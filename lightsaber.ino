@@ -65,6 +65,8 @@ NXPSensorFusion filter;
 SnoozeBlock snooze_config;
 #endif
 
+const char version[] = "$Id$";
+
 const int amplifierPin = 5;
 const int batteryLevelPin = 20;
 const int batteryLevelAnalogPin = 6;
@@ -1465,7 +1467,7 @@ public:
       Serial.println("   ls, rm <file>, format, play <file>, effects");
       Serial.println("To upload files: tar cf - files | uuencode >/dev/ttyACM0");
       Serial.println("Debugging commands:");
-      Serial.println("   monitor swings, monitor samples, top");
+      Serial.println("   monitor swings, monitor samples, top, version");
       return;
     }
 
@@ -1529,6 +1531,10 @@ public:
       Serial.println(AudioProcessorUsageMax());
       AudioProcessorUsageMaxReset();
       // TODO: List blade update speed
+      return;
+    }
+    if (!strcmp(cmd, "version")) {
+      Serial.println(version);
       return;
     }
     if (CommandParser::DoParse(cmd, e)) {
