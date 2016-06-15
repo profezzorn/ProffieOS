@@ -1,14 +1,15 @@
 // Lightsaber Firmware
-// TRY: https://forum.pjrc.com/threads/31717-OctoWS2811-and-CAN-bus?p=89689&amp%3Bviewfull=1
 //
 // Full orientation sensing using NXP's advanced sensor fusion algorithm.
 // You *must* perform a magnetic calibration before this code will work.
 
-// Feature defines, these let you turn off large blocks of code, meant mostly for debugging.
-
+// Feature defines, these let you turn off large blocks of code, used for debugging.
 #define ENABLE_AUDIO
-#define ENABLE_MOTION
+// #define ENABLE_MOTION
 #define ENABLE_SNOOZE
+
+// Use FTM timer for monopodws timing.
+#define USE_FTM_TIMER
 
 // Use the optimized SD_t3 sd library.
 #define USE_TEENSY3_OPTIMIZED_CODE
@@ -29,20 +30,20 @@
 // 0 - FREE (reserve for serial?)
 // 1 - FREE (reserve for serial?)
 // 2 - input, motion sensor interrupts
-// 3 - used by octo library
-// 4 - output, SD card chip select (optional)
+// 3 - used by octo library (not anymore, see USE_FTM_TIMER)
+// 4 - output, SD card chip select (optional) used by octo library (not anymore, see USE_FTM_TIMER)
 // 5 - output, enables amplifier
 // 6 - output, serial flash memory chip select
 // 7 - output, spi led chip select (optional)
 // 8 - AUX button
 // 9 - AUX2 button
-// 10 - used by octo library (used to be pin 4)
+// 10 - FREE
 // 11 - SPI data out (memory, spi led, sd card)
 // 12 - SPI data in (memory, sd card)
 // 13 - SPI clock (memory, spi led, sd card)
 // 14 - output, WS2811 led (blade)
-// 15 - used by octo library (connected to 16)
-// 16 - used by octo library (connected to 15)
+// 15 - used by octo library (connected to 16)  (not anymore, see USE_FTM_TIMER)
+// 16 - used by octo library (connected to 15)  (not anymore, see USE_FTM_TIMER)
 // 18 - I2C (motion sensors)
 // 19 - I2C (motion sensors)
 // 20 - input, Battery level
@@ -131,6 +132,7 @@ public:
   enum MonitorBit {
     MonitorSwings = 1,
     MonitorSamples = 2,
+    MonitorTouch = 4,
   };
 
   bool ShouldPrint(MonitorBit bit) {
@@ -148,6 +150,10 @@ protected:
       }
       if (!strcmp(arg, "samples")) {
 	active_monitors_ ^= MonitorSamples;
+	return true;
+      }
+      if (!strcmp(arg, "touch")) {
+	active_monitors_ ^= MonitorTouch;
 	return true;
       }
     }
@@ -388,6 +394,8 @@ AudioConnection          patchCord4(mixer1, dac1);
 //AudioConnection          patchCord(saber, dac1);
 // GUItool: end automatically generated code
 
+#endif  // ENABLE_AUDIO
+
 class Effect;
 Effect* all_effects = NULL;
 
@@ -431,6 +439,7 @@ class Effect {
   }
 
   bool Play() {
+#ifdef ENABLE_AUDIO
     if (files_found_ < 0) return false;
     int n = 0;
     if (files_found_ > 0) {
@@ -447,6 +456,9 @@ class Effect {
     Serial.println(filename);
     playFlashRaw1.play(filename);
     return true;
+#else
+    return false;
+#endif
   }
 
   static void ScanSerialFlash() {
@@ -475,8 +487,6 @@ EFFECT(clash);
 EFFECT(force);
 EFFECT(stab);
 EFFECT(blaster);
-
-#endif  // ENABLE_AUDIO
 
 #if 1
 /*  OctoWS2811 - High Performance WS2811 LED Display Library
@@ -624,6 +634,56 @@ MonopodWS2811::MonopodWS2811(uint32_t numPerStrip, void *frameBuf, void *drawBuf
 // Discussion about timing and flicker & color shift issues:
 // http://forum.pjrc.com/threads/23877-WS2812B-compatible-with-OctoWS2811-library?p=38190&viewfull=1#post38190
 
+static uint8_t analog_write_res = 8;
+
+void setFTM_Timer(uint8_t ch1, uint8_t ch2, float frequency)
+{
+  uint32_t prescale, mod, ftmClock, ftmClockSource;
+  float minfreq;
+
+  if (frequency < (float)(F_BUS >> 7) / 65536.0f) {     //If frequency is too low for working with F_TIMER:
+    ftmClockSource = 2;                 //Use alternative 31250Hz clock source
+    ftmClock = 31250;                   //Set variable for the actual timer clock frequency
+  } else {                                                //Else do as before:
+    ftmClockSource = 1;                 //Use default F_Timer clock source
+    ftmClock = F_BUS;                    //Set variable for the actual timer clock frequency
+  }
+
+  for (prescale = 0; prescale < 7; prescale++) {
+    minfreq = (float)(ftmClock >> prescale) / 65536.0f;    //Use ftmClock instead of F_TIMER
+    if (frequency >= minfreq) break;
+  }
+
+  mod = (float)(ftmClock >> prescale) / frequency - 0.5f;    //Use ftmClock instead of F_TIMER
+  if (mod > 65535) mod = 65535;
+
+  FTM0_SC = 0; // stop FTM until setting of registers are ready
+  FTM0_CNTIN = 0; // initial value for counter. CNT will be set to this value, if any value is written to FTMx_CNT
+  FTM0_CNT = 0;
+  FTM0_MOD = mod;
+
+  // I don't know why, but the following code leads to a very short first pulse. Shifting the compare values to the end looks much better
+  // uint32_t cval;
+  // FTM0_C0V = 1;  // 0 is not working -> add 1 to every compare value.
+  // cval = ((uint32_t)ch1 * (uint32_t)(mod + 1)) >> analog_write_res;
+  // FTM0_C1V = cval +1;
+  // cval = ((uint32_t)ch2 * (uint32_t)(mod + 1)) >> analog_write_res;
+  // FTM0_C2V = cval +1;
+
+  // Shifting the compare values to the end leads to a perfect first (and last) pulse:
+  uint32_t cval1 = ((uint32_t)ch1 * (uint32_t)(mod + 1)) >> analog_write_res;
+  uint32_t cval2 = ((uint32_t)ch2 * (uint32_t)(mod + 1)) >> analog_write_res;
+  FTM0_C0V = mod - (cval2 - 0);
+  FTM0_C1V = mod - (cval2 - cval1);
+  FTM0_C2V = mod;
+
+  FTM0_C0SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
+  FTM0_C1SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
+  FTM0_C2SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
+
+  FTM0_SC = FTM_SC_CLKS(ftmClockSource) | FTM_SC_PS(prescale);    //Use ftmClockSource instead of 1. Start FTM-Timer.
+  //with 96MHz Teensy: prescale 0, mod 59, ftmClockSource 1, cval1 14, cval2 41
+}
 
 void MonopodWS2811::begin(void)
 {
@@ -650,14 +710,6 @@ void MonopodWS2811::begin(void)
 //	pinMode(21, OUTPUT);	// strip #7
 //	pinMode(5, OUTPUT);	// strip #8
 
-	// create the two waveforms for WS2811 low and high bits
-	// FOOPIN Must be 4 or 17, and it can't be 4....
-	// Need help changing 4 to 17...
-#define FOOPIN 4
-#define BARPIN 3
-#define FOOCAT32(X,Y,Z) X##Y##Z
-#define FOOCAT3(X,Y,Z) FOOCAT32(X,Y,Z)
-
 	int t0h = WS2811_TIMING_T0H;
 	int t1h = WS2811_TIMING_T1H;
 	switch (params & 0xF0) {
@@ -669,7 +721,20 @@ void MonopodWS2811::begin(void)
 	   frequency = 800000;
 	   break;
         }
-	frequency = 400000;
+	// frequency = 400000;
+	frequency = 740000;
+
+#ifdef USE_FTM_TIMER
+	setFTM_Timer(t0h, t1h, frequency);
+#else  // USE_FTM_TIMER
+	// create the two waveforms for WS2811 low and high bits
+	// FOOPIN Must be 4 or 17, and it can't be 4....
+	// Need help changing 4 to 17...
+#define FOOPIN 4
+#define BARPIN 3
+#define FOOCAT32(X,Y,Z) X##Y##Z
+#define FOOCAT3(X,Y,Z) FOOCAT32(X,Y,Z)
+
 	analogWriteResolution(8);
 	analogWriteFrequency(BARPIN, frequency);
 	analogWriteFrequency(FOOPIN, frequency);
@@ -710,6 +775,8 @@ void MonopodWS2811::begin(void)
 
 #endif
 
+#endif  // USE_FTM_TIMER
+
 	// DMA channel #1 sets WS2811 high at the beginning of each cycle
 	dma1.source(ones);
 	dma1.destination(GPIOD_PSOR);
@@ -737,7 +804,11 @@ void MonopodWS2811::begin(void)
 	AXBS_PRS0 = 0x1032;
 #endif
 
-#if defined(KINETISK)
+#ifdef USE_FTM_TIMER
+	dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM0_CH0);
+	dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM0_CH1);
+	dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM0_CH2);
+#elif defined(KINETISK)
 	// route the edge detect interrupts to trigger the 3 channels
 	dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_PORTB);
 	dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_PORTC);
@@ -789,7 +860,40 @@ void MonopodWS2811::show(void)
 	// wait for WS2811 reset
 	while (micros() - update_completed_at < 50) ;
 
-#if defined(KINETISK)
+#ifdef USE_FTM_TIMER
+	uint32_t sc = FTM0_SC;
+	//digitalWriteFast(1, HIGH); // oscilloscope trigger
+  
+	//noInterrupts(); // This code is not time critical anymore. IRQs can stay on. 
+	// We disable the FTM Timer, reset it to its initial counter value and clear all irq-flags. 
+	// Clearing irqs is a bit tricky, because with DMA enabled, only the DMA can clear them. 
+	// We have to disable DMA, reset the irq-flags and enable DMA once again.
+	update_in_progress = 1;
+	FTM0_SC = sc & 0xE7;    // stop FTM timer
+	
+	FTM0_CNT = 0; // writing any value to CNT-register will load the CNTIN value!
+	
+	FTM0_C0SC = 0; // disable DMA transfer. It has to be done, because we can't reset the CHnF bit while DMA is enabled
+	FTM0_C1SC = 0;
+	FTM0_C2SC = 0;
+	
+	FTM0_STATUS; // read status and write 0x00 to it, clears all pending IRQs
+	FTM0_STATUS = 0x00;
+	
+	FTM0_C0SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28; 
+	FTM0_C1SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
+	FTM0_C2SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
+	
+	dma1.enable();
+	dma2.enable();        // enable all 3 DMA channels
+	dma3.enable();
+	//interrupts();
+	//digitalWriteFast(1, LOW);
+	// wait for WS2811 reset
+	while (micros() - update_completed_at < 50) ; // moved to the end, because everything else can be done before.
+	FTM0_SC = sc;        // restart FTM timer
+
+#elif defined(KINETISK)
 	// ok to start, but we must be very careful to begin
 	// without any prior 3 x 800kHz DMA requests pending
 	uint32_t sc = FTM1_SC;
@@ -964,6 +1068,10 @@ struct BladeSettings {
     base.set(r, g, b);
     shimmer = clash = base;
   }
+  void set(uint8_t r, uint8_t g, uint8_t b) {
+    base.set(r, g, b);
+    shimmer = base;
+  }
 };
 
 // TODO: Support for alternate blade types
@@ -976,18 +1084,19 @@ public:
     BLADE_ON,
     BLADE_TURNING_OFF,
     BLADE_TEST,
+    BLADE_SHOWOFF,
   };
-  Blade() : CommandParser(), Looper(), state_(BLADE_OFF), clash_(false) {}
+  Blade() : CommandParser(), Looper(), state_(BLADE_OFF) {}
   bool IsON() { return state_ != BLADE_OFF; }
   void On() {
     state_ = BLADE_TURNING_ON;
     event_millis_ = millis();
-    event_length_ = 500; // Guess
+    event_length_ = 200; // Guess
   }
   void Off() {
     state_ = BLADE_TURNING_OFF;
     event_millis_ = millis();
-    event_length_ = 500; // Guess
+    event_length_ = 200; // Guess
   }
 
   bool Parse(const char* cmd, const char* arg) override {
@@ -1004,12 +1113,49 @@ public:
 	state_ = BLADE_TEST;
         return true;
       }
+      if (!strcmp(arg, "showoff")) {
+	state_ = BLADE_SHOWOFF;
+        return true;
+      }
+    }
+    if (!strcmp(cmd, "red")) {
+      settings_.set(255,0,0);
+      return true;
+    }
+    if (!strcmp(cmd, "green")) {
+      settings_.set(0,255,0);
+      return true;
+    }
+    if (!strcmp(cmd, "blue")) {
+      settings_.set(0,0,255);
+      return true;
+    }
+    if (!strcmp(cmd, "yellow")) {
+      settings_.set(255,255,0);
+      return true;
+    }
+    if (!strcmp(cmd, "cyan")) {
+      settings_.set(0,255,255);
+      return true;
+    }
+    if (!strcmp(cmd, "magenta")) {
+      settings_.set(255,0,255);
+      return true;
+    }
+    if (!strcmp(cmd, "white")) {
+      settings_.set(255,255,255);
+      return true;
     }
     return false;
   }
 
-  void Clash() { clash_ = true; }
+  void Clash() { clash_=true; }
   void Lockup() {  }
+
+  float fps() {
+    if (!millis_sum_) return 0.0;
+    return updates_ * 1000.0 / millis_sum_;
+  }
 
   BladeSettings settings_;
 
@@ -1017,8 +1163,20 @@ protected:
   void Loop() override {
     if (monopodws.busy()) return;
     monopodws.show();
-    if (state_ == BLADE_OFF) return;
+    if (state_ == BLADE_OFF) {
+      last_millis_ = 0;
+      return;
+    }
     int m = millis();
+    if (last_millis_) {
+      millis_sum_ += m - last_millis_;
+      updates_ ++;
+      if (updates_ > 1000) {
+	updates_ /= 2;
+	millis_sum_ /= 2;
+      }
+    }
+    last_millis_ = m;
     int thres = ledsPerStrip * 256 * (m - event_millis_) / event_length_;
     if (thres > (int)((ledsPerStrip + 2) * 256)) {
       switch (state_) {
@@ -1035,17 +1193,22 @@ protected:
       Color c;
       if (clash_) {
         c = settings_.clash.get(i);
-        clash_ = false;
       } else {
         c = settings_.base.get(i);
       }
       // TODO: shimmer more when moving.
       // TODO: Other shimmer styles
-      //      c = c.mix(settings_.shimmer.get(i), rand() & 0xFF);
+      c = c.mix(settings_.shimmer.get(i), rand() & 0xFF);
 
       switch (state_) {
+	case BLADE_SHOWOFF:
+	  c = Color(sin(i*0.23 - m*0.013) * 127 + 127,
+		    sin(i*0.17 - m*0.005) * 127 + 127,
+		    sin(i*0.37 - m*0.007) * 127 + 127);
+	  break;
         case BLADE_TEST: {
-          switch(((m / 100 + i)/10) % 3) {
+          switch((((m >> 5) + i)/10) % 3) {
+//          switch((i/10) % 3) {
             case 0: c = Color(255,0,0); break;
             case 1: c = Color(0,255,0); break;
             case 2: c = Color(0,0,255); break;
@@ -1073,13 +1236,17 @@ protected:
       }
       monopodws.setPixel(i, monopodws.color(c.r, c.g, c.b));
     }
+    clash_ = false;
   }
   
 private:
   State state_;
-  bool clash_;
+  bool clash_ = false;
   int event_millis_;
   int event_length_;
+  int last_millis_;
+  int updates_ = 0;
+  int millis_sum_ = 0;
 };
 
 // Global settings:
@@ -1213,8 +1380,10 @@ public:
       switch (next_action_) {
 	case TURN_ON:
 	  // Will fade in based on swing volume set elsewhere.
+#ifdef ENABLE_AUDIO
 	  saber_synth.volume_.set(0);
 	  saber_synth.on_ = true;
+#endif
 	  break;
 
          case NO_ACTION:
@@ -1247,7 +1416,9 @@ public:
       clicked_(false),
       push_millis_(0) {
     pinMode(pin, INPUT_PULLUP);
+#ifdef ENABLE_SNOOZE
     snooze_config.pinMode(pin, INPUT_PULLUP, RISING);
+#endif
   }
   int pushed_millis() {
     if (pushed_) return millis() - push_millis_;
@@ -1281,9 +1452,197 @@ protected:
     }
     return false;
   }
-private:
+
   uint8_t pin_;
   const char* name_;
+  bool pushed_;
+  bool clicked_;
+  int push_millis_;
+};
+
+
+/* Teensyduino Core Library
+ * http://www.pjrc.com/teensy/
+ * Copyright (c) 2013 PJRC.COM, LLC.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * 1. The above copyright notice and this permission notice shall be 
+ * included in all copies or substantial portions of the Software.
+ *
+ * 2. If the Software is incorporated into a build system that allows 
+ * selection among a list of target devices, then similar target
+ * devices manufactured by PJRC.COM must be included in the list of
+ * target devices and selectable in the same manner.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#if defined(__MK20DX128__) || defined(__MK20DX256__)
+// These settings give approx 0.02 pF sensitivity and 1200 pF range
+// Lower current, higher number of scans, and higher prescaler
+// increase sensitivity, but the trade-off is longer measurement
+// time and decreased range.
+#define CURRENT   2 // 0 to 15 - current to use, value is 2*(current+1)
+#define NSCAN     9 // number of times to scan, 0 to 31, value is nscan+1
+#define PRESCALE  2 // prescaler, 0 to 7 - value is 2^(prescaler+1)
+static const uint8_t pin2tsi[] = {
+//0    1    2    3    4    5    6    7    8    9
+  9,  10, 255, 255, 255, 255, 255, 255, 255, 255,
+255, 255, 255, 255, 255,  13,   0,   6,   8,   7,
+255, 255,  14,  15, 255,  12, 255, 255, 255, 255,
+255, 255,  11,   5
+};
+
+#elif defined(__MK66FX1M0__)
+#define CURRENT   2
+#define NSCAN     9
+#define PRESCALE  2
+static const uint8_t pin2tsi[] = {
+//0    1    2    3    4    5    6    7    8    9
+  9,  10, 255, 255, 255, 255, 255, 255, 255, 255,
+255, 255, 255, 255, 255,  13,   0,   6,   8,   7,
+255, 255,  14,  15, 255, 255, 255, 255, 255,  11,
+ 12, 255, 255, 255, 255, 255, 255, 255, 255, 255
+};
+
+#elif defined(__MKL26Z64__)
+#define NSCAN     9
+#define PRESCALE  2
+static const uint8_t pin2tsi[] = {
+//0    1    2    3    4    5    6    7    8    9
+  9,  10, 255,   2,   3, 255, 255, 255, 255, 255,
+255, 255, 255, 255, 255,  13,   0,   6,   8,   7,
+255, 255,  14,  15, 255, 255, 255
+};
+
+#endif
+
+// Note, there can currently only be one of these.
+// If we need more, we need a time-sharing system.
+class TouchButton : Looper, CommandParser {
+public:
+  TouchButton(int pin, int threshold, const char* name)
+    : Looper(),
+      CommandParser(),
+      pin_(pin),
+      name_(name),
+      threshold_(threshold),
+      pushed_(false),
+      clicked_(false),
+      push_millis_(0) {
+    pinMode(pin, INPUT_PULLUP);
+#ifdef ENABLE_SNOOZE
+    snooze_config.pinMode(pin, TSI, threshold);
+#endif
+#if defined(__MK64FX512__)
+    Serial.println("Touch sensor not supported!\n");
+#endif
+    if (pin >= NUM_DIGITAL_PINS) {
+      Serial.println("touch pin out of range");
+      return;
+    }
+    if (pin2tsi[pin_] == 255) {
+      Serial.println("Not a touch-capable pin!");
+    } 
+  }
+  int pushed_millis() {
+    if (pushed_) return millis() - push_millis_;
+    return 0;
+  }
+  bool clicked() {
+    bool ret = clicked_;
+    clicked_ = false;
+    return ret;
+  }
+protected:
+  void Update(int value) {
+    if (print_next_) {
+      Serial.print("Touch ");
+      Serial.print(name_);
+      Serial.print(" = ");
+      Serial.println(value);
+      print_next_ = false;
+    }
+    if (value > threshold_) {
+      if (!pushed_) {
+        push_millis_ = millis();
+        pushed_ = true;
+      }
+    } else {
+      if (pushed_) {
+        int t = millis() - push_millis_;
+        if (t < 5) return; // De-bounce
+        pushed_ = false;
+        if (t < 500) clicked_ = true;
+      }
+    }
+  }
+
+  void BeginRead() {
+    // Copied from touch.c
+    int32_t ch = pin2tsi[pin_];
+    *portConfigRegister(pin_) = PORT_PCR_MUX(0);
+    SIM_SCGC5 |= SIM_SCGC5_TSI;
+#if defined(KINETISK)
+    TSI0_GENCS = 0;
+    TSI0_PEN = (1 << ch);
+    TSI0_SCANC = TSI_SCANC_REFCHRG(3) | TSI_SCANC_EXTCHRG(CURRENT);
+    TSI0_GENCS = TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_PS(PRESCALE) | TSI_GENCS_TSIEN | TSI_GENCS_SWTS;
+#elif defined(KINETISL)
+    TSI0_GENCS = TSI_GENCS_REFCHRG(4) | TSI_GENCS_EXTCHRG(3) | TSI_GENCS_PS(PRESCALE)
+      | TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
+    TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
+#endif
+    begin_read_micros_ = micros();
+  }
+
+  void Setup() override {
+    BeginRead();
+  }
+
+  void Loop() override {
+    if (monitor.ShouldPrint(Monitoring::MonitorTouch)) {
+      print_next_ = true;
+    }
+    if (micros() - begin_read_micros_ <= 10) return;
+    if (TSI0_GENCS & TSI_GENCS_SCNIP) return;
+    int32_t ch = pin2tsi[pin_];
+    delayMicroseconds(1);
+#if defined(KINETISK)
+    Update(*((volatile uint16_t *)(&TSI0_CNTR1) + ch));
+#elif defined(KINETISL)
+    Update(TSI0_DATA & 0xFFFF);
+#endif
+    BeginRead();
+  }
+
+  bool Parse(const char* cmd, const char* arg) override {
+    if (!strcmp(cmd, name_)) {
+      clicked_ = true;
+      return true;
+    }
+    return false;
+  }
+
+  bool print_next_ = false;
+  int begin_read_micros_ = 0;
+  uint8_t pin_;
+  const char* name_;
+  int threshold_;
   bool pushed_;
   bool clicked_;
   int push_millis_;
@@ -1292,20 +1651,21 @@ private:
 class Saber : CommandParser, Looper {
 public:
   Saber() : CommandParser(),
-	    power_(powerButtonPin, "pow"),
+	    power_(powerButtonPin, 1300, "pow"),
 	    aux_(auxPin, "aux"),
 	    aux2_(aux2Pin, "aux2") {}
 
   void On() {
-    if (saber_synth.on_) return;
+    if (on_) return;
     Serial.println("Ignition.");
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     delay(10);             // allow time to wake up
-    
+
+    on_ = true;
     blade.On();
-    poweron.Play();
     uint32_t delay = 0;
 #ifdef ENABLE_AUDIO
+    poweron.Play();
     if (playFlashRaw1.isPlaying()) {
       delay = playFlashRaw1.lengthMillis() - 10;
     }
@@ -1316,7 +1676,10 @@ public:
 
   void Off() {
     // TODO: FADE OUT!
+#ifdef ENABLE_AUDIO
     saber_synth.on_ = false;
+#endif
+    on_ = false;
     if (scheduler.next_action_ == Scheduler::TURN_ON) {
       scheduler.SetNextAction(Scheduler::NO_ACTION, 0);
     }
@@ -1327,7 +1690,7 @@ public:
   unsigned long last_clash = 0;
   void Clash() {
     // TODO: Pick clash randomly and/or based on strength of clash.
-    if (!saber_synth.on_) return;
+    if (!on_) return;
     unsigned long t = millis();
     if (t - last_clash < 100) return;
     last_clash = t;
@@ -1338,7 +1701,7 @@ public:
 protected:
   void Loop() override {
     if (power_.clicked()) {
-      if (saber_synth.on_) {
+      if (on_) {
 	Off();
       } else {
 	On();
@@ -1361,7 +1724,8 @@ protected:
     return false;
   }
 private:
-  Button power_;
+  bool on_;
+  TouchButton power_;
   Button aux_;
   Button aux2_;
 };
@@ -1463,6 +1827,7 @@ public:
     if (!strcmp(cmd, "help")) {
       Serial.println("General commands:");
       Serial.println("  on, off, blade on, blade off, clash, pow, aux, aux2");
+      Serial.println("  red, green, blue, yellow, cyan, magenta, white");
       Serial.println("Serial Flash memory management:");
       Serial.println("   ls, rm <file>, format, play <file>, effects");
       Serial.println("To upload files: tar cf - files | uuencode >/dev/ttyACM0");
@@ -1511,12 +1876,14 @@ public:
       }
       return;
     }
+#ifdef ENABLE_AUDIO
     if (!strcmp(cmd, "play")) {
       digitalWrite(amplifierPin, HIGH); // turn on the amplifier
       delay(10);             // allow time to wake up
       playFlashRaw1.play(e);
       return;
     }
+#endif
     if (!strcmp(cmd, "format")) {
       Serial.print("Erasing ... ");
       SerialFlashChip::eraseAll();
@@ -1525,11 +1892,15 @@ public:
       return;
     }
     if (!strcmp(cmd, "top")) {
+#ifdef ENABLE_AUDIO
       Serial.print("Audio usage: ");
       Serial.println(AudioProcessorUsage());
       Serial.print("Audio usage max: ");
       Serial.println(AudioProcessorUsageMax());
       AudioProcessorUsageMaxReset();
+#endif
+      Serial.print("Blade FPS: ");
+      Serial.println(blade.fps());
       // TODO: List blade update speed
       return;
     }
@@ -1569,6 +1940,11 @@ class Orientation : Looper {
   Orientation() : Looper(), accel_(0.0f, 0.0f, 0.0f) {
   }
 
+  void Setup() override {
+    imu.begin();
+    filter.begin(100);
+  }
+
   void Loop() override {
     if (imu.available()) {
       Vec3 accel, gyro, magnetic;
@@ -1592,15 +1968,20 @@ class Orientation : Looper {
       if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
 	Serial.print("Speed: ");
 	Serial.print(speed);
+#ifdef ENABLE_AUDIO
 	Serial.print(" VOL: ");
 	Serial.print(saber_synth.volume_.value());
 	Serial.print(" TARGET: ");
 	Serial.println(saber_synth.volume_.target_);
+#endif
       }
 
+#ifdef ENABLE_AUDIO
       saber_synth.volume_.set_target(32768 * (0.5 + clamp(speed/200.0, 0.0, 0.5)));
+
       // TODO: speed delta?
       saber_synth.AdjustDelta(speed);
+#endif
       
       // last_speed = speed;
 #if 0
@@ -1636,7 +2017,15 @@ class Amplifier : Looper {
 public:
   Amplifier() : Looper(), do_print_amp_off_(false) {}
 protected:
-  void Loop() override{
+  void Setup() override {
+    // Audio setup
+    // dac1.analogReference(EXTERNAL); // much louder!
+    delay(50);             // time for DAC voltage stable
+    pinMode(amplifierPin, OUTPUT);
+    delay(10);
+  }
+
+  void Loop() override {
     if (!saber_synth.on_ && !playFlashRaw1.isPlaying() && !playSdWav1.isPlaying()) {
     // Make sure audio has actually settled.
     if (do_print_amp_off_) {
@@ -1666,14 +2055,14 @@ void setup() {
 
   // Time to identify the blade.
   int blade_id = analogRead(bladeIdentifyAnalogPin);
-  float v1 = blade_id * 3.3 / 1024.0;
-  float amps = (3.3 - v1) / 33000; // Pull-up is 33k
-  float r = v1 / amps;
+  float volts = blade_id * 3.3 / 1024.0;  // Volts at bladeIdentifyAnalogPin
+  float amps = (3.3 - volts) / 33000;     // Pull-up is 33k
+  float resistor = volts / amps;
 
   size_t best_config = 0;
   float best_err = 1000000.0;
   for (size_t i = 0; i < sizeof(blades) / sizeof(blades)[0]; i++) {
-    float err = fabs(r - blades[i].ohms);
+    float err = fabs(resistor - blades[i].ohms);
     if (err < best_err) {
       best_config = i;
       best_err = err;
@@ -1682,37 +2071,28 @@ void setup() {
   Serial.print("ID: ");
   Serial.print(blade_id);
   Serial.print(" resistance= ");
-  Serial.print(r);
+  Serial.print(resistor);
   Serial.print(" blade= ");
   Serial.println(best_config);
 
   // TODO only activate monopodws if we have a WS2811-type blade
-  blade.settings_.base.set(0, 0, 255);
-  blade.settings_.shimmer.set(0, 0, 255);
+  blade.settings_.set(0,0,255);
   blade.settings_.clash.set(255, 255, 255);
   monopodws.begin();
   monopodws.show();
   
-  SerialFlashChip::begin(6);
-    
   Serial.begin(9600);
-  imu.begin();
-  filter.begin(100);
 
-  // Audio setup
-  // dac1.analogReference(EXTERNAL); // much louder!
-  delay(50);             // time for DAC voltage stable
-
-  pinMode(amplifierPin, OUTPUT);
-  AudioMemory(20);
-
-  digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+#ifdef ENABLE_AUDIO
+  SerialFlashChip::begin(6);
   Effect::ScanSerialFlash();
-  delay(10);             // allow time to wake up
-  boot.Play();  
+#endif
+
   monopodws.show();
 
   Looper::DoSetup();
+
+  boot.Play();  
 }
 
 int last_activity = millis();
@@ -1720,10 +2100,14 @@ int last_activity = millis();
 void loop() {
   Looper::DoLoop();
 
-  if (!saber_synth.on_ &&
+#ifdef ENABLE_SNOOZE
+  if (
+#ifdef ENABLE_AUDIO
+    !saber_synth.on_ &&
       !playFlashRaw1.isPlaying() &&
       !playSdWav1.isPlaying() &&
       digitalRead(amplifierPin) == LOW &&
+#endif
       !Serial && !blade.IsON()) {
     if (millis() - last_activity > 1000) {
       Serial.println("Snoozing...");
@@ -1732,5 +2116,6 @@ void loop() {
   } else {
     last_activity = millis();
   }
+#endif
 }
 
