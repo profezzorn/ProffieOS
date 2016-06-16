@@ -1,12 +1,11 @@
-// Lightsaber Firmware
+// Teensy Lightsaber Firmware
 //
-// Full orientation sensing using NXP's advanced sensor fusion algorithm.
-// You *must* perform a magnetic calibration before this code will work.
-
-// Feature defines, these let you turn off large blocks of code, used for debugging.
+// Feature defines, these let you turn off large blocks of code
+// used for debugging.
 #define ENABLE_AUDIO
-// #define ENABLE_MOTION
+#define ENABLE_MOTION
 #define ENABLE_SNOOZE
+#define ENABLE_WS2811
 
 // Use FTM timer for monopodws timing.
 #define USE_FTM_TIMER
@@ -27,30 +26,42 @@
 #include <math.h>
 
 // Teensy 3.2 pin map:
-// 0 - FREE (reserve for serial?)
-// 1 - FREE (reserve for serial?)
-// 2 - input, motion sensor interrupts
-// 3 - used by octo library (not anymore, see USE_FTM_TIMER)
-// 4 - output, SD card chip select (optional) used by octo library (not anymore, see USE_FTM_TIMER)
-// 5 - output, enables amplifier
-// 6 - output, serial flash memory chip select
-// 7 - output, spi led chip select (optional)
-// 8 - AUX button
-// 9 - AUX2 button
-// 10 - FREE
-// 11 - SPI data out (memory, spi led, sd card)
-// 12 - SPI data in (memory, sd card)
-// 13 - SPI clock (memory, spi led, sd card)
-// 14 - output, WS2811 led (blade)
-// 15 - used by octo library (connected to 16)  (not anymore, see USE_FTM_TIMER)
-// 16 - used by octo library (connected to 15)  (not anymore, see USE_FTM_TIMER)
-// 18 - I2C (motion sensors)
-// 19 - I2C (motion sensors)
-// 20 - input, Battery level
-// 21 - input, Blade identify
-// 22 - output, blade power BEC control
-// 23 - power button
+enum SaberPins {
+  // Bottom edge (in pin-out diagram)
+  freePin0 = 0,                   // FREE (reserve for serial?)
+  freePin1 = 1,                   // FREE (reserve for serial?)
+  motionSensorInterruptPin = 2,   // motion sensor interrupt (prop shield)
+  freePin3 = 3,                   // FREE
+  sdCardSelectPin = 4,            // SD card chip select (Wiz820+SD)
+  amplifierPin = 5,               // Amplifier enable pin (prop shield)
+  serialFlashSelectPin = 6,       // serial flash chip select (prop shield)
+  spiLedSelect = 7,               // APA102/dotstar chip select (prop shield)
+  freePin8 = 8,                   // FREE
+  freePin9 = 9,                   // FREE
+  freePin10 = 10,                 // FREE
+  spiDataOut = 11,                // spi out, serial flash, spi led & sd card
+  spiDataIn = 12,                 // spi in, serial flash & sd card
 
+  // Top edge
+  spiClock = 13,                  // spi clock, flash, spi led & sd card
+  batteryLevelPin = 14,           // battery level input
+  powerButtonPin = 15,            // power button
+  auxPin = 16,                    // AUX button
+  aux2Pin = 17,                   // AUX2 button
+  i2cDataPin = 18,                // Used by motion sensors (prop shield)
+  i2cClockPin = 19,               // Used by motion sensors (prop shield)
+  bladePin = 20,                  // blade control, either WS2811 or PWM
+  bladeIdentifyPin = 21,          // blade identify input / FoC
+  bladePowerPin = 22,             // blade power control
+  freePin23 = 23,                 // FREE
+};
+
+// analogRead(0 doesn't use the same pin numbers as digitalRead/digitalWrite, so
+// here are the pins used with analogRead()
+enum AnalogSaberPins {
+  batteryLevelAnalogPin = 0,    // digital pin 14
+  bladeIdentifyAnalogPin = 7,   // digital pin 21
+};
 
 #ifdef ENABLE_MOTION
 #include <NXPMotionSense.h>
@@ -68,23 +79,28 @@ SnoozeBlock snooze_config;
 
 const char version[] = "$Id$";
 
-const int amplifierPin = 5;
-const int batteryLevelPin = 20;
-const int batteryLevelAnalogPin = 6;
-const int bladeIdentifyPin = 21;
-const int bladeIdentifyAnalogPin = 7;
-const int auxPin = 8;
-const int aux2Pin = 9;
-const int powerButtonPin = 23;
+enum NoLink { NOLINK = 17 };
 
 // Helper class for classses that needs to be called back from the Loop() function.
 class Looper;
 Looper* loopers = NULL;
 class Looper {
 public:
-  Looper() : next_looper_(loopers) {
+  void Link() {
+    next_looper_ = loopers;
     loopers = this;
   }
+  void Unlink() {
+    for (Looper** i = &loopers; *i; i = &(*i)->next_looper_) {
+      if (*i == this) {
+	*i = next_looper_;
+	return;
+      }
+    }
+  }
+  Looper() { Link(); }
+  explicit Looper(NoLink _) { }
+  ~Looper() { Unlink(); }
   static void DoLoop() {
     for (Looper *l = loopers; l; l = l->next_looper_) {
       l->Loop();
@@ -108,9 +124,22 @@ CommandParser* parsers = NULL;
 
 class CommandParser {
 public:
-  CommandParser() : next_parser_(parsers) {
+  void Link() {
+    next_parser_ = parsers;
     parsers = this;
   }
+  void Unlink() {
+    for (CommandParser** i = &parsers; *i; i = &(*i)->next_parser_) {
+      if (*i == this) {
+	*i = next_parser_;
+	return;
+      }
+    }
+  }
+
+  CommandParser() { Link(); }
+  explicit CommandParser(NoLink _) {}
+  ~CommandParser() { Unlink(); }
   static bool DoParse(const char* cmd, const char* arg) {
     for (CommandParser *p = parsers; p; p = p->next_parser_) {
       if (p->Parse(cmd, arg))
@@ -488,7 +517,7 @@ EFFECT(force);
 EFFECT(stab);
 EFFECT(blaster);
 
-#if 1
+#ifdef ENABLE_WS2811
 /*  OctoWS2811 - High Performance WS2811 LED Display Library
     http://www.pjrc.com/teensy/td_libs_OctoWS2811.html
     Copyright (c) 2013 Paul Stoffregen, PJRC.COM, LLC
@@ -512,9 +541,6 @@ EFFECT(blaster);
     THE SOFTWARE.
 */
 
-#ifndef MonopodWS2811_h
-#define MonopodWS2811_h
-
 #include <Arduino.h>
 #include "DMAChannel.h"
 
@@ -536,36 +562,35 @@ EFFECT(blaster);
 
 class MonopodWS2811 {
 public:
-	MonopodWS2811(uint32_t numPerStrip, void *frameBuf, void *drawBuf, uint8_t config = WS2811_GRB);
-	void begin(void);
+  void begin(uint32_t numPerStrip,
+	     void *frameBuf,
+	     void *drawBuf,
+	     uint8_t config = WS2811_GRB);
+  void setPixel(uint32_t num, int color);
+  void setPixel(uint32_t num, uint8_t red, uint8_t green, uint8_t blue) {
+    setPixel(num, color(red, green, blue));
+  }
+  int getPixel(uint32_t num);
 
-	void setPixel(uint32_t num, int color);
-	void setPixel(uint32_t num, uint8_t red, uint8_t green, uint8_t blue) {
-		setPixel(num, color(red, green, blue));
-	}
-	int getPixel(uint32_t num);
+  void show(void);
+  int busy(void);
 
-	void show(void);
-	int busy(void);
-
-	int numPixels(void) {
-		return stripLen;
-	}
-	int color(uint8_t red, uint8_t green, uint8_t blue) {
-		return (red << 16) | (green << 8) | blue;
-	}
-	
-
+  int numPixels(void) {
+    return stripLen;
+  }
+  int color(uint8_t red, uint8_t green, uint8_t blue) {
+    return (red << 16) | (green << 8) | blue;
+  }
+  
+  
 private:
-	static uint16_t stripLen;
-	static void *frameBuffer;
-	static void *drawBuffer;
-	static uint8_t params;
-	static DMAChannel dma1, dma2, dma3;
-	static void isr(void);
+  static uint16_t stripLen;
+  static void *frameBuffer;
+  static void *drawBuffer;
+  static uint8_t params;
+  static DMAChannel dma1, dma2, dma3;
+  static void isr(void);
 };
-
-#endif
 
 /*  OctoWS2811 - High Performance WS2811 LED Display Library
     http://www.pjrc.com/teensy/td_libs_OctoWS2811.html
@@ -600,18 +625,10 @@ DMAChannel MonopodWS2811::dma1;
 DMAChannel MonopodWS2811::dma2;
 DMAChannel MonopodWS2811::dma3;
 
-static uint8_t ones = 0x02;  // pin 14
+static uint8_t ones = 0x20;  // pin 20
 static volatile uint8_t update_in_progress = 0;
 static uint32_t update_completed_at = 0;
 
-
-MonopodWS2811::MonopodWS2811(uint32_t numPerStrip, void *frameBuf, void *drawBuf, uint8_t config)
-{
-	stripLen = numPerStrip;
-	frameBuffer = frameBuf;
-	drawBuffer = drawBuf;
-	params = config;
-}
 
 // Waveform timing: these set the high time for a 0 and 1 bit, as a fraction of
 // the total 800 kHz or 400 kHz clock cycle.  The scale is 0 to 255.  The Worldsemi
@@ -685,144 +702,150 @@ void setFTM_Timer(uint8_t ch1, uint8_t ch2, float frequency)
   //with 96MHz Teensy: prescale 0, mod 59, ftmClockSource 1, cval1 14, cval2 41
 }
 
-void MonopodWS2811::begin(void)
+void MonopodWS2811::begin(uint32_t numPerStrip,
+			  void *frameBuf,
+			  void *drawBuf,
+			  uint8_t config)
 {
-	uint32_t bufsize, frequency = 400000;
+  stripLen = numPerStrip;
+  frameBuffer = frameBuf;
+  drawBuffer = drawBuf;
+  params = config;
 
-	bufsize = stripLen*24;
+  uint32_t bufsize, frequency = 400000;
 
-	// set up the buffers
-	memset(frameBuffer, ones, bufsize);
-	if (drawBuffer) {
-		memset(drawBuffer, ones, bufsize);
-	} else {
-		drawBuffer = frameBuffer;
-	}
+  bufsize = stripLen*24;
+
+  // set up the buffers
+  memset(frameBuffer, ones, bufsize);
+  if (drawBuffer) {
+    memset(drawBuffer, ones, bufsize);
+  } else {
+    drawBuffer = frameBuffer;
+  }
 	
-	// configure the 8 output pins
-	GPIOD_PCOR = ones;
-//	pinMode(2, OUTPUT);	// strip #1
-	pinMode(14, OUTPUT);	// strip #2
-//	pinMode(7, OUTPUT);	// strip #3
-//	pinMode(8, OUTPUT);	// strip #4
-//	pinMode(6, OUTPUT);	// strip #5
-//	pinMode(20, OUTPUT);	// strip #6
-//	pinMode(21, OUTPUT);	// strip #7
-//	pinMode(5, OUTPUT);	// strip #8
+  // configure the 8 output pins
+  GPIOD_PCOR = ones;
+  if (ones & 1)   pinMode(2, OUTPUT);	// strip #1
+  if (ones & 2)   pinMode(14, OUTPUT);	// strip #2
+  if (ones & 4)   pinMode(7, OUTPUT);	// strip #3
+  if (ones & 8)   pinMode(8, OUTPUT);	// strip #4
+  if (ones & 16)  pinMode(6, OUTPUT);	// strip #5
+  if (ones & 32)  pinMode(20, OUTPUT);	// strip #6
+  if (ones & 64)  pinMode(21, OUTPUT);	// strip #7
+  if (ones & 128) pinMode(5, OUTPUT);	// strip #8
 
-	int t0h = WS2811_TIMING_T0H;
-	int t1h = WS2811_TIMING_T1H;
-	switch (params & 0xF0) {
-          case WS2811_400kHz:
-	   frequency = 400000;
-	    break;
+  int t0h = WS2811_TIMING_T0H;
+  int t1h = WS2811_TIMING_T1H;
+  switch (params & 0xF0) {
+    case WS2811_400kHz:
+      frequency = 400000;
+      break;
 
-          case WS2811_800kHz:
-	   frequency = 800000;
-	   break;
-        }
-	// frequency = 400000;
-	frequency = 740000;
+    case WS2811_800kHz:
+      frequency = 740000;
+      break;
+  }
 
 #ifdef USE_FTM_TIMER
-	setFTM_Timer(t0h, t1h, frequency);
+  setFTM_Timer(t0h, t1h, frequency);
 #else  // USE_FTM_TIMER
-	// create the two waveforms for WS2811 low and high bits
-	// FOOPIN Must be 4 or 17, and it can't be 4....
-	// Need help changing 4 to 17...
+  // create the two waveforms for WS2811 low and high bits
+  // FOOPIN Must be 4 or 17, and it can't be 4....
+  // Need help changing 4 to 17...
 #define FOOPIN 4
 #define BARPIN 3
 #define FOOCAT32(X,Y,Z) X##Y##Z
 #define FOOCAT3(X,Y,Z) FOOCAT32(X,Y,Z)
 
-	analogWriteResolution(8);
-	analogWriteFrequency(BARPIN, frequency);
-	analogWriteFrequency(FOOPIN, frequency);
-	analogWrite(BARPIN, t0h);
-	analogWrite(FOOPIN, t1h);
+  analogWriteResolution(8);
+  analogWriteFrequency(BARPIN, frequency);
+  analogWriteFrequency(FOOPIN, frequency);
+  analogWrite(BARPIN, t0h);
+  analogWrite(FOOPIN, t1h);
 
 #if defined(KINETISK)
-	// pin 16 triggers DMA(port B) on rising edge (configure for pin 3's waveform)
-	CORE_PIN16_CONFIG = PORT_PCR_IRQC(1)|PORT_PCR_MUX(3);
-	pinMode(BARPIN, INPUT_PULLUP); // pin 3 no longer needed
+  // pin 16 triggers DMA(port B) on rising edge (configure for pin 3's waveform)
+  CORE_PIN16_CONFIG = PORT_PCR_IRQC(1)|PORT_PCR_MUX(3);
+  pinMode(BARPIN, INPUT_PULLUP); // pin 3 no longer needed
 
-	// pin 15 triggers DMA(port C) on falling edge of low duty waveform
-	// pin 15 and 16 must be connected by the user: 16 is output, 15 is input
-	pinMode(15, INPUT);
-	CORE_PIN15_CONFIG = PORT_PCR_IRQC(2)|PORT_PCR_MUX(1);
+  // pin 15 triggers DMA(port C) on falling edge of low duty waveform
+  // pin 15 and 16 must be connected by the user: 16 is output, 15 is input
+  pinMode(15, INPUT);
+  CORE_PIN15_CONFIG = PORT_PCR_IRQC(2)|PORT_PCR_MUX(1);
 
-	// pin FOOPIN triggers DMA(port A) on falling edge of high duty waveform
-	FOOCAT3(CORE_PIN,FOOPIN,_CONFIG) = PORT_PCR_IRQC(2)|PORT_PCR_MUX(3);
+  // pin FOOPIN triggers DMA(port A) on falling edge of high duty waveform
+  FOOCAT3(CORE_PIN,FOOPIN,_CONFIG) = PORT_PCR_IRQC(2)|PORT_PCR_MUX(3);
 
 #elif defined(KINETISL)
-	// on Teensy-LC, use timer DMA, not pin DMA
-	//Serial1.println(FTM2_C0SC, HEX);
-	//FTM2_C0SC = 0xA9;
-	//FTM2_C0SC = 0xA9;
-	//uint32_t t = FTM2_C0SC;
-	//FTM2_C0SC = 0xA9;
-	//Serial1.println(t, HEX);
-	CORE_PIN3_CONFIG = 0;
-	FOOCAT3(CORE_PIN,FOOPIN,_CONFIG) = 0;
-	//FTM2_C0SC = 0;
-	//FTM2_C1SC = 0;
-	//while (FTM2_C0SC) ;
-	//while (FTM2_C1SC) ;
-	//FTM2_C0SC = 0x99;
-	//FTM2_C1SC = 0x99;
+  // on Teensy-LC, use timer DMA, not pin DMA
+  //Serial1.println(FTM2_C0SC, HEX);
+  //FTM2_C0SC = 0xA9;
+  //FTM2_C0SC = 0xA9;
+  //uint32_t t = FTM2_C0SC;
+  //FTM2_C0SC = 0xA9;
+  //Serial1.println(t, HEX);
+  CORE_PIN3_CONFIG = 0;
+  FOOCAT3(CORE_PIN,FOOPIN,_CONFIG) = 0;
+  //FTM2_C0SC = 0;
+  //FTM2_C1SC = 0;
+  //while (FTM2_C0SC) ;
+  //while (FTM2_C1SC) ;
+  //FTM2_C0SC = 0x99;
+  //FTM2_C1SC = 0x99;
 
-	//MCM_PLACR |= MCM_PLACR_ARB;
+  //MCM_PLACR |= MCM_PLACR_ARB;
 
 #endif
 
 #endif  // USE_FTM_TIMER
 
 	// DMA channel #1 sets WS2811 high at the beginning of each cycle
-	dma1.source(ones);
-	dma1.destination(GPIOD_PSOR);
-	dma1.transferSize(1);
-	dma1.transferCount(bufsize);
-	dma1.disableOnCompletion();
+  dma1.source(ones);
+  dma1.destination(GPIOD_PSOR);
+  dma1.transferSize(1);
+  dma1.transferCount(bufsize);
+  dma1.disableOnCompletion();
 
-	// DMA channel #2 writes the pixel data at 20% of the cycle
-	dma2.sourceBuffer((uint8_t *)frameBuffer, bufsize);
-	dma2.destination(GPIOD_PCOR);
-	dma2.transferSize(1);
-	dma2.transferCount(bufsize);
-	dma2.disableOnCompletion();
+  // DMA channel #2 writes the pixel data at 20% of the cycle
+  dma2.sourceBuffer((uint8_t *)frameBuffer, bufsize);
+  dma2.destination(GPIOD_PCOR);
+  dma2.transferSize(1);
+  dma2.transferCount(bufsize);
+  dma2.disableOnCompletion();
 
-	// DMA channel #3 clear all the pins low at 48% of the cycle
-	dma3.source(ones);
-	dma3.destination(GPIOD_PCOR);
-	dma3.transferSize(1);
-	dma3.transferCount(bufsize);
-	dma3.disableOnCompletion();
-	dma3.interruptAtCompletion();
+  // DMA channel #3 clear all the pins low at 48% of the cycle
+  dma3.source(ones);
+  dma3.destination(GPIOD_PCOR);
+  dma3.transferSize(1);
+  dma3.transferCount(bufsize);
+  dma3.disableOnCompletion();
+  dma3.interruptAtCompletion();
 
 #ifdef __MK20DX256__
-	MCM_CR = MCM_CR_SRAMLAP(1) | MCM_CR_SRAMUAP(0);
-	AXBS_PRS0 = 0x1032;
+  MCM_CR = MCM_CR_SRAMLAP(1) | MCM_CR_SRAMUAP(0);
+  AXBS_PRS0 = 0x1032;
 #endif
 
 #ifdef USE_FTM_TIMER
-	dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM0_CH0);
-	dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM0_CH1);
-	dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM0_CH2);
+  dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM0_CH0);
+  dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM0_CH1);
+  dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM0_CH2);
 #elif defined(KINETISK)
-	// route the edge detect interrupts to trigger the 3 channels
-	dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_PORTB);
-	dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_PORTC);
-	dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_PORTA);
+  // route the edge detect interrupts to trigger the 3 channels
+  dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_PORTB);
+  dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_PORTC);
+  dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_PORTA);
 #elif defined(KINETISL)
-	// route the timer interrupts to trigger the 3 channels
-	dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_OV);
-	dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_CH0);
-	dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_CH1);
+  // route the timer interrupts to trigger the 3 channels
+  dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_OV);
+  dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_CH0);
+  dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_CH1);
 #endif
 
-	// enable a done interrupts when channel #3 completes
-	dma3.attachInterrupt(isr);
-	//pinMode(9, OUTPUT); // testing: oscilloscope trigger
+  // enable a done interrupts when channel #3 completes
+  dma3.attachInterrupt(isr);
+  //pinMode(9, OUTPUT); // testing: oscilloscope trigger
 }
 
 void MonopodWS2811::isr(void)
@@ -966,7 +989,7 @@ void MonopodWS2811::show(void)
 
 void MonopodWS2811::setPixel(uint32_t num, int color)
 {
-	uint32_t strip, offset, mask;
+	uint32_t offset, mask;
 	uint8_t bit, *p;
 	
 	switch (params & 7) {
@@ -986,9 +1009,10 @@ void MonopodWS2811::setPixel(uint32_t num, int color)
 //	strip = num / stripLen;  // Cortex-M4 has 2 cycle unsigned divide :-)
 //	offset = num % stripLen;
 
-        strip = 1;
+        // strip = 5;
         offset = num;
-	bit = (1<<strip);
+	// bit = (1<<strip);
+	bit = ones;
 	p = ((uint8_t *)drawBuffer) + offset * 24;
 	for (mask = (1<<23) ; mask ; mask >>= 1) {
 		if (color & mask) {
@@ -1001,15 +1025,16 @@ void MonopodWS2811::setPixel(uint32_t num, int color)
 
 int MonopodWS2811::getPixel(uint32_t num)
 {
-	uint32_t strip, offset, mask;
+	uint32_t offset, mask;
 	uint8_t bit, *p;
 	int color=0;
 
 //	strip = num / stripLen;
 //	offset = num % stripLen;
-        strip = 2;
+        // strip = 5;
         offset = num;
-	bit = (1<<strip);
+	// bit = (1<<strip);
+	bit = ones;
 	p = ((uint8_t *)drawBuffer) + offset * 24;
 	for (mask = (1<<23) ; mask ; mask >>= 1) {
 		if (*p++ & bit) color |= mask;
@@ -1030,11 +1055,11 @@ int MonopodWS2811::getPixel(uint32_t num)
 	return color ^ 0xFFFFFF;
 }
 
+// TODO: rename to maxledsPerStrip
 const unsigned int ledsPerStrip = 100;
 DMAMEM int displayMemory[ledsPerStrip*6];
 int drawingMemory[ledsPerStrip*6];
-const int config = WS2811_800kHz;
-MonopodWS2811 monopodws(ledsPerStrip, displayMemory, drawingMemory, config);
+MonopodWS2811 monopodws;
 
 #endif
 
@@ -1076,7 +1101,18 @@ struct BladeSettings {
 
 // TODO: Support for alternate blade types
 // TODO: Support changing number of LEDs at runtime
-class Blade : CommandParser, Looper {
+
+class BladeBase {
+public:
+  virtual bool IsON() const = 0;
+  virtual void On() = 0;
+  virtual void Off() = 0;
+  virtual void Clash() = 0;
+  virtual void Lockup() = 0;
+  virtual float fps() const = 0;
+};
+
+class WS2811_Blade : public BladeBase, CommandParser, Looper {
 public:
   enum State {
     BLADE_OFF,
@@ -1086,17 +1122,35 @@ public:
     BLADE_TEST,
     BLADE_SHOWOFF,
   };
-  Blade() : CommandParser(), Looper(), state_(BLADE_OFF) {}
-  bool IsON() { return state_ != BLADE_OFF; }
-  void On() {
+  WS2811_Blade() : CommandParser(NOLINK), Looper(NOLINK), state_(BLADE_OFF) {
+    // TODO: colors should be set in in blade identify code.
+    settings_.set(0,0,255);
+    settings_.clash.set(255, 255, 255);
+  }
+  void Activate(int num_leds, uint8_t config) {
+    monopodws.begin(num_leds, displayMemory, drawingMemory, config);
+    monopodws.show();  // Make it black
+    CommandParser::Link();
+    Looper::Link();
+  }
+  bool IsON() const override { return state_ != BLADE_OFF; }
+  void On() override {
     state_ = BLADE_TURNING_ON;
     event_millis_ = millis();
     event_length_ = 200; // Guess
   }
-  void Off() {
+  void Off() override {
     state_ = BLADE_TURNING_OFF;
     event_millis_ = millis();
     event_length_ = 200; // Guess
+  }
+
+  void Clash() override { clash_=true; }
+  void Lockup() override {  }
+
+  float fps() const override {
+    if (!millis_sum_) return 0.0;
+    return updates_ * 1000.0 / millis_sum_;
   }
 
   bool Parse(const char* cmd, const char* arg) override {
@@ -1147,14 +1201,6 @@ public:
       return true;
     }
     return false;
-  }
-
-  void Clash() { clash_=true; }
-  void Lockup() {  }
-
-  float fps() {
-    if (!millis_sum_) return 0.0;
-    return updates_ * 1000.0 / millis_sum_;
   }
 
   BladeSettings settings_;
@@ -1249,21 +1295,115 @@ private:
   int millis_sum_ = 0;
 };
 
+class Simple_Blade : public BladeBase, CommandParser, Looper {
+public:
+  enum State {
+    BLADE_OFF,
+    BLADE_TURNING_ON,
+    BLADE_ON,
+    BLADE_TURNING_OFF,
+  };
+  Simple_Blade() : CommandParser(NOLINK), Looper(NOLINK), state_(BLADE_OFF) {
+  }
+  void Activate() {
+    analogWriteFrequency(bladePowerPin, 5000);
+    analogWriteFrequency(bladePin, 5000);
+    analogWrite(bladePowerPin, 0);  // make it black
+    analogWrite(bladePin, 0);   // Turn off FoC
+    CommandParser::Link();
+    Looper::Link();
+  }
+  bool IsON() const override { return state_ != BLADE_OFF; }
+  void On() override {
+    state_ = BLADE_TURNING_ON;
+    event_millis_ = millis();
+    event_length_ = 100;
+  }
+  void Off() override {
+    state_ = BLADE_TURNING_OFF;
+    event_millis_ = millis();
+    event_length_ = 100; // Guess
+  }
+
+  void Clash() override {
+    analogWrite(bladePin, 255);
+    clash_millis_ = millis();
+  }
+  void Lockup() override {  }
+
+  float fps() const override { return 0.0; }
+
+  bool Parse(const char* cmd, const char* arg) override {
+    if (!strcmp(cmd, "blade")) {
+      if (!strcmp(arg, "on")) {
+        On();
+        return true;
+      }
+      if (!strcmp(arg, "off")) {
+        Off();
+        return true;
+      }
+    }
+    return false;
+  }
+
+protected:
+  void Loop() override {
+    if (state_ == BLADE_OFF) return;
+    int thres = 256 * (millis() - event_millis_) / event_length_;
+    if (thres > 254) {
+      switch (state_) {
+	case BLADE_TURNING_ON:
+	  state_ = BLADE_ON;
+	  break;
+	case BLADE_TURNING_OFF:
+	  state_ = BLADE_OFF;
+	  break;
+	default: break;
+      }
+    }
+    
+    int level = 0;
+    switch (state_) {
+      case BLADE_OFF: level = 0;
+      case BLADE_TURNING_ON:
+	level = thres;
+	break;
+      case BLADE_TURNING_OFF:
+	level = 255 - thres;
+      case BLADE_ON:
+	level = 255;
+    }
+    analogWrite(bladePowerPin, level);
+
+    // TODO: support multiple flashes.
+    if (millis() - clash_millis_ > 10) {
+      analogWrite(bladePin, 0);
+    }
+  }
+  
+private:
+  State state_;
+  int clash_millis_;
+  int event_millis_;
+  int event_length_;
+};
+
 // Global settings:
 // Volume, Blade Style
 
-Blade blade;
+WS2811_Blade ws2811_blade;
+Simple_Blade simple_blade;
+BladeBase *blade;
 
 struct BladeID {
   enum BladeType {
     WS2811,   // Also called neopixels, usually in the form of "strips"
     PL9823,   // Same as WS2811, but turns blue when you turn them on, which means we need to
                  // avoid turning the BEC off when a blade of this type is connected. Bad for battery life.
+    SIMPLE,   // string or LED, with optional FoC
 #if 0
-    // The following are not yet implemented
-    STRING,   // Single LED or string
-    FLASH,    // One LED or string, with another led or string for flash-on-clash.
-
+    // Not yet supported
     // These would need to be hooked up through the prop shield, not pin 14.
     APA102,   // Similar to WS2811, but support much higher data rates, and uses two wires.
                  // BT_APA102 uses SPI to talk to the string.
@@ -1284,8 +1424,8 @@ struct BladeID {
 
 BladeID blades[] = {
   // ohms, blade type, leds
-  {   2600, BladeID::PL9823, 100 },
-  {  10000, BladeID::WS2811,  60 },
+  {   2600, BladeID::PL9823,  97 },
+//  {  10000, BladeID::WS2811,  60 },
 };
 
 // Support for uploading files in TAR format.
@@ -1662,7 +1802,7 @@ public:
     delay(10);             // allow time to wake up
 
     on_ = true;
-    blade.On();
+    blade->On();
     uint32_t delay = 0;
 #ifdef ENABLE_AUDIO
     poweron.Play();
@@ -1684,7 +1824,7 @@ public:
       scheduler.SetNextAction(Scheduler::NO_ACTION, 0);
     }
     poweroff.Play();
-    blade.Off();
+    blade->Off();
   }
 
   unsigned long last_clash = 0;
@@ -1695,7 +1835,7 @@ public:
     if (t - last_clash < 100) return;
     last_clash = t;
     clash.Play();
-    blade.Clash();
+    blade->Clash();
   }
 
 protected:
@@ -1900,7 +2040,7 @@ public:
       AudioProcessorUsageMaxReset();
 #endif
       Serial.print("Blade FPS: ");
-      Serial.println(blade.fps());
+      Serial.println(blade->fps());
       // TODO: List blade update speed
       return;
     }
@@ -2048,6 +2188,7 @@ Amplifier amplifier;
 #endif
 
 void setup() {
+  Serial.begin(9600);
   pinMode(bladeIdentifyPin, INPUT_PULLUP);
   pinMode(batteryLevelPin, INPUT_PULLUP);
 
@@ -2076,19 +2217,21 @@ void setup() {
   Serial.println(best_config);
 
   // TODO only activate monopodws if we have a WS2811-type blade
-  blade.settings_.set(0,0,255);
-  blade.settings_.clash.set(255, 255, 255);
-  monopodws.begin();
-  monopodws.show();
+  switch (blades[best_config].blade_type) {
+    case BladeID::PL9823:
+    case BladeID::WS2811:
+      ws2811_blade.Activate(blades[best_config].num_leds, WS2811_800kHz);
+      blade = &ws2811_blade;
+      break;
+    case BladeID::SIMPLE:
+      simple_blade.Activate();
+      blade = &simple_blade;
+  }
   
-  Serial.begin(9600);
-
 #ifdef ENABLE_AUDIO
   SerialFlashChip::begin(6);
   Effect::ScanSerialFlash();
 #endif
-
-  monopodws.show();
 
   Looper::DoSetup();
 
@@ -2108,7 +2251,7 @@ void loop() {
       !playSdWav1.isPlaying() &&
       digitalRead(amplifierPin) == LOW &&
 #endif
-      !Serial && !blade.IsON()) {
+      !Serial && !blade->IsON()) {
     if (millis() - last_activity > 1000) {
       Serial.println("Snoozing...");
       Snooze.sleep(snooze_config);
