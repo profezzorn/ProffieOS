@@ -1,5 +1,21 @@
 // Teensy Lightsaber Firmware
 //
+
+// TODO LIST:
+// Turn off blade power when not in use.
+// sdcard support
+// Audio work items:
+//   Make swing sounds!
+//   Background music mode.
+//   Support regular sound fonts.
+//   select clash from force
+// Support multiple sound fonts.
+// Implement menues:
+//    select sound font
+//    select color
+//    adjust volume
+// POV-writer mode
+
 // Feature defines, these let you turn off large blocks of code
 // used for debugging.
 #define ENABLE_AUDIO
@@ -81,6 +97,53 @@ const char version[] = "$Id$";
 
 enum NoLink { NOLINK = 17 };
 
+// Template for simple linked lists.
+// Classes that inherit from this template will be kept in a linked list which
+// we can iterate over. See Looper for an example below.
+template<class T> class LinkedList {
+protected:
+  void Link() {
+    next_ = all_;
+    all_ = this;
+  }
+  void Unlink() {
+    for (Looper** i = &all_; *i; i = &(*i)->next_) {
+      if (*i == this) {
+	*i = next_;
+	return;
+      }
+    }
+  }
+  LinkedList() { Link(); }
+
+  // Use this constructor if you wish to avoid getting linked
+  // into the linked list upon construction. Good for objects that
+  // are only optionally activated.
+  explicit LinkedList(NoLink _) { }
+  ~LinkedList() { Unlink(); }
+
+  static T* all_ = NULL;
+  T* next_;
+};
+
+#if 1
+// Helper class for classses that needs to be called back from the Loop() function.
+class Looper : LinkedList<Looper> {
+public:
+  Looper() : LinkedList<Looper>() {}
+  explicit Looper(NoLink _) : LinkedList<Looper>(_) { }
+
+  static void DoLoop() {
+    for (Looper *l = all_; l; l = l->next_) l->Loop();
+  }
+  static void DoSetup() {
+    for (Looper *l = all_; l; l = l->next_) l->Setup();
+  }
+protected:
+  virtual void Loop() = 0;
+  virtual void Setup() {}
+};
+#else
 // Helper class for classses that needs to be called back from the Loop() function.
 class Looper;
 Looper* loopers = NULL;
@@ -117,6 +180,7 @@ protected:
 private:
   Looper* next_looper_;
 };
+#endif
 
 // Command parsing linked list base class.
 class CommandParser;
@@ -152,7 +216,6 @@ protected:
 private:
   CommandParser* next_parser_;
 };
-
 
 // Debug printout helper class
 class Monitoring : Looper, CommandParser {
@@ -197,8 +260,10 @@ private:
 
 Monitoring monitor;
 
-// Helper functions & classes
+// Returns the decimals of a number, ie 12.2134 -> 0.2134
 float fract(float x) { return x - floor(x); }
+
+// clamp(x, a, b) makes sure that x is between a and b.
 float clamp(float x, float a, float b) {
   if (x < a) return a;
   if (x > b) return b;
@@ -518,6 +583,17 @@ EFFECT(stab);
 EFFECT(blaster);
 
 #ifdef ENABLE_WS2811
+// What follows is a copy of the OctoWS2811 library. It's been modified in 
+// the following ways:
+//
+//   1) It now only outputs data to one pin. (Which pin can be selected by
+//      changing the "ones" bitfield below.
+//   2) It has been modified to use the FTM timer to drive the DMA. This
+//      frees up a few pins, but locks PWM frequencies for many pins to 800kHz
+//   3) Number of LEDs and configuration is determined when you call begin()
+//      instead of in the constructor to make different blade configurations possible.
+
+
 /*  OctoWS2811 - High Performance WS2811 LED Display Library
     http://www.pjrc.com/teensy/td_libs_OctoWS2811.html
     Copyright (c) 2013 Paul Stoffregen, PJRC.COM, LLC
@@ -1099,9 +1175,10 @@ struct BladeSettings {
   }
 };
 
-// TODO: Support for alternate blade types
 // TODO: Support changing number of LEDs at runtime
 
+// Blade base class. All blades must implement these methods, but
+// of course they don't *have* to do anything.
 class BladeBase {
 public:
   virtual bool IsON() const = 0;
@@ -1112,6 +1189,9 @@ public:
   virtual float fps() const = 0;
 };
 
+// WS2811-type blade implementation.
+// Note that this class does nothing when first constructed. It only starts
+// interacting with pins and timers after Activate() is called.
 class WS2811_Blade : public BladeBase, CommandParser, Looper {
 public:
   enum State {
@@ -1295,6 +1375,9 @@ private:
   int millis_sum_ = 0;
 };
 
+// Simple blade, LED string or LED star with optional flash on clash.
+// Note that this class does nothing when first constructed. It only starts
+// interacting with pins and timers after Activate() is called.
 class Simple_Blade : public BladeBase, CommandParser, Looper {
 public:
   enum State {
@@ -1306,8 +1389,8 @@ public:
   Simple_Blade() : CommandParser(NOLINK), Looper(NOLINK), state_(BLADE_OFF) {
   }
   void Activate() {
-    analogWriteFrequency(bladePowerPin, 5000);
-    analogWriteFrequency(bladePin, 5000);
+    analogWriteFrequency(bladePowerPin, 2000);
+    analogWriteFrequency(bladePin, 2000);
     analogWrite(bladePowerPin, 0);  // make it black
     analogWrite(bladePin, 0);   // Turn off FoC
     CommandParser::Link();
@@ -1422,10 +1505,12 @@ struct BladeID {
   // Default sound font
 };
 
+
+// *USER CONFIGURATION*
 BladeID blades[] = {
   // ohms, blade type, leds
-  {   2600, BladeID::PL9823,  97 },
-//  {  10000, BladeID::WS2811,  60 },
+  {  2600, BladeID::PL9823,  97 },
+//  { 10000, BladeID::WS2811,  60 },
 };
 
 // Support for uploading files in TAR format.
@@ -1503,6 +1588,8 @@ class Tar {
     char block_[512];
 };
 
+// Scheduler class.
+// It can currently only keep track of one outstanding event.
 class Scheduler : Looper {
 public:
   enum Action {
@@ -1545,6 +1632,7 @@ protected:
 
 Scheduler scheduler;
 
+// Simple button handler. Keeps track of clicks and lengths of pushes.
 class Button : Looper, CommandParser {
 public:
   Button(int pin, const char* name)
@@ -1600,6 +1688,11 @@ protected:
   int push_millis_;
 };
 
+
+// What follows is a copy of the touch.c code from the TensyDuino core library.
+// That code originally implements the touchRead() function, I have modified it
+// to become a class instead. That way reading the touch sensor can be
+// initiated and polled without waiting around for it.
 
 /* Teensyduino Core Library
  * http://www.pjrc.com/teensy/
@@ -1788,6 +1881,9 @@ protected:
   int push_millis_;
 };
 
+
+// The Saber class implements the basic states and actions
+// for the saber.
 class Saber : CommandParser, Looper {
 public:
   Saber() : CommandParser(),
@@ -1872,6 +1968,8 @@ private:
 
 Saber saber;
 
+// Command-line parser. Easiest way to use it is to start the arduino
+// serial monitor.
 class Parser : Looper {
 public:
   enum Mode {
@@ -2064,6 +2162,8 @@ private:
 Parser parser;
 
 #ifdef ENABLE_MOTION
+
+// Simple 3D vector.
 class Vec3 {
 public:
   Vec3(){}
@@ -2075,6 +2175,9 @@ public:
   float x, y, z;
 };
 
+// Motion tracking. The NXPmotionsense library can supposedly do
+// full absolute motion tracking, but currently we're only using
+// the raw values from accelerometers and gyroscopes.
 class Orientation : Looper {
   public:
   Orientation() : Looper(), accel_(0.0f, 0.0f, 0.0f) {
@@ -2152,6 +2255,7 @@ Orientation orientation;
 
 
 #ifdef ENABLE_AUDIO
+// Turns off amplifier when no audio is played.
 // Maybe name this IdleHelper or something instead??
 class Amplifier : Looper {
 public:
