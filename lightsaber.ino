@@ -1,8 +1,29 @@
-// Teensy Lightsaber Firmware
-//
+/*  Teensy Lightsaber Firmware
+    http://fredrik.hubbe.net/lightsaber/teensy_saber.html
+    Copyright (c) 2016 Fredrik Hubinette
+    Additional copyright holders listed inline below.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+*/
+
 
 // TODO LIST:
-// Turn off blade power when not in use.
 // sdcard support
 // Audio work items:
 //   Make swing sounds!
@@ -16,39 +37,82 @@
 //    adjust volume
 // POV-writer mode
 
-// Feature defines, these let you turn off large blocks of code
-// used for debugging.
-#define ENABLE_AUDIO
-#define ENABLE_MOTION
-#define ENABLE_SNOOZE
-#define ENABLE_WS2811
+/*
+ * User configurable options below
+ * These options relate to alternate, but supported ways to hook everything up.
+ * For unsupported configurations, you're going to need to read the code below.
+ */
 
-// Use FTM timer for monopodws timing.
-#define USE_FTM_TIMER
-
-// Use the optimized SD_t3 sd library.
-#define USE_TEENSY3_OPTIMIZED_CODE
-
-#ifdef ENABLE_AUDIO
-#include <Audio.h>
-#include <AudioStream.h>
+// This struct defines the configuration for the available blades.
+struct BladeID {
+  enum BladeType {
+    WS2811,   // Also called neopixels, usually in the form of "strips"
+    PL9823,   // Same as WS2811, but turns blue when you turn them on, which means we need to
+                 // avoid turning the BEC off when a blade of this type is connected. Bad for battery life.
+    SIMPLE,   // string or LED, with optional FoC
+#if 0
+    // Not yet supported
+    // These would need to be hooked up through the prop shield, not pin 20.
+    APA102,   // Similar to WS2811, but support much higher data rates, and uses two wires.
+                 // BT_APA102 uses SPI to talk to the string.
 #endif
+  };
 
-#include <EEPROM.h>
-#include <SerialFlash.h>
-#include <SD.h>
-#include <SPI.h>
-#include <Wire.h>
-#include <math.h>
+  // Blade identify resistor value.
+  // Good values range from 1k to 100k
+  // Remember that precision can be +/- 10%, so don't
+  // choose values that are too close to each other.
+  int ohms;
+
+  BladeType blade_type;
+  int num_leds;
+  // Default color settings
+  // Default sound font
+};
+
+
+// List of blades.
+// If you only have one blade, the resistor value is irrelevant as it will always be selected.
+BladeID blades[] = {
+  // ohms, blade type, leds
+  {  2600, BladeID::PL9823,  97 },
+//  { 10000, BladeID::WS2811,  120 },
+};
+
+
+// If you use an N-channel FET instead of a level shifter to drive
+// neopixels, the high becomes low and vice versa, so the driving
+// logic needs to be inverted.
+// If you're using a FET or PEX, on pin 20, leave this defined.
+// If not, comment it out.
+// #define INVERT_WS2811
+
 
 // Teensy 3.2 pin map:
+// A lot of these can be changed, but be careful, because:
+//   o The pins used by the prop shield cannot be easily changed.
+//   o Pins that are going to control normal LEDs (not neopoxels) need PWM capability,
+//     and not all teensy pins can do PWM.
+//   o Touch input is not available on all pins.
+//   o Sdcard chip select pin depends on what shield you use.
+//   o Battery level and blade identification needs analog input, which is not possible
+//     on all pins.
+//
+// Note that while WS2811 leds/strips are being controlled, analogWriteFrequency() can only
+// be used on pins 3, 4, 25 & 32, on all others the analogWriteFrequency is locked to the
+// frequency of the WS2811 (usually 740kHz) which is not an approperiate frequency for
+// driving a FET. This limitation may change in future versions of this software, but for
+// now, if you want to drive a crystal chamber or other internal LEDs, I recommend using
+// the pins listed above to get a reasonable PWM frequency.
+//
+// See the teensy 3.2 pinout diagram for more info: https://www.pjrc.com/teensy/pinout.html
 enum SaberPins {
   // Bottom edge (in pin-out diagram)
-  freePin0 = 0,                   // FREE (reserve for serial?)
-  freePin1 = 1,                   // FREE (reserve for serial?)
+  sdCardSelectPin = 0,            // SD card chip (sd card adapter)
+  freePin1 = 1,                   // FREE
   motionSensorInterruptPin = 2,   // motion sensor interrupt (prop shield)
   freePin3 = 3,                   // FREE
-  sdCardSelectPin = 4,            // SD card chip select (Wiz820+SD)
+  freePin4 = 4,                   // FREE (make this sdCardSelectPin if you're using a Wiz820+SD shield)
   amplifierPin = 5,               // Amplifier enable pin (prop shield)
   serialFlashSelectPin = 6,       // serial flash chip select (prop shield)
   spiLedSelect = 7,               // APA102/dotstar chip select (prop shield)
@@ -72,12 +136,35 @@ enum SaberPins {
   freePin23 = 23,                 // FREE
 };
 
-// analogRead(0 doesn't use the same pin numbers as digitalRead/digitalWrite, so
-// here are the pins used with analogRead()
-enum AnalogSaberPins {
-  batteryLevelAnalogPin = 0,    // digital pin 14
-  bladeIdentifyAnalogPin = 7,   // digital pin 21
-};
+/*
+ * USER CONFIGURABLE OPTIONS END HERE
+ */
+
+// Feature defines, these let you turn off large blocks of code
+// used for debugging.
+#define ENABLE_AUDIO
+//#define ENABLE_MOTION
+//#define ENABLE_SNOOZE
+#define ENABLE_WS2811
+
+// Use FTM timer for monopodws timing.
+#define USE_FTM_TIMER
+
+// For better playback go enable this define.
+// (Not here, but in SD.h)
+// #define USE_TEENSY3_OPTIMIZED_CODE
+
+#ifdef ENABLE_AUDIO
+#include <Audio.h>
+#include <AudioStream.h>
+#endif
+
+#include <EEPROM.h>
+#include <SerialFlash.h>
+#include <SD.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <math.h>
 
 #ifdef ENABLE_MOTION
 #include <NXPMotionSense.h>
@@ -95,6 +182,18 @@ SnoozeBlock snooze_config;
 
 const char version[] = "$Id$";
 
+// Note, you cannot have two YIELD() on the same line.
+#define YIELD() do { next_state_ = __LINE__; return; case __LINE__: break; } while(0)
+#define SLEEP(MILLIS) do { sleep_until_ = millis() + (MILLIS); while (millis() < sleep_until_) YIELD(); } while(0)
+#define STATE_MACHINE_BEGIN() switch(next_state_) { case -1:
+#define STATE_MACHINE_END() }
+
+class StateMachine {
+protected:
+  int next_state_ = -1;
+  uint32_t sleep_until_ = 0;
+};
+
 enum NoLink { NOLINK = 17 };
 
 // Template for simple linked lists.
@@ -104,10 +203,10 @@ template<class T> class LinkedList {
 protected:
   void Link() {
     next_ = all_;
-    all_ = this;
+    all_ = (T*)this;
   }
   void Unlink() {
-    for (Looper** i = &all_; *i; i = &(*i)->next_) {
+    for (T** i = &all_; *i; i = &(*i)->next_) {
       if (*i == this) {
 	*i = next_;
 	return;
@@ -122,13 +221,13 @@ protected:
   explicit LinkedList(NoLink _) { }
   ~LinkedList() { Unlink(); }
 
-  static T* all_ = NULL;
+  static T* all_;
   T* next_;
 };
 
-#if 1
+#if 0
 // Helper class for classses that needs to be called back from the Loop() function.
-class Looper : LinkedList<Looper> {
+class Looper : public LinkedList<Looper> {
 public:
   Looper() : LinkedList<Looper>() {}
   explicit Looper(NoLink _) : LinkedList<Looper>(_) { }
@@ -297,8 +396,10 @@ public:
 
 class ClickAvoiderLin {
 public:
+  ClickAvoiderLin() : speed_(0) { }
   ClickAvoiderLin(uint32_t speed) : speed_(speed) { }
   void set_target(uint32_t target) { target_ = target; }
+  void set_speed(uint32_t speed) { speed_ = speed; }
   void set(uint16_t v) { current_ = v; }
   uint32_t value() const {return current_; }
   void advance() {
@@ -313,13 +414,58 @@ public:
     }
   }
 
-  const uint32_t speed_;
+  uint32_t speed_;
   uint32_t current_;
   uint32_t target_;
 };
 
 struct WaveForm {
   int16_t table_[1024];
+};
+
+template<int N> class AudioDynamicMixer : public AudioStream {
+public:
+private:
+  AudioDynamicMixer() :
+    AudioStream(N, inputQueueArray),
+    volume_(32768 / 200) {
+  }
+  void update() override {
+    audio_block_t tmp[N];
+    size_t volumes[N];
+    for (int i = 0; i < N; i++) {
+      tmp[i] = receiveReadOnly(i);
+      if (tmp[i]) {
+	size_t sum = 0;
+	for (size_t j = 0; j < AUDIO_BLOCK_SAMPLES; j++) {
+	  sum += abs(tmp[i]->data[j]);
+	}
+	volumes[i] = sum / AUDIO_BLOCK_SAMPLES;
+      }
+    }
+    size_t total = 0;
+    for (int i = 0; i < N; i++) {
+      // Gain needed?
+      total += volumes[i];
+    }
+    size_t target = 10000;
+    if (total < target) {
+      volume_.set_target(1 << 15);
+    } else {
+      volume_.set_target(32768 * target / total);
+    }
+    audio_block_t *out = allocate();
+    for (size_t j = 0; j < AUDIO_BLOCK_SAMPLES; j++) {
+      int32_t v = 0;
+      for (int i = 0; i < N; i++) v += tmp[i]->data[j];
+      v = (v * (int32_t)volume_.value()) >> 15;
+      volume_.advance();
+      v = clampi32(v, -32768, 32767);
+      out->data[j] = v;
+    }
+  }
+  audio_block_t *inputQueueArray[N];
+  ClickAvoiderLin volume_;
 };
 
 struct WaveFormSampler {
@@ -501,7 +647,13 @@ class Effect {
     reset();
   }
 
-  void reset() { files_found_ = 0; }
+  void reset() {
+    min_file_ = 20000;
+    max_file_ = -1;
+    digits_ = 0;
+    unnumbered_file_found_ = false;
+
+  }
   void Parse(const char *filename) {
     size_t len = strlen(name_);
     if (memcmp(filename, name_, len)) {
@@ -510,20 +662,36 @@ class Effect {
 
     int n = -1;
     if (filename[len] == '.') {
-      n = 1;
+      unnumbered_file_found_ = true;
     } else {
-      n = strtol(filename + len, NULL, 0);
+      char *end;
+      n = strtol(filename + len, &end, 0);
       if (n <= 0) return;
+      max_file_ = max(max_file_, n);
+      min_file_ = min(min_file_, n);
+      if (filename[len] == '0') {
+	digits_ = end - filename + len;
+      }
     }
-    files_found_ = max(files_found_, n);
   }
 
   void Show() {
     Serial.print("Found ");
-    Serial.print(files_found_);
-    Serial.print(" '");
     Serial.print(name_);
-    Serial.println("' sounds.");
+    Serial.print(" files ");
+    Serial.print(min_file_);
+    Serial.print("-");
+    Serial.print(max_file_);
+    if (digits_) {
+      Serial.print(" using ");
+      Serial.print(digits_);
+      Serial.print(" digits");
+    }
+    if (unnumbered_file_found_) {
+      Serial.print(" + ");
+      Serial.print(" one unnumbered file");
+    }
+    Serial.println("");
   }
 
   static void ShowAll() {
@@ -532,19 +700,40 @@ class Effect {
     }
   }
 
+  size_t files_found() const {
+    size_t ret = 0;
+    if (min_file_ <= max_file_) {
+      ret += max_file_ - min_file_ + 1;
+    }
+    if (unnumbered_file_found_) {
+      ret ++;
+    }
+    return ret;
+  }
+
+
   bool Play() {
 #ifdef ENABLE_AUDIO
-    if (files_found_ < 0) return false;
-    int n = 0;
-    if (files_found_ > 0) {
-      n = rand() % files_found_;
-    }
+    int num_files = files_found();
+    if (num_files < 1) return false;
+    int n = rand() % num_files;
     char filename[150];
     strcpy(filename, name_);
-    if (n > 0) {
+    n += min_file_;
+    // n can be max_file_ + 1, which means pick the file without digits.
+    if (n <= max_file_) {
       char buf[12];
-      strcat(filename, itoa(n + 1, buf, 10));
+      itoa(n, buf, 10);
+      char *j = filename + strlen(filename);
+      int num_digits = strlen(buf);
+      while (num_digits < digits_) {
+	*j = '0';
+	++j;
+	num_digits++;
+      }
+      memcpy(j, buf, strlen(buf) + 1);
     }
+
     strcat(filename, ".raw");
     Serial.print("Playing ");
     Serial.println(filename);
@@ -568,7 +757,20 @@ class Effect {
 
 private:
   Effect* next_;
-  int files_found_;
+
+  // Minimum file number.
+  int min_file_;
+
+  // Maximum file number.
+  int max_file_;
+
+  // Leading zeroes are used to make it this many digits.
+  int digits_;
+
+  // If true. there is an un-numbered file as well.
+  bool unnumbered_file_found_;
+
+  // All files must start with this prefix.
   const char* name_;
 };
 
@@ -778,6 +980,14 @@ void setFTM_Timer(uint8_t ch1, uint8_t ch2, float frequency)
   //with 96MHz Teensy: prescale 0, mod 59, ftmClockSource 1, cval1 14, cval2 41
 }
 
+#ifdef INVERT_WS2811
+#define WS2811_PORT_CLEAR GPIOD_PSOR
+#define WS2811_PORT_SET   GPIOD_PCOR
+#else
+#define WS2811_PORT_CLEAR GPIOD_PCOR
+#define WS2811_PORT_SET   GPIOD_PSOR
+#endif
+
 void MonopodWS2811::begin(uint32_t numPerStrip,
 			  void *frameBuf,
 			  void *drawBuf,
@@ -801,7 +1011,7 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
   }
 	
   // configure the 8 output pins
-  GPIOD_PCOR = ones;
+  WS2811_PORT_CLEAR = ones;
   if (ones & 1)   pinMode(2, OUTPUT);	// strip #1
   if (ones & 2)   pinMode(14, OUTPUT);	// strip #2
   if (ones & 4)   pinMode(7, OUTPUT);	// strip #3
@@ -822,6 +1032,7 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
       frequency = 740000;
       break;
   }
+  frequency = 580000;
 
 #ifdef USE_FTM_TIMER
   setFTM_Timer(t0h, t1h, frequency);
@@ -876,23 +1087,23 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
 
 #endif  // USE_FTM_TIMER
 
-	// DMA channel #1 sets WS2811 high at the beginning of each cycle
+  // DMA channel #1 sets WS2811 high at the beginning of each cycle
   dma1.source(ones);
-  dma1.destination(GPIOD_PSOR);
+  dma1.destination(WS2811_PORT_SET);
   dma1.transferSize(1);
   dma1.transferCount(bufsize);
   dma1.disableOnCompletion();
 
   // DMA channel #2 writes the pixel data at 20% of the cycle
   dma2.sourceBuffer((uint8_t *)frameBuffer, bufsize);
-  dma2.destination(GPIOD_PCOR);
+  dma2.destination(WS2811_PORT_CLEAR);
   dma2.transferSize(1);
   dma2.transferCount(bufsize);
   dma2.disableOnCompletion();
 
   // DMA channel #3 clear all the pins low at 48% of the cycle
   dma3.source(ones);
-  dma3.destination(GPIOD_PCOR);
+  dma3.destination(WS2811_PORT_CLEAR);
   dma3.transferSize(1);
   dma3.transferCount(bufsize);
   dma3.disableOnCompletion();
@@ -1132,7 +1343,7 @@ int MonopodWS2811::getPixel(uint32_t num)
 }
 
 // TODO: rename to maxledsPerStrip
-const unsigned int ledsPerStrip = 100;
+const unsigned int ledsPerStrip = 200;
 DMAMEM int displayMemory[ledsPerStrip*6];
 int drawingMemory[ledsPerStrip*6];
 MonopodWS2811 monopodws;
@@ -1199,6 +1410,7 @@ public:
     BLADE_TURNING_ON,
     BLADE_ON,
     BLADE_TURNING_OFF,
+    BLADE_ALMOST_OFF,
     BLADE_TEST,
     BLADE_SHOWOFF,
   };
@@ -1208,6 +1420,8 @@ public:
     settings_.clash.set(255, 255, 255);
   }
   void Activate(int num_leds, uint8_t config) {
+    pinMode(bladePowerPin, OUTPUT);
+    digitalWrite(bladePowerPin, LOW);
     monopodws.begin(num_leds, displayMemory, drawingMemory, config);
     monopodws.show();  // Make it black
     CommandParser::Link();
@@ -1215,6 +1429,8 @@ public:
   }
   bool IsON() const override { return state_ != BLADE_OFF; }
   void On() override {
+    digitalWrite(bladePowerPin, HIGH);
+    delay(10);
     state_ = BLADE_TURNING_ON;
     event_millis_ = millis();
     event_length_ = 200; // Guess
@@ -1288,11 +1504,12 @@ public:
 protected:
   void Loop() override {
     if (monopodws.busy()) return;
-    monopodws.show();
     if (state_ == BLADE_OFF) {
+      digitalWrite(bladePowerPin, LOW);
       last_millis_ = 0;
       return;
     }
+    monopodws.show();
     int m = millis();
     if (last_millis_) {
       millis_sum_ += m - last_millis_;
@@ -1310,6 +1527,9 @@ protected:
 	  state_ = BLADE_ON;
 	  break;
 	case BLADE_TURNING_OFF:
+	  state_ = BLADE_ALMOST_OFF;
+	  break;
+	case BLADE_ALMOST_OFF:
 	  state_ = BLADE_OFF;
 	  break;
         default: break;
@@ -1341,7 +1561,10 @@ protected:
           }
           break;
         }
-        case BLADE_OFF: c = Color();
+        case BLADE_OFF:
+        case BLADE_ALMOST_OFF:
+	  c = Color();
+	  break;
 	case BLADE_TURNING_ON: {
 	  int x = i * 256 - thres;
 	  if (x > 256) c = Color();
@@ -1479,40 +1702,6 @@ WS2811_Blade ws2811_blade;
 Simple_Blade simple_blade;
 BladeBase *blade;
 
-struct BladeID {
-  enum BladeType {
-    WS2811,   // Also called neopixels, usually in the form of "strips"
-    PL9823,   // Same as WS2811, but turns blue when you turn them on, which means we need to
-                 // avoid turning the BEC off when a blade of this type is connected. Bad for battery life.
-    SIMPLE,   // string or LED, with optional FoC
-#if 0
-    // Not yet supported
-    // These would need to be hooked up through the prop shield, not pin 14.
-    APA102,   // Similar to WS2811, but support much higher data rates, and uses two wires.
-                 // BT_APA102 uses SPI to talk to the string.
-#endif
-  };
-
-  // Blade identify resistor value.
-  // Good values range from 1k to 100k
-  // Remember that precision is typically +/- 5%, so don't
-  // choose values that are too close to each other.
-  int ohms;
-
-  BladeType blade_type;
-  int num_leds;
-  // Default color settings
-  // Default sound font
-};
-
-
-// *USER CONFIGURATION*
-BladeID blades[] = {
-  // ohms, blade type, leds
-  {  2600, BladeID::PL9823,  97 },
-//  { 10000, BladeID::WS2811,  60 },
-};
-
 // Support for uploading files in TAR format.
 class Tar {
   public:
@@ -1627,11 +1816,14 @@ public:
     next_action_ = action;
   }
 protected:
-  void Loop() override { CheckNext(); }
+  void Loop() override {
+    CheckNext();
+  }
 };
 
 Scheduler scheduler;
 
+#if 1
 // Simple button handler. Keeps track of clicks and lengths of pushes.
 class Button : Looper, CommandParser {
 public:
@@ -1687,7 +1879,92 @@ protected:
   bool clicked_;
   int push_millis_;
 };
+#else
 
+class Button {
+public:
+  virtual bool Read() = 0;
+};
+
+class DebouncedButton : Button, StateMachine {
+public:
+  void Update() {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+      while (!Button::Read()) YIELD();
+      pushed_ = true;
+      SLEEP(10);
+      while (Button::Read()) YIELD();
+      pushed_ = false;
+      SLEEP(10);
+    }
+    STATE_MACHINE_END();
+  }
+  bool DebouncedRead() {
+    Update();
+    return pushed_;
+  }
+
+private:
+  bool pushed = false;
+};
+
+// Simple button handler. Keeps track of clicks and lengths of pushes.
+class Button : Looper, CommandParser, DebouncedButton, StateMachine {
+public:
+  Button(int pin, const char* name)
+    : Looper(),
+      CommandParser(),
+      pin_(pin),
+      name_(name),
+      pushed_(false),
+      clicked_(false),
+      push_millis_(0) {
+    pinMode(pin, INPUT_PULLUP);
+#ifdef ENABLE_SNOOZE
+    snooze_config.pinMode(pin, INPUT_PULLUP, RISING);
+#endif
+  }
+  int pushed_millis() {
+    if (pushed_) return millis() - push_millis_;
+    return 0;
+  }
+  bool clicked() {
+    bool ret = clicked_;
+    clicked_ = false;
+    return ret;
+  }
+protected:
+  void Loop() {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+      while (!DebouncedRead()) YIELD();
+      pushed_ = true;
+      push_millis_ = millis();
+      while (DebouncedRead()) YIELD();
+      pushed_ = false;
+      if (millis() - push_millis_ < 500) {
+	clicked_ = true;
+      }
+    }
+    STATE_MACHINE_END();
+  }
+  bool Parse(const char* cmd, const char* arg) override {
+    if (!strcmp(cmd, name_)) {
+      clicked_ = true;
+      return true;
+    }
+    return false;
+  }
+
+  uint8_t pin_;
+  const char* name_;
+  bool pushed_;
+  bool clicked_;
+  int push_millis_;
+};
+
+#endif
 
 // What follows is a copy of the touch.c code from the TensyDuino core library.
 // That code originally implements the touchRead() function, I have modified it
@@ -1970,32 +2247,31 @@ Saber saber;
 
 // Command-line parser. Easiest way to use it is to start the arduino
 // serial monitor.
-class Parser : Looper {
+class Parser : Looper, StateMachine {
 public:
   enum Mode {
     ModeCommand,
     ModeDecode
   };
-  Parser() : Looper(), len_(0), mode_(ModeCommand), do_print_welcome_(true) {}
+  Parser() : Looper(), len_(0), mode_(ModeCommand) {}
 
   void Loop() override {
-    if (!Serial) {
-      do_print_welcome_ = true;
-      return;
-    }
-    if (do_print_welcome_) {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+      while (!Serial) YIELD();
       Serial.println("Welcome to TeensySaber, type 'help' for more info.");
-      do_print_welcome_ = false;
+      
+      while (Serial) {
+	while (!Serial.available()) YIELD();
+	int c = Serial.read();
+	if (c < 0) { len_ = 0; break; }
+	if (c == '\n') { Parse(); len_ = 0; continue; }
+	cmd_[len_] = c;
+	cmd_[len_ + 1] = 0;
+	if (len_ + 1 < (int)sizeof(cmd_)) len_++;
+      }
     }
-
-    while (Serial.available() > 0) {
-      int c = Serial.read();
-      if (c < 0) { len_ = 0; break; }
-      if (c == '\n') { Parse(); len_ = 0; continue; }
-      cmd_[len_] = c;
-      cmd_[len_ + 1] = 0;
-      if (len_ + 1 < (int)sizeof(cmd_)) len_++;
-    }
+    STATE_MACHINE_END();
   }
 
   void Parse() {
@@ -2095,6 +2371,17 @@ public:
       Serial.println("Done listing files.");
       return;
     }
+    if (!strcmp(cmd, "sd")) {
+      File dir = SD.open(e ? e : "/");
+      while (File f = dir.openNextFile()) {
+	Serial.print(f.name());
+	Serial.print(" ");
+	Serial.println(f.size());
+	f.close();
+      }
+      Serial.println("Done listing files.");
+      return;
+    }
     if (!strcmp(cmd, "effects")) {
       Effect::ShowAll();
       return;
@@ -2156,7 +2443,6 @@ private:
   int len_;
   Mode mode_;
   char cmd_[256];
-  bool do_print_welcome_;
 };
 
 Parser parser;
@@ -2257,9 +2543,9 @@ Orientation orientation;
 #ifdef ENABLE_AUDIO
 // Turns off amplifier when no audio is played.
 // Maybe name this IdleHelper or something instead??
-class Amplifier : Looper {
+class Amplifier : Looper, StateMachine {
 public:
-  Amplifier() : Looper(), do_print_amp_off_(false) {}
+  Amplifier() : Looper() {}
 protected:
   void Setup() override {
     // Audio setup
@@ -2269,23 +2555,25 @@ protected:
     delay(10);
   }
 
-  void Loop() override {
-    if (!saber_synth.on_ && !playFlashRaw1.isPlaying() && !playSdWav1.isPlaying()) {
-    // Make sure audio has actually settled.
-    if (do_print_amp_off_) {
-      Serial.println("Amplifier off.");
-      do_print_amp_off_ = false;
-    }
-    delay(20);
-    digitalWrite(amplifierPin, LOW); // turn the amplifier off
-    // Make sure amplifier settles.
-    delay(20);
-    } else {
-      do_print_amp_off_ = true;
-    }
+  bool Active() {
+    if (saber_synth.on_) return true;
+    if (playFlashRaw1.isPlaying()) return true;
+    if (playSdWav1.isPlaying()) return true;
+    return false;
   }
-private:
-  bool do_print_amp_off_;
+
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+      while (Active()) YIELD();
+      SLEEP(20);
+      if (Active()) continue;
+      Serial.println("Amplifier off.");
+      digitalWrite(amplifierPin, LOW); // turn the amplifier off
+      while (!Active()) YIELD();
+    }
+    STATE_MACHINE_END();
+  }
 };
 
 Amplifier amplifier;
@@ -2293,14 +2581,15 @@ Amplifier amplifier;
 
 void setup() {
   Serial.begin(9600);
+  Serial.println("GO");
   pinMode(bladeIdentifyPin, INPUT_PULLUP);
   pinMode(batteryLevelPin, INPUT_PULLUP);
 
   delayMicroseconds(10);
 
   // Time to identify the blade.
-  int blade_id = analogRead(bladeIdentifyAnalogPin);
-  float volts = blade_id * 3.3 / 1024.0;  // Volts at bladeIdentifyAnalogPin
+  int blade_id = analogRead(bladeIdentifyPin);
+  float volts = blade_id * 3.3 / 1024.0;  // Volts at bladeIdentifyPin
   float amps = (3.3 - volts) / 33000;     // Pull-up is 33k
   float resistor = volts / amps;
 
@@ -2323,22 +2612,35 @@ void setup() {
   // TODO only activate monopodws if we have a WS2811-type blade
   switch (blades[best_config].blade_type) {
     case BladeID::PL9823:
-    case BladeID::WS2811:
       ws2811_blade.Activate(blades[best_config].num_leds, WS2811_800kHz);
+      blade = &ws2811_blade;
+      break;
+    case BladeID::WS2811:
+      ws2811_blade.Activate(blades[best_config].num_leds,
+          WS2811_800kHz | WS2811_GRB);
       blade = &ws2811_blade;
       break;
     case BladeID::SIMPLE:
       simple_blade.Activate();
       blade = &simple_blade;
   }
+
   
 #ifdef ENABLE_AUDIO
   SerialFlashChip::begin(6);
+  if (!SD.begin(sdCardSelectPin)) {
+    Serial.println("No sdcard found.");
+  } else {
+    Serial.println("Sdcard found..");
+  }
+
   Effect::ScanSerialFlash();
 #endif
 
+  Serial.println("DoSetup()");
   Looper::DoSetup();
 
+  Serial.println("Play()");
   boot.Play();  
 }
 
