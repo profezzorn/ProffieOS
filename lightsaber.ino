@@ -76,7 +76,7 @@ struct BladeID {
 // If you only have one blade, the resistor value is irrelevant as it will always be selected.
 BladeID blades[] = {
   // ohms, blade type, leds, default font directory
-  {  2600, BladeID::PL9823,  97, "font01" },
+  {  69000, BladeID::PL9823,  97, "font01" },
 //  { 10000, BladeID::WS2811,  120 },
 };
 
@@ -156,13 +156,10 @@ enum SaberPins {
 // (Not here, but in SD.h)
 // #define USE_TEENSY3_OPTIMIZED_CODE
 
-#ifdef ENABLE_AUDIO
-#include <Audio.h>
-#include <AudioStream.h>
-#endif
-
+#include <Arduino.h>
 #include <EEPROM.h>
 #include <SerialFlash.h>
+#include <DMAChannel.h>
 #include <SD.h>
 #include <SPI.h>
 #include <Wire.h>
@@ -203,53 +200,6 @@ protected:
 
 enum NoLink { NOLINK = 17 };
 
-// Template for simple linked lists.
-// Classes that inherit from this template will be kept in a linked list which
-// we can iterate over. See Looper for an example below.
-template<class T> class LinkedList {
-protected:
-  void Link() {
-    next_ = all_;
-    all_ = (T*)this;
-  }
-  void Unlink() {
-    for (T** i = &all_; *i; i = &(*i)->next_) {
-      if (*i == this) {
-        *i = next_;
-        return;
-      }
-    }
-  }
-  LinkedList() { Link(); }
-
-  // Use this constructor if you wish to avoid getting linked
-  // into the linked list upon construction. Good for objects that
-  // are only optionally activated.
-  explicit LinkedList(NoLink _) { }
-  ~LinkedList() { Unlink(); }
-
-  static T* all_;
-  T* next_;
-};
-
-#if 0
-// Helper class for classses that needs to be called back from the Loop() function.
-class Looper : public LinkedList<Looper> {
-public:
-  Looper() : LinkedList<Looper>() {}
-  explicit Looper(NoLink _) : LinkedList<Looper>(_) { }
-
-  static void DoLoop() {
-    for (Looper *l = all_; l; l = l->next_) l->Loop();
-  }
-  static void DoSetup() {
-    for (Looper *l = all_; l; l = l->next_) l->Setup();
-  }
-protected:
-  virtual void Loop() = 0;
-  virtual void Setup() {}
-};
-#else
 // Helper class for classses that needs to be called back from the Loop() function.
 class Looper;
 Looper* loopers = NULL;
@@ -286,7 +236,6 @@ protected:
 private:
   Looper* next_looper_;
 };
-#endif
 
 // Command parsing linked list base class.
 class CommandParser;
@@ -322,6 +271,54 @@ protected:
 private:
   CommandParser* next_parser_;
 };
+
+class SaberBase;
+SaberBase* saberbases = NULL;
+
+class SaberBase {
+public:
+  void Link() {
+    next_saber_ = saberbases;
+    saberbases = this;
+  }
+  void Unlink() {
+    for (SaberBase** i = &saberbases; *i; i = &(*i)->next_saber_) {
+      if (*i == this) {
+        *i = next_saber_;
+        return;
+      }
+    }
+  }
+
+  SaberBase() { Link(); }
+  explicit SaberBase(NoLink _) {}
+  ~SaberBase() { Unlink(); }
+
+
+#define SABERFUN(NAME, TYPED_ARGS, ARGS)			\
+public:								\
+  static void Do##NAME TYPED_ARGS {				\
+    for (SaberBase *p = saberbases; p; p = p->next_saber_) {	\
+      p->NAME ARGS;						\
+    }								\
+  }								\
+protected:							\
+  virtual void NAME TYPED_ARGS {}
+
+  SABERFUN(Clash, (), ());
+  SABERFUN(Stab, (), ());
+  SABERFUN(On, (), ());
+  SABERFUN(Off, (), ());
+  SABERFUN(Lockup, (), ());
+  SABERFUN(Force, (), ());
+  SABERFUN(Swing, (), ());
+  SABERFUN(Top, (), ());
+  SABERFUN(IsOn, (bool* on), (on));
+
+private:
+  SaberBase* next_saber_;
+};
+
 
 // Debug printout helper class
 class Monitoring : Looper, CommandParser {
@@ -391,24 +388,6 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
 
 #ifdef ENABLE_AUDIO
 
-#if 0
-class ClickAvoiderExp {
-public:
-  ClickAvoiderExp(float speed) : speed_(32768 * speed) {}
-  void set(uint16_t target) { target_ = target; }
-  uint16_t value() const {
-    return current_;
-  }
-  void advance() {
-    current_ = (current_ * (32768-speed_) + target_ * speed_) >> 15;
-  }
-
-  const uint16_t speed_;
-  uint16_t current_;
-  uint16_t target_;
-};
-#endif
-
 class ClickAvoiderLin {
 public:
   ClickAvoiderLin() : speed_(0) { }
@@ -452,212 +431,13 @@ struct WaveFormSampler {
 };
 
 
-#ifdef OLD_AUDIO_CODE
-template<int N> class AudioDynamicMixer : public AudioStream {
-public:
-  AudioDynamicMixer() :
-    AudioStream(N, inputQueueArray),
-    volume_(32768 / 200) {
-  }
-  void update() override {
-    audio_block_t tmp[N];
-    size_t volumes[N];
-    for (int i = 0; i < N; i++) {
-      tmp[i] = receiveReadOnly(i);
-      if (tmp[i]) {
-        size_t sum = 0;
-        for (size_t j = 0; j < AUDIO_BLOCK_SAMPLES; j++) {
-          sum += abs(tmp[i]->data[j]);
-        }
-        volumes[i] = sum / AUDIO_BLOCK_SAMPLES;
-      }
-    }
-    size_t total = 0;
-    for (int i = 0; i < N; i++) {
-      // Gain needed?
-      total += volumes[i];
-    }
-    size_t target = 10000;
-    if (total < target) {
-      volume_.set_target(1 << 15);
-    } else {
-      volume_.set_target(32768 * target / total);
-    }
-    audio_block_t *out = allocate();
-    for (size_t j = 0; j < AUDIO_BLOCK_SAMPLES; j++) {
-      int32_t v = 0;
-      for (int i = 0; i < N; i++) v += tmp[i]->data[j];
-      v = (v * (int32_t)volume_.value()) >> 15;
-      volume_.advance();
-      v = clampi32(v, -32768, 32767);
-      out->data[j] = v;
-    }
-  }
-  audio_block_t *inputQueueArray[N];
-  ClickAvoiderLin volume_;
-};
-
-#if 0
-class AudioEffectUpsample : public AudioStream {
-public:
-  AudioEffectUpsample() : AudioStream(1, inputQueueArray) {
-    
-  }
-  void Emit(int16_t sample) {
-    output_block_->data[output_pos_++] = sample;
-    if (output_pos_ == AUDIO_BLOCK_SAMPLES) {
-      transmit(output_block_);
-      release(output_block_);
-      output_block_ = allocate();
-      output_pos_ = 0;
-    }
-  }
-  void Ingest(int16_t sample) {
-    buffer_[pos_] = sample;
-    pos_++;
-    if (pos_ == sizeof(buffer_) / sizeof(buffer_[0])) {
-      memcpy(buffer_, buffer_ + 60, 8);
-      pos_ -= 60;
-    }
-    Emit(sample);
-    Emit((sample * C1 + buf_[pos_-1] * C2 + buf_[pos-2] * C2 + buf_[pos-3] * C1) >> 15);
-  }
-  virtual void update() {
-    audio_block_t *block;
-
-      block = receiveReadOnly();
-      if (!block) return;
-      for (int i=0; i < AUDIO_BLOCK_SAMPLES; i++)
-        Ingest(block->data[i]);
-      release(block);
-    }
-  }
-private:
-  size_t out_pos_;
-  audio_block_t* output_block_;
-  audio_block_t* inputQueueArray[1];
-  int16_t buffer_[64];
-  size_t pos_;
-};
-#endif
-
-class AudioSynthLightSaber : public AudioStream, Looper {
-public:
-  WaveForm sin_a_;
-  WaveForm sin_b_;
-  WaveForm buzz_;
-  WaveForm humm_;
-  WaveFormSampler sin_sampler_a_hi_;
-  WaveFormSampler sin_sampler_a_lo_;
-  WaveFormSampler sin_sampler_b_;
-  WaveFormSampler buzz_sampler_;
-  WaveFormSampler humm_sampler_hi_;
-  WaveFormSampler humm_sampler_lo_;
-  ClickAvoiderLin volume_;
-
-  // For debug monitoring..
-  int32_t last_value = 0;
-  int32_t last_prevolume_value = 0;
-  
-  volatile bool on_ = false;
-
-  float si(float x) { return sin(fract(x) * M_PI * 2.0); }
-//  float sc(float x) { return clamp(si(x), -0.707, 0.707); }
-  float sc(float x) { return clamp(si(x), -0.6, 0.6); }
-  float buzz(float x) {
-    x = fract(x) * 10.0;
-    return sin(exp(2.5 - x) - 0.2);
-  }
-  float humm(float x) {
-    return sc(x)*0.75 + si(x * 2.0)*0.75/2;
-  }
-
-  AudioSynthLightSaber() : AudioStream(0, NULL),
-  sin_sampler_a_hi_(sin_a_),
-  sin_sampler_a_lo_(sin_a_),
-  sin_sampler_b_(sin_b_),
-  buzz_sampler_(buzz_),
-  humm_sampler_hi_(humm_),
-  humm_sampler_lo_(humm_),
-  volume_(32768 / 100) {
-    sin_sampler_a_hi_.delta_ = 137 * 65536 / AUDIO_SAMPLE_RATE;
-    sin_sampler_a_lo_.delta_ = 1024 * 65536 / AUDIO_SAMPLE_RATE;
-    sin_sampler_b_.delta_ = 300 * 65536 / AUDIO_SAMPLE_RATE;
-    AdjustDelta(0.0);
-    for (int i = 0; i < 1024; i++) {
-      float f = i/1024.0;
-      sin_a_.table_[i] = 32768 / (3 + si(f));
-      sin_b_.table_[i] = 32766 / (3 + si(f));
-      buzz_.table_[i] = 32766 * buzz(f);
-      humm_.table_[i] = 32766 * humm(f);
-    }
-  }
-
-  void AdjustDelta(float speed) {
-    float cents = 1.0 - 0.5 * clamp(speed/200.0, -1.0, 1.0);
-    float hz_to_delta = cents * 1024 * 65536 / AUDIO_SAMPLE_RATE;
-    buzz_sampler_.delta_ = 35 * hz_to_delta;
-    humm_sampler_lo_.delta_ = 90 * hz_to_delta;
-    humm_sampler_hi_.delta_ = 98 * hz_to_delta;
-  }
-
-  virtual void update(void) {
-    audio_block_t *block ;
-    if (!on_) return;
-    block = allocate();
-    if (block == NULL) return;
-    for (int i = 0; i < AUDIO_BLOCK_SAMPLES; i++) {
-      int32_t tmp;
-      tmp  = humm_sampler_lo_.next() * sin_sampler_a_lo_.next();
-      tmp += humm_sampler_hi_.next() * sin_sampler_a_hi_.next();
-      tmp += buzz_sampler_.next() * sin_sampler_b_.next();
-      tmp >>= 15;
-//      tmp = humm_sampler_lo_.next();
-      last_prevolume_value = tmp;
-      tmp = (tmp * (int32_t)volume_.value()) >> 15;
-      volume_.advance();
-      last_value = tmp;
-      tmp = clampi32(tmp, -32768, 32767);
-      block->data[i] = tmp;
-    }
-    transmit(block);
-    release(block);
-  }
-protected:
-  void Loop() override {
-    if (monitor.ShouldPrint(Monitoring::MonitorSamples)) {
-      Serial.print("Last sample: ");
-      Serial.print(last_value);
-      Serial.print(" prevol: ");
-      Serial.print(last_prevolume_value);
-      Serial.print(" vol: ");
-      Serial.println(volume_.value());
-    }
-  }
-};
-
-AudioSynthLightSaber saber_synth;
-
-// GUItool: begin automatically generated code
-AudioPlaySdWav           playSdWav1;     //xy=225,392
-AudioPlaySerialflashRaw  playFlashRaw1;  //xy=234,486
-AudioMixer4              mixer1;         //xy=476,396
-AudioOutputAnalog        dac1;           //xy=685,405
-AudioConnection          patchCord1(playSdWav1, 0, mixer1, 1);
-AudioConnection          patchCord2(playFlashRaw1, 0, mixer1, 2);
-AudioConnection          patchCord3(saber_synth, 0, mixer1, 0);
-AudioConnection          patchCord4(mixer1, dac1);
-//AudioConnection          patchCord(saber, dac1);
-// GUItool: end automatically generated code
-#endif  // OLD_AUDIO_CODE
-
 template<class T>
 class DataStream {
 public:
   virtual int read(T* data, int elements) = 0;
 };
 
-#define AUDIO_BUFFER_SIZE 44
+#define AUDIO_BUFFER_SIZE 440
 #define AUDIO_RATE 44100
 
 #define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_CONT | PDB_SC_PDBIE | PDB_SC_DMAEN)
@@ -668,7 +448,7 @@ public:
     dma.begin(true); // Allocate the DMA channel first
     SIM_SCGC2 |= SIM_SCGC2_DAC0;
     DAC0_C0 = DAC_C0_DACEN;                   // 1.2V VDDA is DACREF_2
-    DAC0_C0 |= DAC_C0_DACRFS;  // 3.3V
+//    DAC0_C0 |= DAC_C0_DACRFS;  // 3.3V
     // slowly ramp up to DC voltage, approx 1/4 second
     // TODO: Use this for volume control?
     for (int16_t i=0; i<2048; i+=8) {
@@ -726,7 +506,7 @@ private:
     if (stream) {
       int n = stream->read(dest, end-dest);
       while (n--) {
-        *dest = ((*(int16_t*)dest) + 32767) >> 4;
+	*dest = ((*(int16_t*)dest) + 32767) >> 4;
         dest++;
       }
     }
@@ -823,9 +603,9 @@ public:
     humm_sampler_hi_(humm_),
     humm_sampler_lo_(humm_),
     volume_(32768 / 100) {
-    sin_sampler_a_hi_.delta_ = 137 * 65536 / AUDIO_SAMPLE_RATE;
-    sin_sampler_a_lo_.delta_ = 1024 * 65536 / AUDIO_SAMPLE_RATE;
-    sin_sampler_b_.delta_ = 300 * 65536 / AUDIO_SAMPLE_RATE;
+    sin_sampler_a_hi_.delta_ = 137 * 65536 / AUDIO_RATE;
+    sin_sampler_a_lo_.delta_ = 1024 * 65536 / AUDIO_RATE;
+    sin_sampler_b_.delta_ = 300 * 65536 / AUDIO_RATE;
     AdjustDelta(0.0);
     for (int i = 0; i < 1024; i++) {
       float f = i/1024.0;
@@ -838,7 +618,7 @@ public:
 
   void AdjustDelta(float speed) {
     float cents = 1.0 - 0.5 * clamp(speed/200.0, -1.0, 1.0);
-    float hz_to_delta = cents * 1024 * 65536 / AUDIO_SAMPLE_RATE;
+    float hz_to_delta = cents * 1024 * 65536 / AUDIO_RATE;
     buzz_sampler_.delta_ = 35 * hz_to_delta;
     humm_sampler_lo_.delta_ = 90 * hz_to_delta;
     humm_sampler_hi_.delta_ = 98 * hz_to_delta;
@@ -978,287 +758,6 @@ private:
   volatile size_t buf_end_ = 0;
   T buffer_[N];
 };
-
-
-class AudioShim : public AudioStream {
-public:
-  AudioShim() : AudioStream(0, nullptr) {}
-  void update() override {
-    if (!stream_) return;
-    audio_block_t *block = allocate();
-    if (block == NULL) return;
-    int d = 0;
-    while (d < AUDIO_BLOCK_SAMPLES) {
-      d += stream_->read(block->data + d, AUDIO_BLOCK_SAMPLES - d);
-    }
-    transmit(block);
-    release(block);
-  }
-private:
-  DataStream<int16_t>* stream_ = 0;
-};
-
-
-#define C1 24757
-#define C2 -8191
-
-#define UPSAMPLE_FUNC(NAME, EMIT)                               \
-  void NAME(int16_t sample) {                                   \
-    upsample_buf_##NAME##_a_ = upsample_buf_##NAME##_b_;        \
-    upsample_buf_##NAME##_b_ = upsample_buf_##NAME##_c_;        \
-    upsample_buf_##NAME##_c_ = upsample_buf_##NAME##_d_;        \
-    upsample_buf_##NAME##_d_ = sample;                          \
-    EMIT((upsample_buf_##NAME##_a_ * C2 +                       \
-          upsample_buf_##NAME##_b_ * C1 +                       \
-          upsample_buf_##NAME##_c_ * C1 +                       \
-          upsample_buf_##NAME##_d_ * C2) >> 15);                \
-    EMIT(upsample_buf_##NAME##_c_);                             \
-  }                                                             \
-  void clear_##NAME() {                                         \
-    upsample_buf_##NAME##_a_ = 0;                               \
-    upsample_buf_##NAME##_b_ = 0;                               \
-    upsample_buf_##NAME##_c_ = 0;                               \
-    upsample_buf_##NAME##_d_ = 0;                               \
-  }                                                             \
-  int16_t upsample_buf_##NAME##_a_ = 0;                         \
-  int16_t upsample_buf_##NAME##_b_ = 0;                         \
-  int16_t upsample_buf_##NAME##_c_ = 0;                         \
-  int16_t upsample_buf_##NAME##_d_ = 0
-
-#define DOWNSAMPLE_FUNC(NAME, EMIT)                     \
-  void NAME(int16_t sample) {                           \
-    if (downsample_flag_##NAME##_) {                    \
-      EMIT((downsample_buf_##NAME##_ + sample) >> 1);   \
-      downsample_flag_##NAME##_ = false;                \
-    } else {                                            \
-      downsample_buf_##NAME##_ = sample;                \
-      downsample_flag_##NAME##_ = true;                 \
-    }                                                   \
-  }                                                     \
-  void clear_##NAME() {                                 \
-    downsample_buf_##NAME##_ = 0;                       \
-    downsample_flag_##NAME##_ = false;                  \
-  }                                                     \
-  int16_t downsample_buf_##NAME##_ = 0;                 \
-  bool downsample_flag_##NAME##_ = false
-
-
-
-class PlayWav : StateMachine, DataStream<int16_t> {
-public:
-  void Play(const char* filename) {
-    strcpy(filename_, filename);
-    run_ = true;
-  }
-
-  void Stop() {
-    reset_state_machine();
-    run_ = false;
-  }
-
-  bool isPlaying() const {
-    return run_;
-  }
-
-private:
-  void Emit1(uint16_t sample) {
-    samples_[num_samples_++] = sample;
-  }
-  UPSAMPLE_FUNC(Emit2, Emit1);
-  UPSAMPLE_FUNC(Emit4, Emit2);
-  DOWNSAMPLE_FUNC(Emit05, Emit1);
-
-  uint32_t header(int n) const {
-    return ((uint32_t *)buffer)[n];
-  }
-
-  template<int bits> int read2(char** data) {
-    if (bits == 8) return *((*data)++) << 8;
-    return *((*((uint16_t**)data))++);
-  }
-
-  template<int bits, int channels, int rate>
-  void DecodeBytes4(int samples) {
-    samples = samples * rate / AUDIO_RATE;
-    char *data = buffer;
-    for (int i = 0; i < samples; i++) {
-      int v = 0;
-      if (channels == 1) {
-	v = read2<bits>(&data);
-      } else {
-	int v = read2<bits>(&data);
-	v += read2<bits>(&data);
-	v >>= 1;
-      }
-      if (rate == AUDIO_RATE) {
-        Emit1(v);
-      } else if (rate == AUDIO_RATE / 2) {
-        Emit2(v);
-      } else if (rate == AUDIO_RATE / 4) {
-        Emit4(v);
-      } else if (rate == AUDIO_RATE * 2) {
-        Emit05(v);
-      }
-    }
-  }
-
-  template<int bits, int channels>
-  void DecodeBytes3(int samples) {
-    if (rate_ == 44100)
-      DecodeBytes4<bits, channels, 44100>(samples);
-    else if (rate_ == 22050)
-      DecodeBytes4<bits, channels, 22050>(samples);
-    else if (rate_ == 11025)
-      DecodeBytes4<bits, channels, 11025>(samples);
-  }
-
-  template<int bits>
-  void DecodeBytes2(int samples) {
-    if (channels_ == 1) DecodeBytes3<bits, 1>(samples);
-    DecodeBytes3<bits, 2>(samples >> 1);
-  }
-
-  void DecodeBytes(int bytes) {
-    if (bits_ == 8) DecodeBytes2<8>(bytes);
-    DecodeBytes2<16>(bytes >> 1);
-  }
-
-  int ReadFile(int n) {
-    if (sf_file_) {
-      return sf_file_.read(buffer, n);
-    } else {
-      return sd_file_.read(buffer, n);
-    }
-  }
-
-  void Skip(int n) {
-    if (sf_file_) {
-      sf_file_.seek(sf_file_.position() + n);
-    } else {
-      sd_file_.seek(sd_file_.position() + n);
-    }
-  }
-
-  int AlignRead(int n) {
-    if (sf_file_) return n;
-    int next_block = (sd_file_.position() + 511u) & ~511u;
-    int bytes_to_end_of_block = next_block - sd_file_.position();
-    return min(n, bytes_to_end_of_block);
-  }
-
-  void loop() {
-    STATE_MACHINE_BEGIN();
-    while (true) {
-      run_ = false;
-      while (!run_) YIELD();
-      sf_file_ = SerialFlashChip::open(filename_);
-      if (!sf_file_) {
-        sd_file_ = SD.open(filename_);
-        if (!sd_file_) {
-          // Not found
-          continue;
-        }
-      }
-      if (ReadFile(20) != 20) continue;
-      if (header(0) != 0x46464952 &&
-          header(2) != 0x45564157 &&
-          header(3) != 0x20746D66 &&
-          header(4) < 16) {
-        // Print error message?
-        continue;
-      }
-      {
-	int len = header(4);
-	if (len != ReadFile(len)) continue;
-      }
-      {
-	int format = header(0) & 0xffff;
-	if (format != 1) {
-	  // Wrong format
-	  continue;
-	}
-      }
-      channels_ = header(0) >> 16;
-      rate_ = header(1);
-      bits_ = header(3) >> 16;
-
-      bytes_to_fill_samples_ =
-	NELEM(samples_) * channels_ * (bits_ >> 3) * rate_ / AUDIO_RATE;
-
-      while (ReadFile(8) == 8) {
-        len_ = header(1);
-        if (header(0) != 0x61746164) {
-          Skip(len_);
-          continue;
-        }
-        while (len_) {
-	  bytes_to_decode_ =
-	    ReadFile(AlignRead(min(len_, sizeof(buffer))));
-	  len_ -= bytes_to_decode_;
-          while (bytes_to_decode_) {
-	    {
-	      int to_decode = min(bytes_to_decode_, bytes_to_fill_samples_);
-	      DecodeBytes(to_decode);
-	      bytes_to_decode_ -= to_decode;
-	    }
-
-            while (written_ < num_samples_) {
-              // Preload should go to here...
-              while (to_read_ == 0) YIELD();
-
-              int n = min(num_samples_ - written_, to_read_);
-              memcpy(dest_, samples_ + written_, n * 2);
-              dest_ += n;
-              written_ += n;
-              to_read_ -= n;
-            }
-            written_ = num_samples_ = 0;
-          }
-        }
-      }
-    }
-
-    STATE_MACHINE_END();
-  }
-
-public:
-  // Called from interrupt handler.
-  int read(int16_t* dest, int to_read) override {
-    dest_ = dest;
-    to_read_ = to_read;
-    loop();
-    return dest_ - dest;
-  }
-
-private:
-  volatile bool run_ = false;
-  char filename_[128];
-  File sd_file_;
-  SerialFlashFile sf_file_;
-  int16_t* dest_ = nullptr;
-  int to_read_ = 0;
-
-  int rate_;
-  int channels_;
-  int bits_;
-  int bytes_to_fill_samples_;
-
-  int bytes_to_decode_ = 0;
-  size_t len_ = 0;
-  char buffer[512]  __attribute__((aligned(4)));
-
-  // Number of samples_ in samples that has been
-  // sent out already.
-  int written_ = 0;
-  
-  // Number of samples in samples_
-  int num_samples_ = 0;
-  int16_t samples_[32];
-};
-
-PlayWav wav_players[5];
-
-
 #endif
 
 class Effect;
@@ -1278,6 +777,16 @@ const char *startswith(const char *prefix, const char* x) {
   return x;
 }
 
+int parse1hex(const char* x) {
+  int ret = toLower(*x);
+  if (ret > 'a') return ret - 'a' + 10;
+  return ret - '0';
+}
+
+int parse2hex(const char* x) {
+  return (parse1hex(x) << 4) | parse1hex(x+1);
+}
+
 bool endswith(const char *postfix, const char* x) {
   size_t l = strlen(x);
   if (l < strlen(postfix)) return false;
@@ -1290,7 +799,7 @@ bool endswith(const char *postfix, const char* x) {
   return true;
 }
 
-static char current_directory[100];
+char current_directory[128];
 
 class Effect {
   public:
@@ -1381,12 +890,11 @@ class Effect {
   }
 
 
-  bool Play(PlayWav* player) {
+  bool Play(char *filename) {
 #ifdef ENABLE_AUDIO
     int num_files = files_found();
     if (num_files < 1) return false;
     int n = rand() % num_files;
-    char filename[255];
     strcpy(filename, current_directory);
     if (current_directory[0])
       strcat(filename, "/");
@@ -1413,7 +921,6 @@ class Effect {
     strcat(filename, ".wav");
     Serial.print("Playing ");
     Serial.println(filename);
-    player->Play(filename);
     return true;
 #else
     return false;
@@ -1423,9 +930,6 @@ class Effect {
   static void ScanAll(const char* filename) {
     if (!endswith(".wav", filename))
       return;
-
-    Serial.print("Scanning filename ");
-    Serial.println(filename);
     for (Effect* e = all_effects; e; e = e->next_) {
       e->Scan(filename);
     }
@@ -1434,11 +938,6 @@ class Effect {
   static void ScanDirectory(const char *directory) {
     Serial.print("Scanning sound font: ");
     Serial.println(directory);
-    strcpy(current_directory, directory);
-    if (current_directory[strlen(current_directory)-1] != '/') {
-      strcat(current_directory, "/");
-    }
-    
     for (Effect* e = all_effects; e; e = e->next_) {
       e->reset();
     }
@@ -1499,6 +998,7 @@ private:
 
 // Monophonic fonts
 EFFECT(boot);
+EFFECT(swing);
 EFFECT(hum);
 EFFECT(poweron);
 EFFECT(poweroff);
@@ -1511,8 +1011,328 @@ EFFECT(lockup);
 EFFECT(poweronf);
 EFFECT(font);
 
-class MonophonicFont : public DataStream<int16_t> {
+// Polyphonic fonts
+EFFECT(blst);
+EFFECT(clsh);
+EFFECT(in);
+EFFECT(out);
+EFFECT(lock);
+EFFECT(swng);
+EFFECT(slsh);
+
+#ifdef ENABLE_AUDIO
+
+// Simple upsampler code, doubles the number of samples with
+// 2-lobe lanczos upsampling.
+#define C1 24757
+#define C2 -8191
+
+#define UPSAMPLE_FUNC(NAME, EMIT)                               \
+  void NAME(int16_t sample) {                                   \
+    upsample_buf_##NAME##_a_ = upsample_buf_##NAME##_b_;        \
+    upsample_buf_##NAME##_b_ = upsample_buf_##NAME##_c_;        \
+    upsample_buf_##NAME##_c_ = upsample_buf_##NAME##_d_;        \
+    upsample_buf_##NAME##_d_ = sample;                          \
+    EMIT((upsample_buf_##NAME##_a_ * C2 +                       \
+          upsample_buf_##NAME##_b_ * C1 +                       \
+          upsample_buf_##NAME##_c_ * C1 +                       \
+          upsample_buf_##NAME##_d_ * C2) >> 15);                \
+    EMIT(upsample_buf_##NAME##_c_);                             \
+  }                                                             \
+  void clear_##NAME() {                                         \
+    upsample_buf_##NAME##_a_ = 0;                               \
+    upsample_buf_##NAME##_b_ = 0;                               \
+    upsample_buf_##NAME##_c_ = 0;                               \
+    upsample_buf_##NAME##_d_ = 0;                               \
+  }                                                             \
+  int16_t upsample_buf_##NAME##_a_ = 0;                         \
+  int16_t upsample_buf_##NAME##_b_ = 0;                         \
+  int16_t upsample_buf_##NAME##_c_ = 0;                         \
+  int16_t upsample_buf_##NAME##_d_ = 0
+
+#define DOWNSAMPLE_FUNC(NAME, EMIT)                     \
+  void NAME(int16_t sample) {                           \
+    if (downsample_flag_##NAME##_) {                    \
+      EMIT((downsample_buf_##NAME##_ + sample) >> 1);   \
+      downsample_flag_##NAME##_ = false;                \
+    } else {                                            \
+      downsample_buf_##NAME##_ = sample;                \
+      downsample_flag_##NAME##_ = true;                 \
+    }                                                   \
+  }                                                     \
+  void clear_##NAME() {                                 \
+    downsample_buf_##NAME##_ = 0;                       \
+    downsample_flag_##NAME##_ = false;                  \
+  }                                                     \
+  int16_t downsample_buf_##NAME##_ = 0;                 \
+  bool downsample_flag_##NAME##_ = false
+
+
+class PlayWav : StateMachine, public DataStream<int16_t> {
 public:
+  void Play(const char* filename) {
+    strcpy(filename_, filename);
+    run_ = true;
+  }
+
+  void PlayOnce(Effect* effect) {
+    effect->Play(filename_);
+    run_ = true;
+  }
+  void PlayLoop(Effect* effect) {
+    effect_ = effect;
+  }
+
+  void Stop() {
+    reset_state_machine();
+    effect_ = nullptr;
+    run_ = false;
+  }
+
+  bool isPlaying() const {
+    return run_;
+  }
+
+private:
+  void Emit1(uint16_t sample) {
+    samples_[num_samples_++] = sample;
+  }
+  UPSAMPLE_FUNC(Emit2, Emit1);
+  UPSAMPLE_FUNC(Emit4, Emit2);
+  DOWNSAMPLE_FUNC(Emit05, Emit1);
+
+  uint32_t header(int n) const {
+    return ((uint32_t *)buffer)[n];
+  }
+
+  template<int bits> int16_t read2() {
+    if (bits == 8) return *(ptr_++) << 8;
+    return *((*((int16_t**)&ptr_))++);
+  }
+
+  template<int bits, int channels, int rate>
+  void DecodeBytes4(int samples) {
+    samples = samples * rate / AUDIO_RATE;
+    for (int i = 0; i < samples; i++) {
+      int v = 0;
+      if (channels == 1) {
+	v = read2<bits>();
+      } else {
+	int v = read2<bits>();
+	v += read2<bits>();
+	v >>= 1;
+      }
+      if (rate == AUDIO_RATE) {
+        Emit1(v);
+      } else if (rate == AUDIO_RATE / 2) {
+        Emit2(v);
+      } else if (rate == AUDIO_RATE / 4) {
+        Emit4(v);
+      } else if (rate == AUDIO_RATE * 2) {
+        Emit05(v);
+      } else {
+	Serial.println("Unsupported rate.");
+	Stop();
+      }
+    }
+  }
+
+  template<int bits, int channels>
+  void DecodeBytes3(int samples) {
+    if (rate_ == 44100)
+      DecodeBytes4<bits, channels, 44100>(samples);
+    else if (rate_ == 22050)
+      DecodeBytes4<bits, channels, 22050>(samples);
+    else if (rate_ == 11025)
+      DecodeBytes4<bits, channels, 11025>(samples);
+  }
+
+  template<int bits>
+  void DecodeBytes2(int samples) {
+    if (channels_ == 1) DecodeBytes3<bits, 1>(samples);
+    else DecodeBytes3<bits, 2>(samples >> 1);
+  }
+
+  void DecodeBytes(int bytes) {
+    if (bits_ == 8) DecodeBytes2<8>(bytes);
+    else DecodeBytes2<16>(bytes >> 1);
+  }
+
+  int ReadFile(int n) {
+    if (sf_file_) {
+      return sf_file_.read(buffer, n);
+    } else {
+      return sd_file_.read(buffer, n);
+    }
+  }
+
+  void Skip(int n) {
+    if (sf_file_) {
+      sf_file_.seek(sf_file_.position() + n);
+    } else {
+      sd_file_.seek(sd_file_.position() + n);
+    }
+  }
+
+  int AlignRead(int n) {
+    if (sf_file_) return n;
+    int next_block = (sd_file_.position() + 512u) & ~511u;
+    int bytes_to_end_of_block = next_block - sd_file_.position();
+    return min(n, bytes_to_end_of_block);
+  }
+
+  void loop() {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+      while (!run_ && !effect_) YIELD();
+      if (!run_) {
+	if (!effect_->Play(filename_)) {
+	  goto fail;
+	}
+        run_ = true;
+      }
+      sf_file_ = SerialFlashChip::open(filename_);
+      if (!sf_file_) {
+        sd_file_ = SD.open(filename_);
+        if (!sd_file_) {
+	  Serial.print("File ");
+	  Serial.print(filename_);
+	  Serial.println(" not found.");
+	  goto fail;
+        }
+      }
+      if (ReadFile(20) != 20) {
+	Serial.println("Failed to read 20 bytes.");
+	goto fail;
+      }
+      if (header(0) != 0x46464952 &&
+          header(2) != 0x45564157 &&
+          header(3) != 0x20746D66 &&
+          header(4) < 16) {
+	Serial.println("Headers don't match.");
+	YIELD();
+	goto fail;
+      }
+      tmp_ = header(4);
+      if (tmp_ != ReadFile(tmp_)) {
+	Serial.println("Read failed.");
+	goto fail;
+      }
+      if ((header(0) & 0xffff) != 1) {
+	Serial.println("Wrong format.");
+	goto fail;
+      }
+      channels_ = header(0) >> 16;
+      rate_ = header(1);
+      bits_ = header(3) >> 16;
+      Serial.print("chan: ");
+      Serial.print(channels_);
+      Serial.print(" rate: ");
+      Serial.print(rate_);
+      Serial.print(" bits: ");
+      Serial.println(bits_);
+
+      bytes_to_fill_samples_ =
+	NELEM(samples_) * channels_ * (bits_ >> 3) * rate_ / AUDIO_RATE;
+
+      while (ReadFile(8) == 8) {
+        len_ = header(1);
+        if (header(0) != 0x61746164) {
+          Skip(len_);
+          continue;
+        }
+        while (len_) {
+	  bytes_to_decode_ =
+	    ReadFile(AlignRead(min(len_, sizeof(buffer))));
+	  len_ -= bytes_to_decode_;
+	  ptr_ = buffer;
+          while (bytes_to_decode_) {
+	    {
+	      int to_decode = min(bytes_to_decode_, bytes_to_fill_samples_);
+	      DecodeBytes(to_decode);
+	      bytes_to_decode_ -= to_decode;
+	    }
+
+            while (written_ < num_samples_) {
+              // Preload should go to here...
+              while (to_read_ == 0) YIELD();
+
+              int n = min(num_samples_ - written_, to_read_);
+              memcpy(dest_, samples_ + written_, n * 2);
+              dest_ += n;
+              written_ += n;
+              to_read_ -= n;
+            }
+            written_ = num_samples_ = 0;
+          }
+        }
+      }
+
+      // EOF;
+      run_ = false;
+      continue;
+
+  fail:
+      run_ = false;
+      YIELD();
+    }
+
+    STATE_MACHINE_END();
+  }
+
+public:
+  // Called from interrupt handler.
+  int read(int16_t* dest, int to_read) override {
+    dest_ = dest;
+    to_read_ = to_read;
+    loop();
+    return dest_ - dest;
+  }
+
+private:
+  volatile bool run_ = false;
+  Effect* volatile effect_ = nullptr;
+  char filename_[128];
+  File sd_file_;
+  SerialFlashFile sf_file_;
+  int16_t* dest_ = nullptr;
+  int to_read_ = 0;
+  int tmp_;
+
+  int rate_;
+  int channels_;
+  int bits_;
+  int bytes_to_fill_samples_;
+
+  int bytes_to_decode_ = 0;
+  size_t len_ = 0;
+  char* ptr_;
+  char buffer[512]  __attribute__((aligned(4)));
+
+  // Number of samples_ in samples that has been
+  // sent out already.
+  int written_ = 0;
+  
+  // Number of samples in samples_
+  int num_samples_ = 0;
+  int16_t samples_[32];
+};
+
+PlayWav wav_players[5];
+#endif
+
+class MonophonicFont : public DataStream<int16_t>, SaberBase {
+public:
+  MonophonicFont() : SaberBase(NOLINK) {
+  }
+  void Activate() {
+    SaberBase::Link();
+    dac.SetStream(this);
+  }
+  void Deactivate() {
+    dac.SetStream(nullptr);
+    SaberBase::Unlink();
+  }
   int read(int16_t* data, int elements) override {
     int16_t *p = data;
     int to_read = elements;
@@ -1521,11 +1341,13 @@ public:
       int num = wav_players[current_].read(data, to_read);
       to_read -= num;
       data += elements;
-      if (num != to_read) {
-        current_ = next_;
-        next_ = 1 - current_;
-        // Pick a random hum
-        hum.Play(wav_players + next_);
+      if (num < to_read) {
+	// end of file.
+	current_ = -1;
+	while (num < to_read) {
+	  *(data++) = 0;
+	  to_read --;
+	}
       }
     }
     if (fadeto_ >= 0) {
@@ -1538,7 +1360,7 @@ public:
         while (num < n) tmp[num++] = 0;
         for (int i = 0; i < num; i++) {
           p[i] = (p[i] * fade_ + tmp[i] * (256 - fade_)) >> 8;
-          if (fade_) fade_--;
+          if (fade_) fade_ -= 2;
         }
         to_read -= n;
 	p += n;
@@ -1552,89 +1374,94 @@ public:
     return elements;
   }
 
-#if 0
-  void Play(Effect f) {
+  void Preload() {
+    // Implement preloading.
+    // NVIC_TRIGGER_IRQ(IRQ_WAV);
+  }
+
+  virtual void Play(Effect* f) {
+    if (current_ == -1) return;
     // find free unit
     if (fadeto_ != -1) {
-      // Need to finish fading to the previous unit first.
+      // Need to finish fading to the previous unit first. (~2.5ms)
+      return;
     }
-    int unit;
-    f.Play(wav_players[unit]);
-    // Preload wav headers before we set fadeto_
-    NVIC_TRIGGER_IRQ(IRQ_WAV);
+    int unit = 1 - current_;
+    wav_players[unit].PlayOnce(f);
+    wav_players[unit].PlayLoop(&hum);
+    Preload();
     fadeto_ = unit;
-    fade_ = 256;
+    fade_ = 254;
   }
 
-  void Off(Effect f) {
-    next_ = -1;
+  void On() override {
+    if (current_ == -1) {
+      wav_players[0].PlayOnce(&poweron);
+      wav_players[0].PlayLoop(&hum);
+      Preload();
+      current_ = 0;
+    }
   }
-#endif
+  void Off() override {
+    while (fadeto_ != -1) delay(1);
+    int unit = 1 - current_;
+    wav_players[unit].PlayOnce(&poweroff);
+    Preload();
+    fadeto_ = unit;
+    fade_ = 254;
+  }
+  void Clash() override { Play(&clash); }
+  void Swing() override { Play(&swing); }
+  void Stab() override { Play(&stab); }
+  void Force() override { Play(&force); }
 
-private:
-  int current_= -1;
-  volatile int next_ = 0;
+protected:
+  volatile int current_= -1;
   volatile int fadeto_ = -1;
   int fade_;
 };
 
 MonophonicFont monophonic_font;
 
-// Polyphonic fonts
-EFFECT(blst);
-EFFECT(clsh);
-EFFECT(in);
-EFFECT(out);
-EFFECT(lock);
-EFFECT(swng);
-EFFECT(slsh);
+class PolyphonicFont : public MonophonicFont {
 
-class SaberBase;
-SaberBase* saberbases = NULL;
-
-class SaberBase {
-public:
-  void Link() {
-    next_saber_ = saberbases;
-    saberbases = this;
-  }
-  void Unlink() {
-    for (SaberBase** i = &saberbases; *i; i = &(*i)->next_saber_) {
-      if (*i == this) {
-        *i = next_saber_;
-        return;
-      }
+  void On() override {
+    if (current_ == -1) {
+      wav_players[0].PlayOnce(&out);
+      wav_players[0].PlayLoop(&hum);
+      Preload();
+      current_ = 0;
     }
   }
 
-  SaberBase() { Link(); }
-  explicit SaberBase(NoLink _) {}
-  ~SaberBase() { Unlink(); }
+  void Off() override {
+    while (fadeto_ != -1) delay(1);
+    int unit = 1 - current_;
+    wav_players[unit].PlayOnce(&in);
+    Preload();
+    fadeto_ = unit;
+    fade_ = 254;
+  }
 
-
-#define SABERFUN(NAME, TYPED_ARGS, ARGS)			\
-public:								\
-  static void Do##NAME TYPED_ARGS {				\
-    for (SaberBase *p = saberbases; p; p = p->next_saber_) {	\
-      p->NAME ARGS;						\
-    }								\
-  }								\
-protected:							\
-  virtual void NAME TYPED_ARGS {}
-
-  SABERFUN(Clash, (), ());
-  SABERFUN(Stab, (), ());
-  SABERFUN(On, (), ());
-  SABERFUN(Off, (), ());
-  SABERFUN(Lockup, (), ());
-  SABERFUN(Force, (), ());
-  SABERFUN(Swing, (), ());
-  SABERFUN(Top, (), ());
-  SABERFUN(IsOn, (bool* on), (on));
-
-private:
-  SaberBase* next_saber_;
+  void Play(Effect* f) override {
+    // Find a free wave playback unit.
+    for (size_t unit = 2; unit < NELEM(wav_players); unit++) {
+      if (!wav_players[unit].isPlaying()) {
+	wav_players[unit].PlayOnce(f);
+	Preload();
+	return;
+      }
+    }
+    // Implement preloading.
+    // NVIC_TRIGGER_IRQ(IRQ_WAV);
+  }
+  void Clash() override { Play(&clsh); }
+  void Swing() override { Play(&swng); }
+  void Stab() override { Play(&stab); }
+  void Force() override { Play(&force); }
 };
+
+PolyphonicFont polyphonic_font;
 
 #ifdef ENABLE_WS2811
 // What follows is a copy of the OctoWS2811 library. It's been modified in 
@@ -2277,12 +2104,14 @@ public:
 //    pinMode(bladePin, on ? OUTPUT : INPUT);
   }
   void Activate(int num_leds, uint8_t config) {
-    pinMode(bladePowerPin1, OUTPUT);
-    pinMode(bladePowerPin2, OUTPUT);
-    pinMode(bladePowerPin3, OUTPUT);
-    Power(false);
+    Power(true);
+    delay(10);
     monopodws.begin(num_leds, displayMemory, drawingMemory, config);
     monopodws.show();  // Make it black
+    monopodws.show();  // Make it black
+    monopodws.show();  // Make it black
+    while (monopodws.busy());
+    Power(false);
     CommandParser::Link();
     Looper::Link();
     SaberBase::Link();
@@ -2364,13 +2193,27 @@ public:
       settings_.set(0,255,255);
       return true;
     }
-    if (!strcmp(cmd, "magenta")) {
+    if (!strcmp(cmd, "magenta") || !strcmp(cmd, "purple")) {
       settings_.set(255,0,255);
       return true;
     }
     if (!strcmp(cmd, "white")) {
       settings_.set(255,255,255);
       return true;
+    }
+    if (!strcmp(cmd, "color") && arg) {
+      switch (strlen(arg)) {
+        case 3:
+           settings_.set(parse1hex(arg) * 0x11,
+			 parse1hex(arg + 1) * 0x11,
+			 parse1hex(arg + 2) * 0x11);
+	   return true;
+	case 6:
+	  settings_.set(parse2hex(arg),
+			parse2hex(arg + 2),
+			parse2hex(arg + 4));
+	  return true;
+      }
     }
     return false;
   }
@@ -3108,6 +2951,72 @@ public:
     SaberBase::DoClash();
   }
 
+  bool chdir(const char* dir) {
+    monophonic_font.Deactivate();
+    polyphonic_font.Deactivate();
+
+    strcpy(current_directory, dir);
+    if (current_directory[strlen(current_directory)-1] != '/') {
+      strcat(current_directory, "/");
+    }
+    
+#ifdef ENABLE_AUDIO
+    Effect::ScanDirectory(current_directory);
+#endif
+    if (clash.files_found()) {
+      monophonic_font.Activate();
+      return true;
+    }
+    if (clsh.files_found()) {
+      polyphonic_font.Activate();
+      return true;
+    }
+    return false;
+  }
+
+  float id() {
+    int blade_id = analogRead(bladeIdentifyPin);
+    float volts = blade_id * 3.3 / 1024.0;  // Volts at bladeIdentifyPin
+    float amps = (3.3 - volts) / 33000;     // Pull-up is 33k
+    float resistor = volts / amps;
+    Serial.print("ID: ");
+    Serial.print(blade_id);
+    Serial.print(" volts ");
+    Serial.print(volts);
+    Serial.print(" resistance= ");
+    Serial.println(resistor);
+    return resistor;
+  }
+
+  void next_directory(int sign = 1) {
+    int tries = 0;
+    int dirs = 0;
+    do {
+      dirs = 0;
+      File dir = SD.open("/");
+      File best, first;
+      while (File f = dir.openNextFile()) {
+	if (!f.isDirectory()) continue;
+	dirs++;
+	if (!first) {
+	  first = f;
+	} else {
+	  if (strcmp(f.name(), first.name())*sign < 0) continue;
+	}
+	if (strcmp(f.name(), current_directory)*sign < 0) continue;
+	if (best && strcmp(f.name(), best.name())*sign > 0) continue;
+	best = f;
+      }
+      if (best) {
+	if (chdir(best.name()))
+	  return;
+      } else if (first) {
+	if (chdir(first.name()))
+	  return;
+      }
+    } while (++tries <= dirs);
+  }
+
 protected:
   void Loop() override {
     if (power_.clicked()) {
@@ -3119,6 +3028,10 @@ protected:
     }
   }
   bool Parse(const char *cmd, const char* arg) override {
+    if (!strcmp(cmd, "id")) {
+      id();
+      return true;
+    }
     if (!strcmp(cmd, "on")) {
       On();
       return true;
@@ -3129,6 +3042,22 @@ protected:
     }
     if (!strcmp(cmd, "clash")) {
       Clash();
+      return true;
+    }
+    if (!strcmp(cmd, "cd")) {
+      chdir(arg);
+      return true;
+    }
+    if (!strcmp(cmd, "pwd")) {
+      Serial.println(current_directory);
+      return true;
+    }
+    if (!strcmp(cmd, "next") && arg && !strcmp(arg, "font")) {
+      next_directory(1);
+      return true;
+    }
+    if (!strcmp(cmd, "prev") && arg && !strcmp(arg, "font")) {
+      next_directory(-1);
       return true;
     }
     return false;
@@ -3150,7 +3079,7 @@ protected:
   float battery() {
     float volts = 3.3 * analogRead(batteryLevelPin) / 1024.0;
     float pulldown = 33000;  // Internal pulldown is 33kOhm
-    float external = 28000;  // External pullup
+    float external = 23000;  // External pullup
     float battery_volts = volts * (1.0 + external / pulldown);
     return battery_volts;
   }
@@ -3307,10 +3236,6 @@ public:
       Serial.println("Done listing files.");
       return;
     }
-    if (!strcmp(cmd, "pwd")) {
-      Serial.println(current_directory);
-      return;
-    }
     if (!strcmp(cmd, "dir")) {
       File dir = SD.open(e ? e : current_directory);
       while (File f = dir.openNextFile()) {
@@ -3373,6 +3298,7 @@ public:
       saber_synth.on_ = false;
       return;
     }
+    // TODO: Move to DAC
     if (!strcmp(cmd, "dacbuf")) {
       for (size_t i = 0; i < NELEM(DAC::dac_dma_buffer); i++) {
 	Serial.print(DAC::dac_dma_buffer[i]);
@@ -3384,16 +3310,26 @@ public:
       Serial.println("");
       return;
     }
-#ifdef OLD_AUDIO_CODE
-    if (!strcmp(cmd, "play")) {
-      digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-      delay(10);             // allow time to wake up
-      playFlashRaw1.play(e);
+    if (!strcmp(cmd, "dumpwav")) {
+      int16_t tmp[32];
+      wav_players[0].Stop();
+      wav_players[0].read(tmp, NELEM(tmp));
+      wav_players[0].Play(e);
+      for (int j = 0; j < 32; j++) {
+	int k = wav_players[0].read(tmp, NELEM(tmp));
+	for (int i = 0; i < k; i++) {
+	  Serial.print(tmp[i]);
+	  Serial.print(" ");
+	}
+	Serial.println("");
+      }
+      wav_players[0].Stop();
       return;
     }
-#endif
-    if (!strcmp(cmd, "cd")) {
-      Effect::ScanDirectory(e);
+    if (!strcmp(cmd, "play")) {
+      digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+      wav_players[0].Play(e);
+      dac.SetStream(wav_players);
       return;
     }
 #endif
@@ -3405,9 +3341,9 @@ public:
       return;
     }
     if (!strcmp(cmd, "top")) {
-#ifdef ENABLE_AUDIO
-      Serial.print("Audio usage: ");
-      Serial.println(AudioProcessorUsage());
+#ifdef OLD_AUDIO_CODE
+//      Serial.print("Audio usage: ");
+//      Serial.println(AudioProcessorUsage());
       Serial.print("Audio usage max: ");
       Serial.println(AudioProcessorUsageMax());
       AudioProcessorUsageMaxReset();
@@ -3535,9 +3471,6 @@ public:
 protected:
   void Setup() override {
     // Audio setup
-#ifdef OLD_AUDIO_CODE
-    dac1.analogReference(EXTERNAL); // much louder!
-#endif
     delay(50);             // time for DAC voltage stable
     pinMode(amplifierPin, OUTPUT);
     delay(10);
@@ -3545,10 +3478,6 @@ protected:
 
   bool Active() {
     if (saber_synth.on_) return true;
-#ifdef OLD_AUDIO_CODE
-    if (playFlashRaw1.isPlaying()) return true;
-    if (playSdWav1.isPlaying()) return true;
-#endif
     for (size_t i = 0; i < NELEM(wav_players); i++)
       if (wav_players[i].isPlaying())
 	return true;
@@ -3575,14 +3504,10 @@ Amplifier amplifier;
 void setup() {
   Serial.begin(9600);
   pinMode(bladeIdentifyPin, INPUT_PULLUP);
-
-  delayMicroseconds(10);
+  delay(40);
 
   // Time to identify the blade.
-  int blade_id = analogRead(bladeIdentifyPin);
-  float volts = blade_id * 3.3 / 1024.0;  // Volts at bladeIdentifyPin
-  float amps = (3.3 - volts) / 33000;     // Pull-up is 33k
-  float resistor = volts / amps;
+  float resistor = saber.id();
 
   size_t best_config = 0;
   float best_err = 1000000.0;
@@ -3593,10 +3518,6 @@ void setup() {
       best_err = err;
     }
   }
-  Serial.print("ID: ");
-  Serial.print(blade_id);
-  Serial.print(" resistance= ");
-  Serial.print(resistor);
   Serial.print(" blade= ");
   Serial.println(best_config);
 
@@ -3623,9 +3544,9 @@ void setup() {
     Serial.println("Sdcard found..");
   }
 
-  Effect::ScanDirectory(blades[best_config].sound_font_directory);
   // Check sound font type.
 #endif
+  saber.chdir(blades[best_config].sound_font_directory);
 
   Serial.println("DoSetup()");
   Looper::DoSetup();
