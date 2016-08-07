@@ -1,25 +1,26 @@
-/*  Teensy Lightsaber Firmware
-    http://fredrik.hubbe.net/lightsaber/teensy_saber.html
-    Copyright (c) 2016 Fredrik Hubinette
-    Additional copyright holders listed inline below.
+/*
+ Teensy Lightsaber Firmware
+ http://fredrik.hubbe.net/lightsaber/teensy_saber.html
+ Copyright (c) 2016 Fredrik Hubinette
+ Additional copyright holders listed inline below.
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-    THE SOFTWARE.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
 */
 
 
@@ -68,16 +69,22 @@ struct BladeID {
   int num_leds;
   const char* sound_font_directory;
   // Default color settings
-  // Default sound font
 };
-
 
 // List of blades.
 // If you only have one blade, the resistor value is irrelevant as it will always be selected.
 BladeID blades[] = {
   // ohms, blade type, leds, default font directory
-  {  69000, BladeID::PL9823,  97, "font01" },
-//  { 10000, BladeID::WS2811,  120 },
+
+  {  69000, BladeID::PL9823,  97, "font02" },
+  {   2600, BladeID::PL9823,  97, "font02" },
+
+  {   5200, BladeID::SIMPLE,   1, "font01" },
+
+  {  41000, BladeID::PL9823,  1, "charging" },
+  {  15000, BladeID::PL9823,  1, "charging" },
+
+  { 4800, BladeID::WS2811,  120, "font01" },
 };
 
 
@@ -126,8 +133,8 @@ enum SaberPins {
   // Top edge
   spiClock = 13,                  // spi clock, flash, spi led & sd card
   batteryLevelPin = 14,           // battery level input
-  powerButtonPin = 15,            // power button
-  auxPin = 16,                    // AUX button
+  auxPin = 15,                    // AUX button
+  powerButtonPin = 16,            // power button
   aux2Pin = 17,                   // AUX2 button
   i2cDataPin = 18,                // Used by motion sensors (prop shield)
   i2cClockPin = 19,               // Used by motion sensors (prop shield)
@@ -148,6 +155,7 @@ enum SaberPins {
 #define ENABLE_MOTION
 //#define ENABLE_SNOOZE
 #define ENABLE_WS2811
+#define ENABLE_WATCHDOG
 
 // Use FTM timer for monopodws timing.
 #define USE_FTM_TIMER
@@ -181,6 +189,13 @@ SnoozeBlock snooze_config;
 
 const char version[] = "$Id$";
 
+/*
+ * State machine code.
+ * This code uses the fact that switch can jump into code to create
+ * lightweight pseudo-thread. These threads have a lot of limitations,
+ * but they can make code much easier to read compared to manually
+ * written state machines. Lots of examples below.
+ */
 // Note, you cannot have two YIELD() on the same line.
 #define YIELD() do { next_state_ = __LINE__; return; case __LINE__: break; } while(0)
 #define SLEEP(MILLIS) do { sleep_until_ = millis() + (MILLIS); while (millis() < sleep_until_) YIELD(); } while(0)
@@ -198,6 +213,7 @@ protected:
   }
 };
 
+// Magic type used to prevent linked-list types from automatically linking.
 enum NoLink { NOLINK = 17 };
 
 // Helper class for classses that needs to be called back from the Loop() function.
@@ -312,6 +328,10 @@ protected:							\
   SABERFUN(Lockup, (), ());
   SABERFUN(Force, (), ());
   SABERFUN(Swing, (), ());
+  SABERFUN(Boot, (), ());
+  SABERFUN(BeginLockup, (), ());
+  SABERFUN(EndLockup, (), ());
+  SABERFUN(Motion, (float speed), (speed));
   SABERFUN(Top, (), ());
   SABERFUN(IsOn, (bool* on), (on));
 
@@ -430,14 +450,15 @@ struct WaveFormSampler {
   }
 };
 
-
 template<class T>
 class DataStream {
 public:
   virtual int read(T* data, int elements) = 0;
+  // There is no need to call eof() unless read() returns zero elements.
+  virtual bool eof() { return false; }
 };
 
-#define AUDIO_BUFFER_SIZE 440
+#define AUDIO_BUFFER_SIZE 44
 #define AUDIO_RATE 44100
 
 #define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_CONT | PDB_SC_PDBIE | PDB_SC_DMAEN)
@@ -514,7 +535,6 @@ private:
   }
 
 public: // FIXME remove 'public'
-
   DMAMEM static uint16_t dac_dma_buffer[AUDIO_BUFFER_SIZE*2];
   static DataStream<int16_t> * volatile stream_;
   static DMAChannel dma;
@@ -526,7 +546,7 @@ DMAMEM uint16_t DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2];
 
 DAC dac;
 
-template<int N> class AudioDynamicMixer : public DataStream<int16_t> {
+template<int N> class AudioDynamicMixer : public DataStream<int16_t>, Looper {
 public:
   AudioDynamicMixer() {
     for (int i = 0; i < N; i++) {
@@ -534,9 +554,46 @@ public:
     }
   }
 
+  // Calculate square root of |x|, using the previous square
+  // root as a guess.
+  int my_sqrt(int x) {
+    if (x <= 0) return 0;
+    int over, under, step = 1;
+    if (last_square_ * last_square_ > x) {
+      over = last_square_;
+      under = over - 1;
+      while (under * under > x) {
+	over = under;
+	under -= step;
+	step += step;
+	if (under <= 0) { under = 0; break; }
+      }
+    } else {
+      under = last_square_;
+      over = under + 1;
+      while (over * over <= x) {
+	under = over;
+	over += step;
+	step += step;
+	if (over < 0) { over = x; break; }
+      }
+    }
+    while (under + 1 < over) {
+      int mid = (over + under) >> 1;
+      if (mid * mid > x) {
+	over = mid;
+      } else {
+	under = mid;
+      }
+    }
+    return last_square_ = under;
+  }
+  int last_square_ = 0;
+
   int read(int16_t* data, int elements) override {
     int32_t sum[32];
     int ret = elements;
+    int v = 0, v2 = 0;
     while (elements) {
       int to_do = min(elements, (int)NELEM(sum));
       for (int i = 0; i < to_do; i++) sum[i] = 0;
@@ -546,27 +603,59 @@ public:
 	  sum[j] += data[j];
 	}
       }
-      
-      // FIXME, actually do dynamic compression!
+
       for (int i = 0; i < to_do; i++) {
-	data[i] = clampi32(sum[i] / N, -32768, 32767);
+	v = sum[i];
+	vol_ = ((vol_ + abs(v)) * 255) >> 8;
+	v2 = (v << 10) / (my_sqrt(vol_) + 100);
+	data[i] = clampi32(v2, -32768, 32767);
+	peak_sum_ = max(abs(v), peak_sum_);
+	peak_ = max(abs(v2), peak_);
       }
       data += to_do;
       elements -= to_do;
     }
+    last_sample_ = v2;
+    last_sum_ = v;
+    
+//    Serial.println(vol_);
     return ret;
   }
+
+  void Loop() override {
+    if (monitor.ShouldPrint(Monitoring::MonitorSamples)) {
+      Serial.print("Mixer volume: ");
+      Serial.print(vol_);
+      Serial.print(" last sum: ");
+      Serial.print(last_sum_);
+      Serial.print(" last sample:");
+      Serial.print(last_sample_);
+      Serial.print(" peak sum: ");
+      Serial.print(peak_sum_);
+      Serial.print(" peak: ");
+      Serial.println(peak_);
+      peak_sum_ = peak_ = 0;
+    }
+  }
+
+  // TODO: Make levels monitorable
   
   DataStream<int16_t>* streams_[N];
+  int32_t vol_ = 0;
+  int32_t last_sample_ = 0;
+  int32_t last_sum_ = 0;
+  int32_t peak_sum_ = 0;
+  int32_t peak_ = 0;
 //  int32_t sum_;
 //  ClickAvoiderLin volume_;
 };
 
+AudioDynamicMixer<6> dynamic_mixer;
 
 class LightSaberSynth : public DataStream<int16_t>, Looper {
 public:
   WaveForm sin_a_;
-  WaveForm sin_b_;
+//  WaveForm sin_b_;
   WaveForm buzz_;
   WaveForm humm_;
   WaveFormSampler sin_sampler_a_hi_;
@@ -598,7 +687,7 @@ public:
   LightSaberSynth() :
     sin_sampler_a_hi_(sin_a_),
     sin_sampler_a_lo_(sin_a_),
-    sin_sampler_b_(sin_b_),
+    sin_sampler_b_(sin_a_),
     buzz_sampler_(buzz_),
     humm_sampler_hi_(humm_),
     humm_sampler_lo_(humm_),
@@ -610,7 +699,7 @@ public:
     for (int i = 0; i < 1024; i++) {
       float f = i/1024.0;
       sin_a_.table_[i] = 32768 / (3 + si(f));
-      sin_b_.table_[i] = 32766 / (3 + si(f));
+//      sin_b_.table_[i] = 32766 / (3 + si(f));
       buzz_.table_[i] = 32766 * buzz(f);
       humm_.table_[i] = 32766 * humm(f);
     }
@@ -657,9 +746,7 @@ protected:
   }
 };
 
-LightSaberSynth saber_synth;
-
-#endif  // ENABLE_AUDIO
+// LightSaberSynth saber_synth;
 
 #if 1
 
@@ -673,6 +760,36 @@ LightSaberSynth saber_synth;
 // This means:
 // 5 x WAV player (read from sdcard or serial flash) + HUM/SWING synthesizer
 // WAV player needs gapless playback and find-cut support.
+
+// Style #1
+//  DAC
+//   +-Dynamic Mixer
+//   |  +-MonophonicFont (on/hum/off/swing/clash/etc.)
+//   |     +-Buffer
+//   |     |  +-WavPlayer
+//   |     +-Buffer
+//   |        +-WavPlayer
+//   +-Buffer (for tracks)
+//      +-WavPlayer
+//
+// Style #2 (superset of style #1)
+//  DAC
+//   +-Dynamic Mixer
+//   |  +-MonophonicFont (on/hum/off)
+//   |     +-Buffer
+//   |     |  +-WavPlayer
+//   |     +-Buffer
+//   |        +-WavPlayer
+//   +-Buffer (for tracks)
+//   |   +-WavPlayer
+//   +-Buffer (other sound fx)
+//   |   +-WavPlayer
+//   +-Buffer (other sound fx)
+//   |   +-WavPlayer
+//   +-Buffer (other sound fx)
+//       +-WavPlayer
+//
+
 
 #define IRQ_WAV 55
 
@@ -695,25 +812,33 @@ public:
       }
     }
   }
-  static void ProcessDataStreams() {
-    for (DataStreamWork *d = data_streams; d; d=d->next_) {
-      d->Loop();
-    }
-  }
-protected:
-  void fill() {
+  void scheduleFillBuffer() {
     if (!NVIC_IS_ACTIVE(IRQ_WAV))
       NVIC_TRIGGER_IRQ(IRQ_WAV);
   }
 
-  virtual void Loop() = 0;
+protected:
+  virtual bool FillBuffer() = 0;
+
 private:
+  static void ProcessDataStreams() {
+    for (int i = 0; i < 10; i++) {
+      bool again = false;
+      for (DataStreamWork *d = data_streams; d; d=d->next_) {
+	if (d->FillBuffer()) {
+	  again = true;
+	}
+      }
+      if (!again) break;
+    }
+  }
+
   DataStreamWork* next_;
 };
 
 // N needs to be power of 2
 template<class T, int N>
-class BufferedDataStream : public DataStream<T>, DataStreamWork {
+class BufferedDataStream : public DataStream<T>, public DataStreamWork {
 public:
   BufferedDataStream() : DataStreamWork() {
   }
@@ -731,8 +856,14 @@ public:
       buf += to_copy;
       bufsize -= to_copy;
     }
-    fill();
+    scheduleFillBuffer();
     return copied;
+  }
+  bool eof() override {
+    return !buffered() && eof_;
+  }
+  void clear() {
+    buf_start_ = buf_end_;
   }
   size_t buffered() const {
     return buf_end_ - buf_start_;
@@ -740,25 +871,36 @@ public:
   size_t space_available() const {
     return N - buffered();
   }
-private:
-  void Loop() override {
-    while (stream_) {
-      size_t space = space_available();
-      if (!space) break;
-      size_t end_pos = buf_end_ & (N-1);
-      size_t to_read = min(space, N - end_pos);
-      int got = stream_->read(buffer_ + end_pos, sizeof(T) * to_read);
-      if (!got) break;
-      buf_end_ += got;
-    }
+  void SetStream(DataStream<T>* stream) {
+    eof_ = false;
+    stream_ = stream;
   }
-  DataStream<int16_t>* stream_ = 0;
+private:
+  bool FillBuffer() override {
+    if (stream_) {
+      size_t space = space_available();
+      if (space) {
+	size_t end_pos = buf_end_ & (N-1);
+	size_t to_read = min(space, N - end_pos);
+	int got = stream_->read(buffer_ + end_pos, to_read);
+	if (!got) eof_ = stream_->eof();
+	buf_end_ += got;
+      }
+    }
+    return stream_ && space_available() > 0 && !eof_;
+  }
+  DataStream<T> * volatile stream_ = 0;
   // Note, these are assumed to be atomic, 8-bit processors won't work.
   volatile size_t buf_start_ = 0;
   volatile size_t buf_end_ = 0;
+  volatile bool eof_ = false;
   T buffer_[N];
 };
+
 #endif
+
+#endif  // ENABLE_AUDIO
+
 
 class Effect;
 Effect* all_effects = NULL;
@@ -798,6 +940,7 @@ bool endswith(const char *postfix, const char* x) {
   }
   return true;
 }
+
 
 char current_directory[128];
 
@@ -891,13 +1034,10 @@ class Effect {
 
 
   bool Play(char *filename) {
-#ifdef ENABLE_AUDIO
     int num_files = files_found();
     if (num_files < 1) return false;
     int n = rand() % num_files;
     strcpy(filename, current_directory);
-    if (current_directory[0])
-      strcat(filename, "/");
     strcat(filename, name_);
     if (subdirs_) {
       strcat(filename, "/");
@@ -922,9 +1062,6 @@ class Effect {
     Serial.print("Playing ");
     Serial.println(filename);
     return true;
-#else
-    return false;
-#endif
   }
 
   static void ScanAll(const char* filename) {
@@ -1027,16 +1164,18 @@ EFFECT(slsh);
 #define C1 24757
 #define C2 -8191
 
+#if 1
 #define UPSAMPLE_FUNC(NAME, EMIT)                               \
   void NAME(int16_t sample) {                                   \
     upsample_buf_##NAME##_a_ = upsample_buf_##NAME##_b_;        \
     upsample_buf_##NAME##_b_ = upsample_buf_##NAME##_c_;        \
     upsample_buf_##NAME##_c_ = upsample_buf_##NAME##_d_;        \
     upsample_buf_##NAME##_d_ = sample;                          \
-    EMIT((upsample_buf_##NAME##_a_ * C2 +                       \
+    EMIT(clampi32((upsample_buf_##NAME##_a_ * C2 +		\
           upsample_buf_##NAME##_b_ * C1 +                       \
           upsample_buf_##NAME##_c_ * C1 +                       \
-          upsample_buf_##NAME##_d_ * C2) >> 15);                \
+		   upsample_buf_##NAME##_d_ * C2) >> 15,	\
+		  -32768, 32767));				\
     EMIT(upsample_buf_##NAME##_c_);                             \
   }                                                             \
   void clear_##NAME() {                                         \
@@ -1049,6 +1188,14 @@ EFFECT(slsh);
   int16_t upsample_buf_##NAME##_b_ = 0;                         \
   int16_t upsample_buf_##NAME##_c_ = 0;                         \
   int16_t upsample_buf_##NAME##_d_ = 0
+#else
+#define UPSAMPLE_FUNC(NAME, EMIT)		\
+  void NAME(int16_t sample) {			\
+      EMIT(sample);      EMIT(sample);		\
+  }						\
+  void clear_##NAME() {				\
+  }
+#endif
 
 #define DOWNSAMPLE_FUNC(NAME, EMIT)                     \
   void NAME(int16_t sample) {                           \
@@ -1067,7 +1214,10 @@ EFFECT(slsh);
   int16_t downsample_buf_##NAME##_ = 0;                 \
   bool downsample_flag_##NAME##_ = false
 
-
+// PlayWav reads a file from serialflash or SD and converts
+// it into a stream of samples. Note that because it can
+// spend some time reading data between samples, the
+// reader must have enough buffers to provide smooth playback.
 class PlayWav : StateMachine, public DataStream<int16_t> {
 public:
   void Play(const char* filename) {
@@ -1077,6 +1227,7 @@ public:
 
   void PlayOnce(Effect* effect) {
     effect->Play(filename_);
+    effect_ = nullptr;
     run_ = true;
   }
   void PlayLoop(Effect* effect) {
@@ -1111,14 +1262,13 @@ private:
   }
 
   template<int bits, int channels, int rate>
-  void DecodeBytes4(int samples) {
-    samples = samples * rate / AUDIO_RATE;
-    for (int i = 0; i < samples; i++) {
+  void DecodeBytes4() {
+    while (ptr_ < end_ && num_samples_ < NELEM(samples_)) {
       int v = 0;
       if (channels == 1) {
 	v = read2<bits>();
       } else {
-	int v = read2<bits>();
+      	v = read2<bits>();
 	v += read2<bits>();
 	v >>= 1;
       }
@@ -1138,24 +1288,24 @@ private:
   }
 
   template<int bits, int channels>
-  void DecodeBytes3(int samples) {
+  void DecodeBytes3() {
     if (rate_ == 44100)
-      DecodeBytes4<bits, channels, 44100>(samples);
+      DecodeBytes4<bits, channels, 44100>();
     else if (rate_ == 22050)
-      DecodeBytes4<bits, channels, 22050>(samples);
+      DecodeBytes4<bits, channels, 22050>();
     else if (rate_ == 11025)
-      DecodeBytes4<bits, channels, 11025>(samples);
+      DecodeBytes4<bits, channels, 11025>();
   }
 
   template<int bits>
-  void DecodeBytes2(int samples) {
-    if (channels_ == 1) DecodeBytes3<bits, 1>(samples);
-    else DecodeBytes3<bits, 2>(samples >> 1);
+  void DecodeBytes2() {
+    if (channels_ == 1) DecodeBytes3<bits, 1>();
+    else DecodeBytes3<bits, 2>();
   }
 
-  void DecodeBytes(int bytes) {
-    if (bits_ == 8) DecodeBytes2<8>(bytes);
-    else DecodeBytes2<16>(bytes >> 1);
+  void DecodeBytes() {
+    if (bits_ == 8) DecodeBytes2<8>();
+    else DecodeBytes2<16>();
   }
 
   int ReadFile(int n) {
@@ -1194,6 +1344,7 @@ private:
       sf_file_ = SerialFlashChip::open(filename_);
       if (!sf_file_) {
         sd_file_ = SD.open(filename_);
+	YIELD();
         if (!sd_file_) {
 	  Serial.print("File ");
 	  Serial.print(filename_);
@@ -1225,15 +1376,12 @@ private:
       channels_ = header(0) >> 16;
       rate_ = header(1);
       bits_ = header(3) >> 16;
-      Serial.print("chan: ");
+      Serial.print("channels: ");
       Serial.print(channels_);
       Serial.print(" rate: ");
       Serial.print(rate_);
       Serial.print(" bits: ");
       Serial.println(bits_);
-
-      bytes_to_fill_samples_ =
-	NELEM(samples_) * channels_ * (bits_ >> 3) * rate_ / AUDIO_RATE;
 
       while (ReadFile(8) == 8) {
         len_ = header(1);
@@ -1246,12 +1394,9 @@ private:
 	    ReadFile(AlignRead(min(len_, sizeof(buffer))));
 	  len_ -= bytes_to_decode_;
 	  ptr_ = buffer;
-          while (bytes_to_decode_) {
-	    {
-	      int to_decode = min(bytes_to_decode_, bytes_to_fill_samples_);
-	      DecodeBytes(to_decode);
-	      bytes_to_decode_ -= to_decode;
-	    }
+	  end_ = buffer + bytes_to_decode_;
+          while (ptr_ < end_) {
+	    DecodeBytes();
 
             while (written_ < num_samples_) {
               // Preload should go to here...
@@ -1266,6 +1411,7 @@ private:
             written_ = num_samples_ = 0;
           }
         }
+	YIELD();
       }
 
       // EOF;
@@ -1289,6 +1435,10 @@ public:
     return dest_ - dest;
   }
 
+  bool eof() override {
+    return !run_;
+  }
+
 private:
   volatile bool run_ = false;
   Effect* volatile effect_ = nullptr;
@@ -1302,11 +1452,11 @@ private:
   int rate_;
   int channels_;
   int bits_;
-  int bytes_to_fill_samples_;
 
   int bytes_to_decode_ = 0;
   size_t len_ = 0;
   char* ptr_;
+  char* end_;
   char buffer[512]  __attribute__((aligned(4)));
 
   // Number of samples_ in samples that has been
@@ -1318,36 +1468,75 @@ private:
   int16_t samples_[32];
 };
 
-PlayWav wav_players[5];
-#endif
 
-class MonophonicFont : public DataStream<int16_t>, SaberBase {
+// Combines a WavPlayer and a BufferedDataStream into a
+// buffered wav player. When we start a new sample, we
+// make sure to fill up the buffer before we start playing it.
+// This minimizes latency while making sure to avoid any gaps.
+class BufferedWavPlayer : public DataStream<int16_t> {
 public:
-  MonophonicFont() : SaberBase(NOLINK) {
+  void Play(const char* filename) {
+    pause_ = true;
+    buffer.clear();
+    wav.Play(filename);
+    buffer.scheduleFillBuffer();
+    pause_ = false;
   }
-  void Activate() {
-    SaberBase::Link();
-    dac.SetStream(this);
+
+  void PlayOnce(Effect* effect) {
+    pause_ = true;
+    buffer.clear();
+    wav.PlayOnce(effect);
+    buffer.scheduleFillBuffer();
+    pause_ = false;
   }
-  void Deactivate() {
-    dac.SetStream(nullptr);
-    SaberBase::Unlink();
+  void PlayLoop(Effect* effect) { wav.PlayLoop(effect); }
+  void Stop() {
+    wav.Stop();
+    pause_ = true;
+    buffer.clear();
   }
+
+  bool isPlaying() const {
+    return wav.isPlaying();
+  }
+
+  BufferedWavPlayer() {
+    buffer.SetStream(&wav);
+  }
+
+  int read(int16_t* dest, int to_read) override {
+    if (pause_) return 0;
+    return buffer.read(dest, to_read);
+  }
+
+private:
+  BufferedDataStream<int16_t, 512> buffer;
+  PlayWav wav;
+  volatile bool pause_;
+};
+
+BufferedWavPlayer wav_players[4];
+
+// This class is used to cut from one sound to another with
+// no gap. It does a short (2.5ms) crossfade to accomplish this.
+class AudioSplicer : public DataStream<int16_t> {
+public:
   int read(int16_t* data, int elements) override {
     int16_t *p = data;
     int to_read = elements;
     if (current_ < 0) return 0;
-    while (to_read) {
-      int num = wav_players[current_].read(data, to_read);
-      to_read -= num;
-      data += elements;
-      if (num < to_read) {
-	// end of file.
-	current_ = -1;
-	while (num < to_read) {
-	  *(data++) = 0;
-	  to_read --;
-	}
+
+    int num = players_[current_].read(p, to_read);
+    to_read -= num;
+    p += num;
+    if (num < to_read) {
+      // end of file.
+      current_ = -1;
+      fadeto_ = -1;
+      while (num < to_read) {
+	*(p++) = 0;
+	to_read --;
       }
     }
     if (fadeto_ >= 0) {
@@ -1356,7 +1545,7 @@ public:
       while (to_read) {
         int16_t tmp[32];
         int n = min(to_read, (int)NELEM(tmp));
-        int num = wav_players[fadeto_].read(tmp, n);
+        int num = players_[fadeto_].read(tmp, n);
         while (num < n) tmp[num++] = 0;
         for (int i = 0; i < num; i++) {
           p[i] = (p[i] * fade_ + tmp[i] * (256 - fade_)) >> 8;
@@ -1366,7 +1555,7 @@ public:
 	p += n;
       }
       if (!fade_) {
-	wav_players[current_].Stop();
+	players_[current_].Stop();
         current_ = fadeto_;
         fadeto_ = -1;
       }
@@ -1374,94 +1563,182 @@ public:
     return elements;
   }
 
-  void Preload() {
-    // Implement preloading.
-    // NVIC_TRIGGER_IRQ(IRQ_WAV);
+  bool eof() override {
+    return current_ == -1;
   }
 
-  virtual void Play(Effect* f) {
-    if (current_ == -1) return;
-    // find free unit
+  bool Play(Effect* f, Effect* loop) {
     if (fadeto_ != -1) {
+      Serial.print("cutover unit busy fade_ =");
+      Serial.print(fade_);
+      Serial.print(" fadeto_ = ");
+      Serial.print(fadeto_);
+      Serial.print(" current_ = ");
+      Serial.println(current_);
       // Need to finish fading to the previous unit first. (~2.5ms)
-      return;
+      // Perhaps we should just wait for it?
+      return false;
     }
-    int unit = 1 - current_;
-    wav_players[unit].PlayOnce(f);
-    wav_players[unit].PlayLoop(&hum);
-    Preload();
-    fadeto_ = unit;
-    fade_ = 254;
+    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+    int unit = current_ == 0 ? 1 : 0;
+    players_[unit].PlayOnce(f);
+    if (loop) {
+      players_[unit].PlayLoop(loop);
+    }
+    if (current_ == -1) {
+      current_ = unit;
+    } else {
+      fadeto_ = unit;
+      fade_ = 254;
+    }
+    return true;
   }
 
-  void On() override {
-    if (current_ == -1) {
-      wav_players[0].PlayOnce(&poweron);
-      wav_players[0].PlayLoop(&hum);
-      Preload();
-      current_ = 0;
-    }
+  bool isPlaying() const {
+    return current_ != -1;
   }
-  void Off() override {
-    while (fadeto_ != -1) delay(1);
-    int unit = 1 - current_;
-    wav_players[unit].PlayOnce(&poweroff);
-    Preload();
-    fadeto_ = unit;
-    fade_ = 254;
-  }
-  void Clash() override { Play(&clash); }
-  void Swing() override { Play(&swing); }
-  void Stab() override { Play(&stab); }
-  void Force() override { Play(&force); }
 
 protected:
+  BufferedWavPlayer players_[2];
   volatile int current_= -1;
   volatile int fadeto_ = -1;
   int fade_;
 };
 
-MonophonicFont monophonic_font;
+AudioSplicer audio_splicer;
 
-class PolyphonicFont : public MonophonicFont {
+class MonophonicFont : SaberBase {
+public:
+  MonophonicFont() : SaberBase(NOLINK) { }
+  void Activate() { SaberBase::Link(); }
+  void Deactivate() { SaberBase::Unlink(); }
 
   void On() override {
-    if (current_ == -1) {
-      wav_players[0].PlayOnce(&out);
-      wav_players[0].PlayLoop(&hum);
-      Preload();
-      current_ = 0;
-    }
+    audio_splicer.Play(&poweron, &hum);
   }
 
   void Off() override {
-    while (fadeto_ != -1) delay(1);
-    int unit = 1 - current_;
-    wav_players[unit].PlayOnce(&in);
-    Preload();
-    fadeto_ = unit;
-    fade_ = 254;
+    audio_splicer.Play(&poweroff, NULL);
+  }
+  void Clash() override { audio_splicer.Play(&clash, &hum); }
+  void Swing() override { audio_splicer.Play(&swing, &hum); }
+  void Stab() override { audio_splicer.Play(&stab, &hum); }
+  void Force() override { audio_splicer.Play(&force, &hum); }
+  void Boot() override { audio_splicer.Play(&boot,  NULL); }
+  void Motion(float speed) override {
+    // Adjust hum volume based on motion speed
+  }
+};
+
+MonophonicFont monophonic_font;
+
+class PolyphonicFont : public SaberBase {
+public:
+  PolyphonicFont() : SaberBase(NOLINK) { }
+  void Activate() { SaberBase::Link(); }
+  void Deactivate() { SaberBase::Unlink(); }
+
+  void On() override {
+    audio_splicer.Play(&out, &hum);
   }
 
-  void Play(Effect* f) override {
+  void Off() override {
+    audio_splicer.Play(&in, NULL);
+  }
+
+  void Play(Effect* f)  {
+    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     // Find a free wave playback unit.
-    for (size_t unit = 2; unit < NELEM(wav_players); unit++) {
+    for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
       if (!wav_players[unit].isPlaying()) {
 	wav_players[unit].PlayOnce(f);
-	Preload();
 	return;
       }
     }
-    // Implement preloading.
-    // NVIC_TRIGGER_IRQ(IRQ_WAV);
   }
   void Clash() override { Play(&clsh); }
   void Swing() override { Play(&swng); }
   void Stab() override { Play(&stab); }
   void Force() override { Play(&force); }
+  void Boot() override { audio_splicer.Play(&boot,  NULL); }
+  void Motion(float speed) override {
+    // Adjust hum volume based on motion speed
+  }
 };
 
 PolyphonicFont polyphonic_font;
+
+class SyntheticFont : PolyphonicFont {
+public:
+  void On() override {}
+  void Off() override {}
+  void Swing() override {}
+
+  void Motion(float speed) override {
+    // Adjust hum volume based on motion speed
+  }
+};
+#endif  // ENABLE_AUDIO
+
+class BatteryMonitor : Looper, CommandParser {
+public:
+  float battery_now() {
+    float volts = 3.3 * analogRead(batteryLevelPin) / 1024.0;
+    float pulldown = 33000;  // Internal pulldown is 33kOhm
+    float external = 23000;  // External pullup
+    float battery_volts = volts * (1.0 + external / pulldown);
+    return battery_volts;
+  }
+  float battery() const {
+    return last_voltage_;
+  }
+protected:
+  void Setup() override {
+    last_voltage_ = battery_now();
+    pinMode(batteryLevelPin, INPUT_PULLDOWN);
+  }
+  void Loop() override {
+    last_voltage_ = last_voltage_ * 0.99 + battery_now() * 0.01;
+    if (monitor.ShouldPrint(Monitoring::MonitorBattery) ||
+	millis() - last_print_millis_ > 20000) {
+      Serial.print("Battery voltage: ");
+      Serial.println(battery());
+      last_print_millis_ = millis();
+    }
+    if (battery() < 3.0) {
+      // Battery voltage is low. Turn stuff off, beep, etc.
+    }
+  }
+
+  bool Parse(const char* cmd, const char* arg) override {
+    if (!strcmp(cmd, "batt") || !strcmp(cmd, "battery")) {
+      Serial.print("Battery voltage: ");
+      Serial.println(battery());
+      return true;
+    }
+    return false;
+  }
+private:
+  float last_voltage_ = 0.0;
+  uint32_t last_print_millis_;
+};
+
+BatteryMonitor battery_monitor;
+
+
+struct Color {
+  Color() : r(0), g(0), b(0) {}
+  Color(uint8_t r_, uint8_t g_, uint8_t b_) : r(r_), g(g_), b(b_) {}
+  // x = 0..256
+  Color mix(const Color& other, int x) const {
+    // Wonder if there is an instruction for this?
+    return Color( ((256-x) * r + x * other.r) >> 8,
+                  ((256-x) * g + x * other.g) >> 8,
+                  ((256-x) * b + x * other.b) >> 8);
+  }
+  uint8_t r, g, b;
+};
+
 
 #ifdef ENABLE_WS2811
 // What follows is a copy of the OctoWS2811 library. It's been modified in 
@@ -1517,18 +1794,21 @@ PolyphonicFont polyphonic_font;
 #define WS2811_400kHz 0x10      // Adafruit's Flora Pixels
 #define WS2811_580kHz 0x20      // PL9823
 
+// If you have two 144 LED/m strips in your blade, connect
+// both of them to bladePin and drive them in parallel.
+const unsigned int maxLedsPerStrip = 144;
 
 class MonopodWS2811 {
 public:
   void begin(uint32_t numPerStrip,
              void *frameBuf,
-             void *drawBuf,
              uint8_t config = WS2811_GRB);
-  void setPixel(uint32_t num, int color);
-  void setPixel(uint32_t num, uint8_t red, uint8_t green, uint8_t blue) {
-    setPixel(num, color(red, green, blue));
+  void setPixel(uint32_t num, Color color) {
+    drawBuffer[num] = color;
   }
-  int getPixel(uint32_t num);
+  Color getPixel(uint32_t num) {
+    return drawBuffer[num];
+  }
 
   void show(void);
   int busy(void);
@@ -1536,53 +1816,23 @@ public:
   int numPixels(void) {
     return stripLen;
   }
-  int color(uint8_t red, uint8_t green, uint8_t blue) {
-    return (red << 16) | (green << 8) | blue;
-  }
-  
   
 private:
   static uint16_t stripLen;
   static void *frameBuffer;
-  static void *drawBuffer;
+  static Color drawBuffer[maxLedsPerStrip];
   static uint8_t params;
   static DMAChannel dma1, dma2, dma3;
   static void isr(void);
 };
 
-/*  OctoWS2811 - High Performance WS2811 LED Display Library
-    http://www.pjrc.com/teensy/td_libs_OctoWS2811.html
-    Copyright (c) 2013 Paul Stoffregen, PJRC.COM, LLC
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-    THE SOFTWARE.
-*/
-
-
-
 uint16_t MonopodWS2811::stripLen;
 void * MonopodWS2811::frameBuffer;
-void * MonopodWS2811::drawBuffer;
 uint8_t MonopodWS2811::params;
 DMAChannel MonopodWS2811::dma1;
 DMAChannel MonopodWS2811::dma2;
 DMAChannel MonopodWS2811::dma3;
-
+Color MonopodWS2811::drawBuffer[maxLedsPerStrip];
 static uint8_t ones = 0x20;  // pin 20
 static volatile uint8_t update_in_progress = 0;
 static uint32_t update_completed_at = 0;
@@ -1670,12 +1920,10 @@ void setFTM_Timer(uint8_t ch1, uint8_t ch2, float frequency)
 
 void MonopodWS2811::begin(uint32_t numPerStrip,
                           void *frameBuf,
-                          void *drawBuf,
                           uint8_t config)
 {
   stripLen = numPerStrip;
   frameBuffer = frameBuf;
-  drawBuffer = drawBuf;
   params = config;
 
   uint32_t bufsize, frequency = 400000;
@@ -1684,11 +1932,6 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
 
   // set up the buffers
   memset(frameBuffer, ones, bufsize);
-  if (drawBuffer) {
-    memset(drawBuffer, ones, bufsize);
-  } else {
-    drawBuffer = frameBuffer;
-  }
         
   // configure the 8 output pins
   WS2811_PORT_CLEAR = ones;
@@ -1820,256 +2063,317 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
 
 void MonopodWS2811::isr(void)
 {
-        //Serial1.print(".");
-        //Serial1.println(dma3.CFG->DCR, HEX);
-        //Serial1.print(dma3.CFG->DSR_BCR > 24, HEX);
-        dma3.clearInterrupt();
-        //Serial1.print("*");
-        update_completed_at = micros();
-        update_in_progress = 0;
+  //Serial1.print(".");
+  //Serial1.println(dma3.CFG->DCR, HEX);
+  //Serial1.print(dma3.CFG->DSR_BCR > 24, HEX);
+  dma3.clearInterrupt();
+  //Serial1.print("*");
+  update_completed_at = micros();
+  update_in_progress = 0;
 }
 
 int MonopodWS2811::busy(void)
 {
-        if (update_in_progress) return 1;
-        // busy for 50 us after the done interrupt, for WS2811 reset
-        if (micros() - update_completed_at < 50) return 1;
-        return 0;
+  if (update_in_progress) return 1;
+  // busy for 50 us after the done interrupt, for WS2811 reset
+  if (micros() - update_completed_at < 50) return 1;
+  return 0;
 }
+
+#if 1
+static inline void Out2DMA(uint8_t *& o, uint8_t v) {
+  *(o++) = (v & 128) ? 0 : ones;
+  *(o++) = (v & 64) ? 0 : ones;
+  *(o++) = (v & 32) ? 0 : ones;
+  *(o++) = (v & 16) ? 0 : ones;
+  *(o++) = (v & 8) ? 0 : ones;
+  *(o++) = (v & 4) ? 0 : ones;
+  *(o++) = (v & 2) ? 0 : ones;
+  *(o++) = (v & 1) ? 0 : ones;
+}
+
+template<int STYLE>
+void CopyOut(struct Color* inbuf, void* frameBuffer, int num) {
+  uint8_t *o = (uint8_t*)frameBuffer;
+  for (int j = 0; j < num; j++) {
+    Color tmp = inbuf[j];
+    if (STYLE == WS2811_RBG) {
+      Out2DMA(o, tmp.r);
+      Out2DMA(o, tmp.b);
+      Out2DMA(o, tmp.g);
+    } else if (STYLE == WS2811_GRB) {
+      Out2DMA(o, tmp.g);
+      Out2DMA(o, tmp.r);
+      Out2DMA(o, tmp.b);
+    } else if (STYLE == WS2811_GBR) {
+      Out2DMA(o, tmp.g);
+      Out2DMA(o, tmp.b);
+      Out2DMA(o, tmp.r);
+    } else {
+      Out2DMA(o, tmp.r);
+      Out2DMA(o, tmp.g);
+      Out2DMA(o, tmp.b);
+    }
+  }
+}
+#endif
 
 void MonopodWS2811::show(void)
 {
-        // wait for any prior DMA operation
-        //Serial1.print("1");
-        while (update_in_progress) ; 
-        //Serial1.print("2");
-        // it's ok to copy the drawing buffer to the frame buffer
-        // during the 50us WS2811 reset time
-        if (drawBuffer != frameBuffer) {
-                // TODO: this could be faster with DMA, especially if the
-                // buffers are 32 bit aligned... but does it matter?
-                memcpy(frameBuffer, drawBuffer, stripLen * 24);
-        }
-        // wait for WS2811 reset
-        while (micros() - update_completed_at < 50) ;
+  // wait for any prior DMA operation
+  //Serial1.print("1");
+  while (update_in_progress) ; 
+  //Serial1.print("2");
+
+  // it's ok to copy the drawing buffer to the frame buffer
+  // during the 50us WS2811 reset time
+  switch (params & 7) {
+    case WS2811_RBG:
+      CopyOut<WS2811_RBG>(drawBuffer, frameBuffer, stripLen);
+      break;
+    case WS2811_GRB:
+      CopyOut<WS2811_GRB>(drawBuffer, frameBuffer, stripLen);
+      break;
+    case WS2811_GBR:
+      CopyOut<WS2811_GBR>(drawBuffer, frameBuffer, stripLen);
+      break;
+    default:
+      CopyOut<0>(drawBuffer, frameBuffer, stripLen);
+      break;
+  }
+
+  // wait for WS2811 reset
+  while (micros() - update_completed_at < 50) ;
 
 #ifdef USE_FTM_TIMER
-        uint32_t sc = FTM0_SC;
-        //digitalWriteFast(1, HIGH); // oscilloscope trigger
+  uint32_t sc = FTM0_SC;
+  //digitalWriteFast(1, HIGH); // oscilloscope trigger
   
-        //noInterrupts(); // This code is not time critical anymore. IRQs can stay on. 
-        // We disable the FTM Timer, reset it to its initial counter value and clear all irq-flags. 
-        // Clearing irqs is a bit tricky, because with DMA enabled, only the DMA can clear them. 
-        // We have to disable DMA, reset the irq-flags and enable DMA once again.
-        update_in_progress = 1;
-        FTM0_SC = sc & 0xE7;    // stop FTM timer
+  //noInterrupts(); // This code is not time critical anymore. IRQs can stay on. 
+  // We disable the FTM Timer, reset it to its initial counter value and clear all irq-flags. 
+  // Clearing irqs is a bit tricky, because with DMA enabled, only the DMA can clear them. 
+  // We have to disable DMA, reset the irq-flags and enable DMA once again.
+  update_in_progress = 1;
+  FTM0_SC = sc & 0xE7;    // stop FTM timer
         
-        FTM0_CNT = 0; // writing any value to CNT-register will load the CNTIN value!
+  FTM0_CNT = 0; // writing any value to CNT-register will load the CNTIN value!
         
-        FTM0_C0SC = 0; // disable DMA transfer. It has to be done, because we can't reset the CHnF bit while DMA is enabled
-        FTM0_C1SC = 0;
-        FTM0_C2SC = 0;
+  FTM0_C0SC = 0; // disable DMA transfer. It has to be done, because we can't reset the CHnF bit while DMA is enabled
+  FTM0_C1SC = 0;
+  FTM0_C2SC = 0;
         
-        FTM0_STATUS; // read status and write 0x00 to it, clears all pending IRQs
-        FTM0_STATUS = 0x00;
+  FTM0_STATUS; // read status and write 0x00 to it, clears all pending IRQs
+  FTM0_STATUS = 0x00;
         
-        FTM0_C0SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28; 
-        FTM0_C1SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
-        FTM0_C2SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
+  FTM0_C0SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28; 
+  FTM0_C1SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
+  FTM0_C2SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
         
-        dma1.enable();
-        dma2.enable();        // enable all 3 DMA channels
-        dma3.enable();
-        //interrupts();
-        //digitalWriteFast(1, LOW);
-        // wait for WS2811 reset
-        while (micros() - update_completed_at < 50) ; // moved to the end, because everything else can be done before.
-        FTM0_SC = sc;        // restart FTM timer
+  dma1.enable();
+  dma2.enable();        // enable all 3 DMA channels
+  dma3.enable();
+  //interrupts();
+  //digitalWriteFast(1, LOW);
+  // wait for WS2811 reset
+  while (micros() - update_completed_at < 50) ; // moved to the end, because everything else can be done before.
+  FTM0_SC = sc;        // restart FTM timer
 
 #elif defined(KINETISK)
-        // ok to start, but we must be very careful to begin
-        // without any prior 3 x 800kHz DMA requests pending
-        uint32_t sc = FTM1_SC;
-        uint32_t cv = FTM1_C1V;
-        noInterrupts();
-        // CAUTION: this code is timing critical.  Any editing should be
-        // tested by verifying the oscilloscope trigger pulse at the end
-        // always occurs while both waveforms are still low.  Simply
-        // counting CPU cycles does not take into account other complex
-        // factors, like flash cache misses and bus arbitration from USB
-        // or other DMA.  Testing should be done with the oscilloscope
-        // display set at infinite persistence and a variety of other I/O
-        // performed to create realistic bus usage.  Even then, you really
-        // should not mess with this timing critical code!
-        update_in_progress = 1;
-        while (FTM1_CNT <= cv) ; 
-        while (FTM1_CNT > cv) ; // wait for beginning of an 800 kHz cycle
-        while (FTM1_CNT < cv) ;
-        FTM1_SC = sc & 0xE7;    // stop FTM1 timer (hopefully before it rolls over)
-        //digitalWriteFast(9, HIGH); // oscilloscope trigger
-        PORTB_ISFR = (1<<0);    // clear any prior rising edge
-        PORTC_ISFR = (1<<0);    // clear any prior low duty falling edge
-        PORTA_ISFR = (1<<13);   // clear any prior high duty falling edge
-        dma1.enable();
-        dma2.enable();          // enable all 3 DMA channels
-        dma3.enable();
-        FTM1_SC = sc;           // restart FTM1 timer
-        //digitalWriteFast(9, LOW);
+  // ok to start, but we must be very careful to begin
+  // without any prior 3 x 800kHz DMA requests pending
+  uint32_t sc = FTM1_SC;
+  uint32_t cv = FTM1_C1V;
+  noInterrupts();
+  // CAUTION: this code is timing critical.  Any editing should be
+  // tested by verifying the oscilloscope trigger pulse at the end
+  // always occurs while both waveforms are still low.  Simply
+  // counting CPU cycles does not take into account other complex
+  // factors, like flash cache misses and bus arbitration from USB
+  // or other DMA.  Testing should be done with the oscilloscope
+  // display set at infinite persistence and a variety of other I/O
+  // performed to create realistic bus usage.  Even then, you really
+  // should not mess with this timing critical code!
+  update_in_progress = 1;
+  while (FTM1_CNT <= cv) ; 
+  while (FTM1_CNT > cv) ; // wait for beginning of an 800 kHz cycle
+  while (FTM1_CNT < cv) ;
+  FTM1_SC = sc & 0xE7;    // stop FTM1 timer (hopefully before it rolls over)
+  //digitalWriteFast(9, HIGH); // oscilloscope trigger
+  PORTB_ISFR = (1<<0);    // clear any prior rising edge
+  PORTC_ISFR = (1<<0);    // clear any prior low duty falling edge
+  PORTA_ISFR = (1<<13);   // clear any prior high duty falling edge
+  dma1.enable();
+  dma2.enable();          // enable all 3 DMA channels
+  dma3.enable();
+  FTM1_SC = sc;           // restart FTM1 timer
+  //digitalWriteFast(9, LOW);
 #elif defined(KINETISL)
-        uint32_t sc = FTM2_SC;
-        uint32_t cv = FTM2_C1V;
-        noInterrupts();
-        update_in_progress = 1;
-        while (FTM2_CNT <= cv) ;
-        while (FTM2_CNT > cv) ; // wait for beginning of an 800 kHz cycle
-        while (FTM2_CNT < cv) ;
-        FTM2_SC = 0;            // stop FTM2 timer (hopefully before it rolls over)
-        //digitalWriteFast(9, HIGH); // oscilloscope trigger
+  uint32_t sc = FTM2_SC;
+  uint32_t cv = FTM2_C1V;
+  noInterrupts();
+  update_in_progress = 1;
+  while (FTM2_CNT <= cv) ;
+  while (FTM2_CNT > cv) ; // wait for beginning of an 800 kHz cycle
+  while (FTM2_CNT < cv) ;
+  FTM2_SC = 0;            // stop FTM2 timer (hopefully before it rolls over)
+  //digitalWriteFast(9, HIGH); // oscilloscope trigger
 
 
-        dma1.clearComplete();
-        dma2.clearComplete();
-        dma3.clearComplete();
-        uint32_t bufsize = stripLen*24;
-        dma1.transferCount(bufsize);
-        dma2.transferCount(bufsize);
-        dma3.transferCount(bufsize);
-        dma2.sourceBuffer((uint8_t *)frameBuffer, bufsize);
+  dma1.clearComplete();
+  dma2.clearComplete();
+  dma3.clearComplete();
+  uint32_t bufsize = stripLen*24;
+  dma1.transferCount(bufsize);
+  dma2.transferCount(bufsize);
+  dma3.transferCount(bufsize);
+  dma2.sourceBuffer((uint8_t *)frameBuffer, bufsize);
 
-        // clear any pending event flags
-        FTM2_SC = 0x80;
-        FTM2_C0SC = 0xA9;       // clear any previous pending DMA requests
-        FTM2_C1SC = 0xA9;
-        // clear any prior pending DMA requests
-        dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_OV);
-        dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_CH0);
-        dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_CH1);
-        //GPIOD_PTOR = 0xFF;
-        //GPIOD_PTOR = 0xFF;
-        dma1.enable();
-        dma2.enable();          // enable all 3 DMA channels
-        dma3.enable();
-        FTM2_SC = 0x188;
-        //digitalWriteFast(9, LOW);
+  // clear any pending event flags
+  FTM2_SC = 0x80;
+  FTM2_C0SC = 0xA9;       // clear any previous pending DMA requests
+  FTM2_C1SC = 0xA9;
+  // clear any prior pending DMA requests
+  dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_OV);
+  dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_CH0);
+  dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_CH1);
+  //GPIOD_PTOR = 0xFF;
+  //GPIOD_PTOR = 0xFF;
+  dma1.enable();
+  dma2.enable();          // enable all 3 DMA channels
+  dma3.enable();
+  FTM2_SC = 0x188;
+  //digitalWriteFast(9, LOW);
 #endif
-        //Serial1.print("3");
-        interrupts();
-        //Serial1.print("4");
+  //Serial1.print("3");
+  interrupts();
+  //Serial1.print("4");
 }
 
-void MonopodWS2811::setPixel(uint32_t num, int color)
-{
-        uint32_t offset, mask;
-        uint8_t bit, *p;
-        
-        switch (params & 7) {
-          case WS2811_RBG:
-                color = (color&0xFF0000) | ((color<<8)&0x00FF00) | ((color>>8)&0x0000FF);
-                break;
-          case WS2811_GRB:
-                color = ((color<<8)&0xFF0000) | ((color>>8)&0x00FF00) | (color&0x0000FF);
-                break;
-          case WS2811_GBR:
-                color = ((color<<8)&0xFFFF00) | ((color>>16)&0x0000FF);
-                break;
-          default:
-                break;
-        }
-        color = color ^ 0xFFFFFF;
-//      strip = num / stripLen;  // Cortex-M4 has 2 cycle unsigned divide :-)
-//      offset = num % stripLen;
-
-        // strip = 5;
-        offset = num;
-        // bit = (1<<strip);
-        bit = ones;
-        p = ((uint8_t *)drawBuffer) + offset * 24;
-        for (mask = (1<<23) ; mask ; mask >>= 1) {
-                if (color & mask) {
-                        *p++ |= bit;
-                } else {
-                        *p++ &= ~bit;
-                }
-        }
-}
-
-int MonopodWS2811::getPixel(uint32_t num)
-{
-        uint32_t offset, mask;
-        uint8_t bit, *p;
-        int color=0;
-
-//      strip = num / stripLen;
-//      offset = num % stripLen;
-        // strip = 5;
-        offset = num;
-        // bit = (1<<strip);
-        bit = ones;
-        p = ((uint8_t *)drawBuffer) + offset * 24;
-        for (mask = (1<<23) ; mask ; mask >>= 1) {
-                if (*p++ & bit) color |= mask;
-        }
-        switch (params & 7) {
-          case WS2811_RBG:
-                color = (color&0xFF0000) | ((color<<8)&0x00FF00) | ((color>>8)&0x0000FF);
-                break;
-          case WS2811_GRB:
-                color = ((color<<8)&0xFF0000) | ((color>>8)&0x00FF00) | (color&0x0000FF);
-                break;
-          case WS2811_GBR:
-                color = ((color<<8)&0xFFFF00) | ((color>>16)&0x0000FF);
-                break;
-          default:
-                break;
-        }
-        return color ^ 0xFFFFFF;
-}
-
-// TODO: rename to maxledsPerStrip
-const unsigned int ledsPerStrip = 200;
-DMAMEM int displayMemory[ledsPerStrip*6];
-int drawingMemory[ledsPerStrip*6];
+DMAMEM int displayMemory[maxLedsPerStrip*6];
 MonopodWS2811 monopodws;
 
 #endif
 
-struct Color {
-  Color() : r(0), g(0), b(0) {}
-  Color(uint8_t r_, uint8_t g_, uint8_t b_) : r(r_), g(g_), b(b_) {}
-  // x = 0..256
-  Color mix(const Color& other, int x) const {
-    // Wonder if there is an instruction for this?
-    return Color( ((256-x) * r + x * other.r) >> 8,
-                  ((256-x) * g + x * other.g) >> 8,
-                  ((256-x) * b + x * other.b) >> 8);
+
+#if 0
+
+#define CONFIGARRAY(X) (X), arraysize(X)
+
+class BladeEffect {
+public:
+  explicit BladeEffect(int num_configs) : num_configs_(num_configs) { }
+  virtual void run() = 0;
+  void setConfig(int config_num) {
+    current_config_ = config_num;
   }
-  uint8_t r, g, b;
+  void next_config() {
+    current_config_++;
+    if (current_config_ == num_configs_) current_config_ = 0;
+  }
+protected:
+  int num_configs_;
+  int current_config_ = 0;
 };
 
-struct BladeColor {
-  Color base;
-  Color tip;
-  Color get(int led) { return base.mix(tip, led * 256 / ledsPerStrip); }
-  void set(Color c) { base = tip = c; }
-  void set(uint8_t r, uint8_t g, uint8_t b) { base = tip = Color(r, g, b); }
+struct Preset {
+  const char* sound_font;
+  BladeEffect* effect_;
+  int config;
 };
+
+class BladeEffect_WS2811_Normal : public BladeEffect {
+public:
+  struct Config {
+    Color base;
+    Color clash;
+  };
+  BladeEffect_WS2811_Normal(Config* configs, int num_configs) : BladeEffect(num_configs), configs_(configs) {}
+  void run() override {
+  }
+private:
+  Config* configs_;
+};
+
+class BladeEffect_WS2811_Fire  : public BladeEffect {
+public:
+  struct Config {
+    Color c1, c2;
+    Color clash;
+  };
+  BladeEffect_WS2811_Fire(Config* configs, int num_configs) : BladeEffect(num_configs), configs_(configs) {}
+  void run() override {
+  }
+private:
+  Config* configs_;
+};
+
+class BladeEffect_WS2811_Charging : public BladeEffect {
+public:
+  BladeEffect_WS2811_Charging() : BladeEffect(1) {}
+  void run() override {
+    int black_mix = 128 + 100 * sin(millis() / 1000.0);
+    float volts = battery_monitor.battery();
+    Color colors[] = {
+      Color(0,255,0),   // Green > 4.0
+      Color(0,0,255),
+      Color(255,128,0),
+      Color(255,0,0) 
+      Color(255,0,0) 
+    };
+    float x = (4.0 - volts) * 2.0;
+    int i = floor(x);
+    i = clampi32(i, 0, arraysize(colors) - 2);
+    // Blend colors over 0.1 volts.
+    int blend = (x - i) * 10 * 255;
+    blend = clampi32(blend, 0, 255);
+    Color c = colors[i].mix(colors[i + 1], blend);
+    c = c.mix(Color(), black_mix);
+    break;
+  };
+};
+
+#define RED {255, 0, 0}
+#define GREEN {0, 255, 0}
+#define BLUE {0, 255, 0}
+#define YELLOW {255, 255, 0}
+#define CYAN {0, 255, 255}
+#define MAGENTA {255, 0, 255}
+#define WHITE {255, 255, 255}
+
+#define BLADEFFECT(CLASS, NAME, CONFIGS)	           \
+CLASS::Config CLASS##_##NAME##_configs[] = CONFIGS;        \
+CLASS CLASS##_##NAME(CONFIGARRAY(CLASS##_##NAME##_configs))
+
+BLADEFFECT(BladeEffect_WS2811_Fire,obj, {
+    { RED, YELLOW },
+    { BLUE, CYAN },
+    { GREEN, YELLOW },
+});
+
+BLADEFFECT(BladeEffect_WS2811_Normal,obj, {
+  { CYAN, WHITE },
+  { RED, WHITE },
+  { GREEN, WHITE },
+  { BLUE, WHITE },
+});
+
+BladeEffect_WS2811_Charging BladeEffect_WS2811_Charging_obj;
+
+#endif
 
 struct BladeSettings {
-  BladeColor base;
-  BladeColor shimmer;
-  BladeColor clash;
+  Color base;
+  Color shimmer;
+  Color clash;
 
   void setAll(uint8_t r, uint8_t g, uint8_t b) {
-    base.set(r, g, b);
-    shimmer = clash = base;
+    shimmer = clash = base = Color(r, g, b);
   }
   void set(uint8_t r, uint8_t g, uint8_t b) {
-    base.set(r, g, b);
-    shimmer = base;
+    shimmer = base = Color(r, g, b);
   }
 };
 
-// TODO: Support changing number of LEDs at runtime
 
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
@@ -2082,8 +2386,14 @@ public:
     BLADE_ON,
     BLADE_TURNING_OFF,
     BLADE_ALMOST_OFF,
-    BLADE_TEST,
-    BLADE_SHOWOFF,
+  };
+
+  enum Style {
+    STYLE_NORMAL,
+    STYLE_TEST,
+    STYLE_SHOWOFF,
+    STYLE_FIRE,
+    STYLE_CHARGING,
   };
   WS2811_Blade() : SaberBase(NOLINK),
 		   CommandParser(NOLINK),
@@ -2091,7 +2401,7 @@ public:
 		   state_(BLADE_OFF) {
     // TODO: colors should be set in in blade identify code.
     settings_.set(0,0,255);
-    settings_.clash.set(255, 255, 255);
+    settings_.clash = Color(255, 255, 255);
   }
 
   void Power(bool on) {
@@ -2104,9 +2414,10 @@ public:
 //    pinMode(bladePin, on ? OUTPUT : INPUT);
   }
   void Activate(int num_leds, uint8_t config) {
+    num_leds_ = num_leds;
     Power(true);
     delay(10);
-    monopodws.begin(num_leds, displayMemory, drawingMemory, config);
+    monopodws.begin(num_leds, displayMemory, config);
     monopodws.show();  // Make it black
     monopodws.show();  // Make it black
     monopodws.show();  // Make it black
@@ -2125,12 +2436,12 @@ public:
     delay(10);
     state_ = BLADE_TURNING_ON;
     event_millis_ = millis();
-    event_length_ = 200; // Guess
+    event_length_ = 300; // Guess
   }
   void Off() override {
     state_ = BLADE_TURNING_OFF;
     event_millis_ = millis();
-    event_length_ = 200; // Guess
+    event_length_ = 500; // Guess
   }
 
   void Clash() override { clash_=true; }
@@ -2161,15 +2472,27 @@ public:
 	pinMode(bladePowerPin1, INPUT);
 	pinMode(bladePowerPin2, INPUT);
 	pinMode(bladePowerPin3, INPUT);
+	// Try floating the blade control pin instead?
 	state_ = BLADE_OFF;
         return true;
       }
+      if (!strcmp(arg, "normal")) {
+        style_ = STYLE_NORMAL;
+      }
       if (!strcmp(arg, "test")) {
-        state_ = BLADE_TEST;
+        style_ = STYLE_TEST;
         return true;
       }
       if (!strcmp(arg, "showoff")) {
-        state_ = BLADE_SHOWOFF;
+        style_ = STYLE_SHOWOFF;
+        return true;
+      }
+      if (!strcmp(arg, "fire")) {
+        style_ = STYLE_FIRE;
+        return true;
+      }
+      if (!strcmp(arg, "charging")) {
+        style_ = STYLE_CHARGING;
         return true;
       }
     }
@@ -2228,6 +2551,7 @@ protected:
       last_millis_ = 0;
       return;
     }
+
     monopodws.show();
     int m = millis();
     if (last_millis_) {
@@ -2239,8 +2563,8 @@ protected:
       }
     }
     last_millis_ = m;
-    int thres = ledsPerStrip * 256 * (m - event_millis_) / event_length_;
-    if (thres > (int)((ledsPerStrip + 2) * 256)) {
+    int thres = num_leds_ * 256 * (m - event_millis_) / event_length_;
+    if (thres > (int)(num_leds_ + 2) * 256) {
       switch (state_) {
         case BLADE_TURNING_ON:
           state_ = BLADE_ON;
@@ -2254,67 +2578,120 @@ protected:
         default: break;
       }
     }
-    for (unsigned int i = 0; i < ledsPerStrip; i++) {
+    if (style_ ==  STYLE_FIRE) {
+      uint32_t m = millis();
+      if (m - last_update_ < 10) return;
+      last_update_ = m;
+      FireFX();
+    }
+    for (unsigned int i = 0; i < num_leds_; i++) {
       Color c;
       if (clash_) {
-        c = settings_.clash.get(i);
+        c = settings_.clash;
       } else {
-        c = settings_.base.get(i);
+        c = settings_.base;
       }
       // TODO: shimmer more when moving.
       // TODO: Other shimmer styles
-      c = c.mix(settings_.shimmer.get(i), rand() & 0xFF);
+      c = c.mix(settings_.shimmer, rand() & 0xFF);
 
+      int black_mix = 0;
       switch (state_) {
-        case BLADE_SHOWOFF:
+        case BLADE_OFF:
+        case BLADE_ALMOST_OFF: black_mix = 256; break;
+        case BLADE_TURNING_ON: {
+          int x = i * 256 - thres;
+          if (x > 256) black_mix = 256;
+          else if (x > -256) black_mix = (512 - x) >> 1;
+          break;
+        }
+        case BLADE_ON: black_mix = 0; break;
+        case BLADE_TURNING_OFF: {
+          int x = i * 256 - num_leds_ * 256 + thres;
+          if (x > 256) black_mix = 256;
+          else if (x > -256) black_mix =  (512 - x) >> 1;
+          break;
+        }
+      }
+
+      switch (style_) {
+	default:
+	  c = c.mix(Color(), black_mix);
+	  break;
+
+	case STYLE_CHARGING: {
+	  int black_mix = 128 + 100 * sin(millis() / 1000.0);
+	  float volts = battery_monitor.battery();
+	  if (volts > 4.0) {
+	    c = Color(0,255,0);    // Green
+	  } else if (volts > 3.5) {
+	    c = Color(0,0,255);    // Blue
+	  } else if (volts > 3.0) {
+	    c = Color(255,128,0);  // Orange/yellow
+	  } else {
+	    c = Color(255,0,0);    // Red
+	  }
+	  c = c.mix(Color(), black_mix);
+	  break;
+	}
+	  
+        case STYLE_FIRE: {
+	  // TODO: Use Pixel storage instead of heat_ ?
+          int h = heat_[num_leds_ - 1 - i];
+          c = Color(clamp(h, 0, 255),
+		    clamp(h - 256, 0, 255),
+		    clamp(h - 512, 0, 255));
+	  break;
+        }
+
+        case STYLE_SHOWOFF:
           c = Color(sin(i*0.23 - m*0.013) * 127 + 127,
                     sin(i*0.17 - m*0.005) * 127 + 127,
                     sin(i*0.37 - m*0.007) * 127 + 127);
+	  c = c.mix(Color(), black_mix);
           break;
-        case BLADE_TEST: {
+        case STYLE_TEST: {
           switch((((m >> 5) + i)/10) % 3) {
 //          switch((i/10) % 3) {
             case 0: c = Color(255,0,0); break;
             case 1: c = Color(0,255,0); break;
             case 2: c = Color(0,0,255); break;
           }
-          break;
-        }
-        case BLADE_OFF:
-        case BLADE_ALMOST_OFF:
-          c = Color();
-          break;
-        case BLADE_TURNING_ON: {
-          int x = i * 256 - thres;
-          if (x > 256) c = Color();
-          else if (x > -256) {
-            c = c.mix(Color(), (512 - x) >> 1);
-          }
-          break;
-        }
-        case BLADE_ON: break;
-        case BLADE_TURNING_OFF: {
-          int x = i * 256 - ledsPerStrip * 256 + thres;
-          if (x > 256) c = Color();
-          else if (x > -256) { 
-            c = c.mix(Color(), (512 - x) >> 1);
-          }
+	  c = c.mix(Color(), black_mix);
           break;
         }
       }
-      monopodws.setPixel(i, monopodws.color(c.r, c.g, c.b));
+
+      monopodws.setPixel(i, c);
     }
     clash_ = false;
+  }
+
+  void FireFX() {
+    // Note heat_[0] is tip of blade
+    if (clash_) {
+      heat_[num_leds_ - 1] += 3000;
+    } else {
+      heat_[num_leds_ - 1] += random(random(random(1000)));
+    }
+    for (size_t i = 0; i < num_leds_; i++) {
+      int x = (heat_[i] * 5  + heat_[i+1] * 7 + heat_[i+2] * 4) >> 4;
+      heat_[i] = max(x - random(0, 1), 0);
+    }
   }
   
 private:
   State state_;
+  Style style_;
   bool clash_ = false;
+  size_t num_leds_;
   int event_millis_;
   int event_length_;
   int last_millis_;
   int updates_ = 0;
   int millis_sum_ = 0;
+  uint32_t last_update_ = 0;
+  unsigned short heat_[maxLedsPerStrip];
 };
 
 // Simple blade, LED string or LED star with optional flash on clash.
@@ -2334,6 +2711,7 @@ public:
 		   state_(BLADE_OFF) {
   }
   void Activate() {
+    analogWriteResolution(8);
     analogWriteFrequency(bladePowerPin1, 1000);
     analogWriteFrequency(bladePowerPin2, 1000);
     analogWriteFrequency(bladePowerPin3, 1000);
@@ -2351,12 +2729,12 @@ public:
   void On() override {
     state_ = BLADE_TURNING_ON;
     event_millis_ = millis();
-    event_length_ = 100;
+    event_length_ = 200;
   }
   void Off() override {
     state_ = BLADE_TURNING_OFF;
     event_millis_ = millis();
-    event_length_ = 100; // Guess
+    event_length_ = 200; // Guess
   }
 
   void Clash() override {
@@ -2397,15 +2775,19 @@ protected:
     
     int level = 0;
     switch (state_) {
-      case BLADE_OFF: level = 0;
+      case BLADE_OFF:
+        level = 0;
+        break;
       case BLADE_TURNING_ON:
         level = thres;
         break;
       case BLADE_TURNING_OFF:
         level = 255 - thres;
+	break;
       case BLADE_ON:
         level = 255;
     }
+    level = clampi32(level, 0, 255);
     analogWrite(bladePowerPin1, level);
     analogWrite(bladePowerPin2, level);
     analogWrite(bladePowerPin3, level);
@@ -2523,10 +2905,6 @@ public:
       switch (next_action_) {
         case TURN_ON:
           // Will fade in based on swing volume set elsewhere.
-#ifdef ENABLE_AUDIO
-          saber_synth.volume_.set(0);
-          saber_synth.on_ = true;
-#endif
           break;
 
          case NO_ACTION:
@@ -2550,80 +2928,18 @@ protected:
 
 Scheduler scheduler;
 
-#if 1
-// Simple button handler. Keeps track of clicks and lengths of pushes.
-class Button : Looper, CommandParser {
-public:
-  Button(int pin, const char* name)
-    : Looper(),
-      CommandParser(),
-      pin_(pin),
-      name_(name),
-      pushed_(false),
-      clicked_(false),
-      push_millis_(0) {
-    pinMode(pin, INPUT_PULLUP);
-#ifdef ENABLE_SNOOZE
-    snooze_config.pinMode(pin, INPUT_PULLUP, RISING);
-#endif
-  }
-  int pushed_millis() {
-    if (pushed_) return millis() - push_millis_;
-    return 0;
-  }
-  bool clicked() {
-    bool ret = clicked_;
-    clicked_ = false;
-    return ret;
-  }
-protected:
-  void Loop() {
-    if (digitalRead(pin_) == HIGH) {
-      if (!pushed_) {
-        push_millis_ = millis();
-        pushed_ = true;
-      }
-    } else {
-      if (pushed_) {
-        int t = millis() - push_millis_;
-        if (t < 5) return; // De-bounce
-        pushed_ = false;
-        if (t < 500) clicked_ = true;
-      }
-    }
-  }
-  bool Parse(const char* cmd, const char* arg) override {
-    if (!strcmp(cmd, name_)) {
-      clicked_ = true;
-      return true;
-    }
-    return false;
-  }
-
-  uint8_t pin_;
-  const char* name_;
-  bool pushed_;
-  bool clicked_;
-  int push_millis_;
-};
-#else
-
-class Button {
-public:
-  virtual bool Read() = 0;
-};
-
-class DebouncedButton : Button, StateMachine {
+class DebouncedButton : StateMachine {
 public:
   void Update() {
     STATE_MACHINE_BEGIN();
     while (true) {
-      while (!Button::Read()) YIELD();
+      while (!Read()) YIELD();
       pushed_ = true;
-      SLEEP(10);
-      while (Button::Read()) YIELD();
+      do {
+	if (Read()) last_on_ = millis();
+	YIELD();
+      } while (millis() - last_on_ < timeout());
       pushed_ = false;
-      SLEEP(10);
     }
     STATE_MACHINE_END();
   }
@@ -2632,25 +2948,27 @@ public:
     return pushed_;
   }
 
+protected:
+  virtual uint32_t timeout() { return 10; }
+  virtual bool Read() = 0;
+
 private:
-  bool pushed = false;
+  uint32_t last_on_;
+  bool pushed_ = false;
 };
 
 // Simple button handler. Keeps track of clicks and lengths of pushes.
-class Button : Looper, CommandParser, DebouncedButton, StateMachine {
+class ButtonBase : public Looper,
+		   public CommandParser,
+		   public DebouncedButton {
 public:
-  Button(int pin, const char* name)
+  ButtonBase(const char* name)
     : Looper(),
       CommandParser(),
-      pin_(pin),
       name_(name),
       pushed_(false),
       clicked_(false),
       push_millis_(0) {
-    pinMode(pin, INPUT_PULLUP);
-#ifdef ENABLE_SNOOZE
-    snooze_config.pinMode(pin, INPUT_PULLUP, RISING);
-#endif
   }
   int pushed_millis() {
     if (pushed_) return millis() - push_millis_;
@@ -2661,6 +2979,7 @@ public:
     clicked_ = false;
     return ret;
   }
+
 protected:
   void Loop() {
     STATE_MACHINE_BEGIN();
@@ -2684,14 +3003,29 @@ protected:
     return false;
   }
 
-  uint8_t pin_;
+  int next_state_ = -1;
+  uint32_t sleep_until_ = 0;
   const char* name_;
   bool pushed_;
   bool clicked_;
   int push_millis_;
 };
 
+class Button : public ButtonBase {
+public:
+  Button(int pin, const char* name) : ButtonBase(name), pin_(pin) {
+    pinMode(pin, INPUT_PULLUP);
+#ifdef ENABLE_SNOOZE
+    snooze_config.pinMode(pin, INPUT_PULLUP, RISING);
 #endif
+  }
+protected:
+  bool Read() override {
+    return digitalRead(pin_) == LOW;
+  }
+  uint8_t pin_;
+};
+
 
 // What follows is a copy of the touch.c code from the TensyDuino core library.
 // That code originally implements the touchRead() function, I have modified it
@@ -2770,17 +3104,12 @@ static const uint8_t pin2tsi[] = {
 
 // Note, there can currently only be one of these.
 // If we need more, we need a time-sharing system.
-class TouchButton : Looper, CommandParser {
+class TouchButton : public ButtonBase {
 public:
   TouchButton(int pin, int threshold, const char* name)
-    : Looper(),
-      CommandParser(),
+    : ButtonBase(name),
       pin_(pin),
-      name_(name),
-      threshold_(threshold),
-      pushed_(false),
-      clicked_(false),
-      push_millis_(0) {
+      threshold_(threshold) {
     pinMode(pin, INPUT_PULLUP);
 #ifdef ENABLE_SNOOZE
     snooze_config.pinMode(pin, TSI, threshold);
@@ -2796,38 +3125,7 @@ public:
       Serial.println("Not a touch-capable pin!");
     } 
   }
-  int pushed_millis() {
-    if (pushed_) return millis() - push_millis_;
-    return 0;
-  }
-  bool clicked() {
-    bool ret = clicked_;
-    clicked_ = false;
-    return ret;
-  }
 protected:
-  void Update(int value) {
-    if (print_next_) {
-      Serial.print("Touch ");
-      Serial.print(name_);
-      Serial.print(" = ");
-      Serial.println(value);
-      print_next_ = false;
-    }
-    if (value > threshold_) {
-      if (!pushed_) {
-        push_millis_ = millis();
-        pushed_ = true;
-      }
-    } else {
-      if (pushed_) {
-        int t = millis() - push_millis_;
-        if (t < 5) return; // De-bounce
-        pushed_ = false;
-        if (t < 500) clicked_ = true;
-      }
-    }
-  }
 
   void BeginRead() {
     // Copied from touch.c
@@ -2848,10 +3146,42 @@ protected:
   }
 
   void Setup() override {
+    ButtonBase::Setup();
     BeginRead();
   }
 
+  bool Read() override {
+    return is_pushed_;
+  }
+
+  virtual uint32_t timeout() {
+    return 50;
+  }
+
+  void Update(int value) {
+    if (print_next_) {
+      Serial.print("Touch ");
+      Serial.print(name_);
+      Serial.print(" = ");
+      Serial.print(value);
+      Serial.print(" (");
+      Serial.print(min_);
+      Serial.print(" - ");
+      Serial.print(max_);
+      Serial.println(")");
+      
+      print_next_ = false;
+      min_ = 10000000;
+      max_ = 0;
+    } else {
+      min_ = min(value, min_);
+      max_ = max(value, max_);
+    }
+    is_pushed_ = value > threshold_;
+  }
+
   void Loop() override {
+    ButtonBase::Loop();
     if (monitor.ShouldPrint(Monitoring::MonitorTouch)) {
       print_next_ = true;
     }
@@ -2867,25 +3197,23 @@ protected:
     BeginRead();
   }
 
-  bool Parse(const char* cmd, const char* arg) override {
-    if (!strcmp(cmd, name_)) {
-      clicked_ = true;
-      return true;
-    }
-    return false;
-  }
-
   bool print_next_ = false;
   int begin_read_micros_ = 0;
   uint8_t pin_;
-  const char* name_;
   int threshold_;
-  bool pushed_;
-  bool clicked_;
-  int push_millis_;
+  int min_ = 100000000;
+  int max_ = 0;
+  bool is_pushed_ = false;
 };
 
 // Menu system
+
+// Configuration system:
+// switch track
+// + BLADE
+// +-+ effect
+// +-+ color
+// +-+ sound font
 
 // STATE_OFF:
 // Power click  -> STATE_ON
@@ -2903,7 +3231,7 @@ protected:
 class Saber : CommandParser, Looper {
 public:
   Saber() : CommandParser(),
-            power_(powerButtonPin, 1300, "pow"),
+            power_(powerButtonPin, 1600, "pow"),
             aux_(auxPin, "aux"),
             aux2_(aux2Pin, "aux2") {}
 
@@ -2933,11 +3261,11 @@ public:
 #ifdef ENABLE_AUDIO
     saber_synth.on_ = false;
 #endif
-    on_ = false;
     if (scheduler.next_action_ == Scheduler::TURN_ON) {
       scheduler.SetNextAction(Scheduler::NO_ACTION, 0);
     }
 #endif
+    on_ = false;
     SaberBase::DoOff();
   }
 
@@ -2952,8 +3280,10 @@ public:
   }
 
   bool chdir(const char* dir) {
+#ifdef ENABLE_AUDIO
     monophonic_font.Deactivate();
     polyphonic_font.Deactivate();
+#endif
 
     strcpy(current_directory, dir);
     if (current_directory[strlen(current_directory)-1] != '/') {
@@ -2962,19 +3292,20 @@ public:
     
 #ifdef ENABLE_AUDIO
     Effect::ScanDirectory(current_directory);
-#endif
-    if (clash.files_found()) {
-      monophonic_font.Activate();
-      return true;
-    }
     if (clsh.files_found()) {
       polyphonic_font.Activate();
       return true;
     }
+    if (clash.files_found() || boot.files_found()) {
+      monophonic_font.Activate();
+      return true;
+    }
+#endif
     return false;
   }
 
   float id() {
+    pinMode(bladeIdentifyPin, INPUT_PULLUP);
     int blade_id = analogRead(bladeIdentifyPin);
     float volts = blade_id * 3.3 / 1024.0;  // Volts at bladeIdentifyPin
     float amps = (3.3 - volts) / 33000;     // Pull-up is 33k
@@ -3019,12 +3350,8 @@ public:
 
 protected:
   void Loop() override {
-    if (power_.clicked()) {
-      if (on_) {
-        Off();
-      } else {
-        On();
-      }
+    if (aux_.clicked() || power_.clicked()) {
+      if (on_) Off(); else On();
     }
   }
   bool Parse(const char *cmd, const char* arg) override {
@@ -3070,45 +3397,6 @@ private:
 };
 
 Saber saber;
-
-class BatteryMonitor : Looper, CommandParser {
-protected:
-  void Setup() override {
-    pinMode(batteryLevelPin, INPUT_PULLDOWN);
-  }
-  float battery() {
-    float volts = 3.3 * analogRead(batteryLevelPin) / 1024.0;
-    float pulldown = 33000;  // Internal pulldown is 33kOhm
-    float external = 23000;  // External pullup
-    float battery_volts = volts * (1.0 + external / pulldown);
-    return battery_volts;
-  }
-  void Loop() override {
-    float battery_volts = battery();
-    if (monitor.ShouldPrint(Monitoring::MonitorBattery) ||
-	millis() - last_print_millis_ > 20000) {
-      Serial.print("Battery voltage: ");
-      Serial.println(battery_volts);
-      last_print_millis_ = millis();
-    }
-    if (battery_volts < 3.0) {
-      // Battery voltage is low. Turn stuff off, beep, etc.
-    }
-  }
-
-  bool Parse(const char* cmd, const char* arg) override {
-    if (!strcmp(cmd, "batt") || !strcmp(cmd, "battery")) {
-      Serial.print("Battery voltage: ");
-      Serial.println(battery());
-      return true;
-    }
-    return false;
-  }
-private:
-  uint32_t last_print_millis_;
-};
-
-BatteryMonitor battery_monitor;
 
 // Command-line parser. Easiest way to use it is to start the arduino
 // serial monitor.
@@ -3288,6 +3576,7 @@ public:
       return;
     }
 #ifdef ENABLE_AUDIO
+#if 0
     if (!strcmp(cmd, "ton")) {
       digitalWrite(amplifierPin, HIGH); // turn on the amplifier
       dac.SetStream(&saber_synth);
@@ -3298,6 +3587,7 @@ public:
       saber_synth.on_ = false;
       return;
     }
+#endif
     // TODO: Move to DAC
     if (!strcmp(cmd, "dacbuf")) {
       for (size_t i = 0; i < NELEM(DAC::dac_dma_buffer); i++) {
@@ -3328,8 +3618,13 @@ public:
     }
     if (!strcmp(cmd, "play")) {
       digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-      wav_players[0].Play(e);
-      dac.SetStream(wav_players);
+      for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+	if (!wav_players[unit].isPlaying()) {
+	  wav_players[unit].Play(e);
+	  return;
+	}
+      }
+      Serial.println("No available WAV players.");
       return;
     }
 #endif
@@ -3393,7 +3688,7 @@ class Orientation : Looper {
 
   void Setup() override {
     imu.begin();
-    filter.begin(100);
+    // filter.begin(100);
   }
 
   void Loop() override {
@@ -3419,19 +3714,15 @@ class Orientation : Looper {
       if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
         Serial.print("Speed: ");
         Serial.print(speed);
-#ifdef ENABLE_AUDIO
-        Serial.print(" VOL: ");
-        Serial.print(saber_synth.volume_.value());
-        Serial.print(" TARGET: ");
-        Serial.println(saber_synth.volume_.target_);
-#endif
       }
 
+      SaberBase::DoMotion(speed);
 #ifdef ENABLE_AUDIO
-      saber_synth.volume_.set_target(32768 * (0.5 + clamp(speed/200.0, 0.0, 0.5)));
+      // TODO: Use SaberBase()
+      // saber_synth.volume_.set_target(32768 * (0.5 + clamp(speed/200.0, 0.0, 0.5)));
 
       // TODO: speed delta?
-      saber_synth.AdjustDelta(speed);
+      // saber_synth.AdjustDelta(speed);
 #endif
       
       // last_speed = speed;
@@ -3474,10 +3765,16 @@ protected:
     delay(50);             // time for DAC voltage stable
     pinMode(amplifierPin, OUTPUT);
     delay(10);
+    dac.SetStream(&dynamic_mixer);
+    dynamic_mixer.streams_[0] = &audio_splicer;
+    for (size_t i = 0; i < NELEM(wav_players); i++) {
+      dynamic_mixer.streams_[i+1] = wav_players + i;
+    }
   }
 
   bool Active() {
-    if (saber_synth.on_) return true;
+//    if (saber_synth.on_) return true;
+    if (audio_splicer.isPlaying()) return true;
     for (size_t i = 0; i < NELEM(wav_players); i++)
       if (wav_players[i].isPlaying())
 	return true;
@@ -3489,7 +3786,7 @@ protected:
     while (true) {
       while (Active()) YIELD();
       SLEEP(20);
-      if (Active()) continue;
+     if (Active()) continue;
       Serial.println("Amplifier off.");
       digitalWrite(amplifierPin, LOW); // turn the amplifier off
       while (!Active()) YIELD();
@@ -3504,7 +3801,7 @@ Amplifier amplifier;
 void setup() {
   Serial.begin(9600);
   pinMode(bladeIdentifyPin, INPUT_PULLUP);
-  delay(40);
+  delay(500);
 
   // Time to identify the blade.
   float resistor = saber.id();
@@ -3518,7 +3815,7 @@ void setup() {
       best_err = err;
     }
   }
-  Serial.print(" blade= ");
+  Serial.print("blade= ");
   Serial.println(best_config);
 
   // TODO only activate monopodws if we have a WS2811-type blade
@@ -3548,14 +3845,34 @@ void setup() {
 #endif
   saber.chdir(blades[best_config].sound_font_directory);
 
-  Serial.println("DoSetup()");
   Looper::DoSetup();
-
-#ifdef OLD_AUDIO_CODE
-  Serial.println("Play()");
-  boot.Play();
-#endif
+  
+  SaberBase::DoBoot();
 }
+
+#ifdef ENABLE_WATCHDOG
+void startup_early_hook() {
+  WDOG_TOVALL = 1000; // The next 2 lines sets the time-out value. This is the value that the watchdog timer compares itself to
+  WDOG_TOVALH = 0;
+  WDOG_PRESC = 0; // prescaler
+  WDOG_STCTRLH = (WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN); // Enable WDG
+}
+
+class WatchDog : Looper {
+  void Loop() override {
+    if (watchdogTimer_ > 5) {
+      watchdogTimer_ = 0;
+      
+      noInterrupts();
+      WDOG_REFRESH = 0xA602;
+      WDOG_REFRESH = 0xB480;
+      interrupts();
+    }
+  };
+
+  elapsedMillis watchdogTimer_;
+};
+#endif
 
 int last_activity = millis();
 
@@ -3582,4 +3899,3 @@ void loop() {
   }
 #endif
 }
-
