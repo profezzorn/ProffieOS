@@ -23,78 +23,26 @@
  THE SOFTWARE.
 */
 
+// Search for CONFIGURABLE in this file to find all the places which
+// might need to be modified for your saber.
 
 // TODO LIST:
-// sdcard support
+// Make sure that sound is off before doing file command
 // Audio work items:
-//   Make swing sounds!
-//   Background music mode.
-//   Support regular sound fonts.
+//   Tune swings better
 //   select clash from force
-// Support multiple sound fonts.
+//   stab effect
+//   synthesize swings
+// Blade stuff
+//    better clash
 // Implement menues:
 //    select sound font
 //    select color
 //    adjust volume
 // POV-writer mode
 
-/*
- * User configurable options below
- * These options relate to alternate, but supported ways to hook everything up.
- * For unsupported configurations, you're going to need to read the code below.
- */
-
-// This struct defines the configuration for the available blades.
-struct BladeID {
-  enum BladeType {
-    WS2811,   // Also called neopixels, usually in the form of "strips"
-    PL9823,   // Same as WS2811, but turns blue when you turn them on, which means we need to
-                 // avoid turning the BEC off when a blade of this type is connected. Bad for battery life.
-    SIMPLE,   // string or LED, with optional FoC
-#if 0
-    // Not yet supported
-    // These would need to be hooked up through the prop shield, not pin 20.
-    APA102,   // Similar to WS2811, but support much higher data rates, and uses two wires.
-                 // BT_APA102 uses SPI to talk to the string.
-#endif
-  };
-
-  // Blade identify resistor value.
-  // Good values range from 1k to 100k
-  // Remember that precision can be +/- 10%, so don't
-  // choose values that are too close to each other.
-  int ohms;
-
-  BladeType blade_type;
-  int num_leds;
-  const char* sound_font_directory;
-  // Default color settings
-};
-
-// List of blades.
-// If you only have one blade, the resistor value is irrelevant as it will always be selected.
-BladeID blades[] = {
-  // ohms, blade type, leds, default font directory
-
-  {  69000, BladeID::PL9823,  97, "font02" },
-  {   2600, BladeID::PL9823,  97, "font02" },
-
-  {   5200, BladeID::SIMPLE,   1, "font01" },
-
-  {  41000, BladeID::PL9823,  1, "charging" },
-  {  15000, BladeID::PL9823,  1, "charging" },
-
-  { 4800, BladeID::WS2811,  120, "font01" },
-};
-
-
-// If you use an N-channel FET instead of a level shifter to drive
-// neopixels, the high becomes low and vice versa, so the driving
-// logic needs to be inverted.
-// If you're using a FET or PEX, on pin 20, leave this defined.
-// If not, comment it out.
+// If your electonics inverts the bladePin for some reason, define this.
 // #define INVERT_WS2811
-
 
 // Teensy 3.2 pin map:
 // A lot of these can be changed, but be careful, because:
@@ -145,10 +93,6 @@ enum SaberPins {
   bladePowerPin3 = 23,             // blade power control
 };
 
-/*
- * USER CONFIGURABLE OPTIONS END HERE
- */
-
 // Feature defines, these let you turn off large blocks of code
 // used for debugging.
 #define ENABLE_AUDIO
@@ -157,12 +101,15 @@ enum SaberPins {
 #define ENABLE_WS2811
 #define ENABLE_WATCHDOG
 
+#define LOUD
+
 // Use FTM timer for monopodws timing.
 #define USE_FTM_TIMER
 
-// For better playback go enable this define.
-// (Not here, but in SD.h)
-// #define USE_TEENSY3_OPTIMIZED_CODE
+// You can get better SD card performance by
+// activating the  USE_TEENSY3_OPTIMIZED_CODE define
+// in SD.h in the teensy library, however, my sd card
+// did not work with that define.
 
 #include <Arduino.h>
 #include <EEPROM.h>
@@ -327,11 +274,17 @@ protected:							\
   SABERFUN(Off, (), ());
   SABERFUN(Lockup, (), ());
   SABERFUN(Force, (), ());
-  SABERFUN(Swing, (), ());
+  SABERFUN(Blast, (), ());
   SABERFUN(Boot, (), ());
+  SABERFUN(NewFont, (), ());
   SABERFUN(BeginLockup, (), ());
   SABERFUN(EndLockup, (), ());
+
+  // Swing rotation speed
   SABERFUN(Motion, (float speed), (speed));
+
+  // Wrist rotation speed
+  SABERFUN(XMotion, (float speed), (speed));
   SABERFUN(Top, (), ());
   SABERFUN(IsOn, (bool* on), (on));
 
@@ -468,8 +421,10 @@ public:
   DAC() {
     dma.begin(true); // Allocate the DMA channel first
     SIM_SCGC2 |= SIM_SCGC2_DAC0;
-    DAC0_C0 = DAC_C0_DACEN;                   // 1.2V VDDA is DACREF_2
-//    DAC0_C0 |= DAC_C0_DACRFS;  // 3.3V
+    DAC0_C0 = DAC_C0_DACEN;
+#ifdef LOUD
+    DAC0_C0 |= DAC_C0_DACRFS;  // 3.3V, much louder
+#endif
     // slowly ramp up to DC voltage, approx 1/4 second
     // TODO: Use this for volume control?
     for (int16_t i=0; i<2048; i+=8) {
@@ -650,7 +605,45 @@ public:
 //  ClickAvoiderLin volume_;
 };
 
-AudioDynamicMixer<6> dynamic_mixer;
+AudioDynamicMixer<7> dynamic_mixer;
+
+class Beeper : public DataStream<int16_t> {
+public:
+  int read(int16_t *data, int elements) override {
+    int e = elements;
+    while (true) {
+      int s = min(elements, samples_);
+      s = min(s, x_);
+      if (!s) return e - s;
+      if (up_) {
+	for (int i = 0; i < s; i++) data[i] = 2000;
+      } else {
+	for (int i = 0; i < s; i++) data[i] = -2000;
+      }
+      data += s;
+      elements -= s;
+      x_ -= s;
+      samples_ -= x_;
+      if (x_ == 0) {
+	x_ = f_;
+	up_ = !up_;
+      }
+    }
+  }
+
+  void Beep(float length, float freq) {
+    x_ = f_ = AUDIO_RATE / freq / 2.0;
+    samples_ = AUDIO_RATE * length;
+  }
+
+private:  
+  volatile int samples_ = 0;
+  volatile int f_ = 0;
+  volatile int x_ = 0;
+  volatile bool up_ = false;
+};
+
+Beeper beeper;
 
 class LightSaberSynth : public DataStream<int16_t>, Looper {
 public:
@@ -790,7 +783,6 @@ protected:
 //       +-WavPlayer
 //
 
-
 #define IRQ_WAV 55
 
 class DataStreamWork;
@@ -901,7 +893,6 @@ private:
 
 #endif  // ENABLE_AUDIO
 
-
 class Effect;
 Effect* all_effects = NULL;
 
@@ -917,6 +908,17 @@ const char *startswith(const char *prefix, const char* x) {
     x++;
   }
   return x;
+}
+
+int cmpdir(const char *a, const char *b) {
+  while (toLower(*a) == toLower(*b)) {
+    if (!*a) return 0;
+    a++;
+    b++;
+  }
+  if (*a == '/' && *b == 0) return 0;
+  if (*b == '/' && *a == 0) return 0;
+  return toLower(*a) - toLower(*b);
 }
 
 int parse1hex(const char* x) {
@@ -941,9 +943,9 @@ bool endswith(const char *postfix, const char* x) {
   return true;
 }
 
-
 char current_directory[128];
 
+// Effect represents a set of sound files.
 class Effect {
   public:
   Effect(const char* name) : name_(name) {
@@ -1226,9 +1228,10 @@ public:
   }
 
   void PlayOnce(Effect* effect) {
-    effect->Play(filename_);
-    effect_ = nullptr;
-    run_ = true;
+    if (effect->Play(filename_)) {
+      effect_ = nullptr;
+      run_ = true;
+    }
   }
   void PlayLoop(Effect* effect) {
     effect_ = effect;
@@ -1522,6 +1525,8 @@ BufferedWavPlayer wav_players[4];
 // no gap. It does a short (2.5ms) crossfade to accomplish this.
 class AudioSplicer : public DataStream<int16_t> {
 public:
+  AudioSplicer() : volume_(16384 / 100) {
+  }
   int read(int16_t* data, int elements) override {
     int16_t *p = data;
     int to_read = elements;
@@ -1559,6 +1564,11 @@ public:
         current_ = fadeto_;
         fadeto_ = -1;
       }
+    }
+    for (int i = 0; i < elements; i++) {
+      int32_t v = (data[i] * (int32_t)volume_.value()) >> 15;
+      data[i] = clampi32(v, -32768, 32767);
+      volume_.advance();
     }
     return elements;
   }
@@ -1598,11 +1608,16 @@ public:
     return current_ != -1;
   }
 
+  void set_volume(int vol) {
+    volume_.set_target(vol);
+  }
+
 protected:
   BufferedWavPlayer players_[2];
   volatile int current_= -1;
   volatile int fadeto_ = -1;
   int fade_;
+  ClickAvoiderLin volume_;
 };
 
 AudioSplicer audio_splicer;
@@ -1621,13 +1636,29 @@ public:
     audio_splicer.Play(&poweroff, NULL);
   }
   void Clash() override { audio_splicer.Play(&clash, &hum); }
-  void Swing() override { audio_splicer.Play(&swing, &hum); }
   void Stab() override { audio_splicer.Play(&stab, &hum); }
   void Force() override { audio_splicer.Play(&force, &hum); }
+  void Blast() override { audio_splicer.Play(&blaster, &hum); }
   void Boot() override { audio_splicer.Play(&boot,  NULL); }
+  void NewFont() override { audio_splicer.Play(&font,  NULL); }
+
+  bool swinging_ = false;
   void Motion(float speed) override {
-    // Adjust hum volume based on motion speed
+    if (swinging_) {
+      audio_splicer.set_volume(16384);
+    } else {
+      audio_splicer.set_volume(32768 * (0.5 + clamp(speed/200.0, 0.0, 1.0)));
+    }
+    if (speed > 200.0) {
+      if (!swinging_) {
+	swinging_ = true;
+	audio_splicer.Play(&swing, &hum);
+      }
+    } else {
+      swinging_ = false;
+    }
   }
+  void XMotion(float speed) override {}
 };
 
 MonophonicFont monophonic_font;
@@ -1657,13 +1688,29 @@ public:
     }
   }
   void Clash() override { Play(&clsh); }
-  void Swing() override { Play(&swng); }
   void Stab() override { Play(&stab); }
   void Force() override { Play(&force); }
+  void Blast() override { Play(&blst); }
   void Boot() override { audio_splicer.Play(&boot,  NULL); }
+  void NewFont() override { audio_splicer.Play(&font,  NULL); }
+
+  bool swinging_ = false;
   void Motion(float speed) override {
-    // Adjust hum volume based on motion speed
+    if (swinging_) {
+      audio_splicer.set_volume(16384);
+    } else {
+      audio_splicer.set_volume(32768 * (0.5 + clamp(speed/200.0, 0.0, 1.0)));
+    }
+    if (speed > 200.0) {
+      if (!swinging_) {
+	swinging_ = true;
+	Play(&swing);
+      }
+    } else {
+      swinging_ = false;
+    }
   }
+  void XMotion(float speed) override {}
 };
 
 PolyphonicFont polyphonic_font;
@@ -1672,7 +1719,6 @@ class SyntheticFont : PolyphonicFont {
 public:
   void On() override {}
   void Off() override {}
-  void Swing() override {}
 
   void Motion(float speed) override {
     // Adjust hum volume based on motion speed
@@ -1725,7 +1771,6 @@ private:
 
 BatteryMonitor battery_monitor;
 
-
 struct Color {
   Color() : r(0), g(0), b(0) {}
   Color(uint8_t r_, uint8_t g_, uint8_t b_) : r(r_), g(g_), b(b_) {}
@@ -1736,9 +1781,15 @@ struct Color {
                   ((256-x) * g + x * other.g) >> 8,
                   ((256-x) * b + x * other.b) >> 8);
   }
+  uint8_t select(const Color& other) const {
+    uint8_t ret = 255;
+    if (other.r) ret = min(ret, r * 255 / other.r);
+    if (other.g) ret = min(ret, g * 255 / other.g);
+    if (other.b) ret = min(ret, b * 255 / other.b);
+    return ret;
+  }
   uint8_t r, g, b;
 };
-
 
 #ifdef ENABLE_WS2811
 // What follows is a copy of the OctoWS2811 library. It's been modified in 
@@ -1861,6 +1912,7 @@ static uint32_t update_completed_at = 0;
 
 static uint8_t analog_write_res = 8;
 
+// TODO: Try replacing with FTM0 with FTM1 to unlock PWM frequencies for most pins.
 void setFTM_Timer(uint8_t ch1, uint8_t ch2, float frequency)
 {
   uint32_t prescale, mod, ftmClock, ftmClockSource;
@@ -2254,154 +2306,190 @@ MonopodWS2811 monopodws;
 
 #endif
 
-
-#if 0
-
-#define CONFIGARRAY(X) (X), arraysize(X)
-
-class BladeEffect {
+class BladeBase {
 public:
-  explicit BladeEffect(int num_configs) : num_configs_(num_configs) { }
-  virtual void run() = 0;
-  void setConfig(int config_num) {
-    current_config_ = config_num;
-  }
-  void next_config() {
-    current_config_++;
-    if (current_config_ == num_configs_) current_config_ = 0;
-  }
-protected:
-  int num_configs_;
-  int current_config_ = 0;
+  // Returns number of LEDs in this blade.
+  virtual int num_leds() const = 0;
+  // Returns true if the blade is supposed to be on.
+  // false while "turning off".
+  virtual bool is_on() const = 0;
+  // Set led 'led' to color 'c'.
+  virtual void set(int led, Color c) = 0;
+  // Returns true when a clash occurs.
+  // Returns true only once.
+  virtual bool clash() = 0;
+  // Called to let the blade know that it's ok to
+  // disable power now. (Usually called after is_on()
+  // has returned false for some period of time.)
+  virtual void allow_disable() = 0;
+
+  virtual void Activate() = 0;
 };
 
-struct Preset {
-  const char* sound_font;
-  BladeEffect* effect_;
-  int config;
+class BladeStyle {
+public:
+  virtual void activate() {}
+  virtual void deactivate() {}
+  virtual void run(BladeBase* blade) = 0;
 };
 
-class BladeEffect_WS2811_Normal : public BladeEffect {
+BladeStyle *current_style = NULL;
+
+void SetStyle(class BladeStyle* style) {
+  if (current_style) current_style->deactivate();
+  current_style = style;
+  current_style->activate();
+}
+
+class StyleCharging : public BladeStyle {
 public:
-  struct Config {
-    Color base;
-    Color clash;
-  };
-  BladeEffect_WS2811_Normal(Config* configs, int num_configs) : BladeEffect(num_configs), configs_(configs) {}
-  void run() override {
+  void activate() override {
+    Serial.println("Charging Style");
   }
-private:
-  Config* configs_;
-};
-
-class BladeEffect_WS2811_Fire  : public BladeEffect {
-public:
-  struct Config {
-    Color c1, c2;
-    Color clash;
-  };
-  BladeEffect_WS2811_Fire(Config* configs, int num_configs) : BladeEffect(num_configs), configs_(configs) {}
-  void run() override {
-  }
-private:
-  Config* configs_;
-};
-
-class BladeEffect_WS2811_Charging : public BladeEffect {
-public:
-  BladeEffect_WS2811_Charging() : BladeEffect(1) {}
-  void run() override {
-    int black_mix = 128 + 100 * sin(millis() / 1000.0);
+  void run(BladeBase *blade) override {
+    int black_mix = 128 + 100 * sin(millis() / 500.0);
     float volts = battery_monitor.battery();
     Color colors[] = {
       Color(0,255,0),   // Green > 4.0
       Color(0,0,255),
       Color(255,128,0),
-      Color(255,0,0) 
+      Color(255,0,0),
       Color(255,0,0) 
     };
     float x = (4.0 - volts) * 2.0;
     int i = floor(x);
-    i = clampi32(i, 0, arraysize(colors) - 2);
+    i = clampi32(i, 0, NELEM(colors) - 2);
     // Blend colors over 0.1 volts.
     int blend = (x - i) * 10 * 255;
     blend = clampi32(blend, 0, 255);
     Color c = colors[i].mix(colors[i + 1], blend);
     c = c.mix(Color(), black_mix);
-    break;
+    int num_leds = blade->num_leds();
+    for (int i = 0; i < num_leds; i++) blade->set(i, c);
   };
 };
 
-#define RED {255, 0, 0}
-#define GREEN {0, 255, 0}
-#define BLUE {0, 255, 0}
-#define YELLOW {255, 255, 0}
-#define CYAN {0, 255, 255}
-#define MAGENTA {255, 0, 255}
-#define WHITE {255, 255, 255}
+// No need to templetize this one, as there are no arguments.
+StyleCharging style_charging;
 
-#define BLADEFFECT(CLASS, NAME, CONFIGS)	           \
-CLASS::Config CLASS##_##NAME##_configs[] = CONFIGS;        \
-CLASS CLASS##_##NAME(CONFIGARRAY(CLASS##_##NAME##_configs))
+class StyleFire : public BladeStyle {
+public:
+  StyleFire(Color c1, Color c2) : c1_(c1), c2_(c2) {}
 
-BLADEFFECT(BladeEffect_WS2811_Fire,obj, {
-    { RED, YELLOW },
-    { BLUE, CYAN },
-    { GREEN, YELLOW },
-});
-
-BLADEFFECT(BladeEffect_WS2811_Normal,obj, {
-  { CYAN, WHITE },
-  { RED, WHITE },
-  { GREEN, WHITE },
-  { BLUE, WHITE },
-});
-
-BladeEffect_WS2811_Charging BladeEffect_WS2811_Charging_obj;
-
-#endif
-
-struct BladeSettings {
-  Color base;
-  Color shimmer;
-  Color clash;
-
-  void setAll(uint8_t r, uint8_t g, uint8_t b) {
-    shimmer = clash = base = Color(r, g, b);
+  void activate() override {
+    Serial.println("Fire Style");
+    for (size_t i = 0; i < maxLedsPerStrip; i++) heat_[i] = 0;
   }
-  void set(uint8_t r, uint8_t g, uint8_t b) {
-    shimmer = base = Color(r, g, b);
+  void run(BladeBase* blade) override {
+    uint32_t m = millis();
+    int num_leds = blade->num_leds();
+    if (m - last_update_ >= 10) {
+      last_update_ = m;
+
+      // Note heat_[0] is tip of blade
+      if (blade->clash()) {
+	heat_[num_leds - 1] += 3000;
+      } else if (blade->is_on()) {
+	heat_[num_leds - 1] += random(random(random(1000)));
+      }
+      for (int i = 0; i < num_leds; i++) {
+	int x = (heat_[i] * 5  + heat_[i+1] * 7 + heat_[i+2] * 4) >> 4;
+	heat_[i] = max(x - random(0, 1), 0);
+      }
+    }
+    bool zero = true;
+    for (int i = 0; i < num_leds; i++) {
+      int h = heat_[num_leds - 1 - i];
+      Color c;
+      if (h < 256) {
+	c = Color().mix(c1_, h);
+      } else if (h < 512) {
+	c = c1_.mix(c2_, h - 256);
+      } else if (h < 768) {
+	c = c2_.mix(Color(255,255,255), h - 512);
+      } else {
+	c = Color(255,255,255);
+      }
+      if (h) zero = false;
+      blade->set(i, c);
+    }
+    if (zero) blade->allow_disable();
   }
+
+private:
+  static uint32_t last_update_;
+  static unsigned short heat_[maxLedsPerStrip];
+  Color c1_, c2_;
 };
 
+uint32_t StyleFire::last_update_ = 0;
+unsigned short StyleFire::heat_[maxLedsPerStrip];
+
+template<int r1, int g1, int b1, int r2, int g2, int b2>
+class StyleFire *StyleFirePtr() {
+  static StyleFire style(Color(r1, g1, b1), Color(r2, g2, b2));
+  return &style;
+}
+
+class StyleNormal : public BladeStyle {
+public:
+  StyleNormal(Color color, Color clash_color, uint32_t event_length)
+    : color_(color),
+      clash_color_(clash_color),
+      event_length_(event_length) {}
+
+  void activate() override {
+    Serial.println("Normal Style");
+  }
+  void run(BladeBase* blade) override {
+    int num_leds = blade->num_leds();
+    Color c = color_;
+    uint32_t m = millis();
+    if (on_ != blade->is_on()) {
+      event_millis_ = m;
+      on_ = blade->is_on();
+    }
+    if (m - event_millis_ > 100000) event_millis_ += 1000;
+    int thres = num_leds * 256 * (m - event_millis_) / event_length_;
+    if (!blade->is_on()) thres = num_leds * 256 - thres;
+    for (int i = 0; i < num_leds; i++) {
+      int black_mix = clampi32(thres - i * 256, 0, 255);
+      blade->set(i, Color().mix(c, black_mix));
+    }
+    if (!blade->is_on() && thres > 256 * (num_leds*2)) {
+      Serial.println("Allow off.");
+      blade->allow_disable();
+    }
+  }
+private:
+  static bool on_;
+  static uint32_t event_millis_;
+  Color color_;
+  Color clash_color_;
+  uint32_t event_length_;
+};
+
+bool StyleNormal::on_ = false;
+uint32_t StyleNormal::event_millis_ = 0;
+
+// Arguments: color, clash color, turn-on/off time
+template<int r1, int g1, int b1, int r2, int g2, int b2, int millis>
+class StyleNormal *StyleNormalPtr() {
+  static StyleNormal style(Color(r1, g1, b1), Color(r2, g2, b2), millis);
+  return &style;
+}
 
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
-class WS2811_Blade : public SaberBase, CommandParser, Looper {
+class WS2811_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
 public:
-  enum State {
-    BLADE_OFF,
-    BLADE_TURNING_ON,
-    BLADE_ON,
-    BLADE_TURNING_OFF,
-    BLADE_ALMOST_OFF,
-  };
-
-  enum Style {
-    STYLE_NORMAL,
-    STYLE_TEST,
-    STYLE_SHOWOFF,
-    STYLE_FIRE,
-    STYLE_CHARGING,
-  };
-  WS2811_Blade() : SaberBase(NOLINK),
-		   CommandParser(NOLINK),
-		   Looper(NOLINK),
-		   state_(BLADE_OFF) {
-    // TODO: colors should be set in in blade identify code.
-    settings_.set(0,0,255);
-    settings_.clash = Color(255, 255, 255);
+  WS2811_Blade(int num_leds, uint8_t config) :
+    SaberBase(NOLINK),
+    CommandParser(NOLINK),
+    Looper(NOLINK),
+    num_leds_(num_leds),
+    config_(config) {
   }
 
   void Power(bool on) {
@@ -2412,36 +2500,57 @@ public:
     digitalWrite(bladePowerPin2, on?HIGH:LOW);
     digitalWrite(bladePowerPin3, on?HIGH:LOW);
 //    pinMode(bladePin, on ? OUTPUT : INPUT);
+    powered_ = on;
   }
-  void Activate(int num_leds, uint8_t config) {
-    num_leds_ = num_leds;
+
+  // No need for a "deactivate", the blade stays active until
+  // you take it out, which also cuts the power.
+  void Activate() override {
+    Serial.println("WS2811 Blade");
     Power(true);
     delay(10);
-    monopodws.begin(num_leds, displayMemory, config);
+    monopodws.begin(num_leds_, displayMemory, config_);
     monopodws.show();  // Make it black
     monopodws.show();  // Make it black
     monopodws.show();  // Make it black
     while (monopodws.busy());
-    Power(false);
     CommandParser::Link();
     Looper::Link();
     SaberBase::Link();
   }
 
+  // BladeBase implementation
+  int num_leds() const override {
+    return num_leds_;
+  }
+  bool is_on() const override {
+    return on_;
+  }
+  void set(int led, Color c) override {
+    monopodws.setPixel(led, c);
+  }
+  bool clash() override {
+    bool ret = clash_;
+    clash_ = false;
+    return ret;
+  }
+  void allow_disable() override {
+    if (!on_) {
+      Power(false);
+    }
+  }
+
+  // SaberBase implementation.
   void IsOn(bool* on) override {
-    if (state_ != BLADE_OFF) *on = true;
+    if (on_) *on = true;
   }
   void On() override {
     Power(true);
     delay(10);
-    state_ = BLADE_TURNING_ON;
-    event_millis_ = millis();
-    event_length_ = 300; // Guess
+    on_ = true;
   }
   void Off() override {
-    state_ = BLADE_TURNING_OFF;
-    event_millis_ = millis();
-    event_length_ = 500; // Guess
+    on_ = false;
   }
 
   void Clash() override { clash_=true; }
@@ -2463,95 +2572,17 @@ public:
         Off();
         return true;
       }
-      if (!strcmp(arg, "poweroff")) {
-	Power(false);
-	state_ = BLADE_OFF;
-        return true;
-      }
-      if (!strcmp(arg, "float")) {
-	pinMode(bladePowerPin1, INPUT);
-	pinMode(bladePowerPin2, INPUT);
-	pinMode(bladePowerPin3, INPUT);
-	// Try floating the blade control pin instead?
-	state_ = BLADE_OFF;
-        return true;
-      }
-      if (!strcmp(arg, "normal")) {
-        style_ = STYLE_NORMAL;
-      }
-      if (!strcmp(arg, "test")) {
-        style_ = STYLE_TEST;
-        return true;
-      }
-      if (!strcmp(arg, "showoff")) {
-        style_ = STYLE_SHOWOFF;
-        return true;
-      }
-      if (!strcmp(arg, "fire")) {
-        style_ = STYLE_FIRE;
-        return true;
-      }
-      if (!strcmp(arg, "charging")) {
-        style_ = STYLE_CHARGING;
-        return true;
-      }
-    }
-    if (!strcmp(cmd, "red")) {
-      settings_.set(255,0,0);
-      return true;
-    }
-    if (!strcmp(cmd, "green")) {
-      settings_.set(0,255,0);
-      return true;
-    }
-    if (!strcmp(cmd, "blue")) {
-      settings_.set(0,0,255);
-      return true;
-    }
-    if (!strcmp(cmd, "yellow")) {
-      settings_.set(255,255,0);
-      return true;
-    }
-    if (!strcmp(cmd, "cyan")) {
-      settings_.set(0,255,255);
-      return true;
-    }
-    if (!strcmp(cmd, "magenta") || !strcmp(cmd, "purple")) {
-      settings_.set(255,0,255);
-      return true;
-    }
-    if (!strcmp(cmd, "white")) {
-      settings_.set(255,255,255);
-      return true;
-    }
-    if (!strcmp(cmd, "color") && arg) {
-      switch (strlen(arg)) {
-        case 3:
-           settings_.set(parse1hex(arg) * 0x11,
-			 parse1hex(arg + 1) * 0x11,
-			 parse1hex(arg + 2) * 0x11);
-	   return true;
-	case 6:
-	  settings_.set(parse2hex(arg),
-			parse2hex(arg + 2),
-			parse2hex(arg + 4));
-	  return true;
-      }
     }
     return false;
   }
 
-  BladeSettings settings_;
-
 protected:
   void Loop() override {
-    if (monopodws.busy()) return;
-    if (state_ == BLADE_OFF) {
-      Power(false);
+    if (!powered_) {
       last_millis_ = 0;
       return;
     }
-
+    if (monopodws.busy()) return;
     monopodws.show();
     int m = millis();
     if (last_millis_) {
@@ -2563,183 +2594,95 @@ protected:
       }
     }
     last_millis_ = m;
-    int thres = num_leds_ * 256 * (m - event_millis_) / event_length_;
-    if (thres > (int)(num_leds_ + 2) * 256) {
-      switch (state_) {
-        case BLADE_TURNING_ON:
-          state_ = BLADE_ON;
-          break;
-        case BLADE_TURNING_OFF:
-          state_ = BLADE_ALMOST_OFF;
-          break;
-        case BLADE_ALMOST_OFF:
-          state_ = BLADE_OFF;
-          break;
-        default: break;
-      }
-    }
-    if (style_ ==  STYLE_FIRE) {
-      uint32_t m = millis();
-      if (m - last_update_ < 10) return;
-      last_update_ = m;
-      FireFX();
-    }
-    for (unsigned int i = 0; i < num_leds_; i++) {
-      Color c;
-      if (clash_) {
-        c = settings_.clash;
-      } else {
-        c = settings_.base;
-      }
-      // TODO: shimmer more when moving.
-      // TODO: Other shimmer styles
-      c = c.mix(settings_.shimmer, rand() & 0xFF);
-
-      int black_mix = 0;
-      switch (state_) {
-        case BLADE_OFF:
-        case BLADE_ALMOST_OFF: black_mix = 256; break;
-        case BLADE_TURNING_ON: {
-          int x = i * 256 - thres;
-          if (x > 256) black_mix = 256;
-          else if (x > -256) black_mix = (512 - x) >> 1;
-          break;
-        }
-        case BLADE_ON: black_mix = 0; break;
-        case BLADE_TURNING_OFF: {
-          int x = i * 256 - num_leds_ * 256 + thres;
-          if (x > 256) black_mix = 256;
-          else if (x > -256) black_mix =  (512 - x) >> 1;
-          break;
-        }
-      }
-
-      switch (style_) {
-	default:
-	  c = c.mix(Color(), black_mix);
-	  break;
-
-	case STYLE_CHARGING: {
-	  int black_mix = 128 + 100 * sin(millis() / 1000.0);
-	  float volts = battery_monitor.battery();
-	  if (volts > 4.0) {
-	    c = Color(0,255,0);    // Green
-	  } else if (volts > 3.5) {
-	    c = Color(0,0,255);    // Blue
-	  } else if (volts > 3.0) {
-	    c = Color(255,128,0);  // Orange/yellow
-	  } else {
-	    c = Color(255,0,0);    // Red
-	  }
-	  c = c.mix(Color(), black_mix);
-	  break;
-	}
-	  
-        case STYLE_FIRE: {
-	  // TODO: Use Pixel storage instead of heat_ ?
-          int h = heat_[num_leds_ - 1 - i];
-          c = Color(clamp(h, 0, 255),
-		    clamp(h - 256, 0, 255),
-		    clamp(h - 512, 0, 255));
-	  break;
-        }
-
-        case STYLE_SHOWOFF:
-          c = Color(sin(i*0.23 - m*0.013) * 127 + 127,
-                    sin(i*0.17 - m*0.005) * 127 + 127,
-                    sin(i*0.37 - m*0.007) * 127 + 127);
-	  c = c.mix(Color(), black_mix);
-          break;
-        case STYLE_TEST: {
-          switch((((m >> 5) + i)/10) % 3) {
-//          switch((i/10) % 3) {
-            case 0: c = Color(255,0,0); break;
-            case 1: c = Color(0,255,0); break;
-            case 2: c = Color(0,0,255); break;
-          }
-	  c = c.mix(Color(), black_mix);
-          break;
-        }
-      }
-
-      monopodws.setPixel(i, c);
-    }
-    clash_ = false;
-  }
-
-  void FireFX() {
-    // Note heat_[0] is tip of blade
-    if (clash_) {
-      heat_[num_leds_ - 1] += 3000;
-    } else {
-      heat_[num_leds_ - 1] += random(random(random(1000)));
-    }
-    for (size_t i = 0; i < num_leds_; i++) {
-      int x = (heat_[i] * 5  + heat_[i+1] * 7 + heat_[i+2] * 4) >> 4;
-      heat_[i] = max(x - random(0, 1), 0);
-    }
+    current_style->run(this);
   }
   
 private:
-  State state_;
-  Style style_;
-  bool clash_ = false;
-  size_t num_leds_;
-  int event_millis_;
-  int event_length_;
-  int last_millis_;
-  int updates_ = 0;
-  int millis_sum_ = 0;
-  uint32_t last_update_ = 0;
-  unsigned short heat_[maxLedsPerStrip];
+  int num_leds_;
+  uint8_t config_;
+  static bool on_;
+  static bool powered_;
+  static bool clash_;
+  static int updates_;
+  static int millis_sum_;
+  static uint32_t last_millis_;
 };
+
+bool WS2811_Blade::on_ = false;
+bool WS2811_Blade::powered_ = false;
+bool WS2811_Blade::clash_ = false;
+int WS2811_Blade::updates_ = 0;
+int WS2811_Blade::millis_sum_ = 0;
+uint32_t WS2811_Blade::last_millis_ = 0;
+
+template<int LEDS, int CONFIG>
+class WS2811_Blade *WS2811BladePtr() {
+  static WS2811_Blade blade(LEDS, CONFIG);
+  return &blade;
+}
 
 // Simple blade, LED string or LED star with optional flash on clash.
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
-class Simple_Blade : public SaberBase, CommandParser, Looper {
+class Simple_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
 public:
-  enum State {
-    BLADE_OFF,
-    BLADE_TURNING_ON,
-    BLADE_ON,
-    BLADE_TURNING_OFF,
-  };
-  Simple_Blade() : SaberBase(NOLINK),
-		   CommandParser(NOLINK),
-		   Looper(NOLINK),
-		   state_(BLADE_OFF) {
+  Simple_Blade(Color c1, Color c2, Color c3, Color c4) :
+    SaberBase(NOLINK),
+    CommandParser(NOLINK),
+    Looper(NOLINK),
+    c1_(c1), 
+    c2_(c2),
+    c3_(c3),
+    c4_(c4) {
   }
-  void Activate() {
+
+  void Activate() override {
+    Serial.println("Simple Blade");
     analogWriteResolution(8);
     analogWriteFrequency(bladePowerPin1, 1000);
     analogWriteFrequency(bladePowerPin2, 1000);
     analogWriteFrequency(bladePowerPin3, 1000);
+    analogWriteFrequency(bladePin, 1000);
     analogWrite(bladePowerPin1, 0);  // make it black
     analogWrite(bladePowerPin2, 0);  // make it black
     analogWrite(bladePowerPin3, 0);  // make it black
-    analogWrite(bladePin, 0);   // Turn off FoC
+    analogWrite(bladePin, 0);        // make it black
     CommandParser::Link();
     Looper::Link();
     SaberBase::Link();
   }
-  void IsOn(bool *on) override {
-    if (state_ != BLADE_OFF) *on = true;
+
+  // BladeBase implementation
+  int num_leds() const override {
+    return 1;
   }
-  void On() override {
-    state_ = BLADE_TURNING_ON;
-    event_millis_ = millis();
-    event_length_ = 200;
+  bool is_on() const override {
+    return on_;
   }
-  void Off() override {
-    state_ = BLADE_TURNING_OFF;
-    event_millis_ = millis();
-    event_length_ = 200; // Guess
+  void set(int led, Color c) override {
+    analogWrite(bladePowerPin1, c.select(c1_));
+    analogWrite(bladePowerPin2, c.select(c2_));
+    analogWrite(bladePowerPin3, c.select(c3_));
+    analogWrite(bladePin, c.select(c4_));
   }
 
+  bool clash() override {
+    bool ret = clash_;
+    clash_ = false;
+    return ret;
+  }
+  void allow_disable() override {
+    power_ = false;
+  }
+  
+  // SaberBase implementation
+  void IsOn(bool *on) override {
+    if (on_) *on = true;
+  }
+  void On() override { power_ = on_ = true; }
+  void Off() override { on_ = false; }
   void Clash() override {
-    analogWrite(bladePin, 255);
-    clash_millis_ = millis();
+    clash_ = true;
   }
   void Lockup() override {  }
 
@@ -2759,57 +2702,110 @@ public:
 
 protected:
   void Loop() override {
-    if (state_ == BLADE_OFF) return;
-    int thres = 256 * (millis() - event_millis_) / event_length_;
-    if (thres > 254) {
-      switch (state_) {
-        case BLADE_TURNING_ON:
-          state_ = BLADE_ON;
-          break;
-        case BLADE_TURNING_OFF:
-          state_ = BLADE_OFF;
-          break;
-        default: break;
-      }
-    }
-    
-    int level = 0;
-    switch (state_) {
-      case BLADE_OFF:
-        level = 0;
-        break;
-      case BLADE_TURNING_ON:
-        level = thres;
-        break;
-      case BLADE_TURNING_OFF:
-        level = 255 - thres;
-	break;
-      case BLADE_ON:
-        level = 255;
-    }
-    level = clampi32(level, 0, 255);
-    analogWrite(bladePowerPin1, level);
-    analogWrite(bladePowerPin2, level);
-    analogWrite(bladePowerPin3, level);
-
-    // TODO: support multiple flashes.
-    if (millis() - clash_millis_ > 10) {
-      analogWrite(bladePin, 0);
-    }
+    if (!power_) return;
+    current_style->run(this);
   }
   
 private:
-  State state_;
-  int clash_millis_;
-  int event_millis_;
-  int event_length_;
+  Color c1_, c2_, c3_, c4_;
+  static bool on_;
+  static bool power_;
+  static bool clash_;
 };
 
-// Global settings:
-// Volume, Blade Style
+bool Simple_Blade::on_ = false;
+bool Simple_Blade::power_ = false;
+bool Simple_Blade::clash_ = true;
 
-WS2811_Blade ws2811_blade;
-Simple_Blade simple_blade;
+template<int r1, int g1, int b1,
+	 int r2, int g2, int b2,
+	 int r3, int g3, int b3,
+	 int r4, int g4, int b4>
+class Simple_Blade *SimpleBladePtr() {
+  static Simple_Blade blade(Color(r1, g1, b1),
+			    Color(r2, g2, b2),
+			    Color(r3, g3, b3),
+			    Color(r4, g4, b4));
+			    
+  return &blade;
+}
+
+#define RED       255,   0,   0
+#define GREEN       0, 255,   0
+#define BLUE        0,   0, 255
+#define YELLOW    255, 255,   0
+#define CYAN        0, 255, 255
+#define MAGENTA   255,   0, 255
+#define WHITE     255, 255, 255
+#define BLACK       0,   0,   0
+
+#define CONFIGARRAY(X) X, NELEM(X)
+
+struct Preset {
+  // Sound font.
+  const char* font;
+
+  // Sound track
+  const char* track;
+
+  // Blade config.
+  BladeStyle* style;
+};
+
+// CONFIGURABLE
+Preset presets[] = {
+  { "font01", "tracks/walls.wav", StyleNormalPtr<CYAN, WHITE, 200>() },
+  { "font02", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 200>() },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<GREEN, WHITE, 200>() },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<WHITE, WHITE, 200>() },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<YELLOW, WHITE, 200>() },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 200>() },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<MAGENTA, WHITE, 200>() },
+  { "font02", "tracks/duel.wav", StyleFirePtr<BLUE, CYAN>() },
+  { "font01", "tracks/duel.wav", &style_charging },
+};
+
+Preset simple_presets[] = {
+  { "font01", "tracks/duel.wav", StyleNormalPtr<BLUE, BLUE, 100>() },
+  { "font02", "tracks/duel.wav", StyleNormalPtr<BLUE, BLUE, 100>() },
+};
+
+Preset charging_presets[] = {
+  { "charging", "tracks/duel.wav", &style_charging },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 200>() },
+  { "font02", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 200>() },
+};
+
+struct BladeConfig {
+  // Blade identifier resistor.
+  int ohm;
+
+  // Blade driver.
+  BladeBase* blade;
+
+  // Blade presets
+  Preset* presets;
+  size_t num_presets;
+};
+
+// CONFIGURABLE
+BladeConfig blades[] = {
+  // PL9823 blade, 97 LEDs
+  {  69000, WS2811BladePtr<97, WS2811_580kHz>(), CONFIGARRAY(presets) },
+  {   2600, WS2811BladePtr<97, WS2811_580kHz>(), CONFIGARRAY(presets) },
+
+  // Simple blue string blade.
+  {   5200, SimpleBladePtr<BLUE,BLUE,BLUE,BLACK>(), CONFIGARRAY(simple_presets) },
+
+  // Charging adapter, single PL9823 LED.
+  {  41000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
+  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
+
+//  {  69000, WS2811BladePtr<120, WS2811_800kHz>(), CONFIGARRAY(presets) },
+//  {   2600, WS2811BladePtr<120, WS2811_800kHz>(), CONFIGARRAY(presets) },
+};
+
 
 // Support for uploading files in TAR format.
 class Tar {
@@ -2968,6 +2964,7 @@ public:
       name_(name),
       pushed_(false),
       clicked_(false),
+      long_clicked_(false),
       push_millis_(0) {
   }
   int pushed_millis() {
@@ -2980,6 +2977,16 @@ public:
     return ret;
   }
 
+  bool long_clicked() {
+    bool ret = long_clicked_;
+    long_clicked_ = false;
+    return ret;
+  }
+
+  void EatClick() {
+    eat_click_ = true;
+  }
+
 protected:
   void Loop() {
     STATE_MACHINE_BEGIN();
@@ -2989,8 +2996,14 @@ protected:
       push_millis_ = millis();
       while (DebouncedRead()) YIELD();
       pushed_ = false;
-      if (millis() - push_millis_ < 500) {
-        clicked_ = true;
+      if (eat_click_) {
+	eat_click_ = false;
+      } else {
+	if (millis() - push_millis_ < 500) {
+	  clicked_ = true;
+	} else {
+	  long_clicked_ = true;
+	}
       }
     }
     STATE_MACHINE_END();
@@ -3008,6 +3021,8 @@ protected:
   const char* name_;
   bool pushed_;
   bool clicked_;
+  bool long_clicked_;
+  bool eat_click_ = false;
   int push_millis_;
 };
 
@@ -3025,7 +3040,6 @@ protected:
   }
   uint8_t pin_;
 };
-
 
 // What follows is a copy of the touch.c code from the TensyDuino core library.
 // That code originally implements the touchRead() function, I have modified it
@@ -3243,28 +3257,9 @@ public:
 
     on_ = true;
     SaberBase::DoOn();
-#if 0
-    // FIXME: Let the audio implementation turn on the hum
-    uint32_t delay = 0;
-#ifdef ENABLE_AUDIO
-    if (playFlashRaw1.isPlaying()) {
-      delay = playFlashRaw1.lengthMillis() - 10;
-    }
-#endif
-    scheduler.SetNextAction(Scheduler::TURN_ON, delay);
-#endif
   }
 
   void Off() {
-#if 0
-    // TODO: FADE OUT!
-#ifdef ENABLE_AUDIO
-    saber_synth.on_ = false;
-#endif
-    if (scheduler.next_action_ == Scheduler::TURN_ON) {
-      scheduler.SetNextAction(Scheduler::NO_ACTION, 0);
-    }
-#endif
     on_ = false;
     SaberBase::DoOff();
   }
@@ -3296,14 +3291,38 @@ public:
       polyphonic_font.Activate();
       return true;
     }
-    if (clash.files_found() || boot.files_found()) {
+    if (clash.files_found()) {
       monophonic_font.Activate();
       return true;
+    }
+    if (boot.files_found()) {
+      monophonic_font.Activate();
+      return false;
     }
 #endif
     return false;
   }
+  
+  // Select preset (font/style)
+  void SetPreset(Preset* preset) {
+    current_preset_ = preset;
+    SetStyle(preset->style);
+    chdir(preset->font);
+  }
 
+  // Go to the next Preset.
+  void next_preset() {
+    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+    beeper.Beep(0.05, 2000.0);
+    Preset* tmp = current_preset_ + 1;
+    if (tmp == current_config_->presets + current_config_->num_presets) {
+      tmp = current_config_->presets;
+    }
+    SetPreset(tmp);
+    SaberBase::DoNewFont();
+  }
+
+  // Measure and return the blade identifier resistor.
   float id() {
     pinMode(bladeIdentifyPin, INPUT_PULLUP);
     int blade_id = analogRead(bladeIdentifyPin);
@@ -3319,6 +3338,30 @@ public:
     return resistor;
   }
 
+  // Called from setup to identify the blade and select the right
+  // Blade driver, style and sound font.
+  void FindBlade() {
+    pinMode(bladeIdentifyPin, INPUT_PULLUP);
+    delay(100);
+    float resistor = id();
+    size_t best_config = 0;
+    float best_err = 1000000.0;
+    for (size_t i = 0; i < sizeof(blades) / sizeof(blades)[0]; i++) {
+      float err = fabs(resistor - blades[i].ohm);
+      if (err < best_err) {
+	best_config = i;
+	best_err = err;
+      }
+    }
+    Serial.print("blade= ");
+    Serial.println(best_config);
+    current_config_ = blades + best_config;
+    current_config_->blade->Activate();
+    SetPreset(current_config_->presets);
+  }
+
+  // Select next sound font (in alphabetic order)
+  // Set sign to -1 to get the previous sound font instead.
   void next_directory(int sign = 1) {
     int tries = 0;
     int dirs = 0;
@@ -3332,28 +3375,114 @@ public:
 	if (!first) {
 	  first = f;
 	} else {
-	  if (strcmp(f.name(), first.name())*sign < 0) continue;
+	  if (cmpdir(f.name(), first.name())*sign < 0) first = f;
 	}
-	if (strcmp(f.name(), current_directory)*sign < 0) continue;
-	if (best && strcmp(f.name(), best.name())*sign > 0) continue;
+	if (cmpdir(f.name(), current_directory)*sign <= 0) continue;
+	if (best && cmpdir(f.name(), best.name())*sign > 0) continue;
 	best = f;
       }
       if (best) {
-	if (chdir(best.name()))
+	if (chdir(best.name())) {
+	  SaberBase::DoNewFont();
 	  return;
+	}
       } else if (first) {
-	if (chdir(first.name()))
+	if (chdir(first.name())) {
+	  SaberBase::DoNewFont();
 	  return;
+	}
       }
     } while (++tries <= dirs);
   }
 
 protected:
-  void Loop() override {
-    if (aux_.clicked() || power_.clicked()) {
-      if (on_) Off(); else On();
+  int track_player_ = -1;
+
+  void StartOrStopTrack() {
+    if (track_player_ >= 0) {
+      wav_players[track_player_].Stop();
+      track_player_ = -1;
+    } else {
+      digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+      for (int unit = NELEM(wav_players) - 1; unit >= 0; unit--) {
+	if (!wav_players[unit].isPlaying()) {
+	  track_player_ = unit;
+	  wav_players[unit].Play(current_preset_->track);
+	  return;
+	}
+      }
+      Serial.println("No available WAV players.");
     }
   }
+
+  bool aux_on_ = true;
+  bool lockup_ = false;
+  void Loop() override {
+    bool disable_lockup_ = true;
+    if (track_player_ >= 0 && !wav_players[track_player_].isPlaying()) {
+      track_player_ = -1;
+    }
+    if (!on_) {
+      if (power_.clicked()) {
+	if (aux_.pushed_millis()) {
+	  aux_.EatClick();
+	  next_preset();
+          Serial.println("Next preset");
+	} else {
+          Serial.println("On (power)");
+	  On();
+	  aux_on_ = false;
+	}
+      }
+      if (power_.long_clicked()) {
+	if (aux_.pushed_millis()) {
+	  aux_.EatClick();
+	  next_directory();
+          Serial.println("next directory");
+	} else {
+	  StartOrStopTrack();
+	}
+      }
+      if (aux_.clicked()) {
+	aux_on_ = true;
+	On();
+        Serial.println("On (aux)");
+      }
+    } else {
+      ButtonBase *a, *b;
+      if (aux_on_) {
+	a = &aux_;
+	b = &power_;
+      } else {
+	b = &aux_;
+	a = &power_;
+      }
+      if (a->clicked()) {
+        Serial.println("Off");
+        Off();
+      }
+      if (b->clicked()) {
+        SaberBase::DoBlast();
+        Serial.println("Blast");
+      }
+      if (a->long_clicked()) {
+        Serial.println("Force");
+        SaberBase::DoForce();
+      }
+      if (b->pushed_millis() > 500) {
+	disable_lockup_ = false;
+        if (!lockup_) {
+          lockup_ = true;
+          SaberBase::DoBeginLockup();
+        }
+      }
+    }
+    if (lockup_ && disable_lockup_) {
+      lockup_ = false;
+      SaberBase::DoEndLockup();
+    }
+  }
+
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "id")) {
       id();
@@ -3367,8 +3496,33 @@ protected:
       Off();
       return true;
     }
+    if (!strcmp(cmd, "next")) {
+      if (!arg || (arg && !strcmp(arg, "preset"))) {
+	next_preset();
+	return true;
+      }
+      if (arg && !strcmp(arg, "font")) {
+	next_directory();
+	return true;
+      }
+    }
     if (!strcmp(cmd, "clash")) {
       Clash();
+      return true;
+    }
+    if (!strcmp(cmd, "play")) {
+      if (!arg) {
+	StartOrStopTrack();
+	return true;
+      }
+      digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+      for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+	if (!wav_players[unit].isPlaying()) {
+	  wav_players[unit].Play(arg);
+	  return true;
+	}
+      }
+      Serial.println("No available WAV players.");
       return true;
     }
     if (!strcmp(cmd, "cd")) {
@@ -3390,6 +3544,9 @@ protected:
     return false;
   }
 private:
+  BladeConfig* current_config_ = NULL;
+  Preset* current_preset_ = NULL;
+
   bool on_;
   TouchButton power_;
   Button aux_;
@@ -3616,17 +3773,6 @@ public:
       wav_players[0].Stop();
       return;
     }
-    if (!strcmp(cmd, "play")) {
-      digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-      for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
-	if (!wav_players[unit].isPlaying()) {
-	  wav_players[unit].Play(e);
-	  return;
-	}
-      }
-      Serial.println("No available WAV players.");
-      return;
-    }
 #endif
     if (!strcmp(cmd, "format")) {
       Serial.print("Erasing ... ");
@@ -3636,13 +3782,7 @@ public:
       return;
     }
     if (!strcmp(cmd, "top")) {
-#ifdef OLD_AUDIO_CODE
-//      Serial.print("Audio usage: ");
-//      Serial.println(AudioProcessorUsage());
-      Serial.print("Audio usage max: ");
-      Serial.println(AudioProcessorUsageMax());
-      AudioProcessorUsageMaxReset();
-#endif
+      // TODO: list cpu usage for various objects.
       SaberBase::DoTop();
       return;
     }
@@ -3692,6 +3832,8 @@ class Orientation : Looper {
   }
 
   void Loop() override {
+    print_ |= monitor.ShouldPrint(Monitoring::MonitorSwings);
+
     if (imu.available()) {
       Vec3 accel, gyro, magnetic;
 
@@ -3711,11 +3853,15 @@ class Orientation : Looper {
       // static float last_speed = 0.0;
       float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
 
-      if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
-        Serial.print("Speed: ");
+      if (print_) {
+        Serial.print("Speed: yz: ");
         Serial.print(speed);
+        Serial.print("x: ");
+        Serial.println(gyro.x);
+	print_ = false;
       }
 
+      SaberBase::DoXMotion(gyro.x);
       SaberBase::DoMotion(speed);
 #ifdef ENABLE_AUDIO
       // TODO: Use SaberBase()
@@ -3746,6 +3892,7 @@ class Orientation : Looper {
     }
   }
 private:
+  bool print_= false;
   Vec3 accel_;
 };
 
@@ -3767,8 +3914,9 @@ protected:
     delay(10);
     dac.SetStream(&dynamic_mixer);
     dynamic_mixer.streams_[0] = &audio_splicer;
+    dynamic_mixer.streams_[1] = &beeper;
     for (size_t i = 0; i < NELEM(wav_players); i++) {
-      dynamic_mixer.streams_[i+1] = wav_players + i;
+      dynamic_mixer.streams_[i+2] = wav_players + i;
     }
   }
 
@@ -3800,53 +3948,17 @@ Amplifier amplifier;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(bladeIdentifyPin, INPUT_PULLUP);
-  delay(500);
-
-  // Time to identify the blade.
-  float resistor = saber.id();
-
-  size_t best_config = 0;
-  float best_err = 1000000.0;
-  for (size_t i = 0; i < sizeof(blades) / sizeof(blades)[0]; i++) {
-    float err = fabs(resistor - blades[i].ohms);
-    if (err < best_err) {
-      best_config = i;
-      best_err = err;
-    }
-  }
-  Serial.print("blade= ");
-  Serial.println(best_config);
-
-  // TODO only activate monopodws if we have a WS2811-type blade
-  switch (blades[best_config].blade_type) {
-    case BladeID::PL9823:
-      ws2811_blade.Activate(blades[best_config].num_leds, WS2811_580kHz);
-      break;
-    case BladeID::WS2811:
-      ws2811_blade.Activate(blades[best_config].num_leds,
-          WS2811_800kHz | WS2811_GRB);
-      break;
-    case BladeID::SIMPLE:
-      simple_blade.Activate();
-  }
-
-  
 #ifdef ENABLE_AUDIO
-  // AudioMemory(10);
   SerialFlashChip::begin(6);
   if (!SD.begin(sdCardSelectPin)) {
     Serial.println("No sdcard found.");
   } else {
     Serial.println("Sdcard found..");
   }
-
-  // Check sound font type.
 #endif
-  saber.chdir(blades[best_config].sound_font_directory);
-
+  // Time to identify the blade.
+  saber.FindBlade();
   Looper::DoSetup();
-  
   SaberBase::DoBoot();
 }
 
