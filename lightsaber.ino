@@ -285,6 +285,7 @@ protected:							\
 
   // Wrist rotation speed
   SABERFUN(XMotion, (float speed), (speed));
+
   SABERFUN(Top, (), ());
   SABERFUN(IsOn, (bool* on), (on));
 
@@ -614,7 +615,7 @@ public:
     while (true) {
       int s = min(elements, samples_);
       s = min(s, x_);
-      if (!s) return e - s;
+      if (s <= 0) return e - s;
       if (up_) {
 	for (int i = 0; i < s; i++) data[i] = 2000;
       } else {
@@ -623,7 +624,7 @@ public:
       data += s;
       elements -= s;
       x_ -= s;
-      samples_ -= x_;
+      samples_ -= s;
       if (x_ == 0) {
 	x_ = f_;
 	up_ = !up_;
@@ -1526,6 +1527,7 @@ BufferedWavPlayer wav_players[4];
 class AudioSplicer : public DataStream<int16_t> {
 public:
   AudioSplicer() : volume_(16384 / 100) {
+    set_volume(10000);
   }
   int read(int16_t* data, int elements) override {
     int16_t *p = data;
@@ -1644,12 +1646,7 @@ public:
 
   bool swinging_ = false;
   void Motion(float speed) override {
-    if (swinging_) {
-      audio_splicer.set_volume(16384);
-    } else {
-      audio_splicer.set_volume(32768 * (0.5 + clamp(speed/200.0, 0.0, 1.0)));
-    }
-    if (speed > 200.0) {
+    if (speed > 250.0) {
       if (!swinging_) {
 	swinging_ = true;
 	audio_splicer.Play(&swing, &hum);
@@ -1657,6 +1654,11 @@ public:
     } else {
       swinging_ = false;
     }
+    int vol = 10000;
+    if (!swinging_) {
+      vol = vol * (0.99 + clamp(speed/200.0, 0.0, 1.0));
+    }
+    audio_splicer.set_volume(vol);
   }
   void XMotion(float speed) override {}
 };
@@ -1696,12 +1698,7 @@ public:
 
   bool swinging_ = false;
   void Motion(float speed) override {
-    if (swinging_) {
-      audio_splicer.set_volume(16384);
-    } else {
-      audio_splicer.set_volume(32768 * (0.5 + clamp(speed/200.0, 0.0, 1.0)));
-    }
-    if (speed > 200.0) {
+    if (speed > 250.0) {
       if (!swinging_) {
 	swinging_ = true;
 	Play(&swing);
@@ -1709,6 +1706,11 @@ public:
     } else {
       swinging_ = false;
     }
+    int vol = 10000;
+    if (!swinging_) {
+      vol = vol * (0.99 + clamp(speed/200.0, 0.0, 1.0));
+    }
+    audio_splicer.set_volume(vol);
   }
   void XMotion(float speed) override {}
 };
@@ -1738,21 +1740,23 @@ public:
   float battery() const {
     return last_voltage_;
   }
+  
+  bool low() const {
+    return battery() < 3.0;
+  }
 protected:
   void Setup() override {
-    last_voltage_ = battery_now();
+    really_old_voltage_ = old_voltage_ = last_voltage_ = battery_now();
     pinMode(batteryLevelPin, INPUT_PULLDOWN);
   }
   void Loop() override {
-    last_voltage_ = last_voltage_ * 0.99 + battery_now() * 0.01;
+    float v = battery_now();
+    last_voltage_ = last_voltage_ * 0.999 + v * 0.001;
     if (monitor.ShouldPrint(Monitoring::MonitorBattery) ||
 	millis() - last_print_millis_ > 20000) {
       Serial.print("Battery voltage: ");
       Serial.println(battery());
       last_print_millis_ = millis();
-    }
-    if (battery() < 3.0) {
-      // Battery voltage is low. Turn stuff off, beep, etc.
     }
   }
 
@@ -1766,7 +1770,10 @@ protected:
   }
 private:
   float last_voltage_ = 0.0;
+  float old_voltage_ = 0.0;
+  float really_old_voltage_ = 0.0;
   uint32_t last_print_millis_;
+  uint32_t last_beep_ = 0;
 };
 
 BatteryMonitor battery_monitor;
@@ -2365,7 +2372,14 @@ public:
     Color c = colors[i].mix(colors[i + 1], blend);
     c = c.mix(Color(), black_mix);
     int num_leds = blade->num_leds();
-    for (int i = 0; i < num_leds; i++) blade->set(i, c);
+
+    float min_volts = 2.7;
+    float max_volts = 4.2;
+    float pos = (volts - min_volts) * num_leds / (max_volts - min_volts);
+    int p = pos * 32;
+    for (int i = 0; i < num_leds; i++) {
+      blade->set(i, Color().mix(c, max(0, 256 - abs(p - i * 32))));
+    }
   };
 };
 
@@ -2433,24 +2447,30 @@ class StyleFire *StyleFirePtr() {
 
 class StyleNormal : public BladeStyle {
 public:
-  StyleNormal(Color color, Color clash_color, uint32_t event_length)
+  StyleNormal(Color color, Color clash_color, uint32_t out_millis, uint32_t in_millis)
     : color_(color),
       clash_color_(clash_color),
-      event_length_(event_length) {}
+      out_millis_(out_millis),
+      in_millis_(in_millis) {}
 
   void activate() override {
     Serial.println("Normal Style");
   }
   void run(BladeBase* blade) override {
     int num_leds = blade->num_leds();
-    Color c = color_;
     uint32_t m = millis();
+    if (blade->clash()) clash_millis_ = m;
+    Color c = color_;
+    // Clash effect
+    int clash_t = m - clash_millis_;
+    int clash_mix = min(clash_t * 50, 512 - clash_t * 10);
+    c = c.mix(clash_color_, clampi32(clash_mix, 0, 255));
+
     if (on_ != blade->is_on()) {
       event_millis_ = m;
       on_ = blade->is_on();
     }
-    if (m - event_millis_ > 100000) event_millis_ += 1000;
-    int thres = num_leds * 256 * (m - event_millis_) / event_length_;
+    int thres = num_leds * 256 * (m - event_millis_) / (on_ ? out_millis_ : in_millis_);
     if (!blade->is_on()) thres = num_leds * 256 - thres;
     for (int i = 0; i < num_leds; i++) {
       int black_mix = clampi32(thres - i * 256, 0, 255);
@@ -2460,24 +2480,93 @@ public:
       Serial.println("Allow off.");
       blade->allow_disable();
     }
+    if (m - event_millis_ > 100000) event_millis_ += 1000;
+    if (m - clash_millis_ > 100000) clash_millis_ += 1000;
   }
 private:
   static bool on_;
   static uint32_t event_millis_;
+  static uint32_t clash_millis_;
   Color color_;
   Color clash_color_;
-  uint32_t event_length_;
+  uint32_t out_millis_;
+  uint32_t in_millis_;
 };
 
 bool StyleNormal::on_ = false;
 uint32_t StyleNormal::event_millis_ = 0;
+uint32_t StyleNormal::clash_millis_ = 0;
 
 // Arguments: color, clash color, turn-on/off time
-template<int r1, int g1, int b1, int r2, int g2, int b2, int millis>
+template<int r1, int g1, int b1, int r2, int g2, int b2, int out_millis, int in_millis>
 class StyleNormal *StyleNormalPtr() {
-  static StyleNormal style(Color(r1, g1, b1), Color(r2, g2, b2), millis);
+  static StyleNormal style(Color(r1, g1, b1), Color(r2, g2, b2), out_millis, in_millis);
   return &style;
 }
+
+class StyleRainbow : public BladeStyle {
+public:
+  StyleRainbow(uint32_t out_millis, uint32_t in_millis)
+    : out_millis_(out_millis),
+      in_millis_(in_millis) {}
+
+  void activate() override {
+    Serial.println("Normal Style");
+    for (int i = 0; i < 256; i++) {
+      sin_table[i] = 128 + 127 * sin(i * 3.1415 * 2 / 256);
+    }
+  }
+  void run(BladeBase* blade) override {
+    int num_leds = blade->num_leds();
+    uint32_t m = millis();
+    if (blade->clash()) clash_millis_ = m;
+
+    if (on_ != blade->is_on()) {
+      event_millis_ = m;
+      on_ = blade->is_on();
+    }
+    int clash_t = m - clash_millis_;
+    int clash_mix = min(clash_t * 50, 512 - clash_t * 10);
+    int thres = num_leds * 256 * (m - event_millis_) / (on_ ? out_millis_ : in_millis_);
+    if (!blade->is_on()) thres = num_leds * 256 - thres;
+    for (int i = 0; i < num_leds; i++) {
+      int black_mix = clampi32(thres - i * 256, 0, 255);
+      // Clash effect
+      Color c(sin_table[((m + i * 50)>>2) & 0xff],
+	      sin_table[((m + i * 50 + (256 << 4) / 3)>>2) & 0xff],
+	      sin_table[((m + i * 50 + (256 << 4) * 2 / 3)>>2) & 0xff]);
+      c = c.mix(Color(255,255,255), clampi32(clash_mix, 0, 255));
+      blade->set(i, Color().mix(c, black_mix));
+    }
+    if (!blade->is_on() && thres > 256 * (num_leds*2)) {
+      Serial.println("Allow off.");
+      blade->allow_disable();
+    }
+    if (m - event_millis_ > 100000) event_millis_ += 1000;
+    if (m - clash_millis_ > 100000) clash_millis_ += 1000;
+  }
+private:
+  static unsigned char sin_table[256];
+  static bool on_;
+  static uint32_t event_millis_;
+  static uint32_t clash_millis_;
+  uint32_t out_millis_;
+  uint32_t in_millis_;
+};
+
+bool StyleRainbow::on_ = false;
+uint32_t StyleRainbow::event_millis_ = 0;
+uint32_t StyleRainbow::clash_millis_ = 0;
+unsigned char StyleRainbow::sin_table[256];
+
+// Arguments: color, clash color, turn-on/off time
+template<int out_millis, int in_millis>
+class StyleRainbow *StyleRainbowPtr() {
+  static StyleRainbow style(out_millis, in_millis);
+  return &style;
+}
+
+
 
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
@@ -2754,27 +2843,28 @@ struct Preset {
 
 // CONFIGURABLE
 Preset presets[] = {
-  { "font01", "tracks/walls.wav", StyleNormalPtr<CYAN, WHITE, 200>() },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
   { "font02", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
-  { "font01", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 200>() },
-  { "font01", "tracks/duel.wav", StyleNormalPtr<GREEN, WHITE, 200>() },
-  { "font01", "tracks/duel.wav", StyleNormalPtr<WHITE, WHITE, 200>() },
-  { "font01", "tracks/duel.wav", StyleNormalPtr<YELLOW, WHITE, 200>() },
-  { "font01", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 200>() },
-  { "font01", "tracks/duel.wav", StyleNormalPtr<MAGENTA, WHITE, 200>() },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
+  { "font01", "tracks/walls.wav", StyleNormalPtr<BLUE, WHITE, 300, 800>() },
   { "font02", "tracks/duel.wav", StyleFirePtr<BLUE, CYAN>() },
-  { "font01", "tracks/duel.wav", &style_charging },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>() },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<WHITE, RED, 300, 800>() },
+  { "font01", "tracks/walls.wav", StyleNormalPtr<YELLOW, WHITE, 300, 800>() },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<MAGENTA, WHITE, 300, 800>() },
+  { "font02", "tracks/duel.wav", StyleRainbowPtr<300, 800>() },
+  { "charging", "tracks/duel.wav", &style_charging },
 };
 
 Preset simple_presets[] = {
-  { "font01", "tracks/duel.wav", StyleNormalPtr<BLUE, BLUE, 100>() },
-  { "font02", "tracks/duel.wav", StyleNormalPtr<BLUE, BLUE, 100>() },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<BLUE, BLUE, 100, 200>() },
+  { "font02", "tracks/duel.wav", StyleNormalPtr<BLUE, BLUE, 100, 200>() },
 };
 
 Preset charging_presets[] = {
   { "charging", "tracks/duel.wav", &style_charging },
-  { "font01", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 200>() },
-  { "font02", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 200>() },
+  { "font01", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 300, 800>() },
+  { "font02", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
 };
 
 struct BladeConfig {
@@ -3249,6 +3339,10 @@ public:
             aux_(auxPin, "aux"),
             aux2_(aux2Pin, "aux2") {}
 
+  bool IsOn() const {
+    return on_;
+  }
+
   void On() {
     if (on_) return;
     Serial.println("Ignition.");
@@ -3417,7 +3511,19 @@ protected:
 
   bool aux_on_ = true;
   bool lockup_ = false;
+  uint32_t last_beep_;
+
   void Loop() override {
+    if (battery_monitor.low()) {
+      if (on_) {
+	Off();
+      } else if (millis() - last_beep_ > 1000) {
+	if (current_style != &style_charging) {
+	  beeper.Beep(0.5, 440.0);
+	}
+      }
+      last_beep_ = millis();
+    }
     bool disable_lockup_ = true;
     if (track_player_ >= 0 && !wav_players[track_player_].isPlaying()) {
       track_player_ = -1;
@@ -3861,8 +3967,10 @@ class Orientation : Looper {
 	print_ = false;
       }
 
-      SaberBase::DoXMotion(gyro.x);
-      SaberBase::DoMotion(speed);
+      if (saber.IsOn()) {
+	SaberBase::DoXMotion(gyro.x);
+	SaberBase::DoMotion(speed);
+      }
 #ifdef ENABLE_AUDIO
       // TODO: Use SaberBase()
       // saber_synth.volume_.set_target(32768 * (0.5 + clamp(speed/200.0, 0.0, 0.5)));
