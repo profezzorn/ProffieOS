@@ -28,6 +28,7 @@
 
 // TODO LIST:
 // Make sure that sound is off before doing file command
+// make "chargint style" prevent you from turning the saber "on"
 // Audio work items:
 //   Tune swings better
 //   select clash from force
@@ -2633,9 +2634,9 @@ public:
     for (int i = 0; i < num_leds; i++) {
       int black_mix = clampi32(thres - i * 256, 0, 255);
       // Clash effect
-      Color c(sin_table[((m + i * 50)) & 0x3ff],
-	      sin_table[((m + i * 50 + 1024 / 3)) & 0x3ff],
-	      sin_table[((m + i * 50 + 1024 * 2 / 3)) & 0x3ff]);
+      Color c(max(0, (sin_table[((m * 3 + i * 50)) & 0x3ff] >> 7)),
+	      max(0, (sin_table[((m * 3 + i * 50 + 1024 / 3)) & 0x3ff] >> 7)),
+	      max(0, (sin_table[((m * 3 + i * 50 + 1024 * 2 / 3)) & 0x3ff] >> 7)));
       c = c.mix(Color(255,255,255), clampi32(clash_mix, 0, 255));
       blade->set(i, Color().mix(c, black_mix));
     }
