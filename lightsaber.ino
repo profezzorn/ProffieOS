@@ -102,7 +102,15 @@ enum SaberPins {
 #define ENABLE_WS2811
 #define ENABLE_WATCHDOG
 
+// If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
+
+// If defined all sound samples will be divided by 2, resulting in
+// quieter sound.
+// #define QUIET
+
+// This doesn't seem  to work.
+// #define TAR_UPLOADS_TO_SDCARD
 
 // Use FTM timer for monopodws timing.
 #define USE_FTM_TIMER
@@ -566,6 +574,9 @@ public:
 	v = sum[i];
 	vol_ = ((vol_ + abs(v)) * 255) >> 8;
 	v2 = (v << 10) / (my_sqrt(vol_) + 100);
+#ifdef QUIET
+	v2 >>= 1;
+#endif
 	data[i] = clampi32(v2, -32768, 32767);
 	peak_sum_ = max(abs(v), peak_sum_);
 	peak_ = max(abs(v2), peak_);
@@ -997,9 +1008,8 @@ private:
 class Effect;
 Effect* all_effects = NULL;
 
-char toLower(char x) {
-  if (x >= 'A' && x <= 'Z') return x - 'A' + 'a';
-  return x;
+int constexpr toLower(char x) {
+  return (x >= 'A' && x <= 'Z') ? x - 'A' + 'a' : x;
 }
 
 const char *startswith(const char *prefix, const char* x) {
@@ -1064,7 +1074,6 @@ class Effect {
   }
 
   void Scan(const char *filename) {
-    size_t len = strlen(name_);
     const char *rest = startswith(name_, filename);
     if (!rest) return;
     if (*rest == '/') {
@@ -1084,7 +1093,7 @@ class Effect {
       max_file_ = max(max_file_, n);
       min_file_ = min(min_file_, n);
       if (*rest == '0') {
-        digits_ = end - filename + len;
+        digits_ = end - rest;
       }
     }
   }
@@ -1170,6 +1179,11 @@ class Effect {
   static void ScanAll(const char* filename) {
     if (!endswith(".wav", filename))
       return;
+#if 0
+    // TODO: "monitor scan" command?
+    Serial.print("SCAN ");
+    Serial.println(filename);
+#endif
     for (Effect* e = all_effects; e; e = e->next_) {
       e->Scan(filename);
     }
@@ -1199,7 +1213,7 @@ class Effect {
 	  strcpy(fname, f.name());
 	  strcat(fname, "/");
 	  char* fend = fname + strlen(fname);
-	  while (File f2 = dir.openNextFile()) {
+	  while (File f2 = f.openNextFile()) {
 	    strcpy(fend, f2.name());
 	    ScanAll(fname);
 	    f2.close();
@@ -1493,6 +1507,7 @@ private:
           Skip(len_);
           continue;
         }
+	sample_bytes_ = len_;
         while (len_) {
 	  bytes_to_decode_ =
 	    ReadFile(AlignRead(min(len_, sizeof(buffer))));
@@ -1543,6 +1558,11 @@ public:
     return !run_;
   }
 
+  // Length, seconds.
+  float length() const {
+    return (float)(sample_bytes_) * 8 / (bits_ * rate_);
+  }
+
 private:
   volatile bool run_ = false;
   Effect* volatile effect_ = nullptr;
@@ -1559,6 +1579,7 @@ private:
 
   int bytes_to_decode_ = 0;
   size_t len_ = 0;
+  volatile size_t sample_bytes_ = 0;
   char* ptr_;
   char* end_;
   char buffer[512]  __attribute__((aligned(4)));
@@ -1614,6 +1635,8 @@ public:
     return buffer.read(dest, to_read);
   }
 
+  float length() const { return wav.length(); }
+
 private:
   BufferedDataStream<int16_t, 512> buffer;
   PlayWav wav;
@@ -1632,7 +1655,17 @@ public:
   int read(int16_t* data, int elements) override {
     int16_t *p = data;
     int to_read = elements;
-    if (current_ < 0) return 0;
+    if (current_ < 0) {
+      if (start_after_) {
+	start_after_ -= elements;
+	if (start_after_ < 0) {
+	  start_after_ = 0;
+	  current_ = fadeto_;
+	  fadeto_ = -1;
+	}
+      }
+      return 0;
+    }
 
     int num = players_[current_].read(p, to_read);
     to_read -= num;
@@ -1655,8 +1688,11 @@ public:
         int num = players_[fadeto_].read(tmp, n);
         while (num < n) tmp[num++] = 0;
         for (int i = 0; i < num; i++) {
-          p[i] = (p[i] * fade_ + tmp[i] * (256 - fade_)) >> 8;
-          if (fade_) fade_ -= 2;
+          p[i] = (p[i] * fade_ + tmp[i] * (32768 - fade_)) >> 15;
+          if (fade_) {
+	    fade_ -= fade_speed_;
+	    if (fade_ < 0) fade_ = 0;
+	  }
         }
         to_read -= n;
 	p += n;
@@ -1679,7 +1715,13 @@ public:
     return current_ == -1;
   }
 
-  bool Play(Effect* f, Effect* loop) {
+  void set_fade_time(float t) {
+    fade_speed_ = max(1, (int)(32768 / t / AUDIO_RATE));
+    Serial.print("FADE SPEED: ");
+    Serial.println(fade_speed_);
+  }
+
+  bool Play(Effect* f, Effect* loop, int delay_ms = 0) {
     if (fadeto_ != -1) {
       Serial.print("cutover unit busy fade_ =");
       Serial.print(fade_);
@@ -1697,11 +1739,20 @@ public:
     if (loop) {
       players_[unit].PlayLoop(loop);
     }
-    if (current_ == -1) {
-      current_ = unit;
-    } else {
+    if (delay_ms) {
       fadeto_ = unit;
-      fade_ = 254;
+      start_after_ = delay_ms * (AUDIO_RATE/100) / 10;
+#if 0
+      Serial.print("START AFTER: ");
+      Serial.println(start_after_);
+#endif
+    } else {
+      if (current_ == -1) {
+	current_ = unit;
+      } else {
+	fadeto_ = unit;
+	fade_ = 32768;
+      }
     }
     return true;
   }
@@ -1723,7 +1774,9 @@ protected:
   BufferedWavPlayer players_[2];
   volatile int current_= -1;
   volatile int fadeto_ = -1;
-  int fade_;
+  volatile int fade_speed_ = 128;
+  volatile int start_after_ = 0;
+  volatile int fade_;
   ClickAvoiderLin volume_;
 };
 
@@ -1732,7 +1785,11 @@ AudioSplicer audio_splicer;
 class MonophonicFont : SaberBase {
 public:
   MonophonicFont() : SaberBase(NOLINK) { }
-  void Activate() { SaberBase::Link(); }
+  void Activate() {
+    Serial.println("Activating monophonic font.");
+    audio_splicer.set_fade_time(0.003);
+    SaberBase::Link();
+  }
   void Deactivate() { SaberBase::Unlink(); }
 
   void On() override {
@@ -1768,15 +1825,106 @@ public:
   void XMotion(float speed) override {}
 };
 
+struct ConfigFile {
+  void skipwhite(File* f) {
+    while (f->peek() == ' ' || f->peek() == '\t')
+      f->read();
+  }
+  void skipline(File* f) {
+    while (f->available() && f->read() != '\n');
+  }
+
+  int64_t readValue(File* f) {
+    int64_t ret = 0;
+    int64_t sign = 1;
+    if (f->peek() == '-') {
+      sign = -1;
+      f->read();
+    }
+    while (f->available()) {
+      int c = toLower(f->peek());
+      if (c >= '0' && c <= '9') {
+	ret = (c - '0') + 10 * ret;
+	f->read();
+      } else {
+	return ret * sign;
+      }
+    }
+    return ret * sign;
+  }
+
+  void Read(File* f) {
+    for (; f->available(); skipline(f)) {
+      char variable[33];
+      variable[0] = 0;
+      skipwhite(f);
+      if (f->peek() == '#') continue;
+      for (int i = 0; i < 32; i++) {
+	int c = toLower(f->peek());
+	if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+	  f->read();
+	  variable[i] = c;
+	  variable[i+1] = 0;
+	} else {
+	  break;
+	}
+      }
+      skipwhite(f);
+      if (f->peek() != '=') continue;
+      f->read();
+      skipwhite(f);
+      int64_t v = readValue(f);
+#if 0
+      Serial.print(variable);
+      Serial.print(" = ");
+      Serial.println((int)v);
+#endif
+      if (!strcmp(variable, "humstart")) {
+	humStart = v;
+      }
+    }
+  }
+
+  int humStart = 100;
+};
+
+
 MonophonicFont monophonic_font;
 
 class PolyphonicFont : public SaberBase {
 public:
   PolyphonicFont() : SaberBase(NOLINK) { }
-  void Activate() { SaberBase::Link(); }
+  void Activate() {
+    Serial.println("Activating polyphonic font.");
+    // TODO: while we need to fade out the hum,
+    // maybe we don't need to fade in the in sound?
+    audio_splicer.set_fade_time(0.3);
+    char config_filename[128];
+    strcpy(config_filename, current_directory);
+    strcat(config_filename, "config.ini");
+    File f = SD.open(config_filename);
+    config_.Read(&f);
+    SaberBase::Link();
+  }
   void Deactivate() { SaberBase::Unlink(); }
 
   void On() override {
+    if (config_.humStart) {
+      BufferedWavPlayer* tmp = Play(&out);
+      if (tmp) {
+	int delay_ms = 1000 * tmp->length() - config_.humStart;
+#if 1
+	Serial.print(" LEN = ");
+	Serial.print(tmp->length());
+	Serial.print(" humstart = ");
+	Serial.print(config_.humStart);
+	Serial.print(" delay_ms = ");
+	Serial.println(delay_ms);
+#endif
+	audio_splicer.Play(&hum, &hum, delay_ms);
+	return;
+      }
+    }
     audio_splicer.Play(&out, &hum);
   }
 
@@ -1784,15 +1932,16 @@ public:
     audio_splicer.Play(&in, NULL);
   }
 
-  void Play(Effect* f)  {
+  BufferedWavPlayer* Play(Effect* f)  {
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     // Find a free wave playback unit.
     for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
       if (!wav_players[unit].isPlaying()) {
 	wav_players[unit].PlayOnce(f);
-	return;
+	return wav_players + unit;
       }
     }
+    return NULL;
   }
   void Clash() override { Play(&clsh); }
   void Stab() override { Play(&stab); }
@@ -1818,6 +1967,8 @@ public:
     audio_splicer.set_volume(vol);
   }
   void XMotion(float speed) override {}
+
+  ConfigFile config_;
 };
 
 PolyphonicFont polyphonic_font;
@@ -2497,7 +2648,7 @@ public:
 
   void activate() override {
     Serial.println("Fire Style");
-    for (size_t i = 0; i < maxLedsPerStrip; i++) heat_[i] = 0;
+    for (size_t i = 0; i < NELEM(heat_); i++) heat_[i] = 0;
   }
   void run(BladeBase* blade) override {
     uint32_t m = millis();
@@ -2537,12 +2688,12 @@ public:
 
 private:
   static uint32_t last_update_;
-  static unsigned short heat_[maxLedsPerStrip];
+  static unsigned short heat_[maxLedsPerStrip + 2];
   Color c1_, c2_;
 };
 
 uint32_t StyleFire::last_update_ = 0;
-unsigned short StyleFire::heat_[maxLedsPerStrip];
+unsigned short StyleFire::heat_[maxLedsPerStrip + 2];
 
 template<int r1, int g1, int b1, int r2, int g2, int b2>
 class StyleFire *StyleFirePtr() {
@@ -2567,9 +2718,15 @@ public:
     if (blade->clash()) clash_millis_ = m;
     Color c = color_;
     // Clash effect
+#if 1
+    if (m - clash_millis_ < 40) {
+      c = clash_color_;
+    }
+#else
     int clash_t = m - clash_millis_;
     int clash_mix = min(clash_t * 50, 512 - clash_t * 10);
     c = c.mix(clash_color_, clampi32(clash_mix, 0, 255));
+#endif
 
     if (on_ != blade->is_on()) {
       event_millis_ = m;
@@ -2666,7 +2823,31 @@ class StyleRainbow *StyleRainbowPtr() {
   return &style;
 }
 
-
+#if 0
+class StylePOV : public BladeStyle {
+public:
+  StylePOV(Color* data, int width, int height)
+    : data_(data), width_(width), height_(height) {
+  }
+  void activate() override {
+    Serial.println("POV Style");
+  }
+  void run(BladeBase* blade) override {
+    int col = ANGLE_TODO;
+    int num_leds_ = blade->num_leds();
+    int led = 0;
+    while (led < num_leds - height_) blade->set(led++, Color());
+    Color* data_ + height_ * col;
+    for (int i = 0; i < min(height, num_leds); i++) {
+      blade->set(led++, *(col++));
+    }
+  }
+private:
+  Color* data_;
+  int width_;
+  int height_;
+};
+#endif
 
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
@@ -2695,7 +2876,9 @@ public:
   // No need for a "deactivate", the blade stays active until
   // you take it out, which also cuts the power.
   void Activate() override {
-    Serial.println("WS2811 Blade");
+    Serial.print("WS2811 Blade with ");
+    Serial.print(num_leds_);
+    Serial.println(" leds");
     Power(true);
     delay(10);
     monopodws.begin(num_leds_, displayMemory, config_);
@@ -2806,6 +2989,7 @@ uint32_t WS2811_Blade::last_millis_ = 0;
 
 template<int LEDS, int CONFIG>
 class WS2811_Blade *WS2811BladePtr() {
+  static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
   static WS2811_Blade blade(LEDS, CONFIG);
   return &blade;
 }
@@ -2944,13 +3128,13 @@ struct Preset {
 // CONFIGURABLE
 Preset presets[] = {
   { "font01", "tracks/duel.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
-  { "font02", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
-  { "font01", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
-  { "font01", "tracks/walls.wav", StyleNormalPtr<BLUE, WHITE, 300, 800>() },
+  { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
+  { "igniter/font2", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
+  { "font01", "tracks/walls.wav", StyleNormalPtr<BLUE, RED, 300, 800>() },
   { "font02", "tracks/duel.wav", StyleFirePtr<BLUE, CYAN>() },
-  { "font01", "tracks/duel.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>() },
+  { "igniter/font4", "tracks/duel.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>() },
   { "font01", "tracks/duel.wav", StyleNormalPtr<WHITE, RED, 300, 800>() },
-  { "font01", "tracks/walls.wav", StyleNormalPtr<YELLOW, WHITE, 300, 800>() },
+  { "font01", "tracks/walls.wav", StyleNormalPtr<YELLOW, BLUE, 300, 800>() },
   { "font01", "tracks/duel.wav", StyleNormalPtr<MAGENTA, WHITE, 300, 800>() },
   { "font02", "tracks/duel.wav", StyleRainbowPtr<300, 800>() },
   { "charging", "tracks/duel.wav", &style_charging },
@@ -2962,7 +3146,7 @@ Preset simple_presets[] = {
 };
 
 Preset charging_presets[] = {
-  { "charging", "tracks/duel.wav", &style_charging },
+  { "charging", "", &style_charging },
   { "font01", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 300, 800>() },
   { "font02", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
 };
@@ -2992,8 +3176,8 @@ BladeConfig blades[] = {
   {  41000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
   {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
 
-//  {  69000, WS2811BladePtr<120, WS2811_800kHz>(), CONFIGARRAY(presets) },
-//  {   2600, WS2811BladePtr<120, WS2811_800kHz>(), CONFIGARRAY(presets) },
+//  {  69000, WS2811BladePtr<140, WS2811_800kHz>(), CONFIGARRAY(presets) },
+  {   7800, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(), CONFIGARRAY(presets) },
 };
 
 
@@ -3041,8 +3225,9 @@ class Tar {
       if (bytes_ == sizeof(block_)) {
         if (file_length_) {
           size_t to_write = min(sizeof(block_), file_length_);
-          flash_file_.write(block_, to_write);
+          file_.write(block_, to_write);
           file_length_ -= to_write;
+	  if (!file_length_) file_.close();
         } else {
           if (memcmp("ustar", block_ + 257, 5)) {
             Serial.println("NOT USTAR!");
@@ -3053,11 +3238,15 @@ class Tar {
             Serial.print(block_);
             Serial.print(" length = ");
             Serial.println(file_length_);
+#ifdef TAR_UPLOADS_TO_SDCARD
+	    file_ = SD.open(block_, FILE_WRITE);
+#else
             if (!SerialFlashChip::create(block_, file_length_)) {
               Serial.println("Create file failed.");
               return false;
             }
-            flash_file_ = SerialFlashChip::open(block_);
+            file_ = SerialFlashChip::open(block_);
+#endif
           }
         }
         bytes_ = 0;
@@ -3066,9 +3255,15 @@ class Tar {
     return true;
   }
   private:
-    SerialFlashFile flash_file_;
+#ifdef TAR_UPLOADS_TO_SDCARD
+    File file_;
+#else
+    SerialFlashFile file_;
+#endif
     size_t file_length_;
     size_t bytes_;
+
+    // TODO: Can this be shared with some other task?
     char block_[512];
 };
 
@@ -3435,7 +3630,10 @@ protected:
 class Saber : CommandParser, Looper {
 public:
   Saber() : CommandParser(),
-            power_(powerButtonPin, 1600, "pow"),
+  // CONFIGURABLE, use "monitor touch" to see the range of
+  // values from the touch sensor, then select a value that is
+  // big enough to not trigger the touch sensor randomly.
+            power_(powerButtonPin, 1700, "pow"),
             aux_(auxPin, "aux"),
             aux2_(aux2Pin, "aux2") {}
 
@@ -3742,6 +3940,7 @@ protected:
     }
     if (!strcmp(cmd, "cd")) {
       chdir(arg);
+      SaberBase::DoNewFont();
       return true;
     }
     if (!strcmp(cmd, "pwd")) {
@@ -3869,7 +4068,7 @@ public:
       Serial.println("  red, green, blue, yellow, cyan, magenta, white");
       Serial.println("Serial Flash memory management:");
       Serial.println("   ls, rm <file>, format, play <file>, effects");
-      Serial.println("To upload files: tar cf - files | uuencode >/dev/ttyACM0");
+      Serial.println("To upload files: tar cf - files | uuencode x >/dev/ttyACM0");
       Serial.println("Debugging commands:");
       Serial.println("   monitor swings, monitor samples, top, version");
       return;
@@ -3880,6 +4079,7 @@ public:
       return;
     }
     if (!strcmp(cmd, "begin")) {
+      Serial.println("Begin UUdecode tar file.\n");
       // Filename is ignored.
       mode_ = ModeDecode;
       tar_.begin();
