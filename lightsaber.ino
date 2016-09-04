@@ -1955,7 +1955,7 @@ public:
     if (speed > 250.0) {
       if (!swinging_) {
 	swinging_ = true;
-	Play(&swing);
+	Play(&swng);
       }
     } else {
       swinging_ = false;
@@ -2790,11 +2790,11 @@ public:
     if (!blade->is_on()) thres = num_leds * 256 - thres;
     for (int i = 0; i < num_leds; i++) {
       int black_mix = clampi32(thres - i * 256, 0, 255);
-      // Clash effect
       Color c(max(0, (sin_table[((m * 3 + i * 50)) & 0x3ff] >> 7)),
 	      max(0, (sin_table[((m * 3 + i * 50 + 1024 / 3)) & 0x3ff] >> 7)),
 	      max(0, (sin_table[((m * 3 + i * 50 + 1024 * 2 / 3)) & 0x3ff] >> 7)));
       c = c.mix(Color(255,255,255), clampi32(clash_mix, 0, 255));
+      // Clash effect
       blade->set(i, Color().mix(c, black_mix));
     }
     if (!blade->is_on() && thres > 256 * (num_leds*2)) {
@@ -2822,6 +2822,78 @@ class StyleRainbow *StyleRainbowPtr() {
   static StyleRainbow style(out_millis, in_millis);
   return &style;
 }
+
+class StyleStrobe : public BladeStyle {
+public:
+  StyleStrobe(Color color,
+	      Color clash_color,
+	      int frequency,
+	      uint32_t out_millis,
+	      uint32_t in_millis)
+    : color_(color),
+      clash_color_(clash_color),
+      strobe_millis_(1000/frequency),
+      out_millis_(out_millis),
+      in_millis_(in_millis) {}
+
+  void activate() override {
+    Serial.println("Strobe Style");
+  }
+  void run(BladeBase* blade) override {
+    int num_leds = blade->num_leds();
+    uint32_t m = millis();
+    if (blade->clash()) clash_millis_ = m;
+    Color c = Color();
+    if (m == last_strobe_ || m - last_strobe_ > strobe_millis_) {
+      c = color_;
+      last_strobe_ = m;
+    }
+    // Clash effect
+    if (m - clash_millis_ < 40) {
+      c = clash_color_;
+    }
+
+    if (on_ != blade->is_on()) {
+      event_millis_ = m;
+      on_ = blade->is_on();
+    }
+    int thres = num_leds * 256 * (m - event_millis_) / (on_ ? out_millis_ : in_millis_);
+    if (!blade->is_on()) thres = num_leds * 256 - thres;
+    for (int i = 0; i < num_leds; i++) {
+      int black_mix = clampi32(thres - i * 256, 0, 255);
+      blade->set(i, Color().mix(c, black_mix));
+    }
+    if (!blade->is_on() && thres > 256 * (num_leds*2)) {
+      Serial.println("Allow off.");
+      blade->allow_disable();
+    }
+    if (m - event_millis_ > 100000) event_millis_ += 1000;
+    if (m - clash_millis_ > 100000) clash_millis_ += 1000;
+  }
+private:
+  static bool on_;
+  static uint32_t event_millis_;
+  static uint32_t clash_millis_;
+  static uint32_t last_strobe_;
+  Color color_;
+  Color clash_color_;
+  uint32_t strobe_millis_;
+  uint32_t out_millis_;
+  uint32_t in_millis_;
+};
+
+bool StyleStrobe::on_ = false;
+uint32_t StyleStrobe::last_strobe_ = 0;
+uint32_t StyleStrobe::event_millis_ = 0;
+uint32_t StyleStrobe::clash_millis_ = 0;
+
+// Arguments: color, clash color, turn-on/off time
+template<int r1, int g1, int b1, int r2, int g2, int b2, int frequency, int out_millis, int in_millis>
+class StyleStrobe *StyleStrobePtr() {
+  static StyleStrobe style(Color(r1, g1, b1), Color(r2, g2, b2), frequency, out_millis, in_millis);
+  return &style;
+}
+
 
 #if 0
 class StylePOV : public BladeStyle {
@@ -3126,29 +3198,44 @@ struct Preset {
 };
 
 // CONFIGURABLE
+// Each preset line consists of:
+// { "font directory", "sound track directory", Style },
+// Where Style is one of:
+//   StyleNormalPtr<BaseColor, FlashColor, out millis, in millis>()
+//   StyleFirePtr<LowHeatColor, HighHeatColor>()
+//   StyleRainBowPtr<out millis, in millis>()
+//   StyleStrobePtr<BaseColor, FlashColor, out millis, in millis>()
+//   &style_charging
+// All colors can be specied as three numbers or using one the handy macros above.
+// If you wish to have different presets for different blades, copy this array and
+// name it something other than "preset", then use the new name inside the blade
+// configuration array below. See "simple_presets" and "charging_presets" below for
+// examples.
 Preset presets[] = {
-  { "font01", "tracks/duel.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
+  { "font01", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
+  { "font01", "tracks/cantina.wav", StyleNormalPtr<BLUE, RED, 300, 800>() },
   { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
-  { "igniter/font2", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
-  { "font01", "tracks/walls.wav", StyleNormalPtr<BLUE, RED, 300, 800>() },
-  { "font02", "tracks/duel.wav", StyleFirePtr<BLUE, CYAN>() },
+  { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
+  { "font02", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>() },
   { "igniter/font4", "tracks/duel.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>() },
   { "font01", "tracks/duel.wav", StyleNormalPtr<WHITE, RED, 300, 800>() },
   { "font01", "tracks/walls.wav", StyleNormalPtr<YELLOW, BLUE, 300, 800>() },
-  { "font01", "tracks/duel.wav", StyleNormalPtr<MAGENTA, WHITE, 300, 800>() },
-  { "font02", "tracks/duel.wav", StyleRainbowPtr<300, 800>() },
+  { "font01", "tracks/title.wav", StyleNormalPtr<MAGENTA, WHITE, 300, 800>() },
+  { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
+  { "font02", "tracks/cantina.wav", StyleStrobePtr<WHITE, RED, 15, 300, 800>() },
   { "charging", "tracks/duel.wav", &style_charging },
 };
 
 Preset simple_presets[] = {
-  { "font01", "tracks/duel.wav", StyleNormalPtr<BLUE, BLUE, 100, 200>() },
-  { "font02", "tracks/duel.wav", StyleNormalPtr<BLUE, BLUE, 100, 200>() },
+  { "font01", "tracks/title.wav", StyleNormalPtr<BLUE, WHITE, 100, 200>() },
+  { "font02", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 100, 200>() },
+  { "font02", "tracks/cantina.wav", StyleStrobePtr<BLUE, WHITE, 15, 100, 200>() },
 };
 
 Preset charging_presets[] = {
   { "charging", "", &style_charging },
-  { "font01", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 300, 800>() },
-  { "font02", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
+  { "font01", "tracks/title.wav", StyleNormalPtr<BLUE, BLUE, 100, 200>() },
+  { "font02", "tracks/duel.wav", StyleNormalPtr<BLUE, BLUE, 100, 200>() },
 };
 
 struct BladeConfig {
@@ -3164,6 +3251,13 @@ struct BladeConfig {
 };
 
 // CONFIGURABLE
+// Each line of configuration should be:
+//     { blade id resistor ohms, blade, CONFIGARRAY(array of presets) },
+// Where "blade", can be one of the following:
+//     WS2811BladePtr<number of leds, WS2811 configuration flags>()
+//     SimpleBladePTR<Color of channel 1, color of channel 2, color of channel 3, color of channel 4>()
+// All colors can be specied as three numbers or using one the handy macros above.
+
 BladeConfig blades[] = {
   // PL9823 blade, 97 LEDs
   {  69000, WS2811BladePtr<97, WS2811_580kHz>(), CONFIGARRAY(presets) },
@@ -3178,6 +3272,9 @@ BladeConfig blades[] = {
 
 //  {  69000, WS2811BladePtr<140, WS2811_800kHz>(), CONFIGARRAY(presets) },
   {   7800, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(), CONFIGARRAY(presets) },
+
+  // LED star
+  { 20000, SimpleBladePtr<WHITE, BLUE,BLUE,BLACK>(), CONFIGARRAY(simple_presets) },
 };
 
 
@@ -3826,6 +3923,7 @@ protected:
 	Off();
       } else if (millis() - last_beep_ > 1000) {
 	if (current_style != &style_charging) {
+	  Serial.println("Battery low beep");
 	  beeper.Beep(0.5, 440.0);
 	}
       }
