@@ -26,6 +26,20 @@
 // Search for CONFIGURABLE in this file to find all the places which
 // might need to be modified for your saber.
 
+
+// Board version
+#define VERSION_MAJOR 2
+#define VERSION_MINOR 1
+
+// If you have two 144 LED/m strips in your blade, connect
+// both of them to bladePin and drive them in parallel.
+const unsigned int maxLedsPerStrip = 144;
+
+
+#if VERSION_MAJOR >= 2
+#define V2
+#endif
+
 // TODO LIST:
 // Make sure that sound is off before doing file command
 // make "chargint style" prevent you from turning the saber "on"
@@ -66,6 +80,15 @@
 enum SaberPins {
   // Bottom edge (in pin-out diagram)
   sdCardSelectPin = 0,            // SD card chip (sd card adapter)
+#ifdef V2
+  amplifierPin = 1,               // Amplifier enable pin (TeensySaber V2)
+  motionSensorInterruptPin = 2,   // motion sensor interrupt (TeensySaber V2)
+  bladePowerPin4 = 3,             // Optional power control (TeensySaber V2)
+  bladePowerPin5 = 4,             // Optional power control (TeensySaber V2)
+  bladePowerPin6 = 5,             // Optional power control (TeensySaber V2)
+  freePin6 = 6,
+  freePin7 = 7,
+#else
   freePin1 = 1,                   // FREE
   motionSensorInterruptPin = 2,   // motion sensor interrupt (prop shield)
   freePin3 = 3,                   // FREE
@@ -73,6 +96,7 @@ enum SaberPins {
   amplifierPin = 5,               // Amplifier enable pin (prop shield)
   serialFlashSelectPin = 6,       // serial flash chip select (prop shield)
   spiLedSelect = 7,               // APA102/dotstar chip select (prop shield)
+#endif
   freePin8 = 8,                   // FREE
   freePin9 = 9,                   // FREE
   freePin10 = 10,                 // FREE
@@ -85,22 +109,24 @@ enum SaberPins {
   auxPin = 15,                    // AUX button
   powerButtonPin = 16,            // power button
   aux2Pin = 17,                   // AUX2 button
-  i2cDataPin = 18,                // Used by motion sensors (prop shield)
-  i2cClockPin = 19,               // Used by motion sensors (prop shield)
+  i2cDataPin = 18,                // I2C bus, Used by motion sensors
+  i2cClockPin = 19,               // I2C bus, Used by motion sensors
   bladePin = 20,                  // blade control, either WS2811 or PWM
   bladeIdentifyPin = 20,          // blade identify input / FoC
-  bladePowerPin1 = 21,             // blade power control
-  bladePowerPin2 = 22,             // blade power control
-  bladePowerPin3 = 23,             // blade power control
+  bladePowerPin1 = 21,            // blade power control
+  bladePowerPin2 = 22,            // blade power control
+  bladePowerPin3 = 23,            // blade power control
 };
 
 // Feature defines, these let you turn off large blocks of code
 // used for debugging.
 #define ENABLE_AUDIO
-#define ENABLE_MOTION
-//#define ENABLE_SNOOZE
-#define ENABLE_WS2811
-#define ENABLE_WATCHDOG
+// #define ENABLE_MOTION
+// #define ENABLE_SNOOZE
+// #define ENABLE_WS2811
+// #define ENABLE_WATCHDOG
+// #define ENABLE_SD
+// #define ENABLE_FLASH
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
@@ -122,9 +148,16 @@ enum SaberPins {
 
 #include <Arduino.h>
 #include <EEPROM.h>
+#ifdef ENABLE_SERIALFLASH
 #include <SerialFlash.h>
+#endif
+
 #include <DMAChannel.h>
+
+#ifdef ENABLE_SD
 #include <SD.h>
+#endif
+
 #include <SPI.h>
 #include <Wire.h>
 #include <math.h>
@@ -368,6 +401,101 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x > b) return b;
   return x;
 }
+
+const int16_t sin_table[1024] = {
+  0,100,201,301,402,502,603,703,803,904,1004,1104,1205,1305,1405,
+  1505,1605,1705,1805,1905,2005,2105,2204,2304,2403,2503,2602,2701,
+  2800,2899,2998,3097,3196,3294,3393,3491,3589,3687,3785,3883,3980,
+  4078,4175,4272,4369,4466,4562,4659,4755,4851,4947,5043,5139,5234,
+  5329,5424,5519,5613,5708,5802,5896,5989,6083,6176,6269,6362,6454,
+  6547,6639,6730,6822,6913,7004,7095,7185,7276,7365,7455,7545,7634,
+  7722,7811,7899,7987,8075,8162,8249,8336,8422,8508,8594,8679,8764,
+  8849,8934,9018,9101,9185,9268,9351,9433,9515,9597,9678,9759,9839,
+  9920,9999,10079,10158,10237,10315,10393,10470,10547,10624,10700,
+  10776,10852,10927,11002,11076,11150,11223,11296,11369,11441,11513,
+  11584,11655,11725,11795,11865,11934,12003,12071,12139,12206,12273,
+  12339,12405,12470,12535,12600,12664,12727,12790,12853,12915,12977,
+  13038,13098,13158,13218,13277,13336,13394,13452,13509,13565,13621,
+  13677,13732,13787,13841,13894,13947,14000,14052,14103,14154,14204,
+  14254,14303,14352,14400,14448,14495,14542,14588,14633,14678,14722,
+  14766,14810,14852,14894,14936,14977,15017,15057,15097,15135,15174,
+  15211,15248,15285,15321,15356,15391,15425,15458,15491,15524,15556,
+  15587,15618,15648,15677,15706,15734,15762,15789,15816,15841,15867,
+  15892,15916,15939,15962,15984,16006,16027,16048,16068,16087,16106,
+  16124,16141,16158,16174,16190,16205,16220,16233,16247,16259,16271,
+  16283,16293,16304,16313,16322,16330,16338,16345,16352,16358,16363,
+  16367,16371,16375,16378,16380,16381,16382,16383,16382,16381,16380,
+  16378,16375,16371,16367,16363,16358,16352,16345,16338,16330,16322,
+  16313,16304,16293,16283,16271,16259,16247,16233,16220,16205,16190,
+  16174,16158,16141,16124,16106,16087,16068,16048,16027,16006,15984,
+  15962,15939,15916,15892,15867,15841,15816,15789,15762,15734,15706,
+  15677,15648,15618,15587,15556,15524,15491,15458,15425,15391,15356,
+  15321,15285,15248,15211,15174,15135,15097,15057,15017,14977,14936,
+  14894,14852,14810,14766,14722,14678,14633,14588,14542,14495,14448,
+  14400,14352,14303,14254,14204,14154,14103,14052,14000,13947,13894,
+  13841,13787,13732,13677,13621,13565,13509,13452,13394,13336,13277,
+  13218,13158,13098,13038,12977,12915,12853,12790,12727,12664,12600,
+  12535,12470,12405,12339,12273,12206,12139,12071,12003,11934,11865,
+  11795,11725,11655,11584,11513,11441,11369,11296,11223,11150,11076,
+  11002,10927,10852,10776,10700,10624,10547,10470,10393,10315,10237,
+  10158,10079,9999,9920,9839,9759,9678,9597,9515,9433,9351,9268,9185,
+  9101,9018,8934,8849,8764,8679,8594,8508,8422,8336,8249,8162,8075,
+  7987,7899,7811,7722,7634,7545,7455,7365,7276,7185,7095,7004,6913,
+  6822,6730,6639,6547,6454,6362,6269,6176,6083,5989,5896,5802,5708,
+  5613,5519,5424,5329,5234,5139,5043,4947,4851,4755,4659,4562,4466,
+  4369,4272,4175,4078,3980,3883,3785,3687,3589,3491,3393,3294,3196,
+  3097,2998,2899,2800,2701,2602,2503,2403,2304,2204,2105,2005,1905,
+  1805,1705,1605,1505,1405,1305,1205,1104,1004,904,803,703,603,502,
+  402,301,201,100,0,-100,-201,-301,-402,-502,-603,-703,-803,-904,
+  -1004,-1104,-1205,-1305,-1405,-1505,-1605,-1705,-1805,-1905,-2005,
+  -2105,-2204,-2304,-2403,-2503,-2602,-2701,-2800,-2899,-2998,-3097,
+  -3196,-3294,-3393,-3491,-3589,-3687,-3785,-3883,-3980,-4078,-4175,
+  -4272,-4369,-4466,-4562,-4659,-4755,-4851,-4947,-5043,-5139,-5234,
+  -5329,-5424,-5519,-5613,-5708,-5802,-5896,-5989,-6083,-6176,-6269,
+  -6362,-6454,-6547,-6639,-6730,-6822,-6913,-7004,-7095,-7185,-7276,
+  -7365,-7455,-7545,-7634,-7722,-7811,-7899,-7987,-8075,-8162,-8249,
+  -8336,-8422,-8508,-8594,-8679,-8764,-8849,-8934,-9018,-9101,-9185,
+  -9268,-9351,-9433,-9515,-9597,-9678,-9759,-9839,-9920,-9999,-10079,
+  -10158,-10237,-10315,-10393,-10470,-10547,-10624,-10700,-10776,-10852,
+  -10927,-11002,-11076,-11150,-11223,-11296,-11369,-11441,-11513,-11584,
+  -11655,-11725,-11795,-11865,-11934,-12003,-12071,-12139,-12206,-12273,
+  -12339,-12405,-12470,-12535,-12600,-12664,-12727,-12790,-12853,-12915,
+  -12977,-13038,-13098,-13158,-13218,-13277,-13336,-13394,-13452,-13509,
+  -13565,-13621,-13677,-13732,-13787,-13841,-13894,-13947,-14000,-14052,
+  -14103,-14154,-14204,-14254,-14303,-14352,-14400,-14448,-14495,-14542,
+  -14588,-14633,-14678,-14722,-14766,-14810,-14852,-14894,-14936,-14977,
+  -15017,-15057,-15097,-15135,-15174,-15211,-15248,-15285,-15321,-15356,
+  -15391,-15425,-15458,-15491,-15524,-15556,-15587,-15618,-15648,-15677,
+  -15706,-15734,-15762,-15789,-15816,-15841,-15867,-15892,-15916,-15939,
+  -15962,-15984,-16006,-16027,-16048,-16068,-16087,-16106,-16124,-16141,
+  -16158,-16174,-16190,-16205,-16220,-16233,-16247,-16259,-16271,-16283,
+  -16293,-16304,-16313,-16322,-16330,-16338,-16345,-16352,-16358,-16363,
+  -16367,-16371,-16375,-16378,-16380,-16381,-16382,-16383,-16382,-16381,
+  -16380,-16378,-16375,-16371,-16367,-16363,-16358,-16352,-16345,-16338,
+  -16330,-16322,-16313,-16304,-16293,-16283,-16271,-16259,-16247,-16233,
+  -16220,-16205,-16190,-16174,-16158,-16141,-16124,-16106,-16087,-16068,
+  -16048,-16027,-16006,-15984,-15962,-15939,-15916,-15892,-15867,-15841,
+  -15816,-15789,-15762,-15734,-15706,-15677,-15648,-15618,-15587,-15556,
+  -15524,-15491,-15458,-15425,-15391,-15356,-15321,-15285,-15248,-15211,
+  -15174,-15135,-15097,-15057,-15017,-14977,-14936,-14894,-14852,-14810,
+  -14766,-14722,-14678,-14633,-14588,-14542,-14495,-14448,-14400,-14352,
+  -14303,-14254,-14204,-14154,-14103,-14052,-14000,-13947,-13894,-13841,
+  -13787,-13732,-13677,-13621,-13565,-13509,-13452,-13394,-13336,-13277,
+  -13218,-13158,-13098,-13038,-12977,-12915,-12853,-12790,-12727,-12664,
+  -12600,-12535,-12470,-12405,-12339,-12273,-12206,-12139,-12071,-12003,
+  -11934,-11865,-11795,-11725,-11655,-11584,-11513,-11441,-11369,-11296,
+  -11223,-11150,-11076,-11002,-10927,-10852,-10776,-10700,-10624,-10547,
+  -10470,-10393,-10315,-10237,-10158,-10079,-9999,-9920,-9839,-9759,-9678,
+  -9597,-9515,-9433,-9351,-9268,-9185,-9101,-9018,-8934,-8849,-8764,-8679,
+  -8594,-8508,-8422,-8336,-8249,-8162,-8075,-7987,-7899,-7811,-7722,-7634,
+  -7545,-7455,-7365,-7276,-7185,-7095,-7004,-6913,-6822,-6730,-6639,-6547,
+  -6454,-6362,-6269,-6176,-6083,-5989,-5896,-5802,-5708,-5613,-5519,-5424,
+  -5329,-5234,-5139,-5043,-4947,-4851,-4755,-4659,-4562,-4466,-4369,-4272,
+  -4175,-4078,-3980,-3883,-3785,-3687,-3589,-3491,-3393,-3294,-3196,-3097,
+  -2998,-2899,-2800,-2701,-2602,-2503,-2403,-2304,-2204,-2105,-2005,-1905,
+  -1805,-1705,-1605,-1505,-1405,-1305,-1205,-1104,-1004,-904,-803,-703,
+  -603,-502,-402,-301,-201,-100
+};
 
 #ifdef ENABLE_AUDIO
 
@@ -658,101 +786,6 @@ private:
 };
 
 Beeper beeper;
-
-const int16_t sin_table[1024] = {
-  0,100,201,301,402,502,603,703,803,904,1004,1104,1205,1305,1405,
-  1505,1605,1705,1805,1905,2005,2105,2204,2304,2403,2503,2602,2701,
-  2800,2899,2998,3097,3196,3294,3393,3491,3589,3687,3785,3883,3980,
-  4078,4175,4272,4369,4466,4562,4659,4755,4851,4947,5043,5139,5234,
-  5329,5424,5519,5613,5708,5802,5896,5989,6083,6176,6269,6362,6454,
-  6547,6639,6730,6822,6913,7004,7095,7185,7276,7365,7455,7545,7634,
-  7722,7811,7899,7987,8075,8162,8249,8336,8422,8508,8594,8679,8764,
-  8849,8934,9018,9101,9185,9268,9351,9433,9515,9597,9678,9759,9839,
-  9920,9999,10079,10158,10237,10315,10393,10470,10547,10624,10700,
-  10776,10852,10927,11002,11076,11150,11223,11296,11369,11441,11513,
-  11584,11655,11725,11795,11865,11934,12003,12071,12139,12206,12273,
-  12339,12405,12470,12535,12600,12664,12727,12790,12853,12915,12977,
-  13038,13098,13158,13218,13277,13336,13394,13452,13509,13565,13621,
-  13677,13732,13787,13841,13894,13947,14000,14052,14103,14154,14204,
-  14254,14303,14352,14400,14448,14495,14542,14588,14633,14678,14722,
-  14766,14810,14852,14894,14936,14977,15017,15057,15097,15135,15174,
-  15211,15248,15285,15321,15356,15391,15425,15458,15491,15524,15556,
-  15587,15618,15648,15677,15706,15734,15762,15789,15816,15841,15867,
-  15892,15916,15939,15962,15984,16006,16027,16048,16068,16087,16106,
-  16124,16141,16158,16174,16190,16205,16220,16233,16247,16259,16271,
-  16283,16293,16304,16313,16322,16330,16338,16345,16352,16358,16363,
-  16367,16371,16375,16378,16380,16381,16382,16383,16382,16381,16380,
-  16378,16375,16371,16367,16363,16358,16352,16345,16338,16330,16322,
-  16313,16304,16293,16283,16271,16259,16247,16233,16220,16205,16190,
-  16174,16158,16141,16124,16106,16087,16068,16048,16027,16006,15984,
-  15962,15939,15916,15892,15867,15841,15816,15789,15762,15734,15706,
-  15677,15648,15618,15587,15556,15524,15491,15458,15425,15391,15356,
-  15321,15285,15248,15211,15174,15135,15097,15057,15017,14977,14936,
-  14894,14852,14810,14766,14722,14678,14633,14588,14542,14495,14448,
-  14400,14352,14303,14254,14204,14154,14103,14052,14000,13947,13894,
-  13841,13787,13732,13677,13621,13565,13509,13452,13394,13336,13277,
-  13218,13158,13098,13038,12977,12915,12853,12790,12727,12664,12600,
-  12535,12470,12405,12339,12273,12206,12139,12071,12003,11934,11865,
-  11795,11725,11655,11584,11513,11441,11369,11296,11223,11150,11076,
-  11002,10927,10852,10776,10700,10624,10547,10470,10393,10315,10237,
-  10158,10079,9999,9920,9839,9759,9678,9597,9515,9433,9351,9268,9185,
-  9101,9018,8934,8849,8764,8679,8594,8508,8422,8336,8249,8162,8075,
-  7987,7899,7811,7722,7634,7545,7455,7365,7276,7185,7095,7004,6913,
-  6822,6730,6639,6547,6454,6362,6269,6176,6083,5989,5896,5802,5708,
-  5613,5519,5424,5329,5234,5139,5043,4947,4851,4755,4659,4562,4466,
-  4369,4272,4175,4078,3980,3883,3785,3687,3589,3491,3393,3294,3196,
-  3097,2998,2899,2800,2701,2602,2503,2403,2304,2204,2105,2005,1905,
-  1805,1705,1605,1505,1405,1305,1205,1104,1004,904,803,703,603,502,
-  402,301,201,100,0,-100,-201,-301,-402,-502,-603,-703,-803,-904,
-  -1004,-1104,-1205,-1305,-1405,-1505,-1605,-1705,-1805,-1905,-2005,
-  -2105,-2204,-2304,-2403,-2503,-2602,-2701,-2800,-2899,-2998,-3097,
-  -3196,-3294,-3393,-3491,-3589,-3687,-3785,-3883,-3980,-4078,-4175,
-  -4272,-4369,-4466,-4562,-4659,-4755,-4851,-4947,-5043,-5139,-5234,
-  -5329,-5424,-5519,-5613,-5708,-5802,-5896,-5989,-6083,-6176,-6269,
-  -6362,-6454,-6547,-6639,-6730,-6822,-6913,-7004,-7095,-7185,-7276,
-  -7365,-7455,-7545,-7634,-7722,-7811,-7899,-7987,-8075,-8162,-8249,
-  -8336,-8422,-8508,-8594,-8679,-8764,-8849,-8934,-9018,-9101,-9185,
-  -9268,-9351,-9433,-9515,-9597,-9678,-9759,-9839,-9920,-9999,-10079,
-  -10158,-10237,-10315,-10393,-10470,-10547,-10624,-10700,-10776,-10852,
-  -10927,-11002,-11076,-11150,-11223,-11296,-11369,-11441,-11513,-11584,
-  -11655,-11725,-11795,-11865,-11934,-12003,-12071,-12139,-12206,-12273,
-  -12339,-12405,-12470,-12535,-12600,-12664,-12727,-12790,-12853,-12915,
-  -12977,-13038,-13098,-13158,-13218,-13277,-13336,-13394,-13452,-13509,
-  -13565,-13621,-13677,-13732,-13787,-13841,-13894,-13947,-14000,-14052,
-  -14103,-14154,-14204,-14254,-14303,-14352,-14400,-14448,-14495,-14542,
-  -14588,-14633,-14678,-14722,-14766,-14810,-14852,-14894,-14936,-14977,
-  -15017,-15057,-15097,-15135,-15174,-15211,-15248,-15285,-15321,-15356,
-  -15391,-15425,-15458,-15491,-15524,-15556,-15587,-15618,-15648,-15677,
-  -15706,-15734,-15762,-15789,-15816,-15841,-15867,-15892,-15916,-15939,
-  -15962,-15984,-16006,-16027,-16048,-16068,-16087,-16106,-16124,-16141,
-  -16158,-16174,-16190,-16205,-16220,-16233,-16247,-16259,-16271,-16283,
-  -16293,-16304,-16313,-16322,-16330,-16338,-16345,-16352,-16358,-16363,
-  -16367,-16371,-16375,-16378,-16380,-16381,-16382,-16383,-16382,-16381,
-  -16380,-16378,-16375,-16371,-16367,-16363,-16358,-16352,-16345,-16338,
-  -16330,-16322,-16313,-16304,-16293,-16283,-16271,-16259,-16247,-16233,
-  -16220,-16205,-16190,-16174,-16158,-16141,-16124,-16106,-16087,-16068,
-  -16048,-16027,-16006,-15984,-15962,-15939,-15916,-15892,-15867,-15841,
-  -15816,-15789,-15762,-15734,-15706,-15677,-15648,-15618,-15587,-15556,
-  -15524,-15491,-15458,-15425,-15391,-15356,-15321,-15285,-15248,-15211,
-  -15174,-15135,-15097,-15057,-15017,-14977,-14936,-14894,-14852,-14810,
-  -14766,-14722,-14678,-14633,-14588,-14542,-14495,-14448,-14400,-14352,
-  -14303,-14254,-14204,-14154,-14103,-14052,-14000,-13947,-13894,-13841,
-  -13787,-13732,-13677,-13621,-13565,-13509,-13452,-13394,-13336,-13277,
-  -13218,-13158,-13098,-13038,-12977,-12915,-12853,-12790,-12727,-12664,
-  -12600,-12535,-12470,-12405,-12339,-12273,-12206,-12139,-12071,-12003,
-  -11934,-11865,-11795,-11725,-11655,-11584,-11513,-11441,-11369,-11296,
-  -11223,-11150,-11076,-11002,-10927,-10852,-10776,-10700,-10624,-10547,
-  -10470,-10393,-10315,-10237,-10158,-10079,-9999,-9920,-9839,-9759,-9678,
-  -9597,-9515,-9433,-9351,-9268,-9185,-9101,-9018,-8934,-8849,-8764,-8679,
-  -8594,-8508,-8422,-8336,-8249,-8162,-8075,-7987,-7899,-7811,-7722,-7634,
-  -7545,-7455,-7365,-7276,-7185,-7095,-7004,-6913,-6822,-6730,-6639,-6547,
-  -6454,-6362,-6269,-6176,-6083,-5989,-5896,-5802,-5708,-5613,-5519,-5424,
-  -5329,-5234,-5139,-5043,-4947,-4851,-4755,-4659,-4562,-4466,-4369,-4272,
-  -4175,-4078,-3980,-3883,-3785,-3687,-3589,-3491,-3393,-3294,-3196,-3097,
-  -2998,-2899,-2800,-2701,-2602,-2503,-2403,-2304,-2204,-2105,-2005,-1905,
-  -1805,-1705,-1605,-1505,-1405,-1305,-1205,-1104,-1004,-904,-803,-703,
-  -603,-502,-402,-301,-201,-100
-};
 
 class LightSaberSynth : public DataStream<int16_t>, Looper {
 public:
@@ -1196,6 +1229,7 @@ class Effect {
       e->reset();
     }
 
+#ifdef ENABLE_SERIALFLASH
     // Scan serial flash.
     SerialFlashChip::opendir();
     uint32_t size;
@@ -1204,7 +1238,9 @@ class Effect {
       const char* f = startswith(directory, filename);
       if (f) ScanAll(f);
     }
+#endif
 
+#ifdef ENABLE_SD
     File dir = SD.open(directory);
     if (dir) {
       while (File f = dir.openNextFile()) {
@@ -1224,6 +1260,7 @@ class Effect {
 	f.close();
       }
     }
+#endif
   };
 
 private:
@@ -1427,26 +1464,41 @@ private:
   }
 
   int ReadFile(int n) {
+#ifdef ENABLE_SERIALFLASH
     if (sf_file_) {
       return sf_file_.read(buffer, n);
-    } else {
-      return sd_file_.read(buffer, n);
     }
+#endif
+#ifdef ENABLE_SD
+    return sd_file_.read(buffer, n);
+#else
+    return 0;
+#endif
   }
 
   void Skip(int n) {
+#ifdef ENABLE_SERIALFLASH
     if (sf_file_) {
       sf_file_.seek(sf_file_.position() + n);
-    } else {
-      sd_file_.seek(sd_file_.position() + n);
+      return;
     }
+#endif
+#ifdef ENABLE_SD
+    sd_file_.seek(sd_file_.position() + n);
+#endif
   }
 
   int AlignRead(int n) {
+#ifdef ENABLE_SERIALFLASH
     if (sf_file_) return n;
+#endif
+#ifdef ENABLE_SD
     int next_block = (sd_file_.position() + 512u) & ~511u;
     int bytes_to_end_of_block = next_block - sd_file_.position();
     return min(n, bytes_to_end_of_block);
+#else
+    return n;
+#endif
   }
 
   void loop() {
@@ -1459,11 +1511,17 @@ private:
 	}
         run_ = true;
       }
+#ifdef ENABLE_SERIALFLASH
       sf_file_ = SerialFlashChip::open(filename_);
-      if (!sf_file_) {
+      if (!sf_file_)
+#endif
+      {
+#ifdef ENABLE_SD
         sd_file_ = SD.open(filename_);
 	YIELD();
-        if (!sd_file_) {
+        if (!sd_file_)
+#endif
+        {
 	  Serial.print("File ");
 	  Serial.print(filename_);
 	  Serial.println(" not found.");
@@ -1567,8 +1625,12 @@ private:
   volatile bool run_ = false;
   Effect* volatile effect_ = nullptr;
   char filename_[128];
+#ifdef ENABLE_SD
   File sd_file_;
+#endif
+#ifdef ENABLE_SERIALFLASH
   SerialFlashFile sf_file_;
+#endif
   int16_t* dest_ = nullptr;
   int to_read_ = 0;
   int tmp_;
@@ -1825,7 +1887,10 @@ public:
   void XMotion(float speed) override {}
 };
 
+MonophonicFont monophonic_font;
+
 struct ConfigFile {
+#ifdef ENABLE_SD
   void skipwhite(File* f) {
     while (f->peek() == ' ' || f->peek() == '\t')
       f->read();
@@ -1884,12 +1949,18 @@ struct ConfigFile {
       }
     }
   }
+#endif
+
+  void Read(const char *filename) {
+#ifdef ENABLE_SD
+    File f = SD.open(config_filename);
+    Read(&f);
+#endif
+  }
+
 
   int humStart = 100;
 };
-
-
-MonophonicFont monophonic_font;
 
 class PolyphonicFont : public SaberBase {
 public:
@@ -1902,8 +1973,7 @@ public:
     char config_filename[128];
     strcpy(config_filename, current_directory);
     strcat(config_filename, "config.ini");
-    File f = SD.open(config_filename);
-    config_.Read(&f);
+    config_.Read(config_filename);
     SaberBase::Link();
   }
   void Deactivate() { SaberBase::Unlink(); }
@@ -2107,10 +2177,6 @@ struct Color {
 #define WS2811_800kHz 0x00      // Nearly all WS2811 are 800 kHz
 #define WS2811_400kHz 0x10      // Adafruit's Flora Pixels
 #define WS2811_580kHz 0x20      // PL9823
-
-// If you have two 144 LED/m strips in your blade, connect
-// both of them to bladePin and drive them in parallel.
-const unsigned int maxLedsPerStrip = 144;
 
 class MonopodWS2811 {
 public:
@@ -2921,6 +2987,7 @@ private:
 };
 #endif
 
+#ifdef ENABLE_WS2811
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
@@ -3065,6 +3132,7 @@ class WS2811_Blade *WS2811BladePtr() {
   static WS2811_Blade blade(LEDS, CONFIG);
   return &blade;
 }
+#endif
 
 // Simple blade, LED string or LED star with optional flash on clash.
 // Note that this class does nothing when first constructed. It only starts
@@ -3175,6 +3243,111 @@ class Simple_Blade *SimpleBladePtr() {
   return &blade;
 }
 
+
+#ifdef V2
+// String blade, Segment LED string. All segments assumed to be the same color.
+// Note that this class does nothing when first constructed. It only starts
+// interacting with pins and timers after Activate() is called.
+#define STRING_SEGMENTS 6
+class String_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
+public:
+  String_Blade(Color c) :
+    SaberBase(NOLINK),
+    CommandParser(NOLINK),
+    Looper(NOLINK),
+    c_(c) {
+  }
+
+  void Activate() override {
+    Serial.println("String Blade");
+    analogWriteResolution(8);
+    for (int i = 0; i < STRING_SEGMENTS; i++) {
+      analogWriteFrequency(pin_[i], 1000);
+      analogWrite(pin_[i], 0);  // make it black
+    }
+    CommandParser::Link();
+    Looper::Link();
+    SaberBase::Link();
+  }
+
+  // BladeBase implementation
+  int num_leds() const override {
+    return STRING_SEGMENTS;
+  }
+  bool is_on() const override {
+    return on_;
+  }
+  void set(int led, Color c) override {
+    analogWrite(pin_[led], c.select(c_));
+  }
+
+  bool clash() override {
+    bool ret = clash_;
+    clash_ = false;
+    return ret;
+  }
+  void allow_disable() override {
+    power_ = false;
+  }
+  
+  // SaberBase implementation
+  void IsOn(bool *on) override {
+    if (on_) *on = true;
+  }
+  void On() override { power_ = on_ = true; }
+  void Off() override { on_ = false; }
+  void Clash() override {
+    clash_ = true;
+  }
+  void Lockup() override {  }
+
+  bool Parse(const char* cmd, const char* arg) override {
+    if (!strcmp(cmd, "blade")) {
+      if (!strcmp(arg, "on")) {
+        On();
+        return true;
+      }
+      if (!strcmp(arg, "off")) {
+        Off();
+        return true;
+      }
+    }
+    return false;
+  }
+
+protected:
+  void Loop() override {
+    if (!power_) return;
+    current_style->run(this);
+  }
+  
+private:
+  Color c_;
+  static int pin_[STRING_SEGMENTS];
+  static bool on_;
+  static bool power_;
+  static bool clash_;
+};
+
+int String_Blade::pin_[STRING_SEGMENTS] = {
+    bladePowerPin1,
+    bladePowerPin2,
+    bladePowerPin3,
+    bladePowerPin4,
+    bladePowerPin5,
+    bladePowerPin6,
+};
+bool String_Blade::on_ = false;
+bool String_Blade::power_ = false;
+bool String_Blade::clash_ = true;
+#endif
+
+template<int r1, int g1, int b1>
+class String_Blade *StringBladePtr() {
+  static String_Blade blade(Color(r1, g1, b1));
+  return &blade;
+}
+
 #define RED       255,   0,   0
 #define GREEN       0, 255,   0
 #define BLUE        0,   0, 255
@@ -3259,25 +3432,30 @@ struct BladeConfig {
 // All colors can be specied as three numbers or using one the handy macros above.
 
 BladeConfig blades[] = {
+#ifdef ENABLE_WS2811
   // PL9823 blade, 97 LEDs
   {  69000, WS2811BladePtr<97, WS2811_580kHz>(), CONFIGARRAY(presets) },
   {   2600, WS2811BladePtr<97, WS2811_580kHz>(), CONFIGARRAY(presets) },
+#endif
 
   // Simple blue string blade.
   {   5200, SimpleBladePtr<BLUE,BLUE,BLUE,BLACK>(), CONFIGARRAY(simple_presets) },
 
+#ifdef ENABLE_WS2811
   // Charging adapter, single PL9823 LED.
   {  41000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
   {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
 
 //  {  69000, WS2811BladePtr<140, WS2811_800kHz>(), CONFIGARRAY(presets) },
   {   7800, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(), CONFIGARRAY(presets) },
+#endif
 
   // LED star
   { 20000, SimpleBladePtr<WHITE, BLUE,BLUE,BLACK>(), CONFIGARRAY(simple_presets) },
 };
 
 
+#ifdef ENABLE_SERIALFLASH
 // Support for uploading files in TAR format.
 class Tar {
   public:
@@ -3364,47 +3542,7 @@ class Tar {
     char block_[512];
 };
 
-// Scheduler class.
-// It can currently only keep track of one outstanding event.
-class Scheduler : Looper {
-public:
-  enum Action {
-    NO_ACTION,
-    TURN_ON,
-  };
-  Scheduler() : Looper(), next_action_(NO_ACTION) {}
-
-  unsigned long delay_;
-  unsigned long base_;
-  Action next_action_;
-
-  void CheckNext() {
-    if (millis() - base_ > delay_) {
-      switch (next_action_) {
-        case TURN_ON:
-          // Will fade in based on swing volume set elsewhere.
-          break;
-
-         case NO_ACTION:
-          // Do nothing
-          break;
-      }
-      next_action_ = NO_ACTION;
-    }
-  }
-
-  void SetNextAction(Action action, unsigned long delay) {
-    delay_ = delay;
-    base_ = millis();
-    next_action_ = action;
-  }
-protected:
-  void Loop() override {
-    CheckNext();
-  }
-};
-
-Scheduler scheduler;
+#endif
 
 class DebouncedButton : StateMachine {
 public:
@@ -3767,12 +3905,6 @@ public:
 #ifdef ENABLE_AUDIO
     monophonic_font.Deactivate();
     polyphonic_font.Deactivate();
-#endif
-
-    strcpy(current_directory, dir);
-    if (current_directory[strlen(current_directory)-1] != '/') {
-      strcat(current_directory, "/");
-    }
 
     // Stop all sound!
     // TODO: Move scanning to wav-playing interrupt level so we can
@@ -3780,6 +3912,12 @@ public:
     audio_splicer.Stop();
     for (size_t i = 0; i < NELEM(wav_players); i++) {
       wav_players[i].Stop();
+    }
+#endif
+
+    strcpy(current_directory, dir);
+    if (current_directory[strlen(current_directory)-1] != '/') {
+      strcat(current_directory, "/");
     }
 
     
@@ -3811,7 +3949,9 @@ public:
   // Go to the next Preset.
   void next_preset() {
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+#ifdef ENABLE_AUDIO
     beeper.Beep(0.05, 2000.0);
+#endif
     Preset* tmp = current_preset_ + 1;
     if (tmp == current_config_->presets + current_config_->num_presets) {
       tmp = current_config_->presets;
@@ -3861,6 +4001,7 @@ public:
   // Select next sound font (in alphabetic order)
   // Set sign to -1 to get the previous sound font instead.
   void next_directory(int sign = 1) {
+#ifdef ENABLE_SD
     int tries = 0;
     int dirs = 0;
     do {
@@ -3891,12 +4032,14 @@ public:
 	}
       }
     } while (++tries <= dirs);
+#endif
   }
 
 protected:
   int track_player_ = -1;
 
   void StartOrStopTrack() {
+#ifdef ENABLE_AUDIO
     if (track_player_ >= 0) {
       wav_players[track_player_].Stop();
       track_player_ = -1;
@@ -3911,6 +4054,9 @@ protected:
       }
       Serial.println("No available WAV players.");
     }
+#else
+    Serial.println("Audio disabled.");
+#endif
   }
 
   bool aux_on_ = true;
@@ -3924,15 +4070,19 @@ protected:
       } else if (millis() - last_beep_ > 1000) {
 	if (current_style != &style_charging) {
 	  Serial.println("Battery low beep");
+#ifdef ENABLE_AUDIO
 	  beeper.Beep(0.5, 440.0);
+#endif
 	}
       }
       last_beep_ = millis();
     }
     bool disable_lockup_ = true;
+#ifdef ENABLE_AUDIO
     if (track_player_ >= 0 && !wav_players[track_player_].isPlaying()) {
       track_player_ = -1;
     }
+#endif
     if (!on_) {
       if (power_.clicked()) {
 	if (aux_.pushed_millis()) {
@@ -4021,6 +4171,11 @@ protected:
       Clash();
       return true;
     }
+#ifdef ENABLE_AUDIO
+    if (!strcmp(cmd, "beep")) {
+      beeper.Beep(0.2, 3000.0);
+      return true;
+    }
     if (!strcmp(cmd, "play")) {
       if (!arg) {
 	StartOrStopTrack();
@@ -4036,6 +4191,7 @@ protected:
       Serial.println("No available WAV players.");
       return true;
     }
+#endif
     if (!strcmp(cmd, "cd")) {
       chdir(arg);
       SaberBase::DoNewFont();
@@ -4097,6 +4253,7 @@ public:
   }
 
   void Parse() {
+#ifdef ENABLE_SERIALFLASH
     switch (mode_) {
       case ModeCommand:
         ParseCmd();
@@ -4105,8 +4262,12 @@ public:
         UUDecode();
         break;
     }
+#else
+    ParseCmd();
+#endif
   }
 
+#ifdef ENABLE_SERIALFLASH
   int32_t DecodeChar(char c) {
     return (c - 32) & 0x3f;
   }
@@ -4149,6 +4310,7 @@ public:
     Serial.println("decode failed");
     mode_ = ModeCommand;
   }
+#endif
 
   void ParseCmd() {
     if (len_ == 0 || len_ == (int)sizeof(cmd_)) return;
@@ -4176,6 +4338,7 @@ public:
       // End command ignored.
       return;
     }
+#ifdef ENABLE_SERIALFLASH
     if (!strcmp(cmd, "begin")) {
       Serial.println("Begin UUdecode tar file.\n");
       // Filename is ignored.
@@ -4194,6 +4357,8 @@ public:
       Serial.println("Done listing files.");
       return;
     }
+#endif
+#ifdef ENABLE_SD
     if (!strcmp(cmd, "dir")) {
       File dir = SD.open(e ? e : current_directory);
       while (File f = dir.openNextFile()) {
@@ -4205,6 +4370,23 @@ public:
       Serial.println("Done listing files.");
       return;
     }
+    if (!strcmp(cmd, "rm")) {
+      if (SerialFlashChip::remove(e)) {
+        Serial.println("Removed.\n");
+      } else {
+        Serial.println("No such file.\n");
+      }
+      return;
+    }
+    if (!strcmp(cmd, "format")) {
+      Serial.print("Erasing ... ");
+      SerialFlashChip::eraseAll();
+      while (!SerialFlashChip::ready());
+      Serial.println("Done");
+      return;
+    }
+#endif
+#if defined(ENABLE_SD) && defined(ENABLE_SERIALFLASH)
     if (!strcmp(cmd, "cache")) {
       File f = SD.open(e);
       if (!f) {
@@ -4226,6 +4408,7 @@ public:
       Serial.println("Cached!");
       return;
     }
+#endif
     if (!strcmp(cmd, "effects")) {
       Effect::ShowAll();
       return;
@@ -4237,14 +4420,6 @@ public:
       return;
     }
 #endif
-    if (!strcmp(cmd, "rm")) {
-      if (SerialFlashChip::remove(e)) {
-        Serial.println("Removed.\n");
-      } else {
-        Serial.println("No such file.\n");
-      }
-      return;
-    }
 #ifdef ENABLE_AUDIO
 #if 0
     if (!strcmp(cmd, "ton")) {
@@ -4287,13 +4462,6 @@ public:
       return;
     }
 #endif
-    if (!strcmp(cmd, "format")) {
-      Serial.print("Erasing ... ");
-      SerialFlashChip::eraseAll();
-      while (!SerialFlashChip::ready());
-      Serial.println("Done");
-      return;
-    }
     if (!strcmp(cmd, "top")) {
       // TODO: list cpu usage for various objects.
       SaberBase::DoTop();
@@ -4309,7 +4477,9 @@ public:
     Serial.println("Whut?");
   }
 private:
+#ifdef ENABLE_SERIALFLASH
   Tar tar_;
+#endif
   int len_;
   Mode mode_;
   char cmd_[256];
@@ -4463,8 +4633,10 @@ Amplifier amplifier;
 
 void setup() {
   Serial.begin(9600);
-#ifdef ENABLE_AUDIO
+#ifdef ENABLE_SERIALFLASH
   SerialFlashChip::begin(6);
+#endif
+#ifdef ENABLE_SD
   if (!SD.begin(sdCardSelectPin)) {
     Serial.println("No sdcard found.");
   } else {
