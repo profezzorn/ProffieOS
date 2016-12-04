@@ -121,7 +121,7 @@ enum SaberPins {
 // Feature defines, these let you turn off large blocks of code
 // used for debugging.
 #define ENABLE_AUDIO
-// #define ENABLE_MOTION
+#define ENABLE_MOTION
 // #define ENABLE_SNOOZE
 // #define ENABLE_WS2811
 // #define ENABLE_WATCHDOG
@@ -161,13 +161,6 @@ enum SaberPins {
 #include <SPI.h>
 #include <Wire.h>
 #include <math.h>
-
-#ifdef ENABLE_MOTION
-#include <NXPMotionSense.h>
-
-NXPMotionSense imu;
-NXPSensorFusion filter;
-#endif
 
 
 #ifdef ENABLE_SNOOZE
@@ -564,12 +557,8 @@ public:
 #ifdef LOUD
     DAC0_C0 |= DAC_C0_DACRFS;  // 3.3V, much louder
 #endif
-    // slowly ramp up to DC voltage, approx 1/4 second
-    // TODO: Use this for volume control?
-    for (int16_t i=0; i<2048; i+=8) {
-     *(int16_t *)&(DAC0_DAT0L) = i;
-      delay(1);
-    }
+    // This would cause a click, but the amp is not on yet...
+    *(int16_t *)&(DAC0_DAT0L) = 2048;
 
     // set the programmable delay block to trigger DMA requests
     SIM_SCGC6 |= SIM_SCGC6_PDB;
@@ -776,6 +765,10 @@ public:
   void Beep(float length, float freq) {
     x_ = f_ = AUDIO_RATE / freq / 2.0;
     samples_ = AUDIO_RATE * length;
+  }
+
+  bool isPlaying() {
+    return samples_ > 0;
   }
 
 private:  
@@ -1953,7 +1946,7 @@ struct ConfigFile {
 
   void Read(const char *filename) {
 #ifdef ENABLE_SD
-    File f = SD.open(config_filename);
+    File f = SD.open(filename);
     Read(&f);
 #endif
   }
@@ -4173,7 +4166,8 @@ protected:
     }
 #ifdef ENABLE_AUDIO
     if (!strcmp(cmd, "beep")) {
-      beeper.Beep(0.2, 3000.0);
+      digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+      beeper.Beep(1.0, 3000.0);
       return true;
     }
     if (!strcmp(cmd, "play")) {
@@ -4357,19 +4351,6 @@ public:
       Serial.println("Done listing files.");
       return;
     }
-#endif
-#ifdef ENABLE_SD
-    if (!strcmp(cmd, "dir")) {
-      File dir = SD.open(e ? e : current_directory);
-      while (File f = dir.openNextFile()) {
-        Serial.print(f.name());
-        Serial.print(" ");
-        Serial.println(f.size());
-        f.close();
-      }
-      Serial.println("Done listing files.");
-      return;
-    }
     if (!strcmp(cmd, "rm")) {
       if (SerialFlashChip::remove(e)) {
         Serial.println("Removed.\n");
@@ -4383,6 +4364,19 @@ public:
       SerialFlashChip::eraseAll();
       while (!SerialFlashChip::ready());
       Serial.println("Done");
+      return;
+    }
+#endif
+#ifdef ENABLE_SD
+    if (!strcmp(cmd, "dir")) {
+      File dir = SD.open(e ? e : current_directory);
+      while (File f = dir.openNextFile()) {
+        Serial.print(f.name());
+        Serial.print(" ");
+        Serial.println(f.size());
+        f.close();
+      }
+      Serial.println("Done listing files.");
       return;
     }
 #endif
@@ -4487,8 +4481,6 @@ private:
 
 Parser parser;
 
-#ifdef ENABLE_MOTION
-
 // Simple 3D vector.
 class Vec3 {
 public:
@@ -4500,6 +4492,248 @@ public:
   float len2() const { return x*x + y*y + z*z; }
   float x, y, z;
 };
+
+#ifdef ENABLE_MOTION
+
+#ifdef V2
+#define I2C_TIMEOUT_MILLIS 300
+
+class I2CDevice {
+public:
+  explicit I2CDevice(uint8_t address) : address_(address) {
+    Wire.begin();
+//    Wire.setClock(400000);
+  }
+  void writeByte(uint8_t reg, uint8_t data) {
+    Wire.beginTransmission(address_);
+    Wire.write(reg);
+    Wire.write(data);
+    Wire.endTransmission();
+  }
+  int readByte(uint8_t reg) {
+    Wire.beginTransmission(address_);
+    Wire.write(reg);
+    Wire.endTransmission(true);
+    Wire.requestFrom(address_, (uint8_t) 1);
+    if (Wire.available() < 1) {
+      uint32_t start = millis();
+      while (Wire.available() < 1) {
+	if (millis() - start > I2C_TIMEOUT_MILLIS) return -1;
+      }
+    }
+    return Wire.read();
+  }
+  int readBytes(uint8_t reg, uint8_t* data, int bytes) {
+    Wire.beginTransmission(address_);
+    Wire.write(reg);
+    Wire.endTransmission(true);
+    Wire.requestFrom(address_, (uint8_t) bytes);
+    if (Wire.available() < bytes) {
+      uint32_t start = millis();
+      while (Wire.available() < bytes) {
+	if (millis() - start > I2C_TIMEOUT_MILLIS) return -1;
+      }
+    }
+    for (int i = 0; i < bytes; i++) {
+      data[i] = Wire.read();
+    }		
+    return bytes;
+  }
+  void boink() {
+    address_++;
+    Serial.print("ADDR: ");
+    Serial.println(address_);
+  }
+private:
+  uint8_t address_;
+};
+
+class LSM6DS3H : public I2CDevice, Looper {
+public:
+  enum Registers {
+    FUNC_CFG_ACCESS = 0x1,
+    SENSOR_SYNC_TIME_FRAME = 0x4,
+    FIFO_CONTROL1 = 0x6,
+    FIFO_CONTROL2 = 0x7,
+    FIFO_CONTROL3 = 0x8,
+    FIFO_CONTROL4 = 0x9,
+    FIFO_CONTROL5 = 0xA,
+    ORIENT_CFG_G = 0xB,
+    INT1_CTRL = 0xD,
+    INT2_CTRL = 0xE,
+    WHO_AM_I = 0xF,
+    CTRL1_XL = 0x10,
+    CTRL2_G = 0x11,
+    CTRL3_C = 0x12,
+    CTRL4_C = 0x13,
+    CTRL5_C = 0x14,
+    CTRL6_C = 0x15,
+    CTRL7_G = 0x16,
+    CTRL8_XL = 0x17,
+    CTRL9_XL = 0x18,
+    CTRL10_C = 0x19,
+    MASTER_CONFIG = 0x1A,
+    WAKE_UP_SRC = 0x1B,
+    TAP_SRC = 0x1C,
+    D6D_SRC = 0x1D,
+    STATUS_REG = 0x1E,
+    STATUS_SPIAux = 0x1E,
+    OUT_TEMP_L = 0x20,
+    OUT_TEMP_H = 0x21,
+    OUTX_L_G = 0x22,
+    OUTX_H_G = 0x23,
+    OUTY_L_G = 0x24,
+    OUTY_H_G = 0x25,
+    OUTZ_L_G = 0x26,
+    OUTZ_H_G = 0x27,
+    OUTX_L_XL = 0x28,
+    OUTX_H_XL = 0x29,
+    OUTY_L_XL = 0x2A,
+    OUTY_H_XL = 0x2B,
+    OUTZ_L_XL = 0x2C,
+    OUTZ_H_XL = 0x2D,
+    SENSORHUB1_REG = 0x2E,
+    SENSORHUB2_REG = 0x2F,
+    SENSORHUB3_REG = 0x30,
+    SENSORHUB4_REG = 0x31,
+    SENSORHUB5_REG = 0x32,
+    SENSORHUB6_REG = 0x33,
+    SENSORHUB7_REG = 0x34,
+    SENSORHUB8_REG = 0x35,
+    SENSORHUB9_REG = 0x36,
+    SENSORHUB10_REG = 0x37,
+    SENSORHUB11_REG = 0x38,
+    SENSORHUB12_REG = 0x39,
+    FIFO_STATUS1 = 0x3A,
+    FIFO_STATUS2 = 0x3B,
+    FIFO_STATUS3 = 0x3C,
+    FIFO_STATUS4 = 0x3D,
+    FIFO_DATA_OUT_L = 0x3E,
+    FIFO_DATA_OUT_H = 0x3F,
+    TIMESTAMP0_REG = 0x40,
+    TIMESTAMP1_REG = 0x40,
+    TIMESTAMP2_REG = 0x41,
+    STEP_TIMESTAMP_L = 0x49,
+    STEP_TIMESTAMP_H = 0x4A,
+    STEP_COUNTER_L = 0x4B,
+    STEP_COUNTER_H = 0x4C,
+    SENSORHUB13_REG = 0x4D,
+    SENSORHUB14_REG = 0x4E,
+    SENSORHUB15_REG = 0x4F,
+    SENSORHUB16_REG = 0x50,
+    SENSORHUB17_REG = 0x51,
+    SENSORHUB18_REG = 0x52,
+    FUNC_SRC = 0x53,
+    TAP_CFG = 0x58,
+    TAP_THS_6D = 0x59,
+    INT_DUR2 = 0x5A,
+    WAKE_UP_THS = 0x5B,
+    WAKE_UP_DUR = 0x5C,
+    FREE_FALL = 0x5D,
+    MD1_CFG = 0x5E,
+    MD2_CFG = 0x5F,
+    OUT_MAG_RAW_X_L = 0x66,
+    OUT_MAG_RAW_X_H = 0x67,
+    OUT_MAG_RAW_Y_L = 0x68,
+    OUT_MAG_RAW_Y_H = 0x69,
+    OUT_MAG_RAW_Z_L = 0x6A,
+    OUT_MAG_RAW_Z_H = 0x6B,
+    CTRL_SPIAux = 0x70
+  };
+
+  LSM6DS3H() : I2CDevice(106) {
+  }
+
+  void InitChip() {
+    delay(1000);
+    Serial.println("SETUP");
+    int wai = readByte(WHO_AM_I);
+    Serial.println(wai);
+    if (wai == -1) {
+      boink();
+      return;
+    }
+
+    writeByte(CTRL1_XL, 0x80);  // 1.66kHz accel
+    writeByte(CTRL2_G, 0x80);   // 1.66kHz gyro
+    writeByte(CTRL3_C, 0x44);   // ?
+    writeByte(CTRL4_C, 0x00);
+    writeByte(CTRL5_C, 0x00);
+    writeByte(CTRL6_C, 0x00);
+    writeByte(CTRL7_G, 0x00);
+    writeByte(CTRL8_XL, 0x00);
+    writeByte(CTRL9_XL, 0x38);  // accel xyz enable
+    writeByte(CTRL10_C, 0x38);  // gyro xyz enable
+    Serial.println(readByte(WHO_AM_I));
+    Serial.println("SETUP DONE");
+
+    // Power up??
+  }
+
+  void Setup() override {
+    InitChip();
+  }
+
+  void Loop() override {
+    union {
+      uint8_t buffer[6];
+      struct { int16_t x, y, z; } xyz;
+    } dataBuffer;
+    
+    int status_reg = readByte(STATUS_REG);
+    if (status_reg == -1) {
+      // motion fail, reboot motion chip.
+      writeByte(CTRL3_C, 1);
+      delay(20);
+//      boink();
+      InitChip();
+      return;
+    }
+    if (status_reg & 0x1) {
+      // Temp data available
+      int16_t temp_data;
+      if (readBytes(OUT_TEMP_L, (uint8_t*)&temp_data, 2) == 2) {
+	float temp = 25.0f + temp_data * (1.0f / 16.0f);
+	Serial.print("TEMP: ");
+	Serial.println(temp);
+      }
+    }
+    if (status_reg & 0x2) {
+      // gyroscope data available
+      if (readBytes(OUTX_L_G, dataBuffer.buffer, 6) == 6) {
+	// Got gyro data
+	Serial.print("GYRO: ");
+	Serial.print(dataBuffer.xyz.x);
+	Serial.print(", ");
+	Serial.print(dataBuffer.xyz.y);
+	Serial.print(", ");
+	Serial.println(dataBuffer.xyz.z);
+      }
+    }
+    if (status_reg & 0x4) {
+      // accel data available
+      if (readBytes(OUTX_L_XL, dataBuffer.buffer, 6) == 6) {
+	// Got gyro data
+	Serial.print("ACCEL: ");
+	Serial.print(dataBuffer.xyz.x);
+	Serial.print(", ");
+	Serial.print(dataBuffer.xyz.y);
+	Serial.print(", ");
+	Serial.println(dataBuffer.xyz.z);
+      }
+      delay(100);
+    }
+  }
+};
+
+LSM6DS3H motion;
+
+#else  // V2
+
+#include <NXPMotionSense.h>
+
+NXPMotionSense imu;
+NXPSensorFusion filter;
 
 // Motion tracking. The NXPmotionsense library can supposedly do
 // full absolute motion tracking, but currently we're only using
@@ -4582,6 +4816,7 @@ private:
 };
 
 Orientation orientation;
+#endif   // V2
 #endif   // ENABLE_MOTION
 
 
@@ -4608,6 +4843,7 @@ protected:
   bool Active() {
 //    if (saber_synth.on_) return true;
     if (audio_splicer.isPlaying()) return true;
+    if (beeper.isPlaying()) return true;
     for (size_t i = 0; i < NELEM(wav_players); i++)
       if (wav_players[i].isPlaying())
 	return true;
