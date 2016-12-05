@@ -28,8 +28,8 @@
 
 
 // Board version
-#define VERSION_MAJOR 2
-#define VERSION_MINOR 1
+#define VERSION_MAJOR 1
+#define VERSION_MINOR 0
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
@@ -80,6 +80,9 @@ const unsigned int maxLedsPerStrip = 144;
 enum SaberPins {
   // Bottom edge (in pin-out diagram)
   sdCardSelectPin = 0,            // SD card chip (sd card adapter)
+                                  // Set to BUILTIN_SDCARD for Teensy 3.5/3.6
+                                  // (See File->Example->SD->ReadWrite for
+                                  // other possible values.
 #ifdef V2
   amplifierPin = 1,               // Amplifier enable pin (TeensySaber V2)
   motionSensorInterruptPin = 2,   // motion sensor interrupt (TeensySaber V2)
@@ -123,9 +126,9 @@ enum SaberPins {
 #define ENABLE_AUDIO
 #define ENABLE_MOTION
 // #define ENABLE_SNOOZE
-// #define ENABLE_WS2811
+#define ENABLE_WS2811
 // #define ENABLE_WATCHDOG
-// #define ENABLE_SD
+#define ENABLE_SD
 // #define ENABLE_FLASH
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
@@ -3759,12 +3762,13 @@ protected:
     int32_t ch = pin2tsi[pin_];
     *portConfigRegister(pin_) = PORT_PCR_MUX(0);
     SIM_SCGC5 |= SIM_SCGC5_TSI;
-#if defined(KINETISK)
+
+#if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
     TSI0_GENCS = 0;
     TSI0_PEN = (1 << ch);
     TSI0_SCANC = TSI_SCANC_REFCHRG(3) | TSI_SCANC_EXTCHRG(CURRENT);
     TSI0_GENCS = TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_PS(PRESCALE) | TSI_GENCS_TSIEN | TSI_GENCS_SWTS;
-#elif defined(KINETISL)
+#elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
     TSI0_GENCS = TSI_GENCS_REFCHRG(4) | TSI_GENCS_EXTCHRG(3) | TSI_GENCS_PS(PRESCALE)
       | TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
     TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
@@ -3807,6 +3811,7 @@ protected:
     is_pushed_ = value > threshold_;
   }
 
+  // TODO(hubbe): Convert to state machine.
   void Loop() override {
     ButtonBase::Loop();
     if (monitor.ShouldPrint(Monitoring::MonitorTouch)) {
@@ -3814,11 +3819,11 @@ protected:
     }
     if (micros() - begin_read_micros_ <= 10) return;
     if (TSI0_GENCS & TSI_GENCS_SCNIP) return;
-    int32_t ch = pin2tsi[pin_];
     delayMicroseconds(1);
-#if defined(KINETISK)
+#if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
+    int32_t ch = pin2tsi[pin_];
     Update(*((volatile uint16_t *)(&TSI0_CNTR1) + ch));
-#elif defined(KINETISL)
+#elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
     Update(TSI0_DATA & 0xFFFF);
 #endif
     BeginRead();
