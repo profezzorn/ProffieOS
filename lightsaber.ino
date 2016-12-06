@@ -59,68 +59,6 @@ const unsigned int maxLedsPerStrip = 144;
 // If your electonics inverts the bladePin for some reason, define this.
 // #define INVERT_WS2811
 
-// Teensy 3.2 pin map:
-// A lot of these can be changed, but be careful, because:
-//   o The pins used by the prop shield cannot be easily changed.
-//   o Pins that are going to control normal LEDs (not neopoxels) need PWM capability,
-//     and not all teensy pins can do PWM.
-//   o Touch input is not available on all pins.
-//   o Sdcard chip select pin depends on what shield you use.
-//   o Battery level and blade identification needs analog input, which is not possible
-//     on all pins.
-//
-// Note that while WS2811 leds/strips are being controlled, analogWriteFrequency() can only
-// be used on pins 3, 4, 25 & 32, on all others the analogWriteFrequency is locked to the
-// frequency of the WS2811 (usually 740kHz) which is not an approperiate frequency for
-// driving a FET. This limitation may change in future versions of this software, but for
-// now, if you want to drive a crystal chamber or other internal LEDs, I recommend using
-// the pins listed above to get a reasonable PWM frequency.
-//
-// See the teensy 3.2 pinout diagram for more info: https://www.pjrc.com/teensy/pinout.html
-enum SaberPins {
-  // Bottom edge (in pin-out diagram)
-  sdCardSelectPin = 0,            // SD card chip (sd card adapter)
-                                  // Set to BUILTIN_SDCARD for Teensy 3.5/3.6
-                                  // (See File->Example->SD->ReadWrite for
-                                  // other possible values.
-#ifdef V2
-  amplifierPin = 1,               // Amplifier enable pin (TeensySaber V2)
-  motionSensorInterruptPin = 2,   // motion sensor interrupt (TeensySaber V2)
-  bladePowerPin4 = 3,             // Optional power control (TeensySaber V2)
-  bladePowerPin5 = 4,             // Optional power control (TeensySaber V2)
-  bladePowerPin6 = 5,             // Optional power control (TeensySaber V2)
-  freePin6 = 6,
-  freePin7 = 7,
-#else
-  freePin1 = 1,                   // FREE
-  motionSensorInterruptPin = 2,   // motion sensor interrupt (prop shield)
-  freePin3 = 3,                   // FREE
-  freePin4 = 4,                   // FREE (make this sdCardSelectPin if you're using a Wiz820+SD shield)
-  amplifierPin = 5,               // Amplifier enable pin (prop shield)
-  serialFlashSelectPin = 6,       // serial flash chip select (prop shield)
-  spiLedSelect = 7,               // APA102/dotstar chip select (prop shield)
-#endif
-  freePin8 = 8,                   // FREE
-  freePin9 = 9,                   // FREE
-  freePin10 = 10,                 // FREE
-  spiDataOut = 11,                // spi out, serial flash, spi led & sd card
-  spiDataIn = 12,                 // spi in, serial flash & sd card
-
-  // Top edge
-  spiClock = 13,                  // spi clock, flash, spi led & sd card
-  batteryLevelPin = 14,           // battery level input
-  auxPin = 15,                    // AUX button
-  powerButtonPin = 16,            // power button
-  aux2Pin = 17,                   // AUX2 button
-  i2cDataPin = 18,                // I2C bus, Used by motion sensors
-  i2cClockPin = 19,               // I2C bus, Used by motion sensors
-  bladePin = 20,                  // blade control, either WS2811 or PWM
-  bladeIdentifyPin = 20,          // blade identify input / FoC
-  bladePowerPin1 = 21,            // blade power control
-  bladePowerPin2 = 22,            // blade power control
-  bladePowerPin3 = 23,            // blade power control
-};
-
 // Feature defines, these let you turn off large blocks of code
 // used for debugging.
 #define ENABLE_AUDIO
@@ -171,6 +109,70 @@ enum SaberPins {
 
 SnoozeBlock snooze_config;
 #endif
+
+
+// Teensy 3.2 pin map:
+// A lot of these can be changed, but be careful, because:
+//   o The pins used by the prop shield cannot be easily changed.
+//   o Pins that are going to control normal LEDs (not neopoxels) need PWM capability,
+//     and not all teensy pins can do PWM.
+//   o Touch input is not available on all pins.
+//   o Sdcard chip select pin depends on what shield you use.
+//   o Battery level and blade identification needs analog input, which is not possible
+//     on all pins.
+//
+// Note that while WS2811 leds/strips are being controlled, analogWriteFrequency() can only
+// be used on pins 3, 4, 25 & 32, on all others the analogWriteFrequency is locked to the
+// frequency of the WS2811 (usually 740kHz) which is not an approperiate frequency for
+// driving a FET. This limitation may change in future versions of this software, but for
+// now, if you want to drive a crystal chamber or other internal LEDs, I recommend using
+// the pins listed above to get a reasonable PWM frequency.
+//
+// See the teensy 3.2 pinout diagram for more info: https://www.pjrc.com/teensy/pinout.html
+enum SaberPins {
+  // Bottom edge (in pin-out diagram)
+  sdCardSelectPin = 0,            // SD card chip (sd card adapter)
+                                  // Set to BUILTIN_SDCARD for Teensy 3.5/3.6
+                                  // (See File->Example->SD->ReadWrite for
+                                  // other possible values.)
+#ifdef V2
+  amplifierPin = 1,               // Amplifier enable pin (TeensySaber V2)
+  motionSensorInterruptPin = 2,   // motion sensor interrupt (TeensySaber V2)
+  bladePowerPin4 = 3,             // Optional power control (TeensySaber V2)
+  bladePowerPin5 = 4,             // Optional power control (TeensySaber V2)
+  bladePowerPin6 = 5,             // Optional power control (TeensySaber V2)
+  freePin6 = 6,
+  freePin7 = 7,
+#else
+  freePin1 = 1,                   // FREE
+  motionSensorInterruptPin = 2,   // motion sensor interrupt (prop shield)
+  freePin3 = 3,                   // FREE
+  freePin4 = 4,                   // FREE (make this sdCardSelectPin if you're using a Wiz820+SD shield)
+  amplifierPin = 5,               // Amplifier enable pin (prop shield)
+  serialFlashSelectPin = 6,       // serial flash chip select (prop shield)
+  spiLedSelect = 7,               // APA102/dotstar chip select (prop shield)
+#endif
+  freePin8 = 8,                   // FREE
+  freePin9 = 9,                   // FREE
+  freePin10 = 10,                 // FREE
+  spiDataOut = 11,                // spi out, serial flash, spi led & sd card
+  spiDataIn = 12,                 // spi in, serial flash & sd card
+
+  // Top edge
+  spiClock = 13,                  // spi clock, flash, spi led & sd card
+  batteryLevelPin = 14,           // battery level input
+  auxPin = 15,                    // AUX button
+  powerButtonPin = 16,            // power button
+  aux2Pin = 17,                   // AUX2 button
+  i2cDataPin = 18,                // I2C bus, Used by motion sensors
+  i2cClockPin = 19,               // I2C bus, Used by motion sensors
+  bladePin = 20,                  // blade control, either WS2811 or PWM
+  bladeIdentifyPin = 20,          // blade identify input / FoC
+  bladePowerPin1 = 21,            // blade power control
+  bladePowerPin2 = 22,            // blade power control
+  bladePowerPin3 = 23,            // blade power control
+};
+
 
 const char version[] = "$Id$";
 
