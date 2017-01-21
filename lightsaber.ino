@@ -67,7 +67,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_WS2811
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
-// #define ENABLE_FLASH
+#define ENABLE_SERIALFLASH
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
@@ -95,9 +95,7 @@ const unsigned int maxLedsPerStrip = 144;
 
 #include <DMAChannel.h>
 
-#ifdef ENABLE_SD
 #include <SD.h>
-#endif
 
 #include <SPI.h>
 #include <Wire.h>
@@ -3902,6 +3900,10 @@ public:
   }
 
   bool chdir(const char* dir) {
+    if (strlen(dir) > 1 && dir[strlen(dir)-1] == '/') {
+      Serial.println("Directory must not end with slash.");
+      return false;
+    }
 #ifdef ENABLE_AUDIO
     monophonic_font.Deactivate();
     polyphonic_font.Deactivate();
@@ -3916,13 +3918,13 @@ public:
 #endif
 
     strcpy(current_directory, dir);
-    if (current_directory[strlen(current_directory)-1] != '/') {
+    if (strlen(current_directory) && 
+        current_directory[strlen(current_directory)-1] != '/') {
       strcat(current_directory, "/");
     }
 
-    
 #ifdef ENABLE_AUDIO
-    Effect::ScanDirectory(current_directory);
+    Effect::ScanDirectory(dir);
     if (clsh.files_found()) {
       polyphonic_font.Activate();
       return true;
@@ -4327,9 +4329,11 @@ public:
       Serial.println("General commands:");
       Serial.println("  on, off, blade on, blade off, clash, pow, aux, aux2");
       Serial.println("  red, green, blue, yellow, cyan, magenta, white");
+#ifdef ENABLE_SERIALFLASH
       Serial.println("Serial Flash memory management:");
       Serial.println("   ls, rm <file>, format, play <file>, effects");
       Serial.println("To upload files: tar cf - files | uuencode x >/dev/ttyACM0");
+#endif
       Serial.println("Debugging commands:");
       Serial.println("   monitor swings, monitor samples, top, version");
       return;
