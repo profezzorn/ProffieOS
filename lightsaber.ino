@@ -2054,9 +2054,14 @@ class BatteryMonitor : Looper, CommandParser {
 public:
   float battery_now() {
     float volts = 3.3 * analogRead(batteryLevelPin) / 1024.0;
+#if VERSION_MAJOR >= 2
+    float pulldown = 220000;  // External pulldown
+    float pullup = 2000000;  // External pullup
+#else
     float pulldown = 33000;  // Internal pulldown is 33kOhm
-    float external = 23000;  // External pullup
-    float battery_volts = volts * (1.0 + external / pulldown);
+    float pullup = 23000;  // External pullup
+#endif
+    float battery_volts = volts * (1.0 + pullup / pulldown);
     return battery_volts;
   }
   float battery() const {
@@ -2069,7 +2074,11 @@ public:
 protected:
   void Setup() override {
     really_old_voltage_ = old_voltage_ = last_voltage_ = battery_now();
+#if VERSION_MAJOR >= 2
+    pinMode(batteryLevelPin, INPUT);
+#else
     pinMode(batteryLevelPin, INPUT_PULLDOWN);
+#endif
   }
   void Loop() override {
     float v = battery_now();
@@ -3407,6 +3416,10 @@ Preset charging_presets[] = {
   { "font02", "tracks/duel.wav", StyleNormalPtr<BLUE, BLUE, 100, 200>() },
 };
 
+Preset testing_presets[] = {
+  { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
+};
+
 struct BladeConfig {
   // Blade identifier resistor.
   int ohm;
@@ -3446,8 +3459,11 @@ BladeConfig blades[] = {
   {   7800, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(), CONFIGARRAY(presets) },
 #endif
 
-  // LED star
+  // Blue-Blue-White LED star
   { 20000, SimpleBladePtr<WHITE, BLUE,BLUE,BLACK>(), CONFIGARRAY(simple_presets) },
+
+  // Testing configuration. 
+  { 130000, SimpleBladePtr<RED,GREEN,BLUE,BLACK>(), CONFIGARRAY(testing_presets) },
 };
 
 
@@ -4328,7 +4344,7 @@ public:
     if (!strcmp(cmd, "help")) {
       Serial.println("General commands:");
       Serial.println("  on, off, blade on, blade off, clash, pow, aux, aux2");
-      Serial.println("  red, green, blue, yellow, cyan, magenta, white");
+      // Serial.println("  red, green, blue, yellow, cyan, magenta, white");
 #ifdef ENABLE_SERIALFLASH
       Serial.println("Serial Flash memory management:");
       Serial.println("   ls, rm <file>, format, play <file>, effects");
@@ -4879,6 +4895,7 @@ Amplifier amplifier;
 #endif
 
 void setup() {
+  //  delay(1000);
   Serial.begin(9600);
 #ifdef ENABLE_SERIALFLASH
   SerialFlashChip::begin(6);
