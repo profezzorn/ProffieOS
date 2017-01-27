@@ -3139,12 +3139,45 @@ class WS2811_Blade *WS2811BladePtr() {
 }
 #endif
 
+class LEDInterface {
+public:
+  virtual int PWM(Color c) = 0;
+};
+
+template<class LED>
+class DriveLogic : public LEDInterface {
+public:
+  float PWMMultiplier() {
+    float V = battery_monitor.battery();
+    float dv = LED::MaxVolts - LED::P2Volts;
+    float di = LED::MaxAmps - LED::P2Amps;
+    float delta = dv / di;
+    float amps = (V - LED::MaxVolts + LED::MaxAmps * delta) / (delta + LED::R);
+    if (amps <= LED::MaxAmps) {
+      return 1.0f;
+    }
+    return LED::MaxAmps / amps;
+  }
+  int PWM(Color c) override {
+    return c.select(Color(LED::Red, LED::Green, LED::Blue)) * PWMMultiplier();
+  }
+};
+
+template<class LED>
+class LEDInterface* LEDPtr() {
+  static DriveLogic<LED> led;
+  return &led;
+}
+
 // Simple blade, LED string or LED star with optional flash on clash.
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
 class Simple_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
 public:
-  Simple_Blade(Color c1, Color c2, Color c3, Color c4) :
+  Simple_Blade(LEDInterface* c1,
+	       LEDInterface* c2,
+	       LEDInterface* c3,
+	       LEDInterface* c4) :
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK),
@@ -3178,10 +3211,10 @@ public:
     return on_;
   }
   void set(int led, Color c) override {
-    analogWrite(bladePowerPin1, c.select(c1_));
-    analogWrite(bladePowerPin2, c.select(c2_));
-    analogWrite(bladePowerPin3, c.select(c3_));
-    analogWrite(bladePin, c.select(c4_));
+    analogWrite(bladePowerPin1, c1_->PWM(c));
+    analogWrite(bladePowerPin2, c2_->PWM(c));
+    analogWrite(bladePowerPin3, c3_->PWM(c));
+    analogWrite(bladePin, c4_->PWM(c));
   }
 
   bool clash() override {
@@ -3225,7 +3258,10 @@ protected:
   }
   
 private:
-  Color c1_, c2_, c3_, c4_;
+  LEDInterface *c1_;
+  LEDInterface *c2_;
+  LEDInterface *c3_;
+  LEDInterface *c4_;
   static bool on_;
   static bool power_;
   static bool clash_;
@@ -3235,16 +3271,9 @@ bool Simple_Blade::on_ = false;
 bool Simple_Blade::power_ = false;
 bool Simple_Blade::clash_ = true;
 
-template<int r1, int g1, int b1,
-	 int r2, int g2, int b2,
-	 int r3, int g3, int b3,
-	 int r4, int g4, int b4>
+template<class LED1, class LED2, class LED3, class LED4>
 class Simple_Blade *SimpleBladePtr() {
-  static Simple_Blade blade(Color(r1, g1, b1),
-			    Color(r2, g2, b2),
-			    Color(r3, g3, b3),
-			    Color(r4, g4, b4));
-			    
+  static Simple_Blade blade(LEDPtr<LED1>(), LEDPtr<LED2>(), LEDPtr<LED3>(), LEDPtr<LED4>());
   return &blade;
 }
 
@@ -3362,6 +3391,112 @@ class String_Blade *StringBladePtr() {
 #define WHITE     255, 255, 255
 #define BLACK       0,   0,   0
 
+// CONFIGURABLE
+struct CreeXPE2White {
+  static constexpr float MaxAmps = 1.0;
+  static constexpr float MaxVolts = 3.15;
+  static constexpr float P2Amps = 0.7;
+  static constexpr float P2Volts = 3.05;
+  static constexpr float R = 0.55;
+  static const int Red = 255;
+  static const int Green = 255;
+  static const int Blue = 255;
+};
+
+struct CreeXPE2Blue {
+  static constexpr float MaxAmps = 1.0;
+  static constexpr float MaxVolts = 3.4;
+  static constexpr float P2Amps = 0.35;
+  static constexpr float P2Volts = 3.1;
+  static constexpr float R = 0.24;
+  static const int Red = 0;
+  static const int Green = 0;
+  static const int Blue = 255;
+};
+
+struct CreeXPE2Green {
+  static constexpr float MaxAmps = 1.0;
+  static constexpr float MaxVolts = 3.7;
+  static constexpr float P2Amps = 0.35;
+  static constexpr float P2Volts = 3.2;
+  static constexpr float R = 0.0;
+  static const int Red = 0;
+  static const int Green = 255;
+  static const int Blue = 0;
+};
+
+struct CreeXPE2PCAmber {
+  static constexpr float MaxAmps = 1.0;
+  static constexpr float MaxVolts = 3.28;
+  static constexpr float P2Amps = 0.35;
+  static constexpr float P2Volts = 3.05;
+  static constexpr float R = 0.0;
+  // TODO(hubbe): Find correct values for PC Amber
+  static const int Red = 255;
+  static const int Green = 128;
+  static const int Blue = 0;
+};
+
+struct CreeXPE2Red {
+  static constexpr float MaxAmps = 1.0;
+  static constexpr float MaxVolts = 2.65;
+  static constexpr float P2Amps = 0.35;
+  static constexpr float P2Volts = 2.2;
+  static constexpr float R = 0.0;
+  static const int Red = 255;
+  static const int Green = 0;
+  static const int Blue = 0;
+};
+
+struct CreeXPE2RedOrange {
+  static constexpr float MaxAmps = 1.0;
+  static constexpr float MaxVolts = 2.65;
+  static constexpr float P2Amps = 0.35;
+  static constexpr float P2Volts = 2.2;
+  static constexpr float R = 0.0;
+  // TODO(hubbe): Find correct values for red-orange
+  static const int Red = 255;
+  static const int Green = 196;
+  static const int Blue = 0;
+};
+
+struct CreeXPE2Amber {
+  static constexpr float MaxAmps = 1.0;
+  static constexpr float MaxVolts = 2.65;
+  static constexpr float P2Amps = 0.35;
+  static constexpr float P2Volts = 2.2;
+  static constexpr float R = 0.0;
+  // TODO(hubbe): Find correct values for Amber
+  static const int Red = 255;
+  static const int Green = 100;
+  static const int Blue = 0;
+};
+
+struct Blue3mmLED {
+  // TODO(hubbe): Measure these.
+  static constexpr float MaxAmps = 0.03;
+  static constexpr float MaxVolts = 3.8;
+  static constexpr float P2Amps = 0.0;
+  static constexpr float P2Volts = 2.0;
+  static constexpr float R = 0.0;
+  static const int Red = 255;
+  static const int Green = 0;
+  static const int Blue = 0;
+};
+
+// For when there is no LED hooked up to a channel.
+struct NoLED {
+  static constexpr float MaxAmps = 1.0;
+  static constexpr float MaxVolts = 1000.0;
+  static constexpr float P2Amps = 0.0;
+  static constexpr float P2Volts = 0.0;
+  static constexpr float R = 0.0;
+  static const int Red = 0;
+  static const int Green = 0;
+  static const int Blue = 0;
+};
+
+
 #define CONFIGARRAY(X) X, NELEM(X)
 
 struct Preset {
@@ -3448,7 +3583,7 @@ BladeConfig blades[] = {
 #endif
 
   // Simple blue string blade.
-  {   5200, SimpleBladePtr<BLUE,BLUE,BLUE,BLACK>(), CONFIGARRAY(simple_presets) },
+  {   5200, SimpleBladePtr<Blue3mmLED,Blue3mmLED,Blue3mmLED,NoLED>(), CONFIGARRAY(simple_presets) },
 
 #ifdef ENABLE_WS2811
   // Charging adapter, single PL9823 LED.
@@ -3460,10 +3595,10 @@ BladeConfig blades[] = {
 #endif
 
   // Blue-Blue-White LED star
-  { 20000, SimpleBladePtr<WHITE, BLUE,BLUE,BLACK>(), CONFIGARRAY(simple_presets) },
+  { 20000, SimpleBladePtr<CreeXPE2White, CreeXPE2Blue, CreeXPE2Blue, NoLED>(), CONFIGARRAY(simple_presets) },
 
   // Testing configuration. 
-  { 130000, SimpleBladePtr<RED,GREEN,BLUE,BLACK>(), CONFIGARRAY(testing_presets) },
+  { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, CreeXPE2Blue, NoLED>(), CONFIGARRAY(testing_presets) },
 };
 
 
