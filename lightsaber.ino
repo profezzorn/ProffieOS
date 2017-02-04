@@ -3505,16 +3505,14 @@ struct CreeXPE2Amber {
 };
 
 // This is a "superbright 3mm blue led" that I found on ebay.
-// I used this to build an LED string with >100 LEDs.
-// I should really multiply MaxAmps and P2Amps by the number of
-// parallel LEDs, but it's not needed if there is no resistor.
+// I used this to build an LED string with ~150 LEDs.
+// Since I don't have a proper datasheet, I measured these values.
 struct Blue3mmLED {
-  // TODO(hubbe): Measure these.
-  static constexpr float MaxAmps = 0.03;
+  static constexpr float MaxAmps = 0.03 * 150;
   static constexpr float MaxVolts = 3.4;
-  static constexpr float P2Amps = 0.016;
+  static constexpr float P2Amps = 0.016 * 150;
   static constexpr float P2Volts = 3.2;
-  static constexpr float R = 0.0;
+  static constexpr float R = 0.05; // assumed wire resistance
   static const int Red = 0;
   static const int Green = 0;
   static const int Blue = 255;
@@ -3548,7 +3546,7 @@ struct Preset {
 
 // CONFIGURABLE
 // Each preset line consists of:
-// { "font directory", "sound track directory", Style },
+// { "font directory", "sound track", Style },
 // Where Style is one of:
 //   StyleNormalPtr<BaseColor, FlashColor, out millis, in millis>()
 //   StyleFirePtr<LowHeatColor, HighHeatColor>()
@@ -3942,10 +3940,6 @@ public:
   }
 protected:
 
-  void Setup() override {
-    ButtonBase::Setup();
-  }
-
   bool Read() override {
     return is_pushed_;
   }
@@ -3983,10 +3977,11 @@ protected:
     }
     STATE_MACHINE_BEGIN();
     while (true) {
+      // Wait until it's our turn.
       while (current_button) YIELD();
       current_button = this;
 
-      // Copied from touch.c
+      // Initiate touch read.
       int32_t ch = pin2tsi[pin_];
       *portConfigRegister(pin_) = PORT_PCR_MUX(0);
       SIM_SCGC5 |= SIM_SCGC5_TSI;
@@ -4001,16 +3996,21 @@ protected:
 	| TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
       TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
 #endif
+      // Wait for result to be available.
       SLEEP_MICROS(10);
       while (TSI0_GENCS & TSI_GENCS_SCNIP) YIELD();
       SLEEP_MICROS(1);
+
+      // Read resuilt.
 #if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
       int32_t ch = pin2tsi[pin_];
       Update(*((volatile uint16_t *)(&TSI0_CNTR1) + ch));
 #elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
       Update(TSI0_DATA & 0xFFFF);
 #endif
+      // Let someone else have a turn.
       current_button = NULL;
+      YIELD();
     }
     STATE_MACHINE_END();
   }
