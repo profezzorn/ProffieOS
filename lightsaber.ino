@@ -3964,7 +3964,6 @@ protected:
 
   void Setup() override {
     ButtonBase::Setup();
-    BeginRead();
   }
 
   bool Read() override {
@@ -3998,10 +3997,19 @@ protected:
   }
 
   // TODO(hubbe): Convert to state machine.
+  // Not sure if that can work since one of our ancestors
+  // already inherit a state machine... (maybe make it a private inherit?)
   void Loop() override {
     ButtonBase::Loop();
     if (monitor.ShouldPrint(Monitoring::MonitorTouch)) {
       print_next_ = true;
+    }
+    // We can only actually sample one touchbutton at a time,
+    if (current_button) {
+      if (current_button != this) return;
+    } else {
+      current_button = this;
+      BeginRead();
     }
     if (micros() - begin_read_micros_ <= 10) return;
     if (TSI0_GENCS & TSI_GENCS_SCNIP) return;
@@ -4012,17 +4020,21 @@ protected:
 #elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
     Update(TSI0_DATA & 0xFFFF);
 #endif
-    BeginRead();
+    current_button = NULL;
   }
 
+  static TouchButton *current_button;
+  static int begin_read_micros_;
   bool print_next_ = false;
-  int begin_read_micros_ = 0;
   uint8_t pin_;
   int threshold_;
   int min_ = 100000000;
   int max_ = 0;
   bool is_pushed_ = false;
 };
+
+TouchButton::current_button = NULL;
+TouchButton::begin_read_micros_ = 0;
 
 // Menu system
 
