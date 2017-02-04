@@ -184,6 +184,7 @@ const char version[] = "$Id$";
 // Note, you cannot have two YIELD() on the same line.
 #define YIELD() do { next_state_ = __LINE__; return; case __LINE__: break; } while(0)
 #define SLEEP(MILLIS) do { sleep_until_ = millis() + (MILLIS); while (millis() < sleep_until_) YIELD(); } while(0)
+#define SLEEP_MICROS(MICROS) do { sleep_until_ = micros() + (micros); while (micros() < sleep_until_) YIELD(); } while(0)
 #define STATE_MACHINE_BEGIN() switch(next_state_) { case -1:
 #define STATE_MACHINE_END() }
 
@@ -3918,9 +3919,7 @@ static const uint8_t pin2tsi[] = {
 
 #endif
 
-// Note, there can currently only be one of these.
-// If we need more, we need a time-sharing system.
-class TouchButton : public ButtonBase {
+class TouchButton : StateMachine, public ButtonBase {
 public:
   TouchButton(int pin, int threshold, const char* name)
     : ButtonBase(name),
@@ -3942,25 +3941,6 @@ public:
     } 
   }
 protected:
-
-  void BeginRead() {
-    // Copied from touch.c
-    int32_t ch = pin2tsi[pin_];
-    *portConfigRegister(pin_) = PORT_PCR_MUX(0);
-    SIM_SCGC5 |= SIM_SCGC5_TSI;
-
-#if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
-    TSI0_GENCS = 0;
-    TSI0_PEN = (1 << ch);
-    TSI0_SCANC = TSI_SCANC_REFCHRG(3) | TSI_SCANC_EXTCHRG(CURRENT);
-    TSI0_GENCS = TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_PS(PRESCALE) | TSI_GENCS_TSIEN | TSI_GENCS_SWTS;
-#elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
-    TSI0_GENCS = TSI_GENCS_REFCHRG(4) | TSI_GENCS_EXTCHRG(3) | TSI_GENCS_PS(PRESCALE)
-      | TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
-    TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
-#endif
-    begin_read_micros_ = micros();
-  }
 
   void Setup() override {
     ButtonBase::Setup();
@@ -3996,35 +3976,46 @@ protected:
     is_pushed_ = value > threshold_;
   }
 
-  // TODO(hubbe): Convert to state machine.
-  // Not sure if that can work since one of our ancestors
-  // already inherit a state machine... (maybe make it a private inherit?)
   void Loop() override {
     ButtonBase::Loop();
     if (monitor.ShouldPrint(Monitoring::MonitorTouch)) {
       print_next_ = true;
     }
-    // We can only actually sample one touchbutton at a time,
-    if (current_button) {
-      if (current_button != this) return;
-    } else {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+      while (current_button) YIELD();
       current_button = this;
-      BeginRead();
-    }
-    if (micros() - begin_read_micros_ <= 10) return;
-    if (TSI0_GENCS & TSI_GENCS_SCNIP) return;
-    delayMicroseconds(1);
+
+      // Copied from touch.c
+      int32_t ch = pin2tsi[pin_];
+      *portConfigRegister(pin_) = PORT_PCR_MUX(0);
+      SIM_SCGC5 |= SIM_SCGC5_TSI;
+      
 #if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
-    int32_t ch = pin2tsi[pin_];
-    Update(*((volatile uint16_t *)(&TSI0_CNTR1) + ch));
+      TSI0_GENCS = 0;
+      TSI0_PEN = (1 << ch);
+      TSI0_SCANC = TSI_SCANC_REFCHRG(3) | TSI_SCANC_EXTCHRG(CURRENT);
+      TSI0_GENCS = TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_PS(PRESCALE) | TSI_GENCS_TSIEN | TSI_GENCS_SWTS;
 #elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
-    Update(TSI0_DATA & 0xFFFF);
+      TSI0_GENCS = TSI_GENCS_REFCHRG(4) | TSI_GENCS_EXTCHRG(3) | TSI_GENCS_PS(PRESCALE)
+	| TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
+      TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
 #endif
-    current_button = NULL;
+      SLEEP_MICROS(10);
+      while (TSI0_GENCS & TSI_GENCS_SCNIP) YIELD();
+      SLEEP_MICROS(1);
+#if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
+      int32_t ch = pin2tsi[pin_];
+      Update(*((volatile uint16_t *)(&TSI0_CNTR1) + ch));
+#elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
+      Update(TSI0_DATA & 0xFFFF);
+#endif
+      current_button = NULL;
+    }
+    STATE_MACHINE_END();
   }
 
   static TouchButton *current_button;
-  static int begin_read_micros_;
   bool print_next_ = false;
   uint8_t pin_;
   int threshold_;
@@ -4034,7 +4025,6 @@ protected:
 };
 
 TouchButton::current_button = NULL;
-TouchButton::begin_read_micros_ = 0;
 
 // Menu system
 
