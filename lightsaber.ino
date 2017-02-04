@@ -28,8 +28,8 @@
 
 
 // Board version
-#define VERSION_MAJOR 1
-#define VERSION_MINOR 0
+#define VERSION_MAJOR 2
+#define VERSION_MINOR 1
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
@@ -62,12 +62,12 @@ const unsigned int maxLedsPerStrip = 144;
 // Feature defines, these let you turn off large blocks of code
 // used for debugging.
 #define ENABLE_AUDIO
-#define ENABLE_MOTION
+// #define ENABLE_MOTION
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
-#define ENABLE_SERIALFLASH
+// #define ENABLE_SERIALFLASH
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
@@ -3139,11 +3139,22 @@ class WS2811_Blade *WS2811BladePtr() {
 }
 #endif
 
+// LED interface.
 class LEDInterface {
 public:
+  // Given a color, return a the right PWM level (0-255).
   virtual int PWM(Color c) = 0;
 };
 
+// This code turns down the PWM duty cycle when the battery voltage
+// is too high for the LED. We use a simple affine model to approximate
+// the amp/volt curve of the LED. This model requires that we know
+// two amp/volt points to draw a line through. The higher of those two
+// points also doubles as the maximum amps that the LED will
+// tolerate. So we use the model to calculate what the amps would be
+// given the current battery voltage, if the amps is higher than
+// the maximum then we adjust the PWM rate so that the average amps
+// equals the maximum amps.
 template<class LED>
 class DriveLogic : public LEDInterface {
 public:
@@ -3392,12 +3403,32 @@ class String_Blade *StringBladePtr() {
 #define BLACK       0,   0,   0
 
 // CONFIGURABLE
+// These structs below describe the properties of the LED circuit
+// so that we know how to drive it properly.
+// I've added structs for all the Cree XP-E2 LEDs, you can modify
+// or copy-and-add as many other ones as you like.
+// See DriveLogic above for more explanations.
 struct CreeXPE2White {
+  // These four values come from the datasheet.
+
+  // Maximum (average) amperes for the LED.
+  // If you have multiple LEDs hooked up in parallel, multiply
+  // the amps from the datasheet by the number of LEDs.
   static constexpr float MaxAmps = 1.0;
+  // LED voltage at MaxAmps.
   static constexpr float MaxVolts = 3.15;
+
+  // P2Amps should be less than MaxAmps.
+  // If you have multiple LEDs hooked up in parallel, multiply
+  // the amps from the datasheet by the number of LEDs.
   static constexpr float P2Amps = 0.7;
+  // LED voltage at P2Amps.
   static constexpr float P2Volts = 3.05;
+
+  // Value of the actual resistor you hooked up to the LED.
   static constexpr float R = 0.55;
+
+  // LED color
   static const int Red = 255;
   static const int Green = 255;
   static const int Blue = 255;
@@ -3472,16 +3503,20 @@ struct CreeXPE2Amber {
   static const int Blue = 0;
 };
 
+// This is a "superbright 3mm blue led" that I found on ebay.
+// I used this to build an LED string with >100 LEDs.
+// I should really multiply MaxAmps and P2Amps by the number of
+// parallel LEDs, but it's not needed if there is no resistor.
 struct Blue3mmLED {
   // TODO(hubbe): Measure these.
   static constexpr float MaxAmps = 0.03;
-  static constexpr float MaxVolts = 3.8;
-  static constexpr float P2Amps = 0.0;
-  static constexpr float P2Volts = 2.0;
+  static constexpr float MaxVolts = 3.4;
+  static constexpr float P2Amps = 0.016;
+  static constexpr float P2Volts = 3.2;
   static constexpr float R = 0.0;
-  static const int Red = 255;
+  static const int Red = 0;
   static const int Green = 0;
-  static const int Blue = 0;
+  static const int Blue = 255;
 };
 
 // For when there is no LED hooked up to a channel.
@@ -3598,7 +3633,7 @@ BladeConfig blades[] = {
   { 20000, SimpleBladePtr<CreeXPE2White, CreeXPE2Blue, CreeXPE2Blue, NoLED>(), CONFIGARRAY(simple_presets) },
 
   // Testing configuration. 
-  { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, CreeXPE2Blue, NoLED>(), CONFIGARRAY(testing_presets) },
+  { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) },
 };
 
 
@@ -5030,7 +5065,7 @@ Amplifier amplifier;
 #endif
 
 void setup() {
-  //  delay(1000);
+  delay(1000);
   Serial.begin(9600);
 #ifdef ENABLE_SERIALFLASH
   SerialFlashChip::begin(6);
