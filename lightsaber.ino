@@ -28,8 +28,8 @@
 
 
 // Board version
-#define VERSION_MAJOR 2
-#define VERSION_MINOR 1
+#define VERSION_MAJOR 1
+#define VERSION_MINOR 0
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
@@ -62,12 +62,12 @@ const unsigned int maxLedsPerStrip = 144;
 // Feature defines, these let you turn off large blocks of code
 // used for debugging.
 #define ENABLE_AUDIO
-// #define ENABLE_MOTION
+#define ENABLE_MOTION
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
-// #define ENABLE_SERIALFLASH
+#define ENABLE_SERIALFLASH
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
@@ -182,22 +182,27 @@ const char version[] = "$Id$";
  * written state machines. Lots of examples below.
  */
 // Note, you cannot have two YIELD() on the same line.
-#define YIELD() do { next_state_ = __LINE__; return; case __LINE__: break; } while(0)
-#define SLEEP(MILLIS) do { sleep_until_ = millis() + (MILLIS); while (millis() < sleep_until_) YIELD(); } while(0)
-#define SLEEP_MICROS(MICROS) do { sleep_until_ = micros() + (micros); while (micros() < sleep_until_) YIELD(); } while(0)
-#define STATE_MACHINE_BEGIN() switch(next_state_) { case -1:
+#define YIELD() do { state_machine_.next_state_ = __LINE__; return; case __LINE__: break; } while(0)
+#define SLEEP(MILLIS) do { state_machine_.sleep_until_ = millis() + (MILLIS); while (millis() < state_machine_.sleep_until_) YIELD(); } while(0)
+#define SLEEP_MICROS(MICROS) do { state_machine_.sleep_until_ = micros() + (MICROS); while (micros() < state_machine_.sleep_until_) YIELD(); } while(0)
+#define STATE_MACHINE_BEGIN() switch(state_machine_.next_state_) { case -1:
 #define STATE_MACHINE_END() }
 
-#define NELEM(X) (sizeof(X)/sizeof((X)[0]))
-
-class StateMachine {
-protected:
+struct StateMachineState {
   int next_state_ = -1;
   uint32_t sleep_until_ = 0;
   void reset_state_machine() {
     next_state_ = -1;
   }
 };
+
+class StateMachine {
+protected:
+  StateMachineState state_machine_;
+};
+
+#define NELEM(X) (sizeof(X)/sizeof((X)[0]))
+
 
 // Magic type used to prevent linked-list types from automatically linking.
 enum NoLink { NOLINK = 17 };
@@ -1387,7 +1392,7 @@ public:
   }
 
   void Stop() {
-    reset_state_machine();
+    state_machine_.reset_state_machine();
     effect_ = nullptr;
     run_ = false;
   }
@@ -3725,7 +3730,7 @@ class Tar {
 
 #endif
 
-class DebouncedButton : StateMachine {
+class DebouncedButton {
 public:
   void Update() {
     STATE_MACHINE_BEGIN();
@@ -3752,6 +3757,7 @@ protected:
 private:
   uint32_t last_on_;
   bool pushed_ = false;
+  StateMachineState state_machine_;
 };
 
 // Simple button handler. Keeps track of clicks and lengths of pushes.
@@ -3825,6 +3831,8 @@ protected:
   bool long_clicked_;
   bool eat_click_ = false;
   int push_millis_;
+
+  StateMachineState state_machine_;
 };
 
 class Button : public ButtonBase {
@@ -3917,7 +3925,7 @@ static const uint8_t pin2tsi[] = {
 
 #endif
 
-class TouchButton : StateMachine, public ButtonBase {
+class TouchButton : public ButtonBase {
 public:
   TouchButton(int pin, int threshold, const char* name)
     : ButtonBase(name),
@@ -3982,20 +3990,22 @@ protected:
       current_button = this;
 
       // Initiate touch read.
-      int32_t ch = pin2tsi[pin_];
-      *portConfigRegister(pin_) = PORT_PCR_MUX(0);
-      SIM_SCGC5 |= SIM_SCGC5_TSI;
+      {
+	int32_t ch = pin2tsi[pin_];
+	*portConfigRegister(pin_) = PORT_PCR_MUX(0);
+	SIM_SCGC5 |= SIM_SCGC5_TSI;
       
 #if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
-      TSI0_GENCS = 0;
-      TSI0_PEN = (1 << ch);
-      TSI0_SCANC = TSI_SCANC_REFCHRG(3) | TSI_SCANC_EXTCHRG(CURRENT);
-      TSI0_GENCS = TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_PS(PRESCALE) | TSI_GENCS_TSIEN | TSI_GENCS_SWTS;
+	TSI0_GENCS = 0;
+	TSI0_PEN = (1 << ch);
+	TSI0_SCANC = TSI_SCANC_REFCHRG(3) | TSI_SCANC_EXTCHRG(CURRENT);
+	TSI0_GENCS = TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_PS(PRESCALE) | TSI_GENCS_TSIEN | TSI_GENCS_SWTS;
 #elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
-      TSI0_GENCS = TSI_GENCS_REFCHRG(4) | TSI_GENCS_EXTCHRG(3) | TSI_GENCS_PS(PRESCALE)
-	| TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
-      TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
+	TSI0_GENCS = TSI_GENCS_REFCHRG(4) | TSI_GENCS_EXTCHRG(3) | TSI_GENCS_PS(PRESCALE)
+	  | TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
+	TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
 #endif
+      }
       // Wait for result to be available.
       SLEEP_MICROS(10);
       while (TSI0_GENCS & TSI_GENCS_SCNIP) YIELD();
@@ -4003,8 +4013,7 @@ protected:
 
       // Read resuilt.
 #if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
-      int32_t ch = pin2tsi[pin_];
-      Update(*((volatile uint16_t *)(&TSI0_CNTR1) + ch));
+      Update(*((volatile uint16_t *)(&TSI0_CNTR1) + (pin2tsi[pin_])));
 #elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
       Update(TSI0_DATA & 0xFFFF);
 #endif
@@ -4022,9 +4031,11 @@ protected:
   int min_ = 100000000;
   int max_ = 0;
   bool is_pushed_ = false;
+
+  StateMachineState state_machine_;
 };
 
-TouchButton::current_button = NULL;
+TouchButton* TouchButton::current_button = NULL;
 
 // Menu system
 
