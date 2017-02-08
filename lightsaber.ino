@@ -347,6 +347,7 @@ public:
     MonitorSamples = 2,
     MonitorTouch = 4,
     MonitorBattery = 8,
+    MonitorPWM = 16,
   };
 
   bool ShouldPrint(MonitorBit bit) {
@@ -375,6 +376,10 @@ protected:
       }
       if (!strcmp(arg, "battery")) {
         active_monitors_ ^= MonitorBattery;
+        return true;
+      }
+      if (!strcmp(arg, "pwm")) {
+        active_monitors_ ^= MonitorPWM;
         return true;
       }
     }
@@ -3170,9 +3175,18 @@ public:
     float di = LED::MaxAmps - LED::P2Amps;
     float delta = dv / di;
     float amps = (V - LED::MaxVolts + LED::MaxAmps * delta) / (delta + LED::R);
+    if (monitor.ShouldPrint(Monitoring::MonitorPWM)) {
+      Serial.print("AMPS = ");
+      Serial.print(amps);
+      Serial.print(" / ");
+      Serial.print(LED::MaxAmps);
+      Serial.print(" PWM = ");
+      Serial.println(100.0 * LED::MaxAmps / amps);
+    }
     if (amps <= LED::MaxAmps) {
       return 1.0f;
     }
+
     return LED::MaxAmps / amps;
   }
   int PWM(Color c) override {
