@@ -28,8 +28,8 @@
 
 
 // Board version
-#define VERSION_MAJOR 1
-#define VERSION_MINOR 0
+#define VERSION_MAJOR 2
+#define VERSION_MINOR 2
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
@@ -62,7 +62,7 @@ const unsigned int maxLedsPerStrip = 144;
 // Feature defines, these let you turn off large blocks of code
 // used for debugging.
 #define ENABLE_AUDIO
-#define ENABLE_MOTION
+// #define ENABLE_MOTION
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
 // #define ENABLE_WATCHDOG
@@ -72,7 +72,7 @@ const unsigned int maxLedsPerStrip = 144;
 #endif
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
-#define LOUD
+// #define LOUD
 
 // If defined all sound samples will be divided by 2, resulting in
 // quieter sound.
@@ -613,7 +613,7 @@ public:
     dma.attachInterrupt(isr);
   }
 
-  bool Parse(char* cmd, char* arg) override {
+  bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "dacbuf")) {
       for (size_t i = 0; i < NELEM(dac_dma_buffer); i++) {
 	Serial.print(dac_dma_buffer[i] - 2047);
@@ -996,15 +996,16 @@ public:
 
 protected:
   virtual bool FillBuffer() = 0;
-  size_t space_available() const = 0;
+  virtual size_t space_available() const = 0;
 
 private:
   static void ProcessDataStreams() {
     // Yes, it's a selection sort, luckily there's not a lot of
     // DataStreamWork instances.
     for (int i = 0; i < 50; i++) {
+      size_t max_space = 0;
       for (DataStreamWork *d = data_streams; d; d=d->next_)
-	max_space = std::max(max_space, d->space_available());
+	max_space = max(max_space, d->space_available());
       if (max_space == 0) break;
       for (DataStreamWork *d = data_streams; d; d=d->next_) {
 	if (d->space_available() >= max_space)
@@ -1783,7 +1784,7 @@ public:
     p += num;
     if (num < to_read) {
       // end of file?
-      if (players_[current_]->eof()) {
+      if (players_[current_].eof()) {
 	current_ = -1;
 	fadeto_ = -1;
       }
