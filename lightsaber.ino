@@ -577,7 +577,7 @@ public:
 
 #define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_CONT | PDB_SC_PDBIE | PDB_SC_DMAEN)
 
-class DAC {
+class DAC : CommandParser {
 public:
   DAC() {
     dma.begin(true); // Allocate the DMA channel first
@@ -613,6 +613,25 @@ public:
     dma.attachInterrupt(isr);
   }
 
+  bool Parse(char* cmd, char* arg) override {
+    if (!strcmp(cmd, "dacbuf")) {
+      for (size_t i = 0; i < NELEM(dac_dma_buffer); i++) {
+	Serial.print(dac_dma_buffer[i] - 2047);
+	if ((i & 0xf) == 0xf)
+	  Serial.println("");
+	else
+	  Serial.print(" ");
+      }
+      Serial.println("");
+      return true;
+    }
+    return false;
+  }
+
+  void Help() override {
+    Serial.println(" dacbuf - print the current contents of the dac buffer");
+  }
+
   void SetStream(DataStream<int16_t>* stream) {
     stream_ = stream;
   }
@@ -646,7 +665,6 @@ private:
     while (dest < end) { *dest++ = 2047; }
   }
 
-public: // FIXME remove 'public'
   DMAMEM static uint16_t dac_dma_buffer[AUDIO_BUFFER_SIZE*2];
   static DataStream<int16_t> * volatile stream_;
   static DMAChannel dma;
@@ -4723,18 +4741,6 @@ public:
       return;
     }
 #endif
-    // TODO: Move to DAC
-    if (!strcmp(cmd, "dacbuf")) {
-      for (size_t i = 0; i < NELEM(DAC::dac_dma_buffer); i++) {
-	Serial.print(DAC::dac_dma_buffer[i] - 2047);
-	if ((i & 0xf) == 0xf)
-	  Serial.println("");
-	else
-	  Serial.print(" ");
-      }
-      Serial.println("");
-      return;
-    }
     if (!strcmp(cmd, "dumpwav")) {
       int16_t tmp[32];
       wav_players[0].Stop();
@@ -5226,7 +5232,7 @@ void setup() {
   delay(1000);
   Serial.begin(9600);
 #ifdef ENABLE_SERIALFLASH
-  SerialFlashChip::begin(6);
+  SerialFlashChip::begin(serialFlashSelectPin);
 #endif
 #ifdef ENABLE_SD
   if (!SD.begin(sdCardSelectPin)) {
