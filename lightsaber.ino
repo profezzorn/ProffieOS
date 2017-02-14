@@ -1761,9 +1761,11 @@ public:
     to_read -= num;
     p += num;
     if (num < to_read) {
-      // end of file.
-      current_ = -1;
-      fadeto_ = -1;
+      // end of file?
+      if (players_[current_]->eof()) {
+	current_ = -1;
+	fadeto_ = -1;
+      }
       while (num < to_read) {
 	*(p++) = 0;
 	to_read --;
