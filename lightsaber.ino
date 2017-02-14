@@ -978,17 +978,20 @@ public:
 
 protected:
   virtual bool FillBuffer() = 0;
+  size_t space_available() const = 0;
 
 private:
   static void ProcessDataStreams() {
-    for (int i = 0; i < 10; i++) {
-      bool again = false;
+    // Yes, it's a selection sort, luckily there's not a lot of
+    // DataStreamWork instances.
+    for (int i = 0; i < 50; i++) {
+      for (DataStreamWork *d = data_streams; d; d=d->next_)
+	max_space = std::max(max_space, d->space_available());
+      if (max_space == 0) break;
       for (DataStreamWork *d = data_streams; d; d=d->next_) {
-	if (d->FillBuffer()) {
-	  again = true;
-	}
+	if (d->space_available() >= max_space)
+	  d->FillBuffer();
       }
-      if (!again) break;
     }
   }
 
@@ -1032,7 +1035,7 @@ public:
   size_t buffered() const {
     return buf_end_ - buf_start_;
   }
-  size_t space_available() const {
+  size_t space_available() const override {
     return N - buffered();
   }
   void SetStream(DataStream<T>* stream) {
