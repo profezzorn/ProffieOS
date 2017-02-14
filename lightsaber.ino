@@ -67,7 +67,9 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_WS2811
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
+#if VERSION_MAJOR == 1
 #define ENABLE_SERIALFLASH
+#endif
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
@@ -186,7 +188,7 @@ const char version[] = "$Id$";
 #define SLEEP(MILLIS) do { state_machine_.sleep_until_ = millis() + (MILLIS); while (millis() < state_machine_.sleep_until_) YIELD(); } while(0)
 #define SLEEP_MICROS(MICROS) do { state_machine_.sleep_until_ = micros() + (MICROS); while (micros() < state_machine_.sleep_until_) YIELD(); } while(0)
 #define STATE_MACHINE_BEGIN() switch(state_machine_.next_state_) { case -1:
-#define STATE_MACHINE_END() }
+#define STATE_MACHINE_END() YIELD(); } 
 
 struct StateMachineState {
   int next_state_ = -1;
@@ -273,8 +275,14 @@ public:
     }
     return false;
   }
+  static void DoHelp() {
+    for (CommandParser *p = parsers; p; p = p->next_parser_) {
+      p->Help();
+    }
+  }
 protected:
   virtual bool Parse(const char* cmd, const char* arg) = 0;
+  virtual void Help() = 0;
 private:
   CommandParser* next_parser_;
 };
@@ -351,12 +359,16 @@ public:
   };
 
   bool ShouldPrint(MonitorBit bit) {
-    return monitor_this_loop_ && (bit & active_monitors_);
+    if (bit & monitor_soon_) {
+      monitor_soon_ &= ~bit;
+      return true;
+    }
+    return false;
   }
 protected:
   void Loop() override {
-    monitor_this_loop_ = millis() - last_monitor_loop_ > monitor_frequency_ms_;
-    if (monitor_this_loop_) {
+    if (millis() - last_monitor_loop_ > monitor_frequency_ms_) {
+      monitor_soon_ = active_monitors_;
       last_monitor_loop_ = millis();
     }
   }
@@ -385,10 +397,13 @@ protected:
     }
     return false;
   }
+  void Help() {
+    Serial.println(" mon[itor] swings/samples/touch/battery/pwm - toggle monitoring");
+  }
 private:
   uint32_t monitor_frequency_ms_ = 500;
   int last_monitor_loop_ = 0;
-  bool monitor_this_loop_ = false;
+  uint32_t monitor_soon_ = 0;
   uint32_t active_monitors_ = 0;
 };
 
@@ -724,11 +739,11 @@ public:
 
   void Loop() override {
     if (monitor.ShouldPrint(Monitoring::MonitorSamples)) {
-      Serial.print("Mixer volume: ");
+      Serial.print("AVG volume: ");
       Serial.print(vol_);
-      Serial.print(" last sum: ");
+      Serial.print(" last input sample: ");
       Serial.print(last_sum_);
-      Serial.print(" last sample:");
+      Serial.print(" last output sample:");
       Serial.print(last_sample_);
       Serial.print(" peak sum: ");
       Serial.print(peak_sum_);
@@ -759,11 +774,11 @@ public:
     while (true) {
       int s = min(elements, samples_);
       s = min(s, x_);
-      if (s <= 0) return e - s;
+      if (s <= 0) return e - elements;
       if (up_) {
-	for (int i = 0; i < s; i++) data[i] = 2000;
+	for (int i = 0; i < s; i++) data[i] = 20;
       } else {
-	for (int i = 0; i < s; i++) data[i] = -2000;
+	for (int i = 0; i < s; i++) data[i] = -20;
       }
       data += s;
       elements -= s;
@@ -987,6 +1002,10 @@ public:
   BufferedDataStream() : DataStreamWork() {
   }
   int read(T* buf, int bufsize) override {
+#if 0
+    // Disable buffer
+    return stream_ ? stream_->read(buf, bufsize) : 0;
+#else
     int copied = 0;
     while (bufsize) {
       size_t to_copy = buffered();
@@ -1002,6 +1021,7 @@ public:
     }
     scheduleFillBuffer();
     return copied;
+#endif
   }
   bool eof() override {
     return !buffered() && eof_;
@@ -1400,6 +1420,7 @@ public:
     state_machine_.reset_state_machine();
     effect_ = nullptr;
     run_ = false;
+    written_ = num_samples_ = 0;
   }
 
   bool isPlaying() const {
@@ -2109,6 +2130,9 @@ protected:
       return true;
     }
     return false;
+  }
+  void Help() override {
+    Serial.println(" batt[ery] - show battery voltage");
   }
 private:
   float last_voltage_ = 0.0;
@@ -3102,6 +3126,10 @@ public:
     }
     return false;
   }
+  
+  void Help() override {
+    Serial.println(" blade on/off - turn ws2811 blade on off");
+  }
 
 protected:
   void Loop() override {
@@ -3282,6 +3310,10 @@ public:
     return false;
   }
 
+  void Help() override {
+    Serial.println(" blade on/off - turn simple blade on off");
+  }
+
 protected:
   void Loop() override {
     if (!power_) return;
@@ -3378,6 +3410,10 @@ public:
       }
     }
     return false;
+  }
+
+  void Help() override {
+    Serial.println(" blade on/off - turn string blade on off");
   }
 
 protected:
@@ -3835,6 +3871,14 @@ protected:
       return true;
     }
     return false;
+  }
+
+  void Help() override {
+    Serial.print(" ");
+    Serial.print(name_);
+    Serial.print(" - clicks the ");
+    Serial.print(name_);
+    Serial.println(" button");
   }
 
   int next_state_ = -1;
@@ -4389,7 +4433,7 @@ protected:
 #ifdef ENABLE_AUDIO
     if (!strcmp(cmd, "beep")) {
       digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-      beeper.Beep(1.0, 3000.0);
+      beeper.Beep(5.0, 3000.0);
       return true;
     }
     if (!strcmp(cmd, "play")) {
@@ -4427,6 +4471,18 @@ protected:
     }
     return false;
   }
+  void Help() override {
+    Serial.println(" clash - trigger a clash");
+    Serial.println(" on/off - turn saber on/off");
+#ifdef ENABLE_AUDIO
+    Serial.println(" pwd - print current directory");
+    Serial.println(" cd directory - change directory, and sound font");
+    Serial.println(" play filename - play file");
+    Serial.println(" next/prev font - walk through directories in alphabetical order");
+    Serial.println(" beep - play a beep");
+#endif
+  }
+  
 private:
   BladeConfig* current_config_ = NULL;
   Preset* current_preset_ = NULL;
@@ -4539,16 +4595,15 @@ public:
       e++;  // e is now argument (if any)
     }
     if (!strcmp(cmd, "help")) {
-      Serial.println("General commands:");
-      Serial.println("  on, off, blade on, blade off, clash, pow, aux, aux2");
       // Serial.println("  red, green, blue, yellow, cyan, magenta, white");
 #ifdef ENABLE_SERIALFLASH
       Serial.println("Serial Flash memory management:");
       Serial.println("   ls, rm <file>, format, play <file>, effects");
       Serial.println("To upload files: tar cf - files | uuencode x >/dev/ttyACM0");
 #endif
-      Serial.println("Debugging commands:");
-      Serial.println("   monitor swings, monitor samples, top, version");
+      Serial.println(" version - show software version");
+      Serial.println(" effects - list current effects");
+      CommandParser::DoHelp();
       return;
     }
 
@@ -4603,6 +4658,18 @@ public:
       Serial.println("Done listing files.");
       return;
     }
+    if (!strcmp(cmd, "readalot")) {
+      char tmp[10];
+      File f = SD.open(e);
+      for (int i = 0; i < 10000; i++) {
+        f.seek(0);
+        f.read(tmp, 10);
+        f.seek(1000);
+        f.read(tmp, 10);
+      }
+      Serial.println("Done");
+      return;
+    }
 #endif
 #if defined(ENABLE_SD) && defined(ENABLE_SERIALFLASH)
     if (!strcmp(cmd, "cache")) {
@@ -4654,7 +4721,7 @@ public:
     // TODO: Move to DAC
     if (!strcmp(cmd, "dacbuf")) {
       for (size_t i = 0; i < NELEM(DAC::dac_dma_buffer); i++) {
-	Serial.print(DAC::dac_dma_buffer[i]);
+	Serial.print(DAC::dac_dma_buffer[i] - 2047);
 	if ((i & 0xf) == 0xf)
 	  Serial.println("");
 	else
@@ -4668,7 +4735,7 @@ public:
       wav_players[0].Stop();
       wav_players[0].read(tmp, NELEM(tmp));
       wav_players[0].Play(e);
-      for (int j = 0; j < 32; j++) {
+      for (int j = 0; j < 64; j++) {
 	int k = wav_players[0].read(tmp, NELEM(tmp));
 	for (int i = 0; i < k; i++) {
 	  Serial.print(tmp[i]);
@@ -4680,6 +4747,37 @@ public:
       return;
     }
 #endif
+    if (!strcmp(cmd, "twiddle")) {
+      int pin = strtol(e, NULL, 0);
+      Serial.print("twiddling ");
+      Serial.println(pin);
+      pinMode(pin, OUTPUT);
+      for (int i = 0; i < 1000; i++) {
+         digitalWrite(pin, HIGH);
+	 delay(10);
+         digitalWrite(pin, LOW);
+	 delay(10);
+      }
+      Serial.println("done");
+      return;
+    }
+    if (!strcmp(cmd, "twiddle2")) {
+      int pin = strtol(e, NULL, 0);
+      Serial.print("twiddling ");
+      Serial.println(pin);
+      pinMode(pin, OUTPUT);
+      for (int i = 0; i < 1000; i++) {
+         for (int i = 0; i < 500; i++) {
+           digitalWrite(pin, HIGH);
+	   delayMicroseconds(1);
+	   digitalWrite(pin, LOW);
+	   delayMicroseconds(1);
+	 }
+	 delay(10);
+      }
+      Serial.println("done");
+      return;
+    }
     if (!strcmp(cmd, "top")) {
       // TODO: list cpu usage for various objects.
       SaberBase::DoTop();
@@ -4712,6 +4810,17 @@ public:
   Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
   Vec3 operator-(const Vec3& o) const {
     return Vec3(x - o.x, y - o.y, z - o.z);
+  }
+  Vec3 operator+(const Vec3& o) const {
+    return Vec3(x + o.x, y + o.y, z + o.z);
+  }
+  void operator+=(const Vec3& o)  {
+    x += o.x;
+    y += o.y;
+    z += o.z;
+  }
+  Vec3 operator*(float f) const {
+    return Vec3(x * f, y * f, z * f);
   }
   float len2() const { return x*x + y*y + z*z; }
   float x, y, z;
@@ -4925,6 +5034,10 @@ public:
     if (status_reg & 0x2) {
       // gyroscope data available
       if (readBytes(OUTX_L_G, dataBuffer.buffer, 6) == 6) {
+	Vec3 gyro(dataBuffer.xyz.x, dataBuffer.xyz.y, dataBuffer.xyz.z);
+	static Vec3 filtered_gyro(0, 0, 0);
+	filtered_gyro = filtered_gyro * 0.8 + gyro * 0.01;
+
 	// Got gyro data
 	Serial.print("GYRO: ");
 	Serial.print(dataBuffer.xyz.x);
@@ -4937,7 +5050,6 @@ public:
     if (status_reg & 0x4) {
       // accel data available
       if (readBytes(OUTX_L_XL, dataBuffer.buffer, 6) == 6) {
-	// Got gyro data
 	Serial.print("ACCEL: ");
 	Serial.print(dataBuffer.xyz.x);
 	Serial.print(", ");
@@ -4973,8 +5085,6 @@ class Orientation : Looper {
   }
 
   void Loop() override {
-    print_ |= monitor.ShouldPrint(Monitoring::MonitorSwings);
-
     if (imu.available()) {
       Vec3 accel, gyro, magnetic;
 
@@ -4994,12 +5104,11 @@ class Orientation : Looper {
       // static float last_speed = 0.0;
       float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
 
-      if (print_) {
+      if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
         Serial.print("Speed: yz: ");
         Serial.print(speed);
         Serial.print("x: ");
         Serial.println(gyro.x);
-	print_ = false;
       }
 
       if (saber.IsOn()) {
@@ -5035,7 +5144,6 @@ class Orientation : Looper {
     }
   }
 private:
-  bool print_= false;
   Vec3 accel_;
 };
 
@@ -5047,9 +5155,9 @@ Orientation orientation;
 #ifdef ENABLE_AUDIO
 // Turns off amplifier when no audio is played.
 // Maybe name this IdleHelper or something instead??
-class Amplifier : Looper, StateMachine {
+class Amplifier : Looper, StateMachine, CommandParser {
 public:
-  Amplifier() : Looper() {}
+  Amplifier() : Looper(), CommandParser() {}
 protected:
   void Setup() override {
     // Audio setup
@@ -5085,6 +5193,24 @@ protected:
       while (!Active()) YIELD();
     }
     STATE_MACHINE_END();
+  }
+
+  bool Parse(const char *cmd, const char* arg) override {
+    if (!strcmp(cmd, "amp")) {
+      if (!strcmp(arg, "on")) {
+        digitalWrite(amplifierPin, HIGH); // turn the amplifier off
+        return true;
+      }
+      if (!strcmp(arg, "off")) {
+        digitalWrite(amplifierPin, LOW); // turn the amplifier off
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void Help() {
+    Serial.println(" amp on/off - turn amplifier on or off");
   }
 };
 
@@ -5132,6 +5258,23 @@ class WatchDog : Looper {
 
   elapsedMillis watchdogTimer_;
 };
+#endif
+
+
+#if 0
+class Script : Looper, StateMachine {
+public:
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+    SLEEP(2000);
+    CommandParser::DoParse("amp", "on");
+    CommandParser::DoParse("blade", "on");
+    CommandParser::DoParse("play", "title.wav");
+    STATE_MACHINE_END();
+  }
+};
+
+Script script;
 #endif
 
 int last_activity = millis();
