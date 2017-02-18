@@ -62,7 +62,7 @@ const unsigned int maxLedsPerStrip = 144;
 // Feature defines, these let you turn off large blocks of code
 // used for debugging.
 #define ENABLE_AUDIO
-// #define ENABLE_MOTION
+#define ENABLE_MOTION
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
 // #define ENABLE_WATCHDOG
@@ -72,7 +72,7 @@ const unsigned int maxLedsPerStrip = 144;
 #endif
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
-// #define LOUD
+#define LOUD
 
 // If defined all sound samples will be divided by 2, resulting in
 // quieter sound.
@@ -356,6 +356,8 @@ public:
     MonitorTouch = 4,
     MonitorBattery = 8,
     MonitorPWM = 16,
+    MonitorClash = 32,
+    MonitorTemp = 64,
   };
 
   bool ShouldPrint(MonitorBit bit) {
@@ -394,11 +396,19 @@ protected:
         active_monitors_ ^= MonitorPWM;
         return true;
       }
+      if (!strcmp(arg, "clash")) {
+        active_monitors_ ^= MonitorClash;
+        return true;
+      }
+      if (!strcmp(arg, "temp")) {
+        active_monitors_ ^= MonitorTemp;
+        return true;
+      }
     }
     return false;
   }
   void Help() {
-    Serial.println(" mon[itor] swings/samples/touch/battery/pwm - toggle monitoring");
+    Serial.println(" mon[itor] swings/samples/touch/battery/pwm/clash/temp - toggle monitoring");
   }
 private:
   uint32_t monitor_frequency_ms_ = 500;
@@ -739,7 +749,7 @@ public:
 	vol_ = ((vol_ + abs(v)) * 255) >> 8;
 	v2 = (v << 10) / (my_sqrt(vol_) + 100);
 #ifdef QUIET
-	v2 >>= 1;
+	v2 >>= 2;
 #endif
 	data[i] = clampi32(v2, -32768, 32767);
 	peak_sum_ = max(abs(v), peak_sum_);
@@ -794,9 +804,9 @@ public:
       s = min(s, x_);
       if (s <= 0) return e - elements;
       if (up_) {
-	for (int i = 0; i < s; i++) data[i] = 20;
+	for (int i = 0; i < s; i++) data[i] = 200;
       } else {
-	for (int i = 0; i < s; i++) data[i] = -20;
+	for (int i = 0; i < s; i++) data[i] = -200;
       }
       data += s;
       elements -= s;
@@ -1002,6 +1012,7 @@ private:
   static void ProcessDataStreams() {
     // Yes, it's a selection sort, luckily there's not a lot of
     // DataStreamWork instances.
+    // This doesn't work!
     for (int i = 0; i < 50; i++) {
       size_t max_space = 0;
       for (DataStreamWork *d = data_streams; d; d=d->next_)
@@ -1055,6 +1066,7 @@ public:
     return buf_end_ - buf_start_;
   }
   size_t space_available() const override {
+    if (eof_) return 0;
     return N - buffered();
   }
   void SetStream(DataStream<T>* stream) {
@@ -4626,6 +4638,7 @@ public:
       Serial.println("To upload files: tar cf - files | uuencode x >/dev/ttyACM0");
 #endif
       Serial.println(" version - show software version");
+      Serial.println(" reset - restart software");
       Serial.println(" effects - list current effects");
       CommandParser::DoHelp();
       return;
@@ -4799,6 +4812,11 @@ public:
       Serial.println(version);
       return;
     }
+    if (!strcmp(cmd, "reset")) {
+      SCB_AIRCR = 0x05FA0004;
+      Serial.println("Reset failed.");
+      return;
+    }
     if (CommandParser::DoParse(cmd, e)) {
       return;
     }
@@ -4847,7 +4865,7 @@ class I2CDevice {
 public:
   explicit I2CDevice(uint8_t address) : address_(address) {
     Wire.begin();
-//    Wire.setClock(400000);
+    Wire.setClock(400000);
   }
   void writeByte(uint8_t reg, uint8_t data) {
     Wire.beginTransmission(address_);
@@ -4893,7 +4911,7 @@ private:
   uint8_t address_;
 };
 
-class LSM6DS3H : public I2CDevice, Looper {
+class LSM6DS3H : public I2CDevice, Looper, StateMachine {
 public:
   enum Registers {
     FUNC_CFG_ACCESS = 0x1,
@@ -4989,88 +5007,93 @@ public:
   LSM6DS3H() : I2CDevice(106) {
   }
 
-  void InitChip() {
-    delay(1000);
-    Serial.println("SETUP");
-    int wai = readByte(WHO_AM_I);
-    Serial.println(wai);
-    if (wai == -1) {
-      boink();
-      return;
-    }
-
-    writeByte(CTRL1_XL, 0x80);  // 1.66kHz accel
-    writeByte(CTRL2_G, 0x80);   // 1.66kHz gyro
-    writeByte(CTRL3_C, 0x44);   // ?
-    writeByte(CTRL4_C, 0x00);
-    writeByte(CTRL5_C, 0x00);
-    writeByte(CTRL6_C, 0x00);
-    writeByte(CTRL7_G, 0x00);
-    writeByte(CTRL8_XL, 0x00);
-    writeByte(CTRL9_XL, 0x38);  // accel xyz enable
-    writeByte(CTRL10_C, 0x38);  // gyro xyz enable
-    Serial.println(readByte(WHO_AM_I));
-    Serial.println("SETUP DONE");
-
-    // Power up??
-  }
-
-  void Setup() override {
-    InitChip();
-  }
-
   void Loop() override {
-    union {
-      uint8_t buffer[6];
-      struct { int16_t x, y, z; } xyz;
-    } dataBuffer;
-    
-    int status_reg = readByte(STATUS_REG);
-    if (status_reg == -1) {
-      // motion fail, reboot motion chip.
-      writeByte(CTRL3_C, 1);
-      delay(20);
-//      boink();
-      InitChip();
-      return;
-    }
-    if (status_reg & 0x1) {
-      // Temp data available
-      int16_t temp_data;
-      if (readBytes(OUT_TEMP_L, (uint8_t*)&temp_data, 2) == 2) {
-	float temp = 25.0f + temp_data * (1.0f / 16.0f);
-	Serial.print("TEMP: ");
-	Serial.println(temp);
-      }
-    }
-    if (status_reg & 0x2) {
-      // gyroscope data available
-      if (readBytes(OUTX_L_G, dataBuffer.buffer, 6) == 6) {
-	Vec3 gyro(dataBuffer.xyz.x, dataBuffer.xyz.y, dataBuffer.xyz.z);
-	static Vec3 filtered_gyro(0, 0, 0);
-	filtered_gyro = filtered_gyro * 0.8 + gyro * 0.01;
+    STATE_MACHINE_BEGIN();
+    while (1) {
+      union {
+	uint8_t buffer[6];
+	struct { int16_t x, y, z; } xyz;
+      } dataBuffer;
 
-	// Got gyro data
-	Serial.print("GYRO: ");
-	Serial.print(dataBuffer.xyz.x);
-	Serial.print(", ");
-	Serial.print(dataBuffer.xyz.y);
-	Serial.print(", ");
-	Serial.println(dataBuffer.xyz.z);
+      SLEEP(1000);
+      Serial.println("MOTION SETUP");
+      {
+	int wai = readByte(WHO_AM_I);
+	Serial.println(wai);
+	if (wai == -1) {
+`	  boink();
+	  continue;
+	}
+      }
+
+      writeByte(CTRL1_XL, 0x80);  // 1.66kHz accel
+      writeByte(CTRL2_G, 0x80);   // 1.66kHz gyro
+      writeByte(CTRL3_C, 0x44);   // ?
+      writeByte(CTRL4_C, 0x00);
+      writeByte(CTRL5_C, 0x00);
+      writeByte(CTRL6_C, 0x00);
+      writeByte(CTRL7_G, 0x00);
+      writeByte(CTRL8_XL, 0x00);
+      writeByte(CTRL9_XL, 0x38);  // accel xyz enable
+      writeByte(CTRL10_C, 0x38);  // gyro xyz enable
+      Serial.println(readByte(WHO_AM_I));
+      Serial.println("MOTION SETUP DONE");
+
+      while (1) {
+	YIELD();
+	int status_reg = readByte(STATUS_REG);
+	if (status_reg == -1) {
+	  // motion fail, reboot motion chip.
+	  writeByte(CTRL3_C, 1);
+	  delay(20);
+//      boink();
+	  break;
+	}
+	if (status_reg & 0x1) {
+	  // Temp data available
+	  int16_t temp_data;
+	  if (readBytes(OUT_TEMP_L, (uint8_t*)&temp_data, 2) == 2) {
+	    float temp = 25.0f + temp_data * (1.0f / 16.0f);
+	    if (monitor.ShouldPrint(Monitoring::MonitorTemp)) {
+	      Serial.print("TEMP: ");
+	      Serial.println(temp);
+	    }
+	  }
+	}
+	if (status_reg & 0x2) {
+	  // gyroscope data available
+	  if (readBytes(OUTX_L_G, dataBuffer.buffer, 6) == 6) {
+	    Vec3 gyro(dataBuffer.xyz.x, dataBuffer.xyz.y, dataBuffer.xyz.z);
+	    static Vec3 filtered_gyro(0, 0, 0);
+	    filtered_gyro = filtered_gyro * 0.8 + gyro * 0.01;
+
+	    if (monitor.ShouldPrint(Monitoring::MonitorClash)) {
+	      // Got gyro data
+	      Serial.print("GYRO: ");
+	      Serial.print(dataBuffer.xyz.x);
+	      Serial.print(", ");
+	      Serial.print(dataBuffer.xyz.y);
+	      Serial.print(", ");
+	      Serial.println(dataBuffer.xyz.z);
+	    }
+	  }
+	}
+	if (status_reg & 0x4) {
+	  // accel data available
+	  if (readBytes(OUTX_L_XL, dataBuffer.buffer, 6) == 6) {
+	    if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
+	      Serial.print("ACCEL: ");
+	      Serial.print(dataBuffer.xyz.x);
+	      Serial.print(", ");
+	      Serial.print(dataBuffer.xyz.y);
+	      Serial.print(", ");
+	      Serial.println(dataBuffer.xyz.z);
+	    }
+	  }
+	}
       }
     }
-    if (status_reg & 0x4) {
-      // accel data available
-      if (readBytes(OUTX_L_XL, dataBuffer.buffer, 6) == 6) {
-	Serial.print("ACCEL: ");
-	Serial.print(dataBuffer.xyz.x);
-	Serial.print(", ");
-	Serial.print(dataBuffer.xyz.y);
-	Serial.print(", ");
-	Serial.println(dataBuffer.xyz.z);
-      }
-      delay(100);
-    }
+    STATE_MACHINE_END();
   }
 };
 
