@@ -4902,11 +4902,6 @@ public:
     }		
     return bytes;
   }
-  void boink() {
-    address_++;
-    Serial.print("ADDR: ");
-    Serial.println(address_);
-  }
 private:
   uint8_t address_;
 };
@@ -5016,15 +5011,7 @@ public:
       } dataBuffer;
 
       SLEEP(1000);
-      Serial.println("MOTION SETUP");
-      {
-	int wai = readByte(WHO_AM_I);
-	Serial.println(wai);
-	if (wai == -1) {
-	  boink();
-	  continue;
-	}
-      }
+      Serial.print("Motion setup ... ");
 
       writeByte(CTRL1_XL, 0x80);  // 1.66kHz accel
       writeByte(CTRL2_G, 0x80);   // 1.66kHz gyro
@@ -5036,8 +5023,11 @@ public:
       writeByte(CTRL8_XL, 0x00);
       writeByte(CTRL9_XL, 0x38);  // accel xyz enable
       writeByte(CTRL10_C, 0x38);  // gyro xyz enable
-      Serial.println(readByte(WHO_AM_I));
-      Serial.println("MOTION SETUP DONE");
+      if (readByte(WHO_AM_I) == 105) {
+	Serial.println("done.");
+      } else {
+	Serial.println("failed.");
+      }
 
       while (1) {
 	YIELD();
@@ -5046,7 +5036,6 @@ public:
 	  // motion fail, reboot motion chip.
 	  writeByte(CTRL3_C, 1);
 	  delay(20);
-//      boink();
 	  break;
 	}
 	if (status_reg & 0x1) {
