@@ -320,29 +320,51 @@ public:								\
 protected:							\
   virtual void NAME TYPED_ARGS {}
 
-  SABERFUN(Clash, (), ());
-  SABERFUN(Stab, (), ());
-  SABERFUN(On, (), ());
-  SABERFUN(Off, (), ());
-  SABERFUN(Lockup, (), ());
-  SABERFUN(Force, (), ());
-  SABERFUN(Blast, (), ());
-  SABERFUN(Boot, (), ());
-  SABERFUN(NewFont, (), ());
-  SABERFUN(BeginLockup, (), ());
-  SABERFUN(EndLockup, (), ());
-
-  // Swing rotation speed
-  SABERFUN(Motion, (float speed), (speed));
-
-  // Wrist rotation speed
-  SABERFUN(XMotion, (float speed), (speed));
-
-  SABERFUN(Top, (), ());
+#define SABERBASEFUNCTIONS()			\
+  SABERFUN(Clash, (), ());			\
+  SABERFUN(Stab, (), ());			\
+  SABERFUN(On, (), ());				\
+  SABERFUN(Off, (), ());			\
+  SABERFUN(Lockup, (), ());			\
+  SABERFUN(Force, (), ());			\
+  SABERFUN(Blast, (), ());			\
+  SABERFUN(Boot, (), ());			\
+  SABERFUN(NewFont, (), ());			\
+  SABERFUN(BeginLockup, (), ());		\
+  SABERFUN(EndLockup, (), ());			\
+						\
+  // Swing rotation speed			\
+  SABERFUN(Motion, (float speed), (speed));	\
+						\
+  // Wrist rotation speed			\
+  SABERFUN(XMotion, (float speed), (speed));	\
+						\
+  SABERFUN(Top, (), ());			\
   SABERFUN(IsOn, (bool* on), (on));
+
+  SABERBASEFUNCTIONS();
+#undef SABERFUN
 
 private:
   SaberBase* next_saber_;
+};
+
+class SaberBasePassThrough : public SaberBase {
+public:
+  SaberBasePassThrough() : SaberBase(NOLINK) {}
+protected:
+  void SetDelegate(SaberBase* delegate) {
+    delegate_ = delegate;
+  }
+#define SABERFUN(NAME, TYPED_ARGS, ARGS)	\
+  void NAME TYPED_ARGS override {		\
+    delegate_->NAME (ARGS);			\
+  }
+
+  SABERBASEFUNCTIONS();
+#undef SABERFUN
+
+  SaberBase* delegate_;
 };
 
 
@@ -1372,6 +1394,10 @@ EFFECT(lock);
 EFFECT(swng);
 EFFECT(slsh);
 
+// Looped swing fonts.
+EFFECT(swingl);  // Looped swing, LOW
+EFFECT(swingh);  // Looped swing, HIGH
+
 #ifdef ENABLE_AUDIO
 
 // Simple upsampler code, doubles the number of samples with
@@ -1767,7 +1793,48 @@ private:
   volatile bool pause_;
 };
 
-BufferedWavPlayer wav_players[4];
+BufferedWavPlayer wav_players[6];
+size_t allocated_wav_players = 2;
+
+BufferedWavPlayer* GetFreeWavPlayer()  {
+  // Find a free wave playback unit.
+  for (size_t unit = allocated_wav_players; unit < NELEM(wav_players); unit++) {
+    if (!wav_players[unit].isPlaying()) {
+      return wav_players + unit;
+    }
+  }
+  return NULL;
+}
+
+class VolumeStream : public DataStream<int16_t> {
+public:
+  VolumeStream() : volume_(16384 / 100_) {
+    volume_.set(32768);
+    volume_.set_target(32768);
+  }
+  int read(T* data, int elements) override {
+    elements = source_->read(data, elements);
+    for (int i = 0; i < elements; i++) {
+      int32_t v = (data[i] * (int32_t)volume_.value()) >> 15;
+      data[i] = clampi32(v, -32768, 32767);
+      volume_.advance();
+    }
+  }
+  bool eof() override { return source_->eof(); }
+  void set_volume(int vol) {
+    volume_.set_target(vol);
+  }
+  void set_speed(int speed) {
+    volume_.set_speed(speed);
+  }
+  void set_source(DataStream<int16_t>* source) {
+    source_ = source;
+  }
+
+private:
+  DataStream<int16_t>* source_ = NULL;
+  ClickAvoiderLin volume_;
+};
 
 // This class is used to cut from one sound to another with
 // no gap. It does a short (2.5ms) crossfade to accomplish this.
@@ -1791,12 +1858,12 @@ public:
       return 0;
     }
 
-    int num = players_[current_].read(p, to_read);
+    int num = wav_players[current_].read(p, to_read);
     to_read -= num;
     p += num;
     if (num < to_read) {
       // end of file?
-      if (players_[current_].eof()) {
+      if (wav_players[current_].eof()) {
 	current_ = -1;
 	fadeto_ = -1;
       }
@@ -1811,7 +1878,7 @@ public:
       while (to_read) {
         int16_t tmp[32];
         int n = min(to_read, (int)NELEM(tmp));
-        int num = players_[fadeto_].read(tmp, n);
+        int num = wav_players[fadeto_].read(tmp, n);
         while (num < n) tmp[num++] = 0;
         for (int i = 0; i < num; i++) {
           p[i] = (p[i] * fade_ + tmp[i] * (32768 - fade_)) >> 15;
@@ -1824,7 +1891,7 @@ public:
 	p += n;
       }
       if (!fade_) {
-	players_[current_].Stop();
+	wav_players[current_].Stop();
         current_ = fadeto_;
         fadeto_ = -1;
       }
@@ -1861,9 +1928,9 @@ public:
     }
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     int unit = current_ == 0 ? 1 : 0;
-    players_[unit].PlayOnce(f);
+    wav_players[unit].PlayOnce(f);
     if (loop) {
-      players_[unit].PlayLoop(loop);
+      wav_players[unit].PlayLoop(loop);
     }
     if (delay_ms) {
       fadeto_ = unit;
@@ -1891,13 +1958,7 @@ public:
     volume_.set_target(vol);
   }
 
-  void Stop() {
-    players_[0].Stop();
-    players_[1].Stop();
-  }
-
 protected:
-  BufferedWavPlayer players_[2];
   volatile int current_= -1;
   volatile int fadeto_ = -1;
   volatile int fade_speed_ = 128;
@@ -2022,7 +2083,6 @@ struct ConfigFile {
 #endif
   }
 
-
   int humStart = 100;
 };
 
@@ -2068,14 +2128,9 @@ public:
 
   BufferedWavPlayer* Play(Effect* f)  {
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-    // Find a free wave playback unit.
-    for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
-      if (!wav_players[unit].isPlaying()) {
-	wav_players[unit].PlayOnce(f);
-	return wav_players + unit;
-      }
-    }
-    return NULL;
+    BufferedWavPlayer* player = GetFreeWavPlayer();
+    if (player) player->PlayOnce(f);
+    return player;
   }
   void Clash() override { Play(&clsh); }
   void Stab() override { Play(&stab); }
@@ -2116,6 +2171,21 @@ public:
     // Adjust hum volume based on motion speed
   }
 };
+
+class StandardSwingWrapper : public SaberBasePassThrough {
+public:
+  
+};
+class LoopedSwingWrapper : public SaberBasePassThrough {
+public:
+  void Activate() override {
+    delegate_->Activate();
+    Serial.println("Activating looped swing sounds");
+  }
+};
+
+
+
 #endif  // ENABLE_AUDIO
 
 class BatteryMonitor : Looper, CommandParser {
@@ -3595,6 +3665,17 @@ struct CreeXPE2Amber {
   static const int Blue = 0;
 };
 
+struct CreeXPL {
+  static constexpr float MaxAmps = 3.0;
+  static constexpr float MaxVolts = 3.32;
+  static constexpr float P2Amps = 1.05;
+  static constexpr float P2Volts = 2.95;
+  static constexpr float R = 0.15;
+  static const int Red = 255;
+  static const int Green = 255;
+  static const int Blue = 255;
+};
+
 // This is a "superbright 3mm blue led" that I found on ebay.
 // I used this to build an LED string with ~150 LEDs.
 // Since I don't have a proper datasheet, I measured these values.
@@ -3721,6 +3802,9 @@ BladeConfig blades[] = {
 
   // Blue-Blue-White LED star
   { 20000, SimpleBladePtr<CreeXPE2White, CreeXPE2Blue, CreeXPE2Blue, NoLED>(), CONFIGARRAY(simple_presets) },
+
+  // 3 x Cree XL-L LED star
+  { 33000, SimpleBladePtr<CreeXPL, CreeXPL, CreeXPL, NoLED>(), CONFIGARRAY(simple_presets) },
 
   // Testing configuration. 
   { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) },
@@ -4204,7 +4288,6 @@ public:
     // Stop all sound!
     // TODO: Move scanning to wav-playing interrupt level so we can
     // interleave things without worry about memory corruption.
-    audio_splicer.Stop();
     for (size_t i = 0; i < NELEM(wav_players); i++) {
       wav_players[i].Stop();
     }
@@ -4331,23 +4414,21 @@ public:
   }
 
 protected:
-  int track_player_ = -1;
+  BufferedWavPlayer* track_player_ = NULL;
 
   void StartOrStopTrack() {
 #ifdef ENABLE_AUDIO
-    if (track_player_ >= 0) {
-      wav_players[track_player_].Stop();
-      track_player_ = -1;
+    if (track_player_) {
+      track_player_->Stop();
+      track_player_ = NULL;
     } else {
       digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-      for (int unit = NELEM(wav_players) - 1; unit >= 0; unit--) {
-	if (!wav_players[unit].isPlaying()) {
-	  track_player_ = unit;
-	  wav_players[unit].Play(current_preset_->track);
-	  return;
-	}
+      track_player_ = GetFreeWavPlayer();
+      if (track_player_) {
+	track_player_->Play(current_preset_->track);
+      } else {
+	Serial.println("No available WAV players.");
       }
-      Serial.println("No available WAV players.");
     }
 #else
     Serial.println("Audio disabled.");
@@ -4374,8 +4455,8 @@ protected:
     }
     bool disable_lockup_ = true;
 #ifdef ENABLE_AUDIO
-    if (track_player_ >= 0 && !wav_players[track_player_].isPlaying()) {
-      track_player_ = -1;
+    if (track_player_ && !track_player_->isPlaying()) {
+      track_player_ = NULL;
     }
 #endif
     if (!on_) {
@@ -4478,13 +4559,14 @@ protected:
 	return true;
       }
       digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-      for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
-	if (!wav_players[unit].isPlaying()) {
-	  wav_players[unit].Play(arg);
-	  return true;
-	}
+      BufferedWavPlayer* player = GetFreeWavPlayer();
+      if (player) {
+	Serial.print("Playing ");
+	Serial.println(arg);
+	player->Play(arg);
+      } else {
+	Serial.println("No available WAV players.");
       }
-      Serial.println("No available WAV players.");
       return true;
     }
 #endif
@@ -5191,7 +5273,7 @@ protected:
     dac.SetStream(&dynamic_mixer);
     dynamic_mixer.streams_[0] = &audio_splicer;
     dynamic_mixer.streams_[1] = &beeper;
-    for (size_t i = 0; i < NELEM(wav_players); i++) {
+    for (size_t i = allocate_wav_players; i < NELEM(wav_players); i++) {
       dynamic_mixer.streams_[i+2] = wav_players + i;
     }
   }
