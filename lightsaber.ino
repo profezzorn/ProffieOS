@@ -28,8 +28,8 @@
 
 
 // Board version
-#define VERSION_MAJOR 2
-#define VERSION_MINOR 2
+#define VERSION_MAJOR 1
+#define VERSION_MINOR 0
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
