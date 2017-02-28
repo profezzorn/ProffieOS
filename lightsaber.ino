@@ -291,23 +291,23 @@ class SaberBase;
 SaberBase* saberbases = NULL;
 
 class SaberBase {
-public:
-  void Link() {
+protected:
+  void Link(const SaberBase* x) {
     next_saber_ = saberbases;
     saberbases = this;
   }
-  void Unlink() {
+  void Unlink(const SaberBase* x) {
     for (SaberBase** i = &saberbases; *i; i = &(*i)->next_saber_) {
-      if (*i == this) {
+      if (*i == x) {
         *i = next_saber_;
         return;
       }
     }
   }
 
-  SaberBase() { Link(); }
+  SaberBase() { Link(this); }
   explicit SaberBase(NoLink _) {}
-  ~SaberBase() { Unlink(); }
+  ~SaberBase() { Unlink(this); }
 
 
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)			\
@@ -317,7 +317,7 @@ public:								\
       p->NAME ARGS;						\
     }								\
   }								\
-protected:							\
+								\
   virtual void NAME TYPED_ARGS {}
 
 #define SABERBASEFUNCTIONS()			\
@@ -333,10 +333,10 @@ protected:							\
   SABERFUN(BeginLockup, (), ());		\
   SABERFUN(EndLockup, (), ());			\
 						\
-  // Swing rotation speed			\
+  /* Swing rotation speed */			\
   SABERFUN(Motion, (float speed), (speed));	\
 						\
-  // Wrist rotation speed			\
+  /* Wrist rotation speed */			\
   SABERFUN(XMotion, (float speed), (speed));	\
 						\
   SABERFUN(Top, (), ());			\
@@ -354,17 +354,25 @@ public:
   SaberBasePassThrough() : SaberBase(NOLINK) {}
 protected:
   void SetDelegate(SaberBase* delegate) {
+    Unlink(this);
+    if (delegate_) {
+      SaberBase::Link(delegate_);
+    }
     delegate_ = delegate;
+    if (delegate_) {
+      SaberBase::Unlink(delegate_);
+      SaberBase::Link(this);
+    }
   }
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)	\
   void NAME TYPED_ARGS override {		\
-    delegate_->NAME (ARGS);			\
+    delegate_->NAME ARGS;			\
   }
 
   SABERBASEFUNCTIONS();
 #undef SABERFUN
 
-  SaberBase* delegate_;
+  SaberBase* delegate_ = NULL;
 };
 
 
@@ -604,7 +612,7 @@ public:
   virtual bool eof() { return false; }
 };
 
-#define AUDIO_BUFFER_SIZE 44
+#define AUDIO_BUFFER_SIZE 88
 #define AUDIO_RATE 44100
 
 #define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_CONT | PDB_SC_PDBIE | PDB_SC_DMAEN)
@@ -756,6 +764,7 @@ public:
     int32_t sum[32];
     int ret = elements;
     int v = 0, v2 = 0;
+    num_samples_ += elements;
     while (elements) {
       int to_do = min(elements, (int)NELEM(sum));
       for (int i = 0; i < to_do; i++) sum[i] = 0;
@@ -789,7 +798,9 @@ public:
 
   void Loop() override {
     if (monitor.ShouldPrint(Monitoring::MonitorSamples)) {
-      Serial.print("AVG volume: ");
+      Serial.print("Samples: ");
+      Serial.print(num_samples_);
+      Serial.print(" AVG volume: ");
       Serial.print(vol_);
       Serial.print(" last input sample: ");
       Serial.print(last_sum_);
@@ -811,6 +822,7 @@ public:
   int32_t last_sum_ = 0;
   int32_t peak_sum_ = 0;
   int32_t peak_ = 0;
+  int32_t num_samples_ = 0;
 //  int32_t sum_;
 //  ClickAvoiderLin volume_;
 };
@@ -1032,6 +1044,7 @@ protected:
 
 private:
   static void ProcessDataStreams() {
+#if 1
     // Yes, it's a selection sort, luckily there's not a lot of
     // DataStreamWork instances.
     // This doesn't work!
@@ -1045,6 +1058,13 @@ private:
 	  d->FillBuffer();
       }
     }
+#else
+    for (int i = 0; i < 10; i++) {
+      for (DataStreamWork *d = data_streams; d; d=d->next_) {
+	d->FillBuffer();
+      }
+    }
+#endif
   }
 
   DataStreamWork* next_;
@@ -1082,6 +1102,7 @@ public:
     return !buffered() && eof_;
   }
   void clear() {
+    eof_ = false;
     buf_start_ = buf_end_;
   }
   size_t buffered() const {
@@ -1462,7 +1483,9 @@ EFFECT(swingh);  // Looped swing, HIGH
 class PlayWav : StateMachine, public DataStream<int16_t> {
 public:
   void Play(const char* filename) {
+    Serial.println("RUNRUNRUN");
     strcpy(filename_, filename);
+    Serial.println("RUNRUNRUN");
     run_ = true;
   }
 
@@ -1796,7 +1819,7 @@ private:
 BufferedWavPlayer wav_players[6];
 size_t allocated_wav_players = 2;
 
-BufferedWavPlayer* GetFreeWavPlayer()  {
+class BufferedWavPlayer* GetFreeWavPlayer()  {
   // Find a free wave playback unit.
   for (size_t unit = allocated_wav_players; unit < NELEM(wav_players); unit++) {
     if (!wav_players[unit].isPlaying()) {
@@ -1808,24 +1831,31 @@ BufferedWavPlayer* GetFreeWavPlayer()  {
 
 class VolumeStream : public DataStream<int16_t> {
 public:
-  VolumeStream() : volume_(16384 / 100_) {
+  VolumeStream() : volume_(16384 / 100) {
     volume_.set(32768);
     volume_.set_target(32768);
   }
-  int read(T* data, int elements) override {
+  int read(int16_t* data, int elements) override {
     elements = source_->read(data, elements);
     for (int i = 0; i < elements; i++) {
       int32_t v = (data[i] * (int32_t)volume_.value()) >> 15;
       data[i] = clampi32(v, -32768, 32767);
       volume_.advance();
     }
+    return elements;
   }
   bool eof() override { return source_->eof(); }
   void set_volume(int vol) {
     volume_.set_target(vol);
   }
+  void set_volume(float vol) {
+    set_volume((int)(32768 * vol));
+  }
   void set_speed(int speed) {
     volume_.set_speed(speed);
+  }
+  void set_fade_time(float t) {
+    set_speed(max(1, (int)(32768 / t / AUDIO_RATE)));
   }
   void set_source(DataStream<int16_t>* source) {
     source_ = source;
@@ -1835,6 +1865,8 @@ private:
   DataStream<int16_t>* source_ = NULL;
   ClickAvoiderLin volume_;
 };
+
+VolumeStream volume_streams_[3];
 
 // This class is used to cut from one sound to another with
 // no gap. It does a short (2.5ms) crossfade to accomplish this.
@@ -1975,9 +2007,9 @@ public:
   void Activate() {
     Serial.println("Activating monophonic font.");
     audio_splicer.set_fade_time(0.003);
-    SaberBase::Link();
+    SaberBase::Link(this);
   }
-  void Deactivate() { SaberBase::Unlink(); }
+  void Deactivate() { SaberBase::Unlink(this); }
 
   void On() override {
     audio_splicer.Play(&poweron, &hum);
@@ -2098,9 +2130,9 @@ public:
     strcpy(config_filename, current_directory);
     strcat(config_filename, "config.ini");
     config_.Read(config_filename);
-    SaberBase::Link();
+    SaberBase::Link(this);
   }
-  void Deactivate() { SaberBase::Unlink(); }
+  void Deactivate() { SaberBase::Unlink(this); }
 
   void On() override {
     if (config_.humStart) {
@@ -2176,14 +2208,61 @@ class StandardSwingWrapper : public SaberBasePassThrough {
 public:
   
 };
+#if 0
 class LoopedSwingWrapper : public SaberBasePassThrough {
 public:
-  void Activate() override {
-    delegate_->Activate();
+  void Activate(SaberBase* base_font) override {
+    base_font->Activate();
     Serial.println("Activating looped swing sounds");
+    SetDelegate(base_font);
+    // Activate volume units
+    allocated_wav_players = 4;
+    volume_streams[0].set_source(&audio_splicer_);
+    volume_streams[1].set_source(wav_players + 2);
+    volume_streams[2].set_source(wav_players + 3);
+    volume_streams[1].set_volume(0);
+    volume_streams[2].set_volume(0);
+  }
+
+  void Deactivate() override {
+    SaberBase *tmp = delegate_;
+    SetDelegate(NULL);
+    delegate_->Deactivate();
+  }
+
+  void On() override {
+    // Starts hum, etc.
+    delegate_->On();
+    wav_players[2].Play(&swingl, &swingl);
+    wav_players[3].Play(&swingh, &swingh);
+  }
+  void Off() override {
+    volume_stream[1].set_fade_time(0.3);
+    volume_stream[2].set_fade_time(0.3);
+    volume_stream[1].set_volume(0);
+    volume_stream[2].set_volume(0);
+    delegate_->Off();
+  }
+
+  void Motion(const vec3& gyro) override {
+    float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
+    uint32_t t = (millis() >> 2) & 1024;
+    float s = sin_table[t] * (1.0/16383);
+    float c = sin_table[t + 256] * (1.0/16383);
+    float blend = c * gyro.z + s * gyro.y;
+    blend = clamp(blend / 250.0, -1.0, 1.0);
+    float vol = 0.299 + clamp(speed / 600.0, 0.0, 0.3);
+    flaot low = (blend - 1.0) / 2.0;
+    flaot high = 1.0 - low;
+    float hum = 1.0 - abs(blend);
+    low *= 1.0 - hum;
+    high *= 1.0 - hum;
+    volume_stream[0].set_volume(vol * hum);
+    volume_stream[1].set_volume(vol * low);
+    volume_stream[2].set_volume(vol * high);
   }
 };
-
+#endif
 
 
 #endif  // ENABLE_AUDIO
@@ -3173,7 +3252,7 @@ public:
     while (monopodws.busy());
     CommandParser::Link();
     Looper::Link();
-    SaberBase::Link();
+    SaberBase::Link(this);
   }
 
   // BladeBase implementation
@@ -3365,7 +3444,7 @@ public:
     analogWrite(bladePin, 0);        // make it black
     CommandParser::Link();
     Looper::Link();
-    SaberBase::Link();
+    SaberBase::Link(this);
   }
 
   // BladeBase implementation
@@ -3751,6 +3830,12 @@ Preset simple_presets[] = {
   { "font02", "tracks/cantina.wav", StyleStrobePtr<BLUE, WHITE, 15, 100, 200>() },
 };
 
+Preset white_presets[] = {
+  { "font01", "tracks/title.wav", StyleNormalPtr<WHITE, WHITE, 100, 200>() },
+  { "font02", "tracks/duel.wav", StyleNormalPtr<WHITE, WHITE, 100, 200>() },
+  { "font02", "tracks/cantina.wav", StyleStrobePtr<WHITE, WHITE, 15, 100, 200>() },
+};
+
 Preset charging_presets[] = {
   { "charging", "", &style_charging },
   { "font01", "tracks/title.wav", StyleNormalPtr<BLUE, BLUE, 100, 200>() },
@@ -3804,7 +3889,7 @@ BladeConfig blades[] = {
   { 20000, SimpleBladePtr<CreeXPE2White, CreeXPE2Blue, CreeXPE2Blue, NoLED>(), CONFIGARRAY(simple_presets) },
 
   // 3 x Cree XL-L LED star
-  { 33000, SimpleBladePtr<CreeXPL, CreeXPL, CreeXPL, NoLED>(), CONFIGARRAY(simple_presets) },
+  { 100000, SimpleBladePtr<CreeXPL, CreeXPL, CreeXPL, NoLED>(), CONFIGARRAY(white_presets) },
 
   // Testing configuration. 
   { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) },
@@ -5273,7 +5358,7 @@ protected:
     dac.SetStream(&dynamic_mixer);
     dynamic_mixer.streams_[0] = &audio_splicer;
     dynamic_mixer.streams_[1] = &beeper;
-    for (size_t i = allocate_wav_players; i < NELEM(wav_players); i++) {
+    for (size_t i = allocated_wav_players; i < NELEM(wav_players); i++) {
       dynamic_mixer.streams_[i+2] = wav_players + i;
     }
   }
