@@ -287,6 +287,30 @@ private:
   CommandParser* next_parser_;
 };
 
+// Simple 3D vector.
+class Vec3 {
+public:
+  Vec3(){}
+  Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
+  Vec3 operator-(const Vec3& o) const {
+    return Vec3(x - o.x, y - o.y, z - o.z);
+  }
+  Vec3 operator+(const Vec3& o) const {
+    return Vec3(x + o.x, y + o.y, z + o.z);
+  }
+  void operator+=(const Vec3& o)  {
+    x += o.x;
+    y += o.y;
+    z += o.z;
+  }
+  Vec3 operator*(float f) const {
+    return Vec3(x * f, y * f, z * f);
+  }
+  float len2() const { return x*x + y*y + z*z; }
+  float x, y, z;
+};
+
+
 class SaberBase;
 SaberBase* saberbases = NULL;
 
@@ -334,7 +358,7 @@ public:								\
   SABERFUN(EndLockup, (), ());			\
 						\
   /* Swing rotation speed */			\
-  SABERFUN(Motion, (float speed), (speed));	\
+  SABERFUN(Motion, (const Vec3& gyro), (gyro));	\
 						\
   /* Wrist rotation speed */			\
   SABERFUN(XMotion, (float speed), (speed));	\
@@ -1483,9 +1507,8 @@ EFFECT(swingh);  // Looped swing, HIGH
 class PlayWav : StateMachine, public DataStream<int16_t> {
 public:
   void Play(const char* filename) {
-    Serial.println("RUNRUNRUN");
+    if (!*filename) return;
     strcpy(filename_, filename);
-    Serial.println("RUNRUNRUN");
     run_ = true;
   }
 
@@ -1866,15 +1889,14 @@ private:
   ClickAvoiderLin volume_;
 };
 
-VolumeStream volume_streams_[3];
+VolumeStream volume_streams[3];
 
 // This class is used to cut from one sound to another with
 // no gap. It does a short (2.5ms) crossfade to accomplish this.
 class AudioSplicer : public DataStream<int16_t> {
 public:
-  AudioSplicer() : volume_(16384 / 100) {
-    set_volume(10000);
-  }
+  AudioSplicer() {}
+
   int read(int16_t* data, int elements) override {
     int16_t *p = data;
     int to_read = elements;
@@ -1927,11 +1949,6 @@ public:
         current_ = fadeto_;
         fadeto_ = -1;
       }
-    }
-    for (int i = 0; i < elements; i++) {
-      int32_t v = (data[i] * (int32_t)volume_.value()) >> 15;
-      data[i] = clampi32(v, -32768, 32767);
-      volume_.advance();
     }
     return elements;
   }
@@ -1987,7 +2004,7 @@ public:
   }
 
   void set_volume(int vol) {
-    volume_.set_target(vol);
+    volume_streams[0].set_volume(vol);
   }
 
 protected:
@@ -1996,16 +2013,30 @@ protected:
   volatile int fade_speed_ = 128;
   volatile int start_after_ = 0;
   volatile int fade_;
-  ClickAvoiderLin volume_;
 };
 
 AudioSplicer audio_splicer;
 
-class MonophonicFont : SaberBase {
+// Configure links between audio units, filters, sources.
+void SetupStandardAudio() {
+  allocated_wav_players = 2;
+  dac.SetStream(&dynamic_mixer);
+  dynamic_mixer.streams_[0] = volume_streams + 0;
+  volume_streams[0].set_source(&audio_splicer);
+  dynamic_mixer.streams_[1] = &beeper;
+  for (size_t i = 2; i < NELEM(wav_players); i++) {
+    dynamic_mixer.streams_[i] = wav_players + i;
+  }
+  volume_streams[0].set_volume(10000);
+  volume_streams[0].set_speed(16384 / 100);
+}
+
+class MonophonicFont : public SaberBase {
 public:
   MonophonicFont() : SaberBase(NOLINK) { }
   void Activate() {
     Serial.println("Activating monophonic font.");
+    SetupStandardAudio();
     audio_splicer.set_fade_time(0.003);
     SaberBase::Link(this);
   }
@@ -2026,7 +2057,8 @@ public:
   void NewFont() override { audio_splicer.Play(&font,  NULL); }
 
   bool swinging_ = false;
-  void Motion(float speed) override {
+  void Motion(const Vec3& gyro) override {
+    float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
       if (!swinging_) {
 	swinging_ = true;
@@ -2125,6 +2157,7 @@ public:
     Serial.println("Activating polyphonic font.");
     // TODO: while we need to fade out the hum,
     // maybe we don't need to fade in the in sound?
+    SetupStandardAudio();
     audio_splicer.set_fade_time(0.3);
     char config_filename[128];
     strcpy(config_filename, current_directory);
@@ -2172,7 +2205,8 @@ public:
   void NewFont() override { audio_splicer.Play(&font,  NULL); }
 
   bool swinging_ = false;
-  void Motion(float speed) override {
+  void Motion(const Vec3& gyro) override {
+    float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
       if (!swinging_) {
 	swinging_ = true;
@@ -2199,7 +2233,7 @@ public:
   void On() override {}
   void Off() override {}
 
-  void Motion(float speed) override {
+  void Motion(const Vec3& speed) override {
     // Adjust hum volume based on motion speed
   }
 };
@@ -2208,43 +2242,42 @@ class StandardSwingWrapper : public SaberBasePassThrough {
 public:
   
 };
-#if 0
+#if 1
 class LoopedSwingWrapper : public SaberBasePassThrough {
 public:
-  void Activate(SaberBase* base_font) override {
-    base_font->Activate();
+  void Activate(SaberBase* base_font) {
     Serial.println("Activating looped swing sounds");
     SetDelegate(base_font);
-    // Activate volume units
     allocated_wav_players = 4;
-    volume_streams[0].set_source(&audio_splicer_);
-    volume_streams[1].set_source(wav_players + 2);
-    volume_streams[2].set_source(wav_players + 3);
-    volume_streams[1].set_volume(0);
-    volume_streams[2].set_volume(0);
+    // Inject volume controls for wave player 2,3.
+    for (int i = 2; i < 4; i++) {
+      VolumeStream *v = volume_streams + i - 1;
+      dynamic_mixer.streams_[i] = v;
+      v->set_source(wav_players + i);
+      v->set_volume(0);
+      v->set_speed(16384 / 100);
+    }
   }
 
-  void Deactivate() override {
-    SaberBase *tmp = delegate_;
+  void Deactivate() {
     SetDelegate(NULL);
-    delegate_->Deactivate();
   }
 
   void On() override {
     // Starts hum, etc.
     delegate_->On();
-    wav_players[2].Play(&swingl, &swingl);
-    wav_players[3].Play(&swingh, &swingh);
+    wav_players[2].PlayLoop(&swingl);
+    wav_players[3].PlayLoop(&swingh);
   }
   void Off() override {
-    volume_stream[1].set_fade_time(0.3);
-    volume_stream[2].set_fade_time(0.3);
-    volume_stream[1].set_volume(0);
-    volume_stream[2].set_volume(0);
+    volume_streams[1].set_fade_time(0.3);
+    volume_streams[2].set_fade_time(0.3);
+    volume_streams[1].set_volume(0);
+    volume_streams[2].set_volume(0);
     delegate_->Off();
   }
 
-  void Motion(const vec3& gyro) override {
+  void Motion(const Vec3& gyro) override {
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     uint32_t t = (millis() >> 2) & 1024;
     float s = sin_table[t] * (1.0/16383);
@@ -2252,16 +2285,16 @@ public:
     float blend = c * gyro.z + s * gyro.y;
     blend = clamp(blend / 250.0, -1.0, 1.0);
     float vol = 0.299 + clamp(speed / 600.0, 0.0, 0.3);
-    flaot low = (blend - 1.0) / 2.0;
-    flaot high = 1.0 - low;
+    float low = max(0, blend);
+    float high = max(0, -blend);
     float hum = 1.0 - abs(blend);
-    low *= 1.0 - hum;
-    high *= 1.0 - hum;
-    volume_stream[0].set_volume(vol * hum);
-    volume_stream[1].set_volume(vol * low);
-    volume_stream[2].set_volume(vol * high);
+    volume_streams[0].set_volume(vol * hum);
+    volume_streams[1].set_volume(vol * low);
+    volume_streams[2].set_volume(vol * high);
   }
 };
+
+LoopedSwingWrapper looped_swing_wrapper;
 #endif
 
 
@@ -4367,6 +4400,7 @@ public:
       return false;
     }
 #ifdef ENABLE_AUDIO
+    looped_swing_wrapper.Deactivate();
     monophonic_font.Deactivate();
     polyphonic_font.Deactivate();
 
@@ -4386,17 +4420,21 @@ public:
 
 #ifdef ENABLE_AUDIO
     Effect::ScanDirectory(dir);
+    SaberBase* font = NULL;
     if (clsh.files_found()) {
       polyphonic_font.Activate();
-      return true;
-    }
-    if (clash.files_found()) {
+      font = &polyphonic_font;
+    } else if (clash.files_found()) {
       monophonic_font.Activate();
-      return true;
-    }
-    if (boot.files_found()) {
+      font = &monophonic_font;
+    } else if (boot.files_found()) {
       monophonic_font.Activate();
-      return false;
+      font = &monophonic_font;
+    }
+    if (font) {
+      if (swingl.files_found()) {
+	looped_swing_wrapper.Activate(font);
+      }
     }
 #endif
     return false;
@@ -4526,10 +4564,11 @@ protected:
 
   void Loop() override {
     if (battery_monitor.low()) {
-      if (on_) {
-	Off();
-      } else if (millis() - last_beep_ > 1000) {
-	if (current_style != &style_charging) {
+      if (current_style != &style_charging) {
+	if (on_) {
+	  Serial.println("OFF");
+	  Off();
+	} else if (millis() - last_beep_ > 1000) {
 	  Serial.println("Battery low beep");
 #ifdef ENABLE_AUDIO
 	  beeper.Beep(0.5, 440.0);
@@ -5000,29 +5039,6 @@ private:
 
 Parser parser;
 
-// Simple 3D vector.
-class Vec3 {
-public:
-  Vec3(){}
-  Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
-  Vec3 operator-(const Vec3& o) const {
-    return Vec3(x - o.x, y - o.y, z - o.z);
-  }
-  Vec3 operator+(const Vec3& o) const {
-    return Vec3(x + o.x, y + o.y, z + o.z);
-  }
-  void operator+=(const Vec3& o)  {
-    x += o.x;
-    y += o.y;
-    z += o.z;
-  }
-  Vec3 operator*(float f) const {
-    return Vec3(x * f, y * f, z * f);
-  }
-  float len2() const { return x*x + y*y + z*z; }
-  float x, y, z;
-};
-
 #ifdef ENABLE_MOTION
 
 #ifdef V2
@@ -5293,18 +5309,20 @@ class Orientation : Looper {
       accel_ = accel;
 
       // static float last_speed = 0.0;
-      float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
+      // float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
 
       if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
-        Serial.print("Speed: yz: ");
-        Serial.print(speed);
-        Serial.print("x: ");
-        Serial.println(gyro.x);
+        Serial.print("Gyro: ");
+        Serial.print(gyro.x);
+	Serial.print(" ");
+        Serial.print(gyro.y);
+	Serial.print(" ");
+        Serial.println(gyro.z);
       }
 
       if (saber.IsOn()) {
 	SaberBase::DoXMotion(gyro.x);
-	SaberBase::DoMotion(speed);
+	SaberBase::DoMotion(gyro);
       }
 #ifdef ENABLE_AUDIO
       // TODO: Use SaberBase()
@@ -5355,13 +5373,9 @@ protected:
     delay(50);             // time for DAC voltage stable
     pinMode(amplifierPin, OUTPUT);
     delay(10);
-    dac.SetStream(&dynamic_mixer);
-    dynamic_mixer.streams_[0] = &audio_splicer;
-    dynamic_mixer.streams_[1] = &beeper;
-    for (size_t i = allocated_wav_players; i < NELEM(wav_players); i++) {
-      dynamic_mixer.streams_[i+2] = wav_players + i;
-    }
+    SetupStandardAudio();
   }
+
 
   bool Active() {
 //    if (saber_synth.on_) return true;
