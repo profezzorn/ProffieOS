@@ -78,7 +78,7 @@ const unsigned int maxLedsPerStrip = 144;
 // quieter sound.
 // #define QUIET
 
-// This doesn't seem  to work.
+// This doesn't seem to work.
 // #define TAR_UPLOADS_TO_SDCARD
 
 // Use FTM timer for monopodws timing.
@@ -412,6 +412,7 @@ public:
     MonitorPWM = 16,
     MonitorClash = 32,
     MonitorTemp = 64,
+    MonitorGyro = 128,
   };
 
   bool ShouldPrint(MonitorBit bit) {
@@ -432,6 +433,10 @@ protected:
     if (!strcmp(cmd, "monitor") || !strcmp(cmd, "mon")) {
       if (!strcmp(arg, "swings")) {
         active_monitors_ ^= MonitorSwings;
+        return true;
+      }
+      if (!strcmp(arg, "gyro")) {
+        active_monitors_ ^= MonitorGyro;
         return true;
       }
       if (!strcmp(arg, "samples")) {
@@ -2266,7 +2271,9 @@ public:
   void On() override {
     // Starts hum, etc.
     delegate_->On();
+    wav_players[2].PlayOnce(&swingl);
     wav_players[2].PlayLoop(&swingl);
+    wav_players[3].PlayOnce(&swingh);
     wav_players[3].PlayLoop(&swingh);
   }
   void Off() override {
@@ -2279,18 +2286,38 @@ public:
 
   void Motion(const Vec3& gyro) override {
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
-    uint32_t t = (millis() >> 2) & 1024;
-    float s = sin_table[t] * (1.0/16383);
-    float c = sin_table[t + 256] * (1.0/16383);
+    uint32_t t = (millis() >> 2);
+    float s = sin_table[t & 1023] * (1.0/16383);
+    float c = sin_table[(t + 256) & 1023] * (1.0/16383);
     float blend = c * gyro.z + s * gyro.y;
-    blend = clamp(blend / 250.0, -1.0, 1.0);
-    float vol = 0.299 + clamp(speed / 600.0, 0.0, 0.3);
+    blend = clamp(blend / 150.0, -1.0, 1.0);
+    float vol = 0.299 + clamp(speed / 150.0, 0.0, 2.3);
     float low = max(0, blend);
     float high = max(0, -blend);
     float hum = 1.0 - abs(blend);
     volume_streams[0].set_volume(vol * hum);
     volume_streams[1].set_volume(vol * low);
     volume_streams[2].set_volume(vol * high);
+    if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
+      Serial.print("S:");
+      Serial.print(speed);
+      Serial.print(" T:");
+      Serial.print(t);
+      Serial.print(" s:");
+      Serial.print(s);
+      Serial.print(" c:");
+      Serial.print(c);
+      Serial.print(" blend:");
+      Serial.print(blend);
+      Serial.print(" vol:");
+      Serial.print(vol);
+      Serial.print(" hi:");
+      Serial.print(high);
+      Serial.print(" lo:");
+      Serial.print(low);
+      Serial.print(" hum:");
+      Serial.println(hum);
+    }
   }
 };
 
@@ -4012,6 +4039,13 @@ class Tar {
             Serial.print(" length = ");
             Serial.println(file_length_);
 #ifdef TAR_UPLOADS_TO_SDCARD
+            file_.close();
+            char *dir_end = strrchr(block_, '/');
+            if (dir_end) {
+              *dir_end = 0;
+              SD.mkdir(block_);
+              *dir_end = '/';
+            }
 	    file_ = SD.open(block_, FILE_WRITE);
 #else
             if (!SerialFlashChip::create(block_, file_length_)) {
@@ -4723,6 +4757,10 @@ protected:
       SaberBase::DoNewFont();
       return true;
     }
+    if (!strcmp(cmd, "mkdir")) {
+      SD.mkdir(arg);
+      return true;
+    }
     if (!strcmp(cmd, "pwd")) {
       Serial.println(current_directory);
       return true;
@@ -4817,7 +4855,7 @@ public:
       return;
     }
     int to_decode = DecodeChar(cmd_[0]);
-    if (to_decode > 0 || to_decode < 80) {
+    if (to_decode > 0 && to_decode < 80) {
       char *in = cmd_+ 1;
       char *out = cmd_;
       int decoded = 0;
@@ -5050,7 +5088,8 @@ public:
     if (CommandParser::DoParse(cmd, e)) {
       return;
     }
-    Serial.println("Whut?");
+    Serial.print("Whut? :");
+    Serial.println(cmd);
   }
 private:
 #ifdef ENABLE_SERIALFLASH
@@ -5277,7 +5316,7 @@ public:
 	if (status_reg & 0x4) {
 	  // accel data available
 	  if (readBytes(OUTX_L_XL, dataBuffer.buffer, 6) == 6) {
-	    if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
+	    if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
 	      Serial.print("ACCEL: ");
 	      Serial.print(dataBuffer.xyz.x);
 	      Serial.print(", ");
@@ -5335,7 +5374,7 @@ class Orientation : Looper {
       // static float last_speed = 0.0;
       // float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
 
-      if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
+      if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
         Serial.print("Gyro: ");
         Serial.print(gyro.x);
 	Serial.print(" ");
