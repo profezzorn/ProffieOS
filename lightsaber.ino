@@ -2897,14 +2897,22 @@ class BladeBase {
 public:
   // Returns number of LEDs in this blade.
   virtual int num_leds() const = 0;
+
   // Returns true if the blade is supposed to be on.
   // false while "turning off".
   virtual bool is_on() const = 0;
+
   // Set led 'led' to color 'c'.
   virtual void set(int led, Color c) = 0;
+
+  // Bypasses battery voltage based PWM, intended to be used for
+  // brief flashes only.
+  virtual void set_overdrive(int led, Color c) { set(led, c); }
+
   // Returns true when a clash occurs.
   // Returns true only once.
   virtual bool clash() = 0;
+
   // Called to let the blade know that it's ok to
   // disable power now. (Usually called after is_on()
   // has returned false for some period of time.)
@@ -3168,6 +3176,7 @@ public:
     uint32_t m = millis();
     if (blade->clash()) clash_millis_ = m;
     Color c = Color();
+    // strobes currently last one millisecond.
     if (m == last_strobe_ || m - last_strobe_ > strobe_millis_) {
       c = color_;
       last_strobe_ = m;
@@ -3185,7 +3194,7 @@ public:
     if (!blade->is_on()) thres = num_leds * 256 - thres;
     for (int i = 0; i < num_leds; i++) {
       int black_mix = clampi32(thres - i * 256, 0, 255);
-      blade->set(i, Color().mix(c, black_mix));
+      blade->set_overdrive(i, Color().mix(c, black_mix));
     }
     if (!blade->is_on() && thres > 256 * (num_leds*2)) {
       Serial.println("Allow off.");
@@ -3438,6 +3447,9 @@ public:
   int PWM(Color c) override {
     return c.select(Color(LED::Red, LED::Green, LED::Blue)) * PWMMultiplier();
   }
+  int NoPWM(Color c) override {
+    return c.select(Color(LED::Red, LED::Green, LED::Blue));
+  }
 };
 
 template<class LED>
@@ -3492,6 +3504,13 @@ public:
     analogWrite(bladePowerPin2, c2_->PWM(c));
     analogWrite(bladePowerPin3, c3_->PWM(c));
     analogWrite(bladePin, c4_->PWM(c));
+  }
+
+  void set_overdrive(int led, Color c) override {
+    analogWrite(bladePowerPin1, c1_->NoPWM(c));
+    analogWrite(bladePowerPin2, c2_->NoPWM(c));
+    analogWrite(bladePowerPin3, c3_->NoPWM(c));
+    analogWrite(bladePin, c4_->NoPWM(c));
   }
 
   bool clash() override {
