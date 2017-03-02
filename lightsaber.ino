@@ -3410,6 +3410,9 @@ class LEDInterface {
 public:
   // Given a color, return a the right PWM level (0-255).
   virtual int PWM(Color c) = 0;
+
+  // Same as PWM(), but ignores battery voltage.
+  virtual int PWM_overdrive(Color c) = 0;
 };
 
 // This code turns down the PWM duty cycle when the battery voltage
@@ -3447,7 +3450,7 @@ public:
   int PWM(Color c) override {
     return c.select(Color(LED::Red, LED::Green, LED::Blue)) * PWMMultiplier();
   }
-  int NoPWM(Color c) override {
+  int PWM_overdrive(Color c) override {
     return c.select(Color(LED::Red, LED::Green, LED::Blue));
   }
 };
@@ -3507,10 +3510,10 @@ public:
   }
 
   void set_overdrive(int led, Color c) override {
-    analogWrite(bladePowerPin1, c1_->NoPWM(c));
-    analogWrite(bladePowerPin2, c2_->NoPWM(c));
-    analogWrite(bladePowerPin3, c3_->NoPWM(c));
-    analogWrite(bladePin, c4_->NoPWM(c));
+    analogWrite(bladePowerPin1, c1_->PWM_overdrive(c));
+    analogWrite(bladePowerPin2, c2_->PWM_overdrive(c));
+    analogWrite(bladePowerPin3, c3_->PWM_overdrive(c));
+    analogWrite(bladePin, c4_->PWM_overdrive(c));
   }
 
   bool clash() override {
@@ -3680,6 +3683,8 @@ bool String_Blade::power_ = false;
 bool String_Blade::clash_ = true;
 #endif
 
+// TODO: Needs to take an LED class instead of a color.
+// Possibly one LED per channel...
 template<int r1, int g1, int b1>
 class String_Blade *StringBladePtr() {
   static String_Blade blade(Color(r1, g1, b1));
