@@ -210,6 +210,7 @@ protected:
 enum NoLink { NOLINK = 17 };
 
 // Helper class for classses that needs to be called back from the Loop() function.
+// Also provides a Setup() function.
 class Looper;
 Looper* loopers = NULL;
 class Looper {
@@ -311,6 +312,10 @@ public:
 };
 
 
+// SaberBase is our main class for distributing saber-related events, such
+// as on/off/clash/etc. to where they need to go. Each SABERFUN below
+// has a corresponding SaberBase::Do* function which invokes that function
+// on all active SaberBases.
 class SaberBase;
 SaberBase* saberbases = NULL;
 
@@ -590,6 +595,9 @@ const int16_t sin_table[1024] = {
 
 #ifdef ENABLE_AUDIO
 
+// This class is used to control volumes without causing
+// clicking noises. Everytime you call advance(), the value
+// goes closer towards the target at a preset speed.
 class ClickAvoiderLin {
 public:
   ClickAvoiderLin() : speed_(0) { }
@@ -641,6 +649,9 @@ public:
   virtual bool eof() { return false; }
 };
 
+
+// DMA-driven audio output.
+// Based on the Teensy Audio library code.
 #define AUDIO_BUFFER_SIZE 88
 #define AUDIO_RATE 44100
 
@@ -706,6 +717,8 @@ public:
   }
 
 private:
+  // Interrupt handler.
+  // Fills the dma buffer with new sample data.
   static void isr(void) {
     int16_t *dest, *end;
     uint32_t saddr;
@@ -745,6 +758,8 @@ DMAMEM uint16_t DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2];
 
 DAC dac;
 
+// Audio compressor, takes N input channels, sums them and divides the
+// result by the square root of the average volume.
 template<int N> class AudioDynamicMixer : public DataStream<int16_t>, Looper {
 public:
   AudioDynamicMixer() {
@@ -858,6 +873,7 @@ public:
 
 AudioDynamicMixer<7> dynamic_mixer;
 
+// Beeper class, used for warning beeps and such.
 class Beeper : public DataStream<int16_t> {
 public:
   int read(int16_t *data, int elements) override {
@@ -1041,6 +1057,9 @@ protected:
 //       +-WavPlayer
 //
 
+// DataStreamWork is a linked list of classes that would like to
+// do some work in a software-triggered interrupt. This is used to
+// let audio processing preempt less important tasks.
 #define IRQ_WAV 55
 
 class DataStreamWork;
@@ -1099,6 +1118,14 @@ private:
   DataStreamWork* next_;
 };
 
+// BufferedDataStream is meant to be read from the main autdio interrupt.
+// Every time some space is freed up, Schedulefillbuffer() is called
+// to handle filling up the buffer at a lower interrupt level. Since
+// filling up the buffer can mean reading from SD, there can potentially
+// be more reads from the buffer while we're working on filling it up.
+// To make this work, we need make sure that the end pointer for the buffer
+// is only modified in the FillBuffer() function and the begin pointer is
+// only modified in read();
 // N needs to be power of 2
 template<class T, int N>
 class BufferedDataStream : public DataStream<T>, public DataStreamWork {
@@ -1223,6 +1250,14 @@ bool endswith(const char *postfix, const char* x) {
 char current_directory[128];
 
 // Effect represents a set of sound files.
+// We keep track of the minimum number found, the maximum number found, weather
+// there is a file with no number, and if there are leading zeroes or not.
+// Basically, it means that files can be numbered any which way, as long as it
+// is consistent and there are no gaps in the numbering.
+//
+// Note that *ALL* sounds use this Effect class to keep track of the sounds.
+// This means that you can for instance have hum1.wav, hum2.wav, hum3.wav, and
+// every time the hum loops, it will randomly pick one of them.
 class Effect {
   public:
   Effect(const char* name) : name_(name) {
@@ -1898,6 +1933,7 @@ VolumeStream volume_streams[3];
 
 // This class is used to cut from one sound to another with
 // no gap. It does a short (2.5ms) crossfade to accomplish this.
+// It's currently hard-coded to use wav_players[0] and wav_playes[1].
 class AudioSplicer : public DataStream<int16_t> {
 public:
   AudioSplicer() {}
@@ -2036,6 +2072,14 @@ void SetupStandardAudio() {
   volume_streams[0].set_speed(16384 / 100);
 }
 
+// Monophonic sound fonts are the most common.
+// These fonts are fairly simple, as generally only one sound is
+// played at a time. It starts with the "poweron" sound and when
+// that runs out, we gaplessly transition to the "hum" sound.
+//
+// When an effect happens, like "clash", we do a short cross-fade
+// to transition to the new sound, then we play that sound until
+// it ends and gaplessly transition back to the hum sound.
 class MonophonicFont : public SaberBase {
 public:
   MonophonicFont() : SaberBase(NOLINK) { }
@@ -2083,6 +2127,7 @@ public:
 
 MonophonicFont monophonic_font;
 
+// Reads an igniter config file, looking for the humstart value.
 struct ConfigFile {
 #ifdef ENABLE_SD
   void skipwhite(File* f) {
@@ -2155,6 +2200,10 @@ struct ConfigFile {
   int humStart = 100;
 };
 
+// With polyphonic fonts, sounds are played more or less
+// independently. Hum is faded in/out by changing the volume
+// and all other sound effects are just played in parallel
+// when needed.
 class PolyphonicFont : public SaberBase {
 public:
   PolyphonicFont() : SaberBase(NOLINK) { }
@@ -2243,11 +2292,13 @@ public:
   }
 };
 
-class StandardSwingWrapper : public SaberBasePassThrough {
-public:
-  
-};
-#if 1
+
+// Looped swing sounds is a new way to play swing sounds.
+// Basically, two swing sounds (swingl and swingh) are always
+// playing in the background, but with zero volume. When
+// the saber is swung, we fade out the hum and fade in one of
+// the swingl/swingh sounds. This type of swing sounds can
+// be added to any font by just adding swingl.wav and swingh.wav.
 class LoopedSwingWrapper : public SaberBasePassThrough {
 public:
   void Activate(SaberBase* base_font) {
@@ -2322,14 +2373,13 @@ public:
 };
 
 LoopedSwingWrapper looped_swing_wrapper;
-#endif
-
 
 #endif  // ENABLE_AUDIO
 
 class BatteryMonitor : Looper, CommandParser {
 public:
   float battery_now() {
+    // This is the volts on the battery monitor pin.
     float volts = 3.3 * analogRead(batteryLevelPin) / 1024.0;
 #if VERSION_MAJOR >= 2
     float pulldown = 220000;  // External pulldown
@@ -2338,8 +2388,7 @@ public:
     float pulldown = 33000;  // Internal pulldown is 33kOhm
     float pullup = 23000;  // External pullup
 #endif
-    float battery_volts = volts * (1.0 + pullup / pulldown);
-    return battery_volts;
+    return volts * (1.0 + pullup / pulldown);
   }
   float battery() const {
     return last_voltage_;
@@ -2389,6 +2438,9 @@ private:
 
 BatteryMonitor battery_monitor;
 
+// Used to represent a color. Uses normal 8-bit-per channel RGB.
+// Note that these colors are in linear space and their interpretation
+// depends on the blade.
 struct Color {
   Color() : r(0), g(0), b(0) {}
   Color(uint8_t r_, uint8_t g_, uint8_t b_) : r(r_), g(g_), b(b_) {}
@@ -2948,6 +3000,11 @@ public:
   virtual void Activate() = 0;
 };
 
+// Base class for blade styles.
+// Blade styles are responsible for the colors and patterns
+// of the colors of the blade. Each time run() is called, the
+// BladeStyle shouldl call blade->set() to update the color
+// of all the LEDs in the blade.
 class BladeStyle {
 public:
   virtual void activate() {}
@@ -2963,6 +3020,8 @@ void SetStyle(class BladeStyle* style) {
   current_style->activate();
 }
 
+// Charging blade style.
+// Slowly pulsating battery indicator.
 class StyleCharging : public BladeStyle {
 public:
   void activate() override {
@@ -3001,6 +3060,7 @@ public:
 // No need to templetize this one, as there are no arguments.
 StyleCharging style_charging;
 
+// Fire-style
 class StyleFire : public BladeStyle {
 public:
   StyleFire(Color c1, Color c2) : c1_(c1), c2_(c2) {}
@@ -3060,6 +3120,7 @@ class StyleFire *StyleFirePtr() {
   return &style;
 }
 
+// Standard blade style.
 class StyleNormal : public BladeStyle {
 public:
   StyleNormal(Color color, Color clash_color, uint32_t out_millis, uint32_t in_millis)
@@ -3182,6 +3243,7 @@ class StyleRainbow *StyleRainbowPtr() {
   return &style;
 }
 
+// Stroboscope, flickers the blade at the desired frequency.
 class StyleStrobe : public BladeStyle {
 public:
   StyleStrobe(Color color,
@@ -3256,6 +3318,7 @@ class StyleStrobe *StyleStrobePtr() {
 
 
 #if 0
+// POV writer, not yet finished.
 class StylePOV : public BladeStyle {
 public:
   StylePOV(Color* data, int width, int height)
