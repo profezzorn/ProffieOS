@@ -102,6 +102,7 @@ const unsigned int maxLedsPerStrip = 144;
 #include <SPI.h>
 #include <Wire.h>
 #include <math.h>
+#include <usb_dev.h>
 
 
 #ifdef ENABLE_SNOOZE
@@ -188,7 +189,15 @@ const char version[] = "$Id$";
 #define SLEEP(MILLIS) do { state_machine_.sleep_until_ = millis() + (MILLIS); while (millis() < state_machine_.sleep_until_) YIELD(); } while(0)
 #define SLEEP_MICROS(MICROS) do { state_machine_.sleep_until_ = micros() + (MICROS); while (micros() < state_machine_.sleep_until_) YIELD(); } while(0)
 #define STATE_MACHINE_BEGIN() switch(state_machine_.next_state_) { case -1:
-#define STATE_MACHINE_END() YIELD(); } 
+#define STATE_MACHINE_END() state_machine_.next_state_ = -2; case -2: break; } 
+
+#define CALL(SM, FUN) do {                  \
+  state_machine_.next_state_ = __LINE__;    \
+  case __LINE__:                            \
+  FUN();                                    \
+  if (SM.next_state == -2) return;          \
+  SM.reset_state_machine();                 \
+} while(0)
 
 struct StateMachineState {
   int next_state_ = -1;
@@ -1081,9 +1090,15 @@ public:
       }
     }
   }
-  void scheduleFillBuffer() {
+
+  static void scheduleFillBuffer() {
     if (!NVIC_IS_ACTIVE(IRQ_WAV))
       NVIC_TRIGGER_IRQ(IRQ_WAV);
+  }
+
+  static void LockSD(bool locked) {
+//    scheduleFillBuffer();
+    sd_locked = locked;
   }
 
 protected:
@@ -1092,6 +1107,7 @@ protected:
 
 private:
   static void ProcessDataStreams() {
+    if (sd_locked) return;
 #if 1
     // Yes, it's a selection sort, luckily there's not a lot of
     // DataStreamWork instances.
@@ -1115,8 +1131,12 @@ private:
 #endif
   }
 
+  static volatile bool sd_locked;
+
   DataStreamWork* next_;
 };
+
+volatile bool DataStreamWork::sd_locked = false;
 
 // BufferedDataStream is meant to be read from the main autdio interrupt.
 // Every time some space is freed up, Schedulefillbuffer() is called
@@ -1260,6 +1280,21 @@ char current_directory[128];
 // every time the hum loops, it will randomly pick one of them.
 class Effect {
   public:
+
+  enum Extension {
+    WAV,
+    RAW,
+    USL,
+    UNKNOWN,
+  };
+
+  static Extension IdentifyExtension(const char* filename) {
+    if (endswith(".wav", filename)) return WAV;
+    if (endswith(".raw", filename)) return RAW;
+    if (endswith(".usl", filename)) return USL;
+    return UNKNOWN;
+  }
+
   Effect(const char* name) : name_(name) {
     next_ = all_effects;
     all_effects = this;
@@ -1272,6 +1307,7 @@ class Effect {
     digits_ = 0;
     unnumbered_file_found_ = false;
     subdirs_ = false;
+    ext_ = UNKNOWN;
   }
 
   void Scan(const char *filename) {
@@ -1297,6 +1333,9 @@ class Effect {
         digits_ = end - rest;
       }
     }
+
+    if (ext_ == UNKNOWN)
+      ext_ = IdentifyExtension(filename);
   }
 
   void Show() {
@@ -1371,15 +1410,23 @@ class Effect {
       memcpy(j, buf, strlen(buf) + 1);
     }
 
-    strcat(filename, ".wav");
+    switch (ext_) {
+      case WAV: strcat(filename, ".wav"); break;
+      case RAW: strcat(filename, ".raw"); break;
+      case USL: strcat(filename, ".usl"); break;
+      default: break;
+    }
+    
     Serial.print("Playing ");
     Serial.println(filename);
     return true;
   }
 
   static void ScanAll(const char* filename) {
-    if (!endswith(".wav", filename))
+    if (Effect::IdentifyExtension(filename) == Effect::UNKNOWN) {
       return;
+    }
+
 #if 0
     // TODO: "monitor scan" command?
     Serial.print("SCAN ");
@@ -1451,6 +1498,9 @@ private:
 
   // All files must start with this prefix.
   const char* name_;
+
+  // All files must end with this extension.
+  Extension ext_;
 };
 
 #define EFFECT(X) Effect X(#X)
@@ -1469,6 +1519,7 @@ EFFECT(blaster);
 EFFECT(lockup);
 EFFECT(poweronf);
 EFFECT(font);
+
 
 // Polyphonic fonts
 EFFECT(blst);
@@ -1662,6 +1713,26 @@ private:
 #endif
   }
 
+  uint32_t Tell() {
+#ifdef ENABLE_SERIALFLASH
+    if (sf_file_) return sf_file_.position();
+#endif
+#ifdef ENABLE_SD
+    return sd_file_.position();
+#endif
+    return 0;
+  }
+
+  uint32_t FileSize() {
+#ifdef ENABLE_SERIALFLASH
+    if (sf_file_) return sf_file_.size();
+#endif
+#ifdef ENABLE_SD
+    return sd_file_.size();
+#endif
+    return 0;
+  }
+
   int AlignRead(int n) {
 #ifdef ENABLE_SERIALFLASH
     if (sf_file_) return n;
@@ -1702,30 +1773,37 @@ private:
 	  goto fail;
         }
       }
-      if (ReadFile(20) != 20) {
-	Serial.println("Failed to read 20 bytes.");
-	goto fail;
+      wav_ = endswith(".wav", filename_);
+      if (wav_) {
+	if (ReadFile(20) != 20) {
+	  Serial.println("Failed to read 20 bytes.");
+	  goto fail;
+	}
+	if (header(0) != 0x46464952 &&
+	    header(2) != 0x45564157 &&
+	    header(3) != 0x20746D66 &&
+	    header(4) < 16) {
+	  Serial.println("Headers don't match.");
+	  YIELD();
+	  goto fail;
+	}
+	tmp_ = header(4);
+	if (tmp_ != ReadFile(tmp_)) {
+	  Serial.println("Read failed.");
+	  goto fail;
+	}
+	if ((header(0) & 0xffff) != 1) {
+	  Serial.println("Wrong format.");
+	  goto fail;
+	}
+	channels_ = header(0) >> 16;
+	rate_ = header(1);
+	bits_ = header(3) >> 16;
+      } else {
+         channels_ = 1;
+         rate_ = 44100;
+         bits_ = 16;
       }
-      if (header(0) != 0x46464952 &&
-          header(2) != 0x45564157 &&
-          header(3) != 0x20746D66 &&
-          header(4) < 16) {
-	Serial.println("Headers don't match.");
-	YIELD();
-	goto fail;
-      }
-      tmp_ = header(4);
-      if (tmp_ != ReadFile(tmp_)) {
-	Serial.println("Read failed.");
-	goto fail;
-      }
-      if ((header(0) & 0xffff) != 1) {
-	Serial.println("Wrong format.");
-	goto fail;
-      }
-      channels_ = header(0) >> 16;
-      rate_ = header(1);
-      bits_ = header(3) >> 16;
       Serial.print("channels: ");
       Serial.print(channels_);
       Serial.print(" rate: ");
@@ -1733,12 +1811,18 @@ private:
       Serial.print(" bits: ");
       Serial.println(bits_);
 
-      while (ReadFile(8) == 8) {
-        len_ = header(1);
-        if (header(0) != 0x61746164) {
-          Skip(len_);
-          continue;
-        }
+      while (true) {
+	if (wav_) {
+	  if (ReadFile(8) != 8) break;
+	  len_ = header(1);
+	  if (header(0) != 0x61746164) {
+	    Skip(len_);
+	    continue;
+	  }
+	} else {
+	  if (Tell() >= FileSize()) break;
+	  len_ = FileSize() - Tell();
+	}
 	sample_bytes_ = len_;
         while (len_) {
 	  bytes_to_decode_ =
@@ -1810,8 +1894,10 @@ private:
   int tmp_;
 
   int rate_;
-  int channels_;
-  int bits_;
+  uint8_t channels_;
+  uint8_t bits_;
+
+  bool wav_;
 
   int bytes_to_decode_ = 0;
   size_t len_ = 0;
@@ -3694,7 +3780,7 @@ public:
     }
     CommandParser::Link();
     Looper::Link();
-    SaberBase::Link();
+    SaberBase::Link(this);
   }
 
   // BladeBase implementation
@@ -3916,6 +4002,32 @@ struct Blue3mmLED {
   static const int Blue = 255;
 };
 
+// This blade has 100 x 0.5W red 8mm straw-hat LEDs.
+// Since I don't have a proper datasheet, I measured these values.
+struct Red8mmLED100 {
+  static constexpr float MaxAmps = 11.74;
+  static constexpr float MaxVolts = 2.97;
+  static constexpr float P2Amps = 7.35;
+  static constexpr float P2Volts = 2.5;
+  static constexpr float R = 0.001;
+  static const int Red = 0;
+  static const int Green = 0;
+  static const int Blue = 255;
+};
+
+// This blade has 100 x 0.5W blue 8mm straw-hat LEDs.
+// Since I don't have a proper datasheet, I measured these values.
+struct Blue8mmLED100 {
+  static constexpr float MaxAmps = 8.9;
+  static constexpr float MaxVolts = 3.8;
+  static constexpr float P2Amps = 6.05;
+  static constexpr float P2Volts = 3.5;
+  static constexpr float R = 0.001;
+  static const int Red = 0;
+  static const int Green = 0;
+  static const int Blue = 255;
+};
+
 // For when there is no LED hooked up to a channel.
 struct NoLED {
   static constexpr float MaxAmps = 1.0;
@@ -4041,103 +4153,6 @@ BladeConfig blades[] = {
   // Testing configuration. 
   { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) },
 };
-
-
-#ifdef ENABLE_SERIALFLASH
-// Support for uploading files in TAR format.
-class Tar {
-  public:
-    // Header description:
-    //
-    // Fieldno  Offset  len     Description
-    // 
-    // 0        0       100     Filename
-    // 1        100     8       Mode (octal)
-    // 2        108     8       uid (octal)
-    // 3        116     8       gid (octal)
-    // 4        124     12      size (octal)
-    // 5        136     12      mtime (octal)
-    // 6        148     8       chksum (octal)
-    // 7        156     1       linkflag
-    // 8        157     100     linkname
-    // 9        257     8       magic
-    // 10       265     32      (USTAR) uname
-    // 11       297     32      (USTAR) gname
-    // 12       329     8       devmajor (octal)
-    // 13       337     8       devminor (octal)
-    // 14       345     167     (USTAR) Long path
-    //
-    // magic can be any of:
-    //   "ustar\0""00"  POSIX ustar (Version 0?).
-    //   "ustar  \0"    GNU tar (POSIX draft)
-
-  void begin() {
-    file_length_ = 0;
-    bytes_ = 0;
-  }
-  bool write(char* data, size_t bytes) {
-    while (bytes) {
-      size_t to_copy = min(sizeof(block_) - bytes_, bytes);
-      memcpy(block_ + bytes_, data, to_copy);
-      bytes -= to_copy;
-      data += to_copy;
-      bytes_ += to_copy;
-//      Serial.print("Have: ");
-//      Serial.println(bytes_);
-
-      if (bytes_ == sizeof(block_)) {
-        if (file_length_) {
-          size_t to_write = min(sizeof(block_), file_length_);
-          file_.write(block_, to_write);
-          file_length_ -= to_write;
-	  if (!file_length_) file_.close();
-        } else {
-          if (memcmp("ustar", block_ + 257, 5)) {
-            Serial.println("NOT USTAR!");
-          } else {
-            // Start new file here
-            file_length_ = strtol(block_ + 124, NULL, 8);
-            Serial.print("Receiving ");
-            Serial.print(block_);
-            Serial.print(" length = ");
-            Serial.println(file_length_);
-#ifdef TAR_UPLOADS_TO_SDCARD
-            file_.close();
-            char *dir_end = strrchr(block_, '/');
-            if (dir_end) {
-              *dir_end = 0;
-              SD.mkdir(block_);
-              *dir_end = '/';
-            }
-	    file_ = SD.open(block_, FILE_WRITE);
-#else
-            if (!SerialFlashChip::create(block_, file_length_)) {
-              Serial.println("Create file failed.");
-              return false;
-            }
-            file_ = SerialFlashChip::open(block_);
-#endif
-          }
-        }
-        bytes_ = 0;
-      }
-    }
-    return true;
-  }
-  private:
-#ifdef TAR_UPLOADS_TO_SDCARD
-    File file_;
-#else
-    SerialFlashFile file_;
-#endif
-    size_t file_length_;
-    size_t bytes_;
-
-    // TODO: Can this be shared with some other task?
-    char block_[512];
-};
-
-#endif
 
 class DebouncedButton {
 public:
@@ -4508,11 +4523,18 @@ public:
   unsigned long last_clash = 0;
   void Clash() {
     // TODO: Pick clash randomly and/or based on strength of clash.
-    if (!on_) return;
     unsigned long t = millis();
     if (t - last_clash < 100) return;
     last_clash = t;
-    SaberBase::DoClash();
+    if (on_) {
+      SaberBase::DoClash();
+    } else {
+      if (power_.pushed_millis()) {
+	power_.EatClick();
+	Serial.println("Previous preset");
+	previous_preset();
+      }
+    }
   }
 
   bool chdir(const char* dir) {
@@ -4577,6 +4599,20 @@ public:
     Preset* tmp = current_preset_ + 1;
     if (tmp == current_config_->presets + current_config_->num_presets) {
       tmp = current_config_->presets;
+    }
+    SetPreset(tmp);
+    SaberBase::DoNewFont();
+  }
+
+  // Go to the previous Preset.
+  void previous_preset() {
+    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+#ifdef ENABLE_AUDIO
+    beeper.Beep(0.05, 2000.0);
+#endif
+    Preset* tmp = current_preset_ - 1;
+    if (tmp == current_config_->presets - 1) {
+      tmp = current_config_->presets + current_config_->num_presets - 1;
     }
     SetPreset(tmp);
     SaberBase::DoNewFont();
@@ -4866,11 +4902,7 @@ Saber saber;
 // serial monitor.
 class Parser : Looper, StateMachine {
 public:
-  enum Mode {
-    ModeCommand,
-    ModeDecode
-  };
-  Parser() : Looper(), len_(0), mode_(ModeCommand) {}
+  Parser() : Looper(), len_(0) {}
 
   void Loop() override {
     STATE_MACHINE_BEGIN();
@@ -4892,66 +4924,6 @@ public:
   }
 
   void Parse() {
-#ifdef ENABLE_SERIALFLASH
-    switch (mode_) {
-      case ModeCommand:
-        ParseCmd();
-        break;
-      case ModeDecode:
-        UUDecode();
-        break;
-    }
-#else
-    ParseCmd();
-#endif
-  }
-
-#ifdef ENABLE_SERIALFLASH
-  int32_t DecodeChar(char c) {
-    return (c - 32) & 0x3f;
-  }
-
-  void UUDecode() {
-    if (cmd_[0] == '`') {
-      Serial.println("Done");
-      mode_ = ModeCommand;
-      return;
-    }
-    int to_decode = DecodeChar(cmd_[0]);
-    if (to_decode > 0 && to_decode < 80) {
-      char *in = cmd_+ 1;
-      char *out = cmd_;
-      int decoded = 0;
-      while (decoded < to_decode) {
-        int32_t bits = (DecodeChar(in[0]) << 18) | (DecodeChar(in[1]) << 12) | (DecodeChar(in[2]) << 6) | DecodeChar(in[3]);
-        out[0] = bits >> 16;
-        out[1] = bits >> 8;
-        out[2] = bits;
-#if 0
-        Serial.print(bits);
-        Serial.print("<");
-        Serial.print((int)out[0]);
-        Serial.print(",");
-        Serial.print((int)out[1]);
-        Serial.print(",");
-        Serial.print((int)out[2]);
-        Serial.print(">");
-        Serial.println("");
-#endif
-        in += 4;
-        out += 3;
-        decoded += 3;
-      }
-      if (tar_.write(cmd_, to_decode))
-        return;
-    }
-
-    Serial.println("decode failed");
-    mode_ = ModeCommand;
-  }
-#endif
-
-  void ParseCmd() {
     if (len_ == 0 || len_ == (int)sizeof(cmd_)) return;
     char *cmd = cmd_;
     while (*cmd == ' ') cmd++;
@@ -4980,13 +4952,6 @@ public:
       return;
     }
 #ifdef ENABLE_SERIALFLASH
-    if (!strcmp(cmd, "begin")) {
-      Serial.println("Begin UUdecode tar file.\n");
-      // Filename is ignored.
-      mode_ = ModeDecode;
-      tar_.begin();
-      return;
-    }
     if (!strcmp(cmd, "ls")) {
       SerialFlashChip::opendir();
       uint32_t size;
@@ -5016,6 +4981,7 @@ public:
 #endif
 #ifdef ENABLE_SD
     if (!strcmp(cmd, "dir")) {
+      DataStreamWork::LockSD(true);
       File dir = SD.open(e ? e : current_directory);
       while (File f = dir.openNextFile()) {
         Serial.print(f.name());
@@ -5023,11 +4989,13 @@ public:
         Serial.println(f.size());
         f.close();
       }
+      DataStreamWork::LockSD(false);
       Serial.println("Done listing files.");
       return;
     }
     if (!strcmp(cmd, "readalot")) {
       char tmp[10];
+      DataStreamWork::LockSD(true);
       File f = SD.open(e);
       for (int i = 0; i < 10000; i++) {
         f.seek(0);
@@ -5035,12 +5003,14 @@ public:
         f.seek(1000);
         f.read(tmp, 10);
       }
+      DataStreamWork::LockSD(true);
       Serial.println("Done");
       return;
     }
 #endif
 #if defined(ENABLE_SD) && defined(ENABLE_SERIALFLASH)
     if (!strcmp(cmd, "cache")) {
+      DataStreamWork::LockSD(true);
       File f = SD.open(e);
       if (!f) {
 	Serial.println("File not found.");
@@ -5058,6 +5028,7 @@ public:
 	o.write(tmp, b);
 	bytes -= b;
       }
+      DataStreamWork::LockSD(false);
       Serial.println("Cached!");
       return;
     }
@@ -5154,12 +5125,9 @@ public:
     Serial.print("Whut? :");
     Serial.println(cmd);
   }
+
 private:
-#ifdef ENABLE_SERIALFLASH
-  Tar tar_;
-#endif
   int len_;
-  Mode mode_;
   char cmd_[256];
 };
 
@@ -5167,12 +5135,22 @@ Parser parser;
 
 #ifdef ENABLE_MOTION
 
+bool DetectI2CPullup() {
+  pinMode(i2cDataPin, INPUT_PULLDOWN);
+  delayMicroseconds(10);
+  bool pullup_detected = analogRead(i2cDataPin) > 800;
+  pinMode(i2cDataPin, INPUT);
+  delayMicroseconds(10);
+  return pullup_detected;
+}
+
 #ifdef V2
 #define I2C_TIMEOUT_MILLIS 300
 
 class I2CDevice {
 public:
-  explicit I2CDevice(uint8_t address) : address_(address) {
+  explicit I2CDevice(uint8_t address) : address_(address) {}
+  void begin() {
     Wire.begin();
     Wire.setClock(400000);
   }
@@ -5308,8 +5286,7 @@ public:
     CTRL_SPIAux = 0x70
   };
 
-  LSM6DS3H() : I2CDevice(106) {
-  }
+  LSM6DS3H() : I2CDevice(106) {}
 
   void Loop() override {
     STATE_MACHINE_BEGIN();
@@ -5320,6 +5297,11 @@ public:
       } dataBuffer;
 
       SLEEP(1000);
+      if(!DetectI2CPullup()) {
+        Serial.println("No motion chip detected yet...");
+        while (!DetectI2CPullup()) SLEEP(100);
+      }
+
       Serial.print("Motion setup ... ");
 
       writeByte(CTRL1_XL, 0x80);  // 1.66kHz accel
@@ -5413,11 +5395,15 @@ class Orientation : Looper {
   }
 
   void Setup() override {
-    imu.begin();
-    // filter.begin(100);
+    if (DetectI2CPullup()) {
+      found_ = true;
+      imu.begin();
+      // filter.begin(100);
+    }
   }
 
   void Loop() override {
+    if (!found_) return;
     if (imu.available()) {
       Vec3 accel, gyro, magnetic;
 
@@ -5480,6 +5466,7 @@ class Orientation : Looper {
   }
 private:
   Vec3 accel_;
+  bool found_ = false;
 };
 
 Orientation orientation;
@@ -5549,6 +5536,21 @@ Amplifier amplifier;
 #endif
 
 void setup() {
+  pinMode(bladePowerPin1, OUTPUT);
+  pinMode(bladePowerPin2, OUTPUT);
+  pinMode(bladePowerPin3, OUTPUT);
+  digitalWrite(bladePowerPin1, LOW);
+  digitalWrite(bladePowerPin2, LOW);
+  digitalWrite(bladePowerPin3, LOW);
+#ifdef V2
+  pinMode(bladePowerPin4, OUTPUT);
+  pinMode(bladePowerPin5, OUTPUT);
+  pinMode(bladePowerPin6, OUTPUT);
+  digitalWrite(bladePowerPin4, LOW);
+  digitalWrite(bladePowerPin5, LOW);
+  digitalWrite(bladePowerPin6, LOW);
+#endif
+
   delay(1000);
   Serial.begin(9600);
 #ifdef ENABLE_SERIALFLASH
@@ -5608,9 +5610,856 @@ public:
 Script script;
 #endif
 
+
+#ifdef MTP_RX_ENDPOINT
+
+void mtp_yield() { Looper::DoLoop(); }
+void mtp_lock_storage(bool lock) {
+  DataStreamWork::LockSD(lock);
+}
+
+// This interface lets the MTP responder interface any storage.
+// We'll need to give the MTP responder a pointer to one of these.
+class MTPStorageInterface {
+public:
+  // Return true if this storage is read-only
+  virtual bool readonly() = 0;
+ 
+  // Does it have directories?
+  virtual bool has_directories() = 0;
+
+  // Return size of storage in bytes.
+  virtual uint64_t size() = 0;
+
+  // Return free space in bytes.
+  virtual uint64_t free() = 0;
+
+  // parent = 0 means get all handles.
+  // parent = 0xFFFFFFFF means get root folder.
+  virtual void StartGetObjectHandles(uint32_t parent) = 0;
+  virtual uint32_t GetNextObjectHandle() = 0;
+
+  // Size should be 0xFFFFFFFF if it's a directory.
+  virtual void GetObjectInfo(uint32_t handle,
+			     char* name,
+			     uint32_t* size,
+			     uint32_t* parent) = 0;
+  virtual uint32_t GetSize(uint32_t handle) = 0;
+  virtual void read(uint32_t handle,
+		    uint32_t pos,
+		    char* buffer,
+		    uint32_t bytes) = 0;
+  virtual uint32_t Create(uint32_t parent,
+			  bool folder,
+			  const char* filename) = 0;
+  virtual void write(const char* data, uint32_t size);
+  virtual void close();
+  virtual bool DeleteObject(uint32_t object) = 0;
+};
+
+// Storage implementation for SD. SD needs to be already initialized.
+class MTPStorage_SD : public MTPStorageInterface {
+private:
+  File index_;
+
+  uint8_t mode_ = 0;
+  uint32_t open_file_ = 0xFFFFFFFEUL;
+  File f_;
+  uint32_t index_entries_ = 0;
+
+  struct Record {
+    uint32_t parent;
+    uint32_t child;  // size stored here for files
+    uint32_t sibling;
+    uint8_t isdir;
+    uint8_t scanned;
+    char name[14];
+  };
+
+  bool readonly() { return false; }
+  bool has_directories() { return true; }
+  uint64_t size() { return 1 << 30; }
+  uint64_t free() { return 1 << 29; }
+
+  void OpenIndex() {
+    if (index_) return;
+    mtp_lock_storage(true);
+    index_ = SD.open("mtpindex.dat", FILE_WRITE);
+    mtp_lock_storage(false);
+  }
+
+  void WriteIndexRecord(uint32_t i, const Record& r) {
+    OpenIndex();
+    mtp_lock_storage(true);
+    index_.seek(sizeof(r) * i);
+    index_.write((char*)&r, sizeof(r));
+    mtp_lock_storage(false);
+  }
+  
+  uint32_t AppendIndexRecord(const Record& r) {
+    uint32_t new_record = index_entries_++;
+    WriteIndexRecord(new_record, r);
+    return new_record;
+  }
+
+  // TODO(hubbe): Cache a few records for speed.
+  Record ReadIndexRecord(uint32_t i) {
+    Record ret;
+    if (i > index_entries_) {
+      memset(&ret, 0, sizeof(ret));
+      return ret;
+    }
+    OpenIndex();
+    mtp_lock_storage(true);
+    index_.seek(sizeof(ret) * i);
+    index_.read(&ret, sizeof(ret));
+    mtp_lock_storage(false);
+    return ret;
+  }
+
+  void ConstructFilename(int i, char* out) {
+    if (i == 0) {
+      strcpy(out, "/");
+    } else {
+      Record tmp = ReadIndexRecord(i);
+      ConstructFilename(tmp.parent, out);
+      if (out[strlen(out)-1] != '/')
+	strcat(out, "/");
+      strcat(out, tmp.name);
+    }
+  }
+
+  void OpenFileByIndex(uint32_t i, uint8_t mode = O_RDONLY) {
+    if (open_file_ == i && mode_ == mode)
+      return;
+    char filename[256];
+    ConstructFilename(i, filename);
+    mtp_lock_storage(true);
+    f_.close();
+    f_ = SD.open(filename, mode);
+    open_file_ = i;
+    mode_ = mode;
+    mtp_lock_storage(false);
+  }
+
+  // MTP object handles should not change or be re-used during a session.
+  // This would be easy if we could just have a list of all files in memory.
+  // Since our RAM is limited, we'll keep the index in a file instead.
+  bool index_generated = false;
+  void GenerateIndex() {
+    if (index_generated) return;
+    index_generated = true;
+
+    mtp_lock_storage(true);
+    SD.remove("mtpindex.dat");
+    mtp_lock_storage(false);
+    index_entries_ = 0;
+
+    Record r;
+    r.parent = 0;
+    r.sibling = 0;
+    r.child = 0;
+    r.isdir = true;
+    r.scanned = false;
+    strcpy(r.name, "/");
+    AppendIndexRecord(r);
+  }
+
+  void ScanDir(uint32_t i) {
+    Record record = ReadIndexRecord(i);
+    if (record.isdir && !record.scanned) {
+      OpenFileByIndex(i);
+      if (!f_) return;
+      int sibling = 0;
+      while (true) {
+	mtp_lock_storage(true);
+	File child = f_.openNextFile();
+	mtp_lock_storage(false);
+	if (!child) break;
+	Record r;
+	r.parent = i;
+	r.sibling = sibling;
+	r.isdir = child.isDirectory();
+	r.child = r.isdir ? 0 : child.size();
+	r.scanned = false;
+	strcpy(r.name, child.name());
+	sibling = AppendIndexRecord(r);
+	child.close();
+      }
+      record.scanned = true;
+      record.child = sibling;
+      WriteIndexRecord(i, record);
+    }
+  }
+
+  bool all_scanned_ = false;
+  void ScanAll() {
+    if (all_scanned_) return;
+    all_scanned_ = true;
+
+    GenerateIndex();
+    for (uint32_t i = 0; i < index_entries_; i++) {
+      ScanDir(i);
+    }
+  }
+
+  uint32_t next_;
+  bool follow_sibling_;
+  void StartGetObjectHandles(uint32_t parent) override {
+    GenerateIndex();
+    if (parent) {
+      if (parent == 0xFFFFFFFF) parent = 0;
+      ScanDir(parent);
+      follow_sibling_ = true;
+      // Root folder?
+      next_ = ReadIndexRecord(parent).child;
+    } else {
+      ScanAll();
+      follow_sibling_ = false;
+      next_ = 1;
+    }
+  }
+
+  uint32_t GetNextObjectHandle() override {
+    while (true) {
+      if (next_ == 0)
+	return 0;
+      int ret = next_;
+      Record r = ReadIndexRecord(ret);
+      if (follow_sibling_) {
+	next_ = r.sibling;
+      } else {
+	next_++;
+	if (next_ >= index_entries_)
+	  next_ = 0;
+      }
+      if (r.name[0]) return ret;
+    }
+  }
+
+  void GetObjectInfo(uint32_t handle,
+		     char* name,
+		     uint32_t* size,
+		     uint32_t* parent) override {
+    Record r = ReadIndexRecord(handle);
+    strcpy(name, r.name);
+    *parent = r.parent;
+    *size = r.isdir ? 0xFFFFFFFFUL : r.child;
+  }
+
+  uint32_t GetSize(uint32_t handle) {
+    return ReadIndexRecord(handle).child;
+  }
+
+  void read(uint32_t handle,
+	    uint32_t pos,
+	    char* out,
+	    uint32_t bytes) override {
+    OpenFileByIndex(handle);
+    mtp_lock_storage(true);
+    f_.seek(pos);
+    f_.read(out, bytes);
+    mtp_lock_storage(false);
+  }
+
+  bool DeleteObject(uint32_t object) override {
+    char filename[256];
+    Record r;
+    while (true) {
+      r = ReadIndexRecord(object == 0xFFFFFFFFUL ? 0 : object);
+      if (!r.isdir) break;
+      if (!r.child) break;
+      if (!DeleteObject(r.child))
+	return false;
+    }
+
+    // We can't actually delete the root folder,
+    // but if we deleted everything else, return true.
+    if (object == 0xFFFFFFFFUL) return true;
+
+    ConstructFilename(object, filename);
+    bool success;
+    mtp_lock_storage(true);
+    if (r.isdir) {
+      success = SD.rmdir(filename);
+    } else {
+      success = SD.remove(filename);
+    }
+    mtp_lock_storage(false);
+    if (!success) return false;
+    r.name[0] = 0;
+    int p = r.parent;
+    WriteIndexRecord(object, r);
+    Record tmp = ReadIndexRecord(p);
+    if (tmp.child == object) {
+      tmp.child = r.sibling;
+      WriteIndexRecord(p, tmp);
+    } else {
+      int c = tmp.child;
+      while (c) {
+	tmp = ReadIndexRecord(c);
+	if (tmp.sibling == object) {
+	  tmp.sibling = r.sibling;
+	  WriteIndexRecord(c, tmp);
+	  break;
+	} else {
+	  c = tmp.sibling;
+	}
+      }
+    }
+    return true;
+  }
+
+  uint32_t Create(uint32_t parent,
+		  bool folder,
+		  const char* filename) override {
+    uint32_t ret;
+    if (parent == 0xFFFFFFFFUL) parent = 0;
+    Record p = ReadIndexRecord(parent);
+    Record r;
+    if (strlen(filename) > 12) return 0;
+    strcpy(r.name, filename);
+    r.parent = parent;
+    r.child = 0;
+    r.sibling = p.child;
+    r.isdir = folder;
+    // New folder is empty, scanned = true.
+    r.scanned = 1;
+    ret = p.child = AppendIndexRecord(r);
+    WriteIndexRecord(parent, p);
+    if (folder) {
+      char filename[256];
+      ConstructFilename(ret, filename);
+      mtp_lock_storage(true);
+      SD.mkdir(filename);
+      mtp_lock_storage(false);
+    } else {
+      OpenFileByIndex(ret, FILE_WRITE);
+    }
+    return ret;
+  }
+
+  void write(const char* data, uint32_t bytes) override {
+    mtp_lock_storage(true);
+    f_.write(data, bytes);
+    mtp_lock_storage(false);
+  }
+
+  void close() override {
+    mtp_lock_storage(true);
+    uint32_t size = f_.size();
+    f_.close();
+    mtp_lock_storage(false);
+    Record r = ReadIndexRecord(open_file_);
+    r.child = size;
+    WriteIndexRecord(open_file_, r);
+    open_file_ = 0xFFFFFFFEUL;
+  }
+};
+
+// MTP Responder.
+class MTPD {
+public:
+  explicit MTPD(MTPStorageInterface* storage) : storage_(storage) {}
+
+private:
+  MTPStorageInterface* storage_;
+
+  struct MTPHeader {
+    uint32_t len;  // 0
+    uint16_t type; // 4
+    uint16_t op;   // 6
+    uint32_t transaction_id; // 8
+  };
+
+  struct MTPContainer {
+    uint32_t len;  // 0
+    uint16_t type; // 4
+    uint16_t op;   // 6
+    uint32_t transaction_id; // 8
+    uint32_t params[5];    // 12
+  };
+
+  void PrintPacket(const usb_packet_t *x) {
+#if 0
+    for (int i = 0; i < x->len; i++) {
+      Serial1.print("0123456789ABCDEF"[x->buf[i] >> 4]);
+      Serial1.print("0123456789ABCDEF"[x->buf[i] & 0xf]);
+      if ((i & 3) == 3) Serial1.print(" ");
+    } 
+    Serial1.println("");
+#endif
+#if 0
+    MTPContainer *tmp = (struct MTPContainer*)(x->buf);
+    Serial1.print(" len = ");
+    Serial1.print(tmp->len, HEX);
+    Serial1.print(" type = ");
+    Serial1.print(tmp->type, HEX);
+    Serial1.print(" op = ");
+    Serial1.print(tmp->op, HEX);
+    Serial1.print(" transaction_id = ");
+    Serial1.print(tmp->transaction_id, HEX);
+    for (int i = 0; i * 4 < x->len - 12; i ++) {
+      Serial1.print(" p");
+      Serial1.print(i);
+      Serial1.print(" = ");
+      Serial1.print(tmp->params[i], HEX);
+    }
+    Serial1.println("");
+#endif
+  }
+
+  usb_packet_t *data_buffer_ = NULL;
+  void get_buffer() {
+    while (!data_buffer_) {
+      data_buffer_ = usb_malloc();
+      if (!data_buffer_) mtp_yield();
+    }
+  }
+
+  void receive_buffer() {
+    while (!data_buffer_) {
+      data_buffer_ = usb_rx(MTP_RX_ENDPOINT);
+      if (!data_buffer_) mtp_yield();
+    }
+  }
+
+  bool write_get_length_ = false;
+  uint32_t write_length_ = 0;
+  void write(const char *data, int len) {
+    if (write_get_length_) {
+      write_length_ += len;
+    } else {
+      int pos = 0;
+      while (pos < len) {
+	get_buffer();
+	int avail = sizeof(data_buffer_->buf) - data_buffer_->len;
+	int to_copy = min(len - pos, avail);
+	memcpy(data_buffer_->buf + data_buffer_->len,
+	       data + pos,
+	       to_copy);
+	data_buffer_->len += to_copy;
+	pos += to_copy;
+	if (data_buffer_->len == sizeof(data_buffer_->buf)) {
+	  usb_tx(MTP_TX_ENDPOINT, data_buffer_);
+	  data_buffer_ = NULL;
+	  // Serial1.println("SENT...");
+	}
+      }
+    }
+  }
+  void write8(uint8_t x) { write((char*)&x, sizeof(x)); }
+  void write16(uint16_t x) { write((char*)&x, sizeof(x)); }
+  void write32(uint32_t x) { write((char*)&x, sizeof(x)); }
+  void write64(uint64_t x) { write((char*)&x, sizeof(x)); }
+  void writestring(const char* str) {
+    if (*str) {
+      write8(strlen(str) + 1);
+      while (*str) {
+        write16(*str);
+        ++str;
+      }
+      write16(0);
+    } else {
+      write8(0);
+    }
+  }
+
+  void WriteDescriptor() {
+    write16(100);  // MTP version
+    write32(6);    // MTP extension
+//    write32(0xFFFFFFFFUL);    // MTP extension
+    write16(100);  // MTP version
+    writestring("microsoft.com: 1.0;");
+    write16(0);    // functional mode
+
+    // Supported operations (array of uint16)
+    write32(14);
+    write16(0x1001);  // GetDeviceInfo
+    write16(0x1002);  // OpenSession
+    write16(0x1003);  // CloseSession
+    write16(0x1004);  // GetStorageIDs
+
+    write16(0x1005);  // GetStorageInfo
+    write16(0x1006);  // GetNumObjects
+    write16(0x1007);  // GetObjectHandles
+    write16(0x1008);  // GetObjectInfo
+
+    write16(0x1009);  // GetObject
+    write16(0x100B);  // DeleteObject
+    write16(0x100C);  // SendObjectInfo
+    write16(0x100D);  // SendObject
+
+    write16(0x1014);  // GetDevicePropDesc
+    write16(0x1015);  // GetDevicePropValue
+
+//    write16(0x1010);  // Reset
+//    write16(0x1019);  // MoveObject
+//    write16(0x101A);  // CopyObject
+
+    write32(0);       // Events (array of uint16)
+
+    write32(1);       // Device properties (array of uint16)
+    write16(0xd402);  // Device friendly name
+
+    write32(0);       // Capture formats (array of uint16)
+
+    write32(3);       // Playback formats (array of uint16)
+    write16(0x3000);  // Undefined format
+    write16(0x3001);  // Folders (associations)
+    write16(0x3008);  // WAV
+
+    writestring("PJRC");     // Manufacturer
+    writestring("Teensy");   // Model
+    writestring("1.0");      // version
+    writestring("???");      // serial
+  }
+
+  void WriteStorageIDs() {
+    write32(1); // 1 entry
+    write32(1); // 1 storage
+  }
+
+  void GetStorageInfo(uint32_t storage) {
+    write16(storage_->readonly() ? 0x0001 : 0x0004);   // storage type (removable RAM)
+    write16(storage_->has_directories() ? 0x0002: 0x0001);   // filesystem type (generic hierarchical)
+    write16(0x0000);   // access capability (read-write)
+    write64(storage_->size());  // max capacity
+    write64(storage_->free());  // free space (100M)
+    write32(0xFFFFFFFFUL);  // free space (objects)
+    writestring("SD Card");  // storage descriptor
+    writestring("");  // volume identifier
+  }
+
+  uint32_t GetNumObjects(uint32_t storage,
+			 uint32_t parent) {
+    storage_->StartGetObjectHandles(parent);
+    int num = 0;
+    while (storage_->GetNextObjectHandle()) num++;
+    return num;
+  }
+
+  void GetObjectHandles(uint32_t storage,
+			uint32_t parent) {
+    uint32_t num = 0;
+    if (!write_get_length_) {
+      num = GetNumObjects(storage, parent);
+    }
+    write32(num);
+    int handle;
+    storage_->StartGetObjectHandles(parent);
+    while ((handle = storage_->GetNextObjectHandle()))
+      write32(handle);
+  }
+
+  void GetObjectInfo(uint32_t handle) {
+    char filename[256];
+    uint32_t size, parent;
+    storage_->GetObjectInfo(handle, filename, &size, &parent);
+
+    write32(1); // storage
+    write16(size == 0xFFFFFFFFUL ? 0x3001 : 0x0000); // format
+    write16(0);  // protection
+    write32(size); // size
+    write16(0); // thumb format
+    write32(0); // thumb size
+    write32(0); // thumb width
+    write32(0); // thumb height
+    write32(0); // pix width
+    write32(0); // pix height
+    write32(0); // bit depth
+    write32(parent); // parent
+    write16(size == 0xFFFFFFFFUL ? 1 : 0); // association type
+    write32(0); // association description
+    write32(0);  // sequence number
+    writestring(filename);
+    writestring("");  // date created
+    writestring("");  // date modified
+    writestring("");  // keywords
+  }
+
+  void GetObject(uint32_t object_id) {
+    uint32_t size = storage_->GetSize(object_id);
+    if (write_get_length_) {
+      write_length_ += size;
+    } else {
+      uint32_t pos = 0;
+      while (pos < size) {
+	get_buffer();
+	uint32_t avail = sizeof(data_buffer_->buf) - data_buffer_->len;
+	uint32_t to_copy = min(pos - size, avail);
+	// Read directly from storage into usb buffer.
+	storage_->read(object_id,
+		       pos,
+		       (char*)(data_buffer_->buf + data_buffer_->len),
+		       to_copy);
+	pos += to_copy;
+	data_buffer_->len += to_copy;
+	if (data_buffer_->len == sizeof(data_buffer_->buf)) {
+	  usb_tx(MTP_TX_ENDPOINT, data_buffer_);
+	  data_buffer_ = NULL;
+	}
+      }
+    }
+  }
+
+#define CONTAINER ((struct MTPContainer*)(receive_buffer->buf))
+
+#define TRANSMIT(FUN) do {				\
+    write_length_ = 0;					\
+    write_get_length_ = true;				\
+    FUN;						\
+    write_get_length_ = false;				\
+    MTPHeader header;					\
+    header.len = write_length_ + 12;			\
+    header.type = 2;					\
+    header.op = CONTAINER->op;				\
+    header.transaction_id = CONTAINER->transaction_id;	\
+    write((char *)&header, sizeof(header));		\
+    FUN;						\
+    get_buffer();					\
+    usb_tx(MTP_TX_ENDPOINT, data_buffer_);		\
+    data_buffer_ = NULL;				\
+  } while(0)
+  
+  void read(char* data, uint32_t size) {
+    while (size) {
+      receive_buffer();
+      uint32_t to_copy = data_buffer_->len - data_buffer_->index;
+      to_copy = min(to_copy, size);
+      if (data) {
+	memcpy(data,
+	       data_buffer_->buf + data_buffer_->index,
+	       to_copy);
+	data += to_copy;
+      }
+      size -= to_copy;
+      data_buffer_->index += to_copy;
+      if (data_buffer_->index == data_buffer_->len) {
+	usb_free(data_buffer_);
+	data_buffer_ = NULL;
+      }
+    }
+  }
+
+  uint32_t ReadMTPHeader() {
+    MTPHeader header;
+    read((char *)&header, sizeof(MTPHeader));
+    // check that the type is data
+    return header.len - 12;
+  }
+
+  uint8_t read8() {
+    uint8_t ret;
+    read((char*)&ret, sizeof(ret));
+    return ret;
+  }
+  uint16_t read16() {
+    uint16_t ret;
+    read((char*)&ret, sizeof(ret));
+    return ret;
+  }
+  uint32_t read32() {
+    uint32_t ret;
+    read((char*)&ret, sizeof(ret));
+    return ret;
+  }
+
+  void readstring(char* buffer) {
+    int len = read8();
+    if (!buffer) {
+      read(NULL, len * 2);
+    } else {
+      for (int i = 0; i < len; i++) {
+	*(buffer++) = read16();
+      }
+    }
+  }
+
+  void read_until_short_packet() {
+    bool done = false;
+    while (!done) {
+      receive_buffer();
+      done = data_buffer_->len != sizeof(data_buffer_->buf);
+      usb_free(data_buffer_);
+      data_buffer_ = NULL;
+    }
+  }
+
+  uint32_t SendObjectInfo(uint32_t storage, uint32_t parent) {
+    ReadMTPHeader();
+    char filename[256];
+
+    read32(); // storage
+    bool dir = read16() == 0x3001; // format
+    read16();  // protection
+    read32(); // size
+    read16(); // thumb format
+    read32(); // thumb size
+    read32(); // thumb width
+    read32(); // thumb height
+    read32(); // pix width
+    read32(); // pix height
+    read32(); // bit depth
+    read32(); // parent
+    read16(); // association type
+    read32(); // association description
+    read32();  // sequence number
+
+    readstring(filename);
+    read_until_short_packet();  // ignores dates & keywords
+    return storage_->Create(parent, dir, filename);
+  }
+
+  void SendObject() {
+    uint32_t len = ReadMTPHeader();
+    while (len) {
+      receive_buffer();
+      uint32_t to_copy = data_buffer_->len - data_buffer_->index;
+      to_copy = min(to_copy, len);
+      storage_->write((char*)(data_buffer_->buf + data_buffer_->index),
+		      to_copy);
+      data_buffer_->index += to_copy;
+      len -= to_copy;
+      if (data_buffer_->index == data_buffer_->len) {
+	usb_free(data_buffer_);
+	data_buffer_ = NULL;
+      }
+    }
+    storage_->close();
+  }
+
+  void GetDevicePropValue(uint32_t prop) {
+    switch (prop) {
+      case 0xd402: // friendly name
+        // This is the name we'll actually see in the windows explorer.
+	// Should probably be configurable.
+        writestring("TeensySaber");
+        break;
+    }
+  }
+  void GetDevicePropDesc(uint32_t prop) {
+    switch (prop) {
+      case 0xd402: // friendly name
+        write16(prop);
+        write16(0xFFFF); // string type
+	write8(0);       // read-only
+	GetDevicePropValue(prop);
+	GetDevicePropValue(prop);
+	write8(0);       // no form
+    }
+  }
+
+public:
+  void loop() {
+    usb_packet_t *receive_buffer;
+    if ((receive_buffer = usb_rx(MTP_RX_ENDPOINT))) {
+      PrintPacket(receive_buffer);
+      uint32_t return_code = 0;
+      uint32_t p1 = 0;
+      if (receive_buffer->len >= 12) {
+	return_code = 0x2001;  // Ok
+	receive_buffer->len = 16;
+	if (CONTAINER->type == 1) { // command
+	  switch (CONTAINER->op) {
+	    case 0x1001: // GetDescription
+	      TRANSMIT(WriteDescriptor());
+	      break;
+	    case 0x1002:  // OpenSession
+	      break;
+	    case 0x1003:  // CloseSession
+	      break;
+	    case 0x1004:  // GetStorageIDs
+	      TRANSMIT(WriteStorageIDs());
+	      break;
+	    case 0x1005:  // GetStorageInfo
+	      TRANSMIT(GetStorageInfo(CONTAINER->params[0]));
+	      break;
+	    case 0x1006:  // GetNumObjects
+	      if (CONTAINER->params[1]) {
+		return_code = 0x2014; // spec by format unsupported
+	      } else {
+		p1 = GetNumObjects(CONTAINER->params[0],
+				   CONTAINER->params[2]);
+	      }
+	      break;
+	    case 0x1007:  // GetObjectHandles
+	      if (CONTAINER->params[1]) {
+		return_code = 0x2014; // spec by format unsupported
+	      } else {
+		TRANSMIT(GetObjectHandles(CONTAINER->params[0],
+					  CONTAINER->params[2]));
+	      }
+	      break;
+	    case 0x1008:  // GetObjectInfo
+	      TRANSMIT(GetObjectInfo(CONTAINER->params[0]));
+	      break;
+	    case 0x1009:  // GetObject
+	      TRANSMIT(GetObject(CONTAINER->params[0]));
+	      break;
+	    case 0x100B:  // DeleteObject
+	      if (CONTAINER->params[1]) {
+		return_code = 0x2014; // spec by format unsupported
+	      } else {
+		if (!storage_->DeleteObject(CONTAINER->params[0])) {
+		  return_code = 0x2012; // partial deletion
+		}
+	      }
+	      break;
+	    case 0x100C:  // SendObjectInfo
+	      CONTAINER->params[2] =
+		SendObjectInfo(CONTAINER->params[0], // storage
+			       CONTAINER->params[1]); // parent
+	      p1 = CONTAINER->params[0];
+	      if (!p1) p1 = 1;
+	      CONTAINER->len = receive_buffer->len = 12 + 3 * 4;
+	      break;
+	    case 0x100D:  // SendObject
+	      SendObject();
+	      break;
+	    case 0x1014:  // GetDevicePropDesc
+	      TRANSMIT(GetDevicePropDesc(CONTAINER->params[0]));
+	      break;
+	    case 0x1015:  // GetDevicePropvalue
+	      TRANSMIT(GetDevicePropValue(CONTAINER->params[0]));
+	      break;
+	    default:
+	      return_code = 0x2005;  // operation not supported
+	      break;
+	  }
+	} else {
+	  return_code = 0x2000;  // undefined
+	}
+      }
+      if (return_code) {
+	CONTAINER->type = 3;
+	CONTAINER->op = return_code;
+	CONTAINER->params[0] = p1;
+	PrintPacket(receive_buffer);
+	usb_tx(MTP_TX_ENDPOINT, receive_buffer);
+	receive_buffer = 0;
+      } else {
+	usb_free(receive_buffer);
+      }
+    }
+    // Maybe put event handling inside mtp_yield()?
+    if ((receive_buffer = usb_rx(MTP_EVENT_ENDPOINT))) {
+      usb_free(receive_buffer);
+    }
+  }
+};
+
+MTPStorage_SD storage;
+MTPD mtpd(&storage);
+
+#endif
+
 int last_activity = millis();
 
 void loop() {
+#ifdef MTP_RX_ENDPOINT
+  mtpd.loop();
+#endif
   Looper::DoLoop();
 
 #ifdef ENABLE_SNOOZE
