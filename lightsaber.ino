@@ -4083,6 +4083,12 @@ Preset presets[] = {
   { "charging", "tracks/duel.wav", &style_charging },
 };
 
+Preset red_presets[] = {
+  { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 100, 200>()},
+  { "caliban", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 100, 200>()},
+  { "font02", "tracks/cantina.wav", StyleStrobePtr<RED, WHITE, 15, 100, 200>()},
+};
+
 Preset simple_presets[] = {
   { "font01", "tracks/title.wav", StyleNormalPtr<BLUE, WHITE, 100, 200>() },
   { "font02", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 100, 200>() },
@@ -4146,6 +4152,12 @@ BladeConfig blades[] = {
 
   // Blue-Blue-White LED star
   { 20000, SimpleBladePtr<CreeXPE2White, CreeXPE2Blue, CreeXPE2Blue, NoLED>(), CONFIGARRAY(simple_presets) },
+
+  // Blue LED string (with green flourescent tube)
+  { 27000, SimpleBladePtr<Blue8mmLED100, Blue8mmLED100, Blue8mmLED100, NoLED>(), CONFIGARRAY(simple_presets) },
+
+  // Red LED string
+  { 33000, SimpleBladePtr<Red8mmLED100, Red8mmLED100, Red8mmLED100, NoLED>(), CONFIGARRAY(red_presets) },
 
   // 3 x Cree XL-L LED star
   { 100000, SimpleBladePtr<CreeXPL, CreeXPL, CreeXPL, NoLED>(), CONFIGARRAY(white_presets) },
