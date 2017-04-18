@@ -5315,6 +5315,7 @@ public:
       }
 
       Serial.print("Motion setup ... ");
+      I2CDevice::begin();
 
       writeByte(CTRL1_XL, 0x80);  // 1.66kHz accel
       writeByte(CTRL2_G, 0x80);   // 1.66kHz gyro
