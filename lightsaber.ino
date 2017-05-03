@@ -28,8 +28,8 @@
 
 
 // Board version
-#define VERSION_MAJOR 1
-#define VERSION_MINOR 0
+#define VERSION_MAJOR 2
+#define VERSION_MINOR 3
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
@@ -100,7 +100,7 @@ const unsigned int maxLedsPerStrip = 144;
 #include <SD.h>
 
 #include <SPI.h>
-#include <Wire.h>
+#include <i2c_t3.h>
 #include <math.h>
 #include <usb_dev.h>
 
@@ -221,6 +221,9 @@ enum NoLink { NOLINK = 17 };
 // Also provides a Setup() function.
 class Looper;
 Looper* loopers = NULL;
+static volatile uint32_t looper_calls  = 0;
+static uint32_t last_looper_calls = 0;
+static uint32_t looper_calls_equal = 0;
 class Looper {
 public:
   void Link() {
@@ -239,6 +242,7 @@ public:
   explicit Looper(NoLink _) { }
   ~Looper() { Unlink(); }
   static void DoLoop() {
+    looper_calls++;
     for (Looper *l = loopers; l; l = l->next_looper_) {
       l->Loop();
     }
@@ -246,6 +250,19 @@ public:
   static void DoSetup() {
     for (Looper *l = loopers; l; l = l->next_looper_) {
       l->Setup();
+    }
+  }
+
+  static void CheckLoopsISR() {
+    if (looper_calls == 0) return;
+    if (looper_calls != last_looper_calls) {
+      last_looper_calls = looper_calls;
+      looper_calls_equal = 0;
+      return;
+    }
+    if (looper_calls_equal++ > 1000) {
+      // TODO: Print out in which class we are stuck somehow.
+      Serial.println("Looper is stuck!");
     }
   }
 protected:
@@ -339,7 +356,7 @@ protected:
   void Unlink(const SaberBase* x) {
     for (SaberBase** i = &saberbases; *i; i = &(*i)->next_saber_) {
       if (*i == x) {
-        *i = next_saber_;
+        *i = x->next_saber_;
         return;
       }
     }
@@ -761,6 +778,8 @@ private:
       }
     }
     while (dest < end) { *dest++ = 2047; }
+
+    Looper::CheckLoopsISR();
   }
 
   DMAMEM static uint16_t dac_dma_buffer[AUDIO_BUFFER_SIZE*2];
@@ -2072,7 +2091,7 @@ public:
 	}
       }
     }
-    while (to_read) {
+    while (to_read > 0) {
       *(p++) = 0;
       to_read --;
     }
@@ -2169,8 +2188,8 @@ AudioSplicer audio_splicer;
 
 // Configure links between audio units, filters, sources.
 void SetupStandardAudio() {
+  dac.SetStream(NULL);
   allocated_wav_players = 2;
-  dac.SetStream(&dynamic_mixer);
   dynamic_mixer.streams_[0] = volume_streams + 0;
   volume_streams[0].set_source(&audio_splicer);
   dynamic_mixer.streams_[1] = &beeper;
@@ -2179,6 +2198,7 @@ void SetupStandardAudio() {
   }
   volume_streams[0].set_volume(10000);
   volume_streams[0].set_speed(16384 / 100);
+  dac.SetStream(&dynamic_mixer);
 }
 
 // Monophonic sound fonts are the most common.
@@ -8256,15 +8276,12 @@ struct BladeConfig {
 BladeConfig blades[] = {
 #ifdef ENABLE_WS2811
   // PL9823 blade, 97 LEDs
-  {  96000, WS2811BladePtr<97, WS2811_580kHz>(), CONFIGARRAY(presets) },
-  {  69000, WS2811BladePtr<97, WS2811_580kHz>(), CONFIGARRAY(presets) },
   {   2600, WS2811BladePtr<97, WS2811_580kHz>(), CONFIGARRAY(presets) },
 
   // Charging adapter, single PL9823 LED.
-  {  41000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
   {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
 
-  { 850000, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(), CONFIGARRAY(presets) },
+  // WS2811 string blade 144 LEDs
   {   7800, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(), CONFIGARRAY(presets) },
 #endif
 
@@ -9300,6 +9317,7 @@ public:
   void begin() {
     Wire.begin();
     Wire.setClock(400000);
+    Wire.setDefaultTimeout(20000); // 20ms
   }
   void writeByte(uint8_t reg, uint8_t data) {
     Wire.beginTransmission(address_);
@@ -9726,6 +9744,16 @@ void setup() {
 }
 
 void startup_early_hook() {
+#ifdef ENABLE_WATCHDOG
+  // The next 2 lines sets the time-out value. This is the value that the watchdog timer compares itself to
+  WDOG_TOVALL = 1000;
+  WDOG_TOVALH = 0;
+  WDOG_STCTRLH = (WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN |
+		  WDOG_STCTRLH_STOPEN |
+		  WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN); // Enable WDG
+  WDOG_PRESC = 0; // prescaler
+#endif
+
   pinMode(bladePowerPin1, OUTPUT);
   pinMode(bladePowerPin2, OUTPUT);
   pinMode(bladePowerPin3, OUTPUT);
@@ -9739,14 +9767,6 @@ void startup_early_hook() {
   digitalWrite(bladePowerPin4, LOW);
   digitalWrite(bladePowerPin5, LOW);
   digitalWrite(bladePowerPin6, LOW);
-#endif
-  
-#ifdef ENABLE_WATCHDOG
-  // The next 2 lines sets the time-out value. This is the value that the watchdog timer compares itself to
-  WDOG_TOVALL = 1000;
-  WDOG_TOVALH = 0;
-  WDOG_PRESC = 0; // prescaler
-  WDOG_STCTRLH = (WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN); // Enable WDG
 #endif
 }
 
@@ -9765,6 +9785,8 @@ class WatchDog : Looper {
 
   elapsedMillis watchdogTimer_;
 };
+
+WatchDog dog;
 #endif
 
 
