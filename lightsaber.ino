@@ -212,6 +212,24 @@ protected:
   StateMachineState state_machine_;
 };
 
+// This class is really useful for finding crashes
+// basically, the pin you give it will be held high
+// while this function is running. After that it will
+// be set to low. If a crash occurs in this function
+// it will stay high.
+class ScopedPinTracer {
+public:
+  explicit ScopedPinTracer(int pin) : pin_(pin) {
+    pinMode(pin_, OUTPUT);
+    digitalWriteFast(pin, HIGH);
+  }
+  ~ScopedPinTracer() {
+    digitalWriteFast(pin_, LOW);
+  }
+private:
+  int pin_;
+};
+
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 
 // Magic type used to prevent linked-list types from automatically linking.
@@ -221,9 +239,6 @@ enum NoLink { NOLINK = 17 };
 // Also provides a Setup() function.
 class Looper;
 Looper* loopers = NULL;
-static volatile uint32_t looper_calls  = 0;
-static uint32_t last_looper_calls = 0;
-static uint32_t looper_calls_equal = 0;
 class Looper {
 public:
   void Link() {
@@ -242,7 +257,6 @@ public:
   explicit Looper(NoLink _) { }
   ~Looper() { Unlink(); }
   static void DoLoop() {
-    looper_calls++;
     for (Looper *l = loopers; l; l = l->next_looper_) {
       l->Loop();
     }
@@ -253,18 +267,6 @@ public:
     }
   }
 
-  static void CheckLoopsISR() {
-    if (looper_calls == 0) return;
-    if (looper_calls != last_looper_calls) {
-      last_looper_calls = looper_calls;
-      looper_calls_equal = 0;
-      return;
-    }
-    if (looper_calls_equal++ > 1000) {
-      // TODO: Print out in which class we are stuck somehow.
-      Serial.println("Looper is stuck!");
-    }
-  }
 protected:
   virtual void Loop() = 0;
   virtual void Setup() {}
@@ -349,9 +351,9 @@ SaberBase* saberbases = NULL;
 
 class SaberBase {
 protected:
-  void Link(const SaberBase* x) {
+  void Link(SaberBase* x) {
     next_saber_ = saberbases;
-    saberbases = this;
+    saberbases = x;
   }
   void Unlink(const SaberBase* x) {
     for (SaberBase** i = &saberbases; *i; i = &(*i)->next_saber_) {
@@ -778,8 +780,6 @@ private:
       }
     }
     while (dest < end) { *dest++ = 2047; }
-
-    Looper::CheckLoopsISR();
   }
 
   DMAMEM static uint16_t dac_dma_buffer[AUDIO_BUFFER_SIZE*2];
