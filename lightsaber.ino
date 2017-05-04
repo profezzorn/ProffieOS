@@ -100,10 +100,12 @@ const unsigned int maxLedsPerStrip = 144;
 #include <SD.h>
 
 #include <SPI.h>
-#include <i2c_t3.h>
 #include <math.h>
 #include <usb_dev.h>
 
+#ifdef V2
+#include <i2c_t3.h>
+#endif
 
 #ifdef ENABLE_SNOOZE
 #include <Snooze.h>
