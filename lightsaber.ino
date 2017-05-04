@@ -105,6 +105,8 @@ const unsigned int maxLedsPerStrip = 144;
 
 #ifdef V2
 #include <i2c_t3.h>
+#else
+#include <Wire.h>
 #endif
 
 #ifdef ENABLE_SNOOZE
@@ -865,7 +867,7 @@ public:
 	v2 = v;
 #endif
 #ifdef QUIET
-	v2 >>= 2;
+	v2 >>= 8;
 #endif
 	data[i] = clampi32(v2, -32768, 32767);
 	peak_sum_ = max(abs(v), peak_sum_);
@@ -2070,18 +2072,18 @@ public:
   int read(int16_t* data, int elements) override {
     int16_t *p = data;
     int to_read = elements;
-    if (current_ < 0 && fadeto_ < 0) {
-      if (start_after_) {
-	start_after_ -= elements;
-	if (start_after_ < 0) {
-	  start_after_ = 0;
-	  current_ = fadeto_;
-	  fadeto_ = -1;
-	}
+    if (start_after_) {
+      start_after_ -= elements;
+      if (start_after_ < 0) {
+	start_after_ = 0;
+	current_ = fadeto_;
+	fadeto_ = -1;
       }
       return 0;
     }
-
+    if (current_ < 0 && fadeto_ < 0) {
+      return 0;
+    }
     if (current_ >= 0) {
       int num = wav_players[current_].read(p, to_read);
       to_read -= num;
@@ -2541,9 +2543,11 @@ public:
   float battery() const {
     return last_voltage_;
   }
-  
+  void SetLoad(bool on) {
+    loaded_ = on;
+  }
   bool low() const {
-    return battery() < 3.0;
+    return battery() < (loaded_ ? 2.7 : 3.0);
   }
 protected:
   void Setup() override {
@@ -2577,6 +2581,7 @@ protected:
     Serial.println(" batt[ery] - show battery voltage");
   }
 private:
+  bool loaded_ = false;
   float last_voltage_ = 0.0;
   float old_voltage_ = 0.0;
   float really_old_voltage_ = 0.0;
@@ -7593,6 +7598,7 @@ public:
     digitalWrite(bladePowerPin1, on?HIGH:LOW);
     digitalWrite(bladePowerPin2, on?HIGH:LOW);
     digitalWrite(bladePowerPin3, on?HIGH:LOW);
+    battery_monitor.SetLoad(on);
 //    pinMode(bladePin, on ? OUTPUT : INPUT);
     powered_ = on;
   }
@@ -7847,8 +7853,14 @@ public:
   void IsOn(bool *on) override {
     if (on_) *on = true;
   }
-  void On() override { power_ = on_ = true; }
-  void Off() override { on_ = false; }
+  void On() override {
+    battery_monitor.SetLoad(true);
+    power_ = on_ = true;
+  }
+  void Off() override {
+    battery_monitor.SetLoad(false);
+    on_ = false;
+  }
   void Clash() override {
     clash_ = true;
   }
@@ -7949,8 +7961,14 @@ public:
   void IsOn(bool *on) override {
     if (on_) *on = true;
   }
-  void On() override { power_ = on_ = true; }
-  void Off() override { on_ = false; }
+  void On() override {
+    battery_monitor.SetLoad(false);
+    power_ = on_ = true;
+  }
+  void Off() override {
+    battery_monitor.SetLoad(true);
+    on_ = false;
+  }
   void Clash() override {
     clash_ = true;
   }
@@ -8152,9 +8170,9 @@ struct Red8mmLED100 {
   static constexpr float P2Amps = 7.35;
   static constexpr float P2Volts = 2.5;
   static constexpr float R = 0.001;
-  static const int Red = 0;
+  static const int Red = 255;
   static const int Green = 0;
-  static const int Blue = 255;
+  static const int Blue = 0;
 };
 
 // This blade has 100 x 0.5W blue 8mm straw-hat LEDs.
@@ -8874,7 +8892,8 @@ protected:
     if (battery_monitor.low()) {
       if (current_style != &style_charging) {
 	if (on_) {
-	  Serial.println("OFF");
+	  Serial.print("Battery low, turning off: ");
+	  Serial.println(battery_monitor.battery());
 	  Off();
 	} else if (millis() - last_beep_ > 1000) {
 	  Serial.println("Battery low beep");
