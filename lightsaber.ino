@@ -118,6 +118,10 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_MOTION
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
+
+// FASTLED is experimental and untested right now
+// #define ENABLE_FASTLED
+
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
 #if VERSION_MAJOR == 1
@@ -3243,9 +3247,13 @@ void MonopodWS2811::show(void)
   //Serial1.print("4");
 }
 
-DMAMEM int displayMemory[maxLedsPerStrip*6];
 MonopodWS2811 monopodws;
+#endif
 
+#if defined(ENABLE_WS2811)
+DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4];
+#elif defined(ENABLE_FASTLED)
+DMAMEM int displayMemory[maxLedsPerStrip * 3 / 4];
 #endif
 
 class BladeBase {
@@ -7852,6 +7860,168 @@ template<int LEDS, int CONFIG>
 class WS2811_Blade *WS2811BladePtr() {
   static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
   static WS2811_Blade blade(LEDS, CONFIG);
+  return &blade;
+}
+#endif
+
+#ifdef ENABLE_FASTLED
+
+#include <FastLED.h>
+
+// FASTLED-type blade implementation.
+// Note that this class does nothing when first constructed. It only starts
+// interacting with pins and timers after Activate() is called.
+template<ESPIChipsets CHIPSET, EOrder RGB_ORDER, uint8_t SPI_DATA_RATE>
+class FASTLED_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
+public:
+  FASTLED_Blade(int num_leds) :
+    SaberBase(NOLINK),
+    CommandParser(NOLINK),
+    Looper(NOLINK),
+    num_leds_(num_leds) {
+  }
+
+  void Power(bool on) {
+    pinMode(bladePowerPin1, OUTPUT);
+    pinMode(bladePowerPin2, OUTPUT);
+    pinMode(bladePowerPin3, OUTPUT);
+    digitalWrite(bladePowerPin1, on?HIGH:LOW);
+    digitalWrite(bladePowerPin2, on?HIGH:LOW);
+    digitalWrite(bladePowerPin3, on?HIGH:LOW);
+    battery_monitor.SetLoad(on);
+    powered_ = on;
+  }
+
+  // No need for a "deactivate", the blade stays active until
+  // you take it out, which also cuts the power.
+  void Activate() override {
+    Serial.print("FASTLED Blade with ");
+    Serial.print(num_leds_);
+    Serial.println(" leds");
+    FastLED.addLeds<CHIPSET, spiDataOut, spiClock, EOrder, SPI_DATA_RATE>((struct CRGB*)displayMemory, num_leds_);
+    Power(true);
+    delay(10);
+
+    for (int i = 0; i < num_leds_; i++) set(i, Color());
+    SPI.beginTransaction(SPISettings(SPI_DATA_RATE, MSBFIRST, SPI_MODE0));
+    // TODO: Add support for using alternate SPI pins instead.
+    digitalWrite(spiLedSelect, HIGH);  // enable access to LEDs
+    FastLED.show();
+    digitalWrite(spiLedSelect, LOW);
+    SPI.endTransaction();   // allow other libs to use SPI again
+    CommandParser::Link();
+    Looper::Link();
+    SaberBase::Link(this);
+  }
+
+  // BladeBase implementation
+  int num_leds() const override {
+    return num_leds_;
+  }
+  bool is_on() const override {
+    return on_;
+  }
+  void set(int led, Color c) override {
+    ((Color*)displayMemory)[led] = c;
+  }
+  bool clash() override {
+    bool ret = clash_;
+    clash_ = false;
+    return ret;
+  }
+  void allow_disable() override {
+    if (!on_) {
+      Power(false);
+    }
+  }
+
+  // SaberBase implementation.
+  void IsOn(bool* on) override {
+    if (on_) *on = true;
+  }
+  void On() override {
+    Power(true);
+    delay(10);
+    on_ = true;
+  }
+  void Off() override {
+    on_ = false;
+  }
+
+  void Clash() override { clash_=true; }
+  void Lockup() override {  }
+
+  void Top() override {
+    if (!millis_sum_) return;
+    Serial.print("blade fps: ");
+    Serial.println(updates_ * 1000.0 / millis_sum_);
+  }
+
+  bool Parse(const char* cmd, const char* arg) override {
+    if (!strcmp(cmd, "blade")) {
+      if (!strcmp(arg, "on")) {
+        On();
+        return true;
+      }
+      if (!strcmp(arg, "off")) {
+        Off();
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  void Help() override {
+    Serial.println(" blade on/off - turn apa102 blade on off");
+  }
+
+protected:
+  void Loop() override {
+    if (!powered_) {
+      last_millis_ = 0;
+      return;
+    }
+    int m = millis();
+    // This limits the blade to 1000 updates per second, which
+    // may not be enough for POV-style things, but I suspect
+    // than running it at full speed will cause sound problems.
+    // Note that the FASTLED code is so far untested, so it might
+    // not work right.
+    if (m == last_millis_) return;
+    if (last_millis_) {
+      millis_sum_ += m - last_millis_;
+      updates_ ++;
+      if (updates_ > 1000) {
+        updates_ /= 2;
+        millis_sum_ /= 2;
+      }
+    }
+    last_millis_ = m;
+    current_style->run(this);
+    SPI.beginTransaction(SPISettings(SPI_DATA_RATE, MSBFIRST, SPI_MODE0));
+    digitalWrite(spiLedSelect, HIGH);  // enable access to LEDs
+    FastLED.show();                    // Refresh strip
+    digitalWrite(spiLedSelect, LOW);
+    SPI.endTransaction();   // allow other libs to use SPI again
+  }
+  
+private:
+  int num_leds_;
+  bool on_ = false;
+  bool powered_ = false;
+  bool clash_ = false;
+
+  // TOOD: Break this out into a separate class.
+  int updates_ = 0;
+  int millis_sum_ = 0;
+  uint32_t last_millis_ =0;
+};
+
+template<ESPIChipsets CHIPSET, EOrder RGB_ORDER,
+	 uint8_t SPI_DATA_RATE, int LEDS>
+class BladeBase *FASTLEDBladePtr() {
+  static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
+  static FASTLED_Blade<CHIPSET, RGB_ORDER, SPI_DATA_RATE> blade(LEDS);
   return &blade;
 }
 #endif
