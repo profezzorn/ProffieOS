@@ -3433,14 +3433,17 @@ public:
     if (blade->clash()) clash_millis_ = m;
     Color c = color_;
     // Clash effect
+    bool overdrive = false;
 #if 1
     if (m - clash_millis_ < 40) {
       c = clash_color_;
+      overdrive = true;
     }
 #else
     int clash_t = m - clash_millis_;
     int clash_mix = min(clash_t * 50, 512 - clash_t * 10);
     c = c.mix(clash_color_, clampi32(clash_mix, 0, 255));
+    overdrive = clash_mix > 255;
 #endif
 
     if (on_ != blade->is_on()) {
@@ -3451,7 +3454,7 @@ public:
     if (!blade->is_on()) thres = num_leds * 256 - thres;
     for (int i = 0; i < num_leds; i++) {
       int black_mix = clampi32(thres - i * 256, 0, 255);
-      if (clash_mix > 255) {
+      if (overdrive) {
 	blade->set_overdrive(i, Color().mix(c, black_mix));
       } else {
 	blade->set(i, Color().mix(c, black_mix));
