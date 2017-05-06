@@ -206,7 +206,9 @@ enum SaberPins {
   bladePowerPin5 = 4,             // Optional power control (TeensySaber V2)
   bladePowerPin6 = 5,             // Optional power control (TeensySaber V2)
   freePin6 = 6,
-  freePin7 = 7,
+  spiLedSelect = -1,               // APA102/dotstar chip select (prop shield)
+  spiLedDataOut = 7,
+  spiLedClock = 8,
 #else
   freePin1 = 1,                   // FREE
   motionSensorInterruptPin = 2,   // motion sensor interrupt (prop shield)
@@ -215,8 +217,10 @@ enum SaberPins {
   amplifierPin = 5,               // Amplifier enable pin (prop shield)
   serialFlashSelectPin = 6,       // serial flash chip select (prop shield)
   spiLedSelect = 7,               // APA102/dotstar chip select (prop shield)
-#endif
   freePin8 = 8,                   // FREE
+  spiLedDataOut = 11,
+  spiLedClock = 13,
+#endif
   freePin9 = 9,                   // FREE
   freePin10 = 10,                 // FREE
   spiDataOut = 11,                // spi out, serial flash, spi led & sd card
@@ -7892,23 +7896,33 @@ public:
     powered_ = on;
   }
 
+  void Show() {
+    static_assert(spiLedSelect != -1 || spiDataOut != spiLedDataOut);
+    static_assert(spiLedSelect != -1 || spiClock != spiLedClock)
+    if (spiLedSelect != -1){
+      SPI.beginTransaction(SPISettings(SPI_DATA_RATE, MSBFIRST, SPI_MODE0));
+      // TODO: Add support for using alternate SPI pins instead.
+      digitalWrite(spiLedSelect, HIGH);  // enable access to LEDs
+      FastLED.show();
+      digitalWrite(spiLedSelect, LOW);
+      SPI.endTransaction();   // allow other libs to use SPI again
+    } else {
+      // Bitbang on separate pins, need to lock anything.
+      FastLED.show()
+    }
+  }
+
   // No need for a "deactivate", the blade stays active until
   // you take it out, which also cuts the power.
   void Activate() override {
     Serial.print("FASTLED Blade with ");
     Serial.print(num_leds_);
     Serial.println(" leds");
-    FastLED.addLeds<CHIPSET, spiDataOut, spiClock, EOrder, SPI_DATA_RATE>((struct CRGB*)displayMemory, num_leds_);
+    FastLED.addLeds<CHIPSET, spiLedDataOut, spiLedClock, EOrder, SPI_DATA_RATE>((struct CRGB*)displayMemory, num_leds_);
     Power(true);
     delay(10);
 
     for (int i = 0; i < num_leds_; i++) set(i, Color());
-    SPI.beginTransaction(SPISettings(SPI_DATA_RATE, MSBFIRST, SPI_MODE0));
-    // TODO: Add support for using alternate SPI pins instead.
-    digitalWrite(spiLedSelect, HIGH);  // enable access to LEDs
-    FastLED.show();
-    digitalWrite(spiLedSelect, LOW);
-    SPI.endTransaction();   // allow other libs to use SPI again
     CommandParser::Link();
     Looper::Link();
     SaberBase::Link(this);
