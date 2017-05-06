@@ -3451,7 +3451,11 @@ public:
     if (!blade->is_on()) thres = num_leds * 256 - thres;
     for (int i = 0; i < num_leds; i++) {
       int black_mix = clampi32(thres - i * 256, 0, 255);
-      blade->set(i, Color().mix(c, black_mix));
+      if (clash_mix > 255) {
+	blade->set_overdrive(i, Color().mix(c, black_mix));
+      } else {
+	blade->set(i, Color().mix(c, black_mix));
+      }
     }
     if (!blade->is_on() && thres > 256 * (num_leds*2)) {
       Serial.println("Allow off.");
