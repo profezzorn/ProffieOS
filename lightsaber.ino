@@ -107,7 +107,6 @@ const unsigned int maxLedsPerStrip = 144;
 //    select sound font
 //    select color
 //    adjust volume
-// POV-writer mode
 
 // If your electonics inverts the bladePin for some reason, define this.
 // #define INVERT_WS2811
@@ -2678,7 +2677,7 @@ public:
     loaded_ = on;
   }
   bool low() const {
-    return battery() < (loaded_ ? 2.7 : 3.0);
+    return battery() < (loaded_ ? 2.6 : 3.0);
   }
 protected:
   void Setup() override {
@@ -3279,6 +3278,11 @@ public:
   // Returns true when a clash occurs.
   // Returns true only once.
   virtual bool clash() = 0;
+
+  // Clear blade colors.
+  virtual void clear() {
+    for (int i = 0; i < num_leds(); i++) set(i, Color());
+  }
 
   // Called to let the blade know that it's ok to
   // disable power now. (Usually called after is_on()
@@ -7742,6 +7746,7 @@ public:
     powered_ = on;
   }
 
+
   // No need for a "deactivate", the blade stays active until
   // you take it out, which also cuts the power.
   void Activate() override {
@@ -7922,7 +7927,8 @@ public:
     Power(true);
     delay(10);
 
-    for (int i = 0; i < num_leds_; i++) set(i, Color());
+    clear();
+    Show();
     CommandParser::Link();
     Looper::Link();
     SaberBase::Link(this);
@@ -8012,11 +8018,7 @@ protected:
     }
     last_millis_ = m;
     current_style->run(this);
-    SPI.beginTransaction(SPISettings(SPI_DATA_RATE, MSBFIRST, SPI_MODE0));
-    digitalWrite(spiLedSelect, HIGH);  // enable access to LEDs
-    FastLED.show();                    // Refresh strip
-    digitalWrite(spiLedSelect, LOW);
-    SPI.endTransaction();   // allow other libs to use SPI again
+    Show();
   }
   
 private:
