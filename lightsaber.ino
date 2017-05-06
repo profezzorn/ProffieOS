@@ -40,6 +40,59 @@ const unsigned int maxLedsPerStrip = 144;
 #define V2
 #endif
 
+//
+// OVERVIEW
+//
+// Here explain some general code concepts to make it easier
+// to understand the code below.
+//
+// Most things start with the Saber class. It is responsible
+// for the overall state of the saber and handles button clicks.
+// Once an event is registered, such as "on" or "clash", the
+// event is sent to all registered SaberBase classes.
+//
+// Generally speaking, thre are usually two registered SaberBase
+// classes listening for events. One for sound and one for 
+// the blade. Sound and blade effects are generally executed
+// separately by separate clases.
+//
+// Blades are generally handled by one of the child-classes of
+// BladeBase. These classes know how many LEDs the current
+// blade has, and how to set those LEDs to a given color, but
+// they don't actually decide what the blade should look like.
+// Instead they just call the current BladeStyle class and
+// asks it to set the colors. The BladeStyle classes don't
+// need to know what kind of blade is attached, although
+// some combinations of BladeBases and BladeStyles just don't
+// make any sense.
+//
+// Sounds are also abstracted. It starts with scanning a directory
+// on the SD card for files that match known patterns of file names.
+// The Effect class is responsible for keeping track of all numbered
+// files that for a particular filename prefix.
+//
+// Once the directory has been scanned, we'll either initiate
+// a MonophonicFont or a PolyphonicFont based on the names of the
+// files we find. MonophonicFont and PolyphonicFont inherit from
+// SaberBase and listen on on/off/clash/etc. events, just like
+// BladeBase classes do.
+// 
+// MonophonicFont and PolyphonicFont tells the audio subsystem
+// to trigger and mix sounds as aproperiate. The sound subsystem
+// starts with an DMA channel which feeds data to a digital-to-analog
+// converter. Once the data buffer is half-gone, and interrupt is
+// triggered in the DAC class, which tries to fill it up by
+// reading data from a int16_t DataStream. Generally, that data
+// stream is hooked up to the AudioDynamicMixer class. This
+// class is responsible for taking multiple audio inputs,
+// summing them up and then adjusting the volume to minimize
+// clipping. Generally, one of the inputs are hooked up to
+// the AudioSplicer class, and the others are hooked up to
+// BufferedWavPlayers.  The AudioSplicer is able to do
+// smooth cutovers between sounds, and it's inputs are also
+// BufferedWavPlayers.
+//
+
 // TODO LIST:
 // Make sure that sound is off before doing file command
 // make "chargint style" prevent you from turning the saber "on"
@@ -70,6 +123,8 @@ const unsigned int maxLedsPerStrip = 144;
 #if VERSION_MAJOR == 1
 #define ENABLE_SERIALFLASH
 #endif
+
+// #define ENABLE_DEBUG
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
@@ -216,6 +271,8 @@ protected:
   StateMachineState state_machine_;
 };
 
+#ifdef ENABLE_DEBUG
+
 // This class is really useful for finding crashes
 // basically, the pin you give it will be held high
 // while this function is running. After that it will
@@ -234,6 +291,48 @@ private:
   int pin_;
 };
 
+class ScopedTracer3 {
+public:
+  explicit ScopedTracer3(int code) {
+    pinMode(bladePowerPin1, OUTPUT);
+    pinMode(bladePowerPin2, OUTPUT);
+    pinMode(bladePowerPin3, OUTPUT);
+    digitalWriteFast(bladePowerPin1, !!(code & 1));
+    digitalWriteFast(bladePowerPin2, !!(code & 2));
+    digitalWriteFast(bladePowerPin3, !!(code & 4));
+  }
+  ~ScopedTracer3() {
+    digitalWriteFast(bladePowerPin1, LOW);
+    digitalWriteFast(bladePowerPin2, LOW);
+    digitalWriteFast(bladePowerPin3, LOW);
+  }
+};
+
+#define CHECK_LL(T, START, NEXT) do {					\
+  int len = 0;								\
+  for (T* i = START; i; i = i->NEXT) {					\
+    if (abs(((long)i) - (long)&START) > 65536) {			\
+      Serial.print("Linked list " #START " has invalid pointer @ ");	\
+      Serial.print(__LINE__);						\
+      Serial.print(" pointer: ");					\
+      Serial.println((long)i, 16);						\
+      START = NULL;							\
+      break;								\
+    }									\
+    if (++len > 1000) {							\
+      Serial.print("Linked list " #START " has become infinite @ ");	\
+      Serial.println(__LINE__);						\
+      i->NEXT = NULL;                                                   \
+      break;                                                            \
+    }									\
+  }									\
+} while(0)
+
+#else
+#define CHECK_LL(T, START, NEXT)
+
+#endif
+
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 
 // Magic type used to prevent linked-list types from automatically linking.
@@ -246,21 +345,27 @@ Looper* loopers = NULL;
 class Looper {
 public:
   void Link() {
+    CHECK_LL(Looper, loopers, next_looper_);
     next_looper_ = loopers;
     loopers = this;
+    CHECK_LL(Looper, loopers, next_looper_);
   }
   void Unlink() {
+    CHECK_LL(Looper, loopers, next_looper_);
     for (Looper** i = &loopers; *i; i = &(*i)->next_looper_) {
       if (*i == this) {
         *i = next_looper_;
+	CHECK_LL(Looper, loopers, next_looper_);
         return;
       }
     }
+    CHECK_LL(Looper, loopers, next_looper_);
   }
   Looper() { Link(); }
   explicit Looper(NoLink _) { }
   ~Looper() { Unlink(); }
   static void DoLoop() {
+    CHECK_LL(Looper, loopers, next_looper_);
     for (Looper *l = loopers; l; l = l->next_looper_) {
       l->Loop();
     }
@@ -285,22 +390,28 @@ CommandParser* parsers = NULL;
 class CommandParser {
 public:
   void Link() {
+    CHECK_LL(CommandParser, parsers, next_parser_);
     next_parser_ = parsers;
     parsers = this;
+    CHECK_LL(CommandParser, parsers, next_parser_);
   }
   void Unlink() {
+    CHECK_LL(CommandParser, parsers, next_parser_);
     for (CommandParser** i = &parsers; *i; i = &(*i)->next_parser_) {
       if (*i == this) {
         *i = next_parser_;
+    CHECK_LL(CommandParser, parsers, next_parser_);
         return;
       }
     }
+    CHECK_LL(CommandParser, parsers, next_parser_);
   }
 
   CommandParser() { Link(); }
   explicit CommandParser(NoLink _) {}
   ~CommandParser() { Unlink(); }
   static bool DoParse(const char* cmd, const char* arg) {
+    CHECK_LL(CommandParser, parsers, next_parser_);
     for (CommandParser *p = parsers; p; p = p->next_parser_) {
       if (p->Parse(cmd, arg))
         return true;
@@ -308,6 +419,7 @@ public:
     return false;
   }
   static void DoHelp() {
+    CHECK_LL(CommandParser, parsers, next_parser_);
     for (CommandParser *p = parsers; p; p = p->next_parser_) {
       p->Help();
     }
@@ -356,16 +468,23 @@ SaberBase* saberbases = NULL;
 class SaberBase {
 protected:
   void Link(SaberBase* x) {
-    next_saber_ = saberbases;
+    CHECK_LL(SaberBase, saberbases, next_saber_);
+    noInterrupts();
+    x->next_saber_ = saberbases;
     saberbases = x;
+    interrupts();
+    CHECK_LL(SaberBase, saberbases, next_saber_);
   }
   void Unlink(const SaberBase* x) {
+    CHECK_LL(SaberBase, saberbases, next_saber_);
     for (SaberBase** i = &saberbases; *i; i = &(*i)->next_saber_) {
       if (*i == x) {
         *i = x->next_saber_;
+	CHECK_LL(SaberBase, saberbases, next_saber_);
         return;
       }
     }
+    CHECK_LL(SaberBase, saberbases, next_saber_);
   }
 
   SaberBase() { Link(this); }
@@ -376,9 +495,11 @@ protected:
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)			\
 public:								\
   static void Do##NAME TYPED_ARGS {				\
+    CHECK_LL(SaberBase, saberbases, next_saber_);               \
     for (SaberBase *p = saberbases; p; p = p->next_saber_) {	\
       p->NAME ARGS;						\
     }								\
+    CHECK_LL(SaberBase, saberbases, next_saber_);               \
   }								\
 								\
   virtual void NAME TYPED_ARGS {}
@@ -1145,7 +1266,6 @@ private:
 #if 1
     // Yes, it's a selection sort, luckily there's not a lot of
     // DataStreamWork instances.
-    // This doesn't work!
     for (int i = 0; i < 50; i++) {
       size_t max_space = 0;
       for (DataStreamWork *d = data_streams; d; d=d->next_)
@@ -2118,7 +2238,8 @@ public:
 	p += n;
       }
       if (!fade_) {
-	wav_players[current_].Stop();
+        if (current_ != -1)
+          wav_players[current_].Stop();
         current_ = fadeto_;
         fadeto_ = -1;
       }
@@ -2132,8 +2253,10 @@ public:
 
   void set_fade_time(float t) {
     fade_speed_ = max(1, (int)(32768 / t / AUDIO_RATE));
+#if 0
     Serial.print("FADE SPEED: ");
     Serial.println(fade_speed_);
+#endif
   }
 
   bool Play(Effect* f, Effect* loop, int delay_ms = 0) {
@@ -3163,6 +3286,7 @@ public:
   virtual void activate() {}
   virtual void deactivate() {}
   virtual void run(BladeBase* blade) = 0;
+  virtual bool NoOnOff() { return false; }
 };
 
 BladeStyle *current_style = NULL;
@@ -3208,6 +3332,8 @@ public:
       blade->set(i, Color().mix(c, max(0, 256 - abs(p - i * 32))));
     }
   };
+
+  bool NoOnOff() override { return false; }
 };
 
 // No need to templetize this one, as there are no arguments.
@@ -7565,6 +7691,7 @@ public:
 	  MonopodWS2811::drawBuffer[i * maxLedsPerStrip / num_leds];
       }
     }
+    blade->allow_disable();
   }
 private:
   struct { uint32_t t; Vec3 accel; } accel_entries_[10];
@@ -8271,6 +8398,20 @@ Preset charging_presets[] = {
 
 Preset testing_presets[] = {
   { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
+  { "graflex4", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
+  { "graflex4", "tracks/cantina.wav", StyleNormalPtr<BLUE, RED, 300, 800>() },
+  { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
+  { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
+  { "graflex5", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>() },
+  { "igniter/font4", "tracks/duel.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>() },
+  { "graflex4", "tracks/duel.wav", StyleNormalPtr<WHITE, RED, 300, 800>() },
+  { "graflex4", "tracks/walls.wav", StyleNormalPtr<YELLOW, BLUE, 300, 800>() },
+  { "graflex4", "tracks/title.wav", StyleNormalPtr<MAGENTA, WHITE, 300, 800>() },
+  { "graflex5", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
+  { "graflex5", "tracks/cantina.wav", StyleStrobePtr<WHITE, RED, 15, 300, 800>() },
+  { "graflex5", "tracks/cantina.wav", &style_pov },
+
+  { "charging", "tracks/duel.wav", &style_charging },
 };
 
 struct BladeConfig {
@@ -8389,7 +8530,7 @@ public:
   }
 
 protected:
-  void Loop() {
+  void Loop() override {
     STATE_MACHINE_BEGIN();
     while (true) {
       while (!DebouncedRead()) YIELD();
@@ -8677,6 +8818,7 @@ public:
 
   void On() {
     if (on_) return;
+    if (current_style->NoOnOff()) return;
     Serial.println("Ignition.");
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     delay(10);             // allow time to wake up
@@ -9042,6 +9184,14 @@ protected:
       next_directory(-1);
       return true;
     }
+    if (!strcmp(cmd, "n") || (!strcmp(cmd, "next") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
+      next_preset();
+      return true;
+    }
+    if (!strcmp(cmd, "prev") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre"))) {
+      previous_preset();
+      return true;
+    }
     return false;
   }
   void Help() override {
@@ -9052,6 +9202,7 @@ protected:
     Serial.println(" cd directory - change directory, and sound font");
     Serial.println(" play filename - play file");
     Serial.println(" next/prev font - walk through directories in alphabetical order");
+    Serial.println(" next/prev pre[set] - walk through presets.\n");
     Serial.println(" beep - play a beep");
 #endif
   }
@@ -9817,9 +9968,9 @@ public:
   void Loop() override {
     STATE_MACHINE_BEGIN();
     SLEEP(2000);
-    CommandParser::DoParse("amp", "on");
-    CommandParser::DoParse("blade", "on");
-    CommandParser::DoParse("play", "title.wav");
+    CommandParser::DoParse("next", "preset");
+    SLEEP(200);
+    CommandParser::DoParse("next", "preset");
     STATE_MACHINE_END();
   }
 };
