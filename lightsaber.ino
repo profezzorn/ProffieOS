@@ -115,7 +115,7 @@ const unsigned int maxLedsPerStrip = 144;
 // used for debugging.
 #define ENABLE_AUDIO
 #define ENABLE_MOTION
-// #define ENABLE_SNOOZE
+#define ENABLE_SNOOZE
 #define ENABLE_WS2811
 
 // FASTLED is experimental and untested right now
@@ -168,9 +168,15 @@ const unsigned int maxLedsPerStrip = 144;
 #endif
 
 #ifdef ENABLE_SNOOZE
-#include <Snooze.h>
 
-SnoozeBlock snooze_config;
+#define startup_early_hook DISABLE_startup_early_hook
+#include <Snooze.h>
+#undef startup_early_hook
+
+SnoozeTimer snooze_timer;
+SnoozeDigital snooze_digital;
+SnoozeTouch snooze_touch;
+SnoozeBlock snooze_config(snooze_touch, snooze_digital, snooze_timer);
 #endif
 
 
@@ -8585,8 +8591,6 @@ Preset white_presets[] = {
 
 Preset charging_presets[] = {
   { "charging", "", &style_charging },
-  { "font01", "tracks/title.wav", StyleNormalPtr<BLUE, BLUE, 100, 200>() },
-  { "font02", "tracks/duel.wav", StyleNormalPtr<BLUE, BLUE, 100, 200>() },
 };
 
 Preset testing_presets[] = {
@@ -8776,7 +8780,7 @@ public:
   Button(int pin, const char* name) : ButtonBase(name), pin_(pin) {
     pinMode(pin, INPUT_PULLUP);
 #ifdef ENABLE_SNOOZE
-    snooze_config.pinMode(pin, INPUT_PULLUP, RISING);
+    snooze_digital.pinMode(pin, INPUT_PULLUP, RISING);
 #endif
   }
 protected:
@@ -8869,7 +8873,7 @@ public:
       threshold_(threshold) {
     pinMode(pin, INPUT_PULLUP);
 #ifdef ENABLE_SNOOZE
-    snooze_config.pinMode(pin, TSI, threshold);
+    snooze_touch.pinMode(pin, threshold);
 #endif
 #if defined(__MK64FX512__)
     Serial.println("Touch sensor not supported!\n");
@@ -9009,6 +9013,10 @@ public:
     return on_;
   }
 
+  bool NeedsPower() {
+    return on_ || current_style->NoOnOff();
+  }
+
   void On() {
     if (on_) return;
     if (current_style->NoOnOff()) return;
@@ -9097,6 +9105,8 @@ public:
 
   // Go to the next Preset.
   void next_preset() {
+    if (current_config_->num_presets == 1)
+      return;
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
 #ifdef ENABLE_AUDIO
     beeper.Beep(0.05, 2000.0);
@@ -9111,6 +9121,8 @@ public:
 
   // Go to the previous Preset.
   void previous_preset() {
+    if (current_config_->num_presets == 1)
+      return;
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
 #ifdef ENABLE_AUDIO
     beeper.Beep(0.05, 2000.0);
@@ -10021,15 +10033,6 @@ Orientation orientation;
 class Amplifier : Looper, StateMachine, CommandParser {
 public:
   Amplifier() : Looper(), CommandParser() {}
-protected:
-  void Setup() override {
-    // Audio setup
-    delay(50);             // time for DAC voltage stable
-    pinMode(amplifierPin, OUTPUT);
-    delay(10);
-    SetupStandardAudio();
-  }
-
 
   bool Active() {
 //    if (saber_synth.on_) return true;
@@ -10040,6 +10043,16 @@ protected:
 	return true;
     return false;
   }
+
+protected:
+  void Setup() override {
+    // Audio setup
+    delay(50);             // time for DAC voltage stable
+    pinMode(amplifierPin, OUTPUT);
+    delay(10);
+    SetupStandardAudio();
+  }
+
 
   void Loop() override {
     STATE_MACHINE_BEGIN();
@@ -10066,6 +10079,10 @@ protected:
       }
     }
     if (!strcmp(cmd, "whatison")) {
+      bool on = false;
+      SaberBase::DoIsOn(&on);
+      Serial.print("Saber bases: ");
+      Serial.println(on ? "On" : "Off");
       Serial.print("Audio splicer: ");
       Serial.println(audio_splicer.isPlaying() ? "On" : "Off");
       Serial.print("Beeper: ");
@@ -11023,20 +11040,18 @@ void loop() {
 #endif
   Looper::DoLoop();
 
-#ifdef ENABLE_SNOOZE
+#if defined(ENABLE_SNOOZE)
   bool on = false;
-  BladeBase::IsOn(&on);
-  if (
+  SaberBase::DoIsOn(&on);
+  if (!on && !Serial && !saber.NeedsPower()
 #ifdef ENABLE_AUDIO
-    !saber_synth.on_ &&
-      !playFlashRaw1.isPlaying() &&
-      !playSdWav1.isPlaying() &&
-      digitalRead(amplifierPin) == LOW &&
+       && !amplifier.Active()
 #endif
-    !Serial && !on) {
+    ) {
     if (millis() - last_activity > 1000) {
-      Serial.println("Snoozing...");
+      snooze_timer.setTimer(500);
       Snooze.sleep(snooze_config);
+      Serial.begin(9600);
     }
   } else {
     last_activity = millis();
