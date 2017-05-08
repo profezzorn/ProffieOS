@@ -2360,14 +2360,17 @@ public:
     SetupStandardAudio();
     audio_splicer.set_fade_time(0.003);
     SaberBase::Link(this);
+    on_ = false;
   }
   void Deactivate() { SaberBase::Unlink(this); }
 
   void On() override {
+    on_ = true;
     audio_splicer.Play(&poweron, &hum);
   }
 
   void Off() override {
+    on = false;
     audio_splicer.Play(&poweroff, NULL);
   }
   void Clash() override { audio_splicer.Play(&clash, &hum); }
@@ -2377,11 +2380,12 @@ public:
   void Boot() override { audio_splicer.Play(&boot,  NULL); }
   void NewFont() override { audio_splicer.Play(&font,  NULL); }
 
+  bool on_ = false;
   bool swinging_ = false;
   void Motion(const Vec3& gyro) override {
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
-      if (!swinging_) {
+      if (!swinging_ && on_) {
 	swinging_ = true;
 	audio_splicer.Play(&swing, &hum);
       }
@@ -2489,10 +2493,12 @@ public:
     strcat(config_filename, "config.ini");
     config_.Read(config_filename);
     SaberBase::Link(this);
+    on_ = false;
   }
   void Deactivate() { SaberBase::Unlink(this); }
 
   void On() override {
+    on_ = true;
     if (config_.humStart) {
       BufferedWavPlayer* tmp = Play(&out);
       if (tmp) {
@@ -2513,6 +2519,7 @@ public:
   }
 
   void Off() override {
+    on_ = false;
     audio_splicer.Play(&in, NULL);
   }
 
@@ -2533,7 +2540,7 @@ public:
   void Motion(const Vec3& gyro) override {
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
-      if (!swinging_) {
+      if (!swinging_ && on_) {
 	swinging_ = true;
 	Play(&swng);
       }
@@ -2548,6 +2555,7 @@ public:
   }
 
   ConfigFile config_;
+  bool on_ = false;
 };
 
 PolyphonicFont polyphonic_font;
@@ -2590,6 +2598,7 @@ public:
   void Deactivate() {
     SetDelegate(NULL);
     Looper::Unlink();
+    on = false;
   }
 
   void On() override {
@@ -9000,7 +9009,7 @@ TouchButton* TouchButton::current_button = NULL;
 
 // The Saber class implements the basic states and actions
 // for the saber.
-class Saber : CommandParser, Looper {
+class Saber : CommandParser, Looper, SaberBase {
 public:
   Saber() : CommandParser(),
   // CONFIGURABLE, use "monitor touch" to see the range of
@@ -9210,7 +9219,35 @@ public:
 #endif
   }
 
+  void Accel(const Vec3& accel) override {
+    if ( (accel_ - accel).len2() > 1.0) {
+      // Needs de-bouncing
+      Clash();
+    }
+    accel_ = accel;
+    if (monitor.ShouldPrint(Monitoring::MonitorClash)) {
+      Serial.print("ACCEL: ");
+      Serial.print(accel.x);
+      Serial.print(", ");
+      Serial.print(accel.y);
+      Serial.print(", ");
+      Serial.println(accel.z);
+    }
+  }
+
+  void Motion(const Vec3& gyro) override {
+    if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
+      // Got gyro data
+      Serial.print("GYRO: ");
+      Serial.print(gyro.x);
+      Serial.print(", ");
+      Serial.print(gyro.y);
+      Serial.print(", ");
+      Serial.println(gyro.z);
+    }
+  }
 protected:
+  vec3 accel_;
   BufferedWavPlayer* track_player_ = NULL;
 
   void StartOrStopTrack() {
@@ -9662,46 +9699,6 @@ Parser parser;
 
 #ifdef ENABLE_MOTION
 
-class Accelerometer {
-protected:
-  void Accel(const Vec3& accel) {
-    if ( (accel_ - accel).len2() > 1.0) {
-      // Needs de-bouncing
-      saber.Clash();
-    }
-    accel_ = accel;
-    SaberBase::DoAccel(accel);
-    if (monitor.ShouldPrint(Monitoring::MonitorClash)) {
-      Serial.print("ACCEL: ");
-      Serial.print(accel.x);
-      Serial.print(", ");
-      Serial.print(accel.y);
-      Serial.print(", ");
-      Serial.println(accel.z);
-    }
-  }
-private:
-  vec3 accel_;
-};
-
-class GyroScope {
-protected:
-  void Gyro(const Vec3& gyro) {
-    if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
-      // Got gyro data
-      Serial.print("GYRO: ");
-      Serial.print(gyro.x);
-      Serial.print(", ");
-      Serial.print(gyro.y);
-      Serial.print(", ");
-      Serial.println(gyro.z);
-    }
-    if (saber.IsOn()) {
-      SaberBase::DoMotion(gyro);
-    }
-  }
-};
-
 #define I2C_TIMEOUT_MILLIS 300
 
 class I2CBus : Looper, StateMachine {
@@ -9799,7 +9796,7 @@ private:
 };
 
 #ifdef V2
-class LSM6DS3H : public I2CDevice, Looper, StateMachine, Gyroscope, Accelerometer {
+class LSM6DS3H : public I2CDevice, Looper, StateMachine {
 public:
   enum Registers {
     FUNC_CFG_ACCESS = 0x1,
@@ -9944,13 +9941,14 @@ public:
 	if (status_reg & 0x2) {
 	  // gyroscope data available
 	  if (readBytes(OUTX_L_G, dataBuffer, 6) == 6) {
-	    Gyro(Vec3(databuffer, 32768.0 / 2000.0)); // 2000 dps
+	    SaberBase::DoMotion(
+	      Vec3(databuffer, 32768.0 / 2000.0)); // 2000 dps
 	  }
 	}
 	if (status_reg & 0x4) {
 	  // accel data available
 	  if (readBytes(OUTX_L_XL, dataBuffer, 6) == 6) {
-	    Accel(Vec3(dataBuffer, 32768.0/4.0));  // 4 g range
+	    SaberBase::DoAccel(Vec3(dataBuffer, 32768.0/4.0));  // 4 g range
 	  }
 	}
       }
@@ -10124,7 +10122,7 @@ private:
 	if (status) {
 	  // gyroscope data available
 	  if (readBytes(OUTX_X_MSB, dataBuffer, 6) == 6) {
-	    Accel(Vec3(databuffer, 32768.0 / 4.0)); // 4 g range
+	    SaberBase::DoAccel(Vec3(databuffer, 32768.0 / 4.0)); // 4 g range
 	  }
 	}
       }
@@ -10197,7 +10195,7 @@ private:
 	if (status) {
 	  // gyroscope data available
 	  if (readBytes(OUTX_X_MSB, databuffer, 6) == 6) {
-	    Gyro(Vec3(databuffer, 2000.0 / 32768.0));
+	    SaberBase::DoMotion(Vec3(databuffer, 2000.0 / 32768.0));
 	  }
 	}
       }
