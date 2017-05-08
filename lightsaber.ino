@@ -107,6 +107,7 @@ const unsigned int maxLedsPerStrip = 144;
 //    select sound font
 //    select color
 //    adjust volume
+// Disable motion when off to save power.
 
 // If your electonics inverts the bladePin for some reason, define this.
 // #define INVERT_WS2811
@@ -449,6 +450,11 @@ class Vec3 {
 public:
   Vec3(){}
   Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
+  Vec3(const unsigned char* msb_data, float mul) {
+    x_= mul * (int16_t)((msb_data[0] << 8) | (msb_data[1]));
+    y_= mul * (int16_t)((msb_data[2] << 8) | (msb_data[3]));
+    z_= mul * (int16_t)((msb_data[4] << 8) | (msb_data[5]));
+  }
   Vec3 operator-(const Vec3& o) const {
     return Vec3(x - o.x, y - o.y, z - o.z);
   }
@@ -530,12 +536,12 @@ public:								\
   SABERFUN(BeginLockup, (), ());		\
   SABERFUN(EndLockup, (), ());			\
 						\
-  /* Swing rotation speed */			\
+  /* Swing rotation speed degrees per second */ \
   SABERFUN(Motion, (const Vec3& gyro), (gyro));	\
-  /* Accelertation */                           \
+  /* Accelertation in g */                      \
   SABERFUN(Accel, (const Vec3& accel), (accel));\
 						\
-  /* Wrist rotation speed */			\
+  /* Wrist rotation speed degrees per second */	\
   SABERFUN(XMotion, (float speed), (speed));	\
 						\
   SABERFUN(Top, (), ());			\
@@ -9661,41 +9667,104 @@ Parser parser;
 
 #ifdef ENABLE_MOTION
 
-bool DetectI2CPullup() {
-  pinMode(i2cDataPin, INPUT_PULLDOWN);
-  pinMode(i2cClockPin, INPUT_PULLDOWN);
-  delayMicroseconds(10);
-  bool data_detected = analogRead(i2cDataPin) > 800;
-  bool clock_detected = analogRead(i2cClockPin) > 800;
-  pinMode(i2cDataPin, INPUT);
-  pinMode(i2cClockPin, INPUT);
-  delayMicroseconds(10);
-  if (data_detected && clock_detected) return true;
-  if (clock_detected && !data_detected) {
-    Serial.println("I2C pending data detected, trying to clear...");
-    pinMode(i2cClockPin, OUTPUT);
-    for (int i = 0; i < 100; i++) {
-      delayMicroseconds(1);
-      digitalWrite(i2cClockPin, HIGH);
-      delayMicroseconds(1);
-      digitalWrite(i2cClockPin, LOW);
+class Accelerometer {
+protected:
+  void Accel(const Vec3& accel) {
+    if ( (accel_ - accel).len2() > 1.0) {
+      // Needs de-bouncing
+      saber.Clash();
     }
-    pinMode(i2cClockPin, INPUT);
+    accel_ = accel;
+    SaberBase::DoAccel(accel);
+    if (monitor.ShouldPrint(Monitoring::MonitorClash)) {
+      Serial.print("ACCEL: ");
+      Serial.print(accel.x);
+      Serial.print(", ");
+      Serial.print(accel.y);
+      Serial.print(", ");
+      Serial.println(accel.z);
+    }
   }
-  return false;
-}
+private:
+  vec3 accel_;
+};
 
-#ifdef V2
+class GyroScope {
+protected:
+  void Gyro(const Vec3& gyro) {
+    if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
+      // Got gyro data
+      Serial.print("GYRO: ");
+      Serial.print(gyro.x);
+      Serial.print(", ");
+      Serial.print(gyro.y);
+      Serial.print(", ");
+      Serial.println(gyro.z);
+    }
+    if (saber.IsOn()) {
+      SaberBase::DoXMotion(filtered_gyro.x);
+      SaberBase::DoMotion(filtered_gyro);
+    }
+  }
+};
+
 #define I2C_TIMEOUT_MILLIS 300
+
+class I2CBus : Looper, StateMachine {
+public:
+  void Loop() {
+    STATE_MACHINE_BEGIN();
+    SLEEP(1000);
+
+    // Check that we have pullups.
+    while (true) {
+      pinMode(i2cDataPin, INPUT_PULLDOWN);
+      pinMode(i2cClockPin, INPUT_PULLDOWN);
+      delayMicroseconds(10);
+      bool data_detected = analogRead(i2cDataPin) > 800;
+      bool clock_detected = analogRead(i2cClockPin) > 800;
+      pinMode(i2cDataPin, INPUT);
+      pinMode(i2cClockPin, INPUT);
+      delayMicroseconds(10);
+      if (data_detected && clock_detected) {
+	// All good, proceed.
+	break;
+      }
+      if (clock_detected && !data_detected) {
+	Serial.println("I2C pending data detected, trying to clear...");
+	pinMode(i2cClockPin, OUTPUT);
+	for (int i = 0; i < 100; i++) {
+	  SLEEP_MICROS(1);
+	  digitalWrite(i2cClockPin, HIGH);
+	  SLEEP_MICROS(1);
+	  digitalWrite(i2cClockPin, LOW);
+	}
+	pinMode(i2cClockPin, INPUT);
+	SLEEP(100); // Try again soon
+      } else {
+	SLEEP(1000); // Try again later
+      }
+    }
+
+    Wire.begin();
+    Wire.setClock(400000);
+    Wire.setDefaulitTimeout(20000); // 20ms
+    i2c_detected_ = true;
+    Looper::Unlink();
+    STATE_MACHINE_END();
+  }
+
+  bool inited() const { return i2c_detected_; };
+
+private:
+  bool i2c_detected_ = false;
+};
+
+I2CBus i2cbus;
 
 class I2CDevice {
 public:
   explicit I2CDevice(uint8_t address) : address_(address) {}
-  void begin() {
-    Wire.begin();
-    Wire.setClock(400000);
-    Wire.setDefaultTimeout(20000); // 20ms
-  }
   void writeByte(uint8_t reg, uint8_t data) {
     Wire.beginTransmission(address_);
     Wire.write(reg);
@@ -9735,7 +9804,8 @@ private:
   uint8_t address_;
 };
 
-class LSM6DS3H : public I2CDevice, Looper, StateMachine {
+#ifdef V2
+class LSM6DS3H : public I2CDevice, Looper, StateMachine, Gyroscope, Accelerometer {
 public:
   enum Registers {
     FUNC_CFG_ACCESS = 0x1,
@@ -9833,25 +9903,15 @@ public:
   void Loop() override {
     STATE_MACHINE_BEGIN();
 
-    SLEEP(1000);
-#if 1
-    if(!DetectI2CPullup()) {
-      Serial.println("No motion chip detected yet...");
-      while (!DetectI2CPullup()) SLEEP(100);
-    }
-#endif
+    while (!I2Cbus::inited()) YIELD();
 
     while (1) {
-      union {
-	uint8_t buffer[6];
-	struct { int16_t x, y, z; } xyz;
-      } dataBuffer;
+      unsigned char databuffer[6];
 
       Serial.print("Motion setup ... ");
-      I2CDevice::begin();
 
-      writeByte(CTRL1_XL, 0x80);  // 1.66kHz accel
-      writeByte(CTRL2_G, 0x80);   // 1.66kHz gyro
+      writeByte(CTRL1_XL, 0x88);  // 1.66kHz accel, 4G range
+      writeByte(CTRL2_G, 0x8A);   // 1.66kHz gyro, 2000 dps
       writeByte(CTRL3_C, 0x44);   // ?
       writeByte(CTRL4_C, 0x00);
       writeByte(CTRL5_C, 0x00);
@@ -9889,38 +9949,14 @@ public:
 	}
 	if (status_reg & 0x2) {
 	  // gyroscope data available
-	  if (readBytes(OUTX_L_G, dataBuffer.buffer, 6) == 6) {
-	    Vec3 gyro(dataBuffer.xyz.x, dataBuffer.xyz.y, dataBuffer.xyz.z);
-	    static Vec3 filtered_gyro(0, 0, 0);
-	    filtered_gyro = filtered_gyro * 0.8 + gyro * 0.01;
-	    if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
-	      // Got gyro data
-	      Serial.print("GYRO: ");
-	      Serial.print(dataBuffer.xyz.x);
-	      Serial.print(", ");
-	      Serial.print(dataBuffer.xyz.y);
-	      Serial.print(", ");
-	      Serial.println(dataBuffer.xyz.z);
-	    }
-	    if (saber.IsOn()) {
-              SaberBase::DoXMotion(filtered_gyro.x);
-	      SaberBase::DoMotion(filtered_gyro);
-	    }
+	  if (readBytes(OUTX_L_G, dataBuffer, 6) == 6) {
+	    Gyro(Vec3(databuffer, 32768.0 / 2000.0)); // 2000 dps
 	  }
 	}
 	if (status_reg & 0x4) {
 	  // accel data available
-	  if (readBytes(OUTX_L_XL, dataBuffer.buffer, 6) == 6) {
-	    Vec3 accel(dataBuffer.xyz.x, dataBuffer.xyz.y, dataBuffer.xyz.z);
-	    SaberBase::DoAccel(accel);
-	    if (monitor.ShouldPrint(Monitoring::MonitorClash)) {
-	      Serial.print("ACCEL: ");
-	      Serial.print(dataBuffer.xyz.x);
-	      Serial.print(", ");
-	      Serial.print(dataBuffer.xyz.y);
-	      Serial.print(", ");
-	      Serial.println(dataBuffer.xyz.z);
-	    }
+	  if (readBytes(OUTX_L_XL, dataBuffer, 6) == 6) {
+	    Accel(Vec3(dataBuffer, 32768.0/4.0));  // 4 g range
 	  }
 	}
       }
@@ -9933,96 +9969,249 @@ LSM6DS3H motion;
 
 #else  // V2
 
-#include <NXPMotionSense.h>
-
-NXPMotionSense imu;
-NXPSensorFusion filter;
-
-// Motion tracking. The NXPmotionsense library can supposedly do
-// full absolute motion tracking, but currently we're only using
-// the raw values from accelerometers and gyroscopes.
-class Orientation : Looper {
-  public:
-  Orientation() : Looper(), accel_(0.0f, 0.0f, 0.0f) {
-  }
-
-  void Setup() override {
-    if (DetectI2CPullup()) {
-      found_ = true;
-      imu.begin();
-      // filter.begin(100);
-    }
-  }
+class FXOS8700 : public I2CDevice, Looper, StateMachine {
+public:
+  enum Registers {
+    STATUS              = 0x00, // Real-time data-ready status or FIFO status
+    OUT_X_MSB           = 0x01, // 8 MSBs of 14-bit sample / Root pointer to XYZ FIFO
+    OUT_X_LSB           = 0x02, // 6 LSBs of 14-bit real-time sample
+    OUT_Y_MSB           = 0x03, // 8 MSBs of 14-bit real-time sample
+    OUT_Y_LSB           = 0x04, // 6 LSBs of 14-bit real-time sample
+    OUT_Z_MSB           = 0x05, // 8 MSBs of 14-bit real-time sample
+    OUT_Z_LSB           = 0x06, // 6 LSBs of 14-bit real-time sample
+    F_SETUP             = 0x09, // FIFO setup
+    TRIG_CFG            = 0x0A, // FIFO event trigger configuration register
+    SYSMOD              = 0x0B, // Current system mode
+    INT_SOURCE          = 0x0C, // Interrupt status
+    WHO_AM_I            = 0x0D, // Device ID
+    XYZ_DATA_CFG        = 0x0E, // Acceleration dynamic range and filter enable settings
+    P_FILTER_CUTOFF     = 0x0F, // Pulse detection high- pass and low-pass filter enable bits. High-pass filter cutoff frequency selection
+    PL_STATUS           = 0x10, // Landscape/Portrait orientation status
+    PL_CFG              = 0x11, // Landscape/Portrait configuration
+    PL_COUNT            = 0x12, // Landscape/Portrait debounce counter
+    PL_BF_ZCOMP         = 0x13, // Back/Front Trip angle threshold
+    PL_THS_REG          = 0x14, // Portrait to Landscape Trip Threshold angle and hysteresis settings
+    A_FFMT_CFG          = 0x15, // Freefall/Motion function configuration
+    A_FFMT_SRC          = 0x16, // Freefall/Motion event source register
+    A_FFMT_THS          = 0x17, // Freefall/Motion threshold register
+    A_FFMT_COUNT        = 0x18, // Freefall/Motion debounce counter
+    TRANSIENT_CFG       = 0x1D, // FIFO setup
+    TRANSIENT_SRC       = 0x1E, // Transient event status register
+    TRANSIENT_THS       = 0x1F, // Transient event threshold
+    TRANSIENT_COUNT     = 0x20, // Transient debounce counter
+    PULSE_CFG           = 0x21, // Pulse function configuration
+    PULSE_SRC           = 0x22, // Pulse function source register
+    PULSE_THSX          = 0x23, // X-axis pulse threshold
+    PULSE_THSY          = 0x24, // Y-axis pulse threshold
+    PULSE_THSZ          = 0x25, // Z-axis pulse threshold
+    PULSE_TMLT          = 0x26, // Time limit for pulse detection
+    PULSE_LTCY          = 0x27, // Latency time for second pulse detection
+    PULSE_WIND          = 0x28, // Window time for second pulse detection
+    ASLP_COUNT          = 0x29, // In activity counter setting for Auto-Sleep
+    CTRL_REG1           = 0x2A, // System ODR, accelerometer OSR, operating mode
+    CTRL_REG2           = 0x2B, // Self-Test, Reset, accelerometer OSR and Sleep mode settings
+    CTRL_REG3           = 0x2C, // Sleep mode interrupt wake enable, interrupt polarity, push-pull/open-drain configuration
+    CTRL_REG4           = 0x2D, // Interrupt enable register
+    CTRL_REG5           = 0x2E, // Interrupt pin (INT1/INT2) map
+    OFF_X               = 0x2F, // X-axis accelerometer offset adjust
+    OFF_Y               = 0x30, // Y-axis accelerometer offset adjust
+    OFF_Z               = 0x31, // Z-axis accelerometer offset adjust
+    M_DR_STATUS         = 0x32, // Magnetic data ready
+    M_OUT_X_MSB         = 0x33, // MSB of 16-bit magnetic data for X-axis
+    M_OUT_X_LSB         = 0x34, // LSB of 16-bit magnetic data for X-axis
+    M_OUT_Y_MSB         = 0x35, // MSB of 16-bit magnetic data for Y-axis
+    M_OUT_Y_LSB         = 0x36, // LSB of 16-bit magnetic data for Y-axis
+    M_OUT_Z_MSB         = 0x37, // MSB of 16-bit magnetic data for Z-axis
+    M_OUT_Z_LSB         = 0x38, // LSB of 16-bit magnetic data for Z-axis
+    CMP_X_MSB           = 0x39, // Bits [13:8] of integrated X-axis accerleration data
+    CMP_X_LSB           = 0x3A, // Bits [7:0] of integrated X-axis accerleration data
+    CMP_Y_MSB           = 0x3B, // Bits [13:8] of integrated Y-axis accerleration data
+    CMP_Y_LSB           = 0x3C, // Bits [7:0] of integrated Y-axis accerleration data
+    CMP_Z_MSB           = 0x3D, // Bits [13:8] of integrated Z-axis accerleration data
+    CMP_Z_LSB           = 0x3E, // Bits [7:0] of integrated Z-axis accerleration data
+    M_OFF_X_MSB         = 0x3F, // MSB of magnetometer of X-axis offset
+    M_OFF_X_LSB         = 0x40, // LSB of magnetometer of X-axis offset
+    M_OFF_Y_MSB         = 0x41, // MSB of magnetometer of Y-axis offset
+    M_OFF_Y_LSB         = 0x42, // LSB of magnetometer of Y-axis offset
+    M_OFF_Z_MSB         = 0x43, // MSB of magnetometer of Z-axis offset
+    M_OFF_Z_LSB         = 0x44, // LSB of magnetometer of Z-axis offset
+    MAX_X_MSB           = 0x45, // Magnetometer X-axis maximum value MSB
+    MAX_X_LSB           = 0x46, // Magnetometer X-axis maximum value LSB
+    MAX_Y_MSB           = 0x47, // Magnetometer Y-axis maximum value MSB
+    MAX_Y_LSB           = 0x48, // Magnetometer Y-axis maximum value LSB
+    MAX_Z_MSB           = 0x49, // Magnetometer Z-axis maximum value MSB
+    MAX_Z_LSB           = 0x4A, // Magnetometer Z-axis maximum value LSB
+    MIN_X_MSB           = 0x4B, // Magnetometer X-axis minimum value MSB
+    MIN_X_LSB           = 0x4C, // Magnetometer X-axis minimum value LSB
+    MIN_Y_MSB           = 0x4D, // Magnetometer Y-axis minimum value MSB
+    MIN_Y_LSB           = 0x4E, // Magnetometer Y-axis minimum value LSB
+    MIN_Z_MSB           = 0x4F, // Magnetometer Z-axis minimum value MSB
+    MIN_Z_LSB           = 0x50, // Magnetometer Z-axis minimum value LSB
+    TEMP                = 0x51, // Device temperature, valid range of -128 to 127 Â°C when M_CTRL1[m_hms] > 0b00
+    M_THS_CFG           = 0x52, // Magnetic threshold detection function configuration
+    M_THS_SRC           = 0x53, // Magnetic threshold event source register
+    M_THS_X_MSB         = 0x54, // X-axis magnetic threshold MSB
+    M_THS_X_LSB         = 0x55, // X-axis magnetic threshold LSB
+    M_THS_Y_MSB         = 0x56, // Y-axis magnetic threshold MSB
+    M_THS_Y_LSB         = 0x57, // Y-axis magnetic threshold LSB
+    M_THS_Z_MSB         = 0x58, // Z-axis magnetic threshold MSB
+    M_THS_Z_LSB         = 0x59, // Z-axis magnetic threshold LSB
+    M_THS_COUNT         = 0x5A, // Magnetic threshold debounce counter
+    M_CTRL_REG1         = 0x5B, // Control for magnetic sensor functions
+    M_CTRL_REG2         = 0x5C, // Control for magnetic sensor functions
+    M_CTRL_REG3         = 0x5D, // Control for magnetic sensor functions
+    M_INT_SRC           = 0x5E, // Magnetic interrupt source
+    A_VECM_CFG          = 0x5F, // Acceleration vector-magnitude configuration register
+    A_VECM_THS_MSB      = 0x60, // Acceleration vector-magnitude threshold MSB
+    A_VECM_THS_LSB      = 0x61, // Acceleration vector-magnitude threshold LSB
+    A_VECM_CNT          = 0x62, // Acceleration vector-magnitude debounce count
+    A_VECM_INITX_MSB    = 0x63, // Acceleration vector-magnitude X-axis reference value MSB
+    A_VECM_INITX_LSB    = 0x64, // Acceleration vector-magnitude X-axis reference value LSB
+    A_VECM_INITY_MSB    = 0x65, // Acceleration vector-magnitude Y-axis reference value MSB
+    A_VECM_INITY_LSB    = 0x66, // Acceleration vector-magnitude Y-axis reference value LSB
+    A_VECM_INITZ_MSB    = 0x67, // Acceleration vector-magnitude Z-axis reference value MSB
+    A_VECM_INITZ_LSB    = 0x68, // Acceleration vector-magnitude Z-axis reference value LSB
+    M_VECM_CFG          = 0x69, // Magnetic vector-magnitude configuration register
+    M_VECM_THS_MSB      = 0x6A, // Magnetic vector-magnitude threshold MSB
+    M_VECM_THS_LSB      = 0x6B, // Magnetic vector-magnitude threshold LSB
+    M_VECM_CNT          = 0x6C, // Magnetic vector-magnitude debounce count
+    M_VECM_INITX_MSB    = 0x6D, // Magnetic vector-magnitude reference value X-axis MSB
+    M_VECM_INITX_LSB    = 0x6E, // Magnetic vector-magnitude reference value X-axis LSB
+    M_VECM_INITY_MSB    = 0x6F, // Magnetic vector-magnitude reference value Y-axis MSB
+    M_VECM_INITY_LSB    = 0x70, // Magnetic vector-magnitude reference value Y-axis LSB
+    M_VECM_INITZ_MSB    = 0x71, // Magnetic vector-magnitude reference value Z-axis MSB
+    M_VECM_INITZ_LSB    = 0x72, // Magnetic vector-magnitude reference value Z-axis LSB
+    A_FFMT_THS_X_MSB    = 0x73, // X-axis FMT threshold MSB
+    A_FFMT_THS_X_LSB    = 0x74, // X-axis FFMT threshold LSB
+    A_FFMT_THS_Y_MSB    = 0x75, // Y-axis FFMT threshold MSB
+    A_FFMT_THS_Y_LSB    = 0x76, // Y-axis FFMT threshold LSB
+    A_FFMT_THS_Z_MSB    = 0x77, // Z-axis FFMT threshold MSB
+    A_FFMT_THS_Z_LSB    = 0x78, // Z-axis FFMT threshold LSB
+  };
+private:
+  FXOS8700() : I2CDevice(0x1E) {}
 
   void Loop() override {
-    if (!found_) return;
-    if (imu.available()) {
-      Vec3 accel, gyro, magnetic;
+    STATE_MACHINE_BEGIN();
 
-      // Read the motion sensors
-      imu.readMotionSensor(accel.x, accel.y, accel.z,
-                           gyro.x, gyro.y, gyro.z,
-                           magnetic.x, magnetic.y, magnetic.z);
-      // Clash detection
-      //Serial.print("ACCEL2: ");
-      //Serial.println((accel_ - accel).len2());
-      if ( (accel_ - accel).len2() > 1.0) {
-        // Needs de-bouncing
-        saber.Clash();
-      }
-      accel_ = accel;
-      SaberBase::DoAccel(accel);
+    while (!I2Cbus::inited()) YIELD();
 
-      // static float last_speed = 0.0;
-      // float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
+    while (1) {
+      unsigned char databuffer[6];
+      Serial.print("Accel setup ... ");
 
-      if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
-        Serial.print("Gyro: ");
-        Serial.print(gyro.x);
-	Serial.print(" ");
-        Serial.print(gyro.y);
-	Serial.print(" ");
-        Serial.println(gyro.z);
+      if (readByte(WHO_AM_I) != 0xC7) {
+        Serial.println("Failed.");
+	return;
       }
 
-      if (saber.IsOn()) {
-	SaberBase::DoXMotion(gyro.x);
-	SaberBase::DoMotion(gyro);
+      // Standby
+      writeByte(CTRL_REG1, 0);
+      // configure magnetometer
+      // writeByte(M_CTRL_REG1, 0x1F);
+      // writeByte(M_CTRL_REG2, 0x20);
+      writeByte(M_CTRL_REG2, 0x00); // Disable magnetometer
+      // configure accelerometer
+      writeByte(XYZ_DATA_CFG, 0x01);  // 4G range
+      writeByte(CTRL_REG2, 0x02);  // hires
+      // writeByte(CTRL_REG1, 0x15);  // 100Hz A+M 
+      writeByte(CTRL_REG1, 0x01);  // 800Hz Accel only
+
+      while (1) {
+	YIELD();
+	int status = readByte(STATUS);
+	if (status_reg == -1) {
+	  // motion fail, reboot gyro chip.
+	  Serial.println("Motion chip timeout, reboot motion chip!");
+	  // writeByte(CTRL3_C, 1);
+	  delay(20);
+	  break;
+	}
+	if (status) {
+	  // gyroscope data available
+	  if (readBytes(OUTX_X_MSB, dataBuffer, 6) == 6) {
+	    Accel(Vec3(databuffer, 32768.0 / 4.0)); // 4 g range
+	  }
+	}
       }
-#ifdef ENABLE_AUDIO
-      // TODO: Use SaberBase()
-      // saber_synth.volume_.set_target(32768 * (0.5 + clamp(speed/200.0, 0.0, 0.5)));
-
-      // TODO: speed delta?
-      // saber_synth.AdjustDelta(speed);
-#endif
-      
-      // last_speed = speed;
-#if 0
-      // Update the SensorFusion filter
-      filter.update(accel.x, accel.y, accel.z,
-                    gyro.x, gyro.y, gyro.z,
-                    magnetic.x, magnetic.y, magnetic.z);
-
-      // print the heading, pitch and roll
-      float roll = filter.getRoll();
-      float pitch = filter.getPitch();
-      float heading = filter.getYaw();
-      Serial.print("Orientation: ");
-      Serial.print(heading);
-      Serial.print(" ");
-      Serial.print(pitch);
-      Serial.print(" ");
-      Serial.println(roll);
-#endif
     }
+    STATE_MACHINE_END();
   }
-private:
-  Vec3 accel_;
-  bool found_ = false;
 };
 
-Orientation orientation;
+class FXAS21002 : public I2CDevice, Looper, StateMachine {
+public:
+  enum Registers {
+    I2C_ADDR0         = 0x20, // SA0 = Gnd
+    I2C_ADDR1         = 0x21, // SA0 = Vcc
+    STATUS            = 0x00, // Alias for DR_STATUS or F_STATUS
+    OUT_X_MSB         = 0x01, // MSB of 16 bit X-axis data sample
+    OUT_X_LSB         = 0x02, // LSB of 16 bit X-axis data sample
+    OUT_Y_MSB         =0x03 ,// MSB of 16 bit Y-axis data sample
+    OUT_Y_LSB         = 0x04, // LSB of 16 bit Y-axis data sample
+    OUT_Z_MSB         = 0x05, // MSB of 16 bit Z-axis data sample
+    OUT_Z_LSB         = 0x06, // LSB of 16 bit Z-axis data sample
+    DR_STATUS         = 0x07, // Data-ready status information
+    F_STATUS          = 0x08, // FIFO Status
+    F_SETUP           = 0x09, // FIFO setup
+    F_EVENT           = 0x0A, // FIFO event
+    INT_SRC_FLAG      = 0x0B, // Interrupt event source status flags
+    WHO_AM_I          = 0x0C, // Device ID
+    CTRL_REG0         = 0x0D, // Full-scale range selection, high-pass filter setting, SPI mode selection
+    RT_CFG            = 0x0E, // Rate threshold function configuration
+    RT_SRC            = 0x0F, // Rate threshold event flags status register
+    RT_THS            = 0x10, // Rate threshold function threshold register
+    RT_COUNT          = 0x11, // Rate threshold function debounce counter
+    TEMP              = 0x12, // Device temperature in °C
+    CTRL_REG1         = 0x13, // Operating mode, ODR, self-test and soft reset
+    CTRL_REG2         = 0x14, // Interrupt configuration
+    CTRL_REG3         = 0x15, // Auto-increment address configuration, external power control, FSR expansion
+  };
+private:
+  FXAS21002() : I2CDevice(0x20) {}
+
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+
+    while (!I2Cbus::inited()) YIELD();
+    while (1) {
+      unsigned char databuffer[6];
+
+      Serial.print("Gyro setup ... ");
+
+      if (readByte(WHO_AM_I) != 0xD7) {
+        Serial.println("Failed.");
+	return;
+      }
+
+      // Standby
+      writeByte(CTRL_REG1, 0);
+      // switch to active mode, 800 Hz output rate
+      writeByte(CTRL_REG0, 0x00);
+      writeByte(CTRL_REG1, 0x02);
+
+      while (1) {
+	YIELD();
+	int status = readByte(STATUS);
+	if (status_reg == -1) {
+	  // motion fail, reboot gyro chip.
+	  Serial.println("Motion chip timeout, reboot motion chip!");
+	  // writeByte(CTRL3_C, 1);
+	  delay(20);
+	  break;
+	}
+	if (status) {
+	  // gyroscope data available
+	  if (readBytes(OUTX_X_MSB, databuffer, 6) == 6) {
+	    Gyro(Vec3(databuffer, 2000.0 / 32768.0));
+	  }
+	}
+      }
+    }
+    STATE_MACHINE_END();
+  }
+};
+
 #endif   // V2
 #endif   // ENABLE_MOTION
 
