@@ -541,9 +541,6 @@ public:								\
   /* Accelertation in g */                      \
   SABERFUN(Accel, (const Vec3& accel), (accel));\
 						\
-  /* Wrist rotation speed degrees per second */	\
-  SABERFUN(XMotion, (float speed), (speed));	\
-						\
   SABERFUN(Top, (), ());			\
   SABERFUN(IsOn, (bool* on), (on));
 
@@ -2397,7 +2394,6 @@ public:
     }
     audio_splicer.set_volume(vol);
   }
-  void XMotion(float speed) override {}
 };
 
 MonophonicFont monophonic_font;
@@ -2550,7 +2546,6 @@ public:
     }
     audio_splicer.set_volume(vol);
   }
-  void XMotion(float speed) override {}
 
   ConfigFile config_;
 };
@@ -9702,8 +9697,7 @@ protected:
       Serial.println(gyro.z);
     }
     if (saber.IsOn()) {
-      SaberBase::DoXMotion(filtered_gyro.x);
-      SaberBase::DoMotion(filtered_gyro);
+      SaberBase::DoMotion(gyro);
     }
   }
 };
