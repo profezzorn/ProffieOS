@@ -318,24 +318,24 @@ public:
   }
 };
 
-#define CHECK_LL(T, START, NEXT) do {					\
-  int len = 0;								\
-  for (T* i = START; i; i = i->NEXT) {					\
-    if (abs(((long)i) - (long)&START) > 65536) {			\
-      Serial.print("Linked list " #START " has invalid pointer @ ");	\
-      Serial.print(__LINE__);						\
-      Serial.print(" pointer: ");					\
-      Serial.println((long)i, 16);						\
-      START = NULL;							\
-      break;								\
-    }									\
-    if (++len > 1000) {							\
-      Serial.print("Linked list " #START " has become infinite @ ");	\
-      Serial.println(__LINE__);						\
+#define CHECK_LL(T, START, NEXT) do {                                   \
+  int len = 0;                                                          \
+  for (T* i = START; i; i = i->NEXT) {                                  \
+    if (abs(((long)i) - (long)&START) > 65536) {                        \
+      Serial.print("Linked list " #START " has invalid pointer @ ");    \
+      Serial.print(__LINE__);                                           \
+      Serial.print(" pointer: ");                                       \
+      Serial.println((long)i, 16);                                              \
+      START = NULL;                                                     \
+      break;                                                            \
+    }                                                                   \
+    if (++len > 1000) {                                                 \
+      Serial.print("Linked list " #START " has become infinite @ ");    \
+      Serial.println(__LINE__);                                         \
       i->NEXT = NULL;                                                   \
       break;                                                            \
-    }									\
-  }									\
+    }                                                                   \
+  }                                                                     \
 } while(0)
 
 #else
@@ -365,7 +365,7 @@ public:
     for (Looper** i = &loopers; *i; i = &(*i)->next_looper_) {
       if (*i == this) {
         *i = next_looper_;
-	CHECK_LL(Looper, loopers, next_looper_);
+        CHECK_LL(Looper, loopers, next_looper_);
         return;
       }
     }
@@ -504,7 +504,7 @@ protected:
     for (SaberBase** i = &saberbases; *i; i = &(*i)->next_saber_) {
       if (*i == x) {
         *i = x->next_saber_;
-	CHECK_LL(SaberBase, saberbases, next_saber_);
+        CHECK_LL(SaberBase, saberbases, next_saber_);
         return;
       }
     }
@@ -516,37 +516,37 @@ protected:
   ~SaberBase() { Unlink(this); }
 
 
-#define SABERFUN(NAME, TYPED_ARGS, ARGS)			\
-public:								\
-  static void Do##NAME TYPED_ARGS {				\
+#define SABERFUN(NAME, TYPED_ARGS, ARGS)                        \
+public:                                                         \
+  static void Do##NAME TYPED_ARGS {                             \
     CHECK_LL(SaberBase, saberbases, next_saber_);               \
-    for (SaberBase *p = saberbases; p; p = p->next_saber_) {	\
-      p->SB_##NAME ARGS;					\
-    }								\
+    for (SaberBase *p = saberbases; p; p = p->next_saber_) {    \
+      p->SB_##NAME ARGS;                                        \
+    }                                                           \
     CHECK_LL(SaberBase, saberbases, next_saber_);               \
-  }								\
-								\
+  }                                                             \
+                                                                \
   virtual void SB_##NAME TYPED_ARGS {}
 
-#define SABERBASEFUNCTIONS()			\
-  SABERFUN(Clash, (), ());			\
-  SABERFUN(Stab, (), ());			\
-  SABERFUN(On, (), ());				\
-  SABERFUN(Off, (), ());			\
-  SABERFUN(Lockup, (), ());			\
-  SABERFUN(Force, (), ());			\
-  SABERFUN(Blast, (), ());			\
-  SABERFUN(Boot, (), ());			\
-  SABERFUN(NewFont, (), ());			\
-  SABERFUN(BeginLockup, (), ());		\
-  SABERFUN(EndLockup, (), ());			\
-						\
+#define SABERBASEFUNCTIONS()                    \
+  SABERFUN(Clash, (), ());                      \
+  SABERFUN(Stab, (), ());                       \
+  SABERFUN(On, (), ());                         \
+  SABERFUN(Off, (), ());                        \
+  SABERFUN(Lockup, (), ());                     \
+  SABERFUN(Force, (), ());                      \
+  SABERFUN(Blast, (), ());                      \
+  SABERFUN(Boot, (), ());                       \
+  SABERFUN(NewFont, (), ());                    \
+  SABERFUN(BeginLockup, (), ());                \
+  SABERFUN(EndLockup, (), ());                  \
+                                                \
   /* Swing rotation speed degrees per second */ \
-  SABERFUN(Motion, (const Vec3& gyro), (gyro));	\
+  SABERFUN(Motion, (const Vec3& gyro), (gyro)); \
   /* Accelertation in g */                      \
   SABERFUN(Accel, (const Vec3& accel), (accel));\
-						\
-  SABERFUN(Top, (), ());			\
+                                                \
+  SABERFUN(Top, (), ());                        \
   SABERFUN(IsOn, (bool* on), (on));
 
   SABERBASEFUNCTIONS();
@@ -571,9 +571,9 @@ protected:
       SaberBase::Link(this);
     }
   }
-#define SABERFUN(NAME, TYPED_ARGS, ARGS)	\
-  void SB_##NAME TYPED_ARGS override {		\
-    delegate_->SB_##NAME ARGS;			\
+#define SABERFUN(NAME, TYPED_ARGS, ARGS)        \
+  void SB_##NAME TYPED_ARGS override {          \
+    delegate_->SB_##NAME ARGS;                  \
   }
 
   SABERBASEFUNCTIONS();
@@ -877,11 +877,11 @@ public:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "dacbuf")) {
       for (size_t i = 0; i < NELEM(dac_dma_buffer); i++) {
-	Serial.print(dac_dma_buffer[i] - 2047);
-	if ((i & 0xf) == 0xf)
-	  Serial.println("");
-	else
-	  Serial.print(" ");
+        Serial.print(dac_dma_buffer[i] - 2047);
+        if ((i & 0xf) == 0xf)
+          Serial.println("");
+        else
+          Serial.print(" ");
       }
       Serial.println("");
       return true;
@@ -921,7 +921,7 @@ private:
     if (stream) {
       int n = stream->read(dest, end-dest);
       while (n--) {
-	*dest = ((*(int16_t*)dest) + 32767) >> 4;
+        *dest = ((*(int16_t*)dest) + 32767) >> 4;
         dest++;
       }
     }
@@ -958,27 +958,27 @@ public:
       over = last_square_;
       under = over - 1;
       while (under * under > x) {
-	over = under;
-	under -= step;
-	step += step;
-	if (under <= 0) { under = 0; break; }
+        over = under;
+        under -= step;
+        step += step;
+        if (under <= 0) { under = 0; break; }
       }
     } else {
       under = last_square_;
       over = under + 1;
       while (over * over <= x) {
-	under = over;
-	over += step;
-	step += step;
-	if (over < 0) { over = x; break; }
+        under = over;
+        over += step;
+        step += step;
+        if (over < 0) { over = x; break; }
       }
     }
     while (under + 1 < over) {
       int mid = (over + under) >> 1;
       if (mid * mid > x) {
-	over = mid;
+        over = mid;
       } else {
-	under = mid;
+        under = mid;
       }
     }
     return last_square_ = under;
@@ -994,26 +994,26 @@ public:
       int to_do = min(elements, (int)NELEM(sum));
       for (int i = 0; i < to_do; i++) sum[i] = 0;
       for (int i = 0; i < N; i++) {
-	int e = streams_[i] ? streams_[i]->read(data, to_do) : 0;
-	for (int j = 0; j < e; j++) {
-	  sum[j] += data[j];
-	}
+        int e = streams_[i] ? streams_[i]->read(data, to_do) : 0;
+        for (int j = 0; j < e; j++) {
+          sum[j] += data[j];
+        }
       }
 
       for (int i = 0; i < to_do; i++) {
-	v = sum[i];
-	vol_ = ((vol_ + abs(v)) * 255) >> 8;
+        v = sum[i];
+        vol_ = ((vol_ + abs(v)) * 255) >> 8;
 #if 1
-	v2 = (v << 10) / (my_sqrt(vol_) + 100);
+        v2 = (v << 10) / (my_sqrt(vol_) + 100);
 #else
-	v2 = v;
+        v2 = v;
 #endif
 #ifdef QUIET
-	v2 >>= 8;
+        v2 >>= 8;
 #endif
-	data[i] = clampi32(v2, -32768, 32767);
-	peak_sum_ = max(abs(v), peak_sum_);
-	peak_ = max(abs(v2), peak_);
+        data[i] = clampi32(v2, -32768, 32767);
+        peak_sum_ = max(abs(v), peak_sum_);
+        peak_ = max(abs(v2), peak_);
       }
       data += to_do;
       elements -= to_do;
@@ -1068,17 +1068,17 @@ public:
       s = min(s, x_);
       if (s <= 0) return e - elements;
       if (up_) {
-	for (int i = 0; i < s; i++) data[i] = 200;
+        for (int i = 0; i < s; i++) data[i] = 200;
       } else {
-	for (int i = 0; i < s; i++) data[i] = -200;
+        for (int i = 0; i < s; i++) data[i] = -200;
       }
       data += s;
       elements -= s;
       x_ -= s;
       samples_ -= s;
       if (x_ == 0) {
-	x_ = f_;
-	up_ = !up_;
+        x_ = f_;
+        up_ = !up_;
       }
     }
   }
@@ -1167,11 +1167,11 @@ public:
     for (int i = 0; i < elements; i++) {
       int32_t tmp;
       tmp  = humm_sampler_lo_.next() *
-	(32768 * 16383 / (3 * 16383 + sin_sampler_a_lo_.next()));
+        (32768 * 16383 / (3 * 16383 + sin_sampler_a_lo_.next()));
       tmp += humm_sampler_hi_.next() *
-	(32768 * 16383 / (3 * 16383 + sin_sampler_a_hi_.next()));
+        (32768 * 16383 / (3 * 16383 + sin_sampler_a_hi_.next()));
       tmp += buzz_sampler_.next() *
-	(32768 * 16383 / (3 * 16383 + sin_sampler_b_.next()));
+        (32768 * 16383 / (3 * 16383 + sin_sampler_b_.next()));
       tmp >>= 15;
 //      tmp = humm_sampler_lo_.next();
       last_prevolume_value = tmp;
@@ -1290,17 +1290,17 @@ private:
     for (int i = 0; i < 50; i++) {
       size_t max_space = 0;
       for (DataStreamWork *d = data_streams; d; d=d->next_)
-	max_space = max(max_space, d->space_available());
+        max_space = max(max_space, d->space_available());
       if (max_space == 0) break;
       for (DataStreamWork *d = data_streams; d; d=d->next_) {
-	if (d->space_available() >= max_space)
-	  d->FillBuffer();
+        if (d->space_available() >= max_space)
+          d->FillBuffer();
       }
     }
 #else
     for (int i = 0; i < 10; i++) {
       for (DataStreamWork *d = data_streams; d; d=d->next_) {
-	d->FillBuffer();
+        d->FillBuffer();
       }
     }
 #endif
@@ -1372,11 +1372,11 @@ private:
     if (stream_) {
       size_t space = space_available();
       if (space) {
-	size_t end_pos = buf_end_ & (N-1);
-	size_t to_read = min(space, N - end_pos);
-	int got = stream_->read(buffer_ + end_pos, to_read);
-	if (!got) eof_ = stream_->eof();
-	buf_end_ += got;
+        size_t end_pos = buf_end_ & (N-1);
+        size_t to_read = min(space, N - end_pos);
+        int got = stream_->read(buffer_ + end_pos, to_read);
+        if (!got) eof_ = stream_->eof();
+        buf_end_ += got;
       }
     }
     return stream_ && space_available() > 0 && !eof_;
@@ -1519,23 +1519,23 @@ class Effect {
       Serial.print(name_);
       Serial.print(" files: ");
       if (min_file_ <= max_file_) {
-	Serial.print(min_file_);
-	Serial.print("-");
-	Serial.print(max_file_);
-	if (digits_) {
-	  Serial.print(" using ");
-	  Serial.print(digits_);
-	  Serial.print(" digits");
-	}
-	if (unnumbered_file_found_) {
-	  Serial.print(" + ");
-	}
+        Serial.print(min_file_);
+        Serial.print("-");
+        Serial.print(max_file_);
+        if (digits_) {
+          Serial.print(" using ");
+          Serial.print(digits_);
+          Serial.print(" digits");
+        }
+        if (unnumbered_file_found_) {
+          Serial.print(" + ");
+        }
       }
       if (unnumbered_file_found_) {
-	Serial.print("one unnumbered file");
+        Serial.print("one unnumbered file");
       }
       if (subdirs_) {
-	Serial.print(" in subdirs");
+        Serial.print(" in subdirs");
       }
       Serial.println("");
     }
@@ -1634,20 +1634,20 @@ class Effect {
     File dir = SD.open(directory);
     if (dir) {
       while (File f = dir.openNextFile()) {
-	if (f.isDirectory()) {
-	  char fname[128];
-	  strcpy(fname, f.name());
-	  strcat(fname, "/");
-	  char* fend = fname + strlen(fname);
-	  while (File f2 = f.openNextFile()) {
-	    strcpy(fend, f2.name());
-	    ScanAll(fname);
-	    f2.close();
-	  }
-	} else {
-	  ScanAll(f.name());
-	}
-	f.close();
+        if (f.isDirectory()) {
+          char fname[128];
+          strcpy(fname, f.name());
+          strcat(fname, "/");
+          char* fend = fname + strlen(fname);
+          while (File f2 = f.openNextFile()) {
+            strcpy(fend, f2.name());
+            ScanAll(fname);
+            f2.close();
+          }
+        } else {
+          ScanAll(f.name());
+        }
+        f.close();
       }
     }
 #endif
@@ -1723,11 +1723,11 @@ EFFECT(swingh);  // Looped swing, HIGH
     upsample_buf_##NAME##_b_ = upsample_buf_##NAME##_c_;        \
     upsample_buf_##NAME##_c_ = upsample_buf_##NAME##_d_;        \
     upsample_buf_##NAME##_d_ = sample;                          \
-    EMIT(clampi32((upsample_buf_##NAME##_a_ * C2 +		\
+    EMIT(clampi32((upsample_buf_##NAME##_a_ * C2 +              \
           upsample_buf_##NAME##_b_ * C1 +                       \
           upsample_buf_##NAME##_c_ * C1 +                       \
-		   upsample_buf_##NAME##_d_ * C2) >> 15,	\
-		  -32768, 32767));				\
+                   upsample_buf_##NAME##_d_ * C2) >> 15,        \
+                  -32768, 32767));                              \
     EMIT(upsample_buf_##NAME##_c_);                             \
   }                                                             \
   void clear_##NAME() {                                         \
@@ -1741,11 +1741,11 @@ EFFECT(swingh);  // Looped swing, HIGH
   int16_t upsample_buf_##NAME##_c_ = 0;                         \
   int16_t upsample_buf_##NAME##_d_ = 0
 #else
-#define UPSAMPLE_FUNC(NAME, EMIT)		\
-  void NAME(int16_t sample) {			\
-      EMIT(sample);      EMIT(sample);		\
-  }						\
-  void clear_##NAME() {				\
+#define UPSAMPLE_FUNC(NAME, EMIT)               \
+  void NAME(int16_t sample) {                   \
+      EMIT(sample);      EMIT(sample);          \
+  }                                             \
+  void clear_##NAME() {                         \
   }
 #endif
 
@@ -1821,11 +1821,11 @@ private:
     while (ptr_ < end_ && num_samples_ < NELEM(samples_)) {
       int v = 0;
       if (channels == 1) {
-	v = read2<bits>();
+        v = read2<bits>();
       } else {
-      	v = read2<bits>();
-	v += read2<bits>();
-	v >>= 1;
+        v = read2<bits>();
+        v += read2<bits>();
+        v >>= 1;
       }
       if (rate == AUDIO_RATE) {
         Emit1(v);
@@ -1836,8 +1836,8 @@ private:
       } else if (rate == AUDIO_RATE * 2) {
         Emit05(v);
       } else {
-	Serial.println("Unsupported rate.");
-	Stop();
+        Serial.println("Unsupported rate.");
+        Stop();
       }
     }
   }
@@ -1926,9 +1926,9 @@ private:
     while (true) {
       while (!run_ && !effect_) YIELD();
       if (!run_) {
-	if (!effect_->Play(filename_)) {
-	  goto fail;
-	}
+        if (!effect_->Play(filename_)) {
+          goto fail;
+        }
         run_ = true;
       }
 #ifdef ENABLE_SERIALFLASH
@@ -1938,42 +1938,42 @@ private:
       {
 #ifdef ENABLE_SD
         sd_file_ = SD.open(filename_);
-	YIELD();
+        YIELD();
         if (!sd_file_)
 #endif
         {
-	  Serial.print("File ");
-	  Serial.print(filename_);
-	  Serial.println(" not found.");
-	  goto fail;
+          Serial.print("File ");
+          Serial.print(filename_);
+          Serial.println(" not found.");
+          goto fail;
         }
       }
       wav_ = endswith(".wav", filename_);
       if (wav_) {
-	if (ReadFile(20) != 20) {
-	  Serial.println("Failed to read 20 bytes.");
-	  goto fail;
-	}
-	if (header(0) != 0x46464952 &&
-	    header(2) != 0x45564157 &&
-	    header(3) != 0x20746D66 &&
-	    header(4) < 16) {
-	  Serial.println("Headers don't match.");
-	  YIELD();
-	  goto fail;
-	}
-	tmp_ = header(4);
-	if (tmp_ != ReadFile(tmp_)) {
-	  Serial.println("Read failed.");
-	  goto fail;
-	}
-	if ((header(0) & 0xffff) != 1) {
-	  Serial.println("Wrong format.");
-	  goto fail;
-	}
-	channels_ = header(0) >> 16;
-	rate_ = header(1);
-	bits_ = header(3) >> 16;
+        if (ReadFile(20) != 20) {
+          Serial.println("Failed to read 20 bytes.");
+          goto fail;
+        }
+        if (header(0) != 0x46464952 &&
+            header(2) != 0x45564157 &&
+            header(3) != 0x20746D66 &&
+            header(4) < 16) {
+          Serial.println("Headers don't match.");
+          YIELD();
+          goto fail;
+        }
+        tmp_ = header(4);
+        if (tmp_ != ReadFile(tmp_)) {
+          Serial.println("Read failed.");
+          goto fail;
+        }
+        if ((header(0) & 0xffff) != 1) {
+          Serial.println("Wrong format.");
+          goto fail;
+        }
+        channels_ = header(0) >> 16;
+        rate_ = header(1);
+        bits_ = header(3) >> 16;
       } else {
          channels_ = 1;
          rate_ = 44100;
@@ -1987,26 +1987,26 @@ private:
       Serial.println(bits_);
 
       while (true) {
-	if (wav_) {
-	  if (ReadFile(8) != 8) break;
-	  len_ = header(1);
-	  if (header(0) != 0x61746164) {
-	    Skip(len_);
-	    continue;
-	  }
-	} else {
-	  if (Tell() >= FileSize()) break;
-	  len_ = FileSize() - Tell();
-	}
-	sample_bytes_ = len_;
+        if (wav_) {
+          if (ReadFile(8) != 8) break;
+          len_ = header(1);
+          if (header(0) != 0x61746164) {
+            Skip(len_);
+            continue;
+          }
+        } else {
+          if (Tell() >= FileSize()) break;
+          len_ = FileSize() - Tell();
+        }
+        sample_bytes_ = len_;
         while (len_) {
-	  bytes_to_decode_ =
-	    ReadFile(AlignRead(min(len_, sizeof(buffer))));
-	  len_ -= bytes_to_decode_;
-	  ptr_ = buffer;
-	  end_ = buffer + bytes_to_decode_;
+          bytes_to_decode_ =
+            ReadFile(AlignRead(min(len_, sizeof(buffer))));
+          len_ -= bytes_to_decode_;
+          ptr_ = buffer;
+          end_ = buffer + bytes_to_decode_;
           while (ptr_ < end_) {
-	    DecodeBytes();
+            DecodeBytes();
 
             while (written_ < num_samples_) {
               // Preload should go to here...
@@ -2021,7 +2021,7 @@ private:
             written_ = num_samples_ = 0;
           }
         }
-	YIELD();
+        YIELD();
       }
 
       // EOF;
@@ -2165,13 +2165,13 @@ public:
     elements = source_->read(data, elements);
     if (volume_.isOff()) {
       for (int i = 0; i < elements; i++) {
-	data[i] = 0;
+        data[i] = 0;
       }
     } else {
       for (int i = 0; i < elements; i++) {
-	int32_t v = (data[i] * (int32_t)volume_.value()) >> 15;
-	data[i] = clampi32(v, -32768, 32767);
-	volume_.advance();
+        int32_t v = (data[i] * (int32_t)volume_.value()) >> 15;
+        data[i] = clampi32(v, -32768, 32767);
+        volume_.advance();
       }
     }
     return elements;
@@ -2216,9 +2216,9 @@ public:
     if (start_after_) {
       start_after_ -= elements;
       if (start_after_ < 0) {
-	start_after_ = 0;
-	current_ = fadeto_;
-	fadeto_ = -1;
+        start_after_ = 0;
+        current_ = fadeto_;
+        fadeto_ = -1;
       }
       return 0;
     }
@@ -2230,10 +2230,10 @@ public:
       to_read -= num;
       p += num;
       if (to_read > 0) {
-	// end of file?
-	if (wav_players[current_].eof()) {
-	  current_ = -1;
-	}
+        // end of file?
+        if (wav_players[current_].eof()) {
+          current_ = -1;
+        }
       }
     }
     while (to_read > 0) {
@@ -2251,12 +2251,12 @@ public:
         for (int i = 0; i < num; i++) {
           p[i] = (p[i] * fade_ + tmp[i] * (32768 - fade_)) >> 15;
           if (fade_) {
-	    fade_ -= fade_speed_;
-	    if (fade_ < 0) fade_ = 0;
-	  }
+            fade_ -= fade_speed_;
+            if (fade_ < 0) fade_ = 0;
+          }
         }
         to_read -= n;
-	p += n;
+        p += n;
       }
       if (!fade_) {
         if (current_ != -1)
@@ -2307,10 +2307,10 @@ public:
 #endif
     } else {
       if (current_ == -1) {
-	current_ = unit;
+        current_ = unit;
       } else {
-	fadeto_ = unit;
-	fade_ = 32768;
+        fadeto_ = unit;
+        fade_ = 32768;
       }
     }
     return true;
@@ -2391,8 +2391,8 @@ public:
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
       if (!swinging_ && on_) {
-	swinging_ = true;
-	audio_splicer.Play(&swing, &hum);
+        swinging_ = true;
+        audio_splicer.Play(&swing, &hum);
       }
     } else {
       swinging_ = false;
@@ -2428,10 +2428,10 @@ struct ConfigFile {
     while (f->available()) {
       int c = toLower(f->peek());
       if (c >= '0' && c <= '9') {
-	ret = (c - '0') + 10 * ret;
-	f->read();
+        ret = (c - '0') + 10 * ret;
+        f->read();
       } else {
-	return ret * sign;
+        return ret * sign;
       }
     }
     return ret * sign;
@@ -2444,14 +2444,14 @@ struct ConfigFile {
       skipwhite(f);
       if (f->peek() == '#') continue;
       for (int i = 0; i < 32; i++) {
-	int c = toLower(f->peek());
-	if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
-	  f->read();
-	  variable[i] = c;
-	  variable[i+1] = 0;
-	} else {
-	  break;
-	}
+        int c = toLower(f->peek());
+        if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+          f->read();
+          variable[i] = c;
+          variable[i+1] = 0;
+        } else {
+          break;
+        }
       }
       skipwhite(f);
       if (f->peek() != '=') continue;
@@ -2464,7 +2464,7 @@ struct ConfigFile {
       Serial.println((int)v);
 #endif
       if (!strcmp(variable, "humstart")) {
-	humStart = v;
+        humStart = v;
       }
     }
   }
@@ -2507,17 +2507,17 @@ public:
     if (config_.humStart) {
       BufferedWavPlayer* tmp = Play(&out);
       if (tmp) {
-	int delay_ms = 1000 * tmp->length() - config_.humStart;
+        int delay_ms = 1000 * tmp->length() - config_.humStart;
 #if 1
-	Serial.print(" LEN = ");
-	Serial.print(tmp->length());
-	Serial.print(" humstart = ");
-	Serial.print(config_.humStart);
-	Serial.print(" delay_ms = ");
-	Serial.println(delay_ms);
+        Serial.print(" LEN = ");
+        Serial.print(tmp->length());
+        Serial.print(" humstart = ");
+        Serial.print(config_.humStart);
+        Serial.print(" delay_ms = ");
+        Serial.println(delay_ms);
 #endif
-	audio_splicer.Play(&hum, &hum, delay_ms);
-	return;
+        audio_splicer.Play(&hum, &hum, delay_ms);
+        return;
       }
     }
     audio_splicer.Play(&out, &hum);
@@ -2546,8 +2546,8 @@ public:
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
       if (!swinging_ && on_) {
-	swinging_ = true;
-	Play(&swng);
+        swinging_ = true;
+        Play(&swng);
       }
     } else {
       swinging_ = false;
@@ -2630,7 +2630,7 @@ public:
       wav_players[3].PlayLoop(NULL);
     }
     if (volume_streams[1].isOff() &&
-	volume_streams[2].isOff()) {
+        volume_streams[2].isOff()) {
       Looper::Unlink();
     }
   }
@@ -2712,7 +2712,7 @@ protected:
     float v = battery_now();
     last_voltage_ = last_voltage_ * 0.999 + v * 0.001;
     if (monitor.ShouldPrint(Monitoring::MonitorBattery) ||
-	millis() - last_print_millis_ > 20000) {
+        millis() - last_print_millis_ > 20000) {
       Serial.print("Battery voltage: ");
       Serial.println(battery());
       last_print_millis_ = millis();
@@ -3392,13 +3392,13 @@ public:
 
       // Note heat_[0] is tip of blade
       if (blade->clash()) {
-	heat_[num_leds - 1] += 3000;
+        heat_[num_leds - 1] += 3000;
       } else if (blade->is_on()) {
-	heat_[num_leds - 1] += random(random(random(1000)));
+        heat_[num_leds - 1] += random(random(random(1000)));
       }
       for (int i = 0; i < num_leds; i++) {
-	int x = (heat_[i] * 5  + heat_[i+1] * 7 + heat_[i+2] * 4) >> 4;
-	heat_[i] = max(x - random(0, 1), 0);
+        int x = (heat_[i] * 5  + heat_[i+1] * 7 + heat_[i+2] * 4) >> 4;
+        heat_[i] = max(x - random(0, 1), 0);
       }
     }
     bool zero = true;
@@ -3406,13 +3406,13 @@ public:
       int h = heat_[num_leds - 1 - i];
       Color c;
       if (h < 256) {
-	c = Color().mix(c1_, h);
+        c = Color().mix(c1_, h);
       } else if (h < 512) {
-	c = c1_.mix(c2_, h - 256);
+        c = c1_.mix(c2_, h - 256);
       } else if (h < 768) {
-	c = c2_.mix(Color(255,255,255), h - 512);
+        c = c2_.mix(Color(255,255,255), h - 512);
       } else {
-	c = Color(255,255,255);
+        c = Color(255,255,255);
       }
       if (h) zero = false;
       blade->set(i, c);
@@ -3475,9 +3475,9 @@ public:
     for (int i = 0; i < num_leds; i++) {
       int black_mix = clampi32(thres - i * 256, 0, 255);
       if (overdrive) {
-	blade->set_overdrive(i, Color().mix(c, black_mix));
+        blade->set_overdrive(i, Color().mix(c, black_mix));
       } else {
-	blade->set(i, Color().mix(c, black_mix));
+        blade->set(i, Color().mix(c, black_mix));
       }
     }
     if (!blade->is_on() && thres > 256 * (num_leds*2)) {
@@ -3533,8 +3533,8 @@ public:
     for (int i = 0; i < num_leds; i++) {
       int black_mix = clampi32(thres - i * 256, 0, 255);
       Color c(max(0, (sin_table[((m * 3 + i * 50)) & 0x3ff] >> 7)),
-	      max(0, (sin_table[((m * 3 + i * 50 + 1024 / 3)) & 0x3ff] >> 7)),
-	      max(0, (sin_table[((m * 3 + i * 50 + 1024 * 2 / 3)) & 0x3ff] >> 7)));
+              max(0, (sin_table[((m * 3 + i * 50 + 1024 / 3)) & 0x3ff] >> 7)),
+              max(0, (sin_table[((m * 3 + i * 50 + 1024 * 2 / 3)) & 0x3ff] >> 7)));
       c = c.mix(Color(255,255,255), clampi32(clash_mix, 0, 255));
       // Clash effect
       blade->set(i, Color().mix(c, black_mix));
@@ -3569,10 +3569,10 @@ class StyleRainbow *StyleRainbowPtr() {
 class StyleStrobe : public BladeStyle {
 public:
   StyleStrobe(Color color,
-	      Color clash_color,
-	      int frequency,
-	      uint32_t out_millis,
-	      uint32_t in_millis)
+              Color clash_color,
+              int frequency,
+              uint32_t out_millis,
+              uint32_t in_millis)
     : color_(color),
       clash_color_(clash_color),
       strobe_millis_(1000/frequency),
@@ -7719,8 +7719,8 @@ public:
     // Serial.println(fraction);
     if (fraction < 0 || fraction > 1.0) {
       memset((unsigned char *)&MonopodWS2811::drawBuffer,
-	     0,
-	     maxLedsPerStrip * 3);
+             0,
+             maxLedsPerStrip * 3);
       return;
     }
     int col = fraction * NELEM(imageoffsets);
@@ -7730,8 +7730,8 @@ public:
     size_t num_leds = blade->num_leds();
     if (num_leds < maxLedsPerStrip) {
       for (size_t i = 0; i < maxLedsPerStrip; i++) {
-	MonopodWS2811::drawBuffer[i] =
-	  MonopodWS2811::drawBuffer[i * maxLedsPerStrip / num_leds];
+        MonopodWS2811::drawBuffer[i] =
+          MonopodWS2811::drawBuffer[i * maxLedsPerStrip / num_leds];
       }
     }
     blade->allow_disable();
@@ -8061,7 +8061,7 @@ private:
 };
 
 template<ESPIChipsets CHIPSET, EOrder RGB_ORDER,
-	 uint8_t SPI_DATA_RATE, int LEDS>
+         uint8_t SPI_DATA_RATE, int LEDS>
 class BladeBase *FASTLEDBladePtr() {
   static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
   static FASTLED_Blade<CHIPSET, RGB_ORDER, SPI_DATA_RATE> blade(LEDS);
@@ -8131,9 +8131,9 @@ class LEDInterface* LEDPtr() {
 class Simple_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
 public:
   Simple_Blade(LEDInterface* c1,
-	       LEDInterface* c2,
-	       LEDInterface* c3,
-	       LEDInterface* c4) :
+               LEDInterface* c2,
+               LEDInterface* c3,
+               LEDInterface* c4) :
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK),
@@ -8684,8 +8684,8 @@ public:
       while (!Read()) YIELD();
       pushed_ = true;
       do {
-	if (Read()) last_on_ = millis();
-	YIELD();
+        if (Read()) last_on_ = millis();
+        YIELD();
       } while (millis() - last_on_ < timeout());
       pushed_ = false;
     }
@@ -8708,8 +8708,8 @@ private:
 
 // Simple button handler. Keeps track of clicks and lengths of pushes.
 class ButtonBase : public Looper,
-		   public CommandParser,
-		   public DebouncedButton {
+                   public CommandParser,
+                   public DebouncedButton {
 public:
   ButtonBase(const char* name)
     : Looper(),
@@ -8750,13 +8750,13 @@ protected:
       while (DebouncedRead()) YIELD();
       pushed_ = false;
       if (eat_click_) {
-	eat_click_ = false;
+        eat_click_ = false;
       } else {
-	if (millis() - push_millis_ < 500) {
-	  clicked_ = true;
-	} else {
-	  long_clicked_ = true;
-	}
+        if (millis() - push_millis_ < 500) {
+          clicked_ = true;
+        } else {
+          long_clicked_ = true;
+        }
       }
     }
     STATE_MACHINE_END();
@@ -8945,19 +8945,19 @@ protected:
 
       // Initiate touch read.
       {
-	int32_t ch = pin2tsi[pin_];
-	*portConfigRegister(pin_) = PORT_PCR_MUX(0);
-	SIM_SCGC5 |= SIM_SCGC5_TSI;
+        int32_t ch = pin2tsi[pin_];
+        *portConfigRegister(pin_) = PORT_PCR_MUX(0);
+        SIM_SCGC5 |= SIM_SCGC5_TSI;
       
 #if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
-	TSI0_GENCS = 0;
-	TSI0_PEN = (1 << ch);
-	TSI0_SCANC = TSI_SCANC_REFCHRG(3) | TSI_SCANC_EXTCHRG(CURRENT);
-	TSI0_GENCS = TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_PS(PRESCALE) | TSI_GENCS_TSIEN | TSI_GENCS_SWTS;
+        TSI0_GENCS = 0;
+        TSI0_PEN = (1 << ch);
+        TSI0_SCANC = TSI_SCANC_REFCHRG(3) | TSI_SCANC_EXTCHRG(CURRENT);
+        TSI0_GENCS = TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_PS(PRESCALE) | TSI_GENCS_TSIEN | TSI_GENCS_SWTS;
 #elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
-	TSI0_GENCS = TSI_GENCS_REFCHRG(4) | TSI_GENCS_EXTCHRG(3) | TSI_GENCS_PS(PRESCALE)
-	  | TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
-	TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
+        TSI0_GENCS = TSI_GENCS_REFCHRG(4) | TSI_GENCS_EXTCHRG(3) | TSI_GENCS_PS(PRESCALE)
+          | TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
+        TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
 #endif
       }
       // Wait for result to be available.
@@ -9057,9 +9057,9 @@ public:
       SaberBase::DoClash();
     } else {
       if (power_.pushed_millis()) {
-	power_.EatClick();
-	Serial.println("Previous preset");
-	previous_preset();
+        power_.EatClick();
+        Serial.println("Previous preset");
+        previous_preset();
       }
     }
   }
@@ -9103,7 +9103,7 @@ public:
     }
     if (font) {
       if (swingl.files_found()) {
-	looped_swing_wrapper.Activate(font);
+        looped_swing_wrapper.Activate(font);
       }
     }
 #endif
@@ -9175,8 +9175,8 @@ public:
     for (size_t i = 0; i < sizeof(blades) / sizeof(blades)[0]; i++) {
       float err = fabs(resistor - blades[i].ohm);
       if (err < best_err) {
-	best_config = i;
-	best_err = err;
+        best_config = i;
+        best_err = err;
       }
     }
     Serial.print("blade= ");
@@ -9197,27 +9197,27 @@ public:
       File dir = SD.open("/");
       File best, first;
       while (File f = dir.openNextFile()) {
-	if (!f.isDirectory()) continue;
-	dirs++;
-	if (!first) {
-	  first = f;
-	} else {
-	  if (cmpdir(f.name(), first.name())*sign < 0) first = f;
-	}
-	if (cmpdir(f.name(), current_directory)*sign <= 0) continue;
-	if (best && cmpdir(f.name(), best.name())*sign > 0) continue;
-	best = f;
+        if (!f.isDirectory()) continue;
+        dirs++;
+        if (!first) {
+          first = f;
+        } else {
+          if (cmpdir(f.name(), first.name())*sign < 0) first = f;
+        }
+        if (cmpdir(f.name(), current_directory)*sign <= 0) continue;
+        if (best && cmpdir(f.name(), best.name())*sign > 0) continue;
+        best = f;
       }
       if (best) {
-	if (chdir(best.name())) {
-	  SaberBase::DoNewFont();
-	  return;
-	}
+        if (chdir(best.name())) {
+          SaberBase::DoNewFont();
+          return;
+        }
       } else if (first) {
-	if (chdir(first.name())) {
-	  SaberBase::DoNewFont();
-	  return;
-	}
+        if (chdir(first.name())) {
+          SaberBase::DoNewFont();
+          return;
+        }
       }
     } while (++tries <= dirs);
 #endif
@@ -9263,9 +9263,9 @@ protected:
       digitalWrite(amplifierPin, HIGH); // turn on the amplifier
       track_player_ = GetFreeWavPlayer();
       if (track_player_) {
-	track_player_->Play(current_preset_->track);
+        track_player_->Play(current_preset_->track);
       } else {
-	Serial.println("No available WAV players.");
+        Serial.println("No available WAV players.");
       }
     }
 #else
@@ -9280,16 +9280,16 @@ protected:
   void Loop() override {
     if (battery_monitor.low()) {
       if (current_style != &style_charging) {
-	if (on_) {
-	  Serial.print("Battery low, turning off: ");
-	  Serial.println(battery_monitor.battery());
-	  Off();
-	} else if (millis() - last_beep_ > 1000) {
-	  Serial.println("Battery low beep");
+        if (on_) {
+          Serial.print("Battery low, turning off: ");
+          Serial.println(battery_monitor.battery());
+          Off();
+        } else if (millis() - last_beep_ > 1000) {
+          Serial.println("Battery low beep");
 #ifdef ENABLE_AUDIO
-	  beeper.Beep(0.5, 440.0);
+          beeper.Beep(0.5, 440.0);
 #endif
-	}
+        }
       }
       last_beep_ = millis();
     }
@@ -9301,38 +9301,38 @@ protected:
 #endif
     if (!on_) {
       if (power_.clicked()) {
-	if (aux_.pushed_millis()) {
-	  aux_.EatClick();
-	  next_preset();
+        if (aux_.pushed_millis()) {
+          aux_.EatClick();
+          next_preset();
           Serial.println("Next preset");
-	} else {
+        } else {
           Serial.println("On (power)");
-	  On();
-	  aux_on_ = false;
-	}
+          On();
+          aux_on_ = false;
+        }
       }
       if (power_.long_clicked()) {
-	if (aux_.pushed_millis()) {
-	  aux_.EatClick();
-	  next_directory();
+        if (aux_.pushed_millis()) {
+          aux_.EatClick();
+          next_directory();
           Serial.println("next directory");
-	} else {
-	  StartOrStopTrack();
-	}
+        } else {
+          StartOrStopTrack();
+        }
       }
       if (aux_.clicked()) {
-	aux_on_ = true;
-	On();
+        aux_on_ = true;
+        On();
         Serial.println("On (aux)");
       }
     } else {
       ButtonBase *a, *b;
       if (aux_on_) {
-	a = &aux_;
-	b = &power_;
+        a = &aux_;
+        b = &power_;
       } else {
-	b = &aux_;
-	a = &power_;
+        b = &aux_;
+        a = &power_;
       }
       if (a->clicked()) {
         Serial.println("Off");
@@ -9347,7 +9347,7 @@ protected:
         SaberBase::DoForce();
       }
       if (b->pushed_millis() > 500) {
-	disable_lockup_ = false;
+        disable_lockup_ = false;
         if (!lockup_) {
           lockup_ = true;
           SaberBase::DoBeginLockup();
@@ -9375,12 +9375,12 @@ protected:
     }
     if (!strcmp(cmd, "next")) {
       if (!arg || (arg && !strcmp(arg, "preset"))) {
-	next_preset();
-	return true;
+        next_preset();
+        return true;
       }
       if (arg && !strcmp(arg, "font")) {
-	next_directory();
-	return true;
+        next_directory();
+        return true;
       }
     }
     if (!strcmp(cmd, "clash")) {
@@ -9395,17 +9395,17 @@ protected:
     }
     if (!strcmp(cmd, "play")) {
       if (!arg) {
-	StartOrStopTrack();
-	return true;
+        StartOrStopTrack();
+        return true;
       }
       digitalWrite(amplifierPin, HIGH); // turn on the amplifier
       BufferedWavPlayer* player = GetFreeWavPlayer();
       if (player) {
-	Serial.print("Playing ");
-	Serial.println(arg);
-	player->Play(arg);
+        Serial.print("Playing ");
+        Serial.println(arg);
+        player->Play(arg);
       } else {
-	Serial.println("No available WAV players.");
+        Serial.println("No available WAV players.");
       }
       return true;
     }
@@ -9581,20 +9581,20 @@ public:
       DataStreamWork::LockSD(true);
       File f = SD.open(e);
       if (!f) {
-	Serial.println("File not found.");
-	return;
+        Serial.println("File not found.");
+        return;
       }
       int bytes = f.size();
       if (!SerialFlashChip::create(e, bytes)) {
-	Serial.println("Not enough space on serial flash chip.");
-	return;
+        Serial.println("Not enough space on serial flash chip.");
+        return;
       }
       SerialFlashFile o = SerialFlashChip::open(e);
       while (bytes) {
-	char tmp[256];
-	int b = f.read(tmp, min(bytes, (int)NELEM(tmp)));
-	o.write(tmp, b);
-	bytes -= b;
+        char tmp[256];
+        int b = f.read(tmp, min(bytes, (int)NELEM(tmp)));
+        o.write(tmp, b);
+        bytes -= b;
       }
       DataStreamWork::LockSD(false);
       Serial.println("Cached!");
@@ -9631,12 +9631,12 @@ public:
       wav_players[0].read(tmp, NELEM(tmp));
       wav_players[0].Play(e);
       for (int j = 0; j < 64; j++) {
-	int k = wav_players[0].read(tmp, NELEM(tmp));
-	for (int i = 0; i < k; i++) {
-	  Serial.print(tmp[i]);
-	  Serial.print(" ");
-	}
-	Serial.println("");
+        int k = wav_players[0].read(tmp, NELEM(tmp));
+        for (int i = 0; i < k; i++) {
+          Serial.print(tmp[i]);
+          Serial.print(" ");
+        }
+        Serial.println("");
       }
       wav_players[0].Stop();
       return;
@@ -9649,9 +9649,9 @@ public:
       pinMode(pin, OUTPUT);
       for (int i = 0; i < 1000; i++) {
          digitalWrite(pin, HIGH);
-	 delay(10);
+         delay(10);
          digitalWrite(pin, LOW);
-	 delay(10);
+         delay(10);
       }
       Serial.println("done");
       return;
@@ -9664,11 +9664,11 @@ public:
       for (int i = 0; i < 1000; i++) {
          for (int i = 0; i < 500; i++) {
            digitalWrite(pin, HIGH);
-	   delayMicroseconds(1);
-	   digitalWrite(pin, LOW);
-	   delayMicroseconds(1);
-	 }
-	 delay(10);
+           delayMicroseconds(1);
+           digitalWrite(pin, LOW);
+           delayMicroseconds(1);
+         }
+         delay(10);
       }
       Serial.println("done");
       return;
@@ -9722,22 +9722,22 @@ public:
       pinMode(i2cDataPin, INPUT);
       pinMode(i2cClockPin, INPUT);
       if (data_detected && clock_detected) {
-	// All good, proceed.
-	break;
+        // All good, proceed.
+        break;
       }
       if (clock_detected && !data_detected) {
-	Serial.println("I2C pending data detected, trying to clear...");
-	pinMode(i2cClockPin, OUTPUT);
-	for (i = 0; i < 100; i++) {
-	  SLEEP_MICROS(1);
-	  digitalWrite(i2cClockPin, HIGH);
-	  SLEEP_MICROS(1);
-	  digitalWrite(i2cClockPin, LOW);
-	}
-	pinMode(i2cClockPin, INPUT);
-	SLEEP(100); // Try again soon
+        Serial.println("I2C pending data detected, trying to clear...");
+        pinMode(i2cClockPin, OUTPUT);
+        for (i = 0; i < 100; i++) {
+          SLEEP_MICROS(1);
+          digitalWrite(i2cClockPin, HIGH);
+          SLEEP_MICROS(1);
+          digitalWrite(i2cClockPin, LOW);
+        }
+        pinMode(i2cClockPin, INPUT);
+        SLEEP(100); // Try again soon
       } else {
-	SLEEP(1000); // Try again later
+        SLEEP(1000); // Try again later
       }
     }
 #endif
@@ -9778,7 +9778,7 @@ public:
     if (Wire.available() < 1) {
       uint32_t start = millis();
       while (Wire.available() < 1) {
-	if (millis() - start > I2C_TIMEOUT_MILLIS) return -1;
+        if (millis() - start > I2C_TIMEOUT_MILLIS) return -1;
       }
     }
     return Wire.read();
@@ -9791,12 +9791,12 @@ public:
     if (Wire.available() < bytes) {
       uint32_t start = millis();
       while (Wire.available() < bytes) {
-	if (millis() - start > I2C_TIMEOUT_MILLIS) return -1;
+        if (millis() - start > I2C_TIMEOUT_MILLIS) return -1;
       }
     }
     for (int i = 0; i < bytes; i++) {
       data[i] = Wire.read();
-    }		
+    }           
     return bytes;
   }
 private:
@@ -9920,46 +9920,46 @@ public:
       writeByte(CTRL9_XL, 0x38);  // accel xyz enable
       writeByte(CTRL10_C, 0x38);  // gyro xyz enable
       if (readByte(WHO_AM_I) == 105) {
-	Serial.println("done.");
+        Serial.println("done.");
       } else {
-	Serial.println("failed.");
+        Serial.println("failed.");
       }
 
       while (1) {
-	YIELD();
-	int status_reg = readByte(STATUS_REG);
-	if (status_reg == -1) {
-	  // motion fail, reboot motion chip.
-	  Serial.println("Motion chip timeout, reboot motion chip!");
-	  writeByte(CTRL3_C, 1);
-	  delay(20);
-	  break;
-	}
-	if (status_reg & 0x1) {
-	  // Temp data available
-	  int16_t temp_data;
-	  if (readBytes(OUT_TEMP_L, (uint8_t*)&temp_data, 2) == 2) {
-	    float temp = 25.0f + temp_data * (1.0f / 16.0f);
-	    if (monitor.ShouldPrint(Monitoring::MonitorTemp)) {
-	      Serial.print("TEMP: ");
-	      Serial.println(temp);
-	    }
-	  }
-	}
-	if (status_reg & 0x2) {
-	  // gyroscope data available
-	  if (readBytes(OUTX_L_G, databuffer, 6) == 6) {
-	    SaberBase::DoMotion(
-	      Vec3::LSB(databuffer, 2000.0 / 32768.0)); // 2000 dps
-	  }
-	}
-	if (status_reg & 0x4) {
-	  // accel data available
-	  if (readBytes(OUTX_L_XL, databuffer, 6) == 6) {
-	    SaberBase::DoAccel(
-	      Vec3::LSB(databuffer, 4.0 / 32768.0));  // 4 g range
-	  }
-	}
+        YIELD();
+        int status_reg = readByte(STATUS_REG);
+        if (status_reg == -1) {
+          // motion fail, reboot motion chip.
+          Serial.println("Motion chip timeout, reboot motion chip!");
+          writeByte(CTRL3_C, 1);
+          delay(20);
+          break;
+        }
+        if (status_reg & 0x1) {
+          // Temp data available
+          int16_t temp_data;
+          if (readBytes(OUT_TEMP_L, (uint8_t*)&temp_data, 2) == 2) {
+            float temp = 25.0f + temp_data * (1.0f / 16.0f);
+            if (monitor.ShouldPrint(Monitoring::MonitorTemp)) {
+              Serial.print("TEMP: ");
+              Serial.println(temp);
+            }
+          }
+        }
+        if (status_reg & 0x2) {
+          // gyroscope data available
+          if (readBytes(OUTX_L_G, databuffer, 6) == 6) {
+            SaberBase::DoMotion(
+              Vec3::LSB(databuffer, 2000.0 / 32768.0)); // 2000 dps
+          }
+        }
+        if (status_reg & 0x4) {
+          // accel data available
+          if (readBytes(OUTX_L_XL, databuffer, 6) == 6) {
+            SaberBase::DoAccel(
+              Vec3::LSB(databuffer, 4.0 / 32768.0));  // 4 g range
+          }
+        }
       }
     }
     STATE_MACHINE_END();
@@ -10103,8 +10103,8 @@ public:
 
       if (readByte(WHO_AM_I) != 0xC7) {
         Serial.print("Failed.");
-	SLEEP(1000);
-	continue;
+        SLEEP(1000);
+        continue;
       }
 
       // Standby
@@ -10122,22 +10122,22 @@ public:
       Serial.println(" Done");
 
       while (1) {
-	YIELD();
-	int status = readByte(STATUS);
-	if (status == -1) {
-	  // motion fail, reboot gyro chip.
-	  Serial.println("Motion chip timeout, reboot motion chip!");
-	  // writeByte(CTRL3_C, 1);
-	  delay(20);
-	  break;
-	}
-	if (status) {
-	  // gyroscope data available
-	  if (readBytes(OUT_X_MSB, databuffer, 6) == 6) {
-	    SaberBase::DoAccel(
-	      Vec3::MSB(databuffer, 4.0 / 32768.0)); // 4 g range
-	  }
-	}
+        YIELD();
+        int status = readByte(STATUS);
+        if (status == -1) {
+          // motion fail, reboot gyro chip.
+          Serial.println("Motion chip timeout, reboot motion chip!");
+          // writeByte(CTRL3_C, 1);
+          delay(20);
+          break;
+        }
+        if (status) {
+          // gyroscope data available
+          if (readBytes(OUT_X_MSB, databuffer, 6) == 6) {
+            SaberBase::DoAccel(
+              Vec3::MSB(databuffer, 4.0 / 32768.0)); // 4 g range
+          }
+        }
       }
     }
     STATE_MACHINE_END();
@@ -10186,8 +10186,8 @@ public:
 
       if (readByte(WHO_AM_I) != 0xD7) {
         Serial.println("Failed.");
-	SLEEP(1000);
-	return;
+        SLEEP(1000);
+        return;
       }
 
       // Standby
@@ -10199,21 +10199,21 @@ public:
       Serial.println(" Done");
 
       while (1) {
-	YIELD();
-	int status = readByte(STATUS);
-	if (status == -1) {
-	  // motion fail, reboot gyro chip.
-	  Serial.println("Motion chip timeout, reboot motion chip!");
-	  // writeByte(CTRL3_C, 1);
-	  delay(20);
-	  break;
-	}
-	if (status) {
-	  // gyroscope data available
-	  if (readBytes(OUT_X_MSB, databuffer, 6) == 6) {
-	    SaberBase::DoMotion(Vec3::MSB(databuffer, 2000.0 / 32768.0));
-	  }
-	}
+        YIELD();
+        int status = readByte(STATUS);
+        if (status == -1) {
+          // motion fail, reboot gyro chip.
+          Serial.println("Motion chip timeout, reboot motion chip!");
+          // writeByte(CTRL3_C, 1);
+          delay(20);
+          break;
+        }
+        if (status) {
+          // gyroscope data available
+          if (readBytes(OUT_X_MSB, databuffer, 6) == 6) {
+            SaberBase::DoMotion(Vec3::MSB(databuffer, 2000.0 / 32768.0));
+          }
+        }
       }
     }
     STATE_MACHINE_END();
@@ -10240,7 +10240,7 @@ public:
     if (beeper.isPlaying()) return true;
     for (size_t i = 0; i < NELEM(wav_players); i++)
       if (wav_players[i].isPlaying())
-	return true;
+        return true;
     return false;
   }
 
@@ -10288,10 +10288,10 @@ protected:
       Serial.print("Beeper: ");
       Serial.println(beeper.isPlaying() ? "On" : "Off");
       for (size_t i = 0; i < NELEM(wav_players); i++) {
-	Serial.print("Wav player ");
-	Serial.print(i);
-	Serial.print(": ");
-	Serial.println(wav_players[i].isPlaying() ? "On" : "Off");
+        Serial.print("Wav player ");
+        Serial.print(i);
+        Serial.print(": ");
+        Serial.println(wav_players[i].isPlaying() ? "On" : "Off");
       }
       return true;
     }
@@ -10331,8 +10331,8 @@ void startup_early_hook() {
   WDOG_TOVALL = 1000;
   WDOG_TOVALH = 0;
   WDOG_STCTRLH = (WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN |
-		  WDOG_STCTRLH_STOPEN |
-		  WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN); // Enable WDG
+                  WDOG_STCTRLH_STOPEN |
+                  WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN); // Enable WDG
   WDOG_PRESC = 0; // prescaler
 #endif
 
@@ -10419,17 +10419,17 @@ public:
 
   // Size should be 0xFFFFFFFF if it's a directory.
   virtual void GetObjectInfo(uint32_t handle,
-			     char* name,
-			     uint32_t* size,
-			     uint32_t* parent) = 0;
+                             char* name,
+                             uint32_t* size,
+                             uint32_t* parent) = 0;
   virtual uint32_t GetSize(uint32_t handle) = 0;
   virtual void read(uint32_t handle,
-		    uint32_t pos,
-		    char* buffer,
-		    uint32_t bytes) = 0;
+                    uint32_t pos,
+                    char* buffer,
+                    uint32_t bytes) = 0;
   virtual uint32_t Create(uint32_t parent,
-			  bool folder,
-			  const char* filename) = 0;
+                          bool folder,
+                          const char* filename) = 0;
   virtual void write(const char* data, uint32_t size);
   virtual void close();
   virtual bool DeleteObject(uint32_t object) = 0;
@@ -10502,7 +10502,7 @@ private:
       Record tmp = ReadIndexRecord(i);
       ConstructFilename(tmp.parent, out);
       if (out[strlen(out)-1] != '/')
-	strcat(out, "/");
+        strcat(out, "/");
       strcat(out, tmp.name);
     }
   }
@@ -10550,19 +10550,19 @@ private:
       if (!f_) return;
       int sibling = 0;
       while (true) {
-	mtp_lock_storage(true);
-	File child = f_.openNextFile();
-	mtp_lock_storage(false);
-	if (!child) break;
-	Record r;
-	r.parent = i;
-	r.sibling = sibling;
-	r.isdir = child.isDirectory();
-	r.child = r.isdir ? 0 : child.size();
-	r.scanned = false;
-	strcpy(r.name, child.name());
-	sibling = AppendIndexRecord(r);
-	child.close();
+        mtp_lock_storage(true);
+        File child = f_.openNextFile();
+        mtp_lock_storage(false);
+        if (!child) break;
+        Record r;
+        r.parent = i;
+        r.sibling = sibling;
+        r.isdir = child.isDirectory();
+        r.child = r.isdir ? 0 : child.size();
+        r.scanned = false;
+        strcpy(r.name, child.name());
+        sibling = AppendIndexRecord(r);
+        child.close();
       }
       record.scanned = true;
       record.child = sibling;
@@ -10601,24 +10601,24 @@ private:
   uint32_t GetNextObjectHandle() override {
     while (true) {
       if (next_ == 0)
-	return 0;
+        return 0;
       int ret = next_;
       Record r = ReadIndexRecord(ret);
       if (follow_sibling_) {
-	next_ = r.sibling;
+        next_ = r.sibling;
       } else {
-	next_++;
-	if (next_ >= index_entries_)
-	  next_ = 0;
+        next_++;
+        if (next_ >= index_entries_)
+          next_ = 0;
       }
       if (r.name[0]) return ret;
     }
   }
 
   void GetObjectInfo(uint32_t handle,
-		     char* name,
-		     uint32_t* size,
-		     uint32_t* parent) override {
+                     char* name,
+                     uint32_t* size,
+                     uint32_t* parent) override {
     Record r = ReadIndexRecord(handle);
     strcpy(name, r.name);
     *parent = r.parent;
@@ -10630,9 +10630,9 @@ private:
   }
 
   void read(uint32_t handle,
-	    uint32_t pos,
-	    char* out,
-	    uint32_t bytes) override {
+            uint32_t pos,
+            char* out,
+            uint32_t bytes) override {
     OpenFileByIndex(handle);
     mtp_lock_storage(true);
     f_.seek(pos);
@@ -10648,7 +10648,7 @@ private:
       if (!r.isdir) break;
       if (!r.child) break;
       if (!DeleteObject(r.child))
-	return false;
+        return false;
     }
 
     // We can't actually delete the root folder,
@@ -10675,22 +10675,22 @@ private:
     } else {
       int c = tmp.child;
       while (c) {
-	tmp = ReadIndexRecord(c);
-	if (tmp.sibling == object) {
-	  tmp.sibling = r.sibling;
-	  WriteIndexRecord(c, tmp);
-	  break;
-	} else {
-	  c = tmp.sibling;
-	}
+        tmp = ReadIndexRecord(c);
+        if (tmp.sibling == object) {
+          tmp.sibling = r.sibling;
+          WriteIndexRecord(c, tmp);
+          break;
+        } else {
+          c = tmp.sibling;
+        }
       }
     }
     return true;
   }
 
   uint32_t Create(uint32_t parent,
-		  bool folder,
-		  const char* filename) override {
+                  bool folder,
+                  const char* filename) override {
     uint32_t ret;
     if (parent == 0xFFFFFFFFUL) parent = 0;
     Record p = ReadIndexRecord(parent);
@@ -10810,19 +10810,19 @@ private:
     } else {
       int pos = 0;
       while (pos < len) {
-	get_buffer();
-	int avail = sizeof(data_buffer_->buf) - data_buffer_->len;
-	int to_copy = min(len - pos, avail);
-	memcpy(data_buffer_->buf + data_buffer_->len,
-	       data + pos,
-	       to_copy);
-	data_buffer_->len += to_copy;
-	pos += to_copy;
-	if (data_buffer_->len == sizeof(data_buffer_->buf)) {
-	  usb_tx(MTP_TX_ENDPOINT, data_buffer_);
-	  data_buffer_ = NULL;
-	  // Serial1.println("SENT...");
-	}
+        get_buffer();
+        int avail = sizeof(data_buffer_->buf) - data_buffer_->len;
+        int to_copy = min(len - pos, avail);
+        memcpy(data_buffer_->buf + data_buffer_->len,
+               data + pos,
+               to_copy);
+        data_buffer_->len += to_copy;
+        pos += to_copy;
+        if (data_buffer_->len == sizeof(data_buffer_->buf)) {
+          usb_tx(MTP_TX_ENDPOINT, data_buffer_);
+          data_buffer_ = NULL;
+          // Serial1.println("SENT...");
+        }
       }
     }
   }
@@ -10910,7 +10910,7 @@ private:
   }
 
   uint32_t GetNumObjects(uint32_t storage,
-			 uint32_t parent) {
+                         uint32_t parent) {
     storage_->StartGetObjectHandles(parent);
     int num = 0;
     while (storage_->GetNextObjectHandle()) num++;
@@ -10918,7 +10918,7 @@ private:
   }
 
   void GetObjectHandles(uint32_t storage,
-			uint32_t parent) {
+                        uint32_t parent) {
     uint32_t num = 0;
     if (!write_get_length_) {
       num = GetNumObjects(storage, parent);
@@ -10963,41 +10963,41 @@ private:
     } else {
       uint32_t pos = 0;
       while (pos < size) {
-	get_buffer();
-	uint32_t avail = sizeof(data_buffer_->buf) - data_buffer_->len;
-	uint32_t to_copy = min(pos - size, avail);
-	// Read directly from storage into usb buffer.
-	storage_->read(object_id,
-		       pos,
-		       (char*)(data_buffer_->buf + data_buffer_->len),
-		       to_copy);
-	pos += to_copy;
-	data_buffer_->len += to_copy;
-	if (data_buffer_->len == sizeof(data_buffer_->buf)) {
-	  usb_tx(MTP_TX_ENDPOINT, data_buffer_);
-	  data_buffer_ = NULL;
-	}
+        get_buffer();
+        uint32_t avail = sizeof(data_buffer_->buf) - data_buffer_->len;
+        uint32_t to_copy = min(pos - size, avail);
+        // Read directly from storage into usb buffer.
+        storage_->read(object_id,
+                       pos,
+                       (char*)(data_buffer_->buf + data_buffer_->len),
+                       to_copy);
+        pos += to_copy;
+        data_buffer_->len += to_copy;
+        if (data_buffer_->len == sizeof(data_buffer_->buf)) {
+          usb_tx(MTP_TX_ENDPOINT, data_buffer_);
+          data_buffer_ = NULL;
+        }
       }
     }
   }
 
 #define CONTAINER ((struct MTPContainer*)(receive_buffer->buf))
 
-#define TRANSMIT(FUN) do {				\
-    write_length_ = 0;					\
-    write_get_length_ = true;				\
-    FUN;						\
-    write_get_length_ = false;				\
-    MTPHeader header;					\
-    header.len = write_length_ + 12;			\
-    header.type = 2;					\
-    header.op = CONTAINER->op;				\
-    header.transaction_id = CONTAINER->transaction_id;	\
-    write((char *)&header, sizeof(header));		\
-    FUN;						\
-    get_buffer();					\
-    usb_tx(MTP_TX_ENDPOINT, data_buffer_);		\
-    data_buffer_ = NULL;				\
+#define TRANSMIT(FUN) do {                              \
+    write_length_ = 0;                                  \
+    write_get_length_ = true;                           \
+    FUN;                                                \
+    write_get_length_ = false;                          \
+    MTPHeader header;                                   \
+    header.len = write_length_ + 12;                    \
+    header.type = 2;                                    \
+    header.op = CONTAINER->op;                          \
+    header.transaction_id = CONTAINER->transaction_id;  \
+    write((char *)&header, sizeof(header));             \
+    FUN;                                                \
+    get_buffer();                                       \
+    usb_tx(MTP_TX_ENDPOINT, data_buffer_);              \
+    data_buffer_ = NULL;                                \
   } while(0)
   
   void read(char* data, uint32_t size) {
@@ -11006,16 +11006,16 @@ private:
       uint32_t to_copy = data_buffer_->len - data_buffer_->index;
       to_copy = min(to_copy, size);
       if (data) {
-	memcpy(data,
-	       data_buffer_->buf + data_buffer_->index,
-	       to_copy);
-	data += to_copy;
+        memcpy(data,
+               data_buffer_->buf + data_buffer_->index,
+               to_copy);
+        data += to_copy;
       }
       size -= to_copy;
       data_buffer_->index += to_copy;
       if (data_buffer_->index == data_buffer_->len) {
-	usb_free(data_buffer_);
-	data_buffer_ = NULL;
+        usb_free(data_buffer_);
+        data_buffer_ = NULL;
       }
     }
   }
@@ -11049,7 +11049,7 @@ private:
       read(NULL, len * 2);
     } else {
       for (int i = 0; i < len; i++) {
-	*(buffer++) = read16();
+        *(buffer++) = read16();
       }
     }
   }
@@ -11096,12 +11096,12 @@ private:
       uint32_t to_copy = data_buffer_->len - data_buffer_->index;
       to_copy = min(to_copy, len);
       storage_->write((char*)(data_buffer_->buf + data_buffer_->index),
-		      to_copy);
+                      to_copy);
       data_buffer_->index += to_copy;
       len -= to_copy;
       if (data_buffer_->index == data_buffer_->len) {
-	usb_free(data_buffer_);
-	data_buffer_ = NULL;
+        usb_free(data_buffer_);
+        data_buffer_ = NULL;
       }
     }
     storage_->close();
@@ -11111,7 +11111,7 @@ private:
     switch (prop) {
       case 0xd402: // friendly name
         // This is the name we'll actually see in the windows explorer.
-	// Should probably be configurable.
+        // Should probably be configurable.
         writestring("TeensySaber");
         break;
     }
@@ -11121,10 +11121,10 @@ private:
       case 0xd402: // friendly name
         write16(prop);
         write16(0xFFFF); // string type
-	write8(0);       // read-only
-	GetDevicePropValue(prop);
-	GetDevicePropValue(prop);
-	write8(0);       // no form
+        write8(0);       // read-only
+        GetDevicePropValue(prop);
+        GetDevicePropValue(prop);
+        write8(0);       // no form
     }
   }
 
@@ -11136,88 +11136,88 @@ public:
       uint32_t return_code = 0;
       uint32_t p1 = 0;
       if (receive_buffer->len >= 12) {
-	return_code = 0x2001;  // Ok
-	receive_buffer->len = 16;
-	if (CONTAINER->type == 1) { // command
-	  switch (CONTAINER->op) {
-	    case 0x1001: // GetDescription
-	      TRANSMIT(WriteDescriptor());
-	      break;
-	    case 0x1002:  // OpenSession
-	      break;
-	    case 0x1003:  // CloseSession
-	      break;
-	    case 0x1004:  // GetStorageIDs
-	      TRANSMIT(WriteStorageIDs());
-	      break;
-	    case 0x1005:  // GetStorageInfo
-	      TRANSMIT(GetStorageInfo(CONTAINER->params[0]));
-	      break;
-	    case 0x1006:  // GetNumObjects
-	      if (CONTAINER->params[1]) {
-		return_code = 0x2014; // spec by format unsupported
-	      } else {
-		p1 = GetNumObjects(CONTAINER->params[0],
-				   CONTAINER->params[2]);
-	      }
-	      break;
-	    case 0x1007:  // GetObjectHandles
-	      if (CONTAINER->params[1]) {
-		return_code = 0x2014; // spec by format unsupported
-	      } else {
-		TRANSMIT(GetObjectHandles(CONTAINER->params[0],
-					  CONTAINER->params[2]));
-	      }
-	      break;
-	    case 0x1008:  // GetObjectInfo
-	      TRANSMIT(GetObjectInfo(CONTAINER->params[0]));
-	      break;
-	    case 0x1009:  // GetObject
-	      TRANSMIT(GetObject(CONTAINER->params[0]));
-	      break;
-	    case 0x100B:  // DeleteObject
-	      if (CONTAINER->params[1]) {
-		return_code = 0x2014; // spec by format unsupported
-	      } else {
-		if (!storage_->DeleteObject(CONTAINER->params[0])) {
-		  return_code = 0x2012; // partial deletion
-		}
-	      }
-	      break;
-	    case 0x100C:  // SendObjectInfo
-	      CONTAINER->params[2] =
-		SendObjectInfo(CONTAINER->params[0], // storage
-			       CONTAINER->params[1]); // parent
-	      p1 = CONTAINER->params[0];
-	      if (!p1) p1 = 1;
-	      CONTAINER->len = receive_buffer->len = 12 + 3 * 4;
-	      break;
-	    case 0x100D:  // SendObject
-	      SendObject();
-	      break;
-	    case 0x1014:  // GetDevicePropDesc
-	      TRANSMIT(GetDevicePropDesc(CONTAINER->params[0]));
-	      break;
-	    case 0x1015:  // GetDevicePropvalue
-	      TRANSMIT(GetDevicePropValue(CONTAINER->params[0]));
-	      break;
-	    default:
-	      return_code = 0x2005;  // operation not supported
-	      break;
-	  }
-	} else {
-	  return_code = 0x2000;  // undefined
-	}
+        return_code = 0x2001;  // Ok
+        receive_buffer->len = 16;
+        if (CONTAINER->type == 1) { // command
+          switch (CONTAINER->op) {
+            case 0x1001: // GetDescription
+              TRANSMIT(WriteDescriptor());
+              break;
+            case 0x1002:  // OpenSession
+              break;
+            case 0x1003:  // CloseSession
+              break;
+            case 0x1004:  // GetStorageIDs
+              TRANSMIT(WriteStorageIDs());
+              break;
+            case 0x1005:  // GetStorageInfo
+              TRANSMIT(GetStorageInfo(CONTAINER->params[0]));
+              break;
+            case 0x1006:  // GetNumObjects
+              if (CONTAINER->params[1]) {
+                return_code = 0x2014; // spec by format unsupported
+              } else {
+                p1 = GetNumObjects(CONTAINER->params[0],
+                                   CONTAINER->params[2]);
+              }
+              break;
+            case 0x1007:  // GetObjectHandles
+              if (CONTAINER->params[1]) {
+                return_code = 0x2014; // spec by format unsupported
+              } else {
+                TRANSMIT(GetObjectHandles(CONTAINER->params[0],
+                                          CONTAINER->params[2]));
+              }
+              break;
+            case 0x1008:  // GetObjectInfo
+              TRANSMIT(GetObjectInfo(CONTAINER->params[0]));
+              break;
+            case 0x1009:  // GetObject
+              TRANSMIT(GetObject(CONTAINER->params[0]));
+              break;
+            case 0x100B:  // DeleteObject
+              if (CONTAINER->params[1]) {
+                return_code = 0x2014; // spec by format unsupported
+              } else {
+                if (!storage_->DeleteObject(CONTAINER->params[0])) {
+                  return_code = 0x2012; // partial deletion
+                }
+              }
+              break;
+            case 0x100C:  // SendObjectInfo
+              CONTAINER->params[2] =
+                SendObjectInfo(CONTAINER->params[0], // storage
+                               CONTAINER->params[1]); // parent
+              p1 = CONTAINER->params[0];
+              if (!p1) p1 = 1;
+              CONTAINER->len = receive_buffer->len = 12 + 3 * 4;
+              break;
+            case 0x100D:  // SendObject
+              SendObject();
+              break;
+            case 0x1014:  // GetDevicePropDesc
+              TRANSMIT(GetDevicePropDesc(CONTAINER->params[0]));
+              break;
+            case 0x1015:  // GetDevicePropvalue
+              TRANSMIT(GetDevicePropValue(CONTAINER->params[0]));
+              break;
+            default:
+              return_code = 0x2005;  // operation not supported
+              break;
+          }
+        } else {
+          return_code = 0x2000;  // undefined
+        }
       }
       if (return_code) {
-	CONTAINER->type = 3;
-	CONTAINER->op = return_code;
-	CONTAINER->params[0] = p1;
-	PrintPacket(receive_buffer);
-	usb_tx(MTP_TX_ENDPOINT, receive_buffer);
-	receive_buffer = 0;
+        CONTAINER->type = 3;
+        CONTAINER->op = return_code;
+        CONTAINER->params[0] = p1;
+        PrintPacket(receive_buffer);
+        usb_tx(MTP_TX_ENDPOINT, receive_buffer);
+        receive_buffer = 0;
       } else {
-	usb_free(receive_buffer);
+        usb_free(receive_buffer);
       }
     }
     // Maybe put event handling inside mtp_yield()?
