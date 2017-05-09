@@ -10135,7 +10135,7 @@ public:
 	  // gyroscope data available
 	  if (readBytes(OUT_X_MSB, databuffer, 6) == 6) {
 	    SaberBase::DoAccel(
-	      Vec3::LSB(databuffer, 4.0 / 32768.0)); // 4 g range
+	      Vec3::MSB(databuffer, 4.0 / 32768.0)); // 4 g range
 	  }
 	}
       }
