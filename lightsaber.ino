@@ -28,8 +28,8 @@
 
 
 // Board version
-#define VERSION_MAJOR 1
-#define VERSION_MINOR 0
+#define VERSION_MAJOR 2
+#define VERSION_MINOR 3
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
@@ -116,7 +116,7 @@ const unsigned int maxLedsPerStrip = 144;
 // used for debugging.
 #define ENABLE_AUDIO
 #define ENABLE_MOTION
-#define ENABLE_SNOOZE
+// #define ENABLE_SNOOZE
 #define ENABLE_WS2811
 
 // FASTLED is experimental and untested right now
@@ -162,6 +162,7 @@ const unsigned int maxLedsPerStrip = 144;
 #include <math.h>
 #include <usb_dev.h>
 #include <i2c_t3.h>
+// #include <Wire.h>
 
 #ifdef ENABLE_SNOOZE
 
@@ -445,10 +446,19 @@ class Vec3 {
 public:
   Vec3(){}
   Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
-  Vec3(const unsigned char* msb_data, float mul) {
-    x = mul * (int16_t)((msb_data[0] << 8) | (msb_data[1]));
-    y = mul * (int16_t)((msb_data[2] << 8) | (msb_data[3]));
-    z = mul * (int16_t)((msb_data[4] << 8) | (msb_data[5]));
+  static Vec3 MSB(const unsigned char* msb_data, float mul) {
+    Vec3 ret;
+    ret.x = mul * (int16_t)((msb_data[0] << 8) | (msb_data[1]));
+    ret.y = mul * (int16_t)((msb_data[2] << 8) | (msb_data[3]));
+    ret.z = mul * (int16_t)((msb_data[4] << 8) | (msb_data[5]));
+    return ret;
+  }
+  static Vec3 LSB(const unsigned char* lsb_data, float mul) {
+    Vec3 ret;
+    ret.x = mul * (int16_t)((lsb_data[1] << 8) | (lsb_data[0]));
+    ret.y = mul * (int16_t)((lsb_data[3] << 8) | (lsb_data[2]));
+    ret.z = mul * (int16_t)((lsb_data[5] << 8) | (lsb_data[4]));
+    return ret;
   }
   Vec3 operator-(const Vec3& o) const {
     return Vec3(x - o.x, y - o.y, z - o.z);
@@ -511,12 +521,12 @@ public:								\
   static void Do##NAME TYPED_ARGS {				\
     CHECK_LL(SaberBase, saberbases, next_saber_);               \
     for (SaberBase *p = saberbases; p; p = p->next_saber_) {	\
-      p->NAME ARGS;						\
+      p->SB_##NAME ARGS;					\
     }								\
     CHECK_LL(SaberBase, saberbases, next_saber_);               \
   }								\
 								\
-  virtual void NAME TYPED_ARGS {}
+  virtual void SB_##NAME TYPED_ARGS {}
 
 #define SABERBASEFUNCTIONS()			\
   SABERFUN(Clash, (), ());			\
@@ -562,8 +572,8 @@ protected:
     }
   }
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)	\
-  void NAME TYPED_ARGS override {		\
-    delegate_->NAME ARGS;			\
+  void SB_##NAME TYPED_ARGS override {		\
+    delegate_->SB_##NAME ARGS;			\
   }
 
   SABERBASEFUNCTIONS();
@@ -2359,25 +2369,25 @@ public:
   }
   void Deactivate() { SaberBase::Unlink(this); }
 
-  void On() override {
+  void SB_On() override {
     on_ = true;
     audio_splicer.Play(&poweron, &hum);
   }
 
-  void Off() override {
+  void SB_Off() override {
     on_ = false;
     audio_splicer.Play(&poweroff, NULL);
   }
-  void Clash() override { audio_splicer.Play(&clash, &hum); }
-  void Stab() override { audio_splicer.Play(&stab, &hum); }
-  void Force() override { audio_splicer.Play(&force, &hum); }
-  void Blast() override { audio_splicer.Play(&blaster, &hum); }
-  void Boot() override { audio_splicer.Play(&boot,  NULL); }
-  void NewFont() override { audio_splicer.Play(&font,  NULL); }
+  void SB_Clash() override { audio_splicer.Play(&clash, &hum); }
+  void SB_Stab() override { audio_splicer.Play(&stab, &hum); }
+  void SB_Force() override { audio_splicer.Play(&force, &hum); }
+  void SB_Blast() override { audio_splicer.Play(&blaster, &hum); }
+  void SB_Boot() override { audio_splicer.Play(&boot,  NULL); }
+  void SB_NewFont() override { audio_splicer.Play(&font,  NULL); }
 
   bool on_ = false;
   bool swinging_ = false;
-  void Motion(const Vec3& gyro) override {
+  void SB_Motion(const Vec3& gyro) override {
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
       if (!swinging_ && on_) {
@@ -2492,7 +2502,7 @@ public:
   }
   void Deactivate() { SaberBase::Unlink(this); }
 
-  void On() override {
+  void SB_On() override {
     on_ = true;
     if (config_.humStart) {
       BufferedWavPlayer* tmp = Play(&out);
@@ -2513,7 +2523,7 @@ public:
     audio_splicer.Play(&out, &hum);
   }
 
-  void Off() override {
+  void SB_Off() override {
     on_ = false;
     audio_splicer.Play(&in, NULL);
   }
@@ -2524,15 +2534,15 @@ public:
     if (player) player->PlayOnce(f);
     return player;
   }
-  void Clash() override { Play(&clsh); }
-  void Stab() override { Play(&stab); }
-  void Force() override { Play(&force); }
-  void Blast() override { Play(&blst); }
-  void Boot() override { audio_splicer.Play(&boot,  NULL); }
-  void NewFont() override { audio_splicer.Play(&font,  NULL); }
+  void SB_Clash() override { Play(&clsh); }
+  void SB_Stab() override { Play(&stab); }
+  void SB_Force() override { Play(&force); }
+  void SB_Blast() override { Play(&blst); }
+  void SB_Boot() override { audio_splicer.Play(&boot,  NULL); }
+  void SB_NewFont() override { audio_splicer.Play(&font,  NULL); }
 
   bool swinging_ = false;
-  void Motion(const Vec3& gyro) override {
+  void SB_Motion(const Vec3& gyro) override {
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
       if (!swinging_ && on_) {
@@ -2557,10 +2567,10 @@ PolyphonicFont polyphonic_font;
 
 class SyntheticFont : PolyphonicFont {
 public:
-  void On() override {}
-  void Off() override {}
+  void SB_On() override {}
+  void SB_Off() override {}
 
-  void Motion(const Vec3& speed) override {
+  void SB_Motion(const Vec3& speed) override {
     // Adjust hum volume based on motion speed
   }
 };
@@ -2595,20 +2605,20 @@ public:
     Looper::Unlink();
   }
 
-  void On() override {
+  void SB_On() override {
     // Starts hum, etc.
-    delegate_->On();
+    delegate_->SB_On();
     wav_players[2].PlayOnce(&swingl);
     wav_players[2].PlayLoop(&swingl);
     wav_players[3].PlayOnce(&swingh);
     wav_players[3].PlayLoop(&swingh);
   }
-  void Off() override {
+  void SB_Off() override {
     volume_streams[1].set_fade_time(0.3);
     volume_streams[2].set_fade_time(0.3);
     volume_streams[1].set_volume(0);
     volume_streams[2].set_volume(0);
-    delegate_->Off();
+    delegate_->SB_Off();
     Looper::Link();
   }
 
@@ -2625,7 +2635,7 @@ public:
     }
   }
 
-  void Motion(const Vec3& gyro) override {
+  void SB_Motion(const Vec3& gyro) override {
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     uint32_t t = (millis() >> 2);
     float s = sin_table[t & 1023] * (1.0/16383);
@@ -7695,7 +7705,7 @@ public:
     return sum - slope * avg_t;
   }
 
-  void Accel(const Vec3& accel) override {
+  void SB_Accel(const Vec3& accel) override {
     entry_++;
     if (entry_ >= NELEM(accel_entries_)) entry_ = 0;
     accel_entries_[entry_].accel = accel;
@@ -7804,22 +7814,22 @@ public:
   }
 
   // SaberBase implementation.
-  void IsOn(bool* on) override {
+  void SB_IsOn(bool* on) override {
     if (on_) *on = true;
   }
-  void On() override {
+  void SB_On() override {
     Power(true);
     delay(10);
     on_ = true;
   }
-  void Off() override {
+  void SB_Off() override {
     on_ = false;
   }
 
-  void Clash() override { clash_=true; }
-  void Lockup() override {  }
+  void SB_Clash() override { clash_=true; }
+  void SB_Lockup() override {  }
 
-  void Top() override {
+  void SB_Top() override {
     if (!millis_sum_) return;
     Serial.print("blade fps: ");
     Serial.println(updates_ * 1000.0 / millis_sum_);
@@ -7828,11 +7838,11 @@ public:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-        On();
+        SB_On();
         return true;
       }
       if (!strcmp(arg, "off")) {
-        Off();
+        SB_Off();
         return true;
       }
     }
@@ -7973,22 +7983,22 @@ public:
   }
 
   // SaberBase implementation.
-  void IsOn(bool* on) override {
+  void SB_IsOn(bool* on) override {
     if (on_) *on = true;
   }
-  void On() override {
+  void SB_On() override {
     Power(true);
     delay(10);
     on_ = true;
   }
-  void Off() override {
+  void SB_Off() override {
     on_ = false;
   }
 
-  void Clash() override { clash_=true; }
-  void Lockup() override {  }
+  void SB_Clash() override { clash_=true; }
+  void SB_Lockup() override {  }
 
-  void Top() override {
+  void SB_Top() override {
     if (!millis_sum_) return;
     Serial.print("blade fps: ");
     Serial.println(updates_ * 1000.0 / millis_sum_);
@@ -8180,30 +8190,30 @@ public:
   }
   
   // SaberBase implementation
-  void IsOn(bool *on) override {
+  void SB_IsOn(bool *on) override {
     if (on_) *on = true;
   }
-  void On() override {
+  void SB_On() override {
     battery_monitor.SetLoad(true);
     power_ = on_ = true;
   }
-  void Off() override {
+  void SB_Off() override {
     battery_monitor.SetLoad(false);
     on_ = false;
   }
-  void Clash() override {
+  void SB_Clash() override {
     clash_ = true;
   }
-  void Lockup() override {  }
+  void SB_Lockup() override {  }
 
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-        On();
+        SB_On();
         return true;
       }
       if (!strcmp(arg, "off")) {
-        Off();
+        SB_Off();
         return true;
       }
     }
@@ -8288,30 +8298,30 @@ public:
   }
   
   // SaberBase implementation
-  void IsOn(bool *on) override {
+  void SB_IsOn(bool *on) override {
     if (on_) *on = true;
   }
-  void On() override {
+  void SB_On() override {
     battery_monitor.SetLoad(false);
     power_ = on_ = true;
   }
-  void Off() override {
+  void SB_Off() override {
     battery_monitor.SetLoad(true);
     on_ = false;
   }
-  void Clash() override {
+  void SB_Clash() override {
     clash_ = true;
   }
-  void Lockup() override {  }
+  void SB_Lockup() override {  }
 
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-        On();
+        SB_On();
         return true;
       }
       if (!strcmp(arg, "off")) {
-        Off();
+        SB_Off();
         return true;
       }
     }
@@ -9213,7 +9223,7 @@ public:
 #endif
   }
 
-  void Accel(const Vec3& accel) override {
+  void SB_Accel(const Vec3& accel) override {
     if ( (accel_ - accel).len2() > 1.0) {
       // Needs de-bouncing
       Clash();
@@ -9229,7 +9239,7 @@ public:
     }
   }
 
-  void Motion(const Vec3& gyro) override {
+  void SB_Motion(const Vec3& gyro) override {
     if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
       // Got gyro data
       Serial.print("GYRO: ");
@@ -9701,6 +9711,7 @@ public:
     STATE_MACHINE_BEGIN();
     SLEEP(1000);
 
+#if 0
     // Check that we have pullups.
     while (true) {
       pinMode(i2cDataPin, INPUT_PULLDOWN);
@@ -9710,7 +9721,6 @@ public:
       clock_detected = analogRead(i2cClockPin) > 800;
       pinMode(i2cDataPin, INPUT);
       pinMode(i2cClockPin, INPUT);
-      delayMicroseconds(10);
       if (data_detected && clock_detected) {
 	// All good, proceed.
 	break;
@@ -9730,10 +9740,12 @@ public:
 	SLEEP(1000); // Try again later
       }
     }
+#endif
+    Serial.println("I2C pullups found, initializing...");
 
     Wire.begin();
     Wire.setClock(400000);
-    Wire.setDefaultTimeout(20000); // 20ms
+    Wire.setDefaultTimeout(I2C_TIMEOUT_MILLIS * 1000);
     i2c_detected_ = true;
     Looper::Unlink();
     STATE_MACHINE_END();
@@ -9761,7 +9773,7 @@ public:
   int readByte(uint8_t reg) {
     Wire.beginTransmission(address_);
     Wire.write(reg);
-    Wire.endTransmission(true);
+    Wire.endTransmission(false);
     Wire.requestFrom(address_, (uint8_t) 1);
     if (Wire.available() < 1) {
       uint32_t start = millis();
@@ -9774,7 +9786,7 @@ public:
   int readBytes(uint8_t reg, uint8_t* data, int bytes) {
     Wire.beginTransmission(address_);
     Wire.write(reg);
-    Wire.endTransmission(true);
+    Wire.endTransmission(false);
     Wire.requestFrom(address_, (uint8_t) bytes);
     if (Wire.available() < bytes) {
       uint32_t start = millis();
@@ -9938,13 +9950,14 @@ public:
 	  // gyroscope data available
 	  if (readBytes(OUTX_L_G, databuffer, 6) == 6) {
 	    SaberBase::DoMotion(
-	      Vec3(databuffer, 32768.0 / 2000.0)); // 2000 dps
+	      Vec3::LSB(databuffer, 2000.0 / 32768.0)); // 2000 dps
 	  }
 	}
 	if (status_reg & 0x4) {
 	  // accel data available
 	  if (readBytes(OUTX_L_XL, databuffer, 6) == 6) {
-	    SaberBase::DoAccel(Vec3(dataBuffer, 32768.0/4.0));  // 4 g range
+	    SaberBase::DoAccel(
+	      Vec3::LSB(databuffer, 4.0 / 32768.0));  // 4 g range
 	  }
 	}
       }
@@ -10076,7 +10089,7 @@ public:
     A_FFMT_THS_Z_MSB    = 0x77, // Z-axis FFMT threshold MSB
     A_FFMT_THS_Z_LSB    = 0x78, // Z-axis FFMT threshold LSB
   };
-private:
+
   FXOS8700() : I2CDevice(0x1E) {}
 
   void Loop() override {
@@ -10089,8 +10102,9 @@ private:
       Serial.print("Accel setup ... ");
 
       if (readByte(WHO_AM_I) != 0xC7) {
-        Serial.println("Failed.");
-	return;
+        Serial.print("Failed.");
+	SLEEP(1000);
+	continue;
       }
 
       // Standby
@@ -10105,6 +10119,8 @@ private:
       // writeByte(CTRL_REG1, 0x15);  // 100Hz A+M 
       writeByte(CTRL_REG1, 0x01);  // 800Hz Accel only
 
+      Serial.println(" Done");
+
       while (1) {
 	YIELD();
 	int status = readByte(STATUS);
@@ -10118,7 +10134,8 @@ private:
 	if (status) {
 	  // gyroscope data available
 	  if (readBytes(OUT_X_MSB, databuffer, 6) == 6) {
-	    SaberBase::DoAccel(Vec3(databuffer, 32768.0 / 4.0)); // 4 g range
+	    SaberBase::DoAccel(
+	      Vec3::LSB(databuffer, 4.0 / 32768.0)); // 4 g range
 	  }
 	}
       }
@@ -10155,7 +10172,7 @@ public:
     CTRL_REG2         = 0x14, // Interrupt configuration
     CTRL_REG3         = 0x15, // Auto-increment address configuration, external power control, FSR expansion
   };
-private:
+
   FXAS21002() : I2CDevice(0x20) {}
 
   void Loop() override {
@@ -10169,6 +10186,7 @@ private:
 
       if (readByte(WHO_AM_I) != 0xD7) {
         Serial.println("Failed.");
+	SLEEP(1000);
 	return;
       }
 
@@ -10177,6 +10195,8 @@ private:
       // switch to active mode, 800 Hz output rate
       writeByte(CTRL_REG0, 0x00);
       writeByte(CTRL_REG1, 0x02);
+
+      Serial.println(" Done");
 
       while (1) {
 	YIELD();
@@ -10191,7 +10211,7 @@ private:
 	if (status) {
 	  // gyroscope data available
 	  if (readBytes(OUT_X_MSB, databuffer, 6) == 6) {
-	    SaberBase::DoMotion(Vec3(databuffer, 2000.0 / 32768.0));
+	    SaberBase::DoMotion(Vec3::MSB(databuffer, 2000.0 / 32768.0));
 	  }
 	}
       }
@@ -10199,6 +10219,9 @@ private:
     STATE_MACHINE_END();
   }
 };
+
+FXOS8700 fxos8700;
+FXAS21002 fxas21002;
 
 #endif   // V2
 #endif   // ENABLE_MOTION
