@@ -161,12 +161,7 @@ const unsigned int maxLedsPerStrip = 144;
 #include <SPI.h>
 #include <math.h>
 #include <usb_dev.h>
-
-#ifdef V2
 #include <i2c_t3.h>
-#else
-#include <Wire.h>
-#endif
 
 #ifdef ENABLE_SNOOZE
 
@@ -451,9 +446,9 @@ public:
   Vec3(){}
   Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
   Vec3(const unsigned char* msb_data, float mul) {
-    x_= mul * (int16_t)((msb_data[0] << 8) | (msb_data[1]));
-    y_= mul * (int16_t)((msb_data[2] << 8) | (msb_data[3]));
-    z_= mul * (int16_t)((msb_data[4] << 8) | (msb_data[5]));
+    x = mul * (int16_t)((msb_data[0] << 8) | (msb_data[1]));
+    y = mul * (int16_t)((msb_data[2] << 8) | (msb_data[3]));
+    z = mul * (int16_t)((msb_data[4] << 8) | (msb_data[5]));
   }
   Vec3 operator-(const Vec3& o) const {
     return Vec3(x - o.x, y - o.y, z - o.z);
@@ -2370,7 +2365,7 @@ public:
   }
 
   void Off() override {
-    on = false;
+    on_ = false;
     audio_splicer.Play(&poweroff, NULL);
   }
   void Clash() override { audio_splicer.Play(&clash, &hum); }
@@ -2598,7 +2593,6 @@ public:
   void Deactivate() {
     SetDelegate(NULL);
     Looper::Unlink();
-    on = false;
   }
 
   void On() override {
@@ -9247,7 +9241,7 @@ public:
     }
   }
 protected:
-  vec3 accel_;
+  Vec3 accel_;
   BufferedWavPlayer* track_player_ = NULL;
 
   void StartOrStopTrack() {
@@ -9712,8 +9706,8 @@ public:
       pinMode(i2cDataPin, INPUT_PULLDOWN);
       pinMode(i2cClockPin, INPUT_PULLDOWN);
       delayMicroseconds(10);
-      bool data_detected = analogRead(i2cDataPin) > 800;
-      bool clock_detected = analogRead(i2cClockPin) > 800;
+      data_detected = analogRead(i2cDataPin) > 800;
+      clock_detected = analogRead(i2cClockPin) > 800;
       pinMode(i2cDataPin, INPUT);
       pinMode(i2cClockPin, INPUT);
       delayMicroseconds(10);
@@ -9724,7 +9718,7 @@ public:
       if (clock_detected && !data_detected) {
 	Serial.println("I2C pending data detected, trying to clear...");
 	pinMode(i2cClockPin, OUTPUT);
-	for (int i = 0; i < 100; i++) {
+	for (i = 0; i < 100; i++) {
 	  SLEEP_MICROS(1);
 	  digitalWrite(i2cClockPin, HIGH);
 	  SLEEP_MICROS(1);
@@ -9739,7 +9733,7 @@ public:
 
     Wire.begin();
     Wire.setClock(400000);
-    Wire.setDefaulitTimeout(20000); // 20ms
+    Wire.setDefaultTimeout(20000); // 20ms
     i2c_detected_ = true;
     Looper::Unlink();
     STATE_MACHINE_END();
@@ -9748,6 +9742,8 @@ public:
   bool inited() const { return i2c_detected_; };
 
 private:
+  int i;
+  bool clock_detected, data_detected;
   bool i2c_detected_ = false;
 };
 
@@ -9894,7 +9890,7 @@ public:
   void Loop() override {
     STATE_MACHINE_BEGIN();
 
-    while (!I2Cbus::inited()) YIELD();
+    while (!i2cbus.inited()) YIELD();
 
     while (1) {
       unsigned char databuffer[6];
@@ -9940,14 +9936,14 @@ public:
 	}
 	if (status_reg & 0x2) {
 	  // gyroscope data available
-	  if (readBytes(OUTX_L_G, dataBuffer, 6) == 6) {
+	  if (readBytes(OUTX_L_G, databuffer, 6) == 6) {
 	    SaberBase::DoMotion(
 	      Vec3(databuffer, 32768.0 / 2000.0)); // 2000 dps
 	  }
 	}
 	if (status_reg & 0x4) {
 	  // accel data available
-	  if (readBytes(OUTX_L_XL, dataBuffer, 6) == 6) {
+	  if (readBytes(OUTX_L_XL, databuffer, 6) == 6) {
 	    SaberBase::DoAccel(Vec3(dataBuffer, 32768.0/4.0));  // 4 g range
 	  }
 	}
@@ -10039,7 +10035,7 @@ public:
     MIN_Y_LSB           = 0x4E, // Magnetometer Y-axis minimum value LSB
     MIN_Z_MSB           = 0x4F, // Magnetometer Z-axis minimum value MSB
     MIN_Z_LSB           = 0x50, // Magnetometer Z-axis minimum value LSB
-    TEMP                = 0x51, // Device temperature, valid range of -128 to 127 Â°C when M_CTRL1[m_hms] > 0b00
+    TEMP                = 0x51, // Device temperature, valid range of -128 to 127 C when M_CTRL1[m_hms] > 0b00
     M_THS_CFG           = 0x52, // Magnetic threshold detection function configuration
     M_THS_SRC           = 0x53, // Magnetic threshold event source register
     M_THS_X_MSB         = 0x54, // X-axis magnetic threshold MSB
@@ -10086,7 +10082,7 @@ private:
   void Loop() override {
     STATE_MACHINE_BEGIN();
 
-    while (!I2Cbus::inited()) YIELD();
+    while (!i2cbus.inited()) YIELD();
 
     while (1) {
       unsigned char databuffer[6];
@@ -10112,7 +10108,7 @@ private:
       while (1) {
 	YIELD();
 	int status = readByte(STATUS);
-	if (status_reg == -1) {
+	if (status == -1) {
 	  // motion fail, reboot gyro chip.
 	  Serial.println("Motion chip timeout, reboot motion chip!");
 	  // writeByte(CTRL3_C, 1);
@@ -10121,7 +10117,7 @@ private:
 	}
 	if (status) {
 	  // gyroscope data available
-	  if (readBytes(OUTX_X_MSB, dataBuffer, 6) == 6) {
+	  if (readBytes(OUT_X_MSB, databuffer, 6) == 6) {
 	    SaberBase::DoAccel(Vec3(databuffer, 32768.0 / 4.0)); // 4 g range
 	  }
 	}
@@ -10154,7 +10150,7 @@ public:
     RT_SRC            = 0x0F, // Rate threshold event flags status register
     RT_THS            = 0x10, // Rate threshold function threshold register
     RT_COUNT          = 0x11, // Rate threshold function debounce counter
-    TEMP              = 0x12, // Device temperature in °C
+    TEMP              = 0x12, // Device temperature in C
     CTRL_REG1         = 0x13, // Operating mode, ODR, self-test and soft reset
     CTRL_REG2         = 0x14, // Interrupt configuration
     CTRL_REG3         = 0x15, // Auto-increment address configuration, external power control, FSR expansion
@@ -10165,7 +10161,7 @@ private:
   void Loop() override {
     STATE_MACHINE_BEGIN();
 
-    while (!I2Cbus::inited()) YIELD();
+    while (!i2cbus.inited()) YIELD();
     while (1) {
       unsigned char databuffer[6];
 
@@ -10185,7 +10181,7 @@ private:
       while (1) {
 	YIELD();
 	int status = readByte(STATUS);
-	if (status_reg == -1) {
+	if (status == -1) {
 	  // motion fail, reboot gyro chip.
 	  Serial.println("Motion chip timeout, reboot motion chip!");
 	  // writeByte(CTRL3_C, 1);
@@ -10194,7 +10190,7 @@ private:
 	}
 	if (status) {
 	  // gyroscope data available
-	  if (readBytes(OUTX_X_MSB, databuffer, 6) == 6) {
+	  if (readBytes(OUT_X_MSB, databuffer, 6) == 6) {
 	    SaberBase::DoMotion(Vec3(databuffer, 2000.0 / 32768.0));
 	  }
 	}
