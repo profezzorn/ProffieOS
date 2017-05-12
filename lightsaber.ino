@@ -31,6 +31,9 @@
 #define VERSION_MAJOR 1
 #define VERSION_MINOR 0
 
+// Up to four blades.
+#define NUM_BLADES 1
+
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
 const unsigned int maxLedsPerStrip = 144;
@@ -3862,11 +3865,17 @@ public:
 };
 
 BladeStyle *current_style = NULL;
+#if NUM_BLADES >= 2
+BladeStyle *current_style2 = NULL;
+#endif
+#if NUM_BLADES >= 3
+BladeStyle *current_style3 = NULL;
+#endif
+#if NUM_BLADES >= 4
+BladeStyle *current_style4 = NULL;
+#endif
 
 void SetStyle(class BladeStyle* style) {
-  if (current_style) current_style->deactivate();
-  current_style = style;
-  current_style->activate();
 }
 
 // Charging blade style.
@@ -9104,6 +9113,15 @@ struct Preset {
 
   // Blade config.
   BladeStyle* style;
+#if NUM_BLADES >= 1
+  BladeStyle* style2;
+#endif
+#if NUM_BLADES >= 2
+  BladeStyle* style3;
+#endif
+#if NUM_BLADES >= 3
+  BladeStyle* style4;
+#endif
 };
 
 // CONFIGURABLE
@@ -9183,6 +9201,15 @@ struct BladeConfig {
 
   // Blade driver.
   BladeBase* blade;
+#if NUM_BLADES >= 1
+  BladeBase* blade2;
+#endif
+#if NUM_BLADES >= 2
+  BladeBase* blade3;
+#endif
+#if NUM_BLADES >= 3
+  BladeBase* blade4;
+#endif
 
   // Blade presets
   Preset* presets;
@@ -9665,7 +9692,24 @@ public:
   // Select preset (font/style)
   void SetPreset(Preset* preset) {
     current_preset_ = preset;
-    SetStyle(preset->style);
+    if (current_style) current_style->deactivate();
+    current_style = preset->style;
+    current_style->activate();
+#if NUM_BLADES >= 2
+    if (current_style2) current_style2->deactivate();
+    current_style2 = preset->style2;
+    current_style2->activate();
+#endif
+#if NUM_BLADES >= 3
+    if (current_style3) current_style3->deactivate();
+    current_style3 = preset->style3;
+    current_style3->activate();
+#endif
+#if NUM_BLADES >= 4
+    if (current_style4) current_style4->deactivate();
+    current_style4 = preset->style4;
+    current_style4->activate();
+#endif
     chdir(preset->font);
   }
 
@@ -9735,6 +9779,15 @@ public:
     Serial.println(best_config);
     current_config_ = blades + best_config;
     current_config_->blade->Activate();
+#if NUM_BLADES >= 2
+    current_config_->blade2->Activate();
+#endif
+#if NUM_BLADES >= 3
+    current_config_->blade3->Activate();
+#endif
+#if NUM_BLADES >= 4
+    current_config_->blade4->Activate();
+#endif
     SetPreset(current_config_->presets);
   }
 
