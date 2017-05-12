@@ -8661,6 +8661,27 @@ class LEDInterface* LEDPtr() {
   return &led;
 }
 
+class PWMPin {
+public:
+  void Init(int pin, LEDInterface*c) {
+    pin_ = pin;
+    c_ = c;
+  }
+  void Activate() {
+    analogWriteFrequency(pin_, frequency);
+    analogWrite(pin_, 0);  // make it black
+  }
+  void set(const Color& c) {
+    analogWrite(pin_, c_->PWM(c));
+  }
+  void set_overdrive(const Color& c) {
+    analogWrite(pin_, c_->PWM_overdrive(c));
+  }
+  
+  int pin_;
+  LEDInterface* c_;
+};
+
 // Simple blade, LED string or LED star with optional flash on clash.
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
@@ -8669,27 +8690,24 @@ public:
   Simple_Blade(LEDInterface* c1,
                LEDInterface* c2,
                LEDInterface* c3,
-               LEDInterface* c4) :
+               LEDInterface* c4,
+	       int pin1,
+	       int pin2,
+	       int pin3,
+	       int pin4) :
     SaberBase(NOLINK),
     CommandParser(NOLINK),
-    Looper(NOLINK),
-    c1_(c1), 
-    c2_(c2),
-    c3_(c3),
-    c4_(c4) {
+    Looper(NOLINK) {
+    pin[0].Init(pin1, c1);
+    pin[1].Init(pin2, c2);
+    pin[2].Init(pin3, c3);
+    pin[3].Init(pin4, c4);
   }
 
   void Activate() override {
     Serial.println("Simple Blade");
     analogWriteResolution(8);
-    analogWriteFrequency(bladePowerPin1, 1000);
-    analogWriteFrequency(bladePowerPin2, 1000);
-    analogWriteFrequency(bladePowerPin3, 1000);
-    analogWriteFrequency(bladePin, 1000);
-    analogWrite(bladePowerPin1, 0);  // make it black
-    analogWrite(bladePowerPin2, 0);  // make it black
-    analogWrite(bladePowerPin3, 0);  // make it black
-    analogWrite(bladePin, 0);        // make it black
+    for (size_t i = 0; i < NELEM(pins); i++) pins[i].Activate();
     CommandParser::Link();
     Looper::Link();
     SaberBase::Link(this);
@@ -8703,17 +8721,11 @@ public:
     return on_;
   }
   void set(int led, Color c) override {
-    analogWrite(bladePowerPin1, c1_->PWM(c));
-    analogWrite(bladePowerPin2, c2_->PWM(c));
-    analogWrite(bladePowerPin3, c3_->PWM(c));
-    analogWrite(bladePin, c4_->PWM(c));
+    for (size_t i = 0; i < NELEM(pins); i++) pins[i].set(c);
   }
 
   void set_overdrive(int led, Color c) override {
-    analogWrite(bladePowerPin1, c1_->PWM_overdrive(c));
-    analogWrite(bladePowerPin2, c2_->PWM_overdrive(c));
-    analogWrite(bladePowerPin3, c3_->PWM_overdrive(c));
-    analogWrite(bladePin, c4_->PWM_overdrive(c));
+    for (size_t i = 0; i < NELEM(pins); i++) pins[i].set_overdrive(c);
   }
 
   bool clash() override {
@@ -8767,10 +8779,7 @@ protected:
   }
   
 private:
-  LEDInterface *c1_;
-  LEDInterface *c2_;
-  LEDInterface *c3_;
-  LEDInterface *c4_;
+  struct PIN pins_[4];
   static bool on_;
   static bool power_;
   static bool clash_;
@@ -8780,9 +8789,13 @@ bool Simple_Blade::on_ = false;
 bool Simple_Blade::power_ = false;
 bool Simple_Blade::clash_ = true;
 
-template<class LED1, class LED2, class LED3, class LED4>
+template<class LED1, class LED2, class LED3, class LED4,
+	 int pin1 = bladePowerPin1,
+         int pin2 = bladePowerPin2,
+         int pin3 = bladePowerPin3,
+         int pin4 = bladePin>
 class Simple_Blade *SimpleBladePtr() {
-  static Simple_Blade blade(LEDPtr<LED1>(), LEDPtr<LED2>(), LEDPtr<LED3>(), LEDPtr<LED4>());
+  static Simple_Blade blade(LEDPtr<LED1>(), LEDPtr<LED2>(), LEDPtr<LED3>(), LEDPtr<LED4>(), pin1, pin2, pin3, pin4);
   return &blade;
 }
 
@@ -8794,7 +8807,7 @@ class Simple_Blade *SimpleBladePtr() {
 #define STRING_SEGMENTS 6
 class String_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
 public:
-  String_Blade(Color c) :
+  String_Blade(LEDInterface* c) :
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK),
@@ -8821,7 +8834,11 @@ public:
     return on_;
   }
   void set(int led, Color c) override {
-    analogWrite(pin_[led], c.select(c_));
+    analogWrite(pin_[led], c_->PWM(c));
+  }
+
+  void set_overdrive(int led, Color c) override {
+    analogWrite(pin_[led], c_->PWM_overdrive(c));
   }
 
   bool clash() override {
@@ -8875,7 +8892,7 @@ protected:
   }
   
 private:
-  Color c_;
+  LEDInterface *c_;
   static int pin_[STRING_SEGMENTS];
   static bool on_;
   static bool power_;
@@ -8893,15 +8910,14 @@ int String_Blade::pin_[STRING_SEGMENTS] = {
 bool String_Blade::on_ = false;
 bool String_Blade::power_ = false;
 bool String_Blade::clash_ = true;
-#endif
 
-// TODO: Needs to take an LED class instead of a color.
-// Possibly one LED per channel...
-template<int r1, int g1, int b1>
+// Possibly one LED driver per channel...
+template<class LED>
 class String_Blade *StringBladePtr() {
-  static String_Blade blade(Color(r1, g1, b1));
+  static String_Blade blade(LEDPtr<LED>());
   return &blade;
 }
+#endif
 
 #define RED       255,   0,   0
 #define GREEN       0, 255,   0
