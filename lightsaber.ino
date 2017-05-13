@@ -120,7 +120,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_WS2811
 
 // FASTLED is experimental and untested right now
-// #define ENABLE_FASTLED
+#define ENABLE_FASTLED
 
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
@@ -198,7 +198,7 @@ enum SaberPins {
   bladePowerPin5 = 4,             // Optional power control (TeensySaber V2)
   bladePowerPin6 = 5,             // Optional power control (TeensySaber V2)
   freePin6 = 6,
-  spiLedSelect = -1,               // APA102/dotstar chip select (prop shield)
+  spiLedSelect = -1,               // APA102/dotstar chip select
   spiLedDataOut = 7,
   spiLedClock = 8,
 #else
@@ -7966,18 +7966,19 @@ public:
   }
 
   void Show() {
-    static_assert(spiLedSelect != -1 || spiDataOut != spiLedDataOut);
-    static_assert(spiLedSelect != -1 || spiClock != spiLedClock)
+    if (spiLedSelect != -1 || spiDataOut != spiLedDataOut)
+      Serial.println("SPI data conflict!");
+    if (spiLedSelect != -1 || spiClock != spiLedClock)
+      Serial.println("SPI clock conflict!");
     if (spiLedSelect != -1){
       SPI.beginTransaction(SPISettings(SPI_DATA_RATE, MSBFIRST, SPI_MODE0));
-      // TODO: Add support for using alternate SPI pins instead.
       digitalWrite(spiLedSelect, HIGH);  // enable access to LEDs
       FastLED.show();
       digitalWrite(spiLedSelect, LOW);
       SPI.endTransaction();   // allow other libs to use SPI again
     } else {
       // Bitbang on separate pins, need to lock anything.
-      FastLED.show()
+      FastLED.show();
     }
   }
 
@@ -8044,11 +8045,11 @@ public:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-        On();
+        SB_On();
         return true;
       }
       if (!strcmp(arg, "off")) {
-        Off();
+        SB_Off();
         return true;
       }
     }
