@@ -2826,6 +2826,7 @@ public:
 
   void show(void);
   int busy(void);
+  int in_progress(void);
 
   int numPixels(void) {
     return stripLen;
@@ -3122,6 +3123,11 @@ int MonopodWS2811::busy(void)
   // busy for 50 us after the done interrupt, for WS2811 reset
   if (micros() - update_completed_at < frameSetDelay) return 1;
   return 0;
+}
+
+int MonopodWS2811::in_progress(void)
+{
+  return update_in_progress;
 }
 
 static inline void Out2DMA(uint32_t *& o, uint8_t v, uint32_t table[16]) {
@@ -7894,42 +7900,51 @@ public:
 
 protected:
   void Loop() override {
-    if (!powered_) {
-      last_millis_ = 0;
-      return;
+    STATE_MACHINE_BEGIN() 
+    while (true) {
+       while (!powered_) {
+         last_millis_ = 0;
+         YIELD();
+       }
+       // Wait until it's our turn.
+       while (current_blade) YIELD();
+       current_blade = this;
+       current_style_->run(this);
+       while (monopodws.busy()) YIELD();
+       monopodws.begin(num_leds_, displayMemory, config_);
+       monopodws.show();
+       {
+	 int m = millis();
+	 if (last_millis_) {
+	   millis_sum_ += m - last_millis_;
+	   updates_ ++;
+	   if (updates_ > 1000) {
+	     updates_ /= 2;
+	     millis_sum_ /= 2;
+	   }
+	 }
+	 last_millis_ = m;
+       }
+       current_blade = NULL;
+       YIELD();
     }
-    if (monopodws.busy()) return;
-    monopodws.show();
-    int m = millis();
-    if (last_millis_) {
-      millis_sum_ += m - last_millis_;
-      updates_ ++;
-      if (updates_ > 1000) {
-        updates_ /= 2;
-        millis_sum_ /= 2;
-      }
-    }
-    last_millis_ = m;
-    current_style_->run(this);
+    STATE_MACHINE_END();
   }
   
 private:
   int num_leds_;
   uint8_t config_;
-  static bool on_;
-  static bool powered_;
-  static bool clash_;
-  static int updates_;
-  static int millis_sum_;
-  static uint32_t last_millis_;
+  bool on_ = false;
+  bool powered_ = false;
+  bool clash_ = false;
+  int updates_ = 0;
+  int millis_sum_ = 0;
+  uint32_t last_millis_ = 0;
+  static WS2811_Blade* current_blade;
+  StateMachineState state_machine_;
 };
 
-bool WS2811_Blade::on_ = false;
-bool WS2811_Blade::powered_ = false;
-bool WS2811_Blade::clash_ = false;
-int WS2811_Blade::updates_ = 0;
-int WS2811_Blade::millis_sum_ = 0;
-uint32_t WS2811_Blade::last_millis_ = 0;
+WS2811_Blade* WS2811_Blade::current_blade = NULL;
 
 template<int LEDS, int CONFIG>
 class WS2811_Blade *WS2811BladePtr() {
