@@ -2877,57 +2877,6 @@ static uint32_t update_completed_at = 0;
 // Discussion about timing and flicker & color shift issues:
 // http://forum.pjrc.com/threads/23877-WS2812B-compatible-with-OctoWS2811-library?p=38190&viewfull=1#post38190
 
-static uint8_t analog_write_res = 8;
-
-void setFTM_Timer(uint8_t ch1, uint8_t ch2, float frequency)
-{
-  uint32_t prescale, mod, ftmClock, ftmClockSource;
-  float minfreq;
-
-  if (frequency < (float)(F_BUS >> 7) / 65536.0f) {     //If frequency is too low for working with F_TIMER:
-    ftmClockSource = 2;                 //Use alternative 31250Hz clock source
-    ftmClock = 31250;                   //Set variable for the actual timer clock frequency
-  } else {                                                //Else do as before:
-    ftmClockSource = 1;                 //Use default F_Timer clock source
-    ftmClock = F_BUS;                    //Set variable for the actual timer clock frequency
-  }
-
-  for (prescale = 0; prescale < 7; prescale++) {
-    minfreq = (float)(ftmClock >> prescale) / 65536.0f;    //Use ftmClock instead of F_TIMER
-    if (frequency >= minfreq) break;
-  }
-
-  mod = (float)(ftmClock >> prescale) / frequency - 0.5f;    //Use ftmClock instead of F_TIMER
-  if (mod > 65535) mod = 65535;
-
-  FTM0_SC = 0; // stop FTM until setting of registers are ready
-  FTM0_CNTIN = 0; // initial value for counter. CNT will be set to this value, if any value is written to FTMx_CNT
-  FTM0_CNT = 0;
-  FTM0_MOD = mod;
-
-  // I don't know why, but the following code leads to a very short first pulse. Shifting the compare values to the end looks much better
-  // uint32_t cval;
-  // FTM0_C0V = 1;  // 0 is not working -> add 1 to every compare value.
-  // cval = ((uint32_t)ch1 * (uint32_t)(mod + 1)) >> analog_write_res;
-  // FTM0_C1V = cval +1;
-  // cval = ((uint32_t)ch2 * (uint32_t)(mod + 1)) >> analog_write_res;
-  // FTM0_C2V = cval +1;
-
-  // Shifting the compare values to the end leads to a perfect first (and last) pulse:
-  uint32_t cval1 = ((uint32_t)ch1 * (uint32_t)(mod + 1)) >> analog_write_res;
-  uint32_t cval2 = ((uint32_t)ch2 * (uint32_t)(mod + 1)) >> analog_write_res;
-  FTM0_C0V = mod - (cval2 - 0);
-  FTM0_C1V = mod - (cval2 - cval1);
-  FTM0_C2V = mod;
-
-  FTM0_C0SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
-  FTM0_C1SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
-  FTM0_C2SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
-
-  FTM0_SC = FTM_SC_CLKS(ftmClockSource) | FTM_SC_PS(prescale);    //Use ftmClockSource instead of 1. Start FTM-Timer.
-  //with 96MHz Teensy: prescale 0, mod 59, ftmClockSource 1, cval1 14, cval2 41
-}
-
 #ifdef INVERT_WS2811
 #define WS2811_PORT_CLEAR GPIOD_PSOR
 #define WS2811_PORT_SET   GPIOD_PCOR
@@ -7792,28 +7741,57 @@ private:
 StylePOV style_pov;
 #endif
 
+class PowerPinInterface {
+public:
+  virtual void Init() = 0;
+  virtual void Power(bool on) = 0;
+};
+
+template<int...>
+class PowerPINS {};
+
+template<>
+class PowerPINS<> : public PowerPinInterface {
+public:
+  void Init() override {}
+  void Power(bool power) override {
+    battery_monitor.SetLoad(power);
+  }
+};
+
+template<int PIN, int... PINS>
+class PowerPINS<PIN, PINS...> : public PowerPinInterface {
+public:
+  void Init() override {
+    pinMode(PIN, OUTPUT);
+    rest_.Init();
+  }
+  void Power(bool power) override { 
+    digitalWrite(PIN, power);
+    rest_.Power(power);
+  }
+private:
+  PowerPINS<PINS...> rest_;
+};
+
+
 #ifdef ENABLE_WS2811
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
 class WS2811_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
 public:
-  WS2811_Blade(int num_leds, uint8_t config) :
+  WS2811_Blade(int num_leds, uint8_t config, PowerPinInterface* power) :
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK),
     num_leds_(num_leds),
-    config_(config) {
+    config_(config),
+    power_(power) {
   }
 
   void Power(bool on) {
-    pinMode(bladePowerPin1, OUTPUT);
-    pinMode(bladePowerPin2, OUTPUT);
-    pinMode(bladePowerPin3, OUTPUT);
-    digitalWrite(bladePowerPin1, on?HIGH:LOW);
-    digitalWrite(bladePowerPin2, on?HIGH:LOW);
-    digitalWrite(bladePowerPin3, on?HIGH:LOW);
-    battery_monitor.SetLoad(on);
+    power_->Power(on);
 //    pinMode(bladePin, on ? OUTPUT : INPUT);
     powered_ = on;
   }
@@ -7825,6 +7803,7 @@ public:
     Serial.print("WS2811 Blade with ");
     Serial.print(num_leds_);
     Serial.println(" leds");
+    power_->Init();
     Power(true);
     delay(10);
     monopodws.begin(num_leds_, displayMemory, config_);
@@ -7942,14 +7921,16 @@ private:
   uint32_t last_millis_ = 0;
   static WS2811_Blade* current_blade;
   StateMachineState state_machine_;
+  PowerPinInterface* power_;
 };
 
 WS2811_Blade* WS2811_Blade::current_blade = NULL;
 
-template<int LEDS, int CONFIG>
+template<int LEDS, int CONFIG, class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3> >
 class WS2811_Blade *WS2811BladePtr() {
   static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
-  static WS2811_Blade blade(LEDS, CONFIG);
+  static POWER_PINS power_pins;
+  static WS2811_Blade blade(LEDS, CONFIG, &power_pins);
   return &blade;
 }
 #endif
