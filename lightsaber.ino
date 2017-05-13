@@ -31,6 +31,8 @@
 #define VERSION_MAJOR 1
 #define VERSION_MINOR 0
 
+#define NUM_BLADES 1
+
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
 const unsigned int maxLedsPerStrip = 144;
@@ -8284,12 +8286,11 @@ private:
   PWMPin pins_[4];
   static bool on_;
   static bool power_;
-  static bool clash_;
+  bool clash_ = false;
 };
 
 bool Simple_Blade::on_ = false;
 bool Simple_Blade::power_ = false;
-bool Simple_Blade::clash_ = true;
 
 template<class LED1, class LED2, class LED3, class LED4,
 	 int pin1 = bladePowerPin1,
@@ -8594,7 +8595,6 @@ struct NoLED {
   static const int Blue = 0;
 };
 
-
 #define CONFIGARRAY(X) X, NELEM(X)
 
 struct Preset {
@@ -8606,6 +8606,15 @@ struct Preset {
 
   // Blade config.
   BladeStyle* style;
+#if NUM_BLADES >= 2
+  BladeStyle* style2;
+#endif
+#if NUM_BLADES >= 3
+  BladeStyle* style3;
+#endif
+#if NUM_BLADES >= 4
+  BladeStyle* style4;
+#endif
 };
 
 // CONFIGURABLE
@@ -8685,6 +8694,15 @@ struct BladeConfig {
 
   // Blade driver.
   BladeBase* blade;
+#if NUM_BLADES >= 2
+  BladeBase* blade2;
+#endif
+#if NUM_BLADES >= 3
+  BladeBase* blade3;
+#endif
+#if NUM_BLADES >= 4
+  BladeBase* blade4;
+#endif
 
   // Blade presets
   Preset* presets;
@@ -9167,8 +9185,16 @@ public:
   // Select preset (font/style)
   void SetPreset(Preset* preset) {
     current_preset_ = preset;
-    // TODO(hubbe): Support multiple styles
     current_config_->blade->SetStyle(preset->style);
+#if NUM_BLADES >= 2
+    current_config_->blade2->SetStyle(preset->style2);
+#endif
+#if NUM_BLADES >= 3
+    current_config_->blade3->SetStyle(preset->style3);
+#endif
+#if NUM_BLADES >= 4
+    current_config_->blade4->SetStyle(preset->style4);
+#endif
     chdir(preset->font);
   }
 
@@ -9238,6 +9264,15 @@ public:
     Serial.println(best_config);
     current_config_ = blades + best_config;
     current_config_->blade->Activate();
+#if NUM_BLADES >= 2
+    current_config_->blade2->Activate();
+#endif
+#if NUM_BLADES >= 3
+    current_config_->blade3->Activate();
+#endif
+#if NUM_BLADES >= 4
+    current_config_->blade4->Activate();
+#endif
     SetPreset(current_config_->presets);
   }
 
