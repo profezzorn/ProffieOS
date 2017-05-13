@@ -7945,21 +7945,16 @@ class WS2811_Blade *WS2811BladePtr() {
 template<ESPIChipsets CHIPSET, EOrder RGB_ORDER, uint8_t SPI_DATA_RATE>
 class FASTLED_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
 public:
-  FASTLED_Blade(int num_leds) :
+  FASTLED_Blade(int num_leds, PowerPinInterface* power) :
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK),
-    num_leds_(num_leds) {
+    num_leds_(num_leds),
+    power_(power) {
   }
 
   void Power(bool on) {
-    pinMode(bladePowerPin1, OUTPUT);
-    pinMode(bladePowerPin2, OUTPUT);
-    pinMode(bladePowerPin3, OUTPUT);
-    digitalWrite(bladePowerPin1, on?HIGH:LOW);
-    digitalWrite(bladePowerPin2, on?HIGH:LOW);
-    digitalWrite(bladePowerPin3, on?HIGH:LOW);
-    battery_monitor.SetLoad(on);
+    power_->Power(on);
     powered_ = on;
   }
 
@@ -7987,6 +7982,7 @@ public:
     Serial.print(num_leds_);
     Serial.println(" leds");
     FastLED.addLeds<CHIPSET, spiLedDataOut, spiLedClock, EOrder, SPI_DATA_RATE>((struct CRGB*)displayMemory, num_leds_);
+    power_->Init();
     Power(true);
     delay(10);
 
@@ -8094,13 +8090,15 @@ private:
   int updates_ = 0;
   int millis_sum_ = 0;
   uint32_t last_millis_ =0;
+  PowerPinInterface* power_;
 };
 
 template<ESPIChipsets CHIPSET, EOrder RGB_ORDER,
-         uint8_t SPI_DATA_RATE, int LEDS>
+         uint8_t SPI_DATA_RATE, int LEDS, class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3> >
 class BladeBase *FASTLEDBladePtr() {
   static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
-  static FASTLED_Blade<CHIPSET, RGB_ORDER, SPI_DATA_RATE> blade(LEDS);
+  static POWER_PINS power_pins;
+  static FASTLED_Blade<CHIPSET, RGB_ORDER, SPI_DATA_RATE> blade(LEDS, &power_pins);
   return &blade;
 }
 #endif
