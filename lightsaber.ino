@@ -9772,7 +9772,6 @@ public:
     STATE_MACHINE_BEGIN();
     SLEEP(1000);
 
-#if 0  // TODO: enable me!
     // Check that we have pullups.
     while (true) {
       pinMode(i2cDataPin, INPUT_PULLDOWN);
@@ -9801,7 +9800,7 @@ public:
         SLEEP(1000); // Try again later
       }
     }
-#endif
+
     Serial.println("I2C pullups found, initializing...");
 
     Wire.begin();
