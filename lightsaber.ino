@@ -2816,7 +2816,8 @@ class MonopodWS2811 {
 public:
   void begin(uint32_t numPerStrip,
              void *frameBuf,
-             uint8_t config = WS2811_GRB);
+             uint8_t config,
+	     int pin);
   void setPixel(uint32_t num, Color color) {
     drawBuffer[num] = color;
   }
@@ -2824,7 +2825,7 @@ public:
     return drawBuffer[num];
   }
 
-  void show(void);
+  void show();
   int busy(void);
   int in_progress(void);
 
@@ -2887,7 +2888,8 @@ static uint32_t update_completed_at = 0;
 
 void MonopodWS2811::begin(uint32_t numPerStrip,
                           void *frameBuf,
-                          uint8_t config)
+                          uint8_t config,
+			  int pin)
 {
   stripLen = numPerStrip;
   frameBuffer = frameBuf;
@@ -2897,9 +2899,22 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
 
   bufsize = stripLen*24;
 
+  switch (pin) {
+    case 2:  ones = 1; break;
+    case 14: ones = 2; break;
+    case 7:  ones = 4; break;
+    case 8:  ones = 8; break;
+    case 6:  ones = 16; break;
+    case 20: ones = 32; break;
+    case 21: ones = 64; break;
+    case 5:  ones = 128; break;
+    default:
+      Serial.println("Invalid monopodws pin!");
+  }
+
   // set up the buffers
   memset(frameBuffer, ones, bufsize);
-        
+
   // configure the 8 output pins
   WS2811_PORT_CLEAR = ones;
   if (ones & 1)   pinMode(2, OUTPUT);   // strip #1
@@ -7781,12 +7796,13 @@ private:
 // interacting with pins and timers after Activate() is called.
 class WS2811_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
 public:
-  WS2811_Blade(int num_leds, uint8_t config, PowerPinInterface* power) :
+  WS2811_Blade(int num_leds, uint8_t config, int pin, PowerPinInterface* power) :
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK),
     num_leds_(num_leds),
     config_(config),
+    pin_(pin),
     power_(power) {
   }
 
@@ -7806,7 +7822,7 @@ public:
     power_->Init();
     Power(true);
     delay(10);
-    monopodws.begin(num_leds_, displayMemory, config_);
+    monopodws.begin(num_leds_, displayMemory, config_, pin_);
     monopodws.show();  // Make it black
     monopodws.show();  // Make it black
     monopodws.show();  // Make it black
@@ -7890,7 +7906,7 @@ protected:
        current_blade = this;
        current_style_->run(this);
        while (monopodws.busy()) YIELD();
-       monopodws.begin(num_leds_, displayMemory, config_);
+       monopodws.begin(num_leds_, displayMemory, config_, pin_);
        monopodws.show();
        {
 	 int m = millis();
@@ -7913,6 +7929,7 @@ protected:
 private:
   int num_leds_;
   uint8_t config_;
+  uint8_t pin_;
   bool on_ = false;
   bool powered_ = false;
   bool clash_ = false;
@@ -7926,11 +7943,11 @@ private:
 
 WS2811_Blade* WS2811_Blade::current_blade = NULL;
 
-template<int LEDS, int CONFIG, class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3> >
+template<int LEDS, int CONFIG, int DATA_PIN = bladePin, class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3> >
 class WS2811_Blade *WS2811BladePtr() {
   static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
   static POWER_PINS power_pins;
-  static WS2811_Blade blade(LEDS, CONFIG, &power_pins);
+  static WS2811_Blade blade(LEDS, CONFIG, DATA_PIN, &power_pins);
   return &blade;
 }
 #endif
