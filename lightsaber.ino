@@ -184,13 +184,6 @@ SnoozeBlock snooze_config(snooze_touch, snooze_digital, snooze_timer);
 //   o Battery level and blade identification needs analog input, which is not possible
 //     on all pins.
 //
-// Note that while WS2811 leds/strips are being controlled, analogWriteFrequency() can only
-// be used on pins 3, 4, 25 & 32, on all others the analogWriteFrequency is locked to the
-// frequency of the WS2811 (usually 740kHz) which is not an approperiate frequency for
-// driving a FET. This limitation may change in future versions of this software, but for
-// now, if you want to drive a crystal chamber or other internal LEDs, I recommend using
-// the pins listed above to get a reasonable PWM frequency.
-//
 // See the teensy 3.2 pinout diagram for more info: https://www.pjrc.com/teensy/pinout.html
 enum SaberPins {
   // Bottom edge (in pin-out diagram)
