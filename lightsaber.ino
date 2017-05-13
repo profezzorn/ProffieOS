@@ -9504,7 +9504,7 @@ protected:
     Serial.println(" cd directory - change directory, and sound font");
     Serial.println(" play filename - play file");
     Serial.println(" next/prev font - walk through directories in alphabetical order");
-    Serial.println(" next/prev pre[set] - walk through presets.\n");
+    Serial.println(" next/prev pre[set] - walk through presets.");
     Serial.println(" beep - play a beep");
 #endif
   }
