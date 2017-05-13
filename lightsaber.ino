@@ -140,9 +140,6 @@ const unsigned int maxLedsPerStrip = 144;
 // This doesn't seem to work.
 // #define TAR_UPLOADS_TO_SDCARD
 
-// Use FTM timer for monopodws timing.
-// #define USE_FTM_TIMER
-
 // You can get better SD card performance by
 // activating the  USE_TEENSY3_OPTIMIZED_CODE define
 // in SD.h in the teensy library, however, my sd card
@@ -675,388 +672,6 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x > b) return b;
   return x;
 }
-
-#ifdef ENABLE_COPPER
-
-DMAMEM DMABaseSetting copper_dma[MAX_PWM_PINS];
-int next_copper_dma = 0;
-
-class Copper {
-  DMABaseSetting* get() {
-    DMABaseSetting* ret = copper_dma[next_copper_dma];
-    //
-    next_copper_dma++;
-    return ret;
-  }
-  void emit_memcpy(char* dst, const char* src, int cnt) {
-    DMABaseSetting* tcd = get();
-    tcd->SADDR = src;
-    tcd->SOFF = 1;
-    tcd->ATTR_SRC = 0;
-    tcd->NBYTES = cnt;
-    tcd->BITER = 1;
-    tcd->CITER = 1;
-    tcd->DADDR = dst;
-    tcd->DOFF = 1;
-    tcd->ATTR_DST = 0;
-    tcd->CSR = 0;
-  }
-  void emit_sleep(int count) {
-    static char dummy;
-    DMABaseSetting* tcd = get();
-    tcd->SADDR = &dummy;
-    tcd->SOFF = 0;
-    tcd->ATTR_SRC = 0;
-    tcd->NBYTES = 1;
-    tcd->BITER = count;
-    tcd->CITER = count;
-    tcd->DADDR = &dummy;
-    tcd->DOFF = 0;
-    tcd->ATTR_DST = 0;
-    tcd->CSR = 0;
-  }
-  
-};
-
-
-#define MAX_PWM_PINS 6
-
-class PWM : public Looper {
-  struct PWMdata {
-    int8_t pin;
-    uint8_t start;
-    uint16_t duty_cycle;
-  };
-  
-  PWMData data_[MAX_PWM_PINS];
-  int num_pwm_ = 0;
-  int n = 0;
-  bool needs_update_ = false;
-
-  void Loop() override {
-    if (!needs_update_) return;
-    uint32 bits[8];
-    memset(bits, 0, sizeof(bits));
-    struct Event {
-      uint8_t when;
-      int8_t pin;
-      bool on;
-    };
-    Event events[NELEM(data_)*2];
-    int event = 0;
-
-    for (int i = 0; i < num_pwm_; i++) {
-      uint8_t start = data_[i].start;
-      uint8_t end = start + data_[i].end;
-      if ((bits[start >> 5] & (1 << (start & 0x1f))) ||
-          (bits[end >> 5] & (1 << (end & 0x1f)))) {
-        data_[i].start++;
-        continue;
-      }
-      bits[start >> 5] |= 1 << (start & 0x1f);
-      bits[end >> 5] |= 1 << (end & 0x1f);
-      events[event].when = start;
-      events[event].pin = data_[i].pin;
-      if (start == end) {
-        events[event].on = data_[i].duty_cycle == 256;
-      } else {
-        events[event].on = true;
-        event++;
-        events[event].when = end;
-        events[event].pin = data_[i].pin;
-        events[event].on = false;
-      }
-      events++;
-    }
-    
-    // shellsort
-    for (int gap = 0x7F; gap; gap >>= 1) {
-      for (int i = gap; i < event; i++) {
-        Event tmp = events[i];
-        for (int j = i; j >= gap && events[j - gap].when > tmp.when; j -= gap)
-          events[j] = events[j - gap];
-        events[j] = tmp;
-      }
-    }
-
-    // Build a coproc list
-    int t = 0;
-    for (int i = 0; i < event; i++) {
-      if (events[i].start != t) {
-        emit_sleep(events[i].start - t);
-        t = events[i].start;
-      }
-      if (events[i].on)
-        emit_memcpy(&one, portSetRegister(events[i].pin), 1);
-      else 
-        emit_memcpy(&one, portClearRegister(events[i].pin), 1);
-      t++;
-    }
-    if (t != 256) emit_sleep(256 - t);
-    emit_finish();
-  }
-
-  bool SetPWM(int pin, int duty_cycle) {
-    int i = 0;
-    for (; i < num_pwm_; i++)
-      if (data_[i].pin == pin)
-        break;
-
-    if (i == num_pwm_) {
-      if (i >= NELEM(data_)) return false;
-      num_pwm_++;
-      data_[i].pin = pin;
-      data_[i].start = n++;
-      needs_update_ = true;
-    }
-    if (data_[i].duty_cycle != duty_cycle) {
-      needs_update_ = true;
-      data_[i].duty_cycle = duty_cycle;
-    }
-  }
-};
-
-#endif
-
-#if 0  // TODO remove me!
-#define PortPWMPrecision 256
-#define PortPWMSlots 128
-#define PortPWMFrequency AUDIO_RATE
-#define PortPWMTargetFrequency 1000
-
-DmaChannel *link;
-
-class PortPWM {
-public:
-  struct OnOff {
-    uint8_t on;
-    uint8_t off;
-    void On(uint8_t bits) { on |= bits; off &=~ bits; }
-    void Off(uint8_t bits) { off |= bits; on &=~ bits; }
-    void Disable(uint8_t bits) { off &=~ bits; on &=~ bits; }
-  };
-
-  PortPWM(unsigned long addr) {
-    memset(onoff, 0, sizeof(on));
-    dma.begin(true);
-    dma.TCO->SADDR = onoff;
-    dma.TCD->SOFF = 1;
-    dma.TCD->SLAST = - sizeof(onoff);
-    dma.TCD->DADDR = addr;
-    dma.TCD->ATTR = 3 << 2;
-    dma.TCD->DOFF = 4;
-    dma.TCD->NBYTES_MLNO = 0x8000000UL | 2 | ((-8 & 0xFFFFF) << 10);
-    dma.TCD->CITER_ELINKNO = NELEM(onoff);
-    dma.TCD->DLASTSGA = 0;
-    dma.TCD->BITER_ELINKNO = NELEM(onoff);
-    dma.TCD->SCR = 0;
-    dma.triggerAtTransferOf(*link);
-    link = &dma;
-    dma.enable();
-  }
-
-  void SetPWM(int bits, int pwm) {
-    if (pwm <= 0) {
-      for (int i = 0; i < PortPWMSlots; i++)
-        onoff[i].Off(bits);
-      return;
-    }
-    if (pwm > 255) {
-      for (int i = 0; i < PortPWMSlots; i++)
-        onoff[i].On(bits);
-      return;
-    }
-    int cycles = PortPWMSlots * PortPWMTargetFrequency / PortPWMFrequency;
-    int pos = 0;
-    int total_on = 0;
-    for (int cycle = 0; cycle < cycles; cycle++) {
-      int cycle_length = (PortPWMSlots - pos) / (cycles - cycle);
-      int on = (pos + cycle_length) * pwm / PortPWMPrecision - total_on;
-      int off = cycle_length - on;
-      for (int i = 0; i < off; i++) onoff[pos++].Off(bits);
-      for (int i = 0; i < on; i++) onoff[pos++].On(bits);
-      total_on += on;
-    }
-  }
-  void Disable(int bits) {
-    for (int i = 0; i < PortPWMSlots; i++)
-      onoff[i].Disable(bits);
-  }
-
-  DMAChannel dma;
-  struct OnOff onoff[PortPWMSlots];
-};
-
-static PortPWMPtr<unsigned long ptr>() {
-  static PortPWM pwm(ptr);
-  return &pwm;
-}
-
-template<int pin> AnalogWrite(int pwm) {
-  static_assert(false, "AnalogWriteTemplate missing override);
-}
-
-#define PORTPWM(PIN, PWM)\
-  PortPWMPtr<CORE_PIN##PIN##_PORTSET + CORE_PIN##PIN##_BIT / 8>()->SetPWM(CORE_PIN##PIN##_BIT & 3, (PWM))
-
-template<> AnalogWrite<0>(int pwm) {
-  static_assert(0 != sdCardSelectPin, "Pin 0 is busy");
-  // Pin 0 is not a native PWM pin, so use PORTPWM.
-  PORTPWM(0, pwm);
-}
-
-template<> AnalogWrite<1>(int pwm) {
-  static_assert(1 != amplifierPin, "Pin 1 is busy");
-  // Pin 1 is not a native PWM pin, so use PORTPWM.
-  PORTPWM(1, pwm);
-}
-
-template<> AnalogWrite<2>(int pwm) {
-  static_assert(2 != motionSensorInterruptPin, "Pin 2 is busy");
-  // Pin 1 is not a native PWM pin, so use PORTPWM.
-  PORTPWM(2, pwm);
-}
-
-template<> AnalogWrite<3>(int pwm) {
-  // Pin 3 uses FTM1, which is is not claimed for anything yet.
-  analogWrite(3, pwm);
-}
-
-template<> AnalogWrite<4>(int pwm) {
-  // Pin 4 uses FTM1, which is is not claimed for anything yet.
-  analogWrite(4, pwm);
-}
-
-template<> AnalogWrite<5>(int pwm) {
-  static_assert(5 != amplifierPin, "Pin 5 is busy");
-  // Pin 5 uses FTM0, which may be used by monopodws...
-  if (FTM0_IS_BUSY) {
-    PORTPWM(5, pwm);
-  } else {
-    analogWrite(5, pwm);
-  }
-}
-
-template<> AnalogWrite<6>(int pwm) {
-  static_assert(6 != serialFlashSelectPin, "Pin 6 is busy");
-  // Pin 6 uses FTM0, which may be used by monopodws...
-  if (FTM0_IS_BUSY) {
-    PORTPWM(6, pwm);
-  } else {
-    analogWrite(6, pwm);
-  }
-}
-
-template<> AnalogWrite<7>(int pwm) {
-  // Pin 7 is not an native PWM pin.
-  PORTPWM(7, pwm);
-}
-
-template<> AnalogWrite<8>(int pwm) {
-  // Pin 8 is not an native PWM pin.
-  PORTPWM(8, pwm);
-}
-
-template<> AnalogWrite<9>(int pwm) {
-  // Pin 9 uses FTM0, which may be used by monopodws...
-  if (FTM0_IS_BUSY) {
-    PORTPWM(9, pwm);
-  } else {
-    analogWrite(9, pwm);
-  }
-}
-
-template<> AnalogWrite<10>(int pwm) {
-  // Pin 10 uses FTM0, which may be used by monopodws...
-  if (FTM0_IS_BUSY) {
-    PORTPWM(10, pwm);
-  } else {
-    analogWrite(10, pwm);
-  }
-}
-
-template<> AnalogWrite<11>(int pwm) {
-  static_assert(false, "Pin 11 should be used for spi data out");
-}
-
-template<> AnalogWrite<12>(int pwm) {
-  static_assert(false, "Pin 12 should be used for spi data in");
-}
-
-template<> AnalogWrite<13>(int pwm) {
-  static_assert(false, "Pin 13 should be used for spi clock");
-  PORTPWM(10, pwm);
-}
-
-template<> AnalogWrite<14>(int pwm) {
-  static_assert(14 != batteryLevelPin, "Pin 14 is busy."):
-  // Not a native PWM pin.
-  PORTPWM(14, pwm);
-}
-
-template<> AnalogWrite<15>(int pwm) {
-  static_assert(15 != auxPin, "Pin 15 is busy."):
-  // Not a native PWM pin.
-  PORTPWM(15, pwm);
-}
-
-template<> AnalogWrite<16>(int pwm) {
-  static_assert(16 != powerButtonPin, "Pin 16 is busy."):
-  // Not a native PWM pin.
-  PORTPWM(16, pwm);
-}
-
-template<> AnalogWrite<17>(int pwm) {
-  static_assert(17 != aux2Pin);
-  // Not a native PWM pin.
-  PORTPWM(17, pwm);
-}
-
-template<> AnalogWrite<18>(int pwm) {
-  static_assert(false, "Pin 18 is busy."):
-}
-
-template<> AnalogWrite<19>(int pwm) {
-  static_assert(false, "Pin 19 is busy."):
-}
-
-template<> AnalogWrite<20>(int pwm) {
-  // Pin 20 uses FTM0, which may be used by monopodws...
-  if (FTM0_IS_BUSY) {
-    PORTPWM(20, pwm);
-  } else {
-    analogWrite(20, pwm);
-  }
-}
-
-template<> AnalogWrite<21>(int pwm) {
-  // Pin 21 uses FTM0, which may be used by monopodws...
-  if (FTM0_IS_BUSY) {
-    PORTPWM(21, pwm);
-  } else {
-    analogWrite(21, pwm);
-  }
-}
-
-template<> AnalogWrite<22>(int pwm) {
-  // Pin 22 uses FTM0, which may be used by monopodws...
-  if (FTM0_IS_BUSY) {
-    PORTPWM(22, pwm);
-  } else {
-    analogWrite(22, pwm);
-  }
-}
-
-template<> AnalogWrite<23>(int pwm) {
-  // Pin 23 uses FTM0, which may be used by monopodws...
-  if (FTM0_IS_BUSY) {
-    PORTPWM(23, pwm);
-  } else {
-    analogWrite(23, pwm);
-  }
-}
-
-#endif
 
 const int16_t sin_table[1024] = {
   0,100,201,301,402,502,603,703,803,904,1004,1104,1205,1305,1405,
@@ -1716,10 +1331,10 @@ public:
 #else
     int copied = 0;
     while (bufsize) {
-      size_t to_copy = buffered();
+      int to_copy = buffered();
       if (!to_copy) break;
       to_copy = min(to_copy, bufsize);
-      size_t start_pos = buf_start_ & (N-1);
+      int start_pos = buf_start_ & (N-1);
       to_copy = min(to_copy, N - start_pos);
       memcpy(buf, buffer_ + start_pos, sizeof(T) * to_copy);
       copied += to_copy;
@@ -1738,7 +1353,7 @@ public:
     eof_ = false;
     buf_start_ = buf_end_;
   }
-  size_t buffered() const {
+  int buffered() const {
     return buf_end_ - buf_start_;
   }
   size_t space_available() const override {
@@ -2200,7 +1815,7 @@ private:
 
   template<int bits, int channels, int rate>
   void DecodeBytes4() {
-    while (ptr_ < end_ && num_samples_ < NELEM(samples_)) {
+    while (ptr_ < end_ && num_samples_ < (int)NELEM(samples_)) {
       int v = 0;
       if (channels == 1) {
         v = read2<bits>();
@@ -3126,7 +2741,8 @@ BatteryMonitor battery_monitor;
 // Used to represent a color. Uses normal 8-bit-per channel RGB.
 // Note that these colors are in linear space and their interpretation
 // depends on the blade.
-struct Color {
+class Color {
+  public:
   Color() : r(0), g(0), b(0) {}
   Color(uint8_t r_, uint8_t g_, uint8_t b_) : r(r_), g(g_), b(b_) {}
   // x = 0..256
@@ -3236,7 +2852,7 @@ uint8_t MonopodWS2811::params;
 DMAChannel MonopodWS2811::dma1;
 DMAChannel MonopodWS2811::dma2;
 DMAChannel MonopodWS2811::dma3;
-static uint16_t MonopodWS2811::frameSetDelay = 0;
+uint16_t MonopodWS2811::frameSetDelay = 0;
 
 Color MonopodWS2811::drawBuffer[maxLedsPerStrip];
 static uint8_t ones = 0x20;  // pin 20
@@ -3373,10 +2989,6 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
       break;
   }
 
-#ifdef USE_FTM_TIMER
-  setFTM_Timer(t0h, t1h, frequency);
-#else  // USE_FTM_TIMER
-
 #if defined(__MK20DX128__)
         FTM1_SC = 0;
         FTM1_CNT = 0;
@@ -3385,8 +2997,8 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
         FTM1_SC = FTM_SC_CLKS(1) | FTM_SC_PS(0);
         FTM1_C0SC = 0x69;
         FTM1_C1SC = 0x69;
-        FTM1_C0V = (mod * WS2811_TIMING_T0H) >> 8;
-        FTM1_C1V = (mod * WS2811_TIMING_T1H) >> 8;
+        FTM1_C0V = (mod * t0h) >> 8;
+        FTM1_C1V = (mod * t1h) >> 8;
         // pin 16 triggers DMA(port B) on rising edge
         CORE_PIN16_CONFIG = PORT_PCR_IRQC(1)|PORT_PCR_MUX(3);
         //CORE_PIN4_CONFIG = PORT_PCR_MUX(3); // testing only
@@ -3399,8 +3011,8 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
         FTM2_SC = FTM_SC_CLKS(1) | FTM_SC_PS(0);
         FTM2_C0SC = 0x69;
         FTM2_C1SC = 0x69;
-        FTM2_C0V = (mod * WS2811_TIMING_T0H) >> 8;
-        FTM2_C1V = (mod * WS2811_TIMING_T1H) >> 8;
+        FTM2_C0V = (mod * t0h) >> 8;
+        FTM2_C1V = (mod * t1h) >> 8;
         // pin 32 is FTM2_CH0, PTB18, triggers DMA(port B) on rising edge
         // pin 25 is FTM2_CH1, PTB19
         CORE_PIN32_CONFIG = PORT_PCR_IRQC(1)|PORT_PCR_MUX(3);
@@ -3414,8 +3026,8 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
         FTM2_SC = FTM_SC_CLKS(1) | FTM_SC_PS(0);
         FTM2_C0SC = 0x69;
         FTM2_C1SC = 0x69;
-        FTM2_C0V = (mod * WS2811_TIMING_T0H) >> 8;
-        FTM2_C1V = (mod * WS2811_TIMING_T1H) >> 8;
+        FTM2_C0V = (mod * t0h) >> 8;
+        FTM2_C1V = (mod * t1h) >> 8;
         // FTM2_CH0, PTA10 (not connected), triggers DMA(port A) on rising edge
         PORTA_PCR10 = PORT_PCR_IRQC(1)|PORT_PCR_MUX(3);
 
@@ -3423,8 +3035,8 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
         analogWriteResolution(8);
         analogWriteFrequency(3, frequency);
         analogWriteFrequency(4, frequency);
-        analogWrite(3, WS2811_TIMING_T0H);
-        analogWrite(4, WS2811_TIMING_T1H);
+        analogWrite(3, t0h);
+        analogWrite(4, t1h);
         // on Teensy-LC, use timer DMA, not pin DMA
         //Serial1.println(FTM2_C0SC, HEX);
         //FTM2_C0SC = 0xA9;
@@ -3444,8 +3056,6 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
         //MCM_PLACR |= MCM_PLACR_ARB;
 
 #endif
-
-#endif  // USE_FTM_TIMER
 
   // DMA channel #1 sets WS2811 high at the beginning of each cycle
   dma1.source(ones);
@@ -3470,11 +3080,7 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
   dma3.interruptAtCompletion();
 
 
-#ifdef USE_FTM_TIMER
-  dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM0_CH0);
-  dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM0_CH1);
-  dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM0_CH2);
-#elif defined(__MK20DX128__)
+#if defined(__MK20DX128__)
   // route the edge detect interrupts to trigger the 3 channels
   dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_PORTB);
   dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM1_CH0);
@@ -3523,45 +3129,14 @@ int MonopodWS2811::busy(void)
   return 0;
 }
 
-#if 1
-
-#if 0  // TODO: Enable me!
-static inline void Out2DMANew(uint32_t *& o, uint8_t v, uint32_t table[16]) {
-  *(o++) |= table[v >> 4];
-  *(o++) |= table[v & 0xf];
+static inline void Out2DMA(uint32_t *& o, uint8_t v, uint32_t table[16]) {
+  // TODO: Use OR instead
+  *(o++) = table[v >> 4];
+  *(o++) = table[v & 0xf];
 }
-
-template<int T>
-static inline void OutputColor(uint32_t *& o, const Color& c, uint32_t table[16]) {
-  Out2DMA(o, c.r, table);
-  Out2DMA(o, c.g, table);
-  Out2DMA(o, c.b, table);
-}
-
-template<>
-static inline void OuputColor<WS2811_RBG>(uint32_t *& o, const Color& c, uint32_t table[16]) {
-  Out2DMA(o, c.r, table);
-  Out2DMA(o, c.b, table);
-  Out2DMA(o, c.g, table);
-}
-
-template<>
-static inline void OuputColor<WS2811_GRB>(uint32_t *& o, const Color& c, uint32_t table[16]) {
-  Out2DMA(o, c.g, table);
-  Out2DMA(o, c.r, table);
-  Out2DMA(o, c.b, table);
-}
-
-template<>
-static inline void OuputColor<WS2811_GBR>(uint32_t *& o, const Color& c, uint32_t table[16]) {
-  Out2DMA(o, c.g, table);
-  Out2DMA(o, c.b, table);
-  Out2DMA(o, c.r, table);
-}
-
 
 void CopyOut(int params, struct Color* inbuf, void* frameBuffer, int num, uint8_t bits) {
-  uint32 table[16];
+  uint32_t table[16];
   for (int i = 0; i < 16; i++) {
     union { uint32_t i; uint8_t b[4]; } convert;
     convert.b[0] = (i & 8) ? 0 : bits;
@@ -3570,64 +3145,39 @@ void CopyOut(int params, struct Color* inbuf, void* frameBuffer, int num, uint8_
     convert.b[3] = (i & 1) ? 0 : bits;
     table[i] = convert.i;
   }
-  uint8_t *o = (uint8_t*)frameBuffer;
+  uint32_t *o = (uint32_t*)frameBuffer;
   switch (params & 7) {
     case WS2811_RBG:
-        for (int j = 0; j < num; j++) 
-          OutputColor<WS2811_RBG>(o, inbuf[j], table);
-         break;
+        for (int j = 0; j < num; j++)  {
+          Out2DMA(o, inbuf[j].r, table);
+          Out2DMA(o, inbuf[j].b, table);
+          Out2DMA(o, inbuf[j].g, table);
+        }
+        break;
     case WS2811_GRB:
-        for (int j = 0; j < num; j++) 
-          OutputColor<WS2811_GRB>(o, inbuf[j], table);
+        for (int j = 0; j < num; j++)  {
+          Out2DMA(o, inbuf[j].g, table);
+          Out2DMA(o, inbuf[j].r, table);
+          Out2DMA(o, inbuf[j].b, table);
+        }
         break;
     case WS2811_GBR:
-        for (int j = 0; j < num; j++) 
-          OutputColor<WS2811_GBR>(o, inbuf[j], table);
+        for (int j = 0; j < num; j++)  {
+          Out2DMA(o, inbuf[j].g, table);
+          Out2DMA(o, inbuf[j].b, table);
+          Out2DMA(o, inbuf[j].r, table);
+        }
         break;
     default:
-        for (int j = 0; j < num; j++) 
-          OutputColor<0>(o, inbuf[j], table);
+        for (int j = 0; j < num; j++)  {
+          Out2DMA(o, inbuf[j].r, table);
+          Out2DMA(o, inbuf[j].g, table);
+          Out2DMA(o, inbuf[j].b, table);
+        }
         break;
    }
 }
-#else
 
-static inline void Out2DMA(uint8_t *& o, uint8_t v) {
-  *(o++) = (v & 128) ? 0 : ones;
-  *(o++) = (v & 64) ? 0 : ones;
-  *(o++) = (v & 32) ? 0 : ones;
-  *(o++) = (v & 16) ? 0 : ones;
-  *(o++) = (v & 8) ? 0 : ones;
-  *(o++) = (v & 4) ? 0 : ones;
-  *(o++) = (v & 2) ? 0 : ones;
-  *(o++) = (v & 1) ? 0 : ones;
-}
-
-template<int STYLE>
-void CopyOut(struct Color* inbuf, void* frameBuffer, int num) {
-  uint8_t *o = (uint8_t*)frameBuffer;
-  for (int j = 0; j < num; j++) {
-    Color tmp = inbuf[j];
-    if (STYLE == WS2811_RBG) {
-      Out2DMA(o, tmp.r);
-      Out2DMA(o, tmp.b);
-      Out2DMA(o, tmp.g);
-    } else if (STYLE == WS2811_GRB) {
-      Out2DMA(o, tmp.g);
-      Out2DMA(o, tmp.r);
-      Out2DMA(o, tmp.b);
-    } else if (STYLE == WS2811_GBR) {
-      Out2DMA(o, tmp.g);
-      Out2DMA(o, tmp.b);
-      Out2DMA(o, tmp.r);
-    } else {
-      Out2DMA(o, tmp.r);
-      Out2DMA(o, tmp.g);
-      Out2DMA(o, tmp.b);
-    }
-  }
-}
-#endif
 
 void MonopodWS2811::show(void)
 {
@@ -3636,60 +3186,12 @@ void MonopodWS2811::show(void)
   while (update_in_progress) ; 
   //Serial1.print("2");
 
-  // it's ok to copy the drawing buffer to the frame buffer
-  // during the 50us WS2811 reset time
-  switch (params & 7) {
-    case WS2811_RBG:
-      CopyOut<WS2811_RBG>(drawBuffer, frameBuffer, stripLen);
-      break;
-    case WS2811_GRB:
-      CopyOut<WS2811_GRB>(drawBuffer, frameBuffer, stripLen);
-      break;
-    case WS2811_GBR:
-      CopyOut<WS2811_GBR>(drawBuffer, frameBuffer, stripLen);
-      break;
-    default:
-      CopyOut<0>(drawBuffer, frameBuffer, stripLen);
-      break;
-  }
+  CopyOut(params, drawBuffer, frameBuffer, stripLen, ones);
 
   // wait for WS2811 reset
   while (micros() - update_completed_at < frameSetDelay) ;
 
-#ifdef USE_FTM_TIMER
-  uint32_t sc = FTM0_SC;
-  //digitalWriteFast(1, HIGH); // oscilloscope trigger
-  
-  //noInterrupts(); // This code is not time critical anymore. IRQs can stay on. 
-  // We disable the FTM Timer, reset it to its initial counter value and clear all irq-flags. 
-  // Clearing irqs is a bit tricky, because with DMA enabled, only the DMA can clear them. 
-  // We have to disable DMA, reset the irq-flags and enable DMA once again.
-  update_in_progress = 1;
-  FTM0_SC = sc & 0xE7;    // stop FTM timer
-        
-  FTM0_CNT = 0; // writing any value to CNT-register will load the CNTIN value!
-        
-  FTM0_C0SC = 0; // disable DMA transfer. It has to be done, because we can't reset the CHnF bit while DMA is enabled
-  FTM0_C1SC = 0;
-  FTM0_C2SC = 0;
-        
-  uint32_t tmp __attribute__((unused));
-  tmp = FTM0_STATUS; // read status and write 0x00 to it, clears all pending IRQs
-  FTM0_STATUS = 0x00;
-        
-  FTM0_C0SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28; 
-  FTM0_C1SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
-  FTM0_C2SC = FTM_CSC_DMA | FTM_CSC_CHIE | 0x28;
-        
-  dma1.enable();
-  dma2.enable();        // enable all 3 DMA channels
-  dma3.enable();
-  //interrupts();
-  //digitalWriteFast(1, LOW);
-  // wait for WS2811 reset
-  FTM0_SC = sc;        // restart FTM timer
-
-#elif defined(__MK20DX128__)
+#if defined(__MK20DX128__)
   uint32_t cv = FTM1_C1V;
   noInterrupts();
   // CAUTION: this code is timing critical.
@@ -3815,6 +3317,21 @@ DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4];
 DMAMEM int displayMemory[maxLedsPerStrip * 3 / 4];
 #endif
 
+class BladeBase;
+
+// Base class for blade styles.
+// Blade styles are responsible for the colors and patterns
+// of the colors of the blade. Each time run() is called, the
+// BladeStyle shouldl call blade->set() to update the color
+// of all the LEDs in the blade.
+class BladeStyle {
+public:
+  virtual void activate() {}
+  virtual void deactivate() {}
+  virtual void run(BladeBase* blade) = 0;
+  virtual bool NoOnOff() { return false; }
+};
+
 class BladeBase {
 public:
   // Returns number of LEDs in this blade.
@@ -3846,22 +3363,17 @@ public:
   virtual void allow_disable() = 0;
 
   virtual void Activate() = 0;
+
+  virtual void SetStyle(BladeStyle* style) {
+    if (current_style_) current_style_->deactivate();
+    current_style_ = style;
+    current_style_->activate();
+  }
+
+ protected:
+  BladeStyle *current_style_ = NULL;
 };
 
-// Base class for blade styles.
-// Blade styles are responsible for the colors and patterns
-// of the colors of the blade. Each time run() is called, the
-// BladeStyle shouldl call blade->set() to update the color
-// of all the LEDs in the blade.
-class BladeStyle {
-public:
-  virtual void activate() {}
-  virtual void deactivate() {}
-  virtual void run(BladeBase* blade) = 0;
-  virtual bool NoOnOff() { return false; }
-};
-
-BladeStyle *current_style = NULL;
 
 // Charging blade style.
 // Slowly pulsating battery indicator.
@@ -8403,7 +7915,7 @@ protected:
       }
     }
     last_millis_ = m;
-    current_style->run(this);
+    current_style_->run(this);
   }
   
 private:
@@ -8576,7 +8088,7 @@ protected:
       }
     }
     last_millis_ = m;
-    current_style->run(this);
+    current_style_->run(this);
     Show();
   }
   
@@ -8664,7 +8176,7 @@ public:
     c_ = c;
   }
   void Activate() {
-    analogWriteFrequency(pin_, frequency);
+    analogWriteFrequency(pin_, 1000);
     analogWrite(pin_, 0);  // make it black
   }
   void set(const Color& c) {
@@ -8694,16 +8206,16 @@ public:
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK) {
-    pin[0].Init(pin1, c1);
-    pin[1].Init(pin2, c2);
-    pin[2].Init(pin3, c3);
-    pin[3].Init(pin4, c4);
+    pins_[0].Init(pin1, c1);
+    pins_[1].Init(pin2, c2);
+    pins_[2].Init(pin3, c3);
+    pins_[3].Init(pin4, c4);
   }
 
   void Activate() override {
     Serial.println("Simple Blade");
     analogWriteResolution(8);
-    for (size_t i = 0; i < NELEM(pins); i++) pins[i].Activate();
+    for (size_t i = 0; i < NELEM(pins_); i++) pins_[i].Activate();
     CommandParser::Link();
     Looper::Link();
     SaberBase::Link(this);
@@ -8717,11 +8229,11 @@ public:
     return on_;
   }
   void set(int led, Color c) override {
-    for (size_t i = 0; i < NELEM(pins); i++) pins[i].set(c);
+    for (size_t i = 0; i < NELEM(pins_); i++) pins_[i].set(c);
   }
 
   void set_overdrive(int led, Color c) override {
-    for (size_t i = 0; i < NELEM(pins); i++) pins[i].set_overdrive(c);
+    for (size_t i = 0; i < NELEM(pins_); i++) pins_[i].set_overdrive(c);
   }
 
   bool clash() override {
@@ -8771,11 +8283,11 @@ public:
 protected:
   void Loop() override {
     if (!power_) return;
-    current_style->run(this);
+    current_style_->run(this);
   }
   
 private:
-  struct PIN pins_[4];
+  PWMPin pins_[4];
   static bool on_;
   static bool power_;
   static bool clash_;
@@ -8884,7 +8396,7 @@ public:
 protected:
   void Loop() override {
     if (!power_) return;
-    current_style->run(this);
+    current_style_->run(this);
   }
   
 private:
@@ -9576,12 +9088,12 @@ public:
   }
 
   bool NeedsPower() {
-    return on_ || current_style->NoOnOff();
+    return on_ || current_preset_->style->NoOnOff();
   }
 
   void On() {
     if (on_) return;
-    if (current_style->NoOnOff()) return;
+    if (current_preset_->style->NoOnOff()) return;
     Serial.println("Ignition.");
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     delay(10);             // allow time to wake up
@@ -9661,10 +9173,8 @@ public:
   // Select preset (font/style)
   void SetPreset(Preset* preset) {
     current_preset_ = preset;
-    if (current_style) current_style->deactivate();
-    current_style = preset->style;
-    current_style->activate();
     // TODO(hubbe): Support multiple styles
+    current_config_->blade->SetStyle(preset->style);
     chdir(preset->font);
   }
 
@@ -9830,7 +9340,7 @@ protected:
 
   void Loop() override {
     if (battery_monitor.low()) {
-      if (current_style != &style_charging) {
+      if (current_preset_->style != &style_charging) {
         if (on_) {
           Serial.print("Battery low, turning off: ");
           Serial.println(battery_monitor.battery());
