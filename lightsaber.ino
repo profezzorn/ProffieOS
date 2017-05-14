@@ -3383,6 +3383,7 @@ public:
 StyleCharging style_charging;
 
 // Fire-style
+template<int BLADE_NUM>
 class StyleFire : public BladeStyle {
 public:
   StyleFire(Color c1, Color c2) : c1_(c1), c2_(c2) {}
@@ -3433,14 +3434,17 @@ private:
   Color c1_, c2_;
 };
 
-// TODO: Multiple style-fire blades shouldn't share
-// the same buffer.
-uint32_t StyleFire::last_update_ = 0;
-unsigned short StyleFire::heat_[maxLedsPerStrip + 2];
+template<int BLADE_NUM>
+uint32_t StyleFire<BLADE_NUM>::last_update_ = 0;
 
-template<int r1, int g1, int b1, int r2, int g2, int b2>
-class StyleFire *StyleFirePtr() {
-  static StyleFire style(Color(r1, g1, b1), Color(r2, g2, b2));
+template<int BLADE_NUM>
+unsigned short StyleFire<BLADE_NUM>::heat_[maxLedsPerStrip + 2];
+
+// If you have multiple blades, make sure to use a different BLADE_NUM
+// for each blade.
+template<int r1, int g1, int b1, int r2, int g2, int b2, int BLADE_NUM=0>
+class BladeStyle *StyleFirePtr() {
+  static StyleFire<BLADE_NUM> style(Color(r1, g1, b1), Color(r2, g2, b2));
   return &style;
 }
 
