@@ -3094,7 +3094,7 @@ int MonopodWS2811::in_progress(void)
   return update_in_progress;
 }
 
-static inline void Out2DMA(uint8_t *& o, uint8_t v, uint32_t table[16]) {
+static inline void Out2DMA(uint8_t *& o, uint8_t v) {
   *(o++) = (v & 128) ? 0 : ones;
   *(o++) = (v & 64) ? 0 : ones;
   *(o++) = (v & 32) ? 0 : ones;
@@ -3110,30 +3110,30 @@ void CopyOut(int params, struct Color* inbuf, void* frameBuffer, int num) {
   switch (params & 7) {
     case WS2811_RBG:
         for (int j = 0; j < num; j++)  {
-          Out2DMA(o, inbuf[j].r, table);
-          Out2DMA(o, inbuf[j].b, table);
-          Out2DMA(o, inbuf[j].g, table);
+          Out2DMA(o, inbuf[j].r);
+          Out2DMA(o, inbuf[j].b);
+          Out2DMA(o, inbuf[j].g);
         }
         break;
     case WS2811_GRB:
         for (int j = 0; j < num; j++)  {
-          Out2DMA(o, inbuf[j].g, table);
-          Out2DMA(o, inbuf[j].r, table);
-          Out2DMA(o, inbuf[j].b, table);
+          Out2DMA(o, inbuf[j].g);
+          Out2DMA(o, inbuf[j].r);
+          Out2DMA(o, inbuf[j].b);
         }
         break;
     case WS2811_GBR:
         for (int j = 0; j < num; j++)  {
-          Out2DMA(o, inbuf[j].g, table);
-          Out2DMA(o, inbuf[j].b, table);
-          Out2DMA(o, inbuf[j].r, table);
+          Out2DMA(o, inbuf[j].g);
+          Out2DMA(o, inbuf[j].b);
+          Out2DMA(o, inbuf[j].r);
         }
         break;
     default:
         for (int j = 0; j < num; j++)  {
-          Out2DMA(o, inbuf[j].r, table);
-          Out2DMA(o, inbuf[j].g, table);
-          Out2DMA(o, inbuf[j].b, table);
+          Out2DMA(o, inbuf[j].r);
+          Out2DMA(o, inbuf[j].g);
+          Out2DMA(o, inbuf[j].b);
         }
         break;
    }
