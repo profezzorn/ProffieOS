@@ -3094,23 +3094,19 @@ int MonopodWS2811::in_progress(void)
   return update_in_progress;
 }
 
-static inline void Out2DMA(uint32_t *& o, uint8_t v, uint32_t table[16]) {
-  // TODO: Use OR instead
-  *(o++) = table[v >> 4];
-  *(o++) = table[v & 0xf];
+static inline void Out2DMA(uint8_t *& o, uint8_t v, uint32_t table[16]) {
+  *(o++) = (v & 128) ? 0 : ones;
+  *(o++) = (v & 64) ? 0 : ones;
+  *(o++) = (v & 32) ? 0 : ones;
+  *(o++) = (v & 16) ? 0 : ones;
+  *(o++) = (v & 8) ? 0 : ones;
+  *(o++) = (v & 4) ? 0 : ones;
+  *(o++) = (v & 2) ? 0 : ones;
+  *(o++) = (v & 1) ? 0 : ones;
 }
 
-void CopyOut(int params, struct Color* inbuf, void* frameBuffer, int num, uint8_t bits) {
-  uint32_t table[16];
-  for (int i = 0; i < 16; i++) {
-    union { uint32_t i; uint8_t b[4]; } convert;
-    convert.b[0] = (i & 8) ? 0 : bits;
-    convert.b[1] = (i & 4) ? 0 : bits;
-    convert.b[2] = (i & 3) ? 0 : bits;
-    convert.b[3] = (i & 1) ? 0 : bits;
-    table[i] = convert.i;
-  }
-  uint32_t *o = (uint32_t*)frameBuffer;
+void CopyOut(int params, struct Color* inbuf, void* frameBuffer, int num) {
+  uint8_t *o = (uint8_t*)frameBuffer;
   switch (params & 7) {
     case WS2811_RBG:
         for (int j = 0; j < num; j++)  {
@@ -3151,7 +3147,7 @@ void MonopodWS2811::show(void)
   while (update_in_progress) ; 
   //Serial1.print("2");
 
-  CopyOut(params, drawBuffer, frameBuffer, stripLen, ones);
+  CopyOut(params, drawBuffer, frameBuffer, stripLen);
 
   // wait for WS2811 reset
   while (micros() - update_completed_at < frameSetDelay) ;
