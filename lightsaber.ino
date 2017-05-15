@@ -1304,6 +1304,7 @@ private:
 };
 
 volatile bool DataStreamWork::sd_locked = false;
+#define LOCK_SD(X) DataStreamWork::LockSD(X)
 
 // BufferedDataStream is meant to be read from the main autdio interrupt.
 // Every time some space is freed up, Schedulefillbuffer() is called
@@ -1382,6 +1383,10 @@ private:
 };
 
 #endif
+
+#else  // ENABLE_AUDIO
+
+#define LOCK_SD(X) do { } while(0)
 
 #endif  // ENABLE_AUDIO
 
@@ -1606,7 +1611,7 @@ class Effect {
 
   static void ScanDirectory(const char *directory) {
     Serial.print("Scanning sound font: ");
-    Serial.println(directory);
+    Serial.print(directory);
     for (Effect* e = all_effects; e; e = e->next_) {
       e->reset();
     }
@@ -1623,27 +1628,30 @@ class Effect {
 #endif
 
 #ifdef ENABLE_SD
-    File dir = SD.open(directory);
-    if (dir) {
-      while (File f = dir.openNextFile()) {
-        if (f.isDirectory()) {
-          char fname[128];
-          strcpy(fname, f.name());
-          strcat(fname, "/");
-          char* fend = fname + strlen(fname);
-          while (File f2 = f.openNextFile()) {
-            strcpy(fend, f2.name());
-            ScanAll(fname);
-            f2.close();
-          }
-        } else {
-          ScanAll(f.name());
-        }
-        f.close();
+    if (SD.exists(directory)) {
+      File dir = SD.open(directory);
+      if (dir) {
+	while (File f = dir.openNextFile()) {
+	  if (f.isDirectory()) {
+	    char fname[128];
+	    strcpy(fname, f.name());
+	    strcat(fname, "/");
+	    char* fend = fname + strlen(fname);
+	    while (File f2 = f.openNextFile()) {
+	      strcpy(fend, f2.name());
+	      ScanAll(fname);
+	      f2.close();
+	    }
+	  } else {
+	    ScanAll(f.name());
+	  }
+	  f.close();
+	}
       }
     }
 #endif
-  };
+    Serial.println(" done");
+  }
 
 private:
   Effect* next_;
@@ -7822,6 +7830,7 @@ public:
     power_->Init();
     Power(true);
     delay(10);
+    while (monopodws.busy());
     monopodws.begin(num_leds_, displayMemory, config_, pin_);
     monopodws.show();  // Make it black
     monopodws.show();  // Make it black
@@ -7906,7 +7915,7 @@ protected:
        current_blade = this;
        current_style_->run(this);
        while (monopodws.busy()) YIELD();
-       monopodws.begin(num_leds_, displayMemory, config_, pin_);
+//       monopodws.begin(num_leds_, displayMemory, config_, pin_);
        monopodws.show();
        {
 	 int m = millis();
@@ -8750,7 +8759,7 @@ BladeConfig blades[] = {
   { 27000, SimpleBladePtr<Blue8mmLED100, Blue8mmLED100, Blue8mmLED100, NoLED>(), CONFIGARRAY(simple_presets) },
 
   // Red LED string
-  { 33000, SimpleBladePtr<Red8mmLED100, Red8mmLED100, Red8mmLED100, NoLED>(), CONFIGARRAY(red_presets) },
+//  { 33000, SimpleBladePtr<Red8mmLED100, Red8mmLED100, Red8mmLED100, NoLED>(), CONFIGARRAY(red_presets) },
 
   // 3 x Cree XL-L LED star
   { 100000, SimpleBladePtr<CreeXPL, CreeXPL, CreeXPL, NoLED>(), CONFIGARRAY(white_presets) },
@@ -9244,7 +9253,6 @@ public:
   // Measure and return the blade identifier resistor.
   float id() {
     pinMode(bladeIdentifyPin, INPUT_PULLUP);
-    delay(100);
     int blade_id = analogRead(bladeIdentifyPin);
     float volts = blade_id * 3.3 / 1024.0;  // Volts at bladeIdentifyPin
     float amps = (3.3 - volts) / 33000;     // Pull-up is 33k
@@ -9262,6 +9270,7 @@ public:
   // Blade driver, style and sound font.
   void FindBlade() {
     float resistor = id();
+    
     size_t best_config = 0;
     float best_err = 1000000.0;
     for (size_t i = 0; i < sizeof(blades) / sizeof(blades)[0]; i++) {
@@ -9353,7 +9362,9 @@ public:
   }
 protected:
   Vec3 accel_;
+#ifdef ENABLE_AUDIO
   BufferedWavPlayer* track_player_ = NULL;
+#endif
 
   void StartOrStopTrack() {
 #ifdef ENABLE_AUDIO
@@ -9650,7 +9661,7 @@ public:
 #endif
 #ifdef ENABLE_SD
     if (!strcmp(cmd, "dir")) {
-      DataStreamWork::LockSD(true);
+      LOCK_SD(true);
       File dir = SD.open(e ? e : current_directory);
       while (File f = dir.openNextFile()) {
         Serial.print(f.name());
@@ -9658,13 +9669,13 @@ public:
         Serial.println(f.size());
         f.close();
       }
-      DataStreamWork::LockSD(false);
+      LOCK_SD(false);
       Serial.println("Done listing files.");
       return;
     }
     if (!strcmp(cmd, "readalot")) {
       char tmp[10];
-      DataStreamWork::LockSD(true);
+      LOCK_SD(true);
       File f = SD.open(e);
       for (int i = 0; i < 10000; i++) {
         f.seek(0);
@@ -9672,14 +9683,14 @@ public:
         f.seek(1000);
         f.read(tmp, 10);
       }
-      DataStreamWork::LockSD(true);
+      LOCK_SD(true);
       Serial.println("Done");
       return;
     }
 #endif
 #if defined(ENABLE_SD) && defined(ENABLE_SERIALFLASH)
     if (!strcmp(cmd, "cache")) {
-      DataStreamWork::LockSD(true);
+      LOCK_SD(true);
       File f = SD.open(e);
       if (!f) {
         Serial.println("File not found.");
@@ -9697,7 +9708,7 @@ public:
         o.write(tmp, b);
         bytes -= b;
       }
-      DataStreamWork::LockSD(false);
+      LOCK_SD(false);
       Serial.println("Cached!");
       return;
     }
@@ -10407,6 +10418,22 @@ Amplifier amplifier;
 #endif
 
 void setup() {
+  pinMode(bladePin, OUTPUT);
+  pinMode(bladePowerPin1, OUTPUT);
+  pinMode(bladePowerPin2, OUTPUT);
+  pinMode(bladePowerPin3, OUTPUT);
+  digitalWrite(bladePin, LOW);
+  digitalWrite(bladePowerPin1, LOW);
+  digitalWrite(bladePowerPin2, LOW);
+  digitalWrite(bladePowerPin3, LOW);
+#ifdef V2
+  pinMode(bladePowerPin4, OUTPUT);
+  pinMode(bladePowerPin5, OUTPUT);
+  pinMode(bladePowerPin6, OUTPUT);
+  digitalWrite(bladePowerPin4, LOW);
+  digitalWrite(bladePowerPin5, LOW);
+  digitalWrite(bladePowerPin6, LOW);
+#endif
   delay(1000);
   Serial.begin(9600);
 #ifdef ENABLE_SERIALFLASH
@@ -10425,7 +10452,8 @@ void setup() {
   SaberBase::DoBoot();
 }
 
-void startup_early_hook() {
+#if 1
+extern "C" void startup_early_hook(void) {
 #ifdef ENABLE_WATCHDOG
   // The next 2 lines sets the time-out value. This is the value that the watchdog timer compares itself to
   WDOG_TOVALL = 1000;
@@ -10434,23 +10462,56 @@ void startup_early_hook() {
                   WDOG_STCTRLH_STOPEN |
                   WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN); // Enable WDG
   WDOG_PRESC = 0; // prescaler
+#elif defined(KINETISK)
+	WDOG_STCTRLH = WDOG_STCTRLH_ALLOWUPDATE;
+#elif defined(KINETISL)
+	SIM_COPC = 0;  // disable the watchdog
 #endif
+	// enable clocks to always-used peripherals
+#if defined(__MK20DX128__)
+	SIM_SCGC5 = 0x00043F82;		// clocks active to all GPIO
+	SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
+#elif defined(__MK20DX256__)
+	SIM_SCGC3 = SIM_SCGC3_ADC1 | SIM_SCGC3_FTM2;
+	SIM_SCGC5 = 0x00043F82;		// clocks active to all GPIO
+	SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
+#elif defined(__MK64FX512__) || defined(__MK66FX1M0__)
+	SIM_SCGC3 = SIM_SCGC3_ADC1 | SIM_SCGC3_FTM2 | SIM_SCGC3_FTM3;
+	SIM_SCGC5 = 0x00043F82;		// clocks active to all GPIO
+	SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
+	//PORTC_PCR5 = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE;
+	//GPIOC_PDDR |= (1<<5);
+	//GPIOC_PSOR = (1<<5);
+	//while (1);
+#elif defined(__MKL26Z64__)
+	SIM_SCGC4 = SIM_SCGC4_USBOTG | 0xF0000030;
+	SIM_SCGC5 = 0x00003F82;		// clocks active to all GPIO
+	SIM_SCGC6 = SIM_SCGC6_ADC0 | SIM_SCGC6_TPM0 | SIM_SCGC6_TPM1 | SIM_SCGC6_TPM2 | SIM_SCGC6_FTFL;
+#endif
+#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
+	SCB_CPACR = 0x00F00000;
+#endif
+#if defined(__MK66FX1M0__)
+	LMEM_PCCCR = 0x85000003;
+#endif
+	
+#define SETUP_PIN(X) do {						\
+ CORE_PIN##X##_PORTREG &=~ CORE_PIN##X##_BITMASK;			\
+ CORE_PIN##X##_CONFIG = PORT_PCR_SRE | PORT_PCR_DSE | PORT_PCR_MUX(1);	\
+ CORE_PIN##X##_DDRREG |= CORE_PIN##X##_BITMASK;				\
+} while (0)
 
-  pinMode(bladePowerPin1, OUTPUT);
-  pinMode(bladePowerPin2, OUTPUT);
-  pinMode(bladePowerPin3, OUTPUT);
-  digitalWrite(bladePowerPin1, LOW);
-  digitalWrite(bladePowerPin2, LOW);
-  digitalWrite(bladePowerPin3, LOW);
+  SETUP_PIN(20);
+  SETUP_PIN(21);
+  SETUP_PIN(22);
+  SETUP_PIN(23);
 #ifdef V2
-  pinMode(bladePowerPin4, OUTPUT);
-  pinMode(bladePowerPin5, OUTPUT);
-  pinMode(bladePowerPin6, OUTPUT);
-  digitalWrite(bladePowerPin4, LOW);
-  digitalWrite(bladePowerPin5, LOW);
-  digitalWrite(bladePowerPin6, LOW);
+  SETUP_PIN(3);
+  SETUP_PIN(4);
+  SETUP_PIN(5);
 #endif
 }
+#endif
 
 #ifdef ENABLE_WATCHDOG
 class WatchDog : Looper {
