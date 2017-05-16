@@ -3452,211 +3452,286 @@ class BladeStyle *StyleFirePtr() {
   return &style;
 }
 
-// Standard blade style.
-class StyleNormal : public BladeStyle {
-public:
-  StyleNormal(Color color, Color clash_color, uint32_t out_millis, uint32_t in_millis)
-    : color_(color),
-      clash_color_(clash_color),
-      out_millis_(out_millis),
-      in_millis_(in_millis) {}
-
-  void activate() override {
-    Serial.println("Normal Style");
+class MicroEventTime {
+  void SetToNow() { micros_ = micros(); millis_ = millis(); }
+  uint32_t millis_since() { return millis() - millis_; }
+  uint32_t micros_since() {
+    if (millis_since() > (0xFFFF0000UL / 1000)) return 0xFFFFFFFFUL;
+    return micros() - micros_;
   }
-  void run(BladeBase* blade) override {
-    int num_leds = blade->num_leds();
+private:
+  uint32_t millis_;
+  uint32_t micros_;
+};
+
+struct OverDriveColor {
+  Color c;
+  bool overdrive;
+};
+// Simple solid color.
+template<int R, int G, int B>
+class Rgb {
+public:
+  void run(BladeBase* base) {}
+  OverDriveColor getColor(int led) {
+    OverDriveColor ret;
+    ret.c = Color(R, G, B);
+    ret.overdrive = false;
+    return ret;
+  }
+};
+
+// Gradient, color A at base, B at tip.
+template<class A, class B>
+class Gradient {
+public:
+  void run(BladeBase* blade) {
+    num_leds_ = blade->num_leds();
+  }
+  OverDriveColor getColor(int led) {
+    OverDriveColor a = a_.getColor(led);
+    OverDriveColor b = b_.getColor(led);
+    a.c = a.c.mix(b.c, led * 255 / num_leds_);
+    return a;
+  }
+private:
+  A a_;
+  A b_;
+  int num_leds_;
+};
+
+// Basic RGB rainbow.
+class Rainbow {
+public:
+  void run(BladeBase* base) {
+    m = millis();
+  }
+  OverDriveColor getColor(int led) {
+    Color c(max(0, (sin_table[((m * 3 + led * 50)) & 0x3ff] >> 7)),
+	    max(0, (sin_table[((m * 3 + led * 50 + 1024 / 3)) & 0x3ff] >> 7)),
+	    max(0, (sin_table[((m * 3 + led * 50 + 1024 * 2 / 3)) & 0x3ff] >> 7)));
+    OverDriveColor ret;
+    ret.c = c;
+    ret.overdrive = false;
+    return ret;
+  }
+private:
+  uint32_t m;
+};
+
+// Let's us use a different color right in the beginning.
+template<class T, class SPARK_COLOR = Rgb<255,255,255>, int MILLIS = 100>
+class OnSpark {
+  void run(BladeBase* blade) {
+    base_.run(blade);
+    spark_color_.run(blade);
+    uint32_t m = millis();
+    if (on_ != blade->is_on()) {
+      on_ = blade->is_on();
+      if (on_) on_millis_ = m;
+    }
+    uint32_t t = millis() - on_millis_;
+    if (t < MILLIS) {
+      mix_ = 255 - 255 * t / MILLIS;
+    } else {
+      mix_ = 0;
+    }
+  }
+  OverDriveColor getColor(int led) {
+    OverDriveColor ret = base_.getColor(led);
+    OverDriveColor spark = spark_color_.getColor(led);
+    ret.c = ret.c.mix(spark.c, mix_);
+    return ret;
+  }
+private:
+  bool on_;
+  int mix_;
+  T base_;
+  SPARK_COLOR spark_color_;
+  uint32_t on_millis_;
+};
+
+template<class T, class CLASH_COLOR, int CLASH_MILLIS = 40>
+class SimpleClash {
+public:
+  void run(BladeBase* blade) {
+    base_.run(blade);
+    clash_color_.run(blade);
     uint32_t m = millis();
     if (blade->clash()) clash_millis_ = m;
-    Color c = color_;
-    // Clash effect
-    bool overdrive = false;
-#if 1
-    if (m - clash_millis_ < 40) {
-      c = clash_color_;
-      overdrive = true;
+    clash_ = m - clash_millis_ < CLASH_MILLIS;
+  }
+  OverDriveColor getColor(int led) {
+    if (clash_) {
+      return clash_color_.getColor(led);
+    } else {
+      return base_.getColor(led);
     }
-#else
-    int clash_t = m - clash_millis_;
-    int clash_mix = min(clash_t * 50, 512 - clash_t * 10);
-    c = c.mix(clash_color_, clampi32(clash_mix, 0, 255));
-    overdrive = clash_mix > 255;
-#endif
+  }
+private:
+  bool clash_;
+  T base_;
+  CLASH_COLOR clash_color_;
+  uint32_t clash_millis_;
+};
 
+template<class T, class STROBE_COLOR, int STROBE_FREQUENCY, int STROBE_MILLIS = 1>
+class Strobe {
+public:
+   void run(BladeBase* blade) {
+     base_.run(blade);
+     strobe_color_.run(blade);
+     uint32_t m = millis();
+     uint32_t timeout = strobe_ ? STROBE_MILLIS : (1000/STROBE_FREQUENCY);
+     if (m - strobe_millis_ > timeout) {
+       strobe_millis_ += timeout;
+       if (m - strobe_millis_ > STROBE_MILLIS + (1000/STROBE_FREQUENCY))
+	 strobe_millis_ = m;
+       strobe_ = !strobe_;
+     }
+   }
+   OverDriveColor getColor(int led) {
+     if (strobe_) {
+       return strobe_color_.getColor(led);
+     } else {
+       return base_.getColor(led);
+     }
+   }
+private:
+  bool strobe_;
+  T base_;
+  STROBE_COLOR strobe_color_;
+  uint32_t strobe_millis_;
+};
+
+template<class T, int OUT_MILLIS, int IN_MILLIS>
+class InOutHelper {
+public:
+  void run(BladeBase* blade) {
+    base_.run(blade);
+    uint32_t m = millis();
     if (on_ != blade->is_on()) {
       event_millis_ = m;
       on_ = blade->is_on();
     }
-    int thres = num_leds * 256 * (m - event_millis_) / (on_ ? out_millis_ : in_millis_);
+    int num_leds = blade->num_leds();
+    thres = num_leds * 256 * (m - event_millis_) / (on_ ? IN_MILLIS : OUT_MILLIS);
     if (!blade->is_on()) thres = num_leds * 256 - thres;
-    for (int i = 0; i < num_leds; i++) {
-      int black_mix = clampi32(thres - i * 256, 0, 255);
-      if (overdrive) {
-        blade->set_overdrive(i, Color().mix(c, black_mix));
-      } else {
-        blade->set(i, Color().mix(c, black_mix));
-      }
-    }
+    if (m - event_millis_ > 100000) event_millis_ += 1000;
     if (!blade->is_on() && thres > 256 * (num_leds*2)) {
       Serial.println("Allow off.");
       blade->allow_disable();
     }
-    if (m - event_millis_ > 100000) event_millis_ += 1000;
-    if (m - clash_millis_ > 100000) clash_millis_ += 1000;
+  }
+  OverDriveColor getColor(int led) {
+    int black_mix = clampi32(thres - led * 256, 0, 255);
+    OverDriveColor ret = base_.getColor(led);
+    ret.c = Color().mix(ret.c, black_mix);
+    return ret;
   }
 private:
-  static bool on_;
-  static uint32_t event_millis_;
-  static uint32_t clash_millis_;
-  Color color_;
-  Color clash_color_;
-  uint32_t out_millis_;
-  uint32_t in_millis_;
+  T base_;
+  bool on_ = false;
+  int thres = 0;
+  uint32_t event_millis_ = 0;
 };
 
-bool StyleNormal::on_ = false;
-uint32_t StyleNormal::event_millis_ = 0;
-uint32_t StyleNormal::clash_millis_ = 0;
+template<class T, int OUT_MILLIS, int IN_MILLIS, class SPARK_COLOR = Rgb<255,255,255> >
+class InOutSparkTip {
+public:
+  void run(BladeBase* blade) {
+    base_.run(blade);
+    spark_color_.run(blade);
+    uint32_t m = millis();
+    if (on_ != blade->is_on()) {
+      event_millis_ = m;
+      on_ = blade->is_on();
+    }
+    int num_leds = blade->num_leds();
+    thres = num_leds * 256 * (m - event_millis_) / (on_ ? IN_MILLIS : OUT_MILLIS);
+    if (!blade->is_on()) thres = num_leds * 256 - thres;
+    if (m - event_millis_ > 100000) event_millis_ += 1000;
+    if (!blade->is_on() && thres > 256 * (num_leds*2)) {
+      Serial.println("Allow off.");
+      blade->allow_disable();
+    }
+  }
+  OverDriveColor getColor(int led) {
+    OverDriveColor ret = base_.getColor(led);
+    if (on_) {
+      OverDriveColor spark = spark_color_.getColor(led);
+      int spark_mix = clampi32(thres - 512 - led * 256, 0, 255);
+      ret.c = spark.c.mix(ret.c, spark_mix);
+    }
+    int black_mix = clampi32(thres - led * 256, 0, 255);
+    ret.c = Color().mix(ret.c, black_mix);
+    return ret;
+  }
+private:
+  T base_;
+  bool on_ = false;
+  int thres = 0;
+  uint32_t event_millis_ = 0;
+  SPARK_COLOR spark_color_;
+};
+
+template<class T>
+class Style : public BladeStyle {
+public:
+  void activate() override { }
+  void run(BladeBase* blade) override {
+    base_.run(blade);
+    int num_leds = blade->num_leds();
+    for (int i = 0; i < num_leds; i++) {
+      OverDriveColor c = base_.getColor(i);
+      if (c.overdrive) {
+        blade->set_overdrive(i, c.c);
+      } else {
+        blade->set(i, c.c);
+      }
+    }
+  }
+private:
+  T base_;
+};
+
+// Get a pointer to class.
+template<class STYLE>
+BladeStyle* StylePtr() {
+  static Style<STYLE> style;
+  return &style;
+};
+
+// The following functions are mostly for illustration.
+// The templates above gives you more power and functionality.
 
 // Arguments: color, clash color, turn-on/off time
 template<int r1, int g1, int b1, int r2, int g2, int b2, int out_millis, int in_millis>
-class StyleNormal *StyleNormalPtr() {
-  static StyleNormal style(Color(r1, g1, b1), Color(r2, g2, b2), out_millis, in_millis);
-  return &style;
+BladeStyle *StyleNormalPtr() {
+  typedef Rgb<r1,g1,b1> base_color;
+  typedef Rgb<r2,g2,b2> clash_color;
+  return StylePtr<InOutHelper<SimpleClash<base_color, clash_color>, out_millis, in_millis> >();
 }
 
-class StyleRainbow : public BladeStyle {
-public:
-  StyleRainbow(uint32_t out_millis, uint32_t in_millis)
-    : out_millis_(out_millis),
-      in_millis_(in_millis) {}
-
-  void activate() override {
-    Serial.println("Normal Style");
-  }
-  void run(BladeBase* blade) override {
-    int num_leds = blade->num_leds();
-    uint32_t m = millis();
-    if (blade->clash()) clash_millis_ = m;
-
-    if (on_ != blade->is_on()) {
-      event_millis_ = m;
-      on_ = blade->is_on();
-    }
-    int clash_t = m - clash_millis_;
-    int clash_mix = min(clash_t * 50, 512 - clash_t * 10);
-    int thres = num_leds * 256 * (m - event_millis_) / (on_ ? out_millis_ : in_millis_);
-    if (!blade->is_on()) thres = num_leds * 256 - thres;
-    for (int i = 0; i < num_leds; i++) {
-      int black_mix = clampi32(thres - i * 256, 0, 255);
-      Color c(max(0, (sin_table[((m * 3 + i * 50)) & 0x3ff] >> 7)),
-              max(0, (sin_table[((m * 3 + i * 50 + 1024 / 3)) & 0x3ff] >> 7)),
-              max(0, (sin_table[((m * 3 + i * 50 + 1024 * 2 / 3)) & 0x3ff] >> 7)));
-      c = c.mix(Color(255,255,255), clampi32(clash_mix, 0, 255));
-      // Clash effect
-      blade->set(i, Color().mix(c, black_mix));
-    }
-    if (!blade->is_on() && thres > 256 * (num_leds*2)) {
-      Serial.println("Allow off.");
-      blade->allow_disable();
-    }
-    if (m - event_millis_ > 100000) event_millis_ += 1000;
-    if (m - clash_millis_ > 100000) clash_millis_ += 1000;
-  }
-private:
-  static bool on_;
-  static uint32_t event_millis_;
-  static uint32_t clash_millis_;
-  uint32_t out_millis_;
-  uint32_t in_millis_;
-};
-
-bool StyleRainbow::on_ = false;
-uint32_t StyleRainbow::event_millis_ = 0;
-uint32_t StyleRainbow::clash_millis_ = 0;
-
+// Rainbow blade.
 // Arguments: color, clash color, turn-on/off time
 template<int out_millis, int in_millis>
-class StyleRainbow *StyleRainbowPtr() {
-  static StyleRainbow style(out_millis, in_millis);
-  return &style;
+BladeStyle *StyleRainbowPtr() {
+  return StylePtr<InOutHelper<SimpleClash<Rainbow, Rgb<255,255,255> >, out_millis, in_millis> >();
 }
 
 // Stroboscope, flickers the blade at the desired frequency.
-class StyleStrobe : public BladeStyle {
-public:
-  StyleStrobe(Color color,
-              Color clash_color,
-              int frequency,
-              uint32_t out_millis,
-              uint32_t in_millis)
-    : color_(color),
-      clash_color_(clash_color),
-      strobe_millis_(1000/frequency),
-      out_millis_(out_millis),
-      in_millis_(in_millis) {}
-
-  void activate() override {
-    Serial.println("Strobe Style");
-  }
-  void run(BladeBase* blade) override {
-    int num_leds = blade->num_leds();
-    uint32_t m = millis();
-    if (blade->clash()) clash_millis_ = m;
-    Color c = Color();
-    // strobes currently last one millisecond.
-    if (m == last_strobe_ || m - last_strobe_ > strobe_millis_) {
-      c = color_;
-      last_strobe_ = m;
-    }
-    // Clash effect
-    if (m - clash_millis_ < 40) {
-      c = clash_color_;
-    }
-
-    if (on_ != blade->is_on()) {
-      event_millis_ = m;
-      on_ = blade->is_on();
-    }
-    int thres = num_leds * 256 * (m - event_millis_) / (on_ ? out_millis_ : in_millis_);
-    if (!blade->is_on()) thres = num_leds * 256 - thres;
-    for (int i = 0; i < num_leds; i++) {
-      int black_mix = clampi32(thres - i * 256, 0, 255);
-      blade->set_overdrive(i, Color().mix(c, black_mix));
-    }
-    if (!blade->is_on() && thres > 256 * (num_leds*2)) {
-      Serial.println("Allow off.");
-      blade->allow_disable();
-    }
-    if (m - event_millis_ > 100000) event_millis_ += 1000;
-    if (m - clash_millis_ > 100000) clash_millis_ += 1000;
-  }
-private:
-  static bool on_;
-  static uint32_t event_millis_;
-  static uint32_t clash_millis_;
-  static uint32_t last_strobe_;
-  Color color_;
-  Color clash_color_;
-  uint32_t strobe_millis_;
-  uint32_t out_millis_;
-  uint32_t in_millis_;
-};
-
-bool StyleStrobe::on_ = false;
-uint32_t StyleStrobe::last_strobe_ = 0;
-uint32_t StyleStrobe::event_millis_ = 0;
-uint32_t StyleStrobe::clash_millis_ = 0;
-
 // Arguments: color, clash color, turn-on/off time
 template<int r1, int g1, int b1, int r2, int g2, int b2, int frequency, int out_millis, int in_millis>
-class StyleStrobe *StyleStrobePtr() {
-  static StyleStrobe style(Color(r1, g1, b1), Color(r2, g2, b2), frequency, out_millis, in_millis);
-  return &style;
+BladeStyle *StyleStrobePtr() {
+  typedef Rgb<0, 0, 0> black;
+  typedef Rgb<r1, g1, b1> strobe_color;
+  typedef Strobe<black, strobe_color, frequency, 1> strobe;
+  typedef Rgb<r2, g2, b2> clash_color;
+  typedef SimpleClash<strobe, clash_color> clash;
+  return StylePtr<InOutHelper<clash, out_millis, in_millis> >();
 }
 
-
-#if 1
 
 void rle_decode(const unsigned char *input,
                 unsigned char *output,
@@ -7762,7 +7837,6 @@ private:
 };
 
 StylePOV style_pov;
-#endif
 
 class PowerPinInterface {
 public:
@@ -9484,16 +9558,6 @@ protected:
     if (!strcmp(cmd, "off")) {
       Off();
       return true;
-    }
-    if (!strcmp(cmd, "next")) {
-      if (!arg || (arg && !strcmp(arg, "preset"))) {
-        next_preset();
-        return true;
-      }
-      if (arg && !strcmp(arg, "font")) {
-        next_directory();
-        return true;
-      }
     }
     if (!strcmp(cmd, "clash")) {
       Clash();
