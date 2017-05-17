@@ -3446,9 +3446,9 @@ unsigned short StyleFire<BLADE_NUM>::heat_[maxLedsPerStrip + 2];
 
 // If you have multiple blades, make sure to use a different BLADE_NUM
 // for each blade.
-template<int r1, int g1, int b1, int r2, int g2, int b2, int BLADE_NUM=0>
+template<class COLOR1, class COLOR2, int BLADE_NUM=0>
 class BladeStyle *StyleFirePtr() {
-  static StyleFire<BLADE_NUM> style(Color(r1, g1, b1), Color(r2, g2, b2));
+  static StyleFire<BLADE_NUM> style(COLOR1::color(), COLOR2::color());
   return &style;
 }
 
@@ -3472,6 +3472,7 @@ struct OverDriveColor {
 template<int R, int G, int B>
 class Rgb {
 public:
+  static Color color() { return Color(R,G,B); }
   void run(BladeBase* base) {}
   OverDriveColor getColor(int led) {
     OverDriveColor ret;
@@ -3496,7 +3497,7 @@ public:
   }
 private:
   A a_;
-  A b_;
+  B b_;
   int num_leds_;
 };
 
@@ -3520,8 +3521,9 @@ private:
 };
 
 // Let's us use a different color right in the beginning.
-template<class T, class SPARK_COLOR = Rgb<255,255,255>, int MILLIS = 100>
+template<class T, class SPARK_COLOR = Rgb<255,255,255>, int MILLIS = 200>
 class OnSpark {
+public:
   void run(BladeBase* blade) {
     base_.run(blade);
     spark_color_.run(blade);
@@ -3551,7 +3553,7 @@ private:
   uint32_t on_millis_;
 };
 
-template<class T, class CLASH_COLOR, int CLASH_MILLIS = 40>
+template<class T, class CLASH_COLOR = Rgb<255,255,255>, int CLASH_MILLIS = 40>
 class SimpleClash {
 public:
   void run(BladeBase* blade) {
@@ -3615,7 +3617,7 @@ public:
       on_ = blade->is_on();
     }
     int num_leds = blade->num_leds();
-    thres = num_leds * 256 * (m - event_millis_) / (on_ ? IN_MILLIS : OUT_MILLIS);
+    thres = num_leds * 256 * (m - event_millis_) / (on_ ? OUT_MILLIS : IN_MILLIS);
     if (!blade->is_on()) thres = num_leds * 256 - thres;
     if (m - event_millis_ > 100000) event_millis_ += 1000;
     if (!blade->is_on() && thres > 256 * (num_leds*2)) {
@@ -3648,7 +3650,7 @@ public:
       on_ = blade->is_on();
     }
     int num_leds = blade->num_leds();
-    thres = num_leds * 256 * (m - event_millis_) / (on_ ? IN_MILLIS : OUT_MILLIS);
+    thres = num_leds * 256 * (m - event_millis_) / (on_ ? OUT_MILLIS : IN_MILLIS);
     if (!blade->is_on()) thres = num_leds * 256 - thres;
     if (m - event_millis_ > 100000) event_millis_ += 1000;
     if (!blade->is_on() && thres > 256 * (num_leds*2)) {
@@ -3660,7 +3662,7 @@ public:
     OverDriveColor ret = base_.getColor(led);
     if (on_) {
       OverDriveColor spark = spark_color_.getColor(led);
-      int spark_mix = clampi32(thres - 512 - led * 256, 0, 255);
+      int spark_mix = clampi32(thres - 1024 - led * 256, 0, 255);
       ret.c = spark.c.mix(ret.c, spark_mix);
     }
     int black_mix = clampi32(thres - led * 256, 0, 255);
@@ -3706,10 +3708,8 @@ BladeStyle* StylePtr() {
 // The templates above gives you more power and functionality.
 
 // Arguments: color, clash color, turn-on/off time
-template<int r1, int g1, int b1, int r2, int g2, int b2, int out_millis, int in_millis>
+template<class base_color, class clash_color, int out_millis, int in_millis>
 BladeStyle *StyleNormalPtr() {
-  typedef Rgb<r1,g1,b1> base_color;
-  typedef Rgb<r2,g2,b2> clash_color;
   return StylePtr<InOutHelper<SimpleClash<base_color, clash_color>, out_millis, in_millis> >();
 }
 
@@ -3722,12 +3722,10 @@ BladeStyle *StyleRainbowPtr() {
 
 // Stroboscope, flickers the blade at the desired frequency.
 // Arguments: color, clash color, turn-on/off time
-template<int r1, int g1, int b1, int r2, int g2, int b2, int frequency, int out_millis, int in_millis>
+template<class strobe_color, class clash_color, int frequency, int out_millis, int in_millis>
 BladeStyle *StyleStrobePtr() {
   typedef Rgb<0, 0, 0> black;
-  typedef Rgb<r1, g1, b1> strobe_color;
   typedef Strobe<black, strobe_color, frequency, 1> strobe;
-  typedef Rgb<r2, g2, b2> clash_color;
   typedef SimpleClash<strobe, clash_color> clash;
   return StylePtr<InOutHelper<clash, out_millis, in_millis> >();
 }
@@ -8516,14 +8514,14 @@ class String_Blade *StringBladePtr() {
 }
 #endif
 
-#define RED       255,   0,   0
-#define GREEN       0, 255,   0
-#define BLUE        0,   0, 255
-#define YELLOW    255, 255,   0
-#define CYAN        0, 255, 255
-#define MAGENTA   255,   0, 255
-#define WHITE     255, 255, 255
-#define BLACK       0,   0,   0
+typedef Rgb<255,0,0> RED;
+typedef Rgb<0,255,0> GREEN;
+typedef Rgb<0,0,255> BLUE;
+typedef Rgb<255,255,0> YELLOW;
+typedef Rgb<0,255,255> CYAN;
+typedef Rgb<255,0,255> MAGENTA;
+typedef Rgb<255,255,255> WHITE;
+typedef Rgb<0,0,0> BLACK;
 
 // CONFIGURABLE
 // These structs below describe the properties of the LED circuit
@@ -8723,20 +8721,24 @@ struct Preset {
 // All colors can be specied as three numbers or using one the handy macros above.
 // If you wish to have different presets for different blades, copy this array and
 // name it something other than "preset", then use the new name inside the blade
-// configuration array below. See "simple_presets" and "charging_presets" below for
-// examples.
+// configuration array below. See "simple_presets" and "charging_presets"
+// below for examples.
 Preset presets[] = {
   { "font01", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
-  { "font01", "tracks/cantina.wav", StyleNormalPtr<BLUE, RED, 300, 800>() },
+  { "font01", "tracks/cantina.wav",
+    StylePtr<InOutSparkTip<SimpleClash<BLUE, WHITE>, 300, 800> >() },
   { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
   { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
   { "font02", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>() },
-  { "igniter/font4", "tracks/duel.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>() },
+  { "igniter/font4", "tracks/duel.wav",
+    StylePtr<InOutHelper<SimpleClash<OnSpark<GREEN> >, 300, 800> >() },
   { "font01", "tracks/duel.wav", StyleNormalPtr<WHITE, RED, 300, 800>() },
   { "font01", "tracks/walls.wav", StyleNormalPtr<YELLOW, BLUE, 300, 800>() },
-  { "font01", "tracks/title.wav", StyleNormalPtr<MAGENTA, WHITE, 300, 800>() },
+  { "font01", "tracks/title.wav", 
+    StylePtr<InOutSparkTip<SimpleClash<MAGENTA, WHITE>, 300, 800> >() },
+  { "font02", "tracks/cantina.wav", StyleNormalPtr<Gradient<RED, BLUE>, WHITE, 300, 800>() },
   { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
-  { "font02", "tracks/cantina.wav", StyleStrobePtr<WHITE, RED, 15, 300, 800>() },
+  { "font02", "tracks/cantina.wav", StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>() },
   { "font02", "tracks/cantina.wav", &style_pov },
 
   { "charging", "tracks/duel.wav", &style_charging },
@@ -9327,6 +9329,7 @@ public:
   // Measure and return the blade identifier resistor.
   float id() {
     pinMode(bladeIdentifyPin, INPUT_PULLUP);
+    delay(100);
     int blade_id = analogRead(bladeIdentifyPin);
     float volts = blade_id * 3.3 / 1024.0;  // Volts at bladeIdentifyPin
     float amps = (3.3 - volts) / 33000;     // Pull-up is 33k
@@ -10482,11 +10485,12 @@ Amplifier amplifier;
 #endif
 
 void setup() {
-  pinMode(bladePin, OUTPUT);
+#if 0
+//  pinMode(bladePin, OUTPUT);
   pinMode(bladePowerPin1, OUTPUT);
   pinMode(bladePowerPin2, OUTPUT);
   pinMode(bladePowerPin3, OUTPUT);
-  digitalWrite(bladePin, LOW);
+//  digitalWrite(bladePin, LOW);
   digitalWrite(bladePowerPin1, LOW);
   digitalWrite(bladePowerPin2, LOW);
   digitalWrite(bladePowerPin3, LOW);
@@ -10497,6 +10501,7 @@ void setup() {
   digitalWrite(bladePowerPin4, LOW);
   digitalWrite(bladePowerPin5, LOW);
   digitalWrite(bladePowerPin6, LOW);
+#endif
 #endif
   delay(1000);
   Serial.begin(9600);
@@ -10516,7 +10521,7 @@ void setup() {
   SaberBase::DoBoot();
 }
 
-#if 1
+#if 0
 extern "C" void startup_early_hook(void) {
 #ifdef ENABLE_WATCHDOG
   // The next 2 lines sets the time-out value. This is the value that the watchdog timer compares itself to
