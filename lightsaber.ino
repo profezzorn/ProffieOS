@@ -3611,19 +3611,25 @@ class InOutHelper {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
-    uint32_t m = millis();
-    if (on_ != blade->is_on()) {
-      event_millis_ = m;
-      on_ = blade->is_on();
+    uint32_t now = micros();
+    uint32_t num_leds = blade->num_leds();
+    // Note we use "/ 4" instead of "* 256 / 1024".
+    // It's close enough and avoids overflows.
+    uint32_t delta = (now - last_micros_) * num_leds / 4;
+    last_micros_ = now;
+    if (blade->is_on()) {
+      if (thres == 0) {
+	// We might have been off for a while, so delta might
+	// be insanely high.
+	thres = 1;
+      } else {
+	thres += delta / OUT_MILLIS;
+      }
+    } else {
+      if (thres == 0) blade->allow_disable();
+      thres -= delta / IN_MILLIS;
     }
-    int num_leds = blade->num_leds();
-    thres = num_leds * 256 * (m - event_millis_) / (on_ ? OUT_MILLIS : IN_MILLIS);
-    if (!blade->is_on()) thres = num_leds * 256 - thres;
-    if (m - event_millis_ > 100000) event_millis_ += 1000;
-    if (!blade->is_on() && thres > 256 * (num_leds*2)) {
-      Serial.println("Allow off.");
-      blade->allow_disable();
-    }
+    thres = clampi32(thres, 0, num_leds * 256);
   }
   OverDriveColor getColor(int led) {
     int black_mix = clampi32(thres - led * 256, 0, 255);
@@ -3633,9 +3639,8 @@ public:
   }
 private:
   T base_;
-  bool on_ = false;
   int thres = 0;
-  uint32_t event_millis_ = 0;
+  uint32_t last_micros_;
 };
 
 template<class T, int OUT_MILLIS, int IN_MILLIS, class SPARK_COLOR = Rgb<255,255,255> >
@@ -3643,20 +3648,25 @@ class InOutSparkTip {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
-    spark_color_.run(blade);
-    uint32_t m = millis();
-    if (on_ != blade->is_on()) {
-      event_millis_ = m;
-      on_ = blade->is_on();
+    uint32_t now = micros();
+    uint32_t num_leds = blade->num_leds();
+    // Note we use "/ 4" instead of "* 256 / 1024".
+    // It's close enough and avoids overflows.
+    uint32_t delta = (now - last_micros_) * num_leds / 4;
+    last_micros_ = now;
+    if ((on_ = blade->is_on())) {
+      if (thres == 0) {
+	// We might have been off for a while, so delta might
+	// be insanely high.
+	thres = 1;
+      } else {
+	thres += delta / OUT_MILLIS;
+      }
+    } else {
+      if (thres == 0) blade->allow_disable();
+      thres -= delta / IN_MILLIS;
     }
-    int num_leds = blade->num_leds();
-    thres = num_leds * 256 * (m - event_millis_) / (on_ ? OUT_MILLIS : IN_MILLIS);
-    if (!blade->is_on()) thres = num_leds * 256 - thres;
-    if (m - event_millis_ > 100000) event_millis_ += 1000;
-    if (!blade->is_on() && thres > 256 * (num_leds*2)) {
-      Serial.println("Allow off.");
-      blade->allow_disable();
-    }
+    thres = clampi32(thres, 0, num_leds * 256 + 1024);
   }
   OverDriveColor getColor(int led) {
     OverDriveColor ret = base_.getColor(led);
@@ -3671,9 +3681,9 @@ public:
   }
 private:
   T base_;
-  bool on_ = false;
+  bool on_;
   int thres = 0;
-  uint32_t event_millis_ = 0;
+  uint32_t last_micros_;
   SPARK_COLOR spark_color_;
 };
 
@@ -9179,6 +9189,38 @@ TouchButton* TouchButton::current_button = NULL;
 // STATE_RUN:
 // 
 
+
+#if 1
+class Script : Looper, StateMachine {
+public:
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+    while(!run_) YIELD();
+    run_ = false;
+#ifdef ENABLE_AUDIO
+    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+    beeper.Beep(0.05, 2000.0);
+    SLEEP(100);
+    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+    beeper.Beep(0.05, 2000.0);
+    SLEEP(100);
+    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+    beeper.Beep(0.05, 3000.0);
+#endif
+    SLEEP(20000);
+    CommandParser::DoParse("on", NULL);
+    STATE_MACHINE_END();
+  }
+  void Run() {
+    state_machine_.reset_state_machine();
+    run_ = true;
+  }
+  bool run_ = false;
+};
+
+Script script;
+#endif
+
 // The Saber class implements the basic states and actions
 // for the saber.
 class Saber : CommandParser, Looper, SaberBase {
@@ -9496,7 +9538,8 @@ protected:
           Serial.println("Next preset");
         } else {
           Serial.println("On (power)");
-          On();
+	  On();
+	  // script.Run();
           aux_on_ = false;
         }
       }
@@ -10601,22 +10644,6 @@ class WatchDog : Looper {
 WatchDog dog;
 #endif
 
-
-#if 0
-class Script : Looper, StateMachine {
-public:
-  void Loop() override {
-    STATE_MACHINE_BEGIN();
-    SLEEP(2000);
-    CommandParser::DoParse("next", "preset");
-    SLEEP(200);
-    CommandParser::DoParse("next", "preset");
-    STATE_MACHINE_END();
-  }
-};
-
-Script script;
-#endif
 
 
 #ifdef MTP_RX_ENDPOINT
