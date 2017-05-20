@@ -110,6 +110,7 @@ const unsigned int maxLedsPerStrip = 144;
 //    select color
 //    adjust volume
 // Disable motion when off to save power.
+// Allow several blades to share power pins.
 
 // If your electonics inverts the bladePin for some reason, define this.
 // #define INVERT_WS2811
@@ -2505,7 +2506,7 @@ public:
   void SB_On() override {
     on_ = true;
     if (config_.humStart) {
-      BufferedWavPlayer* tmp = Play(&out);
+      Bufferedwavplayer* tmp = Play(&out);
       if (tmp) {
         int delay_ms = 1000 * tmp->length() - config_.humStart;
 #if 1
@@ -2538,8 +2539,8 @@ public:
   void SB_Stab() override { Play(&stab); }
   void SB_Force() override { Play(&force); }
   void SB_Blast() override { Play(&blst); }
-  void SB_Boot() override { audio_splicer.Play(&boot,  NULL); }
-  void SB_NewFont() override { audio_splicer.Play(&font,  NULL); }
+  void SB_Boot() override { Play(&boot); }
+  void SB_NewFont() override { Play(&font); }
 
   bool swinging_ = false;
   void SB_Motion(const Vec3& gyro) override {
@@ -7900,8 +7901,8 @@ public:
     power_->Power(on);
 //    pinMode(bladePin, on ? OUTPUT : INPUT);
     powered_ = on;
+    allow_disable_ = false;
   }
-
 
   // No need for a "deactivate", the blade stays active until
   // you take it out, which also cuts the power.
@@ -7939,9 +7940,7 @@ public:
     return ret;
   }
   void allow_disable() override {
-    if (!on_) {
-      Power(false);
-    }
+    if (!on_) allow_disable_ = true;
   }
 
   // SaberBase implementation.
@@ -7994,6 +7993,10 @@ protected:
        }
        // Wait until it's our turn.
        while (current_blade) YIELD();
+       if (allow_disable_) {
+	 Power(on_);
+	 continue;
+       }
        current_blade = this;
        current_style_->run(this);
        while (monopodws.busy()) YIELD();
@@ -8024,6 +8027,8 @@ private:
   bool on_ = false;
   bool powered_ = false;
   bool clash_ = false;
+  bool allow_disable_ = false;
+  
   int updates_ = 0;
   int millis_sum_ = 0;
   uint32_t last_millis_ = 0;
@@ -8064,6 +8069,7 @@ public:
   void Power(bool on) {
     power_->Power(on);
     powered_ = on;
+    allow_disable_ = false;
   }
 
   void Show() {
@@ -8117,9 +8123,7 @@ public:
     return ret;
   }
   void allow_disable() override {
-    if (!on_) {
-      Power(false);
-    }
+    if (!on_) allow_disable_ = true;
   }
 
   // SaberBase implementation.
@@ -8186,6 +8190,7 @@ protected:
     last_millis_ = m;
     current_style_->run(this);
     Show();
+    if (allow_disable_) Power(on_);
   }
   
 private:
@@ -8193,6 +8198,7 @@ private:
   bool on_ = false;
   bool powered_ = false;
   bool clash_ = false;
+  bool allow_disable_ = false;
 
   // TOOD: Break this out into a separate class.
   int updates_ = 0;
