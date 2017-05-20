@@ -84,7 +84,7 @@ const unsigned int maxLedsPerStrip = 144;
 // starts with an DMA channel which feeds data to a digital-to-analog
 // converter. Once the data buffer is half-gone, and interrupt is
 // triggered in the DAC class, which tries to fill it up by
-// reading data from a int16_t DataStream. Generally, that data
+// reading data from a int16_t AudioStream. Generally, that data
 // stream is hooked up to the AudioDynamicMixer class. This
 // class is responsible for taking multiple audio inputs,
 // summing them up and then adjusting the volume to minimize
@@ -815,12 +815,13 @@ struct WaveFormSampler {
   }
 };
 
-template<class T>
-class DataStream {
+class AudioStream {
 public:
-  virtual int read(T* data, int elements) = 0;
+  virtual int read(int16_t* data, int elements) = 0;
   // There is no need to call eof() unless read() returns zero elements.
   virtual bool eof() { return false; }
+  // Stop
+  virtual void Stop() {}
 };
 
 
@@ -886,7 +887,7 @@ public:
     Serial.println(" dacbuf - print the current contents of the dac buffer");
   }
 
-  void SetStream(DataStream<int16_t>* stream) {
+  void SetStream(AudioStream* stream) {
     stream_ = stream;
   }
 
@@ -910,7 +911,7 @@ private:
       dest = (int16_t *)dac_dma_buffer;
       end = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE];
     }
-    DataStream<int16_t> *stream = stream_;
+    AudioStream *stream = stream_;
     if (stream) {
       int n = stream->read(dest, end-dest);
       while (n--) {
@@ -922,19 +923,19 @@ private:
   }
 
   DMAMEM static uint16_t dac_dma_buffer[AUDIO_BUFFER_SIZE*2];
-  static DataStream<int16_t> * volatile stream_;
+  static AudioStream * volatile stream_;
   static DMAChannel dma;
 };
 
 DMAChannel DAC::dma(false);
-DataStream<int16_t> * volatile DAC::stream_ = nullptr;
+AudioStream * volatile DAC::stream_ = nullptr;
 DMAMEM uint16_t DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2];
 
 DAC dac;
 
 // Audio compressor, takes N input channels, sums them and divides the
 // result by the square root of the average volume.
-template<int N> class AudioDynamicMixer : public DataStream<int16_t>, Looper {
+template<int N> class AudioDynamicMixer : public AudioStream, Looper {
 public:
   AudioDynamicMixer() {
     for (int i = 0; i < N; i++) {
@@ -1038,7 +1039,7 @@ public:
 
   // TODO: Make levels monitorable
   
-  DataStream<int16_t>* streams_[N];
+  AudioStream* streams_[N];
   int32_t vol_ = 0;
   int32_t last_sample_ = 0;
   int32_t last_sum_ = 0;
@@ -1049,10 +1050,10 @@ public:
 //  ClickAvoiderLin volume_;
 };
 
-AudioDynamicMixer<7> dynamic_mixer;
+AudioDynamicMixer<8> dynamic_mixer;
 
 // Beeper class, used for warning beeps and such.
-class Beeper : public DataStream<int16_t> {
+class Beeper : public AudioStream {
 public:
   int read(int16_t *data, int elements) override {
     int e = elements;
@@ -1094,7 +1095,7 @@ private:
 
 Beeper beeper;
 
-class LightSaberSynth : public DataStream<int16_t>, Looper {
+class LightSaberSynth : public AudioStream, Looper {
 public:
 //  WaveForm sin_a_;
 //  WaveForm sin_b_;
@@ -1235,25 +1236,25 @@ protected:
 //       +-WavPlayer
 //
 
-// DataStreamWork is a linked list of classes that would like to
+// AudioStreamWork is a linked list of classes that would like to
 // do some work in a software-triggered interrupt. This is used to
 // let audio processing preempt less important tasks.
 #define IRQ_WAV 55
 
-class DataStreamWork;
-DataStreamWork* data_streams;
+class AudioStreamWork;
+AudioStreamWork* data_streams;
 
-class DataStreamWork {
+class AudioStreamWork {
 public:
-  DataStreamWork() {
+  AudioStreamWork() {
     next_ = data_streams;
     data_streams = this;
     NVIC_SET_PRIORITY(IRQ_WAV, 240);
-    _VectorsRam[IRQ_WAV + 16] = &ProcessDataStreams;
+    _VectorsRam[IRQ_WAV + 16] = &ProcessAudioStreams;
     NVIC_ENABLE_IRQ(IRQ_WAV);
   }
-  ~DataStreamWork() {
-    for (DataStreamWork** d = &data_streams; *d; d = &(*d)->next_) {
+  ~AudioStreamWork() {
+    for (AudioStreamWork** d = &data_streams; *d; d = &(*d)->next_) {
       if (*d == this) {
         *d = next_;
       }
@@ -1275,24 +1276,24 @@ protected:
   virtual size_t space_available() const = 0;
 
 private:
-  static void ProcessDataStreams() {
+  static void ProcessAudioStreams() {
     if (sd_locked) return;
 #if 1
     // Yes, it's a selection sort, luckily there's not a lot of
-    // DataStreamWork instances.
+    // AudioStreamWork instances.
     for (int i = 0; i < 50; i++) {
       size_t max_space = 0;
-      for (DataStreamWork *d = data_streams; d; d=d->next_)
+      for (AudioStreamWork *d = data_streams; d; d=d->next_)
         max_space = max(max_space, d->space_available());
       if (max_space == 0) break;
-      for (DataStreamWork *d = data_streams; d; d=d->next_) {
+      for (AudioStreamWork *d = data_streams; d; d=d->next_) {
         if (d->space_available() >= max_space)
           d->FillBuffer();
       }
     }
 #else
     for (int i = 0; i < 10; i++) {
-      for (DataStreamWork *d = data_streams; d; d=d->next_) {
+      for (AudioStreamWork *d = data_streams; d; d=d->next_) {
         d->FillBuffer();
       }
     }
@@ -1301,13 +1302,13 @@ private:
 
   static volatile bool sd_locked;
 
-  DataStreamWork* next_;
+  AudioStreamWork* next_;
 };
 
-volatile bool DataStreamWork::sd_locked = false;
-#define LOCK_SD(X) DataStreamWork::LockSD(X)
+volatile bool AudioStreamWork::sd_locked = false;
+#define LOCK_SD(X) AudioStreamWork::LockSD(X)
 
-// BufferedDataStream is meant to be read from the main autdio interrupt.
+// BufferedAudioStream is meant to be read from the main autdio interrupt.
 // Every time some space is freed up, Schedulefillbuffer() is called
 // to handle filling up the buffer at a lower interrupt level. Since
 // filling up the buffer can mean reading from SD, there can potentially
@@ -1316,12 +1317,12 @@ volatile bool DataStreamWork::sd_locked = false;
 // is only modified in the FillBuffer() function and the begin pointer is
 // only modified in read();
 // N needs to be power of 2
-template<class T, int N>
-class BufferedDataStream : public DataStream<T>, public DataStreamWork {
+template<int N>
+class BufferedAudioStream : public AudioStream, public AudioStreamWork {
 public:
-  BufferedDataStream() : DataStreamWork() {
+  BufferedAudioStream() : AudioStreamWork() {
   }
-  int read(T* buf, int bufsize) override {
+  int read(int16_t* buf, int bufsize) override {
 #if 0
     // Disable buffer
     return stream_ ? stream_->read(buf, bufsize) : 0;
@@ -1333,7 +1334,7 @@ public:
       to_copy = min(to_copy, bufsize);
       int start_pos = buf_start_ & (N-1);
       to_copy = min(to_copy, N - start_pos);
-      memcpy(buf, buffer_ + start_pos, sizeof(T) * to_copy);
+      memcpy(buf, buffer_ + start_pos, sizeof(buf[0]) * to_copy);
       copied += to_copy;
       buf_start_ += to_copy;
       buf += to_copy;
@@ -1357,7 +1358,7 @@ public:
     if (eof_) return 0;
     return N - buffered();
   }
-  void SetStream(DataStream<T>* stream) {
+  void SetStream(AudioStream* stream) {
     eof_ = false;
     stream_ = stream;
   }
@@ -1375,12 +1376,12 @@ private:
     }
     return stream_ && space_available() > 0 && !eof_;
   }
-  DataStream<T> * volatile stream_ = 0;
+  AudioStream* volatile stream_ = 0;
   // Note, these are assumed to be atomic, 8-bit processors won't work.
   volatile size_t buf_start_ = 0;
   volatile size_t buf_end_ = 0;
   volatile bool eof_ = false;
-  T buffer_[N];
+  int16_t buffer_[N];
 };
 
 #endif
@@ -1771,7 +1772,7 @@ EFFECT(swingh);  // Looped swing, HIGH
 // it into a stream of samples. Note that because it can
 // spend some time reading data between samples, the
 // reader must have enough buffers to provide smooth playback.
-class PlayWav : StateMachine, public DataStream<int16_t> {
+class PlayWav : StateMachine, public AudioStream {
 public:
   void Play(const char* filename) {
     if (!*filename) return;
@@ -1789,7 +1790,7 @@ public:
     effect_ = effect;
   }
 
-  void Stop() {
+  void Stop() override {
     state_machine_.reset_state_machine();
     effect_ = nullptr;
     run_ = false;
@@ -2092,11 +2093,11 @@ private:
 };
 
 
-// Combines a WavPlayer and a BufferedDataStream into a
+// Combines a WavPlayer and a BufferedAudioStream into a
 // buffered wav player. When we start a new sample, we
 // make sure to fill up the buffer before we start playing it.
 // This minimizes latency while making sure to avoid any gaps.
-class BufferedWavPlayer : public DataStream<int16_t> {
+class BufferedWavPlayer : public AudioStream {
 public:
   void Play(const char* filename) {
     pause_ = true;
@@ -2114,7 +2115,7 @@ public:
     pause_ = false;
   }
   void PlayLoop(Effect* effect) { wav.PlayLoop(effect); }
-  void Stop() {
+  void Stop() override {
     wav.Stop();
     pause_ = true;
     buffer.clear();
@@ -2138,7 +2139,7 @@ public:
   float length() const { return wav.length(); }
 
 private:
-  BufferedDataStream<int16_t, 512> buffer;
+  BufferedAudioStream<512> buffer;
   PlayWav wav;
   volatile bool pause_;
 };
@@ -2156,7 +2157,7 @@ class BufferedWavPlayer* GetFreeWavPlayer()  {
   return NULL;
 }
 
-class VolumeStream : public DataStream<int16_t> {
+class VolumeStream : public AudioStream {
 public:
   VolumeStream() : volume_(16384 / 100) {
     volume_.set(32768);
@@ -2165,6 +2166,10 @@ public:
   int read(int16_t* data, int elements) override {
     elements = source_->read(data, elements);
     if (volume_.isOff()) {
+      if (stop_when_zero_) {
+	source_->Stop();
+	stop_when_zero_ = false;
+      }
       for (int i = 0; i < elements; i++) {
         data[i] = 0;
       }
@@ -2178,8 +2183,12 @@ public:
     return elements;
   }
   bool eof() override { return source_->eof(); }
+  void Stop() override { return source_->Stop(); }
   void set_volume(int vol) {
     volume_.set_target(vol);
+  }
+  void set_volume_now(int vol) {
+    volume_.set(vol);
   }
   void set_volume(float vol) {
     set_volume((int)(32768 * vol));
@@ -2190,24 +2199,29 @@ public:
   void set_fade_time(float t) {
     set_speed(max(1, (int)(32768 / t / AUDIO_RATE)));
   }
-  void set_source(DataStream<int16_t>* source) {
+  void set_source(AudioStream* source) {
     source_ = source;
   }
   bool isOff() const {
     return volume_.isOff() || source_->eof();
   }
+  void FadeAndStop() {
+    volume_.set_target(0);
+    stop_when_zero_ = true;
+  }
 
 private:
-  DataStream<int16_t>* source_ = NULL;
+  volatile bool stop_when_zero_ = false;
+  AudioStream* source_ = NULL;
   ClickAvoiderLin volume_;
 };
 
-VolumeStream volume_streams[3];
+VolumeStream volume_streams[4];
 
 // This class is used to cut from one sound to another with
 // no gap. It does a short (2.5ms) crossfade to accomplish this.
 // It's currently hard-coded to use wav_players[0] and wav_playes[1].
-class AudioSplicer : public DataStream<int16_t> {
+class AudioSplicer : public AudioStream {
 public:
   AudioSplicer() {}
 
@@ -2490,10 +2504,22 @@ public:
   PolyphonicFont() : SaberBase(NOLINK) { }
   void Activate() {
     Serial.println("Activating polyphonic font.");
-    // TODO: while we need to fade out the hum,
-    // maybe we don't need to fade in the in sound?
-    SetupStandardAudio();
-    audio_splicer.set_fade_time(0.3);
+
+    dac.SetStream(NULL);
+    allocated_wav_players = 0;
+    for (size_t i = 1; i < NELEM(wav_players); i++) {
+      dynamic_mixer.streams_[i] = wav_players + i;
+    }
+    volume_streams[0].set_source(wav_players);
+    volume_streams[0].set_volume_now(10000);
+    volume_streams[0].set_speed(16384/100);
+    volume_streams[1].set_source(volume_streams);
+    volume_streams[1].set_volume_now(0);
+    volume_streams[1].set_fade_time(0.3);
+    dynamic_mixer.streams_[0] = volume_streams + 1;
+    dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
+    dac.SetStream(&dynamic_mixer);
+
     char config_filename[128];
     strcpy(config_filename, current_directory);
     strcat(config_filename, "config.ini");
@@ -2505,28 +2531,22 @@ public:
 
   void SB_On() override {
     on_ = true;
+    wav_players[0].PlayOnce(&hum);
+    wav_players[0].PlayLoop(&hum);
+    hum_start_ = millis();
     if (config_.humStart) {
-      Bufferedwavplayer* tmp = Play(&out);
+      BufferedWavPlayer* tmp = Play(&out);
       if (tmp) {
         int delay_ms = 1000 * tmp->length() - config_.humStart;
-#if 1
-        Serial.print(" LEN = ");
-        Serial.print(tmp->length());
-        Serial.print(" humstart = ");
-        Serial.print(config_.humStart);
-        Serial.print(" delay_ms = ");
-        Serial.println(delay_ms);
-#endif
-        audio_splicer.Play(&hum, &hum, delay_ms);
-        return;
+	hum_start_ += delay_ms;
       }
     }
-    audio_splicer.Play(&out, &hum);
   }
 
   void SB_Off() override {
     on_ = false;
-    audio_splicer.Play(&in, NULL);
+    Play(&in);
+    volume_streams[0].FadeAndStop();
   }
 
   BufferedWavPlayer* Play(Effect* f)  {
@@ -2543,7 +2563,13 @@ public:
   void SB_NewFont() override { Play(&font); }
 
   bool swinging_ = false;
+  uint32_t hum_start_;
   void SB_Motion(const Vec3& gyro) override {
+    if (!on_) return;
+    if (millis() - hum_start_ < 0x7fffffffUL) {
+      hum_start_ = millis(); // Keep it from overflowing.
+      volume_streams[0].set_volume(32768);
+    }
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
       if (!swinging_ && on_) {
@@ -2557,7 +2583,7 @@ public:
     if (!swinging_) {
       vol = vol * (0.99 + clamp(speed/200.0, 0.0, 1.0));
     }
-    audio_splicer.set_volume(vol);
+    volume_streams[1].set_volume(vol);
   }
 
   ConfigFile config_;
@@ -2583,9 +2609,9 @@ public:
 // the saber is swung, we fade out the hum and fade in one of
 // the swingl/swingh sounds. This type of swing sounds can
 // be added to any font by just adding swingl.wav and swingh.wav.
-class LoopedSwingWrapper : public SaberBasePassThrough, public Looper{
+class LoopedSwingWrapper : public SaberBasePassThrough {
 public:
-  LoopedSwingWrapper() : SaberBasePassThrough(), Looper(NOLINK) {}
+  LoopedSwingWrapper() : SaberBasePassThrough() {}
 
   void Activate(SaberBase* base_font) {
     Serial.println("Activating looped swing sounds");
@@ -2593,7 +2619,7 @@ public:
     allocated_wav_players = 4;
     // Inject volume controls for wave player 2,3.
     for (int i = 2; i < 4; i++) {
-      VolumeStream *v = volume_streams + i - 1;
+      VolumeStream *v = volume_streams + i;
       dynamic_mixer.streams_[i] = v;
       v->set_source(wav_players + i);
       v->set_volume(0);
@@ -2603,7 +2629,6 @@ public:
 
   void Deactivate() {
     SetDelegate(NULL);
-    Looper::Unlink();
   }
 
   void SB_On() override {
@@ -2615,25 +2640,11 @@ public:
     wav_players[3].PlayLoop(&swingh);
   }
   void SB_Off() override {
-    volume_streams[1].set_fade_time(0.3);
     volume_streams[2].set_fade_time(0.3);
-    volume_streams[1].set_volume(0);
-    volume_streams[2].set_volume(0);
+    volume_streams[3].set_fade_time(0.3);
+    volume_streams[2].FadeAndStop();
+    volume_streams[3].FadeAndStop();
     delegate_->SB_Off();
-    Looper::Link();
-  }
-
-  void Loop() override {
-    if (volume_streams[1].isOff()) {
-      wav_players[2].PlayLoop(NULL);
-    }
-    if (volume_streams[2].isOff()) {
-      wav_players[3].PlayLoop(NULL);
-    }
-    if (volume_streams[1].isOff() &&
-        volume_streams[2].isOff()) {
-      Looper::Unlink();
-    }
   }
 
   void SB_Motion(const Vec3& gyro) override {
@@ -10480,7 +10491,6 @@ protected:
     SetupStandardAudio();
   }
 
-
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (true) {
@@ -10656,7 +10666,7 @@ WatchDog dog;
 
 void mtp_yield() { Looper::DoLoop(); }
 void mtp_lock_storage(bool lock) {
-  DataStreamWork::LockSD(lock);
+  AudioStreamWork::LockSD(lock);
 }
 
 // This interface lets the MTP responder interface any storage.
