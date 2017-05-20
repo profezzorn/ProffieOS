@@ -2513,9 +2513,11 @@ public:
     volume_streams[0].set_source(wav_players);
     volume_streams[0].set_volume_now(10000);
     volume_streams[0].set_speed(16384/100);
+
     volume_streams[1].set_source(volume_streams);
     volume_streams[1].set_volume_now(0);
     volume_streams[1].set_fade_time(0.3);
+    
     dynamic_mixer.streams_[0] = volume_streams + 1;
     dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
     dac.SetStream(&dynamic_mixer);
@@ -2568,7 +2570,7 @@ public:
     if (!on_) return;
     if (millis() - hum_start_ < 0x7fffffffUL) {
       hum_start_ = millis(); // Keep it from overflowing.
-      volume_streams[0].set_volume(32768);
+      volume_streams[1].set_volume(32768);
     }
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
@@ -2583,7 +2585,7 @@ public:
     if (!swinging_) {
       vol = vol * (0.99 + clamp(speed/200.0, 0.0, 1.0));
     }
-    volume_streams[1].set_volume(vol);
+    volume_streams[0].set_volume(vol);
   }
 
   ConfigFile config_;
@@ -2659,8 +2661,8 @@ public:
     float high = max(0, -blend);
     float hum = 1.0 - abs(blend);
     volume_streams[0].set_volume(vol * hum);
-    volume_streams[1].set_volume(vol * low);
-    volume_streams[2].set_volume(vol * high);
+    volume_streams[2].set_volume(vol * low);
+    volume_streams[3].set_volume(vol * high);
     if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
       Serial.print("S:");
       Serial.print(speed);
@@ -8751,8 +8753,8 @@ struct Preset {
 // configuration array below. See "simple_presets" and "charging_presets"
 // below for examples.
 Preset presets[] = {
-  { "font01", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
-  { "font01", "tracks/cantina.wav",
+  { "font03", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
+  { "font02", "tracks/cantina.wav",
     StylePtr<InOutSparkTip<SimpleClash<BLUE, WHITE>, 300, 800> >() },
   { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
   { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
