@@ -9209,14 +9209,14 @@ TouchButton* TouchButton::current_button = NULL;
 // 
 
 
-#if 1
+#if 0
 class Script : Looper, StateMachine {
 public:
   void Loop() override {
     STATE_MACHINE_BEGIN();
-    while(!run_) YIELD();
-    run_ = false;
-#ifdef ENABLE_AUDIO
+    // while(!run_) YIELD();
+    // run_ = false;
+#if 0
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     beeper.Beep(0.05, 2000.0);
     SLEEP(100);
@@ -9227,7 +9227,14 @@ public:
     beeper.Beep(0.05, 3000.0);
 #endif
     SLEEP(20000);
-    CommandParser::DoParse("on", NULL);
+    while (1) {
+      CommandParser::DoParse("on", NULL);
+      SLEEP(3000);
+      CommandParser::DoParse("off", NULL);
+      SLEEP(2000);
+      CommandParser::DoParse("n", NULL);
+      SLEEP(500);
+    }
     STATE_MACHINE_END();
   }
   void Run() {
