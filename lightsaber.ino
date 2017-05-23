@@ -88,7 +88,12 @@ const unsigned int maxLedsPerStrip = 144;
 // stream is hooked up to the AudioDynamicMixer class. This
 // class is responsible for taking multiple audio inputs,
 // summing them up and then adjusting the volume to minimize
-// clipping. 
+// clipping.  Generally, one of the inputs are hooked up to
+// the AudioSplicer class, and the others are hooked up to
+// BufferedWavPlayers.  The AudioSplicer is able to do
+// smooth cutovers between sounds, and it's inputs are also
+// BufferedWavPlayers.
+
 
 // TODO LIST:
 // Make sure that sound is off before doing file command
@@ -158,6 +163,7 @@ const unsigned int maxLedsPerStrip = 144;
 #include <usb_dev.h>
 #include <i2c_t3.h>
 // #include <Wire.h>
+#include <kinetis.h>
 
 #ifdef ENABLE_SNOOZE
 
@@ -331,18 +337,40 @@ public:
 
 #endif
 
+class ScopedCycleCounter {
+public:
+  ScopedCycleCounter(uint64_t& dest) :
+    dest_(dest) {
+    ARM_DEMCR |= ARM_DEMCR_TRCENA;
+    ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
+    cycles_ = ARM_DWT_CYCCNT;
+  }
+  ~ScopedCycleCounter() {
+    cycles_ -= ARM_DWT_CYCCNT;
+    dest_ += cycles_;
+  }
+private:
+  uint32_t cycles_;
+  uint64_t& dest_;
+};
+
+uint64_t audio_dma_interrupt_cycles = 0;
+uint64_t wav_interrupt_cycles = 0;
+uint64_t loop_cycles = 0;
+
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 
 // Magic type used to prevent linked-list types from automatically linking.
 enum NoLink { NOLINK = 17 };
 
-// Helper class for classses that needs to be called back from the Loop() function.
-// Also provides a Setup() function.
+// Helper class for classses that needs to be called back from the Loop()
+// function. Also provides a Setup() function.
 class Looper;
 Looper* loopers = NULL;
 class Looper {
 public:
   void Link() {
+    ScopedCycleCounter cc(loop_cycles);
     CHECK_LL(Looper, loopers, next_looper_);
     next_looper_ = loopers;
     loopers = this;
@@ -503,6 +531,9 @@ protected:
   explicit SaberBase(NoLink _) {}
   ~SaberBase() { Unlink(this); }
 
+public:
+  // volume is 0 - 32768
+  virtual void SetHumVolume(int volume) {}
 
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)                        \
 public:                                                         \
@@ -889,6 +920,7 @@ private:
   // Interrupt handler.
   // Fills the dma buffer with new sample data.
   static void isr(void) {
+    ScopedCycleCounter cc(audio_dma_interrupt_cycles);
     int16_t *dest, *end;
     uint32_t saddr;
 
@@ -1271,6 +1303,7 @@ protected:
 
 private:
   static void ProcessAudioStreams() {
+    ScopedCycleCounter cc(wav_interrupt_cycles);
     if (sd_locked) return;
 #if 1
     // Yes, it's a selection sort, luckily there's not a lot of
@@ -2167,11 +2200,11 @@ public:
     pause_ = true;
     clear();
     wav.PlayOnce(effect);
-    interrupts();
     scheduleFillBuffer();
     pause_ = false;
   }
   void PlayLoop(Effect* effect) { wav.PlayLoop(effect); }
+
   void Stop() override {
     wav.Stop();
     pause_ = true;
@@ -2199,10 +2232,12 @@ private:
 };
 
 BufferedWavPlayer wav_players[6];
+size_t reserved_wav_players = 0;
 
 class BufferedWavPlayer* GetFreeWavPlayer()  {
   // Find a free wave playback unit.
-  for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+  for (size_t unit = reserved_wav_players;
+       unit < NELEM(wav_players); unit++) {
     if (!wav_players[unit].isPlaying()) {
       return wav_players + unit;
     }
@@ -2210,13 +2245,145 @@ class BufferedWavPlayer* GetFreeWavPlayer()  {
   return NULL;
 }
 
+// This class is used to cut from one sound to another with
+// no gap. It does a short (2.5ms) crossfade to accomplish this.
+// It's currently hard-coded to use wav_players[0] and wav_playes[1].
+class AudioSplicer : public AudioStream, Looper {
+public:
+  AudioSplicer() : Looper(NOLINK) {}
+
+  int read(int16_t* data, int elements) override {
+    int16_t *p = data;
+    int to_read = elements;
+    if (current_ < 0 && fadeto_ < 0) {
+      return 0;
+    }
+    if (current_ >= 0) {
+      int num = wav_players[current_].read(p, to_read);
+      to_read -= num;
+      p += num;
+      if (to_read > 0) {
+        // end of file?
+        if (wav_players[current_].eof()) {
+          current_ = -1;
+        }
+      }
+    }
+    while (to_read > 0) {
+      *(p++) = 0;
+      to_read --;
+    }
+    if (fadeto_ >= 0) {
+      p = data;
+      to_read = elements;
+      while (to_read) {
+        int16_t tmp[32];
+        int n = min(to_read, (int)NELEM(tmp));
+        int num = wav_players[fadeto_].read(tmp, n);
+        while (num < n) tmp[num++] = 0;
+        for (int i = 0; i < num; i++) {
+          p[i] = (p[i] * fade_ + tmp[i] * (32768 - fade_)) >> 15;
+          if (fade_) {
+            fade_ -= fade_speed_;
+            if (fade_ < 0) fade_ = 0;
+          }
+        }
+        to_read -= n;
+        p += n;
+      }
+      if (!fade_) {
+        if (current_ != -1)
+          wav_players[current_].Stop();
+        current_ = fadeto_;
+        fadeto_ = -1;
+      }
+    }
+    return elements;
+  }
+
+  bool eof() override {
+    return current_ == -1 && fadeto_ == -1;
+  }
+
+  void set_crossover_time(float t) {
+    fade_speed_ = max(1, (int)(32768 / t / AUDIO_RATE));
+#if 0
+    Serial.print("FADE SPEED: ");
+    Serial.println(fade_speed_);
+#endif
+  }
+
+  Effect* next_effect_ = NULL;
+  Effect* next_loop_ = NULL;
+
+  void Loop() override {
+    if (fadeto_ == -1) {
+      Effect *f = next_effect_;
+      Effect *l = next_loop_;
+      next_effect_ = next_loop_ = NULL;
+      if (f) Play(f, l);
+      Looper::Unlink();
+    }
+  }
+  	  
+  bool Play(Effect* f, Effect* loop) {
+    if (fadeto_ != -1) {
+      next_effect_ = f;
+      next_loop_ = loop;
+      Looper::Link();
+      return false;
+    }
+    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+    int unit = current_ == 0 ? 1 : 0;
+    wav_players[unit].PlayOnce(f);
+    if (loop) {
+      wav_players[unit].PlayLoop(loop);
+    }
+    if (current_ == -1) {
+      current_ = unit;
+    } else {
+      fadeto_ = unit;
+      fade_ = 32768;
+    }
+    return true;
+  }
+
+  bool isPlaying() const {
+    return current_ != -1 || fadeto_ != -1;
+  }
+
+protected:
+  volatile int current_= -1;
+  volatile int fadeto_ = -1;
+  volatile int fade_speed_ = 128;
+  volatile int fade_;
+};
+
+VolumeOverlay<AudioSplicer> audio_splicer;
+
+void SetupStandardAudioLow() {
+    for (size_t i = 0; i < NELEM(wav_players); i++) {
+    dynamic_mixer.streams_[i] = wav_players + i;
+    wav_players[i].set_volume_now(32768);
+    wav_players[i].set_speed(16384 / 100);
+  }
+  reserved_wav_players = 0;
+  dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
+}
 
 void SetupStandardAudio() {
   dac.SetStream(NULL);
-  for (size_t i = 0; i < NELEM(wav_players); i++) {
-    dynamic_mixer.streams_[i] = wav_players + i;
-  }
-  dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
+  SetupStandardAudioLow();
+  dac.SetStream(&dynamic_mixer);
+}
+
+void ActivateAudioSplicer() {
+  dac.SetStream(NULL);
+  SetupStandardAudioLow();
+  dynamic_mixer.streams_[0] = &audio_splicer;
+  dynamic_mixer.streams_[1] = NULL;
+  reserved_wav_players = 2;
+  audio_splicer.set_crossover_time(0.003);
   dac.SetStream(&dynamic_mixer);
 }
 
@@ -2233,62 +2400,43 @@ public:
   MonophonicFont() : SaberBase(NOLINK) { }
   void Activate() {
     Serial.println("Activating monophonic font.");
-    SetupStandardAudio();
+    ActivateAudioSplicer();
     SaberBase::Link(this);
     on_ = false;
-  }
-
-  BufferedWavPlayer* current_ = NULL;
-  void Play(Effect* f, Effect* loop) {
-    BufferedWavPlayer* player = GetFreeWavPlayer();
-    if (!player) {
-      // Traffic jam, should happen exceedingly rarely!
-      Serial.println("Traffic jam!");
-      current_->PlayLoop(loop);
-      return;
-    }
-    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-    player->set_volume(32768);
-    player->set_fade_time(0.003);
-    noInterrupts();
-    if (current_ && current_->isPlaying()) {
-      player->set_volume_now(0);
-      current_->FadeAndStop();
-    } else {
-      player->set_volume_now(32768);
-    }
-    player->PlayOnce(f);  // Enables interrupts again!
-    if (loop) player->PlayLoop(loop);
   }
 
   void Deactivate() { SaberBase::Unlink(this); }
 
   void SB_On() override {
     on_ = true;
-    Play(&poweron, &hum);
+    audio_splicer.Play(&poweron, &hum);
   }
 
   void SB_Off() override {
     on_ = false;
-    Play(&poweroff, NULL);
+    audio_splicer.Play(&poweroff, NULL);
   }
-  void SB_Clash() override { Play(&clash, &hum); }
-  void SB_Stab() override { Play(&stab, &hum); }
-  void SB_Force() override { Play(&force, &hum); }
-  void SB_Blast() override { Play(&blaster, &hum); }
-  void SB_Boot() override { Play(&boot,  NULL); }
-  void SB_NewFont() override { Play(&font,  NULL); }
+  void SB_Clash() override { audio_splicer.Play(&clash, &hum); }
+  void SB_Stab() override { audio_splicer.Play(&stab, &hum); }
+  void SB_Force() override { audio_splicer.Play(&force, &hum); }
+  void SB_Blast() override { audio_splicer.Play(&blaster, &hum); }
+  void SB_Boot() override { audio_splicer.Play(&boot,  NULL); }
+  void SB_NewFont() override { audio_splicer.Play(&font,  NULL); }
 
   void SB_BeginLockup() override {
     if (lockup.files_found()) {
-      Play(&lockup, &lockup);
+      audio_splicer.Play(&lockup, &lockup);
     }
   }
 
   void SB_EndLockup() override {
     if (lockup.files_found()) {
-      Play(&hum, &hum);
+      audio_splicer.Play(&hum, &hum);
     }
+  }
+
+  void SetHumVolume(int vol) override {
+    audio_splicer.set_volume(vol);
   }
 
   bool on_ = false;
@@ -2298,7 +2446,7 @@ public:
     if (speed > 250.0) {
       if (!swinging_ && on_) {
         swinging_ = true;
-	Play(&swing, &hum);
+	audio_splicer.Play(&swing, &hum);
       }
     } else {
       swinging_ = false;
@@ -2307,9 +2455,7 @@ public:
     if (!swinging_) {
       vol = vol * (0.99 + clamp(speed/200.0, 0.0, 1.0));
     }
-    if (current_) {
-      current_->set_volume(vol);
-    }
+    SetHumVolume(vol);
   }
 };
 
@@ -2398,6 +2544,7 @@ public:
   void Activate() {
     Serial.println("Activating polyphonic font.");
     SetupStandardAudio();
+    wav_players[0].set_volume_now(0);
     char config_filename[128];
     strcpy(config_filename, current_directory);
     strcat(config_filename, "config.ini");
@@ -2469,11 +2616,11 @@ public:
   bool swinging_ = false;
   uint32_t hum_start_;
   uint32_t last_micros_;
-  
-  void SB_Motion(const Vec3& gyro) override {
-    float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
+
+  void SetHumVolume(int vol) override {
     switch (state_) {
       case STATE_OFF:
+        volume_ = 0;
 	return;
       case STATE_OUT:
 	volume_ = 0;
@@ -2506,7 +2653,12 @@ public:
 	break;
       }
     }
-
+    vol = (vol * volume_) >> 15;
+    wav_players[0].set_volume(vol);
+  }
+  
+  void SB_Motion(const Vec3& gyro) override {
+    float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
       if (!swinging_ && state_ != STATE_HUM_ON) {
         swinging_ = true;
@@ -2519,8 +2671,7 @@ public:
     if (!swinging_) {
       vol = vol * (0.99 + clamp(speed/200.0, 0.0, 1.0));
     }
-    vol = (vol * volume_) >> 15;
-    wav_players[0].set_volume(vol);
+    SetHumVolume(vol);
   }
 
   ConfigFile config_;
@@ -2607,7 +2758,8 @@ public:
     float low = max(0, blend);
     float high = max(0, -blend);
     float hum = 1.0 - abs(blend);
-    wav_players[0].set_volume(vol * hum);
+
+    delegate_->SetHumVolume(vol * hum * 32768);
     if (low_) low_->set_volume(vol * low);
     if (high_) high_->set_volume(vol * high);
     if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
@@ -9568,6 +9720,7 @@ protected:
 	case ButtonBase::CLICK_SHORT:
 	  Serial.println("Off");
 	  Off();
+	  break;
 	case ButtonBase::CLICK_LONG:
 	  Serial.println("Force");
 	  SaberBase::DoForce();
@@ -9893,7 +10046,22 @@ public:
     }
     if (!strcmp(cmd, "top")) {
       // TODO: list cpu usage for various objects.
+      double total_cycles =
+	(double)(audio_dma_interrupt_cycles +
+	 wav_interrupt_cycles +
+	 loop_cycles);
+      Serial.print("Audio DMA%: ");
+      Serial.println(audio_dma_interrupt_cycles * 100.0 / total_cycles);
+      Serial.print("Wav reading%: ");
+      Serial.println(wav_interrupt_cycles * 100.0 / total_cycles);
+      Serial.print("LOOP%: ");
+      Serial.println(loop_cycles * 100.0 / total_cycles);
       SaberBase::DoTop();
+      noInterrupts();
+      audio_dma_interrupt_cycles = 0;
+      wav_interrupt_cycles = 0;
+      loop_cycles = 0;
+      interrupts();
       return;
     }
     if (!strcmp(cmd, "version")) {
@@ -10453,6 +10621,7 @@ public:
 
   bool Active() {
 //    if (saber_synth.on_) return true;
+    if (audio_splicer.isPlaying()) return true;
     if (beeper.isPlaying()) return true;
     for (size_t i = 0; i < NELEM(wav_players); i++)
       if (wav_players[i].isPlaying())
@@ -10498,6 +10667,8 @@ protected:
       SaberBase::DoIsOn(&on);
       Serial.print("Saber bases: ");
       Serial.println(on ? "On" : "Off");
+      Serial.print("Audio splicer: ");
+      Serial.println(audio_splicer.isPlaying() ? "On" : "Off");
       Serial.print("Beeper: ");
       Serial.println(beeper.isPlaying() ? "On" : "Off");
       for (size_t i = 0; i < NELEM(wav_players); i++) {
@@ -10520,6 +10691,8 @@ Amplifier amplifier;
 #endif
 
 void setup() {
+
+  // Enable cycle counting
 #if 0
 //  pinMode(bladePin, OUTPUT);
   pinMode(bladePowerPin1, OUTPUT);
