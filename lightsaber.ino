@@ -346,7 +346,7 @@ public:
     cycles_ = ARM_DWT_CYCCNT;
   }
   ~ScopedCycleCounter() {
-    cycles_ -= ARM_DWT_CYCCNT;
+    cycles_ = ARM_DWT_CYCCNT - cycles_;
     dest_ += cycles_;
   }
 private:
@@ -370,7 +370,6 @@ Looper* loopers = NULL;
 class Looper {
 public:
   void Link() {
-    ScopedCycleCounter cc(loop_cycles);
     CHECK_LL(Looper, loopers, next_looper_);
     next_looper_ = loopers;
     loopers = this;
@@ -391,6 +390,7 @@ public:
   explicit Looper(NoLink _) { }
   ~Looper() { Unlink(); }
   static void DoLoop() {
+    ScopedCycleCounter cc(loop_cycles);
     CHECK_LL(Looper, loopers, next_looper_);
     for (Looper *l = loopers; l; l = l->next_looper_) {
       l->Loop();
@@ -2402,6 +2402,7 @@ public:
     Serial.println("Activating monophonic font.");
     ActivateAudioSplicer();
     SaberBase::Link(this);
+    SetHumVolume(10000);  // default volume
     on_ = false;
   }
 
@@ -10050,12 +10051,15 @@ public:
 	(double)(audio_dma_interrupt_cycles +
 	 wav_interrupt_cycles +
 	 loop_cycles);
-      Serial.print("Audio DMA%: ");
-      Serial.println(audio_dma_interrupt_cycles * 100.0 / total_cycles);
-      Serial.print("Wav reading%: ");
-      Serial.println(wav_interrupt_cycles * 100.0 / total_cycles);
-      Serial.print("LOOP%: ");
-      Serial.println(loop_cycles * 100.0 / total_cycles);
+      Serial.print("Audio DMA: ");
+      Serial.print(audio_dma_interrupt_cycles * 100.0 / total_cycles);
+      Serial.println("%");
+      Serial.print("Wav reading: ");
+      Serial.print(wav_interrupt_cycles * 100.0 / total_cycles);
+      Serial.println("%");
+      Serial.print("LOOP: ");
+      Serial.print(loop_cycles * 100.0 / total_cycles);
+      Serial.println("%");
       SaberBase::DoTop();
       noInterrupts();
       audio_dma_interrupt_cycles = 0;
