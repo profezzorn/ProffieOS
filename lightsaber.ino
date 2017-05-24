@@ -28,8 +28,8 @@
 
 
 // Board version
-#define VERSION_MAJOR 1
-#define VERSION_MINOR 0
+#define VERSION_MAJOR 2
+#define VERSION_MINOR 3
 
 #define NUM_BLADES 1
 
@@ -358,6 +358,35 @@ uint64_t audio_dma_interrupt_cycles = 0;
 uint64_t wav_interrupt_cycles = 0;
 uint64_t loop_cycles = 0;
 
+class LoopCounter {
+public:
+  void Print() {
+    if (millis_sum_)
+      Serial.print(updates_ * 1000.0 / millis_sum_);
+  }
+  void Reset() {
+    updates_ = 0;
+    millis_sum_ = 0;
+    last_millis_ = 0;
+  }
+  void Update() {
+    uint32_t m = millis();
+    if (last_millis_) {
+      millis_sum_ += m - last_millis_;
+      updates_++;
+      if (updates_ > 1000) {
+         updates_ /= 2;
+         millis_sum_ /= 2;
+      }
+    }
+    last_millis_ = m;
+  }
+private:
+  int updates_ = 0;
+  int millis_sum_ = 0;
+  uint32_t last_millis_ = 0;
+};
+
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 
 // Magic type used to prevent linked-list types from automatically linking.
@@ -367,6 +396,7 @@ enum NoLink { NOLINK = 17 };
 // function. Also provides a Setup() function.
 class Looper;
 Looper* loopers = NULL;
+LoopCounter global_loop_counter;
 class Looper {
 public:
   void Link() {
@@ -395,6 +425,7 @@ public:
     for (Looper *l = loopers; l; l = l->next_looper_) {
       l->Loop();
     }
+    global_loop_counter.Update();
   }
   static void DoSetup() {
     for (Looper *l = loopers; l; l = l->next_looper_) {
@@ -2520,6 +2551,10 @@ struct ConfigFile {
 #endif
       if (!strcmp(variable, "humstart")) {
         humStart = v;
+      } else if (!strcmp(variable, "volhum")) {
+        volHum = v;
+      } else if (!strcmp(variable, "voleff")) {
+        volEff = v;
       }
     }
   }
@@ -2533,6 +2568,8 @@ struct ConfigFile {
   }
 
   int humStart = 100;
+  int volHum = 15;
+  int volEff = 16;
 };
 
 // With polyphonic fonts, sounds are played more or less
@@ -8072,9 +8109,9 @@ public:
   void SB_Clash() override { clash_=true; }
 
   void SB_Top() override {
-    if (!millis_sum_) return;
     Serial.print("blade fps: ");
-    Serial.println(updates_ * 1000.0 / millis_sum_);
+    loop_counter_.Print();
+    Serial.println("");
   }
 
   bool Parse(const char* cmd, const char* arg) override {
@@ -8100,7 +8137,7 @@ protected:
     STATE_MACHINE_BEGIN() 
     while (true) {
        while (!powered_) {
-         last_millis_ = 0;
+         loop_counter_.Reset();
          YIELD();
        }
        // Wait until it's our turn.
@@ -8114,18 +8151,7 @@ protected:
        while (monopodws.busy()) YIELD();
 //       monopodws.begin(num_leds_, displayMemory, config_, pin_);
        monopodws.show();
-       {
-	 int m = millis();
-	 if (last_millis_) {
-	   millis_sum_ += m - last_millis_;
-	   updates_ ++;
-	   if (updates_ > 1000) {
-	     updates_ /= 2;
-	     millis_sum_ /= 2;
-	   }
-	 }
-	 last_millis_ = m;
-       }
+       loop_counter_.Update();
        current_blade = NULL;
        YIELD();
     }
@@ -8140,10 +8166,8 @@ private:
   bool powered_ = false;
   bool clash_ = false;
   bool allow_disable_ = false;
+  LoopCounter loop_counter_;
   
-  int updates_ = 0;
-  int millis_sum_ = 0;
-  uint32_t last_millis_ = 0;
   static WS2811_Blade* current_blade;
   StateMachineState state_machine_;
   PowerPinInterface* power_;
@@ -8254,9 +8278,9 @@ public:
   void SB_Clash() override { clash_=true; }
 
   void SB_Top() override {
-    if (!millis_sum_) return;
     Serial.print("blade fps: ");
-    Serial.println(updates_ * 1000.0 / millis_sum_);
+    loop_counter_.Print();
+    Serial.println("");
   }
 
   bool Parse(const char* cmd, const char* arg) override {
@@ -8280,7 +8304,7 @@ public:
 protected:
   void Loop() override {
     if (!powered_) {
-      last_millis_ = 0;
+      loop_counter_.Reset();
       return;
     }
     int m = millis();
@@ -8290,14 +8314,6 @@ protected:
     // Note that the FASTLED code is so far untested, so it might
     // not work right.
     if (m == last_millis_) return;
-    if (last_millis_) {
-      millis_sum_ += m - last_millis_;
-      updates_ ++;
-      if (updates_ > 1000) {
-        updates_ /= 2;
-        millis_sum_ /= 2;
-      }
-    }
     last_millis_ = m;
     current_style_->run(this);
     Show();
@@ -8310,11 +8326,9 @@ private:
   bool powered_ = false;
   bool clash_ = false;
   bool allow_disable_ = false;
+  LoopCounter loop_counter_;
+  uint32_t last_millis_;
 
-  // TOOD: Break this out into a separate class.
-  int updates_ = 0;
-  int millis_sum_ = 0;
-  uint32_t last_millis_ =0;
   PowerPinInterface* power_;
 };
 
@@ -8586,7 +8600,6 @@ public:
   void SB_Clash() override {
     clash_ = true;
   }
-  void SB_Lockup() override {  }
 
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
@@ -9379,12 +9392,11 @@ public:
     SaberBase::DoOff();
   }
 
-  unsigned long last_clash = 0;
+  uint32_t last_clash_ = 0;
   void Clash() {
     // TODO: Pick clash randomly and/or based on strength of clash.
-    unsigned long t = millis();
-    if (t - last_clash < 100) return;
-    last_clash = t;
+    uint32_t t = millis();
+    if (t - last_clash_ < 100) return;
     if (on_) {
       ButtonBase *a;
       if (aux_on_) {
@@ -9397,17 +9409,19 @@ public:
 	lockup_ = true;
 	SaberBase::DoBeginLockup();
 	a->EatClick();
-	return;
+      } else{
+        SaberBase::DoClash();
       }
-
-      SaberBase::DoClash();
     } else {
       if (power_.pushed_millis()) {
+        // Avoid skipping lots of steps.
+        if (t - last_clash_ < 400) return;
         power_.EatClick();
         Serial.println("Previous preset");
         previous_preset();
       }
     }
+    last_clash_ = t;
   }
 
   bool chdir(const char* dir) {
@@ -10060,6 +10074,9 @@ public:
       Serial.print("LOOP: ");
       Serial.print(loop_cycles * 100.0 / total_cycles);
       Serial.println("%");
+      Serial.print("Global loops / second: ");
+      global_loop_counter.Print();
+      Serial.println("");
       SaberBase::DoTop();
       noInterrupts();
       audio_dma_interrupt_cycles = 0;
@@ -10715,7 +10732,14 @@ void setup() {
   digitalWrite(bladePowerPin6, LOW);
 #endif
 #endif
-  delay(1000);
+
+  // Wait for all voltages to settle.
+  // Accumulate some entrypy while we wait.
+  uint32_t now = millis();
+  while (millis() - now < 1000) {
+    srand((rand() * 917823) ^ analogRead(batteryLevelPin));
+  }
+
   Serial.begin(9600);
 #ifdef ENABLE_SERIALFLASH
   SerialFlashChip::begin(serialFlashSelectPin);
