@@ -3765,24 +3765,23 @@ public:
   void run(BladeBase* blade) {
     base_.run(blade);
     uint32_t now = micros();
-    uint32_t num_leds = blade->num_leds();
-    // Note we use "/ 4" instead of "* 256 / 1024".
-    // It's close enough and avoids overflows.
-    uint32_t delta = (now - last_micros_) * num_leds / 4;
+    uint32_t delta = now - last_micros_;
     last_micros_ = now;
     if (blade->is_on()) {
-      if (thres == 0) {
+      if (extension == 0.0) {
 	// We might have been off for a while, so delta might
 	// be insanely high.
-	thres = 1;
+	extension = 0.00001;
       } else {
-	thres += delta / OUT_MILLIS;
+      	extension += delta / (OUT_MILLIS * 1000.0);
+	extension = min(extension, 1.0f);
       }
     } else {
-      if (thres == 0) blade->allow_disable();
-      thres -= delta / IN_MILLIS;
+      if (extension == 0.0) blade->allow_disable();
+      extension -= delta / (IN_MILLIS * 1000.0);
+      extension = max(extension, 0.0f);
     }
-    thres = clampi32(thres, 0, num_leds * 256);
+    thres = extension * blade->num_leds() * 256;
   }
   OverDriveColor getColor(int led) {
     int black_mix = clampi32(thres - led * 256, 0, 255);
@@ -3793,6 +3792,7 @@ public:
 private:
   T base_;
   int thres = 0;
+  float extension = 0.0;
   uint32_t last_micros_;
 };
 
@@ -3802,25 +3802,25 @@ public:
   void run(BladeBase* blade) {
     base_.run(blade);
     uint32_t now = micros();
-    uint32_t num_leds = blade->num_leds();
-    // Note we use "/ 4" instead of "* 256 / 1024".
-    // It's close enough and avoids overflows.
-    uint32_t delta = (now - last_micros_) * num_leds / 4;
+    uint32_t delta = now - last_micros_;
     last_micros_ = now;
     if ((on_ = blade->is_on())) {
-      if (thres == 0) {
+      if (extension == 0.0) {
 	// We might have been off for a while, so delta might
 	// be insanely high.
-	thres = 1;
+	extension = 0.00001;
       } else {
-	thres += delta / OUT_MILLIS;
+      	extension += delta / (OUT_MILLIS * 1000.0);
+	extension = min(extension, 1.0f);
       }
     } else {
-      if (thres == 0) blade->allow_disable();
-      thres -= delta / IN_MILLIS;
+      if (extension == 0.0) blade->allow_disable();
+      extension -= delta / (IN_MILLIS * 1000.0);
+      extension = max(extension, 0.0f);
     }
-    thres = clampi32(thres, 0, num_leds * 256 + 1024);
+    thres = extension * (blade->num_leds() + 4) * 256;
   }
+  
   OverDriveColor getColor(int led) {
     OverDriveColor ret = base_.getColor(led);
     if (on_) {
@@ -3836,6 +3836,7 @@ private:
   T base_;
   bool on_;
   int thres = 0;
+  float extension = 0.0;
   uint32_t last_micros_;
   SPARK_COLOR spark_color_;
 };
