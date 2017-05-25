@@ -39,7 +39,6 @@
 // both of them to bladePin and drive them in parallel.
 const unsigned int maxLedsPerStrip = 144;
 
-
 #if VERSION_MAJOR >= 2
 #define V2
 #endif
@@ -565,8 +564,8 @@ protected:
   ~SaberBase() { Unlink(this); }
 
 public:
-  // volume is 0 - 32768
-  virtual void SetHumVolume(int volume) {}
+  // 1.0 = kDefaultVolume
+  virtual void SetHumVolume(float volume) {}
 
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)                        \
 public:                                                         \
@@ -726,6 +725,9 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x > b) return b;
   return x;
 }
+int16_t clamptoi16(int32_t x) {
+  return clampi32(x, -32768, 32767);
+}
 
 const int16_t sin_table[1024] = {
   0,100,201,301,402,502,603,703,803,904,1004,1104,1205,1305,1405,
@@ -877,7 +879,7 @@ class AudioStream {
 public:
   virtual int read(int16_t* data, int elements) = 0;
   // There is no need to call eof() unless read() returns zero elements.
-  virtual bool eof() { return false; }
+  virtual bool eof() const { return false; }
   // Stop
   virtual void Stop() {}
 };
@@ -1057,14 +1059,14 @@ public:
         v = sum[i];
         vol_ = ((vol_ + abs(v)) * 255) >> 8;
 #if 1
-        v2 = (v << 10) / (my_sqrt(vol_) + 100);
+        v2 = (v << 11) / (my_sqrt(vol_) + 100);
 #else
         v2 = v;
 #endif
 #ifdef QUIET
         v2 >>= 8;
 #endif
-        data[i] = clampi32(v2, -32768, 32767);
+        data[i] = clamptoi16(v2);
         peak_sum_ = max(abs(v), peak_sum_);
         peak_ = max(abs(v2), peak_);
       }
@@ -1404,7 +1406,7 @@ public:
     return copied;
 #endif
   }
-  bool eof() override {
+  bool eof() const override {
     return !buffered() && eof_;
   }
   void clear() {
@@ -2107,7 +2109,7 @@ public:
     return dest_ - dest;
   }
 
-  bool eof() override {
+  bool eof() const override {
     return !run_;
   }
 
@@ -2152,19 +2154,24 @@ private:
   int16_t samples_[32];
 };
 
+const uint32_t kVolumeShift = 14;
+const uint32_t kMaxVolume = 1 << kVolumeShift;
+const uint32_t kDefaultVolume = kMaxVolume / 3;
+
 template<class T>
 class VolumeOverlay : public T {
 public:
-  VolumeOverlay() : volume_(16384 / 100) {
-    volume_.set(1 << 15);
-    volume_.set_target(1 << 15);
+  
+  VolumeOverlay() : volume_(kMaxVolume / 100) {
+    volume_.set(kDefaultVolume);
+    volume_.set_target(kDefaultVolume);
   }
   int read(int16_t* data, int elements) override {
     elements = T::read(data, elements);
     if (volume_.isConstant()) {
       int32_t mult = volume_.value();
-      if (mult == (1 << 15)) {
-	// Do nothing, because (x * (1 << 15)) >> 15 == x
+      if (mult == kMaxVolume) {
+	// Do nothing
       } else if (mult == 0) {
 	if (stop_when_zero_) {
           T::Stop();
@@ -2173,14 +2180,13 @@ public:
 	for (int i = 0; i < elements; i++) data[i] = 0;
       } else {
 	for (int i = 0; i < elements; i++) {
-	  int32_t v = (data[i] * mult) >> 15;
-	  data[i] = clampi32(v, -32768, 32767);
+	  data[i] = clamptoi16((data[i] * mult) >> kVolumeShift);
 	}
       }
     } else {
       for (int i = 0; i < elements; i++) {
-        int32_t v = (data[i] * (int32_t)volume_.value()) >> 15;
-        data[i] = clampi32(v, -32768, 32767);
+        int32_t v = (data[i] * (int32_t)volume_.value()) >> kVolumeShift;
+        data[i] = clamptoi16(v);
         volume_.advance();
       }
     }
@@ -2193,14 +2199,20 @@ public:
     volume_.set(vol);
     volume_.set_target(vol);
   }
+  void reset_volume() {
+    set_volume_now((int)kDefaultVolume);
+  }
   void set_volume(float vol) {
-    set_volume((int)(32768 * vol));
+    set_volume((int)(kDefaultVolume * vol));
+  }
+  void set_volume_now(float vol) {
+    set_volume_now((int)(kDefaultVolume * vol));
   }
   void set_speed(int speed) {
     volume_.set_speed(speed);
   }
   void set_fade_time(float t) {
-    set_speed(max(1, (int)(32768 / t / AUDIO_RATE)));
+    set_speed(max(1, (int)(kMaxVolume / t / AUDIO_RATE)));
   }
   bool isOff() const {
     return volume_.isConstant() && volume_.value() == 0;
@@ -2239,13 +2251,14 @@ public:
   void PlayLoop(Effect* effect) { wav.PlayLoop(effect); }
 
   void Stop() override {
+    Serial.println("STOPSTOPSTOP");
     wav.Stop();
     pause_ = true;
     clear();
   }
 
   bool isPlaying() const {
-    return wav.isPlaying();
+    return wav.isPlaying() && eof();
   }
 
   BufferedWavPlayer() {
@@ -2272,6 +2285,7 @@ class BufferedWavPlayer* GetFreeWavPlayer()  {
   for (size_t unit = reserved_wav_players;
        unit < NELEM(wav_players); unit++) {
     if (!wav_players[unit].isPlaying()) {
+      wav_players[unit].reset_volume();
       return wav_players + unit;
     }
   }
@@ -2334,7 +2348,7 @@ public:
     return elements;
   }
 
-  bool eof() override {
+  bool eof() const override {
     return current_ == -1 && fadeto_ == -1;
   }
 
@@ -2397,8 +2411,7 @@ VolumeOverlay<AudioSplicer> audio_splicer;
 void SetupStandardAudioLow() {
     for (size_t i = 0; i < NELEM(wav_players); i++) {
     dynamic_mixer.streams_[i] = wav_players + i;
-    wav_players[i].set_volume_now(32768);
-    wav_players[i].set_speed(16384 / 100);
+    wav_players[i].reset_volume();
   }
   reserved_wav_players = 0;
   dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
@@ -2435,7 +2448,7 @@ public:
     Serial.println("Activating monophonic font.");
     ActivateAudioSplicer();
     SaberBase::Link(this);
-    SetHumVolume(10000);  // default volume
+    SetHumVolume(1.0);
     on_ = false;
   }
 
@@ -2469,7 +2482,7 @@ public:
     }
   }
 
-  void SetHumVolume(int vol) override {
+  void SetHumVolume(float vol) override {
     audio_splicer.set_volume(vol);
   }
 
@@ -2485,9 +2498,9 @@ public:
     } else {
       swinging_ = false;
     }
-    int vol = 10000;
+    float vol = 1.0f;
     if (!swinging_) {
-      vol = vol * (0.99 + clamp(speed/200.0, 0.0, 1.0));
+      vol = vol * (0.99 + clamp(speed/200.0, 0.0, 2.3));
     }
     SetHumVolume(vol);
   }
@@ -2625,7 +2638,7 @@ public:
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     BufferedWavPlayer* player = GetFreeWavPlayer();
     if (player) {
-      player->set_volume_now(32768);
+      player->set_volume_now(config_.volEff / 16.0);
       player->PlayOnce(f);
     }
     return player;
@@ -2657,13 +2670,13 @@ public:
   uint32_t hum_start_;
   uint32_t last_micros_;
 
-  void SetHumVolume(int vol) override {
+  void SetHumVolume(float vol) override {
     switch (state_) {
       case STATE_OFF:
-        volume_ = 0;
+        volume_ = 0.0f;
 	return;
       case STATE_OUT:
-	volume_ = 0;
+	volume_ = 0.0f;
 	if (millis() - hum_start_ < 0x7fffffffUL) {
 	  state_ = STATE_HUM_FADE_IN;
 	  last_micros_ = micros();
@@ -2672,9 +2685,9 @@ public:
       case STATE_HUM_FADE_IN: {
 	uint32_t m = micros();
 	uint32_t delta = m - last_micros_;
-	volume_ += delta / 10;
-	if (volume_ >= 32768) {
-	  volume_ = 32768;
+	volume_ += (delta / 1000000.0) * 0.3; // 0.3 seconds
+	if (volume_ >= 1.0f) {
+	  volume_ = 1.0f;
 	  state_ = STATE_HUM_ON;
 	}
 	break;
@@ -2685,16 +2698,15 @@ public:
       case STATE_HUM_FADE_OUT: {
 	uint32_t m = micros();
 	uint32_t delta = m - last_micros_;
-	volume_ -= delta / 10;
-	if (volume_ <= 0) {
-	  volume_ = 0;
+	volume_ -= (delta / 1000000.0) * 0.3; // 0.3 seconds
+	if (volume_ <= 0.0f) {
+	  volume_ = 0.0f;
 	  state_ = STATE_OFF;
 	}
 	break;
       }
     }
-    vol = (vol * volume_) >> 15;
-    wav_players[0].set_volume(vol);
+    wav_players[0].set_volume(vol * volume_);
   }
   
   void SB_Motion(const Vec3& gyro) override {
@@ -2707,16 +2719,16 @@ public:
     } else {
       swinging_ = false;
     }
-    int vol = 10000;
+    float vol = 1.0f;
     if (!swinging_) {
-      vol = vol * (0.99 + clamp(speed/200.0, 0.0, 1.0));
+      vol = vol * (0.99 + clamp(speed/200.0, 0.0, 2.3));
     }
     SetHumVolume(vol);
   }
 
   ConfigFile config_;
   State state_;
-  int volume_;
+  float volume_;
 };
 
 PolyphonicFont polyphonic_font;
@@ -2794,12 +2806,12 @@ public:
     float c = sin_table[(t + 256) & 1023] * (1.0/16383);
     float blend = c * gyro.z + s * gyro.y;
     blend = clamp(blend / 150.0, -1.0, 1.0);
-    float vol = 0.299 + clamp(speed / 150.0, 0.0, 2.3);
+    float vol = 0.99 + clamp(speed/200.0, 0.0, 2.3);
     float low = max(0, blend);
     float high = max(0, -blend);
     float hum = 1.0 - abs(blend);
 
-    delegate_->SetHumVolume(vol * hum * 32768);
+    delegate_->SetHumVolume(vol * hum);
     if (low_) low_->set_volume(vol * low);
     if (high_) high_->set_volume(vol * high);
     if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
