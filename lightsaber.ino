@@ -137,8 +137,8 @@ const unsigned int maxLedsPerStrip = 144;
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
 
-// If defined all sound samples will be divided by 2, resulting in
-// quieter sound.
+// If defined all sound samples will be divided by 8, resulting in
+// very quit sound.
 // #define QUIET
 
 // This doesn't seem to work.
@@ -1041,7 +1041,7 @@ public:
   int last_square_ = 0;
 
   int read(int16_t* data, int elements) override {
-    int32_t sum[32];
+    int32_t sum[AUDIO_BUFFER_SIZE / 2];
     int ret = elements;
     int v = 0, v2 = 0;
     num_samples_ += elements;
@@ -1064,7 +1064,7 @@ public:
         v2 = v;
 #endif
 #ifdef QUIET
-        v2 >>= 8;
+        v2 >>= 3;
 #endif
         data[i] = clamptoi16(v2);
         peak_sum_ = max(abs(v), peak_sum_);
@@ -2251,14 +2251,13 @@ public:
   void PlayLoop(Effect* effect) { wav.PlayLoop(effect); }
 
   void Stop() override {
-    Serial.println("STOPSTOPSTOP");
     wav.Stop();
     pause_ = true;
     clear();
   }
 
   bool isPlaying() const {
-    return wav.isPlaying() && eof();
+    return wav.isPlaying() || !eof();
   }
 
   BufferedWavPlayer() {
@@ -2411,7 +2410,6 @@ VolumeOverlay<AudioSplicer> audio_splicer;
 void SetupStandardAudioLow() {
     for (size_t i = 0; i < NELEM(wav_players); i++) {
     dynamic_mixer.streams_[i] = wav_players + i;
-    wav_players[i].reset_volume();
   }
   reserved_wav_players = 0;
   dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
