@@ -233,9 +233,15 @@ enum SaberPins {
   i2cClockPin = 19,               // I2C bus, Used by motion sensors
   bladePin = 20,                  // blade control, either WS2811 or PWM
   bladeIdentifyPin = 20,          // blade identify input / FoC
+#ifdef V2
+  bladePowerPin3 = 21,            // blade power control
+  bladePowerPin2 = 22,            // blade power control
+  bladePowerPin1 = 23,            // blade power control
+#else
   bladePowerPin1 = 21,            // blade power control
   bladePowerPin2 = 22,            // blade power control
   bladePowerPin3 = 23,            // blade power control
+#endif
 };
 
 
