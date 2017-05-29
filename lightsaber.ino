@@ -3705,6 +3705,8 @@ private:
   int num_leds_;
 };
 
+// Mixes randomly between A and B.
+// mix is even over entire blade.
 template<class A, class B>
 class RandomFlicker {
 public:
@@ -3725,6 +3727,8 @@ private:
   int mix_;
 };
 
+// Mixes randomly between A and B.
+// mix is chosen individually for every LED.
 template<class A, class B>
 class RandomPerLEDFlicker {
 public:
@@ -3743,6 +3747,9 @@ private:
   B b_;
 };
 
+// Mixes between A and B based
+// on audio. Quiet audio means more A, loud audio means more B.
+// Based on a single sample instead of an average to make it flicker.
 template<class A, class B>
 class AudioFlicker {
 public:
