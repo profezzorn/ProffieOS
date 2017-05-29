@@ -1415,6 +1415,7 @@ public:
   bool eof() const override {
     return !buffered() && eof_;
   }
+  void Stop() override { stream_->Stop(); }
   void clear() {
     eof_ = false;
     buf_start_ = buf_end_;
@@ -2180,7 +2181,7 @@ public:
 	// Do nothing
       } else if (mult == 0) {
 	if (stop_when_zero_) {
-          T::Stop();
+          this->Stop();
 	  stop_when_zero_ = false;
 	}
 	for (int i = 0; i < elements; i++) data[i] = 0;
@@ -2309,6 +2310,7 @@ class BufferedWavPlayer* GetFreeWavPlayer()  {
 }
 
 size_t WhatUnit(class BufferedWavPlayer* player) {
+  if (!player) return -1;
   return player - wav_players;
 }
 
@@ -2805,6 +2807,10 @@ public:
     } else {
       Serial.println("Looped swings cannot allocate wav player.");
     }
+    Serial.print("UNITS: ");
+    Serial.print(WhatUnit(low_));
+    Serial.print(",");
+    Serial.println(WhatUnit(high_));
   }
   void SB_Off() override {
     if (low_) {
@@ -10743,7 +10749,10 @@ protected:
         Serial.print("Wav player ");
         Serial.print(i);
         Serial.print(": ");
-        Serial.println(wav_players[i].isPlaying() ? "On" : "Off");
+        Serial.print(wav_players[i].isPlaying() ? "On" : "Off");
+        Serial.print(" (eof =  ");
+        Serial.print(wav_players[i].eof());
+        Serial.println(")");
       }
       return true;
     }
