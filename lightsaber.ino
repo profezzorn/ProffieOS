@@ -1106,6 +1106,14 @@ public:
 
   // TODO: Make levels monitorable
 
+  int32_t last_sample() const {
+    return last_sample_;
+  }
+
+  int32_t last_sum() const {
+    return last_sum_;
+  }
+
   AudioStream* streams_[N];
   int32_t vol_ = 0;
   int32_t last_sample_ = 0;
@@ -3681,6 +3689,8 @@ template<class A, class B>
 class Gradient {
 public:
   void run(BladeBase* blade) {
+    a_.run(blade);
+    b_.run(blade);
     num_leds_ = blade->num_leds();
   }
   OverDriveColor getColor(int led) {
@@ -3693,6 +3703,64 @@ private:
   A a_;
   B b_;
   int num_leds_;
+};
+
+template<class A, class B>
+class RandomFlicker {
+public:
+  void run(BladeBase* blade) {
+    a_.run(blade);
+    b_.run(blade);
+    mix_ = random(255);
+  }
+  OverDriveColor getColor(int led) {
+    OverDriveColor a = a_.getColor(led);
+    OverDriveColor b = b_.getColor(led);
+    a.c = a.c.mix(b.c, mix_);
+    return a;
+  }
+private:
+  A a_;
+  B b_;
+  int mix_;
+};
+
+template<class A, class B>
+class RandomPerLEDFlicker {
+public:
+  void run(BladeBase* blade) {
+    a_.run(blade);
+    b_.run(blade);
+  }
+  OverDriveColor getColor(int led) {
+    OverDriveColor a = a_.getColor(led);
+    OverDriveColor b = b_.getColor(led);
+    a.c = a.c.mix(b.c, random(255));
+    return a;
+  }
+private:
+  A a_;
+  B b_;
+};
+
+template<class A, class B>
+class AudioFlicker {
+public:
+  void run(BladeBase* blade) {
+    a_.run(blade);
+    b_.run(blade);
+    mix_ = clampi32(dynamic_mixer.last_sum() >> 4, 0, 255);
+  }
+  OverDriveColor getColor(int led) {
+    OverDriveColor a = a_.getColor(led);
+    OverDriveColor b = b_.getColor(led);
+    a.c = a.c.mix(b.c, mix_);
+    return a;
+  }
+private:
+  A a_;
+  B b_;
+  int mix_;
 };
 
 // Basic RGB rainbow.
@@ -8916,7 +8984,8 @@ Preset presets[] = {
   { "igniter/font4", "tracks/duel.wav",
     StylePtr<InOutHelper<SimpleClash<OnSpark<GREEN> >, 300, 800> >() },
   { "font01", "tracks/duel.wav", StyleNormalPtr<WHITE, RED, 300, 800>() },
-  { "font01", "tracks/walls.wav", StyleNormalPtr<YELLOW, BLUE, 300, 800>() },
+  { "font01", "tracks/walls.wav",
+      StyleNormalPtr<AudioFlicker<YELLOW, WHITE>, BLUE, 300, 800>() },
   { "font01", "tracks/title.wav", 
     StylePtr<InOutSparkTip<SimpleClash<MAGENTA, WHITE>, 300, 800> >() },
   { "font02", "tracks/cantina.wav", StyleNormalPtr<Gradient<RED, BLUE>, WHITE, 300, 800>() },
