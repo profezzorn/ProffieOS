@@ -2269,13 +2269,13 @@ public:
   void PlayLoop(Effect* effect) { wav.PlayLoop(effect); }
 
   void Stop() override {
-    wav.Stop();
     pause_ = true;
+    wav.Stop();
     clear();
   }
 
   bool isPlaying() const {
-    return wav.isPlaying() || !eof();
+    return !pause_ && (wav.isPlaying() || buffered());
   }
 
   BufferedWavPlayer() {
@@ -2807,10 +2807,12 @@ public:
     } else {
       Serial.println("Looped swings cannot allocate wav player.");
     }
+#if 0
     Serial.print("UNITS: ");
     Serial.print(WhatUnit(low_));
     Serial.print(",");
     Serial.println(WhatUnit(high_));
+#endif
   }
   void SB_Off() override {
     if (low_) {
