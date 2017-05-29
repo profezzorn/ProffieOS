@@ -982,7 +982,7 @@ private:
     if (stream) {
       int n = stream->read(dest, end-dest);
       while (n--) {
-        *dest = ((*(int16_t*)dest) + 32767) >> 4;
+        *dest = ((*(int16_t*)dest) + 32768) >> 4;
         dest++;
       }
     }
@@ -1105,7 +1105,7 @@ public:
   }
 
   // TODO: Make levels monitorable
-  
+
   AudioStream* streams_[N];
   int32_t vol_ = 0;
   int32_t last_sample_ = 0;
@@ -2162,7 +2162,7 @@ private:
 
 const uint32_t kVolumeShift = 14;
 const uint32_t kMaxVolume = 1 << kVolumeShift;
-const uint32_t kDefaultVolume = kMaxVolume / 3;
+const uint32_t kDefaultVolume = kMaxVolume / 2;
 
 template<class T>
 class VolumeOverlay : public T {
@@ -2197,6 +2197,9 @@ public:
       }
     }
     return elements;
+  }
+  float volume() {
+    return volume_.value() * (1.0f / (1 << kVolumeShift));
   }
   void set_volume(int vol) {
     volume_.set_target(vol);
@@ -2233,6 +2236,9 @@ private:
   ClickAvoiderLin volume_;
 };
 
+size_t WhatUnit(class BufferedWavPlayer* player);
+
+
 // Combines a WavPlayer and a BufferedAudioStream into a
 // buffered wav player. When we start a new sample, we
 // make sure to fill up the buffer before we start playing it.
@@ -2250,6 +2256,11 @@ public:
   void PlayOnce(Effect* effect) {
     pause_ = true;
     clear();
+    Serial.print("unit = ");
+    Serial.print(WhatUnit(this));
+    Serial.print(" vol = ");
+    Serial.print(volume());
+    Serial.print(", ");
     wav.PlayOnce(effect);
     scheduleFillBuffer();
     pause_ = false;
@@ -2296,6 +2307,11 @@ class BufferedWavPlayer* GetFreeWavPlayer()  {
   }
   return NULL;
 }
+
+size_t WhatUnit(class BufferedWavPlayer* player) {
+  return player - wav_players;
+}
+
 
 // This class is used to cut from one sound to another with
 // no gap. It does a short (2.5ms) crossfade to accomplish this.
@@ -2416,6 +2432,7 @@ VolumeOverlay<AudioSplicer> audio_splicer;
 void SetupStandardAudioLow() {
     for (size_t i = 0; i < NELEM(wav_players); i++) {
     dynamic_mixer.streams_[i] = wav_players + i;
+    wav_players[i].reset_volume();
   }
   reserved_wav_players = 0;
   dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
@@ -9812,6 +9829,17 @@ protected:
       } else {
         Serial.println("No available WAV players.");
       }
+      return true;
+    }
+    if (!strcmp(cmd, "volumes")) {
+      for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+	Serial.print(" Unit ");
+	Serial.print(unit);
+	Serial.print(" Volume ");
+	Serial.println(wav_players[unit].volume());
+      }
+      Serial.println("Splicer Volume:");
+      Serial.println(audio_splicer.volume());
       return true;
     }
 #endif
