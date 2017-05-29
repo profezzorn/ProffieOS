@@ -4019,6 +4019,9 @@ typedef Rgb<255,0,255> MAGENTA;
 typedef Rgb<255,255,255> WHITE;
 typedef Rgb<0,0,0> BLACK;
 
+#define EASYBLADE(COLOR, CLASH_COLOR) \
+  SimpleClash<Lockup<COLOR, AudioFlicker<COLOR, WHITE> >, CLASH_COLOR>
+
 // The following functions are mostly for illustration.
 // The templates above gives you more power and functionality.
 
@@ -9028,17 +9031,17 @@ struct Preset {
 Preset presets[] = {
   { "font03", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
   { "font02", "tracks/cantina.wav",
-    StylePtr<InOutSparkTip<SimpleClash<BLUE, WHITE>, 300, 800> >() },
+    StylePtr<InOutSparkTip<EASYBLADE(BLUE, WHITE), 300, 800> >() },
   { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
   { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
   { "font02", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>() },
   { "igniter/font4", "tracks/duel.wav",
-    StylePtr<InOutHelper<SimpleClash<OnSpark<GREEN> >, 300, 800> >() },
+    StylePtr<InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> >() },
   { "font01", "tracks/duel.wav", StyleNormalPtr<WHITE, RED, 300, 800>() },
   { "font01", "tracks/walls.wav",
       StyleNormalPtr<AudioFlicker<YELLOW, WHITE>, BLUE, 300, 800>() },
   { "font01", "tracks/title.wav", 
-    StylePtr<InOutSparkTip<SimpleClash<MAGENTA, WHITE>, 300, 800> >() },
+    StylePtr<InOutSparkTip<EASYBLADE(MAGENTA, WHITE), 300, 800> >() },
   { "font02", "tracks/cantina.wav", StyleNormalPtr<Gradient<RED, BLUE>, WHITE, 300, 800>() },
   { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
   { "font02", "tracks/cantina.wav", StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>() },
