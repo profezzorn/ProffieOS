@@ -570,6 +570,9 @@ protected:
   ~SaberBase() { Unlink(this); }
 
 public:
+  static bool Lockup() { return lockup_; }
+  static void SetLockup(bool lockup) { lockup_ = lockup; }
+  
   // 1.0 = kDefaultVolume
   virtual void SetHumVolume(float volume) {}
 
@@ -609,8 +612,11 @@ public:                                                         \
 #undef SABERFUN
 
 private:
+  static bool lockup_;
   SaberBase* next_saber_;
 };
+
+bool SaberBase::lockup_ = false;
 
 class SaberBasePassThrough : public SaberBase {
 public:
@@ -637,7 +643,6 @@ protected:
 
   SaberBase* delegate_ = NULL;
 };
-
 
 // Debug printout helper class
 class Monitoring : Looper, CommandParser {
@@ -3520,7 +3525,7 @@ public:
   virtual void set_overdrive(int led, Color c) { set(led, c); }
 
   // Returns true when a clash occurs.
-  // Returns true only once.
+  // Returns true only once per clash.
   virtual bool clash() = 0;
 
   // Clear blade colors.
@@ -3846,6 +3851,26 @@ private:
   uint32_t clash_millis_;
 };
 
+// Shows LOCKUP if the lockup state is true, otherwise BASE.
+template<class BASE, class LOCKUP>
+class Lockup {
+public:
+  void run(BladeBase* blade) {
+    base_.run(blade);
+    lockup_.run(blade);
+  }
+  OverDriveColor getColor(int led) {
+    if (SaberBase::Lockup()) {
+      return lockup_.getColor(led);
+    } else {
+      return base_.getColor(led);
+    }
+  }
+private:
+  BASE base_;
+  LOCKUP lockup_;
+};
+
 template<class T, class STROBE_COLOR, int STROBE_FREQUENCY, int STROBE_MILLIS = 1>
 class Strobe {
 public:
@@ -3984,29 +4009,57 @@ BladeStyle* StylePtr() {
   return &style;
 };
 
+
+typedef Rgb<255,0,0> RED;
+typedef Rgb<0,255,0> GREEN;
+typedef Rgb<0,0,255> BLUE;
+typedef Rgb<255,255,0> YELLOW;
+typedef Rgb<0,255,255> CYAN;
+typedef Rgb<255,0,255> MAGENTA;
+typedef Rgb<255,255,255> WHITE;
+typedef Rgb<0,0,0> BLACK;
+
 // The following functions are mostly for illustration.
 // The templates above gives you more power and functionality.
 
 // Arguments: color, clash color, turn-on/off time
-template<class base_color, class clash_color, int out_millis, int in_millis>
+template<class base_color,
+	 class clash_color,
+	 int out_millis,
+	 int in_millis,
+	 class lockup_flicker_color = WHITE>
 BladeStyle *StyleNormalPtr() {
-  return StylePtr<InOutHelper<SimpleClash<base_color, clash_color>, out_millis, in_millis> >();
+  typedef AudioFlicker<base_color, lockup_flicker_color> AddFlicker;
+  typedef Lockup<base_color, AddFlicker> AddLockup;
+  typedef SimpleClash<AddLockup, clash_color> AddClash;
+  return StylePtr<InOutHelper<AddClash, out_millis, in_millis> >();
 }
 
 // Rainbow blade.
 // Arguments: color, clash color, turn-on/off time
-template<int out_millis, int in_millis>
+template<int out_millis,
+	 int in_millis,
+	 class clash_color = WHITE,
+	 class lockup_flicker_color = WHITE>
 BladeStyle *StyleRainbowPtr() {
-  return StylePtr<InOutHelper<SimpleClash<Rainbow, Rgb<255,255,255> >, out_millis, in_millis> >();
+  typedef AudioFlicker<Rainbow, lockup_flicker_color> AddFlicker;
+  typedef Lockup<Rainbow, AddFlicker> AddLockup;
+  typedef SimpleClash<AddLockup, clash_color> AddClash;
+  return StylePtr<InOutHelper<AddClash, out_millis, in_millis> >();
 }
 
 // Stroboscope, flickers the blade at the desired frequency.
 // Arguments: color, clash color, turn-on/off time
-template<class strobe_color, class clash_color, int frequency, int out_millis, int in_millis>
+template<class strobe_color,
+	 class clash_color,
+	 int frequency,
+	 int out_millis,
+	 int in_millis>
 BladeStyle *StyleStrobePtr() {
-  typedef Rgb<0, 0, 0> black;
-  typedef Strobe<black, strobe_color, frequency, 1> strobe;
-  typedef SimpleClash<strobe, clash_color> clash;
+  typedef Strobe<BLACK, strobe_color, frequency, 1> strobe;
+  typedef Strobe<BLACK, strobe_color, 3* frequency, 1> fast_strobe;
+  typedef Lockup<strobe, fast_strobe> AddLockup;
+  typedef SimpleClash<AddLockup, clash_color> clash;
   return StylePtr<InOutHelper<clash, out_millis, in_millis> >();
 }
 
@@ -8772,15 +8825,6 @@ class String_Blade *StringBladePtr() {
 }
 #endif
 
-typedef Rgb<255,0,0> RED;
-typedef Rgb<0,255,0> GREEN;
-typedef Rgb<0,0,255> BLUE;
-typedef Rgb<255,255,0> YELLOW;
-typedef Rgb<0,255,255> CYAN;
-typedef Rgb<255,0,255> MAGENTA;
-typedef Rgb<255,255,255> WHITE;
-typedef Rgb<0,0,0> BLACK;
-
 // CONFIGURABLE
 // These structs below describe the properties of the LED circuit
 // so that we know how to drive it properly.
@@ -9526,7 +9570,7 @@ public:
       }
 
       if (a->pushed_millis()) {
-	lockup_ = true;
+	SaberBase::SetLockup(true);
 	SaberBase::DoBeginLockup();
 	a->EatClick();
       } else{
@@ -9775,7 +9819,6 @@ protected:
   }
 
   bool aux_on_ = true;
-  bool lockup_ = false;
   uint32_t last_beep_;
 
   void Loop() override {
@@ -9847,8 +9890,8 @@ protected:
         b = &aux_;
         a = &power_;
       }
-      if (lockup_ && !a->pushed_millis()) {
-	lockup_ = false;
+      if (SaberBase::Lockup() && !a->pushed_millis()) {
+	SaberBase::SetLockup(false);
 	SaberBase::DoEndLockup();
       }
       switch (a->GetClick()) {
@@ -9975,7 +10018,7 @@ private:
   BladeConfig* current_config_ = NULL;
   Preset* current_preset_ = NULL;
 
-  bool on_;
+  bool on_;  // <- move to SaberBase
   TouchButton power_;
   Button aux_;
   Button aux2_;
