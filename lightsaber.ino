@@ -2501,7 +2501,7 @@ public:
 
   void SB_EndLockup() override {
     if (lockup.files_found()) {
-      audio_splicer.Play(&hum, &hum);
+      audio_splicer.Play(&clash, &hum);
     }
   }
 
