@@ -2411,9 +2411,9 @@ public:
   	  
   bool Play(Effect* f, Effect* loop) {
     if (fadeto_ != -1) {
+      if (!next_effect_) Looper::Link();
       next_effect_ = f;
       next_loop_ = loop;
-      Looper::Link();
       return false;
     }
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
@@ -2688,9 +2688,11 @@ public:
 
   BufferedWavPlayer* lock_player_ = NULL;
   void SB_BeginLockup() override {
-    lock_player_ = Play(&lock);
-    if (lock_player_) {
-      lock_player_->PlayLoop(&lock);
+    if (!lock_player_) {
+      lock_player_ = Play(&lock);
+      if (lock_player_) {
+	lock_player_->PlayLoop(&lock);
+      }
     }
   }
 
@@ -9037,12 +9039,14 @@ Preset presets[] = {
   { "font02", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>() },
   { "igniter/font4", "tracks/duel.wav",
     StylePtr<InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> >() },
-  { "font01", "tracks/duel.wav", StyleNormalPtr<WHITE, RED, 300, 800>() },
+  { "font01", "tracks/duel.wav",
+    StyleNormalPtr<WHITE, RED, 300, 800, RED>() },
   { "font01", "tracks/walls.wav",
       StyleNormalPtr<AudioFlicker<YELLOW, WHITE>, BLUE, 300, 800>() },
   { "font01", "tracks/title.wav", 
     StylePtr<InOutSparkTip<EASYBLADE(MAGENTA, WHITE), 300, 800> >() },
-  { "font02", "tracks/cantina.wav", StyleNormalPtr<Gradient<RED, BLUE>, WHITE, 300, 800>() },
+  { "font02", "tracks/cantina.wav", StyleNormalPtr<
+    Gradient<RED, BLUE>, Gradient<CYAN, YELLOW>, 300, 800>() },
   { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
   { "font02", "tracks/cantina.wav", StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>() },
   { "font02", "tracks/cantina.wav", &style_pov },
