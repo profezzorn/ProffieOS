@@ -41,6 +41,8 @@ const unsigned int maxLedsPerStrip = 144;
 
 #if VERSION_MAJOR >= 2
 #define V2
+#else
+#define POWER_TOUCHBUTTON
 #endif
 
 //
@@ -2527,7 +2529,7 @@ public:
   void SB_Motion(const Vec3& gyro) override {
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
-      if (!swinging_ && on_) {
+      if (!swinging_ && on_ && !SaberBase::Lockup()) {
         swinging_ = true;
 	audio_splicer.Play(&swing, &hum);
       }
@@ -9535,7 +9537,11 @@ public:
   // CONFIGURABLE, use "monitor touch" to see the range of
   // values from the touch sensor, then select a value that is
   // big enough to not trigger the touch sensor randomly.
+#ifdef POWER_TOUCHBUTTON
             power_(powerButtonPin, 1700, "pow"),
+#else
+            power_(powerButtonPin, "pow"),
+#endif
             aux_(auxPin, "aux"),
             aux2_(aux2Pin, "aux2") {}
 
@@ -9565,6 +9571,8 @@ public:
 
   uint32_t last_clash_ = 0;
   void Clash() {
+    // No clashes in lockup mode.
+    if (SaberBase::Lockup()) return;
     // TODO: Pick clash randomly and/or based on strength of clash.
     uint32_t t = millis();
     if (t - last_clash_ < 100) return;
@@ -10026,7 +10034,11 @@ private:
   Preset* current_preset_ = NULL;
 
   bool on_;  // <- move to SaberBase
+#ifdef POWER_TOUCHBUTTON
   TouchButton power_;
+#else
+  Button power_;
+#endif
   Button aux_;
   Button aux2_;
 };
