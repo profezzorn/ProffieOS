@@ -2700,7 +2700,7 @@ public:
 
   void SB_EndLockup() override {
     if (lock_player_) {
-      lock_player_->set_fade_time(0.05);
+      lock_player_->set_fade_time(0.3);
       lock_player_->FadeAndStop();
       lock_player_ = NULL;
     }
@@ -2752,7 +2752,7 @@ public:
   void SB_Motion(const Vec3& gyro) override {
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
-      if (!swinging_ && state_ != STATE_HUM_ON) {
+      if (!swinging_ && state_ != STATE_OFF) {
         swinging_ = true;
         Play(&swng);
       }
@@ -9034,7 +9034,7 @@ struct Preset {
 // below for examples.
 Preset presets[] = {
   { "font03", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
-  { "font02", "tracks/cantina.wav",
+  { "graflex7", "tracks/cantina.wav",
     StylePtr<InOutSparkTip<EASYBLADE(BLUE, WHITE), 300, 800> >() },
   { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
   { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
@@ -9132,6 +9132,7 @@ BladeConfig blades[] = {
 
   // Charging adapter, single PL9823 LED.
   {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
+//  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(presets) },
 
   // WS2811 string blade 144 LEDs
   {   7800, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(), CONFIGARRAY(presets) },
@@ -10509,7 +10510,7 @@ public:
       Serial.print("Motion setup ... ");
 
       writeByte(CTRL1_XL, 0x88);  // 1.66kHz accel, 4G range
-      writeByte(CTRL2_G, 0x8A);   // 1.66kHz gyro, 2000 dps
+      writeByte(CTRL2_G, 0x8C);   // 1.66kHz gyro, 2000 dps
       writeByte(CTRL3_C, 0x44);   // ?
       writeByte(CTRL4_C, 0x00);
       writeByte(CTRL5_C, 0x00);
