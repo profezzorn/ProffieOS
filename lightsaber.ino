@@ -167,6 +167,7 @@ const unsigned int maxLedsPerStrip = 144;
 #include <i2c_t3.h>
 // #include <Wire.h>
 #include <kinetis.h>
+#include <malloc.h>
 
 #ifdef ENABLE_SNOOZE
 
@@ -944,7 +945,7 @@ public:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "dacbuf")) {
       for (size_t i = 0; i < NELEM(dac_dma_buffer); i++) {
-        Serial.print(dac_dma_buffer[i] - 2047);
+        Serial.print(dac_dma_buffer[i] - 2048);
         if ((i & 0xf) == 0xf)
           Serial.println("");
         else
@@ -954,6 +955,13 @@ public:
       return true;
     }
     return false;
+  }
+
+  bool isSilent() {
+     for (size_t i = 0; i < NELEM(dac_dma_buffer); i++)
+       if (dac_dma_buffer[i] != dac_dma_buffer[0])
+         return false;
+     return true;
   }
 
   void Help() override {
@@ -993,7 +1001,7 @@ private:
         dest++;
       }
     }
-    while (dest < end) { *dest++ = 2047; }
+    while (dest < end) { *dest++ = 2048; }
   }
 
   DMAMEM static uint16_t dac_dma_buffer[AUDIO_BUFFER_SIZE*2];
@@ -1430,10 +1438,11 @@ public:
   bool eof() const override {
     return !buffered() && eof_;
   }
-  void Stop() override { stream_->Stop(); }
+  void Stop() override { if(stream_) stream_->Stop(); }
   void clear() {
     eof_ = false;
     buf_start_ = buf_end_;
+    stream_ = NULL;
   }
   int buffered() const {
     return buf_end_ - buf_start_;
@@ -1454,7 +1463,15 @@ private:
         size_t end_pos = buf_end_ & (N-1);
         size_t to_read = min(space, N - end_pos);
         int got = stream_->read(buffer_ + end_pos, to_read);
-        if (!got) eof_ = stream_->eof();
+        if (got) {
+          eof_ = false;
+        } else {
+          eof_ = stream_->eof();
+#if 0
+          Serial.print("FillBuffer, eof = ");
+          Serial.println(eof_);
+#endif
+        }
         buf_end_ += got;
       }
     }
@@ -1717,22 +1734,22 @@ class Effect {
     if (SD.exists(directory)) {
       File dir = SD.open(directory);
       if (dir) {
-	while (File f = dir.openNextFile()) {
-	  if (f.isDirectory()) {
-	    char fname[128];
-	    strcpy(fname, f.name());
-	    strcat(fname, "/");
-	    char* fend = fname + strlen(fname);
-	    while (File f2 = f.openNextFile()) {
-	      strcpy(fend, f2.name());
-	      ScanAll(fname);
-	      f2.close();
-	    }
-	  } else {
-	    ScanAll(f.name());
-	  }
-	  f.close();
-	}
+        while (File f = dir.openNextFile()) {
+          if (f.isDirectory()) {
+            char fname[128];
+            strcpy(fname, f.name());
+            strcat(fname, "/");
+            char* fend = fname + strlen(fname);
+            while (File f2 = f.openNextFile()) {
+              strcpy(fend, f2.name());
+              ScanAll(fname);
+              f2.close();
+            }
+          } else {
+            ScanAll(f.name());
+          }
+          f.close();
+        }
       }
     }
 #endif
@@ -2023,6 +2040,7 @@ private:
 #endif
       {
 #ifdef ENABLE_SD
+        sd_file_.close();
         sd_file_ = SD.open(filename_);
         YIELD();
         if (!sd_file_)
@@ -2193,17 +2211,17 @@ public:
     if (volume_.isConstant()) {
       int32_t mult = volume_.value();
       if (mult == kMaxVolume) {
-	// Do nothing
+        // Do nothing
       } else if (mult == 0) {
-	if (stop_when_zero_) {
+        if (stop_when_zero_) {
           this->Stop();
-	  stop_when_zero_ = false;
-	}
-	for (int i = 0; i < elements; i++) data[i] = 0;
+          stop_when_zero_ = false;
+        }
+        for (int i = 0; i < elements; i++) data[i] = 0;
       } else {
-	for (int i = 0; i < elements; i++) {
-	  data[i] = clamptoi16((data[i] * mult) >> kVolumeShift);
-	}
+        for (int i = 0; i < elements; i++) {
+          data[i] = clamptoi16((data[i] * mult) >> kVolumeShift);
+        }
       }
     } else {
       for (int i = 0; i < elements; i++) {
@@ -2265,19 +2283,22 @@ public:
     pause_ = true;
     clear();
     wav.Play(filename);
+    SetStream(&wav);
     scheduleFillBuffer();
     pause_ = false;
   }
 
   void PlayOnce(Effect* effect) {
-    pause_ = true;
-    clear();
     Serial.print("unit = ");
     Serial.print(WhatUnit(this));
     Serial.print(" vol = ");
     Serial.print(volume());
     Serial.print(", ");
+
+    pause_ = true;
+    clear();
     wav.PlayOnce(effect);
+    SetStream(&wav);
     scheduleFillBuffer();
     pause_ = false;
   }
@@ -2294,7 +2315,7 @@ public:
   }
 
   BufferedWavPlayer() {
-    SetStream(&wav);
+   SetStream(&wav);
   }
 
   int read(int16_t* dest, int to_read) override {
@@ -2350,6 +2371,7 @@ public:
       if (to_read > 0) {
         // end of file?
         if (wav_players[current_].eof()) {
+          // Serial.println("AudioSPlicer::EOF!!");
           current_ = -1;
         }
       }
@@ -2410,7 +2432,7 @@ public:
       Looper::Unlink();
     }
   }
-  	  
+          
   bool Play(Effect* f, Effect* loop) {
     if (fadeto_ != -1) {
       if (!next_effect_) Looper::Link();
@@ -2531,7 +2553,7 @@ public:
     if (speed > 250.0) {
       if (!swinging_ && on_ && !SaberBase::Lockup()) {
         swinging_ = true;
-	audio_splicer.Play(&swing, &hum);
+        audio_splicer.Play(&swing, &hum);
       }
     } else {
       swinging_ = false;
@@ -2617,6 +2639,7 @@ struct ConfigFile {
 #ifdef ENABLE_SD
     File f = SD.open(filename);
     Read(&f);
+    f.close();
 #endif
   }
 
@@ -2662,7 +2685,7 @@ public:
       BufferedWavPlayer* tmp = Play(&out);
       if (tmp) {
         int delay_ms = 1000 * tmp->length() - config_.humStart;
-	hum_start_ += delay_ms;
+        hum_start_ += delay_ms;
       }
     }
   }
@@ -2693,7 +2716,7 @@ public:
     if (!lock_player_) {
       lock_player_ = Play(&lock);
       if (lock_player_) {
-	lock_player_->PlayLoop(&lock);
+        lock_player_->PlayLoop(&lock);
       }
     }
   }
@@ -2714,36 +2737,36 @@ public:
     switch (state_) {
       case STATE_OFF:
         volume_ = 0.0f;
-	return;
+        return;
       case STATE_OUT:
-	volume_ = 0.0f;
-	if (millis() - hum_start_ < 0x7fffffffUL) {
-	  state_ = STATE_HUM_FADE_IN;
-	  last_micros_ = micros();
-	}
-	break;
+        volume_ = 0.0f;
+        if (millis() - hum_start_ < 0x7fffffffUL) {
+          state_ = STATE_HUM_FADE_IN;
+          last_micros_ = micros();
+        }
+        break;
       case STATE_HUM_FADE_IN: {
-	uint32_t m = micros();
-	uint32_t delta = m - last_micros_;
-	volume_ += (delta / 1000000.0) * 0.3; // 0.3 seconds
-	if (volume_ >= 1.0f) {
-	  volume_ = 1.0f;
-	  state_ = STATE_HUM_ON;
-	}
-	break;
+        uint32_t m = micros();
+        uint32_t delta = m - last_micros_;
+        volume_ += (delta / 1000000.0) * 0.3; // 0.3 seconds
+        if (volume_ >= 1.0f) {
+          volume_ = 1.0f;
+          state_ = STATE_HUM_ON;
+        }
+        break;
       }
       case STATE_HUM_ON:
-	last_micros_ = micros();
-	break;
+        last_micros_ = micros();
+        break;
       case STATE_HUM_FADE_OUT: {
-	uint32_t m = micros();
-	uint32_t delta = m - last_micros_;
-	volume_ -= (delta / 1000000.0) * 0.3; // 0.3 seconds
-	if (volume_ <= 0.0f) {
-	  volume_ = 0.0f;
-	  state_ = STATE_OFF;
-	}
-	break;
+        uint32_t m = micros();
+        uint32_t delta = m - last_micros_;
+        volume_ -= (delta / 1000000.0) * 0.3; // 0.3 seconds
+        if (volume_ <= 0.0f) {
+          volume_ = 0.0f;
+          state_ = STATE_OFF;
+        }
+        break;
       }
     }
     wav_players[0].set_volume(vol * volume_);
@@ -3036,7 +3059,7 @@ public:
   void begin(uint32_t numPerStrip,
              void *frameBuf,
              uint8_t config,
-	     int pin);
+             int pin);
   void setPixel(uint32_t num, Color color) {
     drawBuffer[num] = color;
   }
@@ -3108,7 +3131,7 @@ static uint32_t update_completed_at = 0;
 void MonopodWS2811::begin(uint32_t numPerStrip,
                           void *frameBuf,
                           uint8_t config,
-			  int pin)
+                          int pin)
 {
   stripLen = numPerStrip;
   frameBuffer = frameBuf;
@@ -3787,8 +3810,8 @@ public:
   }
   OverDriveColor getColor(int led) {
     Color c(max(0, (sin_table[((m * 3 + led * 50)) & 0x3ff] >> 7)),
-	    max(0, (sin_table[((m * 3 + led * 50 + 1024 / 3)) & 0x3ff] >> 7)),
-	    max(0, (sin_table[((m * 3 + led * 50 + 1024 * 2 / 3)) & 0x3ff] >> 7)));
+            max(0, (sin_table[((m * 3 + led * 50 + 1024 / 3)) & 0x3ff] >> 7)),
+            max(0, (sin_table[((m * 3 + led * 50 + 1024 * 2 / 3)) & 0x3ff] >> 7)));
     OverDriveColor ret;
     ret.c = c;
     ret.overdrive = false;
@@ -3886,7 +3909,7 @@ public:
      if (m - strobe_millis_ > timeout) {
        strobe_millis_ += timeout;
        if (m - strobe_millis_ > STROBE_MILLIS + (1000/STROBE_FREQUENCY))
-	 strobe_millis_ = m;
+         strobe_millis_ = m;
        strobe_ = !strobe_;
      }
    }
@@ -3914,12 +3937,12 @@ public:
     last_micros_ = now;
     if (blade->is_on()) {
       if (extension == 0.0) {
-	// We might have been off for a while, so delta might
-	// be insanely high.
-	extension = 0.00001;
+        // We might have been off for a while, so delta might
+        // be insanely high.
+        extension = 0.00001;
       } else {
-      	extension += delta / (OUT_MILLIS * 1000.0);
-	extension = min(extension, 1.0f);
+        extension += delta / (OUT_MILLIS * 1000.0);
+        extension = min(extension, 1.0f);
       }
     } else {
       if (extension == 0.0) blade->allow_disable();
@@ -3951,12 +3974,12 @@ public:
     last_micros_ = now;
     if ((on_ = blade->is_on())) {
       if (extension == 0.0) {
-	// We might have been off for a while, so delta might
-	// be insanely high.
-	extension = 0.00001;
+        // We might have been off for a while, so delta might
+        // be insanely high.
+        extension = 0.00001;
       } else {
-      	extension += delta / (OUT_MILLIS * 1000.0);
-	extension = min(extension, 1.0f);
+        extension += delta / (OUT_MILLIS * 1000.0);
+        extension = min(extension, 1.0f);
       }
     } else {
       if (extension == 0.0) blade->allow_disable();
@@ -4031,10 +4054,10 @@ typedef Rgb<0,0,0> BLACK;
 
 // Arguments: color, clash color, turn-on/off time
 template<class base_color,
-	 class clash_color,
-	 int out_millis,
-	 int in_millis,
-	 class lockup_flicker_color = WHITE>
+         class clash_color,
+         int out_millis,
+         int in_millis,
+         class lockup_flicker_color = WHITE>
 BladeStyle *StyleNormalPtr() {
   typedef AudioFlicker<base_color, lockup_flicker_color> AddFlicker;
   typedef Lockup<base_color, AddFlicker> AddLockup;
@@ -4045,9 +4068,9 @@ BladeStyle *StyleNormalPtr() {
 // Rainbow blade.
 // Arguments: color, clash color, turn-on/off time
 template<int out_millis,
-	 int in_millis,
-	 class clash_color = WHITE,
-	 class lockup_flicker_color = WHITE>
+         int in_millis,
+         class clash_color = WHITE,
+         class lockup_flicker_color = WHITE>
 BladeStyle *StyleRainbowPtr() {
   typedef AudioFlicker<Rainbow, lockup_flicker_color> AddFlicker;
   typedef Lockup<Rainbow, AddFlicker> AddLockup;
@@ -4058,10 +4081,10 @@ BladeStyle *StyleRainbowPtr() {
 // Stroboscope, flickers the blade at the desired frequency.
 // Arguments: color, clash color, turn-on/off time
 template<class strobe_color,
-	 class clash_color,
-	 int frequency,
-	 int out_millis,
-	 int in_millis>
+         class clash_color,
+         int frequency,
+         int out_millis,
+         int in_millis>
 BladeStyle *StyleStrobePtr() {
   typedef Strobe<BLACK, strobe_color, frequency, 1> strobe;
   typedef Strobe<BLACK, strobe_color, 3* frequency, 1> fast_strobe;
@@ -8322,8 +8345,8 @@ protected:
        // Wait until it's our turn.
        while (current_blade) YIELD();
        if (allow_disable_) {
-	 Power(on_);
-	 continue;
+         Power(on_);
+         continue;
        }
        current_blade = this;
        current_style_->run(this);
@@ -8607,10 +8630,10 @@ public:
                LEDInterface* c2,
                LEDInterface* c3,
                LEDInterface* c4,
-	       int pin1,
-	       int pin2,
-	       int pin3,
-	       int pin4) :
+               int pin1,
+               int pin2,
+               int pin3,
+               int pin4) :
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK) {
@@ -8704,7 +8727,7 @@ bool Simple_Blade::on_ = false;
 bool Simple_Blade::power_ = false;
 
 template<class LED1, class LED2, class LED3, class LED4,
-	 int pin1 = bladePowerPin1,
+         int pin1 = bladePowerPin1,
          int pin2 = bladePowerPin2,
          int pin3 = bladePowerPin3,
          int pin4 = bladePin>
@@ -9131,8 +9154,8 @@ BladeConfig blades[] = {
   {   2600, WS2811BladePtr<97, WS2811_580kHz>(), CONFIGARRAY(presets) },
 
   // Charging adapter, single PL9823 LED.
-  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
-//  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(presets) },
+//  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
+  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(presets) },
 
   // WS2811 string blade 144 LEDs
   {   7800, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(), CONFIGARRAY(presets) },
@@ -9234,7 +9257,7 @@ protected:
         eat_click_ = false;
       } else {
         if (millis() - push_millis_ < 500) {
-	  click_ = CLICK_SHORT;
+          click_ = CLICK_SHORT;
         } else {
           click_ = CLICK_LONG;
         }
@@ -9497,26 +9520,18 @@ class Script : Looper, StateMachine {
 public:
   void Loop() override {
     STATE_MACHINE_BEGIN();
-    // while(!run_) YIELD();
-    // run_ = false;
-#if 0
-    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-    beeper.Beep(0.05, 2000.0);
-    SLEEP(100);
-    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-    beeper.Beep(0.05, 2000.0);
-    SLEEP(100);
-    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-    beeper.Beep(0.05, 3000.0);
-#endif
-    SLEEP(20000);
-    while (1) {
-      CommandParser::DoParse("on", NULL);
-      SLEEP(3000);
-      CommandParser::DoParse("off", NULL);
-      SLEEP(2000);
-      CommandParser::DoParse("n", NULL);
-      SLEEP(500);
+    SLEEP(2000);
+    CommandParser::DoParse("on", NULL);
+    SLEEP(2000);
+    while (true) {
+      if (dac.isSilent()) {
+        SLEEP(2000);
+      } else {
+        CommandParser::DoParse("clash", NULL);
+        Serial.print("alloced: ");
+        Serial.println(mallinfo().uordblks);
+        SLEEP(100);
+      }
     }
     STATE_MACHINE_END();
   }
@@ -9586,9 +9601,9 @@ public:
       }
 
       if (a->pushed_millis()) {
-	SaberBase::SetLockup(true);
-	SaberBase::DoBeginLockup();
-	a->EatClick();
+        SaberBase::SetLockup(true);
+        SaberBase::DoBeginLockup();
+        a->EatClick();
       } else{
         SaberBase::DoClash();
       }
@@ -9863,27 +9878,27 @@ protected:
          case ButtonBase::CLICK_NONE:
            break;
          case ButtonBase::CLICK_SHORT:
-	   if (aux_.pushed_millis()) {
-	     aux_.EatClick();
-	     next_preset();
-	     Serial.println("Next preset");
-	   } else {
-	     Serial.println("On (power)");
-	     On();
-	     // script.Run();
-	     aux_on_ = false;
-	   }
-	   break;
+           if (aux_.pushed_millis()) {
+             aux_.EatClick();
+             next_preset();
+             Serial.println("Next preset");
+           } else {
+             Serial.println("On (power)");
+             On();
+             // script.Run();
+             aux_on_ = false;
+           }
+           break;
         case ButtonBase::CLICK_LONG:
-	  // TODO: Change this to something else...
-	  if (aux_.pushed_millis()) {
-	    aux_.EatClick();
-	    next_directory();
-	    Serial.println("next directory");
-	  } else {
-	    StartOrStopTrack();
-	  }
-	  break;
+          // TODO: Change this to something else...
+          if (aux_.pushed_millis()) {
+            aux_.EatClick();
+            next_directory();
+            Serial.println("next directory");
+          } else {
+            StartOrStopTrack();
+          }
+          break;
       }
 
       switch (aux_.GetClick()) {
@@ -9892,7 +9907,7 @@ protected:
           On();
           Serial.println("On (aux)");
           break;
-	  
+          
         case ButtonBase::CLICK_LONG: // reserved
         case ButtonBase::CLICK_NONE:
           break;
@@ -9907,30 +9922,30 @@ protected:
         a = &power_;
       }
       if (SaberBase::Lockup() && !a->pushed_millis()) {
-	SaberBase::SetLockup(false);
-	SaberBase::DoEndLockup();
+        SaberBase::SetLockup(false);
+        SaberBase::DoEndLockup();
       }
       switch (a->GetClick()) {
-	case ButtonBase::CLICK_SHORT:
-	  Serial.println("Off");
-	  Off();
-	  break;
-	case ButtonBase::CLICK_LONG:
-	  Serial.println("Force");
-	  SaberBase::DoForce();
-	  break;
-	case ButtonBase::CLICK_NONE:
-	  break;
+        case ButtonBase::CLICK_SHORT:
+          Serial.println("Off");
+          Off();
+          break;
+        case ButtonBase::CLICK_LONG:
+          Serial.println("Force");
+          SaberBase::DoForce();
+          break;
+        case ButtonBase::CLICK_NONE:
+          break;
       }
 
       switch (b->GetClick()) {
-	case ButtonBase::CLICK_SHORT:
-	  SaberBase::DoBlast();
-	  Serial.println("Blast");
-	  break;
-	case ButtonBase::CLICK_LONG: // reserved
-	case ButtonBase::CLICK_NONE:
-	  break;
+        case ButtonBase::CLICK_SHORT:
+          SaberBase::DoBlast();
+          Serial.println("Blast");
+          break;
+        case ButtonBase::CLICK_LONG: // reserved
+        case ButtonBase::CLICK_NONE:
+          break;
       }
     }
   }
@@ -9976,10 +9991,10 @@ protected:
     }
     if (!strcmp(cmd, "volumes")) {
       for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
-	Serial.print(" Unit ");
-	Serial.print(unit);
-	Serial.print(" Volume ");
-	Serial.println(wav_players[unit].volume());
+        Serial.print(" Unit ");
+        Serial.print(unit);
+        Serial.print(" Volume ");
+        Serial.println(wav_players[unit].volume());
       }
       Serial.println("Splicer Volume:");
       Serial.println(audio_splicer.volume());
@@ -10253,12 +10268,19 @@ public:
       Serial.println("done");
       return;
     }
+    if (!strcmp(cmd, "malloc")) {
+      Serial.print("alloced: ");
+      Serial.println(mallinfo().uordblks);
+      Serial.print("Free: ");
+      Serial.println(mallinfo().fordblks);
+      return;
+    }
     if (!strcmp(cmd, "top")) {
       // TODO: list cpu usage for various objects.
       double total_cycles =
-	(double)(audio_dma_interrupt_cycles +
-	 wav_interrupt_cycles +
-	 loop_cycles);
+        (double)(audio_dma_interrupt_cycles +
+         wav_interrupt_cycles +
+         loop_cycles);
       Serial.print("Audio DMA: ");
       Serial.print(audio_dma_interrupt_cycles * 100.0 / total_cycles);
       Serial.println("%");
@@ -10965,42 +10987,42 @@ extern "C" void startup_early_hook(void) {
                   WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN); // Enable WDG
   WDOG_PRESC = 0; // prescaler
 #elif defined(KINETISK)
-	WDOG_STCTRLH = WDOG_STCTRLH_ALLOWUPDATE;
+        WDOG_STCTRLH = WDOG_STCTRLH_ALLOWUPDATE;
 #elif defined(KINETISL)
-	SIM_COPC = 0;  // disable the watchdog
+        SIM_COPC = 0;  // disable the watchdog
 #endif
-	// enable clocks to always-used peripherals
+        // enable clocks to always-used peripherals
 #if defined(__MK20DX128__)
-	SIM_SCGC5 = 0x00043F82;		// clocks active to all GPIO
-	SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
+        SIM_SCGC5 = 0x00043F82;         // clocks active to all GPIO
+        SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
 #elif defined(__MK20DX256__)
-	SIM_SCGC3 = SIM_SCGC3_ADC1 | SIM_SCGC3_FTM2;
-	SIM_SCGC5 = 0x00043F82;		// clocks active to all GPIO
-	SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
+        SIM_SCGC3 = SIM_SCGC3_ADC1 | SIM_SCGC3_FTM2;
+        SIM_SCGC5 = 0x00043F82;         // clocks active to all GPIO
+        SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
 #elif defined(__MK64FX512__) || defined(__MK66FX1M0__)
-	SIM_SCGC3 = SIM_SCGC3_ADC1 | SIM_SCGC3_FTM2 | SIM_SCGC3_FTM3;
-	SIM_SCGC5 = 0x00043F82;		// clocks active to all GPIO
-	SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
-	//PORTC_PCR5 = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE;
-	//GPIOC_PDDR |= (1<<5);
-	//GPIOC_PSOR = (1<<5);
-	//while (1);
+        SIM_SCGC3 = SIM_SCGC3_ADC1 | SIM_SCGC3_FTM2 | SIM_SCGC3_FTM3;
+        SIM_SCGC5 = 0x00043F82;         // clocks active to all GPIO
+        SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
+        //PORTC_PCR5 = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE;
+        //GPIOC_PDDR |= (1<<5);
+        //GPIOC_PSOR = (1<<5);
+        //while (1);
 #elif defined(__MKL26Z64__)
-	SIM_SCGC4 = SIM_SCGC4_USBOTG | 0xF0000030;
-	SIM_SCGC5 = 0x00003F82;		// clocks active to all GPIO
-	SIM_SCGC6 = SIM_SCGC6_ADC0 | SIM_SCGC6_TPM0 | SIM_SCGC6_TPM1 | SIM_SCGC6_TPM2 | SIM_SCGC6_FTFL;
+        SIM_SCGC4 = SIM_SCGC4_USBOTG | 0xF0000030;
+        SIM_SCGC5 = 0x00003F82;         // clocks active to all GPIO
+        SIM_SCGC6 = SIM_SCGC6_ADC0 | SIM_SCGC6_TPM0 | SIM_SCGC6_TPM1 | SIM_SCGC6_TPM2 | SIM_SCGC6_FTFL;
 #endif
 #if defined(__MK64FX512__) || defined(__MK66FX1M0__)
-	SCB_CPACR = 0x00F00000;
+        SCB_CPACR = 0x00F00000;
 #endif
 #if defined(__MK66FX1M0__)
-	LMEM_PCCCR = 0x85000003;
+        LMEM_PCCCR = 0x85000003;
 #endif
-	
-#define SETUP_PIN(X) do {						\
- CORE_PIN##X##_PORTREG &=~ CORE_PIN##X##_BITMASK;			\
- CORE_PIN##X##_CONFIG = PORT_PCR_SRE | PORT_PCR_DSE | PORT_PCR_MUX(1);	\
- CORE_PIN##X##_DDRREG |= CORE_PIN##X##_BITMASK;				\
+        
+#define SETUP_PIN(X) do {                                               \
+ CORE_PIN##X##_PORTREG &=~ CORE_PIN##X##_BITMASK;                       \
+ CORE_PIN##X##_CONFIG = PORT_PCR_SRE | PORT_PCR_DSE | PORT_PCR_MUX(1);  \
+ CORE_PIN##X##_DDRREG |= CORE_PIN##X##_BITMASK;                         \
 } while (0)
 
   SETUP_PIN(20);
