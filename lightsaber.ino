@@ -9200,8 +9200,9 @@ BladeConfig blades[] = {
   {   2600, WS2811BladePtr<97, WS2811_580kHz>(), CONFIGARRAY(presets) },
 
   // Charging adapter, single PL9823 LED.
-//  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
-  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(presets) },
+  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
+  // For testing (makes the charging blade behave like a normal blade.)
+  //  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(presets) },
 
   // WS2811 string blade 144 LEDs
   {   7800, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(), CONFIGARRAY(presets) },
