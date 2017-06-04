@@ -28,8 +28,8 @@
 
 
 // Board version
-#define VERSION_MAJOR 1
-#define VERSION_MINOR 0
+#define VERSION_MAJOR 2
+#define VERSION_MINOR 3
 
 // Number of simultaneously connected blades.
 // (For interchangeable blades, see the blades[] array.)
@@ -997,7 +997,7 @@ private:
     if (stream) {
       int n = stream->read(dest, end-dest);
       while (n--) {
-        *dest = ((*(int16_t*)dest) + 32768) >> 4;
+        *dest = ((*(uint16_t*)dest) + 32768) >> 4;
         dest++;
       }
     }
@@ -1261,7 +1261,7 @@ public:
       last_prevolume_value = tmp;
       tmp = (tmp * (int32_t)volume_.value()) >> 15;
       volume_.advance();
-      tmp = clampi32(tmp, -32768, 32767);
+      tmp = clamptoi16(tmp);
       last_value = tmp;
       data[i] = tmp;
     }
@@ -1826,11 +1826,10 @@ EFFECT(swingh);  // Looped swing, HIGH
     upsample_buf_##NAME##_b_ = upsample_buf_##NAME##_c_;        \
     upsample_buf_##NAME##_c_ = upsample_buf_##NAME##_d_;        \
     upsample_buf_##NAME##_d_ = sample;                          \
-    EMIT(clampi32((upsample_buf_##NAME##_a_ * C2 +              \
+    EMIT(clamptoi16((upsample_buf_##NAME##_a_ * C2 +            \
           upsample_buf_##NAME##_b_ * C1 +                       \
           upsample_buf_##NAME##_c_ * C1 +                       \
-                   upsample_buf_##NAME##_d_ * C2) >> 15,        \
-                  -32768, 32767));                              \
+                   upsample_buf_##NAME##_d_ * C2) >> 15));      \
     EMIT(upsample_buf_##NAME##_c_);                             \
   }                                                             \
   void clear_##NAME() {                                         \
@@ -2315,7 +2314,7 @@ public:
   }
 
   BufferedWavPlayer() {
-   SetStream(&wav);
+    SetStream(&wav);
   }
 
   int read(int16_t* dest, int to_read) override {
@@ -10046,8 +10045,17 @@ protected:
         Serial.print(" Volume ");
         Serial.println(wav_players[unit].volume());
       }
-      Serial.println("Splicer Volume:");
+      Serial.print("Splicer Volume ");
       Serial.println(audio_splicer.volume());
+      return true;
+    }
+    if (!strcmp(cmd, "buffered")) {
+      for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+        Serial.print(" Unit ");
+        Serial.print(unit);
+        Serial.print(" Buffered: ");
+        Serial.println(wav_players[unit].buffered());
+      }
       return true;
     }
 #endif
