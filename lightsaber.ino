@@ -1438,7 +1438,7 @@ public:
   bool eof() const override {
     return !buffered() && eof_;
   }
-  void Stop() override { if(stream_) stream_->Stop(); }
+  void Stop() override { if (!stream_) stream_->Stop(); }
   void clear() {
     eof_ = false;
     buf_start_ = buf_end_;
@@ -1448,7 +1448,7 @@ public:
     return buf_end_ - buf_start_;
   }
   size_t space_available() const override {
-    if (eof_) return 0;
+    if (eof_ || !stream_) return 0;
     return N - buffered();
   }
   void SetStream(AudioStream* stream) {
@@ -1467,10 +1467,6 @@ private:
           eof_ = false;
         } else {
           eof_ = stream_->eof();
-#if 0
-          Serial.print("FillBuffer, eof = ");
-          Serial.println(eof_);
-#endif
         }
         buf_end_ += got;
       }
@@ -1750,6 +1746,7 @@ class Effect {
           }
           f.close();
         }
+	dir.close();
       }
     }
 #endif
@@ -9823,12 +9820,17 @@ public:
         if (!f.isDirectory()) continue;
         dirs++;
         if (!first) {
+	  first.close();
           first = f;
         } else {
-          if (cmpdir(f.name(), first.name())*sign < 0) first = f;
+          if (cmpdir(f.name(), first.name())*sign < 0) {
+	    first.close();
+	    first = f;
+	  }
         }
         if (cmpdir(f.name(), current_directory)*sign <= 0) continue;
         if (best && cmpdir(f.name(), best.name())*sign > 0) continue;
+	best.close();
         best = f;
       }
       if (best) {
@@ -9842,6 +9844,9 @@ public:
           return;
         }
       }
+      dir.close();
+      first.close();
+      best.close();
     } while (++tries <= dirs);
 #endif
   }
