@@ -26,8 +26,8 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "toy_saber_config.h"
-#define CONFIG_FILE "graflex_v1_config.h"
+#define CONFIG_FILE "toy_saber_config.h"
+// #define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
 
 // Search for CONFIGURABLE in this file to find all the places which
@@ -685,6 +685,7 @@ public:
     MonitorClash = 32,
     MonitorTemp = 64,
     MonitorGyro = 128,
+    MonitorStrokes = 256,
   };
 
   bool ShouldPrint(MonitorBit bit) {
@@ -694,6 +695,11 @@ public:
     }
     return false;
   }
+
+  bool IsMonitoring(MonitorBit bit) const {
+    return (active_monitors_ & bit) != 0;
+  }
+  
 protected:
   void Loop() override {
     if (millis() - last_monitor_loop_ > monitor_frequency_ms_) {
@@ -733,6 +739,10 @@ protected:
       }
       if (!strcmp(arg, "temp")) {
         active_monitors_ ^= MonitorTemp;
+        return true;
+      }
+      if (!strcmp(arg, "strokes")) {
+        active_monitors_ ^= MonitorStrokes;
         return true;
       }
     }
@@ -9918,18 +9928,38 @@ public:
   Stroke strokes[5];
 
   void ProcessStrokes() {
+    if (monitor.IsMonitoring(Monitoring::MonitorStrokes)) {
+      Serial.print("Stroke: ");
+      switch (strokes[NELEM(strokes)-1].type) {
+	case TWIST_LEFT:
+	  Serial.print("TwistLeft");
+	  break;
+	case TWIST_RIGHT:
+	  Serial.print("TwistRight");
+	  break;
+	default: break;
+      }
+      Serial.print(" len=");
+      Serial.print(strokes[NELEM(strokes)-1].length());
+      Serial.print(" separation=");
+	uint32_t separation =
+	  strokes[NELEM(strokes)-1].start_millis -
+	  strokes[NELEM(strokes)-2].end_millis;
+      Serial.println(separation);
+    }
     if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
 	 strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
-	(strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
-	 strokes[NELEM(strokes)-2].type == TWIST_RIGHT)) {
-      if (strokes[NELEM(strokes) -1].length() > 50UL &&
+	(strokes[NELEM(strokes)-1].type == TWIST_RIGHT &&
+	 strokes[NELEM(strokes)-2].type == TWIST_LEFT)) {
+      if (strokes[NELEM(strokes) -1].length() > 90UL &&
 	  strokes[NELEM(strokes) -1].length() < 300UL &&
-	  strokes[NELEM(strokes) -2].length() > 50UL &&
+	  strokes[NELEM(strokes) -2].length() > 90UL &&
 	  strokes[NELEM(strokes) -2].length() < 300UL) {
 	uint32_t separation =
 	  strokes[NELEM(strokes)-1].start_millis -
 	  strokes[NELEM(strokes)-2].end_millis;
 	if (separation < 200UL) {
+	  Serial.println("TWIST");
 	  // We have a twisting gesture.
 #if NUM_BUTTONS == 0
 	  if (on_) Off(); else On();
@@ -9970,7 +10000,7 @@ public:
       Serial.print(", ");
       Serial.println(gyro.z);
     }
-    if (abs(gyro.x) > 100.0 &&
+    if (abs(gyro.x) > 200.0 &&
 	abs(gyro.x) > 3.0 * abs(gyro.y) &&
 	abs(gyro.x) > 3.0 * abs(gyro.z)) {
       DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);

@@ -55,9 +55,9 @@ const unsigned int maxLedsPerStrip = 144;
 // configuration array below. See "simple_presets" and "charging_presets"
 // below for examples.
 Preset presets[] = {
-  { "font01", "tracks/title.wav", StyleNormalPtr<BLUE, WHITE, 100, 200>() },
-  { "graflex7", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 100, 200>() },
-  { "font03", "tracks/cantina.wav", StyleStrobePtr<BLUE, WHITE, 15, 100, 200>() },
+  { "font01", "tracks/title.wav", StyleNormalPtr<BLUE, WHITE, 200, 300>() },
+  { "graflex7", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 200, 300>() },
+  { "font03", "tracks/cantina.wav", StyleStrobePtr<BLUE, WHITE, 15, 200, 300>() },
 };
 
 // Each line of configuration should be:
