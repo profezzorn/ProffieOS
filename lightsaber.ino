@@ -23,7 +23,11 @@
  THE SOFTWARE.
 */
 
-#define CONFIG_FILE "toy_saber_config.h"
+// You can have multiple configuration files, and specify which one
+// to use here.
+
+// #define CONFIG_FILE "toy_saber_config.h"
+#define CONFIG_FILE "graflex_v1_config.h"
 
 // Search for CONFIGURABLE in this file to find all the places which
 // might need to be modified for your saber.
@@ -9621,6 +9625,7 @@ public:
 Script script;
 #endif
 
+
 // The Saber class implements the basic states and actions
 // for the saber.
 class Saber : CommandParser, Looper, SaberBase {
@@ -9897,6 +9902,63 @@ public:
     }
   }
 
+  enum StrokeType {
+    NO_STROKE,
+    TWIST_LEFT,
+    TWIST_RIGHT,
+  };
+  struct Stroke {
+    StrokeType type;
+    uint32_t start_millis;
+    uint32_t end_millis;
+    uint32_t length() const { return end_millis - start_millis; }
+  };
+
+  Stroke strokes[5];
+
+  void ProcessStrokes() {
+    if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
+	 strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
+	(strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
+	 strokes[NELEM(strokes)-2].type == TWIST_RIGHT)) {
+      if (strokes[NELEM(strokes) -1].length() > 50UL &&
+	  strokes[NELEM(strokes) -1].length() < 300UL &&
+	  strokes[NELEM(strokes) -2].length() > 50UL &&
+	  strokes[NELEM(strokes) -2].length() < 300UL) {
+	uint32_t separation =
+	  strokes[NELEM(strokes)-1].start_millis -
+	  strokes[NELEM(strokes)-2].end_millis;
+	if (separation < 200UL) {
+	  // We have a twisting gesture.
+#if NUM_BUTTONS == 0
+	  if (on_) Off(); else On();
+#endif
+	}
+      }
+    }
+  }
+
+  void DoGesture(StrokeType gesture) {
+    if (gesture == NO_STROKE) {
+      if (strokes[NELEM(strokes) - 1].end_millis == 0) {
+	strokes[NELEM(strokes) - 1].end_millis = millis();
+	ProcessStrokes();
+      }
+      return;
+    }
+    if (gesture == strokes[NELEM(strokes)-1].type &&
+	strokes[NELEM(strokes)-1].end_millis == 0) {
+      // Stroke not done, wait.
+      return;
+    }
+    for (size_t i = 0; i < NELEM(strokes) - 1; i++) {
+      strokes[i] = strokes[i+1];
+    }
+    strokes[NELEM(strokes)-1].type = gesture;
+    strokes[NELEM(strokes)-1].start_millis = millis();
+    strokes[NELEM(strokes)-1].end_millis = 0;
+  }
+
   void SB_Motion(const Vec3& gyro) override {
     if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
       // Got gyro data
@@ -9906,6 +9968,13 @@ public:
       Serial.print(gyro.y);
       Serial.print(", ");
       Serial.println(gyro.z);
+    }
+    if (abs(gyro.x) > 100.0 &&
+	abs(gyro.x) > 3.0 * abs(gyro.y) &&
+	abs(gyro.x) > 3.0 * abs(gyro.z)) {
+      DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
+    } else {
+      DoGesture(NO_STROKE);
     }
   }
 protected:
