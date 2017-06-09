@@ -9,6 +9,9 @@
 // (For interchangeable blades, see the blades[] array.)
 #define NUM_BLADES 1
 
+// Number of buttons
+#define NUM_BUTTONS 0
+
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
 const unsigned int maxLedsPerStrip = 144;
