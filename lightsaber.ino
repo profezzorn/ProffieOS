@@ -28,6 +28,7 @@
 
 // #define CONFIG_FILE "toy_saber_config.h"
 #define CONFIG_FILE "graflex_v1_config.h"
+// #define CONFIG_FILE "owk_v2_config.h"
 
 // Search for CONFIGURABLE in this file to find all the places which
 // might need to be modified for your saber.
