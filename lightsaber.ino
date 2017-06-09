@@ -23,9 +23,22 @@
  THE SOFTWARE.
 */
 
+#define CONFIG_FILE "toy_saber_config.h"
+
 // Search for CONFIGURABLE in this file to find all the places which
 // might need to be modified for your saber.
 
+#ifdef CONFIG_FILE
+
+#define CONFIG_TOP
+#include CONFIG_FILE
+#undef CONFIG_TOP
+
+#if VERSION_MAJOR >= 2
+#define V2
+#endif
+
+#else
 
 // Board version
 #define VERSION_MAJOR 2
@@ -99,15 +112,20 @@ const unsigned int maxLedsPerStrip = 144;
 
 
 // TODO LIST:
+//   Drag effect
+//   Blast effect
+//   stab detect/effect
+//   Test MTP with beta teensyduino.
 // Make sure that sound is off before doing file command
-// make "chargint style" prevent you from turning the saber "on"
+// make "charging style" prevent you from turning the saber "on"
+// 
 // Audio work items:
 //   Tune swings better
 //   select clash from force
 //   stab effect
-//   synthesize swings
 // Blade stuff
 //    better clash
+//    blast effect
 // Implement menues:
 //    select sound font
 //    select color
@@ -135,6 +153,8 @@ const unsigned int maxLedsPerStrip = 144;
 #endif
 
 // #define ENABLE_DEBUG
+
+#endif  // CONFIG_FILE
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
@@ -9087,6 +9107,34 @@ struct Preset {
 #endif
 };
 
+struct BladeConfig {
+  // Blade identifier resistor.
+  int ohm;
+
+  // Blade driver.
+  BladeBase* blade;
+#if NUM_BLADES >= 2
+  BladeBase* blade2;
+#endif
+#if NUM_BLADES >= 3
+  BladeBase* blade3;
+#endif
+#if NUM_BLADES >= 4
+  BladeBase* blade4;
+#endif
+
+  // Blade presets
+  Preset* presets;
+  size_t num_presets;
+};
+
+#ifdef CONFIG_FILE
+
+#define CONFIG_PRESETS
+#include CONFIG_FILE
+#undef CONFIG_PRESETS
+#else
+
 // CONFIGURABLE
 // Each preset line consists of:
 // { "font directory", "sound track", Style },
@@ -9165,27 +9213,6 @@ Preset testing_presets[] = {
   { "charging", "tracks/duel.wav", &style_charging },
 };
 
-struct BladeConfig {
-  // Blade identifier resistor.
-  int ohm;
-
-  // Blade driver.
-  BladeBase* blade;
-#if NUM_BLADES >= 2
-  BladeBase* blade2;
-#endif
-#if NUM_BLADES >= 3
-  BladeBase* blade3;
-#endif
-#if NUM_BLADES >= 4
-  BladeBase* blade4;
-#endif
-
-  // Blade presets
-  Preset* presets;
-  size_t num_presets;
-};
-
 // CONFIGURABLE
 // Each line of configuration should be:
 //     { blade id resistor ohms, blade, CONFIGARRAY(array of presets) },
@@ -9226,6 +9253,8 @@ BladeConfig blades[] = {
   // Testing configuration. 
   { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) },
 };
+
+#endif // CONFIG_FILE
 
 class DebouncedButton {
 public:
