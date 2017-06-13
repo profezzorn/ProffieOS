@@ -8833,8 +8833,8 @@ public:
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK),
-    c_(c),
-    clash_pin_.Init(clash_pin, clash_led) {
+    c_(c) {
+    clash_pin_.Init(clash_pin, clash_led);
   }
 
   void Activate() override {
