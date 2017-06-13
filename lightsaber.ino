@@ -26,9 +26,10 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "toy_saber_config.h"
+// #define CONFIG_FILE "toy_saber_config.h"
 // #define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
+#define CONFIG_FILE "test_bench_config.h"
 
 // Search for CONFIGURABLE in this file to find all the places which
 // might need to be modified for your saber.
@@ -8688,13 +8689,16 @@ public:
     c_ = c;
   }
   void Activate() {
+    if (pin_ == -1) return;
     analogWriteFrequency(pin_, 1000);
     analogWrite(pin_, 0);  // make it black
   }
   void set(const Color& c) {
+    if (pin_ == -1) return;
     analogWrite(pin_, c_->PWM(c));
   }
   void set_overdrive(const Color& c) {
+    if (pin_ == -1) return;
     analogWrite(pin_, c_->PWM_overdrive(c));
   }
   
@@ -8825,11 +8829,12 @@ class Simple_Blade *SimpleBladePtr() {
 #define STRING_SEGMENTS 6
 class String_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
 public:
-  String_Blade(LEDInterface* c) :
+  String_Blade(LEDInterface* c, int clash_pin, LEDInterface* clash_led) :
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK),
-    c_(c) {
+    c_(c),
+    clash_pin_.Init(clash_pin, clash_led) {
   }
 
   void Activate() override {
@@ -8839,6 +8844,7 @@ public:
       analogWriteFrequency(pin_[i], 1000);
       analogWrite(pin_[i], 0);  // make it black
     }
+    clash_pin_.Activate();
     CommandParser::Link();
     Looper::Link();
     SaberBase::Link(this);
@@ -8853,10 +8859,12 @@ public:
   }
   void set(int led, Color c) override {
     analogWrite(pin_[led], c_->PWM(c));
+    if (led == 0) clash_pin_.set(c);
   }
 
   void set_overdrive(int led, Color c) override {
     analogWrite(pin_[led], c_->PWM_overdrive(c));
+    if (led == 0) clash_pin_.set_overdrive(c);
   }
 
   bool clash() override {
@@ -8910,6 +8918,7 @@ protected:
   
 private:
   LEDInterface *c_;
+  PWMPin clash_pin_;
   static int pin_[STRING_SEGMENTS];
   static bool on_;
   static bool power_;
@@ -8928,10 +8937,12 @@ bool String_Blade::on_ = false;
 bool String_Blade::power_ = false;
 bool String_Blade::clash_ = true;
 
+class NoLED;
+
 // Possibly one LED driver per channel...
-template<class LED>
+template<class LED, int CLASH_PIN = -1, class CLASH_LED = NoLED>
 class String_Blade *StringBladePtr() {
-  static String_Blade blade(LEDPtr<LED>());
+  static String_Blade blade(LEDPtr<LED>(), CLASH_PIN, LEDPtr<CLASH_LED>());
   return &blade;
 }
 #endif
@@ -11249,8 +11260,6 @@ class WatchDog : Looper {
 WatchDog dog;
 #endif
 
-
-
 #ifdef MTP_RX_ENDPOINT
 
 void mtp_yield() { Looper::DoLoop(); }
@@ -11610,7 +11619,7 @@ private:
     uint16_t type; // 4
     uint16_t op;   // 6
     uint32_t transaction_id; // 8
-  };
+  } __attribute__((__may_alias__));
 
   struct MTPContainer {
     uint32_t len;  // 0
@@ -11618,7 +11627,7 @@ private:
     uint16_t op;   // 6
     uint32_t transaction_id; // 8
     uint32_t params[5];    // 12
-  };
+  } __attribute__((__may_alias__));
 
   void PrintPacket(const usb_packet_t *x) {
 #if 0
