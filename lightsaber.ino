@@ -26,13 +26,43 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// to configure your saber, make a copy of one of these config files,
-// then set CONFIG_FILE to the name of that file.
-
 // #define CONFIG_FILE "toy_saber_config.h"
 // #define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
 #define CONFIG_FILE "test_bench_config.h"
+
+// Search for CONFIGURABLE in this file to find all the places which
+// might need to be modified for your saber.
+
+#ifdef CONFIG_FILE
+
+#define CONFIG_TOP
+#include CONFIG_FILE
+#undef CONFIG_TOP
+
+#if VERSION_MAJOR >= 2
+#define V2
+#endif
+
+#else
+
+// Board version
+#define VERSION_MAJOR 2
+#define VERSION_MINOR 3
+
+// Number of simultaneously connected blades.
+// (For interchangeable blades, see the blades[] array.)
+#define NUM_BLADES 1
+
+// If you have two 144 LED/m strips in your blade, connect
+// both of them to bladePin and drive them in parallel.
+const unsigned int maxLedsPerStrip = 144;
+
+#if VERSION_MAJOR >= 2
+#define V2
+#else
+#define POWER_TOUCHBUTTON
+#endif
 
 //
 // OVERVIEW
@@ -109,14 +139,28 @@
 // Disable motion when off to save power.
 // Allow several blades to share power pins.
 
-#define CONFIG_TOP
-#include CONFIG_FILE
-#undef CONFIG_TOP
+// If your electonics inverts the bladePin for some reason, define this.
+// #define INVERT_WS2811
 
-#if VERSION_MAJOR >= 2
-#define V2
+// Feature defines, these let you turn off large blocks of code
+// used for debugging.
+#define ENABLE_AUDIO
+#define ENABLE_MOTION
+// #define ENABLE_SNOOZE
+#define ENABLE_WS2811
+
+// FASTLED is experimental and untested right now
+#define ENABLE_FASTLED
+
+// #define ENABLE_WATCHDOG
+#define ENABLE_SD
+#if VERSION_MAJOR == 1
+#define ENABLE_SERIALFLASH
 #endif
 
+// #define ENABLE_DEBUG
+
+#endif  // CONFIG_FILE
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
@@ -4131,7 +4175,7 @@ BladeStyle *StyleStrobePtr() {
   return StylePtr<InOutHelper<clash, out_millis, in_millis> >();
 }
 
-
+#if defined(ENABLE_WS2811) || defined(ENABLE_FASTLED)
 void rle_decode(const unsigned char *input,
                 unsigned char *output,
                 int output_length) {
@@ -4248,6 +4292,7 @@ private:
 };
 
 StylePOV style_pov;
+#endif
 
 class PowerPinInterface {
 public:
@@ -5122,10 +5167,133 @@ struct BladeConfig {
   size_t num_presets;
 };
 
+#ifdef CONFIG_FILE
+
 #define CONFIG_PRESETS
 #include CONFIG_FILE
 #undef CONFIG_PRESETS
+#else
 
+// CONFIGURABLE
+// Each preset line consists of:
+// { "font directory", "sound track", Style },
+// Where Style is one of:
+//   StyleNormalPtr<BaseColor, FlashColor, out millis, in millis>()
+//   StyleFirePtr<LowHeatColor, HighHeatColor>()
+//   StyleRainBowPtr<out millis, in millis>()
+//   StyleStrobePtr<BaseColor, FlashColor, out millis, in millis>()
+//   &style_charging
+// All colors can be specied as three numbers or using one the handy macros above.
+// If you wish to have different presets for different blades, copy this array and
+// name it something other than "preset", then use the new name inside the blade
+// configuration array below. See "simple_presets" and "charging_presets"
+// below for examples.
+Preset presets[] = {
+  { "font03", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
+  { "graflex7", "tracks/cantina.wav",
+    StylePtr<InOutSparkTip<EASYBLADE(BLUE, WHITE), 300, 800> >() },
+  { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
+  { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
+  { "font02", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>() },
+  { "igniter/font4", "tracks/duel.wav",
+    StylePtr<InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> >() },
+  { "font01", "tracks/duel.wav",
+    StyleNormalPtr<WHITE, RED, 300, 800, RED>() },
+  { "font01", "tracks/walls.wav",
+      StyleNormalPtr<AudioFlicker<YELLOW, WHITE>, BLUE, 300, 800>() },
+  { "font01", "tracks/title.wav", 
+    StylePtr<InOutSparkTip<EASYBLADE(MAGENTA, WHITE), 300, 800> >() },
+  { "font02", "tracks/cantina.wav", StyleNormalPtr<
+    Gradient<RED, BLUE>, Gradient<CYAN, YELLOW>, 300, 800>() },
+  { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
+  { "font02", "tracks/cantina.wav", StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>() },
+  { "font02", "tracks/cantina.wav", &style_pov },
+
+  { "charging", "tracks/duel.wav", &style_charging },
+};
+
+Preset red_presets[] = {
+  { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 100, 200>()},
+  { "caliban", "tracks/duel.wav", StyleNormalPtr<RED, WHITE, 100, 200>()},
+  { "font02", "tracks/cantina.wav", StyleStrobePtr<RED, WHITE, 15, 100, 200>()},
+};
+
+Preset simple_presets[] = {
+  { "font01", "tracks/title.wav", StyleNormalPtr<BLUE, WHITE, 100, 200>() },
+  { "font02", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 100, 200>() },
+  { "font02", "tracks/cantina.wav", StyleStrobePtr<BLUE, WHITE, 15, 100, 200>() },
+};
+
+Preset white_presets[] = {
+  { "font01", "tracks/title.wav", StyleNormalPtr<WHITE, WHITE, 100, 200>() },
+  { "font02", "tracks/duel.wav", StyleNormalPtr<WHITE, WHITE, 100, 200>() },
+  { "font02", "tracks/cantina.wav", StyleStrobePtr<WHITE, WHITE, 15, 100, 200>() },
+};
+
+Preset charging_presets[] = {
+  { "charging", "", &style_charging },
+};
+
+Preset testing_presets[] = {
+  { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
+  { "graflex4", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
+  { "graflex4", "tracks/cantina.wav", StyleNormalPtr<BLUE, RED, 300, 800>() },
+  { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
+  { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
+  { "graflex5", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>() },
+  { "igniter/font4", "tracks/duel.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>() },
+  { "graflex4", "tracks/duel.wav", StyleNormalPtr<WHITE, RED, 300, 800>() },
+  { "graflex4", "tracks/walls.wav", StyleNormalPtr<YELLOW, BLUE, 300, 800>() },
+  { "graflex4", "tracks/title.wav", StyleNormalPtr<MAGENTA, WHITE, 300, 800>() },
+  { "graflex5", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
+  { "graflex5", "tracks/cantina.wav", StyleStrobePtr<WHITE, RED, 15, 300, 800>() },
+  { "graflex5", "tracks/cantina.wav", &style_pov },
+
+  { "charging", "tracks/duel.wav", &style_charging },
+};
+
+// CONFIGURABLE
+// Each line of configuration should be:
+//     { blade id resistor ohms, blade, CONFIGARRAY(array of presets) },
+// Where "blade", can be one of the following:
+//     WS2811BladePtr<number of leds, WS2811 configuration flags>()
+//     SimpleBladePTR<Color of channel 1, color of channel 2, color of channel 3, color of channel 4>()
+// All colors can be specied as three numbers or using one the handy macros above.
+
+BladeConfig blades[] = {
+#ifdef ENABLE_WS2811
+  // PL9823 blade, 97 LEDs
+  {   2600, WS2811BladePtr<97, WS2811_580kHz>(), CONFIGARRAY(presets) },
+
+  // Charging adapter, single PL9823 LED.
+  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
+  // For testing (makes the charging blade behave like a normal blade.)
+  //  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(presets) },
+
+  // WS2811 string blade 144 LEDs
+  {   7800, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(), CONFIGARRAY(presets) },
+#endif
+
+  // Simple blue string blade.
+  {   5200, SimpleBladePtr<Blue3mmLED,Blue3mmLED,Blue3mmLED,NoLED>(), CONFIGARRAY(simple_presets) },
+
+  // Blue-Blue-White LED star
+  { 20000, SimpleBladePtr<CreeXPE2White, CreeXPE2Blue, CreeXPE2Blue, NoLED>(), CONFIGARRAY(simple_presets) },
+
+  // Blue LED string (with green flourescent tube)
+  { 27000, SimpleBladePtr<Blue8mmLED100, Blue8mmLED100, Blue8mmLED100, NoLED>(), CONFIGARRAY(simple_presets) },
+
+  // Red LED string
+//  { 33000, SimpleBladePtr<Red8mmLED100, Red8mmLED100, Red8mmLED100, NoLED>(), CONFIGARRAY(red_presets) },
+
+  // 3 x Cree XL-L LED star
+  { 100000, SimpleBladePtr<CreeXPL, CreeXPL, CreeXPL, NoLED>(), CONFIGARRAY(white_presets) },
+
+  // Testing configuration. 
+  { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) },
+};
+
+#endif // CONFIG_FILE
 
 class DebouncedButton {
 public:
@@ -5253,8 +5421,6 @@ protected:
   }
   uint8_t pin_;
 };
-
-
 
 // What follows is a copy of the touch.c code from the TensyDuino core library.
 // That code originally implements the touchRead() function, I have modified it
