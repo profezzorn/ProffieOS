@@ -54,7 +54,7 @@ Preset testing_presets[] = {
   { "graflex4", "tracks/title.wav", StyleNormalPtr<MAGENTA, WHITE, 300, 800>() },
   { "graflex5", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
   { "graflex5", "tracks/cantina.wav", StyleStrobePtr<WHITE, RED, 15, 300, 800>() },
-  { "graflex5", "tracks/cantina.wav", &style_pov },
+//  { "graflex5", "tracks/cantina.wav", &style_pov },
 
   { "charging", "tracks/duel.wav", &style_charging },
 };
