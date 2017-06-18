@@ -5650,6 +5650,7 @@ protected:
 #define CURRENT   2 // 0 to 15 - current to use, value is 2*(current+1)
 #define NSCAN     9 // number of times to scan, 0 to 31, value is nscan+1
 #define PRESCALE  2 // prescaler, 0 to 7 - value is 2^(prescaler+1)
+#define TOUCH_BUTTON_SUPPORTED
 static const uint8_t pin2tsi[] = {
 //0    1    2    3    4    5    6    7    8    9
   9,  10, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -5662,6 +5663,7 @@ static const uint8_t pin2tsi[] = {
 #define CURRENT   2
 #define NSCAN     9
 #define PRESCALE  2
+#define TOUCH_BUTTON_SUPPORTED
 static const uint8_t pin2tsi[] = {
 //0    1    2    3    4    5    6    7    8    9
   9,  10, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -5673,6 +5675,7 @@ static const uint8_t pin2tsi[] = {
 #elif defined(__MKL26Z64__)
 #define NSCAN     9
 #define PRESCALE  2
+#define TOUCH_BUTTON_SUPPORTED
 static const uint8_t pin2tsi[] = {
 //0    1    2    3    4    5    6    7    8    9
   9,  10, 255,   2,   3, 255, 255, 255, 255, 255,
@@ -5682,6 +5685,7 @@ static const uint8_t pin2tsi[] = {
 
 #endif
 
+#ifdef TOUCH_BUTTON_SUPPORTED_
 class TouchButton : public ButtonBase {
 public:
   TouchButton(int pin, int threshold, const char* name)
@@ -5793,6 +5797,7 @@ protected:
 };
 
 TouchButton* TouchButton::current_button = NULL;
+#endif
 
 // Menu system
 
