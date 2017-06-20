@@ -16,8 +16,15 @@
 // both of them to bladePin and drive them in parallel.
 const unsigned int maxLedsPerStrip = 144;
 
+// This defines how sensetive the clash detection is.
+#define CLASH_THRESHOLD_G 1.0
+
 // Define this if your power button is a touch button.
 #define POWER_TOUCHBUTTON
+
+// For V1 electronics, there is an external pullup resistor to measure
+// battery voltage. This specifies how many Ohms it is.
+#define BATTER_PULLUP_OHMS 23000
 
 // If your electonics inverts the bladePin for some reason, define this.
 // #define INVERT_WS2811

@@ -45,18 +45,12 @@
 #define VERSION_MAJOR 2
 #define VERSION_MINOR 3
 
-// Number of simultaneously connected blades.
-// (For interchangeable blades, see the blades[] array.)
-#define NUM_BLADES 1
-
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
 const unsigned int maxLedsPerStrip = 144;
 
 #if VERSION_MAJOR >= 2
 #define V2
-#else
-#define POWER_TOUCHBUTTON
 #endif
 
 //
@@ -216,10 +210,14 @@ SnoozeBlock snooze_config(snooze_touch, snooze_digital, snooze_timer);
 // See the teensy 3.2 pinout diagram for more info: https://www.pjrc.com/teensy/pinout.html
 enum SaberPins {
   // Bottom edge (in pin-out diagram)
-  sdCardSelectPin = 0,            // SD card chip (sd card adapter)
-                                  // Set to BUILTIN_SDCARD for Teensy 3.5/3.6
-                                  // (See File->Example->SD->ReadWrite for
+#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
+   // Prefer the built-in sd card for Teensy 3.5/3.6 as it is faster.
+   sdCardSelectPin = BUILTIN_SDCARD;
+#else   
+  sdCardSelectPin = 0,            // (See File->Example->SD->ReadWrite for
                                   // other possible values.)
+#endif
+
 #ifdef V2
   amplifierPin = 1,               // Amplifier enable pin (TeensySaber V2)
   motionSensorInterruptPin = 2,   // motion sensor interrupt (TeensySaber V2)
@@ -3248,12 +3246,12 @@ public:
   float battery_now() {
     // This is the volts on the battery monitor pin.
     float volts = 3.3 * analogRead(batteryLevelPin) / 1024.0;
-#if VERSION_MAJOR >= 2
+#ifdef V2
     float pulldown = 220000;  // External pulldown
     float pullup = 2000000;  // External pullup
 #else
     float pulldown = 33000;  // Internal pulldown is 33kOhm
-    float pullup = 23000;  // External pullup
+    float pullup = EXTERNAL_PULLUP_OHMS;  // External pullup
 #endif
     return volts * (1.0 + pullup / pulldown);
   }
@@ -6112,7 +6110,8 @@ public:
   }
 
   void SB_Accel(const Vec3& accel) override {
-    if ( (accel_ - accel).len2() > 1.0) {
+    if ( (accel_ - accel).len2() >
+	 CLASH_THRESHOLD_G * CLASH_THRESHOLD_G) {
       // Needs de-bouncing
       Clash();
     }

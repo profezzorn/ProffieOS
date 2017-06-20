@@ -16,6 +16,9 @@
 // both of them to bladePin and drive them in parallel.
 const unsigned int maxLedsPerStrip = 144;
 
+// This defines how sensetive the clash detection is.
+#define CLASH_THRESHOLD_G 1.0
+
 // Define this if your power button is a touch button.
 // #define POWER_TOUCHBUTTON
 
