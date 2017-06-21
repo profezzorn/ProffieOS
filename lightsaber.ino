@@ -41,18 +41,6 @@
 
 #else
 
-// Board version
-#define VERSION_MAJOR 2
-#define VERSION_MINOR 3
-
-// If you have two 144 LED/m strips in your blade, connect
-// both of them to bladePin and drive them in parallel.
-const unsigned int maxLedsPerStrip = 144;
-
-#if VERSION_MAJOR >= 2
-#define V2
-#endif
-
 //
 // OVERVIEW
 //
@@ -128,28 +116,6 @@ const unsigned int maxLedsPerStrip = 144;
 // Disable motion when off to save power.
 // Allow several blades to share power pins.
 
-// If your electonics inverts the bladePin for some reason, define this.
-// #define INVERT_WS2811
-
-// Feature defines, these let you turn off large blocks of code
-// used for debugging.
-#define ENABLE_AUDIO
-#define ENABLE_MOTION
-// #define ENABLE_SNOOZE
-#define ENABLE_WS2811
-
-// FASTLED is experimental and untested right now
-#define ENABLE_FASTLED
-
-// #define ENABLE_WATCHDOG
-#define ENABLE_SD
-#if VERSION_MAJOR == 1
-#define ENABLE_SERIALFLASH
-#endif
-
-// #define ENABLE_DEBUG
-
-#endif  // CONFIG_FILE
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
@@ -7831,6 +7797,91 @@ private:
     open_file_ = 0xFFFFFFFEUL;
   }
 };
+
+#if 0
+
+// Need to expose a bunch of functions in SerialFlash to make this work..
+// Also need to support multiple MTPStorage in the MTP responder.
+class MTPStorage_SerialFlash : public MTPStorageInterface {
+public:
+  int entry = 0;
+  uint16_t hash(int index) {
+    uint16_t hash;
+    SerialFlash::read(8 + index * 2, hash, 2);
+    return hash;
+  }
+
+  // Return true if this storage is read-only
+  bool readonly() override {
+    return false;
+  }
+ 
+  // Does it have directories?
+  bool has_directories() override {
+    return false;
+  }
+
+  // Return size of storage in bytes.
+  uint64_t size() override {
+    uint8_t id[5];
+    SerialFlashChip::ReadID(id);
+    return SerialFlashChip::capacity(id);
+  }
+
+  // Return free space in bytes.
+  uint64_t free() override {
+    // how?
+  }
+
+  // parent = 0 means get all handles.
+  // parent = 0xFFFFFFFF means get root folder.
+  void StartGetObjectHandles(uint32_t parent) override {
+    entry = 0;
+  }
+  uint32_t GetNextObjectHandle() override {
+    while (true) {
+      if (entry >= maxfiles) return 0;
+      uint16_t hash = read(entry);
+      if (hash == 0xFFFF) return 0;
+      if (hash == 0) continue; // deleted
+      entry++;
+      return entry;
+    };
+  }
+  // Size should be 0xFFFFFFFF if it's a directory.
+  void GetObjectInfo(uint32_t handle,
+		     char* name,
+		     uint32_t* size,
+		     uint32_t* parent) override {
+    SerialFlashFile file = Open(handle);
+    file.GetName(name_);
+    *parent = 0xFFFFFFFFUL;
+  }
+  uint32_t GetSize(uint32_t handle) override {
+  }
+  void read(uint32_t handle,
+	    uint32_t pos,
+	    char* buffer,
+	    uint32_t bytes) override {
+    SerialFlashFile file = Open(handle);
+    file.seek(pos);
+    file.read(buffer, bytes);
+  }
+  uint32_t Create(uint32_t parent,
+		  bool folder,
+		  const char* filename) override {
+    // Need some magic to create files without knowing the length.
+    // Probably we need to delay the creation until sendobject is called.
+  }
+  void write(const char* data, uint32_t size) override {
+  }
+  void close() override {
+  }
+  bool DeleteObject(uint32_t object) override {
+    SerialFlashChip::remove(Open(handle));
+  }
+};
+#endif
 
 // MTP Responder.
 class MTPD {
