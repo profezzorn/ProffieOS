@@ -22,14 +22,12 @@
 // to use here.
 
 // #define CONFIG_FILE "toy_saber_config.h"
-// #define CONFIG_FILE "graflex_v1_config.h"
+#define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
-#define CONFIG_FILE "test_bench_config.h"
+// #define CONFIG_FILE "test_bench_config.h"
 
 // Search for CONFIGURABLE in this file to find all the places which
 // might need to be modified for your saber.
-
-#ifdef CONFIG_FILE
 
 #define CONFIG_TOP
 #include CONFIG_FILE
@@ -38,7 +36,6 @@
 #if VERSION_MAJOR >= 2
 #define V2
 #endif
-
 
 //
 // OVERVIEW
@@ -130,9 +127,6 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
-#ifdef ENABLE_SERIALFLASH
-#include <SerialFlash.h>
-#endif
 
 #include <DMAChannel.h>
 
@@ -145,6 +139,13 @@
 // #include <Wire.h>
 #include <kinetis.h>
 #include <malloc.h>
+
+#ifdef ENABLE_SERIALFLASH
+//#define private public
+//#define protected public
+#include <SerialFlash.h>
+#endif
+
 
 #ifdef ENABLE_SNOOZE
 
@@ -2814,7 +2815,14 @@ public:
 
   void SB_Off() override {
     on_ = false;
-    audio_splicer.Play(&poweroff, NULL);
+    size_t total = poweroff.files_found() + pwroff.files_found();
+    if (total) {
+      if ((rand() % total) < poweroff.files_found()) {
+	audio_splicer.Play(&poweroff, NULL);
+      } else {
+	audio_splicer.Play(&pwroff, NULL);
+      }
+    }
   }
   void SB_Clash() override { audio_splicer.Play(&clash, &hum); }
   void SB_Stab() override { audio_splicer.Play(&stab, &hum); }
@@ -3213,7 +3221,7 @@ public:
     float pullup = 2000000;  // External pullup
 #else
     float pulldown = 33000;  // Internal pulldown is 33kOhm
-    float pullup = EXTERNAL_PULLUP_OHMS;  // External pullup
+    float pullup = BATTERY_PULLUP_OHMS;  // External pullup
 #endif
     return volts * (1.0 + pullup / pulldown);
   }
@@ -5645,7 +5653,7 @@ static const uint8_t pin2tsi[] = {
 
 #endif
 
-#ifdef TOUCH_BUTTON_SUPPORTED_
+#ifdef TOUCH_BUTTON_SUPPORTED
 class TouchButton : public ButtonBase {
 public:
   TouchButton(int pin, int threshold, const char* name)
@@ -7826,7 +7834,6 @@ public:
 
   // Return free space in bytes.
   uint64_t free() override {
-    // how?
   }
 
   // parent = 0 means get all handles.

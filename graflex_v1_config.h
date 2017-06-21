@@ -24,7 +24,7 @@ const unsigned int maxLedsPerStrip = 144;
 
 // For V1 electronics, there is an external pullup resistor to measure
 // battery voltage. This specifies how many Ohms it is.
-#define BATTER_PULLUP_OHMS 23000
+#define BATTERY_PULLUP_OHMS 23000
 
 // If your electonics inverts the bladePin for some reason, define this.
 // #define INVERT_WS2811
