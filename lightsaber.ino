@@ -39,7 +39,6 @@
 #define V2
 #endif
 
-#else
 
 //
 // OVERVIEW
@@ -123,9 +122,6 @@
 // If defined all sound samples will be divided by 8, resulting in
 // very quit sound.
 // #define QUIET
-
-// This doesn't seem to work.
-// #define TAR_UPLOADS_TO_SDCARD
 
 // You can get better SD card performance by
 // activating the  USE_TEENSY3_OPTIMIZED_CODE define
