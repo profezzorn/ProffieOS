@@ -7513,15 +7513,10 @@ public:
   virtual bool DeleteObject(uint32_t object) = 0;
 };
 
-class MTPDInterface {
-public:
-  void AddStorage(MTPStorageInterface* storage);
-};
-
 // MTP Responder.
-class MTPD : public MTPDInterface {
+class MTPD {
 public:
-  void AddStorage(MTPStorageInterface* storage) override {
+  void AddStorage(MTPStorageInterface* storage) {
     for (size_t i = 1; i < NELEM(storage_); i++) {
       if (!storage_[i]) {
 	storage_[i] = storage;
@@ -7946,7 +7941,7 @@ private:
         data_buffer_ = NULL;
       }
     }
-    storage_->close();
+    Stor(new_object)->close();
   }
 
   void GetDevicePropValue(uint32_t prop) {
@@ -8021,7 +8016,8 @@ public:
               if (CONTAINER->params[1]) {
                 return_code = 0x2014; // spec by format unsupported
               } else {
-                if (!storage_->DeleteObject(CONTAINER->params[0])) {
+                if (!Stor(CONTAINER->params[0])->DeleteObject(
+		      INT(CONTAINER->params[0]))) {
                   return_code = 0x2012; // partial deletion
                 }
               }
@@ -8071,10 +8067,11 @@ public:
 
 MTPD mtpd;
 
+#ifdef ENABLE_SD
 // Storage implementation for SD. SD needs to be already initialized.
 class MTPStorage_SD : public MTPStorageInterface {
 public:
-  explicit MTPStorage_SD(MTPDInterface* mtpd) { mtpd->AddStorage(this); }
+  explicit MTPStorage_SD(MTPD* mtpd) { mtpd->AddStorage(this); }
 private:
   File index_;
 
@@ -8096,7 +8093,7 @@ private:
   bool has_directories() override { return true; }
   uint64_t size() override { return 1 << 30; }
   uint64_t free() override { return 1 << 29; }
-  uint32_t free_object() override { return 0xFFFFFFFEUL; }
+  uint32_t free_objects() override { return 0xFFFFFFFEUL; }
 
   const char* GetName() override {
     return "SD Card";
@@ -8380,19 +8377,22 @@ private:
 
 MTPStorage_SD sd_storage(&mtpd);
 
-#if 0
+#endif
+
+#ifdef ENABLE_SERIALFLASH
+
 // Need to expose a bunch of functions in SerialFlash to make this work..
 // Also need to support multiple MTPStorage in the MTP responder.
 class MTPStorage_SerialFlash : public MTPStorageInterface {
 public:
-  explicit MTPStorage_SerialFlash(MTPDInterface* mtpd) { mtpd->AddStorage(this); }
+  explicit MTPStorage_SerialFlash(MTPD* mtpd) { mtpd->AddStorage(this); }
 private:
   int entry = 0;
-  int last_entry = -1;
+  int last_entry_ = -1;
   int maxfiles_ = -1;
   uint16_t readHash(int index) {
     uint16_t hash;
-    SerialFlash::read(8 + index * 2, hash, 2);
+    SerialFlash.read(8 + index * 2, &hash, 2);
     return hash;
   }
 
@@ -8449,7 +8449,7 @@ public:
   // Return size of storage in bytes.
   uint64_t size() override {
     uint8_t id[5];
-    SerialFlashChip::ReadID(id);
+    SerialFlash.readID(id);
     return SerialFlashChip::capacity(id);
   }
 
@@ -8459,7 +8459,7 @@ public:
     return size() - last.getFlashAddress() + last.size();
   }
 
-  uint32_t free_object() override {
+  uint32_t free_objects() override {
     return maxfiles() - last_entry() - 1;
   }
 
@@ -8491,7 +8491,7 @@ public:
     uint32_t buf[3];
     buf[2] = 0;
     SerialFlash.read(8 + maxfiles() * 2 + handle * 10, buf, 10);
-    int straddr = 8 + maxfiles * 12 + buf[2] * 4;
+    int straddr = 8 + maxfiles() * 12 + buf[2] * 4;
     name[255] = 0;
     SerialFlash.read(straddr, name, 255); // TODO max filename length
     *size = buf[1];
@@ -8514,12 +8514,13 @@ public:
 		  const char* filename) override {
     if (strlen(filename) > 255) return 0;
     strcpy(new_filename, filename);
-    int entry = last_entry() + 1;
+    return last_entry() + 1;
   }
   SerialFlashFile file;
-  virtual uint32_t SendObject(uint32_t length) {
+  virtual void SendObject(uint32_t length) {
     last_entry_++;
-    file = SerialFlash.create(new_filename, length);
+    SerialFlash.create(new_filename, length);
+    file = open(last_entry_);
   }
   void write(const char* data, uint32_t size) override {
     file.write(data, size);
@@ -8527,14 +8528,14 @@ public:
   void close() override {
   }
   bool DeleteObject(uint32_t object) override {
-    SerialFlashChip::remove(open(handle));
+    SerialFlashFile file = open(object);
+    return SerialFlashChip::remove(file);
   }
 };
 
 MTPStorage_SerialFlash serialflash_storage(&mtpd);
 
 #endif
-
 
 #endif
 
