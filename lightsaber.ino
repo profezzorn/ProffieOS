@@ -5580,6 +5580,16 @@ protected:
   uint8_t pin_;
 };
 
+template<int SENSITIVITY> class ButtonTemplate;
+
+template<>
+class ButtonTemplate<0> : public Button {
+public:
+  ButtonTemplate(int pin, const char* name) : Button(pin, name) {
+  }
+};
+
+
 // What follows is a copy of the touch.c code from the TensyDuino core library.
 // That code originally implements the touchRead() function, I have modified it
 // to become a class instead. That way reading the touch sensor can be
@@ -5770,6 +5780,15 @@ protected:
 };
 
 TouchButton* TouchButton::current_button = NULL;
+
+template<int SENSITIVITY>
+class ButtonTemplate : public TouchButton {
+public:
+  ButtonTemplate(int pin, const char* name) :
+    TouchButton(pin, SENSITIVITY, name) {
+  }
+};
+
 #endif
 
 // Menu system
@@ -5823,6 +5842,16 @@ public:
 Script script;
 #endif
 
+// Zero means that we use a normal button.
+#ifndef POWER_BUTTON_SENSITIVITY
+#define POWER_BUTTON_SENSITIVITY 0
+#endif
+#ifndef AUX_BUTTON_SENSITIVITY
+#define AUX_BUTTON_SENSITIVITY 0
+#endif
+#ifndef AUX2_BUTTON_SENSITIVITY
+#define AUX2_BUTTON_SENSITIVITY 0
+#endif
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -5832,11 +5861,7 @@ public:
   // CONFIGURABLE, use "monitor touch" to see the range of
   // values from the touch sensor, then select a value that is
   // big enough to not trigger the touch sensor randomly.
-#ifdef POWER_TOUCHBUTTON
-            power_(powerButtonPin, 1700, "pow"),
-#else
             power_(powerButtonPin, "pow"),
-#endif
             aux_(auxPin, "aux"),
             aux2_(aux2Pin, "aux2") {}
 
@@ -6441,13 +6466,9 @@ private:
   Preset* current_preset_ = NULL;
 
   bool on_;  // <- move to SaberBase
-#ifdef POWER_TOUCHBUTTON
-  TouchButton power_;
-#else
-  Button power_;
-#endif
-  Button aux_;
-  Button aux2_;
+  ButtonTemplate<POWER_BUTTON_SENSITIVITY> power_;
+  ButtonTemplate<AUX_BUTTON_SENSITIVITY> aux_;
+  ButtonTemplate<AUX2_BUTTON_SENSITIVITY> aux2_;
 };
 
 Saber saber;

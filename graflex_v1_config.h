@@ -20,7 +20,9 @@ const unsigned int maxLedsPerStrip = 144;
 #define CLASH_THRESHOLD_G 1.0
 
 // Define this if your power button is a touch button.
-#define POWER_TOUCHBUTTON
+#define POWER_TOUCHBUTTON_SENSITIVITY 1700
+// #define AUX_TOUCHBUTTON_SENSITIVITY 1700
+// #define AUX2_TOUCHBUTTON_SENSITIVITY 1700
 
 // For V1 electronics, there is an external pullup resistor to measure
 // battery voltage. This specifies how many Ohms it is.
