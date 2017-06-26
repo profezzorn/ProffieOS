@@ -40,8 +40,6 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
 
-// #define ENABLE_DEBUG
-
 #endif
 
 #include "common_presets.h"

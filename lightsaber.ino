@@ -37,6 +37,8 @@
 #define V2
 #endif
 
+// #define ENABLE_DEBUG
+
 //
 // OVERVIEW
 //
@@ -271,6 +273,7 @@ class StateMachine {
 protected:
   StateMachineState state_machine_;
 };
+
 
 #ifdef ENABLE_DEBUG
 
@@ -2404,6 +2407,8 @@ private:
         while (len_) {
           bytes_to_decode_ =
             ReadFile(AlignRead(min(len_, sizeof(buffer))));
+	  if (bytes_to_decode_ == 0)
+	    break;
           len_ -= bytes_to_decode_;
           ptr_ = buffer;
           end_ = buffer + bytes_to_decode_;
@@ -5858,9 +5863,6 @@ Script script;
 class Saber : CommandParser, Looper, SaberBase {
 public:
   Saber() : CommandParser(),
-  // CONFIGURABLE, use "monitor touch" to see the range of
-  // values from the touch sensor, then select a value that is
-  // big enough to not trigger the touch sensor randomly.
             power_(powerButtonPin, "pow"),
             aux_(auxPin, "aux"),
             aux2_(aux2Pin, "aux2") {}
@@ -7532,6 +7534,7 @@ public:
   virtual void write(const char* data, uint32_t size);
   virtual void close() {}
   virtual bool DeleteObject(uint32_t object) = 0;
+  virtual bool Format() { return false; }
 };
 
 // MTP Responder.
@@ -7578,7 +7581,12 @@ private:
     }
   }
 
-  uint32_t FirstStorage() { return 1UL << 28; }
+  uint32_t FirstStorage() {
+    for (size_t i = 0; i < NELEM(storage_); i++) {
+      if (storage_[i]) return i << 28;
+    }
+    return 0;
+  }
 
   struct MTPHeader {
     uint32_t len;  // 0
@@ -7598,29 +7606,31 @@ private:
   void PrintPacket(const usb_packet_t *x) {
 #if 0
     for (int i = 0; i < x->len; i++) {
-      Serial1.print("0123456789ABCDEF"[x->buf[i] >> 4]);
-      Serial1.print("0123456789ABCDEF"[x->buf[i] & 0xf]);
-      if ((i & 3) == 3) Serial1.print(" ");
+      Serial.print("0123456789ABCDEF"[x->buf[i] >> 4]);
+      Serial.print("0123456789ABCDEF"[x->buf[i] & 0xf]);
+      if ((i & 3) == 3) Serial.print(" ");
     } 
-    Serial1.println("");
+    Serial.println("");
 #endif
 #if 0
     MTPContainer *tmp = (struct MTPContainer*)(x->buf);
-    Serial1.print(" len = ");
-    Serial1.print(tmp->len, HEX);
-    Serial1.print(" type = ");
-    Serial1.print(tmp->type, HEX);
-    Serial1.print(" op = ");
-    Serial1.print(tmp->op, HEX);
-    Serial1.print(" transaction_id = ");
-    Serial1.print(tmp->transaction_id, HEX);
+    Serial.print(" len = ");
+    Serial.print(tmp->len, HEX);
+    Serial.print(" type = ");
+    Serial.print(tmp->type, HEX);
+    Serial.print(" op = ");
+    Serial.print(tmp->op, HEX);
+    Serial.print(" transaction_id = ");
+    Serial.print(tmp->transaction_id, HEX);
     for (int i = 0; i * 4 < x->len - 12; i ++) {
-      Serial1.print(" p");
-      Serial1.print(i);
-      Serial1.print(" = ");
-      Serial1.print(tmp->params[i], HEX);
+      Serial.print(" p");
+      Serial.print(i);
+      Serial.print(" = ");
+      Serial.print(tmp->params[i], HEX);
     }
-    Serial1.println("");
+    Serial.println("");
+    Serial.flush();
+    delay(10);
 #endif
   }
 
@@ -7689,7 +7699,7 @@ private:
     write16(0);    // functional mode
 
     // Supported operations (array of uint16)
-    write32(14);
+    write32(15);
     write16(0x1001);  // GetDeviceInfo
     write16(0x1002);  // OpenSession
     write16(0x1003);  // CloseSession
@@ -7704,6 +7714,7 @@ private:
     write16(0x100B);  // DeleteObject
     write16(0x100C);  // SendObjectInfo
     write16(0x100D);  // SendObject
+    write16(0x100F);  // FormatStore
 
     write16(0x1014);  // GetDevicePropDesc
     write16(0x1015);  // GetDevicePropValue
@@ -7773,12 +7784,12 @@ private:
     write32(num);
     if (storage == 0xFFFFFFFFUL) {
       for (size_t i = FirstStorage(); i; i = NextStorage(i)) {
-	Stor(i)->StartGetObjectHandles(parent);
+	Stor(i)->StartGetObjectHandles(INT(parent));
 	while ((handle = Stor(i)->GetNextObjectHandle()))
 	  write32(EXT(handle, i));
       }
     } else {
-      Stor(storage)->StartGetObjectHandles(parent);
+      Stor(storage)->StartGetObjectHandles(INT(parent));
       while ((handle = Stor(storage)->GetNextObjectHandle()))
 	write32(EXT(handle, storage));
     }
@@ -7812,6 +7823,8 @@ private:
 
   void GetObject(uint32_t object_id) {
     uint32_t size = Stor(object_id)->GetSize(INT(object_id));
+    	     Serial.print("FOO=");
+    	     Serial.println(size);
     if (write_get_length_) {
       write_length_ += size;
     } else {
@@ -8053,6 +8066,11 @@ public:
               break;
             case 0x100D:  // SendObject
               SendObject();
+              break;
+            case 0x100F:  // FormatStore
+	      if (!Stor(CONTAINER->params[0])->Format()) {
+	        return_code = 0x201D; // invalid parameter
+	      }
               break;
             case 0x1014:  // GetDevicePropDesc
               TRANSMIT(GetDevicePropDesc(CONTAINER->params[0]));
@@ -8413,14 +8431,18 @@ private:
   int maxfiles_ = -1;
   uint16_t readHash(int index) {
     uint16_t hash;
+    mtp_lock_storage(true);
     SerialFlash.read(8 + index * 2, &hash, 2);
+    mtp_lock_storage(false);    		       
     return hash;
   }
 
   int maxfiles() {
     if (maxfiles_ != -1) return maxfiles_;
     uint32_t sig[2];
+    mtp_lock_storage(true);
     SerialFlash.read(0, sig, 8);
+    mtp_lock_storage(false);
     if (sig[0] == 0xFA96554C) {
       maxfiles_ = sig[1] & 0xffff;
       return maxfiles_;
@@ -8448,7 +8470,9 @@ private:
   SerialFlashFile open(int index) {
     SerialFlashFile file;
     uint32_t buf[2];
+    mtp_lock_storage(true);
     SerialFlash.read(8 + maxfiles() * 2 + index * 10, buf, 8);
+    mtp_lock_storage(false);
     file.address = buf[0];
     file.length = buf[1];
     file.offset = 0;
@@ -8470,8 +8494,11 @@ public:
   // Return size of storage in bytes.
   uint64_t size() override {
     uint8_t id[5];
+    mtp_lock_storage(true);
     SerialFlash.readID(id);
-    return SerialFlashChip::capacity(id);
+    uint64_t ret = SerialFlashChip::capacity(id);
+    mtp_lock_storage(false);
+    return ret;
   }
 
   // Return free space in bytes.
@@ -8509,25 +8536,36 @@ public:
 		     char* name,
 		     uint32_t* size,
 		     uint32_t* parent) override {
+    handle--;
     uint32_t buf[3];
     buf[2] = 0;
+    mtp_lock_storage(true);
     SerialFlash.read(8 + maxfiles() * 2 + handle * 10, buf, 10);
+    mtp_lock_storage(false);
     int straddr = 8 + maxfiles() * 12 + buf[2] * 4;
     name[255] = 0;
+    mtp_lock_storage(true);
     SerialFlash.read(straddr, name, 255); // TODO max filename length
+    mtp_lock_storage(false);
     *size = buf[1];
-    *parent = 0xFFFFFFFFUL;
+    Serial.print("SIZE = ");
+    Serial.println(buf[1]);
+    *parent = 0; // Top level
   }
   uint32_t GetSize(uint32_t handle) override {
+    handle--;
     return open(handle).size();
   }
   void read(uint32_t handle,
 	    uint32_t pos,
 	    char* buffer,
 	    uint32_t bytes) override {
+    handle--;
     SerialFlashFile file = open(handle);
+    mtp_lock_storage(true);
     file.seek(pos);
     file.read(buffer, bytes);
+    mtp_lock_storage(false);
   }
   char new_filename[256];
   uint32_t Create(uint32_t parent,
@@ -8535,22 +8573,41 @@ public:
 		  const char* filename) override {
     if (strlen(filename) > 255) return 0;
     strcpy(new_filename, filename);
-    return last_entry() + 1;
+    return last_entry() + 1 + 1;
   }
   SerialFlashFile file;
   virtual void SendObject(uint32_t length) {
     last_entry_++;
+    mtp_lock_storage(true);
     SerialFlash.create(new_filename, length);
+    mtp_lock_storage(false);
     file = open(last_entry_);
   }
   void write(const char* data, uint32_t size) override {
+    mtp_lock_storage(true);
     file.write(data, size);
+    mtp_lock_storage(false);
   }
   void close() override {
   }
   bool DeleteObject(uint32_t object) override {
+    object--;
     SerialFlashFile file = open(object);
-    return SerialFlashChip::remove(file);
+    mtp_lock_storage(true);
+    bool ret = SerialFlashChip::remove(file);
+    mtp_lock_storage(false);
+    return ret;
+  }
+  virtual bool Format() {
+    mtp_lock_storage(true);
+    SerialFlashChip::eraseAll();
+    while (!SerialFlashChip::ready()) {
+      mtp_lock_storage(false);
+      mtp_yield();
+      mtp_lock_storage(true);
+    }
+    mtp_lock_storage(false);
+    return true;
   }
 };
 
