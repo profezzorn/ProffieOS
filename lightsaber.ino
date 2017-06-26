@@ -1266,7 +1266,7 @@ public:
     noInterrupts();
     if (ptrAddr) {
       if (num_words < NELEM(words)) {
-	words[num_words++] = addr;
+        words[num_words++] = addr;
       }
     } else {
       count_ = 199;
@@ -1343,12 +1343,12 @@ public:
       synthK9 = 0;
       synthK10 = 0;
       if (num_words) {
-	ptrAddr = words[0];
-	num_words--;
-	for (size_t i = 0; i < num_words; i++) words[i] = words[i + 1];
-	ptrBit = 0;
+        ptrAddr = words[0];
+        num_words--;
+        for (size_t i = 0; i < num_words; i++) words[i] = words[i + 1];
+        ptrBit = 0;
       } else {
-	ptrAddr = NULL;
+        ptrAddr = NULL;
       }
     } else {
       synthEnergy = tmsEnergy[energy];
@@ -1356,20 +1356,20 @@ public:
       synthPeriod = tmsPeriod[getBits(6)];
       // A repeat frame uses the last coefficients
       if (!repeat) {
-	// All frames use the first 4 coefficients
-	synthK1 = tmsK1[getBits(5)];
-	synthK2 = tmsK2[getBits(5)];
-	synthK3 = tmsK3[getBits(4)];
-	synthK4 = tmsK4[getBits(4)];
-	if (synthPeriod) {
-	  // Voiced frames use 6 extra coefficients.
-	  synthK5 = tmsK5[getBits(4)];
-	  synthK6 = tmsK6[getBits(4)];
-	  synthK7 = tmsK7[getBits(4)];
-	  synthK8 = tmsK8[getBits(3)];
-	  synthK9 = tmsK9[getBits(3)];
-	  synthK10 = tmsK10[getBits(3)];
-	}
+        // All frames use the first 4 coefficients
+        synthK1 = tmsK1[getBits(5)];
+        synthK2 = tmsK2[getBits(5)];
+        synthK3 = tmsK3[getBits(4)];
+        synthK4 = tmsK4[getBits(4)];
+        if (synthPeriod) {
+          // Voiced frames use 6 extra coefficients.
+          synthK5 = tmsK5[getBits(4)];
+          synthK6 = tmsK6[getBits(4)];
+          synthK7 = tmsK7[getBits(4)];
+          synthK8 = tmsK8[getBits(3)];
+          synthK9 = tmsK9[getBits(3)];
+          synthK10 = tmsK10[getBits(3)];
+        }
       }
     }
   }
@@ -1387,14 +1387,14 @@ public:
     if (synthPeriod) {
       // Voiced source
       if (periodCounter < synthPeriod) {
-	periodCounter++;
+        periodCounter++;
       } else {
-	periodCounter = 0;
+        periodCounter = 0;
       }
       if (periodCounter < CHIRP_SIZE) {
-	u10 = ((chirp[periodCounter]) * (uint32_t) synthEnergy) >> 8;
+        u10 = ((chirp[periodCounter]) * (uint32_t) synthEnergy) >> 8;
       } else {
-	u10 = 0;
+        u10 = 0;
       }
     } else {
       // Unvoiced source
@@ -2047,7 +2047,7 @@ class Effect {
           }
           f.close();
         }
-	dir.close();
+        dir.close();
       }
     } else if (strlen(directory)) {
       talkie.Say(spBANK);
@@ -2407,8 +2407,8 @@ private:
         while (len_) {
           bytes_to_decode_ =
             ReadFile(AlignRead(min(len_, sizeof(buffer))));
-	  if (bytes_to_decode_ == 0)
-	    break;
+          if (bytes_to_decode_ == 0)
+            break;
           len_ -= bytes_to_decode_;
           ptr_ = buffer;
           end_ = buffer + bytes_to_decode_;
@@ -2828,9 +2828,9 @@ public:
     size_t total = poweroff.files_found() + pwroff.files_found();
     if (total) {
       if ((rand() % total) < poweroff.files_found()) {
-	audio_splicer.Play(&poweroff, NULL);
+        audio_splicer.Play(&poweroff, NULL);
       } else {
-	audio_splicer.Play(&pwroff, NULL);
+        audio_splicer.Play(&pwroff, NULL);
       }
     }
   }
@@ -6080,17 +6080,17 @@ public:
         if (!f.isDirectory()) continue;
         dirs++;
         if (!first) {
-	  first.close();
+          first.close();
           first = f;
         } else {
           if (cmpdir(f.name(), first.name())*sign < 0) {
-	    first.close();
-	    first = f;
-	  }
+            first.close();
+            first = f;
+          }
         }
         if (cmpdir(f.name(), current_directory)*sign <= 0) continue;
         if (best && cmpdir(f.name(), best.name())*sign > 0) continue;
-	best.close();
+        best.close();
         best = f;
       }
       if (best) {
@@ -6113,7 +6113,7 @@ public:
 
   void SB_Accel(const Vec3& accel) override {
     if ( (accel_ - accel).len2() >
-	 CLASH_THRESHOLD_G * CLASH_THRESHOLD_G) {
+         CLASH_THRESHOLD_G * CLASH_THRESHOLD_G) {
       // Needs de-bouncing
       Clash();
     }
@@ -6146,40 +6146,40 @@ public:
     if (monitor.IsMonitoring(Monitoring::MonitorStrokes)) {
       Serial.print("Stroke: ");
       switch (strokes[NELEM(strokes)-1].type) {
-	case TWIST_LEFT:
-	  Serial.print("TwistLeft");
-	  break;
-	case TWIST_RIGHT:
-	  Serial.print("TwistRight");
-	  break;
-	default: break;
+        case TWIST_LEFT:
+          Serial.print("TwistLeft");
+          break;
+        case TWIST_RIGHT:
+          Serial.print("TwistRight");
+          break;
+        default: break;
       }
       Serial.print(" len=");
       Serial.print(strokes[NELEM(strokes)-1].length());
       Serial.print(" separation=");
-	uint32_t separation =
-	  strokes[NELEM(strokes)-1].start_millis -
-	  strokes[NELEM(strokes)-2].end_millis;
+        uint32_t separation =
+          strokes[NELEM(strokes)-1].start_millis -
+          strokes[NELEM(strokes)-2].end_millis;
       Serial.println(separation);
     }
     if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
-	 strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
-	(strokes[NELEM(strokes)-1].type == TWIST_RIGHT &&
-	 strokes[NELEM(strokes)-2].type == TWIST_LEFT)) {
+         strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
+        (strokes[NELEM(strokes)-1].type == TWIST_RIGHT &&
+         strokes[NELEM(strokes)-2].type == TWIST_LEFT)) {
       if (strokes[NELEM(strokes) -1].length() > 90UL &&
-	  strokes[NELEM(strokes) -1].length() < 300UL &&
-	  strokes[NELEM(strokes) -2].length() > 90UL &&
-	  strokes[NELEM(strokes) -2].length() < 300UL) {
-	uint32_t separation =
-	  strokes[NELEM(strokes)-1].start_millis -
-	  strokes[NELEM(strokes)-2].end_millis;
-	if (separation < 200UL) {
-	  Serial.println("TWIST");
-	  // We have a twisting gesture.
+          strokes[NELEM(strokes) -1].length() < 300UL &&
+          strokes[NELEM(strokes) -2].length() > 90UL &&
+          strokes[NELEM(strokes) -2].length() < 300UL) {
+        uint32_t separation =
+          strokes[NELEM(strokes)-1].start_millis -
+          strokes[NELEM(strokes)-2].end_millis;
+        if (separation < 200UL) {
+          Serial.println("TWIST");
+          // We have a twisting gesture.
 #if NUM_BUTTONS == 0
-	  if (on_) Off(); else On();
+          if (on_) Off(); else On();
 #endif
-	}
+        }
       }
     }
   }
@@ -6187,13 +6187,13 @@ public:
   void DoGesture(StrokeType gesture) {
     if (gesture == NO_STROKE) {
       if (strokes[NELEM(strokes) - 1].end_millis == 0) {
-	strokes[NELEM(strokes) - 1].end_millis = millis();
-	ProcessStrokes();
+        strokes[NELEM(strokes) - 1].end_millis = millis();
+        ProcessStrokes();
       }
       return;
     }
     if (gesture == strokes[NELEM(strokes)-1].type &&
-	strokes[NELEM(strokes)-1].end_millis == 0) {
+        strokes[NELEM(strokes)-1].end_millis == 0) {
       // Stroke not done, wait.
       return;
     }
@@ -6216,8 +6216,8 @@ public:
       Serial.println(gyro.z);
     }
     if (abs(gyro.x) > 200.0 &&
-	abs(gyro.x) > 3.0 * abs(gyro.y) &&
-	abs(gyro.x) > 3.0 * abs(gyro.z)) {
+        abs(gyro.x) > 3.0 * abs(gyro.y) &&
+        abs(gyro.x) > 3.0 * abs(gyro.z)) {
       DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
     } else {
       DoGesture(NO_STROKE);
@@ -6261,9 +6261,9 @@ protected:
         } else if (millis() - last_beep_ > 5000) {
           Serial.println("Battery low beep");
 #ifdef ENABLE_AUDIO
-	  // TODO: allow this to be replaced with WAV file
-	  talkie.Say(spLOW);
-	  talkie.Say(spPOWER);
+          // TODO: allow this to be replaced with WAV file
+          talkie.Say(spLOW);
+          talkie.Say(spPOWER);
 #endif
         }
       }
@@ -7543,8 +7543,8 @@ public:
   void AddStorage(MTPStorageInterface* storage) {
     for (size_t i = 1; i < NELEM(storage_); i++) {
       if (!storage_[i]) {
-	storage_[i] = storage;
-	return;
+        storage_[i] = storage;
+        return;
       }
     }
   }
@@ -7764,8 +7764,8 @@ private:
     uint32_t num = 0;
     if (storage == 0xFFFFFFFFUL) {
       for (size_t i = FirstStorage(); i; i = NextStorage(i)) {
-	Stor(i)->StartGetObjectHandles(INT(parent));
-	while (Stor(i)->GetNextObjectHandle()) num++;
+        Stor(i)->StartGetObjectHandles(INT(parent));
+        while (Stor(i)->GetNextObjectHandle()) num++;
       }
     } else {
       Stor(storage)->StartGetObjectHandles(INT(parent));
@@ -7784,14 +7784,14 @@ private:
     write32(num);
     if (storage == 0xFFFFFFFFUL) {
       for (size_t i = FirstStorage(); i; i = NextStorage(i)) {
-	Stor(i)->StartGetObjectHandles(INT(parent));
-	while ((handle = Stor(i)->GetNextObjectHandle()))
-	  write32(EXT(handle, i));
+        Stor(i)->StartGetObjectHandles(INT(parent));
+        while ((handle = Stor(i)->GetNextObjectHandle()))
+          write32(EXT(handle, i));
       }
     } else {
       Stor(storage)->StartGetObjectHandles(INT(parent));
       while ((handle = Stor(storage)->GetNextObjectHandle()))
-	write32(EXT(handle, storage));
+        write32(EXT(handle, storage));
     }
   }
 
@@ -7823,8 +7823,8 @@ private:
 
   void GetObject(uint32_t object_id) {
     uint32_t size = Stor(object_id)->GetSize(INT(object_id));
-    	     Serial.print("FOO=");
-    	     Serial.println(size);
+             Serial.print("FOO=");
+             Serial.println(size);
     if (write_get_length_) {
       write_length_ += size;
     } else {
@@ -7835,9 +7835,9 @@ private:
         uint32_t to_copy = min(pos - size, avail);
         // Read directly from storage into usb buffer.
         Stor(object_id)->read(INT(object_id),
-			      pos,
-			      (char*)(data_buffer_->buf + data_buffer_->len),
-			      to_copy);
+                              pos,
+                              (char*)(data_buffer_->buf + data_buffer_->len),
+                              to_copy);
         pos += to_copy;
         data_buffer_->len += to_copy;
         if (data_buffer_->len == sizeof(data_buffer_->buf)) {
@@ -7967,7 +7967,7 @@ private:
       uint32_t to_copy = data_buffer_->len - data_buffer_->index;
       to_copy = min(to_copy, len);
       Stor(new_object)->write((char*)(data_buffer_->buf + data_buffer_->index),
-			      to_copy);
+                              to_copy);
       data_buffer_->index += to_copy;
       len -= to_copy;
       if (data_buffer_->index == data_buffer_->len) {
@@ -8051,7 +8051,7 @@ public:
                 return_code = 0x2014; // spec by format unsupported
               } else {
                 if (!Stor(CONTAINER->params[0])->DeleteObject(
-		      INT(CONTAINER->params[0]))) {
+                      INT(CONTAINER->params[0]))) {
                   return_code = 0x2012; // partial deletion
                 }
               }
@@ -8068,9 +8068,9 @@ public:
               SendObject();
               break;
             case 0x100F:  // FormatStore
-	      if (!Stor(CONTAINER->params[0])->Format()) {
-	        return_code = 0x201D; // invalid parameter
-	      }
+              if (!Stor(CONTAINER->params[0])->Format()) {
+                return_code = 0x201D; // invalid parameter
+              }
               break;
             case 0x1014:  // GetDevicePropDesc
               TRANSMIT(GetDevicePropDesc(CONTAINER->params[0]));
@@ -8433,7 +8433,7 @@ private:
     uint16_t hash;
     mtp_lock_storage(true);
     SerialFlash.read(8 + index * 2, &hash, 2);
-    mtp_lock_storage(false);    		       
+    mtp_lock_storage(false);                           
     return hash;
   }
 
@@ -8455,12 +8455,12 @@ private:
       int max = maxfiles();
       int min = 0;
       while (max - min > 1) {
-	int mid = (max + min) / 2;
-	if (readHash(mid) == 0xffff) {
-	  max = mid;
-	} else {
-	  min = mid;
-	}
+        int mid = (max + min) / 2;
+        if (readHash(mid) == 0xffff) {
+          max = mid;
+        } else {
+          min = mid;
+        }
       }
       last_entry_ = min;
     }
@@ -8533,9 +8533,9 @@ public:
   }
   // Size should be 0xFFFFFFFF if it's a directory.
   void GetObjectInfo(uint32_t handle,
-		     char* name,
-		     uint32_t* size,
-		     uint32_t* parent) override {
+                     char* name,
+                     uint32_t* size,
+                     uint32_t* parent) override {
     handle--;
     uint32_t buf[3];
     buf[2] = 0;
@@ -8557,9 +8557,9 @@ public:
     return open(handle).size();
   }
   void read(uint32_t handle,
-	    uint32_t pos,
-	    char* buffer,
-	    uint32_t bytes) override {
+            uint32_t pos,
+            char* buffer,
+            uint32_t bytes) override {
     handle--;
     SerialFlashFile file = open(handle);
     mtp_lock_storage(true);
@@ -8569,8 +8569,8 @@ public:
   }
   char new_filename[256];
   uint32_t Create(uint32_t parent,
-		  bool folder,
-		  const char* filename) override {
+                  bool folder,
+                  const char* filename) override {
     if (strlen(filename) > 255) return 0;
     strcpy(new_filename, filename);
     return last_entry() + 1 + 1;
