@@ -7823,8 +7823,6 @@ private:
 
   void GetObject(uint32_t object_id) {
     uint32_t size = Stor(object_id)->GetSize(INT(object_id));
-             Serial.print("FOO=");
-             Serial.println(size);
     if (write_get_length_) {
       write_length_ += size;
     } else {
@@ -7987,6 +7985,14 @@ private:
         break;
     }
   }
+  void GetObjectPropValue(uint32_t handle, uint32_t prop) {
+    switch (prop) {
+      case 0xdc04: // size
+	write64(Stor(handle)->GetSize(INT(handle)));
+	break;
+    }
+  }
+  
   void GetDevicePropDesc(uint32_t prop) {
     switch (prop) {
       case 0xd402: // friendly name
@@ -8008,7 +8014,7 @@ public:
       uint32_t p1 = 0;
       if (receive_buffer->len >= 12) {
         return_code = 0x2001;  // Ok
-        receive_buffer->len = 16;
+	CONTAINER->len = receive_buffer->len = 12;
         if (CONTAINER->type == 1) { // command
           switch (CONTAINER->op) {
             case 0x1001: // GetDescription
@@ -8030,6 +8036,7 @@ public:
               } else {
                 p1 = GetNumObjects(CONTAINER->params[0],
                                    CONTAINER->params[2]);
+                CONTAINER->len = receive_buffer->len = 16;
               }
               break;
             case 0x1007:  // GetObjectHandles
@@ -8078,6 +8085,10 @@ public:
             case 0x1015:  // GetDevicePropvalue
               TRANSMIT(GetDevicePropValue(CONTAINER->params[0]));
               break;
+            case 0x9803:  // GetObjectPropValue
+	      TRANSMIT(GetObjectPropValue(CONTAINER->params[0],
+					  CONTAINER->params[1]));
+	      break;
             default:
               return_code = 0x2005;  // operation not supported
               break;
@@ -8488,7 +8499,7 @@ public:
  
   // Does it have directories?
   bool has_directories() override {
-    return false;
+o    return false;
   }
 
   // Return size of storage in bytes.
@@ -8548,8 +8559,6 @@ public:
     SerialFlash.read(straddr, name, 255); // TODO max filename length
     mtp_lock_storage(false);
     *size = buf[1];
-    Serial.print("SIZE = ");
-    Serial.println(buf[1]);
     *parent = 0; // Top level
   }
   uint32_t GetSize(uint32_t handle) override {
