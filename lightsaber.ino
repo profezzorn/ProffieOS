@@ -8499,7 +8499,7 @@ public:
  
   // Does it have directories?
   bool has_directories() override {
-o    return false;
+    return false;
   }
 
   // Return size of storage in bytes.
