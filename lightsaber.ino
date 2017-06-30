@@ -7988,8 +7988,8 @@ private:
   void GetObjectPropValue(uint32_t handle, uint32_t prop) {
     switch (prop) {
       case 0xdc04: // size
-	write64(Stor(handle)->GetSize(INT(handle)));
-	break;
+        write64(Stor(handle)->GetSize(INT(handle)));
+        break;
     }
   }
   
@@ -8086,9 +8086,9 @@ public:
               TRANSMIT(GetDevicePropValue(CONTAINER->params[0]));
               break;
             case 0x9803:  // GetObjectPropValue
-	      TRANSMIT(GetObjectPropValue(CONTAINER->params[0],
-					  CONTAINER->params[1]));
-	      break;
+              TRANSMIT(GetObjectPropValue(CONTAINER->params[0],
+                                          CONTAINER->params[1]));
+              break;
             default:
               return_code = 0x2005;  // operation not supported
               break;
