@@ -7541,7 +7541,7 @@ public:
 class MTPD {
 public:
   void AddStorage(MTPStorageInterface* storage) {
-    for (size_t i = 1; i < NELEM(storage_); i++) {
+    for (size_t i = 0; i < NELEM(storage_); i++) {
       if (!storage_[i]) {
         storage_[i] = storage;
         return;
@@ -7563,7 +7563,7 @@ private:
   // Make an external object id from an internal one.
   uint32_t EXT(uint32_t id, uint32_t storage) {
     if (id == 0 || id == 0xFFFFFFFFUL) return id;
-    return id | storage;
+    return id | (storage & 0xF0000000UL);
   }
 
   // Make an internal object id from an external one.
@@ -7577,13 +7577,13 @@ private:
     while (true) {
       i++;
       if (i >= NELEM(storage_)) return 0;
-      if (storage_[i]) return i << 28;
+      if (storage_[i]) return (i << 28) | 1;
     }
   }
 
   uint32_t FirstStorage() {
     for (size_t i = 0; i < NELEM(storage_); i++) {
-      if (storage_[i]) return i << 28;
+      if (storage_[i]) return (i << 28) | 1;
     }
     return 0;
   }
@@ -8014,7 +8014,7 @@ public:
       uint32_t p1 = 0;
       if (receive_buffer->len >= 12) {
         return_code = 0x2001;  // Ok
-	CONTAINER->len = receive_buffer->len = 12;
+        CONTAINER->len = receive_buffer->len = 12;
         if (CONTAINER->type == 1) { // command
           switch (CONTAINER->op) {
             case 0x1001: // GetDescription
@@ -8464,7 +8464,7 @@ private:
   int last_entry() {
     if (last_entry_ == -1) {
       int max = maxfiles();
-      int min = 0;
+      int min = -1;
       while (max - min > 1) {
         int mid = (max + min) / 2;
         if (readHash(mid) == 0xffff) {
@@ -8514,8 +8514,10 @@ public:
 
   // Return free space in bytes.
   uint64_t free() override {
-    SerialFlashFile last = open(last_entry());
-    return size() - last.getFlashAddress() + last.size();
+    int entry = last_entry();
+    if (entry == -1) return size();
+    SerialFlashFile last = open(entry);
+    return size() - (last.getFlashAddress() + last.size());
   }
 
   uint32_t free_objects() override {
@@ -8609,12 +8611,15 @@ public:
   }
   virtual bool Format() {
     mtp_lock_storage(true);
+    last_entry_ = -1;
+    maxfiles_ = -1;
     SerialFlashChip::eraseAll();
     while (!SerialFlashChip::ready()) {
       mtp_lock_storage(false);
       mtp_yield();
       mtp_lock_storage(true);
     }
+    SerialFlash.open("bogus"); // creates signature
     mtp_lock_storage(false);
     return true;
   }
