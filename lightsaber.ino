@@ -5848,14 +5848,14 @@ Script script;
 #endif
 
 // Zero means that we use a normal button.
-#ifndef POWER_BUTTON_SENSITIVITY
-#define POWER_BUTTON_SENSITIVITY 0
+#ifndef POWER_TOUCHBUTTON_SENSITIVITY
+#define POWER_TOUCHBUTTON_SENSITIVITY 0
 #endif
-#ifndef AUX_BUTTON_SENSITIVITY
-#define AUX_BUTTON_SENSITIVITY 0
+#ifndef AUX_TOUCHBUTTON_SENSITIVITY
+#define AUX_TOUCHBUTTON_SENSITIVITY 0
 #endif
-#ifndef AUX2_BUTTON_SENSITIVITY
-#define AUX2_BUTTON_SENSITIVITY 0
+#ifndef AUX2_TOUCHBUTTON_SENSITIVITY
+#define AUX2_TOUCHBUTTON_SENSITIVITY 0
 #endif
 
 // The Saber class implements the basic states and actions
@@ -6468,9 +6468,9 @@ private:
   Preset* current_preset_ = NULL;
 
   bool on_;  // <- move to SaberBase
-  ButtonTemplate<POWER_BUTTON_SENSITIVITY> power_;
-  ButtonTemplate<AUX_BUTTON_SENSITIVITY> aux_;
-  ButtonTemplate<AUX2_BUTTON_SENSITIVITY> aux2_;
+  ButtonTemplate<POWER_TOUCHBUTTON_SENSITIVITY> power_;
+  ButtonTemplate<AUX_TOUCHBUTTON_SENSITIVITY> aux_;
+  ButtonTemplate<AUX2_TOUCHBUTTON_SENSITIVITY> aux2_;
 };
 
 Saber saber;
