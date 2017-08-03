@@ -3959,11 +3959,11 @@ public:
       if (blade->clash()) {
         heat_[num_leds - 1] += 3000;
       } else if (blade->is_on()) {
-        heat_[num_leds - 1] += random(random(random(1000)));
+        heat_[num_leds - 1] += random(random(random(3000)));
       }
       for (int i = 0; i < num_leds; i++) {
-        int x = (heat_[i] * 5  + heat_[i+1] * 7 + heat_[i+2] * 4) >> 4;
-        heat_[i] = max(x - random(0, 1), 0);
+        int x = (heat_[i+1] * 3  + heat_[i+2] * 10 + heat_[i+3] * 3) >> 4;
+        heat_[i] = max(x - random(0, 5), 0);
       }
     }
     bool zero = true;
@@ -3987,7 +3987,7 @@ public:
 
 private:
   static uint32_t last_update_;
-  static unsigned short heat_[maxLedsPerStrip + 2];
+  static unsigned short heat_[maxLedsPerStrip + 3];
   Color c1_, c2_;
 };
 
@@ -3995,7 +3995,7 @@ template<int BLADE_NUM>
 uint32_t StyleFire<BLADE_NUM>::last_update_ = 0;
 
 template<int BLADE_NUM>
-unsigned short StyleFire<BLADE_NUM>::heat_[maxLedsPerStrip + 2];
+unsigned short StyleFire<BLADE_NUM>::heat_[maxLedsPerStrip + 3];
 
 // If you have multiple blades, make sure to use a different BLADE_NUM
 // for each blade.
