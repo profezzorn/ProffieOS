@@ -3933,11 +3933,32 @@ StyleCharging style_charging;
 template<int BLADE_NUM>
 class StyleFire : public BladeStyle {
 public:
-  StyleFire(Color c1, Color c2) : c1_(c1), c2_(c2) {}
-
+  StyleFire(Color c1, Color c2, uint32_t delay) :
+    c1_(c1), c2_(c2), delay_(delay) {}
+  enum OnState {
+    STATE_OFF = 0,
+    STATE_ACTIVATING,
+    STATE_ON,
+  };
   void activate() override {
     Serial.println("Fire Style");
     for (size_t i = 0; i < NELEM(heat_); i++) heat_[i] = 0;
+  }
+  bool On(BladeBase* blade) {
+    if (!blade->is_on()) {
+      state_ = STATE_OFF;
+      return false;
+    }
+    switch (state_) {
+      default:
+	state_ = STATE_ACTIVATING;
+	on_time_ = millis();
+      case STATE_ACTIVATING:
+	if (millis() - on_time_ < delay_) return false;
+	state_ = STATE_ON;
+      case STATE_ON:
+	return true;
+    }
   }
   void run(BladeBase* blade) override {
     uint32_t m = millis();
@@ -3946,14 +3967,23 @@ public:
       last_update_ = m;
 
       // Note heat_[0] is tip of blade
+      int cooling = 5;
       if (blade->clash()) {
         heat_[num_leds - 1] += 3000;
-      } else if (blade->is_on()) {
-        heat_[num_leds - 1] += random(random(random(3000)));
+        heat_[num_leds - 2] += 3000;
+      } else if (On(blade)) {
+	if (SaberBase::Lockup()) {
+	  cooling = 20;
+	  heat_[num_leds - 1] += random(random(random(5000)));
+	  heat_[num_leds - 2] += random(random(random(5000)));
+	} else {
+	  heat_[num_leds - 1] += random(random(random(2000)));
+	  heat_[num_leds - 2] += random(random(random(2000)));
+	}
       }
       for (int i = 0; i < num_leds; i++) {
         int x = (heat_[i+1] * 3  + heat_[i+2] * 10 + heat_[i+3] * 3) >> 4;
-        heat_[i] = max(x - random(0, 5), 0);
+        heat_[i] = max(x - random(0, cooling), 0);
       }
     }
     bool zero = true;
@@ -3979,6 +4009,9 @@ private:
   static uint32_t last_update_;
   static unsigned short heat_[maxLedsPerStrip + 3];
   Color c1_, c2_;
+  uint32_t delay_;
+  OnState state_;
+  uint32_t on_time_;
 };
 
 template<int BLADE_NUM>
@@ -3989,9 +4022,9 @@ unsigned short StyleFire<BLADE_NUM>::heat_[maxLedsPerStrip + 3];
 
 // If you have multiple blades, make sure to use a different BLADE_NUM
 // for each blade.
-template<class COLOR1, class COLOR2, int BLADE_NUM=0>
+template<class COLOR1, class COLOR2, int BLADE_NUM=0, int DELAY=0>
 class BladeStyle *StyleFirePtr() {
-  static StyleFire<BLADE_NUM> style(COLOR1::color(), COLOR2::color());
+  static StyleFire<BLADE_NUM> style(COLOR1::color(), COLOR2::color(), DELAY);
   return &style;
 }
 
@@ -4723,7 +4756,9 @@ protected:
        current_blade = this;
        current_style_->run(this);
        while (monopodws.busy()) YIELD();
-//       monopodws.begin(num_leds_, displayMemory, config_, pin_);
+#if NUM_BLADES > 1
+       monopodws.begin(num_leds_, displayMemory, config_, pin_);
+#endif
        monopodws.show();
        loop_counter_.Update();
        current_blade = NULL;
@@ -6358,6 +6393,19 @@ protected:
       Clash();
       return true;
     }
+    if (!strcmp(cmd, "lock") || !strcmp(cmd, "lockup")) {
+	Serial.print("Lockup ");
+      if (SaberBase::Lockup()) {
+	SaberBase::SetLockup(true);
+	SaberBase::DoBeginLockup();
+	Serial.println("OFF");
+      } else {
+        SaberBase::SetLockup(false);
+        SaberBase::DoEndLockup();
+	Serial.println("ON");
+      }
+      return true;
+    }
 #ifdef ENABLE_AUDIO
     if (!strcmp(cmd, "beep")) {
       digitalWrite(amplifierPin, HIGH); // turn on the amplifier
@@ -6443,6 +6491,7 @@ protected:
   void Help() override {
     Serial.println(" clash - trigger a clash");
     Serial.println(" on/off - turn saber on/off");
+    Serial.println(" lock - begin/end lockup");
 #ifdef ENABLE_AUDIO
     Serial.println(" pwd - print current directory");
     Serial.println(" cd directory - change directory, and sound font");

@@ -50,24 +50,29 @@ const unsigned int maxLedsPerStrip = 144;
 Preset presets[] = {
   { "font01", "tracks/title.wav",
     StyleFirePtr<RED, YELLOW, 0>(),
-    StyleFirePtr<RED, YELLOW, 1>(),
-    StyleFirePtr<RED, YELLOW, 2>()
+    StyleFirePtr<RED, YELLOW, 1, 800>(), // 800ms delay
+    StyleFirePtr<RED, YELLOW, 2, 800>()
   },
   { "font02", "tracks/title.wav",
     StyleNormalPtr<RED, WHITE, 200, 300>(),
     StyleNormalPtr<RED, WHITE, 200, 300>(),
     StyleNormalPtr<RED, WHITE, 200, 300>()
   },
+  { "font02", "tracks/title.wav",
+    StyleRainbowPtr<300, 800>(),
+    StyleRainbowPtr<300, 800>(),
+    StyleRainbowPtr<300, 800>()
+  },
 };
 
 BladeConfig blades[] = {
   { 0, // blade ID resistor not used
-    // Main blade, 144 LEDs
-    WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(),
-    // First crossguard, 20 LEDS, power on LED4, data on pin 7
-    WS2811BladePtr<20, WS2811_800kHz | WS2811_GRB, 7, PowerPINS<bladePowerPin4> >(),
-    // First crossguard, 20 LEDS, power on LED5, data on pin 8
-    WS2811BladePtr<20, WS2811_800kHz | WS2811_GRB, 8, PowerPINS<bladePowerPin5> >(),
+    // Main blade, 118 LEDs
+    WS2811BladePtr<118, WS2811_800kHz | WS2811_GRB>(),
+    // First crossguard, 26 LEDS, power on LED4, data on pin 7
+    WS2811BladePtr<26, WS2811_800kHz | WS2811_GRB, 7, PowerPINS<bladePowerPin4> >(),
+    // First crossguard, 26 LEDS, power on LED5, data on pin 8
+    WS2811BladePtr<26, WS2811_800kHz | WS2811_GRB, 8, PowerPINS<bladePowerPin5> >(),
     CONFIGARRAY(presets)
   },
 };
