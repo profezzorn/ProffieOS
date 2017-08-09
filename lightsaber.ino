@@ -22,9 +22,10 @@
 // to use here.
 
 // #define CONFIG_FILE "toy_saber_config.h"
-#define CONFIG_FILE "graflex_v1_config.h"
+// #define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
 // #define CONFIG_FILE "test_bench_config.h"
+#define CONFIG_FILE "crossguard_config.h"
 
 // Search for CONFIGURABLE in this file to find all the places which
 // might need to be modified for your saber.
@@ -116,10 +117,6 @@
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
-
-// If defined all sound samples will be divided by 8, resulting in
-// very quit sound.
-// #define QUIET
 
 // You can get better SD card performance by
 // activating the  USE_TEENSY3_OPTIMIZED_CODE define
@@ -1079,14 +1076,7 @@ public:
       for (int i = 0; i < to_do; i++) {
         v = sum[i];
         vol_ = ((vol_ + abs(v)) * 255) >> 8;
-#if 1
-        v2 = (v << 11) / (my_sqrt(vol_) + 100);
-#else
-        v2 = v;
-#endif
-#ifdef QUIET
-        v2 >>= 3;
-#endif
+        v2 = v * VOLUME / (my_sqrt(vol_) + 100);
         data[i] = clamptoi16(v2);
         peak_sum_ = max(abs(v), peak_sum_);
         peak_ = max(abs(v2), peak_);

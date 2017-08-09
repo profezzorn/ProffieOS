@@ -2,15 +2,15 @@
 #ifdef CONFIG_TOP
 
 // Board version
-#define VERSION_MAJOR 1
-#define VERSION_MINOR 0
+#define VERSION_MAJOR 2
+#define VERSION_MINOR 3
 
 // Number of simultaneously connected blades.
 // (For interchangeable blades, see the blades[] array.)
-#define NUM_BLADES 1
+#define NUM_BLADES 3
 
 // Number of buttons
-#define NUM_BUTTONS 2
+#define NUM_BUTTONS 1
 
 // Volume, useful range is about 0-2000.
 #define VOLUME 1800
@@ -23,13 +23,9 @@ const unsigned int maxLedsPerStrip = 144;
 #define CLASH_THRESHOLD_G 1.0
 
 // Define this if your power button is a touch button.
-#define POWER_TOUCHBUTTON_SENSITIVITY 1700
+// #define POWER_TOUCHBUTTON_SENSITIVITY 1700
 // #define AUX_TOUCHBUTTON_SENSITIVITY 1700
 // #define AUX2_TOUCHBUTTON_SENSITIVITY 1700
-
-// For V1 electronics, there is an external pullup resistor to measure
-// battery voltage. This specifies how many Ohms it is.
-#define BATTERY_PULLUP_OHMS 23000
 
 // If your electonics inverts the bladePin for some reason, define this.
 // #define INVERT_WS2811
@@ -45,8 +41,36 @@ const unsigned int maxLedsPerStrip = 144;
 // #define ENABLE_FASTLED
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
-#define ENABLE_SERIALFLASH
+// #define ENABLE_SERIALFLASH
 
 #endif
 
-#include "common_presets.h"
+#ifdef CONFIG_PRESETS
+
+Preset presets[] = {
+  { "font01", "tracks/title.wav",
+    StyleFirePtr<RED, YELLOW, 0>(),
+    StyleFirePtr<RED, YELLOW, 1>(),
+    StyleFirePtr<RED, YELLOW, 2>()
+  },
+  { "font02", "tracks/title.wav",
+    StyleNormalPtr<RED, WHITE, 200, 300>(),
+    StyleNormalPtr<RED, WHITE, 200, 300>(),
+    StyleNormalPtr<RED, WHITE, 200, 300>()
+  },
+};
+
+BladeConfig blades[] = {
+  { 0, // blade ID resistor not used
+    // Main blade, 144 LEDs
+    WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(),
+    // First crossguard, 20 LEDS, power on LED4, data on pin 7
+    WS2811BladePtr<20, WS2811_800kHz | WS2811_GRB, 7, PowerPINS<bladePowerPin4> >(),
+    // First crossguard, 20 LEDS, power on LED5, data on pin 8
+    WS2811BladePtr<20, WS2811_800kHz | WS2811_GRB, 8, PowerPINS<bladePowerPin5> >(),
+    CONFIGARRAY(presets)
+  },
+};
+
+
+#endif
