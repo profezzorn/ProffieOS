@@ -3487,11 +3487,11 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
       break;
 
     case WS2811_800kHz:
-      frequency = 740000;
+      frequency = 800000;
       break;
 
     case WS2813_800kHz:
-      frequency = 740000;
+      frequency = 800000;
       frameSetDelay = 300;
       break;
 
@@ -3929,12 +3929,33 @@ public:
 // No need to templetize this one, as there are no arguments.
 StyleCharging style_charging;
 
+struct FireConfig {
+  FireConfig(int b, int r, int c) : intensity_base(b),
+                                    intensity_rand(r),
+                                    cooling(c) {}
+  int intensity_base;
+  int intensity_rand;
+  int cooling;
+};
+
 // Fire-style
 template<int BLADE_NUM>
 class StyleFire : public BladeStyle {
 public:
-  StyleFire(Color c1, Color c2, uint32_t delay) :
-    c1_(c1), c2_(c2), delay_(delay) {}
+  StyleFire(Color c1,
+            Color c2,
+            uint32_t delay,
+            uint32_t speed,
+            FireConfig normal,
+            FireConfig clash,
+            FireConfig lockup) :
+    c1_(c1), c2_(c2),
+    delay_(delay),
+    speed_(speed),
+    normal_(normal),
+    clash_(clash),
+    lockup_(lockup) {
+  }
   enum OnState {
     STATE_OFF = 0,
     STATE_ACTIVATING,
@@ -3951,13 +3972,13 @@ public:
     }
     switch (state_) {
       default:
-	state_ = STATE_ACTIVATING;
-	on_time_ = millis();
+        state_ = STATE_ACTIVATING;
+        on_time_ = millis();
       case STATE_ACTIVATING:
-	if (millis() - on_time_ < delay_) return false;
-	state_ = STATE_ON;
+        if (millis() - on_time_ < delay_) return false;
+        state_ = STATE_ON;
       case STATE_ON:
-	return true;
+        return true;
     }
   }
   void run(BladeBase* blade) override {
@@ -3966,24 +3987,30 @@ public:
     if (m - last_update_ >= 10) {
       last_update_ = m;
 
-      // Note heat_[0] is tip of blade
-      int cooling = 5;
+      FireConfig config(0,0,0);
       if (blade->clash()) {
-        heat_[num_leds - 1] += 3000;
-        heat_[num_leds - 2] += 3000;
+        config = clash_;
       } else if (On(blade)) {
-	if (SaberBase::Lockup()) {
-	  cooling = 20;
-	  heat_[num_leds - 1] += random(random(random(5000)));
-	  heat_[num_leds - 2] += random(random(random(5000)));
-	} else {
-	  heat_[num_leds - 1] += random(random(random(2000)));
-	  heat_[num_leds - 2] += random(random(random(2000)));
-	}
+        if (SaberBase::Lockup()) {
+          config = lockup_;
+        } else {
+          config = normal_;
+        }
+      } else {
+        config = normal_;
+        config.intensity_base = 0;
+        config.intensity_rand = 0;
+      }
+      // Note heat_[0] is tip of blade
+      for (int i = 1; i <= speed_; i++) {
+        heat_[num_leds - i] += config.intensity_base +
+          random(random(random(config.intensity_rand)));
       }
       for (int i = 0; i < num_leds; i++) {
-        int x = (heat_[i+1] * 3  + heat_[i+2] * 10 + heat_[i+3] * 3) >> 4;
-        heat_[i] = max(x - random(0, cooling), 0);
+        int x = (heat_[i+speed_-1] * 3  +
+                 heat_[i+speed_] * 10 +
+                 heat_[i+speed_+1] * 3) >> 4;
+        heat_[i] = clampi32(x - random(config.cooling), 0, 65535);
       }
     }
     bool zero = true;
@@ -4007,24 +4034,37 @@ public:
 
 private:
   static uint32_t last_update_;
-  static unsigned short heat_[maxLedsPerStrip + 3];
+  static unsigned short heat_[maxLedsPerStrip + 13];
   Color c1_, c2_;
   uint32_t delay_;
   OnState state_;
   uint32_t on_time_;
+  int speed_;
+  FireConfig normal_;
+  FireConfig clash_;
+  FireConfig lockup_;
 };
 
 template<int BLADE_NUM>
 uint32_t StyleFire<BLADE_NUM>::last_update_ = 0;
 
 template<int BLADE_NUM>
-unsigned short StyleFire<BLADE_NUM>::heat_[maxLedsPerStrip + 3];
+unsigned short StyleFire<BLADE_NUM>::heat_[maxLedsPerStrip + 13];
 
 // If you have multiple blades, make sure to use a different BLADE_NUM
 // for each blade.
-template<class COLOR1, class COLOR2, int BLADE_NUM=0, int DELAY=0>
+template<class COLOR1, class COLOR2,
+         int BLADE_NUM=0, int DELAY=0, int SPEED=2,
+         int NORM_INT_BASE = 0, int NORM_INT_RAND=2000, int NORM_COOLING = 5,
+         int CLSH_INT_BASE = 3000, int CLSH_INT_RAND=0, int CLSH_COOLING = 0,
+         int LOCK_INT_BASE = 0, int LOCK_INT_RAND=5000, int LOCK_COOLING = 10>
 class BladeStyle *StyleFirePtr() {
-  static StyleFire<BLADE_NUM> style(COLOR1::color(), COLOR2::color(), DELAY);
+  static StyleFire<BLADE_NUM> style(
+    COLOR1::color(), COLOR2::color(),
+    DELAY, SPEED,
+    FireConfig(NORM_INT_BASE, NORM_INT_RAND, NORM_COOLING),
+    FireConfig(CLSH_INT_BASE, CLSH_INT_RAND, CLSH_COOLING),
+    FireConfig(LOCK_INT_BASE, LOCK_INT_RAND, LOCK_COOLING));
   return &style;
 }
 
@@ -4142,6 +4182,52 @@ private:
   A a_;
   B b_;
   int mix_;
+};
+
+// Randomly selects between A and B, but keeps nearby
+// pixels looking similar.
+template<class A, class B, int grade>
+class BrownNoiseFlicker {
+public:
+  void run(BladeBase* blade) {
+    a_.run(blade);
+    b_.run(blade);
+    mix_ = random(255);
+  }
+  OverDriveColor getColor(int led) {
+    OverDriveColor a = a_.getColor(led);
+    OverDriveColor b = b_.getColor(led);
+    a.c = a.c.mix(b.c, mix_);
+    mix_ = clampi32(mix_ + random(grade * 2 + 1) - grade, 0, 255);
+    return a;
+  }
+private:
+  A a_;
+  B b_;
+  int mix_;
+};
+
+// Makes a random "hump" which is about 2xHUMP_WIDTH leds wide.
+template<class A, class B, int HUMP_WIDTH>
+class HumpFlicker {
+public:
+  void run(BladeBase* blade) {
+    a_.run(blade);
+    b_.run(blade);
+    int num_leds_ = blade->num_leds();
+    pos_ = random(num_leds_);
+  }
+  OverDriveColor getColor(int led) {
+    OverDriveColor a = a_.getColor(led);
+    OverDriveColor b = b_.getColor(led);
+    int mix_ = clampi32(abs(led - pos_) * 255 / HUMP_WIDTH, 0, 255);
+    a.c = a.c.mix(b.c, mix_);
+    return a;
+  }
+private:
+  A a_;
+  B b_;
+  int pos_;
 };
 
 // Basic RGB rainbow.
@@ -5943,8 +6029,13 @@ public:
         // Avoid skipping lots of steps.
         if (t - last_clash_ < 400) return;
         power_.EatClick();
+#if NUM_BUTTONS > 1
         Serial.println("Previous preset");
         previous_preset();
+#else
+	Serial.println("Next preset");
+	next_preset();
+#endif
       }
     }
     last_clash_ = t;
@@ -6394,15 +6485,15 @@ protected:
       return true;
     }
     if (!strcmp(cmd, "lock") || !strcmp(cmd, "lockup")) {
-	Serial.print("Lockup ");
+        Serial.print("Lockup ");
       if (SaberBase::Lockup()) {
-	SaberBase::SetLockup(true);
-	SaberBase::DoBeginLockup();
-	Serial.println("OFF");
+        SaberBase::SetLockup(true);
+        SaberBase::DoBeginLockup();
+        Serial.println("OFF");
       } else {
         SaberBase::SetLockup(false);
         SaberBase::DoEndLockup();
-	Serial.println("ON");
+        Serial.println("ON");
       }
       return true;
     }

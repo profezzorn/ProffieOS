@@ -47,11 +47,39 @@ const unsigned int maxLedsPerStrip = 144;
 
 #ifdef CONFIG_PRESETS
 
+// Fire speed, valid values are 1 - 10
+#define FIRE1_SPEED 2
+// How long to wait before firing up crossguards.
+#define FIRE1_DELAY 800
+
+// Each of these have three values: A, B, C
+// A = non-random intensity
+// B = random intensity
+// C = cooling
+// The first two control temperature, and as we add
+// A + rnd(B) to the base of the blade each animation frame.
+// The second controls how rapidly the fire cools down
+
+// This is used during normal operation.
+#define FIRE1_NORMAL 0, 2000, 5
+
+// This is used when a clash occurs
+#define FIRE1_CLASH  3000, 0, 0
+
+// This is used during lockup.
+#define FIRE1_LOCKUP 0, 5000, 10
+
+// Helper
+#define FIRE1PTR(NUM, DELAY) \
+  StyleFirePtr<RED, YELLOW, NUM, DELAY, FIRE1_SPEED, \
+    FIRE1_NORMAL, FIRE1_CLASH, FIRE1_LOCKUP>()
+
+
 Preset presets[] = {
   { "font01", "tracks/title.wav",
-    StyleFirePtr<RED, YELLOW, 0>(),
-    StyleFirePtr<RED, YELLOW, 1, 800>(), // 800ms delay
-    StyleFirePtr<RED, YELLOW, 2, 800>()
+    FIRE1PTR(0, 0),
+    FIRE1PTR(1, FIRE1_DELAY),
+    FIRE1PTR(2, FIRE1_DELAY),
   },
   { "font02", "tracks/title.wav",
     StyleNormalPtr<RED, WHITE, 200, 300>(),
@@ -63,7 +91,72 @@ Preset presets[] = {
     StyleRainbowPtr<300, 800>(),
     StyleRainbowPtr<300, 800>()
   },
+  { "font03", "tracks/title.wav",
+    StyleNormalPtr<CYAN, WHITE, 300, 800>(),
+    StyleNormalPtr<CYAN, WHITE, 300, 800>(),
+     StyleNormalPtr<CYAN, WHITE, 300, 800>()
+  },
+  { "graflex7", "tracks/cantina.wav",
+    StylePtr<InOutSparkTip<EASYBLADE(BLUE, WHITE), 300, 800> >(),
+    StylePtr<InOutSparkTip<EASYBLADE(BLUE, WHITE), 300, 800> >(),
+    StylePtr<InOutSparkTip<EASYBLADE(BLUE, WHITE), 300, 800> >()
+  },
+  { "font02", "tracks/title.wav",
+    StyleFirePtr<BLUE, CYAN>(),
+    StyleFirePtr<BLUE, CYAN>(),
+    StyleFirePtr<BLUE, CYAN>()
+  },
+  { "igniter/font4", "tracks/duel.wav",
+    StylePtr<InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> >(),
+    StylePtr<InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> >(),
+    StylePtr<InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> >()
+  },
+  { "font01", "tracks/duel.wav",
+    StyleNormalPtr<WHITE, RED, 300, 800, RED>(),
+    StyleNormalPtr<WHITE, RED, 300, 800, RED>(),
+    StyleNormalPtr<WHITE, RED, 300, 800, RED>()
+  },
+  { "font01", "tracks/walls.wav",
+    StyleNormalPtr<AudioFlicker<YELLOW, WHITE>, BLUE, 300, 800>(),
+    StyleNormalPtr<AudioFlicker<YELLOW, WHITE>, BLUE, 300, 800>(),
+    StyleNormalPtr<AudioFlicker<YELLOW, WHITE>, BLUE, 300, 800>()
+  },
+  { "font01", "tracks/title.wav", 
+    StylePtr<InOutSparkTip<EASYBLADE(MAGENTA, WHITE), 300, 800> >(),
+    StylePtr<InOutSparkTip<EASYBLADE(MAGENTA, WHITE), 300, 800> >(),
+    StylePtr<InOutSparkTip<EASYBLADE(MAGENTA, WHITE), 300, 800> >()
+  },
+  { "font02", "tracks/cantina.wav",
+    StyleNormalPtr<Gradient<RED, BLUE>, Gradient<CYAN, YELLOW>, 300, 800>(),
+    StyleNormalPtr<Gradient<RED, BLUE>, Gradient<CYAN, YELLOW>, 300, 800>(),
+    StyleNormalPtr<Gradient<RED, BLUE>, Gradient<CYAN, YELLOW>, 300, 800>()
+  },
+  { "font02", "tracks/cantina.wav",
+    StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>()
+  },
+  { "font02", "tracks/cantina.wav",
+    &style_pov,
+    StyleNormalPtr<BLACK, BLACK, 0,0>(),
+    StyleNormalPtr<BLACK, BLACK, 0,0>(),
+  },
+
+  { "charging", "tracks/duel.wav",
+    &style_charging,
+    StyleNormalPtr<BLACK, BLACK, 0,0>(),
+    StyleNormalPtr<BLACK, BLACK, 0,0>(),
+  },
 };
+
+
+// Hook up the main blade as normal.
+// Hook up one of the crossguards like this:
+//  NEOPIXEL  +    <--> positive power (probably from charge port)
+//  NEOPIXEL  -    <--> LED4 pad on the bottom of the teensysaber
+//  NEOPIXEL data  <--> Pin 7 on the teensy  (through a 100ohm resistor)
+// Hook up the other crossguards like this:
+//  NEOPIXEL  +    <--> positive power (probably from charge port)
+//  NEOPIXEL  -    <--> LED5 pad on the bottom of the teensysaber
+//  NEOPIXEL data  <--> Pin 8 on the teensy  (through a 100ohm resistor)
 
 BladeConfig blades[] = {
   { 0, // blade ID resistor not used
