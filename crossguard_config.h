@@ -132,6 +132,8 @@ Preset presets[] = {
     StyleNormalPtr<Gradient<RED, BLUE>, Gradient<CYAN, YELLOW>, 300, 800>()
   },
   { "font02", "tracks/cantina.wav",
+    StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>(),
+    StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>(),
     StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>()
   },
   { "font02", "tracks/cantina.wav",
