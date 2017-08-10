@@ -3362,6 +3362,7 @@ class Color {
 #define WS2811_400kHz 0x10      // Adafruit's Flora Pixels
 #define WS2813_800kHz 0x20      // WS2813 are close to 800 kHz but has 300 us frame set delay
 #define WS2811_580kHz 0x30      // PL9823
+#define WS2811_ACTUALLY_800kHz 0x40      // Normally we use 740kHz instead of 800, this uses 800.
 
 class MonopodWS2811 {
 public:
@@ -3487,16 +3488,20 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
       break;
 
     case WS2811_800kHz:
-      frequency = 800000;
+      frequency = 740000;
       break;
 
     case WS2813_800kHz:
-      frequency = 800000;
+      frequency = 740000;
       frameSetDelay = 300;
       break;
 
     case WS2811_580kHz:
       frequency = 580000;
+      break;
+
+    case WS2811_ACTUALLY_800kHz:
+      frequency = 800000;
       break;
   }
 

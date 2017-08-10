@@ -61,7 +61,7 @@ const unsigned int maxLedsPerStrip = 144;
 // The second controls how rapidly the fire cools down
 
 // This is used during normal operation.
-#define FIRE1_NORMAL 0, 2000, 5
+#define FIRE1_NORMAL 0, 1000, 2
 
 // This is used when a clash occurs
 #define FIRE1_CLASH  3000, 0, 0
@@ -136,14 +136,13 @@ Preset presets[] = {
   },
   { "font02", "tracks/cantina.wav",
     &style_pov,
-    StyleNormalPtr<BLACK, BLACK, 0,0>(),
-    StyleNormalPtr<BLACK, BLACK, 0,0>(),
+    StyleNormalPtr<BLACK, BLACK, 100,100>(),
+    StyleNormalPtr<BLACK, BLACK, 100,100>(),
   },
-
   { "charging", "tracks/duel.wav",
     &style_charging,
-    StyleNormalPtr<BLACK, BLACK, 0,0>(),
-    StyleNormalPtr<BLACK, BLACK, 0,0>(),
+    StyleNormalPtr<BLACK, BLACK, 100,100>(),
+    StyleNormalPtr<BLACK, BLACK, 100,100>(),
   },
 };
 

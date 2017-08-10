@@ -79,7 +79,7 @@ BladeConfig blades[] = {
   //  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(presets) },
 
   // WS2811 string blade 144 LEDs
-  {   7800, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB>(), CONFIGARRAY(presets) },
+  {   7800, WS2811BladePtr<144, WS2811_ACTUALLY_800kHz | WS2811_GRB>(), CONFIGARRAY(presets) },
 #endif
 
   // Simple blue string blade.
