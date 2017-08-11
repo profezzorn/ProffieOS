@@ -34,9 +34,6 @@
 #include CONFIG_FILE
 #undef CONFIG_TOP
 
-#if VERSION_MAJOR >= 2
-#define V2
-#endif
 
 // #define ENABLE_DEBUG
 
@@ -162,77 +159,6 @@ SnoozeDigital snooze_digital;
 SnoozeTouch snooze_touch;
 SnoozeBlock snooze_config(snooze_touch, snooze_digital, snooze_timer);
 #endif
-
-
-// Teensy 3.2 pin map:
-// A lot of these can be changed, but be careful, because:
-//   o The pins used by the prop shield cannot be easily changed.
-//   o Pins that are going to control normal LEDs (not neopoxels) need PWM capability,
-//     and not all teensy pins can do PWM.
-//   o Touch input is not available on all pins.
-//   o Sdcard chip select pin depends on what shield you use.
-//   o Battery level and blade identification needs analog input, which is not possible
-//     on all pins.
-//
-// See the teensy 3.2 pinout diagram for more info: https://www.pjrc.com/teensy/pinout.html
-enum SaberPins {
-  // Bottom edge (in pin-out diagram)
-#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
-   // Prefer the built-in sd card for Teensy 3.5/3.6 as it is faster.
-  sdCardSelectPin = BUILTIN_SDCARD,
-#else   
-  sdCardSelectPin = 0,            // (See File->Example->SD->ReadWrite for
-                                  // other possible values.)
-#endif
-
-#ifdef V2
-  amplifierPin = 1,               // Amplifier enable pin (TeensySaber V2)
-  motionSensorInterruptPin = 2,   // motion sensor interrupt (TeensySaber V2)
-  bladePowerPin4 = 3,             // Optional power control (TeensySaber V2)
-  bladePowerPin5 = 4,             // Optional power control (TeensySaber V2)
-  bladePowerPin6 = 5,             // Optional power control (TeensySaber V2)
-  freePin6 = 6,
-  spiLedSelect = -1,               // APA102/dotstar chip select
-  spiLedDataOut = 7,
-  spiLedClock = 8,
-#else
-  freePin1 = 1,                   // FREE
-  motionSensorInterruptPin = 2,   // motion sensor interrupt (prop shield)
-  freePin3 = 3,                   // FREE
-  freePin4 = 4,                   // FREE (make this sdCardSelectPin if you're using a Wiz820+SD shield)
-  amplifierPin = 5,               // Amplifier enable pin (prop shield)
-  serialFlashSelectPin = 6,       // serial flash chip select (prop shield)
-  spiLedSelect = 7,               // APA102/dotstar chip select (prop shield)
-  freePin8 = 8,                   // FREE
-  spiLedDataOut = 11,
-  spiLedClock = 13,
-#endif
-  freePin9 = 9,                   // FREE
-  freePin10 = 10,                 // FREE
-  spiDataOut = 11,                // spi out, serial flash, spi led & sd card
-  spiDataIn = 12,                 // spi in, serial flash & sd card
-
-  // Top edge
-  spiClock = 13,                  // spi clock, flash, spi led & sd card
-  batteryLevelPin = 14,           // battery level input
-  auxPin = 15,                    // AUX button
-  powerButtonPin = 16,            // power button
-  aux2Pin = 17,                   // AUX2 button
-  i2cDataPin = 18,                // I2C bus, Used by motion sensors
-  i2cClockPin = 19,               // I2C bus, Used by motion sensors
-  bladePin = 20,                  // blade control, either WS2811 or PWM
-  bladeIdentifyPin = 20,          // blade identify input / FoC
-#ifdef V2
-  bladePowerPin3 = 21,            // blade power control
-  bladePowerPin2 = 22,            // blade power control
-  bladePowerPin1 = 23,            // blade power control
-#else
-  bladePowerPin1 = 21,            // blade power control
-  bladePowerPin2 = 22,            // blade power control
-  bladePowerPin3 = 23,            // blade power control
-#endif
-};
-
 
 const char version[] = "$Id$";
 
@@ -898,8 +824,54 @@ public:
 
 // DMA-driven audio output.
 // Based on the Teensy Audio library code.
-#define AUDIO_BUFFER_SIZE 88
+#define AUDIO_BUFFER_SIZE 44
 #define AUDIO_RATE 44100
+
+#ifdef USE_I2S
+
+// MCLK needs to be 48e6 / 1088 * 256 = 11.29411765 MHz -> 44.117647 kHz sample rate
+//
+#if F_CPU == 96000000 || F_CPU == 48000000 || F_CPU == 24000000
+  // PLL is at 96 MHz in these modes
+  #define MCLK_MULT 2
+  #define MCLK_DIV  17
+#elif F_CPU == 72000000
+  #define MCLK_MULT 8
+  #define MCLK_DIV  51
+#elif F_CPU == 120000000
+  #define MCLK_MULT 8
+  #define MCLK_DIV  85
+#elif F_CPU == 144000000
+  #define MCLK_MULT 4
+  #define MCLK_DIV  51
+#elif F_CPU == 168000000
+  #define MCLK_MULT 8
+  #define MCLK_DIV  119
+#elif F_CPU == 180000000
+  #define MCLK_MULT 16
+  #define MCLK_DIV  255
+  #define MCLK_SRC  0
+#elif F_CPU == 192000000
+  #define MCLK_MULT 1
+  #define MCLK_DIV  17
+#elif F_CPU == 216000000
+  #define MCLK_MULT 8
+  #define MCLK_DIV  153
+  #define MCLK_SRC  0
+#elif F_CPU == 240000000
+  #define MCLK_MULT 4
+  #define MCLK_DIV  85
+#elif F_CPU == 16000000
+  #define MCLK_MULT 12
+  #define MCLK_DIV  17
+#else
+  #error "This CPU Clock Speed is not supported.";
+#endif
+
+#define CHANNELS 2
+#else   // USE_I2S
+#define CHANNELS 1
+#endif  // USE_I2S
 
 #define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_CONT | PDB_SC_PDBIE | PDB_SC_DMAEN)
 
@@ -907,6 +879,54 @@ class DAC : CommandParser {
 public:
   DAC() {
     dma.begin(true); // Allocate the DMA channel first
+
+#ifdef USE_I2S
+    SIM_SCGC6 |= SIM_SCGC6_I2S;
+    SIM_SCGC7 |= SIM_SCGC7_DMA;
+    SIM_SCGC6 |= SIM_SCGC6_DMAMUX;
+
+    // enable MCLK output
+    I2S0_MCR = I2S_MCR_MICS(MCLK_SRC) | I2S_MCR_MOE;
+    while (I2S0_MCR & I2S_MCR_DUF) ;
+    I2S0_MDR = I2S_MDR_FRACT((MCLK_MULT-1)) | I2S_MDR_DIVIDE((MCLK_DIV-1));
+
+    // configure transmitter
+    I2S0_TMR = 0;
+    I2S0_TCR1 = I2S_TCR1_TFW(1);  // watermark at half fifo size
+    I2S0_TCR2 = I2S_TCR2_SYNC(0) | I2S_TCR2_BCP | I2S_TCR2_MSEL(1)
+      | I2S_TCR2_BCD | I2S_TCR2_DIV(3);
+    I2S0_TCR3 = I2S_TCR3_TCE;
+    I2S0_TCR4 = I2S_TCR4_FRSZ(1) | I2S_TCR4_SYWD(15) | I2S_TCR4_MF
+      | I2S_TCR4_FSE | I2S_TCR4_FSP | I2S_TCR4_FSD;
+    I2S0_TCR5 = I2S_TCR5_WNW(15) | I2S_TCR5_W0W(15) | I2S_TCR5_FBT(15);
+
+    // configure pin mux for 3 clock signals
+    CORE_PIN23_CONFIG = PORT_PCR_MUX(6); // pin 23, PTC2, I2S0_TX_FS (LRCLK)
+    CORE_PIN9_CONFIG  = PORT_PCR_MUX(6); // pin  9, PTC3, I2S0_TX_BCLK
+    CORE_PIN22_CONFIG = PORT_PCR_MUX(6); // pin 22, PTC1, I2S0_TXD0
+
+#if defined(KINETISK)
+    dma.TCD->SADDR = dac_dma_buffer;
+    dma.TCD->SOFF = 2;
+    dma.TCD->ATTR = DMA_TCD_ATTR_SSIZE(1) | DMA_TCD_ATTR_DSIZE(1);
+    dma.TCD->NBYTES_MLNO = 2;
+    dma.TCD->SLAST = -sizeof(dac_dma_buffer);
+    dma.TCD->DADDR = &I2S0_TDR0;
+    dma.TCD->DOFF = 0;
+    dma.TCD->CITER_ELINKNO = sizeof(dac_dma_buffer) / 2;
+    dma.TCD->DLASTSGA = 0;
+    dma.TCD->BITER_ELINKNO = sizeof(dac_cma_buffer) / 2;
+    dma.TCD->CSR = DMA_TCD_CSR_INTHALF | DMA_TCD_CSR_INTMAJOR;
+#endif
+    dma.triggerAtHardwareEvent(DMAMUX_SOURCE_I2S0_TX);
+    update_responsibility = update_setup();
+    dma.enable();
+    
+    I2S0_TCSR = I2S_TCSR_SR;
+    I2S0_TCSR = I2S_TCSR_TE | I2S_TCSR_BCE | I2S_TCSR_FRDE;
+
+#else   // USE_I2S
+
     SIM_SCGC2 |= SIM_SCGC2_DAC0;
     DAC0_C0 = DAC_C0_DACEN;
 #ifdef LOUD
@@ -936,6 +956,7 @@ public:
     dma.TCD->CSR = DMA_TCD_CSR_INTHALF | DMA_TCD_CSR_INTMAJOR;
     dma.triggerAtHardwareEvent(DMAMUX_SOURCE_PDB);
     dma.enable();
+#endif
     dma.attachInterrupt(isr);
   }
 
@@ -982,33 +1003,40 @@ private:
     if (saddr < (uint32_t)dac_dma_buffer + sizeof(dac_dma_buffer) / 2) {
       // DMA is transmitting the first half of the buffer
       // so we must fill the second half
-      dest = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE];
-      end = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*2];
+      dest = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*CHANNELS];
+      end = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
     } else {
       // DMA is transmitting the second half of the buffer
       // so we must fill the first half
       dest = (int16_t *)dac_dma_buffer;
-      end = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE];
+      end = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*CHANNELS];
     }
     AudioStream *stream = stream_;
+    int16_t data[AUDIO_BUFFER_SIZE];
+    int n = 0;
     if (stream) {
-      int n = stream->read(dest, end-dest);
-      while (n--) {
-        *dest = ((*(uint16_t*)dest) + 32768) >> 4;
-        dest++;
-      }
+      n = stream->read(data, (end-dest) / CHANNELS);
     }
-    while (dest < end) { *dest++ = 2048; }
+    while (n < AUDIO_BUFFER_SIZE) data[n++] = 0;
+    for (int i = 0; i < n; i++) {
+#ifdef USE_I2S
+      // Duplicate sample to left and right channel.
+      *(dest++) = tmp[i];
+      *(dest++) = tmp[i];
+#else
+      *(dest++) = ((*(uint16_t*)data[i]) + 32768) >> 4;
+#endif
+    }
   }
 
-  DMAMEM static uint16_t dac_dma_buffer[AUDIO_BUFFER_SIZE*2];
+  DMAMEM static uint16_t dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
   static AudioStream * volatile stream_;
   static DMAChannel dma;
 };
 
 DMAChannel DAC::dma(false);
 AudioStream * volatile DAC::stream_ = nullptr;
-DMAMEM uint16_t DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2];
+DMAMEM uint16_t DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
 
 DAC dac;
 
@@ -7516,7 +7544,12 @@ void setup() {
   SerialFlashChip::begin(serialFlashSelectPin);
 #endif
 #ifdef ENABLE_SD
+#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
+  // Prefer the built-in sd card for Teensy 3.5/3.6 as it is faster.
+  bool sd_card_found = SD.begin(BUILTIN_SDCARD);
+#else
   bool sd_card_found = SD.begin(sdCardSelectPin);
+#endif
   if (!sd_card_found) {
     Serial.println("No sdcard found.");
   } else {

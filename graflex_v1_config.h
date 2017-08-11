@@ -1,9 +1,8 @@
 
 #ifdef CONFIG_TOP
 
-// Board version
-#define VERSION_MAJOR 1
-#define VERSION_MINOR 0
+// V1 electronics
+#include "v1_config.h"
 
 // Number of simultaneously connected blades.
 // (For interchangeable blades, see the blades[] array.)
