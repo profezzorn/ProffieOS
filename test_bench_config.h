@@ -47,7 +47,8 @@ const unsigned int maxLedsPerStrip = 144;
 #ifdef CONFIG_PRESETS
 
 Preset testing_presets[] = {
-  { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
+  { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>(),
+    "=RainboW++\n++BladE++" },
   { "graflex4", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
   { "graflex4", "tracks/cantina.wav", StyleNormalPtr<BLUE, RED, 300, 800>() },
   { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },

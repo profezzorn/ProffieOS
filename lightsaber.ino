@@ -24,16 +24,12 @@
 // #define CONFIG_FILE "toy_saber_config.h"
 // #define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
-// #define CONFIG_FILE "test_bench_config.h"
-#define CONFIG_FILE "crossguard_config.h"
-
-// Search for CONFIGURABLE in this file to find all the places which
-// might need to be modified for your saber.
+// #define CONFIG_FILE "crossguard_config.h"
+#define CONFIG_FILE "test_bench_config.h"
 
 #define CONFIG_TOP
 #include CONFIG_FILE
 #undef CONFIG_TOP
-
 
 // #define ENABLE_DEBUG
 
@@ -522,7 +518,8 @@ public:                                                         \
   SABERFUN(Accel, (const Vec3& accel), (accel));\
                                                 \
   SABERFUN(Top, (), ());                        \
-  SABERFUN(IsOn, (bool* on), (on));
+  SABERFUN(IsOn, (bool* on), (on));             \
+  SABERFUN(Message, (const char* msg), (msg));
 
   SABERBASEFUNCTIONS();
 #undef SABERFUN
@@ -1024,7 +1021,7 @@ private:
       *(dest++) = tmp[i];
       *(dest++) = tmp[i];
 #else
-      *(dest++) = ((*(uint16_t*)data[i]) + 32768) >> 4;
+      *(dest++) = (((uint16_t*)data)[i] + 32768) >> 4;
 #endif
     }
   }
@@ -3262,6 +3259,13 @@ public:
   bool low() const {
     return battery() < (loaded_ ? 2.6 : 3.0);
   }
+  float battery_percent() {
+    // Energy is roughly proportional to voltage squared.
+    float v = battery();
+    float min_v = 3.0;
+    float max_v = 4.2;
+    return 100.0 * (v * v - min_v * min_v) / (max_v * max_v - min_v * min_v);
+  }
 protected:
   void Setup() override {
     really_old_voltage_ = old_voltage_ = last_voltage_ = battery_now();
@@ -3323,8 +3327,8 @@ class Color {
   Color mix(const Color& other, int x) const {
     // Wonder if there is an instruction for this?
     return Color( ((256-x) * r + x * other.r) >> 8,
-                  ((256-x) * g + x * other.g) >> 8,
-                  ((256-x) * b + x * other.b) >> 8);
+                   ((256-x) * g + x * other.g) >> 8,
+                   ((256-x) * b + x * other.b) >> 8);
   }
   uint8_t select(const Color& other) const {
     uint8_t ret = 255;
@@ -3395,9 +3399,9 @@ class Color {
 class MonopodWS2811 {
 public:
   void begin(uint32_t numPerStrip,
-             void *frameBuf,
-             uint8_t config,
-             int pin);
+              void *frameBuf,
+              uint8_t config,
+              int pin);
   void setPixel(uint32_t num, Color color) {
     drawBuffer[num] = color;
   }
@@ -3412,7 +3416,7 @@ public:
   int numPixels(void) {
     return stripLen;
   }
-  
+
   static Color drawBuffer[maxLedsPerStrip];
 private:
   static uint16_t stripLen;
@@ -3467,9 +3471,9 @@ static uint32_t update_completed_at = 0;
 #endif
 
 void MonopodWS2811::begin(uint32_t numPerStrip,
-                          void *frameBuf,
-                          uint8_t config,
-                          int pin)
+                           void *frameBuf,
+                           uint8_t config,
+                           int pin)
 {
   stripLen = numPerStrip;
   frameBuffer = frameBuf;
@@ -3508,7 +3512,7 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
 
   int t0h = WS2811_TIMING_T0H;
   int t1h = WS2811_TIMING_T1H;
-  
+
   frameSetDelay = 50;
   switch (params & 0xF0) {
     case WS2811_400kHz:
@@ -3534,70 +3538,70 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
   }
 
 #if defined(__MK20DX128__)
-        FTM1_SC = 0;
-        FTM1_CNT = 0;
-        uint32_t mod = (F_BUS + frequency / 2) / frequency;
-        FTM1_MOD = mod - 1;
-        FTM1_SC = FTM_SC_CLKS(1) | FTM_SC_PS(0);
-        FTM1_C0SC = 0x69;
-        FTM1_C1SC = 0x69;
-        FTM1_C0V = (mod * t0h) >> 8;
-        FTM1_C1V = (mod * t1h) >> 8;
-        // pin 16 triggers DMA(port B) on rising edge
-        CORE_PIN16_CONFIG = PORT_PCR_IRQC(1)|PORT_PCR_MUX(3);
-        //CORE_PIN4_CONFIG = PORT_PCR_MUX(3); // testing only
+         FTM1_SC = 0;
+         FTM1_CNT = 0;
+         uint32_t mod = (F_BUS + frequency / 2) / frequency;
+         FTM1_MOD = mod - 1;
+         FTM1_SC = FTM_SC_CLKS(1) | FTM_SC_PS(0);
+         FTM1_C0SC = 0x69;
+         FTM1_C1SC = 0x69;
+         FTM1_C0V = (mod * t0h) >> 8;
+         FTM1_C1V = (mod * t1h) >> 8;
+         // pin 16 triggers DMA(port B) on rising edge
+         CORE_PIN16_CONFIG = PORT_PCR_IRQC(1)|PORT_PCR_MUX(3);
+         //CORE_PIN4_CONFIG = PORT_PCR_MUX(3); // testing only
 
 #elif defined(__MK20DX256__)
-        FTM2_SC = 0;
-        FTM2_CNT = 0;
-        uint32_t mod = (F_BUS + frequency / 2) / frequency;
-        FTM2_MOD = mod - 1;
-        FTM2_SC = FTM_SC_CLKS(1) | FTM_SC_PS(0);
-        FTM2_C0SC = 0x69;
-        FTM2_C1SC = 0x69;
-        FTM2_C0V = (mod * t0h) >> 8;
-        FTM2_C1V = (mod * t1h) >> 8;
-        // pin 32 is FTM2_CH0, PTB18, triggers DMA(port B) on rising edge
-        // pin 25 is FTM2_CH1, PTB19
-        CORE_PIN32_CONFIG = PORT_PCR_IRQC(1)|PORT_PCR_MUX(3);
-        //CORE_PIN25_CONFIG = PORT_PCR_MUX(3); // testing only
+         FTM2_SC = 0;
+         FTM2_CNT = 0;
+         uint32_t mod = (F_BUS + frequency / 2) / frequency;
+         FTM2_MOD = mod - 1;
+         FTM2_SC = FTM_SC_CLKS(1) | FTM_SC_PS(0);
+         FTM2_C0SC = 0x69;
+         FTM2_C1SC = 0x69;
+         FTM2_C0V = (mod * t0h) >> 8;
+         FTM2_C1V = (mod * t1h) >> 8;
+         // pin 32 is FTM2_CH0, PTB18, triggers DMA(port B) on rising edge
+         // pin 25 is FTM2_CH1, PTB19
+         CORE_PIN32_CONFIG = PORT_PCR_IRQC(1)|PORT_PCR_MUX(3);
+         //CORE_PIN25_CONFIG = PORT_PCR_MUX(3); // testing only
 
 #elif defined(__MK64FX512__) || defined(__MK66FX1M0__)
-        FTM2_SC = 0;
-        FTM2_CNT = 0;
-        uint32_t mod = (F_BUS + frequency / 2) / frequency;
-        FTM2_MOD = mod - 1;
-        FTM2_SC = FTM_SC_CLKS(1) | FTM_SC_PS(0);
-        FTM2_C0SC = 0x69;
-        FTM2_C1SC = 0x69;
-        FTM2_C0V = (mod * t0h) >> 8;
-        FTM2_C1V = (mod * t1h) >> 8;
-        // FTM2_CH0, PTA10 (not connected), triggers DMA(port A) on rising edge
-        PORTA_PCR10 = PORT_PCR_IRQC(1)|PORT_PCR_MUX(3);
+         FTM2_SC = 0;
+         FTM2_CNT = 0;
+         uint32_t mod = (F_BUS + frequency / 2) / frequency;
+         FTM2_MOD = mod - 1;
+         FTM2_SC = FTM_SC_CLKS(1) | FTM_SC_PS(0);
+         FTM2_C0SC = 0x69;
+         FTM2_C1SC = 0x69;
+         FTM2_C0V = (mod * t0h) >> 8;
+         FTM2_C1V = (mod * t1h) >> 8;
+         // FTM2_CH0, PTA10 (not connected), triggers DMA(port A) on rising edge
+         PORTA_PCR10 = PORT_PCR_IRQC(1)|PORT_PCR_MUX(3);
 
 #elif defined(__MKL26Z64__)
-        analogWriteResolution(8);
-        analogWriteFrequency(3, frequency);
-        analogWriteFrequency(4, frequency);
-        analogWrite(3, t0h);
-        analogWrite(4, t1h);
-        // on Teensy-LC, use timer DMA, not pin DMA
-        //Serial1.println(FTM2_C0SC, HEX);
-        //FTM2_C0SC = 0xA9;
-        //FTM2_C0SC = 0xA9;
-        //uint32_t t = FTM2_C0SC;
-        //FTM2_C0SC = 0xA9;
-        //Serial1.println(t, HEX);
-        CORE_PIN3_CONFIG = 0;
-        CORE_PIN4_CONFIG = 0;
-        //FTM2_C0SC = 0;
-        //FTM2_C1SC = 0;
-        //while (FTM2_C0SC) ;
-        //while (FTM2_C1SC) ;
-        //FTM2_C0SC = 0x99;
-        //FTM2_C1SC = 0x99;
+         analogWriteResolution(8);
+         analogWriteFrequency(3, frequency);
+         analogWriteFrequency(4, frequency);
+         analogWrite(3, t0h);
+         analogWrite(4, t1h);
+         // on Teensy-LC, use timer DMA, not pin DMA
+         //Serial1.println(FTM2_C0SC, HEX);
+         //FTM2_C0SC = 0xA9;
+         //FTM2_C0SC = 0xA9;
+         //uint32_t t = FTM2_C0SC;
+         //FTM2_C0SC = 0xA9;
+         //Serial1.println(t, HEX);
+         CORE_PIN3_CONFIG = 0;
+         CORE_PIN4_CONFIG = 0;
+         //FTM2_C0SC = 0;
+         //FTM2_C1SC = 0;
+         //while (FTM2_C0SC) ;
+         //while (FTM2_C1SC) ;
+         //FTM2_C0SC = 0x99;
+         //FTM2_C1SC = 0x99;
 
-        //MCM_PLACR |= MCM_PLACR_ARB;
+         //MCM_PLACR |= MCM_PLACR_ARB;
 
 #endif
 
@@ -3693,33 +3697,33 @@ void CopyOut(int params, struct Color* inbuf, void* frameBuffer, int num) {
   uint8_t *o = (uint8_t*)frameBuffer;
   switch (params & 7) {
     case WS2811_RBG:
-        for (int j = 0; j < num; j++)  {
-          Out2DMA(o, inbuf[j].r);
-          Out2DMA(o, inbuf[j].b);
-          Out2DMA(o, inbuf[j].g);
-        }
-        break;
+         for (int j = 0; j < num; j++)  {
+           Out2DMA(o, inbuf[j].r);
+           Out2DMA(o, inbuf[j].b);
+           Out2DMA(o, inbuf[j].g);
+         }
+         break;
     case WS2811_GRB:
-        for (int j = 0; j < num; j++)  {
-          Out2DMA(o, inbuf[j].g);
-          Out2DMA(o, inbuf[j].r);
-          Out2DMA(o, inbuf[j].b);
-        }
-        break;
+         for (int j = 0; j < num; j++)  {
+           Out2DMA(o, inbuf[j].g);
+           Out2DMA(o, inbuf[j].r);
+           Out2DMA(o, inbuf[j].b);
+         }
+         break;
     case WS2811_GBR:
-        for (int j = 0; j < num; j++)  {
-          Out2DMA(o, inbuf[j].g);
-          Out2DMA(o, inbuf[j].b);
-          Out2DMA(o, inbuf[j].r);
-        }
-        break;
+         for (int j = 0; j < num; j++)  {
+           Out2DMA(o, inbuf[j].g);
+           Out2DMA(o, inbuf[j].b);
+           Out2DMA(o, inbuf[j].r);
+         }
+         break;
     default:
-        for (int j = 0; j < num; j++)  {
-          Out2DMA(o, inbuf[j].r);
-          Out2DMA(o, inbuf[j].g);
-          Out2DMA(o, inbuf[j].b);
-        }
-        break;
+         for (int j = 0; j < num; j++)  {
+           Out2DMA(o, inbuf[j].r);
+           Out2DMA(o, inbuf[j].g);
+           Out2DMA(o, inbuf[j].b);
+         }
+         break;
    }
 }
 
@@ -3964,8 +3968,8 @@ StyleCharging style_charging;
 
 struct FireConfig {
   FireConfig(int b, int r, int c) : intensity_base(b),
-                                    intensity_rand(r),
-                                    cooling(c) {}
+                                     intensity_rand(r),
+                                     cooling(c) {}
   int intensity_base;
   int intensity_rand;
   int cooling;
@@ -3976,12 +3980,12 @@ template<int BLADE_NUM>
 class StyleFire : public BladeStyle {
 public:
   StyleFire(Color c1,
-            Color c2,
-            uint32_t delay,
-            uint32_t speed,
-            FireConfig normal,
-            FireConfig clash,
-            FireConfig lockup) :
+             Color c2,
+             uint32_t delay,
+             uint32_t speed,
+             FireConfig normal,
+             FireConfig clash,
+             FireConfig lockup) :
     c1_(c1), c2_(c2),
     delay_(delay),
     speed_(speed),
@@ -4005,13 +4009,13 @@ public:
     }
     switch (state_) {
       default:
-        state_ = STATE_ACTIVATING;
-        on_time_ = millis();
+         state_ = STATE_ACTIVATING;
+         on_time_ = millis();
       case STATE_ACTIVATING:
-        if (millis() - on_time_ < delay_) return false;
-        state_ = STATE_ON;
+         if (millis() - on_time_ < delay_) return false;
+         state_ = STATE_ON;
       case STATE_ON:
-        return true;
+         return true;
     }
   }
   void run(BladeBase* blade) override {
@@ -4022,28 +4026,28 @@ public:
 
       FireConfig config(0,0,0);
       if (blade->clash()) {
-        config = clash_;
+         config = clash_;
       } else if (On(blade)) {
-        if (SaberBase::Lockup()) {
-          config = lockup_;
-        } else {
-          config = normal_;
-        }
+         if (SaberBase::Lockup()) {
+           config = lockup_;
+         } else {
+           config = normal_;
+         }
       } else {
-        config = normal_;
-        config.intensity_base = 0;
-        config.intensity_rand = 0;
+         config = normal_;
+         config.intensity_base = 0;
+         config.intensity_rand = 0;
       }
       // Note heat_[0] is tip of blade
       for (int i = 1; i <= speed_; i++) {
-        heat_[num_leds - i] += config.intensity_base +
-          random(random(random(config.intensity_rand)));
+         heat_[num_leds - i] += config.intensity_base +
+           random(random(random(config.intensity_rand)));
       }
       for (int i = 0; i < num_leds; i++) {
-        int x = (heat_[i+speed_-1] * 3  +
-                 heat_[i+speed_] * 10 +
-                 heat_[i+speed_+1] * 3) >> 4;
-        heat_[i] = clampi32(x - random(config.cooling), 0, 65535);
+         int x = (heat_[i+speed_-1] * 3  +
+                  heat_[i+speed_] * 10 +
+                  heat_[i+speed_+1] * 3) >> 4;
+         heat_[i] = clampi32(x - random(config.cooling), 0, 65535);
       }
     }
     bool zero = true;
@@ -4051,13 +4055,13 @@ public:
       int h = heat_[num_leds - 1 - i];
       Color c;
       if (h < 256) {
-        c = Color().mix(c1_, h);
+         c = Color().mix(c1_, h);
       } else if (h < 512) {
-        c = c1_.mix(c2_, h - 256);
+         c = c1_.mix(c2_, h - 256);
       } else if (h < 768) {
-        c = c2_.mix(Color(255,255,255), h - 512);
+         c = c2_.mix(Color(255,255,255), h - 512);
       } else {
-        c = Color(255,255,255);
+         c = Color(255,255,255);
       }
       if (h) zero = false;
       blade->set(i, c);
@@ -4087,10 +4091,10 @@ unsigned short StyleFire<BLADE_NUM>::heat_[maxLedsPerStrip + 13];
 // If you have multiple blades, make sure to use a different BLADE_NUM
 // for each blade.
 template<class COLOR1, class COLOR2,
-         int BLADE_NUM=0, int DELAY=0, int SPEED=2,
-         int NORM_INT_BASE = 0, int NORM_INT_RAND=2000, int NORM_COOLING = 5,
-         int CLSH_INT_BASE = 3000, int CLSH_INT_RAND=0, int CLSH_COOLING = 0,
-         int LOCK_INT_BASE = 0, int LOCK_INT_RAND=5000, int LOCK_COOLING = 10>
+          int BLADE_NUM=0, int DELAY=0, int SPEED=2,
+          int NORM_INT_BASE = 0, int NORM_INT_RAND=2000, int NORM_COOLING = 5,
+          int CLSH_INT_BASE = 3000, int CLSH_INT_RAND=0, int CLSH_COOLING = 0,
+          int LOCK_INT_BASE = 0, int LOCK_INT_RAND=5000, int LOCK_COOLING = 10>
 class BladeStyle *StyleFirePtr() {
   static StyleFire<BLADE_NUM> style(
     COLOR1::color(), COLOR2::color(),
@@ -4271,8 +4275,8 @@ public:
   }
   OverDriveColor getColor(int led) {
     Color c(max(0, (sin_table[((m * 3 + led * 50)) & 0x3ff] >> 7)),
-            max(0, (sin_table[((m * 3 + led * 50 + 1024 / 3)) & 0x3ff] >> 7)),
-            max(0, (sin_table[((m * 3 + led * 50 + 1024 * 2 / 3)) & 0x3ff] >> 7)));
+             max(0, (sin_table[((m * 3 + led * 50 + 1024 / 3)) & 0x3ff] >> 7)),
+             max(0, (sin_table[((m * 3 + led * 50 + 1024 * 2 / 3)) & 0x3ff] >> 7)));
     OverDriveColor ret;
     ret.c = c;
     ret.overdrive = false;
@@ -4368,17 +4372,17 @@ public:
      uint32_t m = millis();
      uint32_t timeout = strobe_ ? STROBE_MILLIS : (1000/STROBE_FREQUENCY);
      if (m - strobe_millis_ > timeout) {
-       strobe_millis_ += timeout;
-       if (m - strobe_millis_ > STROBE_MILLIS + (1000/STROBE_FREQUENCY))
-         strobe_millis_ = m;
-       strobe_ = !strobe_;
+        strobe_millis_ += timeout;
+        if (m - strobe_millis_ > STROBE_MILLIS + (1000/STROBE_FREQUENCY))
+          strobe_millis_ = m;
+        strobe_ = !strobe_;
      }
    }
    OverDriveColor getColor(int led) {
      if (strobe_) {
-       return strobe_color_.getColor(led);
+        return strobe_color_.getColor(led);
      } else {
-       return base_.getColor(led);
+        return base_.getColor(led);
      }
    }
 private:
@@ -4398,12 +4402,12 @@ public:
     last_micros_ = now;
     if (blade->is_on()) {
       if (extension == 0.0) {
-        // We might have been off for a while, so delta might
-        // be insanely high.
-        extension = 0.00001;
+         // We might have been off for a while, so delta might
+         // be insanely high.
+         extension = 0.00001;
       } else {
-        extension += delta / (OUT_MILLIS * 1000.0);
-        extension = min(extension, 1.0f);
+         extension += delta / (OUT_MILLIS * 1000.0);
+         extension = min(extension, 1.0f);
       }
     } else {
       if (extension == 0.0) blade->allow_disable();
@@ -4435,12 +4439,12 @@ public:
     last_micros_ = now;
     if ((on_ = blade->is_on())) {
       if (extension == 0.0) {
-        // We might have been off for a while, so delta might
-        // be insanely high.
-        extension = 0.00001;
+         // We might have been off for a while, so delta might
+         // be insanely high.
+         extension = 0.00001;
       } else {
-        extension += delta / (OUT_MILLIS * 1000.0);
-        extension = min(extension, 1.0f);
+         extension += delta / (OUT_MILLIS * 1000.0);
+         extension = min(extension, 1.0f);
       }
     } else {
       if (extension == 0.0) blade->allow_disable();
@@ -4449,7 +4453,7 @@ public:
     }
     thres = extension * (blade->num_leds() + 4) * 256;
   }
-  
+
   OverDriveColor getColor(int led) {
     OverDriveColor ret = base_.getColor(led);
     if (on_) {
@@ -4480,9 +4484,9 @@ public:
     for (int i = 0; i < num_leds; i++) {
       OverDriveColor c = base_.getColor(i);
       if (c.overdrive) {
-        blade->set_overdrive(i, c.c);
+         blade->set_overdrive(i, c.c);
       } else {
-        blade->set(i, c.c);
+         blade->set(i, c.c);
       }
     }
   }
@@ -4565,10 +4569,10 @@ typedef Rgb<255, 255, 0> Yellow;
 
 // Arguments: color, clash color, turn-on/off time
 template<class base_color,
-         class clash_color,
-         int out_millis,
-         int in_millis,
-         class lockup_flicker_color = WHITE>
+          class clash_color,
+          int out_millis,
+          int in_millis,
+          class lockup_flicker_color = WHITE>
 BladeStyle *StyleNormalPtr() {
   typedef AudioFlicker<base_color, lockup_flicker_color> AddFlicker;
   typedef Lockup<base_color, AddFlicker> AddLockup;
@@ -4579,9 +4583,9 @@ BladeStyle *StyleNormalPtr() {
 // Rainbow blade.
 // Arguments: color, clash color, turn-on/off time
 template<int out_millis,
-         int in_millis,
-         class clash_color = WHITE,
-         class lockup_flicker_color = WHITE>
+          int in_millis,
+          class clash_color = WHITE,
+          class lockup_flicker_color = WHITE>
 BladeStyle *StyleRainbowPtr() {
   typedef AudioFlicker<Rainbow, lockup_flicker_color> AddFlicker;
   typedef Lockup<Rainbow, AddFlicker> AddLockup;
@@ -4592,10 +4596,10 @@ BladeStyle *StyleRainbowPtr() {
 // Stroboscope, flickers the blade at the desired frequency.
 // Arguments: color, clash color, turn-on/off time
 template<class strobe_color,
-         class clash_color,
-         int frequency,
-         int out_millis,
-         int in_millis>
+          class clash_color,
+          int frequency,
+          int out_millis,
+          int in_millis>
 BladeStyle *StyleStrobePtr() {
   typedef Strobe<BLACK, strobe_color, frequency, 1> strobe;
   typedef Strobe<BLACK, strobe_color, 3* frequency, 1> fast_strobe;
@@ -4606,8 +4610,8 @@ BladeStyle *StyleStrobePtr() {
 
 #if defined(ENABLE_WS2811) || defined(ENABLE_FASTLED)
 void rle_decode(const unsigned char *input,
-                unsigned char *output,
-                int output_length) {
+                 unsigned char *output,
+                 int output_length) {
   int olen = 0;
   while (olen < output_length) {
     if (*input == 255) {
@@ -4616,9 +4620,9 @@ void rle_decode(const unsigned char *input,
       int len = input[2];
       input += 3;
       for (i = 0; i < len; i++) {
-        *output = output[-offset];
-        output++;
-        olen++;
+         *output = output[-offset];
+         output++;
+         olen++;
       }
     }
     else if (*input < 128) {
@@ -4695,19 +4699,19 @@ public:
     // Serial.println(fraction);
     if (fraction < 0 || fraction > 1.0) {
       memset((unsigned char *)&MonopodWS2811::drawBuffer,
-             0,
-             maxLedsPerStrip * 3);
+              0,
+              maxLedsPerStrip * 3);
       return;
     }
     int col = fraction * NELEM(imageoffsets);
     rle_decode(imagedata + imageoffsets[col],
-               (unsigned char *)&MonopodWS2811::drawBuffer,
-               maxLedsPerStrip * 3);
+                (unsigned char *)&MonopodWS2811::drawBuffer,
+                maxLedsPerStrip * 3);
     size_t num_leds = blade->num_leds();
     if (num_leds < maxLedsPerStrip) {
       for (size_t i = 0; i < maxLedsPerStrip; i++) {
-        MonopodWS2811::drawBuffer[i] =
-          MonopodWS2811::drawBuffer[i * maxLedsPerStrip / num_leds];
+         MonopodWS2811::drawBuffer[i] =
+           MonopodWS2811::drawBuffer[i * maxLedsPerStrip / num_leds];
       }
     }
     blade->allow_disable();
@@ -4843,17 +4847,17 @@ public:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-        SB_On();
-        return true;
+         SB_On();
+         return true;
       }
       if (!strcmp(arg, "off")) {
-        SB_Off();
-        return true;
+         SB_Off();
+         return true;
       }
     }
     return false;
   }
-  
+
   void Help() override {
     Serial.println(" blade on/off - turn ws2811 blade on off");
   }
@@ -4862,30 +4866,30 @@ protected:
   void Loop() override {
     STATE_MACHINE_BEGIN() 
     while (true) {
-       while (!powered_) {
-         loop_counter_.Reset();
-         YIELD();
-       }
-       // Wait until it's our turn.
-       while (current_blade) YIELD();
-       if (allow_disable_) {
-         Power(on_);
-         continue;
-       }
-       current_blade = this;
-       current_style_->run(this);
-       while (monopodws.busy()) YIELD();
+        while (!powered_) {
+          loop_counter_.Reset();
+          YIELD();
+        }
+        // Wait until it's our turn.
+        while (current_blade) YIELD();
+        if (allow_disable_) {
+          Power(on_);
+          continue;
+        }
+        current_blade = this;
+        current_style_->run(this);
+        while (monopodws.busy()) YIELD();
 #if NUM_BLADES > 1
-       monopodws.begin(num_leds_, displayMemory, config_, pin_);
+        monopodws.begin(num_leds_, displayMemory, config_, pin_);
 #endif
-       monopodws.show();
-       loop_counter_.Update();
-       current_blade = NULL;
-       YIELD();
+        monopodws.show();
+        loop_counter_.Update();
+        current_blade = NULL;
+        YIELD();
     }
     STATE_MACHINE_END();
   }
-  
+
 private:
   int num_leds_;
   uint8_t config_;
@@ -4895,7 +4899,7 @@ private:
   bool clash_ = false;
   bool allow_disable_ = false;
   LoopCounter loop_counter_;
-  
+
   static WS2811_Blade* current_blade;
   StateMachineState state_machine_;
   PowerPinInterface* power_;
@@ -5014,17 +5018,17 @@ public:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-        SB_On();
-        return true;
+         SB_On();
+         return true;
       }
       if (!strcmp(arg, "off")) {
-        SB_Off();
-        return true;
+         SB_Off();
+         return true;
       }
     }
     return false;
   }
-  
+
   void Help() override {
     Serial.println(" blade on/off - turn apa102 blade on off");
   }
@@ -5047,7 +5051,7 @@ protected:
     Show();
     if (allow_disable_) Power(on_);
   }
-  
+
 private:
   int num_leds_;
   bool on_ = false;
@@ -5061,7 +5065,7 @@ private:
 };
 
 template<ESPIChipsets CHIPSET, EOrder RGB_ORDER,
-         uint8_t SPI_DATA_RATE, int LEDS, class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3> >
+          uint8_t SPI_DATA_RATE, int LEDS, class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3> >
 class BladeBase *FASTLEDBladePtr() {
   static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
   static POWER_PINS power_pins;
@@ -5145,7 +5149,7 @@ public:
     if (pin_ == -1) return;
     analogWrite(pin_, c_->PWM_overdrive(c));
   }
-  
+
   int pin_;
   LEDInterface* c_;
 };
@@ -5156,13 +5160,13 @@ public:
 class Simple_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
 public:
   Simple_Blade(LEDInterface* c1,
-               LEDInterface* c2,
-               LEDInterface* c3,
-               LEDInterface* c4,
-               int pin1,
-               int pin2,
-               int pin3,
-               int pin4) :
+                LEDInterface* c2,
+                LEDInterface* c3,
+                LEDInterface* c4,
+                int pin1,
+                int pin2,
+                int pin3,
+                int pin4) :
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK) {
@@ -5204,7 +5208,7 @@ public:
   void allow_disable() override {
     power_ = false;
   }
-  
+
   // SaberBase implementation
   void SB_IsOn(bool *on) override {
     if (on_) *on = true;
@@ -5224,12 +5228,12 @@ public:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-        SB_On();
-        return true;
+         SB_On();
+         return true;
       }
       if (!strcmp(arg, "off")) {
-        SB_Off();
-        return true;
+         SB_Off();
+         return true;
       }
     }
     return false;
@@ -5244,7 +5248,7 @@ protected:
     if (!power_) return;
     current_style_->run(this);
   }
-  
+
 private:
   PWMPin pins_[4];
   static bool on_;
@@ -5256,10 +5260,10 @@ bool Simple_Blade::on_ = false;
 bool Simple_Blade::power_ = false;
 
 template<class LED1, class LED2, class LED3, class LED4,
-         int pin1 = bladePowerPin1,
-         int pin2 = bladePowerPin2,
-         int pin3 = bladePowerPin3,
-         int pin4 = bladePin>
+          int pin1 = bladePowerPin1,
+          int pin2 = bladePowerPin2,
+          int pin3 = bladePowerPin3,
+          int pin4 = bladePin>
 class Simple_Blade *SimpleBladePtr() {
   static Simple_Blade blade(LEDPtr<LED1>(), LEDPtr<LED2>(), LEDPtr<LED3>(), LEDPtr<LED4>(), pin1, pin2, pin3, pin4);
   return &blade;
@@ -5319,7 +5323,7 @@ public:
   void allow_disable() override {
     power_ = false;
   }
-  
+
   // SaberBase implementation
   void SB_IsOn(bool *on) override {
     if (on_) *on = true;
@@ -5339,12 +5343,12 @@ public:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-        SB_On();
-        return true;
+         SB_On();
+         return true;
       }
       if (!strcmp(arg, "off")) {
-        SB_Off();
-        return true;
+         SB_Off();
+         return true;
       }
     }
     return false;
@@ -5359,7 +5363,7 @@ protected:
     if (!power_) return;
     current_style_->run(this);
   }
-  
+
 private:
   LEDInterface *c_;
   PWMPin clash_pin_;
@@ -5575,6 +5579,8 @@ struct Preset {
 #if NUM_BLADES >= 4
   BladeStyle* style4;
 #endif
+
+  const char* name;
 };
 
 struct BladeConfig {
@@ -5610,8 +5616,8 @@ public:
       while (!Read()) YIELD();
       pushed_ = true;
       do {
-        if (Read()) last_on_ = millis();
-        YIELD();
+         if (Read()) last_on_ = millis();
+         YIELD();
       } while (millis() - last_on_ < timeout());
       pushed_ = false;
     }
@@ -5634,8 +5640,8 @@ private:
 
 // Simple button handler. Keeps track of clicks and lengths of pushes.
 class ButtonBase : public Looper,
-                   public CommandParser,
-                   public DebouncedButton {
+                    public CommandParser,
+                    public DebouncedButton {
 public:
   enum ClickType {
     CLICK_NONE,
@@ -5676,13 +5682,13 @@ protected:
       while (DebouncedRead()) YIELD();
       pushed_ = false;
       if (eat_click_) {
-        eat_click_ = false;
+         eat_click_ = false;
       } else {
-        if (millis() - push_millis_ < 500) {
-          click_ = CLICK_SHORT;
-        } else {
-          click_ = CLICK_LONG;
-        }
+         if (millis() - push_millis_ < 500) {
+           click_ = CLICK_SHORT;
+         } else {
+           click_ = CLICK_LONG;
+         }
       }
     }
     STATE_MACHINE_END();
@@ -5860,7 +5866,7 @@ protected:
       Serial.print(" - ");
       Serial.print(max_);
       Serial.println(")");
-      
+
       print_next_ = false;
       min_ = 10000000;
       max_ = 0;
@@ -5884,19 +5890,19 @@ protected:
 
       // Initiate touch read.
       {
-        int32_t ch = pin2tsi[pin_];
-        *portConfigRegister(pin_) = PORT_PCR_MUX(0);
-        SIM_SCGC5 |= SIM_SCGC5_TSI;
-      
+         int32_t ch = pin2tsi[pin_];
+         *portConfigRegister(pin_) = PORT_PCR_MUX(0);
+         SIM_SCGC5 |= SIM_SCGC5_TSI;
+
 #if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
-        TSI0_GENCS = 0;
-        TSI0_PEN = (1 << ch);
-        TSI0_SCANC = TSI_SCANC_REFCHRG(3) | TSI_SCANC_EXTCHRG(CURRENT);
-        TSI0_GENCS = TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_PS(PRESCALE) | TSI_GENCS_TSIEN | TSI_GENCS_SWTS;
+         TSI0_GENCS = 0;
+         TSI0_PEN = (1 << ch);
+         TSI0_SCANC = TSI_SCANC_REFCHRG(3) | TSI_SCANC_EXTCHRG(CURRENT);
+         TSI0_GENCS = TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_PS(PRESCALE) | TSI_GENCS_TSIEN | TSI_GENCS_SWTS;
 #elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
-        TSI0_GENCS = TSI_GENCS_REFCHRG(4) | TSI_GENCS_EXTCHRG(3) | TSI_GENCS_PS(PRESCALE)
-          | TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
-        TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
+         TSI0_GENCS = TSI_GENCS_REFCHRG(4) | TSI_GENCS_EXTCHRG(3) | TSI_GENCS_PS(PRESCALE)
+           | TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
+         TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
 #endif
       }
       // Wait for result to be available.
@@ -6066,8 +6072,8 @@ public:
         Serial.println("Previous preset");
         previous_preset();
 #else
-	Serial.println("Next preset");
-	next_preset();
+        Serial.println("Next preset");
+        next_preset();
 #endif
       }
     }
@@ -6119,9 +6125,25 @@ public:
 #endif
     return false;
   }
-  
+
   // Select preset (font/style)
-  void SetPreset(Preset* preset) {
+  void SetPreset(Preset* preset, bool announce) {
+    if (announce) {
+      if (preset->name) {
+        SaberBase::DoMessage(preset->name);
+      } else {
+        char message[64];
+        strcpy(message, "Preset: ");
+        itoa(preset - current_config_->presets + 1,
+             message + strlen(message), 10);
+        strcat(message, "\n");
+        strncat(message + strlen(message),
+                preset->font, sizeof(message) - strlen(message));
+        message[sizeof(message) - 1] = 0;
+        SaberBase::DoMessage(message);
+      }
+    }
+
     current_preset_ = preset;
     current_config_->blade->SetStyle(preset->style);
 #if NUM_BLADES >= 2
@@ -6148,7 +6170,7 @@ public:
     if (tmp == current_config_->presets + current_config_->num_presets) {
       tmp = current_config_->presets;
     }
-    SetPreset(tmp);
+    SetPreset(tmp, true);
     SaberBase::DoNewFont();
   }
 
@@ -6164,7 +6186,7 @@ public:
     if (tmp == current_config_->presets - 1) {
       tmp = current_config_->presets + current_config_->num_presets - 1;
     }
-    SetPreset(tmp);
+    SetPreset(tmp, true);
     SaberBase::DoNewFont();
   }
 
@@ -6189,7 +6211,7 @@ public:
   // Blade driver, style and sound font.
   void FindBlade() {
     float resistor = id();
-    
+
     size_t best_config = 0;
     float best_err = 1000000.0;
     for (size_t i = 0; i < sizeof(blades) / sizeof(blades)[0]; i++) {
@@ -6212,7 +6234,7 @@ public:
 #if NUM_BLADES >= 4
     current_config_->blade4->Activate();
 #endif
-    SetPreset(current_config_->presets);
+    SetPreset(current_config_->presets, false);
   }
 
   // Select next sound font (in alphabetic order)
@@ -6258,6 +6280,11 @@ public:
       best.close();
     } while (++tries <= dirs);
 #endif
+  }
+
+  void SB_Message(const char* text) override {
+    Serial.print("DISPLAY: ");
+    Serial.println(text);
   }
 
   void SB_Accel(const Vec3& accel) override {
@@ -6306,9 +6333,9 @@ public:
       Serial.print(" len=");
       Serial.print(strokes[NELEM(strokes)-1].length());
       Serial.print(" separation=");
-        uint32_t separation =
-          strokes[NELEM(strokes)-1].start_millis -
-          strokes[NELEM(strokes)-2].end_millis;
+      uint32_t separation =
+        strokes[NELEM(strokes)-1].start_millis -
+        strokes[NELEM(strokes)-2].end_millis;
       Serial.println(separation);
     }
     if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
@@ -6425,20 +6452,20 @@ protected:
 #endif
     if (!on_) {
       switch (power_.GetClick()) {
-         case ButtonBase::CLICK_NONE:
-           break;
-         case ButtonBase::CLICK_SHORT:
-           if (aux_.pushed_millis()) {
-             aux_.EatClick();
-             next_preset();
-             Serial.println("Next preset");
-           } else {
-             Serial.println("On (power)");
-             On();
-             // script.Run();
-             aux_on_ = false;
-           }
-           break;
+        case ButtonBase::CLICK_NONE:
+          break;
+        case ButtonBase::CLICK_SHORT:
+          if (aux_.pushed_millis()) {
+            aux_.EatClick();
+            next_preset();
+            Serial.println("Next preset");
+          } else {
+            Serial.println("On (power)");
+            On();
+            // script.Run();
+            aux_on_ = false;
+          }
+          break;
         case ButtonBase::CLICK_LONG:
           // TODO: Change this to something else...
           if (aux_.pushed_millis()) {
@@ -6457,7 +6484,7 @@ protected:
           On();
           Serial.println("On (aux)");
           break;
-          
+
         case ButtonBase::CLICK_LONG: // reserved
         case ButtonBase::CLICK_NONE:
           break;
@@ -6518,7 +6545,7 @@ protected:
       return true;
     }
     if (!strcmp(cmd, "lock") || !strcmp(cmd, "lockup")) {
-        Serial.print("Lockup ");
+      Serial.print("Lockup ");
       if (SaberBase::Lockup()) {
         SaberBase::SetLockup(true);
         SaberBase::DoBeginLockup();
@@ -6606,8 +6633,12 @@ protected:
       next_preset();
       return true;
     }
-    if (!strcmp(cmd, "prev") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre"))) {
+    if (!strcmp(cmd, "p") || (!strcmp(cmd, "prev") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
       previous_preset();
+      return true;
+    }
+    if (!strcmp(cmd, "message") && arg) {
+      SaberBase::DoMessage(arg);
       return true;
     }
     return false;
@@ -6625,7 +6656,7 @@ protected:
     Serial.println(" beep - play a beep");
 #endif
   }
-  
+
 private:
   BladeConfig* current_config_ = NULL;
   Preset* current_preset_ = NULL;
@@ -6649,7 +6680,7 @@ public:
     while (true) {
       while (!Serial) YIELD();
       Serial.println("Welcome to TeensySaber, type 'help' for more info.");
-      
+
       while (Serial) {
         while (!Serial.available()) YIELD();
         int c = Serial.read();
@@ -6820,10 +6851,10 @@ public:
       Serial.println(pin);
       pinMode(pin, OUTPUT);
       for (int i = 0; i < 1000; i++) {
-         digitalWrite(pin, HIGH);
-         delay(10);
-         digitalWrite(pin, LOW);
-         delay(10);
+        digitalWrite(pin, HIGH);
+        delay(10);
+        digitalWrite(pin, LOW);
+        delay(10);
       }
       Serial.println("done");
       return;
@@ -6834,13 +6865,13 @@ public:
       Serial.println(pin);
       pinMode(pin, OUTPUT);
       for (int i = 0; i < 1000; i++) {
-         for (int i = 0; i < 500; i++) {
-           digitalWrite(pin, HIGH);
-           delayMicroseconds(1);
-           digitalWrite(pin, LOW);
-           delayMicroseconds(1);
-         }
-         delay(10);
+        for (int i = 0; i < 500; i++) {
+          digitalWrite(pin, HIGH);
+          delayMicroseconds(1);
+          digitalWrite(pin, LOW);
+          delayMicroseconds(1);
+        }
+        delay(10);
       }
       Serial.println("done");
       return;
@@ -6856,8 +6887,8 @@ public:
       // TODO: list cpu usage for various objects.
       double total_cycles =
         (double)(audio_dma_interrupt_cycles +
-         wav_interrupt_cycles +
-         loop_cycles);
+                 wav_interrupt_cycles +
+                 loop_cycles);
       Serial.print("Audio DMA: ");
       Serial.print(audio_dma_interrupt_cycles * 100.0 / total_cycles);
       Serial.println("%");
@@ -6998,9 +7029,288 @@ public:
     }           
     return bytes;
   }
-private:
+protected:
   uint8_t address_;
 };
+
+#define ENABLE_SSD1306
+#ifdef ENABLE_SSD1306
+
+struct Glyph {
+  int8_t skip;
+  int8_t xoffset;
+  int8_t yoffset;
+  uint8_t columns;
+  const uint32_t* data;
+};
+
+const uint32_t BatteryBar16_data[] = {
+   0b00000000000000000000000000000000UL,
+   0b00000111111111111111111111100000UL,
+   0b00011111111111111111111111111000UL,
+   0b00111111111111111111111111111100UL,
+   0b01111111111111111111111111111110UL,
+   0b11111111111111111111111111111111UL,
+   0b11111111111111111111111111111111UL,
+   0b11111111111111111111111111111111UL,
+   0b11111111111111111111111111111111UL,
+   0b11111111111111111111111111111111UL,
+   0b11111111111111111111111111111111UL,
+   0b01111111111111111111111111111110UL,
+   0b00111111111111111111111111111100UL,
+   0b00011111111111111111111111111000UL,
+   0b00000111111111111111111111100000UL,
+};
+
+#define GLYPHDATA(X) NELEM(X), X
+
+const Glyph BatteryBar16 = { 16, 0, 0, GLYPHDATA(BatteryBar16_data) };
+
+#include "StarJedi10Font.h"
+
+class SSD1306 : public I2CDevice, Looper, StateMachine, SaberBase {
+public:
+  static const int WIDTH = 128;
+  static const int HEIGHT = 32;
+
+  enum Commands {
+    SETCONTRAST = 0x81,
+    DISPLAYALLON_RESUME = 0xA4,
+    DISPLAYALLON = 0xA5,
+    NORMALDISPLAY = 0xA6,
+    INVERTDISPLAY = 0xA7,
+    DISPLAYOFF = 0xAE,
+    DISPLAYON = 0xAF,
+
+    SETDISPLAYOFFSET = 0xD3,
+    SETCOMPINS = 0xDA,
+
+    SETVCOMDETECT = 0xDB,
+
+    SETDISPLAYCLOCKDIV = 0xD5,
+    SETPRECHARGE = 0xD9,
+
+    SETMULTIPLEX = 0xA8,
+
+    SETLOWCOLUMN = 0x00,
+    SETHIGHCOLUMN = 0x10,
+
+    SETSTARTLINE = 0x40,
+
+    MEMORYMODE = 0x20,
+    COLUMNADDR = 0x21,
+    PAGEADDR   = 0x22,
+
+    COMSCANINC = 0xC0,
+    COMSCANDEC = 0xC8,
+
+    SEGREMAP = 0xA0,
+
+    CHARGEPUMP = 0x8D,
+
+    EXTERNALVCC = 0x1,
+    SWITCHCAPVCC = 0x2,
+
+    // Scrolling commands
+    ACTIVATE_SCROLL = 0x2F,
+    DEACTIVATE_SCROLL = 0x2E,
+    SET_VERTICAL_SCROLL_AREA = 0xA3,
+    RIGHT_HORIZONTAL_SCROLL = 0x26,
+    LEFT_HORIZONTAL_SCROLL = 0x27,
+    VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL = 0x29,
+    VERTICAL_AND_LEFT_HORIZONTAL_SCROLL = 0x2A,
+  };
+
+  enum Screen {
+    SCREEN_STARTUP,
+    SCREEN_MESSAGE,
+    SCREEN_PLI,
+  };
+
+  SSD1306() : I2CDevice(0x3C) { }
+  void Send(int c) { writeByte(0, c); }
+
+  void Draw(const Glyph& glyph, int x, int y) {
+    x += glyph.xoffset;
+    y += glyph.yoffset;
+    int begin = max(0, -x);
+    int end = min(glyph.columns, WIDTH - x);
+    uint32_t *pos = frame_buffer_ + x;
+    if (y > 0) {
+      for (int i = begin; i < end; i++) pos[i] |= glyph.data[i] << y;
+    } else if (y < 0) {
+      for (int i = begin; i < end; i++) pos[i] |= glyph.data[i] >> -y;
+    } else {
+      for (int i = begin; i < end; i++) pos[i] |= glyph.data[i];
+    }
+  }
+
+  void DrawBatteryBar(const Glyph& bar) {
+    int start, end;
+    if (bar.skip < bar.columns) {
+      start = -bar.skip;
+      end = WIDTH + bar.columns - 1;
+    } else {
+      start = 0;
+      end = WIDTH;
+    }
+    int max_bars = (end - start) / bar.skip;
+    int pos = start;
+    int bars = floor(
+        battery_monitor.battery_percent() * (0.5 + max_bars) / 100);
+    for (int i = 0; i < bars; i++) {
+      Draw(bar, pos, 0);
+      pos += bar.skip;
+    }
+  }
+  void DrawText(const char* str,
+                int x, int y,
+                const Glyph* font) {
+    while (*str) {
+      if (*str == '\n') {
+        x = 0;
+        y += 16;
+      } else if (*str >= 0x20 && *str <= 0x7f) {
+        Draw(font[*str - 0x20], x, y);
+        x += font[*str - 0x20].skip;
+      }
+      str++;
+    }
+  }
+
+  void FillFrameBuffer() {
+    memset(frame_buffer_, 0, sizeof(frame_buffer_));
+
+    if (millis() - displayed_when_ > 5000)
+      screen_ = SCREEN_PLI;
+
+    switch (screen_) {
+      case SCREEN_STARTUP:
+        DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
+        DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
+        break;
+
+      case SCREEN_PLI:
+        DrawBatteryBar(BatteryBar16);
+        break;
+
+      case SCREEN_MESSAGE:
+        if (strchr(message_, '\n')) {
+          DrawText(message_, 0, 15, Starjedi10pt7bGlyphs);
+        } else {
+          DrawText(message_, 0, 23, Starjedi10pt7bGlyphs);
+        }
+    }
+  }
+
+  void SB_Message(const char* text) override {
+    strncpy(message_, text, sizeof(message_));
+    message_[sizeof(message_)-1] = 0;
+    displayed_when_ = millis();
+    screen_ = SCREEN_MESSAGE;
+  }
+
+  void SB_Top() override {
+    Serial.print("display fps: ");
+    loop_counter_.Print();
+    Serial.println("");
+  }
+
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+    while (!i2cbus.inited()) YIELD();
+
+    // Init sequence
+    Send(DISPLAYOFF);                    // 0xAE
+    Send(SETDISPLAYCLOCKDIV);            // 0xD5
+    Send(0x80);                                  // the suggested ratio 0x80
+    
+    Send(SETMULTIPLEX);                  // 0xA8
+    Send(HEIGHT - 1);
+    
+    Send(SETDISPLAYOFFSET);              // 0xD3
+    Send(0x0);                                   // no offset
+    Send(SETSTARTLINE | 0x0);            // line #0
+    Send(CHARGEPUMP);                    // 0x8D
+    Send(0x14);
+    Send(MEMORYMODE);                    // 0x20
+    Send(0x01);                          // vertical address mode
+    Send(SEGREMAP | 0x1);
+    Send(COMSCANDEC);
+
+    Send(SETCOMPINS);                    // 0xDA
+    Send(0x02);  // may need to be 0x12 for some displays
+    Send(SETCONTRAST);                   // 0x81
+    Send(0x8F);
+
+    Send(SETPRECHARGE);                  // 0xd9
+    Send(0xF1);
+    Send(SETVCOMDETECT);                 // 0xDB
+    Send(0x40);
+    Send(DISPLAYALLON_RESUME);           // 0xA4
+    Send(NORMALDISPLAY);                 // 0xA6
+    
+    Send(DEACTIVATE_SCROLL);
+
+    Send(DISPLAYON);                     //--turn on oled panel
+
+    Serial.println("Display initialized.");
+    screen_ = SCREEN_STARTUP;
+    displayed_when_ = millis();
+    
+    while (true) {
+      FillFrameBuffer();
+      Send(COLUMNADDR);
+      Send(0);   // Column start address (0 = reset)
+      Send(WIDTH-1); // Column end address (127 = reset)
+
+      Send(PAGEADDR);
+      Send(0); // Page start address (0 = reset)
+      switch (HEIGHT) {
+        case 64:
+          Send(7); // Page end address
+          break;
+        case 32:
+          Send(3); // Page end address
+          break;
+        case 16:
+          Send(1); // Page end address
+          break;
+        default:
+          Serial.println("Unknown display height");
+      }
+
+      //Serial.println(TWSR & 0x3, DEC);
+        
+      // I2C
+      for (i=0; i < WIDTH * HEIGHT / 8; ) {
+        // send a bunch of data in one xmission
+        Wire.beginTransmission(address_);
+        Wire.write(0x40);
+        for (uint8_t x=0; x<16; x++) {
+          Wire.write(((unsigned char*)frame_buffer_)[i]);
+          i++;
+        }
+        Wire.endTransmission();
+        YIELD();
+      }
+      loop_counter_.Update();
+    }
+    
+    STATE_MACHINE_END();
+  }
+
+private:
+  uint16_t i;
+  uint32_t frame_buffer_[WIDTH];
+  LoopCounter loop_counter_;
+  char message_[32];
+  uint32_t displayed_when_;
+  Screen screen_;
+};
+
+SSD1306 display;
+#endif
 
 #ifdef V2
 class LSM6DS3H : public I2CDevice, Looper, StateMachine {
