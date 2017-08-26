@@ -865,6 +865,14 @@ public:
   #error "This CPU Clock Speed is not supported.";
 #endif
 
+#ifndef MCLK_SRC
+#if F_CPU >= 20000000
+  #define MCLK_SRC  3  // the PLL
+#else
+  #define MCLK_SRC  0  // system clock
+#endif
+#endif
+
 #define CHANNELS 2
 #else   // USE_I2S
 #define CHANNELS 1
@@ -912,11 +920,10 @@ public:
     dma.TCD->DOFF = 0;
     dma.TCD->CITER_ELINKNO = sizeof(dac_dma_buffer) / 2;
     dma.TCD->DLASTSGA = 0;
-    dma.TCD->BITER_ELINKNO = sizeof(dac_cma_buffer) / 2;
+    dma.TCD->BITER_ELINKNO = sizeof(dac_dma_buffer) / 2;
     dma.TCD->CSR = DMA_TCD_CSR_INTHALF | DMA_TCD_CSR_INTMAJOR;
 #endif
     dma.triggerAtHardwareEvent(DMAMUX_SOURCE_I2S0_TX);
-    update_responsibility = update_setup();
     dma.enable();
     
     I2S0_TCSR = I2S_TCSR_SR;
@@ -1018,8 +1025,8 @@ private:
     for (int i = 0; i < n; i++) {
 #ifdef USE_I2S
       // Duplicate sample to left and right channel.
-      *(dest++) = tmp[i];
-      *(dest++) = tmp[i];
+      *(dest++) = data[i];
+      *(dest++) = data[i];
 #else
       *(dest++) = (((uint16_t*)data)[i] + 32768) >> 4;
 #endif
@@ -7033,9 +7040,7 @@ protected:
   uint8_t address_;
 };
 
-#define ENABLE_SSD1306
 #ifdef ENABLE_SSD1306
-
 struct Glyph {
   int8_t skip;
   int8_t xoffset;
