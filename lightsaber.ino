@@ -447,6 +447,38 @@ public:
   float x, y, z;
 };
 
+enum BUTTON : uint32_t {
+  BUTTON_NONE = 0,   // used for gestures and the like
+  BUTTON_POWER = 1,
+  BUTTON_AUX = 2,
+  BUTTON_AUX2 = 4,
+  BUTTON_UP = 8,
+  BUTTON_DOWN = 16,
+  BUTTON_LEFT = 32,
+  BUTTON_RIGHT = 64,
+  BUTTON_SELECT = 128,
+  MODE_ON = 256,
+  MODE_OFF = 0,
+};
+
+enum EVENT : uint32_t {
+  EVENT_NONE = 0,
+  EVENT_PRESSED,
+  EVENT_RELEASED,
+  EVENT_CLICK_SHORT,
+  EVENT_CLICK_LONG,
+  EVENT_DOUBLE_CLICK, // Note, will also generate a short click
+  EVENT_LATCH_ON,
+  EVENT_LATCH_OFF,
+  EVENT_STAB,
+  EVENT_SWING,
+  EVENT_SHAKE,
+  EVENT_TWIST,
+  EVENT_CLASH,
+};
+
+uint32_t current_modifiers = BUTTON_NONE;
+
 
 // SaberBase is our main class for distributing saber-related events, such
 // as on/off/clash/etc. to where they need to go. Each SABERFUN below
@@ -511,6 +543,7 @@ public:                                                         \
   SABERFUN(NewFont, (), ());                    \
   SABERFUN(BeginLockup, (), ());                \
   SABERFUN(EndLockup, (), ());                  \
+  SABERFUN(Speedup, (), ());                    \
                                                 \
   /* Swing rotation speed degrees per second */ \
   SABERFUN(Motion, (const Vec3& gyro), (gyro)); \
@@ -5615,344 +5648,6 @@ struct BladeConfig {
 #include CONFIG_FILE
 #undef CONFIG_PRESETS
 
-class DebouncedButton {
-public:
-  void Update() {
-    STATE_MACHINE_BEGIN();
-    while (true) {
-      while (!Read()) YIELD();
-      pushed_ = true;
-      do {
-         if (Read()) last_on_ = millis();
-         YIELD();
-      } while (millis() - last_on_ < timeout());
-      pushed_ = false;
-    }
-    STATE_MACHINE_END();
-  }
-  bool DebouncedRead() {
-    Update();
-    return pushed_;
-  }
-
-protected:
-  virtual uint32_t timeout() { return 10; }
-  virtual bool Read() = 0;
-
-private:
-  uint32_t last_on_;
-  bool pushed_ = false;
-  StateMachineState state_machine_;
-};
-
-// Simple button handler. Keeps track of clicks and lengths of pushes.
-class ButtonBase : public Looper,
-                    public CommandParser,
-                    public DebouncedButton {
-public:
-  enum ClickType {
-    CLICK_NONE,
-    CLICK_SHORT,
-    CLICK_LONG
-  };
-
-  ButtonBase(const char* name)
-    : Looper(),
-      CommandParser(),
-      name_(name),
-      pushed_(false),
-      click_(CLICK_NONE),
-      push_millis_(0) {
-  }
-  int pushed_millis() {
-    if (pushed_) return millis() - push_millis_;
-    return 0;
-  }
-
-  ClickType GetClick() {
-    ClickType ret = click_;
-    click_ = CLICK_NONE;
-    return ret;
-  }
-
-  void EatClick() {
-    eat_click_ = true;
-  }
-
-protected:
-  void Loop() override {
-    STATE_MACHINE_BEGIN();
-    while (true) {
-      while (!DebouncedRead()) YIELD();
-      pushed_ = true;
-      push_millis_ = millis();
-      while (DebouncedRead()) YIELD();
-      pushed_ = false;
-      if (eat_click_) {
-         eat_click_ = false;
-      } else {
-         if (millis() - push_millis_ < 500) {
-           click_ = CLICK_SHORT;
-         } else {
-           click_ = CLICK_LONG;
-         }
-      }
-    }
-    STATE_MACHINE_END();
-  }
-  bool Parse(const char* cmd, const char* arg) override {
-    if (!strcmp(cmd, name_)) {
-      click_ = CLICK_SHORT;
-      return true;
-    }
-    return false;
-  }
-
-  void Help() override {
-    Serial.print(" ");
-    Serial.print(name_);
-    Serial.print(" - clicks the ");
-    Serial.print(name_);
-    Serial.println(" button");
-  }
-
-  int next_state_ = -1;
-  uint32_t sleep_until_ = 0;
-  const char* name_;
-  bool pushed_;
-  bool eat_click_ = false;
-  ClickType click_;
-  int push_millis_;
-
-  StateMachineState state_machine_;
-};
-
-class Button : public ButtonBase {
-public:
-  Button(int pin, const char* name) : ButtonBase(name), pin_(pin) {
-    pinMode(pin, INPUT_PULLUP);
-#ifdef ENABLE_SNOOZE
-    snooze_digital.pinMode(pin, INPUT_PULLUP, RISING);
-#endif
-  }
-protected:
-  bool Read() override {
-    return digitalRead(pin_) == LOW;
-  }
-  uint8_t pin_;
-};
-
-template<int SENSITIVITY> class ButtonTemplate;
-
-template<>
-class ButtonTemplate<0> : public Button {
-public:
-  ButtonTemplate(int pin, const char* name) : Button(pin, name) {
-  }
-};
-
-
-// What follows is a copy of the touch.c code from the TensyDuino core library.
-// That code originally implements the touchRead() function, I have modified it
-// to become a class instead. That way reading the touch sensor can be
-// initiated and polled without waiting around for it.
-
-/* Teensyduino Core Library
- * http://www.pjrc.com/teensy/
- * Copyright (c) 2013 PJRC.COM, LLC.
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * 1. The above copyright notice and this permission notice shall be 
- * included in all copies or substantial portions of the Software.
- *
- * 2. If the Software is incorporated into a build system that allows 
- * selection among a list of target devices, then similar target
- * devices manufactured by PJRC.COM must be included in the list of
- * target devices and selectable in the same manner.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
-#if defined(__MK20DX128__) || defined(__MK20DX256__)
-// These settings give approx 0.02 pF sensitivity and 1200 pF range
-// Lower current, higher number of scans, and higher prescaler
-// increase sensitivity, but the trade-off is longer measurement
-// time and decreased range.
-#define CURRENT   2 // 0 to 15 - current to use, value is 2*(current+1)
-#define NSCAN     9 // number of times to scan, 0 to 31, value is nscan+1
-#define PRESCALE  2 // prescaler, 0 to 7 - value is 2^(prescaler+1)
-#define TOUCH_BUTTON_SUPPORTED
-static const uint8_t pin2tsi[] = {
-//0    1    2    3    4    5    6    7    8    9
-  9,  10, 255, 255, 255, 255, 255, 255, 255, 255,
-255, 255, 255, 255, 255,  13,   0,   6,   8,   7,
-255, 255,  14,  15, 255,  12, 255, 255, 255, 255,
-255, 255,  11,   5
-};
-
-#elif defined(__MK66FX1M0__)
-#define CURRENT   2
-#define NSCAN     9
-#define PRESCALE  2
-#define TOUCH_BUTTON_SUPPORTED
-static const uint8_t pin2tsi[] = {
-//0    1    2    3    4    5    6    7    8    9
-  9,  10, 255, 255, 255, 255, 255, 255, 255, 255,
-255, 255, 255, 255, 255,  13,   0,   6,   8,   7,
-255, 255,  14,  15, 255, 255, 255, 255, 255,  11,
- 12, 255, 255, 255, 255, 255, 255, 255, 255, 255
-};
-
-#elif defined(__MKL26Z64__)
-#define NSCAN     9
-#define PRESCALE  2
-#define TOUCH_BUTTON_SUPPORTED
-static const uint8_t pin2tsi[] = {
-//0    1    2    3    4    5    6    7    8    9
-  9,  10, 255,   2,   3, 255, 255, 255, 255, 255,
-255, 255, 255, 255, 255,  13,   0,   6,   8,   7,
-255, 255,  14,  15, 255, 255, 255
-};
-
-#endif
-
-#ifdef TOUCH_BUTTON_SUPPORTED
-class TouchButton : public ButtonBase {
-public:
-  TouchButton(int pin, int threshold, const char* name)
-    : ButtonBase(name),
-      pin_(pin),
-      threshold_(threshold) {
-    pinMode(pin, INPUT_PULLUP);
-#ifdef ENABLE_SNOOZE
-    snooze_touch.pinMode(pin, threshold);
-#endif
-#if defined(__MK64FX512__)
-    Serial.println("Touch sensor not supported!\n");
-#endif
-    if (pin >= NUM_DIGITAL_PINS) {
-      Serial.println("touch pin out of range");
-      return;
-    }
-    if (pin2tsi[pin_] == 255) {
-      Serial.println("Not a touch-capable pin!");
-    } 
-  }
-protected:
-
-  bool Read() override {
-    return is_pushed_;
-  }
-
-  virtual uint32_t timeout() {
-    return 50;
-  }
-
-  void Update(int value) {
-    if (print_next_) {
-      Serial.print("Touch ");
-      Serial.print(name_);
-      Serial.print(" = ");
-      Serial.print(value);
-      Serial.print(" (");
-      Serial.print(min_);
-      Serial.print(" - ");
-      Serial.print(max_);
-      Serial.println(")");
-
-      print_next_ = false;
-      min_ = 10000000;
-      max_ = 0;
-    } else {
-      min_ = min(value, min_);
-      max_ = max(value, max_);
-    }
-    is_pushed_ = value > threshold_;
-  }
-
-  void Loop() override {
-    ButtonBase::Loop();
-    if (monitor.ShouldPrint(Monitoring::MonitorTouch)) {
-      print_next_ = true;
-    }
-    STATE_MACHINE_BEGIN();
-    while (true) {
-      // Wait until it's our turn.
-      while (current_button) YIELD();
-      current_button = this;
-
-      // Initiate touch read.
-      {
-         int32_t ch = pin2tsi[pin_];
-         *portConfigRegister(pin_) = PORT_PCR_MUX(0);
-         SIM_SCGC5 |= SIM_SCGC5_TSI;
-
-#if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
-         TSI0_GENCS = 0;
-         TSI0_PEN = (1 << ch);
-         TSI0_SCANC = TSI_SCANC_REFCHRG(3) | TSI_SCANC_EXTCHRG(CURRENT);
-         TSI0_GENCS = TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_PS(PRESCALE) | TSI_GENCS_TSIEN | TSI_GENCS_SWTS;
-#elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
-         TSI0_GENCS = TSI_GENCS_REFCHRG(4) | TSI_GENCS_EXTCHRG(3) | TSI_GENCS_PS(PRESCALE)
-           | TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
-         TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
-#endif
-      }
-      // Wait for result to be available.
-      SLEEP_MICROS(10);
-      while (TSI0_GENCS & TSI_GENCS_SCNIP) YIELD();
-      SLEEP_MICROS(1);
-
-      // Read resuilt.
-#if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
-      Update(*((volatile uint16_t *)(&TSI0_CNTR1) + (pin2tsi[pin_])));
-#elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
-      Update(TSI0_DATA & 0xFFFF);
-#endif
-      // Let someone else have a turn.
-      current_button = NULL;
-      YIELD();
-    }
-    STATE_MACHINE_END();
-  }
-
-  static TouchButton *current_button;
-  bool print_next_ = false;
-  uint8_t pin_;
-  int threshold_;
-  int min_ = 100000000;
-  int max_ = 0;
-  bool is_pushed_ = false;
-
-  StateMachineState state_machine_;
-};
-
-TouchButton* TouchButton::current_button = NULL;
-
-template<int SENSITIVITY>
-class ButtonTemplate : public TouchButton {
-public:
-  ButtonTemplate(int pin, const char* name) :
-    TouchButton(pin, SENSITIVITY, name) {
-  }
-};
-
-#endif
-
 // Menu system
 
 // Configuration system:
@@ -6004,25 +5699,12 @@ public:
 Script script;
 #endif
 
-// Zero means that we use a normal button.
-#ifndef POWER_TOUCHBUTTON_SENSITIVITY
-#define POWER_TOUCHBUTTON_SENSITIVITY 0
-#endif
-#ifndef AUX_TOUCHBUTTON_SENSITIVITY
-#define AUX_TOUCHBUTTON_SENSITIVITY 0
-#endif
-#ifndef AUX2_TOUCHBUTTON_SENSITIVITY
-#define AUX2_TOUCHBUTTON_SENSITIVITY 0
-#endif
 
 // The Saber class implements the basic states and actions
 // for the saber.
 class Saber : CommandParser, Looper, SaberBase {
 public:
-  Saber() : CommandParser(),
-            power_(powerButtonPin, "pow"),
-            aux_(auxPin, "aux"),
-            aux2_(aux2Pin, "aux2") {}
+  Saber() : CommandParser() {}
 
   bool IsOn() const {
     return on_;
@@ -6045,44 +5727,26 @@ public:
 
   void Off() {
     on_ = false;
+    if (SaberBase::Lockup()) {
+      SaberBase::SetLockup(false);
+      SaberBase::DoEndLockup();
+    }
     SaberBase::DoOff();
   }
 
   uint32_t last_clash_ = 0;
+  uint32_t clash_timeout_ = 100;
   void Clash() {
     // No clashes in lockup mode.
     if (SaberBase::Lockup()) return;
     // TODO: Pick clash randomly and/or based on strength of clash.
     uint32_t t = millis();
-    if (t - last_clash_ < 100) return;
-    if (on_) {
-      ButtonBase *a;
-      if (aux_on_) {
-        a = &aux_;
-      } else {
-        a = &power_;
-      }
-
-      if (a->pushed_millis()) {
-        SaberBase::SetLockup(true);
-        SaberBase::DoBeginLockup();
-        a->EatClick();
-      } else{
-        SaberBase::DoClash();
-      }
+    if (t - last_clash_ < clash_timeout_) return;
+    if (Event(BUTTON_NONE, EVENT_CLASH)) {
+      clash_timeout_ = 400;  // For events, space clashes out more.
     } else {
-      if (power_.pushed_millis()) {
-        // Avoid skipping lots of steps.
-        if (t - last_clash_ < 400) return;
-        power_.EatClick();
-#if NUM_BUTTONS > 1
-        Serial.println("Previous preset");
-        previous_preset();
-#else
-        Serial.println("Next preset");
-        next_preset();
-#endif
-      }
+      clash_timeout_ = 100;
+      if (on_) SaberBase::DoClash();
     }
     last_clash_ = t;
   }
@@ -6359,9 +6023,7 @@ public:
         if (separation < 200UL) {
           Serial.println("TWIST");
           // We have a twisting gesture.
-#if NUM_BUTTONS == 0
-          if (on_) Off(); else On();
-#endif
+	  Event(BUTTON_NONE, EVENT_TWIST);
         }
       }
     }
@@ -6457,80 +6119,146 @@ protected:
       track_player_ = NULL;
     }
 #endif
-    if (!on_) {
-      switch (power_.GetClick()) {
-        case ButtonBase::CLICK_NONE:
-          break;
-        case ButtonBase::CLICK_SHORT:
-          if (aux_.pushed_millis()) {
-            aux_.EatClick();
-            next_preset();
-            Serial.println("Next preset");
-          } else {
-            Serial.println("On (power)");
-            On();
-            // script.Run();
-            aux_on_ = false;
-          }
-          break;
-        case ButtonBase::CLICK_LONG:
-          // TODO: Change this to something else...
-          if (aux_.pushed_millis()) {
-            aux_.EatClick();
-            next_directory();
-            Serial.println("next directory");
-          } else {
-            StartOrStopTrack();
-          }
-          break;
-      }
+  }
 
-      switch (aux_.GetClick()) {
-        case ButtonBase::CLICK_SHORT:
-          aux_on_ = true;
-          On();
-          Serial.println("On (aux)");
-          break;
+  void PrintButton(BUTTON b) {
+    if (b & BUTTON_POWER) Serial.print("Power");
+    if (b & BUTTON_AUX) Serial.print("Aux");
+    if (b & BUTTON_AUX2) Serial.print("Aux2");
+    if (b & BUTTON_UP) Serial.print("Up");
+    if (b & BUTTON_DOWN) Serial.print("Down");
+    if (b & BUTTON_LEFT) Serial.print("Left");
+    if (b & BUTTON_RIGHT) Serial.print("Right");
+    if (b & BUTTON_SELECT) Serial.print("Select");
+    if (b & MODE_ON) Serial.print("On");
+  }
 
-        case ButtonBase::CLICK_LONG: // reserved
-        case ButtonBase::CLICK_NONE:
-          break;
-      }
+  void PrintEvent(EVENT e) {
+    switch (e) {
+      case EVENT_NONE: Serial.print("None"); break;
+      case EVENT_PRESSED: Serial.print("Pressed"); break;
+      case EVENT_RELEASED: Serial.print("Released"); break;
+      case EVENT_CLICK_SHORT: Serial.print("Shortclick"); break;
+      case EVENT_CLICK_LONG: Serial.print("Longclick"); break;
+      case EVENT_DOUBLE_CLICK: Serial.print("Doubleclick"); break;
+      case EVENT_LATCH_ON: Serial.print("Onn"); break;
+      case EVENT_LATCH_OFF: Serial.print("Off"); break;
+      case EVENT_STAB: Serial.print("Stab"); break;
+      case EVENT_SWING: Serial.print("Swing"); break;
+      case EVENT_SHAKE: Serial.print("Shake"); break;
+      case EVENT_TWIST: Serial.print("Twist"); break;
+      case EVENT_CLASH: Serial.print("Clash"); break;
+    }
+  }
+
+public:
+  bool Event(BUTTON button, EVENT event) {
+    Serial.print("EVENT: ");
+    PrintButton(button);
+    Serial.print("-");
+    PrintEvent(event);
+    Serial.print(" mods ");
+    PrintButton(button);
+    Serial.println("");
+
+#define EVENTID(BUTTON, EVENT, MODIFIERS) (((EVENT) << 24) | ((BUTTON) << 12) | ((MODIFIERS) & ~(BUTTON)))
+    if (on_ && aux_on_) {
+      if (button == BUTTON_POWER) button = BUTTON_AUX;
+      if (button == BUTTON_AUX) button = BUTTON_POWER;
+    }
+    
+    bool handled = true;
+    switch (EVENTID(button, event, current_modifiers | (on_ ? MODE_ON : MODE_OFF))) {
+      default:
+	handled = false;
+	break;
+
+#if NUM_BUTTONS == 0
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
+#endif
+      case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
+	aux_on_ = false;
+        On();
+        break;
+
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
+#ifdef DUAL_POWER_BUTTONS
+	aux_on_ = true;
+	On();
+#else
+	next_preset();
+#endif
+	break;
+         
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
+#if NUM_BUTTONS == 0
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+#endif
+	Off();
+        break;
+
+      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_OFF):
+	SaberBase::DoSpeedup();
+	break;
+
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
+	SaberBase::DoForce();
+	break;
+
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
+	SaberBase::DoBlast();
+	break;
+
+	// Lockup
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
+	if (!SaberBase::Lockup()) {
+	  SaberBase::SetLockup(true);
+	  SaberBase::DoBeginLockup();
+	} else {
+	  handled = false;
+	}
+	break;
+
+      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
+	if (SaberBase::Lockup()) {
+	  SaberBase::SetLockup(false);
+	  SaberBase::DoEndLockup();
+	} else {
+	  handled = false;
+	}
+	break;
+
+	// Off functions
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
+	StartOrStopTrack();
+	break;
+
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
+	next_preset();
+	break;
+
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
+	previous_preset();
+	break;
+
+      case EVENTID(BUTTON_AUX2, EVENT_CLICK_SHORT, MODE_OFF):
+#ifdef DUAL_POWER_BUTTONS
+	next_preset();
+#else
+	prev_preset();
+#endif
+	break;
+    }
+    if (handled) {
+      current_modifiers = BUTTON_NONE;
+      return true;
     } else {
-      ButtonBase *a, *b;
-      if (aux_on_) {
-        a = &aux_;
-        b = &power_;
-      } else {
-        b = &aux_;
-        a = &power_;
-      }
-      if (SaberBase::Lockup() && !a->pushed_millis()) {
-        SaberBase::SetLockup(false);
-        SaberBase::DoEndLockup();
-      }
-      switch (a->GetClick()) {
-        case ButtonBase::CLICK_SHORT:
-          Serial.println("Off");
-          Off();
-          break;
-        case ButtonBase::CLICK_LONG:
-          Serial.println("Force");
-          SaberBase::DoForce();
-          break;
-        case ButtonBase::CLICK_NONE:
-          break;
-      }
-
-      switch (b->GetClick()) {
-        case ButtonBase::CLICK_SHORT:
-          SaberBase::DoBlast();
-          Serial.println("Blast");
-          break;
-        case ButtonBase::CLICK_LONG: // reserved
-        case ButtonBase::CLICK_NONE:
-          break;
-      }
+      return false;
     }
   }
 
@@ -6669,12 +6397,373 @@ private:
   Preset* current_preset_ = NULL;
 
   bool on_;  // <- move to SaberBase
-  ButtonTemplate<POWER_TOUCHBUTTON_SENSITIVITY> power_;
-  ButtonTemplate<AUX_TOUCHBUTTON_SENSITIVITY> aux_;
-  ButtonTemplate<AUX2_TOUCHBUTTON_SENSITIVITY> aux2_;
 };
 
 Saber saber;
+
+class DebouncedButton {
+public:
+  void Update() {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+      while (!Read()) YIELD();
+      pushed_ = true;
+      do {
+         if (Read()) last_on_ = millis();
+         YIELD();
+      } while (millis() - last_on_ < timeout());
+      pushed_ = false;
+    }
+    STATE_MACHINE_END();
+  }
+  bool DebouncedRead() {
+    Update();
+    return pushed_;
+  }
+
+protected:
+  virtual uint32_t timeout() { return 10; }
+  virtual bool Read() = 0;
+
+private:
+  uint32_t last_on_;
+  bool pushed_ = false;
+  StateMachineState state_machine_;
+};
+
+// Simple button handler. Keeps track of clicks and lengths of pushes.
+class ButtonBase : public Looper,
+                   public CommandParser,
+                   public DebouncedButton {
+public:
+  ButtonBase(const char* name, BUTTON button)
+    : Looper(),
+      CommandParser(),
+      name_(name),
+      button_(button) {
+  }
+
+protected:
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+      while (!DebouncedRead()) YIELD();
+      saber.Event(button_, EVENT_PRESSED);
+      if (millis() - push_millis_ < 500) {
+	saber.Event(button_, EVENT_DOUBLE_CLICK);
+      } else {
+	push_millis_ = millis();
+	current_modifiers |= button_;
+      }
+      while (DebouncedRead()) YIELD();
+      saber.Event(button_, EVENT_RELEASED);
+      if (current_modifiers & button_) {
+	current_modifiers &=~ button_;
+	if (millis() - push_millis_ < 500) {
+	  saber.Event(button_, EVENT_CLICK_SHORT);
+	} else {
+	  saber.Event(button_, EVENT_CLICK_LONG);
+	}
+      } else {
+	// someone ate our clicks
+	push_millis_ = millis() - 10000; // disable double click
+      }
+    }
+    STATE_MACHINE_END();
+  }
+
+  bool Parse(const char* cmd, const char* arg) override {
+    if (!strcmp(cmd, name_)) {
+      saber.Event(button_, EVENT_CLICK_SHORT);
+      return true;
+    }
+    return false;
+  }
+
+  void Help() override {
+    Serial.print(" ");
+    Serial.print(name_);
+    Serial.print(" - clicks the ");
+    Serial.print(name_);
+    Serial.println(" button");
+  }
+
+  const char* name_;
+  BUTTON button_;
+  uint32_t push_millis_;
+  StateMachineState state_machine_;
+};
+
+// Latching button
+class LatchingButton : public Looper,
+                       public CommandParser,
+                       public DebouncedButton {
+public:
+  LatchingButton(BUTTON button, int pin, const char* name)
+    : Looper(),
+      CommandParser(),
+      name_(name),
+      button_(button),
+      pin_(pin) {
+  }
+
+protected:
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+      while (!DebouncedRead()) YIELD();
+      saber.Event(button_, EVENT_LATCH_ON);
+      current_modifiers |= button_;
+      while (DebouncedRead()) YIELD();
+      current_modifiers &=~ button_;
+      saber.Event(button_, EVENT_LATCH_OFF);
+    }
+    STATE_MACHINE_END();
+  }
+
+  bool Parse(const char* cmd, const char* arg) override {
+    if (!strcmp(cmd, name_)) {
+      if (current_modifiers & button_) {
+	current_modifiers &=~ button_;
+	saber.Event(button_, EVENT_LATCH_ON);
+      } else {
+	current_modifiers |= button_;
+	saber.Event(button_, EVENT_LATCH_OFF);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  void Help() override {
+    Serial.print(" ");
+    Serial.print(name_);
+    Serial.print(" - toggles the ");
+    Serial.print(name_);
+    Serial.println(" button");
+  }
+
+  bool Read() override {
+    return digitalRead(pin_) == LOW;
+  }
+
+  const char* name_;
+  BUTTON button_;
+  StateMachineState state_machine_;
+  uint8_t pin_;
+};
+
+class Button : public ButtonBase {
+public:
+  Button(BUTTON button, int pin, const char* name) : ButtonBase(name, button), pin_(pin) {
+    pinMode(pin, INPUT_PULLUP);
+#ifdef ENABLE_SNOOZE
+    snooze_digital.pinMode(pin, INPUT_PULLUP, RISING);
+#endif
+  }
+protected:
+  bool Read() override {
+    return digitalRead(pin_) == LOW;
+  }
+  uint8_t pin_;
+};
+
+// What follows is a copy of the touch.c code from the TensyDuino core library.
+// That code originally implements the touchRead() function, I have modified it
+// to become a class instead. That way reading the touch sensor can be
+// initiated and polled without waiting around for it.
+
+/* Teensyduino Core Library
+ * http://www.pjrc.com/teensy/
+ * Copyright (c) 2013 PJRC.COM, LLC.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * 1. The above copyright notice and this permission notice shall be 
+ * included in all copies or substantial portions of the Software.
+ *
+ * 2. If the Software is incorporated into a build system that allows 
+ * selection among a list of target devices, then similar target
+ * devices manufactured by PJRC.COM must be included in the list of
+ * target devices and selectable in the same manner.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#if defined(__MK20DX128__) || defined(__MK20DX256__)
+// These settings give approx 0.02 pF sensitivity and 1200 pF range
+// Lower current, higher number of scans, and higher prescaler
+// increase sensitivity, but the trade-off is longer measurement
+// time and decreased range.
+#define CURRENT   2 // 0 to 15 - current to use, value is 2*(current+1)
+#define NSCAN     9 // number of times to scan, 0 to 31, value is nscan+1
+#define PRESCALE  2 // prescaler, 0 to 7 - value is 2^(prescaler+1)
+#define TOUCH_BUTTON_SUPPORTED
+static const uint8_t pin2tsi[] = {
+//0    1    2    3    4    5    6    7    8    9
+  9,  10, 255, 255, 255, 255, 255, 255, 255, 255,
+255, 255, 255, 255, 255,  13,   0,   6,   8,   7,
+255, 255,  14,  15, 255,  12, 255, 255, 255, 255,
+255, 255,  11,   5
+};
+
+#elif defined(__MK66FX1M0__)
+#define CURRENT   2
+#define NSCAN     9
+#define PRESCALE  2
+#define TOUCH_BUTTON_SUPPORTED
+static const uint8_t pin2tsi[] = {
+//0    1    2    3    4    5    6    7    8    9
+  9,  10, 255, 255, 255, 255, 255, 255, 255, 255,
+255, 255, 255, 255, 255,  13,   0,   6,   8,   7,
+255, 255,  14,  15, 255, 255, 255, 255, 255,  11,
+ 12, 255, 255, 255, 255, 255, 255, 255, 255, 255
+};
+
+#elif defined(__MKL26Z64__)
+#define NSCAN     9
+#define PRESCALE  2
+#define TOUCH_BUTTON_SUPPORTED
+static const uint8_t pin2tsi[] = {
+//0    1    2    3    4    5    6    7    8    9
+  9,  10, 255,   2,   3, 255, 255, 255, 255, 255,
+255, 255, 255, 255, 255,  13,   0,   6,   8,   7,
+255, 255,  14,  15, 255, 255, 255
+};
+
+#endif
+
+#ifdef TOUCH_BUTTON_SUPPORTED
+class TouchButton : public ButtonBase {
+public:
+  TouchButton(BUTTON button, int pin, int threshold, const char* name)
+    : ButtonBase(name, button),
+      pin_(pin),
+      threshold_(threshold) {
+    pinMode(pin, INPUT_PULLUP);
+#ifdef ENABLE_SNOOZE
+    snooze_touch.pinMode(pin, threshold);
+#endif
+#if defined(__MK64FX512__)
+    Serial.println("Touch sensor not supported!\n");
+#endif
+    if (pin >= NUM_DIGITAL_PINS) {
+      Serial.println("touch pin out of range");
+      return;
+    }
+    if (pin2tsi[pin_] == 255) {
+      Serial.println("Not a touch-capable pin!");
+    } 
+  }
+protected:
+
+  bool Read() override {
+    return is_pushed_;
+  }
+
+  virtual uint32_t timeout() {
+    return 50;
+  }
+
+  void Update(int value) {
+    if (print_next_) {
+      Serial.print("Touch ");
+      Serial.print(name_);
+      Serial.print(" = ");
+      Serial.print(value);
+      Serial.print(" (");
+      Serial.print(min_);
+      Serial.print(" - ");
+      Serial.print(max_);
+      Serial.println(")");
+
+      print_next_ = false;
+      min_ = 10000000;
+      max_ = 0;
+    } else {
+      min_ = min(value, min_);
+      max_ = max(value, max_);
+    }
+    is_pushed_ = value > threshold_;
+  }
+
+  void Loop() override {
+    ButtonBase::Loop();
+    if (monitor.ShouldPrint(Monitoring::MonitorTouch)) {
+      print_next_ = true;
+    }
+    STATE_MACHINE_BEGIN();
+    while (true) {
+      // Wait until it's our turn.
+      while (current_button) YIELD();
+      current_button = this;
+
+      // Initiate touch read.
+      {
+         int32_t ch = pin2tsi[pin_];
+         *portConfigRegister(pin_) = PORT_PCR_MUX(0);
+         SIM_SCGC5 |= SIM_SCGC5_TSI;
+
+#if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
+         TSI0_GENCS = 0;
+         TSI0_PEN = (1 << ch);
+         TSI0_SCANC = TSI_SCANC_REFCHRG(3) | TSI_SCANC_EXTCHRG(CURRENT);
+         TSI0_GENCS = TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_PS(PRESCALE) | TSI_GENCS_TSIEN | TSI_GENCS_SWTS;
+#elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
+         TSI0_GENCS = TSI_GENCS_REFCHRG(4) | TSI_GENCS_EXTCHRG(3) | TSI_GENCS_PS(PRESCALE)
+           | TSI_GENCS_NSCN(NSCAN) | TSI_GENCS_TSIEN | TSI_GENCS_EOSF;
+         TSI0_DATA = TSI_DATA_TSICH(ch) | TSI_DATA_SWTS;
+#endif
+      }
+      // Wait for result to be available.
+      SLEEP_MICROS(10);
+      while (TSI0_GENCS & TSI_GENCS_SCNIP) YIELD();
+      SLEEP_MICROS(1);
+
+      // Read resuilt.
+#if defined(KINETISK) && !defined(HAS_KINETIS_TSI_LITE)
+      Update(*((volatile uint16_t *)(&TSI0_CNTR1) + (pin2tsi[pin_])));
+#elif defined(KINETISL) || defined(HAS_KINETIS_TSI_LITE)
+      Update(TSI0_DATA & 0xFFFF);
+#endif
+      // Let someone else have a turn.
+      current_button = NULL;
+      YIELD();
+    }
+    STATE_MACHINE_END();
+  }
+
+  static TouchButton *current_button;
+  bool print_next_ = false;
+  uint8_t pin_;
+  int threshold_;
+  int min_ = 100000000;
+  int max_ = 0;
+  bool is_pushed_ = false;
+
+  StateMachineState state_machine_;
+};
+
+TouchButton* TouchButton::current_button = NULL;
+
+#endif
+
+#define CONFIG_BUTTONS
+#include CONFIG_FILE
+#undef CONFIG_BUTTONS
 
 // Command-line parser. Easiest way to use it is to start the arduino
 // serial monitor.

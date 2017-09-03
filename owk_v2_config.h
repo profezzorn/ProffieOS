@@ -11,6 +11,10 @@
 // Number of buttons
 #define NUM_BUTTONS 1
 
+// Dual power buttons means that clicking AUX will also turn the saber on.
+// If not defined, AUX will go to next preset when off.
+// #define DUAL_POWER_BUTTONS
+
 // Volume, useful range is about 0-2000.
 #define VOLUME 1800
 
@@ -45,3 +49,7 @@ const unsigned int maxLedsPerStrip = 144;
 #endif
 
 #include "common_presets.h"
+
+#ifdef CONFIG_BUTTONS
+Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
+#endif

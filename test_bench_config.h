@@ -9,7 +9,11 @@
 #define NUM_BLADES 1
 
 // Number of buttons
-#define NUM_BUTTONS 1
+#define NUM_BUTTONS 3
+
+// Dual power buttons means that clicking AUX will also turn the saber on.
+// If not defined, AUX will go to next preset when off.
+#define DUAL_POWER_BUTTONS
 
 // Volume, useful range is about 0-2000.
 #define VOLUME 1000
@@ -41,6 +45,7 @@ const unsigned int maxLedsPerStrip = 144;
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
+#define ENABLE_SSD1306
 
 #endif
 
@@ -70,4 +75,10 @@ BladeConfig blades[] = {
   { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) }
 };
 
+#endif
+
+#ifdef CONFIG_BUTTONS
+Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
+Button AuxButton(BUTTON_AUX, auxPin, "aux");
+Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
 #endif
