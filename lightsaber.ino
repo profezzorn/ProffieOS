@@ -23,8 +23,8 @@
 
 // #define CONFIG_FILE "crossguard_config.h"
 // #define CONFIG_FILE "graflex_v1_config.h"
-// #define CONFIG_FILE "owk_v2_config.h"
-#define CONFIG_FILE "test_bench_config.h"
+#define CONFIG_FILE "owk_v2_config.h"
+// #define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
 
 #define CONFIG_TOP
@@ -6259,7 +6259,7 @@ public:
 #ifdef DUAL_POWER_BUTTONS
 	next_preset();
 #else
-	prev_preset();
+	previous_preset();
 #endif
 	break;
     }
