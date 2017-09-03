@@ -21,11 +21,11 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "toy_saber_config.h"
+// #define CONFIG_FILE "crossguard_config.h"
 // #define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
-// #define CONFIG_FILE "crossguard_config.h"
 #define CONFIG_FILE "test_bench_config.h"
+// #define CONFIG_FILE "toy_saber_config.h"
 
 #define CONFIG_TOP
 #include CONFIG_FILE
@@ -6121,7 +6121,7 @@ protected:
 #endif
   }
 
-  void PrintButton(BUTTON b) {
+  void PrintButton(uint32_t b) {
     if (b & BUTTON_POWER) Serial.print("Power");
     if (b & BUTTON_AUX) Serial.print("Aux");
     if (b & BUTTON_AUX2) Serial.print("Aux2");
@@ -6141,7 +6141,7 @@ protected:
       case EVENT_CLICK_SHORT: Serial.print("Shortclick"); break;
       case EVENT_CLICK_LONG: Serial.print("Longclick"); break;
       case EVENT_DOUBLE_CLICK: Serial.print("Doubleclick"); break;
-      case EVENT_LATCH_ON: Serial.print("Onn"); break;
+      case EVENT_LATCH_ON: Serial.print("On"); break;
       case EVENT_LATCH_OFF: Serial.print("Off"); break;
       case EVENT_STAB: Serial.print("Stab"); break;
       case EVENT_SWING: Serial.print("Swing"); break;
@@ -6154,11 +6154,16 @@ protected:
 public:
   bool Event(BUTTON button, EVENT event) {
     Serial.print("EVENT: ");
-    PrintButton(button);
-    Serial.print("-");
+    if (button) {
+      PrintButton(button);
+      Serial.print("-");
+    }
     PrintEvent(event);
-    Serial.print(" mods ");
-    PrintButton(button);
+    if (current_modifiers & ~button) {
+      Serial.print(" mods ");
+      PrintButton(current_modifiers);
+    }
+    if (on_) Serial.print(" ON");
     Serial.println("");
 
 #define EVENTID(BUTTON, EVENT, MODIFIERS) (((EVENT) << 24) | ((BUTTON) << 12) | ((MODIFIERS) & ~(BUTTON)))
@@ -6177,6 +6182,8 @@ public:
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
 #endif
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
+      case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
+      case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
 	aux_on_ = false;
         On();
@@ -6193,6 +6200,8 @@ public:
          
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
+      case EVENTID(BUTTON_AUX2, EVENT_LATCH_OFF, MODE_ON):
 #if NUM_BUTTONS == 0
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
 #endif
@@ -6505,6 +6514,10 @@ public:
       name_(name),
       button_(button),
       pin_(pin) {
+    pinMode(pin, INPUT_PULLUP);
+#ifdef ENABLE_SNOOZE
+    snooze_digital.pinMode(pin, INPUT_PULLUP, RISING);
+#endif
   }
 
 protected:
@@ -6668,8 +6681,8 @@ public:
       Serial.println("Not a touch-capable pin!");
     } 
   }
-protected:
 
+protected:
   bool Read() override {
     return is_pushed_;
   }

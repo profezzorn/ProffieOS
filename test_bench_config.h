@@ -1,8 +1,8 @@
 
 #ifdef CONFIG_TOP
 
-// V2 electronics
-#include "v2_config.h"
+// V3 electronics
+#include "v3_config.h"
 
 // Number of simultaneously connected blades.
 // (For interchangeable blades, see the blades[] array.)
@@ -78,7 +78,12 @@ BladeConfig blades[] = {
 #endif
 
 #ifdef CONFIG_BUTTONS
-Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
+// There are currently three available button classes:
+// Button (standard momentary button)
+// TouchButton (similar to momentary button, but reacts to touch).
+// LatchingButton (on/off button, always controls ignition)
+
+LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button AuxButton(BUTTON_AUX, auxPin, "aux");
 Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
 #endif

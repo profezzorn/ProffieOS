@@ -55,6 +55,12 @@ const unsigned int maxLedsPerStrip = 144;
 #include "common_presets.h"
 
 #ifdef CONFIG_BUTTONS
+
+// There are currently three available button classes:
+// Button (standard momentary button)
+// TouchButton (similar to momentary button, but reacts to touch).
+// LatchingButton (on/off button, always controls ignition)
+
 TouchButton PowerButton(BUTTON_POWER, powerButtonPin, 1700, "pow");
 Button AuxButton(BUTTON_AUX, auxPin, "aux");
 #endif

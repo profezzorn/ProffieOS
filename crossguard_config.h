@@ -177,5 +177,10 @@ BladeConfig blades[] = {
 #endif
 
 #ifdef CONFIG_BUTTONS
+// There are currently three available button classes:
+// Button (standard momentary button)
+// TouchButton (similar to momentary button, but reacts to touch).
+// LatchingButton (on/off button, always controls ignition)
+
 Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 #endif
