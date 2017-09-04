@@ -6526,9 +6526,7 @@ protected:
     while (true) {
       while (!DebouncedRead()) YIELD();
       saber.Event(button_, EVENT_LATCH_ON);
-      current_modifiers |= button_;
       while (DebouncedRead()) YIELD();
-      current_modifiers &=~ button_;
       saber.Event(button_, EVENT_LATCH_OFF);
     }
     STATE_MACHINE_END();
@@ -6537,10 +6535,8 @@ protected:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, name_)) {
       if (current_modifiers & button_) {
-	current_modifiers &=~ button_;
 	saber.Event(button_, EVENT_LATCH_ON);
       } else {
-	current_modifiers |= button_;
 	saber.Event(button_, EVENT_LATCH_OFF);
       }
       return true;
