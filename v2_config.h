@@ -1,6 +1,7 @@
 #define VERSION_MAJOR 2
 #define VERSION_MINOR 3
 #define V2
+#define GYRO_CLASS LSM6DS3H
 
 // Teensy 3.2 pin map:
 // A lot of these can be changed, but be careful, because:

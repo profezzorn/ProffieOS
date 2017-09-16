@@ -1,5 +1,7 @@
 #define VERSION_MAJOR 1
 #define VERSION_MINOR 0
+#define GYRO_CLASS FXAS21002
+#define ACCEL_CLASS FXOS8700
 
 // Teensy 3.2 pin map:
 // A lot of these can be changed, but be careful, because:

@@ -3,6 +3,7 @@
 #define V2
 #define V3
 #define USE_I2S
+#define GYRO_CLASS LSM6DS3H
 
 // Teensy 3.2 pin map:
 // A lot of these can be changed, but be careful, because:
@@ -24,8 +25,8 @@ enum SaberPins {
   bladePowerPin4 = 3,             // Optional power control (TeensySaber V2)
   bladePowerPin5 = 4,             // Optional power control (TeensySaber V2)
   bladePowerPin6 = 5,             // Optional power control (TeensySaber V2)
-  bladePowerPin1 = 6,            // blade power control
-  spiLedSelect = -1,               // APA102/dotstar chip select
+  bladePowerPin1 = 6,             // blade power control
+  spiLedSelect = -1,              // APA102/dotstar chip select
   spiLedDataOut = 7,
   spiLedClock = 8,
   bclkPin = 9,                    // BCLK (digital audio)
