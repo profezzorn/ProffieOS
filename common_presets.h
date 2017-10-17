@@ -15,27 +15,29 @@
 // configuration array below. See "simple_presets" and "charging_presets"
 // below for examples.
 Preset presets[] = {
-  { "font03", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
+  { "font03", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>(), "cyan" },
   { "graflex7", "tracks/cantina.wav",
-    StylePtr<InOutSparkTip<EASYBLADE(BLUE, WHITE), 300, 800> >() },
-  { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
-  { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
-  { "font02", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>() },
+    StylePtr<InOutSparkTip<EASYBLADE(BLUE, WHITE), 300, 800> >(), "blue" },
+  { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>(), "fire" },
+  { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>(), "red" },
+  { "font02", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>(), "blue fire" },
   { "igniter/font4", "tracks/duel.wav",
-    StylePtr<InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> >() },
+    StylePtr<InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> >(), "green" },
   { "font01", "tracks/duel.wav",
-    StyleNormalPtr<WHITE, RED, 300, 800, RED>() },
+    StyleNormalPtr<WHITE, RED, 300, 800, RED>(), "white" },
   { "font01", "tracks/walls.wav",
-      StyleNormalPtr<AudioFlicker<YELLOW, WHITE>, BLUE, 300, 800>() },
+    StyleNormalPtr<AudioFlicker<YELLOW, WHITE>, BLUE, 300, 800>(), "yellow\nflicker" },
   { "font01", "tracks/title.wav", 
-    StylePtr<InOutSparkTip<EASYBLADE(MAGENTA, WHITE), 300, 800> >() },
+    StylePtr<InOutSparkTip<EASYBLADE(MAGENTA, WHITE), 300, 800> >(), "magenta" },
   { "font02", "tracks/cantina.wav", StyleNormalPtr<
-    Gradient<RED, BLUE>, Gradient<CYAN, YELLOW>, 300, 800>() },
-  { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
-  { "font02", "tracks/cantina.wav", StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>() },
-  { "font02", "tracks/cantina.wav", &style_pov },
+    Gradient<RED, BLUE>, Gradient<CYAN, YELLOW>, 300, 800>(), "gradient" },
+  { "font02", "tracks/duel.wav",
+    StyleNormalPtr<Pulsing<RED, Rgb<50,0,0>, 5000>, WHITE, 300, 800, RED>(), "pulsing" },
+  { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>(), "rainbow" },
+  { "font02", "tracks/cantina.wav", StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>(), "strobe" },
+  { "font02", "tracks/cantina.wav", &style_pov, "POV" },
 
-  { "charging", "tracks/duel.wav", &style_charging },
+  { "charging", "tracks/duel.wav", &style_charging, "battery" },
 };
 
 Preset red_presets[] = {

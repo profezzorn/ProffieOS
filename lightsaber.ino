@@ -22,8 +22,8 @@
 // to use here.
 
 // #define CONFIG_FILE "crossguard_config.h"
-// #define CONFIG_FILE "graflex_v1_config.h"
-#define CONFIG_FILE "owk_v2_config.h"
+#define CONFIG_FILE "graflex_v1_config.h"
+// #define CONFIG_FILE "owk_v2_config.h"
 // #define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
 
@@ -4326,6 +4326,34 @@ private:
   uint32_t m;
 };
 
+template<class COLOR1, class COLOR2, int pulse_millis>
+class Pulsing {
+public:
+  void run(BladeBase* base) {
+    c1_.run(base);
+    c2_.run(base);
+    uint32_t now = micros();
+    uint32_t delta = now - last_micros_;
+    last_micros_ = now;
+    pos_ = fract(pos_ + delta / (1000.0 * pulse_millis));
+    mix_ = sin_table[(int)floor(pos_ * 0x400)] >> 7;
+  }
+
+  OverDriveColor getColor(int led) {
+    OverDriveColor c1 = c1_.getColor(led);
+    OverDriveColor c2 = c2_.getColor(led);
+    c1.c = c1.c.mix(c2.c, mix_);
+    return c1;
+  }
+
+private:
+  COLOR1 c1_;
+  COLOR2 c2_;
+  int mix_;
+  uint32_t last_micros_;
+  float pos_ = 0.0;
+};
+
 // Let's us use a different color right in the beginning.
 template<class T, class SPARK_COLOR = Rgb<255,255,255>, int MILLIS = 200>
 class OnSpark {
@@ -4432,11 +4460,12 @@ private:
   uint32_t strobe_millis_;
 };
 
-template<class T, int OUT_MILLIS, int IN_MILLIS>
+template<class T, int OUT_MILLIS, int IN_MILLIS, class OFF_COLOR=Rgb<0,0,0> >
 class InOutHelper {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
+    off_color_.run(blade);
     uint32_t now = micros();
     uint32_t delta = now - last_micros_;
     last_micros_ = now;
@@ -4459,11 +4488,13 @@ public:
   OverDriveColor getColor(int led) {
     int black_mix = clampi32(thres - led * 256, 0, 255);
     OverDriveColor ret = base_.getColor(led);
-    ret.c = Color().mix(ret.c, black_mix);
+    OverDriveColor off_color  = off_color_.getColor(led);
+    ret.c = off_color.c.mix(ret.c, black_mix);
     return ret;
   }
 private:
   T base_;
+  OFF_COLOR off_color_;
   int thres = 0;
   float extension = 0.0;
   uint32_t last_micros_;
@@ -7986,6 +8017,70 @@ public:
     STATE_MACHINE_END();
   }
 };
+
+#ifdef CLASH_RECORDER
+class ClashRecorder : public SaberBase {
+public:
+  void SB_Clash() override {
+    time_to_dump_ = NELEM(buffer_) / 2;
+  }
+  void SB_Accel(const Vec3& accel) override {
+    buffer_[pos_] = accel;
+    pos_++;
+    if (pos_ == NELEM(buffer_)) pos_ = 0;
+    if (time_to_dump_) {
+      time_to_dump_--;
+      if (time_to_dump_ == 0) {
+	LOCK_SD(true);
+	char file_name[16];
+	size_t file_num = last_file_ + 1;
+
+	while (true) {
+	  char num[16];
+	  itoa(file_num, num, 10);
+	  strcpy(file_name, "CLS");
+	  while(strlen(num) + strlen(file_name) < 8) strcat(file_name, "0");
+	  strcat(file_name, num);
+	  strcat(file_name, ".CSV");
+	  
+	  int last_skip = file_num - last_seen_;
+	  if (SD.exists(file_name)) {
+	    last_file_ = file_num;
+	    file_num += last_skip * 2;
+	    continue;
+	  }
+
+	  if (file_num - last_file_ > 1) {
+	    file_num = last_file_ + last_skip / 2;
+	    continue;
+	  }
+	  break;
+	}
+	File f = SD.open(file_name, FILE_WRITE);
+	for (size_t i = 0; i < NELEM(buffer_); i++) {
+	  const Vec3& v = buffer_[(pos_ + i) % NELEM(buffer_)];
+	  f.print(v.x);
+	  f.print(", ");
+	  f.print(v.y);
+	  f.print(", ");
+	  f.print(v.z);
+	  f.print("\n");
+	}
+	f.close();
+	LOCK_SD(false);
+      }
+    }
+  }
+private:
+  size_t last_file_ = 0;
+  size_t time_to_dump_ = 0;
+  size_t pos_ = 0;
+  Vec3 buffer_[512];
+};
+
+ClashRecorder clash_recorder;
+#endif
+
 
 #ifdef GYRO_CHIP
 // Can also be gyro+accel.
