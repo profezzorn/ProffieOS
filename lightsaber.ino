@@ -5239,7 +5239,6 @@ public:
     float di = LED::MaxAmps - LED::P2Amps;
     float delta = dv / di;
     float amps = (V - LED::MaxVolts + LED::MaxAmps * delta) / (delta + LED::R);
-#if 0
     if (monitor.ShouldPrint(Monitoring::MonitorPWM)) {
       Serial.print("AMPS = ");
       Serial.print(amps);
@@ -5248,7 +5247,6 @@ public:
       Serial.print(" PWM = ");
       Serial.println(100.0 * LED::MaxAmps / amps);
     }
-#endif
     if (amps <= LED::MaxAmps) {
       return 1.0f;
     }
@@ -5256,19 +5254,6 @@ public:
     return LED::MaxAmps / amps;
   }
   int PWM(Color16 c) override {
-    if (monitor.ShouldPrint(Monitoring::MonitorPWM)) {
-      Serial.print("COLOR: ");
-      Serial.print(c.r);
-      Serial.print(", ");
-      Serial.print(c.g);
-      Serial.print(", ");
-      Serial.print(c.b);
-      Serial.print(" Select: ");
-      Serial.println(c.select(Color16(Color8(LED::Red, LED::Green, LED::Blue))));
-      Serial.print(" AnalogWrite: ");
-      Serial.println((int)(c.select(Color16(Color8(LED::Red, LED::Green, LED::Blue))) * PWMMultiplier()));
-    }
-  
     return c.select(Color16(Color8(LED::Red, LED::Green, LED::Blue))) * PWMMultiplier();
   }
   int PWM_overdrive(Color16 c) override {
