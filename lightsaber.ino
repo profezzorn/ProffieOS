@@ -3417,7 +3417,7 @@ class Color16 {
   }
 
   Color8 dither(int n) const {
-    return Color8(max(255, (r+n) >> 8), max(255, (g+n) >> 8), max(255, (b+n) >> 8));
+    return Color8(min(255, (r+n) >> 8), min(255, (g+n) >> 8), min(255, (b+n) >> 8));
   }
 
   uint16_t r, g, b;
