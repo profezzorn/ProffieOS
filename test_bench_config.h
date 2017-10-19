@@ -51,7 +51,15 @@ const unsigned int maxLedsPerStrip = 144;
 
 #ifdef CONFIG_PRESETS
 
+typedef RandomFlicker<Rgb<200,200,200>, Rgb<40,40,40>> OnPulse;
+typedef Pulsing<Rgb16<512,512,512>, Rgb16<50,50,50>, 3000> OffPulse;
+
 Preset testing_presets[] = {
+#if 0
+  { "font02", "tracks/cantina.wav", 
+    StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
+    "ONOFF" },
+#endif
   { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>(),
     "=RainboW++\n++BladE++" },
   { "graflex4", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },

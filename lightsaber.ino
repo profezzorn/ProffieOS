@@ -22,9 +22,9 @@
 // to use here.
 
 // #define CONFIG_FILE "crossguard_config.h"
-#define CONFIG_FILE "graflex_v1_config.h"
+// #define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
-// #define CONFIG_FILE "test_bench_config.h"
+#define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
 
 #define CONFIG_TOP
@@ -3359,25 +3359,68 @@ BatteryMonitor battery_monitor;
 // Used to represent a color. Uses normal 8-bit-per channel RGB.
 // Note that these colors are in linear space and their interpretation
 // depends on the blade.
-class Color {
+class Color8 {
   public:
-  Color() : r(0), g(0), b(0) {}
-  Color(uint8_t r_, uint8_t g_, uint8_t b_) : r(r_), g(g_), b(b_) {}
+  Color8() : r(0), g(0), b(0) {}
+  Color8(uint8_t r_, uint8_t g_, uint8_t b_) : r(r_), g(g_), b(b_) {}
   // x = 0..256
-  Color mix(const Color& other, int x) const {
+  Color8 mix(const Color8& other, int x) const {
     // Wonder if there is an instruction for this?
-    return Color( ((256-x) * r + x * other.r) >> 8,
+    return Color8( ((256-x) * r + x * other.r) >> 8,
                    ((256-x) * g + x * other.g) >> 8,
                    ((256-x) * b + x * other.b) >> 8);
   }
-  uint8_t select(const Color& other) const {
+  // x = 0..16384
+  Color8 mix2(const Color8& other, int x) const {
+    // Wonder if there is an instruction for this?
+    return Color8( ((16384-x) * r + x * other.r) >> 14,
+                   ((16384-x) * g + x * other.g) >> 14,
+                   ((16384-x) * b + x * other.b) >> 14);
+  }
+  uint8_t select(const Color8& other) const {
     uint8_t ret = 255;
     if (other.r) ret = min(ret, r * 255 / other.r);
     if (other.g) ret = min(ret, g * 255 / other.g);
     if (other.b) ret = min(ret, b * 255 / other.b);
     return ret;
   }
+  
   uint8_t r, g, b;
+};
+
+class Color16 {
+  public:
+  Color16() : r(0), g(0), b(0) {}
+  Color16(const Color8& c) : r(c.r << 8), g(c.g << 8), b(c.b << 8) {}
+  Color16(uint16_t r_, uint16_t g_, uint16_t b_) : r(r_), g(g_), b(b_) {}
+  // x = 0..256
+  Color16 mix(const Color16& other, int x) const {
+    // Wonder if there is an instruction for this?
+    return Color16( ((256-x) * r + x * other.r) >> 8,
+		    ((256-x) * g + x * other.g) >> 8,
+		    ((256-x) * b + x * other.b) >> 8);
+  }
+  // x = 0..16384
+  Color16 mix2(const Color16& other, int x) const {
+    // Wonder if there is an instruction for this?
+    return Color16( ((16384-x) * r + x * other.r) >> 14,
+		    ((16384-x) * g + x * other.g) >> 14,
+		    ((16384-x) * b + x * other.b) >> 14);
+  }
+  uint16_t select(const Color16& other) const {
+    uint32_t ret = 65535;
+    uint32_t tmp = 65535;
+    if (other.r) ret = min(ret, r * tmp / other.r);
+    if (other.g) ret = min(ret, g * tmp / other.g);
+    if (other.b) ret = min(ret, b * tmp / other.b);
+    return ret;
+  }
+
+  Color8 dither(int n) const {
+    return Color8(max(255, (r+n) >> 8), max(255, (g+n) >> 8), max(255, (b+n) >> 8));
+  }
+
+  uint16_t r, g, b;
 };
 
 #ifdef ENABLE_WS2811
@@ -3442,10 +3485,10 @@ public:
               void *frameBuf,
               uint8_t config,
               int pin);
-  void setPixel(uint32_t num, Color color) {
+  void setPixel(uint32_t num, Color8 color) {
     drawBuffer[num] = color;
   }
-  Color getPixel(uint32_t num) {
+  Color8 getPixel(uint32_t num) {
     return drawBuffer[num];
   }
 
@@ -3457,7 +3500,7 @@ public:
     return stripLen;
   }
 
-  static Color drawBuffer[maxLedsPerStrip];
+  static Color8 drawBuffer[maxLedsPerStrip];
 private:
   static uint16_t stripLen;
   static void *frameBuffer;
@@ -3475,7 +3518,7 @@ DMAChannel MonopodWS2811::dma2;
 DMAChannel MonopodWS2811::dma3;
 uint16_t MonopodWS2811::frameSetDelay = 0;
 
-Color MonopodWS2811::drawBuffer[maxLedsPerStrip];
+Color8 MonopodWS2811::drawBuffer[maxLedsPerStrip];
 static uint8_t ones = 0x20;  // pin 20
 static volatile uint8_t update_in_progress = 0;
 static uint32_t update_completed_at = 0;
@@ -3733,7 +3776,7 @@ static inline void Out2DMA(uint8_t *& o, uint8_t v) {
   *(o++) = (v & 1) ? 0 : ones;
 }
 
-void CopyOut(int params, struct Color* inbuf, void* frameBuffer, int num) {
+void CopyOut(int params, class Color8* inbuf, void* frameBuffer, int num) {
   uint8_t *o = (uint8_t*)frameBuffer;
   switch (params & 7) {
     case WS2811_RBG:
@@ -3931,11 +3974,11 @@ public:
   virtual bool is_on() const = 0;
 
   // Set led 'led' to color 'c'.
-  virtual void set(int led, Color c) = 0;
+  virtual void set(int led, Color16 c) = 0;
 
   // Bypasses battery voltage based PWM, intended to be used for
   // brief flashes only.
-  virtual void set_overdrive(int led, Color c) { set(led, c); }
+  virtual void set_overdrive(int led, Color16 c) { set(led, c); }
 
   // Returns true when a clash occurs.
   // Returns true only once per clash.
@@ -3943,7 +3986,7 @@ public:
 
   // Clear blade colors.
   virtual void clear() {
-    for (int i = 0; i < num_leds(); i++) set(i, Color());
+    for (int i = 0; i < num_leds(); i++) set(i, Color16());
   }
 
   // Called to let the blade know that it's ok to
@@ -3974,12 +4017,12 @@ public:
   void run(BladeBase *blade) override {
     int black_mix = 128 + 100 * sin(millis() / 500.0);
     float volts = battery_monitor.battery();
-    Color colors[] = {
-      Color(0,255,0),   // Green > 4.0
-      Color(0,0,255),
-      Color(255,128,0),
-      Color(255,0,0),
-      Color(255,0,0) 
+    Color8 colors[] = {
+      Color8(0,255,0),   // Green > 4.0
+      Color8(0,0,255),
+      Color8(255,128,0),
+      Color8(255,0,0),
+      Color8(255,0,0) 
     };
     float x = (4.0 - volts) * 2.0;
     int i = floor(x);
@@ -3987,8 +4030,8 @@ public:
     // Blend colors over 0.1 volts.
     int blend = (x - i) * 10 * 255;
     blend = clampi32(blend, 0, 255);
-    Color c = colors[i].mix(colors[i + 1], blend);
-    c = c.mix(Color(), black_mix);
+    Color8 c = colors[i].mix(colors[i + 1], blend);
+    c = c.mix(Color8(), black_mix);
     int num_leds = blade->num_leds();
 
     float min_volts = 2.7;
@@ -3996,7 +4039,7 @@ public:
     float pos = (volts - min_volts) * num_leds / (max_volts - min_volts);
     int p = pos * 32;
     for (int i = 0; i < num_leds; i++) {
-      blade->set(i, Color().mix(c, max(0, 256 - abs(p - i * 32))));
+      blade->set(i, Color16(Color8().mix(c, max(0, 256 - abs(p - i * 32)))));
     }
   };
 
@@ -4019,8 +4062,8 @@ struct FireConfig {
 template<int BLADE_NUM>
 class StyleFire : public BladeStyle {
 public:
-  StyleFire(Color c1,
-             Color c2,
+  StyleFire(Color8 c1,
+             Color8 c2,
              uint32_t delay,
              uint32_t speed,
              FireConfig normal,
@@ -4093,15 +4136,15 @@ public:
     bool zero = true;
     for (int i = 0; i < num_leds; i++) {
       int h = heat_[num_leds - 1 - i];
-      Color c;
+      Color8 c;
       if (h < 256) {
-         c = Color().mix(c1_, h);
+         c = Color8().mix(c1_, h);
       } else if (h < 512) {
          c = c1_.mix(c2_, h - 256);
       } else if (h < 768) {
-         c = c2_.mix(Color(255,255,255), h - 512);
+         c = c2_.mix(Color8(255,255,255), h - 512);
       } else {
-         c = Color(255,255,255);
+         c = Color8(255,255,255);
       }
       if (h) zero = false;
       blade->set(i, c);
@@ -4112,7 +4155,7 @@ public:
 private:
   static uint32_t last_update_;
   static unsigned short heat_[maxLedsPerStrip + 13];
-  Color c1_, c2_;
+  Color8 c1_, c2_;
   uint32_t delay_;
   OnState state_;
   uint32_t on_time_;
@@ -4137,7 +4180,7 @@ template<class COLOR1, class COLOR2,
           int LOCK_INT_BASE = 0, int LOCK_INT_RAND=5000, int LOCK_COOLING = 10>
 class BladeStyle *StyleFirePtr() {
   static StyleFire<BLADE_NUM> style(
-    COLOR1::color(), COLOR2::color(),
+    COLOR1::color().dither(0), COLOR2::color().dither(0),
     DELAY, SPEED,
     FireConfig(NORM_INT_BASE, NORM_INT_RAND, NORM_COOLING),
     FireConfig(CLSH_INT_BASE, CLSH_INT_RAND, CLSH_COOLING),
@@ -4158,18 +4201,32 @@ private:
 };
 
 struct OverDriveColor {
-  Color c;
+  Color16 c;
   bool overdrive;
 };
 // Simple solid color.
 template<int R, int G, int B>
 class Rgb {
 public:
-  static Color color() { return Color(R,G,B); }
+  static Color16 color() { return Color16(Color8(R,G,B)); }
   void run(BladeBase* base) {}
   OverDriveColor getColor(int led) {
     OverDriveColor ret;
-    ret.c = Color(R, G, B);
+    ret.c = color();
+    ret.overdrive = false;
+    return ret;
+  }
+};
+
+// Simple solid color with 16-bit precision.
+template<int R, int G, int B>
+class Rgb16 {
+public:
+  static Color16 color() { return Color16(R, G, B); }
+  void run(BladeBase* base) {}
+  OverDriveColor getColor(int led) {
+    OverDriveColor ret;
+    ret.c = color();
     ret.overdrive = false;
     return ret;
   }
@@ -4187,7 +4244,7 @@ public:
   OverDriveColor getColor(int led) {
     OverDriveColor a = a_.getColor(led);
     OverDriveColor b = b_.getColor(led);
-    a.c = a.c.mix(b.c, led * 255 / num_leds_);
+    a.c = a.c.mix2(b.c, led * 16384 / num_leds_);
     return a;
   }
 private:
@@ -4314,9 +4371,9 @@ public:
     m = millis();
   }
   OverDriveColor getColor(int led) {
-    Color c(max(0, (sin_table[((m * 3 + led * 50)) & 0x3ff] >> 7)),
-             max(0, (sin_table[((m * 3 + led * 50 + 1024 / 3)) & 0x3ff] >> 7)),
-             max(0, (sin_table[((m * 3 + led * 50 + 1024 * 2 / 3)) & 0x3ff] >> 7)));
+    Color16 c(max(0, (sin_table[((m * 3 + led * 50)) & 0x3ff] << 2)),
+	      max(0, (sin_table[((m * 3 + led * 50 + 1024 / 3)) & 0x3ff] << 2)),
+	      max(0, (sin_table[((m * 3 + led * 50 + 1024 * 2 / 3)) & 0x3ff] << 2)));
     OverDriveColor ret;
     ret.c = c;
     ret.overdrive = false;
@@ -4336,13 +4393,13 @@ public:
     uint32_t delta = now - last_micros_;
     last_micros_ = now;
     pos_ = fract(pos_ + delta / (1000.0 * pulse_millis));
-    mix_ = sin_table[(int)floor(pos_ * 0x400)] >> 7;
+    mix_ = (sin_table[(int)floor(pos_ * 0x400)] + 16384) >> 1;
   }
 
   OverDriveColor getColor(int led) {
     OverDriveColor c1 = c1_.getColor(led);
     OverDriveColor c2 = c2_.getColor(led);
-    c1.c = c1.c.mix(c2.c, mix_);
+    c1.c = c1.c.mix2(c2.c, mix_);
     return c1;
   }
 
@@ -4460,6 +4517,13 @@ private:
   uint32_t strobe_millis_;
 };
 
+template<class T, class U>
+struct is_same_type { static const bool value = false; };
+ 
+template<class T>
+struct is_same_type<T, T> { static const bool value = true; };
+
+
 template<class T, int OUT_MILLIS, int IN_MILLIS, class OFF_COLOR=Rgb<0,0,0> >
 class InOutHelper {
 public:
@@ -4479,7 +4543,9 @@ public:
          extension = min(extension, 1.0f);
       }
     } else {
-      if (extension == 0.0) blade->allow_disable();
+      if (is_same_type<OFF_COLOR, Rgb<0,0,0> >::value)
+        if (extension == 0.0)
+          blade->allow_disable();
       extension -= delta / (IN_MILLIS * 1000.0);
       extension = max(extension, 0.0f);
     }
@@ -4533,7 +4599,7 @@ public:
       ret.c = spark.c.mix(ret.c, spark_mix);
     }
     int black_mix = clampi32(thres - led * 256, 0, 255);
-    ret.c = Color().mix(ret.c, black_mix);
+    ret.c = Color16().mix(ret.c, black_mix);
     return ret;
   }
 private:
@@ -4790,7 +4856,7 @@ public:
 private:
   struct { uint32_t t; Vec3 accel; } accel_entries_[10];
   size_t entry_;
-  Color* data_;
+  Color8* data_;
   int width_;
   int height_;
 };
@@ -4882,8 +4948,8 @@ public:
   bool is_on() const override {
     return on_;
   }
-  void set(int led, Color c) override {
-    monopodws.setPixel(led, c);
+  void set(int led, Color16 c) override {
+    monopodws.setPixel(led, c.dither(0));
   }
   bool clash() override {
     bool ret = clash_;
@@ -5054,7 +5120,7 @@ public:
     return on_;
   }
   void set(int led, Color c) override {
-    ((Color*)displayMemory)[led] = c;
+    ((Color8*)displayMemory)[led] = c;
   }
   bool clash() override {
     bool ret = clash_;
@@ -5148,11 +5214,11 @@ class BladeBase *FASTLEDBladePtr() {
 // LED interface.
 class LEDInterface {
 public:
-  // Given a color, return a the right PWM level (0-255).
-  virtual int PWM(Color c) = 0;
+  // Given a color, return a the right PWM level (0-65535).
+  virtual int PWM(Color16 c) = 0;
 
   // Same as PWM(), but ignores battery voltage.
-  virtual int PWM_overdrive(Color c) = 0;
+  virtual int PWM_overdrive(Color16 c) = 0;
 };
 
 // This code turns down the PWM duty cycle when the battery voltage
@@ -5173,6 +5239,7 @@ public:
     float di = LED::MaxAmps - LED::P2Amps;
     float delta = dv / di;
     float amps = (V - LED::MaxVolts + LED::MaxAmps * delta) / (delta + LED::R);
+#if 0
     if (monitor.ShouldPrint(Monitoring::MonitorPWM)) {
       Serial.print("AMPS = ");
       Serial.print(amps);
@@ -5181,17 +5248,31 @@ public:
       Serial.print(" PWM = ");
       Serial.println(100.0 * LED::MaxAmps / amps);
     }
+#endif
     if (amps <= LED::MaxAmps) {
       return 1.0f;
     }
 
     return LED::MaxAmps / amps;
   }
-  int PWM(Color c) override {
-    return c.select(Color(LED::Red, LED::Green, LED::Blue)) * PWMMultiplier();
+  int PWM(Color16 c) override {
+    if (monitor.ShouldPrint(Monitoring::MonitorPWM)) {
+      Serial.print("COLOR: ");
+      Serial.print(c.r);
+      Serial.print(", ");
+      Serial.print(c.g);
+      Serial.print(", ");
+      Serial.print(c.b);
+      Serial.print(" Select: ");
+      Serial.println(c.select(Color16(Color8(LED::Red, LED::Green, LED::Blue))));
+      Serial.print(" AnalogWrite: ");
+      Serial.println((int)(c.select(Color16(Color8(LED::Red, LED::Green, LED::Blue))) * PWMMultiplier()));
+    }
+  
+    return c.select(Color16(Color8(LED::Red, LED::Green, LED::Blue))) * PWMMultiplier();
   }
-  int PWM_overdrive(Color c) override {
-    return c.select(Color(LED::Red, LED::Green, LED::Blue));
+  int PWM_overdrive(Color16 c) override {
+    return c.select(Color16(Color8(LED::Red, LED::Green, LED::Blue)));
   }
 };
 
@@ -5212,11 +5293,11 @@ public:
     analogWriteFrequency(pin_, 1000);
     analogWrite(pin_, 0);  // make it black
   }
-  void set(const Color& c) {
+  void set(const Color16& c) {
     if (pin_ == -1) return;
     analogWrite(pin_, c_->PWM(c));
   }
-  void set_overdrive(const Color& c) {
+  void set_overdrive(const Color16& c) {
     if (pin_ == -1) return;
     analogWrite(pin_, c_->PWM_overdrive(c));
   }
@@ -5249,7 +5330,8 @@ public:
 
   void Activate() override {
     Serial.println("Simple Blade");
-    analogWriteResolution(8);
+    analogWriteResolution(16);
+    power_ = true;
     for (size_t i = 0; i < NELEM(pins_); i++) pins_[i].Activate();
     CommandParser::Link();
     Looper::Link();
@@ -5263,11 +5345,11 @@ public:
   bool is_on() const override {
     return on_;
   }
-  void set(int led, Color c) override {
+  void set(int led, Color16 c) override {
     for (size_t i = 0; i < NELEM(pins_); i++) pins_[i].set(c);
   }
 
-  void set_overdrive(int led, Color c) override {
+  void set_overdrive(int led, Color16 c) override {
     for (size_t i = 0; i < NELEM(pins_); i++) pins_[i].set_overdrive(c);
   }
 
@@ -5282,7 +5364,7 @@ public:
 
   // SaberBase implementation
   void SB_IsOn(bool *on) override {
-    if (on_) *on = true;
+    if (on_ || power_) *on = true;
   }
   void SB_On() override {
     battery_monitor.SetLoad(true);
@@ -5358,7 +5440,7 @@ public:
 
   void Activate() override {
     Serial.println("String Blade");
-    analogWriteResolution(8);
+    analogWriteResolution(16);
     for (int i = 0; i < STRING_SEGMENTS; i++) {
       analogWriteFrequency(pin_[i], 1000);
       analogWrite(pin_[i], 0);  // make it black
@@ -5376,12 +5458,12 @@ public:
   bool is_on() const override {
     return on_;
   }
-  void set(int led, Color c) override {
+  void set(int led, Color16 c) override {
     analogWrite(pin_[led], c_->PWM(c));
     if (led == 0) clash_pin_.set(c);
   }
 
-  void set_overdrive(int led, Color c) override {
+  void set_overdrive(int led, Color16 c) override {
     analogWrite(pin_[led], c_->PWM_overdrive(c));
     if (led == 0) clash_pin_.set_overdrive(c);
   }
@@ -8082,12 +8164,12 @@ ClashRecorder clash_recorder;
 #endif
 
 
-#ifdef GYRO_CHIP
+#ifdef GYRO_CLASS
 // Can also be gyro+accel.
 GYRO_CLASS gyroscope;
 #endif
 
-#ifdef ACCEL_CHIP
+#ifdef ACCEL_CLASS
 ACCEL_CLASS accelerometer;
 #endif
 
