@@ -194,6 +194,103 @@ protected:
 };
 
 
+// Debug printout helper class
+class Monitoring  {
+public:
+  enum MonitorBit {
+    MonitorSwings = 1,
+    MonitorSamples = 2,
+    MonitorTouch = 4,
+    MonitorBattery = 8,
+    MonitorPWM = 16,
+    MonitorClash = 32,
+    MonitorTemp = 64,
+    MonitorGyro = 128,
+    MonitorStrokes = 256,
+    MonitorSerial = 512,
+  };
+
+  bool ShouldPrint(MonitorBit bit) {
+    if (bit & monitor_soon_) {
+      monitor_soon_ &= ~bit;
+      return true;
+    }
+    return false;
+  }
+
+  bool IsMonitoring(MonitorBit bit) const {
+    return (active_monitors_ & bit) != 0;
+  }
+  
+  void Loop() {
+    if (millis() - last_monitor_loop_ > monitor_frequency_ms_) {
+      monitor_soon_ = active_monitors_;
+      last_monitor_loop_ = millis();
+    }
+  }
+
+  void Toggle(MonitorBit bit) {
+    active_monitors_ ^= bit;
+  }
+private:
+  uint32_t monitor_frequency_ms_ = 500;
+  int last_monitor_loop_ = 0;
+  uint32_t monitor_soon_ = 0;
+  uint32_t active_monitors_ = 0;
+};
+
+Monitoring monitor;
+
+Print* default_output = &Serial;
+Print* stdout_output = &Serial;
+
+class ConsoleHelper : public Print {
+public:
+  bool debug_is_on() const {
+    return monitor.IsMonitoring(Monitoring::MonitorSerial) &&
+      stdout_output != default_output;
+  }
+  size_t write(uint8_t b) override {
+    size_t ret = stdout_output->write(b);
+    if (debug_is_on()) default_output->write(b);
+    return ret;
+  }
+  size_t write(const uint8_t *buffer, size_t size) override {
+    size_t ret = stdout_output->write(buffer, size);
+    if (debug_is_on()) default_output->write(buffer, size);
+    return ret;
+  }
+  int availableForWrite(void) override {
+    return stdout_output->availableForWrite();
+  }
+  virtual void flush() override {
+    stdout_output->flush();
+    if (debug_is_on()) default_output->flush();
+  }
+};
+
+ConsoleHelper STDOUT;
+
+void PrintQuotedValue(const char *name, const char* str) {
+  STDOUT.print(name);
+  STDOUT.write('=');
+  if (str) {
+    while (*str) {
+      switch (*str) {
+        case '\n':
+          STDOUT.print("\\n");
+	  break;
+        case '\\':
+          STDOUT.write('\\');
+	default:
+          STDOUT.write(*str);
+      }
+      ++str;
+    }
+  }
+  STDOUT.write('\n');
+}
+
 #ifdef ENABLE_DEBUG
 
 // This class is really useful for finding crashes
@@ -235,16 +332,16 @@ public:
   int len = 0;                                                          \
   for (T* i = START; i; i = i->NEXT) {                                  \
     if (abs(((long)i) - (long)&START) > 65536) {                        \
-      Serial.print("Linked list " #START " has invalid pointer @ ");    \
-      Serial.print(__LINE__);                                           \
-      Serial.print(" pointer: ");                                       \
-      Serial.println((long)i, 16);                                      \
+      STDOUT.print("Linked list " #START " has invalid pointer @ ");    \
+      STDOUT.print(__LINE__);                                           \
+      STDOUT.print(" pointer: ");                                       \
+      STDOUT.println((long)i, 16);                                      \
       START = NULL;                                                     \
       break;                                                            \
     }                                                                   \
     if (++len > 1000) {                                                 \
-      Serial.print("Linked list " #START " has become infinite @ ");    \
-      Serial.println(__LINE__);                                         \
+      STDOUT.print("Linked list " #START " has become infinite @ ");    \
+      STDOUT.println(__LINE__);                                         \
       i->NEXT = NULL;                                                   \
       break;                                                            \
     }                                                                   \
@@ -255,6 +352,7 @@ public:
 #define CHECK_LL(T, START, NEXT)
 
 #endif
+
 
 class ScopedCycleCounter {
 public:
@@ -281,7 +379,7 @@ class LoopCounter {
 public:
   void Print() {
     if (millis_sum_)
-      Serial.print(updates_ * 1000.0 / millis_sum_);
+      STDOUT.print(updates_ * 1000.0 / millis_sum_);
   }
   void Reset() {
     updates_ = 0;
@@ -407,6 +505,65 @@ private:
   CommandParser* next_parser_;
 };
 
+// Debug printout helper class
+class MonitorHelper : Looper, CommandParser {
+public:
+  MonitorHelper() : Looper(), CommandParser() {}
+  
+protected:
+  void Loop() { monitor.Loop(); }
+  bool Parse(const char *cmd, const char* arg) override {
+    if (!strcmp(cmd, "monitor") || !strcmp(cmd, "mon")) {
+      if (!strcmp(arg, "swings")) {
+        monitor.Toggle(Monitoring::MonitorSwings);
+        return true;
+      }
+      if (!strcmp(arg, "gyro")) {
+        monitor.Toggle(Monitoring::MonitorGyro);
+        return true;
+      }
+      if (!strcmp(arg, "samples")) {
+        monitor.Toggle(Monitoring::MonitorSamples);
+        return true;
+      }
+      if (!strcmp(arg, "touch")) {
+        monitor.Toggle(Monitoring::MonitorTouch);
+        return true;
+      }
+      if (!strcmp(arg, "battery")) {
+        monitor.Toggle(Monitoring::MonitorBattery);
+        return true;
+      }
+      if (!strcmp(arg, "pwm")) {
+        monitor.Toggle(Monitoring::MonitorPWM);
+        return true;
+      }
+      if (!strcmp(arg, "clash")) {
+        monitor.Toggle(Monitoring::MonitorClash);
+        return true;
+      }
+      if (!strcmp(arg, "temp")) {
+        monitor.Toggle(Monitoring::MonitorTemp);
+        return true;
+      }
+      if (!strcmp(arg, "strokes")) {
+        monitor.Toggle(Monitoring::MonitorStrokes);
+        return true;
+      }
+      if (!strcmp(arg, "serial")) {
+        monitor.Toggle(Monitoring::MonitorSerial);
+        return true;
+      }
+    }
+    return false;
+  }
+  void Help() {
+    STDOUT.println(" mon[itor] swings/samples/touch/battery/pwm/clash/temp/serial - toggle monitoring");
+  }
+};
+
+MonitorHelper monitor_helper;
+
 // Simple 3D vector.
 class Vec3 {
 public:
@@ -514,9 +671,38 @@ protected:
   ~SaberBase() { Unlink(this); }
 
 public:
-  static bool Lockup() { return lockup_; }
-  static void SetLockup(bool lockup) { lockup_ = lockup; }
-  
+  enum LockupType {
+    LOCKUP_NONE,
+    LOCKUP_NORMAL,
+    LOCKUP_DRAG,
+  };
+  static LockupType Lockup() { return lockup_; }
+  static void SetLockup(LockupType lockup) { lockup_ = lockup; }
+
+  struct Blast {
+    uint32_t start_micros;
+    float location; // 0 = base, 1 = tip
+  };
+
+  static size_t NumBlasts() {
+    while (num_blasts_ &&
+	   micros() - blasts_[num_blasts_-1].start_micros > 5000000) {
+      num_blasts_--;
+    }
+    return num_blasts_;
+  }
+  static const Blast& getBlast(size_t i) {
+    return blasts_[i];
+  }
+  static void addBlast(float location) {
+    for (size_t i = NELEM(blasts_) - 1; i; i--) {
+      blasts_[i] = blasts_[i-1];
+    }
+    blasts_[0].start_micros = micros();
+    blasts_[0].location = location;
+    num_blasts_ = min(num_blasts_ + 1, NELEM(blasts_));
+  }
+
   // 1.0 = kDefaultVolume
   virtual void SetHumVolume(float volume) {}
 
@@ -558,11 +744,15 @@ public:                                                         \
 #undef SABERFUN
 
 private:
-  static bool lockup_;
+  static size_t num_blasts_;
+  static struct Blast blasts_[3];
+  static LockupType lockup_;
   SaberBase* next_saber_;
 };
 
-bool SaberBase::lockup_ = false;
+SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
+size_t SaberBase::num_blasts_ = 0;
+struct SaberBase::Blast SaberBase::blasts_[3];
 
 class SaberBasePassThrough : public SaberBase {
 public:
@@ -590,93 +780,6 @@ protected:
   SaberBase* delegate_ = NULL;
 };
 
-// Debug printout helper class
-class Monitoring : Looper, CommandParser {
-public:
-  Monitoring() : Looper(), CommandParser() {}
-  enum MonitorBit {
-    MonitorSwings = 1,
-    MonitorSamples = 2,
-    MonitorTouch = 4,
-    MonitorBattery = 8,
-    MonitorPWM = 16,
-    MonitorClash = 32,
-    MonitorTemp = 64,
-    MonitorGyro = 128,
-    MonitorStrokes = 256,
-  };
-
-  bool ShouldPrint(MonitorBit bit) {
-    if (bit & monitor_soon_) {
-      monitor_soon_ &= ~bit;
-      return true;
-    }
-    return false;
-  }
-
-  bool IsMonitoring(MonitorBit bit) const {
-    return (active_monitors_ & bit) != 0;
-  }
-  
-protected:
-  void Loop() override {
-    if (millis() - last_monitor_loop_ > monitor_frequency_ms_) {
-      monitor_soon_ = active_monitors_;
-      last_monitor_loop_ = millis();
-    }
-  }
-  bool Parse(const char *cmd, const char* arg) override {
-    if (!strcmp(cmd, "monitor") || !strcmp(cmd, "mon")) {
-      if (!strcmp(arg, "swings")) {
-        active_monitors_ ^= MonitorSwings;
-        return true;
-      }
-      if (!strcmp(arg, "gyro")) {
-        active_monitors_ ^= MonitorGyro;
-        return true;
-      }
-      if (!strcmp(arg, "samples")) {
-        active_monitors_ ^= MonitorSamples;
-        return true;
-      }
-      if (!strcmp(arg, "touch")) {
-        active_monitors_ ^= MonitorTouch;
-        return true;
-      }
-      if (!strcmp(arg, "battery")) {
-        active_monitors_ ^= MonitorBattery;
-        return true;
-      }
-      if (!strcmp(arg, "pwm")) {
-        active_monitors_ ^= MonitorPWM;
-        return true;
-      }
-      if (!strcmp(arg, "clash")) {
-        active_monitors_ ^= MonitorClash;
-        return true;
-      }
-      if (!strcmp(arg, "temp")) {
-        active_monitors_ ^= MonitorTemp;
-        return true;
-      }
-      if (!strcmp(arg, "strokes")) {
-        active_monitors_ ^= MonitorStrokes;
-        return true;
-      }
-    }
-    return false;
-  }
-  void Help() {
-    Serial.println(" mon[itor] swings/samples/touch/battery/pwm/clash/temp - toggle monitoring");
-  }
-private:
-  uint32_t monitor_frequency_ms_ = 500;
-  int last_monitor_loop_ = 0;
-  uint32_t monitor_soon_ = 0;
-  uint32_t active_monitors_ = 0;
-};
-
-Monitoring monitor;
 
 // Returns the decimals of a number, ie 12.2134 -> 0.2134
 float fract(float x) { return x - floor(x); }
@@ -1000,13 +1103,13 @@ public:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "dacbuf")) {
       for (size_t i = 0; i < NELEM(dac_dma_buffer); i++) {
-        Serial.print(dac_dma_buffer[i] - 2048);
+        STDOUT.print(dac_dma_buffer[i] - 2048);
         if ((i & 0xf) == 0xf)
-          Serial.println("");
+          STDOUT.println("");
         else
-          Serial.print(" ");
+          STDOUT.print(" ");
       }
-      Serial.println("");
+      STDOUT.println("");
       return true;
     }
     return false;
@@ -1020,7 +1123,7 @@ public:
   }
 
   void Help() override {
-    Serial.println(" dacbuf - print the current contents of the dac buffer");
+    STDOUT.println(" dacbuf - print the current contents of the dac buffer");
   }
 
   void SetStream(AudioStream* stream) {
@@ -1152,24 +1255,24 @@ public:
     last_sample_ = v2;
     last_sum_ = v;
     
-//    Serial.println(vol_);
+//    STDOUT.println(vol_);
     return ret;
   }
 
   void Loop() override {
     if (monitor.ShouldPrint(Monitoring::MonitorSamples)) {
-      Serial.print("Samples: ");
-      Serial.print(num_samples_);
-      Serial.print(" AVG volume: ");
-      Serial.print(vol_);
-      Serial.print(" last input sample: ");
-      Serial.print(last_sum_);
-      Serial.print(" last output sample:");
-      Serial.print(last_sample_);
-      Serial.print(" peak sum: ");
-      Serial.print(peak_sum_);
-      Serial.print(" peak: ");
-      Serial.println(peak_);
+      STDOUT.print("Samples: ");
+      STDOUT.print(num_samples_);
+      STDOUT.print(" AVG volume: ");
+      STDOUT.print(vol_);
+      STDOUT.print(" last input sample: ");
+      STDOUT.print(last_sum_);
+      STDOUT.print(" last output sample:");
+      STDOUT.print(last_sample_);
+      STDOUT.print(" peak sum: ");
+      STDOUT.print(peak_sum_);
+      STDOUT.print(" peak: ");
+      STDOUT.println(peak_);
       peak_sum_ = peak_ = 0;
     }
   }
@@ -1626,14 +1729,14 @@ public:
 protected:
   void Loop() override {
     if (monitor.ShouldPrint(Monitoring::MonitorSamples)) {
-      Serial.print("Last elements: ");
-      Serial.print(last_elements);
-      Serial.print("Last sample: ");
-      Serial.print(last_value);
-      Serial.print(" prevol: ");
-      Serial.print(last_prevolume_value);
-      Serial.print(" vol: ");
-      Serial.println(volume_.value());
+      STDOUT.print("Last elements: ");
+      STDOUT.print(last_elements);
+      STDOUT.print("Last sample: ");
+      STDOUT.print(last_value);
+      STDOUT.print(" prevol: ");
+      STDOUT.print(last_prevolume_value);
+      STDOUT.print(" vol: ");
+      STDOUT.println(volume_.value());
     }
   }
 };
@@ -1967,29 +2070,29 @@ class Effect {
 
   void Show() {
     if (files_found()) {
-      Serial.print("Found ");
-      Serial.print(name_);
-      Serial.print(" files: ");
+      STDOUT.print("Found ");
+      STDOUT.print(name_);
+      STDOUT.print(" files: ");
       if (min_file_ <= max_file_) {
-        Serial.print(min_file_);
-        Serial.print("-");
-        Serial.print(max_file_);
+        STDOUT.print(min_file_);
+        STDOUT.print("-");
+        STDOUT.print(max_file_);
         if (digits_) {
-          Serial.print(" using ");
-          Serial.print(digits_);
-          Serial.print(" digits");
+          STDOUT.print(" using ");
+          STDOUT.print(digits_);
+          STDOUT.print(" digits");
         }
         if (unnumbered_file_found_) {
-          Serial.print(" + ");
+          STDOUT.print(" + ");
         }
       }
       if (unnumbered_file_found_) {
-        Serial.print("one unnumbered file");
+        STDOUT.print("one unnumbered file");
       }
       if (subdirs_) {
-        Serial.print(" in subdirs");
+        STDOUT.print(" in subdirs");
       }
-      Serial.println("");
+      STDOUT.println("");
     }
   }
 
@@ -1997,7 +2100,7 @@ class Effect {
     for (Effect* e = all_effects; e; e = e->next_) {
       e->Show();
     }
-    Serial.println("Done listing effects.");
+    STDOUT.println("Done listing effects.");
   }
 
   size_t files_found() const {
@@ -2044,8 +2147,8 @@ class Effect {
       default: break;
     }
     
-    Serial.print("Playing ");
-    Serial.println(filename);
+    default_output->print("Playing ");
+    default_output->println(filename);
     return true;
   }
 
@@ -2056,8 +2159,8 @@ class Effect {
 
 #if 0
     // TODO: "monitor scan" command?
-    Serial.print("SCAN ");
-    Serial.println(filename);
+    STDOUT.print("SCAN ");
+    STDOUT.println(filename);
 #endif
     for (Effect* e = all_effects; e; e = e->next_) {
       e->Scan(filename);
@@ -2065,8 +2168,8 @@ class Effect {
   }
 
   static void ScanDirectory(const char *directory) {
-    Serial.print("Scanning sound font: ");
-    Serial.print(directory);
+    STDOUT.print("Scanning sound font: ");
+    STDOUT.print(directory);
     for (Effect* e = all_effects; e; e = e->next_) {
       e->reset();
     }
@@ -2110,7 +2213,7 @@ class Effect {
       talkie.Say(spFAILURE);
     }
 #endif
-    Serial.println(" done");
+    STDOUT.println(" done");
   }
 
 private:
@@ -2295,7 +2398,7 @@ private:
       } else if (rate == AUDIO_RATE * 2) {
         Emit05(v);
       } else {
-        Serial.println("Unsupported rate.");
+        STDOUT.println("Unsupported rate.");
         Stop();
       }
     }
@@ -2402,33 +2505,33 @@ private:
         if (!sd_file_)
 #endif
         {
-          Serial.print("File ");
-          Serial.print(filename_);
-          Serial.println(" not found.");
+          STDOUT.print("File ");
+          STDOUT.print(filename_);
+          STDOUT.println(" not found.");
           goto fail;
         }
       }
       wav_ = endswith(".wav", filename_);
       if (wav_) {
         if (ReadFile(20) != 20) {
-          Serial.println("Failed to read 20 bytes.");
+          STDOUT.println("Failed to read 20 bytes.");
           goto fail;
         }
         if (header(0) != 0x46464952 &&
             header(2) != 0x45564157 &&
             header(3) != 0x20746D66 &&
             header(4) < 16) {
-          Serial.println("Headers don't match.");
+          STDOUT.println("Headers don't match.");
           YIELD();
           goto fail;
         }
         tmp_ = header(4);
         if (tmp_ != ReadFile(tmp_)) {
-          Serial.println("Read failed.");
+          STDOUT.println("Read failed.");
           goto fail;
         }
         if ((header(0) & 0xffff) != 1) {
-          Serial.println("Wrong format.");
+          STDOUT.println("Wrong format.");
           goto fail;
         }
         channels_ = header(0) >> 16;
@@ -2439,12 +2542,12 @@ private:
          rate_ = 44100;
          bits_ = 16;
       }
-      Serial.print("channels: ");
-      Serial.print(channels_);
-      Serial.print(" rate: ");
-      Serial.print(rate_);
-      Serial.print(" bits: ");
-      Serial.println(bits_);
+      STDOUT.print("channels: ");
+      STDOUT.print(channels_);
+      STDOUT.print(" rate: ");
+      STDOUT.print(rate_);
+      STDOUT.print(" bits: ");
+      STDOUT.println(bits_);
 
       while (true) {
         if (wav_) {
@@ -2647,11 +2750,11 @@ public:
   }
 
   void PlayOnce(Effect* effect) {
-    Serial.print("unit = ");
-    Serial.print(WhatUnit(this));
-    Serial.print(" vol = ");
-    Serial.print(volume());
-    Serial.print(", ");
+    STDOUT.print("unit = ");
+    STDOUT.print(WhatUnit(this));
+    STDOUT.print(" vol = ");
+    STDOUT.print(volume());
+    STDOUT.print(", ");
 
     pause_ = true;
     clear();
@@ -2729,7 +2832,7 @@ public:
       if (to_read > 0) {
         // end of file?
         if (wav_players[current_].eof()) {
-          // Serial.println("AudioSPlicer::EOF!!");
+          // STDOUT.println("AudioSPlicer::EOF!!");
           current_ = -1;
         }
       }
@@ -2773,8 +2876,8 @@ public:
   void set_crossover_time(float t) {
     fade_speed_ = max(1, (int)(32768 / t / AUDIO_RATE));
 #if 0
-    Serial.print("FADE SPEED: ");
-    Serial.println(fade_speed_);
+    STDOUT.print("FADE SPEED: ");
+    STDOUT.println(fade_speed_);
 #endif
   }
 
@@ -2864,7 +2967,7 @@ class MonophonicFont : public SaberBase {
 public:
   MonophonicFont() : SaberBase(NOLINK) { }
   void Activate() {
-    Serial.println("Activating monophonic font.");
+    STDOUT.println("Activating monophonic font.");
     ActivateAudioSplicer();
     SaberBase::Link(this);
     SetHumVolume(1.0);
@@ -2986,9 +3089,9 @@ struct ConfigFile {
       skipwhite(f);
       int64_t v = readValue(f);
 #if 0
-      Serial.print(variable);
-      Serial.print(" = ");
-      Serial.println((int)v);
+      STDOUT.print(variable);
+      STDOUT.print(" = ");
+      STDOUT.println((int)v);
 #endif
       if (!strcmp(variable, "humstart")) {
         humStart = v;
@@ -3022,7 +3125,7 @@ class PolyphonicFont : public SaberBase {
 public:
   PolyphonicFont() : SaberBase(NOLINK) { }
   void Activate() {
-    Serial.println("Activating polyphonic font.");
+    STDOUT.println("Activating polyphonic font.");
     SetupStandardAudio();
     wav_players[0].set_volume_now(0);
     char config_filename[128];
@@ -3184,7 +3287,7 @@ public:
   LoopedSwingWrapper() : SaberBasePassThrough() {}
 
   void Activate(SaberBase* base_font) {
-    Serial.println("Activating looped swing sounds");
+    STDOUT.println("Activating looped swing sounds");
     SetDelegate(base_font);
   }
 
@@ -3203,7 +3306,7 @@ public:
       low_->PlayOnce(&swingl);
       low_->PlayLoop(&swingl);
     } else {
-      Serial.println("Looped swings cannot allocate wav player.");
+      STDOUT.println("Looped swings cannot allocate wav player.");
     }
     high_ = GetFreeWavPlayer();
     if (high_) {
@@ -3211,13 +3314,13 @@ public:
       high_->PlayOnce(&swingh);
       high_->PlayLoop(&swingh);
     } else {
-      Serial.println("Looped swings cannot allocate wav player.");
+      STDOUT.println("Looped swings cannot allocate wav player.");
     }
 #if 0
-    Serial.print("UNITS: ");
-    Serial.print(WhatUnit(low_));
-    Serial.print(",");
-    Serial.println(WhatUnit(high_));
+    STDOUT.print("UNITS: ");
+    STDOUT.print(WhatUnit(low_));
+    STDOUT.print(",");
+    STDOUT.println(WhatUnit(high_));
 #endif
   }
   void SB_Off() override {
@@ -3250,24 +3353,24 @@ public:
     if (low_) low_->set_volume(vol * low);
     if (high_) high_->set_volume(vol * high);
     if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
-      Serial.print("S:");
-      Serial.print(speed);
-      Serial.print(" T:");
-      Serial.print(t);
-      Serial.print(" s:");
-      Serial.print(s);
-      Serial.print(" c:");
-      Serial.print(c);
-      Serial.print(" blend:");
-      Serial.print(blend);
-      Serial.print(" vol:");
-      Serial.print(vol);
-      Serial.print(" hi:");
-      Serial.print(high);
-      Serial.print(" lo:");
-      Serial.print(low);
-      Serial.print(" hum:");
-      Serial.println(hum);
+      STDOUT.print("S:");
+      STDOUT.print(speed);
+      STDOUT.print(" T:");
+      STDOUT.print(t);
+      STDOUT.print(" s:");
+      STDOUT.print(s);
+      STDOUT.print(" c:");
+      STDOUT.print(c);
+      STDOUT.print(" blend:");
+      STDOUT.print(blend);
+      STDOUT.print(" vol:");
+      STDOUT.print(vol);
+      STDOUT.print(" hi:");
+      STDOUT.print(high);
+      STDOUT.print(" lo:");
+      STDOUT.print(low);
+      STDOUT.print(" hum:");
+      STDOUT.println(hum);
     }
   }
 };
@@ -3320,17 +3423,21 @@ protected:
     last_voltage_ = last_voltage_ * 0.999 + v * 0.001;
     if (monitor.ShouldPrint(Monitoring::MonitorBattery) ||
         millis() - last_print_millis_ > 20000) {
-      Serial.print("Battery voltage: ");
-      Serial.println(battery());
+      STDOUT.print("Battery voltage: ");
+      STDOUT.println(battery());
       last_print_millis_ = millis();
     }
   }
 
   bool Parse(const char* cmd, const char* arg) override {
+    if (!strcmp(cmd, "battery_voltage")) {
+      STDOUT.println(battery());
+      return true;
+    }
     if (!strcmp(cmd, "batt") || !strcmp(cmd, "battery")) {
-      Serial.print("Battery voltage: ");
+      STDOUT.print("Battery voltage: ");
       float v = battery();
-      Serial.println(v);
+      STDOUT.println(v);
 #ifdef ENABLE_AUDIO
       talkie.SayDigit((int)floor(v));
       talkie.Say(spPOINT);
@@ -3343,7 +3450,7 @@ protected:
     return false;
   }
   void Help() override {
-    Serial.println(" batt[ery] - show battery voltage");
+    STDOUT.println(" batt[ery[_voltage]] - show battery voltage");
   }
 private:
   bool loaded_ = false;
@@ -3397,15 +3504,15 @@ class Color16 {
   Color16 mix(const Color16& other, int x) const {
     // Wonder if there is an instruction for this?
     return Color16( ((256-x) * r + x * other.r) >> 8,
-		    ((256-x) * g + x * other.g) >> 8,
-		    ((256-x) * b + x * other.b) >> 8);
+                    ((256-x) * g + x * other.g) >> 8,
+                    ((256-x) * b + x * other.b) >> 8);
   }
   // x = 0..16384
   Color16 mix2(const Color16& other, int x) const {
     // Wonder if there is an instruction for this?
     return Color16( ((16384-x) * r + x * other.r) >> 14,
-		    ((16384-x) * g + x * other.g) >> 14,
-		    ((16384-x) * b + x * other.b) >> 14);
+                    ((16384-x) * g + x * other.g) >> 14,
+                    ((16384-x) * b + x * other.b) >> 14);
   }
   uint16_t select(const Color16& other) const {
     uint32_t ret = 65535;
@@ -3576,7 +3683,7 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
     case 21: ones = 64; break;
     case 5:  ones = 128; break;
     default:
-      Serial.println("Invalid monopodws pin!");
+      STDOUT.println("Invalid monopodws pin!");
   }
 
   // set up the buffers
@@ -4012,7 +4119,7 @@ public:
 class StyleCharging : public BladeStyle {
 public:
   void activate() override {
-    Serial.println("Charging Style");
+    STDOUT.println("Charging Style");
   }
   void run(BladeBase *blade) override {
     int black_mix = 128 + 100 * sin(millis() / 500.0);
@@ -4082,7 +4189,7 @@ public:
     STATE_ON,
   };
   void activate() override {
-    Serial.println("Fire Style");
+    STDOUT.println("Fire Style");
     for (size_t i = 0; i < NELEM(heat_); i++) heat_[i] = 0;
   }
   bool On(BladeBase* blade) {
@@ -4111,11 +4218,11 @@ public:
       if (blade->clash()) {
          config = clash_;
       } else if (On(blade)) {
-         if (SaberBase::Lockup()) {
-           config = lockup_;
-         } else {
-           config = normal_;
-         }
+	if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
+	  config = normal_;
+	} else {
+	  config = lockup_;
+	}
       } else {
          config = normal_;
          config.intensity_base = 0;
@@ -4372,8 +4479,8 @@ public:
   }
   OverDriveColor getColor(int led) {
     Color16 c(max(0, (sin_table[((m * 3 + led * 50)) & 0x3ff] << 2)),
-	      max(0, (sin_table[((m * 3 + led * 50 + 1024 / 3)) & 0x3ff] << 2)),
-	      max(0, (sin_table[((m * 3 + led * 50 + 1024 * 2 / 3)) & 0x3ff] << 2)));
+              max(0, (sin_table[((m * 3 + led * 50 + 1024 / 3)) & 0x3ff] << 2)),
+              max(0, (sin_table[((m * 3 + led * 50 + 1024 * 2 / 3)) & 0x3ff] << 2)));
     OverDriveColor ret;
     ret.c = c;
     ret.overdrive = false;
@@ -4469,23 +4576,72 @@ private:
 };
 
 // Shows LOCKUP if the lockup state is true, otherwise BASE.
+// Also handles "Drag" effect.
 template<class BASE, class LOCKUP>
 class Lockup {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
     lockup_.run(blade);
+    int num_leds = blade->num_leds();
+    if (num_leds > 6) {
+      drag_cutoff_ = num_leds * 98 / 100;
+    } else {
+      drag_cutoff_ = 0;
+    }
   }
   OverDriveColor getColor(int led) {
-    if (SaberBase::Lockup()) {
-      return lockup_.getColor(led);
-    } else {
-      return base_.getColor(led);
+    // Good luck desciphering this one...
+    switch (SaberBase::Lockup()) {
+      case SaberBase::LOCKUP_DRAG:
+	if (led >= drag_cutoff_) {
+	  case SaberBase::LOCKUP_NORMAL:
+	    return lockup_.getColor(led);
+	} else {
+	  case SaberBase::LOCKUP_NONE:
+	    break;
+	}
     }
+    return base_.getColor(led);
+  }
+private:
+  int drag_cutoff_;
+  BASE base_;
+  LOCKUP lockup_;
+};
+
+template<class BASE, class BLAST>
+class Blast {
+public:
+  void run(BladeBase* blade) {
+    base_.run(blade);
+    blast_.run(blade);
+    num_leds_ = blade->num_leds();
+  }
+  OverDriveColor getColor(int led) {
+    OverDriveColor base = base_.getColor(led);
+    float mix = 0.0;
+    for (size_t i = 0; i < SaberBase::NumBlasts(); i++) {
+      // TODO(hubbe): Use sin_table and avoid floats
+      const SaberBase::Blast b = SaberBase::getBlast(i);
+      float x = (b.location - led/(float)num_leds_) * 30.0;
+      uint32_t T = micros() - b.start_micros;
+      float t = 0.5 + T / 200000.0;
+      if (x == 0.0) {
+	mix += 1.0f / (t*t);
+      } else {
+	mix += sinf(x / (t*t)) / x;
+      }
+    }
+    if (mix < 0.0) return base;
+    OverDriveColor blast = blast_.getColor(led);
+    base.c = base.c.mix(blast.c, min(mix, 1.0) * 256);
+    return base;
   }
 private:
   BASE base_;
-  LOCKUP lockup_;
+  BLAST blast_;
+  int num_leds_;
 };
 
 template<class T, class STROBE_COLOR, int STROBE_FREQUENCY, int STROBE_MILLIS = 1>
@@ -4698,8 +4854,13 @@ typedef Rgb<255, 31, 15> Tomato;
 typedef Rgb<255, 255, 255> White;
 typedef Rgb<255, 255, 0> Yellow;
 
+// This macro has a problem with commas, please don't use it.
 #define EASYBLADE(COLOR, CLASH_COLOR) \
-  SimpleClash<Lockup<COLOR, AudioFlicker<COLOR, WHITE> >, CLASH_COLOR>
+  SimpleClash<Lockup<Blast<COLOR, WHITE>, AudioFlicker<COLOR, WHITE> >, CLASH_COLOR>
+
+// Use EasyBlade<COLOR, CLASH_COLOR> instead of EASYBLADE(COLOR, CLASH_COLOR)
+template<class color, class clash_color, class lockup_flicker_color = WHITE>
+using EasyBlade = SimpleClash<Lockup<Blast<color, WHITE>, AudioFlicker<color, lockup_flicker_color> >, clash_color>;
 
 // The following functions are mostly for illustration.
 // The templates above gives you more power and functionality.
@@ -4709,10 +4870,12 @@ template<class base_color,
           class clash_color,
           int out_millis,
           int in_millis,
-          class lockup_flicker_color = WHITE>
+	 class lockup_flicker_color = WHITE,
+	 class blast_color = WHITE>
 BladeStyle *StyleNormalPtr() {
   typedef AudioFlicker<base_color, lockup_flicker_color> AddFlicker;
-  typedef Lockup<base_color, AddFlicker> AddLockup;
+  typedef Blast<base_color, blast_color> AddBlast;
+  typedef Lockup<AddBlast, AddFlicker> AddLockup;
   typedef SimpleClash<AddLockup, clash_color> AddClash;
   return StylePtr<InOutHelper<AddClash, out_millis, in_millis> >();
 }
@@ -4785,7 +4948,7 @@ public:
   }
   void activate() override {
     SaberBase::Link(this);
-    Serial.println("POV Style");
+    STDOUT.println("POV Style");
   }
   void deactivate() override {
     SaberBase::Unlink(this);
@@ -4812,12 +4975,12 @@ public:
     }
     Vec3 slope = dot_sum * (1.0 / t_square_sum);
 #if 0
-    Serial.print("SLOPE: ");
-    Serial.print(slope.x * 100.0);
-    Serial.print(", ");
-    Serial.print(slope.y * 100.0);
-    Serial.print(", ");
-    Serial.println(slope.z * 100.0);
+    STDOUT.print("SLOPE: ");
+    STDOUT.print(slope.x * 100.0);
+    STDOUT.print(", ");
+    STDOUT.print(slope.y * 100.0);
+    STDOUT.print(", ");
+    STDOUT.println(slope.z * 100.0);
 #endif
     return sum - slope * avg_t;
   }
@@ -4832,8 +4995,8 @@ public:
   void run(BladeBase* blade) override {
     Vec3 v = extrapolate_accel();
     float fraction = 0.5 - atan2f(v.y, v.x) * 2.0 / M_PI;
-    // Serial.print("F:");
-    // Serial.println(fraction);
+    // STDOUT.print("F:");
+    // STDOUT.println(fraction);
     if (fraction < 0 || fraction > 1.0) {
       memset((unsigned char *)&MonopodWS2811::drawBuffer,
               0,
@@ -4924,9 +5087,9 @@ public:
   // No need for a "deactivate", the blade stays active until
   // you take it out, which also cuts the power.
   void Activate() override {
-    Serial.print("WS2811 Blade with ");
-    Serial.print(num_leds_);
-    Serial.println(" leds");
+    STDOUT.print("WS2811 Blade with ");
+    STDOUT.print(num_leds_);
+    STDOUT.println(" leds");
     power_->Init();
     Power(true);
     delay(10);
@@ -4976,9 +5139,9 @@ public:
   void SB_Clash() override { clash_=true; }
 
   void SB_Top() override {
-    Serial.print("blade fps: ");
+    STDOUT.print("blade fps: ");
     loop_counter_.Print();
-    Serial.println("");
+    STDOUT.println("");
   }
 
   bool Parse(const char* cmd, const char* arg) override {
@@ -4996,7 +5159,7 @@ public:
   }
 
   void Help() override {
-    Serial.println(" blade on/off - turn ws2811 blade on off");
+    STDOUT.println(" blade on/off - turn ws2811 blade on off");
   }
 
 protected:
@@ -5079,9 +5242,9 @@ public:
 
   void Show() {
     if (spiLedSelect != -1 || spiDataOut != spiLedDataOut)
-      Serial.println("SPI data conflict!");
+      STDOUT.println("SPI data conflict!");
     if (spiLedSelect != -1 || spiClock != spiLedClock)
-      Serial.println("SPI clock conflict!");
+      STDOUT.println("SPI clock conflict!");
     if (spiLedSelect != -1){
       SPI.beginTransaction(SPISettings(SPI_DATA_RATE, MSBFIRST, SPI_MODE0));
       digitalWrite(spiLedSelect, HIGH);  // enable access to LEDs
@@ -5097,9 +5260,9 @@ public:
   // No need for a "deactivate", the blade stays active until
   // you take it out, which also cuts the power.
   void Activate() override {
-    Serial.print("FASTLED Blade with ");
-    Serial.print(num_leds_);
-    Serial.println(" leds");
+    STDOUT.print("FASTLED Blade with ");
+    STDOUT.print(num_leds_);
+    STDOUT.println(" leds");
     FastLED.addLeds<CHIPSET, spiLedDataOut, spiLedClock, EOrder, SPI_DATA_RATE>((struct CRGB*)displayMemory, num_leds_);
     power_->Init();
     Power(true);
@@ -5147,9 +5310,9 @@ public:
   void SB_Clash() override { clash_=true; }
 
   void SB_Top() override {
-    Serial.print("blade fps: ");
+    STDOUT.print("blade fps: ");
     loop_counter_.Print();
-    Serial.println("");
+    STDOUT.println("");
   }
 
   bool Parse(const char* cmd, const char* arg) override {
@@ -5167,7 +5330,7 @@ public:
   }
 
   void Help() override {
-    Serial.println(" blade on/off - turn apa102 blade on off");
+    STDOUT.println(" blade on/off - turn apa102 blade on off");
   }
 
 protected:
@@ -5240,12 +5403,12 @@ public:
     float delta = dv / di;
     float amps = (V - LED::MaxVolts + LED::MaxAmps * delta) / (delta + LED::R);
     if (monitor.ShouldPrint(Monitoring::MonitorPWM)) {
-      Serial.print("AMPS = ");
-      Serial.print(amps);
-      Serial.print(" / ");
-      Serial.print(LED::MaxAmps);
-      Serial.print(" PWM = ");
-      Serial.println(100.0 * LED::MaxAmps / amps);
+      STDOUT.print("AMPS = ");
+      STDOUT.print(amps);
+      STDOUT.print(" / ");
+      STDOUT.print(LED::MaxAmps);
+      STDOUT.print(" PWM = ");
+      STDOUT.println(100.0 * LED::MaxAmps / amps);
     }
     if (amps <= LED::MaxAmps) {
       return 1.0f;
@@ -5314,7 +5477,7 @@ public:
   }
 
   void Activate() override {
-    Serial.println("Simple Blade");
+    STDOUT.println("Simple Blade");
     analogWriteResolution(16);
     power_ = true;
     for (size_t i = 0; i < NELEM(pins_); i++) pins_[i].Activate();
@@ -5378,7 +5541,7 @@ public:
   }
 
   void Help() override {
-    Serial.println(" blade on/off - turn simple blade on off");
+    STDOUT.println(" blade on/off - turn simple blade on off");
   }
 
 protected:
@@ -5424,7 +5587,7 @@ public:
   }
 
   void Activate() override {
-    Serial.println("String Blade");
+    STDOUT.println("String Blade");
     analogWriteResolution(16);
     for (int i = 0; i < STRING_SEGMENTS; i++) {
       analogWriteFrequency(pin_[i], 1000);
@@ -5493,7 +5656,7 @@ public:
   }
 
   void Help() override {
-    Serial.println(" blade on/off - turn string blade on off");
+    STDOUT.println(" blade on/off - turn string blade on off");
   }
 
 protected:
@@ -5780,8 +5943,8 @@ public:
         SLEEP(2000);
       } else {
         CommandParser::DoParse("clash", NULL);
-        Serial.print("alloced: ");
-        Serial.println(mallinfo().uordblks);
+        STDOUT.print("alloced: ");
+        STDOUT.println(mallinfo().uordblks);
         SLEEP(100);
       }
     }
@@ -5815,7 +5978,7 @@ public:
   void On() {
     if (on_) return;
     if (current_preset_->style->NoOnOff()) return;
-    Serial.println("Ignition.");
+    STDOUT.println("Ignition.");
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     delay(10);             // allow time to wake up
 
@@ -5826,7 +5989,7 @@ public:
   void Off() {
     on_ = false;
     if (SaberBase::Lockup()) {
-      SaberBase::SetLockup(false);
+      SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
       SaberBase::DoEndLockup();
     }
     SaberBase::DoOff();
@@ -5851,7 +6014,7 @@ public:
 
   bool chdir(const char* dir) {
     if (strlen(dir) > 1 && dir[strlen(dir)-1] == '/') {
-      Serial.println("Directory must not end with slash.");
+      STDOUT.println("Directory must not end with slash.");
       return false;
     }
 #ifdef ENABLE_AUDIO
@@ -5967,12 +6130,12 @@ public:
     float volts = blade_id * 3.3 / 1024.0;  // Volts at bladeIdentifyPin
     float amps = (3.3 - volts) / 33000;     // Pull-up is 33k
     float resistor = volts / amps;
-    Serial.print("ID: ");
-    Serial.print(blade_id);
-    Serial.print(" volts ");
-    Serial.print(volts);
-    Serial.print(" resistance= ");
-    Serial.println(resistor);
+    STDOUT.print("ID: ");
+    STDOUT.print(blade_id);
+    STDOUT.print(" volts ");
+    STDOUT.print(volts);
+    STDOUT.print(" resistance= ");
+    STDOUT.println(resistor);
     return resistor;
   }
 
@@ -5990,8 +6153,8 @@ public:
         best_err = err;
       }
     }
-    Serial.print("blade= ");
-    Serial.println(best_config);
+    STDOUT.print("blade= ");
+    STDOUT.println(best_config);
     current_config_ = blades + best_config;
     current_config_->blade->Activate();
 #if NUM_BLADES >= 2
@@ -6052,8 +6215,8 @@ public:
   }
 
   void SB_Message(const char* text) override {
-    Serial.print("DISPLAY: ");
-    Serial.println(text);
+    STDOUT.print("DISPLAY: ");
+    STDOUT.println(text);
   }
 
   void SB_Accel(const Vec3& accel) override {
@@ -6064,12 +6227,12 @@ public:
     }
     accel_ = accel;
     if (monitor.ShouldPrint(Monitoring::MonitorClash)) {
-      Serial.print("ACCEL: ");
-      Serial.print(accel.x);
-      Serial.print(", ");
-      Serial.print(accel.y);
-      Serial.print(", ");
-      Serial.println(accel.z);
+      STDOUT.print("ACCEL: ");
+      STDOUT.print(accel.x);
+      STDOUT.print(", ");
+      STDOUT.print(accel.y);
+      STDOUT.print(", ");
+      STDOUT.println(accel.z);
     }
   }
 
@@ -6089,23 +6252,23 @@ public:
 
   void ProcessStrokes() {
     if (monitor.IsMonitoring(Monitoring::MonitorStrokes)) {
-      Serial.print("Stroke: ");
+      STDOUT.print("Stroke: ");
       switch (strokes[NELEM(strokes)-1].type) {
         case TWIST_LEFT:
-          Serial.print("TwistLeft");
+          STDOUT.print("TwistLeft");
           break;
         case TWIST_RIGHT:
-          Serial.print("TwistRight");
+          STDOUT.print("TwistRight");
           break;
         default: break;
       }
-      Serial.print(" len=");
-      Serial.print(strokes[NELEM(strokes)-1].length());
-      Serial.print(" separation=");
+      STDOUT.print(" len=");
+      STDOUT.print(strokes[NELEM(strokes)-1].length());
+      STDOUT.print(" separation=");
       uint32_t separation =
         strokes[NELEM(strokes)-1].start_millis -
         strokes[NELEM(strokes)-2].end_millis;
-      Serial.println(separation);
+      STDOUT.println(separation);
     }
     if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
          strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
@@ -6119,9 +6282,9 @@ public:
           strokes[NELEM(strokes)-1].start_millis -
           strokes[NELEM(strokes)-2].end_millis;
         if (separation < 200UL) {
-          Serial.println("TWIST");
+          STDOUT.println("TWIST");
           // We have a twisting gesture.
-	  Event(BUTTON_NONE, EVENT_TWIST);
+          Event(BUTTON_NONE, EVENT_TWIST);
         }
       }
     }
@@ -6151,12 +6314,12 @@ public:
   void SB_Motion(const Vec3& gyro) override {
     if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
       // Got gyro data
-      Serial.print("GYRO: ");
-      Serial.print(gyro.x);
-      Serial.print(", ");
-      Serial.print(gyro.y);
-      Serial.print(", ");
-      Serial.println(gyro.z);
+      STDOUT.print("GYRO: ");
+      STDOUT.print(gyro.x);
+      STDOUT.print(", ");
+      STDOUT.print(gyro.y);
+      STDOUT.print(", ");
+      STDOUT.println(gyro.z);
     }
     if (abs(gyro.x) > 200.0 &&
         abs(gyro.x) > 3.0 * abs(gyro.y) &&
@@ -6168,6 +6331,7 @@ public:
   }
 protected:
   Vec3 accel_;
+  bool pointing_down_ = false;
 #ifdef ENABLE_AUDIO
   BufferedWavPlayer* track_player_ = NULL;
 #endif
@@ -6183,11 +6347,11 @@ protected:
       if (track_player_) {
         track_player_->Play(current_preset_->track);
       } else {
-        Serial.println("No available WAV players.");
+        STDOUT.println("No available WAV players.");
       }
     }
 #else
-    Serial.println("Audio disabled.");
+    STDOUT.println("Audio disabled.");
 #endif
   }
 
@@ -6198,11 +6362,11 @@ protected:
     if (battery_monitor.low()) {
       if (current_preset_->style != &style_charging) {
         if (on_) {
-          Serial.print("Battery low, turning off: ");
-          Serial.println(battery_monitor.battery());
+          STDOUT.print("Battery low, turning off: ");
+          STDOUT.println(battery_monitor.battery());
           Off();
         } else if (millis() - last_beep_ > 5000) {
-          Serial.println("Battery low beep");
+          STDOUT.println("Battery low beep");
 #ifdef ENABLE_AUDIO
           // TODO: allow this to be replaced with WAV file
           talkie.Say(spLOW);
@@ -6220,49 +6384,49 @@ protected:
   }
 
   void PrintButton(uint32_t b) {
-    if (b & BUTTON_POWER) Serial.print("Power");
-    if (b & BUTTON_AUX) Serial.print("Aux");
-    if (b & BUTTON_AUX2) Serial.print("Aux2");
-    if (b & BUTTON_UP) Serial.print("Up");
-    if (b & BUTTON_DOWN) Serial.print("Down");
-    if (b & BUTTON_LEFT) Serial.print("Left");
-    if (b & BUTTON_RIGHT) Serial.print("Right");
-    if (b & BUTTON_SELECT) Serial.print("Select");
-    if (b & MODE_ON) Serial.print("On");
+    if (b & BUTTON_POWER) STDOUT.print("Power");
+    if (b & BUTTON_AUX) STDOUT.print("Aux");
+    if (b & BUTTON_AUX2) STDOUT.print("Aux2");
+    if (b & BUTTON_UP) STDOUT.print("Up");
+    if (b & BUTTON_DOWN) STDOUT.print("Down");
+    if (b & BUTTON_LEFT) STDOUT.print("Left");
+    if (b & BUTTON_RIGHT) STDOUT.print("Right");
+    if (b & BUTTON_SELECT) STDOUT.print("Select");
+    if (b & MODE_ON) STDOUT.print("On");
   }
 
   void PrintEvent(EVENT e) {
     switch (e) {
-      case EVENT_NONE: Serial.print("None"); break;
-      case EVENT_PRESSED: Serial.print("Pressed"); break;
-      case EVENT_RELEASED: Serial.print("Released"); break;
-      case EVENT_CLICK_SHORT: Serial.print("Shortclick"); break;
-      case EVENT_CLICK_LONG: Serial.print("Longclick"); break;
-      case EVENT_DOUBLE_CLICK: Serial.print("Doubleclick"); break;
-      case EVENT_LATCH_ON: Serial.print("On"); break;
-      case EVENT_LATCH_OFF: Serial.print("Off"); break;
-      case EVENT_STAB: Serial.print("Stab"); break;
-      case EVENT_SWING: Serial.print("Swing"); break;
-      case EVENT_SHAKE: Serial.print("Shake"); break;
-      case EVENT_TWIST: Serial.print("Twist"); break;
-      case EVENT_CLASH: Serial.print("Clash"); break;
+      case EVENT_NONE: STDOUT.print("None"); break;
+      case EVENT_PRESSED: STDOUT.print("Pressed"); break;
+      case EVENT_RELEASED: STDOUT.print("Released"); break;
+      case EVENT_CLICK_SHORT: STDOUT.print("Shortclick"); break;
+      case EVENT_CLICK_LONG: STDOUT.print("Longclick"); break;
+      case EVENT_DOUBLE_CLICK: STDOUT.print("Doubleclick"); break;
+      case EVENT_LATCH_ON: STDOUT.print("On"); break;
+      case EVENT_LATCH_OFF: STDOUT.print("Off"); break;
+      case EVENT_STAB: STDOUT.print("Stab"); break;
+      case EVENT_SWING: STDOUT.print("Swing"); break;
+      case EVENT_SHAKE: STDOUT.print("Shake"); break;
+      case EVENT_TWIST: STDOUT.print("Twist"); break;
+      case EVENT_CLASH: STDOUT.print("Clash"); break;
     }
   }
 
 public:
   bool Event(BUTTON button, EVENT event) {
-    Serial.print("EVENT: ");
+    STDOUT.print("EVENT: ");
     if (button) {
       PrintButton(button);
-      Serial.print("-");
+      STDOUT.print("-");
     }
     PrintEvent(event);
     if (current_modifiers & ~button) {
-      Serial.print(" mods ");
+      STDOUT.print(" mods ");
       PrintButton(current_modifiers);
     }
-    if (on_) Serial.print(" ON");
-    Serial.println("");
+    if (on_) STDOUT.print(" ON");
+    STDOUT.println("");
 
 #define EVENTID(BUTTON, EVENT, MODIFIERS) (((EVENT) << 24) | ((BUTTON) << 12) | ((MODIFIERS) & ~(BUTTON)))
     if (on_ && aux_on_) {
@@ -6273,8 +6437,17 @@ public:
     bool handled = true;
     switch (EVENTID(button, event, current_modifiers | (on_ ? MODE_ON : MODE_OFF))) {
       default:
-	handled = false;
-	break;
+        handled = false;
+        break;
+
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
+	if (accel_.x < -0.15) {
+	  pointing_down_ = true;
+	} else {
+	  pointing_down_ = false;
+	}
+        break;
 
 #if NUM_BUTTONS == 0
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
@@ -6283,18 +6456,18 @@ public:
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
-	aux_on_ = false;
+        aux_on_ = false;
         On();
         break;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
 #ifdef DUAL_POWER_BUTTONS
-	aux_on_ = true;
-	On();
+        aux_on_ = true;
+        On();
 #else
-	next_preset();
+        next_preset();
 #endif
-	break;
+        break;
          
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
@@ -6303,63 +6476,69 @@ public:
 #if NUM_BUTTONS == 0
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
 #endif
-	Off();
+        Off();
         break;
 
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_OFF):
-	SaberBase::DoSpeedup();
-	break;
+        SaberBase::DoSpeedup();
+        break;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
-	SaberBase::DoForce();
-	break;
+        SaberBase::DoForce();
+        break;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
-	SaberBase::DoBlast();
-	break;
+	// Avoid the base and the very tip.
+	SaberBase::addBlast((200 + random(700)) / 1000.0);
+        SaberBase::DoBlast();
+        break;
 
-	// Lockup
+        // Lockup
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
-	if (!SaberBase::Lockup()) {
-	  SaberBase::SetLockup(true);
-	  SaberBase::DoBeginLockup();
-	} else {
-	  handled = false;
-	}
-	break;
+        if (!SaberBase::Lockup()) {
+	  if (pointing_down_) {
+	    SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+	  } else {
+	    SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+	  }
+          SaberBase::DoBeginLockup();
+        } else {
+          handled = false;
+        }
+        break;
 
       case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
-	if (SaberBase::Lockup()) {
-	  SaberBase::SetLockup(false);
-	  SaberBase::DoEndLockup();
-	} else {
-	  handled = false;
-	}
-	break;
+        if (SaberBase::Lockup()) {
+          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+          SaberBase::DoEndLockup();
+        } else {
+          handled = false;
+        }
+        break;
 
-	// Off functions
+        // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
-	StartOrStopTrack();
-	break;
+        StartOrStopTrack();
+        break;
 
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-	next_preset();
-	break;
+        next_preset();
+        break;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
-	previous_preset();
-	break;
+        previous_preset();
+        break;
 
       case EVENTID(BUTTON_AUX2, EVENT_CLICK_SHORT, MODE_OFF):
 #ifdef DUAL_POWER_BUTTONS
-	next_preset();
+        next_preset();
 #else
-	previous_preset();
+        previous_preset();
 #endif
-	break;
+        break;
     }
     if (handled) {
       current_modifiers = BUTTON_NONE;
@@ -6386,16 +6565,35 @@ public:
       Clash();
       return true;
     }
+    if (!strcmp(cmd, "blast")) {
+      // Avoid the base and the very tip.
+      SaberBase::addBlast((200 + random(700)) / 1000.0);
+      SaberBase::DoBlast();
+      return true;
+    }
     if (!strcmp(cmd, "lock") || !strcmp(cmd, "lockup")) {
-      Serial.print("Lockup ");
-      if (SaberBase::Lockup()) {
-        SaberBase::SetLockup(true);
+      STDOUT.print("Lockup ");
+      if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
+        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
         SaberBase::DoBeginLockup();
-        Serial.println("OFF");
+        STDOUT.println("ON");
       } else {
-        SaberBase::SetLockup(false);
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         SaberBase::DoEndLockup();
-        Serial.println("ON");
+        STDOUT.println("OFF");
+      }
+      return true;
+    }
+    if (!strcmp(cmd, "drag")) {
+      STDOUT.print("Drag ");
+      if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
+        SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+        SaberBase::DoBeginLockup();
+        STDOUT.println("ON");
+      } else {
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        SaberBase::DoEndLockup();
+        STDOUT.println("OFF");
       }
       return true;
     }
@@ -6413,11 +6611,11 @@ public:
       digitalWrite(amplifierPin, HIGH); // turn on the amplifier
       BufferedWavPlayer* player = GetFreeWavPlayer();
       if (player) {
-        Serial.print("Playing ");
-        Serial.println(arg);
+        STDOUT.print("Playing ");
+        STDOUT.println(arg);
         player->Play(arg);
       } else {
-        Serial.println("No available WAV players.");
+        STDOUT.println("No available WAV players.");
       }
       return true;
     }
@@ -6429,21 +6627,21 @@ public:
     }
     if (!strcmp(cmd, "volumes")) {
       for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
-        Serial.print(" Unit ");
-        Serial.print(unit);
-        Serial.print(" Volume ");
-        Serial.println(wav_players[unit].volume());
+        STDOUT.print(" Unit ");
+        STDOUT.print(unit);
+        STDOUT.print(" Volume ");
+        STDOUT.println(wav_players[unit].volume());
       }
-      Serial.print("Splicer Volume ");
-      Serial.println(audio_splicer.volume());
+      STDOUT.print("Splicer Volume ");
+      STDOUT.println(audio_splicer.volume());
       return true;
     }
     if (!strcmp(cmd, "buffered")) {
       for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
-        Serial.print(" Unit ");
-        Serial.print(unit);
-        Serial.print(" Buffered: ");
-        Serial.println(wav_players[unit].buffered());
+        STDOUT.print(" Unit ");
+        STDOUT.print(unit);
+        STDOUT.print(" Buffered: ");
+        STDOUT.println(wav_players[unit].buffered());
       }
       return true;
     }
@@ -6460,7 +6658,7 @@ public:
     }
 #endif    
     if (!strcmp(cmd, "pwd")) {
-      Serial.println(current_directory);
+      STDOUT.println(current_directory);
       return true;
     }
     if (!strcmp(cmd, "next") && arg && !strcmp(arg, "font")) {
@@ -6483,19 +6681,47 @@ public:
       SaberBase::DoMessage(arg);
       return true;
     }
+
+    if (!strcmp(cmd, "list_presets")) {
+      for (size_t i = 0; i < current_config_->num_presets; i++) {
+        Preset *p = current_config_->presets + i;
+        PrintQuotedValue("FONT", p->font);
+        PrintQuotedValue("TRACK", p->track);
+        PrintQuotedValue("NAME", p->name);
+      }
+      return true;
+    }
+
+    if (!strcmp(cmd, "get_preset")) {
+      STDOUT.println(current_preset_ - current_config_->presets);
+      return true;
+    }
+    
+    if (!strcmp(cmd, "set_preset") && arg) {
+      size_t preset = strtol(arg, NULL, 0);
+      if (preset < current_config_->num_presets) {
+        Preset *p = current_config_->presets + preset;
+        if (p != current_preset_) {
+          SetPreset(p, true);
+          SaberBase::DoNewFont();
+        }
+      }
+      return true;
+    }
+    
     return false;
   }
   void Help() override {
-    Serial.println(" clash - trigger a clash");
-    Serial.println(" on/off - turn saber on/off");
-    Serial.println(" lock - begin/end lockup");
+    STDOUT.println(" clash - trigger a clash");
+    STDOUT.println(" on/off - turn saber on/off");
+    STDOUT.println(" lock - begin/end lockup");
 #ifdef ENABLE_AUDIO
-    Serial.println(" pwd - print current directory");
-    Serial.println(" cd directory - change directory, and sound font");
-    Serial.println(" play filename - play file");
-    Serial.println(" next/prev font - walk through directories in alphabetical order");
-    Serial.println(" next/prev pre[set] - walk through presets.");
-    Serial.println(" beep - play a beep");
+    STDOUT.println(" pwd - print current directory");
+    STDOUT.println(" cd directory - change directory, and sound font");
+    STDOUT.println(" play filename - play file");
+    STDOUT.println(" next/prev font - walk through directories in alphabetical order");
+    STDOUT.println(" next/prev pre[set] - walk through presets.");
+    STDOUT.println(" beep - play a beep");
 #endif
   }
 
@@ -6557,23 +6783,23 @@ protected:
       while (!DebouncedRead()) YIELD();
       saber.Event(button_, EVENT_PRESSED);
       if (millis() - push_millis_ < 500) {
-	saber.Event(button_, EVENT_DOUBLE_CLICK);
+        saber.Event(button_, EVENT_DOUBLE_CLICK);
       } else {
-	push_millis_ = millis();
-	current_modifiers |= button_;
+        push_millis_ = millis();
+        current_modifiers |= button_;
       }
       while (DebouncedRead()) YIELD();
       saber.Event(button_, EVENT_RELEASED);
       if (current_modifiers & button_) {
-	current_modifiers &=~ button_;
-	if (millis() - push_millis_ < 500) {
-	  saber.Event(button_, EVENT_CLICK_SHORT);
-	} else {
-	  saber.Event(button_, EVENT_CLICK_LONG);
-	}
+        current_modifiers &=~ button_;
+        if (millis() - push_millis_ < 500) {
+          saber.Event(button_, EVENT_CLICK_SHORT);
+        } else {
+          saber.Event(button_, EVENT_CLICK_LONG);
+        }
       } else {
-	// someone ate our clicks
-	push_millis_ = millis() - 10000; // disable double click
+        // someone ate our clicks
+        push_millis_ = millis() - 10000; // disable double click
       }
     }
     STATE_MACHINE_END();
@@ -6588,11 +6814,11 @@ protected:
   }
 
   void Help() override {
-    Serial.print(" ");
-    Serial.print(name_);
-    Serial.print(" - clicks the ");
-    Serial.print(name_);
-    Serial.println(" button");
+    STDOUT.print(" ");
+    STDOUT.print(name_);
+    STDOUT.print(" - clicks the ");
+    STDOUT.print(name_);
+    STDOUT.println(" button");
   }
 
   const char* name_;
@@ -6633,9 +6859,9 @@ protected:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, name_)) {
       if (current_modifiers & button_) {
-	saber.Event(button_, EVENT_LATCH_ON);
+        saber.Event(button_, EVENT_LATCH_ON);
       } else {
-	saber.Event(button_, EVENT_LATCH_OFF);
+        saber.Event(button_, EVENT_LATCH_OFF);
       }
       return true;
     }
@@ -6643,11 +6869,11 @@ protected:
   }
 
   void Help() override {
-    Serial.print(" ");
-    Serial.print(name_);
-    Serial.print(" - toggles the ");
-    Serial.print(name_);
-    Serial.println(" button");
+    STDOUT.print(" ");
+    STDOUT.print(name_);
+    STDOUT.print(" - toggles the ");
+    STDOUT.print(name_);
+    STDOUT.println(" button");
   }
 
   bool Read() override {
@@ -6765,14 +6991,14 @@ public:
     snooze_touch.pinMode(pin, threshold);
 #endif
 #if defined(__MK64FX512__)
-    Serial.println("Touch sensor not supported!\n");
+    STDOUT.println("Touch sensor not supported!\n");
 #endif
     if (pin >= NUM_DIGITAL_PINS) {
-      Serial.println("touch pin out of range");
+      STDOUT.println("touch pin out of range");
       return;
     }
     if (pin2tsi[pin_] == 255) {
-      Serial.println("Not a touch-capable pin!");
+      STDOUT.println("Not a touch-capable pin!");
     } 
   }
 
@@ -6787,15 +7013,15 @@ protected:
 
   void Update(int value) {
     if (print_next_) {
-      Serial.print("Touch ");
-      Serial.print(name_);
-      Serial.print(" = ");
-      Serial.print(value);
-      Serial.print(" (");
-      Serial.print(min_);
-      Serial.print(" - ");
-      Serial.print(max_);
-      Serial.println(")");
+      STDOUT.print("Touch ");
+      STDOUT.print(name_);
+      STDOUT.print(" = ");
+      STDOUT.print(value);
+      STDOUT.print(" (");
+      STDOUT.print(min_);
+      STDOUT.print(" - ");
+      STDOUT.print(max_);
+      STDOUT.println(")");
 
       print_next_ = false;
       min_ = 10000000;
@@ -6872,85 +7098,42 @@ TouchButton* TouchButton::current_button = NULL;
 #include CONFIG_FILE
 #undef CONFIG_BUTTONS
 
-// Command-line parser. Easiest way to use it is to start the arduino
-// serial monitor.
-class Parser : Looper, StateMachine {
-public:
-  Parser() : Looper(), len_(0) {}
-
-  void Loop() override {
-    STATE_MACHINE_BEGIN();
-    while (true) {
-      while (!Serial) YIELD();
-      Serial.println("Welcome to TeensySaber, type 'help' for more info.");
-
-      while (Serial) {
-        while (!Serial.available()) YIELD();
-        int c = Serial.read();
-        if (c < 0) { len_ = 0; break; }
-        if (c == '\n') { Parse(); len_ = 0; continue; }
-        cmd_[len_] = c;
-        cmd_[len_ + 1] = 0;
-        if (len_ + 1 < (int)sizeof(cmd_)) len_++;
-      }
-    }
-    STATE_MACHINE_END();
-  }
-
-  void Parse() {
-    if (len_ == 0 || len_ == (int)sizeof(cmd_)) return;
-    char *cmd = cmd_;
-    while (*cmd == ' ') cmd++;
-    char *e = cmd;
-    while (*e != ' ' && *e) e++;
-    if (*e) {
-      *e = 0;
-      e++;  // e is now argument (if any)
-    }
+class Commands : public CommandParser {
+ public:
+  bool Parse(const char* cmd, const char* e) override {
     if (!strcmp(cmd, "help")) {
-      // Serial.println("  red, green, blue, yellow, cyan, magenta, white");
-#ifdef ENABLE_SERIALFLASH
-      Serial.println("Serial Flash memory management:");
-      Serial.println("   ls, rm <file>, format, play <file>, effects");
-      Serial.println("To upload files: tar cf - files | uuencode x >/dev/ttyACM0");
-#endif
-      Serial.println(" version - show software version");
-      Serial.println(" reset - restart software");
-      Serial.println(" effects - list current effects");
+      // STDOUT.println("  red, green, blue, yellow, cyan, magenta, white");
       CommandParser::DoHelp();
-      return;
+      return true;
     }
 
-    if (!strcmp(cmd, "end")) {
-      // End command ignored.
-      return;
-    }
 #ifdef ENABLE_SERIALFLASH
     if (!strcmp(cmd, "ls")) {
+      char tmp[128];
       SerialFlashChip::opendir();
       uint32_t size;
-      while (SerialFlashChip::readdir(cmd_, sizeof(cmd_), size)) {
-        Serial.print(cmd_);
-        Serial.print(" ");
-        Serial.println(size);
+      while (SerialFlashChip::readdir(tmp, sizeof(tmp), size)) {
+        STDOUT.print(tmp);
+        STDOUT.print(" ");
+        STDOUT.println(size);
       }
-      Serial.println("Done listing files.");
-      return;
+      STDOUT.println("Done listing files.");
+      return true;
     }
     if (!strcmp(cmd, "rm")) {
       if (SerialFlashChip::remove(e)) {
-        Serial.println("Removed.\n");
+        STDOUT.println("Removed.\n");
       } else {
-        Serial.println("No such file.\n");
+        STDOUT.println("No such file.\n");
       }
-      return;
+      return true;
     }
     if (!strcmp(cmd, "format")) {
-      Serial.print("Erasing ... ");
+      STDOUT.print("Erasing ... ");
       SerialFlashChip::eraseAll();
       while (!SerialFlashChip::ready());
-      Serial.println("Done");
-      return;
+      STDOUT.println("Done");
+      return true;
     }
 #endif
 #ifdef ENABLE_SD
@@ -6958,14 +7141,14 @@ public:
       LOCK_SD(true);
       File dir = SD.open(e ? e : current_directory);
       while (File f = dir.openNextFile()) {
-        Serial.print(f.name());
-        Serial.print(" ");
-        Serial.println(f.size());
+        STDOUT.print(f.name());
+        STDOUT.print(" ");
+        STDOUT.println(f.size());
         f.close();
       }
       LOCK_SD(false);
-      Serial.println("Done listing files.");
-      return;
+      STDOUT.println("Done listing files.");
+      return true;
     }
     if (!strcmp(cmd, "readalot")) {
       char tmp[10];
@@ -6978,8 +7161,8 @@ public:
         f.read(tmp, 10);
       }
       LOCK_SD(true);
-      Serial.println("Done");
-      return;
+      STDOUT.println("Done");
+      return true;
     }
 #endif
 #if defined(ENABLE_SD) && defined(ENABLE_SERIALFLASH)
@@ -6987,13 +7170,13 @@ public:
       LOCK_SD(true);
       File f = SD.open(e);
       if (!f) {
-        Serial.println("File not found.");
-        return;
+        STDOUT.println("File not found.");
+        return true;
       }
       int bytes = f.size();
       if (!SerialFlashChip::create(e, bytes)) {
-        Serial.println("Not enough space on serial flash chip.");
-        return;
+        STDOUT.println("Not enough space on serial flash chip.");
+        return true;
       }
       SerialFlashFile o = SerialFlashChip::open(e);
       while (bytes) {
@@ -7003,19 +7186,19 @@ public:
         bytes -= b;
       }
       LOCK_SD(false);
-      Serial.println("Cached!");
-      return;
+      STDOUT.println("Cached!");
+      return true;
     }
 #endif
     if (!strcmp(cmd, "effects")) {
       Effect::ShowAll();
-      return;
+      return true;
     }
 #if 0
     if (!strcmp(cmd, "df")) {
-      Serial.print(SerialFlashChip::capacity());
-      Serial.println(" bytes available.");
-      return;
+      STDOUT.print(SerialFlashChip::capacity());
+      STDOUT.println(" bytes available.");
+      return true;
     }
 #endif
 #ifdef ENABLE_AUDIO
@@ -7024,11 +7207,11 @@ public:
       digitalWrite(amplifierPin, HIGH); // turn on the amplifier
       dac.SetStream(&saber_synth);
       saber_synth.on_ = true;
-      return;
+      return true;
     }
     if (!strcmp(cmd, "tof")) {
       saber_synth.on_ = false;
-      return;
+      return true;
     }
 #endif
     if (!strcmp(cmd, "dumpwav")) {
@@ -7039,19 +7222,19 @@ public:
       for (int j = 0; j < 64; j++) {
         int k = wav_players[0].read(tmp, NELEM(tmp));
         for (int i = 0; i < k; i++) {
-          Serial.print(tmp[i]);
-          Serial.print(" ");
+          STDOUT.print(tmp[i]);
+          STDOUT.print(" ");
         }
-        Serial.println("");
+        STDOUT.println("");
       }
       wav_players[0].Stop();
-      return;
+      return true;
     }
 #endif
     if (!strcmp(cmd, "twiddle")) {
       int pin = strtol(e, NULL, 0);
-      Serial.print("twiddling ");
-      Serial.println(pin);
+      STDOUT.print("twiddling ");
+      STDOUT.println(pin);
       pinMode(pin, OUTPUT);
       for (int i = 0; i < 1000; i++) {
         digitalWrite(pin, HIGH);
@@ -7059,13 +7242,13 @@ public:
         digitalWrite(pin, LOW);
         delay(10);
       }
-      Serial.println("done");
-      return;
+      STDOUT.println("done");
+      return true;
     }
     if (!strcmp(cmd, "twiddle2")) {
       int pin = strtol(e, NULL, 0);
-      Serial.print("twiddling ");
-      Serial.println(pin);
+      STDOUT.print("twiddling ");
+      STDOUT.println(pin);
       pinMode(pin, OUTPUT);
       for (int i = 0; i < 1000; i++) {
         for (int i = 0; i < 500; i++) {
@@ -7076,15 +7259,15 @@ public:
         }
         delay(10);
       }
-      Serial.println("done");
-      return;
+      STDOUT.println("done");
+      return true;
     }
     if (!strcmp(cmd, "malloc")) {
-      Serial.print("alloced: ");
-      Serial.println(mallinfo().uordblks);
-      Serial.print("Free: ");
-      Serial.println(mallinfo().fordblks);
-      return;
+      STDOUT.print("alloced: ");
+      STDOUT.println(mallinfo().uordblks);
+      STDOUT.print("Free: ");
+      STDOUT.println(mallinfo().fordblks);
+      return true;
     }
     if (!strcmp(cmd, "top")) {
       // TODO: list cpu usage for various objects.
@@ -7092,40 +7275,147 @@ public:
         (double)(audio_dma_interrupt_cycles +
                  wav_interrupt_cycles +
                  loop_cycles);
-      Serial.print("Audio DMA: ");
-      Serial.print(audio_dma_interrupt_cycles * 100.0 / total_cycles);
-      Serial.println("%");
-      Serial.print("Wav reading: ");
-      Serial.print(wav_interrupt_cycles * 100.0 / total_cycles);
-      Serial.println("%");
-      Serial.print("LOOP: ");
-      Serial.print(loop_cycles * 100.0 / total_cycles);
-      Serial.println("%");
-      Serial.print("Global loops / second: ");
+      STDOUT.print("Audio DMA: ");
+      STDOUT.print(audio_dma_interrupt_cycles * 100.0 / total_cycles);
+      STDOUT.println("%");
+      STDOUT.print("Wav reading: ");
+      STDOUT.print(wav_interrupt_cycles * 100.0 / total_cycles);
+      STDOUT.println("%");
+      STDOUT.print("LOOP: ");
+      STDOUT.print(loop_cycles * 100.0 / total_cycles);
+      STDOUT.println("%");
+      STDOUT.print("Global loops / second: ");
       global_loop_counter.Print();
-      Serial.println("");
+      STDOUT.println("");
       SaberBase::DoTop();
       noInterrupts();
       audio_dma_interrupt_cycles = 0;
       wav_interrupt_cycles = 0;
       loop_cycles = 0;
       interrupts();
-      return;
+      return true;
     }
     if (!strcmp(cmd, "version")) {
-      Serial.println(version);
-      return;
+      STDOUT.println(version);
+      return true;
     }
     if (!strcmp(cmd, "reset")) {
       SCB_AIRCR = 0x05FA0004;
-      Serial.println("Reset failed.");
-      return;
+      STDOUT.println("Reset failed.");
+      return true;
     }
-    if (CommandParser::DoParse(cmd, e)) {
-      return;
+    return false;
+  }
+
+  void Help() override {
+    STDOUT.println(" version - show software version");
+    STDOUT.println(" reset - restart software");
+    STDOUT.println(" effects - list current effects");
+#ifdef ENABLE_SERIALFLASH
+    STDOUT.println("Serial Flash memory management:");
+    STDOUT.println("   ls, rm <file>, format, play <file>, effects");
+    STDOUT.println("To upload files: tar cf - files | uuencode x >/dev/ttyACM0");
+#endif
+  }
+};
+
+Commands commands;
+
+
+class SerialAdapter {
+public:
+  static void begin() { Serial.begin(115200); }
+  static bool Connected() { return !!Serial; }
+  static bool AlwaysConnected() { return false; }
+  static Stream& stream() { return Serial; }
+  static const char* response_header() { return ""; }
+  static const char* response_footer() { return ""; }
+};
+
+class Serial3Adapter {
+public:
+  static void begin() { Serial3.begin(115200); }
+  static bool Connected() { return true; }
+  static bool AlwaysConnected() { return true; }
+  static Stream& stream() { return Serial3; }
+  static const char* response_header() { return "-+=BEGIN_OUTPUT=+-\n"; }
+  static const char* response_footer() { return "-+=END_OUTPUT=+-\n"; }
+};
+
+// Command-line parser. Easiest way to use it is to start the arduino
+// serial monitor.
+template<class SA> /* SA = Serial Adapter */
+class Parser : Looper, StateMachine {
+public:
+  Parser() : Looper(), len_(0) {
+    SA::begin();
+  }
+
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+      while (!SA::Connected()) YIELD();
+      if (!SA::AlwaysConnected()) {
+        STDOUT.println("Welcome to TeensySaber, type 'help' for more info.");
+      }
+
+      while (SA::Connected()) {
+        while (!SA::stream().available()) YIELD();
+        int c = SA::stream().read();
+        if (c < 0) { len_ = 0; break; }
+#if 0
+	if (monitor.IsMonitoring(Monitoring::MonitorSerial) &&
+	    default_output != &SA::stream()) {
+	  default_output->print("SER: ");
+	  default_output->println(c, HEX);
+        }
+#endif	
+        if (c == '\n') { ParseLine(); len_ = 0; continue; }
+        cmd_[len_] = c;
+        cmd_[len_ + 1] = 0;
+        if (len_ + 1 < (int)sizeof(cmd_)) len_++;
+      }
     }
-    Serial.print("Whut? :");
-    Serial.println(cmd);
+    STATE_MACHINE_END();
+  }
+
+  void ParseLine() {
+    if (len_ == 0 || len_ == (int)sizeof(cmd_)) return;
+    while (len_ > 0 && (cmd_[len_-1] == '\r' || cmd_[len_-1] == ' ')) {
+      len_--;
+      cmd_[len_] = 0;
+    }
+    stdout_output = &SA::stream();
+    STDOUT.print(SA::response_header());
+    char *cmd = cmd_;
+    while (*cmd == ' ') cmd++;
+    char *e = cmd;
+    while (*e != ' ' && *e) e++;
+    if (*e) {
+      *e = 0;
+      e++;  // e is now argument (if any)
+    }
+    if (monitor.IsMonitoring(Monitoring::MonitorSerial) &&
+        default_output != &SA::stream()) {
+      default_output->print("Received command: ");
+      default_output->print(cmd);
+      if (e) {
+        default_output->print(" arg: ");
+        default_output->print(e);
+      }
+      default_output->print(" HEX ");
+      for (size_t i = 0; i < strlen(cmd); i++) {
+        default_output->print(cmd[i], HEX);
+        default_output->print(" ");
+      }
+      default_output->println("");
+    }
+    if (!CommandParser::DoParse(cmd, e)) {
+      STDOUT.print("Whut? :");
+      STDOUT.println(cmd);
+    }
+    STDOUT.print(SA::response_footer());
+    stdout_output = default_output;
   }
 
 private:
@@ -7133,7 +7423,77 @@ private:
   char cmd_[256];
 };
 
-Parser parser;
+Parser<SerialAdapter> parser;
+
+#ifdef ENABLE_SERIAL
+Parser<Serial3Adapter> serial_parser;
+
+class SerialCommands : public CommandParser {
+ public:
+  void HM1XCmd(const char* cmd) {
+    STDOUT.print("Sending: ");
+    STDOUT.println(cmd);
+    STDOUT.print("Reply: ");
+    Serial3.print(cmd);
+    uint32_t last_char = millis();
+    uint32_t timeout = 300;
+    while (millis() - last_char < timeout) {
+      if (Serial3.available()) {
+	last_char = millis();
+	timeout = 100;
+	STDOUT.write(Serial3.read());
+      }
+    }
+    STDOUT.println("");
+  }
+  bool Parse(const char* cmd, const char* e) override {
+#if 0
+    if (!strcmp(cmd, "hm1Xpin")) {
+      // Doesn't work, pine is 4 chars, pinb is 6
+      HM1XCmd("AT+AUTH1");
+      HM1XCmd("AT+DUAL1");
+      Serial3.write("AT+PINE");
+      Serial3.println(e);
+      Serial3.write("AT+PINB");
+      Serial3.println(e);
+      return true;
+    }
+    if (!strcmp(cmd, "hm1Xname")) {
+      Serial3.write("AT+NAME");
+      Serial3.println(e);
+      Serial3.write("AT+NAMB");
+      Serial3.println(e);
+      return true;
+    }
+#endif
+    if (cmd[0] == 'A' && cmd[1] == 'T') {
+      HM1XCmd(cmd);
+      return true;
+    }
+    if (!strcmp(cmd, "send") && e) {
+      Serial3.println(e);
+      STDOUT.print("Wrote: ");
+      STDOUT.println(e);
+      return true;
+    }
+    if (!strcmp(cmd, "make_default_console")) {
+      default_output = stdout_output;
+      return true;
+    }
+    return false;
+  }
+  void Help() override {
+    STDOUT.println(" hm13pin PIN - configure HM13 PIN");
+    STDOUT.println(" hm13name NAME - configure HM13 NAME");
+    if (default_output != stdout_output)
+      STDOUT.println(" make_default_console - make this connection the default connection");
+  }
+};
+
+SerialCommands serial_commands;
+
+#endif
+
 
 #ifdef ENABLE_MOTION
 
@@ -7159,7 +7519,7 @@ public:
         break;
       }
       if (clock_detected && !data_detected) {
-        Serial.println("I2C pending data detected, trying to clear...");
+        STDOUT.println("I2C pending data detected, trying to clear...");
         pinMode(i2cClockPin, OUTPUT);
         for (i = 0; i < 100; i++) {
           SLEEP_MICROS(1);
@@ -7174,7 +7534,7 @@ public:
       }
     }
 
-    Serial.println("I2C pullups found, initializing...");
+    STDOUT.println("I2C pullups found, initializing...");
 
     Wire.begin();
     Wire.setClock(400000);
@@ -7412,9 +7772,9 @@ public:
   }
 
   void SB_Top() override {
-    Serial.print("display fps: ");
+    STDOUT.print("display fps: ");
     loop_counter_.Print();
-    Serial.println("");
+    STDOUT.println("");
   }
 
   void Loop() override {
@@ -7455,7 +7815,7 @@ public:
 
     Send(DISPLAYON);                     //--turn on oled panel
 
-    Serial.println("Display initialized.");
+    STDOUT.println("Display initialized.");
     screen_ = SCREEN_STARTUP;
     displayed_when_ = millis();
     
@@ -7478,10 +7838,10 @@ public:
           Send(1); // Page end address
           break;
         default:
-          Serial.println("Unknown display height");
+          STDOUT.println("Unknown display height");
       }
 
-      //Serial.println(TWSR & 0x3, DEC);
+      //STDOUT.println(TWSR & 0x3, DEC);
         
       // I2C
       for (i=0; i < WIDTH * HEIGHT / 8; ) {
@@ -7619,7 +7979,7 @@ public:
     while (1) {
       unsigned char databuffer[6];
 
-      Serial.print("Motion setup ... ");
+      STDOUT.print("Motion setup ... ");
       writeByte(PWR_MGMT_1, 0); // wake up
       writeByte(CONFIG, 1);     // digital filter config ~180Hz, 1khz rate, 2ms delay
       writeByte(SMPLRT_DIV, 0); // sample rate = 1khz / 1
@@ -7628,9 +7988,9 @@ public:
       writeByte(INT_ENABLE, 1); // enable data ready interrupt
 
       if (readByte(WHO_AM_I) == 0x86) {
-        Serial.println("done.");
+        STDOUT.println("done.");
       } else {
-        Serial.println("failed.");
+        STDOUT.println("failed.");
       }
 
       while (1) {
@@ -7638,7 +7998,7 @@ public:
         int status_reg = readByte(INT_STATUS);
         if (status_reg == -1) {
           // motion fail, reboot motion chip.
-          Serial.println("Motion chip timeout, reboot motion chip!");
+          STDOUT.println("Motion chip timeout, reboot motion chip!");
           // writeByte(CTRL3_C, 1);
           delay(20);
           break;
@@ -7659,11 +8019,11 @@ public:
           // Temp data available
           // TODO: Temp Shutdown
           if (readBytes(TEMP_OUT_H, databuffer, 2) == 2) {
-	    int16_t temp_data = (databuffer[0] << 8) + databuffer[1];
+            int16_t temp_data = (databuffer[0] << 8) + databuffer[1];
             float temp = temp_data / 340.0 + 36.53;
             if (monitor.ShouldPrint(Monitoring::MonitorTemp)) {
-              Serial.print("TEMP: ");
-              Serial.println(temp);
+              STDOUT.print("TEMP: ");
+              STDOUT.println(temp);
             }
           }
         }
@@ -7776,7 +8136,7 @@ public:
     while (1) {
       unsigned char databuffer[6];
 
-      Serial.print("Motion setup ... ");
+      STDOUT.print("Motion setup ... ");
 
       writeByte(CTRL1_XL, 0x88);  // 1.66kHz accel, 4G range
       writeByte(CTRL2_G, 0x8C);   // 1.66kHz gyro, 2000 dps
@@ -7789,9 +8149,9 @@ public:
       writeByte(CTRL9_XL, 0x38);  // accel xyz enable
       writeByte(CTRL10_C, 0x38);  // gyro xyz enable
       if (readByte(WHO_AM_I) == 105) {
-        Serial.println("done.");
+        STDOUT.println("done.");
       } else {
-        Serial.println("failed.");
+        STDOUT.println("failed.");
       }
 
       while (1) {
@@ -7799,7 +8159,7 @@ public:
         int status_reg = readByte(STATUS_REG);
         if (status_reg == -1) {
           // motion fail, reboot motion chip.
-          Serial.println("Motion chip timeout, reboot motion chip!");
+          STDOUT.println("Motion chip timeout, reboot motion chip!");
           writeByte(CTRL3_C, 1);
           delay(20);
           break;
@@ -7810,8 +8170,8 @@ public:
           if (readBytes(OUT_TEMP_L, (uint8_t*)&temp_data, 2) == 2) {
             float temp = 25.0f + temp_data * (1.0f / 16.0f);
             if (monitor.ShouldPrint(Monitoring::MonitorTemp)) {
-              Serial.print("TEMP: ");
-              Serial.println(temp);
+              STDOUT.print("TEMP: ");
+              STDOUT.println(temp);
             }
           }
         }
@@ -7964,10 +8324,10 @@ public:
 
     while (1) {
       unsigned char databuffer[6];
-      Serial.print("Accel setup ... ");
+      STDOUT.print("Accel setup ... ");
 
       if (readByte(WHO_AM_I) != 0xC7) {
-        Serial.print("Failed.");
+        STDOUT.print("Failed.");
         SLEEP(1000);
         continue;
       }
@@ -7984,14 +8344,14 @@ public:
       // writeByte(CTRL_REG1, 0x15);  // 100Hz A+M 
       writeByte(CTRL_REG1, 0x01);  // 800Hz Accel only
 
-      Serial.println(" Done");
+      STDOUT.println(" Done");
 
       while (1) {
         YIELD();
         int status = readByte(STATUS);
         if (status == -1) {
           // motion fail, reboot gyro chip.
-          Serial.println("Motion chip timeout, reboot motion chip!");
+          STDOUT.println("Motion chip timeout, reboot motion chip!");
           // writeByte(CTRL3_C, 1);
           delay(20);
           break;
@@ -8047,10 +8407,10 @@ public:
     while (1) {
       unsigned char databuffer[6];
 
-      Serial.print("Gyro setup ... ");
+      STDOUT.print("Gyro setup ... ");
 
       if (readByte(WHO_AM_I) != 0xD7) {
-        Serial.println("Failed.");
+        STDOUT.println("Failed.");
         SLEEP(1000);
         return;
       }
@@ -8061,14 +8421,14 @@ public:
       writeByte(CTRL_REG0, 0x00);
       writeByte(CTRL_REG1, 0x02);
 
-      Serial.println(" Done");
+      STDOUT.println(" Done");
 
       while (1) {
         YIELD();
         int status = readByte(STATUS);
         if (status == -1) {
           // motion fail, reboot gyro chip.
-          Serial.println("Motion chip timeout, reboot motion chip!");
+          STDOUT.println("Motion chip timeout, reboot motion chip!");
           // writeByte(CTRL3_C, 1);
           delay(20);
           break;
@@ -8098,43 +8458,43 @@ public:
     if (time_to_dump_) {
       time_to_dump_--;
       if (time_to_dump_ == 0) {
-	LOCK_SD(true);
-	char file_name[16];
-	size_t file_num = last_file_ + 1;
+        LOCK_SD(true);
+        char file_name[16];
+        size_t file_num = last_file_ + 1;
 
-	while (true) {
-	  char num[16];
-	  itoa(file_num, num, 10);
-	  strcpy(file_name, "CLS");
-	  while(strlen(num) + strlen(file_name) < 8) strcat(file_name, "0");
-	  strcat(file_name, num);
-	  strcat(file_name, ".CSV");
-	  
-	  int last_skip = file_num - last_seen_;
-	  if (SD.exists(file_name)) {
-	    last_file_ = file_num;
-	    file_num += last_skip * 2;
-	    continue;
-	  }
+        while (true) {
+          char num[16];
+          itoa(file_num, num, 10);
+          strcpy(file_name, "CLS");
+          while(strlen(num) + strlen(file_name) < 8) strcat(file_name, "0");
+          strcat(file_name, num);
+          strcat(file_name, ".CSV");
+          
+          int last_skip = file_num - last_seen_;
+          if (SD.exists(file_name)) {
+            last_file_ = file_num;
+            file_num += last_skip * 2;
+            continue;
+          }
 
-	  if (file_num - last_file_ > 1) {
-	    file_num = last_file_ + last_skip / 2;
-	    continue;
-	  }
-	  break;
-	}
-	File f = SD.open(file_name, FILE_WRITE);
-	for (size_t i = 0; i < NELEM(buffer_); i++) {
-	  const Vec3& v = buffer_[(pos_ + i) % NELEM(buffer_)];
-	  f.print(v.x);
-	  f.print(", ");
-	  f.print(v.y);
-	  f.print(", ");
-	  f.print(v.z);
-	  f.print("\n");
-	}
-	f.close();
-	LOCK_SD(false);
+          if (file_num - last_file_ > 1) {
+            file_num = last_file_ + last_skip / 2;
+            continue;
+          }
+          break;
+        }
+        File f = SD.open(file_name, FILE_WRITE);
+        for (size_t i = 0; i < NELEM(buffer_); i++) {
+          const Vec3& v = buffer_[(pos_ + i) % NELEM(buffer_)];
+          f.print(v.x);
+          f.print(", ");
+          f.print(v.y);
+          f.print(", ");
+          f.print(v.z);
+          f.print("\n");
+        }
+        f.close();
+        LOCK_SD(false);
       }
     }
   }
@@ -8194,7 +8554,7 @@ protected:
       while (Active()) YIELD();
       SLEEP(20);
       if (Active()) continue;
-      Serial.println("Amplifier off.");
+      STDOUT.println("Amplifier off.");
       digitalWrite(amplifierPin, LOW); // turn the amplifier off
       while (!Active()) YIELD();
     }
@@ -8215,22 +8575,22 @@ protected:
     if (!strcmp(cmd, "whatison")) {
       bool on = false;
       SaberBase::DoIsOn(&on);
-      Serial.print("Saber bases: ");
-      Serial.println(on ? "On" : "Off");
-      Serial.print("Audio splicer: ");
-      Serial.println(audio_splicer.isPlaying() ? "On" : "Off");
-      Serial.print("Beeper: ");
-      Serial.println(beeper.isPlaying() ? "On" : "Off");
-      Serial.print("Talker: ");
-      Serial.println(talkie.isPlaying() ? "On" : "Off");
+      STDOUT.print("Saber bases: ");
+      STDOUT.println(on ? "On" : "Off");
+      STDOUT.print("Audio splicer: ");
+      STDOUT.println(audio_splicer.isPlaying() ? "On" : "Off");
+      STDOUT.print("Beeper: ");
+      STDOUT.println(beeper.isPlaying() ? "On" : "Off");
+      STDOUT.print("Talker: ");
+      STDOUT.println(talkie.isPlaying() ? "On" : "Off");
       for (size_t i = 0; i < NELEM(wav_players); i++) {
-        Serial.print("Wav player ");
-        Serial.print(i);
-        Serial.print(": ");
-        Serial.print(wav_players[i].isPlaying() ? "On" : "Off");
-        Serial.print(" (eof =  ");
-        Serial.print(wav_players[i].eof());
-        Serial.println(")");
+        STDOUT.print("Wav player ");
+        STDOUT.print(i);
+        STDOUT.print(": ");
+        STDOUT.print(wav_players[i].isPlaying() ? "On" : "Off");
+        STDOUT.print(" (eof =  ");
+        STDOUT.print(wav_players[i].eof());
+        STDOUT.println(")");
       }
       return true;
     }
@@ -8238,7 +8598,7 @@ protected:
   }
 
   void Help() {
-    Serial.println(" amp on/off - turn amplifier on or off");
+    STDOUT.println(" amp on/off - turn amplifier on or off");
   }
 };
 
@@ -8286,9 +8646,9 @@ void setup() {
   bool sd_card_found = SD.begin(sdCardSelectPin);
 #endif
   if (!sd_card_found) {
-    Serial.println("No sdcard found.");
+    STDOUT.println("No sdcard found.");
   } else {
-    Serial.println("Sdcard found..");
+    STDOUT.println("Sdcard found..");
   }
 #endif
   // Time to identify the blade.
@@ -8509,30 +8869,30 @@ private:
   void PrintPacket(const usb_packet_t *x) {
 #if 0
     for (int i = 0; i < x->len; i++) {
-      Serial.print("0123456789ABCDEF"[x->buf[i] >> 4]);
-      Serial.print("0123456789ABCDEF"[x->buf[i] & 0xf]);
-      if ((i & 3) == 3) Serial.print(" ");
+      STDOUT.print("0123456789ABCDEF"[x->buf[i] >> 4]);
+      STDOUT.print("0123456789ABCDEF"[x->buf[i] & 0xf]);
+      if ((i & 3) == 3) STDOUT.print(" ");
     } 
-    Serial.println("");
+    STDOUT.println("");
 #endif
 #if 0
     MTPContainer *tmp = (struct MTPContainer*)(x->buf);
-    Serial.print(" len = ");
-    Serial.print(tmp->len, HEX);
-    Serial.print(" type = ");
-    Serial.print(tmp->type, HEX);
-    Serial.print(" op = ");
-    Serial.print(tmp->op, HEX);
-    Serial.print(" transaction_id = ");
-    Serial.print(tmp->transaction_id, HEX);
+    STDOUT.print(" len = ");
+    STDOUT.print(tmp->len, HEX);
+    STDOUT.print(" type = ");
+    STDOUT.print(tmp->type, HEX);
+    STDOUT.print(" op = ");
+    STDOUT.print(tmp->op, HEX);
+    STDOUT.print(" transaction_id = ");
+    STDOUT.print(tmp->transaction_id, HEX);
     for (int i = 0; i * 4 < x->len - 12; i ++) {
-      Serial.print(" p");
-      Serial.print(i);
-      Serial.print(" = ");
-      Serial.print(tmp->params[i], HEX);
+      STDOUT.print(" p");
+      STDOUT.print(i);
+      STDOUT.print(" = ");
+      STDOUT.print(tmp->params[i], HEX);
     }
-    Serial.println("");
-    Serial.flush();
+    STDOUT.println("");
+    STDOUT.flush();
     delay(10);
 #endif
   }

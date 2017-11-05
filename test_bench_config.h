@@ -39,6 +39,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_MOTION
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
+#define ENABLE_SERIAL
 
 // FASTLED is experimental and untested right now
 // #define ENABLE_FASTLED
@@ -62,20 +63,19 @@ Preset testing_presets[] = {
 #endif
   { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>(),
     "=RainboW++\n++BladE++" },
-  { "graflex4", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>() },
-  { "graflex4", "tracks/cantina.wav", StyleNormalPtr<BLUE, RED, 300, 800>() },
-  { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>() },
-  { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>() },
-  { "graflex5", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>() },
-  { "igniter/font4", "tracks/duel.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>() },
-  { "graflex4", "tracks/duel.wav", StyleNormalPtr<WHITE, RED, 300, 800>() },
-  { "graflex4", "tracks/walls.wav", StyleNormalPtr<YELLOW, BLUE, 300, 800>() },
-  { "graflex4", "tracks/title.wav", StyleNormalPtr<MAGENTA, WHITE, 300, 800>() },
-  { "graflex5", "tracks/cantina.wav", StyleRainbowPtr<300, 800>() },
-  { "graflex5", "tracks/cantina.wav", StyleStrobePtr<WHITE, RED, 15, 300, 800>() },
+  { "graflex4", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>(), "cyan" },
+  { "graflex4", "tracks/cantina.wav", StyleNormalPtr<BLUE, RED, 300, 800>(), "blue" },
+  { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>(), "red" },
+  { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>(), "red" },
+  { "graflex5", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>(), "blue" },
+  { "igniter/font4", "tracks/duel.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>(), "green" },
+  { "graflex4", "tracks/duel.wav", StyleNormalPtr<WHITE, RED, 300, 800>(), "white" },
+  { "graflex4", "tracks/walls.wav", StyleNormalPtr<YELLOW, BLUE, 300, 800>(), "yellow" },
+  { "graflex4", "tracks/title.wav", StyleNormalPtr<MAGENTA, WHITE, 300, 800>(), "magenta" },
+  { "graflex5", "tracks/cantina.wav", StyleStrobePtr<WHITE, RED, 15, 300, 800>(), "white" },
 //  { "graflex5", "tracks/cantina.wav", &style_pov },
 
-  { "charging", "tracks/duel.wav", &style_charging },
+  { "charging", "tracks/duel.wav", &style_charging, "charging" },
 };
 
 BladeConfig blades[] = {
