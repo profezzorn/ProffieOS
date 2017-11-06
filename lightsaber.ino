@@ -87,8 +87,6 @@
 
 
 // TODO LIST:
-//   Drag effect
-//   Blast effect
 //   stab detect/effect
 // Make sure that sound is off before doing file command
 // make "charging style" prevent you from turning the saber "on"
@@ -99,7 +97,6 @@
 //   stab effect
 // Blade stuff
 //    better clash
-//    blast effect
 // Implement menues:
 //    select sound font
 //    select color
@@ -2272,6 +2269,9 @@ EFFECT(slsh);
 EFFECT(swingl);  // Looped swing, LOW
 EFFECT(swingh);  // Looped swing, HIGH
 
+// Drag effect, replaces "lock/lockup" in drag mode if present.
+EFFECT(drag);
+
 #ifdef ENABLE_AUDIO
 
 // Simple upsampler code, doubles the number of samples with
@@ -3000,7 +3000,10 @@ public:
   void SB_NewFont() override { audio_splicer.Play(&font,  NULL); }
 
   void SB_BeginLockup() override {
-    if (lockup.files_found()) {
+    if (SaberBase::Lockup() == SaberBase::LOCKUP_DRAG &&
+	drag.files_found()) {
+      audio_splicer.Play(&drag, &drag);
+    } else if (lockup.files_found()) {
       audio_splicer.Play(&lockup, &lockup);
     }
   }
@@ -3182,10 +3185,15 @@ public:
 
   BufferedWavPlayer* lock_player_ = NULL;
   void SB_BeginLockup() override {
+    Effect* e = &lock;
+    if (SaberBase::Lockup() == SaberBase::LOCKUP_DRAG &&
+	drag.files_found()) {
+      e = &drag;
+    }
     if (!lock_player_) {
-      lock_player_ = Play(&lock);
+      lock_player_ = Play(e);
       if (lock_player_) {
-        lock_player_->PlayLoop(&lock);
+        lock_player_->PlayLoop(e);
       }
     }
   }
