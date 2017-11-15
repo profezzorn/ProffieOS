@@ -276,10 +276,10 @@ void PrintQuotedValue(const char *name, const char* str) {
       switch (*str) {
         case '\n':
           STDOUT.print("\\n");
-	  break;
+          break;
         case '\\':
           STDOUT.write('\\');
-	default:
+        default:
           STDOUT.write(*str);
       }
       ++str;
@@ -437,6 +437,7 @@ public:
     ScopedCycleCounter cc(loop_cycles);
     CHECK_LL(Looper, loopers, next_looper_);
     for (Looper *l = loopers; l; l = l->next_looper_) {
+      ScopedCycleCounter cc2(l->cycles_);
       l->Loop();
     }
     global_loop_counter.Update();
@@ -446,11 +447,22 @@ public:
       l->Setup();
     }
   }
+  static void LoopTop(double total_cycles) {
+    for (Looper *l = loopers; l; l = l->next_looper_) {
+      STDOUT.print(l->name());
+      STDOUT.print(" loop: ");
+      STDOUT.print(l->cycles_ * 100.0 / total_cycles);
+      STDOUT.println("%");
+      l->cycles_ = 0;
+    }
+  }
 
 protected:
+  virtual const char* name() = 0;
   virtual void Loop() = 0;
   virtual void Setup() {}
 private:
+  uint64_t cycles_ = 0;
   Looper* next_looper_;
 };
 
@@ -506,6 +518,7 @@ private:
 class MonitorHelper : Looper, CommandParser {
 public:
   MonitorHelper() : Looper(), CommandParser() {}
+  const char* name() override { return "MonitorHelper"; }
   
 protected:
   void Loop() { monitor.Loop(); }
@@ -683,7 +696,7 @@ public:
 
   static size_t NumBlasts() {
     while (num_blasts_ &&
-	   micros() - blasts_[num_blasts_-1].start_micros > 5000000) {
+           micros() - blasts_[num_blasts_-1].start_micros > 5000000) {
       num_blasts_--;
     }
     return num_blasts_;
@@ -1186,6 +1199,7 @@ public:
       streams_[i] = nullptr;
     }
   }
+  const char* name() override { return "AudioDynamicMixer"; }
 
   // Calculate square root of |x|, using the previous square
   // root as a guess.
@@ -1643,6 +1657,8 @@ Talkie talkie;
 
 class LightSaberSynth : public AudioStream, Looper {
 public:
+  const char* name() override { return "LightSaberSynth"; }
+
 //  WaveForm sin_a_;
 //  WaveForm sin_b_;
   WaveForm buzz_;
@@ -2114,7 +2130,11 @@ class Effect {
 
   bool Play(char *filename) {
     int num_files = files_found();
-    if (num_files < 1) return false;
+    if (num_files < 1) {
+      default_output->print("No sounds found: ");
+      default_output->println(name_);
+      return false; 
+    }
     int n = rand() % num_files;
     strcpy(filename, current_directory);
     strcat(filename, name_);
@@ -2818,6 +2838,7 @@ size_t WhatUnit(class BufferedWavPlayer* player) {
 class AudioSplicer : public AudioStream, Looper {
 public:
   AudioSplicer() : Looper(NOLINK) {}
+  const char* name() override { return "AudioSplicer"; }
 
   int read(int16_t* data, int elements) override {
     int16_t *p = data;
@@ -3001,7 +3022,7 @@ public:
 
   void SB_BeginLockup() override {
     if (SaberBase::Lockup() == SaberBase::LOCKUP_DRAG &&
-	drag.files_found()) {
+        drag.files_found()) {
       audio_splicer.Play(&drag, &drag);
     } else if (lockup.files_found()) {
       audio_splicer.Play(&lockup, &lockup);
@@ -3187,7 +3208,7 @@ public:
   void SB_BeginLockup() override {
     Effect* e = &lock;
     if (SaberBase::Lockup() == SaberBase::LOCKUP_DRAG &&
-	drag.files_found()) {
+        drag.files_found()) {
       e = &drag;
     }
     if (!lock_player_) {
@@ -3389,6 +3410,7 @@ LoopedSwingWrapper looped_swing_wrapper;
 
 class BatteryMonitor : Looper, CommandParser {
 public:
+  const char* name() override { return "BatteryMonitor"; }
   float battery_now() {
     // This is the volts on the battery monitor pin.
     float volts = 3.3 * analogRead(batteryLevelPin) / 1024.0;
@@ -4226,11 +4248,11 @@ public:
       if (blade->clash()) {
          config = clash_;
       } else if (On(blade)) {
-	if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
-	  config = normal_;
-	} else {
-	  config = lockup_;
-	}
+        if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
+          config = normal_;
+        } else {
+          config = lockup_;
+        }
       } else {
          config = normal_;
          config.intensity_base = 0;
@@ -4628,13 +4650,13 @@ public:
     // Good luck desciphering this one...
     switch (SaberBase::Lockup()) {
       case SaberBase::LOCKUP_DRAG:
-	if (led >= drag_cutoff_) {
-	  case SaberBase::LOCKUP_NORMAL:
-	    return lockup_.getColor(led);
-	} else {
-	  case SaberBase::LOCKUP_NONE:
-	    break;
-	}
+        if (led >= drag_cutoff_) {
+          case SaberBase::LOCKUP_NORMAL:
+            return lockup_.getColor(led);
+        } else {
+          case SaberBase::LOCKUP_NONE:
+            break;
+        }
     }
     return base_.getColor(led);
   }
@@ -4651,23 +4673,24 @@ public:
     base_.run(blade);
     blast_.run(blade);
     num_leds_ = blade->num_leds();
+    num_blasts_ = SaberBase::NumBlasts();
   }
   OverDriveColor getColor(int led) {
     OverDriveColor base = base_.getColor(led);
+    if (num_blasts_ == 0) return base;
     float mix = 0.0;
-    for (size_t i = 0; i < SaberBase::NumBlasts(); i++) {
+    for (size_t i = 0; i < num_blasts_; i++) {
       // TODO(hubbe): Use sin_table and avoid floats
       const SaberBase::Blast b = SaberBase::getBlast(i);
       float x = (b.location - led/(float)num_leds_) * 30.0;
       uint32_t T = micros() - b.start_micros;
       float t = 0.5 + T / 200000.0;
       if (x == 0.0) {
-	mix += 1.0f / (t*t);
+        mix += 1.0f / (t*t);
       } else {
-	mix += sinf(x / (t*t)) / x;
+        mix += sinf(x / (t*t)) / x;
       }
     }
-    if (mix < 0.0) return base;
     OverDriveColor blast = blast_.getColor(led);
     base.c = base.c.mix(blast.c, min(mix, 1.0) * 256);
     return base;
@@ -4676,6 +4699,7 @@ private:
   BASE base_;
   BLAST blast_;
   int num_leds_;
+  size_t num_blasts_;
 };
 
 template<class T, class STROBE_COLOR, int STROBE_FREQUENCY, int STROBE_MILLIS = 1>
@@ -4904,8 +4928,8 @@ template<class base_color,
           class clash_color,
           int out_millis,
           int in_millis,
-	 class lockup_flicker_color = WHITE,
-	 class blast_color = WHITE>
+         class lockup_flicker_color = WHITE,
+         class blast_color = WHITE>
 BladeStyle *StyleNormalPtr() {
   typedef AudioFlicker<base_color, lockup_flicker_color> AddFlicker;
   typedef Blast<base_color, blast_color> AddBlast;
@@ -5110,6 +5134,7 @@ public:
     pin_(pin),
     power_(power) {
   }
+  const char* name() override { return "WS2811_Blade"; }
 
   void Power(bool on) {
     power_->Power(on);
@@ -5267,6 +5292,7 @@ public:
     num_leds_(num_leds),
     power_(power) {
   }
+  const char* name() override { return "FASTLED_Blade"; }
 
   void Power(bool on) {
     power_->Power(on);
@@ -5509,6 +5535,7 @@ public:
     pins_[2].Init(pin3, c3);
     pins_[3].Init(pin4, c4);
   }
+  const char* name() override { return "Simple_Blade"; }
 
   void Activate() override {
     STDOUT.println("Simple Blade");
@@ -5619,6 +5646,7 @@ public:
     c_(c) {
     clash_pin_.Init(clash_pin, clash_led);
   }
+  const char* name() override { return "String_Blade"; }
 
   void Activate() override {
     STDOUT.println("String Blade");
@@ -5967,6 +5995,7 @@ struct BladeConfig {
 #if 0
 class Script : Looper, StateMachine {
 public:
+  const char* name() override { return "Script"; }
   void Loop() override {
     STATE_MACHINE_BEGIN();
     SLEEP(2000);
@@ -6000,6 +6029,7 @@ Script script;
 class Saber : CommandParser, Looper, SaberBase {
 public:
   Saber() : CommandParser() {}
+  const char* name() override { return "Saber"; }
 
   bool IsOn() const {
     return on_;
@@ -6476,11 +6506,11 @@ public:
 
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
-	if (accel_.x < -0.15) {
-	  pointing_down_ = true;
-	} else {
-	  pointing_down_ = false;
-	}
+        if (accel_.x < -0.15) {
+          pointing_down_ = true;
+        } else {
+          pointing_down_ = false;
+        }
         break;
 
 #if NUM_BUTTONS == 0
@@ -6523,8 +6553,8 @@ public:
         break;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
-	// Avoid the base and the very tip.
-	SaberBase::addBlast((200 + random(700)) / 1000.0);
+        // Avoid the base and the very tip.
+        SaberBase::addBlast((200 + random(700)) / 1000.0);
         SaberBase::DoBlast();
         break;
 
@@ -6532,11 +6562,11 @@ public:
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
         if (!SaberBase::Lockup()) {
-	  if (pointing_down_) {
-	    SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-	  } else {
-	    SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-	  }
+          if (pointing_down_) {
+            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+          } else {
+            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+          }
           SaberBase::DoBeginLockup();
         } else {
           handled = false;
@@ -6810,6 +6840,8 @@ public:
       button_(button) {
   }
 
+  const char* name() override { return name_; }
+
 protected:
   void Loop() override {
     STATE_MACHINE_BEGIN();
@@ -6877,6 +6909,8 @@ public:
     snooze_digital.pinMode(pin, INPUT_PULLUP, RISING);
 #endif
   }
+
+  const char* name() override { return name_; }
 
 protected:
   void Loop() override {
@@ -7322,6 +7356,7 @@ class Commands : public CommandParser {
       global_loop_counter.Print();
       STDOUT.println("");
       SaberBase::DoTop();
+      Looper::LoopTop(total_cycles);
       noInterrupts();
       audio_dma_interrupt_cycles = 0;
       wav_interrupt_cycles = 0;
@@ -7384,6 +7419,7 @@ public:
   Parser() : Looper(), len_(0) {
     SA::begin();
   }
+  const char* name() override { return "Parser"; }
 
   void Loop() override {
     STATE_MACHINE_BEGIN();
@@ -7398,12 +7434,12 @@ public:
         int c = SA::stream().read();
         if (c < 0) { len_ = 0; break; }
 #if 0
-	if (monitor.IsMonitoring(Monitoring::MonitorSerial) &&
-	    default_output != &SA::stream()) {
-	  default_output->print("SER: ");
-	  default_output->println(c, HEX);
+        if (monitor.IsMonitoring(Monitoring::MonitorSerial) &&
+            default_output != &SA::stream()) {
+          default_output->print("SER: ");
+          default_output->println(c, HEX);
         }
-#endif	
+#endif  
         if (c == '\n') { ParseLine(); len_ = 0; continue; }
         cmd_[len_] = c;
         cmd_[len_ + 1] = 0;
@@ -7418,6 +7454,10 @@ public:
     while (len_ > 0 && (cmd_[len_-1] == '\r' || cmd_[len_-1] == ' ')) {
       len_--;
       cmd_[len_] = 0;
+    }
+    if (cmd_[0] == '#') {
+      Serial.println(cmd_);
+      return;
     }
     stdout_output = &SA::stream();
     STDOUT.print(SA::response_header());
@@ -7473,9 +7513,9 @@ class SerialCommands : public CommandParser {
     uint32_t timeout = 300;
     while (millis() - last_char < timeout) {
       if (Serial3.available()) {
-	last_char = millis();
-	timeout = 100;
-	STDOUT.write(Serial3.read());
+        last_char = millis();
+        timeout = 100;
+        STDOUT.write(Serial3.read());
       }
     }
     STDOUT.println("");
@@ -7514,11 +7554,31 @@ class SerialCommands : public CommandParser {
       default_output = stdout_output;
       return true;
     }
+#ifdef BLE_PASSWORD
+    if (!strcmp(cmd, "get_ble_config")) {
+      PrintQuotedValue("password", BLE_PASSWORD);
+#ifndef BLE_NAME
+#define BLE_NAME "TeensySaber"
+#endif
+      PrintQuotedValue("name", BLE_NAME);
+#ifdef BLE_SHORTNAME
+      PrintQuotedValue("shortname", BLE_SHORTNAME);
+#else
+      if (sizeof(BLE_NAME) - sizeof("") <= 9) {
+        PrintQuotedValue("shortname", BLE_NAME);
+      } else {
+        PrintQuotedValue("shortname", "Saber");
+      }
+#endif
+      return true;
+    }
+#endif
     return false;
   }
   void Help() override {
-    STDOUT.println(" hm13pin PIN - configure HM13 PIN");
-    STDOUT.println(" hm13name NAME - configure HM13 NAME");
+    // STDOUT.println(" hm13pin PIN - configure HM13 PIN");
+    // STDOUT.println(" hm13name NAME - configure HM13 NAME");
+    STDOUT.println(" get_ble_config - show BLE PIN");
     if (default_output != stdout_output)
       STDOUT.println(" make_default_console - make this connection the default connection");
   }
@@ -7535,6 +7595,7 @@ SerialCommands serial_commands;
 
 class I2CBus : Looper, StateMachine {
 public:
+  const char* name() override { return "I2CBus"; }
   void Loop() {
     STATE_MACHINE_BEGIN();
     SLEEP(1000);
@@ -7667,6 +7728,7 @@ class SSD1306 : public I2CDevice, Looper, StateMachine, SaberBase {
 public:
   static const int WIDTH = 128;
   static const int HEIGHT = 32;
+  const char* name() override { return "SSD1306"; }
 
   enum Commands {
     SETCONTRAST = 0x81,
@@ -7909,6 +7971,7 @@ SSD1306 display;
 
 class MPU6050 : public I2CDevice, Looper, StateMachine {
 public:
+  const char* name() override { return "MPU6050"; }
   enum Registers {
     AUX_VDDIO          = 0x01,   // R/W
     SELF_TEST_X        = 0x0D,   // R/W
@@ -8069,6 +8132,7 @@ public:
 
 class LSM6DS3H : public I2CDevice, Looper, StateMachine {
 public:
+  const char* name() override { return "LSM6DS3H"; }
   enum Registers {
     FUNC_CFG_ACCESS = 0x1,
     SENSOR_SYNC_TIME_FRAME = 0x4,
@@ -8231,6 +8295,7 @@ public:
 
 class FXOS8700 : public I2CDevice, Looper, StateMachine {
 public:
+  const char* name() override { return "FXOS8700"; }
   enum Registers {
     STATUS              = 0x00, // Real-time data-ready status or FIFO status
     OUT_X_MSB           = 0x01, // 8 MSBs of 14-bit sample / Root pointer to XYZ FIFO
@@ -8405,6 +8470,7 @@ public:
 
 class FXAS21002 : public I2CDevice, Looper, StateMachine {
 public:
+  const char* name() override { return "FXAS21002"; }
   enum Registers {
     I2C_ADDR0         = 0x20, // SA0 = Gnd
     I2C_ADDR1         = 0x21, // SA0 = Vcc
@@ -8561,6 +8627,7 @@ ACCEL_CLASS accelerometer;
 class Amplifier : Looper, StateMachine, CommandParser {
 public:
   Amplifier() : Looper(), CommandParser() {}
+  const char* name() override { return "Amplifier"; }
 
   bool Active() {
 //    if (saber_synth.on_) return true;
@@ -8764,6 +8831,7 @@ extern "C" void startup_early_hook(void) {
 
 #ifdef ENABLE_WATCHDOG
 class WatchDog : Looper {
+  const char* name() override { return "WatchDog"; }
   void Loop() override {
     if (watchdogTimer_ > 5) {
       watchdogTimer_ = 0;
