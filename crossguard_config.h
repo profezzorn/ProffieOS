@@ -105,9 +105,9 @@ Preset presets[] = {
     StylePtr<InOutSparkTip<EASYBLADE(BLUE, WHITE), 300, 800> >()
   },
   { "font02", "tracks/title.wav",
-    StyleFirePtr<BLUE, CYAN>(),
-    StyleFirePtr<BLUE, CYAN>(),
-    StyleFirePtr<BLUE, CYAN>()
+    StyleFirePtr<BLUE, CYAN, 0>(),
+    StyleFirePtr<BLUE, CYAN, 1>(),
+    StyleFirePtr<BLUE, CYAN, 2>()
   },
   { "igniter/font4", "tracks/duel.wav",
     StylePtr<InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> >(),

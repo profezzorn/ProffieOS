@@ -1255,7 +1255,7 @@ public:
       for (int i = 0; i < to_do; i++) {
         v = sum[i];
         vol_ = ((vol_ + abs(v)) * 255) >> 8;
-        v2 = v * VOLUME / (my_sqrt(vol_) + 100);
+        v2 = v * volume_ / (my_sqrt(vol_) + 100);
         data[i] = clamptoi16(v2);
         peak_sum_ = max(abs(v), peak_sum_);
         peak_ = max(abs(v2), peak_);
@@ -1298,6 +1298,9 @@ public:
     return last_sum_;
   }
 
+  void set_volume(int32_t volume) { volume_ = volume; }
+  int32_t get_volume() const { return volume_; }
+
   AudioStream* streams_[N];
   int32_t vol_ = 0;
   int32_t last_sample_ = 0;
@@ -1305,6 +1308,7 @@ public:
   int32_t peak_sum_ = 0;
   int32_t peak_ = 0;
   int32_t num_samples_ = 0;
+  int32_t volume_ = VOLUME;
 //  int32_t sum_;
 //  ClickAvoiderLin volume_;
 };
@@ -2360,6 +2364,10 @@ public:
     run_ = true;
   }
 
+  const char* Filename() const {
+    return filename_;
+  }
+
   void PlayOnce(Effect* effect) {
     if (effect->Play(filename_)) {
       effect_ = nullptr;
@@ -2791,6 +2799,10 @@ public:
     clear();
   }
 
+  const char* Filename() const {
+    return wav.Filename();
+  }
+  
   bool isPlaying() const {
     return !pause_ && (wav.isPlaying() || buffered());
   }
@@ -6625,6 +6637,10 @@ public:
       Off();
       return true;
     }
+    if (!strcmp(cmd, "get_on")) {
+      STDOUT.println(on_);
+      return true;
+    }
     if (!strcmp(cmd, "clash")) {
       Clash();
       return true;
@@ -6680,6 +6696,39 @@ public:
         player->Play(arg);
       } else {
         STDOUT.println("No available WAV players.");
+      }
+      return true;
+    }
+    if (!strcmp(cmd, "play_track")) {
+      if (!arg) {
+        StartOrStopTrack();
+        return true;
+      }
+      if (track_player_) {
+        track_player_->Stop();
+        track_player_ = NULL;
+      }
+      digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+      track_player_ = GetFreeWavPlayer();
+      if (track_player_) {
+        STDOUT.print("Playing ");
+        STDOUT.println(arg);
+        track_player_->Play(arg);
+      } else {
+        STDOUT.println("No available WAV players.");
+      }
+      return true;
+    }
+    if (!strcmp(cmd, "stop_track")) {
+      if (track_player_) {
+        track_player_->Stop();
+        track_player_ = NULL;
+      }
+      return true;
+    }
+    if (!strcmp(cmd, "get_track")) {
+      if (track_player_) {
+        STDOUT.println(track_player_->Filename());
       }
       return true;
     }
@@ -6760,6 +6809,16 @@ public:
       STDOUT.println(current_preset_ - current_config_->presets);
       return true;
     }
+    if (!strcmp(cmd, "get_volume")) {
+      STDOUT.println(dynamic_mixer.get_volume());
+      return true;
+    }
+    if (!strcmp(cmd, "set_volume") && arg) {
+      int32_t volume = strtol(arg, NULL, 0);
+      if (volume >= 0 && volume <= 3000)
+        dynamic_mixer.set_volume(volume);
+      return true;
+    }
     
     if (!strcmp(cmd, "set_preset") && arg) {
       size_t preset = strtol(arg, NULL, 0);
@@ -6773,6 +6832,50 @@ public:
       return true;
     }
     
+#ifdef ENABLE_SD
+    if (!strcmp(cmd, "list_tracks")) {
+      LOCK_SD(true);
+      File dir = SD.open("/");
+      while (File f = dir.openNextFile()) {
+        if (f.isDirectory()) {
+          char fname[128];
+          strcpy(fname, f.name());
+          strcat(fname, "/");
+          char* fend = fname + strlen(fname);
+          bool isfont = false;
+          if (!isfont) {
+            strcpy(fend, "hum.wav");
+            isfont = SD.exists(fname);
+          }
+          if (!isfont) {
+            strcpy(fend, "hum01.wav");
+            isfont = SD.exists(fname);
+          }
+          if (!isfont) {
+            strcpy(fend, "hum");
+            isfont = SD.exists(fname);
+          }
+          if (!isfont) {
+            while (File f2 = f.openNextFile()) {
+              if (endswith(".wav", f2.name()) && f2.size() > 200000) {
+                strcpy(fend, f2.name());
+                STDOUT.println(fname);
+                f2.close();
+              }
+            }
+          }
+        } else {
+          if (endswith(".wav", f.name()) && f.size() > 200000) {
+            STDOUT.println(f.name());
+          }
+        }
+        f.close();
+      }
+      dir.close();
+      LOCK_SD(false);
+      return true;
+    }
+#endif
     return false;
   }
   void Help() override {

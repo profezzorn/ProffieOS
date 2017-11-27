@@ -41,6 +41,9 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_WS2811
 #define ENABLE_SERIAL
 
+// Must be 20 characters or less.
+#define BLE_PASSWORD "password"
+
 // FASTLED is experimental and untested right now
 // #define ENABLE_FASTLED
 // #define ENABLE_WATCHDOG
@@ -65,9 +68,9 @@ Preset testing_presets[] = {
     "=RainboW++\n++BladE++" },
   { "graflex4", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>(), "cyan" },
   { "graflex4", "tracks/cantina.wav", StyleNormalPtr<BLUE, RED, 300, 800>(), "blue" },
-  { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>(), "red" },
+  { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>(), "red fire" },
   { "igniter/font2", "tracks/vader.wav", StyleNormalPtr<RED, WHITE, 300, 800>(), "red" },
-  { "graflex5", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>(), "blue" },
+  { "graflex5", "tracks/title.wav", StyleFirePtr<BLUE, CYAN>(), "blue fire" },
   { "igniter/font4", "tracks/duel.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>(), "green" },
   { "graflex4", "tracks/duel.wav", StyleNormalPtr<WHITE, RED, 300, 800>(), "white" },
   { "graflex4", "tracks/walls.wav", StyleNormalPtr<YELLOW, BLUE, 300, 800>(), "yellow" },
