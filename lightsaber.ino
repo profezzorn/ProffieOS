@@ -26,6 +26,7 @@
 // #define CONFIG_FILE "owk_v2_config.h"
 #define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
+// #define CONFIG_FILE "new_config.h"
 
 #define CONFIG_TOP
 #include CONFIG_FILE
@@ -116,16 +117,20 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
+#ifdef TEENSYDUINO
 #include <DMAChannel.h>
-
+#include <usb_dev.h>
+#include <kinetis.h>
+#include <i2c_t3.h>
 #include <SD.h>
+#else
+#include <Wire.h>
+#include <FS.h>
+#define digitalWriteFast digitalWrite
+#endif
 
 #include <SPI.h>
 #include <math.h>
-#include <usb_dev.h>
-#include <i2c_t3.h>
-// #include <Wire.h>
-#include <kinetis.h>
 #include <malloc.h>
 
 #ifdef ENABLE_SERIALFLASH
@@ -257,6 +262,7 @@ public:
     if (debug_is_on()) default_output->write(buffer, size);
     return ret;
   }
+#ifdef TEENSYDUINO
   int availableForWrite(void) override {
     return stdout_output->availableForWrite();
   }
@@ -264,6 +270,7 @@ public:
     stdout_output->flush();
     if (debug_is_on()) default_output->flush();
   }
+#endif
 };
 
 ConsoleHelper STDOUT;
@@ -355,13 +362,17 @@ class ScopedCycleCounter {
 public:
   ScopedCycleCounter(uint64_t& dest) :
     dest_(dest) {
+#ifdef TEENSYDUINO
     ARM_DEMCR |= ARM_DEMCR_TRCENA;
     ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
     cycles_ = ARM_DWT_CYCCNT;
+#endif    
   }
   ~ScopedCycleCounter() {
+#ifdef TEENSYDUINO
     cycles_ = ARM_DWT_CYCCNT - cycles_;
     dest_ += cycles_;
+#endif
   }
 private:
   uint32_t cycles_;
@@ -2014,6 +2025,125 @@ bool endswith(const char *postfix, const char* x) {
   return true;
 }
 
+#ifdef TEENSYDUINO
+class LSFS {
+public:
+  typedef File FILE;
+  static bool Begin() {
+#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
+    // Prefer the built-in sd card for Teensy 3.5/3.6 as it is faster.
+    return SD.begin(BUILTIN_SDCARD);
+#else 
+    return SD.begin(sdCardSelectPin);
+#endif    
+  }
+  static bool Exists(const char* path) {
+    return SD.exists(path);
+  }
+  static File Open(const char* path) {
+    return SD.open(path);
+  }
+  static File OpenForWrite(const char* path) {
+    return SD.open(path, FILE_WRITE);
+  }
+  class Iterator {
+  public:
+    explicit Iterator(const char* dirname) {
+      dir_ = SD.open(dirname);
+      if (dir_.isDirectory()) {
+	f_ = dir_.openNextFile();
+      }
+    }
+    explicit Iterator(Iterator& other) {
+      dir_ = other.f_;
+      other.f_ = File();
+      f_ = dir_.openNextFile();
+    }
+    ~Iterator() {
+      dir_.close();
+      f_.close();
+    }
+    void operator++() {
+      f_.close();
+      f_ = dir_.openNextFile();
+    }
+    operator bool() { return f_; }
+    bool isdir() { return f_.isDirectory(); }
+    const char* name() { return f_.name(); }
+    size_t size() { return f_.size(); }
+    
+  private:
+    File dir_;
+    File f_;
+  };
+};
+#else
+class LSFS {
+public:
+  typedef File FILE;
+  static bool Begin() {
+    return DOSFS.begin() && DOSFS.check();
+  }
+  static bool Exists(const char* path) {
+    return DOSFS.exists(path);
+  }
+  static File Open(const char* path) {
+    return DOSFS.open(path, "r");
+  }
+  static File OpenForWrite(const char* path) {
+    return DOSFS.open(path, "wc");
+  }
+  class Iterator {
+  public:
+    explicit Iterator(const char* path) {
+      char filename[F_MAXPATH];
+
+      strcpy(_path, path);
+
+      if (path[strlen(path)-1] != '/')  
+	strcat(_path, "/");
+
+      strcpy(filename, _path);
+      strcat(filename, "*.*");
+
+      if (f_findfirst(filename, &_find) != F_NO_ERROR) {
+	_find.find_clsno = 0x0fffffff;
+      }
+    }
+    explicit Iterator(Iterator& other) {
+      char filename[F_MAXPATH];
+
+      strcpy(_path, other._path);
+      strcat(_path, other.name());
+
+      if (_path[strlen(_path)-1] != '/')  
+	strcat(_path, "/");
+
+      strcpy(filename, _path);
+      strcat(filename, "*.*");
+
+      if (f_findfirst(filename, &_find) != F_NO_ERROR) {
+	_find.find_clsno = 0x0fffffff;
+      }
+    }
+
+    void operator++() {
+      if (f_findnext(&_find) != F_NO_ERROR) {
+	_find.find_clsno = 0x0fffffff;
+      }
+    }
+    operator bool() { return _find.find_clsno != 0x0fffffff; }
+    bool isdir() { return _find.attr & F_ATTR_DIR; }
+    const char* name() { return _find.filename; }
+    size_t size() { return _find.filesize; }
+    
+  private:
+    char _path[F_MAXPATH];
+    F_FIND _find;
+  };
+};
+#endif
+
 char current_directory[128];
 
 // Effect represents a set of sound files.
@@ -2207,6 +2337,25 @@ class Effect {
 #endif
 
 #ifdef ENABLE_SD
+
+#if 1
+    if (LSFS::Exists(directory)) {
+      for (LSFS::Iterator iter(directory); iter; ++iter) {
+	if (iter.isdir()) {
+	  char fname[128];
+	  strcpy(fname, iter.name());
+	  strcat(fname, "/");
+	  char* fend = fname + strlen(fname);
+	  for (LSFS::Iterator i2(iter); i2; ++i2) {
+	    strcpy(fend, i2.name());
+	    ScanAll(fname);
+	  }
+	} else {
+	  ScanAll(iter.name());
+	}
+      }
+    }
+#else
     if (SD.exists(directory)) {
       File dir = SD.open(directory);
       if (dir) {
@@ -2228,12 +2377,17 @@ class Effect {
         }
         dir.close();
       }
-    } else if (strlen(directory)) {
+    }
+#endif
+    
+#ifdef ENABLE_AUDIO
+    else if (strlen(directory)) {
       talkie.Say(spBANK);
       talkie.Say(spOPEN);
       talkie.Say(spFAILURE);
     }
-#endif
+#endif   // ENABLE_AUDIO    
+#endif   // ENABLE_SD
     STDOUT.println(" done");
   }
 
@@ -2528,7 +2682,7 @@ private:
       {
 #ifdef ENABLE_SD
         sd_file_.close();
-        sd_file_ = SD.open(filename_);
+        sd_file_ = LSFS::Open(filename_);
         YIELD();
         if (!sd_file_)
 #endif
@@ -3142,7 +3296,7 @@ struct ConfigFile {
 
   void Read(const char *filename) {
 #ifdef ENABLE_SD
-    File f = SD.open(filename);
+    File f = LSFS::Open(filename);
     Read(&f);
     f.close();
 #endif
@@ -4453,7 +4607,11 @@ public:
   void run(BladeBase* blade) {
     a_.run(blade);
     b_.run(blade);
+#ifdef ENABLE_AUDIO    
     mix_ = clampi32(dynamic_mixer.last_sum() >> 4, 0, 255);
+#else
+    mix_ = 0;
+#endif
   }
   OverDriveColor getColor(int led) {
     OverDriveColor a = a_.getColor(led);
@@ -6013,6 +6171,10 @@ public:
     SLEEP(2000);
     CommandParser::DoParse("on", NULL);
     SLEEP(2000);
+    CommandParser::DoParse("batt", NULL);
+    SLEEP(2000);
+    CommandParser::DoParse("play", "cantina.wav");
+#if 0    
     while (true) {
       if (dac.isSilent()) {
         SLEEP(2000);
@@ -6023,6 +6185,7 @@ public:
         SLEEP(100);
       }
     }
+#endif    
     STATE_MACHINE_END();
   }
   void Run() {
@@ -6245,50 +6408,6 @@ public:
     SetPreset(current_config_->presets, false);
   }
 
-  // Select next sound font (in alphabetic order)
-  // Set sign to -1 to get the previous sound font instead.
-  void next_directory(int sign = 1) {
-#ifdef ENABLE_SD
-    int tries = 0;
-    int dirs = 0;
-    do {
-      dirs = 0;
-      File dir = SD.open("/");
-      File best, first;
-      while (File f = dir.openNextFile()) {
-        if (!f.isDirectory()) continue;
-        dirs++;
-        if (!first) {
-          first.close();
-          first = f;
-        } else {
-          if (cmpdir(f.name(), first.name())*sign < 0) {
-            first.close();
-            first = f;
-          }
-        }
-        if (cmpdir(f.name(), current_directory)*sign <= 0) continue;
-        if (best && cmpdir(f.name(), best.name())*sign > 0) continue;
-        best.close();
-        best = f;
-      }
-      if (best) {
-        if (chdir(best.name())) {
-          SaberBase::DoNewFont();
-          return;
-        }
-      } else if (first) {
-        if (chdir(first.name())) {
-          SaberBase::DoNewFont();
-          return;
-        }
-      }
-      dir.close();
-      first.close();
-      best.close();
-    } while (++tries <= dirs);
-#endif
-  }
 
   void SB_Message(const char* text) override {
     STDOUT.print("DISPLAY: ");
@@ -6490,7 +6609,7 @@ protected:
   }
 
 public:
-  bool Event(BUTTON button, EVENT event) {
+  bool Event(enum BUTTON button, EVENT event) {
     STDOUT.print("EVENT: ");
     if (button) {
       PrintButton(button);
@@ -6764,7 +6883,7 @@ public:
       SaberBase::DoNewFont();
       return true;
     }
-#ifndef USE_TEENSY3_OPTIMIZED_CODE
+#if 0
     if (!strcmp(cmd, "mkdir")) {
       SD.mkdir(arg);
       return true;
@@ -6772,14 +6891,6 @@ public:
 #endif    
     if (!strcmp(cmd, "pwd")) {
       STDOUT.println(current_directory);
-      return true;
-    }
-    if (!strcmp(cmd, "next") && arg && !strcmp(arg, "font")) {
-      next_directory(1);
-      return true;
-    }
-    if (!strcmp(cmd, "prev") && arg && !strcmp(arg, "font")) {
-      next_directory(-1);
       return true;
     }
     if (!strcmp(cmd, "n") || (!strcmp(cmd, "next") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
@@ -6810,13 +6921,19 @@ public:
       return true;
     }
     if (!strcmp(cmd, "get_volume")) {
+#ifdef ENABLE_AUDIO
       STDOUT.println(dynamic_mixer.get_volume());
+#else
+      STDOUT.println(0);
+#endif      
       return true;
     }
     if (!strcmp(cmd, "set_volume") && arg) {
+#ifdef ENABLE_AUDIO
       int32_t volume = strtol(arg, NULL, 0);
       if (volume >= 0 && volume <= 3000)
         dynamic_mixer.set_volume(volume);
+#endif      
       return true;
     }
     
@@ -6835,43 +6952,39 @@ public:
 #ifdef ENABLE_SD
     if (!strcmp(cmd, "list_tracks")) {
       LOCK_SD(true);
-      File dir = SD.open("/");
-      while (File f = dir.openNextFile()) {
-        if (f.isDirectory()) {
+      for (LSFS::Iterator iter("/"); iter; ++iter) {
+        if (iter.isdir()) {
           char fname[128];
-          strcpy(fname, f.name());
+          strcpy(fname, iter.name());
           strcat(fname, "/");
           char* fend = fname + strlen(fname);
           bool isfont = false;
           if (!isfont) {
             strcpy(fend, "hum.wav");
-            isfont = SD.exists(fname);
+            isfont = LSFS::Exists(fname);
           }
           if (!isfont) {
             strcpy(fend, "hum01.wav");
-            isfont = SD.exists(fname);
+            isfont = LSFS::Exists(fname);
           }
           if (!isfont) {
             strcpy(fend, "hum");
-            isfont = SD.exists(fname);
+            isfont = LSFS::Exists(fname);
           }
           if (!isfont) {
-            while (File f2 = f.openNextFile()) {
-              if (endswith(".wav", f2.name()) && f2.size() > 200000) {
-                strcpy(fend, f2.name());
+	    for (LSFS::Iterator i2(iter); i2; ++i2) {
+              if (endswith(".wav", i2.name()) && i2.size() > 200000) {
+                strcpy(fend, i2.name());
                 STDOUT.println(fname);
-                f2.close();
               }
             }
           }
         } else {
-          if (endswith(".wav", f.name()) && f.size() > 200000) {
-            STDOUT.println(f.name());
+          if (endswith(".wav", iter.name()) && iter.size() > 200000) {
+            STDOUT.println(iter.name());
           }
         }
-        f.close();
       }
-      dir.close();
       LOCK_SD(false);
       return true;
     }
@@ -6936,7 +7049,7 @@ class ButtonBase : public Looper,
                    public CommandParser,
                    public DebouncedButton {
 public:
-  ButtonBase(const char* name, BUTTON button)
+  ButtonBase(const char* name, enum BUTTON button)
     : Looper(),
       CommandParser(),
       name_(name),
@@ -6991,7 +7104,7 @@ protected:
   }
 
   const char* name_;
-  BUTTON button_;
+  enum BUTTON button_;
   uint32_t push_millis_;
   StateMachineState state_machine_;
 };
@@ -7001,7 +7114,7 @@ class LatchingButton : public Looper,
                        public CommandParser,
                        public DebouncedButton {
 public:
-  LatchingButton(BUTTON button, int pin, const char* name)
+  LatchingButton(enum BUTTON button, int pin, const char* name)
     : Looper(),
       CommandParser(),
       name_(name),
@@ -7052,14 +7165,14 @@ protected:
   }
 
   const char* name_;
-  BUTTON button_;
+  enum BUTTON button_;
   StateMachineState state_machine_;
   uint8_t pin_;
 };
 
 class Button : public ButtonBase {
 public:
-  Button(BUTTON button, int pin, const char* name) : ButtonBase(name, button), pin_(pin) {
+  Button(enum BUTTON button, int pin, const char* name) : ButtonBase(name, button), pin_(pin) {
     pinMode(pin, INPUT_PULLUP);
 #ifdef ENABLE_SNOOZE
     snooze_digital.pinMode(pin, INPUT_PULLUP, RISING);
@@ -7310,21 +7423,20 @@ class Commands : public CommandParser {
 #ifdef ENABLE_SD
     if (!strcmp(cmd, "dir")) {
       LOCK_SD(true);
-      File dir = SD.open(e ? e : current_directory);
-      while (File f = dir.openNextFile()) {
-        STDOUT.print(f.name());
+      for (LSFS::Iterator dir(e ? e : current_directory); dir; ++dir) {
+        STDOUT.print(dir.name());
         STDOUT.print(" ");
-        STDOUT.println(f.size());
-        f.close();
+        STDOUT.println(dir.size());
       }
       LOCK_SD(false);
       STDOUT.println("Done listing files.");
       return true;
     }
+    
     if (!strcmp(cmd, "readalot")) {
-      char tmp[10];
+      uint8_t tmp[10];
       LOCK_SD(true);
-      File f = SD.open(e);
+      File f = LSFS::Open(e);
       for (int i = 0; i < 10000; i++) {
         f.seek(0);
         f.read(tmp, 10);
@@ -7339,7 +7451,7 @@ class Commands : public CommandParser {
 #if defined(ENABLE_SD) && defined(ENABLE_SERIALFLASH)
     if (!strcmp(cmd, "cache")) {
       LOCK_SD(true);
-      File f = SD.open(e);
+      File f = LSFS::Open(e);
       if (!f) {
         STDOUT.println("File not found.");
         return true;
@@ -7471,11 +7583,13 @@ class Commands : public CommandParser {
       STDOUT.println(version);
       return true;
     }
+#ifdef TEENSYDUINO    
     if (!strcmp(cmd, "reset")) {
       SCB_AIRCR = 0x05FA0004;
       STDOUT.println("Reset failed.");
       return true;
     }
+#endif    
     return false;
   }
 
@@ -7520,9 +7634,12 @@ template<class SA> /* SA = Serial Adapter */
 class Parser : Looper, StateMachine {
 public:
   Parser() : Looper(), len_(0) {
-    SA::begin();
   }
   const char* name() override { return "Parser"; }
+
+  void Setup() override {
+    SA::begin();
+  }
 
   void Loop() override {
     STATE_MACHINE_BEGIN();
@@ -7703,13 +7820,21 @@ public:
     STATE_MACHINE_BEGIN();
     SLEEP(1000);
 
+#ifdef TEENSYSABER    
     // Check that we have pullups.
     while (true) {
+      STDOUT.println("I2C TRY");
       pinMode(i2cDataPin, INPUT_PULLDOWN);
       pinMode(i2cClockPin, INPUT_PULLDOWN);
-      delayMicroseconds(10);
+      SLEEP_MICROS(10);
+#ifdef TEENSYSABER      
       data_detected = analogRead(i2cDataPin) > 800;
       clock_detected = analogRead(i2cClockPin) > 800;
+#else
+      data_detected = digitalRead(i2cDataPin);
+      clock_detected = digitalRead(i2cClockPin);
+#endif      
+      
       pinMode(i2cDataPin, INPUT);
       pinMode(i2cClockPin, INPUT);
       if (data_detected && clock_detected) {
@@ -7728,15 +7853,20 @@ public:
         pinMode(i2cClockPin, INPUT);
         SLEEP(100); // Try again soon
       } else {
+	if (!clock_detected)
+	  Serial.println("No I2C clock pullup detected.");
         SLEEP(1000); // Try again later
       }
     }
 
     STDOUT.println("I2C pullups found, initializing...");
-
+#endif
+    
     Wire.begin();
     Wire.setClock(400000);
+#ifdef TEENSYDUINO
     Wire.setDefaultTimeout(I2C_TIMEOUT_MILLIS * 1000);
+#endif
     i2c_detected_ = true;
     Looper::Unlink();
     STATE_MACHINE_END();
@@ -8200,7 +8330,7 @@ public:
           // motion fail, reboot motion chip.
           STDOUT.println("Motion chip timeout, reboot motion chip!");
           // writeByte(CTRL3_C, 1);
-          delay(20);
+	  delay(20);
           break;
         }
         if (status_reg & 0x1) {
@@ -8362,7 +8492,7 @@ public:
           // motion fail, reboot motion chip.
           STDOUT.println("Motion chip timeout, reboot motion chip!");
           writeByte(CTRL3_C, 1);
-          delay(20);
+	  delay(20);
           break;
         }
         if (status_reg & 0x1) {
@@ -8674,7 +8804,7 @@ public:
           strcat(file_name, ".CSV");
           
           int last_skip = file_num - last_seen_;
-          if (SD.exists(file_name)) {
+          if (LSFS::Exists(file_name)) {
             last_file_ = file_num;
             file_num += last_skip * 2;
             continue;
@@ -8686,7 +8816,7 @@ public:
           }
           break;
         }
-        File f = SD.open(file_name, FILE_WRITE);
+        File f = LSFS::OpenForWrite(file_name);
         for (size_t i = 0; i < NELEM(buffer_); i++) {
           const Vec3& v = buffer_[(pos_ + i) % NELEM(buffer_)];
           f.print(v.x);
@@ -8831,6 +8961,7 @@ void setup() {
 #endif
 #endif
 
+  Serial.begin(9600);
   // Wait for all voltages to settle.
   // Accumulate some entrypy while we wait.
   uint32_t now = millis();
@@ -8838,17 +8969,11 @@ void setup() {
     srand((rand() * 917823) ^ analogRead(batteryLevelPin));
   }
 
-  Serial.begin(9600);
 #ifdef ENABLE_SERIALFLASH
   SerialFlashChip::begin(serialFlashSelectPin);
 #endif
 #ifdef ENABLE_SD
-#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
-  // Prefer the built-in sd card for Teensy 3.5/3.6 as it is faster.
-  bool sd_card_found = SD.begin(BUILTIN_SDCARD);
-#else
-  bool sd_card_found = SD.begin(sdCardSelectPin);
-#endif
+  bool sd_card_found = LSFS::Begin();
   if (!sd_card_found) {
     STDOUT.println("No sdcard found.");
   } else {
@@ -8859,7 +8984,7 @@ void setup() {
   Looper::DoSetup();
   saber.FindBlade();
   SaberBase::DoBoot();
-#ifdef ENABLE_SD
+#if defined(ENABLE_SD) && defined(ENABLE_AUDIO)
   if (!sd_card_found) {
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     talkie.Say(spPLEASE);
@@ -8868,7 +8993,7 @@ void setup() {
     talkie.Say(spD);
     talkie.Say(spUNIT);
   }
-#endif
+#endif // ENABLE_AUDIO && ENABLE_SD
 }
 
 #if 0
