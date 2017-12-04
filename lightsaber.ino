@@ -3345,6 +3345,12 @@ public:
       BufferedWavPlayer* tmp = Play(&out);
       if (tmp) {
         int delay_ms = 1000 * tmp->length() - config_.humStart;
+#if 0	
+	STDOUT.print("LEN: ");
+	STDOUT.println(tmp->length());
+	STDOUT.print("DELAY: ");
+	STDOUT.println(delay_ms);
+#endif	
         hum_start_ += delay_ms;
       }
     }
