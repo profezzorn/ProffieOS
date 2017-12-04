@@ -21,10 +21,11 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
+#define CONFIG_FILE "default_v3_config.h"
 // #define CONFIG_FILE "crossguard_config.h"
 // #define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
-#define CONFIG_FILE "test_bench_config.h"
+// #define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
 // #define CONFIG_FILE "new_config.h"
 
