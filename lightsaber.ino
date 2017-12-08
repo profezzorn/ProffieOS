@@ -2052,7 +2052,7 @@ public:
     explicit Iterator(const char* dirname) {
       dir_ = SD.open(dirname);
       if (dir_.isDirectory()) {
-	f_ = dir_.openNextFile();
+        f_ = dir_.openNextFile();
       }
     }
     explicit Iterator(Iterator& other) {
@@ -2102,13 +2102,13 @@ public:
       strcpy(_path, path);
 
       if (path[strlen(path)-1] != '/')  
-	strcat(_path, "/");
+        strcat(_path, "/");
 
       strcpy(filename, _path);
       strcat(filename, "*.*");
 
       if (f_findfirst(filename, &_find) != F_NO_ERROR) {
-	_find.find_clsno = 0x0fffffff;
+        _find.find_clsno = 0x0fffffff;
       }
     }
     explicit Iterator(Iterator& other) {
@@ -2118,19 +2118,19 @@ public:
       strcat(_path, other.name());
 
       if (_path[strlen(_path)-1] != '/')  
-	strcat(_path, "/");
+        strcat(_path, "/");
 
       strcpy(filename, _path);
       strcat(filename, "*.*");
 
       if (f_findfirst(filename, &_find) != F_NO_ERROR) {
-	_find.find_clsno = 0x0fffffff;
+        _find.find_clsno = 0x0fffffff;
       }
     }
 
     void operator++() {
       if (f_findnext(&_find) != F_NO_ERROR) {
-	_find.find_clsno = 0x0fffffff;
+        _find.find_clsno = 0x0fffffff;
       }
     }
     operator bool() { return _find.find_clsno != 0x0fffffff; }
@@ -2342,18 +2342,18 @@ class Effect {
 #if 1
     if (LSFS::Exists(directory)) {
       for (LSFS::Iterator iter(directory); iter; ++iter) {
-	if (iter.isdir()) {
-	  char fname[128];
-	  strcpy(fname, iter.name());
-	  strcat(fname, "/");
-	  char* fend = fname + strlen(fname);
-	  for (LSFS::Iterator i2(iter); i2; ++i2) {
-	    strcpy(fend, i2.name());
-	    ScanAll(fname);
-	  }
-	} else {
-	  ScanAll(iter.name());
-	}
+        if (iter.isdir()) {
+          char fname[128];
+          strcpy(fname, iter.name());
+          strcat(fname, "/");
+          char* fend = fname + strlen(fname);
+          for (LSFS::Iterator i2(iter); i2; ++i2) {
+            strcpy(fend, i2.name());
+            ScanAll(fname);
+          }
+        } else {
+          ScanAll(iter.name());
+        }
       }
     }
 #else
@@ -3345,12 +3345,12 @@ public:
       BufferedWavPlayer* tmp = Play(&out);
       if (tmp) {
         int delay_ms = 1000 * tmp->length() - config_.humStart;
-#if 0	
-	STDOUT.print("LEN: ");
-	STDOUT.println(tmp->length());
-	STDOUT.print("DELAY: ");
-	STDOUT.println(delay_ms);
-#endif	
+#if 0   
+        STDOUT.print("LEN: ");
+        STDOUT.println(tmp->length());
+        STDOUT.print("DELAY: ");
+        STDOUT.println(delay_ms);
+#endif  
         hum_start_ += delay_ms;
       }
     }
@@ -4695,6 +4695,58 @@ public:
   }
 private:
   uint32_t m;
+};
+
+class Range {
+public:
+  uint32_t start;
+  uint32_t end;
+  Range(uint32_t s, uint32_t e) : start(s), end(e) {}
+  uint32_t size() const {
+    if (start >= end) return 0;
+    return end - start;
+  }
+  Range operator&(const Range& other) {
+    return Range(max(start, other.start),
+                 min(end, other.end));
+  }
+};
+
+template<class COLOR, int percentage, int rpm>
+class ColorCycle {
+public:
+  void run(BladeBase* base) {
+    c_.run(base);
+
+    uint32_t now = micros();
+    uint32_t delta = now - last_micros_;
+    last_micros_ = now;
+    pos_ = fract(pos_ + delta / 60000000.0 * rpm);
+    num_leds_ = base->num_leds() * 16384;
+    start_ = pos_ * num_leds_;
+    end_ = fract(pos_ + percentage / 100.0) * num_leds_;
+  }
+  OverDriveColor getColor(int led) {
+    led *= 16384;
+    Range led_range(led, led + 16384);
+    int black_mix = 0;
+    if (start_ < end_) {
+      black_mix = (Range(start_, end_) & led_range).size();
+    } else {
+      black_mix = (Range(0, end_) & led_range).size() +
+                  (Range(start_, num_leds_) & led_range).size();
+    }
+    OverDriveColor ret = c_.getColor(led);
+    ret.c = Color16().mix2(ret.c, black_mix);
+    return ret;
+  }
+private:
+  float pos_;
+  uint32_t start_;
+  uint32_t end_;
+  uint32_t num_leds_;
+  COLOR c_;
+  uint32_t last_micros_;
 };
 
 template<class COLOR1, class COLOR2, int pulse_millis>
@@ -6979,7 +7031,7 @@ public:
             isfont = LSFS::Exists(fname);
           }
           if (!isfont) {
-	    for (LSFS::Iterator i2(iter); i2; ++i2) {
+            for (LSFS::Iterator i2(iter); i2; ++i2) {
               if (endswith(".wav", i2.name()) && i2.size() > 200000) {
                 strcpy(fend, i2.name());
                 STDOUT.println(fname);
@@ -7860,8 +7912,8 @@ public:
         pinMode(i2cClockPin, INPUT);
         SLEEP(100); // Try again soon
       } else {
-	if (!clock_detected)
-	  Serial.println("No I2C clock pullup detected.");
+        if (!clock_detected)
+          Serial.println("No I2C clock pullup detected.");
         SLEEP(1000); // Try again later
       }
     }
@@ -8337,7 +8389,7 @@ public:
           // motion fail, reboot motion chip.
           STDOUT.println("Motion chip timeout, reboot motion chip!");
           // writeByte(CTRL3_C, 1);
-	  delay(20);
+          delay(20);
           break;
         }
         if (status_reg & 0x1) {
@@ -8499,7 +8551,7 @@ public:
           // motion fail, reboot motion chip.
           STDOUT.println("Motion chip timeout, reboot motion chip!");
           writeByte(CTRL3_C, 1);
-	  delay(20);
+          delay(20);
           break;
         }
         if (status_reg & 0x1) {
