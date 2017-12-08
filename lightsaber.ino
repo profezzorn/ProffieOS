@@ -4316,6 +4316,26 @@ public:
   BladeStyle *current_style_ = NULL;
 };
 
+class BladeWrapper : public BladeBase {
+public:
+  int num_leds() const override { return blade_->num_leds(); }
+  bool is_on() const override { return blade_->is_on(); }
+  void set(int led, Color16 c) override { return blade_->set(led, c); }
+  void set_overdrive(int led, Color16 c) override {
+    return blade_->set_overdrive(led, c);
+  }
+  bool clash() override { return blade_->clash(); }
+  void clear() override { return blade_->clear(); }
+  void allow_disable() override { blade_->allow_disable(); }
+  void Activate() override { blade_->Activate(); }
+  void SetStyle(BladeStyle* style) override {
+    return blade_->SetStyle(style);
+  }
+
+protected:
+  BladeBase* blade_;
+};
+
 
 // Charging blade style.
 // Slowly pulsating battery indicator.
@@ -4712,6 +4732,10 @@ public:
   }
 };
 
+// This is intended for a small ring of neopixels
+// A section of the ring is lit at the specified color
+// and rotates at the specified speed. The size of the
+// lit up section is defined by "percentage".
 template<class COLOR, int percentage, int rpm>
 class ColorCycle {
 public:
@@ -4747,6 +4771,97 @@ private:
   uint32_t num_leds_;
   COLOR c_;
   uint32_t last_micros_;
+};
+
+// This class renders BASE as normal, but delays ignition by
+// the specified number of milliseconds. Intended for kylo-style
+// quillions.
+template<int delay_millis, class BASE>
+class IgnitionDelay : public BladeWrapper {
+public:
+  void run(BladeBase* base) {
+    blade_ = base;
+    if (base->is_on()) {
+      if (!waiting_) {
+        waiting_ = true;
+	wait_start_time_ = millis();
+      }
+      uint32_t waited = millis() - wait_start_time_;
+      if (waited > delay_millis) {
+        is_on_ = true;
+	wait_start_time_ = millis() - delay_millis - 1;
+      }
+    } else {
+      waiting_ = false;
+      is_on_ = false;
+    }
+    base_.run(this);
+  }
+  OverDriveColor getColor(int led) { return base_.getColor(led); }
+  bool is_on() const override { return is_on_; }
+private:
+  bool is_on_ = false;
+  bool waiting_ = false;
+  uint32_t wait_start_time_;
+  BASE base_;
+};
+
+class SubBladeWrapper : public BladeWrapper {
+public:
+  int num_leds() const override { return num_leds_; }
+  void set(int led, Color16 c) override {
+    return blade_->set(led - offset_, c);
+  }
+  void set_overdrive(int led, Color16 c) override {
+    return blade_->set_overdrive(led - offset_, c);
+  }
+  void allow_disable() override {
+    allow_disable_ = true;
+    if (other_->allow_disable_)
+       blade_->allow_disable();
+  }
+  void Setup(BladeBase* base,
+	     int offset,
+	     int num_leds,
+	     SubBladeWrapper* other) {
+    blade_ = base;
+    offset_ = offset;
+    num_leds_ = num_leds;
+    other_ = other;
+    allow_disable_ = false;
+  }
+private:
+  int num_leds_;
+  int offset_;
+  bool allow_disable_;
+  SubBladeWrapper* other_;
+};
+
+// This class let's you split a blade into sections. Let's say you
+// have a crystal chamber and some accent leds, all lit up by a
+// single string of neopixels. With this, you have have the first
+// N leds use one effect, and the rest a different effect. Note that
+// SplitBlade<> can be used recursively if you have more than two
+// sections.
+template<int LEDS, class A, class B>
+class SplitBlade {
+public:
+  void run(BladeBase* base) {
+    int num_leds = base->num_leds();
+    a_blade_.Setup(base, 0, LEDS, &b_blade_);
+    b_blade_.Setup(base, LEDS, num_leds - LEDS, &a_blade_);
+    a_.run(&a_blade_);
+    b_.run(&b_blade_);
+  }
+  OverDriveColor getColor(int led) {
+    if (led < LEDS) return a_.getColor(led);
+    return b_.getColor(led - LEDS);
+  }
+private:
+  A a_;
+  B b_;
+  SubBladeWrapper a_blade_;
+  SubBladeWrapper b_blade_;
 };
 
 template<class COLOR1, class COLOR2, int pulse_millis>
