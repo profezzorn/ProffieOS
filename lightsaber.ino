@@ -21,9 +21,9 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "default_v3_config.h"
+// #define CONFIG_FILE "default_v3_config.h"
 // #define CONFIG_FILE "crossguard_config.h"
-// #define CONFIG_FILE "graflex_v1_config.h"
+#define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
 // #define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
@@ -4328,11 +4328,7 @@ public:
   void clear() override { return blade_->clear(); }
   void allow_disable() override { blade_->allow_disable(); }
   void Activate() override { blade_->Activate(); }
-  void SetStyle(BladeStyle* style) override {
-    return blade_->SetStyle(style);
-  }
 
-protected:
   BladeBase* blade_;
 };
 
@@ -4806,7 +4802,7 @@ private:
   BASE base_;
 };
 
-class SubBladeWrapper : public BladeWrapper {
+class SubBladeWrapper : public BladeWrapper, BladeStyle {
 public:
   int num_leds() const override { return num_leds_; }
   void set(int led, Color16 c) override {
@@ -4815,54 +4811,74 @@ public:
   void set_overdrive(int led, Color16 c) override {
     return blade_->set_overdrive(led - offset_, c);
   }
-  void allow_disable() override {
-    allow_disable_ = true;
-    if (other_->allow_disable_)
-       blade_->allow_disable();
+  void allow_disable() override { allow_disable_ = true; }
+  void Activate() override { if (!offset_) BladeWrapper::Activate(); }
+  void clear() override { if (!offset_) BladeWrapper::clear(); }
+  void SetStyle(BladeStyle* style) {
+    BladeWrapper::SetStyle(style);
+    if (!offset_) blade_->SetStyle(this);
   }
-  void Setup(BladeBase* base,
-	     int offset,
-	     int num_leds,
-	     SubBladeWrapper* other) {
+  
+  void Setup(BladeBase* base, int offset, int num_leds) {
     blade_ = base;
     offset_ = offset;
     num_leds_ = num_leds;
-    other_ = other;
-    allow_disable_ = false;
   }
+
+  void SetNext(SubBladeWrapper* next) {
+    next_ = next;
+  }
+
+  // Bladestyle implementation
+  virtual void activate() override { style_->activate(); }
+  virtual void deactivate() override { style_->deactivate(); }
+  virtual void run(BladeBase* blade) override {
+    SubBladeWrapper* tmp = this;
+    bool allow_disable = true;
+    do {
+      tmp->allow_disable_ = false;
+      tmp->style_->run(tmp);
+      allow_disable &= tmp->allow_disable_;
+      tmp = tmp->next_;
+    } while(tmp != this);
+    if (allow_disable) blade_->allow_disable();
+  }
+
+ bool NoOnOff() override {
+    SubBladeWrapper* tmp = this;
+    do {
+      if (tmp->style_->NoOnOff()) return true;
+      tmp = tmp->next_;
+    } while(tmp != this);
+    return false;
+  }
+
 private:
+  BladeStyle* style_;
   int num_leds_;
   int offset_;
   bool allow_disable_;
-  SubBladeWrapper* other_;
+  SubBladeWrapper* next_;
 };
 
-// This class let's you split a blade into sections. Let's say you
-// have a crystal chamber and some accent leds, all lit up by a
-// single string of neopixels. With this, you have have the first
-// N leds use one effect, and the rest a different effect. Note that
-// SplitBlade<> can be used recursively if you have more than two
-// sections.
-template<int LEDS, class A, class B>
-class SplitBlade {
-public:
-  void run(BladeBase* base) {
-    int num_leds = base->num_leds();
-    a_blade_.Setup(base, 0, LEDS, &b_blade_);
-    b_blade_.Setup(base, LEDS, num_leds - LEDS, &a_blade_);
-    a_.run(&a_blade_);
-    b_.run(&b_blade_);
+BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
+  static SubBladeWrapper* last = NULL;
+  static SubBladeWrapper* first = NULL;
+  if (first && first->blade_ == blade) {
+    first = last = NULL;
   }
-  OverDriveColor getColor(int led) {
-    if (led < LEDS) return a_.getColor(led);
-    return b_.getColor(led - LEDS);
+  SubBladeWrapper* ret = new SubBladeWrapper();
+  if (first) {
+    ret->SetNext(last);
+    first->SetNext(ret);
+    last = ret;
+  } else {
+    ret->SetNext(ret);
+    first = last = ret;
   }
-private:
-  A a_;
-  B b_;
-  SubBladeWrapper a_blade_;
-  SubBladeWrapper b_blade_;
-};
+  ret->Setup(blade, first_led, last_led + 1 - first_led);
+  return ret;
+}
 
 template<class COLOR1, class COLOR2, int pulse_millis>
 class Pulsing {
