@@ -4802,84 +4802,6 @@ private:
   BASE base_;
 };
 
-class SubBladeWrapper : public BladeWrapper, BladeStyle {
-public:
-  int num_leds() const override { return num_leds_; }
-  void set(int led, Color16 c) override {
-    return blade_->set(led - offset_, c);
-  }
-  void set_overdrive(int led, Color16 c) override {
-    return blade_->set_overdrive(led - offset_, c);
-  }
-  void allow_disable() override { allow_disable_ = true; }
-  void Activate() override { if (!offset_) BladeWrapper::Activate(); }
-  void clear() override { if (!offset_) BladeWrapper::clear(); }
-  void SetStyle(BladeStyle* style) {
-    BladeWrapper::SetStyle(style);
-    if (!offset_) blade_->SetStyle(this);
-  }
-  
-  void Setup(BladeBase* base, int offset, int num_leds) {
-    blade_ = base;
-    offset_ = offset;
-    num_leds_ = num_leds;
-  }
-
-  void SetNext(SubBladeWrapper* next) {
-    next_ = next;
-  }
-
-  // Bladestyle implementation
-  virtual void activate() override { style_->activate(); }
-  virtual void deactivate() override { style_->deactivate(); }
-  virtual void run(BladeBase* blade) override {
-    SubBladeWrapper* tmp = this;
-    bool allow_disable = true;
-    do {
-      tmp->allow_disable_ = false;
-      tmp->style_->run(tmp);
-      allow_disable &= tmp->allow_disable_;
-      tmp = tmp->next_;
-    } while(tmp != this);
-    if (allow_disable) blade_->allow_disable();
-  }
-
- bool NoOnOff() override {
-    SubBladeWrapper* tmp = this;
-    do {
-      if (tmp->style_->NoOnOff()) return true;
-      tmp = tmp->next_;
-    } while(tmp != this);
-    return false;
-  }
-
-private:
-  BladeStyle* style_;
-  int num_leds_;
-  int offset_;
-  bool allow_disable_;
-  SubBladeWrapper* next_;
-};
-
-BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
-  static SubBladeWrapper* last = NULL;
-  static SubBladeWrapper* first = NULL;
-  if (first && first->blade_ == blade) {
-    first = last = NULL;
-  }
-  SubBladeWrapper* ret = new SubBladeWrapper();
-  if (first) {
-    ret->SetNext(last);
-    first->SetNext(ret);
-    last = ret;
-  } else {
-    ret->SetNext(ret);
-    first = last = ret;
-  }
-  ret->Setup(blade, first_led, last_led + 1 - first_led);
-  return ret;
-}
-
 template<class COLOR1, class COLOR2, int pulse_millis>
 class Pulsing {
 public:
@@ -6118,6 +6040,97 @@ class String_Blade *StringBladePtr() {
 }
 #endif
 
+
+class SubBladeWrapper : public BladeWrapper, BladeStyle {
+public:
+  int num_leds() const override { return num_leds_; }
+  void set(int led, Color16 c) override {
+    return blade_->set(led - offset_, c);
+  }
+  void set_overdrive(int led, Color16 c) override {
+    return blade_->set_overdrive(led - offset_, c);
+  }
+  void allow_disable() override { allow_disable_ = true; }
+  void Activate() override { if (!offset_) BladeWrapper::Activate(); }
+  void clear() override { if (!offset_) BladeWrapper::clear(); }
+  void SetStyle(BladeStyle* style) {
+    BladeWrapper::SetStyle(style);
+    if (!offset_) blade_->SetStyle(this);
+  }
+  
+  void Setup(BladeBase* base, int offset, int num_leds) {
+    blade_ = base;
+    offset_ = offset;
+    num_leds_ = num_leds;
+  }
+
+  void SetNext(SubBladeWrapper* next) {
+    next_ = next;
+  }
+
+  // Bladestyle implementation
+  virtual void activate() override { style_->activate(); }
+  virtual void deactivate() override { style_->deactivate(); }
+  virtual void run(BladeBase* blade) override {
+    SubBladeWrapper* tmp = this;
+    bool allow_disable = true;
+    do {
+      tmp->allow_disable_ = false;
+      tmp->style_->run(tmp);
+      allow_disable &= tmp->allow_disable_;
+      tmp = tmp->next_;
+    } while(tmp != this);
+    if (allow_disable) blade_->allow_disable();
+  }
+
+ bool NoOnOff() override {
+    SubBladeWrapper* tmp = this;
+    do {
+      if (tmp->style_->NoOnOff()) return true;
+      tmp = tmp->next_;
+    } while(tmp != this);
+    return false;
+  }
+
+private:
+  BladeStyle* style_;
+  int num_leds_;
+  int offset_;
+  bool allow_disable_;
+  SubBladeWrapper* next_;
+};
+
+// This let's you split a single chain of neopixels into multiple blades.
+// Let's say you build saber with an 8-led PLI, a single led for a crystal chamber
+// crystal chamber and 3 accent LEDs all hooked up as a single neopixel chain.
+// The blades[] entry could then look like this:
+// { 2000,
+//   WS2811BladePtr<144, WS2811_ACTUALLY_800kHz | WS211_GRB>(),
+//   SubBlade(0,  7, WS2811BladePtr<15, WS2811_580kHz>()),  // PLI
+//   SubBlade(8,  8, WS2811BladePtr<15, WS2811_580kHz>()),  // crystal chamber
+//   SubBlade(9, 11, WS2811BladePtr<15, WS2811_580kHz>()),  // accent leds
+//   CONFIGARRAY(presets) }
+//
+// The third argument for SubBlade must be identical, or it won't work.
+// In the example above, NUM_BLADES must be 4, so you get to specify
+// a style for each section of the string.
+BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
+  static SubBladeWrapper* last = NULL;
+  static SubBladeWrapper* first = NULL;
+  if (first_led == 0)  first = last = NULL;
+  SubBladeWrapper* ret = new SubBladeWrapper();
+  if (first) {
+    ret->SetNext(last);
+    first->SetNext(ret);
+    last = ret;
+  } else {
+    ret->SetNext(ret);
+    first = last = ret;
+  }
+  ret->Setup(blade, first_led, last_led + 1 - first_led);
+  return ret;
+}
+
 // CONFIGURABLE
 // These structs below describe the properties of the LED circuit
 // so that we know how to drive it properly.
@@ -6302,6 +6315,18 @@ struct Preset {
 #if NUM_BLADES >= 4
   BladeStyle* style4;
 #endif
+#if NUM_BLADES >= 5
+  BladeStyle* style5;
+#endif
+#if NUM_BLADES >= 6
+  BladeStyle* style6;
+#endif
+#if NUM_BLADES >= 7
+  BladeStyle* style7;
+#endif
+#if NUM_BLADES >= 8
+  BladeStyle* style8;
+#endif
 
   const char* name;
 };
@@ -6320,6 +6345,18 @@ struct BladeConfig {
 #endif
 #if NUM_BLADES >= 4
   BladeBase* blade4;
+#endif
+#if NUM_BLADES >= 5
+  BladeBase* blade5;
+#endif
+#if NUM_BLADES >= 6
+  BladeBase* blade6;
+#endif
+#if NUM_BLADES >= 7
+  BladeBase* blade7;
+#endif
+#if NUM_BLADES >= 8
+  BladeBase* blade8;
 #endif
 
   // Blade presets
@@ -6516,6 +6553,18 @@ public:
 #if NUM_BLADES >= 4
     current_config_->blade4->SetStyle(preset->style4);
 #endif
+#if NUM_BLADES >= 5
+    current_config_->blade5->SetStyle(preset->style5);
+#endif
+#if NUM_BLADES >= 6
+    current_config_->blade6->SetStyle(preset->style6);
+#endif
+#if NUM_BLADES >= 7
+    current_config_->blade7->SetStyle(preset->style7);
+#endif
+#if NUM_BLADES >= 8
+    current_config_->blade8->SetStyle(preset->style8);
+#endif
     chdir(preset->font);
   }
 
@@ -6594,6 +6643,18 @@ public:
 #endif
 #if NUM_BLADES >= 4
     current_config_->blade4->Activate();
+#endif
+#if NUM_BLADES >= 5
+    current_config_->blade5->Activate();
+#endif
+#if NUM_BLADES >= 6
+    current_config_->blade6->Activate();
+#endif
+#if NUM_BLADES >= 7
+    current_config_->blade7->Activate();
+#endif
+#if NUM_BLADES >= 8
+    current_config_->blade8->Activate();
 #endif
     SetPreset(current_config_->presets, false);
   }
