@@ -6045,20 +6045,24 @@ class SubBladeWrapper : public BladeWrapper, BladeStyle {
 public:
   int num_leds() const override { return num_leds_; }
   void set(int led, Color16 c) override {
-    return blade_->set(led - offset_, c);
+    return blade_->set(led + offset_, c);
   }
   void set_overdrive(int led, Color16 c) override {
-    return blade_->set_overdrive(led - offset_, c);
+    return blade_->set_overdrive(led + offset_, c);
   }
   void allow_disable() override { allow_disable_ = true; }
-  void Activate() override { if (!offset_) BladeWrapper::Activate(); }
-  void clear() override { if (!offset_) BladeWrapper::clear(); }
+  void Activate() override {
+    if (!offset_) BladeWrapper::Activate();
+  }
+  void clear() override {
+    if (!offset_) BladeWrapper::clear();
+  }
   void SetStyle(BladeStyle* style) {
     BladeWrapper::SetStyle(style);
     if (!offset_) blade_->SetStyle(this);
   }
   
-  void Setup(BladeBase* base, int offset, int num_leds) {
+  void SetupSubBlade(BladeBase* base, int offset, int num_leds) {
     blade_ = base;
     offset_ = offset;
     num_leds_ = num_leds;
@@ -6069,14 +6073,18 @@ public:
   }
 
   // Bladestyle implementation
-  virtual void activate() override { style_->activate(); }
-  virtual void deactivate() override { style_->deactivate(); }
+  virtual void activate() override {
+    current_style_->activate();
+  }
+  virtual void deactivate() override {
+    current_style_->deactivate();
+  }
   virtual void run(BladeBase* blade) override {
     SubBladeWrapper* tmp = this;
     bool allow_disable = true;
     do {
       tmp->allow_disable_ = false;
-      tmp->style_->run(tmp);
+      tmp->current_style_->run(tmp);
       allow_disable &= tmp->allow_disable_;
       tmp = tmp->next_;
     } while(tmp != this);
@@ -6086,14 +6094,13 @@ public:
  bool NoOnOff() override {
     SubBladeWrapper* tmp = this;
     do {
-      if (tmp->style_->NoOnOff()) return true;
+      if (tmp->current_style_->NoOnOff()) return true;
       tmp = tmp->next_;
     } while(tmp != this);
     return false;
   }
 
 private:
-  BladeStyle* style_;
   int num_leds_;
   int offset_;
   bool allow_disable_;
@@ -6107,17 +6114,23 @@ private:
 // { 2000,
 //   WS2811BladePtr<144, WS2811_ACTUALLY_800kHz | WS211_GRB>(),
 //   SubBlade(0,  7, WS2811BladePtr<15, WS2811_580kHz>()),  // PLI
-//   SubBlade(8,  8, WS2811BladePtr<15, WS2811_580kHz>()),  // crystal chamber
-//   SubBlade(9, 11, WS2811BladePtr<15, WS2811_580kHz>()),  // accent leds
+//   SubBlade(8,  8, NULL),  // crystal chamber
+//   SubBlade(9, 11, NULL),  // accent leds
 //   CONFIGARRAY(presets) }
 //
-// The third argument for SubBlade must be identical, or it won't work.
 // In the example above, NUM_BLADES must be 4, so you get to specify
 // a style for each section of the string.
-BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
+class BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
   static SubBladeWrapper* last = NULL;
   static SubBladeWrapper* first = NULL;
-  if (first_led == 0)  first = last = NULL;
+  if (first_led == 0)  {
+    first = last = NULL;
+    if (!blade) return NULL;
+  } else {
+    if (blade) return NULL;
+    blade = first->blade_;
+  }
+  
   SubBladeWrapper* ret = new SubBladeWrapper();
   if (first) {
     ret->SetNext(last);
@@ -6127,7 +6140,7 @@ BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
     ret->SetNext(ret);
     first = last = ret;
   }
-  ret->Setup(blade, first_led, last_led + 1 - first_led);
+  ret->SetupSubBlade(blade, first_led, last_led + 1 - first_led);
   return ret;
 }
 
@@ -6634,29 +6647,40 @@ public:
     STDOUT.print("blade= ");
     STDOUT.println(best_config);
     current_config_ = blades + best_config;
-    current_config_->blade->Activate();
+
+#define ACTIVATE(BLADE) do {     \
+    if (!BLADE) goto bad_blade;  \
+    BLADE->Activate();           \
+  } while(0);
+
+    ACTIVATE(current_config_->blade);
 #if NUM_BLADES >= 2
-    current_config_->blade2->Activate();
+    ACTIVATE(current_config_->blade2)
 #endif
 #if NUM_BLADES >= 3
-    current_config_->blade3->Activate();
+    ACTIVATE(current_config_->blade3);
 #endif
 #if NUM_BLADES >= 4
-    current_config_->blade4->Activate();
+    ACTIVATE(current_config_->blade4);
 #endif
 #if NUM_BLADES >= 5
-    current_config_->blade5->Activate();
+    ACTIVATE(current_config_->blade5);
 #endif
 #if NUM_BLADES >= 6
-    current_config_->blade6->Activate();
+    ACTIVATE(current_config_->blade6);
 #endif
 #if NUM_BLADES >= 7
-    current_config_->blade7->Activate();
+    ACTIVATE(current_config_->blade7);
 #endif
 #if NUM_BLADES >= 8
-    current_config_->blade8->Activate();
+    ACTIVATE(current_config_->blade8);
 #endif
     SetPreset(current_config_->presets, false);
+    return;
+
+   bad_blade:
+    STDOUT.println("BAD BLADE");
+    talkie.Say(spABORT);
   }
 
 
