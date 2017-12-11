@@ -4732,7 +4732,7 @@ public:
 // A section of the ring is lit at the specified color
 // and rotates at the specified speed. The size of the
 // lit up section is defined by "percentage".
-template<class COLOR, int percentage, int rpm>
+template<class COLOR, int percentage, int rpm, int on_rpm=0, int fade_ms=300>
 class ColorCycle {
 public:
   void run(BladeBase* base) {
@@ -4741,7 +4741,13 @@ public:
     uint32_t now = micros();
     uint32_t delta = now - last_micros_;
     last_micros_ = now;
-    pos_ = fract(pos_ + delta / 60000000.0 * rpm);
+    int rpm_diff = 0;
+    if (on_rpm) rpm_diff = on_rpm - rpm;
+    if (!base->is_on()) rpm_diff = -rpm_diff;
+    rpm_ += rpm_diff / 1000.0 * delta / fade_ms;
+    rpm_ = max(rpm_, min(rpm, on_rpm));
+    rpm_ = min(rpm_, max(rpm, on_rpm));
+    pos_ = fract(pos_ + delta / 60000000.0 * rpm_);
     num_leds_ = base->num_leds() * 16384;
     start_ = pos_ * num_leds_;
     end_ = fract(pos_ + percentage / 100.0) * num_leds_;
@@ -4761,6 +4767,7 @@ public:
     return ret;
   }
 private:
+  float rpm_ = rpm;
   float pos_;
   uint32_t start_;
   uint32_t end_;
