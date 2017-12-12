@@ -128,6 +128,8 @@
 #include <Wire.h>
 #include <FS.h>
 #define digitalWriteFast digitalWrite
+#include <stm32l4_dma.h>
+#define DMAChannel stm32l4_dma_t
 #endif
 
 #include <SPI.h>
@@ -1041,6 +1043,7 @@ public:
 class DAC : CommandParser {
 public:
   DAC() {
+#ifdef TEENSYDUINO
     dma.begin(true); // Allocate the DMA channel first
 
 #ifdef USE_I2S
@@ -1120,6 +1123,36 @@ public:
     dma.enable();
 #endif
     dma.attachInterrupt(isr);
+#else  // teensyduino
+    // check return value
+    stm32l_dma_create(&dma, DMA_CHANNEL_DMA2_CH6_SAI1_A, STM32L4_SAI_IRQ_PRIORITY);
+    NVIC_SetPriority(sai->interrupt, sai->priority);
+    NVIC_EnableIRQ(sai->interrupt);
+    SAI_Block_TypeDef *SAIx = SAI1_Block_A;
+    uint32_t sai_cr1 = (SAI_xCR1_DS_2);
+    uint32_t saiclk = SYSTEM_SAICLK_11289600;
+    sai_cr1 |= SAI_xCR1_CKSTR;
+    sai_frcr = (31 << SAI_xFRCR_FRL_Pos) | (15 << SAI_xFRCR_FSALL_Pos) | SAI_xFRCR_FSDEF | SAI_xFRCR_FSOFF;
+    sai_slotr = SAI_xSLOTR_NBSLOT_0 | (0x0003 << SAI_xSLOTR_SLOTEN_Pos) | SAI_xSLOTR_SLOTSZ_0;
+    stm32l4_system_periph_enable(SYSTEM_PERIPH_SAI1);
+    SAIx->CR1 = sai_cr1;
+    SAIx->FRCR = sai_frcr;
+    SAIx->SLOTR = sai_slotr;
+    stm32l4_system_saiclk_configure(saiclk);
+    stm32l4_gpio_pin_configure(bclkPin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_gpio_pin_configure(txd0Pin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_gpio_pin_configure(lrclkPin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_dma_enable(&dma, &isr, 0);
+    stm32l4_dma_start(&dma, (uint32_t)&SAIx->DR, dac_dma_buffer, AUDIO_BUFFER_SIZE * 2,
+                      DMA_OPTION_TRANSFER_DONE |
+		      DMA_OPTION_TRANSFER_HALF |
+		      DMA_OPTION_MEMORY_TO_PERIPHERAL |
+		      DMA_OPTION_PERIPHERAL_DATA_SIZE_32 |
+		      DMA_OPTION_MEMORY_DATA_SIZE_16 |
+		      DMA_OPTION_MEMORY_DATA_INCREMENT |
+		      DMA_OPTION_PRIORITY_HIGH |
+		      DMA_OPTION_CIRCULAR);
+#endif
   }
 
   bool Parse(const char* cmd, const char* arg) override {
@@ -1160,8 +1193,12 @@ private:
     int16_t *dest, *end;
     uint32_t saddr;
 
+#ifdef TEENSYDUINO
     saddr = (uint32_t)(dma.TCD->SADDR);
     dma.clearInterrupt();
+#else
+    saddr = dac_dma_buffer + stm32l4_dma_count(&dma);
+#endif
     if (saddr < (uint32_t)dac_dma_buffer + sizeof(dac_dma_buffer) / 2) {
       // DMA is transmitting the first half of the buffer
       // so we must fill the second half
@@ -1182,8 +1219,10 @@ private:
     while (n < AUDIO_BUFFER_SIZE) data[n++] = 0;
     for (int i = 0; i < n; i++) {
 #ifdef USE_I2S
+#if CHANNELS == 2
       // Duplicate sample to left and right channel.
       *(dest++) = data[i];
+#endif      
       *(dest++) = data[i];
 #else
       *(dest++) = (((uint16_t*)data)[i] + 32768) >> 4;
@@ -4732,25 +4771,33 @@ public:
 // A section of the ring is lit at the specified color
 // and rotates at the specified speed. The size of the
 // lit up section is defined by "percentage".
-template<class COLOR, int percentage, int rpm, int on_rpm=0, int fade_ms=300>
+template<class COLOR, int percentage, int rpm,
+         class ON_COLOR = COLOR,
+	 int on_percentage = percentage,
+	 int on_rpm = rpm,
+	 int fade_time_millis = 1>
 class ColorCycle {
 public:
   void run(BladeBase* base) {
     c_.run(base);
+    on_c_.run(base);
 
     uint32_t now = micros();
     uint32_t delta = now - last_micros_;
     last_micros_ = now;
-    int rpm_diff = 0;
-    if (on_rpm) rpm_diff = on_rpm - rpm;
-    if (!base->is_on()) rpm_diff = -rpm_diff;
-    rpm_ += rpm_diff / 1000.0 * delta / fade_ms;
-    rpm_ = max(rpm_, min(rpm, on_rpm));
-    rpm_ = min(rpm_, max(rpm, on_rpm));
-    pos_ = fract(pos_ + delta / 60000000.0 * rpm_);
+
+    float fade_delta = delta / 1000.0 / fade_time_millis;
+    if (!base->is_on()) fade_delta = - fade_delta;
+    fade_ = max(0.0, min(1.0, fade_ + fade_delta));
+
+    float current_rpm = rpm * (1 - fade_) + on_rpm * fade_;
+    float current_percentage =
+       percentage * (1 - fade_) + on_percentage * fade_;
+    fade_int_ = (int)(16384 * fade_);
+    pos_ = fract(pos_ + delta / 60000000.0 * current_rpm);
     num_leds_ = base->num_leds() * 16384;
     start_ = pos_ * num_leds_;
-    end_ = fract(pos_ + percentage / 100.0) * num_leds_;
+    end_ = fract(pos_ + current_percentage / 100.0) * num_leds_;
   }
   OverDriveColor getColor(int led) {
     led *= 16384;
@@ -4762,17 +4809,21 @@ public:
       black_mix = (Range(0, end_) & led_range).size() +
                   (Range(start_, num_leds_) & led_range).size();
     }
-    OverDriveColor ret = c_.getColor(led);
-    ret.c = Color16().mix2(ret.c, black_mix);
-    return ret;
+    OverDriveColor c = c_.getColor(led);
+    OverDriveColor on_c = on_c_.getColor(led);
+    c.c = c.c.mix2(on_c.c, fade_int_);
+    c.c = Color16().mix2(c.c, black_mix);
+    return c;
   }
 private:
-  float rpm_ = rpm;
-  float pos_;
+  float fade_ = 0.0;
+  int fade_int_;
+  float pos_ = 0.0;
   uint32_t start_;
   uint32_t end_;
   uint32_t num_leds_;
   COLOR c_;
+  ON_COLOR on_c_;
   uint32_t last_micros_;
 };
 
