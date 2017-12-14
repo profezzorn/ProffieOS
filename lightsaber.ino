@@ -23,11 +23,11 @@
 
 // #define CONFIG_FILE "default_v3_config.h"
 // #define CONFIG_FILE "crossguard_config.h"
-#define CONFIG_FILE "graflex_v1_config.h"
+// #define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
 // #define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
-// #define CONFIG_FILE "new_config.h"
+#define CONFIG_FILE "new_config.h"
 
 #define CONFIG_TOP
 #include CONFIG_FILE
@@ -128,8 +128,16 @@
 #include <Wire.h>
 #include <FS.h>
 #define digitalWriteFast digitalWrite
+#include <stm32l4_wiring_private.h>
+#include <stm32l4xx.h>
+#include <armv7m.h>
+#include <stm32l4_gpio.h>
+#include <stm32l4_sai.h>
 #include <stm32l4_dma.h>
+#include <stm32l4_system.h>
 #define DMAChannel stm32l4_dma_t
+#define DMAMEM
+#define NVIC_SET_PRIORITY NVIC_SetPriority
 #endif
 
 #include <SPI.h>
@@ -986,6 +994,7 @@ public:
 
 #ifdef USE_I2S
 
+#ifdef TEENSYDUINO
 // MCLK needs to be 48e6 / 1088 * 256 = 11.29411765 MHz -> 44.117647 kHz sample rate
 //
 #if F_CPU == 96000000 || F_CPU == 48000000 || F_CPU == 24000000
@@ -1034,15 +1043,22 @@ public:
 #endif
 
 #define CHANNELS 2
+
+#else // TEENSYDUINO
+
+#define CHANNELS 1
+
+#endif
+
 #else   // USE_I2S
 #define CHANNELS 1
 #endif  // USE_I2S
 
 #define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_CONT | PDB_SC_PDBIE | PDB_SC_DMAEN)
 
-class DAC : CommandParser {
+class LS_DAC : CommandParser {
 public:
-  DAC() {
+  LS_DAC() {
 #ifdef TEENSYDUINO
     dma.begin(true); // Allocate the DMA channel first
 
@@ -1123,17 +1139,18 @@ public:
     dma.enable();
 #endif
     dma.attachInterrupt(isr);
+
 #else  // teensyduino
-    // check return value
-    stm32l_dma_create(&dma, DMA_CHANNEL_DMA2_CH6_SAI1_A, STM32L4_SAI_IRQ_PRIORITY);
-    NVIC_SetPriority(sai->interrupt, sai->priority);
-    NVIC_EnableIRQ(sai->interrupt);
+    // check return value?
+    stm32l4_dma_create(&dma, DMA_CHANNEL_DMA2_CH6_SAI1_A, STM32L4_SAI_IRQ_PRIORITY);
+    // NVIC_SetPriority(sai->interrupt, sai->priority);
+    // NVIC_EnableIRQ(sai->interrupt);
     SAI_Block_TypeDef *SAIx = SAI1_Block_A;
     uint32_t sai_cr1 = (SAI_xCR1_DS_2);
     uint32_t saiclk = SYSTEM_SAICLK_11289600;
     sai_cr1 |= SAI_xCR1_CKSTR;
-    sai_frcr = (31 << SAI_xFRCR_FRL_Pos) | (15 << SAI_xFRCR_FSALL_Pos) | SAI_xFRCR_FSDEF | SAI_xFRCR_FSOFF;
-    sai_slotr = SAI_xSLOTR_NBSLOT_0 | (0x0003 << SAI_xSLOTR_SLOTEN_Pos) | SAI_xSLOTR_SLOTSZ_0;
+    uint32_t sai_frcr = (31 << SAI_xFRCR_FRL_Pos) | (15 << SAI_xFRCR_FSALL_Pos) | SAI_xFRCR_FSDEF | SAI_xFRCR_FSOFF;
+    uint32_t sai_slotr = SAI_xSLOTR_NBSLOT_0 | (0x0003 << SAI_xSLOTR_SLOTEN_Pos) | SAI_xSLOTR_SLOTSZ_0;
     stm32l4_system_periph_enable(SYSTEM_PERIPH_SAI1);
     SAIx->CR1 = sai_cr1;
     SAIx->FRCR = sai_frcr;
@@ -1143,9 +1160,9 @@ public:
     stm32l4_gpio_pin_configure(txd0Pin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
     stm32l4_gpio_pin_configure(lrclkPin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
     stm32l4_dma_enable(&dma, &isr, 0);
-    stm32l4_dma_start(&dma, (uint32_t)&SAIx->DR, dac_dma_buffer, AUDIO_BUFFER_SIZE * 2,
-                      DMA_OPTION_TRANSFER_DONE |
-		      DMA_OPTION_TRANSFER_HALF |
+    stm32l4_dma_start(&dma, (uint32_t)&SAIx->DR, (uint32_t)dac_dma_buffer, AUDIO_BUFFER_SIZE * 2,
+                      DMA_OPTION_EVENT_TRANSFER_DONE |
+		      DMA_OPTION_EVENT_TRANSFER_HALF |
 		      DMA_OPTION_MEMORY_TO_PERIPHERAL |
 		      DMA_OPTION_PERIPHERAL_DATA_SIZE_32 |
 		      DMA_OPTION_MEMORY_DATA_SIZE_16 |
@@ -1181,14 +1198,19 @@ public:
     STDOUT.println(" dacbuf - print the current contents of the dac buffer");
   }
 
-  void SetStream(AudioStream* stream) {
+  void SetStream(class AudioStream* stream) {
     stream_ = stream;
   }
 
 private:
   // Interrupt handler.
   // Fills the dma buffer with new sample data.
-  static void isr(void) {
+#ifdef TEENSYDUINO
+  static void isr(void)
+#else
+  static void isr(void* arg, unsigned long int event)
+#endif
+  {
     ScopedCycleCounter cc(audio_dma_interrupt_cycles);
     int16_t *dest, *end;
     uint32_t saddr;
@@ -1197,7 +1219,7 @@ private:
     saddr = (uint32_t)(dma.TCD->SADDR);
     dma.clearInterrupt();
 #else
-    saddr = dac_dma_buffer + stm32l4_dma_count(&dma);
+    saddr = (uint32_t)(dac_dma_buffer + stm32l4_dma_count(&dma));
 #endif
     if (saddr < (uint32_t)dac_dma_buffer + sizeof(dac_dma_buffer) / 2) {
       // DMA is transmitting the first half of the buffer
@@ -1235,11 +1257,13 @@ private:
   static DMAChannel dma;
 };
 
-DMAChannel DAC::dma(false);
-AudioStream * volatile DAC::stream_ = nullptr;
-DMAMEM uint16_t DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
+#ifdef TEENSYDUINO
+DMAChannel LS_DAC::dma(false);
+#endif  
+AudioStream * volatile LS_DAC::stream_ = nullptr;
+DMAMEM uint16_t LS_DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
 
-DAC dac;
+LS_DAC dac;
 
 // Audio compressor, takes N input channels, sums them and divides the
 // result by the square root of the average volume.
@@ -4487,8 +4511,8 @@ public:
          config.intensity_rand = 0;
       }
       // Note heat_[0] is tip of blade
-      for (int i = 1; i <= speed_; i++) {
-         heat_[num_leds - i] += config.intensity_base +
+      for (int i = 0; i < speed_; i++) {
+         heat_[num_leds + i] += config.intensity_base +
            random(random(random(config.intensity_rand)));
       }
       for (int i = 0; i < num_leds; i++) {
@@ -6738,7 +6762,9 @@ public:
 
    bad_blade:
     STDOUT.println("BAD BLADE");
+#ifdef ENABLE_AUDIO
     talkie.Say(spABORT);
+#endif    
   }
 
 
