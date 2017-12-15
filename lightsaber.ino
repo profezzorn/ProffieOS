@@ -24,10 +24,10 @@
 // #define CONFIG_FILE "default_v3_config.h"
 // #define CONFIG_FILE "crossguard_config.h"
 // #define CONFIG_FILE "graflex_v1_config.h"
-// #define CONFIG_FILE "owk_v2_config.h"
+#define CONFIG_FILE "owk_v2_config.h"
 // #define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
-#define CONFIG_FILE "new_config.h"
+// #define CONFIG_FILE "new_config.h"
 
 #define CONFIG_TOP
 #include CONFIG_FILE
@@ -137,7 +137,7 @@
 #include <stm32l4_system.h>
 #define DMAChannel stm32l4_dma_t
 #define DMAMEM
-#define NVIC_SET_PRIORITY NVIC_SetPriority
+#define NVIC_SET_PRIORITY(X,Y) NVIC_SetPriority((X), (IRQn_Type)(Y))
 #endif
 
 #include <SPI.h>
@@ -4512,7 +4512,7 @@ public:
       }
       // Note heat_[0] is tip of blade
       for (int i = 0; i < speed_; i++) {
-         heat_[num_leds + i] += config.intensity_base +
+         heat_[num_leds + i] = config.intensity_base +
            random(random(random(config.intensity_rand)));
       }
       for (int i = 0; i < num_leds; i++) {
@@ -6563,7 +6563,10 @@ public:
     if (SaberBase::Lockup()) return;
     // TODO: Pick clash randomly and/or based on strength of clash.
     uint32_t t = millis();
-    if (t - last_clash_ < clash_timeout_) return;
+    if (t - last_clash_ < clash_timeout_) {
+      last_clash_ = t; // Vibration cancellation
+      return;
+    }
     if (Event(BUTTON_NONE, EVENT_CLASH)) {
       clash_timeout_ = 400;  // For events, space clashes out more.
     } else {
@@ -6773,11 +6776,17 @@ public:
     STDOUT.println(text);
   }
 
+  float peak = 0.0;
+  Vec3 at_peak;
   void SB_Accel(const Vec3& accel) override {
-    if ( (accel_ - accel).len2() >
-         CLASH_THRESHOLD_G * CLASH_THRESHOLD_G) {
+    float v = (accel_ - accel).len2();
+    if (v > CLASH_THRESHOLD_G * CLASH_THRESHOLD_G) {
       // Needs de-bouncing
       Clash();
+    }
+    if (v > peak) {
+      peak = v;
+      at_peak = accel_ - accel;
     }
     accel_ = accel;
     if (monitor.ShouldPrint(Monitoring::MonitorClash)) {
@@ -6786,7 +6795,17 @@ public:
       STDOUT.print(", ");
       STDOUT.print(accel.y);
       STDOUT.print(", ");
-      STDOUT.println(accel.z);
+      STDOUT.print(accel.z);
+      STDOUT.print(" peak ");
+      STDOUT.print(at_peak.x);
+      STDOUT.print(", ");
+      STDOUT.print(at_peak.y);
+      STDOUT.print(", ");
+      STDOUT.print(at_peak.z);
+      STDOUT.print(" (");
+      STDOUT.print(sqrt(peak));
+      STDOUT.println(")");
+      peak = 0.0;
     }
   }
 
