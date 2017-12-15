@@ -1,10 +1,9 @@
 ARDUINO_DIR:=/home/hubbe/lib/arduino-1.8.3
+
 BOARD_TAG=teensy31
-ARDUINO_LIBS =
 USB_TYPE=USB_SERIAL
 ARDUINO_LIB_PATH=FOOBAR
 ARDUINO_LIBS=EEPROM FastLED SD SPI SerialFlash Snooze i2c_t3
-
 include Teensy.mk
 
 MAKEFILES=Makefile Arduino.mk Common.mk Teensy.mk
