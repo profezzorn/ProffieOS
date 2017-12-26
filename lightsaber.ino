@@ -3408,13 +3408,9 @@ public:
       BufferedWavPlayer* tmp = Play(&out);
       if (tmp) {
         int delay_ms = 1000 * tmp->length() - config_.humStart;
-#if 0   
-        STDOUT.print("LEN: ");
-        STDOUT.println(tmp->length());
-        STDOUT.print("DELAY: ");
-        STDOUT.println(delay_ms);
-#endif  
-        hum_start_ += delay_ms;
+        if (delay_ms > 0 && delay_ms < 30000) {
+          hum_start_ += delay_ms;
+        }
       }
     }
   }
@@ -3468,6 +3464,7 @@ public:
   uint32_t last_micros_;
 
   void SetHumVolume(float vol) override {
+    uint32_t m = micros();
     switch (state_) {
       case STATE_OFF:
         volume_ = 0.0f;
@@ -3476,13 +3473,11 @@ public:
         volume_ = 0.0f;
         if (millis() - hum_start_ < 0x7fffffffUL) {
           state_ = STATE_HUM_FADE_IN;
-          last_micros_ = micros();
         }
         break;
       case STATE_HUM_FADE_IN: {
-        uint32_t m = micros();
         uint32_t delta = m - last_micros_;
-        volume_ += (delta / 1000000.0) * 0.3; // 0.3 seconds
+        volume_ += (delta / 1000000.0) * 0.2; // 0.2 seconds
         if (volume_ >= 1.0f) {
           volume_ = 1.0f;
           state_ = STATE_HUM_ON;
@@ -3490,12 +3485,10 @@ public:
         break;
       }
       case STATE_HUM_ON:
-        last_micros_ = micros();
         break;
       case STATE_HUM_FADE_OUT: {
-        uint32_t m = micros();
         uint32_t delta = m - last_micros_;
-        volume_ -= (delta / 1000000.0) * 0.3; // 0.3 seconds
+        volume_ -= (delta / 1000000.0) * 0.2; // 0.2 seconds
         if (volume_ <= 0.0f) {
           volume_ = 0.0f;
           state_ = STATE_OFF;
@@ -3503,6 +3496,7 @@ public:
         break;
       }
     }
+    last_micros_ = m;
     wav_players[0].set_volume(vol * volume_);
   }
   
@@ -9364,6 +9358,8 @@ protected:
         STDOUT.print(wav_players[i].isPlaying() ? "On" : "Off");
         STDOUT.print(" (eof =  ");
         STDOUT.print(wav_players[i].eof());
+        STDOUT.print(" volume = ");
+        STDOUT.print(wav_players[i].volume());
         STDOUT.println(")");
       }
       return true;
