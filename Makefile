@@ -14,5 +14,5 @@ CONFIG_FILES=common_presets.h graflex_v1_config.h owk_v2_config.h \
              default_config.h
 
 export:
-	zip -9 lightsaber-`sed <lightsaber.ino -n 's@.*lightsaber.ino,v \([^ ]*\) .*$$@\1@gp'`.zip $(SOURCE_FILES) $(CONFIG_FILES) $(MAKEFILES)
+	cd .. && zip -9 lightsaber/lightsaber-`sed <lightsaber/lightsaber.ino -n 's@.*lightsaber.ino,v \([^ ]*\) .*$$@\1@gp'`.zip `for x in $(SOURCE_FILES) $(CONFIG_FILES) $(MAKEFILES); do echo lightsaber/$$x ; done`
 
