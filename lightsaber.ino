@@ -24,8 +24,8 @@
 // #define CONFIG_FILE "default_v3_config.h"
 // #define CONFIG_FILE "crossguard_config.h"
 // #define CONFIG_FILE "graflex_v1_config.h"
-#define CONFIG_FILE "owk_v2_config.h"
-// #define CONFIG_FILE "test_bench_config.h"
+// #define CONFIG_FILE "owk_v2_config.h"
+#define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
 // #define CONFIG_FILE "new_config.h"
 
@@ -2616,17 +2616,19 @@ private:
   DOWNSAMPLE_FUNC(Emit05, Emit1);
 
   uint32_t header(int n) const {
-    return ((uint32_t *)buffer)[n];
+    return ((uint32_t *)buffer)[n+2];
   }
 
   template<int bits> int16_t read2() {
     if (bits == 8) return *(ptr_++) << 8;
+    ptr_ += bits / 8 - 2;
     return *((*((int16_t**)&ptr_))++);
   }
 
   template<int bits, int channels, int rate>
   void DecodeBytes4() {
-    while (ptr_ < end_ && num_samples_ < (int)NELEM(samples_)) {
+    while (ptr_ < end_ - channels * bits / 8 &&
+	   num_samples_ < (int)NELEM(samples_)) {
       int v = 0;
       if (channels == 1) {
         v = read2<bits>();
@@ -2668,17 +2670,19 @@ private:
 
   void DecodeBytes() {
     if (bits_ == 8) DecodeBytes2<8>();
-    else DecodeBytes2<16>();
+    else if (bits_ == 16) DecodeBytes2<16>();
+    else if (bits_ == 24) DecodeBytes2<24>();
+    else if (bits_ == 32) DecodeBytes2<32>();
   }
 
   int ReadFile(int n) {
 #ifdef ENABLE_SERIALFLASH
     if (sf_file_) {
-      return sf_file_.read(buffer, n);
+      return sf_file_.read(buffer + 8, n);
     }
 #endif
 #ifdef ENABLE_SD
-    return sd_file_.read(buffer, n);
+    return sd_file_.read(buffer + 8, n);
 #else
     return 0;
 #endif
@@ -2759,23 +2763,40 @@ private:
       }
       wav_ = endswith(".wav", filename_);
       if (wav_) {
-        if (ReadFile(20) != 20) {
-          STDOUT.println("Failed to read 20 bytes.");
+        if (ReadFile(12) != 12) {
+          STDOUT.println("Failed to read 12 bytes.");
           goto fail;
         }
-        if (header(0) != 0x46464952 &&
-            header(2) != 0x45564157 &&
-            header(3) != 0x20746D66 &&
-            header(4) < 16) {
-          STDOUT.println("Headers don't match.");
+        if (header(0) != 0x46464952 || header(2) != 0x45564157) {
+          STDOUT.println("Not RIFF WAVE.");
           YIELD();
           goto fail;
-        }
-        tmp_ = header(4);
-        if (tmp_ != ReadFile(tmp_)) {
+	}
+
+	// Look for FMT header.
+	while (true) {
+	  if (ReadFile(8) != 8) {
+	    STDOUT.println("Failed to read 8 bytes.");
+	    goto fail;
+	  }
+
+	  len_ = header(1);
+	  if (header(0) != 0x20746D66) {  // 'fmt '
+	    Skip(len_);
+	    continue;
+	  }
+	  if (len_ < 16) {
+	    STDOUT.println("FMT header is wrong size..");
+	    goto fail;
+	  }
+	  break;
+	}
+	
+        if (16 != ReadFile(16)) {
           STDOUT.println("Read failed.");
           goto fail;
         }
+	if (len_ > 16) Skip(len_ - 16);
         if ((header(0) & 0xffff) != 1) {
           STDOUT.println("Wrong format.");
           goto fail;
@@ -2795,6 +2816,9 @@ private:
       STDOUT.print(" bits: ");
       STDOUT.println(bits_);
 
+      ptr_ = buffer + 8;
+      end_ = buffer + 8;
+      
       while (true) {
         if (wav_) {
           if (ReadFile(8) != 8) break;
@@ -2809,14 +2833,14 @@ private:
         }
         sample_bytes_ = len_;
         while (len_) {
-          bytes_to_decode_ =
-            ReadFile(AlignRead(min(len_, sizeof(buffer))));
-          if (bytes_to_decode_ == 0)
-            break;
-          len_ -= bytes_to_decode_;
-          ptr_ = buffer;
-          end_ = buffer + bytes_to_decode_;
-          while (ptr_ < end_) {
+	  {
+	    int bytes_read = ReadFile(AlignRead(min(len_, 512u)));
+	    if (bytes_read == 0)
+	      break;
+	    len_ -= bytes_read;
+	    end_ = buffer + 8 + bytes_read;
+	  }
+          while (ptr_ < end_ - channels_ * bits_ / 8) {
             DecodeBytes();
 
             while (written_ < num_samples_) {
@@ -2831,6 +2855,12 @@ private:
             }
             written_ = num_samples_ = 0;
           }
+	  if (ptr_ < end_) {
+	    memmove(buffer + 8 - (end_ - ptr_),
+		    ptr_,
+		    end_ - ptr_);
+	  }
+	  ptr_ = buffer + 8 - (end_ - ptr_);
         }
         YIELD();
       }
@@ -2885,12 +2915,11 @@ private:
 
   bool wav_;
 
-  int bytes_to_decode_ = 0;
   size_t len_ = 0;
   volatile size_t sample_bytes_ = 0;
   char* ptr_;
   char* end_;
-  char buffer[512]  __attribute__((aligned(4)));
+  char buffer[512 + 8]  __attribute__((aligned(4)));
 
   // Number of samples_ in samples that has been
   // sent out already.
