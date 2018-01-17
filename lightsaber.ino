@@ -25,9 +25,9 @@
 // #define CONFIG_FILE "crossguard_config.h"
 // #define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
-#define CONFIG_FILE "test_bench_config.h"
+// #define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
-// #define CONFIG_FILE "new_config.h"
+#define CONFIG_FILE "new_config.h"
 
 #define CONFIG_TOP
 #include CONFIG_FILE
@@ -1259,6 +1259,8 @@ private:
 
 #ifdef TEENSYDUINO
 DMAChannel LS_DAC::dma(false);
+#else
+DMAChannel LS_DAC::dma;
 #endif  
 AudioStream * volatile LS_DAC::stream_ = nullptr;
 DMAMEM uint16_t LS_DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
@@ -1890,9 +1892,11 @@ public:
   AudioStreamWork() {
     next_ = data_streams;
     data_streams = this;
+#ifdef TEENSYDUINO
     NVIC_SET_PRIORITY(IRQ_WAV, 240);
     _VectorsRam[IRQ_WAV + 16] = &ProcessAudioStreams;
     NVIC_ENABLE_IRQ(IRQ_WAV);
+#endif    
   }
   ~AudioStreamWork() {
     for (AudioStreamWork** d = &data_streams; *d; d = &(*d)->next_) {
@@ -1903,8 +1907,12 @@ public:
   }
 
   static void scheduleFillBuffer() {
+#ifdef TEENSYDUINO
     if (!NVIC_IS_ACTIVE(IRQ_WAV))
       NVIC_TRIGGER_IRQ(IRQ_WAV);
+#else
+    armv7m_pendsv_enqueue((armv7m_pendsv_routine_t)ProcessAudioStreams, NULL, 0);
+#endif    
   }
 
   static void LockSD(bool locked) {
@@ -2917,9 +2925,9 @@ private:
 
   size_t len_ = 0;
   volatile size_t sample_bytes_ = 0;
-  char* ptr_;
-  char* end_;
-  char buffer[512 + 8]  __attribute__((aligned(4)));
+  unsigned char* ptr_;
+  unsigned char* end_;
+  unsigned char buffer[512 + 8]  __attribute__((aligned(4)));
 
   // Number of samples_ in samples that has been
   // sent out already.
@@ -3853,9 +3861,6 @@ class Color16 {
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 */
-
-#include <Arduino.h>
-#include "DMAChannel.h"
 
 #if TEENSYDUINO < 121
 #error "Teensyduino version 1.21 or later is required to compile this library."
