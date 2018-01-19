@@ -25,9 +25,9 @@
 // #define CONFIG_FILE "crossguard_config.h"
 // #define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
-// #define CONFIG_FILE "test_bench_config.h"
+#define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
-#define CONFIG_FILE "new_config.h"
+// #define CONFIG_FILE "new_config.h"
 
 #define CONFIG_TOP
 #include CONFIG_FILE
@@ -822,6 +822,10 @@ float clamp(float x, float a, float b) {
   if (x > b) return b;
   return x;
 }
+float fmod(float a, float b) {
+  return a - floor(a / b) * b;
+}
+
 int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x < a) return a;
   if (x > b) return b;
@@ -2257,6 +2261,7 @@ class Effect {
     unnumbered_file_found_ = false;
     subdirs_ = false;
     ext_ = UNKNOWN;
+    selected_ = -1;
   }
 
   void Scan(const char *filename) {
@@ -2333,6 +2338,9 @@ class Effect {
     return ret;
   }
 
+  void Select(int n) {
+    selected_ = n;
+  }
 
   bool Play(char *filename) {
     int num_files = files_found();
@@ -2342,6 +2350,7 @@ class Effect {
       return false; 
     }
     int n = rand() % num_files;
+    if (selected_ != -1) n = selected_;
     strcpy(filename, current_directory);
     strcat(filename, name_);
     if (subdirs_) {
@@ -2484,6 +2493,9 @@ private:
   // All files must start with this prefix.
   const char* name_;
 
+  // If not -1, return this file.
+  int selected_;
+
   // All files must end with this extension.
   Extension ext_;
 };
@@ -2515,9 +2527,14 @@ EFFECT(lock);
 EFFECT(swng);
 EFFECT(slsh);
 
-// Looped swing fonts.
+// Looped swing fonts. (SmoothSwing V1)
 EFFECT(swingl);  // Looped swing, LOW
 EFFECT(swingh);  // Looped swing, HIGH
+
+// SmoothSwing V2
+// swinga and swingb must have the same number of files.
+EFFECT(swinga);
+EFFECT(swingb);
 
 // Drag effect, replaces "lock/lockup" in drag mode if present.
 EFFECT(drag);
@@ -2594,8 +2611,9 @@ public:
     return filename_;
   }
 
-  void PlayOnce(Effect* effect) {
+  void PlayOnce(Effect* effect, float start = 0.0) {
     if (effect->Play(filename_)) {
+      start_ = start;
       effect_ = nullptr;
       run_ = true;
     }
@@ -2840,6 +2858,15 @@ private:
           len_ = FileSize() - Tell();
         }
         sample_bytes_ = len_;
+
+        if (start_ != 0.0) {
+	  int samples = fmod(start_, length()) * rate_;
+	  int bytes_to_skip = samples * channels_ * bits_ / 8;
+	  Skip(bytes_to_skip);
+	  len_ -= bytes_to_skip;
+	  start_ = 0.0;
+	}
+
         while (len_) {
 	  {
 	    int bytes_read = ReadFile(AlignRead(min(len_, 512u)));
@@ -2916,6 +2943,7 @@ private:
   int16_t* dest_ = nullptr;
   int to_read_ = 0;
   int tmp_;
+  float start_ = 0.0;
 
   int rate_;
   uint8_t channels_;
@@ -3032,7 +3060,7 @@ public:
     pause_ = false;
   }
 
-  void PlayOnce(Effect* effect) {
+  void PlayOnce(Effect* effect, float start = 0.0) {
     STDOUT.print("unit = ");
     STDOUT.print(WhatUnit(this));
     STDOUT.print(" vol = ");
@@ -3041,7 +3069,7 @@ public:
 
     pause_ = true;
     clear();
-    wav.PlayOnce(effect);
+    wav.PlayOnce(effect, start);
     SetStream(&wav);
     scheduleFillBuffer();
     pause_ = false;
@@ -3572,6 +3600,7 @@ public:
 };
 
 
+// SmoothSwing V1
 // Looped swing sounds is a new way to play swing sounds.
 // Basically, two swing sounds (swingl and swingh) are always
 // playing in the background, but with zero volume. When
@@ -3672,6 +3701,159 @@ public:
 };
 
 LoopedSwingWrapper looped_swing_wrapper;
+
+// SmoothSwing V2, based on Thexter's excellent work.
+// For more details, see:
+// http://therebelarmory.com/thread/9138/smoothswing-v2-algorithm-description
+//
+class SmoothSwingV2 : public SaberBasePassThrough {
+public:
+  SmoothSwingV2() : SaberBasePassThrough() {}
+
+  void Activate(SaberBase* base_font) {
+    STDOUT.println("Activating SmoothSwing V2");
+    SetDelegate(base_font);
+    if (swinga.files_found() != swingb.files_found()) {
+      STDOUT.println("Warning, swinga and swingb should have the same number of files.");
+      swings_ = min(swinga.files_found(), swingb.files_found());
+    }
+  }
+
+  void Deactivate() {
+    SetDelegate(NULL);
+  }
+
+  // Should only be done when the volume is near zero.
+  void PickRandomSwing() {
+    int swing = random(swings_);
+    float start = millis() / 1000.0;
+    A.Stop();
+    B.Stop();
+    swinga.Select(swing);
+    swingb.Select(swing);
+    A.Play(&swinga, start);
+    B.Play(&swingb, start);
+    if (random(2)) std::swap(A, B);
+    float t1_offset = random(1000) / 1000.0 * 50 + 10;
+    A.SetTransition(t1_offset, 45.0);
+    B.SetTransition(t1_offset + 180, 160.0);
+  }
+
+  void SB_On() override {
+    // Starts hum, etc.
+    delegate_->SB_On();
+    A.player = GetFreeWavPlayer();
+    B.player= GetFreeWavPlayer();
+    if (!A.player || !B.player) {
+      STDOUT.println("SmoothSwing V2 cannot allocate wav player.");
+    }
+    PickRandomSwing();
+  }
+  void SB_Off() override {
+    A.Off();
+    B.Off();
+    delegate_->SB_Off();
+  }
+
+  enum class SwingState {
+    OFF, // waiting for swing to start
+    ON,  // swinging
+    OUT, // Waiting for sound to fade out
+  };
+
+  void SB_Motion(const Vec3& gyro) override {
+    // degrees per second
+    // May not need to smooth gyro since volume is smoothed.
+    float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
+    uint32_t t = micros();
+    uint32_t delta = t - last_micros_;
+    if (delta > 1000000) delta = 1;
+    last_micros_ = t;
+
+    switch (state_) {
+      case SwingState::OFF:
+	if (speed < 60.0) break;
+	state_ = SwingState::ON;
+	
+      case SwingState::ON:
+	if (speed > 50.0) {
+	  float swing_strength = min(1.0, (speed - 50.0) / 720.0);
+	  A.rotate(-speed * delta / 1000000.0);
+	  while (A.end() < 0.0) {
+	    B.midpoint = A.midpoint + 180.0;
+	    A.rotate(360.0);
+	    std::swap(A, B);
+	  }
+	  float mixab = 0.0;
+	  if (A.begin() < 0.0)
+	    mixab = - A.begin() / A.width;
+	  
+	  float swing_sharpness = 1.75;
+	  float mixhum = 0.75 * pow(swing_strength, swing_sharpness);
+
+	  delegate_->SetHumVolume(1.0 - mixhum);
+	  A.set_volume(mixhum * mixab);
+	  B.set_volume(mixhum * (1.0 - mixab));
+	  break;
+	}
+	delegate_->SetHumVolume(1.0);
+	A.set_volume(0);
+	B.set_volume(0);
+	state_ = SwingState::OUT;
+
+      case SwingState::OUT:
+	if (!A.isOff() || !B.isOff()) break;
+	PickRandomSwing();
+	state_ = SwingState::OFF;
+    }
+  }
+
+private:
+  struct Data {
+    void set_volume(float v) {
+      if (player) player->set_volume(v);
+    }
+    void Play(Effect* effect, float start = 0.0) {
+      if (!player) return;
+      player->PlayOnce(effect, start);
+      player->PlayLoop(effect);
+    }
+    void Off() {
+      if (!player) return;
+      player->set_fade_time(0.3);
+      player->FadeAndStop();
+      player = NULL;
+    }
+    void Stop() {
+      if (!player) return;
+      player->Stop();
+    }
+    bool isOff() {
+      if (!player) return true;
+      return player->isOff();
+    }
+    void SetTransition(float mp, float w) {
+      midpoint = mp;
+      width = w;
+    }
+    float begin() const { return midpoint - width / 2; }
+    float end() const { return midpoint + width / 2; }
+    void rotate(float degrees) {
+      midpoint = degrees;
+    }
+    BufferedWavPlayer *player = nullptr;
+    float midpoint;
+    float width;
+  };
+  Data A;
+  Data B;
+
+  int swings_;
+  uint32_t last_micros_;
+  SwingState state_ = SwingState::OFF;;
+};
+
+SmoothSwingV2 smooth_swing_v2;
 
 #endif  // ENABLE_AUDIO
 
@@ -6672,6 +6854,7 @@ public:
       return false;
     }
 #ifdef ENABLE_AUDIO
+    smooth_swing_v2.Deactivate();
     looped_swing_wrapper.Deactivate();
     monophonic_font.Deactivate();
     polyphonic_font.Deactivate();
@@ -6704,7 +6887,9 @@ public:
       font = &monophonic_font;
     }
     if (font) {
-      if (swingl.files_found()) {
+      if (swinga.files_found()) {
+        smooth_swing_v2.Activate(font);
+      } else if (swingl.files_found()) {
         looped_swing_wrapper.Activate(font);
       }
     }
