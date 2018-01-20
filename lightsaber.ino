@@ -2527,14 +2527,9 @@ EFFECT(lock);
 EFFECT(swng);
 EFFECT(slsh);
 
-// Looped swing fonts. (SmoothSwing V1)
+// Looped swing fonts. (SmoothSwing V1/V2)
 EFFECT(swingl);  // Looped swing, LOW
 EFFECT(swingh);  // Looped swing, HIGH
-
-// SmoothSwing V2
-// swinga and swingb must have the same number of files.
-EFFECT(swinga);
-EFFECT(swingb);
 
 // Drag effect, replaces "lock/lockup" in drag mode if present.
 EFFECT(drag);
@@ -3367,7 +3362,7 @@ struct ConfigFile {
     while (f->available() && f->read() != '\n');
   }
 
-  int64_t readValue(File* f) {
+  int64_t readIntValue(File* f) {
     int64_t ret = 0;
     int64_t sign = 1;
     if (f->peek() == '-') {
@@ -3386,7 +3381,39 @@ struct ConfigFile {
     return ret * sign;
   }
 
+  int64_t readFloatValue(File* f) {
+    float ret = 0.0;
+    float sign = 1.0;
+    float mult = 1.0;
+    bool decimals = false;
+    if (f->peek() == '-') {
+      sign = -1.0;
+      f->read();
+    }
+    while (f->available()) {
+      int c = toLower(f->peek());
+      if (c >= '0' && c <= '9') {
+	if (decimals) {
+	  ret += (c - '0') * mult;
+	  mult /= 10;
+	} else {
+          ret = (c - '0') + 10 * ret;
+	}
+        f->read();
+      } else if (c == '.') {
+	if (decimals) return ret * sign;
+	// Time to read decimals.
+	decimals = true;
+	f->read();
+      } else {
+        return ret * sign;
+      }
+    }
+    return ret * sign;
+  }
+
   void Read(File* f) {
+    SetVariable("=", 0.0);  // This resets all variables.
     for (; f->available(); skipline(f)) {
       char variable[33];
       variable[0] = 0;
@@ -3406,22 +3433,18 @@ struct ConfigFile {
       if (f->peek() != '=') continue;
       f->read();
       skipwhite(f);
-      int64_t v = readValue(f);
+      float v = readFloatValue(f);
 #if 0
       STDOUT.print(variable);
       STDOUT.print(" = ");
-      STDOUT.println((int)v);
+      STDOUT.println(v);
 #endif
-      if (!strcmp(variable, "humstart")) {
-        humStart = v;
-      } else if (!strcmp(variable, "volhum")) {
-        volHum = v;
-      } else if (!strcmp(variable, "voleff")) {
-        volEff = v;
-      }
+
+      SetVariable(variable, v);
     }
   }
 #endif
+  virtual void SetVariable(const char* variable, float v) = 0;
 
   void Read(const char *filename) {
 #ifdef ENABLE_SD
@@ -3431,11 +3454,35 @@ struct ConfigFile {
 #endif
   }
 
-  int humStart = 100;
-  int volHum = 15;
-  int volEff = 16;
+  void ReadInCurrentDir(const char* name) {
+    char full_name[128];
+    strcpy(full_name, current_directory);
+    strcat(full_name, name);
+    Read(full_name);
+  }
 };
 
+class IgniterConfigFile : public ConfigFile {
+public:
+#define CONFIG_VARIABLE(X, DEF) do {		\
+    if (variable[0] == '=') X = DEF;		\
+    else if (!strcasecmp(variable, #X)) {	\
+      X = v;					\
+      return;					\
+    }						\
+} while(0)
+	
+  void SetVariable(const char* variable, float v) override {
+    CONFIG_VARIABLE(humStart, 100);
+    CONFIG_VARIABLE(volHum, 15);
+    CONFIG_VARIABLE(volEff, 16);
+  }
+  int humStart;
+  int volHum;
+  int volEff;
+};
+
+  
 // With polyphonic fonts, sounds are played more or less
 // independently. Hum is faded in/out by changing the volume
 // and all other sound effects are just played in parallel
@@ -3447,10 +3494,7 @@ public:
     STDOUT.println("Activating polyphonic font.");
     SetupStandardAudio();
     wav_players[0].set_volume_now(0);
-    char config_filename[128];
-    strcpy(config_filename, current_directory);
-    strcat(config_filename, "config.ini");
-    config_.Read(config_filename);
+    config_.ReadInCurrentDir("config.ini");
     SaberBase::Link(this);
     state_ = STATE_OFF;
     lock_player_ = NULL;
@@ -3582,7 +3626,7 @@ public:
     SetHumVolume(vol);
   }
 
-  ConfigFile config_;
+  IgniterConfigFile config_;
   State state_;
   float volume_;
 };
@@ -3599,6 +3643,28 @@ public:
   }
 };
 
+class SmoothSwingConfigFile : public ConfigFile {
+public:
+  void SetVariable(const char* variable, float v) override {
+    CONFIG_VARIABLE(Version, 1);
+    CONFIG_VARIABLE(SwingSensitivity, 720.0);
+    CONFIG_VARIABLE(MaximumHumDucking, 75.0);
+    CONFIG_VARIABLE(SwingSharpness, 1.75);
+    CONFIG_VARIABLE(SwingStrengthThreshold, 3.0);
+    CONFIG_VARIABLE(Transition1Degrees, 45.0);
+    CONFIG_VARIABLE(Transition2Degrees, 160.0);
+  };
+
+  int  Version;
+  float SwingSensitivity;
+  float MaximumHumDucking;
+  float SwingSharpness;
+  float SwingStrengthThreshold;
+  float Transition1Degrees;
+  float Transition2Degrees;
+};
+
+SmoothSwingConfigFile smooth_swing_config_file;
 
 // SmoothSwing V1
 // Looped swing sounds is a new way to play swing sounds.
@@ -3713,9 +3779,9 @@ public:
   void Activate(SaberBase* base_font) {
     STDOUT.println("Activating SmoothSwing V2");
     SetDelegate(base_font);
-    if (swinga.files_found() != swingb.files_found()) {
-      STDOUT.println("Warning, swinga and swingb should have the same number of files.");
-      swings_ = min(swinga.files_found(), swingb.files_found());
+    if (swingl.files_found() != swingh.files_found()) {
+      STDOUT.println("Warning, swingl and swingh should have the same number of files.");
+      swings_ = min(swingl.files_found(), swingh.files_found());
     }
   }
 
@@ -3729,21 +3795,22 @@ public:
     float start = millis() / 1000.0;
     A.Stop();
     B.Stop();
-    swinga.Select(swing);
-    swingb.Select(swing);
-    A.Play(&swinga, start);
-    B.Play(&swingb, start);
+    swingl.Select(swing);
+    swingh.Select(swing);
+    A.Play(&swingl, start);
+    B.Play(&swingh, start);
     if (random(2)) std::swap(A, B);
     float t1_offset = random(1000) / 1000.0 * 50 + 10;
-    A.SetTransition(t1_offset, 45.0);
-    B.SetTransition(t1_offset + 180, 160.0);
+    A.SetTransition(t1_offset, smooth_swing_config_file.Transition1Degrees);
+    B.SetTransition(t1_offset + 180,
+      smooth_swing_config_file.Transition2Degrees);
   }
 
   void SB_On() override {
     // Starts hum, etc.
     delegate_->SB_On();
     A.player = GetFreeWavPlayer();
-    B.player= GetFreeWavPlayer();
+    B.player = GetFreeWavPlayer();
     if (!A.player || !B.player) {
       STDOUT.println("SmoothSwing V2 cannot allocate wav player.");
     }
@@ -3772,26 +3839,30 @@ public:
 
     switch (state_) {
       case SwingState::OFF:
-	if (speed < 60.0) break;
+	if (speed < smooth_swing_config_file.SwingStrengthThreshold) break;
 	state_ = SwingState::ON;
 	
       case SwingState::ON:
-	if (speed > 50.0) {
-	  float swing_strength = min(1.0, (speed - 50.0) / 720.0);
+	if (speed >= smooth_swing_config_file.SwingStrengthThreshold * 0.9) {
+	  float swing_strength =
+	    min(1.0, speed / smooth_swing_config_file.SwingSensitivity);
 	  A.rotate(-speed * delta / 1000000.0);
+	  // If the current transition is done, switch A & B,
+	  // and set the next transition to be 180 degrees from the one
+	  // that is done.
 	  while (A.end() < 0.0) {
 	    B.midpoint = A.midpoint + 180.0;
-	    A.rotate(360.0);
 	    std::swap(A, B);
 	  }
 	  float mixab = 0.0;
 	  if (A.begin() < 0.0)
 	    mixab = - A.begin() / A.width;
 	  
-	  float swing_sharpness = 1.75;
-	  float mixhum = 0.75 * pow(swing_strength, swing_sharpness);
+	  float mixhum =
+	    pow(swing_strength, smooth_swing_config_file.SwingSharpness);
 
-	  delegate_->SetHumVolume(1.0 - mixhum);
+	  delegate_->SetHumVolume(
+	    (1.0 - mixhum) * smooth_swing_config_file.MaximumHumDucking);
 	  A.set_volume(mixhum * mixab);
 	  B.set_volume(mixhum * (1.0 - mixab));
 	  break;
@@ -3820,7 +3891,7 @@ private:
     }
     void Off() {
       if (!player) return;
-      player->set_fade_time(0.3);
+      player->set_fade_time(0.2);  // Read from config file?
       player->FadeAndStop();
       player = NULL;
     }
@@ -6887,10 +6958,16 @@ public:
       font = &monophonic_font;
     }
     if (font) {
-      if (swinga.files_found()) {
-        smooth_swing_v2.Activate(font);
-      } else if (swingl.files_found()) {
-        looped_swing_wrapper.Activate(font);
+      if (swingl.files_found()) {
+        smooth_swing_config_file.ReadInCurrentDir("smoothsw.ini");
+	switch (smooth_swing_config_file.Version) {
+	  case 1:
+            looped_swing_wrapper.Activate(font);
+	    break;
+	  case 2:
+            smooth_swing_v2.Activate(font);
+	    break;
+        }
       }
     }
 #endif
