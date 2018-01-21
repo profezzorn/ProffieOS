@@ -24,8 +24,8 @@
 // #define CONFIG_FILE "default_v3_config.h"
 // #define CONFIG_FILE "crossguard_config.h"
 // #define CONFIG_FILE "graflex_v1_config.h"
-// #define CONFIG_FILE "owk_v2_config.h"
-#define CONFIG_FILE "test_bench_config.h"
+#define CONFIG_FILE "owk_v2_config.h"
+// #define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
 // #define CONFIG_FILE "new_config.h"
 
@@ -628,6 +628,9 @@ public:
   }
   Vec3 operator*(float f) const {
     return Vec3(x * f, y * f, z * f);
+  }
+  Vec3 operator/(int i) const {
+    return Vec3(x / i, y / i, z / i);
   }
   Vec3 dot(const Vec3& o) const {
     return Vec3(x * o.x, y * o.y, z * o.z);
@@ -3468,6 +3471,9 @@ public:
     if (variable[0] == '=') X = DEF;		\
     else if (!strcasecmp(variable, #X)) {	\
       X = v;					\
+      STDOUT.print(variable);			\
+      STDOUT.print("=");			\
+      STDOUT.println(v);			\
       return;					\
     }						\
 } while(0)
@@ -3586,7 +3592,7 @@ public:
         break;
       case STATE_HUM_FADE_IN: {
         uint32_t delta = m - last_micros_;
-        volume_ += (delta / 1000000.0) * 0.2; // 0.2 seconds
+        volume_ += (delta / 1000000.0) / 0.2; // 0.2 seconds
         if (volume_ >= 1.0f) {
           volume_ = 1.0f;
           state_ = STATE_HUM_ON;
@@ -3597,7 +3603,7 @@ public:
         break;
       case STATE_HUM_FADE_OUT: {
         uint32_t delta = m - last_micros_;
-        volume_ -= (delta / 1000000.0) * 0.2; // 0.2 seconds
+        volume_ -= (delta / 1000000.0) / 0.2; // 0.2 seconds
         if (volume_ <= 0.0f) {
           volume_ = 0.0f;
           state_ = STATE_OFF;
@@ -3647,10 +3653,10 @@ class SmoothSwingConfigFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
     CONFIG_VARIABLE(Version, 1);
-    CONFIG_VARIABLE(SwingSensitivity, 720.0);
+    CONFIG_VARIABLE(SwingSensitivity, 360.0);
     CONFIG_VARIABLE(MaximumHumDucking, 75.0);
     CONFIG_VARIABLE(SwingSharpness, 1.75);
-    CONFIG_VARIABLE(SwingStrengthThreshold, 3.0);
+    CONFIG_VARIABLE(SwingStrengthThreshold, 10.0);
     CONFIG_VARIABLE(Transition1Degrees, 45.0);
     CONFIG_VARIABLE(Transition2Degrees, 160.0);
   };
@@ -3768,6 +3774,25 @@ public:
 
 LoopedSwingWrapper looped_swing_wrapper;
 
+template<class T, int N>
+class BoxFilter {
+public:
+  void add(const T& v) {
+    data[pos] = v;
+    pos++;
+    if (pos == N) pos = 0;
+  }
+  T get() const {
+    T ret = data[0];
+    for (int i = 1; i < N; i++) {
+      ret += data[i];
+    }
+    return ret / N;
+  }
+  T data[N];
+  int pos = 0;
+};
+
 // SmoothSwing V2, based on Thexter's excellent work.
 // For more details, see:
 // http://therebelarmory.com/thread/9138/smoothswing-v2-algorithm-description
@@ -3781,8 +3806,8 @@ public:
     SetDelegate(base_font);
     if (swingl.files_found() != swingh.files_found()) {
       STDOUT.println("Warning, swingl and swingh should have the same number of files.");
-      swings_ = min(swingl.files_found(), swingh.files_found());
     }
+    swings_ = min(swingl.files_found(), swingh.files_found());
   }
 
   void Deactivate() {
@@ -3797,12 +3822,14 @@ public:
     B.Stop();
     swingl.Select(swing);
     swingh.Select(swing);
+    A.set_volume(0.0);
+    B.set_volume(0.0);
     A.Play(&swingl, start);
     B.Play(&swingh, start);
     if (random(2)) std::swap(A, B);
     float t1_offset = random(1000) / 1000.0 * 50 + 10;
     A.SetTransition(t1_offset, smooth_swing_config_file.Transition1Degrees);
-    B.SetTransition(t1_offset + 180,
+    B.SetTransition(t1_offset + 180.0,
       smooth_swing_config_file.Transition2Degrees);
   }
 
@@ -3836,7 +3863,8 @@ public:
     uint32_t delta = t - last_micros_;
     if (delta > 1000000) delta = 1;
     last_micros_ = t;
-
+    float hum_volume = 1.0;
+    
     switch (state_) {
       case SwingState::OFF:
 	if (speed < smooth_swing_config_file.SwingStrengthThreshold) break;
@@ -3856,27 +3884,47 @@ public:
 	  }
 	  float mixab = 0.0;
 	  if (A.begin() < 0.0)
-	    mixab = - A.begin() / A.width;
-	  
+	    mixab = clamp(- A.begin() / A.width, 0.0, 1.0);
+
 	  float mixhum =
 	    pow(swing_strength, smooth_swing_config_file.SwingSharpness);
 
-	  delegate_->SetHumVolume(
-	    (1.0 - mixhum) * smooth_swing_config_file.MaximumHumDucking);
+	  hum_volume =
+	    1.0 - mixhum * smooth_swing_config_file.MaximumHumDucking / 100.0;
+
+	  if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
+	    STDOUT.print("speed: ");
+	    STDOUT.print(speed);
+	    STDOUT.print(" R: ");
+	    STDOUT.print(-speed * delta / 1000000.0);
+	    STDOUT.print(" MP: ");
+	    STDOUT.print(A.midpoint);
+	    STDOUT.print("  mixhum: ");
+	    STDOUT.print(mixhum);
+	    STDOUT.print("  mixab: ");
+	    STDOUT.print(mixab);
+	    STDOUT.print("  hum_volume: ");
+	    STDOUT.println(hum_volume);
+	  }
 	  A.set_volume(mixhum * mixab);
 	  B.set_volume(mixhum * (1.0 - mixab));
 	  break;
 	}
-	delegate_->SetHumVolume(1.0);
 	A.set_volume(0);
 	B.set_volume(0);
 	state_ = SwingState::OUT;
 
       case SwingState::OUT:
-	if (!A.isOff() || !B.isOff()) break;
+	if (!A.isOff() || !B.isOff()) {
+	  if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
+	    Serial.println("Waiting for volume = 0");
+	  }
+	}
 	PickRandomSwing();
 	state_ = SwingState::OFF;
     }
+    // Must always set hum volume, or fade-out doesn't work.
+    delegate_->SetHumVolume(hum_volume);
   }
 
 private:
@@ -3910,7 +3958,7 @@ private:
     float begin() const { return midpoint - width / 2; }
     float end() const { return midpoint + width / 2; }
     void rotate(float degrees) {
-      midpoint = degrees;
+      midpoint += degrees;
     }
     BufferedWavPlayer *player = nullptr;
     float midpoint;
