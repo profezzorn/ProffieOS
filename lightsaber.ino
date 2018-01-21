@@ -3660,7 +3660,7 @@ public:
     CONFIG_VARIABLE(SwingSensitivity, 360.0);
     CONFIG_VARIABLE(MaximumHumDucking, 75.0);
     CONFIG_VARIABLE(SwingSharpness, 1.75);
-    CONFIG_VARIABLE(SwingStrengthThreshold, 30.0);
+    CONFIG_VARIABLE(SwingStrengthThreshold, 20.0);
     CONFIG_VARIABLE(Transition1Degrees, 45.0);
     CONFIG_VARIABLE(Transition2Degrees, 160.0);
     CONFIG_VARIABLE(MaxSwingVolume, 3.0);
