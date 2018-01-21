@@ -246,7 +246,7 @@ public:
     active_monitors_ ^= bit;
   }
 private:
-  uint32_t monitor_frequency_ms_ = 500;
+  uint32_t monitor_frequency_ms_ = 200;
   int last_monitor_loop_ = 0;
   uint32_t monitor_soon_ = 0;
   uint32_t active_monitors_ = 0;
@@ -636,6 +636,7 @@ public:
     return Vec3(x * o.x, y * o.y, z * o.z);
   }
   float len2() const { return x*x + y*y + z*z; }
+  float len() const { return sqrt(len2()); }
   float x, y, z;
 };
 
@@ -2967,6 +2968,7 @@ private:
 const uint32_t kVolumeShift = 14;
 const uint32_t kMaxVolume = 1 << kVolumeShift;
 const uint32_t kDefaultVolume = kMaxVolume / 2;
+const uint32_t kDefaultSpeed = kMaxVolume / 200;
 
 template<class T>
 class VolumeOverlay : public T {
@@ -2975,6 +2977,7 @@ public:
   VolumeOverlay() : volume_(kMaxVolume / 100) {
     volume_.set(kDefaultVolume);
     volume_.set_target(kDefaultVolume);
+    volume_.set_speed(kDefaultSpeed);
   }
   int read(int16_t* data, int elements) override {
     elements = T::read(data, elements);
@@ -3014,6 +3017,7 @@ public:
   }
   void reset_volume() {
     set_volume_now((int)kDefaultVolume);
+    volume_.set_speed(kDefaultSpeed);
   }
   void set_volume(float vol) {
     set_volume((int)(kDefaultVolume * vol));
@@ -3659,6 +3663,7 @@ public:
     CONFIG_VARIABLE(SwingStrengthThreshold, 10.0);
     CONFIG_VARIABLE(Transition1Degrees, 45.0);
     CONFIG_VARIABLE(Transition2Degrees, 160.0);
+    CONFIG_VARIABLE(MaxSwingVolume, 3.0);
   };
 
   int  Version;
@@ -3668,9 +3673,10 @@ public:
   float SwingStrengthThreshold;
   float Transition1Degrees;
   float Transition2Degrees;
+  float MaxSwingVolume;
 };
 
-SmoothSwingConfigFile smooth_swing_config_file;
+SmoothSwingConfigFile smooth_swing_config;
 
 // SmoothSwing V1
 // Looped swing sounds is a new way to play swing sounds.
@@ -3777,18 +3783,18 @@ LoopedSwingWrapper looped_swing_wrapper;
 template<class T, int N>
 class BoxFilter {
 public:
-  void add(const T& v) {
+  T filter(const T& v) {
     data[pos] = v;
     pos++;
     if (pos == N) pos = 0;
-  }
-  T get() const {
+
     T ret = data[0];
     for (int i = 1; i < N; i++) {
       ret += data[i];
     }
     return ret / N;
   }
+
   T data[N];
   int pos = 0;
 };
@@ -3828,9 +3834,9 @@ public:
     B.Play(&swingh, start);
     if (random(2)) std::swap(A, B);
     float t1_offset = random(1000) / 1000.0 * 50 + 10;
-    A.SetTransition(t1_offset, smooth_swing_config_file.Transition1Degrees);
+    A.SetTransition(t1_offset, smooth_swing_config.Transition1Degrees);
     B.SetTransition(t1_offset + 180.0,
-      smooth_swing_config_file.Transition2Degrees);
+      smooth_swing_config.Transition2Degrees);
   }
 
   void SB_On() override {
@@ -3855,7 +3861,8 @@ public:
     OUT, // Waiting for sound to fade out
   };
 
-  void SB_Motion(const Vec3& gyro) override {
+  void SB_Motion(const Vec3& raw_gyro) override {
+    Vec3 gyro = gyro_filter_.filter(raw_gyro);
     // degrees per second
     // May not need to smooth gyro since volume is smoothed.
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
@@ -3867,13 +3874,19 @@ public:
     
     switch (state_) {
       case SwingState::OFF:
-	if (speed < smooth_swing_config_file.SwingStrengthThreshold) break;
+	if (speed < smooth_swing_config.SwingStrengthThreshold) {
+	  if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
+	    STDOUT.print("speed: ");
+	    STDOUT.println(speed);
+	  }
+	  break;
+	}
 	state_ = SwingState::ON;
 	
       case SwingState::ON:
-	if (speed >= smooth_swing_config_file.SwingStrengthThreshold * 0.9) {
+	if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
 	  float swing_strength =
-	    min(1.0, speed / smooth_swing_config_file.SwingSensitivity);
+	    min(1.0, speed / smooth_swing_config.SwingSensitivity);
 	  A.rotate(-speed * delta / 1000000.0);
 	  // If the current transition is done, switch A & B,
 	  // and set the next transition to be 180 degrees from the one
@@ -3887,10 +3900,12 @@ public:
 	    mixab = clamp(- A.begin() / A.width, 0.0, 1.0);
 
 	  float mixhum =
-	    pow(swing_strength, smooth_swing_config_file.SwingSharpness);
+	    pow(swing_strength, smooth_swing_config.SwingSharpness);
 
 	  hum_volume =
-	    1.0 - mixhum * smooth_swing_config_file.MaximumHumDucking / 100.0;
+	    1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
+
+	  mixhum *= smooth_swing_config.MaxSwingVolume;
 
 	  if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
 	    STDOUT.print("speed: ");
@@ -3967,6 +3982,7 @@ private:
   Data A;
   Data B;
 
+  BoxFilter<Vec3, 3> gyro_filter_;
   int swings_;
   uint32_t last_micros_;
   SwingState state_ = SwingState::OFF;;
@@ -7007,8 +7023,8 @@ public:
     }
     if (font) {
       if (swingl.files_found()) {
-        smooth_swing_config_file.ReadInCurrentDir("smoothsw.ini");
-	switch (smooth_swing_config_file.Version) {
+        smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
+	switch (smooth_swing_config.Version) {
 	  case 1:
             looped_swing_wrapper.Activate(font);
 	    break;
@@ -7179,8 +7195,10 @@ public:
   float peak = 0.0;
   Vec3 at_peak;
   void SB_Accel(const Vec3& accel) override {
-    float v = (accel_ - accel).len2();
-    if (v > CLASH_THRESHOLD_G * CLASH_THRESHOLD_G) {
+    float v = (accel_ - accel).len();
+    // If we're spinning the saber, require a stronger acceleration
+    // to activate the clash.
+    if (v > CLASH_THRESHOLD_G + filtered_gyro_.len() / 200.0) {
       // Needs de-bouncing
       Clash();
     }
@@ -7284,7 +7302,10 @@ public:
     strokes[NELEM(strokes)-1].end_millis = 0;
   }
 
+  BoxFilter<Vec3, 5> gyro_filter_;
+  Vec3 filtered_gyro_;
   void SB_Motion(const Vec3& gyro) override {
+    filtered_gyro_ = gyro_filter_.filter(gyro);
     if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
       // Got gyro data
       STDOUT.print("GYRO: ");
