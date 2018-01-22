@@ -246,7 +246,7 @@ public:
     active_monitors_ ^= bit;
   }
 private:
-  uint32_t monitor_frequency_ms_ = 200;
+  uint32_t monitor_frequency_ms_ = 100;
   int last_monitor_loop_ = 0;
   uint32_t monitor_soon_ = 0;
   uint32_t active_monitors_ = 0;
@@ -1170,13 +1170,13 @@ public:
     stm32l4_dma_enable(&dma, &isr, 0);
     stm32l4_dma_start(&dma, (uint32_t)&SAIx->DR, (uint32_t)dac_dma_buffer, AUDIO_BUFFER_SIZE * 2,
                       DMA_OPTION_EVENT_TRANSFER_DONE |
-		      DMA_OPTION_EVENT_TRANSFER_HALF |
-		      DMA_OPTION_MEMORY_TO_PERIPHERAL |
-		      DMA_OPTION_PERIPHERAL_DATA_SIZE_32 |
-		      DMA_OPTION_MEMORY_DATA_SIZE_16 |
-		      DMA_OPTION_MEMORY_DATA_INCREMENT |
-		      DMA_OPTION_PRIORITY_HIGH |
-		      DMA_OPTION_CIRCULAR);
+                      DMA_OPTION_EVENT_TRANSFER_HALF |
+                      DMA_OPTION_MEMORY_TO_PERIPHERAL |
+                      DMA_OPTION_PERIPHERAL_DATA_SIZE_32 |
+                      DMA_OPTION_MEMORY_DATA_SIZE_16 |
+                      DMA_OPTION_MEMORY_DATA_INCREMENT |
+                      DMA_OPTION_PRIORITY_HIGH |
+                      DMA_OPTION_CIRCULAR);
 #endif
   }
 
@@ -2653,7 +2653,7 @@ private:
   template<int bits, int channels, int rate>
   void DecodeBytes4() {
     while (ptr_ < end_ - channels * bits / 8 &&
-	   num_samples_ < (int)NELEM(samples_)) {
+           num_samples_ < (int)NELEM(samples_)) {
       int v = 0;
       if (channels == 1) {
         v = read2<bits>();
@@ -2796,32 +2796,32 @@ private:
           STDOUT.println("Not RIFF WAVE.");
           YIELD();
           goto fail;
-	}
+        }
 
-	// Look for FMT header.
-	while (true) {
-	  if (ReadFile(8) != 8) {
-	    STDOUT.println("Failed to read 8 bytes.");
-	    goto fail;
-	  }
+        // Look for FMT header.
+        while (true) {
+          if (ReadFile(8) != 8) {
+            STDOUT.println("Failed to read 8 bytes.");
+            goto fail;
+          }
 
-	  len_ = header(1);
-	  if (header(0) != 0x20746D66) {  // 'fmt '
-	    Skip(len_);
-	    continue;
-	  }
-	  if (len_ < 16) {
-	    STDOUT.println("FMT header is wrong size..");
-	    goto fail;
-	  }
-	  break;
-	}
-	
+          len_ = header(1);
+          if (header(0) != 0x20746D66) {  // 'fmt '
+            Skip(len_);
+            continue;
+          }
+          if (len_ < 16) {
+            STDOUT.println("FMT header is wrong size..");
+            goto fail;
+          }
+          break;
+        }
+        
         if (16 != ReadFile(16)) {
           STDOUT.println("Read failed.");
           goto fail;
         }
-	if (len_ > 16) Skip(len_ - 16);
+        if (len_ > 16) Skip(len_ - 16);
         if ((header(0) & 0xffff) != 1) {
           STDOUT.println("Wrong format.");
           goto fail;
@@ -2859,21 +2859,21 @@ private:
         sample_bytes_ = len_;
 
         if (start_ != 0.0) {
-	  int samples = fmod(start_, length()) * rate_;
-	  int bytes_to_skip = samples * channels_ * bits_ / 8;
-	  Skip(bytes_to_skip);
-	  len_ -= bytes_to_skip;
-	  start_ = 0.0;
-	}
+          int samples = fmod(start_, length()) * rate_;
+          int bytes_to_skip = samples * channels_ * bits_ / 8;
+          Skip(bytes_to_skip);
+          len_ -= bytes_to_skip;
+          start_ = 0.0;
+        }
 
         while (len_) {
-	  {
-	    int bytes_read = ReadFile(AlignRead(min(len_, 512u)));
-	    if (bytes_read == 0)
-	      break;
-	    len_ -= bytes_read;
-	    end_ = buffer + 8 + bytes_read;
-	  }
+          {
+            int bytes_read = ReadFile(AlignRead(min(len_, 512u)));
+            if (bytes_read == 0)
+              break;
+            len_ -= bytes_read;
+            end_ = buffer + 8 + bytes_read;
+          }
           while (ptr_ < end_ - channels_ * bits_ / 8) {
             DecodeBytes();
 
@@ -2889,12 +2889,12 @@ private:
             }
             written_ = num_samples_ = 0;
           }
-	  if (ptr_ < end_) {
-	    memmove(buffer + 8 - (end_ - ptr_),
-		    ptr_,
-		    end_ - ptr_);
-	  }
-	  ptr_ = buffer + 8 - (end_ - ptr_);
+          if (ptr_ < end_) {
+            memmove(buffer + 8 - (end_ - ptr_),
+                    ptr_,
+                    end_ - ptr_);
+          }
+          ptr_ = buffer + 8 - (end_ - ptr_);
         }
         YIELD();
       }
@@ -2968,7 +2968,8 @@ private:
 const uint32_t kVolumeShift = 14;
 const uint32_t kMaxVolume = 1 << kVolumeShift;
 const uint32_t kDefaultVolume = kMaxVolume / 2;
-const uint32_t kDefaultSpeed = kMaxVolume / 200;
+// 1 / 500 second for to change the volume. (2ms)
+const uint32_t kDefaultSpeed = 500 * kMaxVolume / AUDIO_RATE;
 
 template<class T>
 class VolumeOverlay : public T {
@@ -3388,11 +3389,10 @@ struct ConfigFile {
     return ret * sign;
   }
 
-  int64_t readFloatValue(File* f) {
+  float readFloatValue(File* f) {
     float ret = 0.0;
     float sign = 1.0;
     float mult = 1.0;
-    bool decimals = false;
     if (f->peek() == '-') {
       sign = -1.0;
       f->read();
@@ -3400,18 +3400,18 @@ struct ConfigFile {
     while (f->available()) {
       int c = toLower(f->peek());
       if (c >= '0' && c <= '9') {
-	if (decimals) {
-	  ret += (c - '0') * mult;
-	  mult /= 10;
-	} else {
+        if (mult == 1.0) {
           ret = (c - '0') + 10 * ret;
-	}
+        } else {
+          ret += (c - '0') * mult;
+          mult /= 10.0;
+        }
         f->read();
       } else if (c == '.') {
-	if (decimals) return ret * sign;
-	// Time to read decimals.
-	decimals = true;
-	f->read();
+        if (mult != 1.0) return ret * sign;
+        // Time to read decimals.
+        mult /= 10.0;
+        f->read();
       } else {
         return ret * sign;
       }
@@ -3471,17 +3471,17 @@ struct ConfigFile {
 
 class IgniterConfigFile : public ConfigFile {
 public:
-#define CONFIG_VARIABLE(X, DEF) do {		\
-    if (variable[0] == '=') X = DEF;		\
-    else if (!strcasecmp(variable, #X)) {	\
-      X = v;					\
-      STDOUT.print(variable);			\
-      STDOUT.print("=");			\
-      STDOUT.println(v);			\
-      return;					\
-    }						\
+#define CONFIG_VARIABLE(X, DEF) do {            \
+    if (variable[0] == '=') X = DEF;            \
+    else if (!strcasecmp(variable, #X)) {       \
+      X = v;                                    \
+      STDOUT.print(variable);                   \
+      STDOUT.print("=");                        \
+      STDOUT.println(v);                        \
+      return;                                   \
+    }                                           \
 } while(0)
-	
+        
   void SetVariable(const char* variable, float v) override {
     CONFIG_VARIABLE(humStart, 100);
     CONFIG_VARIABLE(volHum, 15);
@@ -3657,7 +3657,7 @@ class SmoothSwingConfigFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
     CONFIG_VARIABLE(Version, 1);
-    CONFIG_VARIABLE(SwingSensitivity, 360.0);
+    CONFIG_VARIABLE(SwingSensitivity, 450.0);
     CONFIG_VARIABLE(MaximumHumDucking, 75.0);
     CONFIG_VARIABLE(SwingSharpness, 1.75);
     CONFIG_VARIABLE(SwingStrengthThreshold, 20.0);
@@ -3822,14 +3822,13 @@ public:
 
   // Should only be done when the volume is near zero.
   void PickRandomSwing() {
+    if (!on_) return;
     int swing = random(swings_);
     float start = millis() / 1000.0;
     A.Stop();
     B.Stop();
     swingl.Select(swing);
     swingh.Select(swing);
-    A.set_volume(0.0);
-    B.set_volume(0.0);
     A.Play(&swingl, start);
     B.Play(&swingh, start);
     if (random(2)) std::swap(A, B);
@@ -3840,16 +3839,16 @@ public:
   }
 
   void SB_On() override {
+    on_ = true;
     // Starts hum, etc.
     delegate_->SB_On();
-    A.player = GetFreeWavPlayer();
-    B.player = GetFreeWavPlayer();
+    PickRandomSwing();
     if (!A.player || !B.player) {
       STDOUT.println("SmoothSwing V2 cannot allocate wav player.");
     }
-    PickRandomSwing();
   }
   void SB_Off() override {
+    on_ = false;
     A.Off();
     B.Off();
     delegate_->SB_Off();
@@ -3874,69 +3873,75 @@ public:
     
     switch (state_) {
       case SwingState::OFF:
-	if (speed < smooth_swing_config.SwingStrengthThreshold) {
-	  if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
-	    STDOUT.print("speed: ");
-	    STDOUT.println(speed);
-	  }
-	  break;
-	}
-	state_ = SwingState::ON;
-	
+        if (speed < smooth_swing_config.SwingStrengthThreshold) {
+#if 1
+          if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
+            STDOUT.print("speed: ");
+            STDOUT.println(speed);
+          }
+#endif
+          break;
+        }
+        state_ = SwingState::ON;
+        
       case SwingState::ON:
-	if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
-	  float swing_strength =
-	    min(1.0, speed / smooth_swing_config.SwingSensitivity);
-	  A.rotate(-speed * delta / 1000000.0);
-	  // If the current transition is done, switch A & B,
-	  // and set the next transition to be 180 degrees from the one
-	  // that is done.
-	  while (A.end() < 0.0) {
-	    B.midpoint = A.midpoint + 180.0;
-	    std::swap(A, B);
-	  }
-	  float mixab = 0.0;
-	  if (A.begin() < 0.0)
-	    mixab = clamp(- A.begin() / A.width, 0.0, 1.0);
+        if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
+          float swing_strength =
+            min(1.0, speed / smooth_swing_config.SwingSensitivity);
+          A.rotate(-speed * delta / 1000000.0);
+          // If the current transition is done, switch A & B,
+          // and set the next transition to be 180 degrees from the one
+          // that is done.
+          while (A.end() < 0.0) {
+            B.midpoint = A.midpoint + 180.0;
+            std::swap(A, B);
+          }
+          float mixab = 0.0;
+          if (A.begin() < 0.0)
+            mixab = clamp(- A.begin() / A.width, 0.0, 1.0);
 
-	  float mixhum =
-	    pow(swing_strength, smooth_swing_config.SwingSharpness);
+          float mixhum =
+            pow(swing_strength, smooth_swing_config.SwingSharpness);
 
-	  hum_volume =
-	    1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
+          hum_volume =
+            1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
 
-	  mixhum *= smooth_swing_config.MaxSwingVolume;
+          mixhum *= smooth_swing_config.MaxSwingVolume;
 
-	  if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
-	    STDOUT.print("speed: ");
-	    STDOUT.print(speed);
-	    STDOUT.print(" R: ");
-	    STDOUT.print(-speed * delta / 1000000.0);
-	    STDOUT.print(" MP: ");
-	    STDOUT.print(A.midpoint);
-	    STDOUT.print("  mixhum: ");
-	    STDOUT.print(mixhum);
-	    STDOUT.print("  mixab: ");
-	    STDOUT.print(mixab);
-	    STDOUT.print("  hum_volume: ");
-	    STDOUT.println(hum_volume);
-	  }
-	  A.set_volume(mixhum * mixab);
-	  B.set_volume(mixhum * (1.0 - mixab));
-	  break;
-	}
-	A.set_volume(0);
-	B.set_volume(0);
-	state_ = SwingState::OUT;
+          if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
+            STDOUT.print("speed: ");
+            STDOUT.print(speed);
+            STDOUT.print(" R: ");
+            STDOUT.print(-speed * delta / 1000000.0);
+            STDOUT.print(" MP: ");
+            STDOUT.print(A.midpoint);
+            STDOUT.print(" B: ");
+            STDOUT.print(A.begin());
+            STDOUT.print(" E: ");
+            STDOUT.print(A.end());
+            STDOUT.print("  mixhum: ");
+            STDOUT.print(mixhum);
+            STDOUT.print("  mixab: ");
+            STDOUT.print(mixab);
+            STDOUT.print("  hum_volume: ");
+            STDOUT.println(hum_volume);
+          }
+          A.set_volume(mixhum * mixab);
+          B.set_volume(mixhum * (1.0 - mixab));
+          break;
+        }
+        A.set_volume(0);
+        B.set_volume(0);
+        state_ = SwingState::OUT;
 
       case SwingState::OUT:
-	if (!A.isOff() || !B.isOff()) {
-	  if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
-	    Serial.println("Waiting for volume = 0");
-	  }
-	}
-	PickRandomSwing();
-	state_ = SwingState::OFF;
+        if (!A.isOff() || !B.isOff()) {
+          if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
+            Serial.println("Waiting for volume = 0");
+          }
+        }
+        PickRandomSwing();
+        state_ = SwingState::OFF;
     }
     // Must always set hum volume, or fade-out doesn't work.
     delegate_->SetHumVolume(hum_volume);
@@ -3948,7 +3953,11 @@ private:
       if (player) player->set_volume(v);
     }
     void Play(Effect* effect, float start = 0.0) {
-      if (!player) return;
+      if (!player) {
+	player = GetFreeWavPlayer();
+	if (!player) return;
+      }
+      player->set_volume(0.0);
       player->PlayOnce(effect, start);
       player->PlayLoop(effect);
     }
@@ -3982,6 +3991,7 @@ private:
   Data A;
   Data B;
 
+  bool on_ = false;;
   BoxFilter<Vec3, 3> gyro_filter_;
   int swings_;
   uint32_t last_micros_;
@@ -5142,9 +5152,9 @@ public:
 // lit up section is defined by "percentage".
 template<class COLOR, int percentage, int rpm,
          class ON_COLOR = COLOR,
-	 int on_percentage = percentage,
-	 int on_rpm = rpm,
-	 int fade_time_millis = 1>
+         int on_percentage = percentage,
+         int on_rpm = rpm,
+         int fade_time_millis = 1>
 class ColorCycle {
 public:
   void run(BladeBase* base) {
@@ -5202,9 +5212,9 @@ private:
 // states.
 template<class COLOR, int percentage, int rpm,
          class ON_COLOR = COLOR,
-	 int on_percentage = percentage,
-	 int on_rpm = rpm,
-	 int fade_time_millis = 1>
+         int on_percentage = percentage,
+         int on_rpm = rpm,
+         int fade_time_millis = 1>
 class Cylon {
 public:
   void run(BladeBase* base) {
@@ -5269,12 +5279,12 @@ public:
     if (base->is_on()) {
       if (!waiting_) {
         waiting_ = true;
-	wait_start_time_ = millis();
+        wait_start_time_ = millis();
       }
       uint32_t waited = millis() - wait_start_time_;
       if (waited > delay_millis) {
         is_on_ = true;
-	wait_start_time_ = millis() - delay_millis - 1;
+        wait_start_time_ = millis() - delay_millis - 1;
       }
     } else {
       waiting_ = false;
@@ -7024,13 +7034,13 @@ public:
     if (font) {
       if (swingl.files_found()) {
         smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
-	switch (smooth_swing_config.Version) {
-	  case 1:
+        switch (smooth_swing_config.Version) {
+          case 1:
             looped_swing_wrapper.Activate(font);
-	    break;
-	  case 2:
+            break;
+          case 2:
             smooth_swing_v2.Activate(font);
-	    break;
+            break;
         }
       }
     }
