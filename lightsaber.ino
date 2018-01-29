@@ -21,13 +21,13 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "default_v3_config.h"
+// #define CONFIG_FILE "default_v3_config.h"
 // #define CONFIG_FILE "crossguard_config.h"
 // #define CONFIG_FILE "graflex_v1_config.h"
 // #define CONFIG_FILE "owk_v2_config.h"
 // #define CONFIG_FILE "test_bench_config.h"
 // #define CONFIG_FILE "toy_saber_config.h"
-// #define CONFIG_FILE "new_config.h"
+#define CONFIG_FILE "new_config.h"
 
 #define CONFIG_TOP
 #include CONFIG_FILE
@@ -601,6 +601,7 @@ class Vec3 {
 public:
   Vec3(){}
   Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
+
   static Vec3 MSB(const unsigned char* msb_data, float mul) {
     Vec3 ret;
     ret.x = mul * (int16_t)((msb_data[0] << 8) | (msb_data[1]));
@@ -637,6 +638,23 @@ public:
   }
   float len2() const { return x*x + y*y + z*z; }
   float len() const { return sqrt(len2()); }
+
+  static void Rotate90(float& a, float& b) {
+    float tmp = b;
+    b = -a;
+    a = b;
+  }
+  static void Rotate180(float& a, float& b) {
+    a = -a;
+    b = -b;
+  }
+  void RotateX90() { Rotate90(y, z); }
+  void RotateZ90() { Rotate90(x, y); }
+  void RotateY90() { Rotate90(z, x); }
+
+  void RotateX180() { Rotate180(y, z); }
+  void RotateZ180() { Rotate180(x, y); }
+  void RotateY180() { Rotate180(z, x); }
   float x, y, z;
 };
 
@@ -1064,9 +1082,11 @@ public:
 
 #define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_CONT | PDB_SC_PDBIE | PDB_SC_DMAEN)
 
-class LS_DAC : CommandParser {
+class LS_DAC : CommandParser, Looper {
 public:
-  LS_DAC() {
+  virtual void Loop() override {}
+  virtual const char* name() { return "DAC"; }
+  void Setup() override {
 #ifdef TEENSYDUINO
     dma.begin(true); // Allocate the DMA channel first
 
@@ -1160,14 +1180,14 @@ public:
     uint32_t sai_frcr = (31 << SAI_xFRCR_FRL_Pos) | (15 << SAI_xFRCR_FSALL_Pos) | SAI_xFRCR_FSDEF | SAI_xFRCR_FSOFF;
     uint32_t sai_slotr = SAI_xSLOTR_NBSLOT_0 | (0x0003 << SAI_xSLOTR_SLOTEN_Pos) | SAI_xSLOTR_SLOTSZ_0;
     stm32l4_system_periph_enable(SYSTEM_PERIPH_SAI1);
+    stm32l4_dma_enable(&dma, &isr, 0);
     SAIx->CR1 = sai_cr1;
     SAIx->FRCR = sai_frcr;
     SAIx->SLOTR = sai_slotr;
     stm32l4_system_saiclk_configure(saiclk);
-    stm32l4_gpio_pin_configure(bclkPin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
-    stm32l4_gpio_pin_configure(txd0Pin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
-    stm32l4_gpio_pin_configure(lrclkPin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
-    stm32l4_dma_enable(&dma, &isr, 0);
+    stm32l4_gpio_pin_configure(GPIO_PIN_PB13_SAI1_SCK_A, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_gpio_pin_configure(GPIO_PIN_PB12_SAI1_FS_A, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_gpio_pin_configure(GPIO_PIN_PB15_SAI1_SD_A, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
     stm32l4_dma_start(&dma, (uint32_t)&SAIx->DR, (uint32_t)dac_dma_buffer, AUDIO_BUFFER_SIZE * 2,
                       DMA_OPTION_EVENT_TRANSFER_DONE |
                       DMA_OPTION_EVENT_TRANSFER_HALF |
@@ -1177,11 +1197,29 @@ public:
                       DMA_OPTION_MEMORY_DATA_INCREMENT |
                       DMA_OPTION_PRIORITY_HIGH |
                       DMA_OPTION_CIRCULAR);
+
+    SAIx->CR1 |= SAI_xCR1_DMAEN;
+    if (!(SAIx->CR1 & SAI_xCR1_SAIEN))
+    {
+      SAIx->CR2 = SAI_xCR2_FTH_1;
+      SAIx->CR1 |= SAI_xCR1_SAIEN;
+      STDOUT.println("ENABLING SAI");
+    }
+
 #endif
   }
 
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "dacbuf")) {
+      SAI_Block_TypeDef *SAIx = SAI1_Block_A;
+      STDOUT.print("STATUS: ");
+      STDOUT.print(SAIx->SR, HEX);
+      STDOUT.print(" CR1: ");
+      STDOUT.print(SAIx->CR1, HEX);
+      STDOUT.print(" CR2: ");
+      STDOUT.println(SAIx->CR2, HEX);
+      STDOUT.print("Current position: ");
+      STDOUT.println(((uint16_t*)current_position()) - dac_dma_buffer);
       for (size_t i = 0; i < NELEM(dac_dma_buffer); i++) {
         STDOUT.print(dac_dma_buffer[i] - 2048);
         if ((i & 0xf) == 0xf)
@@ -1211,6 +1249,13 @@ public:
   }
 
 private:
+  static uint32_t current_position() {
+#ifdef TEENSYDUINO
+    return (uint32_t)(dma.TCD->SADDR);
+#else
+    return (uint32_t)(dac_dma_buffer + stm32l4_dma_count(&dma));
+#endif
+  }
   // Interrupt handler.
   // Fills the dma buffer with new sample data.
 #ifdef TEENSYDUINO
@@ -1219,15 +1264,13 @@ private:
   static void isr(void* arg, unsigned long int event)
 #endif
   {
+    digitalWrite(38, !digitalRead(38));
     ScopedCycleCounter cc(audio_dma_interrupt_cycles);
     int16_t *dest, *end;
-    uint32_t saddr;
+    uint32_t saddr = current_position();
 
 #ifdef TEENSYDUINO
-    saddr = (uint32_t)(dma.TCD->SADDR);
     dma.clearInterrupt();
-#else
-    saddr = (uint32_t)(dac_dma_buffer + stm32l4_dma_count(&dma));
 #endif
     if (saddr < (uint32_t)dac_dma_buffer + sizeof(dac_dma_buffer) / 2) {
       // DMA is transmitting the first half of the buffer
@@ -3820,6 +3863,12 @@ public:
     SetDelegate(NULL);
   }
 
+  void Swap() {
+    Data C = A;
+    A = B;
+    B = C;
+  }
+
   // Should only be done when the volume is near zero.
   void PickRandomSwing() {
     if (!on_) return;
@@ -3831,7 +3880,7 @@ public:
     swingh.Select(swing);
     A.Play(&swingl, start);
     B.Play(&swingh, start);
-    if (random(2)) std::swap(A, B);
+    if (random(2)) Swap();
     float t1_offset = random(1000) / 1000.0 * 50 + 10;
     A.SetTransition(t1_offset, smooth_swing_config.Transition1Degrees);
     B.SetTransition(t1_offset + 180.0,
@@ -3894,7 +3943,7 @@ public:
           // that is done.
           while (A.end() < 0.0) {
             B.midpoint = A.midpoint + 180.0;
-            std::swap(A, B);
+	    Swap();
           }
           float mixab = 0.0;
           if (A.begin() < 0.0)
