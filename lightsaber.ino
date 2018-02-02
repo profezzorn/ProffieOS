@@ -8358,34 +8358,50 @@ class Commands : public CommandParser {
         f.seek(1000);
         f.read(tmp, 10);
       }
-      LOCK_SD(true);
+      f.close();
+      LOCK_SD(false);
       STDOUT.println("Done");
       return true;
     }
     if (!strcmp(cmd, "sdtest")) {
       char filename[128];
       uint8_t block[512];
-      hum.Play(filename);
-      File f = LSFS::Open(filename);
-      uint32_t start_millis = millis();
-      int bytes = 0;
-      for (int j = 0; j < 128; j++) {
-        f.seek(0);
-        for (int i = 0; i < 128; i++) {
-          bytes += f.read(block, 512);
-        }
-        STDOUT.print(".");
+      if (!hum.Play(filename)) {
+        STDOUT.println("hum file not found, try cd <fontir>");
+	return true;
       }
-      uint32_t end_millis = millis();
       LOCK_SD(true);
-      STDOUT.println("Done");
-      // bytes per ms = kb per s (note, not kibibytes)
-      float kb_per_sec = bytes / (float)(end_millis - start_millis);
-      STDOUT.println("SD card speed: ");
-      STDOUT.print(kb_per_sec);
-      STDOUT.print(" kb/s = ");
-      STDOUT.print(kb_per_sec / 88.2);
-      STDOUT.println(" simultaneous audio streams.");
+      File f = LSFS::Open(filename);
+      if (!f) {
+        STDOUT.println("Unable to open hum file.");
+      } else {
+	STDOUT.println("Each dot is 64kB");
+	uint32_t start_millis = millis();
+	int bytes = 0;
+	for (int k = 0; k < 8; k++) {
+	  for (int j = 0; j < 16; j++) {
+	    f.seek(0);
+	    int tmp = 0;
+	    for (int i = 0; i < 128; i++) {
+	      tmp += f.read(block, 512);
+	    }
+	    STDOUT.print(tmp == 0x10000 ? "." : "!");
+	    bytes += tmp;
+	  }
+	  STDOUT.println("");
+	}
+	f.close();
+	uint32_t end_millis = millis();
+	STDOUT.println("Done");
+	// bytes per ms = kb per s (note, not kibibytes)
+	float kb_per_sec = bytes / (float)(end_millis - start_millis);
+	STDOUT.println("SD card speed: ");
+	STDOUT.print(kb_per_sec);
+	STDOUT.print(" kb/s = ");
+	STDOUT.print(kb_per_sec / 88.2);
+	STDOUT.println(" simultaneous audio streams.");
+      }
+      LOCK_SD(false);
       return true;
     }
 #endif
