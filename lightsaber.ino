@@ -642,7 +642,7 @@ public:
   static void Rotate90(float& a, float& b) {
     float tmp = b;
     b = -a;
-    a = b;
+    a = tmp;
   }
   static void Rotate180(float& a, float& b) {
     a = -a;
@@ -1211,6 +1211,7 @@ public:
 
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "dacbuf")) {
+#ifndef TEENSYDUINO
       SAI_Block_TypeDef *SAIx = SAI1_Block_A;
       STDOUT.print("STATUS: ");
       STDOUT.print(SAIx->SR, HEX);
@@ -1218,6 +1219,7 @@ public:
       STDOUT.print(SAIx->CR1, HEX);
       STDOUT.print(" CR2: ");
       STDOUT.println(SAIx->CR2, HEX);
+#endif      
       STDOUT.print("Current position: ");
       STDOUT.println(((uint16_t*)current_position()) - dac_dma_buffer);
       for (size_t i = 0; i < NELEM(dac_dma_buffer); i++) {
@@ -2281,6 +2283,28 @@ char current_directory[128];
 class Effect {
   public:
 
+  // This class represents a specific effect file. It's main purpose
+  // is to be smaller than using the filename to identify the file.
+  class FileID {
+   public:
+    FileID(const Effect* effect, int file) : effect_(effect), file_(file) {}
+    FileID() : effect_(nullptr), file_(0) {}
+
+    bool operator==(const FileID& other) const {
+      return other.effect_ == effect_ && file_ == other.file_;
+    }
+
+    operator bool() const { return effect_ != nullptr; }
+
+    void GetName(char *filename) {
+      effect_->GetName(filename, file_);
+    }
+
+   private:
+    const Effect* effect_;
+    int file_;
+  };
+
   enum Extension {
     WAV,
     RAW,
@@ -2389,15 +2413,27 @@ class Effect {
     selected_ = n;
   }
 
-  bool Play(char *filename) {
+  FileID RandomFile() const {
     int num_files = files_found();
     if (num_files < 1) {
       default_output->print("No sounds found: ");
       default_output->println(name_);
-      return false; 
+      return FileID();
     }
     int n = rand() % num_files;
     if (selected_ != -1) n = selected_;
+    return FileID(this, n);
+  }
+
+  bool Play(char *filename) {
+    FileID f = RandomFile();
+    if (f == FileID()) return false;
+    f.GetName(filename);
+    return true;
+  }
+
+  // Get the name of a specific file in the set.
+  void GetName(char *filename, int n) const {
     strcpy(filename, current_directory);
     strcat(filename, name_);
     if (subdirs_) {
@@ -2428,7 +2464,6 @@ class Effect {
     
     default_output->print("Playing ");
     default_output->println(filename);
-    return true;
   }
 
   static void ScanAll(const char* filename) {
@@ -2768,6 +2803,18 @@ private:
 #endif
   }
 
+  void Rewind() {
+#ifdef ENABLE_SERIALFLASH
+    if (sf_file_) {
+      sf_file_.seek(0);
+      return;
+    }
+#endif
+#ifdef ENABLE_SD
+    sd_file_.seek(0);
+#endif
+  }
+
   uint32_t Tell() {
 #ifdef ENABLE_SERIALFLASH
     if (sf_file_) return sf_file_.position();
@@ -2805,29 +2852,37 @@ private:
     STATE_MACHINE_BEGIN();
     while (true) {
       while (!run_ && !effect_) YIELD();
+      new_file_id_ = Effect::FileID();
       if (!run_) {
-        if (!effect_->Play(filename_)) {
-          goto fail;
-        }
+        new_file_id_ = effect_->RandomFile();
+        if (!new_file_id_) goto fail;
+        new_file_id_.GetName(filename_);
         run_ = true;
       }
+      if (new_file_id_ && new_file_id_ == old_file_id_) {
+        // Minor optimization: If we're reading the same file
+        // as before, then seek to 0 instead of open/close file.
+        Rewind();
+      } else {
 #ifdef ENABLE_SERIALFLASH
-      sf_file_ = SerialFlashChip::open(filename_);
-      if (!sf_file_)
-#endif
-      {
-#ifdef ENABLE_SD
-        sd_file_.close();
-        sd_file_ = LSFS::Open(filename_);
-        YIELD();
-        if (!sd_file_)
+        sf_file_ = SerialFlashChip::open(filename_);
+        if (!sf_file_)
 #endif
         {
-          STDOUT.print("File ");
-          STDOUT.print(filename_);
-          STDOUT.println(" not found.");
-          goto fail;
+#ifdef ENABLE_SD
+          sd_file_.close();
+          sd_file_ = LSFS::Open(filename_);
+          YIELD();
+          if (!sd_file_)
+#endif
+          {
+            STDOUT.print("File ");
+            STDOUT.print(filename_);
+            STDOUT.println(" not found.");
+            goto fail;
+          }
         }
+        old_file_id_ = new_file_id_;
       }
       wav_ = endswith(".wav", filename_);
       if (wav_) {
@@ -2975,6 +3030,8 @@ public:
 private:
   volatile bool run_ = false;
   Effect* volatile effect_ = nullptr;
+  Effect::FileID new_file_id_;
+  Effect::FileID old_file_id_;
   char filename_[128];
 #ifdef ENABLE_SD
   File sd_file_;
@@ -8305,6 +8362,32 @@ class Commands : public CommandParser {
       STDOUT.println("Done");
       return true;
     }
+    if (!strcmp(cmd, "sdtest")) {
+      char filename[128];
+      uint8_t block[512];
+      hum.Play(filename);
+      File f = LSFS::Open(filename);
+      uint32_t start_millis = millis();
+      int bytes = 0;
+      for (int j = 0; j < 128; j++) {
+        f.seek(0);
+        for (int i = 0; i < 128; i++) {
+          bytes += f.read(block, 512);
+        }
+        STDOUT.print(".");
+      }
+      uint32_t end_millis = millis();
+      LOCK_SD(true);
+      STDOUT.println("Done");
+      // bytes per ms = kb per s (note, not kibibytes)
+      float kb_per_sec = bytes / (float)(end_millis - start_millis);
+      STDOUT.println("SD card speed: ");
+      STDOUT.print(kb_per_sec);
+      STDOUT.print(" kb/s = ");
+      STDOUT.print(kb_per_sec / 88.2);
+      STDOUT.println(" simultaneous audio streams.");
+      return true;
+    }
 #endif
 #if defined(ENABLE_SD) && defined(ENABLE_SERIALFLASH)
     if (!strcmp(cmd, "cache")) {
@@ -8459,6 +8542,10 @@ class Commands : public CommandParser {
     STDOUT.println("Serial Flash memory management:");
     STDOUT.println("   ls, rm <file>, format, play <file>, effects");
     STDOUT.println("To upload files: tar cf - files | uuencode x >/dev/ttyACM0");
+#endif
+#ifdef ENABLE_SD
+    STDOUT.println(" dir [directory] - list files on SD card.");
+    STDOUT.println(" sdtest - benchmark SD card");
 #endif
   }
 };
