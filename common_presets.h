@@ -77,6 +77,7 @@ BladeConfig blades[] = {
 
   // Charging adapter, single PL9823 LED.
   {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(charging_presets) },
+
   // For testing (makes the charging blade behave like a normal blade.)
   //  {  15000, WS2811BladePtr<1, WS2811_580kHz>(), CONFIGARRAY(presets) },
 
