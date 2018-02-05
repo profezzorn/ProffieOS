@@ -2,6 +2,9 @@
 #define BLADES_WS2811_BLADE_H
 
 #ifdef ENABLE_WS2811
+
+#include "monopodws.h"
+
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
