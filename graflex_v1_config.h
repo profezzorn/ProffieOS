@@ -1,4 +1,3 @@
-
 #ifdef CONFIG_TOP
 
 // V1 electronics
