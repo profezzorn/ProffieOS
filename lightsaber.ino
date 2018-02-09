@@ -834,6 +834,24 @@ protected:
   SaberBase* delegate_ = NULL;
 };
 
+template<class T, int N>
+class BoxFilter {
+public:
+  T filter(const T& v) {
+    data[pos] = v;
+    pos++;
+    if (pos == N) pos = 0;
+
+    T ret = data[0];
+    for (int i = 1; i < N; i++) {
+      ret += data[i];
+    }
+    return ret / N;
+  }
+
+  T data[N];
+  int pos = 0;
+};
 
 // Returns the decimals of a number, ie 12.2134 -> 0.2134
 float fract(float x) { return x - floor(x); }
@@ -3881,25 +3899,6 @@ public:
 };
 
 LoopedSwingWrapper looped_swing_wrapper;
-
-template<class T, int N>
-class BoxFilter {
-public:
-  T filter(const T& v) {
-    data[pos] = v;
-    pos++;
-    if (pos == N) pos = 0;
-
-    T ret = data[0];
-    for (int i = 1; i < N; i++) {
-      ret += data[i];
-    }
-    return ret / N;
-  }
-
-  T data[N];
-  int pos = 0;
-};
 
 // SmoothSwing V2, based on Thexter's excellent work.
 // For more details, see:
