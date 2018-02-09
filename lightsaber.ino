@@ -6376,7 +6376,7 @@ protected:
     if (battery_monitor.low()) {
       if (current_style() != &style_charging) {
         if (on_) {
-          STDOUT.print("Battery low, turning off: ");
+          STDOUT.print("Battery low, turning off. Battery voltage: ");
           STDOUT.println(battery_monitor.battery());
           Off();
         } else if (millis() - last_beep_ > 5000) {
