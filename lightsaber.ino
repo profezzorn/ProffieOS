@@ -1471,6 +1471,7 @@ public:
   }
 
   void Beep(float length, float freq) {
+    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     x_ = f_ = AUDIO_RATE / freq / 2.0;
     samples_ = AUDIO_RATE * length;
   }
@@ -3711,6 +3712,7 @@ public:
         if (volume_ <= 0.0f) {
           volume_ = 0.0f;
           state_ = STATE_OFF;
+	  wav_players[0].FadeAndStop();
         }
         break;
       }
@@ -4271,6 +4273,7 @@ class BladeBase;
 // of all the LEDs in the blade.
 class BladeStyle {
 public:
+  virtual ~BladeStyle() {}
   virtual void activate() {}
   virtual void deactivate() {}
   virtual void run(BladeBase* blade) = 0;
@@ -4309,10 +4312,24 @@ public:
 
   virtual void Activate() = 0;
 
+  virtual BladeStyle* UnSetStyle() {
+    BladeStyle *ret = current_style_;
+    if (ret) {
+      ret->deactivate();
+    }
+    current_style_ = nullptr;
+    return ret;
+  }
   virtual void SetStyle(BladeStyle* style) {
-    if (current_style_) current_style_->deactivate();
+    // current_style should be nullptr;
     current_style_ = style;
-    current_style_->activate();
+    if (current_style_) {
+      current_style_->activate();
+    }
+  }
+
+  BladeStyle* current_style() const {
+    return current_style_;
   }
 
  protected:
@@ -4388,6 +4405,7 @@ struct FireConfig {
 };
 
 // Fire-style
+// Note: BLADE_NUM is now irrelevant.
 template<int BLADE_NUM>
 class StyleFire : public BladeStyle {
 public:
@@ -4482,8 +4500,8 @@ public:
   }
 
 private:
-  static uint32_t last_update_;
-  static unsigned short heat_[maxLedsPerStrip + 13];
+  uint32_t last_update_;
+  unsigned short heat_[maxLedsPerStrip + 13];
   Color8 c1_, c2_;
   uint32_t delay_;
   OnState state_;
@@ -4493,12 +4511,6 @@ private:
   FireConfig clash_;
   FireConfig lockup_;
 };
-
-template<int BLADE_NUM>
-uint32_t StyleFire<BLADE_NUM>::last_update_ = 0;
-
-template<int BLADE_NUM>
-unsigned short StyleFire<BLADE_NUM>::heat_[maxLedsPerStrip + 13];
 
 // If you have multiple blades, make sure to use a different BLADE_NUM
 // for each blade.
@@ -5211,11 +5223,16 @@ private:
   T base_;
 };
 
+typedef BladeStyle *(*StyleAllocator)();
+template<class STYLE>
+BladeStyle* AllocateStyle() {
+  return new Style<STYLE>();
+};
+
 // Get a pointer to class.
 template<class STYLE>
-BladeStyle* StylePtr() {
-  static Style<STYLE> style;
-  return &style;
+StyleAllocator StylePtr() {
+  return &AllocateStyle<STYLE>;
 };
 
 
@@ -5296,7 +5313,7 @@ template<class base_color,
           int in_millis,
          class lockup_flicker_color = WHITE,
          class blast_color = WHITE>
-BladeStyle *StyleNormalPtr() {
+StyleAllocator StyleNormalPtr() {
   typedef AudioFlicker<base_color, lockup_flicker_color> AddFlicker;
   typedef Blast<base_color, blast_color> AddBlast;
   typedef Lockup<AddBlast, AddFlicker> AddLockup;
@@ -5310,7 +5327,7 @@ template<int out_millis,
           int in_millis,
           class clash_color = WHITE,
           class lockup_flicker_color = WHITE>
-BladeStyle *StyleRainbowPtr() {
+StyleAllocator StyleRainbowPtr() {
   typedef AudioFlicker<Rainbow, lockup_flicker_color> AddFlicker;
   typedef Lockup<Rainbow, AddFlicker> AddLockup;
   typedef SimpleClash<AddLockup, clash_color> AddClash;
@@ -5324,7 +5341,7 @@ template<class strobe_color,
           int frequency,
           int out_millis,
           int in_millis>
-BladeStyle *StyleStrobePtr() {
+StyleAllocator StyleStrobePtr() {
   typedef Strobe<BLACK, strobe_color, frequency, 1> strobe;
   typedef Strobe<BLACK, strobe_color, 3* frequency, 1> fast_strobe;
   typedef Lockup<strobe, fast_strobe> AddLockup;
@@ -5593,6 +5610,11 @@ public:
     if (!offset_) blade_->SetStyle(this);
   }
   
+  BladeStyle* UnSetStyle() {
+    if (!offset_) blade_->UnSetStyle();
+    return BladeWrapper::UnSetStyle();
+  }
+  
   void SetupSubBlade(BladeBase* base, int offset, int num_leds) {
     blade_ = base;
     offset_ = offset;
@@ -5841,6 +5863,30 @@ struct NoLED {
 
 #define CONFIGARRAY(X) X, NELEM(X)
 
+#if NUM_BLADES == 1
+#define ONCEPERBLADE(F) F(1)
+#elif NUM_BLADES == 2
+#define ONCEPERBLADE(F) F(1) F(2)
+#elif NUM_BLADES == 3
+#define ONCEPERBLADE(F) F(1) F(2) F(3)
+#elif NUM_BLADES == 4
+#define ONCEPERBLADE(F) F(1) F(2) F(3) F(4)
+#elif NUM_BLADES == 5
+#define ONCEPERBLADE(F) F(1) F(2) F(3) F(4) F(5)
+#elif NUM_BLADES == 6
+#define ONCEPERBLADE(F) F(1) F(2) F(3) F(4) F(5) F(6)
+#elif NUM_BLADES == 7
+#define ONCEPERBLADE(F) F(1) F(2) F(3) F(4) F(5) F(6) F(7)
+#elif NUM_BLADES == 8
+#define ONCEPERBLADE(F) F(1) F(2) F(3) F(4) F(5) F(6) F(7) F(8)
+#elif NUM_BLADES == 9
+#define ONCEPERBLADE(F) F(1) F(2) F(3) F(4) F(5) F(6) F(7) F(8) F(9)
+#elif NUM_BLADES == 10
+#define ONCEPERBLADE(F) F(1) F(2) F(3) F(4) F(5) F(6) F(7) F(8) F(9) F(10)
+#else
+#error NUM_BLADES is too big
+#endif
+
 struct Preset {
   // Sound font.
   const char* font;
@@ -5849,28 +5895,8 @@ struct Preset {
   const char* track;
 
   // Blade config.
-  BladeStyle* style;
-#if NUM_BLADES >= 2
-  BladeStyle* style2;
-#endif
-#if NUM_BLADES >= 3
-  BladeStyle* style3;
-#endif
-#if NUM_BLADES >= 4
-  BladeStyle* style4;
-#endif
-#if NUM_BLADES >= 5
-  BladeStyle* style5;
-#endif
-#if NUM_BLADES >= 6
-  BladeStyle* style6;
-#endif
-#if NUM_BLADES >= 7
-  BladeStyle* style7;
-#endif
-#if NUM_BLADES >= 8
-  BladeStyle* style8;
-#endif
+#define DEFINE_BLADE_STYLES(N) StyleAllocator style_allocator##N;
+  ONCEPERBLADE(DEFINE_BLADE_STYLES);
 
   const char* name;
 };
@@ -5880,28 +5906,8 @@ struct BladeConfig {
   int ohm;
 
   // Blade driver.
-  BladeBase* blade;
-#if NUM_BLADES >= 2
-  BladeBase* blade2;
-#endif
-#if NUM_BLADES >= 3
-  BladeBase* blade3;
-#endif
-#if NUM_BLADES >= 4
-  BladeBase* blade4;
-#endif
-#if NUM_BLADES >= 5
-  BladeBase* blade5;
-#endif
-#if NUM_BLADES >= 6
-  BladeBase* blade6;
-#endif
-#if NUM_BLADES >= 7
-  BladeBase* blade7;
-#endif
-#if NUM_BLADES >= 8
-  BladeBase* blade8;
-#endif
+#define DEFINE_BLADES(N) BladeBase* blade##N;
+  ONCEPERBLADE(DEFINE_BLADES);
 
   // Blade presets
   Preset* presets;
@@ -5981,13 +5987,21 @@ public:
     return on_;
   }
 
+  BladeStyle* current_style(){
+    return current_config_->blade1->current_style();
+  }
+
   bool NeedsPower() {
-    return on_ || current_preset_->style->NoOnOff();
+    if (on_) return true;
+    if (current_style() && current_style()->NoOnOff())
+      return true;
+    return false;
   }
 
   void On() {
     if (on_) return;
-    if (current_preset_->style->NoOnOff()) return;
+    if (current_style() && current_style()->NoOnOff())
+      return;
     STDOUT.println("Ignition.");
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     delay(10);             // allow time to wake up
@@ -6099,28 +6113,15 @@ public:
     }
 
     current_preset_ = preset;
-    current_config_->blade->SetStyle(preset->style);
-#if NUM_BLADES >= 2
-    current_config_->blade2->SetStyle(preset->style2);
-#endif
-#if NUM_BLADES >= 3
-    current_config_->blade3->SetStyle(preset->style3);
-#endif
-#if NUM_BLADES >= 4
-    current_config_->blade4->SetStyle(preset->style4);
-#endif
-#if NUM_BLADES >= 5
-    current_config_->blade5->SetStyle(preset->style5);
-#endif
-#if NUM_BLADES >= 6
-    current_config_->blade6->SetStyle(preset->style6);
-#endif
-#if NUM_BLADES >= 7
-    current_config_->blade7->SetStyle(preset->style7);
-#endif
-#if NUM_BLADES >= 8
-    current_config_->blade8->SetStyle(preset->style8);
-#endif
+
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+#define UNSET_BLADE_STYLE(N) \
+    delete current_config_->blade##N->UnSetStyle();
+    ONCEPERBLADE(UNSET_BLADE_STYLE)
+#define SET_BLADE_STYLE(N) \
+    current_config_->blade##N->SetStyle(preset->style_allocator##N());
+    ONCEPERBLADE(SET_BLADE_STYLE)
     chdir(preset->font);
   }
 
@@ -6128,7 +6129,6 @@ public:
   void next_preset() {
     if (current_config_->num_presets == 1)
       return;
-    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
 #ifdef ENABLE_AUDIO
     beeper.Beep(0.05, 2000.0);
 #endif
@@ -6144,7 +6144,6 @@ public:
   void previous_preset() {
     if (current_config_->num_presets == 1)
       return;
-    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
 #ifdef ENABLE_AUDIO
     beeper.Beep(0.05, 2000.0);
 #endif
@@ -6191,33 +6190,12 @@ public:
     STDOUT.println(best_config);
     current_config_ = blades + best_config;
 
-#define ACTIVATE(BLADE) do {     \
-    if (!BLADE) goto bad_blade;  \
-    BLADE->Activate();           \
+#define ACTIVATE(N) do {     \
+    if (!current_config_->blade##N) goto bad_blade;  \
+    current_config_->blade##N->Activate();           \
   } while(0);
 
-    ACTIVATE(current_config_->blade);
-#if NUM_BLADES >= 2
-    ACTIVATE(current_config_->blade2)
-#endif
-#if NUM_BLADES >= 3
-    ACTIVATE(current_config_->blade3);
-#endif
-#if NUM_BLADES >= 4
-    ACTIVATE(current_config_->blade4);
-#endif
-#if NUM_BLADES >= 5
-    ACTIVATE(current_config_->blade5);
-#endif
-#if NUM_BLADES >= 6
-    ACTIVATE(current_config_->blade6);
-#endif
-#if NUM_BLADES >= 7
-    ACTIVATE(current_config_->blade7);
-#endif
-#if NUM_BLADES >= 8
-    ACTIVATE(current_config_->blade8);
-#endif
+    ONCEPERBLADE(ACTIVATE);
     SetPreset(current_config_->presets, false);
     return;
 
@@ -6396,7 +6374,7 @@ protected:
 
   void Loop() override {
     if (battery_monitor.low()) {
-      if (current_preset_->style != &style_charging) {
+      if (current_style() != &style_charging) {
         if (on_) {
           STDOUT.print("Battery low, turning off: ");
           STDOUT.println(battery_monitor.battery());
@@ -6408,9 +6386,9 @@ protected:
           talkie.Say(spLOW);
           talkie.Say(spPOWER);
 #endif
+	  last_beep_ = millis();
         }
       }
-      last_beep_ = millis();
     }
 #ifdef ENABLE_AUDIO
     if (track_player_ && !track_player_->isPlaying()) {
@@ -6639,7 +6617,6 @@ public:
     }
 #ifdef ENABLE_AUDIO
     if (!strcmp(cmd, "beep")) {
-      digitalWrite(amplifierPin, HIGH); // turn on the amplifier
       beeper.Beep(1.0, 3000.0);
       return true;
     }
