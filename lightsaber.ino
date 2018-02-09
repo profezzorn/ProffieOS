@@ -29,6 +29,12 @@
 // #define CONFIG_FILE "toy_saber_config.h"
 // #define CONFIG_FILE "new_config.h"
 
+
+#ifdef CONFIG_FILE_TEST
+#undef CONFIG_FILE
+#define CONFIG_FILE CONFIG_FILE_TEST
+#endif
+
 #define CONFIG_TOP
 #include CONFIG_FILE
 #undef CONFIG_TOP
@@ -374,16 +380,18 @@ public:
   ScopedCycleCounter(uint64_t& dest) :
     dest_(dest) {
 #ifdef TEENSYDUINO
-    ARM_DEMCR |= ARM_DEMCR_TRCENA;
-    ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
     cycles_ = ARM_DWT_CYCCNT;
-#endif    
+#else
+    cycles_ = DWT->CYCCNT;
+#endif
   }
   ~ScopedCycleCounter() {
 #ifdef TEENSYDUINO
     cycles_ = ARM_DWT_CYCCNT - cycles_;
-    dest_ += cycles_;
+#else
+    cycles_ = DWT->CYCCNT - cycles_;
 #endif
+    dest_ += cycles_;
   }
 private:
   uint32_t cycles_;
@@ -4352,6 +4360,20 @@ public:
 };
 
 
+class StyleFactory {
+public:
+  virtual BladeStyle* make() = 0;
+};
+
+
+template<class STYLE>
+class StyleFactoryImpl : public StyleFactory {
+  BladeStyle* make() override {
+    return new STYLE();
+  }
+};
+
+
 // Charging blade style.
 // Slowly pulsating battery indicator.
 class StyleCharging : public BladeStyle {
@@ -4392,7 +4414,7 @@ public:
 };
 
 // No need to templetize this one, as there are no arguments.
-StyleCharging style_charging;
+StyleFactoryImpl<StyleCharging> style_charging;
 
 struct FireConfig {
   FireConfig(int b, int r, int c) : intensity_base(b),
@@ -4404,8 +4426,6 @@ struct FireConfig {
 };
 
 // Fire-style
-// Note: BLADE_NUM is now irrelevant.
-template<int BLADE_NUM>
 class StyleFire : public BladeStyle {
 public:
   StyleFire(Color8 c1,
@@ -4511,21 +4531,34 @@ private:
   FireConfig lockup_;
 };
 
-// If you have multiple blades, make sure to use a different BLADE_NUM
-// for each blade.
+template<class COLOR1, class COLOR2,
+          int DELAY=0, int SPEED=2,
+          int NORM_INT_BASE = 0, int NORM_INT_RAND=2000, int NORM_COOLING = 5,
+          int CLSH_INT_BASE = 3000, int CLSH_INT_RAND=0, int CLSH_COOLING = 0,
+          int LOCK_INT_BASE = 0, int LOCK_INT_RAND=5000, int LOCK_COOLING = 10>
+class FireFactory : public StyleFactory {
+  BladeStyle* make() override {
+    return new StyleFire(
+      COLOR1::color().dither(0), COLOR2::color().dither(0),
+      DELAY, SPEED,
+      FireConfig(NORM_INT_BASE, NORM_INT_RAND, NORM_COOLING),
+      FireConfig(CLSH_INT_BASE, CLSH_INT_RAND, CLSH_COOLING),
+      FireConfig(LOCK_INT_BASE, LOCK_INT_RAND, LOCK_COOLING));
+  }
+};
+
+// Note: BLADE_NUM is is now irrelevant.
 template<class COLOR1, class COLOR2,
           int BLADE_NUM=0, int DELAY=0, int SPEED=2,
           int NORM_INT_BASE = 0, int NORM_INT_RAND=2000, int NORM_COOLING = 5,
           int CLSH_INT_BASE = 3000, int CLSH_INT_RAND=0, int CLSH_COOLING = 0,
           int LOCK_INT_BASE = 0, int LOCK_INT_RAND=5000, int LOCK_COOLING = 10>
-class BladeStyle *StyleFirePtr() {
-  static StyleFire<BLADE_NUM> style(
-    COLOR1::color().dither(0), COLOR2::color().dither(0),
-    DELAY, SPEED,
-    FireConfig(NORM_INT_BASE, NORM_INT_RAND, NORM_COOLING),
-    FireConfig(CLSH_INT_BASE, CLSH_INT_RAND, CLSH_COOLING),
-    FireConfig(LOCK_INT_BASE, LOCK_INT_RAND, LOCK_COOLING));
-  return &style;
+class StyleFactory* StyleFirePtr() {
+  static FireFactory<COLOR1, COLOR2, DELAY, SPEED,
+          NORM_INT_BASE, NORM_INT_RAND, NORM_COOLING,
+          CLSH_INT_BASE, CLSH_INT_RAND, CLSH_COOLING,
+          LOCK_INT_BASE, LOCK_INT_RAND, LOCK_COOLING> factory;
+  return &factory;
 }
 
 class MicroEventTime {
@@ -5222,16 +5255,13 @@ private:
   T base_;
 };
 
-typedef BladeStyle *(*StyleAllocator)();
-template<class STYLE>
-BladeStyle* AllocateStyle() {
-  return new Style<STYLE>();
-};
+typedef StyleFactory* StyleAllocator;
 
 // Get a pointer to class.
 template<class STYLE>
 StyleAllocator StylePtr() {
-  return &AllocateStyle<STYLE>;
+  static StyleFactoryImpl<Style<STYLE> > factory;
+  return &factory;
 };
 
 
@@ -5464,7 +5494,7 @@ private:
   int height_;
 };
 
-StylePOV style_pov;
+StyleFactoryImpl<StylePOV> style_pov;
 #endif
 
 class PowerPinInterface {
@@ -6119,7 +6149,7 @@ public:
     delete current_config_->blade##N->UnSetStyle();
     ONCEPERBLADE(UNSET_BLADE_STYLE)
 #define SET_BLADE_STYLE(N) \
-    current_config_->blade##N->SetStyle(preset->style_allocator##N());
+    current_config_->blade##N->SetStyle(preset->style_allocator##N->make());
     ONCEPERBLADE(SET_BLADE_STYLE)
     chdir(preset->font);
   }
@@ -6373,7 +6403,7 @@ protected:
 
   void Loop() override {
     if (battery_monitor.low()) {
-      if (current_style() != &style_charging) {
+      if (current_preset_->style_allocator1 != &style_charging) {
         if (on_) {
           STDOUT.print("Battery low, turning off. Battery voltage: ");
           STDOUT.println(battery_monitor.battery());
@@ -7052,6 +7082,22 @@ class Commands : public CommandParser {
       return true;
     }
     if (!strcmp(cmd, "top")) {
+#ifdef TEENSYDUINO
+      if (!(ARM_DWT_CTRL & ARM_DWT_CTRL_CYCCNTENA)) {
+        ARM_DEMCR |= ARM_DEMCR_TRCENA;
+        ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
+        STDOUT.println("Cycle counting enabled, top will work next time.");
+        return true;
+      }
+#else
+      if (!(DWT->CTRL & DWT_CTRL_CYCCNTENA_Msk)) {
+        CoreDebug->DEMCR |= DEMCR_TRCENA_Msk;
+        DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+        STDOUT.println("Cycle counting enabled, top will work next time.");
+        return true;
+      }
+#endif
+
       // TODO: list cpu usage for various objects.
       double total_cycles =
         (double)(audio_dma_interrupt_cycles +
