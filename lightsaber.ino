@@ -4227,16 +4227,6 @@ public:
         }
         break;
 
-      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
-        if (SaberBase::Lockup()) {
-          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-          SaberBase::DoEndLockup();
-        } else {
-          handled = false;
-        }
-        break;
-
         // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
         StartOrStopTrack();
@@ -4257,6 +4247,22 @@ public:
         previous_preset();
 #endif
         break;
+    }
+    if (!handled) {
+      // Events that needs to be handled regardless of what other buttons
+      // are pressed.
+      switch (EVENTID(button, event, on_ ? MODE_ON : MODE_OFF)) {
+	case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
+	case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
+	  if (SaberBase::Lockup()) {
+	    SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+	    SaberBase::DoEndLockup();
+	  } else {
+	    handled = false;
+	  }
+        break;
+
+      }
     }
     if (handled) {
       current_modifiers = BUTTON_NONE;
