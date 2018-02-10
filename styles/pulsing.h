@@ -8,7 +8,7 @@ class Int {
 };
 
 template<class COLOR1, class COLOR2, typename PULSE_MILLIS>
-class PulsingImpl {
+class PulsingX {
 public:
   void run(BladeBase* base) {
     c1_.run(base);
@@ -39,7 +39,7 @@ private:
 
 
 template<class COLOR1, class COLOR2, int PULSE_MILLIS>
-  using Pulsing = PulsingImpl<COLOR1, COLOR2, Int<PULSE_MILLIS> >;
+  using Pulsing = PulsingX<COLOR1, COLOR2, Int<PULSE_MILLIS> >;
 
 
 #endif
