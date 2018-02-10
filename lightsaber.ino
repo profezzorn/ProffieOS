@@ -3838,161 +3838,6 @@ public:
   }
 };
 
-// Gradient, color A at base, B at tip.
-template<class A, class B>
-class Gradient {
-public:
-  void run(BladeBase* blade) {
-    a_.run(blade);
-    b_.run(blade);
-    num_leds_ = blade->num_leds();
-  }
-  OverDriveColor getColor(int led) {
-    OverDriveColor a = a_.getColor(led);
-    OverDriveColor b = b_.getColor(led);
-    a.c = a.c.mix2(b.c, led * 16384 / num_leds_);
-    return a;
-  }
-private:
-  A a_;
-  B b_;
-  int num_leds_;
-};
-
-// Mixes randomly between A and B.
-// mix is even over entire blade.
-template<class A, class B>
-class RandomFlicker {
-public:
-  void run(BladeBase* blade) {
-    a_.run(blade);
-    b_.run(blade);
-    mix_ = random(255);
-  }
-  OverDriveColor getColor(int led) {
-    OverDriveColor a = a_.getColor(led);
-    OverDriveColor b = b_.getColor(led);
-    a.c = a.c.mix(b.c, mix_);
-    return a;
-  }
-private:
-  A a_;
-  B b_;
-  int mix_;
-};
-
-// Mixes randomly between A and B.
-// mix is chosen individually for every LED.
-template<class A, class B>
-class RandomPerLEDFlicker {
-public:
-  void run(BladeBase* blade) {
-    a_.run(blade);
-    b_.run(blade);
-  }
-  OverDriveColor getColor(int led) {
-    OverDriveColor a = a_.getColor(led);
-    OverDriveColor b = b_.getColor(led);
-    a.c = a.c.mix(b.c, random(255));
-    return a;
-  }
-private:
-  A a_;
-  B b_;
-};
-
-// Mixes between A and B based
-// on audio. Quiet audio means more A, loud audio means more B.
-// Based on a single sample instead of an average to make it flicker.
-template<class A, class B>
-class AudioFlicker {
-public:
-  void run(BladeBase* blade) {
-    a_.run(blade);
-    b_.run(blade);
-#ifdef ENABLE_AUDIO    
-    mix_ = clampi32(dynamic_mixer.last_sum() >> 4, 0, 255);
-#else
-    mix_ = 0;
-#endif
-  }
-  OverDriveColor getColor(int led) {
-    OverDriveColor a = a_.getColor(led);
-    OverDriveColor b = b_.getColor(led);
-    a.c = a.c.mix(b.c, mix_);
-    return a;
-  }
-private:
-  A a_;
-  B b_;
-  int mix_;
-};
-
-// Randomly selects between A and B, but keeps nearby
-// pixels looking similar.
-template<class A, class B, int grade>
-class BrownNoiseFlicker {
-public:
-  void run(BladeBase* blade) {
-    a_.run(blade);
-    b_.run(blade);
-    mix_ = random(255);
-  }
-  OverDriveColor getColor(int led) {
-    OverDriveColor a = a_.getColor(led);
-    OverDriveColor b = b_.getColor(led);
-    a.c = a.c.mix(b.c, mix_);
-    mix_ = clampi32(mix_ + random(grade * 2 + 1) - grade, 0, 255);
-    return a;
-  }
-private:
-  A a_;
-  B b_;
-  int mix_;
-};
-
-// Makes a random "hump" which is about 2xHUMP_WIDTH leds wide.
-template<class A, class B, int HUMP_WIDTH>
-class HumpFlicker {
-public:
-  void run(BladeBase* blade) {
-    a_.run(blade);
-    b_.run(blade);
-    int num_leds_ = blade->num_leds();
-    pos_ = random(num_leds_);
-  }
-  OverDriveColor getColor(int led) {
-    OverDriveColor a = a_.getColor(led);
-    OverDriveColor b = b_.getColor(led);
-    int mix_ = clampi32(abs(led - pos_) * 255 / HUMP_WIDTH, 0, 255);
-    a.c = a.c.mix(b.c, mix_);
-    return a;
-  }
-private:
-  A a_;
-  B b_;
-  int pos_;
-};
-
-// Basic RGB rainbow.
-class Rainbow {
-public:
-  void run(BladeBase* base) {
-    m = millis();
-  }
-  OverDriveColor getColor(int led) {
-    Color16 c(max(0, (sin_table[((m * 3 + led * 50)) & 0x3ff] << 2)),
-              max(0, (sin_table[((m * 3 + led * 50 + 1024 / 3)) & 0x3ff] << 2)),
-              max(0, (sin_table[((m * 3 + led * 50 + 1024 * 2 / 3)) & 0x3ff] << 2)));
-    OverDriveColor ret;
-    ret.c = c;
-    ret.overdrive = false;
-    return ret;
-  }
-private:
-  uint32_t m;
-};
-
 class Range {
 public:
   uint32_t start;
@@ -4014,6 +3859,13 @@ struct is_same_type { static const bool value = false; };
 template<class T>
 struct is_same_type<T, T> { static const bool value = true; };
 
+#include "styles/gradient.h"
+#include "styles/random_flicker.h"
+#include "styles/random_per_led_flicker.h"
+#include "styles/audio_flicker.h"
+#include "styles/brown_noise_flicker.h"
+#include "styles/hump_flicker.h"
+#include "styles/rainbow.h"
 #include "styles/color_cycle.h"
 #include "styles/cylon.h"
 #include "styles/ignition_delay.h"
