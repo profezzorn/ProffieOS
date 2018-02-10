@@ -3154,7 +3154,8 @@ private:
   T base_;
 };
 
-typedef StyleFactory* StyleAllocator;
+// This really ought to be a typedef, but it causes problems I don't understand.
+#define StyleAllocator StyleFactory*
 
 // Get a pointer to class.
 template<class STYLE>
