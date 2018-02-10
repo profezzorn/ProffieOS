@@ -9,7 +9,7 @@ include Teensy.mk
 CPPFLAGS += $(TESTFLAGS)
 
 MAKEFILES=Makefile Arduino.mk Common.mk Teensy.mk
-SOURCE_FILES=lightsaber.ino star_wars_logo_pov_data.h voice_data.h gpl-3.0.txt \
+SOURCE_FILES=lightsaber.ino voice_data.h gpl-3.0.txt \
              blades/*.h buttons/*.h motion/*.h mtp/*.h styles/*.h
 CONFIG_FILES=common_presets.h graflex_v1_config.h owk_v2_config.h \
              toy_saber_config.h test_bench_config.h crossguard_config.h \
