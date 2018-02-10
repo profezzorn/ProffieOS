@@ -2862,192 +2862,6 @@ class StyleFactoryImpl : public StyleFactory {
 };
 
 
-// Charging blade style.
-// Slowly pulsating battery indicator.
-class StyleCharging : public BladeStyle {
-public:
-  void activate() override {
-    STDOUT.println("Charging Style");
-  }
-  void run(BladeBase *blade) override {
-    int black_mix = 128 + 100 * sin(millis() / 500.0);
-    float volts = battery_monitor.battery();
-    Color8 colors[] = {
-      Color8(0,255,0),   // Green > 4.0
-      Color8(0,0,255),
-      Color8(255,128,0),
-      Color8(255,0,0),
-      Color8(255,0,0) 
-    };
-    float x = (4.0 - volts) * 2.0;
-    int i = floor(x);
-    i = clampi32(i, 0, NELEM(colors) - 2);
-    // Blend colors over 0.1 volts.
-    int blend = (x - i) * 10 * 255;
-    blend = clampi32(blend, 0, 255);
-    Color8 c = colors[i].mix(colors[i + 1], blend);
-    c = c.mix(Color8(), black_mix);
-    int num_leds = blade->num_leds();
-
-    float min_volts = 2.7;
-    float max_volts = 4.2;
-    float pos = (volts - min_volts) * num_leds / (max_volts - min_volts);
-    int p = pos * 32;
-    for (int i = 0; i < num_leds; i++) {
-      blade->set(i, Color16(Color8().mix(c, max(0, 256 - abs(p - i * 32)))));
-    }
-  };
-
-  bool NoOnOff() override { return false; }
-};
-
-// No need to templetize this one, as there are no arguments.
-StyleFactoryImpl<StyleCharging> style_charging;
-
-struct FireConfig {
-  FireConfig(int b, int r, int c) : intensity_base(b),
-                                     intensity_rand(r),
-                                     cooling(c) {}
-  int intensity_base;
-  int intensity_rand;
-  int cooling;
-};
-
-// Fire-style
-class StyleFire : public BladeStyle {
-public:
-  StyleFire(Color8 c1,
-             Color8 c2,
-             uint32_t delay,
-             uint32_t speed,
-             FireConfig normal,
-             FireConfig clash,
-             FireConfig lockup) :
-    c1_(c1), c2_(c2),
-    delay_(delay),
-    speed_(speed),
-    normal_(normal),
-    clash_(clash),
-    lockup_(lockup) {
-  }
-  enum OnState {
-    STATE_OFF = 0,
-    STATE_ACTIVATING,
-    STATE_ON,
-  };
-  void activate() override {
-    STDOUT.println("Fire Style");
-    for (size_t i = 0; i < NELEM(heat_); i++) heat_[i] = 0;
-  }
-  bool On(BladeBase* blade) {
-    if (!blade->is_on()) {
-      state_ = STATE_OFF;
-      return false;
-    }
-    switch (state_) {
-      default:
-         state_ = STATE_ACTIVATING;
-         on_time_ = millis();
-      case STATE_ACTIVATING:
-         if (millis() - on_time_ < delay_) return false;
-         state_ = STATE_ON;
-      case STATE_ON:
-         return true;
-    }
-  }
-  void run(BladeBase* blade) override {
-    uint32_t m = millis();
-    int num_leds = blade->num_leds();
-    if (m - last_update_ >= 10) {
-      last_update_ = m;
-
-      FireConfig config(0,0,0);
-      if (blade->clash()) {
-         config = clash_;
-      } else if (On(blade)) {
-        if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
-          config = normal_;
-        } else {
-          config = lockup_;
-        }
-      } else {
-         config = normal_;
-         config.intensity_base = 0;
-         config.intensity_rand = 0;
-      }
-      // Note heat_[0] is tip of blade
-      for (int i = 0; i < speed_; i++) {
-         heat_[num_leds + i] = config.intensity_base +
-           random(random(random(config.intensity_rand)));
-      }
-      for (int i = 0; i < num_leds; i++) {
-         int x = (heat_[i+speed_-1] * 3  +
-                  heat_[i+speed_] * 10 +
-                  heat_[i+speed_+1] * 3) >> 4;
-         heat_[i] = clampi32(x - random(config.cooling), 0, 65535);
-      }
-    }
-    bool zero = true;
-    for (int i = 0; i < num_leds; i++) {
-      int h = heat_[num_leds - 1 - i];
-      Color8 c;
-      if (h < 256) {
-         c = Color8().mix(c1_, h);
-      } else if (h < 512) {
-         c = c1_.mix(c2_, h - 256);
-      } else if (h < 768) {
-         c = c2_.mix(Color8(255,255,255), h - 512);
-      } else {
-         c = Color8(255,255,255);
-      }
-      if (h) zero = false;
-      blade->set(i, c);
-    }
-    if (zero) blade->allow_disable();
-  }
-
-private:
-  uint32_t last_update_;
-  unsigned short heat_[maxLedsPerStrip + 13];
-  Color8 c1_, c2_;
-  uint32_t delay_;
-  OnState state_;
-  uint32_t on_time_;
-  int speed_;
-  FireConfig normal_;
-  FireConfig clash_;
-  FireConfig lockup_;
-};
-
-template<class COLOR1, class COLOR2,
-          int DELAY=0, int SPEED=2,
-          int NORM_INT_BASE = 0, int NORM_INT_RAND=2000, int NORM_COOLING = 5,
-          int CLSH_INT_BASE = 3000, int CLSH_INT_RAND=0, int CLSH_COOLING = 0,
-          int LOCK_INT_BASE = 0, int LOCK_INT_RAND=5000, int LOCK_COOLING = 10>
-class FireFactory : public StyleFactory {
-  BladeStyle* make() override {
-    return new StyleFire(
-      COLOR1::color().dither(0), COLOR2::color().dither(0),
-      DELAY, SPEED,
-      FireConfig(NORM_INT_BASE, NORM_INT_RAND, NORM_COOLING),
-      FireConfig(CLSH_INT_BASE, CLSH_INT_RAND, CLSH_COOLING),
-      FireConfig(LOCK_INT_BASE, LOCK_INT_RAND, LOCK_COOLING));
-  }
-};
-
-// Note: BLADE_NUM is is now irrelevant.
-template<class COLOR1, class COLOR2,
-          int BLADE_NUM=0, int DELAY=0, int SPEED=2,
-          int NORM_INT_BASE = 0, int NORM_INT_RAND=2000, int NORM_COOLING = 5,
-          int CLSH_INT_BASE = 3000, int CLSH_INT_RAND=0, int CLSH_COOLING = 0,
-          int LOCK_INT_BASE = 0, int LOCK_INT_RAND=5000, int LOCK_COOLING = 10>
-class StyleFactory* StyleFirePtr() {
-  static FireFactory<COLOR1, COLOR2, DELAY, SPEED,
-          NORM_INT_BASE, NORM_INT_RAND, NORM_COOLING,
-          CLSH_INT_BASE, CLSH_INT_RAND, CLSH_COOLING,
-          LOCK_INT_BASE, LOCK_INT_RAND, LOCK_COOLING> factory;
-  return &factory;
-}
 
 class MicroEventTime {
   void SetToNow() { micros_ = micros(); millis_ = millis(); }
@@ -3114,6 +2928,8 @@ struct is_same_type { static const bool value = false; };
 template<class T>
 struct is_same_type<T, T> { static const bool value = true; };
 
+#include "styles/charging.h"
+#include "styles/fire.h"
 #include "styles/gradient.h"
 #include "styles/random_flicker.h"
 #include "styles/random_per_led_flicker.h"
@@ -3133,6 +2949,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/strobe.h"
 #include "styles/inout_helper.h"
 #include "styles/inout_sparktip.h"
+#include "styles/colors.h"
 
 template<class T>
 class Style : public BladeStyle {
@@ -3164,65 +2981,6 @@ StyleAllocator StylePtr() {
   return &factory;
 };
 
-
-typedef Rgb<255,0,0> RED;
-typedef Rgb<0,255,0> GREEN;
-typedef Rgb<0,0,255> BLUE;
-typedef Rgb<255,255,0> YELLOW;
-typedef Rgb<0,255,255> CYAN;
-typedef Rgb<255,0,255> MAGENTA;
-typedef Rgb<255,255,255> WHITE;
-typedef Rgb<0,0,0> BLACK;
-
-typedef Rgb<223, 239, 255> AliceBlue;
-typedef Rgb<0, 255, 255> Aqua;
-typedef Rgb<55, 255, 169> Aquamarine;
-typedef Rgb<223, 255, 255> Azure;
-typedef Rgb<255, 199, 142> Bisque;
-typedef Rgb<0, 0, 0> Black;
-typedef Rgb<255, 213, 157> BlanchedAlmond;
-typedef Rgb<0, 0, 255> Blue;
-typedef Rgb<55, 255, 0> Chartreuse;
-typedef Rgb<255, 55, 19> Coral;
-typedef Rgb<255, 239, 184> Cornsilk;
-typedef Rgb<0, 255, 255> Cyan;
-typedef Rgb<255, 68, 0> DarkOrange;
-typedef Rgb<255, 0, 75> DeepPink;
-typedef Rgb<0, 135, 255> DeepSkyBlue;
-typedef Rgb<2, 72, 255> DodgerBlue;
-typedef Rgb<255, 244, 223> FloralWhite;
-typedef Rgb<255, 0, 255> Fuchsia;
-typedef Rgb<239, 239, 255> GhostWhite;
-typedef Rgb<0, 255, 0> Green;
-typedef Rgb<108, 255, 6> GreenYellow;
-typedef Rgb<223, 255, 223> HoneyDew;
-typedef Rgb<255, 36, 118> HotPink;
-typedef Rgb<255, 255, 223> Ivory;
-typedef Rgb<255, 223, 233> LavenderBlush;
-typedef Rgb<255, 244, 157> LemonChiffon;
-typedef Rgb<191, 255, 255> LightCyan;
-typedef Rgb<255, 121, 138> LightPink;
-typedef Rgb<255, 91, 50> LightSalmon;
-typedef Rgb<255, 255, 191> LightYellow;
-typedef Rgb<0, 255, 0> Lime;
-typedef Rgb<255, 0, 255> Magenta;
-typedef Rgb<233, 255, 244> MintCream;
-typedef Rgb<255, 199, 193> MistyRose;
-typedef Rgb<255, 199, 119> Moccasin;
-typedef Rgb<255, 187, 108> NavajoWhite;
-typedef Rgb<255, 97, 0> Orange;
-typedef Rgb<255, 14, 0> OrangeRed;
-typedef Rgb<255, 221, 171> PapayaWhip;
-typedef Rgb<255, 180, 125> PeachPuff;
-typedef Rgb<255, 136, 154> Pink;
-typedef Rgb<255, 0, 0> Red;
-typedef Rgb<255, 233, 219> SeaShell;
-typedef Rgb<255, 244, 244> Snow;
-typedef Rgb<0, 255, 55> SpringGreen;
-typedef Rgb<14, 57, 118> SteelBlue;
-typedef Rgb<255, 31, 15> Tomato;
-typedef Rgb<255, 255, 255> White;
-typedef Rgb<255, 255, 0> Yellow;
 
 // This macro has a problem with commas, please don't use it.
 #define EASYBLADE(COLOR, CLASH_COLOR) \

@@ -37,7 +37,6 @@ private:
   float pos_ = 0.0;
 };
 
-
 template<class COLOR1, class COLOR2, int PULSE_MILLIS>
   using Pulsing = PulsingX<COLOR1, COLOR2, Int<PULSE_MILLIS> >;
 
