@@ -1,5 +1,6 @@
 *.zip
 Arduino-Makefile-1.6.0
+audio
 build-teensy31
 lightsaber.ino-1.94
 lightsaber.ino.bak2
