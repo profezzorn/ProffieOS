@@ -374,127 +374,20 @@ public:
 
 #endif
 
-
-class ScopedCycleCounter {
-public:
-  ScopedCycleCounter(uint64_t& dest) :
-    dest_(dest) {
-#ifdef TEENSYDUINO
-    cycles_ = ARM_DWT_CYCCNT;
-#else
-    cycles_ = DWT->CYCCNT;
-#endif
-  }
-  ~ScopedCycleCounter() {
-#ifdef TEENSYDUINO
-    cycles_ = ARM_DWT_CYCCNT - cycles_;
-#else
-    cycles_ = DWT->CYCCNT - cycles_;
-#endif
-    dest_ += cycles_;
-  }
-private:
-  uint32_t cycles_;
-  uint64_t& dest_;
-};
+#include "common/scoped_cycle_counter.h"
 
 uint64_t audio_dma_interrupt_cycles = 0;
 uint64_t wav_interrupt_cycles = 0;
 uint64_t loop_cycles = 0;
 
-class LoopCounter {
-public:
-  void Print() {
-    if (millis_sum_)
-      STDOUT.print(updates_ * 1000.0 / millis_sum_);
-  }
-  void Reset() {
-    updates_ = 0;
-    millis_sum_ = 0;
-    last_millis_ = 0;
-  }
-  void Update() {
-    uint32_t m = millis();
-    if (last_millis_) {
-      millis_sum_ += m - last_millis_;
-      updates_++;
-      if (updates_ > 1000) {
-         updates_ /= 2;
-         millis_sum_ /= 2;
-      }
-    }
-    last_millis_ = m;
-  }
-private:
-  int updates_ = 0;
-  int millis_sum_ = 0;
-  uint32_t last_millis_ = 0;
-};
+#include "common/loop_counter.h"
 
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 
 // Magic type used to prevent linked-list types from automatically linking.
 enum NoLink { NOLINK = 17 };
 
-// Helper class for classses that needs to be called back from the Loop()
-// function. Also provides a Setup() function.
-class Looper;
-Looper* loopers = NULL;
-LoopCounter global_loop_counter;
-class Looper {
-public:
-  void Link() {
-    CHECK_LL(Looper, loopers, next_looper_);
-    next_looper_ = loopers;
-    loopers = this;
-    CHECK_LL(Looper, loopers, next_looper_);
-  }
-  void Unlink() {
-    CHECK_LL(Looper, loopers, next_looper_);
-    for (Looper** i = &loopers; *i; i = &(*i)->next_looper_) {
-      if (*i == this) {
-        *i = next_looper_;
-        CHECK_LL(Looper, loopers, next_looper_);
-        return;
-      }
-    }
-    CHECK_LL(Looper, loopers, next_looper_);
-  }
-  Looper() { Link(); }
-  explicit Looper(NoLink _) { }
-  ~Looper() { Unlink(); }
-  static void DoLoop() {
-    ScopedCycleCounter cc(loop_cycles);
-    CHECK_LL(Looper, loopers, next_looper_);
-    for (Looper *l = loopers; l; l = l->next_looper_) {
-      ScopedCycleCounter cc2(l->cycles_);
-      l->Loop();
-    }
-    global_loop_counter.Update();
-  }
-  static void DoSetup() {
-    for (Looper *l = loopers; l; l = l->next_looper_) {
-      l->Setup();
-    }
-  }
-  static void LoopTop(double total_cycles) {
-    for (Looper *l = loopers; l; l = l->next_looper_) {
-      STDOUT.print(l->name());
-      STDOUT.print(" loop: ");
-      STDOUT.print(l->cycles_ * 100.0 / total_cycles);
-      STDOUT.println("%");
-      l->cycles_ = 0;
-    }
-  }
-
-protected:
-  virtual const char* name() = 0;
-  virtual void Loop() = 0;
-  virtual void Setup() {}
-private:
-  uint64_t cycles_ = 0;
-  Looper* next_looper_;
-};
+#include "common/looper.h"
 
 // Command parsing linked list base class.
 class CommandParser;
