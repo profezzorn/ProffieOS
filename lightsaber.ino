@@ -1016,6 +1016,11 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/inout_helper.h"
 #include "styles/inout_sparktip.h"
 #include "styles/colors.h"
+#include "styles/mix.h"
+
+// functions
+#include "styles/ifon.h"
+#include "styles/change_slowly.h"
 
 template<class T>
 class Style : public BladeStyle {

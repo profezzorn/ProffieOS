@@ -1,6 +1,11 @@
 #ifndef STYLES_INT_H
 #define STYLES_INT_H
 
+// Usage: Int<N>
+// Returns N
+// N: a number
+// return value: INTEGER
+
 template<int N>
 class Int {
 public:
