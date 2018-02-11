@@ -1,7 +1,7 @@
 #ifndef STYLES_PULSING_H
 #define STYLES_PULSING_H
 
-#include "int.h"
+#include "../functions/int.h"
 
 template<class COLOR1, class COLOR2, typename PULSE_MILLIS>
 class PulsingX {

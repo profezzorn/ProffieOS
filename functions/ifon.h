@@ -1,5 +1,5 @@
-#ifndef STYLES_IFON_H
-#define STYLES_IFON_H
+#ifndef FUNCTIONS_IFON_H
+#define FUNCTIONS_IFON_H
 
 // Usage: Ifon<A, B>
 // Returns A if saber is on, B otherwise.

@@ -1,5 +1,5 @@
-#ifndef STYLES_INT_H
-#define STYLES_INT_H
+#ifndef FUNCTIONS_INT_H
+#define FUNCTIONS_INT_H
 
 // Usage: Int<N>
 // Returns N

@@ -1019,8 +1019,11 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/mix.h"
 
 // functions
-#include "styles/ifon.h"
-#include "styles/change_slowly.h"
+#include "functions/ifon.h"
+#include "functions/change_slowly.h"
+#include "functions/int.h"
+#include "functions/sin.h"
+#include "functions/scale.h"
 
 template<class T>
 class Style : public BladeStyle {

@@ -1,5 +1,5 @@
-#ifndef STYLES_CHANGE_SLOWLY_H
-#define STYLES_CHANGE_SLOWLY_H
+#ifndef FUNCTIONS_CHANGE_SLOWLY_H
+#define FUNCTIONS_CHANGE_SLOWLY_H
 
 // Usage: ChangeSlowly<F, SPEED>
 // Changes F by no more than SPEED values per second.

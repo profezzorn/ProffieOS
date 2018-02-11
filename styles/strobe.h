@@ -1,7 +1,7 @@
 #ifndef STYLES_STROBE_H
 #define STYLES_STROBE_H
 
-#include "int.h"
+#include "../functions/int.h"
 
 template<class T, class STROBE_COLOR, class STROBE_FREQUENCY, class STROBE_MILLIS>
 class StrobeX {
