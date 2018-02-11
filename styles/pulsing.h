@@ -1,11 +1,7 @@
 #ifndef STYLES_PULSING_H
 #define STYLES_PULSING_H
 
-template<int N>
-class Int {
-  void run(BladeBase* base) {}
-  int getInteger(int led) { return N; }
-};
+#include "int.h"
 
 template<class COLOR1, class COLOR2, typename PULSE_MILLIS>
 class PulsingX {
