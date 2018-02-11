@@ -177,41 +177,7 @@ SnoozeBlock snooze_config(snooze_touch, snooze_digital, snooze_timer);
 
 const char version[] = "$Id$";
 
-/*
- * State machine code.
- * This code uses the fact that switch can jump into code to create
- * lightweight pseudo-thread. These threads have a lot of limitations,
- * but they can make code much easier to read compared to manually
- * written state machines. Lots of examples below.
- */
-// Note, you cannot have two YIELD() on the same line.
-#define YIELD() do { state_machine_.next_state_ = __LINE__; return; case __LINE__: break; } while(0)
-#define SLEEP(MILLIS) do { state_machine_.sleep_until_ = millis() + (MILLIS); while (millis() < state_machine_.sleep_until_) YIELD(); } while(0)
-#define SLEEP_MICROS(MICROS) do { state_machine_.sleep_until_ = micros() + (MICROS); while (micros() < state_machine_.sleep_until_) YIELD(); } while(0)
-#define STATE_MACHINE_BEGIN() switch(state_machine_.next_state_) { case -1:
-#define STATE_MACHINE_END() state_machine_.next_state_ = -2; case -2: break; } 
-
-#define CALL(SM, FUN) do {                  \
-  state_machine_.next_state_ = __LINE__;    \
-  case __LINE__:                            \
-  FUN();                                    \
-  if (SM.next_state == -2) return;          \
-  SM.reset_state_machine();                 \
-} while(0)
-
-struct StateMachineState {
-  int next_state_ = -1;
-  uint32_t sleep_until_ = 0;
-  void reset_state_machine() {
-    next_state_ = -1;
-  }
-};
-
-class StateMachine {
-protected:
-  StateMachineState state_machine_;
-};
-
+#include "common/state_machine.h"
 
 // Debug printout helper class
 class Monitoring  {
@@ -388,54 +354,9 @@ uint64_t loop_cycles = 0;
 enum NoLink { NOLINK = 17 };
 
 #include "common/looper.h"
+#include "common/command_parser.h"
 
-// Command parsing linked list base class.
-class CommandParser;
 CommandParser* parsers = NULL;
-
-class CommandParser {
-public:
-  void Link() {
-    CHECK_LL(CommandParser, parsers, next_parser_);
-    next_parser_ = parsers;
-    parsers = this;
-    CHECK_LL(CommandParser, parsers, next_parser_);
-  }
-  void Unlink() {
-    CHECK_LL(CommandParser, parsers, next_parser_);
-    for (CommandParser** i = &parsers; *i; i = &(*i)->next_parser_) {
-      if (*i == this) {
-        *i = next_parser_;
-    CHECK_LL(CommandParser, parsers, next_parser_);
-        return;
-      }
-    }
-    CHECK_LL(CommandParser, parsers, next_parser_);
-  }
-
-  CommandParser() { Link(); }
-  explicit CommandParser(NoLink _) {}
-  ~CommandParser() { Unlink(); }
-  static bool DoParse(const char* cmd, const char* arg) {
-    CHECK_LL(CommandParser, parsers, next_parser_);
-    for (CommandParser *p = parsers; p; p = p->next_parser_) {
-      if (p->Parse(cmd, arg))
-        return true;
-    }
-    return false;
-  }
-  static void DoHelp() {
-    CHECK_LL(CommandParser, parsers, next_parser_);
-    for (CommandParser *p = parsers; p; p = p->next_parser_) {
-      p->Help();
-    }
-  }
-protected:
-  virtual bool Parse(const char* cmd, const char* arg) = 0;
-  virtual void Help() = 0;
-private:
-  CommandParser* next_parser_;
-};
 
 // Debug printout helper class
 class MonitorHelper : Looper, CommandParser {
@@ -531,120 +452,9 @@ enum EVENT : uint32_t {
 
 uint32_t current_modifiers = BUTTON_NONE;
 
+#include "common/saber_base.h"
 
-// SaberBase is our main class for distributing saber-related events, such
-// as on/off/clash/etc. to where they need to go. Each SABERFUN below
-// has a corresponding SaberBase::Do* function which invokes that function
-// on all active SaberBases.
-class SaberBase;
 SaberBase* saberbases = NULL;
-
-class SaberBase {
-protected:
-  void Link(SaberBase* x) {
-    CHECK_LL(SaberBase, saberbases, next_saber_);
-    noInterrupts();
-    x->next_saber_ = saberbases;
-    saberbases = x;
-    interrupts();
-    CHECK_LL(SaberBase, saberbases, next_saber_);
-  }
-  void Unlink(const SaberBase* x) {
-    CHECK_LL(SaberBase, saberbases, next_saber_);
-    for (SaberBase** i = &saberbases; *i; i = &(*i)->next_saber_) {
-      if (*i == x) {
-        *i = x->next_saber_;
-        CHECK_LL(SaberBase, saberbases, next_saber_);
-        return;
-      }
-    }
-    CHECK_LL(SaberBase, saberbases, next_saber_);
-  }
-
-  SaberBase() { Link(this); }
-  explicit SaberBase(NoLink _) {}
-  ~SaberBase() { Unlink(this); }
-
-public:
-  enum LockupType {
-    LOCKUP_NONE,
-    LOCKUP_NORMAL,
-    LOCKUP_DRAG,
-  };
-  static LockupType Lockup() { return lockup_; }
-  static void SetLockup(LockupType lockup) { lockup_ = lockup; }
-
-  struct Blast {
-    uint32_t start_micros;
-    float location; // 0 = base, 1 = tip
-  };
-
-  static size_t NumBlasts() {
-    while (num_blasts_ &&
-           micros() - blasts_[num_blasts_-1].start_micros > 5000000) {
-      num_blasts_--;
-    }
-    return num_blasts_;
-  }
-  static const Blast& getBlast(size_t i) {
-    return blasts_[i];
-  }
-  static void addBlast(float location) {
-    for (size_t i = NELEM(blasts_) - 1; i; i--) {
-      blasts_[i] = blasts_[i-1];
-    }
-    blasts_[0].start_micros = micros();
-    blasts_[0].location = location;
-    num_blasts_ = min(num_blasts_ + 1, NELEM(blasts_));
-  }
-
-  // 1.0 = kDefaultVolume
-  virtual void SetHumVolume(float volume) {}
-
-#define SABERFUN(NAME, TYPED_ARGS, ARGS)                        \
-public:                                                         \
-  static void Do##NAME TYPED_ARGS {                             \
-    CHECK_LL(SaberBase, saberbases, next_saber_);               \
-    for (SaberBase *p = saberbases; p; p = p->next_saber_) {    \
-      p->SB_##NAME ARGS;                                        \
-    }                                                           \
-    CHECK_LL(SaberBase, saberbases, next_saber_);               \
-  }                                                             \
-                                                                \
-  virtual void SB_##NAME TYPED_ARGS {}
-
-#define SABERBASEFUNCTIONS()                    \
-  SABERFUN(Clash, (), ());                      \
-  SABERFUN(Stab, (), ());                       \
-  SABERFUN(On, (), ());                         \
-  SABERFUN(Off, (), ());                        \
-  SABERFUN(Force, (), ());                      \
-  SABERFUN(Blast, (), ());                      \
-  SABERFUN(Boot, (), ());                       \
-  SABERFUN(NewFont, (), ());                    \
-  SABERFUN(BeginLockup, (), ());                \
-  SABERFUN(EndLockup, (), ());                  \
-  SABERFUN(Speedup, (), ());                    \
-                                                \
-  /* Swing rotation speed degrees per second */ \
-  SABERFUN(Motion, (const Vec3& gyro), (gyro)); \
-  /* Accelertation in g */                      \
-  SABERFUN(Accel, (const Vec3& accel), (accel));\
-                                                \
-  SABERFUN(Top, (), ());                        \
-  SABERFUN(IsOn, (bool* on), (on));             \
-  SABERFUN(Message, (const char* msg), (msg));
-
-  SABERBASEFUNCTIONS();
-#undef SABERFUN
-
-private:
-  static size_t num_blasts_;
-  static struct Blast blasts_[3];
-  static LockupType lockup_;
-  SaberBase* next_saber_;
-};
-
 SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
 size_t SaberBase::num_blasts_ = 0;
 struct SaberBase::Blast SaberBase::blasts_[3];
