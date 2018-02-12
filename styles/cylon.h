@@ -1,6 +1,8 @@
 #ifndef STYLES_CYLON_H
 #define STYLES_CYLON_H
 
+class BladeBase;
+
 // Cylon/Knight Rider effect, a section of the strip is
 // lit up and moves back and forth. Speed, color and fraction
 // illuminated can be configured separately for on and off
@@ -34,6 +36,14 @@ public:
     num_leds_ = base->num_leds() * 16384;
     start_ = pos_ * num_leds_;
     end_ = (pos + fraction) * num_leds_;
+    if (start_ == end_) {
+      if (current_percentage > 50.0) {
+	start_ = 0;
+	end_ = num_leds_ + 1;
+      } else {
+	base->allow_disable();
+      }
+    }
   }
   OverDriveColor getColor(int led) {
     led *= 16384;

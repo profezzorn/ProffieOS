@@ -1,6 +1,8 @@
 #ifndef STYLES_COLOR_CYCLE_H
 #define STYLES_COLOR_CYCLE_H
 
+class BladeBase;
+
 // This is intended for a small ring of neopixels
 // A section of the ring is lit at the specified color
 // and rotates at the specified speed. The size of the
@@ -32,6 +34,14 @@ public:
     num_leds_ = base->num_leds() * 16384;
     start_ = pos_ * num_leds_;
     end_ = fract(pos_ + current_percentage / 100.0) * num_leds_;
+    if (start_ == end_) {
+      if (current_percentage > 50.0) {
+	start_ = 0;
+	end_ = num_leds_ + 1;
+      } else {
+	base->allow_disable();
+      }
+    }
   }
   OverDriveColor getColor(int led) {
     led *= 16384;
