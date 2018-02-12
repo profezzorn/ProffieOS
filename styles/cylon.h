@@ -21,6 +21,7 @@ public:
     uint32_t now = micros();
     uint32_t delta = now - last_micros_;
     last_micros_ = now;
+    if (delta > 1000000) delta = 1;
 
     float fade_delta = delta / 1000.0 / fade_time_millis;
     if (!base->is_on()) fade_delta = - fade_delta;
@@ -36,13 +37,15 @@ public:
     num_leds_ = base->num_leds() * 16384;
     start_ = pos_ * num_leds_;
     end_ = (pos + fraction) * num_leds_;
-    if (start_ == end_) {
-      if (current_percentage > 50.0) {
-	start_ = 0;
-	end_ = num_leds_ + 1;
-      } else {
-	base->allow_disable();
-      }
+    if (current_percentage == 100.0) {
+      start_ = 0;
+      end_ = num_leds_;
+    } else if (current_percentage == 0.0) {
+      start_ = 0;
+      end_ = 0;
+      base->allow_disable();
+    } else {
+      end_ = fract(pos_ + current_percentage / 100.0) * num_leds_;
     }
   }
   OverDriveColor getColor(int led) {
