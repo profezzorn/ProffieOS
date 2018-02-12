@@ -18,17 +18,17 @@ CONFIG_FILES=common_presets.h graflex_v1_config.h owk_v2_config.h \
 
 test:
 	$(MAKE) clean
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"graflex_v1_config.h\\\"
+	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/graflex_v1_config.h\\\"
 	$(MAKE) clean
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"owk_v2_config.h\\\"
+	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/owk_v2_config.h\\\"
 	$(MAKE) clean
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"crossguard_config.h\\\"
+	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/crossguard_config.h\\\"
 	$(MAKE) clean
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"test_bench_config.h\\\"
+	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/test_bench_config.h\\\"
 	$(MAKE) clean
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"toy_saber_config.h\\\"
+	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/toy_saber_config.h\\\"
 	$(MAKE) clean
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"default_v3_config.h\\\"
+	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_v3_config.h\\\"
 	$(MAKE) clean
 
 export: test
