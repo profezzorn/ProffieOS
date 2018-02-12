@@ -29,7 +29,6 @@
 // #define CONFIG_FILE "toy_saber_config.h"
 // #define CONFIG_FILE "new_config.h"
 
-
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
 #define CONFIG_FILE CONFIG_FILE_TEST
@@ -93,7 +92,6 @@
 // smooth cutovers between sounds, and it's inputs are also
 // BufferedWavPlayers.
 
-
 // TODO LIST:
 //   stab detect/effect
 // Make sure that sound is off before doing file command
@@ -111,7 +109,6 @@
 //    adjust volume
 // Disable motion when off to save power.
 // Allow several blades to share power pins.
-
 
 // If defined, DAC vref will be 3 volts, resulting in louder sound.
 #define LOUD
@@ -161,7 +158,6 @@
 #undef private
 #undef protected
 #endif
-
 
 #ifdef ENABLE_SNOOZE
 
@@ -588,7 +584,6 @@ public:
   virtual void Stop() {}
 };
 
-
 #include "sound/dac.h"
 #include "sound/dynamic_mixer.h"
 #include "sound/beeper.h"
@@ -642,7 +637,6 @@ Talkie talkie;
 //   +-Buffer (other sound fx)
 //       +-WavPlayer
 //
-
 
 #endif
 
@@ -725,7 +719,6 @@ EFFECT(blaster);
 EFFECT(lockup);
 EFFECT(poweronf);
 EFFECT(font);
-
 
 // Polyphonic fonts
 EFFECT(blst);
@@ -946,7 +939,6 @@ public:
   virtual BladeStyle* make() = 0;
 };
 
-
 template<class STYLE>
 class StyleFactoryImpl : public StyleFactory {
   BladeStyle* make() override {
@@ -970,7 +962,6 @@ struct OverDriveColor {
   Color16 c;
   bool overdrive;
 };
-
 
 class Range {
 public:
@@ -1054,7 +1045,6 @@ StyleAllocator StylePtr() {
   static StyleFactoryImpl<Style<STYLE> > factory;
   return &factory;
 };
-
 
 // This macro has a problem with commas, please don't use it.
 #define EASYBLADE(COLOR, CLASH_COLOR) \
@@ -1311,7 +1301,6 @@ struct BladeConfig {
 // STATE_RUN:
 // 
 
-
 #if 0
 class Script : Looper, StateMachine {
 public:
@@ -1347,7 +1336,6 @@ public:
 
 Script script;
 #endif
-
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -1578,7 +1566,6 @@ public:
     talkie.Say(spABORT);
 #endif    
   }
-
 
   void SB_Message(const char* text) override {
     STDOUT.print("DISPLAY: ");
@@ -2506,7 +2493,6 @@ class Commands : public CommandParser {
 
 Commands commands;
 
-
 class SerialAdapter {
 public:
   static void begin() { Serial.begin(115200); }
@@ -2786,7 +2772,6 @@ private:
 ClashRecorder clash_recorder;
 #endif
 
-
 #ifdef GYRO_CLASS
 // Can also be gyro+accel.
 GYRO_CLASS gyroscope;
@@ -2797,7 +2782,6 @@ ACCEL_CLASS accelerometer;
 #endif
 
 #endif   // ENABLE_MOTION
-
 
 #ifdef ENABLE_AUDIO
 // Turns off amplifier when no audio is played.
