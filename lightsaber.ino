@@ -526,64 +526,9 @@ int16_t clamptoi16(int32_t x) {
 
 #ifdef ENABLE_AUDIO
 
-// This class is used to control volumes without causing
-// clicking noises. Everytime you call advance(), the value
-// goes closer towards the target at a preset speed.
-class ClickAvoiderLin {
-public:
-  ClickAvoiderLin() : speed_(0) { }
-  ClickAvoiderLin(uint32_t speed) : speed_(speed) { }
-  void set_target(uint32_t target) { target_ = target; }
-  void set_speed(uint32_t speed) { speed_ = speed; }
-  void set(uint16_t v) { current_ = v; }
-  uint32_t value() const {return current_; }
-  void advance() {
-    uint32_t target = target_;
-    if (current_ > target) {
-      current_ -= min(speed_, current_ - target);
-      return;
-    }
-    if (current_ < target) {
-      current_ += min(speed_, target - current_);
-      return;
-    }
-  }
-  bool isConstant() const {
-    return current_ == target_;
-  }
-
-  uint32_t speed_;
-  uint32_t current_;
-  uint32_t target_;
-};
-
-struct WaveForm {
-  int16_t table_[1024];
-};
-
-struct WaveFormSampler {
-  WaveFormSampler(const WaveForm& waveform) : waveform_(waveform.table_), pos_(0), delta_(0) {}
-  WaveFormSampler(const int16_t* waveform) : waveform_(waveform), pos_(0), delta_(0) {}
-  const int16_t *waveform_;
-  int pos_;
-  volatile int delta_;
-  int16_t next() {
-    pos_ += delta_;
-    if (pos_ > 1024 * 65536) pos_ -= 1024 * 65536;
-    // Bilinear lookup here?
-    return waveform_[pos_ >> 16];
-  }
-};
-
-class AudioStream {
-public:
-  virtual int read(int16_t* data, int elements) = 0;
-  // There is no need to call eof() unless read() returns zero elements.
-  virtual bool eof() const { return false; }
-  // Stop
-  virtual void Stop() {}
-};
-
+#include "sound/click_avoider_lin.h"
+#include "sound/waveform_sampler.h"
+#include "sound/audiostream.h"
 #include "sound/dac.h"
 #include "sound/dynamic_mixer.h"
 #include "sound/beeper.h"
