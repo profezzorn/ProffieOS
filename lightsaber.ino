@@ -174,51 +174,7 @@ SnoozeBlock snooze_config(snooze_touch, snooze_digital, snooze_timer);
 const char version[] = "$Id$";
 
 #include "common/state_machine.h"
-
-// Debug printout helper class
-class Monitoring  {
-public:
-  enum MonitorBit {
-    MonitorSwings = 1,
-    MonitorSamples = 2,
-    MonitorTouch = 4,
-    MonitorBattery = 8,
-    MonitorPWM = 16,
-    MonitorClash = 32,
-    MonitorTemp = 64,
-    MonitorGyro = 128,
-    MonitorStrokes = 256,
-    MonitorSerial = 512,
-  };
-
-  bool ShouldPrint(MonitorBit bit) {
-    if (bit & monitor_soon_) {
-      monitor_soon_ &= ~bit;
-      return true;
-    }
-    return false;
-  }
-
-  bool IsMonitoring(MonitorBit bit) const {
-    return (active_monitors_ & bit) != 0;
-  }
-  
-  void Loop() {
-    if (millis() - last_monitor_loop_ > monitor_frequency_ms_) {
-      monitor_soon_ = active_monitors_;
-      last_monitor_loop_ = millis();
-    }
-  }
-
-  void Toggle(MonitorBit bit) {
-    active_monitors_ ^= bit;
-  }
-private:
-  uint32_t monitor_frequency_ms_ = 100;
-  int last_monitor_loop_ = 0;
-  uint32_t monitor_soon_ = 0;
-  uint32_t active_monitors_ = 0;
-};
+#include "common/monitoring.h"
 
 Monitoring monitor;
 
@@ -1226,25 +1182,6 @@ struct BladeConfig {
 #include CONFIG_FILE
 #undef CONFIG_PRESETS
 
-// Menu system
-
-// Configuration system:
-// switch track
-// + BLADE
-// +-+ effect
-// +-+ color
-// +-+ sound font
-
-// STATE_OFF:
-// Power click  -> STATE_ON
-// Power double click
-// Power long click
-// AUX click  -> STATE_ON
-// AUX double click -> MUSIC_ON
-// AUX long click -> SILENT_ON
-
-// STATE_RUN:
-// 
 
 #if 0
 class Script : Looper, StateMachine {
