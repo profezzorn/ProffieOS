@@ -1,6 +1,14 @@
 #ifndef STYLES_BLAST_H
 #define STYLES_BLAST_H
 
+// Usage: Blaset<BASE, BLAST>
+// BASE, BLAST: COLOR
+// return value: COLOR
+// Normally shows BASE, but creates a blast effect using
+// the color BLAST when a blast is requested.
+
+class BladeBase;
+
 template<class BASE, class BLAST>
 class Blast {
 public:

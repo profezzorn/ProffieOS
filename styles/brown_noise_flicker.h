@@ -1,8 +1,14 @@
 #ifndef STYLES_BROWN_NOISE_FLICKER_H
 #define STYLES_BROWN_NOISE_FLICKER_H
 
+// Usage: BrownNoiseFlicker<A, B
+// A, B: COLOR
+// return value: COLOR
 // Randomly selects between A and B, but keeps nearby
 // pixels looking similar.
+
+class BladeBase;
+
 template<class A, class B, int grade>
 class BrownNoiseFlicker {
 public:

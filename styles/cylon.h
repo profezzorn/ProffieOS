@@ -1,12 +1,18 @@
 #ifndef STYLES_CYLON_H
 #define STYLES_CYLON_H
 
-class BladeBase;
-
+// Usage: ColorCycle<COLOR, PERCENT, RPM>
+// or: ColorCycle<COLOR, PERCENT, RPM, ON_COLOR, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS>
+// COLOR, ON_COLOR: COLOR
+// RPM, PERCENT, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS: a number
+// return value: COLOR
 // Cylon/Knight Rider effect, a section of the strip is
 // lit up and moves back and forth. Speed, color and fraction
 // illuminated can be configured separately for on and off
 // states.
+
+class BladeBase;
+
 template<class COLOR, int percentage, int rpm,
          class ON_COLOR = COLOR,
          int on_percentage = percentage,

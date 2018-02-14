@@ -1,9 +1,14 @@
 #ifndef STYLES_IGNITION_DELAY_H
 #define STYLES_IGNITION_DELAY_H
 
+// Usage: IgnitionDelay<DELAY_MILLIS, BASE>
+// DELAY_MILLIS: a number
+// BASE: COLOR
+// return value: COLOR
 // This class renders BASE as normal, but delays ignition by
 // the specified number of milliseconds. Intended for kylo-style
 // quillions.
+class BladeBase;
 template<int delay_millis, class BASE>
 class IgnitionDelay : public BladeWrapper {
 public:

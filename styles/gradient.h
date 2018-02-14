@@ -1,7 +1,13 @@
 #ifndef STYLES_GRADIENT_H
 #define STYLES_GRADIENT_H
 
+// Usage: Gradient<A, B>
+// A, B: COLOR
+// return value: COLOR
 // Gradient, color A at base, B at tip.
+
+class BlaseBase;
+
 template<class A, class B>
 class Gradient {
 public:

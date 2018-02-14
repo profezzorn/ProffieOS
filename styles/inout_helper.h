@@ -1,6 +1,17 @@
 #ifndef STYLES_INOUT_HELPER_H
 #define STYLES_INOUT_HELPER_H
 
+// Usage: InOutHelper<BASE, OUT_MILLIS, IN_MILLIS>
+// or: InOutHelper<BASE, OUT_MILLIS, IN_MILLIS, OFF_COLOR>
+// BASE, OFF_COLOR: COLOR
+// OUT_MILLIS, IN_MILLIS: a number
+// return value: COLOR
+// This class does a basic extend/retract. Basically it fades between
+// BASE and OFF_COLOR (which defaults to black). It starts by just
+// displaying OFF_COLOR, and when you turn the saber on it starts mixing
+// in BASE at the base of the saber. After OUT_MILLIS milliseconds, it
+// will be displaying the BASE color on the entire blade.
+
 template<class T, int OUT_MILLIS, int IN_MILLIS, class OFF_COLOR=Rgb<0,0,0> >
 class InOutHelper {
 public:

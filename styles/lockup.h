@@ -1,6 +1,9 @@
 #ifndef STYLES_LOCKUP_H
 #define STYLES_LOCKUP_H
 
+// Usage: Lockup<BASE, LOCKUP>
+// BASE, LOCKUP: COLOR
+// return value: COLOR
 // Shows LOCKUP if the lockup state is true, otherwise BASE.
 // Also handles "Drag" effect.
 template<class BASE, class LOCKUP>

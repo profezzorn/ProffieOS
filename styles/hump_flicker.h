@@ -1,7 +1,14 @@
 #ifdef STYLES_HUMP_FLICKER_H
 #define STYLES_HUMP_FLICKER_H
 
+// Usage: HumpFlicker<A, B, HUMP_WIDTH>
+// A, B: COLOR
+// HUMP_WIDTH: a number
+// return value: COLOR
 // Makes a random "hump" which is about 2xHUMP_WIDTH leds wide.
+
+class BladeBase;
+
 template<class A, class B, int HUMP_WIDTH>
 class HumpFlicker {
 public:

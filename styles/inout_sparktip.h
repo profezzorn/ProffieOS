@@ -1,5 +1,12 @@
 #ifndef STYLES_INOUT_SPARKTIP_H
 #define STYLES_INOUT_SPARKTIP_H
+// Usage: InOutHelper<BASE, OUT_MILLIS, IN_MILLIS>
+// or: InOutHelper<BASE, OUT_MILLIS, IN_MILLIS, SPARK_COLOR>
+// BASE, SPARK_COLOR: COLOR
+// OUT_MILLIS, IN_MILLIS: a number
+// return value: COLOR
+// Similar to InOutHelper, but makes the tip a different color
+// during extension.
 
 template<class T, int OUT_MILLIS, int IN_MILLIS, class SPARK_COLOR = Rgb<255,255,255> >
 class InOutSparkTip {

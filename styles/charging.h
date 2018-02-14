@@ -1,8 +1,13 @@
 #ifndef STYLES_CHARGING_H
 #define STYLES_CHARGING_H
 
+// Usage: &style_charging
+// return value: POINTER
 // Charging blade style.
 // Slowly pulsating battery indicator.
+
+#include "blade_style.h"
+
 class StyleCharging : public BladeStyle {
 public:
   void activate() override {

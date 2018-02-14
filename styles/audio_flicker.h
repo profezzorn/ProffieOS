@@ -1,12 +1,12 @@
 #ifndef STYLES_AUDIO_FLICKER_H
 #define STYLES_AUDIO_FLICKER_H
 
-// USAGE: AudioFlicker<A, B>
+// Usage: AudioFlicker<A, B>
+// A, B: COLOR
+// return value: COLOR
 // Mixes between A and B based on audio. Quiet audio
 // means more A, loud audio means more B.
 // Based on a single sample instead of an average to make it flicker.
-// A, B: COLOR
-// return value: COLOR
 
 class BladeBase;
 
