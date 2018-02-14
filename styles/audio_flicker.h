@@ -1,9 +1,15 @@
 #ifndef STYLES_AUDIO_FLICKER_H
 #define STYLES_AUDIO_FLICKER_H
 
-// Mixes between A and B based
-// on audio. Quiet audio means more A, loud audio means more B.
+// USAGE: AudioFlicker<A, B>
+// Mixes between A and B based on audio. Quiet audio
+// means more A, loud audio means more B.
 // Based on a single sample instead of an average to make it flicker.
+// A, B: COLOR
+// return value: COLOR
+
+class BladeBase;
+
 template<class A, class B>
 class AudioFlicker {
 public:
