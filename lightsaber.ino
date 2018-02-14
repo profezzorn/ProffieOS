@@ -347,56 +347,14 @@ enum EVENT : uint32_t {
 uint32_t current_modifiers = BUTTON_NONE;
 
 #include "common/saber_base.h"
+#include "common/saber_base_passthrough.h"
 
 SaberBase* saberbases = NULL;
 SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
 size_t SaberBase::num_blasts_ = 0;
 struct SaberBase::Blast SaberBase::blasts_[3];
 
-class SaberBasePassThrough : public SaberBase {
-public:
-  SaberBasePassThrough() : SaberBase(NOLINK) {}
-protected:
-  void SetDelegate(SaberBase* delegate) {
-    Unlink(this);
-    if (delegate_) {
-      SaberBase::Link(delegate_);
-    }
-    delegate_ = delegate;
-    if (delegate_) {
-      SaberBase::Unlink(delegate_);
-      SaberBase::Link(this);
-    }
-  }
-#define SABERFUN(NAME, TYPED_ARGS, ARGS)        \
-  void SB_##NAME TYPED_ARGS override {          \
-    delegate_->SB_##NAME ARGS;                  \
-  }
-
-  SABERBASEFUNCTIONS();
-#undef SABERFUN
-
-  SaberBase* delegate_ = NULL;
-};
-
-template<class T, int N>
-class BoxFilter {
-public:
-  T filter(const T& v) {
-    data[pos] = v;
-    pos++;
-    if (pos == N) pos = 0;
-
-    T ret = data[0];
-    for (int i = 1; i < N; i++) {
-      ret += data[i];
-    }
-    return ret / N;
-  }
-
-  T data[N];
-  int pos = 0;
-};
+#include "common/box_filter.h"
 
 // Returns the decimals of a number, ie 12.2134 -> 0.2134
 float fract(float x) { return x - floor(x); }
