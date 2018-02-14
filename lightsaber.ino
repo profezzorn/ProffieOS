@@ -175,40 +175,10 @@ const char version[] = "$Id$";
 
 #include "common/state_machine.h"
 #include "common/monitoring.h"
+#include "common/stdout.h"
 
 Monitoring monitor;
-
-Print* default_output = &Serial;
-Print* stdout_output = &Serial;
-
-class ConsoleHelper : public Print {
-public:
-  bool debug_is_on() const {
-    return monitor.IsMonitoring(Monitoring::MonitorSerial) &&
-      stdout_output != default_output;
-  }
-  size_t write(uint8_t b) override {
-    size_t ret = stdout_output->write(b);
-    if (debug_is_on()) default_output->write(b);
-    return ret;
-  }
-  size_t write(const uint8_t *buffer, size_t size) override {
-    size_t ret = stdout_output->write(buffer, size);
-    if (debug_is_on()) default_output->write(buffer, size);
-    return ret;
-  }
-#ifdef TEENSYDUINO
-  int availableForWrite(void) override {
-    return stdout_output->availableForWrite();
-  }
-  virtual void flush() override {
-    stdout_output->flush();
-    if (debug_is_on()) default_output->flush();
-  }
-#endif
-};
-
-ConsoleHelper STDOUT;
+DEFINE_COMMON_STDOUT_GLOBALS;
 
 void PrintQuotedValue(const char *name, const char* str) {
   STDOUT.print(name);
