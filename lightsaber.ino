@@ -755,6 +755,9 @@ struct is_same_type { static const bool value = false; };
 template<class T>
 struct is_same_type<T, T> { static const bool value = true; };
 
+// This really ought to be a typedef, but it causes problems I don't understand.
+#define StyleAllocator class StyleFactory*
+
 #include "styles/rgb.h"
 #include "styles/charging.h"
 #include "styles/fire.h"
@@ -779,6 +782,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/inout_sparktip.h"
 #include "styles/colors.h"
 #include "styles/mix.h"
+#include "styles/style_ptr.h"
 
 // functions
 #include "functions/ifon.h"
@@ -786,36 +790,6 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/int.h"
 #include "functions/sin.h"
 #include "functions/scale.h"
-
-template<class T>
-class Style : public BladeStyle {
-public:
-  void activate() override { }
-  void run(BladeBase* blade) override {
-    base_.run(blade);
-    int num_leds = blade->num_leds();
-    for (int i = 0; i < num_leds; i++) {
-      OverDriveColor c = base_.getColor(i);
-      if (c.overdrive) {
-         blade->set_overdrive(i, c.c);
-      } else {
-         blade->set(i, c.c);
-      }
-    }
-  }
-private:
-  T base_;
-};
-
-// This really ought to be a typedef, but it causes problems I don't understand.
-#define StyleAllocator class StyleFactory*
-
-// Get a pointer to class.
-template<class STYLE>
-StyleAllocator StylePtr() {
-  static StyleFactoryImpl<Style<STYLE> > factory;
-  return &factory;
-};
 
 // This macro has a problem with commas, please don't use it.
 #define EASYBLADE(COLOR, CLASH_COLOR) \
