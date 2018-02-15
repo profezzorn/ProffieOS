@@ -3,6 +3,15 @@
 
 #include "../functions/int.h"
 
+// Usage: Pulsing<A, B, PULSE_MILLIS>
+// or: Pulsing<A, B, PULSE_MILLIS_FUNC>
+// A, B: COLOR
+// PULSE_MILLIS: a number
+// PULSE_MILLIS_FUNC: FUNCTION
+// return value: COLOR
+// Goes back and forth between COLOR1 and COLOR2.
+// A full transition from COLOR1 to COLOR2 and back again takes PULSE_MILLIS milliseconds.
+
 template<class COLOR1, class COLOR2, typename PULSE_MILLIS>
 class PulsingX {
 public:

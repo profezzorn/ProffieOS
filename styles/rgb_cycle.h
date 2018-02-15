@@ -1,6 +1,9 @@
 #ifndef STYLES_RGB_CYCLE_H
 #define STYLES_RGB_CYCLE_H
 
+// Usage: RgbCycle
+// (no arguments)
+// return value: COLOR
 // Very fast Red, Green, Blue cycle, result should essentially be white
 // until you start swinging it around.
 class RGBCycle {

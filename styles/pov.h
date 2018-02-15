@@ -3,6 +3,15 @@
 
 #if defined(ENABLE_WS2811) || defined(ENABLE_FASTLED)
 
+// Usage: &style_pov
+// return value: suitable for preset array
+
+// This style draws "Star Wars" in the air if you swing the saber
+// carefully back and forth. Unfortunately you can't really see
+// the result without a slow exposure camera. It's possible that
+// dotstar APA102 pixels would be fast enough to do the effect
+// full justice, but I haven't tried that.
+
 #include "star_wars_logo_pov_data.h"
 
 void rle_decode(const unsigned char *input,

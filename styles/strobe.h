@@ -3,6 +3,15 @@
 
 #include "../functions/int.h"
 
+// Usage: Strobe<BASE, STROBE_COLOR, STROBE_FREQUENCY, STROBE_MILLIS>
+// or: StrobeX<BASE, STROBE_COLOR, STROBE_FREQUENCY_FUNC, STROBE_MILLIS_FUNC>
+// BASE, STROBE_COLOR: COLOR
+// STROBE_FREQUENCY, STROBE_MILLIS: a number
+// STROBE_FREQUENCY_FUNC, STROBE_MILLIS_FUNC: FUNCTION
+// return value: COLOR
+// Stroboscope-like effect, turns the color to STROBE_COLOR for STROBE_MILLIS
+// STROBE_FREQUENCY times per second.
+
 template<class T, class STROBE_COLOR, class STROBE_FREQUENCY, class STROBE_MILLIS>
 class StrobeX {
 public:

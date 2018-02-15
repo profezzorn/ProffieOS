@@ -1,6 +1,14 @@
 #ifndef STYLES_ON_SPARK_H
 #define STYLES_ON_SPARK_H
 
+// Usage: OnSpark<BASE, SPARK_COLOR, MILLIS>
+// BASE: COLOR
+// SPARK_COLOR: COLOR (defaults to white)
+// MILLIS: a number (defaults to 200)
+// return value: COLOR
+// When you turn the saber on, it starts with SPARK_COLOR, and then
+// fades to BASE over a peariod of MILLIS millseconds.
+
 // Let's us use a different color right in the beginning.
 template<class T, class SPARK_COLOR = Rgb<255,255,255>, int MILLIS = 200>
 class OnSpark {

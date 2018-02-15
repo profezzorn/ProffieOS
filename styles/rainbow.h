@@ -1,7 +1,10 @@
 #ifndef STYLES_RAINBOW_H
 #define STYLES_RAINBOW_H
 
+// Usage: Rainbow
+// return value: COLOR
 // Basic RGB rainbow.
+
 class Rainbow {
 public:
   void run(BladeBase* base) {

@@ -1,6 +1,19 @@
 #ifndef STYLES_RGB_H
 #define STYLES_RGB_H
 
+// Usage: Rgb<R, G, B>
+// R, G, B: a number (0-255)
+// return value: COLOR
+
+// Usage: Rgb16<R, G, B>
+// R, G, B: a number (0-65536)
+// return value: COLOR
+
+// The two RGB classes are equivialent, but Rgb16<> is much more precise,
+// most of the time this doesn't matter as 255 different values is accurate
+// enough, but especially for very dim colors, the extra accuracy can be
+// very useful.
+
 // We use these templates instead of the Color class, because
 // the compiler can inline everything. That means that we can
 // have the flexibility of using a dynamically calculated color

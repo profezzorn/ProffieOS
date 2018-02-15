@@ -1,6 +1,14 @@
 #ifndef STYLES_SIMPLE_CLASH_H
 #define STYLES_SIMPLE_CLASH_H
 
+// Usage: SimpleClash<BASE, CLASH_COLOR, CLASH_MILLIS>
+// BASE: COLOR
+// CLASH_COLOR: COLOR (defaults to white)
+// CLASH_MILLIS: a number (defaults to 40)
+// return value: COLOR
+// Turns the blade to CLASH_COLOR for CLASH_MILLIS millseconds
+// when a clash occurs.
+
 template<class T, class CLASH_COLOR = Rgb<255,255,255>, int CLASH_MILLIS = 40>
 class SimpleClash {
 public:

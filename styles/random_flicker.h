@@ -1,8 +1,12 @@
 #ifndef STYLES_RANDOM_FLICKER_H
 #define STYLES_RANDOM_FLICKER_H
 
+// Usage: RandomFlicker<A, B>
+// A, B: COLOR
+// return value: COLOR
 // Mixes randomly between A and B.
 // mix is even over entire blade.
+
 template<class A, class B>
 class RandomFlicker {
 public:

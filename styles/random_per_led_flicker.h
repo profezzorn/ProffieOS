@@ -1,8 +1,12 @@
 #ifndef STYLES_RANDOM_PER_LED_FLICKER_H
 #define STYLES_RANDOM_PER_LED_FLICKER_H
 
+// Usage: RandomPerLEDFlicker<A, B>
+// A, B: COLOR
+// return value: COLOR
 // Mixes randomly between A and B.
 // mix is chosen individually for every LED.
+
 template<class A, class B>
 class RandomPerLEDFlicker {
 public:
