@@ -283,6 +283,7 @@ CommandParser* parsers = NULL;
 MonitorHelper monitor_helper;
 
 #include "common/vec3.h"
+#include "common/linked_ptr.h"
 
 enum BUTTON : uint32_t {
   BUTTON_NONE = 0,   // used for gestures and the like
