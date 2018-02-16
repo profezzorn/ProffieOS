@@ -2,7 +2,8 @@
 #define SOUND_TALKIE_H
 
 // This is adapted from the Talkie Library
-
+#include "audiostream.h"
+#include "../common/command_parser.h"
 #include "voice_data.h"
 
 // TMS5200 coefficients
@@ -72,7 +73,7 @@ const uint8_t tmsK10[0x08] = {
 #define CHIRP_SIZE 41
 const uint8_t chirp[CHIRP_SIZE] = {0x00,0x2a,0xd4,0x32,0xb2,0x12,0x25,0x14,0x02,0xe1,0xc5,0x02,0x5f,0x5a,0x05,0x0f,0x26,0xfc,0xa5,0xa5,0xd6,0xdd,0xdc,0xfc,0x25,0x2b,0x22,0x21,0x0f,0xff,0xf8,0xee,0xed,0xef,0xf7,0xf6,0xfa,0x00,0x03,0x02,0x01};
 
-class Talkie : public AudioStream {
+class Talkie : public AudioStream, CommandParser {
 public:
   const uint8_t* words[30];
   size_t num_words = 0;
@@ -277,6 +278,45 @@ public:
     return !eof();
   }
   void Stop() override {}
+
+  bool Parse(const char *cmd, const char* arg) override {
+    if (!strcmp(cmd, "say") && arg) {
+      const char *start= strchr(arg, '{');
+      const char *end = strchr(arg, '}');
+      char *out = const_cast<char*>(arg);
+      if (!start) start = arg;
+      if (!end) end = arg + strlen(arg);
+      int n = 0;
+      int digits = 0;
+      for (;start < end; start++) {
+	if (*start >= '0' && *start <= '9') {
+	  n = (n << 4) + *start - '0';
+	  digits++;
+	} else if (*start >= 'a' && *start <= 'f') {
+	  n = (n << 4) + *start - 'a' + 10;
+	  digits++;
+	} else if (*start >= 'A' && *start <= 'F') {
+	  n = (n << 4) + *start - 'A' + 10;
+	  digits++;
+	} else if (*start == 'x') {
+	  digits = 0;
+	}
+	if (digits == 2) {
+	  *(out++) = n;
+	  digits = n = 0;
+	}
+      }
+      Say((uint8_t*)arg);
+      // As soon as we return "arg" will be freed, so let's wait for it.
+      while (isPlaying());
+    }
+
+    return false;
+  }
+
+  void Help() override {
+    STDOUT.println("say HEXDATA - play talkie");
+  }
 
 private:
   const uint8_t * ptrAddr = NULL;

@@ -1652,12 +1652,6 @@ public:
       }
       return true;
     }
-    if (!strcmp(cmd, "say")) {
-      talkie.Say(spBANK);
-      talkie.Say(spOPEN);
-      talkie.Say(spFAILURE);
-      return true;
-    }
     if (!strcmp(cmd, "volumes")) {
       for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
         STDOUT.print(" Unit ");
@@ -2154,7 +2148,7 @@ public:
       while (SA::Connected()) {
         while (!SA::stream().available()) YIELD();
         int c = SA::stream().read();
-        if (c < 0) { len_ = 0; break; }
+        if (c < 0) { break; }
 #if 0
         if (monitor.IsMonitoring(Monitoring::MonitorSerial) &&
             default_output != &SA::stream()) {
@@ -2162,11 +2156,34 @@ public:
           default_output->println(c, HEX);
         }
 #endif  
-        if (c == '\n') { ParseLine(); len_ = 0; continue; }
+        if (c == '\n') {
+	  if (cmd_) ParseLine();
+	  len_ = 0;
+	  space_ = 0;
+	  free(cmd_);
+	  continue;
+	}
+	if (len_ + 1 >= space_) {
+	  int new_space = space_ * 3 / 2 + 8;
+	  char* tmp = (char*)realloc(cmd_, new_space);
+	  if (tmp) {
+	    space_ = new_space;
+	    cmd_ = tmp;
+	  } else {
+	    STDOUT.println("Line too long.");
+	    len_ = 0;
+	    space_ = 0;
+	    free(cmd_);
+	    continue;
+	  }
+	}
         cmd_[len_] = c;
         cmd_[len_ + 1] = 0;
-        if (len_ + 1 < (int)sizeof(cmd_)) len_++;
+	len_++;
       }
+      len_ = 0;
+      space_ = 0;
+      free(cmd_);
     }
     STATE_MACHINE_END();
   }
@@ -2215,8 +2232,9 @@ public:
   }
 
 private:
-  int len_;
-  char cmd_[256];
+  int len_ = 0;
+  char* cmd_ = nullptr;
+  int space_ = 0;
 };
 
 Parser<SerialAdapter> parser;
