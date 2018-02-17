@@ -73,19 +73,42 @@ const uint8_t tmsK10[0x08] = {
 #define CHIRP_SIZE 41
 const uint8_t chirp[CHIRP_SIZE] = {0x00,0x2a,0xd4,0x32,0xb2,0x12,0x25,0x14,0x02,0xe1,0xc5,0x02,0x5f,0x5a,0x05,0x0f,0x26,0xfc,0xa5,0xa5,0xd6,0xdd,0xdc,0xfc,0x25,0x2b,0x22,0x21,0x0f,0xff,0xf8,0xee,0xed,0xef,0xf7,0xf6,0xfa,0x00,0x03,0x02,0x01};
 
+const int32_t lanc2_11[] = {
+  -36, -152, -349, -609, -901, -1173, -1366, -1409, -1233, -777,
+  0,
+  1120, 2572, 4315, 6273, 8347, 10416, 12347, 14013, 15297, 16107,
+  16384,
+  16107, 15297, 14013, 12347, 10416, 8347, 6273, 4315, 2572, 1120,
+  0,
+  -777, -1233, -1409, -1366, -1173, -901, -609, -349, -152, -36,
+  0,0,0,0,0,
+  0,0,0,0,0,
+  0,0,0,0,0,
+  0,0,0,0,0,
+  0,0,0,0,0
+};
+
+
 class Talkie : public AudioStream, CommandParser {
 public:
-  const uint8_t* words[30];
+  struct Word {
+    const uint8_t *ptr;
+    uint32_t rate;
+  };
+  Word words[30];
   size_t num_words = 0;
 
-  void Say(const uint8_t* addr) {
+  void Say(const uint8_t* addr, uint32_t rate = 8000) {
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     noInterrupts();
     if (ptrAddr) {
       if (num_words < NELEM(words)) {
-        words[num_words++] = addr;
+        words[num_words].ptr = addr;
+        words[num_words].rate = rate;
+	num_words++;
       }
     } else {
+      rate_ = rate;
       count_ = 199;
       ptrAddr = addr;
       ptrBit = 0;
@@ -160,7 +183,8 @@ public:
       synthK9 = 0;
       synthK10 = 0;
       if (num_words) {
-        ptrAddr = words[0];
+        ptrAddr = words[0].ptr;
+	rate_ = words[0].rate;
         num_words--;
         for (size_t i = 0; i < num_words; i++) words[i] = words[i + 1];
         ptrBit = 0;
@@ -250,20 +274,47 @@ public:
     return u0 << 5;
   }
 
+#if 1
+  // 2-lobe 5.5x upsampler
+  uint32_t l_pos_ = 0;
+  int16_t A = 0, B = 0, C = 0, D = 0;
+  int16_t Get44kHz() {
+    uint32_t pos = l_pos_;
+    int32_t sum =
+      A * lanc2_11[l_pos_] +
+      B * lanc2_11[l_pos_ + 11] +
+      C * lanc2_11[l_pos_ + 22] +
+      D * lanc2_11[l_pos_ + 44];
+    l_pos_ += 2;
+    if (l_pos_ >= 11) {
+      l_pos_ -= 11;
+      D = C; C = B; B = A;
+      A = Get8kHz();
+    }
+    return clamptoi16(sum >> 14);
+  }
+  bool eof() const override {
+    return ptrAddr == NULL && !A && !B && !C && !D;
+  }
+#else
   // Very very stupid upsamler, slightly better than
   // just repeating samples.
   int16_t tmp = 0;
   int16_t last = 0;
   int32_t N = 0;
   int16_t Get44kHz() {
-    N += 80;
-    if (N > 441) {
+    N += rate_;
+    if (N > 44100) {
       last = Get8kHz();
-      N -= 441;
+      N -= 44100;
     }
     tmp = (tmp * 3 + last) >> 2;
     return tmp;
   }
+  bool eof() const override {
+    return ptrAddr == NULL && tmp == 0;
+  }
+#endif
   
   int read(int16_t* data, int elements) override {
     for (int i = 0; i < elements; i++) {
@@ -271,16 +322,19 @@ public:
     }
     return elements;
   }
-  bool eof() const override {
-    return ptrAddr == NULL && tmp == 0;
-  }
   bool isPlaying() const {
     return !eof();
   }
   void Stop() override {}
 
   bool Parse(const char *cmd, const char* arg) override {
-    if (!strcmp(cmd, "say") && arg) {
+    uint32_t rate = 0;
+    if (!strcmp(cmd, "talkie")) rate = 8000;
+    if (!strcmp(cmd, "talkie16")) rate = 16000;
+    if (!strcmp(cmd, "talkie11")) rate = 11050;
+    if (!strcmp(cmd, "talkie22")) rate = 22100;
+    if (!strcmp(cmd, "talkie44")) rate = 44200;
+    if (rate && arg) {
       const char *start= strchr(arg, '{');
       const char *end = strchr(arg, '}');
       char *out = const_cast<char*>(arg);
@@ -306,7 +360,7 @@ public:
 	  digits = n = 0;
 	}
       }
-      Say((uint8_t*)arg);
+      Say((uint8_t*)arg, rate);
       // As soon as we return "arg" will be freed, so let's wait for it.
       while (isPlaying());
     }
@@ -320,6 +374,7 @@ public:
 
 private:
   const uint8_t * ptrAddr = NULL;
+  uint32_t rate_ = 0;
   uint8_t ptrBit = 0;
   
   uint8_t synthPeriod = 0;

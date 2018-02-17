@@ -1,6 +1,8 @@
 #ifndef SOUND_AUDIOSTREAM_H
 #define SOUND_AUDIOSTREAM_H
 
+#include <stdint.h>
+
 class AudioStream {
 public:
   virtual int read(int16_t* data, int elements) = 0;

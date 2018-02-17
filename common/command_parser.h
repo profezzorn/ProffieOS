@@ -1,6 +1,8 @@
 #ifndef COMMON_COMMAND_PARSER_H
 #define COMMON_COMMAND_PARSER_H
 
+#include "linked_list.h"
+
 // Command parsing linked list base class.
 class CommandParser;
 extern CommandParser* parsers;

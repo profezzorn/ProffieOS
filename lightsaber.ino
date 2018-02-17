@@ -237,29 +237,6 @@ public:
   }
 };
 
-#define CHECK_LL(T, START, NEXT) do {                                   \
-  int len = 0;                                                          \
-  for (T* i = START; i; i = i->NEXT) {                                  \
-    if (abs(((long)i) - (long)&START) > 65536) {                        \
-      STDOUT.print("Linked list " #START " has invalid pointer @ ");    \
-      STDOUT.print(__LINE__);                                           \
-      STDOUT.print(" pointer: ");                                       \
-      STDOUT.println((long)i, 16);                                      \
-      START = NULL;                                                     \
-      break;                                                            \
-    }                                                                   \
-    if (++len > 1000) {                                                 \
-      STDOUT.print("Linked list " #START " has become infinite @ ");    \
-      STDOUT.println(__LINE__);                                         \
-      i->NEXT = NULL;                                                   \
-      break;                                                            \
-    }                                                                   \
-  }                                                                     \
-} while(0)
-
-#else
-#define CHECK_LL(T, START, NEXT)
-
 #endif
 
 #include "common/scoped_cycle_counter.h"
@@ -272,9 +249,7 @@ uint64_t loop_cycles = 0;
 
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 
-// Magic type used to prevent linked-list types from automatically linking.
-enum NoLink { NOLINK = 17 };
-
+#include "common/linked_list.h"
 #include "common/looper.h"
 #include "common/command_parser.h"
 #include "common/monitor_helper.h"
