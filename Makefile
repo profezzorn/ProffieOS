@@ -8,13 +8,11 @@ include Teensy.mk
 
 CPPFLAGS += $(TESTFLAGS)
 
-MAKEFILES=Makefile Arduino.mk Common.mk Teensy.mk
+MAKEFILES=Makefile Arduino.mk Common.mk Teensy.mk sound/Makefile
 SOURCE_FILES=lightsaber.ino gpl-3.0.txt common/*.h display/*.h functions/*.h \
-             blades/*.h buttons/*.h motion/*.h mtp/*.h styles/*.h sound/*.h
-CONFIG_FILES=common_presets.h graflex_v1_config.h owk_v2_config.h \
-             toy_saber_config.h test_bench_config.h crossguard_config.h \
-             StarJedi10Font.h v1_config.h v2_config.h v3_config.h \
-             default_v3_config.h
+             blades/*.h buttons/*.h motion/*.h mtp/*.h styles/*.h sound/*.h \
+             sound/*.cpp
+CONFIG_FILES=config/*.h
 
 test:
 	$(MAKE) clean
