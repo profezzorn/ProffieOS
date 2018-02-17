@@ -275,7 +275,6 @@ public:
   uint32_t l_pos_ = 0;
   int16_t A = 0, B = 0, C = 0, D = 0;
   int16_t Get44kHz() {
-    uint32_t pos = l_pos_;
     int32_t sum =
       A * lanc2_11[l_pos_] +
       B * lanc2_11[l_pos_ + 11] +
