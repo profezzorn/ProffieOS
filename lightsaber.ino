@@ -2136,6 +2136,7 @@ public:
 	  len_ = 0;
 	  space_ = 0;
 	  free(cmd_);
+          cmd_ = nullptr;
 	  continue;
 	}
 	if (len_ + 1 >= space_) {
@@ -2149,6 +2150,7 @@ public:
 	    len_ = 0;
 	    space_ = 0;
 	    free(cmd_);
+            cmd_ = nullptr;
 	    continue;
 	  }
 	}
@@ -2159,6 +2161,7 @@ public:
       len_ = 0;
       space_ = 0;
       free(cmd_);
+      cmd_ = nullptr;
     }
     STATE_MACHINE_END();
   }
