@@ -343,50 +343,6 @@ Talkie talkie;
 
 // LightSaberSynth saber_synth;
 
-#if 1
-
-// Wanted audio capabilities:
-// Background music (with independent volume)
-// Options:
-// 3 x EFFECT + synthesized HUM&SWING  (teensy style)
-// 3 x EFFECT (wav) + { wav HUM or synthesized hum }  (nec style)
-// HUM/EFFECTS spliced or x-faded (monophonic style)
-
-// This means:
-// 5 x WAV player (read from sdcard or serial flash) + HUM/SWING synthesizer
-// WAV player needs gapless playback and find-cut support.
-
-// Style #1
-//  DAC
-//   +-Dynamic Mixer
-//   |  +-MonophonicFont (on/hum/off/swing/clash/etc.)
-//   |     +-Buffer
-//   |     |  +-WavPlayer
-//   |     +-Buffer
-//   |        +-WavPlayer
-//   +-Buffer (for tracks)
-//      +-WavPlayer
-//
-// Style #2 (superset of style #1)
-//  DAC
-//   +-Dynamic Mixer
-//   |  +-MonophonicFont (on/hum/off)
-//   |     +-Buffer
-//   |     |  +-WavPlayer
-//   |     +-Buffer
-//   |        +-WavPlayer
-//   +-Buffer (for tracks)
-//   |   +-WavPlayer
-//   +-Buffer (other sound fx)
-//   |   +-WavPlayer
-//   +-Buffer (other sound fx)
-//   |   +-WavPlayer
-//   +-Buffer (other sound fx)
-//       +-WavPlayer
-//
-
-#endif
-
 #include "sound/buffered_audio_stream.h"
 
 #else  // ENABLE_AUDIO
