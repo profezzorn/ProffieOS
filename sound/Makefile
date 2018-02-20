@@ -1,6 +1,6 @@
 
 talkie_test: talkie_test.cpp talkie.h
-	g++ -O -std=c++11 -o talkie_test talkie_test.cpp -lm
+	g++ -O -g -std=c++11 -o talkie_test talkie_test.cpp -lm
 
 
 zero.wav: talkie_test

@@ -55,7 +55,6 @@ int main(int argc, char** argv) {
     const char *arg = argv[i];
     const char *start = strchr(arg, '{');
     const char *end = strchr(arg, '}');
-    char *out = const_cast<char*>(arg);
     if (!start) start = arg;
     if (!end) end = arg + strlen(arg);
     int n = 0;
@@ -75,6 +74,8 @@ int main(int argc, char** argv) {
       }
       if (digits == 2) {
 	data.push_back(n);
+	fprintf(stderr, "%02x ", n);
+	fflush(stderr);
 	digits = n = 0;
       }
     }
