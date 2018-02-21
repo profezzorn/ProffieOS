@@ -1,7 +1,8 @@
 #ifndef STYLES_POV_H
 #define STYLES_POV_H
 
-#if defined(ENABLE_WS2811) || defined(ENABLE_FASTLED)
+// TODO(hubbe): Make it work with FastLED
+#if defined(ENABLE_WS2811)
 
 // Usage: &style_pov
 // return value: suitable for preset array

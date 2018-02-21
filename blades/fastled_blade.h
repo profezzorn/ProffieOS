@@ -3,6 +3,8 @@
 
 #ifdef ENABLE_FASTLED
 
+// Needed for "displayMemory"
+#include "monopodws.h"
 #include <FastLED.h>
 
 // FASTLED-type blade implementation.
@@ -68,8 +70,8 @@ public:
   bool is_on() const override {
     return on_;
   }
-  void set(int led, Color c) override {
-    ((Color8*)displayMemory)[led] = c;
+  void set(int led, Color16 c) override {
+    ((Color8*)displayMemory)[led] = c.dither(0);
   }
   bool clash() override {
     bool ret = clash_;

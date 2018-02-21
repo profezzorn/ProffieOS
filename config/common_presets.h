@@ -35,7 +35,9 @@ Preset presets[] = {
     StyleNormalPtr<Pulsing<RED, Rgb<50,0,0>, 5000>, WHITE, 300, 800, RED>(), "pulsing" },
   { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>(), "rainbow" },
   { "font02", "tracks/cantina.wav", StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>(), "strobe" },
+#ifdef ENABLE_WS2811
   { "font02", "tracks/cantina.wav", &style_pov, "POV" },
+#endif
 
   { "charging", "tracks/duel.wav", &style_charging, "battery" },
 };

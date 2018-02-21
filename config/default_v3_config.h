@@ -5,7 +5,7 @@
 #include "v3_config.h"
 #define NUM_BLADES 1
 #define NUM_BUTTONS 2
-#define VOLUME 1000
+#define VOLUME 2200
 const unsigned int maxLedsPerStrip = 144;
 #define CLASH_THRESHOLD_G 1.0
 #define ENABLE_AUDIO
@@ -16,7 +16,7 @@ const unsigned int maxLedsPerStrip = 144;
 
 #ifdef CONFIG_PRESETS
 Preset presets[] = {
-  { "TeensySF", "tracks/mars.wav",
+  { "fontdir", "tracks/mars.wav",
     StyleNormalPtr<CYAN, WHITE, 300, 800>(), "cyan"},
   { "TeensySF", "tracks/mars.wav",
     StylePtr<InOutSparkTip<EASYBLADE(BLUE, WHITE), 300, 800> >(), "blue"},
