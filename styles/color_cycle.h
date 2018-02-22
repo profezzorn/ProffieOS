@@ -46,14 +46,19 @@ public:
       end_ = 0;
       base->allow_disable();
     } else {
-      end_ = (pos + fraction) * num_leds_;
+      end_ = fract(pos_ + current_percentage / 100.0) * num_leds_;
     }
   }
   OverDriveColor getColor(int led) {
     led *= 16384;
     Range led_range(led, led + 16384);
     int black_mix = 0;
-    black_mix = (Range(start_, end_) & led_range).size();
+    if (start_ <= end_) {
+      black_mix = (Range(start_, end_) & led_range).size();
+    } else {
+      black_mix = (Range(0, end_) & led_range).size() +
+                  (Range(start_, num_leds_) & led_range).size();
+    }
     OverDriveColor c = c_.getColor(led);
     OverDriveColor on_c = on_c_.getColor(led);
     c.c = c.c.mix2(on_c.c, fade_int_);
