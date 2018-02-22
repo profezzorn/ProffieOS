@@ -51,7 +51,7 @@ public:
     STDOUT.print("FASTLED Blade with ");
     STDOUT.print(num_leds_);
     STDOUT.println(" leds");
-    FastLED.addLeds<CHIPSET, spiLedDataOut, spiLedClock, EOrder, SPI_DATA_RATE>((struct CRGB*)displayMemory, num_leds_);
+    FastLED.addLeds<CHIPSET, spiLedDataOut, spiLedClock, RGB_ORDER, SPI_DATA_RATE>((struct CRGB*)displayMemory, num_leds_);
     power_->Init();
     Power(true);
     delay(10);
