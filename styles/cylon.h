@@ -58,7 +58,7 @@ public:
     led *= 16384;
     Range led_range(led, led + 16384);
     int black_mix = 0;
-    if (start_ < end_) {
+    if (start_ <= end_) {
       black_mix = (Range(start_, end_) & led_range).size();
     } else {
       black_mix = (Range(0, end_) & led_range).size() +
