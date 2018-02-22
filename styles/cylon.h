@@ -51,7 +51,7 @@ public:
       end_ = 0;
       base->allow_disable();
     } else {
-      end_ = (pos_ + current_percentage / 100.0) * num_leds_;
+      end_ = (pos + fraction) * num_leds_;
     }
   }
   OverDriveColor getColor(int led) {
