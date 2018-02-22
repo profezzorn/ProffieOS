@@ -40,7 +40,7 @@ public:
       digitalWrite(spiLedSelect, LOW);
       SPI.endTransaction();   // allow other libs to use SPI again
     } else {
-      // Bitbang on separate pins, need to lock anything.
+      // Bitbang on separate pins, no need to lock anything.
       FastLED.show();
     }
   }
