@@ -68,4 +68,9 @@ class Color16 {
   uint16_t r, g, b;
 };
 
+struct OverDriveColor {
+  Color16 c;
+  bool overdrive;
+};
+
 #endif

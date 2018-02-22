@@ -634,21 +634,10 @@ private:
 BatteryMonitor battery_monitor;
 
 #include "common/color.h"
+#include "common/range.h"
 #include "blades/monopodws.h"
 #include "blades/blade_base.h"
 #include "blades/blade_wrapper.h"
-
-class StyleFactory {
-public:
-  virtual BladeStyle* make() = 0;
-};
-
-template<class STYLE>
-class StyleFactoryImpl : public StyleFactory {
-  BladeStyle* make() override {
-    return new STYLE();
-  }
-};
 
 class MicroEventTime {
   void SetToNow() { micros_ = micros(); millis_ = millis(); }
@@ -660,26 +649,6 @@ class MicroEventTime {
 private:
   uint32_t millis_;
   uint32_t micros_;
-};
-
-struct OverDriveColor {
-  Color16 c;
-  bool overdrive;
-};
-
-class Range {
-public:
-  uint32_t start;
-  uint32_t end;
-  Range(uint32_t s, uint32_t e) : start(s), end(e) {}
-  uint32_t size() const {
-    if (start >= end) return 0;
-    return end - start;
-  }
-  Range operator&(const Range& other) {
-    return Range(max(start, other.start),
-                 min(end, other.end));
-  }
 };
 
 template<class T, class U>

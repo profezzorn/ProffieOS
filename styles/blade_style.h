@@ -28,4 +28,16 @@ public:
   virtual bool NoOnOff() { return false; }
 };
 
+class StyleFactory {
+public:
+  virtual BladeStyle* make() = 0;
+};
+
+template<class STYLE>
+class StyleFactoryImpl : public StyleFactory {
+  BladeStyle* make() override {
+    return new STYLE();
+  }
+};
+
 #endif

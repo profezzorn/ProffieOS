@@ -1,6 +1,8 @@
 #ifndef STYLES_COLORS_H
 #define STYLES_COLORS_H
 
+#include "rgb.h"
+
 typedef Rgb<255,0,0> RED;
 typedef Rgb<0,255,0> GREEN;
 typedef Rgb<0,0,255> BLUE;

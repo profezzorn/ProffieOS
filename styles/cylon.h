@@ -1,6 +1,8 @@
 #ifndef STYLES_CYLON_H
 #define STYLES_CYLON_H
 
+#include "../common/range.h"
+
 // Usage: ColorCycle<COLOR, PERCENT, RPM>
 // or: ColorCycle<COLOR, PERCENT, RPM, ON_COLOR, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS>
 // COLOR, ON_COLOR: COLOR
@@ -41,7 +43,7 @@ public:
     float fraction = current_percentage / 100.0;
     float pos = 0.5 + sin(pos_ * M_PI * 2) * (1.0 - fraction) / 2.0 - fraction / 2.0;
     num_leds_ = base->num_leds() * 16384;
-    start_ = pos_ * num_leds_;
+    start_ = pos * num_leds_;
     end_ = (pos + fraction) * num_leds_;
     if (current_percentage == 100.0) {
       start_ = 0;

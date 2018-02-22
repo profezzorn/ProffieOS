@@ -56,7 +56,7 @@ public:
   }
 
  protected:
-  BladeStyle *current_style_ = NULL;
+  BladeStyle *current_style_ = nullptr;
 };
 
 #endif

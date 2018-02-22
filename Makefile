@@ -8,13 +8,14 @@ include Teensy.mk
 
 CPPFLAGS += $(TESTFLAGS)
 
-MAKEFILES=Makefile Arduino.mk Common.mk Teensy.mk sound/Makefile
+MAKEFILES=Makefile Arduino.mk Common.mk Teensy.mk sound/Makefile styles/Makefile
 SOURCE_FILES=lightsaber.ino gpl-3.0.txt common/*.h display/*.h functions/*.h \
              blades/*.h buttons/*.h motion/*.h mtp/*.h styles/*.h sound/*.h \
-             sound/*.cpp
+             sound/*.cpp styles/*.cpp
 CONFIG_FILES=config/*.h
 
 test:
+	(cd styles && $(MAKE) test)
 	$(MAKE) clean
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/graflex_v1_config.h\\\"
 	$(MAKE) clean
