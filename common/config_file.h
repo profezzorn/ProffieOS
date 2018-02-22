@@ -2,6 +2,7 @@
 #define COMMON_CONFIG_FILE_H
 
 // Reads an config file, looking for variable assignments.
+// TODO(hubbe): Read config files from serialflash.
 struct ConfigFile {
 #ifdef ENABLE_SD
   void skipwhite(File* f) {
