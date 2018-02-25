@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <iostream>
 
@@ -49,8 +50,15 @@ int main(int argc, char** argv) {
   std::string tmp;
   Talkie talkie;
 
+  int rate = 25 * 7;
+  int i = 1;
+  if (argc > 1 && argv[1][0] == '-') {
+    rate = atoi(argv[1]+1) * 7;
+    i++;
+  }
+
   std::string samples = "";
-  for (int i = 1; i < argc; i++) {
+  for (; i < argc; i++) {
     std::vector<uint8_t> data;
     const char *arg = argv[i];
     const char *start = strchr(arg, '{');
@@ -79,7 +87,7 @@ int main(int argc, char** argv) {
 	digits = n = 0;
       }
     }
-    talkie.Say(data.data());
+    talkie.Say(data.data(), rate);
     while (talkie.isPlaying()) {
       int16_t ret = talkie.Get44kHz();
       samples += STRINGIFY(ret);

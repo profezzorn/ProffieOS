@@ -1081,8 +1081,8 @@ public:
    bad_blade:
     STDOUT.println("BAD BLADE");
 #ifdef ENABLE_AUDIO
-    talkie.Say(spERRORIN);
-    talkie.Say(spBLADEARRAY);
+    talkie.Say(talkie_error_in_15, 15);
+    talkie.Say(talkie_blade_array_15, 15);
 #endif    
   }
 
@@ -1262,7 +1262,7 @@ protected:
           STDOUT.println("Battery low beep");
 #ifdef ENABLE_AUDIO
           // TODO: allow this to be replaced with WAV file
-          talkie.Say(spLOWBATTERY);
+          talkie.Say(talkie_low_battery_15, 15);
 #endif
 	  last_beep_ = millis();
         }
@@ -2457,8 +2457,8 @@ void setup() {
 #if defined(ENABLE_SD) && defined(ENABLE_AUDIO)
   if (!sd_card_found) {
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-    talkie.Say(spSDCARD);
-    talkie.Say(spNOTFOUND);
+    talkie.Say(talkie_sd_card_15, 15);
+    talkie.Say(talkie_not_found_15, 15);
   }
 #endif // ENABLE_AUDIO && ENABLE_SD
 }

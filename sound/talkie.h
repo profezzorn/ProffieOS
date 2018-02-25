@@ -666,10 +666,11 @@ public:
     for (int i = 0; i < 10; i++) x[i] = 0;
   }
 
-  void Say(const uint8_t* addr, uint32_t rate = 25 * 7,
+  void Say(const uint8_t* addr, uint32_t rate = 25,
 	   const tms5100_coeffs* coeffs = &tms5220_coeff
 //	   const tms5100_coeffs* coeffs = &tms5110a_coeff
     ) {
+    rate *= 7;
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     noInterrupts();
     if (ptrAddr) {
@@ -896,38 +897,39 @@ public:
     uint32_t rate = 0;
     if (!strcmp(cmd, "say") && arg) {
       if (!strcmp(arg, "bof")) {
-	Say(spFONTDIRECTORY);
-	Say(spNOTFOUND);
+	Say(talkie_font_directory_15, 15);
+	Say(talkie_not_found_15, 15);
 	return true;
       }
       if (!strcmp(arg, "ftl")) {
-	Say(spFONTDIRECTORY);
-	Say(spTOOLONG);
+	Say(talkie_font_directory_15, 15);
+	Say(talkie_too_long_15, 15);
 	return true;
       }
       if (!strcmp(arg, "sd")) {
-	Say(spSDCARD);
-	Say(spNOTFOUND);
+	Say(talkie_sd_card_15, 15);
+	Say(talkie_not_found_15, 15);
 	return true;
       }
       if (!strcmp(arg, "bb")) {
-	Say(spERRORIN);
-	Say(spBLADEARRAY);
+	Say(talkie_error_in_15, 15);
+	Say(talkie_blade_array_15, 15);
 	return true;
       }
       if (!strcmp(arg, "bp")) {
-	Say(spERRORIN);
-	Say(spPRESETARRAY);
+	Say(talkie_error_in_15, 15);
+	Say(talkie_preset_array_15, 15);
 	return true;
       }
       if (!strcmp(arg, "lb")) {
-	Say(spLOWBATTERY);
+	Say(talkie_low_battery_15, 15);
 	return true;
       }
     }
-    if (!strcmp(cmd, "talkie")) rate = 25 * 7;
-    if (!strcmp(cmd, "talkie_slow")) rate = 25 * 8;
-    if (!strcmp(cmd, "talkie12")) rate = 12 * 7;
+    if (!strcmp(cmd, "talkie")) rate = 25;
+    if (!strcmp(cmd, "talkie_slow")) rate = 25;
+    if (!strcmp(cmd, "talkie12")) rate = 12;
+    if (!strcmp(cmd, "talkie15")) rate = 15;
     if (rate && arg) {
       const char *start= strchr(arg, '{');
       const char *end = strchr(arg, '}');

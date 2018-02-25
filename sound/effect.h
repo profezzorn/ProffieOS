@@ -275,11 +275,11 @@ class Effect {
     
 #ifdef ENABLE_AUDIO
     else if (strlen(directory) > 8) {
-      talkie.Say(spFONTDIRECTORY);
-      talkie.Say(spTOOLONG);
+      talkie.Say(talkie_font_directory_15, 15);
+      talkie.Say(talkie_too_long_15, 15);
     } else if (strlen(directory)) {
-      talkie.Say(spFONTDIRECTORY);
-      talkie.Say(spNOTFOUND);
+      talkie.Say(talkie_font_directory_15, 15);
+      talkie.Say(talkie_not_found_15, 15);
     }
 #endif   // ENABLE_AUDIO    
 #endif   // ENABLE_SD
