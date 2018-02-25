@@ -21,12 +21,12 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_v3_config.h"
+// #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
 // #define CONFIG_FILE "config/owk_v2_config.h"
-// #define CONFIG_FILE "config/test_bench_config.h"
+#define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
 // #define CONFIG_FILE "config/new_config.h"
 
@@ -338,7 +338,7 @@ int16_t clamptoi16(int32_t x) {
 #include "sound/talkie.h"
 #include "sound/lightsaber_synth.h"
 
-AudioDynamicMixer<8> dynamic_mixer;
+AudioDynamicMixer<9> dynamic_mixer;
 Beeper beeper;
 Talkie talkie;
 
@@ -1081,7 +1081,8 @@ public:
    bad_blade:
     STDOUT.println("BAD BLADE");
 #ifdef ENABLE_AUDIO
-    talkie.Say(spABORT);
+    talkie.Say(spERRORIN);
+    talkie.Say(spBLADEARRAY);
 #endif    
   }
 
@@ -1261,8 +1262,7 @@ protected:
           STDOUT.println("Battery low beep");
 #ifdef ENABLE_AUDIO
           // TODO: allow this to be replaced with WAV file
-          talkie.Say(spLOW);
-          talkie.Say(spPOWER);
+          talkie.Say(spLOWBATTERY);
 #endif
 	  last_beep_ = millis();
         }
@@ -2457,11 +2457,8 @@ void setup() {
 #if defined(ENABLE_SD) && defined(ENABLE_AUDIO)
   if (!sd_card_found) {
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-    talkie.Say(spPLEASE);
-    talkie.Say(spCONNECT);
-    talkie.Say(spS);
-    talkie.Say(spD);
-    talkie.Say(spUNIT);
+    talkie.Say(spSDCARD);
+    talkie.Say(spNOTFOUND);
   }
 #endif // ENABLE_AUDIO && ENABLE_SD
 }

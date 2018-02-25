@@ -4,6 +4,9 @@
 // Filesystem abstractions
 
 #ifdef TEENSYDUINO
+
+#include <SD.h>
+
 class LSFS {
 public:
   typedef File FILE;
@@ -56,6 +59,9 @@ public:
   };
 };
 #else
+
+#include <FS.h>
+
 class LSFS {
 public:
   typedef File FILE;

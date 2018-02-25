@@ -1,6 +1,10 @@
 #ifndef SOUND_PLAYWAV_H
 #define SOUND_PLAYWAV_H
 
+#include "../common/file_reader.h"
+#include "../common/state_machine.h"
+#include "audiostream.h"
+
 // Simple upsampler code, doubles the number of samples with
 // 2-lobe lanczos upsampling.
 #define C1 24757
@@ -59,7 +63,7 @@
 // it into a stream of samples. Note that because it can
 // spend some time reading data between samples, the
 // reader must have enough buffers to provide smooth playback.
-class PlayWav : StateMachine, public AudioStream {
+class PlayWav : StateMachine, public AudioStream, FileReader {
 public:
   void Play(const char* filename) {
     if (!*filename) return;
@@ -161,75 +165,8 @@ private:
     else if (bits_ == 32) DecodeBytes2<32>();
   }
 
-  int ReadFile(int n) {
-#ifdef ENABLE_SERIALFLASH
-    if (sf_file_) {
-      return sf_file_.read(buffer + 8, n);
-    }
-#endif
-#ifdef ENABLE_SD
-    return sd_file_.read(buffer + 8, n);
-#else
-    return 0;
-#endif
-  }
 
-  void Skip(int n) {
-#ifdef ENABLE_SERIALFLASH
-    if (sf_file_) {
-      sf_file_.seek(sf_file_.position() + n);
-      return;
-    }
-#endif
-#ifdef ENABLE_SD
-    sd_file_.seek(sd_file_.position() + n);
-#endif
-  }
-
-  void Rewind() {
-#ifdef ENABLE_SERIALFLASH
-    if (sf_file_) {
-      sf_file_.seek(0);
-      return;
-    }
-#endif
-#ifdef ENABLE_SD
-    sd_file_.seek(0);
-#endif
-  }
-
-  uint32_t Tell() {
-#ifdef ENABLE_SERIALFLASH
-    if (sf_file_) return sf_file_.position();
-#endif
-#ifdef ENABLE_SD
-    return sd_file_.position();
-#endif
-    return 0;
-  }
-
-  uint32_t FileSize() {
-#ifdef ENABLE_SERIALFLASH
-    if (sf_file_) return sf_file_.size();
-#endif
-#ifdef ENABLE_SD
-    return sd_file_.size();
-#endif
-    return 0;
-  }
-
-  int AlignRead(int n) {
-#ifdef ENABLE_SERIALFLASH
-    if (sf_file_) return n;
-#endif
-#ifdef ENABLE_SD
-    int next_block = (sd_file_.position() + 512u) & ~511u;
-    int bytes_to_end_of_block = next_block - sd_file_.position();
-    return min(n, bytes_to_end_of_block);
-#else
-    return n;
-#endif
-  }
+  int ReadFile(int n) { return Read(buffer + 8, n); }
 
   void loop() {
     STATE_MACHINE_BEGIN();
@@ -247,24 +184,13 @@ private:
         // as before, then seek to 0 instead of open/close file.
         Rewind();
       } else {
-#ifdef ENABLE_SERIALFLASH
-        sf_file_ = SerialFlashChip::open(filename_);
-        if (!sf_file_)
-#endif
-        {
-#ifdef ENABLE_SD
-          sd_file_.close();
-          sd_file_ = LSFS::Open(filename_);
-          YIELD();
-          if (!sd_file_)
-#endif
-          {
-            STDOUT.print("File ");
-            STDOUT.print(filename_);
-            STDOUT.println(" not found.");
-            goto fail;
-          }
-        }
+	if (!Open(filename_)) {
+	  STDOUT.print("File ");
+	  STDOUT.print(filename_);
+	  STDOUT.println(" not found.");
+	  goto fail;
+	}
+	YIELD();
         old_file_id_ = new_file_id_;
       }
       wav_ = endswith(".wav", filename_);
@@ -416,12 +342,6 @@ private:
   Effect::FileID new_file_id_;
   Effect::FileID old_file_id_;
   char filename_[128];
-#ifdef ENABLE_SD
-  File sd_file_;
-#endif
-#ifdef ENABLE_SERIALFLASH
-  SerialFlashFile sf_file_;
-#endif
   int16_t* dest_ = nullptr;
   int to_read_ = 0;
   int tmp_;

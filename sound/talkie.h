@@ -894,11 +894,40 @@ public:
 
   bool Parse(const char *cmd, const char* arg) override {
     uint32_t rate = 0;
-    if (!strcmp(cmd, "talkie")) rate = 8000;
-    if (!strcmp(cmd, "talkie16")) rate = 16000;
-    if (!strcmp(cmd, "talkie11")) rate = 11050;
-    if (!strcmp(cmd, "talkie22")) rate = 22100;
-    if (!strcmp(cmd, "talkie44")) rate = 44200;
+    if (!strcmp(cmd, "say") && arg) {
+      if (!strcmp(arg, "bof")) {
+	Say(spFONTDIRECTORY);
+	Say(spNOTFOUND);
+	return true;
+      }
+      if (!strcmp(arg, "ftl")) {
+	Say(spFONTDIRECTORY);
+	Say(spTOOLONG);
+	return true;
+      }
+      if (!strcmp(arg, "sd")) {
+	Say(spSDCARD);
+	Say(spNOTFOUND);
+	return true;
+      }
+      if (!strcmp(arg, "bb")) {
+	Say(spERRORIN);
+	Say(spBLADEARRAY);
+	return true;
+      }
+      if (!strcmp(arg, "bp")) {
+	Say(spERRORIN);
+	Say(spPRESETARRAY);
+	return true;
+      }
+      if (!strcmp(arg, "lb")) {
+	Say(spLOWBATTERY);
+	return true;
+      }
+    }
+    if (!strcmp(cmd, "talkie")) rate = 25 * 7;
+    if (!strcmp(cmd, "talkie_slow")) rate = 25 * 8;
+    if (!strcmp(cmd, "talkie12")) rate = 12 * 7;
     if (rate && arg) {
       const char *start= strchr(arg, '{');
       const char *end = strchr(arg, '}');
@@ -934,7 +963,8 @@ public:
   }
 
   void Help() override {
-    STDOUT.println("say HEXDATA - play talkie");
+    STDOUT.println("say bof/sd/abort - test error messages");
+    STDOUT.println("talkie HEXDATA - play talkie");
   }
 
 private:
