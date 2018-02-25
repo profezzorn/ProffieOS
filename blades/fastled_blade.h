@@ -127,7 +127,7 @@ protected:
       loop_counter_.Reset();
       return;
     }
-    int m = millis();
+    uint32_t m = millis();
     // This limits the blade to 1000 updates per second, which
     // may not be enough for POV-style things, but I suspect
     // than running it at full speed will cause sound problems.
