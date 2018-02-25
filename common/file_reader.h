@@ -75,7 +75,7 @@ public:
   bool Open(const char* filename) {
     Close();
 #ifdef ENABLE_SERIALFLASH
-    sf_file_ = SerialFlashChip::open(filename_);
+    sf_file_ = SerialFlashChip::open(filename);
     if (sf_file_) {
       type_ = TYPE_SF;
       return true;
