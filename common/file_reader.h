@@ -148,7 +148,7 @@ public:
       case TYPE_SF: {
 	uint8_t tmp;
 	if (sf_file_.read(&tmp, 1)) {
-	  sf_file_.seek(sf_file_.tell() - 1);
+	  sf_file_.seek(sf_file_.position() - 1);
 	  return tmp;
 	} else {
 	  return -1;
