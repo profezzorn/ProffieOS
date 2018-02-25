@@ -39,11 +39,17 @@ public:
   MemFile() : data_(nullptr), size_(0), pos_(0) {
   }
   int read(uint8_t* dest, size_t bytes) {
-    size_t available = size_ - pos_;
-    size_t to_copy = min(available, bytes);
+    size_t to_copy = min(available(), bytes);
     memcpy(dest, data_ + pos_, to_copy);
     pos_ += to_copy;
     return to_copy;
+  }
+  size_t available() {
+    return size_ - pos_;
+  }
+  int peek() {
+    if (!available()) return -1;
+    return data_[pos_];
   }
   void seek(size_t pos) {
     pos_ = min(size_, pos);
@@ -112,8 +118,20 @@ public:
     RUN_ALL(read(dest, bytes))
     return 0;
   }
+  int Read() {
+    uint8_t tmp;
+    if (Read(&tmp, 1)) {
+      return tmp;
+    } else {
+      return -1;
+    }
+  }
   void Seek(uint32_t n) {
     RUN_ALL_VOID(seek(n))
+  }
+  uint32_t Available() {
+    RUN_ALL(available());
+    return 0;
   }
   uint32_t Tell() {
     RUN_ALL(position());
@@ -122,6 +140,25 @@ public:
   uint32_t FileSize() {
     RUN_ALL(size());
     return 0;
+  }
+  int Peek() {
+    switch (type_) {
+      IF_SD(case TYPE_SD: return sd_file_.peek(););
+#ifdef ENABLE_SERIALFLASH
+      case TYPE_SF: {
+	uint8_t tmp;
+	if (sf_file_.read(&tmp, 1)) {
+	  sf_file_.seek(sf_file_.tell() - 1);
+	  return tmp;
+	} else {
+	  return -1;
+	}
+      }
+#endif   
+      case TYPE_MEM:
+	return mem_file_.peek();
+    }
+    return -1;
   }
   int AlignRead(int n) {
 #ifdef ENABLE_SD
