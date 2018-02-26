@@ -50,10 +50,10 @@ int main(int argc, char** argv) {
   std::string tmp;
   Talkie talkie;
 
-  int rate = 25 * 7;
+  int rate = 25;
   int i = 1;
   if (argc > 1 && argv[1][0] == '-') {
-    rate = atoi(argv[1]+1) * 7;
+    rate = atoi(argv[1]+1);
     i++;
   }
 
