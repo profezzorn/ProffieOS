@@ -63,7 +63,7 @@
 // it into a stream of samples. Note that because it can
 // spend some time reading data between samples, the
 // reader must have enough buffers to provide smooth playback.
-class PlayWav : StateMachine, public AudioStream, FileReader {
+class PlayWav : StateMachine, public AudioStream {
 public:
   void Play(const char* filename) {
     if (!*filename) return;
@@ -166,7 +166,7 @@ private:
   }
 
 
-  int ReadFile(int n) { return Read(buffer + 8, n); }
+  int ReadFile(int n) { return file_.Read(buffer + 8, n); }
 
   void loop() {
     STATE_MACHINE_BEGIN();
@@ -182,9 +182,9 @@ private:
       if (new_file_id_ && new_file_id_ == old_file_id_) {
         // Minor optimization: If we're reading the same file
         // as before, then seek to 0 instead of open/close file.
-        Rewind();
+        file_.Rewind();
       } else {
-	if (!Open(filename_)) {
+	if (!file_.Open(filename_)) {
 	  STDOUT.print("File ");
 	  STDOUT.print(filename_);
 	  STDOUT.println(" not found.");
@@ -214,7 +214,7 @@ private:
 
           len_ = header(1);
           if (header(0) != 0x20746D66) {  // 'fmt '
-            Skip(len_);
+            file_.Skip(len_);
             continue;
           }
           if (len_ < 16) {
@@ -228,7 +228,7 @@ private:
           STDOUT.println("Read failed.");
           goto fail;
         }
-        if (len_ > 16) Skip(len_ - 16);
+        if (len_ > 16) file_.Skip(len_ - 16);
         if ((header(0) & 0xffff) != 1) {
           STDOUT.println("Wrong format.");
           goto fail;
@@ -256,26 +256,26 @@ private:
           if (ReadFile(8) != 8) break;
           len_ = header(1);
           if (header(0) != 0x61746164) {
-            Skip(len_);
+            file_.Skip(len_);
             continue;
           }
         } else {
-          if (Tell() >= FileSize()) break;
-          len_ = FileSize() - Tell();
+          if (file_.Tell() >= file_.FileSize()) break;
+          len_ = file_.FileSize() - file_.Tell();
         }
         sample_bytes_ = len_;
 
         if (start_ != 0.0) {
           int samples = fmod(start_, length()) * rate_;
           int bytes_to_skip = samples * channels_ * bits_ / 8;
-          Skip(bytes_to_skip);
+          file_.Skip(bytes_to_skip);
           len_ -= bytes_to_skip;
           start_ = 0.0;
         }
 
         while (len_) {
           {
-            int bytes_read = ReadFile(AlignRead(min(len_, 512u)));
+            int bytes_read = ReadFile(file_.AlignRead(min(len_, 512u)));
             if (bytes_read == 0)
               break;
             len_ -= bytes_read;
@@ -352,6 +352,8 @@ private:
   uint8_t bits_;
 
   bool wav_;
+
+  FileReader file_;
 
   size_t len_ = 0;
   volatile size_t sample_bytes_ = 0;
