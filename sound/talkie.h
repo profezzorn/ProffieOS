@@ -659,7 +659,7 @@ public:
     uint32_t rate;
     const tms5100_coeffs* coeffs;
   };
-  Word words[30];
+  Word words[20];
   size_t num_words = 0;
 
   Talkie() {
@@ -742,7 +742,6 @@ public:
       return;
     }
     new_frame.inited = true;
-    
     // Read speech data, processing the variable size frames.
     uint8_t energy = getBits(coeffs_->energy_bits);
     if (energy == 0) {
@@ -789,6 +788,7 @@ public:
 
     Frame f;
     f.lerp(old_frame, new_frame, count_, rate_);
+
     
     int32_t u[11];
 
@@ -837,7 +837,7 @@ public:
     x[2] = x[1] + matrix_multiply(f.k[1], u[1]);
     x[1] = x[0] + matrix_multiply(f.k[0], u[0]);
     x[0] = u[0];
-    
+
     return u[0] << 5;
   }
 
