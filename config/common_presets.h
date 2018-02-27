@@ -1,3 +1,10 @@
+// If you have multiple sabers that use the same blade connector, and your
+// blades use blade ID resistors, you will probably want to share your blades[]
+// and preset[] arrays between all your sabers. This file is an example of
+// how to do that. My recommendation is to make a copy of this file, edit it
+// for your purposes, and then include it from your config file.
+// See "graflex_v1_config.h" and "owk_v2_config.h" for examples of how I do this.
+
 #ifdef CONFIG_PRESETS
 
 // CONFIGURABLE

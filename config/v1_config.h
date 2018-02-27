@@ -1,3 +1,7 @@
+// This config file contains all the things should be the same for all
+// V1 teensysaber configurations. In most cases there should be no need
+// to change anything in this file.
+
 #define VERSION_MAJOR 1
 #define VERSION_MINOR 0
 #define GYRO_CLASS FXAS21002

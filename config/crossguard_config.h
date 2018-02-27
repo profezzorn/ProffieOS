@@ -1,3 +1,9 @@
+// This is a sample configuration file for a 3-blade saber. (Kylo style)
+// This saber has:
+//   o TeensySaber V2 hardware.
+//   o A single button
+//   o Three neopixel blades
+// If you have a saber similar to this one, make a copy and use the copy.
 
 #ifdef CONFIG_TOP
 

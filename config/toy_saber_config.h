@@ -1,3 +1,9 @@
+// This is a sample configuration file.
+// This saber has:
+//   o TeensySaber V2 hardware.
+//   o Zero buttons (just a latching on-off switch that toggles the power directly.)
+//   o A six-segment string blade
+// If you have a saber similar to this one, make a copy and use the copy.
 
 #ifdef CONFIG_TOP
 

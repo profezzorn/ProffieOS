@@ -1,14 +1,14 @@
-// This is a configuration file that I use to test V3 boards.
+// This is a configuration file that I use to test proffieboard V1.
 // This configuration has:
-//   o TeensySaber V3 hardware.
+//   o Proffieboard V1 hardware.
 //   o Three buttons
-//   o A very weird 3-channel LED configuration.
-// If you have a V3 test rig, you may also want to use this configuration file.
+//   o A very weird 3-channel LED configuration. (TODO: Change to neopixels.)
+// If you have a proffieboard V1 test rig, you may also want to use this configuration file.
 
 #ifdef CONFIG_TOP
 
-// V3 electronics
-#include "v3_config.h"
+// Proffieboard config
+#include "proffieboard_v1_config.h"
 
 // Number of simultaneously connected blades.
 // (For interchangeable blades, see the blades[] array.)
@@ -44,18 +44,20 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_AUDIO
 #define ENABLE_MOTION
 // #define ENABLE_SNOOZE
-#define ENABLE_WS2811
-#define ENABLE_SERIAL
+// #define ENABLE_WS2811
+// #define ENABLE_SERIAL
 
 // Must be 20 characters or less.
-#define BLE_PASSWORD "password"
+// #define BLE_PASSWORD "password"
 
 // FASTLED is experimental and untested right now
 // #define ENABLE_FASTLED
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
-#define ENABLE_SSD1306
+// #define ENABLE_SSD1306
+
+// #define ENABLE_DEBUG
 
 #endif
 

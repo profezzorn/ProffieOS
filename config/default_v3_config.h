@@ -1,5 +1,11 @@
-// Default V3 config file, set up for
-// a single font, a single track and an XP-E2 RGB star.
+// This is a sample configuration file.
+// This saber has:
+//   o TeensySaber V3 hardware.
+//   o Two buttons
+//   o An XP-E2 RGB LED star.
+// If you have a saber similar to this one, make a copy and use the copy.
+// This is also the default configuration file. Pre-programmed boards will
+// use this configuration file.
 
 #ifdef CONFIG_TOP
 #include "v3_config.h"

@@ -1,3 +1,11 @@
+// This is a sample configuration file.
+// This saber has:
+//   o TeensySaber V1 hardware.
+//   o A touchbutton and a regular button
+//   o An 8-pin blade connector
+//   o All blades and presets are stored in common_config.h
+// If you have a saber similar to this one, make a copy and use the copy.
+
 #ifdef CONFIG_TOP
 
 // V1 electronics

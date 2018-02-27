@@ -1,3 +1,10 @@
+// This is a sample configuration file.
+// This saber has:
+//   o TeensySaber V1 hardware.
+//   o Two buttons
+//   o A dotstar pixel blade. (beware: this is experimental and untested!!)
+// If you have a saber similar to this one, make a copy and use the copy.
+
 #ifdef CONFIG_TOP
 
 // V1 electronics

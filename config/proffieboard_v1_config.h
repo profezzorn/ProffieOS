@@ -1,10 +1,12 @@
 // This config file contains all the things should be the same for all
-// V2 teensysaber configurations. In most cases there should be no need
+// V1 proffiboard configurations. In most cases there should be no need
 // to change anything in this file.
 
-#define VERSION_MAJOR 2
-#define VERSION_MINOR 3
+#define VERSION_MAJOR 4
+#define VERSION_MINOR 1
 #define V2
+#define V3
+#define USE_I2S
 #define GYRO_CLASS LSM6DS3H
 
 // Teensy 3.2 pin map:
@@ -20,19 +22,17 @@
 // See the teensy 3.2 pinout diagram for more info: https://www.pjrc.com/teensy/pinout.html
 enum SaberPins {
   // Bottom edge (in pin-out diagram)
-  sdCardSelectPin = 0,            // (See File->Example->SD->ReadWrite for
-                                  // other possible values.)
   amplifierPin = 1,               // Amplifier enable pin (TeensySaber V2)
   motionSensorInterruptPin = 2,   // motion sensor interrupt (TeensySaber V2)
-  bladePowerPin4 = 3,             // Optional power control (TeensySaber V2)
-  bladePowerPin5 = 4,             // Optional power control (TeensySaber V2)
-  bladePowerPin6 = 5,             // Optional power control (TeensySaber V2)
-  freePin6 = 6,
-  spiLedSelect = -1,               // APA102/dotstar chip select
+  bladePowerPin4 = -1,             // Optional power control (TeensySaber V2)
+  bladePowerPin5 = -1,             // Optional power control (TeensySaber V2)
+  bladePowerPin6 = -1,             // Optional power control (TeensySaber V2)
+  bladePowerPin3 = -1,            // blade power control
+  spiLedSelect = -1,              // APA102/dotstar chip select
   spiLedDataOut = 7,
   spiLedClock = 8,
-  freePin9 = 9,                   // FREE
-  freePin10 = 10,                 // FREE
+  bclkPin = 3,                    // BCLK (digital audio)
+  sdCardSelectPin = 10,
   spiDataOut = 11,                // spi out, serial flash, spi led & sd card
   spiDataIn = 12,                 // spi in, serial flash & sd card
 
@@ -42,11 +42,16 @@ enum SaberPins {
   auxPin = 15,                    // AUX button
   powerButtonPin = 16,            // power button
   aux2Pin = 17,                   // AUX2 button
-  i2cDataPin = 18,                // I2C bus, Used by motion sensors
-  i2cClockPin = 19,               // I2C bus, Used by motion sensors
-  bladePin = 20,                  // blade control, either WS2811 or PWM
-  bladeIdentifyPin = 20,          // blade identify input / FoC
-  bladePowerPin3 = 21,            // blade power control
-  bladePowerPin2 = 22,            // blade power control
-  bladePowerPin1 = 23,            // blade power control
+
+  bladePin = 18,                  // blade control, either WS2811 or PWM
+  bladeIdentifyPin = 19,          // blade identify input / FoC
+
+  i2cDataPin = 20,                // I2C bus, Used by motion sensors
+  i2cClockPin = 21,               // I2C bus, Used by motion sensors
+
+  txd0Pin = 5,                   // TXD0 (digital audio)
+  lrclkPin = 2,                  // LRCLK (digital audio)
+
+  bladePowerPin1 = 38,             // blade power control
+  bladePowerPin2 = 26,            // blade power control
 };
