@@ -17,7 +17,6 @@ public:
   void run(BladeBase* blade) override {
     base_.run(blade);
     int num_leds = blade->num_leds();
-    bool allow_disable = true;
     for (int i = 0; i < num_leds; i++) {
       OverDriveColor c = base_.getColor(i);
       if (c.overdrive) {
@@ -25,10 +24,7 @@ public:
       } else {
          blade->set(i, c.c);
       }
-      if (c.c.r || c.c.g || c.c.b) allow_disable = false;
     }
-    if (allow_disable)
-      blade->allow_disable();
   }
 private:
   T base_;
