@@ -173,7 +173,8 @@ public:
   }
   void Skip(int n) { Seek(Tell() + n); }
   void Rewind() { Seek(0); }
-  
+
+private:
   enum {
 #ifdef ENABLE_SD
     TYPE_SD,
