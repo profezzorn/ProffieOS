@@ -21,11 +21,11 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "config/default_v3_config.h"
+#define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
-#define CONFIG_FILE "config/owk_v2_config.h"
+// #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
 // #define CONFIG_FILE "config/new_config.h"
@@ -470,7 +470,7 @@ size_t WhatUnit(class BufferedWavPlayer* player) {
 VolumeOverlay<AudioSplicer> audio_splicer;
 
 void SetupStandardAudioLow() {
-    for (size_t i = 0; i < NELEM(wav_players); i++) {
+  for (size_t i = 0; i < NELEM(wav_players); i++) {
     dynamic_mixer.streams_[i] = wav_players + i;
     wav_players[i].reset_volume();
   }
