@@ -65,6 +65,7 @@ struct ConfigFile {
 
   void Read(FileReader* f) {
     SetVariable("=", 0.0);  // This resets all variables.
+    if (!f || !f->IsOpen()) return;
     for (; f->Available(); skipline(f)) {
       char variable[33];
       variable[0] = 0;
@@ -99,10 +100,9 @@ struct ConfigFile {
 
   void Read(const char *filename) {
     FileReader f;
-    if (f.Open(filename)) {
-      Read(&f);
-      f.Close();
-    }
+    f.Open(filename);
+    Read(&f);
+    f.Close();
   }
 
 #define CONFIG_VARIABLE(X, DEF) do {            \

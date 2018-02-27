@@ -25,7 +25,7 @@ public:
       } else {
          blade->set(i, c.c);
       }
-      if (c.c.r || c.c.g || c.c.b) allow_disable = true;
+      if (c.c.r || c.c.g || c.c.b) allow_disable = false;
     }
     if (allow_disable)
       blade->allow_disable();
