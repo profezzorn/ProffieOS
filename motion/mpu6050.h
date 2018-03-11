@@ -98,7 +98,7 @@ public:
     WHO_AM_I           = 0x75,   // R
   };
 
-  MPU6050() : I2CDevice(0x86) {}
+  MPU6050() : I2CDevice(0x68) {}
 
   void Loop() override {
     STATE_MACHINE_BEGIN();
@@ -114,9 +114,10 @@ public:
       writeByte(SMPLRT_DIV, 0); // sample rate = 1khz / 1
       writeByte(GYRO_CONFIG, 3 << 3); // 2000 degrees / s
       writeByte(ACCEL_CONFIG, 1 << 3); // 4g range
+      writeByte(INT_PIN_CFG, 0x20);  // interrupt on data available
       writeByte(INT_ENABLE, 1); // enable data ready interrupt
 
-      if (readByte(WHO_AM_I) == 0x86) {
+      if (readByte(WHO_AM_I) == 0x68) {
         STDOUT.println("done.");
       } else {
         STDOUT.println("failed.");
