@@ -818,41 +818,6 @@ struct BladeConfig {
 #undef CONFIG_PRESETS
 
 
-#if 0
-class Script : Looper, StateMachine {
-public:
-  const char* name() override { return "Script"; }
-  void Loop() override {
-    STATE_MACHINE_BEGIN();
-    SLEEP(2000);
-    CommandParser::DoParse("on", NULL);
-    SLEEP(2000);
-    CommandParser::DoParse("batt", NULL);
-    SLEEP(2000);
-    CommandParser::DoParse("play", "cantina.wav");
-#if 0    
-    while (true) {
-      if (dac.isSilent()) {
-        SLEEP(2000);
-      } else {
-        CommandParser::DoParse("clash", NULL);
-        STDOUT.print("alloced: ");
-        STDOUT.println(mallinfo().uordblks);
-        SLEEP(100);
-      }
-    }
-#endif    
-    STATE_MACHINE_END();
-  }
-  void Run() {
-    state_machine_.reset_state_machine();
-    run_ = true;
-  }
-  bool run_ = false;
-};
-
-Script script;
-#endif
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -1709,6 +1674,52 @@ private:
 
 Saber saber;
 
+#if 0
+class Script : Looper, StateMachine {
+public:
+  const char* name() override { return "Script"; }
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+    SLEEP(2000);
+    if (fabs(saber.id() - 125812.5f) > 22687.0f) {
+      STDOUT.println("ID IS WRONG!!!");
+      beeper.Beep(0.5, 2000.0);
+      SLEEP(1000);
+      beeper.Beep(0.5, 2000.0);
+      SLEEP(1000);
+      beeper.Beep(0.5, 2000.0);
+      SLEEP(1000);
+    }
+    CommandParser::DoParse("on", NULL);
+    SLEEP(1000);
+    CommandParser::DoParse("batt", NULL);
+    SLEEP(2000);
+    CommandParser::DoParse("play", "cantina.wav");
+#if 0    
+    while (true) {
+      if (dac.isSilent()) {
+        SLEEP(2000);
+      } else {
+        CommandParser::DoParse("clash", NULL);
+        STDOUT.print("alloced: ");
+        STDOUT.println(mallinfo().uordblks);
+        SLEEP(100);
+      }
+    }
+#endif    
+    STATE_MACHINE_END();
+  }
+  void Run() {
+    state_machine_.reset_state_machine();
+    run_ = true;
+  }
+  bool run_ = false;
+};
+
+Script script;
+#endif
+
+
 #include "buttons/latching_button.h"
 #include "buttons/button.h"
 #include "buttons/touchbutton.h"
@@ -1721,7 +1732,6 @@ class Commands : public CommandParser {
  public:
   bool Parse(const char* cmd, const char* e) override {
     if (!strcmp(cmd, "help")) {
-      // STDOUT.println("  red, green, blue, yellow, cyan, magenta, white");
       CommandParser::DoHelp();
       return true;
     }
@@ -2052,7 +2062,7 @@ public:
 #if 0
         if (monitor.IsMonitoring(Monitoring::MonitorSerial) &&
             default_output != &SA::stream()) {
-          default_output->print("SER: ");
+	  default_output->print("SER: ");
           default_output->println(c, HEX);
         }
 #endif  
@@ -2092,7 +2102,7 @@ public:
   }
 
   void ParseLine() {
-    if (len_ == 0 || len_ == (int)sizeof(cmd_)) return;
+    if (len_ == 0) return;
     while (len_ > 0 && (cmd_[len_-1] == '\r' || cmd_[len_-1] == ' ')) {
       len_--;
       cmd_[len_] = 0;
