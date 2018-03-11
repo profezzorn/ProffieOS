@@ -32,6 +32,10 @@ test:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_v3_config.h\\\"
 	$(MAKE) clean
 
-export: test
+# Check that there are no uncommitted changes
+cvstest:
+	if [ -d CVS ]; then cvs diff >/dev/null 2>&1; fi
+
+export: cvstest test
 	cd .. && zip -9 lightsaber/lightsaber-`sed <lightsaber/lightsaber.ino -n 's@.*lightsaber.ino,v \([^ ]*\) .*$$@\1@gp'`.zip `for x in $(SOURCE_FILES) $(CONFIG_FILES) $(MAKEFILES); do echo lightsaber/$$x ; done`
 
