@@ -95,17 +95,39 @@ public:                                                         \
   SABERFUN(EndLockup, (), ());                  \
   SABERFUN(Speedup, (), ());                    \
                                                 \
-  /* Swing rotation speed degrees per second */ \
-  SABERFUN(Motion, (const Vec3& gyro), (gyro)); \
-  /* Accelertation in g */                      \
-  SABERFUN(Accel, (const Vec3& accel), (accel));\
-                                                \
   SABERFUN(Top, (), ());                        \
   SABERFUN(IsOn, (bool* on), (on));             \
   SABERFUN(Message, (const char* msg), (msg));
 
   SABERBASEFUNCTIONS();
 #undef SABERFUN
+
+  /* Swing rotation speed degrees per second */
+  static void DoMotion(Vec3 gyro) {
+#ifdef INVERT_ORIENTATION
+    gyro.x = -gyro.x;
+#endif
+    CHECK_LL(SaberBase, saberbases, next_saber_);
+    for (SaberBase *p = saberbases; p; p = p->next_saber_) {
+      p->SB_Motion(gyro);
+    }
+    CHECK_LL(SaberBase, saberbases, next_saber_);
+  }
+  virtual void SB_Motion(const Vec3& gyro) {}
+
+  /* Accelertation in g */
+  static void DoAccel(Vec3 gyro) {
+#ifdef INVERT_ORIENTATION
+    gyro.x = -gyro.x;
+#endif
+    CHECK_LL(SaberBase, saberbases, next_saber_);
+    for (SaberBase *p = saberbases; p; p = p->next_saber_) {
+      p->SB_Accel(gyro);
+    }
+    CHECK_LL(SaberBase, saberbases, next_saber_);
+  }
+  virtual void SB_Accel(const Vec3& gyro) {}
+
 
 private:
   static size_t num_blasts_;
