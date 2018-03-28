@@ -72,6 +72,7 @@ private:
   size_t pos_;
 };
 
+// TODO: Make proper assignment or use std::variant instead.
 class FileReader {
 public:
   FileReader() : type_(TYPE_MEM) {
@@ -112,7 +113,13 @@ public:
     return false;
   };
   void Close() {
-    RUN_ALL_VOID(close())
+    switch (type_) {
+      IF_SD(case TYPE_SD: return sd_file_.close(); sd_file_.~File();)
+      IF_SF(case TYPE_SF: return sf_file_.close(); sf_file_.~SerialFlashFile();)
+      IF_MEM(case TYPE_MEM: return mem_file_.close(); mem_file_.~MemFile();)
+    }
+    type_ = TYPE_MEM;
+    mem_file_ = MemFile();
   }
   int Read(uint8_t* dest, int bytes) {
     RUN_ALL(read(dest, bytes))
