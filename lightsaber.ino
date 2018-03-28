@@ -28,7 +28,7 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/new_config.h"
+// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -139,6 +139,7 @@
 #include <stm32l4_sai.h>
 #include <stm32l4_dma.h>
 #include <stm32l4_system.h>
+#include <arm_math.h>
 #define DMAChannel stm32l4_dma_t
 #define DMAMEM
 #define NVIC_SET_PRIORITY(X,Y) NVIC_SetPriority((X), (IRQn_Type)(Y))
@@ -1654,6 +1655,7 @@ public:
   void Help() override {
     STDOUT.println(" clash - trigger a clash");
     STDOUT.println(" on/off - turn saber on/off");
+    STDOUT.println(" blast - tricker a blast");
     STDOUT.println(" lock - begin/end lockup");
 #ifdef ENABLE_AUDIO
     STDOUT.println(" pwd - print current directory");
@@ -1949,7 +1951,7 @@ class Commands : public CommandParser {
       }
 #else
       if (!(DWT->CTRL & DWT_CTRL_CYCCNTENA_Msk)) {
-        CoreDebug->DEMCR |= DEMCR_TRCENA_Msk;
+        CoreDebug->DEMCR |= 1<<24; // DEMCR_TRCENA_Msk;
         DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
         STDOUT.println("Cycle counting enabled, top will work next time.");
         return true;
@@ -2419,8 +2421,6 @@ Amplifier amplifier;
 #endif
 
 void setup() {
-
-  // Enable cycle counting
 #if 0
 //  pinMode(bladePin, OUTPUT);
   pinMode(bladePowerPin1, OUTPUT);
