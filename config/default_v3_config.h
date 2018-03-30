@@ -22,7 +22,7 @@ const unsigned int maxLedsPerStrip = 144;
 
 #ifdef CONFIG_PRESETS
 Preset presets[] = {
-  { "fontdir", "tracks/mars.wav",
+  { "TeensySF", "tracks/mars.wav",
     StyleNormalPtr<CYAN, WHITE, 300, 800>(), "cyan"},
   { "TeensySF", "tracks/mars.wav",
     StylePtr<InOutSparkTip<EASYBLADE(BLUE, WHITE), 300, 800> >(), "blue"},
