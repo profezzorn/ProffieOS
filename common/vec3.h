@@ -7,20 +7,35 @@ public:
   Vec3(){}
   Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
 
-  static Vec3 MSB(const unsigned char* msb_data, float mul) {
+  enum ByteOrder {
+    BYTEORDER_MSB = 0,
+    BYTEORDER_LSB = 1,
+  };
+  enum Orientation {
+    ORIENTATION_NORMAL = 0x00,
+    ORIENTATION_FETS_TOWARDS_BLADE = 0x00,
+    ORIENTATION_USB_TOWARDS_BLADE = 0x10,
+    ORIENTATION_SDA_TOWARDS_BLADE = 0x02,
+    ORIENTATION_SERIAL_TOWARDS_BLADE = 0x12,
+    ORIENTATION_TOP_TOWARDS_BLADE = 0x04,
+    ORIENTATION_BOTTOM_TOWARDS_BLADE = 0x14,
+  };
+  static int16_t GetShort(const unsigned char *data, int LSB) {
+    return (data[LSB] << 8) | data[1-LSB];
+  }
+  static Vec3 FromData(const unsigned char* data, float mul, int LSB,
+		       Orientation ORIENTATION) {
     Vec3 ret;
-    ret.x = mul * (int16_t)((msb_data[0] << 8) | (msb_data[1]));
-    ret.y = mul * (int16_t)((msb_data[2] << 8) | (msb_data[3]));
-    ret.z = mul * (int16_t)((msb_data[4] << 8) | (msb_data[5]));
+    ret.x = mul * GetShort(data + (0 + (ORIENTATION & 7)) % 6, LSB);
+    ret.y = mul * GetShort(data + (2 + (ORIENTATION & 7)) % 6, LSB);
+    ret.z = mul * GetShort(data + (4 + (ORIENTATION & 7)) % 6, LSB);
+    if (ORIENTATION & 0x10) {
+      ret.x = - ret.x;
+      ret.y = - ret.y;
+    }
     return ret;
   }
-  static Vec3 LSB(const unsigned char* lsb_data, float mul) {
-    Vec3 ret;
-    ret.x = mul * (int16_t)((lsb_data[1] << 8) | (lsb_data[0]));
-    ret.y = mul * (int16_t)((lsb_data[3] << 8) | (lsb_data[2]));
-    ret.z = mul * (int16_t)((lsb_data[5] << 8) | (lsb_data[4]));
-    return ret;
-  }
+
   Vec3 operator-(const Vec3& o) const {
     return Vec3(x - o.x, y - o.y, z - o.z);
   }

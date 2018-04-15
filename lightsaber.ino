@@ -39,7 +39,7 @@
 #include CONFIG_FILE
 #undef CONFIG_TOP
 
-// #define ENABLE_DEBUG
+#define ENABLE_DEBUG
 
 //
 // OVERVIEW
@@ -1873,6 +1873,30 @@ class Commands : public CommandParser {
       return true;
     }
 #endif
+    if (!strcmp(cmd, "high") && e) {
+      digitalWrite(atoi(e), HIGH);
+      STDOUT.println("Ok.");
+      return true;
+    }
+    if (!strcmp(cmd, "low") && e) {
+      digitalWrite(atoi(e), LOW);
+      STDOUT.println("Ok.");
+      return true;
+    }
+#if VERSION_MAJOR >= 4
+    if (!strcmp(cmd, "booster")) {
+       if (!strcmp(e, "on")) {
+         digitalWrite(boosterPin, HIGH);
+         STDOUT.println("Booster on.");
+         return true;
+       }
+       if (!strcmp(e, "off")) {
+         digitalWrite(boosterPin, LOW);
+         STDOUT.println("Booster off.");
+         return true;
+       }
+    }
+#endif
 #ifdef ENABLE_AUDIO
 #if 0
     if (!strcmp(cmd, "ton")) {
@@ -2018,7 +2042,10 @@ Commands commands;
 
 class SerialAdapter {
 public:
-  static void begin() { Serial.begin(115200); }
+  static void begin() {
+    // Already configured in Setup().
+    // Serial.begin(115200);
+  }
   static bool Connected() { return !!Serial; }
   static bool AlwaysConnected() { return false; }
   static Stream& stream() { return Serial; }
@@ -2046,6 +2073,7 @@ public:
   const char* name() override { return "Parser"; }
 
   void Setup() override {
+    ScopedPinTracer tracer(17);
     SA::begin();
   }
 
@@ -2254,6 +2282,11 @@ SSD1306 display;
 #endif
 
 #ifdef ENABLE_MOTION
+
+#ifndef ORIENTATION
+#define ORIENTATION ORIENTATION_NORMAL
+#endif
+
 #include "motion/mpu6050.h"
 #include "motion/lsm6ds3h.h"
 #include "motion/fxos8700.h"
@@ -2439,8 +2472,11 @@ void setup() {
   digitalWrite(bladePowerPin6, LOW);
 #endif
 #endif
-
   Serial.begin(9600);
+#if VERSION_MAJOR >= 4
+  Serial.blockOnOverrun(false);
+#endif
+    
   // Wait for all voltages to settle.
   // Accumulate some entrypy while we wait.
   uint32_t now = millis();
@@ -2459,8 +2495,9 @@ void setup() {
     STDOUT.println("Sdcard found..");
   }
 #endif
-  // Time to identify the blade.
+
   Looper::DoSetup();
+  // Time to identify the blade.
   saber.FindBlade();
   SaberBase::DoBoot();
 #if defined(ENABLE_SD) && defined(ENABLE_AUDIO)
@@ -2530,6 +2567,13 @@ extern "C" void startup_early_hook(void) {
   SETUP_PIN(4);
   SETUP_PIN(5);
 #endif
+
+#ifdef VERSION_MAJOR >= 4
+  // TODO enable/disable as needed
+  digitalWrite(boosterPin, HIGH);
+#endif
+
+
 }
 #endif
 

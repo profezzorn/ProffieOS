@@ -69,7 +69,10 @@ public:
         if (status) {
           // gyroscope data available
           if (readBytes(OUT_X_MSB, databuffer, 6) == 6) {
-            SaberBase::DoMotion(Vec3::MSB(databuffer, 2000.0 / 32768.0));
+            SaberBase::DoMotion(Vec3::FromData(databuffer,
+					       2000.0 / 32768.0,
+					       Vec3::BYTEORDER_MSB,
+					       Vec3::ORIENTATION));
           }
         }
       }
