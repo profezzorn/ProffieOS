@@ -1,41 +1,32 @@
 #ifndef STYLES_FIRE_H
 #define STYLES_FIRE_H
 
+#include "style_ptr.h"
+
+template<int INTENSITY_BASE, int INTENSITY_RAND, int COOLING>
 struct FireConfig {
-  FireConfig(int b, int r, int c) : intensity_base(b),
-                                     intensity_rand(r),
-                                     cooling(c) {}
-  int intensity_base;
-  int intensity_rand;
-  int cooling;
+  static constexpr int Cooling = COOLING;
+  int intensity_base = INTENSITY_BASE;
+  int intensity_rand = INTENSITY_RAND;
+  int cooling = COOLING;
 };
 
-// Fire-style
-class StyleFire : public BladeStyle {
+template<class COLOR1, class COLOR2,
+  int DELAY = 0, int SPEED = 2,
+  class NORM = FireConfig<0,2000,5>,
+  class CLASH = FireConfig<3000,0,0>,
+  class LOCK = FireConfig<0, 5000, 10>,
+  class OFF = FireConfig<0, 0, NORM::Cooling>>
+class StyleFire {
 public:
-  StyleFire(Color8 c1,
-             Color8 c2,
-             uint32_t delay,
-             uint32_t speed,
-             FireConfig normal,
-             FireConfig clash,
-             FireConfig lockup) :
-    c1_(c1), c2_(c2),
-    delay_(delay),
-    speed_(speed),
-    normal_(normal),
-    clash_(clash),
-    lockup_(lockup) {
+  StyleFire() {
+    for (size_t i = 0; i < NELEM(heat_); i++) heat_[i] = 0;
   }
   enum OnState {
     STATE_OFF = 0,
     STATE_ACTIVATING,
     STATE_ON,
   };
-  void activate() override {
-    STDOUT.println("Fire Style");
-    for (size_t i = 0; i < NELEM(heat_); i++) heat_[i] = 0;
-  }
   bool On(BladeBase* blade) {
     if (!blade->is_on()) {
       state_ = STATE_OFF;
@@ -46,104 +37,88 @@ public:
          state_ = STATE_ACTIVATING;
          on_time_ = millis();
       case STATE_ACTIVATING:
-         if (millis() - on_time_ < delay_) return false;
+         if (millis() - on_time_ < DELAY) return false;
          state_ = STATE_ON;
       case STATE_ON:
          return true;
     }
   }
-  void run(BladeBase* blade) override {
+  void run(BladeBase* blade) {
+    c1_.run(blade);
+    c2_.run(blade);
     uint32_t m = millis();
-    int num_leds = blade->num_leds();
+    num_leds_ = blade->num_leds();
     if (m - last_update_ >= 10) {
       last_update_ = m;
 
-      FireConfig config(0,0,0);
+      OFF config;
       if (blade->clash()) {
-         config = clash_;
+	config = CLASH();
       } else if (On(blade)) {
         if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
-          config = normal_;
+          config = NORM();
         } else {
-          config = lockup_;
+          config = LOCK();
         }
-      } else {
-         config = normal_;
-         config.intensity_base = 0;
-         config.intensity_rand = 0;
       }
       // Note heat_[0] is tip of blade
-      for (int i = 0; i < speed_; i++) {
-         heat_[num_leds + i] = config.intensity_base +
+      for (int i = 0; i < SPEED; i++) {
+         heat_[num_leds_ + i] = config.intensity_base +
            random(random(random(config.intensity_rand)));
       }
-      for (int i = 0; i < num_leds; i++) {
-         int x = (heat_[i+speed_-1] * 3  +
-                  heat_[i+speed_] * 10 +
-                  heat_[i+speed_+1] * 3) >> 4;
+      int zero = true;
+      for (int i = 0; i < num_leds_; i++) {
+         int x = (heat_[i+SPEED-1] * 3  +
+                  heat_[i+SPEED] * 10 +
+                  heat_[i+SPEED+1] * 3) >> 4;
          heat_[i] = clampi32(x - random(config.cooling), 0, 65535);
+	 if (heat_[i]) zero = false;
       }
+      if (zero) blade->allow_disable();
     }
-    bool zero = true;
-    for (int i = 0; i < num_leds; i++) {
-      int h = heat_[num_leds - 1 - i];
-      Color8 c;
-      if (h < 256) {
-         c = Color8().mix(c1_, h);
-      } else if (h < 512) {
-         c = c1_.mix(c2_, h - 256);
-      } else if (h < 768) {
-         c = c2_.mix(Color8(255,255,255), h - 512);
-      } else {
-         c = Color8(255,255,255);
-      }
-      if (h) zero = false;
-      blade->set(i, c);
+  }
+
+  OverDriveColor getColor(int led) {
+    int h = heat_[num_leds_ - 1 - led];
+    OverDriveColor c;
+    if (h < 256) {
+      c.c = Color8().mix(c1_.getColor(led).c, h);
+    } else if (h < 512) {
+      c.c = c1_.mix(c2_.getColor(led).c, h - 256);
+    } else if (h < 768) {
+      c.c = c2_.mix(Color8(255,255,255), h - 512);
+    } else {
+      c.c = Color8(255,255,255);
     }
-    if (zero) blade->allow_disable();
+    return c;
   }
 
 private:
+  COLOR1 c1_;
+  COLOR2 c2_;
+  int num_leds_;
   uint32_t last_update_;
   unsigned short heat_[maxLedsPerStrip + 13];
-  Color8 c1_, c2_;
-  uint32_t delay_;
-  OnState state_;
+  OnState state_ = STATE_OFF;
   uint32_t on_time_;
-  int speed_;
-  FireConfig normal_;
-  FireConfig clash_;
-  FireConfig lockup_;
 };
 
-template<class COLOR1, class COLOR2,
-          int DELAY=0, int SPEED=2,
-          int NORM_INT_BASE = 0, int NORM_INT_RAND=2000, int NORM_COOLING = 5,
-          int CLSH_INT_BASE = 3000, int CLSH_INT_RAND=0, int CLSH_COOLING = 0,
-          int LOCK_INT_BASE = 0, int LOCK_INT_RAND=5000, int LOCK_COOLING = 10>
-class FireFactory : public StyleFactory {
-  BladeStyle* make() override {
-    return new StyleFire(
-      COLOR1::color().dither(0), COLOR2::color().dither(0),
-      DELAY, SPEED,
-      FireConfig(NORM_INT_BASE, NORM_INT_RAND, NORM_COOLING),
-      FireConfig(CLSH_INT_BASE, CLSH_INT_RAND, CLSH_COOLING),
-      FireConfig(LOCK_INT_BASE, LOCK_INT_RAND, LOCK_COOLING));
-  }
-};
 
 // Note: BLADE_NUM is is now irrelevant.
 template<class COLOR1, class COLOR2,
           int BLADE_NUM=0, int DELAY=0, int SPEED=2,
           int NORM_INT_BASE = 0, int NORM_INT_RAND=2000, int NORM_COOLING = 5,
           int CLSH_INT_BASE = 3000, int CLSH_INT_RAND=0, int CLSH_COOLING = 0,
-          int LOCK_INT_BASE = 0, int LOCK_INT_RAND=5000, int LOCK_COOLING = 10>
-class StyleFactory* StyleFirePtr() {
-  static FireFactory<COLOR1, COLOR2, DELAY, SPEED,
-          NORM_INT_BASE, NORM_INT_RAND, NORM_COOLING,
-          CLSH_INT_BASE, CLSH_INT_RAND, CLSH_COOLING,
-          LOCK_INT_BASE, LOCK_INT_RAND, LOCK_COOLING> factory;
+          int LOCK_INT_BASE = 0, int LOCK_INT_RAND=5000, int LOCK_COOLING = 10,
+          int OFF_INT_BASE = 0, int OFF_INT_RAND=0, int OFF_COOLING = 10>
+StyleAllocator StyleFirePtr() {
+  static StyleFactoryImpl<Style<StyleFire<COLOR1, COLOR2, DELAY, SPEED,
+  FireConfig<NORM_INT_BASE, NORM_INT_RAND, NORM_COOLING>,
+  FireConfig<CLSH_INT_BASE, CLSH_INT_RAND, CLSH_COOLING>,
+  FireConfig<LOCK_INT_BASE, LOCK_INT_RAND, LOCK_COOLING>,
+  FireConfig<OFF_INT_BASE, OFF_INT_RAND, OFF_COOLING>>>> factory;
   return &factory;
 }
+
 
 #endif
