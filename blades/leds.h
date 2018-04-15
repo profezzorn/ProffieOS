@@ -35,6 +35,7 @@ struct CreeXPE2WhiteTemplate {
 
 using CreeXPE2White = CreeXPE2WhiteTemplate<>;
 
+// Note, also good for royal blue.
 template<int milliohms = 240>
 struct CreeXPE2BlueTemplate {
   static constexpr float MaxAmps = 1.0;
