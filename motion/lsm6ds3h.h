@@ -133,15 +133,12 @@ public:
           delay(20);
           break;
         }
-        if (status_reg & 0x1) {
-          // Temp data available
-          int16_t temp_data;
-          if (readBytes(OUT_TEMP_L, (uint8_t*)&temp_data, 2) == 2) {
-            float temp = 25.0f + temp_data * (1.0f / 16.0f);
-            if (monitor.ShouldPrint(Monitoring::MonitorTemp)) {
-              STDOUT.print("TEMP: ");
-              STDOUT.println(temp);
-            }
+	// Do the accel data first to make clashes as fast as possible.
+        if (status_reg & 0x4) {
+          // accel data available
+          if (readBytes(OUTX_L_XL, databuffer, 6) == 6) {
+            SaberBase::DoAccel(
+              Vec3::LSB(databuffer, 4.0 / 32768.0));  // 4 g range
           }
         }
         if (status_reg & 0x2) {
@@ -151,11 +148,15 @@ public:
               Vec3::LSB(databuffer, 2000.0 / 32768.0)); // 2000 dps
           }
         }
-        if (status_reg & 0x4) {
-          // accel data available
-          if (readBytes(OUTX_L_XL, databuffer, 6) == 6) {
-            SaberBase::DoAccel(
-              Vec3::LSB(databuffer, 4.0 / 32768.0));  // 4 g range
+        if (status_reg & 0x1) {
+          // Temp data available
+          int16_t temp_data;
+          if (readBytes(OUT_TEMP_L, (uint8_t*)&temp_data, 2) == 2) {
+            float temp = 25.0f + temp_data * (1.0f / 16.0f);
+            if (monitor.ShouldPrint(Monitoring::MonitorTemp)) {
+              STDOUT.print("TEMP: ");
+              STDOUT.println(temp);
+            }
           }
         }
       }

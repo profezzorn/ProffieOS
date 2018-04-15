@@ -134,16 +134,17 @@ public:
           break;
         }
         if (status_reg & 0x1) {
-          // gyroscope data available
-          if (readBytes(GYRO_XOUT_H, databuffer, 6) == 6) {
-            SaberBase::DoMotion(
-              Vec3::MSB(databuffer, 2000.0 / 32768.0)); // 2000 dps
-          }
-
+	// Do the accel data first to make clashes as fast as possible.
           // accel data available
           if (readBytes(ACCEL_XOUT_H, databuffer, 6) == 6) {
             SaberBase::DoAccel(
               Vec3::MSB(databuffer, 4.0 / 32768.0));  // 4 g range
+          }
+
+          // gyroscope data available
+          if (readBytes(GYRO_XOUT_H, databuffer, 6) == 6) {
+            SaberBase::DoMotion(
+              Vec3::MSB(databuffer, 2000.0 / 32768.0)); // 2000 dps
           }
 
           // Temp data available
