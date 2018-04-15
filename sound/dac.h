@@ -191,7 +191,6 @@ public:
     {
       SAIx->CR2 = SAI_xCR2_FTH_1;
       SAIx->CR1 |= SAI_xCR1_SAIEN;
-      STDOUT.println("ENABLING SAI");
     }
 
 #endif
