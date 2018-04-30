@@ -3,13 +3,24 @@
 
 #include "style_ptr.h"
 
+struct FireConfiguration {
+  int intensity_base;
+  int intensity_rand;
+  int cooling;
+};
+
 template<int INTENSITY_BASE, int INTENSITY_RAND, int COOLING>
 struct FireConfig {
   static constexpr int Cooling = COOLING;
-  int intensity_base = INTENSITY_BASE;
-  int intensity_rand = INTENSITY_RAND;
-  int cooling = COOLING;
+  static FireConfiguration get() {
+    FireConfiguration ret;
+    ret.intensity_base = INTENSITY_BASE;
+    ret.intensity_rand = INTENSITY_RAND;
+    ret.cooling = COOLING;
+    return ret;
+  }
 };
+
 
 template<class COLOR1, class COLOR2,
   int DELAY = 0, int SPEED = 2,
@@ -51,14 +62,14 @@ public:
     if (m - last_update_ >= 10) {
       last_update_ = m;
 
-      OFF config;
+      FireConfiguration config = OFF::get();
       if (blade->clash()) {
-	config = CLASH();
+	config = CLASH::get();
       } else if (On(blade)) {
         if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
-          config = NORM();
+          config = NORM::get();
         } else {
-          config = LOCK();
+          config = LOCK::get();
         }
       }
       // Note heat_[0] is tip of blade
@@ -82,13 +93,13 @@ public:
     int h = heat_[num_leds_ - 1 - led];
     OverDriveColor c;
     if (h < 256) {
-      c.c = Color8().mix(c1_.getColor(led).c, h);
+      c.c = Color16().mix(c1_.getColor(led).c, h);
     } else if (h < 512) {
-      c.c = c1_.mix(c2_.getColor(led).c, h - 256);
+      c.c = c1_.getColor(led).c.mix(c2_.getColor(led).c, h - 256);
     } else if (h < 768) {
-      c.c = c2_.mix(Color8(255,255,255), h - 512);
+      c.c = c2_.getColor(led).c.mix(Color16(65535,65535,65535), h - 512);
     } else {
-      c.c = Color8(255,255,255);
+      c.c = Color16(65535, 65535, 65535);
     }
     return c;
   }

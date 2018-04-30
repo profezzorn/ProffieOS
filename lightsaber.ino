@@ -21,14 +21,14 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_v3_config.h"
+// #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -661,6 +661,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #define StyleAllocator class StyleFactory*
 
 #include "styles/rgb.h"
+#include "styles/rgb_arg.h"
 #include "styles/charging.h"
 #include "styles/fire.h"
 #include "styles/gradient.h"
@@ -690,6 +691,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/ifon.h"
 #include "functions/change_slowly.h"
 #include "functions/int.h"
+#include "functions/int_arg.h"
 #include "functions/sin.h"
 #include "functions/scale.h"
 
@@ -1724,7 +1726,11 @@ Script script;
 
 #include "buttons/latching_button.h"
 #include "buttons/button.h"
+#ifdef TEENSYDUINO
 #include "buttons/touchbutton.h"
+#else
+#include "buttons/stm32l4_touchbutton.h"
+#endif
 
 #define CONFIG_BUTTONS
 #include CONFIG_FILE
@@ -2474,6 +2480,7 @@ void setup() {
 #endif
   Serial.begin(9600);
 #if VERSION_MAJOR >= 4
+  // TODO: Figure out if we need this.
   Serial.blockOnOverrun(false);
 #endif
     

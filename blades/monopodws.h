@@ -171,7 +171,7 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
   int t0h = WS2811_TIMING_T0H;
   int t1h = WS2811_TIMING_T1H;
 
-  frameSetDelay = 50;
+  frameSetDelay = 300;
   switch (params & 0xF0) {
     case WS2811_400kHz:
       frequency = 400000;
@@ -183,7 +183,6 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
 
     case WS2813_800kHz:
       frequency = 740000;
-      frameSetDelay = 300;
       break;
 
     case WS2811_580kHz:

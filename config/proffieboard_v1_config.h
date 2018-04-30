@@ -9,49 +9,52 @@
 #define USE_I2S
 #define GYRO_CLASS LSM6DS3H
 
-// Teensy 3.2 pin map:
-// A lot of these can be changed, but be careful, because:
-//   o The pins used by the prop shield cannot be easily changed.
-//   o Pins that are going to control normal LEDs (not neopixels) need PWM capability,
-//     and not all teensy pins can do PWM.
-//   o Touch input is not available on all pins.
-//   o Sdcard chip select pin depends on what shield you use.
-//   o Battery level and blade identification needs analog input, which is not possible
-//     on all pins.
-//
-// See the teensy 3.2 pinout diagram for more info: https://www.pjrc.com/teensy/pinout.html
+// Proffieboard pin map
 enum SaberPins {
-  // Bottom edge (in pin-out diagram)
-  amplifierPin = 1,               // Amplifier enable pin (TeensySaber V2)
-  motionSensorInterruptPin = 2,   // motion sensor interrupt (TeensySaber V2)
-  bladePowerPin4 = -1,             // Optional power control (TeensySaber V2)
-  bladePowerPin5 = -1,             // Optional power control (TeensySaber V2)
-  bladePowerPin6 = -1,             // Optional power control (TeensySaber V2)
-  bladePowerPin3 = -1,            // blade power control
+  // I2S (fixed)
+  bclkPin = 3,                    // BCLK (digital audio)  PB13
+  txd0Pin = 5,                   // TXD0 (digital audio)   PB15
+  lrclkPin = 2,                  // LRCLK (digital audio)  PB12
+
+  // I2C (fixed)
+  i2cDataPin = 20,                // I2C bus, Used by motion sensors  PB7
+  i2cClockPin = 21,               // I2C bus, Used by motion sensors  PB6
+
+  // Buttons (don't change)
+  powerButtonPin = 21,            // power button  PB6
+  auxPin = 23,                    // AUX button    PB5
+  aux2Pin = 22,                   // AUX2 button   PB4
+
+  // Memory card (fixed)
+  sdCardSelectPin = 10,           // PA8
+  spiDataOut = 11,                // PA7
+  spiDataIn = 12,                 // PA6
+  spiClock = 13,                  // PA1
+
+  // These may be changed
+  amplifierPin = 26,              // Amplifier enable pin
+  boosterPin = 38,                // Booster enable pin
+  motionSensorInterruptPin = 2,   // motion sensor interrupt (TeensySaber V2)   // TODO: is this correct?
+
+  // Not sure if these should be free pins or what...
   spiLedSelect = -1,              // APA102/dotstar chip select
   spiLedDataOut = 7,
   spiLedClock = 8,
-  bclkPin = 3,                    // BCLK (digital audio)
-  sdCardSelectPin = 10,
-  spiDataOut = 11,                // spi out, serial flash, spi led & sd card
-  spiDataIn = 12,                 // spi in, serial flash & sd card
 
-  // Top edge
-  spiClock = 13,                  // spi clock, flash, spi led & sd card
-  batteryLevelPin = 14,           // battery level input
-  auxPin = 15,                    // AUX button
-  powerButtonPin = 16,            // power button
-  aux2Pin = 17,                   // AUX2 button
+  // Neopixel pins
+  bladePin = 16,                  // blade control, either WS2811 or PWM  PA0_TIM2_CH1
+  bladeIdentifyPin = 16,          // blade identify input / FoC
+  blade2Pin = 17,                 // PA3 TIM2 CH4
+  blade3Pin = -1,                 //     TIM2 CH
 
-  bladePin = 18,                  // blade control, either WS2811 or PWM
-  bladeIdentifyPin = 19,          // blade identify input / FoC
+  // Blade power control
+  bladePowerPin1 = 18,            // PB0 TIM1 CH2N
+  bladePowerPin2 = -1,            // TIM1
+  bladePowerPin3 = 14,            // blade power control    NO TIMER AVAILABLE!!!!!
+  bladePowerPin4 = 9,             // blade power control    TIM2 CH3
+  bladePowerPin5 = 15,            // blade power control   TIM2 CH1!!!!! PA5!!!
+  bladePowerPin6 = 24,            // blade power control   TIM2 CH2
 
-  i2cDataPin = 20,                // I2C bus, Used by motion sensors
-  i2cClockPin = 21,               // I2C bus, Used by motion sensors
-
-  txd0Pin = 5,                   // TXD0 (digital audio)
-  lrclkPin = 2,                  // LRCLK (digital audio)
-
-  bladePowerPin1 = 38,             // blade power control
-  bladePowerPin2 = 26,            // blade power control
+  // Analog pins
+  batteryLevelPin = 5,           // battery level input
 };
