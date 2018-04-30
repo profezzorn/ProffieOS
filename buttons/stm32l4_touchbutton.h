@@ -16,7 +16,7 @@ struct TSC_CR_TYPE : public BitField<uint32_t, TSC_CR_TYPE> {
   using SYNC_POL = Field<3, 1>;
   using AM = Field<2, 1>;
   using START = Field<1, 1>;
-  using TSCE = Field<3, 1>;
+  using TSCE = Field<0, 1>;
 };
 
 struct TSC_IER_TYPE : public BitField<uint32_t, TSC_IER_TYPE> {
@@ -131,7 +131,7 @@ protected:
       min_ = min(value, min_);
       max_ = max(value, max_);
     }
-    is_pushed_ = value > threshold_;
+    is_pushed_ = value < threshold_;
   }
 
   
@@ -157,42 +157,54 @@ protected:
 		  TSC_CR_TYPE::MCV(5) |
 		  TSC_CR_TYPE::IODEF(0) |
 		  TSC_CR_TYPE::SYNC_POL(0) |
-		  TSC_CR_TYPE::AM(0));
+		  TSC_CR_TYPE::AM(0) |
+		  TSC_CR_TYPE::TSCE(1));
 
-      // TODO configure pins (cap and sense)
+
+      TSC->IOGCSR.set(TSC_IOGCSR_TYPE::G7E(0) |
+		      TSC_IOGCSR_TYPE::G6E(0) |
+		      TSC_IOGCSR_TYPE::G5E(0) |
+		      TSC_IOGCSR_TYPE::G4E(0) |
+		      TSC_IOGCSR_TYPE::G3E(0) |
+		      TSC_IOGCSR_TYPE::G2E(1) |
+		      TSC_IOGCSR_TYPE::G1E(0));
 
       // Cap pin is always the same for now. (PB7)
       stm32l4_gpio_pin_configure(GPIO_PIN_PB7_TSC_G2_IO4,
 				 (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_OPENDRAIN | GPIO_MODE_ALTERNATE));
-      TSC->IOHCR.set(TSC_IO_TYPE::G2_IO4(1));
+      TSC->IOHCR.set(TSC_IO_TYPE::G2_IO4(0));
       TSC->IOSCR.set(TSC_IO_TYPE::G2_IO4(1));
+//      TSC->IOASCR.set(TSC_IO_TYPE::G2_IO4(1));
 
       switch (pin_) {
 	case 21: // PB6
 	  stm32l4_gpio_pin_configure(GPIO_PIN_PB6_TSC_G2_IO3,
-				     (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_OPENDRAIN | GPIO_MODE_ALTERNATE));
-	  TSC->IOHCR.set(TSC_IO_TYPE::G2_IO3(1));
+				     (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+	  TSC->IOHCR.set(TSC_IO_TYPE::G2_IO3(0));
 	  TSC->IOCCR.set(TSC_IO_TYPE::G2_IO3(1));
+//	  TSC->IOASCR.set(TSC_IO_TYPE::G2_IO3(1));
 	  break;
 
 	case 23: // PB5
 	  stm32l4_gpio_pin_configure(GPIO_PIN_PB5_TSC_G2_IO2,
-				     (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_OPENDRAIN | GPIO_MODE_ALTERNATE));
-	  TSC->IOHCR.set(TSC_IO_TYPE::G2_IO2(1));
+				     (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+	  TSC->IOHCR.set(TSC_IO_TYPE::G2_IO2(0));
 	  TSC->IOCCR.set(TSC_IO_TYPE::G2_IO2(1));
+//	  TSC->IOASCR.set(TSC_IO_TYPE::G2_IO2(1));
 	  break;
 
 	case 22: // PB4
 	  stm32l4_gpio_pin_configure(GPIO_PIN_PB4_TSC_G2_IO1,
-				     (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_OPENDRAIN | GPIO_MODE_ALTERNATE));
-	  TSC->IOHCR.set(TSC_IO_TYPE::G2_IO1(1));
+				     (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+	  TSC->IOHCR.set(TSC_IO_TYPE::G2_IO1(0));
 	  TSC->IOCCR.set(TSC_IO_TYPE::G2_IO1(1));
+//	  TSC->IOASCR.set(TSC_IO_TYPE::G2_IO1(1));
 	  break;
       }
 
       // Discharge
       SLEEP(1);
-     
+
       TSC->CR.set(TSC_CR_TYPE::IODEF(1)); // stop discharge
 
       // Disable interrupts
@@ -207,6 +219,8 @@ protected:
       while (!TSC->ISR.get<TSC_IER_TYPE::EOA>()) YIELD();
 
       if (TSC->ISR.get<TSC_IER_TYPE::MCE>()) {
+	STDOUT.print("Touch error!");
+	SLEEP(100);
 	// Error
       } else {
 	Update(TSC->IOGCR[1]);
@@ -227,7 +241,12 @@ protected:
   int max_ = 0;
   bool is_pushed_ = false;
 
+  TSC_TYPE* TSC_ = (TSC_TYPE*)TSC_BASE;
+  TSC_TypeDef* TSCx_ = (TSC_TypeDef*)TSC_BASE;
+
   StateMachineState state_machine_;
 };
+
+TouchButton* TouchButton::current_button = NULL;
 
 #endif
