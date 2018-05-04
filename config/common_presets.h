@@ -74,10 +74,6 @@ Preset charging_presets[] = {
 // CONFIGURABLE
 // Each line of configuration should be:
 //     { blade id resistor ohms, blade, CONFIGARRAY(array of presets) },
-// Where "blade", can be one of the following:
-//     WS2811BladePtr<number of leds, WS2811 configuration flags>()
-//     SimpleBladePTR<Color of channel 1, color of channel 2, color of channel 3, color of channel 4>()
-// All colors can be specied as three numbers or using one the handy macros above.
 
 BladeConfig blades[] = {
 #ifdef ENABLE_WS2811
