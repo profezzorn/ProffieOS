@@ -141,7 +141,7 @@ WS2811Engine* GetWS2811Engine(int pin) {
 
 class WS2811Pin : public WS2811Client {
 public:
-  enum class Byteorder {
+  enum Byteorder {
     BGR=0x321,
     BRG=0x312,
     GBR=0x231,
@@ -225,6 +225,8 @@ public:
     frame_num_++;
     engine_->show(pin_, num_leds_, frequency_, this);
   }
+
+  int num_leds() const { return num_leds_; }
 
 private:
   void done_callback() override {

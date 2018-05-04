@@ -2,27 +2,31 @@
 #define BLADES_WS2811_BLADE_H
 
 #ifdef ENABLE_WS2811
-#include "monopodws.h"
+#include "stm32l4_ws2811.h"
 
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
 class WS2811_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
 public:
-  WS2811_Blade(int num_leds, uint8_t config, int pin, PowerPinInterface* power) :
+  WS2811_Blade(int num_leds,
+	       int data_pinpin,
+	       int byteorder,
+	       int frequency,
+	       int reset_us,
+	       int t0h_us,
+	       int t1h_us
+	       PowerPinInterface* power) :
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK),
-    num_leds_(num_leds),
-    config_(config),
-    pin_(pin),
     power_(power) {
+    pin_.begin(pin, num_leds, byteorder, frequency, reset_us, t0h_us, t1h_us);
   }
   const char* name() override { return "WS2811_Blade"; }
 
   void Power(bool on) {
     power_->Power(on);
-//    pinMode(bladePin, on ? OUTPUT : INPUT);
     powered_ = on;
     allow_disable_ = false;
   }
@@ -31,17 +35,18 @@ public:
   // you take it out, which also cuts the power.
   void Activate() override {
     STDOUT.print("WS2811 Blade with ");
-    STDOUT.print(num_leds_);
-    STDOUT.println(" leds");
+    STDOUT.print(pin_.num_leds());
+    STDOUT.print(" leds.");
     power_->Init();
     Power(true);
     delay(10);
-    while (monopodws.busy());
-    monopodws.begin(num_leds_, displayMemory, config_, pin_);
-    monopodws.show();  // Make it black
-    monopodws.show();  // Make it black
-    monopodws.show();  // Make it black
-    while (monopodws.busy());
+    pin_.BeginFrame();
+    for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, Color16());
+    pin_.EndFrame();
+    pin_.BeginFrame();
+    pin_.EndFrame();
+    pin_.BeginFrame();
+    pin_.EndFrame();
     CommandParser::Link();
     Looper::Link();
     SaberBase::Link(this);
@@ -55,7 +60,7 @@ public:
     return on_;
   }
   void set(int led, Color16 c) override {
-    monopodws.setPixel(led, c.dither(0));
+    color_buffer[led] = c;
   }
   bool clash() override {
     bool ret = clash_;
@@ -65,7 +70,6 @@ public:
   void allow_disable() override {
     if (!on_) allow_disable_ = true;
   }
-
   // SaberBase implementation.
   void SB_IsOn(bool* on) override {
     if (on_) *on = true;
@@ -121,11 +125,11 @@ protected:
         }
         current_blade = this;
         current_style_->run(this);
-        while (monopodws.busy()) YIELD();
-#if NUM_BLADES > 1
-        monopodws.begin(num_leds_, displayMemory, config_, pin_);
-#endif
-        monopodws.show();
+	while (!pin_.IsReadyForBeginFrame()) YIELD();
+	pin_.BeginFrame();
+	for (int i = 0; i < pin_.num_leds(); i++) pin_.set(i, color_buffer[i]);
+	while (!pin_.IsReadyForEndFrame()) YIELD();
+	pin_.EndFrame();
         loop_counter_.Update();
         current_blade = NULL;
         YIELD();
@@ -134,20 +138,20 @@ protected:
   }
 
 private:
-  int num_leds_;
-  uint8_t config_;
-  uint8_t pin_;
   bool on_ = false;
   bool powered_ = false;
   bool clash_ = false;
   bool allow_disable_ = false;
   LoopCounter loop_counter_;
 
+  static Color16 color_buffer[maxLedsPerStrip];
   static WS2811_Blade* current_blade;
   StateMachineState state_machine_;
   PowerPinInterface* power_;
+  WS2811Pin pin_;
 };
 
+Color16 WS2811_Blade::color_buffer[maxLedsPerStrip];
 WS2811_Blade* WS2811_Blade::current_blade = NULL;
 
 template<int LEDS, int CONFIG, int DATA_PIN = bladePin, class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3> >
