@@ -756,7 +756,11 @@ class NoLED;
 #include "blades/power_pin.h"
 #include "blades/drive_logic.h"
 #include "blades/pwm_pin.h"
+#ifdef TEENSYDUINO
 #include "blades/ws2811_blade.h"
+#else
+#include "blades/stm32l4_ws2811_blade.h"
+#endif
 #include "blades/fastled_blade.h"
 #include "blades/simple_blade.h"
 #include "blades/string_blade.h"
