@@ -4,17 +4,19 @@
 // This class describes a bitfield, for examples of how to use it
 // see ../buttons/stm32l4_touchbutton.h
 
-#ifdef STM32L4
+#ifdef __STM32L4_CMSIS_VERSION
 // TODO: replace atomics with inline code.
-#include <armv7_atomic.h>
+#include <armv7m_atomic.h>
+#define USE_ATOMICS
 #endif
 
 template<typename T, class RegisterClass> 
 struct BitField {
   template<int POS = 0, int BITS = 0>
   struct Field {
-    Field(T v, T m = MASK) : value(v), mask(m) {}
-    static const T MASK = (~(~(T)0) << BITS) << POS;
+    static const T MASK = (~((~(T)0) << BITS)) << POS;
+    Field(T v) : value(v << POS), mask(MASK) {}
+    Field(T v, T m) : value(v), mask(m) {}
     static T get(const BitField& reg) {
       return (reg.value & MASK) >> POS;
     }
@@ -39,10 +41,10 @@ struct BitField {
 
   template<int POS, int BITS>
   T set(const Field<POS, BITS>& v) volatile {
-#ifdef STM32L4
-    armv7_atomic_modify(&reg->value, v.mask, v.value);
+#ifdef USE_ATOMICS
+    armv7m_atomic_modify(&value, v.mask, v.value);
 #else
-    value = (value & v.mask) | v.value;
+    value = (value & ~v.mask) | v.value;
 #endif
   }
   T value;
