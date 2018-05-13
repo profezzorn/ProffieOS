@@ -280,10 +280,9 @@ void MonopodWS2811::begin(uint32_t numPerStrip,
   dma3.source(ones);
   dma3.destination(WS2811_PORT_CLEAR);
   dma3.transferSize(1);
-  dma3.transferCount(bufsize);
+  dma3.transferCount(bufsize + 1);
   dma3.disableOnCompletion();
   dma3.interruptAtCompletion();
-
 
 #if defined(__MK20DX128__)
   // route the edge detect interrupts to trigger the 3 channels
