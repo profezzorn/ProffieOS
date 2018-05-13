@@ -8,11 +8,11 @@ extern I2CBus i2cbus;
 class I2CDevice {
 public:
   explicit I2CDevice(uint8_t address) : address_(address) {}
-  void writeByte(uint8_t reg, uint8_t data) {
+  bool writeByte(uint8_t reg, uint8_t data) {
     Wire.beginTransmission(address_);
     Wire.write(reg);
     Wire.write(data);
-    Wire.endTransmission();
+    return Wire.endTransmission() == 0;
   }
   int readByte(uint8_t reg) {
     Wire.beginTransmission(address_);
