@@ -31,14 +31,6 @@ const unsigned int maxLedsPerStrip = 144;
 // This defines how sensetive the clash detection is.
 #define CLASH_THRESHOLD_G 1.0
 
-// Define this if your power button is a touch button.
-// #define POWER_TOUCHBUTTON_SENSITIVITY 1700
-// #define AUX_TOUCHBUTTON_SENSITIVITY 1700
-// #define AUX2_TOUCHBUTTON_SENSITIVITY 1700
-
-// If your electonics inverts the bladePin for some reason, define this.
-// #define INVERT_WS2811
-
 // Feature defines, these let you turn off large blocks of code
 // used for debugging.
 #define ENABLE_AUDIO
@@ -105,4 +97,5 @@ BladeConfig blades[] = {
 LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button AuxButton(BUTTON_AUX, auxPin, "aux");
 Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
+// TouchButton Aux2Button(BUTTON_AUX2, aux2Pin, 1700, "aux2");
 #endif
