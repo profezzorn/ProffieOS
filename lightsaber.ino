@@ -635,7 +635,6 @@ BatteryMonitor battery_monitor;
 
 #include "common/color.h"
 #include "common/range.h"
-#include "blades/monopodws.h"
 #include "blades/blade_base.h"
 #include "blades/blade_wrapper.h"
 
@@ -2464,6 +2463,13 @@ Amplifier amplifier;
 #endif
 
 void setup() {
+
+#if VERSION_MAJOR >= 4
+  // TODO enable/disable as needed
+  pinMode(boosterPin, OUTPUT);
+  digitalWrite(boosterPin, HIGH);
+#endif
+
 #if 0
 //  pinMode(bladePin, OUTPUT);
   pinMode(bladePowerPin1, OUTPUT);
@@ -2578,13 +2584,6 @@ extern "C" void startup_early_hook(void) {
   SETUP_PIN(4);
   SETUP_PIN(5);
 #endif
-
-#ifdef VERSION_MAJOR >= 4
-  // TODO enable/disable as needed
-  digitalWrite(boosterPin, HIGH);
-#endif
-
-
 }
 #endif
 
