@@ -404,6 +404,7 @@ void MonopodWS2811::show(void)
   while (FTM1_CNT > cv) ; // wait for beginning of an 800 kHz cycle
   while (FTM1_CNT < cv) ;
   FTM1_SC = 0;            // stop FTM1 timer (hopefully before it rolls over)
+  FTM1_CNT = 0;
   update_in_progress = 1;
   //digitalWriteFast(9, HIGH); // oscilloscope trigger
   PORTB_ISFR = (1<<0);    // clear any prior rising edge
@@ -431,6 +432,7 @@ void MonopodWS2811::show(void)
   while (FTM2_CNT > cv) ; // wait for beginning of an 800 kHz cycle
   while (FTM2_CNT < cv) ;
   FTM2_SC = 0;             // stop FTM2 timer (hopefully before it rolls over)
+  FTM2_CNT = 0;
   update_in_progress = 1;
   //digitalWriteFast(9, HIGH); // oscilloscope trigger
   PORTB_ISFR = (1<<18);    // clear any prior rising edge
@@ -458,6 +460,7 @@ void MonopodWS2811::show(void)
   while (FTM2_CNT > cv) ; // wait for beginning of an 800 kHz cycle
   while (FTM2_CNT < cv) ;
   FTM2_SC = 0;             // stop FTM2 timer (hopefully before it rolls over)
+  FTM2_CNT = 0;
   update_in_progress = 1;
   //digitalWriteFast(9, HIGH); // oscilloscope trigger
   PORTA_ISFR = (1<<10);    // clear any prior rising edge
