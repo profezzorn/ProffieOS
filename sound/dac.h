@@ -163,6 +163,7 @@ public:
     // NVIC_EnableIRQ(sai->interrupt);
     SAI_Block_TypeDef *SAIx = SAI1_Block_A;
     uint32_t sai_cr1 = (SAI_xCR1_DS_2);
+    sai_cr1 |= SAI_xCR1_MONO;
     uint32_t saiclk = SYSTEM_SAICLK_11289600;
     sai_cr1 |= SAI_xCR1_CKSTR;
     uint32_t sai_frcr = (31 << SAI_xFRCR_FRL_Pos) | (15 << SAI_xFRCR_FSALL_Pos) | SAI_xFRCR_FSDEF | SAI_xFRCR_FSOFF;
@@ -192,7 +193,6 @@ public:
       SAIx->CR2 = SAI_xCR2_FTH_1;
       SAIx->CR1 |= SAI_xCR1_SAIEN;
     }
-
 #endif
   }
 
@@ -253,7 +253,6 @@ private:
   static void isr(void* arg, unsigned long int event)
 #endif
   {
-    digitalWrite(38, !digitalRead(38));
     ScopedCycleCounter cc(audio_dma_interrupt_cycles);
     int16_t *dest, *end;
     uint32_t saddr = current_position();
