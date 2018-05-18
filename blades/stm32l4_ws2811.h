@@ -6,12 +6,7 @@
 #include <stm32l4_gpio.h>
 #include <stm32l4_wiring_private.h>
 
-#ifndef APPDIR
-#define APPDIR(X) APPDIR2(../##X)
-#define APPDIR2(X) #X
-#endif
-
-#include APPDIR(common/color.h)
+#include "../common/color.h"
 
 // common
 int displayMemory[maxLedsPerStrip * 24 / 4 + 1];
