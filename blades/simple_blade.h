@@ -26,7 +26,6 @@ public:
 
   void Activate() override {
     STDOUT.println("Simple Blade");
-    analogWriteResolution(16);
     power_ = true;
     for (size_t i = 0; i < NELEM(pins_); i++) pins_[i].Activate();
     CommandParser::Link();
