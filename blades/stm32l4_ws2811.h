@@ -6,8 +6,6 @@
 #include <stm32l4_gpio.h>
 #include <stm32l4_wiring_private.h>
 
-#include "../common/color.h"
-
 // common
 int displayMemory[maxLedsPerStrip * 24 / 4 + 1];
 
@@ -75,7 +73,7 @@ public:
     stm32l4_timer_enable(&timer_,
 			 divider -1,
 			 pulse_len -1,
-			 0, NULL, NULL, 0);
+			 0 /* TIMER_OPTION_COUNT_PRELOAD */, NULL, NULL, 0);
 
     armv7m_atomic_modify(&timer_.TIM->DIER, TIM_DIER_UDE, 0);
 
@@ -180,16 +178,13 @@ public:
   void Set(int led, Color8 color) {
     uint32_t *output = ((uint32_t *)displayMemory) + led * (24/4);
     uint8_t rgb[3];
-    rgb[0] = color.r;
+    rgb[2] = color.r;
     rgb[1] = color.g;
-    rgb[2] = color.b;
+    rgb[0] = color.b;
     for (int i = 0; i < 3; i++) {
-      uint8_t tmp = rgb[( ((int)byteorder_) >> (i * 4)) & 0xf];
-      // ~14 ops
-      uint32_t tmp2 = ((tmp >> 4) * 0x204081U) & 0x01010101U;
-      *(output++) = zero4X_ + tmp2 * one_minus_zero_;
-      tmp2 = ((tmp & 15) * 0x204081U) & 0x01010101U;
-      *(output++) = zero4X_ + tmp2 * one_minus_zero_;
+      uint32_t tmp = rgb[(( ((int)byteorder_) >> (i * 4)) & 0xf) - 1] * 0x8040201U;
+      *(output++) = zero4X_ + ((tmp >> 7) & 0x01010101U) * one_minus_zero_;
+      *(output++) = zero4X_ + ((tmp >> 3) & 0x01010101U) * one_minus_zero_;
     }
   }
 
@@ -197,16 +192,13 @@ public:
     uint32_t *output = ((uint32_t *)displayMemory) + led * (24/4);
     uint8_t rgb[3];
     int dither = dither_matrix[frame_num_ & 3][led & 3];
-    rgb[0] = clampi32((color.r + dither) >> 8, 0, 255);
+    rgb[2] = clampi32((color.r + dither) >> 8, 0, 255);
     rgb[1] = clampi32((color.g + dither) >> 8, 0, 255);
-    rgb[2] = clampi32((color.b + dither) >> 8, 0, 255);
+    rgb[0] = clampi32((color.b + dither) >> 8, 0, 255);
     for (int i = 0; i < 3; i++) {
-      uint8_t tmp = rgb[( ((int)byteorder_) >> (i * 4)) & 0xf];
-      // ~14 ops
-      uint32_t tmp2 = ((tmp >> 4) * 0x204081U) & 0x01010101U;
-      *(output++) = zero4X_ + tmp2 * one_minus_zero_;
-      tmp2 = ((tmp & 15) * 0x204081U) & 0x01010101U;
-      *(output++) = zero4X_ + tmp2 * one_minus_zero_;
+      uint32_t tmp = rgb[(( ((int)byteorder_) >> (i * 4)) & 0xf) - 1] * 0x8040201U;
+      *(output++) = zero4X_ + ((tmp >> 7) & 0x01010101U) * one_minus_zero_;
+      *(output++) = zero4X_ + ((tmp >> 3) & 0x01010101U) * one_minus_zero_;
     }
   }
 
