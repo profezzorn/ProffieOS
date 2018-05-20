@@ -2568,22 +2568,6 @@ extern "C" void startup_early_hook(void) {
 #if defined(__MK66FX1M0__)
         LMEM_PCCCR = 0x85000003;
 #endif
-        
-#define SETUP_PIN(X) do {                                               \
- CORE_PIN##X##_PORTREG &=~ CORE_PIN##X##_BITMASK;                       \
- CORE_PIN##X##_CONFIG = PORT_PCR_SRE | PORT_PCR_DSE | PORT_PCR_MUX(1);  \
- CORE_PIN##X##_DDRREG |= CORE_PIN##X##_BITMASK;                         \
-} while (0)
-
-  SETUP_PIN(20);
-  SETUP_PIN(21);
-  SETUP_PIN(22);
-  SETUP_PIN(23);
-#ifdef V2
-  SETUP_PIN(3);
-  SETUP_PIN(4);
-  SETUP_PIN(5);
-#endif
 }
 #endif
 
