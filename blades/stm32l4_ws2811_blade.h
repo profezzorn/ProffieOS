@@ -10,18 +10,18 @@
 class WS2811_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
 public:
   WS2811_Blade(int num_leds,
-	       int data_pinpin,
-	       int byteorder,
+	       int data_pin,
+	       WS2811Pin::Byteorder byteorder,
 	       int frequency,
 	       int reset_us,
 	       int t0h_us,
-	       int t1h_us
+	       int t1h_us,
 	       PowerPinInterface* power) :
     SaberBase(NOLINK),
     CommandParser(NOLINK),
     Looper(NOLINK),
     power_(power) {
-    pin_.begin(pin, num_leds, byteorder, frequency, reset_us, t0h_us, t1h_us);
+    pin_.begin(data_pin, num_leds, byteorder, frequency, reset_us, t0h_us, t1h_us);
   }
   const char* name() override { return "WS2811_Blade"; }
 
@@ -54,7 +54,7 @@ public:
 
   // BladeBase implementation
   int num_leds() const override {
-    return num_leds_;
+    return pin_.num_leds();
   }
   bool is_on() const override {
     return on_;
@@ -127,7 +127,7 @@ protected:
         current_style_->run(this);
 	while (!pin_.IsReadyForBeginFrame()) YIELD();
 	pin_.BeginFrame();
-	for (int i = 0; i < pin_.num_leds(); i++) pin_.set(i, color_buffer[i]);
+	for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, color_buffer[i]);
 	while (!pin_.IsReadyForEndFrame()) YIELD();
 	pin_.EndFrame();
         loop_counter_.Update();

@@ -99,25 +99,19 @@ public:
   void run(BladeBase* blade) override {
     Vec3 v = extrapolate_accel();
     float fraction = 0.5 - atan2f(v.y, v.x) * 2.0 / M_PI;
-    // STDOUT.print("F:");
-    // STDOUT.println(fraction);
     if (fraction < 0 || fraction > 1.0) {
-      memset((unsigned char *)&MonopodWS2811::drawBuffer,
-              0,
-              maxLedsPerStrip * 3);
+      blade->clear();
       return;
     }
+    Color8 buffer[144];
     int col = fraction * NELEM(imageoffsets);
     rle_decode(imagedata + imageoffsets[col],
-                (unsigned char *)&MonopodWS2811::drawBuffer,
-                maxLedsPerStrip * 3);
+	       (unsigned char *)&buffer, 144 * 3);
+    // Rescale / transfer
     size_t num_leds = blade->num_leds();
-    if (num_leds < maxLedsPerStrip) {
-      for (size_t i = 0; i < maxLedsPerStrip; i++) {
-         MonopodWS2811::drawBuffer[i] =
-           MonopodWS2811::drawBuffer[i * maxLedsPerStrip / num_leds];
-      }
-    }
+    for (size_t i = 0; i < maxLedsPerStrip; i++)
+      blade->set(i, buffer[i * 144 / num_leds]);
+
     blade->allow_disable();
   }
 private:

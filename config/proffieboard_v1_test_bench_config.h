@@ -36,8 +36,8 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_AUDIO
 #define ENABLE_MOTION
 // #define ENABLE_SNOOZE
-// #define ENABLE_WS2811
-// #define ENABLE_SERIAL
+#define ENABLE_WS2811
+#define ENABLE_SERIAL
 
 // Must be 20 characters or less.
 // #define BLE_PASSWORD "password"

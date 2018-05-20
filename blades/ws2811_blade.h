@@ -2,7 +2,11 @@
 #define BLADES_WS2811_BLADE_H
 
 #ifdef ENABLE_WS2811
+#ifdef TEENSYDUINO
 #include "monopodws.h"
+#else
+#include "stm32_ws2811.h"
+#endif
 
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
