@@ -29,6 +29,7 @@ public:
     power_->Power(on);
     powered_ = on;
     allow_disable_ = false;
+    if (on) EnableBooster();
   }
 
   // No need for a "deactivate", the blade stays active until
