@@ -12,7 +12,7 @@ public:
   bool Active() {
     if (amplifier.Active()) return true;
     uint32_t t = millis() - last_setup_;
-    if (t < 30) return true;
+    if (t < 10000) return true;
     if (saber.NeedsPower()) return true;
     bool on = false;
     SaberBase::DoIsOn(&on);
