@@ -6,6 +6,7 @@
 #define VERSION_MINOR 1
 #define V2
 #define V3
+#define PROFFIEBOARD
 #define USE_I2S
 #define GYRO_CLASS LSM6DS3H
 
