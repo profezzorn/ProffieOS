@@ -40,14 +40,14 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_SERIAL
 
 // Must be 20 characters or less.
-// #define BLE_PASSWORD "password"
+#define BLE_PASSWORD "password"
 
 // FASTLED is experimental and untested right now
 // #define ENABLE_FASTLED
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
-// #define ENABLE_SSD1306
+#define ENABLE_SSD1306
 
 // #define ENABLE_DEBUG
 
@@ -83,7 +83,8 @@ Preset testing_presets[] = {
 
 BladeConfig blades[] = {
   // Testing configuration.
-  { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) }
+//  { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) }
+  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
 };
 
 #endif
