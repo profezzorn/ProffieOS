@@ -93,7 +93,6 @@ public:                                                         \
   SABERFUN(NewFont, (), ());                    \
   SABERFUN(BeginLockup, (), ());                \
   SABERFUN(EndLockup, (), ());                  \
-  SABERFUN(Speedup, (), ());                    \
                                                 \
   SABERFUN(Top, (), ());                        \
   SABERFUN(IsOn, (bool* on), (on));             \
