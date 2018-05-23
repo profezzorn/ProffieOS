@@ -29,7 +29,9 @@ protected:
     STATE_MACHINE_BEGIN();
     while (true) {
       while (Active()) YIELD();
-      SLEEP(20);
+      // 100 * 0.1 s = 10 seconds
+      for (i_ = 0; i_ < 100 && !Active(); i_++)
+	SLEEP(100);
       if (Active()) continue;
       STDOUT.println("Booster off.");
       digitalWrite(boosterPin, LOW); // turn the booster off
@@ -65,6 +67,7 @@ protected:
   }
 
 private:
+  int i_;
   uint32_t last_enabled_;
 };
 
