@@ -671,7 +671,7 @@ public:
 //	   const tms5100_coeffs* coeffs = &tms5110a_coeff
     ) {
     rate *= 7;
-    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+    EnableAmplifier();
     noInterrupts();
     if (ptrAddr) {
       if (num_words < NELEM(words)) {

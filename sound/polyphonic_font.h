@@ -60,7 +60,7 @@ public:
   }
 
   BufferedWavPlayer* Play(Effect* f)  {
-    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+    EnableAmplifier();
     BufferedWavPlayer* player = GetFreeWavPlayer();
     if (player) {
       player->set_volume_now(config_.volEff / 16.0);

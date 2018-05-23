@@ -329,6 +329,8 @@ int16_t clamptoi16(int32_t x) {
 
 #ifdef ENABLE_AUDIO
 
+void EnableAmplifier();
+
 #include "sound/click_avoider_lin.h"
 #include "sound/waveform_sampler.h"
 #include "sound/audiostream.h"
@@ -852,9 +854,7 @@ public:
     if (current_style() && current_style()->NoOnOff())
       return;
     STDOUT.println("Ignition.");
-    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
-    delay(10);             // allow time to wake up
-
+    EnableAmplifier();
     on_ = true;
     SaberBase::DoOn();
   }
@@ -1205,7 +1205,7 @@ protected:
       track_player_->Stop();
       track_player_ = NULL;
     } else {
-      digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+      EnableAmplifier();
       track_player_ = GetFreeWavPlayer();
       if (track_player_) {
         track_player_->Play(current_preset_->track);
@@ -1479,7 +1479,7 @@ public:
         StartOrStopTrack();
         return true;
       }
-      digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+      EnableAmplifier();
       BufferedWavPlayer* player = GetFreeWavPlayer();
       if (player) {
         STDOUT.print("Playing ");
@@ -1499,7 +1499,7 @@ public:
         track_player_->Stop();
         track_player_ = NULL;
       }
-      digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+      EnableAmplifier();
       track_player_ = GetFreeWavPlayer();
       if (track_player_) {
         STDOUT.print("Playing ");
@@ -1909,7 +1909,7 @@ class Commands : public CommandParser {
 #ifdef ENABLE_AUDIO
 #if 0
     if (!strcmp(cmd, "ton")) {
-      digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+      EnableAmplifier();
       dac.SetStream(&saber_synth);
       saber_synth.on_ = true;
       return true;
@@ -2077,8 +2077,7 @@ public:
 template<class SA> /* SA = Serial Adapter */
 class Parser : Looper, StateMachine {
 public:
-  Parser() : Looper(), len_(0) {
-  }
+  Parser() : Looper() {}
   const char* name() override { return "Parser"; }
 
   void Setup() override {
@@ -2098,6 +2097,8 @@ public:
         while (!SA::stream().available()) YIELD();
         int c = SA::stream().read();
         if (c < 0) { break; }
+	STDOUT.print("GOT:");
+	STDOUT.println(c);
 #if 0
         if (monitor.IsMonitoring(Monitoring::MonitorSerial) &&
             default_output != &SA::stream()) {
@@ -2375,92 +2376,7 @@ ACCEL_CLASS accelerometer;
 
 #endif   // ENABLE_MOTION
 
-#ifdef ENABLE_AUDIO
-// Turns off amplifier when no audio is played.
-// Maybe name this IdleHelper or something instead??
-class Amplifier : Looper, StateMachine, CommandParser {
-public:
-  Amplifier() : Looper(), CommandParser() {}
-  const char* name() override { return "Amplifier"; }
-
-  bool Active() {
-//    if (saber_synth.on_) return true;
-    if (audio_splicer.isPlaying()) return true;
-    if (beeper.isPlaying()) return true;
-    if (talkie.isPlaying()) return true;
-    for (size_t i = 0; i < NELEM(wav_players); i++)
-      if (wav_players[i].isPlaying())
-        return true;
-    return false;
-  }
-
-protected:
-  void Setup() override {
-    // Audio setup
-    delay(50);             // time for DAC voltage stable
-    pinMode(amplifierPin, OUTPUT);
-    delay(10);
-    SetupStandardAudio();
-  }
-
-  void Loop() override {
-    STATE_MACHINE_BEGIN();
-    while (true) {
-      while (Active()) YIELD();
-      SLEEP(20);
-      if (Active()) continue;
-      STDOUT.println("Amplifier off.");
-      digitalWrite(amplifierPin, LOW); // turn the amplifier off
-      while (!Active()) YIELD();
-    }
-    STATE_MACHINE_END();
-  }
-
-  bool Parse(const char *cmd, const char* arg) override {
-    if (!strcmp(cmd, "amp")) {
-      if (!strcmp(arg, "on")) {
-        digitalWrite(amplifierPin, HIGH); // turn the amplifier off
-        return true;
-      }
-      if (!strcmp(arg, "off")) {
-        digitalWrite(amplifierPin, LOW); // turn the amplifier off
-        return true;
-      }
-    }
-    if (!strcmp(cmd, "whatison")) {
-      bool on = false;
-      SaberBase::DoIsOn(&on);
-      STDOUT.print("Saber bases: ");
-      STDOUT.println(on ? "On" : "Off");
-      STDOUT.print("Audio splicer: ");
-      STDOUT.println(audio_splicer.isPlaying() ? "On" : "Off");
-      STDOUT.print("Beeper: ");
-      STDOUT.println(beeper.isPlaying() ? "On" : "Off");
-      STDOUT.print("Talker: ");
-      STDOUT.println(talkie.isPlaying() ? "On" : "Off");
-      for (size_t i = 0; i < NELEM(wav_players); i++) {
-        STDOUT.print("Wav player ");
-        STDOUT.print(i);
-        STDOUT.print(": ");
-        STDOUT.print(wav_players[i].isPlaying() ? "On" : "Off");
-        STDOUT.print(" (eof =  ");
-        STDOUT.print(wav_players[i].eof());
-        STDOUT.print(" volume = ");
-        STDOUT.print(wav_players[i].volume());
-        STDOUT.println(")");
-      }
-      return true;
-    }
-    return false;
-  }
-
-  void Help() {
-    STDOUT.println(" amp on/off - turn amplifier on or off");
-  }
-};
-
-Amplifier amplifier;
-#endif
+#include "sound/amplifier.h"
 
 void setup() {
 
@@ -2470,24 +2386,6 @@ void setup() {
   digitalWrite(boosterPin, HIGH);
 #endif
 
-#if 0
-//  pinMode(bladePin, OUTPUT);
-  pinMode(bladePowerPin1, OUTPUT);
-  pinMode(bladePowerPin2, OUTPUT);
-  pinMode(bladePowerPin3, OUTPUT);
-//  digitalWrite(bladePin, LOW);
-  digitalWrite(bladePowerPin1, LOW);
-  digitalWrite(bladePowerPin2, LOW);
-  digitalWrite(bladePowerPin3, LOW);
-#ifdef V2
-  pinMode(bladePowerPin4, OUTPUT);
-  pinMode(bladePowerPin5, OUTPUT);
-  pinMode(bladePowerPin6, OUTPUT);
-  digitalWrite(bladePowerPin4, LOW);
-  digitalWrite(bladePowerPin5, LOW);
-  digitalWrite(bladePowerPin6, LOW);
-#endif
-#endif
   Serial.begin(9600);
 #if VERSION_MAJOR >= 4
   // TODO: Figure out if we need this.
@@ -2519,7 +2417,6 @@ void setup() {
   SaberBase::DoBoot();
 #if defined(ENABLE_SD) && defined(ENABLE_AUDIO)
   if (!sd_card_found) {
-    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     talkie.Say(talkie_sd_card_15, 15);
     talkie.Say(talkie_not_found_15, 15);
   }
