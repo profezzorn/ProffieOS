@@ -330,6 +330,7 @@ int16_t clamptoi16(int32_t x) {
 #ifdef ENABLE_AUDIO
 
 void EnableAmplifier();
+void EnableBooster();
 
 #include "sound/click_avoider_lin.h"
 #include "sound/waveform_sampler.h"
@@ -2377,9 +2378,9 @@ ACCEL_CLASS accelerometer;
 #endif   // ENABLE_MOTION
 
 #include "sound/amplifier.h"
+#include "common/booster.h"
 
 void setup() {
-
 #if VERSION_MAJOR >= 4
   // TODO enable/disable as needed
   pinMode(boosterPin, OUTPUT);
