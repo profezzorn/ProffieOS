@@ -140,6 +140,7 @@
 #include <stm32l4_dma.h>
 #include <stm32l4_system.h>
 #include <arm_math.h>
+#include <STM32.h>
 #define DMAChannel stm32l4_dma_t
 #define DMAMEM
 #define NVIC_SET_PRIORITY(X,Y) NVIC_SetPriority((X), (IRQn_Type)(Y))
@@ -2020,13 +2021,15 @@ class Commands : public CommandParser {
       STDOUT.println(version);
       return true;
     }
-#ifdef TEENSYDUINO    
     if (!strcmp(cmd, "reset")) {
+#ifdef TEENSYDUINO    
       SCB_AIRCR = 0x05FA0004;
+#else
+      STM32.reset();
+#endif      
       STDOUT.println("Reset failed.");
       return true;
     }
-#endif    
     return false;
   }
 
@@ -2096,8 +2099,10 @@ public:
         while (!SA::stream().available()) YIELD();
         int c = SA::stream().read();
         if (c < 0) { break; }
+#if 0	
 	STDOUT.print("GOT:");
 	STDOUT.println(c);
+#endif	
 #if 0
         if (monitor.IsMonitoring(Monitoring::MonitorSerial) &&
             default_output != &SA::stream()) {
@@ -2526,8 +2531,12 @@ void loop() {
     ) {
     if (millis() - last_activity > 1000) {
 #if VERSION_MAJOR >= 4
+      // stm32l4_system_sysclk_configure(1000000, 500000, 500000);
       // Delay will enter low-power mode.
-      delay(50);
+      delay(50);         // 13.8 mA
+      // STM32.stop(50);  // 12.4 mA
+      // stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
+      
 #elif defined(ENABLE_SNOOZE)
       snooze_timer.setTimer(500);
       Snooze.sleep(snooze_config);
