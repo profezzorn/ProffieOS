@@ -68,7 +68,11 @@ public:
     OUT, // Waiting for sound to fade out
   };
 
-  void SB_Motion(const Vec3& raw_gyro) override {
+  void SB_Motion(const Vec3& raw_gyro, bool clear) override {
+    if (clear) {
+      gyro_filter_.filter(raw_gyro);
+      gyro_filter_.filter(raw_gyro);
+    }
     Vec3 gyro = gyro_filter_.filter(raw_gyro);
     // degrees per second
     // May not need to smooth gyro since volume is smoothed.

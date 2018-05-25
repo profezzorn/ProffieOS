@@ -35,6 +35,27 @@ protected:
   ~SaberBase() { Unlink(this); }
 
 public:
+  static bool IsOn() { return on_; }
+  static void TurnOn() {
+    on_ = true;
+    SaberBase::DoOn();
+  }
+  static void TurnOff() {
+    on_ = false;
+    SaberBase::DoOff();
+  }
+
+  static bool MotionRequested() {
+#ifdef NUM_BUTTONS == 0
+    return true;
+#else
+    return IsOn() || (millis() - last_motion_request_) < 10000;
+#endif
+  }
+  static void RequestMotion() {
+    last_motion_request_ = millis();
+  }
+
   enum LockupType {
     LOCKUP_NONE,
     LOCKUP_NORMAL,
@@ -68,6 +89,7 @@ public:
   }
 
   // 1.0 = kDefaultVolume
+  // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
 
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)                        \
@@ -102,36 +124,37 @@ public:                                                         \
 #undef SABERFUN
 
   /* Swing rotation speed degrees per second */
-  static void DoMotion(Vec3 gyro) {
+  static void DoMotion(Vec3 gyro, bool clear) {
 #ifdef INVERT_ORIENTATION
     gyro.x = -gyro.x;
 #endif
     CHECK_LL(SaberBase, saberbases, next_saber_);
     for (SaberBase *p = saberbases; p; p = p->next_saber_) {
-      p->SB_Motion(gyro);
+      p->SB_Motion(gyro, clear);
     }
     CHECK_LL(SaberBase, saberbases, next_saber_);
   }
-  virtual void SB_Motion(const Vec3& gyro) {}
+  virtual void SB_Motion(const Vec3& gyro, bool clear) {}
 
   /* Accelertation in g */
-  static void DoAccel(Vec3 gyro) {
+  static void DoAccel(Vec3 gyro, bool clear) {
 #ifdef INVERT_ORIENTATION
     gyro.x = -gyro.x;
 #endif
     CHECK_LL(SaberBase, saberbases, next_saber_);
     for (SaberBase *p = saberbases; p; p = p->next_saber_) {
-      p->SB_Accel(gyro);
+      p->SB_Accel(gyro, clear);
     }
     CHECK_LL(SaberBase, saberbases, next_saber_);
   }
-  virtual void SB_Accel(const Vec3& gyro) {}
-
+  virtual void SB_Accel(const Vec3& gyro, bool clear) {}
 
 private:
+  static bool on_;
   static size_t num_blasts_;
   static struct Blast blasts_[3];
   static LockupType lockup_;
+  static uint32_t last_motion_request_;
   SaberBase* next_saber_;
 };
 

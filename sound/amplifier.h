@@ -18,9 +18,18 @@ public:
     for (size_t i = 0; i < NELEM(wav_players); i++)
       if (wav_players[i].isPlaying())
         return true;
-    uint32_t t = millis() - last_setup_;
+    uint32_t t = millis() - last_enabled_;
     if (t < 30) return true;
     return false;
+  }
+
+  void Enable() {
+    last_enabled_ = millis();
+    if (!digitalRead(amplifierPin)) {
+      EnableBooster();
+      digitalWrite(amplifierPin, HIGH);
+      delay(10); // Give it a little time to wake up.
+    }
   }
 
 protected:
@@ -28,7 +37,7 @@ protected:
     // Audio setup
     pinMode(amplifierPin, OUTPUT);
     SetupStandardAudio();
-    last_setup_ = millis();
+    last_enabled_ = millis();
   }
 
   void Loop() override {
@@ -84,15 +93,6 @@ protected:
 
   void Help() {
     STDOUT.println(" amp on/off - turn amplifier on or off");
-  }
-
-  void Enable() {
-    last_enabled_ = millis();
-    if (!digitalRead(amplifierPin)) {
-      EnableBooster();
-      digitalWrite(amplifierPin, HIGH);
-      delay(10); // Give it a little time to wake up.
-    }
   }
 
 private:

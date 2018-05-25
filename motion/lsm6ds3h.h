@@ -103,6 +103,9 @@ public:
     while (!i2cbus.inited()) YIELD();
 
     while (1) {
+      first_motion_ = true;
+      first_accel_ = true;
+      
       unsigned char databuffer[6];
 
       STDOUT.print("Motion setup ... ");
@@ -123,7 +126,7 @@ public:
         STDOUT.println("failed.");
       }
 
-      while (1) {
+      while (SaberBase::MotionRequested()) {
         YIELD();
         int status_reg = readByte(STATUS_REG);
         if (status_reg == -1) {
@@ -139,15 +142,19 @@ public:
           if (readBytes(OUTX_L_XL, databuffer, 6) == 6) {
             SaberBase::DoAccel(
               Vec3::FromData(databuffer, 4.0 / 32768.0,   // 4 g range
-			     Vec3::BYTEORDER_LSB, Vec3::ORIENTATION));
-	   }
-	 }
-	 if (status_reg & 0x2) {
-	   // gyroscope data available
-	   if (readBytes(OUTX_L_G, databuffer, 6) == 6) {
-	     SaberBase::DoMotion(
-	       Vec3::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
-			      Vec3::BYTEORDER_LSB, Vec3::ORIENTATION));
+			     Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
+	      first_accel_);
+	    first_accel_ = false;
+	  }
+	}
+	if (status_reg & 0x2) {
+	  // gyroscope data available
+	  if (readBytes(OUTX_L_G, databuffer, 6) == 6) {
+	    SaberBase::DoMotion(
+	      Vec3::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
+			     Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
+	      first_motion_);
+	    first_motion_ = false;
           }
         }
         if (status_reg & 0x1) {
@@ -162,9 +169,19 @@ public:
           }
         }
       }
+
+      STDOUT.println("Modtion disable.");
+
+      writeByte(CTRL9_XL, 0x0);  // accel xyz disable
+      writeByte(CTRL10_C, 0x0);  // gyro xyz disable
+
+      while (!SaberBase::MotionRequested()) YIELD();
     }
     STATE_MACHINE_END();
   }
+
+  bool first_motion_;
+  bool first_accel_;
 };
 
 #endif

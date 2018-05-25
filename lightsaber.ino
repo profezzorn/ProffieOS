@@ -300,6 +300,8 @@ SaberBase* saberbases = NULL;
 SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
 size_t SaberBase::num_blasts_ = 0;
 struct SaberBase::Blast SaberBase::blasts_[3];
+bool SaberBase::on_ = false;
+uint32_t SaberBase::last_motion_request_ = 0;
 
 #include "common/box_filter.h"
 
@@ -513,7 +515,7 @@ public:
   void SB_On() override {}
   void SB_Off() override {}
 
-  void SB_Motion(const Vec3& speed) override {
+  void SB_Motion(const Vec3& speed, bool clear) override {
     // Adjust hum volume based on motion speed
   }
 };
@@ -835,38 +837,32 @@ public:
   Saber() : CommandParser() {}
   const char* name() override { return "Saber"; }
 
-  bool IsOn() const {
-    return on_;
-  }
-
   BladeStyle* current_style(){
     return current_config_->blade1->current_style();
   }
 
   bool NeedsPower() {
-    if (on_) return true;
+    if (SaberBase::IsOn()) return true;
     if (current_style() && current_style()->NoOnOff())
       return true;
     return false;
   }
 
   void On() {
-    if (on_) return;
+    if (SaberBase::IsOn()) return;
     if (current_style() && current_style()->NoOnOff())
       return;
     STDOUT.println("Ignition.");
     EnableAmplifier();
-    on_ = true;
-    SaberBase::DoOn();
+    SaberBase::TurnOn();
   }
 
   void Off() {
-    on_ = false;
     if (SaberBase::Lockup()) {
       SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
       SaberBase::DoEndLockup();
     }
-    SaberBase::DoOff();
+    SaberBase::TurnOff();
   }
 
   uint32_t last_clash_ = 0;
@@ -884,7 +880,7 @@ public:
       clash_timeout_ = 400;  // For events, space clashes out more.
     } else {
       clash_timeout_ = 100;
-      if (on_) SaberBase::DoClash();
+      if (SaberBase::IsOn()) SaberBase::DoClash();
     }
     last_clash_ = t;
   }
@@ -1064,7 +1060,8 @@ public:
 
   float peak = 0.0;
   Vec3 at_peak;
-  void SB_Accel(const Vec3& accel) override {
+  void SB_Accel(const Vec3& accel, bool clear) override {
+    if (clear) accel_ = accel;
     float v = (accel_ - accel).len();
     // If we're spinning the saber, require a stronger acceleration
     // to activate the clash.
@@ -1174,7 +1171,11 @@ public:
 
   BoxFilter<Vec3, 5> gyro_filter_;
   Vec3 filtered_gyro_;
-  void SB_Motion(const Vec3& gyro) override {
+  void SB_Motion(const Vec3& gyro, bool clear) override {
+    if (clear)
+      for (int i = 0; i < 4; i++)
+	gyro_filter_.filter(gyro);
+
     filtered_gyro_ = gyro_filter_.filter(gyro);
     if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
       // Got gyro data
@@ -1225,7 +1226,7 @@ protected:
   void Loop() override {
     if (battery_monitor.low()) {
       if (current_preset_->style_allocator1 != &style_charging) {
-        if (on_) {
+        if (SaberBase::IsOn()) {
           STDOUT.print("Battery low, turning off. Battery voltage: ");
           STDOUT.println(battery_monitor.battery());
           Off();
@@ -1288,17 +1289,17 @@ public:
       STDOUT.print(" mods ");
       PrintButton(current_modifiers);
     }
-    if (on_) STDOUT.print(" ON");
+    if (SaberBase::IsOn()) STDOUT.print(" ON");
     STDOUT.println("");
 
 #define EVENTID(BUTTON, EVENT, MODIFIERS) (((EVENT) << 24) | ((BUTTON) << 12) | ((MODIFIERS) & ~(BUTTON)))
-    if (on_ && aux_on_) {
+    if (SaberBase::IsOn() && aux_on_) {
       if (button == BUTTON_POWER) button = BUTTON_AUX;
       if (button == BUTTON_AUX) button = BUTTON_POWER;
     }
     
     bool handled = true;
-    switch (EVENTID(button, event, current_modifiers | (on_ ? MODE_ON : MODE_OFF))) {
+    switch (EVENTID(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
       default:
         handled = false;
         break;
@@ -1342,11 +1343,6 @@ public:
         Off();
         break;
 
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_OFF):
-        SaberBase::DoSpeedup();
-        break;
-
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
         SaberBase::DoForce();
         break;
@@ -1377,6 +1373,10 @@ public:
         StartOrStopTrack();
         break;
 
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
+	SaberBase::RequestMotion();
+	break;
+
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
         next_preset();
         break;
@@ -1396,7 +1396,7 @@ public:
     if (!handled) {
       // Events that needs to be handled regardless of what other buttons
       // are pressed.
-      switch (EVENTID(button, event, on_ ? MODE_ON : MODE_OFF)) {
+      switch (EVENTID(button, event, SaberBase::IsOn() ? MODE_ON : MODE_OFF)) {
 	case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
 	case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
 	  if (SaberBase::Lockup()) {
@@ -1431,7 +1431,7 @@ public:
       return true;
     }
     if (!strcmp(cmd, "get_on")) {
-      STDOUT.println(on_);
+      STDOUT.println(SaberBase::IsOn());
       return true;
     }
     if (!strcmp(cmd, "clash")) {
@@ -1676,8 +1676,6 @@ public:
 private:
   BladeConfig* current_config_ = NULL;
   Preset* current_preset_ = NULL;
-
-  bool on_;  // <- move to SaberBase
 };
 
 Saber saber;
@@ -2519,7 +2517,6 @@ void loop() {
 #endif
   Looper::DoLoop();
 
-#if defined(ENABLE_SNOOZE)
   bool on = false;
   SaberBase::DoIsOn(&on);
   if (!on && !Serial && !saber.NeedsPower()
@@ -2528,12 +2525,16 @@ void loop() {
 #endif
     ) {
     if (millis() - last_activity > 1000) {
+#if VERSION_MAJOR >= 4
+      // Delay will enter low-power mode.
+      delay(50);
+#elif defined(ENABLE_SNOOZE)
       snooze_timer.setTimer(500);
       Snooze.sleep(snooze_config);
       Serial.begin(9600);
+#endif
     }
   } else {
     last_activity = millis();
   }
-#endif
 }

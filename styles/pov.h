@@ -89,7 +89,7 @@ public:
     return sum - slope * avg_t;
   }
 
-  void SB_Accel(const Vec3& accel) override {
+  void SB_Accel(const Vec3& accel, bool clear) override {
     entry_++;
     if (entry_ >= NELEM(accel_entries_)) entry_ = 0;
     accel_entries_[entry_].accel = accel;

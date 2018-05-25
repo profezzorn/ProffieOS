@@ -11,7 +11,7 @@ public:
 
   bool Active() {
     if (amplifier.Active()) return true;
-    uint32_t t = millis() - last_setup_;
+    uint32_t t = millis() - last_enabled_;
     if (t < 10000) return true;
     if (saber.NeedsPower()) return true;
     bool on = false;
@@ -19,10 +19,18 @@ public:
     return on;
   }
 
+  void Enable() {
+    last_enabled_ = millis();
+    if (!digitalRead(boosterPin)) {
+      digitalWrite(boosterPin, HIGH);
+      delay(10); // Give it a little time to wake up.
+    }
+  }
+
 protected:
   void Setup() override {
     pinMode(boosterPin, OUTPUT);
-    last_setup_ = millis();
+    last_enabled_ = millis();
   }
 
   void Loop() override {
@@ -56,14 +64,6 @@ protected:
 
   void Help() {
     STDOUT.println(" booster on/off - turn booster on or off");
-  }
-
-  void Enable() {
-    last_enabled_ = millis();
-    if (!digitalRead(boosterPin)) {
-      digitalWrite(boosterPin, HIGH);
-      delay(10); // Give it a little time to wake up.
-    }
   }
 
 private:

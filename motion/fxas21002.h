@@ -72,7 +72,8 @@ public:
             SaberBase::DoMotion(Vec3::FromData(databuffer,
 					       2000.0 / 32768.0,
 					       Vec3::BYTEORDER_MSB,
-					       Vec3::ORIENTATION));
+					       Vec3::ORIENTATION),
+	      false);
           }
         }
       }

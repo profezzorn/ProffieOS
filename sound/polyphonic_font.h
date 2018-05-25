@@ -140,7 +140,7 @@ public:
     wav_players[0].set_volume(vol * volume_);
   }
   
-  void SB_Motion(const Vec3& gyro) override {
+  void SB_Motion(const Vec3& gyro, bool clear) override {
     float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
       if (!swinging_ && state_ != STATE_OFF) {
