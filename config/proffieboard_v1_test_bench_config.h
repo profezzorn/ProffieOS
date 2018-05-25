@@ -84,7 +84,8 @@ Preset testing_presets[] = {
 BladeConfig blades[] = {
   // Testing configuration.
 //  { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) }
-  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
+//  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
+  { 130000, WS2811BladePtr<5, WS2811_580kHz, blade2Pin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
 };
 
 #endif
