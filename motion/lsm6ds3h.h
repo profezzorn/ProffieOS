@@ -170,7 +170,7 @@ public:
         }
       }
 
-      STDOUT.println("Modtion disable.");
+      STDOUT.println("Motion disable.");
 
       writeByte(CTRL9_XL, 0x0);  // accel xyz disable
       writeByte(CTRL10_C, 0x0);  // gyro xyz disable

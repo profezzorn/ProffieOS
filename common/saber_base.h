@@ -46,7 +46,7 @@ public:
   }
 
   static bool MotionRequested() {
-#ifdef NUM_BUTTONS == 0
+#if NUM_BUTTONS == 0
     return true;
 #else
     return IsOn() || (millis() - last_motion_request_) < 10000;
