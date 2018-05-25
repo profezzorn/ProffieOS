@@ -26,7 +26,7 @@ public:
     pinMode(PIN, OUTPUT);
     rest_.Init();
   }
-  void Power(bool power) override { 
+  void Power(bool power) override {
     digitalWrite(PIN, power);
     rest_.Power(power);
   }

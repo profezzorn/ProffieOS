@@ -214,6 +214,7 @@ public:
   }
 
   int num_leds() const { return num_leds_; }
+  int pin() { return pin_; }
 
 private:
   void done_callback() override {

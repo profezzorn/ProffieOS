@@ -25,6 +25,7 @@ public:
   const char* name() override { return "WS2811_Blade"; }
 
   void Power(bool on) {
+    while (monopodws.busy());
     power_->Power(on);
 //    pinMode(bladePin, on ? OUTPUT : INPUT);
     powered_ = on;

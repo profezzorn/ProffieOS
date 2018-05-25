@@ -26,6 +26,8 @@ public:
   const char* name() override { return "WS2811_Blade"; }
 
   void Power(bool on) {
+    while (!pin_.IsReadyForEndFrame());
+    pinMode(pin_.pin(), on ? OUTPUT : INPUT);
     power_->Power(on);
     powered_ = on;
     allow_disable_ = false;
@@ -37,7 +39,7 @@ public:
   void Activate() override {
     STDOUT.print("WS2811 Blade with ");
     STDOUT.print(pin_.num_leds());
-    STDOUT.print(" leds.");
+    STDOUT.println(" leds.");
     power_->Init();
     Power(true);
     delay(10);
@@ -155,11 +157,47 @@ private:
 Color16 WS2811_Blade::color_buffer[maxLedsPerStrip];
 WS2811_Blade* WS2811_Blade::current_blade = NULL;
 
+#define WS2811_RGB      0       // The WS2811 datasheet documents this way
+#define WS2811_RBG      1
+#define WS2811_GRB      2       // Most LED strips are wired this way
+#define WS2811_GBR      3
+
+#define WS2811_800kHz 0x00      // Nearly all WS2811 are 800 kHz
+#define WS2811_400kHz 0x10      // Adafruit's Flora Pixels
+#define WS2813_800kHz 0x20      // WS2813 are close to 800 kHz but has 300 us frame set delay
+#define WS2811_580kHz 0x30      // PL9823
+#define WS2811_ACTUALLY_800kHz 0x40      // Normally we use 740kHz instead of 800, this uses 800.
+
 template<int LEDS, int CONFIG, int DATA_PIN = bladePin, class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3> >
 class WS2811_Blade *WS2811BladePtr() {
   static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
   static POWER_PINS power_pins;
-  static WS2811_Blade blade(LEDS, CONFIG, DATA_PIN, &power_pins);
+  typename WS2811Pin::Byteorder byteorder = WS2811Pin::BGR;
+  switch (CONFIG & 0xf) {
+    case WS2811_RGB: byteorder = WS2811Pin::RGB; break;
+    case WS2811_RBG: byteorder = WS2811Pin::RBG; break;
+    case WS2811_GRB: byteorder = WS2811Pin::GRB; break;
+    case WS2811_GBR: byteorder = WS2811Pin::GBR; break;
+  }
+
+  int frequency = 800000;
+  int reset_us = 300;
+  switch (CONFIG & 0xf0) {
+    case WS2811_800kHz:
+      frequency = 740000;
+      break;
+    case WS2811_400kHz:
+      frequency = 400000;
+      break;
+    case WS2813_800kHz:
+    case WS2811_ACTUALLY_800kHz:
+      frequency = 800000;
+      break;
+  }
+    
+  static WS2811_Blade blade(LEDS, DATA_PIN, byteorder,
+			    frequency, reset_us,
+			    294, 862, &power_pins);
   return &blade;
 }
 #endif
