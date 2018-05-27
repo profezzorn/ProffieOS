@@ -60,7 +60,13 @@ public:
 
   float length() const { return wav.length(); }
 
+  void AddRef() { refs_++; }
+  void SubRef() { refs_--; }
+  bool Available() const { return refs_ == 0 && !isPlaying(); }
+  uint32_t refs() const { return refs_; }
 private:
+  uint32_t refs_ = 0;
+
   PlayWav wav;
   volatile bool pause_;
 };

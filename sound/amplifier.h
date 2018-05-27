@@ -84,6 +84,8 @@ protected:
         STDOUT.print(wav_players[i].eof());
         STDOUT.print(" volume = ");
         STDOUT.print(wav_players[i].volume());
+        STDOUT.print(" refs = ");
+        STDOUT.print(wav_players[i].refs());
         STDOUT.println(")");
       }
       return true;

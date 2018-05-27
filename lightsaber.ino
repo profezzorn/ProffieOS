@@ -21,14 +21,14 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_v3_config.h"
+// #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -260,7 +260,7 @@ CommandParser* parsers = NULL;
 MonitorHelper monitor_helper;
 
 #include "common/vec3.h"
-#include "common/linked_ptr.h"
+#include "common/ref.h"
 
 enum BUTTON : uint32_t {
   BUTTON_NONE = 0,   // used for gestures and the like
@@ -330,10 +330,10 @@ int16_t clamptoi16(int32_t x) {
 
 #include "common/sin_table.h"
 
-#ifdef ENABLE_AUDIO
-
-void EnableAmplifier();
 void EnableBooster();
+void EnableAmplifier();
+
+#ifdef ENABLE_AUDIO
 
 #include "sound/click_avoider_lin.h"
 #include "sound/waveform_sampler.h"
@@ -453,18 +453,16 @@ size_t WhatUnit(class BufferedWavPlayer* player);
 #include "sound/buffered_wav_player.h"
 
 BufferedWavPlayer wav_players[6];
-size_t reserved_wav_players = 0;
 
-class BufferedWavPlayer* GetFreeWavPlayer()  {
+RefPtr<BufferedWavPlayer> GetFreeWavPlayer()  {
   // Find a free wave playback unit.
-  for (size_t unit = reserved_wav_players;
-       unit < NELEM(wav_players); unit++) {
-    if (!wav_players[unit].isPlaying()) {
+  for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+    if (wav_players[unit].Available()) {
       wav_players[unit].reset_volume();
-      return wav_players + unit;
+      return RefPtr<BufferedWavPlayer>(wav_players + unit);
     }
   }
-  return NULL;
+  return RefPtr<BufferedWavPlayer>();
 }
 
 size_t WhatUnit(class BufferedWavPlayer* player) {
@@ -477,11 +475,14 @@ size_t WhatUnit(class BufferedWavPlayer* player) {
 VolumeOverlay<AudioSplicer> audio_splicer;
 
 void SetupStandardAudioLow() {
+  audio_splicer.Deactivate();
   for (size_t i = 0; i < NELEM(wav_players); i++) {
+    if (wav_players[i].refs() != 0) {
+      STDOUT.print("WARNING, wav player still referenced!");
+    }
     dynamic_mixer.streams_[i] = wav_players + i;
     wav_players[i].reset_volume();
   }
-  reserved_wav_players = 0;
   dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
   dynamic_mixer.streams_[NELEM(wav_players)+1] = &talkie;
 }
@@ -495,10 +496,7 @@ void SetupStandardAudio() {
 void ActivateAudioSplicer() {
   dac.SetStream(NULL);
   SetupStandardAudioLow();
-  dynamic_mixer.streams_[0] = &audio_splicer;
-  dynamic_mixer.streams_[1] = NULL;
-  reserved_wav_players = 2;
-  audio_splicer.set_crossover_time(0.003);
+  audio_splicer.Activate();
   dac.SetStream(&dynamic_mixer);
 }
 
@@ -1198,14 +1196,14 @@ protected:
   Vec3 accel_;
   bool pointing_down_ = false;
 #ifdef ENABLE_AUDIO
-  BufferedWavPlayer* track_player_ = NULL;
+  RefPtr<BufferedWavPlayer> track_player_;
 #endif
 
   void StartOrStopTrack() {
 #ifdef ENABLE_AUDIO
     if (track_player_) {
       track_player_->Stop();
-      track_player_ = NULL;
+      track_player_.Free();
     } else {
       EnableAmplifier();
       track_player_ = GetFreeWavPlayer();
@@ -1242,7 +1240,7 @@ protected:
     }
 #ifdef ENABLE_AUDIO
     if (track_player_ && !track_player_->isPlaying()) {
-      track_player_ = NULL;
+      track_player_.Free();
     }
 #endif
   }
@@ -1481,7 +1479,7 @@ public:
         return true;
       }
       EnableAmplifier();
-      BufferedWavPlayer* player = GetFreeWavPlayer();
+      RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
       if (player) {
         STDOUT.print("Playing ");
         STDOUT.println(arg);
@@ -1498,7 +1496,7 @@ public:
       }
       if (track_player_) {
         track_player_->Stop();
-        track_player_ = NULL;
+        track_player_.Free();
       }
       EnableAmplifier();
       track_player_ = GetFreeWavPlayer();
@@ -1514,7 +1512,7 @@ public:
     if (!strcmp(cmd, "stop_track")) {
       if (track_player_) {
         track_player_->Stop();
-        track_player_ = NULL;
+        track_player_.Free();
       }
       return true;
     }

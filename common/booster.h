@@ -10,7 +10,9 @@ public:
   const char* name() override { return "Booster"; }
 
   bool Active() {
+#ifdef ENABLE_AUDIO    
     if (amplifier.Active()) return true;
+#endif    
     uint32_t t = millis() - last_enabled_;
     if (t < 10000) return true;
     if (saber.NeedsPower()) return true;

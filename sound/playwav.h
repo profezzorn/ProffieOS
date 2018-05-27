@@ -165,7 +165,6 @@ private:
     else if (bits_ == 32) DecodeBytes2<32>();
   }
 
-
   int ReadFile(int n) { return file_.Read(buffer + 8, n); }
 
   void loop() {

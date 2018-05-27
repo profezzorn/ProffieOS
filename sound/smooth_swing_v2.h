@@ -177,7 +177,7 @@ private:
       if (!player) return;
       player->set_fade_time(0.2);  // Read from config file?
       player->FadeAndStop();
-      player = NULL;
+      player.Free();
     }
     void Stop() {
       if (!player) return;
@@ -196,7 +196,7 @@ private:
     void rotate(float degrees) {
       midpoint += degrees;
     }
-    BufferedWavPlayer *player = nullptr;
+    RefPtr<BufferedWavPlayer> player;
     float midpoint;
     float width;
   };

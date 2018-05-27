@@ -19,10 +19,12 @@ public:
 
   void Deactivate() {
     SetDelegate(NULL);
+    low_.Free();
+    high_.Free();
   }
 
-  BufferedWavPlayer* low_;
-  BufferedWavPlayer* high_;
+  RefPtr<BufferedWavPlayer> low_;
+  RefPtr<BufferedWavPlayer> high_;
   void SB_On() override {
     // Starts hum, etc.
     delegate_->SB_On();
@@ -53,12 +55,12 @@ public:
     if (low_) {
       low_->set_fade_time(0.3);
       low_->FadeAndStop();
-      low_ = NULL;
+      low_.Free();
     }
     if (high_) {
       high_->set_fade_time(0.3);
       high_->FadeAndStop();
-      high_ = NULL;
+      high_.Free();
     }
     delegate_->SB_Off();
   }

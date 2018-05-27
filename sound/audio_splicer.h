@@ -3,11 +3,29 @@
 
 // This class is used to cut from one sound to another with
 // no gap. It does a short (2.5ms) crossfade to accomplish this.
-// It's currently hard-coded to use wav_players[0] and wav_playes[1].
 class AudioSplicer : public AudioStream, Looper {
 public:
   AudioSplicer() : Looper(NOLINK) {}
   const char* name() override { return "AudioSplicer"; }
+
+  void Activate() {
+    players_[0] = GetFreeWavPlayer();
+    players_[1] = GetFreeWavPlayer();
+    for (size_t i = 0; i < NELEM(dynamic_mixer.streams_); i++) {
+      if (dynamic_mixer.streams_[i] == players_[0].get()) {
+	dynamic_mixer.streams_[i] = this;
+      }
+      if (dynamic_mixer.streams_[i] == players_[1].get()) {
+	dynamic_mixer.streams_[i] = nullptr;
+      }
+    }
+    set_crossover_time(0.003);
+  }
+
+  void Deactivate() {
+    players_[0].Free();
+    players_[1].Free();
+  }
 
   int read(int16_t* data, int elements) override {
     int16_t *p = data;
@@ -16,12 +34,12 @@ public:
       return 0;
     }
     if (current_ >= 0) {
-      int num = wav_players[current_].read(p, to_read);
+      int num = players_[current_]->read(p, to_read);
       to_read -= num;
       p += num;
       if (to_read > 0) {
         // end of file?
-        if (wav_players[current_].eof()) {
+        if (players_[current_]->eof()) {
           // STDOUT.println("AudioSPlicer::EOF!!");
           current_ = -1;
         }
@@ -37,7 +55,7 @@ public:
       while (to_read) {
         int16_t tmp[32];
         int n = min(to_read, (int)NELEM(tmp));
-        int num = wav_players[fadeto_].read(tmp, n);
+        int num = players_[fadeto_]->read(tmp, n);
         while (num < n) tmp[num++] = 0;
         for (int i = 0; i < num; i++) {
           p[i] = (p[i] * fade_ + tmp[i] * (32768 - fade_)) >> 15;
@@ -51,7 +69,7 @@ public:
       }
       if (!fade_) {
         if (current_ != -1)
-          wav_players[current_].Stop();
+          players_[current_]->Stop();
         current_ = fadeto_;
         fadeto_ = -1;
       }
@@ -93,9 +111,9 @@ public:
     }
     digitalWrite(amplifierPin, HIGH); // turn on the amplifier
     int unit = current_ == 0 ? 1 : 0;
-    wav_players[unit].PlayOnce(f);
+    players_[unit]->PlayOnce(f);
     if (loop) {
-      wav_players[unit].PlayLoop(loop);
+      players_[unit]->PlayLoop(loop);
     }
     if (current_ == -1) {
       current_ = unit;
@@ -111,6 +129,7 @@ public:
   }
 
 protected:
+  RefPtr<BufferedWavPlayer> players_[2];
   volatile int current_= -1;
   volatile int fadeto_ = -1;
   volatile int fade_speed_ = 128;
