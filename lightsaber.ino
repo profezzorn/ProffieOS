@@ -768,7 +768,6 @@ class NoLED;
 #endif
 #include "blades/fastled_blade.h"
 #include "blades/simple_blade.h"
-#include "blades/string_blade.h"
 #include "blades/sub_blade.h"
 #include "blades/leds.h"
 
