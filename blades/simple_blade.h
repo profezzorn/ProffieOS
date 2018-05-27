@@ -114,6 +114,7 @@ class BladeBase *SimpleBladePtr() {
   return &blade;
 }
 
+#if VERSION_MAJOR > 2
 // Possibly one LED driver per channel...
 template<class LED, int CLASH_PIN = -1, class CLASH_LED = NoLED>
 class BladeBase *StringBladePtr() {
@@ -128,5 +129,6 @@ class BladeBase *StringBladePtr() {
   > blade;
   return &blade;
 }
+#endif
 
 #endif
