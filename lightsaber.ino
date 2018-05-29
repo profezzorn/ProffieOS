@@ -465,6 +465,15 @@ RefPtr<BufferedWavPlayer> GetFreeWavPlayer()  {
   return RefPtr<BufferedWavPlayer>();
 }
 
+RefPtr<BufferedWavPlayer> RequireFreeWavPlayer()  {
+  while (true) {
+    RefPtr<BufferedWavPlayer> ret = GetFreeWavPlayer();
+    if (ret) return ret;
+    STDOUT.println("Failed to get hum player, trying again!");
+    delay(100);
+  }
+}
+
 size_t WhatUnit(class BufferedWavPlayer* player) {
   if (!player) return -1;
   return player - wav_players;
@@ -478,7 +487,7 @@ void SetupStandardAudioLow() {
   audio_splicer.Deactivate();
   for (size_t i = 0; i < NELEM(wav_players); i++) {
     if (wav_players[i].refs() != 0) {
-      STDOUT.print("WARNING, wav player still referenced!");
+      STDOUT.println("WARNING, wav player still referenced!");
     }
     dynamic_mixer.streams_[i] = wav_players + i;
     wav_players[i].reset_volume();
@@ -557,6 +566,7 @@ public:
   const char* name() override { return "BatteryMonitor"; }
   float battery_now() {
     // This is the volts on the battery monitor pin.
+    // TODO: analogRead can be very slow, make an async one and/or read it less often.
     float volts = 3.3 * analogRead(batteryLevelPin) / 1024.0;
 #ifdef V2
     float pulldown = 220000;  // External pulldown
@@ -593,8 +603,12 @@ protected:
 #endif
   }
   void Loop() override {
-    float v = battery_now();
-    last_voltage_ = last_voltage_ * 0.999 + v * 0.001;
+    uint32_t now = millis();
+    if (last_voltage_read_time_ != now) {
+      float v = battery_now();
+      last_voltage_ = last_voltage_ * 0.999 + v * 0.001;
+      last_voltage_read_time_ = now;
+    }
     if (monitor.ShouldPrint(Monitoring::MonitorBattery) ||
         millis() - last_print_millis_ > 20000) {
       STDOUT.print("Battery voltage: ");
@@ -629,6 +643,7 @@ protected:
 private:
   bool loaded_ = false;
   float last_voltage_ = 0.0;
+  uint32_t last_voltage_read_time_ = 0;
   float old_voltage_ = 0.0;
   float really_old_voltage_ = 0.0;
   uint32_t last_print_millis_;
