@@ -23,7 +23,8 @@ public:
   void Activate() {
     STDOUT.println("Activating polyphonic font.");
     SetupStandardAudio();
-    wav_players[0].set_volume_now(0);
+    hum_player_ = RequireFreeWavPlayer();
+    hum_player_->set_volume_now(0);
     config_.ReadInCurrentDir("config.ini");
     SaberBase::Link(this);
     state_ = STATE_OFF;
@@ -38,13 +39,14 @@ public:
   };
   void Deactivate() {
     lock_player_.Free();
+    hum_player_.Free();
     SaberBase::Unlink(this);
   }
 
   void SB_On() override {
     state_ = STATE_OUT;
-    wav_players[0].PlayOnce(&hum);
-    wav_players[0].PlayLoop(&hum);
+    hum_player_->PlayOnce(&hum);
+    hum_player_->PlayLoop(&hum);
     hum_start_ = millis();
     if (config_.humStart) {
       RefPtr<BufferedWavPlayer> tmp = Play(&out);
@@ -129,18 +131,19 @@ public:
       case STATE_HUM_ON:
         break;
       case STATE_HUM_FADE_OUT: {
+	SaberBase::RequestMotion();
         uint32_t delta = m - last_micros_;
         volume_ -= (delta / 1000000.0) / 0.2; // 0.2 seconds
         if (volume_ <= 0.0f) {
           volume_ = 0.0f;
           state_ = STATE_OFF;
-	  wav_players[0].FadeAndStop();
+	  hum_player_->FadeAndStop();
         }
         break;
       }
     }
     last_micros_ = m;
-    wav_players[0].set_volume(vol * volume_);
+    hum_player_->set_volume(vol * volume_);
   }
   
   void SB_Motion(const Vec3& gyro, bool clear) override {
@@ -160,6 +163,7 @@ public:
     SetHumVolume(vol);
   }
 
+  RefPtr<BufferedWavPlayer> hum_player_;
   IgniterConfigFile config_;
   State state_;
   float volume_;
