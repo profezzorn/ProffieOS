@@ -1,6 +1,91 @@
 #ifndef BLADES_SIMPLE_BLADE_H
 #define BLADES_SIMPLE_BLADE_H
 
+template<int PIN, class LED>
+class PWMPin : public PWMPinInterface {
+public:
+  void Activate() override {
+    LSanalogWriteSetup(PIN);
+    LSanalogWrite(PIN, 0);  // make it black
+  }
+  void set(const Color16& c) override {
+    LSanalogWrite(PIN, led_.PWM(c));
+  }
+  void set_overdrive(const Color16& c) override {
+    LSanalogWrite(PIN, led_.PWM_overdrive(c));
+  }
+
+  DriveLogic<LED> led_;
+};
+
+template<class LED>
+class PWMPin<-1, LED> : PWMPinInterface {
+public:
+  void Activate() override {}
+  void set(const Color16& c) override {}
+  void set_overdrive(const Color16& c) override {}
+};
+
+template<class ... LEDS>
+class MultiChannelLED {};
+
+template<>
+class MultiChannelLED<> : public PWMPinInterface {
+public:
+  void Activate() override {}
+  void set(const Color16& c) override {}
+  void set_overdrive(const Color16& c) override {}
+};
+
+template<class LED, class... LEDS>
+class MultiChannelLED<LED, LEDS...> : public PWMPinInterface {
+public:
+  void Activate() override {
+    led_.Activate();
+    rest_.Activate();
+  }
+  void set(const Color16& c) override {
+    led_.set(c);
+    rest_.set(c);
+  }
+  void set_overdrive(const Color16& c) override {
+    led_.set_overdrive(c);
+    rest_.set_overdrive(c);
+  }
+private:
+  LED led_;
+  MultiChannelLED<LEDS...> rest_;
+};
+
+template<class... LEDS>
+class LEDArrayHelper {};
+
+template<>
+class LEDArrayHelper<> {
+public:
+  static const size_t size = 0;
+  void InitArray(PWMPinInterface** pos) {}
+  void Activate() {}
+};
+
+template<class LED, class... LEDS>
+class LEDArrayHelper<LED, LEDS...> {
+public:
+  static const size_t size = LEDArrayHelper<LEDS...>::size + 1;
+  void InitArray(PWMPinInterface** pos) {
+    *pos = &led_;
+    rest_.InitArray(pos + 1);
+  }
+  void Activate() {
+    led_.Activate();
+    rest_.Activate();
+  }
+private:
+  LED led_;
+  LEDArrayHelper<LEDS...> rest_;
+};
+
+
 // Simple blade, LED string or LED star with optional flash on clash.
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.

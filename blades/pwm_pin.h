@@ -56,20 +56,28 @@ void LSanalogWriteSetup(uint32_t pin) {
     Serial.println(pin);
     return;
   }
-  SetupTimer(g_APinDescription[pin].pwm_instance);
+  uint32_t instance = g_APinDescription[pin].pwm_instance;
+  SetupTimer(instance);
+  stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, 0, TIMER_CONTROL_PWM);
   stm32l4_gpio_pin_configure(g_APinDescription[pin].pin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
 }
 // TODO: Shut down timer when we don't need it anymore.
 
 void LSanalogWrite(uint32_t pin, int value) {
-  uint32_t instance = g_APinDescription[pin].pwm_instance;
+  TIM_TypeDef* TIM = stm32l4_pwm[g_APinDescription[pin].pwm_instance].TIM;
   value >>= 1;
   if (value < 0) value = 0;
   if (value > 32768) value = 32768;
-  
-  stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, value, TIMER_CONTROL_PWM);
+  // stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, value, TIMER_CONTROL_PWM);
+  switch (g_APinDescription[pin].pwm_channel) {
+    case TIMER_CHANNEL_1: TIM->CCR1 = value; break;
+    case TIMER_CHANNEL_2: TIM->CCR2 = value; break;
+    case TIMER_CHANNEL_3: TIM->CCR3 = value; break;
+    case TIMER_CHANNEL_4: TIM->CCR4 = value; break;
+    case TIMER_CHANNEL_5: TIM->CCR5 = value; break;
+    case TIMER_CHANNEL_6: TIM->CCR6 = value; break;
+  }
 }
-
 
 };
 #endif
@@ -81,89 +89,16 @@ public:
   virtual void set_overdrive(const Color16& c) = 0;
 };
 
-template<int PIN, class LED>
-class PWMPin : public PWMPinInterface {
+template<int PIN>
+class SimplePWMPin {
 public:
-  void Activate() override {
+  void Activate() {
     LSanalogWriteSetup(PIN);
     LSanalogWrite(PIN, 0);  // make it black
   }
-  void set(const Color16& c) override {
-    LSanalogWrite(PIN, led_.PWM(c));
+  void set(int32_t v) {
+    LSanalogWrite(PIN, v);
   }
-  void set_overdrive(const Color16& c) override {
-    LSanalogWrite(PIN, led_.PWM_overdrive(c));
-  }
-
-  DriveLogic<LED> led_;
 };
-
-template<class LED>
-class PWMPin<-1, LED> : PWMPinInterface {
-public:
-  void Activate() override {}
-  void set(const Color16& c) override {}
-  void set_overdrive(const Color16& c) override {}
-};
-
-template<class ... LEDS>
-class MultiChannelLED {};
-
-template<>
-class MultiChannelLED<> : public PWMPinInterface {
-public:
-  void Activate() override {}
-  void set(const Color16& c) override {}
-  void set_overdrive(const Color16& c) override {}
-};
-
-template<class LED, class... LEDS>
-class MultiChannelLED<LED, LEDS...> : public PWMPinInterface {
-public:
-  void Activate() override {
-    led_.Activate();
-    rest_.Activate();
-  }
-  void set(const Color16& c) override {
-    led_.set(c);
-    rest_.set(c);
-  }
-  void set_overdrive(const Color16& c) override {
-    led_.set_overdrive(c);
-    rest_.set_overdrive(c);
-  }
-private:
-  LED led_;
-  MultiChannelLED<LEDS...> rest_;
-};
-
-template<class... LEDS>
-class LEDArrayHelper {};
-
-template<>
-class LEDArrayHelper<> {
-public:
-  static const size_t size = 0;
-  void InitArray(PWMPinInterface** pos) {}
-  void Activate() {}
-};
-
-template<class LED, class... LEDS>
-class LEDArrayHelper<LED, LEDS...> {
-public:
-  static const size_t size = LEDArrayHelper<LEDS...>::size + 1;
-  void InitArray(PWMPinInterface** pos) {
-    *pos = &led_;
-    rest_.InitArray(pos + 1);
-  }
-  void Activate() {
-    led_.Activate();
-    rest_.Activate();
-  }
-private:
-  LED led_;
-  LEDArrayHelper<LEDS...> rest_;
-};
-
 
 #endif
