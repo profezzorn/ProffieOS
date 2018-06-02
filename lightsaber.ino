@@ -2095,7 +2095,6 @@ public:
   const char* name() override { return "Parser"; }
 
   void Setup() override {
-    ScopedPinTracer tracer(17);
     SA::begin();
   }
 
