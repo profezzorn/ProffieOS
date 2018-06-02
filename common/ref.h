@@ -21,7 +21,7 @@ public:
     return *this;
   }
 
-  void Free() { ptr_->SubRef(); ptr_ = nullptr; }
+  void Free() { if (ptr_) { ptr_->SubRef(); ptr_ = nullptr; }  }
   T* operator->() { return ptr_; }
   T* get() { return ptr_; }
   T& operator*() { return *ptr_; }
