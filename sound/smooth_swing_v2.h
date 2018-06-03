@@ -197,8 +197,8 @@ private:
       midpoint += degrees;
     }
     RefPtr<BufferedWavPlayer> player;
-    float midpoint;
-    float width;
+    float midpoint = 0.0;
+    float width = 0.0;
   };
   Data A;
   Data B;

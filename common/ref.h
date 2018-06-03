@@ -30,7 +30,7 @@ public:
   explicit operator bool() const { return ptr_ != nullptr; }
 
 private:
-  void AddRef() { ptr_->AddRef(); }
+  void AddRef() { if (ptr_) ptr_->AddRef(); }
   T* ptr_;
 };
 
