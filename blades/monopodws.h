@@ -468,7 +468,6 @@ void MonopodWS2811::show(void)
   asm volatile ("" : "=m" (FTM2_C0SC) : "r" (FTM2_C0SC));
   FTM2_C0SC = 0x69;
   FTM2_C1SC = 0x28;
-  tmp = FTM2_C1SC;
   // Clear any prior timer DMA triggers
   asm volatile ("" : "=m" (FTM2_C1SC) : "r" (FTM2_C1SC));
   dma1.enable();
