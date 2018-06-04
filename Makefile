@@ -17,6 +17,10 @@ CONFIG_FILES=config/*.h
 test:
 	(cd styles && $(MAKE) test)
 	$(MAKE) clean
+	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_v3_config.h\\\" BOARD_TAG=teensy36
+	$(MAKE) clean
+	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_v3_config.h\\\" BOARD_TAG=teensy35
+	$(MAKE) clean
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/graflex_v1_config.h\\\"
 	$(MAKE) clean
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/prop_shield_fastled_v1_config.h\\\"
