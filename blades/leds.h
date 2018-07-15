@@ -91,7 +91,7 @@ struct CreeXPE2RedTemplate {
   static const int Blue = 0;
 };
 
-using CreeXPE2Red = CreeXPE2PCAmberTemplate<>;
+using CreeXPE2Red = CreeXPE2PCRedTemplate<>;
 
 template<int milliohms = 1000>
 struct CreeXPE2RedOrangeTemplate {
