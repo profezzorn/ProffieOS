@@ -14,7 +14,7 @@
 enum SaberPins {
   // I2S
   bclkPin = 3,                   // BCLK (digital audio)   PB13
-  txd0Pin = 5,                   // TXD0 (digital audio)   PB15
+  txd0Pin = 31,                  // TXD0 (digital audio)   PA10
   lrclkPin = 2,                  // LRCLK (digital audio)  PB12
 
   // I2C
@@ -27,10 +27,10 @@ enum SaberPins {
   aux2Pin = 22,                   // AUX2 button   PB4
 
   // Memory card
-  sdCardSelectPin = 14,           // PA4
+  sdCardSelectPin = 4,            // PB14
   spiDataOut = 11,                // PA7
   spiDataIn = 12,                 // PA6
-  spiClock = 13,                  // PA1
+  spiClock = 15,                  // PA5
 
   amplifierPin = 26,              // Amplifier enable pin PH1
   boosterPin = 38,                // Booster enable pin   PH0
@@ -46,18 +46,21 @@ enum SaberPins {
   bladeIdentifyPin = 16,          // blade identify input / FoC
   blade2Pin = 1,                  // PB10
   blade3Pin = 0,                  // PB11
+  blade4Pin = 17,                 // PA03
+  blade5Pin = 24,                 // PB03
 
   // Blade power control
-  bladePowerPin1 = 17,            // blade power control PA3
-  bladePowerPin2 = 31,            // blade power control PA10
+  bladePowerPin1 = 13,            // blade power control PA1
+  bladePowerPin2 = 5,             // blade power control PB15
   bladePowerPin3 = 18,            // blade power control PB0
   bladePowerPin4 = 10,            // blade power control PA8
-  bladePowerPin5 = 4,             // blade power control PB5
+  bladePowerPin5 = 19,            // blade power control PB1
   bladePowerPin6 = 6,             // blade power control PB6
 
   // Analog pins
-  batteryLevelPin = 19,           // battery level input PB1
+  batteryLevelPin = 14,           // battery level input PA04
 
-  FreePin1 = 15,  // PA5
-  FreePin2 = 24,  // PB3
+  // UART
+  rxPin = 8,                      // PA15
+  txPin = 9,                      // PA02
 };
