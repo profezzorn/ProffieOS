@@ -174,9 +174,10 @@ public:
     SAIx->FRCR = sai_frcr;
     SAIx->SLOTR = sai_slotr;
     stm32l4_system_saiclk_configure(saiclk);
-    stm32l4_gpio_pin_configure(GPIO_PIN_PB13_SAI1_SCK_A, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
-    stm32l4_gpio_pin_configure(GPIO_PIN_PB12_SAI1_FS_A, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
-    stm32l4_gpio_pin_configure(GPIO_PIN_PB15_SAI1_SD_A, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    extern const stm32l4_sai_pins_t g_SAIPins;
+    stm32l4_gpio_pin_configure(g_SAIPins.sck, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_gpio_pin_configure(g_SAIPins.fs, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_gpio_pin_configure(g_SAIPins.sd, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
     stm32l4_dma_start(&dma, (uint32_t)&SAIx->DR, (uint32_t)dac_dma_buffer, AUDIO_BUFFER_SIZE * 2,
                       DMA_OPTION_EVENT_TRANSFER_DONE |
                       DMA_OPTION_EVENT_TRANSFER_HALF |

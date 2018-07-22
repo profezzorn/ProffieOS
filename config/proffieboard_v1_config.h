@@ -3,7 +3,7 @@
 // to change anything in this file.
 
 #define VERSION_MAJOR 4
-#define VERSION_MINOR 1
+#define VERSION_MINOR 5
 #define V2
 #define V3
 #define PROFFIEBOARD
