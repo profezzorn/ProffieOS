@@ -48,14 +48,26 @@ enum SaberPins {
   blade3Pin = 0,                  // PB11
   blade4Pin = 17,                 // PA03
   blade5Pin = 24,                 // PB03
+  blade6Pin = 8,                  // PA15 (also UART)
+  blade7Pin = 9,                  // PA02 (also UART)
 
   // Blade power control
   bladePowerPin1 = 13,            // blade power control PA1
-  bladePowerPin2 = 5,             // blade power control PB15
+  bladePowerPin2 = 10,            // blade power control PA8
   bladePowerPin3 = 18,            // blade power control PB0
-  bladePowerPin4 = 10,            // blade power control PA8
-  bladePowerPin5 = 19,            // blade power control PB1
-  bladePowerPin6 = 6,             // blade power control PB6
+  bladePowerPin4 = 19,            // blade power control PB1
+  bladePowerPin5 = 5,             // blade power control PB15
+  bladePowerPin6 = 6,             // blade power control PB8
+
+  // If there is no neopixels, these can be used as PWM output
+  // If neopixels are present, but not on these pins, PWM may still
+  // be possible at 800kHz.
+  // You can drive 20mA LEDs with a resistor from these pins, or
+  // hook up an external FET to drive more powerful LEDs
+  bladePowerPin7 = 24,            // PB03 (also neopix5)
+  bladePowerPin8 = 1,             // PB10 (also neopix2)
+  bladePowerPin9 = 0,             // PB11 (also neopix3)
+  bladePowerPin10 = 10,           // PA00 (also blade ID / neopixels)
 
   // Analog pins
   batteryLevelPin = 14,           // battery level input PA04
