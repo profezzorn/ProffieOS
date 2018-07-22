@@ -1,4 +1,4 @@
-#ifdef STYLES_HUMP_FLICKER_H
+#ifndef STYLES_HUMP_FLICKER_H
 #define STYLES_HUMP_FLICKER_H
 
 // Usage: HumpFlicker<A, B, HUMP_WIDTH>
