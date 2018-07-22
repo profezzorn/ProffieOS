@@ -1187,7 +1187,7 @@ public:
   void SB_Motion(const Vec3& gyro, bool clear) override {
     if (clear)
       for (int i = 0; i < 4; i++)
-	gyro_filter_.filter(gyro);
+        gyro_filter_.filter(gyro);
 
     filtered_gyro_ = gyro_filter_.filter(gyro);
     if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
@@ -1249,7 +1249,7 @@ protected:
           // TODO: allow this to be replaced with WAV file
           talkie.Say(talkie_low_battery_15, 15);
 #endif
-	  last_beep_ = millis();
+          last_beep_ = millis();
         }
       }
     }
@@ -1387,8 +1387,8 @@ public:
         break;
 
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
-	SaberBase::RequestMotion();
-	break;
+        SaberBase::RequestMotion();
+        break;
 
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
         next_preset();
@@ -1410,14 +1410,14 @@ public:
       // Events that needs to be handled regardless of what other buttons
       // are pressed.
       switch (EVENTID(button, event, SaberBase::IsOn() ? MODE_ON : MODE_OFF)) {
-	case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
-	case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
-	  if (SaberBase::Lockup()) {
-	    SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-	    SaberBase::DoEndLockup();
-	  } else {
-	    handled = false;
-	  }
+        case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
+        case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
+          if (SaberBase::Lockup()) {
+            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+            SaberBase::DoEndLockup();
+          } else {
+            handled = false;
+          }
         break;
 
       }
@@ -1693,7 +1693,7 @@ private:
 
 Saber saber;
 
-#if 0
+#if 1
 class Script : Looper, StateMachine {
 public:
   const char* name() override { return "Script"; }
@@ -1753,6 +1753,45 @@ Script script;
 
 class Commands : public CommandParser {
  public:
+  enum PinType {
+    PinTypeFloating,
+    PinTypePulldown,
+    PinTypeCap,
+    PinTypeOther,
+  };
+
+  bool TestPin(int pin, PinType t) {
+    int ret = 0;
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, LOW);
+    delayMicroseconds(20);
+    ret <<= 1;
+    ret |= digitalRead(pin);
+
+    digitalWrite(pin, HIGH);
+    delayMicroseconds(20);
+    ret <<= 1;
+    ret |= digitalRead(pin);
+
+    // Discharge time
+    pinMode(pin, INPUT_PULLDOWN);
+    uint32_t start = micros();
+    uint32_t end;
+    while (digitalRead(pin)) {
+      end = micros();
+      if (end - start > 32768) break; // 32 millis
+    }
+    ret <<= 16;
+    ret |= (end - start);
+
+    pinMode(pin, INPUT_PULLUP);
+    delayMicroseconds(20);
+    ret <<= 1;
+    ret |= digitalRead(pin);
+    pinMode(pin, INPUT);
+
+    return ret;
+  }
   bool Parse(const char* cmd, const char* e) override {
     if (!strcmp(cmd, "help")) {
       CommandParser::DoHelp();
@@ -1821,38 +1860,38 @@ class Commands : public CommandParser {
       uint8_t block[512];
       if (!hum.Play(filename)) {
         STDOUT.println("hum file not found, try cd <fontir>");
-	return true;
+        return true;
       }
       LOCK_SD(true);
       File f = LSFS::Open(filename);
       if (!f) {
         STDOUT.println("Unable to open hum file.");
       } else {
-	STDOUT.println("Each dot is 64kB");
-	uint32_t start_millis = millis();
-	int bytes = 0;
-	for (int k = 0; k < 8; k++) {
-	  for (int j = 0; j < 16; j++) {
-	    f.seek(0);
-	    int tmp = 0;
-	    for (int i = 0; i < 128; i++) {
-	      tmp += f.read(block, 512);
-	    }
-	    STDOUT.print(tmp == 0x10000 ? "." : "!");
-	    bytes += tmp;
-	  }
-	  STDOUT.println("");
-	}
-	f.close();
-	uint32_t end_millis = millis();
-	STDOUT.println("Done");
-	// bytes per ms = kb per s (note, not kibibytes)
-	float kb_per_sec = bytes / (float)(end_millis - start_millis);
-	STDOUT.println("SD card speed: ");
-	STDOUT.print(kb_per_sec);
-	STDOUT.print(" kb/s = ");
-	STDOUT.print(kb_per_sec / 88.2);
-	STDOUT.println(" simultaneous audio streams.");
+        STDOUT.println("Each dot is 64kB");
+        uint32_t start_millis = millis();
+        int bytes = 0;
+        for (int k = 0; k < 8; k++) {
+          for (int j = 0; j < 16; j++) {
+            f.seek(0);
+            int tmp = 0;
+            for (int i = 0; i < 128; i++) {
+              tmp += f.read(block, 512);
+            }
+            STDOUT.print(tmp == 0x10000 ? "." : "!");
+            bytes += tmp;
+          }
+          STDOUT.println("");
+        }
+        f.close();
+        uint32_t end_millis = millis();
+        STDOUT.println("Done");
+        // bytes per ms = kb per s (note, not kibibytes)
+        float kb_per_sec = bytes / (float)(end_millis - start_millis);
+        STDOUT.println("SD card speed: ");
+        STDOUT.print(kb_per_sec);
+        STDOUT.print(" kb/s = ");
+        STDOUT.print(kb_per_sec / 88.2);
+        STDOUT.println(" simultaneous audio streams.");
       }
       LOCK_SD(false);
       return true;
@@ -1986,6 +2025,47 @@ class Commands : public CommandParser {
       STDOUT.println(mallinfo().fordblks);
       return true;
     }
+#if 0
+    // Not finished yet
+    if (!strcmp(cmd, "selftest")) {
+      struct PinDefs { int8_t pin; PinType type; };
+      static PinDefs pin_defs[]  = {
+        { bladePowerPin1, PinTypePulldown },
+        { bladePowerPin2, PinTypePulldown },
+        { bladePowerPin3, PinTypePulldown },
+        { bladePowerPin4, PinTypePulldown },
+        { bladePowerPin5, PinTypePulldown },
+        { bladePowerPin6, PinTypePulldown },
+        { bladePin,       PinTypeOther },
+        { blade2Pin,      PinTypeFloating },
+        { blade3Pin,      PinTypeFloating },
+        { blade4Pin,      PinTypeFloating },
+        { blade5Pin,      PinTypeFloating },
+        { amplifierPin,   PinTypeFloating },
+        { boosterPin,     PinTypeFloating },
+        { powerButtonPin, PinTypeFloating },
+        { auxPin,         PinTypeFloating },
+        { aux2Pin,        PinTypeFloating },
+        { rxPin,          PinTypeOther },
+        { txPin,          PinTypeFloating },
+      };
+      for (size_t test_index = 0; test_index < NELEM(pin_defs); test_index++) {
+        int pin = pin_defs[test_index].pin;
+        for (size_t i = 0; i < NELEM(pin_defs); i++)
+          pinMode(pin_defs[i].pin, INPUT);
+
+        // test
+        for (size_t i = 0; i < NELEM(pin_defs); i++) {
+          pinMode(pin_defs[i].pin, OUTPUT);
+          digitalWrite(pin_defs[i].pin, HIGH);
+          // test
+          digitalWrite(pin_defs[i].pin, LOW);
+          // test
+          pinMode(pin_defs[i].pin, INPUT);
+        }
+      }
+    }
+#endif
     if (!strcmp(cmd, "top")) {
 #ifdef TEENSYDUINO
       if (!(ARM_DWT_CTRL & ARM_DWT_CTRL_CYCCNTENA)) {
@@ -2110,43 +2190,43 @@ public:
         while (!SA::stream().available()) YIELD();
         int c = SA::stream().read();
         if (c < 0) { break; }
-#if 0	
-	STDOUT.print("GOT:");
-	STDOUT.println(c);
-#endif	
+#if 0   
+        STDOUT.print("GOT:");
+        STDOUT.println(c);
+#endif  
 #if 0
         if (monitor.IsMonitoring(Monitoring::MonitorSerial) &&
             default_output != &SA::stream()) {
-	  default_output->print("SER: ");
+          default_output->print("SER: ");
           default_output->println(c, HEX);
         }
 #endif  
         if (c == '\n') {
-	  if (cmd_) ParseLine();
-	  len_ = 0;
-	  space_ = 0;
-	  free(cmd_);
+          if (cmd_) ParseLine();
+          len_ = 0;
+          space_ = 0;
+          free(cmd_);
           cmd_ = nullptr;
-	  continue;
-	}
-	if (len_ + 1 >= space_) {
-	  int new_space = space_ * 3 / 2 + 8;
-	  char* tmp = (char*)realloc(cmd_, new_space);
-	  if (tmp) {
-	    space_ = new_space;
-	    cmd_ = tmp;
-	  } else {
-	    STDOUT.println("Line too long.");
-	    len_ = 0;
-	    space_ = 0;
-	    free(cmd_);
+          continue;
+        }
+        if (len_ + 1 >= space_) {
+          int new_space = space_ * 3 / 2 + 8;
+          char* tmp = (char*)realloc(cmd_, new_space);
+          if (tmp) {
+            space_ = new_space;
+            cmd_ = tmp;
+          } else {
+            STDOUT.println("Line too long.");
+            len_ = 0;
+            space_ = 0;
+            free(cmd_);
             cmd_ = nullptr;
-	    continue;
-	  }
-	}
+            continue;
+          }
+        }
         cmd_[len_] = c;
         cmd_[len_ + 1] = 0;
-	len_++;
+        len_++;
       }
       len_ = 0;
       space_ = 0;
@@ -2404,7 +2484,7 @@ void setup() {
   Serial.begin(9600);
 #if VERSION_MAJOR >= 4
   // TODO: Figure out if we need this.
-  Serial.blockOnOverrun(false);
+  // Serial.blockOnOverrun(false);
 #endif
     
   // Wait for all voltages to settle.
@@ -2420,7 +2500,29 @@ void setup() {
 #ifdef ENABLE_SD
   bool sd_card_found = LSFS::Begin();
   if (!sd_card_found) {
-    STDOUT.println("No sdcard found.");
+    if (sdCardSelectPin >= 0 && sdCardSelectPin < 255) {
+      STDOUT.println("No sdcard found.");
+      pinMode(sdCardSelectPin, OUTPUT);
+      digitalWrite(sdCardSelectPin, 0);
+      delayMicroseconds(2);
+      pinMode(sdCardSelectPin, INPUT);
+      delayMicroseconds(2);
+      if (digitalRead(sdCardSelectPin) != HIGH) {
+        STDOUT.println("SD select not pulled high!");
+      }
+    }
+#if VERSION_MAJOR >= 4
+    stm32l4_gpio_pin_configure(GPIO_PIN_PA5,   (GPIO_PUPD_PULLUP | GPIO_OSPEED_HIGH | GPIO_MODE_INPUT));
+    delayMicroseconds(10);
+    if (!stm32l4_gpio_pin_read(GPIO_PIN_PA5)) {
+      STDOUT.println("SCK won't go high!");
+    }
+    stm32l4_gpio_pin_configure(GPIO_PIN_PA5,   (GPIO_PUPD_PULLDOWN | GPIO_OSPEED_HIGH | GPIO_MODE_INPUT));
+    delayMicroseconds(10);
+    if (stm32l4_gpio_pin_read(GPIO_PIN_PA5)) {
+      STDOUT.println("SCK won't go low!");
+    }
+#endif
   } else {
     STDOUT.println("Sdcard found..");
   }
