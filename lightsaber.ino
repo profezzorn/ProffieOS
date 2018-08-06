@@ -21,14 +21,14 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "config/default_v3_config.h"
+#define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -1741,7 +1741,7 @@ V3TestScript script;
 #endif
 
 
-#if 1
+#if 0
 
 #warning !!! PROFFIEBOARD TEST SCRIPT ACTIVE !!!
 
@@ -2023,14 +2023,28 @@ public:
   uint32_t start_, last_eq_, first_ne_;
 };
 
-  
-// *Test that buttons are not shorted (and other pins)
-// *test that touch cap is working.
-// Test reset button
-// *test boot button
-// * Test buttons (please press button X)
-// *Test 5v
-// Test debugger
+// Preparations:
+// 1) In one window, start openocd:
+//    cd .arduino15/packages/grumpyoldpizza/hardware/stm32l4/0.0.26
+//    ./tools/linux/openocd/bin/openocd -s tools/share/openocd/scripts/ -f  ./variants/STM32L433CC-Butterfly/openocd_scripts/stm32l433cc_butterfly.cfg
+// 2) In a second window:
+//    tail -f /var/log/kern.log
+// 3) Start up arduino
+// 4) Hook up multimeter to test board and set it to beep on short
+//
+// For each board:
+// A) Insert SD, put board on tester, plug in USB
+// B) Check that openocd connects and that kernel window says STM32 bootloader
+// C) press reset, make sure STM32 bootloader pops up again
+// D) It should say LOW BATTERY repeatedly, no beeps
+// E) Switch to battery power
+// F) Press BOOT
+// G) Press Power button
+// H) Press AUX button
+// I) Press AUX2 button
+// J) verify that all LEDs light up in order
+// H) verify that music is playing
+// I) Switch back to short checking and turn off USB
 
 V4TestScript script;
 Blinker1 blinker1;
