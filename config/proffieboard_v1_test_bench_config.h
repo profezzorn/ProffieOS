@@ -60,8 +60,14 @@ typedef Pulsing<Rgb16<512,512,512>, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
 #if 1
-  { "font02", "tracks/cantina.wav", 
-    StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
+  { "TeensySF", "tracks/cantina.wav",
+    StyleNormalPtr<CYAN, WHITE, 3000, 8000>(),
+    "ONOFF" },
+  { "TeensySF", "tracks/cantina.wav",
+    StylePtr<InOutHelper<SimpleClash<Lockup<Blast<OnSpark<HumpFlicker<Black,Blue,5>,White,250>,White>,AudioFlicker<OnSpark<Blue,White,200>,Black>>,White,40>,300,800,Black>> (),
+    "ONOFF" },
+  { "font02", "tracks/cantina.wav",
+    StylePtr<InOutHelper<SimpleClash<Lockup<Blast<OnSpark<HumpFlicker<BLACK, BLUE, 5>, WHITE, 250>, YELLOW>, AudioFlicker<OnSpark<BLUE, WHITE, 200>, YELLOW>>, AudioFlicker<BLUE, YELLOW>, 200>, 400, 800>>(),
     "ONOFF" },
 #endif
   { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>(),
