@@ -21,14 +21,14 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_v3_config.h"
+// #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -1451,6 +1451,10 @@ public:
       Clash();
       return true;
     }
+    if (!strcmp(cmd, "force")) {
+      SaberBase::DoForce();
+      return true;
+    }
     if (!strcmp(cmd, "blast")) {
       // Avoid the base and the very tip.
       SaberBase::addBlast((200 + random(700)) / 1000.0);
@@ -1674,7 +1678,8 @@ public:
   void Help() override {
     STDOUT.println(" clash - trigger a clash");
     STDOUT.println(" on/off - turn saber on/off");
-    STDOUT.println(" blast - tricker a blast");
+    STDOUT.println(" force - trigger a force push");
+    STDOUT.println(" blast - trigger a blast");
     STDOUT.println(" lock - begin/end lockup");
 #ifdef ENABLE_AUDIO
     STDOUT.println(" pwd - print current directory");
