@@ -76,3 +76,10 @@ enum SaberPins {
   rxPin = 8,                      // PA15
   txPin = 9,                      // PA02
 };
+
+#if DOSFS_SDCARD - 0 == 0
+#error Tools->DOSFS should be set to SDCARD (SPI)
+#endif
+#ifdef TEENSYDUINO
+#error Please select Proffieboard from Tools->Board
+#endif
