@@ -60,6 +60,10 @@ typedef Pulsing<Rgb16<512,512,512>, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
 #if 1
+  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<RED, WHITE, 300, 800>(), "RED" },
+  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>(), "GREEN" },
+  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<BLUE, WHITE, 300, 800>(), "BLUE" },
+
   { "TeensySF", "tracks/cantina.wav",
     StyleNormalPtr<CYAN, WHITE, 3000, 8000>(),
     "ONOFF" },
@@ -89,8 +93,8 @@ Preset testing_presets[] = {
 
 BladeConfig blades[] = {
   // Testing configuration.
-  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
-//  { 130000, WS2811BladePtr<5, WS2811_580kHz, blade2Pin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
+//  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
+  { 130000, WS2811BladePtr<5, WS2811_580kHz, blade2Pin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
 };
 
 #endif
