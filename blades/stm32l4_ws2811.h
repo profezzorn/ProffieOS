@@ -178,10 +178,10 @@ public:
   void Set(int led, Color8 color) {
     uint32_t *output = ((uint32_t *)displayMemory) + led * (24/4);
     uint8_t rgb[3];
-    rgb[2] = color.r;
+    rgb[0] = color.r;
     rgb[1] = color.g;
-    rgb[0] = color.b;
-    for (int i = 0; i < 3; i++) {
+    rgb[2] = color.b;
+    for (int i = 2; i >= 0; i--) {
       uint32_t tmp = rgb[(( ((int)byteorder_) >> (i * 4)) & 0xf) - 1] * 0x8040201U;
       *(output++) = zero4X_ + ((tmp >> 7) & 0x01010101U) * one_minus_zero_;
       *(output++) = zero4X_ + ((tmp >> 3) & 0x01010101U) * one_minus_zero_;
@@ -192,10 +192,10 @@ public:
     uint32_t *output = ((uint32_t *)displayMemory) + led * (24/4);
     uint8_t rgb[3];
     int dither = dither_matrix[frame_num_ & 3][led & 3];
-    rgb[2] = clampi32((color.r + dither) >> 8, 0, 255);
+    rgb[0] = clampi32((color.r + dither) >> 8, 0, 255);
     rgb[1] = clampi32((color.g + dither) >> 8, 0, 255);
-    rgb[0] = clampi32((color.b + dither) >> 8, 0, 255);
-    for (int i = 0; i < 3; i++) {
+    rgb[2] = clampi32((color.b + dither) >> 8, 0, 255);
+    for (int i = 2; i >= 0; i--) {
       uint32_t tmp = rgb[(( ((int)byteorder_) >> (i * 4)) & 0xf) - 1] * 0x8040201U;
       *(output++) = zero4X_ + ((tmp >> 7) & 0x01010101U) * one_minus_zero_;
       *(output++) = zero4X_ + ((tmp >> 3) & 0x01010101U) * one_minus_zero_;
