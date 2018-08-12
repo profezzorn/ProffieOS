@@ -1,6 +1,8 @@
 #ifndef COMMON_BOOSTER_H
 #define COMMON_BOOSTER_H
 
+#include "battery_monitor.h"
+
 #if VERSION_MAJOR >= 4
 
 // Turns off booster when we don't need it anymore.
@@ -24,8 +26,10 @@ public:
   void Enable() {
     last_enabled_ = millis();
     if (!digitalRead(boosterPin)) {
+      battery_monitor.SetPinHigh(true);
       digitalWrite(boosterPin, HIGH);
       delay(10); // Give it a little time to wake up.
+      battery_monitor.SetPinHigh(false);
     }
   }
 
