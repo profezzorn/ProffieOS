@@ -265,7 +265,7 @@ private:
         sample_bytes_ = len_;
 
         if (start_ != 0.0) {
-          int samples = fmod(start_, length()) * rate_;
+          int samples = Fmod(start_, length()) * rate_;
           int bytes_to_skip = samples * channels_ * bits_ / 8;
           file_.Skip(bytes_to_skip);
           len_ -= bytes_to_skip;
