@@ -22,14 +22,14 @@
 // to use here.
 
 // #define CONFIG_FILE "config/default_v3_config.h"
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -2413,7 +2413,7 @@ public:
     while (true) {
       while (!SA::Connected()) YIELD();
       if (!SA::AlwaysConnected()) {
-        STDOUT.println("Welcome to TeensySaber, type 'help' for more info.");
+        STDOUT.println("Welcome to ProffieOS, type 'help' for more info.");
       }
 
       while (SA::Connected()) {
@@ -2576,7 +2576,7 @@ class SerialCommands : public CommandParser {
     if (!strcmp(cmd, "get_ble_config")) {
       PrintQuotedValue("password", BLE_PASSWORD);
 #ifndef BLE_NAME
-#define BLE_NAME "TeensySaber"
+#define BLE_NAME "ProffieOS"
 #endif
       PrintQuotedValue("name", BLE_NAME);
 #ifdef BLE_SHORTNAME
