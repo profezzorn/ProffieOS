@@ -29,9 +29,9 @@ public:
       uint32_t T = micros() - b.start_micros;
       float t = 0.5 + T / 200000.0;
       if (x == 0.0) {
-        mix += 1.0f / (t*t);
+        mix += 2.0f / (t*t);
       } else {
-        mix += sinf(x / (t*t)) / x;
+        mix += max(0.0, 2.0 * sinf(x / (t*t)) / x);
       }
     }
     OverDriveColor blast = blast_.getColor(led);
