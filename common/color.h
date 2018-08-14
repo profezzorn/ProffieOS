@@ -45,6 +45,12 @@ class Color16 {
                     ((256-x) * g + x * other.g) >> 8,
                     ((256-x) * b + x * other.b) >> 8);
   }
+  Color16 mix_clamped(const Color16& other, int x) const {
+    // Wonder if there is an instruction for this?
+    return Color16( clampi32(((256-x) * r + x * other.r) >> 8, 0, 255),
+                    clampi32(((256-x) * g + x * other.g) >> 8, 0, 255),
+                    clampi32(((256-x) * b + x * other.b) >> 8, 0, 255));
+  }
   // x = 0..16384
   Color16 mix2(const Color16& other, int x) const {
     // Wonder if there is an instruction for this?
