@@ -3,7 +3,7 @@
 
 #include "../common/range.h"
 
-// Usage: ColorCycle<COLOR, PERCENT, RPM>
+// Usage: Cylon<COLOR, PERCENT, RPM>
 // or: ColorCycle<COLOR, PERCENT, RPM, ON_COLOR, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS>
 // COLOR, ON_COLOR: COLOR
 // RPM, PERCENT, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS: a number
