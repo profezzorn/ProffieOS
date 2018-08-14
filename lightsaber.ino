@@ -606,7 +606,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/pulsing.h"
 #include "styles/on_spark.h"
 #include "styles/rgb_cycle.h"
-#include "styles/simple_clash.h"
+#include "styles/clash.h"
 #include "styles/lockup.h"  // Also does "drag"
 #include "styles/blast.h"
 #include "styles/strobe.h"
