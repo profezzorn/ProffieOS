@@ -17,7 +17,7 @@ public:
     base_.run(blade);
     off_color_.run(blade);
     extension_.run(blade);
-    thres = extension_.getInteger(0) * blade->num_leds() * 128;
+    thres = (extension_.getInteger(0) * blade->num_leds()) >> 7;
 
     if (ALLOW_DISABLE && is_same_type<OFF_COLOR, Rgb<0,0,0> >::value && thres == 0) 
       blade->allow_disable();
