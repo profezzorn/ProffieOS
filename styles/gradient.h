@@ -26,7 +26,7 @@ public:
 template<class A, class B, class... C>
 class GradientHelper<A, B, C...> {
 public:
-  static const size_t size = 1;
+  static const size_t size = GradientHelper<B, C...>::size + 1;
   void run(BladeBase* blade) {
     a_.run(blade);
     b_.run(blade);
@@ -36,6 +36,7 @@ public:
       OverDriveColor a = a_.getColor(led);
       OverDriveColor b = b_.a_.getColor(led);
       a.c = a.c.mix2(b.c, partition);
+      return a;
     } else {
       return b_.get(led, partition - 16384);
     }
@@ -52,7 +53,8 @@ public:
     mul_ =  (GradientHelper<COLOR...>::size << 14) / blade->num_leds();
   }
   OverDriveColor getColor(int led) {
-    return colors_.get(led, led * mul_);
+    OverDriveColor ret = colors_.get(led, led * mul_);
+    return ret;
   }
 private:
   GradientHelper<COLOR...> colors_;
