@@ -773,10 +773,34 @@ public:
     return false;
   }
 
+  int32_t muted_volume_ = 0;
+  bool SetMute(bool muted) {
+#ifdef ENABLE_AUDIO
+    if (muted) {
+      if (dynamic_mixer.get_volume()) {
+	muted_volume_ = dynamic_mixer.get_volume();
+	dynamic_mixer.set_volume(0);
+	return true;
+      }
+    } else {
+      if (muted_volume_) {
+	dynamic_mixer.set_volume(muted_volume_);
+	muted_volume_ = 0;
+	return true;
+      }
+    }
+#endif      
+    return false;
+  }
+
+  bool unmute_on_deactivation_ = false;
+  uint32_t activated_ = 0;
+
   void On() {
     if (SaberBase::IsOn()) return;
     if (current_style() && current_style()->NoOnOff())
       return;
+    activated_ = millis();
     STDOUT.println("Ignition.");
     EnableAmplifier();
     SaberBase::TurnOn();
@@ -788,6 +812,10 @@ public:
       SaberBase::DoEndLockup();
     }
     SaberBase::TurnOff();
+    if (unmute_on_deactivation_) {
+      unmute_on_deactivation_ = false;
+      SetMute(false);
+    }
   }
 
   uint32_t last_clash_ = 0;
@@ -1249,6 +1277,7 @@ public:
         On();
         break;
 
+
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
 #ifdef DUAL_POWER_BUTTONS
         aux_on_ = true;
@@ -1257,7 +1286,15 @@ public:
         next_preset();
 #endif
         break;
-         
+
+      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
+	if (millis() - activated_ < 500) {
+	  if (SetMute(true)) {
+	    unmute_on_deactivation_ = true;
+	  }
+	}
+	break;
+	
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
@@ -1530,6 +1567,19 @@ public:
       if (volume >= 0 && volume <= 3000)
         dynamic_mixer.set_volume(volume);
 #endif      
+      return true;
+    }
+    
+    if (!strcmp(cmd, "mute")) {
+      SetMute(true);
+      return true;
+    }
+    if (!strcmp(cmd, "unmute")) {
+      SetMute(true);
+      return true;
+    }
+    if (!strcmp(cmd, "toggle_mute")) {
+      if (!SetMute(true)) SetMute(false);
       return true;
     }
     
