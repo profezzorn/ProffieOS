@@ -177,7 +177,7 @@ private:
       if (!player) return;
       player->set_fade_time(0.2);  // Read from config file?
       player->FadeAndStop();
-      player.Free();
+//      player.Free();
     }
     void Stop() {
       if (!player) return;
