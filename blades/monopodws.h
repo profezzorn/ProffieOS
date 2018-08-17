@@ -470,6 +470,7 @@ void MonopodWS2811::show(void)
   FTM2_C1SC = 0x28;
   // Clear any prior timer DMA triggers
   asm volatile ("" : "=m" (FTM2_C1SC) : "r" (FTM2_C1SC));
+  FTM2_C1SC = 0x69;
   dma1.enable();
   dma2.enable();           // enable all 3 DMA channels
   dma3.enable();
