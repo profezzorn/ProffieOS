@@ -795,6 +795,8 @@ public:
 
   bool unmute_on_deactivation_ = false;
   uint32_t activated_ = 0;
+  uint32_t last_clash_ = 0;
+  uint32_t clash_timeout_ = 100;
 
   void On() {
     if (SaberBase::IsOn()) return;
@@ -804,6 +806,11 @@ public:
     STDOUT.println("Ignition.");
     EnableAmplifier();
     SaberBase::TurnOn();
+
+    // Avoid clashes a little bit while turning on.
+    // It might be a "clicky" power button...
+    last_clash_ = activated_;
+    clash_timeout_ = 300;
   }
 
   void Off() {
@@ -818,8 +825,6 @@ public:
     }
   }
 
-  uint32_t last_clash_ = 0;
-  uint32_t clash_timeout_ = 100;
   void Clash() {
     // No clashes in lockup mode.
     if (SaberBase::Lockup()) return;
