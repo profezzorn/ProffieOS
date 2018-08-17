@@ -48,13 +48,11 @@ public:
     hum_player_->PlayOnce(&hum);
     hum_player_->PlayLoop(&hum);
     hum_start_ = millis();
-    if (config_.humStart) {
-      RefPtr<BufferedWavPlayer> tmp = Play(&out);
-      if (tmp) {
-        int delay_ms = 1000 * tmp->length() - config_.humStart;
-        if (delay_ms > 0 && delay_ms < 30000) {
-          hum_start_ += delay_ms;
-        }
+    RefPtr<BufferedWavPlayer> tmp = Play(&out);
+    if (config_.humStart && tmp) {
+      int delay_ms = 1000 * tmp->length() - config_.humStart;
+      if (delay_ms > 0 && delay_ms < 30000) {
+	hum_start_ += delay_ms;
       }
     }
   }
