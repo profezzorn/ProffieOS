@@ -7,11 +7,11 @@
 // SPARK_CHANCE_PROMILLE: a number
 // SPARK_INTENSITY: a number
 // Generally displays BASE, but creates little sparkles of SPARKLE_COLOR
-// SPARK_CHANCE_PROMILLE decides how often a spark is generated, defaults to 100 (10%)
-// SPARK_INTENSITY specifies how intens the spark is, defaults to 256.
+// SPARK_CHANCE_PROMILLE decides how often a spark is generated, defaults to 300 (30%)
+// SPARK_INTENSITY specifies how intens the spark is, defaults to 1024
 template<class BASE,
   class SPARKLE_COLOR = Rgb<255,255,255>,
-  int SPARK_CHANCE_PROMILLE = 100,
+  int SPARK_CHANCE_PROMILLE = 300,
   int SPARK_INTENSITY = 1024>
 class Sparkle {
 public:
@@ -30,15 +30,15 @@ public:
       fifo[1] = 0;
       int N = blade->num_leds();
       for (size_t i = 2; i < N + 2; i++) {
-#if 1
+#if 0
 	int32_t x = (sparks_[i - 1] + sparks_[i + 1]) * 3 - (sparks_[i - 2] + sparks_[i + 2]);
 	sparks_[i-2] = fifo[0];
 	fifo[0] = fifo[1];
 	fifo[1] = (sparks_[i] * 11 + x) >> 4;
 #else
+	int32_t x = ((sparks_[i-1] + sparks_[i+1]) * 200 + sparks_[i] * 570) >> 10;
 	sparks_[i-1] = fifo[0];
-	fifo[0] = fifo[1];
-	int32_t x = ((sparks_[i-1] + sparks_[i+1]) * 63 + sparks_[i] * 895) >> 10;
+	fifo[0] = x;
 #endif	
       }
       sparks_[N] = fifo[0];
@@ -52,7 +52,7 @@ public:
   OverDriveColor getColor(int led) {
     OverDriveColor a = base_.getColor(led);
     OverDriveColor b = sparkle_color_.getColor(led);
-    a.c = a.c.mix_clamped(b.c, sparks_[led + 2]);
+    a.c = a.c.mix(b.c, clampi32(sparks_[led + 2], 0, 256));
     return a;
   }
 
