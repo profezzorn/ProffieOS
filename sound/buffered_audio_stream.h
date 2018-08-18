@@ -42,7 +42,7 @@ public:
   bool eof() const override {
     return !buffered() && eof_;
   }
-  void Stop() override { if (!stream_) stream_->Stop(); }
+  void Stop() override { if (stream_) stream_->Stop(); }
   void clear() {
     eof_ = false;
     buf_start_ = buf_end_;
