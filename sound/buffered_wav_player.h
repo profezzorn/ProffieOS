@@ -28,6 +28,7 @@ public:
 
     pause_ = true;
     clear();
+    ResetStopWhenZero();
     wav.PlayOnce(effect, start);
     SetStream(&wav);
     scheduleFillBuffer();

@@ -25,7 +25,6 @@ public:
       } else if (mult == 0) {
         if (stop_when_zero_) {
           this->Stop();
-          stop_when_zero_ = false;
         }
         for (int i = 0; i < elements; i++) data[i] = 0;
       } else {
@@ -55,6 +54,7 @@ public:
   void reset_volume() {
     set_volume_now((int)kDefaultVolume);
     volume_.set_speed(kDefaultSpeed);
+    stop_when_zero_ = false;
   }
   void set_volume(float vol) {
     set_volume((int)(kDefaultVolume * vol));
@@ -71,9 +71,14 @@ public:
   bool isOff() const {
     return volume_.isConstant() && volume_.value() == 0;
   }
+
   void FadeAndStop() {
     volume_.set_target(0);
     stop_when_zero_ = true;
+  }
+
+  void ResetStopWhenZero() {
+    stop_when_zero_ = false;
   }
 
 private:
