@@ -2638,7 +2638,7 @@ class SerialCommands : public CommandParser {
 #ifdef BLE_SHORTNAME
       PrintQuotedValue("shortname", BLE_SHORTNAME);
 #else
-      if (sizeof(BLE_NAME) - sizeof("") <= 9) {
+      if (sizeof(BLE_NAME) - sizeof("") <= 8) {
         PrintQuotedValue("shortname", BLE_NAME);
       } else {
         PrintQuotedValue("shortname", "Saber");
@@ -2932,6 +2932,7 @@ void loop() {
 #if VERSION_MAJOR >= 4
       // stm32l4_system_sysclk_configure(1000000, 500000, 500000);
       // Delay will enter low-power mode.
+      // TODO: Do we need to disable this when serial port is active?
       delay(50);         // 13.8 mA
       // STM32.stop(50);  // 12.4 mA
       // stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
