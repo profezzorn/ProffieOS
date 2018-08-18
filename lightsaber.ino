@@ -1580,7 +1580,7 @@ public:
       return true;
     }
     if (!strcmp(cmd, "unmute")) {
-      SetMute(true);
+      SetMute(false);
       return true;
     }
     if (!strcmp(cmd, "toggle_mute")) {
