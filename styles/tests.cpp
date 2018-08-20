@@ -17,6 +17,11 @@ float fract(float x) { return x - floor(x); }
 
 uint32_t micros_ = 0;
 uint32_t micros() { return micros_; }
+int32_t clampi32(int32_t x, int32_t a, int32_t b) {
+  if (x < a) return a;
+  if (x > b) return b;
+  return x;
+}
 
 // This really ought to be a typedef, but it causes problems I don't understand.
 #define StyleAllocator class StyleFactory*
