@@ -56,7 +56,7 @@ template<class T,
          class CLASH_COLOR = Rgb<255,255,255>,
          int CLASH_MILLIS = 40,
          int CLASH_WIDTH_PERCENT = 50>
-class LocalizedClashClash {
+class LocalizedClash {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
