@@ -47,7 +47,7 @@ const unsigned int maxLedsPerStrip = 144;
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
-#define ENABLE_SSD1306
+// #define ENABLE_SSD1306
 
 // #define ENABLE_DEBUG
 
@@ -60,15 +60,22 @@ typedef Pulsing<Rgb16<512,512,512>, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
 #if 1
-  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<RED, WHITE, 300, 800>(), "RED" },
-  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>(), "GREEN" },
-  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<BLUE, WHITE, 300, 800>(), "BLUE" },
-
   { "TeensySF", "tracks/cantina.wav",
-    StyleNormalPtr<CYAN, WHITE, 3000, 8000>(),
+    StylePtr<InOutHelper<LocalizedClash<Lockup<BlastFadeout<OnSpark<HumpFlicker<Black,Blue,5>,White,250>,White>,AudioFlicker<OnSpark<Blue,White,200>,Black>>,White,40>,300,800,Black>> (),
     "ONOFF" },
   { "TeensySF", "tracks/cantina.wav",
     StylePtr<InOutHelper<SimpleClash<Lockup<Blast<OnSpark<HumpFlicker<Black,Blue,5>,White,250>,White>,AudioFlicker<OnSpark<Blue,White,200>,Black>>,White,40>,300,800,Black>> (),
+    "ONOFF" },
+  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<Sparkle<BLUE>, WHITE, 300, 800>(), "BLUE" },
+  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<BLUE, WHITE, 300, 800>(), "BLUE" },
+  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<RED, WHITE, 300, 800>(), "RED" },
+  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>(), "GREEN" },
+
+  { "savant", "tracks/mars.wav",
+    StyleNormalPtr<HumpFlicker<Yellow, Red ,50>, WHITE, 300, 800, RED>(), "HumpFlicker"},
+  
+  { "TeensySF", "tracks/cantina.wav",
+    StyleNormalPtr<CYAN, WHITE, 3000, 8000>(),
     "ONOFF" },
   { "font02", "tracks/cantina.wav",
     StylePtr<InOutHelper<SimpleClash<Lockup<Blast<OnSpark<HumpFlicker<BLACK, BLUE, 5>, WHITE, 250>, YELLOW>, AudioFlicker<OnSpark<BLUE, WHITE, 200>, YELLOW>>, AudioFlicker<BLUE, YELLOW>, 200>, 400, 800>>(),
@@ -94,7 +101,7 @@ Preset testing_presets[] = {
 BladeConfig blades[] = {
   // Testing configuration.
 //  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
-  { 130000, WS2811BladePtr<5, WS2811_580kHz, blade2Pin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
+  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
 };
 
 #endif
