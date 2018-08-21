@@ -52,3 +52,7 @@ enum SaberPins {
   txd0Pin = 22,                   // TXD0 (digital audio)
   lrclkPin = 23,                  // LRCLK (digital audio)
 };
+
+#ifndef TEENSYDUINO
+#error Please select your Teensy model from Tools->Board
+#endif
