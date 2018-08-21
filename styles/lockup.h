@@ -27,7 +27,7 @@ public:
       // Good luck desciphering this one..
       case SaberBase::LOCKUP_DRAG:
       if (led >= drag_cutoff_) {
-	if (!is_same_type<DRAG_COLOR, LOCKUP>::value) {
+	if (is_same_type<DRAG_COLOR, LOCKUP>::value) {
 	  case SaberBase::LOCKUP_NORMAL:
 	  return lockup_.getColor(led);
 	} else {
