@@ -20,6 +20,8 @@ public:
 
   void Deactivate() {
     SetDelegate(NULL);
+    A.Free();
+    B.Free();
   }
 
   void Swap() {
@@ -31,8 +33,12 @@ public:
   // Should only be done when the volume is near zero.
   void PickRandomSwing() {
     if (!on_) return;
+    uint32_t m = millis();
+    // No point in picking a new random so soon after picking one.
+    if (A.player && m - last_random_ < 1000) return;
+    last_random_ = m;
     int swing = random(swings_);
-    float start = millis() / 1000.0;
+    float start = m / 1000.0;
     A.Stop();
     B.Stop();
     swingl.Select(swing);
@@ -177,7 +183,10 @@ private:
       if (!player) return;
       player->set_fade_time(0.2);  // Read from config file?
       player->FadeAndStop();
-//      player.Free();
+    }
+    void Free() {
+      if (!player) return;
+      player.Free();
     }
     void Stop() {
       if (!player) return;
@@ -203,6 +212,7 @@ private:
   Data A;
   Data B;
 
+  uint32_t last_random_ = 0;
   bool on_ = false;;
   BoxFilter<Vec3, 3> gyro_filter_;
   int swings_;
