@@ -821,6 +821,12 @@ public:
     SaberBase::TurnOff();
     if (unmute_on_deactivation_) {
       unmute_on_deactivation_ = false;
+#ifdef ENABLE_AUDIO
+      // We may also need to stop any thing else that generates noise..
+      for (size_t i = 0; i < NELEM(wav_players); i++) {
+        wav_players[i].Stop();
+      }
+#endif
       SetMute(false);
     }
   }
