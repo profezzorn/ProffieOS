@@ -40,7 +40,7 @@ struct BitField {
   template<class FIELD> T get() volatile { return FIELD::get(*this); }
 
   template<int POS, int BITS>
-  T set(const Field<POS, BITS>& v) volatile {
+  void set(const Field<POS, BITS>& v) volatile {
 #ifdef USE_ATOMICS
     armv7m_atomic_modify(&value, v.mask, v.value);
 #else

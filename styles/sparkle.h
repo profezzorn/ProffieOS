@@ -29,7 +29,7 @@ public:
       fifo[0] = 0;
       fifo[1] = 0;
       int N = blade->num_leds();
-      for (size_t i = 2; i < N + 2; i++) {
+      for (int i = 2; i < N + 2; i++) {
 #if 0
 	int32_t x = (sparks_[i - 1] + sparks_[i + 1]) * 3 - (sparks_[i - 2] + sparks_[i + 2]);
 	sparks_[i-2] = fifo[0];
