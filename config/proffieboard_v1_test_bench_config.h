@@ -60,14 +60,27 @@ typedef Pulsing<Rgb16<512,512,512>, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
 #if 1
+  { "TeensySF", "tracks/cantina.wav", StylePtr<InOutHelper<SimpleClash<
+    Lockup<Blast<Blue,White>,
+           AudioFlicker<Blue,White>,
+           AudioFlicker<Green,White>
+    >,White>, 300, 800>>(), "DEFAULT" },
+  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<BLUE, WHITE, 300, 800>(), "BLUE" },
   { "TeensySF", "tracks/cantina.wav",
-    StylePtr<InOutHelper<LocalizedClash<Lockup<BlastFadeout<OnSpark<HumpFlicker<Black,Blue,5>,White,250>,White>,AudioFlicker<OnSpark<Blue,White,200>,Black>>,White,40>,300,800,Black>> (),
+    StylePtr<InOutHelper<LocalizedClash<
+      Lockup<
+        BlastFadeout<
+          OnSpark<
+            HumpFlicker<Black,Blue,5>,
+          White,
+          250>,
+        White>,
+      AudioFlicker<OnSpark<Blue,White,200>,Black>>,White,40>,300,800,Black>> (),
     "ONOFF" },
   { "TeensySF", "tracks/cantina.wav",
     StylePtr<InOutHelper<SimpleClash<Lockup<Blast<OnSpark<HumpFlicker<Black,Blue,5>,White,250>,White>,AudioFlicker<OnSpark<Blue,White,200>,Black>>,White,40>,300,800,Black>> (),
     "ONOFF" },
   { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<Sparkle<BLUE>, WHITE, 300, 800>(), "BLUE" },
-  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<BLUE, WHITE, 300, 800>(), "BLUE" },
   { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<RED, WHITE, 300, 800>(), "RED" },
   { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<GREEN, WHITE, 300, 800>(), "GREEN" },
 
@@ -112,7 +125,8 @@ BladeConfig blades[] = {
 // TouchButton (similar to momentary button, but reacts to touch).
 // LatchingButton (on/off button, always controls ignition)
 
-LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
+//LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
+Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button AuxButton(BUTTON_AUX, auxPin, "aux");
 Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
 // TouchButton Aux2Button(BUTTON_AUX2, aux2Pin, 1700, "aux2");
