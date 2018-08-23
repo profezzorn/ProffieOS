@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_v3_config.h"
+// #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,7 +29,7 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -900,12 +900,15 @@ public:
         }
       }
     }
+//    EnableBooster();
 #endif
     return false;
   }
 
   // Select preset (font/style)
   void SetPreset(Preset* preset, bool announce) {
+    bool on = SaberBase::IsOn();
+    if (on) Off();
     if (announce) {
       if (preset->name) {
         SaberBase::DoMessage(preset->name);
@@ -933,6 +936,7 @@ public:
     current_config_->blade##N->SetStyle(preset->style_allocator##N->make());
     ONCEPERBLADE(SET_BLADE_STYLE)
     chdir(preset->font);
+    if (on) On();
   }
 
   // Go to the next Preset.
