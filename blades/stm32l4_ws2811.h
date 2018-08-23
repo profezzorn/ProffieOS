@@ -13,10 +13,10 @@ namespace {
 
 const int timer_frequency = 80000000;  // 80Mhz
   
-static uint8_t dither_matrix[4][4] = {
+static int8_t dither_matrix[4][4] = {
   { -127, 111,  -76,  94 },
   {    9, -59,   60,  -8 },
-  {  -93,  77, -110, 128 },
+  {  -93,  77, -110, 127 },
   {   43, -25,   26, -42 },
 };
 
@@ -60,7 +60,7 @@ public:
     
     stm32l4_dma_enable(&dma_, &dma_done_callback, (void*)client);
 
-    volatile uint32_t* cmp_address;
+    volatile uint32_t* cmp_address = nullptr;
     switch (g_APinDescription[pin].pwm_channel) {
     case TIMER_CHANNEL_1: cmp_address = &timer_.TIM->CCR1; break;
     case TIMER_CHANNEL_2: cmp_address = &timer_.TIM->CCR2; break;
