@@ -109,7 +109,7 @@ public:
       next_loop_ = loop;
       return false;
     }
-    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+    // EnableAmplifier();
     int unit = current_ == 0 ? 1 : 0;
     players_[unit]->PlayOnce(f);
     if (loop) {
