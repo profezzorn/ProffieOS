@@ -67,7 +67,7 @@ enum SaberPins {
   bladePowerPin7 = 24,            // PB03 (also neopix5)
   bladePowerPin8 = 1,             // PB10 (also neopix2)
   bladePowerPin9 = 0,             // PB11 (also neopix3)
-  bladePowerPin10 = 10,           // PA00 (also blade ID / neopixels)
+  bladePowerPin10 = 16,           // PA00 (also blade ID / neopixels)
 
   // Analog pins
   batteryLevelPin = 14,           // battery level input PA04
