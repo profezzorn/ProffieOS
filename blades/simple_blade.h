@@ -130,7 +130,7 @@ public:
     return ret;
   }
   void allow_disable() override {
-    power_ = false;
+    if (!on_) power_ = false;
   }
 
   // SaberBase implementation
