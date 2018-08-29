@@ -11,6 +11,7 @@
 class BufferedWavPlayer : public VolumeOverlay<BufferedAudioStream<512> > {
 public:
   void Play(const char* filename) {
+    EnableAmplifier();
     pause_ = true;
     clear();
     wav.Play(filename);
@@ -20,6 +21,7 @@ public:
   }
 
   void PlayOnce(Effect* effect, float start = 0.0) {
+    EnableAmplifier();
     STDOUT.print("unit = ");
     STDOUT.print(WhatUnit(this));
     STDOUT.print(" vol = ");

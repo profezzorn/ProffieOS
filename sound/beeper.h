@@ -27,7 +27,7 @@ public:
   }
 
   void Beep(float length, float freq) {
-    digitalWrite(amplifierPin, HIGH); // turn on the amplifier
+    EnableAmplifier();
     x_ = f_ = AUDIO_RATE / freq / 2.0;
     samples_ = AUDIO_RATE * length;
   }
