@@ -11,7 +11,8 @@ public:
     loaded_ = on;
   }
   bool low() const {
-    return battery() < (loaded_ ? 2.6 : 3.0);
+    // Battery isn't low if it's not connected at all.
+    return battery() < (loaded_ ? 2.6 : 3.0) && battery() > 0.5;
   }
   float battery_percent() {
     // Energy is roughly proportional to voltage squared.
