@@ -109,7 +109,7 @@ public:
       next_loop_ = loop;
       return false;
     }
-    // EnableAmplifier();
+    EnableAmplifier();
     int unit = current_ == 0 ? 1 : 0;
     players_[unit]->PlayOnce(f);
     if (loop) {
