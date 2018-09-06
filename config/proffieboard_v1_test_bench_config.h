@@ -37,10 +37,10 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_MOTION
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
-#define ENABLE_SERIAL
+// #define ENABLE_SERIAL
 
 // Must be 20 characters or less.
-#define BLE_PASSWORD "password"
+// #define BLE_PASSWORD "password"
 
 // FASTLED is experimental and untested right now
 // #define ENABLE_FASTLED
@@ -125,8 +125,8 @@ BladeConfig blades[] = {
 // TouchButton (similar to momentary button, but reacts to touch).
 // LatchingButton (on/off button, always controls ignition)
 
-//LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
-Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
+LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
+//Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button AuxButton(BUTTON_AUX, auxPin, "aux");
 Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
 // TouchButton Aux2Button(BUTTON_AUX2, aux2Pin, 1700, "aux2");
