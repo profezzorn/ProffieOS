@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_v3_config.h"
+// #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,7 +29,7 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -2418,6 +2418,22 @@ class Commands : public CommandParser {
       STDOUT.println("Reset failed.");
       return true;
     }
+#ifndef TEENSYDUINO    
+    if (!strcmp(cmd, "shutdown")) {
+      STDOUT.println("Sleeping 10 seconds.\n");
+      STM32.stop(100000);
+      return true;
+    }
+    if (!strcmp(cmd, "stm32info")) {
+      STDOUT.print("VBAT: ");
+      STDOUT.println(STM32.getVBAT());
+      STDOUT.print("VREF: ");
+      STDOUT.println(STM32.getVREF());
+      STDOUT.print("TEMP: ");
+      STDOUT.println(STM32.getTemperature());
+      return true;
+    }
+#endif    
     return false;
   }
 
@@ -2943,8 +2959,10 @@ void loop() {
       // stm32l4_system_sysclk_configure(1000000, 500000, 500000);
       // Delay will enter low-power mode.
       // TODO: Do we need to disable this when serial port is active?
-      delay(50);         // 13.8 mA
-      // STM32.stop(50);  // 12.4 mA
+      delay(100);         // ~8 mA
+      // STM32.stop(50);  // ~16 mA
+      // STM32.standby(50); // not better
+      // STM32.shutdown(10000); // this actually resets the cpu after the timeout, but uses a lot less power.
       // stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
       
 #elif defined(ENABLE_SNOOZE)
