@@ -70,8 +70,8 @@ BladeConfig blades[] = {
  { 0, WS2811BladePtr<144, WS2811_ACTUALLY_800kHz | WS2811_GRB>(),
      SimpleBladePtr<CreeXPE2WhiteTemplate<550>,
                     CreeXPE2BlueTemplate<240>,
-                    CreeXPE2BlueTemplate<240>, NoLED, bladePowerPin4, bladePowerPin5, bladePowerPin6, -1>()>()
-     , CONFIGARRAY(presets) },
+                    CreeXPE2BlueTemplate<240>, NoLED, bladePowerPin4, bladePowerPin5, bladePowerPin6, -1>(),
+     CONFIGARRAY(presets) },
   };
 #endif
 
