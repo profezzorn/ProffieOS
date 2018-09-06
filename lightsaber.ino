@@ -2959,7 +2959,7 @@ void loop() {
       // stm32l4_system_sysclk_configure(1000000, 500000, 500000);
       // Delay will enter low-power mode.
       // TODO: Do we need to disable this when serial port is active?
-      delay(100);         // ~8 mA
+      delay(50);         // ~8 mA
       // STM32.stop(50);  // ~16 mA
       // STM32.standby(50); // not better
       // STM32.shutdown(10000); // this actually resets the cpu after the timeout, but uses a lot less power.
