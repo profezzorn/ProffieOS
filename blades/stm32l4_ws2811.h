@@ -165,9 +165,17 @@ public:
     int one_len = pulse_len * t1h_us / 1250;
     zero4X_ = zero_len * 0x01010101U;
     one_minus_zero_ = one_len - zero_len;
+#if 0    
+    if (!engine_) {
+      Serial.print("Pin ");
+      Serial.print(pin);
+      Serial.println(" cannot do WS2811 output.");
+    }
+#endif    
   }
 
   bool IsReadyForBeginFrame() {
+    if (!engine_) return true;
     return engine_->done();
   }
 
@@ -207,10 +215,12 @@ public:
   }
 
   void EndFrame() {
+    if (!engine_) return;
     while (!IsReadyForEndFrame());
     done_ = false;
     frame_num_++;
-    engine_->show(pin_, num_leds_, frequency_, this);
+    if (engine_)
+      engine_->show(pin_, num_leds_, frequency_, this);
   }
 
   int num_leds() const { return num_leds_; }
