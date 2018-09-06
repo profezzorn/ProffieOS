@@ -24,6 +24,7 @@ public:
         // Do nothing
       } else if (mult == 0) {
         if (stop_when_zero_) {
+	  volume_.set_speed(kDefaultSpeed);
           this->Stop();
         }
         for (int i = 0; i < elements; i++) data[i] = 0;
@@ -67,6 +68,9 @@ public:
   }
   void set_fade_time(float t) {
     set_speed(max(1, (int)(kMaxVolume / t / AUDIO_RATE)));
+  }
+  float fade_speed() const {
+    return (kMaxVolume / (float)volume_.speed_) / AUDIO_RATE;
   }
   bool isOff() const {
     return volume_.isConstant() && volume_.value() == 0;

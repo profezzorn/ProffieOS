@@ -91,6 +91,8 @@ protected:
         STDOUT.print(wav_players[i].volume());
         STDOUT.print(" refs = ");
         STDOUT.print(wav_players[i].refs());
+        STDOUT.print(" fade speed = ");
+        STDOUT.print(wav_players[i].fade_speed());
         STDOUT.println(")");
       }
       return true;
