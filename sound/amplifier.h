@@ -3,6 +3,8 @@
 
 #ifdef ENABLE_AUDIO
 
+#include "dac.h"
+
 // Turns off amplifier when no audio is played.
 // Maybe name this IdleHelper or something instead??
 class Amplifier : Looper, StateMachine, CommandParser {
@@ -24,6 +26,7 @@ public:
   }
 
   void Enable() {
+    dac.begin();
     last_enabled_ = millis();
     if (!digitalRead(amplifierPin)) {
       EnableBooster();
@@ -48,6 +51,8 @@ protected:
       if (Active()) continue;
       STDOUT.println("Amplifier off.");
       digitalWrite(amplifierPin, LOW); // turn the amplifier off
+      SLEEP(20);
+      dac.end();
       while (!Active()) YIELD();
     }
     STATE_MACHINE_END();

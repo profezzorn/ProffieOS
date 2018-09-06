@@ -75,6 +75,8 @@ public:
   virtual void Loop() override {}
   virtual const char* name() { return "DAC"; }
   void Setup() override {
+    if (!needs_setup_) return;
+    needs_setup_ = false;
 #ifdef TEENSYDUINO
     dma.begin(true); // Allocate the DMA channel first
 
@@ -159,21 +161,25 @@ public:
 #else  // teensyduino
     // check return value?
     stm32l4_dma_create(&dma, DMA_CHANNEL_DMA2_CH6_SAI1_A, STM32L4_SAI_IRQ_PRIORITY);
-    // NVIC_SetPriority(sai->interrupt, sai->priority);
-    // NVIC_EnableIRQ(sai->interrupt);
+
     SAI_Block_TypeDef *SAIx = SAI1_Block_A;
-    uint32_t sai_cr1 = (SAI_xCR1_DS_2);
-    sai_cr1 |= SAI_xCR1_MONO;
-    uint32_t saiclk = SYSTEM_SAICLK_11289600;
-    sai_cr1 |= SAI_xCR1_CKSTR;
-    uint32_t sai_frcr = (31 << SAI_xFRCR_FRL_Pos) | (15 << SAI_xFRCR_FSALL_Pos) | SAI_xFRCR_FSDEF | SAI_xFRCR_FSOFF;
-    uint32_t sai_slotr = SAI_xSLOTR_NBSLOT_0 | (0x0003 << SAI_xSLOTR_SLOTEN_Pos) | SAI_xSLOTR_SLOTSZ_0;
     stm32l4_system_periph_enable(SYSTEM_PERIPH_SAI1);
     stm32l4_dma_enable(&dma, &isr, 0);
-    SAIx->CR1 = sai_cr1;
-    SAIx->FRCR = sai_frcr;
-    SAIx->SLOTR = sai_slotr;
-    stm32l4_system_saiclk_configure(saiclk);
+    SAIx->CR1 = SAI_xCR1_DS_2 | SAI_xCR1_MONO | SAI_xCR1_CKSTR;
+    SAIx->FRCR = (31 << SAI_xFRCR_FRL_Pos) | (15 << SAI_xFRCR_FSALL_Pos) | SAI_xFRCR_FSDEF | SAI_xFRCR_FSOFF;
+    SAIx->SLOTR = SAI_xSLOTR_NBSLOT_0 | (0x0003 << SAI_xSLOTR_SLOTEN_Pos) | SAI_xSLOTR_SLOTSZ_0;
+#endif
+  }
+
+  void begin() {
+    if (on_) return;
+    on_ = true;
+    Setup();
+
+    memset(dac_dma_buffer, 0, sizeof(dac_dma_buffer));
+#ifndef TEENSYDUINO
+    SAI_Block_TypeDef *SAIx = SAI1_Block_A;
+    stm32l4_system_saiclk_configure(SYSTEM_SAICLK_11289600);
     extern const stm32l4_sai_pins_t g_SAIPins;
     stm32l4_gpio_pin_configure(g_SAIPins.sck, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
     stm32l4_gpio_pin_configure(g_SAIPins.fs, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
@@ -194,6 +200,19 @@ public:
       SAIx->CR2 = SAI_xCR2_FTH_1;
       SAIx->CR1 |= SAI_xCR1_SAIEN;
     }
+#endif
+  }
+
+  void end() {
+    if (!on_) return;
+    on_ = false;
+#ifndef TEENSYDUINO
+    stm32l4_system_saiclk_configure(SYSTEM_SAICLK_NONE);
+
+    extern const stm32l4_sai_pins_t g_SAIPins;
+    stm32l4_gpio_pin_configure(g_SAIPins.sck, (GPIO_PUPD_NONE | GPIO_MODE_ANALOG));
+    stm32l4_gpio_pin_configure(g_SAIPins.fs, (GPIO_PUPD_NONE | GPIO_MODE_ANALOG));
+    stm32l4_gpio_pin_configure(g_SAIPins.sd, (GPIO_PUPD_NONE | GPIO_MODE_ANALOG));
 #endif
   }
 
@@ -292,6 +311,8 @@ private:
     }
   }
 
+  bool on_ = false;
+  bool needs_setup_ = true;
   DMAMEM static uint16_t dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
   static AudioStream * volatile stream_;
   static DMAChannel dma;
