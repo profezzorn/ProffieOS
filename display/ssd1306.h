@@ -266,6 +266,11 @@ public:
     STATE_MACHINE_END();
   }
 
+  // TODO: Don't update the display when we don't need to
+  // and return false here so that we can go into lower power modes.
+  void SB_IsOn(bool* on) override {
+    *on = true;
+  }
 private:
   uint16_t i;
   uint32_t frame_buffer_[WIDTH];
