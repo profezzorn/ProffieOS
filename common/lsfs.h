@@ -75,7 +75,7 @@ public:
     return DOSFS.open(path, "r");
   }
   static File OpenForWrite(const char* path) {
-    return DOSFS.open(path, "wc");
+    return DOSFS.open(path, "w");
   }
   class Iterator {
   public:
