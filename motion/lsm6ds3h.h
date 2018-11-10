@@ -120,6 +120,8 @@ public:
       writeByte(CTRL8_XL, 0x00);
       writeByte(CTRL9_XL, 0x38);  // accel xyz enable
       writeByte(CTRL10_C, 0x38);  // gyro xyz enable
+      writeByte(INT1_CTRL, 0x3);  // Activate INT on data ready
+      pinMode(motionSensorInterruptPin, INPUT);
       if (readByte(WHO_AM_I) == 105) {
         STDOUT.println("done.");
       } else {
@@ -128,6 +130,7 @@ public:
 
       while (SaberBase::MotionRequested()) {
         YIELD();
+	if (!digitalRead(motionSensorInterruptPin)) continue;
         int status_reg = readByte(STATUS_REG);
         if (status_reg == -1) {
           // motion fail, reboot motion chip.
