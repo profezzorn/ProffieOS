@@ -25,9 +25,10 @@ public:
 
   void Enable() {
     last_enabled_ = millis();
-    if (!digitalRead(boosterPin)) {
+    if (!on_) {
       battery_monitor.SetPinHigh(true);
       digitalWrite(boosterPin, HIGH);
+      on_ = true;
       delay(10); // Give it a little time to wake up.
       battery_monitor.SetPinHigh(false);
     }
@@ -35,7 +36,9 @@ public:
 
 protected:
   void Setup() override {
+    on_ = false;
     pinMode(boosterPin, OUTPUT);
+    digitalWrite(boosterPin, LOW); // turn the booster off
     last_enabled_ = millis();
   }
 
@@ -49,6 +52,7 @@ protected:
       if (Active()) continue;
       STDOUT.println("Booster off.");
       digitalWrite(boosterPin, LOW); // turn the booster off
+      on_ = false;
       while (!Active()) YIELD();
     }
     STATE_MACHINE_END();
@@ -73,6 +77,7 @@ protected:
   }
 
 private:
+  bool on_;
   int i_;
   uint32_t last_enabled_;
 };
