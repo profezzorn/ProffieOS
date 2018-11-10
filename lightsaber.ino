@@ -605,6 +605,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/cylon.h"
 #include "styles/ignition_delay.h"
 #include "styles/pulsing.h"
+#include "styles/blinking.h"
 #include "styles/on_spark.h"
 #include "styles/rgb_cycle.h"
 #include "styles/clash.h"
