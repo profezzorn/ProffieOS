@@ -23,14 +23,14 @@ protected:
         while (true) {
             while (!DebouncedRead()) YIELD();
             saber.Event(button_, EVENT_PRESSED);
-            if (millis() - push_millis_ > 250 && millis() - push_millis_ < 500) {
+            if (millis() - push_millis_  < 500) {
                 saber.Event(button_, EVENT_DOUBLE_CLICK);
             } else {
                 push_millis_ = millis();
                 current_modifiers |= button_;
             }
             while (DebouncedRead()) {
-                if (millis() - push_millis_ > 250) {
+                if (millis() - push_millis_ > 150) {
                     saber.Event(button_, EVENT_HELD);
                     while (DebouncedRead()) YIELD();
                }
