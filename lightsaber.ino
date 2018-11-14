@@ -1309,9 +1309,9 @@ public:
 	  if (SetMute(true)) {
 	    unmute_on_deactivation_ = true;
 	  }
+   }
    else{
     SaberBase::DoForce();
-   }
 	}
 	break;
 	
