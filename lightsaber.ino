@@ -21,8 +21,8 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/mysaber.h"
-// #define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_v3_config.h"
+#define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
@@ -174,7 +174,7 @@ SnoozeTouch snooze_touch;
 SnoozeBlock snooze_config(snooze_touch, snooze_digital, snooze_timer);
 #endif
 
-const char version[] = "$Id: lightsaber.ino,v 1.279 2018/08/22 03:44:52 hubbe Exp $";
+const char version[] = "$Id$";
 
 #include "common/state_machine.h"
 #include "common/monitoring.h"
@@ -291,6 +291,7 @@ enum EVENT : uint32_t {
   EVENT_SHAKE,
   EVENT_TWIST,
   EVENT_CLASH,
+  EVENT_HELD,
 };
 
 uint32_t current_modifiers = BUTTON_NONE;
@@ -900,12 +901,15 @@ public:
         }
       }
     }
+//    EnableBooster();
 #endif
     return false;
   }
 
   // Select preset (font/style)
   void SetPreset(Preset* preset, bool announce) {
+    bool on = SaberBase::IsOn();
+    if (on) Off();
     if (announce) {
       if (preset->name) {
         SaberBase::DoMessage(preset->name);
@@ -933,6 +937,7 @@ public:
     current_config_->blade##N->SetStyle(preset->style_allocator##N->make());
     ONCEPERBLADE(SET_BLADE_STYLE)
     chdir(preset->font);
+    if (on) On();
   }
 
   // Go to the next Preset.
@@ -1238,6 +1243,7 @@ protected:
       case EVENT_SHAKE: STDOUT.print("Shake"); break;
       case EVENT_TWIST: STDOUT.print("Twist"); break;
       case EVENT_CLASH: STDOUT.print("Clash"); break;
+      case EVENT_HELD: STDOUT.print("Held"); break;
     }
   }
 
@@ -1316,7 +1322,7 @@ public:
         Off();
         break;
 
-      case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
         SaberBase::DoForce();
         break;
 
@@ -1330,6 +1336,18 @@ public:
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
         if (!SaberBase::Lockup()) {
+          if (pointing_down_) {
+            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+          } else {
+            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+          }
+          SaberBase::DoBeginLockup();
+        } else {
+          handled = false;
+        }
+        break;
+      case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON):
+      if (!SaberBase::Lockup()) {
           if (pointing_down_) {
             SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
           } else {
@@ -2414,6 +2432,22 @@ class Commands : public CommandParser {
       STDOUT.println("Reset failed.");
       return true;
     }
+#ifndef TEENSYDUINO    
+    if (!strcmp(cmd, "shutdown")) {
+      STDOUT.println("Sleeping 10 seconds.\n");
+      STM32.stop(100000);
+      return true;
+    }
+    if (!strcmp(cmd, "stm32info")) {
+      STDOUT.print("VBAT: ");
+      STDOUT.println(STM32.getVBAT());
+      STDOUT.print("VREF: ");
+      STDOUT.println(STM32.getVREF());
+      STDOUT.print("TEMP: ");
+      STDOUT.println(STM32.getTemperature());
+      return true;
+    }
+#endif    
     return false;
   }
 
@@ -2939,8 +2973,10 @@ void loop() {
       // stm32l4_system_sysclk_configure(1000000, 500000, 500000);
       // Delay will enter low-power mode.
       // TODO: Do we need to disable this when serial port is active?
-      delay(50);         // 13.8 mA
-      // STM32.stop(50);  // 12.4 mA
+      delay(50);         // ~8 mA
+      // STM32.stop(50);  // ~16 mA
+      // STM32.standby(50); // not better
+      // STM32.shutdown(10000); // this actually resets the cpu after the timeout, but uses a lot less power.
       // stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
       
 #elif defined(ENABLE_SNOOZE)
