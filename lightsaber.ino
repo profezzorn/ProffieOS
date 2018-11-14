@@ -1309,6 +1309,9 @@ public:
 	  if (SetMute(true)) {
 	    unmute_on_deactivation_ = true;
 	  }
+   else{
+    SaberBase::DoForce();
+   }
 	}
 	break;
 	
@@ -1322,9 +1325,7 @@ public:
         Off();
         break;
 
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
-        SaberBase::DoForce();
-        break;
+      
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
         // Avoid the base and the very tip.
