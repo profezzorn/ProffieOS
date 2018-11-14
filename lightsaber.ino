@@ -1322,7 +1322,7 @@ public:
         Off();
         break;
 
-      case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
         SaberBase::DoForce();
         break;
 
