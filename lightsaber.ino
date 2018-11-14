@@ -22,7 +22,7 @@
 // to use here.
 
 // #define CONFIG_FILE "config/default_v3_config.h"
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+#define CONFIG_FILE "config/proffiesaber.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
@@ -1322,7 +1322,7 @@ public:
         Off();
         break;
 
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_ON):
         SaberBase::DoForce();
         break;
 
