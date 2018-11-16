@@ -102,6 +102,8 @@ public:
 
     while (!i2cbus.inited()) YIELD();
 
+  i2c_timeout:
+    
     while (1) {
       first_motion_ = true;
       first_accel_ = true;
@@ -129,9 +131,9 @@ public:
       }
 
       while (SaberBase::MotionRequested()) {
-        YIELD();
+	I2CUnlock(); do { YIELD(); } while (!I2CLock());
 	if (!digitalRead(motionSensorInterruptPin)) continue;
-        int status_reg = readByte(STATUS_REG);
+        status_reg = readByte(STATUS_REG);
         if (status_reg == -1) {
           // motion fail, reboot motion chip.
           STDOUT.println("Motion chip timeout, reboot motion chip!");
@@ -142,34 +144,37 @@ public:
 	// Do the accel data first to make clashes as fast as possible.
         if (status_reg & 0x4) {
           // accel data available
-          if (readBytes(OUTX_L_XL, databuffer, 6) == 6) {
+	  I2C_READ_BYTES_ASYNC(OUTX_L_XL, databuffer, 6);
+//          if (readBytes(OUTX_L_XL, databuffer, 6) == 6) {
             SaberBase::DoAccel(
               Vec3::FromData(databuffer, 4.0 / 32768.0,   // 4 g range
 			     Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
 	      first_accel_);
 	    first_accel_ = false;
-	  }
+//	  }
 	}
 	if (status_reg & 0x2) {
 	  // gyroscope data available
-	  if (readBytes(OUTX_L_G, databuffer, 6) == 6) {
+	  I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 6);
+//	  if (readBytes(OUTX_L_G, databuffer, 6) == 6) {
 	    SaberBase::DoMotion(
 	      Vec3::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
 			     Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
 	      first_motion_);
 	    first_motion_ = false;
-          }
+//          }
         }
         if (status_reg & 0x1) {
           // Temp data available
           int16_t temp_data;
-          if (readBytes(OUT_TEMP_L, (uint8_t*)&temp_data, 2) == 2) {
+	  I2C_READ_BYTES_ASYNC(OUT_TEMP_L, (uint8_t*)&temp_data, 2);
+//          if (readBytes(OUT_TEMP_L, (uint8_t*)&temp_data, 2) == 2) {
             float temp = 25.0f + temp_data * (1.0f / 16.0f);
             if (monitor.ShouldPrint(Monitoring::MonitorTemp)) {
               STDOUT.print("TEMP: ");
               STDOUT.println(temp);
             }
-          }
+//          }
         }
       }
 
@@ -183,6 +188,7 @@ public:
     STATE_MACHINE_END();
   }
 
+  int status_reg;
   bool first_motion_;
   bool first_accel_;
 };
