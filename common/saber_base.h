@@ -42,6 +42,7 @@ public:
   }
   static void TurnOff() {
     on_ = false;
+    last_motion_request_ = millis();
     SaberBase::DoOff();
   }
 
