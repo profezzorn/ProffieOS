@@ -30,20 +30,20 @@ public:
     pulse_millis_.run(base);
     pulse_promille_.run(base);
     uint32_t now = micros();
-    uint32_t pulse_millis = pulse_millis_.getInteger();
+    uint32_t pulse_millis = pulse_millis_.getInteger(0);
     if (pulse_millis <= 0) return;
     uint32_t pulse_progress_micros = now - pulse_start_micros_;
     if (pulse_progress_micros > pulse_millis * 1000) {
       // Time to start a new pulse
       if (pulse_progress_micros < pulse_millis * 2000) {
-	pulse_start_micros_ += pulse_millis_ * 1000;
+	pulse_start_micros_ += pulse_millis * 1000;
       } else {
 	pulse_start_micros_ = now;
       }
       pulse_progress_micros = now - pulse_start_micros_;
     }
     uint32_t pulse_progress_promille = pulse_progress_micros / pulse_millis;
-    on_ = pulse_progress_promille <= pulse_promille_;
+    on_ = pulse_progress_promille <= pulse_promille_.getInteger(0);
   }
 
   OverDriveColor getColor(int led) {
