@@ -213,7 +213,7 @@ public:
   }
 
   bool IsReadyForEndFrame() {
-    return done_ && micros() > done_time_us_ + reset_us_;
+    return done_ && (micros() - done_time_us_) > reset_us_;
   }
 
   void EndFrame() {
