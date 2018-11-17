@@ -74,6 +74,8 @@ public:
 			 divider -1,
 			 pulse_len -1,
 			 0 /* TIMER_OPTION_COUNT_PRELOAD */, NULL, NULL, 0);
+    stm32l4_timer_stop(&timer_);
+    timer_.TIM->CNT = 0;
 
     armv7m_atomic_modify(&timer_.TIM->DIER, TIM_DIER_UDE, 0);
 
