@@ -258,7 +258,7 @@ public:
           i++;
         }
         Wire.endTransmission();
-        YIELD();
+	I2CUnlock(); do { YIELD(); } while (!I2CLock());
       }
       loop_counter_.Update();
     }

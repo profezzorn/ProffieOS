@@ -30,7 +30,7 @@ protected:
                 current_modifiers |= button_;
             }
             while (DebouncedRead()) {
-                if (millis() - push_millis_ > 150) {
+                if (millis() - push_millis_ > 300) {
                     saber.Event(button_, EVENT_HELD);
                     while (DebouncedRead()) YIELD();
                }

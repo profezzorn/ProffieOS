@@ -120,66 +120,72 @@ public:
       writeByte(CTRL8_XL, 0x00);
       writeByte(CTRL9_XL, 0x38);  // accel xyz enable
       writeByte(CTRL10_C, 0x38);  // gyro xyz enable
+      writeByte(INT1_CTRL, 0x3);  // Activate INT on data ready
+      pinMode(motionSensorInterruptPin, INPUT);
       if (readByte(WHO_AM_I) == 105) {
         STDOUT.println("done.");
       } else {
         STDOUT.println("failed.");
       }
 
-      while (SaberBase::MotionRequested()) {
-        YIELD();
-        int status_reg = readByte(STATUS_REG);
-        if (status_reg == -1) {
-          // motion fail, reboot motion chip.
-          STDOUT.println("Motion chip timeout, reboot motion chip!");
-          writeByte(CTRL3_C, 1);
-          delay(20);
-          break;
-        }
+      while (true) {
+	YIELD();
+	if (!SaberBase::MotionRequested()) break;
+	if (!digitalRead(motionSensorInterruptPin)) continue;
+        while (!I2CLock()) YIELD();
+        I2C_READ_BYTES_ASYNC(OUTX_L_XL, &status_reg, 1);
 	// Do the accel data first to make clashes as fast as possible.
         if (status_reg & 0x4) {
           // accel data available
-          if (readBytes(OUTX_L_XL, databuffer, 6) == 6) {
-            SaberBase::DoAccel(
-              Vec3::FromData(databuffer, 4.0 / 32768.0,   // 4 g range
-			     Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
-	      first_accel_);
-	    first_accel_ = false;
-	  }
+	  I2C_READ_BYTES_ASYNC(OUTX_L_XL, databuffer, 6);
+	  SaberBase::DoAccel(
+	    Vec3::FromData(databuffer, 4.0 / 32768.0,   // 4 g range
+			   Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
+	    first_accel_);
+	  first_accel_ = false;
 	}
 	if (status_reg & 0x2) {
 	  // gyroscope data available
-	  if (readBytes(OUTX_L_G, databuffer, 6) == 6) {
-	    SaberBase::DoMotion(
-	      Vec3::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
-			     Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
-	      first_motion_);
-	    first_motion_ = false;
-          }
+	  I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 6);
+	  SaberBase::DoMotion(
+	    Vec3::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
+			   Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
+	    first_motion_);
+	  first_motion_ = false;
         }
         if (status_reg & 0x1) {
           // Temp data available
           int16_t temp_data;
-          if (readBytes(OUT_TEMP_L, (uint8_t*)&temp_data, 2) == 2) {
-            float temp = 25.0f + temp_data * (1.0f / 16.0f);
-            if (monitor.ShouldPrint(Monitoring::MonitorTemp)) {
+	  I2C_READ_BYTES_ASYNC(OUT_TEMP_L, (uint8_t*)&temp_data, 2);
+	  float temp = 25.0f + temp_data * (1.0f / 16.0f);
+	  if (monitor.ShouldPrint(Monitoring::MonitorTemp)) {
               STDOUT.print("TEMP: ");
               STDOUT.println(temp);
-            }
-          }
+	  }
         }
+        I2CUnlock();
       }
 
       STDOUT.println("Motion disable.");
 
+      while (!I2CLock()) YIELD();
       writeByte(CTRL9_XL, 0x0);  // accel xyz disable
       writeByte(CTRL10_C, 0x0);  // gyro xyz disable
-
+      I2CUnlock();
+      
       while (!SaberBase::MotionRequested()) YIELD();
+      continue;
+
+    i2c_timeout:
+      STDOUT.println("Motion chip timeout, reboot motion chip!");
+      writeByte(CTRL3_C, 1);
+      delay(20);
     }
+
     STATE_MACHINE_END();
   }
 
+  uint8_t status_reg;
   bool first_motion_;
   bool first_accel_;
 };
