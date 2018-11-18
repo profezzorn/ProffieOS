@@ -21,8 +21,8 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "config/default_v3_config.h"
 #define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
@@ -2568,6 +2568,8 @@ public:
     if (*e) {
       *e = 0;
       e++;  // e is now argument (if any)
+    } else {
+      e = nullptr;
     }
     if (monitor.IsMonitoring(Monitoring::MonitorSerial) &&
         default_output != &SA::stream()) {
