@@ -21,8 +21,9 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "config/default_v3_config.h"
 #define CONFIG_FILE "config/proffiesaber.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
@@ -606,6 +607,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/cylon.h"
 #include "styles/ignition_delay.h"
 #include "styles/pulsing.h"
+#include "styles/blinking.h"
 #include "styles/on_spark.h"
 #include "styles/rgb_cycle.h"
 #include "styles/clash.h"
@@ -1309,10 +1311,11 @@ public:
 	  if (SetMute(true)) {
 	    unmute_on_deactivation_ = true;
 	  }
-   }
-   else{
-    SaberBase::DoForce();
+   
 	}
+ else{
+      SaberBase::DoForce();
+    }
 	break;
 	
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
@@ -1324,8 +1327,6 @@ public:
 #endif
         Off();
         break;
-
-      
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
         // Avoid the base and the very tip.
@@ -1347,16 +1348,17 @@ public:
           handled = false;
         }
         break;
-      case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON):
-      if (!SaberBase::Lockup()) {
-          if (pointing_down_) {
-            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-          } else {
-            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-          }
-          SaberBase::DoBeginLockup();
+    
+    case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON):
+        if (!SaberBase::Lockup()) {
+            if (pointing_down_) {
+                SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+            } else {
+                SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+            }
+            SaberBase::DoBeginLockup();
         } else {
-          handled = false;
+            handled = false;
         }
         break;
 
@@ -2582,6 +2584,8 @@ public:
     if (*e) {
       *e = 0;
       e++;  // e is now argument (if any)
+    } else {
+      e = nullptr;
     }
     if (monitor.IsMonitoring(Monitoring::MonitorSerial) &&
         default_output != &SA::stream()) {
