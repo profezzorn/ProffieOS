@@ -112,9 +112,9 @@ public:
 
 protected:
   void Loop() override {
-    STATE_MACHINE_BEGIN() 
+    STATE_MACHINE_BEGIN()
     while (true) {
-        while (!powered_) {
+        while (!powered_ || !current_style_) {
           loop_counter_.Reset();
           YIELD();
         }
