@@ -88,12 +88,15 @@ private:
 class BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
   static SubBladeWrapper* last = NULL;
   static SubBladeWrapper* first = NULL;
-  if (first_led == 0)  {
+  if (blade)  {
     first = last = NULL;
-    if (!blade) return NULL;
   } else {
-    if (blade) return NULL;
+    if (!first) return NULL;
     blade = first->blade_;
+  }
+  
+  if (last_led >= blade->num_leds()) {
+    return NULL;
   }
   
   SubBladeWrapper* ret = new SubBladeWrapper();

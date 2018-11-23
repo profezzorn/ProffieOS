@@ -23,7 +23,7 @@ public:
     power_(power) {
     pin_.begin(data_pin, num_leds, byteorder, frequency, reset_us, t0h_us, t1h_us);
   }
-  const char* name() override { return "WS2811_Blade"; }
+  const char* name() override { return "STM32L4_WS2811_Blade"; }
 
   void Power(bool on) {
     while (!pin_.IsReadyForEndFrame());
@@ -116,7 +116,7 @@ protected:
   void Loop() override {
     STATE_MACHINE_BEGIN() 
     while (true) {
-        while (!powered_) {
+        while (!powered_ || !current_style_) {
           loop_counter_.Reset();
           YIELD();
         }
