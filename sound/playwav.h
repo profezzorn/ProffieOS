@@ -335,6 +335,11 @@ public:
     return (float)(sample_bytes_) * 8 / (bits_ * rate_);
   }
 
+  void Close() {
+    file_.Close();
+    old_file_id_ = new_file_id_ = Effect::FileID();
+  }
+
 private:
   volatile bool run_ = false;
   Effect* volatile effect_ = nullptr;

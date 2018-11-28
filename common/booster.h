@@ -61,7 +61,7 @@ protected:
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "booster")) {
       if (!strcmp(arg, "on")) {
-        digitalWrite(boosterPin, HIGH); // turn the booster off
+	Enable();
         return true;
       }
       if (!strcmp(arg, "off")) {
@@ -84,11 +84,11 @@ private:
 
 Booster booster;
 
-void EnableBooster() {
+inline void EnableBooster() {
   booster.Enable();
 }
 
 #else
-void EnableBooster() { }
+inline void EnableBooster() { }
 #endif   // V4
 #endif

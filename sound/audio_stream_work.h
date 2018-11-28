@@ -1,6 +1,7 @@
 #ifndef SOUND_AUDIO_STREAM_WORK_H
 #define SOUND_AUDIO_STREAM_WORK_H
 
+
 // AudioStreamWork is a linked list of classes that would like to
 // do some work in a software-triggered interrupt. This is used to
 // let audio processing preempt less important tasks.
@@ -37,10 +38,14 @@ public:
 #endif    
   }
 
+
   static void LockSD(bool locked) {
 //    scheduleFillBuffer();
     sd_locked = locked;
+    if (locked) MountSDCard();
   }
+
+  static bool sd_is_locked() { return sd_locked; }
 
 protected:
   virtual bool FillBuffer() = 0;
@@ -72,8 +77,8 @@ private:
 #endif
   }
 
-  static volatile bool sd_locked;
 
+  static volatile bool sd_locked;
   AudioStreamWork* next_;
 };
 

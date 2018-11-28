@@ -281,6 +281,8 @@ enum EVENT : uint32_t {
   EVENT_NONE = 0,
   EVENT_PRESSED,
   EVENT_RELEASED,
+  EVENT_HELD,
+  EVENT_HELD_LONG,
   EVENT_CLICK_SHORT,
   EVENT_CLICK_LONG,
   EVENT_DOUBLE_CLICK, // Note, will also generate a short click
@@ -333,7 +335,9 @@ int16_t clamptoi16(int32_t x) {
 
 void EnableBooster();
 void EnableAmplifier();
+void MountSDCard();
 
+#include "common/lsfs.h"
 #ifdef ENABLE_AUDIO
 
 #include "sound/click_avoider_lin.h"
@@ -350,14 +354,15 @@ Beeper beeper;
 Talkie talkie;
 
 // LightSaberSynth saber_synth;
-
 #include "sound/buffered_audio_stream.h"
 
 #else  // ENABLE_AUDIO
 
+#include "common/sd_card.h"
 #define LOCK_SD(X) do { } while(0)
 
 #endif  // ENABLE_AUDIO
+
 
 class Effect;
 Effect* all_effects = NULL;
@@ -407,8 +412,6 @@ bool endswith(const char *postfix, const char* x) {
   }
   return true;
 }
-
-#include "common/lsfs.h"
 
 char current_directory[128];
 
@@ -805,6 +808,7 @@ public:
       return;
     activated_ = millis();
     STDOUT.println("Ignition.");
+    MountSDCard();
     EnableAmplifier();
     SaberBase::TurnOn();
 
@@ -1176,6 +1180,7 @@ protected:
       track_player_->Stop();
       track_player_.Free();
     } else {
+      MountSDCard();
       EnableAmplifier();
       track_player_ = GetFreeWavPlayer();
       if (track_player_) {
@@ -1462,6 +1467,7 @@ public:
         StartOrStopTrack();
         return true;
       }
+      MountSDCard();
       EnableAmplifier();
       RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
       if (player) {
@@ -1482,6 +1488,7 @@ public:
         track_player_->Stop();
         track_player_.Free();
       }
+      MountSDCard();
       EnableAmplifier();
       track_player_ = GetFreeWavPlayer();
       if (track_player_) {
@@ -2787,6 +2794,7 @@ ACCEL_CLASS accelerometer;
 #endif   // ENABLE_MOTION
 
 #include "sound/amplifier.h"
+#include "common/sd_card.h"
 #include "common/booster.h"
 
 void setup() {
