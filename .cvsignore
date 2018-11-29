@@ -2,7 +2,10 @@
 Arduino-Makefile-1.6.0
 audio
 build-dragonfly
+build-proffieboard
 build-teensy31
+build-teensy35
+build-teensy36
 common_presets.h.test
 lightsaber.ino-1.94
 lightsaber.ino.bak2
