@@ -999,7 +999,7 @@ public:
     size_t best_config = 0;
     float best_err = 1000000.0;
     for (size_t i = 0; i < sizeof(blades) / sizeof(blades)[0]; i++) {
-      float err = fabs(resistor - blades[i].ohm);
+      float err = fabsf(resistor - blades[i].ohm);
       if (err < best_err) {
         best_config = i;
         best_err = err;
@@ -1692,7 +1692,7 @@ public:
   void Loop() override {
     STATE_MACHINE_BEGIN();
     SLEEP(2000);
-    if (fabs(saber.id() - 125812.5f) > 22687.0f) {
+    if (fabsf(saber.id() - 125812.5f) > 22687.0f) {
       STDOUT.println("ID IS WRONG!!!");
       beeper.Beep(0.5, 2000.0);
       SLEEP(1000);
@@ -1836,7 +1836,7 @@ public:
     STDOUT.println(" battery found.");
     EnableBooster();
     SLEEP(100);
-    if (fabs(saber.id() - 110000.0f) > 22687.0f) {
+    if (fabsf(saber.id() - 110000.0f) > 22687.0f) {
       STDOUT.println("ID IS WRONG (want 2.5 volts)!!!");
       beeper.Beep(0.5, 2000.0);
       SLEEP(1000);
