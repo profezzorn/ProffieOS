@@ -29,8 +29,19 @@ public:
 
   void Mount() {
     last_enabled_ = millis();
-    if (!LSFS::IsMounted() && LSFS::CanMount()) {
-      LSFS::Begin();
+    if (LSFS::IsMounted()) return;
+    // Wait for card to become available, up to 1000ms
+    uint32_t start = millis();
+    while (!LSFS::CanMount() && millis() - start < 1000)
+      armv7m_core_yield();
+    if (!LSFS::CanMount()) {
+      STDOUT.println("SD card is busy.");
+      return;
+    }
+    
+    if (!LSFS::Begin()) {
+      STDOUT.println("Failed to mount SD card.");
+      return;
     }
   }
 
@@ -52,7 +63,7 @@ protected:
     } else {
       if (Active() && millis() - last_mount_try_ > 1000) {
 	last_mount_try_ = millis();
-	Mount();
+	if (LSFS::CanMount()) Mount();
       }
     }
   }
