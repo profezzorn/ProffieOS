@@ -122,7 +122,7 @@ public:
     }
     int max_bars = (end - start) / bar.skip;
     int pos = start;
-    int bars = floor(
+    int bars = floorf(
         battery_monitor.battery_percent() * (0.5 + max_bars) / 100);
     for (int i = 0; i < bars; i++) {
       Draw(bar, pos, 0);

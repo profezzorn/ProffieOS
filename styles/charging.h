@@ -24,7 +24,7 @@ public:
       Color8(255,0,0) 
     };
     float x = (4.0 - volts) * 2.0;
-    int i = floor(x);
+    int i = floorf(x);
     i = clampi32(i, 0, NELEM(colors) - 2);
     // Blend colors over 0.1 volts.
     int blend = (x - i) * 10 * 255;

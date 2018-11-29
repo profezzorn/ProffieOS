@@ -65,10 +65,10 @@ protected:
       float v = battery();
       STDOUT.println(v);
 #ifdef ENABLE_AUDIO
-      talkie.SayDigit((int)floor(v));
+      talkie.SayDigit((int)floorf(v));
       talkie.Say(spPOINT);
-      talkie.SayDigit(((int)floor(v * 10)) % 10);
-      talkie.SayDigit(((int)floor(v * 100)) % 10);
+      talkie.SayDigit(((int)floorf(v * 10)) % 10);
+      talkie.SayDigit(((int)floorf(v * 100)) % 10);
       talkie.Say(spVOLTS);
 #endif
       return true;

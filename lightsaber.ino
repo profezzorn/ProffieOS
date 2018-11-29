@@ -310,7 +310,7 @@ uint32_t SaberBase::last_motion_request_ = 0;
 #include "common/box_filter.h"
 
 // Returns the decimals of a number, ie 12.2134 -> 0.2134
-float fract(float x) { return x - floor(x); }
+float fract(float x) { return x - floorf(x); }
 
 // clamp(x, a, b) makes sure that x is between a and b.
 float clamp(float x, float a, float b) {
@@ -319,7 +319,7 @@ float clamp(float x, float a, float b) {
   return x;
 }
 float Fmod(float a, float b) {
-  return a - floor(a / b) * b;
+  return a - floorf(a / b) * b;
 }
 
 int32_t clampi32(int32_t x, int32_t a, int32_t b) {
@@ -536,13 +536,13 @@ class SmoothSwingConfigFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
     CONFIG_VARIABLE(Version, 1);
-    CONFIG_VARIABLE(SwingSensitivity, 450.0);
-    CONFIG_VARIABLE(MaximumHumDucking, 75.0);
-    CONFIG_VARIABLE(SwingSharpness, 1.75);
-    CONFIG_VARIABLE(SwingStrengthThreshold, 20.0);
-    CONFIG_VARIABLE(Transition1Degrees, 45.0);
-    CONFIG_VARIABLE(Transition2Degrees, 160.0);
-    CONFIG_VARIABLE(MaxSwingVolume, 3.0);
+    CONFIG_VARIABLE(SwingSensitivity, 450.0f);
+    CONFIG_VARIABLE(MaximumHumDucking, 75.0f);
+    CONFIG_VARIABLE(SwingSharpness, 1.75f);
+    CONFIG_VARIABLE(SwingStrengthThreshold, 20.0f);
+    CONFIG_VARIABLE(Transition1Degrees, 45.0f);
+    CONFIG_VARIABLE(Transition2Degrees, 160.0f);
+    CONFIG_VARIABLE(MaxSwingVolume, 3.0f);
   };
 
   int  Version;
@@ -979,8 +979,8 @@ public:
     pinMode(bladeIdentifyPin, INPUT_PULLUP);
     delay(100);
     int blade_id = analogRead(bladeIdentifyPin);
-    float volts = blade_id * 3.3 / 1024.0;  // Volts at bladeIdentifyPin
-    float amps = (3.3 - volts) / 33000;     // Pull-up is 33k
+    float volts = blade_id * 3.3f / 1024.0f;  // Volts at bladeIdentifyPin
+    float amps = (3.3f - volts) / 33000;     // Pull-up is 33k
     float resistor = volts / amps;
     STDOUT.print("ID: ");
     STDOUT.print(blade_id);
@@ -1160,8 +1160,8 @@ public:
       STDOUT.println(gyro.z);
     }
     if (abs(gyro.x) > 200.0 &&
-        abs(gyro.x) > 3.0 * abs(gyro.y) &&
-        abs(gyro.x) > 3.0 * abs(gyro.z)) {
+        abs(gyro.x) > 3.0f * abs(gyro.y) &&
+        abs(gyro.x) > 3.0f * abs(gyro.z)) {
       DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
     } else {
       DoGesture(NO_STROKE);
@@ -1332,7 +1332,7 @@ public:
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
         // Avoid the base and the very tip.
-        SaberBase::addBlast((200 + random(700)) / 1000.0);
+        SaberBase::addBlast((200 + random(700)) / 1000.0f);
         SaberBase::DoBlast();
         break;
 
@@ -1427,7 +1427,7 @@ public:
     }
     if (!strcmp(cmd, "blast")) {
       // Avoid the base and the very tip.
-      SaberBase::addBlast((200 + random(700)) / 1000.0);
+      SaberBase::addBlast((200 + random(700)) / 1000.0f);
       SaberBase::DoBlast();
       return true;
     }
@@ -2388,18 +2388,18 @@ class Commands : public CommandParser {
 #endif
 
       // TODO: list cpu usage for various objects.
-      double total_cycles =
-        (double)(audio_dma_interrupt_cycles +
+      float total_cycles =
+        (float)(audio_dma_interrupt_cycles +
                  wav_interrupt_cycles +
                  loop_cycles);
       STDOUT.print("Audio DMA: ");
-      STDOUT.print(audio_dma_interrupt_cycles * 100.0 / total_cycles);
+      STDOUT.print(audio_dma_interrupt_cycles * 100.0f / total_cycles);
       STDOUT.println("%");
       STDOUT.print("Wav reading: ");
-      STDOUT.print(wav_interrupt_cycles * 100.0 / total_cycles);
+      STDOUT.print(wav_interrupt_cycles * 100.0f / total_cycles);
       STDOUT.println("%");
       STDOUT.print("LOOP: ");
-      STDOUT.print(loop_cycles * 100.0 / total_cycles);
+      STDOUT.print(loop_cycles * 100.0f / total_cycles);
       STDOUT.println("%");
       STDOUT.print("Global loops / second: ");
       global_loop_counter.Print();
