@@ -1061,7 +1061,7 @@ public:
       STDOUT.print(", ");
       STDOUT.print(at_peak.z);
       STDOUT.print(" (");
-      STDOUT.print(sqrt(peak));
+      STDOUT.print(sqrtf(peak));
       STDOUT.println(")");
       peak = 0.0;
     }

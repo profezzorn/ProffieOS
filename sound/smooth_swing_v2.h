@@ -82,7 +82,7 @@ public:
     Vec3 gyro = gyro_filter_.filter(raw_gyro);
     // degrees per second
     // May not need to smooth gyro since volume is smoothed.
-    float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
+    float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
     uint32_t t = micros();
     uint32_t delta = t - last_micros_;
     if (delta > 1000000) delta = 1;

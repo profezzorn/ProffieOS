@@ -145,7 +145,7 @@ public:
   }
   
   void SB_Motion(const Vec3& gyro, bool clear) override {
-    float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
+    float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
       if (!swinging_ && state_ != STATE_OFF) {
         swinging_ = true;
