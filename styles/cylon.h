@@ -41,7 +41,7 @@ public:
     fade_int_ = (int)(16384 * fade_);
     pos_ = fract(pos_ + delta / 60000000.0 * current_rpm);
     float fraction = current_percentage / 100.0;
-    float pos = 0.5 + sin(pos_ * M_PI * 2) * (1.0 - fraction) / 2.0 - fraction / 2.0;
+    float pos = 0.5 + sinf(pos_ * M_PI * 2) * (1.0 - fraction) / 2.0 - fraction / 2.0;
     num_leds_ = base->num_leds() * 16384;
     start_ = pos * num_leds_;
     end_ = (pos + fraction) * num_leds_;

@@ -14,7 +14,7 @@ public:
     STDOUT.println("Charging Style");
   }
   void run(BladeBase *blade) override {
-    int black_mix = 128 + 100 * sin(millis() / 500.0);
+    int black_mix = 128 + 100 * sinf(millis() / 500.0);
     float volts = battery_monitor.battery();
     Color8 colors[] = {
       Color8(0,255,0),   // Green > 4.0
