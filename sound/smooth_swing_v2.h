@@ -119,7 +119,7 @@ public:
             mixab = clamp(- A.begin() / A.width, 0.0, 1.0);
 
           float mixhum =
-            pow(swing_strength, smooth_swing_config.SwingSharpness);
+            powf(swing_strength, smooth_swing_config.SwingSharpness);
 
           hum_volume =
             1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
