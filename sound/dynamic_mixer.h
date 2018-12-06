@@ -12,6 +12,10 @@ public:
   }
   const char* name() override { return "AudioDynamicMixer"; }
 
+#if defined(STM32L433xx) && defined(__FAST_MATH__)
+  // Faster AND smaller
+  int my_sqrt(int x) { return sqrtf(x); }
+#else  
   // Calculate square root of |x|, using the previous square
   // root as a guess.
   int my_sqrt(int x) {
@@ -47,7 +51,8 @@ public:
     return last_square_ = under;
   }
   int last_square_ = 0;
-
+#endif
+  
   int read(int16_t* data, int elements) override {
     int32_t sum[AUDIO_BUFFER_SIZE / 2];
     int ret = elements;
