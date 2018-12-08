@@ -1,6 +1,8 @@
 #ifndef BLADES_SIMPLE_BLADE_H
 #define BLADES_SIMPLE_BLADE_H
 
+#include "abstract_blade.h"
+
 template<int PIN, class LED>
 class PWMPin : public PWMPinInterface {
 public:
@@ -90,10 +92,10 @@ private:
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
 template<class ... LEDS>
-class Simple_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
+class Simple_Blade : public AbstractBlade, CommandParser, Looper {
 public:
   Simple_Blade() :
-    SaberBase(NOLINK),
+    AbstractBlade(),
     CommandParser(NOLINK),
     Looper(NOLINK) {
     led_structs_.InitArray(leds_);
@@ -106,7 +108,7 @@ public:
     led_structs_.Activate();
     CommandParser::Link();
     Looper::Link();
-    SaberBase::Link(this);
+    AbstractBlade::Activate();
   }
 
   // BladeBase implementation
@@ -124,11 +126,6 @@ public:
     leds_[led]->set_overdrive(c);
   }
 
-  bool clash() override {
-    bool ret = clash_;
-    clash_ = false;
-    return ret;
-  }
   void allow_disable() override {
     if (!on_) power_ = false;
   }
@@ -144,9 +141,6 @@ public:
   void SB_Off() override {
     battery_monitor.SetLoad(false);
     on_ = false;
-  }
-  void SB_Clash() override {
-    clash_ = true;
   }
 
   bool Parse(const char* cmd, const char* arg) override {
@@ -182,7 +176,6 @@ private:
 
   bool on_ = false;
   bool power_ = false;
-  bool clash_ = false;
 };
 
 template<class LED1, class LED2, class LED3, class LED4,

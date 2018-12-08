@@ -9,15 +9,15 @@
 // Turns the blade to CLASH_COLOR for CLASH_MILLIS millseconds
 // when a clash occurs.
 
-template<class T, class CLASH_COLOR = Rgb<255,255,255>, int CLASH_MILLIS = 40>
+template<class T, class CLASH_COLOR = Rgb<255,255,255>, int CLASH_MILLIS = 40,
+  BladeEffectType EFFECT = EFFECT_CLASH>
 class SimpleClash {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
     clash_color_.run(blade);
-    uint32_t m = millis();
-    if (blade->clash()) clash_millis_ = m;
-    clash_ = m - clash_millis_ < CLASH_MILLIS;
+    // This should make us activate the clash at least one "frame".
+    clash_ = effect_.Detect(blade) || micros() - effect_.last_detected_micros() < CLASH_MILLIS * 1000;
   }
   OverDriveColor getColor(int led) {
     if (clash_) {
@@ -27,10 +27,10 @@ public:
     }
   }
 private:
+  OneshotEffectDetector<EFFECT> effect_;
   bool clash_;
   T base_;
   CLASH_COLOR clash_color_;
-  uint32_t clash_millis_;
 };
 
 
@@ -53,22 +53,25 @@ static uint8_t clash_hump[32] = {
 };
 
 template<class T,
-         class CLASH_COLOR = Rgb<255,255,255>,
-         int CLASH_MILLIS = 40,
-         int CLASH_WIDTH_PERCENT = 50>
+  class CLASH_COLOR = Rgb<255,255,255>,
+  int CLASH_MILLIS = 40,
+  int CLASH_WIDTH_PERCENT = 50,
+  BladeEffectType EFFECT = EFFECT_CLASH>
 class LocalizedClash {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
     clash_color_.run(blade);
-    uint32_t m = millis();
-    if (blade->clash()) {
-      clash_millis_ = m;
+    // This should make us activate the clash at least one "frame".
+    if (BladeEffect* e = effect_.Detect(blade)) {
+      clash_ = true;
       mult_ = NELEM(clash_hump) * 2 * 102400 / CLASH_WIDTH_PERCENT / blade->num_leds();
-      clash_location_ = random(blade->num_leds() * mult_ / 2) +
-	blade->num_leds() * mult_ / 4;
+      clash_location_ = e->location * blade->num_leds() * mult_;
+  } else if (micros() - effect_.last_detected_micros() < CLASH_MILLIS * 1000) {
+      clash_ = true;
+    } else {
+      clash_ = false;
     }
-    clash_ = m - clash_millis_ < CLASH_MILLIS;
   }
   OverDriveColor getColor(int led) {
     if (clash_) {
@@ -84,12 +87,12 @@ public:
     }
   }
 private:
+  OneshotEffectDetector<EFFECT> effect_;
   bool clash_;
   T base_;
   int mult_;
   int clash_location_;
   CLASH_COLOR clash_color_;
-  uint32_t clash_millis_;
 };
 
 #endif

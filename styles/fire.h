@@ -63,7 +63,7 @@ public:
       last_update_ = m;
 
       FireConfiguration config = OFF::get();
-      if (blade->clash()) {
+      if (clash_.Detect(blade)) {
 	config = CLASH::get();
       } else if (On(blade)) {
         if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
@@ -105,6 +105,7 @@ public:
   }
 
 private:
+  OneshotEffectDetector<EFFECT_CLASH> clash_;
   COLOR1 c1_;
   COLOR2 c2_;
   int num_leds_;

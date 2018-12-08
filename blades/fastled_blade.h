@@ -2,6 +2,7 @@
 #define BLADES_FASTLED_BLADE_H
 
 #ifdef ENABLE_FASTLED
+#include "abstract_blade.h"
 
 // Needed for "displayMemory"
 #include "monopodws.h"
@@ -11,10 +12,10 @@
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
 template<ESPIChipsets CHIPSET, EOrder RGB_ORDER, uint8_t SPI_DATA_RATE>
-class FASTLED_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
+class FASTLED_Blade : public AbstractBlade, CommandParser, Looper {
 public:
   FASTLED_Blade(int num_leds, PowerPinInterface* power) :
-    SaberBase(NOLINK),
+    AbstractBlade(),
     CommandParser(NOLINK),
     Looper(NOLINK),
     num_leds_(num_leds),
@@ -60,7 +61,7 @@ public:
     Show();
     CommandParser::Link();
     Looper::Link();
-    SaberBase::Link(this);
+    AbstractBlade::Activate();
   }
 
   // BladeBase implementation
@@ -72,11 +73,6 @@ public:
   }
   void set(int led, Color16 c) override {
     ((Color8*)displayMemory)[led] = c.dither(0);
-  }
-  bool clash() override {
-    bool ret = clash_;
-    clash_ = false;
-    return ret;
   }
   void allow_disable() override {
     if (!on_) allow_disable_ = true;
@@ -94,8 +90,6 @@ public:
   void SB_Off() override {
     on_ = false;
   }
-
-  void SB_Clash() override { clash_=true; }
 
   void SB_Top() override {
     STDOUT.print("blade fps: ");
@@ -144,7 +138,6 @@ private:
   int num_leds_;
   bool on_ = false;
   bool powered_ = false;
-  bool clash_ = false;
   bool allow_disable_ = false;
   LoopCounter loop_counter_;
   uint32_t last_millis_;

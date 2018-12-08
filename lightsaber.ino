@@ -42,6 +42,7 @@
 
 // #define ENABLE_DEBUG
 
+
 //
 // OVERVIEW
 //
@@ -53,7 +54,7 @@
 // Once an event is registered, such as "on" or "clash", the
 // event is sent to all registered SaberBase classes.
 //
-// Generally speaking, thre are usually two registered SaberBase
+// Generally speaking, there are usually two registered SaberBase
 // classes listening for events. One for sound and one for 
 // the blade. Sound and blade effects are generally executed
 // separately by separate clases.
@@ -145,6 +146,7 @@
 #define DMAChannel stm32l4_dma_t
 #define DMAMEM
 #define NVIC_SET_PRIORITY(X,Y) NVIC_SetPriority((X), (IRQn_Type)(Y))
+
 #endif
 
 #include <SPI.h>
@@ -302,8 +304,6 @@ uint32_t current_modifiers = BUTTON_NONE;
 
 SaberBase* saberbases = NULL;
 SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
-size_t SaberBase::num_blasts_ = 0;
-struct SaberBase::Blast SaberBase::blasts_[3];
 bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 
@@ -1248,6 +1248,8 @@ protected:
       case EVENT_SHAKE: STDOUT.print("Shake"); break;
       case EVENT_TWIST: STDOUT.print("Twist"); break;
       case EVENT_CLASH: STDOUT.print("Clash"); break;
+      case EVENT_HELD: STDOUT.print("Held"); break;
+      case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
     }
   }
 
@@ -1332,7 +1334,7 @@ public:
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
         // Avoid the base and the very tip.
-        SaberBase::addBlast((200 + random(700)) / 1000.0f);
+	// TODO: Make blast only appear on one blade!
         SaberBase::DoBlast();
         break;
 
@@ -1427,7 +1429,7 @@ public:
     }
     if (!strcmp(cmd, "blast")) {
       // Avoid the base and the very tip.
-      SaberBase::addBlast((200 + random(700)) / 1000.0f);
+      // TODO: Make blast only appear on one blade!
       SaberBase::DoBlast();
       return true;
     }

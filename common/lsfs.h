@@ -19,6 +19,7 @@ public:
 #endif    
   }
   static bool End() {
+    return true;
   }
   static bool Exists(const char* path) {
     return SD.exists(path);

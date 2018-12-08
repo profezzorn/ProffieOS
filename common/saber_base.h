@@ -65,30 +65,6 @@ public:
   static LockupType Lockup() { return lockup_; }
   static void SetLockup(LockupType lockup) { lockup_ = lockup; }
 
-  struct Blast {
-    uint32_t start_micros;
-    float location; // 0 = base, 1 = tip
-  };
-
-  static size_t NumBlasts() {
-    while (num_blasts_ &&
-           micros() - blasts_[num_blasts_-1].start_micros > 5000000) {
-      num_blasts_--;
-    }
-    return num_blasts_;
-  }
-  static const Blast& getBlast(size_t i) {
-    return blasts_[i];
-  }
-  static void addBlast(float location) {
-    for (size_t i = NELEM(blasts_) - 1; i; i--) {
-      blasts_[i] = blasts_[i-1];
-    }
-    blasts_[0].start_micros = micros();
-    blasts_[0].location = location;
-    num_blasts_ = min(num_blasts_ + 1, NELEM(blasts_));
-  }
-
   // 1.0 = kDefaultVolume
   // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
@@ -152,8 +128,6 @@ public:                                                         \
 
 private:
   static bool on_;
-  static size_t num_blasts_;
-  static struct Blast blasts_[3];
   static LockupType lockup_;
   static uint32_t last_motion_request_;
   SaberBase* next_saber_;

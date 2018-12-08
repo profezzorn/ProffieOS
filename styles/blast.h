@@ -26,21 +26,27 @@ static uint8_t blast_hump[32] = {
   26,22,18,14,11,9,7,5
 };
 
-template<class BASE, class BLAST, int FADEOUT_MS = 200, int WAVE_SIZE=100, int WAVE_MS=400>
+template<class BASE,
+  class BLAST,
+  int FADEOUT_MS = 200,
+  int WAVE_SIZE=100,
+  int WAVE_MS=400,
+  BladeEffectType EFFECT = EFFECT_BLAST>
 class Blast {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
     blast_.run(blade);
     num_leds_ = blade->num_leds();
-    num_blasts_ = SaberBase::NumBlasts();
+    num_blasts_ = blade->GetEffects(&effects_);
   }
   OverDriveColor getColor(int led) {
     OverDriveColor base = base_.getColor(led);
     if (num_blasts_ == 0) return base;
     int mix = 0;
     for (size_t i = 0; i < num_blasts_; i++) {
-      const SaberBase::Blast b = SaberBase::getBlast(i);
+      const BladeEffect& b = effects_[i];
+      if (!(b.type & EFFECT)) continue;
       uint32_t T = micros() - b.start_micros;
       int M = 1000 - T/FADEOUT_MS;
       if (M > 0) {
@@ -61,6 +67,7 @@ private:
   BLAST blast_;
   int num_leds_;
   size_t num_blasts_;
+  BladeEffect* effects_;
 };
 
 // Usage: BlastFadeout<BASE, BLAST, FADEOUT_MS>
@@ -70,21 +77,22 @@ private:
 // Normally shows BASE, but swiches to BLAST when a blast
 // is requested and then fades back to BASE. FADEOUT_MS
 // specifies out many milliseconds the fade takes.
-template<class BASE, class BLAST, int FADEOUT_MS = 250>
+template<class BASE, class BLAST, int FADEOUT_MS = 250, BladeEffectType EFFECT = EFFECT_BLAST>
 class BlastFadeout {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
     blast_.run(blade);
     num_leds_ = blade->num_leds();
-    num_blasts_ = SaberBase::NumBlasts();
+    num_blasts_ = blade->GetEffects(&effects_);
   }
   OverDriveColor getColor(int led) {
     OverDriveColor base = base_.getColor(led);
     if (num_blasts_ == 0) return base;
     int mix = 0;
     for (size_t i = 0; i < num_blasts_; i++) {
-      const SaberBase::Blast b = SaberBase::getBlast(i);
+      const BladeEffect& b = effects_[i];
+      if (!(b.type & EFFECT)) continue;
       uint32_t T = micros() - b.start_micros;
       int M = 1000 - T/FADEOUT_MS;
       if (M > 0) {
@@ -100,6 +108,7 @@ private:
   BLAST blast_;
   int num_leds_;
   size_t num_blasts_;
+  BladeEffect* effects_;
 };
 
 
@@ -110,14 +119,14 @@ private:
 // the color BLAST when a blast is requested.
 // This was the original blast effect, but it is slow and not
 // very configurable.
-template<class BASE, class BLAST>
+template<class BASE, class BLAST, BladeEffectType EFFECT=EFFECT_BLAST>
 class OriginalBlast {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
     blast_.run(blade);
     num_leds_ = blade->num_leds();
-    num_blasts_ = SaberBase::NumBlasts();
+    num_blasts_ = blade->GetEffects(&effects_);
   }
   OverDriveColor getColor(int led) {
     OverDriveColor base = base_.getColor(led);
@@ -125,7 +134,8 @@ public:
     float mix = 0.0;
     for (size_t i = 0; i < num_blasts_; i++) {
       // TODO(hubbe): Use sin_table and avoid floats
-      const SaberBase::Blast b = SaberBase::getBlast(i);
+      const BladeEffect& b = effects_[i];
+      if (!(b.type & EFFECT)) continue;
       float x = (b.location - led/(float)num_leds_) * 30.0;
       uint32_t T = micros() - b.start_micros;
       float t = 0.5 + T / 200000.0;
@@ -144,6 +154,7 @@ private:
   BLAST blast_;
   int num_leds_;
   size_t num_blasts_;
+  BladeEffect* effects_;
 };
 
 
