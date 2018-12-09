@@ -10,6 +10,7 @@ public:
   }
   
   size_t GetEffects(BladeEffect** blade_effects) override {
+    *blade_effects = effects_;
     while (num_effects_ &&
            micros() - effects_[num_effects_-1].start_micros > 5000000) {
       num_effects_--;
@@ -34,10 +35,10 @@ public:
     addEffect(EFFECT_STAB, 1.0f);
   }
   void SB_Blast() override {
-    addEffect(EFFECT_BLAST, 1.0f);
+    addEffect(EFFECT_BLAST, (200 + random(700)) / 1000.0f);
   }
   void SB_Force() override {
-    addEffect(EFFECT_FORCE, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_FORCE, 1.0f);
   }
   
 private:
