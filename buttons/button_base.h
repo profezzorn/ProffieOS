@@ -37,6 +37,7 @@ protected:
 	      saber.Event(button_, EVENT_HELD_LONG);
 	      while (DebouncedRead()) YIELD();
 	    }
+	    YIELD();
 	  }
 	}
 	YIELD();
