@@ -144,7 +144,7 @@ public:
             STDOUT.print("  hum_volume: ");
             STDOUT.println(hum_volume);
           }
-	  if (!off_) {
+	  if (!on_) {
 	    // We need to stop setting the volume when off, or playback may never stop.
 	    A.set_volume(mixhum * mixab);
 	    B.set_volume(mixhum * (1.0 - mixab));
