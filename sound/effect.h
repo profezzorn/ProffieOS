@@ -212,6 +212,7 @@ class Effect {
   }
 
   static void ScanDirectory(const char *directory) {
+    LOCK_SD(true);
     STDOUT.print("Scanning sound font: ");
     STDOUT.print(directory);
     for (Effect* e = all_effects; e; e = e->next_) {
@@ -284,6 +285,7 @@ class Effect {
 #endif   // ENABLE_AUDIO    
 #endif   // ENABLE_SD
     STDOUT.println(" done");
+    LOCK_SD(false);
   }
 
 private:
