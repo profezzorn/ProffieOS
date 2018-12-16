@@ -77,7 +77,7 @@ public:
     return mounted_;
   }
   static bool CanMount() {
-    dosfs_volume_t *volume = DOSFS_DEFAULT_VOLUME();
+    // dosfs_volume_t *volume = DOSFS_DEFAULT_VOLUME();
     dosfs_device_t *device = DOSFS_VOLUME_DEVICE(volume);
     if (device->lock & (DOSFS_DEVICE_LOCK_VOLUME |
 			DOSFS_DEVICE_LOCK_SCSI |

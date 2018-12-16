@@ -240,7 +240,7 @@ private:
   int16_t num_leds_;
   Byteorder byteorder_;
   int frequency_;
-  int reset_us_;
+  uint32_t reset_us_;
 
   uint32_t one_minus_zero_;
   uint32_t zero4X_;
