@@ -457,6 +457,7 @@ size_t WhatUnit(class BufferedWavPlayer* player);
 #include "sound/buffered_wav_player.h"
 
 BufferedWavPlayer wav_players[6];
+RefPtr<BufferedWavPlayer> track_player_;
 
 RefPtr<BufferedWavPlayer> GetFreeWavPlayer()  {
   // Find a free wave playback unit.
@@ -620,6 +621,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/colors.h"
 #include "styles/mix.h"
 #include "styles/style_ptr.h"
+#include "styles/file.h"
 
 // functions
 #include "functions/ifon.h"
@@ -1061,7 +1063,7 @@ public:
       STDOUT.print(", ");
       STDOUT.print(at_peak.z);
       STDOUT.print(" (");
-      STDOUT.print(sqrtf(peak));
+      STDOUT.print(peak);
       STDOUT.println(")");
       peak = 0.0;
     }
@@ -1170,9 +1172,6 @@ public:
 protected:
   Vec3 accel_;
   bool pointing_down_ = false;
-#ifdef ENABLE_AUDIO
-  RefPtr<BufferedWavPlayer> track_player_;
-#endif
 
   void StartOrStopTrack() {
 #ifdef ENABLE_AUDIO
