@@ -1,8 +1,6 @@
 #ifndef SOUND_HYBRID_FONT_H
 #define SOUND_HYBRID_FONT_H
 
-#if 0
-// Spork
 class IgniterConfigFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
@@ -14,7 +12,6 @@ public:
   int volHum;
   int volEff;
 };
-#endif
 
 // Monophonic sound fonts are the most common.
 // These fonts are fairly simple, as generally only one sound is

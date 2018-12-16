@@ -420,19 +420,19 @@ char current_directory[128];
 #define EFFECT(X) Effect X(#X)
 
 // Monophonic fonts
-EFFECT(boot);
+EFFECT(boot);  // also polyphonic
 EFFECT(swing);
 EFFECT(hum);
 EFFECT(poweron);
 EFFECT(poweroff);
 EFFECT(pwroff);
 EFFECT(clash);
-EFFECT(force);
-EFFECT(stab);
+EFFECT(force);  // also polyphonic
+EFFECT(stab);   // also polyphonic
 EFFECT(blaster);
 EFFECT(lockup);
 EFFECT(poweronf);
-EFFECT(font);
+EFFECT(font);   // also polyphonic
 
 // Polyphonic fonts
 EFFECT(blst);
@@ -514,26 +514,10 @@ void ActivateAudioSplicer() {
   dac.SetStream(&dynamic_mixer);
 }
 
-#include "sound/monophonic_font.h"
-
-MonophonicFont monophonic_font;
-
 #include "common/config_file.h"
-#include "sound/polyphonic_font.h"  
-
-PolyphonicFont polyphonic_font;
-
 #include "sound/hybrid_font.h"
 
-class SyntheticFont : PolyphonicFont {
-public:
-  void SB_On() override {}
-  void SB_Off() override {}
-
-  void SB_Motion(const Vec3& speed, bool clear) override {
-    // Adjust hum volume based on motion speed
-  }
-};
+HybridFont hybrid_font;
 
 class SmoothSwingConfigFile : public ConfigFile {
 public:
@@ -866,8 +850,7 @@ public:
 #ifdef ENABLE_AUDIO
     smooth_swing_v2.Deactivate();
     looped_swing_wrapper.Deactivate();
-    monophonic_font.Deactivate();
-    polyphonic_font.Deactivate();
+    hybrid_font.Deactivate();
 
     // Stop all sound!
     // TODO: Move scanning to wav-playing interrupt level so we can
@@ -886,16 +869,8 @@ public:
 #ifdef ENABLE_AUDIO
     Effect::ScanDirectory(dir);
     SaberBase* font = NULL;
-    if (clsh.files_found()) {
-      polyphonic_font.Activate();
-      font = &polyphonic_font;
-    } else if (clash.files_found()) {
-      monophonic_font.Activate();
-      font = &monophonic_font;
-    } else if (boot.files_found()) {
-      monophonic_font.Activate();
-      font = &monophonic_font;
-    }
+    hybrid_font.Activate();
+    font = &hybrid_font;
     if (font) {
       if (swingl.files_found()) {
         smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
