@@ -523,6 +523,8 @@ MonophonicFont monophonic_font;
 
 PolyphonicFont polyphonic_font;
 
+#include "sound/hybrid_font.h"
+
 class SyntheticFont : PolyphonicFont {
 public:
   void SB_On() override {}
