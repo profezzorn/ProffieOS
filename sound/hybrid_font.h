@@ -127,9 +127,13 @@ public:
       PlayMonophonic(&poweron, &hum);
     } else {
       state_ = STATE_OUT;
-      hum_player_->PlayOnce(&hum);
-      hum_player_->PlayLoop(&hum);
-      hum_start_ = millis();
+      hum_player_ = GetFreeWavPlayer();
+      if (hum_player_) {
+	hum_player_->set_volume_now(0);
+	hum_player_->PlayOnce(&hum);
+	hum_player_->PlayLoop(&hum);
+	hum_start_ = millis();
+      }
       RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&out);
       if (config_.humStart && tmp) {
 	int delay_ms = 1000 * tmp->length() - config_.humStart;
@@ -162,8 +166,6 @@ public:
   void SB_Blast() override { Play(&blaster, &blst); }
   void SB_Boot() override { PlayPolyphonic(&boot); }
   void SB_NewFont() override { PlayPolyphonic(&font); }
-
-  // WORKING HERE
 
   void SB_BeginLockup() override {
     if (lockup.files_found()) {
@@ -204,6 +206,16 @@ public:
 
   void SetHumVolume(float vol) override {
     if (!monophonic_hum_) {
+      if (state_ != STATE_OFF && !hum_player_) {
+	hum_player_ = GetFreeWavPlayer();
+	if (hum_player_) {
+	  hum_player_->set_volume_now(0);
+	  hum_player_->PlayOnce(&hum);
+	  hum_player_->PlayLoop(&hum);
+	  hum_start_ = millis();
+	}
+      }
+      if (!hum_player_) return;
       uint32_t m = micros();
       switch (state_) {
 	case STATE_OFF:
