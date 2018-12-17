@@ -6,12 +6,12 @@ BOARD_TAG=teensy31
 ifeq ($(strip $(BOARD_TAG)),Proffieboard-L433CC)
   ALTERNATE_CORE_PATH=/home/hubbe/lib/arduino-STM32L4
   USB_TYPE=USB_TYPE_CDC_MSC
-  ARDUINO_LIBS=EEPROM SPI Wire
+  ARDUINO_LIBS=SPI Wire
   include Proffieboard.mk
 else
   USB_TYPE=USB_SERIAL
   ARDUINO_LIB_PATH=FOOBAR
-  ARDUINO_LIBS=EEPROM FastLED SD SPI SerialFlash Snooze i2c_t3
+  ARDUINO_LIBS=FastLED SD SPI SerialFlash Snooze i2c_t3
   include Teensy.mk
 endif
 
