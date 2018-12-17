@@ -106,7 +106,7 @@ public:
   }
 
   void Play(Effect* monophonic, Effect* polyphonic) {
-    if (polyphonic) {
+    if (polyphonic->files_found()) {
       PlayPolyphonic(polyphonic);
     } else {
       PlayMonophonic(monophonic, &hum);
@@ -150,9 +150,9 @@ public:
       if (total) {
 	state_ = STATE_OFF;
 	if ((rand() % total) < poweroff.files_found()) {
-	  Play(&poweroff, NULL);
+	  PlayMonophonic(&poweroff, NULL);
 	} else {
-	  Play(&pwroff, NULL);
+	  PlayMonophonic(&pwroff, NULL);
 	}
       }
     } else {
@@ -253,6 +253,7 @@ public:
       last_micros_ = m;
       vol *= volume_;
     }
+    if (!hum_player_) return;
     hum_player_->set_volume(vol);
   }
   
