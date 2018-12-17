@@ -47,8 +47,13 @@ public:
 
   static bool sd_is_locked() { return sd_locked; }
 
+  static void CloseAllOpenFiles() {
+    for (AudioStreamWork *d = data_streams; d; d=d->next_)
+      d->CloseFiles();
+  }
 protected:
   virtual bool FillBuffer() = 0;
+  virtual void CloseFiles() = 0;
   virtual size_t space_available() const = 0;
 
 private:

@@ -59,6 +59,7 @@ typedef RandomFlicker<Rgb<200,200,200>, Rgb<40,40,40>> OnPulse;
 typedef Pulsing<Rgb16<512,512,512>, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
+  { "TeensySF", "tracks/mars.wav", StylePtr<FromFileStyle<>>(), "BLUE" },
 #if 1
   { "TeensySF", "tracks/cantina.wav", StylePtr<InOutHelper<SimpleClash<
     Lockup<Blast<Blue,White>,
@@ -125,9 +126,9 @@ BladeConfig blades[] = {
 // TouchButton (similar to momentary button, but reacts to touch).
 // LatchingButton (on/off button, always controls ignition)
 
-LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
-//Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
+//LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
+Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button AuxButton(BUTTON_AUX, auxPin, "aux");
 Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
-// TouchButton Aux2Button(BUTTON_AUX2, aux2Pin, 1700, "aux2");
+//TouchButton Aux2Button(BUTTON_AUX2, aux2Pin, 1700, "aux2");
 #endif

@@ -20,6 +20,7 @@ public:
   
   void run(BladeBase* blade) {
     uint32_t now = millis();
+    num_leds_ = blade->num_leds();
     if (next_available_) {
       uint32_t frame = FrameNum();
       if (frame >= BackFrame().frame) {
@@ -32,47 +33,55 @@ public:
     }
   }
   size_t space_available() const override {
-    if (open_fail_) return 0;
+    if (millis() - last_open_ < 500) return 0;
     return next_available_ ? 0 : 1;
   }
   bool FillBuffer() override {
     if (!file_.IsOpen()) {
-      if (open_fail_) return;
-      if (!track_player_) return;
-      if (!*track_player_->filename()) return;
+      uint32_t now = millis();
+      if (!now) now++;
+      if (now - last_open_ < 500) return false;
+      last_open_ = now;
+      if (!track_player_) return false;
+      if (!track_player_->isPlaying()) return false;
+      if (!*track_player_->filename()) return false;
       strcpy(filename, track_player_->filename());
       int x = strlen(filename);
       if (x > 4) strcpy(filename + x - 3, "blc");
-      if (!file_.Open(filename)) {
-	open_fail_ = true;
-	// TODO(hubbe): Re-try open later
-      }
+      file_.Open(filename);
       // Yield to make sure we don't upset the audio.
-      return;
+      return false;
     }
     if (!next_available_) {
       uint32_t frame = FrameNum();
       if (frame == CurrentFrame().frame) frame++;
       file_.Seek(frame * sizeof(BackFrame().data));
-      file_.Read(BackFrame().data, sizeof(BackFrame().data));
+      file_.Read((uint8_t*)BackFrame().data, sizeof(BackFrame().data));
       BackFrame().frame = frame;
       next_available_ = true;
     }
+    return true;
+  }
+  void CloseFiles() override {
+    file_.Close();
   }
   // Approximate sRGB -> linear calculation
   uint16_t sqr(uint8_t x) { return x * x; }
   OverDriveColor getColor(int led) {
     led = led * N / num_leds_ + OFFSET;
-    return Color16(sqr(CurrentFrame().data[led*3]),
-		   sqr(CurrentFrame().data[led*3+1]),
-		   sqr(CurrentFrame().data[led*3+2]));
+    OverDriveColor ret;
+    ret.c = Color16(sqr(CurrentFrame().data[led*3]),
+		    sqr(CurrentFrame().data[led*3+1]),
+		    sqr(CurrentFrame().data[led*3+2]));
+    ret.overdrive = false;
+    return ret;
   }
 private:
   char filename[128];
   Frame frames_[2];
   volatile int current_;
   volatile bool next_available_;
-  volatile bool open_fail_;
+  volatile uint32_t last_open_;
   FileReader file_;
   int num_leds_;
 };

@@ -46,7 +46,7 @@ public:
     clear();
   }
 
-  void Close() { wav.Close(); }
+  void CloseFiles() override { wav.Close(); }
 
   const char* Filename() const {
     return wav.Filename();
