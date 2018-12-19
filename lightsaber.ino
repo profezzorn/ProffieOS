@@ -607,6 +607,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/mix.h"
 #include "styles/style_ptr.h"
 #include "styles/file.h"
+#include "styles/stripes.h"
 
 // functions
 #include "functions/ifon.h"
