@@ -1,7 +1,7 @@
 #ifndef STYLES_RANDOM_BLINK_H
 #define STYLES_RANDOM_BLINK_H
 
-template<int MILLIHZ, class COLOR1, class COLOR2>
+template<int MILLIHZ, class COLOR1 = WHITE, class COLOR2 = BLACK>
 class RandomBlink {
 public:
   void run(BladeBase* blade) {
