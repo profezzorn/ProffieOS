@@ -23,7 +23,7 @@ public:
     uint32_t delta = now - last_micros_;
     last_micros_ = now;
     pos_ = fract(pos_ + delta / (1000.0 * pulse_millis_.getInteger(0)));
-    mix_ = (sin_table[(int)floor(pos_ * 0x400)] + 16384) >> 1;
+    mix_ = (sin_table[(int)floorf(pos_ * 0x400)] + 16384) >> 1;
   }
 
   OverDriveColor getColor(int led) {

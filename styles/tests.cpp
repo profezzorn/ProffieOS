@@ -33,7 +33,6 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
 #include "colors.h"
 
 bool on_ = true;
-bool clash_ = false;
 
 class MockBlade : public BladeBase {
 public:
@@ -49,7 +48,9 @@ public:
     fprintf(stderr, "NOT IMPLEMENTED\n");
     exit(1);
   }
-  virtual bool clash() { return clash_; }
+  size_t GetEffects(BladeEffect** blade_effects) override {
+    return 0;
+  }
   void allow_disable() override { }
   void Activate() override {
     fprintf(stderr, "NOT IMPLEMENTED\n");

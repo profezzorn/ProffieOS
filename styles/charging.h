@@ -14,7 +14,7 @@ public:
     STDOUT.println("Charging Style");
   }
   void run(BladeBase *blade) override {
-    int black_mix = 128 + 100 * sin(millis() / 500.0);
+    int black_mix = 128 + 100 * sinf(millis() / 500.0);
     float volts = battery_monitor.battery();
     Color8 colors[] = {
       Color8(0,255,0),   // Green > 4.0
@@ -24,7 +24,7 @@ public:
       Color8(255,0,0) 
     };
     float x = (4.0 - volts) * 2.0;
-    int i = floor(x);
+    int i = floorf(x);
     i = clampi32(i, 0, NELEM(colors) - 2);
     // Blend colors over 0.1 volts.
     int blend = (x - i) * 10 * 255;
