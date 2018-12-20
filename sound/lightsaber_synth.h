@@ -24,12 +24,12 @@ public:
   
   volatile bool on_ = false;
 
-  float si(float x) { return sin(fract(x) * M_PI * 2.0); }
+  float si(float x) { return sinf(fract(x) * M_PI * 2.0); }
 //  float sc(float x) { return clamp(si(x), -0.707, 0.707); }
   float sc(float x) { return clamp(si(x), -0.6, 0.6); }
   float buzz(float x) {
     x = fract(x) * 10.0;
-    return sin(exp(2.5 - x) - 0.2);
+    return sinf(expf(2.5 - x) - 0.2);
   }
   float humm(float x) {
     return sc(x)*0.75 + si(x * 2.0)*0.75/2;

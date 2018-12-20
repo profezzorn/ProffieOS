@@ -82,7 +82,7 @@ public:
     Vec3 gyro = gyro_filter_.filter(raw_gyro);
     // degrees per second
     // May not need to smooth gyro since volume is smoothed.
-    float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
+    float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
     uint32_t t = micros();
     uint32_t delta = t - last_micros_;
     if (delta > 1000000) delta = 1;
@@ -119,7 +119,7 @@ public:
             mixab = clamp(- A.begin() / A.width, 0.0, 1.0);
 
           float mixhum =
-            pow(swing_strength, smooth_swing_config.SwingSharpness);
+            powf(swing_strength, smooth_swing_config.SwingSharpness);
 
           hum_volume =
             1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
@@ -144,8 +144,11 @@ public:
             STDOUT.print("  hum_volume: ");
             STDOUT.println(hum_volume);
           }
-          A.set_volume(mixhum * mixab);
-          B.set_volume(mixhum * (1.0 - mixab));
+	  if (on_) {
+	    // We need to stop setting the volume when off, or playback may never stop.
+	    A.set_volume(mixhum * mixab);
+	    B.set_volume(mixhum * (1.0 - mixab));
+	  }
           break;
         }
         A.set_volume(0);

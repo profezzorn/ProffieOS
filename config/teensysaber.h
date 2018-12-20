@@ -15,7 +15,7 @@ const unsigned int maxLedsPerStrip = 144;
 #ifdef CONFIG_PRESETS
 Preset presets[] = {
    { "LukeROTJ", "tracks/jaba_scene.wav",
-    StylePtr<InOutHelper<SimpleClash<Lockup<Blast<OnSpark<AudioFlicker<Green,Rgb<0,139,0>>,Blue,200>,White>,AudioFlicker<OnSpark<AudioFlicker<Green,Rgb<0,139,0>>,White,200>,White>>,White,40>,200,500,Black>>(), "green"},
+    StylePtr<InOutHelper<SimpleClash<Lockup<Blast<OnSpark<AudioFlicker<Green,Rgb<0,139,0>>,White,200>,Orange,200,100,400>,AudioFlicker<OnSpark<AudioFlicker<Green,Rgb<0,139,0>>,White,200>,White>,AudioFlicker<OnSpark<AudioFlicker<Green,Rgb<0,139,0>>,White,200>,Red>>,White,40>,200,500,Black>>(), "green"},
    { "Graflex8", "tracks/rey_training.wav",
     StylePtr<InOutHelper<SimpleClash<Lockup<Blast<OnSpark<AudioFlicker<Rgb<0,123,255>,Rgb<0,62,139>>,White,200>,Red>,AudioFlicker<OnSpark<AudioFlicker<Blue,Rgb<0,0,139>>,White,200>,White>>,White,40>,350,500,Black>>(), "blue"},
    { "kguard", "tracks/mercury.wav",
@@ -38,7 +38,7 @@ Preset presets[] = {
     StylePtr<InOutSparkTip<SimpleClash<Lockup<Blast<Strobe<Rgb<126,250,255>,Black,20,1>,RandomPerLEDFlicker<White,Black>>,RandomPerLEDFlicker<Strobe<Black,White,20,1>,Black>>,RandomPerLEDFlicker<Strobe<Black,White,20,1>,Black>,150>,50,200,White>>(), "strobe"},
    { "DrkKyber", "tracks/venus.wav",
     StylePtr<InOutHelper<SimpleClash<Lockup<Blast<OnSpark<ColorCycle<Orange,0,1,AudioFlicker<Red,Rgb<139,0,0>>,100,5000,1000>,White,200>,White>,AudioFlicker<OnSpark<ColorCycle<Orange,0,1,AudioFlicker<Red,Rgb<139,0,0>>,100,5000,1000>,White,200>,White>>,White,40>,300,800,Black>>(), "CyRed"},
-	{ "megajuan", "tracks/venus.wav",
+	{ "Vengence", "tracks/venus.wav",
 	StylePtr<InOutHelper<SimpleClash<Lockup<Blast<OnSpark<Sparkle<Red, Yellow, 300, 1024>,White,200>,White>,AudioFlicker<OnSpark<Sparkle<Red, Yellow, 900, 1024>,White,200>,White>>,White,40>,300,800,Black>>(), "redspark"},
 	{ "SAVANT", "tracks/venus.wav",
 	StylePtr<InOutHelper<SimpleClash<Lockup<Blast<OnSpark<Sparkle<Orange, Red, 300, 1024>,White,200>,White>,AudioFlicker<OnSpark<Sparkle<Orange, Red, 900, 1024>,White,200>,White>>,White,40>,300,800,Black>>(), "ospark"},
@@ -51,6 +51,6 @@ BladeConfig blades[] = {
 #endif
 
 #ifdef CONFIG_BUTTONS
-Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
+Button PowerButton(BUTTON_POWER, aux2Pin, "pow");
 Button AuxButton(BUTTON_AUX, auxPin, "aux");
 #endif

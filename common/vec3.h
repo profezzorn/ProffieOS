@@ -56,8 +56,13 @@ public:
   Vec3 dot(const Vec3& o) const {
     return Vec3(x * o.x, y * o.y, z * o.z);
   }
+  Vec3 cross(const Vec3& o) const {
+    return Vec3(x * o.y - y * o.x,
+		y * o.z - z * o.y,
+		z * o.x - x * o.z);
+  }
   float len2() const { return x*x + y*y + z*z; }
-  float len() const { return sqrt(len2()); }
+  float len() const { return sqrtf(len2()); }
 
   static void Rotate90(float& a, float& b) {
     float tmp = b;

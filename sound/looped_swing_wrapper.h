@@ -66,7 +66,7 @@ public:
   }
 
   void SB_Motion(const Vec3& gyro, bool clear) override {
-    float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
+    float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
     uint32_t t = (millis() >> 2);
     float s = sin_table[t & 1023] * (1.0/16383);
     float c = sin_table[(t + 256) & 1023] * (1.0/16383);

@@ -1,6 +1,8 @@
 #ifndef BLADES_WS2811_BLADE_H
 #define BLADES_WS2811_BLADE_H
 
+#include "abstract_blade.h"
+
 #ifdef ENABLE_WS2811
 #ifdef TEENSYDUINO
 #include "monopodws.h"
@@ -11,10 +13,10 @@
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
-class WS2811_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
+class WS2811_Blade : public AbstractBlade, CommandParser, Looper{
 public:
   WS2811_Blade(int num_leds, uint8_t config, int pin, PowerPinInterface* power) :
-    SaberBase(NOLINK),
+    AbstractBlade(),
     CommandParser(NOLINK),
     Looper(NOLINK),
     num_leds_(num_leds),
@@ -49,7 +51,7 @@ public:
     while (monopodws.busy());
     CommandParser::Link();
     Looper::Link();
-    SaberBase::Link(this);
+    AbstractBlade::Activate();
   }
 
   // BladeBase implementation
@@ -61,11 +63,6 @@ public:
   }
   void set(int led, Color16 c) override {
     monopodws.setPixel(led, c.dither(0));
-  }
-  bool clash() override {
-    bool ret = clash_;
-    clash_ = false;
-    return ret;
   }
   void allow_disable() override {
     if (!on_) allow_disable_ = true;
@@ -83,8 +80,6 @@ public:
   void SB_Off() override {
     on_ = false;
   }
-
-  void SB_Clash() override { clash_=true; }
 
   void SB_Top() override {
     STDOUT.print("blade fps: ");
@@ -144,7 +139,6 @@ private:
   uint8_t pin_;
   bool on_ = false;
   bool powered_ = false;
-  bool clash_ = false;
   bool allow_disable_ = false;
   LoopCounter loop_counter_;
 

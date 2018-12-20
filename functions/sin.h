@@ -27,7 +27,7 @@ public:
     pos_ = fract(pos_ + delta / 60000000.0 * rpm_.getInteger());
     int high = high_.getInteger();
     int low = low_.getInteger();
-    float tmp = sin_table[(int)floor(pos_ * 1024)] / 32768.0;
+    float tmp = sin_table[(int)floorf(pos_ * 1024)] / 32768.0;
     value_ = (int)( (tmp + 0.5) * (high - low) + low );
   }
   int getInteger(int led) { return value_; }

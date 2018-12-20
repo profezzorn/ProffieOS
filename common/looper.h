@@ -42,11 +42,11 @@ public:
       l->Setup();
     }
   }
-  static void LoopTop(double total_cycles) {
+  static void LoopTop(float total_cycles) {
     for (Looper *l = loopers; l; l = l->next_looper_) {
       STDOUT.print(l->name());
       STDOUT.print(" loop: ");
-      STDOUT.print(l->cycles_ * 100.0 / total_cycles);
+      STDOUT.print(l->cycles_ * 100.0f / total_cycles);
       STDOUT.println("%");
       l->cycles_ = 0;
     }

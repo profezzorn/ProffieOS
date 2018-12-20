@@ -18,6 +18,9 @@ public:
     return SD.begin(sdCardSelectPin);
 #endif    
   }
+  static bool End() {
+    return true;
+  }
   static bool Exists(const char* path) {
     return SD.exists(path);
   }
@@ -62,19 +65,46 @@ public:
 
 #include <FS.h>
 
+// Workaround for badly named variable
+#define private c_private
+#include <dosfs_core.h>
+#undef private
+
 class LSFS {
 public:
   typedef File FILE;
+  static bool IsMounted() {
+    return mounted_;
+  }
+  static bool CanMount() {
+    dosfs_volume_t *volume = DOSFS_DEFAULT_VOLUME();
+    dosfs_device_t *device = DOSFS_VOLUME_DEVICE(volume);
+    if (device->lock & (DOSFS_DEVICE_LOCK_VOLUME |
+			DOSFS_DEVICE_LOCK_SCSI |
+			DOSFS_DEVICE_LOCK_MEDIUM |
+			DOSFS_DEVICE_LOCK_INIT)) return false;
+    return true;
+  }
+  // This function waits until the volume is mounted.
   static bool Begin() {
-    return DOSFS.begin() && DOSFS.check();
+    if (mounted_) return true;
+    return mounted_ = (DOSFS.begin() && DOSFS.check());
+  }
+  static void End() {
+    if (!mounted_) return;
+    DOSFS.end();
+    mounted_ = false;
   }
   static bool Exists(const char* path) {
+    if (!mounted_) return false;
     return DOSFS.exists(path);
   }
   static File Open(const char* path) {
+    if (!mounted_) return File();
     return DOSFS.open(path, "r");
   }
   static File OpenForWrite(const char* path) {
+    if (!mounted_) return File();
     return DOSFS.open(path, "w");
   }
   class Iterator {
@@ -90,7 +120,7 @@ public:
       strcpy(filename, _path);
       strcat(filename, "*.*");
 
-      if (f_findfirst(filename, &_find) != F_NO_ERROR) {
+      if (!mounted_ || f_findfirst(filename, &_find) != F_NO_ERROR) {
         _find.find_clsno = 0x0fffffff;
       }
     }
@@ -106,13 +136,13 @@ public:
       strcpy(filename, _path);
       strcat(filename, "*.*");
 
-      if (f_findfirst(filename, &_find) != F_NO_ERROR) {
+      if (!mounted_ || f_findfirst(filename, &_find) != F_NO_ERROR) {
         _find.find_clsno = 0x0fffffff;
       }
     }
 
     void operator++() {
-      if (f_findnext(&_find) != F_NO_ERROR) {
+      if (!mounted_ || f_findnext(&_find) != F_NO_ERROR) {
         _find.find_clsno = 0x0fffffff;
       }
     }
@@ -125,7 +155,11 @@ public:
     char _path[F_MAXPATH];
     F_FIND _find;
   };
+private:
+  static bool mounted_;
 };
+
+bool LSFS::mounted_ = false;
 #endif
 
 #endif
