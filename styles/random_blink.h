@@ -3,6 +3,7 @@
 
 template<int MILLIHZ, class COLOR1, class COLOR2>
 class RandomBlink {
+public:
   void run(BladeBase* blade) {
     c1_.run(blade);
     c2_.run(blade);
