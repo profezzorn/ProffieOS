@@ -1,9 +1,16 @@
 #ifndef STYLES_STRIPES_H
 #define STYLES_STRIPES_H
 
-// Usage: Stripes
+// Usage: Stripes<WIDTH, SPEED, COLOR1, COLOR2, ... >
+// or: Usage: StripesX<WIDTH_CLASS, SPEED, COLOR1, COLOR2, ... >
+// WIDTH: integer (start with 1000, then adjust up or down)
+// WIDTH_CLASS: INTEGER
+// SPEED: integer  (start with 1000, then adjust up or down)
+// COLOR1, COLOR2: COLOR
 // return value: COLOR
-// Basic RGB stripes.
+// Works like rainbow, but with any colors you like.
+// WIDTH determines width of stripes
+// SPEED determines movement speed
 
 template<class... A>
 class StripesHelper {};
@@ -39,19 +46,23 @@ public:
 };
 
 
-template<int WIDTH=1000, int SPEED = 1000, class... COLORS>
-class Stripes {
+template<class WIDTH, class SPEED, class... COLORS>
+class StripesX {
 public:
   void run(BladeBase* base) {
+    colors_.run(base);
+    width_.run(base);
+    colors_.run(base);
+    
     uint32_t now_micros = micros();
     uint32_t delta_micros = now_micros - last_micros_;
     last_micros_ = now_micros;
-    m = (m + delta_micros * SPEED / 333) % (colors_.size * 341*1024);
-    colors_.run(base);
+    m = (m + delta_micros * speed_.getInteger(0) / 333) % (colors_.size * 341*1024);
+    mult_ = (50000*1024 / width_.getInteger(0));
   }
   OverDriveColor getColor(int led) {
     // p = 0..341*len(colors)
-    int p = ((m + led * (50000*1024 / WIDTH)) >> 10) % (colors_.size * 341);
+    int p = ((m + led * mult_) >> 10) % (colors_.size * 341);
     
     OverDriveColor ret;
     ret.overdrive = false;
@@ -62,8 +73,13 @@ public:
   }
 private:
   StripesHelper<COLORS...> colors_;
+  WIDTH width_;
+  uint32_t mult_;
+  SPEED speed_;
   uint32_t last_micros_;
   uint32_t m;
 };
 
+template<class WIDTH, class SPEED, class... COLORS>
+  using StripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;
 #endif
