@@ -1,6 +1,8 @@
 #ifndef STYLES_STRIPES_H
 #define STYLES_STRIPES_H
 
+#include "../functions/int.h"
+
 // Usage: Stripes<WIDTH, SPEED, COLOR1, COLOR2, ... >
 // or: Usage: StripesX<WIDTH_CLASS, SPEED, COLOR1, COLOR2, ... >
 // WIDTH: integer (start with 1000, then adjust up or down)
@@ -80,6 +82,6 @@ private:
   uint32_t m;
 };
 
-template<class WIDTH, class SPEED, class... COLORS>
-  using StripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;
+template<int WIDTH, int SPEED, class... COLORS>
+  using Stripes = StripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;
 #endif

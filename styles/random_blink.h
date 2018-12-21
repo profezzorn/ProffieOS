@@ -37,7 +37,7 @@ private:
   uint32_t last_update_;
 };
 
-template<class MILLIHZ, class COLOR1 = WHITE, class COLOR2 = BLACK>
+template<int MILLIHZ, class COLOR1 = WHITE, class COLOR2 = BLACK>
   using RandomBlink = RandomBlinkX<Int<MILLIHZ>, COLOR1, COLOR2>;
 
 #endif
