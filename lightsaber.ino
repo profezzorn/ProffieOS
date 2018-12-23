@@ -483,12 +483,8 @@ size_t WhatUnit(class BufferedWavPlayer* player) {
   return player - wav_players;
 }
 
-#include "sound/audio_splicer.h"
-
-VolumeOverlay<AudioSplicer> audio_splicer;
-
 void SetupStandardAudioLow() {
-  audio_splicer.Deactivate();
+//  audio_splicer.Deactivate();
   for (size_t i = 0; i < NELEM(wav_players); i++) {
     if (wav_players[i].refs() != 0) {
       STDOUT.println("WARNING, wav player still referenced!");
@@ -506,12 +502,6 @@ void SetupStandardAudio() {
   dac.SetStream(&dynamic_mixer);
 }
 
-void ActivateAudioSplicer() {
-  dac.SetStream(NULL);
-  SetupStandardAudioLow();
-  audio_splicer.Activate();
-  dac.SetStream(&dynamic_mixer);
-}
 
 #include "common/config_file.h"
 #include "sound/hybrid_font.h"
@@ -1499,8 +1489,6 @@ public:
         STDOUT.print(" Volume ");
         STDOUT.println(wav_players[unit].volume());
       }
-      STDOUT.print("Splicer Volume ");
-      STDOUT.println(audio_splicer.volume());
       return true;
     }
     if (!strcmp(cmd, "buffered")) {
