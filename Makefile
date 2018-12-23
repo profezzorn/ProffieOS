@@ -16,7 +16,7 @@ else
 endif
 
 MKFILES=Makefile Arduino.mk Common.mk Teensy.mk sound/Makefile styles/Makefile
-SOURCE_FILES=lightsaber.ino gpl-3.0.txt common/*.h display/*.h functions/*.h \
+SOURCE_FILES=lightsaber.ino LICENCE.txt common/*.h display/*.h functions/*.h \
              blades/*.h buttons/*.h motion/*.h mtp/*.h styles/*.h sound/*.h \
              sound/*.cpp styles/*.cpp
 CONFIG_FILES=config/*.h
