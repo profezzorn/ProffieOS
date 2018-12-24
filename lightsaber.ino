@@ -793,8 +793,7 @@ public:
 
     // Avoid clashes a little bit while turning on.
     // It might be a "clicky" power button...
-    last_clash_ = activated_;
-    clash_timeout_ = 300;
+    IgnoreClash(300);
   }
 
   void Off() {
@@ -815,6 +814,16 @@ public:
     }
   }
 
+  void IgnoreClash(size_t ms) {
+    uint32_t now = millis();
+    uint32_t time_since_last_clash = now - last_clash_;
+    if (time_since_last_clash < clash_timeout_) {
+      ms = max(ms, clash_timeout_ - time_since_last_clash);
+    }
+    last_clash_ = now;
+    clash_timeout_ = ms;
+  }
+
   void Clash() {
     // No clashes in lockup mode.
     if (SaberBase::Lockup()) return;
@@ -825,12 +834,11 @@ public:
       return;
     }
     if (Event(BUTTON_NONE, EVENT_CLASH)) {
-      clash_timeout_ = 400;  // For events, space clashes out more.
+      IgnoreClash(400);
     } else {
-      clash_timeout_ = 100;
+      IgnoreClash(100);
       if (SaberBase::IsOn()) SaberBase::DoClash();
     }
-    last_clash_ = t;
   }
 
   bool chdir(const char* dir) {
@@ -1242,6 +1250,9 @@ public:
     }
     
     bool handled = true;
+    if (event == EVENT_PRESSED || event == EVENT_RELEASED) {
+      IgnoreClash(100); // ignore clashes for 100ms to prevent buttons from causing clashes
+    }
     switch (EVENTID(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
       default:
         handled = false;
