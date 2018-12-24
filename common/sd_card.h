@@ -35,7 +35,10 @@ public:
     while (!LSFS::CanMount() && millis() - start < 1000)
       armv7m_core_yield();
     if (!LSFS::CanMount()) {
-      STDOUT.println("SD card is busy.");
+      char tmp[128];
+      LSFS::WhyBusy(tmp);
+      STDOUT.print("SD card is busy, flags= ");
+      STDOUT.println(tmp);
       return;
     }
     
