@@ -15,12 +15,6 @@ else
   include Teensy.mk
 endif
 
-MKFILES=Makefile Arduino.mk Common.mk Teensy.mk sound/Makefile styles/Makefile
-SOURCE_FILES=lightsaber.ino LICENCE.txt common/*.h display/*.h functions/*.h \
-             blades/*.h buttons/*.h motion/*.h mtp/*.h styles/*.h sound/*.h \
-             sound/*.cpp styles/*.cpp
-CONFIG_FILES=config/*.h
-
 CPPFLAGS += $(TESTFLAGS)
 
 style-test:
@@ -64,5 +58,5 @@ cvstest:
 	if [ -d CVS ]; then cvs diff >/dev/null 2>&1; fi
 
 export: cvstest test
-	cd .. && zip -9 lightsaber/lightsaber-`sed <lightsaber/lightsaber.ino -n 's@.*lightsaber.ino,v \([^ ]*\) .*$$@\1@gp'`.zip `for x in $(SOURCE_FILES) $(CONFIG_FILES) $(MKFILES) ; do echo lightsaber/$$x ; done`
+	cd .. && zip -9 lightsaber/lightsaber-`sed <lightsaber/lightsaber.ino -n 's@.*lightsaber.ino,v \([^ ]*\) .*$$@\1@gp'`.zip `cd lightsaber && cvs status 2>/dev/null | sed -n 's@.*Repository.*/cvs/lightsaber/\(.*\),v@\1@gp' | grep -v 'lightsaber/doc' | grep -v '.cvsignore'`
 
