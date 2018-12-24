@@ -133,9 +133,9 @@ public:
 	if (!SaberBase::MotionRequested()) break;
 	if (!digitalRead(motionSensorInterruptPin)) continue;
         while (!I2CLock()) YIELD();
-        I2C_READ_BYTES_ASYNC(OUTX_L_XL, &status_reg, 1);
+        I2C_READ_BYTES_ASYNC(STATUS_REG, &status_reg, 1);
 	// Do the accel data first to make clashes as fast as possible.
-        if (status_reg & 0x4) {
+        if (status_reg & 0x1) {
           // accel data available
 	  I2C_READ_BYTES_ASYNC(OUTX_L_XL, databuffer, 6);
 	  SaberBase::DoAccel(
@@ -153,7 +153,7 @@ public:
 	    first_motion_);
 	  first_motion_ = false;
         }
-        if (status_reg & 0x1) {
+        if (status_reg & 0x4) {
           // Temp data available
           int16_t temp_data;
 	  I2C_READ_BYTES_ASYNC(OUT_TEMP_L, (uint8_t*)&temp_data, 2);
