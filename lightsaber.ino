@@ -1012,6 +1012,7 @@ public:
   float peak = 0.0;
   Vec3 at_peak;
   void SB_Accel(const Vec3& accel, bool clear) override {
+    accel_loop_counter_.Update();
     if (clear) accel_ = accel;
     float v = (accel_ - accel).len();
     // If we're spinning the saber, require a stronger acceleration
@@ -1043,6 +1044,12 @@ public:
       STDOUT.println(")");
       peak = 0.0;
     }
+  }
+
+  void SB_Top() override {
+    STDOUT.print("Acceleration measurements per second: ");
+    accel_loop_counter_.Print();
+    STDOUT.println("");
   }
 
   enum StrokeType {
@@ -1241,7 +1248,8 @@ public:
       PrintButton(current_modifiers);
     }
     if (SaberBase::IsOn()) STDOUT.print(" ON");
-    STDOUT.println("");
+    STDOUT.print(" millis=");    
+    STDOUT.println(millis());
 
 #define EVENTID(BUTTON, EVENT, MODIFIERS) (((EVENT) << 24) | ((BUTTON) << 12) | ((MODIFIERS) & ~(BUTTON)))
     if (SaberBase::IsOn() && aux_on_) {
@@ -1251,7 +1259,7 @@ public:
     
     bool handled = true;
     if (event == EVENT_PRESSED || event == EVENT_RELEASED) {
-      IgnoreClash(100); // ignore clashes for 100ms to prevent buttons from causing clashes
+      IgnoreClash(10); // ignore clashes for 10ms to prevent buttons from causing clashes
     }
     switch (EVENTID(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
       default:
@@ -1657,6 +1665,7 @@ public:
 private:
   BladeConfig* current_config_ = NULL;
   Preset* current_preset_ = NULL;
+  LoopCounter accel_loop_counter_;
 };
 
 Saber saber;
@@ -2702,62 +2711,74 @@ class ClashRecorder : public SaberBase {
 public:
   void SB_Clash() override {
     time_to_dump_ = NELEM(buffer_) / 2;
+    STDOUT.println("dumping soon...");
+    SaberBase::RequestMotion();
   }
-  void SB_Accel(const Vec3& accel) override {
+  void SB_Accel(const Vec3& accel, bool clear) override {
+    SaberBase::RequestMotion();
+    loop_counter_.Update();
     buffer_[pos_] = accel;
     pos_++;
     if (pos_ == NELEM(buffer_)) pos_ = 0;
-    if (time_to_dump_) {
-      time_to_dump_--;
-      if (time_to_dump_ == 0) {
-        LOCK_SD(true);
-        char file_name[16];
-        size_t file_num = last_file_ + 1;
+    if (!time_to_dump_) return;
+    time_to_dump_--;
+    if (time_to_dump_) return;
 
-        while (true) {
-          char num[16];
-          itoa(file_num, num, 10);
-          strcpy(file_name, "CLS");
-          while(strlen(num) + strlen(file_name) < 8) strcat(file_name, "0");
-          strcat(file_name, num);
-          strcat(file_name, ".CSV");
+    LOCK_SD(true);
+    char file_name[16];
+    size_t file_num = last_file_ + 1;
+
+    while (true) {
+      char num[16];
+      itoa(file_num, num, 10);
+      strcpy(file_name, "CLS");
+      while(strlen(num) + strlen(file_name) < 8) strcat(file_name, "0");
+      strcat(file_name, num);
+      strcat(file_name, ".CSV");
           
-          int last_skip = file_num - last_seen_;
-          if (LSFS::Exists(file_name)) {
-            last_file_ = file_num;
-            file_num += last_skip * 2;
-            continue;
-          }
-
-          if (file_num - last_file_ > 1) {
-            file_num = last_file_ + last_skip / 2;
-            continue;
-          }
-          break;
-        }
-        File f = LSFS::OpenForWrite(file_name);
-        for (size_t i = 0; i < NELEM(buffer_); i++) {
-          const Vec3& v = buffer_[(pos_ + i) % NELEM(buffer_)];
-          f.print(v.x);
-          f.print(", ");
-          f.print(v.y);
-          f.print(", ");
-          f.print(v.z);
-          f.print("\n");
-        }
-        f.close();
-        LOCK_SD(false);
+      int last_skip = file_num - last_file_;
+      if (LSFS::Exists(file_name)) {
+	last_file_ = file_num;
+	file_num += last_skip * 2;
+	continue;
       }
+
+      if (file_num - last_file_ > 1) {
+	file_num = last_file_ + last_skip / 2;
+	continue;
+      }
+      break;
     }
+    File f = LSFS::OpenForWrite(file_name);
+    for (size_t i = 0; i < NELEM(buffer_); i++) {
+      const Vec3& v = buffer_[(pos_ + i) % NELEM(buffer_)];
+      f.print(v.x);
+      f.print(", ");
+      f.print(v.y);
+      f.print(", ");
+      f.print(v.z);
+      f.print("\n");
+    }
+    f.close();
+    LOCK_SD(false);
+    STDOUT.print("Clash dumped to ");
+    STDOUT.print(file_name);
+    STDOUT.print(" ~ ");
+    loop_counter_.Print();
+    STDOUT.println(" measurements / second");
   }
 private:
   size_t last_file_ = 0;
   size_t time_to_dump_ = 0;
   size_t pos_ = 0;
   Vec3 buffer_[512];
+  LoopCounter loop_counter_;
 };
 
 ClashRecorder clash_recorder;
+void DumpClash() { clash_recorder.SB_Clash(); }
+#else
+void DumpClash() {}
 #endif
 
 #ifdef GYRO_CLASS
