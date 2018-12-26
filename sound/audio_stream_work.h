@@ -34,7 +34,10 @@ public:
     if (!NVIC_IS_ACTIVE(IRQ_WAV))
       NVIC_TRIGGER_IRQ(IRQ_WAV);
 #else
-    armv7m_pendsv_enqueue((armv7m_pendsv_routine_t)ProcessAudioStreams, NULL, 0);
+    if (scheduled_millis != millis()) {
+      scheduled_millis = millis();
+      armv7m_pendsv_enqueue((armv7m_pendsv_routine_t)ProcessAudioStreams, NULL, 0);
+    }
 #endif    
   }
 
@@ -58,6 +61,7 @@ protected:
 
 private:
   static void ProcessAudioStreams() {
+    scheduled_millis = 0;
     ScopedCycleCounter cc(wav_interrupt_cycles);
     if (sd_locked) return;
 #if 1
@@ -84,10 +88,12 @@ private:
 
 
   static volatile bool sd_locked;
+  static volatile uint32_t scheduled_millis;
   AudioStreamWork* next_;
 };
 
 volatile bool AudioStreamWork::sd_locked = false;
+volatile uint32_t AudioStreamWork::scheduled_millis = false;
 #define LOCK_SD(X) AudioStreamWork::LockSD(X)
 
 #endif
