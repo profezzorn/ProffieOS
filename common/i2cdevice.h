@@ -59,6 +59,60 @@ public:
     return EndReadBytes(data, bytes);
   }
 
+#if 1
+  private:
+  // Without this define, the state machine gets mixed up with
+  // inherited state machines later. No idea why that happens since
+  // it is PRIVATE.
+#define state_machine_ temp_state_machine_
+    StateMachineState state_machine_;
+
+// If we fail we just retry over and over again until timeout
+#define FAIL() do { state_machine_.reset_state_machine(); return; } while(0);
+
+  inline void i2c_read_bytes_loop(uint8_t reg, uint8_t* data, size_t bytes) {
+    STATE_MACHINE_BEGIN();
+    // Write the register to the device.
+    Wire._tx_data[0] = reg;
+    if (!stm32l4_i2c_transmit(Wire._i2c, address_, Wire._tx_data, 1, I2C_CONTROL_RESTART)) FAIL();
+
+    // Wait for write to finish.
+    while (!stm32l4_i2c_done(Wire._i2c)) YIELD();
+
+    // Check status.
+    if (stm32l4_i2c_status(Wire._i2c)) FAIL();
+
+    // Wire.requestFrom(address_, (uint8_t) bytes);
+    if (!stm32l4_i2c_receive(Wire._i2c, address_, Wire._rx_data, bytes, 0)) FAIL();
+
+    // Wait for write to finish.
+    while (!stm32l4_i2c_done(Wire._i2c)) YIELD();
+
+    // Check status.
+    if (stm32l4_i2c_status(Wire._i2c)) FAIL();
+
+    memcpy(data, Wire._rx_data, bytes);
+
+    STATE_MACHINE_END();
+  }
+public:
+  bool i2c_read_bytes_async(uint8_t reg, uint8_t* data, size_t bytes) {
+    i2c_read_bytes_loop(reg, data, bytes);
+    if (state_machine_.next_state_ != -2) return true;
+    state_machine_.reset_state_machine();
+    return false;
+  }
+#undef state_machine_
+
+#define I2C_READ_BYTES_ASYNC(reg, data, bytes) do {			\
+  state_machine_.sleep_until_ = millis();				\
+  while (i2c_read_bytes_async(reg, data, bytes)) {			\
+    if (millis() - state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) goto i2c_timeout; \
+    YIELD();								\
+  }									\
+} while(0)
+
+#else  
 #define I2C_READ_BYTES_ASYNC(reg, data, bytes) do {			\
   StartReadBytes(reg, bytes);						\
   state_machine_.sleep_until_ = millis();				\
@@ -68,6 +122,7 @@ public:
   }									\
   EndReadBytes(data, bytes);						\
 } while(0)
+#endif
   
 protected:
   uint8_t address_;
