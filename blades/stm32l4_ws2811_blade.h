@@ -109,32 +109,32 @@ public:
 
 protected:
   void Loop() override {
-    STATE_MACHINE_BEGIN() 
+    STATE_MACHINE_BEGIN();
     while (true) {
-        while (!powered_ || !current_style_) {
-          loop_counter_.Reset();
-          YIELD();
-        }
-        // Wait until it's our turn.
-        while (current_blade) YIELD();
-        if (allow_disable_) {
-          Power(on_);
-          continue;
-        }
-        current_blade = this;
-        current_style_->run(this);
-	while (!pin_.IsReadyForBeginFrame()) YIELD();
-	pin_.BeginFrame();
-	for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, color_buffer[i]);
-	while (!pin_.IsReadyForEndFrame()) YIELD();
-	pin_.EndFrame();
-        loop_counter_.Update();
-        current_blade = NULL;
-        YIELD();
+      while (!powered_ || !current_style_) {
+	loop_counter_.Reset();
+	YIELD();
+      }
+      // Wait until it's our turn.
+      while (current_blade) YIELD();
+      if (allow_disable_) {
+	Power(on_);
+	continue;
+      }
+      current_blade = this;
+      current_style_->run(this);
+      while (!pin_.IsReadyForBeginFrame()) YIELD();
+      pin_.BeginFrame();
+      for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, color_buffer[i]);
+      while (!pin_.IsReadyForEndFrame()) YIELD();
+      pin_.EndFrame();
+      loop_counter_.Update();
+      current_blade = NULL;
+      YIELD();
     }
     STATE_MACHINE_END();
   }
-
+  
 private:
   bool on_ = false;
   bool powered_ = false;
