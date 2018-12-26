@@ -130,7 +130,12 @@
 #include <i2c_t3.h>
 #include <SD.h>
 #else
+
+// This is a hack to let me access the internal stuff..
+#define private public
 #include <Wire.h>
+#undef private
+
 #include <FS.h>
 #define digitalWriteFast digitalWrite
 #include <stm32l4_wiring_private.h>
