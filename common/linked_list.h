@@ -4,6 +4,9 @@
 // Magic type used to prevent linked-list types from automatically linking.
 enum NoLink { NOLINK = 17 };
 
+// Magic type for HF linking
+enum HFLink { HFLINK = 18 };
+
 #ifdef DEBUG
 
 #define CHECK_LL(T, START, NEXT) do {                                   \
