@@ -59,7 +59,7 @@ public:
     return EndReadBytes(data, bytes);
   }
 
-#if 1
+#ifdef PROFFIEBOARD
   private:
   // Without this define, the state machine gets mixed up with
   // inherited state machines later. No idea why that happens since
