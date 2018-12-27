@@ -24,6 +24,7 @@ public:
       } else {
          blade->set(i, c.c);
       }
+      if (!(i & 0xf)) Looper::DoHFLoop();
     }
   }
 private:
