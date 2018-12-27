@@ -131,34 +131,23 @@ public:
 	if (!SaberBase::MotionRequested()) break;
 	if (!digitalRead(motionSensorInterruptPin)) continue;
         while (!I2CLock()) YIELD();
-        I2C_READ_BYTES_ASYNC(STATUS_REG, &status_reg, 1);
-        if ((status_reg & 0x3) == 0x3) {
-	  I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 12);
-	} else if (status_reg & 0x1) {
-	  // accel data available
-	  I2C_READ_BYTES_ASYNC(OUTX_L_XL, databuffer + 6, 6);
-	} else {
-	  // gyroscope data available
-	  I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 6);
-	}
-	if (status_reg & 0x1) {
-	  // accel data available
-	  SaberBase::DoAccel(
-	    Vec3::FromData(databuffer + 6, 4.0 / 32768.0,   // 4 g range
-			   Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
-	    first_accel_);
-	  first_accel_ = false;
-	}
-	if (status_reg & 0x2) {
-	  // gyroscope data available
-	  SaberBase::DoMotion(
-	    Vec3::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
-			   Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
-	    first_motion_);
-	  first_motion_ = false;
-	}
-        if (status_reg & 0x4) {
-          // Temp data available
+	
+	I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 12);
+	// accel data available
+	SaberBase::DoAccel(
+	  Vec3::FromData(databuffer + 6, 4.0 / 32768.0,   // 4 g range
+			 Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
+	  first_accel_);
+	first_accel_ = false;
+	// gyroscope data available
+	SaberBase::DoMotion(
+	  Vec3::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
+			 Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
+	  first_motion_);
+	first_motion_ = false;
+
+	if (millis() - last_temp_ < 100) {
+	  last_temp_ = millis();
           int16_t temp_data;
 	  I2C_READ_BYTES_ASYNC(OUT_TEMP_L, (uint8_t*)&temp_data, 2);
 	  float temp = 25.0f + temp_data * (1.0f / 16.0f);
@@ -190,7 +179,7 @@ public:
   }
 
   uint8_t databuffer[12];
-  uint8_t status_reg;
+  uint32_t last_temp_;
   bool first_motion_;
   bool first_accel_;
 };
