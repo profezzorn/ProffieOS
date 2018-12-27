@@ -125,7 +125,10 @@ protected:
       current_style_->run(this);
       while (!pin_.IsReadyForBeginFrame()) YIELD();
       pin_.BeginFrame();
-      for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, color_buffer[i]);
+      for (int i = 0; i < pin_.num_leds(); i++) {
+	pin_.Set(i, color_buffer[i]);
+	if (!(i & 0x1f)) Looper::DoHFLoop();
+      }
       while (!pin_.IsReadyForEndFrame()) YIELD();
       pin_.EndFrame();
       loop_counter_.Update();
