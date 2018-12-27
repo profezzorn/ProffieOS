@@ -46,7 +46,7 @@ public:
     clear();
   }
 
-  void Close() { wav.Close(); }
+  void CloseFiles() override { wav.Close(); }
 
   const char* Filename() const {
     return wav.Filename();
@@ -66,6 +66,12 @@ public:
   }
 
   float length() const { return wav.length(); }
+  float pos() const {
+    return wav.pos() - buffered() * (1.0f / AUDIO_RATE);
+  }
+  const char* filename() const {
+    return wav.filename();
+  }
 
   void AddRef() { refs_++; }
   void SubRef() { refs_--; }

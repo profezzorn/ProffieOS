@@ -23,6 +23,11 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   return x;
 }
 
+class Looper {
+public:
+  static void DoHFLoop() {}
+};
+
 // This really ought to be a typedef, but it causes problems I don't understand.
 #define StyleAllocator class StyleFactory*
 

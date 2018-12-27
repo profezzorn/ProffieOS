@@ -95,7 +95,7 @@ public:
     CTRL_SPIAux = 0x70
   };
 
-  LSM6DS3H() : I2CDevice(106) {}
+  LSM6DS3H() : I2CDevice(106), Looper(HFLINK) {}
 
   void Loop() override {
     STATE_MACHINE_BEGIN();
@@ -106,8 +106,6 @@ public:
       first_motion_ = true;
       first_accel_ = true;
       
-      unsigned char databuffer[6];
-
       STDOUT.print("Motion setup ... ");
 
       writeByte(CTRL1_XL, 0x88);  // 1.66kHz accel, 4G range
@@ -133,27 +131,33 @@ public:
 	if (!SaberBase::MotionRequested()) break;
 	if (!digitalRead(motionSensorInterruptPin)) continue;
         while (!I2CLock()) YIELD();
-        I2C_READ_BYTES_ASYNC(OUTX_L_XL, &status_reg, 1);
-	// Do the accel data first to make clashes as fast as possible.
-        if (status_reg & 0x4) {
-          // accel data available
-	  I2C_READ_BYTES_ASYNC(OUTX_L_XL, databuffer, 6);
+        I2C_READ_BYTES_ASYNC(STATUS_REG, &status_reg, 1);
+        if ((status_reg & 0x3) == 0x3) {
+	  I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 12);
+	} else if (status_reg & 0x1) {
+	  // accel data available
+	  I2C_READ_BYTES_ASYNC(OUTX_L_XL, databuffer + 6, 6);
+	} else {
+	  // gyroscope data available
+	  I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 6);
+	}
+	if (status_reg & 0x1) {
+	  // accel data available
 	  SaberBase::DoAccel(
-	    Vec3::FromData(databuffer, 4.0 / 32768.0,   // 4 g range
+	    Vec3::FromData(databuffer + 6, 4.0 / 32768.0,   // 4 g range
 			   Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
 	    first_accel_);
 	  first_accel_ = false;
 	}
 	if (status_reg & 0x2) {
 	  // gyroscope data available
-	  I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 6);
 	  SaberBase::DoMotion(
 	    Vec3::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
 			   Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
 	    first_motion_);
 	  first_motion_ = false;
-        }
-        if (status_reg & 0x1) {
+	}
+        if (status_reg & 0x4) {
           // Temp data available
           int16_t temp_data;
 	  I2C_READ_BYTES_ASYNC(OUT_TEMP_L, (uint8_t*)&temp_data, 2);
@@ -185,6 +189,7 @@ public:
     STATE_MACHINE_END();
   }
 
+  uint8_t databuffer[12];
   uint8_t status_reg;
   bool first_motion_;
   bool first_accel_;

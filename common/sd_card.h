@@ -35,7 +35,10 @@ public:
     while (!LSFS::CanMount() && millis() - start < 1000)
       armv7m_core_yield();
     if (!LSFS::CanMount()) {
-      STDOUT.println("SD card is busy.");
+      char tmp[128];
+      LSFS::WhyBusy(tmp);
+      STDOUT.print("SD card is busy, flags= ");
+      STDOUT.println(tmp);
       return;
     }
     
@@ -53,10 +56,7 @@ protected:
   void Loop() override {
     if (LSFS::IsMounted()) {
       if (!Active()) {
-	// Close all open files
-	for (size_t i = 0; i < NELEM(wav_players); i++)
-	  wav_players[i].Close();
-	
+	AudioStreamWork::CloseAllOpenFiles();
 	STDOUT.println("Unmounting SD Card.");
 	LSFS::End();
       }

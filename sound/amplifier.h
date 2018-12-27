@@ -14,7 +14,7 @@ public:
 
   bool Active() {
 //    if (saber_synth.on_) return true;
-    if (audio_splicer.isPlaying()) return true;
+//    if (audio_splicer.isPlaying()) return true;
     if (beeper.isPlaying()) return true;
     if (talkie.isPlaying()) return true;
     for (size_t i = 0; i < NELEM(wav_players); i++)
@@ -74,8 +74,8 @@ protected:
       SaberBase::DoIsOn(&on);
       STDOUT.print("Saber bases: ");
       STDOUT.println(on ? "On" : "Off");
-      STDOUT.print("Audio splicer: ");
-      STDOUT.println(audio_splicer.isPlaying() ? "On" : "Off");
+//      STDOUT.print("Audio splicer: ");
+//      STDOUT.println(audio_splicer.isPlaying() ? "On" : "Off");
       STDOUT.print("Beeper: ");
       STDOUT.println(beeper.isPlaying() ? "On" : "Off");
       STDOUT.print("Talker: ");

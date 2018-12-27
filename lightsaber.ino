@@ -21,10 +21,8 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-//#define CONFIG_FILE "config/teensysaber.h"
+//#define CONFIG_FILE "config/default_proffieboard_config.h"
 #define CONFIG_FILE "config/proffiesaber.h"
-//#define CONFIG_FILE "config/ls6.h"
-// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -45,6 +43,7 @@
 
 // #define ENABLE_DEBUG
 
+
 //
 // OVERVIEW
 //
@@ -56,7 +55,7 @@
 // Once an event is registered, such as "on" or "clash", the
 // event is sent to all registered SaberBase classes.
 //
-// Generally speaking, thre are usually two registered SaberBase
+// Generally speaking, there are usually two registered SaberBase
 // classes listening for events. One for sound and one for 
 // the blade. Sound and blade effects are generally executed
 // separately by separate clases.
@@ -124,7 +123,6 @@
 // did not work with that define.
 
 #include <Arduino.h>
-#include <EEPROM.h>
 
 #ifdef TEENSYDUINO
 #include <DMAChannel.h>
@@ -133,7 +131,12 @@
 #include <i2c_t3.h>
 #include <SD.h>
 #else
+
+// This is a hack to let me access the internal stuff..
+#define private public
 #include <Wire.h>
+#undef private
+
 #include <FS.h>
 #define digitalWriteFast digitalWrite
 #include <stm32l4_wiring_private.h>
@@ -148,6 +151,7 @@
 #define DMAChannel stm32l4_dma_t
 #define DMAMEM
 #define NVIC_SET_PRIORITY(X,Y) NVIC_SetPriority((X), (IRQn_Type)(Y))
+
 #endif
 
 #include <SPI.h>
@@ -284,6 +288,8 @@ enum EVENT : uint32_t {
   EVENT_NONE = 0,
   EVENT_PRESSED,
   EVENT_RELEASED,
+  EVENT_HELD,
+  EVENT_HELD_LONG,
   EVENT_CLICK_SHORT,
   EVENT_CLICK_LONG,
   EVENT_DOUBLE_CLICK, // Note, will also generate a short click
@@ -294,8 +300,6 @@ enum EVENT : uint32_t {
   EVENT_SHAKE,
   EVENT_TWIST,
   EVENT_CLASH,
-  EVENT_HELD,
-  EVENT_HELD_LONG,
 };
 
 uint32_t current_modifiers = BUTTON_NONE;
@@ -305,7 +309,6 @@ uint32_t current_modifiers = BUTTON_NONE;
 
 SaberBase* saberbases = NULL;
 SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
-
 bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 
@@ -356,7 +359,6 @@ Beeper beeper;
 Talkie talkie;
 
 // LightSaberSynth saber_synth;
-
 #include "sound/buffered_audio_stream.h"
 
 #else  // ENABLE_AUDIO
@@ -365,6 +367,7 @@ Talkie talkie;
 #define LOCK_SD(X) do { } while(0)
 
 #endif  // ENABLE_AUDIO
+
 
 class Effect;
 Effect* all_effects = NULL;
@@ -415,8 +418,6 @@ bool endswith(const char *postfix, const char* x) {
   return true;
 }
 
-//#include "common/lsfs.h"
-
 char current_directory[128];
 
 #include "sound/effect.h"
@@ -424,19 +425,19 @@ char current_directory[128];
 #define EFFECT(X) Effect X(#X)
 
 // Monophonic fonts
-EFFECT(boot);
+EFFECT(boot);  // also polyphonic
 EFFECT(swing);
 EFFECT(hum);
 EFFECT(poweron);
 EFFECT(poweroff);
 EFFECT(pwroff);
 EFFECT(clash);
-EFFECT(force);
-EFFECT(stab);
+EFFECT(force);  // also polyphonic
+EFFECT(stab);   // also polyphonic
 EFFECT(blaster);
 EFFECT(lockup);
 EFFECT(poweronf);
-EFFECT(font);
+EFFECT(font);   // also polyphonic
 
 // Polyphonic fonts
 EFFECT(blst);
@@ -461,6 +462,7 @@ size_t WhatUnit(class BufferedWavPlayer* player);
 #include "sound/buffered_wav_player.h"
 
 BufferedWavPlayer wav_players[6];
+RefPtr<BufferedWavPlayer> track_player_;
 
 RefPtr<BufferedWavPlayer> GetFreeWavPlayer()  {
   // Find a free wave playback unit.
@@ -487,12 +489,8 @@ size_t WhatUnit(class BufferedWavPlayer* player) {
   return player - wav_players;
 }
 
-#include "sound/audio_splicer.h"
-
-VolumeOverlay<AudioSplicer> audio_splicer;
-
 void SetupStandardAudioLow() {
-  audio_splicer.Deactivate();
+//  audio_splicer.Deactivate();
   for (size_t i = 0; i < NELEM(wav_players); i++) {
     if (wav_players[i].refs() != 0) {
       STDOUT.println("WARNING, wav player still referenced!");
@@ -510,31 +508,11 @@ void SetupStandardAudio() {
   dac.SetStream(&dynamic_mixer);
 }
 
-void ActivateAudioSplicer() {
-  dac.SetStream(NULL);
-  SetupStandardAudioLow();
-  audio_splicer.Activate();
-  dac.SetStream(&dynamic_mixer);
-}
-
-#include "sound/monophonic_font.h"
-
-MonophonicFont monophonic_font;
 
 #include "common/config_file.h"
-#include "sound/polyphonic_font.h"  
+#include "sound/hybrid_font.h"
 
-PolyphonicFont polyphonic_font;
-
-class SyntheticFont : PolyphonicFont {
-public:
-  void SB_On() override {}
-  void SB_Off() override {}
-
-  void SB_Motion(const Vec3& speed, bool clear) override {
-    // Adjust hum volume based on motion speed
-  }
-};
+HybridFont hybrid_font;
 
 class SmoothSwingConfigFile : public ConfigFile {
 public:
@@ -624,6 +602,9 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/colors.h"
 #include "styles/mix.h"
 #include "styles/style_ptr.h"
+#include "styles/file.h"
+#include "styles/stripes.h"
+#include "styles/random_blink.h"
 
 // functions
 #include "functions/ifon.h"
@@ -821,8 +802,7 @@ public:
 
     // Avoid clashes a little bit while turning on.
     // It might be a "clicky" power button...
-    last_clash_ = activated_;
-    clash_timeout_ = 300;
+    IgnoreClash(300);
   }
 
   void Off() {
@@ -843,6 +823,16 @@ public:
     }
   }
 
+  void IgnoreClash(size_t ms) {
+    uint32_t now = millis();
+    uint32_t time_since_last_clash = now - last_clash_;
+    if (time_since_last_clash < clash_timeout_) {
+      ms = max(ms, clash_timeout_ - time_since_last_clash);
+    }
+    last_clash_ = now;
+    clash_timeout_ = ms;
+  }
+
   void Clash() {
     // No clashes in lockup mode.
     if (SaberBase::Lockup()) return;
@@ -853,12 +843,11 @@ public:
       return;
     }
     if (Event(BUTTON_NONE, EVENT_CLASH)) {
-      clash_timeout_ = 400;  // For events, space clashes out more.
+      IgnoreClash(400);
     } else {
-      clash_timeout_ = 100;
+      IgnoreClash(100);
       if (SaberBase::IsOn()) SaberBase::DoClash();
     }
-    last_clash_ = t;
   }
 
   bool chdir(const char* dir) {
@@ -869,8 +858,7 @@ public:
 #ifdef ENABLE_AUDIO
     smooth_swing_v2.Deactivate();
     looped_swing_wrapper.Deactivate();
-    monophonic_font.Deactivate();
-    polyphonic_font.Deactivate();
+    hybrid_font.Deactivate();
 
     // Stop all sound!
     // TODO: Move scanning to wav-playing interrupt level so we can
@@ -889,16 +877,8 @@ public:
 #ifdef ENABLE_AUDIO
     Effect::ScanDirectory(dir);
     SaberBase* font = NULL;
-    if (clsh.files_found()) {
-      polyphonic_font.Activate();
-      font = &polyphonic_font;
-    } else if (clash.files_found()) {
-      monophonic_font.Activate();
-      font = &monophonic_font;
-    } else if (boot.files_found()) {
-      monophonic_font.Activate();
-      font = &monophonic_font;
-    }
+    hybrid_font.Activate();
+    font = &hybrid_font;
     if (font) {
       if (swingl.files_found()) {
         smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
@@ -1041,6 +1021,7 @@ public:
   float peak = 0.0;
   Vec3 at_peak;
   void SB_Accel(const Vec3& accel, bool clear) override {
+    accel_loop_counter_.Update();
     if (clear) accel_ = accel;
     float v = (accel_ - accel).len();
     // If we're spinning the saber, require a stronger acceleration
@@ -1068,10 +1049,16 @@ public:
       STDOUT.print(", ");
       STDOUT.print(at_peak.z);
       STDOUT.print(" (");
-      STDOUT.print(sqrtf(peak));
+      STDOUT.print(peak);
       STDOUT.println(")");
       peak = 0.0;
     }
+  }
+
+  void SB_Top() override {
+    STDOUT.print("Acceleration measurements per second: ");
+    accel_loop_counter_.Print();
+    STDOUT.println("");
   }
 
   enum StrokeType {
@@ -1177,9 +1164,6 @@ public:
 protected:
   Vec3 accel_;
   bool pointing_down_ = false;
-#ifdef ENABLE_AUDIO
-  RefPtr<BufferedWavPlayer> track_player_;
-#endif
 
   void StartOrStopTrack() {
 #ifdef ENABLE_AUDIO
@@ -1187,8 +1171,8 @@ protected:
       track_player_->Stop();
       track_player_.Free();
     } else {
-      EnableAmplifier();
       MountSDCard();
+      EnableAmplifier();
       track_player_ = GetFreeWavPlayer();
       if (track_player_) {
         track_player_->Play(current_preset_->track);
@@ -1274,17 +1258,19 @@ public:
       PrintButton(current_modifiers);
     }
     if (SaberBase::IsOn()) STDOUT.print(" ON");
-    STDOUT.println("");
+    STDOUT.print(" millis=");    
+    STDOUT.println(millis());
 
 #define EVENTID(BUTTON, EVENT, MODIFIERS) (((EVENT) << 24) | ((BUTTON) << 12) | ((MODIFIERS) & ~(BUTTON)))
     if (SaberBase::IsOn() && aux_on_) {
       if (button == BUTTON_POWER) button = BUTTON_AUX;
       if (button == BUTTON_AUX) button = BUTTON_POWER;
     }
-
     
     bool handled = true;
-    
+    if (event == EVENT_PRESSED || event == EVENT_RELEASED) {
+      IgnoreClash(10); // ignore clashes for 10ms to prevent buttons from causing clashes
+    }
     switch (EVENTID(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
       default:
         handled = false;
@@ -1306,23 +1292,24 @@ public:
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
-        if (MODE_VOLUME){
-          STDOUT.println("Volume up");
-          if (dynamic_mixer.get_volume() < max_volume_){
+      if (MODE_VOLUME){
+        STDOUT.println("Volume up");
+        if (dynamic_mixer.get_volume() < max_volume_){
             current_volume_ += max_volume_ * 0.10;
             dynamic_mixer.set_volume(current_volume_);
             beeper.Beep(0.5, 2000);
             STDOUT.print("Current Volume: ");
             STDOUT.println(dynamic_mixer.get_volume());
-          }
-          else{
-            beeper.Beep(0.5, 1000);
-          }
-          }
+        }
         else{
+            beeper.Beep(0.5, 1000);
+        }
+      }
+      else{
+
         aux_on_ = false;
         On();
-        }
+      }
         break;
 
 
@@ -1336,19 +1323,20 @@ public:
             beeper.Beep(0.5, 2000);
             STDOUT.print("Current Volume: ");
             STDOUT.println(dynamic_mixer.get_volume());
-          }
-          else{
+        }
+        else{
             beeper.Beep(0.5, 1000);
-          }
-      }
-      else{
+        }
+     }
+     else{
+
 #ifdef DUAL_POWER_BUTTONS
         aux_on_ = true;
         On();
 #else
         next_preset();
 #endif
-}
+     }
         break;
 
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
@@ -1356,11 +1344,11 @@ public:
 	  if (SetMute(true)) {
 	    unmute_on_deactivation_ = true;
 	  }
-   
 	}
- else{
-      SaberBase::DoForce();
-    }
+  else {
+     SaberBase::DoForce();
+     break;
+  }
 	break;
 	
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
@@ -1373,9 +1361,12 @@ public:
         Off();
         break;
 
+
+
+
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
         // Avoid the base and the very tip.
-        //SaberBase::addBlast((200 + random(700)) / 1000.0);
+	// TODO: Make blast only appear on one blade!
         SaberBase::DoBlast();
         break;
 
@@ -1393,7 +1384,6 @@ public:
           handled = false;
         }
         break;
-    
     case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON):
         if (!SaberBase::Lockup()) {
             if (pointing_down_) {
@@ -1401,11 +1391,12 @@ public:
             } else {
                 SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
             }
-            SaberBase::DoBeginLockup();
+        SaberBase::DoBeginLockup();
         } else {
             handled = false;
         }
         break;
+
 
         // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
@@ -1414,18 +1405,19 @@ public:
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
         current_volume_ = dynamic_mixer.get_volume();
         if (MODE_VOLUME){
-          MODE_VOLUME = false;
-          beeper.Beep(0.5, 3000);
-          STDOUT.println("Exit Volume Menu");
-          
+            MODE_VOLUME = false;
+            beeper.Beep(0.5, 3000);
+            STDOUT.println("Exit Volume Menu");
+
         }
         else{
-        MODE_VOLUME = true;
+            MODE_VOLUME = true;
             beeper.Beep(0.5, 3000);
-        STDOUT.println("Enter Volume Menu");
+            STDOUT.println("Enter Volume Menu");
         }
         break;
-      
+
+
 
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
         SaberBase::RequestMotion();
@@ -1446,7 +1438,6 @@ public:
         previous_preset();
 #endif
         break;
-        
     }
     if (!handled) {
       // Events that needs to be handled regardless of what other buttons
@@ -1499,7 +1490,7 @@ public:
     }
     if (!strcmp(cmd, "blast")) {
       // Avoid the base and the very tip.
-      //SaberBase::addBlast((200 + random(700)) / 1000.0);
+      // TODO: Make blast only appear on one blade!
       SaberBase::DoBlast();
       return true;
     }
@@ -1592,8 +1583,6 @@ public:
         STDOUT.print(" Volume ");
         STDOUT.println(wav_players[unit].volume());
       }
-      STDOUT.print("Splicer Volume ");
-      STDOUT.println(audio_splicer.volume());
       return true;
     }
     if (!strcmp(cmd, "buffered")) {
@@ -1751,6 +1740,7 @@ public:
 private:
   BladeConfig* current_config_ = NULL;
   Preset* current_preset_ = NULL;
+  LoopCounter accel_loop_counter_;
 };
 
 Saber saber;
@@ -2796,62 +2786,74 @@ class ClashRecorder : public SaberBase {
 public:
   void SB_Clash() override {
     time_to_dump_ = NELEM(buffer_) / 2;
+    STDOUT.println("dumping soon...");
+    SaberBase::RequestMotion();
   }
-  void SB_Accel(const Vec3& accel) override {
+  void SB_Accel(const Vec3& accel, bool clear) override {
+    SaberBase::RequestMotion();
+    loop_counter_.Update();
     buffer_[pos_] = accel;
     pos_++;
     if (pos_ == NELEM(buffer_)) pos_ = 0;
-    if (time_to_dump_) {
-      time_to_dump_--;
-      if (time_to_dump_ == 0) {
-        LOCK_SD(true);
-        char file_name[16];
-        size_t file_num = last_file_ + 1;
+    if (!time_to_dump_) return;
+    time_to_dump_--;
+    if (time_to_dump_) return;
 
-        while (true) {
-          char num[16];
-          itoa(file_num, num, 10);
-          strcpy(file_name, "CLS");
-          while(strlen(num) + strlen(file_name) < 8) strcat(file_name, "0");
-          strcat(file_name, num);
-          strcat(file_name, ".CSV");
+    LOCK_SD(true);
+    char file_name[16];
+    size_t file_num = last_file_ + 1;
+
+    while (true) {
+      char num[16];
+      itoa(file_num, num, 10);
+      strcpy(file_name, "CLS");
+      while(strlen(num) + strlen(file_name) < 8) strcat(file_name, "0");
+      strcat(file_name, num);
+      strcat(file_name, ".CSV");
           
-          int last_skip = file_num - last_seen_;
-          if (LSFS::Exists(file_name)) {
-            last_file_ = file_num;
-            file_num += last_skip * 2;
-            continue;
-          }
-
-          if (file_num - last_file_ > 1) {
-            file_num = last_file_ + last_skip / 2;
-            continue;
-          }
-          break;
-        }
-        File f = LSFS::OpenForWrite(file_name);
-        for (size_t i = 0; i < NELEM(buffer_); i++) {
-          const Vec3& v = buffer_[(pos_ + i) % NELEM(buffer_)];
-          f.print(v.x);
-          f.print(", ");
-          f.print(v.y);
-          f.print(", ");
-          f.print(v.z);
-          f.print("\n");
-        }
-        f.close();
-        LOCK_SD(false);
+      int last_skip = file_num - last_file_;
+      if (LSFS::Exists(file_name)) {
+	last_file_ = file_num;
+	file_num += last_skip * 2;
+	continue;
       }
+
+      if (file_num - last_file_ > 1) {
+	file_num = last_file_ + last_skip / 2;
+	continue;
+      }
+      break;
     }
+    File f = LSFS::OpenForWrite(file_name);
+    for (size_t i = 0; i < NELEM(buffer_); i++) {
+      const Vec3& v = buffer_[(pos_ + i) % NELEM(buffer_)];
+      f.print(v.x);
+      f.print(", ");
+      f.print(v.y);
+      f.print(", ");
+      f.print(v.z);
+      f.print("\n");
+    }
+    f.close();
+    LOCK_SD(false);
+    STDOUT.print("Clash dumped to ");
+    STDOUT.print(file_name);
+    STDOUT.print(" ~ ");
+    loop_counter_.Print();
+    STDOUT.println(" measurements / second");
   }
 private:
   size_t last_file_ = 0;
   size_t time_to_dump_ = 0;
   size_t pos_ = 0;
   Vec3 buffer_[512];
+  LoopCounter loop_counter_;
 };
 
 ClashRecorder clash_recorder;
+void DumpClash() { clash_recorder.SB_Clash(); }
+#else
+void DumpClash() {}
 #endif
 
 #ifdef GYRO_CLASS

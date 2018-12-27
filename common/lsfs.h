@@ -77,13 +77,26 @@ public:
     return mounted_;
   }
   static bool CanMount() {
-    dosfs_volume_t *volume = DOSFS_DEFAULT_VOLUME();
+    // dosfs_volume_t *volume = DOSFS_DEFAULT_VOLUME();
     dosfs_device_t *device = DOSFS_VOLUME_DEVICE(volume);
     if (device->lock & (DOSFS_DEVICE_LOCK_VOLUME |
 			DOSFS_DEVICE_LOCK_SCSI |
 			DOSFS_DEVICE_LOCK_MEDIUM |
 			DOSFS_DEVICE_LOCK_INIT)) return false;
     return true;
+  }
+  static void WhyBusy(char *tmp) {
+    *tmp = 0;
+    // dosfs_volume_t *volume = DOSFS_DEFAULT_VOLUME();
+    dosfs_device_t *device = DOSFS_VOLUME_DEVICE(volume);
+    if (device->lock & DOSFS_DEVICE_LOCK_VOLUME)
+      strcat(tmp, " volume");
+    if (device->lock & DOSFS_DEVICE_LOCK_SCSI)
+      strcat(tmp, " scsi");
+    if (device->lock & DOSFS_DEVICE_LOCK_MEDIUM)
+      strcat(tmp, " medium");
+    if (device->lock & DOSFS_DEVICE_LOCK_INIT)
+      strcat(tmp, " init");
   }
   // This function waits until the volume is mounted.
   static bool Begin() {

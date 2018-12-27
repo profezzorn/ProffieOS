@@ -335,9 +335,19 @@ public:
     return (float)(sample_bytes_) * 8 / (bits_ * rate_);
   }
 
+  // Current position, seconds.
+  float pos() const {
+    if (!isPlaying()) return 0.0;
+    return (float)(sample_bytes_ - len_ + end_ - ptr_) * 8 / (bits_ * rate_);
+  }
+
   void Close() {
     file_.Close();
     old_file_id_ = new_file_id_ = Effect::FileID();
+  }
+
+  const char* filename() const {
+    return filename_;
   }
 
 private:

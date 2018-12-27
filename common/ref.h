@@ -22,7 +22,10 @@ public:
   }
 
   void Free() { if (ptr_) { ptr_->SubRef(); ptr_ = nullptr; }  }
-  T* operator->() { return ptr_; }
+  T* operator->() {
+    if (!ptr_) { STDOUT.println("NULL POINTER!"); delay(100); }
+    return ptr_;
+  }
   T* get() { return ptr_; }
   T& operator*() { return *ptr_; }
   bool operator==(const RefPtr& other) const { return ptr_ == other.ptr_; }
