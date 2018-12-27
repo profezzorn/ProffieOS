@@ -95,7 +95,7 @@ public:
     CTRL_SPIAux = 0x70
   };
 
-  LSM6DS3H() : I2CDevice(106) {}
+  LSM6DS3H() : I2CDevice(106), Looper(HFLINK) {}
 
   void Loop() override {
     STATE_MACHINE_BEGIN();
