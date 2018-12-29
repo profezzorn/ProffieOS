@@ -107,6 +107,7 @@ public:
       first_accel_ = true;
       
       STDOUT.print("Motion setup ... ");
+      while (!I2CLock()) YIELD();
 
       writeByte(CTRL1_XL, 0x88);  // 1.66kHz accel, 4G range
       writeByte(CTRL2_G, 0x8C);   // 1.66kHz gyro, 2000 dps
@@ -125,6 +126,7 @@ public:
       } else {
         STDOUT.println("failed.");
       }
+      I2CUnlock();
 
       while (true) {
 	YIELD();
@@ -172,6 +174,7 @@ public:
     i2c_timeout:
       STDOUT.println("Motion chip timeout, reboot motion chip!");
       writeByte(CTRL3_C, 1);
+      I2CUnlock();
       delay(20);
     }
 
