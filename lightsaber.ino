@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,7 +29,7 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -785,6 +785,7 @@ public:
   uint32_t activated_ = 0;
   uint32_t last_clash_ = 0;
   uint32_t clash_timeout_ = 100;
+  bool clash_pending_ = false;
 
   void On() {
     if (SaberBase::IsOn()) return;
@@ -820,6 +821,7 @@ public:
   }
 
   void IgnoreClash(size_t ms) {
+    if (clash_pending_) return;
     uint32_t now = millis();
     uint32_t time_since_last_clash = now - last_clash_;
     if (time_since_last_clash < clash_timeout_) {
@@ -827,6 +829,15 @@ public:
     }
     last_clash_ = now;
     clash_timeout_ = ms;
+  }
+
+  void Clash2() {
+    if (Event(BUTTON_NONE, EVENT_CLASH)) {
+      IgnoreClash(400);
+    } else {
+      IgnoreClash(100);
+      if (SaberBase::IsOn()) SaberBase::DoClash();
+    }
   }
 
   void Clash() {
@@ -838,12 +849,15 @@ public:
       last_clash_ = t; // Vibration cancellation
       return;
     }
-    if (Event(BUTTON_NONE, EVENT_CLASH)) {
-      IgnoreClash(400);
-    } else {
-      IgnoreClash(100);
-      if (SaberBase::IsOn()) SaberBase::DoClash();
+    if (current_modifiers & ~MODE_ON) {
+      // Some button is pressed, that means that we need to delay the clash a little
+      // to see if was caused by a button *release*.
+      last_clash_ = millis();
+      clash_timeout_ = 3;
+      clash_pending_ = true;
+      return;
     }
+    Clash2();
   }
 
   bool chdir(const char* dir) {
@@ -1024,7 +1038,30 @@ public:
     // to activate the clash.
     if (v > CLASH_THRESHOLD_G + filtered_gyro_.len() / 200.0) {
       // Needs de-bouncing
+#if 1
+      STDOUT.print("ACCEL: ");
+      STDOUT.print(accel.x);
+      STDOUT.print(", ");
+      STDOUT.print(accel.y);
+      STDOUT.print(", ");
+      STDOUT.print(accel.z);
+      STDOUT.print(" v = ");
+      STDOUT.print(v);
+      STDOUT.print(" fgl = ");
+      STDOUT.print(filtered_gyro_.len() / 200.0);
+      STDOUT.print(" accel_: ");
+      STDOUT.print(accel_.x);
+      STDOUT.print(", ");
+      STDOUT.print(accel_.y);
+      STDOUT.print(", ");
+      STDOUT.print(accel_.z);
+      STDOUT.print(" clear = ");
+      STDOUT.print(clear);
+      STDOUT.print(" millis = ");
+      STDOUT.println(millis());
+#endif      
       Clash();
+      DumpClash();
     }
     if (v > peak) {
       peak = v;
@@ -1185,6 +1222,10 @@ protected:
   uint32_t last_beep_;
 
   void Loop() override {
+    if (clash_pending_ && millis() - last_clash_ >= clash_timeout_) {
+      clash_pending_ = false;
+      Clash2();
+    }
     if (battery_monitor.low()) {
       if (current_preset_->style_allocator1 != &style_charging) {
         if (SaberBase::IsOn()) {
@@ -1263,8 +1304,11 @@ public:
     }
     
     bool handled = true;
-    if (event == EVENT_PRESSED || event == EVENT_RELEASED) {
-      IgnoreClash(10); // ignore clashes for 10ms to prevent buttons from causing clashes
+    switch (event) {
+      case EVENT_RELEASED:
+	clash_pending_ = false;
+      case EVENT_PRESSED:
+	IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
     }
     switch (EVENTID(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
       default:
@@ -2710,6 +2754,8 @@ SSD1306 display;
 #include "motion/lsm6ds3h.h"
 #include "motion/fxos8700.h"
 #include "motion/fxas21002.h"
+
+// #define CLASH_RECORDER
 
 #ifdef CLASH_RECORDER
 class ClashRecorder : public SaberBase {
