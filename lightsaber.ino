@@ -811,6 +811,7 @@ public:
       SaberBase::DoEndLockup();
     }
     SaberBase::TurnOff();
+    STDOUT.println("Retraction.");
     if (unmute_on_deactivation_) {
       unmute_on_deactivation_ = false;
 #ifdef ENABLE_AUDIO
@@ -1222,7 +1223,6 @@ protected:
     if (b & BUTTON_RIGHT) STDOUT.print("Right");
     if (b & BUTTON_SELECT) STDOUT.print("Select");
     if (b & MODE_ON) STDOUT.print("On");
-    if (b & MODE_VOLUME) STDOUT.print("Volume Menu");
   }
 
   void PrintEvent(EVENT e) {
@@ -1291,7 +1291,73 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
+        aux_on_ = false;
+        On();
+        break;
+
+
+
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
+      case EVENTID(BUTTON_AUX2, EVENT_LATCH_OFF, MODE_ON):
+#if NUM_BUTTONS == 0
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+#endif
+        Off();
+        break;
+
+      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
+         if (millis() - activated_ < 500) {
+            if (SetMute(true)) {
+               unmute_on_deactivation_ = true;
+            }
+         }
+         break;
+         
+      //case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
+        //     SaberBase::DoForce();
+        //break;
+
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
+        // Avoid the base and the very tip.
+	// TODO: Make blast only appear on one blade!
+        SaberBase::DoBlast();
+        break;
+
+        // Lockup
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
+      case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON | BUTTON_AUX):
+        if (!SaberBase::Lockup()) {
+          if (pointing_down_) {
+            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+          } else {
+            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+          }
+          SaberBase::DoBeginLockup();
+        } else {
+          handled = false;
+        }
+        break;
+             // VOLUME MENU
+
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
+        current_volume_ = dynamic_mixer.get_volume();
+        if (MODE_VOLUME){
+            MODE_VOLUME = false;
+            beeper.Beep(0.5, 3000);
+            STDOUT.println("Exit Volume Menu");
+
+        }
+        else{
+            MODE_VOLUME = true;
+            beeper.Beep(0.5, 3000);
+            STDOUT.println("Enter Volume Menu");
+        }
+        break;
+        
+        case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
       if (MODE_VOLUME){
         STDOUT.println("Volume up");
         if (dynamic_mixer.get_volume() < max_volume_){
@@ -1311,8 +1377,7 @@ public:
         On();
       }
         break;
-
-
+        
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
       if (MODE_VOLUME){
         STDOUT.println("Volume Down");
@@ -1329,95 +1394,19 @@ public:
         }
      }
      else{
-
-#ifdef DUAL_POWER_BUTTONS
+     #ifdef DUAL_POWER_BUTTONS
         aux_on_ = true;
         On();
-#else
+     #else
         next_preset();
-#endif
+     #endif
      }
-        break;
-
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
-	if (millis() - activated_ < 500) {
-	  if (SetMute(true)) {
-	    unmute_on_deactivation_ = true;
-	  }
-	}
-  else {
-     SaberBase::DoForce();
-     break;
-  }
-	break;
-	
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
-      case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
-      case EVENTID(BUTTON_AUX2, EVENT_LATCH_OFF, MODE_ON):
-#if NUM_BUTTONS == 0
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-#endif
-        Off();
-        break;
-
-
-
-
-      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
-        // Avoid the base and the very tip.
-	// TODO: Make blast only appear on one blade!
-        SaberBase::DoBlast();
-        break;
-
-        // Lockup
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
-        if (!SaberBase::Lockup()) {
-          if (pointing_down_) {
-            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-          } else {
-            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-          }
-          SaberBase::DoBeginLockup();
-        } else {
-          handled = false;
-        }
-        break;
-    case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON):
-        if (!SaberBase::Lockup()) {
-            if (pointing_down_) {
-                SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-            } else {
-                SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-            }
-        SaberBase::DoBeginLockup();
-        } else {
-            handled = false;
-        }
-        break;
-
+     break; 
 
         // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
         StartOrStopTrack();
         break;
-      case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
-        current_volume_ = dynamic_mixer.get_volume();
-        if (MODE_VOLUME){
-            MODE_VOLUME = false;
-            beeper.Beep(0.5, 3000);
-            STDOUT.println("Exit Volume Menu");
-
-        }
-        else{
-            MODE_VOLUME = true;
-            beeper.Beep(0.5, 3000);
-            STDOUT.println("Enter Volume Menu");
-        }
-        break;
-
-
 
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
         SaberBase::RequestMotion();
