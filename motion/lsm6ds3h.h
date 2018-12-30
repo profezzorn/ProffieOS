@@ -109,29 +109,39 @@ public:
       STDOUT.print("Motion setup ... ");
       while (!I2CLock()) YIELD();
 
-      writeByte(CTRL1_XL, 0x88);  // 1.66kHz accel, 4G range
-      writeByte(CTRL2_G, 0x8C);   // 1.66kHz gyro, 2000 dps
-      writeByte(CTRL3_C, 0x44);   // ?
-      writeByte(CTRL4_C, 0x00);
-      writeByte(CTRL5_C, 0x00);
-      writeByte(CTRL6_C, 0x00);
-      writeByte(CTRL7_G, 0x00);
-      writeByte(CTRL8_XL, 0x00);
-      writeByte(CTRL9_XL, 0x38);  // accel xyz enable
-      writeByte(CTRL10_C, 0x38);  // gyro xyz enable
-      writeByte(INT1_CTRL, 0x3);  // Activate INT on data ready
+      I2C_WRITE_BYTE_ASYNC(CTRL1_XL, 0x88);  // 1.66kHz accel, 4G range
+      I2C_WRITE_BYTE_ASYNC(CTRL2_G, 0x8C);   // 1.66kHz gyro, 2000 dps
+      I2C_WRITE_BYTE_ASYNC(CTRL3_C, 0x44);   // ?
+      I2C_WRITE_BYTE_ASYNC(CTRL4_C, 0x00);
+      I2C_WRITE_BYTE_ASYNC(CTRL5_C, 0x00);
+      I2C_WRITE_BYTE_ASYNC(CTRL6_C, 0x00);
+      I2C_WRITE_BYTE_ASYNC(CTRL7_G, 0x00);
+      I2C_WRITE_BYTE_ASYNC(CTRL8_XL, 0x00);
+      I2C_WRITE_BYTE_ASYNC(CTRL9_XL, 0x38);  // accel xyz enable
+      I2C_WRITE_BYTE_ASYNC(CTRL10_C, 0x38);  // gyro xyz enable
+      I2C_WRITE_BYTE_ASYNC(INT1_CTRL, 0x3);  // Activate INT on data ready
       pinMode(motionSensorInterruptPin, INPUT);
-      if (readByte(WHO_AM_I) == 105) {
+      I2C_READ_BYTES_ASYNC(WHO_AM_I, databuffer, 1);
+      if (databuffer[0] == 105) {
         STDOUT.println("done.");
       } else {
         STDOUT.println("failed.");
+	goto i2c_timeout;
       }
       I2CUnlock();
 
+      last_event_ = millis();
       while (true) {
 	YIELD();
 	if (!SaberBase::MotionRequested()) break;
-	if (!digitalRead(motionSensorInterruptPin)) continue;
+	if (!digitalRead(motionSensorInterruptPin)) {
+	  if (millis() - last_event_ > I2C_TIMEOUT_MILLIS * 2) {
+	    goto i2c_timeout;
+	  }
+	  continue;
+	} else {
+	  last_event_ = millis();
+	}
         while (!I2CLock()) YIELD();
 	
 	I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 12);
@@ -164,8 +174,8 @@ public:
       STDOUT.println("Motion disable.");
 
       while (!I2CLock()) YIELD();
-      writeByte(CTRL9_XL, 0x0);  // accel xyz disable
-      writeByte(CTRL10_C, 0x0);  // gyro xyz disable
+      I2C_WRITE_BYTE_ASYNC(CTRL9_XL, 0x0);  // accel xyz disable
+      I2C_WRITE_BYTE_ASYNC(CTRL10_C, 0x0);  // gyro xyz disable
       I2CUnlock();
       
       while (!SaberBase::MotionRequested()) YIELD();
@@ -173,9 +183,11 @@ public:
 
     i2c_timeout:
       STDOUT.println("Motion chip timeout, reboot motion chip!");
-      writeByte(CTRL3_C, 1);
+      Reset();
+      SLEEP(20);
+      I2C_WRITE_BYTE_ASYNC(CTRL3_C, 1);
       I2CUnlock();
-      delay(20);
+      SLEEP(20);
     }
 
     STATE_MACHINE_END();
@@ -183,6 +195,7 @@ public:
 
   uint8_t databuffer[12];
   uint32_t last_temp_;
+  uint32_t last_event_;
   bool first_motion_;
   bool first_accel_;
 };

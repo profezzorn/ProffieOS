@@ -246,6 +246,7 @@ public:
 	    volume_ = 0.0f;
 	    state_ = STATE_OFF;
 	    hum_player_->FadeAndStop();
+	    hum_player_.Free();
 	  }
 	  break;
 	}

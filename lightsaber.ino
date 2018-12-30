@@ -1061,7 +1061,6 @@ public:
       STDOUT.println(millis());
 #endif      
       Clash();
-      DumpClash();
     }
     if (v > peak) {
       peak = v;
@@ -1309,6 +1308,8 @@ public:
 	clash_pending_ = false;
       case EVENT_PRESSED:
 	IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
+      default:
+	break;
     }
     switch (EVENTID(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
       default:
