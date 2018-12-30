@@ -54,7 +54,8 @@ public:
          return true;
     }
   }
-  void run(BladeBase* blade) {
+  bool run(BladeBase* blade) {
+    bool keep_running = true;
     c1_.run(blade);
     c2_.run(blade);
     uint32_t m = millis();
@@ -85,8 +86,9 @@ public:
          heat_[i] = clampi32(x - random(config.cooling), 0, 65535);
 	 if (heat_[i]) zero = false;
       }
-      if (zero) blade->allow_disable();
+      if (zero) keep_running = false;
     }
+    return keep_running;
   }
 
   OverDriveColor getColor(int led) {

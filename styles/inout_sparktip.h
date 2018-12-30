@@ -11,7 +11,8 @@
 template<class T, int OUT_MILLIS, int IN_MILLIS, class SPARK_COLOR = Rgb<255,255,255> >
 class InOutSparkTip {
 public:
-  void run(BladeBase* blade) {
+  bool run(BladeBase* blade) {
+    bool keep_running = true;
     base_.run(blade);
     uint32_t now = micros();
     uint32_t delta = now - last_micros_;
@@ -26,11 +27,12 @@ public:
          extension = min(extension, 1.0f);
       }
     } else {
-      if (extension == 0.0) blade->allow_disable();
+      if (extension == 0.0) keep_running = false;
       extension -= delta / (IN_MILLIS * 1000.0);
       extension = max(extension, 0.0f);
     }
     thres = extension * (blade->num_leds() + 4) * 256;
+    return keep_running;
   }
 
   OverDriveColor getColor(int led) {

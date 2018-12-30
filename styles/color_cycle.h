@@ -18,7 +18,8 @@ template<class COLOR, int percentage, int rpm,
          int fade_time_millis = 1>
 class ColorCycle {
 public:
-  void run(BladeBase* base) {
+  bool run(BladeBase* base) {
+    bool keep_running = true;
     c_.run(base);
     on_c_.run(base);
 
@@ -44,10 +45,11 @@ public:
     } else if (current_percentage == 0.0) {
       start_ = 0;
       end_ = 0;
-      base->allow_disable();
+      keep_running = false;
     } else {
       end_ = fract(pos_ + current_percentage / 100.0) * num_leds_;
     }
+    return keep_running;
   }
   OverDriveColor getColor(int led) {
     Range led_range(led * 16384, led * 16384 + 16384);
