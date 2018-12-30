@@ -19,7 +19,6 @@ template<class T, typename X> struct RunStyle {
 
 template<class T> struct RunStyle<T, void> {
   static void run(T* style, BladeBase* blade) {
-    STDOUT.println("CANNOT DISABLE");
     style->run(blade);
   }
 };
