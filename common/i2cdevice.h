@@ -70,6 +70,20 @@ public:
 // If we fail we just retry over and over again until timeout
 #define FAIL() do { state_machine_.reset_state_machine(); return; } while(0);
 
+  inline void i2c_write_byte_loop(uint8_t reg, uint8_t data) {
+    STATE_MACHINE_BEGIN();
+    Wire._tx_data[0] = reg;
+    Wire._tx_data[1] = data;
+    if (!stm32l4_i2c_transmit(Wire._i2c, address_, Wire._tx_data, 2, 0)) FAIL();
+
+    // Wait for write to finish.
+    while (!stm32l4_i2c_done(Wire._i2c)) YIELD();
+
+    // Check status.
+    if (stm32l4_i2c_status(Wire._i2c)) FAIL();
+    STATE_MACHINE_END();
+  }
+
   inline void i2c_read_bytes_loop(uint8_t reg, uint8_t* data, size_t bytes) {
     STATE_MACHINE_BEGIN();
     // Write the register to the device.
@@ -96,8 +110,26 @@ public:
     STATE_MACHINE_END();
   }
 public:
+  void Reset() {
+    int i;
+    for (i = 0; i < 10; i++) {
+      if (!stm32l4_i2c_reset(Wire._i2c)) break;
+      delay(1);
+    }
+    if (i == 10) {
+      Wire._i2c->state = I2C_STATE_READY;
+      stm32l4_i2c_reset(Wire._i2c);
+    }
+    state_machine_.reset_state_machine();
+  }
   bool i2c_read_bytes_async(uint8_t reg, uint8_t* data, size_t bytes) {
     i2c_read_bytes_loop(reg, data, bytes);
+    if (state_machine_.next_state_ != -2) return true;
+    state_machine_.reset_state_machine();
+    return false;
+  }
+  bool i2c_write_byte_async(uint8_t reg, uint8_t data) {
+    i2c_write_byte_loop(reg, data);
     if (state_machine_.next_state_ != -2) return true;
     state_machine_.reset_state_machine();
     return false;
@@ -112,7 +144,17 @@ public:
   }									\
 } while(0)
 
-#else  
+#define I2C_WRITE_BYTE_ASYNC(reg, data) do {				\
+  state_machine_.sleep_until_ = millis();				\
+  while (i2c_write_byte_async(reg, data)) {				\
+    if (millis() - state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) goto i2c_timeout; \
+    YIELD();								\
+  }									\
+} while(0)
+
+#else
+  // Do nothing, i2c_t3.h will handle most of the resetting for us.
+  void Reset() {}
 #define I2C_READ_BYTES_ASYNC(reg, data, bytes) do {			\
   StartReadBytes(reg, bytes);						\
   state_machine_.sleep_until_ = millis();				\
@@ -122,7 +164,9 @@ public:
   }									\
   EndReadBytes(data, bytes);						\
 } while(0)
+#define I2C_WRITE_BYTE_ASYNC(reg, data) writeByte(reg, data)
 #endif
+
   
 protected:
   uint8_t address_;

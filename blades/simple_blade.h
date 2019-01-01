@@ -129,6 +129,10 @@ public:
   void allow_disable() override {
     if (!on_) power_ = false;
   }
+  virtual void SetStyle(BladeStyle* style) {
+    AbstractBlade::SetStyle(style);
+    power_ = true;
+  }
 
   // SaberBase implementation
   void SB_IsOn(bool *on) override {
