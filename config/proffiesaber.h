@@ -52,6 +52,6 @@ BladeConfig blades[] = {
 #endif
 
 #ifdef CONFIG_BUTTONS
-Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
-Button AuxButton(BUTTON_AUX, auxPin, "aux");
+Button PowerButton(BUTTON_POWER, auxPin, "pow");
+Button AuxButton(BUTTON_AUX, powerButtonPin, "aux");
 #endif
