@@ -789,6 +789,7 @@ public:
   uint32_t activated_ = 0;
   uint32_t last_clash_ = 0;
   uint32_t clash_timeout_ = 100;
+  bool clash_pending_ = false;
 
   void On() {
     if (SaberBase::IsOn()) return;
@@ -811,7 +812,7 @@ public:
       SaberBase::DoEndLockup();
     }
     SaberBase::TurnOff();
-    STDOUT.println("Retraction.");
+      STDOUT.println("Retraction");
     if (unmute_on_deactivation_) {
       unmute_on_deactivation_ = false;
 #ifdef ENABLE_AUDIO
@@ -825,6 +826,7 @@ public:
   }
 
   void IgnoreClash(size_t ms) {
+    if (clash_pending_) return;
     uint32_t now = millis();
     uint32_t time_since_last_clash = now - last_clash_;
     if (time_since_last_clash < clash_timeout_) {
@@ -832,6 +834,15 @@ public:
     }
     last_clash_ = now;
     clash_timeout_ = ms;
+  }
+
+  void Clash2() {
+    if (Event(BUTTON_NONE, EVENT_CLASH)) {
+      IgnoreClash(400);
+    } else {
+      IgnoreClash(100);
+      if (SaberBase::IsOn()) SaberBase::DoClash();
+    }
   }
 
   void Clash() {
@@ -843,12 +854,15 @@ public:
       last_clash_ = t; // Vibration cancellation
       return;
     }
-    if (Event(BUTTON_NONE, EVENT_CLASH)) {
-      IgnoreClash(400);
-    } else {
-      IgnoreClash(100);
-      if (SaberBase::IsOn()) SaberBase::DoClash();
+    if (current_modifiers & ~MODE_ON) {
+      // Some button is pressed, that means that we need to delay the clash a little
+      // to see if was caused by a button *release*.
+      last_clash_ = millis();
+      clash_timeout_ = 3;
+      clash_pending_ = true;
+      return;
     }
+    Clash2();
   }
 
   bool chdir(const char* dir) {
@@ -1029,6 +1043,28 @@ public:
     // to activate the clash.
     if (v > CLASH_THRESHOLD_G + filtered_gyro_.len() / 200.0) {
       // Needs de-bouncing
+#if 1
+      STDOUT.print("ACCEL: ");
+      STDOUT.print(accel.x);
+      STDOUT.print(", ");
+      STDOUT.print(accel.y);
+      STDOUT.print(", ");
+      STDOUT.print(accel.z);
+      STDOUT.print(" v = ");
+      STDOUT.print(v);
+      STDOUT.print(" fgl = ");
+      STDOUT.print(filtered_gyro_.len() / 200.0);
+      STDOUT.print(" accel_: ");
+      STDOUT.print(accel_.x);
+      STDOUT.print(", ");
+      STDOUT.print(accel_.y);
+      STDOUT.print(", ");
+      STDOUT.print(accel_.z);
+      STDOUT.print(" clear = ");
+      STDOUT.print(clear);
+      STDOUT.print(" millis = ");
+      STDOUT.println(millis());
+#endif      
       Clash();
     }
     if (v > peak) {
@@ -1190,6 +1226,10 @@ protected:
   uint32_t last_beep_;
 
   void Loop() override {
+    if (clash_pending_ && millis() - last_clash_ >= clash_timeout_) {
+      clash_pending_ = false;
+      Clash2();
+    }
     if (battery_monitor.low()) {
       if (current_preset_->style_allocator1 != &style_charging) {
         if (SaberBase::IsOn()) {
@@ -1223,6 +1263,7 @@ protected:
     if (b & BUTTON_RIGHT) STDOUT.print("Right");
     if (b & BUTTON_SELECT) STDOUT.print("Select");
     if (b & MODE_ON) STDOUT.print("On");
+    if (b & MODE_VOLUME) STDOUT.print("Volume Menu");
   }
 
   void PrintEvent(EVENT e) {
@@ -1268,8 +1309,13 @@ public:
     }
     
     bool handled = true;
-    if (event == EVENT_PRESSED || event == EVENT_RELEASED) {
-      IgnoreClash(10); // ignore clashes for 10ms to prevent buttons from causing clashes
+    switch (event) {
+      case EVENT_RELEASED:
+	clash_pending_ = false;
+      case EVENT_PRESSED:
+	IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
+      default:
+	break;
     }
     switch (EVENTID(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
       default:
@@ -1291,12 +1337,66 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
-        aux_on_ = false;
-        On();
+    case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
+        if (MODE_VOLUME){
+            STDOUT.println("Volume up");
+            if (dynamic_mixer.get_volume() < max_volume_){
+                current_volume_ += max_volume_ * 0.10;
+                dynamic_mixer.set_volume(current_volume_);
+                beeper.Beep(0.5, 2000);
+                STDOUT.print("Current Volume: ");
+                STDOUT.println(dynamic_mixer.get_volume());
+            }
+            else{
+                beeper.Beep(0.5, 1000);
+            }
+        }
+        else{
+            
+            aux_on_ = false;
+            On();
+        }
         break;
+        
+        
+    case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
+        if (MODE_VOLUME){
+            STDOUT.println("Volume Down");
+            if (dynamic_mixer.get_volume() <= max_volume_ && dynamic_mixer.get_volume() > (0.10 * max_volume_)){
+                current_volume_ = dynamic_mixer.get_volume();
+                current_volume_ -= (max_volume_ * 0.10) ;
+                dynamic_mixer.set_volume(current_volume_);
+                beeper.Beep(0.5, 2000);
+                STDOUT.print("Current Volume: ");
+                STDOUT.println(dynamic_mixer.get_volume());
+            }
+            else{
+                beeper.Beep(0.5, 1000);
+            }
+        }
+        else{
+            
+#ifdef DUAL_POWER_BUTTONS
+            aux_on_ = true;
+            On();
+#else
+            next_preset();
+#endif
+        }
+        break;
+            
+        case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
+            if (millis() - activated_ < 500) {
+                if (SetMute(true)) {
+                    unmute_on_deactivation_ = true;
+                }
+            }
+            else {
+                SaberBase::DoForce();
+            }
+            break;
 
-
-
+	
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
@@ -1306,19 +1406,7 @@ public:
 #endif
         Off();
         break;
-
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
-         if (millis() - activated_ < 500) {
-            if (SetMute(true)) {
-               unmute_on_deactivation_ = true;
-            }
-         }
-         break;
-         
-      //case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
-        //     SaberBase::DoForce();
-        //break;
-
+            
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
         // Avoid the base and the very tip.
 	// TODO: Make blast only appear on one blade!
@@ -1328,7 +1416,7 @@ public:
         // Lockup
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
-      case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON | BUTTON_AUX):
+        case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON):
         if (!SaberBase::Lockup()) {
           if (pointing_down_) {
             SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
@@ -1340,73 +1428,25 @@ public:
           handled = false;
         }
         break;
-             // VOLUME MENU
-
-      case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
-        current_volume_ = dynamic_mixer.get_volume();
-        if (MODE_VOLUME){
-            MODE_VOLUME = false;
-            beeper.Beep(0.5, 3000);
-            STDOUT.println("Exit Volume Menu");
-
-        }
-        else{
-            MODE_VOLUME = true;
-            beeper.Beep(0.5, 3000);
-            STDOUT.println("Enter Volume Menu");
-        }
-        break;
-        
-        case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
-      if (MODE_VOLUME){
-        STDOUT.println("Volume up");
-        if (dynamic_mixer.get_volume() < max_volume_){
-            current_volume_ += max_volume_ * 0.10;
-            dynamic_mixer.set_volume(current_volume_);
-            beeper.Beep(0.5, 2000);
-            STDOUT.print("Current Volume: ");
-            STDOUT.println(dynamic_mixer.get_volume());
-        }
-        else{
-            beeper.Beep(0.5, 1000);
-        }
-      }
-      else{
-
-        aux_on_ = false;
-        On();
-      }
-        break;
-        
-      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
-      if (MODE_VOLUME){
-        STDOUT.println("Volume Down");
-        if (dynamic_mixer.get_volume() <= max_volume_ && dynamic_mixer.get_volume() > (0.10 * max_volume_)){
-            current_volume_ = dynamic_mixer.get_volume();
-            current_volume_ -= (max_volume_ * 0.10) ;
-            dynamic_mixer.set_volume(current_volume_);
-            beeper.Beep(0.5, 2000);
-            STDOUT.print("Current Volume: ");
-            STDOUT.println(dynamic_mixer.get_volume());
-        }
-        else{
-            beeper.Beep(0.5, 1000);
-        }
-     }
-     else{
-     #ifdef DUAL_POWER_BUTTONS
-        aux_on_ = true;
-        On();
-     #else
-        next_preset();
-     #endif
-     }
-     break; 
 
         // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
         StartOrStopTrack();
         break;
+        case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
+            current_volume_ = dynamic_mixer.get_volume();
+            if (MODE_VOLUME){
+                MODE_VOLUME = false;
+                beeper.Beep(0.5, 3000);
+                STDOUT.println("Exit Volume Menu");
+                
+            }
+            else{
+                MODE_VOLUME = true;
+                beeper.Beep(0.5, 3000);
+                STDOUT.println("Enter Volume Menu");
+            }
+            break;
 
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
         SaberBase::RequestMotion();
@@ -2769,6 +2809,8 @@ SSD1306 display;
 #include "motion/lsm6ds3h.h"
 #include "motion/fxos8700.h"
 #include "motion/fxas21002.h"
+
+// #define CLASH_RECORDER
 
 #ifdef CLASH_RECORDER
 class ClashRecorder : public SaberBase {
