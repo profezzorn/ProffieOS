@@ -13,15 +13,14 @@
 template<class T, class EXTENSION, class OFF_COLOR=Rgb<0,0,0>, bool ALLOW_DISABLE=1 >
 class InOutHelperX {
 public:
-  bool run(BladeBase* blade) __attribute__((warn_unused_result)) {
+  void run(BladeBase* blade) {
     base_.run(blade);
     off_color_.run(blade);
     extension_.run(blade);
     thres = (extension_.getInteger(0) * blade->num_leds()) >> 7;
 
-    if (ALLOW_DISABLE && is_same_type<OFF_COLOR, Rgb<0,0,0> >::value && thres == 0)
-      return false;
-    return true;
+    if (ALLOW_DISABLE && is_same_type<OFF_COLOR, Rgb<0,0,0> >::value && thres == 0) 
+      blade->allow_disable();
   }
   OverDriveColor getColor(int led) {
     int black_mix = clampi32(thres - led * 256, 0, 255);

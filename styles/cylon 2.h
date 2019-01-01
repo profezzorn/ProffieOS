@@ -22,8 +22,7 @@ template<class COLOR, int percentage, int rpm,
          int fade_time_millis = 1>
 class Cylon {
 public:
-  bool run(BladeBase* base) {
-    bool keep_running = true;
+  void run(BladeBase* base) {
     c_.run(base);
     on_c_.run(base);
 
@@ -52,11 +51,10 @@ public:
     } else if (current_percentage == 0.0) {
       start_ = 0;
       end_ = 0;
-      keep_running = false;
+      base->allow_disable();
     } else {
       end_ = (pos + fraction) * num_leds_;
     }
-    return keep_running;
   }
   OverDriveColor getColor(int led) {
     led *= 16384;

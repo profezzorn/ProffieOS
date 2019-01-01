@@ -1,29 +1,24 @@
-#ifndef STYLES_CYLON_H
-#define STYLES_CYLON_H
+#ifndef STYLES_COLOR_CYCLE_H
+#define STYLES_COLOR_CYCLE_H
 
-#include "../common/range.h"
-
-// Usage: Cylon<COLOR, PERCENT, RPM>
+// Usage: ColorCycle<COLOR, PERCENT, RPM>
 // or: ColorCycle<COLOR, PERCENT, RPM, ON_COLOR, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS>
 // COLOR, ON_COLOR: COLOR
 // RPM, PERCENT, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS: a number
 // return value: COLOR
-// Cylon/Knight Rider effect, a section of the strip is
-// lit up and moves back and forth. Speed, color and fraction
-// illuminated can be configured separately for on and off
-// states.
-
+// This is intended for a small ring of neopixels
+// A section of the ring is lit at the specified color
+// and rotates at the specified speed. The size of the
+// lit up section is defined by "percentage".
 class BladeBase;
-
 template<class COLOR, int percentage, int rpm,
          class ON_COLOR = COLOR,
          int on_percentage = percentage,
          int on_rpm = rpm,
          int fade_time_millis = 1>
-class Cylon {
+class ColorCycle {
 public:
-  bool run(BladeBase* base) {
-    bool keep_running = true;
+  void run(BladeBase* base) {
     c_.run(base);
     on_c_.run(base);
 
@@ -41,28 +36,28 @@ public:
        percentage * (1 - fade_) + on_percentage * fade_;
     fade_int_ = (int)(16384 * fade_);
     pos_ = fract(pos_ + delta / 60000000.0 * current_rpm);
-    float fraction = current_percentage / 100.0;
-    float pos = 0.5 + sinf(pos_ * M_PI * 2) * (1.0 - fraction) / 2.0 - fraction / 2.0;
     num_leds_ = base->num_leds() * 16384;
-    start_ = pos * num_leds_;
-    end_ = (pos + fraction) * num_leds_;
+    start_ = pos_ * num_leds_;
     if (current_percentage == 100.0) {
       start_ = 0;
       end_ = num_leds_;
     } else if (current_percentage == 0.0) {
       start_ = 0;
       end_ = 0;
-      keep_running = false;
+      base->allow_disable();
     } else {
-      end_ = (pos + fraction) * num_leds_;
+      end_ = fract(pos_ + current_percentage / 100.0) * num_leds_;
     }
-    return keep_running;
   }
   OverDriveColor getColor(int led) {
-    led *= 16384;
-    Range led_range(led, led + 16384);
+    Range led_range(led * 16384, led * 16384 + 16384);
     int black_mix = 0;
-    black_mix = (Range(start_, end_) & led_range).size();
+    if (start_ <= end_) {
+      black_mix = (Range(start_, end_) & led_range).size();
+    } else {
+      black_mix = (Range(0, end_) & led_range).size() +
+                  (Range(start_, num_leds_) & led_range).size();
+    }
     OverDriveColor c = c_.getColor(led);
     OverDriveColor on_c = on_c_.getColor(led);
     c.c = c.c.mix2(on_c.c, fade_int_);
