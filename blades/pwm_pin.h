@@ -29,7 +29,7 @@ void SetupTimer(uint32_t instance) {
     
     if (divider == 0) divider = 1;
     
-    stm32l4_timer_enable(&stm32l4_pwm[instance], divider -1, modulus -1, TIMER_OPTION_COUNT_PRELOAD, NULL, NULL, 0);
+    stm32l4_timer_enable(&stm32l4_pwm[instance], divider -1, modulus -1, 0, NULL, NULL, 0);
     stm32l4_timer_start(&stm32l4_pwm[instance], false);
     if (instance)  {
       SetupTimer(0);
@@ -39,7 +39,12 @@ void SetupTimer(uint32_t instance) {
       noInterrupts();
       *to = *from + 10;
       interrupts();
+    } else {
+      // avoid slow startup
+      stm32l4_pwm[instance].TIM->CNT = 0;
     }
+    // Buffer counters from now on.
+    stm32l4_pwm[instance].TIM->CR1 |= TIM_CR1_ARPE;
   }
 }
 
