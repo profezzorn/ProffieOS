@@ -33,6 +33,9 @@ protected:
                 if (millis() - push_millis_ > 300) {
                     saber.Event(button_, EVENT_HELD);
                     while (DebouncedRead()) {
+                        if (millis() - push_millis_ > 800){
+                        saber.Event(button_, EVENT_HELD_MEDIUM);
+                    while (DebouncedRead()) {
                         if (millis() - push_millis_ > 2000) {
                             saber.Event(button_, EVENT_HELD_LONG);
                             while (DebouncedRead()) YIELD();
@@ -41,6 +44,9 @@ protected:
                     }
                 }
                 YIELD();
+                }
+			  }
+              YIELD();
             }
             while (DebouncedRead()) YIELD();
             saber.Event(button_, EVENT_RELEASED);
