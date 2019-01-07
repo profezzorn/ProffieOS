@@ -21,7 +21,7 @@ public:
     float di = LED::MaxAmps - LED::P2Amps;
     float delta = dv / di;
     float amps = (V - LED::MaxVolts + LED::MaxAmps * delta) / (delta + LED::R);
-    if (monitor.ShouldPrint(Monitoring::MonitorPWM)) {
+    if (monitor.ShouldPrintMultiple(Monitoring::MonitorPWM)) {
       STDOUT.print("AMPS = ");
       STDOUT.print(amps);
       STDOUT.print(" / ");
