@@ -289,6 +289,7 @@ enum EVENT : uint32_t {
   EVENT_PRESSED,
   EVENT_RELEASED,
   EVENT_HELD,
+  EVENT_HELD_MEDIUM,
   EVENT_HELD_LONG,
   EVENT_CLICK_SHORT,
   EVENT_CLICK_LONG,
@@ -1283,6 +1284,7 @@ protected:
       case EVENT_CLASH: STDOUT.print("Clash"); break;
       case EVENT_HELD: STDOUT.print("Held"); break;
       case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
+      case EVENT_HELD_MEDIUM: STDOUT.print("HeldMediumLong"); break;
     }
   }
 
@@ -1397,7 +1399,7 @@ public:
             break;
 
 	
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_HELD_MEDIUM, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_OFF, MODE_ON):
