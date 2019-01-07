@@ -25,11 +25,21 @@ public:
     return false;
   }
 
+  bool ShouldPrintMultiple(MonitorBit bit) {
+    if (bit & monitor_soon_) {
+      monitored_ |= bit;
+      return true;
+    }
+    return false;
+  }
+  
   bool IsMonitoring(MonitorBit bit) const {
     return (active_monitors_ & bit) != 0;
   }
   
   void Loop() {
+    monitor_soon_ &= ~monitored_;
+    monitored_ = 0;
     if (millis() - last_monitor_loop_ > monitor_frequency_ms_) {
       monitor_soon_ = active_monitors_;
       last_monitor_loop_ = millis();
@@ -40,9 +50,10 @@ public:
     active_monitors_ ^= bit;
   }
 private:
-  uint32_t monitor_frequency_ms_ = 100;
+  uint32_t monitor_frequency_ms_ = 200;
   int last_monitor_loop_ = 0;
   uint32_t monitor_soon_ = 0;
+  uint32_t monitored_ = 0;
   uint32_t active_monitors_ = 0;
 };
 
