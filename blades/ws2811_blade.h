@@ -211,9 +211,9 @@ class BladeBase *WS2811BladePtr() {
       break;
   }
     
-  static WS2811_Blade<DefaultPinClass> blade(LEDS, DATA_PIN, byteorder,
-					     frequency, reset_us,
-					     t1h, t0h, &power_pins);
+  static WS2811_Blade<PinClass> blade(LEDS, DATA_PIN, byteorder,
+				      frequency, reset_us,
+				      t1h, t0h, &power_pins);
   return &blade;
 }
 
