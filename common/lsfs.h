@@ -35,7 +35,7 @@ public:
     explicit Iterator(const char* dirname) {
       dir_ = SD.open(dirname);
       if (dir_.isDirectory()) {
-        f_ = dir_.openNextFile();
+	f_ = dir_.openNextFile();
       }
     }
     explicit Iterator(Iterator& other) {

@@ -29,8 +29,32 @@ class Color8 {
     if (other.b) ret = min(ret, b * 255 / other.b);
     return ret;
   }
+
+  enum Byteorder {
+    BGR=0x321,
+    BRG=0x312,
+    GBR=0x231,
+    GRB=0x213,
+    RBG=0x132,
+    RGB=0x123,
+  };
+
+  uint8_t getByte(int byteorder, int byte) {
+    switch (byteorder >> (byte * 4) & 0x3) {
+      default: return r;
+      case 2: return g;
+      case 3: return b;
+    }
+  }
   
   uint8_t r, g, b;
+};
+
+static int8_t color16_dither_matrix[4][4] = {
+  { -127, 111,  -76,  94 },
+  {    9, -59,   60,  -8 },
+  {  -93,  77, -110, 127 },
+  {   43, -25,   26, -42 },
 };
 
 class Color16 {
@@ -68,7 +92,14 @@ class Color16 {
   }
 
   Color8 dither(int n) const {
-    return Color8(min(255, (r+n) >> 8), min(255, (g+n) >> 8), min(255, (b+n) >> 8));
+    return Color8(clampi32((r+n) >> 8, 0, 255),
+                  clampi32((g+n) >> 8, 0, 255),
+                  clampi32((b+n) >> 8, 0, 255));
+  }
+
+  
+  Color8 dither(int x, int y) const {
+    return dither(color16_dither_matrix[x & 3][y & 3]);
   }
 
   uint16_t r, g, b;
