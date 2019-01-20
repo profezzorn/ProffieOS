@@ -12,6 +12,7 @@ class I2CDevice {
 public:
   explicit I2CDevice(uint8_t address) : address_(address) {}
   bool I2CLock() {
+    if (!i2cbus.inited()) return false;
     if (current_i2c_device) return false;
     current_i2c_device = this;
     return true;
