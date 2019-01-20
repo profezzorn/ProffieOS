@@ -7,8 +7,8 @@
 
 // Simple upsampler code, doubles the number of samples with
 // 2-lobe lanczos upsampling.
-#define C1 24757
-#define C2 -8191
+#define UPSCALE_C1 24757
+#define UPSCALE_C2 -8191
 
 #if 1
 #define UPSAMPLE_FUNC(NAME, EMIT)                               \
@@ -17,10 +17,10 @@
     upsample_buf_##NAME##_b_ = upsample_buf_##NAME##_c_;        \
     upsample_buf_##NAME##_c_ = upsample_buf_##NAME##_d_;        \
     upsample_buf_##NAME##_d_ = sample;                          \
-    EMIT(clamptoi16((upsample_buf_##NAME##_a_ * C2 +            \
-          upsample_buf_##NAME##_b_ * C1 +                       \
-          upsample_buf_##NAME##_c_ * C1 +                       \
-                   upsample_buf_##NAME##_d_ * C2) >> 15));      \
+    EMIT(clamptoi16((upsample_buf_##NAME##_a_ * UPSCALE_C2 +            \
+          upsample_buf_##NAME##_b_ * UPSCALE_C1 +                       \
+          upsample_buf_##NAME##_c_ * UPSCALE_C1 +                       \
+                   upsample_buf_##NAME##_d_ * UPSCALE_C2) >> 15));      \
     EMIT(upsample_buf_##NAME##_c_);                             \
   }                                                             \
   void clear_##NAME() {                                         \
