@@ -27,6 +27,7 @@ public:
     last_enabled_ = millis();
     if (!on_) {
       battery_monitor.SetPinHigh(true);
+      pinMode(boosterPin, OUTPUT);
       digitalWrite(boosterPin, HIGH);
       on_ = true;
       delay(10); // Give it a little time to wake up.
@@ -46,12 +47,13 @@ protected:
     STATE_MACHINE_BEGIN();
     while (true) {
       while (Active()) YIELD();
-      // 100 * 0.1 s = 10 seconds
-      for (i_ = 0; i_ < 100 && !Active(); i_++)
+      // 10 * 0.1 s = 1 second
+      for (i_ = 0; i_ < 10 && !Active(); i_++)
 	SLEEP(100);
       if (Active()) continue;
       STDOUT.println("Booster off.");
       digitalWrite(boosterPin, LOW); // turn the booster off
+      // pinMode(amplifierPin, INPUT_ANALOG); // Let the pull-down do the work
       on_ = false;
       while (!Active()) YIELD();
     }
