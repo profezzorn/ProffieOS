@@ -10,6 +10,9 @@ public:
     LSanalogWriteSetup(PIN);
     LSanalogWrite(PIN, 0);  // make it black
   }
+  void Deactivate() override {
+    LSanalogWriteTeardown(PIN);
+  }
   void set(const Color16& c) override {
     LSanalogWrite(PIN, led_.PWM(c));
   }
@@ -24,6 +27,7 @@ template<class LED>
 class PWMPin<-1, LED> : PWMPinInterface {
 public:
   void Activate() override {}
+  void Deactivate() override {}
   void set(const Color16& c) override {}
   void set_overdrive(const Color16& c) override {}
 };
@@ -35,6 +39,7 @@ template<>
 class MultiChannelLED<> : public PWMPinInterface {
 public:
   void Activate() override {}
+  void Deactivate() override {}
   void set(const Color16& c) override {}
   void set_overdrive(const Color16& c) override {}
 };
@@ -45,6 +50,10 @@ public:
   void Activate() override {
     led_.Activate();
     rest_.Activate();
+  }
+  void Deactivate() override {
+    led_.Deactivate();
+    rest_.Deactivate();
   }
   void set(const Color16& c) override {
     led_.set(c);
