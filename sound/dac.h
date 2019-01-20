@@ -161,13 +161,6 @@ public:
 #else  // teensyduino
     // check return value?
     stm32l4_dma_create(&dma, DMA_CHANNEL_DMA2_CH6_SAI1_A, STM32L4_SAI_IRQ_PRIORITY);
-
-    SAI_Block_TypeDef *SAIx = SAI1_Block_A;
-    stm32l4_system_periph_enable(SYSTEM_PERIPH_SAI1);
-    stm32l4_dma_enable(&dma, &isr, 0);
-    SAIx->CR1 = SAI_xCR1_DS_2 | SAI_xCR1_MONO | SAI_xCR1_CKSTR;
-    SAIx->FRCR = (31 << SAI_xFRCR_FRL_Pos) | (15 << SAI_xFRCR_FSALL_Pos) | SAI_xFRCR_FSDEF | SAI_xFRCR_FSOFF;
-    SAIx->SLOTR = SAI_xSLOTR_NBSLOT_0 | (0x0003 << SAI_xSLOTR_SLOTEN_Pos) | SAI_xSLOTR_SLOTSZ_0;
 #endif
   }
 
@@ -178,7 +171,12 @@ public:
 
     memset(dac_dma_buffer, 0, sizeof(dac_dma_buffer));
 #ifndef TEENSYDUINO
+    stm32l4_system_periph_enable(SYSTEM_PERIPH_SAI1);
+    stm32l4_dma_enable(&dma, &isr, 0);
     SAI_Block_TypeDef *SAIx = SAI1_Block_A;
+    SAIx->CR1 = SAI_xCR1_DS_2 | SAI_xCR1_MONO | SAI_xCR1_CKSTR;
+    SAIx->FRCR = (31 << SAI_xFRCR_FRL_Pos) | (15 << SAI_xFRCR_FSALL_Pos) | SAI_xFRCR_FSDEF | SAI_xFRCR_FSOFF;
+    SAIx->SLOTR = SAI_xSLOTR_NBSLOT_0 | (0x0003 << SAI_xSLOTR_SLOTEN_Pos) | SAI_xSLOTR_SLOTSZ_0;
     stm32l4_system_saiclk_configure(SYSTEM_SAICLK_11289600);
     extern const stm32l4_sai_pins_t g_SAIPins;
     stm32l4_gpio_pin_configure(g_SAIPins.sck, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
@@ -207,8 +205,16 @@ public:
     if (!on_) return;
     on_ = false;
 #ifndef TEENSYDUINO
+    SAI_Block_TypeDef *SAIx = SAI1_Block_A;
+
+    SAIx->CR1 &=~ SAI_xCR1_SAIEN;
+    // Poll until actually off
+    while (SAIx->CR1 & SAI_xCR1_SAIEN);
+    
     stm32l4_system_saiclk_configure(SYSTEM_SAICLK_NONE);
 
+    stm32l4_dma_disable(&dma);
+    stm32l4_system_periph_disable(SYSTEM_PERIPH_SAI1);
     extern const stm32l4_sai_pins_t g_SAIPins;
     stm32l4_gpio_pin_configure(g_SAIPins.sck, (GPIO_PUPD_NONE | GPIO_MODE_ANALOG));
     stm32l4_gpio_pin_configure(g_SAIPins.fs, (GPIO_PUPD_NONE | GPIO_MODE_ANALOG));
