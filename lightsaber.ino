@@ -21,13 +21,13 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
 // #define CONFIG_FILE "config/owk_v2_config.h"
-// #define CONFIG_FILE "config/test_bench_config.h"
+#define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
 // #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 
@@ -40,7 +40,7 @@
 #include CONFIG_FILE
 #undef CONFIG_TOP
 
-// #define ENABLE_DEBUG
+#define ENABLE_DEBUG
 
 
 //
@@ -129,6 +129,8 @@
 #include <kinetis.h>
 #include <i2c_t3.h>
 #include <SD.h>
+
+#define INPUT_ANALOG INPUT
 #else
 
 // This is a hack to let me access the internal stuff..
@@ -674,11 +676,7 @@ class NoLED;
 #include "blades/power_pin.h"
 #include "blades/drive_logic.h"
 #include "blades/pwm_pin.h"
-#ifdef TEENSYDUINO
 #include "blades/ws2811_blade.h"
-#else
-#include "blades/stm32l4_ws2811_blade.h"
-#endif
 #include "blades/fastled_blade.h"
 #include "blades/simple_blade.h"
 #include "blades/sub_blade.h"
@@ -2086,6 +2084,15 @@ CapTest captest;
 #include "buttons/touchbutton.h"
 #else
 #include "buttons/stm32l4_touchbutton.h"
+
+uint32_t startup_AHB1ENR;
+uint32_t startup_AHB2ENR;
+uint32_t startup_AHB3ENR;
+uint32_t startup_APB1ENR1;
+uint32_t startup_APB1ENR2;
+uint32_t startup_APB2ENR;
+uint32_t startup_MODER[4];
+
 #endif
 
 #define CONFIG_BUTTONS
@@ -2171,13 +2178,17 @@ class Commands : public CommandParser {
 #ifdef ENABLE_SD
     if (!strcmp(cmd, "dir")) {
       LOCK_SD(true);
-      for (LSFS::Iterator dir(e ? e : current_directory); dir; ++dir) {
-        STDOUT.print(dir.name());
-        STDOUT.print(" ");
-        STDOUT.println(dir.size());
+      if (LSFS::Exists(e ? e : current_directory)) {
+        for (LSFS::Iterator dir(e ? e : current_directory); dir; ++dir) {
+          STDOUT.print(dir.name());
+          STDOUT.print(" ");
+          STDOUT.println(dir.size());
+        }
+        STDOUT.println("Done listing files.");
+      } else {
+        STDOUT.println("No such directory.");
       }
       LOCK_SD(false);
-      STDOUT.println("Done listing files.");
       return true;
     }
     
@@ -2478,7 +2489,132 @@ class Commands : public CommandParser {
       STDOUT.println(STM32.getTemperature());
       return true;
     }
-#endif    
+    if (!strcmp(cmd, "portstates")) {
+      GPIO_TypeDef *GPIO;
+      for (int i = 0; i < 4; i++) {
+	switch (i) {
+	  case 0:
+	    GPIO = (GPIO_TypeDef *)GPIOA_BASE;
+	    STDOUT.print("PORTA: ");
+	    break;
+	  case 1:
+	    GPIO = (GPIO_TypeDef *)GPIOB_BASE;
+	    STDOUT.print("PORTB: ");
+	    break;
+	  case 2:
+	    GPIO = (GPIO_TypeDef *)GPIOC_BASE;
+	    STDOUT.print("PORTC: ");
+	    break;
+	  case 3:
+	    GPIO = (GPIO_TypeDef *)GPIOH_BASE;
+	    STDOUT.print("PORTH: ");
+	    break;
+	}
+	for (int j = 15; j >= 0; j--) {
+	  uint32_t now = (GPIO->MODER >> (j * 2)) & 3;
+	  uint32_t saved = (startup_MODER[i] >> (j * 2)) & 3;
+	  STDOUT.print((now == saved ? "ioga" : "IOGA")[now]);
+	  if (!(j & 3)) STDOUT.print(" ");
+	}
+	STDOUT.println("");
+      }
+      return true;
+    }
+    if (!strcmp(cmd, "whatispowered")) {
+      STDOUT.print("ON: ");
+#define PRINTIFON(REG, BIT) do {					\
+	if (RCC->REG & RCC_##REG##_##BIT##EN) {				\
+          STDOUT.print(" " #BIT);					\
+          if (!(startup_##REG & RCC_##REG##_##BIT##EN)) STDOUT.print("+"); \
+        }								\
+      } while(0)
+      
+      PRINTIFON(AHB1ENR,FLASH);
+      PRINTIFON(AHB1ENR,DMA1);
+      PRINTIFON(AHB1ENR,DMA2);
+      PRINTIFON(AHB2ENR,GPIOA);
+      PRINTIFON(AHB2ENR,GPIOB);
+#if defined(STM32L433xx) || defined(STM32L476xx) || defined(STM32L496xx)
+      PRINTIFON(AHB2ENR,GPIOC);
+      PRINTIFON(AHB2ENR,GPIOD);
+      PRINTIFON(AHB2ENR,GPIOE);
+#endif
+#if defined(STM32L476xx) || defined(STM32L496xx)
+      PRINTIFON(AHB2ENR,GPIOF);
+      PRINTIFON(AHB2ENR,GPIOG);
+#endif
+      PRINTIFON(AHB2ENR,GPIOH);
+#if defined(STM32L496xx)
+      PRINTIFON(AHB2ENR,GPIOI);
+#endif
+      PRINTIFON(AHB2ENR,ADC);
+      PRINTIFON(APB1ENR1,DAC1);
+#if defined(STM32L476xx) || defined(STM32L496xx)
+      PRINTIFON(AHB2ENR,OTGFS);
+#else
+      PRINTIFON(APB1ENR1,USBFS);
+#endif
+      PRINTIFON(APB2ENR,USART1);
+      PRINTIFON(APB1ENR1,USART2);
+#if defined(STM32L433xx) || defined(STM32L476xx) || defined(STM32L496xx)
+      PRINTIFON(APB1ENR1,USART3);
+#endif
+#if defined(STM32L476xx) || defined(STM32L496xx)
+      PRINTIFON(APB1ENR1,UART4);
+      PRINTIFON(APB1ENR1,UART5);
+#endif
+      PRINTIFON(APB1ENR2,LPUART1);
+      PRINTIFON(APB1ENR1,I2C1);
+#if defined(STM32L433xx) || defined(STM32L476xx) || defined(STM32L496xx)
+      PRINTIFON(APB1ENR1,I2C2);
+#endif
+      PRINTIFON(APB1ENR1,I2C3);
+#if defined(STM32L496xx)
+      PRINTIFON(APB1ENR2,I2C4);
+#endif
+      PRINTIFON(APB2ENR,SPI1);
+#if defined(STM32L433xx) || defined(STM32L476xx) || defined(STM32L496xx)
+      PRINTIFON(APB1ENR1,SPI2);
+#endif
+      PRINTIFON(APB1ENR1,SPI3);
+      PRINTIFON(APB1ENR1,CAN1);
+#if defined(STM32L496xx)
+      PRINTIFON(APB1ENR1,CAN2);
+#endif
+      PRINTIFON(AHB3ENR,QSPI);
+#if defined(STM32L433xx) || defined(STM32L476xx) || defined(STM32L496xx)
+      PRINTIFON(APB2ENR,SDMMC1);
+#endif
+      PRINTIFON(APB2ENR,SAI1);
+#if defined(STM32L476xx) || defined(STM32L496xx)
+      PRINTIFON(APB2ENR,SAI2);
+      PRINTIFON(APB2ENR,DFSDM1);
+#endif
+      PRINTIFON(APB2ENR,TIM1);
+      PRINTIFON(APB1ENR1,TIM2);
+#if defined(STM32L476xx) || defined(STM32L496xx)
+      PRINTIFON(APB1ENR1,TIM3);
+      PRINTIFON(APB1ENR1,TIM4);
+      PRINTIFON(APB1ENR1,TIM5);
+#endif
+      PRINTIFON(APB1ENR1,TIM6);
+      PRINTIFON(APB1ENR1,TIM7);
+#if defined(STM32L476xx) || defined(STM32L496xx)
+      PRINTIFON(APB2ENR,TIM8);
+#endif
+      PRINTIFON(APB2ENR,TIM15);
+      PRINTIFON(APB2ENR,TIM16);
+#if defined(STM32L476xx) || defined(STM32L496xx)
+      PRINTIFON(APB2ENR,TIM17);
+#endif
+      PRINTIFON(APB1ENR1,LPTIM1);
+      PRINTIFON(APB1ENR2,LPTIM2);
+
+      STDOUT.println("");
+      return true;
+    }
+#endif  // TEENSYDUINO
+    
     return false;
   }
 
@@ -2850,6 +2986,19 @@ ACCEL_CLASS accelerometer;
 
 void setup() {
 #if VERSION_MAJOR >= 4
+#define SAVE_RCC(X) startup_##X = RCC->X
+  SAVE_RCC(AHB1ENR);
+  SAVE_RCC(AHB2ENR);
+  SAVE_RCC(AHB3ENR);
+  SAVE_RCC(APB1ENR1);
+  SAVE_RCC(APB1ENR2);
+  SAVE_RCC(APB2ENR);
+#define SAVE_MODER(PORT, X) startup_MODER[X] = ((GPIO_TypeDef *)GPIO##PORT##_BASE)->MODER
+  SAVE_MODER(A, 0);
+  SAVE_MODER(B, 1);
+  SAVE_MODER(C, 2);
+  SAVE_MODER(H, 3);
+  
   // TODO enable/disable as needed
   pinMode(boosterPin, OUTPUT);
   digitalWrite(boosterPin, HIGH);
@@ -3016,7 +3165,7 @@ void loop() {
        && !amplifier.Active()
 #endif
     ) {
-    if (millis() - last_activity > 1000) {
+    if (millis() - last_activity > 30000) {
 #if VERSION_MAJOR >= 4
       // stm32l4_system_sysclk_configure(1000000, 500000, 500000);
       // Delay will enter low-power mode.
@@ -3024,7 +3173,7 @@ void loop() {
       delay(50);         // ~8 mA
       // STM32.stop(50);  // ~16 mA
       // STM32.standby(50); // not better
-      // STM32.shutdown(10000); // this actually resets the cpu after the timeout, but uses a lot less power.
+      // STM32.shutdown(10000); // this actually resets the cpu after the timeout, but uses a lot less power. (~3.6mA right now)
       // stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
       
 #elif defined(ENABLE_SNOOZE)
