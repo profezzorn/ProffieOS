@@ -30,6 +30,7 @@ public:
     last_enabled_ = millis();
     if (!digitalRead(amplifierPin)) {
       EnableBooster();
+      pinMode(amplifierPin, OUTPUT);
       digitalWrite(amplifierPin, HIGH);
       delay(10); // Give it a little time to wake up.
     }
@@ -50,7 +51,8 @@ protected:
       SLEEP(20);
       if (Active()) continue;
       STDOUT.println("Amplifier off.");
-      digitalWrite(amplifierPin, LOW); // turn the amplifier off
+      // digitalWrite(amplifierPin, LOW); // turn the amplifier off
+      pinMode(amplifierPin, INPUT_ANALOG); // Let the pull-down do the work
       SLEEP(20);
       dac.end();
       while (!Active()) YIELD();
