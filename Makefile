@@ -16,6 +16,7 @@ else
 endif
 
 CPPFLAGS += $(TESTFLAGS)
+DIAGNOSTICS_COLOR_WHEN = auto
 
 style-test:
 	(cd styles && $(MAKE) test)
