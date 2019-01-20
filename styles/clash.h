@@ -76,7 +76,7 @@ public:
   OverDriveColor getColor(int led) {
     if (clash_) {
       OverDriveColor ret = base_.getColor(led);
-      int dist = abs(led * mult_ - clash_location_) / 1024;
+      uint32_t dist = abs(led * mult_ - clash_location_) / 1024;
       if (dist < NELEM(clash_hump)) {
 	OverDriveColor clash =  clash_color_.getColor(led);
 	ret.c = ret.c.mix(clash.c, clash_hump[dist]);
