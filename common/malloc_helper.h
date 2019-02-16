@@ -1,0 +1,44 @@
+#ifndef COMMON_MALLOC_HELPER_H
+#define COMMON_MALLOC_HELPER_H
+
+#ifdef TEENSYDUINO
+
+bool IsHeap(const void* mem) {
+  extern unsigned long _ebss;
+  extern unsigned long _estack;
+  return (uint32_t)mem >= _ebss && mem <= _estack;
+}
+
+#else
+
+bool IsHeap(const void* mem) {
+  extern uint32_t __HeapBase[];
+  extern uint32_t __StackLimit[];
+  return (uint32_t)mem >= __HeapBase[0] && (uint32_t)mem <= __StackLimit[0];
+}
+#endif
+
+template<class T>
+void LSFreeObject(T *memory) { free((void*)memory); }
+
+template<class T>
+void LSFree(T *memory) {
+  if (IsHeap(memory)) LSFreeObject((T*)memory);
+}
+
+template<class T>
+class LSPtr {
+public:
+  LSPtr() : ptr_(nullptr) {}
+  ~LSPtr() { Free(); }
+  void Free() { LSFree(ptr_); }
+
+  void operator=(const T* t) {
+    Free();
+    ptr_ = t;
+  }
+  const T* get() { return ptr_; }
+  const T* ptr_;
+};
+
+#endif
