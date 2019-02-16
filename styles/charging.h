@@ -42,7 +42,8 @@ public:
     }
   };
 
-  bool NoOnOff() override { return false; }
+  bool NoOnOff() override { return true; }
+  bool Charging() override { return true; }
 };
 
 // No need to templetize this one, as there are no arguments.
