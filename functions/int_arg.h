@@ -7,13 +7,13 @@ template<int ARG>
 class IntArg {
 public:
   IntArg() {
-    const char* arg = ArgParser->GetArg(ARG, "INT");
+    const char* arg = CurrentArgParser->GetArg(ARG, "INT");
     if (arg) {
-      value_ = strtol(arg, &arg, 0);
+      value_ = strtol(arg, NULL, 0);
     }
   }
   void run(BladeBase* base) {}
-  OverDriveColor getInteger(int led) { return value_; }
+  int getInteger(int led) { return value_; }
 private:
   int value_;
 };
