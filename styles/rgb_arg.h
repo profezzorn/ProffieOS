@@ -7,13 +7,12 @@ template<int ARG>
 class RgbArg {
 public:
   RgbArg() {
-    const char* arg = ArgParser->GetArg(ARG, "COLOR");
+    const char* arg = CurrentArgParser->GetArg(ARG, "COLOR");
     if (arg) {
-      int r = strtol(arg, &arg, 0);
-      arg++;
-      int g = strtol(arg, &arg, 0);
-      arg++;
-      int b = strtol(arg, &arg, 0);
+      char* tmp;
+      int r = strtol(arg, &tmp, 0);
+      int g = strtol(tmp+1, &tmp, 0);
+      int b = strtol(tmp+1, NULL, 0);
       // TODO: color names?
       color_ = Color16(r, g, b);
     }
