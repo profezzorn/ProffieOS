@@ -172,12 +172,16 @@ public:
   }
 
   void BeginFrame() {
+    while (Color8::num_bytes(byteorder_) * num_leds_ > sizeof(displayMemory)) {
+      STDOUT.print("Display memory is not big enough, increase maxLedsPerStrip!");
+      num_leds_ /= 2;
+    }
     while (!IsReadyForBeginFrame());
   }
 
   void Set(int led, Color8 color) {
-    uint32_t *output = ((uint32_t *)displayMemory) + led * (24/4);
-    for (int i = 2; i >= 0; i--) {
+    uint32_t *output = ((uint32_t *)displayMemory) + led * Color8::num_bytes(byteorder_) * 2;
+    for (int i = Color8::num_bytes(byteorder_) - 1; i >= 0; i--) {
       uint32_t tmp = color.getByte(byteorder_, i) * 0x8040201U;
       *(output++) = zero4X_ + ((tmp >> 7) & 0x01010101U) * one_minus_zero_;
       *(output++) = zero4X_ + ((tmp >> 3) & 0x01010101U) * one_minus_zero_;

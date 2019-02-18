@@ -31,19 +31,58 @@ class Color8 {
   }
 
   enum Byteorder {
+    // RGB colors
     BGR=0x321,
     BRG=0x312,
     GBR=0x231,
     GRB=0x213,
     RBG=0x132,
     RGB=0x123,
+
+    // RGBA colors
+    BGRA=0x3214,
+    BRGA=0x3124,
+    GBRA=0x2314,
+    GRBA=0x2134,
+    RBGA=0x1324,
+    RGBA=0x1234,
+
+    ABGR=0x4321,
+    ABRG=0x4312,
+    AGBR=0x4231,
+    AGRB=0x4213,
+    ARBG=0x4132,
+    ARGB=0x4123,
+
+    // Energy-efficient RGBA colors (white *replaces RGB, not in addition to RGB)
+    BGRa=0x7654,
+    BRGa=0x7564,
+    GBRa=0x6754,
+    GRBa=0x6574,
+    RBGa=0x5764,
+    RGBa=0x5674,
+
+    aBGR=0x4765,
+    aBRG=0x4756,
+    aGBR=0x4675,
+    aGRB=0x4657,
+    aRBG=0x4576,
+    aRGB=0x4567,
   };
+
+  static int num_bytes(int byteorder) {
+    return byteorder <= 0xfff ? 3 : 4;
+  }
 
   uint8_t getByte(int byteorder, int byte) {
     switch (byteorder >> (byte * 4) & 0x3) {
       default: return r;
       case 2: return g;
       case 3: return b;
+      case 4: return min(r, min(g, b));
+      case 5: r - min(r, min(g, b));
+      case 6: g - min(r, min(g, b));
+      case 7: b - min(r, min(g, b));
     }
   }
   
