@@ -24,9 +24,9 @@ class Color8 {
   }
   uint8_t select(const Color8& other) const {
     uint8_t ret = 255;
-    if (other.r) ret = min(ret, r * 255 / other.r);
-    if (other.g) ret = min(ret, g * 255 / other.g);
-    if (other.b) ret = min(ret, b * 255 / other.b);
+    if (other.r) ret = std::min<int>(ret, r * 255 / other.r);
+    if (other.g) ret = std::min<int>(ret, g * 255 / other.g);
+    if (other.b) ret = std::min<int>(ret, b * 255 / other.b);
     return ret;
   }
 
@@ -79,10 +79,10 @@ class Color8 {
       default: return r;
       case 2: return g;
       case 3: return b;
-      case 4: return min(r, min(g, b));
-      case 5: r - min(r, min(g, b));
-      case 6: g - min(r, min(g, b));
-      case 7: b - min(r, min(g, b));
+      case 4: return std::min(r, std::min(g, b));
+      case 5: return r - std::min(r, std::min(g, b));
+      case 6: return g - std::min(r, std::min(g, b));
+      case 7: return b - std::min(r, std::min(g, b));
     }
   }
   
@@ -124,9 +124,9 @@ class Color16 {
   uint16_t select(const Color16& other) const {
     uint32_t ret = 65535;
     uint32_t tmp = 65535;
-    if (other.r) ret = min(ret, r * tmp / other.r);
-    if (other.g) ret = min(ret, g * tmp / other.g);
-    if (other.b) ret = min(ret, b * tmp / other.b);
+    if (other.r) ret = std::min<uint32_t>(ret, r * tmp / other.r);
+    if (other.g) ret = std::min<uint32_t>(ret, g * tmp / other.g);
+    if (other.b) ret = std::min<uint32_t>(ret, b * tmp / other.b);
     return ret;
   }
 

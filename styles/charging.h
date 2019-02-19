@@ -38,7 +38,7 @@ public:
     float pos = (volts - min_volts) * num_leds / (max_volts - min_volts);
     int p = pos * 32;
     for (int i = 0; i < num_leds; i++) {
-      blade->set(i, Color16(Color8().mix(c, max(0, 256 - abs(p - i * 32)))));
+      blade->set(i, Color16(Color8().mix(c, std::max(0, 256 - abs(p - i * 32)))));
     }
   };
 

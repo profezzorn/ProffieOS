@@ -1,7 +1,12 @@
 #ifndef COMMON_FILE_READER_H
 #define COMMON_FILE_READER_H
 
+#include <new>
+#include <algorithm>
+
 #include "lsfs.h"
+
+// inline void* operator new(size_t, void* p) { return p; }
 
 #ifdef ENABLE_SD
 #define IF_SD(X) X
@@ -39,7 +44,7 @@ public:
   MemFile() : data_(nullptr), size_(0), pos_(0) {
   }
   int read(uint8_t* dest, size_t bytes) {
-    size_t to_copy = min(available(), bytes);
+    size_t to_copy = std::min<size_t>(available(), bytes);
     memcpy(dest, data_ + pos_, to_copy);
     pos_ += to_copy;
     return to_copy;
@@ -53,7 +58,7 @@ public:
     return data_[pos_];
   }
   void seek(size_t pos) {
-    pos_ = min(size_, pos);
+    pos_ = std::min<size_t>(size_, pos);
   }
   size_t position() const {
     return pos_;
@@ -83,6 +88,7 @@ public:
   bool Open(const char* filename) {
     Close();
 #ifdef ENABLE_SERIALFLASH
+    new (&sf_file_) SerialFlashFile;
     sf_file_ = SerialFlashChip::open(filename);
     if (sf_file_) {
       type_ = TYPE_SF;
@@ -90,6 +96,7 @@ public:
     }
 #endif
 #ifdef ENABLE_SD
+    new (&sd_file_) File;
     sd_file_ = LSFS::Open(filename);
     if (sd_file_) {
       type_ = TYPE_SD;
@@ -101,6 +108,7 @@ public:
   bool Create(const char* filename) {
     Close();
 #ifdef ENABLE_SD
+    new (&sd_file_) File;
     sd_file_ = LSFS::OpenForWrite(filename);
     if (sd_file_) {
       type_ = TYPE_SD;
@@ -191,7 +199,7 @@ public:
       uint32_t pos = Tell();
       uint32_t next_block = (pos + 512u) & ~511u;
       int bytes_to_end_of_block = next_block - pos;
-      return min(n, bytes_to_end_of_block);
+      return std::min<int>(n, bytes_to_end_of_block);
     }
 #endif
     return n;
@@ -216,7 +224,7 @@ public:
       Read();
     }
     while (Available()) {
-      int c = toLower(Peek());
+      int c = Peek();
       if (c >= '0' && c <= '9') {
         ret = (c - '0') + 10 * ret;
         Read();
@@ -236,7 +244,7 @@ public:
       Read();
     }
     while (Available()) {
-      int c = toLower(Peek());
+      int c = Peek();
       if (c >= '0' && c <= '9') {
         if (mult == 1.0) {
           ret = (c - '0') + 10 * ret;

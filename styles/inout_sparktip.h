@@ -24,12 +24,12 @@ public:
          extension = 0.00001;
       } else {
          extension += delta / (OUT_MILLIS * 1000.0);
-         extension = min(extension, 1.0f);
+         extension = std::min(extension, 1.0f);
       }
     } else {
       if (extension == 0.0) keep_running = false;
       extension -= delta / (IN_MILLIS * 1000.0);
-      extension = max(extension, 0.0f);
+      extension = std::max(extension, 0.0f);
     }
     thres = extension * (blade->num_leds() + 4) * 256;
     return keep_running;

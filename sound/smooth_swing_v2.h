@@ -15,7 +15,7 @@ public:
     if (swingl.files_found() != swingh.files_found()) {
       STDOUT.println("Warning, swingl and swingh should have the same number of files.");
     }
-    swings_ = min(swingl.files_found(), swingh.files_found());
+    swings_ = std::min<size_t>(swingl.files_found(), swingh.files_found());
   }
 
   void Deactivate() {
@@ -105,7 +105,7 @@ public:
       case SwingState::ON:
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
-            min(1.0, speed / smooth_swing_config.SwingSensitivity);
+            std::min<float>(1.0, speed / smooth_swing_config.SwingSensitivity);
           A.rotate(-speed * delta / 1000000.0);
           // If the current transition is done, switch A & B,
           // and set the next transition to be 180 degrees from the one

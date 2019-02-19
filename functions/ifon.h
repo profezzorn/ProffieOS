@@ -49,11 +49,11 @@ public:
          extension = 0.00001;
       } else {
  	extension += delta / (out_millis_.getInteger(0) * 1000.0);
-	extension = min(extension, 1.0f);
+	extension = std::min(extension, 1.0f);
       }
     } else {
       extension -= delta / (in_millis_.getInteger(0) * 1000.0);
-      extension = max(extension, 0.0f);
+      extension = std::max(extension, 0.0f);
     }
     ret_ = extension * 32768.0;
   }

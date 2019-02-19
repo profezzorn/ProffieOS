@@ -274,7 +274,7 @@ private:
 
         while (len_) {
           {
-            int bytes_read = ReadFile(file_.AlignRead(min(len_, 512u)));
+            int bytes_read = ReadFile(file_.AlignRead(std::min<size_t>(len_, 512u)));
             if (bytes_read == 0)
               break;
             len_ -= bytes_read;
@@ -287,7 +287,7 @@ private:
               // Preload should go to here...
               while (to_read_ == 0) YIELD();
 
-              int n = min(num_samples_ - written_, to_read_);
+              int n = std::min<int>(num_samples_ - written_, to_read_);
               memcpy(dest_, samples_ + written_, n * 2);
               dest_ += n;
               written_ += n;
