@@ -128,8 +128,8 @@ protected:
       min_ = 10000000;
       max_ = 0;
     } else {
-      min_ = min(value, min_);
-      max_ = max(value, max_);
+      min_ = std::min(value, min_);
+      max_ = std::max(value, max_);
     }
     is_pushed_ = value < threshold_;
   }
