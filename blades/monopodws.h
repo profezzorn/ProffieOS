@@ -380,7 +380,7 @@ public:
     return micros() - start_micros_ > num_leds_ * 24000000.0 / frequency_ + 300;
   }
   void BeginFrame() {
-    while (Color8::num_bytes(byteorder_) * num_leds_ > sizeof(displayMemory)) {
+    while (Color8::num_bytes(byteorder_) * num_leds_ > (int)sizeof(displayMemory)) {
       STDOUT.print("Display memory is not big enough, increase maxLedsPerStrip!");
       num_leds_ /= 2;
     }
