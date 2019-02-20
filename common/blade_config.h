@@ -1,6 +1,8 @@
 #ifndef COMMON_BLADE_CONFIG_H
 #define COMMON_BLADE_CONFIG_H
 
+class BladeBase;
+
 struct BladeConfig {
   // Blade identifier resistor.
   int ohm;
