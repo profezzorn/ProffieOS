@@ -7,7 +7,7 @@
 template<class T, class Free>
 class LinkedPtr {
 public:
-  LinkedPtr() : next_(this), prev_(this) {}
+  LinkedPtr() : next_(this), prev_(this), ptr_(nullptr) {}
   explicit LinkedPtr(T* p) : ptr_(p), next_(this), prev_(this) {}
   ~LinkedPtr() { leave(); }
   LinkedPtr(LinkedPtr const& other) { join(other); }
@@ -18,17 +18,23 @@ public:
     }
     return *this;
   }
+  LinkedPtr& operator=(T* other) {
+    leave();
+    ptr_ = other;
+    return *this;
+  }
 
+  T* get() { return ptr_; }
   T* operator->() { return ptr_; }
   T& operator*() { return *ptr_; }
   bool operator==(const LinkedPtr& other) const { return ptr_ == other.ptr_; }
-  bool operator!=(const LinkedPtr& other) const { return ptr_ == other.ptr_; }
+  bool operator!=(const LinkedPtr& other) const { return ptr_ != other.ptr_; }
   explicit operator bool() const { return ptr_ != nullptr; }
 
 private:
   void leave() {
     if (next_ == this) {
-      Free(ptr_);
+      Free::Free(ptr_);
     } else {
       next_->prev_ = prev_;
       prev_->next_ = next_;
@@ -37,13 +43,14 @@ private:
   void join(LinkedPtr const& other) {
     ptr_ = other.ptr_;
     prev_ = &other;
-    next_ = other->next_;
+    next_ = other.next_;
     next_->prev_ = this;
     prev_->next_ = this;
   }
 
   T* ptr_;
-  LinkedPtr* next_, *prev_;
+  mutable LinkedPtr const *prev_;
+  mutable LinkedPtr const *next_;
 };
 
 #endif

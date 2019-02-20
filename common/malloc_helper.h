@@ -6,7 +6,13 @@
 bool IsHeap(const void* mem) {
   extern unsigned long _ebss;
   extern unsigned long _estack;
-  return (uint32_t)mem >= _ebss && mem <= _estack;
+  return (uint32_t)mem >= _ebss && (uint32_t)mem <= _estack;
+}
+
+#elif defined(PROFFIE_TEST)
+bool IsHeap(const void* mem) {
+  extern uint32_t end[];
+  return (void*)mem >= (void*)&end;
 }
 
 #else
@@ -14,12 +20,16 @@ bool IsHeap(const void* mem) {
 bool IsHeap(const void* mem) {
   extern uint32_t __HeapBase[];
   extern uint32_t __StackLimit[];
-  return (uint32_t)mem >= __HeapBase[0] && (uint32_t)mem <= __StackLimit[0];
+  return (uint32_t)mem >= (uint32_t)__HeapBase && (uint32_t)mem <= (uint32_t)__StackLimit;
 }
 #endif
 
 template<class T>
-void LSFreeObject(T *memory) { free((void*)memory); }
+void LSFreeObject(T *memory) {
+//  STDOUT.print("FREE ");
+//  STDOUT.println((uint32_t)memory, HEX);
+  free((void*)memory);
+}
 
 template<class T>
 void LSFree(T *memory) {
@@ -38,6 +48,7 @@ public:
     ptr_ = t;
   }
   const T* get() { return ptr_; }
+private:
   const T* ptr_;
 };
 

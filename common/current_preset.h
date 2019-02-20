@@ -3,6 +3,7 @@
 
 #include "preset.h"
 #include "file_reader.h"
+#include "blade_config.h"
 
 class CurrentPreset {
 public:
@@ -21,13 +22,16 @@ public:
   }
   #endif
 
-  char *mk_builtin_str(int num, int N) {
+  const char *mk_builtin_str(int num, int N) {
     char tmp[30];
     strcpy(tmp, "$");
     itoa(num, tmp + strlen(tmp), 10);
     strcat(tmp, ",");
-    itoa(num, tmp + strlen(tmp), 10);
+    itoa(N, tmp + strlen(tmp), 10);
     char *ret = (char *)malloc(strlen(tmp)+1);
+    if (!ret) return "";
+//    STDOUT.print("MALLOC ");
+//    STDOUT.println((uint32_t)ret, HEX);
     strcpy(ret, tmp);
     return ret;
   }
@@ -118,6 +122,14 @@ public:
     return true;
   }
 
+  void Print() {
+    PrintQuotedValue("FONT", font.get());
+    PrintQuotedValue("TRACK", track.get());
+#define PRINT_PRESET_STYLE(N) PrintQuotedValue("STYLE" #N, current_style##N.get());
+    ONCEPERBLADE(PRINT_PRESET_STYLE);
+    PrintQuotedValue("NAME", name.get());
+  }
+
   static bool isSpace(int c) {
     return c == '\n' || c == '\r' || c == ' ' || c == '\t';
   }
@@ -126,14 +138,14 @@ public:
     if (!f->Open(filename))
       return false;
 
-    if (f->Tell() < 4) return false;
-    int p = f->Tell() - 1;
+    if (f->FileSize() < 4) return false;
+    int p = f->FileSize() - 1;
     while (p > 0) { f->Seek(p); if (!isSpace(f->Read())) break; p--; }
-    f->Seek(p - 4);
+    f->Seek(p - 3);
     if (!isSpace(f->Read())) return false;
-    if (f->Read() != 'e') return false;
-    if (f->Read() != 'n') return false;
-    if (f->Read() != 'd') return false;
+    if (toLower(f->Read()) != 'e') return false;
+    if (toLower(f->Read()) != 'n') return false;
+    if (toLower(f->Read()) != 'd') return false;
     f->Seek(0);
 
     return true;
@@ -192,30 +204,40 @@ public:
     }
   }
 
+  // position = 0 -> first spot
+  // position = N -> last
+  // position = -1 -> delete
+  // To duplicate, set preset_num to -1
   void SaveAt(int position) {
     FileReader f, out;
     if (!OpenPresets(&f, "presets.ini")) {
-      if (!UpdateINI()) return false;
-      if (!OpenPresets(&f, "presets.ini")) CreateINI();
+      if (!UpdateINI()) CreateINI();
       OpenPresets(&f, "presets.ini");
     }
     LSFS::Remove("presets.tmp");
     out.Create("presets.tmp");
     CurrentPreset tmp;
-    int n = 0;
-    while (tmp.Read(&f)) {
-      n++;
-      if (n == position) Write(&out);
-      if (n != preset_num) tmp.Write(&out);
+    int opos = 0;
+    if (position == 0) {
+      Write(&out);
+      opos++;
     }
-    if (n + 1 == position) Write(&out);
+    while (tmp.Read(&f)) {
+      if (tmp.preset_num != preset_num) {
+	tmp.Write(&out);
+	opos++;
+	if (position == opos) {
+	  Write(&out);
+	  opos++;
+	}
+      }
+    }
     f.Close();
     out.Write("end\n");
     out.Close();
     UpdateINI();
+    preset_num = position;
   }
-
-
 
   void SetPreset(int preset) {
     LOCK_SD(true);

@@ -270,7 +270,7 @@ public:
     skipwhite();
     for (int i = 0; i < 32; i++) {
       int c = toLower(Peek());
-      if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+      if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_') {
 	Read();
 	variable[i] = c;
 	variable[i+1] = 0;
@@ -292,6 +292,7 @@ public:
       switch (c) {
 	case '\n':
 	  ret[len] = 0;
+	  Seek(Tell() - 1);
 	  return ret;
 	case '\\':
 	  switch (c = Read()) {
@@ -326,16 +327,13 @@ public:
     Write('=');
     for (;*value; value++) {
       switch (*value) {
-	case 0:
-	  Write('\n');
-	  return;
 	case '\n': Write("\\n"); break;
 	case '\t': Write("\\t"); break;
 	case '\\': Write("\\\\"); break;
-	default:
-	  Write(*value);
+	default: Write(*value);
       }
     }
+    Write('\n');
   }
 
 private:
