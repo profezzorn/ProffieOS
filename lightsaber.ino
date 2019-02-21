@@ -211,6 +211,13 @@ void PrintQuotedValue(const char *name, const char* str) {
   STDOUT.write('\n');
 }
 
+char* mkstr(char* str) {
+  int len = strlen(str);
+  char* ret = malloc(len + 1);
+  memcpy(ret, str, len + 1);
+  return ret;
+}
+
 #ifdef ENABLE_DEBUG
 
 // This class is really useful for finding crashes
@@ -804,7 +811,7 @@ public:
     uint32_t now = millis();
     uint32_t time_since_last_clash = now - last_clash_;
     if (time_since_last_clash < clash_timeout_) {
-      ms = max(ms, clash_timeout_ - time_since_last_clash);
+      ms = std::max<size_t>(ms, clash_timeout_ - time_since_last_clash);
     }
     last_clash_ = now;
     clash_timeout_ = ms;
@@ -978,7 +985,7 @@ public:
   } while(0);
 
     ONCEPERBLADE(ACTIVATE);
-    SetPreset(0, true);
+    SetPreset(0, false);
     return;
 
    bad_blade:
@@ -1566,12 +1573,61 @@ public:
     }
 
     if (!strcmp(cmd, "list_presets")) {
-      for (size_t i = 0; i < current_config->num_presets; i++) {
-        Preset *p = current_config->presets + i;
-        PrintQuotedValue("FONT", p->font);
-        PrintQuotedValue("TRACK", p->track);
-        PrintQuotedValue("NAME", p->name);
+      CurrentPreset tmp;
+      for (int i = 0; ; i++)
+        tmp.SetPreset(i);
+	if (tmp.preset_num == i) break;
+	tmp.Print();
       }
+      return true;
+    }
+
+    if (!strcmp(cmd, "set_font") && arg) {
+      current_preset_.font = mkstr(arg);
+      current_preset.Save();
+      return true;
+    }
+
+    if (!strcmp(cmd, "set_track") && arg) {
+      current_preset_.track = mkstr(arg);
+      current_preset.Save();
+      return true;
+    }
+
+    if (!strcmp(cmd, "set_name") && arg) {
+      current_preset_.track = mkstr(arg);
+      current_preset.Save();
+      return true;
+    }
+
+#define SET_STYLE_CMD(N)                             \
+    if (!strcmp(cmd, "set_name" #N) && arg) {        \
+      current_preset_.current_style##N = mkstr(arg); \
+      current_preset.Save();                         \
+      return true;                                   \
+    }
+    ONCEPERBLADE(SET_STYLE_CMD)
+
+    if (!strcmp(cmd, "move_preset") && arg) {
+      int32_t pos = strtol(arg, NULL, 0);
+      current_preset.SaveAt(pos);
+      return true;      
+    }
+
+    if (!strcmp(cmd, "duplicate_preset") && arg) {
+      int32_t pos = strtol(arg, NULL, 0);
+      current_preset.preset_num = -1;
+      current_preset.SaveAt(pos);
+      return true;      
+    }
+
+    if (!strcmp(cmd, "delete_preset") && arg) {
+      current_preset.SaveAt(-1);
+      return true;      
+    }
+
+    if (!strcmp(cmd, "show_current_preset")) {
+      current_preset_.Print();
       return true;
     }
 
@@ -2140,8 +2196,8 @@ class Commands : public CommandParser {
 #ifdef ENABLE_SD
     if (!strcmp(cmd, "dir")) {
       LOCK_SD(true);
-      if (LSFS::Exists(e ? e : current_directory)) {
-        for (LSFS::Iterator dir(e ? e : current_directory); dir; ++dir) {
+      if (!e || LSFS::Exists(e)) {
+        for (LSFS::Iterator dir(e ? e : ""); dir; ++dir) {
           STDOUT.print(dir.name());
           STDOUT.print(" ");
           STDOUT.println(dir.size());
