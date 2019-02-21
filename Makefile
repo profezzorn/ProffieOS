@@ -1,7 +1,7 @@
 ARDUINO_DIR:=/home/hubbe/lib/arduino-1.8.3
 
-#BOARD_TAG=Proffieboard-L433CC
-BOARD_TAG=teensy31
+BOARD_TAG=Proffieboard-L433CC
+#BOARD_TAG=teensy31
 
 ifeq ($(strip $(BOARD_TAG)),Proffieboard-L433CC)
   ALTERNATE_CORE_PATH=/home/hubbe/lib/arduino-STM32L4
@@ -20,6 +20,9 @@ DIAGNOSTICS_COLOR_WHEN = auto
 
 style-test:
 	(cd styles && $(MAKE) test)
+
+common-test:
+	(cd common && $(MAKE) test)
 
 test1:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_proffieboard_config.h\\\" BOARD_TAG=Proffieboard-L433CC OBJDIR=test-proffieboard-default
@@ -51,7 +54,7 @@ test9:
 testA:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_v3_config.h\\\" BOARD_TAG=teensy31 OBJDIR=test-teensy31-default-v3
 
-test: style-test test1 test2 test3 test4 test5 test6 test7 test8 test9 testA
+test: style-test common-test test1 test2 test3 test4 test5 test6 test7 test8 test9 testA
 	@echo Tests pass
 
 # Check that there are no uncommitted changes
