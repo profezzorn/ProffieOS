@@ -8,12 +8,14 @@ build-teensy31
 build-teensy35
 build-teensy36
 common_presets.h.test
+lightsaber.d
 lightsaber.ino-1.94
 lightsaber.ino.bak2
 lightsaber.ino.broken
 lightsaber.ino.fixes
 lightsaber.ino.funky
 lightsaber.ino.junk
+lightsaber.ino.reverted
 lightsaber.ino2
 test-proffieboard-default
 test-teensy31-crossguard-v3
