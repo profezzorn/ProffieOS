@@ -274,6 +274,15 @@ void test_current_preset() {
   preset.SaveAt(1);
   CHECK_EQ(PresetOrder(), 10234);
   CHECK_EQ(preset.preset_num, 1);
+  preset.SaveAt(2);
+  CHECK_EQ(PresetOrder(), 12034);
+  CHECK_EQ(preset.preset_num, 2);
+  preset.SaveAt(3);
+  CHECK_EQ(PresetOrder(), 12304);
+  CHECK_EQ(preset.preset_num, 3);
+  preset.SaveAt(4);
+  CHECK_EQ(PresetOrder(), 12340);
+  CHECK_EQ(preset.preset_num, 4);
 }
 
 int main() {
