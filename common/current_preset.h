@@ -15,13 +15,6 @@ public:
   ONCEPERBLADE(DEFINE_CURRENT_STYLE_STRING);
   LSPtr<char> name;
 
-  #if 0
-  void InitStyles() {
-#define  INIT_CURRENT_STYLE(N) current_config->blade##N->SetStyle(StyleParser::Parse(current_style##N.get()));
-    ONCEPERBLADE(INIT_CURRENT_STYLE)
-  }
-  #endif
-
   const char *mk_builtin_str(int num, int N) {
     char tmp[30];
     strcpy(tmp, "$");
@@ -209,6 +202,7 @@ public:
   // position = -1 -> delete
   // To duplicate, set preset_num to -1
   void SaveAt(int position) {
+    LOCK_SD(true);
     FileReader f, out;
     if (!OpenPresets(&f, "presets.ini")) {
       if (!UpdateINI()) CreateINI();
@@ -237,7 +231,10 @@ public:
     out.Close();
     UpdateINI();
     preset_num = position;
+    LOCK_SD(false);
   }
+
+  void Save() { SaveAt(preset_num); }
 
   void SetPreset(int preset) {
     LOCK_SD(true);
