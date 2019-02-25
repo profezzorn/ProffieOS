@@ -211,9 +211,9 @@ void PrintQuotedValue(const char *name, const char* str) {
   STDOUT.write('\n');
 }
 
-char* mkstr(char* str) {
+char* mkstr(const char* str) {
   int len = strlen(str);
-  char* ret = malloc(len + 1);
+  char* ret = (char*)malloc(len + 1);
   memcpy(ret, str, len + 1);
   return ret;
 }
@@ -613,6 +613,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/file.h"
 #include "styles/stripes.h"
 #include "styles/random_blink.h"
+#include "styles/sequence.h"
 
 // functions
 #include "functions/ifon.h"
@@ -1574,7 +1575,7 @@ public:
 
     if (!strcmp(cmd, "list_presets")) {
       CurrentPreset tmp;
-      for (int i = 0; ; i++)
+      for (int i = 0; ; i++) {
         tmp.SetPreset(i);
 	if (tmp.preset_num == i) break;
 	tmp.Print();
@@ -1584,45 +1585,45 @@ public:
 
     if (!strcmp(cmd, "set_font") && arg) {
       current_preset_.font = mkstr(arg);
-      current_preset.Save();
+      current_preset_.Save();
       return true;
     }
 
     if (!strcmp(cmd, "set_track") && arg) {
       current_preset_.track = mkstr(arg);
-      current_preset.Save();
+      current_preset_.Save();
       return true;
     }
 
     if (!strcmp(cmd, "set_name") && arg) {
       current_preset_.track = mkstr(arg);
-      current_preset.Save();
+      current_preset_.Save();
       return true;
     }
 
 #define SET_STYLE_CMD(N)                             \
     if (!strcmp(cmd, "set_name" #N) && arg) {        \
       current_preset_.current_style##N = mkstr(arg); \
-      current_preset.Save();                         \
+      current_preset_.Save();                        \
       return true;                                   \
     }
     ONCEPERBLADE(SET_STYLE_CMD)
 
     if (!strcmp(cmd, "move_preset") && arg) {
       int32_t pos = strtol(arg, NULL, 0);
-      current_preset.SaveAt(pos);
+      current_preset_.SaveAt(pos);
       return true;      
     }
 
     if (!strcmp(cmd, "duplicate_preset") && arg) {
       int32_t pos = strtol(arg, NULL, 0);
-      current_preset.preset_num = -1;
-      current_preset.SaveAt(pos);
+      current_preset_.preset_num = -1;
+      current_preset_.SaveAt(pos);
       return true;      
     }
 
     if (!strcmp(cmd, "delete_preset") && arg) {
-      current_preset.SaveAt(-1);
+      current_preset_.SaveAt(-1);
       return true;      
     }
 
