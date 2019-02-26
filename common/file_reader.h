@@ -89,18 +89,22 @@ public:
     Close();
 #ifdef ENABLE_SERIALFLASH
     new (&sf_file_) SerialFlashFile;
+    type_ = TYPE_SF;
     sf_file_ = SerialFlashChip::open(filename);
     if (sf_file_) {
-      type_ = TYPE_SF;
       return true;
+    } else {
+      Close();
     }
 #endif
 #ifdef ENABLE_SD
     new (&sd_file_) File;
+    type_ = TYPE_SD;
     sd_file_ = LSFS::Open(filename);
     if (sd_file_) {
-      type_ = TYPE_SD;
       return true;
+    } else {
+      Close();
     }
 #endif    
     return false;
