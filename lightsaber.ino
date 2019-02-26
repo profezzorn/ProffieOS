@@ -211,9 +211,10 @@ void PrintQuotedValue(const char *name, const char* str) {
   STDOUT.write('\n');
 }
 
-char* mkstr(const char* str) {
+const char* mkstr(const char* str) {
   int len = strlen(str);
   char* ret = (char*)malloc(len + 1);
+  if (!ret) return "";
   memcpy(ret, str, len + 1);
   return ret;
 }
@@ -898,6 +899,11 @@ public:
   void SetPreset(int preset_num, bool announce) {
     bool on = SaberBase::IsOn();
     if (on) Off();
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+#define UNSET_BLADE_STYLE(N) \
+    delete current_config->blade##N->UnSetStyle();
+    ONCEPERBLADE(UNSET_BLADE_STYLE)
     current_preset_.SetPreset(preset_num);
     if (announce) {
       if (current_preset_.name.get()) {
@@ -916,11 +922,6 @@ public:
     }
 
 
-    // First free all styles, then allocate new ones to avoid memory
-    // fragmentation.
-#define UNSET_BLADE_STYLE(N) \
-    delete current_config->blade##N->UnSetStyle();
-    ONCEPERBLADE(UNSET_BLADE_STYLE)
 #define SET_BLADE_STYLE(N) \
     current_config->blade##N->SetStyle(style_parser.Parse(current_preset_.current_style##N.get()));
     ONCEPERBLADE(SET_BLADE_STYLE)
@@ -1577,7 +1578,7 @@ public:
       CurrentPreset tmp;
       for (int i = 0; ; i++) {
         tmp.SetPreset(i);
-	if (tmp.preset_num == i) break;
+	if (tmp.preset_num != i) break;
 	tmp.Print();
       }
       return true;
