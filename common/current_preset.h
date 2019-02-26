@@ -29,6 +29,14 @@ public:
     return ret;
   }
 
+  void Clear() {
+    font = "";
+    track = "";
+#define CLEAR_STYLE_STRING(N) current_style##N = "";
+    ONCEPERBLADE(CLEAR_STYLE_STRING);
+    name = "";
+  }
+
   void Set(int num) {
     num = (current_config->num_presets + num) % current_config->num_presets;
     Preset* preset = current_config->presets + num;
@@ -237,6 +245,7 @@ public:
   void Save() { SaveAt(preset_num); }
 
   void SetPreset(int preset) {
+    Clear();
     LOCK_SD(true);
     if (!Load(preset)) Set(preset);
     LOCK_SD(false);
