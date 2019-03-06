@@ -949,13 +949,10 @@ public:
   // Measure and return the blade identifier resistor.
   float id() {
 #ifdef ENABLE_POWER_FOR_ID
+    ENABLE_POWER_FOR_ID power_pins_to_toggle;
     STDOUT.println("Power for ID enabled. Turning on FETs");
-    pinMode(bladePowerPin1, OUTPUT);
-    pinMode(bladePowerPin2, OUTPUT);
-    pinMode(bladePowerPin3, OUTPUT);
-    digitalWrite(bladePowerPin1, HIGH);
-    digitalWrite(bladePowerPin2, HIGH);
-    digitalWrite(bladePowerPin3, HIGH);
+    power_pins_to_toggle.Init();
+    power_pins_to_toggle.Power(true);
 #endif
     pinMode(bladeIdentifyPin, INPUT_PULLUP);
     delay(100);
@@ -965,9 +962,7 @@ public:
     float amps = (3.3f - volts) / 33000;     // Pull-up is 33k
     float resistor = volts / amps;
 #ifdef ENABLE_POWER_FOR_ID
-    pinMode(bladePowerPin1, LOW);
-    pinMode(bladePowerPin2, LOW);
-    pinMode(bladePowerPin3, LOW);
+    power_pins_to_toggle.Power(false);
 #endif
     STDOUT.print("ID: ");
     STDOUT.print(blade_id);
