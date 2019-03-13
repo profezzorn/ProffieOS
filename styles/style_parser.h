@@ -1,7 +1,9 @@
 #ifndef STYLES_STYLE_PARSER_H
 #define STYLES_STYLE_PARSER_H
 
+#include "../common/preset.h"
 #include "../common/arg_parser.h"
+#include "../functions/int_arg.h"
 
 class NamedStyle {
 public:
@@ -10,12 +12,38 @@ public:
   const char* description;
 };
 
+class BuiltinPresetAllocator : public StyleFactory {
+public:
+  BladeStyle* make() override {
+    // Technically we should call run on these.
+    IntArg<1> preset_arg;
+    IntArg<2> style_arg;
+    int preset = preset_arg.getInteger(0);
+    int style = style_arg.getInteger(0);
+    
+    StyleAllocator allocator = nullptr;
+    if (preset < 0 && preset >= current_config->num_presets)
+      return nullptr;
+    
+    Preset* p = current_config->presets + preset;
+#define GET_PRESET_STYLE(N) if (style == N) allocator = p->style_allocator##N;
+    ONCEPERBLADE(GET_PRESET_STYLE);
+    if (!allocator) return nullptr;
+    return allocator->make();
+  }
+};
+
+BuiltinPresetAllocator builtin_preset_allocator;
+
 NamedStyle named_styles[] = {
   { "standard", StyleNormalPtrX<RgbArg<1>, RgbArg<2>, IntArg<3>, IntArg<4>>(),
     "Standard blade, color, clash color, extension time, retraction time",
   },
   { "rainbow", StyleRainbowPtrX<IntArg<1>, IntArg<2>>(),
     "Rainbow blade, extension time, retraction time"
+  },
+  { "builtin", &builtin_preset_allocator,
+    "builtin preset styles, preset num, style index"
   },
 };
 
@@ -32,18 +60,6 @@ public:
   }
 
   BladeStyle* Parse(const char* str) {
-    if (str[0] == '$') {
-      // Builtin style
-      char* tmp;
-      int preset = strtol(str + 1, &tmp, 0);
-      int style = strtol(tmp + 1, NULL, 0);
-      Preset* p = current_config->presets + preset;
-      StyleAllocator allocator = nullptr;
-#define GET_PRESET_STYLE(N) if (style == N) allocator = p->style_allocator##N;
-      ONCEPERBLADE(GET_PRESET_STYLE);
-      if (!allocator) return nullptr;
-      return allocator->make();
-    }
     for (size_t i = 0; i < NELEM(named_styles); i++) {
       if (FirstWord(str, named_styles[i].name)) {
 	ArgParser ap(SkipWord(str));

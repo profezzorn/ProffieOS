@@ -17,9 +17,9 @@ public:
 
   const char *mk_builtin_str(int num, int N) {
     char tmp[30];
-    strcpy(tmp, "$");
+    strcpy(tmp, "builtin ");
     itoa(num, tmp + strlen(tmp), 10);
-    strcat(tmp, ",");
+    strcat(tmp, " ");
     itoa(N, tmp + strlen(tmp), 10);
     char *ret = (char *)malloc(strlen(tmp)+1);
     if (!ret) return "";
