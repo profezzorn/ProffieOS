@@ -379,7 +379,7 @@ public:
     return micros() - start_micros_ > num_leds_ * 24000000.0 / frequency_ + 300;
   }
   void BeginFrame() {
-    while (Color8::num_bytes(byteorder_) * num_leds_ > (int)sizeof(displayMemory)) {
+    while (Color8::num_bytes(byteorder_) * num_leds_ * 8 + 1 > (int)sizeof(displayMemory)) {
       STDOUT.print("Display memory is not big enough, increase maxLedsPerStrip!");
       num_leds_ /= 2;
     }
@@ -388,7 +388,7 @@ public:
   }
   void EndFrame() {
     while (!IsReadyForEndFrame());
-    MonopodWS2811::show(pin_, ones_ * Color8::num_bytes(byteorder_), num_leds_, frequency_);
+    MonopodWS2811::show(pin_, ones_ * Color8::num_bytes(byteorder_) * 8, num_leds_, frequency_);
     start_micros_ = micros();
   }
 

@@ -39,6 +39,7 @@ public:
   }
 
   void show(int pin, int bits, int frequency, WS2811Client* client) override {
+    ((uint8_t*)displayMemory)[bits] = 0;
     int pulse_len = timer_frequency / frequency;
     int instance = g_APinDescription[pin].pwm_instance;
     if (g_PWMInstances[instance] != TIMER_INSTANCE_TIM2) {
@@ -63,6 +64,8 @@ public:
     case TIMER_CHANNEL_6: cmp_address = &timer()->TIM->CCR6; break;
     }
 
+    STDOUT.print("TIMER = ");
+    STDOUT.println((long)timer(), HEX);
     stm32l4_timer_enable(timer(),
 			 divider -1,
 			 pulse_len -1,
@@ -171,12 +174,11 @@ public:
   }
 
   void BeginFrame() {
-    while (Color8::num_bytes(byteorder_) * num_leds_ + 1 > (int)sizeof(displayMemory)) {
+    while (Color8::num_bytes(byteorder_) * num_leds_ * 8 + 1 > (int)sizeof(displayMemory)) {
       STDOUT.print("Display memory is not big enough, increase maxLedsPerStrip!");
       num_leds_ /= 2;
     }
     while (!IsReadyForBeginFrame());
-    ((uint8_t*)displayMemory)[Color8::num_bytes(byteorder_) * num_leds_] = 0;
   }
 
   void Set(int led, Color8 color) {
@@ -200,7 +202,7 @@ public:
     done_ = false;
     frame_num_++;
     if (engine_)
-      engine_->show(pin_, num_leds_ * Color8::num_bytes(byteorder_), frequency_, this);
+      engine_->show(pin_, num_leds_ * Color8::num_bytes(byteorder_) * 8, frequency_, this);
   }
 
   int num_leds() const { return num_leds_; }
