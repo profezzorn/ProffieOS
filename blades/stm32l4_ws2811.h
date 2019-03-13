@@ -74,7 +74,7 @@ public:
 
     stm32l4_dma_start(&dma_, (uint32_t)cmp_address,
 		      (uint32_t)displayMemory,
-		      num_bits + 1,
+		      bits + 1,
                       DMA_OPTION_EVENT_TRANSFER_DONE |
                       DMA_OPTION_MEMORY_TO_PERIPHERAL |
                       DMA_OPTION_PERIPHERAL_DATA_SIZE_32 |
