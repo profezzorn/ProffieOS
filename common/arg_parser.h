@@ -63,7 +63,7 @@ public:
   }
   
   bool try_again = false;
-  int current_arg = 0;
+  int current_arg = 1;
 };
 
 extern ArgParserInterface* CurrentArgParser;
