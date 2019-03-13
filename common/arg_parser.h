@@ -19,14 +19,14 @@ bool FirstWord(const char *str, const char *word) {
 }
 
 const char* SkipWord(const char* str) {
-  while (*str == ' ' || *str != '\t') str++;
+  while (*str == ' ' || *str == '\t') str++;
   while (*str != ' ' && *str != '\t' && *str) str++;
   return str;
 }
 
 class ArgParser : public ArgParserInterface {
 public:
-  ArgParser(const char* data) : str_(data) { }
+  ArgParser(const char* data) : str_(data) {}
 
   const char* GetArg(int arg_num, const char* name) override {
     const char* ret = str_;
