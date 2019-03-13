@@ -17,7 +17,7 @@ public:
 
 class WS2811Engine {
 public:
-  virtual void show(int pin, int num_leds, int frequency, WS2811Client* client) = 0;
+  virtual void show(int pin, int bits, int frequency, WS2811Client* client) = 0;
   virtual bool done() = 0;
 };
 
@@ -38,8 +38,7 @@ public:
     stm32l4_dma_destroy(&dma_);
   }
 
-  void show(int pin, int num_leds, int frequency, WS2811Client* client) override {
-    displayMemory[num_leds * 24/4] = 0;
+  void show(int pin, int bits, int frequency, WS2811Client* client) override {
     int pulse_len = timer_frequency / frequency;
     int instance = g_APinDescription[pin].pwm_instance;
     if (g_PWMInstances[instance] != TIMER_INSTANCE_TIM2) {
@@ -75,7 +74,7 @@ public:
 
     stm32l4_dma_start(&dma_, (uint32_t)cmp_address,
 		      (uint32_t)displayMemory,
-		      num_leds * 24 + 1,
+		      num_bits + 1,
                       DMA_OPTION_EVENT_TRANSFER_DONE |
                       DMA_OPTION_MEMORY_TO_PERIPHERAL |
                       DMA_OPTION_PERIPHERAL_DATA_SIZE_32 |
@@ -172,11 +171,12 @@ public:
   }
 
   void BeginFrame() {
-    while (Color8::num_bytes(byteorder_) * num_leds_ > (int)sizeof(displayMemory)) {
+    while (Color8::num_bytes(byteorder_) * num_leds_ + 1 > (int)sizeof(displayMemory)) {
       STDOUT.print("Display memory is not big enough, increase maxLedsPerStrip!");
       num_leds_ /= 2;
     }
     while (!IsReadyForBeginFrame());
+    ((uint8_t*)displayMemory)[Color8::num_bytes(byteorder_) * num_leds_] = 0;
   }
 
   void Set(int led, Color8 color) {
@@ -200,7 +200,7 @@ public:
     done_ = false;
     frame_num_++;
     if (engine_)
-      engine_->show(pin_, num_leds_, frequency_, this);
+      engine_->show(pin_, num_leds_ * Color8::num_bytes(byteorder_), frequency_, this);
   }
 
   int num_leds() const { return num_leds_; }

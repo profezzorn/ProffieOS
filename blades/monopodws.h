@@ -83,9 +83,8 @@
 
 class MonopodWS2811 {
 public:
-  static void show(int pin, uint8_t ones, int leds, uint32_t frequency) {
+  static void show(int pin, uint8_t ones, int bufsize, uint32_t frequency) {
     ones_ = ones;
-    uint32_t bufsize = leds * 24;
     
     pinMode(pin, OUTPUT);
     digitalWrite(pin, LOW);
@@ -389,7 +388,7 @@ public:
   }
   void EndFrame() {
     while (!IsReadyForEndFrame());
-    MonopodWS2811::show(pin_, ones_, num_leds_, frequency_);
+    MonopodWS2811::show(pin_, ones_ * Color8::num_bytes(byteorder_), num_leds_, frequency_);
     start_micros_ = micros();
   }
 
