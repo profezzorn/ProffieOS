@@ -235,7 +235,7 @@ public:
     return !WS2811SerialEngine::busy();
   }
   bool IsReadyForEndFrame() {
-    while (Color8::num_bytes(byteorder_) * num_leds_ > (int)sizeof(displayMemory)) {
+    while (Color8::num_bytes(byteorder_) * num_leds_ * 8 + 1 > (int)sizeof(displayMemory)) {
       STDOUT.print("Display memory is not big enough, increase maxLedsPerStrip!");
       num_leds_ /= 2;
     }
@@ -247,13 +247,13 @@ public:
   }
   void EndFrame() {
     while (!IsReadyForEndFrame()) yield();
-    required_micros_ = WS2811SerialEngine::show(pin_, num_leds_ * Color8::num_bytes(byteorder_), frequency_);
+    required_micros_ = WS2811SerialEngine::show(pin_, num_leds_ * Color8::num_bytes(byteorder_) * 8, frequency_);
     start_micros_ = micros();
   }
 
   void Set(int led, Color8 color) {
     uint32_t *output = ((uint32_t *)displayMemory) + led * 3;
-    uint32_t bufsize = leds * 24;
+    for (int i = Color8::num_bytes(byteorder_) - 1; i >= 0; i--) {
       *(output++) = serial_lookup_table[color.getByte(byteorder_, i)];
     }
   }

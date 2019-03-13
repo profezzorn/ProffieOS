@@ -64,8 +64,6 @@ public:
     case TIMER_CHANNEL_6: cmp_address = &timer()->TIM->CCR6; break;
     }
 
-    STDOUT.print("TIMER = ");
-    STDOUT.println((long)timer(), HEX);
     stm32l4_timer_enable(timer(),
 			 divider -1,
 			 pulse_len -1,
