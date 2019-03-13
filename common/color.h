@@ -39,35 +39,35 @@ class Color8 {
     RBG=0x132,
     RGB=0x123,
 
-    // RGBA colors
-    BGRA=0x3214,
-    BRGA=0x3124,
-    GBRA=0x2314,
-    GRBA=0x2134,
-    RBGA=0x1324,
-    RGBA=0x1234,
+    // RGBW colors
+    BGRW=0x3214,
+    BRGW=0x3124,
+    GBRW=0x2314,
+    GRBW=0x2134,
+    RBGW=0x1324,
+    RGBW=0x1234,
 
-    ABGR=0x4321,
-    ABRG=0x4312,
-    AGBR=0x4231,
-    AGRB=0x4213,
-    ARBG=0x4132,
-    ARGB=0x4123,
+    WBGR=0x4321,
+    WBRG=0x4312,
+    WGBR=0x4231,
+    WGRB=0x4213,
+    WRBG=0x4132,
+    WRGB=0x4123,
 
-    // Energy-efficient RGBA colors (white *replaces RGB, not in addition to RGB)
-    BGRa=0x7654,
-    BRGa=0x7564,
-    GBRa=0x6754,
-    GRBa=0x6574,
-    RBGa=0x5764,
-    RGBa=0x5674,
+    // Energy-efficient RGBW colors (white *replaces RGB, not in addition to RGB)
+    BGRw=0x7654,
+    BRGw=0x7564,
+    GBRw=0x6754,
+    GRBw=0x6574,
+    RBGw=0x5764,
+    RGBw=0x5674,
 
-    aBGR=0x4765,
-    aBRG=0x4756,
-    aGBR=0x4675,
-    aGRB=0x4657,
-    aRBG=0x4576,
-    aRGB=0x4567,
+    wBGR=0x4765,
+    wBRG=0x4756,
+    wGBR=0x4675,
+    wGRB=0x4657,
+    wRBG=0x4576,
+    wRGB=0x4567,
   };
 
   static int num_bytes(int byteorder) {
