@@ -22,7 +22,7 @@ public:
     int style = style_arg.getInteger(0);
     
     StyleAllocator allocator = nullptr;
-    if (preset < 0 && preset >= current_config->num_presets)
+    if (preset < 0 || preset >= current_config->num_presets)
       return nullptr;
     
     Preset* p = current_config->presets + preset;
