@@ -4,8 +4,9 @@
 #ifdef ENABLE_FASTLED
 #include "abstract_blade.h"
 
-// Needed for "displayMemory"
-#include "monopodws.h"
+// Common
+DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4 + 1];
+
 #include <FastLED.h>
 
 // FASTLED-type blade implementation.
