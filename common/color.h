@@ -75,7 +75,7 @@ class Color8 {
   }
 
   uint8_t getByte(int byteorder, int byte) {
-    switch (byteorder >> (byte * 4) & 0x3) {
+    switch (byteorder >> (byte * 4) & 0x7) {
       default: return r;
       case 2: return g;
       case 3: return b;
