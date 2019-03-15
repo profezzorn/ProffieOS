@@ -3,11 +3,13 @@
 
 #include "../common/arg_parser.h"
 
-template<int ARG>
+template<int ARG, int DEFAULT_VALUE>
 class IntArg {
 public:
   IntArg() {
-    const char* arg = CurrentArgParser->GetArg(ARG, "INT");
+    char default_value[16];
+    itoa(DEFAULT_VALUE, default_value, 10);
+    const char* arg = CurrentArgParser->GetArg(ARG, "INT", default_value);
     if (arg) {
       value_ = strtol(arg, NULL, 0);
     }

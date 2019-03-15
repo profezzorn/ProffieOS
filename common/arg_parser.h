@@ -3,7 +3,9 @@
 
 class ArgParserInterface {
 public:
-  virtual const char* GetArg(int arg_num, const char* name) = 0;
+  virtual const char* GetArg(int arg_num,
+			     const char* name,
+			     const char* default_value) = 0;
 };
 
 bool FirstWord(const char *str, const char *word) {
@@ -28,7 +30,9 @@ class ArgParser : public ArgParserInterface {
 public:
   ArgParser(const char* data) : str_(data) {}
 
-  const char* GetArg(int arg_num, const char* name) override {
+  const char* GetArg(int arg_num,
+		     const char* name,
+		     const char* default_value) override {
     const char* ret = str_;
     int arg = 0;
     while (true) {
@@ -36,7 +40,7 @@ public:
       if (!*ret) {
 	STDOUT.print("Missing argument ");
 	STDOUT.println(arg_num);
-	return nullptr;
+	return default_value;
       }
       if (++arg == arg_num) return ret;
       while (*ret && *ret != ' ' && *ret != '\t') ret++;
@@ -48,9 +52,13 @@ private:
 
 class ArgParserPrinter : public ArgParserInterface {
 public:
-  const char* GetArg(int arg_num, const char* name) override {
+  const char* GetArg(int arg_num,
+		     const char* name,
+		     const char* default_value) override {
     if (current_arg == arg_num) {
-      STDOUT.println(name);
+      STDOUT.print(name);
+      STDOUT.print(" ");
+      STDOUT.println(default_value);
       try_again = true;
       current_arg++;
     }
