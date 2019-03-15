@@ -10,11 +10,12 @@
 // fades to BASE over a peariod of MILLIS millseconds.
 
 // Let's us use a different color right in the beginning.
-template<class T, class SPARK_COLOR = Rgb<255,255,255>, int MILLIS = 200>
-class OnSpark {
+template<class T, class SPARK_COLOR = Rgb<255,255,255>, class MILLIS = Int<200> >
+class OnSparkX {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
+    millis_.run(blade);
     spark_color_.run(blade);
     uint32_t m = millis();
     if (on_ != blade->is_on()) {
@@ -22,8 +23,9 @@ public:
       if (on_) on_millis_ = m;
     }
     uint32_t t = millis() - on_millis_;
-    if (t < MILLIS) {
-      mix_ = 255 - 255 * t / MILLIS;
+    uint32_t fade_millis = millis_.getInteger(0);
+    if (t < fade_millis) {
+      mix_ = 255 - 255 * t / fade_millis;
     } else {
       mix_ = 0;
     }
@@ -40,6 +42,10 @@ private:
   T base_;
   SPARK_COLOR spark_color_;
   uint32_t on_millis_;
+  MILLIS millis_;
 };
+
+template<class T, class SPARK_COLOR = Rgb<255,255,255>, int MILLIS = 200>
+  using OnSpark = OnSparkX<T, SPARK_COLOR, Int<MILLIS>>;
 
 #endif
