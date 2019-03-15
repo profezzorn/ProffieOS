@@ -8,31 +8,18 @@
 // Similar to InOutHelper, but makes the tip a different color
 // during extension.
 
-template<class T, int OUT_MILLIS, int IN_MILLIS, class SPARK_COLOR = Rgb<255,255,255> >
-class InOutSparkTip {
+template<class T, class EXTENSION, class SPARK_COLOR = Rgb<255,255,255>, class OFF_COLOR=Rgb<0,0,0>, bool ALLOW_DISABLE=1>
+class InOutSparkTipX {
 public:
-  bool run(BladeBase* blade) {
+  bool run(BladeBase* blade) __attribute__((warn_unused_result)) {
     bool keep_running = true;
     base_.run(blade);
-    uint32_t now = micros();
-    uint32_t delta = now - last_micros_;
-    last_micros_ = now;
-    if ((on_ = blade->is_on())) {
-      if (extension == 0.0) {
-         // We might have been off for a while, so delta might
-         // be insanely high.
-         extension = 0.00001;
-      } else {
-         extension += delta / (OUT_MILLIS * 1000.0);
-         extension = std::min(extension, 1.0f);
-      }
-    } else {
-      if (extension == 0.0) keep_running = false;
-      extension -= delta / (IN_MILLIS * 1000.0);
-      extension = std::max(extension, 0.0f);
-    }
-    thres = extension * (blade->num_leds() + 4) * 256;
-    return keep_running;
+    extension_.run(blade);
+    on_ = blade->is_on();
+    thres = (extension_.getInteger(0) * (blade->num_leds() + 4)) >> 7;
+    if (ALLOW_DISABLE && is_same_type<OFF_COLOR, Rgb<0,0,0> >::value && thres == 0)
+      return false;
+    return true;
   }
 
   OverDriveColor getColor(int led) {
@@ -50,9 +37,11 @@ private:
   T base_;
   bool on_;
   int thres = 0;
-  float extension = 0.0;
-  uint32_t last_micros_;
   SPARK_COLOR spark_color_;
+  EXTENSION extension_;
 };
+
+template<class T, int OUT_MILLIS, int IN_MILLIS, class SPARK_COLOR = Rgb<255,255,255>, class OFF_COLOR=Rgb<0,0,0>, bool ALLOW_DISABLE=1>
+  using InOutSparkTip = InOutSparkTipX<T,  InOutFunc<OUT_MILLIS, IN_MILLIS>, SPARK_COLOR, OFF_COLOR, ALLOW_DISABLE>;
 
 #endif
