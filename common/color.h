@@ -99,7 +99,7 @@ static int8_t color16_dither_matrix[4][4] = {
 class Color16 {
   public:
   Color16() : r(0), g(0), b(0) {}
-  Color16(const Color8& c) : r(c.r << 8), g(c.g << 8), b(c.b << 8) {}
+  Color16(const Color8& c) : r(c.r * 0x101), g(c.g * 0x101), b(c.b * 0x101) {}
   Color16(uint16_t r_, uint16_t g_, uint16_t b_) : r(r_), g(g_), b(b_) {}
   // x = 0..256
   Color16 mix(const Color16& other, int x) const {
