@@ -23,7 +23,7 @@
 
 class WS2811SerialEngine {
 public:
-  static uint32_t show(int pin, int bits, int frequency) {
+  static uint32_t show(int pin, int numbits, int frequency) {
     uint32_t divisor, portconfig, hwtrigger;
     KINETISK_UART_t *uart;
 
