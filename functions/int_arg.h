@@ -7,6 +7,7 @@ template<int ARG, int DEFAULT_VALUE>
 class IntArg {
 public:
   IntArg() {
+    value_ = DEFAULT_VALUE;
     char default_value[16];
     itoa(DEFAULT_VALUE, default_value, 10);
     const char* arg = CurrentArgParser->GetArg(ARG, "INT", default_value);
