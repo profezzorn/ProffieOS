@@ -85,6 +85,10 @@ class Color8 {
       case 7: return b - std::min(r, std::min(g, b));
     }
   }
+
+  Color8 operator*(uint8_t v) const {
+    return Color8(r * v / 255, g * v / 255, b * v / 255);
+  }
   
   uint8_t r, g, b;
 };
