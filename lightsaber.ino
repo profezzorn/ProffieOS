@@ -959,7 +959,6 @@ public:
 #endif
     pinMode(bladeIdentifyPin, INPUT_PULLUP);
     delay(100);
-
     int blade_id = analogRead(bladeIdentifyPin);
 #ifdef ENABLE_POWER_FOR_ID
     power_pins_to_toggle.Power(false);
@@ -967,9 +966,6 @@ public:
     float volts = blade_id * 3.3f / 1024.0f;  // Volts at bladeIdentifyPin
     float amps = (3.3f - volts) / 33000;     // Pull-up is 33k
     float resistor = volts / amps;
-#ifdef ENABLE_POWER_FOR_ID
-    power_pins_to_toggle.Power(false);
-#endif
     STDOUT.print("ID: ");
     STDOUT.print(blade_id);
     STDOUT.print(" volts ");
