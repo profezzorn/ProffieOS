@@ -7,10 +7,14 @@ public:
     CONFIG_VARIABLE(humStart, 100);
     CONFIG_VARIABLE(volHum, 15);
     CONFIG_VARIABLE(volEff, 16);
+    CONFIG_VARIABLE(clashLockOn, 1);
+    CONFIG_VARIABLE(clashLockOff, 1);	
   }
   int humStart;
   int volHum;
   int volEff;
+  int clashLockOn;
+  int clashLockOff;
 };
 
 // Monophonic sound fonts are the most common.
@@ -181,6 +185,17 @@ public:
 	  drag.files_found()) {
 	e = &drag;
       }
+	    
+      // ultra - dynalock lockon
+      if (lockon.files_found()) {
+        PlayPolyphonic(&lockon);
+      } else {
+        if (config_.clashLockOn) { // ultra
+          PlayPolyphonic(&clsh); // clash fallback
+        }
+      }
+        // ultra
+	    
       if (!lock_player_) {
 	lock_player_ = PlayPolyphonic(e);
 	if (lock_player_) {
@@ -193,16 +208,41 @@ public:
   void SB_EndLockup() override {
     if (lock_player_) {
       // Polyphonic case
+
+      // ultra - dynalock lockoff
+
+      if (lockoff.files_found()) {
+        PlayPolyphonic(&lockoff);
+      } else {
+        if (config_.clashLockOff) { // ultra clash fallback
+          PlayPolyphonic(&clsh);
+        }
+      }
+
+      // ultra
+	    
       lock_player_->set_fade_time(0.3);
       lock_player_->FadeAndStop();
       lock_player_.Free();
       return;
     }
-    // Monophonic case
-    if (lockup.files_found()) {
-      PlayMonophonic(&clash, &hum);
+      // monophonic case
+
+      // ultra - returned endlock to plecter labs
+      // with clash fallback maintained plus opt-out
+
+      if (lockup.files_found()) {
+        if (endlock.files_found()) {
+          PlayMonophonic(&endlock, &hum); // plecter endlock
+        } else {
+          if (config_.clashLockOff) { // ultra
+            PlayMonophonic(&clash, &hum); // clash fallback
+          } else {
+            PlayMonophonic(&hum, &hum); // opt out
+          }
+        }
+      }
     }
-  }
 
   void SetHumVolume(float vol) override {
     if (!monophonic_hum_) {
