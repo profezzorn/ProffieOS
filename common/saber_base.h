@@ -50,7 +50,7 @@ public:
 #if NUM_BUTTONS == 0
     return true;
 #else
-    return IsOn() || (millis() - last_motion_request_) < 10000;
+    return IsOn() || (millis() - last_motion_request_) < 20000;
 #endif
   }
   static void RequestMotion() {
@@ -94,6 +94,7 @@ public:                                                         \
   SABERFUN(EndLockup, (), ());                  \
                                                 \
   SABERFUN(Top, (), ());                        \
+  SABERFUN(Relax, (), ());                      \
   SABERFUN(IsOn, (bool* on), (on));             \
   SABERFUN(Message, (const char* msg), (msg));
 

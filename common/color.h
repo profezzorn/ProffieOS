@@ -39,35 +39,35 @@ class Color8 {
     RBG=0x132,
     RGB=0x123,
 
-    // RGBA colors
-    BGRA=0x3214,
-    BRGA=0x3124,
-    GBRA=0x2314,
-    GRBA=0x2134,
-    RBGA=0x1324,
-    RGBA=0x1234,
+    // RGBW colors
+    BGRW=0x3214,
+    BRGW=0x3124,
+    GBRW=0x2314,
+    GRBW=0x2134,
+    RBGW=0x1324,
+    RGBW=0x1234,
 
-    ABGR=0x4321,
-    ABRG=0x4312,
-    AGBR=0x4231,
-    AGRB=0x4213,
-    ARBG=0x4132,
-    ARGB=0x4123,
+    WBGR=0x4321,
+    WBRG=0x4312,
+    WGBR=0x4231,
+    WGRB=0x4213,
+    WRBG=0x4132,
+    WRGB=0x4123,
 
-    // Energy-efficient RGBA colors (white *replaces RGB, not in addition to RGB)
-    BGRa=0x7654,
-    BRGa=0x7564,
-    GBRa=0x6754,
-    GRBa=0x6574,
-    RBGa=0x5764,
-    RGBa=0x5674,
+    // Energy-efficient RGBW colors (white *replaces RGB, not in addition to RGB)
+    BGRw=0x7654,
+    BRGw=0x7564,
+    GBRw=0x6754,
+    GRBw=0x6574,
+    RBGw=0x5764,
+    RGBw=0x5674,
 
-    aBGR=0x4765,
-    aBRG=0x4756,
-    aGBR=0x4675,
-    aGRB=0x4657,
-    aRBG=0x4576,
-    aRGB=0x4567,
+    wBGR=0x4765,
+    wBRG=0x4756,
+    wGBR=0x4675,
+    wGRB=0x4657,
+    wRBG=0x4576,
+    wRGB=0x4567,
   };
 
   static int num_bytes(int byteorder) {
@@ -75,7 +75,7 @@ class Color8 {
   }
 
   uint8_t getByte(int byteorder, int byte) {
-    switch (byteorder >> (byte * 4) & 0x3) {
+    switch (byteorder >> (byte * 4) & 0x7) {
       default: return r;
       case 2: return g;
       case 3: return b;
@@ -84,6 +84,10 @@ class Color8 {
       case 6: return g - std::min(r, std::min(g, b));
       case 7: return b - std::min(r, std::min(g, b));
     }
+  }
+
+  Color8 operator*(uint8_t v) const {
+    return Color8(r * v / 255, g * v / 255, b * v / 255);
   }
   
   uint8_t r, g, b;
@@ -99,7 +103,7 @@ static int8_t color16_dither_matrix[4][4] = {
 class Color16 {
   public:
   Color16() : r(0), g(0), b(0) {}
-  Color16(const Color8& c) : r(c.r << 8), g(c.g << 8), b(c.b << 8) {}
+  Color16(const Color8& c) : r(c.r * 0x101), g(c.g * 0x101), b(c.b * 0x101) {}
   Color16(uint16_t r_, uint16_t g_, uint16_t b_) : r(r_), g(g_), b(b_) {}
   // x = 0..256
   Color16 mix(const Color16& other, int x) const {

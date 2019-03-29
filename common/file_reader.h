@@ -301,8 +301,8 @@ public:
 	case '\\':
 	  switch (c = Read()) {
 	    case '\\': ret[len++] = '\\'; break;
-	    case '\n': ret[len++] = '\n'; break;
-	    case '\t': ret[len++] = '\t'; break;
+	    case 'n': ret[len++] = '\n'; break;
+	    case 't': ret[len++] = '\t'; break;
 	    default: ret[len++] = c; break;
 	  }
 	  break;

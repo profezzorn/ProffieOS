@@ -23,7 +23,7 @@
 
 class WS2811SerialEngine {
 public:
-  static uint32_t show(int pin, int numled, int frequency) {
+  static uint32_t show(int pin, int numbits, int frequency) {
     uint32_t divisor, portconfig, hwtrigger;
     KINETISK_UART_t *uart;
 
@@ -149,19 +149,19 @@ public:
 
     // start DMA transfer to update LEDs  :-)
 #if defined(KINETISK)
-    dma.sourceBuffer(displayMemory, numled * 12);
+    dma.sourceBuffer(displayMemory, numbits / 2);
     dma.transferSize(1);
-    dma.transferCount(numled * 12);
+    dma.transferCount(numbits / 2);
     dma.disableOnCompletion();
     dma.enable();
 #elif defined(KINETISL)
     dma.CFG->SAR = displayMemory;
     dma.CFG->DSR_BCR = 0x01000000;
-    dma.CFG->DSR_BCR = numled * 12;
+    dma.CFG->DSR_BCR = numbits / 2
     dma.CFG->DCR = DMA_DCR_ERQ | DMA_DCR_CS | DMA_DCR_SSIZE(1) |
       DMA_DCR_SINC | DMA_DCR_DSIZE(1) | DMA_DCR_D_REQ;
 #endif
-    return numled * 24.0 * 5000000/frequency  * divisor / target_divisor;
+    return numbits * 5000000.0 / frequency  * divisor / target_divisor;
   }
 
 
@@ -238,18 +238,22 @@ public:
     return micros() - start_micros_ > required_micros_ + 301;
   }
   void BeginFrame() {
+    while (Color8::num_bytes(byteorder_) * num_leds_ * 8 + 1 > (int)sizeof(displayMemory)) {
+      STDOUT.print("Display memory is not big enough, increase maxLedsPerStrip!");
+      num_leds_ /= 2;
+    }
     while (!IsReadyForBeginFrame()) yield();
     frame_num_++;
   }
   void EndFrame() {
     while (!IsReadyForEndFrame()) yield();
-    required_micros_ = WS2811SerialEngine::show(pin_, num_leds_, frequency_);
+    required_micros_ = WS2811SerialEngine::show(pin_, num_leds_ * Color8::num_bytes(byteorder_) * 8, frequency_);
     start_micros_ = micros();
   }
 
   void Set(int led, Color8 color) {
-    uint32_t *output = ((uint32_t *)displayMemory) + led * 3;
-    for (int i = 2; i >= 0; i--) {
+    uint32_t *output = ((uint32_t *)displayMemory) + led * Color8::num_bytes(byteorder_);
+    for (int i = Color8::num_bytes(byteorder_) - 1; i >= 0; i--) {
       *(output++) = serial_lookup_table[color.getByte(byteorder_, i)];
     }
   }

@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "config/default_proffieboard_config.h"
+#define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,7 +29,8 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -199,6 +200,9 @@ void PrintQuotedValue(const char *name, const char* str) {
       switch (*str) {
         case '\n':
           STDOUT.print("\\n");
+          break;
+        case '\t':
+          STDOUT.print("\\t");
           break;
         case '\\':
           STDOUT.write('\\');
@@ -921,7 +925,6 @@ public:
       }
     }
 
-
 #define SET_BLADE_STYLE(N) \
     current_config->blade##N->SetStyle(style_parser.Parse(current_preset_.current_style##N.get()));
     ONCEPERBLADE(SET_BLADE_STYLE)
@@ -958,6 +961,9 @@ public:
     delay(100);
 
     int blade_id = analogRead(bladeIdentifyPin);
+#ifdef ENABLE_POWER_FOR_ID
+    power_pins_to_toggle.Power(false);
+#endif
     float volts = blade_id * 3.3f / 1024.0f;  // Volts at bladeIdentifyPin
     float amps = (3.3f - volts) / 33000;     // Pull-up is 33k
     float resistor = volts / amps;
@@ -1607,13 +1613,13 @@ public:
     }
 
     if (!strcmp(cmd, "set_name") && arg) {
-      current_preset_.track = mkstr(arg);
+      current_preset_.name = mkstr(arg);
       current_preset_.Save();
       return true;
     }
 
 #define SET_STYLE_CMD(N)                             \
-    if (!strcmp(cmd, "set_name" #N) && arg) {        \
+    if (!strcmp(cmd, "set_style" #N) && arg) {        \
       current_preset_.current_style##N = mkstr(arg); \
       current_preset_.Save();                        \
       return true;                                   \
@@ -1644,7 +1650,7 @@ public:
     }
 
     if (!strcmp(cmd, "get_preset")) {
-      STDOUT.println(current_preset_.preset_num + 1);
+      STDOUT.println(current_preset_.preset_num);
       return true;
     }
     if (!strcmp(cmd, "get_volume")) {
@@ -1716,6 +1722,36 @@ public:
         } else {
           if (endswith(".wav", iter.name()) && iter.size() > 200000) {
             STDOUT.println(iter.name());
+          }
+        }
+      }
+      LOCK_SD(false);
+      return true;
+    }
+
+    if (!strcmp(cmd, "list_fonts")) {
+      LOCK_SD(true);
+      for (LSFS::Iterator iter("/"); iter; ++iter) {
+        if (iter.isdir()) {
+          char fname[128];
+          strcpy(fname, iter.name());
+          strcat(fname, "/");
+          char* fend = fname + strlen(fname);
+          bool isfont = false;
+          if (!isfont) {
+            strcpy(fend, "hum.wav");
+            isfont = LSFS::Exists(fname);
+          }
+          if (!isfont) {
+            strcpy(fend, "hum01.wav");
+            isfont = LSFS::Exists(fname);
+          }
+          if (!isfont) {
+            strcpy(fend, "hum");
+            isfont = LSFS::Exists(fname);
+          }
+          if (isfont) {
+	    STDOUT.println(iter.name());
           }
         }
       }
@@ -2222,6 +2258,24 @@ class Commands : public CommandParser {
       return true;
     }
     
+    if (!strcmp(cmd, "cat") && e) {
+      LOCK_SD(true);
+      File f = LSFS::Open(e);
+      while (f.available()) {
+        STDOUT.write(f.read());
+      }
+      f.close();
+      LOCK_SD(false);
+      return true;
+    }
+    
+    if (!strcmp(cmd, "del") && e) {
+      LOCK_SD(true);
+      LSFS::Remove(e);
+      LOCK_SD(false);
+      return true;
+    }
+    
     if (!strcmp(cmd, "readalot")) {
       uint8_t tmp[10];
       LOCK_SD(true);
@@ -2405,6 +2459,10 @@ class Commands : public CommandParser {
       STDOUT.println(mallinfo().uordblks);
       STDOUT.print("Free: ");
       STDOUT.println(mallinfo().fordblks);
+      return true;
+    }
+    if (!strcmp(cmd, "make_default_console")) {
+      default_output = stdout_output;
       return true;
     }
 #if 0
@@ -2689,6 +2747,19 @@ public:
   static const char* response_footer() { return "-+=END_OUTPUT=+-\n"; }
 };
 
+#ifdef USB_CLASS_WEBUSB
+class WebUSBSerialAdapter {
+public:
+  static void begin() { WebUSBSerial.begin(115200); }
+  // static bool Connected() { return !!WebUSBSerial; }
+  static bool Connected() { return true; }
+  static bool AlwaysConnected() { return true; }
+  static Stream& stream() { return WebUSBSerial; }
+  static const char* response_header() { return "-+=BEGIN_OUTPUT=+-\n"; }
+  static const char* response_footer() { return "-+=END_OUTPUT=+-\n"; }
+};
+#endif
+
 // Command-line parser. Easiest way to use it is to start the arduino
 // serial monitor.
 template<class SA> /* SA = Serial Adapter */
@@ -2814,7 +2885,14 @@ Parser<SerialAdapter> parser;
 
 #ifdef ENABLE_SERIAL
 Parser<Serial3Adapter> serial_parser;
+#define ENABLE_SERIAL_COMMANDS
+#endif
 
+#ifdef USB_CLASS_WEBUSB
+Parser<WebUSBSerialAdapter> webusb_parser;
+#endif
+
+#ifdef ENABLE_SERIAL_COMMANDS
 class SerialCommands : public CommandParser {
  public:
   void HM1XCmd(const char* cmd) {
@@ -2863,10 +2941,6 @@ class SerialCommands : public CommandParser {
       STDOUT.println(e);
       return true;
     }
-    if (!strcmp(cmd, "make_default_console")) {
-      default_output = stdout_output;
-      return true;
-    }
 #ifdef BLE_PASSWORD
     if (!strcmp(cmd, "get_ble_config")) {
       PrintQuotedValue("password", BLE_PASSWORD);
@@ -2900,6 +2974,7 @@ class SerialCommands : public CommandParser {
 SerialCommands serial_commands;
 
 #endif
+
 
 #if defined(ENABLE_MOTION) || defined(ENABLE_SSD1306)
 #include "common/i2cdevice.h"

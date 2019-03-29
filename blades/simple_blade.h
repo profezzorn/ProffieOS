@@ -180,7 +180,8 @@ protected:
     // Make sure the booster is running so we don't get low voltage
     // and under-drive any FETs.
     EnableBooster();
-    current_style_->run(this);
+    if (current_style_)
+      current_style_->run(this);
   }
 
 private:

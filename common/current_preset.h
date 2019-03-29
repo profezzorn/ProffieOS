@@ -17,9 +17,9 @@ public:
 
   const char *mk_builtin_str(int num, int N) {
     char tmp[30];
-    strcpy(tmp, "$");
+    strcpy(tmp, "builtin ");
     itoa(num, tmp + strlen(tmp), 10);
-    strcat(tmp, ",");
+    strcat(tmp, " ");
     itoa(N, tmp + strlen(tmp), 10);
     char *ret = (char *)malloc(strlen(tmp)+1);
     if (!ret) return "";
@@ -155,10 +155,20 @@ public:
   bool UpdateINI() {
     FileReader f, f2;
     if (OpenPresets(&f2, "presets.tmp")) {
+      uint8_t buf[512];
       // Found valid tmp file
       LSFS::Remove("presets.ini");
       f.Create("presets.ini");
-      while (f2.Available()) f.Write(f2.Read());
+      while (f2.Available()) {
+	int to_copy = std::min<int>(f2.Available(), sizeof(buf));
+	if (f2.Read(buf, to_copy) != to_copy ||
+	    f.Write(buf, to_copy) != to_copy) {
+	  f2.Close();
+	  f.Close();
+	  LSFS::Remove("presets.ini");
+	  return false;
+	}
+      }
       f2.Close();
       f.Close();
       return true;
