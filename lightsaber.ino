@@ -452,6 +452,8 @@ EFFECT(lockup);
 EFFECT(poweronf);
 EFFECT(font);   // also polyphonic
 
+EFFECT(endlock);	// endlock added
+
 // Polyphonic fonts
 EFFECT(blst);
 EFFECT(clsh);
@@ -467,6 +469,9 @@ EFFECT(swingh);  // Looped swing, HIGH
 
 // Drag effect, replaces "lock/lockup" in drag mode if present.
 EFFECT(drag);
+
+EFFECT(lockon);		// when dynalock or dynadrag starts (polyphonic "start lock")
+EFFECT(lockoff);	// when dynalock or dynadrag ends (polyphonic "end lock")
 
 #ifdef ENABLE_AUDIO
 
