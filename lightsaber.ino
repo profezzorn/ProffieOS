@@ -461,6 +461,7 @@ EFFECT(out);
 EFFECT(lock);
 EFFECT(swng);
 EFFECT(slsh);
+EFFECT(endlck); // polyphonic endlock
 
 // Looped swing fonts. (SmoothSwing V1/V2)
 EFFECT(swingl);  // Looped swing, LOW
