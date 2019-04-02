@@ -193,6 +193,10 @@ public:
   void SB_EndLockup() override {
     if (lock_player_) {
       // Polyphonic case
+      if (endlck.files_found()) { // polyphonic end lock
+        lock_player_->set_fade_time(0.003);
+        lock_player_->Play(&endlck);
+      }
       lock_player_->set_fade_time(0.3);
       lock_player_->FadeAndStop();
       lock_player_.Free();
