@@ -173,7 +173,11 @@ public:
 	  drag.files_found()) {
 	PlayMonophonic(&drag, &drag);
       } else if (lockup.files_found()) {
-	PlayMonophonic(&lockup, &lockup);
+        if (bgnlock.files_found()) {
+          PlayMonophonic(&bgnlock, &lockup);
+        } else {
+	  PlayMonophonic(&lockup, &lockup);
+	}
       }
     } else {
       Effect* e = &lock;
@@ -182,7 +186,12 @@ public:
 	e = &drag;
       }
       if (!lock_player_) {
-	lock_player_ = PlayPolyphonic(e);
+        if (bgnlck.files_found()) {
+          lock_player_ = PlayPolyphonic(&bgnlck);
+        } else {
+	  lock_player_ = PlayPolyphonic(e);
+        }
+
 	if (lock_player_) {
 	  lock_player_->PlayLoop(e);
 	}
