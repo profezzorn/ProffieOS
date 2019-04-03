@@ -202,14 +202,15 @@ public:
   void SB_EndLockup() override {
     if (lock_player_) {
       // Polyphonic case
+      lock_player_->set_fade_time(0.3);
+
       if (endlck.files_found()) { // polyphonic end lock
-        // if playing an end lock fade the lockup faster
-        lock_player_->set_fade_time(0.003);
-        PlayPolyphonic(&endlck);
-      } else {
-        // if we don't have an outgoing transition fade slower
-        lock_player_->set_fade_time(0.3);
+        if (PlayPolyphonic(&endlck)) {
+          // if playing an end lock fade the lockup faster
+          lock_player_->set_fade_time(0.003);
+	}
       }
+
       lock_player_->FadeAndStop();
       lock_player_.Free();
       return;
