@@ -451,6 +451,7 @@ EFFECT(blaster);
 EFFECT(lockup);
 EFFECT(poweronf);
 EFFECT(font);   // also polyphonic
+EFFECT(bgnlock); // monophonic begin lock..?
 EFFECT(endlock); // Plecter endlock support
 
 // Polyphonic fonts
@@ -461,6 +462,7 @@ EFFECT(out);
 EFFECT(lock);
 EFFECT(swng);
 EFFECT(slsh);
+EFFECT(bgnlck); // polyphonic begin lock..?
 EFFECT(endlck); // polyphonic endlock
 
 // Looped swing fonts. (SmoothSwing V1/V2)
