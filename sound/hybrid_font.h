@@ -186,8 +186,8 @@ public:
 	e = &drag;
       }
       if (!lock_player_) {
-        if (bgnlck.files_found()) {
-          lock_player_ = PlayPolyphonic(&bgnlck);
+        if (bgnlock.files_found()) {
+          lock_player_ = PlayPolyphonic(&bgnlock);
         } else {
 	  lock_player_ = PlayPolyphonic(e);
         }
@@ -204,8 +204,8 @@ public:
       // Polyphonic case
       lock_player_->set_fade_time(0.3);
 
-      if (endlck.files_found()) { // polyphonic end lock
-        if (PlayPolyphonic(&endlck)) {
+      if (endlock.files_found()) { // polyphonic end lock
+        if (PlayPolyphonic(&endlock)) {
           // if playing an end lock fade the lockup faster
           lock_player_->set_fade_time(0.003);
 	}
