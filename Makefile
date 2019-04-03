@@ -58,10 +58,14 @@ test: style-test common-test test1 test2 test3 test4 test5 test6 test7 test8 tes
 	@echo Tests pass
 
 # Check that there are no uncommitted changes
-cvstest:
+up-to-date-test:
 	if [ -d CVS ]; then cvs diff >/dev/null 2>&1; fi
 	if [ -d .git ]; then git diff-index --quiet HEAD -- ; fi
 
-export: cvstest test
-	cd .. && zip -9 lightsaber/lightsaber-`sed <lightsaber/lightsaber.ino -n 's@.*lightsaber.ino,v \([^ ]*\) .*$$@\1@gp'`.zip `cd lightsaber && cvs status 2>/dev/null | sed -n 's@.*Repository.*/cvs/lightsaber/\(.*\),v@\1@gp' | grep -v 'lightsaber/doc' | grep -v '.cvsignore'`
+export: up-to-date-test test
+	if [ -d CVS ]; cd .. && zip -9 lightsaber/lightsaber-`sed <lightsaber/lightsaber.ino -n 's@.*lightsaber.ino,v \([^ ]*\) .*$$@\1@gp'`.zip `cd lightsaber && cvs status 2>/dev/null | sed -n 's@.*Repository.*/cvs/lightsaber/\(.*\),v@\1@gp' | grep -v 'lightsaber/doc' | grep -v '.cvsignore'`
+	if [ -d .git ]; then DIR=`pwd` ; VERSION=`git describe --tags --always --dirty --broken` ; echo "Exporting $$VERSION" ; rm -rvf /tmp/exporttmp || : ; mkdir -p /tmp/exporttmp/lightsaber && cp -r . /tmp/exporttmp/lightsaber/ && sed <lightsaber.ino "s@const char version.*@const char version[] = \"$$VERSION\";@g" >/tmp/exporttmp/lightsaber/lightsaber.ino && ( cd /tmp/exporttmp && zip -MM -9 $$DIR/lightsaber-$$VERSION.zip lightsaber `cd $$DIR && git ls-files | grep -v doc/ | sed 's@^@lightsaber/@'` ) && echo "Ok, finished exporting $$VERSION" ; fi
+
+export-dirty:
+	if [ -d CVS ]; cd .. && zip -9 lightsaber/lightsaber-`sed <lightsaber/lightsaber.ino -n 's@.*lightsaber.ino,v \([^ ]*\) .*$$@\1@gp'`.zip `cd lightsaber && cvs status 2>/dev/null | sed -n 's@.*Repository.*/cvs/lightsaber/\(.*\),v@\1@gp' | grep -v 'lightsaber/doc' | grep -v '.cvsignore'`
 	if [ -d .git ]; then DIR=`pwd` ; VERSION=`git describe --tags --always --dirty --broken` ; echo "Exporting $$VERSION" ; rm -rvf /tmp/exporttmp || : ; mkdir -p /tmp/exporttmp/lightsaber && cp -r . /tmp/exporttmp/lightsaber/ && sed <lightsaber.ino "s@const char version.*@const char version[] = \"$$VERSION\";@g" >/tmp/exporttmp/lightsaber/lightsaber.ino && ( cd /tmp/exporttmp && zip -MM -9 $$DIR/lightsaber-$$VERSION.zip lightsaber `cd $$DIR && git ls-files | grep -v doc/ | sed 's@^@lightsaber/@'` ) && echo "Ok, finished exporting $$VERSION" ; fi
