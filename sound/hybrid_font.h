@@ -200,7 +200,11 @@ public:
     }
     // Monophonic case
     if (lockup.files_found()) {
-      PlayMonophonic(&clash, &hum);
+      if (endlock.files_found()) { // Plecter font endlock support
+        PlayMonophonic(&endlock, &hum);
+      } else {
+        PlayMonophonic(&clash, &hum);
+      }
     }
   }
 
