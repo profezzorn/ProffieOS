@@ -42,6 +42,17 @@ class Effect {
     UNKNOWN,
   };
 
+  enum class FilePattern {
+    // No idea
+    UNKNOWN,
+    // NAMENNNN.WAV
+    FLAT,
+    // NAME/NAMENNNN.WAV
+    SUBDIRS,
+    // NAME/NNNN.WAV
+    NONREDUNDANT_SUBDIRS,
+  };
+
   static Extension IdentifyExtension(const char* filename) {
     if (endswith(".wav", filename)) return WAV;
     if (endswith(".raw", filename)) return RAW;
@@ -60,19 +71,24 @@ class Effect {
     max_file_ = -1;
     digits_ = 0;
     unnumbered_file_found_ = false;
-    subdirs_ = false;
+    file_pattern_ = FilePattern::UNKNOWN;
     ext_ = UNKNOWN;
     selected_ = -1;
   }
 
   void Scan(const char *filename) {
+    FilePattern type_if_found = FilePattern::FLAT;
     const char *rest = startswith(name_, filename);
     if (!rest) return;
     if (*rest == '/') {
-      subdirs_ = true;
       const char *tmp = startswith(name_, rest + 1);
-      if (!tmp) return;
-      rest = tmp;
+      if (tmp) {
+        type_if_found = FilePattern::SUBDIRS;
+        rest = tmp;
+      } else {
+        type_if_found = FilePattern::NONREDUNDANT_SUBDIRS;
+        rest++;
+      }
     }
 
     int n = -1;
@@ -91,6 +107,8 @@ class Effect {
 
     if (ext_ == UNKNOWN)
       ext_ = IdentifyExtension(filename);
+
+    file_pattern_ = type_if_found;
   }
 
   void Show() {
@@ -114,8 +132,15 @@ class Effect {
       if (unnumbered_file_found_) {
         STDOUT.print("one unnumbered file");
       }
-      if (subdirs_) {
-        STDOUT.print(" in subdirs");
+      switch (file_pattern_) {
+        case FilePattern::UNKNOWN:
+        case FilePattern::FLAT:
+          break;
+        case FilePattern::SUBDIRS:
+          STDOUT.print(" in subdirs");
+          break;
+        case FilePattern::NONREDUNDANT_SUBDIRS:
+          STDOUT.print(" in efficient subdirs");
       }
       STDOUT.println("");
     }
@@ -166,9 +191,16 @@ class Effect {
   void GetName(char *filename, int n) const {
     strcpy(filename, current_directory);
     strcat(filename, name_);
-    if (subdirs_) {
-      strcat(filename, "/");
-      strcat(filename, name_);
+    switch (file_pattern_) {
+      case FilePattern::UNKNOWN:
+      case FilePattern::FLAT:
+        break;
+      case FilePattern::SUBDIRS:
+        strcat(filename, "/");
+        strcat(filename, name_);
+        break;
+      case FilePattern::NONREDUNDANT_SUBDIRS:
+        strcat(filename, "/");
     }
     n += min_file_;
     // n can be max_file_ + 1, which means pick the file without digits.
@@ -191,7 +223,7 @@ class Effect {
       case USL: strcat(filename, ".usl"); break;
       default: break;
     }
-    
+
     default_output->print("Playing ");
     default_output->println(filename);
   }
@@ -282,7 +314,7 @@ class Effect {
       talkie.Say(talkie_font_directory_15, 15);
       talkie.Say(talkie_not_found_15, 15);
     }
-#endif   // ENABLE_AUDIO    
+#endif   // ENABLE_AUDIO
 #endif   // ENABLE_SD
     STDOUT.println(" done");
     LOCK_SD(false);
@@ -303,8 +335,7 @@ private:
   // If true. there is an un-numbered file as well.
   bool unnumbered_file_found_;
 
-  // Files are in subdirectories, like "lock/lockNN.wav"
-  bool subdirs_;
+  FilePattern file_pattern_ = FilePattern::UNKNOWN;
 
   // All files must start with this prefix.
   const char* name_;
