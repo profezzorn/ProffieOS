@@ -31,6 +31,9 @@ common-test:
 test1:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_proffieboard_config.h\\\" BOARD_TAG=Proffieboard-L433CC OBJDIR=test-proffieboard-default
 
+test1V:
+	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/proffieboard_v1_verification_config.h\\\" BOARD_TAG=Proffieboard-L433CC OBJDIR=test-proffieboard-v1-verification
+
 test2:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_v3_config.h\\\" BOARD_TAG=teensy36 OBJDIR=test-teensy36-default-v3
 
@@ -58,7 +61,8 @@ test9:
 testA:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_v3_config.h\\\" BOARD_TAG=teensy31 OBJDIR=test-teensy31-default-v3
 
-test: style-test common-test test1 test2 test3 test4 test5 test6 test7 test8 test9 testA
+
+test: style-test common-test test1 test2 test3 test4 test5 test6 test7 test8 test9 testA test1V
 	@echo Tests pass
 
 # Check that there are no uncommitted changes
