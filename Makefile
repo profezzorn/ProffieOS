@@ -1,14 +1,11 @@
-#TODO: autodetect
-#ARDUINO_DIR:=/home/hubbe/lib/arduino-1.8.3
-ARDUINO_DIR:=/Applications/Arduino.app/Contents/Java
-
+# Select one
 BOARD_TAG=Proffieboard-L433CC
 #BOARD_TAG=teensy31
 
+# This should only need to be set if arduino is installed in a nonstandard location.
+# ARDUINO_DIR:=/home/hubbe/lib/arduino-1.8.3
+
 ifeq ($(strip $(BOARD_TAG)),Proffieboard-L433CC)
-  #TODO: autodetect
-  #ALTERNATE_CORE_PATH=/home/hubbe/lib/arduino-STM32L4
-  ALTERNATE_CORE_PATH=/Users/hubbe/Library/Arduino15/packages/proffieboard/hardware/stm32l4/0.1.7
   USB_TYPE=USB_TYPE_CDC_MSC
   ARDUINO_LIBS=SPI Wire
   include Proffieboard.mk
