@@ -8,8 +8,8 @@
 // return value: COLOR
 //
 // F = 0 -> return A
-// F = 8192 -> return (A+B)/2
-// F = 16384 = return B
+// F = 16384 -> return (A+B)/2
+// F = 32768 -> return B
 template<class A, class B, class F>
 class Mix {
 public:
@@ -21,7 +21,7 @@ public:
   OverDriveColor getColor(int led) {
     OverDriveColor a = a_.getColor(led);
     OverDriveColor b = b_.getColor(led);
-    a.c = a.c.mix(b.c, f_.getInteger(led));
+    a.c = a.c.mix3(b.c, f_.getInteger(led));
     return a;
   }
 private:
