@@ -125,7 +125,7 @@ public:
     explicit Iterator(Iterator& other) {
       dir_ = other.dir_;
       other.dir_ = nullptr;
-      entry_ = entry_;
+      entry_ = other.entry_;
     }
     ~Iterator() {
       closedir(dir_);

@@ -11,8 +11,12 @@ bool IsHeap(const void* mem) {
 
 #elif defined(PROFFIE_TEST)
 bool IsHeap(const void* mem) {
+#ifdef __APPLE__
+  return false; // leak
+#else
   extern uint32_t end[];
   return (void*)mem >= (void*)&end;
+#endif
 }
 
 #else

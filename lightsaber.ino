@@ -41,7 +41,7 @@
 #include CONFIG_FILE
 #undef CONFIG_TOP
 
-#define ENABLE_DEBUG
+// #define ENABLE_DEBUG
 
 
 //
@@ -628,6 +628,8 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/int_arg.h"
 #include "functions/sin.h"
 #include "functions/scale.h"
+#include "functions/battery_level.h"
+#include "functions/trigger.h"
 
 // This macro has a problem with commas, please don't use it.
 #define EASYBLADE(COLOR, CLASH_COLOR) \
@@ -3164,71 +3166,6 @@ void setup() {
   }
 #endif // ENABLE_AUDIO && ENABLE_SD
 }
-
-#if 0
-extern "C" void startup_early_hook(void) {
-#ifdef ENABLE_WATCHDOG
-  // The next 2 lines sets the time-out value. This is the value that the watchdog timer compares itself to
-  WDOG_TOVALL = 1000;
-  WDOG_TOVALH = 0;
-  WDOG_STCTRLH = (WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN |
-                  WDOG_STCTRLH_STOPEN |
-                  WDOG_STCTRLH_WAITEN | WDOG_STCTRLH_STOPEN); // Enable WDG
-  WDOG_PRESC = 0; // prescaler
-#elif defined(KINETISK)
-        WDOG_STCTRLH = WDOG_STCTRLH_ALLOWUPDATE;
-#elif defined(KINETISL)
-        SIM_COPC = 0;  // disable the watchdog
-#endif
-        // enable clocks to always-used peripherals
-#if defined(__MK20DX128__)
-        SIM_SCGC5 = 0x00043F82;         // clocks active to all GPIO
-        SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
-#elif defined(__MK20DX256__)
-        SIM_SCGC3 = SIM_SCGC3_ADC1 | SIM_SCGC3_FTM2;
-        SIM_SCGC5 = 0x00043F82;         // clocks active to all GPIO
-        SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
-#elif defined(__MK64FX512__) || defined(__MK66FX1M0__)
-        SIM_SCGC3 = SIM_SCGC3_ADC1 | SIM_SCGC3_FTM2 | SIM_SCGC3_FTM3;
-        SIM_SCGC5 = 0x00043F82;         // clocks active to all GPIO
-        SIM_SCGC6 = SIM_SCGC6_RTC | SIM_SCGC6_FTM0 | SIM_SCGC6_FTM1 | SIM_SCGC6_ADC0 | SIM_SCGC6_FTFL;
-        //PORTC_PCR5 = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE;
-        //GPIOC_PDDR |= (1<<5);
-        //GPIOC_PSOR = (1<<5);
-        //while (1);
-#elif defined(__MKL26Z64__)
-        SIM_SCGC4 = SIM_SCGC4_USBOTG | 0xF0000030;
-        SIM_SCGC5 = 0x00003F82;         // clocks active to all GPIO
-        SIM_SCGC6 = SIM_SCGC6_ADC0 | SIM_SCGC6_TPM0 | SIM_SCGC6_TPM1 | SIM_SCGC6_TPM2 | SIM_SCGC6_FTFL;
-#endif
-#if defined(__MK64FX512__) || defined(__MK66FX1M0__)
-        SCB_CPACR = 0x00F00000;
-#endif
-#if defined(__MK66FX1M0__)
-        LMEM_PCCCR = 0x85000003;
-#endif
-}
-#endif
-
-#ifdef ENABLE_WATCHDOG
-class WatchDog : Looper {
-  const char* name() override { return "WatchDog"; }
-  void Loop() override {
-    if (watchdogTimer_ > 5) {
-      watchdogTimer_ = 0;
-      
-      noInterrupts();
-      WDOG_REFRESH = 0xA602;
-      WDOG_REFRESH = 0xB480;
-      interrupts();
-    }
-  };
-
-  elapsedMillis watchdogTimer_;
-};
-
-WatchDog dog;
-#endif
 
 #ifdef MTP_RX_ENDPOINT
 
