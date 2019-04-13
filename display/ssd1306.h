@@ -99,8 +99,8 @@ public:
   void Draw(const Glyph& glyph, int x, int y) {
     x += glyph.xoffset;
     y += glyph.yoffset;
-    int begin = max(0, -x);
-    int end = min(glyph.columns, WIDTH - x);
+    int begin = std::max<int>(0, -x);
+    int end = std::min<int>(glyph.columns, WIDTH - x);
     uint32_t *pos = frame_buffer_ + x;
     if (y > 0) {
       for (int i = begin; i < end; i++) pos[i] |= glyph.data[i] << y;

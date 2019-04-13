@@ -43,6 +43,15 @@ else
     $(call show_config_variable,ARDUINO_PACKAGE_DIR,[USER])
 endif
 
+ifndef ALTERNATE_CORE_PATH
+    ALTERNATE_CORE_PATH := $(firstword \
+        $(call dir_if_exists,$(ARDUINO_PACKAGE_DIR)/proffieboard/hardware/stm32l4/0.1.7/) \
+        $(call dir_if_exists,$(HOME)/lib/arduino-STM32L4) )
+    $(call show_config_variable,ALTERNATE_CORE_PATH,[AUTODETECTED],(from DEFAULT))
+else
+    $(call show_config_variable,ALTERNATE_CORE_PATH,[USER])
+endif
+
 ifndef ARDMK_VENDOR
     ARDMK_VENDOR := arduino
 endif
