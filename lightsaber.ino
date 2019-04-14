@@ -798,6 +798,7 @@ public:
   }
 
   void Off() {
+    if (!SaberBase::IsOn()) return;
     if (SaberBase::Lockup()) {
       SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
       SaberBase::DoEndLockup();
