@@ -76,10 +76,10 @@ class Effect {
     selected_ = -1;
   }
 
-  void Scan(const char *filename) {
+  bool Scan(const char *filename) {
     FilePattern type_if_found = FilePattern::FLAT;
     const char *rest = startswith(name_, filename);
-    if (!rest) return;
+    if (!rest) return false;
     if (*rest == '/') {
       const char *tmp = startswith(name_, rest + 1);
       if (tmp) {
@@ -97,7 +97,7 @@ class Effect {
     } else {
       char *end;
       n = strtol(rest, &end, 0);
-      if (n <= 0) return;
+      if (n <= 0) return false;
       max_file_ = max(max_file_, n);
       min_file_ = min(min_file_, n);
       if (*rest == '0') {
@@ -109,6 +109,7 @@ class Effect {
       ext_ = IdentifyExtension(filename);
 
     file_pattern_ = type_if_found;
+    return true;
   }
 
   void Show() {
@@ -228,9 +229,10 @@ class Effect {
     default_output->println(filename);
   }
 
-  static void ScanAll(const char* filename) {
+  // Returns true if file was identified.
+  static bool ScanAll(const char* filename) {
     if (Effect::IdentifyExtension(filename) == Effect::UNKNOWN) {
-      return;
+      return false;
     }
 
 #if 0
@@ -239,8 +241,11 @@ class Effect {
     STDOUT.println(filename);
 #endif
     for (Effect* e = all_effects; e; e = e->next_) {
-      e->Scan(filename);
+      if (e->Scan(filename)) {
+	return true;
+      }
     }
+    return false;
   }
 
   static void ScanDirectory(const char *directory) {
@@ -263,9 +268,8 @@ class Effect {
 #endif
 
 #ifdef ENABLE_SD
-
-#if 1
     if (LSFS::Exists(directory)) {
+      int total_identified = 0;
       for (LSFS::Iterator iter(directory); iter; ++iter) {
         if (iter.isdir()) {
           char fname[128];
@@ -274,40 +278,26 @@ class Effect {
           char* fend = fname + strlen(fname);
           for (LSFS::Iterator i2(iter); i2; ++i2) {
             strcpy(fend, i2.name());
-            ScanAll(fname);
+            if (ScanAll(fname)) total_identified++;
           }
         } else {
-          ScanAll(iter.name());
+          if (ScanAll(iter.name())) total_identified++;
         }
       }
-    }
-#else
-    if (SD.exists(directory)) {
-      File dir = SD.open(directory);
-      if (dir) {
-        while (File f = dir.openNextFile()) {
-          if (f.isDirectory()) {
-            char fname[128];
-            strcpy(fname, f.name());
-            strcat(fname, "/");
-            char* fend = fname + strlen(fname);
-            while (File f2 = f.openNextFile()) {
-              strcpy(fend, f2.name());
-              ScanAll(fname);
-              f2.close();
-            }
-          } else {
-            ScanAll(f.name());
-          }
-          f.close();
-        }
-        dir.close();
+
+      for (Effect* e = all_effects; e; e = e->next_)
+	total_identified -= e->files_found();
+
+      if (total_identified) {
+	STDOUT.println("");
+	STDOUT.println("WARNING: This font seems to be missing some files!!");
+	talkie.Say(talkie_error_in_15, 15);
+	talkie.Say(talkie_font_directory_15, 15);
       }
     }
-#endif
     
 #ifdef ENABLE_AUDIO
-    else if (strlen(directory) > 8) {
+    else if (strlen(directory) > 8) { // TODO: Check individual path segments
       talkie.Say(talkie_font_directory_15, 15);
       talkie.Say(talkie_too_long_15, 15);
     } else if (strlen(directory)) {
@@ -324,13 +314,13 @@ private:
   Effect* next_;
 
   // Minimum file number.
-  int min_file_;
+  int16_t min_file_;
 
   // Maximum file number.
-  int max_file_;
+  int16_t max_file_;
 
   // Leading zeroes are used to make it this many digits.
-  int digits_;
+  int8_t digits_;
 
   // If true. there is an un-numbered file as well.
   bool unnumbered_file_found_;
@@ -341,7 +331,7 @@ private:
   const char* name_;
 
   // If not -1, return this file.
-  int selected_;
+  int16_t selected_;
 
   // All files must end with this extension.
   Extension ext_;
