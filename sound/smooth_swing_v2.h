@@ -16,19 +16,12 @@ public:
             STDOUT.println("Warning, swingl and swingh should have the same number of files.");
         }
         swings_ = std::min<size_t>(swingl.files_found(), swingh.files_found());
-        if (swng.files_found() > 0)
-        {
-            aswings_ = size_t(swng.files_found());
-            STDOUT.println("Accent Swings Detected");
-            accent_swings_present = true;
-        }
     }
     
     void Deactivate() {
         SetDelegate(NULL);
         A.Free();
         B.Free();
-        D.Free();
     }
     
     void Swap() {
@@ -45,7 +38,6 @@ public:
         if (A.player && m - last_random_ < 1000) return;
         last_random_ = m;
         int swing = random(swings_);
-        
         float start = m / 1000.0;
         A.Stop();
         B.Stop();
@@ -117,7 +109,6 @@ public:
                 state_ = SwingState::ON;
                 
             case SwingState::ON:
-                
                 if (speed >=smooth_swing_config.AccentSwingThreshold && accent_swings_present)
                 {
                     if(!accent_played)
@@ -129,7 +120,6 @@ public:
                     }
                     accent_played=true;
                     last_accent_ = millis();
-                    
                 }
                 if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
                     float swing_strength =
@@ -191,7 +181,6 @@ public:
                 }
                 PickRandomSwing();
                 state_ = SwingState::OFF;
-                accent_played = false;
         }
         // Must always set hum volume, or fade-out doesn't work.
         delegate_->SetHumVolume(hum_volume);
@@ -244,7 +233,6 @@ private:
     Data A;
     Data B;
     BufferedWavPlayer D;
-    
     uint32_t last_random_ = 0;
     uint32_t last_accent_ = 0;
     bool accent_played=false;
@@ -258,3 +246,4 @@ private:
 };
 
 #endif
+
