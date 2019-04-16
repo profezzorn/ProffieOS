@@ -9,6 +9,7 @@ void LSanalogWriteSetup(uint32_t pin) {
   analogWriteResolution(16);
   analogWriteFrequency(pin, 1000);
 }
+void LSanalogWriteTeardown(uint32_t pin) {}
 void LSanalogWrite(uint32_t pin, int value) {
   analogWrite(pin, value);
 }
@@ -21,7 +22,9 @@ static stm32l4_timer_t stm32l4_pwm[PWM_INSTANCE_COUNT];
 void SetupTimer(uint32_t instance) {
   if (stm32l4_pwm[instance].state == TIMER_STATE_NONE) {
     stm32l4_timer_create(&stm32l4_pwm[instance], g_PWMInstances[instance], 15, 0);
-    
+  }
+
+  if (stm32l4_pwm[instance].state == TIMER_STATE_INIT) {
     // 813 Hz, 32768 steps
     uint32_t carrier = 26666666;
     uint32_t modulus = 32768;
@@ -66,7 +69,12 @@ void LSanalogWriteSetup(uint32_t pin) {
   stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, 0, TIMER_CONTROL_PWM);
   stm32l4_gpio_pin_configure(g_APinDescription[pin].pin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
 }
-// TODO: Shut down timer when we don't need it anymore.
+
+void LSanalogWriteTeardown(uint32_t pin) {
+  uint32_t instance = g_APinDescription[pin].pwm_instance;
+  stm32l4_timer_stop(&stm32l4_pwm[instance]);
+  stm32l4_timer_disable(&stm32l4_pwm[instance]);
+}
 
 void LSanalogWrite(uint32_t pin, int value) {
   TIM_TypeDef* TIM = stm32l4_pwm[g_APinDescription[pin].pwm_instance].TIM;
@@ -90,6 +98,7 @@ void LSanalogWrite(uint32_t pin, int value) {
 class PWMPinInterface {
 public:
   virtual void Activate() = 0;
+  virtual void Deactivate() = 0;
   virtual void set(const Color16& c) = 0;
   virtual void set_overdrive(const Color16& c) = 0;
 };

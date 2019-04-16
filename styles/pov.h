@@ -103,6 +103,7 @@ public:
       blade->clear();
       return;
     }
+#ifdef POV_RGB
     Color8 buffer[144];
     int col = fraction * NELEM(imageoffsets);
     rle_decode(imagedata + imageoffsets[col],
@@ -111,6 +112,16 @@ public:
     size_t num_leds = blade->num_leds();
     for (size_t i = 0; i < maxLedsPerStrip; i++)
       blade->set(i, buffer[i * 144 / num_leds]);
+#else
+    uint8_t buffer[144];
+    int col = fraction * NELEM(imageoffsets);
+    rle_decode(imagedata + imageoffsets[col],
+	       (unsigned char *)&buffer, 144);
+    // Rescale / transfer
+    size_t num_leds = blade->num_leds();
+    for (size_t i = 0; i < maxLedsPerStrip; i++)
+      blade->set(i, image_color * buffer[i * 144 / num_leds]);
+#endif
 
     blade->allow_disable();
   }

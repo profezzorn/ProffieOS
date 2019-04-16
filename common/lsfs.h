@@ -24,6 +24,9 @@ public:
   static bool Exists(const char* path) {
     return SD.exists(path);
   }
+  static bool Remove(const char* path) {
+    return SD.remove(path);
+  }
   static File Open(const char* path) {
     return SD.open(path);
   }
@@ -35,7 +38,7 @@ public:
     explicit Iterator(const char* dirname) {
       dir_ = SD.open(dirname);
       if (dir_.isDirectory()) {
-        f_ = dir_.openNextFile();
+	f_ = dir_.openNextFile();
       }
     }
     explicit Iterator(Iterator& other) {
@@ -111,6 +114,9 @@ public:
   static bool Exists(const char* path) {
     if (!mounted_) return false;
     return DOSFS.exists(path);
+  }
+  static bool Remove(const char* path) {
+    return DOSFS.remove(path);
   }
   static File Open(const char* path) {
     if (!mounted_) return File();

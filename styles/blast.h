@@ -59,7 +59,7 @@ public:
       }
     }
     OverDriveColor blast = blast_.getColor(led);
-    base.c = base.c.mix(blast.c, min(mix, 256));
+    base.c = base.c.mix(blast.c, std::min(mix, 256));
     return base;
   }
 private:
@@ -100,7 +100,7 @@ public:
       }
     }
     OverDriveColor blast = blast_.getColor(led);
-    base.c = base.c.mix(blast.c, min(mix, 256));
+    base.c = base.c.mix(blast.c, std::min(mix, 256));
     return base;
   }
 private:
@@ -142,11 +142,11 @@ public:
       if (x == 0.0) {
         mix += 2.0f / (t*t);
       } else {
-        mix += max(0.0, 2.0 * sinf(x / (t*t)) / x);
+        mix += std::max(0.0, 2.0 * sinf(x / (t*t)) / x);
       }
     }
     OverDriveColor blast = blast_.getColor(led);
-    base.c = base.c.mix(blast.c, min(mix, 1.0) * 256);
+    base.c = base.c.mix(blast.c, std::min(mix, 1.0) * 256);
     return base;
   }
 private:

@@ -67,7 +67,7 @@ public:
     volume_.set_speed(speed);
   }
   void set_fade_time(float t) {
-    set_speed(max(1, (int)(kMaxVolume / t / AUDIO_RATE)));
+    set_speed(std::max<int>(1, (int)(kMaxVolume / t / AUDIO_RATE)));
   }
   float fade_speed() const {
     return (kMaxVolume / (float)volume_.speed_) / AUDIO_RATE;

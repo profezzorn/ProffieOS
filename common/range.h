@@ -11,8 +11,8 @@ public:
     return end - start;
   }
   Range operator&(const Range& other) {
-    return Range(max(start, other.start),
-                 min(end, other.end));
+    return Range(std::max(start, other.start),
+                 std::min(end, other.end));
   }
 };
 

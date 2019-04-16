@@ -3,17 +3,25 @@
 
 #include "../common/arg_parser.h"
 
-template<int ARG>
+template<int ARG, class DEFAULT_COLOR>
 class RgbArg {
 public:
   RgbArg() {
-    const char* arg = ArgParser->GetArg(ARG, "COLOR");
+    char default_value[32];
+    DEFAULT_COLOR default_color; // Note, no run() call for default_color!
+    color_ = default_color.getColor(0).c;
+    itoa(color_.r, default_value, 10);
+    strcat(default_value, ",");
+    itoa(color_.g, default_value + strlen(default_value), 10);
+    strcat(default_value, ",");
+    itoa(color_.b, default_value + strlen(default_value), 10);
+    
+    const char* arg = CurrentArgParser->GetArg(ARG, "COLOR", default_value);
     if (arg) {
-      int r = strtol(arg, &arg, 0);
-      arg++;
-      int g = strtol(arg, &arg, 0);
-      arg++;
-      int b = strtol(arg, &arg, 0);
+      char* tmp;
+      int r = strtol(arg, &tmp, 0);
+      int g = strtol(tmp+1, &tmp, 0);
+      int b = strtol(tmp+1, NULL, 0);
       // TODO: color names?
       color_ = Color16(r, g, b);
     }

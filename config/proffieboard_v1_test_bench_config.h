@@ -26,9 +26,9 @@
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
-const unsigned int maxLedsPerStrip = 144;
+const unsigned int maxLedsPerStrip = 196;
 
-// This defines how sensetive the clash detection is.
+// This defines how sensitive the clash detection is.
 #define CLASH_THRESHOLD_G 1.0
 
 // Feature defines, these let you turn off large blocks of code
@@ -37,10 +37,10 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_MOTION
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
-// #define ENABLE_SERIAL
+#define ENABLE_SERIAL
 
 // Must be 20 characters or less.
-// #define BLE_PASSWORD "password"
+#define BLE_PASSWORD "password"
 
 // FASTLED is experimental and untested right now
 // #define ENABLE_FASTLED
@@ -118,6 +118,7 @@ BladeConfig blades[] = {
   // Testing configuration.
 //  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
   { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
+//  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
 };
 
 #endif

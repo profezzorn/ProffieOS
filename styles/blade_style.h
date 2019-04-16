@@ -26,6 +26,8 @@ public:
   // we disabllow the saber from turning on. Mostly used for charging
   // styles.
   virtual bool NoOnOff() { return false; }
+
+  virtual bool Charging() { return false; }
 };
 
 class StyleFactory {

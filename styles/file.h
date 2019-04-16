@@ -19,7 +19,6 @@ public:
   }
   
   void run(BladeBase* blade) {
-    uint32_t now = millis();
     num_leds_ = blade->num_leds();
     if (next_available_) {
       uint32_t frame = FrameNum();

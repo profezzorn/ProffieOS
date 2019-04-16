@@ -1,3 +1,4 @@
+
 # Proffie OS - SA22C BUTTON MOD
 
 The open source operating system. Proffie OS is supported on various platforms ranging from Teensy 3.2 development boards to its own dedicated ProffieBoard reference hardware.  This fork has minor changes to allow for more user-friendly button behaviour.
@@ -15,6 +16,7 @@ Volume menu:
 - long press aux to exit volume menu
 - Volume will increment in 10% steps, will never go above max volume specified in the config file or below 10% of max.
 
+
 Proffie OS supports:
 - :fire: SmoothSwing V1/V2 Algorithm
 - :fire: NEC styled lightsaber sound fonts (polyphonic)
@@ -29,3 +31,4 @@ Proffie OS supports:
 * Proffieboard: https://fredrik.hubbe.net/lightsaber/v4/
 * TeensySaber: http://fredrik.hubbe.net/lightsaber/v3/
 * Support forum: http://imperialroyalarms.com/board/97/profezzorns-lab
+

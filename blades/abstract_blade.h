@@ -25,7 +25,7 @@ public:
     effects_[0].type = type;
     effects_[0].start_micros = micros();
     effects_[0].location = location;
-    num_effects_ = min(num_effects_ + 1, NELEM(effects_));
+    num_effects_ = std::min(num_effects_ + 1, NELEM(effects_));
   }
 
   void SB_Clash() override {

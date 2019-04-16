@@ -33,10 +33,12 @@ private:
 // RETURN VALUE: FUNCTION
 // 0 when off, 32768 when on, takes OUT_MILLIS to go from 0 to 32768
 // takes IN_MILLIS to go from 32768 to 0.
-template<int OUT_MILLIS, int IN_MILLIS>
-class InOutFunc {
+template<class OUT_MILLIS, class IN_MILLIS>
+class InOutFuncX {
 public:
   void run(BladeBase* blade) {
+    out_millis_.run(blade);
+    in_millis_.run(blade);
     uint32_t now = micros();
     uint32_t delta = now - last_micros_;
     last_micros_ = now;
@@ -46,21 +48,26 @@ public:
          // be insanely high.
          extension = 0.00001;
       } else {
-         extension += delta / (OUT_MILLIS * 1000.0);
-         extension = min(extension, 1.0f);
+ 	extension += delta / (out_millis_.getInteger(0) * 1000.0);
+	extension = std::min(extension, 1.0f);
       }
     } else {
-      extension -= delta / (IN_MILLIS * 1000.0);
-      extension = max(extension, 0.0f);
+      extension -= delta / (in_millis_.getInteger(0) * 1000.0);
+      extension = std::max(extension, 0.0f);
     }
     ret_ = extension * 32768.0;
   }
   int getInteger(int led) { return ret_; }
 
 private:
+  OUT_MILLIS out_millis_;
+  IN_MILLIS in_millis_;
   float extension = 0.0;
   uint32_t last_micros_;
   int ret_;
 };
+
+template<int OUT_MILLIS, int IN_MILLIS>
+  using InOutFunc = InOutFuncX<Int<OUT_MILLIS>, Int<IN_MILLIS>>;
 
 #endif

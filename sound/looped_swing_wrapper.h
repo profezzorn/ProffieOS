@@ -73,8 +73,8 @@ public:
     float blend = c * gyro.z + s * gyro.y;
     blend = clamp(blend / 150.0, -1.0, 1.0);
     float vol = 0.99 + clamp(speed/200.0, 0.0, 2.3);
-    float low = max(0, blend);
-    float high = max(0, -blend);
+    float low = std::max<float>(0, blend);
+    float high = std::max<float>(0, -blend);
     float hum = 1.0 - abs(blend);
 
     delegate_->SetHumVolume(vol * hum);

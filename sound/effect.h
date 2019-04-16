@@ -42,6 +42,17 @@ class Effect {
     UNKNOWN,
   };
 
+  enum class FilePattern {
+    // No idea
+    UNKNOWN,
+    // NAMENNNN.WAV
+    FLAT,
+    // NAME/NAMENNNN.WAV
+    SUBDIRS,
+    // NAME/NNNN.WAV
+    NONREDUNDANT_SUBDIRS,
+  };
+
   static Extension IdentifyExtension(const char* filename) {
     if (endswith(".wav", filename)) return WAV;
     if (endswith(".raw", filename)) return RAW;
@@ -60,19 +71,24 @@ class Effect {
     max_file_ = -1;
     digits_ = 0;
     unnumbered_file_found_ = false;
-    subdirs_ = false;
+    file_pattern_ = FilePattern::UNKNOWN;
     ext_ = UNKNOWN;
     selected_ = -1;
   }
 
-  void Scan(const char *filename) {
+  bool Scan(const char *filename) {
+    FilePattern type_if_found = FilePattern::FLAT;
     const char *rest = startswith(name_, filename);
-    if (!rest) return;
+    if (!rest) return false;
     if (*rest == '/') {
-      subdirs_ = true;
       const char *tmp = startswith(name_, rest + 1);
-      if (!tmp) return;
-      rest = tmp;
+      if (tmp) {
+        type_if_found = FilePattern::SUBDIRS;
+        rest = tmp;
+      } else {
+        type_if_found = FilePattern::NONREDUNDANT_SUBDIRS;
+        rest++;
+      }
     }
 
     int n = -1;
@@ -81,7 +97,7 @@ class Effect {
     } else {
       char *end;
       n = strtol(rest, &end, 0);
-      if (n <= 0) return;
+      if (n <= 0) return false;
       max_file_ = max(max_file_, n);
       min_file_ = min(min_file_, n);
       if (*rest == '0') {
@@ -91,6 +107,9 @@ class Effect {
 
     if (ext_ == UNKNOWN)
       ext_ = IdentifyExtension(filename);
+
+    file_pattern_ = type_if_found;
+    return true;
   }
 
   void Show() {
@@ -114,8 +133,15 @@ class Effect {
       if (unnumbered_file_found_) {
         STDOUT.print("one unnumbered file");
       }
-      if (subdirs_) {
-        STDOUT.print(" in subdirs");
+      switch (file_pattern_) {
+        case FilePattern::UNKNOWN:
+        case FilePattern::FLAT:
+          break;
+        case FilePattern::SUBDIRS:
+          STDOUT.print(" in subdirs");
+          break;
+        case FilePattern::NONREDUNDANT_SUBDIRS:
+          STDOUT.print(" in efficient subdirs");
       }
       STDOUT.println("");
     }
@@ -166,9 +192,16 @@ class Effect {
   void GetName(char *filename, int n) const {
     strcpy(filename, current_directory);
     strcat(filename, name_);
-    if (subdirs_) {
-      strcat(filename, "/");
-      strcat(filename, name_);
+    switch (file_pattern_) {
+      case FilePattern::UNKNOWN:
+      case FilePattern::FLAT:
+        break;
+      case FilePattern::SUBDIRS:
+        strcat(filename, "/");
+        strcat(filename, name_);
+        break;
+      case FilePattern::NONREDUNDANT_SUBDIRS:
+        strcat(filename, "/");
     }
     n += min_file_;
     // n can be max_file_ + 1, which means pick the file without digits.
@@ -191,14 +224,15 @@ class Effect {
       case USL: strcat(filename, ".usl"); break;
       default: break;
     }
-    
+
     default_output->print("Playing ");
     default_output->println(filename);
   }
 
-  static void ScanAll(const char* filename) {
+  // Returns true if file was identified.
+  static bool ScanAll(const char* filename) {
     if (Effect::IdentifyExtension(filename) == Effect::UNKNOWN) {
-      return;
+      return false;
     }
 
 #if 0
@@ -207,8 +241,11 @@ class Effect {
     STDOUT.println(filename);
 #endif
     for (Effect* e = all_effects; e; e = e->next_) {
-      e->Scan(filename);
+      if (e->Scan(filename)) {
+	return true;
+      }
     }
+    return false;
   }
 
   static void ScanDirectory(const char *directory) {
@@ -231,9 +268,8 @@ class Effect {
 #endif
 
 #ifdef ENABLE_SD
-
-#if 1
     if (LSFS::Exists(directory)) {
+      int total_identified = 0;
       for (LSFS::Iterator iter(directory); iter; ++iter) {
         if (iter.isdir()) {
           char fname[128];
@@ -242,47 +278,33 @@ class Effect {
           char* fend = fname + strlen(fname);
           for (LSFS::Iterator i2(iter); i2; ++i2) {
             strcpy(fend, i2.name());
-            ScanAll(fname);
+            if (ScanAll(fname)) total_identified++;
           }
         } else {
-          ScanAll(iter.name());
+          if (ScanAll(iter.name())) total_identified++;
         }
       }
-    }
-#else
-    if (SD.exists(directory)) {
-      File dir = SD.open(directory);
-      if (dir) {
-        while (File f = dir.openNextFile()) {
-          if (f.isDirectory()) {
-            char fname[128];
-            strcpy(fname, f.name());
-            strcat(fname, "/");
-            char* fend = fname + strlen(fname);
-            while (File f2 = f.openNextFile()) {
-              strcpy(fend, f2.name());
-              ScanAll(fname);
-              f2.close();
-            }
-          } else {
-            ScanAll(f.name());
-          }
-          f.close();
-        }
-        dir.close();
+
+      for (Effect* e = all_effects; e; e = e->next_)
+	total_identified -= e->files_found();
+
+      if (total_identified) {
+	STDOUT.println("");
+	STDOUT.println("WARNING: This font seems to be missing some files!!");
+	talkie.Say(talkie_error_in_15, 15);
+	talkie.Say(talkie_font_directory_15, 15);
       }
     }
-#endif
     
 #ifdef ENABLE_AUDIO
-    else if (strlen(directory) > 8) {
+    else if (strlen(directory) > 8) { // TODO: Check individual path segments
       talkie.Say(talkie_font_directory_15, 15);
       talkie.Say(talkie_too_long_15, 15);
     } else if (strlen(directory)) {
       talkie.Say(talkie_font_directory_15, 15);
       talkie.Say(talkie_not_found_15, 15);
     }
-#endif   // ENABLE_AUDIO    
+#endif   // ENABLE_AUDIO
 #endif   // ENABLE_SD
     STDOUT.println(" done");
     LOCK_SD(false);
@@ -292,25 +314,24 @@ private:
   Effect* next_;
 
   // Minimum file number.
-  int min_file_;
+  int16_t min_file_;
 
   // Maximum file number.
-  int max_file_;
+  int16_t max_file_;
 
   // Leading zeroes are used to make it this many digits.
-  int digits_;
+  int8_t digits_;
 
   // If true. there is an un-numbered file as well.
   bool unnumbered_file_found_;
 
-  // Files are in subdirectories, like "lock/lockNN.wav"
-  bool subdirs_;
+  FilePattern file_pattern_ = FilePattern::UNKNOWN;
 
   // All files must start with this prefix.
   const char* name_;
 
   // If not -1, return this file.
-  int selected_;
+  int16_t selected_;
 
   // All files must end with this extension.
   Extension ext_;
