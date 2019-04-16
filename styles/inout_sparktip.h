@@ -11,7 +11,6 @@
 template<class T, class EXTENSION, class SPARK_COLOR = Rgb<255,255,255>, class OFF_COLOR=Rgb<0,0,0>, bool ALLOW_DISABLE=1>
 class InOutSparkTipX {
 public:
-
   bool run(BladeBase* blade) __attribute__((warn_unused_result)) {
     base_.run(blade);
     extension_.run(blade);
