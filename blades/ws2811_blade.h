@@ -23,7 +23,6 @@ BladeBase* current_blade = NULL;
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
-
 template<class WS2811PIN>
 class WS2811_Blade : public AbstractBlade, CommandParser, Looper {
 public:
@@ -81,9 +80,7 @@ public:
     return on_;
   }
   void set(int led, Color16 c) override {
-
     color_buffer[led] = c;
-
   }
   void allow_disable() override {
     if (!on_) allow_disable_ = true;
@@ -92,7 +89,6 @@ public:
     AbstractBlade::SetStyle(style);
     Power(true);
   }
-
   // SaberBase implementation.
   void SB_IsOn(bool* on) override {
     if (on_) *on = true;
@@ -132,7 +128,6 @@ public:
 
 protected:
   void Loop() override {
-
     STATE_MACHINE_BEGIN();
     while (true) {
       while (!powered_ || !current_style_) {
@@ -158,7 +153,6 @@ protected:
       loop_counter_.Update();
       current_blade = NULL;
       YIELD();
-
     }
     STATE_MACHINE_END();
   }

@@ -70,6 +70,7 @@ public:
 			 0 /* TIMER_OPTION_COUNT_PRELOAD */, NULL, NULL, 0);
     stm32l4_timer_stop(timer());
     timer()->TIM->CNT = 0;
+
     armv7m_atomic_modify(&timer()->TIM->DIER, TIM_DIER_UDE, 0);
 
     stm32l4_dma_start(&dma_, (uint32_t)cmp_address,
