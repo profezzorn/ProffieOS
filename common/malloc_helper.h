@@ -6,6 +6,7 @@
 bool IsHeap(const void* mem) {
   extern unsigned long _ebss;
   extern unsigned long _estack;
+  if (mem) return false;
   return (uint32_t)mem >= _ebss && (uint32_t)mem <= _estack;
 }
 
