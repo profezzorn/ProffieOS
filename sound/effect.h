@@ -96,7 +96,7 @@ class Effect {
       unnumbered_file_found_ = true;
     } else {
       char *end;
-      n = strtol(rest, &end, 0);
+      n = strtol(rest, &end, 10);
       if (n <= 0) return false;
       max_file_ = max(max_file_, n);
       min_file_ = min(min_file_, n);
@@ -109,6 +109,7 @@ class Effect {
       ext_ = IdentifyExtension(filename);
 
     file_pattern_ = type_if_found;
+    num_files_++;
     return true;
   }
 
@@ -142,6 +143,9 @@ class Effect {
           break;
         case FilePattern::NONREDUNDANT_SUBDIRS:
           STDOUT.print(" in efficient subdirs");
+      }
+      if (files_found() != num_files_) {
+	STDOUT.print(" SOME FILES ARE MISSING!");
       }
       STDOUT.println("");
     }
@@ -318,6 +322,9 @@ private:
 
   // Maximum file number.
   int16_t max_file_;
+
+  // Number of files identified.
+  int16_t num_files_;
 
   // Leading zeroes are used to make it this many digits.
   int8_t digits_;
