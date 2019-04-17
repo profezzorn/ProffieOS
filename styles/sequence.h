@@ -24,7 +24,7 @@ public:
 
     uint32_t now = millis();
     uint32_t bit = (now / millis_per_bit) % std::min<size_t>(bits, sizeof...(sequence) * 16);
-    bool on_ = !!((sequence_[bit >> 4] >> ((~bit) & 0xf)) & 1);
+    on_ = !!((sequence_[bit >> 4] >> ((~bit) & 0xf)) & 1);
   }
   OverDriveColor getColor(int led) {
     return on_ ? c1_.getColor(led) : c2_.getColor(led);
