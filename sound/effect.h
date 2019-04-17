@@ -144,7 +144,7 @@ class Effect {
         case FilePattern::NONREDUNDANT_SUBDIRS:
           STDOUT.print(" in efficient subdirs");
       }
-      if (files_found() != num_files_) {
+      if (files_found() != (size_t)num_files_) {
 	STDOUT.print(" SOME FILES ARE MISSING!");
       }
       STDOUT.println("");
