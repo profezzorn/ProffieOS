@@ -1329,7 +1329,11 @@ public:
         break;
 
 
+#if NUM_BUTTONS == 1
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
+#else
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
+#endif
 #ifdef DUAL_POWER_BUTTONS
         aux_on_ = true;
         On();
@@ -1346,21 +1350,38 @@ public:
 	}
 	break;
 	
+#if NUM_BUTTONS == 1
+      case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
+#else
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
+#endif
       case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_OFF, MODE_ON):
 #if NUM_BUTTONS == 0
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
 #endif
+    if (!SaberBase::Lockup()) {
         Off();
+    }
+     else {
+          handled = false;
+        }
         break;
 
+#if NUM_BUTTONS == 1
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
+#else
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
+#endif
         SaberBase::DoForce();
         break;
 
+#if NUM_BUTTONS == 1
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
+#else
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
+#endif      
         // Avoid the base and the very tip.
 	// TODO: Make blast only appear on one blade!
         SaberBase::DoBlast();
@@ -1382,7 +1403,11 @@ public:
         break;
 
         // Off functions
+#if NUM_BUTTONS == 1
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
+#else
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
+#endif
         StartOrStopTrack();
         break;
 
@@ -1390,6 +1415,7 @@ public:
         SaberBase::RequestMotion();
         break;
 
+#if NUM_BUTTONS != 1
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
         next_preset();
         break;
@@ -1397,6 +1423,7 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
         previous_preset();
         break;
+#endif
 
       case EVENTID(BUTTON_AUX2, EVENT_CLICK_SHORT, MODE_OFF):
 #ifdef DUAL_POWER_BUTTONS
