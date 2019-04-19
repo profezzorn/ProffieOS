@@ -388,7 +388,7 @@ public:
   }
   void EndFrame() {
     while (!IsReadyForEndFrame());
-    MonopodWS2811::show(pin_, ones_ * Color8::num_bytes(byteorder_) * 8, num_leds_, frequency_);
+    MonopodWS2811::show(pin_, ones_, num_leds_ * Color8::num_bytes(byteorder_) * 8, frequency_);
     start_micros_ = micros();
   }
 
