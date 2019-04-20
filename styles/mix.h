@@ -3,14 +3,14 @@
 
 // Usage: Mix<A, B, F>
 // Mix between A and B using function F
-// A, B: COLOR
 // F: INTEGER
+// A, B: COLOR
 // return value: COLOR
 //
 // F = 0 -> return A
 // F = 16384 -> return (A+B)/2
 // F = 32768 -> return B
-template<class A, class B, class F>
+template<class F, class A, class B>
 class Mix {
 public:
   void run(BladeBase* blade) {
