@@ -176,7 +176,7 @@ public:
         if (bgnlock.files_found()) {
           PlayMonophonic(&bgnlock, &lockup);
         } else {
-	  PlayMonophonic(&lockup, &lockup);
+          PlayMonophonic(&lockup, &lockup);
 	}
       }
     } else {
@@ -189,7 +189,7 @@ public:
         if (bgnlock.files_found()) {
           lock_player_ = PlayPolyphonic(&bgnlock);
         } else {
-	  lock_player_ = PlayPolyphonic(e);
+          lock_player_ = PlayPolyphonic(e);
         }
 
 	if (lock_player_) {
