@@ -451,7 +451,8 @@ EFFECT(blaster);
 EFFECT(lockup);
 EFFECT(poweronf);
 EFFECT(font);   // also polyphonic
-EFFECT(endlock); // Plecter endlock support
+EFFECT(bgnlock); // monophonic and polyphonic begin lock
+EFFECT(endlock); // Plecter endlock support, used for polyphonic name too
 
 // Polyphonic fonts
 EFFECT(blst);
