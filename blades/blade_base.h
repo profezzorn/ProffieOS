@@ -3,14 +3,20 @@
 
 #include "../styles/blade_style.h"
 
-  // Bitfield
+// Bitfield
 enum BladeEffectType {
-  EFFECT_NONE =  0,
-  EFFECT_CLASH = 1,
-  EFFECT_BLAST = 2,
-  EFFECT_FORCE = 4,
-  EFFECT_STAB =  8,
-  // TODO: Other things that could go here: boot/on/off/lockup/drag
+  EFFECT_NONE =  0x0,
+  EFFECT_CLASH = 1 << 0,
+  EFFECT_BLAST = 1 << 1,
+  EFFECT_FORCE = 1 << 2,
+  EFFECT_STAB =  1 << 3,
+  EFFECT_BOOT =  1 << 4,
+  EFFECT_LOCKUP_BEGIN = 1 << 5,
+  EFFECT_LOCKUP_END = 1 << 6,
+  EFFECT_DRAG_BEGIN = 1 << 7,
+  EFFECT_DRAG_END = 1 << 8,
+  EFFECT_IGNITION = 1 << 9,
+  EFFECT_RETRACTION = 1 << 10,
 };
 
 struct BladeEffect {

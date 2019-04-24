@@ -7,8 +7,9 @@ public:
   AbstractBlade() : SaberBase(NOLINK) {}
   void Activate() override {
     SaberBase::Link(this);
+    addEffect(EFFECT_BOOT, (200 + random(700)) / 1000.0f);
   }
-  
+
   size_t GetEffects(BladeEffect** blade_effects) override {
     *blade_effects = effects_;
     while (num_effects_ &&
@@ -17,7 +18,7 @@ public:
     }
     return num_effects_;
   }
-  
+
   void addEffect(BladeEffectType type, float location) {
     for (size_t i = NELEM(effects_) - 1; i; i--) {
       effects_[i] = effects_[i-1];
@@ -40,10 +41,37 @@ public:
   void SB_Force() override {
     addEffect(EFFECT_FORCE, 1.0f);
   }
-  
+
+  void SB_On() override {
+    addEffect(EFFECT_IGNITION, 0);
+  }
+
+  void SB_Off() override {
+    addEffect(EFFECT_RETRACTION, 0);
+  }
+
+  void SB_BeginLockup() override {
+    if (SaberBase::Lockup() == LOCKUP_NORMAL) {
+      addEffect(EFFECT_LOCKUP_BEGIN, (200 + random(700)) / 1000.0f);
+    }
+    if (SaberBase::Lockup() == LOCKUP_DRAG) {
+      addEffect(EFFECT_DRAG_BEGIN, (200 + random(700)) / 1000.0f);
+    }
+  }
+
+  void SB_EndLockup() override {
+    // TODO: use same location as begin
+    if (SaberBase::Lockup() == LOCKUP_NORMAL) {
+      addEffect(EFFECT_LOCKUP_END, (200 + random(700)) / 1000.0f);
+    }
+    if (SaberBase::Lockup() == LOCKUP_DRAG) {
+      addEffect(EFFECT_DRAG_END, (200 + random(700)) / 1000.0f);
+    }
+  }
+
 private:
   size_t num_effects_ = 0;
-  BladeEffect effects_[3];
+  BladeEffect effects_[4];
 };
 
 #endif
