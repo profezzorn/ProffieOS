@@ -181,7 +181,6 @@ public:
         }
         PickRandomSwing();
         state_ = SwingState::OFF;
-        accent_played = false;
     }
     // Must always set hum volume, or fade-out doesn't work.
     delegate_->SetHumVolume(hum_volume);
@@ -255,7 +254,6 @@ private:
   int swings_;
   int aswings_;
   bool accent_swings_present = false;
-  bool accent_played;
   uint32_t last_micros_;
   SwingState state_ = SwingState::OFF;;
   HybridFont hybrid;
