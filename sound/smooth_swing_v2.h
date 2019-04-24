@@ -16,9 +16,8 @@ public:
       STDOUT.println("Warning, swingl and swingh should have the same number of files.");
     }
     swings_ = std::min<size_t>(swingl.files_found(), swingh.files_found());
-    if (swng.files_found() > 0)
-    {
-      aswings_ = size_t(swng.files_found());
+    if (swng.files_found() > 0){
+      aswings_ = swng.files_found();
       STDOUT.print("Accent Swings Detected: ");
       STDOUT.println(swng.files_found());
       accent_swings_present = true;
@@ -50,11 +49,6 @@ public:
     // No point in picking a new random so soon after picking one.
     if (A.player && m - last_random_ < 1000) return;
     last_random_ = m;
-    while (swing == randomizer)
-    {
-      swing = random(swings_);
-    }
-    randomizer = swing;
     float start = m / 1000.0;
     A.Stop();
     B.Stop();
@@ -123,12 +117,6 @@ public:
         //check for AccentSwingThreshold, presence of accent swings and if the accent player is stopped (this prevents clipping)
         if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && accent_swings_present && !D.isPlaying() && (A.isPlaying() || B.isPlaying()))
         {
-          while (accentswing == accentrandomizer)
-          {
-           accentswing = random(aswings_);
-          }
-          accentrandomizer = accentswing;
-          STDOUT.print("Accent SWING!");
           D.set_volume(smooth_swing_config.AccentSwingVolume);
           D.PlayAccent(&swng);
           swng.Select(accentswing);
