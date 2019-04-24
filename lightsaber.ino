@@ -183,7 +183,7 @@ SnoozeTouch snooze_touch;
 SnoozeBlock snooze_config(snooze_touch, snooze_digital, snooze_timer);
 #endif
 
-const char version[] = "$Id$";
+const char version[] = "$Id: 3210a1ba122c79758d6fd90b84af5f57d46b1d2b $";
 
 #include "common/state_machine.h"
 #include "common/monitoring.h"
@@ -540,6 +540,8 @@ public:
     CONFIG_VARIABLE(Transition1Degrees, 45.0f);
     CONFIG_VARIABLE(Transition2Degrees, 160.0f);
     CONFIG_VARIABLE(MaxSwingVolume, 3.0f);
+    CONFIG_VARIABLE(AccentSwingSpeedThreshold, 650f);
+    CONFIG_VARIABLE(AccentSwingVolume, 1.0f);
   };
 
   int  Version;
@@ -550,6 +552,8 @@ public:
   float Transition1Degrees;
   float Transition2Degrees;
   float MaxSwingVolume;
+  float AccentSwingSpeedThreshold
+  float AccentSwingVolume
 };
 
 SmoothSwingConfigFile smooth_swing_config;
