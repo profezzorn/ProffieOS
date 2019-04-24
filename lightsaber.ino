@@ -801,8 +801,8 @@ public:
   void Off() {
     if (!SaberBase::IsOn()) return;
     if (SaberBase::Lockup()) {
-      SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
       SaberBase::DoEndLockup();
+      SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
     }
     SaberBase::TurnOff();
     if (unmute_on_deactivation_) {
@@ -1414,8 +1414,8 @@ public:
         case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
         case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
           if (SaberBase::Lockup()) {
-            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
             SaberBase::DoEndLockup();
+            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
           } else {
             handled = false;
           }
@@ -1469,8 +1469,8 @@ public:
         SaberBase::DoBeginLockup();
         STDOUT.println("ON");
       } else {
-        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         STDOUT.println("OFF");
       }
       return true;
@@ -1482,8 +1482,8 @@ public:
         SaberBase::DoBeginLockup();
         STDOUT.println("ON");
       } else {
-        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         STDOUT.println("OFF");
       }
       return true;

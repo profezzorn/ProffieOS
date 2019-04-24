@@ -84,11 +84,13 @@ public:
     if (on_) *on = true;
   }
   void SB_On() override {
+    AbstractBlade::SB_On();
     Power(true);
     delay(10);
     on_ = true;
   }
   void SB_Off() override {
+    AbstractBlade::SB_Off();
     on_ = false;
   }
 

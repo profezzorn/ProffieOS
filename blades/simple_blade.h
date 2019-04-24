@@ -148,10 +148,12 @@ public:
     if (on_ || power_) *on = true;
   }
   void SB_On() override {
+    AbstractBlade::SB_On();
     battery_monitor.SetLoad(true);
     power_ = on_ = true;
   }
   void SB_Off() override {
+    AbstractBlade::SB_Off();
     battery_monitor.SetLoad(false);
     on_ = false;
   }
