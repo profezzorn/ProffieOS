@@ -16,11 +16,16 @@ public:
       STDOUT.println("Warning, swingl and swingh should have the same number of files.");
     }
     swings_ = std::min<size_t>(swingl.files_found(), swingh.files_found());
+    //check for swngxx files to use as accent swings
     if (swng.files_found() > 0){
       aswings_ = swng.files_found();
       STDOUT.print("Accent Swings Detected: ");
       STDOUT.println(swng.files_found());
       accent_swings_present = true;
+      //allocate player
+      if(!accent_player_){
+          accent_player_ = GetFreeWavPlayer();
+      }
     }
     else
     {
@@ -68,7 +73,7 @@ public:
     // Starts hum, etc.
     delegate_->SB_On();
     PickRandomSwing();
-    if (!A.player || !B.player) {
+    if (!A.player || !B.player ) {
       STDOUT.println("SmoothSwing V2 cannot allocate wav player.");
     }
   }
@@ -115,10 +120,10 @@ public:
         
       case SwingState::ON:
         //check for AccentSwingThreshold, presence of accent swings and if the accent player is stopped (this prevents clipping)
-        if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && accent_swings_present && !accent_player_.isPlaying() && (A.isPlaying() || B.isPlaying()))
+        if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && accent_swings_present && !accent_player_->isPlaying() && (A.isPlaying() || B.isPlaying()))
         {
-          accent_player_.set_volume(smooth_swing_config.AccentSwingVolume);
-          accent_player_.PlayAccent(&swng);
+          accent_player_->PlayOnce(&swng);
+          //select new random swng accent
           int accentswing = random(aswings_);
           swng.Select(accentswing);
         }
@@ -140,10 +145,14 @@ public:
           float mixhum =
           powf(swing_strength, smooth_swing_config.SwingSharpness);
           
+          float accent_volume =
+          powf(swing_strength, smooth_swing_config.AccentSwingVolumeSharpness);
+          
           hum_volume =
           1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
           
           mixhum *= smooth_swing_config.MaxSwingVolume;
+          accent_volume *= smooth_swing_config.MaxAccentSwingVolume;
           
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
            STDOUT.print("speed: ");
@@ -161,12 +170,16 @@ public:
            STDOUT.print("  mixab: ");
            STDOUT.print(mixab);
            STDOUT.print("  hum_volume: ");
-           STDOUT.println(hum_volume);
+           STDOUT.print(hum_volume);
+           STDOUT.print("  accent_volume: ");
+           STDOUT.println(accent_volume);
           }
           if (on_) {
            // We need to stop setting the volume when off, or playback may never stop.
            A.set_volume(mixhum * mixab);
            B.set_volume(mixhum * (1.0 - mixab));
+           //This volume will scale with swing speed but is modulated by AccentSwingVolumeSharpness.
+           accent_player_->set_volume(accent_volume);
           }
           break;
         }
@@ -248,7 +261,7 @@ private:
   };
   Data A;
   Data B;
-  RefPtr < BufferedWavPlayer > accent_player_;
+  RefPtr<BufferedWavPlayer> accent_player_;
   uint32_t last_random_ = 0;
   bool on_ = false;;
   BoxFilter<Vec3, 3> gyro_filter_;
