@@ -33,7 +33,6 @@ public:
     SetDelegate(NULL);
     A.Free();
     B.Free();
-    D.Free();
   }
   
   void Swap() {
@@ -52,6 +51,7 @@ public:
     float start = m / 1000.0;
     A.Stop();
     B.Stop();
+    int swing = random(swings_);
     swingl.Select(swing);
     swingh.Select(swing);
     A.Play(&swingl, start);
@@ -115,10 +115,11 @@ public:
         
       case SwingState::ON:
         //check for AccentSwingThreshold, presence of accent swings and if the accent player is stopped (this prevents clipping)
-        if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && accent_swings_present && !D.isPlaying() && (A.isPlaying() || B.isPlaying()))
+        if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && accent_swings_present && !accent_player_.isPlaying() && (A.isPlaying() || B.isPlaying()))
         {
-          D.set_volume(smooth_swing_config.AccentSwingVolume);
-          D.PlayAccent(&swng);
+          accent_player_.set_volume(smooth_swing_config.AccentSwingVolume);
+          accent_player_.PlayAccent(&swng);
+          int accentswing = random(aswings_);
           swng.Select(accentswing);
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
@@ -247,7 +248,7 @@ private:
   };
   Data A;
   Data B;
-  Data D;
+  RefPtr < BufferedWavPlayer > accent_player_;
   uint32_t last_random_ = 0;
   bool on_ = false;;
   BoxFilter<Vec3, 3> gyro_filter_;
@@ -256,11 +257,6 @@ private:
   bool accent_swings_present = false;
   uint32_t last_micros_;
   SwingState state_ = SwingState::OFF;;
-  HybridFont hybrid;
-  int randomizer = 0;
-  int accentrandomizer = 0;
-  int swing = 0;
-  int accentswing = 0;
 };
 
 #endif
