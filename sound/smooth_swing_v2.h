@@ -8,7 +8,6 @@
 class SmoothSwingV2 : public SaberBasePassThrough {
 public:
   SmoothSwingV2() : SaberBasePassThrough() {}
-  
   void Activate(SaberBase* base_font) {
     STDOUT.println("Activating SmoothSwing V2");
     SetDelegate(base_font);
@@ -97,8 +96,8 @@ public:
         if (speed < smooth_swing_config.SwingStrengthThreshold) {
 #if 1
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
-           STDOUT.print("speed: ");
-           STDOUT.println(speed);
+            STDOUT.print("speed: ");
+            STDOUT.println(speed);
           }
 #endif
           break;
@@ -108,8 +107,8 @@ public:
       case SwingState::ON:
         //check for AccentSwingThreshold, presence of accent swings and if the accent player is stopped (this prevents clipping)
         if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && 
-        accent_swings_present && 
-        (A.player->isPlaying() || B.player->isPlaying())){
+            accent_swings_present && 
+            (A.player->isPlaying() || B.player->isPlaying())) {
           //allocate player
           if (!accent_player_) {
             accent_player_ = GetFreeWavPlayer();
@@ -155,8 +154,7 @@ public:
                 powf(swing_strength, smooth_swing_config.AccentSwingVolumeSharpness);
                 accent_volume *= smooth_swing_config.MaxAccentSwingVolume;
                 accent_player_->set_volume(accent_volume);
-              }
-              else{
+              }else{
                 accent_player_.Free();
               }
             }
@@ -199,7 +197,6 @@ public:
     // Must always set hum volume, or fade-out doesn't work.
     delegate_->SetHumVolume(hum_volume);
   }
-  
 private:
   struct Data {
     void set_volume(float v) {
@@ -208,7 +205,7 @@ private:
     void Play(Effect* effect, float start = 0.0) {
       if (!player) {
         player = GetFreeWavPlayer();
-      if (!player) return;
+        if (!player) return;
       }
       player->set_volume(0.0);
       player->PlayOnce(effect, start);
