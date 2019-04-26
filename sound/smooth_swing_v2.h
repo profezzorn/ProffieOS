@@ -17,7 +17,7 @@ public:
     }
     swings_ = std::min<size_t>(swingl.files_found(), swingh.files_found());
     //check for swngxx files to use as accent swings
-    if (swng.files_found() > 0 || && smooth_swing_config._AccentSwingSpeedThreshold > 0.0) {
+    if (swng.files_found() > 0 && smooth_swing_config._AccentSwingSpeedThreshold > 0.0) {
       STDOUT.print("Accent Swings Detected: ");
       STDOUT.println(swng.files_found());
       accent_swings_present = true;
