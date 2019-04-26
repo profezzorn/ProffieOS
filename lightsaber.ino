@@ -541,7 +541,8 @@ public:
     CONFIG_VARIABLE(Transition2Degrees, 160.0f);
     CONFIG_VARIABLE(MaxSwingVolume, 3.0f);
     CONFIG_VARIABLE(AccentSwingSpeedThreshold, 650f);
-    CONFIG_VARIABLE(AccentSwingVolume, 1.0f);
+    CONFIG_VARIABLE(AccentSwingVolumeSharpness, 1.75f);
+    CONFIG_VARIABLE(MaxAccentSwingVolume, 3.0f);
   };
 
   int  Version;
@@ -552,8 +553,9 @@ public:
   float Transition1Degrees;
   float Transition2Degrees;
   float MaxSwingVolume;
-  float AccentSwingSpeedThreshold
-  float AccentSwingVolume
+  float AccentSwingSpeedThreshold;
+  float AccentSwingVolumeSharpness;
+  float MaxAccentSwingVolume;
 };
 
 SmoothSwingConfigFile smooth_swing_config;
