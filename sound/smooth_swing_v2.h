@@ -17,15 +17,10 @@ public:
     }
     swings_ = std::min<size_t>(swingl.files_found(), swingh.files_found());
     //check for swngxx files to use as accent swings
-    if (swng.files_found() > 0){
-      aswings_ = swng.files_found();
+    if (swng.files_found() > 0) {
       STDOUT.print("Accent Swings Detected: ");
       STDOUT.println(swng.files_found());
       accent_swings_present = true;
-      //allocate player
-      if(!accent_player_){
-          accent_player_ = GetFreeWavPlayer();
-      }
     }
     else
     {
@@ -56,7 +51,6 @@ public:
     float start = m / 1000.0;
     A.Stop();
     B.Stop();
-    int swing = random(swings_);
     swingl.Select(swing);
     swingh.Select(swing);
     A.Play(&swingl, start);
@@ -122,10 +116,15 @@ public:
         //check for AccentSwingThreshold, presence of accent swings and if the accent player is stopped (this prevents clipping)
         if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && accent_swings_present && !accent_player_->isPlaying() && (A.isPlaying() || B.isPlaying()))
         {
+          //allocate player
+          if(!accent_player_) {
+            accent_player_ = GetFreeWavPlayer();
+          }
+          else {
           accent_player_->PlayOnce(&swng);
           //select new random swng accent
-          int accentswing = random(aswings_);
           swng.Select(accentswing);
+          }
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
@@ -155,42 +154,41 @@ public:
           accent_volume *= smooth_swing_config.MaxAccentSwingVolume;
           
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
-           STDOUT.print("speed: ");
-           STDOUT.print(speed);
-           STDOUT.print(" R: ");
-           STDOUT.print(-speed * delta / 1000000.0);
-           STDOUT.print(" MP: ");
-           STDOUT.print(A.midpoint);
-           STDOUT.print(" B: ");
-           STDOUT.print(A.begin());
-           STDOUT.print(" E: ");
-           STDOUT.print(A.end());
-           STDOUT.print("  mixhum: ");
-           STDOUT.print(mixhum);
-           STDOUT.print("  mixab: ");
-           STDOUT.print(mixab);
-           STDOUT.print("  hum_volume: ");
-           STDOUT.print(hum_volume);
-           STDOUT.print("  accent_volume: ");
-           STDOUT.println(accent_volume);
+            STDOUT.print("speed: ");
+            STDOUT.print(speed);
+            STDOUT.print(" R: ");
+            STDOUT.print(-speed * delta / 1000000.0);
+            STDOUT.print(" MP: ");
+            STDOUT.print(A.midpoint);
+            STDOUT.print(" B: ");
+            STDOUT.print(A.begin());
+            STDOUT.print(" E: ");
+            STDOUT.print(A.end());
+            STDOUT.print("  mixhum: ");
+            STDOUT.print(mixhum);
+            STDOUT.print("  mixab: ");
+            STDOUT.print(mixab);
+            STDOUT.print("  hum_volume: ");
+            STDOUT.print(hum_volume);
+            STDOUT.print("  accent_volume: ");
+            STDOUT.println(accent_volume);
           }
           if (on_) {
-           // We need to stop setting the volume when off, or playback may never stop.
-           A.set_volume(mixhum * mixab);
-           B.set_volume(mixhum * (1.0 - mixab));
-           //This volume will scale with swing speed but is modulated by AccentSwingVolumeSharpness.
-           accent_player_->set_volume(accent_volume);
+            // We need to stop setting the volume when off, or playback may never stop.
+            A.set_volume(mixhum * mixab);
+            B.set_volume(mixhum * (1.0 - mixab));
+            //This volume will scale with swing speed but is modulated by AccentSwingVolumeSharpness.
+            accent_player_->set_volume(accent_volume);
           }
           break;
         }
         A.set_volume(0);
         B.set_volume(0);
         state_ = SwingState::OUT;
-        
       case SwingState::OUT:
         if (!A.isOff() || !B.isOff()) {
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
-           Serial.println("Waiting for volume = 0");
+            Serial.println("Waiting for volume = 0");
           }
         }
         PickRandomSwing();
@@ -266,7 +264,6 @@ private:
   bool on_ = false;;
   BoxFilter<Vec3, 3> gyro_filter_;
   int swings_;
-  int aswings_;
   bool accent_swings_present = false;
   uint32_t last_micros_;
   SwingState state_ = SwingState::OFF;;
