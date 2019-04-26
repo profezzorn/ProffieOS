@@ -17,30 +17,25 @@ public:
     }
     swings_ = std::min<size_t>(swingl.files_found(), swingh.files_found());
     //check for swngxx files to use as accent swings
-    if (swng.files_found() > 0) {
+    if (swng.files_found() > 0 || && config._AccentSwingSpeedThreshold > 0.0) {
       STDOUT.print("Accent Swings Detected: ");
       STDOUT.println(swng.files_found());
       accent_swings_present = true;
-    }
-    else
-    {
+    }else{
       accent_swings_present = false;
       STDOUT.print("Accent Swings NOT Detected: ");
     }
   }
-  
   void Deactivate() {
     SetDelegate(NULL);
     A.Free();
     B.Free();
   }
-  
   void Swap() {
     Data C = A;
     A = B;
     B = C;
   }
-  
   // Should only be done when the volume is near zero.
   void PickRandomSwing() {
     if (!on_) return;
@@ -60,15 +55,14 @@ public:
     float t1_offset = random(1000) / 1000.0 * 50 + 10;
     A.SetTransition(t1_offset, smooth_swing_config.Transition1Degrees);
     B.SetTransition(t1_offset + 180.0,
-           smooth_swing_config.Transition2Degrees);
+      smooth_swing_config.Transition2Degrees);
   }
-  
   void SB_On() override {
     on_ = true;
     // Starts hum, etc.
     delegate_->SB_On();
     PickRandomSwing();
-    if (!A.player || !B.player ) {
+    if (!A.player || !B.player) {
       STDOUT.println("SmoothSwing V2 cannot allocate wav player.");
     }
   }
@@ -78,13 +72,11 @@ public:
     B.Off();
     delegate_->SB_Off();
   }
-  
   enum class SwingState {
     OFF, // waiting for swing to start
     ON,  // swinging
     OUT, // Waiting for sound to fade out
   };
-  
   void SB_Motion(const Vec3& raw_gyro, bool clear) override {
     if (clear) {
       gyro_filter_.filter(raw_gyro);
@@ -115,15 +107,14 @@ public:
         
       case SwingState::ON:
         //check for AccentSwingThreshold, presence of accent swings and if the accent player is stopped (this prevents clipping)
-        if (speed >=smooth_swing_config.AccentSwingSpeedThreshold
-          && accent_swings_present
-            && (A.player->isPlaying() || B.player->isPlaying())
-        {
+        if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && 
+        accent_swings_present && 
+        (A.player->isPlaying() || B.player->isPlaying()){
           //allocate player
-          if(!accent_player_) {
+          if (!accent_player_) {
             accent_player_ = GetFreeWavPlayer();
           }
-          else {
+          if (accent_player){
             if (!accent_player_->isPlaying()) {
               accent_player_->PlayOnce(&swng);
             }
@@ -131,19 +122,19 @@ public:
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
-          std::min<float>(1.0, speed / smooth_swing_config.SwingSensitivity);
+            std::min<float>(1.0, speed / smooth_swing_config.SwingSensitivity);
           A.rotate(-speed * delta / 1000000.0);
           // If the current transition is done, switch A & B,
           // and set the next transition to be 180 degrees from the one
           // that is done.
           while (A.end() < 0.0) {
-           B.midpoint = A.midpoint + 180.0;
-           Swap();
+            B.midpoint = A.midpoint + 180.0;
+          Swap();
           }
           float accent_volume = 0.0;
           float mixab = 0.0;
           if (A.begin() < 0.0)
-           mixab = clamp(- A.begin() / A.width, 0.0, 1.0);
+            mixab = clamp(- A.begin() / A.width, 0.0, 1.0);
           
           float mixhum =
             powf(swing_strength, smooth_swing_config.SwingSharpness);
@@ -158,11 +149,14 @@ public:
             A.set_volume(mixhum * mixab);
             B.set_volume(mixhum * (1.0 - mixab));
             //This volume will scale with swing speed but is modulated by AccentSwingVolumeSharpness.
-            if (accent_player_) {
+            if (accent_player_->isPlaying()) {
               accent_volume =
               powf(swing_strength, smooth_swing_config.AccentSwingVolumeSharpness);
               accent_volume *= smooth_swing_config.MaxAccentSwingVolume;
               accent_player_->set_volume(accent_volume);
+            }
+            else{
+              accent_player_.Free();
             }
           }
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
@@ -212,7 +206,7 @@ private:
     void Play(Effect* effect, float start = 0.0) {
       if (!player) {
         player = GetFreeWavPlayer();
-        if (!player) return;
+      if (!player) return;
       }
       player->set_volume(0.0);
       player->PlayOnce(effect, start);
