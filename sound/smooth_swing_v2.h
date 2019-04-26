@@ -114,7 +114,7 @@ public:
           if (!accent_player_) {
             accent_player_ = GetFreeWavPlayer();
           }
-          if (accent_player){
+          if (accent_player_){
             if (!accent_player_->isPlaying()) {
               accent_player_->PlayOnce(&swng);
             }
@@ -149,14 +149,16 @@ public:
             A.set_volume(mixhum * mixab);
             B.set_volume(mixhum * (1.0 - mixab));
             //This volume will scale with swing speed but is modulated by AccentSwingVolumeSharpness.
-            if (accent_player_->isPlaying()) {
-              accent_volume =
-              powf(swing_strength, smooth_swing_config.AccentSwingVolumeSharpness);
-              accent_volume *= smooth_swing_config.MaxAccentSwingVolume;
-              accent_player_->set_volume(accent_volume);
-            }
-            else{
-              accent_player_.Free();
+            if (accent_player_){
+	      if (accent_player_->isPlaying()) {
+                accent_volume =
+                powf(swing_strength, smooth_swing_config.AccentSwingVolumeSharpness);
+                accent_volume *= smooth_swing_config.MaxAccentSwingVolume;
+                accent_player_->set_volume(accent_volume);
+              }
+              else{
+                accent_player_.Free();
+              }
             }
           }
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
