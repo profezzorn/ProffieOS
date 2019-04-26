@@ -48,6 +48,7 @@ public:
     // No point in picking a new random so soon after picking one.
     if (A.player && m - last_random_ < 1000) return;
     last_random_ = m;
+    int swing = random(swings_);
     float start = m / 1000.0;
     A.Stop();
     B.Stop();
@@ -114,16 +115,17 @@ public:
         
       case SwingState::ON:
         //check for AccentSwingThreshold, presence of accent swings and if the accent player is stopped (this prevents clipping)
-        if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && accent_swings_present && !accent_player_->isPlaying() && (A.isPlaying() || B.isPlaying()))
+        if (speed >=smooth_swing_config.AccentSwingSpeedThreshold
+          && accent_swings_present)
         {
           //allocate player
           if(!accent_player_) {
             accent_player_ = GetFreeWavPlayer();
           }
           else {
-          accent_player_->PlayOnce(&swng);
-          //select new random swng accent
-          swng.Select(accentswing);
+            if (!accent_player_->isPlaying()) {
+              accent_player_->PlayOnce(&swng);
+            }
           }
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
@@ -137,22 +139,31 @@ public:
            B.midpoint = A.midpoint + 180.0;
            Swap();
           }
+          float accent_volume = 0.0;
           float mixab = 0.0;
           if (A.begin() < 0.0)
            mixab = clamp(- A.begin() / A.width, 0.0, 1.0);
           
           float mixhum =
-          powf(swing_strength, smooth_swing_config.SwingSharpness);
-          
-          float accent_volume =
-          powf(swing_strength, smooth_swing_config.AccentSwingVolumeSharpness);
+            powf(swing_strength, smooth_swing_config.SwingSharpness);
           
           hum_volume =
-          1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
+            1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
           
           mixhum *= smooth_swing_config.MaxSwingVolume;
-          accent_volume *= smooth_swing_config.MaxAccentSwingVolume;
           
+          if (on_) {
+            // We need to stop setting the volume when off, or playback may never stop.
+            A.set_volume(mixhum * mixab);
+            B.set_volume(mixhum * (1.0 - mixab));
+            //This volume will scale with swing speed but is modulated by AccentSwingVolumeSharpness.
+            if (accent_player_) {
+              accent_volume =
+              powf(swing_strength, smooth_swing_config.AccentSwingVolumeSharpness);
+              accent_volume *= smooth_swing_config.MaxAccentSwingVolume;
+              accent_player_->set_volume(accent_volume);
+            }
+          }
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
             STDOUT.print("speed: ");
             STDOUT.print(speed);
@@ -173,13 +184,6 @@ public:
             STDOUT.print("  accent_volume: ");
             STDOUT.println(accent_volume);
           }
-          if (on_) {
-            // We need to stop setting the volume when off, or playback may never stop.
-            A.set_volume(mixhum * mixab);
-            B.set_volume(mixhum * (1.0 - mixab));
-            //This volume will scale with swing speed but is modulated by AccentSwingVolumeSharpness.
-            accent_player_->set_volume(accent_volume);
-          }
           break;
         }
         A.set_volume(0);
@@ -192,6 +196,7 @@ public:
           }
         }
         PickRandomSwing();
+        accent_player_.Free();
         state_ = SwingState::OFF;
     }
     // Must always set hum volume, or fade-out doesn't work.
@@ -211,21 +216,6 @@ private:
       player->set_volume(0.0);
       player->PlayOnce(effect, start);
       player->PlayLoop(effect);
-    }
-    void PlayAccent(Effect* effect){
-      if (!player) {
-        player = GetFreeWavPlayer();
-        if (!player) return;
-      }
-      player->PlayOnce(effect);
-    }
-    bool isPlaying()
-    {
-      if (!player) return false;
-      else
-      {
-        return player->isPlaying();
-      }
     }
     void Off() {
       if (!player) return;
