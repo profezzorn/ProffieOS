@@ -109,7 +109,7 @@ public:
         //check for AccentSwingThreshold, presence of accent swings and if the accent player is stopped (this prevents clipping)
         if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && 
         accent_swings_present && 
-        (A.player->isPlaying() || B.player->isPlaying()){
+        (A.player->isPlaying() || B.player->isPlaying())){
           //allocate player
           if (!accent_player_) {
             accent_player_ = GetFreeWavPlayer();
