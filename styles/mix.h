@@ -74,8 +74,8 @@ public:
   OverDriveColor getColor(int led) {
     int x = f_.getInteger(led);
     x *= (sizeof...(COLORS) - 1);
-    OverDriveColor a = colors_.get(x >> 15, led);
-    OverDriveColor b = colors_.get((x >> 15) + 1, led);
+    OverDriveColor a = colors_.getColor(x >> 15, led);
+    OverDriveColor b = colors_.getColor((x >> 15) + 1, led);
     a.c = a.c.mix3(b.c, x & 0x7fff);
     return a;
   }
