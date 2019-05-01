@@ -7,10 +7,12 @@ public:
     CONFIG_VARIABLE(humStart, 100);
     CONFIG_VARIABLE(volHum, 15);
     CONFIG_VARIABLE(volEff, 16);
+    CONFIG_VARIABLE(swingThresh, 250.0);
   }
   int humStart;
   int volHum;
   int volEff;
+  float swingThresh;
 };
 
 // Monophonic sound fonts are the most common.
@@ -62,12 +64,14 @@ public:
     lock_player_.Free();
     hum_player_.Free();
     next_hum_player_.Free();
+    swng_player_.Free();
     SaberBase::Unlink(this);
   }
 
   RefPtr<BufferedWavPlayer> hum_player_;
   RefPtr<BufferedWavPlayer> next_hum_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
+  RefPtr<BufferedWavPlayer> swng_player_;
   
   void PlayMonophonic(Effect* f, Effect* loop)  {
     EnableAmplifier();
@@ -108,6 +112,13 @@ public:
   void Play(Effect* monophonic, Effect* polyphonic) {
     if (polyphonic->files_found()) {
       PlayPolyphonic(polyphonic);
+    } else {
+      PlayMonophonic(monophonic, &hum);
+    }
+  }
+  void PlaySwing(Effect* monophonic, Effect* polyphonic) {
+    if (polyphonic->files_found()) {
+      swng_player_ = PlayPolyphonic(polyphonic);
     } else {
       PlayMonophonic(monophonic, &hum);
     }
@@ -282,22 +293,25 @@ public:
   bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
-    if (speed > 250.0) {
-      if (!swinging_ && state_ != STATE_OFF &&
-	  !(lockup.files_found() && SaberBase::Lockup())) {
-        swinging_ = true;
-        Play(&swing, &swng);
-      }
+    if (speed > config_.swingThresh) {
+      CommonSwing(speed);
     } else {
       swinging_ = false;
     }
     float vol = 1.0f;
     if (!swinging_) {
       vol = vol * (0.99 + clamp(speed/200.0, 0.0, 2.3));
+      swng_player_.Free();
     }
     SetHumVolume(vol);
   }
-
+  void CommonSwing(float speed) override {
+    if (!swinging_ && state_ != STATE_OFF &&
+	  !(lockup.files_found() && SaberBase::Lockup())) {
+        swinging_ = true;
+        PlaySwing(&swing, &swng);
+      }
+  }
  private:
   uint32_t last_micros_;
   uint32_t hum_start_;
