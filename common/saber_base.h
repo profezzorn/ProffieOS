@@ -68,6 +68,7 @@ public:
   // 1.0 = kDefaultVolume
   // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
+  virtual void CommonSwing(float speed) {}
 
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)                        \
 public:                                                         \
