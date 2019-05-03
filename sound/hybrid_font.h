@@ -35,11 +35,11 @@ public:
       if ((clash.files_found() || blaster.files_found() || swing.files_found())) {
         guess_monophonic_ = true;
         STDOUT.print("monophonic");
-      }else{
+      } else {
         guess_monophonic_ = false;
         STDOUT.print("hybrid");
       }
-    }else{
+    } else {
       guess_monophonic_ = false;
       STDOUT.print("polyphonic");
     }
