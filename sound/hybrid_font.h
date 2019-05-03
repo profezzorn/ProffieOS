@@ -67,6 +67,7 @@ public:
 
   RefPtr<BufferedWavPlayer> hum_player_;
   RefPtr<BufferedWavPlayer> next_hum_player_;
+  RefPtr<BufferedWavPlayer> swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
   
   void PlayMonophonic(Effect* f, Effect* loop)  {
@@ -118,6 +119,36 @@ public:
       PlayMonophonic(effect, &hum);
     } else {
       PlayPolyphonic(effect);
+    }
+  }
+  
+  void CommonSwing(Effect* monophonic, Effect* polyphonic) override {
+    if (polyphonic->files_found()) {
+      if (!IsSwingPlaying()) {
+        swing_player_ = PlayPolyphonic(polyphonic);
+      }
+    } else {
+      PlayMonophonic(monophonic, &hum);
+    }
+  }
+  
+  void SetSwingVolume(float volume) override {
+    if (IsSwingPlaying()) {
+      swing_player_->set_volume(volume);
+    }
+    
+  }
+  
+  bool IsSwingPlaying() override {
+    if (swing_player_) {
+      if (swing_player_->isPlaying()) {
+        return true;
+      } else {
+        swing_player_.Free();
+        return false;
+      }
+    } else {
+    return false;
     }
   }
 
@@ -173,11 +204,11 @@ public:
 	  drag.files_found()) {
 	PlayMonophonic(&drag, &drag);
       } else if (lockup.files_found()) {
-        if (bgnlock.files_found()) {
-          PlayMonophonic(&bgnlock, &lockup);
-        } else {
+	if (bgnlock.files_found()) {
+	  PlayMonophonic(&bgnlock, &lockup);
+	} else {
           PlayMonophonic(&lockup, &lockup);
-	}
+        }
       }
     } else {
       Effect* e = &lock;
@@ -186,15 +217,14 @@ public:
 	e = &drag;
       }
       if (!lock_player_) {
-        if (bgnlock.files_found()) {
-          lock_player_ = PlayPolyphonic(&bgnlock);
-        } else {
+	if (bgnlock.files_found()) {
+            lock_player_ = PlayPolyphonic(&bgnlock);
+	} else {
           lock_player_ = PlayPolyphonic(e);
         }
-
-	if (lock_player_) {
-	  lock_player_->PlayLoop(e);
-	}
+      }
+      if (lock_player_) {
+        lock_player_->PlayLoop(e);  	
       }
     }
   }
@@ -203,14 +233,12 @@ public:
     if (lock_player_) {
       // Polyphonic case
       lock_player_->set_fade_time(0.3);
-
       if (endlock.files_found()) { // polyphonic end lock
-        if (PlayPolyphonic(&endlock)) {
+	if (PlayPolyphonic(&endlock)) {
           // if playing an end lock fade the lockup faster
           lock_player_->set_fade_time(0.003);
 	}
       }
-
       lock_player_->FadeAndStop();
       lock_player_.Free();
       return;
@@ -218,9 +246,9 @@ public:
     // Monophonic case
     if (lockup.files_found()) {
       if (endlock.files_found()) { // Plecter font endlock support
-        PlayMonophonic(&endlock, &hum);
+	PlayMonophonic(&endlock, &hum);
       } else {
-        PlayMonophonic(&clash, &hum);
+	PlayMonophonic(&clash, &hum);
       }
     }
   }
@@ -286,7 +314,7 @@ public:
       if (!swinging_ && state_ != STATE_OFF &&
 	  !(lockup.files_found() && SaberBase::Lockup())) {
         swinging_ = true;
-        Play(&swing, &swng);
+        CommonSwing(&swing, &swng);
       }
     } else {
       swinging_ = false;

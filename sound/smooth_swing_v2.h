@@ -16,9 +16,12 @@ public:
     }
     swings_ = std::min<size_t>(swingl.files_found(), swingh.files_found());
     //check for swngxx files to use as accent swings
-    if (swng.files_found() > 0 && smooth_swing_config.AccentSwingSpeedThreshold > 0.0) {
-      STDOUT.print("Accent Swings Detected: ");
+    if ((swng.files_found() || swing.files_found()) > 0 && smooth_swing_config.AccentSwingSpeedThreshold > 0.0) {
+      STDOUT.println("Accent Swings Enabled.");
+      STDOUT.print("Polyphonic swings: ");
       STDOUT.println(swng.files_found());
+      STDOUT.print("Monophonic swings: ");
+      STDOUT.println(swing.files_found());
       accent_swings_present = true;
     }else{
       accent_swings_present = false;
@@ -109,15 +112,7 @@ public:
         if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && 
             accent_swings_present && 
             (A.player->isPlaying() || B.player->isPlaying())) {
-          //allocate player
-          if (!accent_player_) {
-            accent_player_ = GetFreeWavPlayer();
-          }
-          if (accent_player_){
-            if (!accent_player_->isPlaying()) {
-              accent_player_->PlayOnce(&swng);
-            }
-          }
+          delegate_->CommonSwing(&swing, &swng);
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
@@ -148,15 +143,12 @@ public:
             A.set_volume(mixhum * mixab);
             B.set_volume(mixhum * (1.0 - mixab));
             //This volume will scale with swing speed but is modulated by AccentSwingVolumeSharpness.
-            if (accent_player_){
-	      if (accent_player_->isPlaying()) {
-                accent_volume =
-                powf(swing_strength, smooth_swing_config.AccentSwingVolumeSharpness);
-                accent_volume *= smooth_swing_config.MaxAccentSwingVolume;
-                accent_player_->set_volume(accent_volume);
-              }else{
-                accent_player_.Free();
-              }
+            if (delegate_->IsSwingPlaying()) {
+              accent_volume =
+              powf(swing_strength, smooth_swing_config.AccentSwingVolumeSharpness);
+              accent_volume *= smooth_swing_config.MaxAccentSwingVolume;
+              delegate_->SetSwingVolume(accent_volume);
+              mixhum = mixhum - accent_volume * smooth_swing_config.MaxAccentSwingDucking;
             }
           }
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
