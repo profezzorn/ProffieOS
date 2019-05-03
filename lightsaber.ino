@@ -543,6 +543,7 @@ public:
     CONFIG_VARIABLE(AccentSwingSpeedThreshold, 0.0f);
     CONFIG_VARIABLE(AccentSwingVolumeSharpness, 1.0f);
     CONFIG_VARIABLE(MaxAccentSwingVolume, 3.0f);
+    CONFIG_VARIABLE(MaxAccentSwingDucking, 0.5f);
   };
 
   int  Version;
@@ -556,6 +557,7 @@ public:
   float AccentSwingSpeedThreshold;
   float AccentSwingVolumeSharpness;
   float MaxAccentSwingVolume;
+  float MaxAccentSwingDucking;
 };
 
 SmoothSwingConfigFile smooth_swing_config;
@@ -3233,3 +3235,4 @@ void loop() {
     last_activity = millis();
   }
 }
+

@@ -7,12 +7,10 @@ public:
     CONFIG_VARIABLE(humStart, 100);
     CONFIG_VARIABLE(volHum, 15);
     CONFIG_VARIABLE(volEff, 16);
-    CONFIG_VARIABLE(swingThresh, 250.0);
   }
   int humStart;
   int volHum;
   int volEff;
-  float swingThresh;
 };
 
 // Monophonic sound fonts are the most common.
@@ -64,14 +62,13 @@ public:
     lock_player_.Free();
     hum_player_.Free();
     next_hum_player_.Free();
-    swng_player_.Free();
     SaberBase::Unlink(this);
   }
 
   RefPtr<BufferedWavPlayer> hum_player_;
   RefPtr<BufferedWavPlayer> next_hum_player_;
+  RefPtr<BufferedWavPlayer> swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
-  RefPtr<BufferedWavPlayer> swng_player_;
   
   void PlayMonophonic(Effect* f, Effect* loop)  {
     EnableAmplifier();
@@ -116,19 +113,42 @@ public:
       PlayMonophonic(monophonic, &hum);
     }
   }
-  void PlaySwing(Effect* monophonic, Effect* polyphonic) {
-    if (polyphonic->files_found()) {
-      swng_player_ = PlayPolyphonic(polyphonic);
-    } else {
-      PlayMonophonic(monophonic, &hum);
-    }
-  }
 
   void PlayCommon(Effect* effect) {
     if (guess_monophonic_) {
       PlayMonophonic(effect, &hum);
     } else {
       PlayPolyphonic(effect);
+    }
+  }
+  
+  void CommonSwing(Effect* monophonic, Effect* polyphonic) override {
+    if (polyphonic->files_found()) {
+      if (!IsSwingPlaying()) {
+        swing_player_ = PlayPolyphonic(polyphonic);
+      }
+    } else {
+      PlayMonophonic(monophonic, &hum);
+    }
+  }
+  
+  void SetSwingVolume(float volume) override {
+    if (IsSwingPlaying()) {
+      swing_player_->set_volume(volume);
+    }
+    
+  }
+  
+  bool IsSwingPlaying() override {
+    if (swing_player_) {
+      if (swing_player_->isPlaying()) {
+        return true;
+      } else {
+        swing_player_.Free();
+        return false;
+      }
+    } else {
+    return false;
     }
   }
 
@@ -184,11 +204,7 @@ public:
 	  drag.files_found()) {
 	PlayMonophonic(&drag, &drag);
       } else if (lockup.files_found()) {
-        if (bgnlock.files_found()) {
-          PlayMonophonic(&bgnlock, &lockup);
-        } else {
-          PlayMonophonic(&lockup, &lockup);
-	}
+	PlayMonophonic(&lockup, &lockup);
       }
     } else {
       Effect* e = &lock;
@@ -197,12 +213,7 @@ public:
 	e = &drag;
       }
       if (!lock_player_) {
-        if (bgnlock.files_found()) {
-          lock_player_ = PlayPolyphonic(&bgnlock);
-        } else {
-          lock_player_ = PlayPolyphonic(e);
-        }
-
+	lock_player_ = PlayPolyphonic(e);
 	if (lock_player_) {
 	  lock_player_->PlayLoop(e);
 	}
@@ -214,25 +225,13 @@ public:
     if (lock_player_) {
       // Polyphonic case
       lock_player_->set_fade_time(0.3);
-
-      if (endlock.files_found()) { // polyphonic end lock
-        if (PlayPolyphonic(&endlock)) {
-          // if playing an end lock fade the lockup faster
-          lock_player_->set_fade_time(0.003);
-	}
-      }
-
       lock_player_->FadeAndStop();
       lock_player_.Free();
       return;
     }
     // Monophonic case
     if (lockup.files_found()) {
-      if (endlock.files_found()) { // Plecter font endlock support
-        PlayMonophonic(&endlock, &hum);
-      } else {
-        PlayMonophonic(&clash, &hum);
-      }
+      PlayMonophonic(&clash, &hum);
     }
   }
 
@@ -293,25 +292,22 @@ public:
   bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
-    if (speed > config_.swingThresh) {
-      CommonSwing(speed);
+    if (speed > 250.0) {
+      if (!swinging_ && state_ != STATE_OFF &&
+	  !(lockup.files_found() && SaberBase::Lockup())) {
+        swinging_ = true;
+        CommonSwing(&swing, &swng);
+      }
     } else {
       swinging_ = false;
     }
     float vol = 1.0f;
     if (!swinging_) {
       vol = vol * (0.99 + clamp(speed/200.0, 0.0, 2.3));
-      swng_player_.Free();
     }
     SetHumVolume(vol);
   }
-  void CommonSwing(float speed) override {
-    if (!swinging_ && state_ != STATE_OFF &&
-	  !(lockup.files_found() && SaberBase::Lockup())) {
-        swinging_ = true;
-        PlaySwing(&swing, &swng);
-      }
-  }
+
  private:
   uint32_t last_micros_;
   uint32_t hum_start_;
