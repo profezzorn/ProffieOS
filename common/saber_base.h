@@ -30,11 +30,11 @@ protected:
     }
     CHECK_LL(SaberBase, saberbases, next_saber_);
   }
-
+  
   SaberBase() { Link(this); }
   explicit SaberBase(NoLink _) {}
   ~SaberBase() { Unlink(this); }
-
+  
 public:
   static bool IsOn() { return on_; }
   static void TurnOn() {
@@ -46,7 +46,7 @@ public:
     last_motion_request_ = millis();
     SaberBase::DoOff();
   }
-
+  
   static bool MotionRequested() {
 #if NUM_BUTTONS == 0
     return true;
@@ -57,7 +57,7 @@ public:
   static void RequestMotion() {
     last_motion_request_ = millis();
   }
-
+  
   enum LockupType {
     LOCKUP_NONE,
     LOCKUP_NORMAL,
@@ -65,47 +65,47 @@ public:
   };
   static LockupType Lockup() { return lockup_; }
   static void SetLockup(LockupType lockup) { lockup_ = lockup; }
-
+  
   // 1.0 = kDefaultVolume
   // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
   virtual void StartSwing(Effect* monophonic, Effect* polyphonic) {}
-  virtual float SetSwingVolume(float swing_strength, float AccentSwingVolumeSharpness, 
-  float MaxAccentSwingVolume, float mixhum) {}
+  virtual float SetSwingVolume(float swing_strength, float AccentSwingVolumeSharpness,
+  float MaxAccentSwingVolume, float MaxAccentSwingDucking, float mixhum) {}
   virtual bool IsSwingPlaying() {}
-
+  
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)                        \
 public:                                                         \
-  static void Do##NAME TYPED_ARGS {                             \
-    CHECK_LL(SaberBase, saberbases, next_saber_);               \
-    for (SaberBase *p = saberbases; p; p = p->next_saber_) {    \
-      p->SB_##NAME ARGS;                                        \
-    }                                                           \
-    CHECK_LL(SaberBase, saberbases, next_saber_);               \
-  }                                                             \
-                                                                \
-  virtual void SB_##NAME TYPED_ARGS {}
-
+static void Do##NAME TYPED_ARGS {                             \
+CHECK_LL(SaberBase, saberbases, next_saber_);               \
+for (SaberBase *p = saberbases; p; p = p->next_saber_) {    \
+p->SB_##NAME ARGS;                                        \
+}                                                           \
+CHECK_LL(SaberBase, saberbases, next_saber_);               \
+}                                                             \
+\
+virtual void SB_##NAME TYPED_ARGS {}
+  
 #define SABERBASEFUNCTIONS()                    \
-  SABERFUN(Clash, (), ());                      \
-  SABERFUN(Stab, (), ());                       \
-  SABERFUN(On, (), ());                         \
-  SABERFUN(Off, (), ());                        \
-  SABERFUN(Force, (), ());                      \
-  SABERFUN(Blast, (), ());                      \
-  SABERFUN(Boot, (), ());                       \
-  SABERFUN(NewFont, (), ());                    \
-  SABERFUN(BeginLockup, (), ());                \
-  SABERFUN(EndLockup, (), ());                  \
-                                                \
-  SABERFUN(Top, (), ());                        \
-  SABERFUN(Relax, (), ());                      \
-  SABERFUN(IsOn, (bool* on), (on));             \
-  SABERFUN(Message, (const char* msg), (msg));
-
+SABERFUN(Clash, (), ());                      \
+SABERFUN(Stab, (), ());                       \
+SABERFUN(On, (), ());                         \
+SABERFUN(Off, (), ());                        \
+SABERFUN(Force, (), ());                      \
+SABERFUN(Blast, (), ());                      \
+SABERFUN(Boot, (), ());                       \
+SABERFUN(NewFont, (), ());                    \
+SABERFUN(BeginLockup, (), ());                \
+SABERFUN(EndLockup, (), ());                  \
+\
+SABERFUN(Top, (), ());                        \
+SABERFUN(Relax, (), ());                      \
+SABERFUN(IsOn, (bool* on), (on));             \
+SABERFUN(Message, (const char* msg), (msg));
+  
   SABERBASEFUNCTIONS();
 #undef SABERFUN
-
+  
   /* Swing rotation speed degrees per second */
   static void DoMotion(Vec3 gyro, bool clear) {
 #ifdef INVERT_ORIENTATION
@@ -118,7 +118,7 @@ public:                                                         \
     CHECK_LL(SaberBase, saberbases, next_saber_);
   }
   virtual void SB_Motion(const Vec3& gyro, bool clear) {}
-
+  
   /* Accelertation in g */
   static void DoAccel(Vec3 gyro, bool clear) {
 #ifdef INVERT_ORIENTATION
@@ -131,7 +131,7 @@ public:                                                         \
     CHECK_LL(SaberBase, saberbases, next_saber_);
   }
   virtual void SB_Accel(const Vec3& gyro, bool clear) {}
-
+  
 private:
   static bool on_;
   static LockupType lockup_;
