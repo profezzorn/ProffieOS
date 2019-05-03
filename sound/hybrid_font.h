@@ -132,10 +132,14 @@ public:
     }
   }
   
-  void SetSwingVolume(float volume) override {
+  float SetSwingVolume(float swing_strength, float AccentSwingVolumeSharpness, float MaxAccentSwingVolume, float mixhum) override {
     if (IsSwingPlaying()) {
-      swing_player_->set_volume(volume);
+      float accent_volume = powf(swing_strength, AccentSwingVolumeSharpness) * MaxAccentSwingVolume;
+      swing_player_->set_volume(accent_volume);
+      mixhum = mixhum * MaxAccentSwingDucking;
+      return mixhum;
     }
+    else return 0.0;
   }
   
   bool IsSwingPlaying() override {
