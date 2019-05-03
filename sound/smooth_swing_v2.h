@@ -108,11 +108,11 @@ public:
         state_ = SwingState::ON;
         
       case SwingState::ON:
-        //check for AccentSwingThreshold, presence of accent swings and if the accent player is stopped (this prevents clipping)
+        //trigger accent swing
         if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && 
             accent_swings_present && 
             (A.player->isPlaying() || B.player->isPlaying())) {
-          delegate_->CommonSwing(&swing, &swng);
+          delegate_->StartSwing(&swing, &swng);
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
@@ -144,11 +144,9 @@ public:
             B.set_volume(mixhum * (1.0 - mixab));
             //This volume will scale with swing speed but is modulated by AccentSwingVolumeSharpness.
             if (delegate_->IsSwingPlaying()) {
-              accent_volume =
-              powf(swing_strength, smooth_swing_config.AccentSwingVolumeSharpness);
-              accent_volume *= smooth_swing_config.MaxAccentSwingVolume;
-              delegate_->SetSwingVolume(accent_volume);
-              mixhum = mixhum - accent_volume * smooth_swing_config.MaxAccentSwingDucking;
+              mixhum = delegate_->SetSwingVolume(swing_strength,
+              smooth_swing_config.AccentSwingVolumeSharpness,
+              smooth_swing_config.MaxAccentSwingVolume, mixhum);
             }
           }
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
