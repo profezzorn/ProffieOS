@@ -57,7 +57,7 @@ public:
     float t1_offset = random(1000) / 1000.0 * 50 + 10;
     A.SetTransition(t1_offset, smooth_swing_config.Transition1Degrees);
     B.SetTransition(t1_offset + 180.0,
-      smooth_swing_config.Transition2Degrees);
+                    smooth_swing_config.Transition2Degrees);
   }
   void SB_On() override {
     on_ = true;
@@ -109,21 +109,21 @@ public:
         
       case SwingState::ON:
         //trigger accent swing
-        if (speed >=smooth_swing_config.AccentSwingSpeedThreshold && 
-            accent_swings_present && 
+        if (speed >=smooth_swing_config.AccentSwingSpeedThreshold &&
+            accent_swings_present &&
             (A.player->isPlaying() || B.player->isPlaying())) {
           delegate_->StartSwing(&swing, &swng);
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
-            std::min<float>(1.0, speed / smooth_swing_config.SwingSensitivity);
+          std::min<float>(1.0, speed / smooth_swing_config.SwingSensitivity);
           A.rotate(-speed * delta / 1000000.0);
           // If the current transition is done, switch A & B,
           // and set the next transition to be 180 degrees from the one
           // that is done.
           while (A.end() < 0.0) {
             B.midpoint = A.midpoint + 180.0;
-          Swap();
+            Swap();
           }
           float accent_volume = 0.0;
           float mixab = 0.0;
@@ -131,10 +131,10 @@ public:
             mixab = clamp(- A.begin() / A.width, 0.0, 1.0);
           
           float mixhum =
-            powf(swing_strength, smooth_swing_config.SwingSharpness);
+          powf(swing_strength, smooth_swing_config.SwingSharpness);
           
           hum_volume =
-            1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
+          1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
           
           mixhum *= smooth_swing_config.MaxSwingVolume;
           
@@ -146,7 +146,8 @@ public:
             if (delegate_->IsSwingPlaying()) {
               mixhum = delegate_->SetSwingVolume(swing_strength,
               smooth_swing_config.AccentSwingVolumeSharpness,
-              smooth_swing_config.MaxAccentSwingVolume, mixhum);
+              smooth_swing_config.MaxAccentSwingVolume,
+              smooth_swing_config.MaxAccentSwingDucking, mixhum);
             }
           }
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
@@ -181,7 +182,6 @@ public:
           }
         }
         PickRandomSwing();
-        accent_player_.Free();
         state_ = SwingState::OFF;
     }
     // Must always set hum volume, or fade-out doesn't work.
