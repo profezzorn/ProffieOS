@@ -70,7 +70,7 @@ public:
   // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
   virtual void StartSwing(Effect* monophonic, Effect* polyphonic) {}
-  virtual void SetSwingVolume(float volume) {}
+  virtual void SetSwingVolume(float swing_strength, float AccentSwingVolumeSharpness, float MaxAccentSwingVolume, float mixhum) {}
   virtual bool IsSwingPlaying() {}
 
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)                        \
