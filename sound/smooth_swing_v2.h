@@ -23,7 +23,7 @@ public:
       STDOUT.print("Monophonic swings: ");
       STDOUT.println(swing.files_found());
       accent_swings_present = true;
-    }else{
+    } else {
       accent_swings_present = false;
       STDOUT.print("Accent Swings NOT Detected: ");
     }
@@ -93,7 +93,6 @@ public:
     if (delta > 1000000) delta = 1;
     last_micros_ = t;
     float hum_volume = 1.0;
-    
     switch (state_) {
       case SwingState::OFF:
         if (speed < smooth_swing_config.SwingStrengthThreshold) {
@@ -106,7 +105,6 @@ public:
           break;
         }
         state_ = SwingState::ON;
-        
       case SwingState::ON:
         //trigger accent swing
         if (speed >=smooth_swing_config.AccentSwingSpeedThreshold &&
