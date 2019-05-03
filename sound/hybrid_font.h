@@ -217,12 +217,14 @@ public:
 	e = &drag;
       }
       if (!lock_player_) {
-	if (lock_player_) {
-          if (bgnlock.files_found()) {
+	if (bgnlock.files_found()) {
             lock_player_ = PlayPolyphonic(&bgnlock);
 	  } else {
             lock_player_ = PlayPolyphonic(e);
-          }	
+          }
+        }
+	if (lock_player_) {
+          lock_player_->PlayLoop(e);  	
 	}
       }
     }
