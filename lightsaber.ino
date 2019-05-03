@@ -631,6 +631,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/scale.h"
 #include "functions/battery_level.h"
 #include "functions/trigger.h"
+#include "functions/bump.h"
 
 // This macro has a problem with commas, please don't use it.
 #define EASYBLADE(COLOR, CLASH_COLOR) \
