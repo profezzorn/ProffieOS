@@ -235,7 +235,6 @@ private:
   };
   Data A;
   Data B;
-  RefPtr<BufferedWavPlayer> accent_player_;
   uint32_t last_random_ = 0;
   bool on_ = false;;
   BoxFilter<Vec3, 3> gyro_filter_;
