@@ -206,9 +206,9 @@ public:
       } else if (lockup.files_found()) {
 	if (bgnlock.files_found()) {
 	  PlayMonophonic(&bgnlock, &lockup);
-	  } else {
-            PlayMonophonic(&lockup, &lockup);
-          }
+	} else {
+          PlayMonophonic(&lockup, &lockup);
+        }
       }
     } else {
       Effect* e = &lock;
@@ -232,6 +232,12 @@ public:
     if (lock_player_) {
       // Polyphonic case
       lock_player_->set_fade_time(0.3);
+      if (endlock.files_found()) { // polyphonic end lock
+	if (PlayPolyphonic(&endlock)) {
+          // if playing an end lock fade the lockup faster
+          lock_player_->set_fade_time(0.003);
+	}
+      }
       lock_player_->FadeAndStop();
       lock_player_.Free();
       return;
