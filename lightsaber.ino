@@ -984,15 +984,17 @@ public:
   // Called from setup to identify the blade and select the right
   // Blade driver, style and sound font.
   void FindBlade() {
-    float resistor = id();
-
     size_t best_config = 0;
-    float best_err = 1000000.0;
-    for (size_t i = 0; i < sizeof(blades) / sizeof(blades)[0]; i++) {
-      float err = fabsf(resistor - blades[i].ohm);
-      if (err < best_err) {
-        best_config = i;
-        best_err = err;
+    if (NELEM(blades) > 1) {
+      float resistor = id();
+
+      float best_err = 1000000.0;
+      for (size_t i = 0; i < NELEM(blades); i++) {
+        float err = fabsf(resistor - blades[i].ohm);
+        if (err < best_err) {
+          best_config = i;
+          best_err = err;
+        }
       }
     }
     STDOUT.print("blade= ");
