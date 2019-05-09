@@ -144,38 +144,37 @@ public:
 
           mixhum *= smooth_swing_config.MaxSwingVolume;
 
-	      if (on_) {
-	        // We need to stop setting the volume when off, or playback may never stop.
-	        A.set_volume(mixhum * mixab);
-	        B.set_volume(mixhum * (1.0 - mixab));
-          if (delegate_->IsSwingPlaying()) {
-            mixhum = delegate_->SetSwingVolume(swing_strength,
-            smooth_swing_config.AccentSwingVolumeSharpness,
-            smooth_swing_config.MaxAccentSwingVolume,
-            smooth_swing_config.MaxAccentSwingDucking, mixhum);
-          }
-	      }
-        if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
-          STDOUT.print("speed: ");
-          STDOUT.print(speed);
-          STDOUT.print(" R: ");
-          STDOUT.print(-speed * delta / 1000000.0);
-          STDOUT.print(" MP: ");
-          STDOUT.print(A.midpoint);
-          STDOUT.print(" B: ");
-          STDOUT.print(A.begin());
-          STDOUT.print(" E: ");
-          STDOUT.print(A.end());
-          STDOUT.print("  mixhum: ");
-          STDOUT.print(mixhum);
-          STDOUT.print("  mixab: ");
-          STDOUT.print(mixab);
-          STDOUT.print("  hum_volume: ");
-          STDOUT.print(hum_volume);
-          STDOUT.print("  accent_volume: ");
-          STDOUT.println(accent_volume);
-        }
-          break;
+	  if (on_) {
+	  // We need to stop setting the volume when off, or playback may never stop.
+      A.set_volume(mixhum * mixab);
+      B.set_volume(mixhum * (1.0 - mixab));
+      if (delegate_->IsSwingPlaying()) {
+        mixhum = delegate_->SetSwingVolume(swing_strength,
+        smooth_swing_config.AccentSwingVolumeSharpness,
+        smooth_swing_config.MaxAccentSwingVolume,
+        smooth_swing_config.MaxAccentSwingDucking, mixhum);
+      }
+      if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
+        STDOUT.print("speed: ");
+        STDOUT.print(speed);
+        STDOUT.print(" R: ");
+        STDOUT.print(-speed * delta / 1000000.0);
+        STDOUT.print(" MP: ");
+        STDOUT.print(A.midpoint);
+        STDOUT.print(" B: ");
+        STDOUT.print(A.begin());
+        STDOUT.print(" E: ");
+        STDOUT.print(A.end());
+        STDOUT.print("  mixhum: ");
+        STDOUT.print(mixhum);
+        STDOUT.print("  mixab: ");
+        STDOUT.print(mixab);
+        STDOUT.print("  hum_volume: ");
+        STDOUT.print(hum_volume);
+        STDOUT.print("  accent_volume: ");
+        STDOUT.println(accent_volume);
+      }
+      break;
         }
         A.set_volume(0);
         B.set_volume(0);
