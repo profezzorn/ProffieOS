@@ -96,7 +96,7 @@ public:
     hum_player_->PlayOnce(f);
     if (loop) hum_player_->PlayLoop(loop);
   }
-					  		 
+				  	  		 
   RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
     EnableAmplifier();
     RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
@@ -208,7 +208,7 @@ public:
         PlayMonophonic(&drag, &drag);
       } else if (lockup.files_found()) {
         if (bgnlock.files_found()) {
-         PlayMonophonic(&bgnlock, &lockup);
+          PlayMonophonic(&bgnlock, &lockup);
         } else {
           PlayMonophonic(&lockup, &lockup);
       }
@@ -236,13 +236,14 @@ public:
     if (lock_player_) {
       // Polyphonic case
       lock_player_->set_fade_time(0.3);
-      
+
       if (endlock.files_found()) { // polyphonic end lock
         if (PlayPolyphonic(&endlock)) {
           // if playing an end lock fade the lockup faster
           lock_player_->set_fade_time(0.003);
-	}
+	      }
       }
+      
       lock_player_->FadeAndStop();
       lock_player_.Free();
       return;
@@ -257,16 +258,16 @@ public:
       PlayMonophonic(&clash, &hum);
     }
   }
-  
+
   void SetHumVolume(float vol) override {
     if (!monophonic_hum_) {
       if (state_ != STATE_OFF && !hum_player_) {
-        hum_player_ = GetFreeWavPlayer();
-        if (hum_player_) {
-	 hum_player_->set_volume_now(0);
-	 hum_player_->PlayOnce(&hum);
-	 hum_player_->PlayLoop(&hum);
-	 hum_start_ = millis();
+       hum_player_ = GetFreeWavPlayer();
+       if (hum_player_) {
+	      hum_player_->set_volume_now(0);
+	      hum_player_->PlayOnce(&hum);
+	      hum_player_->PlayLoop(&hum);
+	      hum_start_ = millis();
         }
       }
       if (!hum_player_) return;
