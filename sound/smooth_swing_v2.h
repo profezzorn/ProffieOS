@@ -24,7 +24,7 @@ public:
       STDOUT.print("Monophonic swings: ");
       STDOUT.println(swing.files_found());
       accent_swings_present = true;
-    }else{
+    } else {
       accent_swings_present = false;
       STDOUT.print("Accent Swings NOT Detected: ");
     }
