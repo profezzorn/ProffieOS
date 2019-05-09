@@ -220,16 +220,14 @@ public:
       }
       if (!lock_player_) {
         if (bgnlock.files_found()) {
-        lock_player_ = PlayPolyphonic(&bgnlock);
-      } else {
+          lock_player_ = PlayPolyphonic(&bgnlock);
+        } else {
           lock_player_ = PlayPolyphonic(e);
         }
-      
-      if (lock_player_) {
-       if (bgnlock.files_found()) {
-        lock_player_ = PlayPolyphonic(&bgnlock);
-        
-        lock_player_->PlayLoop(e);
+	      
+	if (lock_player_) {
+	  lock_player_->PlayLoop(e);
+	}
       }
     }
   }
