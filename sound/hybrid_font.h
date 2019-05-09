@@ -224,7 +224,7 @@ public:
         } else {
           lock_player_ = PlayPolyphonic(e);
         }
-	      
+
 	if (lock_player_) {
 	  lock_player_->PlayLoop(e);
 	}
@@ -237,12 +237,23 @@ public:
       // Polyphonic case
       lock_player_->set_fade_time(0.3);
       
+      if (endlock.files_found()) { // polyphonic end lock
+        if (PlayPolyphonic(&endlock)) {
+          // if playing an end lock fade the lockup faster
+          lock_player_->set_fade_time(0.003);
+	}
+      }
       lock_player_->FadeAndStop();
       lock_player_.Free();
       return;
     }
     // Monophonic case
     if (lockup.files_found()) {
+      if (endlock.files_found()) { // Plecter font endlock support
+        PlayMonophonic(&endlock, &hum);
+      } else {
+        PlayMonophonic(&clash, &hum);
+      }
       PlayMonophonic(&clash, &hum);
     }
   }
@@ -252,50 +263,50 @@ public:
       if (state_ != STATE_OFF && !hum_player_) {
         hum_player_ = GetFreeWavPlayer();
         if (hum_player_) {
-          hum_player_->set_volume_now(0);
-          hum_player_->PlayOnce(&hum);
-          hum_player_->PlayLoop(&hum);
-          hum_start_ = millis();
+	 hum_player_->set_volume_now(0);
+	 hum_player_->PlayOnce(&hum);
+	 hum_player_->PlayLoop(&hum);
+	 hum_start_ = millis();
         }
       }
       if (!hum_player_) return;
       uint32_t m = micros();
       switch (state_) {
-        case STATE_OFF:
-          volume_ = 0.0f;
-          return;
-        case STATE_OUT:
-          volume_ = 0.0f;
-          if (millis() - hum_start_ < 0x7fffffffUL) {
-            state_ = STATE_HUM_FADE_IN;
-          }
-          break;
-        case STATE_HUM_FADE_IN: {
-          uint32_t delta = m - last_micros_;
-          volume_ += (delta / 1000000.0) / 0.2; // 0.2 seconds
-          if (volume_ >= 1.0f) {
-            volume_ = 1.0f;
-            state_ = STATE_HUM_ON;
-          }
-          break;
-        }
-        case STATE_HUM_ON:
-          break;
-        case STATE_HUM_FADE_OUT: {
-          SaberBase::RequestMotion();
-          uint32_t delta = m - last_micros_;
-          volume_ -= (delta / 1000000.0) / 0.2; // 0.2 seconds
-          if (volume_ <= 0.0f) {
-            volume_ = 0.0f;
-            state_ = STATE_OFF;
-            hum_player_->FadeAndStop();
-            hum_player_.Free();
-          }
-          break;
-        }
-      }
-      last_micros_ = m;
-      vol *= volume_;
+       case STATE_OFF:
+         volume_ = 0.0f;
+         return;
+       case STATE_OUT:
+         volume_ = 0.0f;
+         if (millis() - hum_start_ < 0x7fffffffUL) {
+           state_ = STATE_HUM_FADE_IN;
+	 }
+         break;
+       case STATE_HUM_FADE_IN: {
+         uint32_t delta = m - last_micros_;
+         volume_ += (delta / 1000000.0) / 0.2; // 0.2 seconds
+         if (volume_ >= 1.0f) {
+           volume_ = 1.0f;
+           state_ = STATE_HUM_ON;
+         }
+         break;
+       }
+       case STATE_HUM_ON:
+         break;
+       case STATE_HUM_FADE_OUT: {
+         SaberBase::RequestMotion();
+         uint32_t delta = m - last_micros_;
+         volume_ -= (delta / 1000000.0) / 0.2; // 0.2 seconds
+         if (volume_ <= 0.0f) {
+           volume_ = 0.0f;
+           state_ = STATE_OFF;
+           hum_player_->FadeAndStop();
+           hum_player_.Free();
+         }
+         break;
+       }
+     }
+     last_micros_ = m;
+     vol *= volume_;
     }
     if (!hum_player_) return;
     hum_player_->set_volume(vol);
