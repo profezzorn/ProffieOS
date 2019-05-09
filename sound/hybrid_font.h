@@ -33,11 +33,11 @@ public:
     guess_monophonic_ = false;
     if (monophonic_hum_) {
       if ((clash.files_found() || blaster.files_found() || swing.files_found())) {
-       guess_monophonic_ = true;
-       STDOUT.print("monophonic");
+			 guess_monophonic_ = true;
+			 STDOUT.print("monophonic");
       } else {
-       guess_monophonic_ = false;
-       STDOUT.print("hybrid");
+			 guess_monophonic_ = false;
+			 STDOUT.print("hybrid");
       }
     } else {
       guess_monophonic_ = false;
