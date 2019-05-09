@@ -143,18 +143,7 @@ public:
             1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
 
           mixhum *= smooth_swing_config.MaxSwingVolume;
-
-	  if (on_) {
-	  // We need to stop setting the volume when off, or playback may never stop.
-      A.set_volume(mixhum * mixab);
-      B.set_volume(mixhum * (1.0 - mixab));
-      if (delegate_->IsSwingPlaying()) {
-        mixhum = delegate_->SetSwingVolume(swing_strength,
-        smooth_swing_config.AccentSwingVolumeSharpness,
-        smooth_swing_config.MaxAccentSwingVolume,
-        smooth_swing_config.MaxAccentSwingDucking, mixhum);
-      }
-      if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
+       if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
         STDOUT.print("speed: ");
         STDOUT.print(speed);
         STDOUT.print(" R: ");
@@ -170,15 +159,23 @@ public:
         STDOUT.print("  mixab: ");
         STDOUT.print(mixab);
         STDOUT.print("  hum_volume: ");
-        STDOUT.print(hum_volume);
-        STDOUT.print("  accent_volume: ");
-        STDOUT.println(accent_volume);
+        STDOUT.println(hum_volume);
       }
-      break;
-        }
-        A.set_volume(0);
-        B.set_volume(0);
-        state_ = SwingState::OUT;
+	    if (on_) {
+	      // We need to stop setting the volume when off, or playback may never stop.
+        A.set_volume(mixhum * mixab);
+        B.set_volume(mixhum * (1.0 - mixab));
+        if (delegate_->IsSwingPlaying()) {
+          mixhum = delegate_->SetSwingVolume(swing_strength,
+          smooth_swing_config.AccentSwingVolumeSharpness,
+          smooth_swing_config.MaxAccentSwingVolume,
+          smooth_swing_config.MaxAccentSwingDucking, mixhum);
+	      }
+        break;
+      }
+      A.set_volume(0);
+      B.set_volume(0);
+      state_ = SwingState::OUT;
 
       case SwingState::OUT:
         if (!A.isOff() || !B.isOff()) {
