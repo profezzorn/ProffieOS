@@ -30,6 +30,7 @@ protected:
     }
     CHECK_LL(SaberBase, saberbases, next_saber_);
   }
+
   SaberBase() { Link(this); }
   explicit SaberBase(NoLink _) {}
   ~SaberBase() { Unlink(this); }
@@ -40,7 +41,6 @@ public:
     on_ = true;
     SaberBase::DoOn();
   }
-  
   static void TurnOff() {
     on_ = false;
     last_motion_request_ = millis();
@@ -84,7 +84,7 @@ public:                                                         \
     CHECK_LL(SaberBase, saberbases, next_saber_);               \
   }                                                             \
                                                                 \
-virtual void SB_##NAME TYPED_ARGS {}
+  virtual void SB_##NAME TYPED_ARGS {}
 
 #define SABERBASEFUNCTIONS()                    \
   SABERFUN(Clash, (), ());                      \
@@ -102,9 +102,10 @@ virtual void SB_##NAME TYPED_ARGS {}
   SABERFUN(Relax, (), ());                      \
   SABERFUN(IsOn, (bool* on), (on));             \
   SABERFUN(Message, (const char* msg), (msg));
-  
+
   SABERBASEFUNCTIONS();
 #undef SABERFUN
+
   /* Swing rotation speed degrees per second */
   static void DoMotion(Vec3 gyro, bool clear) {
 #ifdef INVERT_ORIENTATION
@@ -117,7 +118,8 @@ virtual void SB_##NAME TYPED_ARGS {}
     CHECK_LL(SaberBase, saberbases, next_saber_);
   }
   virtual void SB_Motion(const Vec3& gyro, bool clear) {}
-  /* Accelertation in g */
+
+  /* Acceleration in g */
   static void DoAccel(Vec3 gyro, bool clear) {
 #ifdef INVERT_ORIENTATION
     gyro.x = -gyro.x;
@@ -129,6 +131,7 @@ virtual void SB_##NAME TYPED_ARGS {}
     CHECK_LL(SaberBase, saberbases, next_saber_);
   }
   virtual void SB_Accel(const Vec3& gyro, bool clear) {}
+
 private:
   static bool on_;
   static LockupType lockup_;
