@@ -8,7 +8,6 @@
 class SmoothSwingV2 : public SaberBasePassThrough {
 public:
   SmoothSwingV2() : SaberBasePassThrough() {}
-
   void Activate(SaberBase* base_font) {
     STDOUT.println("Activating SmoothSwing V2");
     SetDelegate(base_font);
@@ -16,7 +15,7 @@ public:
       STDOUT.println("Warning, swingl and swingh should have the same number of files.");
     }
     swings_ = std::min<size_t>(swingl.files_found(), swingh.files_found());
-    //check for swngxx or swingxx files to use as accent swings
+    //check for swngxx files to use as accent swings
     if ((swng.files_found() || swing.files_found()) > 0 && smooth_swing_config.AccentSwingSpeedThreshold > 0.0) {
       STDOUT.println("Accent Swings Enabled.");
       STDOUT.print("Polyphonic swings: ");
@@ -29,19 +28,16 @@ public:
       STDOUT.print("Accent Swings NOT Detected: ");
     }
   }
-
   void Deactivate() {
     SetDelegate(NULL);
     A.Free();
     B.Free();
   }
-
   void Swap() {
     Data C = A;
     A = B;
     B = C;
   }
-
   // Should only be done when the volume is near zero.
   void PickRandomSwing() {
     if (!on_) return;
@@ -61,9 +57,8 @@ public:
     float t1_offset = random(1000) / 1000.0 * 50 + 10;
     A.SetTransition(t1_offset, smooth_swing_config.Transition1Degrees);
     B.SetTransition(t1_offset + 180.0,
-      smooth_swing_config.Transition2Degrees);
+                    smooth_swing_config.Transition2Degrees);
   }
-
   void SB_On() override {
     on_ = true;
     // Starts hum, etc.
@@ -79,13 +74,11 @@ public:
     B.Off();
     delegate_->SB_Off();
   }
-
   enum class SwingState {
     OFF, // waiting for swing to start
     ON,  // swinging
     OUT, // Waiting for sound to fade out
   };
-
   void SB_Motion(const Vec3& raw_gyro, bool clear) override {
     if (clear) {
       gyro_filter_.filter(raw_gyro);
@@ -123,28 +116,28 @@ public:
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
-            std::min<float>(1.0, speed / smooth_swing_config.SwingSensitivity);
+          std::min<float>(1.0, speed / smooth_swing_config.SwingSensitivity);
           A.rotate(-speed * delta / 1000000.0);
           // If the current transition is done, switch A & B,
           // and set the next transition to be 180 degrees from the one
           // that is done.
           while (A.end() < 0.0) {
             B.midpoint = A.midpoint + 180.0;
-	    Swap();
+            Swap();
           }
           float accent_volume = 0.0;
           float mixab = 0.0;
           if (A.begin() < 0.0)
             mixab = clamp(- A.begin() / A.width, 0.0, 1.0);
-
+          
           float mixhum =
-            powf(swing_strength, smooth_swing_config.SwingSharpness);
-
+          powf(swing_strength, smooth_swing_config.SwingSharpness);
+          
           hum_volume =
-            1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
-
+          1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
+          
           mixhum *= smooth_swing_config.MaxSwingVolume;
-
+          
           if (on_) {
             // We need to stop setting the volume when off, or playback may never stop.
             A.set_volume(mixhum * mixab);
@@ -182,7 +175,6 @@ public:
         A.set_volume(0);
         B.set_volume(0);
         state_ = SwingState::OUT;
-
       case SwingState::OUT:
         if (!A.isOff() || !B.isOff()) {
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {
@@ -195,7 +187,6 @@ public:
     // Must always set hum volume, or fade-out doesn't work.
     delegate_->SetHumVolume(hum_volume);
   }
-
 private:
   struct Data {
     void set_volume(float v) {
@@ -203,8 +194,8 @@ private:
     }
     void Play(Effect* effect, float start = 0.0) {
       if (!player) {
-	player = GetFreeWavPlayer();
-	if (!player) return;
+        player = GetFreeWavPlayer();
+        if (!player) return;
       }
       player->set_volume(0.0);
       player->PlayOnce(effect, start);
@@ -242,7 +233,6 @@ private:
   };
   Data A;
   Data B;
-
   uint32_t last_random_ = 0;
   bool on_ = false;;
   BoxFilter<Vec3, 3> gyro_filter_;
