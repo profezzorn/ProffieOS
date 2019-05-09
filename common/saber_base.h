@@ -19,7 +19,6 @@ protected:
     interrupts();
     CHECK_LL(SaberBase, saberbases, next_saber_);
   }
-  
   void Unlink(const SaberBase* x) {
     CHECK_LL(SaberBase, saberbases, next_saber_);
     for (SaberBase** i = &saberbases; *i; i = &(*i)->next_saber_) {
@@ -34,7 +33,7 @@ protected:
   SaberBase() { Link(this); }
   explicit SaberBase(NoLink _) {}
   ~SaberBase() { Unlink(this); }
-  
+
 public:
   static bool IsOn() { return on_; }
   static void TurnOn() {
@@ -47,7 +46,7 @@ public:
     last_motion_request_ = millis();
     SaberBase::DoOff();
   }
-  
+
   static bool MotionRequested() {
 #if NUM_BUTTONS == 0
     return true;
@@ -58,7 +57,7 @@ public:
   static void RequestMotion() {
     last_motion_request_ = millis();
   }
-  
+
   enum LockupType {
     LOCKUP_NONE,
     LOCKUP_NORMAL,
@@ -66,7 +65,7 @@ public:
   };
   static LockupType Lockup() { return lockup_; }
   static void SetLockup(LockupType lockup) { lockup_ = lockup; }
-  
+
   // 1.0 = kDefaultVolume
   // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
@@ -86,7 +85,7 @@ public:                                                         \
   }                                                             \
                                                                 \
 virtual void SB_##NAME TYPED_ARGS {}
-  
+
 #define SABERBASEFUNCTIONS()                    \
   SABERFUN(Clash, (), ());                      \
   SABERFUN(Stab, (), ());                       \
