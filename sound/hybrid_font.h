@@ -43,7 +43,7 @@ public:
       guess_monophonic_ = false;
       STDOUT.print("polyphonic");
     }
-      
+       
     STDOUT.println(" font.");
     SaberBase::Link(this);
     SetHumVolume(1.0);
@@ -96,7 +96,7 @@ public:
     hum_player_->PlayOnce(f);
     if (loop) hum_player_->PlayLoop(loop);
   }
-							 
+					  		 
   RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
     EnableAmplifier();
     RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
@@ -173,7 +173,7 @@ public:
        int delay_ms = 1000 * tmp->length() - config_.humStart;
        if (delay_ms > 0 && delay_ms < 30000) {
          hum_start_ += delay_ms;
-        }
+       }
       }
     }
   }
@@ -205,7 +205,7 @@ public:
     if (lockup.files_found()) {
       if (SaberBase::Lockup() == SaberBase::LOCKUP_DRAG &&
          drag.files_found()) {
-       PlayMonophonic(&drag, &drag);
+        PlayMonophonic(&drag, &drag);
       } else if (lockup.files_found()) {
         if (bgnlock.files_found()) {
          PlayMonophonic(&bgnlock, &lockup);
@@ -219,15 +219,16 @@ public:
        e = &drag;
       }
       if (!lock_player_) {
+        if (bgnlock.files_found()) {
+        lock_player_ = PlayPolyphonic(&bgnlock);
+      } else {
           lock_player_ = PlayPolyphonic(e);
-      }
+        }
       
       if (lock_player_) {
        if (bgnlock.files_found()) {
         lock_player_ = PlayPolyphonic(&bgnlock);
-        } else {
-          lock_player_ = PlayPolyphonic(e);
-        }
+        
         lock_player_->PlayLoop(e);
       }
     }
