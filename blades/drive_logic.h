@@ -76,7 +76,7 @@ public:
 
 // This allows LED class to override the entire drive logic.
 template<class LED>
-class DriveLogic<LED, typename LED::CustomDriveLogic> : public LEDInterface {
+class DriveLogic<LED, typename ToVoid<typename LED::CustomDriveLogic>::Type> : public LEDInterface {
 public:
   int PWM_overdrive(Color16 c) override { return drive_.PWM_overdrive(c); }
   int PWM(Color16 c) override { return drive_.PWM(c); }
