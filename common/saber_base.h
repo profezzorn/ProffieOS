@@ -69,7 +69,7 @@ public:
   // 1.0 = kDefaultVolume
   // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
-  virtual void StartSwing(Effect* monophonic, Effect* polyphonic) {}
+  virtual void StartSwing() {}
   virtual float SetSwingVolume(float swing_strength, float AccentSwingVolumeSharpness,
   float MaxAccentSwingVolume, float MaxAccentSwingDucking, float mixhum) {}
   virtual bool IsSwingPlaying() {}
