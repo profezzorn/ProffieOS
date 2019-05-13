@@ -119,7 +119,7 @@ public:
         if (speed >=smooth_swing_config.AccentSwingSpeedThreshold &&
             accent_swings_present &&
             (A.player->isPlaying() || B.player->isPlaying())) {
-          delegate_->StartSwing(&swing, &swng);
+          delegate_->StartSwing();
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
