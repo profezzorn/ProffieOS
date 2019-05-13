@@ -135,7 +135,9 @@ public:
       if (!swing_player_) {
         swing_player_ = PlayPolyphonic(&swng);
       } else {
-        second_swing_player_ = PlayPolyphonic(&swng);
+        if (!second_swing_player_) {
+          second_swing_player_ = PlayPolyphonic(&swng);
+        }
       }
     } else {
       PlayMonophonic(&swing, &hum);
@@ -161,10 +163,10 @@ public:
           return true;
         }
       } else {
-        if (!swing_player_) {
+        if (!swing_player_->isPlaying()) {
           swing_player_.Free();
         }
-        if (!second_swing_player_) {
+        if (!second_swing_player_->isPlaying()) {
           second_swing_player_.Free();
         }
         return false;
