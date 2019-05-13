@@ -124,9 +124,9 @@ public:
   }
   void StartSwing() override {
     if (!guess_monophonic_) {
-      swing_player_ = PlayPolyphonic(swng);
+      swing_player_ = PlayPolyphonic(&swng);
     } else {
-      PlayMonophonic(swing, &hum);
+      PlayMonophonic(&swing, &hum);
     }
   }
 
