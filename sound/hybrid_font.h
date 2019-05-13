@@ -7,10 +7,16 @@ public:
     CONFIG_VARIABLE(humStart, 100);
     CONFIG_VARIABLE(volHum, 15);
     CONFIG_VARIABLE(volEff, 16);
+    CONFIG_VARIABLE(ProffieOSSwingVolumeSharpness, 0.5f);
+    CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 3.0f);
+    CONFIG_VARIABLE(ProffieOSMaxSwingDucking, 1.0f);
   }
   int humStart;
   int volHum;
   int volEff;
+  float ProffieOSSwingVolumeSharpness;
+  float ProffieOSMaxSwingVolume;
+  float ProffieOSMaxSwingDucking;
 };
 
 // Monophonic sound fonts are the most common.
@@ -63,12 +69,14 @@ public:
     hum_player_.Free();
     next_hum_player_.Free();
     swing_player_.Free();
+    second_swing_player_.Free();
     SaberBase::Unlink(this);
   }
 
   RefPtr<BufferedWavPlayer> hum_player_;
   RefPtr<BufferedWavPlayer> next_hum_player_;
   RefPtr<BufferedWavPlayer> swing_player_;
+  RefPtr<BufferedWavPlayer> second_swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
   
   void PlayMonophonic(Effect* f, Effect* loop)  {
@@ -124,29 +132,41 @@ public:
   }
   void StartSwing() override {
     if (!guess_monophonic_) {
-      swing_player_ = PlayPolyphonic(&swng);
+      if (!swing_player_) {
+        swing_player_ = PlayPolyphonic(&swng);
+      } else {
+        second_swing_player_ = PlayPolyphonic(&swng);
+      }
     } else {
       PlayMonophonic(&swing, &hum);
     }
   }
 
-  float SetSwingVolume(float swing_strength, float AccentSwingVolumeSharpness, float MaxAccentSwingVolume,
-  float MaxAccentSwingDucking, float mixhum) override {
+  float SetSwingVolume(float swing_strength, float mixhum) {
     if (IsSwingPlaying()) {
-      float accent_volume = powf(swing_strength, AccentSwingVolumeSharpness) * MaxAccentSwingVolume;
+      float accent_volume = powf(swing_strength, config_.ProffieOSSwingVolumeSharpness) * config_.ProffieOSMaxSwingVolume;
       swing_player_->set_volume(accent_volume);
-      mixhum = mixhum * MaxAccentSwingDucking;
-      return mixhum;
+      if (second_swing_player_) {
+        second_swing_player_->set_volume(accent_volume);
+      }
+      mixhum = mixhum * config_.ProffieOSMaxSwingDucking;
     }
-    else return 0.0;
+    return mixhum;
   }
 
-  bool IsSwingPlaying() override {
+  bool IsSwingPlaying() {
     if (swing_player_) {
-      if (swing_player_->isPlaying()) {
-        return true;
+      if (second_swing_player_) {
+        if(second_swing_player_->isPlaying() || swing_player_->isPlaying()) {
+          return true;
+        }
       } else {
-        swing_player_.Free();
+        if (!swing_player_) {
+          swing_player_.Free();
+        }
+        if (!second_swing_player_) {
+          second_swing_player_.Free();
+        }
         return false;
       }
     } else {

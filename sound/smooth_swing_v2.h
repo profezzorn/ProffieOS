@@ -166,12 +166,7 @@ public:
 	    // We need to stop setting the volume when off, or playback may never stop.
 	    A.set_volume(mixhum * mixab);
 	    B.set_volume(mixhum * (1.0 - mixab));
-      if (delegate_->IsSwingPlaying()) {
-        mixhum = delegate_->SetSwingVolume(swing_strength,
-        smooth_swing_config.AccentSwingVolumeSharpness,
-        smooth_swing_config.MaxAccentSwingVolume,
-        smooth_swing_config.MaxAccentSwingDucking, mixhum);
-	    }
+      mixhum = delegate_->SetSwingVolume(swing_strength, mixhum);
 	  }
           break;
         }
