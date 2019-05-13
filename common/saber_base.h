@@ -6,7 +6,6 @@
 // has a corresponding SaberBase::Do* function which invokes that function
 // on all active SaberBases.
 class SaberBase;
-class Effect;
 extern SaberBase* saberbases;
 
 class SaberBase {
