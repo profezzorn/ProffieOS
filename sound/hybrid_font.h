@@ -122,11 +122,11 @@ public:
       PlayPolyphonic(effect);
     }
   }
-  void StartSwing(Effect* monophonic, Effect* polyphonic) override {
-    if (polyphonic->files_found()) {
-      swing_player_ = PlayPolyphonic(polyphonic);
+  void StartSwing() override {
+    if (!guess_monophonic_) {
+      swing_player_ = PlayPolyphonic(swng);
     } else {
-      PlayMonophonic(monophonic, &hum);
+      PlayMonophonic(swing, &hum);
     }
   }
 
@@ -318,7 +318,7 @@ public:
       if (!swinging_ && state_ != STATE_OFF &&
 	  !(lockup.files_found() && SaberBase::Lockup())) {
         swinging_ = true;
-        StartSwing(&swing, &swng);
+        StartSwing();
       }
     } else {
       swinging_ = false;
