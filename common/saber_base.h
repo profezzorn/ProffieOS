@@ -69,7 +69,7 @@ public:
   // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
   virtual void StartSwing() {}
-  virtual float SetSwingVolume(float swing_strength, float mixhum) {}
+  virtual void SetSwingVolume(float swing_strength) {}
   
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)                        \
 public:                                                         \
