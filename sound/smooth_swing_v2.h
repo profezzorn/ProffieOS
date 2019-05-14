@@ -119,7 +119,7 @@ public:
         if (speed >=smooth_swing_config.AccentSwingSpeedThreshold &&
             accent_swings_present &&
             (A.player->isPlaying() || B.player->isPlaying())) {
-          delegate_->StartSwing();
+          delegate_->StartSwing(true);
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
@@ -130,7 +130,7 @@ public:
           // that is done.
           while (A.end() < 0.0) {
             B.midpoint = A.midpoint + 180.0;
-	    Swap();
+            Swap();
           }
           float mixab = 0.0;
           if (A.begin() < 0.0)
@@ -162,12 +162,12 @@ public:
             STDOUT.print("  hum_volume: ");
             STDOUT.println(hum_volume);
           }
-	  if (on_) {
-	    // We need to stop setting the volume when off, or playback may never stop.
-      delegate_->SetSwingVolume(swing_strength);
-	    A.set_volume(mixhum * mixab);
-	    B.set_volume(mixhum * (1.0 - mixab));
-	  }
+          if (on_) {
+            // We need to stop setting the volume when off, or playback may never stop.
+            delegate_->SetSwingVolume(swing_strength); 
+            A.set_volume(mixhum * mixab);
+            B.set_volume(mixhum * (1.0 - mixab));
+          }
           break;
         }
         A.set_volume(0);
@@ -194,8 +194,8 @@ private:
     }
     void Play(Effect* effect, float start = 0.0) {
       if (!player) {
-	player = GetFreeWavPlayer();
-	if (!player) return;
+        player = GetFreeWavPlayer();
+        if (!player) return;
       }
       player->set_volume(0.0);
       player->PlayOnce(effect, start);
