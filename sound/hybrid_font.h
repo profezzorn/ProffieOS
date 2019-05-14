@@ -7,12 +7,14 @@ public:
     CONFIG_VARIABLE(humStart, 100);
     CONFIG_VARIABLE(volHum, 15);
     CONFIG_VARIABLE(volEff, 16);
+	  CONFIG_VARIABLE(ProffieOSSwingSpeedThreshold, 250.0f);
     CONFIG_VARIABLE(ProffieOSSwingVolumeSharpness, 0.5f);
     CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 3.0f);
   }
   int humStart;
   int volHum;
   int volEff;
+  float ProffieOSSwingSpeedThreshold;
   float ProffieOSSwingVolumeSharpness;
   float ProffieOSMaxSwingVolume;
 };
@@ -126,23 +128,29 @@ public:
       PlayPolyphonic(effect);
     }
   }
-  void StartSwing() override {
-    if (!guess_monophonic_) {
-      if (!swing_player_) {
-        swing_player_ = PlayPolyphonic(&swng);
+  
+  void StartSwing(bool AccentSwing) override {
+      if (AccentSwing) {
+        if (!guess_monophonic_) {
+          if (!swing_player_) {
+            swing_player_ = PlayPolyphonic(&swng);
+          }
+          if (swing_player_->length() - swing_player_->pos() <= 0.1) {
+            RefPtr<BufferedWavPlayer> overlap_swing = swing_player_;
+            overlap_swing->set_fade_time(0.1);
+            overlap_swing->FadeAndStop();
+            overlap_swing.Free();
+            swing_player_ = PlayPolyphonic(&swng);
+          }
+        } else {
+          PlayMonophonic(&swing, &hum);
+        }
       } else {
-        RefPtr<BufferedWavPlayer> second_swing_player_ = swing_player_;
-        swing_player_ = PlayPolyphonic(&swng);
-        second_swing_player_->set_fade_time(0.2);
-        second_swing_player_->FadeAndStop();
-        second_swing_player_.Free();
-      }
-    } else {
-      PlayMonophonic(&swing, &hum);
+        Play(&swing, &swng);
     }
   }
 
-  float SetSwingVolume(float swing_strength) override {
+  void SetSwingVolume(float swing_strength) override {
     if(swing_player_) {
       if (swing_player_->isPlaying()) {
         float accent_volume = powf(swing_strength, config_.ProffieOSSwingVolumeSharpness) * config_.ProffieOSMaxSwingVolume;
@@ -315,7 +323,7 @@ public:
   bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
-    if (speed > 250.0) {
+    if (speed > config_.ProffieOSSwingSpeedThreshold) {
       if (!swinging_ && state_ != STATE_OFF &&
 	  !(lockup.files_found() && SaberBase::Lockup())) {
         swinging_ = true;
