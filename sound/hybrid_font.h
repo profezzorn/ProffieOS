@@ -69,14 +69,12 @@ public:
     hum_player_.Free();
     next_hum_player_.Free();
     swing_player_.Free();
-    second_swing_player_.Free();
     SaberBase::Unlink(this);
   }
 
   RefPtr<BufferedWavPlayer> hum_player_;
   RefPtr<BufferedWavPlayer> next_hum_player_;
   RefPtr<BufferedWavPlayer> swing_player_;
-  RefPtr<BufferedWavPlayer> second_swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
   
   void PlayMonophonic(Effect* f, Effect* loop)  {
@@ -135,13 +133,11 @@ public:
       if (!swing_player_) {
         swing_player_ = PlayPolyphonic(&swng);
       } else {
-        if (!second_swing_player_) {
-          second_swing_player_ = swing_player_;
-          swing_player_ = PlayPolyphonic(&swng);
-          second_swing_player_->set_fade_time(0.2);
-          second_swing_player_->FadeAndStop();
-          second_swing_player_.Free();
-        }
+        RefPtr<BufferedWavPlayer> second_swing_player_ = swing_player_;
+        swing_player_ = PlayPolyphonic(&swng);
+        second_swing_player_->set_fade_time(0.2);
+        second_swing_player_->FadeAndStop();
+        second_swing_player_.Free();
       }
     } else {
       PlayMonophonic(&swing, &hum);
