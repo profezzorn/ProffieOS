@@ -129,24 +129,21 @@ public:
     }
   }
   
-  void StartSwing(bool AccentSwing) override {
-      if (AccentSwing) {
-        if (!guess_monophonic_) {
-          if (!swing_player_) {
-            swing_player_ = PlayPolyphonic(&swng);
-          }
-          if (swing_player_->length() - swing_player_->pos() <= 0.1) {
-            RefPtr<BufferedWavPlayer> overlap_swing = swing_player_;
-            overlap_swing->set_fade_time(0.1);
-            overlap_swing->FadeAndStop();
-            overlap_swing.Free();
-            swing_player_ = PlayPolyphonic(&swng);
-          }
-        } else {
-          PlayMonophonic(&swing, &hum);
-        }
-      } else {
-        Play(&swing, &swng);
+  void StartSwing() override {
+    if (!guess_monophonic_) {
+      if (!swing_player_) {
+        swing_player_ = PlayPolyphonic(&swng);
+      }
+      // avoid overlapping swings unless at least a quarter of the swing has played.  Stops double swing events.
+      if ((swing_player_->length() - swing_player_->pos()) / swing_player_->length() <= 0.75) {
+        RefPtr<BufferedWavPlayer> overlap_swing = swing_player_;
+        swing_player_ = PlayPolyphonic(&swng);
+        overlap_swing->set_fade_time(0.1);
+        overlap_swing->FadeAndStop();
+        overlap_swing.Free();
+      }
+    } else {
+      PlayMonophonic(&swing, &hum);
     }
   }
 
@@ -329,6 +326,8 @@ public:
         swinging_ = true;
         StartSwing();
       }
+      float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
+      SetSwingVolume(swing_strength);
     } else {
       swinging_ = false;
     }
