@@ -183,7 +183,7 @@ SnoozeTouch snooze_touch;
 SnoozeBlock snooze_config(snooze_touch, snooze_digital, snooze_timer);
 #endif
 
-const char version[] = "$Id:$";
+const char version[] = "$Id$";
 
 #include "common/state_machine.h"
 #include "common/monitoring.h"
