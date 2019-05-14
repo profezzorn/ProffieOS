@@ -39,23 +39,23 @@ public:
     guess_monophonic_ = false;
     if (monophonic_hum_) {
       if ((clash.files_found() || blaster.files_found() || swing.files_found())) {
-	guess_monophonic_ = true;
-	STDOUT.print("monophonic");
+        guess_monophonic_ = true;
+        STDOUT.print("monophonic");
       } else {
-	guess_monophonic_ = false;
-	STDOUT.print("hybrid");
+        guess_monophonic_ = false;
+        STDOUT.print("hybrid");
       }
     } else {
       guess_monophonic_ = false;
       STDOUT.print("polyphonic");
     }
-	
+    
     STDOUT.println(" font.");
     SaberBase::Link(this);
     SetHumVolume(1.0);
     state_ = STATE_OFF;
   }
-
+  
   enum State {
     STATE_OFF,
     STATE_OUT,
@@ -63,7 +63,7 @@ public:
     STATE_HUM_ON,
     STATE_HUM_FADE_OUT,
   };
-
+  
   void Deactivate() {
     lock_player_.Free();
     hum_player_.Free();
@@ -72,7 +72,7 @@ public:
     second_swing_player_.Free();
     SaberBase::Unlink(this);
   }
-
+  
   RefPtr<BufferedWavPlayer> hum_player_;
   RefPtr<BufferedWavPlayer> next_hum_player_;
   RefPtr<BufferedWavPlayer> swing_player_;
@@ -84,8 +84,8 @@ public:
     if (!next_hum_player_) {
       next_hum_player_ = GetFreeWavPlayer();
       if (!next_hum_player_) {
-	STDOUT.println("Out of WAV players!");
-	return;
+        STDOUT.println("Out of WAV players!");
+        return;
       }
     }
     if (hum_player_) {
@@ -104,7 +104,7 @@ public:
     hum_player_->PlayOnce(f);
     if (loop) hum_player_->PlayLoop(loop);
   }
-							   
+  
   RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
     EnableAmplifier();
     RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
@@ -114,7 +114,7 @@ public:
     }
     return player;
   }
-
+  
   void Play(Effect* monophonic, Effect* polyphonic) {
     if (polyphonic->files_found()) {
       PlayPolyphonic(polyphonic);
@@ -122,7 +122,7 @@ public:
       PlayMonophonic(monophonic, &hum);
     }
   }
-
+  
   void PlayCommon(Effect* effect) {
     if (guess_monophonic_) {
       PlayMonophonic(effect, &hum);
@@ -136,44 +136,30 @@ public:
         swing_player_ = PlayPolyphonic(&swng);
       } else {
         if (!second_swing_player_) {
-          second_swing_player_ = PlayPolyphonic(&swng);
+          second_swing_player_ = swing_player_;
+          swing_player_ = PlayPolyphonic(&swng);
+          second_swing_player_->set_fade_time(0.2);
+          second_swing_player_->FadeAndStop();
+          second_swing_player_.Free();
         }
       }
     } else {
       PlayMonophonic(&swing, &hum);
     }
   }
-
+  
   float SetSwingVolume(float swing_strength, float mixhum) {
-    if (IsSwingPlaying()) {
-      float accent_volume = powf(swing_strength, config_.ProffieOSSwingVolumeSharpness) * config_.ProffieOSMaxSwingVolume;
-      swing_player_->set_volume(accent_volume);
-      if (second_swing_player_) {
-        second_swing_player_->set_volume(accent_volume);
+    if(swing_player_) {
+      if (swing_player_->isPlaying()) {
+        float accent_volume = powf(swing_strength, config_.ProffieOSSwingVolumeSharpness) * config_.ProffieOSMaxSwingVolume;
+        swing_player_->set_volume(accent_volume);
+        mixhum = mixhum * config_.ProffieOSMaxSwingDucking;
       }
-      mixhum = mixhum * config_.ProffieOSMaxSwingDucking;
+      else {
+        swing_player_.Free();
+      }
     }
     return mixhum;
-  }
-
-  bool IsSwingPlaying() {
-    if (swing_player_) {
-      if (second_swing_player_) {
-        if(second_swing_player_->isPlaying() || swing_player_->isPlaying()) {
-          return true;
-        }
-      } else {
-        if (!swing_player_->isPlaying()) {
-          swing_player_.Free();
-        }
-        if (!second_swing_player_->isPlaying()) {
-          second_swing_player_.Free();
-        }
-        return false;
-      }
-    } else {
-      return false;
-    }
   }
   void SB_On() override {
     if (monophonic_hum_) {
@@ -183,31 +169,31 @@ public:
       state_ = STATE_OUT;
       hum_player_ = GetFreeWavPlayer();
       if (hum_player_) {
-	hum_player_->set_volume_now(0);
-	hum_player_->PlayOnce(&hum);
-	hum_player_->PlayLoop(&hum);
-	hum_start_ = millis();
+        hum_player_->set_volume_now(0);
+        hum_player_->PlayOnce(&hum);
+        hum_player_->PlayLoop(&hum);
+        hum_start_ = millis();
       }
       RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&out);
       if (config_.humStart && tmp) {
-	int delay_ms = 1000 * tmp->length() - config_.humStart;
-	if (delay_ms > 0 && delay_ms < 30000) {
-	  hum_start_ += delay_ms;
-	}
+        int delay_ms = 1000 * tmp->length() - config_.humStart;
+        if (delay_ms > 0 && delay_ms < 30000) {
+          hum_start_ += delay_ms;
+        }
       }
     }
   }
-
+  
   void SB_Off() override {
     if (monophonic_hum_) {
       size_t total = poweroff.files_found() + pwroff.files_found();
       if (total) {
-	state_ = STATE_OFF;
-	if ((rand() % total) < poweroff.files_found()) {
-	  PlayMonophonic(&poweroff, NULL);
-	} else {
-	  PlayMonophonic(&pwroff, NULL);
-	}
+        state_ = STATE_OFF;
+        if ((rand() % total) < poweroff.files_found()) {
+          PlayMonophonic(&poweroff, NULL);
+        } else {
+          PlayMonophonic(&pwroff, NULL);
+        }
       }
     } else {
       state_ = STATE_HUM_FADE_OUT;
@@ -220,24 +206,24 @@ public:
   void SB_Blast() override { Play(&blaster, &blst); }
   void SB_Boot() override { PlayPolyphonic(&boot); }
   void SB_NewFont() override { PlayPolyphonic(&font); }
-
+  
   void SB_BeginLockup() override {
     if (lockup.files_found()) {
       if (SaberBase::Lockup() == SaberBase::LOCKUP_DRAG &&
-	  drag.files_found()) {
-	PlayMonophonic(&drag, &drag);
+          drag.files_found()) {
+        PlayMonophonic(&drag, &drag);
       } else if (lockup.files_found()) {
         if (bgnlock.files_found()) {
           PlayMonophonic(&bgnlock, &lockup);
         } else {
           PlayMonophonic(&lockup, &lockup);
-	}
+        }
       }
     } else {
       Effect* e = &lock;
       if (SaberBase::Lockup() == SaberBase::LOCKUP_DRAG &&
-	  drag.files_found()) {
-	e = &drag;
+          drag.files_found()) {
+        e = &drag;
       }
       if (!lock_player_) {
         if (bgnlock.files_found()) {
@@ -245,26 +231,26 @@ public:
         } else {
           lock_player_ = PlayPolyphonic(e);
         }
-
-	if (lock_player_) {
-	  lock_player_->PlayLoop(e);
-	}
+        
+        if (lock_player_) {
+          lock_player_->PlayLoop(e);
+        }
       }
     }
   }
-
+  
   void SB_EndLockup() override {
     if (lock_player_) {
       // Polyphonic case
       lock_player_->set_fade_time(0.3);
-
+      
       if (endlock.files_found()) { // polyphonic end lock
         if (PlayPolyphonic(&endlock)) {
           // if playing an end lock fade the lockup faster
           lock_player_->set_fade_time(0.003);
-	}
+        }
       }
-
+      
       lock_player_->FadeAndStop();
       lock_player_.Free();
       return;
@@ -278,53 +264,53 @@ public:
       }
     }
   }
-
+  
   void SetHumVolume(float vol) override {
     if (!monophonic_hum_) {
       if (state_ != STATE_OFF && !hum_player_) {
-	hum_player_ = GetFreeWavPlayer();
-	if (hum_player_) {
-	  hum_player_->set_volume_now(0);
-	  hum_player_->PlayOnce(&hum);
-	  hum_player_->PlayLoop(&hum);
-	  hum_start_ = millis();
-	}
+        hum_player_ = GetFreeWavPlayer();
+        if (hum_player_) {
+          hum_player_->set_volume_now(0);
+          hum_player_->PlayOnce(&hum);
+          hum_player_->PlayLoop(&hum);
+          hum_start_ = millis();
+        }
       }
       if (!hum_player_) return;
       uint32_t m = micros();
       switch (state_) {
-	case STATE_OFF:
-	  volume_ = 0.0f;
-	  return;
-	case STATE_OUT:
-	  volume_ = 0.0f;
-	  if (millis() - hum_start_ < 0x7fffffffUL) {
-	    state_ = STATE_HUM_FADE_IN;
-	  }
-	  break;
-	case STATE_HUM_FADE_IN: {
-	  uint32_t delta = m - last_micros_;
-	  volume_ += (delta / 1000000.0) / 0.2; // 0.2 seconds
-	  if (volume_ >= 1.0f) {
-	    volume_ = 1.0f;
-	    state_ = STATE_HUM_ON;
-	  }
-	  break;
-	}
-	case STATE_HUM_ON:
-	  break;
-	case STATE_HUM_FADE_OUT: {
-	  SaberBase::RequestMotion();
-	  uint32_t delta = m - last_micros_;
-	  volume_ -= (delta / 1000000.0) / 0.2; // 0.2 seconds
-	  if (volume_ <= 0.0f) {
-	    volume_ = 0.0f;
-	    state_ = STATE_OFF;
-	    hum_player_->FadeAndStop();
-	    hum_player_.Free();
-	  }
-	  break;
-	}
+        case STATE_OFF:
+          volume_ = 0.0f;
+          return;
+        case STATE_OUT:
+          volume_ = 0.0f;
+          if (millis() - hum_start_ < 0x7fffffffUL) {
+            state_ = STATE_HUM_FADE_IN;
+          }
+          break;
+        case STATE_HUM_FADE_IN: {
+          uint32_t delta = m - last_micros_;
+          volume_ += (delta / 1000000.0) / 0.2; // 0.2 seconds
+          if (volume_ >= 1.0f) {
+            volume_ = 1.0f;
+            state_ = STATE_HUM_ON;
+          }
+          break;
+        }
+        case STATE_HUM_ON:
+          break;
+        case STATE_HUM_FADE_OUT: {
+          SaberBase::RequestMotion();
+          uint32_t delta = m - last_micros_;
+          volume_ -= (delta / 1000000.0) / 0.2; // 0.2 seconds
+          if (volume_ <= 0.0f) {
+            volume_ = 0.0f;
+            state_ = STATE_OFF;
+            hum_player_->FadeAndStop();
+            hum_player_.Free();
+          }
+          break;
+        }
       }
       last_micros_ = m;
       vol *= volume_;
@@ -338,7 +324,7 @@ public:
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > 250.0) {
       if (!swinging_ && state_ != STATE_OFF &&
-	  !(lockup.files_found() && SaberBase::Lockup())) {
+          !(lockup.files_found() && SaberBase::Lockup())) {
         swinging_ = true;
         StartSwing();
       }
@@ -351,8 +337,8 @@ public:
     }
     SetHumVolume(vol);
   }
-
- private:
+  
+private:
   uint32_t last_micros_;
   uint32_t hum_start_;
   bool monophonic_hum_;
@@ -363,3 +349,4 @@ public:
 };
 
 #endif
+
