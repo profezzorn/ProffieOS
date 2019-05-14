@@ -9,14 +9,12 @@ public:
     CONFIG_VARIABLE(volEff, 16);
     CONFIG_VARIABLE(ProffieOSSwingVolumeSharpness, 0.5f);
     CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 3.0f);
-    CONFIG_VARIABLE(ProffieOSMaxSwingDucking, 1.0f);
   }
   int humStart;
   int volHum;
   int volEff;
   float ProffieOSSwingVolumeSharpness;
   float ProffieOSMaxSwingVolume;
-  float ProffieOSMaxSwingDucking;
 };
 
 // Monophonic sound fonts are the most common.
@@ -144,18 +142,16 @@ public:
     }
   }
 
-  float SetSwingVolume(float swing_strength, float mixhum) {
+  float SetSwingVolume(float swing_strength) override {
     if(swing_player_) {
       if (swing_player_->isPlaying()) {
         float accent_volume = powf(swing_strength, config_.ProffieOSSwingVolumeSharpness) * config_.ProffieOSMaxSwingVolume;
         swing_player_->set_volume(accent_volume);
-        mixhum = mixhum * config_.ProffieOSMaxSwingDucking;
       }
       else {
         swing_player_.Free();
       }
     }
-    return mixhum;
   }
   
   void SB_On() override {
