@@ -199,7 +199,7 @@ public:
     } else {
       state_ = STATE_HUM_FADE_OUT;
       PlayPolyphonic(&in);
-    }
+    } 
   }
   void SB_Clash() override { Play(&clash, &clsh); }
   void SB_Stab() override { PlayCommon(&stab); }
