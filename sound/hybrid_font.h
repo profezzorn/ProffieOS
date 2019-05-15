@@ -144,7 +144,9 @@ public:
           overlap_swing.Free();
         }
       }
-      swing_player_ = PlayPolyphonic(&swng);
+      else if (!swing_player_) {
+        swing_player_ = PlayPolyphonic(&swng);
+      }
     } else {
       PlayMonophonic(&swing, &hum);
     }
