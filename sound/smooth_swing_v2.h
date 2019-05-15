@@ -130,7 +130,7 @@ public:
           // that is done.
           while (A.end() < 0.0) {
             B.midpoint = A.midpoint + 180.0;
-            Swap();
+	    Swap();
           }
           float mixab = 0.0;
           if (A.begin() < 0.0)
@@ -194,8 +194,8 @@ private:
     }
     void Play(Effect* effect, float start = 0.0) {
       if (!player) {
-        player = GetFreeWavPlayer();
-        if (!player) return;
+	player = GetFreeWavPlayer();
+	if (!player) return;
       }
       player->set_volume(0.0);
       player->PlayOnce(effect, start);
