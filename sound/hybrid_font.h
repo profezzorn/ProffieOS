@@ -139,7 +139,7 @@ public:
         if (swing_player_->pos() / swing_player_->length() >= config_.ProffieOSSwingOverlap) {
           RefPtr<BufferedWavPlayer> overlap_swing = swing_player_;
           swing_player_ = PlayPolyphonic(&swng);
-          overlap_swing->set_fade_time(0.1);
+          overlap_swing->set_fade_time(overlap_swing->length() - overlap_swing->pos());
           overlap_swing->FadeAndStop();
           overlap_swing.Free();
         }
