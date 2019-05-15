@@ -115,7 +115,7 @@ public:
         state_ = SwingState::ON;
         
       case SwingState::ON:
-        //trigger accent swing
+        // trigger accent swing
         if (speed >=smooth_swing_config.AccentSwingSpeedThreshold &&
             accent_swings_present &&
             (A.player->isPlaying() || B.player->isPlaying())) {
