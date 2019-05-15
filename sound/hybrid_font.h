@@ -10,6 +10,7 @@ public:
     CONFIG_VARIABLE(ProffieOSSwingSpeedThreshold, 250.0f);
     CONFIG_VARIABLE(ProffieOSSwingVolumeSharpness, 0.5f);
     CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 3.0f);
+    CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.6f);
   }
   int humStart;
   int volHum;
@@ -131,17 +132,18 @@ public:
   
   void StartSwing() override {
     if (!guess_monophonic_) {
-      if (!swing_player_) {
-        swing_player_ = PlayPolyphonic(&swng);
+      if (swing_player_) {
+        // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
+        // between 0 (no overlap) and 1.0 (full overlap)
+        if (swing_player_->pos() / swing_player_->length()) >= config_.ProffieOSSwingOverlap) {
+          RefPtr<BufferedWavPlayer> overlap_swing = swing_player_;
+          swing_player_ = PlayPolyphonic(&swng);
+          overlap_swing->set_fade_time(0.1);
+          overlap_swing->FadeAndStop();
+          overlap_swing.Free();
+        }
       }
-      // avoid overlapping swings unless at least a quarter of the swing has played.  Stops double swing events.
-      if ((swing_player_->length() - swing_player_->pos()) / swing_player_->length() <= 0.75) {
-        RefPtr<BufferedWavPlayer> overlap_swing = swing_player_;
-        swing_player_ = PlayPolyphonic(&swng);
-        overlap_swing->set_fade_time(0.1);
-        overlap_swing->FadeAndStop();
-        overlap_swing.Free();
-      }
+      swing_player_ = PlayPolyphonic(&swng);
     } else {
       PlayMonophonic(&swing, &hum);
     }
@@ -196,7 +198,7 @@ public:
     } else {
       state_ = STATE_HUM_FADE_OUT;
       PlayPolyphonic(&in);
-    } 
+    }
   }
   void SB_Clash() override { Play(&clash, &clsh); }
   void SB_Stab() override { PlayCommon(&stab); }
