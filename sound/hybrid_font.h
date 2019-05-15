@@ -331,7 +331,7 @@ public:
       }
       float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
       SetSwingVolume(swing_strength);
-    } else {
+    } else if (swinging_ && speed <= config_.ProffieOSSwingSpeedThreshold * 0.8) {
       swinging_ = false;
     }
     float vol = 1.0f;
