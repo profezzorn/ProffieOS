@@ -18,6 +18,7 @@ public:
   float ProffieOSSwingSpeedThreshold;
   float ProffieOSSwingVolumeSharpness;
   float ProffieOSMaxSwingVolume;
+  float ProffieOSSwingOverlap;
 };
 
 // Monophonic sound fonts are the most common.
