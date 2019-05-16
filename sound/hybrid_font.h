@@ -343,7 +343,7 @@ public:
         StartSwing();
       }
       float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
-      SetSwingVolume(swing_strength);
+      SetSwingVolume(swing_strength, 1.0);
     } else if (swinging_ && speed <= config_.ProffieOSSwingSpeedThreshold * 0.8) {
       swinging_ = false;
     }
