@@ -146,6 +146,7 @@ public:
       }
       else if (!swing_player_) {
         swing_player_ = PlayPolyphonic(&swng);
+        swing_player_->set_volume_now(0);
       }
     } else {
       PlayMonophonic(&swing, &hum);
