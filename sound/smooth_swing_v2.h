@@ -164,7 +164,9 @@ public:
           }
           if (on_) {
             // We need to stop setting the volume when off, or playback may never stop.
-            delegate_->SetSwingVolume(swing_strength); 
+            if (accent_swings_present) {
+              mixhum = delegate_->SetSwingVolume(swing_strength, mixhum);
+            }
             A.set_volume(mixhum * mixab);
             B.set_volume(mixhum * (1.0 - mixab));
           }
