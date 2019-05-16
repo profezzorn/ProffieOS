@@ -155,7 +155,7 @@ public:
     }
   }
 
-  float SetSwingVolume(float swing_strength, mixhum) override {
+  float SetSwingVolume(float swing_strength, float mixhum) override {
     if(swing_player_) {
       if (swing_player_->isPlaying()) {
         float accent_volume = powf(swing_strength, config_.ProffieOSSwingVolumeSharpness) * config_.ProffieOSMaxSwingVolume;
