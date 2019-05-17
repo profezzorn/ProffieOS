@@ -159,7 +159,7 @@ public:
     if(swing_player_) {
       if (swing_player_->isPlaying()) {
         float accent_volume = powf(swing_strength, config_.ProffieOSSwingVolumeSharpness) * config_.ProffieOSMaxSwingVolume;
-        swing_player_->set_fade_time(0.02);
+        swing_player_->set_fade_time(0.04);
         swing_player_->set_volume(accent_volume);
         mixhum = mixhum - mixhum * (config_.ProffieOSSmoothSwingDucking * accent_volume);
       } else {
