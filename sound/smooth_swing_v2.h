@@ -16,7 +16,7 @@ public:
       STDOUT.println("Warning, swingl and swingh should have the same number of files.");
     }
     swings_ = std::min<size_t>(swingl.files_found(), swingh.files_found());
-    //check for swngxx files to use as accent swings
+    // check for swngxx files to use as accent swings
     if ((swng.files_found() || swing.files_found()) > 0 && smooth_swing_config.AccentSwingSpeedThreshold > 0.0) {
       STDOUT.println("Accent Swings Enabled.");
       STDOUT.print("Polyphonic swings: ");
