@@ -8,9 +8,9 @@ public:
     CONFIG_VARIABLE(volHum, 15);
     CONFIG_VARIABLE(volEff, 16);
     CONFIG_VARIABLE(ProffieOSSwingSpeedThreshold, 250.0f);
-    CONFIG_VARIABLE(ProffieOSSwingVolumeSharpness, 0.5f);
+    CONFIG_VARIABLE(ProffieOSSwingVolumeSharpness, 1.0f);
     CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 3.0f);
-    CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.6f);
+    CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.25f);
   }
   int humStart;
@@ -137,7 +137,7 @@ public:
     if (!guess_monophonic_) {
       if (swing_player_) {
         // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
-        // between 0 (no overlap) and 1.0 (full overlap)
+        // between 0 (full overlap) and 1.0 (no overlap)
         if (swing_player_->pos() / swing_player_->length() >= config_.ProffieOSSwingOverlap) {
           swing_player_.Free();
           swing_player_ = PlayPolyphonic(&swng);
