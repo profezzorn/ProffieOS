@@ -12,6 +12,7 @@ public:
     CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 3.0f);
     CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.0f);
+    CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 0.8f);
   }
   int humStart;
   int volHum;
@@ -21,6 +22,7 @@ public:
   float ProffieOSMaxSwingVolume;
   float ProffieOSSwingOverlap;
   float ProffieOSSmoothSwingDucking;
+  float ProffieOSSwingLowerThreshold;
 };
 
 // Monophonic sound fonts are the most common.
@@ -344,7 +346,8 @@ public:
       }
       float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
       SetSwingVolume(swing_strength, 1.0);
-    } else if (swinging_ && speed <= config_.ProffieOSSwingSpeedThreshold * 0.8) {
+    } else if (swinging_ && speed <= config_.ProffieOSSwingSpeedThreshold * 
+               ProffieOSSwingLowerThreshold, config_.ProffieOSSwingLowerThreshold) {
       swinging_ = false;
     }
     float vol = 1.0f;
