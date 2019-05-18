@@ -64,7 +64,7 @@ public:
       for (int i = 0; i < N; i++) {
 	if (!streams_[i]) continue;
         int e = streams_[i]->read(data, to_do);
-	if (e == 0 && !streams_[i]->eof()) {
+	if (e < to_do && !streams_[i]->eof()) {
 	  underflow_count_++;
 	}
         for (int j = 0; j < e; j++) {
