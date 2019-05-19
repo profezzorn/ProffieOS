@@ -64,4 +64,18 @@ protected:
   uint8_t pin_;
 };
 
+class InvertedLatchingButton : public LatchingButton {
+public:
+  InvertedLatchingButton(enum BUTTON button, int pin, const char* name)
+    : LatchingButton(button, pin, name) {
+#ifdef ENABLE_SNOOZE
+    snooze_digital.pinMode(pin, INPUT_PULLUP, FALLING);
+#endif
+  }
+
+  bool Read() override {
+    return digitalRead(pin_) == HIGH;
+  }
+};
+
 #endif
