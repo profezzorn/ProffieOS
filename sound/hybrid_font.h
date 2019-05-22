@@ -7,10 +7,22 @@ public:
     CONFIG_VARIABLE(humStart, 100);
     CONFIG_VARIABLE(volHum, 15);
     CONFIG_VARIABLE(volEff, 16);
+    CONFIG_VARIABLE(ProffieOSSwingSpeedThreshold, 250.0f);
+    CONFIG_VARIABLE(ProffieOSSwingVolumeSharpness, 1.0f);
+    CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 3.0f);
+    CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
+    CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.0f);
+    CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
   }
   int humStart;
   int volHum;
   int volEff;
+  float ProffieOSSwingSpeedThreshold;
+  float ProffieOSSwingVolumeSharpness;
+  float ProffieOSMaxSwingVolume;
+  float ProffieOSSwingOverlap;
+  float ProffieOSSmoothSwingDucking;
+  float ProffieOSSwingLowerThreshold;
 };
 
 // Monophonic sound fonts are the most common.
@@ -62,11 +74,13 @@ public:
     lock_player_.Free();
     hum_player_.Free();
     next_hum_player_.Free();
+    swing_player_.Free();
     SaberBase::Unlink(this);
   }
 
   RefPtr<BufferedWavPlayer> hum_player_;
   RefPtr<BufferedWavPlayer> next_hum_player_;
+  RefPtr<BufferedWavPlayer> swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
   
   void PlayMonophonic(Effect* f, Effect* loop)  {
@@ -120,7 +134,47 @@ public:
       PlayPolyphonic(effect);
     }
   }
+  
+  void StartSwing() override {
+    if (!guess_monophonic_) {
+      if (swing_player_) {
+        // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
+        // between 0 (full overlap) and 1.0 (no overlap)
+        if (swing_player_->pos() / swing_player_->length() >= config_.ProffieOSSwingOverlap) {
+          swing_player_->set_fade_time(swing_player_->length() - swing_player_->pos());
+          swing_player_->FadeAndStop();
+          swing_player_.Free();
+          swing_player_ = PlayPolyphonic(&swng);
+        }
+      }
+      else if (!swing_player_) {
+        swing_player_ = PlayPolyphonic(&swng);
+      }
+    } else {
+      PlayMonophonic(&swing, &hum);
+    }
+  }
 
+  float SetSwingVolume(float swing_strength, float mixhum) override {
+    if(swing_player_) {
+      if (swing_player_->isPlaying()) {
+        float accent_volume = powf(swing_strength, config_.ProffieOSSwingVolumeSharpness) * config_.ProffieOSMaxSwingVolume;
+        swing_player_->set_fade_time(0.04);
+        swing_player_->set_volume(accent_volume);
+        mixhum = mixhum - mixhum * (config_.ProffieOSSmoothSwingDucking * accent_volume);
+      } else {
+        swing_player_.Free();
+      }
+    }
+    // in the off chance this gets reduced below 0, we don't want to pass a negative number
+    // to the mixer.
+    if (mixhum > 0) {
+      return mixhum;
+    } else {
+      return 0.0;
+    }
+  }
+  
   void SB_On() override {
     if (monophonic_hum_) {
       state_ = STATE_HUM_ON;
@@ -282,13 +336,15 @@ public:
   bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
-    if (speed > 250.0) {
+    if (speed > config_.ProffieOSSwingSpeedThreshold) {
       if (!swinging_ && state_ != STATE_OFF &&
 	  !(lockup.files_found() && SaberBase::Lockup())) {
         swinging_ = true;
-        Play(&swing, &swng);
+        StartSwing();
       }
-    } else {
+      float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
+      SetSwingVolume(swing_strength, 1.0);
+    } else if (swinging_ && speed <= config_.ProffieOSSwingSpeedThreshold) {
       swinging_ = false;
     }
     float vol = 1.0f;

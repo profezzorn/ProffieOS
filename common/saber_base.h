@@ -68,7 +68,9 @@ public:
   // 1.0 = kDefaultVolume
   // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
-
+  virtual void StartSwing() {}
+  virtual float SetSwingVolume(float swing_strength, float mixhum) {}
+  
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)                        \
 public:                                                         \
   static void Do##NAME TYPED_ARGS {                             \
@@ -114,7 +116,7 @@ public:                                                         \
   }
   virtual void SB_Motion(const Vec3& gyro, bool clear) {}
 
-  /* Accelertation in g */
+  /* Acceleration in g */
   static void DoAccel(Vec3 gyro, bool clear) {
 #ifdef INVERT_ORIENTATION
     gyro.x = -gyro.x;
