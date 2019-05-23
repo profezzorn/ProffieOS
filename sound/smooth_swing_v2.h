@@ -73,11 +73,11 @@ public:
       STDOUT.println("SmoothSwing V2 cannot allocate wav player.");
     }
   }
-  void SB_Off() override {
+  void SB_Off(OffType off_type) override {
     on_ = false;
     A.Off();
     B.Off();
-    delegate_->SB_Off();
+    delegate_->SB_Off(off_type);
   }
 
   enum class SwingState {

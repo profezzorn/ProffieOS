@@ -46,8 +46,14 @@ public:
     addEffect(EFFECT_IGNITION, 0);
   }
 
-  void SB_Off() override {
-    addEffect(EFFECT_RETRACTION, 0);
+  void SB_Off(OffType off_type) override {
+    switch (off_type) {
+      case OFF_BLAST:
+        addEffect(EFFECT_BLAST, (200 + random(700)) / 1000.0f);
+      case OFF_NORMAL:
+        addEffect(EFFECT_RETRACTION, 0);
+        break;
+    }
   }
 
   void SB_BeginLockup() override {

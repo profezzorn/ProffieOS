@@ -198,20 +198,32 @@ public:
     }
   }
 
-  void SB_Off() override {
-    if (monophonic_hum_) {
-      size_t total = poweroff.files_found() + pwroff.files_found();
-      if (total) {
-	state_ = STATE_OFF;
-	if ((rand() % total) < poweroff.files_found()) {
-	  PlayMonophonic(&poweroff, NULL);
-	} else {
-	  PlayMonophonic(&pwroff, NULL);
-	}
-      }
-    } else {
-      state_ = STATE_HUM_FADE_OUT;
-      PlayPolyphonic(&in);
+  void SB_Off(OffType off_type) override {
+    switch (off_type) {
+      case OFF_NORMAL:
+        if (monophonic_hum_) {
+          size_t total = poweroff.files_found() + pwroff.files_found();
+          if (total) {
+            state_ = STATE_OFF;
+            if ((rand() % total) < poweroff.files_found()) {
+              PlayMonophonic(&poweroff, NULL);
+            } else {
+              PlayMonophonic(&pwroff, NULL);
+            }
+          }
+        } else {
+          state_ = STATE_HUM_FADE_OUT;
+          PlayPolyphonic(&in);
+        }
+        break;
+      case OFF_BLAST:
+        if (monophonic_hum_) {
+          PlayMonophonic(&blaster, NULL);
+        } else {
+          state_ = STATE_HUM_FADE_OUT;
+          PlayPolyphonic(&blst);
+        }
+        break;
     }
   }
   void SB_Clash() override { Play(&clash, &clsh); }
