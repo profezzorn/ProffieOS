@@ -20,6 +20,7 @@ public:
     float min_v = 3.0;
     float max_v = 4.2;
     return 100.0 * (v * v - min_v * min_v) / (max_v * max_v - min_v * min_v);
+//    return 100.0 * (v - min_v) / (max_v - min_v);
   }
   void SetPinHigh(bool go_high) {
     if (go_high) {

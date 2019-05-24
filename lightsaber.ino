@@ -293,7 +293,8 @@ enum BUTTON : uint32_t {
   BUTTON_LEFT = 32,
   BUTTON_RIGHT = 64,
   BUTTON_SELECT = 128,
-  MODE_ON = 256,
+  MODE_ANY_BUTTON = 256,
+  MODE_ON = 512,
   MODE_OFF = 0,
 };
 
@@ -314,6 +315,8 @@ enum EVENT : uint32_t {
   EVENT_TWIST,
   EVENT_CLASH,
 };
+
+#define EVENTID(BUTTON, EVENT, MODIFIERS) (((EVENT) << 24) | ((BUTTON) << 12) | ((MODIFIERS) & ~(BUTTON)))
 
 uint32_t current_modifiers = BUTTON_NONE;
 
@@ -697,14 +700,10 @@ class NoLED;
 BladeConfig* current_config = nullptr;
 ArgParserInterface* CurrentArgParser;
 
-
-// The Saber class implements the basic states and actions
-// for the saber.
-class Saber : CommandParser, Looper, SaberBase {
+// Base class for props.
+class PropBase : CommandParser, Looper, protected SaberBase {
 public:
-  Saber() : CommandParser() {}
-  const char* name() override { return "Saber"; }
-
+  PropBase() : CommandParser() {}
   BladeStyle* current_style(){
     return current_config->blade1->current_style();
   }
@@ -736,13 +735,14 @@ public:
     return false;
   }
 
+
   bool unmute_on_deactivation_ = false;
   uint32_t activated_ = 0;
   uint32_t last_clash_ = 0;
   uint32_t clash_timeout_ = 100;
   bool clash_pending_ = false;
 
-  void On() {
+  virtual void On() {
     if (SaberBase::IsOn()) return;
     if (current_style() && current_style()->NoOnOff())
       return;
@@ -757,7 +757,7 @@ public:
     IgnoreClash(300);
   }
 
-  void Off() {
+  virtual void Off() {
     if (!SaberBase::IsOn()) return;
     if (SaberBase::Lockup()) {
       SaberBase::DoEndLockup();
@@ -796,7 +796,7 @@ public:
     }
   }
 
-  void Clash() {
+  virtual void Clash() {
     // No clashes in lockup mode.
     if (SaberBase::Lockup()) return;
     // TODO: Pick clash randomly and/or based on strength of clash.
@@ -1146,9 +1146,8 @@ public:
       DoGesture(NO_STROKE);
     }
   }
-protected:
+  
   Vec3 accel_;
-  bool pointing_down_ = false;
 
   void StartOrStopTrack() {
 #ifdef ENABLE_AUDIO
@@ -1170,7 +1169,6 @@ protected:
 #endif
   }
 
-  bool aux_on_ = true;
   uint32_t last_beep_;
 
   void Loop() override {
@@ -1248,151 +1246,6 @@ protected:
     if (SaberBase::IsOn()) STDOUT.print(" ON");
     STDOUT.print(" millis=");    
     STDOUT.println(millis());
-  }
-public:
-  bool Event(enum BUTTON button, EVENT event) {
-    PrintEvent(button, event);
-
-#define EVENTID(BUTTON, EVENT, MODIFIERS) (((EVENT) << 24) | ((BUTTON) << 12) | ((MODIFIERS) & ~(BUTTON)))
-    if (SaberBase::IsOn() && aux_on_) {
-      if (button == BUTTON_POWER) button = BUTTON_AUX;
-      if (button == BUTTON_AUX) button = BUTTON_POWER;
-    }
-    
-    bool handled = true;
-    switch (event) {
-      case EVENT_RELEASED:
-	clash_pending_ = false;
-      case EVENT_PRESSED:
-	IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
-      default:
-	break;
-    }
-    switch (EVENTID(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
-      default:
-        handled = false;
-        break;
-
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
-        if (accel_.x < -0.15) {
-          pointing_down_ = true;
-        } else {
-          pointing_down_ = false;
-        }
-        break;
-
-#if NUM_BUTTONS == 0
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-#endif
-      case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
-        aux_on_ = false;
-        On();
-        break;
-
-
-      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
-#ifdef DUAL_POWER_BUTTONS
-        aux_on_ = true;
-        On();
-#else
-        next_preset();
-#endif
-        break;
-
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
-	if (millis() - activated_ < 500) {
-	  if (SetMute(true)) {
-	    unmute_on_deactivation_ = true;
-	  }
-	}
-	break;
-	
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
-      case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
-      case EVENTID(BUTTON_AUX2, EVENT_LATCH_OFF, MODE_ON):
-#if NUM_BUTTONS == 0
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-#endif
-        Off();
-        break;
-
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
-        SaberBase::DoForce();
-        break;
-
-      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
-        // Avoid the base and the very tip.
-	// TODO: Make blast only appear on one blade!
-        SaberBase::DoBlast();
-        break;
-
-        // Lockup
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
-        if (!SaberBase::Lockup()) {
-          if (pointing_down_) {
-            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-          } else {
-            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-          }
-          SaberBase::DoBeginLockup();
-        } else {
-          handled = false;
-        }
-        break;
-
-        // Off functions
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
-        StartOrStopTrack();
-        break;
-
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
-        SaberBase::RequestMotion();
-        break;
-
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-        next_preset();
-        break;
-
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
-        previous_preset();
-        break;
-
-      case EVENTID(BUTTON_AUX2, EVENT_CLICK_SHORT, MODE_OFF):
-#ifdef DUAL_POWER_BUTTONS
-        next_preset();
-#else
-        previous_preset();
-#endif
-        break;
-    }
-    if (!handled) {
-      // Events that needs to be handled regardless of what other buttons
-      // are pressed.
-      switch (EVENTID(button, event, SaberBase::IsOn() ? MODE_ON : MODE_OFF)) {
-        case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
-        case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
-          if (SaberBase::Lockup()) {
-            SaberBase::DoEndLockup();
-            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-          } else {
-            handled = false;
-          }
-        break;
-
-      }
-    }
-    if (handled) {
-      current_modifiers = BUTTON_NONE;
-      return true;
-    } else {
-      return false;
-    }
   }
 
   bool Parse(const char *cmd, const char* arg) override {
@@ -1742,12 +1595,194 @@ public:
 #endif
   }
 
+  virtual bool Event(enum BUTTON button, EVENT event) {
+    PrintEvent(button, event);
+
+    switch (event) {
+      case EVENT_RELEASED:
+	clash_pending_ = false;
+      case EVENT_PRESSED:
+	IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
+      default:
+	break;
+    }
+
+    if (Event2(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
+      current_modifiers = BUTTON_NONE;
+      return true;
+    }
+    if (Event2(button, event,  MODE_ANY_BUTTON | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
+      current_modifiers = BUTTON_NONE;
+      return true;
+    }
+    return false;
+  }
+  
+  virtual bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) = 0;
+  
 private:
   CurrentPreset current_preset_;
   LoopCounter accel_loop_counter_;
 };
 
-Saber saber;
+
+// The Saber class implements the basic states and actions
+// for the saber.
+class Saber : public PropBase {
+public:
+  Saber() : PropBase() {}
+  const char* name() override { return "Saber"; }
+
+  bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+    switch (EVENTID(button, event, modifiers)) {
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
+        if (accel_.x < -0.15) {
+          pointing_down_ = true;
+        } else {
+          pointing_down_ = false;
+        }
+      return true;
+
+#if NUM_BUTTONS == 0
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
+#endif
+      case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
+      case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
+      case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
+        aux_on_ = false;
+        On();
+	return true;
+
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
+#ifdef DUAL_POWER_BUTTONS
+        aux_on_ = true;
+        On();
+#else
+        next_preset();
+#endif
+	return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
+	if (millis() - activated_ < 500) {
+	  if (SetMute(true)) {
+	    unmute_on_deactivation_ = true;
+	  }
+	}
+	return true;
+	
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
+      case EVENTID(BUTTON_AUX2, EVENT_LATCH_OFF, MODE_ON):
+#if NUM_BUTTONS == 0
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+#endif
+        Off();
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
+        SaberBase::DoForce();
+	return true;
+
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
+        // Avoid the base and the very tip.
+	// TODO: Make blast only appear on one blade!
+        SaberBase::DoBlast();
+	return true;
+
+        // Lockup
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
+        if (!SaberBase::Lockup()) {
+          if (pointing_down_) {
+            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+          } else {
+            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+          }
+          SaberBase::DoBeginLockup();
+	  return true;
+        }
+        break;
+
+        // Off functions
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
+        StartOrStopTrack();
+	return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
+        SaberBase::RequestMotion();
+	return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
+        next_preset();
+	return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
+        previous_preset();
+	return true;
+
+      case EVENTID(BUTTON_AUX2, EVENT_CLICK_SHORT, MODE_OFF):
+#ifdef DUAL_POWER_BUTTONS
+        next_preset();
+#else
+        previous_preset();
+#endif
+	return true;
+
+	// Events that needs to be handled regardless of what other buttons
+	// are pressed.
+      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
+	if (SaberBase::Lockup()) {
+	  SaberBase::DoEndLockup();
+	  SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+	  return true;
+	}
+    }
+    return false;
+  }
+private:
+  bool aux_on_ = true;
+  bool pointing_down_ = false;
+};
+
+class Detonator : public PropBase {
+public:
+  Detonator() : PropBase() {}
+  const char* name() override { return "Detonator"; }
+
+  bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+    switch (EVENTID(button, event, modifiers)) {
+      case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
+	On();
+	return true;
+      case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
+	Off();
+	return true;
+
+      case EVENTID(BUTTON_AUX2, EVENT_CLICK_SHORT, MODE_ON):
+	// Next mode?
+	return true;
+
+      case EVENTID(BUTTON_AUX2, EVENT_HELD_LONG, MODE_ON):
+	// Arm (beep or something?)
+	return true;
+
+      case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ON):
+	// Detonation in 4 seconds. Then turn off
+	return true;
+    }
+    return false;
+  }
+};
+
+#ifndef PROP_TYPE
+#define PROP_TYPE Saber
+#endif
+
+PROP_TYPE prop;
 
 #include "scripts/v3_test_script.h"
 #include "scripts/proffieboard_test_script.h"
@@ -2707,7 +2742,7 @@ void setup() {
 
   Looper::DoSetup();
   // Time to identify the blade.
-  saber.FindBlade();
+  prop.FindBlade();
   SaberBase::DoBoot();
 #if defined(ENABLE_SD) && defined(ENABLE_AUDIO)
   if (!sd_card_found) {
@@ -2749,7 +2784,7 @@ void loop() {
 
   bool on = false;
   SaberBase::DoIsOn(&on);
-  if (!on && !Serial && !saber.NeedsPower()
+  if (!on && !Serial && !prop.NeedsPower()
 #ifdef ENABLE_AUDIO
        && !amplifier.Active()
 #endif
