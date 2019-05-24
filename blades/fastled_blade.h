@@ -107,7 +107,7 @@ public:
          return true;
       }
       if (!strcmp(arg, "off")) {
-         SB_Off();
+         SB_Off(OFF_NORMAL);
          return true;
       }
     }

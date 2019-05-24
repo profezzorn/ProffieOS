@@ -94,6 +94,7 @@ public:                                                         \
   SABERFUN(Clash, (), ());                       \
   SABERFUN(Stab, (), ());                        \
   SABERFUN(On, (), ());                          \
+  SABERFUN(Arm, (), ());                         \
   SABERFUN(Off, (OffType off_type), (off_type)); \
   SABERFUN(Force, (), ());                       \
   SABERFUN(Blast, (), ());                       \
