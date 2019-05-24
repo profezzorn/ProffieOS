@@ -51,7 +51,7 @@ public:
     STDOUT.println(WhatUnit(high_));
 #endif
   }
-  void SB_Off() override {
+  void SB_Off(OffType off_type) override {
     if (low_) {
       low_->set_fade_time(0.3);
       low_->FadeAndStop();
@@ -62,7 +62,7 @@ public:
       high_->FadeAndStop();
       high_.Free();
     }
-    delegate_->SB_Off();
+    delegate_->SB_Off(off_type);
   }
 
   void SB_Motion(const Vec3& gyro, bool clear) override {
