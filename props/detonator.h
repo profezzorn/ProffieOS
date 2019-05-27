@@ -10,7 +10,16 @@ public:
   Detonator() : PropBase() {}
   const char* name() override { return "Detonator"; }
 
+#ifdef DELAYED_OFF
+  bool powered_ = false;
+  void SetPower(bool on) { powered_ = on; }
+#else
+  constexpr bool powered_ = true;
+  void SetPower(bool on) {}
+#endif
+
   void rotate_presets() {
+    if (!powered_) return;
 #ifdef ENABLE_AUDIO
     beeper.Beep(0.05, 2000.0);
 #endif
@@ -20,7 +29,6 @@ public:
   }
 
   bool armed_ = false;
-  bool powered_ = false;
   void arm() {
     Serial.println("ARM");
     armed_ = true;
@@ -35,39 +43,42 @@ public:
     }
   }
 
+#if NUM_BUTTONS >= 2
+  // Make clash do nothing
+  void Clash() override {}
+#endif
+
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
-	armed_ = false;
-	powered_ = true;
-	On();
-	return true;
+        armed_ = false;
+        SetPower(true);
+        On();
+        return true;
 
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_OFF):
-	powered_ = false;
-	Off();
-	return true;
+        SetPowered(false);
+        Off();
+        return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_OFF):
-	if (powered_) {
-	  rotate_presets();
-	}
-	return true;
+        rotate_presets();
+        return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_ON):
         StartOrStopTrack();
-	return true;
+        return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_HELD_LONG, MODE_ON):
-	arm();
-	break;
+        arm();
+        break;
 
       case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ON):
-	blast();
-	return true;
+        blast();
+        return true;
 
-	// TODO: Long click when off?
+        // TODO: Long click when off?
     }
     return false;
   }
