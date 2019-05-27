@@ -1,4 +1,4 @@
-# Proffie OS
+# ProffieOS
 
 The open source operating system. Proffie OS is supported on various platforms ranging from Teensy 3.2 development boards to its own dedicated ProffieBoard reference hardware.
 
