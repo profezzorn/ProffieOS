@@ -58,7 +58,7 @@ public:
 
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_OFF):
-        SetPowered(false);
+        SetPower(false);
         Off();
         return true;
 
