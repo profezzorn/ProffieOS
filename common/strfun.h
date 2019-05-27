@@ -47,5 +47,4 @@ bool endswith(const char *postfix, const char* x) {
   return true;
 }
 
-
 #endif
