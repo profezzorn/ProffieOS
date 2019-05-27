@@ -169,6 +169,8 @@ class Effect {
     return ret;
   }
 
+  operator bool() const { return files_found() > 0; }
+  
   void Select(int n) {
     selected_ = n;
   }

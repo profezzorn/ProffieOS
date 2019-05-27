@@ -25,6 +25,7 @@ public:
   float ProffieOSSwingLowerThreshold;
 };
 
+
 // Monophonic sound fonts are the most common.
 // These fonts are fairly simple, as generally only one sound is
 // played at a time. It starts with the "poweron" sound and when
@@ -218,10 +219,11 @@ public:
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
-          PlayMonophonic(&blaster, NULL);
+	  if (boom) PlayMonophonic(&boom, NULL);
+	  else PlayMonophonic(&clash, NULL);  // Thermal-D fallback
         } else {
           state_ = STATE_HUM_FADE_OUT;
-          PlayPolyphonic(&blst);
+	  PlayPolyphonic(&boom);
         }
         break;
     }
@@ -234,44 +236,63 @@ public:
   void SB_NewFont() override { PlayPolyphonic(&font); }
 
   void SB_BeginLockup() override {
-    if (lockup.files_found()) {
-      if (SaberBase::Lockup() == SaberBase::LOCKUP_DRAG &&
-	  drag.files_found()) {
-	PlayMonophonic(&drag, &drag);
-      } else if (lockup.files_found()) {
-        if (bgnlock.files_found()) {
-          PlayMonophonic(&bgnlock, &lockup);
-        } else {
-          PlayMonophonic(&lockup, &lockup);
-	}
-      }
-    } else {
-      Effect* e = &lock;
-      if (SaberBase::Lockup() == SaberBase::LOCKUP_DRAG &&
-	  drag.files_found()) {
-	e = &drag;
-      }
-      if (!lock_player_) {
-        if (bgnlock.files_found()) {
-          lock_player_ = PlayPolyphonic(&bgnlock);
-        } else {
-          lock_player_ = PlayPolyphonic(e);
-        }
+    Effect *once = nullptr;
+    Effect *loop = nullptr;
+    switch (SaberBase::Lockup()) {
+      case SaberBase::LOCKUP_ARMED:
+	if (bgnarm) once = &bgnarm;
+	if (armhum) loop = &armhum;
+	if (!armhum && swing) loop = &swing;  // Thermal-D fallback
+	break;
+      case SaberBase::LOCKUP_DRAG:
+	if (bgndrag) once = &bgndrag;
+	if (drag) loop = &drag;
+	// fall through
+      case SaberBase::LOCKUP_NORMAL:
+	if (!once && bgnlock) once = &bgnlock;
+	// fall through
+      case SaberBase::LOCKUP_NONE:
+	break;
+    }
 
-	if (lock_player_) {
-	  lock_player_->PlayLoop(e);
-	}
+    if (lockup.files_found() > 0) {
+      // Monophonic
+      if (!loop) loop = &lockup;
+      if (!once) once = loop;
+      PlayMonophonic(once, loop);
+    } else {
+      // Polyphonic
+      if (!loop) loop = &lock;
+      if (!once) once = loop;
+      if (!lock_player_) {
+	lock_player_ = PlayPolyphonic(once);
+	if (lock_player_) lock_player_->PlayLoop(loop);
       }
     }
   }
 
   void SB_EndLockup() override {
+    Effect *end = nullptr;
+    switch (SaberBase::Lockup()) {
+      case SaberBase::LOCKUP_ARMED:
+	end = &endarm;
+	break;
+      case SaberBase::LOCKUP_DRAG:
+	if (enddrag) end = &enddrag;
+	// fall through
+      case SaberBase::LOCKUP_NORMAL:
+	if (!end && endlock) end = &endlock;
+	if (!end) end = &clash;
+	// fall through
+      case SaberBase::LOCKUP_NONE:
+	break;
+    }
+
     if (lock_player_) {
       // Polyphonic case
       lock_player_->set_fade_time(0.3);
-
-      if (endlock.files_found()) { // polyphonic end lock
-        if (PlayPolyphonic(&endlock)) {
+      if (end) { // polyphonic end lock
+        if (PlayPolyphonic(end)) {
           // if playing an end lock fade the lockup faster
           lock_player_->set_fade_time(0.003);
 	}
@@ -283,11 +304,7 @@ public:
     }
     // Monophonic case
     if (lockup.files_found()) {
-      if (endlock.files_found()) { // Plecter font endlock support
-        PlayMonophonic(&endlock, &hum);
-      } else {
-        PlayMonophonic(&clash, &hum);
-      }
+      PlayMonophonic(end, &hum);
     }
   }
 

@@ -29,6 +29,7 @@ public:
       if (led >= drag_cutoff_) {
 	if (is_same_type<DRAG_COLOR, LOCKUP>::value) {
 	  case SaberBase::LOCKUP_NORMAL:
+	  case SaberBase::LOCKUP_ARMED:  // TODO: should this be different?
 	  return lockup_.getColor(led);
 	} else {
 	  return drag_.getColor(led);

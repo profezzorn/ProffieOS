@@ -45,5 +45,5 @@ BladeConfig blades[] = {
 
 #ifdef CONFIG_BUTTONS
 InvertedLatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
-Button AuxButton(BUTTON_AUX, auxPin, "aux");
+Button AuxButton(BUTTON_AUX2, aux2Pin, "aux");
 #endif

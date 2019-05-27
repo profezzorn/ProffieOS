@@ -66,6 +66,7 @@ public:
     LOCKUP_NONE,
     LOCKUP_NORMAL,
     LOCKUP_DRAG,
+    LOCKUP_ARMED,   // For detonators and such
   };
   static LockupType Lockup() { return lockup_; }
   static void SetLockup(LockupType lockup) { lockup_ = lockup; }
@@ -94,7 +95,6 @@ public:                                                         \
   SABERFUN(Clash, (), ());                       \
   SABERFUN(Stab, (), ());                        \
   SABERFUN(On, (), ());                          \
-  SABERFUN(Arm, (), ());                         \
   SABERFUN(Off, (OffType off_type), (off_type)); \
   SABERFUN(Force, (), ());                       \
   SABERFUN(Blast, (), ());                       \

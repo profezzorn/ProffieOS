@@ -21,8 +21,17 @@ public:
 
   bool armed_ = false;
   void arm() {
+    Serial.println("ARM");
     armed_ = true;
-    SaberBase::DoArm();
+    SaberBase::SetLockup(SaberBase::LOCKUP_ARMED);
+    SaberBase::DoBeginLockup();
+  }
+
+  void blast() {
+    if (armed_) {
+      SaberBase::DoEndLockup();
+      Off(OFF_BLAST);
+    }
   }
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
@@ -49,7 +58,7 @@ public:
 	break;
 
       case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ON):
-	if (armed_) Off(OFF_BLAST);
+	blast();
 	return true;
 
 	// TODO: Long click when off?

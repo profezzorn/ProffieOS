@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -30,6 +30,7 @@
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
 // #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/td_pb1_config.h"
 
 
 #ifdef CONFIG_FILE_TEST
@@ -427,7 +428,15 @@ EFFECT(swingl);  // Looped swing, LOW
 EFFECT(swingh);  // Looped swing, HIGH
 
 // Drag effect, replaces "lock/lockup" in drag mode if present.
+EFFECT(bgndrag);
 EFFECT(drag);
+EFFECT(enddrag);
+
+// Detonator effects
+EFFECT(bgnarm);
+EFFECT(armhum);
+EFFECT(endarm);
+EFFECT(boom);
 
 #ifdef ENABLE_AUDIO
 
