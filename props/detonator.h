@@ -20,6 +20,7 @@ public:
   }
 
   bool armed_ = false;
+  bool powered_ = false;
   void arm() {
     Serial.println("ARM");
     armed_ = true;
@@ -38,15 +39,20 @@ public:
     switch (EVENTID(button, event, modifiers)) {
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
 	armed_ = false;
+	powered_ = true;
 	On();
 	return true;
 
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_OFF):
+	powered_ = false;
 	Off();
 	return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_OFF):
-	rotate_presets();
+	if (powered_) {
+	  rotate_presets();
+	}
 	return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_ON):
