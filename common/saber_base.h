@@ -35,15 +35,20 @@ protected:
   ~SaberBase() { Unlink(this); }
 
 public:
+  enum OffType {
+    OFF_NORMAL,
+    OFF_BLAST,
+  };
+
   static bool IsOn() { return on_; }
   static void TurnOn() {
     on_ = true;
     SaberBase::DoOn();
   }
-  static void TurnOff() {
+  static void TurnOff(OffType off_type) {
     on_ = false;
     last_motion_request_ = millis();
-    SaberBase::DoOff();
+    SaberBase::DoOff(off_type);
   }
 
   static bool MotionRequested() {
@@ -61,6 +66,7 @@ public:
     LOCKUP_NONE,
     LOCKUP_NORMAL,
     LOCKUP_DRAG,
+    LOCKUP_ARMED,   // For detonators and such
   };
   static LockupType Lockup() { return lockup_; }
   static void SetLockup(LockupType lockup) { lockup_ = lockup; }
@@ -69,8 +75,10 @@ public:
   // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
   virtual void StartSwing() {}
-  virtual float SetSwingVolume(float swing_strength, float mixhum) {}
-  
+  virtual float SetSwingVolume(float swing_strength, float mixhum) {
+    return mixhum;
+  }
+
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)                        \
 public:                                                         \
   static void Do##NAME TYPED_ARGS {                             \
@@ -83,21 +91,21 @@ public:                                                         \
                                                                 \
   virtual void SB_##NAME TYPED_ARGS {}
 
-#define SABERBASEFUNCTIONS()                    \
-  SABERFUN(Clash, (), ());                      \
-  SABERFUN(Stab, (), ());                       \
-  SABERFUN(On, (), ());                         \
-  SABERFUN(Off, (), ());                        \
-  SABERFUN(Force, (), ());                      \
-  SABERFUN(Blast, (), ());                      \
-  SABERFUN(Boot, (), ());                       \
-  SABERFUN(NewFont, (), ());                    \
-  SABERFUN(BeginLockup, (), ());                \
-  SABERFUN(EndLockup, (), ());                  \
-                                                \
-  SABERFUN(Top, (), ());                        \
-  SABERFUN(Relax, (), ());                      \
-  SABERFUN(IsOn, (bool* on), (on));             \
+#define SABERBASEFUNCTIONS()                     \
+  SABERFUN(Clash, (), ());                       \
+  SABERFUN(Stab, (), ());                        \
+  SABERFUN(On, (), ());                          \
+  SABERFUN(Off, (OffType off_type), (off_type)); \
+  SABERFUN(Force, (), ());                       \
+  SABERFUN(Blast, (), ());                       \
+  SABERFUN(Boot, (), ());                        \
+  SABERFUN(NewFont, (), ());                     \
+  SABERFUN(BeginLockup, (), ());                 \
+  SABERFUN(EndLockup, (), ());                   \
+                                                 \
+  SABERFUN(Top, (), ());                         \
+  SABERFUN(Relax, (), ());                       \
+  SABERFUN(IsOn, (bool* on), (on));              \
   SABERFUN(Message, (const char* msg), (msg));
 
   SABERBASEFUNCTIONS();

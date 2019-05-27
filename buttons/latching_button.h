@@ -27,9 +27,9 @@ protected:
     STATE_MACHINE_BEGIN();
     while (true) {
       while (!DebouncedRead()) YIELD();
-      saber.Event(button_, EVENT_LATCH_ON);
+      prop.Event(button_, EVENT_LATCH_ON);
       while (DebouncedRead()) YIELD();
-      saber.Event(button_, EVENT_LATCH_OFF);
+      prop.Event(button_, EVENT_LATCH_OFF);
     }
     STATE_MACHINE_END();
   }
@@ -37,9 +37,9 @@ protected:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, name_)) {
       if (current_modifiers & button_) {
-        saber.Event(button_, EVENT_LATCH_ON);
+        prop.Event(button_, EVENT_LATCH_ON);
       } else {
-        saber.Event(button_, EVENT_LATCH_OFF);
+        prop.Event(button_, EVENT_LATCH_OFF);
       }
       return true;
     }
@@ -62,6 +62,20 @@ protected:
   enum BUTTON button_;
   StateMachineState state_machine_;
   uint8_t pin_;
+};
+
+class InvertedLatchingButton : public LatchingButton {
+public:
+  InvertedLatchingButton(enum BUTTON button, int pin, const char* name)
+    : LatchingButton(button, pin, name) {
+#ifdef ENABLE_SNOOZE
+    snooze_digital.pinMode(pin, INPUT_PULLUP, FALLING);
+#endif
+  }
+
+  bool Read() override {
+    return digitalRead(pin_) == HIGH;
+  }
 };
 
 #endif

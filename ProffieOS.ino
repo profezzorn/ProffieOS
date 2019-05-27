@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -30,6 +30,7 @@
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
 // #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/td_pb1_config.h"
 
 
 #ifdef CONFIG_FILE_TEST
@@ -50,11 +51,13 @@
 // Here explain some general code concepts to make it easier
 // to understand the code below.
 //
-// Most things start with the Saber class. It is responsible
-// for the overall state of the saber and handles button clicks.
-// Once an event is registered, such as "on" or "clash", the
-// event is sent to all registered SaberBase classes.
-//
+// Most things start with the ProbBase class. Depending on the
+// configuration, this class is extended by the Saber class,
+// the Detonator class, or some other class. The extended class
+// is instantiated as "prop", and is responsible for handling
+// button clicks, clashes, swings and other events. These events
+// are then send to all registered SaberBase classes.
+///
 // Generally speaking, there are usually two registered SaberBase
 // classes listening for events. One for sound and one for 
 // the blade. Sound and blade effects are generally executed
@@ -75,13 +78,17 @@
 // The Effect class is responsible for keeping track of all numbered
 // files that for a particular filename prefix.
 //
-// Once the directory has been scanned, we'll either initiate
-// a MonophonicFont or a PolyphonicFont based on the names of the
-// files we find. MonophonicFont and PolyphonicFont inherit from
+// Once the directory has been scanned, we'll decide how to play
+// sounds. In the past, there was one class for handling NEC style
+// fonts and another for handling Plecter style fonts. However,
+// both of those have now been merged into the HybridFont class
+// which can do both. It is also capable of doing some mix and matching,
+// so you can use a plecter style hum together with a NEC style
+// swing if you so desire. The HybridFont class inherit from
 // SaberBase and listen on on/off/clash/etc. events, just like
 // BladeBase classes do.
-// 
-// MonophonicFont and PolyphonicFont tells the audio subsystem
+//
+// HybridFont tells the audio subsystem
 // to trigger and mix sounds as aproperiate. The sound subsystem
 // starts with an DMA channel which feeds data to a digital-to-analog
 // converter. Once the data buffer is half-gone, and interrupt is
@@ -90,31 +97,19 @@
 // stream is hooked up to the AudioDynamicMixer class. This
 // class is responsible for taking multiple audio inputs,
 // summing them up and then adjusting the volume to minimize
-// clipping.  Generally, one of the inputs are hooked up to
-// the AudioSplicer class, and the others are hooked up to
-// BufferedWavPlayers.  The AudioSplicer is able to do
-// smooth cutovers between sounds, and it's inputs are also
-// BufferedWavPlayers.
+// clipping.
 
 // TODO LIST:
 //   stab detect/effect
-// Make sure that sound is off before doing file command
-// make "charging style" prevent you from turning the saber "on"
 // 
 // Audio work items:
-//   Tune swings better
 //   select clash from force
 //   stab effect
 // Blade stuff
 //    better clash
-// Implement menues:
-//    select sound font
-//    select color
-//    adjust volume
-// Disable motion when off to save power.
 // Allow several blades to share power pins.
 
-// If defined, DAC vref will be 3 volts, resulting in louder sound.
+// If defined, DAC vref will be 3 volts, resulting in louder sound. (teensy only)
 #define LOUD
 
 // You can get better SD card performance by
@@ -183,7 +178,7 @@ SnoozeTouch snooze_touch;
 SnoozeBlock snooze_config(snooze_touch, snooze_digital, snooze_timer);
 #endif
 
-const char version[] = "$Id$";
+const char version[] = "$Id: ce12a06a1e236b5101ec60c950530a9a4719a74d $";
 
 #include "common/state_machine.h"
 #include "common/monitoring.h"
@@ -213,14 +208,6 @@ void PrintQuotedValue(const char *name, const char* str) {
     }
   }
   STDOUT.write('\n');
-}
-
-const char* mkstr(const char* str) {
-  int len = strlen(str);
-  char* ret = (char*)malloc(len + 1);
-  if (!ret) return "";
-  memcpy(ret, str, len + 1);
-  return ret;
 }
 
 #ifdef ENABLE_DEBUG
@@ -282,41 +269,7 @@ MonitorHelper monitor_helper;
 
 #include "common/vec3.h"
 #include "common/ref.h"
-
-enum BUTTON : uint32_t {
-  BUTTON_NONE = 0,   // used for gestures and the like
-  BUTTON_POWER = 1,
-  BUTTON_AUX = 2,
-  BUTTON_AUX2 = 4,
-  BUTTON_UP = 8,
-  BUTTON_DOWN = 16,
-  BUTTON_LEFT = 32,
-  BUTTON_RIGHT = 64,
-  BUTTON_SELECT = 128,
-  MODE_ON = 256,
-  MODE_OFF = 0,
-};
-
-enum EVENT : uint32_t {
-  EVENT_NONE = 0,
-  EVENT_PRESSED,
-  EVENT_RELEASED,
-  EVENT_HELD,
-  EVENT_HELD_LONG,
-  EVENT_CLICK_SHORT,
-  EVENT_CLICK_LONG,
-  EVENT_DOUBLE_CLICK, // Note, will also generate a short click
-  EVENT_LATCH_ON,
-  EVENT_LATCH_OFF,
-  EVENT_STAB,
-  EVENT_SWING,
-  EVENT_SHAKE,
-  EVENT_TWIST,
-  EVENT_CLASH,
-};
-
-uint32_t current_modifiers = BUTTON_NONE;
-
+#include "common/events.h"
 #include "common/saber_base.h"
 #include "common/saber_base_passthrough.h"
 
@@ -381,94 +334,11 @@ Talkie talkie;
 
 #endif  // ENABLE_AUDIO
 
-
-class Effect;
-Effect* all_effects = NULL;
-
-int constexpr toLower(char x) {
-  return (x >= 'A' && x <= 'Z') ? x - 'A' + 'a' : x;
-}
-
-const char *startswith(const char *prefix, const char* x) {
-  while (*prefix) {
-    if (toLower(*x) != toLower(*prefix)) return nullptr;
-    prefix++;
-    x++;
-  }
-  return x;
-}
-
-int cmpdir(const char *a, const char *b) {
-  while (toLower(*a) == toLower(*b)) {
-    if (!*a) return 0;
-    a++;
-    b++;
-  }
-  if (*a == '/' && *b == 0) return 0;
-  if (*b == '/' && *a == 0) return 0;
-  return toLower(*a) - toLower(*b);
-}
-
-int parse1hex(const char* x) {
-  int ret = toLower(*x);
-  if (ret > 'a') return ret - 'a' + 10;
-  return ret - '0';
-}
-
-int parse2hex(const char* x) {
-  return (parse1hex(x) << 4) | parse1hex(x+1);
-}
-
-bool endswith(const char *postfix, const char* x) {
-  size_t l = strlen(x);
-  if (l < strlen(postfix)) return false;
-  x = x + l - strlen(postfix);
-  while (*postfix) {
-    if (toLower(*x) != toLower(*postfix)) return false;
-    postfix++;
-    x++;
-  }
-  return true;
-}
+#include "common/strfun.h"
 
 char current_directory[128];
 
 #include "sound/effect.h"
-
-#define EFFECT(X) Effect X(#X)
-
-// Monophonic fonts
-EFFECT(boot);  // also polyphonic
-EFFECT(swing);
-EFFECT(hum);
-EFFECT(poweron);
-EFFECT(poweroff);
-EFFECT(pwroff);
-EFFECT(clash);
-EFFECT(force);  // also polyphonic
-EFFECT(stab);   // also polyphonic
-EFFECT(blaster);
-EFFECT(lockup);
-EFFECT(poweronf);
-EFFECT(font);   // also polyphonic
-EFFECT(bgnlock); // monophonic and polyphonic begin lock
-EFFECT(endlock); // Plecter endlock support, used for polyphonic name too
-
-// Polyphonic fonts
-EFFECT(blst);
-EFFECT(clsh);
-EFFECT(in);
-EFFECT(out);
-EFFECT(lock);
-EFFECT(swng);
-EFFECT(slsh);
-
-// Looped swing fonts. (SmoothSwing V1/V2)
-EFFECT(swingl);  // Looped swing, LOW
-EFFECT(swingh);  // Looped swing, HIGH
-
-// Drag effect, replaces "lock/lockup" in drag mode if present.
-EFFECT(drag);
 
 #ifdef ENABLE_AUDIO
 
@@ -529,33 +399,7 @@ void SetupStandardAudio() {
 
 HybridFont hybrid_font;
 
-class SmoothSwingConfigFile : public ConfigFile {
-public:
-  void SetVariable(const char* variable, float v) override {
-    CONFIG_VARIABLE(Version, 1);
-    CONFIG_VARIABLE(SwingSensitivity, 450.0f);
-    CONFIG_VARIABLE(MaximumHumDucking, 75.0f);
-    CONFIG_VARIABLE(SwingSharpness, 1.75f);
-    CONFIG_VARIABLE(SwingStrengthThreshold, 20.0f);
-    CONFIG_VARIABLE(Transition1Degrees, 45.0f);
-    CONFIG_VARIABLE(Transition2Degrees, 160.0f);
-    CONFIG_VARIABLE(MaxSwingVolume, 3.0f);
-    CONFIG_VARIABLE(AccentSwingSpeedThreshold, 0.0f);
-  };
-
-  int  Version;
-  float SwingSensitivity;
-  float MaximumHumDucking;
-  float SwingSharpness;
-  float SwingStrengthThreshold;
-  float Transition1Degrees;
-  float Transition2Degrees;
-  float MaxSwingVolume;
-  float AccentSwingSpeedThreshold;
-};
-
-SmoothSwingConfigFile smooth_swing_config;
-
+#include "sound/smooth_swing_config.h"
 #include "sound/looped_swing_wrapper.h"
 #include "sound/smooth_swing_v2.h"
 
@@ -734,1064 +578,22 @@ class NoLED;
 #include "common/current_preset.h"
 #include "styles/style_parser.h"
 
+BladeConfig* current_config = nullptr;
+ArgParserInterface* CurrentArgParser;
+
 #define CONFIG_PRESETS
 #include CONFIG_FILE
 #undef CONFIG_PRESETS
 
-BladeConfig* current_config = nullptr;
-ArgParserInterface* CurrentArgParser;
+#define CONFIG_PROP
+#include CONFIG_FILE
+#undef CONFIG_PROP
 
-
-// The Saber class implements the basic states and actions
-// for the saber.
-class Saber : CommandParser, Looper, SaberBase {
-public:
-  Saber() : CommandParser() {}
-  const char* name() override { return "Saber"; }
-
-  BladeStyle* current_style(){
-    return current_config->blade1->current_style();
-  }
-
-  bool NeedsPower() {
-    if (SaberBase::IsOn()) return true;
-    if (current_style() && current_style()->NoOnOff())
-      return true;
-    return false;
-  }
-
-  int32_t muted_volume_ = 0;
-  bool SetMute(bool muted) {
-#ifdef ENABLE_AUDIO
-    if (muted) {
-      if (dynamic_mixer.get_volume()) {
-	muted_volume_ = dynamic_mixer.get_volume();
-	dynamic_mixer.set_volume(0);
-	return true;
-      }
-    } else {
-      if (muted_volume_) {
-	dynamic_mixer.set_volume(muted_volume_);
-	muted_volume_ = 0;
-	return true;
-      }
-    }
-#endif      
-    return false;
-  }
-
-  bool unmute_on_deactivation_ = false;
-  uint32_t activated_ = 0;
-  uint32_t last_clash_ = 0;
-  uint32_t clash_timeout_ = 100;
-  bool clash_pending_ = false;
-
-  void On() {
-    if (SaberBase::IsOn()) return;
-    if (current_style() && current_style()->NoOnOff())
-      return;
-    activated_ = millis();
-    STDOUT.println("Ignition.");
-    MountSDCard();
-    EnableAmplifier();
-    SaberBase::TurnOn();
-
-    // Avoid clashes a little bit while turning on.
-    // It might be a "clicky" power button...
-    IgnoreClash(300);
-  }
-
-  void Off() {
-    if (!SaberBase::IsOn()) return;
-    if (SaberBase::Lockup()) {
-      SaberBase::DoEndLockup();
-      SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-    }
-    SaberBase::TurnOff();
-    if (unmute_on_deactivation_) {
-      unmute_on_deactivation_ = false;
-#ifdef ENABLE_AUDIO
-      // We may also need to stop any thing else that generates noise..
-      for (size_t i = 0; i < NELEM(wav_players); i++) {
-        wav_players[i].Stop();
-      }
-#endif
-      SetMute(false);
-    }
-  }
-
-  void IgnoreClash(size_t ms) {
-    if (clash_pending_) return;
-    uint32_t now = millis();
-    uint32_t time_since_last_clash = now - last_clash_;
-    if (time_since_last_clash < clash_timeout_) {
-      ms = std::max<size_t>(ms, clash_timeout_ - time_since_last_clash);
-    }
-    last_clash_ = now;
-    clash_timeout_ = ms;
-  }
-
-  void Clash2() {
-    if (Event(BUTTON_NONE, EVENT_CLASH)) {
-      IgnoreClash(400);
-    } else {
-      IgnoreClash(100);
-      if (SaberBase::IsOn()) SaberBase::DoClash();
-    }
-  }
-
-  void Clash() {
-    // No clashes in lockup mode.
-    if (SaberBase::Lockup()) return;
-    // TODO: Pick clash randomly and/or based on strength of clash.
-    uint32_t t = millis();
-    if (t - last_clash_ < clash_timeout_) {
-      last_clash_ = t; // Vibration cancellation
-      return;
-    }
-    if (current_modifiers & ~MODE_ON) {
-      // Some button is pressed, that means that we need to delay the clash a little
-      // to see if was caused by a button *release*.
-      last_clash_ = millis();
-      clash_timeout_ = 3;
-      clash_pending_ = true;
-      return;
-    }
-    Clash2();
-  }
-
-  bool chdir(const char* dir) {
-    if (strlen(dir) > 1 && dir[strlen(dir)-1] == '/') {
-      STDOUT.println("Directory must not end with slash.");
-      return false;
-    }
-#ifdef ENABLE_AUDIO
-    smooth_swing_v2.Deactivate();
-    looped_swing_wrapper.Deactivate();
-    hybrid_font.Deactivate();
-
-    // Stop all sound!
-    // TODO: Move scanning to wav-playing interrupt level so we can
-    // interleave things without worry about memory corruption.
-    for (size_t i = 0; i < NELEM(wav_players); i++) {
-      wav_players[i].Stop();
-    }
+#ifndef PROP_TYPE
+#include "props/saber.h"
 #endif
 
-    strcpy(current_directory, dir);
-    if (strlen(current_directory) && 
-        current_directory[strlen(current_directory)-1] != '/') {
-      strcat(current_directory, "/");
-    }
-
-#ifdef ENABLE_AUDIO
-    Effect::ScanDirectory(dir);
-    SaberBase* font = NULL;
-    hybrid_font.Activate();
-    font = &hybrid_font;
-    if (font) {
-      if (swingl.files_found()) {
-        smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
-        switch (smooth_swing_config.Version) {
-          case 1:
-            looped_swing_wrapper.Activate(font);
-            break;
-          case 2:
-            smooth_swing_v2.Activate(font);
-            break;
-        }
-      }
-    }
-//    EnableBooster();
-#endif
-    return false;
-  }
-
-  // Select preset (font/style)
-  void SetPreset(int preset_num, bool announce) {
-    bool on = SaberBase::IsOn();
-    if (on) Off();
-    // First free all styles, then allocate new ones to avoid memory
-    // fragmentation.
-#define UNSET_BLADE_STYLE(N) \
-    delete current_config->blade##N->UnSetStyle();
-    ONCEPERBLADE(UNSET_BLADE_STYLE)
-    current_preset_.SetPreset(preset_num);
-    if (announce) {
-      if (current_preset_.name.get()) {
-        SaberBase::DoMessage(current_preset_.name.get());
-      } else {
-        char message[64];
-        strcpy(message, "Preset: ");
-        itoa(current_preset_.preset_num + 1,
-             message + strlen(message), 10);
-        strcat(message, "\n");
-        strncat(message + strlen(message),
-                current_preset_.font.get(), sizeof(message) - strlen(message));
-        message[sizeof(message) - 1] = 0;
-        SaberBase::DoMessage(message);
-      }
-    }
-
-#define SET_BLADE_STYLE(N) \
-    current_config->blade##N->SetStyle(style_parser.Parse(current_preset_.current_style##N.get()));
-    ONCEPERBLADE(SET_BLADE_STYLE)
-    chdir(current_preset_.font.get());
-    if (on) On();
-    if (announce) SaberBase::DoNewFont();
-  }
-
-  // Go to the next Preset.
-  void next_preset() {
-#ifdef ENABLE_AUDIO
-    beeper.Beep(0.05, 2000.0);
-#endif
-    SetPreset(current_preset_.preset_num + 1, true);
-  }
-
-  // Go to the previous Preset.
-  void previous_preset() {
-#ifdef ENABLE_AUDIO
-    beeper.Beep(0.05, 2000.0);
-#endif
-    SetPreset(current_preset_.preset_num - 1, true);
-  }
-
-  // Measure and return the blade identifier resistor.
-  float id() {
-#ifdef ENABLE_POWER_FOR_ID
-    ENABLE_POWER_FOR_ID power_pins_to_toggle;
-    STDOUT.println("Power for ID enabled. Turning on FETs");
-    power_pins_to_toggle.Init();
-    power_pins_to_toggle.Power(true);
-#endif
-    pinMode(bladeIdentifyPin, INPUT_PULLUP);
-    delay(100);
-    int blade_id = analogRead(bladeIdentifyPin);
-#ifdef ENABLE_POWER_FOR_ID
-    power_pins_to_toggle.Power(false);
-#endif
-    float volts = blade_id * 3.3f / 1024.0f;  // Volts at bladeIdentifyPin
-    float amps = (3.3f - volts) / 33000;     // Pull-up is 33k
-    float resistor = volts / amps;
-    STDOUT.print("ID: ");
-    STDOUT.print(blade_id);
-    STDOUT.print(" volts ");
-    STDOUT.print(volts);
-    STDOUT.print(" resistance= ");
-    STDOUT.println(resistor);
-    return resistor;
-  }
-
-  // Called from setup to identify the blade and select the right
-  // Blade driver, style and sound font.
-  void FindBlade() {
-    size_t best_config = 0;
-    if (NELEM(blades) > 1) {
-      float resistor = id();
-
-      float best_err = 1000000.0;
-      for (size_t i = 0; i < NELEM(blades); i++) {
-        float err = fabsf(resistor - blades[i].ohm);
-        if (err < best_err) {
-          best_config = i;
-          best_err = err;
-        }
-      }
-    }
-    STDOUT.print("blade= ");
-    STDOUT.println(best_config);
-    current_config = blades + best_config;
-
-#define ACTIVATE(N) do {     \
-    if (!current_config->blade##N) goto bad_blade;  \
-    current_config->blade##N->Activate();           \
-  } while(0);
-
-    ONCEPERBLADE(ACTIVATE);
-    SetPreset(0, false);
-    return;
-
-   bad_blade:
-    STDOUT.println("BAD BLADE");
-#ifdef ENABLE_AUDIO
-    talkie.Say(talkie_error_in_15, 15);
-    talkie.Say(talkie_blade_array_15, 15);
-#endif    
-  }
-
-  void SB_Message(const char* text) override {
-    STDOUT.print("DISPLAY: ");
-    STDOUT.println(text);
-  }
-
-  float peak = 0.0;
-  Vec3 at_peak;
-  void SB_Accel(const Vec3& accel, bool clear) override {
-    accel_loop_counter_.Update();
-    if (clear) accel_ = accel;
-    float v = (accel_ - accel).len();
-    // If we're spinning the saber, require a stronger acceleration
-    // to activate the clash.
-    if (v > CLASH_THRESHOLD_G + filtered_gyro_.len() / 200.0) {
-      // Needs de-bouncing
-#if 1
-      STDOUT.print("ACCEL: ");
-      STDOUT.print(accel.x);
-      STDOUT.print(", ");
-      STDOUT.print(accel.y);
-      STDOUT.print(", ");
-      STDOUT.print(accel.z);
-      STDOUT.print(" v = ");
-      STDOUT.print(v);
-      STDOUT.print(" fgl = ");
-      STDOUT.print(filtered_gyro_.len() / 200.0);
-      STDOUT.print(" accel_: ");
-      STDOUT.print(accel_.x);
-      STDOUT.print(", ");
-      STDOUT.print(accel_.y);
-      STDOUT.print(", ");
-      STDOUT.print(accel_.z);
-      STDOUT.print(" clear = ");
-      STDOUT.print(clear);
-      STDOUT.print(" millis = ");
-      STDOUT.println(millis());
-#endif      
-      Clash();
-    }
-    if (v > peak) {
-      peak = v;
-      at_peak = accel_ - accel;
-    }
-    accel_ = accel;
-    if (monitor.ShouldPrint(Monitoring::MonitorClash)) {
-      STDOUT.print("ACCEL: ");
-      STDOUT.print(accel.x);
-      STDOUT.print(", ");
-      STDOUT.print(accel.y);
-      STDOUT.print(", ");
-      STDOUT.print(accel.z);
-      STDOUT.print(" peak ");
-      STDOUT.print(at_peak.x);
-      STDOUT.print(", ");
-      STDOUT.print(at_peak.y);
-      STDOUT.print(", ");
-      STDOUT.print(at_peak.z);
-      STDOUT.print(" (");
-      STDOUT.print(peak);
-      STDOUT.println(")");
-      peak = 0.0;
-    }
-  }
-
-  void SB_Top() override {
-    STDOUT.print("Acceleration measurements per second: ");
-    accel_loop_counter_.Print();
-    STDOUT.println("");
-  }
-
-  enum StrokeType {
-    NO_STROKE,
-    TWIST_LEFT,
-    TWIST_RIGHT,
-  };
-  struct Stroke {
-    StrokeType type;
-    uint32_t start_millis;
-    uint32_t end_millis;
-    uint32_t length() const { return end_millis - start_millis; }
-  };
-
-  Stroke strokes[5];
-
-  void ProcessStrokes() {
-    if (monitor.IsMonitoring(Monitoring::MonitorStrokes)) {
-      STDOUT.print("Stroke: ");
-      switch (strokes[NELEM(strokes)-1].type) {
-        case TWIST_LEFT:
-          STDOUT.print("TwistLeft");
-          break;
-        case TWIST_RIGHT:
-          STDOUT.print("TwistRight");
-          break;
-        default: break;
-      }
-      STDOUT.print(" len=");
-      STDOUT.print(strokes[NELEM(strokes)-1].length());
-      STDOUT.print(" separation=");
-      uint32_t separation =
-        strokes[NELEM(strokes)-1].start_millis -
-        strokes[NELEM(strokes)-2].end_millis;
-      STDOUT.println(separation);
-    }
-    if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
-         strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
-        (strokes[NELEM(strokes)-1].type == TWIST_RIGHT &&
-         strokes[NELEM(strokes)-2].type == TWIST_LEFT)) {
-      if (strokes[NELEM(strokes) -1].length() > 90UL &&
-          strokes[NELEM(strokes) -1].length() < 300UL &&
-          strokes[NELEM(strokes) -2].length() > 90UL &&
-          strokes[NELEM(strokes) -2].length() < 300UL) {
-        uint32_t separation =
-          strokes[NELEM(strokes)-1].start_millis -
-          strokes[NELEM(strokes)-2].end_millis;
-        if (separation < 200UL) {
-          STDOUT.println("TWIST");
-          // We have a twisting gesture.
-          Event(BUTTON_NONE, EVENT_TWIST);
-        }
-      }
-    }
-  }
-
-  void DoGesture(StrokeType gesture) {
-    if (gesture == NO_STROKE) {
-      if (strokes[NELEM(strokes) - 1].end_millis == 0) {
-        strokes[NELEM(strokes) - 1].end_millis = millis();
-        ProcessStrokes();
-      }
-      return;
-    }
-    if (gesture == strokes[NELEM(strokes)-1].type &&
-        strokes[NELEM(strokes)-1].end_millis == 0) {
-      // Stroke not done, wait.
-      return;
-    }
-    for (size_t i = 0; i < NELEM(strokes) - 1; i++) {
-      strokes[i] = strokes[i+1];
-    }
-    strokes[NELEM(strokes)-1].type = gesture;
-    strokes[NELEM(strokes)-1].start_millis = millis();
-    strokes[NELEM(strokes)-1].end_millis = 0;
-  }
-
-  BoxFilter<Vec3, 5> gyro_filter_;
-  Vec3 filtered_gyro_;
-  void SB_Motion(const Vec3& gyro, bool clear) override {
-    if (clear)
-      for (int i = 0; i < 4; i++)
-        gyro_filter_.filter(gyro);
-
-    filtered_gyro_ = gyro_filter_.filter(gyro);
-    if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
-      // Got gyro data
-      STDOUT.print("GYRO: ");
-      STDOUT.print(gyro.x);
-      STDOUT.print(", ");
-      STDOUT.print(gyro.y);
-      STDOUT.print(", ");
-      STDOUT.println(gyro.z);
-    }
-    if (abs(gyro.x) > 200.0 &&
-        abs(gyro.x) > 3.0f * abs(gyro.y) &&
-        abs(gyro.x) > 3.0f * abs(gyro.z)) {
-      DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
-    } else {
-      DoGesture(NO_STROKE);
-    }
-  }
-protected:
-  Vec3 accel_;
-  bool pointing_down_ = false;
-
-  void StartOrStopTrack() {
-#ifdef ENABLE_AUDIO
-    if (track_player_) {
-      track_player_->Stop();
-      track_player_.Free();
-    } else {
-      MountSDCard();
-      EnableAmplifier();
-      track_player_ = GetFreeWavPlayer();
-      if (track_player_) {
-        track_player_->Play(current_preset_.track.get());
-      } else {
-        STDOUT.println("No available WAV players.");
-      }
-    }
-#else
-    STDOUT.println("Audio disabled.");
-#endif
-  }
-
-  bool aux_on_ = true;
-  uint32_t last_beep_;
-
-  void Loop() override {
-    if (clash_pending_ && millis() - last_clash_ >= clash_timeout_) {
-      clash_pending_ = false;
-      Clash2();
-    }
-    if (battery_monitor.low()) {
-      // TODO: FIXME
-      if (current_style()->Charging()) {
-        if (SaberBase::IsOn()) {
-          STDOUT.print("Battery low, turning off. Battery voltage: ");
-          STDOUT.println(battery_monitor.battery());
-          Off();
-        } else if (millis() - last_beep_ > 5000) {
-          STDOUT.println("Battery low beep");
-#ifdef ENABLE_AUDIO
-          // TODO: allow this to be replaced with WAV file
-          talkie.Say(talkie_low_battery_15, 15);
-#endif
-          last_beep_ = millis();
-        }
-      }
-    }
-#ifdef ENABLE_AUDIO
-    if (track_player_ && !track_player_->isPlaying()) {
-      track_player_.Free();
-    }
-#endif
-  }
-
-  void PrintButton(uint32_t b) {
-    if (b & BUTTON_POWER) STDOUT.print("Power");
-    if (b & BUTTON_AUX) STDOUT.print("Aux");
-    if (b & BUTTON_AUX2) STDOUT.print("Aux2");
-    if (b & BUTTON_UP) STDOUT.print("Up");
-    if (b & BUTTON_DOWN) STDOUT.print("Down");
-    if (b & BUTTON_LEFT) STDOUT.print("Left");
-    if (b & BUTTON_RIGHT) STDOUT.print("Right");
-    if (b & BUTTON_SELECT) STDOUT.print("Select");
-    if (b & MODE_ON) STDOUT.print("On");
-  }
-
-  void PrintEvent(EVENT e) {
-    switch (e) {
-      case EVENT_NONE: STDOUT.print("None"); break;
-      case EVENT_PRESSED: STDOUT.print("Pressed"); break;
-      case EVENT_RELEASED: STDOUT.print("Released"); break;
-      case EVENT_CLICK_SHORT: STDOUT.print("Shortclick"); break;
-      case EVENT_CLICK_LONG: STDOUT.print("Longclick"); break;
-      case EVENT_DOUBLE_CLICK: STDOUT.print("Doubleclick"); break;
-      case EVENT_LATCH_ON: STDOUT.print("On"); break;
-      case EVENT_LATCH_OFF: STDOUT.print("Off"); break;
-      case EVENT_STAB: STDOUT.print("Stab"); break;
-      case EVENT_SWING: STDOUT.print("Swing"); break;
-      case EVENT_SHAKE: STDOUT.print("Shake"); break;
-      case EVENT_TWIST: STDOUT.print("Twist"); break;
-      case EVENT_CLASH: STDOUT.print("Clash"); break;
-      case EVENT_HELD: STDOUT.print("Held"); break;
-      case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
-    }
-  }
-
-  void PrintEvent(enum BUTTON button, EVENT event) {
-    STDOUT.print("EVENT: ");
-    if (button) {
-      PrintButton(button);
-      STDOUT.print("-");
-    }
-    PrintEvent(event);
-    if (current_modifiers & ~button) {
-      STDOUT.print(" mods ");
-      PrintButton(current_modifiers);
-    }
-    if (SaberBase::IsOn()) STDOUT.print(" ON");
-    STDOUT.print(" millis=");    
-    STDOUT.println(millis());
-  }
-public:
-  bool Event(enum BUTTON button, EVENT event) {
-    PrintEvent(button, event);
-
-#define EVENTID(BUTTON, EVENT, MODIFIERS) (((EVENT) << 24) | ((BUTTON) << 12) | ((MODIFIERS) & ~(BUTTON)))
-    if (SaberBase::IsOn() && aux_on_) {
-      if (button == BUTTON_POWER) button = BUTTON_AUX;
-      if (button == BUTTON_AUX) button = BUTTON_POWER;
-    }
-    
-    bool handled = true;
-    switch (event) {
-      case EVENT_RELEASED:
-	clash_pending_ = false;
-      case EVENT_PRESSED:
-	IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
-      default:
-	break;
-    }
-    switch (EVENTID(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
-      default:
-        handled = false;
-        break;
-
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
-        if (accel_.x < -0.15) {
-          pointing_down_ = true;
-        } else {
-          pointing_down_ = false;
-        }
-        break;
-
-#if NUM_BUTTONS == 0
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-#endif
-      case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
-        aux_on_ = false;
-        On();
-        break;
-
-
-      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
-#ifdef DUAL_POWER_BUTTONS
-        aux_on_ = true;
-        On();
-#else
-        next_preset();
-#endif
-        break;
-
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
-	if (millis() - activated_ < 500) {
-	  if (SetMute(true)) {
-	    unmute_on_deactivation_ = true;
-	  }
-	}
-	break;
-	
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
-      case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
-      case EVENTID(BUTTON_AUX2, EVENT_LATCH_OFF, MODE_ON):
-#if NUM_BUTTONS == 0
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-#endif
-        Off();
-        break;
-
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
-        SaberBase::DoForce();
-        break;
-
-      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
-        // Avoid the base and the very tip.
-	// TODO: Make blast only appear on one blade!
-        SaberBase::DoBlast();
-        break;
-
-        // Lockup
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
-        if (!SaberBase::Lockup()) {
-          if (pointing_down_) {
-            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-          } else {
-            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-          }
-          SaberBase::DoBeginLockup();
-        } else {
-          handled = false;
-        }
-        break;
-
-        // Off functions
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
-        StartOrStopTrack();
-        break;
-
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
-        SaberBase::RequestMotion();
-        break;
-
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-        next_preset();
-        break;
-
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
-        previous_preset();
-        break;
-
-      case EVENTID(BUTTON_AUX2, EVENT_CLICK_SHORT, MODE_OFF):
-#ifdef DUAL_POWER_BUTTONS
-        next_preset();
-#else
-        previous_preset();
-#endif
-        break;
-    }
-    if (!handled) {
-      // Events that needs to be handled regardless of what other buttons
-      // are pressed.
-      switch (EVENTID(button, event, SaberBase::IsOn() ? MODE_ON : MODE_OFF)) {
-        case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
-        case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
-          if (SaberBase::Lockup()) {
-            SaberBase::DoEndLockup();
-            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-          } else {
-            handled = false;
-          }
-        break;
-
-      }
-    }
-    if (handled) {
-      current_modifiers = BUTTON_NONE;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  bool Parse(const char *cmd, const char* arg) override {
-    if (!strcmp(cmd, "id")) {
-      id();
-      return true;
-    }
-    if (!strcmp(cmd, "on")) {
-      On();
-      return true;
-    }
-    if (!strcmp(cmd, "off")) {
-      Off();
-      return true;
-    }
-    if (!strcmp(cmd, "get_on")) {
-      STDOUT.println(SaberBase::IsOn());
-      return true;
-    }
-    if (!strcmp(cmd, "clash")) {
-      Clash();
-      return true;
-    }
-    if (!strcmp(cmd, "force")) {
-      SaberBase::DoForce();
-      return true;
-    }
-    if (!strcmp(cmd, "blast")) {
-      // Avoid the base and the very tip.
-      // TODO: Make blast only appear on one blade!
-      SaberBase::DoBlast();
-      return true;
-    }
-    if (!strcmp(cmd, "lock") || !strcmp(cmd, "lockup")) {
-      STDOUT.print("Lockup ");
-      if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
-        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-        SaberBase::DoBeginLockup();
-        STDOUT.println("ON");
-      } else {
-        SaberBase::DoEndLockup();
-        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-        STDOUT.println("OFF");
-      }
-      return true;
-    }
-    if (!strcmp(cmd, "drag")) {
-      STDOUT.print("Drag ");
-      if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
-        SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-        SaberBase::DoBeginLockup();
-        STDOUT.println("ON");
-      } else {
-        SaberBase::DoEndLockup();
-        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-        STDOUT.println("OFF");
-      }
-      return true;
-    }
-#ifdef ENABLE_AUDIO
-    if (!strcmp(cmd, "beep")) {
-      beeper.Beep(1.0, 3000.0);
-      return true;
-    }
-    if (!strcmp(cmd, "play")) {
-      if (!arg) {
-        StartOrStopTrack();
-        return true;
-      }
-      MountSDCard();
-      EnableAmplifier();
-      RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
-      if (player) {
-        STDOUT.print("Playing ");
-        STDOUT.println(arg);
-        player->Play(arg);
-      } else {
-        STDOUT.println("No available WAV players.");
-      }
-      return true;
-    }
-    if (!strcmp(cmd, "play_track")) {
-      if (!arg) {
-        StartOrStopTrack();
-        return true;
-      }
-      if (track_player_) {
-        track_player_->Stop();
-        track_player_.Free();
-      }
-      MountSDCard();
-      EnableAmplifier();
-      track_player_ = GetFreeWavPlayer();
-      if (track_player_) {
-        STDOUT.print("Playing ");
-        STDOUT.println(arg);
-        track_player_->Play(arg);
-      } else {
-        STDOUT.println("No available WAV players.");
-      }
-      return true;
-    }
-    if (!strcmp(cmd, "stop_track")) {
-      if (track_player_) {
-        track_player_->Stop();
-        track_player_.Free();
-      }
-      return true;
-    }
-    if (!strcmp(cmd, "get_track")) {
-      if (track_player_) {
-        STDOUT.println(track_player_->Filename());
-      }
-      return true;
-    }
-    if (!strcmp(cmd, "volumes")) {
-      for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
-        STDOUT.print(" Unit ");
-        STDOUT.print(unit);
-        STDOUT.print(" Volume ");
-        STDOUT.println(wav_players[unit].volume());
-      }
-      return true;
-    }
-    if (!strcmp(cmd, "buffered")) {
-      for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
-        STDOUT.print(" Unit ");
-        STDOUT.print(unit);
-        STDOUT.print(" Buffered: ");
-        STDOUT.println(wav_players[unit].buffered());
-      }
-      return true;
-    }
-#endif
-    if (!strcmp(cmd, "cd")) {
-      chdir(arg);
-      SaberBase::DoNewFont();
-      return true;
-    }
-#if 0
-    if (!strcmp(cmd, "mkdir")) {
-      SD.mkdir(arg);
-      return true;
-    }
-#endif    
-    if (!strcmp(cmd, "pwd")) {
-      STDOUT.println(current_directory);
-      return true;
-    }
-    if (!strcmp(cmd, "n") || (!strcmp(cmd, "next") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
-      next_preset();
-      return true;
-    }
-    if (!strcmp(cmd, "p") || (!strcmp(cmd, "prev") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
-      previous_preset();
-      return true;
-    }
-    if (!strcmp(cmd, "message") && arg) {
-      SaberBase::DoMessage(arg);
-      return true;
-    }
-
-    if (!strcmp(cmd, "list_presets")) {
-      CurrentPreset tmp;
-      for (int i = 0; ; i++) {
-        tmp.SetPreset(i);
-	if (tmp.preset_num != i) break;
-	tmp.Print();
-      }
-      return true;
-    }
-
-    if (!strcmp(cmd, "set_font") && arg) {
-      current_preset_.font = mkstr(arg);
-      current_preset_.Save();
-      return true;
-    }
-
-    if (!strcmp(cmd, "set_track") && arg) {
-      current_preset_.track = mkstr(arg);
-      current_preset_.Save();
-      return true;
-    }
-
-    if (!strcmp(cmd, "set_name") && arg) {
-      current_preset_.name = mkstr(arg);
-      current_preset_.Save();
-      return true;
-    }
-
-#define SET_STYLE_CMD(N)                             \
-    if (!strcmp(cmd, "set_style" #N) && arg) {        \
-      current_preset_.current_style##N = mkstr(arg); \
-      current_preset_.Save();                        \
-      return true;                                   \
-    }
-    ONCEPERBLADE(SET_STYLE_CMD)
-
-    if (!strcmp(cmd, "move_preset") && arg) {
-      int32_t pos = strtol(arg, NULL, 0);
-      current_preset_.SaveAt(pos);
-      return true;      
-    }
-
-    if (!strcmp(cmd, "duplicate_preset") && arg) {
-      int32_t pos = strtol(arg, NULL, 0);
-      current_preset_.preset_num = -1;
-      current_preset_.SaveAt(pos);
-      return true;      
-    }
-
-    if (!strcmp(cmd, "delete_preset") && arg) {
-      current_preset_.SaveAt(-1);
-      return true;      
-    }
-
-    if (!strcmp(cmd, "show_current_preset")) {
-      current_preset_.Print();
-      return true;
-    }
-
-    if (!strcmp(cmd, "get_preset")) {
-      STDOUT.println(current_preset_.preset_num);
-      return true;
-    }
-    if (!strcmp(cmd, "get_volume")) {
-#ifdef ENABLE_AUDIO
-      STDOUT.println(dynamic_mixer.get_volume());
-#else
-      STDOUT.println(0);
-#endif      
-      return true;
-    }
-    if (!strcmp(cmd, "set_volume") && arg) {
-#ifdef ENABLE_AUDIO
-      int32_t volume = strtol(arg, NULL, 0);
-      if (volume >= 0 && volume <= 3000)
-        dynamic_mixer.set_volume(volume);
-#endif      
-      return true;
-    }
-    
-    if (!strcmp(cmd, "mute")) {
-      SetMute(true);
-      return true;
-    }
-    if (!strcmp(cmd, "unmute")) {
-      SetMute(false);
-      return true;
-    }
-    if (!strcmp(cmd, "toggle_mute")) {
-      if (!SetMute(true)) SetMute(false);
-      return true;
-    }
-    
-    if (!strcmp(cmd, "set_preset") && arg) {
-      size_t preset = strtol(arg, NULL, 0);
-      SetPreset(preset, true);
-      return true;
-    }
-    
-#ifdef ENABLE_SD
-    if (!strcmp(cmd, "list_tracks")) {
-      LOCK_SD(true);
-      for (LSFS::Iterator iter("/"); iter; ++iter) {
-        if (iter.isdir()) {
-          char fname[128];
-          strcpy(fname, iter.name());
-          strcat(fname, "/");
-          char* fend = fname + strlen(fname);
-          bool isfont = false;
-          if (!isfont) {
-            strcpy(fend, "hum.wav");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            strcpy(fend, "hum01.wav");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            strcpy(fend, "hum");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            for (LSFS::Iterator i2(iter); i2; ++i2) {
-              if (endswith(".wav", i2.name()) && i2.size() > 200000) {
-                strcpy(fend, i2.name());
-                STDOUT.println(fname);
-              }
-            }
-          }
-        } else {
-          if (endswith(".wav", iter.name()) && iter.size() > 200000) {
-            STDOUT.println(iter.name());
-          }
-        }
-      }
-      LOCK_SD(false);
-      return true;
-    }
-
-    if (!strcmp(cmd, "list_fonts")) {
-      LOCK_SD(true);
-      for (LSFS::Iterator iter("/"); iter; ++iter) {
-        if (iter.isdir()) {
-          char fname[128];
-          strcpy(fname, iter.name());
-          strcat(fname, "/");
-          char* fend = fname + strlen(fname);
-          bool isfont = false;
-          if (!isfont) {
-            strcpy(fend, "hum.wav");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            strcpy(fend, "hum01.wav");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            strcpy(fend, "hum");
-            isfont = LSFS::Exists(fname);
-          }
-          if (isfont) {
-	    STDOUT.println(iter.name());
-          }
-        }
-      }
-      LOCK_SD(false);
-      return true;
-    }
-#endif
-    return false;
-  }
-  void Help() override {
-    STDOUT.println(" clash - trigger a clash");
-    STDOUT.println(" on/off - turn saber on/off");
-    STDOUT.println(" force - trigger a force push");
-    STDOUT.println(" blast - trigger a blast");
-    STDOUT.println(" lock - begin/end lockup");
-#ifdef ENABLE_AUDIO
-    STDOUT.println(" pwd - print current directory");
-    STDOUT.println(" cd directory - change directory, and sound font");
-    STDOUT.println(" play filename - play file");
-    STDOUT.println(" next/prev font - walk through directories in alphabetical order");
-    STDOUT.println(" next/prev pre[set] - walk through presets.");
-    STDOUT.println(" beep - play a beep");
-#endif
-  }
-
-private:
-  CurrentPreset current_preset_;
-  LoopCounter accel_loop_counter_;
-};
-
-Saber saber;
+PROP_TYPE prop;
 
 #include "scripts/v3_test_script.h"
 #include "scripts/proffieboard_test_script.h"
@@ -2751,7 +1553,7 @@ void setup() {
 
   Looper::DoSetup();
   // Time to identify the blade.
-  saber.FindBlade();
+  prop.FindBlade();
   SaberBase::DoBoot();
 #if defined(ENABLE_SD) && defined(ENABLE_AUDIO)
   if (!sd_card_found) {
@@ -2793,7 +1595,7 @@ void loop() {
 
   bool on = false;
   SaberBase::DoIsOn(&on);
-  if (!on && !Serial && !saber.NeedsPower()
+  if (!on && !Serial && !prop.NeedsPower()
 #ifdef ENABLE_AUDIO
        && !amplifier.Active()
 #endif

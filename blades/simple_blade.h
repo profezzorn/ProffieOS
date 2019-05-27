@@ -152,8 +152,8 @@ public:
     battery_monitor.SetLoad(true);
     power_ = on_ = true;
   }
-  void SB_Off() override {
-    AbstractBlade::SB_Off();
+  void SB_Off(OffType off_type) override {
+    AbstractBlade::SB_Off(off_type);
     battery_monitor.SetLoad(false);
     on_ = false;
   }
@@ -161,12 +161,12 @@ public:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-         SB_On();
-         return true;
+        SB_On();
+        return true;
       }
       if (!strcmp(arg, "off")) {
-         SB_Off();
-         return true;
+        SB_Off(OFF_NORMAL);
+        return true;
       }
     }
     return false;

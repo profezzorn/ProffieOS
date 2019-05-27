@@ -99,8 +99,8 @@ public:
     delay(10);
     on_ = true;
   }
-  void SB_Off() override {
-    AbstractBlade::SB_Off();
+  void SB_Off(OffType off_type) override {
+    AbstractBlade::SB_Off(off_type);
     on_ = false;
   }
 
@@ -117,7 +117,7 @@ public:
          return true;
       }
       if (!strcmp(arg, "off")) {
-         SB_Off();
+         SB_Off(OFF_NORMAL);
          return true;
       }
     }
