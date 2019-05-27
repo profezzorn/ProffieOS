@@ -51,11 +51,13 @@
 // Here explain some general code concepts to make it easier
 // to understand the code below.
 //
-// Most things start with the Saber class. It is responsible
-// for the overall state of the saber and handles button clicks.
-// Once an event is registered, such as "on" or "clash", the
-// event is sent to all registered SaberBase classes.
-//
+// Most things start with the ProbBase class. Depending on the
+// configuration, this class is extended by the Saber class,
+// the Detonator class, or some other class. The extended class
+// is instantiated as "prop", and is responsible for handling
+// button clicks, clashes, swings and other events. These events
+// are then send to all registered SaberBase classes.
+///
 // Generally speaking, there are usually two registered SaberBase
 // classes listening for events. One for sound and one for 
 // the blade. Sound and blade effects are generally executed
@@ -76,13 +78,17 @@
 // The Effect class is responsible for keeping track of all numbered
 // files that for a particular filename prefix.
 //
-// Once the directory has been scanned, we'll either initiate
-// a MonophonicFont or a PolyphonicFont based on the names of the
-// files we find. MonophonicFont and PolyphonicFont inherit from
+// Once the directory has been scanned, we'll decide how to play
+// sounds. In the past, there was one class for handling NEC style
+// fonts and another for handling Plecter style fonts. However,
+// both of those have now been merged into the HybridFont class
+// which can do both. It is also capable of doing some mix and matching,
+// so you can use a plecter style hum together with a NEC style
+// swing if you so desire. The HybridFont class inherit from
 // SaberBase and listen on on/off/clash/etc. events, just like
 // BladeBase classes do.
-// 
-// MonophonicFont and PolyphonicFont tells the audio subsystem
+//
+// HybridFont tells the audio subsystem
 // to trigger and mix sounds as aproperiate. The sound subsystem
 // starts with an DMA channel which feeds data to a digital-to-analog
 // converter. Once the data buffer is half-gone, and interrupt is
@@ -91,31 +97,19 @@
 // stream is hooked up to the AudioDynamicMixer class. This
 // class is responsible for taking multiple audio inputs,
 // summing them up and then adjusting the volume to minimize
-// clipping.  Generally, one of the inputs are hooked up to
-// the AudioSplicer class, and the others are hooked up to
-// BufferedWavPlayers.  The AudioSplicer is able to do
-// smooth cutovers between sounds, and it's inputs are also
-// BufferedWavPlayers.
+// clipping.
 
 // TODO LIST:
 //   stab detect/effect
-// Make sure that sound is off before doing file command
-// make "charging style" prevent you from turning the saber "on"
 // 
 // Audio work items:
-//   Tune swings better
 //   select clash from force
 //   stab effect
 // Blade stuff
 //    better clash
-// Implement menues:
-//    select sound font
-//    select color
-//    adjust volume
-// Disable motion when off to save power.
 // Allow several blades to share power pins.
 
-// If defined, DAC vref will be 3 volts, resulting in louder sound.
+// If defined, DAC vref will be 3 volts, resulting in louder sound. (teensy only)
 #define LOUD
 
 // You can get better SD card performance by
