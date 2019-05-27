@@ -385,58 +385,11 @@ Talkie talkie;
 
 #endif  // ENABLE_AUDIO
 
-
 #include "common/strfun.h"
-
-class Effect;
-Effect* all_effects = NULL;
 
 char current_directory[128];
 
 #include "sound/effect.h"
-
-#define EFFECT(X) Effect X(#X)
-
-// Monophonic fonts
-EFFECT(boot);  // also polyphonic
-EFFECT(swing);
-EFFECT(hum);
-EFFECT(poweron);
-EFFECT(poweroff);
-EFFECT(pwroff);
-EFFECT(clash);
-EFFECT(force);  // also polyphonic
-EFFECT(stab);   // also polyphonic
-EFFECT(blaster);
-EFFECT(lockup);
-EFFECT(poweronf);
-EFFECT(font);   // also polyphonic
-EFFECT(bgnlock); // monophonic and polyphonic begin lock
-EFFECT(endlock); // Plecter endlock support, used for polyphonic name too
-
-// Polyphonic fonts
-EFFECT(blst);
-EFFECT(clsh);
-EFFECT(in);
-EFFECT(out);
-EFFECT(lock);
-EFFECT(swng);
-EFFECT(slsh);
-
-// Looped swing fonts. (SmoothSwing V1/V2)
-EFFECT(swingl);  // Looped swing, LOW
-EFFECT(swingh);  // Looped swing, HIGH
-
-// Drag effect, replaces "lock/lockup" in drag mode if present.
-EFFECT(bgndrag);
-EFFECT(drag);
-EFFECT(enddrag);
-
-// Detonator effects
-EFFECT(bgnarm);
-EFFECT(armhum);
-EFFECT(endarm);
-EFFECT(boom);
 
 #ifdef ENABLE_AUDIO
 
