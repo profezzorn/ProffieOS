@@ -284,7 +284,8 @@ public:
 
   float peak = 0.0;
   Vec3 at_peak;
-  void SB_Accel(const Vec3& accel, bool clear) override {
+  virtual void DoAccel(const Vec3& accel, bool clear) {
+    SaberBase::DoAccel(accel, clear);
     accel_loop_counter_.Update();
     if (clear) accel_ = accel;
     float v = (accel_ - accel).len();
@@ -339,6 +340,10 @@ public:
       STDOUT.println(")");
       peak = 0.0;
     }
+  }
+
+  virtual void DoMotion(const Vec3& motion, bool clear) {
+    SaberBase::DoMotion(motion, clear);
   }
 
   void SB_Top() override {
