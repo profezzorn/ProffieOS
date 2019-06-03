@@ -64,6 +64,10 @@ public:
     if (pause_) return 0;
     return VolumeOverlay<BufferedAudioStream<512> >::read(dest, to_read);
   }
+  bool eof() const override {
+    if (pause_) return true;
+    return VolumeOverlay<BufferedAudioStream<512> >::eof();
+  }
 
   float length() const { return wav.length(); }
   float pos() const {

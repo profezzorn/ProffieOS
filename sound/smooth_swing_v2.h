@@ -16,6 +16,18 @@ public:
       STDOUT.println("Warning, swingl and swingh should have the same number of files.");
     }
     swings_ = std::min<size_t>(swingl.files_found(), swingh.files_found());
+    // check for swngxx files to use as accent swings
+    if ((swng.files_found() || swing.files_found()) > 0 && smooth_swing_config.AccentSwingSpeedThreshold > 0.0) {
+      STDOUT.println("Accent Swings Enabled.");
+      STDOUT.print("Polyphonic swings: ");
+      STDOUT.println(swng.files_found());
+      STDOUT.print("Monophonic swings: ");
+      STDOUT.println(swing.files_found());
+      accent_swings_present = true;
+    } else {
+      accent_swings_present = false;
+      STDOUT.print("Accent Swings NOT Detected: ");
+    }
   }
 
   void Deactivate() {
@@ -61,11 +73,11 @@ public:
       STDOUT.println("SmoothSwing V2 cannot allocate wav player.");
     }
   }
-  void SB_Off() override {
+  void SB_Off(OffType off_type) override {
     on_ = false;
     A.Off();
     B.Off();
-    delegate_->SB_Off();
+    delegate_->SB_Off(off_type);
   }
 
   enum class SwingState {
@@ -103,6 +115,12 @@ public:
         state_ = SwingState::ON;
         
       case SwingState::ON:
+        // trigger accent swing
+        if (speed >=smooth_swing_config.AccentSwingSpeedThreshold &&
+            accent_swings_present &&
+            (A.player->isPlaying() || B.player->isPlaying())) {
+          delegate_->StartSwing();
+        }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
             std::min<float>(1.0, speed / smooth_swing_config.SwingSensitivity);
@@ -144,11 +162,12 @@ public:
             STDOUT.print("  hum_volume: ");
             STDOUT.println(hum_volume);
           }
-	  if (on_) {
-	    // We need to stop setting the volume when off, or playback may never stop.
-	    A.set_volume(mixhum * mixab);
-	    B.set_volume(mixhum * (1.0 - mixab));
-	  }
+          if (on_) {
+            // We need to stop setting the volume when off, or playback may never stop.
+            mixhum = delegate_->SetSwingVolume(swing_strength, mixhum);
+            A.set_volume(mixhum * mixab);
+            B.set_volume(mixhum * (1.0 - mixab));
+          }
           break;
         }
         A.set_volume(0);
@@ -217,6 +236,7 @@ private:
 
   uint32_t last_random_ = 0;
   bool on_ = false;;
+  bool accent_swings_present = false;
   BoxFilter<Vec3, 3> gyro_filter_;
   int swings_;
   uint32_t last_micros_;

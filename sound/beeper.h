@@ -36,6 +36,10 @@ public:
     return samples_ > 0;
   }
 
+  bool eof() const override {
+    return !samples_;
+  }
+
 private:  
   volatile int samples_ = 0;
   volatile int f_ = 0;

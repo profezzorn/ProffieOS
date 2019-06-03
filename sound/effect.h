@@ -1,6 +1,9 @@
 #ifndef SOUND_EFFECT_H
 #define SOUND_EFFECT_H
 
+class Effect;
+Effect* all_effects = NULL;
+
 // Effect represents a set of sound files.
 // We keep track of the minimum number found, the maximum number found, weather
 // there is a file with no number, and if there are leading zeroes or not.
@@ -169,6 +172,8 @@ class Effect {
     return ret;
   }
 
+  operator bool() const { return files_found() > 0; }
+  
   void Select(int n) {
     selected_ = n;
   }
@@ -343,5 +348,49 @@ private:
   // All files must end with this extension.
   Extension ext_;
 };
+
+
+#define EFFECT(X) Effect X(#X)
+
+// Monophonic fonts
+EFFECT(boot);  // also polyphonic
+EFFECT(swing);
+EFFECT(hum);
+EFFECT(poweron);
+EFFECT(poweroff);
+EFFECT(pwroff);
+EFFECT(clash);
+EFFECT(force);  // also polyphonic
+EFFECT(stab);   // also polyphonic
+EFFECT(blaster);
+EFFECT(lockup);
+EFFECT(poweronf);
+EFFECT(font);   // also polyphonic
+EFFECT(bgnlock); // monophonic and polyphonic begin lock
+EFFECT(endlock); // Plecter endlock support, used for polyphonic name too
+
+// Polyphonic fonts
+EFFECT(blst);
+EFFECT(clsh);
+EFFECT(in);
+EFFECT(out);
+EFFECT(lock);
+EFFECT(swng);
+EFFECT(slsh);
+
+// Looped swing fonts. (SmoothSwing V1/V2)
+EFFECT(swingl);  // Looped swing, LOW
+EFFECT(swingh);  // Looped swing, HIGH
+
+// Drag effect, replaces "lock/lockup" in drag mode if present.
+EFFECT(bgndrag);
+EFFECT(drag);
+EFFECT(enddrag);
+
+// Detonator effects
+EFFECT(bgnarm);
+EFFECT(armhum);
+EFFECT(endarm);
+EFFECT(boom);
 
 #endif

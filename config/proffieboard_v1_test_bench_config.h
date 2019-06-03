@@ -59,6 +59,21 @@ typedef RandomFlicker<Rgb<200,200,200>, Rgb<40,40,40>> OnPulse;
 typedef Pulsing<Rgb16<512,512,512>, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
+  { "charging", "tracks/duel.wav",
+    StylePtr< Mix<Sin<Int<20>, Int<8192>, Int<32768>>, Black, Mix<Bump<BatteryLevel, Int<8000>>, Black,
+    Mix<BatteryLevel, Red, Red, Orange, Orange, Orange, Blue, Blue, Blue, Blue, Green, Green, Green> >>>(),
+    "charging" },
+
+  { "charging", "tracks/duel.wav",
+    StylePtr< Mix<Sin<Int<20>, Int<8192>, Int<32768>>, Black, 
+    Mix<BatteryLevel, Red, Red, Orange, Orange, Orange, Blue, Blue, Blue, Blue, Green, Green, Green> >>(),
+    "charging" },
+
+  { "charging", "tracks/duel.wav",
+    StylePtr< Mix<Bump<BatteryLevel, Int<8000>>, Black,
+    Mix<BatteryLevel, Red, Red, Orange, Orange, Orange, Blue, Blue, Blue, Blue, Green, Green, Green> >>(),
+    "charging" },
+
   { "TeensySF", "tracks/mars.wav", StyleNormalPtr<Stripes<1000, 1000, RED, GREEN, BLUE, CYAN, YELLOW, MAGENTA>, WHITE, 300, 800>(), "BLUE" },
   { "TeensySF", "tracks/mars.wav", StyleNormalPtr<RandomBlink<1000, RED, GREEN>, WHITE, 300, 800>(), "BLUE" },
   { "TeensySF", "tracks/mars.wav", StylePtr<FromFileStyle<>>(), "BLUE" },

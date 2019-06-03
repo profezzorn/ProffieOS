@@ -9,7 +9,7 @@ public:
   void Loop() override {
     STATE_MACHINE_BEGIN();
     SLEEP(2000);
-    if (fabsf(saber.id() - 125812.5f) > 22687.0f) {
+    if (fabsf(prop.id() - 125812.5f) > 22687.0f) {
       STDOUT.println("ID IS WRONG!!!");
       beeper.Beep(0.5, 2000.0);
       SLEEP(1000);

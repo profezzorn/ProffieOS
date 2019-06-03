@@ -17,7 +17,7 @@ public:
 #endif    
     uint32_t t = millis() - last_enabled_;
     if (t < 10000) return true;
-    if (saber.NeedsPower()) return true;
+    if (prop.NeedsPower()) return true;
     bool on = false;
     SaberBase::DoIsOn(&on);
     return on;
