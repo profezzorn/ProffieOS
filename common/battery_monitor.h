@@ -84,9 +84,12 @@ private:
     // This is the volts on the battery monitor pin.
     // TODO: analogRead can be very slow, make an async one and/or read it less often.
     float volts = 3.3 * analogRead(batteryLevelPin) / 1024.0;
-#ifdef V2
+#if VERSION_MAJOR == 5
+    float pulldown = 410000;  // External pulldown
+    float pullup =   410000;  // External pullup
+#elif defined(V2)
     float pulldown = 220000;  // External pulldown
-    float pullup = 2000000;  // External pullup
+    float pullup = 2000000;   // External pullup
 #else
     float pulldown = 33000;  // Internal pulldown is 33kOhm
     float pullup = BATTERY_PULLUP_OHMS;  // External pullup
