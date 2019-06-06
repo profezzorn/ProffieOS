@@ -196,7 +196,9 @@ public:
       TESTPIN2(blade2Pin, PinState::Unknown); // hooked up to neopixels
       TESTPIN(blade3Pin);
       TESTPIN(blade4Pin);
+#if VERSION_MAJOR == 4      
       TESTPIN(blade7Pin);
+#endif
       TESTPIN(blade6Pin);
       TESTPIN(blade5Pin);
     }

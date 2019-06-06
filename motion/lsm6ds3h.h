@@ -146,13 +146,13 @@ public:
 	
 	I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 12);
 	// accel data available
-	SaberBase::DoAccel(
+	prop.DoAccel(
 	  Vec3::FromData(databuffer + 6, 4.0 / 32768.0,   // 4 g range
 			 Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
 	  first_accel_);
 	first_accel_ = false;
 	// gyroscope data available
-	SaberBase::DoMotion(
+	prop.DoMotion(
 	  Vec3::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
 			 Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
 	  first_motion_);

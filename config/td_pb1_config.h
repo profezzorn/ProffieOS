@@ -10,7 +10,7 @@
 #include "proffieboard_v1_config.h"
 #define NUM_BLADES 2
 #define NUM_BUTTONS 2
-#define VOLUME 2000
+#define VOLUME 2500
 const unsigned int maxLedsPerStrip = 144;
 #define CLASH_THRESHOLD_G 2.0
 #define ENABLE_AUDIO
