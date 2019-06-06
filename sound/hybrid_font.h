@@ -13,6 +13,8 @@ public:
     CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.0f);
     CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
+    CONFIG_VARIABLE(ProffieOSSlashSpeedThreshold, 500.0f);
+    CONFIG_VARIABLE(ProffieOSSlashLowerThreshold, 450.0f);
   }
   int humStart;
   int volHum;
@@ -23,6 +25,8 @@ public:
   float ProffieOSSwingOverlap;
   float ProffieOSSmoothSwingDucking;
   float ProffieOSSwingLowerThreshold;
+  float ProffieOSSlashSpeedThreshold;
+  float ProffieOSSlashLowerThreshold;
 };
 
 
@@ -145,11 +149,19 @@ public:
           swing_player_->set_fade_time(swing_player_->length() - swing_player_->pos());
           swing_player_->FadeAndStop();
           swing_player_.Free();
-          swing_player_ = PlayPolyphonic(&swng);
+          if (slashing_ && slsh.files_found() {
+            swing_player_ = PlayPolyphonic(&slsh);
+          } else {
+            swing_player_ = PlayPolyphonic(&swng);
+          }
         }
       }
       else if (!swing_player_) {
-        swing_player_ = PlayPolyphonic(&swng);
+        if (slashing_ && slsh.files_found() {
+          swing_player_ = PlayPolyphonic(&slsh);
+        } else {
+          swing_player_ = PlayPolyphonic(&swng);
+        }
       }
     } else {
       PlayMonophonic(&swing, &hum);
@@ -362,19 +374,24 @@ public:
     hum_player_->set_volume(vol);
   }
   
-  bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > config_.ProffieOSSwingSpeedThreshold) {
       if (!swinging_ && state_ != STATE_OFF &&
 	  !(lockup.files_found() && SaberBase::Lockup())) {
-        swinging_ = true;
+        if (speed > config_.ProffieOSSlashSpeedThreshold) {
+          slashing_=true;
+        } else {
+          swinging_ = true;
+        }
         StartSwing();
       }
       float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
       SetSwingVolume(swing_strength, 1.0);
-    } else if (swinging_ && speed <= config_.ProffieOSSwingSpeedThreshold) {
+    } else if (swinging_ && speed <= config_.ProffieOSSwingLowerThreshold) {
       swinging_ = false;
+    } else if (slashing_ && speed <= config_.ProffieOSSlashLowerThreshold) {
+      slashing_ = false;
     }
     float vol = 1.0f;
     if (!swinging_) {
@@ -388,6 +405,8 @@ public:
   uint32_t hum_start_;
   bool monophonic_hum_;
   bool guess_monophonic_;
+  bool swinging_ = false;
+  bool slashing_ = false;
   IgniterConfigFile config_;
   State state_;
   float volume_;
