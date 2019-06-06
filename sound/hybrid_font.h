@@ -118,7 +118,9 @@ public:
     EnableAmplifier();
     RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
     if (player) {
-      player->set_volume_now(config_.volEff / 16.0);
+	    if (!swinging_ && !slashing_) {
+        player->set_volume_now(config_.volEff / 16.0);
+      }
       player->PlayOnce(f);
     }
     return player;
