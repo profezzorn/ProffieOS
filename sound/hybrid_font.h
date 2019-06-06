@@ -151,11 +151,6 @@ public:
           swing_player_->set_fade_time(swing_player_->length() - swing_player_->pos());
           swing_player_->FadeAndStop();
           swing_player_.Free();
-          if (slashing_ && slsh.files_found()) {
-            swing_player_ = PlayPolyphonic(&slsh);
-          } else {
-            swing_player_ = PlayPolyphonic(&swng);
-          }
         }
       }
       else if (!swing_player_) {
