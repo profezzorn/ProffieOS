@@ -12,7 +12,7 @@ public:
     CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 3.0f);
     CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.0f);
-    CONFIG_VARIABLE(ProffieOSSlashSpeedThreshold, 400.0f);
+    CONFIG_VARIABLE(ProffieOSSlashSpeedThreshold, 500.0f);
   }
   int humStart;
   int volHum;
@@ -114,7 +114,8 @@ public:
     EnableAmplifier();
     RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
     if (player) {
-	    if (!swinging_ && !slashing_) {
+    if (!(std::all_of(std::begin(swingType_), std::end(swingType_),
+    [](bool swing) { return swing; })))  {
         player->set_volume_now(config_.volEff / 16.0);
       }
       player->PlayOnce(f);
@@ -138,7 +139,7 @@ public:
     }
   }
   
-  void StartSwing() override {
+  void StartSwing(bool* swingType_) override {
     if (!guess_monophonic_) {
       if (swing_player_) {
         // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
@@ -150,15 +151,19 @@ public:
         }
       }
       if (!swing_player_) {
-        if (slashing_) {
+        if (swingType_[1]) {
           swing_player_ = PlayPolyphonic(&slsh);
-        } else {
-          swing_player_ = PlayPolyphonic(&swng);
+        } else if (swingType_[2]) {
+          //swing_player_ = PlayPolyphonic(&spn);
         }
       }
     } else {
-      if (!swinging_) {
-        PlayMonophonic(&swing, &hum);
+      if (!swingType_[0]) {
+        if (!swingType_[2]) {
+          PlayMonophonic(&swing, &hum);
+        } else {
+          PlayMonophonic(&spin, &hum);
+        }
       }
     }
   }
@@ -374,22 +379,24 @@ public:
     float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
     SetSwingVolume(swing_strength, 1.0);
     if (speed > config_.ProffieOSSwingSpeedThreshold) {
+      
       if (speed > config_.ProffieOSSlashSpeedThreshold) {
-        slashing_ = true;
+        swingType_[1] = true;
       } else {
-        swinging_ = true;
+        swingType_[0] = true;
       }
       if (state_ != STATE_OFF && !(lockup.files_found()
       && SaberBase::Lockup())) {
-        StartSwing();
+        StartSwing(swingType_);
       }
-    } else if (swinging_ && speed <= config_.ProffieOSSwingSpeedThreshold) {
-      swinging_ = false;
-    } else if (slashing_ && speed <= config_.ProffieOSSlashSpeedThreshold) {
-      slashing_ = false;
+    } else if (swingType_[0] && speed <= config_.ProffieOSSwingSpeedThreshold) {
+      swingType_[0] = false;
+    } else if (swingType_[1] && speed <= config_.ProffieOSSlashSpeedThreshold) {
+      swingType_[1] = false;
     }
     float vol = 1.0f;
-    if (!swinging_) {
+    if (!(std::all_of(std::begin(swingType_), std::end(swingType_),
+    [](bool swing) { return swing;}))) {
       vol = vol * (0.99 + clamp(speed/200.0, 0.0, 2.3));
     }
     SetHumVolume(vol);
@@ -400,8 +407,10 @@ public:
   uint32_t hum_start_;
   bool monophonic_hum_;
   bool guess_monophonic_;
-  bool swinging_ = false;
-  bool slashing_ = false;
+  //bool swinging_ = false;
+  //bool slashing_ = false;
+  //0 is swing, 1 is slash and 2 is spin
+  bool swingType_[3];
   IgniterConfigFile config_;
   State state_;
   float volume_;
