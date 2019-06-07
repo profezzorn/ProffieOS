@@ -12,9 +12,7 @@ public:
     CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 3.0f);
     CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.0f);
-    CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
-    CONFIG_VARIABLE(ProffieOSSlashSpeedThreshold, 500.0f);
-    CONFIG_VARIABLE(ProffieOSSlashLowerThreshold, 450.0f);
+    CONFIG_VARIABLE(ProffieOSSlashSpeedThreshold, 400.0f);
   }
   int humStart;
   int volHum;
@@ -24,9 +22,7 @@ public:
   float ProffieOSMaxSwingVolume;
   float ProffieOSSwingOverlap;
   float ProffieOSSmoothSwingDucking;
-  float ProffieOSSwingLowerThreshold;
   float ProffieOSSlashSpeedThreshold;
-  float ProffieOSSlashLowerThreshold;
 };
 
 
@@ -153,15 +149,17 @@ public:
           swing_player_.Free();
         }
       }
-      else if (!swing_player_) {
-        if (slashing_ && slsh.files_found()) {
+      if (!swing_player_) {
+        if (slashing_) {
           swing_player_ = PlayPolyphonic(&slsh);
         } else {
           swing_player_ = PlayPolyphonic(&swng);
         }
       }
     } else {
-      PlayMonophonic(&swing, &hum);
+      if (!swinging_) {
+        PlayMonophonic(&swing, &hum);
+      }
     }
   }
 
@@ -169,7 +167,7 @@ public:
     if(swing_player_) {
       if (swing_player_->isPlaying()) {
         float accent_volume = powf(swing_strength, config_.ProffieOSSwingVolumeSharpness) * config_.ProffieOSMaxSwingVolume;
-        swing_player_->set_fade_time(0.04);
+        swing_player_->set_fade_time(0.02);
         swing_player_->set_volume(accent_volume);
         mixhum = mixhum - mixhum * (config_.ProffieOSSmoothSwingDucking * accent_volume);
       } else {
@@ -373,21 +371,21 @@ public:
   
   void SB_Motion(const Vec3& gyro, bool clear) override {
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
+    float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
+    SetSwingVolume(swing_strength, 1.0);
     if (speed > config_.ProffieOSSwingSpeedThreshold) {
-      if (!swinging_ && state_ != STATE_OFF &&
-	  !(lockup.files_found() && SaberBase::Lockup())) {
-        if (speed > config_.ProffieOSSlashSpeedThreshold) {
-          slashing_=true;
-        } else {
-          swinging_ = true;
-        }
+      if (speed > config_.ProffieOSSlashSpeedThreshold) {
+        slashing_ = true;
+      } else {
+        swinging_ = true;
+      }
+      if (state_ != STATE_OFF && !(lockup.files_found()
+      && SaberBase::Lockup())) {
         StartSwing();
       }
-      float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
-      SetSwingVolume(swing_strength, 1.0);
-    } else if (swinging_ && speed <= config_.ProffieOSSwingLowerThreshold) {
+    } else if (swinging_ && speed <= config_.ProffieOSSwingSpeedThreshold) {
       swinging_ = false;
-    } else if (slashing_ && speed <= config_.ProffieOSSlashLowerThreshold) {
+    } else if (slashing_ && speed <= config_.ProffieOSSlashSpeedThreshold) {
       slashing_ = false;
     }
     float vol = 1.0f;
