@@ -155,15 +155,17 @@ public:
           swing_player_ = PlayPolyphonic(&slsh);
         } else if (swingType_[2]) {
           //swing_player_ = PlayPolyphonic(&spn);
+        } else {
+          swing_player_ = PlayPolyphonic(&swng);
         }
       }
-    } else {
-      if (!swingType_[0]) {
-        if (!swingType_[2]) {
-          PlayMonophonic(&swing, &hum);
-        } else {
-          PlayMonophonic(&spin, &hum);
-        }
+    } else if (!swinging_) {
+      swinging_ = true;
+      if (swingType_[0]) {
+        PlayMonophonic(&swing, &hum);
+      }
+      if (swingType_[2]) {
+        PlayMonophonic(&spin, &hum);
       }
     }
   }
@@ -177,6 +179,7 @@ public:
         mixhum = mixhum - mixhum * (config_.ProffieOSSmoothSwingDucking * accent_volume);
       } else {
         swing_player_.Free();
+        swinging_ = false;
       }
     }
     // in the off chance this gets reduced below 0, we don't want to pass a negative number
@@ -379,25 +382,27 @@ public:
     float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
     SetSwingVolume(swing_strength, 1.0);
     if (speed > config_.ProffieOSSwingSpeedThreshold) {
-      
       if (speed > config_.ProffieOSSlashSpeedThreshold) {
         swingType_[1] = true;
       } else {
         swingType_[0] = true;
       }
-      if (state_ != STATE_OFF && !(lockup.files_found()
-      && SaberBase::Lockup())) {
-        StartSwing(swingType_);
-      }
-    } else if (swingType_[0] && speed <= config_.ProffieOSSwingSpeedThreshold) {
-      swingType_[0] = false;
-    } else if (swingType_[1] && speed <= config_.ProffieOSSlashSpeedThreshold) {
+    } else if (speed < config_.ProffieOSSlashSpeedThreshold) {
       swingType_[1] = false;
+      if (speed < config_.ProffieOSSwingSpeedThreshold) {
+        swingType_[0] = false;
+        swinging_ = false;
+      }
     }
     float vol = 1.0f;
     if (!(std::all_of(std::begin(swingType_), std::end(swingType_),
     [](bool swing) { return swing;}))) {
       vol = vol * (0.99 + clamp(speed/200.0, 0.0, 2.3));
+    }
+    if ((std::any_of(std::begin(swingType_), std::end(swingType_),
+    [](bool swing) { return swing;})) &&state_ != STATE_OFF 
+    && !(lockup.files_found() && SaberBase::Lockup())) {
+      StartSwing(swingType_);
     }
     SetHumVolume(vol);
   }
@@ -407,7 +412,7 @@ public:
   uint32_t hum_start_;
   bool monophonic_hum_;
   bool guess_monophonic_;
-  //bool swinging_ = false;
+  bool swinging_ = false;
   //bool slashing_ = false;
   //0 is swing, 1 is slash and 2 is spin
   bool swingType_[3];
