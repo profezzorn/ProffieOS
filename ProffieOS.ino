@@ -21,8 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_v2_config.h"
-// #define CONFIG_FILE "config/default_proffieboard_config.h"
+#define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -1515,7 +1514,7 @@ void setup() {
   // Accumulate some entrypy while we wait.
   uint32_t now = millis();
   while (millis() - now < 1000) {
-    srand((rand() * 917823) ^ analogRead(batteryLevelPin));
+    srand((rand() * 917823) ^ LSAnalogRead(batteryLevelPin));
   }
 
 #ifdef ENABLE_SERIALFLASH

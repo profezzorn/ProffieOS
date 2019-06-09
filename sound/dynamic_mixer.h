@@ -76,6 +76,7 @@ public:
         v = sum[i];
         vol_ = ((vol_ + abs(v)) * 255) >> 8;
         v2 = v * volume_ / (my_sqrt(vol_) + 100);
+//	v2 = (int)((v * (float)volume_)/(sqrtf(vol_)+100.0));
         data[i] = clamptoi16(v2);
         peak_sum_ = max(abs(v), peak_sum_);
         peak_ = max(abs(v2), peak_);
