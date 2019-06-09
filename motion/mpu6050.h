@@ -137,7 +137,7 @@ public:
 	// Do the accel data first to make clashes as fast as possible.
           // accel data available
           if (readBytes(ACCEL_XOUT_H, databuffer, 6) == 6) {
-            SaberBase::DoAccel(
+	    prop.DoAccel(
               Vec3::FromData(databuffer, 4.0 / 32768.0,   // 4 g range
 			     Vec3::BYTEORDER_MSB, Vec3::ORIENTATION),
 	      false);
@@ -145,7 +145,7 @@ public:
 
           // gyroscope data available
           if (readBytes(GYRO_XOUT_H, databuffer, 6) == 6) {
-            SaberBase::DoMotion(
+	    prop.DoMotion(
               Vec3::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
 			     Vec3::BYTEORDER_MSB, Vec3::ORIENTATION),
 	      false);

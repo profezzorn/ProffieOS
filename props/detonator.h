@@ -48,6 +48,10 @@ public:
   void Clash() override {}
 #endif
 
+  // Make swings do nothing
+  void DoMotion(const Vec3& motion, bool clear) override { }
+
+
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
