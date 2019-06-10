@@ -169,7 +169,7 @@ public:
       if (swingType_[2]) {
         PlayMonophonic(&spin, &hum);
       }
-      if (swingType_[4]) {
+      if (swingType_[3]) {
         PlayMonophonic(&stab, &hum);
       }
     }
@@ -384,10 +384,14 @@ public:
   
   void SB_Motion(const Vec3& gyro, bool clear) override {
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
-    filtered_gyro_ = gyro_filter_.filter(gyro);
     float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
     SetSwingVolume(swing_strength, 1.0);
     if (speed > config_.ProffieOSSwingSpeedThreshold) {
+      if ((std::any_of(std::begin(swingType_), std::end(swingType_),
+      [](bool swing) { return swing;})) &&state_ != STATE_OFF 
+      && !(lockup.files_found() && SaberBase::Lockup())) {
+        StartSwing(swingType_);
+      }
       if (speed > config_.ProffieOSSlashSpeedThreshold) {
         swingType_[1] = true;
       } else {
@@ -405,11 +409,6 @@ public:
     [](bool swing) { return swing;})) {
       vol = vol * (0.99 + clamp(speed/200.0, 0.0, 2.3));
     }
-    if ((std::any_of(std::begin(swingType_), std::end(swingType_),
-    [](bool swing) { return swing;})) &&state_ != STATE_OFF 
-    && !(lockup.files_found() && SaberBase::Lockup())) {
-      StartSwing(swingType_);
-    }
     SetHumVolume(vol);
   }
 
@@ -417,22 +416,25 @@ public:
   {
     if (accel.x < -0.15) {
       pointing_down_ = true;
-    } else if (accel.x > -0.15 ) {
+    }
+    if (accel.x > 0.15 ) {
       pointing_down_ = false;
     }
-    if (accel.y > 0.30 ) {
+    if (accel.y > 0.15 ) {
       pointing_right_ = true;
-    } else if (accel.y < -0.30) {
-      pointing_right_ - false;
     }
-    if (accel.z > 0.75 || accel.z < -0.75) {
+    if (accel.y < -0.15) {
+      pointing_right_ = false;
+    }
+    if (fabs(accel.z) > 0.75) {
       pointing_level_ = true;
-      if (filtered_gyro_.z > (1.5 * filtered_gyro_.x) && filtered_gyro_.z > (1.5 * filtered_gyro_.y)) {
-        swingType_[4] = true;
-      }
-    } else if (accel.z < 0.75 || accel.z > -0.75 ) {
+    } else {
       pointing_level_ = false;
-      swingType_[4] = false;
+    }
+    if (accel.x >= 3.0) {
+      swingType_[3] = true;
+    } else {
+      swingType_[3] = false;
     }
   }
 
@@ -450,8 +452,6 @@ public:
   bool pointing_level_ = false;
   bool pointing_down_ = false;
   bool pointing_right_ = false;
-  BoxFilter<Vec3, 5> gyro_filter_;
-  Vec3 filtered_gyro_;
 };
 
 #endif
