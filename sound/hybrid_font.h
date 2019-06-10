@@ -153,9 +153,11 @@ public:
       if (!swing_player_) {
         if (swingType_[1]) {
           swing_player_ = PlayPolyphonic(&slsh);
-        } else if (swingType_[2]) {
-          //swing_player_ = PlayPolyphonic(&spn);
-        } else {
+        }
+        if (swingType_[2]) {
+          swing_player_ = PlayPolyphonic(&spin);
+        }
+        if (swingType_[0]) {
           swing_player_ = PlayPolyphonic(&swng);
         }
       }
@@ -166,6 +168,9 @@ public:
       }
       if (swingType_[2]) {
         PlayMonophonic(&spin, &hum);
+      }
+      if (swingType_[4]) {
+        PlayMonophonic(&stab, &hum);
       }
     }
   }
@@ -199,17 +204,17 @@ public:
       state_ = STATE_OUT;
       hum_player_ = GetFreeWavPlayer();
       if (hum_player_) {
-	hum_player_->set_volume_now(0);
-	hum_player_->PlayOnce(&hum);
-	hum_player_->PlayLoop(&hum);
-	hum_start_ = millis();
+        hum_player_->set_volume_now(0);
+        hum_player_->PlayOnce(&hum);
+        hum_player_->PlayLoop(&hum);
+        hum_start_ = millis();
       }
       RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&out);
       if (config_.humStart && tmp) {
-	int delay_ms = 1000 * tmp->length() - config_.humStart;
-	if (delay_ms > 0 && delay_ms < 30000) {
-	  hum_start_ += delay_ms;
-	}
+        int delay_ms = 1000 * tmp->length() - config_.humStart;
+        if (delay_ms > 0 && delay_ms < 30000) {
+          hum_start_ += delay_ms;
+        }
       }
     }
   }
@@ -234,16 +239,16 @@ public:
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
-	  if (boom) PlayMonophonic(&boom, NULL);
-	  else PlayMonophonic(&clash, NULL);  // Thermal-D fallback
+          if (boom) PlayMonophonic(&boom, NULL);
+          else PlayMonophonic(&clash, NULL);  // Thermal-D fallback
         } else {
           state_ = STATE_HUM_FADE_OUT;
-	  PlayPolyphonic(&boom);
+          PlayPolyphonic(&boom);
         }
         break;
     }
   }
-  void SB_Clash() override { Play(&clash, &clsh); }
+  void SB_Clash() override { Play(&clash, &clsh); };
   void SB_Stab() override { PlayCommon(&stab); }
   void SB_Force() override { PlayCommon(&force); }
   void SB_Blast() override { Play(&blaster, &blst); }
@@ -255,19 +260,19 @@ public:
     Effect *loop = nullptr;
     switch (SaberBase::Lockup()) {
       case SaberBase::LOCKUP_ARMED:
-	if (bgnarm) once = &bgnarm;
-	if (armhum) loop = &armhum;
-	if (!armhum && swing) loop = &swing;  // Thermal-D fallback
-	break;
+        if (bgnarm) once = &bgnarm;
+        if (armhum) loop = &armhum;
+        if (!armhum && swing) loop = &swing;  // Thermal-D fallback
+        break;
       case SaberBase::LOCKUP_DRAG:
-	if (bgndrag) once = &bgndrag;
-	if (drag) loop = &drag;
-	// fall through
+        if (bgndrag) once = &bgndrag;
+        if (drag) loop = &drag;
+        // fall through
       case SaberBase::LOCKUP_NORMAL:
-	if (!once && bgnlock) once = &bgnlock;
-	// fall through
+        if (!once && bgnlock) once = &bgnlock;
+        // fall through
       case SaberBase::LOCKUP_NONE:
-	break;
+        break;
     }
 
     if (lockup.files_found() > 0) {
@@ -280,8 +285,8 @@ public:
       if (!loop) loop = &lock;
       if (!once) once = loop;
       if (!lock_player_) {
-	lock_player_ = PlayPolyphonic(once);
-	if (lock_player_) lock_player_->PlayLoop(loop);
+        lock_player_ = PlayPolyphonic(once);
+        if (lock_player_) lock_player_->PlayLoop(loop);
       }
     }
   }
@@ -290,17 +295,17 @@ public:
     Effect *end = nullptr;
     switch (SaberBase::Lockup()) {
       case SaberBase::LOCKUP_ARMED:
-	end = &endarm;
-	break;
+        end = &endarm;
+        break;
       case SaberBase::LOCKUP_DRAG:
-	if (enddrag) end = &enddrag;
-	// fall through
+        if (enddrag) end = &enddrag;
+        // fall through
       case SaberBase::LOCKUP_NORMAL:
-	if (!end && endlock) end = &endlock;
-	if (!end) end = &clash;
-	// fall through
+        if (!end && endlock) end = &endlock;
+        if (!end) end = &clash;
+        // fall through
       case SaberBase::LOCKUP_NONE:
-	break;
+        break;
     }
 
     if (lock_player_) {
@@ -326,49 +331,49 @@ public:
   void SetHumVolume(float vol) override {
     if (!monophonic_hum_) {
       if (state_ != STATE_OFF && !hum_player_) {
-	hum_player_ = GetFreeWavPlayer();
-	if (hum_player_) {
-	  hum_player_->set_volume_now(0);
-	  hum_player_->PlayOnce(&hum);
-	  hum_player_->PlayLoop(&hum);
-	  hum_start_ = millis();
+        hum_player_ = GetFreeWavPlayer();
+        if (hum_player_) {
+          hum_player_->set_volume_now(0);
+          hum_player_->PlayOnce(&hum);
+          hum_player_->PlayLoop(&hum);
+          hum_start_ = millis();
 	}
       }
       if (!hum_player_) return;
       uint32_t m = micros();
       switch (state_) {
-	case STATE_OFF:
-	  volume_ = 0.0f;
-	  return;
-	case STATE_OUT:
-	  volume_ = 0.0f;
-	  if (millis() - hum_start_ < 0x7fffffffUL) {
-	    state_ = STATE_HUM_FADE_IN;
-	  }
-	  break;
-	case STATE_HUM_FADE_IN: {
-	  uint32_t delta = m - last_micros_;
-	  volume_ += (delta / 1000000.0) / 0.2; // 0.2 seconds
-	  if (volume_ >= 1.0f) {
-	    volume_ = 1.0f;
-	    state_ = STATE_HUM_ON;
-	  }
-	  break;
-	}
-	case STATE_HUM_ON:
-	  break;
-	case STATE_HUM_FADE_OUT: {
-	  SaberBase::RequestMotion();
-	  uint32_t delta = m - last_micros_;
-	  volume_ -= (delta / 1000000.0) / 0.2; // 0.2 seconds
-	  if (volume_ <= 0.0f) {
-	    volume_ = 0.0f;
-	    state_ = STATE_OFF;
-	    hum_player_->FadeAndStop();
-	    hum_player_.Free();
-	  }
-	  break;
-	}
+        case STATE_OFF:
+          volume_ = 0.0f;
+          return;
+        case STATE_OUT:
+          volume_ = 0.0f;
+          if (millis() - hum_start_ < 0x7fffffffUL) {
+            state_ = STATE_HUM_FADE_IN;
+          }
+          break;
+        case STATE_HUM_FADE_IN: {
+          uint32_t delta = m - last_micros_;
+          volume_ += (delta / 1000000.0) / 0.2; // 0.2 seconds
+          if (volume_ >= 1.0f) {
+            volume_ = 1.0f;
+            state_ = STATE_HUM_ON;
+          }
+          break;
+        }
+        case STATE_HUM_ON:
+          break;
+        case STATE_HUM_FADE_OUT: {
+          SaberBase::RequestMotion();
+          uint32_t delta = m - last_micros_;
+          volume_ -= (delta / 1000000.0) / 0.2; // 0.2 seconds
+          if (volume_ <= 0.0f) {
+            volume_ = 0.0f;
+            state_ = STATE_OFF;
+            hum_player_->FadeAndStop();
+            hum_player_.Free();
+          }
+          break;
+        }
       }
       last_micros_ = m;
       vol *= volume_;
@@ -379,6 +384,7 @@ public:
   
   void SB_Motion(const Vec3& gyro, bool clear) override {
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
+    filtered_gyro_ = gyro_filter_.filter(gyro);
     float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
     SetSwingVolume(swing_strength, 1.0);
     if (speed > config_.ProffieOSSwingSpeedThreshold) {
@@ -395,8 +401,8 @@ public:
       }
     }
     float vol = 1.0f;
-    if (!(std::all_of(std::begin(swingType_), std::end(swingType_),
-    [](bool swing) { return swing;}))) {
+    if (std::none_of(std::begin(swingType_), std::end(swingType_),
+    [](bool swing) { return swing;})) {
       vol = vol * (0.99 + clamp(speed/200.0, 0.0, 2.3));
     }
     if ((std::any_of(std::begin(swingType_), std::end(swingType_),
@@ -407,18 +413,45 @@ public:
     SetHumVolume(vol);
   }
 
+  void SB_Accel(const Vec3& accel, bool clear) override
+  {
+    if (accel.x < -0.15) {
+      pointing_down_ = true;
+    } else if (accel.x > -0.15 ) {
+      pointing_down_ = false;
+    }
+    if (accel.y > 0.30 ) {
+      pointing_right_ = true;
+    } else if (accel.y < -0.30) {
+      pointing_right_ - false;
+    }
+    if (accel.z > 0.75 || accel.z < -0.75) {
+      pointing_level_ = true;
+      if (filtered_gyro_.z > (1.5 * filtered_gyro_.x) && filtered_gyro_.z > (1.5 * filtered_gyro_.y)) {
+        swingType_[4] = true;
+      }
+    } else if (accel.z < 0.75 || accel.z > -0.75 ) {
+      pointing_level_ = false;
+      swingType_[4] = false;
+    }
+  }
+
  private:
   uint32_t last_micros_;
   uint32_t hum_start_;
   bool monophonic_hum_;
   bool guess_monophonic_;
   bool swinging_ = false;
-  //bool slashing_ = false;
-  //0 is swing, 1 is slash and 2 is spin
-  bool swingType_[3];
+  //0 is swing, 1 is slash, 2 is spin, 3 is stab
+  bool swingType_[4];
   IgniterConfigFile config_;
   State state_;
   float volume_;
+  bool pointing_level_ = false;
+  bool pointing_down_ = false;
+  bool pointing_right_ = false;
+  BoxFilter<Vec3, 5> gyro_filter_;
+  Vec3 filtered_gyro_;
 };
 
 #endif
