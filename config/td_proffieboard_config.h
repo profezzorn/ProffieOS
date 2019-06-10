@@ -7,7 +7,7 @@
 // If you have a similar configuration, make a copy and use that.
 
 #ifdef CONFIG_TOP
-#include "proffieboard_v1_config.h"
+#include "proffieboard_config.h"
 #define NUM_BLADES 2
 #define NUM_BUTTONS 2
 #define VOLUME 2500
