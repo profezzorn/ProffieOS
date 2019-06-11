@@ -174,8 +174,8 @@ public:
       STDOUT.println("Motion disable.");
 
       while (!I2CLock()) YIELD();
-      I2C_WRITE_BYTE_ASYNC(CTRL9_XL, 0x0);  // accel xyz disable
-      I2C_WRITE_BYTE_ASYNC(CTRL10_C, 0x0);  // gyro xyz disable
+      I2C_WRITE_BYTE_ASYNC(CTRL2_G, 0x0);  // accel disable
+      I2C_WRITE_BYTE_ASYNC(CTRL1_XL, 0x0);  // gyro disable
       I2CUnlock();
       
       while (!SaberBase::MotionRequested()) YIELD();
