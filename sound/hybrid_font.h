@@ -437,6 +437,8 @@ public:
  private:
   uint32_t last_micros_;
   uint32_t hum_start_;
+  bool monophonic_hum_;
+  bool guess_monophonic_;
   bool swinging_ = false;
   //0 is swing, 1 is slash, 2 is spin, 3 is stab
   bool swingType_[4];
