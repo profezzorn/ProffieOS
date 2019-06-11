@@ -13,6 +13,8 @@ public:
     CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.0f);
     CONFIG_VARIABLE(ProffieOSSlashSpeedThreshold, 500.0f);
+    CONFIG_VARIABLE(ProffieOSLowerSpeedThreshold, 175.0f);
+    CONFIG_VARIABLE(ProffieOSStabAccelThreshold, 3.0f);
   }
   int humStart;
   int volHum;
@@ -23,6 +25,8 @@ public:
   float ProffieOSSwingOverlap;
   float ProffieOSSmoothSwingDucking;
   float ProffieOSSlashSpeedThreshold;
+  float ProffieOSLowerSpeedThreshold;
+  float ProffieOSStabAccelThreshold;
 };
 
 
@@ -170,7 +174,7 @@ public:
         PlayMonophonic(&stab, &hum);
       }
     }
-}
+  }
 
   float SetSwingVolume(float swing_strength, float mixhum) override {
     if(swing_player_) {
@@ -379,10 +383,16 @@ public:
   }
   
   void SB_Motion(const Vec3& gyro, bool clear) override {
+    if (clear) {
+      gyro_filter_.filter(gyro);
+      gyro_filter_.filter(gyro);
+    }
+    filtered_gyro_ = gyro_filter_.filter(gyro);
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
     float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
     SetSwingVolume(swing_strength, 1.0);
     if (speed > config_.ProffieOSSwingSpeedThreshold) {
+              STDOUT.println(speed);
       if ((std::any_of(std::begin(swingType_), std::end(swingType_),
       [](bool swing) { return swing;})) &&state_ != STATE_OFF 
       && !(lockup.files_found() && SaberBase::Lockup())) {
@@ -395,14 +405,14 @@ public:
       }
     } else if (speed < config_.ProffieOSSlashSpeedThreshold) {
       swingType_[1] = false;
-      if (speed < config_.ProffieOSSwingSpeedThreshold) {
+      if (speed < config_.ProffieOSLowerSpeedThreshold) {
         swingType_[0] = false;
+        swingType_[3] = false;
         swinging_ = false;
       }
     }
     float vol = 1.0f;
-    if (std::none_of(std::begin(swingType_), std::end(swingType_),
-    [](bool swing) { return swing;})) {
+    if (!swinging_) {
       vol = vol * (0.99 + clamp(speed/200.0, 0.0, 2.3));
     }
     SetHumVolume(vol);
@@ -422,24 +432,27 @@ public:
     if (accel.y < -0.15) {
       pointing_right_ = false;
     }
-    if (fabs(accel.z) > 0.75) {
+    if (accel.z > 0.75) {
+      pointing_forward_ = true;
+    } else {
+      pointing_forward_ = false;
+    }
+    if ((fabs(accel.y > 0.75) || fabs(accel.z) > 0.75) && fabs(accel.x < 0.15)) {
       pointing_level_ = true;
     } else {
       pointing_level_ = false;
     }
-    if (accel.x >= 3.0) {
+    if (accel.x >= config_.ProffieOSStabAccelThreshold) {
       swingType_[3] = true;
-    } else {
-      swingType_[3] = false;
     }
 }
 
  private:
   uint32_t last_micros_;
   uint32_t hum_start_;
+  bool swinging_ = false;
   bool monophonic_hum_;
   bool guess_monophonic_;
-  bool swinging_ = false;
   //0 is swing, 1 is slash, 2 is spin, 3 is stab
   bool swingType_[4];
   IgniterConfigFile config_;
@@ -448,6 +461,9 @@ public:
   bool pointing_level_ = false;
   bool pointing_down_ = false;
   bool pointing_right_ = false;
+  bool pointing_forward_ = false;
+  BoxFilter<Vec3, 3> gyro_filter_;
+  Vec3 filtered_gyro_;
 };
 
 #endif
