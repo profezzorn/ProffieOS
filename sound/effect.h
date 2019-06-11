@@ -362,6 +362,7 @@ EFFECT(pwroff);
 EFFECT(clash);
 EFFECT(force);  // also polyphonic
 EFFECT(stab);   // also polyphonic
+EFFECT(spin);
 EFFECT(blaster);
 EFFECT(lockup);
 EFFECT(poweronf);
