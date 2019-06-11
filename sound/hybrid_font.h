@@ -204,17 +204,17 @@ public:
       state_ = STATE_OUT;
       hum_player_ = GetFreeWavPlayer();
       if (hum_player_) {
-        hum_player_->set_volume_now(0);
-        hum_player_->PlayOnce(&hum);
-        hum_player_->PlayLoop(&hum);
-        hum_start_ = millis();
+       hum_player_->set_volume_now(0);
+       hum_player_->PlayOnce(&hum);
+       hum_player_->PlayLoop(&hum);
+       hum_start_ = millis();
       }
       RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&out);
       if (config_.humStart && tmp) {
-        int delay_ms = 1000 * tmp->length() - config_.humStart;
-        if (delay_ms > 0 && delay_ms < 30000) {
-          hum_start_ += delay_ms;
-        }
+       int delay_ms = 1000 * tmp->length() - config_.humStart;
+       if (delay_ms > 0 && delay_ms < 30000) {
+         hum_start_ += delay_ms;
+       }
       }
     }
   }
@@ -239,11 +239,11 @@ public:
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
-          if (boom) PlayMonophonic(&boom, NULL);
-          else PlayMonophonic(&clash, NULL);  // Thermal-D fallback
+         if (boom) PlayMonophonic(&boom, NULL);
+         else PlayMonophonic(&clash, NULL);  // Thermal-D fallback
         } else {
           state_ = STATE_HUM_FADE_OUT;
-          PlayPolyphonic(&boom);
+         PlayPolyphonic(&boom);
         }
         break;
     }
