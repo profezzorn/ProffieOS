@@ -12,7 +12,7 @@ public:
     CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 3.0f);
     CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.0f);
-    CONFIG_VARIABLE(ProffieOSSlashSpeedthreshold, 500.0f);
+    CONFIG_VARIABLE(ProffieOSSlashSpeedThreshold, 500.0f);
   }
   int humStart;
   int volHum;
