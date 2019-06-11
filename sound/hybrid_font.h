@@ -213,7 +213,7 @@ public:
       if (config_.humStart && tmp) {
        int delay_ms = 1000 * tmp->length() - config_.humStart;
        if (delay_ms > 0 && delay_ms < 30000) {
-         hum_start_ += delay_ms;
+        hum_start_ += delay_ms;
        }
       }
     }
