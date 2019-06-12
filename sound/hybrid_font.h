@@ -14,7 +14,7 @@ public:
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.0f);
     CONFIG_VARIABLE(ProffieOSSlashSpeedThreshold, 500.0f);
     CONFIG_VARIABLE(ProffieOSLowerSpeedThreshold, 175.0f);
-    CONFIG_VARIABLE(ProffieOSStabAccelThreshold, 3.0f);
+    CONFIG_VARIABLE(ProffieOSStabAccelThreshold, 2.5f);
   }
   int humStart;
   int volHum;
@@ -111,6 +111,10 @@ public:
     hum_player_ = next_hum_player_;
     next_hum_player_.Free();
     hum_player_->PlayOnce(f);
+    if (swinging_) {
+      swingDuration_ = hum_player_->length() * 1000;
+      swingTime_ = millis();
+    }
     if (loop) hum_player_->PlayLoop(loop);
   }
 							   
@@ -162,8 +166,10 @@ public:
           swing_player_ = PlayPolyphonic(&swng);
         }
       }
-    } else if (!swinging_) {
-      swinging_ = true;
+    } else if ((millis() - swingTime_ - swingDuration_) > 0 ) {
+      STDOUT.println(millis());
+      STDOUT.println(swingTime_);
+      STDOUT.println(swingDuration_);
       if (swingType_[0]) {
         PlayMonophonic(&swing, &hum);
       }
@@ -173,6 +179,7 @@ public:
       if (swingType_[3]) {
         PlayMonophonic(&stab, &hum);
       }
+      swinging_ = true;
     }
   }
 
@@ -392,11 +399,11 @@ public:
     float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
     SetSwingVolume(swing_strength, 1.0);
     if (speed > config_.ProffieOSSwingSpeedThreshold) {
-              STDOUT.println(speed);
       if ((std::any_of(std::begin(swingType_), std::end(swingType_),
       [](bool swing) { return swing;})) &&state_ != STATE_OFF 
       && !(lockup.files_found() && SaberBase::Lockup())) {
         StartSwing(swingType_);
+        swinging_ = true;
       }
       if (speed > config_.ProffieOSSlashSpeedThreshold) {
         swingType_[1] = true;
@@ -464,6 +471,9 @@ public:
   bool pointing_forward_ = false;
   BoxFilter<Vec3, 3> gyro_filter_;
   Vec3 filtered_gyro_;
+  float swingDuration_;
+  float swingTime_;
+  float lastSwingTime_;
 };
 
 #endif
