@@ -49,9 +49,9 @@ enum SaberPins {
 
   // Blade power control
   bladePowerPin1 = 13,            // blade power control PA1
-  bladePowerPin2 = 10,            // blade power control PB1
+  bladePowerPin2 = 19,            // blade power control PB8
   bladePowerPin3 = 18,            // blade power control PA8
-  bladePowerPin4 = 17,            // blade power control PB3
+  bladePowerPin4 = 10,            // blade power control PB3
   bladePowerPin5 = 5,             // blade power control PB15
   bladePowerPin6 = 6,             // blade power control PB0
 
