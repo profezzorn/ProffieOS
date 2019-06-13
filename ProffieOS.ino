@@ -1075,6 +1075,12 @@ class Commands : public CommandParser {
       }
       return true;
     }
+    if (!strcmp(cmd, "CLK")) {
+      uint32_t c = atoi(e) * 1000000;
+      stm32l4_system_sysclk_configure(c, c/2, c/2);
+      Serial.println("OK");
+      return true;
+    }
     if (!strcmp(cmd, "whatispowered")) {
       STDOUT.print("ON: ");
 #define PRINTIFON(REG, BIT) do {					\
@@ -1605,10 +1611,23 @@ void loop() {
       // stm32l4_system_sysclk_configure(1000000, 500000, 500000);
       // Delay will enter low-power mode.
       // TODO: Do we need to disable this when serial port is active?
-      delay(50);         // ~8 mA
+
+      // Changing the clock frequency saves a lot of power, but going below 16Mhz makes USB not work.
+      stm32l4_system_sysclk_configure(16000000, 8000000, 8000000);
+      delay(50);
+      stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
+
+
+//      stm32l4_system_sysclk_configure(1000000, 500000, 500000);
+
       // STM32.stop(50);  // ~16 mA
       // STM32.standby(50); // not better
-      // STM32.shutdown(10000); // this actually resets the cpu after the timeout, but uses a lot less power. (~3.6mA right now)
+//      stm32l4_gpio_pin_standby_pushpull(PIN_SPI_SD_POWER, GPIO_PUPD_PULLUP);
+//      extern const stm32l4_spi_pins_t g_SPIPins;
+//      stm32l4_gpio_pin_standby_pushpull(g_SPIPins.sck, GPIO_PUPD_PULLUP);
+//      stm32l4_gpio_pin_standby_pushpull(g_SPIPins.mosi,GPIO_PUPD_PULLUP);
+
+//      STM32.shutdown(10000); // this actually resets the cpu after the timeout, but uses a lot less power. (~3.6mA right now)
       // stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
       
 #elif defined(ENABLE_SNOOZE)
