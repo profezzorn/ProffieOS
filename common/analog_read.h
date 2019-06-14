@@ -21,7 +21,7 @@
 class AnalogReader {
 public:
   // Charge time specifies the minimum time to charge the builtin signal hold capacitor.
-  explicit AnalogReader(int pin, float charge_time = -1.0) : pin_(pin) {
+  explicit AnalogReader(int pin, int pin_mode = INPUT, float charge_time = -1.0) : pin_(pin), pin_mode_(pin_mode) {
     int channel = g_APinDescription[pin].adc_input;
     if (charge_time < 0.0) {
       charge_time = 500e-9; // default is 500 ns.
@@ -74,8 +74,14 @@ public:
     stm32l4_adc_enable(&stm32l4_adc, 0,NULL, NULL, 0);
     stm32l4_adc.state = ADC_STATE_BUSY;
 
-    // TODO: respect pullup/pulldown
-    stm32l4_gpio_pin_configure(g_APinDescription[pin_].pin, (GPIO_PUPD_NONE | GPIO_MODE_ANALOG | GPIO_ANALOG_SWITCH));
+    {
+      uint32_t mode = GPIO_MODE_ANALOG | GPIO_ANALOG_SWITCH;
+      switch (pin_mode_) {
+	case INPUT_PULLUP: mode |= GPIO_PUPD_PULLUP; break;
+	case INPUT_PULLDOWN: mode |= GPIO_PUPD_PULLDOWN; break;
+      }
+      stm32l4_gpio_pin_configure(g_APinDescription[pin_].pin, mode);
+    }
 
     /* Silicon ERRATA 2.4.4. Wrong ADC conversion results when delay between
      * calibration and first conversion or between 2 consecutive conversions is too long. 
@@ -158,15 +164,18 @@ public:
 #undef ADCx
 #undef channel
   
-  int pin_;
-  int value_;
+  int8_t pin_;
+  int8_t pin_mode_;
   uint32_t adc_smp_;
+  int value_;
   StateMachineState state_machine_;
 };
 #else
 class AnalogReader {
 public:
-  explicit AnalogReader(int pin, float charge_time = -1) : pin_(pin) {}
+  explicit AnalogReader(int pin, int pin_mode_ = INPUT, float charge_time = -1) : pin_(pin) {
+    pinMode(pin_, INPUT);
+  }
 
   bool Start() { return true; }
   bool Done() { return true; }
@@ -178,8 +187,8 @@ private:
 
 #endif
 
-int LSAnalogRead(int pin) {
-  AnalogReader reader(pin);
+int LSAnalogRead(int pin, int pinmode = INPUT) {
+  AnalogReader reader(pin, pinmode);
   if (!reader.Start()) return -1;
   while (!reader.Done());
   return reader.Value();

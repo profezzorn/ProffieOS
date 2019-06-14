@@ -402,6 +402,9 @@ CPPFLAGS += -DMD -DUSB_TYPE=$(USB_TYPE) '-DUSB_PRODUCT=$(USB_PRODUCT)' '-DUSB_MA
 EXFLAGS := $(shell echo $(call PARSE_BOARD,$(BOARD_TAG),build.extra_flags) | grep -oE '(-D)\w+')
 XFLAGS=-ffast-math -fsingle-precision-constant -D__FPU_PRESENT=1 -march=armv7e-m -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mabi=aapcs -mslow-flash-data -DDOSFS_SDCARD=1 -DUSB_DID=0xffff -D_SYSTEM_CORE_CLOCK_=80000000L -D_ARDUINO_STM32L4
 
+# TODO: Makefile selects proffieboard version
+CPPFLAGS += -DPROFFIEBOARD_VERSION=1
+
 # Strip only defines from extra flags as boards file appends user {build.usb}
 CPPFLAGS += $(EXFLAGS) $(XFLAGS)
 CPPFLAGS += -DUSB_VID=$(USB_VID)
