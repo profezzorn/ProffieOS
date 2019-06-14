@@ -77,6 +77,7 @@ public:
   static const size_t size = 0;
   void InitArray(PWMPinInterface** pos) {}
   void Activate() {}
+  void Deactivate() {}
 };
 
 template<class LED, class... LEDS>
@@ -90,6 +91,10 @@ public:
   void Activate() {
     led_.Activate();
     rest_.Activate();
+  }
+  void Deactivate() {
+    led_.Deactivate();
+    rest_.Deactivate();
   }
 private:
   LED led_;
@@ -113,11 +118,21 @@ public:
 
   void Activate() override {
     STDOUT.println("Simple Blade");
-    power_ = true;
-    led_structs_.Activate();
+    Power(true);
     CommandParser::Link();
     Looper::Link();
     AbstractBlade::Activate();
+  }
+
+  void Power(bool on) {
+    if (power_ != on) {
+      if (on) {
+	led_structs_.Activate();
+      } else {
+	led_structs_.Deactivate();
+      }
+      power_ = on;
+    }
   }
 
   // BladeBase implementation
@@ -136,11 +151,11 @@ public:
   }
 
   void allow_disable() override {
-    if (!on_) power_ = false;
+    if (!on_) Power(false);
   }
   virtual void SetStyle(BladeStyle* style) {
+    Power(true);
     AbstractBlade::SetStyle(style);
-    power_ = true;
   }
 
   // SaberBase implementation
@@ -150,7 +165,8 @@ public:
   void SB_On() override {
     AbstractBlade::SB_On();
     battery_monitor.SetLoad(true);
-    power_ = on_ = true;
+    on_ = true;
+    Power(true);
   }
   void SB_Off(OffType off_type) override {
     AbstractBlade::SB_Off(off_type);

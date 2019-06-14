@@ -224,7 +224,7 @@ public:
 #endif
     pinMode(bladeIdentifyPin, INPUT_PULLUP);
     delay(100);
-    int blade_id = LSAnalogRead(bladeIdentifyPin);
+    int blade_id = LSAnalogRead(bladeIdentifyPin, INPUT_PULLUP);
 #ifdef ENABLE_POWER_FOR_ID
     power_pins_to_toggle.Power(false);
 #endif

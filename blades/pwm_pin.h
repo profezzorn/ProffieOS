@@ -18,8 +18,10 @@ void LSanalogWrite(uint32_t pin, int value) {
 
 namespace {
 static stm32l4_timer_t stm32l4_pwm[PWM_INSTANCE_COUNT];
+static uint8_t timer_use_counts[PWM_INSTANCE_COUNT];
 
 void SetupTimer(uint32_t instance) {
+  timer_use_counts[instance]++;
   if (stm32l4_pwm[instance].state == TIMER_STATE_NONE) {
     stm32l4_timer_create(&stm32l4_pwm[instance], g_PWMInstances[instance], 15, 0);
   }
@@ -51,6 +53,14 @@ void SetupTimer(uint32_t instance) {
   }
 }
 
+void TeardownTimer(uint32_t instance) {
+  if (0 == --timer_use_counts[instance]) {
+    stm32l4_timer_stop(&stm32l4_pwm[instance]);
+    stm32l4_timer_disable(&stm32l4_pwm[instance]);
+    if (instance) TeardownTimer(0);
+  }
+}
+
 void LSanalogWriteSetup(uint32_t pin) {
   // Handle the case the pin isn't usable as PIO
   if (pin >= NUM_TOTAL_PINS || g_APinDescription[pin].GPIO == NULL) {
@@ -71,9 +81,7 @@ void LSanalogWriteSetup(uint32_t pin) {
 }
 
 void LSanalogWriteTeardown(uint32_t pin) {
-  uint32_t instance = g_APinDescription[pin].pwm_instance;
-  stm32l4_timer_stop(&stm32l4_pwm[instance]);
-  stm32l4_timer_disable(&stm32l4_pwm[instance]);
+  TeardownTimer(g_APinDescription[pin].pwm_instance);
 }
 
 void LSanalogWrite(uint32_t pin, int value) {
