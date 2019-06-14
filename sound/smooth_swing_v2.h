@@ -26,15 +26,16 @@ public:
       accent_swings_present = true;
     } else {
       accent_swings_present = false;
-      STDOUT.println("Accent Swings NOT Detected.");
+      STDOUT.println("Accent Swings NOT Detected: ");
     }
     if (slsh.files_found() > 0 && smooth_swing_config.AccentSlashSpeedThreshold > 0.0) {
+      STDOUT.println("Accent Slashes Enabled.");
       STDOUT.print("Polyphonic slashes: ");
       STDOUT.println(slsh.files_found());
       accent_slashes_present = true;
     } else {
       accent_slashes_present = false;
-      STDOUT.println("Accent Slashes NOT Detected.");
+      STDOUT.println("Accent Slashes NOT Detected: ");
     }
   }
 
@@ -127,15 +128,11 @@ public:
         if (speed >=smooth_swing_config.AccentSwingSpeedThreshold &&
             accent_swings_present &&
             (A.player->isPlaying() || B.player->isPlaying())) {
-          swingType_[0] = true;
-          delegate_->StartSwing(swingType_);
+          delegate_->StartSwing();
         }
-        //trigger accent slash
-        if (speed >=smooth_swing_config.AccentSlashSpeedThreshold &&
-            accent_slashes_present &&
-            (A.player->isPlaying() || B.player->isPlaying())) {
-          swingType_[1] = true;
-          delegate_->StartSwing(swingType_);
+        if (accent_slashes_present &&
+            speed >=smooth_swing_config.AccentSlashSpeedThreshold) {
+          delegate_->StartSlash();
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
@@ -256,7 +253,6 @@ private:
   bool accent_slashes_present = false;
   BoxFilter<Vec3, 3> gyro_filter_;
   int swings_;
-  bool swingType_[3];
   uint32_t last_micros_;
   SwingState state_ = SwingState::OFF;;
 };

@@ -10,11 +10,10 @@ public:
     CONFIG_VARIABLE(ProffieOSSwingSpeedThreshold, 250.0f);
     CONFIG_VARIABLE(ProffieOSSwingVolumeSharpness, 1.0f);
     CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 3.0f);
-    CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
+    CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.3f);
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.0f);
-    CONFIG_VARIABLE(ProffieOSSlashSpeedThreshold, 500.0f);
-    CONFIG_VARIABLE(ProffieOSLowerSpeedThreshold, 175.0f);
-    CONFIG_VARIABLE(ProffieOSStabAccelThreshold, 2.5f);
+    CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
+    CONFIG_VARIABLE(ProffieOSSlashSpeedThreshold, 700.0f);
   }
   int humStart;
   int volHum;
@@ -24,10 +23,10 @@ public:
   float ProffieOSMaxSwingVolume;
   float ProffieOSSwingOverlap;
   float ProffieOSSmoothSwingDucking;
+  float ProffieOSSwingLowerThreshold;
   float ProffieOSSlashSpeedThreshold;
-  float ProffieOSLowerSpeedThreshold;
-  float ProffieOSStabAccelThreshold;
 };
+
 
 // Monophonic sound fonts are the most common.
 // These fonts are fairly simple, as generally only one sound is
@@ -110,10 +109,6 @@ public:
     hum_player_ = next_hum_player_;
     next_hum_player_.Free();
     hum_player_->PlayOnce(f);
-    if (swinging_) {
-      swingDuration_ = hum_player_->length() * 1000;
-      swingTime_ = millis();
-    }
     if (loop) hum_player_->PlayLoop(loop);
   }
 							   
@@ -143,7 +138,7 @@ public:
     }
   }
   
-  void StartSwing(bool swingType_[3]) override {
+  void StartSwing() override {
     if (!guess_monophonic_) {
       if (swing_player_) {
         // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
@@ -153,39 +148,34 @@ public:
           swing_player_->FadeAndStop();
           swing_player_.Free();
         }
-      } else {
-        if (swingType_[2] && swinging_) {
-          swing_player_ = PlayPolyphonic(&spin);
-        }
+      }
+      else if (!swing_player_) {
         if (!swinging_) {
-          if (swingType_[1]) {
-            swing_player_ = PlayPolyphonic(&slsh);
-          } else {
-            swing_player_ = PlayPolyphonic(&swng);
-          }
-          swingDuration_ = swing_player_->length() * 1000;
-          swingTime_ = millis();
-          swinging_ = true;
+          swing_player_ = PlayPolyphonic(&swng);
         }
       }
     } else {
-      if ((millis() - swingTime_) / swingDuration_ >=config_.ProffieOSSwingOverlap) {
-        if (!swinging_) {
-          if (swingType_[3]) {
-            PlayMonophonic(&stab, &hum);
-            swinging_ = true;
-          } else {
-            PlayMonophonic(&swing, &hum);
-            swinging_ = true;
-          }
-        }
-        if (swingType_[2] && swinging_) {
-          PlayMonophonic(&spin, &hum);
-        }
+      if (!swinging_) {
+        PlayMonophonic(&swing, &hum);
       }
     }
   }
   
+  void StartSlash() override {
+    if (swing_player_) {
+      // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
+      // between 0 (full overlap) and 1.0 (no overlap)
+      if (swing_player_->pos() / swing_player_->length() >= config_.ProffieOSSwingOverlap) {
+        swing_player_->set_fade_time(swing_player_->length() - swing_player_->pos());
+        swing_player_->FadeAndStop();
+        swing_player_.Free();
+      }
+    }
+    else if (!swing_player_) {
+      swing_player_ = PlayPolyphonic(&slsh);
+    }
+  }
+
   float SetSwingVolume(float swing_strength, float mixhum) override {
     if(swing_player_) {
       if (swing_player_->isPlaying()) {
@@ -392,66 +382,38 @@ public:
     hum_player_->set_volume(vol);
   }
   
+  bool swinging_ = false;
+  bool slashing_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
-    if (speed > config_.ProffieOSSwingSpeedThreshold) {
-      swingType_[0] = true;
-      if (speed > config_.ProffieOSSlashSpeedThreshold) {
-        swingType_[1] = true;
-      } else {
-        swingType_[1] = false;
+    if (state_ != STATE_OFF && !(lockup.files_found()
+    && SaberBase::Lockup())) {
+      if (speed >= config_.ProffieOSSwingSpeedThreshold
+         && speed < config_.ProffieOSSlashSpeedThreshold) {
+        StartSwing();
+        swinging_ = true;
       }
-      if (state_ != STATE_OFF &&
-          !(lockup.files_found() && SaberBase::Lockup())) {
-        StartSwing(swingType_);
+      if (speed >= config_.ProffieOSSlashSpeedThreshold) {
+          StartSlash();
+          slashing_ = true;
       }
-      float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
-      SetSwingVolume(swing_strength, 1.0);
-      STDOUT.println(gyro.len());
-    } else if (speed <= config_.ProffieOSLowerSpeedThreshold) {
-      swinging_ = false;
-      swingType_[0] = false;
-      swingType_[1] = false;
-      swingType_[2] = false;
-      swingType_[3] = false;
+      if (speed < config_.ProffieOSSlashSpeedThreshold) {
+        slashing_ = false;
+      }
+      if (speed <= config_.ProffieOSSwingLowerThreshold) {
+        swinging_ = false;
+      }
     }
+    float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
+    SetSwingVolume(swing_strength, 1.0);
     float vol = 1.0f;
     if (!swinging_) {
       vol = vol * (0.99 + clamp(speed/200.0, 0.0, 2.3));
     }
     SetHumVolume(vol);
   }
-  
-  void SB_Accel(const Vec3& accel, bool clear) override
-  {
-    if (accel.x < -0.15) {
-      pointing_down_ = true;
-    }
-    if (accel.x > 0.15 ) {
-      pointing_down_ = false;
-    }
-    if (accel.y > 0.15 ) {
-      pointing_right_ = true;
-    }
-    if (accel.y < -0.15) {
-      pointing_right_ = false;
-    }
-    if (accel.z > 0.75) {
-      pointing_forward_ = true;
-    } else {
-      pointing_forward_ = false;
-    }
-    if ((fabs(accel.y > 0.75) || fabs(accel.z) > 0.75) && fabs(accel.x < 0.15)) {
-      pointing_level_ = true;
-    } else {
-      pointing_level_ = false;
-    }
-    if (accel.x >= config_.ProffieOSStabAccelThreshold) {
-      swingType_[3] = true;
-    }
-  }
-  
-private:
+
+ private:
   uint32_t last_micros_;
   uint32_t hum_start_;
   bool monophonic_hum_;
@@ -459,15 +421,6 @@ private:
   IgniterConfigFile config_;
   State state_;
   float volume_;
-  bool swingType_[4];
-  float swingDuration_;
-  float swingTime_;
-  float lastSwingTime_;
-  bool pointing_level_;
-  bool pointing_down_;
-  bool pointing_right_;
-  bool pointing_forward_;
-  bool swinging_ = false;
 };
 
 #endif
