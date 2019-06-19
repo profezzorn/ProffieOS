@@ -1071,14 +1071,43 @@ class Commands : public CommandParser {
 	  STDOUT.print((now == saved ? "ioga" : "IOGA")[now]);
 	  if (!(j & 3)) STDOUT.print(" ");
 	}
+	STDOUT.print("  ");
+	for (int j = 15; j >= 0; j--) {
+	  uint32_t now = (GPIO->PUPDR >> (j * 2)) & 3;
+	  STDOUT.print("-ud?"[now]);
+	  if (!(j & 3)) STDOUT.print(" ");
+	}
+	STDOUT.print("  ");
+	for (int j = 15; j >= 0; j--) {
+	  uint32_t now = ((GPIO->IDR >> j) & 1) | (((GPIO->ODR >> j) & 1) << 1);
+	  STDOUT.print("lhLH"[now]);
+	  if (!(j & 3)) STDOUT.print(" ");
+	}
 	STDOUT.println("");
       }
       return true;
     }
     if (!strcmp(cmd, "CLK")) {
-      uint32_t c = atoi(e) * 1000000;
-      stm32l4_system_sysclk_configure(c, c/2, c/2);
-      Serial.println("OK");
+      if (e) {
+        uint32_t c = atoi(e) * 1000000;
+        stm32l4_system_sysclk_configure(c, c/2, c/2);
+      }
+      STDOUT.print("Clocks: hse=");
+      STDOUT.print(stm32l4_system_hseclk());
+      STDOUT.print(" lse=");
+      STDOUT.print(stm32l4_system_lseclk());
+      STDOUT.print(" sys=");
+      STDOUT.print(stm32l4_system_sysclk());
+      STDOUT.print(" f=");
+      STDOUT.print(stm32l4_system_fclk());
+      STDOUT.print(" h=");
+      STDOUT.print(stm32l4_system_hclk());
+      STDOUT.print(" p1=");
+      STDOUT.print(stm32l4_system_pclk1());
+      STDOUT.print(" p2=");
+      STDOUT.print(stm32l4_system_pclk2());
+      STDOUT.print(" sai=");
+      STDOUT.println(stm32l4_system_saiclk());
       return true;
     }
     if (!strcmp(cmd, "whatispowered")) {
@@ -1089,7 +1118,7 @@ class Commands : public CommandParser {
           if (!(startup_##REG & RCC_##REG##_##BIT##EN)) STDOUT.print("+"); \
         }								\
       } while(0)
-      
+
       PRINTIFON(AHB1ENR,FLASH);
       PRINTIFON(AHB1ENR,DMA1);
       PRINTIFON(AHB1ENR,DMA2);
@@ -1171,7 +1200,26 @@ class Commands : public CommandParser {
       PRINTIFON(APB1ENR1,LPTIM1);
       PRINTIFON(APB1ENR2,LPTIM2);
 
+      // Not sure what CPUs implement these
+      PRINTIFON(AHB1ENR, CRC);
+      PRINTIFON(AHB1ENR, TSC);
+      PRINTIFON(AHB2ENR, RNG);
+      PRINTIFON(APB1ENR1, LCD);
+      PRINTIFON(APB1ENR1, RTCAPB);
+      PRINTIFON(APB1ENR1, WWDG);
+      PRINTIFON(APB1ENR1, CRS);
+      PRINTIFON(APB1ENR1, CAN1);
+      PRINTIFON(APB1ENR1, PWR);
+      PRINTIFON(APB1ENR1, OPAMP);
+      PRINTIFON(APB1ENR2, SWPMI1);
+      PRINTIFON(APB2ENR, SYSCFG);
+      PRINTIFON(APB2ENR, FW);
+
       STDOUT.println("");
+      STDOUT.print("VBUS: ");
+      STDOUT.println(stm32l4_gpio_pin_read(GPIO_PIN_PB2));
+      STDOUT.print("USBD connected: ");
+      STDOUT.println(USBD_Connected());
       return true;
     }
 #endif  // TEENSYDUINO
@@ -1268,7 +1316,7 @@ public:
           default_output->println(c, HEX);
         }
 #endif  
-        if (c == '\n') {
+        if (c == '\n' || c == '\r') {
           if (cmd_) ParseLine();
           len_ = 0;
           space_ = 0;
@@ -1591,52 +1639,11 @@ MTPStorage_SerialFlash serialflash_storage(&mtpd);
 
 #endif  // MTP_RX_ENDPOINT
 
-int last_activity = millis();
+#include "common/clock_control.h"
 
 void loop() {
 #ifdef MTP_RX_ENDPOINT
   mtpd.loop();
 #endif
   Looper::DoLoop();
-
-  bool on = false;
-  SaberBase::DoIsOn(&on);
-  if (!on && !Serial && !prop.NeedsPower()
-#ifdef ENABLE_AUDIO
-       && !amplifier.Active()
-#endif
-    ) {
-    if (millis() - last_activity > 30000) {
-#if VERSION_MAJOR >= 4
-      // stm32l4_system_sysclk_configure(1000000, 500000, 500000);
-      // Delay will enter low-power mode.
-      // TODO: Do we need to disable this when serial port is active?
-
-      // Changing the clock frequency saves a lot of power, but going below 16Mhz makes USB not work.
-      stm32l4_system_sysclk_configure(16000000, 8000000, 8000000);
-      delay(50);
-      stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
-
-
-//      stm32l4_system_sysclk_configure(1000000, 500000, 500000);
-
-      // STM32.stop(50);  // ~16 mA
-      // STM32.standby(50); // not better
-//      stm32l4_gpio_pin_standby_pushpull(PIN_SPI_SD_POWER, GPIO_PUPD_PULLUP);
-//      extern const stm32l4_spi_pins_t g_SPIPins;
-//      stm32l4_gpio_pin_standby_pushpull(g_SPIPins.sck, GPIO_PUPD_PULLUP);
-//      stm32l4_gpio_pin_standby_pushpull(g_SPIPins.mosi,GPIO_PUPD_PULLUP);
-
-//      STM32.shutdown(10000); // this actually resets the cpu after the timeout, but uses a lot less power. (~3.6mA right now)
-      // stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
-      
-#elif defined(ENABLE_SNOOZE)
-      snooze_timer.setTimer(500);
-      Snooze.sleep(snooze_config);
-      Serial.begin(9600);
-#endif
-    }
-  } else {
-    last_activity = millis();
-  }
 }
