@@ -105,7 +105,12 @@ public:
   // This function waits until the volume is mounted.
   static bool Begin() {
     if (mounted_) return true;
-    return mounted_ = (DOSFS.begin() && DOSFS.check());
+    if (!DOSFS.begin()) return false;
+    if (!DOSFS.check()) {
+      DOSFS.end();
+      return false;
+    }
+    return mounted_ = true;
   }
   static void End() {
     if (!mounted_) return;

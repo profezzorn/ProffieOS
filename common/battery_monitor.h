@@ -5,7 +5,8 @@
 
 class BatteryMonitor : Looper, CommandParser, StateMachine {
 public:
-  BatteryMonitor() : reader_(batteryLevelPin
+BatteryMonitor() : reader_(batteryLevelPin,
+			     INPUT
 #if VERSION_MAJOR == 5
                              , 10e-6
 #endif
