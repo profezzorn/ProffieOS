@@ -38,7 +38,7 @@ struct ConfigFile {
     f.Open(filename);
     Read(&f);
     f.Close();
-    LOCK_SD(base);
+    LOCK_SD(false);
   }
 
 #define CONFIG_VARIABLE(X, DEF) do {            \
