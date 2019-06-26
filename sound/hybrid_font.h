@@ -109,6 +109,7 @@ public:
     hum_player_ = next_hum_player_;
     next_hum_player_.Free();
     hum_player_->PlayOnce(f);
+    current_effect_length_ = hum_player_->length();
     if (loop) hum_player_->PlayLoop(loop);
   }
 							   
@@ -118,6 +119,7 @@ public:
     if (player) {
       player->set_volume_now(config_.volEff / 16.0);
       player->PlayOnce(f);
+      current_effect_length_ = player->length();
     }
     return player;
   }
@@ -413,6 +415,10 @@ public:
     SetHumVolume(vol);
   }
 
+  float GetCurrentEffectLength() const {
+    return current_effect_length_;
+  }
+
  private:
   uint32_t last_micros_;
   uint32_t hum_start_;
@@ -421,6 +427,7 @@ public:
   IgniterConfigFile config_;
   State state_;
   float volume_;
+  float current_effect_length_ = 0.0;
 };
 
 #endif

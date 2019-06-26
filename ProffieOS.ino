@@ -1035,6 +1035,10 @@ class Commands : public CommandParser {
       STM32.stop(100000);
       return true;
     }
+    if (!strcmp(cmd, "RebootDFU")) {
+      stm32l4_system_dfu();
+      return true;
+    }
     if (!strcmp(cmd, "stm32info")) {
       STDOUT.print("VBAT: ");
       STDOUT.println(STM32.getVBAT());
