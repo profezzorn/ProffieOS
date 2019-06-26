@@ -1,6 +1,8 @@
 #ifndef FUNCTIONS_IFON_H
 #define FUNCTIONS_IFON_H
 
+#include "int.h"
+
 // Usage: Ifon<A, B>
 // Returns A if saber is on, B otherwise.
 // A, B: INTEGER
