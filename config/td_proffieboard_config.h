@@ -26,6 +26,13 @@ const unsigned int maxLedsPerStrip = 144;
 
 #ifdef CONFIG_PRESETS
 Preset presets[] = {
+  { "tdmod", "tracks/cantina.wav",
+    StyleNormalPtr<ColorSequence<2000,
+                                 Rgb<255,0,0>,Rgb<255,255,0>,Rgb<255,0,255>,
+                                 Rgb<0,255,255>,Rgb<0,255,0>,Rgb<0,0,255>,
+                                 Rgb<255,255,0>,Rgb<0,255,255> >, WHITE, 200, 200>(),
+    StyleNormalPtr<RED, RED, 300, 800>(),
+    ""},
   { "ThermalD", "tracks/cantina.wav",
     StyleNormalPtr<ColorSequence<2000,
                                  Rgb<255,0,0>,Rgb<255,255,0>,Rgb<255,0,255>,
