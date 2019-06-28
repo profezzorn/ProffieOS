@@ -28,7 +28,7 @@ public:
       accent_swings_present = false;
       STDOUT.println("Accent Swings NOT Detected: ");
     }
-    if (slsh.files_found() > 0 && smooth_swing_config.AccentSlashSpeedThreshold > 0.0) {
+    if (slsh.files_found() > 0 && smooth_swing_config.AccentSlashAccelerationThreshold > 0.0) {
       STDOUT.println("Accent Slashes Enabled.");
       STDOUT.print("Polyphonic slashes: ");
       STDOUT.println(slsh.files_found());
@@ -104,6 +104,11 @@ public:
     // degrees per second
     // May not need to smooth gyro since volume is smoothed.
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
+    if (millis() - last_swing_millis_ >= 10 ) {
+      swing_acceleration_ = (speed - last_speed_) / (millis() - last_swing_millis_);
+      last_speed_ = speed;
+      last_swing_millis_ = millis();
+    }
     uint32_t t = micros();
     uint32_t delta = t - last_micros_;
     if (delta > 1000000) delta = 1;
@@ -128,11 +133,7 @@ public:
         if (speed >=smooth_swing_config.AccentSwingSpeedThreshold &&
             accent_swings_present &&
             (A.player->isPlaying() || B.player->isPlaying())) {
-          delegate_->StartSwing();
-        }
-        if (accent_slashes_present &&
-            speed >=smooth_swing_config.AccentSlashSpeedThreshold) {
-          delegate_->StartSlash();
+          delegate_->StartSwing(swing_acceleration_);
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
@@ -255,6 +256,9 @@ private:
   int swings_;
   uint32_t last_micros_;
   SwingState state_ = SwingState::OFF;;
+  float swing_acceleration_ = 0.0;
+  int last_swing_millis_ = 0;
+  float last_speed_ = 0.0;
 };
 
 #endif
