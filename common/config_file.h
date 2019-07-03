@@ -33,10 +33,12 @@ struct ConfigFile {
   virtual void SetVariable(const char* variable, float v) = 0;
 
   void Read(const char *filename) {
+    LOCK_SD(true);
     FileReader f;
     f.Open(filename);
     Read(&f);
     f.Close();
+    LOCK_SD(false);
   }
 
 #define CONFIG_VARIABLE(X, DEF) do {            \

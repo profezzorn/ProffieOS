@@ -35,7 +35,10 @@ public:
     ResetStopWhenZero();
     wav.PlayOnce(effect, start);
     SetStream(&wav);
-    scheduleFillBuffer();
+    // Fill up the buffer, if possible.
+    while (!wav.eof() && space_available()) {
+      scheduleFillBuffer();
+    }
     pause_ = false;
   }
   void PlayLoop(Effect* effect) { wav.PlayLoop(effect); }
@@ -58,6 +61,14 @@ public:
 
   BufferedWavPlayer() {
     SetStream(&wav);
+  }
+
+  // This makes a paused player report very little available space, which
+  // means that it will be low priority for reading.
+  size_t space_available() const override {
+    size_t ret = VolumeOverlay<BufferedAudioStream<512>>::space_available();
+    if (pause_ && ret) ret = 2; // still slightly higher than FromFileStyle<>
+    return ret;
   }
 
   int read(int16_t* dest, int to_read) override {

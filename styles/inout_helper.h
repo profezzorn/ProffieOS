@@ -24,7 +24,7 @@ public:
     return true;
   }
   OverDriveColor getColor(int led) {
-    int black_mix = clampi32(thres - led * 256, 0, 255);
+    int black_mix = clampi32(thres - led * 256, 0, 256);
     OverDriveColor ret = base_.getColor(led);
     OverDriveColor off_color  = off_color_.getColor(led);
     ret.c = off_color.c.mix(ret.c, black_mix);

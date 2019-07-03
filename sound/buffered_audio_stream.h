@@ -69,8 +69,10 @@ private:
         int got = stream_->read(buffer_ + end_pos, to_read);
         if (got) {
           eof_ = false;
-        } else {
+        } else if (stream_) {
           eof_ = stream_->eof();
+	} else {
+	  eof_ = true;
         }
         buf_end_ += got;
       }
