@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -30,7 +30,7 @@
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
 // #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
-// #define CONFIG_FILE "config/td_proffieboard_config.h"
+#define CONFIG_FILE "config/td_proffieboard_config.h"
 
 
 #ifdef CONFIG_FILE_TEST
@@ -1571,7 +1571,12 @@ void setup() {
   // Wait for all voltages to settle.
   // Accumulate some entrypy while we wait.
   uint32_t now = millis();
-  while (millis() - now < 1000) {
+#ifdef DOSFS_CONFIG_STARTUP_DELAY
+#define PROFFIEOS_STARTUP_DELAY DOSFS_CONFIG_STARTUP_DELAY
+#else
+#define PROFFIEOS_STARTUP_DELAY 1000
+#endif
+  while (millis() - now < PROFFIEOS_STARTUP_DELAY) {
     srand((rand() * 917823) ^ LSAnalogRead(batteryLevelPin));
   }
 

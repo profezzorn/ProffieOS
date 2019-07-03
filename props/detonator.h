@@ -85,6 +85,7 @@ public:
 #else    
     float len = 0.0;
 #endif
+    SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
     if (armed_) {
       SetNextActionF(NEXT_ACTION_BLOW, len);
     } else {

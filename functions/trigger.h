@@ -16,10 +16,10 @@ template<
   class FADE_OUT_MILLIS>
 class Trigger {
   enum TriggerState {
-    TRIGGER_ATTACK,
-    TRIGGER_SUSTAIN,
-    TRIGGER_RELEASE,
-    TRIGGER_OFF
+    TRIGGER_ATTACK = 0,
+    TRIGGER_SUSTAIN = 1,
+    TRIGGER_RELEASE = 2,
+    TRIGGER_OFF = 3
   };
  public:
   void run(BladeBase* blade) {
@@ -27,11 +27,11 @@ class Trigger {
     sustain_millis_.run(blade);
     fade_out_millis_.run(blade);
 
-    if (effect_.detect(blade)) {
+    if (effect_.Detect(blade)) {
       start_time_ = micros();
-      state_ = TRIGGER_ATTACK;
+      trigger_state_ = TRIGGER_ATTACK;
     }
-    if (state_ == TRIGGER_OFF) {
+    if (trigger_state_ == TRIGGER_OFF) {
       value_ = 0;
       return;
     }
@@ -40,7 +40,7 @@ class Trigger {
     while (true) {
       uint32_t micros_for_state = get_millis_for_state() * 1000;
       if (t < micros_for_state) {
-	switch (state_) {
+	switch (trigger_state_) {
 	case TRIGGER_ATTACK:
 	  value_ = t * 32768.0 / micros_for_state;
 	  return;
@@ -55,13 +55,13 @@ class Trigger {
 	  return;
 	}
       }
-      state_++;
+      trigger_state_++;
       t -= micros_for_state;
       start_time_ += micros_for_state;
     }
   }
   uint32_t get_millis_for_state() {
-    switch (state_) {
+    switch (trigger_state_) {
     case TRIGGER_OFF: return 1000000;
     case TRIGGER_ATTACK: return fade_in_millis_.getInteger(0);
     case TRIGGER_SUSTAIN: return sustain_millis_.getInteger(0);
@@ -74,7 +74,7 @@ class Trigger {
   SUSTAIN_MILLIS sustain_millis_;
   FADE_OUT_MILLIS fade_out_millis_;
   int value_;
-  TriggerState state_;
+  uint8_t trigger_state_ = TRIGGER_OFF;
   uint32_t start_time_;
   OneshotEffectDetector<EFFECT> effect_;
 };
