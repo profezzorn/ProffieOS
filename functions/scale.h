@@ -15,10 +15,10 @@ public:
     f_.run(blade);
     a_.run(blade);
     b_.run(blade);
-    int a = a_.getInteger();
-    int b = a_.getInteger();
+    int a = a_.getInteger(0);
+    int b = b_.getInteger(0);
     mul_ = (b - a) * 16384;
-    add_ = a_;
+    add_ = a;
   }
   int getInteger(int led) {
     return (f_.getInteger(led) * mul_ >> 14) + add_;
