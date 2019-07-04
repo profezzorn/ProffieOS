@@ -37,7 +37,7 @@ public:
     SetStream(&wav);
     // Fill up the buffer, if possible.
     while (!wav.eof() && space_available()) {
-      scheduleFillBuffer();
+      scheduleFillBufferNow();
     }
     pause_ = false;
   }
