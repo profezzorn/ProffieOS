@@ -18,16 +18,6 @@ public:
   void SetPower(bool on) {}
 #endif
 
-  void rotate_presets() {
-    if (!powered_) return;
-#ifdef ENABLE_AUDIO
-    beeper.Beep(0.05, 2000.0);
-#endif
-    current_preset_.Load(-1);  // load last preset
-    current_preset_.SaveAt(0); // save in first position, shifting all other presets down
-    SetPreset(0, true);
-  }
-
   bool armed_ = false;
 
   enum NextAction {
@@ -122,7 +112,7 @@ public:
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_OFF):
-        rotate_presets();
+	if (powered_) rotate_presets();
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_ON):
@@ -135,7 +125,7 @@ public:
 
       case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ON):
         blast();
-        return true;
+	return armed_;
 
         // TODO: Long click when off?
     }

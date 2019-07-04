@@ -214,6 +214,18 @@ public:
     SetPreset(current_preset_.preset_num - 1, true);
   }
 
+  // Rotates presets backwards and saves.
+  virtual void rotate_presets() {
+#ifdef ENABLE_AUDIO
+    beeper.Beep(0.05, 2000.0);
+#endif
+    LOCK_SD(true);
+    current_preset_.Load(-1);  // load last preset
+    current_preset_.SaveAt(0); // save in first position, shifting all other presets down
+    LOCK_SD(false);
+    SetPreset(0, true);
+  }
+
   // Measure and return the blade identifier resistor.
   float id() {
 #ifdef ENABLE_POWER_FOR_ID
@@ -707,6 +719,10 @@ public:
     }
     if (!strcmp(cmd, "p") || (!strcmp(cmd, "prev") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
       previous_preset();
+      return true;
+    }
+    if (!strcmp(cmd, "rotate")) {
+      rotate_presets();
       return true;
     }
     if (!strcmp(cmd, "message") && arg) {
