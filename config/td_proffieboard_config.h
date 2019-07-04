@@ -26,7 +26,7 @@ const unsigned int maxLedsPerStrip = 144;
 
 #ifdef CONFIG_PRESETS
 Preset presets[] = {
-  { "tdmod", "tracks/cantina.wav",
+  { "tdmod", "tracks/laptinek.wav",
     StylePtr<InOutHelperTD<SimpleClash<ColorSequence<2000,
                          Rgb<255,0,0>,Rgb<255,255,0>,Rgb<255,0,255>,
                          Rgb<0,255,255>,Rgb<0,255,0>,Rgb<0,0,255>,

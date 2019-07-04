@@ -29,6 +29,16 @@ public:
     }
   }
 
+  static void scheduleFillBufferNow() {
+#ifdef TEENSYDUINO
+    if (!NVIC_IS_ACTIVE(IRQ_WAV))
+      NVIC_TRIGGER_IRQ(IRQ_WAV);
+#else
+    scheduled_millis = millis();
+    armv7m_pendsv_enqueue((armv7m_pendsv_routine_t)ProcessAudioStreams, NULL, 0);
+#endif    
+  }
+
   static void scheduleFillBuffer() {
 #ifdef TEENSYDUINO
     if (!NVIC_IS_ACTIVE(IRQ_WAV))
