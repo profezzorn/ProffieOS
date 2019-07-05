@@ -62,11 +62,13 @@ class Trigger {
   }
   uint32_t get_millis_for_state() {
     switch (trigger_state_) {
-    case TRIGGER_OFF: return 1000000;
     case TRIGGER_ATTACK: return fade_in_millis_.getInteger(0);
     case TRIGGER_SUSTAIN: return sustain_millis_.getInteger(0);
     case TRIGGER_RELEASE: return fade_out_millis_.getInteger(0);
+    case TRIGGER_OFF:
+      break;
     }
+    return 1000000;
   }
   int getInteger(int led) const { return value_; }
  private:
