@@ -64,7 +64,7 @@ void TeardownTimer(uint32_t instance) {
 void LSanalogWriteSetup(uint32_t pin) {
   // Handle the case the pin isn't usable as PIO
   if (pin >= NUM_TOTAL_PINS || g_APinDescription[pin].GPIO == NULL) {
-    Serial.println("Analog Setup: NOT A PIN: ");
+    Serial.print("Analog Setup: NOT A PIN: ");
     Serial.println(pin);
     return;
   }
@@ -115,6 +115,7 @@ template<int PIN>
 class SimplePWMPin {
 public:
   void Activate() {
+    static_assert(PIN >= -1, "PIN is negative");
     LSanalogWriteSetup(PIN);
     LSanalogWrite(PIN, 0);  // make it black
   }
