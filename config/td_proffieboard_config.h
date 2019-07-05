@@ -44,7 +44,7 @@ BladeConfig blades[] = {
      SimpleBladePtr<CH1LED,CH2LED,CH3LED,NoLED,
                     bladePowerPin1, bladePowerPin5, bladePowerPin3, -1>(),
      SimpleBladePtr<CH1LED,NoLED,NoLED,NoLED,
-                    bladePowerPin4, -1, -1 -1>(),
+                    bladePowerPin4, -1, -1, -1>(),
      CONFIGARRAY(presets) },
   };
 #endif
