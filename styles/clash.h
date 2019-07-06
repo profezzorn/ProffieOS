@@ -17,7 +17,9 @@ public:
     base_.run(blade);
     clash_color_.run(blade);
     // This should make us activate the clash at least one "frame".
-    clash_ = effect_.Detect(blade) || micros() - effect_.last_detected_micros() < CLASH_MILLIS * 1000;
+    clash_ |= !!effect_.Detect(blade);
+    if (clash_ && micros() - effect_.last_detected_micros() > CLASH_MILLIS * 1000)
+      clash_ = false;
   }
   OverDriveColor getColor(int led) {
     if (clash_) {
@@ -28,7 +30,7 @@ public:
   }
 private:
   OneshotEffectDetector<EFFECT> effect_;
-  bool clash_;
+  bool clash_ = false;
   T base_;
   CLASH_COLOR clash_color_;
 };
