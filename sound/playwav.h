@@ -88,10 +88,12 @@ public:
   }
 
   void Stop() override {
+    noInterrupts();
     run_ = false;
     state_machine_.reset_state_machine();
     effect_ = nullptr;
     written_ = num_samples_ = 0;
+    interrupts();
   }
 
   bool isPlaying() const {
@@ -276,7 +278,7 @@ private:
         while (len_) {
           {
             int bytes_read = ReadFile(file_.AlignRead(std::min<size_t>(len_, 512u)));
-            if (bytes_read == 0)
+            if (bytes_read <= 0)
               break;
             len_ -= bytes_read;
             end_ = buffer + 8 + bytes_read;

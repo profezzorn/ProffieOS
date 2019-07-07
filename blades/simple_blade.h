@@ -7,6 +7,7 @@ template<int PIN, class LED>
 class PWMPin : public PWMPinInterface {
 public:
   void Activate() override {
+    static_assert(PIN >= 0, "PIN is negative?");
     LSanalogWriteSetup(PIN);
     LSanalogWrite(PIN, 0);  // make it black
   }
@@ -32,6 +33,23 @@ public:
   void set_overdrive(const Color16& c) override {}
 };
 
+template<int PIN>
+class PWMPin<PIN, NoLED> : PWMPinInterface {
+public:
+  void Activate() override {}
+  void Deactivate() override {}
+  void set(const Color16& c) override {}
+  void set_overdrive(const Color16& c) override {}
+};
+
+template<>
+class PWMPin<-1, NoLED> : PWMPinInterface {
+public:
+  void Activate() override {}
+  void Deactivate() override {}
+  void set(const Color16& c) override {}
+  void set_overdrive(const Color16& c) override {}
+};
 template<class ... LEDS>
 class MultiChannelLED {};
 
