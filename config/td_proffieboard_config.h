@@ -26,27 +26,25 @@ const unsigned int maxLedsPerStrip = 144;
 
 #ifdef CONFIG_PRESETS
 Preset presets[] = {
-  { "tdmod", "tracks/cantina.wav",
-    StyleNormalPtr<ColorSequence<2000,
-                                 Rgb<255,0,0>,Rgb<255,255,0>,Rgb<255,0,255>,
-                                 Rgb<0,255,255>,Rgb<0,255,0>,Rgb<0,0,255>,
-                                 Rgb<255,255,0>,Rgb<0,255,255> >, WHITE, 200, 200>(),
-    StyleNormalPtr<RED, RED, 300, 800>(),
+  { "tdmod", "tracks/laptinek.wav",
+    StylePtr<InOutHelperTD<SimpleClash<ColorSequence<2000,
+                         Rgb<255,0,0>,Rgb<255,255,0>,Rgb<255,0,255>,
+                         Rgb<0,255,255>,Rgb<0,255,0>,Rgb<0,0,255>,
+                         Rgb<255,255,0>,Rgb<0,255,255> >, RandomFlicker<WHITE, BLACK>, 6000, EFFECT_BLAST>, 100, 100, 6000, BLACK>>(),
+    StylePtr<InOutHelperTD<Lockup<SimpleClash<RED,RandomFlicker<RED,BLACK>, 6000, EFFECT_BLAST>, Pulsing<RED, Rgb<50,0,0>, 300>>, 100, 100, 6000>>(),
     ""},
   { "ThermalD", "tracks/cantina.wav",
-    StyleNormalPtr<ColorSequence<2000,
-                                 Rgb<255,0,0>,Rgb<255,255,0>,Rgb<255,0,255>,
-                                 Rgb<0,255,255>,Rgb<0,255,0>,Rgb<0,0,255>,
-                                 Rgb<255,255,0>,Rgb<0,255,255> >, WHITE, 200, 200>(),
-    StyleNormalPtr<RED, RED, 300, 800>(),
+    StyleRainbowPtr<100, 100>(),
+    StylePtr<InOutHelper<Lockup<RED, Pulsing<RED, Rgb<50,0,0>, 300>>, 100, 100>>(),
     ""},
 };
 BladeConfig blades[] = {
  { 0,
+     // Note, I use bladePowerPin5 instead of bladePowerPin2!
      SimpleBladePtr<CH1LED,CH2LED,CH3LED,NoLED,
-                    bladePowerPin1, bladePowerPin2, bladePowerPin3, -1>(),
+                    bladePowerPin1, bladePowerPin5, bladePowerPin3, -1>(),
      SimpleBladePtr<CH1LED,NoLED,NoLED,NoLED,
-                    bladePowerPin4, -1, -1 -1>(),
+                    bladePowerPin4, -1, -1, -1>(),
      CONFIGARRAY(presets) },
   };
 #endif

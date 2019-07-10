@@ -1571,7 +1571,12 @@ void setup() {
   // Wait for all voltages to settle.
   // Accumulate some entrypy while we wait.
   uint32_t now = millis();
-  while (millis() - now < 1000) {
+#ifdef DOSFS_CONFIG_STARTUP_DELAY
+#define PROFFIEOS_STARTUP_DELAY DOSFS_CONFIG_STARTUP_DELAY
+#else
+#define PROFFIEOS_STARTUP_DELAY 1000
+#endif
+  while (millis() - now < PROFFIEOS_STARTUP_DELAY) {
     srand((rand() * 917823) ^ LSAnalogRead(batteryLevelPin));
   }
 

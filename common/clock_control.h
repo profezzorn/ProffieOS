@@ -24,10 +24,11 @@ public:
       last_activity_ = now;
     }
     if (now - last_activity_ > 30000) {
-      if (now - last_activity_ < 30200) {
-	Serial3.println("SLEEPING");
-      }
+#ifdef PROFFIEOS_VERSION
       stm32l4_system_sysclk_configure(1000000, 500000, 500000);
+#else
+      stm32l4_system_sysclk_configure(16000000, 8000000, 8000000);
+#endif
       delay(50);
       stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
     }

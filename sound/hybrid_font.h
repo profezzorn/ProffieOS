@@ -271,6 +271,7 @@ public:
 	if (lock_player_) lock_player_->PlayLoop(loop);
       }
     }
+    if (once == loop) current_effect_length_ = 0;
   }
 
   void SB_EndLockup() override {
@@ -290,6 +291,7 @@ public:
 	break;
     }
 
+    current_effect_length_ = 0;
     if (lock_player_) {
       // Polyphonic case
       lock_player_->set_fade_time(0.3);

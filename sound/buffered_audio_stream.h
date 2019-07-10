@@ -42,11 +42,14 @@ public:
   bool eof() const override {
     return !buffered() && eof_;
   }
-  void Stop() override { if (stream_) stream_->Stop(); }
+  void Stop() override {
+    stop_requested_ = true;
+  }
   void clear() {
     eof_ = false;
     buf_start_ = buf_end_;
     stream_ = NULL;
+    stop_requested_ = false;
   }
   int buffered() const {
     return buf_end_ - buf_start_;
@@ -56,12 +59,17 @@ public:
     return N - buffered();
   }
   void SetStream(AudioStream* stream) {
+    stop_requested_ = false;
     eof_ = false;
     stream_ = stream;
   }
 private:
   bool FillBuffer() override {
     if (stream_) {
+      if (stop_requested_) {
+	stop_requested_ = false;
+	stream_->Stop();
+      }
       size_t space = space_available();
       if (space) {
         size_t end_pos = buf_end_ & (N-1);
@@ -84,6 +92,7 @@ private:
   volatile size_t buf_start_ = 0;
   volatile size_t buf_end_ = 0;
   volatile bool eof_ = false;
+  volatile bool stop_requested_ = false;
   int16_t buffer_[N];
 };
 
