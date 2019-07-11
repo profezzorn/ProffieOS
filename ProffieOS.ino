@@ -595,15 +595,15 @@ ArgParserInterface* CurrentArgParser;
 
 PROP_TYPE prop;
 
-#include "scripts/v3_test_script.h"
-#include "scripts/proffieboard_test_script.h"
 
 #if 0
+#include "scripts/v3_test_script.h"
 #warning !!! V3 TEST SCRIPT ACTIVE !!!
 V3TestScript script;
 #endif
 
 #if 0
+#include "scripts/proffieboard_test_script.h"
 #warning !!! PROFFIEBOARD TEST SCRIPT ACTIVE !!!
 V4TestScript script;
 Blinker1 blinker1;
