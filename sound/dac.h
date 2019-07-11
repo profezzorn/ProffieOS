@@ -236,7 +236,11 @@ public:
       STDOUT.print("Current position: ");
       STDOUT.println(((uint16_t*)current_position()) - dac_dma_buffer);
       for (size_t i = 0; i < NELEM(dac_dma_buffer); i++) {
+#ifdef TEENSYDUINO	
         STDOUT.print(dac_dma_buffer[i] - 2048);
+#else	
+        STDOUT.print(dac_dma_buffer[i]);
+#endif	
         if ((i & 0xf) == 0xf)
           STDOUT.println("");
         else
