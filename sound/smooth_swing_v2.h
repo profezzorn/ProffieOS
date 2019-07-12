@@ -104,11 +104,6 @@ public:
     // degrees per second
     // May not need to smooth gyro since volume is smoothed.
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
-    if (millis() - last_swing_millis_ >= 10 ) {
-      swing_acceleration_ = (speed - last_speed_) / (millis() - last_swing_millis_);
-      last_speed_ = speed;
-      last_swing_millis_ = millis();
-    }
     uint32_t t = micros();
     uint32_t delta = t - last_micros_;
     if (delta > 1000000) delta = 1;
@@ -130,10 +125,10 @@ public:
         
       case SwingState::ON:
         // trigger accent swing
-        if (speed >=smooth_swing_config.AccentSwingSpeedThreshold &&
-            accent_swings_present &&
+        if (accent_swings_present &&
             (A.player->isPlaying() || B.player->isPlaying())) {
-          delegate_->StartSwing(swing_acceleration_);
+          delegate_->StartSwing(gyro, smooth_swing_config.AccentSwingSpeedThreshold,
+          smooth_swing_config.AccentSlashAccelerationThreshold);
         }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
