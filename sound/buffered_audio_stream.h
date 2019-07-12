@@ -54,9 +54,9 @@ public:
   int buffered() const {
     return buf_end_ - buf_start_;
   }
+  // Overridable
   size_t space_available() const override {
-    if (eof_ || !stream_) return 0;
-    return N - buffered();
+    return real_space_available();
   }
   void SetStream(AudioStream* stream) {
     stop_requested_ = false;
@@ -64,13 +64,17 @@ public:
     stream_ = stream;
   }
 private:
+  size_t real_space_available() const {
+    if (eof_ || !stream_) return 0;
+    return N - buffered();
+  }
   bool FillBuffer() override {
     if (stream_) {
       if (stop_requested_) {
 	stop_requested_ = false;
 	stream_->Stop();
       }
-      size_t space = space_available();
+      size_t space = real_space_available();
       if (space) {
         size_t end_pos = buf_end_ & (N-1);
         size_t to_read = min(space, N - end_pos);
