@@ -162,7 +162,8 @@ public:
     bool isdir() {
       CHECK(dir_);
       struct stat s;
-      if (entry_->d_name[0] == '.') return false;
+      if (!strcmp(entry_->d_name, ".")) return false;
+      if (!strcmp(entry_->d_name, "..")) return false;
       if (fstatat(dirfd(dir_.get()), entry_->d_name, &s, 0) != 0) return false;
       return S_ISDIR(s.st_mode);
     }
@@ -221,6 +222,13 @@ void test_effects() {
   CHECK_EQ(1, hum.files_found());
 
   mktestdir();
+  touch("testfont/hum.wav");
+  touch("testfont/.DS_Store");
+  touch("testfont/._.DS_Store");
+  Effect::ScanDirectory("testfont");
+  CHECK_EQ(1, hum.files_found());
+
+  mktestdir();
   touch("testfont/hummus.wav");
   Effect::ScanDirectory("testfont");
   CHECK_EQ(0, hum.files_found());
@@ -266,6 +274,12 @@ void test_effects() {
   Effect::ScanDirectory("testfont");
   CHECK_EQ(1, hum.files_found());
 
+  mktestdir();
+  mkdir("testfont/hum", -1);
+  touch("testfont/hum/.DS_Store");
+  touch("testfont/hum/._.DS_Store");
+  Effect::ScanDirectory("testfont");
+  CHECK_EQ(0, hum.files_found());
 }
 
 int main() {
