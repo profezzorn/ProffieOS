@@ -11,6 +11,7 @@
 #define interrupts()  ((void)0)
 #define pgm_read_byte(X) *((uint8_t*)(X))
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
+#define EnableAmplifier()
 #define PROGMEM
 
 int32_t clampi32(int32_t x, int32_t a, int32_t b) {
