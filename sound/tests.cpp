@@ -222,6 +222,12 @@ void test_effects() {
   CHECK_EQ(1, hum.files_found());
 
   mktestdir();
+  mkdir("testfont/hum", -1);
+  touch("testfont/hum/._.hum.wav");
+  Effect::ScanDirectory("testfont");
+  CHECK_EQ(0, hum.files_found());
+
+  mktestdir();
   touch("testfont/hum.wav");
   touch("testfont/.DS_Store");
   touch("testfont/._.DS_Store");
