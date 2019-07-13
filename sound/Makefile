@@ -1,3 +1,9 @@
+test: tests zero.wav
+	./tests
+
+tests: tests.cpp effect.h
+	g++ -O -ggdb -std=c++11 -o tests tests.cpp -lm
+
 
 talkie_test: talkie_test.cpp talkie.h
 	g++ -O -g -std=c++11 -o talkie_test talkie_test.cpp -lm
