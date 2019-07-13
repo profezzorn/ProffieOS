@@ -95,7 +95,7 @@ class Effect {
     }
 
     int n = -1;
-    if (*rest == '.') {
+    if (*rest == '.' && strlen(rest) == 4) {
       unnumbered_file_found_ = true;
     } else {
       char *end;
