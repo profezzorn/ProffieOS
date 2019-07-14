@@ -13,7 +13,7 @@ public:
     CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.0f);
     CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
-    CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 1800.0f);
+    CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 700.0f);
   }
   int humStart;
   int volHum;
@@ -154,37 +154,33 @@ public:
       doSlash_ = true;
       swinging_ = true;
     }
-    if (!guess_monophonic_) {
-      if (swing_player_ && swinging_) {
-        // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
-        // between 0 (full overlap) and 1.0 (no overlap)
-        if (swing_player_->pos() / swing_player_->length() >= config_.ProffieOSSwingOverlap) {
-          swing_player_->set_fade_time(swing_player_->length() - swing_player_->pos());
-          swing_player_->FadeAndStop();
-          swing_player_.Free();
+    if (speed > swingThreshold_) {
+      if (!guess_monophonic_) {
+        if (swing_player_) {
+          // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
+          // between 0 (full overlap) and 1.0 (no overlap)
+          if (swing_player_->pos() / swing_player_->length() >= config_.ProffieOSSwingOverlap) {
+            swing_player_->set_fade_time(swing_player_->length() - swing_player_->pos());
+            swing_player_->FadeAndStop();
+            swing_player_.Free();
+          }
         }
+        if (!swing_player_) {
+          if (swing_acceleration_ > slashThreshold_) {
+            swing_player_ = PlayPolyphonic(&slsh);
+          } else if (swing_acceleration_ < slashThreshold_ && !swinging_) {
+            swing_player_ = PlayPolyphonic(&swng);
+          }
+        }
+      } else if (!swinging_ && speed > swingThreshold_) {
+        PlayMonophonic(&swing, &hum);
       }
-      if (!swing_player_) {
-        if (doSlash_) {
-          swing_player_ = PlayPolyphonic(&slsh);
-        }
-        if (!swinging_ && speed > swingThreshold_ && !doSlash_) {
-          swing_player_ = PlayPolyphonic(&swng);
-          swinging_ = true;
-        }
-      }
-    } else if (!swinging_ && speed > swingThreshold_) {
-      PlayMonophonic(&swing, &hum);
-      swinging_ = true;
-    }
-    if (speed > swingThreshold_ ) {
       float swing_strength = std::min<float>(1.0, speed / swingThreshold_);
       SetSwingVolume(swing_strength, 1.0);
+      swinging_ = true;
     } else if (speed <= config_.ProffieOSSwingLowerThreshold) {
       swinging_ = false;
-      doSlash_ = false;
       swing_player_.Free();
-      swing_acceleration_ = 0;
     }
     float vol = 1.0f;
     if (!swinging_) {
