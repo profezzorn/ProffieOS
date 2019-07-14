@@ -64,7 +64,7 @@ public:
     SetHumVolume(1.0);
     state_ = STATE_OFF;
   }
-  
+
   enum State {
     STATE_OFF,
     STATE_OUT,
@@ -72,7 +72,7 @@ public:
     STATE_HUM_ON,
     STATE_HUM_FADE_OUT,
   };
-  
+
   void Deactivate() {
     lock_player_.Free();
     hum_player_.Free();
@@ -80,7 +80,7 @@ public:
     swing_player_.Free();
     SaberBase::Unlink(this);
   }
-  
+
   RefPtr<BufferedWavPlayer> hum_player_;
   RefPtr<BufferedWavPlayer> next_hum_player_;
   RefPtr<BufferedWavPlayer> swing_player_;
@@ -91,8 +91,8 @@ public:
     if (!next_hum_player_) {
       next_hum_player_ = GetFreeWavPlayer();
       if (!next_hum_player_) {
-        STDOUT.println("Out of WAV players!");
-        return;
+				STDOUT.println("Out of WAV players!");
+				return;
       }
     }
     if (hum_player_) {
@@ -112,7 +112,7 @@ public:
     current_effect_length_ = hum_player_->length();
     if (loop) hum_player_->PlayLoop(loop);
   }
-  
+	
   RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
     EnableAmplifier();
     RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
@@ -123,7 +123,7 @@ public:
     }
     return player;
   }
-  
+
   void Play(Effect* monophonic, Effect* polyphonic) {
     if (polyphonic->files_found()) {
       PlayPolyphonic(polyphonic);
