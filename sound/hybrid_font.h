@@ -166,18 +166,19 @@ public:
           }
         }
         if (!swing_player_) {
-          if (swing_acceleration_ > slashThreshold_ && slsh.files_found()) {
+          if (swing_acceleration_ > slashThreshold_ && slsh.files_found() && slashThreshold > 0) {
             swing_player_ = PlayPolyphonic(&slsh);
           } else if (swing_acceleration_ < slashThreshold_ && !swinging_) {
             swing_player_ = PlayPolyphonic(&swng);
           }
+          swinging_ = true;
         }
       } else if (!swinging_ && speed > swingThreshold_) {
         PlayMonophonic(&swing, &hum);
+        swinging_ = true;
       }
       float swing_strength = std::min<float>(1.0, speed / swingThreshold_);
       SetSwingVolume(swing_strength, 1.0);
-      swinging_ = true;
     } else if (speed <= config_.ProffieOSSwingLowerThreshold) {
       swinging_ = false;
       swing_player_.Free();
