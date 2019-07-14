@@ -28,6 +28,9 @@ common-test:
 blades-test:
 	(cd blades && $(MAKE) test)
 
+sound-test:
+	(cd sound && $(MAKE) test)
+
 test1:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_proffieboard_config.h\\\" BOARD_TAG=Proffieboard-L433CC OBJDIR=test-proffieboard-default
 
@@ -65,7 +68,7 @@ testB:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/td_proffieboard_config.h\\\" BOARD_TAG=Proffieboard-L433CC OBJDIR=test-proffieboard-td
 
 
-test: style-test common-test blades-test test1 test2 test3 test4 test5 test6 test7 test8 test9 testA testB test1V
+test: style-test common-test blades-test sound-test test1 test2 test3 test4 test5 test6 test7 test8 test9 testA testB test1V
 	@echo Tests pass
 
 # Check that there are no uncommitted changes
