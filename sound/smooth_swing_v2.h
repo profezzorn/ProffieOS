@@ -251,9 +251,6 @@ private:
   int swings_;
   uint32_t last_micros_;
   SwingState state_ = SwingState::OFF;;
-  float swing_acceleration_ = 0.0;
-  int last_swing_millis_ = 0;
-  float last_speed_ = 0.0;
 };
 
 #endif
