@@ -166,7 +166,7 @@ public:
           }
         }
         if (!swing_player_) {
-          if (swing_acceleration_ > slashThreshold_) {
+          if (swing_acceleration_ > slashThreshold_ && slsh.files_found()) {
             swing_player_ = PlayPolyphonic(&slsh);
           } else if (swing_acceleration_ < slashThreshold_ && !swinging_) {
             swing_player_ = PlayPolyphonic(&swng);
