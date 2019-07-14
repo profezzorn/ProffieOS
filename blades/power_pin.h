@@ -25,6 +25,7 @@ public:
 
 template<int PIN>
 class PowerPinSingleton {
+public:
   static void Init() {
     if (refs_ == 255) {
       pinMode(PIN, OUTPUT);
@@ -32,13 +33,15 @@ class PowerPinSingleton {
       refs_ = 0;
     }
   }
-  void Power(bool on) {
+  static void Power(bool on) {
     refs_ += on ? 1 : -1;
     digitalWrite(PIN, refs_ != 0);
   }
-
-  static uint8_t refs_ = 255;
+private:
+  static uint8_t refs_;
 };
+template<int PIN>
+uint8_t PowerPinSingleton<PIN>::refs_ = 255;
 
 template<int PIN>
 class PowerPinWrapper : public PowerPinInterface {

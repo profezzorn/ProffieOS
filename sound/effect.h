@@ -1,6 +1,8 @@
 #ifndef SOUND_EFFECT_H
 #define SOUND_EFFECT_H
 
+#include <algorithm>
+
 class Effect;
 Effect* all_effects = NULL;
 
@@ -95,7 +97,7 @@ class Effect {
     }
 
     int n = -1;
-    if (*rest == '.') {
+    if (*rest == '.' && strlen(rest) == 4) {
       unnumbered_file_found_ = true;
     } else {
       char *end;
