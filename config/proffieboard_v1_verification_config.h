@@ -20,6 +20,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_WS2811
 #define ENABLE_SD
 #define ENABLE_SSD1306
+#define SHARED_POWER_PINS
 #endif
 
 #ifdef CONFIG_PRESETS
