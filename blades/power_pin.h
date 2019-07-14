@@ -41,7 +41,7 @@ private:
   static uint8_t refs_;
 };
 template<int PIN>
-uint8_t PowerPinSingleton<PIN>::refs_ = 0;
+uint8_t PowerPinSingleton<PIN>::refs_ = 255;
 
 template<int PIN>
 class PowerPinWrapper : public PowerPinInterface {
