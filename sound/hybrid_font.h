@@ -399,7 +399,6 @@ public:
   }
   
   bool swinging_ = false;
-  bool doSlash_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
     if (state_ != STATE_OFF &&
         !(lockup.files_found() && SaberBase::Lockup())) {
