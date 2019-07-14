@@ -1,6 +1,8 @@
 #ifndef SOUND_EFFECT_H
 #define SOUND_EFFECT_H
 
+#include <algorithm>
+
 class Effect;
 Effect* all_effects = NULL;
 
