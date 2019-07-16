@@ -150,10 +150,6 @@ public:
     last_speed_ = speed;
     float filter_factor = powf(0.01, delta);
     swing_acceleration_ = swing_acceleration_ * filter_factor + current_acceleration * (1 - filter_factor);
-    if (swing_acceleration_ > slashThreshold_ && slsh.files_found()) {
-      doSlash_ = true;
-      swinging_ = true;
-    }
     if (speed > swingThreshold_) {
       if (!guess_monophonic_) {
         if (swing_player_) {
@@ -165,10 +161,10 @@ public:
             swing_player_.Free();
           }
         }
-        if (!swing_player_) {
-          if (swing_acceleration_ > slashThreshold_ && slsh.files_found() && slashThreshold > 0) {
+        if (!swing_player_ && ! swinging_) {
+          if (swing_acceleration_ > slashThreshold_ && slsh.files_found()) {
             swing_player_ = PlayPolyphonic(&slsh);
-          } else if (swing_acceleration_ < slashThreshold_ && !swinging_) {
+          } else if (swing_acceleration_ < swingThreshold_) {
             swing_player_ = PlayPolyphonic(&swng);
           }
           swinging_ = true;
