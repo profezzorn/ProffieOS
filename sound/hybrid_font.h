@@ -161,10 +161,10 @@ public:
             swing_player_.Free();
           }
         }
-        if (!swing_player_ && ! swinging_) {
+        if (!swing_player_ && !swinging_) {
           if (swing_acceleration_ > slashThreshold_ && slsh.files_found()) {
             swing_player_ = PlayPolyphonic(&slsh);
-          } else if (swing_acceleration_ < swingThreshold_) {
+          } else {
             swing_player_ = PlayPolyphonic(&swng);
           }
           swinging_ = true;
