@@ -36,11 +36,20 @@ public:
     return ret;
   }
 
+  Vec3 operator+(const Vec3& o) const {
+    return Vec3(x + o.x, y + o.y, z + o.z);
+  }
+  Vec3 operator+(float f) const {
+    return Vec3(x + f, y + f, z + f);
+  }
   Vec3 operator-(const Vec3& o) const {
     return Vec3(x - o.x, y - o.y, z - o.z);
   }
-  Vec3 operator+(const Vec3& o) const {
-    return Vec3(x + o.x, y + o.y, z + o.z);
+  Vec3 operator-(float f) const {
+    return Vec3(x - f, y - f, z - f);
+  }
+  Vec3 operator-() const {
+    return Vec3(-x, -y, -z);
   }
   void operator+=(const Vec3& o)  {
     x += o.x;
@@ -53,8 +62,8 @@ public:
   Vec3 operator/(int i) const {
     return Vec3(x / i, y / i, z / i);
   }
-  Vec3 dot(const Vec3& o) const {
-    return Vec3(x * o.x, y * o.y, z * o.z);
+  float dot(const Vec3& o) const {
+    return x * o.x + y * o.y + z * o.z;
   }
   Vec3 cross(const Vec3& o) const {
     return Vec3(x * o.y - y * o.x,
