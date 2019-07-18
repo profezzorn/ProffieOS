@@ -268,6 +268,7 @@ CommandParser* parsers = NULL;
 MonitorHelper monitor_helper;
 
 #include "common/vec3.h"
+#include "common/quat.h"
 #include "common/ref.h"
 #include "common/events.h"
 #include "common/saber_base.h"
