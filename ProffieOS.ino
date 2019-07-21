@@ -849,6 +849,7 @@ class Commands : public CommandParser {
 #endif
 #ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "high") && e) {
+      pinMode(atoi(e), OUTPUT);
       digitalWrite(atoi(e), HIGH);
       STDOUT.println("Ok.");
       return true;
@@ -856,6 +857,7 @@ class Commands : public CommandParser {
 #endif // ENABLE_DEVELOPER_COMMANDS
 #ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "low") && e) {
+      pinMode(atoi(e), OUTPUT);
       digitalWrite(atoi(e), LOW);
       STDOUT.println("Ok.");
       return true;
