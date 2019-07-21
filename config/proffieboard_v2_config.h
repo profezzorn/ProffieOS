@@ -42,8 +42,13 @@ enum SaberPins {
   bladePin = 16,                  // blade control, either WS2811 or PWM  PA4
   bladeIdentifyPin = 16,          // blade identify input / FoC
   blade2Pin = 1,                  // PB10
+<<<<<<< HEAD
   blade3Pin = 0,                  // PB11
   blade4Pin = 17,                 // PA03
+=======
+  blade3Pin = 17,                 // PA4
+  blade4Pin = 0,                  // PB3
+>>>>>>> c08580a... v2 bugfix
   blade5Pin = 8,                  // PA15 (also UART)
   blade6Pin = 9,                  // PA02 (also UART)
 
