@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,7 +29,7 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 
 
@@ -618,6 +618,13 @@ CapTest captest;
 #include "buttons/touchbutton.h"
 #else
 #include "buttons/stm32l4_touchbutton.h"
+
+#include "ir/ir.h"
+#include "ir/receiver.h"
+#include "ir/blaster.h"
+#include "ir/print.h"
+#include "ir/nec.h"
+#include "ir/rc6.h"
 
 uint32_t startup_AHB1ENR;
 uint32_t startup_AHB2ENR;
