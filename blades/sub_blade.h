@@ -118,7 +118,7 @@ class SubBladeWrapperReverse : public SubBladeWrapper {
     return blade_->set(offset_ - led, c);
   }
   void set_overdrive(int led, Color16 c) override {
-    return blade_->set_overdrive(offset_ led, c);
+    return blade_->set_overdrive(offset_ - led, c);
   }
 };
 
