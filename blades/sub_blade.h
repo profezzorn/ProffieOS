@@ -115,10 +115,10 @@ class BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
 
 class SubBladeWrapperReverse : public SubBladeWrapper {
   void set(int led, Color16 c) override {
-    return blade_->set(led - offset_, c);
+    return blade_->set(offset_ - led, c);
   }
   void set_overdrive(int led, Color16 c) override {
-    return blade_->set_overdrive(led - offset_, c);
+    return blade_->set_overdrive(offset_ led, c);
   }
 };
 
