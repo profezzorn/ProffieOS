@@ -8,7 +8,7 @@
 #ifdef CONFIG_TOP
 
 // Proffieboard config
-#include "proffieboard_v1_config.h"
+#include "proffieboard_config.h"
 
 // Number of simultaneously connected blades.
 // (For interchangeable blades, see the blades[] array.)
@@ -38,6 +38,7 @@ const unsigned int maxLedsPerStrip = 196;
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
 #define ENABLE_SERIAL
+#define ENABLE_DEVELOPER_COMMANDS
 
 // Must be 20 characters or less.
 #define BLE_PASSWORD "password"
@@ -59,6 +60,8 @@ typedef RandomFlicker<Rgb<200,200,200>, Rgb<40,40,40>> OnPulse;
 typedef Pulsing<Rgb16<512,512,512>, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
+  { "TeensySF", "tracks/venus.wav",
+    StyleNormalPtr<BLUE, WHITE, 300, 800>(), "cyan"},
   { "charging", "tracks/duel.wav",
     StylePtr< Mix<Sin<Int<20>, Int<8192>, Int<32768>>, Black, Mix<Bump<BatteryLevel, Int<8000>>, Black,
     Mix<BatteryLevel, Red, Red, Orange, Orange, Orange, Blue, Blue, Blue, Blue, Green, Green, Green> >>>(),
@@ -149,4 +152,10 @@ Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button AuxButton(BUTTON_AUX, auxPin, "aux");
 Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
 //TouchButton Aux2Button(BUTTON_AUX2, aux2Pin, 1700, "aux2");
+
+IRReceiver<blade3Pin> ir_receiver;
+BlasterDecoder blaster_decoder;
+NECDecoder nec_decoder;
+RC6Decoder rc6_decoder;
+PrintDecoder print_decoder;
 #endif

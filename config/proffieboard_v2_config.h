@@ -39,11 +39,11 @@ enum SaberPins {
   spiLedClock = -1,
 
   // Neopixel pins
-  bladePin = 16,                  // blade control, either WS2811 or PWM  PA4
+  bladePin = 16,                  // blade control, either WS2811 or PWM PA0
   bladeIdentifyPin = 16,          // blade identify input / FoC
   blade2Pin = 1,                  // PB10
-  blade3Pin = 0,                  // PB11
-  blade4Pin = 17,                 // PA03
+  blade3Pin = 17,                 // PA4
+  blade4Pin = 0,                  // PB3
   blade5Pin = 8,                  // PA15 (also UART)
   blade6Pin = 9,                  // PA02 (also UART)
 

@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,7 +29,7 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 
 
@@ -59,7 +59,7 @@
 // are then send to all registered SaberBase classes.
 ///
 // Generally speaking, there are usually two registered SaberBase
-// classes listening for events. One for sound and one for 
+// classes listening for events. One for sound and one for
 // the blade. Sound and blade effects are generally executed
 // separately by separate clases.
 //
@@ -101,7 +101,7 @@
 
 // TODO LIST:
 //   stab detect/effect
-// 
+//
 // Audio work items:
 //   select clash from force
 //   stab effect
@@ -429,7 +429,7 @@ private:
 
 template<class T, class U>
 struct is_same_type { static const bool value = false; };
- 
+
 template<class T>
 struct is_same_type<T, T> { static const bool value = true; };
 
@@ -619,6 +619,13 @@ CapTest captest;
 #else
 #include "buttons/stm32l4_touchbutton.h"
 
+#include "ir/ir.h"
+#include "ir/receiver.h"
+#include "ir/blaster.h"
+#include "ir/print.h"
+#include "ir/nec.h"
+#include "ir/rc6.h"
+
 uint32_t startup_AHB1ENR;
 uint32_t startup_AHB2ENR;
 uint32_t startup_AHB3ENR;
@@ -725,7 +732,7 @@ class Commands : public CommandParser {
       LOCK_SD(false);
       return true;
     }
-    
+
     if (!strcmp(cmd, "cat") && e) {
       LOCK_SD(true);
       File f = LSFS::Open(e);
@@ -736,14 +743,15 @@ class Commands : public CommandParser {
       LOCK_SD(false);
       return true;
     }
-    
+
     if (!strcmp(cmd, "del") && e) {
       LOCK_SD(true);
       LSFS::Remove(e);
       LOCK_SD(false);
       return true;
     }
-    
+
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "readalot")) {
       uint8_t tmp[10];
       LOCK_SD(true);
@@ -759,6 +767,8 @@ class Commands : public CommandParser {
       STDOUT.println("Done");
       return true;
     }
+#endif // ENABLE_DEVELOPER_COMMANDS
+
     if (!strcmp(cmd, "sdtest")) {
       char filename[128];
       uint8_t block[512];
@@ -837,16 +847,23 @@ class Commands : public CommandParser {
       return true;
     }
 #endif
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "high") && e) {
+      pinMode(atoi(e), OUTPUT);
       digitalWrite(atoi(e), HIGH);
       STDOUT.println("Ok.");
       return true;
     }
+#endif // ENABLE_DEVELOPER_COMMANDS
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "low") && e) {
+      pinMode(atoi(e), OUTPUT);
       digitalWrite(atoi(e), LOW);
       STDOUT.println("Ok.");
       return true;
     }
+#endif // ENABLE_DEVELOPER_COMMANDS
+
 #if VERSION_MAJOR >= 4
     if (!strcmp(cmd, "booster")) {
        if (!strcmp(e, "on")) {
@@ -874,6 +891,7 @@ class Commands : public CommandParser {
       return true;
     }
 #endif
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "dumpwav")) {
       int16_t tmp[32];
       wav_players[0].Stop();
@@ -890,7 +908,9 @@ class Commands : public CommandParser {
       wav_players[0].Stop();
       return true;
     }
+#endif // ENABLE_DEVELOPER_COMMANDS
 #endif
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "twiddle")) {
       int pin = strtol(e, NULL, 0);
       STDOUT.print("twiddling ");
@@ -905,6 +925,8 @@ class Commands : public CommandParser {
       STDOUT.println("done");
       return true;
     }
+#endif // ENABLE_DEVELOPER_COMMANDS
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "twiddle2")) {
       int pin = strtol(e, NULL, 0);
       STDOUT.print("twiddling ");
@@ -922,6 +944,7 @@ class Commands : public CommandParser {
       STDOUT.println("done");
       return true;
     }
+#endif // ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "malloc")) {
       STDOUT.print("alloced: ");
       STDOUT.println(mallinfo().uordblks);
@@ -1022,15 +1045,15 @@ class Commands : public CommandParser {
       return true;
     }
     if (!strcmp(cmd, "reset")) {
-#ifdef TEENSYDUINO    
+#ifdef TEENSYDUINO
       SCB_AIRCR = 0x05FA0004;
 #else
       STM32.reset();
-#endif      
+#endif 
       STDOUT.println("Reset failed.");
       return true;
     }
-#ifndef TEENSYDUINO    
+#ifndef TEENSYDUINO
     if (!strcmp(cmd, "shutdown")) {
       STDOUT.println("Sleeping 10 seconds.\n");
       STM32.stop(100000);
@@ -1040,6 +1063,7 @@ class Commands : public CommandParser {
       stm32l4_system_dfu();
       return true;
     }
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "stm32info")) {
       STDOUT.print("VBAT: ");
       STDOUT.println(STM32.getVBAT());
@@ -1049,49 +1073,53 @@ class Commands : public CommandParser {
       STDOUT.println(STM32.getTemperature());
       return true;
     }
+#endif // ENABLE_DEVELOPER_COMMANDS
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "portstates")) {
       GPIO_TypeDef *GPIO;
       for (int i = 0; i < 4; i++) {
-	switch (i) {
-	  case 0:
-	    GPIO = (GPIO_TypeDef *)GPIOA_BASE;
-	    STDOUT.print("PORTA: ");
-	    break;
-	  case 1:
-	    GPIO = (GPIO_TypeDef *)GPIOB_BASE;
-	    STDOUT.print("PORTB: ");
-	    break;
-	  case 2:
-	    GPIO = (GPIO_TypeDef *)GPIOC_BASE;
-	    STDOUT.print("PORTC: ");
-	    break;
-	  case 3:
-	    GPIO = (GPIO_TypeDef *)GPIOH_BASE;
-	    STDOUT.print("PORTH: ");
-	    break;
-	}
-	for (int j = 15; j >= 0; j--) {
-	  uint32_t now = (GPIO->MODER >> (j * 2)) & 3;
-	  uint32_t saved = (startup_MODER[i] >> (j * 2)) & 3;
-	  STDOUT.print((now == saved ? "ioga" : "IOGA")[now]);
-	  if (!(j & 3)) STDOUT.print(" ");
-	}
-	STDOUT.print("  ");
-	for (int j = 15; j >= 0; j--) {
-	  uint32_t now = (GPIO->PUPDR >> (j * 2)) & 3;
-	  STDOUT.print("-ud?"[now]);
-	  if (!(j & 3)) STDOUT.print(" ");
-	}
-	STDOUT.print("  ");
-	for (int j = 15; j >= 0; j--) {
-	  uint32_t now = ((GPIO->IDR >> j) & 1) | (((GPIO->ODR >> j) & 1) << 1);
-	  STDOUT.print("lhLH"[now]);
-	  if (!(j & 3)) STDOUT.print(" ");
-	}
-	STDOUT.println("");
+        switch (i) {
+          case 0:
+            GPIO = (GPIO_TypeDef *)GPIOA_BASE;
+            STDOUT.print("PORTA: ");
+            break;
+          case 1:
+            GPIO = (GPIO_TypeDef *)GPIOB_BASE;
+            STDOUT.print("PORTB: ");
+            break;
+          case 2:
+            GPIO = (GPIO_TypeDef *)GPIOC_BASE;
+            STDOUT.print("PORTC: ");
+            break;
+          case 3:
+            GPIO = (GPIO_TypeDef *)GPIOH_BASE;
+            STDOUT.print("PORTH: ");
+            break;
+        }
+        for (int j = 15; j >= 0; j--) {
+          uint32_t now = (GPIO->MODER >> (j * 2)) & 3;
+          uint32_t saved = (startup_MODER[i] >> (j * 2)) & 3;
+          STDOUT.print((now == saved ? "ioga" : "IOGA")[now]);
+          if (!(j & 3)) STDOUT.print(" ");
+        }
+        STDOUT.print("  ");
+        for (int j = 15; j >= 0; j--) {
+          uint32_t now = (GPIO->PUPDR >> (j * 2)) & 3;
+          STDOUT.print("-ud?"[now]);
+          if (!(j & 3)) STDOUT.print(" ");
+        }
+        STDOUT.print("  ");
+        for (int j = 15; j >= 0; j--) {
+          uint32_t now = ((GPIO->IDR >> j) & 1) | (((GPIO->ODR >> j) & 1) << 1);
+          STDOUT.print("lhLH"[now]);
+          if (!(j & 3)) STDOUT.print(" ");
+        }
+        STDOUT.println("");
       }
       return true;
     }
+#endif // ENABLE_DEVELOPER_COMMANDS
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "CLK")) {
       if (e) {
         uint32_t c = atoi(e) * 1000000;
@@ -1115,13 +1143,15 @@ class Commands : public CommandParser {
       STDOUT.println(stm32l4_system_saiclk());
       return true;
     }
+#endif // ENABLE_DEVELOPER_COMMANDS
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "whatispowered")) {
       STDOUT.print("ON: ");
-#define PRINTIFON(REG, BIT) do {					\
-	if (RCC->REG & RCC_##REG##_##BIT##EN) {				\
-          STDOUT.print(" " #BIT);					\
+#define PRINTIFON(REG, BIT) do {                                        \
+        if (RCC->REG & RCC_##REG##_##BIT##EN) {                         \
+          STDOUT.print(" " #BIT);                                       \
           if (!(startup_##REG & RCC_##REG##_##BIT##EN)) STDOUT.print("+"); \
-        }								\
+        }                                                               \
       } while(0)
 
       PRINTIFON(AHB1ENR,FLASH);
@@ -1227,8 +1257,10 @@ class Commands : public CommandParser {
       STDOUT.println(USBD_Connected());
       return true;
     }
+#endif // ENABLE_DEVELOPER_COMMANDS
+
 #endif  // TEENSYDUINO
-    
+
     return false;
   }
 
@@ -1310,17 +1342,17 @@ public:
         while (!SA::stream().available()) YIELD();
         int c = SA::stream().read();
         if (c < 0) { break; }
-#if 0   
+#if 0
         STDOUT.print("GOT:");
         STDOUT.println(c);
-#endif  
+#endif
 #if 0
         if (monitor.IsMonitoring(Monitoring::MonitorSerial) &&
             default_output != &SA::stream()) {
           default_output->print("SER: ");
           default_output->println(c, HEX);
         }
-#endif  
+#endif
         if (c == '\n' || c == '\r') {
           if (cmd_) ParseLine();
           len_ = 0;
@@ -1557,7 +1589,7 @@ void setup() {
   SAVE_MODER(B, 1);
   SAVE_MODER(C, 2);
   SAVE_MODER(H, 3);
-  
+
   // TODO enable/disable as needed
   pinMode(boosterPin, OUTPUT);
   digitalWrite(boosterPin, HIGH);
@@ -1568,7 +1600,7 @@ void setup() {
   // TODO: Figure out if we need this.
   // Serial.blockOnOverrun(false);
 #endif
-    
+
   // Wait for all voltages to settle.
   // Accumulate some entrypy while we wait.
   uint32_t now = millis();

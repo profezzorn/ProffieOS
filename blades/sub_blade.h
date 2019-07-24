@@ -65,12 +65,15 @@ public:
     return false;
   }
 
-private:
+protected:
   int num_leds_;
   int offset_;
   bool allow_disable_;
   SubBladeWrapper* next_;
 };
+
+SubBladeWrapper* first_subblade_wrapper = NULL;
+SubBladeWrapper* last_subblade_wrapper = NULL;
 
 // This let's you split a single chain of neopixels into multiple blades.
 // Let's say you build saber with an 8-led PLI, a single led for a crystal chamber
@@ -86,13 +89,11 @@ private:
 // In the example above, NUM_BLADES must be 4, so you get to specify
 // a style for each section of the string.
 class BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
-  static SubBladeWrapper* last = NULL;
-  static SubBladeWrapper* first = NULL;
   if (blade)  {
-    first = last = NULL;
+    first_subblade_wrapper = last_subblade_wrapper = NULL;
   } else {
-    if (!first) return NULL;
-    blade = first->blade_;
+    if (!first_subblade_wrapper) return NULL;
+    blade = first_subblade_wrapper->blade_;
   }
   
   if (last_led >= blade->num_leds()) {
@@ -100,16 +101,50 @@ class BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
   }
   
   SubBladeWrapper* ret = new SubBladeWrapper();
-  if (first) {
-    ret->SetNext(last);
-    first->SetNext(ret);
-    last = ret;
+  if (first_subblade_wrapper) {
+    ret->SetNext(last_subblade_wrapper);
+    first_subblade_wrapper->SetNext(ret);
+    last_subblade_wrapper = ret;
   } else {
     ret->SetNext(ret);
-    first = last = ret;
+    first_subblade_wrapper = last_subblade_wrapper = ret;
   }
   ret->SetupSubBlade(blade, first_led, last_led + 1 - first_led);
   return ret;
 }
 
+class SubBladeWrapperReverse : public SubBladeWrapper {
+  void set(int led, Color16 c) override {
+    return blade_->set(offset_ - led, c);
+  }
+  void set_overdrive(int led, Color16 c) override {
+    return blade_->set_overdrive(offset_ - led, c);
+  }
+};
+
+// Like SubBlade, but LEDs are indexed in reverse.
+class BladeBase* SubBladeReverse(int first_led, int last_led, BladeBase* blade) {
+  if (blade)  {
+    first_subblade_wrapper = last_subblade_wrapper = NULL;
+  } else {
+    if (!first_subblade_wrapper) return NULL;
+    blade = first_subblade_wrapper->blade_;
+  }
+  
+  if (last_led >= blade->num_leds()) {
+    return NULL;
+  }
+  
+  SubBladeWrapper* ret = new SubBladeWrapperReverse();
+  if (first_subblade_wrapper) {
+    ret->SetNext(last_subblade_wrapper);
+    first_subblade_wrapper->SetNext(ret);
+    last_subblade_wrapper = ret;
+  } else {
+    ret->SetNext(ret);
+    first_subblade_wrapper = last_subblade_wrapper = ret;
+  }
+  ret->SetupSubBlade(blade, last_led, last_led + 1 - first_led);
+  return ret;
+}
 #endif
