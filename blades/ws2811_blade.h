@@ -91,7 +91,7 @@ public:
   }
   // SaberBase implementation.
   void SB_IsOn(bool* on) override {
-    if (on_) *on = true;
+    if (on_ || powered_) *on = true;
   }
   void SB_On() override {
     AbstractBlade::SB_On();
