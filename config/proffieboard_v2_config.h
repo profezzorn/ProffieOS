@@ -73,9 +73,9 @@ enum SaberPins {
   txPin = 9,                      // PA02
 };
 
+#if PROFFIEBOARD_VERSION - 0 != 2
+#error Please select Proffieboard V2 in Tools->Board
+#endif
 #if DOSFS_SDCARD - 0 == 0
 #error Tools->DOSFS should be set to SDCARD (SPI)
-#endif
-#ifdef TEENSYDUINO
-#error Please select Proffieboard from Tools->Board
 #endif
