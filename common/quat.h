@@ -10,6 +10,13 @@ public:
   Quat(float w, Vec3 v) : w_(w), v_(v) {}
   Quat(float w, float x, float y, float z) : w_(w), v_(x,y,z) {}
 
+  // Rotate from u to v
+  Quat(Vec3 u, Vec3 v) {
+    float m = sqrtf(2.f + 2.f * u.dot(v));
+    w_ = 0.5f * m;
+    v_ = u.cross(v) * (1.0f / m);
+  }
+
   // Create a rotated quat (rotate angle around vector)
   Quat(Vec3 vector, float angle)
     : w_(cosf(angle/2)),
