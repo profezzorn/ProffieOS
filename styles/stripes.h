@@ -70,7 +70,7 @@ public:
     ret.overdrive = false;
     ret.c = Color16(0,0,0);
     colors_.get(led, p, &ret);
-    colors_.get(led, p - 341 * colors_.size, &ret);
+    colors_.get(led, p + 341 * colors_.size, &ret);
     return ret;
   }
 private:
