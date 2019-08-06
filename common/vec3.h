@@ -5,6 +5,7 @@
 class Vec3 {
 public:
   Vec3(){}
+  Vec3(float v_) : x(v_), y(v_), z(v_) {}
   Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
 
   enum ByteOrder {
