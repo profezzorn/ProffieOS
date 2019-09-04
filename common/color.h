@@ -96,7 +96,7 @@ class Color8 {
   Color8 operator*(uint8_t v) const {
     return Color8(r * v / 255, g * v / 255, b * v / 255);
   }
-  
+
   uint8_t r, g, b;
 };
 
@@ -154,9 +154,38 @@ class Color16 {
                   clampi32((b+n) >> 8, 0, 255));
   }
 
-  
   Color8 dither(int x, int y) const {
     return dither(color16_dither_matrix[x & 3][y & 3]);
+  }
+
+private:
+  static int f(int n, int C, int MAX) {
+    int k = n % 36000;
+    return MAX - C * clampi32(std::min(k, 24000 - k), 0, 6000) / 6000;
+  }
+
+public:
+  // angle = 0 - 36000 (non-inclusive)
+  Color16 rotate(int angle) const {
+    int H;
+    int MAX = std::max(r, std::max(g, b));
+    int MIN = std::min(r, std::min(g, b));
+    int C = MAX - MIN;
+    if (r > g && r > b) {
+      // r is biggest
+      H = 6000 * (g - b) / C;
+    }
+    if (b > g) {
+      // b is biggest
+      H = 6000 * (b - r) / C + 12000;
+    } else {
+      // g is biggest
+      H = 6000 * (r - g) / C + 24000;
+    }
+    H += angle;
+    return Color16(f(5*6000+H, C, MAX),
+                   f(3*6000+H, C, MAX),
+                   f(1*6000+H, C, MAX));
   }
 
   uint16_t r, g, b;
