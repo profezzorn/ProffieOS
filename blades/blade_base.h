@@ -40,6 +40,10 @@ public:
   // Return how many effects are in effect.
   virtual size_t GetEffects(BladeEffect** blade_effects) = 0;
 
+  // Let the blade know that this style handles "effect".
+  virtual void HandleEffectType(BladeEffectType effect) = 0;
+  virtual bool IsHandled(BladeEffectType effect) = 0;
+
   // Set led 'led' to color 'c'.
   virtual void set(int led, Color16 c) = 0;
 
@@ -88,6 +92,7 @@ template<BladeEffectType effect>
 class OneshotEffectDetector {
 public:
   BladeEffect* Detect(BladeBase* blade) {
+    blade->HandleEffectType(effect);
     BladeEffect* effects;
     size_t n = blade->GetEffects(&effects);
     for (size_t i = 0; i < n; i++) {

@@ -19,6 +19,20 @@ public:
     return num_effects_;
   }
 
+  void HandleEffectType(BladeEffectType effect) override {
+    handled_types_ = (BladeEffectType) ((int)handled_types_ | (int)effect);
+  }
+
+  // Returns true if the current style handles a particular effect type.
+  bool IsHandled(BladeEffectType effect) override {
+    return (handled_types_ & effect) != 0;
+  }
+
+  virtual void SetStyle(BladeStyle* style) {
+    handled_types_ = EFFECT_NONE;
+    BladeBase::SetStyle(style);
+  }
+  
   void addEffect(BladeEffectType type, float location) {
     for (size_t i = NELEM(effects_) - 1; i; i--) {
       effects_[i] = effects_[i-1];
@@ -78,6 +92,7 @@ public:
 private:
   size_t num_effects_ = 0;
   BladeEffect effects_[4];
+  BladeEffectType handled_types_ = EFFECT_NONE;
 };
 
 #endif
