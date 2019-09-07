@@ -39,8 +39,7 @@ public:
     interrupts();
     if (enqueue) {
 #ifdef TEENSYDUINO
-      if (!NVIC_IS_ACTIVE(IRQ_WAV))
-	NVIC_TRIGGER_IRQ(IRQ_WAV);
+      NVIC_TRIGGER_IRQ(IRQ_WAV);
 #else
       armv7m_pendsv_enqueue((armv7m_pendsv_routine_t)ProcessAudioStreams, NULL, 0);
 #endif    
