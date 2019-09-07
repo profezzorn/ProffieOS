@@ -76,6 +76,9 @@ public:
   int num_leds() const override {
     return pin_.num_leds();
   }
+  Color8::Byteorder get_byteorder() const {
+    return pin_.get_byteorder();
+  }
   bool is_on() const override {
     return on_;
   }

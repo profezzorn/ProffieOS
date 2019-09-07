@@ -30,6 +30,9 @@ public:
   // Returns number of LEDs in this blade.
   virtual int num_leds() const = 0;
 
+  // Returns the byte order of this blade.
+  virtual Color8::Byteorder get_byteorder() const = 0;
+
   // Returns true if the blade is supposed to be on.
   // false while "turning off".
   virtual bool is_on() const = 0;
