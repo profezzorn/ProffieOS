@@ -14,9 +14,9 @@
 template<Color8::Byteorder byteorder, class COLOR>
 class ByteOrderStyle {
 public:
-  void run(BladeBase* base) {
-    color_.run(base);
+  bool run(BladeBase* base) {
     order_ = Color8::combine_byteorder(Color8::invert_byteorder(base->get_byteorder()), byteorder);
+    return color_.run(base);
   }
   OverDriveColor getColor(int led) {
     Color16 tmp;
