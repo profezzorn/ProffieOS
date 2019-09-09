@@ -93,6 +93,30 @@ class Color8 {
     }
   }
 
+  // RGB combine X = X
+  static int combine_byteorder(int byteorder1, int byteorder2) {
+    int ret = 0;
+    for (int i = num_bytes(byteorder1) - 1; i >= 0; i--) {
+      int b = (byteorder1 >> (i * 4) & 7);
+      int pos = 3 - b;
+      b = byteorder2 >> (pos * 4) & 7;
+      ret |= b << (i * 4);
+    }
+    return ret;
+  }
+
+  // invert(X) combine X = RGB
+  // invert(RGB) = RGB
+  static int invert_byteorder(int byteorder) {
+    int ret = 0;
+    for (int i = num_bytes(byteorder) - 1; i >= 0; i--) {
+      int b = byteorder >> (i * 4) & 7;
+      int pos = 3 - b;
+      ret |= (3-i) << (pos * 4);
+    }
+    return ret;
+  }
+
   Color8 operator*(uint8_t v) const {
     return Color8(r * v / 255, g * v / 255, b * v / 255);
   }
@@ -156,6 +180,18 @@ class Color16 {
 
   Color8 dither(int x, int y) const {
     return dither(color16_dither_matrix[x & 3][y & 3]);
+  }
+
+  uint16_t getShort(int byteorder, int byte) {
+    switch (byteorder >> (byte * 4) & 0x7) {
+      default: return r;
+      case 2: return g;
+      case 3: return b;
+      case 4: return std::min(r, std::min(g, b));
+      case 5: return r - std::min(r, std::min(g, b));
+      case 6: return g - std::min(r, std::min(g, b));
+      case 7: return b - std::min(r, std::min(g, b));
+    }
   }
 
 private:

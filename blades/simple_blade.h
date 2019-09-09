@@ -157,6 +157,9 @@ public:
   int num_leds() const override {
     return LEDArrayHelper<LEDS...>::size;
   }
+  Color8::Byteorder get_byteorder() const override {
+    return Color8::RGB;
+  }
   bool is_on() const override {
     return on_;
   }

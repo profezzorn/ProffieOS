@@ -18,6 +18,13 @@ public:
   void allow_disable() override { blade_->allow_disable(); }
   void Activate() override { blade_->Activate(); }
 
+  void HandleEffectType(BladeEffectType effect) {
+    blade_->HandleEffectType(effect);
+  }
+  bool IsHandled(BladeEffectType effect) {
+    return blade_->IsHandled(effect);
+  }
+
   BladeBase* blade_;
 };
 
