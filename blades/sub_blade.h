@@ -4,9 +4,6 @@
 class SubBladeWrapper : public BladeWrapper, BladeStyle {
 public:
   int num_leds() const override { return num_leds_; }
-  Color8::Byteorder get_byteorder() const override {
-    return blade_->get_byteorder();
-  }
   void set(int led, Color16 c) override {
     return blade_->set(led + offset_, c);
   }
