@@ -6,6 +6,9 @@
 class BladeWrapper : public BladeBase {
 public:
   int num_leds() const override { return blade_->num_leds(); }
+  Color8::Byteorder get_byteorder() const override {
+    return blade_->get_byteorder();
+  }
   bool is_on() const override { return blade_->is_on(); }
   void set(int led, Color16 c) override { return blade_->set(led, c); }
   void set_overdrive(int led, Color16 c) override {
