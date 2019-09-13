@@ -17,6 +17,7 @@ enum BladeEffectType {
   EFFECT_DRAG_END = 1 << 8,
   EFFECT_IGNITION = 1 << 9,
   EFFECT_RETRACTION = 1 << 10,
+  EFFECT_CHANGE = 1 << 11, // used for click to change
 };
 
 struct BladeEffect {
