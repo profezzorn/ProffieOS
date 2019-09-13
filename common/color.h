@@ -38,6 +38,8 @@ class Color8 {
   }
 
   enum Byteorder {
+    NONE = 0,
+
     // RGB colors
     BGR=0x321,
     BRG=0x312,

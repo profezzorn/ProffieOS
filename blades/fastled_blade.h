@@ -71,7 +71,7 @@ public:
   }
   // TODO: If needed, fix this!
   Color8::Byteorder get_byteorder() const override {
-    return Color8::RGB;
+    return Color8::NONE;
   }
   bool is_on() const override {
     return on_;

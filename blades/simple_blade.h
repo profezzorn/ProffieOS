@@ -21,6 +21,8 @@ public:
     LSanalogWrite(PIN, led_.PWM_overdrive(c));
   }
 
+  Color8 getColor8() { return led_.getColor8(); }
+
   DriveLogic<LED> led_;
 };
 
@@ -80,6 +82,9 @@ public:
   void set_overdrive(const Color16& c) override {
     led_.set_overdrive(c);
     rest_.set_overdrive(c);
+  }
+  Color8 getColor8() {
+    return led_.getColor8() + rest_.getColor8();
   }
 private:
   LED led_;
@@ -158,7 +163,11 @@ public:
     return LEDArrayHelper<LEDS...>::size;
   }
   Color8::Byteorder get_byteorder() const override {
-    return Color8::RGB;
+    Color8 color = leds_[0].getColor8();
+    if (color.r && color.g && color.b) {
+      return Color8::RGB;
+    }
+    return Color8::NONE;
   }
   bool is_on() const override {
     return on_;

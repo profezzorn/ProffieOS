@@ -7,24 +7,33 @@ template<typename T> struct ToVoid { typedef void Type; };
 
 template<class LED, typename Enable=void>
 struct ColorSelector {
+  static Color8 getColor8() {
+    return Color8(LED::Red, LED::Green, LED::Blue);
+  }
   static int Select(Color16 c) {
-    return c.select(Color16(Color8(LED::Red, LED::Green, LED::Blue)));
+    return c.select(Color16(getColor8()));
   }
 };
 
 // This allows for engergy-efficient RGBW setups
 template<class LED>
 struct ColorSelector<LED, typename ToVoid<typename LED::SUBTRACT>::Type>  {
+  static Color8 getColor8() {
+    return Color8(LED::Red, LED::Green, LED::Blue);
+  }
   static int Select(Color16 c) {
     ColorSelector<typename LED::SUBTRACT> subtract_selector;
     int white = subtract_selector.Select(c);
-    return Color16(c.r - white, c.g - white, c.b - white).select(Color16(Color8(LED::Red, LED::Green, LED::Blue)));
+    return Color16(c.r - white, c.g - white, c.b - white).select(Color16(getColor8()));
   }
 };
 
 // This allows for an easy way to override color selection (but not the overdrive logic)
 template<class LED>
 struct ColorSelector<LED, typename ToVoid<typename LED::CustomColorSelector>::Type> {
+  static Color8 getColor8() {
+    return Color8(LED::Red, LED::Green, LED::Blue);
+  }
   static int Select(Color16 c) {
     typename LED::CustomColorSelector selector;
     return selector.Select(c);
@@ -71,6 +80,9 @@ public:
   }
   int PWM(Color16 c) override {
     return PWM_overdrive(c) * PWMMultiplier();
+  }
+  Color8 getColor8() {
+    return ColorSelector<LED>::getColor8();
   }
 };
 
