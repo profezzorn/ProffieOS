@@ -201,27 +201,28 @@ private:
   }
 
 public:
-  // angle = 0 - 36000 (non-inclusive)
+  // angle = 0 - 98034 (32768 * 3) (non-inclusive)
   Color16 rotate(int angle) const {
     int H;
     int MAX = std::max(r, std::max(g, b));
     int MIN = std::min(r, std::min(g, b));
     int C = MAX - MIN;
+    // Note 16384 = 60 degrees.
     if (r > g && r > b) {
       // r is biggest
-      H = 6000 * (g - b) / C;
+      H = 16384 * (g - b) / C;
     }
     if (b > g) {
       // b is biggest
-      H = 6000 * (b - r) / C + 12000;
+      H = 16384 * (b - r) / C + 16384 * 2;
     } else {
       // g is biggest
-      H = 6000 * (r - g) / C + 24000;
+      H = 16384 * (r - g) / C + 16384 * 6;
     }
     H += angle;
-    return Color16(f(5*6000+H, C, MAX),
-                   f(3*6000+H, C, MAX),
-                   f(1*6000+H, C, MAX));
+    return Color16(f(5*16384+H, C, MAX),
+                   f(3*16384+H, C, MAX),
+                   f(1*16384+H, C, MAX));
   }
 
   uint16_t r, g, b;
