@@ -81,7 +81,7 @@ public:
   int PWM(Color16 c) override {
     return PWM_overdrive(c) * PWMMultiplier();
   }
-  Color8 getColor8() {
+  Color8 getColor8() const {
     return ColorSelector<LED>::getColor8();
   }
 };
