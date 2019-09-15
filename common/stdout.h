@@ -6,6 +6,16 @@
 extern Print* default_output;
 extern Print* stdout_output;
 
+
+template<typename T, typename X = void> struct PrintHelper {
+  static void out(Print& p, T& x) { p.print(x); }
+};
+
+template<typename T> struct PrintHelper<T, decltype(((T*)0)->printTo(*(Print*)0))> {
+  static void out(Print& p, T& x) { x.printTo(p); }
+};
+
+
 class ConsoleHelper : public Print {
 public:
   bool debug_is_on() const {
@@ -22,8 +32,12 @@ public:
     if (debug_is_on()) default_output->write(buffer, size);
     return ret;
   }
-  // TODO: use SFINAE to avoid print problems.
-  template<class X> void out(X& v) { v.printTo(*this); }
+  template<typename T, typename Enable = void>
+  ConsoleHelper& operator<<(T v) {
+    PrintHelper<T>::out(*this, v);
+    return *this;
+  }
+
 #ifdef TEENSYDUINO
   int availableForWrite(void) override {
     return stdout_output->availableForWrite();
