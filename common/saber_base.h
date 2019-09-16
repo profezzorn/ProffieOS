@@ -94,6 +94,7 @@ public:                                                         \
 #define SABERBASEFUNCTIONS()                     \
   SABERFUN(Clash, (), ());                       \
   SABERFUN(Stab, (), ());                        \
+  SABERFUN(PreOn, (), ());                       \
   SABERFUN(On, (), ());                          \
   SABERFUN(Off, (OffType off_type), (off_type)); \
   SABERFUN(Force, (), ());                       \

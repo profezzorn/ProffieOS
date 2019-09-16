@@ -22,6 +22,8 @@ public:
     if (debug_is_on()) default_output->write(buffer, size);
     return ret;
   }
+  // TODO: use SFINAE to avoid print problems.
+  template<class X> void out(X& v) { v.printTo(*this); }
 #ifdef TEENSYDUINO
   int availableForWrite(void) override {
     return stdout_output->availableForWrite();

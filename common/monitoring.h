@@ -15,6 +15,7 @@ public:
     MonitorGyro = 128,
     MonitorStrokes = 256,
     MonitorSerial = 512,
+    MonitorFusion = 1024,
   };
 
   bool ShouldPrint(MonitorBit bit) {

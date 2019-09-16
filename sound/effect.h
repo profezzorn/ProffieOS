@@ -65,8 +65,9 @@ class Effect {
     return UNKNOWN;
   }
 
-  Effect(const char* name) : name_(name) {
+  Effect(const char* name, Effect* following = nullptr) : name_(name) {
     next_ = all_effects;
+    following_ = following;
     all_effects = this;
     reset();
   }
@@ -178,6 +179,14 @@ class Effect {
   
   void Select(int n) {
     selected_ = n;
+  }
+
+  Effect* GetFollowing() const {
+    return following_;
+  }
+
+  void SetFollowing(Effect* following) {
+    following_ = following;
   }
 
   FileID RandomFile() const {
@@ -323,6 +332,7 @@ class Effect {
 
 private:
   Effect* next_;
+  Effect* following_ = nullptr;
 
   // Minimum file number.
   int16_t min_file_;
@@ -353,28 +363,32 @@ private:
 
 
 #define EFFECT(X) Effect X(#X)
+#define EFFECT2(X, Y) Effect X(#X, &Y)
 
 // Monophonic fonts
 EFFECT(boot);  // also polyphonic
-EFFECT(swing);
 EFFECT(hum);
-EFFECT(poweron);
+EFFECT2(swing, hum);
+EFFECT2(poweron, hum);
 EFFECT(poweroff);
 EFFECT(pwroff);
-EFFECT(clash);
+EFFECT2(clash, hum);
 EFFECT(force);  // also polyphonic
 EFFECT(stab);   // also polyphonic
-EFFECT(blaster);
+EFFECT2(blaster, hum);
 EFFECT(lockup);
 EFFECT(poweronf);
 EFFECT(font);   // also polyphonic
-EFFECT(bgnlock); // monophonic and polyphonic begin lock
+EFFECT2(bgnlock, lockup); // monophonic and polyphonic begin lock
 EFFECT(endlock); // Plecter endlock support, used for polyphonic name too
+
+EFFECT(preon);
+EFFECT(postoff);
 
 // Polyphonic fonts
 EFFECT(blst);
 EFFECT(clsh);
-EFFECT(in);
+EFFECT2(in, postoff);
 EFFECT(out);
 EFFECT(lock);
 EFFECT(swng);

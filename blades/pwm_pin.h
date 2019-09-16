@@ -109,6 +109,7 @@ public:
   virtual void Deactivate() = 0;
   virtual void set(const Color16& c) = 0;
   virtual void set_overdrive(const Color16& c) = 0;
+  virtual bool rgb() { return false; }
 };
 
 template<int PIN>

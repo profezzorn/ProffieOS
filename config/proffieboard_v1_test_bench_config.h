@@ -41,7 +41,7 @@ const unsigned int maxLedsPerStrip = 196;
 #define ENABLE_DEVELOPER_COMMANDS
 
 // Must be 20 characters or less.
-#define BLE_PASSWORD "password"
+// #define BLE_PASSWORD "password"
 
 // FASTLED is experimental and untested right now
 // #define ENABLE_FASTLED
@@ -134,8 +134,8 @@ Preset testing_presets[] = {
 
 BladeConfig blades[] = {
   // Testing configuration.
-//  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
-  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
+  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
+//  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
 };
 
@@ -153,9 +153,9 @@ Button AuxButton(BUTTON_AUX, auxPin, "aux");
 Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
 //TouchButton Aux2Button(BUTTON_AUX2, aux2Pin, 1700, "aux2");
 
-IRReceiver<blade3Pin> ir_receiver;
-BlasterDecoder blaster_decoder;
-NECDecoder nec_decoder;
-RC6Decoder rc6_decoder;
-PrintDecoder print_decoder;
+//IRReceiver<blade3Pin> ir_receiver;
+//BlasterDecoder blaster_decoder;
+//NECDecoder nec_decoder;
+//RC6Decoder rc6_decoder;
+//PrintDecoder print_decoder;
 #endif
