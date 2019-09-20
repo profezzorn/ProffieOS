@@ -90,6 +90,19 @@ public:
   void RotateX180() { Rotate180(y, z); }
   void RotateZ180() { Rotate180(x, y); }
   void RotateY180() { Rotate180(z, x); }
+
+
+  void printTo(Print& p) {
+    p.write('{');
+    p.print(x);
+    p.write(',');
+    p.write(' ');
+    p.print(y);
+    p.write(',');
+    p.write(' ');
+    p.print(z);
+    p.write('}');
+  }
   float x, y, z;
 };
 

@@ -123,6 +123,10 @@ class Color8 {
     return Color8(r * v / 255, g * v / 255, b * v / 255);
   }
 
+  Color8 operator|(const Color8& other) const {
+    return Color8(std::max(r, other.r), std::max(g, other.g), std::max(b, other.b));
+  }
+
   uint8_t r, g, b;
 };
 

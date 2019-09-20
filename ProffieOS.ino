@@ -412,6 +412,7 @@ SmoothSwingV2 smooth_swing_v2;
 #include "common/battery_monitor.h"
 #include "common/color.h"
 #include "common/range.h"
+#include "common/fuse.h"
 #include "blades/blade_base.h"
 #include "blades/blade_wrapper.h"
 

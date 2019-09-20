@@ -21,7 +21,7 @@ public:
     LSanalogWrite(PIN, led_.PWM_overdrive(c));
   }
 
-  Color8 getColor8() { return led_.getColor8(); }
+  Color8 getColor8() const { return led_.getColor8(); }
 
   DriveLogic<LED> led_;
 };
@@ -51,6 +51,7 @@ public:
   void Deactivate() override {}
   void set(const Color16& c) override {}
   void set_overdrive(const Color16& c) override {}
+  Color8 getColor8() const { return Color8(0,0,0); }
 };
 template<class ... LEDS>
 class MultiChannelLED {};
@@ -62,6 +63,7 @@ public:
   void Deactivate() override {}
   void set(const Color16& c) override {}
   void set_overdrive(const Color16& c) override {}
+  Color8 getColor8() const { return Color8(0,0,0); }
 };
 
 template<class LED, class... LEDS>
@@ -83,8 +85,8 @@ public:
     led_.set_overdrive(c);
     rest_.set_overdrive(c);
   }
-  Color8 getColor8() {
-    return led_.getColor8() + rest_.getColor8();
+  Color8 getColor8() const {
+    return led_.getColor8() | rest_.getColor8();
   }
 private:
   LED led_;
@@ -118,6 +120,9 @@ public:
   void Deactivate() {
     led_.Deactivate();
     rest_.Deactivate();
+  }
+  Color8 getColor8() const {
+    return led_.getColor8();
   }
 private:
   LED led_;
@@ -163,7 +168,7 @@ public:
     return LEDArrayHelper<LEDS...>::size;
   }
   Color8::Byteorder get_byteorder() const override {
-    Color8 color = leds_[0].getColor8();
+    Color8 color = led_structs_.getColor8();
     if (color.r && color.g && color.b) {
       return Color8::RGB;
     }
