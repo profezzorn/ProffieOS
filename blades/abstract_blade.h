@@ -9,6 +9,9 @@ public:
     SaberBase::Link(this);
     addEffect(EFFECT_BOOT, (200 + random(700)) / 1000.0f);
   }
+  void Deactivate() override {
+    SaberBase::Unlink(this);
+  }
 
   size_t GetEffects(BladeEffect** blade_effects) override {
     *blade_effects = effects_;
@@ -32,7 +35,7 @@ public:
     handled_types_ = EFFECT_NONE;
     BladeBase::SetStyle(style);
   }
-  
+
   void addEffect(BladeEffectType type, float location) {
     for (size_t i = NELEM(effects_) - 1; i; i--) {
       effects_[i] = effects_[i-1];

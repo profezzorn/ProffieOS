@@ -20,6 +20,7 @@ public:
   void clear() override { return blade_->clear(); }
   void allow_disable() override { blade_->allow_disable(); }
   void Activate() override { blade_->Activate(); }
+  void Deactivate() override { blade_->Deactivate(); }
 
   void HandleEffectType(BladeEffectType effect) {
     blade_->HandleEffectType(effect);

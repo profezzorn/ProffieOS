@@ -69,6 +69,20 @@ public:
     fprintf(stderr, "NOT IMPLEMENTED\n");
     exit(1);
   }
+  void Deactivate() override {
+    fprintf(stderr, "NOT IMPLEMENTED\n");
+    exit(1);
+  }
+  Color8::Byteorder get_byteorder() const {
+    return Color8::RGB;
+  }
+  BladeEffectType handled_types_ = EFFECT_NONE;
+  void HandleEffectType(BladeEffectType effect) override {
+    handled_types_ = (BladeEffectType) ((int)handled_types_ | (int)effect);
+  }
+  bool IsHandled(BladeEffectType effect) override {
+    return (handled_types_ & effect) != 0;
+  }
 };
 
 struct TestResult {
