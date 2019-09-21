@@ -253,5 +253,6 @@ int main(int argc, char** argv) {
     printf(" %d", offsets[i].first);
   }
   printf("};\n");
+  printf("#define POV_RGB\n");
   fprintf(stderr, " %d bytes\n", (int)(offsets.size() * 2 + blob.size()));
 }
