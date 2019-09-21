@@ -32,7 +32,7 @@ public:
     if (debug_is_on()) default_output->write(buffer, size);
     return ret;
   }
-  template<typename T, typename Enable = void>
+  template<typename T>
   ConsoleHelper& operator<<(T v) {
     PrintHelper<T>::out(*this, v);
     return *this;
