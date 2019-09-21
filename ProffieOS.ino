@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "config/default_proffieboard_config.h"
+#define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,7 +29,7 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 
 
@@ -412,7 +412,7 @@ SmoothSwingV2 smooth_swing_v2;
 #include "common/battery_monitor.h"
 #include "common/color.h"
 #include "common/range.h"
-#include "common/fuse.h"
+// #include "common/fuse.h"
 #include "blades/blade_base.h"
 #include "blades/blade_wrapper.h"
 
@@ -470,6 +470,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/random_blink.h"
 #include "styles/sequence.h"
 #include "styles/byteorder.h"
+#include "styles/rotate_color.h"
 
 // functions
 #include "functions/ifon.h"

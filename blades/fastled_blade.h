@@ -65,6 +65,14 @@ public:
     AbstractBlade::Activate();
   }
 
+  void Deactivate() override {
+    Power(false);
+    // de-init power pin?
+    CommandParser::Unlink();
+    Looper::Unlink();
+    AbstractBlade::Deactivate();
+  }
+
   // BladeBase implementation
   int num_leds() const override {
     return num_leds_;
