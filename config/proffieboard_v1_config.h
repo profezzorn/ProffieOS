@@ -80,6 +80,6 @@ enum SaberPins {
 #if DOSFS_SDCARD - 0 == 0
 #error Tools->DOSFS should be set to SDCARD (SPI)
 #endif
-#ifdef TEENSYDUINO
-#error Please select Proffieboard from Tools->Board
+#if defined(TEENSYDUINO) || PROFFIEBOARD_VERSION - 0 > 1
+#error Please select Proffieboard in Tools->Board
 #endif

@@ -204,6 +204,7 @@ public:
   }
 
   int num_leds() const { return num_leds_; }
+  Color8::Byteorder get_byteorder() const { return byteorder_; }
   int pin() { return pin_; }
 
 private:

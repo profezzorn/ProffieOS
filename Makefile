@@ -6,7 +6,7 @@ BOARD_TAG=Proffieboard-L433CC
 # ARDUINO_DIR:=/home/hubbe/lib/arduino-1.8.3
 
 ifeq ($(strip $(BOARD_TAG)),Proffieboard-L433CC)
-  USB_TYPE=USB_TYPE_CDC_MSC
+  USB_TYPE=USB_TYPE_CDC_MSC_WEBUSB
   ARDUINO_LIBS=SPI Wire
   include Proffieboard.mk
 else

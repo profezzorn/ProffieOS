@@ -177,6 +177,7 @@ void PrintQuotedValue(const char *name, const char* str) {
 
 
 #include "current_preset.h"
+#include "color.h"
 
 BladeConfig* current_config;
 
@@ -188,13 +189,13 @@ BladeConfig* current_config;
 #define CHECK_EQ(X, Y) do {						\
   auto x = (X);								\
   auto y = (Y);								\
-  if (x != y) { std::cerr << #X << " (" << x << ") != " << #Y << " (" << y << ") line " << __LINE__;  exit(1); } \
+  if (x != y) { std::cerr << #X << " (" << x << ") != " << #Y << " (" << y << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
 #define CHECK_STREQ(X, Y) do {						\
   auto x = (X);								\
   auto y = (Y);								\
-  if (strcmp(x, y)) { std::cerr << #X << " (" << x << ") != " << #Y << " (" << y << ") line " << __LINE__;  exit(1); } \
+  if (strcmp(x, y)) { std::cerr << #X << " (" << x << ") != " << #Y << " (" << y << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
 
@@ -285,6 +286,24 @@ void test_current_preset() {
   CHECK_EQ(preset.preset_num, 4);
 }
 
+void test_byteorder(int byteorder) {
+  std::cerr << "Testing " << byteorder <<  std::endl;
+  CHECK_EQ(byteorder, Color8::combine_byteorder(Color8::RGB, byteorder));
+  CHECK_EQ(Color8::RGB, Color8::combine_byteorder(Color8::invert_byteorder(byteorder), byteorder));
+}
+
+void byteorder_tests() {
+  CHECK_EQ(Color8::invert_byteorder(Color8::RGB), Color8::RGB);
+  CHECK_EQ(Color8::invert_byteorder(Color8::BGR), Color8::BGR);
+  test_byteorder(Color8::BGR);
+  test_byteorder(Color8::BRG);
+  test_byteorder(Color8::GBR);
+  test_byteorder(Color8::GRB);
+  test_byteorder(Color8::RBG);
+  test_byteorder(Color8::RGB);
+}
+
 int main() {
   test_current_preset();
+  byteorder_tests();
 }

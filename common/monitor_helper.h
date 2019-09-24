@@ -54,11 +54,15 @@ protected:
         monitor.Toggle(Monitoring::MonitorSerial);
         return true;
       }
+      if (!strcmp(arg, "fusion")) {
+        monitor.Toggle(Monitoring::MonitorFusion);
+        return true;
+      }
     }
     return false;
   }
   void Help() {
-    STDOUT.println(" mon[itor] swings/samples/touch/battery/pwm/clash/temp/serial - toggle monitoring");
+    STDOUT.println(" mon[itor] swings/samples/touch/battery/pwm/clash/temp/serial/fusion - toggle monitoring");
   }
 };
 
