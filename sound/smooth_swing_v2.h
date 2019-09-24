@@ -126,10 +126,9 @@ public:
       case SwingState::ON:
         // trigger accent swing
         if (accent_swings_present &&
-            (A.player->isPlaying() || B.player->isPlaying())) {
+            (A.isPlaying() || B.isPlaying())) {
           delegate_->StartSwing(gyro, smooth_swing_config.AccentSwingSpeedThreshold,
           smooth_swing_config.AccentSlashAccelerationThreshold);
-        }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
             std::min<float>(1.0, speed / smooth_swing_config.SwingSensitivity);
@@ -209,6 +208,10 @@ private:
       player->set_volume(0.0);
       player->PlayOnce(effect, start);
       player->PlayLoop(effect);
+    }
+    bool isPlaying() {
+      if (!player) return false;
+      return player->isPlaying();
     }
     void Off() {
       if (!player) return;

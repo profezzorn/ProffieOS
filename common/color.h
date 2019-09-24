@@ -38,6 +38,8 @@ class Color8 {
   }
 
   enum Byteorder {
+    NONE = 0,
+
     // RGB colors
     BGR=0x321,
     BRG=0x312,
@@ -93,10 +95,38 @@ class Color8 {
     }
   }
 
+  // RGB combine X = X
+  static int combine_byteorder(int byteorder1, int byteorder2) {
+    int ret = 0;
+    for (int i = num_bytes(byteorder1) - 1; i >= 0; i--) {
+      int b = (byteorder1 >> (i * 4) & 7);
+      int pos = 3 - b;
+      b = byteorder2 >> (pos * 4) & 7;
+      ret |= b << (i * 4);
+    }
+    return ret;
+  }
+
+  // invert(X) combine X = RGB
+  // invert(RGB) = RGB
+  static int invert_byteorder(int byteorder) {
+    int ret = 0;
+    for (int i = num_bytes(byteorder) - 1; i >= 0; i--) {
+      int b = byteorder >> (i * 4) & 7;
+      int pos = 3 - b;
+      ret |= (3-i) << (pos * 4);
+    }
+    return ret;
+  }
+
   Color8 operator*(uint8_t v) const {
     return Color8(r * v / 255, g * v / 255, b * v / 255);
   }
-  
+
+  Color8 operator|(const Color8& other) const {
+    return Color8(std::max(r, other.r), std::max(g, other.g), std::max(b, other.b));
+  }
+
   uint8_t r, g, b;
 };
 
@@ -154,9 +184,52 @@ class Color16 {
                   clampi32((b+n) >> 8, 0, 255));
   }
 
-  
   Color8 dither(int x, int y) const {
     return dither(color16_dither_matrix[x & 3][y & 3]);
+  }
+
+  uint16_t getShort(int byteorder, int byte) {
+    switch (byteorder >> (byte * 4) & 0x7) {
+      default: return r;
+      case 2: return g;
+      case 3: return b;
+      case 4: return std::min(r, std::min(g, b));
+      case 5: return r - std::min(r, std::min(g, b));
+      case 6: return g - std::min(r, std::min(g, b));
+      case 7: return b - std::min(r, std::min(g, b));
+    }
+  }
+
+private:
+  static int f(int n, int C, int MAX) {
+    int k = n % 36000;
+    return MAX - C * clampi32(std::min(k, 24000 - k), 0, 6000) / 6000;
+  }
+
+public:
+  // angle = 0 - 98034 (32768 * 3) (non-inclusive)
+  Color16 rotate(int angle) const {
+    int H;
+    if (!angle) return *this;
+    int MAX = std::max(r, std::max(g, b));
+    int MIN = std::min(r, std::min(g, b));
+    int C = MAX - MIN;
+    // Note 16384 = 60 degrees.
+    if (r > g && r > b) {
+      // r is biggest
+      H = 16384 * (g - b) / C;
+    }
+    if (b > g) {
+      // b is biggest
+      H = 16384 * (b - r) / C + 16384 * 2;
+    } else {
+      // g is biggest
+      H = 16384 * (r - g) / C + 16384 * 6;
+    }
+    H += angle;
+    return Color16(f(5*16384+H, C, MAX),
+                   f(3*16384+H, C, MAX),
+                   f(1*16384+H, C, MAX));
   }
 
   uint16_t r, g, b;

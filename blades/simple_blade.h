@@ -21,6 +21,8 @@ public:
     LSanalogWrite(PIN, led_.PWM_overdrive(c));
   }
 
+  Color8 getColor8() const { return led_.getColor8(); }
+
   DriveLogic<LED> led_;
 };
 
@@ -49,6 +51,7 @@ public:
   void Deactivate() override {}
   void set(const Color16& c) override {}
   void set_overdrive(const Color16& c) override {}
+  Color8 getColor8() const { return Color8(0,0,0); }
 };
 template<class ... LEDS>
 class MultiChannelLED {};
@@ -60,6 +63,7 @@ public:
   void Deactivate() override {}
   void set(const Color16& c) override {}
   void set_overdrive(const Color16& c) override {}
+  Color8 getColor8() const { return Color8(0,0,0); }
 };
 
 template<class LED, class... LEDS>
@@ -80,6 +84,9 @@ public:
   void set_overdrive(const Color16& c) override {
     led_.set_overdrive(c);
     rest_.set_overdrive(c);
+  }
+  Color8 getColor8() const {
+    return led_.getColor8() | rest_.getColor8();
   }
 private:
   LED led_;
@@ -114,6 +121,9 @@ public:
     led_.Deactivate();
     rest_.Deactivate();
   }
+  Color8 getColor8() const {
+    return led_.getColor8();
+  }
 private:
   LED led_;
   LEDArrayHelper<LEDS...> rest_;
@@ -142,6 +152,13 @@ public:
     AbstractBlade::Activate();
   }
 
+  void Deactivate() override {
+    Power(false);
+    AbstractBlade::Deactivate();
+    Looper::Unlink();
+    CommandParser::Unlink();
+  }
+
   void Power(bool on) {
     if (power_ != on) {
       if (on) {
@@ -156,6 +173,13 @@ public:
   // BladeBase implementation
   int num_leds() const override {
     return LEDArrayHelper<LEDS...>::size;
+  }
+  Color8::Byteorder get_byteorder() const override {
+    Color8 color = led_structs_.getColor8();
+    if (color.r && color.g && color.b) {
+      return Color8::RGB;
+    }
+    return Color8::NONE;
   }
   bool is_on() const override {
     return on_;

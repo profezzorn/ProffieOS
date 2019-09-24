@@ -12,7 +12,7 @@ class BladeBase;
 template<int delay_millis, class BASE>
 class IgnitionDelay : public BladeWrapper {
 public:
-  void run(BladeBase* base) {
+  bool run(BladeBase* base)  __attribute__((warn_unused_result)) {
     blade_ = base;
     if (base->is_on()) {
       if (!waiting_) {
@@ -28,7 +28,7 @@ public:
       waiting_ = false;
       is_on_ = false;
     }
-    base_.run(this);
+    return base_.run(this);
   }
   OverDriveColor getColor(int led) { return base_.getColor(led); }
   bool is_on() const override { return is_on_; }

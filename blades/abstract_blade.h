@@ -9,6 +9,9 @@ public:
     SaberBase::Link(this);
     addEffect(EFFECT_BOOT, (200 + random(700)) / 1000.0f);
   }
+  void Deactivate() override {
+    SaberBase::Unlink(this);
+  }
 
   size_t GetEffects(BladeEffect** blade_effects) override {
     *blade_effects = effects_;
@@ -17,6 +20,20 @@ public:
       num_effects_--;
     }
     return num_effects_;
+  }
+
+  void HandleEffectType(BladeEffectType effect) override {
+    handled_types_ = (BladeEffectType) ((int)handled_types_ | (int)effect);
+  }
+
+  // Returns true if the current style handles a particular effect type.
+  bool IsHandled(BladeEffectType effect) override {
+    return (handled_types_ & effect) != 0;
+  }
+
+  virtual void SetStyle(BladeStyle* style) {
+    handled_types_ = EFFECT_NONE;
+    BladeBase::SetStyle(style);
   }
 
   void addEffect(BladeEffectType type, float location) {
@@ -78,6 +95,7 @@ public:
 private:
   size_t num_effects_ = 0;
   BladeEffect effects_[4];
+  BladeEffectType handled_types_ = EFFECT_NONE;
 };
 
 #endif

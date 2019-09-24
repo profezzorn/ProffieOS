@@ -17,6 +17,7 @@ enum BladeEffectType {
   EFFECT_DRAG_END = 1 << 8,
   EFFECT_IGNITION = 1 << 9,
   EFFECT_RETRACTION = 1 << 10,
+  EFFECT_CHANGE = 1 << 11, // used for click to change
 };
 
 struct BladeEffect {
@@ -30,12 +31,19 @@ public:
   // Returns number of LEDs in this blade.
   virtual int num_leds() const = 0;
 
+  // Returns the byte order of this blade.
+  virtual Color8::Byteorder get_byteorder() const = 0;
+
   // Returns true if the blade is supposed to be on.
   // false while "turning off".
   virtual bool is_on() const = 0;
 
   // Return how many effects are in effect.
   virtual size_t GetEffects(BladeEffect** blade_effects) = 0;
+
+  // Let the blade know that this style handles "effect".
+  virtual void HandleEffectType(BladeEffectType effect) = 0;
+  virtual bool IsHandled(BladeEffectType effect) = 0;
 
   // Set led 'led' to color 'c'.
   virtual void set(int led, Color16 c) = 0;
@@ -55,6 +63,7 @@ public:
   virtual void allow_disable() = 0;
 
   virtual void Activate() = 0;
+  virtual void Deactivate() = 0;
 
   // TODO: Move to abstract_blade ?
   virtual BladeStyle* UnSetStyle() {
@@ -85,6 +94,7 @@ template<BladeEffectType effect>
 class OneshotEffectDetector {
 public:
   BladeEffect* Detect(BladeBase* blade) {
+    blade->HandleEffectType(effect);
     BladeEffect* effects;
     size_t n = blade->GetEffects(&effects);
     for (size_t i = 0; i < n; i++) {
