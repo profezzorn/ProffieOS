@@ -11,8 +11,13 @@ public:
     return blade_->set_overdrive(led + offset_, c);
   }
   void allow_disable() override { allow_disable_ = true; }
+
+  uint8_t refs_ = 0;
   void Activate() override {
-    if (!offset_) BladeWrapper::Activate();
+    if (refs_++ == 0) BladeWrapper::Activate();
+  }
+  void Deactivate() override {
+    if (!--refs_) BladeWrapper::Deactivate();
   }
   void clear() override {
     if (!offset_) BladeWrapper::clear();
@@ -21,12 +26,12 @@ public:
     BladeWrapper::SetStyle(style);
     if (!offset_) blade_->SetStyle(this);
   }
-  
+
   BladeStyle* UnSetStyle() {
     if (!offset_) blade_->UnSetStyle();
     return BladeWrapper::UnSetStyle();
   }
-  
+
   void SetupSubBlade(BladeBase* base, int offset, int num_leds) {
     blade_ = base;
     offset_ = offset;
@@ -130,11 +135,11 @@ class BladeBase* SubBladeReverse(int first_led, int last_led, BladeBase* blade) 
     if (!first_subblade_wrapper) return NULL;
     blade = first_subblade_wrapper->blade_;
   }
-  
+
   if (last_led >= blade->num_leds()) {
     return NULL;
   }
-  
+
   SubBladeWrapper* ret = new SubBladeWrapperReverse();
   if (first_subblade_wrapper) {
     ret->SetNext(last_subblade_wrapper);

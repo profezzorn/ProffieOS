@@ -330,8 +330,8 @@ class Effect {
     LOCK_SD(false);
   }
 
-private:
   Effect* next_;
+private:
   Effect* following_ = nullptr;
 
   // Minimum file number.

@@ -152,6 +152,13 @@ public:
     AbstractBlade::Activate();
   }
 
+  void Deactivate() override {
+    Power(false);
+    AbstractBlade::Deactivate();
+    Looper::Unlink();
+    CommandParser::Unlink();
+  }
+
   void Power(bool on) {
     if (power_ != on) {
       if (on) {

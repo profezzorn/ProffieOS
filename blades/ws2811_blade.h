@@ -51,8 +51,6 @@ public:
     if (on) EnableBooster();
   }
 
-  // No need for a "deactivate", the blade stays active until
-  // you take it out, which also cuts the power.
   void Activate() override {
     STDOUT.print("WS2811 Blade with ");
     STDOUT.print(pin_.num_leds());
@@ -72,6 +70,13 @@ public:
     AbstractBlade::Activate();
   }
 
+  void Deactivate() override {
+    Power(false);
+    // de-init power pin?
+    CommandParser::Unlink();
+    Looper::Unlink();
+    AbstractBlade::Deactivate();
+  }
   // BladeBase implementation
   int num_leds() const override {
     return pin_.num_leds();

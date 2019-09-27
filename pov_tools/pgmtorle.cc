@@ -264,7 +264,7 @@ int main(int argc, char** argv) {
     printf(" %d", offsets[i].first);
   }
   printf("};\n");
-  printf("const Color8 image_color(%d, %d, %d));",
+  printf("const Color8 image_color(%d, %d, %d);\n",
 	 (int)(pow(brightest.r, 2.2) * 255.0),
 	 (int)(pow(brightest.g, 2.2) * 255.0),
 	 (int)(pow(brightest.b, 2.2) * 255.0));

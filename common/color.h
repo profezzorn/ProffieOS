@@ -210,6 +210,7 @@ public:
   // angle = 0 - 98034 (32768 * 3) (non-inclusive)
   Color16 rotate(int angle) const {
     int H;
+    if (!angle) return *this;
     int MAX = std::max(r, std::max(g, b));
     int MIN = std::min(r, std::min(g, b));
     int C = MAX - MIN;

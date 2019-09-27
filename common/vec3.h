@@ -60,6 +60,12 @@ public:
   Vec3 operator*(float f) const {
     return Vec3(x * f, y * f, z * f);
   }
+  Vec3 operator*=(float f) {
+    x*=f;
+    y*=f;
+    z*=f;
+    return *this;
+  }
   Vec3 operator/(int i) const {
     return Vec3(x / i, y / i, z / i);
   }
@@ -67,9 +73,9 @@ public:
     return x * o.x + y * o.y + z * o.z;
   }
   Vec3 cross(const Vec3& o) const {
-    return Vec3(x * o.y - y * o.x,
-		y * o.z - z * o.y,
-		z * o.x - x * o.z);
+    return Vec3(y * o.z - z * o.y,
+		z * o.x - x * o.z,
+		x * o.y - y * o.x);
   }
   float len2() const { return x*x + y*y + z*z; }
   float len() const { return sqrtf(len2()); }
@@ -91,6 +97,25 @@ public:
   void RotateZ180() { Rotate180(x, y); }
   void RotateY180() { Rotate180(z, x); }
 
+  // TODO: Check if these three rotate the right direction
+  Vec3 RotateX(float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return Vec3(x, y * c + z * s, y * -s + z * c);
+  }
+  Vec3 RotateY(float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return Vec3(x * c - z * s, y, y * s + z * c);
+  }
+  Vec3 RotateZ(float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return Vec3(x * c - y * s, x * s + y * c, z);
+  }
+  Vec3 Rotate(Vec3 angles) {
+    return RotateX(angles.x).RotateY(angles.y).RotateZ(angles.z);
+  }
 
   void printTo(Print& p) {
     p.write('{');
