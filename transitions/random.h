@@ -1,0 +1,67 @@
+#ifndef TRANSITIONS_RANDOM_H
+#define TRANSITIONS_RANDOM_H
+
+class TransitionInterface {
+  virtual bool done() = 0;
+  virtual void begin() = 0;
+  virtual void run(BladeBase* blade) = 0;
+  virtual OverDriveColor getColor(const OverDriveColor& a,
+			  const OverDriveColor& b,
+			  int led) = 0;
+};
+
+template<class TR>
+class TrWrapper : public TransitionInterface {
+public:
+  bool done() override { return tr_.done(); }
+  void begin() override { tr_.begin(); }
+  void run(BladeBase* blade) override { tr_.run(blade); }
+  OverDriveColor getColor(const OverDriveColor& a,
+			  const OverDriveColor& b,
+			  int led) override {
+    return tr_.getColor(a, b, led);
+  }
+public:
+  TR tr_;
+};
+
+// This could be made generic for any interface.
+template<class... TR> class TrHelper {};
+template<class TR>
+class TrHelper<TR> {
+  TransitionInterface* get(int n) { return &tr_; }
+private:
+  TrWrapper<TR> tr_;
+};
+
+template<class TR, class... REST>
+class TrHelper<TR, REST...> {
+  TransitionInterface* get(int n) {
+    if (!n) return &tr_;
+    return rest_.get(n-1);
+  }
+private:
+  TrWrapper<TR> tr_;
+  TrHelper<REST...> rest_;
+};
+
+
+template<class... TRANSITION>
+class TrRandom {
+  void begin() {
+    selected_ = transitions_.get(random(sizeof...(TRANSITION)));
+    selected_->begin();
+  }
+  bool done() { return selected_->done(); }
+  void run(BladeBase* blade) { selected_->run(blade); }
+  OverDriveColor getColor(const OverDriveColor& a,
+			  const OverDriveColor& b,
+			  int led) {
+    return selected_->getColor(a, b, led);
+  }
+private:
+  TrHelper<TRANSITION...> transitions_;
+  TransitionInterface* selected_;
+};
+
+#endif

@@ -489,7 +489,7 @@ endif
 ifndef AR_NAME
     AR_NAME := $(call PARSE_BOARD,$(BOARD_TAG),build.command.ar)
     ifndef AR_NAME
-        AR_NAME := $(TOOL_PREFIX)-ar
+        AR_NAME := $(TOOL_PREFIX)-gcc-ar
     else
         $(call show_config_variable,AR_NAME,[COMPUTED])
     endif

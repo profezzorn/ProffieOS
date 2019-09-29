@@ -194,23 +194,22 @@ public:
     current_config->blade##N->SetStyle(style_parser.Parse(current_preset_.current_style##N.get()));
     ONCEPERBLADE(SET_BLADE_STYLE)
     chdir(current_preset_.font.get());
+
+#ifdef SAVE_COLOR_CHANGE
+    SaberBase::SetVariation(current_preset_.variation);
+#endif    
+    
     if (on) On();
     if (announce) SaberBase::DoNewFont();
   }
 
   // Go to the next Preset.
   virtual void next_preset() {
-#ifdef ENABLE_AUDIO
-    beeper.Beep(0.05, 2000.0);
-#endif
     SetPreset(current_preset_.preset_num + 1, true);
   }
 
   // Go to the previous Preset.
   virtual void previous_preset() {
-#ifdef ENABLE_AUDIO
-    beeper.Beep(0.05, 2000.0);
-#endif
     SetPreset(current_preset_.preset_num - 1, true);
   }
 
@@ -243,12 +242,7 @@ public:
     float volts = blade_id * 3.3f / 1024.0f;  // Volts at bladeIdentifyPin
     float amps = (3.3f - volts) / 33000;     // Pull-up is 33k
     float resistor = volts / amps;
-    STDOUT.print("ID: ");
-    STDOUT.print(blade_id);
-    STDOUT.print(" volts ");
-    STDOUT.print(volts);
-    STDOUT.print(" resistance= ");
-    STDOUT.println(resistor);
+    STDOUT << "ID: " << blade_id << " volts " << volts << " resistance= " << resistor << "\n";
     return resistor;
   }
 
@@ -287,6 +281,23 @@ public:
     talkie.Say(talkie_error_in_15, 15);
     talkie.Say(talkie_blade_array_15, 15);
 #endif    
+  }
+
+  void FindBladeAgain() {
+    // Reverse everything that FindBlade does.
+
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+    ONCEPERBLADE(UNSET_BLADE_STYLE)
+
+#define DEACTIVATE(N) do {			\
+    if (current_config->blade##N) 		\
+      current_config->blade##N->Deactivate();	\
+  } while(0);
+
+    ONCEPERBLADE(DEACTIVATE);
+      
+    FindBlade();
   }
 
   void SB_Message(const char* text) override {
@@ -488,6 +499,7 @@ public:
   }
 
   uint32_t last_beep_;
+  float current_tick_angle_ = 0.0;
 
   void Loop() override {
     if (clash_pending_ && millis() - last_clash_ >= clash_timeout_) {
@@ -516,6 +528,63 @@ public:
       track_player_.Free();
     }
 #endif
+
+#ifndef DISABLE_COLOR_CHANGE
+#define TICK_ANGLE (M_PI * 2 / 12)
+    switch (SaberBase::GetColorChangeMode()) {
+      case SaberBase::COLOR_CHANGE_MODE_NONE:
+	break;
+      case SaberBase::COLOR_CHANGE_MODE_STEPPED: {
+	float a = fusor.angle2() - current_tick_angle_;
+	if (a > M_PI) a-=M_PI*2;
+	if (a < -M_PI) a+=M_PI*2;
+	if (a > TICK_ANGLE * 2/3) {
+	  current_tick_angle_ += TICK_ANGLE;
+	  if (current_tick_angle_ > M_PI) current_tick_angle_ -= M_PI * 2;
+	  STDOUT << "TICK+\n";
+	  SaberBase::UpdateVariation(1);
+	}
+	if (a < -TICK_ANGLE * 2/3) {
+	  current_tick_angle_ -= TICK_ANGLE;
+	  if (current_tick_angle_ < M_PI) current_tick_angle_ += M_PI * 2;
+	  STDOUT << "TICK-\n";
+	  SaberBase::UpdateVariation(-1);
+	}
+	break;
+      }
+      case SaberBase::COLOR_CHANGE_MODE_SMOOTH:
+	float a = fmod(fusor.angle2() - current_tick_angle_, M_PI * 2);
+	SaberBase::SetVariation(0x7fff & (int32_t)(a * (32768 / (M_PI * 2))));
+	break;
+    }
+    if (monitor.ShouldPrint(Monitoring::MonitorVariation)) {
+      STDOUT << " variation = " << SaberBase::GetCurrentVariation()
+	     << " ccmode = " << SaberBase::GetColorChangeMode()
+	     << "\n";
+    }
+    
+#endif	  
+  }
+
+  void ToggleColorChangeMode() {
+    if (!current_style()) return;
+    if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {
+      current_tick_angle_ = fusor.angle2();
+      if (!current_style()->HandlesColorChange()) {
+	STDOUT << "Entering smooth color change mode.\n";
+	SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
+      } else {
+	STDOUT << "Entering stepped color change mode.\n";
+	SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
+      }
+    } else {
+#ifdef SAVE_COLOR_CHANGE
+      current_preset_.variation = SaberBase::GetCurrentVariation();
+      current_preset_.Save();
+#endif
+      STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
+      SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
+    }
   }
 
   void PrintButton(uint32_t b) {
@@ -571,6 +640,10 @@ public:
       id();
       return true;
     }
+    if (!strcmp(cmd, "scanid")) {
+      FindBladeAgain();
+      return true;
+    }
     if (!strcmp(cmd, "on")) {
       On();
       return true;
@@ -624,10 +697,17 @@ public:
       return true;
     }
 #ifdef ENABLE_AUDIO
+
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "beep")) {
-      beeper.Beep(1.0, 3000.0);
+      beeper.Beep(0.5, 293.66 * 2);
+      beeper.Beep(0.5, 329.33 * 2);
+      beeper.Beep(0.5, 261.63 * 2);
+      beeper.Beep(0.5, 130.81 * 2);
+      beeper.Beep(1.0, 196.00 * 2);
       return true;
     }
+#endif
     if (!strcmp(cmd, "play")) {
       if (!arg) {
         StartOrStopTrack();
@@ -679,6 +759,7 @@ public:
       }
       return true;
     }
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "volumes")) {
       for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
         STDOUT.print(" Unit ");
@@ -688,6 +769,8 @@ public:
       }
       return true;
     }
+#endif    
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "buffered")) {
       for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
         STDOUT.print(" Unit ");
@@ -698,6 +781,8 @@ public:
       return true;
     }
 #endif
+    
+#endif // enable sound
     if (!strcmp(cmd, "cd")) {
       chdir(arg);
       SaberBase::DoNewFont();
@@ -826,6 +911,16 @@ public:
     if (!strcmp(cmd, "set_preset") && arg) {
       size_t preset = strtol(arg, NULL, 0);
       SetPreset(preset, true);
+      return true;
+    }
+
+    if (arg && (!strcmp(cmd, "var") || !strcmp(cmd, "variation"))) {
+      size_t variation = strtol(arg, NULL, 0);
+      SaberBase::SetVariation(variation);
+      return true;
+    }
+    if (!strcmp(cmd, "ccmode")) {
+      ToggleColorChangeMode();
       return true;
     }
     

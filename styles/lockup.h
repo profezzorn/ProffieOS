@@ -1,13 +1,17 @@
 #ifndef STYLES_LOCKUP_H
 #define STYLES_LOCKUP_H
 
+#include "../functions/smoothstep.h"
+
 // Usage: Lockup<BASE, LOCKUP, DRAG_COLOR>
 // BASE, LOCKUP: COLOR
 // DRAG_COLOR: COLOR (defaults to the LOCKUP color)
 // return value: COLOR
 // Shows LOCKUP if the lockup state is true, otherwise BASE.
 // Also handles "Drag" effect.
-template<class BASE, class LOCKUP, class DRAG_COLOR = LOCKUP>
+template<class BASE,
+  class LOCKUP, class DRAG_COLOR = LOCKUP,
+  class LOCKUP_SHAPE = Int<32768>, class DRAG_SHAPE = SmoothStep<Int<32112>, Int<455>> >
 class Lockup {
 public:
   void run(BladeBase* blade) {
@@ -15,37 +19,38 @@ public:
     lockup_.run(blade);
     if (!is_same_type<DRAG_COLOR, LOCKUP>::value)
       drag_.run(blade);
-    int num_leds = blade->num_leds();
-    if (num_leds > 6) {
-      drag_cutoff_ = num_leds * 98 / 100;
-    } else {
-      drag_cutoff_ = 0;
-    }
+    lockup_shape_.run(blade);
+    drag_shape_.run(blade);
   }
   OverDriveColor getColor(int led) {
+    OverDriveColor ret = base_.getColor(led);
     switch (SaberBase::Lockup()) {
-      // Good luck desciphering this one..
-      case SaberBase::LOCKUP_DRAG:
-      if (led >= drag_cutoff_) {
-	if (is_same_type<DRAG_COLOR, LOCKUP>::value) {
-	  case SaberBase::LOCKUP_NORMAL:
-	  case SaberBase::LOCKUP_ARMED:  // TODO: should this be different?
+      case SaberBase::LOCKUP_DRAG: {
+        if (!is_same_type<DRAG_COLOR, LOCKUP>::value) {
+	  ret.c = ret.c.mix2(drag_.getColor(led).c, drag_shape_.getInteger(led));
+	} else {
+	  ret.c = ret.c.mix2(lockup_.getColor(led).c, drag_shape_.getInteger(led));
+	}
+	break;
+      case SaberBase::LOCKUP_NORMAL:
+      case SaberBase::LOCKUP_ARMED:
+	if (is_same_type<LOCKUP_SHAPE, Int<32768>>::value) {
 	  return lockup_.getColor(led);
 	} else {
-	  return drag_.getColor(led);
+	  ret.c = ret.c.mix2(lockup_.getColor(led).c, lockup_shape_.getInteger(led));
 	}
-      } else {
-	case SaberBase::LOCKUP_NONE:
+      case SaberBase::LOCKUP_NONE:
 	break;
       }
     }
-    return base_.getColor(led);
+    return ret;
   }
 private:
-  int drag_cutoff_;
   BASE base_;
   LOCKUP lockup_;
   DRAG_COLOR drag_;
+  LOCKUP_SHAPE lockup_shape_;
+  DRAG_SHAPE drag_shape_;
 };
 
 #endif

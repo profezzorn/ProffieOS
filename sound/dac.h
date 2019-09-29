@@ -223,6 +223,7 @@ public:
   }
 
   bool Parse(const char* cmd, const char* arg) override {
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "dacbuf")) {
 #ifndef TEENSYDUINO
       SAI_Block_TypeDef *SAIx = SAI1_Block_A;
@@ -249,6 +250,7 @@ public:
       STDOUT.println("");
       return true;
     }
+#endif    
     return false;
   }
 

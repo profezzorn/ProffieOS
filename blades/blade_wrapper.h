@@ -22,13 +22,6 @@ public:
   void Activate() override { blade_->Activate(); }
   void Deactivate() override { blade_->Deactivate(); }
 
-  void HandleEffectType(BladeEffectType effect) {
-    blade_->HandleEffectType(effect);
-  }
-  bool IsHandled(BladeEffectType effect) {
-    return blade_->IsHandled(effect);
-  }
-
   BladeBase* blade_;
 };
 

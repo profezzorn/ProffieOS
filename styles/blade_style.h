@@ -28,6 +28,8 @@ public:
   virtual bool NoOnOff() { return false; }
 
   virtual bool Charging() { return false; }
+
+  virtual bool HandlesColorChange() { return false; }
 };
 
 class StyleFactory {

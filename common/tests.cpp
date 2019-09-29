@@ -18,8 +18,9 @@
 
 float fract(float x) { return x - floor(x); }
 
-uint32_t micros_ = 0;
+uint64_t micros_ = 0;
 uint32_t micros() { return micros_; }
+uint32_t millis() { return micros_ / 1000; }
 int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x < a) return a;
   if (x > b) return b;
@@ -31,6 +32,8 @@ int constexpr toLower(char x) {
 
 class Looper {
 public:
+  virtual const char* name() = 0;
+  virtual void Loop() = 0;
   static void DoHFLoop() {}
 };
 
@@ -45,7 +48,6 @@ char* itoa( int value, char *string, int radix )
 #define StyleAllocator class StyleFactory*
 
 #include "linked_ptr.h"
-
 
 #define COMMON_LSFS_H
 // Posix file primitives
@@ -144,16 +146,36 @@ public:
   };
 };
 
-struct StdoutHelper {
+struct  Print {
   void print(const char* s) { puts(s); }
+  void print(float v) { fprintf(stdout, "%f", v); }
   void write(char s) { putchar(s); }
   template<class T>
   void println(T s) { print(s); putchar('\n'); }
 };
 
+template<typename T, typename X = void> struct PrintHelper {
+  static void out(Print& p, T& x) { p.print(x); }
+};
+
+template<typename T> struct PrintHelper<T, decltype(((T*)0)->printTo(*(Print*)0))> {
+  static void out(Print& p, T& x) { x.printTo(p); }
+};
+
+struct ConsoleHelper : public Print {
+  template<typename T, typename Enable = void>
+  ConsoleHelper& operator<<(T v) {
+    PrintHelper<T>::out(*this, v);
+    return *this;
+  }
+};
+
 #define LOCK_SD(X) do { } while(0)
 
-StdoutHelper STDOUT;
+ConsoleHelper STDOUT;
+
+#define noInterrupts() do{}while(0)
+#define interrupts() do{}while(0)
 
 void PrintQuotedValue(const char *name, const char* str) {
   STDOUT.print(name);
@@ -176,8 +198,16 @@ void PrintQuotedValue(const char *name, const char* str) {
 }
 
 
+#include "monitoring.h"
 #include "current_preset.h"
 #include "color.h"
+#include "fuse.h"
+
+SaberBase* saberbases = NULL;
+SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
+bool SaberBase::on_ = false;
+uint32_t SaberBase::last_motion_request_ = 0;
+Monitoring monitor;
 
 BladeConfig* current_config;
 
@@ -190,6 +220,18 @@ BladeConfig* current_config;
   auto x = (X);								\
   auto y = (Y);								\
   if (x != y) { std::cerr << #X << " (" << x << ") != " << #Y << " (" << y << ") line " << __LINE__ << std::endl;  exit(1); } \
+} while(0)
+
+#define CHECK_LT(X, Y) do {						\
+  auto x = (X);								\
+  auto y = (Y);								\
+  if (!(x < y)) { std::cerr << #X << " (" << x << ") >= " << #Y << " (" << y << ") line " << __LINE__ << std::endl;  exit(1); } \
+} while(0)
+
+#define CHECK_GT(X, Y) do {						\
+  auto x = (X);								\
+  auto y = (Y);								\
+  if (!(x > y)) { std::cerr << #X << " (" << x << ") <= " << #Y << " (" << y << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
 #define CHECK_STREQ(X, Y) do {						\
@@ -303,7 +345,69 @@ void byteorder_tests() {
   test_byteorder(Color8::RGB);
 }
 
+void fuse_rotate_test() {
+  Fusor fuse;
+  fuse.SB_Motion(Vec3(0,0,0), true);
+  fuse.SB_Accel(Vec3(0,0,1), true);
+  for (int i = 0; i < 10; i++) {
+    micros_ += 1000;
+    fuse.SB_Motion(Vec3(0,0,0), false);
+    fuse.SB_Accel(Vec3(0,0,1), false);
+  }
+
+  // 1-second rotation test
+  for (int i = 0; i < 104; i++) {
+    micros_ += 10000;
+    fuse.SB_Motion(Vec3(360.0f,0.0f,0.0f), false); // 360 degrees / second
+    float angle = M_PI * 2 * i / 100.0;
+    fuse.SB_Accel(Vec3(0.0f,sinf(angle), cosf(angle)), false);
+    fuse.Loop();
+    // fprintf(stderr, "SPEEDR: %f, %f, %f  DOWN: %f, %f, %f i = %d V=%f,%f,%f,\n", fuse.speed().x, fuse.speed().y, fuse.speed().z, fuse.down().x, fuse.down().y, fuse.down().z, i,0.0f,sinf(angle), cosf(angle));
+  }
+
+  CHECK_LT(fuse.speed().len(), 0.6);
+}
+
+void fuse_translate_test() {
+  Fusor fuse;
+  fuse.SB_Motion(Vec3(0,0,0), true);
+  fuse.SB_Accel(Vec3(0,0,1), true);
+  for (int i = 0; i < 10; i++) {
+    micros_ += 1000;
+    fuse.SB_Motion(Vec3(0,0,0), false);
+    fuse.SB_Accel(Vec3(0,0,1), false);
+  }
+
+  // 1-second translation test
+  for (int i = 0; i < 250; i++) {
+    micros_ += 1000;
+    fuse.SB_Motion(Vec3(0.0f,0.0f,0.0f), false);
+    fuse.SB_Accel(Vec3(1.0f, 0.0f, 1.0f), false);
+    fuse.Loop();
+    // fprintf(stderr, "SPEED1: %f, %f, %f  DOWN: %f, %f, %f\n", fuse.speed().x, fuse.speed().y, fuse.speed().z, fuse.down().x, fuse.down().y, fuse.down().z);
+  }
+  for (int i = 0; i < 500; i++) {
+    micros_ += 1000;
+    fuse.SB_Motion(Vec3(0.0f,0.0f,0.0f), false);
+    fuse.SB_Accel(Vec3(0.0f, 0.0f, 1.0f), false);
+    fuse.Loop();
+    // fprintf(stderr, "SPEED2: %f, %f, %f  DOWN: %f, %f, %f i = %d\n", fuse.speed().x, fuse.speed().y, fuse.speed().z, fuse.down().x, fuse.down().y, fuse.down().z, i);
+    CHECK_GT(fuse.speed().len(), 1);
+    CHECK_LT(fuse.speed().len(), 2.5);
+  }
+  for (int i = 0; i < 250; i++) {
+    micros_ += 1000;
+    fuse.SB_Motion(Vec3(0.0f,0.0f,0.0f), false);
+    fuse.SB_Accel(Vec3(-1.0f, 0.0f, 1.0f), false);
+    fuse.Loop();
+    // fprintf(stderr, "SPEED3: %f, %f, %f  DOWN: %f, %f, %f\n", fuse.speed().x, fuse.speed().y, fuse.speed().z, fuse.down().x, fuse.down().y, fuse.down().z);
+  }
+  CHECK_LT(fuse.speed().len(), 1.0);
+}
+
 int main() {
   test_current_preset();
   byteorder_tests();
+  fuse_translate_test();
+  fuse_rotate_test();
 }
