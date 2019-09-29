@@ -71,6 +71,7 @@ protected:
         return true;
       }
     }
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "whatison")) {
       bool on = false;
       SaberBase::DoIsOn(&on);
@@ -99,6 +100,7 @@ protected:
       }
       return true;
     }
+#endif    
     return false;
   }
 

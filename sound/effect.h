@@ -409,4 +409,9 @@ EFFECT(armhum);
 EFFECT(endarm);
 EFFECT(boom);
 
+// Color change
+EFFECT(ccbegin);
+EFFECT(ccend);
+EFFECT(ccchange);
+
 #endif

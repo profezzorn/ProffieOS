@@ -23,16 +23,36 @@ template<class T> struct RunStyle<T, void> {
   }
 };
 
+struct HandledTypeResetter {
+  HandledTypeResetter() { BladeBase::ResetHandledTypes(); }
+};
+
+struct HandledTypeSaver {
+  HandledTypeSaver() { handled_types_ = BladeBase::GetHandledTypes(); }
+  bool IsHandled(BladeEffectType effect) {
+    return (handled_types_ & effect) != 0;
+  }
+  BladeEffectType handled_types_;
+};
+
 template<class T>
 class Style : public BladeStyle {
 public:
   void activate() override { }
 
+  bool HandlesColorChange() override {
+    return handled_type_saver_.IsHandled(EFFECT_CHANGE);
+  }
+
   void run(BladeBase* blade) override {
     RunStyle<T, decltype(base_.run(blade))>::run(&base_, blade);
     int num_leds = blade->num_leds();
+    bool rotate = !HandlesColorChange() && blade->get_byteorder() != Color8::NONE;
+    
     for (int i = 0; i < num_leds; i++) {
       OverDriveColor c = base_.getColor(i);
+      if (rotate)
+	c.c = c.c.rotate((SaberBase::GetCurrentVariation() & 0x7fff) * 3);
       if (c.overdrive) {
          blade->set_overdrive(i, c.c);
       } else {
@@ -42,7 +62,9 @@ public:
     }
   }
 private:
+  HandledTypeResetter handled_type_resetter_;
   T base_;
+  HandledTypeSaver handled_type_saver_;
 };
 
 // Get a pointer to class.

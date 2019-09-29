@@ -1,28 +1,33 @@
 #ifndef FUNCTIONS_TRIGGER_H
 #define FUNCTIONS_TRIGGER_H
 
-// Usage: Trigger<EFFECT, FADE_IN_MILLIS, SUSTAIN_MILLIS, FADE_OUT_MILLIS>
+// Usage: Trigger<EFFECT, FADE_IN_MILLIS, SUSTAIN_MILLIS, FADE_OUT_MILLIS, DELAY>
 // Normally returns 0, but when EFFECT occurs, it ramps up to 32768,
 // stays there for SUSTAIN_MILLIS, then fades down to zero again.
+// If delay is specified, the whole thing is delayed that much before it starts.
 // EFFECT: BladeEffectType
 // FADE_IN_MILLIS: INTEGER
 // SUSTAIN_MILLIS: INTEGER
 // FADE_OUT_MILLIS: INTEGER
+// DELAY_MILLIS: INTEGER (defaults to Int<0>)
 // return value: INTEGER
 template<
   BladeEffectType EFFECT,
   class FADE_IN_MILLIS,
   class SUSTAIN_MILLIS,
-  class FADE_OUT_MILLIS>
+  class FADE_OUT_MILLIS,
+  class DELAY_MILLIS = Int<0>>
 class Trigger {
   enum TriggerState {
-    TRIGGER_ATTACK = 0,
-    TRIGGER_SUSTAIN = 1,
-    TRIGGER_RELEASE = 2,
-    TRIGGER_OFF = 3
+    TRIGGER_DELAY = 0,
+    TRIGGER_ATTACK = 1,
+    TRIGGER_SUSTAIN = 2,
+    TRIGGER_RELEASE = 3,
+    TRIGGER_OFF = 4
   };
  public:
   void run(BladeBase* blade) {
+    delay_millis_.run(blade);
     fade_in_millis_.run(blade);
     sustain_millis_.run(blade);
     fade_out_millis_.run(blade);
@@ -41,6 +46,9 @@ class Trigger {
       uint32_t micros_for_state = get_millis_for_state() * 1000;
       if (t < micros_for_state) {
 	switch (trigger_state_) {
+	case TRIGGER_DELAY:
+	  value_ = 0;
+	  return;
 	case TRIGGER_ATTACK:
 	  value_ = t * 32768.0 / micros_for_state;
 	  return;
@@ -62,6 +70,7 @@ class Trigger {
   }
   uint32_t get_millis_for_state() {
     switch (trigger_state_) {
+    case TRIGGER_DELAY: return delay_millis_.getInteger(0);
     case TRIGGER_ATTACK: return fade_in_millis_.getInteger(0);
     case TRIGGER_SUSTAIN: return sustain_millis_.getInteger(0);
     case TRIGGER_RELEASE: return fade_out_millis_.getInteger(0);
@@ -72,6 +81,7 @@ class Trigger {
   }
   int getInteger(int led) const { return value_; }
  private:
+  DELAY_MILLIS delay_millis_;
   FADE_IN_MILLIS fade_in_millis_;
   SUSTAIN_MILLIS sustain_millis_;
   FADE_OUT_MILLIS fade_out_millis_;

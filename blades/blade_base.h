@@ -22,6 +22,7 @@ enum BladeEffectType {
 
 struct BladeEffect {
   BladeEffectType type;
+
   uint32_t start_micros;
   float location; // 0 = base, 1 = tip
 };
@@ -40,10 +41,6 @@ public:
 
   // Return how many effects are in effect.
   virtual size_t GetEffects(BladeEffect** blade_effects) = 0;
-
-  // Let the blade know that this style handles "effect".
-  virtual void HandleEffectType(BladeEffectType effect) = 0;
-  virtual bool IsHandled(BladeEffectType effect) = 0;
 
   // Set led 'led' to color 'c'.
   virtual void set(int led, Color16 c) = 0;
@@ -72,6 +69,7 @@ public:
       ret->deactivate();
     }
     current_style_ = nullptr;
+    handled_types_ = EFFECT_NONE;
     return ret;
   }
   virtual void SetStyle(BladeStyle* style) {
@@ -80,21 +78,44 @@ public:
     if (current_style_) {
       current_style_->activate();
     }
+    handled_types_ = EFFECT_NONE;
   }
 
   BladeStyle* current_style() const {
     return current_style_;
   }
 
+  // Let the blade know that this style handles "effect".
+  static void HandleEffectType(BladeEffectType effect) {
+    handled_types_ = (BladeEffectType) ((int)handled_types_ | (int)effect);
+  }
+
+  // Returns true if the current style handles a particular effect type.
+  static bool IsHandled(BladeEffectType effect) {
+    return (handled_types_ & effect) != 0;
+  }
+
+  static BladeEffectType GetHandledTypes() {
+    return handled_types_;
+  }
+  static void ResetHandledTypes() {
+    handled_types_ = EFFECT_NONE;
+  }
+  
  protected:
+  static BladeEffectType handled_types_;
   BladeStyle *current_style_ = nullptr;
 };
+
+BladeEffectType BladeBase::handled_types_ = EFFECT_NONE;
 
 template<BladeEffectType effect>
 class OneshotEffectDetector {
 public:
+  OneshotEffectDetector() {
+    BladeBase::HandleEffectType(effect);
+  }
   BladeEffect* Detect(BladeBase* blade) {
-    blade->HandleEffectType(effect);
     BladeEffect* effects;
     size_t n = blade->GetEffects(&effects);
     for (size_t i = 0; i < n; i++) {

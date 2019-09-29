@@ -42,6 +42,7 @@ public:
     // TODO: Change ADC clock if 640.5 cycles is not enough.
   }
 
+  
   bool Start() {
     if (stm32l4_adc.state == ADC_STATE_NONE) {
       stm32l4_adc_create(&stm32l4_adc, ADC_INSTANCE_ADC1, STM32L4_ADC_IRQ_PRIORITY, 0);
@@ -51,9 +52,15 @@ public:
     }
     if (stm32l4_adc.state != ADC_STATE_INIT)
       return false;
+    current_AnalogReader = this;
     state_machine_.reset_state_machine();
     loop();
     return true;
+  }
+
+  
+  void LoopUntilStart() {
+    while (!Start()) current_AnalogReader->loop();
   }
 
   bool Done() {
@@ -75,11 +82,8 @@ public:
     stm32l4_adc.state = ADC_STATE_BUSY;
 
     {
+      // pullup/pulldown does NOT WORK
       uint32_t mode = GPIO_MODE_ANALOG | GPIO_ANALOG_SWITCH;
-      switch (pin_mode_) {
-	case INPUT_PULLUP: mode |= GPIO_PUPD_PULLUP; break;
-	case INPUT_PULLDOWN: mode |= GPIO_PUPD_PULLDOWN; break;
-      }
       stm32l4_gpio_pin_configure(g_APinDescription[pin_].pin, mode);
     }
 
@@ -112,10 +116,28 @@ public:
 	SLEEP_MICROS(120);
       }
     }
-    
-    ADCx->SQR1 = (channel << 6);
-    ADCx->SMPR1 = (channel < 10) ? (adc_smp_ << (channel * 3)) : 0;
-    ADCx->SMPR2 = (channel >= 10) ? (adc_smp_ << ((channel * 3) - 30)) : 0;
+
+    #if 1
+    // This is a hack. We chage up the sampling capacitor from VREFINT (to 1.1 volts)
+    // then we activate the input a very short time and see how much it changes the sampling
+    // capacitor. It's not the same as INPUT_PULLUP, but at least it provides some sort of
+    // reading.
+    if (pin_mode_ == INPUT_PULLUP) {
+      adc_smp_ = ADC_SAMPLE_TIME_2_5;
+      ADCx->SQR1 = (ADC_CHANNEL_ADC1_VREFINT << 6);
+      ADCx->SMPR1 = (ADC_CHANNEL_ADC1_VREFINT < 10) ? (adc_smp_ << (ADC_CHANNEL_ADC1_VREFINT * 3)) : 0;
+      ADCx->SMPR2 = (ADC_CHANNEL_ADC1_VREFINT >= 10) ? (adc_smp_ << ((ADC_CHANNEL_ADC1_VREFINT * 3) - 30)) : 0;
+      adc_smp_ = ADC_SAMPLE_TIME_2_5;
+    } else {
+      ADCx->SQR1 = (channel << 6);
+      ADCx->SMPR1 = (channel < 10) ? (adc_smp_ << (channel * 3)) : 0;
+      ADCx->SMPR2 = (channel >= 10) ? (adc_smp_ << ((channel * 3) - 30)) : 0;
+    }
+    #else
+      ADCx->SQR1 = (channel << 6);
+      ADCx->SMPR1 = (channel < 10) ? (adc_smp_ << (channel * 3)) : 0;
+      ADCx->SMPR2 = (channel >= 10) ? (adc_smp_ << ((channel * 3) - 30)) : 0;
+    #endif
 
     ADCx->CR |= ADC_CR_ADSTART;
     
@@ -125,7 +147,12 @@ public:
     value_ = ADCx->DR & ADC_DR_RDATA;
 	
     ADCx->ISR = ADC_ISR_EOC;
-    
+
+    // Set it to the proper channel
+    ADCx->SQR1 = (channel << 6);
+    ADCx->SMPR1 = (channel < 10) ? (adc_smp_ << (channel * 3)) : 0;
+    ADCx->SMPR2 = (channel >= 10) ? (adc_smp_ << ((channel * 3) - 30)) : 0;
+
     ADCx->CR |= ADC_CR_ADSTART;
     
     while (!(ADCx->ISR & ADC_ISR_EOC)) YIELD();
@@ -158,6 +185,7 @@ public:
     
     stm32l4_adc.state = ADC_STATE_READY;
     stm32l4_adc_disable(&stm32l4_adc);
+    current_AnalogReader = nullptr;
     STATE_MACHINE_END();
   }
 
@@ -169,15 +197,20 @@ public:
   uint32_t adc_smp_;
   int value_;
   StateMachineState state_machine_;
+  static AnalogReader* current_AnalogReader;
 };
+
+AnalogReader* AnalogReader::current_AnalogReader = nullptr;
+
 #else
 class AnalogReader {
 public:
   explicit AnalogReader(int pin, int pin_mode_ = INPUT, float charge_time = -1) : pin_(pin) {
-    pinMode(pin_, INPUT);
+    pinMode(pin_, pin_mode_);
   }
 
   bool Start() { return true; }
+  void LoopUntilStart() {}
   bool Done() { return true; }
   int Value() { return analogRead(pin_); }
 
@@ -189,7 +222,8 @@ private:
 
 int LSAnalogRead(int pin, int pinmode = INPUT) {
   AnalogReader reader(pin, pinmode);
-  if (!reader.Start()) return -1;
+  // if (!reader.Start()) return -1;
+  reader.LoopUntilStart();
   while (!reader.Done());
   return reader.Value();
 }

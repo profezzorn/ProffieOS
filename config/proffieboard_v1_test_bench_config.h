@@ -61,7 +61,8 @@ typedef Pulsing<Rgb16<512,512,512>, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
   { "TeensySF", "tracks/venus.wav",
-    StyleNormalPtr<BLUE, WHITE, 300, 800>(), "cyan"},
+    StyleNormalPtr<ColorChange<TrConcat<TrWipe<200>, WHITE, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(), "cyan"},
+//    StyleNormalPtr<Gradient<ColorChange<TrFade<300>,RED, GREEN, BLUE>, ColorChange<TrFade<500>, CYAN, MAGENTA>>, WHITE, 300, 800>(), "cyan"},
   { "charging", "tracks/duel.wav",
     StylePtr< Mix<Sin<Int<20>, Int<8192>, Int<32768>>, Black, Mix<Bump<BatteryLevel, Int<8000>>, Black,
     Mix<BatteryLevel, Red, Red, Orange, Orange, Orange, Blue, Blue, Blue, Blue, Green, Green, Green> >>>(),
@@ -134,8 +135,8 @@ Preset testing_presets[] = {
 
 BladeConfig blades[] = {
   // Testing configuration.
-  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
-//  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
+//  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
+  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
 };
 
