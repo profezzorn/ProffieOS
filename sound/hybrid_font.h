@@ -143,14 +143,6 @@ public:
 
   void StartSwing(const Vec3& gyro, float swingThreshold_, float slashThreshold_) override {
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
-    uint32_t now = micros();
-    uint32_t delta_micros = now - last_swing_micros_;
-    last_swing_micros_ = now;
-    float delta = delta_micros * 0.000001;
-    float current_acceleration = (speed - last_speed_) / delta;
-    last_speed_ = speed;
-    float filter_factor = powf(0.01, delta);
-    swing_acceleration_ = swing_acceleration_ * filter_factor + current_acceleration * (1 - filter_factor);
     if (speed > swingThreshold_) {
       if (!guess_monophonic_) {
         if (swing_player_) {
