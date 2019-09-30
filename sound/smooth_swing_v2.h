@@ -109,7 +109,7 @@ public:
     if (delta > 1000000) delta = 1;
     last_micros_ = t;
     float hum_volume = 1.0;
-    
+
     switch (state_) {
       case SwingState::OFF:
         if (speed < smooth_swing_config.SwingStrengthThreshold) {
@@ -122,13 +122,14 @@ public:
           break;
         }
         state_ = SwingState::ON;
-        
+
       case SwingState::ON:
         // trigger accent swing
         if (accent_swings_present &&
             (A.isPlaying() || B.isPlaying())) {
           delegate_->StartSwing(gyro, smooth_swing_config.AccentSwingSpeedThreshold,
           smooth_swing_config.AccentSlashAccelerationThreshold);
+        }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
             std::min<float>(1.0, speed / smooth_swing_config.SwingSensitivity);
