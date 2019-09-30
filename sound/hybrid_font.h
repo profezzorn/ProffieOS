@@ -113,6 +113,7 @@ public:
 							   
   RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
     EnableAmplifier();
+    if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
     RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
     if (player) {
       player->set_volume_now(config_.volEff / 16.0);
@@ -235,7 +236,34 @@ public:
   void SB_Force() override { PlayCommon(&force); }
   void SB_Blast() override { Play(&blaster, &blst); }
   void SB_Boot() override { PlayPolyphonic(&boot); }
-  void SB_NewFont() override { PlayPolyphonic(&font); }
+  void SB_NewFont() override {
+    if (!PlayPolyphonic(&font)) {
+      beeper.Beep(0.05, 2000.0);
+    }
+  }
+  void SB_Change(SaberBase::ChangeType change) override {
+    switch (change) {
+      case SaberBase::ENTER_COLOR_CHANGE:
+	if (!PlayPolyphonic(&ccbegin)) {
+	  beeper.Beep(0.20, 1000.0);
+	  beeper.Beep(0.20, 1414.2);
+	  beeper.Beep(0.20, 2000.0);
+	}
+	break;
+      case SaberBase::EXIT_COLOR_CHANGE:
+	if (!PlayPolyphonic(&ccend)) {
+	  beeper.Beep(0.20, 2000.0);
+	  beeper.Beep(0.20, 1414.2);
+	  beeper.Beep(0.20, 1000.0);
+	}
+	break;
+      case SaberBase::CHANGE_COLOR:
+	if (!PlayPolyphonic(&ccchange)) {
+	  beeper.Beep(0.05, 2000.0);
+	}
+	break;
+    }
+  }
 
   void SB_BeginLockup() override {
     Effect *once = nullptr;

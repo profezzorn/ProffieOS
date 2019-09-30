@@ -162,7 +162,7 @@ SAM_CORE_S_SRCS := $(wildcard $(SAM_CORE_PATH)/*.S)
 
 # Use arm-toolchain from Arduino install if exists and user has not defined global version
 ifndef ARM_TOOLS_DIR
-    ARM_TOOLS_DIR = $(call dir_if_exists,$(wildcard $(ARDUINO_PACKAGE_DIR)/$(ARDMK_VENDOR)/tools/$(TOOL_PREFIX)-gcc/*))
+    ARM_TOOLS_DIR = $(call dir_if_exists,$(wildcard $(ARDUINO_PACKAGE_DIR)/$(ARDMK_VENDOR)/tools/$(TOOL_PREFIX)-gcc/7-2017q4))
     $(call show_config_variable,ARM_TOOLS_DIR,[COMPUTED],(from ARDUINO_PACKAGE_DIR))
 else
     $(call show_config_variable,ARM_TOOLS_DIR,[USER])

@@ -71,6 +71,12 @@ public:
         SaberBase::DoBlast();
 	return true;
 
+#ifndef DISABLE_COLOR_CHANGE
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
+	ToggleColorChangeMode();
+	break;
+#endif
+	
         // Lockup
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):

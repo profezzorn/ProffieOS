@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,7 +29,7 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 
 
@@ -276,8 +276,11 @@ MonitorHelper monitor_helper;
 
 SaberBase* saberbases = NULL;
 SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
+SaberBase::ColorChangeMode SaberBase::color_change_mode_ =
+  SaberBase::COLOR_CHANGE_MODE_NONE;
 bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
+uint32_t SaberBase::current_variation_ = 0;
 
 #include "common/box_filter.h"
 
@@ -412,7 +415,7 @@ SmoothSwingV2 smooth_swing_v2;
 #include "common/battery_monitor.h"
 #include "common/color.h"
 #include "common/range.h"
-// #include "common/fuse.h"
+#include "common/fuse.h"
 #include "blades/blade_base.h"
 #include "blades/blade_wrapper.h"
 
@@ -471,6 +474,8 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/sequence.h"
 #include "styles/byteorder.h"
 #include "styles/rotate_color.h"
+#include "styles/colorchange.h"
+#include "styles/transition_effect.h"
 
 // functions
 #include "functions/ifon.h"
@@ -482,6 +487,17 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/battery_level.h"
 #include "functions/trigger.h"
 #include "functions/bump.h"
+
+// transitions
+#include "transitions/fade.h"
+#include "transitions/join.h"
+#include "transitions/concat.h"
+#include "transitions/instant.h"
+#include "transitions/delay.h"
+#include "transitions/wipe.h"
+#include "transitions/join.h"
+#include "transitions/boing.h"
+#include "transitions/random.h"
 
 // This macro has a problem with commas, please don't use it.
 #define EASYBLADE(COLOR, CLASH_COLOR) \
@@ -826,10 +842,12 @@ class Commands : public CommandParser {
     return ret;
   }
   bool Parse(const char* cmd, const char* e) override {
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "help")) {
       CommandParser::DoHelp();
       return true;
     }
+#endif    
 
 #ifdef ENABLE_SERIALFLASH
     if (!strcmp(cmd, "ls")) {
@@ -861,6 +879,8 @@ class Commands : public CommandParser {
     }
 #endif
 #ifdef ENABLE_SD
+
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "dir")) {
       LOCK_SD(true);
       if (!e || LSFS::Exists(e)) {
@@ -876,7 +896,9 @@ class Commands : public CommandParser {
       LOCK_SD(false);
       return true;
     }
+#endif
 
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "cat") && e) {
       LOCK_SD(true);
       File f = LSFS::Open(e);
@@ -887,6 +909,7 @@ class Commands : public CommandParser {
       LOCK_SD(false);
       return true;
     }
+#endif    
 
     if (!strcmp(cmd, "del") && e) {
       LOCK_SD(true);
@@ -913,6 +936,7 @@ class Commands : public CommandParser {
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
 
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "sdtest")) {
       SDTestHelper sdtester;
       if (e && !strcmp(e, "all")) {
@@ -923,6 +947,9 @@ class Commands : public CommandParser {
       return true;
     }
 #endif
+
+#endif  // ENABLE_SD
+
 #if defined(ENABLE_SD) && defined(ENABLE_SERIALFLASH)
     if (!strcmp(cmd, "cache")) {
       LOCK_SD(true);
@@ -948,10 +975,12 @@ class Commands : public CommandParser {
       return true;
     }
 #endif
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "effects")) {
       Effect::ShowAll();
       return true;
     }
+#endif    
 #if 0
     if (!strcmp(cmd, "df")) {
       STDOUT.print(SerialFlashChip::capacity());
@@ -1057,6 +1086,8 @@ class Commands : public CommandParser {
       return true;
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
+
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "malloc")) {
       STDOUT.print("alloced: ");
       STDOUT.println(mallinfo().uordblks);
@@ -1064,6 +1095,7 @@ class Commands : public CommandParser {
       STDOUT.println(mallinfo().fordblks);
       return true;
     }
+#endif    
     if (!strcmp(cmd, "make_default_console")) {
       default_output = stdout_output;
       return true;
@@ -1109,6 +1141,8 @@ class Commands : public CommandParser {
       }
     }
 #endif
+
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "top")) {
 #ifdef TEENSYDUINO
       if (!(ARM_DWT_CTRL & ARM_DWT_CTRL_CYCCNTENA)) {
@@ -1152,6 +1186,8 @@ class Commands : public CommandParser {
       interrupts();
       return true;
     }
+#endif
+
     if (!strcmp(cmd, "version")) {
       STDOUT.println(version);
       return true;
@@ -1379,13 +1415,15 @@ class Commands : public CommandParser {
   void Help() override {
     STDOUT.println(" version - show software version");
     STDOUT.println(" reset - restart software");
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS    
     STDOUT.println(" effects - list current effects");
+#endif    
 #ifdef ENABLE_SERIALFLASH
     STDOUT.println("Serial Flash memory management:");
     STDOUT.println("   ls, rm <file>, format, play <file>, effects");
     STDOUT.println("To upload files: tar cf - files | uuencode x >/dev/ttyACM0");
 #endif
-#ifdef ENABLE_SD
+#if defined(ENABLE_SD) && !defined(DISABLE_DIAGNOSTIC_COMMANDS)
     STDOUT.println(" dir [directory] - list files on SD card.");
     STDOUT.println(" sdtest - benchmark SD card");
 #endif

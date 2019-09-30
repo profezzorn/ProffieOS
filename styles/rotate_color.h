@@ -27,4 +27,8 @@ public:
   ROTATION rotation_;
 };
 
+template<int rotation, class COLOR> using RotateColors = RotateColorsX<Int<rotation>, COLOR>;
+template<class HUE> using HueX = RotateColorsX<HUE, Red>;
+template<int HUE> using Hue = HueX<Int<HUE>>;
+
 #endif

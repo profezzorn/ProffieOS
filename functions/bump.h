@@ -35,7 +35,7 @@ public:
   }
   int getInteger(int led) {
     uint32_t dist = abs(led * mult_ - location_);
-    int p = dist >> 7;
+    uint32_t p = dist >> 7;
     if (p >= NELEM(bump_shape) - 1) return 0;
     int m = dist & 0x3f;
     return bump_shape[p] * (128 - m) + bump_shape[p+1] * m;
