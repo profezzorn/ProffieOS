@@ -59,8 +59,7 @@ public:
     return keep_running;
   }
   OverDriveColor getColor(int led) {
-    led *= 16384;
-    Range led_range(led, led + 16384);
+    Range led_range(led * 16384, led * 16384 + 16384);
     int black_mix = 0;
     black_mix = (Range(start_, end_) & led_range).size();
     OverDriveColor c = c_.getColor(led);
