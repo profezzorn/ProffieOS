@@ -1,5 +1,5 @@
 /*
- Teensy Lightsaber Firmware
+ ProffieOS: Control software for lightsabers and other props.
  http://fredrik.hubbe.net/lightsaber/teensy_saber.html
  Copyright (c) 2016-2017 Fredrik Hubinette
  Additional copyright holders listed inline below.
