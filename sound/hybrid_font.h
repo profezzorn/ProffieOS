@@ -58,7 +58,7 @@ public:
       guess_monophonic_ = false;
       STDOUT.print("polyphonic");
     }
-    
+      
     STDOUT.println(" font.");
     SaberBase::Link(this);
     SetHumVolume(1.0);
