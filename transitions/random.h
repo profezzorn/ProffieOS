@@ -1,6 +1,13 @@
 #ifndef TRANSITIONS_RANDOM_H
 #define TRANSITIONS_RANDOM_H
 
+// Usage: TrRandom<TR1, TR2, ...>
+// TR1, TR2: TRANSITION
+// return value: TRANSITION
+// Each time a new transition is started, a random
+// transition is picked from the specified list of
+// transitions.
+
 class TransitionInterface {
   virtual bool done() = 0;
   virtual void begin() = 0;
