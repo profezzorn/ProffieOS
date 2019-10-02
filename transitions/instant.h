@@ -1,8 +1,9 @@
 #ifndef TRANSITIONS_INSTANT_H
 #define TRANSITIONS_INSTANT_H
 
-#include "base.h"
-
+// Usage: TrInstant
+// return value: TRANSITION
+// Instant transition.
 class TrInstant {
 public:
   bool done() { return true; }
