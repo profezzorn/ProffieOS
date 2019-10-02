@@ -3,6 +3,13 @@
 
 #include "base.h"
 
+// Usage: TrFadeX<MILLIS_FUNCTION>
+// or: TrFade<MILLIS>
+// MILLIS_FUNCTION: FUNCTION
+// MILLIS: a number
+// return value: TRANSITION
+// Linear fading between two colors in specified number of milliseconds.
+
 template<class MILLIS>
 class TrFadeX : public TransitionBaseX<MILLIS> {
 public:
