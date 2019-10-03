@@ -56,7 +56,15 @@ public:
     }
   }
   T get() { return get(micros()); }
-  T get(uint32_t now) {
+
+  T avg_;
+  T slope_;
+  float avg_t_;
+  bool needs_update_ = true;
+  void update() {
+    if (!needs_update_) return;
+    needs_update_ = false;
+    uint32_t now = t_[entry_];
     T sum(0.0f);
     float sum_t = 0.0;
     for (size_t i = 0; i < SIZE; i++) {
@@ -64,26 +72,36 @@ public:
       sum_t += t;
       sum += v_[i];
     }
-    T avg = sum * (1.0 / SIZE);
-    CHECK_NAN(avg);
-    float avg_t = sum_t / SIZE;
-    CHECK_NAN(avg_t);
+    avg_ = sum * (1.0 / SIZE);
+    CHECK_NAN(avg_);
+    avg_t_ = sum_t / SIZE;
+    CHECK_NAN(avg_t_);
 
     T dot_sum(0.0f);
     float t_square_sum = 0.0;
     for (size_t i = 0; i < SIZE; i++) {
-      float t = (now - t_[i]) - avg_t;
-      T v = v_[i] - avg;
+      float t = avg_t_ - (now - t_[i]);
+      T v = v_[i] - avg_;
       t_square_sum += t * t;
       dot_sum += v * t;
     }
     CHECK_NAN(dot_sum);
     CHECK_NAN(t_square_sum);
     CHECK_NAN(sum);
-    if (t_square_sum == 0.0) return avg;
-    T slope = dot_sum * (1.0 / t_square_sum);
-    CHECK_NAN(slope);
-    return (sum - slope * avg_t) / SIZE;
+    if (t_square_sum == 0.0) {
+      slope_ = T(0.0f);
+    } else {
+      slope_ = dot_sum * (1.0 / t_square_sum);
+      CHECK_NAN(slope_);
+    }
+  }
+  T get(uint32_t now) {
+    update();
+    return avg_ + slope_ * (now - t_[entry_] + avg_t_);
+  }
+  T slope() {
+    update();
+    return slope_;
   }
   void push(const T& value, uint32_t now) {
     entry_++;
@@ -91,6 +109,7 @@ public:
     v_[entry_] = value;
     t_[entry_] = now;
     values_++;
+    needs_update_ = true;
   }
   void push(const T& value) {
     push(value, micros());
@@ -290,6 +309,7 @@ public:
   }
 
   Vec3 gyro() { return gyro_; }    // degrees/s
+  Vec3 gyro_slope() { return gyro_extrapolator_.slope(); }
   Vec3 accel() { return accel_; }  // m/s/s
   Vec3 down() { return down_; }
   Vec3 speed() { return speed_; }  // m/s
