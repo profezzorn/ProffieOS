@@ -51,3 +51,7 @@ enum SaberPins {
   bladePowerPin2 = 22,            // blade power control
   bladePowerPin3 = 23,            // blade power control
 };
+
+#ifndef TEENSYDUINO
+#error Please select your Teensy model from Tools->Board
+#endif
