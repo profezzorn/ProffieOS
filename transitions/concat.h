@@ -1,6 +1,14 @@
 #ifndef TRANSITIONS_CONCAT_H
 #define TRANSITIONS_CONCAT_H
 
+// Usage: TrConcat<TRANSITION, INTERMEDIATE, TRANSITION, ...>
+// TRANSITION: TRANSITION
+// INTERMEDIATE: COLOR
+// return value: TRANSITION
+// Concatenates any number of transitions.
+// In between each transition, we need an intermediate color
+// to transition to.
+
 template<class ... REST> class TrConcat  {};
 
 template<class A> class TrConcat<A> : public A {};

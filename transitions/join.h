@@ -1,6 +1,13 @@
 #ifndef TRANSITIONS_JOIN_H
 #define TRANSITIONS_JOIN_H
 
+// Usage: TrJoin<TR1, TR2, ...>
+// TR1, TR2: TRANSITION
+// return value: TRANSITION
+// A little hard to explain, but all the specified
+// transitions are run in parallel. Basically, we
+// chain transitions like ((A TR1 B) TR2 B)
+
 template<class ... REST> class TrJoin {};
 
 template<class X> class TrJoin<X> : public X {};
@@ -24,7 +31,13 @@ private:
   TrJoin<B...> b_;
 };
 
-// Right join
+// Usage: TrJoinR<TR1, TR2, ...>
+// TR1, TR2: TRANSITION
+// return value: TRANSITION
+// Similar to TrJoin, but transitions are chained
+// to the right instead of to the left. Like:
+// (A TR2 (A TR1 B))
+
 template<class ... REST> class TrJoinR {};
 template<class X> class TrJoinR<X> : public X {};
 

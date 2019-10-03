@@ -1,6 +1,15 @@
 #ifndef TRANSITIONS_WIPE_H
 #define TRANSITIONS_WIPE_H
 
+// Usage: TrWipeX<MILLIS_FUNCTION>
+// or: TrWipe<MILLIS>
+// MILLIS_FUNCTION: FUNCTION
+// MILLIS: a number
+// return value: TRANSITION
+// Similar to saber ignition. In the beginning
+// entire blade is color A, then color B starts at the base
+// and extends up to the tip of the blade in the specified
+// number of milliseconds.
 template<class MILLIS>
 class TrWipeX : public TransitionBaseX<MILLIS> {
 public:
@@ -25,6 +34,12 @@ private:
 
 template<int MILLIS> using TrWipe = TrWipeX<Int<MILLIS>>;
 
+// Usage: TrWipeInX<MILLIS_FUNCTION>
+// or: TrWipeIn<MILLIS>
+// MILLIS_FUNCTION: FUNCTION
+// MILLIS: a number
+// return value: TRANSITION
+// Like TrWipe, but from tip to base.
 template<class MILLIS>
 class TrWipeInX : public TransitionBaseX<MILLIS> {
 public:
