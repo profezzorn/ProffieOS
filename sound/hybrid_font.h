@@ -1,5 +1,6 @@
 #ifndef SOUND_HYBRID_FONT_H
 #define SOUND_HYBRID_FONT_H
+#include "../common/fuse.h"
 
 class IgniterConfigFile : public ConfigFile {
 public:
@@ -152,6 +153,8 @@ public:
           }
         }
         if (!swing_player_){
+        STDOUT.print("Adjusted Acceleration: ");
+        STDOUT.println(accel_.len());
           if (accel_.len() > slashThreshold_ && slsh.files_found() && !swinging_) {
             swing_player_ = PlayPolyphonic(&slsh);
           } else if (!swinging_){
@@ -419,7 +422,7 @@ public:
     }
   }
   void SB_Accel(const Vec3& accel, bool clear) override {
-    accel_ = accel;
+    accel_ = accel - fusor.down();
   }
 
   float GetCurrentEffectLength() const {
