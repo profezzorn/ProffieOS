@@ -217,21 +217,21 @@ BladeConfig* current_config;
 } while(0)
 
 #define CHECK_EQ(X, Y) do {						\
-  auto x = (X);								\
-  auto y = (Y);								\
-  if (x != y) { std::cerr << #X << " (" << x << ") != " << #Y << " (" << y << ") line " << __LINE__ << std::endl;  exit(1); } \
+  auto x_ = (X);								\
+  auto y_ = (Y);								\
+  if (x_ != y_) { std::cerr << #X << " (" << x_ << ") != " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
 #define CHECK_LT(X, Y) do {						\
-  auto x = (X);								\
-  auto y = (Y);								\
-  if (!(x < y)) { std::cerr << #X << " (" << x << ") >= " << #Y << " (" << y << ") line " << __LINE__ << std::endl;  exit(1); } \
+  auto x_ = (X);								\
+  auto y_ = (Y);								\
+  if (!(x_ < y_)) { std::cerr << #X << " (" << x_ << ") >= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
 #define CHECK_GT(X, Y) do {						\
-  auto x = (X);								\
-  auto y = (Y);								\
-  if (!(x > y)) { std::cerr << #X << " (" << x << ") <= " << #Y << " (" << y << ") line " << __LINE__ << std::endl;  exit(1); } \
+  auto x_ = (X);								\
+  auto y_ = (Y);								\
+  if (!(x_ > y_)) { std::cerr << #X << " (" << x_ << ") <= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
 #define CHECK_STREQ(X, Y) do {						\
@@ -345,6 +345,27 @@ void byteorder_tests() {
   test_byteorder(Color8::RGB);
 }
 
+
+void extrapolator_test() {
+  Extrapolator<float> x;
+  x.push(0.0, 0);
+  x.push(1.0, 1);
+  x.push(2.0, 2);
+  x.push(3.0, 3);
+  x.push(4.0, 4);
+  x.push(5.0, 5);
+  x.push(6.0, 6);
+  x.push(7.0, 7);
+  x.push(8.0, 8);
+  x.push(9.0, 9);
+  CHECK_GT(x.slope(), 0.99);
+  CHECK_LT(x.slope(), 1.01);
+  CHECK_GT(x.get(10),  9.99);
+  CHECK_LT(x.get(10), 10.01);
+  CHECK_GT(x.get(11), 10.99);
+  CHECK_LT(x.get(11), 11.01);
+}
+
 void fuse_rotate_test() {
   Fusor fuse;
   fuse.SB_Motion(Vec3(0,0,0), true);
@@ -408,6 +429,7 @@ void fuse_translate_test() {
 int main() {
   test_current_preset();
   byteorder_tests();
+  extrapolator_test();
   fuse_translate_test();
   fuse_rotate_test();
 }
