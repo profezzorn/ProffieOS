@@ -197,7 +197,7 @@ public:
     //wGyro += (accel_ - down_).len2();
 
     // If acceleration is not 1.0G, don't trust it.
-    wGyro += std::abs(accel_.len() - 1.0) * 50.0;
+    wGyro += fabs(accel_.len() - 1.0f) * 50.0;
     CHECK_NAN(wGyro);
 
     Vec3 mss = (accel_ - down_) * G_constant; // change unit from G to m/s/s
