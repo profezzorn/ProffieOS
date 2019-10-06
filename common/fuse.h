@@ -309,7 +309,10 @@ public:
   }
 
   Vec3 gyro() { return gyro_; }    // degrees/s
-  Vec3 gyro_slope() { return gyro_extrapolator_.slope(); }
+  Vec3 gyro_slope() {
+    // degrees per second per second
+    return gyro_extrapolator_.slope() * 1000000;
+  }
   Vec3 accel() { return accel_; }  // m/s/s
   Vec3 down() { return down_; }
   Vec3 speed() { return speed_; }  // m/s
