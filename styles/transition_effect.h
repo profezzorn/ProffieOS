@@ -3,8 +3,18 @@
 
 #include "../transitions/concat.h"
 
+// Usage: TransitionLoop<COLOR, EFFECT_COLOR, TRANSITION1, TRANSITION2, EFFECT>
+// COLOR, EFFECT_COLOR: COLOR
+// TRANSITION1, TRANSITION2 : TRANSITION
+// EFFECT: effect type
+// return value: COLOR
+//
+// When the specified EFFECT happens (clash/blast/etc.) transition from COLOR to
+// EFFECT_COLOR using TRANSITION1. Then transition back using TRANSITION2.
+
 template<class T, class EFFECT_COLOR, class TRANSITION1, class TRANSITION2, BladeEffectType EFFECT>
 class TransitionEffect {
+public:
   void run(BladeBase* blade) {
     color_.run(blade);
     transition_.run(blade);
