@@ -376,9 +376,13 @@ public:
   }
 
   enum StrokeType {
-    NO_STROKE,
+    TWIST_CLOSE,
     TWIST_LEFT,
     TWIST_RIGHT,
+
+    STAB_CLOSE,
+    STAB_FWD,
+    STAB_REW
   };
   struct Stroke {
     StrokeType type;
@@ -398,6 +402,12 @@ public:
           break;
         case TWIST_RIGHT:
           STDOUT.print("TwistRight");
+          break;
+        case STAB_FWD:
+          STDOUT.print("Thrust");
+          break;
+        case STAB_REW:
+          STDOUT.print("Yank");
           break;
         default: break;
       }
@@ -427,20 +437,50 @@ public:
         }
       }
     }
+    int i;
+    for (i = 0; i < 5; i++) {
+      if (strokes[NELEM(strokes)-1-i].type !=
+	  ((i & 1) ? STAB_REW : STAB_FWD)) break;
+      if (i) {
+        uint32_t separation =
+          strokes[NELEM(strokes)-i].start_millis -
+          strokes[NELEM(strokes)-1-i].end_millis;
+	if (separation > 250) break;
+      }
+    }
+    if (i == 5) {
+      Event(BUTTON_NONE, EVENT_SHAKE);
+    }
+  }
+
+  bool ShouldClose(StrokeType a, StrokeType b) {
+    if (a == TWIST_CLOSE) {
+      return b == TWIST_LEFT || b == TWIST_RIGHT;
+    }
+    if (a == STAB_CLOSE) {
+      return b == STAB_FWD || b == STAB_REW;
+    }
+    return false;
   }
 
   void DoGesture(StrokeType gesture) {
-    if (gesture == NO_STROKE) {
-      if (strokes[NELEM(strokes) - 1].end_millis == 0) {
-        strokes[NELEM(strokes) - 1].end_millis = millis();
-        ProcessStrokes();
-      }
-      return;
+    if (strokes[NELEM(strokes) - 1].end_millis == 0 &&
+	ShouldClose(gesture, strokes[NELEM(strokes) - 1].type)) {
+      strokes[NELEM(strokes) - 1].end_millis = millis();
+      ProcessStrokes();
     }
-    if (gesture == strokes[NELEM(strokes)-1].type &&
-        strokes[NELEM(strokes)-1].end_millis == 0) {
-      // Stroke not done, wait.
-      return;
+    if (gesture == TWIST_CLOSE) return;
+    if (gesture == STAB_CLOSE) return;
+    if (gesture == strokes[NELEM(strokes)-1].type) {
+      if (strokes[NELEM(strokes)-1].end_millis == 0) {
+	// Stroke not done, wait.
+	return;
+      }
+      if (millis() - strokes[NELEM(strokes)-1].end_millis < 50)  {
+	// Stroke continues
+	strokes[NELEM(strokes)-1].end_millis = millis();
+	return;
+      }
     }
     for (size_t i = 0; i < NELEM(strokes) - 1; i++) {
       strokes[i] = strokes[i+1];
@@ -467,12 +507,12 @@ public:
       STDOUT.print(", ");
       STDOUT.println(gyro.z);
     }
-    if (abs(gyro.x) > 200.0 &&
-        abs(gyro.x) > 3.0f * abs(gyro.y) &&
-        abs(gyro.x) > 3.0f * abs(gyro.z)) {
+    if (fabs(gyro.x) > 200.0 &&
+        fabs(gyro.x) > 3.0f * abs(gyro.y) &&
+        fabs(gyro.x) > 3.0f * abs(gyro.z)) {
       DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
     } else {
-      DoGesture(NO_STROKE);
+      DoGesture(TWIST_CLOSE);
     }
   }
   
@@ -563,7 +603,16 @@ public:
 	     << "\n";
     }
     
-#endif	  
+#endif
+
+    Vec3 mss = fusor.mss();
+    if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
+	fabs(mss.x) > 8 &&
+	fusor.swing_speed() < 175) {
+      DoGesture(mss.x > 0 ? STAB_FWD : STAB_REW);
+    } else {
+      DoGesture(STAB_CLOSE);
+    }
   }
 
   void ToggleColorChangeMode() {
