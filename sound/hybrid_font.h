@@ -14,7 +14,7 @@ public:
     CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.0f);
     CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
-    CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 2.3f);
+    CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 260.0f);
   }
   int humStart;
   int volHum;
@@ -59,7 +59,7 @@ public:
       guess_monophonic_ = false;
       STDOUT.print("polyphonic");
     }
-      
+
     STDOUT.println(" font.");
     SaberBase::Link(this);
     SetHumVolume(1.0);
@@ -140,6 +140,8 @@ public:
   }
 
   void StartSwing(const Vec3& gyro, float swingThreshold_, float slashThreshold_) override {
+    Vec3 gyro_slope = fusor.gyro_slope() * 1000000;
+    float rss = sqrtf(gyro_slope.z * gyro_slope.z + gyro_slope.y * gyro_slope.y)/57.3;
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > swingThreshold_) {
       if (!guess_monophonic_) {
@@ -153,9 +155,7 @@ public:
           }
         }
         if (!swing_player_){
-        STDOUT.print("Adjusted Acceleration: ");
-        STDOUT.println(accel_.len());
-          if (accel_.len() > slashThreshold_ && slsh.files_found() && !swinging_) {
+          if (rss > slashThreshold_ && slsh.files_found() && !swinging_) {
             swing_player_ = PlayPolyphonic(&slsh);
           } else if (!swinging_){
             swing_player_ = PlayPolyphonic(&swng);
@@ -421,9 +421,6 @@ public:
       StartSwing(gyro, config_.ProffieOSSwingSpeedThreshold, config_.ProffieOSSlashAccelerationThreshold);
     }
   }
-  void SB_Accel(const Vec3& accel, bool clear) override {
-    accel_ = accel - fusor.down();
-  }
 
   float GetCurrentEffectLength() const {
     return current_effect_length_;
@@ -431,7 +428,6 @@ public:
 
  private:
   uint32_t last_micros_;
-  uint32_t last_swing_micros_;
   uint32_t hum_start_;
   bool monophonic_hum_;
   bool guess_monophonic_;
@@ -439,9 +435,6 @@ public:
   State state_;
   float volume_;
   float current_effect_length_ = 0.0;
-  float swing_acceleration_;
-  float last_speed_;
-  Vec3 accel_;
 };
 
 #endif
