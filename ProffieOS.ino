@@ -726,6 +726,9 @@ public:
     uint8_t block[512];
     uint32_t start_open = micros();
     File f = LSFS::Open(filename);
+    if (!f) {
+      STDOUT << "Failed to open!";
+    }
     open_histogram.count(micros() - start_open);
 
     int cnt = 0;
