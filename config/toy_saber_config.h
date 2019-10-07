@@ -22,7 +22,8 @@
 // #define DUAL_POWER_BUTTONS
 
 // Volume, useful range is about 0-2000.
-#define VOLUME 1800
+//#define VOLUME 1800
+#define VOLUME 50
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
@@ -64,12 +65,8 @@ const unsigned int maxLedsPerStrip = 144;
 //   StyleRainBowPtr<out millis, in millis>()
 //   StyleStrobePtr<BaseColor, FlashColor, out millis, in millis>()
 //   &style_charging
-// All colors can be specied as three numbers or using one the handy macros above.
-// If you wish to have different presets for different blades, copy this array and
-// name it something other than "preset", then use the new name inside the blade
-// configuration array below. See "simple_presets" and "charging_presets"
-// below for examples.
 Preset presets[] = {
+  { "TeensySF", "tracks/title.wav", StyleNormalPtr<BLUE, WHITE, 200, 300>() },
   { "font01", "tracks/title.wav", StyleNormalPtr<BLUE, WHITE, 200, 300>() },
   { "graflex7", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 200, 300>() },
   { "font03", "tracks/cantina.wav", StyleStrobePtr<BLUE, WHITE, 15, 200, 300>() },
@@ -82,7 +79,7 @@ Preset presets[] = {
 //     SimpleBladePTR<Color of channel 1, color of channel 2, color of channel 3, color of channel 4>()
 // All colors can be specied as three numbers or using one the handy macros above.
 BladeConfig blades[] = {
-  { 0, StringBladePtr<Blue3mmLED>(), presets },
+  { 0, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(presets) },
 };
 
 #endif

@@ -323,8 +323,8 @@ public:
     return gyro_extrapolator_.slope() * 1000000;
   }
   Vec3 accel() { return accel_; }  // G/s/s
-  Vec3 mss() { return mss_; } // m/s/s (acceleration - down vector)
-  Vec3 down() { return down_; }
+  Vec3 mss() { return mss_; }      // m/s/s (acceleration - down vector)
+  Vec3 down() { return down_; }    // G/s/s (length should be close to 1.0)
   Vec3 speed() { return speed_; }  // m/s
   
 private:
