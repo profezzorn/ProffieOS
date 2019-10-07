@@ -22,8 +22,7 @@
 // #define DUAL_POWER_BUTTONS
 
 // Volume, useful range is about 0-2000.
-//#define VOLUME 1800
-#define VOLUME 50
+#define VOLUME 1800
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
