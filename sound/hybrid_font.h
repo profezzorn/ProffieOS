@@ -140,7 +140,7 @@ public:
   }
 
   void StartSwing(const Vec3& gyro, float swingThreshold_, float slashThreshold_) override {
-    Vec3 gyro_slope = fusor.gyro_slope() * 1000000;
+    Vec3 gyro_slope = fusor.gyro_slope();
     float rss = sqrtf(gyro_slope.z * gyro_slope.z + gyro_slope.y * gyro_slope.y)/57.3;
     float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
     if (speed > swingThreshold_) {
@@ -155,6 +155,7 @@ public:
           }
         }
         if (!swing_player_){
+          STDOUT.println(rss);
           if (rss > slashThreshold_ && slsh.files_found() && !swinging_) {
             swing_player_ = PlayPolyphonic(&slsh);
           } else if (!swinging_){
