@@ -33,38 +33,43 @@ public:
 	       int reset_us,
 	       int t0h_us,
 	       int t1h_us,
-	       PowerPinInterface* power) :
+	       PowerPinInterface* power,
+	       uint32_t poweroff_delay_ms) :
     AbstractBlade(),
     CommandParser(NOLINK),
     Looper(NOLINK),
+    poweroff_delay_ms_(poweroff_delay_ms),
     power_(power),
     pin_(data_pin, num_leds, byteorder, frequency, reset_us, t0h_us, t1h_us) {
     }
   const char* name() override { return "WS2811_Blade"; }
 
   void Power(bool on) {
-    while (!pin_.IsReadyForEndFrame());
+    if (on) EnableBooster();
     pinMode(pin_.pin(), on ? OUTPUT : INPUT_ANALOG);
-    power_->Power(on);
+    if (!powered_ && on) {
+      pin_.BeginFrame();
+      for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, Color8());
+      while (!pin_.IsReadyForEndFrame());
+      power_->Power(on);
+      pin_.EndFrame();
+      pin_.BeginFrame();
+      pin_.EndFrame();
+      pin_.BeginFrame();
+      pin_.EndFrame();
+    } else {
+      power_->Power(on);
+    }
     powered_ = on;
     allow_disable_ = false;
-    if (on) EnableBooster();
   }
 
   void Activate() override {
     STDOUT.print("WS2811 Blade with ");
     STDOUT.print(pin_.num_leds());
     STDOUT.println(" leds.");
-    power_->Init();
     Power(true);
-    delay(10);
-    pin_.BeginFrame();
-    for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, Color16());
-    pin_.EndFrame();
-    pin_.BeginFrame();
-    pin_.EndFrame();
-    pin_.BeginFrame();
-    pin_.EndFrame();
+    power_->Init();
     CommandParser::Link();
     Looper::Link();
     AbstractBlade::Activate();
@@ -104,7 +109,6 @@ public:
   void SB_On() override {
     AbstractBlade::SB_On();
     Power(true);
-    delay(10);
     on_ = true;
   }
   void SB_Off(OffType off_type) override {
@@ -147,6 +151,18 @@ protected:
       // Wait until it's our turn.
       while (current_blade) YIELD();
       if (allow_disable_) {
+	if (!on_) {
+	  if (!poweroff_delay_start_) {
+	    STDOUT << "Delaying powerof...\n";
+	    poweroff_delay_start_ = millis();
+	  }
+	  if (millis() - poweroff_delay_start_ < poweroff_delay_ms_) {
+	    YIELD();
+	    continue;
+	  }
+	  STDOUT << "Actually powering off....\n";
+	  poweroff_delay_start_ = 0;
+	}
 	Power(on_);
 	continue;
       }
@@ -171,8 +187,9 @@ private:
   bool on_ = false;
   bool powered_ = false;
   bool allow_disable_ = false;
+  uint32_t poweroff_delay_ms_;
+  uint32_t poweroff_delay_start_ = 0;
   LoopCounter loop_counter_;
-
   StateMachineState state_machine_;
   PowerPinInterface* power_;
   WS2811PIN pin_;
@@ -192,7 +209,8 @@ private:
 
 template<int LEDS, int CONFIG, int DATA_PIN = bladePin, class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>,
           class PinClass = DefaultPinClass,
-          int reset_us=300, int t1h=294, int t0h=892>
+  int reset_us=300, int t1h=294, int t0h=892,
+  int POWER_OFF_DELAY_MS=0>
 class BladeBase *WS2811BladePtr() {
   static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
   static POWER_PINS power_pins;
@@ -223,7 +241,8 @@ class BladeBase *WS2811BladePtr() {
     
   static WS2811_Blade<PinClass> blade(LEDS, DATA_PIN, byteorder,
 				      frequency, reset_us,
-				      t1h, t0h, &power_pins);
+				      t1h, t0h, &power_pins,
+				      POWER_OFF_DELAY_MS);
   return &blade;
 }
 
@@ -232,12 +251,14 @@ template<int LEDS,
           Color8::Byteorder byteorder,
           class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>,
           class PinClass = DefaultPinClass,
-          int frequency=800000, int reset_us=300, int t1h=294, int t0h=892>
+          int frequency=800000, int reset_us=300, int t1h=294, int t0h=892,
+          int POWER_OFF_DELAY_MS = 0>
 class BladeBase *WS281XBladePtr() {
   static POWER_PINS power_pins;
   static WS2811_Blade<PinClass> blade(LEDS, DATA_PIN, byteorder,
 				      frequency, reset_us,
-				      t1h, t0h, &power_pins);
+				      t1h, t0h, &power_pins,
+				      POWER_OFF_DELAY_MS);
   return &blade;
 }
 
