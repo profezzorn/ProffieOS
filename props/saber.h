@@ -101,6 +101,9 @@ public:
 	return true;
 
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
+#if NUM_BUTTONS == 0
+      case EVENTID(BUTTON_NONE, EVENT_SHAKE, MODE_OFF):
+#endif      
         next_preset();
 	return true;
 

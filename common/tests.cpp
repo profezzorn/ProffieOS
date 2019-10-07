@@ -364,6 +364,41 @@ void extrapolator_test() {
   CHECK_LT(x.get(10), 10.01);
   CHECK_GT(x.get(11), 10.99);
   CHECK_LT(x.get(11), 11.01);
+
+  
+  x.push(-0.0, 0);
+  x.push(-1.0, 1);
+  x.push(-2.0, 2);
+  x.push(-3.0, 3);
+  x.push(-4.0, 4);
+  x.push(-5.0, 5);
+  x.push(-6.0, 6);
+  x.push(-7.0, 7);
+  x.push(-8.0, 8);
+  x.push(-9.0, 9);
+  CHECK_GT(-x.slope(), 0.99);
+  CHECK_LT(-x.slope(), 1.01);
+  CHECK_GT(-x.get(10),  9.99);
+  CHECK_LT(-x.get(10), 10.01);
+  CHECK_GT(-x.get(11), 10.99);
+  CHECK_LT(-x.get(11), 11.01);
+
+  x.push(-1.0, 0);
+  x.push( 1.0, 1);
+  x.push(-1.0, 2);
+  x.push( 1.0, 3);
+  x.push(-1.0, 4);
+  x.push( 1.0, 5);
+  x.push(-1.0, 6);
+  x.push( 1.0, 7);
+  x.push(-1.0, 8);
+  x.push( 1.0, 9);
+  CHECK_GT(x.slope(), 0.0);
+  CHECK_LT(x.slope(), 0.1);
+  CHECK_GT(x.get(10), 0.0);
+  CHECK_LT(x.get(10), 0.5);
+  CHECK_GT(x.get(11), 0.0);
+  CHECK_LT(x.get(11), 0.5);
 }
 
 void fuse_rotate_test() {
