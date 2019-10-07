@@ -23,7 +23,8 @@
 // #define DUAL_POWER_BUTTONS
 
 // Volume, useful range is about 0-2000.
-#define VOLUME 1800
+// #define VOLUME 1800
+#define VOLUME 100
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
@@ -52,6 +53,8 @@ const unsigned int maxLedsPerStrip = 144;
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
+
+#define ENABLE_POWER_FOR_ID PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>
 
 #endif
 

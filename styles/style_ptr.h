@@ -44,6 +44,10 @@ public:
     return handled_type_saver_.IsHandled(EFFECT_CHANGE);
   }
 
+  bool IsHandled(BladeEffectType effect) override {
+    return handled_type_saver_.IsHandled(effect);
+  }
+  
   void run(BladeBase* blade) override {
     RunStyle<T, decltype(base_.run(blade))>::run(&base_, blade);
     int num_leds = blade->num_leds();

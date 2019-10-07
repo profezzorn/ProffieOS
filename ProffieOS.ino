@@ -26,10 +26,10 @@
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
-// #define CONFIG_FILE "config/owk_v2_config.h"
+#define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 
 
@@ -477,6 +477,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/rotate_color.h"
 #include "styles/colorchange.h"
 #include "styles/transition_effect.h"
+#include "styles/transition_loop.h"
 
 // functions
 #include "functions/ifon.h"
@@ -725,6 +726,9 @@ public:
     uint8_t block[512];
     uint32_t start_open = micros();
     File f = LSFS::Open(filename);
+    if (!f) {
+      STDOUT << "Failed to open!";
+    }
     open_histogram.count(micros() - start_open);
 
     int cnt = 0;

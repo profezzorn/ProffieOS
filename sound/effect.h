@@ -80,6 +80,7 @@ class Effect {
     file_pattern_ = FilePattern::UNKNOWN;
     ext_ = UNKNOWN;
     selected_ = -1;
+    num_files_ = 0;
   }
 
   bool Scan(const char *filename) {
@@ -115,6 +116,7 @@ class Effect {
       ext_ = IdentifyExtension(filename);
 
     file_pattern_ = type_if_found;
+    // STDOUT << "Counting " << filename << " as " << name_ << "\n";
     num_files_++;
     return true;
   }
@@ -151,7 +153,7 @@ class Effect {
           STDOUT.print(" in efficient subdirs");
       }
       if (files_found() != (size_t)num_files_) {
-	STDOUT.print(" SOME FILES ARE MISSING!");
+	STDOUT << " SOME FILES ARE MISSING! " << files_found() << " != " << num_files_;
       }
       STDOUT.println("");
     }

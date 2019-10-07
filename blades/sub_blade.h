@@ -60,6 +60,13 @@ public:
     } while(tmp != this);
     if (allow_disable) blade_->allow_disable();
   }
+  bool HandlesColorChange() override {
+    return current_style_->HandlesColorChange();
+  }
+
+  bool IsHandled(BladeEffectType effect) override {
+    return current_style_->IsHandled(effect);
+  }
 
  bool NoOnOff() override {
     SubBladeWrapper* tmp = this;

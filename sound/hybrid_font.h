@@ -252,7 +252,14 @@ public:
     }
   }
   void SB_Clash() override { Play(&clash, &clsh); }
-  void SB_Stab() override { PlayCommon(&stab); }
+  void SB_Stab() override {
+    if (stab.files_found()) {
+      PlayCommon(&stab);
+    } else {
+      // If no stab sounds are found, use a clash sound
+      SB_Clash();
+    }
+  }
   void SB_Force() override { PlayCommon(&force); }
   void SB_Blast() override { Play(&blaster, &blst); }
   void SB_Boot() override { PlayPolyphonic(&boot); }
