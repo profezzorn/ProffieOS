@@ -205,6 +205,8 @@ public:
 
 #ifdef SAVE_COLOR_CHANGE
     SaberBase::SetVariation(current_preset_.variation);
+#else
+    SaberBase::SetVariation(0);
 #endif    
     
     if (on) On();
