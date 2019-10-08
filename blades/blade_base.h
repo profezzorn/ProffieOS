@@ -58,6 +58,7 @@ public:
   // disable power now. (Usually called after is_on()
   // has returned false for some period of time.)
   virtual void allow_disable() = 0;
+  virtual bool IsPrimary() = 0;
 
   virtual void Activate() = 0;
   virtual void Deactivate() = 0;
@@ -101,6 +102,7 @@ public:
   static void ResetHandledTypes() {
     handled_types_ = EFFECT_NONE;
   }
+
   
  protected:
   static BladeEffectType handled_types_;
@@ -120,7 +122,9 @@ public:
     size_t n = blade->GetEffects(&effects);
     BladeEffectType mask = effect;
     // If no other thing is handling stab, treat it like a clash.
-    if ((effect & EFFECT_CLASH) && !blade->current_style()->IsHandled(EFFECT_STAB)) {
+    // But only for the primary blade...
+    if ((effect & EFFECT_CLASH) && !blade->current_style()->IsHandled(EFFECT_STAB) &&
+	blade->IsPrimary()) {
       mask = (BladeEffectType)(((int)mask) | ((int)EFFECT_STAB));
     }
     for (size_t i = 0; i < n; i++) {

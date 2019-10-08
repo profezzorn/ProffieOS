@@ -21,6 +21,7 @@ public:
   void allow_disable() override { blade_->allow_disable(); }
   void Activate() override { blade_->Activate(); }
   void Deactivate() override { blade_->Deactivate(); }
+  bool IsPrimary() override { return blade_->IsPrimary(); }
 
   BladeBase* blade_;
 };
