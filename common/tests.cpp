@@ -222,6 +222,12 @@ BladeConfig* current_config;
   if (x_ != y_) { std::cerr << #X << " (" << x_ << ") != " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
+#define CHECK_NEAR(X, Y, D) do {						\
+  auto x_ = (X);								\
+  auto y_ = (Y);								\
+  if (fabs(x_ - y_) > D) { std::cerr << #X << " (" << x_ << ") ~!= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+} while(0)
+
 #define CHECK_LT(X, Y) do {						\
   auto x_ = (X);								\
   auto y_ = (Y);								\
@@ -345,6 +351,75 @@ void byteorder_tests() {
   test_byteorder(Color8::RGB);
 }
 
+void test_rotate(Color16 c, int angle) {
+  Color16 x = c.rotate(angle);
+  double R = c.r/65535.0;
+  double G = c.g/65535.0;
+  double B = c.b/65535.0;
+  double Max = std::max(R, std::max(G, B));
+  double Min = std::min(R, std::min(G, B));
+  double H;
+  if (Max == Min) {
+    H = 0.0;
+  } else if (R == Max) {
+    H = (G - B) / (Max - Min);
+  } else if (G == Max) {
+    H = 2 + (B - R) / (Max - Min);
+  } else if (B == Max) {
+    H = 4 + (R - G) / (Max - Min);
+  }
+  H *= 60;
+  double S = Max == 0 ? 0 : (Max - Min) / Max;
+  double V = Max;
+
+  // We have HSV
+  H += angle * 360.0 / (32768 * 3);
+  while (H < 0) H += 360;
+  while (H >= 360.0) H -= 360;
+
+  double Hp =H / 60.0;
+  double Hp2 = Hp;
+  while (Hp2 > 2.0) Hp2-=2.0; // mod 2
+  double C = V * S;
+  double X = C * (1 - fabs(Hp2 - 1));
+
+  Color16 y;
+  if (Hp <= 1)      { R=C; G=X; B=0; }
+  else if (Hp <= 2) { R=X; G=C; B=0; }
+  else if (Hp <= 3) { R=0; G=C; B=X; }
+  else if (Hp <= 4) { R=0; G=X; B=C; }
+  else if (Hp <= 5) { R=X; G=0; B=C; }
+  else              { R=C; G=0; B=X; }
+  R+=V - C;
+  G+=V - C;
+  B+=V - C;
+  Color16 result(R*65535, G*65535, B*65535);
+  CHECK_NEAR(result.r, x.r, 2);
+  CHECK_NEAR(result.g, x.g, 2);
+  CHECK_NEAR(result.b, x.b, 2);
+}
+
+void test_rotate(Color16 c) {
+  test_rotate(c, 0);
+  test_rotate(c, 32768);
+  test_rotate(c, 100);
+  test_rotate(c, 1000);
+  test_rotate(c, 10000);
+  test_rotate(c, 80000);
+  test_rotate(c, 90000);
+  test_rotate(c, 32768 * 3 - 1);
+}
+
+void test_rotate() {
+  test_rotate(Color16(65535,65535,65535));
+  test_rotate(Color16(0,65535,65535));
+  test_rotate(Color16(65535,0,65535));
+  test_rotate(Color16(65535,65535,0));
+  test_rotate(Color16(65535,0,0));
+  test_rotate(Color16(0,65535,0));
+  test_rotate(Color16(0,0,65535));
+}
+
 
 void extrapolator_test() {
   Extrapolator<float> x;
@@ -462,6 +537,7 @@ void fuse_translate_test() {
 }
 
 int main() {
+  test_rotate();
   test_current_preset();
   byteorder_tests();
   extrapolator_test();
