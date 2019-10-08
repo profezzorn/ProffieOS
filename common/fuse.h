@@ -197,13 +197,13 @@ public:
     //wGyro += (accel_ - down_).len2();
 
     // If acceleration is not 1.0G, don't trust it.
-    wGyro += std::abs(accel_.len() - 1.0) * 50.0;
+    wGyro += fabs(accel_.len() - 1.0f) * 50.0;
     CHECK_NAN(wGyro);
 
-    Vec3 mss = (accel_ - down_) * G_constant; // change unit from G to m/s/s
-    CHECK_NAN(mss);
+    mss_ = (accel_ - down_) * G_constant; // change unit from G to m/s/s
+    CHECK_NAN(mss_);
 
-    speed_ += mss * std::min(delta_t, 0.01f);
+    speed_ += mss_ * std::min(delta_t, 0.01f);
     CHECK_NAN(speed_);
 
     // FIXME?
@@ -228,13 +228,14 @@ public:
 	     << " Gyro=" << gyro_
 	// << " rotation=" << rotation << "(" << rotation.len() << ")"
 	     << " down=" << down_ << " (" << down_.len() << ")"
-	     << " mss=" << mss  << " (" << mss.len() << ")"
+	     << " mss=" << mss_  << " (" << mss_.len() << ")"
 	     << " Speed=" << speed_ << " (" << speed_.len() << ")"
 	     << " swing speed=" << swing_speed()
 	     << " wGyro=" << wGyro
 	     << " delta_t=" << (delta_t * 1000)
 	     << " delta factor=" << delta_factor
 	     << " gyro factor=" << gyro_factor
+	     << " gyro slope=" << gyro_slope().len()
 	     << "\n";
       
     }
@@ -261,7 +262,14 @@ public:
   float pov_angle() {
     return atan2f(down_.y, down_.x);
   }
-  
+#if 1  
+  float swing_speed() {
+    if (swing_speed_ < 0) {
+      swing_speed_ = sqrtf(gyro_.z * gyro_.z + gyro_.y + gyro_.y);
+    }
+    return swing_speed_;
+  }
+#else
   // Distance in meters.
   float swing_speed_at_distance(float dist) {
     float y = gyro_.z * dist * (M_PI / 180.0) + speed_.y;
@@ -307,11 +315,16 @@ public:
     
     return swing_speed_;
   }
+#endif  
 
   Vec3 gyro() { return gyro_; }    // degrees/s
-  Vec3 gyro_slope() { return gyro_extrapolator_.slope(); }
-  Vec3 accel() { return accel_; }  // m/s/s
-  Vec3 down() { return down_; }
+  Vec3 gyro_slope() {
+    // degrees per second per second
+    return gyro_extrapolator_.slope() * 1000000;
+  }
+  Vec3 accel() { return accel_; }  // G/s/s
+  Vec3 mss() { return mss_; }      // m/s/s (acceleration - down vector)
+  Vec3 down() { return down_; }    // G/s/s (length should be close to 1.0)
   Vec3 speed() { return speed_; }  // m/s
   
 private:
@@ -320,6 +333,7 @@ private:
 
   Vec3 speed_;
   Vec3 down_;
+  Vec3 mss_;
   uint32_t last_micros_;
   Vec3 accel_;
   Vec3 gyro_;

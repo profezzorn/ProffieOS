@@ -58,31 +58,16 @@ const unsigned int maxLedsPerStrip = 144;
 
 // Each preset line consists of:
 // { "font directory", "sound track", Style },
-// Where Style is one of:
-//   StyleNormalPtr<BaseColor, FlashColor, out millis, in millis>()
-//   StyleFirePtr<LowHeatColor, HighHeatColor>()
-//   StyleRainBowPtr<out millis, in millis>()
-//   StyleStrobePtr<BaseColor, FlashColor, out millis, in millis>()
-//   &style_charging
-// All colors can be specied as three numbers or using one the handy macros above.
-// If you wish to have different presets for different blades, copy this array and
-// name it something other than "preset", then use the new name inside the blade
-// configuration array below. See "simple_presets" and "charging_presets"
-// below for examples.
 Preset presets[] = {
-  { "font01", "tracks/title.wav", StyleNormalPtr<BLUE, WHITE, 200, 300>() },
+  { "TeensySF", "tracks/title.wav", StyleNormalPtr<BLUE, WHITE, 200, 300>() },
   { "graflex7", "tracks/duel.wav", StyleNormalPtr<BLUE, WHITE, 200, 300>() },
   { "font03", "tracks/cantina.wav", StyleStrobePtr<BLUE, WHITE, 15, 200, 300>() },
 };
 
 // Each line of configuration should be:
 //     { blade id resistor ohms, blade, CONFIGARRAY(array of presets) },
-// Where "blade", can be one of the following:
-//     WS2811BladePtr<number of leds, WS2811 configuration flags>()
-//     SimpleBladePTR<Color of channel 1, color of channel 2, color of channel 3, color of channel 4>()
-// All colors can be specied as three numbers or using one the handy macros above.
 BladeConfig blades[] = {
-  { 0, StringBladePtr<Blue3mmLED>(), presets },
+  { 0, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(presets) },
 };
 
 #endif

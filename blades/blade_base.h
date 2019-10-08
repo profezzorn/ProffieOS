@@ -1,8 +1,6 @@
 #ifndef BLADES_BLADE_BASE_H
 #define BLADES_BLADE_BASE_H
 
-#include "../styles/blade_style.h"
-
 // Bitfield
 enum BladeEffectType {
   EFFECT_NONE =  0x0,
@@ -19,6 +17,8 @@ enum BladeEffectType {
   EFFECT_RETRACTION = 1 << 10,
   EFFECT_CHANGE = 1 << 11, // used for click to change
 };
+
+#include "../styles/blade_style.h"
 
 struct BladeEffect {
   BladeEffectType type;
@@ -118,6 +118,11 @@ public:
   BladeEffect* Detect(BladeBase* blade) {
     BladeEffect* effects;
     size_t n = blade->GetEffects(&effects);
+    BladeEffectType mask = effect;
+    // If no other thing is handling stab, treat it like a clash.
+    if ((effect & EFFECT_CLASH) && !blade->current_style()->IsHandled(EFFECT_STAB)) {
+      mask = (BladeEffectType)(((int)mask) | ((int)EFFECT_STAB));
+    }
     for (size_t i = 0; i < n; i++) {
       if (effect & effects[i].type) {
 	if (effects[i].start_micros == last_detected_)

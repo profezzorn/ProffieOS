@@ -42,6 +42,7 @@ public:
   void Deactivate() override {}
   void set(const Color16& c) override {}
   void set_overdrive(const Color16& c) override {}
+  Color8 getColor8() const { return Color8(0,0,0); }
 };
 
 template<>

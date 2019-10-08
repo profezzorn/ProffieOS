@@ -29,7 +29,8 @@ public:
 
   virtual bool Charging() { return false; }
 
-  virtual bool HandlesColorChange() { return false; }
+  virtual bool HandlesColorChange() = 0;
+  virtual bool IsHandled(BladeEffectType effect) = 0;
 };
 
 class StyleFactory {

@@ -117,6 +117,14 @@ public:
     return RotateX(angles.x).RotateY(angles.y).RotateZ(angles.z);
   }
 
+  // move towards zero
+  Vec3 MTZ(float delta) {
+    float l = len();
+    float new_length = l - delta;
+    if (new_length <= 0.0) return Vec3(0.0f);
+    return (*this) * (new_length / l);
+  }
+
   void printTo(Print& p) {
     p.write('{');
     p.print(x);

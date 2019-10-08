@@ -42,6 +42,7 @@ public:
   uint32_t last_clash_ = 0;
   uint32_t clash_timeout_ = 100;
   bool clash_pending_ = false;
+  bool pending_clash_is_stab_ = false;
 
   virtual void On() {
     if (SaberBase::IsOn()) return;
@@ -88,16 +89,22 @@ public:
     clash_timeout_ = ms;
   }
 
-  void Clash2() {
-    if (Event(BUTTON_NONE, EVENT_CLASH)) {
+  virtual void Clash2(bool stab) {
+    if (Event(BUTTON_NONE, stab ? EVENT_STAB : EVENT_CLASH)) {
       IgnoreClash(400);
     } else {
       IgnoreClash(100);
-      if (SaberBase::IsOn()) SaberBase::DoClash();
+      if (SaberBase::IsOn()) {
+	if (stab) {
+	  SaberBase::DoStab();
+	} else {
+	  SaberBase::DoClash();
+	}
+      }
     }
   }
 
-  virtual void Clash() {
+  virtual void Clash(bool stab) {
     // No clashes in lockup mode.
     if (SaberBase::Lockup()) return;
     // TODO: Pick clash randomly and/or based on strength of clash.
@@ -112,9 +119,10 @@ public:
       last_clash_ = millis();
       clash_timeout_ = 3;
       clash_pending_ = true;
+      pending_clash_is_stab_ = stab;
       return;
     }
-    Clash2();
+    Clash2(stab);
   }
 
   bool chdir(const char* dir) {
@@ -311,34 +319,33 @@ public:
     SaberBase::DoAccel(accel, clear);
     accel_loop_counter_.Update();
     if (clear) accel_ = accel;
-    float v = (accel_ - accel).len();
+    Vec3 diff = (accel - accel_);
+    float v = diff.len();
     // If we're spinning the saber, require a stronger acceleration
     // to activate the clash.
     if (v > CLASH_THRESHOLD_G + filtered_gyro_.len() / 200.0) {
       // Needs de-bouncing
+      Vec3 speed = fusor.speed();
+      bool stab = diff.x < - 2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z) &&
+#if 0
+	// Speed checks simply don't work yet
+	speed.y * speed.y + speed.z * speed.z < 5.0 && // TODO: Make this tighter
+	speed.x > 0.1 &&
+#endif	
+	fusor.swing_speed() < 150;
 #if 1
-      STDOUT.print("ACCEL: ");
-      STDOUT.print(accel.x);
-      STDOUT.print(", ");
-      STDOUT.print(accel.y);
-      STDOUT.print(", ");
-      STDOUT.print(accel.z);
-      STDOUT.print(" v = ");
-      STDOUT.print(v);
-      STDOUT.print(" fgl = ");
-      STDOUT.print(filtered_gyro_.len() / 200.0);
-      STDOUT.print(" accel_: ");
-      STDOUT.print(accel_.x);
-      STDOUT.print(", ");
-      STDOUT.print(accel_.y);
-      STDOUT.print(", ");
-      STDOUT.print(accel_.z);
-      STDOUT.print(" clear = ");
-      STDOUT.print(clear);
-      STDOUT.print(" millis = ");
-      STDOUT.println(millis());
-#endif      
-      Clash();
+      STDOUT << "ACCEL: " << accel
+	     << " diff=" << diff
+	     << " v=" << v
+	     << " fgl=" << (filtered_gyro_.len() / 200.0)
+	     << " accel_=" << accel_
+	     << " clear=" << clear
+	     << " millis=" << millis()
+	     << " speed=" << speed
+	     << " stab=" << stab
+	     << "\n";
+#endif
+      Clash(stab);
     }
     if (v > peak) {
       peak = v;
@@ -376,9 +383,13 @@ public:
   }
 
   enum StrokeType {
-    NO_STROKE,
+    TWIST_CLOSE,
     TWIST_LEFT,
     TWIST_RIGHT,
+
+    STAB_CLOSE,
+    STAB_FWD,
+    STAB_REW
   };
   struct Stroke {
     StrokeType type;
@@ -398,6 +409,12 @@ public:
           break;
         case TWIST_RIGHT:
           STDOUT.print("TwistRight");
+          break;
+        case STAB_FWD:
+          STDOUT.print("Thrust");
+          break;
+        case STAB_REW:
+          STDOUT.print("Yank");
           break;
         default: break;
       }
@@ -427,23 +444,71 @@ public:
         }
       }
     }
+    int i;
+    for (i = 0; i < 5; i++) {
+      if (strokes[NELEM(strokes)-1-i].type !=
+	  ((i & 1) ? STAB_REW : STAB_FWD)) break;
+      if (i) {
+        uint32_t separation =
+          strokes[NELEM(strokes)-i].start_millis -
+          strokes[NELEM(strokes)-1-i].end_millis;
+	if (separation > 250) break;
+      }
+    }
+    if (i == 5) {
+      Event(BUTTON_NONE, EVENT_SHAKE);
+    }
+  }
+
+  StrokeType GetStrokeGroup(StrokeType a) {
+    switch (a) {
+      case TWIST_CLOSE:
+      case TWIST_LEFT:
+      case TWIST_RIGHT:
+	return TWIST_CLOSE;
+      case STAB_CLOSE:
+      case STAB_FWD:
+      case STAB_REW:
+	break;
+    }
+    return STAB_CLOSE;
+  }
+
+  bool ShouldClose(StrokeType a, StrokeType b) {
+    // Don't close if it's the same exact stroke
+    if (a == b) return false;
+    // Different stroke in same stroke group -> close
+    if (GetStrokeGroup(a) == GetStrokeGroup(b)) return true;
+    // New stroke in different group -> close
+    if (GetStrokeGroup(b) != b) return true;
+    return false;
   }
 
   void DoGesture(StrokeType gesture) {
-    if (gesture == NO_STROKE) {
-      if (strokes[NELEM(strokes) - 1].end_millis == 0) {
-        strokes[NELEM(strokes) - 1].end_millis = millis();
-        ProcessStrokes();
+    if (gesture == strokes[NELEM(strokes)-1].type) {
+      if (strokes[NELEM(strokes)-1].end_millis == 0) {
+	// Stroke not done, wait.
+	return;
       }
-      return;
+      if (millis() - strokes[NELEM(strokes)-1].end_millis < 50)  {
+	// Stroke continues
+	strokes[NELEM(strokes)-1].end_millis = millis();
+	return;
+      }
     }
-    if (gesture == strokes[NELEM(strokes)-1].type &&
-        strokes[NELEM(strokes)-1].end_millis == 0) {
-      // Stroke not done, wait.
-      return;
+    if (strokes[NELEM(strokes) - 1].end_millis == 0 &&
+	GetStrokeGroup(gesture) == GetStrokeGroup(strokes[NELEM(strokes) - 1].type)) {
+      strokes[NELEM(strokes) - 1].end_millis = millis();
+      ProcessStrokes();
     }
-    for (size_t i = 0; i < NELEM(strokes) - 1; i++) {
-      strokes[i] = strokes[i+1];
+    // Exit here if it's a *_CLOSE stroke.
+    if (GetStrokeGroup(gesture) == gesture) return;
+    // If last stroke is very short, just write over it.
+    if (strokes[NELEM(strokes)-1].end_millis -
+	strokes[NELEM(strokes)-1].start_millis > 10) {
+      for (size_t i = 0; i < NELEM(strokes) - 1; i++) {
+	strokes[i] = strokes[i+1];
+      }
     }
     strokes[NELEM(strokes)-1].type = gesture;
     strokes[NELEM(strokes)-1].start_millis = millis();
@@ -467,12 +532,12 @@ public:
       STDOUT.print(", ");
       STDOUT.println(gyro.z);
     }
-    if (abs(gyro.x) > 200.0 &&
-        abs(gyro.x) > 3.0f * abs(gyro.y) &&
-        abs(gyro.x) > 3.0f * abs(gyro.z)) {
+    if (fabs(gyro.x) > 200.0 &&
+        fabs(gyro.x) > 3.0f * abs(gyro.y) &&
+        fabs(gyro.x) > 3.0f * abs(gyro.z)) {
       DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
     } else {
-      DoGesture(NO_STROKE);
+      DoGesture(TWIST_CLOSE);
     }
   }
   
@@ -504,7 +569,7 @@ public:
   void Loop() override {
     if (clash_pending_ && millis() - last_clash_ >= clash_timeout_) {
       clash_pending_ = false;
-      Clash2();
+      Clash2(pending_clash_is_stab_);
     }
     if (battery_monitor.low()) {
       // TODO: FIXME
@@ -563,7 +628,16 @@ public:
 	     << "\n";
     }
     
-#endif	  
+#endif
+
+    Vec3 mss = fusor.mss();
+    if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
+	fabs(mss.x) > 8 &&
+	fusor.swing_speed() < 150) {
+      DoGesture(mss.x > 0 ? STAB_FWD : STAB_REW);
+    } else {
+      DoGesture(STAB_CLOSE);
+    }
   }
 
   void ToggleColorChangeMode() {
@@ -657,7 +731,11 @@ public:
       return true;
     }
     if (!strcmp(cmd, "clash")) {
-      Clash();
+      Clash(false);
+      return true;
+    }
+    if (!strcmp(cmd, "stab")) {
+      Clash(true);
       return true;
     }
     if (!strcmp(cmd, "force")) {

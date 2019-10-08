@@ -44,6 +44,8 @@ public:
 
   bool NoOnOff() override { return true; }
   bool Charging() override { return true; }
+  bool HandlesColorChange() override { return false; }
+  bool IsHandled(BladeEffectType effect) override { return false; }
 };
 
 // No need to templetize this one, as there are no arguments.
