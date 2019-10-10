@@ -5,6 +5,8 @@
 #include "quat.h"
 #include "saber_base.h"
 
+// #define FUSE_SPEED
+
 #if 1 // def DEBUG
 
 #if 0
@@ -30,11 +32,11 @@ static bool my_isnan(Quat q) {
 
 int nan_count = 0;
 
-#define CHECK_NAN(X) do {			\
- if (nan_count < 20 && my_isnan((X))) {		\
-    nan_count++;				\
+#define CHECK_NAN(X) do {                       \
+ if (nan_count < 20 && my_isnan((X))) {         \
+    nan_count++;                                \
     STDOUT << "NAN " << #X << " = " << (X) << " LINE " << __LINE__ << "\n"; \
-  }						\
+  }                                             \
 }while(0)
 
 #else
@@ -44,7 +46,7 @@ int nan_count = 0;
 #endif
 
 
-
+#if 1
 template<class T, int SIZE = 10>
 class Extrapolator {
 public:
@@ -129,10 +131,30 @@ public:
   size_t entry_;
   size_t values_;
 };
-
+#else
+template<class T, int SIZE = 10>
+class Extrapolator {
+public:
+  Extrapolator() {}
+  T get() { return get(micros()); }
+  T get(uint32_t now) { return value_; }
+  T slope() { return 0.0; }
+  void push(const T& value, uint32_t now) { value_ = value; t_ = now; }
+  void push(const T& value) { push(value, micros());  }
+  void clear(const T& value) { value_ = value;  }
+  bool ready() { return true; }
+  uint32_t last_time() { return t_; }
+  T value_;
+  uint32_t t_;
+};
+#endif
 class Fusor : public SaberBase, Looper {
 public:
-  Fusor() : speed_(0.0), down_(0.0), last_micros_(0) {
+  Fusor() :
+#ifdef FUSE_SPEED
+  speed_(0.0),
+#endif
+    down_(0.0), last_micros_(0) {
   }
   const char* name() override { return "Fusor"; }
   void SB_Motion(const Vec3& gyro, bool clear) override {
@@ -159,11 +181,11 @@ public:
     if (!gyro_extrapolator_.ready()) return;
     if (now - accel_extrapolator_.last_time() > 20000) return;
     if (now - gyro_extrapolator_.last_time() > 20000) return;
-    
+
     float delta_t = (now - last_micros_) / 1000000.0;
     last_micros_ = now;
     CHECK_NAN(delta_t);
-    
+
     accel_ = accel_extrapolator_.get(now);
     CHECK_NAN(accel_);
     gyro_ = gyro_extrapolator_.get(now);
@@ -181,9 +203,11 @@ public:
     //    down_ = rotation * speed_;
     CHECK_NAN(down_);
 
+#ifdef FUSE_SPEED
     speed_ = rotation.rotate_normalized(speed_);
 //    speed_ = rotation * speed_;
     CHECK_NAN(speed_);
+#endif
 
 #define G_constant 9.80665
 
@@ -203,6 +227,7 @@ public:
     mss_ = (accel_ - down_) * G_constant; // change unit from G to m/s/s
     CHECK_NAN(mss_);
 
+#ifdef FUSE_SPEED
     speed_ += mss_ * std::min(delta_t, 0.01f);
     CHECK_NAN(speed_);
 
@@ -212,32 +237,38 @@ public:
       speed_ *= 100.0 / speed_.len();
     }
 
-    // TODO: Zero location and speed slowly.
+#if 1
+    speed_ = speed_.MTZ(0.2 * delta_t);
+#else
     float delta_factor = powf(0.75, delta_t);
     CHECK_NAN(delta_factor);
     speed_ = speed_ * delta_factor;
     CHECK_NAN(speed_.x);
+#endif
+#endif
     // goes towards 1.0 when moving.
     float gyro_factor = powf(0.01, delta_t / wGyro);
     CHECK_NAN(gyro_factor);
     down_ = down_ *  gyro_factor + accel_ * (1.0 - gyro_factor);
+    // Might be a good idea to normalize down_, but then
+    // down_ and accel_ might be slightly different length,
+    // so we would need to use MTZ() on mss_.
     CHECK_NAN(down_.x);
 
     if (monitor.ShouldPrint(Monitoring::MonitorFusion)) {
       STDOUT << " Accel=" << accel_ << "(" << accel_.len() << ")"
-	     << " Gyro=" << gyro_
-	// << " rotation=" << rotation << "(" << rotation.len() << ")"
-	     << " down=" << down_ << " (" << down_.len() << ")"
-	     << " mss=" << mss_  << " (" << mss_.len() << ")"
-	     << " Speed=" << speed_ << " (" << speed_.len() << ")"
-	     << " swing speed=" << swing_speed()
-	     << " wGyro=" << wGyro
-	     << " delta_t=" << (delta_t * 1000)
-	     << " delta factor=" << delta_factor
-	     << " gyro factor=" << gyro_factor
-	     << " gyro slope=" << gyro_slope().len()
-	     << "\n";
-      
+             << " Gyro=" << gyro_
+        // << " rotation=" << rotation << "(" << rotation.len() << ")"
+             << " down=" << down_ << " (" << down_.len() << ")"
+             << " mss=" << mss_  << " (" << mss_.len() << ")"
+        //     << " Speed=" << speed_ << " (" << speed_.len() << ")"
+             << " swing speed=" << swing_speed()
+             << " wGyro=" << wGyro
+             << " delta_t=" << (delta_t * 1000)
+//           << " delta factor=" << delta_factor
+             << " gyro factor=" << gyro_factor
+             << " gyro slope=" << gyro_slope().len()
+             << "\n";
     }
   }
 
@@ -262,10 +293,14 @@ public:
   float pov_angle() {
     return atan2f(down_.y, down_.x);
   }
-#if 1  
+#if 1
   float swing_speed() {
     if (swing_speed_ < 0) {
-      swing_speed_ = sqrtf(gyro_.z * gyro_.z + gyro_.y + gyro_.y);
+      swing_speed_ = sqrtf(gyro_.z * gyro_.z + gyro_.y * gyro_.y);
+      if (nan_count < 20 && my_isnan(swing_speed_)) {
+	nan_count++;
+	STDOUT << "\nNAN swing_speed_ " << gyro_;
+      }
     }
     return swing_speed_;
   }
@@ -303,19 +338,19 @@ public:
   float swing_speed() {
     if (swing_speed_ < 0) {
       if (speed_.len2() < 0.00001) {
-	swing_speed_ = sqrtf(gyro_.z * gyro_.z + gyro_.y * gyro_.y);
+        swing_speed_ = sqrtf(gyro_.z * gyro_.z + gyro_.y * gyro_.y);
       } else if (gyro_.len2() < 0.00001) {
-	swing_speed_ = sqrtf(speed_.z * speed_.z + speed_.y * speed_.y);
-	swing_speed_ *= (360 / M_PI);        // Scale it back to degrees per second, sort of.
+        swing_speed_ = sqrtf(speed_.z * speed_.z + speed_.y * speed_.y);
+        swing_speed_ *= (360 / M_PI);        // Scale it back to degrees per second, sort of.
       } else {
-	swing_speed_ = (swing_speed_integral(0.9) - swing_speed_integral(0.1));
-	swing_speed_ *= (360 / M_PI) / 0.8;  // Scale it back to degrees per second, sort of.
+        swing_speed_ = (swing_speed_integral(0.9) - swing_speed_integral(0.1));
+        swing_speed_ *= (360 / M_PI) / 0.8;  // Scale it back to degrees per second, sort of.
       }
     }
-    
+
     return swing_speed_;
   }
-#endif  
+#endif
 
   Vec3 gyro() { return gyro_; }    // degrees/s
   Vec3 gyro_slope() {
@@ -325,13 +360,18 @@ public:
   Vec3 accel() { return accel_; }  // G/s/s
   Vec3 mss() { return mss_; }      // m/s/s (acceleration - down vector)
   Vec3 down() { return down_; }    // G/s/s (length should be close to 1.0)
+
+#ifdef FUSE_SPEED
   Vec3 speed() { return speed_; }  // m/s
-  
+#endif
+
 private:
   Extrapolator<Vec3> accel_extrapolator_;
   Extrapolator<Vec3> gyro_extrapolator_;
 
+#ifdef FUSE_SPEED
   Vec3 speed_;
+#endif
   Vec3 down_;
   Vec3 mss_;
   uint32_t last_micros_;

@@ -2,6 +2,8 @@
 #define BLADES_ABSTRACT_BLADE_H
 #include "blade_base.h"
 
+BladeBase* GetPrimaryBlade();
+
 class AbstractBlade : public BladeBase, public SaberBase {
 public:
   AbstractBlade() : SaberBase(NOLINK) {}
@@ -80,6 +82,10 @@ public:
     if (SaberBase::Lockup() == LOCKUP_DRAG) {
       addEffect(EFFECT_DRAG_END, (200 + random(700)) / 1000.0f);
     }
+  }
+
+  bool IsPrimary() override {
+    return GetPrimaryBlade() == this;
   }
 
 private:

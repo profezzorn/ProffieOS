@@ -601,6 +601,8 @@ class NoLED;
 #include "styles/style_parser.h"
 
 BladeConfig* current_config = nullptr;
+class BladeBase* GetPrimaryBlade() { return current_config->blade1; }
+
 ArgParserInterface* CurrentArgParser;
 
 #define CONFIG_PRESETS

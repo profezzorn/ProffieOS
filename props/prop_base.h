@@ -205,6 +205,8 @@ public:
 
 #ifdef SAVE_COLOR_CHANGE
     SaberBase::SetVariation(current_preset_.variation);
+#else
+    SaberBase::SetVariation(0);
 #endif    
     
     if (on) On();
@@ -324,10 +326,12 @@ public:
     // If we're spinning the saber, require a stronger acceleration
     // to activate the clash.
     if (v > CLASH_THRESHOLD_G + filtered_gyro_.len() / 200.0) {
-      // Needs de-bouncing
-      Vec3 speed = fusor.speed();
+      if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
+	diff = -diff;
+      }
       bool stab = diff.x < - 2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z) &&
 #if 0
+      Vec3 speed = fusor.speed();
 	// Speed checks simply don't work yet
 	speed.y * speed.y + speed.z * speed.z < 5.0 && // TODO: Make this tighter
 	speed.x > 0.1 &&
@@ -341,10 +345,11 @@ public:
 	     << " accel_=" << accel_
 	     << " clear=" << clear
 	     << " millis=" << millis()
-	     << " speed=" << speed
+	     << " swing_speed=" << fusor.swing_speed()
 	     << " stab=" << stab
 	     << "\n";
 #endif
+      // Needs de-bouncing
       Clash(stab);
     }
     if (v > peak) {
