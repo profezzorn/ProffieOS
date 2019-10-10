@@ -171,7 +171,7 @@ public:
       }
       float swing_strength = std::min<float>(1.0, swing_speed / swingThreshold);
       SetSwingVolume(swing_strength, 1.0);
-    } else if (speed <= config_.ProffieOSSwingLowerThreshold) {
+    } else if (swing_speed <= config_.ProffieOSSwingLowerThreshold) {
       swinging_ = false;
       swing_player_.Free();
     }
