@@ -139,11 +139,12 @@ public:
     }
   }
 
-  void StartSwing(const Vec3& gyro, float swingThreshold_, float slashThreshold_) override {
+  void StartSwing(const Vec3& gyro, float swingThreshold, float slashThreshold) override {
     Vec3 gyro_slope = fusor.gyro_slope();
-    float rss = sqrtf(gyro_slope.z * gyro_slope.z + gyro_slope.y * gyro_slope.y)/57.3;
-    float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
-    if (speed > swingThreshold_) {
+    //Radians per second per second
+    float rss = sqrtf(gyro_slope.z * gyro_slope.z + gyro_slope.y * gyro_slope.y) * (M_PI/180);
+    float swing_speed = fusor.swing_speed();
+    if (swing_speed > swingThreshold) {
       if (!guess_monophonic_) {
         if (swing_player_) {
           // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
@@ -154,20 +155,21 @@ public:
             swing_player_.Free();
           }
         }
-        if (!swing_player_){
-          STDOUT.println(rss);
-          if (rss > slashThreshold_ && slsh.files_found() && !swinging_) {
-            swing_player_ = PlayPolyphonic(&slsh);
-          } else if (!swinging_){
-            swing_player_ = PlayPolyphonic(&swng);
+        if (!swing_player_) {
+          if (!swinging_) {
+            if (rss > slashThreshold && slsh.files_found()) {
+              swing_player_ = PlayPolyphonic(&slsh);
+            } else {
+              swing_player_ = PlayPolyphonic(&swng);
+            }
+            swinging_ = true;
           }
-          swinging_ = true;
         }
-      } else if (!swinging_ && speed > swingThreshold_) {
+      } else if (!swinging_ && swing_speed > swingThreshold) {
         PlayMonophonic(&swing, &hum);
         swinging_ = true;
       }
-      float swing_strength = std::min<float>(1.0, speed / swingThreshold_);
+      float swing_strength = std::min<float>(1.0, speed / swingThreshold);
       SetSwingVolume(swing_strength, 1.0);
     } else if (speed <= config_.ProffieOSSwingLowerThreshold) {
       swinging_ = false;
@@ -175,7 +177,7 @@ public:
     }
     float vol = 1.0f;
     if (!swinging_) {
-      vol = vol * (0.99 + clamp(speed/200.0, 0.0, 2.3));
+      vol = vol * (0.99 + clamp(swing_speed/200.0, 0.0, 2.3));
     }
     SetHumVolume(vol);
   }
