@@ -139,7 +139,7 @@ public:
     // bool isdir() { return f_.isDirectory(); }
     const char* name() { return entry_->d_name; }
     // size_t size() { return f_.size(); }
-    
+
   private:
     DIR* dir_;
     dirent* entry_;
@@ -212,31 +212,37 @@ Monitoring monitor;
 BladeConfig* current_config;
 
 
-#define CHECK(X) do {						\
+#define CHECK(X) do {                                           \
     if (!(X)) { fprintf(stderr, "%s failed, line %d\n", #X, __LINE__); exit(1); } \
 } while(0)
 
-#define CHECK_EQ(X, Y) do {						\
-  auto x_ = (X);								\
-  auto y_ = (Y);								\
+#define CHECK_EQ(X, Y) do {                                             \
+  auto x_ = (X);                                                                \
+  auto y_ = (Y);                                                                \
   if (x_ != y_) { std::cerr << #X << " (" << x_ << ") != " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
-#define CHECK_LT(X, Y) do {						\
-  auto x_ = (X);								\
-  auto y_ = (Y);								\
+#define CHECK_NEAR(X, Y, D) do {                                                \
+  auto x_ = (X);                                                                \
+  auto y_ = (Y);                                                                \
+  if (fabs(x_ - y_) > D) { std::cerr << #X << " (" << x_ << ") ~!= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+} while(0)
+
+#define CHECK_LT(X, Y) do {                                             \
+  auto x_ = (X);                                                                \
+  auto y_ = (Y);                                                                \
   if (!(x_ < y_)) { std::cerr << #X << " (" << x_ << ") >= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
-#define CHECK_GT(X, Y) do {						\
-  auto x_ = (X);								\
-  auto y_ = (Y);								\
+#define CHECK_GT(X, Y) do {                                             \
+  auto x_ = (X);                                                                \
+  auto y_ = (Y);                                                                \
   if (!(x_ > y_)) { std::cerr << #X << " (" << x_ << ") <= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
-#define CHECK_STREQ(X, Y) do {						\
-  auto x = (X);								\
-  auto y = (Y);								\
+#define CHECK_STREQ(X, Y) do {                                          \
+  auto x = (X);                                                         \
+  auto y = (Y);                                                         \
   if (strcmp(x, y)) { std::cerr << #X << " (" << x << ") != " << #Y << " (" << y << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
@@ -289,7 +295,7 @@ void test_current_preset() {
   CHECK_STREQ(preset.current_style2.get(), "style0:2");
   CHECK_STREQ(preset.current_style3.get(), "style0:3");
   CHECK_STREQ(preset.name.get(), "preset0");
-  
+
   CHECK(preset.Load(1));
   CHECK_EQ(preset.preset_num, 1);
   CHECK(preset.Load(2));
@@ -345,6 +351,75 @@ void byteorder_tests() {
   test_byteorder(Color8::RGB);
 }
 
+void test_rotate(Color16 c, int angle) {
+  Color16 x = c.rotate(angle);
+  double R = c.r/65535.0;
+  double G = c.g/65535.0;
+  double B = c.b/65535.0;
+  double Max = std::max(R, std::max(G, B));
+  double Min = std::min(R, std::min(G, B));
+  double H;
+  if (Max == Min) {
+    H = 0.0;
+  } else if (R == Max) {
+    H = (G - B) / (Max - Min);
+  } else if (G == Max) {
+    H = 2 + (B - R) / (Max - Min);
+  } else if (B == Max) {
+    H = 4 + (R - G) / (Max - Min);
+  }
+  H *= 60;
+  double S = Max == 0 ? 0 : (Max - Min) / Max;
+  double V = Max;
+
+  // We have HSV
+  H += angle * 360.0 / (32768 * 3);
+  while (H < 0) H += 360;
+  while (H >= 360.0) H -= 360;
+
+  double Hp =H / 60.0;
+  double Hp2 = Hp;
+  while (Hp2 > 2.0) Hp2-=2.0; // mod 2
+  double C = V * S;
+  double X = C * (1 - fabs(Hp2 - 1));
+
+  Color16 y;
+  if (Hp <= 1)      { R=C; G=X; B=0; }
+  else if (Hp <= 2) { R=X; G=C; B=0; }
+  else if (Hp <= 3) { R=0; G=C; B=X; }
+  else if (Hp <= 4) { R=0; G=X; B=C; }
+  else if (Hp <= 5) { R=X; G=0; B=C; }
+  else              { R=C; G=0; B=X; }
+  R+=V - C;
+  G+=V - C;
+  B+=V - C;
+  Color16 result(R*65535, G*65535, B*65535);
+  CHECK_NEAR(result.r, x.r, 2);
+  CHECK_NEAR(result.g, x.g, 2);
+  CHECK_NEAR(result.b, x.b, 2);
+}
+
+void test_rotate(Color16 c) {
+  test_rotate(c, 0);
+  test_rotate(c, 32768);
+  test_rotate(c, 100);
+  test_rotate(c, 1000);
+  test_rotate(c, 10000);
+  test_rotate(c, 80000);
+  test_rotate(c, 90000);
+  test_rotate(c, 32768 * 3 - 1);
+}
+
+void test_rotate() {
+  test_rotate(Color16(65535,65535,65535));
+  test_rotate(Color16(0,65535,65535));
+  test_rotate(Color16(65535,0,65535));
+  test_rotate(Color16(65535,65535,0));
+  test_rotate(Color16(65535,0,0));
+  test_rotate(Color16(0,65535,0));
+  test_rotate(Color16(0,0,65535));
+}
+
 
 void extrapolator_test() {
   Extrapolator<float> x;
@@ -365,7 +440,6 @@ void extrapolator_test() {
   CHECK_GT(x.get(11), 10.99);
   CHECK_LT(x.get(11), 11.01);
 
-  
   x.push(-0.0, 0);
   x.push(-1.0, 1);
   x.push(-2.0, 2);
@@ -401,70 +475,119 @@ void extrapolator_test() {
   CHECK_LT(x.get(11), 0.5);
 }
 
-void fuse_rotate_test() {
+#ifdef FUSE_SPEED
+
+#define FUSE_DEBUG
+#define XYZL(X) (X).x, (X).y, (X).z, (X).len()
+
+class FuseTester {
+public:
   Fusor fuse;
-  fuse.SB_Motion(Vec3(0,0,0), true);
-  fuse.SB_Accel(Vec3(0,0,1), true);
-  for (int i = 0; i < 10; i++) {
-    micros_ += 1000;
-    fuse.SB_Motion(Vec3(0,0,0), false);
-    fuse.SB_Accel(Vec3(0,0,1), false);
+
+  void motion(float x, float y, float z) {
+    fuse.SB_Motion(Vec3(x, y, z), false);
+#ifdef FUSE_DEBUG
+    fprintf(stderr," motion %f %f %f\n", x, y, z);
+#endif
+  }
+  void accel(float x, float y, float z) {
+    fuse.SB_Accel(Vec3(x, y, z), false);
+#ifdef FUSE_DEBUG
+    fprintf(stderr," accel %f %f %f\n", x, y, z);
+#endif
   }
 
-  // 1-second rotation test
-  for (int i = 0; i < 104; i++) {
-    micros_ += 10000;
-    fuse.SB_Motion(Vec3(360.0f,0.0f,0.0f), false); // 360 degrees / second
-    float angle = M_PI * 2 * i / 100.0;
-    fuse.SB_Accel(Vec3(0.0f,sinf(angle), cosf(angle)), false);
-    fuse.Loop();
-    // fprintf(stderr, "SPEEDR: %f, %f, %f  DOWN: %f, %f, %f i = %d V=%f,%f,%f,\n", fuse.speed().x, fuse.speed().y, fuse.speed().z, fuse.down().x, fuse.down().y, fuse.down().z, i,0.0f,sinf(angle), cosf(angle));
+  void init() {
+#ifdef FUSE_DEBUG
+    fprintf(stderr," INIT FUSOR\n");
+#endif
+    fuse = Fusor();
+
+    fuse.SB_Motion(Vec3(0,0,0), true);
+    fuse.SB_Accel(Vec3(0,0,1), true);
+    for (int i = 0; i < 10; i++) {
+      micros_ += 1000;
+      motion(0,0,0);
+      accel(0,0,1);
+    }
   }
 
-  CHECK_LT(fuse.speed().len(), 0.6);
+  void dump(const char *x) {
+#ifdef FUSE_DEBUG
+    fprintf(stderr, "%s SPEED: %f, %f, %f  (%f) DOWN: %f, %f, %f  (%f)  MSS: %f, %f, %f, (%f)\n",
+            x,
+            XYZL(fuse.speed()),
+            XYZL(fuse.down()),
+            XYZL(fuse.mss()));
+#endif
+  }
+
+  void fuse_rotate_test() {
+    init();
+
+    // 1-second rotation test
+    for (int i = 1; i < 104; i++) {
+      micros_ += 10000;
+      motion(360.0f,0.0f,0.0f); // 360 degrees / second
+      float angle = M_PI * 2 * i / 100.0;
+      accel(0.0f, sinf(angle), cosf(angle));
+      fuse.Loop();
+      dump("rot");
+    }
+
+    CHECK_LT(fuse.speed().len(), 0.6);
+  }
+
+  void fuse_translate_test() {
+    init();
+
+    // 1-second translation test
+    for (int i = 0; i < 250; i++) {
+      micros_ += 1000;
+      motion(0.0f,0.0f,0.0f);
+      accel(1.0f, 0.0f, 1.0f);
+      fuse.Loop();
+      dump("GO");
+    }
+    for (int i = 0; i < 500; i++) {
+      micros_ += 1000;
+      motion(0.0f,0.0f,0.0f);
+      accel(0.0f, 0.0f, 1.0f);
+      fuse.Loop();
+      dump("coast");
+      CHECK_GT(fuse.speed().len(), 1);
+      CHECK_LT(fuse.speed().len(), 2.5);
+    }
+    for (int i = 0; i < 250; i++) {
+      micros_ += 1000;
+      motion(0.0f,0.0f,0.0f);
+      accel(-1.0f, 0.0f, 1.0f);
+      fuse.Loop();
+      dump("STOP");
+    }
+    CHECK_LT(fuse.speed().len(), 1.0);
+  }
+
+  void run() {
+    fuse_rotate_test();
+    fuse_translate_test();
+  }
+};
+
+void fuse_tests() {
+  FuseTester a;
+  a.run();
 }
 
-void fuse_translate_test() {
-  Fusor fuse;
-  fuse.SB_Motion(Vec3(0,0,0), true);
-  fuse.SB_Accel(Vec3(0,0,1), true);
-  for (int i = 0; i < 10; i++) {
-    micros_ += 1000;
-    fuse.SB_Motion(Vec3(0,0,0), false);
-    fuse.SB_Accel(Vec3(0,0,1), false);
-  }
-
-  // 1-second translation test
-  for (int i = 0; i < 250; i++) {
-    micros_ += 1000;
-    fuse.SB_Motion(Vec3(0.0f,0.0f,0.0f), false);
-    fuse.SB_Accel(Vec3(1.0f, 0.0f, 1.0f), false);
-    fuse.Loop();
-    // fprintf(stderr, "SPEED1: %f, %f, %f  DOWN: %f, %f, %f\n", fuse.speed().x, fuse.speed().y, fuse.speed().z, fuse.down().x, fuse.down().y, fuse.down().z);
-  }
-  for (int i = 0; i < 500; i++) {
-    micros_ += 1000;
-    fuse.SB_Motion(Vec3(0.0f,0.0f,0.0f), false);
-    fuse.SB_Accel(Vec3(0.0f, 0.0f, 1.0f), false);
-    fuse.Loop();
-    // fprintf(stderr, "SPEED2: %f, %f, %f  DOWN: %f, %f, %f i = %d\n", fuse.speed().x, fuse.speed().y, fuse.speed().z, fuse.down().x, fuse.down().y, fuse.down().z, i);
-    CHECK_GT(fuse.speed().len(), 1);
-    CHECK_LT(fuse.speed().len(), 2.5);
-  }
-  for (int i = 0; i < 250; i++) {
-    micros_ += 1000;
-    fuse.SB_Motion(Vec3(0.0f,0.0f,0.0f), false);
-    fuse.SB_Accel(Vec3(-1.0f, 0.0f, 1.0f), false);
-    fuse.Loop();
-    // fprintf(stderr, "SPEED3: %f, %f, %f  DOWN: %f, %f, %f\n", fuse.speed().x, fuse.speed().y, fuse.speed().z, fuse.down().x, fuse.down().y, fuse.down().z);
-  }
-  CHECK_LT(fuse.speed().len(), 1.0);
-}
+#else // FUSE_SPEED
+void fuse_tests() {}
+// TODO: Write fuse tests that don't rely on speed()
+#endif
 
 int main() {
+  fuse_tests();
+  test_rotate();
   test_current_preset();
   byteorder_tests();
   extrapolator_test();
-  fuse_translate_test();
-  fuse_rotate_test();
 }

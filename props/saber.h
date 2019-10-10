@@ -91,6 +91,17 @@ public:
         }
         break;
 
+        // Stab Lockup? Long-Stab? Touche?
+      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
+      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_AUX):
+        if (!SaberBase::Lockup()) {
+	  // TODO: Make it possible to distinguish between drag and long-stab.
+	  SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+          SaberBase::DoBeginLockup();
+	  return true;
+        }
+        break;
+
         // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
         StartOrStopTrack();

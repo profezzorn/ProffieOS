@@ -202,7 +202,7 @@ class Color16 {
 
 private:
   static int f(int n, int C, int MAX) {
-    int k = n % 98034;
+    int k = n % 98304;
     return MAX - C * clampi32(std::min(k, 65536 - k), 0, 16384) / 16384;
   }
 
@@ -214,16 +214,17 @@ public:
     int MAX = std::max(r, std::max(g, b));
     int MIN = std::min(r, std::min(g, b));
     int C = MAX - MIN;
+    if (C == 0) return *this;  // Can't rotate something without color.
     // Note 16384 = 60 degrees.
-    if (r > g && r > b) {
+    if (r == MAX) {
       // r is biggest
-      H = 32768 * (g - b) / C;
-    } else if (b > g) {
-      // b is biggest
-      H = 32768 * (b - r) / C + 16384 * 2;
-    } else {
+      H = 16384 * (g - b) / C;
+    } else if (g == MAX) {
       // g is biggest
-      H = 32768 * (r - g) / C + 16384 * 4;
+      H = 16384 * (b - r) / C + 16384 * 2;
+    } else {
+      // b is biggest
+      H = 16384 * (r - g) / C + 16384 * 4;
     }
     H += angle;
     return Color16(f(5*16384+H, C, MAX),
