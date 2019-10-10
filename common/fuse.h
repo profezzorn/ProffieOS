@@ -7,7 +7,7 @@
 
 // #define FUSE_SPEED
 
-#ifdef DEBUG
+#if 1 // def DEBUG
 
 #if 0
 static bool my_isnan(float val) {
@@ -296,7 +296,11 @@ public:
 #if 1
   float swing_speed() {
     if (swing_speed_ < 0) {
-      swing_speed_ = sqrtf(gyro_.z * gyro_.z + gyro_.y + gyro_.y);
+      swing_speed_ = sqrtf(gyro_.z * gyro_.z + gyro_.y * gyro_.y);
+      if (nan_count < 20 && my_isnan(swing_speed_)) {
+	nan_count++;
+	STDOUT << "\nNAN swing_speed_ " << gyro_;
+      }
     }
     return swing_speed_;
   }

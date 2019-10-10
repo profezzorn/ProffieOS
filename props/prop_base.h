@@ -326,7 +326,9 @@ public:
     // If we're spinning the saber, require a stronger acceleration
     // to activate the clash.
     if (v > CLASH_THRESHOLD_G + filtered_gyro_.len() / 200.0) {
-      // Needs de-bouncing
+      if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
+	diff = -diff;
+      }
       bool stab = diff.x < - 2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z) &&
 #if 0
       Vec3 speed = fusor.speed();
@@ -343,10 +345,11 @@ public:
 	     << " accel_=" << accel_
 	     << " clear=" << clear
 	     << " millis=" << millis()
-//	     << " speed=" << speed
+	     << " swing_speed=" << fusor.swing_speed()
 	     << " stab=" << stab
 	     << "\n";
 #endif
+      // Needs de-bouncing
       Clash(stab);
     }
     if (v > peak) {

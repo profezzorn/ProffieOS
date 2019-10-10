@@ -11,7 +11,7 @@
 // Also handles "Drag" effect.
 template<class BASE,
   class LOCKUP, class DRAG_COLOR = LOCKUP,
-  class LOCKUP_SHAPE = Int<32768>, class DRAG_SHAPE = SmoothStep<Int<32112>, Int<455>> >
+  class LOCKUP_SHAPE = Int<32768>, class DRAG_SHAPE = SmoothStep<Int<32000>, Int<8000>> >
 class Lockup {
 public:
   void run(BladeBase* blade) {
@@ -27,9 +27,9 @@ public:
     switch (SaberBase::Lockup()) {
       case SaberBase::LOCKUP_DRAG: {
         if (!is_same_type<DRAG_COLOR, LOCKUP>::value) {
-	  ret.c = ret.c.mix2(drag_.getColor(led).c, drag_shape_.getInteger(led));
+	  ret.c = ret.c.mix2(drag_.getColor(led).c, drag_shape_.getInteger(led)>>1);
 	} else {
-	  ret.c = ret.c.mix2(lockup_.getColor(led).c, drag_shape_.getInteger(led));
+	  ret.c = ret.c.mix2(lockup_.getColor(led).c, drag_shape_.getInteger(led)>>1);
 	}
 	break;
       case SaberBase::LOCKUP_NORMAL:
@@ -37,7 +37,7 @@ public:
 	if (is_same_type<LOCKUP_SHAPE, Int<32768>>::value) {
 	  return lockup_.getColor(led);
 	} else {
-	  ret.c = ret.c.mix2(lockup_.getColor(led).c, lockup_shape_.getInteger(led));
+	  ret.c = ret.c.mix2(lockup_.getColor(led).c, lockup_shape_.getInteger(led)>>1);
 	}
       case SaberBase::LOCKUP_NONE:
 	break;

@@ -13,7 +13,7 @@
 
 template<class T, class CLASH_COLOR = Rgb<255,255,255>, int CLASH_MILLIS = 40,
   BladeEffectType EFFECT = EFFECT_CLASH,
-  class STAB_SHAPE = SmoothStep<Int<32112>, Int<8192>> >
+  class STAB_SHAPE = SmoothStep<Int<30000>, Int<32768>> >
 class SimpleClash {
 public:
   void run(BladeBase* blade) {
@@ -33,7 +33,8 @@ public:
     if (clash_) {
       OverDriveColor ret = clash_color_.getColor(led);
       if (stab_) {
-	ret.c = ret.c.mix2(ret.c, stab_shape_.getInteger(led));
+	OverDriveColor b = base_.getColor(led);
+	ret.c = b.c.mix2(ret.c, stab_shape_.getInteger(led)>>1);
       }
       return ret;
     } else {

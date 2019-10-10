@@ -128,7 +128,7 @@ public:
       mask = (BladeEffectType)(((int)mask) | ((int)EFFECT_STAB));
     }
     for (size_t i = 0; i < n; i++) {
-      if (effect & effects[i].type) {
+      if (mask & effects[i].type) {
 	if (effects[i].start_micros == last_detected_)
 	  return nullptr;
 	last_detected_ = effects[i].start_micros;
