@@ -327,9 +327,9 @@ public:
     // to activate the clash.
     if (v > CLASH_THRESHOLD_G + filtered_gyro_.len() / 200.0) {
       // Needs de-bouncing
-      Vec3 speed = fusor.speed();
       bool stab = diff.x < - 2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z) &&
 #if 0
+      Vec3 speed = fusor.speed();
 	// Speed checks simply don't work yet
 	speed.y * speed.y + speed.z * speed.z < 5.0 && // TODO: Make this tighter
 	speed.x > 0.1 &&
@@ -343,7 +343,7 @@ public:
 	     << " accel_=" << accel_
 	     << " clear=" << clear
 	     << " millis=" << millis()
-	     << " speed=" << speed
+//	     << " speed=" << speed
 	     << " stab=" << stab
 	     << "\n";
 #endif
