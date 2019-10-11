@@ -24,18 +24,18 @@ public:
       STDOUT.print("Monophonic swings: ");
       STDOUT.println(swing.files_found());
       accent_swings_present = true;
+      if (slsh.files_found() > 0 && smooth_swing_config.AccentSlashAccelerationThreshold > 0.0) {
+        STDOUT.println("Accent Slashes Enabled.");
+        STDOUT.print("Polyphonic slashes: ");
+        STDOUT.println(slsh.files_found());
+        accent_slashes_present = true;
+      } else {
+        accent_slashes_present = false;
+        STDOUT.println("Accent Slashes NOT Detected: ");
+      }
     } else {
       accent_swings_present = false;
       STDOUT.println("Accent Swings NOT Detected: ");
-    }
-    if (slsh.files_found() > 0 && smooth_swing_config.AccentSlashAccelerationThreshold > 0.0) {
-      STDOUT.println("Accent Slashes Enabled.");
-      STDOUT.print("Polyphonic slashes: ");
-      STDOUT.println(slsh.files_found());
-      accent_slashes_present = true;
-    } else {
-      accent_slashes_present = false;
-      STDOUT.println("Accent Slashes NOT Detected: ");
     }
   }
 
