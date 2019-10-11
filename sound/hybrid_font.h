@@ -141,8 +141,8 @@ public:
 
   void StartSwing(const Vec3& gyro, float swingThreshold, float slashThreshold) override {
     Vec3 gyro_slope = fusor.gyro_slope();
-    //Radians per second per second
-    float rss = sqrtf(gyro_slope.z * gyro_slope.z + gyro_slope.y * gyro_slope.y) * (M_PI/180);
+    // Radians per second per second
+    float rss = sqrtf(gyro_slope.z * gyro_slope.z + gyro_slope.y * gyro_slope.y) * (M_PI / 180);
     float swing_speed = fusor.swing_speed();
     if (swing_speed > swingThreshold) {
       if (!guess_monophonic_) {
@@ -426,8 +426,7 @@ public:
 
   bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
-    if (state_ != STATE_OFF &&
-        !(lockup.files_found() && SaberBase::Lockup())) {
+    if (state_ != STATE_OFF && !(lockup.files_found() && SaberBase::Lockup())) {
       StartSwing(gyro, config_.ProffieOSSwingSpeedThreshold, config_.ProffieOSSlashAccelerationThreshold);
     }
   }
