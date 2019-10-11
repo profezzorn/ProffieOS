@@ -1,5 +1,6 @@
 #ifndef SOUND_HYBRID_FONT_H
 #define SOUND_HYBRID_FONT_H
+#include "../common/fuse.h"
 
 class IgniterConfigFile : public ConfigFile {
 public:
@@ -8,11 +9,12 @@ public:
     CONFIG_VARIABLE(volHum, 15);
     CONFIG_VARIABLE(volEff, 16);
     CONFIG_VARIABLE(ProffieOSSwingSpeedThreshold, 250.0f);
-    CONFIG_VARIABLE(ProffieOSSwingVolumeSharpness, 1.0f);
-    CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 3.0f);
+    CONFIG_VARIABLE(ProffieOSSwingVolumeSharpness, 0.5f);
+    CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 2.0f);
     CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
-    CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.0f);
+    CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.2f);
     CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
+    CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 260.0f);
   }
   int humStart;
   int volHum;
@@ -23,6 +25,7 @@ public:
   float ProffieOSSwingOverlap;
   float ProffieOSSmoothSwingDucking;
   float ProffieOSSwingLowerThreshold;
+  float ProffieOSSlashAccelerationThreshold;
 };
 
 
@@ -56,7 +59,7 @@ public:
       guess_monophonic_ = false;
       STDOUT.print("polyphonic");
     }
-	
+
     STDOUT.println(" font.");
     SaberBase::Link(this);
     SetHumVolume(1.0);
@@ -83,7 +86,6 @@ public:
   RefPtr<BufferedWavPlayer> next_hum_player_;
   RefPtr<BufferedWavPlayer> swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
-  
   void PlayMonophonic(Effect* f, Effect* loop)  {
     EnableAmplifier();
     if (!next_hum_player_) {
@@ -97,7 +99,6 @@ public:
       hum_player_->set_fade_time(0.003);
       hum_player_->FadeAndStop();
       hum_player_.Free();
-      
       next_hum_player_->set_volume_now(0);
       next_hum_player_->set_fade_time(0.003);
       next_hum_player_->set_volume(config_.volEff / 16.0);
@@ -110,7 +111,6 @@ public:
     current_effect_length_ = hum_player_->length();
     if (loop) hum_player_->PlayLoop(loop);
   }
-							   
   RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
     EnableAmplifier();
     if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
@@ -138,25 +138,48 @@ public:
       PlayPolyphonic(effect);
     }
   }
-  
-  void StartSwing() override {
-    if (!guess_monophonic_) {
-      if (swing_player_) {
-        // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
-        // between 0 (full overlap) and 1.0 (no overlap)
-        if (swing_player_->pos() / swing_player_->length() >= config_.ProffieOSSwingOverlap) {
-          swing_player_->set_fade_time(swing_player_->length() - swing_player_->pos());
-          swing_player_->FadeAndStop();
-          swing_player_.Free();
-          swing_player_ = PlayPolyphonic(&swng);
+
+  void StartSwing(const Vec3& gyro, float swingThreshold, float slashThreshold) override {
+    Vec3 gyro_slope = fusor.gyro_slope();
+    // Radians per second per second
+    float rss = sqrtf(gyro_slope.z * gyro_slope.z + gyro_slope.y * gyro_slope.y) * (M_PI / 180);
+    float swing_speed = fusor.swing_speed();
+    if (swing_speed > swingThreshold) {
+      if (!guess_monophonic_) {
+        if (swing_player_) {
+          // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
+          // between 0 (full overlap) and 1.0 (no overlap)
+          if (swing_player_->pos() / swing_player_->length() >= config_.ProffieOSSwingOverlap) {
+            swing_player_->set_fade_time(swing_player_->length() - swing_player_->pos());
+            swing_player_->FadeAndStop();
+            swing_player_.Free();
+          }
         }
+        if (!swing_player_) {
+          if (!swinging_) {
+            if (rss > slashThreshold && slsh.files_found()) {
+              swing_player_ = PlayPolyphonic(&slsh);
+            } else {
+              swing_player_ = PlayPolyphonic(&swng);
+            }
+            swinging_ = true;
+          }
+        }
+      } else if (!swinging_ && swing_speed > swingThreshold) {
+        PlayMonophonic(&swing, &hum);
+        swinging_ = true;
       }
-      else if (!swing_player_) {
-        swing_player_ = PlayPolyphonic(&swng);
-      }
-    } else {
-      PlayMonophonic(&swing, &hum);
+      float swing_strength = std::min<float>(1.0, swing_speed / swingThreshold);
+      SetSwingVolume(swing_strength, 1.0);
+    } else if (swing_speed <= config_.ProffieOSSwingLowerThreshold) {
+      swinging_ = false;
+      swing_player_.Free();
     }
+    float vol = 1.0f;
+    if (!swinging_) {
+      vol = vol * (0.99 + clamp(swing_speed/200.0, 0.0, 2.3));
+    }
+    SetHumVolume(vol);
   }
 
   float SetSwingVolume(float swing_strength, float mixhum) override {
@@ -178,7 +201,7 @@ public:
       return 0.0;
     }
   }
-  
+
   void SB_On() override {
     if (monophonic_hum_) {
       state_ = STATE_HUM_ON;
@@ -400,26 +423,12 @@ public:
     if (!hum_player_) return;
     hum_player_->set_volume(vol);
   }
-  
+
   bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
-    float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
-    if (speed > config_.ProffieOSSwingSpeedThreshold) {
-      if (!swinging_ && state_ != STATE_OFF &&
-	  !(lockup.files_found() && SaberBase::Lockup())) {
-        swinging_ = true;
-        StartSwing();
-      }
-      float swing_strength = std::min<float>(1.0, speed / config_.ProffieOSSwingSpeedThreshold);
-      SetSwingVolume(swing_strength, 1.0);
-    } else if (swinging_ && speed <= config_.ProffieOSSwingSpeedThreshold) {
-      swinging_ = false;
+    if (state_ != STATE_OFF && !(lockup.files_found() && SaberBase::Lockup())) {
+      StartSwing(gyro, config_.ProffieOSSwingSpeedThreshold, config_.ProffieOSSlashAccelerationThreshold);
     }
-    float vol = 1.0f;
-    if (!swinging_) {
-      vol = vol * (0.99 + clamp(speed/200.0, 0.0, 2.3));
-    }
-    SetHumVolume(vol);
   }
 
   float GetCurrentEffectLength() const {
