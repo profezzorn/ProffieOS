@@ -13,7 +13,7 @@
 
 template<class T, class CLASH_COLOR = Rgb<255,255,255>, int CLASH_MILLIS = 40,
   BladeEffectType EFFECT = EFFECT_CLASH,
-  class STAB_SHAPE = SmoothStep<Int<30000>, Int<32768>> >
+  class STAB_SHAPE = SmoothStep<Int<16384>, Int<24000>> >
 class SimpleClash {
 public:
   void run(BladeBase* blade) {
@@ -21,13 +21,13 @@ public:
     clash_color_.run(blade);
     stab_shape_.run(blade);
     // This should make us activate the clash at least one "frame".
+    if (clash_ && micros() - effect_.last_detected_micros() > CLASH_MILLIS * 1000)
+      clash_ = false;
     BladeEffect *e = effect_.Detect(blade);
     if (e) {
       clash_ = true;
       stab_ = EFFECT == EFFECT_CLASH && e->type == EFFECT_STAB;
     }
-    if (clash_ && micros() - effect_.last_detected_micros() > CLASH_MILLIS * 1000)
-      clash_ = false;
   }
   OverDriveColor getColor(int led) {
     if (clash_) {
