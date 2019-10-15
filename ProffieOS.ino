@@ -29,8 +29,9 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
+#define CONFIG_FILE "config/testconfig.h"
 
 
 #ifdef CONFIG_FILE_TEST
@@ -1713,7 +1714,7 @@ SSD1306 display;
 #include "motion/fxas21002.h"
 
 // Define this to record clashes to sd card as CSV files
-#define CLASH_RECORDER
+// #define CLASH_RECORDER
 
 #include "scripts/clash_recorder.h"
 
