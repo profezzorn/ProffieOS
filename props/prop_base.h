@@ -579,7 +579,7 @@ public:
     }
     if (battery_monitor.low()) {
       // TODO: FIXME
-      if (current_style()->Charging()) {
+      if (current_style() && current_style()->Charging()) {
         if (SaberBase::IsOn()) {
           STDOUT.print("Battery low, turning off. Battery voltage: ");
           STDOUT.println(battery_monitor.battery());
