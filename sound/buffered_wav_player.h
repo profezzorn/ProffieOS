@@ -4,6 +4,10 @@
 #include "playwav.h"
 #include "volume_overlay.h"
 
+class BufferedWavPlayer;
+size_t WhatUnit(class BufferedWavPlayer* player);
+
+
 // Combines a WavPlayer and a BufferedAudioStream into a
 // buffered wav player. When we start a new sample, we
 // make sure to fill up the buffer before we start playing it.

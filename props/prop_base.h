@@ -346,6 +346,7 @@ public:
 	     << " clear=" << clear
 	     << " millis=" << millis()
 	     << " swing_speed=" << fusor.swing_speed()
+	     << " mss=" << fusor.mss()
 	     << " stab=" << stab
 	     << "\n";
 #endif

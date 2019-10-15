@@ -26,10 +26,10 @@
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
 // #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
-#define CONFIG_FILE "config/owk_v2_config.h"
+// #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 
 
@@ -1713,7 +1713,7 @@ SSD1306 display;
 #include "motion/fxas21002.h"
 
 // Define this to record clashes to sd card as CSV files
-// #define CLASH_RECORDER
+#define CLASH_RECORDER
 
 #include "scripts/clash_recorder.h"
 
