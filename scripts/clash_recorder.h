@@ -8,6 +8,11 @@ public:
     STDOUT.println("dumping soon...");
     SaberBase::RequestMotion();
   }
+  void SB_Stab() override {
+    time_to_dump_ = NELEM(buffer_) / 2;
+    STDOUT.println("dumping soon...");
+    SaberBase::RequestMotion();
+  }
   void SB_Accel(const Vec3& accel, bool clear) override {
     SaberBase::RequestMotion();
     loop_counter_.Update();

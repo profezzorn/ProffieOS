@@ -212,12 +212,30 @@ public:
   void Rewind() { Seek(0); }
 
   void skipwhite() {
-    while (Peek() == ' ' || Peek() == '\t') Read();
+    while (true) {
+      switch (Peek()) {
+	case ' ':
+	case '\t':
+	case '\n':
+	case '\r':
+	  Read();
+	  continue;
+	default:
+	  return;
+      }
+    }
   }
-
   // Skip rest of line.
   void skipline() {
     while (Available() && Read() != '\n');
+  }
+
+  // Note: Byte order may be an issue!!
+  // This code generally assumes it's running on a little-endian machine.
+  template<typename T> T ReadType() {
+    T ret;
+    Read((uint8_t*)&ret, sizeof(ret));
+    return ret;
   }
 
   int64_t readIntValue() {
