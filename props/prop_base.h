@@ -282,11 +282,7 @@ public:
   } while(0);
 
     ONCEPERBLADE(ACTIVATE);
-    #ifdef SAVED_PRESET
-    ResumePreset();
-    #else
     SetPreset(0, false);
-    #endif
     return;
 
    bad_blade:
@@ -295,36 +291,6 @@ public:
     talkie.Say(talkie_error_in_15, 15);
     talkie.Say(talkie_blade_array_15, 15);
 #endif    
-  }
-  
-  void ResumePreset() {
-    FileReader f;
-    int newPreset;
-    int newVolume;
-    if (f.Open("savedpreset.ini") && f.FileSize() > 0) {
-      for (; f.Available(); f.skipline()) {
-        char variable[33];
-        f.readVariable(variable);
-        if (!variable[0]) continue;
-        if (f.Peek() != '=') continue;
-        f.Read();
-        f.skipwhite();
-        if (!strcmp(variable, "preset")) {
-          newPreset = f.readIntValue();
-        continue;
-        }
-        if (!strcmp(variable, "volume")) {
-          newVolume = f.readIntValue();
-        }
-      }
-      f.Close();
-      SetPreset(newPreset, false);
-      if (newVolume <= VOLUME) {
-        dynamic_mixer.set_volume(newVolume);
-      }
-    } else {
-      SetPreset(0, false);
-    }
   }
 
   void FindBladeAgain() {
