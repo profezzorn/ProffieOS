@@ -271,8 +271,27 @@ public:
 
   void SetPreset(int preset) {
     Clear();
+    #ifdef SAVED_PRESET
+    SavePreset(preset);
+    #endif
     LOCK_SD(true);
     if (!Load(preset)) Set(preset);
+    LOCK_SD(false);
+  }
+  
+  bool SavePreset(int preset) {
+  if (preset >= 0 && preset <= current_config->num_presets) {
+    STDOUT.println("Saving Current Preset");
+    LOCK_SD(true);
+    FileReader c;
+    LSFS::Remove("savedpreset.ini");
+    c.Create("savedpreset.ini");
+    char value[30];
+    itoa(preset, value, 10);
+    c.write_key_value("preset", value);
+    itoa(dynamic_mixer.get_volume(), value, 10);
+    c.write_key_value("volume", value);
+    c.Close();
     LOCK_SD(false);
   }
 };
