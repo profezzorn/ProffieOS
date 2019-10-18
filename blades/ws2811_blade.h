@@ -153,14 +153,12 @@ protected:
       if (allow_disable_) {
 	if (!on_) {
 	  if (!poweroff_delay_start_) {
-	    STDOUT << "Delaying powerof...\n";
 	    poweroff_delay_start_ = millis();
 	  }
 	  if (millis() - poweroff_delay_start_ < poweroff_delay_ms_) {
 	    YIELD();
 	    continue;
 	  }
-	  STDOUT << "Actually powering off....\n";
 	  poweroff_delay_start_ = 0;
 	}
 	Power(on_);

@@ -2,6 +2,7 @@
 #define SOUND_EFFECT_H
 
 #include <algorithm>
+#include "../common/file_reader.h"
 
 class Effect;
 Effect* all_effects = NULL;
@@ -44,6 +45,9 @@ class Effect {
     WAV,
     RAW,
     USL,
+    BMP,
+    PBM,
+    Binary, // .BIN
     UNKNOWN,
   };
 
@@ -58,10 +62,19 @@ class Effect {
     NONREDUNDANT_SUBDIRS,
   };
 
+  enum class FileType {
+    SOUND,
+    IMAGE,
+    UNKNOWN,
+  };
+
   static Extension IdentifyExtension(const char* filename) {
     if (endswith(".wav", filename)) return WAV;
     if (endswith(".raw", filename)) return RAW;
     if (endswith(".usl", filename)) return USL;
+    if (endswith(".bmp", filename)) return BMP;
+    if (endswith(".pbm", filename)) return PBM;
+    if (endswith(".bin", filename)) return Binary;
     return UNKNOWN;
   }
 
@@ -244,6 +257,9 @@ class Effect {
       case WAV: strcat(filename, ".wav"); break;
       case RAW: strcat(filename, ".raw"); break;
       case USL: strcat(filename, ".usl"); break;
+      case BMP: strcat(filename, ".bmp"); break;
+      case PBM: strcat(filename, ".pbm"); break;
+      case Binary: strcat(filename, ".bin"); break;
       default: break;
     }
 
@@ -415,5 +431,49 @@ EFFECT(boom);
 EFFECT(ccbegin);
 EFFECT(ccend);
 EFFECT(ccchange);
+
+// Images/animations
+EFFECT(logo);
+
+// TODO: Optimize this and make it possible
+// have the WAV reader use this.
+class EffectFileReader : public FileReader {
+public:
+  bool Play(Effect* f) {
+    blorg_ = false;
+    Effect::FileID id = f->RandomFile();
+    if (!id) {
+      return false;
+    }
+    id.GetName(filename_);
+    blorg_ = true;
+  }
+
+  void Play(const char* filename) {
+    blorg_ = false;
+    strncpy(filename_, filename, sizeof(filename));
+    blorg_ = true;
+  }
+
+  // When do we actually call this?
+  bool OpenFile() {
+    if (!blorg_) {
+      STDOUT << "OpenFILE not ready!\n";
+      return false;
+    }
+    if (!Open(filename_)) {
+      default_output->print("File ");
+      default_output->print(filename_);
+      default_output->println(" not found.");
+      blorg_ = false;
+      return false;
+    }
+
+    return true;
+  }
+private:
+  volatile bool blorg_ = false;
+  char filename_[128];
+};
 
 #endif

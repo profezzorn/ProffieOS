@@ -48,7 +48,7 @@ const unsigned int maxLedsPerStrip = 196;
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
-// #define ENABLE_SSD1306
+#define ENABLE_SSD1306
 
 // #define ENABLE_DEBUG
 
@@ -73,6 +73,7 @@ Preset testing_presets[] = {
     Mix<BatteryLevel, Red, Red, Orange, Orange, Orange, Blue, Blue, Blue, Blue, Green, Green, Green> >>(),
     "charging" },
 
+#if 0
   { "charging", "tracks/duel.wav",
     StylePtr< Mix<Bump<BatteryLevel, Int<8000>>, Black,
     Mix<BatteryLevel, Red, Red, Orange, Orange, Orange, Blue, Blue, Blue, Blue, Green, Green, Green> >>(),
@@ -81,7 +82,6 @@ Preset testing_presets[] = {
   { "TeensySF", "tracks/mars.wav", StyleNormalPtr<Stripes<1000, 1000, RED, GREEN, BLUE, CYAN, YELLOW, MAGENTA>, WHITE, 300, 800>(), "BLUE" },
   { "TeensySF", "tracks/mars.wav", StyleNormalPtr<RandomBlink<1000, RED, GREEN>, WHITE, 300, 800>(), "BLUE" },
   { "TeensySF", "tracks/mars.wav", StylePtr<FromFileStyle<>>(), "BLUE" },
-#if 1
   { "TeensySF", "tracks/cantina.wav", StylePtr<InOutHelper<SimpleClash<
     Lockup<Blast<Blue,White>,
            AudioFlicker<Blue,White>,
