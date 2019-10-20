@@ -451,7 +451,7 @@ public:
 
   void Play(const char* filename) {
     blorg_ = false;
-    strncpy(filename_, filename, sizeof(filename));
+    strncpy(filename_, filename, sizeof(filename_));
     blorg_ = true;
   }
 
