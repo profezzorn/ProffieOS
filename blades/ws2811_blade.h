@@ -46,10 +46,10 @@ public:
 
   void Power(bool on) {
     if (on) EnableBooster();
-    pinMode(pin_.pin(), on ? OUTPUT : INPUT_ANALOG);
     if (!powered_ && on) {
       pin_.BeginFrame();
       for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, Color8());
+      pinMode(pin_.pin(), OUTPUT);
       while (!pin_.IsReadyForEndFrame());
       power_->Power(on);
       pin_.EndFrame();
@@ -57,8 +57,13 @@ public:
       pin_.EndFrame();
       pin_.BeginFrame();
       pin_.EndFrame();
-    } else {
+    } else if (powered_ && !on_) {
+      pin_.BeginFrame();
+      for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, Color8());
+      pin_.EndFrame();
+      while (!pin_.IsReadyForEndFrame());
       power_->Power(on);
+      pinMode(pin_.pin(), INPUT_ANALOG);
     }
     powered_ = on;
     allow_disable_ = false;

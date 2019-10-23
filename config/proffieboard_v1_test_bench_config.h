@@ -12,7 +12,7 @@
 
 // Number of simultaneously connected blades.
 // (For interchangeable blades, see the blades[] array.)
-#define NUM_BLADES 1
+#define NUM_BLADES 2
 
 // Number of buttons
 #define NUM_BUTTONS 3
@@ -52,18 +52,27 @@ const unsigned int maxLedsPerStrip = 196;
 
 // #define ENABLE_DEBUG
 
+#define IDLE_OFF_TIME 10000
+
 #endif
 
 #ifdef CONFIG_PRESETS
 
 typedef RandomFlicker<Rgb<200,200,200>, Rgb<40,40,40>> OnPulse;
-typedef Pulsing<Rgb16<512,512,512>, Rgb16<50,50,50>, 3000> OffPulse;
+typedef Pulsing<WHITE, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
   { "TeensySF", "tracks/venus.wav",
-    StylePtr<InOutTr<BLUE, TrColorCycle<10000>, TrFade<800>>>(), "blorg" },
+    // DATA POWER LEACH
+    // Doesn't always turn off all the way!
+//    StyleNormalPtr<ColorChange<TrConcat<TrWipe<200>, WHITE, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(),
+    StylePtr<InOutTr<BLUE, TrColorCycle<10000>, TrFade<800>, OffPulse> >(),
+    StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
+    "cyan1"},
+#if 0  
   { "TeensySF", "tracks/venus.wav",
-    StyleNormalPtr<ColorChange<TrConcat<TrWipe<200>, WHITE, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(), "cyan1"},
+    StylePtr<InOutTr<BLUE, TrColorCycle<10000>, TrFade<800>>>(),
+    "blorg" },
 
   
 //    StyleNormalPtr<Gradient<ColorChange<TrFade<300>,RED, GREEN, BLUE>, ColorChange<TrFade<500>, CYAN, MAGENTA>>, WHITE, 300, 800>(), "cyan"},
@@ -135,13 +144,17 @@ Preset testing_presets[] = {
 //  { "graflex5", "tracks/cantina.wav", &style_pov },
 
   { "charging", "tracks/duel.wav", &style_charging, "charging" },
+#endif  
 };
 
 BladeConfig blades[] = {
   // Testing configuration.
 //  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
 //  { 1, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
-  { 1, SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()), CONFIGARRAY(testing_presets) }
+  { 1,
+    SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()),
+    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
+    CONFIGARRAY(testing_presets) }
 //  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>>(), CONFIGARRAY(testing_presets) }
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
 };

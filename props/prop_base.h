@@ -648,11 +648,11 @@ public:
 
 #ifdef IDLE_OFF_TIME
     if (SaberBase::IsOn() ||
-	(current_style() && current_style()->Chargin())) {
+	(current_style() && current_style()->Charging())) {
       last_on_time_ = millis();
     }
-    if (mills() - last_on_time_ > IDLE_OFF_TIME) {
-      SaberBase::DoOFF(OFF_IDLE);
+    if (millis() - last_on_time_ > IDLE_OFF_TIME) {
+      SaberBase::DoOff(OFF_IDLE);
       last_on_time_ = millis();
     }
 #endif
