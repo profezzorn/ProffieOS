@@ -62,6 +62,9 @@ public:
       case OFF_NORMAL:
         addEffect(EFFECT_RETRACTION, 0);
         break;
+      case OFF_IDLE:
+	// do nothing
+	break;
     }
   }
 

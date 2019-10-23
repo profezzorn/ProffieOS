@@ -110,10 +110,14 @@ public:
     AbstractBlade::SB_On();
     Power(true);
     on_ = true;
+    power_off_requested_ = false;
   }
   void SB_Off(OffType off_type) override {
     AbstractBlade::SB_Off(off_type);
     on_ = false;
+    if (off_type == OFF_IDLE) {
+      power_off_requested_ = true;
+    }
   }
 
   void SB_Top() override {
@@ -150,7 +154,7 @@ protected:
       }
       // Wait until it's our turn.
       while (current_blade) YIELD();
-      if (allow_disable_) {
+      if (allow_disable_ || power_off_requested_) {
 	if (!on_) {
 	  if (!poweroff_delay_start_) {
 	    poweroff_delay_start_ = millis();
@@ -185,6 +189,7 @@ private:
   bool on_ = false;
   bool powered_ = false;
   bool allow_disable_ = false;
+  bool power_off_requested_ = false;
   uint32_t poweroff_delay_ms_;
   uint32_t poweroff_delay_start_ = 0;
   LoopCounter loop_counter_;

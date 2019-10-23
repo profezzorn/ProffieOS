@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "config/default_proffieboard_config.h"
+#define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,7 +29,7 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 
 
@@ -500,6 +500,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/join.h"
 #include "transitions/boing.h"
 #include "transitions/random.h"
+#include "transitions/colorcycle.h"
 
 // This macro has a problem with commas, please don't use it.
 #define EASYBLADE(COLOR, CLASH_COLOR) \
@@ -594,6 +595,7 @@ class NoLED;
 #include "blades/fastled_blade.h"
 #include "blades/simple_blade.h"
 #include "blades/sub_blade.h"
+#include "blades/dim_blade.h"
 #include "blades/leds.h"
 #include "common/preset.h"
 #include "common/blade_config.h"

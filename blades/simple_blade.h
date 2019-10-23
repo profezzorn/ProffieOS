@@ -215,6 +215,9 @@ public:
     AbstractBlade::SB_Off(off_type);
     battery_monitor.SetLoad(false);
     on_ = false;
+    if (off_type == OFF_IDLE) {
+      Power(false);
+    }
   }
 
   bool Parse(const char* cmd, const char* arg) override {
