@@ -321,7 +321,8 @@ public:
     SaberBase::DoAccel(accel, clear);
     accel_loop_counter_.Update();
     if (clear) accel_ = accel;
-    Vec3 diff = (accel - accel_);
+    Vec3 diff = (accel - fusor.down());
+    if (clear) diff = Vec3(0,0,0);
     float v = diff.len();
     // If we're spinning the saber, require a stronger acceleration
     // to activate the clash.
@@ -644,8 +645,23 @@ public:
     } else {
       DoGesture(STAB_CLOSE);
     }
+
+#ifdef IDLE_OFF_TIME
+    if (SaberBase::IsOn() ||
+	(current_style() && current_style()->Charging())) {
+      last_on_time_ = millis();
+    }
+    if (millis() - last_on_time_ > IDLE_OFF_TIME) {
+      SaberBase::DoOff(OFF_IDLE);
+      last_on_time_ = millis();
+    }
+#endif
   }
 
+#ifdef IDLE_OFF_TIME
+  uint32_t last_on_time_;
+#endif  
+  
   void ToggleColorChangeMode() {
     if (!current_style()) return;
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {

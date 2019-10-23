@@ -500,6 +500,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/join.h"
 #include "transitions/boing.h"
 #include "transitions/random.h"
+#include "transitions/colorcycle.h"
 
 // This macro has a problem with commas, please don't use it.
 #define EASYBLADE(COLOR, CLASH_COLOR) \
@@ -594,6 +595,7 @@ class NoLED;
 #include "blades/fastled_blade.h"
 #include "blades/simple_blade.h"
 #include "blades/sub_blade.h"
+#include "blades/dim_blade.h"
 #include "blades/leds.h"
 #include "common/preset.h"
 #include "common/blade_config.h"

@@ -81,6 +81,7 @@ void LSanalogWriteSetup(uint32_t pin) {
 }
 
 void LSanalogWriteTeardown(uint32_t pin) {
+  pinMode(pin, INPUT_ANALOG);
   TeardownTimer(g_APinDescription[pin].pwm_instance);
 }
 

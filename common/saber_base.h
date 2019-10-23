@@ -40,6 +40,7 @@ public:
   enum OffType {
     OFF_NORMAL,
     OFF_BLAST,
+    OFF_IDLE,
   };
 
   static bool IsOn() { return on_; }

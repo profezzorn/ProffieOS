@@ -22,13 +22,16 @@ public:
   void clear() override {
     if (!offset_) BladeWrapper::clear();
   }
-  void SetStyle(BladeStyle* style) {
+  virtual bool primary() const {
+    return !offset_;
+  }
+  void SetStyle(BladeStyle* style) override {
     BladeWrapper::SetStyle(style);
-    if (!offset_) blade_->SetStyle(this);
+    if (primary()) blade_->SetStyle(this);
   }
 
-  BladeStyle* UnSetStyle() {
-    if (!offset_) blade_->UnSetStyle();
+  BladeStyle* UnSetStyle() override {
+    if (primary()) blade_->UnSetStyle();
     return BladeWrapper::UnSetStyle();
   }
 
@@ -126,6 +129,9 @@ class BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
 }
 
 class SubBladeWrapperReverse : public SubBladeWrapper {
+  virtual bool primary() const override {
+    return offset_ + 1 == num_leds_;
+  }
   void set(int led, Color16 c) override {
     return blade_->set(offset_ - led, c);
   }

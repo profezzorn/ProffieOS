@@ -222,6 +222,9 @@ public:
 
     // If acceleration is not 1.0G, don't trust it.
     wGyro += fabs(accel_.len() - 1.0f) * 50.0;
+
+    // If acceleration is changing rapidly, don't trust it.
+    wGyro += accel_extrapolator_.slope().len() * 1000;
     CHECK_NAN(wGyro);
 
     mss_ = (accel_ - down_) * G_constant; // change unit from G to m/s/s
