@@ -26,15 +26,28 @@ public:
     return !offset_;
   }
   void SetStyle(BladeStyle* style) override {
-    BladeWrapper::SetStyle(style);
+    // current_style should be nullptr;
+    current_style_ = style;
+    if (current_style_) {
+      current_style_->activate();
+    }
     if (primary()) blade_->SetStyle(this);
   }
 
   BladeStyle* UnSetStyle() override {
     if (primary()) blade_->UnSetStyle();
-    return BladeWrapper::UnSetStyle();
+    BladeStyle *ret = current_style_;
+    if (ret) {
+      ret->deactivate();
+    }
+    current_style_ = nullptr;
+    return ret;
   }
 
+  BladeStyle* current_style() const override {
+    return current_style_;
+  }
+  
   void SetupSubBlade(BladeBase* base, int offset, int num_leds) {
     blade_ = base;
     offset_ = offset;
@@ -81,6 +94,7 @@ public:
   }
 
 protected:
+  BladeStyle *current_style_ = nullptr;
   int num_leds_;
   int offset_;
   bool allow_disable_;

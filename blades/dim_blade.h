@@ -8,7 +8,7 @@ public:
     fraction_ = fraction;
   }
   void set(int led, Color16 c) override {
-    return blade_->set(led, Color16().mix2(c, fraction_));
+    return blade_->set(led, c.mix2(Color16(), fraction_));
   }
 private:
   int fraction_;

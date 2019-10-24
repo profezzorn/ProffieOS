@@ -22,6 +22,10 @@ public:
   void Activate() override { blade_->Activate(); }
   void Deactivate() override { blade_->Deactivate(); }
   bool IsPrimary() override { return blade_->IsPrimary(); }
+  void SetStyle(BladeStyle* style) override { blade_->SetStyle(style); }
+  BladeStyle* UnSetStyle() override { return blade_->UnSetStyle(); }
+  BladeStyle* current_style() const  override { return blade_->current_style(); }
+  
 
   BladeBase* blade_;
 };
