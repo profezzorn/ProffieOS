@@ -24,10 +24,27 @@ public:
     return num_effects_;
   }
 
-  virtual void SetStyle(BladeStyle* style) {
-    BladeBase::SetStyle(style);
+  void SetStyle(BladeStyle* style) override {
+    // current_style should be nullptr;
+    current_style_ = style;
+    if (current_style_) {
+      current_style_->activate();
+    }
   }
 
+  BladeStyle* UnSetStyle() override {
+    BladeStyle *ret = current_style_;
+    if (ret) {
+      ret->deactivate();
+    }
+    current_style_ = nullptr;
+    return ret;
+  }
+  
+  BladeStyle* current_style() const override {
+    return current_style_;
+  }
+  
   void addEffect(BladeEffectType type, float location) {
     for (size_t i = NELEM(effects_) - 1; i; i--) {
       effects_[i] = effects_[i-1];
@@ -91,6 +108,8 @@ public:
     return GetPrimaryBlade() == this;
   }
 
+protected:
+  BladeStyle *current_style_ = nullptr;
 private:
   size_t num_effects_ = 0;
   BladeEffect effects_[4];

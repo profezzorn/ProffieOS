@@ -63,28 +63,9 @@ public:
   virtual void Activate() = 0;
   virtual void Deactivate() = 0;
 
-  // TODO: Move to abstract_blade ?
-  virtual BladeStyle* UnSetStyle() {
-    BladeStyle *ret = current_style_;
-    if (ret) {
-      ret->deactivate();
-    }
-    current_style_ = nullptr;
-    handled_types_ = EFFECT_NONE;
-    return ret;
-  }
-  virtual void SetStyle(BladeStyle* style) {
-    // current_style should be nullptr;
-    current_style_ = style;
-    if (current_style_) {
-      current_style_->activate();
-    }
-    handled_types_ = EFFECT_NONE;
-  }
-
-  BladeStyle* current_style() const {
-    return current_style_;
-  }
+  virtual BladeStyle* UnSetStyle() = 0;
+  virtual void SetStyle(BladeStyle* style) = 0;
+  virtual BladeStyle* current_style() const = 0;
 
   // Let the blade know that this style handles "effect".
   static void HandleEffectType(BladeEffectType effect) {
@@ -106,7 +87,6 @@ public:
   
  protected:
   static BladeEffectType handled_types_;
-  BladeStyle *current_style_ = nullptr;
 };
 
 BladeEffectType BladeBase::handled_types_ = EFFECT_NONE;
