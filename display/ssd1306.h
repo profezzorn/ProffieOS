@@ -178,12 +178,14 @@ public:
         DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
 	screen_ = SCREEN_PLI;
 	layout_ = LAYOUT_NATIVE;
+	xor_ = 0;
 	return 5000;
 
       case SCREEN_PLI:
 	memset(frame_buffer_, 0, sizeof(frame_buffer_));
         DrawBatteryBar(BatteryBar16);
 	layout_ = LAYOUT_NATIVE;
+	xor_ = 0;
 	return 200;  // redraw once every 200 ms
 
       case SCREEN_MESSAGE:
@@ -195,6 +197,7 @@ public:
         }
 	screen_ = SCREEN_PLI;
 	layout_ = LAYOUT_NATIVE;
+	xor_ = 0;
 	return 5000;
 
       case SCREEN_IMAGE:
@@ -205,6 +208,7 @@ public:
 	}
 	if (eof_) {
 	  screen_ = SCREEN_PLI;
+	  if (frame_count_ == 1) return 5000;
 	  return FillFrameBuffer();
 	}
 	frame_count_++;
@@ -355,10 +359,9 @@ public:
 		b |= (*pos >> shift) & 1;
 		pos -= 16;
 	      }
-	      b = ~b;
 	    }
 	  }
-	  Wire.write(b);
+	  Wire.write(b ^ xor_);
           i++;
         }
         Wire.endTransmission();
@@ -379,9 +382,11 @@ public:
 #define TAG2(X, Y) (((X) << 8) | (Y))
 
   bool ReadImage(FileReader* f) {
+    uint32_t file_end = 0;
     if (ypos_ >= height_) {
       if (looped_) f->Seek(0);
       ypos_ = 0;
+      uint32_t file_start = f->Tell();
       int a = f->Read();
       int b = f->Read();
       int width;
@@ -397,6 +402,7 @@ public:
 	  f->skipwhite();
 	  height_ = f->readIntValue();
 	  f->Read();
+	  xor_ = 255;
 	  break;
 	  
 	case TAG2('B', 'M'):
@@ -405,14 +411,16 @@ public:
 	case TAG2('C', 'P'):
 	case TAG2('I', 'C'):
 	case TAG2('P', 'T'):
+	  xor_ = 0;
 	  // BMP
+	  file_end = file_start + f->ReadType<uint32_t>();
 	  STDOUT << "BMP detected!\n";
-	  f->Seek(10); // check height and width
+	  f->Skip(4);
 	  uint32_t offset = f->ReadType<uint32_t>();
-	  f->Seek(18); // 4 bytes into DIB
+	  f->Skip(4);
 	  width = f->ReadType<uint16_t>();
 	  height_ = f->ReadType<uint16_t>();
-	  f->Seek(offset);
+	  f->Seek(file_start + offset);
       }
       if (width != 128 && width != 32) {
 	STDOUT << "Wrong size image: " << width << "x" << height_ << "\n";
@@ -428,6 +436,7 @@ public:
     if (f->Available() < sizeof(frame_buffer_)) return false;
     f->Read((uint8_t*)frame_buffer_, sizeof(frame_buffer_));
     ypos_ += 32;
+    if (file_end) f->Seek(file_end);
     return true;
   }
 
@@ -469,6 +478,7 @@ public:
   }
 private:
   uint16_t i;
+  uint8_t xor_ = 0;
   uint32_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
   char message_[32];
