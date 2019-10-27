@@ -401,7 +401,7 @@ EFFECT2(bgnlock, lockup); // monophonic and polyphonic begin lock
 EFFECT(endlock); // Plecter endlock support, used for polyphonic name too
 
 EFFECT(preon);
-EFFECT(postoff);
+EFFECT(pstoff);
 
 // Polyphonic fonts
 EFFECT(blst);
