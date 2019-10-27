@@ -406,7 +406,7 @@ EFFECT(pstoff);
 // Polyphonic fonts
 EFFECT(blst);
 EFFECT(clsh);
-EFFECT2(in, postoff);
+EFFECT2(in, pstoff);
 EFFECT(out);
 EFFECT(lock);
 EFFECT(swng);
