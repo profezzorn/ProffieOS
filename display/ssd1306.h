@@ -283,7 +283,6 @@ public:
     // powered down and up again properly.
     // This only makes it black, which prevents burn-in.
     if (offtype == OFF_IDLE) {
-      STDOUT << "SCREEN IDLE OFF\n";
       SetScreenNow(SCREEN_OFF);
     }
   }
