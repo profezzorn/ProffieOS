@@ -70,11 +70,12 @@ Preset testing_presets[] = {
 
     StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
     "cyan1"},
-#if 0  
-  { "TeensySF", "tracks/venus.wav",
+  { "SmthJedi", "tracks/venus.wav",
     StylePtr<InOutTr<BLUE, TrColorCycle<10000>, TrFade<800>>>(),
+    StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
     "blorg" },
 
+#if 0  
   
 //    StyleNormalPtr<Gradient<ColorChange<TrFade<300>,RED, GREEN, BLUE>, ColorChange<TrFade<500>, CYAN, MAGENTA>>, WHITE, 300, 800>(), "cyan"},
   { "charging", "tracks/duel.wav",

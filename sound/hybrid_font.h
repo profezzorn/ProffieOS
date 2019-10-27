@@ -227,6 +227,8 @@ public:
 
   void SB_Off(OffType off_type) override {
     switch (off_type) {
+      case OFF_IDLE:
+	break;
       case OFF_NORMAL:
         if (monophonic_hum_) {
           size_t total = poweroff.files_found() + pwroff.files_found();
