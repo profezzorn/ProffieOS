@@ -21,15 +21,15 @@ public:
 #ifdef ENABLE_AUDIO
     if (muted) {
       if (dynamic_mixer.get_volume()) {
-	muted_volume_ = dynamic_mixer.get_volume();
-	dynamic_mixer.set_volume(0);
-	return true;
+        muted_volume_ = dynamic_mixer.get_volume();
+        dynamic_mixer.set_volume(0);
+        return true;
       }
     } else {
       if (muted_volume_) {
-	dynamic_mixer.set_volume(muted_volume_);
-	muted_volume_ = 0;
-	return true;
+        dynamic_mixer.set_volume(muted_volume_);
+        muted_volume_ = 0;
+        return true;
       }
     }
 #endif      
@@ -95,11 +95,11 @@ public:
     } else {
       IgnoreClash(100);
       if (SaberBase::IsOn()) {
-	if (stab) {
-	  SaberBase::DoStab();
-	} else {
-	  SaberBase::DoClash();
-	}
+        if (stab) {
+          SaberBase::DoStab();
+        } else {
+          SaberBase::DoClash();
+        }
       }
     }
   }
@@ -306,9 +306,9 @@ public:
     // fragmentation.
     ONCEPERBLADE(UNSET_BLADE_STYLE)
 
-#define DEACTIVATE(N) do {			\
-    if (current_config->blade##N) 		\
-      current_config->blade##N->Deactivate();	\
+#define DEACTIVATE(N) do {                      \
+    if (current_config->blade##N)               \
+      current_config->blade##N->Deactivate();   \
   } while(0);
 
     ONCEPERBLADE(DEACTIVATE);
@@ -334,28 +334,28 @@ public:
     // to activate the clash.
     if (v > CLASH_THRESHOLD_G + filtered_gyro_.len() / 200.0) {
       if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
-	diff = -diff;
+        diff = -diff;
       }
       bool stab = diff.x < - 2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z) &&
 #if 0
       Vec3 speed = fusor.speed();
-	// Speed checks simply don't work yet
-	speed.y * speed.y + speed.z * speed.z < 5.0 && // TODO: Make this tighter
-	speed.x > 0.1 &&
-#endif	
-	fusor.swing_speed() < 150;
+        // Speed checks simply don't work yet
+        speed.y * speed.y + speed.z * speed.z < 5.0 && // TODO: Make this tighter
+        speed.x > 0.1 &&
+#endif  
+        fusor.swing_speed() < 150;
 #if 1
       STDOUT << "ACCEL: " << accel
-	     << " diff=" << diff
-	     << " v=" << v
-	     << " fgl=" << (filtered_gyro_.len() / 200.0)
-	     << " accel_=" << accel_
-	     << " clear=" << clear
-	     << " millis=" << millis()
-	     << " swing_speed=" << fusor.swing_speed()
-	     << " mss=" << fusor.mss()
-	     << " stab=" << stab
-	     << "\n";
+             << " diff=" << diff
+             << " v=" << v
+             << " fgl=" << (filtered_gyro_.len() / 200.0)
+             << " accel_=" << accel_
+             << " clear=" << clear
+             << " millis=" << millis()
+             << " swing_speed=" << fusor.swing_speed()
+             << " mss=" << fusor.mss()
+             << " stab=" << stab
+             << "\n";
 #endif
       // Needs de-bouncing
       Clash(stab);
@@ -436,9 +436,9 @@ public:
         strokes[NELEM(strokes)-1].start_millis -
         strokes[NELEM(strokes)-2].end_millis;
       STDOUT << " separation=" << separation 
-	     << " mss=" << fusor.mss()
-	     << " swspd=" << fusor.swing_speed()
-	     << "\n";
+             << " mss=" << fusor.mss()
+             << " swspd=" << fusor.swing_speed()
+             << "\n";
     }
     if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
          strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
@@ -461,12 +461,12 @@ public:
     int i;
     for (i = 0; i < 5; i++) {
       if (strokes[NELEM(strokes)-1-i].type !=
-	  ((i & 1) ? SHAKE_REW : SHAKE_FWD)) break;
+          ((i & 1) ? SHAKE_REW : SHAKE_FWD)) break;
       if (i) {
         uint32_t separation =
           strokes[NELEM(strokes)-i].start_millis -
           strokes[NELEM(strokes)-1-i].end_millis;
-	if (separation > 250) break;
+        if (separation > 250) break;
       }
     }
     if (i == 5) {
@@ -480,11 +480,11 @@ public:
       case TWIST_CLOSE:
       case TWIST_LEFT:
       case TWIST_RIGHT:
-	return TWIST_CLOSE;
+        return TWIST_CLOSE;
       case SHAKE_CLOSE:
       case SHAKE_FWD:
       case SHAKE_REW:
-	break;
+        break;
     }
     return SHAKE_CLOSE;
   }
@@ -502,17 +502,17 @@ public:
   void DoGesture(StrokeType gesture) {
     if (gesture == strokes[NELEM(strokes)-1].type) {
       if (strokes[NELEM(strokes)-1].end_millis == 0) {
-	// Stroke not done, wait.
-	return;
+        // Stroke not done, wait.
+        return;
       }
       if (millis() - strokes[NELEM(strokes)-1].end_millis < 50)  {
-	// Stroke continues
-	strokes[NELEM(strokes)-1].end_millis = millis();
-	return;
+        // Stroke continues
+        strokes[NELEM(strokes)-1].end_millis = millis();
+        return;
       }
     }
     if (strokes[NELEM(strokes) - 1].end_millis == 0 &&
-	GetStrokeGroup(gesture) == GetStrokeGroup(strokes[NELEM(strokes) - 1].type)) {
+        GetStrokeGroup(gesture) == GetStrokeGroup(strokes[NELEM(strokes) - 1].type)) {
       strokes[NELEM(strokes) - 1].end_millis = millis();
       ProcessStrokes();
     }
@@ -520,9 +520,9 @@ public:
     if (GetStrokeGroup(gesture) == gesture) return;
     // If last stroke is very short, just write over it.
     if (strokes[NELEM(strokes)-1].end_millis -
-	strokes[NELEM(strokes)-1].start_millis > 10) {
+        strokes[NELEM(strokes)-1].start_millis > 10) {
       for (size_t i = 0; i < NELEM(strokes) - 1; i++) {
-	strokes[i] = strokes[i+1];
+        strokes[i] = strokes[i+1];
       }
     }
     strokes[NELEM(strokes)-1].type = gesture;
@@ -613,43 +613,42 @@ public:
 #define TICK_ANGLE (M_PI * 2 / 12)
     switch (SaberBase::GetColorChangeMode()) {
       case SaberBase::COLOR_CHANGE_MODE_NONE:
-	break;
+        break;
       case SaberBase::COLOR_CHANGE_MODE_STEPPED: {
-	float a = fusor.angle2() - current_tick_angle_;
-	if (a > M_PI) a-=M_PI*2;
-	if (a < -M_PI) a+=M_PI*2;
-	if (a > TICK_ANGLE * 2/3) {
-	  current_tick_angle_ += TICK_ANGLE;
-	  if (current_tick_angle_ > M_PI) current_tick_angle_ -= M_PI * 2;
-	  STDOUT << "TICK+\n";
-	  SaberBase::UpdateVariation(1);
-	}
-	if (a < -TICK_ANGLE * 2/3) {
-	  current_tick_angle_ -= TICK_ANGLE;
-	  if (current_tick_angle_ < M_PI) current_tick_angle_ += M_PI * 2;
-	  STDOUT << "TICK-\n";
-	  SaberBase::UpdateVariation(-1);
-	}
-	break;
+        float a = fusor.angle2() - current_tick_angle_;
+        if (a > M_PI) a-=M_PI*2;
+        if (a < -M_PI) a+=M_PI*2;
+        if (a > TICK_ANGLE * 2/3) {
+          current_tick_angle_ += TICK_ANGLE;
+          if (current_tick_angle_ > M_PI) current_tick_angle_ -= M_PI * 2;
+          STDOUT << "TICK+\n";
+          SaberBase::UpdateVariation(1);
+        }
+        if (a < -TICK_ANGLE * 2/3) {
+          current_tick_angle_ -= TICK_ANGLE;
+          if (current_tick_angle_ < M_PI) current_tick_angle_ += M_PI * 2;
+          STDOUT << "TICK-\n";
+          SaberBase::UpdateVariation(-1);
+        }
+        break;
       }
       case SaberBase::COLOR_CHANGE_MODE_SMOOTH:
-	float a = fmod(fusor.angle2() - current_tick_angle_, M_PI * 2);
-	SaberBase::SetVariation(0x7fff & (int32_t)(a * (32768 / (M_PI * 2))));
-	break;
+        float a = fmod(fusor.angle2() - current_tick_angle_, M_PI * 2);
+        SaberBase::SetVariation(0x7fff & (int32_t)(a * (32768 / (M_PI * 2))));
+        break;
     }
     if (monitor.ShouldPrint(Monitoring::MonitorVariation)) {
       STDOUT << " variation = " << SaberBase::GetCurrentVariation()
-	     << " ccmode = " << SaberBase::GetColorChangeMode()
-	     << "\n";
+             << " ccmode = " << SaberBase::GetColorChangeMode()
+             << "\n";
     }
     
 #endif
 
-
     Vec3 mss = fusor.mss();
     if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
-	(mss.x > 7 || mss.x < -6)  &&
-	fusor.swing_speed() < 150) {
+        (mss.x > 7 || mss.x < -6)  &&
+        fusor.swing_speed() < 150) {
       DoGesture(mss.x > 0 ? SHAKE_FWD : SHAKE_REW);
     } else {
       DoGesture(SHAKE_CLOSE);
@@ -657,7 +656,7 @@ public:
 
 #ifdef IDLE_OFF_TIME
     if (SaberBase::IsOn() ||
-	(current_style() && current_style()->Charging())) {
+        (current_style() && current_style()->Charging())) {
       last_on_time_ = millis();
     }
     if (millis() - last_on_time_ > IDLE_OFF_TIME) {
@@ -676,11 +675,11 @@ public:
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {
       current_tick_angle_ = fusor.angle2();
       if (!current_style()->HandlesColorChange()) {
-	STDOUT << "Entering smooth color change mode.\n";
-	SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
+        STDOUT << "Entering smooth color change mode.\n";
+        SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
       } else {
-	STDOUT << "Entering stepped color change mode.\n";
-	SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
+        STDOUT << "Entering stepped color change mode.\n";
+        SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
       }
     } else {
 #ifdef SAVE_COLOR_CHANGE
@@ -928,8 +927,8 @@ public:
       CurrentPreset tmp;
       for (int i = 0; ; i++) {
         tmp.SetPreset(i);
-	if (tmp.preset_num != i) break;
-	tmp.Print();
+        if (tmp.preset_num != i) break;
+        tmp.Print();
       }
       return true;
     }
@@ -1095,7 +1094,7 @@ public:
             isfont = LSFS::Exists(fname);
           }
           if (isfont) {
-	    STDOUT.println(iter.name());
+            STDOUT.println(iter.name());
           }
         }
       }
@@ -1126,11 +1125,11 @@ public:
 
     switch (event) {
       case EVENT_RELEASED:
-	clash_pending_ = false;
+        clash_pending_ = false;
       case EVENT_PRESSED:
-	IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
+        IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
       default:
-	break;
+        break;
     }
 
     if (Event2(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
