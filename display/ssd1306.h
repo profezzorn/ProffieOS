@@ -93,6 +93,7 @@ public:
     SCREEN_MESSAGE,
     SCREEN_PLI,
     SCREEN_IMAGE,  // also for animations
+    SCREEN_OFF,
   };
 
   enum ScreenLayout {
@@ -167,18 +168,28 @@ public:
     }
   }
 
-#define FRAME_RATE_SLEEP 20  
+#define FRAME_RATE_SLEEP 41
 
   // Fill frame buffer and return how long to display it.
   int FillFrameBuffer() {
     switch (screen_) {
+      case SCREEN_OFF:
+	memset(frame_buffer_, 0, sizeof(frame_buffer_));
+	layout_ = LAYOUT_NATIVE;
+	xor_ = 0;
+	invert_y_ = false;
+	return 1000;
+	
       case SCREEN_STARTUP:
 	memset(frame_buffer_, 0, sizeof(frame_buffer_));
-        DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
-        DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
+        // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
+        // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
+        DrawText("ProffieOS", 0,15, Starjedi10pt7bGlyphs);
+        DrawText(version,0,31, Starjedi10pt7bGlyphs);
 	screen_ = SCREEN_PLI;
 	layout_ = LAYOUT_NATIVE;
 	xor_ = 0;
+	invert_y_ = false;
 	return 5000;
 
       case SCREEN_PLI:
@@ -186,6 +197,7 @@ public:
         DrawBatteryBar(BatteryBar16);
 	layout_ = LAYOUT_NATIVE;
 	xor_ = 0;
+	invert_y_ = false;
 	return 200;  // redraw once every 200 ms
 
       case SCREEN_MESSAGE:
@@ -198,6 +210,7 @@ public:
 	screen_ = SCREEN_PLI;
 	layout_ = LAYOUT_NATIVE;
 	xor_ = 0;
+	invert_y_ = false;
 	return 5000;
 
       case SCREEN_IMAGE:
@@ -265,6 +278,16 @@ public:
     STDOUT.println("");
   }
 
+  void SB_Off(OffType offtype) override {
+    // TODO: Make it so that screen can be
+    // powered down and up again properly.
+    // This only makes it black, which prevents burn-in.
+    if (offtype == OFF_IDLE) {
+      STDOUT << "SCREEN IDLE OFF\n";
+      SetScreenNow(SCREEN_OFF);
+    }
+  }
+
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (!i2cbus.inited()) YIELD();
@@ -308,6 +331,7 @@ public:
     
     while (true) {
       millis_to_display_ = FillFrameBuffer();
+      frame_start_time_ = millis();
       
       Send(COLUMNADDR);
       Send(0);   // Column start address (0 = reset)
@@ -343,11 +367,20 @@ public:
 	      b = ((unsigned char *)frame_buffer_)[i];
 	      break;
 	    case LAYOUT_PORTRAIT:
-	      b = ~((unsigned char *)frame_buffer_)[i ^ 3];
+	      if (!invert_y_) {
+		b = ((unsigned char *)frame_buffer_)[511 - i];
+	      } else {
+		b = ((unsigned char *)frame_buffer_)[i ^ 3];
+	      }
 	      break;
 	    case LAYOUT_LANDSCAPE: {
 	      int x = i >> 2;
 	      int y = ((i & 3) << 3) + 7;
+	      int delta_pos = -16;
+	      if (invert_y_) {
+		y = 31 - y;
+		delta_pos = 16;
+	      }
 //	      STDOUT << " LANDSCAPE DECODE!! x = " << x << " y = " << y << "\n";
 	      
 	      int shift = 7 - (x & 7);
@@ -357,7 +390,7 @@ public:
 	      for (int j = 0; j < 8; j++) {
 		b <<= 1;
 		b |= (*pos >> shift) & 1;
-		pos -= 16;
+		pos += delta_pos;
 	      }
 	    }
 	  }
@@ -373,7 +406,7 @@ public:
       loop_counter_.Update();
       frame_available_ = false;
       scheduleFillBuffer();
-      SLEEP(millis_to_display_);
+      while (millis() - frame_start_time_ < millis_to_display_) YIELD();
     }
     
     STATE_MACHINE_END();
@@ -403,6 +436,7 @@ public:
 	  height_ = f->readIntValue();
 	  f->Read();
 	  xor_ = 255;
+	  invert_y_ = false;
 	  break;
 	  
 	case TAG2('B', 'M'):
@@ -412,6 +446,7 @@ public:
 	case TAG2('I', 'C'):
 	case TAG2('P', 'T'):
 	  xor_ = 0;
+	  invert_y_ = true; // bmp data is bottom to top
 	  // BMP
 	  file_end = file_start + f->ReadType<uint32_t>();
 	  STDOUT << "BMP detected!\n";
@@ -479,10 +514,12 @@ public:
 private:
   uint16_t i;
   uint8_t xor_ = 0;
+  bool invert_y_ = 0;
   uint32_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
   char message_[32];
   uint32_t millis_to_display_;
+  uint32_t frame_start_time_;
   Screen screen_;
   int32_t height_ = 0;
   int32_t ypos_ = 0;

@@ -174,6 +174,9 @@ public:
 
   // Select preset (font/style)
   void SetPreset(int preset_num, bool announce) {
+#ifdef IDLE_OFF_TIME
+    last_on_time_ = millis();
+#endif    
     bool on = SaberBase::IsOn();
     if (on) Off();
     // First free all styles, then allocate new ones to avoid memory
@@ -225,6 +228,9 @@ public:
 
   // Rotates presets backwards and saves.
   virtual void rotate_presets() {
+#ifdef IDLE_OFF_TIME
+    last_on_time_ = millis();
+#endif    
 #ifdef ENABLE_AUDIO
     beeper.Beep(0.05, 2000.0);
 #endif
