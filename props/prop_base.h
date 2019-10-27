@@ -400,9 +400,9 @@ public:
     TWIST_LEFT,
     TWIST_RIGHT,
 
-    STAB_CLOSE,
-    STAB_FWD,
-    STAB_REW
+    SHAKE_CLOSE,
+    SHAKE_FWD,
+    SHAKE_REW
   };
   struct Stroke {
     StrokeType type;
@@ -423,21 +423,22 @@ public:
         case TWIST_RIGHT:
           STDOUT.print("TwistRight");
           break;
-        case STAB_FWD:
+        case SHAKE_FWD:
           STDOUT.print("Thrust");
           break;
-        case STAB_REW:
+        case SHAKE_REW:
           STDOUT.print("Yank");
           break;
         default: break;
       }
-      STDOUT.print(" len=");
-      STDOUT.print(strokes[NELEM(strokes)-1].length());
-      STDOUT.print(" separation=");
+      STDOUT << " len = " << strokes[NELEM(strokes)-1].length();
       uint32_t separation =
         strokes[NELEM(strokes)-1].start_millis -
         strokes[NELEM(strokes)-2].end_millis;
-      STDOUT.println(separation);
+      STDOUT << " separation=" << separation 
+	     << " mss=" << fusor.mss()
+	     << " swspd=" << fusor.swing_speed()
+	     << "\n";
     }
     if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
          strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
@@ -460,7 +461,7 @@ public:
     int i;
     for (i = 0; i < 5; i++) {
       if (strokes[NELEM(strokes)-1-i].type !=
-	  ((i & 1) ? STAB_REW : STAB_FWD)) break;
+	  ((i & 1) ? SHAKE_REW : SHAKE_FWD)) break;
       if (i) {
         uint32_t separation =
           strokes[NELEM(strokes)-i].start_millis -
@@ -469,6 +470,7 @@ public:
       }
     }
     if (i == 5) {
+      strokes[NELEM(strokes)-1].type = SHAKE_CLOSE;
       Event(BUTTON_NONE, EVENT_SHAKE);
     }
   }
@@ -479,12 +481,12 @@ public:
       case TWIST_LEFT:
       case TWIST_RIGHT:
 	return TWIST_CLOSE;
-      case STAB_CLOSE:
-      case STAB_FWD:
-      case STAB_REW:
+      case SHAKE_CLOSE:
+      case SHAKE_FWD:
+      case SHAKE_REW:
 	break;
     }
-    return STAB_CLOSE;
+    return SHAKE_CLOSE;
   }
 
   bool ShouldClose(StrokeType a, StrokeType b) {
@@ -643,13 +645,14 @@ public:
     
 #endif
 
+
     Vec3 mss = fusor.mss();
     if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
-	fabs(mss.x) > 8 &&
+	(mss.x > 7 || mss.x < -6)  &&
 	fusor.swing_speed() < 150) {
-      DoGesture(mss.x > 0 ? STAB_FWD : STAB_REW);
+      DoGesture(mss.x > 0 ? SHAKE_FWD : SHAKE_REW);
     } else {
-      DoGesture(STAB_CLOSE);
+      DoGesture(SHAKE_CLOSE);
     }
 
 #ifdef IDLE_OFF_TIME
