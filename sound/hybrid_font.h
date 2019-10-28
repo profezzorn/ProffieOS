@@ -2,7 +2,7 @@
 #define SOUND_HYBRID_FONT_H
 #include "../common/fuse.h"
 
-class IgniterConfigFile : public ConfigFile {
+class FontConfigFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
     CONFIG_VARIABLE(humStart, 100);
@@ -15,10 +15,13 @@ public:
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.2f);
     CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 260.0f);
+    CONFIG_VARIABLE(ProffieOSAnimationFrameRate, 24.0f);
   }
+  // Igniter compat
   int humStart;
   int volHum;
   int volEff;
+
   float ProffieOSSwingSpeedThreshold;
   float ProffieOSSwingVolumeSharpness;
   float ProffieOSMaxSwingVolume;
@@ -26,8 +29,10 @@ public:
   float ProffieOSSmoothSwingDucking;
   float ProffieOSSwingLowerThreshold;
   float ProffieOSSlashAccelerationThreshold;
+  float ProffieOSAnimationFrameRate;
 };
 
+FontConfigFile font_config;
 
 // Monophonic sound fonts are the most common.
 // These fonts are fairly simple, as generally only one sound is
@@ -42,7 +47,7 @@ public:
   HybridFont() : SaberBase(NOLINK) { }
   void Activate() {
     SetupStandardAudio();
-    config_.ReadInCurrentDir("config.ini");
+    font_config.ReadInCurrentDir("config.ini");
     STDOUT.print("Activating ");
     // TODO: Find more reliable way to figure out if it's a monophonic or polyphonic font!!!!
     monophonic_hum_ = SFX_poweron || SFX_poweroff || SFX_pwroff;
@@ -107,9 +112,9 @@ public:
       hum_player_.Free();
       next_hum_player_->set_volume_now(0);
       next_hum_player_->set_fade_time(0.003);
-      next_hum_player_->set_volume(config_.volEff / 16.0);
+      next_hum_player_->set_volume(font_config.volEff / 16.0);
     } else {
-      next_hum_player_->set_volume_now(config_.volEff / 16.0);
+      next_hum_player_->set_volume_now(font_config.volEff / 16.0);
     }
     hum_player_ = next_hum_player_;
     next_hum_player_.Free();
@@ -123,7 +128,7 @@ public:
     if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
     RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
     if (player) {
-      player->set_volume_now(config_.volEff / 16.0);
+      player->set_volume_now(font_config.volEff / 16.0);
       player->PlayOnce(f);
       current_effect_length_ = player->length();
     }
@@ -158,7 +163,7 @@ public:
         if (swing_player_) {
           // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
           // between 0 (full overlap) and 1.0 (no overlap)
-          if (swing_player_->pos() / swing_player_->length() >= config_.ProffieOSSwingOverlap) {
+          if (swing_player_->pos() / swing_player_->length() >= font_config.ProffieOSSwingOverlap) {
             swing_player_->set_fade_time(swing_player_->length() - swing_player_->pos());
             swing_player_->FadeAndStop();
             swing_player_.Free();
@@ -182,7 +187,7 @@ public:
       }
       float swing_strength = std::min<float>(1.0, swing_speed / swingThreshold);
       SetSwingVolume(swing_strength, 1.0);
-    } else if (swing_speed <= config_.ProffieOSSwingLowerThreshold) {
+    } else if (swing_speed <= font_config.ProffieOSSwingLowerThreshold) {
       swinging_ = false;
       swing_player_.Free();
     }
@@ -196,10 +201,11 @@ public:
   float SetSwingVolume(float swing_strength, float mixhum) override {
     if(swing_player_) {
       if (swing_player_->isPlaying()) {
-        float accent_volume = powf(swing_strength, config_.ProffieOSSwingVolumeSharpness) * config_.ProffieOSMaxSwingVolume;
+        float accent_volume = powf(
+	  swing_strength, font_config.ProffieOSSwingVolumeSharpness) * font_config.ProffieOSMaxSwingVolume;
         swing_player_->set_fade_time(0.04);
         swing_player_->set_volume(accent_volume);
-        mixhum = mixhum - mixhum * (config_.ProffieOSSmoothSwingDucking * accent_volume);
+        mixhum = mixhum - mixhum * (font_config.ProffieOSSmoothSwingDucking * accent_volume);
       } else {
         swing_player_.Free();
       }
@@ -236,8 +242,8 @@ public:
 	hum_start_ = millis();
       }
       RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&SFX_out);
-      if (config_.humStart && tmp) {
-	int delay_ms = 1000 * tmp->length() - config_.humStart;
+      if (font_config.humStart && tmp) {
+	int delay_ms = 1000 * tmp->length() - font_config.humStart;
 	if (delay_ms > 0 && delay_ms < 30000) {
 	  hum_start_ += delay_ms;
 	}
@@ -448,7 +454,9 @@ public:
   bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
     if (state_ != STATE_OFF && !(SFX_lockup && SaberBase::Lockup())) {
-      StartSwing(gyro, config_.ProffieOSSwingSpeedThreshold, config_.ProffieOSSlashAccelerationThreshold);
+      StartSwing(gyro,
+		 font_config.ProffieOSSwingSpeedThreshold,
+		 font_config.ProffieOSSlashAccelerationThreshold);
     }
   }
 
@@ -456,12 +464,12 @@ public:
     return current_effect_length_;
   }
 
+
  private:
   uint32_t last_micros_;
   uint32_t hum_start_;
   bool monophonic_hum_;
   bool guess_monophonic_;
-  IgniterConfigFile config_;
   State state_;
   float volume_;
   float current_effect_length_ = 0.0;
