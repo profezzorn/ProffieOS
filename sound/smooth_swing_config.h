@@ -4,7 +4,7 @@
 class SmoothSwingConfigFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
-    CONFIG_VARIABLE(Version, 1);
+    CONFIG_VARIABLE(Version, 2);
     CONFIG_VARIABLE(SwingSensitivity, 450.0f);
     CONFIG_VARIABLE(MaximumHumDucking, 75.0f);
     CONFIG_VARIABLE(SwingSharpness, 1.75f);

@@ -64,9 +64,9 @@ typedef Pulsing<Rgb<128,128,128>, Rgb16<50,50,50>, 3000> OffPulse;
 Preset testing_presets[] = {
   { "TeensySF", "tracks/venus.wav",
     // Doesn't always turn off all the way!
-//    StyleNormalPtr<ColorChange<TrConcat<TrWipe<200>, WHITE, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(),
+    StyleNormalPtr<ColorChange<TrConcat<TrWipe<200>, WHITE, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(),
 //    StylePtr<InOutTr<BLUE, TrColorCycle<10000, 0, 6000>, TrFade<800>, RED> >(),
-    StylePtr<InOutHelper<Stripes<20000,-60,HotPink,HotPink,Magenta,Magenta,Rgb<150,40,200>,Rgb<150,40,200>,Blue,Blue,DeepSkyBlue,DeepSkyBlue,Green,Green,Yellow,Yellow,DarkOrange,DarkOrange,Red,Red>,300,500,Black>>(),
+    // StylePtr<InOutHelper<Stripes<20000,-60,HotPink,HotPink,Magenta,Magenta,Rgb<150,40,200>,Rgb<150,40,200>,Blue,Blue,DeepSkyBlue,DeepSkyBlue,Green,Green,Yellow,Yellow,DarkOrange,DarkOrange,Red,Red>,300,500,Black>>(),
 
     StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
     "cyan1"},

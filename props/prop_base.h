@@ -44,6 +44,10 @@ public:
   bool clash_pending_ = false;
   bool pending_clash_is_stab_ = false;
 
+  bool on_pending_ = false;
+  uint32_t on_pending_base_;
+  uint32_t on_pending_delay_;
+
   virtual void On() {
     if (SaberBase::IsOn()) return;
     if (current_style() && current_style()->NoOnOff())
@@ -52,11 +56,19 @@ public:
     STDOUT.println("Ignition.");
     MountSDCard();
     EnableAmplifier();
-    SaberBase::TurnOn();
 
     // Avoid clashes a little bit while turning on.
     // It might be a "clicky" power button...
     IgnoreClash(300);
+
+    float preon_time = 0.0;
+    SaberBase::DoPreOn(&preon_time);
+    if (preon_time > 0.0) {
+      on_pending_base_ = millis();
+      on_pending_delay_ = preon_time * 1000;
+    } else {
+      SaberBase::TurnOn();
+    }
   }
 
   virtual void Off(OffType off_type = OFF_NORMAL) {
@@ -155,7 +167,7 @@ public:
     hybrid_font.Activate();
     font = &hybrid_font;
     if (font) {
-      if (swingl.files_found()) {
+      if (SFX_swingl || SFX_lswing) {
         smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
         switch (smooth_swing_config.Version) {
           case 1:
@@ -582,6 +594,11 @@ public:
   float current_tick_angle_ = 0.0;
 
   void Loop() override {
+    if (on_pending_ && millis() - on_pending_base_ >= on_pending_delay_) {
+      on_pending_ = false;
+      SaberBase::TurnOn();
+    }
+      
     if (clash_pending_ && millis() - last_clash_ >= clash_timeout_) {
       clash_pending_ = false;
       Clash2(pending_clash_is_stab_);

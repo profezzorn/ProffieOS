@@ -173,6 +173,7 @@ public:
   // Fill frame buffer and return how long to display it.
   int FillFrameBuffer() {
     switch (screen_) {
+      default:
       case SCREEN_OFF:
 	memset(frame_buffer_, 0, sizeof(frame_buffer_));
 	layout_ = LAYOUT_NATIVE;
@@ -260,9 +261,9 @@ public:
   }
 
   void SB_NewFont() override {
-    if (logo.files_found()) {
+    if (SFX_logo.files_found()) {
       // Overrides message from below..
-      ShowFile(&logo);
+      ShowFile(&SFX_logo);
     }
   }
 
@@ -362,6 +363,7 @@ public:
         for (uint8_t x=0; x<16; x++) {
 	  uint8_t b;
 	  switch (layout_) {
+	    default:
 	    case LAYOUT_NATIVE:
 	      b = ((unsigned char *)frame_buffer_)[i];
 	      break;

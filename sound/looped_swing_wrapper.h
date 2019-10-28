@@ -31,16 +31,16 @@ public:
     low_ = GetFreeWavPlayer();
     if (low_) {
       low_->set_volume_now(0);
-      low_->PlayOnce(&swingl);
-      low_->PlayLoop(&swingl);
+      low_->PlayOnce(&SFX_swingl);
+      low_->PlayLoop(&SFX_swingl);
     } else {
       STDOUT.println("Looped swings cannot allocate wav player.");
     }
     high_ = GetFreeWavPlayer();
     if (high_) {
       high_->set_volume_now(0);
-      high_->PlayOnce(&swingh);
-      high_->PlayLoop(&swingh);
+      high_->PlayOnce(&SFX_swingh);
+      high_->PlayLoop(&SFX_swingh);
     } else {
       STDOUT.println("Looped swings cannot allocate wav player.");
     }
