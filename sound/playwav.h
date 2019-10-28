@@ -181,9 +181,7 @@ private:
         if (!new_file_id_) goto fail;
         new_file_id_.GetName(filename_);
         run_ = true;
-	if (effect_->GetFollowing()) {
-	  effect_ = effect_->GetFollowing();
-	}
+	effect_ = effect_->GetFollowing();
       }
       if (new_file_id_ && new_file_id_ == old_file_id_) {
         // Minor optimization: If we're reading the same file

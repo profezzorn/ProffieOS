@@ -168,11 +168,11 @@ public:
     }
   }
 
-#define FRAME_RATE_SLEEP 41
 
   // Fill frame buffer and return how long to display it.
   int FillFrameBuffer() {
     switch (screen_) {
+      default:
       case SCREEN_OFF:
 	memset(frame_buffer_, 0, sizeof(frame_buffer_));
 	layout_ = LAYOUT_NATIVE;
@@ -227,9 +227,7 @@ public:
 	frame_count_++;
 	if (looped_ && millis() - loop_start_ > 5000)
 	  screen_ = SCREEN_PLI;
-	// Screen updates takes enough time
-	// that no sleeping is really needed.
-	return FRAME_RATE_SLEEP;
+	return 1000 / font_config.ProffieOSAnimationFrameRate;
     }
   }
 
@@ -260,9 +258,9 @@ public:
   }
 
   void SB_NewFont() override {
-    if (logo.files_found()) {
+    if (SFX_logo.files_found()) {
       // Overrides message from below..
-      ShowFile(&logo);
+      ShowFile(&SFX_logo);
     }
   }
 
@@ -362,6 +360,7 @@ public:
         for (uint8_t x=0; x<16; x++) {
 	  uint8_t b;
 	  switch (layout_) {
+	    default:
 	    case LAYOUT_NATIVE:
 	      b = ((unsigned char *)frame_buffer_)[i];
 	      break;
@@ -452,9 +451,10 @@ public:
 	  f->Skip(4);
 	  uint32_t offset = f->ReadType<uint32_t>();
 	  f->Skip(4);
-	  width = f->ReadType<uint16_t>();
-	  height_ = f->ReadType<uint16_t>();
-	  f->Seek(file_start + offset);
+	  width = f->ReadType<uint32_t>();
+	  height_ = f->ReadType<uint32_t>();
+	  // First frame is near the end, seek to it.
+	  f->Seek(file_start + offset + width * height_ / 8 - 512);
       }
       if (width != 128 && width != 32) {
 	STDOUT << "Wrong size image: " << width << "x" << height_ << "\n";
@@ -470,7 +470,16 @@ public:
     if (f->Available() < sizeof(frame_buffer_)) return false;
     f->Read((uint8_t*)frame_buffer_, sizeof(frame_buffer_));
     ypos_ += 32;
-    if (file_end) f->Seek(file_end);
+    if (file_end)
+      f->Seek(file_end);
+    else if (looped_ && invert_y_) {
+      if (f->Tell() > 1024) {
+	// Seek two frames back, because BMP are backwards.
+	f->Seek(f->Tell() - 1024);
+      } else {
+	f->Seek(f->FileSize());
+      }
+    }
     return true;
   }
 
