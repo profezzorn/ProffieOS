@@ -451,8 +451,8 @@ public:
 	  f->Skip(4);
 	  uint32_t offset = f->ReadType<uint32_t>();
 	  f->Skip(4);
-	  width = f->ReadType<uint16_t>();
-	  height_ = f->ReadType<uint16_t>();
+	  width = f->ReadType<uint32_t>();
+	  height_ = f->ReadType<uint32_t>();
 	  // First frame is near the end, seek to it.
 	  f->Seek(file_start + offset + width * height_ / 8 - 512);
       }
