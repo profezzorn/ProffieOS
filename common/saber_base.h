@@ -40,6 +40,7 @@ public:
   enum OffType {
     OFF_NORMAL,
     OFF_BLAST,
+    OFF_IDLE,
   };
 
   static bool IsOn() { return on_; }
@@ -102,7 +103,7 @@ public:                                                         \
 #define SABERBASEFUNCTIONS()					\
   SABERFUN(Clash, (), ());					\
   SABERFUN(Stab, (), ());					\
-  SABERFUN(PreOn, (), ());					\
+  SABERFUN(PreOn, (float* delay), (delay));			\
   SABERFUN(On, (), ());						\
   SABERFUN(Off, (OffType off_type), (off_type));		\
   SABERFUN(Force, (), ());					\

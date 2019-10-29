@@ -22,16 +22,32 @@ public:
   void clear() override {
     if (!offset_) BladeWrapper::clear();
   }
-  void SetStyle(BladeStyle* style) {
-    BladeWrapper::SetStyle(style);
-    if (!offset_) blade_->SetStyle(this);
+  virtual bool primary() const {
+    return !offset_;
+  }
+  void SetStyle(BladeStyle* style) override {
+    // current_style should be nullptr;
+    current_style_ = style;
+    if (current_style_) {
+      current_style_->activate();
+    }
+    if (primary()) blade_->SetStyle(this);
   }
 
-  BladeStyle* UnSetStyle() {
-    if (!offset_) blade_->UnSetStyle();
-    return BladeWrapper::UnSetStyle();
+  BladeStyle* UnSetStyle() override {
+    if (primary()) blade_->UnSetStyle();
+    BladeStyle *ret = current_style_;
+    if (ret) {
+      ret->deactivate();
+    }
+    current_style_ = nullptr;
+    return ret;
   }
 
+  BladeStyle* current_style() const override {
+    return current_style_;
+  }
+  
   void SetupSubBlade(BladeBase* base, int offset, int num_leds) {
     blade_ = base;
     offset_ = offset;
@@ -78,6 +94,7 @@ public:
   }
 
 protected:
+  BladeStyle *current_style_ = nullptr;
   int num_leds_;
   int offset_;
   bool allow_disable_;
@@ -126,6 +143,9 @@ class BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
 }
 
 class SubBladeWrapperReverse : public SubBladeWrapper {
+  virtual bool primary() const override {
+    return offset_ + 1 == num_leds_;
+  }
   void set(int led, Color16 c) override {
     return blade_->set(offset_ - led, c);
   }

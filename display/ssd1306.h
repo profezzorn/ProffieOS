@@ -1,6 +1,10 @@
 #ifndef DISPLAY_SSD1306_H
 #define DISPLAY_SSD1306_H
 
+// Images/animations
+IMAGE_FILESET(font);
+IMAGE_FILESET(boot);
+
 struct Glyph {
   int32_t skip : 7;
   int32_t xoffset : 7;
@@ -93,6 +97,7 @@ public:
     SCREEN_MESSAGE,
     SCREEN_PLI,
     SCREEN_IMAGE,  // also for animations
+    SCREEN_OFF,
   };
 
   enum ScreenLayout {
@@ -167,23 +172,36 @@ public:
     }
   }
 
-#define FRAME_RATE_SLEEP 20  
 
   // Fill frame buffer and return how long to display it.
   int FillFrameBuffer() {
     switch (screen_) {
+      default:
+      case SCREEN_OFF:
+	memset(frame_buffer_, 0, sizeof(frame_buffer_));
+	layout_ = LAYOUT_NATIVE;
+	xor_ = 0;
+	invert_y_ = false;
+	return 1000;
+	
       case SCREEN_STARTUP:
 	memset(frame_buffer_, 0, sizeof(frame_buffer_));
-        DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
-        DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
+        // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
+        // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
+        DrawText("ProffieOS", 0,15, Starjedi10pt7bGlyphs);
+        DrawText(version,0,31, Starjedi10pt7bGlyphs);
 	screen_ = SCREEN_PLI;
 	layout_ = LAYOUT_NATIVE;
+	xor_ = 0;
+	invert_y_ = false;
 	return 5000;
 
       case SCREEN_PLI:
 	memset(frame_buffer_, 0, sizeof(frame_buffer_));
         DrawBatteryBar(BatteryBar16);
 	layout_ = LAYOUT_NATIVE;
+	xor_ = 0;
+	invert_y_ = false;
 	return 200;  // redraw once every 200 ms
 
       case SCREEN_MESSAGE:
@@ -195,6 +213,8 @@ public:
         }
 	screen_ = SCREEN_PLI;
 	layout_ = LAYOUT_NATIVE;
+	xor_ = 0;
+	invert_y_ = false;
 	return 5000;
 
       case SCREEN_IMAGE:
@@ -205,14 +225,21 @@ public:
 	}
 	if (eof_) {
 	  screen_ = SCREEN_PLI;
+	  if (frame_count_ == 1) return 5000;
 	  return FillFrameBuffer();
 	}
 	frame_count_++;
-	if (looped_ && millis() - loop_start_ > 5000)
+	if (looped_frames_ > 1 && millis() - loop_start_ > 5000)
 	  screen_ = SCREEN_PLI;
-	// Screen updates takes enough time
-	// that no sleeping is really needed.
-	return FRAME_RATE_SLEEP;
+
+	if (font_config.ProffieOSAnimationFrameRate > 0.0) {
+	  return 1000 / font_config.ProffieOSAnimationFrameRate;
+	}
+	if (looped_frames_ > 1) {
+	  return 1000 / looped_frames_;
+	} else {
+	  return 41;   // ~24 fps
+	}
     }
   }
 
@@ -243,9 +270,9 @@ public:
   }
 
   void SB_NewFont() override {
-    if (logo.files_found()) {
+    if (IMG_font) {
       // Overrides message from below..
-      ShowFile(&logo);
+      ShowFile(&IMG_font);
     }
   }
 
@@ -259,6 +286,15 @@ public:
     STDOUT.print("display fps: ");
     loop_counter_.Print();
     STDOUT.println("");
+  }
+
+  void SB_Off(OffType offtype) override {
+    // TODO: Make it so that screen can be
+    // powered down and up again properly.
+    // This only makes it black, which prevents burn-in.
+    if (offtype == OFF_IDLE) {
+      SetScreenNow(SCREEN_OFF);
+    }
   }
 
   void Loop() override {
@@ -301,9 +337,13 @@ public:
 
     STDOUT.println("Display initialized.");
     screen_ = SCREEN_STARTUP;
+    if (IMG_boot) {
+      ShowFile(&IMG_boot);
+    }
     
     while (true) {
       millis_to_display_ = FillFrameBuffer();
+      frame_start_time_ = millis();
       
       Send(COLUMNADDR);
       Send(0);   // Column start address (0 = reset)
@@ -335,15 +375,25 @@ public:
         for (uint8_t x=0; x<16; x++) {
 	  uint8_t b;
 	  switch (layout_) {
+	    default:
 	    case LAYOUT_NATIVE:
 	      b = ((unsigned char *)frame_buffer_)[i];
 	      break;
 	    case LAYOUT_PORTRAIT:
-	      b = ~((unsigned char *)frame_buffer_)[i ^ 3];
+	      if (!invert_y_) {
+		b = ((unsigned char *)frame_buffer_)[511 - i];
+	      } else {
+		b = ((unsigned char *)frame_buffer_)[i ^ 3];
+	      }
 	      break;
 	    case LAYOUT_LANDSCAPE: {
 	      int x = i >> 2;
 	      int y = ((i & 3) << 3) + 7;
+	      int delta_pos = -16;
+	      if (invert_y_) {
+		y = 31 - y;
+		delta_pos = 16;
+	      }
 //	      STDOUT << " LANDSCAPE DECODE!! x = " << x << " y = " << y << "\n";
 	      
 	      int shift = 7 - (x & 7);
@@ -353,12 +403,11 @@ public:
 	      for (int j = 0; j < 8; j++) {
 		b <<= 1;
 		b |= (*pos >> shift) & 1;
-		pos -= 16;
+		pos += delta_pos;
 	      }
-	      b = ~b;
 	    }
 	  }
-	  Wire.write(b);
+	  Wire.write(b ^ xor_);
           i++;
         }
         Wire.endTransmission();
@@ -370,21 +419,28 @@ public:
       loop_counter_.Update();
       frame_available_ = false;
       scheduleFillBuffer();
-      SLEEP(millis_to_display_);
+      while (millis() - frame_start_time_ < millis_to_display_) YIELD();
     }
     
     STATE_MACHINE_END();
   }
 
 #define TAG2(X, Y) (((X) << 8) | (Y))
+  int ReadColorAsGray(FileReader* f) {
+    uint8_t rgba[4];
+    f->Read(rgba, 4);
+    return rgba[0] + rgba[1] + rgba[2];
+  }
 
   bool ReadImage(FileReader* f) {
-    if (ypos_ >= height_) {
-      if (looped_) f->Seek(0);
+    uint32_t file_end = 0;
+    if (ypos_ >= looped_frames_) {
+      if (looped_frames_ > 1) f->Seek(0);
       ypos_ = 0;
+      uint32_t file_start = f->Tell();
       int a = f->Read();
       int b = f->Read();
-      int width;
+      int width, height;
       switch (TAG2(a, b)) {
 	default:
 	  STDOUT << "Unknown image format.\n";
@@ -395,8 +451,10 @@ public:
 	  f->skipwhite();
 	  width = f->readIntValue();
 	  f->skipwhite();
-	  height_ = f->readIntValue();
+	  height = f->readIntValue();
 	  f->Read();
+	  xor_ = 255;
+	  invert_y_ = false;
 	  break;
 	  
 	case TAG2('B', 'M'):
@@ -405,29 +463,54 @@ public:
 	case TAG2('C', 'P'):
 	case TAG2('I', 'C'):
 	case TAG2('P', 'T'):
+	  // STDOUT << "BMP detected!\n";
+	  xor_ = 255;
+	  invert_y_ = true; // bmp data is bottom to top
 	  // BMP
-	  STDOUT << "BMP detected!\n";
-	  f->Seek(10); // check height and width
+	  file_end = file_start + f->ReadType<uint32_t>();
+	  f->Skip(4);
 	  uint32_t offset = f->ReadType<uint32_t>();
-	  f->Seek(18); // 4 bytes into DIB
-	  width = f->ReadType<uint16_t>();
-	  height_ = f->ReadType<uint16_t>();
-	  f->Seek(offset);
+	  uint32_t ctable = f->Tell() + f->ReadType<uint32_t>();
+	  // STDOUT << "OFFSET = " << offset << " CTABLE=" << ctable << "\n";
+	  width = f->ReadType<uint32_t>();
+	  height = f->ReadType<uint32_t>();
+	  // STDOUT << "Width=" << width << " Height=" << height << "\n";
+#if 0
+	  f->Seek(ctable);
+	  int c0 = ReadColorAsGray(f);
+	  int c1 = ReadColorAsGray(f);
+	  xor_ = c0 > c1 ? 255 : 0;
+#endif	  
+	  // First frame is near the end, seek to it.
+	  f->Seek(file_start + offset + width * height / 8 - 512);
       }
       if (width != 128 && width != 32) {
-	STDOUT << "Wrong size image: " << width << "x" << height_ << "\n";
+	STDOUT << "Wrong size image: " << width << "x" << height << "\n";
 	return false;
       }
       if (width == 128) {
 	layout_ = LAYOUT_LANDSCAPE;
-	looped_ = height_ > 32;
+	looped_frames_ = height / 32;
       } else {
-	looped_ = height_ > 128;
+	looped_frames_ = height / 128;
       }
     }
+    // STDOUT << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
     if (f->Available() < sizeof(frame_buffer_)) return false;
     f->Read((uint8_t*)frame_buffer_, sizeof(frame_buffer_));
-    ypos_ += 32;
+    ypos_++;
+    if (looped_frames_ > 1) {
+      if (ypos_ >= looped_frames_) {
+	f->Seek(f->FileSize());
+      } else {
+	if (invert_y_) {
+	  // Seek two frames back, because BMP are backwards.
+	  f->Seek(f->Tell() - 1024);
+	}
+      }
+    } else {
+      if (file_end) f->Seek(file_end);
+    }
     return true;
   }
 
@@ -446,7 +529,7 @@ public:
       if (!file_.OpenFile()) {
 	eof_ = true;
       }
-      ypos_ = height_;
+      ypos_ = looped_frames_;
       return false;
     }
     if (!frame_available_) {
@@ -469,13 +552,16 @@ public:
   }
 private:
   uint16_t i;
+  uint8_t xor_ = 0;
+  bool invert_y_ = 0;
   uint32_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
   char message_[32];
   uint32_t millis_to_display_;
+  uint32_t frame_start_time_;
   Screen screen_;
-  int32_t height_ = 0;
   int32_t ypos_ = 0;
+  volatile int32_t looped_frames_ = 0;
   volatile ScreenLayout layout_;
   uint32_t loop_start_;
   uint32_t frame_count_ = 0;
@@ -483,7 +569,6 @@ private:
   EffectFileReader file_;
   volatile bool frame_available_ = true;
   volatile bool eof_ = true;
-  volatile bool looped_ = false;
 };
 
 #endif

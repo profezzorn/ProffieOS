@@ -11,23 +11,29 @@ public:
 
   void Activate(SaberBase* base_font) {
     STDOUT.println("Activating SmoothSwing V2");
+    if (SFX_swingl) {
+      L = &SFX_swingl;
+      H = &SFX_swingh;
+    } else {
+      L = &SFX_lswing;
+      H = &SFX_hswing;
+    }
     SetDelegate(base_font);
-    if (swingl.files_found() != swingh.files_found()) {
+    if (L->files_found() != H->files_found()) {
       STDOUT.println("Warning, swingl and swingh should have the same number of files.");
     }
-    swings_ = std::min<size_t>(swingl.files_found(), swingh.files_found());
     // check for swngxx files to use as accent swings
-    if ((swng.files_found() || swing.files_found()) > 0 && smooth_swing_config.AccentSwingSpeedThreshold > 0.0) {
+    if ((SFX_swng || SFX_swing) > 0 && smooth_swing_config.AccentSwingSpeedThreshold > 0.0) {
       STDOUT.println("Accent Swings Enabled.");
       STDOUT.print("Polyphonic swings: ");
-      STDOUT.println(swng.files_found());
+      STDOUT.println(SFX_swng.files_found());
       STDOUT.print("Monophonic swings: ");
-      STDOUT.println(swing.files_found());
+      STDOUT.println(SFX_swing.files_found());
       accent_swings_present = true;
-      if (slsh.files_found() > 0 && smooth_swing_config.AccentSlashAccelerationThreshold > 0.0) {
+      if (SFX_slsh && smooth_swing_config.AccentSlashAccelerationThreshold > 0.0) {
         STDOUT.println("Accent Slashes Enabled.");
         STDOUT.print("Polyphonic slashes: ");
-        STDOUT.println(slsh.files_found());
+        STDOUT.println(SFX_slsh.files_found());
         accent_slashes_present = true;
       } else {
         accent_slashes_present = false;
@@ -62,10 +68,10 @@ public:
     float start = m / 1000.0;
     A.Stop();
     B.Stop();
-    swingl.Select(swing);
-    swingh.Select(swing);
-    A.Play(&swingl, start);
-    B.Play(&swingh, start);
+    L->Select(swing);
+    H->Select(swing);
+    A.Play(L, start);
+    B.Play(H, start);
     if (random(2)) Swap();
     float t1_offset = random(1000) / 1000.0 * 50 + 10;
     A.SetTransition(t1_offset, smooth_swing_config.Transition1Degrees);
@@ -254,6 +260,7 @@ private:
   int swings_;
   uint32_t last_micros_;
   SwingState state_ = SwingState::OFF;;
+  Effect *L, *H;
 };
 
 #endif

@@ -222,6 +222,9 @@ public:
 
     // If acceleration is not 1.0G, don't trust it.
     wGyro += fabs(accel_.len() - 1.0f) * 50.0;
+
+    // If acceleration is changing rapidly, don't trust it.
+    wGyro += accel_extrapolator_.slope().len() * 1000;
     CHECK_NAN(wGyro);
 
     mss_ = (accel_ - down_) * G_constant; // change unit from G to m/s/s
@@ -381,4 +384,33 @@ private:
 };
 
 Fusor fusor;
+
+// For debugging
+template<class T, int N>
+class PeakPrinter {
+public:
+  void Add(T v, bool print) {
+    for (int i = 0; i < N-1; i++) tmp_[i] = tmp_[i+1];
+    tmp_[N-1] = v;
+    if (print)  {
+      HighPeak();
+      LowPeak();
+    }
+  }
+  void HighPeak() {
+    for (int i = 0; i < N-1; i++) {
+      if (tmp_[i] > tmp_[N/2]) return;
+    }
+    STDOUT << " HIGHPEAK: " << tmp_[N/2] << "\n";
+  }
+  void LowPeak() {
+    for (int i = 0; i < N-1; i++) {
+      if (tmp_[i] < tmp_[N/2]) return;
+    }
+    STDOUT << " LOWPEAK: " << tmp_[N/2] << "\n";
+  }
+private:
+  T tmp_[N];
+};
+
 #endif

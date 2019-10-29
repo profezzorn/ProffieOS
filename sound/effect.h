@@ -68,6 +68,20 @@ class Effect {
     UNKNOWN,
   };
 
+  static FileType GetFileType(Extension x) {
+    switch (x) {
+      case WAV:
+      case RAW:
+      case USL:
+	return FileType::SOUND;
+      case BMP:
+      case PBM:
+      case Binary:
+	return FileType::IMAGE;
+    }
+    return FileType::UNKNOWN;
+  }
+
   static Extension IdentifyExtension(const char* filename) {
     if (endswith(".wav", filename)) return WAV;
     if (endswith(".raw", filename)) return RAW;
@@ -78,9 +92,12 @@ class Effect {
     return UNKNOWN;
   }
 
-  Effect(const char* name, Effect* following = nullptr) : name_(name) {
-    next_ = all_effects;
+  Effect(const char* name,
+	 Effect* following = nullptr,
+	 FileType file_type = FileType::SOUND) : name_(name) {
     following_ = following;
+    file_type_ = file_type;
+    next_ = all_effects;
     all_effects = this;
     reset();
   }
@@ -111,6 +128,15 @@ class Effect {
       }
     }
 
+    Extension ext = IdentifyExtension(filename);
+    if (GetFileType(ext) != file_type_) return false;
+    if (ext_ == UNKNOWN) {
+      ext_ = ext;
+    } else if (ext_ != ext) {
+      // Different extension, ignore!
+      return false;
+    }
+
     int n = -1;
     if (*rest == '.' && strlen(rest) == 4) {
       unnumbered_file_found_ = true;
@@ -125,8 +151,6 @@ class Effect {
       }
     }
 
-    if (ext_ == UNKNOWN)
-      ext_ = IdentifyExtension(filename);
 
     file_pattern_ = type_if_found;
     // STDOUT << "Counting " << filename << " as " << name_ << "\n";
@@ -377,63 +401,68 @@ private:
 
   // All files must end with this extension.
   Extension ext_;
+
+  // Image or sound?
+  FileType file_type_;
 };
 
 
-#define EFFECT(X) Effect X(#X)
-#define EFFECT2(X, Y) Effect X(#X, &Y)
-
-// Monophonic fonts
-EFFECT(boot);  // also polyphonic
-EFFECT(hum);
-EFFECT2(swing, hum);
-EFFECT2(poweron, hum);
-EFFECT(poweroff);
-EFFECT(pwroff);
-EFFECT2(clash, hum);
-EFFECT(force);  // also polyphonic
-EFFECT(stab);   // also polyphonic
-EFFECT2(blaster, hum);
-EFFECT(lockup);
-EFFECT(poweronf);
-EFFECT(font);   // also polyphonic
-EFFECT2(bgnlock, lockup); // monophonic and polyphonic begin lock
-EFFECT(endlock); // Plecter endlock support, used for polyphonic name too
+#define EFFECT(X) Effect SFX_##X(#X)
+#define EFFECT2(X, Y) Effect SFX_##X(#X, &SFX_##Y)
+#define IMAGE_FILESET(X) Effect IMG_##X(#X, nullptr, Effect::FileType::IMAGE)
 
 EFFECT(preon);
-EFFECT(postoff);
+EFFECT(pstoff);
+
+// Monophonic fonts
+EFFECT(boot);     // also polyphonic
+EFFECT2(hum, hum);
+EFFECT2(humm, humm);
+EFFECT(swing);
+EFFECT(poweron);
+EFFECT2(poweroff, pstoff);
+EFFECT2(pwroff, pstoff);
+EFFECT(clash);
+EFFECT(force);    // also polyphonic
+EFFECT(stab);     // also polyphonic
+EFFECT(blaster);
+EFFECT2(lockup, lockup);
+EFFECT(poweronf); // force poweron
+EFFECT(font);     // also polyphonic
+EFFECT(bgnlock);  // monophonic and polyphonic begin lock
+EFFECT(endlock);  // Plecter endlock support, used for polyphonic name too
 
 // Polyphonic fonts
 EFFECT(blst);
 EFFECT(clsh);
-EFFECT2(in, postoff);
+EFFECT2(in, pstoff);
 EFFECT(out);
 EFFECT(lock);
 EFFECT(swng);
 EFFECT(slsh);
 
 // Looped swing fonts. (SmoothSwing V1/V2)
-EFFECT(swingl);  // Looped swing, LOW
-EFFECT(swingh);  // Looped swing, HIGH
+EFFECT2(swingl, swingl);  // Looped swing, LOW
+EFFECT2(swingh, swingh);  // Looped swing, HIGH
+EFFECT2(lswing, lswing);  // Looped swing, LOW (plecter naming)
+EFFECT2(hswing, hswing);  // Looped swing, HIGH (plecter naming)
 
 // Drag effect, replaces "lock/lockup" in drag mode if present.
 EFFECT(bgndrag);
-EFFECT(drag);
+EFFECT2(drag, drag);
 EFFECT(enddrag);
 
 // Detonator effects
 EFFECT(bgnarm);
-EFFECT(armhum);
+EFFECT2(armhum, armhum);
 EFFECT(endarm);
 EFFECT(boom);
 
 // Color change
+EFFECT(color);
 EFFECT(ccbegin);
 EFFECT(ccend);
 EFFECT(ccchange);
-
-// Images/animations
-EFFECT(logo);
 
 // TODO: Optimize this and make it possible
 // have the WAV reader use this.
@@ -447,11 +476,12 @@ public:
     }
     id.GetName(filename_);
     blorg_ = true;
+    return true;
   }
 
   void Play(const char* filename) {
     blorg_ = false;
-    strncpy(filename_, filename, sizeof(filename));
+    strncpy(filename_, filename, sizeof(filename_));
     blorg_ = true;
   }
 

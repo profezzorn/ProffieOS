@@ -66,6 +66,7 @@ template<class T, int OUT_MILLIS, int IN_MILLIS, int EXPLODE_MILLIS, class OFF_C
 // to go to and from the BASE to the OFF_COLOR.
 template<class ON, class OutTr, class InTr, class OFF=Rgb<0,0,0>, bool ALLOW_DISABLE=1 >
 class InOutTr {
+public:
   bool run(BladeBase* blade) __attribute__((warn_unused_result)) {
     on_color_.run(blade);
     off_color_.run(blade);
@@ -100,6 +101,22 @@ class InOutTr {
     return true;
   }
 
+
+  OverDriveColor runIn(OverDriveColor a, OverDriveColor b, int led) {
+    if (in_active_) {
+      return in_tr_.getColor(a, b, led);
+    } else {
+      return b;
+    }
+  }
+  OverDriveColor runOut(OverDriveColor a, OverDriveColor b, int led) {
+    if (out_active_) {
+      return out_tr_.getColor(a, b, led);
+    } else {
+      return b;
+    }
+  }
+
   OverDriveColor getColor(int led) {
     if (!out_active_ && !in_active_) {
       if (on_) {
@@ -108,22 +125,12 @@ class InOutTr {
 	return off_color_.getColor(led);
       }
     } else {
+      OverDriveColor on_color = on_color_.getColor(led);
+      OverDriveColor off_color = off_color_.getColor(led);
       if (on_) {
-	OverDriveColor ret = on_color_.getColor(led);
-	OverDriveColor off_color = off_color_.getColor(led);
-	if (in_active_)
-	  ret = in_tr_.getColor(ret, off_color, led);
-	if (out_active_)
-	  ret = out_tr_.getColor(off_color, ret, led);
-	return ret;
+	return runOut(runIn(on_color, off_color, led), on_color, led);
       } else {
-	OverDriveColor on_color = on_color_.getColor(led);
-	OverDriveColor ret = off_color_.getColor(led);
-	if (out_active_)
-	  ret = out_tr_.getColor(ret, on_color, led);
-	if (in_active_)
-	  ret = in_tr_.getColor(on_color, ret, led);
-	return ret;
+	return runIn(runOut(off_color, on_color, led), off_color, led);
       }
     }
   }
