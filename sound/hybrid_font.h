@@ -15,7 +15,7 @@ public:
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.2f);
     CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 260.0f);
-    CONFIG_VARIABLE(ProffieOSAnimationFrameRate, 24.0f);
+    CONFIG_VARIABLE(ProffieOSAnimationFrameRate, 0.0f);
   }
   // Igniter compat
   int humStart;
