@@ -68,6 +68,20 @@ class Effect {
     UNKNOWN,
   };
 
+  static FileType GetFileType(Extension x) {
+    switch (x) {
+      case WAV:
+      case RAW:
+      case USL:
+	return FileType::SOUND;
+      case BMP:
+      case PBM:
+      case Binary:
+	return FileType::IMAGE;
+    }
+    return FileType::UNKNOWN;
+  }
+
   static Extension IdentifyExtension(const char* filename) {
     if (endswith(".wav", filename)) return WAV;
     if (endswith(".raw", filename)) return RAW;
@@ -78,9 +92,12 @@ class Effect {
     return UNKNOWN;
   }
 
-  Effect(const char* name, Effect* following = nullptr) : name_(name) {
-    next_ = all_effects;
+  Effect(const char* name,
+	 Effect* following = nullptr,
+	 FileType file_type = FileType::SOUND) : name_(name) {
     following_ = following;
+    file_type_ = file_type;
+    next_ = all_effects;
     all_effects = this;
     reset();
   }
@@ -111,6 +128,15 @@ class Effect {
       }
     }
 
+    Extension ext = IdentifyExtension(filename);
+    if (GetFileType(ext) != file_type_) return false;
+    if (ext_ == UNKNOWN) {
+      ext_ = ext;
+    } else if (ext_ != ext) {
+      // Different extension, ignore!
+      return false;
+    }
+
     int n = -1;
     if (*rest == '.' && strlen(rest) == 4) {
       unnumbered_file_found_ = true;
@@ -125,8 +151,6 @@ class Effect {
       }
     }
 
-    if (ext_ == UNKNOWN)
-      ext_ = IdentifyExtension(filename);
 
     file_pattern_ = type_if_found;
     // STDOUT << "Counting " << filename << " as " << name_ << "\n";
@@ -377,11 +401,15 @@ private:
 
   // All files must end with this extension.
   Extension ext_;
+
+  // Image or sound?
+  FileType file_type_;
 };
 
 
 #define EFFECT(X) Effect SFX_##X(#X)
 #define EFFECT2(X, Y) Effect SFX_##X(#X, &SFX_##Y)
+#define IMAGE_FILESET(X) Effect IMG_##X(#X, nullptr, Effect::FileType::IMAGE)
 
 EFFECT(preon);
 EFFECT(pstoff);
@@ -435,9 +463,6 @@ EFFECT(color);
 EFFECT(ccbegin);
 EFFECT(ccend);
 EFFECT(ccchange);
-
-// Images/animations
-EFFECT(logo);
 
 // TODO: Optimize this and make it possible
 // have the WAV reader use this.
