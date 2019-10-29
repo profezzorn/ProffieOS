@@ -1,6 +1,16 @@
 #ifndef PROPS_PROP_BASE_H
 #define PROPS_PROP_BASE_H
 
+class SaveStateFile : public ConfigFile {
+public:
+  void SetVariable(const char* variable, float v) override {
+    CONFIG_VARIABLE(preset, 0);
+    CONFIG_VARIABLE(volume, VOLUME);
+  }
+  int preset;
+  int volume;
+};
+
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase {
 public:
@@ -304,50 +314,87 @@ public:
   }
 
   void ResumePreset() {
-    FileReader f;
-    int newPreset;
-    int newVolume;
-    if (f.Open("curstate.ini") && f.FileSize() > 0) {
-      LOCK_SD(true);
-      for (; f.Available(); f.skipline()) {
-        char variable[33];
-        f.readVariable(variable);
-        if (!variable[0]) continue;
-        if (f.Peek() != '=') continue;
-        f.Read();
-        f.skipwhite();
-        if (!strcmp(variable, "preset")) {
-          newPreset = f.readIntValue();
-        continue;
-        }
-        if (!strcmp(variable, "volume")) {
-          newVolume = f.readIntValue();
-        }
-      }
-      f.Close();
-      LOCK_SD(false);
-      SetPreset(newPreset, false);
-      if (newVolume < VOLUME) {
-        dynamic_mixer.set_volume(newVolume);
-      }
-    } else {
-      SetPreset(0, false);
+    savestate_.ReadInCurrentDir("curstate.ini");
+    SetPreset(savestate_.preset, false);
+    if (savestate_.volume < VOLUME) {
+      dynamic_mixer.set_volume(savestate_.volume);
     }
+  }
+
+  bool OpenState(FileReader* f, const char* filename) {
+    if (!f->Open(filename))
+      return false;
+
+    if (f->FileSize() < 4) return false;
+    int p = f->FileSize() - 1;
+    while (p > 0) { f->Seek(p); if (!isSpace(f->Read())) break; p--; }
+    f->Seek(p - 3);
+    if (!isSpace(f->Read())) return false;
+    if (toLower(f->Read()) != 'e') return false;
+    if (toLower(f->Read()) != 'n') return false;
+    if (toLower(f->Read()) != 'd') return false;
+    f->Seek(0);
+
+    return true;
   }
 
   bool SaveState(int preset) {
     STDOUT.println("Saving Current State");
     LOCK_SD(true);
-    FileReader f;
-    LSFS::Remove("curstate.ini");
-    f.Create("curstate.ini");
+    FileReader f, out;
+    if (!OpenState(&f, "curstate.ini")) {
+      if (!UpdateINI()) CreateINI();
+      OpenState(&f, "curstate.ini");
+    }
+    LSFS::Remove("curstate.tmp");
+    out.Create("curstate.tmp");
     char value[30];
     itoa(preset, value, 10);
-    f.write_key_value("preset", value);
+    out.write_key_value("preset", value);
     itoa(dynamic_mixer.get_volume(), value, 10);
-    f.write_key_value("volume", value);
+    out.write_key_value("volume", value);
     f.Close();
+    out.Write("end\n");
+    out.Close();
+    UpdateINI();
     LOCK_SD(false);
+  }
+
+    bool UpdateINI() {
+    FileReader f, f2;
+    if (OpenState(&f2, "curstate.tmp")) {
+      uint8_t buf[512];
+      // Found valid tmp file
+      LSFS::Remove("curstate.ini");
+      f.Create("curstate.ini");
+      while (f2.Available()) {
+	int to_copy = std::min<int>(f2.Available(), sizeof(buf));
+	if (f2.Read(buf, to_copy) != to_copy ||
+	    f.Write(buf, to_copy) != to_copy) {
+	  f2.Close();
+	  f.Close();
+	  LSFS::Remove("curstate.ini");
+	  return false;
+	}
+      }
+      f2.Close();
+      f.Close();
+      return true;
+    }
+    return false;
+  }
+
+    bool CreateINI() {
+    FileReader f;
+    f.Create("curstate.ini");
+    char value[30];
+    itoa(0, value, 10);
+    f.write_key_value("preset", value);
+    itoa(VOLUME, value, 10);
+    f.write_key_value("volume", value);
+    f.Write("end\n");
+    f.Close();
+    return true;
   }
 
   void FindBladeAgain() {
@@ -1181,6 +1228,7 @@ public:
 protected:
   CurrentPreset current_preset_;
   LoopCounter accel_loop_counter_;
+  SaveStateFile savestate_;
 };
 
 #endif
