@@ -167,17 +167,20 @@ public:
     hybrid_font.Activate();
     font = &hybrid_font;
     if (font) {
-      if (SFX_swingl || SFX_lswing) {
+      if (SFX_swingl) {
         smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
-        switch (smooth_swing_config.Version) {
-          case 1:
-            looped_swing_wrapper.Activate(font);
-            break;
-          case 2:
-            smooth_swing_v2.Activate(font);
-            break;
-        }
+      } else if (SFX_lswing) {
+        smooth_swing_cfx_config.ReadInCurrentDir("font_config.txt");
       }
+      switch (smooth_swing_config.Version) {
+        case 1:
+          looped_swing_wrapper.Activate(font);
+          break;
+        case 2:
+          smooth_swing_v2.Activate(font);
+          break;
+      }
+    }
     }
 //    EnableBooster();
 #endif
