@@ -62,6 +62,9 @@ typedef RandomFlicker<Rgb<200,200,200>, Rgb<40,40,40>> OnPulse;
 typedef Pulsing<Rgb<128,128,128>, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
+  { "SmthFuzz", "tracks/cantina.wav", StyleRainbowPtr<300, 800>(),
+    StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
+    "=RainboW++\n++BladE++" },
   { "TeensySF", "tracks/venus.wav",
     // Doesn't always turn off all the way!
     StyleNormalPtr<ColorChange<TrConcat<TrWipe<200>, WHITE, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(),

@@ -178,19 +178,34 @@ public:
   };
 };
 
-struct StdoutHelper {
-  void print(const char* s) { fputs(s, stdout); }
-  void print(const int i) { printf("%d", i); }
+struct  Print {
+  void print(const char* s) { puts(s); }
+  void print(float v) { fprintf(stdout, "%f", v); }
   void write(char s) { putchar(s); }
   template<class T>
   void println(T s) { print(s); putchar('\n'); }
 };
 
-#define LOCK_SD(X) do { } while(0)
+template<typename T, typename X = void> struct PrintHelper {
+  static void out(Print& p, T& x) { p.print(x); }
+};
 
-StdoutHelper STDOUT;
+template<typename T> struct PrintHelper<T, decltype(((T*)0)->printTo(*(Print*)0))> {
+  static void out(Print& p, T& x) { x.printTo(p); }
+};
+
+struct ConsoleHelper : public Print {
+  template<typename T, typename Enable = void>
+  ConsoleHelper& operator<<(T v) {
+    PrintHelper<T>::out(*this, v);
+    return *this;
+  }
+};
+
+ConsoleHelper STDOUT;
 #define default_output (&STDOUT)
 char current_directory[128] = "./";
+#define LOCK_SD(X) do { } while(0)
 
 struct TALKIEFAKE {
   int IGNORE;
@@ -219,40 +234,40 @@ void test_effects() {
   mktestdir();
   touch("testfont/hum.wav");
   Effect::ScanDirectory("testfont");
-  CHECK_EQ(1, hum.files_found());
+  CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   mkdir("testfont/hum", -1);
   touch("testfont/hum/._.hum.wav");
   Effect::ScanDirectory("testfont");
-  CHECK_EQ(0, hum.files_found());
+  CHECK_EQ(0, SFX_hum.files_found());
 
   mktestdir();
   touch("testfont/hum.wav");
   touch("testfont/.DS_Store");
   touch("testfont/._.DS_Store");
   Effect::ScanDirectory("testfont");
-  CHECK_EQ(1, hum.files_found());
+  CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   touch("testfont/hummus.wav");
   Effect::ScanDirectory("testfont");
-  CHECK_EQ(0, hum.files_found());
+  CHECK_EQ(0, SFX_hum.files_found());
 
   mktestdir();
   touch("testfont/hum1.wav");
   Effect::ScanDirectory("testfont");
-  CHECK_EQ(1, hum.files_found());
+  CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   touch("testfont/hum99.wav");
   Effect::ScanDirectory("testfont");
-  CHECK_EQ(1, hum.files_found());
+  CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   touch("testfont/99blarg.wav");
   Effect::ScanDirectory("testfont");
-  CHECK_EQ(0, hum.files_found());
+  CHECK_EQ(0, SFX_hum.files_found());
 
   mktestdir();
   mkdir("testfont/hum", -1);
@@ -262,13 +277,13 @@ void test_effects() {
   touch("testfont/hum/._.DS_Store");
   touch("testfont/hum/01.wav");
   Effect::ScanDirectory("testfont");
-  CHECK_EQ(1, hum.files_found());
+  CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   mkdir("testfont/hum", -1);
   touch("testfont/hum/hum01.wav");
   Effect::ScanDirectory("testfont");
-  CHECK_EQ(1, hum.files_found());
+  CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   mkdir("testfont/hum", -1);
@@ -278,14 +293,14 @@ void test_effects() {
   touch("testfont/hum/._.DS_Store");
   touch("testfont/hum/hum01.wav");
   Effect::ScanDirectory("testfont");
-  CHECK_EQ(1, hum.files_found());
+  CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   mkdir("testfont/hum", -1);
   touch("testfont/hum/.DS_Store");
   touch("testfont/hum/._.DS_Store");
   Effect::ScanDirectory("testfont");
-  CHECK_EQ(0, hum.files_found());
+  CHECK_EQ(0, SFX_hum.files_found());
 }
 
 int main() {

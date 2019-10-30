@@ -90,7 +90,7 @@ public:
 
 #if NUM_BUTTONS >= 2
   // Make clash do nothing
-  void Clash() override {}
+  void Clash(bool stab) override {}
 #endif
 
   // Make swings do nothing

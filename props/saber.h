@@ -34,6 +34,15 @@ public:
         On();
 	return true;
 
+
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_OFF):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_OFF):
+	// Might need to do something cleaner, but let's try this for now.
+	FindBladeAgain();
+	return true;
+
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
 #ifdef DUAL_POWER_BUTTONS
         aux_on_ = true;

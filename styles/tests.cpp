@@ -38,6 +38,13 @@ struct is_same_type<T, T> { static const bool value = true; };
 // This really ought to be a typedef, but it causes problems I don't understand.
 #define StyleAllocator class StyleFactory*
 
+struct SaberBase {
+  static uint32_t GetCurrentVariation() {
+    return 0;
+  }
+};
+
+
 #include "../common/color.h"
 #include "../blades/blade_base.h"
 #include "cylon.h"
@@ -76,13 +83,31 @@ public:
   Color8::Byteorder get_byteorder() const {
     return Color8::RGB;
   }
-  BladeEffectType handled_types_ = EFFECT_NONE;
-  void HandleEffectType(BladeEffectType effect) override {
-    handled_types_ = (BladeEffectType) ((int)handled_types_ | (int)effect);
+  bool IsPrimary() override {
+    return true;
   }
-  bool IsHandled(BladeEffectType effect) override {
-    return (handled_types_ & effect) != 0;
+  void SetStyle(BladeStyle* style) override {
+    // current_style should be nullptr;
+    current_style_ = style;
+    if (current_style_) {
+      current_style_->activate();
+    }
   }
+
+  BladeStyle* UnSetStyle() override {
+    BladeStyle *ret = current_style_;
+    if (ret) {
+      ret->deactivate();
+    }
+    current_style_ = nullptr;
+    return ret;
+  }
+  
+  BladeStyle* current_style() const override {
+    return current_style_;
+  }
+protected:
+  BladeStyle *current_style_ = nullptr;
 };
 
 struct TestResult {

@@ -78,8 +78,9 @@ class Effect {
       case PBM:
       case Binary:
 	return FileType::IMAGE;
+      default:
+	return FileType::UNKNOWN;
     }
-    return FileType::UNKNOWN;
   }
 
   static Extension IdentifyExtension(const char* filename) {

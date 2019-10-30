@@ -60,10 +60,11 @@ public:
     
     for (; f->Available(); f->skipline()) {
       char variable[33];
-      f->skipwhite();
+      f->skipspace();
       if (f->Peek() == '#') continue;
       int line_begin = f->Tell();
       f->readVariable(variable);
+
       if (!variable[0]) continue;
       if (!strcmp(variable, "new_preset")) {
 	preset_count++;
@@ -78,7 +79,7 @@ public:
       if (!preset_count) return false;
       if (f->Peek() != '=') continue;
       f->Read();
-      f->skipwhite();
+      f->skipspace();
 
       if (!strcmp(variable, "end")) {
 	f->Seek(line_begin);
