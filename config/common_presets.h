@@ -22,6 +22,7 @@
 // configuration array below. See "simple_presets" and "charging_presets"
 // below for examples.
 Preset presets[] = {
+  { "hero", "tracks/duel.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>(), "cyan" },
   { "font03", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>(), "cyan" },
   { "graflex7", "tracks/cantina.wav",
     StylePtr<InOutSparkTip<EasyBlade<BLUE, WHITE>, 300, 800> >(), "blue" },

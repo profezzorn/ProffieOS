@@ -1,8 +1,16 @@
 #ifndef COMMON_BATTERY_MONITOR_H
 #define COMMON_BATTERY_MONITOR_H
 
-class BatteryMonitor : Looper, CommandParser {
+#include "analog_read.h"
+
+class BatteryMonitor : Looper, CommandParser, StateMachine {
 public:
+BatteryMonitor() : reader_(batteryLevelPin,
+			     INPUT
+#if VERSION_MAJOR == 5
+                             , 10e-6
+#endif
+   ) {}
   const char* name() override { return "BatteryMonitor"; }
   float battery() const {
     return last_voltage_;
@@ -20,6 +28,7 @@ public:
     float min_v = 3.0;
     float max_v = 4.2;
     return 100.0 * (v * v - min_v * min_v) / (max_v * max_v - min_v * min_v);
+//    return 100.0 * (v - min_v) / (max_v - min_v);
   }
   void SetPinHigh(bool go_high) {
     if (go_high) {
@@ -41,10 +50,17 @@ protected:
     SetPinHigh(false);
   }
   void Loop() override {
-    uint32_t now = micros();
-    if (now - last_voltage_read_time_ >= 1000) {
+    if (reading_) {
+      if (!reader_.Done()) return;
       float v = battery_now();
       last_voltage_ = last_voltage_ * 0.999 + v * 0.001;
+      reading_ = false;
+    }
+    uint32_t now = micros();
+    if (now - last_voltage_read_time_ >= 1000) {
+      if (!reader_.Start())
+        return;
+      reading_ = true;
       last_voltage_read_time_ = now;
     }
     if (monitor.ShouldPrint(Monitoring::MonitorBattery) ||
@@ -73,6 +89,19 @@ protected:
 #endif
       return true;
     }
+#if 0
+    if (!strcmp(cmd, "bstate")) {
+      STDOUT.print("reading = ");
+      STDOUT.println(reading_);
+      STDOUT.print("Next state: ");
+      STDOUT.println(reader_.state_machine_.next_state_);
+      STDOUT.print("ADC SMP: ");
+      STDOUT.println(reader_.adc_smp_);
+      STDOUT.print("ADC state: ");
+      STDOUT.println(stm32l4_adc.state);
+      return true;
+    }
+#endif
     return false;
   }
   void Help() override {
@@ -81,16 +110,19 @@ protected:
 private:
   float battery_now() {
     // This is the volts on the battery monitor pin.
-    // TODO: analogRead can be very slow, make an async one and/or read it less often.
-    float volts = 3.3 * analogRead(batteryLevelPin) / 1024.0;
+    float volts = 3.3 * reader_.Value() / 1024.0;
+#if VERSION_MAJOR == 5
+    return volts * 2.0;
+#else
 #ifdef V2
     float pulldown = 220000;  // External pulldown
-    float pullup = 2000000;  // External pullup
+    float pullup = 2000000;   // External pullup
 #else
     float pulldown = 33000;  // Internal pulldown is 33kOhm
     float pullup = BATTERY_PULLUP_OHMS;  // External pullup
 #endif
     return volts * (1.0 + pullup / pulldown);
+#endif
   }
 
   bool loaded_ = false;
@@ -100,6 +132,8 @@ private:
   float really_old_voltage_ = 0.0;
   uint32_t last_print_millis_;
   uint32_t last_beep_ = 0;
+  AnalogReader reader_;
+  bool reading_ = false;
 };
 
 BatteryMonitor battery_monitor;

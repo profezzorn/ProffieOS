@@ -1,6 +1,12 @@
 #ifndef SOUND_EFFECT_H
 #define SOUND_EFFECT_H
 
+#include <algorithm>
+#include "../common/file_reader.h"
+
+class Effect;
+Effect* all_effects = NULL;
+
 // Effect represents a set of sound files.
 // We keep track of the minimum number found, the maximum number found, weather
 // there is a file with no number, and if there are leading zeroes or not.
@@ -39,6 +45,9 @@ class Effect {
     WAV,
     RAW,
     USL,
+    BMP,
+    PBM,
+    Binary, // .BIN
     UNKNOWN,
   };
 
@@ -53,14 +62,42 @@ class Effect {
     NONREDUNDANT_SUBDIRS,
   };
 
+  enum class FileType {
+    SOUND,
+    IMAGE,
+    UNKNOWN,
+  };
+
+  static FileType GetFileType(Extension x) {
+    switch (x) {
+      case WAV:
+      case RAW:
+      case USL:
+	return FileType::SOUND;
+      case BMP:
+      case PBM:
+      case Binary:
+	return FileType::IMAGE;
+      default:
+	return FileType::UNKNOWN;
+    }
+  }
+
   static Extension IdentifyExtension(const char* filename) {
     if (endswith(".wav", filename)) return WAV;
     if (endswith(".raw", filename)) return RAW;
     if (endswith(".usl", filename)) return USL;
+    if (endswith(".bmp", filename)) return BMP;
+    if (endswith(".pbm", filename)) return PBM;
+    if (endswith(".bin", filename)) return Binary;
     return UNKNOWN;
   }
 
-  Effect(const char* name) : name_(name) {
+  Effect(const char* name,
+	 Effect* following = nullptr,
+	 FileType file_type = FileType::SOUND) : name_(name) {
+    following_ = following;
+    file_type_ = file_type;
     next_ = all_effects;
     all_effects = this;
     reset();
@@ -74,6 +111,7 @@ class Effect {
     file_pattern_ = FilePattern::UNKNOWN;
     ext_ = UNKNOWN;
     selected_ = -1;
+    num_files_ = 0;
   }
 
   bool Scan(const char *filename) {
@@ -91,24 +129,32 @@ class Effect {
       }
     }
 
+    Extension ext = IdentifyExtension(filename);
+    if (GetFileType(ext) != file_type_) return false;
+    if (ext_ == UNKNOWN) {
+      ext_ = ext;
+    } else if (ext_ != ext) {
+      // Different extension, ignore!
+      return false;
+    }
+
     int n = -1;
-    if (*rest == '.') {
+    if (*rest == '.' && strlen(rest) == 4) {
       unnumbered_file_found_ = true;
     } else {
       char *end;
       n = strtol(rest, &end, 10);
       if (n <= 0) return false;
-      max_file_ = max(max_file_, n);
-      min_file_ = min(min_file_, n);
+      max_file_ = std::max<int>(max_file_, n);
+      min_file_ = std::min<int>(min_file_, n);
       if (*rest == '0') {
         digits_ = end - rest;
       }
     }
 
-    if (ext_ == UNKNOWN)
-      ext_ = IdentifyExtension(filename);
 
     file_pattern_ = type_if_found;
+    // STDOUT << "Counting " << filename << " as " << name_ << "\n";
     num_files_++;
     return true;
   }
@@ -145,7 +191,7 @@ class Effect {
           STDOUT.print(" in efficient subdirs");
       }
       if (files_found() != (size_t)num_files_) {
-	STDOUT.print(" SOME FILES ARE MISSING!");
+	STDOUT << " SOME FILES ARE MISSING! " << files_found() << " != " << num_files_;
       }
       STDOUT.println("");
     }
@@ -169,8 +215,18 @@ class Effect {
     return ret;
   }
 
+  operator bool() const { return files_found() > 0; }
+  
   void Select(int n) {
     selected_ = n;
+  }
+
+  Effect* GetFollowing() const {
+    return following_;
+  }
+
+  void SetFollowing(Effect* following) {
+    following_ = following;
   }
 
   FileID RandomFile() const {
@@ -226,6 +282,9 @@ class Effect {
       case WAV: strcat(filename, ".wav"); break;
       case RAW: strcat(filename, ".raw"); break;
       case USL: strcat(filename, ".usl"); break;
+      case BMP: strcat(filename, ".bmp"); break;
+      case PBM: strcat(filename, ".pbm"); break;
+      case Binary: strcat(filename, ".bin"); break;
       default: break;
     }
 
@@ -314,8 +373,9 @@ class Effect {
     LOCK_SD(false);
   }
 
-private:
   Effect* next_;
+private:
+  Effect* following_ = nullptr;
 
   // Minimum file number.
   int16_t min_file_;
@@ -342,6 +402,109 @@ private:
 
   // All files must end with this extension.
   Extension ext_;
+
+  // Image or sound?
+  FileType file_type_;
+};
+
+
+#define EFFECT(X) Effect SFX_##X(#X)
+#define EFFECT2(X, Y) Effect SFX_##X(#X, &SFX_##Y)
+#define IMAGE_FILESET(X) Effect IMG_##X(#X, nullptr, Effect::FileType::IMAGE)
+
+EFFECT(preon);
+EFFECT(pstoff);
+
+// Monophonic fonts
+EFFECT(boot);     // also polyphonic
+EFFECT2(hum, hum);
+EFFECT2(humm, humm);
+EFFECT(swing);
+EFFECT(poweron);
+EFFECT2(poweroff, pstoff);
+EFFECT2(pwroff, pstoff);
+EFFECT(clash);
+EFFECT(force);    // also polyphonic
+EFFECT(stab);     // also polyphonic
+EFFECT(blaster);
+EFFECT2(lockup, lockup);
+EFFECT(poweronf); // force poweron
+EFFECT(font);     // also polyphonic
+EFFECT(bgnlock);  // monophonic and polyphonic begin lock
+EFFECT(endlock);  // Plecter endlock support, used for polyphonic name too
+
+// Polyphonic fonts
+EFFECT(blst);
+EFFECT(clsh);
+EFFECT2(in, pstoff);
+EFFECT(out);
+EFFECT(lock);
+EFFECT(swng);
+EFFECT(slsh);
+
+// Looped swing fonts. (SmoothSwing V1/V2)
+EFFECT2(swingl, swingl);  // Looped swing, LOW
+EFFECT2(swingh, swingh);  // Looped swing, HIGH
+EFFECT2(lswing, lswing);  // Looped swing, LOW (plecter naming)
+EFFECT2(hswing, hswing);  // Looped swing, HIGH (plecter naming)
+
+// Drag effect, replaces "lock/lockup" in drag mode if present.
+EFFECT(bgndrag);
+EFFECT2(drag, drag);
+EFFECT(enddrag);
+
+// Detonator effects
+EFFECT(bgnarm);
+EFFECT2(armhum, armhum);
+EFFECT(endarm);
+EFFECT(boom);
+
+// Color change
+EFFECT(color);
+EFFECT(ccbegin);
+EFFECT(ccend);
+EFFECT(ccchange);
+
+// TODO: Optimize this and make it possible
+// have the WAV reader use this.
+class EffectFileReader : public FileReader {
+public:
+  bool Play(Effect* f) {
+    blorg_ = false;
+    Effect::FileID id = f->RandomFile();
+    if (!id) {
+      return false;
+    }
+    id.GetName(filename_);
+    blorg_ = true;
+    return true;
+  }
+
+  void Play(const char* filename) {
+    blorg_ = false;
+    strncpy(filename_, filename, sizeof(filename_));
+    blorg_ = true;
+  }
+
+  // When do we actually call this?
+  bool OpenFile() {
+    if (!blorg_) {
+      STDOUT << "OpenFILE not ready!\n";
+      return false;
+    }
+    if (!Open(filename_)) {
+      default_output->print("File ");
+      default_output->print(filename_);
+      default_output->println(" not found.");
+      blorg_ = false;
+      return false;
+    }
+
+    return true;
+  }
+private:
+  volatile bool blorg_ = false;
+  char filename_[128];
 };
 
 #endif

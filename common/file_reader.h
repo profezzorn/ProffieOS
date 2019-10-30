@@ -212,12 +212,42 @@ public:
   void Rewind() { Seek(0); }
 
   void skipwhite() {
-    while (Peek() == ' ' || Peek() == '\t') Read();
+    while (true) {
+      switch (Peek()) {
+	case ' ':
+	case '\t':
+	case '\n':
+	case '\r':
+	  Read();
+	  continue;
+	default:
+	  return;
+      }
+    }
   }
-
+  void skipspace() {
+    while (true) {
+      switch (Peek()) {
+	case ' ':
+	case '\t':
+	  Read();
+	  continue;
+	default:
+	  return;
+      }
+    }
+  }
   // Skip rest of line.
   void skipline() {
     while (Available() && Read() != '\n');
+  }
+
+  // Note: Byte order may be an issue!!
+  // This code generally assumes it's running on a little-endian machine.
+  template<typename T> T ReadType() {
+    T ret;
+    Read((uint8_t*)&ret, sizeof(ret));
+    return ret;
   }
 
   int64_t readIntValue() {
@@ -271,7 +301,7 @@ public:
 
   bool readVariable(char variable[33]) {
     variable[0] = 0;
-    skipwhite();
+    skipspace();
     for (int i = 0; i < 32; i++) {
       int c = toLower(Peek());
       if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_') {
@@ -282,7 +312,7 @@ public:
 	break;
       }
     }
-    skipwhite();
+    skipspace();
     return true;
   }
 

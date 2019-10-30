@@ -46,6 +46,7 @@ endif
 ifndef ALTERNATE_CORE_PATH
     ALTERNATE_CORE_PATH := $(firstword \
         $(call dir_if_exists,$(ARDUINO_PACKAGE_DIR)/proffieboard/hardware/stm32l4/0.1.7/) \
+        $(call dir_if_exists,$(ARDUINO_PACKAGE_DIR)/proffieboard/hardware/stm32l4/0.1.3/) \
         $(call dir_if_exists,$(HOME)/lib/arduino-STM32L4) )
     $(call show_config_variable,ALTERNATE_CORE_PATH,[AUTODETECTED],(from DEFAULT))
 else
@@ -161,7 +162,9 @@ SAM_CORE_S_SRCS := $(wildcard $(SAM_CORE_PATH)/*.S)
 
 # Use arm-toolchain from Arduino install if exists and user has not defined global version
 ifndef ARM_TOOLS_DIR
+#    ARM_TOOLS_DIR = $(call dir_if_exists,$(wildcard $(ARDUINO_PACKAGE_DIR)/$(ARDMK_VENDOR)/tools/$(TOOL_PREFIX)-gcc/7-2017q4))
     ARM_TOOLS_DIR = $(call dir_if_exists,$(wildcard $(ARDUINO_PACKAGE_DIR)/$(ARDMK_VENDOR)/tools/$(TOOL_PREFIX)-gcc/*))
+
     $(call show_config_variable,ARM_TOOLS_DIR,[COMPUTED],(from ARDUINO_PACKAGE_DIR))
 else
     $(call show_config_variable,ARM_TOOLS_DIR,[USER])
@@ -400,6 +403,9 @@ CPPFLAGS += -DMD -DUSB_TYPE=$(USB_TYPE) '-DUSB_PRODUCT=$(USB_PRODUCT)' '-DUSB_MA
 # Get extra define flags from boards.txt
 EXFLAGS := $(shell echo $(call PARSE_BOARD,$(BOARD_TAG),build.extra_flags) | grep -oE '(-D)\w+')
 XFLAGS=-ffast-math -fsingle-precision-constant -D__FPU_PRESENT=1 -march=armv7e-m -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mabi=aapcs -mslow-flash-data -DDOSFS_SDCARD=1 -DUSB_DID=0xffff -D_SYSTEM_CORE_CLOCK_=80000000L -D_ARDUINO_STM32L4
+
+# TODO: Makefile selects proffieboard version
+CPPFLAGS += -DPROFFIEBOARD_VERSION=1
 
 # Strip only defines from extra flags as boards file appends user {build.usb}
 CPPFLAGS += $(EXFLAGS) $(XFLAGS)

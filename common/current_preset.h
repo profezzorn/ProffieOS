@@ -14,6 +14,7 @@ public:
 #define DEFINE_CURRENT_STYLE_STRING(N) LSPtr<char> current_style##N;
   ONCEPERBLADE(DEFINE_CURRENT_STYLE_STRING);
   LSPtr<char> name;
+  uint32_t variation;
 
   const char *mk_builtin_str(int num, int N) {
     char tmp[30];
@@ -35,6 +36,7 @@ public:
 #define CLEAR_STYLE_STRING(N) current_style##N = "";
     ONCEPERBLADE(CLEAR_STYLE_STRING);
     name = "";
+    variation = 0;
   }
 
   void Set(int num) {
@@ -47,6 +49,7 @@ public:
 #define MAKE_STYLE_STRING(N) current_style##N = mk_builtin_str(num, N);
     ONCEPERBLADE(MAKE_STYLE_STRING);
     name = preset->name;
+    variation = 0;
   }
 
   bool Read(FileReader* f) {
@@ -57,10 +60,11 @@ public:
     
     for (; f->Available(); f->skipline()) {
       char variable[33];
-      f->skipwhite();
+      f->skipspace();
       if (f->Peek() == '#') continue;
       int line_begin = f->Tell();
       f->readVariable(variable);
+
       if (!variable[0]) continue;
       if (!strcmp(variable, "new_preset")) {
 	preset_count++;
@@ -75,7 +79,7 @@ public:
       if (!preset_count) return false;
       if (f->Peek() != '=') continue;
       f->Read();
-      f->skipwhite();
+      f->skipspace();
 
       if (!strcmp(variable, "end")) {
 	f->Seek(line_begin);
@@ -96,6 +100,14 @@ public:
       }
       if (!strcmp(variable, "track")) {
 	track = f->readString();
+	continue;
+      }
+      if (!strcmp(variable, "variation")) {
+	char *tmp = f->readString();
+	if (tmp) {
+	  variation = strtol(tmp, nullptr, 10);
+	  if (tmp) free(tmp);
+	}
 	continue;
       }
       if (!strcmp(variable, "style")) {
@@ -120,6 +132,9 @@ public:
 #define WRITE_PRESET_STYLE(N) f->write_key_value("style", current_style##N.get());
     ONCEPERBLADE(WRITE_PRESET_STYLE);
     f->write_key_value("name", name.get());
+    char tmp[12];
+    itoa(variation, tmp, 10);
+    f->write_key_value("variation", tmp);
     return true;
   }
 
@@ -129,6 +144,7 @@ public:
 #define PRINT_PRESET_STYLE(N) PrintQuotedValue("STYLE" #N, current_style##N.get());
     ONCEPERBLADE(PRINT_PRESET_STYLE);
     PrintQuotedValue("NAME", name.get());
+    STDOUT << "VARIATION=" << variation << "\n";
   }
 
   static bool isSpace(int c) {

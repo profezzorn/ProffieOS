@@ -22,19 +22,19 @@ protected:
     STATE_MACHINE_BEGIN();
     while (true) {
       while (!DebouncedRead()) YIELD();
-      saber.Event(button_, EVENT_PRESSED);
+      prop.Event(button_, EVENT_PRESSED);
       if (millis() - push_millis_ < 500) {
-        saber.Event(button_, EVENT_DOUBLE_CLICK);
+        prop.Event(button_, EVENT_DOUBLE_CLICK);
       } else {
         push_millis_ = millis();
         current_modifiers |= button_;
       }
       while (DebouncedRead()) {
 	if (millis() - push_millis_ > 300) {
-	  saber.Event(button_, EVENT_HELD);
+	  prop.Event(button_, EVENT_HELD);
 	  while (DebouncedRead()) {
 	    if (millis() - push_millis_ > 2000) {
-	      saber.Event(button_, EVENT_HELD_LONG);
+	      prop.Event(button_, EVENT_HELD_LONG);
 	      while (DebouncedRead()) YIELD();
 	    }
 	    YIELD();
@@ -43,13 +43,13 @@ protected:
 	YIELD();
       }
       while (DebouncedRead()) YIELD();
-      saber.Event(button_, EVENT_RELEASED);
+      prop.Event(button_, EVENT_RELEASED);
       if (current_modifiers & button_) {
         current_modifiers &=~ button_;
         if (millis() - push_millis_ < 500) {
-          saber.Event(button_, EVENT_CLICK_SHORT);
+          prop.Event(button_, EVENT_CLICK_SHORT);
         } else {
-          saber.Event(button_, EVENT_CLICK_LONG);
+          prop.Event(button_, EVENT_CLICK_LONG);
         }
       } else {
         // someone ate our clicks
@@ -61,7 +61,7 @@ protected:
 
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, name_)) {
-      saber.Event(button_, EVENT_CLICK_SHORT);
+      prop.Event(button_, EVENT_CLICK_SHORT);
       return true;
     }
     return false;

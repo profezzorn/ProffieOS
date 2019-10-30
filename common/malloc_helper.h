@@ -57,4 +57,12 @@ private:
   const T* ptr_;
 };
 
+const char* mkstr(const char* str) {
+  int len = strlen(str);
+  char* ret = (char*)malloc(len + 1);
+  if (!ret) return "";
+  memcpy(ret, str, len + 1);
+  return ret;
+}
+
 #endif

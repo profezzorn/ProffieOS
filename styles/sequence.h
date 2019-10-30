@@ -36,4 +36,29 @@ private:
   bool on_;
 };
 
+template<int millis_per_color, class... COLORS> 
+class ColorSequence {
+public:
+  void run(BladeBase* blade) {
+    colors_.run(blade);
+    uint32_t now = micros();
+    if (now - last_micros_ > millis_per_color * 1000) {
+      if (now - last_micros_ > millis_per_color * 10000) {
+	n_ = 0;
+	last_micros_ = now;
+      } else {
+	n_ = (n_ + 1) % sizeof...(COLORS);
+	last_micros_ += millis_per_color * 1000;
+      }
+    }
+  }
+  OverDriveColor getColor(int led) {
+    return colors_.getColor(n_, led);
+  }
+private:
+  uint32_t last_micros_;
+  int n_;
+  MixHelper<COLORS...> colors_;
+};
+
 #endif

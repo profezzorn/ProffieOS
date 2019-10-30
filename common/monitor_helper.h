@@ -13,6 +13,7 @@ public:
 protected:
   void Loop() { monitor.Loop(); }
   bool Parse(const char *cmd, const char* arg) override {
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "monitor") || !strcmp(cmd, "mon")) {
       if (!strcmp(arg, "swings")) {
         monitor.Toggle(Monitoring::MonitorSwings);
@@ -54,11 +55,20 @@ protected:
         monitor.Toggle(Monitoring::MonitorSerial);
         return true;
       }
+      if (!strcmp(arg, "fusion")) {
+        monitor.Toggle(Monitoring::MonitorFusion);
+        return true;
+      }
+      if (!strcmp(arg, "var") || !strcmp(arg, "variation")) {
+        monitor.Toggle(Monitoring::MonitorVariation);
+        return true;
+      }
     }
+#endif
     return false;
   }
   void Help() {
-    STDOUT.println(" mon[itor] swings/samples/touch/battery/pwm/clash/temp/serial - toggle monitoring");
+    STDOUT.println(" mon[itor] swings/samples/touch/battery/pwm/clash/temp/serial/fusion - toggle monitoring");
   }
 };
 

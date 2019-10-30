@@ -24,9 +24,9 @@ public:
     uint32_t now = micros();
     uint64_t delta = now - last_micros_;
     last_micros_ = now;
-    pos_ = fract(pos_ + delta / 60000000.0 * rpm_.getInteger());
-    int high = high_.getInteger();
-    int low = low_.getInteger();
+    pos_ = fract(pos_ + delta / 60000000.0 * rpm_.getInteger(0));
+    int high = high_.getInteger(0);
+    int low = low_.getInteger(0);
     float tmp = sin_table[(int)floorf(pos_ * 1024)] / 32768.0;
     value_ = (int)( (tmp + 0.5) * (high - low) + low );
   }

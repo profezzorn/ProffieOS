@@ -1,6 +1,8 @@
 #ifndef STYLES_SIMPLE_CLASH_H
 #define STYLES_SIMPLE_CLASH_H
 
+#include "../functions/smoothstep.h"
+
 // Usage: SimpleClash<BASE, CLASH_COLOR, CLASH_MILLIS>
 // BASE: COLOR
 // CLASH_COLOR: COLOR (defaults to white)
@@ -10,27 +12,42 @@
 // when a clash occurs.
 
 template<class T, class CLASH_COLOR = Rgb<255,255,255>, int CLASH_MILLIS = 40,
-  BladeEffectType EFFECT = EFFECT_CLASH>
+  BladeEffectType EFFECT = EFFECT_CLASH,
+  class STAB_SHAPE = SmoothStep<Int<16384>, Int<24000>> >
 class SimpleClash {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
     clash_color_.run(blade);
+    stab_shape_.run(blade);
     // This should make us activate the clash at least one "frame".
-    clash_ = effect_.Detect(blade) || micros() - effect_.last_detected_micros() < CLASH_MILLIS * 1000;
+    if (clash_ && micros() - effect_.last_detected_micros() > CLASH_MILLIS * 1000)
+      clash_ = false;
+    BladeEffect *e = effect_.Detect(blade);
+    if (e) {
+      clash_ = true;
+      stab_ = EFFECT == EFFECT_CLASH && e->type == EFFECT_STAB;
+    }
   }
   OverDriveColor getColor(int led) {
     if (clash_) {
-      return clash_color_.getColor(led);
+      OverDriveColor ret = clash_color_.getColor(led);
+      if (stab_) {
+	OverDriveColor b = base_.getColor(led);
+	ret.c = b.c.mix2(ret.c, stab_shape_.getInteger(led)>>1);
+      }
+      return ret;
     } else {
       return base_.getColor(led);
     }
   }
 private:
   OneshotEffectDetector<EFFECT> effect_;
-  bool clash_;
+  bool clash_ = false;
+  bool stab_ = false;
   T base_;
   CLASH_COLOR clash_color_;
+  STAB_SHAPE stab_shape_;
 };
 
 
@@ -42,6 +59,7 @@ private:
 // Similar to SimpleClash, but lights up a portion of the blade.
 // The fraction of the blade is defined by CLASH_WIDTH_PERCENT
 // The location of the clash is random within the middle half of the blade.
+// Localized clashes should work well with stabs with no modifications.
 
 // Based on exp(-x*x)
 // TODO: Put in shared location as it is identical to the one in blast.h

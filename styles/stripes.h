@@ -37,9 +37,9 @@ public:
     if (p > 0 && p < 512) {
       OverDriveColor tmp = a_.getColor(led);
       int mul = sin_table[p];
-      ret->c.r += (tmp.c.r * mul) >> 14;
-      ret->c.g += (tmp.c.g * mul) >> 14;
-      ret->c.b += (tmp.c.b * mul) >> 14;
+      ret->c.r = clampi32(ret->c.r + ((tmp.c.r * mul) >> 14), 0, 65535);
+      ret->c.g = clampi32(ret->c.g + ((tmp.c.g * mul) >> 14), 0, 65535);
+      ret->c.b = clampi32(ret->c.b + ((tmp.c.b * mul) >> 14), 0, 65535);
     }
     b_.get(led, p - 341, ret);
   }
@@ -47,6 +47,11 @@ public:
   StripesHelper<B...> b_;
 };
 
+// TODO: Move this somewhere common.
+static inline int32_t MOD(int32_t x, int32_t m) {
+  if (x > 0) return x % m;
+  return m + ~(~x % m);
+}
 
 template<class WIDTH, class SPEED, class... COLORS>
 class StripesX {
@@ -57,9 +62,10 @@ public:
     colors_.run(base);
     
     uint32_t now_micros = micros();
-    uint32_t delta_micros = now_micros - last_micros_;
+    int32_t delta_micros = now_micros - last_micros_;
     last_micros_ = now_micros;
-    m = (m + delta_micros * speed_.getInteger(0) / 333) % (colors_.size * 341*1024);
+
+    m = MOD(m + delta_micros * speed_.getInteger(0) / 333, colors_.size * 341*1024);
     mult_ = (50000*1024 / width_.getInteger(0));
   }
   OverDriveColor getColor(int led) {
@@ -70,7 +76,7 @@ public:
     ret.overdrive = false;
     ret.c = Color16(0,0,0);
     colors_.get(led, p, &ret);
-    colors_.get(led, p - 341 * colors_.size, &ret);
+    colors_.get(led, p + 341 * colors_.size, &ret);
     return ret;
   }
 private:
@@ -79,7 +85,7 @@ private:
   uint32_t mult_;
   SPEED speed_;
   uint32_t last_micros_;
-  uint32_t m;
+  int32_t m;
 };
 
 template<int WIDTH, int SPEED, class... COLORS>

@@ -6,7 +6,7 @@ BOARD_TAG=Proffieboard-L433CC
 # ARDUINO_DIR:=/home/hubbe/lib/arduino-1.8.3
 
 ifeq ($(strip $(BOARD_TAG)),Proffieboard-L433CC)
-  USB_TYPE=USB_TYPE_CDC_MSC
+  USB_TYPE=USB_TYPE_CDC_MSC_WEBUSB
   ARDUINO_LIBS=SPI Wire
   include Proffieboard.mk
 else
@@ -24,6 +24,12 @@ style-test:
 
 common-test:
 	(cd common && $(MAKE) test)
+
+blades-test:
+	(cd blades && $(MAKE) test)
+
+sound-test:
+	(cd sound && $(MAKE) test)
 
 test1:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_proffieboard_config.h\\\" BOARD_TAG=Proffieboard-L433CC OBJDIR=test-proffieboard-default
@@ -58,8 +64,11 @@ test9:
 testA:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_v3_config.h\\\" BOARD_TAG=teensy31 OBJDIR=test-teensy31-default-v3
 
+testB:
+	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/td_proffieboard_config.h\\\" BOARD_TAG=Proffieboard-L433CC OBJDIR=test-proffieboard-td
 
-test: style-test common-test test1 test2 test3 test4 test5 test6 test7 test8 test9 testA test1V
+
+test: style-test common-test blades-test sound-test test1 test2 test3 test4 test5 test6 test7 test8 test9 testA testB test1V
 	@echo Tests pass
 
 # Check that there are no uncommitted changes
@@ -68,9 +77,9 @@ up-to-date-test:
 	if [ -d .git ]; then git diff-index --quiet HEAD -- ; fi
 
 export: up-to-date-test test
-	if [ -d CVS ]; then cd .. && zip -9 lightsaber/lightsaber-`sed <lightsaber/lightsaber.ino -n 's@.*lightsaber.ino,v \([^ ]*\) .*$$@\1@gp'`.zip `cd lightsaber && cvs status 2>/dev/null | sed -n 's@.*Repository.*/cvs/lightsaber/\(.*\),v@\1@gp' | grep -v 'lightsaber/doc' | grep -v '.cvsignore'` ; fi
-	if [ -d .git ]; then DIR=`pwd` ; VERSION=`git describe --tags --always --dirty --broken` ; echo "Exporting $$VERSION" ; rm -rvf /tmp/exporttmp || : ; mkdir -p /tmp/exporttmp/lightsaber && cp -r . /tmp/exporttmp/lightsaber/ && sed <lightsaber.ino "s@const char version.*@const char version[] = \"$$VERSION\";@g" >/tmp/exporttmp/lightsaber/lightsaber.ino && ( cd /tmp/exporttmp && zip -MM -9 $$DIR/lightsaber-$$VERSION.zip lightsaber `cd $$DIR && git ls-files | grep -v doc/ | sed 's@^@lightsaber/@'` ) && echo "Ok, finished exporting $$VERSION" ; fi
+	if [ -d CVS ]; then cd .. && zip -9 ProffieOS/ProffieOS-`sed <ProffieOS/ProffieOS.ino -n 's@.*ProffieOS.ino,v \([^ ]*\) .*$$@\1@gp'`.zip `cd ProffieOS && cvs status 2>/dev/null | sed -n 's@.*Repository.*/cvs/ProffieOS/\(.*\),v@\1@gp' | grep -v 'ProffieOS/doc' | grep -v '.cvsignore'` ; fi
+	if [ -d .git ]; then DIR=`pwd` ; VERSION=`git describe --tags --always --dirty --broken` ; echo "Exporting $$VERSION" ; rm -rvf /tmp/exporttmp || : ; mkdir -p /tmp/exporttmp/ProffieOS && cp -r . /tmp/exporttmp/ProffieOS/ && sed <ProffieOS.ino "s@const char version.*@const char version[] = \"$$VERSION\";@g" >/tmp/exporttmp/ProffieOS/ProffieOS.ino && ( cd /tmp/exporttmp && zip -MM -9 $$DIR/ProffieOS-$$VERSION.zip ProffieOS `cd $$DIR && git ls-files | grep -v doc/ | sed 's@^@ProffieOS/@'` ) && echo "Ok, finished exporting $$VERSION" ; fi
 
 export-dirty:
-	if [ -d CVS ]; then cd .. && zip -9 lightsaber/lightsaber-`sed <lightsaber/lightsaber.ino -n 's@.*lightsaber.ino,v \([^ ]*\) .*$$@\1@gp'`.zip `cd lightsaber && cvs status 2>/dev/null | sed -n 's@.*Repository.*/cvs/lightsaber/\(.*\),v@\1@gp' | grep -v 'lightsaber/doc' | grep -v '.cvsignore'` ; fi
-	if [ -d .git ]; then DIR=`pwd` ; VERSION=`git describe --tags --always --dirty --broken` ; echo "Exporting $$VERSION" ; rm -rvf /tmp/exporttmp || : ; mkdir -p /tmp/exporttmp/lightsaber && cp -r . /tmp/exporttmp/lightsaber/ && sed <lightsaber.ino "s@const char version.*@const char version[] = \"$$VERSION\";@g" >/tmp/exporttmp/lightsaber/lightsaber.ino && ( cd /tmp/exporttmp && zip -MM -9 $$DIR/lightsaber-$$VERSION.zip lightsaber `cd $$DIR && git ls-files | grep -v doc/ | sed 's@^@lightsaber/@'` ) && echo "Ok, finished exporting $$VERSION" ; fi
+	if [ -d CVS ]; then cd .. && zip -9 ProffieOS/ProffieOS-`sed <ProffieOS/ProffieOS.ino -n 's@.*ProffieOS.ino,v \([^ ]*\) .*$$@\1@gp'`.zip `cd ProffieOS && cvs status 2>/dev/null | sed -n 's@.*Repository.*/cvs/ProffieOS/\(.*\),v@\1@gp' | grep -v 'ProffieOS/doc' | grep -v '.cvsignore'` ; fi
+	if [ -d .git ]; then DIR=`pwd` ; VERSION=`git describe --tags --always --dirty --broken` ; echo "Exporting $$VERSION" ; rm -rvf /tmp/exporttmp || : ; mkdir -p /tmp/exporttmp/ProffieOS && cp -r . /tmp/exporttmp/ProffieOS/ && sed <ProffieOS.ino "s@const char version.*@const char version[] = \"$$VERSION\";@g" >/tmp/exporttmp/ProffieOS/ProffieOS.ino && ( cd /tmp/exporttmp && zip -MM -9 $$DIR/ProffieOS-$$VERSION.zip ProffieOS `cd $$DIR && git ls-files | grep -v doc/ | sed 's@^@ProffieOS/@'` ) && echo "Ok, finished exporting $$VERSION" ; fi

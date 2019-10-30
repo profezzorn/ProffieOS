@@ -28,6 +28,12 @@ public:
     return SD.remove(path);
   }
   static File Open(const char* path) {
+    // At some point, I put this check in here to make sure that the file
+    // exists before we try to open it, as opening directories and other
+    // weird files can cause open() to hang. However, this check takes
+    // too long, and causes audio underflows, so we're going to need a
+    // different approach to not opening directories and weird files. /Hubbe
+    // if (!SD.exists(path)) return File();
     return SD.open(path);
   }
   static File OpenForWrite(const char* path) {
@@ -104,7 +110,12 @@ public:
   // This function waits until the volume is mounted.
   static bool Begin() {
     if (mounted_) return true;
-    return mounted_ = (DOSFS.begin() && DOSFS.check());
+    if (!DOSFS.begin()) return false;
+    if (!DOSFS.check()) {
+      DOSFS.end();
+      return false;
+    }
+    return mounted_ = true;
   }
   static void End() {
     if (!mounted_) return;

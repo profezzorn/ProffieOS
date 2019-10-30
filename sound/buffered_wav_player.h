@@ -4,6 +4,10 @@
 #include "playwav.h"
 #include "volume_overlay.h"
 
+class BufferedWavPlayer;
+size_t WhatUnit(class BufferedWavPlayer* player);
+
+
 // Combines a WavPlayer and a BufferedAudioStream into a
 // buffered wav player. When we start a new sample, we
 // make sure to fill up the buffer before we start playing it.
@@ -35,7 +39,10 @@ public:
     ResetStopWhenZero();
     wav.PlayOnce(effect, start);
     SetStream(&wav);
-    scheduleFillBuffer();
+    // Fill up the buffer, if possible.
+    while (!wav.eof() && space_available()) {
+      scheduleFillBuffer();
+    }
     pause_ = false;
   }
   void PlayLoop(Effect* effect) { wav.PlayLoop(effect); }
@@ -60,9 +67,21 @@ public:
     SetStream(&wav);
   }
 
+  // This makes a paused player report very little available space, which
+  // means that it will be low priority for reading.
+  size_t space_available() const override {
+    size_t ret = VolumeOverlay<BufferedAudioStream<512>>::space_available();
+    if (pause_ && ret) ret = 2; // still slightly higher than FromFileStyle<>
+    return ret;
+  }
+
   int read(int16_t* dest, int to_read) override {
     if (pause_) return 0;
     return VolumeOverlay<BufferedAudioStream<512> >::read(dest, to_read);
+  }
+  bool eof() const override {
+    if (pause_) return true;
+    return VolumeOverlay<BufferedAudioStream<512> >::eof();
   }
 
   float length() const { return wav.length(); }

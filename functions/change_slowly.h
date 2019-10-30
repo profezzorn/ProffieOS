@@ -22,7 +22,7 @@ public:
     if (delta > 1000000) delta = 1;
     delta *= speed_.getInteger();
     delta /= 1000000;
-    uint32_t target = f_.getInteger();
+    int target = f_.getInteger();
     if (delta > abs(value_ - target)) {
       value_ = target;
     } else  if (value_ < target) {

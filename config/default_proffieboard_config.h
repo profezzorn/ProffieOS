@@ -9,7 +9,7 @@
 // use this configuration file.
 
 #ifdef CONFIG_TOP
-#include "proffieboard_v1_config.h"
+#include "proffieboard_config.h"
 #define NUM_BLADES 2
 #define NUM_BUTTONS 2
 #define VOLUME 1000
@@ -19,6 +19,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_MOTION
 #define ENABLE_WS2811
 #define ENABLE_SD
+#define ENABLE_SERIAL
 #endif
 
 #ifdef CONFIG_PRESETS
@@ -67,7 +68,7 @@ Preset presets[] = {
     StyleNormalPtr<BLACK, BLACK, 300, 800>(), "Battery\nLevel"}
 };
 BladeConfig blades[] = {
- { 0, WS2811BladePtr<144, WS2811_ACTUALLY_800kHz | WS2811_GRB>(),
+ { 0, WS2811BladePtr<97, WS2811_800kHz>(),
      SimpleBladePtr<CreeXPE2WhiteTemplate<550>,
                     CreeXPE2BlueTemplate<240>,
                     CreeXPE2BlueTemplate<240>, NoLED, bladePowerPin4, bladePowerPin5, bladePowerPin6, -1>(),

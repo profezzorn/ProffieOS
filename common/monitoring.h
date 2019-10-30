@@ -15,26 +15,36 @@ public:
     MonitorGyro = 128,
     MonitorStrokes = 256,
     MonitorSerial = 512,
+    MonitorFusion = 1024,
+    MonitorVariation = 2048,
   };
 
   bool ShouldPrint(MonitorBit bit) {
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (bit & monitor_soon_) {
       monitor_soon_ &= ~bit;
       return true;
     }
+#endif
     return false;
   }
 
   bool ShouldPrintMultiple(MonitorBit bit) {
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (bit & monitor_soon_) {
       monitored_ |= bit;
       return true;
     }
+#endif
     return false;
   }
-  
+
   bool IsMonitoring(MonitorBit bit) const {
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     return (active_monitors_ & bit) != 0;
+#else
+    return false;
+#endif
   }
   
   void Loop() {

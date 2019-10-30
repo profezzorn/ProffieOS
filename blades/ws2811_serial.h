@@ -262,6 +262,7 @@ public:
   }
 
   int num_leds() const { return num_leds_; }
+  Color8::Byteorder get_byteorder() const { return byteorder_; }
   uint8_t pin() const { return pin_; }
 
   uint8_t pin_;

@@ -2,13 +2,19 @@
 #define BLADES_ABSTRACT_BLADE_H
 #include "blade_base.h"
 
+BladeBase* GetPrimaryBlade();
+
 class AbstractBlade : public BladeBase, public SaberBase {
 public:
   AbstractBlade() : SaberBase(NOLINK) {}
   void Activate() override {
     SaberBase::Link(this);
+    addEffect(EFFECT_BOOT, (200 + random(700)) / 1000.0f);
   }
-  
+  void Deactivate() override {
+    SaberBase::Unlink(this);
+  }
+
   size_t GetEffects(BladeEffect** blade_effects) override {
     *blade_effects = effects_;
     while (num_effects_ &&
@@ -16,6 +22,27 @@ public:
       num_effects_--;
     }
     return num_effects_;
+  }
+
+  void SetStyle(BladeStyle* style) override {
+    // current_style should be nullptr;
+    current_style_ = style;
+    if (current_style_) {
+      current_style_->activate();
+    }
+  }
+
+  BladeStyle* UnSetStyle() override {
+    BladeStyle *ret = current_style_;
+    if (ret) {
+      ret->deactivate();
+    }
+    current_style_ = nullptr;
+    return ret;
+  }
+  
+  BladeStyle* current_style() const override {
+    return current_style_;
   }
   
   void addEffect(BladeEffectType type, float location) {
@@ -40,10 +67,52 @@ public:
   void SB_Force() override {
     addEffect(EFFECT_FORCE, 1.0f);
   }
-  
+
+  void SB_On() override {
+    addEffect(EFFECT_IGNITION, 0);
+  }
+
+  void SB_Off(OffType off_type) override {
+    switch (off_type) {
+      case OFF_BLAST:
+        addEffect(EFFECT_BLAST, (200 + random(700)) / 1000.0f);
+      case OFF_NORMAL:
+        addEffect(EFFECT_RETRACTION, 0);
+        break;
+      case OFF_IDLE:
+	// do nothing
+	break;
+    }
+  }
+
+  void SB_BeginLockup() override {
+    if (SaberBase::Lockup() == LOCKUP_NORMAL) {
+      addEffect(EFFECT_LOCKUP_BEGIN, (200 + random(700)) / 1000.0f);
+    }
+    if (SaberBase::Lockup() == LOCKUP_DRAG) {
+      addEffect(EFFECT_DRAG_BEGIN, (200 + random(700)) / 1000.0f);
+    }
+  }
+
+  void SB_EndLockup() override {
+    // TODO: use same location as begin
+    if (SaberBase::Lockup() == LOCKUP_NORMAL) {
+      addEffect(EFFECT_LOCKUP_END, (200 + random(700)) / 1000.0f);
+    }
+    if (SaberBase::Lockup() == LOCKUP_DRAG) {
+      addEffect(EFFECT_DRAG_END, (200 + random(700)) / 1000.0f);
+    }
+  }
+
+  bool IsPrimary() override {
+    return GetPrimaryBlade() == this;
+  }
+
+protected:
+  BladeStyle *current_style_ = nullptr;
 private:
   size_t num_effects_ = 0;
-  BladeEffect effects_[3];
+  BladeEffect effects_[4];
 };
 
 #endif

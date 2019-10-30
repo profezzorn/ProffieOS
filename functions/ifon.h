@@ -1,6 +1,8 @@
 #ifndef FUNCTIONS_IFON_H
 #define FUNCTIONS_IFON_H
 
+#include "int.h"
+
 // Usage: Ifon<A, B>
 // Returns A if saber is on, B otherwise.
 // A, B: INTEGER
@@ -67,7 +69,13 @@ private:
   int ret_;
 };
 
+#include "trigger.h"
+#include "scale.h"
+
 template<int OUT_MILLIS, int IN_MILLIS>
   using InOutFunc = InOutFuncX<Int<OUT_MILLIS>, Int<IN_MILLIS>>;
+
+template<int OUT_MILLIS, int IN_MILLIS, int EXPLODE_MILLIS>
+  using InOutFuncTD = InOutFuncX<Int<OUT_MILLIS>, Scale<Trigger<EFFECT_BLAST, Int<0>, Int<EXPLODE_MILLIS>, Int<0>>, Int<IN_MILLIS>, Int<EXPLODE_MILLIS>>>;
 
 #endif

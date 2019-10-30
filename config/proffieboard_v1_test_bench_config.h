@@ -8,11 +8,11 @@
 #ifdef CONFIG_TOP
 
 // Proffieboard config
-#include "proffieboard_v1_config.h"
+#include "proffieboard_config.h"
 
 // Number of simultaneously connected blades.
 // (For interchangeable blades, see the blades[] array.)
-#define NUM_BLADES 1
+#define NUM_BLADES 2
 
 // Number of buttons
 #define NUM_BUTTONS 3
@@ -38,31 +38,68 @@ const unsigned int maxLedsPerStrip = 196;
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
 #define ENABLE_SERIAL
+#define ENABLE_DEVELOPER_COMMANDS
 
 // Must be 20 characters or less.
-#define BLE_PASSWORD "password"
+// #define BLE_PASSWORD "password"
 
 // FASTLED is experimental and untested right now
 // #define ENABLE_FASTLED
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
-// #define ENABLE_SSD1306
+#define ENABLE_SSD1306
 
 // #define ENABLE_DEBUG
+
+#define IDLE_OFF_TIME 10000
 
 #endif
 
 #ifdef CONFIG_PRESETS
 
 typedef RandomFlicker<Rgb<200,200,200>, Rgb<40,40,40>> OnPulse;
-typedef Pulsing<Rgb16<512,512,512>, Rgb16<50,50,50>, 3000> OffPulse;
+typedef Pulsing<Rgb<128,128,128>, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
+  { "SmthFuzz", "tracks/cantina.wav", StyleRainbowPtr<300, 800>(),
+    StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
+    "=RainboW++\n++BladE++" },
+  { "TeensySF", "tracks/venus.wav",
+    // Doesn't always turn off all the way!
+    StyleNormalPtr<ColorChange<TrConcat<TrWipe<200>, WHITE, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(),
+//    StylePtr<InOutTr<BLUE, TrColorCycle<10000, 0, 6000>, TrFade<800>, RED> >(),
+    // StylePtr<InOutHelper<Stripes<20000,-60,HotPink,HotPink,Magenta,Magenta,Rgb<150,40,200>,Rgb<150,40,200>,Blue,Blue,DeepSkyBlue,DeepSkyBlue,Green,Green,Yellow,Yellow,DarkOrange,DarkOrange,Red,Red>,300,500,Black>>(),
+
+    StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
+    "cyan1"},
+  { "SmthJedi", "tracks/venus.wav",
+    StylePtr<InOutTr<BLUE, TrColorCycle<10000>, TrFade<800>>>(),
+    StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
+    "blorg" },
+
+#if 0  
+  
+//    StyleNormalPtr<Gradient<ColorChange<TrFade<300>,RED, GREEN, BLUE>, ColorChange<TrFade<500>, CYAN, MAGENTA>>, WHITE, 300, 800>(), "cyan"},
+  { "charging", "tracks/duel.wav",
+    StylePtr< Mix<Sin<Int<20>, Int<8192>, Int<32768>>, Black, Mix<Bump<BatteryLevel, Int<8000>>, Black,
+    Mix<BatteryLevel, Red, Red, Orange, Orange, Orange, Blue, Blue, Blue, Blue, Green, Green, Green> >>>(),
+    "charging" },
+
+  { "charging", "tracks/duel.wav",
+    StylePtr< Mix<Sin<Int<20>, Int<8192>, Int<32768>>, Black, 
+    Mix<BatteryLevel, Red, Red, Orange, Orange, Orange, Blue, Blue, Blue, Blue, Green, Green, Green> >>(),
+    "charging" },
+
+#if 0
+  { "charging", "tracks/duel.wav",
+    StylePtr< Mix<Bump<BatteryLevel, Int<8000>>, Black,
+    Mix<BatteryLevel, Red, Red, Orange, Orange, Orange, Blue, Blue, Blue, Blue, Green, Green, Green> >>(),
+    "charging" },
+
   { "TeensySF", "tracks/mars.wav", StyleNormalPtr<Stripes<1000, 1000, RED, GREEN, BLUE, CYAN, YELLOW, MAGENTA>, WHITE, 300, 800>(), "BLUE" },
   { "TeensySF", "tracks/mars.wav", StyleNormalPtr<RandomBlink<1000, RED, GREEN>, WHITE, 300, 800>(), "BLUE" },
   { "TeensySF", "tracks/mars.wav", StylePtr<FromFileStyle<>>(), "BLUE" },
-#if 1
   { "TeensySF", "tracks/cantina.wav", StylePtr<InOutHelper<SimpleClash<
     Lockup<Blast<Blue,White>,
            AudioFlicker<Blue,White>,
@@ -112,12 +149,19 @@ Preset testing_presets[] = {
 //  { "graflex5", "tracks/cantina.wav", &style_pov },
 
   { "charging", "tracks/duel.wav", &style_charging, "charging" },
+#endif  
 };
 
 BladeConfig blades[] = {
   // Testing configuration.
 //  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
-  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
+//  { 1, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
+  { 1,
+//    DimBlade(20.0, SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>())),
+    DimBlade(1.0, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()),
+    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
+    CONFIGARRAY(testing_presets) }
+//  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>>(), CONFIGARRAY(testing_presets) }
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
 };
 
@@ -134,4 +178,10 @@ Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button AuxButton(BUTTON_AUX, auxPin, "aux");
 Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
 //TouchButton Aux2Button(BUTTON_AUX2, aux2Pin, 1700, "aux2");
+
+//IRReceiver<blade3Pin> ir_receiver;
+//BlasterDecoder blaster_decoder;
+//NECDecoder nec_decoder;
+//RC6Decoder rc6_decoder;
+//PrintDecoder print_decoder;
 #endif

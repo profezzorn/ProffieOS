@@ -6,41 +6,67 @@ class Beeper : public AudioStream {
 public:
   int read(int16_t *data, int elements) override {
     int e = elements;
-    while (true) {
-      int s = min(elements, samples_);
+    while (num_beeps_) {
+      int s = min(elements, beeps_[0].samples_);
+      if (x_ == 0) {
+        x_ = beeps_[0].f_;
+	if (x_ == 0) {
+	  x_ = beeps_[0].samples_;
+	  value_ = 0;
+	} else {
+	  if (value_ <= 0) {
+	    value_ = 200;
+	  } else {
+	    value_ = -200;
+	  }
+	}
+      }
       s = min(s, x_);
       if (s <= 0) return e - elements;
-      if (up_) {
-        for (int i = 0; i < s; i++) data[i] = 200;
-      } else {
-        for (int i = 0; i < s; i++) data[i] = -200;
-      }
+      for (int i = 0; i < s; i++) data[i] = value_;
       data += s;
       elements -= s;
       x_ -= s;
-      samples_ -= s;
-      if (x_ == 0) {
-        x_ = f_;
-        up_ = !up_;
+      beeps_[0].samples_ -= s;
+      if (beeps_[0].samples_ == 0) {
+	num_beeps_--;
+	for (size_t i = 0; i < num_beeps_; i++) beeps_[i] = beeps_[i + 1];
       }
     }
+    return e - elements;
   }
 
   void Beep(float length, float freq) {
     EnableAmplifier();
-    x_ = f_ = AUDIO_RATE / freq / 2.0;
-    samples_ = AUDIO_RATE * length;
+    noInterrupts();
+    if (num_beeps_ < NELEM(beeps_)) {
+      beeps_[num_beeps_].f_ = freq == 0.0 ? 0 : AUDIO_RATE / freq / 2.0;
+      beeps_[num_beeps_].samples_ = AUDIO_RATE * length;
+      num_beeps_++;
+    }
+    interrupts();
+  }
+  void Silence(float length) {
+    Beep(length, 0.0);
   }
 
   bool isPlaying() {
-    return samples_ > 0;
+    return num_beeps_ > 0;
   }
 
-private:  
-  volatile int samples_ = 0;
-  volatile int f_ = 0;
+  bool eof() const override {
+    return !num_beeps_;
+  }
+
+private:
+  struct Beep {
+    int f_ = 0;
+    int samples_ = 0;
+  };
+  struct Beep beeps_[10];
+  volatile size_t num_beeps_ = 0;
   volatile int x_ = 0;
-  volatile bool up_ = false;
+  volatile int value_ = 0;
 };
 
 #endif

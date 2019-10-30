@@ -28,14 +28,29 @@ public:
   static void DoHFLoop() {}
 };
 
+template<class T, class U>
+struct is_same_type { static const bool value = false; };
+ 
+template<class T>
+struct is_same_type<T, T> { static const bool value = true; };
+
+
 // This really ought to be a typedef, but it causes problems I don't understand.
 #define StyleAllocator class StyleFactory*
+
+struct SaberBase {
+  static uint32_t GetCurrentVariation() {
+    return 0;
+  }
+};
+
 
 #include "../common/color.h"
 #include "../blades/blade_base.h"
 #include "cylon.h"
 #include "style_ptr.h"
 #include "colors.h"
+#include "inout_helper.h"
 
 bool on_ = true;
 
@@ -43,7 +58,7 @@ class MockBlade : public BladeBase {
 public:
   std::vector<Color16> colors;
 
-  int num_leds() const override { return 100; }
+  int num_leds() const override { return colors.size(); }
   bool is_on() const override { return on_; }
   void set(int led, Color16 c) override {
 //    fprintf(stderr, "SETILISET %d = %d %d %d\n", led, c.r, c.g, c.b);
@@ -61,6 +76,38 @@ public:
     fprintf(stderr, "NOT IMPLEMENTED\n");
     exit(1);
   }
+  void Deactivate() override {
+    fprintf(stderr, "NOT IMPLEMENTED\n");
+    exit(1);
+  }
+  Color8::Byteorder get_byteorder() const {
+    return Color8::RGB;
+  }
+  bool IsPrimary() override {
+    return true;
+  }
+  void SetStyle(BladeStyle* style) override {
+    // current_style should be nullptr;
+    current_style_ = style;
+    if (current_style_) {
+      current_style_->activate();
+    }
+  }
+
+  BladeStyle* UnSetStyle() override {
+    BladeStyle *ret = current_style_;
+    if (ret) {
+      ret->deactivate();
+    }
+    current_style_ = nullptr;
+    return ret;
+  }
+  
+  BladeStyle* current_style() const override {
+    return current_style_;
+  }
+protected:
+  BladeStyle *current_style_ = nullptr;
 };
 
 struct TestResult {
@@ -110,6 +157,31 @@ void test_cylon() {
   test_style(&t3, 0, 0, 100, 49.5);
 }
 
+
+void test_inouthelper() {
+  Style<InOutHelper<Rgb16<65535,65535,65535>, 100, 100, Rgb16<0,0,0>>> t1;
+  MockBlade mock_blade;
+  mock_blade.colors.resize(1);
+  on_ = false;
+  micros_ = 0;
+  t1.run(&mock_blade);
+  if (mock_blade.colors[0].r != 0) {
+    fprintf(stderr, "InOutHelper fails to make blade completely black.\n");
+    exit(1);
+  }
+  on_ = true;
+  for (int i = 0; i < 200; i++) {
+    micros_ = i * 1000;
+    t1.run(&mock_blade);
+  }
+  t1.run(&mock_blade);
+  if (mock_blade.colors[0].r != 65535) {
+    fprintf(stderr, "InOutHelper fails to make blade completely white: %d != %d\n", mock_blade.colors[0].r, 65535);
+    exit(1);
+  }
+}
+
 int main() {
   test_cylon();
+  test_inouthelper();
 }

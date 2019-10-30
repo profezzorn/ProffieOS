@@ -76,21 +76,25 @@ public:
   }
 
   void PlayOnce(Effect* effect, float start = 0.0) {
+    sample_bytes_ = 0;
     if (effect->Play(filename_)) {
       start_ = start;
       effect_ = nullptr;
       run_ = true;
     }
+    PlayLoop(effect->GetFollowing());
   }
   void PlayLoop(Effect* effect) {
     effect_ = effect;
   }
 
   void Stop() override {
+    noInterrupts();
+    run_ = false;
     state_machine_.reset_state_machine();
     effect_ = nullptr;
-    run_ = false;
     written_ = num_samples_ = 0;
+    interrupts();
   }
 
   bool isPlaying() const {
@@ -136,7 +140,7 @@ private:
       } else if (rate == AUDIO_RATE * 2) {
         Emit05(v);
       } else {
-        STDOUT.println("Unsupported rate.");
+        default_output->println("Unsupported rate.");
         Stop();
       }
     }
@@ -177,6 +181,7 @@ private:
         if (!new_file_id_) goto fail;
         new_file_id_.GetName(filename_);
         run_ = true;
+	effect_ = effect_->GetFollowing();
       }
       if (new_file_id_ && new_file_id_ == old_file_id_) {
         // Minor optimization: If we're reading the same file
@@ -184,9 +189,9 @@ private:
         file_.Rewind();
       } else {
 	if (!file_.Open(filename_)) {
-	  STDOUT.print("File ");
-	  STDOUT.print(filename_);
-	  STDOUT.println(" not found.");
+	  default_output->print("File ");
+	  default_output->print(filename_);
+	  default_output->println(" not found.");
 	  goto fail;
 	}
 	YIELD();
@@ -195,11 +200,11 @@ private:
       wav_ = endswith(".wav", filename_);
       if (wav_) {
         if (ReadFile(12) != 12) {
-          STDOUT.println("Failed to read 12 bytes.");
+          default_output->println("Failed to read 12 bytes.");
           goto fail;
         }
         if (header(0) != 0x46464952 || header(2) != 0x45564157) {
-          STDOUT.println("Not RIFF WAVE.");
+          default_output->println("Not RIFF WAVE.");
           YIELD();
           goto fail;
         }
@@ -207,7 +212,7 @@ private:
         // Look for FMT header.
         while (true) {
           if (ReadFile(8) != 8) {
-            STDOUT.println("Failed to read 8 bytes.");
+            default_output->println("Failed to read 8 bytes.");
             goto fail;
           }
 
@@ -217,19 +222,19 @@ private:
             continue;
           }
           if (len_ < 16) {
-            STDOUT.println("FMT header is wrong size..");
+            default_output->println("FMT header is wrong size..");
             goto fail;
           }
           break;
         }
         
         if (16 != ReadFile(16)) {
-          STDOUT.println("Read failed.");
+          default_output->println("Read failed.");
           goto fail;
         }
         if (len_ > 16) file_.Skip(len_ - 16);
         if ((header(0) & 0xffff) != 1) {
-          STDOUT.println("Wrong format.");
+          default_output->println("Wrong format.");
           goto fail;
         }
         channels_ = header(0) >> 16;
@@ -240,12 +245,12 @@ private:
          rate_ = 44100;
          bits_ = 16;
       }
-      STDOUT.print("channels: ");
-      STDOUT.print(channels_);
-      STDOUT.print(" rate: ");
-      STDOUT.print(rate_);
-      STDOUT.print(" bits: ");
-      STDOUT.println(bits_);
+      default_output->print("channels: ");
+      default_output->print(channels_);
+      default_output->print(" rate: ");
+      default_output->print(rate_);
+      default_output->print(" bits: ");
+      default_output->println(bits_);
 
       ptr_ = buffer + 8;
       end_ = buffer + 8;
@@ -275,7 +280,7 @@ private:
         while (len_) {
           {
             int bytes_read = ReadFile(file_.AlignRead(std::min<size_t>(len_, 512u)));
-            if (bytes_read == 0)
+            if (bytes_read <= 0)
               break;
             len_ -= bytes_read;
             end_ = buffer + 8 + bytes_read;

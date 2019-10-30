@@ -1,4 +1,5 @@
 /*
+ProffieOS font converter, based on:
 TrueType to Adafruit_GFX font converter.  Derived from Peter Jakobs'
 Adafruit_ftGFX fork & makefont tool, and Paul Kourany's Adafruit_mfGFX.
 
@@ -14,7 +15,6 @@ Currently this only extracts the printable 7-bit ASCII chars of a font.
 Will eventually extend with some int'l chars a la ftGFX, not there yet.
 Keep 7-bit fonts around as an option in that case, more compact.
 
-See notes at end for glyph nomenclature & other tidbits.
 */
 
 #include <stdio.h>
@@ -38,26 +38,6 @@ typedef struct { // Data stored for FONT AS A WHOLE:
 } GFXfont;
 
 #define DPI 141 // Approximate res. of Adafruit 2.8" TFT
-
-// Accumulate bits for output, with periodic hexadecimal byte write
-void enbit(uint8_t value) {
-  static uint8_t row = 0, sum = 0, bit = 0x80, firstCall = 1;
-  if(value) sum |= bit;    // Set bit if needed
-  if(!(bit >>= 1)) {       // Advance to next bit, end of byte reached?
-    if(!firstCall) { // Format output table nicely
-      if(++row >= 12) {        // Last entry on line?
-	printf(",\n  "); //   Newline format output
-	row = 0;         //   Reset row counter
-      } else {                 // Not end of line
-	printf(", ");    //   Simple comma delim
-      }
-    }
-    printf("0x%02X", sum); // Write byte value
-    sum       = 0;         // Clear for next byte
-    bit       = 0x80;      // Reset bit counter
-    firstCall = 0;         // Formatting flag
-	}
-}
 
 int main(int argc, char *argv[]) {
   int                i, j, err, size, first=' ', last='~',
@@ -144,9 +124,8 @@ int main(int argc, char *argv[]) {
   // the right symbols, and that's not done yet.
   // fprintf(stderr, "%ld glyphs\n", face->num_glyphs);
   
-  // printf("const uint8_t %sBitmaps[] PROGMEM = {\n  ", fontName);
-  
-  // Process glyphs and output huge bitmap data array
+  // Process glyphs and output glyph arrays.
+  int bytes_used = 0;
   for(i=first, j=0; i<=last; i++, j++) {
     // MONO renderer provides clean image with perfect crop
     // (no wasted pixels) via bitmap struct.
@@ -172,14 +151,7 @@ int main(int argc, char *argv[]) {
     bitmap = &face->glyph->bitmap;
     g      = (FT_BitmapGlyphRec *)glyph;
     
-    // Minimal font and per-glyph information is stored to
-    // reduce flash space requirements.  Glyph bitmaps are
-    // fully bit-packed; no per-scanline pad, though end of
-    // each character may be padded to next byte boundary
-    // when needed.  16-bit offset means 64K max for bitmaps,
-    // code currently doesn't check for overflow.  (Doesn't
-    // check that size & offsets are within bounds either for
-    // that matter...please convert fonts responsibly.)
+    // Glyps are stored as 8/16/32-bit arrays to save space.
     table[j].bitmapOffset = bitmapOffset;
     table[j].width        = bitmap->width;
     table[j].height       = bitmap->rows;
@@ -187,8 +159,12 @@ int main(int argc, char *argv[]) {
     table[j].xOffset      = g->left;
     table[j].yOffset      = 1 - g->top;
 
-    printf("const uint32_t %sChar%d[] = {\n", fontName, j);
+    int type_width = (bitmap->rows + 7) / 8;
+    if (type_width == 0) type_width = 1;
+    if (type_width == 3) type_width = 4;
+    printf("const uint%d_t %sChar%d[] = {\n", type_width * 8, fontName, j);
     for(x=0;x < bitmap->width; x++) {
+      bytes_used += type_width;
       printf("  0b");
       for(y=bitmap->rows-1; y>=0; y--) {
 	byte = x / 8;
@@ -207,6 +183,8 @@ int main(int argc, char *argv[]) {
     
     FT_Done_Glyph(glyph);
   }
+
+  fprintf(stderr, "  %d bytes used for bitmaps.\n", bytes_used);
   
   // Output glyph attributes table (one per character)
   printf("const Glyph %sGlyphs[] = {\n", fontName);
@@ -234,45 +212,3 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-/* -------------------------------------------------------------------------
-
-Character metrics are slightly different from classic GFX & ftGFX.
-In classic GFX: cursor position is the upper-left pixel of each 5x7
-character; lower extent of most glyphs (except those w/descenders)
-is +6 pixels in Y direction.
-W/new GFX fonts: cursor position is on baseline, where baseline is
-'inclusive' (containing the bottom-most row of pixels in most symbols,
-except those with descenders; ftGFX is one pixel lower).
-
-Cursor Y will be moved automatically when switching between classic
-and new fonts.  If you switch fonts, any print() calls will continue
-along the same baseline.
-
-                    ...........#####.. -- yOffset
-                    ..........######..
-                    ..........######..
-                    .........#######..
-                    ........#########.
-   * = Cursor pos.  ........#########.
-                    .......##########.
-                    ......#####..####.
-                    ......#####..####.
-       *.#..        .....#####...####.
-       .#.#.        ....##############
-       #...#        ...###############
-       #...#        ...###############
-       #####        ..#####......#####
-       #...#        .#####.......#####
-====== #...# ====== #*###.........#### ======= Baseline
-                    || xOffset
-
-glyph->xOffset and yOffset are pixel offsets, in GFX coordinate space
-(+Y is down), from the cursor position to the top-left pixel of the
-glyph bitmap.  i.e. yOffset is typically negative, xOffset is typically
-zero but a few glyphs will have other values (even negative xOffsets
-sometimes, totally normal).  glyph->xAdvance is the distance to move
-the cursor on the X axis after drawing the corresponding symbol.
-
-There's also some changes with regard to 'background' color and new GFX
-fonts (classic fonts unchanged).  See Adafruit_GFX.cpp for explanation.
-*/

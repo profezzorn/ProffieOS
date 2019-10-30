@@ -489,7 +489,7 @@ endif
 ifndef AR_NAME
     AR_NAME := $(call PARSE_BOARD,$(BOARD_TAG),build.command.ar)
     ifndef AR_NAME
-        AR_NAME := $(TOOL_PREFIX)-ar
+        AR_NAME := $(TOOL_PREFIX)-gcc-ar
     else
         $(call show_config_variable,AR_NAME,[COMPUTED])
     endif
@@ -1064,14 +1064,14 @@ get_library_files  = $(if $(and $(wildcard $(1)/src), $(wildcard $(1)/library.pr
 USER_LIBS      := $(sort $(wildcard $(patsubst %,$(USER_LIB_PATH)/%,$(ARDUINO_LIBS))))
 USER_LIB_NAMES := $(patsubst $(USER_LIB_PATH)/%,%,$(USER_LIBS))
 
-# Let user libraries override system ones.
-SYS_LIBS       := $(sort $(wildcard $(patsubst %,$(ARDUINO_LIB_PATH)/%,$(filter-out $(USER_LIB_NAMES),$(ARDUINO_LIBS)))))
-SYS_LIB_NAMES  := $(patsubst $(ARDUINO_LIB_PATH)/%,%,$(SYS_LIBS))
-
 ifdef ARDUINO_PLATFORM_LIB_PATH
     PLATFORM_LIBS       := $(sort $(wildcard $(patsubst %,$(ARDUINO_PLATFORM_LIB_PATH)/%,$(filter-out $(USER_LIB_NAMES),$(ARDUINO_LIBS)))))
     PLATFORM_LIB_NAMES  := $(patsubst $(ARDUINO_PLATFORM_LIB_PATH)/%,%,$(PLATFORM_LIBS))
 endif
+
+# Let user and platform libraries override system ones.
+SYS_LIBS       := $(sort $(wildcard $(patsubst %,$(ARDUINO_LIB_PATH)/%,$(filter-out $(USER_LIB_NAMES)  $(PLATFORM_LIB_NAMES),$(ARDUINO_LIBS)))))
+SYS_LIB_NAMES  := $(patsubst $(ARDUINO_LIB_PATH)/%,%,$(SYS_LIBS))
 
 
 # Error here if any are missing.

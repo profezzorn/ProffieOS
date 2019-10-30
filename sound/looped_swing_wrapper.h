@@ -31,16 +31,16 @@ public:
     low_ = GetFreeWavPlayer();
     if (low_) {
       low_->set_volume_now(0);
-      low_->PlayOnce(&swingl);
-      low_->PlayLoop(&swingl);
+      low_->PlayOnce(&SFX_swingl);
+      low_->PlayLoop(&SFX_swingl);
     } else {
       STDOUT.println("Looped swings cannot allocate wav player.");
     }
     high_ = GetFreeWavPlayer();
     if (high_) {
       high_->set_volume_now(0);
-      high_->PlayOnce(&swingh);
-      high_->PlayLoop(&swingh);
+      high_->PlayOnce(&SFX_swingh);
+      high_->PlayLoop(&SFX_swingh);
     } else {
       STDOUT.println("Looped swings cannot allocate wav player.");
     }
@@ -51,7 +51,7 @@ public:
     STDOUT.println(WhatUnit(high_));
 #endif
   }
-  void SB_Off() override {
+  void SB_Off(OffType off_type) override {
     if (low_) {
       low_->set_fade_time(0.3);
       low_->FadeAndStop();
@@ -62,7 +62,7 @@ public:
       high_->FadeAndStop();
       high_.Free();
     }
-    delegate_->SB_Off();
+    delegate_->SB_Off(off_type);
   }
 
   void SB_Motion(const Vec3& gyro, bool clear) override {

@@ -20,6 +20,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_WS2811
 #define ENABLE_SD
 #define ENABLE_SSD1306
+#define SHARED_POWER_PINS
 #endif
 
 #ifdef CONFIG_PRESETS
@@ -41,7 +42,7 @@ Preset presets[] = {
     StyleFirePtr<BLUE, CYAN, 1>(), "blue fire"},
   { "TthCrstl", "tracks/mars.wav",
     StylePtr<InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> >(),
-    StylePtr<InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> >(), "green"},
+    StylePtr<IgnitionDelay<100, InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> > >(), "green"},
   { "TeensySF", "tracks/mercury.wav",
     StyleNormalPtr<WHITE, RED, 300, 800, RED>(),
     StyleNormalPtr<WHITE, RED, 300, 800, RED>(), "white"},

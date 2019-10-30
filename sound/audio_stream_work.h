@@ -30,17 +30,21 @@ public:
   }
 
   static void scheduleFillBuffer() {
+    bool enqueue = false;
+    noInterrupts();
+    if (!fill_buffers_pending_) {
+      fill_buffers_pending_ = true;
+      enqueue = true;
+    }
+    interrupts();
+    if (enqueue) {
 #ifdef TEENSYDUINO
-    if (!NVIC_IS_ACTIVE(IRQ_WAV))
       NVIC_TRIGGER_IRQ(IRQ_WAV);
 #else
-    if (scheduled_millis != millis()) {
-      scheduled_millis = millis();
       armv7m_pendsv_enqueue((armv7m_pendsv_routine_t)ProcessAudioStreams, NULL, 0);
-    }
 #endif    
+    }
   }
-
 
   static void LockSD(bool locked) {
 //    scheduleFillBuffer();
@@ -61,9 +65,11 @@ protected:
 
 private:
   static void ProcessAudioStreams() {
-    scheduled_millis = 0;
     ScopedCycleCounter cc(wav_interrupt_cycles);
-    if (sd_locked) return;
+    if (sd_locked) {
+      fill_buffers_pending_ = false;
+      return;
+    }
 #if 1
     // Yes, it's a selection sort, luckily there's not a lot of
     // AudioStreamWork instances.
@@ -84,16 +90,16 @@ private:
       }
     }
 #endif
+    fill_buffers_pending_ = false;
   }
 
-
   static volatile bool sd_locked;
-  static volatile uint32_t scheduled_millis;
+  static volatile bool fill_buffers_pending_;
   AudioStreamWork* next_;
 };
 
 volatile bool AudioStreamWork::sd_locked = false;
-volatile uint32_t AudioStreamWork::scheduled_millis = false;
+volatile bool AudioStreamWork::fill_buffers_pending_ = false;
 #define LOCK_SD(X) AudioStreamWork::LockSD(X)
 
 #endif

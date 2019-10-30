@@ -65,9 +65,21 @@ public:
     AbstractBlade::Activate();
   }
 
+  void Deactivate() override {
+    Power(false);
+    // de-init power pin?
+    CommandParser::Unlink();
+    Looper::Unlink();
+    AbstractBlade::Deactivate();
+  }
+
   // BladeBase implementation
   int num_leds() const override {
     return num_leds_;
+  }
+  // TODO: If needed, fix this!
+  Color8::Byteorder get_byteorder() const override {
+    return Color8::NONE;
   }
   bool is_on() const override {
     return on_;
@@ -84,11 +96,13 @@ public:
     if (on_) *on = true;
   }
   void SB_On() override {
+    AbstractBlade::SB_On();
     Power(true);
     delay(10);
     on_ = true;
   }
-  void SB_Off() override {
+  void SB_Off(OffType off_type) override {
+    AbstractBlade::SB_Off(off_type);
     on_ = false;
   }
 
@@ -105,7 +119,7 @@ public:
          return true;
       }
       if (!strcmp(arg, "off")) {
-         SB_Off();
+         SB_Off(OFF_NORMAL);
          return true;
       }
     }

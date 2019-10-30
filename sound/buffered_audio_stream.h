@@ -42,35 +42,49 @@ public:
   bool eof() const override {
     return !buffered() && eof_;
   }
-  void Stop() override { if (stream_) stream_->Stop(); }
+  void Stop() override {
+    stop_requested_ = true;
+  }
   void clear() {
     eof_ = false;
     buf_start_ = buf_end_;
     stream_ = NULL;
+    stop_requested_ = false;
   }
   int buffered() const {
     return buf_end_ - buf_start_;
   }
+  // Overridable
   size_t space_available() const override {
-    if (eof_ || !stream_) return 0;
-    return N - buffered();
+    return real_space_available();
   }
   void SetStream(AudioStream* stream) {
+    stop_requested_ = false;
     eof_ = false;
     stream_ = stream;
   }
 private:
+  size_t real_space_available() const {
+    if (eof_ || !stream_) return 0;
+    return N - buffered();
+  }
   bool FillBuffer() override {
     if (stream_) {
-      size_t space = space_available();
+      if (stop_requested_) {
+	stop_requested_ = false;
+	stream_->Stop();
+      }
+      size_t space = real_space_available();
       if (space) {
         size_t end_pos = buf_end_ & (N-1);
         size_t to_read = min(space, N - end_pos);
         int got = stream_->read(buffer_ + end_pos, to_read);
         if (got) {
           eof_ = false;
-        } else {
+        } else if (stream_) {
           eof_ = stream_->eof();
+	} else {
+	  eof_ = true;
         }
         buf_end_ += got;
       }
@@ -82,6 +96,7 @@ private:
   volatile size_t buf_start_ = 0;
   volatile size_t buf_end_ = 0;
   volatile bool eof_ = false;
+  volatile bool stop_requested_ = false;
   int16_t buffer_[N];
 };
 

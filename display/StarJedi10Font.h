@@ -1,13 +1,13 @@
-const uint32_t Starjedi10pt7bChar0[] = {
+const uint8_t Starjedi10pt7bChar0[] = {
 };
-const uint32_t Starjedi10pt7bChar1[] = {
+const uint16_t Starjedi10pt7bChar1[] = {
   0b11110111111111UL,
   0b11110111111111UL,
   0b11110111111111UL,
   0b11110111111111UL,
   0b00000000000111UL,
 };
-const uint32_t Starjedi10pt7bChar2[] = {
+const uint8_t Starjedi10pt7bChar2[] = {
   0b111111UL,
   0b111111UL,
   0b111111UL,
@@ -91,7 +91,7 @@ const uint32_t Starjedi10pt7bChar6[] = {
   0b0000000000010010100000UL,
   0b0000000000100100010000UL,
 };
-const uint32_t Starjedi10pt7bChar7[] = {
+const uint8_t Starjedi10pt7bChar7[] = {
   0b111111UL,
   0b111111UL,
   0b111111UL,
@@ -128,7 +128,7 @@ const uint32_t Starjedi10pt7bChar10[] = {
   0b000001111100000000UL,
   0b000000100000000000UL,
 };
-const uint32_t Starjedi10pt7bChar11[] = {
+const uint8_t Starjedi10pt7bChar11[] = {
   0b1111UL,
   0b1111UL,
   0b1111UL,
@@ -146,27 +146,27 @@ const uint32_t Starjedi10pt7bChar11[] = {
   0b1111UL,
   0b1111UL,
 };
-const uint32_t Starjedi10pt7bChar12[] = {
+const uint8_t Starjedi10pt7bChar12[] = {
   0b111110UL,
   0b111111UL,
   0b111111UL,
   0b001111UL,
   0b000001UL,
 };
-const uint32_t Starjedi10pt7bChar13[] = {
+const uint8_t Starjedi10pt7bChar13[] = {
   0b111UL,
   0b111UL,
   0b111UL,
   0b111UL,
   0b111UL,
 };
-const uint32_t Starjedi10pt7bChar14[] = {
+const uint8_t Starjedi10pt7bChar14[] = {
   0b1111UL,
   0b1111UL,
   0b1111UL,
   0b1111UL,
 };
-const uint32_t Starjedi10pt7bChar15[] = {
+const uint16_t Starjedi10pt7bChar15[] = {
   0b11000000000000UL,
   0b11110000000000UL,
   0b11111100000000UL,
@@ -177,7 +177,7 @@ const uint32_t Starjedi10pt7bChar15[] = {
   0b00000000001111UL,
   0b00000000000011UL,
 };
-const uint32_t Starjedi10pt7bChar16[] = {
+const uint16_t Starjedi10pt7bChar16[] = {
   0b00000011000000UL,
   0b00011111111000UL,
   0b00111111111100UL,
@@ -193,7 +193,7 @@ const uint32_t Starjedi10pt7bChar16[] = {
   0b00111111111100UL,
   0b00001111110000UL,
 };
-const uint32_t Starjedi10pt7bChar17[] = {
+const uint16_t Starjedi10pt7bChar17[] = {
   0b00000000111000UL,
   0b00000001111100UL,
   0b00000000111100UL,
@@ -204,7 +204,7 @@ const uint32_t Starjedi10pt7bChar17[] = {
   0b11111111111111UL,
   0b11111111111111UL,
 };
-const uint32_t Starjedi10pt7bChar18[] = {
+const uint16_t Starjedi10pt7bChar18[] = {
   0b11110000001000UL,
   0b11111000000111UL,
   0b11111000000111UL,
@@ -217,7 +217,7 @@ const uint32_t Starjedi10pt7bChar18[] = {
   0b11100011111110UL,
   0b11100001111100UL,
 };
-const uint32_t Starjedi10pt7bChar19[] = {
+const uint16_t Starjedi10pt7bChar19[] = {
   0b01110000001000UL,
   0b11100000000111UL,
   0b11100111000111UL,
@@ -230,7 +230,7 @@ const uint32_t Starjedi10pt7bChar19[] = {
   0b01111101111110UL,
   0b00111000111100UL,
 };
-const uint32_t Starjedi10pt7bChar20[] = {
+const uint16_t Starjedi10pt7bChar20[] = {
   0b00011110000000UL,
   0b00011111000000UL,
   0b00011111100000UL,
@@ -244,7 +244,7 @@ const uint32_t Starjedi10pt7bChar20[] = {
   0b00011100000000UL,
   0b00011100000000UL,
 };
-const uint32_t Starjedi10pt7bChar21[] = {
+const uint16_t Starjedi10pt7bChar21[] = {
   0b11100011111111UL,
   0b11100011111111UL,
   0b11100011111111UL,
@@ -257,7 +257,7 @@ const uint32_t Starjedi10pt7bChar21[] = {
   0b01111111000111UL,
   0b00011100000000UL,
 };
-const uint32_t Starjedi10pt7bChar22[] = {
+const uint16_t Starjedi10pt7bChar22[] = {
   0b00000111100000UL,
   0b00011111111000UL,
   0b01111111111100UL,
@@ -272,7 +272,7 @@ const uint32_t Starjedi10pt7bChar22[] = {
   0b01111111000111UL,
   0b00011110000000UL,
 };
-const uint32_t Starjedi10pt7bChar23[] = {
+const uint16_t Starjedi10pt7bChar23[] = {
   0b00000000001111UL,
   0b11000000001111UL,
   0b11100000001111UL,
@@ -285,7 +285,7 @@ const uint32_t Starjedi10pt7bChar23[] = {
   0b00000011111111UL,
   0b00000000111111UL,
 };
-const uint32_t Starjedi10pt7bChar24[] = {
+const uint16_t Starjedi10pt7bChar24[] = {
   0b00111100111100UL,
   0b01111101111110UL,
   0b01111111111110UL,
@@ -300,7 +300,7 @@ const uint32_t Starjedi10pt7bChar24[] = {
   0b01111101111110UL,
   0b00111100111100UL,
 };
-const uint32_t Starjedi10pt7bChar25[] = {
+const uint16_t Starjedi10pt7bChar25[] = {
   0b00000001111000UL,
   0b11100011111110UL,
   0b11100011111110UL,
@@ -315,13 +315,13 @@ const uint32_t Starjedi10pt7bChar25[] = {
   0b00011111111100UL,
   0b00000111110000UL,
 };
-const uint32_t Starjedi10pt7bChar26[] = {
+const uint16_t Starjedi10pt7bChar26[] = {
   0b1111001111UL,
   0b1111001111UL,
   0b1111001111UL,
   0b1111001111UL,
 };
-const uint32_t Starjedi10pt7bChar27[] = {
+const uint16_t Starjedi10pt7bChar27[] = {
   0b00000000001111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -340,7 +340,7 @@ const uint32_t Starjedi10pt7bChar27[] = {
   0b11110000000000UL,
   0b11110000000000UL,
 };
-const uint32_t Starjedi10pt7bChar28[] = {
+const uint8_t Starjedi10pt7bChar28[] = {
   0b1111UL,
   0b1111UL,
   0b1111UL,
@@ -358,7 +358,7 @@ const uint32_t Starjedi10pt7bChar28[] = {
   0b1111UL,
   0b1111UL,
 };
-const uint32_t Starjedi10pt7bChar29[] = {
+const uint8_t Starjedi10pt7bChar29[] = {
   0b1111UL,
   0b1111UL,
   0b1111UL,
@@ -376,7 +376,7 @@ const uint32_t Starjedi10pt7bChar29[] = {
   0b1111UL,
   0b1111UL,
 };
-const uint32_t Starjedi10pt7bChar30[] = {
+const uint8_t Starjedi10pt7bChar30[] = {
   0b1111UL,
   0b1111UL,
   0b1111UL,
@@ -394,7 +394,7 @@ const uint32_t Starjedi10pt7bChar30[] = {
   0b1111UL,
   0b1111UL,
 };
-const uint32_t Starjedi10pt7bChar31[] = {
+const uint16_t Starjedi10pt7bChar31[] = {
   0b00000000001111UL,
   0b00000000000111UL,
   0b11110011000111UL,
@@ -467,7 +467,7 @@ const uint32_t Starjedi10pt7bChar32[] = {
   0b01111000011110011110000000000UL,
   0b00000000011110000000000000000UL,
 };
-const uint32_t Starjedi10pt7bChar33[] = {
+const uint16_t Starjedi10pt7bChar33[] = {
   0b10000000001111UL,
   0b11110000001111UL,
   0b11111110001111UL,
@@ -485,7 +485,7 @@ const uint32_t Starjedi10pt7bChar33[] = {
   0b11111000000000UL,
   0b11000000000000UL,
 };
-const uint32_t Starjedi10pt7bChar34[] = {
+const uint16_t Starjedi10pt7bChar34[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -505,7 +505,7 @@ const uint32_t Starjedi10pt7bChar34[] = {
   0b01111100111110UL,
   0b00111000000000UL,
 };
-const uint32_t Starjedi10pt7bChar35[] = {
+const uint16_t Starjedi10pt7bChar35[] = {
   0b00001111110000UL,
   0b00111111111100UL,
   0b01111111111110UL,
@@ -520,7 +520,7 @@ const uint32_t Starjedi10pt7bChar35[] = {
   0b01100000000110UL,
   0b01000000000100UL,
 };
-const uint32_t Starjedi10pt7bChar36[] = {
+const uint16_t Starjedi10pt7bChar36[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -540,7 +540,7 @@ const uint32_t Starjedi10pt7bChar36[] = {
   0b00111111111100UL,
   0b00011111111000UL,
 };
-const uint32_t Starjedi10pt7bChar37[] = {
+const uint16_t Starjedi10pt7bChar37[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -558,7 +558,7 @@ const uint32_t Starjedi10pt7bChar37[] = {
   0b11110000000000UL,
   0b11110000000000UL,
 };
-const uint32_t Starjedi10pt7bChar38[] = {
+const uint16_t Starjedi10pt7bChar38[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -574,7 +574,7 @@ const uint32_t Starjedi10pt7bChar38[] = {
   0b00000000001111UL,
   0b00000000001111UL,
 };
-const uint32_t Starjedi10pt7bChar39[] = {
+const uint16_t Starjedi10pt7bChar39[] = {
   0b00011111111000UL,
   0b00111111111100UL,
   0b01111111111110UL,
@@ -589,7 +589,7 @@ const uint32_t Starjedi10pt7bChar39[] = {
   0b11111110001110UL,
   0b11111110000100UL,
 };
-const uint32_t Starjedi10pt7bChar40[] = {
+const uint16_t Starjedi10pt7bChar40[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -607,7 +607,7 @@ const uint32_t Starjedi10pt7bChar40[] = {
   0b11111111111111UL,
   0b11111111111111UL,
 };
-const uint32_t Starjedi10pt7bChar41[] = {
+const uint16_t Starjedi10pt7bChar41[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -638,7 +638,7 @@ const uint32_t Starjedi10pt7bChar42[] = {
   0b0000000000000001111UL,
   0b0000000000000001111UL,
 };
-const uint32_t Starjedi10pt7bChar43[] = {
+const uint16_t Starjedi10pt7bChar43[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -656,7 +656,7 @@ const uint32_t Starjedi10pt7bChar43[] = {
   0b11110000000000UL,
   0b11110000000000UL,
 };
-const uint32_t Starjedi10pt7bChar44[] = {
+const uint16_t Starjedi10pt7bChar44[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -672,7 +672,7 @@ const uint32_t Starjedi10pt7bChar44[] = {
   0b11110000000000UL,
   0b11110000000000UL,
 };
-const uint32_t Starjedi10pt7bChar45[] = {
+const uint16_t Starjedi10pt7bChar45[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -693,7 +693,7 @@ const uint32_t Starjedi10pt7bChar45[] = {
   0b11111111111111UL,
   0b11111111111111UL,
 };
-const uint32_t Starjedi10pt7bChar46[] = {
+const uint16_t Starjedi10pt7bChar46[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -712,7 +712,7 @@ const uint32_t Starjedi10pt7bChar46[] = {
   0b00000000001111UL,
   0b00000000001111UL,
 };
-const uint32_t Starjedi10pt7bChar47[] = {
+const uint16_t Starjedi10pt7bChar47[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -730,7 +730,7 @@ const uint32_t Starjedi10pt7bChar47[] = {
   0b11111111111111UL,
   0b11111111111111UL,
 };
-const uint32_t Starjedi10pt7bChar48[] = {
+const uint16_t Starjedi10pt7bChar48[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -749,7 +749,7 @@ const uint32_t Starjedi10pt7bChar48[] = {
   0b00000011111110UL,
   0b00000000110000UL,
 };
-const uint32_t Starjedi10pt7bChar49[] = {
+const uint16_t Starjedi10pt7bChar49[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -771,7 +771,7 @@ const uint32_t Starjedi10pt7bChar49[] = {
   0b00000000001111UL,
   0b00000000001111UL,
 };
-const uint32_t Starjedi10pt7bChar50[] = {
+const uint16_t Starjedi10pt7bChar50[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -791,7 +791,7 @@ const uint32_t Starjedi10pt7bChar50[] = {
   0b11110000000000UL,
   0b11110000000000UL,
 };
-const uint32_t Starjedi10pt7bChar51[] = {
+const uint16_t Starjedi10pt7bChar51[] = {
   0b11110000000000UL,
   0b11110000000000UL,
   0b11110000000000UL,
@@ -810,7 +810,7 @@ const uint32_t Starjedi10pt7bChar51[] = {
   0b00000000001111UL,
   0b00000000001111UL,
 };
-const uint32_t Starjedi10pt7bChar52[] = {
+const uint16_t Starjedi10pt7bChar52[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -854,7 +854,7 @@ const uint32_t Starjedi10pt7bChar54[] = {
   0b1111100000000111100UL,
   0b1111000000000000000UL,
 };
-const uint32_t Starjedi10pt7bChar55[] = {
+const uint16_t Starjedi10pt7bChar55[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -877,7 +877,7 @@ const uint32_t Starjedi10pt7bChar55[] = {
   0b00000001111111UL,
   0b00000000000111UL,
 };
-const uint32_t Starjedi10pt7bChar56[] = {
+const uint16_t Starjedi10pt7bChar56[] = {
   0b00000000001111UL,
   0b11111111101111UL,
   0b11111111101111UL,
@@ -894,7 +894,7 @@ const uint32_t Starjedi10pt7bChar56[] = {
   0b11110001111100UL,
   0b11110000000000UL,
 };
-const uint32_t Starjedi10pt7bChar57[] = {
+const uint16_t Starjedi10pt7bChar57[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -913,7 +913,7 @@ const uint32_t Starjedi10pt7bChar57[] = {
   0b00000000000011UL,
   0b00000000000001UL,
 };
-const uint32_t Starjedi10pt7bChar58[] = {
+const uint16_t Starjedi10pt7bChar58[] = {
   0b10000000000000UL,
   0b11110000000000UL,
   0b11111110000000UL,
@@ -931,7 +931,7 @@ const uint32_t Starjedi10pt7bChar58[] = {
   0b11111000001111UL,
   0b11000000001111UL,
 };
-const uint32_t Starjedi10pt7bChar59[] = {
+const uint16_t Starjedi10pt7bChar59[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -952,7 +952,7 @@ const uint32_t Starjedi10pt7bChar59[] = {
   0b11110000000000UL,
   0b11110000000000UL,
 };
-const uint32_t Starjedi10pt7bChar60[] = {
+const uint8_t Starjedi10pt7bChar60[] = {
   0b1111UL,
   0b1111UL,
   0b1111UL,
@@ -960,7 +960,7 @@ const uint32_t Starjedi10pt7bChar60[] = {
   0b1111UL,
   0b1111UL,
 };
-const uint32_t Starjedi10pt7bChar61[] = {
+const uint16_t Starjedi10pt7bChar61[] = {
   0b00000000000111UL,
   0b00000000111111UL,
   0b00000111111111UL,
@@ -1005,7 +1005,7 @@ const uint32_t Starjedi10pt7bChar62[] = {
   0b0000111000011100000UL,
   0b0000001000010000000UL,
 };
-const uint32_t Starjedi10pt7bChar63[] = {
+const uint16_t Starjedi10pt7bChar63[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -1024,7 +1024,7 @@ const uint32_t Starjedi10pt7bChar63[] = {
   0b00111111111111UL,
   0b00011111111111UL,
 };
-const uint32_t Starjedi10pt7bChar64[] = {
+const uint16_t Starjedi10pt7bChar64[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -1044,7 +1044,7 @@ const uint32_t Starjedi10pt7bChar64[] = {
   0b00000000011111UL,
   0b00000000000011UL,
 };
-const uint32_t Starjedi10pt7bChar65[] = {
+const uint16_t Starjedi10pt7bChar65[] = {
   0b10000000000000UL,
   0b11110000000000UL,
   0b11111110000000UL,
@@ -1062,7 +1062,7 @@ const uint32_t Starjedi10pt7bChar65[] = {
   0b11111000000000UL,
   0b11000000000000UL,
 };
-const uint32_t Starjedi10pt7bChar66[] = {
+const uint16_t Starjedi10pt7bChar66[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1079,7 +1079,7 @@ const uint32_t Starjedi10pt7bChar66[] = {
   0b01111100111110UL,
   0b00111000000000UL,
 };
-const uint32_t Starjedi10pt7bChar67[] = {
+const uint16_t Starjedi10pt7bChar67[] = {
   0b00000111110000UL,
   0b00011111111000UL,
   0b00111111111100UL,
@@ -1095,7 +1095,7 @@ const uint32_t Starjedi10pt7bChar67[] = {
   0b11110000001111UL,
   0b11110000001111UL,
 };
-const uint32_t Starjedi10pt7bChar68[] = {
+const uint16_t Starjedi10pt7bChar68[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1112,7 +1112,7 @@ const uint32_t Starjedi10pt7bChar68[] = {
   0b00111111111100UL,
   0b00011111111000UL,
 };
-const uint32_t Starjedi10pt7bChar69[] = {
+const uint16_t Starjedi10pt7bChar69[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1127,7 +1127,7 @@ const uint32_t Starjedi10pt7bChar69[] = {
   0b11110000000000UL,
   0b11110000000000UL,
 };
-const uint32_t Starjedi10pt7bChar70[] = {
+const uint16_t Starjedi10pt7bChar70[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1140,7 +1140,7 @@ const uint32_t Starjedi10pt7bChar70[] = {
   0b00000000001111UL,
   0b00000000001111UL,
 };
-const uint32_t Starjedi10pt7bChar71[] = {
+const uint16_t Starjedi10pt7bChar71[] = {
   0b00001111110000UL,
   0b00011111111100UL,
   0b00111111111100UL,
@@ -1156,7 +1156,7 @@ const uint32_t Starjedi10pt7bChar71[] = {
   0b11111110001111UL,
   0b11111110001111UL,
 };
-const uint32_t Starjedi10pt7bChar72[] = {
+const uint16_t Starjedi10pt7bChar72[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1171,14 +1171,14 @@ const uint32_t Starjedi10pt7bChar72[] = {
   0b11111111111111UL,
   0b11111111111111UL,
 };
-const uint32_t Starjedi10pt7bChar73[] = {
+const uint16_t Starjedi10pt7bChar73[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
 };
-const uint32_t Starjedi10pt7bChar74[] = {
+const uint16_t Starjedi10pt7bChar74[] = {
   0b11110000000000UL,
   0b11110000000000UL,
   0b11111000000000UL,
@@ -1189,7 +1189,7 @@ const uint32_t Starjedi10pt7bChar74[] = {
   0b00111111111111UL,
   0b00000000001111UL,
 };
-const uint32_t Starjedi10pt7bChar75[] = {
+const uint16_t Starjedi10pt7bChar75[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1204,7 +1204,7 @@ const uint32_t Starjedi10pt7bChar75[] = {
   0b11110000000001UL,
   0b11110000000000UL,
 };
-const uint32_t Starjedi10pt7bChar76[] = {
+const uint16_t Starjedi10pt7bChar76[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1217,7 +1217,7 @@ const uint32_t Starjedi10pt7bChar76[] = {
   0b11110000000000UL,
   0b11110000000000UL,
 };
-const uint32_t Starjedi10pt7bChar77[] = {
+const uint16_t Starjedi10pt7bChar77[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1235,7 +1235,7 @@ const uint32_t Starjedi10pt7bChar77[] = {
   0b11111111111111UL,
   0b11111111111111UL,
 };
-const uint32_t Starjedi10pt7bChar78[] = {
+const uint16_t Starjedi10pt7bChar78[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1250,7 +1250,7 @@ const uint32_t Starjedi10pt7bChar78[] = {
   0b11111111111111UL,
   0b11111111111111UL,
 };
-const uint32_t Starjedi10pt7bChar79[] = {
+const uint16_t Starjedi10pt7bChar79[] = {
   0b00001111110000UL,
   0b00011111111000UL,
   0b00111111111100UL,
@@ -1268,7 +1268,7 @@ const uint32_t Starjedi10pt7bChar79[] = {
   0b00111111111100UL,
   0b00001111110000UL,
 };
-const uint32_t Starjedi10pt7bChar80[] = {
+const uint16_t Starjedi10pt7bChar80[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1284,7 +1284,7 @@ const uint32_t Starjedi10pt7bChar80[] = {
   0b00000011111110UL,
   0b00000000110000UL,
 };
-const uint32_t Starjedi10pt7bChar81[] = {
+const uint16_t Starjedi10pt7bChar81[] = {
   0b00000011000000UL,
   0b00011111111000UL,
   0b00111111111100UL,
@@ -1302,7 +1302,7 @@ const uint32_t Starjedi10pt7bChar81[] = {
   0b11111111111100UL,
   0b11110011110000UL,
 };
-const uint32_t Starjedi10pt7bChar82[] = {
+const uint16_t Starjedi10pt7bChar82[] = {
   0b11111111111111UL,
   0b11111111111111UL,
   0b11111111111111UL,
@@ -1318,7 +1318,7 @@ const uint32_t Starjedi10pt7bChar82[] = {
   0b11110001111100UL,
   0b11110000000000UL,
 };
-const uint32_t Starjedi10pt7bChar83[] = {
+const uint16_t Starjedi10pt7bChar83[] = {
   0b11110000000000UL,
   0b11110000111110UL,
   0b11110001111111UL,
@@ -1331,7 +1331,7 @@ const uint32_t Starjedi10pt7bChar83[] = {
   0b01111100001111UL,
   0b00000000001111UL,
 };
-const uint32_t Starjedi10pt7bChar84[] = {
+const uint16_t Starjedi10pt7bChar84[] = {
   0b00000000001111UL,
   0b00000000001111UL,
   0b00000000001111UL,
@@ -1346,7 +1346,7 @@ const uint32_t Starjedi10pt7bChar84[] = {
   0b00000000001111UL,
   0b00000000001111UL,
 };
-const uint32_t Starjedi10pt7bChar85[] = {
+const uint16_t Starjedi10pt7bChar85[] = {
   0b00011111111111UL,
   0b00111111111111UL,
   0b01111111111111UL,
@@ -1362,7 +1362,7 @@ const uint32_t Starjedi10pt7bChar85[] = {
   0b00111111111111UL,
   0b00011111111111UL,
 };
-const uint32_t Starjedi10pt7bChar86[] = {
+const uint16_t Starjedi10pt7bChar86[] = {
   0b00000000000001UL,
   0b00000000001111UL,
   0b00000001111111UL,
@@ -1381,7 +1381,7 @@ const uint32_t Starjedi10pt7bChar86[] = {
   0b00000000011111UL,
   0b00000000000011UL,
 };
-const uint32_t Starjedi10pt7bChar87[] = {
+const uint16_t Starjedi10pt7bChar87[] = {
   0b00000000000111UL,
   0b00000000111111UL,
   0b00000111111111UL,
@@ -1403,7 +1403,7 @@ const uint32_t Starjedi10pt7bChar87[] = {
   0b00000000001111UL,
   0b00000000000001UL,
 };
-const uint32_t Starjedi10pt7bChar88[] = {
+const uint16_t Starjedi10pt7bChar88[] = {
   0b10000000000001UL,
   0b11000000000011UL,
   0b11110000001111UL,
@@ -1421,7 +1421,7 @@ const uint32_t Starjedi10pt7bChar88[] = {
   0b11100000000111UL,
   0b10000000000001UL,
 };
-const uint32_t Starjedi10pt7bChar89[] = {
+const uint16_t Starjedi10pt7bChar89[] = {
   0b00000000000001UL,
   0b00000000000011UL,
   0b00000000001111UL,
@@ -1440,7 +1440,7 @@ const uint32_t Starjedi10pt7bChar89[] = {
   0b00000000000011UL,
   0b00000000000001UL,
 };
-const uint32_t Starjedi10pt7bChar90[] = {
+const uint16_t Starjedi10pt7bChar90[] = {
   0b11110000001111UL,
   0b11111000001111UL,
   0b11111100001111UL,
@@ -1471,7 +1471,7 @@ const uint32_t Starjedi10pt7bChar91[] = {
   0b1011000000000101110UL,
   0b1111100000000010100UL,
 };
-const uint32_t Starjedi10pt7bChar92[] = {
+const uint8_t Starjedi10pt7bChar92[] = {
   0b1111UL,
   0b1111UL,
   0b1111UL,
@@ -1501,7 +1501,7 @@ const uint32_t Starjedi10pt7bChar93[] = {
   0b0000001111111000000UL,
   0b0000000000000000000UL,
 };
-const uint32_t Starjedi10pt7bChar94[] = {
+const uint16_t Starjedi10pt7bChar94[] = {
   0b00000000000001UL,
   0b00000000000011UL,
   0b00000000001111UL,

@@ -7,6 +7,7 @@ template<int PIN, class LED>
 class PWMPin : public PWMPinInterface {
 public:
   void Activate() override {
+    static_assert(PIN >= 0, "PIN is negative?");
     LSanalogWriteSetup(PIN);
     LSanalogWrite(PIN, 0);  // make it black
   }
@@ -20,6 +21,8 @@ public:
     LSanalogWrite(PIN, led_.PWM_overdrive(c));
   }
 
+  Color8 getColor8() const { return led_.getColor8(); }
+
   DriveLogic<LED> led_;
 };
 
@@ -32,6 +35,25 @@ public:
   void set_overdrive(const Color16& c) override {}
 };
 
+template<int PIN>
+class PWMPin<PIN, NoLED> : PWMPinInterface {
+public:
+  void Activate() override {}
+  void Deactivate() override {}
+  void set(const Color16& c) override {}
+  void set_overdrive(const Color16& c) override {}
+  Color8 getColor8() const { return Color8(0,0,0); }
+};
+
+template<>
+class PWMPin<-1, NoLED> : PWMPinInterface {
+public:
+  void Activate() override {}
+  void Deactivate() override {}
+  void set(const Color16& c) override {}
+  void set_overdrive(const Color16& c) override {}
+  Color8 getColor8() const { return Color8(0,0,0); }
+};
 template<class ... LEDS>
 class MultiChannelLED {};
 
@@ -42,6 +64,7 @@ public:
   void Deactivate() override {}
   void set(const Color16& c) override {}
   void set_overdrive(const Color16& c) override {}
+  Color8 getColor8() const { return Color8(0,0,0); }
 };
 
 template<class LED, class... LEDS>
@@ -63,6 +86,9 @@ public:
     led_.set_overdrive(c);
     rest_.set_overdrive(c);
   }
+  Color8 getColor8() const {
+    return led_.getColor8() | rest_.getColor8();
+  }
 private:
   LED led_;
   MultiChannelLED<LEDS...> rest_;
@@ -77,6 +103,7 @@ public:
   static const size_t size = 0;
   void InitArray(PWMPinInterface** pos) {}
   void Activate() {}
+  void Deactivate() {}
 };
 
 template<class LED, class... LEDS>
@@ -90,6 +117,13 @@ public:
   void Activate() {
     led_.Activate();
     rest_.Activate();
+  }
+  void Deactivate() {
+    led_.Deactivate();
+    rest_.Deactivate();
+  }
+  Color8 getColor8() const {
+    return led_.getColor8();
   }
 private:
   LED led_;
@@ -113,16 +147,40 @@ public:
 
   void Activate() override {
     STDOUT.println("Simple Blade");
-    power_ = true;
-    led_structs_.Activate();
+    Power(true);
     CommandParser::Link();
     Looper::Link();
     AbstractBlade::Activate();
   }
 
+  void Deactivate() override {
+    Power(false);
+    AbstractBlade::Deactivate();
+    Looper::Unlink();
+    CommandParser::Unlink();
+  }
+
+  void Power(bool on) {
+    if (power_ != on) {
+      if (on) {
+	led_structs_.Activate();
+      } else {
+	led_structs_.Deactivate();
+      }
+      power_ = on;
+    }
+  }
+
   // BladeBase implementation
   int num_leds() const override {
     return LEDArrayHelper<LEDS...>::size;
+  }
+  Color8::Byteorder get_byteorder() const override {
+    Color8 color = led_structs_.getColor8();
+    if (color.r && color.g && color.b) {
+      return Color8::RGB;
+    }
+    return Color8::NONE;
   }
   bool is_on() const override {
     return on_;
@@ -136,11 +194,11 @@ public:
   }
 
   void allow_disable() override {
-    if (!on_) power_ = false;
+    if (!on_) Power(false);
   }
   virtual void SetStyle(BladeStyle* style) {
+    Power(true);
     AbstractBlade::SetStyle(style);
-    power_ = true;
   }
 
   // SaberBase implementation
@@ -148,23 +206,29 @@ public:
     if (on_ || power_) *on = true;
   }
   void SB_On() override {
+    AbstractBlade::SB_On();
     battery_monitor.SetLoad(true);
-    power_ = on_ = true;
+    on_ = true;
+    Power(true);
   }
-  void SB_Off() override {
+  void SB_Off(OffType off_type) override {
+    AbstractBlade::SB_Off(off_type);
     battery_monitor.SetLoad(false);
     on_ = false;
+    if (off_type == OFF_IDLE) {
+      Power(false);
+    }
   }
 
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-         SB_On();
-         return true;
+        SB_On();
+        return true;
       }
       if (!strcmp(arg, "off")) {
-         SB_Off();
-         return true;
+        SB_Off(OFF_NORMAL);
+        return true;
       }
     }
     return false;
