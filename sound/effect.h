@@ -465,6 +465,26 @@ EFFECT(ccbegin);
 EFFECT(ccend);
 EFFECT(ccchange);
 
+// Blaster effects
+// hum, boot and font are reused from sabers and already defined.
+EFFECT(bgnauto); // Doesn't exist in fonts, but I expect there may be use for autofire transitions
+EFFECT2(auto,auto); // HACK to work around autoN.wav
+EFFECT(endauto); // Doesn't exist in fonts, but I expect there may be use for autofire transitions
+
+EFFECT(blast); // Not to be confused with "blst" and "blaster" as blocking sounds in sabers
+EFFECT(clipin);
+EFFECT(clipout);
+EFFECT(empty);
+EFFECT(full);
+EFFECT(jam);
+EFFECT(mode);
+EFFECT(plioff);
+EFFECT(plion);
+EFFECT(range);
+EFFECT(reload);
+EFFECT(stun);
+EFFECT(unjam);
+
 // TODO: Optimize this and make it possible
 // have the WAV reader use this.
 class EffectFileReader : public FileReader {
