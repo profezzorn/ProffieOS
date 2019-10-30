@@ -470,16 +470,22 @@ public:
 	  file_end = file_start + f->ReadType<uint32_t>();
 	  f->Skip(4);
 	  uint32_t offset = f->ReadType<uint32_t>();
+	  
+#if 0
 	  uint32_t ctable = f->Tell() + f->ReadType<uint32_t>();
 	  // STDOUT << "OFFSET = " << offset << " CTABLE=" << ctable << "\n";
 	  width = f->ReadType<uint32_t>();
 	  height = f->ReadType<uint32_t>();
 	  // STDOUT << "Width=" << width << " Height=" << height << "\n";
-#if 0
 	  f->Seek(ctable);
 	  int c0 = ReadColorAsGray(f);
 	  int c1 = ReadColorAsGray(f);
 	  xor_ = c0 > c1 ? 255 : 0;
+#else
+	  f->Skip(4);
+	  width = f->ReadType<uint32_t>();
+	  height = f->ReadType<uint32_t>();
+	  // STDOUT << "Width=" << width << " Height=" << height << "\n";
 #endif	  
 	  // First frame is near the end, seek to it.
 	  f->Seek(file_start + offset + width * height / 8 - 512);

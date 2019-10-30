@@ -225,6 +225,18 @@ public:
       }
     }
   }
+  void skipspace() {
+    while (true) {
+      switch (Peek()) {
+	case ' ':
+	case '\t':
+	  Read();
+	  continue;
+	default:
+	  return;
+      }
+    }
+  }
   // Skip rest of line.
   void skipline() {
     while (Available() && Read() != '\n');
@@ -289,7 +301,7 @@ public:
 
   bool readVariable(char variable[33]) {
     variable[0] = 0;
-    skipwhite();
+    skipspace();
     for (int i = 0; i < 32; i++) {
       int c = toLower(Peek());
       if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_') {
@@ -300,7 +312,7 @@ public:
 	break;
       }
     }
-    skipwhite();
+    skipspace();
     return true;
   }
 

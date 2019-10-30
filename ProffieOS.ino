@@ -1,7 +1,7 @@
 /*
  ProffieOS: Control software for lightsabers and other props.
  http://fredrik.hubbe.net/lightsaber/teensy_saber.html
- Copyright (c) 2016-2017 Fredrik Hubinette
+ Copyright (c) 2016-20197 Fredrik Hubinette
  Additional copyright holders listed inline below.
 
  This program is free software: you can redistribute it and/or modify
@@ -597,6 +597,7 @@ class NoLED;
 #include "blades/sub_blade.h"
 #include "blades/dim_blade.h"
 #include "blades/leds.h"
+#include "blades/blade_id.h"
 #include "common/preset.h"
 #include "common/blade_config.h"
 #include "common/current_preset.h"
@@ -621,6 +622,9 @@ ArgParserInterface* CurrentArgParser;
 
 PROP_TYPE prop;
 
+#ifdef BLADE_DETECT_PIN
+LatchingButton BladeDetect(BUTTON_BLADE_DETECT ,BLADE_DETECT_PIN, "blade_detect");
+#endif
 
 #if 0
 #include "scripts/v3_test_script.h"

@@ -170,10 +170,9 @@ struct ConsoleHelper : public Print {
   }
 };
 
-#define LOCK_SD(X) do { } while(0)
-
 ConsoleHelper STDOUT;
 
+#define LOCK_SD(X) do { } while(0)
 #define noInterrupts() do{}while(0)
 #define interrupts() do{}while(0)
 
@@ -243,7 +242,9 @@ BladeConfig* current_config;
 #define CHECK_STREQ(X, Y) do {                                          \
   auto x = (X);                                                         \
   auto y = (Y);                                                         \
-  if (strcmp(x, y)) { std::cerr << #X << " (" << x << ") != " << #Y << " (" << y << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (!x || !y || strcmp(x, y)) {                                       \
+    std::cerr << #X << " (" << (x?x:"null") << ") != " << #Y << " (" << (y?y:"null") << ") line " << __LINE__ << std::endl;  exit(1); \
+  }						                        \
 } while(0)
 
 

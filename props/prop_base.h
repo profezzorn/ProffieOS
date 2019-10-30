@@ -273,23 +273,17 @@ public:
 
   // Measure and return the blade identifier resistor.
   float id() {
-#ifdef ENABLE_POWER_FOR_ID
-    ENABLE_POWER_FOR_ID power_pins_to_toggle;
-    STDOUT.println("Power for ID enabled. Turning on FETs");
-    power_pins_to_toggle.Init();
-    power_pins_to_toggle.Power(true);
-#endif
-    pinMode(bladeIdentifyPin, INPUT_PULLUP);
-    delay(100);
-    int blade_id = LSAnalogRead(bladeIdentifyPin, INPUT_PULLUP);
-#ifdef ENABLE_POWER_FOR_ID
-    power_pins_to_toggle.Power(false);
-#endif
-    float volts = blade_id * 3.3f / 1024.0f;  // Volts at bladeIdentifyPin
-    float amps = (3.3f - volts) / 33000;     // Pull-up is 33k
-    float resistor = volts / amps;
-    STDOUT << "ID: " << blade_id << " volts " << volts << " resistance= " << resistor << "\n";
-    return resistor;
+    BLADE_ID_CLASS blade_id;
+    float ret = blade_id.id();
+    STDOUT << "ID: " << ret << "\n";
+#ifdef BLADE_DETECT_PIN
+    if (!BladeDetect.Read()) {
+      STDOUT << "NO ";
+      ret += NO_BLADE;
+    }
+    STDOUT << "Blade Detected\n";
+#endif    
+    return ret;
   }
 
   // Called from setup to identify the blade and select the right
@@ -815,6 +809,7 @@ public:
     if (b & BUTTON_LEFT) STDOUT.print("Left");
     if (b & BUTTON_RIGHT) STDOUT.print("Right");
     if (b & BUTTON_SELECT) STDOUT.print("Select");
+    if (b & BUTTON_BLADE_DETECT) STDOUT.print("Select");
     if (b & MODE_ON) STDOUT.print("On");
   }
 
