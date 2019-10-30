@@ -240,9 +240,9 @@ public:
 
   // Go to the next Preset.
   virtual void next_preset() {
-    #ifdef SAVE_STATE
+  #ifdef SAVE_STATE
     SaveState(current_preset_.preset_num + 1);
-    #endif
+  #endif
     SetPreset(current_preset_.preset_num + 1, true);
   }
 
@@ -332,9 +332,18 @@ public:
   }
 
   void ResumePreset() {
-    savestate_.ReadInCurrentDir("curstate.ini");
+    FileReader f;
+    SaveStateFile savestate_;
+    if (!OpenState(&f, "curstate.ini")) {
+      if(!OpenState(&f, "curstate.tmp")) {
+      } else {
+        savestate_.Read("curstate.tmp");
+      }
+    } else { 
+      savestate_.Read("curstate.ini");
+    }
     SetPreset(savestate_.preset, false);
-    if (savestate_.volume < VOLUME) {
+    if (savestate_.volume <= VOLUME) {
       dynamic_mixer.set_volume(savestate_.volume);
     }
   }
@@ -359,11 +368,7 @@ public:
   bool SaveState(int preset) {
     STDOUT.println("Saving Current State");
     LOCK_SD(true);
-    FileReader f, out;
-    if (!OpenState(&f, "curstate.ini")) {
-      if (!UpdateINI()) CreateINI();
-      OpenState(&f, "curstate.ini");
-    }
+    FileReader out;
     LSFS::Remove("curstate.tmp");
     out.Create("curstate.tmp");
     char value[30];
@@ -371,7 +376,6 @@ public:
     out.write_key_value("preset", value);
     itoa(dynamic_mixer.get_volume(), value, 10);
     out.write_key_value("volume", value);
-    f.Close();
     out.Write("end\n");
     out.Close();
     UpdateINI();
@@ -400,19 +404,6 @@ public:
       return true;
     }
     return false;
-  }
-
-    bool CreateINI() {
-    FileReader f;
-    f.Create("curstate.ini");
-    char value[30];
-    itoa(0, value, 10);
-    f.write_key_value("preset", value);
-    itoa(VOLUME, value, 10);
-    f.write_key_value("volume", value);
-    f.Write("end\n");
-    f.Close();
-    return true;
   }
 
   void FindBladeAgain() {
@@ -1270,7 +1261,6 @@ public:
 protected:
   CurrentPreset current_preset_;
   LoopCounter accel_loop_counter_;
-  SaveStateFile savestate_;
 };
 
 #endif
