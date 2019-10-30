@@ -404,7 +404,6 @@ void SetupStandardAudio() {
 HybridFont hybrid_font;
 
 #include "sound/smooth_swing_config.h"
-#include "sound/smooth_swing_cfx_config.h"
 #include "sound/looped_swing_wrapper.h"
 #include "sound/smooth_swing_v2.h"
 
