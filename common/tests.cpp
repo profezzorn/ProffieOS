@@ -170,10 +170,9 @@ struct ConsoleHelper : public Print {
   }
 };
 
-#define LOCK_SD(X) do { } while(0)
-
 ConsoleHelper STDOUT;
 
+#define LOCK_SD(X) do { } while(0)
 #define noInterrupts() do{}while(0)
 #define interrupts() do{}while(0)
 
