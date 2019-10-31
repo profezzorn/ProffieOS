@@ -181,7 +181,6 @@ public:
           break;
       }
     }
-    }
 //    EnableBooster();
 #endif
     return false;
