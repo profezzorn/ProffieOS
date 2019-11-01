@@ -329,44 +329,27 @@ public:
 
   void ResumePreset() {
     FileReader f;
-    SaveStateFile savestate_;
-    if (!OpenState(&f, "curstate.ini")) {
-      if(!OpenState(&f, "curstate.tmp")) {
-      } else {
-        savestate_.Read("curstate.tmp");
-      }
-    } else { 
-      savestate_.Read("curstate.ini");
+    SaveStateFile savestate;
+    if (!savestate.Read("curstate.ini")) {
+      savestate.Read("curstate.tmp");
     }
-    SetPreset(savestate_.preset, false);
-    if (savestate_.volume <= VOLUME) {
-      dynamic_mixer.set_volume(savestate_.volume);
+    SetPreset(savestate.preset, false);
+    if (savestate.volume <= VOLUME) {
+      dynamic_mixer.set_volume(savestate.volume);
     }
-  }
-
-  bool OpenState(FileReader* f, const char* filename) {
-    if (!f->Open(filename))
-      return false;
-
-    if (f->FileSize() < 4) return false;
-    int p = f->FileSize() - 1;
-    while (p > 0) { f->Seek(p); if (!isSpace(f->Read())) break; p--; }
-    f->Seek(p - 3);
-    if (!isSpace(f->Read())) return false;
-    if (toLower(f->Read()) != 'e') return false;
-    if (toLower(f->Read()) != 'n') return false;
-    if (toLower(f->Read()) != 'd') return false;
-    f->Seek(0);
-
-    return true;
   }
 
   bool SaveState(int preset) {
     STDOUT.println("Saving Current State");
+    writeState("curstate.tmp", preset);
+    writeState("curstate.ini", preset);
+  }
+
+  void writeState(const char *filename, int preset) {
     LOCK_SD(true);
     FileReader out;
-    LSFS::Remove("curstate.tmp");
-    out.Create("curstate.tmp");
+    LSFS::Remove(filename);
+    out.Create(filename);
     char value[30];
     itoa(preset, value, 10);
     out.write_key_value("preset", value);
@@ -374,32 +357,7 @@ public:
     out.write_key_value("volume", value);
     out.Write("end\n");
     out.Close();
-    UpdateINI();
     LOCK_SD(false);
-  }
-
-    bool UpdateINI() {
-    FileReader f, f2;
-    if (OpenState(&f2, "curstate.tmp")) {
-      uint8_t buf[512];
-      // Found valid tmp file
-      LSFS::Remove("curstate.ini");
-      f.Create("curstate.ini");
-      while (f2.Available()) {
-	int to_copy = std::min<int>(f2.Available(), sizeof(buf));
-	if (f2.Read(buf, to_copy) != to_copy ||
-	    f.Write(buf, to_copy) != to_copy) {
-	  f2.Close();
-	  f.Close();
-	  LSFS::Remove("curstate.ini");
-	  return false;
-	}
-      }
-      f2.Close();
-      f.Close();
-      return true;
-    }
-    return false;
   }
 
   void FindBladeAgain() {
