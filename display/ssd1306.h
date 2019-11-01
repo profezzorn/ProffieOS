@@ -224,13 +224,16 @@ public:
 	  return 1;
 	}
 	if (eof_) {
+	  // STDOUT << "EOF " << frame_count_ << "\n";
 	  screen_ = SCREEN_PLI;
 	  if (frame_count_ == 1) return 5000;
 	  return FillFrameBuffer();
 	}
 	frame_count_++;
-	if (looped_frames_ > 1 && millis() - loop_start_ > 5000)
+	if (looped_frames_ > 1 && millis() - loop_start_ > 5000) {
+	  STDOUT << "END OF LOOP\n";
 	  screen_ = SCREEN_PLI;
+	}
 
 	if (font_config.ProffieOSAnimationFrameRate > 0.0) {
 	  return 1000 / font_config.ProffieOSAnimationFrameRate;
@@ -245,14 +248,14 @@ public:
 
   void SetScreenNow(Screen screen) {
     millis_to_display_ = 0;
-    // This aborts the sleep in the display loop.
-    state_machine_.sleep_until_ = millis();
     screen_ = screen;
   }
 
   void ShowFile(Effect* effect) {
     MountSDCard();
+    eof_ = true;
     file_.Play(effect);
+    frame_available_ = false;
     loop_start_ = millis();
     frame_count_ = 0;
     SetScreenNow(SCREEN_IMAGE);
@@ -261,11 +264,12 @@ public:
 
   void ShowFile(const char* file) {
     MountSDCard();
+    eof_ = true;
     file_.Play(file);
+    frame_available_ = false;
     loop_start_ = millis();
     frame_count_ = 0;
     SetScreenNow(SCREEN_IMAGE);
-    scheduleFillBuffer();
     eof_ = false;
   }
 
@@ -344,7 +348,9 @@ public:
     while (true) {
       millis_to_display_ = FillFrameBuffer();
       frame_start_time_ = millis();
-      
+      lock_fb_ = true;
+      frame_available_ = false;
+
       Send(COLUMNADDR);
       Send(0);   // Column start address (0 = reset)
       Send(WIDTH-1); // Column end address (127 = reset)
@@ -412,12 +418,9 @@ public:
         }
         Wire.endTransmission();
 	I2CUnlock(); do { YIELD(); } while (!I2CLock());
-
-	// Slightly incorrect since it doesn't accunt for
-	// the time it takes to actually show the image.
       }
       loop_counter_.Update();
-      frame_available_ = false;
+      lock_fb_ = false;
       scheduleFillBuffer();
       while (millis() - frame_start_time_ < millis_to_display_) YIELD();
     }
@@ -434,6 +437,7 @@ public:
 
   bool ReadImage(FileReader* f) {
     uint32_t file_end = 0;
+    // STDOUT << "ReadImage " << f->Tell() << " size = " << f->FileSize() << "\n";
     if (ypos_ >= looped_frames_) {
       if (looped_frames_ > 1) f->Seek(0);
       ypos_ = 0;
@@ -443,7 +447,7 @@ public:
       int width, height;
       switch (TAG2(a, b)) {
 	default:
-	  STDOUT << "Unknown image format.\n";
+	  STDOUT << "Unknown image format. a=" << a << " b=" << b << " pos=" << f->Tell() << "\n";
 	  return false;
 	  
 	case TAG2('P', '4'):
@@ -522,7 +526,7 @@ public:
 
   // AudioStreamWork implementation
   size_t space_available() const override {
-    if (eof_) return 0;
+    if (eof_ || lock_fb_) return 0;
     if (frame_available_) return 0;
 
     // Always low priority
@@ -531,13 +535,14 @@ public:
 
   bool FillBuffer() override {
     if (eof_) return true;
-    if (!file_.IsOpen()) {
-      if (!file_.OpenFile()) {
+    if (file_.OpenFile()) {
+      if (!file_.IsOpen()) {
 	eof_ = true;
+	return false;
       }
       ypos_ = looped_frames_;
-      return false;
     }
+    if (lock_fb_) return true;
     if (!frame_available_) {
       if (!ReadImage(&file_)) {
 	file_.Close();
@@ -575,6 +580,7 @@ private:
   EffectFileReader file_;
   volatile bool frame_available_ = true;
   volatile bool eof_ = true;
+  volatile bool lock_fb_ = false;
 };
 
 #endif
