@@ -52,6 +52,10 @@ public:
     if (locked) MountSDCard();
   }
 
+  static void LockSD_nomount(bool locked) {
+    sd_locked = locked;
+  }
+  
   static bool sd_is_locked() { return sd_locked; }
 
   static void CloseAllOpenFiles() {

@@ -56,14 +56,18 @@ protected:
   void Loop() override {
     if (LSFS::IsMounted()) {
       if (!Active()) {
+	AudioStreamWork::LockSD_nomount(true);
 	AudioStreamWork::CloseAllOpenFiles();
 	STDOUT.println("Unmounting SD Card.");
 	LSFS::End();
+	AudioStreamWork::LockSD_nomount(false);
       }
     } else {
       if (Active() && millis() - last_mount_try_ > 1000) {
 	last_mount_try_ = millis();
+	AudioStreamWork::LockSD_nomount(true);
 	if (LSFS::CanMount()) Mount();
+	AudioStreamWork::LockSD_nomount(false);
       }
     }
   }
