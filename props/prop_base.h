@@ -355,7 +355,6 @@ public:
     out.write_key_value("preset", value);
     itoa(dynamic_mixer.get_volume(), value, 10);
     out.write_key_value("volume", value);
-    out.Write("end\n");
     out.Close();
     LOCK_SD(false);
   }
