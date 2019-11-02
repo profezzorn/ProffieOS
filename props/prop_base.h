@@ -5,10 +5,12 @@ class SaveStateFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
     CONFIG_VARIABLE(preset, 0);
-    CONFIG_VARIABLE(volume, VOLUME);
+    CONFIG_VARIABLE(volume, -1);
+    CONFIG_VARIABLE(end, 0);
   }
   int preset;
   int volume;
+  int end;
 };
 
 // Base class for props.
@@ -333,16 +335,18 @@ public:
   void ResumePreset() {
     FileReader f;
     SaveStateFile savestate;
-    if (!savestate.Read("curstate.ini")) {
+    savestate.Read("curstate.ini");
+    if (!savestate.end) {
       savestate.Read("curstate.tmp");
+      if (!savestate.end) return;
     }
     SetPreset(savestate.preset, false);
-    if (savestate.volume <= VOLUME) {
-      dynamic_mixer.set_volume(savestate.volume);
+    if (savestate.volume >= 0) {
+      dynamic_mixer.set_volume(clampi32(savestate.volume, 0, VOLUME));
     }
   }
 
-  bool SaveState(int preset) {
+  void SaveState(int preset) {
     STDOUT.println("Saving Current State");
     writeState("curstate.tmp", preset);
     writeState("curstate.ini", preset);
@@ -358,6 +362,7 @@ public:
     out.write_key_value("preset", value);
     itoa(dynamic_mixer.get_volume(), value, 10);
     out.write_key_value("volume", value);
+    out.write_key_value("end", "1");
     out.Close();
     LOCK_SD(false);
   }

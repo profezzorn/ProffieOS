@@ -32,7 +32,6 @@
 #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 
-
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
 #define CONFIG_FILE CONFIG_FILE_TEST
