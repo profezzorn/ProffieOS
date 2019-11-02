@@ -3,7 +3,7 @@
 
 #include "../transitions/concat.h"
 
-// Usage: TransitionLoop<COLOR, EFFECT_COLOR, TRANSITION1, TRANSITION2, EFFECT>
+// Usage: TransitionEffect<COLOR, EFFECT_COLOR, TRANSITION1, TRANSITION2, EFFECT>
 // COLOR, EFFECT_COLOR: COLOR
 // TRANSITION1, TRANSITION2 : TRANSITION
 // EFFECT: effect type
