@@ -1,7 +1,7 @@
 /*
  ProffieOS: Control software for lightsabers and other props.
  http://fredrik.hubbe.net/lightsaber/teensy_saber.html
- Copyright (c) 2016-20197 Fredrik Hubinette
+ Copyright (c) 2016-2019 Fredrik Hubinette
  Additional copyright holders listed inline below.
 
  This program is free software: you can redistribute it and/or modify
