@@ -247,17 +247,17 @@ public:
 
   // Go to the next Preset.
   virtual void next_preset() {
-  #ifdef SAVE_STATE
+#ifdef SAVE_STATE
     SaveState(current_preset_.preset_num + 1);
-  #endif
+#endif
     SetPreset(current_preset_.preset_num + 1, true);
   }
 
   // Go to the previous Preset.
   virtual void previous_preset() {
-    #ifdef SAVE_STATE
+#ifdef SAVE_STATE
     SaveState(current_preset_.preset_num - 1);
-    #endif
+#endif
     SetPreset(current_preset_.preset_num - 1, true);
   }
 
@@ -317,11 +317,11 @@ public:
   } while(0);
 
     ONCEPERBLADE(ACTIVATE);
-    #ifdef SAVE_STATE
+#ifdef SAVE_STATE
     ResumePreset();
-    #else
+#else
     SetPreset(0, false);
-    #endif
+#endif
     return;
 
    bad_blade:
