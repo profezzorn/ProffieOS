@@ -490,6 +490,8 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/battery_level.h"
 #include "functions/trigger.h"
 #include "functions/bump.h"
+#include "functions/smoothstep.h"
+#include "functions/swing_speed.h"
 
 // transitions
 #include "transitions/fade.h"
