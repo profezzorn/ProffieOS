@@ -1,6 +1,16 @@
 #ifndef PROPS_PROP_BASE_H
 #define PROPS_PROP_BASE_H
 
+class SaveStateFile : public ConfigFile {
+public:
+  void SetVariable(const char* variable, float v) override {
+    CONFIG_VARIABLE(preset, 0);
+    CONFIG_VARIABLE(volume, VOLUME);
+  }
+  int preset;
+  int volume;
+};
+
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase {
 public:
@@ -32,7 +42,7 @@ public:
         return true;
       }
     }
-#endif      
+#endif
     return false;
   }
 
@@ -159,7 +169,7 @@ public:
 #endif
 
     strcpy(current_directory, dir);
-    if (strlen(current_directory) && 
+    if (strlen(current_directory) &&
         current_directory[strlen(current_directory)-1] != '/') {
       strcat(current_directory, "/");
     }
@@ -227,19 +237,25 @@ public:
     SaberBase::SetVariation(current_preset_.variation);
 #else
     SaberBase::SetVariation(0);
-#endif    
-    
+#endif
+
     if (on) On();
     if (announce) SaberBase::DoNewFont();
   }
 
   // Go to the next Preset.
   virtual void next_preset() {
+  #ifdef SAVE_STATE
+    SaveState(current_preset_.preset_num + 1);
+  #endif
     SetPreset(current_preset_.preset_num + 1, true);
   }
 
   // Go to the previous Preset.
   virtual void previous_preset() {
+    #ifdef SAVE_STATE
+    SaveState(current_preset_.preset_num - 1);
+    #endif
     SetPreset(current_preset_.preset_num - 1, true);
   }
 
@@ -299,7 +315,11 @@ public:
   } while(0);
 
     ONCEPERBLADE(ACTIVATE);
+    #ifdef SAVE_STATE
+    ResumePreset();
+    #else
     SetPreset(0, false);
+    #endif
     return;
 
    bad_blade:
@@ -307,7 +327,39 @@ public:
 #ifdef ENABLE_AUDIO
     talkie.Say(talkie_error_in_15, 15);
     talkie.Say(talkie_blade_array_15, 15);
-#endif    
+#endif
+  }
+
+  void ResumePreset() {
+    FileReader f;
+    SaveStateFile savestate;
+    if (!savestate.Read("curstate.ini")) {
+      savestate.Read("curstate.tmp");
+    }
+    SetPreset(savestate.preset, false);
+    if (savestate.volume <= VOLUME) {
+      dynamic_mixer.set_volume(savestate.volume);
+    }
+  }
+
+  bool SaveState(int preset) {
+    STDOUT.println("Saving Current State");
+    writeState("curstate.tmp", preset);
+    writeState("curstate.ini", preset);
+  }
+
+  void writeState(const char *filename, int preset) {
+    LOCK_SD(true);
+    FileReader out;
+    LSFS::Remove(filename);
+    out.Create(filename);
+    char value[30];
+    itoa(preset, value, 10);
+    out.write_key_value("preset", value);
+    itoa(dynamic_mixer.get_volume(), value, 10);
+    out.write_key_value("volume", value);
+    out.Close();
+    LOCK_SD(false);
   }
 
   void FindBladeAgain() {
@@ -323,7 +375,7 @@ public:
   } while(0);
 
     ONCEPERBLADE(DEACTIVATE);
-      
+
     FindBlade();
   }
 
@@ -355,6 +407,7 @@ public:
         speed.x > 0.1 &&
 #endif  
         fusor.swing_speed() < 150;
+
 #if 1
       STDOUT << "ACCEL: " << accel
              << " diff=" << diff
@@ -566,7 +619,7 @@ public:
       DoGesture(TWIST_CLOSE);
     }
   }
-  
+
   Vec3 accel_;
 
   void StartOrStopTrack() {
@@ -658,7 +711,7 @@ public:
              << " ccmode = " << SaberBase::GetColorChangeMode()
              << "\n";
     }
-    
+
 #endif
 
     Vec3 mss = fusor.mss();
@@ -752,7 +805,7 @@ public:
       PrintButton(current_modifiers);
     }
     if (SaberBase::IsOn()) STDOUT.print(" ON");
-    STDOUT.print(" millis=");    
+    STDOUT.print(" millis=");
     STDOUT.println(millis());
   }
 
@@ -894,7 +947,7 @@ public:
       }
       return true;
     }
-#endif    
+#endif
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "buffered")) {
       for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
@@ -906,7 +959,7 @@ public:
       return true;
     }
 #endif
-    
+
 #endif // enable sound
     if (!strcmp(cmd, "cd")) {
       chdir(arg);
@@ -918,7 +971,7 @@ public:
       SD.mkdir(arg);
       return true;
     }
-#endif    
+#endif
     if (!strcmp(cmd, "pwd")) {
       STDOUT.println(current_directory);
       return true;
@@ -979,19 +1032,19 @@ public:
     if (!strcmp(cmd, "move_preset") && arg) {
       int32_t pos = strtol(arg, NULL, 0);
       current_preset_.SaveAt(pos);
-      return true;      
+      return true;
     }
 
     if (!strcmp(cmd, "duplicate_preset") && arg) {
       int32_t pos = strtol(arg, NULL, 0);
       current_preset_.preset_num = -1;
       current_preset_.SaveAt(pos);
-      return true;      
+      return true;
     }
 
     if (!strcmp(cmd, "delete_preset") && arg) {
       current_preset_.SaveAt(-1);
-      return true;      
+      return true;
     }
 
     if (!strcmp(cmd, "show_current_preset")) {
@@ -1008,7 +1061,7 @@ public:
       STDOUT.println(dynamic_mixer.get_volume());
 #else
       STDOUT.println(0);
-#endif      
+#endif
       return true;
     }
     if (!strcmp(cmd, "set_volume") && arg) {
@@ -1016,10 +1069,10 @@ public:
       int32_t volume = strtol(arg, NULL, 0);
       if (volume >= 0 && volume <= 3000)
         dynamic_mixer.set_volume(volume);
-#endif      
+#endif
       return true;
     }
-    
+
     if (!strcmp(cmd, "mute")) {
       SetMute(true);
       return true;
@@ -1032,7 +1085,7 @@ public:
       if (!SetMute(true)) SetMute(false);
       return true;
     }
-    
+
     if (!strcmp(cmd, "set_preset") && arg) {
       size_t preset = strtol(arg, NULL, 0);
       SetPreset(preset, true);
@@ -1048,7 +1101,7 @@ public:
       ToggleColorChangeMode();
       return true;
     }
-    
+
 #ifdef ENABLE_SD
     if (!strcmp(cmd, "list_tracks")) {
       LOCK_SD(true);
@@ -1159,9 +1212,9 @@ public:
     }
     return false;
   }
-  
+
   virtual bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) = 0;
-  
+
 protected:
   CurrentPreset current_preset_;
   LoopCounter accel_loop_counter_;
