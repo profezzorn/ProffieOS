@@ -201,6 +201,25 @@ public:
     return false;
   }
 
+  void SaveColorChangeIfNeeded() {
+#ifdef SAVE_COLOR_CHANGE
+    if (current_preset_.variation != SaberBase::GetCurrentVariation()) {
+      current_preset_.variation = SaberBase::GetCurrentVariation();
+      current_preset_.Save();
+    }
+#endif	
+  }
+
+  void PollSaveColorChange() {
+#ifdef SAVE_COLOR_CHANGE
+    if (current_preset_.variation == SaberBase::GetCurrentVariation()) return;
+#ifdef ENABLE_AUDIO
+    if (amplifier.Active()) return; // Do it later
+#endif    
+    SaveColorChangeIfNeeded();
+#endif	
+  }
+
   // Select preset (font/style)
   void SetPreset(int preset_num, bool announce) {
 #ifdef IDLE_OFF_TIME
@@ -208,6 +227,7 @@ public:
 #endif    
     bool on = SaberBase::IsOn();
     if (on) Off();
+    SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
 #define UNSET_BLADE_STYLE(N) \
@@ -738,6 +758,8 @@ public:
       last_on_time_ = millis();
     }
 #endif
+
+    PollSaveColorChange();
   }
 
 #ifdef IDLE_OFF_TIME
@@ -756,10 +778,6 @@ public:
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
       }
     } else {
-#ifdef SAVE_COLOR_CHANGE
-      current_preset_.variation = SaberBase::GetCurrentVariation();
-      current_preset_.Save();
-#endif
       STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
     }
