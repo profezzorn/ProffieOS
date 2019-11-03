@@ -772,6 +772,9 @@ public:
       current_tick_angle_ = fusor.angle2();
       if (!current_style()->HandlesColorChange()) {
         STDOUT << "Entering smooth color change mode.\n";
+	current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
+	current_tick_angle_ = fmod(current_tick_angle_, M_PI * 2);
+
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
       } else {
         STDOUT << "Entering stepped color change mode.\n";
