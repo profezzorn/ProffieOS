@@ -1,7 +1,7 @@
 /*
  ProffieOS: Control software for lightsabers and other props.
  http://fredrik.hubbe.net/lightsaber/teensy_saber.html
- Copyright (c) 2016-20197 Fredrik Hubinette
+ Copyright (c) 2016-2019 Fredrik Hubinette
  Additional copyright holders listed inline below.
 
  This program is free software: you can redistribute it and/or modify
@@ -31,7 +31,6 @@
 // #define CONFIG_FILE "config/toy_saber_config.h"
 #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
-
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -490,6 +489,9 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/battery_level.h"
 #include "functions/trigger.h"
 #include "functions/bump.h"
+#include "functions/smoothstep.h"
+#include "functions/swing_speed.h"
+#include "functions/sound_level.h"
 
 // transitions
 #include "transitions/fade.h"

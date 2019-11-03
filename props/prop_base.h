@@ -5,10 +5,12 @@ class SaveStateFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
     CONFIG_VARIABLE(preset, 0);
-    CONFIG_VARIABLE(volume, VOLUME);
+    CONFIG_VARIABLE(volume, -1);
+    CONFIG_VARIABLE(end, 0);
   }
   int preset;
   int volume;
+  int end;
 };
 
 // Base class for props.
@@ -86,6 +88,9 @@ public:
     if (SaberBase::Lockup()) {
       SaberBase::DoEndLockup();
       SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+    }
+    if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+      ToggleColorChangeMode();
     }
     SaberBase::TurnOff(off_type);
     if (unmute_on_deactivation_) {
@@ -196,13 +201,33 @@ public:
     return false;
   }
 
+  void SaveColorChangeIfNeeded() {
+#ifdef SAVE_COLOR_CHANGE
+    if (current_preset_.variation != SaberBase::GetCurrentVariation()) {
+      current_preset_.variation = SaberBase::GetCurrentVariation();
+      current_preset_.Save();
+    }
+#endif
+  }
+
+  void PollSaveColorChange() {
+#ifdef SAVE_COLOR_CHANGE
+    if (current_preset_.variation == SaberBase::GetCurrentVariation()) return;
+#ifdef ENABLE_AUDIO
+    if (amplifier.Active()) return; // Do it later
+#endif
+    SaveColorChangeIfNeeded();
+#endif
+  }
+
   // Select preset (font/style)
   void SetPreset(int preset_num, bool announce) {
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
-#endif    
+#endif
     bool on = SaberBase::IsOn();
     if (on) Off();
+    SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
 #define UNSET_BLADE_STYLE(N) \
@@ -242,17 +267,17 @@ public:
 
   // Go to the next Preset.
   virtual void next_preset() {
-  #ifdef SAVE_STATE
+#ifdef SAVE_STATE
     SaveState(current_preset_.preset_num + 1);
-  #endif
+#endif
     SetPreset(current_preset_.preset_num + 1, true);
   }
 
   // Go to the previous Preset.
   virtual void previous_preset() {
-    #ifdef SAVE_STATE
+#ifdef SAVE_STATE
     SaveState(current_preset_.preset_num - 1);
-    #endif
+#endif
     SetPreset(current_preset_.preset_num - 1, true);
   }
 
@@ -260,7 +285,7 @@ public:
   virtual void rotate_presets() {
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
-#endif    
+#endif
 #ifdef ENABLE_AUDIO
     beeper.Beep(0.05, 2000.0);
 #endif
@@ -282,7 +307,7 @@ public:
       ret += NO_BLADE;
     }
     STDOUT << "Blade Detected\n";
-#endif    
+#endif
     return ret;
   }
 
@@ -312,11 +337,11 @@ public:
   } while(0);
 
     ONCEPERBLADE(ACTIVATE);
-    #ifdef SAVE_STATE
+#ifdef SAVE_STATE
     ResumePreset();
-    #else
+#else
     SetPreset(0, false);
-    #endif
+#endif
     return;
 
    bad_blade:
@@ -330,16 +355,18 @@ public:
   void ResumePreset() {
     FileReader f;
     SaveStateFile savestate;
-    if (!savestate.Read("curstate.ini")) {
+    savestate.Read("curstate.ini");
+    if (!savestate.end) {
       savestate.Read("curstate.tmp");
+      if (!savestate.end) return;
     }
     SetPreset(savestate.preset, false);
-    if (savestate.volume <= VOLUME) {
-      dynamic_mixer.set_volume(savestate.volume);
+    if (savestate.volume >= 0) {
+      dynamic_mixer.set_volume(clampi32(savestate.volume, 0, VOLUME));
     }
   }
 
-  bool SaveState(int preset) {
+  void SaveState(int preset) {
     STDOUT.println("Saving Current State");
     writeState("curstate.tmp", preset);
     writeState("curstate.ini", preset);
@@ -355,6 +382,7 @@ public:
     out.write_key_value("preset", value);
     itoa(dynamic_mixer.get_volume(), value, 10);
     out.write_key_value("volume", value);
+    out.write_key_value("end", "1");
     out.Close();
     LOCK_SD(false);
   }
@@ -402,7 +430,7 @@ public:
         // Speed checks simply don't work yet
         speed.y * speed.y + speed.z * speed.z < 5.0 && // TODO: Make this tighter
         speed.x > 0.1 &&
-#endif  
+#endif
         fusor.swing_speed() < 150;
 
 #if 1
@@ -496,7 +524,7 @@ public:
       uint32_t separation =
         strokes[NELEM(strokes)-1].start_millis -
         strokes[NELEM(strokes)-2].end_millis;
-      STDOUT << " separation=" << separation 
+      STDOUT << " separation=" << separation
              << " mss=" << fusor.mss()
              << " swspd=" << fusor.swing_speed()
              << "\n";
@@ -647,7 +675,7 @@ public:
       on_pending_ = false;
       SaberBase::TurnOn();
     }
-      
+
     if (clash_pending_ && millis() - last_clash_ >= clash_timeout_) {
       clash_pending_ = false;
       Clash2(pending_clash_is_stab_);
@@ -730,28 +758,29 @@ public:
       last_on_time_ = millis();
     }
 #endif
+
+    PollSaveColorChange();
   }
 
 #ifdef IDLE_OFF_TIME
   uint32_t last_on_time_;
-#endif  
-  
+#endif
+
   void ToggleColorChangeMode() {
     if (!current_style()) return;
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {
       current_tick_angle_ = fusor.angle2();
       if (!current_style()->HandlesColorChange()) {
         STDOUT << "Entering smooth color change mode.\n";
+	current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
+	current_tick_angle_ = fmod(current_tick_angle_, M_PI * 2);
+
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
       } else {
         STDOUT << "Entering stepped color change mode.\n";
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
       }
     } else {
-#ifdef SAVE_COLOR_CHANGE
-      current_preset_.variation = SaberBase::GetCurrentVariation();
-      current_preset_.Save();
-#endif
       STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
     }

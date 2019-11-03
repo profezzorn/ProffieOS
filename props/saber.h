@@ -67,6 +67,14 @@ public:
 #if NUM_BUTTONS == 0
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
 #endif
+#ifndef DISABLE_COLOR_CHANGE
+	if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+	  // Just exit color change mode.
+	  // Don't turn saber off.
+	  ToggleColorChangeMode();
+	  return true;
+	}
+#endif
         Off();
         return true;
 
@@ -80,6 +88,9 @@ public:
         SaberBase::DoBlast();
 	return true;
 
+#if NUM_BUTTONS == 1
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
+#endif
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
 	ToggleColorChangeMode();
