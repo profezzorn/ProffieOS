@@ -296,13 +296,17 @@ public:
     SetPreset(0, true);
   }
 
+#ifdef BLADE_DETECT_PIN
+  bool blade_detected_ = false;
+#endif  
+
   // Measure and return the blade identifier resistor.
   float id() {
     BLADE_ID_CLASS blade_id;
     float ret = blade_id.id();
     STDOUT << "ID: " << ret << "\n";
 #ifdef BLADE_DETECT_PIN
-    if (!BladeDetect.Read()) {
+    if (!blade_detected_) {
       STDOUT << "NO ";
       ret += NO_BLADE;
     }

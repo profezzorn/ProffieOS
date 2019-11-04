@@ -625,10 +625,6 @@ ArgParserInterface* CurrentArgParser;
 
 PROP_TYPE prop;
 
-#ifdef BLADE_DETECT_PIN
-LatchingButton BladeDetect(BUTTON_BLADE_DETECT ,BLADE_DETECT_PIN, "blade_detect");
-#endif
-
 #if 0
 #include "scripts/v3_test_script.h"
 #warning !!! V3 TEST SCRIPT ACTIVE !!!
@@ -650,6 +646,7 @@ CapTest captest;
 #include "buttons/touchbutton.h"
 #else
 #include "buttons/stm32l4_touchbutton.h"
+#endif
 
 #include "ir/ir.h"
 #include "ir/receiver.h"
@@ -657,6 +654,8 @@ CapTest captest;
 #include "ir/print.h"
 #include "ir/nec.h"
 #include "ir/rc6.h"
+
+#ifndef TEENSYDUINO
 
 uint32_t startup_AHB1ENR;
 uint32_t startup_AHB2ENR;
@@ -671,6 +670,11 @@ uint32_t startup_MODER[4];
 #define CONFIG_BUTTONS
 #include CONFIG_FILE
 #undef CONFIG_BUTTONS
+
+#ifdef BLADE_DETECT_PIN
+LatchingButton BladeDetect(BUTTON_BLADE_DETECT ,BLADE_DETECT_PIN, "blade_detect");
+#endif
+
 
 struct SDTestHistogram {
   SDTestHistogram() {
