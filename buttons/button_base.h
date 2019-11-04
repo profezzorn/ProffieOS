@@ -31,7 +31,7 @@ protected:
       }
       while (DebouncedRead()) {
         if (millis() - push_millis_ > 300) {
-            prop.Event(button_, EVENT_HELD);
+          prop.Event(button_, EVENT_HELD);
           while (DebouncedRead()) {
             if (millis() - push_millis_ > 800){
               prop.Event(button_, EVENT_HELD_MEDIUM);
@@ -50,14 +50,14 @@ protected:
       }
       while (DebouncedRead()) YIELD();
       prop.Event(button_, EVENT_RELEASED);
-        if (current_modifiers & button_) {
-            current_modifiers &=~ button_;
-          if (millis() - push_millis_ < 500) {
-            prop.Event(button_, EVENT_CLICK_SHORT);
-          } else if (millis() - push_millis_ > 500 && millis() - push_millis_ < 2500) {
-            prop.Event(button_, EVENT_CLICK_LONG);
-          }
-        } else {
+      if (current_modifiers & button_) {
+          current_modifiers &=~ button_;
+        if (millis() - push_millis_ < 500) {
+          prop.Event(button_, EVENT_CLICK_SHORT);
+        } else if (millis() - push_millis_ > 500 && millis() - push_millis_ < 2500) {
+          prop.Event(button_, EVENT_CLICK_LONG);
+        }
+      } else {
         // someone ate our clicks
         push_millis_ = millis() - 10000; // disable double click
       }
