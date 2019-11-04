@@ -21,6 +21,7 @@ protected:
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (true) {
+      short_click = false;
       while (!DebouncedRead()) YIELD();
       prop.Event(button_, EVENT_PRESSED);
       if (millis() - push_millis_ < 500) {
@@ -30,27 +31,36 @@ protected:
         current_modifiers |= button_;
       }
       while (DebouncedRead()) {
-	if (millis() - push_millis_ > 300) {
-	  prop.Event(button_, EVENT_HELD);
-	  while (DebouncedRead()) {
-	    if (millis() - push_millis_ > 2000) {
-	      prop.Event(button_, EVENT_HELD_LONG);
-	      while (DebouncedRead()) YIELD();
-	    }
-	    YIELD();
-	  }
-	}
-	YIELD();
-      }
-      while (DebouncedRead()) YIELD();
-      prop.Event(button_, EVENT_RELEASED);
-      if (current_modifiers & button_) {
-        current_modifiers &=~ button_;
-        if (millis() - push_millis_ < 500) {
-          prop.Event(button_, EVENT_CLICK_SHORT);
-        } else {
-          prop.Event(button_, EVENT_CLICK_LONG);
+          if (!short_click){
+            if (millis() - push_millis_ > 300) {
+                prop.Event(button_, EVENT_HELD);
+                while (DebouncedRead()) {
+                    if (millis() - push_millis_ > 800){
+                        prop.Event(button_, EVENT_HELD_MEDIUM);
+                        while (DebouncedRead()) {
+                            if (millis() - push_millis_ > 2000) {
+                                prop.Event(button_, EVENT_HELD_LONG);
+                                while (DebouncedRead()) YIELD();
+                            }
+                            YIELD();
+                        }
+                    }
+                    YIELD();
+                }
+            }
+            YIELD();
+          }
         }
+        while (DebouncedRead()) YIELD();
+        prop.Event(button_, EVENT_RELEASED);
+        if (current_modifiers & button_) {
+            current_modifiers &=~ button_;
+            if (millis() - push_millis_ < 500) {
+                prop.Event(button_, EVENT_CLICK_SHORT);
+                short_click = true;
+            } else if (millis() - push_millis_ > 500 && millis() - push_millis_ < 2500){
+                prop.Event(button_, EVENT_CLICK_LONG);
+            }
       } else {
         // someone ate our clicks
         push_millis_ = millis() - 10000; // disable double click
@@ -78,7 +88,12 @@ protected:
   const char* name_;
   enum BUTTON button_;
   uint32_t push_millis_;
+  bool short_click;
   StateMachineState state_machine_;
 };
 
 #endif
+
+
+
+
