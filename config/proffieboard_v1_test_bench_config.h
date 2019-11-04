@@ -40,6 +40,7 @@ const unsigned int maxLedsPerStrip = 196;
 #define ENABLE_SERIAL
 #define ENABLE_DEVELOPER_COMMANDS
 // #define DISABLE_DIAGNOSTIC_COMMANDS
+#define SAVE_COLOR_CHANGE
 
 // Must be 20 characters or less.
 // #define BLE_PASSWORD "password"

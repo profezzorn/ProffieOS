@@ -207,7 +207,7 @@ public:
       current_preset_.variation = SaberBase::GetCurrentVariation();
       current_preset_.Save();
     }
-#endif	
+#endif
   }
 
   void PollSaveColorChange() {
@@ -215,16 +215,16 @@ public:
     if (current_preset_.variation == SaberBase::GetCurrentVariation()) return;
 #ifdef ENABLE_AUDIO
     if (amplifier.Active()) return; // Do it later
-#endif    
+#endif
     SaveColorChangeIfNeeded();
-#endif	
+#endif
   }
 
   // Select preset (font/style)
   void SetPreset(int preset_num, bool announce) {
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
-#endif    
+#endif
     bool on = SaberBase::IsOn();
     if (on) Off();
     SaveColorChangeIfNeeded();
@@ -285,7 +285,7 @@ public:
   virtual void rotate_presets() {
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
-#endif    
+#endif
 #ifdef ENABLE_AUDIO
     beeper.Beep(0.05, 2000.0);
 #endif
@@ -298,7 +298,7 @@ public:
 
 #ifdef BLADE_DETECT_PIN
   bool blade_detected_ = false;
-#endif  
+#endif
 
   // Measure and return the blade identifier resistor.
   float id() {
@@ -311,7 +311,7 @@ public:
       ret += NO_BLADE;
     }
     STDOUT << "Blade Detected\n";
-#endif    
+#endif
     return ret;
   }
 
@@ -434,7 +434,7 @@ public:
         // Speed checks simply don't work yet
         speed.y * speed.y + speed.z * speed.z < 5.0 && // TODO: Make this tighter
         speed.x > 0.1 &&
-#endif  
+#endif
         fusor.swing_speed() < 150;
 
 #if 1
@@ -528,7 +528,7 @@ public:
       uint32_t separation =
         strokes[NELEM(strokes)-1].start_millis -
         strokes[NELEM(strokes)-2].end_millis;
-      STDOUT << " separation=" << separation 
+      STDOUT << " separation=" << separation
              << " mss=" << fusor.mss()
              << " swspd=" << fusor.swing_speed()
              << "\n";
@@ -679,7 +679,7 @@ public:
       on_pending_ = false;
       SaberBase::TurnOn();
     }
-      
+
     if (clash_pending_ && millis() - last_clash_ >= clash_timeout_) {
       clash_pending_ = false;
       Clash2(pending_clash_is_stab_);
@@ -768,16 +768,16 @@ public:
 
 #ifdef IDLE_OFF_TIME
   uint32_t last_on_time_;
-#endif  
-  
+#endif
+
   void ToggleColorChangeMode() {
     if (!current_style()) return;
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {
       current_tick_angle_ = fusor.angle2();
       if (!current_style()->HandlesColorChange()) {
         STDOUT << "Entering smooth color change mode.\n";
-	current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
-	current_tick_angle_ = fmod(current_tick_angle_, M_PI * 2);
+        current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
+        current_tick_angle_ = fmod(current_tick_angle_, M_PI * 2);
 
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
       } else {
