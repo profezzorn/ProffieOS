@@ -30,17 +30,23 @@ protected:
         current_modifiers |= button_;
       }
       while (DebouncedRead()) {
-	if (millis() - push_millis_ > 300) {
-	  prop.Event(button_, EVENT_HELD);
-	  while (DebouncedRead()) {
-	    if (millis() - push_millis_ > 2000) {
-	      prop.Event(button_, EVENT_HELD_LONG);
-	      while (DebouncedRead()) YIELD();
-	    }
-	    YIELD();
-	  }
-	}
-	YIELD();
+        if (millis() - push_millis_ > 300) {
+          prop.Event(button_, EVENT_HELD);
+          while (DebouncedRead()) {
+            if (millis() - push_millis_ > 800){
+              prop.Event(button_, EVENT_HELD_MEDIUM);
+              while (DebouncedRead()) {
+                if (millis() - push_millis_ > 2000) {
+                  prop.Event(button_, EVENT_HELD_LONG);
+                  while (DebouncedRead()) YIELD();
+                }
+                YIELD();
+              }
+            }
+            YIELD();
+          }
+        }
+        YIELD();
       }
       while (DebouncedRead()) YIELD();
       prop.Event(button_, EVENT_RELEASED);
@@ -48,7 +54,7 @@ protected:
         current_modifiers &=~ button_;
         if (millis() - push_millis_ < 500) {
           prop.Event(button_, EVENT_CLICK_SHORT);
-        } else {
+        } else if (millis() - push_millis_ > 500 && millis() - push_millis_ < 2500) {
           prop.Event(button_, EVENT_CLICK_LONG);
         }
       } else {
