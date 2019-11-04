@@ -117,8 +117,12 @@ Amplifier amplifier;
 void EnableAmplifier() {
   amplifier.Enable();
 }
+bool AmplifierIsActive() {
+  return amplifier.Active();
+}
 
 #else
 void EnableAmplifier() { }
+bool AmplifierIsActive() { return false; }
 #endif   // enable audio
 #endif

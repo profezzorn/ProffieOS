@@ -309,6 +309,7 @@ int16_t clamptoi16(int32_t x) {
 
 void EnableBooster();
 void EnableAmplifier();
+bool AmplifierIsActive();
 void MountSDCard();
 
 #include "common/lsfs.h"

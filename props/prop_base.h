@@ -214,7 +214,7 @@ public:
 #ifdef SAVE_COLOR_CHANGE
     if (current_preset_.variation == SaberBase::GetCurrentVariation()) return;
 #ifdef ENABLE_AUDIO
-    if (amplifier.Active()) return; // Do it later
+    if (AmplifierIsActive()) return; // Do it later
 #endif
     SaveColorChangeIfNeeded();
 #endif
