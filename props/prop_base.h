@@ -819,6 +819,7 @@ public:
       case EVENT_TWIST: STDOUT.print("Twist"); break;
       case EVENT_CLASH: STDOUT.print("Clash"); break;
       case EVENT_HELD: STDOUT.print("Held"); break;
+      case EVENT_HELD_MEDIUM: STDOUT.print("HeldMedium"); break;
       case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
     }
   }
