@@ -51,7 +51,7 @@ protected:
       while (DebouncedRead()) YIELD();
       prop.Event(button_, EVENT_RELEASED);
       if (current_modifiers & button_) {
-          current_modifiers &=~ button_;
+        current_modifiers &=~ button_;
         if (millis() - push_millis_ < 500) {
           prop.Event(button_, EVENT_CLICK_SHORT);
         } else if (millis() - push_millis_ > 500 && millis() - push_millis_ < 2500) {
