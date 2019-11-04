@@ -60,7 +60,7 @@ protected:
         } else {
         // someone ate our clicks
         push_millis_ = millis() - 10000; // disable double click
-        }
+      }
     }
     STATE_MACHINE_END();
   }
@@ -88,7 +88,3 @@ protected:
 };
 
 #endif
-
-
-
-
