@@ -32,6 +32,7 @@ public:
   OverDriveColor getColor(int led) {
     if (clash_) {
       OverDriveColor ret = clash_color_.getColor(led);
+      ret.overdrive = true;
       if (stab_) {
 	OverDriveColor b = base_.getColor(led);
 	ret.c = b.c.mix2(ret.c, stab_shape_.getInteger(led)>>1);
