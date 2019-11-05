@@ -8,8 +8,8 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_AUDIO
 #define ENABLE_WS2811
 #define ENABLE_SD
-#define ENABLE_POWER_FOR_ID PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>
 #define DELAYED_OFF
+#define ENABLE_BLASTER_AUTO
 #endif
 
 #ifdef CONFIG_PROP

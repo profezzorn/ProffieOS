@@ -27,22 +27,24 @@ public:
 
   BlasterMode blaster_mode = MODE_STUN;
 
-  void SetBlasterMode(BlasterMode to_mode) {
-    blaster_mode = to_mode;
+  virtual void SetBlasterMode(BlasterMode to_mode) {
+    if (!firing_) {
+      blaster_mode = to_mode;
     
-    // Initiate mode change effect
-    if (SFX_mode.files_found()) {
-      hybrid_font.PlayCommon(&SFX_mode);
+      // Initiate mode change effect
+      if (SFX_mode.files_found()) {
+        hybrid_font.PlayCommon(&SFX_mode);
+      }
     }
   }
 
-  void NextBlasterMode() {
+  virtual void NextBlasterMode() {
     switch(blaster_mode) {
       case MODE_STUN:
         SetBlasterMode(MODE_KILL);
         return;
       case MODE_KILL:
-#ifdef ENABLE_AUTO
+#ifdef ENABLE_BLASTER_AUTO
         SetBlasterMode(MODE_AUTO);
 #else
         SetBlasterMode(MODE_STUN);
@@ -54,7 +56,9 @@ public:
     }
   }
 
-  void Fire() {
+  bool firing_ = false;
+
+  virtual void Fire() {
     if (blaster_mode == MODE_AUTO) {
       SaberBase::SetLockup(LOCKUP_AUTOFIRE);
       SaberBase::DoBeginLockup();
@@ -62,6 +66,8 @@ public:
       SaberBase::DoBlast();
       hybrid_font.PlayCommon(&SFX_blast);
     }
+
+    firing_ = true;
   }
 
   // Self-destruct pulled from detonator 
@@ -173,6 +179,7 @@ public:
 
       case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
         if (blaster_mode == MODE_AUTO) SaberBase::DoEndLockup();
+        firing_ = false;
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
