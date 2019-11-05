@@ -68,7 +68,6 @@ public:
     }
 
     firing_ = true;
-
   }
 
   // Self-destruct pulled from detonator 
