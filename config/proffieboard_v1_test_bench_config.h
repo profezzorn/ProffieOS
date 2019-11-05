@@ -39,6 +39,8 @@ const unsigned int maxLedsPerStrip = 196;
 #define ENABLE_WS2811
 #define ENABLE_SERIAL
 #define ENABLE_DEVELOPER_COMMANDS
+// #define DISABLE_DIAGNOSTIC_COMMANDS
+#define SAVE_COLOR_CHANGE
 
 // Must be 20 characters or less.
 // #define BLE_PASSWORD "password"
@@ -54,6 +56,8 @@ const unsigned int maxLedsPerStrip = 196;
 
 #define IDLE_OFF_TIME 10000
 
+#define BLADE_DETECT_PIN aux2Pin
+
 #endif
 
 #ifdef CONFIG_PRESETS
@@ -67,14 +71,14 @@ Preset testing_presets[] = {
     "=RainboW++\n++BladE++" },
   { "TeensySF", "tracks/venus.wav",
     // Doesn't always turn off all the way!
-    StyleNormalPtr<ColorChange<TrConcat<TrWipe<200>, WHITE, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(),
+    StyleNormalPtr<ColorChange<TrRandom<TrWipeIn<200>, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(),
 //    StylePtr<InOutTr<BLUE, TrColorCycle<10000, 0, 6000>, TrFade<800>, RED> >(),
     // StylePtr<InOutHelper<Stripes<20000,-60,HotPink,HotPink,Magenta,Magenta,Rgb<150,40,200>,Rgb<150,40,200>,Blue,Blue,DeepSkyBlue,DeepSkyBlue,Green,Green,Yellow,Yellow,DarkOrange,DarkOrange,Red,Red>,300,500,Black>>(),
 
     StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
     "cyan1"},
   { "SmthJedi", "tracks/venus.wav",
-    StylePtr<InOutTr<BLUE, TrColorCycle<10000>, TrFade<800>>>(),
+    StylePtr<RotateColors<10000, InOutTr<BLUE, TrColorCycle<10000>, TrFade<800>>>>(),
     StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
     "blorg" },
 
@@ -157,12 +161,23 @@ BladeConfig blades[] = {
 //  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
 //  { 1, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
   { 1,
-//    DimBlade(20.0, SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>())),
-    DimBlade(1.0, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()),
+    DimBlade(10.0, SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>())),
+//    DimBlade(5.0, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()),
+    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
+    CONFIGARRAY(testing_presets) },
+//  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>>(), CONFIGARRAY(testing_presets) }
+//  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
+
+  
+  { NO_BLADE,
+    WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>(),
+//    DimBlade(5.0, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()),
     SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
     CONFIGARRAY(testing_presets) }
 //  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>>(), CONFIGARRAY(testing_presets) }
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
+
+  
 };
 
 #endif
@@ -176,7 +191,8 @@ BladeConfig blades[] = {
 //LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button AuxButton(BUTTON_AUX, auxPin, "aux");
-Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
+// Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
+
 //TouchButton Aux2Button(BUTTON_AUX2, aux2Pin, 1700, "aux2");
 
 //IRReceiver<blade3Pin> ir_receiver;

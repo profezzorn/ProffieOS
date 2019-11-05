@@ -490,40 +490,36 @@ EFFECT(unjam);
 class EffectFileReader : public FileReader {
 public:
   bool Play(Effect* f) {
-    blorg_ = false;
+    do_open_ = false;
     Effect::FileID id = f->RandomFile();
     if (!id) {
       return false;
     }
     id.GetName(filename_);
-    blorg_ = true;
+    do_open_ = true;
     return true;
   }
 
   void Play(const char* filename) {
-    blorg_ = false;
+    do_open_ = false;
     strncpy(filename_, filename, sizeof(filename_));
-    blorg_ = true;
+    do_open_ = true;
   }
 
-  // When do we actually call this?
+  // Returns true if we had been asked to open a file.
+  // Check if open succeded or not by calling IsOpen()
   bool OpenFile() {
-    if (!blorg_) {
-      STDOUT << "OpenFILE not ready!\n";
-      return false;
-    }
+    if (!do_open_) return false;
     if (!Open(filename_)) {
       default_output->print("File ");
       default_output->print(filename_);
       default_output->println(" not found.");
-      blorg_ = false;
-      return false;
     }
-
+    do_open_ = false;
     return true;
   }
 private:
-  volatile bool blorg_ = false;
+  volatile bool do_open_ = false;
   char filename_[128];
 };
 

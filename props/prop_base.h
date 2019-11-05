@@ -1,6 +1,18 @@
 #ifndef PROPS_PROP_BASE_H
 #define PROPS_PROP_BASE_H
 
+class SaveStateFile : public ConfigFile {
+public:
+  void SetVariable(const char* variable, float v) override {
+    CONFIG_VARIABLE(preset, 0);
+    CONFIG_VARIABLE(volume, -1);
+    CONFIG_VARIABLE(end, 0);
+  }
+  int preset;
+  int volume;
+  int end;
+};
+
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase {
 public:
@@ -32,7 +44,7 @@ public:
         return true;
       }
     }
-#endif      
+#endif
     return false;
   }
 
@@ -76,6 +88,9 @@ public:
     if (SaberBase::Lockup()) {
       SaberBase::DoEndLockup();
       SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+    }
+    if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+      ToggleColorChangeMode();
     }
     SaberBase::TurnOff(off_type);
     if (unmute_on_deactivation_) {
@@ -156,7 +171,7 @@ public:
 #endif
 
     strcpy(current_directory, dir);
-    if (strlen(current_directory) && 
+    if (strlen(current_directory) &&
         current_directory[strlen(current_directory)-1] != '/') {
       strcat(current_directory, "/");
     }
@@ -167,16 +182,18 @@ public:
     hybrid_font.Activate();
     font = &hybrid_font;
     if (font) {
-      if (SFX_swingl || SFX_lswing) {
+      if (SFX_swingl) {
         smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
-        switch (smooth_swing_config.Version) {
-          case 1:
-            looped_swing_wrapper.Activate(font);
-            break;
-          case 2:
-            smooth_swing_v2.Activate(font);
-            break;
-        }
+      } else if (SFX_lswing) {
+        smooth_swing_cfx_config.ReadInCurrentDir("font_config.txt");
+      }
+      switch (smooth_swing_config.Version) {
+        case 1:
+          looped_swing_wrapper.Activate(font);
+          break;
+        case 2:
+          smooth_swing_v2.Activate(font);
+          break;
       }
     }
 //    EnableBooster();
@@ -184,13 +201,33 @@ public:
     return false;
   }
 
+  void SaveColorChangeIfNeeded() {
+#ifdef SAVE_COLOR_CHANGE
+    if (current_preset_.variation != SaberBase::GetCurrentVariation()) {
+      current_preset_.variation = SaberBase::GetCurrentVariation();
+      current_preset_.Save();
+    }
+#endif
+  }
+
+  void PollSaveColorChange() {
+#ifdef SAVE_COLOR_CHANGE
+    if (current_preset_.variation == SaberBase::GetCurrentVariation()) return;
+#ifdef ENABLE_AUDIO
+    if (AmplifierIsActive()) return; // Do it later
+#endif
+    SaveColorChangeIfNeeded();
+#endif
+  }
+
   // Select preset (font/style)
   void SetPreset(int preset_num, bool announce) {
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
-#endif    
+#endif
     bool on = SaberBase::IsOn();
     if (on) Off();
+    SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
 #define UNSET_BLADE_STYLE(N) \
@@ -222,19 +259,25 @@ public:
     SaberBase::SetVariation(current_preset_.variation);
 #else
     SaberBase::SetVariation(0);
-#endif    
-    
+#endif
+
     if (on) On();
     if (announce) SaberBase::DoNewFont();
   }
 
   // Go to the next Preset.
   virtual void next_preset() {
+#ifdef SAVE_STATE
+    SaveState(current_preset_.preset_num + 1);
+#endif
     SetPreset(current_preset_.preset_num + 1, true);
   }
 
   // Go to the previous Preset.
   virtual void previous_preset() {
+#ifdef SAVE_STATE
+    SaveState(current_preset_.preset_num - 1);
+#endif
     SetPreset(current_preset_.preset_num - 1, true);
   }
 
@@ -242,7 +285,7 @@ public:
   virtual void rotate_presets() {
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
-#endif    
+#endif
 #ifdef ENABLE_AUDIO
     beeper.Beep(0.05, 2000.0);
 #endif
@@ -253,18 +296,22 @@ public:
     SetPreset(0, true);
   }
 
+#ifdef BLADE_DETECT_PIN
+  bool blade_detected_ = false;
+#endif
+
   // Measure and return the blade identifier resistor.
   float id() {
     BLADE_ID_CLASS blade_id;
     float ret = blade_id.id();
     STDOUT << "ID: " << ret << "\n";
 #ifdef BLADE_DETECT_PIN
-    if (!BladeDetect.Read()) {
+    if (!blade_detected_) {
       STDOUT << "NO ";
       ret += NO_BLADE;
     }
     STDOUT << "Blade Detected\n";
-#endif    
+#endif
     return ret;
   }
 
@@ -294,7 +341,11 @@ public:
   } while(0);
 
     ONCEPERBLADE(ACTIVATE);
+#ifdef SAVE_STATE
+    ResumePreset();
+#else
     SetPreset(0, false);
+#endif
     return;
 
    bad_blade:
@@ -302,7 +353,42 @@ public:
 #ifdef ENABLE_AUDIO
     talkie.Say(talkie_error_in_15, 15);
     talkie.Say(talkie_blade_array_15, 15);
-#endif    
+#endif
+  }
+
+  void ResumePreset() {
+    FileReader f;
+    SaveStateFile savestate;
+    savestate.Read("curstate.ini");
+    if (!savestate.end) {
+      savestate.Read("curstate.tmp");
+      if (!savestate.end) return;
+    }
+    SetPreset(savestate.preset, false);
+    if (savestate.volume >= 0) {
+      dynamic_mixer.set_volume(clampi32(savestate.volume, 0, VOLUME));
+    }
+  }
+
+  void SaveState(int preset) {
+    STDOUT.println("Saving Current State");
+    writeState("curstate.tmp", preset);
+    writeState("curstate.ini", preset);
+  }
+
+  void writeState(const char *filename, int preset) {
+    LOCK_SD(true);
+    FileReader out;
+    LSFS::Remove(filename);
+    out.Create(filename);
+    char value[30];
+    itoa(preset, value, 10);
+    out.write_key_value("preset", value);
+    itoa(dynamic_mixer.get_volume(), value, 10);
+    out.write_key_value("volume", value);
+    out.write_key_value("end", "1");
+    out.Close();
+    LOCK_SD(false);
   }
 
   void FindBladeAgain() {
@@ -318,7 +404,7 @@ public:
   } while(0);
 
     ONCEPERBLADE(DEACTIVATE);
-      
+
     FindBlade();
   }
 
@@ -348,8 +434,9 @@ public:
         // Speed checks simply don't work yet
         speed.y * speed.y + speed.z * speed.z < 5.0 && // TODO: Make this tighter
         speed.x > 0.1 &&
-#endif  
+#endif
         fusor.swing_speed() < 150;
+
 #if 1
       STDOUT << "ACCEL: " << accel
              << " diff=" << diff
@@ -441,7 +528,7 @@ public:
       uint32_t separation =
         strokes[NELEM(strokes)-1].start_millis -
         strokes[NELEM(strokes)-2].end_millis;
-      STDOUT << " separation=" << separation 
+      STDOUT << " separation=" << separation
              << " mss=" << fusor.mss()
              << " swspd=" << fusor.swing_speed()
              << "\n";
@@ -561,7 +648,7 @@ public:
       DoGesture(TWIST_CLOSE);
     }
   }
-  
+
   Vec3 accel_;
 
   void StartOrStopTrack() {
@@ -592,7 +679,7 @@ public:
       on_pending_ = false;
       SaberBase::TurnOn();
     }
-      
+
     if (clash_pending_ && millis() - last_clash_ >= clash_timeout_) {
       clash_pending_ = false;
       Clash2(pending_clash_is_stab_);
@@ -653,7 +740,7 @@ public:
              << " ccmode = " << SaberBase::GetColorChangeMode()
              << "\n";
     }
-    
+
 #endif
 
     Vec3 mss = fusor.mss();
@@ -675,28 +762,29 @@ public:
       last_on_time_ = millis();
     }
 #endif
+
+    PollSaveColorChange();
   }
 
 #ifdef IDLE_OFF_TIME
   uint32_t last_on_time_;
-#endif  
-  
+#endif
+
   void ToggleColorChangeMode() {
     if (!current_style()) return;
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {
       current_tick_angle_ = fusor.angle2();
       if (!current_style()->HandlesColorChange()) {
         STDOUT << "Entering smooth color change mode.\n";
+        current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
+        current_tick_angle_ = fmod(current_tick_angle_, M_PI * 2);
+
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
       } else {
         STDOUT << "Entering stepped color change mode.\n";
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
       }
     } else {
-#ifdef SAVE_COLOR_CHANGE
-      current_preset_.variation = SaberBase::GetCurrentVariation();
-      current_preset_.Save();
-#endif
       STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
     }
@@ -731,6 +819,7 @@ public:
       case EVENT_TWIST: STDOUT.print("Twist"); break;
       case EVENT_CLASH: STDOUT.print("Clash"); break;
       case EVENT_HELD: STDOUT.print("Held"); break;
+      case EVENT_HELD_MEDIUM: STDOUT.print("HeldMedium"); break;
       case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
     }
   }
@@ -747,7 +836,7 @@ public:
       PrintButton(current_modifiers);
     }
     if (SaberBase::IsOn()) STDOUT.print(" ON");
-    STDOUT.print(" millis=");    
+    STDOUT.print(" millis=");
     STDOUT.println(millis());
   }
 
@@ -889,7 +978,7 @@ public:
       }
       return true;
     }
-#endif    
+#endif
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "buffered")) {
       for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
@@ -901,7 +990,7 @@ public:
       return true;
     }
 #endif
-    
+
 #endif // enable sound
     if (!strcmp(cmd, "cd")) {
       chdir(arg);
@@ -913,7 +1002,7 @@ public:
       SD.mkdir(arg);
       return true;
     }
-#endif    
+#endif
     if (!strcmp(cmd, "pwd")) {
       STDOUT.println(current_directory);
       return true;
@@ -974,19 +1063,19 @@ public:
     if (!strcmp(cmd, "move_preset") && arg) {
       int32_t pos = strtol(arg, NULL, 0);
       current_preset_.SaveAt(pos);
-      return true;      
+      return true;
     }
 
     if (!strcmp(cmd, "duplicate_preset") && arg) {
       int32_t pos = strtol(arg, NULL, 0);
       current_preset_.preset_num = -1;
       current_preset_.SaveAt(pos);
-      return true;      
+      return true;
     }
 
     if (!strcmp(cmd, "delete_preset") && arg) {
       current_preset_.SaveAt(-1);
-      return true;      
+      return true;
     }
 
     if (!strcmp(cmd, "show_current_preset")) {
@@ -1003,7 +1092,7 @@ public:
       STDOUT.println(dynamic_mixer.get_volume());
 #else
       STDOUT.println(0);
-#endif      
+#endif
       return true;
     }
     if (!strcmp(cmd, "set_volume") && arg) {
@@ -1011,10 +1100,10 @@ public:
       int32_t volume = strtol(arg, NULL, 0);
       if (volume >= 0 && volume <= 3000)
         dynamic_mixer.set_volume(volume);
-#endif      
+#endif
       return true;
     }
-    
+
     if (!strcmp(cmd, "mute")) {
       SetMute(true);
       return true;
@@ -1027,7 +1116,7 @@ public:
       if (!SetMute(true)) SetMute(false);
       return true;
     }
-    
+
     if (!strcmp(cmd, "set_preset") && arg) {
       size_t preset = strtol(arg, NULL, 0);
       SetPreset(preset, true);
@@ -1043,7 +1132,7 @@ public:
       ToggleColorChangeMode();
       return true;
     }
-    
+
 #ifdef ENABLE_SD
     if (!strcmp(cmd, "list_tracks")) {
       LOCK_SD(true);
@@ -1154,9 +1243,9 @@ public:
     }
     return false;
   }
-  
+
   virtual bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) = 0;
-  
+
 protected:
   CurrentPreset current_preset_;
   LoopCounter accel_loop_counter_;

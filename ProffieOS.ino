@@ -1,7 +1,7 @@
 /*
  ProffieOS: Control software for lightsabers and other props.
  http://fredrik.hubbe.net/lightsaber/teensy_saber.html
- Copyright (c) 2016-20197 Fredrik Hubinette
+ Copyright (c) 2016-2019 Fredrik Hubinette
  Additional copyright holders listed inline below.
 
  This program is free software: you can redistribute it and/or modify
@@ -31,7 +31,6 @@
 // #define CONFIG_FILE "config/toy_saber_config.h"
 #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
-
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -310,6 +309,7 @@ int16_t clamptoi16(int32_t x) {
 
 void EnableBooster();
 void EnableAmplifier();
+bool AmplifierIsActive();
 void MountSDCard();
 
 #include "common/lsfs.h"
@@ -404,6 +404,7 @@ void SetupStandardAudio() {
 HybridFont hybrid_font;
 
 #include "sound/smooth_swing_config.h"
+#include "sound/smooth_swing_cfx_config.h"
 #include "sound/looped_swing_wrapper.h"
 #include "sound/smooth_swing_v2.h"
 
@@ -489,6 +490,9 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/battery_level.h"
 #include "functions/trigger.h"
 #include "functions/bump.h"
+#include "functions/smoothstep.h"
+#include "functions/swing_speed.h"
+#include "functions/sound_level.h"
 
 // transitions
 #include "transitions/fade.h"
@@ -622,10 +626,6 @@ ArgParserInterface* CurrentArgParser;
 
 PROP_TYPE prop;
 
-#ifdef BLADE_DETECT_PIN
-LatchingButton BladeDetect(BUTTON_BLADE_DETECT ,BLADE_DETECT_PIN, "blade_detect");
-#endif
-
 #if 0
 #include "scripts/v3_test_script.h"
 #warning !!! V3 TEST SCRIPT ACTIVE !!!
@@ -647,6 +647,7 @@ CapTest captest;
 #include "buttons/touchbutton.h"
 #else
 #include "buttons/stm32l4_touchbutton.h"
+#endif
 
 #include "ir/ir.h"
 #include "ir/receiver.h"
@@ -654,6 +655,8 @@ CapTest captest;
 #include "ir/print.h"
 #include "ir/nec.h"
 #include "ir/rc6.h"
+
+#ifndef TEENSYDUINO
 
 uint32_t startup_AHB1ENR;
 uint32_t startup_AHB2ENR;
@@ -668,6 +671,11 @@ uint32_t startup_MODER[4];
 #define CONFIG_BUTTONS
 #include CONFIG_FILE
 #undef CONFIG_BUTTONS
+
+#ifdef BLADE_DETECT_PIN
+LatchingButton BladeDetect(BUTTON_BLADE_DETECT ,BLADE_DETECT_PIN, "blade_detect");
+#endif
+
 
 struct SDTestHistogram {
   SDTestHistogram() {
