@@ -40,6 +40,7 @@ const unsigned int maxLedsPerStrip = 196;
 #define ENABLE_SERIAL
 #define ENABLE_DEVELOPER_COMMANDS
 // #define DISABLE_DIAGNOSTIC_COMMANDS
+#define SAVE_COLOR_CHANGE
 
 // Must be 20 characters or less.
 // #define BLE_PASSWORD "password"
@@ -70,7 +71,7 @@ Preset testing_presets[] = {
     "=RainboW++\n++BladE++" },
   { "TeensySF", "tracks/venus.wav",
     // Doesn't always turn off all the way!
-    StyleNormalPtr<ColorChange<TrConcat<TrWipeIn<200>, WHITE, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(),
+    StyleNormalPtr<ColorChange<TrRandom<TrWipeIn<200>, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(),
 //    StylePtr<InOutTr<BLUE, TrColorCycle<10000, 0, 6000>, TrFade<800>, RED> >(),
     // StylePtr<InOutHelper<Stripes<20000,-60,HotPink,HotPink,Magenta,Magenta,Rgb<150,40,200>,Rgb<150,40,200>,Blue,Blue,DeepSkyBlue,DeepSkyBlue,Green,Green,Yellow,Yellow,DarkOrange,DarkOrange,Red,Red>,300,500,Black>>(),
 
