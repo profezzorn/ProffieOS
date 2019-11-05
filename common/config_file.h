@@ -6,9 +6,9 @@
 // Reads an config file, looking for variable assignments.
 // TODO(hubbe): Read config files from serialflash.
 struct ConfigFile {
-  void Read(FileReader* f) {
+  bool Read(FileReader* f) {
     SetVariable("=", 0.0);  // This resets all variables.
-    if (!f || !f->IsOpen()) return;
+    if (!f || !f->IsOpen()) return false;
     for (; f->Available(); f->skipline()) {
       char variable[33];
       variable[0] = 0;
@@ -28,17 +28,22 @@ struct ConfigFile {
 
       SetVariable(variable, v);
     }
+    return true;
   }
 
   virtual void SetVariable(const char* variable, float v) = 0;
 
-  void Read(const char *filename) {
+  bool Read(const char *filename) {
     LOCK_SD(true);
+    bool read = false;
     FileReader f;
     f.Open(filename);
-    Read(&f);
+    if (Read(&f)) {
+      read = true;
+    }
     f.Close();
     LOCK_SD(false);
+    return read;
   }
 
 #define CONFIG_VARIABLE(X, DEF) do {            \

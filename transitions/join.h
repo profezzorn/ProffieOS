@@ -14,6 +14,7 @@ template<class X> class TrJoin<X> : public X {};
 
 template<class A, class... B>
 class TrJoin<A, B...> {
+ public:
   void begin() { a_.begin(); b_.begin(); }
   bool done() { return a_.done() && b_.done(); }
   void run(BladeBase* blade) {
@@ -25,7 +26,7 @@ class TrJoin<A, B...> {
 			  int led) {
     return b_.getColor(a_.getColor(a, b, led), b, led);
   }
-  
+
 private:
   A a_;
   TrJoin<B...> b_;
@@ -43,6 +44,7 @@ template<class X> class TrJoinR<X> : public X {};
 
 template<class A, class... B>
 class TrJoinR<A, B...> {
+ public:
   void begin() { a_.begin(); b_.begin(); }
   bool done() { return a_.done() && b_.done(); }
   void run(BladeBase* blade) {
@@ -54,10 +56,10 @@ class TrJoinR<A, B...> {
 			  int led) {
     return b_.getColor(a, a_.getColor(a, b, led), led);
   }
-  
+
 private:
   A a_;
   TrJoinR<B...> b_;
 };
-  
+
 #endif

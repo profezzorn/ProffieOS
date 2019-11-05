@@ -131,6 +131,10 @@ public:
     return last_sum_;
   }
 
+  int32_t audio_volume() const {
+    return vol_;
+  }
+
   void set_volume(int32_t volume) { volume_ = volume; }
   int32_t get_volume() const { return volume_; }
 

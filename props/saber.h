@@ -34,14 +34,21 @@ public:
         On();
 	return true;
 
-
-      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ON):
-      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ON):
-      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_OFF):
+#ifdef BLADE_DETECT_PIN
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
 	// Might need to do something cleaner, but let's try this for now.
+	blade_detected_ = true;
 	FindBladeAgain();
 	return true;
+	
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
+	// Might need to do something cleaner, but let's try this for now.
+	blade_detected_ = false;
+	FindBladeAgain();
+	return true;
+#endif	
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
 #ifdef DUAL_POWER_BUTTONS
@@ -67,6 +74,14 @@ public:
 #if NUM_BUTTONS == 0
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
 #endif
+#ifndef DISABLE_COLOR_CHANGE
+	if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+	  // Just exit color change mode.
+	  // Don't turn saber off.
+	  ToggleColorChangeMode();
+	  return true;
+	}
+#endif
         Off();
         return true;
 
@@ -80,6 +95,9 @@ public:
         SaberBase::DoBlast();
 	return true;
 
+#if NUM_BUTTONS == 1
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
+#endif
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
 	ToggleColorChangeMode();
