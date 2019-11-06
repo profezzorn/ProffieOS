@@ -34,6 +34,7 @@ public:
 	break;
       case SaberBase::LOCKUP_NORMAL:
       case SaberBase::LOCKUP_ARMED:
+      case SaberBase::LOCKUP_AUTOFIRE:
 	if (is_same_type<LOCKUP_SHAPE, Int<32768>>::value) {
 	  return lockup_.getColor(led);
 	} else {

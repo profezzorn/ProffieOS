@@ -332,6 +332,10 @@ public:
 	if (SFX_armhum) loop = &SFX_armhum;
 	if (!SFX_armhum && SFX_swing) loop = &SFX_swing;  // Thermal-D fallback
 	break;
+      case SaberBase::LOCKUP_AUTOFIRE:
+  if (SFX_bgnauto) once = &SFX_bgnauto;
+  if (SFX_auto) loop = &SFX_auto;
+  break;
       case SaberBase::LOCKUP_DRAG:
 	if (SFX_bgndrag) once = &SFX_bgndrag;
 	if (SFX_drag) loop = &SFX_drag;
@@ -365,6 +369,10 @@ public:
       case SaberBase::LOCKUP_ARMED:
 	end = &SFX_endarm;
 	break;
+      case SaberBase::LOCKUP_AUTOFIRE:
+  if (SFX_endauto) end = &SFX_endauto; // if we have a transition use it
+  if (!end) end = &SFX_blast; // if we don't, end with a blast
+  break;
       case SaberBase::LOCKUP_DRAG:
 	if (SFX_enddrag) end = &SFX_enddrag;
 	// fall through
