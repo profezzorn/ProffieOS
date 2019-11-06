@@ -78,7 +78,7 @@ Preset testing_presets[] = {
     StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
     "cyan1"},
   { "SmthJedi", "tracks/venus.wav",
-    StylePtr<InOutTr<BLUE, TrColorCycle<10000>, TrFade<800>>>(),
+    StylePtr<RotateColors<10000, InOutTr<BLUE, TrColorCycle<10000>, TrFade<800>>>>(),
     StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
     "blorg" },
 

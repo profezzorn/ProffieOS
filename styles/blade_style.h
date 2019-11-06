@@ -45,4 +45,26 @@ class StyleFactoryImpl : public StyleFactory {
   }
 };
 
+template<class T, typename X> struct RunStyleHelper {
+  static bool run(T* style, BladeBase* blade) {
+    return style->run(blade);
+  }
+};
+
+template<class T> struct RunStyleHelper<T, void> {
+  static bool run(T* style, BladeBase* blade) {
+    style->run(blade);
+    return true;
+  }
+};
+
+// Helper function for running the run() function in a style and
+// returning a bool.
+// Since some run() functions return void, we need some template
+// magic to detect which way to run the function.
+template<class T>
+inline bool RunStyle(T* style, BladeBase* blade) {
+  return RunStyleHelper<T, decltype(style->run(blade))>::run(style, blade);
+}
+
 #endif

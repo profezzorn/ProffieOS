@@ -14,15 +14,15 @@ class RotateColorsX {
 public:
   bool run(BladeBase* blade) {
     rotation_.run(blade);
-    return color_.run(blade);
+    return RunStyle(&color_, blade);
   }
-  
+
   OverDriveColor getColor(int led) {
     OverDriveColor c = color_.getColor(led);
     c.c = c.c.rotate((rotation_.getInteger(led) & 0x7fff) * 3);
     return c;
   }
-  
+
   COLOR color_;
   ROTATION rotation_;
 };
