@@ -1,3 +1,49 @@
+//sa22c props file, includes the following changes
+//
+//New DEFINE: NO_LOCKUP_HOLD
+//reverts to lockup being triggered only by clash + pow or aux
+//Button configs:
+//
+//1 Button:
+//Activate Muted - fast double click while OFF
+//Activate - short click while OFF
+//Play/Stop Music - hold and release while ON
+//Turn off blade - hold and wait till blade is off while ON
+//Next Preset - hold and release while OFF
+//Prev Preset - hold and wait while OFF
+//Lockup - hold + hit clash while ON
+//Drag - hold + hit clash while ON pointing the blade tip down
+//Blaster Blocks - short click while ON
+//Force Effects - hold + twist the hilt while ON (while pointing up)
+//Color Change mode - hold + twist the hilt while ON (pointing down)
+//
+//2 Button: 
+//POWER
+//Activate Muted - fast double click while OFF
+//Activate - short click while OFF
+//Play/Stop Music - hold and release while OFF
+//Turn off blade - hold and wait till blade is off while ON
+//Force Effects - double click while ON
+//Volume UP - short click while OFF and in VOLUME MENU
+//Prev Preset - hold and wait while OFF
+//Color Change mode - hold + toggle AUX while ON
+//AUX
+//Blaster blocks - short click while ON
+//Next Preset - short click while OFF
+//Lockup - hold while ON
+//Drag - hold while ON pointing the blade tip down
+//Enter VOLUME MENU - long click while OFF
+//Volume down - short click while OFF and in VOLUME MENU
+//Battery level - hold while off
+//
+//3 Button: Same as two button except for VOLUME MENU
+//AUX
+//Volume UP - short click while OFF and in VOLUME MENU
+//AUX2
+//Lockup - hold while ON
+//Previous Preset - short click while OFF
+//Volume DOWN - short click while OFF and in VOLUME MENU
+
 #ifndef PROPS_SABER_SA22C_BUTTONS_H
 #define PROPS_SABER_SA22C_BUTTONS_H
 
