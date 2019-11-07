@@ -1,6 +1,6 @@
 // sa22c props file, includes the following changes
 //
-// New #define NO_LOCKUP_HOLD
+// New #define SA22C_NO_LOCKUP_HOLD
 // reverts to lockup being triggered only by clash + pow or aux
 // Button configs:
 //
@@ -63,7 +63,8 @@ public:
     if (up) {
       STDOUT.println("Volume up");
       if (dynamic_mixer.get_volume() < VOLUME) {
-        dynamic_mixer.set_volume(dynamic_mixer.get_volume() + VOLUME * 0.10);
+        dynamic_mixer.set_volume(std::max<int>(VOLUME,
+          dynamic_mixer.get_volume() + VOLUME * 0.10));
         beeper.Beep(0.5, 2000);
         STDOUT.print("Current Volume: ");
         STDOUT.println(dynamic_mixer.get_volume());
@@ -74,7 +75,8 @@ public:
     } else {
       STDOUT.println("Volume Down");
       if (dynamic_mixer.get_volume() > (0.10 * VOLUME)) {
-        dynamic_mixer.set_volume(dynamic_mixer.get_volume() - VOLUME * 0.10);
+        dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
+          dynamic_mixer.get_volume() + VOLUME * 0.10));
         beeper.Beep(0.5, 2000);
         STDOUT.print("Current Volume: ");
         STDOUT.println(dynamic_mixer.get_volume());
@@ -105,7 +107,7 @@ public:
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
  #if NUM_BUTTONS == 2
-        if (mode_volume_){
+        if (mode_volume_) {
           ChangeVolume(true);
         }
 #endif
@@ -193,15 +195,15 @@ public:
 #endif
 
 #ifndef DISABLE_COLOR_CHANGE
-#ifdef NO_LOCKUP_HOLD
+#ifdef SA22C_NO_LOCKUP_HOLD
     case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
       ToggleColorChangeMode();
       break;
-#else //NO_LOCKUP_HOLD
+#else //SA22C_NO_LOCKUP_HOLD
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
       ToggleColorChangeMode();
       break;
-#endif //NO_LOCKUP_HOLD
+#endif //SA22C_NO_LOCKUP_HOLD
 #endif //DISABLE_COLOR_CHANGE
 #if NUM_BUTTONS > 1
       case EVENTID(BUTTON_POWER, EVENT_HELD_MEDIUM, MODE_ON):
@@ -229,7 +231,7 @@ public:
 
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
-#ifndef NO_LOCKUP_HOLD
+#ifndef SA22C_NO_LOCKUP_HOLD
     case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON):
 #endif
       if (!SaberBase::Lockup()) {
@@ -242,49 +244,49 @@ public:
         return true;
       }
 
-        // Off functions
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
+    // Off functions
+    case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
 #if NUM_BUTTONS == 1
-      if (!mode_volume_);
-          next_preset();
-        return true;
+    if (!mode_volume_);
+        next_preset();
+      return true;
 #endif
 #if NUM_BUTTONS > 1
-        StartOrStopTrack();
+      StartOrStopTrack();
 #endif
-        return true;
+      return true;
 
-      case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
-      if (mode_volume_){
-        mode_volume_ = false;
-        beeper.Beep(0.5, 3000);
-        STDOUT.println("Exit Volume Menu");
-      }
-      else{
-        mode_volume_ = true;
-        beeper.Beep(0.5, 3000);
-        STDOUT.println("Enter Volume Menu");
+    case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
+    if (mode_volume_){
+      mode_volume_ = false;
+      beeper.Beep(0.5, 3000);
+      STDOUT.println("Exit Volume Menu");
+    }
+    else{
+      mode_volume_ = true;
+      beeper.Beep(0.5, 3000);
+      STDOUT.println("Enter Volume Menu");
+    }
+    return true;
+
+    case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
+      SaberBase::RequestMotion();
+      return true;
+
+    case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
+    if (!mode_volume_) {
+        next_preset();
       }
       return true;
 
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
-        SaberBase::RequestMotion();
-        return true;
-
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-      if (!mode_volume_) {
-          next_preset();
-        }
-        return true;
-
 #if NUM_BUTTONS < 3
-      case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_OFF):
+    case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_OFF):
 #endif
-        if (!mode_volume_) {
-          previous_preset();
-        }
-        return true;
-      case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF):
+      if (!mode_volume_) {
+        previous_preset();
+      }
+      return true;
+    case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF):
       talkie.SayDigit((int)floorf(battery_monitor.battery()));
       talkie.Say(spPOINT);
       talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
@@ -292,31 +294,29 @@ public:
       talkie.Say(spVOLTS);
       return true;
 
-      case EVENTID(BUTTON_AUX2, EVENT_CLICK_SHORT, MODE_OFF):
-      STDOUT.println(NUM_BUTTONS);
+    case EVENTID(BUTTON_AUX2, EVENT_CLICK_SHORT, MODE_OFF):
 #if NUM_BUTTONS == 3
-        if (mode_volume_) {
-          ChangeVolume(false);
-        }
-
+      if (mode_volume_) {
+        ChangeVolume(false);
+      }
 #endif
 
 #ifdef DUAL_POWER_BUTTONS
-        if (!mode_volume_) {
-          next_preset();
-        }
+      if (!mode_volume_) {
+        next_preset();
+      }
 #else
-        if (!mode_volume_) {
-          previous_preset();
-        }
+      if (!mode_volume_) {
+        previous_preset();
+      }
 #endif
-  return true;
+      return true;
 
   // Events that needs to be handled regardless of what other buttons
   // are pressed.
-      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
-      case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
+    case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
+    case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
+    case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
       if (SaberBase::Lockup()) {
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
