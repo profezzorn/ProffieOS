@@ -45,8 +45,10 @@ public:
   }
   int read(uint8_t* dest, size_t bytes) {
     size_t to_copy = std::min<size_t>(available(), bytes);
-    memcpy(dest, data_ + pos_, to_copy);
-    pos_ += to_copy;
+    if (to_copy) {
+      memcpy(dest, data_ + pos_, to_copy);
+      pos_ += to_copy;
+    }
     return to_copy;
   }
   int write(const uint8_t* dest, size_t bytes) { return 0; }
@@ -106,7 +108,32 @@ public:
     } else {
       Close();
     }
-#endif    
+#endif
+    return false;
+  }
+
+  bool OpenFast(const char* filename) {
+    Close();
+#ifdef ENABLE_SERIALFLASH
+    new (&sf_file_) SerialFlashFile;
+    type_ = TYPE_SF;
+    sf_file_ = SerialFlashChip::open(filename);
+    if (sf_file_) {
+      return true;
+    } else {
+      Close();
+    }
+#endif
+#ifdef ENABLE_SD
+    new (&sd_file_) File;
+    type_ = TYPE_SD;
+    sd_file_ = LSFS::OpenFast(filename);
+    if (sd_file_) {
+      return true;
+    } else {
+      Close();
+    }
+#endif
     return false;
   }
   bool Create(const char* filename) {
@@ -118,7 +145,7 @@ public:
       type_ = TYPE_SD;
       return true;
     }
-#endif    
+#endif
     return false;
   }
   bool OpenMem(const uint8_t* data, uint32_t length) {
@@ -191,7 +218,7 @@ public:
 	  return -1;
 	}
       }
-#endif   
+#endif
       case TYPE_MEM:
 	return mem_file_.peek();
     }
@@ -375,9 +402,9 @@ private:
 #ifdef ENABLE_SD
     TYPE_SD,
 #endif
-#ifdef ENABLE_SERIALFLASH    
+#ifdef ENABLE_SERIALFLASH
     TYPE_SF,
-#endif    
+#endif
     TYPE_MEM
   } type_;
   union {

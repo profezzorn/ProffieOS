@@ -37,8 +37,7 @@ struct ConfigFile {
     LOCK_SD(true);
     bool read = false;
     FileReader f;
-    f.Open(filename);
-    if (Read(&f)) {
+    if (f.Open(filename) && Read(&f)) {
       read = true;
     }
     f.Close();
