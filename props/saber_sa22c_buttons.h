@@ -113,7 +113,7 @@ public:
           aux_on_ = false;
           On();
         }
-	return true;
+        return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
 #if NUM_BUTTONS == 2
@@ -131,13 +131,13 @@ public:
           aux_on_ = true;
           On();
 #else
-      if (!mode_volume_) {
-        next_preset();
-	  }
+          if (!mode_volume_) {
+            next_preset();
+          }
 
 #endif
         }
-	return true;
+        return true;
 
 #if NUM_BUTTONS > 1
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
@@ -174,18 +174,18 @@ public:
           SaberBase::DoForce();
         }
 #endif
-	return true;
+        return true;
 
 #if NUM_BUTTONS == 1
         case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
         if (!SaberBase::Lockup()) {
 #ifndef DISABLE_COLOR_CHANGE
-	        if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-	          // Just exit color change mode.
-	          // Don't turn saber off.
-	          ToggleColorChangeMode();
-	          return true;
-	        }
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+            // Just exit color change mode.
+            // Don't turn saber off.
+            ToggleColorChangeMode();
+            return true;
+          }
 #endif
           Off();
         }
@@ -230,7 +230,7 @@ public:
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
 #ifndef NO_LOCKUP_HOLD
-	  case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON):
+    case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON):
 #endif
       if (!SaberBase::Lockup()) {
         if (pointing_down_) {
@@ -245,15 +245,14 @@ public:
         // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
 #if NUM_BUTTONS == 1
-	  if (!mode_volume_);
-        next_preset();
-
+      if (!mode_volume_);
+          next_preset();
         return true;
 #endif
 #if NUM_BUTTONS > 1
         StartOrStopTrack();
 #endif
-	return true;
+        return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
       if (mode_volume_){
@@ -283,8 +282,8 @@ public:
 #endif
         if (!mode_volume_) {
           previous_preset();
-		}
-	return true;
+        }
+        return true;
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF):
       talkie.SayDigit((int)floorf(battery_monitor.battery()));
       talkie.Say(spPOINT);
