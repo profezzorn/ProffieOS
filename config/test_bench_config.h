@@ -95,8 +95,9 @@ Preset testing_presets[] = {
 BladeConfig blades[] = {
   // Testing configuration.
 //  { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) }
-  { 130000, WS2811BladePtr<97, WS2811_400kHz, 8, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets),  }
+//  { 130000, WS2811BladePtr<97, WS2811_400kHz, 8, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets),  }
 //  { 130000, WS2811BladePtr<97, WS2811_400kHz, 8, PowerPINS<bladePowerPin1>, WS2811SerialPin>(), CONFIGARRAY(testing_presets),  }
+  { 130000, SubBlade(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()), CONFIGARRAY(testing_presets),  }
 
 };
 

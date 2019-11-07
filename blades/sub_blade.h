@@ -12,18 +12,33 @@ public:
   }
   void allow_disable() override { allow_disable_ = true; }
 
-  uint8_t refs_ = 0;
+  bool active_ = false;
+  bool SomeSubBladeIsActive() {
+    bool some_subblade_is_active = false;
+    SubBladeWrapper* tmp = this;
+    do {
+      some_subblade_is_active |= tmp->active_;
+      tmp = tmp->next_;
+    } while (tmp != this);
+    return some_subblade_is_active;
+  }
   void Activate() override {
-    if (refs_++ == 0) BladeWrapper::Activate();
+    if (!active_) {
+      if (!SomeSubBladeIsActive()) BladeWrapper::Activate();
+      active_ = true;
+    }
   }
   void Deactivate() override {
-    if (!--refs_) BladeWrapper::Deactivate();
-  }
-  void clear() override {
-    if (!offset_) BladeWrapper::clear();
+    if (active_) {
+      active_ = false;
+      if (!SomeSubBladeIsActive()) BladeWrapper::Deactivate();
+    }
   }
   virtual bool primary() const {
     return !offset_;
+  }
+  void clear() override {
+    if (primary()) BladeWrapper::clear();
   }
   void SetStyle(BladeStyle* style) override {
     // current_style should be nullptr;
