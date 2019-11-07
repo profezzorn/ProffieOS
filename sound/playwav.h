@@ -188,7 +188,7 @@ private:
         // as before, then seek to 0 instead of open/close file.
         file_.Rewind();
       } else {
-	if (!file_.Open(filename_)) {
+	if (!file_.OpenFast(filename_)) {
 	  default_output->print("File ");
 	  default_output->print(filename_);
 	  default_output->println(" not found.");

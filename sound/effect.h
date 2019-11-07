@@ -510,7 +510,7 @@ public:
   // Check if open succeded or not by calling IsOpen()
   bool OpenFile() {
     if (!do_open_) return false;
-    if (!Open(filename_)) {
+    if (!OpenFast(filename_)) {
       default_output->print("File ");
       default_output->print(filename_);
       default_output->println(" not found.");

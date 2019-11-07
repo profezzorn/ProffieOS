@@ -28,6 +28,10 @@ public:
     return SD.remove(path);
   }
   static File Open(const char* path) {
+    if (!SD.exists(path)) return File();
+    return SD.open(path);
+  }
+  static File OpenFast(const char* path) {
     // At some point, I put this check in here to make sure that the file
     // exists before we try to open it, as opening directories and other
     // weird files can cause open() to hang. However, this check takes
@@ -130,6 +134,10 @@ public:
     return DOSFS.remove(path);
   }
   static File Open(const char* path) {
+    if (!mounted_) return File();
+    return DOSFS.open(path, "r");
+  }
+  static File OpenFast(const char* path) {
     if (!mounted_) return File();
     return DOSFS.open(path, "r");
   }
