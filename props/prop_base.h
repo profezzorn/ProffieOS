@@ -781,8 +781,13 @@ public:
 
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
       } else {
+#ifdef COLOR_CHANGE_DIRECT
+        STDOUT << "Color change, TICK+\n";
+	SaberBase::UpdateVariation(1);
+#else
         STDOUT << "Entering stepped color change mode.\n";
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
+#endif
       }
     } else {
       STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
