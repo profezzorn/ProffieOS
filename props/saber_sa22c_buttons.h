@@ -270,14 +270,13 @@ public:
 
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
         SaberBase::RequestMotion();
-	return true;
+        return true;
 
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-	    if (!mode_volume_) {
+      if (!mode_volume_) {
           next_preset();
-		}
-
-	return true;
+        }
+        return true;
 
 #if NUM_BUTTONS < 3
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_OFF):
@@ -305,27 +304,25 @@ public:
 
 #ifdef DUAL_POWER_BUTTONS
         if (!mode_volume_) {
-			next_preset();
-
-		}
+          next_preset();
+        }
 #else
         if (!mode_volume_) {
-			previous_preset();
-
-		}
+          previous_preset();
+        }
 #endif
-	return true;
+  return true;
 
-	// Events that needs to be handled regardless of what other buttons
-	// are pressed.
+  // Events that needs to be handled regardless of what other buttons
+  // are pressed.
       case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
-	if (SaberBase::Lockup()) {
-	  SaberBase::DoEndLockup();
-	  SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-	  return true;
-	}
+      if (SaberBase::Lockup()) {
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        return true;
+      }
     }
     return false;
   }
