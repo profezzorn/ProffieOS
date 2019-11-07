@@ -63,7 +63,7 @@ public:
     if (up) {
       STDOUT.println("Volume up");
       if (dynamic_mixer.get_volume() < VOLUME) {
-        dynamic_mixer.set_volume(std::max<int>(VOLUME,
+        dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
           dynamic_mixer.get_volume() + VOLUME * 0.10));
         beeper.Beep(0.5, 2000);
         STDOUT.print("Current Volume: ");
@@ -76,7 +76,7 @@ public:
       STDOUT.println("Volume Down");
       if (dynamic_mixer.get_volume() > (0.10 * VOLUME)) {
         dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
-          dynamic_mixer.get_volume() + VOLUME * 0.10));
+          dynamic_mixer.get_volume() - VOLUME * 0.10));
         beeper.Beep(0.5, 2000);
         STDOUT.print("Current Volume: ");
         STDOUT.println(dynamic_mixer.get_volume());
