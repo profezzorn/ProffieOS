@@ -294,8 +294,8 @@ public:
     }
   }
 
-  // void Set(int led, Color16 color) { Set(led, color.dither(frame_num_, led)); }
-  void Set(int led, Color16 color) { Set(led, color.dither(0)); }
+  void Set(int led, Color16 color) { Set(led, color.dither(frame_num_, led)); }
+  // void Set(int led, Color16 color) { Set(led, color.dither(0)); }
 
   bool IsReadyForEndFrame() {
     return done_ && (micros() - done_time_us_) > reset_us_;
