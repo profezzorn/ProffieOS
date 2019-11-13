@@ -7,13 +7,22 @@ extern I2CBus i2cbus;
 
 class I2CDevice;
 static I2CDevice* current_i2c_device = nullptr;
+static I2CDevice* next_i2c_device = nullptr;
 
 class I2CDevice {
 public:
   explicit I2CDevice(uint8_t address) : address_(address) {}
   bool I2CLock() {
     if (!i2cbus.inited()) return false;
-    if (current_i2c_device) return false;
+    if (current_i2c_device) {
+      next_i2c_device = this;
+      return false;
+    }
+    // 1-level fairness...
+    if (next_i2c_device && next_i2c_device != this) {
+      return false;
+    }
+    next_i2c_device = nullptr;
     current_i2c_device = this;
     return true;
   }

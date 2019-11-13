@@ -90,6 +90,7 @@ public:
     next_hum_player_.Free();
     swing_player_.Free();
     SaberBase::Unlink(this);
+    state_ = STATE_OFF;
   }
 
   RefPtr<BufferedWavPlayer> hum_player_;
