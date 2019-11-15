@@ -705,6 +705,53 @@ public:
     }
   }
 
+  void SayNumber(int n) {
+    if (n == 0) {
+      Say(spZERO);
+      return;
+    }
+    if (n / 1000000) {
+      SayNumber(n/1000000);
+      Say(spMILLION);
+      n %= 1000000;
+    }
+    if (n / 1000) {
+      SayNumber(n/1000);
+      Say(spTHOUSAND);
+      n %= 1000;
+    }
+    if (n / 100) {
+      SayDigit(n / 100);
+      Say(spHUNDRED);
+      n %= 100;
+    }
+    switch (n / 10) {
+      case 9: Say(spNINETY); break;
+      case 8: Say(spEIGHTY); break;
+      case 7: Say(spSEVENTY); break;
+      case 6: Say(spSIXTY); break;
+      case 5: Say(spFIFTY); break;
+      case 4: Say(spFOURTY); break;
+      case 3: Say(spTHIRTY); break;
+      case 2: Say(spTWENTY); break;
+      case 1:
+	switch (n) {
+	  case 19: Say(spNINETEEN); return;
+	  case 18: Say(spEIGHTEEN); return;
+	  case 17: Say(spSEVENTEEN); return;
+	  case 16: Say(spSIXTEEN); return;
+	  case 15: Say(spFIFTEEN); return;
+	  case 14: Say(spFOURTEEN); return;
+	  case 13: Say(spTHIRTEEN); return;
+	  case 12: Say(spTWELVE); return;
+	  case 11: Say(spELEVEN); return;
+	  case 10: Say(spTEN); return;
+	}
+    }
+    n %= 10;
+    if (n) SayDigit(n);
+  }
+
   // The ROMs used with the TI speech were serial, not byte wide.
   // Here's a handy routine to flip ROM data which is usually reversed.
   static uint8_t rev(uint8_t a) {
