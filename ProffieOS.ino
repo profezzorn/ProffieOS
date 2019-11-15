@@ -31,6 +31,7 @@
 // #define CONFIG_FILE "config/toy_saber_config.h"
 #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
+// #define CONFIG_FILE "config/testconfig.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -606,6 +607,7 @@ class NoLED;
 #include "common/blade_config.h"
 #include "common/current_preset.h"
 #include "styles/style_parser.h"
+#include "styles/length_finder.h"
 
 BladeConfig* current_config = nullptr;
 class BladeBase* GetPrimaryBlade() { return current_config->blade1; }
