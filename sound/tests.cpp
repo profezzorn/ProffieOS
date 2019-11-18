@@ -136,6 +136,9 @@ public:
   static File Open(const char* path) {
     return fopen(path, "r");
   }
+  static File OpenFast(const char* path) {
+    return fopen(path, "r");
+  }
   static File OpenForWrite(const char* path) {
     return fopen(path, "wct");
   }
