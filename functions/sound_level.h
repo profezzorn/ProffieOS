@@ -7,8 +7,7 @@
 class SmoothSoundLevel {
  public:
   void run(BladeBase* blade) {
-    // TODO: Tune the 82 divisor...
-    value_ = clampi32(dynamic_mixer.audio_volume() / 82, 0, 32768);
+    value_ = clampi32(sqrtf(dynamic_mixer.audio_volume()) * 20, 0, 32768);
   }
   int getInteger(int led) { return value_; }
   int value_;
@@ -20,7 +19,7 @@ class SmoothSoundLevel {
 class NoisySoundLevel {
  public:
   void run(BladeBase* blade) {
-    value_ = clampi32(dynamic_mixer.last_sum() << 3, 0, 32768);
+    value_ = clampi32(dynamic_mixer.last_sum() * 3, 0, 32768);
   }
   int getInteger(int led) { return value_; }
   int value_;
