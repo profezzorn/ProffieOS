@@ -68,6 +68,7 @@ public:
     STDOUT.println("Ignition.");
     MountSDCard();
     EnableAmplifier();
+    SaberBase::RequestMotion();
 
     // Avoid clashes a little bit while turning on.
     // It might be a "clicky" power button...
@@ -76,6 +77,7 @@ public:
     float preon_time = 0.0;
     SaberBase::DoPreOn(&preon_time);
     if (preon_time > 0.0) {
+      on_pending_ = true;
       on_pending_base_ = millis();
       on_pending_delay_ = preon_time * 1000;
     } else {
