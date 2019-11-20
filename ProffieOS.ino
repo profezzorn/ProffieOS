@@ -642,6 +642,7 @@ Blinker2 blinker2;
 CapTest captest;
 #endif
 
+#include "buttons/floating_button.h"
 #include "buttons/latching_button.h"
 #include "buttons/button.h"
 #ifdef TEENSYDUINO
@@ -674,7 +675,8 @@ uint32_t startup_MODER[4];
 #undef CONFIG_BUTTONS
 
 #ifdef BLADE_DETECT_PIN
-LatchingButton BladeDetect(BUTTON_BLADE_DETECT ,BLADE_DETECT_PIN, "blade_detect");
+LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN>>
+    BladeDetect(BUTTON_BLADE_DETECT, BLADE_DETECT_PIN, "blade_detect");
 #endif
 
 

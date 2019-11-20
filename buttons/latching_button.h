@@ -4,11 +4,12 @@
 #include "debounced_button.h"
 
 // Latching button
-class LatchingButton : public Looper,
-                       public CommandParser,
-                       public DebouncedButton {
+template<class BASE = DebouncedButton>
+class LatchingButtonTemplate : public Looper,
+  public CommandParser,
+  public BASE {
 public:
-  LatchingButton(enum BUTTON button, int pin, const char* name)
+  LatchingButtonTemplate(enum BUTTON button, int pin, const char* name)
     : Looper(),
       CommandParser(),
       name_(name),
@@ -26,9 +27,9 @@ protected:
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (true) {
-      while (!DebouncedRead()) YIELD();
+      while (!BASE::DebouncedRead()) YIELD();
       prop.Event(button_, EVENT_LATCH_ON);
-      while (DebouncedRead()) YIELD();
+      while (BASE::DebouncedRead()) YIELD();
       prop.Event(button_, EVENT_LATCH_OFF);
     }
     STATE_MACHINE_END();
@@ -63,6 +64,8 @@ protected:
   StateMachineState state_machine_;
   uint8_t pin_;
 };
+
+using LatchingButton = LatchingButtonTemplate<>;
 
 class InvertedLatchingButton : public LatchingButton {
 public:
