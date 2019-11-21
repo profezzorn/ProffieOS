@@ -1785,6 +1785,12 @@ void setup() {
 #endif
   while (millis() - now < PROFFIEOS_STARTUP_DELAY) {
     srand((rand() * 917823) ^ LSAnalogRead(batteryLevelPin));
+#ifdef BLADE_DETECT_PIN
+    // Figure out if blade is connected or not.
+    // Note that if PROFFIEOS_STARTUP_DELAY is smaller than
+    // the settle time for BladeDetect, this won't work properly.
+    BladeDetect.Warmup();
+#endif
   }
 
 #ifdef ENABLE_SERIALFLASH
