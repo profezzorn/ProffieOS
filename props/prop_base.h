@@ -394,6 +394,10 @@ public:
   }
 
   void FindBladeAgain() {
+    if (!current_config) {
+      // FindBlade() hasn't been called yet - ignore this.
+      return;
+    }
     // Reverse everything that FindBlade does.
 
     // First free all styles, then allocate new ones to avoid memory

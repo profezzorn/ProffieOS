@@ -23,6 +23,8 @@ public:
 
   const char* name() override { return name_; }
 
+  void Warmup() { Loop(); }
+
 protected:
   void Loop() override {
     STATE_MACHINE_BEGIN();
