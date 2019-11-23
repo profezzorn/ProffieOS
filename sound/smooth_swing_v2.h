@@ -17,15 +17,6 @@ public:
     } else {
       L = &SFX_lswing;
       H = &SFX_hswing;
-      // map CFX values to Proffie (sourced from font_config.txt in font folder)
-      smooth_swing_config.SwingSensitivity = smooth_swing_cfx_config.smooth_sens;
-      smooth_swing_config.MaximumHumDucking = smooth_swing_cfx_config.smooth_dampen;
-      smooth_swing_config.SwingSharpness = smooth_swing_cfx_config.smooth_sharp;
-      smooth_swing_config.SwingStrengthThreshold = smooth_swing_cfx_config.smooth_gate;
-      smooth_swing_config.Transition1Degrees = smooth_swing_cfx_config.smooth_width1;
-      smooth_swing_config.Transition2Degrees = smooth_swing_cfx_config.smooth_width2;
-      smooth_swing_config.MaxSwingVolume = smooth_swing_cfx_config.smooth_gain * 3 / 100;
-      smooth_swing_config.AccentSwingSpeedThreshold = smooth_swing_cfx_config.hswing;
     }
     SetDelegate(base_font);
     if (L->files_found() != H->files_found()) {

@@ -642,6 +642,7 @@ Blinker2 blinker2;
 CapTest captest;
 #endif
 
+#include "buttons/floating_button.h"
 #include "buttons/latching_button.h"
 #include "buttons/button.h"
 #ifdef TEENSYDUINO
@@ -674,7 +675,8 @@ uint32_t startup_MODER[4];
 #undef CONFIG_BUTTONS
 
 #ifdef BLADE_DETECT_PIN
-LatchingButton BladeDetect(BUTTON_BLADE_DETECT ,BLADE_DETECT_PIN, "blade_detect");
+LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN>>
+    BladeDetect(BUTTON_BLADE_DETECT, BLADE_DETECT_PIN, "blade_detect");
 #endif
 
 
@@ -1783,6 +1785,12 @@ void setup() {
 #endif
   while (millis() - now < PROFFIEOS_STARTUP_DELAY) {
     srand((rand() * 917823) ^ LSAnalogRead(batteryLevelPin));
+#ifdef BLADE_DETECT_PIN
+    // Figure out if blade is connected or not.
+    // Note that if PROFFIEOS_STARTUP_DELAY is smaller than
+    // the settle time for BladeDetect, this won't work properly.
+    BladeDetect.Warmup();
+#endif
   }
 
 #ifdef ENABLE_SERIALFLASH

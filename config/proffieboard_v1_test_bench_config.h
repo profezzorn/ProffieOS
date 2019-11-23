@@ -56,7 +56,7 @@ const unsigned int maxLedsPerStrip = 196;
 
 #define IDLE_OFF_TIME 100000
 
-// #define BLADE_DETECT_PIN aux2Pin
+#define BLADE_DETECT_PIN aux2Pin
 
 #endif
 
@@ -174,7 +174,7 @@ BladeConfig blades[] = {
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
 
 
-#if 0
+#if 1
   { NO_BLADE,
     WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>(),
 //    WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , blade4Pin, PowerPINS<bladePowerPin1>>(),
