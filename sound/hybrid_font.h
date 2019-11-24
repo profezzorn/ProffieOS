@@ -301,7 +301,7 @@ public:
       PlayPolyphonic(&X);
       return;
     }
-    if (SFX_boot) {
+    if (detected && SFX_boot) {
       PlayPolyphonic(&SFX_boot);
       return;
     }
