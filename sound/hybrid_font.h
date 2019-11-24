@@ -295,6 +295,18 @@ public:
   void SB_Force() override { PlayCommon(&SFX_force); }
   void SB_Blast() override { Play(&SFX_blaster, &SFX_blst); }
   void SB_Boot() override { PlayPolyphonic(&SFX_boot); }
+  void SB_BladeDetect(bool detected) {
+    Effect &X(detected ? SFX_bladein : SFX_bladeout);
+    if (X) {
+      PlayPolyphonic(&X);
+      return;
+    }
+    if (SFX_boot) {
+      PlayPolyphonic(&SFX_boot);
+      return;
+    }
+    beeper.Beep(0.05, 2000.0);
+  }
   void SB_NewFont() override {
     if (!PlayPolyphonic(&SFX_font)) {
       beeper.Beep(0.05, 2000.0);
