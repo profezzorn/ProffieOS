@@ -67,7 +67,9 @@ typedef Pulsing<Rgb<128,128,128>, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
   { "SmthFuzz", "tracks/cantina.wav",
-    StylePtr<InOutHelper<LengthFinder<>, 300, 800>>(),
+    StyleNormalPtr<StrobeX<BLACK, WHITE, Scale<SwingSpeed<450>, Int<2>, Int<20>>, Int<1>>, Rainbow, 300, 800>(),
+//    StyleNormalPtr<ColorChange<TrFade<100>, Hue<8192*0>, Hue<8192*1>, Hue<8192*2>, Hue<8192*3>>, WHITE, 300, 800>(),
+//    StylePtr<InOutHelper<LengthFinder<>, 300, 800>>(),
 //    StyleRainbowPtr<300, 800>(),
     StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
 //    StylePtr<Rgb<0x00, 0xF2, 0xF3>>(),

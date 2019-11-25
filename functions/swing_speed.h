@@ -12,7 +12,7 @@ class SwingSpeedX {
  public:
  void run(BladeBase* blade) {
    max_.run(blade);
-   float v = fusor.swing_speed() / max_.getInteger(blade);
+   float v = fusor.swing_speed() / max_.getInteger(0);
    value_ = clampi32(v * 32768, 0, 32768);
   }
   int getInteger(int led) { return value_; }

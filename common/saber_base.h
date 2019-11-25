@@ -110,6 +110,7 @@ public:                                                         \
   SABERFUN(Force, (), ());					\
   SABERFUN(Blast, (), ());					\
   SABERFUN(Boot, (), ());					\
+  SABERFUN(BladeDetect, (bool detected), (detected));		\
   SABERFUN(NewFont, (), ());					\
   SABERFUN(BeginLockup, (), ());				\
   SABERFUN(EndLockup, (), ());					\
