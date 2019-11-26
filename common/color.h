@@ -96,7 +96,7 @@ class Color8 {
   }
 
   // RGB combine X = X
-  static int combine_byteorder(int byteorder1, int byteorder2) {
+  static Byteorder combine_byteorder(int byteorder1, int byteorder2) {
     int ret = 0;
     for (int i = num_bytes(byteorder1) - 1; i >= 0; i--) {
       int b = (byteorder1 >> (i * 4) & 7);
@@ -104,19 +104,19 @@ class Color8 {
       b = byteorder2 >> (pos * 4) & 7;
       ret |= b << (i * 4);
     }
-    return ret;
+    return (Byteorder)ret;
   }
 
   // invert(X) combine X = RGB
   // invert(RGB) = RGB
-  static int invert_byteorder(int byteorder) {
+  static Byteorder invert_byteorder(int byteorder) {
     int ret = 0;
     for (int i = num_bytes(byteorder) - 1; i >= 0; i--) {
       int b = byteorder >> (i * 4) & 7;
       int pos = 3 - b;
       ret |= (3-i) << (pos * 4);
     }
-    return ret;
+    return (Byteorder)ret;
   }
 
   Color8 operator*(uint8_t v) const {
