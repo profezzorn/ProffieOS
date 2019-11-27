@@ -91,9 +91,11 @@ public:
       SaberBase::DoEndLockup();
       SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
     }
+#ifndef DISABLE_COLOR_CHANGE
     if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
       ToggleColorChangeMode();
     }
+#endif    
     SaberBase::TurnOff(off_type);
     if (unmute_on_deactivation_) {
       unmute_on_deactivation_ = false;
@@ -785,6 +787,7 @@ public:
   uint32_t last_on_time_;
 #endif
 
+#ifndef DISABLE_COLOR_CHANGE
   void ToggleColorChangeMode() {
     if (!current_style()) return;
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {
@@ -809,6 +812,7 @@ public:
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
     }
   }
+#endif // DISABLE_COLOR_CHANGE  
 
   void PrintButton(uint32_t b) {
     if (b & BUTTON_POWER) STDOUT.print("Power");
@@ -1143,6 +1147,7 @@ public:
       return true;
     }
 
+#ifndef DISABLE_COLOR_CHANGE
     if (arg && (!strcmp(cmd, "var") || !strcmp(cmd, "variation"))) {
       size_t variation = strtol(arg, NULL, 0);
       SaberBase::SetVariation(variation);
@@ -1152,6 +1157,7 @@ public:
       ToggleColorChangeMode();
       return true;
     }
+#endif
 
 #ifdef ENABLE_SD
     if (!strcmp(cmd, "list_tracks")) {
