@@ -175,9 +175,11 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
 #ifdef ENABLE_AUDIO
         hybrid_font.PlayCommon(&SFX_jam);
-        hybrid_font.Deactivate();
 #endif
         Off();
+#ifdef ENABLE_AUDIO
+        hybrid_font.Deactivate();
+#endif
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_OFF):
