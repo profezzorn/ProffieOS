@@ -4,7 +4,7 @@
 #define NUM_BUTTONS 2
 #define VOLUME 2200
 const unsigned int maxLedsPerStrip = 144;
-#define CLASH_THRESHOLD_G 1.0
+#define CLASH_THRESHOLD_G 1.9
 #define ENABLE_AUDIO
 #define ENABLE_MOTION
 #define ENABLE_WS2811
