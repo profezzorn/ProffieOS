@@ -10,7 +10,6 @@ public:
   Blaster() : PropBase() {}
   const char* name() override { return "Blaster"; }
 
-/*
 #ifdef DELAYED_OFF
   bool powered_ = false;
   void SetPower(bool on) { powered_ = on; }
@@ -18,7 +17,6 @@ public:
   constexpr bool powered_ = true;
   void SetPower(bool on) {}
 #endif
-*/
 
   // Mode states to handle kill vs stun effects
   enum BlasterMode {
@@ -30,15 +28,13 @@ public:
   BlasterMode blaster_mode = MODE_STUN;
 
   virtual void SetBlasterMode(BlasterMode to_mode) {
-    if (!auto_firing_) {
+    if (!firing_) {
       blaster_mode = to_mode;
     
-#ifdef ENABLE_AUDIO
       // Initiate mode change effect
       if (SFX_mode.files_found()) {
         hybrid_font.PlayCommon(&SFX_mode);
       }
-#endif
     }
   }
 
@@ -60,21 +56,18 @@ public:
     }
   }
 
-  bool auto_firing_ = false;
+  bool firing_ = false;
 
   virtual void Fire() {
-    if (!SaberBase::IsOn()) return; // Don't allow firing when off.
-
     if (blaster_mode == MODE_AUTO) {
       SaberBase::SetLockup(LOCKUP_AUTOFIRE);
       SaberBase::DoBeginLockup();
-      auto_firing_ = true;
     } else {
       SaberBase::DoBlast();
-#ifdef ENABLE_AUDIO
       hybrid_font.PlayCommon(&SFX_blast);
-#endif
     }
+
+    firing_ = true;
   }
 
   // Self-destruct pulled from detonator 
@@ -161,35 +154,23 @@ public:
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
         armed_ = false;
-#ifdef ENABLE_AUDIO
-        hybrid_font.PlayCommon(&SFX_unjam);
-#endif
+        SetPower(true);
         On();
-#ifdef ENABLE_AUDIO
-        hybrid_font.Activate();
-#endif
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
-#ifdef ENABLE_AUDIO
-        hybrid_font.PlayCommon(&SFX_jam);
-        hybrid_font.Deactivate();
-#endif
+        SetPower(false);
         Off();
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_OFF):
-        next_preset();
+        if (powered_) rotate_presets();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
         StartOrStopTrack();
-        return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
-        NextBlasterMode();
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
@@ -197,13 +178,8 @@ public:
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
-        if (blaster_mode == MODE_AUTO) {
-          if (SaberBase::Lockup()) {
-            SaberBase::DoEndLockup();
-            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-            auto_firing_ = false;
-          }
-        }
+        if (blaster_mode == MODE_AUTO) SaberBase::DoEndLockup();
+        firing_ = false;
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
