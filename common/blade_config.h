@@ -14,6 +14,8 @@ struct BladeConfig {
   // Blade presets
   Preset* presets;
   size_t num_presets;
+
+  const char* save_dir;
 };
 
 extern BladeConfig* current_config;
