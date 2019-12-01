@@ -152,7 +152,8 @@ public:
   }
 
   bool OpenPresets(FileReader* f, const char* filename) {
-    if (!f->Open(filename))
+    PathHelper fn(GetSaveDir(), filename);
+    if (!f->Open(fn))
       return false;
 
     if (f->FileSize() < 4) return false;
@@ -170,18 +171,19 @@ public:
 
   bool UpdateINI() {
     FileReader f, f2;
+    PathHelper ini_fn(GetSaveDir(), "presets.ini");
     if (OpenPresets(&f2, "presets.tmp")) {
       uint8_t buf[512];
       // Found valid tmp file
-      LSFS::Remove("presets.ini");
-      f.Create("presets.ini");
+      LSFS::Remove(ini_fn);
+      f.Create(ini_fn);
       while (f2.Available()) {
 	int to_copy = std::min<int>(f2.Available(), sizeof(buf));
 	if (f2.Read(buf, to_copy) != to_copy ||
 	    f.Write(buf, to_copy) != to_copy) {
 	  f2.Close();
 	  f.Close();
-	  LSFS::Remove("presets.ini");
+	  LSFS::Remove(ini_fn);
 	  return false;
 	}
       }
@@ -194,7 +196,8 @@ public:
 
   bool CreateINI() {
     FileReader f;
-    f.Create("presets.ini");
+    PathHelper ini_fn(GetSaveDir(), "presets.ini");
+    f.Create(ini_fn);
     CurrentPreset tmp;
     for (size_t i = 0; i < current_config->num_presets; i++) {
       tmp.Set(i);
@@ -242,8 +245,9 @@ public:
       if (!UpdateINI()) CreateINI();
       OpenPresets(&f, "presets.ini");
     }
-    LSFS::Remove("presets.tmp");
-    out.Create("presets.tmp");
+    PathHelper tmp_fn(GetSaveDir(), "presets.tmp");
+    LSFS::Remove(tmp_fn);
+    out.Create(tmp_fn);
     CurrentPreset tmp;
     int opos = 0;
     if (position == 0) {

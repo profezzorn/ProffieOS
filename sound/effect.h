@@ -417,6 +417,8 @@ EFFECT(pstoff);
 
 // Monophonic fonts
 EFFECT(boot);     // also polyphonic
+EFFECT(bladein);  // also polyphonic
+EFFECT(bladeout);  // also polyphonic
 EFFECT2(hum, hum);
 EFFECT2(humm, humm);
 EFFECT(swing);

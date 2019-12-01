@@ -6,15 +6,22 @@
 // Reads an config file, looking for variable assignments.
 // TODO(hubbe): Read config files from serialflash.
 struct ConfigFile {
-  bool Read(FileReader* f) {
+
+  enum class ReadStatus {
+    READ_FAIL,
+    READ_OK,
+    READ_END,
+  };
+  ReadStatus Read(FileReader* f) {
     SetVariable("=", 0.0);  // This resets all variables.
-    if (!f || !f->IsOpen()) return false;
+    if (!f || !f->IsOpen()) return ReadStatus::READ_FAIL;
     for (; f->Available(); f->skipline()) {
       char variable[33];
       variable[0] = 0;
       f->skipwhite();
       if (f->Peek() == '#') continue;
       f->readVariable(variable);
+      if (!strcmp(variable,"end")) return ReadStatus::READ_END;
       f->skipwhite();
       if (f->Peek() != '=') continue;
       f->Read();
@@ -25,24 +32,21 @@ struct ConfigFile {
       STDOUT.print(" = ");
       STDOUT.println(v);
 #endif
-
       SetVariable(variable, v);
     }
-    return true;
+    return ReadStatus::READ_OK;
   }
 
   virtual void SetVariable(const char* variable, float v) = 0;
 
-  bool Read(const char *filename) {
+  ReadStatus Read(const char *filename) {
     LOCK_SD(true);
-    bool read = false;
     FileReader f;
-    if (f.Open(filename) && Read(&f)) {
-      read = true;
-    }
+    f.Open(filename);
+    ReadStatus ret = Read(&f);
     f.Close();
     LOCK_SD(false);
-    return read;
+    return ret;
   }
 
 #define CONFIG_VARIABLE(X, DEF) do {            \
@@ -57,11 +61,27 @@ struct ConfigFile {
 } while(0)
 
   void ReadInCurrentDir(const char* name) {
-    char full_name[128];
-    strcpy(full_name, current_directory);
-    strcat(full_name, name);
+    PathHelper full_name(current_directory, name);
     Read(full_name);
   }
+
+  ReadStatus ReadINIFromDir(const char *dir, const char* basename) {
+    PathHelper full_name(dir, basename, "ini");
+    if (Read(full_name) == ReadStatus::READ_END) {
+      return ReadStatus::READ_END;
+    }
+    full_name.Set(dir, basename, "tmp");
+    return Read(full_name);
+  }
+  ReadStatus ReadINIFromSaveDir(const char* basename) {
+    PathHelper full_name(GetSaveDir(), basename, "ini");
+    if (Read(full_name) == ReadStatus::READ_END) {
+      return ReadStatus::READ_END;
+    }
+    full_name.Set(GetSaveDir(), basename, "tmp");
+    return Read(full_name);
+  }
 };
+
 
 #endif

@@ -1,17 +1,22 @@
 #ifndef PROPS_PROP_BASE_H
 #define PROPS_PROP_BASE_H
 
-class SaveStateFile : public ConfigFile {
+class SaveGlobalStateFile : public ConfigFile {
+public:
+  void SetVariable(const char* variable, float v) override {
+    CONFIG_VARIABLE(volume, -1);
+  }
+  int volume;
+};
+
+class SavePresetStateFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
     CONFIG_VARIABLE(preset, 0);
-    CONFIG_VARIABLE(volume, -1);
-    CONFIG_VARIABLE(end, 0);
   }
   int preset;
-  int volume;
-  int end;
 };
+
 
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase {
@@ -48,7 +53,6 @@ public:
     return false;
   }
 
-
   bool unmute_on_deactivation_ = false;
   uint32_t activated_ = 0;
   uint32_t last_clash_ = 0;
@@ -68,6 +72,7 @@ public:
     STDOUT.println("Ignition.");
     MountSDCard();
     EnableAmplifier();
+    SaberBase::RequestMotion();
 
     // Avoid clashes a little bit while turning on.
     // It might be a "clicky" power button...
@@ -76,6 +81,7 @@ public:
     float preon_time = 0.0;
     SaberBase::DoPreOn(&preon_time);
     if (preon_time > 0.0) {
+      on_pending_ = true;
       on_pending_base_ = millis();
       on_pending_delay_ = preon_time * 1000;
     } else {
@@ -89,9 +95,11 @@ public:
       SaberBase::DoEndLockup();
       SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
     }
+#ifndef DISABLE_COLOR_CHANGE
     if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
       ToggleColorChangeMode();
     }
+#endif    
     SaberBase::TurnOff(off_type);
     if (unmute_on_deactivation_) {
       unmute_on_deactivation_ = false;
@@ -182,10 +190,19 @@ public:
     hybrid_font.Activate();
     font = &hybrid_font;
     if (font) {
-      if (SFX_swingl) {
-        smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
-      } else if (SFX_lswing) {
+      smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
+      if (SFX_lswing) {
         smooth_swing_cfx_config.ReadInCurrentDir("font_config.txt");
+	// map CFX values to Proffie (sourced from font_config.txt in font folder)
+	smooth_swing_config.SwingSensitivity = smooth_swing_cfx_config.smooth_sens;
+	smooth_swing_config.MaximumHumDucking = smooth_swing_cfx_config.smooth_dampen;
+	smooth_swing_config.SwingSharpness = smooth_swing_cfx_config.smooth_sharp;
+	smooth_swing_config.SwingStrengthThreshold = smooth_swing_cfx_config.smooth_gate;
+	smooth_swing_config.Transition1Degrees = smooth_swing_cfx_config.smooth_width1;
+	smooth_swing_config.Transition2Degrees = smooth_swing_cfx_config.smooth_width2;
+	smooth_swing_config.MaxSwingVolume = smooth_swing_cfx_config.smooth_gain * 3 / 100;
+	smooth_swing_config.AccentSwingSpeedThreshold = smooth_swing_cfx_config.hswing;
+	smooth_swing_config.Version = 2;
       }
       switch (smooth_swing_config.Version) {
         case 1:
@@ -201,6 +218,14 @@ public:
     return false;
   }
 
+  void SaveVolumeIfNeeded() {
+#ifdef SAVE_VOLUME
+    if (dynamic_mixer.get_volume() != saved_global_state.volume) {
+      SaveGlobalState();
+    }
+#endif
+  }
+
   void SaveColorChangeIfNeeded() {
 #ifdef SAVE_COLOR_CHANGE
     if (current_preset_.variation != SaberBase::GetCurrentVariation()) {
@@ -211,13 +236,11 @@ public:
   }
 
   void PollSaveColorChange() {
-#ifdef SAVE_COLOR_CHANGE
-    if (current_preset_.variation == SaberBase::GetCurrentVariation()) return;
 #ifdef ENABLE_AUDIO
     if (AmplifierIsActive()) return; // Do it later
 #endif
     SaveColorChangeIfNeeded();
-#endif
+    SaveVolumeIfNeeded();
   }
 
   // Select preset (font/style)
@@ -267,7 +290,7 @@ public:
 
   // Go to the next Preset.
   virtual void next_preset() {
-#ifdef SAVE_STATE
+#ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num + 1);
 #endif
     SetPreset(current_preset_.preset_num + 1, true);
@@ -275,7 +298,7 @@ public:
 
   // Go to the previous Preset.
   virtual void previous_preset() {
-#ifdef SAVE_STATE
+#ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num - 1);
 #endif
     SetPreset(current_preset_.preset_num - 1, true);
@@ -341,7 +364,7 @@ public:
   } while(0);
 
     ONCEPERBLADE(ACTIVATE);
-#ifdef SAVE_STATE
+#ifdef SAVE_PRESET
     ResumePreset();
 #else
     SetPreset(0, false);
@@ -357,41 +380,64 @@ public:
   }
 
   void ResumePreset() {
-    FileReader f;
-    SaveStateFile savestate;
-    savestate.Read("curstate.ini");
-    if (!savestate.end) {
-      savestate.Read("curstate.tmp");
-      if (!savestate.end) return;
-    }
+    SavePresetStateFile savestate;
+    savestate.ReadINIFromSaveDir("curstate");
     SetPreset(savestate.preset, false);
-    if (savestate.volume >= 0) {
-      dynamic_mixer.set_volume(clampi32(savestate.volume, 0, VOLUME));
-    }
   }
 
-  void SaveState(int preset) {
-    STDOUT.println("Saving Current State");
-    writeState("curstate.tmp", preset);
-    writeState("curstate.ini", preset);
-  }
-
-  void writeState(const char *filename, int preset) {
+  void WriteState(const char *filename, int preset) {
+    PathHelper fn(GetSaveDir(), filename);
     LOCK_SD(true);
     FileReader out;
-    LSFS::Remove(filename);
-    out.Create(filename);
-    char value[30];
-    itoa(preset, value, 10);
-    out.write_key_value("preset", value);
-    itoa(dynamic_mixer.get_volume(), value, 10);
-    out.write_key_value("volume", value);
+    LSFS::Remove(fn);
+    out.Create(fn);
+    out.write_key_value("preset", preset);
     out.write_key_value("end", "1");
     out.Close();
     LOCK_SD(false);
   }
 
+  void SaveState(int preset) {
+    STDOUT.println("Saving Current Preset");
+    WriteState("curstate.tmp", preset);
+    WriteState("curstate.ini", preset);
+  }
+
+  SaveGlobalStateFile saved_global_state;
+  void RestoreGlobalState() {
+#ifdef SAVE_VOLUME
+    saved_global_state.ReadINIFromDir(NULL, "global");
+    if (saved_global_state.volume >= 0) {
+      dynamic_mixer.set_volume(clampi32(saved_global_state.volume, 0, VOLUME));
+    }
+#endif    
+  }
+
+  void WriteGlobalState(const char* filename) {
+    LOCK_SD(true);
+    FileReader out;
+    LSFS::Remove(filename);
+    out.Create(filename);
+    out.write_key_value("volume", muted_volume_ ? muted_volume_ : dynamic_mixer.get_volume());
+    out.write_key_value("end", "1");
+    out.Close();
+    LOCK_SD(false);
+  }
+
+  void SaveGlobalState() {
+#ifdef SAVE_VOLUME
+    STDOUT.println("Saving Global State");
+    WriteGlobalState("global.tmp");
+    WriteGlobalState("global.ini");
+    saved_global_state.volume = dynamic_mixer.get_volume();
+#endif    
+  }
+  
   void FindBladeAgain() {
+    if (!current_config) {
+      // FindBlade() hasn't been called yet - ignore this.
+      return;
+    }
     // Reverse everything that FindBlade does.
 
     // First free all styles, then allocate new ones to avoid memory
@@ -770,6 +816,7 @@ public:
   uint32_t last_on_time_;
 #endif
 
+#ifndef DISABLE_COLOR_CHANGE
   void ToggleColorChangeMode() {
     if (!current_style()) return;
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {
@@ -794,6 +841,7 @@ public:
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
     }
   }
+#endif // DISABLE_COLOR_CHANGE  
 
   void PrintButton(uint32_t b) {
     if (b & BUTTON_POWER) STDOUT.print("Power");
@@ -1103,8 +1151,10 @@ public:
     if (!strcmp(cmd, "set_volume") && arg) {
 #ifdef ENABLE_AUDIO
       int32_t volume = strtol(arg, NULL, 0);
-      if (volume >= 0 && volume <= 3000)
+      if (volume >= 0 && volume <= 3000) {
         dynamic_mixer.set_volume(volume);
+	SaveGlobalState();
+      }
 #endif
       return true;
     }
@@ -1128,6 +1178,7 @@ public:
       return true;
     }
 
+#ifndef DISABLE_COLOR_CHANGE
     if (arg && (!strcmp(cmd, "var") || !strcmp(cmd, "variation"))) {
       size_t variation = strtol(arg, NULL, 0);
       SaberBase::SetVariation(variation);
@@ -1137,6 +1188,7 @@ public:
       ToggleColorChangeMode();
       return true;
     }
+#endif
 
 #ifdef ENABLE_SD
     if (!strcmp(cmd, "list_tracks")) {
