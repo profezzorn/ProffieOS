@@ -156,7 +156,7 @@ public:
   void Clash(bool stab) override {}
 
   // Make swings do nothing
-  void DoMotion(const Vec3& motion, bool clear) override { }
+  void DoMotion(const Vec3& motion, bool clear) override {}
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
@@ -169,9 +169,6 @@ public:
         hybrid_font.PlayCommon(&SFX_unjam);
 #endif
         On();
-#ifdef ENABLE_AUDIO
-        hybrid_font.Activate();
-#endif
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
@@ -181,9 +178,6 @@ public:
         hybrid_font.PlayCommon(&SFX_jam);
 #endif
         Off();
-#ifdef ENABLE_AUDIO
-        hybrid_font.Deactivate();
-#endif
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_OFF):

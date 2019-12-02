@@ -203,6 +203,8 @@ public:
 	smooth_swing_config.MaxSwingVolume = smooth_swing_cfx_config.smooth_gain * 3 / 100;
 	smooth_swing_config.AccentSwingSpeedThreshold = smooth_swing_cfx_config.hswing;
 	smooth_swing_config.Version = 2;
+      } else if (!SFX_swingl) {
+	smooth_swing_config.Version = 0;
       }
       switch (smooth_swing_config.Version) {
         case 1:
