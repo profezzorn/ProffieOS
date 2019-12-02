@@ -259,14 +259,19 @@ public:
       case OFF_NORMAL:
         if (monophonic_hum_) {
           size_t total = SFX_poweroff.files_found() + SFX_pwroff.files_found();
+	  state_ = STATE_OFF;
           if (total) {
-            state_ = STATE_OFF;
             if ((rand() % total) < SFX_poweroff.files_found()) {
               PlayMonophonic(&SFX_poweroff, NULL);
             } else {
               PlayMonophonic(&SFX_pwroff, NULL);
             }
-          }
+          } else {
+	    // No poweroff, just fade out...
+	    hum_player_->set_fade_time(0.2);
+	    hum_player_->FadeAndStop();
+	    hum_player_.Free();
+	  }
         } else {
           state_ = STATE_HUM_FADE_OUT;
           PlayPolyphonic(&SFX_in);
