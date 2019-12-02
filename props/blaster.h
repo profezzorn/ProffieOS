@@ -72,7 +72,11 @@ public:
     } else {
       SaberBase::DoBlast();
 #ifdef ENABLE_AUDIO
-      hybrid_font.PlayCommon(&SFX_blast);
+      if (blaster_mode == MODE_STUN) {
+        hybrid_font.PlayCommon(&SFX_stun);
+      } else {
+        hybrid_font.PlayCommon(&SFX_blast);
+      }
 #endif
     }
   }
