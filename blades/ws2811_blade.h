@@ -75,8 +75,8 @@ public:
     STDOUT.print("WS2811 Blade with ");
     STDOUT.print(pin_.num_leds());
     STDOUT.println(" leds.");
-    Power(true);
     power_->Init();
+    Power(true);
     CommandParser::Link();
     Looper::Link();
     AbstractBlade::Activate();

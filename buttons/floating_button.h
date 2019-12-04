@@ -26,7 +26,6 @@ public:
       SLEEP(1);
       if (!digitalRead(PIN)) {
 	Vote(false);
-	floating_ = false;
 	continue;
       }
       

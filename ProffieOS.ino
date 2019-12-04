@@ -41,6 +41,12 @@
 #include CONFIG_FILE
 #undef CONFIG_TOP
 
+#ifdef SAVE_STATE
+#define SAVE_VOLUME
+#define SAVE_PRESET
+#define SAVE_COLOR_CHANGE
+#endif
+
 // #define ENABLE_DEBUG
 
 
@@ -311,6 +317,7 @@ void EnableBooster();
 void EnableAmplifier();
 bool AmplifierIsActive();
 void MountSDCard();
+const char* GetSaveDir();
 
 #include "common/lsfs.h"
 #ifdef ENABLE_AUDIO
@@ -610,6 +617,11 @@ class NoLED;
 
 BladeConfig* current_config = nullptr;
 class BladeBase* GetPrimaryBlade() { return current_config->blade1; }
+const char* GetSaveDir() {
+  if (!current_config) return "";
+  if (!current_config->save_dir) return "";
+  return current_config->save_dir;
+}
 
 ArgParserInterface* CurrentArgParser;
 

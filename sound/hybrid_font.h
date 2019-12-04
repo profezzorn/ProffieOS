@@ -50,7 +50,7 @@ public:
     font_config.ReadInCurrentDir("config.ini");
     STDOUT.print("Activating ");
     // TODO: Find more reliable way to figure out if it's a monophonic or polyphonic font!!!!
-    monophonic_hum_ = SFX_poweron || SFX_poweroff || SFX_pwroff;
+    monophonic_hum_ = SFX_poweron || SFX_poweroff || SFX_pwroff || SFX_blast;
     guess_monophonic_ = false;
     if (monophonic_hum_) {
       if (SFX_clash || SFX_blaster || SFX_swing) {
@@ -259,14 +259,19 @@ public:
       case OFF_NORMAL:
         if (monophonic_hum_) {
           size_t total = SFX_poweroff.files_found() + SFX_pwroff.files_found();
+	  state_ = STATE_OFF;
           if (total) {
-            state_ = STATE_OFF;
             if ((rand() % total) < SFX_poweroff.files_found()) {
               PlayMonophonic(&SFX_poweroff, NULL);
             } else {
               PlayMonophonic(&SFX_pwroff, NULL);
             }
-          }
+          } else {
+	    // No poweroff, just fade out...
+	    hum_player_->set_fade_time(0.2);
+	    hum_player_->FadeAndStop();
+	    hum_player_.Free();
+	  }
         } else {
           state_ = STATE_HUM_FADE_OUT;
           PlayPolyphonic(&SFX_in);
@@ -295,6 +300,18 @@ public:
   void SB_Force() override { PlayCommon(&SFX_force); }
   void SB_Blast() override { Play(&SFX_blaster, &SFX_blst); }
   void SB_Boot() override { PlayPolyphonic(&SFX_boot); }
+  void SB_BladeDetect(bool detected) {
+    Effect &X(detected ? SFX_bladein : SFX_bladeout);
+    if (X) {
+      PlayPolyphonic(&X);
+      return;
+    }
+    if (detected && SFX_boot) {
+      PlayPolyphonic(&SFX_boot);
+      return;
+    }
+    beeper.Beep(0.05, 2000.0);
+  }
   void SB_NewFont() override {
     if (!PlayPolyphonic(&SFX_font)) {
       beeper.Beep(0.05, 2000.0);

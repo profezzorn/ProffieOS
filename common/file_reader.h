@@ -397,6 +397,11 @@ public:
     Write('\n');
   }
 
+  void write_key_value(const char* key, int v) {
+    char value[30];
+    itoa(v, value, 10);
+    write_key_value(key, value);
+  }
 private:
   enum {
 #ifdef ENABLE_SD
