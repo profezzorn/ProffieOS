@@ -44,6 +44,7 @@
 #ifdef SAVE_STATE
 #define SAVE_VOLUME
 #define SAVE_PRESET
+#define SAVE_COLOR_CHANGE
 #endif
 
 // #define ENABLE_DEBUG
