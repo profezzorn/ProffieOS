@@ -5,7 +5,7 @@
 template<int PIN>
 class FloatingButtonBase {
 public:
-  // Requires 50 milliseconds of float/non float agreement
+  // Requires 100 milliseconds of float/non float agreement
   // before changing state.
   void Vote(int floating) {
     uint32_t now = millis();
@@ -13,7 +13,7 @@ public:
       last_confirmation_ = now;
       return;
     }
-    if (now - last_confirmation_ < 50) return;
+    if (now - last_confirmation_ < 100) return;
     floating_ = floating;
     last_confirmation_ = now;
   }
