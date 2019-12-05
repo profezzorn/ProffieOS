@@ -5,19 +5,16 @@
 template<int PIN>
 class FloatingButtonBase {
 public:
-  // Requires 50 milliseconds of float/non float agreement
+  // Requires 10 votes of float/non float agreement
   // before changing state.
   void Vote(int floating) {
-    uint32_t now = millis();
-    if (floating == floating_) {
-      last_confirmation_ = now;
-      return;
+    if (floating != floating_) {
+      if (++votes_for_change_ <= 10) return;
+      floating_ = floating;
     }
-    if (now - last_confirmation_ < 50) return;
-    floating_ = floating;
-    last_confirmation_ = now;
+    votes_for_change_ = 0;
   }
-  
+
   void Update() {
     STATE_MACHINE_BEGIN();
     while (true) {
@@ -28,7 +25,7 @@ public:
 	Vote(false);
 	continue;
       }
-      
+
       pinMode(PIN, INPUT_PULLDOWN);
       SLEEP(1);
       if (digitalRead(PIN)) {
@@ -48,7 +45,7 @@ public:
   virtual bool Read() = 0;
 private:
   bool floating_ = true;
-  uint32_t last_confirmation_ = 0;
+  uint8_t votes_for_change_ = 0;
   StateMachineState state_machine_;
 };
 
