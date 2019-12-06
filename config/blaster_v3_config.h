@@ -8,7 +8,6 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_AUDIO
 #define ENABLE_WS2811
 #define ENABLE_SD
-#define DELAYED_OFF
 #define ENABLE_BLASTER_AUTO
 #endif
 
@@ -20,8 +19,8 @@ const unsigned int maxLedsPerStrip = 144;
 Preset presets[] = {
   // Default basic blast color with red audio flicker on blast
   { "_blstr1", "tracks/mars.wav",
-    StylePtr<BlastFadeout<Black,AudioFlicker<Black,Red>,375>>(), 
-    StylePtr<BlastFadeout<Black,AudioFlicker<Black,Red>,375>>() }
+    StylePtr<Lockup<BlastFadeout<Black,AudioFlicker<Black,Red>>,AudioFlicker<Black,Red>>>(),
+    StylePtr<Lockup<BlastFadeout<Black,AudioFlicker<Black,Red>>,AudioFlicker<Black,Red>>>() },
 };
 
 BladeConfig blades[] = {
