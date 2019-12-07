@@ -91,12 +91,12 @@ public:
       }
       if (!t0h) t0h = pulse_len / 3;
       if (!t1h) t1h = pulse_len * 2 / 3;
-      for (int i = bits; i > 0; i--) {
+      for (int i = bits; i >= 0; i--) {
 	data[i] = (data[i-1] == t0h) ? bit_ : 0;
       }
 
       #if 0
-      STDOUT << data[0] << "," << data[1] << "," << data[2]<< "," << data[3]
+      STDOUT << data[0] << "," << data[1] << "," << data[2]<< "," << data[3] << ","
 	     << data[4] << "," << data[5] << "," << data[6]<< "," << data[7]<< "\n";
       // STDOUT << data[bits -1] << "," << data[bits] << "," << data[bits+1] << "\n";
       #endif
