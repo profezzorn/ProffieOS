@@ -10,16 +10,6 @@ public:
   Blaster() : PropBase() {}
   const char* name() override { return "Blaster"; }
 
-/*
-#ifdef DELAYED_OFF
-  bool powered_ = false;
-  void SetPower(bool on) { powered_ = on; }
-#else
-  constexpr bool powered_ = true;
-  void SetPower(bool on) {}
-#endif
-*/
-
   // Mode states to handle kill vs stun effects
   enum BlasterMode {
     MODE_STUN,
@@ -61,9 +51,25 @@ public:
   }
 
   bool auto_firing_ = false;
+  int shots_fired_ = 0;
+
+#ifdef BLASTER_SHOTS_UNTIL_EMPTY
+  const int max_shots_ = BLASTER_SHOTS_UNTIL_EMPTY;
+#else
+  const int max_shots_ = -1;
+#endif
 
   virtual void Fire() {
-    if (!SaberBase::IsOn()) return; // Don't allow firing when off.
+    if (max_shots_ != -1) {
+      if (shots_fired_ >= max_shots_) {
+#ifdef ENABLE_AUDIO
+        if (SFX_empty.files_found()) {
+          hybrid_font.PlayCommon(&SFX_empty);
+        }
+#endif
+        return;
+      }
+    }
 
     if (blaster_mode == MODE_AUTO) {
       SaberBase::SetLockup(LOCKUP_AUTOFIRE);
@@ -77,8 +83,51 @@ public:
       } else {
         hybrid_font.PlayCommon(&SFX_blast);
       }
+
+      shots_fired_++;
 #endif
     }
+  }
+
+  virtual void Reload() {
+    shots_fired_ = 0;
+
+#ifdef ENABLE_AUDIO
+    if (SFX_reload.files_found()) {
+      hybrid_font.PlayCommon(&SFX_reload);
+    }
+#endif
+  }
+
+  virtual void ClipOut() {
+    if (max_shots_ != -1) shots_fired_ = max_shots_;
+
+#ifdef ENABLE_AUDIO
+    if (SFX_clipout.files_found()) {
+      hybrid_font.PlayCommon(&SFX_clipout);
+    }
+#endif
+  }
+
+  virtual void ClipIn() {
+#ifdef ENABLE_AUDIO
+    if (SFX_clipin.files_found()) {
+      hybrid_font.PlayCommon(&SFX_clipin);
+    }
+#endif
+  }
+
+  // Pull in parent's SetPreset, but turn the blaster on.
+  virtual void SetPreset(int preset_num, bool announce) override {
+    PropBase::SetPreset(preset_num, announce);
+
+    if (!SaberBase::IsOn()) {
+      On();
+    }
+
+#ifdef ENABLE_AUDIO
+    hybrid_font.SB_On();
+#endif
   }
 
   // Self-destruct pulled from detonator 
@@ -160,43 +209,29 @@ public:
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
-      case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
-        armed_ = false;
-#ifdef ENABLE_AUDIO
-        hybrid_font.PlayCommon(&SFX_unjam);
-#endif
-        On();
-        return true;
 
-      case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
-      case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_OFF):
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
-#ifdef ENABLE_AUDIO
-        hybrid_font.PlayCommon(&SFX_jam);
-#endif
-        Off();
-        return true;
-
-      case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_OFF):
-        next_preset();
-        return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
-        StartOrStopTrack();
-        return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_PRESSED, MODE_ON):
         NextBlasterMode();
         return true;
 
-      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_DOUBLE_CLICK, MODE_ON):
+        next_preset();
+        return true;
+
+      case EVENTID(BUTTON_RELOAD, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON):
+        Reload();
+        return true;
+
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_LONG, MODE_ON):
+        StartOrStopTrack();
+        return true;
+
+      case EVENTID(BUTTON_FIRE, EVENT_PRESSED, MODE_ON):
         Fire();
         return true;
 
-      case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
+      case EVENTID(BUTTON_FIRE, EVENT_RELEASED, MODE_ON):
         if (blaster_mode == MODE_AUTO) {
           if (SaberBase::Lockup()) {
             SaberBase::DoEndLockup();
@@ -205,16 +240,6 @@ public:
           }
         }
         return true;
-
-      case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
-        beginArm();
-        break;
-
-      case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ON):
-        selfDestruct();
-        return armed_;
-
-        // TODO: Long click when off?
     }
     return false;
   }

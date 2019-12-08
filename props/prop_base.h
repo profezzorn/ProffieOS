@@ -246,7 +246,7 @@ public:
   }
 
   // Select preset (font/style)
-  void SetPreset(int preset_num, bool announce) {
+  virtual void SetPreset(int preset_num, bool announce) {
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif

@@ -9,6 +9,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_WS2811
 #define ENABLE_SD
 #define ENABLE_BLASTER_AUTO
+#define BLASTER_SHOTS_UNTIL_EMPTY 30
 #endif
 
 #ifdef CONFIG_PROP
@@ -32,6 +33,6 @@ BladeConfig blades[] = {
 #endif
 
 #ifdef CONFIG_BUTTONS
-Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
-Button AuxButton(BUTTON_AUX, auxPin, "aux");
+Button FireButton(BUTTON_FIRE, powerButtonPin, "fire");
+Button ModeButton(BUTTON_MODE_SELECT, auxPin, "modeselect");
 #endif
