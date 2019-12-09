@@ -240,6 +240,16 @@ public:
           }
         }
         return true;
+
+      case EVENTID(BUTTON_CLIP_DETECT, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_CLIP_DETECT, EVENT_LATCH_ON, MODE_ON):
+        ClipIn();
+        return true;
+
+      case EVENTID(BUTTON_CLIP_DETECT, EVENT_RELEASED, MODE_ON):
+      case EVENTID(BUTTON_CLIP_DETECT, EVENT_LATCH_OFF, MODE_ON):
+        ClipOut();
+        return true;
     }
     return false;
   }
