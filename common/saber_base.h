@@ -119,8 +119,21 @@ public:                                                         \
   SABERFUN(Top, (), ());					\
   SABERFUN(Relax, (), ());					\
   SABERFUN(IsOn, (bool* on), (on));				\
-  SABERFUN(Message, (const char* msg), (msg));
-
+  SABERFUN(Message, (const char* msg), (msg));  \
+  \
+  SABERFUN(Stun, (), ());          \
+  SABERFUN(Fire, (), ());          \
+  SABERFUN(ClipIn, (), ());          \
+  SABERFUN(ClipOut, (), ());          \
+  SABERFUN(Reload, (), ());          \
+  SABERFUN(Mode, (), ());          \
+  SABERFUN(Range, (), ());          \
+  SABERFUN(Empty, (), ());          \
+  SABERFUN(Full, (), ());          \
+  SABERFUN(Jam, (), ());          \
+  SABERFUN(UnJam, (), ());          \
+  SABERFUN(PLIOn, (), ());          \
+  SABERFUN(PLIOff, (), ());
   SABERBASEFUNCTIONS();
 #undef SABERFUN
 

@@ -470,7 +470,7 @@ EFFECT(ccchange);
 // Blaster effects
 // hum, boot and font are reused from sabers and already defined.
 EFFECT(bgnauto); // Doesn't exist in fonts, but I expect there may be use for autofire transitions
-EFFECT2(auto,auto); // HACK to work around autoN.wav
+EFFECT2(auto,auto);
 EFFECT(endauto); // Doesn't exist in fonts, but I expect there may be use for autofire transitions
 
 EFFECT(blast); // Not to be confused with "blst" and "blaster" as blocking sounds in sabers

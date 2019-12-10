@@ -20,8 +20,8 @@ const unsigned int maxLedsPerStrip = 144;
 Preset presets[] = {
   // Default basic blast color with red audio flicker on blast
   { "_blstr1", "tracks/mars.wav",
-    StylePtr<Lockup<BlastFadeout<Black,AudioFlicker<Black,Red>>,AudioFlicker<Black,Red>>>(),
-    StylePtr<Lockup<BlastFadeout<Black,AudioFlicker<Black,Red>>,AudioFlicker<Black,Red>>>() },
+    StylePtr<Lockup<BlastFadeout<BlastFadeout<Black,AudioFlicker<Black,Red>,250,EFFECT_FIRE>,AudioFlicker<Black,Blue>,1500,EFFECT_STUN>,AudioFlicker<Black,Red>>>(),
+    StylePtr<Lockup<BlastFadeout<BlastFadeout<Black,AudioFlicker<Black,Red>,250,EFFECT_FIRE>,AudioFlicker<Black,Blue>,1500,EFFECT_STUN>,AudioFlicker<Black,Red>>>() }
 };
 
 BladeConfig blades[] = {

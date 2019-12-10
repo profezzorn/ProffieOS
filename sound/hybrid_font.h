@@ -119,8 +119,12 @@ public:
     }
     hum_player_ = next_hum_player_;
     next_hum_player_.Free();
-    hum_player_->PlayOnce(f);
-    current_effect_length_ = hum_player_->length();
+
+    if (f) {
+      hum_player_->PlayOnce(f);
+      current_effect_length_ = hum_player_->length();
+    }
+
     if (loop) hum_player_->PlayLoop(loop);
   }
 
@@ -300,6 +304,22 @@ public:
   void SB_Force() override { PlayCommon(&SFX_force); }
   void SB_Blast() override { Play(&SFX_blaster, &SFX_blst); }
   void SB_Boot() override { PlayPolyphonic(&SFX_boot); }
+
+  // Blaster effects, auto fire is handled by begin/end lockup
+  void SB_Stun() override { PlayPolyphonic(&SFX_stun); }
+  void SB_Fire() override { PlayPolyphonic(&SFX_blast); }
+  void SB_ClipIn() override { PlayPolyphonic(&SFX_clipin); }
+  void SB_ClipOut() override { PlayPolyphonic(&SFX_clipout); }
+  void SB_Reload() override { PlayPolyphonic(&SFX_reload); }
+  void SB_Mode() override { PlayPolyphonic(&SFX_mode); }
+  void SB_Range() override { PlayPolyphonic(&SFX_range); }
+  void SB_Empty() override { PlayPolyphonic(&SFX_empty); }
+  void SB_Full() override { PlayPolyphonic(&SFX_full); }
+  void SB_Jam() override { PlayPolyphonic(&SFX_jam); }
+  void SB_UnJam() override { PlayPolyphonic(&SFX_unjam); }
+  void SB_PLIOn() override { PlayPolyphonic(&SFX_plion); }
+  void SB_PLIOff() override { PlayPolyphonic(&SFX_plioff); }
+
   void SB_BladeDetect(bool detected) {
     Effect &X(detected ? SFX_bladein : SFX_bladeout);
     if (X) {
