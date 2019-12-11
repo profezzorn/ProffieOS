@@ -46,12 +46,18 @@ public:
 
   bool auto_firing_ = false;
   int shots_fired_ = 0;
+  bool is_jammed_ = false;
 
 #ifdef BLASTER_SHOTS_UNTIL_EMPTY
   const int max_shots_ = BLASTER_SHOTS_UNTIL_EMPTY;
 #else
   const int max_shots_ = -1;
 #endif
+
+  virtual bool CheckJam(int percent) {
+    int random = rand() % 100;
+    return random <= percent ? true : false;
+  }
 
   virtual void Fire() {
     if (max_shots_ != -1) {
@@ -60,6 +66,16 @@ public:
         return;
       }
     }
+
+#ifdef BLASTER_JAM_PERCENTAGE
+    // If we're already jammed then we don't need to recheck. If we're not jammed then check if we just jammed.
+    is_jammed_ = is_jammed_ ? true : CheckJam(BLASTER_JAM_PERCENTAGE);
+
+    if (is_jammed_) {
+      SaberBase::DoJam();
+      return;
+    }
+#endif
 
     if (blaster_mode == MODE_AUTO) {
       SelectAutoFirePair(); // Set up the autofire pairing if the font suits it.
@@ -187,8 +203,13 @@ public:
     PollNextAction();
   }
 
-  // Make clash do nothing
-  void Clash(bool stab) override {}
+  // We're not really doing anything with clash, but we do want to unjam if we're jammed.
+  void Clash(bool stab) override {
+    if( is_jammed_ ) {
+      is_jammed_ = false;
+      SaberBase:DoUnJam();
+    }
+  }
 
   // Make swings do nothing
   void DoMotion(const Vec3& motion, bool clear) override {}

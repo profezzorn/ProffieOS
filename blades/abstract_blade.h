@@ -113,43 +113,43 @@ public:
 
   // Blaster Effects
   void SB_Stun() override {
-    addEffect(EFFECT_STUN, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_STUN, 0);
   }
   void SB_Fire() override {
-    addEffect(EFFECT_FIRE, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_FIRE, 0);
   }
   void SB_ClipIn() override {
-    addEffect(EFFECT_CLIP_IN, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_CLIP_IN, 0);
   }
   void SB_ClipOut() override {
-    addEffect(EFFECT_CLIP_OUT, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_CLIP_OUT, 0);
   }
   void SB_Reload() override {
-    addEffect(EFFECT_RELOAD, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_RELOAD, 0);
   }
   void SB_Mode() override {
-    addEffect(EFFECT_MODE, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_MODE, 0);
   }
   void SB_Range() override {
-    addEffect(EFFECT_RANGE, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_RANGE, 0);
   }
   void SB_Empty() override {
-    addEffect(EFFECT_EMPTY, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_EMPTY, 0);
   }
   void SB_Full() override {
-    addEffect(EFFECT_FULL, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_FULL, 0);
   }
   void SB_Jam() override {
-    addEffect(EFFECT_JAM, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_JAM, 0);
   }
   void SB_UnJam() override {
-    addEffect(EFFECT_UNJAM, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_UNJAM, 0);
   }
   void SB_PLIOn() override {
-    addEffect(EFFECT_PLI_ON, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_PLI_ON, 0);
   }
   void SB_PLIOff() override {
-    addEffect(EFFECT_PLI_OFF, (200 + random(700)) / 1000.0f);
+    addEffect(EFFECT_PLI_OFF, 0);
   }
 
 protected:
