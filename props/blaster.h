@@ -60,13 +60,6 @@ public:
   }
 
   virtual void Fire() {
-    if (max_shots_ != -1) {
-      if (shots_fired_ >= max_shots_) {
-        SaberBase::DoEmpty();
-        return;
-      }
-    }
-
 #ifdef ENABLE_MOTION
 #ifdef BLASTER_JAM_PERCENTAGE
     // If we're already jammed then we don't need to recheck. If we're not jammed then check if we just jammed.
@@ -78,6 +71,13 @@ public:
     }
 #endif
 #endif
+
+    if (max_shots_ != -1) {
+      if (shots_fired_ >= max_shots_) {
+        SaberBase::DoEmpty();
+        return;
+      }
+    }
 
     if (blaster_mode == MODE_AUTO) {
       SelectAutoFirePair(); // Set up the autofire pairing if the font suits it.
