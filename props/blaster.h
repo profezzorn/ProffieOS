@@ -205,13 +205,8 @@ public:
     PollNextAction();
   }
 
-  // We're not really doing anything with clash, but we do want to unjam if we're jammed.
-  void Clash(bool stab) override {
-    if( is_jammed_ ) {
-      is_jammed_ = false;
-      SaberBase:DoUnJam();
-    }
-  }
+  // Make clash do nothing
+  void Clash(bool stab) override {}
 
   // Make swings do nothing
   void DoMotion(const Vec3& motion, bool clear) override {}
@@ -258,6 +253,14 @@ public:
       case EVENTID(BUTTON_CLIP_DETECT, EVENT_RELEASED, MODE_ON):
       case EVENTID(BUTTON_CLIP_DETECT, EVENT_LATCH_OFF, MODE_ON):
         ClipOut();
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_SHAKE, MODE_ON):
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
+        if( is_jammed_ ) {
+          is_jammed_ = false;
+          SaberBase:DoUnJam();
+        }
         return true;
     }
     return false;
