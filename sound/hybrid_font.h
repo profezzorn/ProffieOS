@@ -311,7 +311,14 @@ public:
   void SB_ClipIn() override { PlayCommon(&SFX_clipin); }
   void SB_ClipOut() override { PlayCommon(&SFX_clipout); }
   void SB_Reload() override { PlayCommon(&SFX_reload); }
-  void SB_Mode() override { PlayCommon(&SFX_mode); }
+  void SB_Mode() override {
+    if (SFX_mode) {
+      PlayCommon(&SFX_mode);
+      return;
+    }
+    // TODO: would rather do a Talkie to speak the mode we're in after mode sound
+    beeper.Beep(0.05, 2000.0);
+  }
   void SB_Range() override { PlayCommon(&SFX_range); }
   void SB_Empty() override { PlayCommon(&SFX_empty); }
   void SB_Full() override { PlayCommon(&SFX_full); }
