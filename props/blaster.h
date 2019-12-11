@@ -259,7 +259,7 @@ public:
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
         if( is_jammed_ ) {
           is_jammed_ = false;
-          SaberBase:DoUnJam();
+          SaberBase::DoUnJam();
         }
         return true;
     }
