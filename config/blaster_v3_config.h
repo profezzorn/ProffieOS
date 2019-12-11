@@ -11,7 +11,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_SD
 #define ENABLE_BLASTER_AUTO
 #define BLASTER_SHOTS_UNTIL_EMPTY 30
-#define BLASTER_JAM_PERCENTAGE 10
+#define BLASTER_JAM_PERCENTAGE 3
 #endif
 
 #ifdef CONFIG_PROP
