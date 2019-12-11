@@ -113,7 +113,6 @@ public:
   virtual void Reload() {
     shots_fired_ = 0;
     SaberBase::DoReload();
-    SaberBase::DoFull();
   }
 
   virtual void ClipOut() {
