@@ -9,6 +9,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_WS2811
 #define ENABLE_SD
 #define ENABLE_BLASTER_AUTO
+#define ENABLE_MOTION
 #define BLASTER_SHOTS_UNTIL_EMPTY 30
 #define BLASTER_JAM_PERCENTAGE 10
 #endif
