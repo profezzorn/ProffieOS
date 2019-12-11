@@ -6,10 +6,10 @@
 const unsigned int maxLedsPerStrip = 144;
 #define CLASH_THRESHOLD_G 1.0
 #define ENABLE_AUDIO
+#define ENABLE_MOTION
 #define ENABLE_WS2811
 #define ENABLE_SD
 #define ENABLE_BLASTER_AUTO
-#define ENABLE_MOTION
 #define BLASTER_SHOTS_UNTIL_EMPTY 30
 #define BLASTER_JAM_PERCENTAGE 10
 #endif
