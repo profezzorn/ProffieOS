@@ -128,8 +128,10 @@ public:
   virtual void SetPreset(int preset_num, bool announce) override {
     PropBase::SetPreset(preset_num, announce);
 
-    if (!SaberBase::IsOn()) {
-      On();
+    if (!SFX_poweron) {
+      if (!SaberBase::IsOn()) {
+        On();
+      }
     }
   }
 
@@ -206,7 +208,7 @@ public:
 
   // Make clash do nothing except unjam if jammed.
   void Clash(bool stab) override {
-    if( is_jammed_ ) {
+    if (is_jammed_) {
       is_jammed_ = false;
       SaberBase::DoUnJam();
     }
@@ -257,6 +259,15 @@ public:
       case EVENTID(BUTTON_CLIP_DETECT, EVENT_RELEASED, MODE_ON):
       case EVENTID(BUTTON_CLIP_DETECT, EVENT_LATCH_OFF, MODE_ON):
         ClipOut();
+        return true;
+
+      // In the event of the presence of a power button, let it control the power on events.
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
+        On();
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
+        Off();
         return true;
     }
     return false;
