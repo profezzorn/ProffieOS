@@ -101,7 +101,7 @@ public:
   }
   void set(int led, Color16 c) override {
     color_buffer[led] = c;
-  }
+    }
   void allow_disable() override {
     if (!on_) allow_disable_ = true;
   }
@@ -178,6 +178,8 @@ protected:
       current_blade = this;
       current_style_->run(this);
       while (!pin_.IsReadyForBeginFrame()) YIELD();
+      // If Power() was called....
+      if (current_blade != this) continue;
       pin_.BeginFrame();
       for (int i = 0; i < pin_.num_leds(); i++) {
 	pin_.Set(i, color_buffer[i]);
