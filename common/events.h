@@ -12,7 +12,7 @@ enum BUTTON : uint32_t {
   BUTTON_RIGHT = 64,
   BUTTON_SELECT = 128,
 
-  // D-pad and FIRE//MODE_SELECT/CLIP_DETECT/RELOAD have the same numbers,
+  // D-pad and FIRE//MODE_SELECT/CLIP_DETECT/RELOAD and RANGE have the same numbers,
   // so you can't have a D-pad in a blaster.
   BUTTON_FIRE = 8,
   BUTTON_MODE_SELECT = 16,
