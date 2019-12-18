@@ -31,10 +31,54 @@ public:
     return &stm32l4_pwm[instance];
   }
 
+  // Copy of stm32l4_timer_channel, but without the buffering.
+  bool timer_channel(unsigned int channel, uint32_t compare) {
+    TIM_TypeDef *TIM = timer()->TIM;
+    uint32_t tim_ccmr, tim_ccer;
+    
+    if ((timer()->state != TIMER_STATE_READY) && (timer()->state != TIMER_STATE_ACTIVE)) {
+      return false;
+    }
+    
+    armv7m_atomic_and(&TIM->CCER, ~(TIM_CCER_CC1E << (channel * 4)));
+    
+    tim_ccmr = 0;
+    tim_ccer = 0;
+
+    // TIMER_CONTROL_PWM
+    tim_ccmr |= 6 << 4;
+    tim_ccer |= (TIM_CCER_CC1E | TIM_CCER_CC1NE | TIM_CCER_CC1NP);
+    
+    if (channel <= TIMER_CHANNEL_4) {
+      armv7m_atomic_or(&timer()->channels, (TIMER_EVENT_CHANNEL_1 << channel));
+    }
+    
+    if (channel <= TIMER_CHANNEL_4) {
+      if ((timer()->channels & timer()->events) & (TIMER_EVENT_CHANNEL_1 << channel)) {
+	armv7m_atomic_or(&TIM->DIER, (TIM_DIER_CC1IE << channel));
+      } else {
+	armv7m_atomic_and(&TIM->DIER, ~(TIM_DIER_CC1IE << channel));
+      }
+    }
+    
+    switch (channel) {
+      case TIMER_CHANNEL_1: armv7m_atomic_modify(&TIM->CCMR1, 0x000100ff, (tim_ccmr << 0)); TIM->CCR1 = compare; break;
+      case TIMER_CHANNEL_2: armv7m_atomic_modify(&TIM->CCMR1, 0x0100ff00, (tim_ccmr << 8)); TIM->CCR2 = compare; break;
+      case TIMER_CHANNEL_3: armv7m_atomic_modify(&TIM->CCMR2, 0x000100ff, (tim_ccmr << 0)); TIM->CCR3 = compare; break;
+      case TIMER_CHANNEL_4: armv7m_atomic_modify(&TIM->CCMR2, 0x0100ff00, (tim_ccmr << 8)); TIM->CCR4 = compare; break;
+      case TIMER_CHANNEL_5: armv7m_atomic_modify(&TIM->CCMR2, 0x000100ff, (tim_ccmr << 0)); TIM->CCR5 = compare; break;
+      case TIMER_CHANNEL_6: armv7m_atomic_modify(&TIM->CCMR2, 0x0100ff00, (tim_ccmr << 8)); TIM->CCR6 = compare; break;
+    }
+    
+    armv7m_atomic_modify(&TIM->CCER, (0x0000000f << (channel * 4)), (tim_ccer << (channel * 4)));
+    
+    return true;
+  }
+  
   WS2811EngineSTM32L4TIM2() {
     stm32l4_timer_create(timer(), TIMER_INSTANCE_TIM2, STM32L4_PWM_IRQ_PRIORITY, 0);
     stm32l4_dma_create(&dma_, DMA_CHANNEL_DMA1_CH2_TIM2_UP, STM32L4_PWM_IRQ_PRIORITY);
-
+    
     // For proxy mode
     stm32l4_dma_create(&dma2_, DMA_CHANNEL_DMA1_CH1_TIM2_CH3, STM32L4_PWM_IRQ_PRIORITY);
     stm32l4_dma_create(&dma3_, DMA_CHANNEL_DMA1_CH5_TIM2_CH1, STM32L4_PWM_IRQ_PRIORITY);
@@ -45,26 +89,42 @@ public:
     stm32l4_dma_destroy(&dma2_);
     stm32l4_dma_destroy(&dma3_);
   }
-
+  
+  static void flush_dma(stm32l4_dma_t *dma) {
+    stm32l4_dma_enable(dma, &dma_done_callback_ignore, (void*)NULL);
+    uint32_t foo;
+    stm32l4_dma_start(dma, (uint32_t)&foo,
+		      (uint32_t) &(RCC->AHB2SMENR),  // any register should work
+		      1,
+		      DMA_OPTION_EVENT_TRANSFER_DONE |
+		      DMA_OPTION_PERIPHERAL_TO_MEMORY |
+		      DMA_OPTION_PERIPHERAL_DATA_SIZE_32 |
+		      DMA_OPTION_MEMORY_DATA_SIZE_32 |
+		      DMA_OPTION_PRIORITY_VERY_HIGH);
+    stm32l4_dma_stop(dma);
+    stm32l4_dma_disable(dma);
+  }
+  
   void show(int pin, int bits, int frequency, WS2811Client* client) override {
+    while (!ws2811_dma_done) armv7m_core_yield();
     ((uint8_t*)displayMemory)[bits] = 0;
     int pulse_len = timer_frequency / frequency;
     int instance = g_APinDescription[pin].pwm_instance;
     int divider = stm32l4_timer_clock(timer()) / timer_frequency;
     ws2811_dma_done = false;
     pin_ = pin;
-      
+    
     if (g_PWMInstances[instance] != TIMER_INSTANCE_TIM2) {
       // Proxy mode, make sure GPIO A/B doesn't fall asleep
       RCC->AHB2SMENR |= (RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN);
       
-      stm32l4_dma_enable(&dma_, &dma_done_callback_ignore, (void*)client);
-      stm32l4_dma_enable(&dma2_, NULL, NULL);
-      stm32l4_dma_enable(&dma3_, &dma_done_callback, (void*)client);
       stm32l4_timer_enable(timer(),
 			   divider -1,
 			   pulse_len -1,
 			   0 /* TIMER_OPTION_COUNT_PRELOAD */, NULL, NULL, 0);
+      stm32l4_dma_enable(&dma_, &dma_done_callback_ignore, (void*)client);
+      stm32l4_dma_enable(&dma2_, &dma_done_callback_ignore, (void*)client);
+      stm32l4_dma_enable(&dma3_, &dma_done_callback, (void*)client);
       uint16_t bit = g_APinDescription[pin].bit;
       GPIO_TypeDef *GPIO = (GPIO_TypeDef *)(g_APinDescription[pin].GPIO);
       int offset = 0;
@@ -73,7 +133,7 @@ public:
 	offset++;
       }
       bit_ = bit;
-
+      
       uint8_t* data = (uint8_t*)displayMemory;
       
       // TODO: do the proper encoding upfront
@@ -91,19 +151,28 @@ public:
       }
       if (!t0h) t0h = pulse_len / 3;
       if (!t1h) t1h = pulse_len * 2 / 3;
-      for (int i = bits; i >= 0; i--) {
+      for (int i = bits; i > 0; i--) {
 	data[i] = (data[i-1] == t0h) ? bit_ : 0;
       }
-
-      #if 0
+      data[0] = 0;
+      
+#if 0
       STDOUT << data[0] << "," << data[1] << "," << data[2]<< "," << data[3] << ","
 	     << data[4] << "," << data[5] << "," << data[6]<< "," << data[7]<< "\n";
       // STDOUT << data[bits -1] << "," << data[bits] << "," << data[bits+1] << "\n";
-      #endif
+#endif
       
       stm32l4_timer_stop(timer());
       timer()->TIM->CNT = 0;
       
+      // armv7m_atomic_or(&timer()->TIM->CR1, TIM_CR1_ARPE);
+      
+      timer_channel(TIMER_CHANNEL_1, t1h);
+      timer_channel(TIMER_CHANNEL_3, t0h);
+      
+      timer()->TIM->SR = 0;
+      
+      armv7m_atomic_or(&timer()->TIM->DIER, TIM_DIER_UDE | TIM_DIER_CC1DE | TIM_DIER_CC3DE);
       armv7m_atomic_modify(&timer()->TIM->DIER, TIM_DIER_UDE | TIM_DIER_CC1DE | TIM_DIER_CC3DE, 0);
       
       stm32l4_dma_start(&dma_, offset + (uint32_t)(&(GPIO->BSRR)),
@@ -132,16 +201,14 @@ public:
 			DMA_OPTION_MEMORY_DATA_SIZE_8 |
 			DMA_OPTION_PRIORITY_VERY_HIGH);
       
-      armv7m_atomic_or(&timer()->TIM->CR1, TIM_CR1_ARPE);
-      
-      stm32l4_timer_channel(timer(), TIMER_CHANNEL_1, t1h, TIMER_CONTROL_PWM);
-      stm32l4_timer_channel(timer(), TIMER_CHANNEL_3, t0h, TIMER_CONTROL_PWM);
       stm32l4_gpio_pin_configure(g_APinDescription[pin].pin,
 				 (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_OUTPUT));
       
       // Trigger DMA on update
       armv7m_atomic_or(&timer()->TIM->DIER, TIM_DIER_UDE | TIM_DIER_CC1DE | TIM_DIER_CC3DE);
+      
       stm32l4_timer_start(timer(), false);
+//      timer()->TIM->EGR = TIM_EGR_UG;
       
     } else {
       stm32l4_dma_enable(&dma_, &dma_done_callback, (void*)client);
@@ -187,11 +254,11 @@ public:
       armv7m_atomic_or(&timer()->TIM->DIER, TIM_DIER_UDE);
     }
   }
-    
+  
   bool done() override {
     return ws2811_dma_done;
   }
-
+  
   static void dma_done_callback_ignore(void* context, uint32_t events) {
   }
   static void dma_done_callback(void* context, uint32_t events) {
@@ -213,7 +280,7 @@ public:
     RCC->AHB2SMENR &= ~(RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN);
     ((WS2811Client*)context)->done_callback();
   }
-
+  
 private:
   static volatile int pin_;
   static volatile uint8_t bit_;
