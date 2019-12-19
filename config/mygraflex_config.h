@@ -41,6 +41,10 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_POWER_FOR_ID PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>
 #endif
 
+#ifdef CONFIG_PROP
+#include "../props/saber_sa22c_buttons.h"
+#endif
+
 #ifdef CONFIG_PRESETS
 
 
