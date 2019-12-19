@@ -57,6 +57,7 @@ public:
       pin_.EndFrame();
       pin_.BeginFrame();
       pin_.EndFrame();
+      current_blade = NULL;
     } else if (powered_ && !on) {
       pin_.BeginFrame();
       for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, Color8());
@@ -64,6 +65,7 @@ public:
       while (!pin_.IsReadyForEndFrame());
       power_->Power(on);
       pinMode(pin_.pin(), INPUT_ANALOG);
+      current_blade = NULL;
     }
     powered_ = on;
     allow_disable_ = false;
@@ -73,8 +75,8 @@ public:
     STDOUT.print("WS2811 Blade with ");
     STDOUT.print(pin_.num_leds());
     STDOUT.println(" leds.");
-    Power(true);
     power_->Init();
+    Power(true);
     CommandParser::Link();
     Looper::Link();
     AbstractBlade::Activate();
@@ -99,7 +101,7 @@ public:
   }
   void set(int led, Color16 c) override {
     color_buffer[led] = c;
-  }
+    }
   void allow_disable() override {
     if (!on_) allow_disable_ = true;
   }
@@ -176,12 +178,16 @@ protected:
       current_blade = this;
       current_style_->run(this);
       while (!pin_.IsReadyForBeginFrame()) YIELD();
+      // If Power() was called....
+      if (current_blade != this) continue;
       pin_.BeginFrame();
       for (int i = 0; i < pin_.num_leds(); i++) {
 	pin_.Set(i, color_buffer[i]);
 	if (!(i & 0x1f)) Looper::DoHFLoop();
       }
       while (!pin_.IsReadyForEndFrame()) YIELD();
+      // If Power() was called....
+      if (current_blade != this) continue;
       pin_.EndFrame();
       loop_counter_.Update();
       current_blade = NULL;

@@ -9,6 +9,7 @@
 // transitions.
 
 class TransitionInterface {
+public:
   virtual bool done() = 0;
   virtual void begin() = 0;
   virtual void run(BladeBase* blade) = 0;
@@ -36,6 +37,7 @@ public:
 template<class... TR> class TrHelper {};
 template<class TR>
 class TrHelper<TR> {
+public:
   TransitionInterface* get(int n) { return &tr_; }
 private:
   TrWrapper<TR> tr_;
@@ -43,6 +45,7 @@ private:
 
 template<class TR, class... REST>
 class TrHelper<TR, REST...> {
+public:
   TransitionInterface* get(int n) {
     if (!n) return &tr_;
     return rest_.get(n-1);
@@ -55,6 +58,7 @@ private:
 
 template<class... TRANSITION>
 class TrRandom {
+public:
   void begin() {
     selected_ = transitions_.get(random(sizeof...(TRANSITION)));
     selected_->begin();

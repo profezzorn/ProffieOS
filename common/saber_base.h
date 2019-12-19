@@ -70,6 +70,7 @@ public:
     LOCKUP_NORMAL,
     LOCKUP_DRAG,
     LOCKUP_ARMED,   // For detonators and such
+    LOCKUP_AUTOFIRE, // For blasters and phasers
   };
   static LockupType Lockup() { return lockup_; }
   static void SetLockup(LockupType lockup) { lockup_ = lockup; }
@@ -109,6 +110,7 @@ public:                                                         \
   SABERFUN(Force, (), ());					\
   SABERFUN(Blast, (), ());					\
   SABERFUN(Boot, (), ());					\
+  SABERFUN(BladeDetect, (bool detected), (detected));		\
   SABERFUN(NewFont, (), ());					\
   SABERFUN(BeginLockup, (), ());				\
   SABERFUN(EndLockup, (), ());					\

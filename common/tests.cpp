@@ -16,6 +16,8 @@
 #define PROFFIE_TEST
 #define ENABLE_SD
 
+const char* GetSaveDir() { return NULL; }
+
 float fract(float x) { return x - floor(x); }
 
 uint64_t micros_ = 0;
@@ -49,102 +51,9 @@ char* itoa( int value, char *string, int radix )
 
 #include "linked_ptr.h"
 
-#define COMMON_LSFS_H
 // Posix file primitives
 
-class DoCloseFile {
-public:
-  static void Free(FILE* f) { if(f) fclose(f); }
-};
-
-class File {
-public:
-  File() : file_() {}
-  File(FILE* f) : file_(f) {}
-  operator bool() const { return !!file_; }
-  void close() { file_ = NULL; }
-  int read(uint8_t *dest, size_t bytes) {
-    return fread(dest, 1, bytes, file_.get());
-  }
-  int write(const uint8_t *dest, size_t bytes) {
-    return fwrite(dest, 1, bytes, file_.get());
-  }
-  void seek(size_t pos) {
-    fseek(file_.get(), pos, SEEK_SET);
-  }
-  uint32_t position() {
-    return ftell(file_.get());
-  }
-  uint32_t available() {
-    long pos = position();
-    fseek(file_.get(), 0, SEEK_END);
-    long end = position();
-    seek(pos);
-    return end - pos;
-  }
-  uint32_t size() {
-    long pos = position();
-    fseek(file_.get(), 0, SEEK_END);
-    long end = position();
-    seek(pos);
-    return end;
-  }
-  int peek() {
-    long pos = position();
-    uint8_t ret;
-    read(&ret, 1);
-    seek(pos);
-    return ret;
-  }
-  LinkedPtr<FILE, DoCloseFile> file_;
-};
-
-
-class LSFS {
-public:
-  typedef File FILE;
-  static bool Begin() { return true; }
-  static bool End() { return true; }
-  static bool Exists(const char* path) {
-    struct stat s;
-    return stat(path, &s) == 0;
-  }
-  static bool Remove(const char* path) {
-    return unlink(path) == 0;
-  }
-  static File Open(const char* path) {
-    return fopen(path, "r");
-  }
-  static File OpenForWrite(const char* path) {
-    return fopen(path, "wct");
-  }
-  class Iterator {
-  public:
-    explicit Iterator(const char* dirname) {
-      dir_ = opendir(dirname);
-      entry_ = readdir(dir_);
-    }
-    explicit Iterator(Iterator& other) {
-      dir_ = other.dir_;
-      other.dir_ = nullptr;
-      entry_ = other.entry_;
-    }
-    ~Iterator() {
-      closedir(dir_);
-    }
-    void operator++() {
-      entry_ = readdir(dir_);
-    }
-    operator bool() { return !!entry_; }
-    // bool isdir() { return f_.isDirectory(); }
-    const char* name() { return entry_->d_name; }
-    // size_t size() { return f_.size(); }
-
-  private:
-    DIR* dir_;
-    dirent* entry_;
-  };
-};
+#include "lsfs.h"
 
 struct  Print {
   void print(const char* s) { puts(s); }

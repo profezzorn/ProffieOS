@@ -43,6 +43,8 @@ template<int MILLIS> using TrWipe = TrWipeX<Int<MILLIS>>;
 template<class MILLIS>
 class TrWipeInX : public TransitionBaseX<MILLIS> {
 public:
+  TrWipeInX() : TransitionBaseX<MILLIS>(), fade_(0, 0) {}
+
   void run(BladeBase* blade) {
     if (this->done()) {
       fade_ = Range(0, blade->num_leds() * 256);
@@ -55,7 +57,7 @@ public:
   OverDriveColor getColor(const OverDriveColor& a,
 			  const OverDriveColor& b,
 			  int led) {
-    int mix = (Range(0, fade_) & Range(led << 8, (led << 8) + 256)).size();
+    int mix = (fade_ & Range(led << 8, (led << 8) + 256)).size();
     OverDriveColor ret = a;
     ret.c = a.c.mix(b.c, mix);
     return ret;

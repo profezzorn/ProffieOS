@@ -42,7 +42,7 @@ public:
       }
       pulse_progress_micros = now - pulse_start_micros_;
     }
-    uint32_t pulse_progress_promille = pulse_progress_micros / pulse_millis;
+    int32_t pulse_progress_promille = pulse_progress_micros / pulse_millis;
     on_ = pulse_progress_promille <= pulse_promille_.getInteger(0);
   }
 

@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "config/default_proffieboard_config.h"
+#define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,7 +29,7 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 
 #ifdef CONFIG_FILE_TEST
@@ -40,6 +40,12 @@
 #define CONFIG_TOP
 #include CONFIG_FILE
 #undef CONFIG_TOP
+
+#ifdef SAVE_STATE
+#define SAVE_VOLUME
+#define SAVE_PRESET
+#define SAVE_COLOR_CHANGE
+#endif
 
 // #define ENABLE_DEBUG
 
@@ -309,7 +315,9 @@ int16_t clamptoi16(int32_t x) {
 
 void EnableBooster();
 void EnableAmplifier();
+bool AmplifierIsActive();
 void MountSDCard();
+const char* GetSaveDir();
 
 #include "common/lsfs.h"
 #ifdef ENABLE_AUDIO
@@ -605,9 +613,15 @@ class NoLED;
 #include "common/blade_config.h"
 #include "common/current_preset.h"
 #include "styles/style_parser.h"
+#include "styles/length_finder.h"
 
 BladeConfig* current_config = nullptr;
 class BladeBase* GetPrimaryBlade() { return current_config->blade1; }
+const char* GetSaveDir() {
+  if (!current_config) return "";
+  if (!current_config->save_dir) return "";
+  return current_config->save_dir;
+}
 
 ArgParserInterface* CurrentArgParser;
 
@@ -640,6 +654,7 @@ Blinker2 blinker2;
 CapTest captest;
 #endif
 
+#include "buttons/floating_button.h"
 #include "buttons/latching_button.h"
 #include "buttons/button.h"
 #ifdef TEENSYDUINO
@@ -672,7 +687,8 @@ uint32_t startup_MODER[4];
 #undef CONFIG_BUTTONS
 
 #ifdef BLADE_DETECT_PIN
-LatchingButton BladeDetect(BUTTON_BLADE_DETECT ,BLADE_DETECT_PIN, "blade_detect");
+LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN>>
+    BladeDetect(BUTTON_BLADE_DETECT, BLADE_DETECT_PIN, "blade_detect");
 #endif
 
 
@@ -1781,6 +1797,12 @@ void setup() {
 #endif
   while (millis() - now < PROFFIEOS_STARTUP_DELAY) {
     srand((rand() * 917823) ^ LSAnalogRead(batteryLevelPin));
+#ifdef BLADE_DETECT_PIN
+    // Figure out if blade is connected or not.
+    // Note that if PROFFIEOS_STARTUP_DELAY is smaller than
+    // the settle time for BladeDetect, this won't work properly.
+    BladeDetect.Warmup();
+#endif
   }
 
 #ifdef ENABLE_SERIALFLASH

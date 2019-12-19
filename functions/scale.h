@@ -17,11 +17,11 @@ public:
     b_.run(blade);
     int a = a_.getInteger(0);
     int b = b_.getInteger(0);
-    mul_ = (b - a) * 16384;
+    mul_ = (b - a);
     add_ = a;
   }
   int getInteger(int led) {
-    return (f_.getInteger(led) * mul_ >> 14) + add_;
+    return (f_.getInteger(led) * mul_ >> 15) + add_;
   }
 private:
   F f_;
