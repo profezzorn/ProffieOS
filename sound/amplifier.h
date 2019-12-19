@@ -84,19 +84,13 @@ protected:
       STDOUT.print("Talker: ");
       STDOUT.println(talkie.isPlaying() ? "On" : "Off");
       for (size_t i = 0; i < NELEM(wav_players); i++) {
-        STDOUT.print("Wav player ");
-        STDOUT.print(i);
-        STDOUT.print(": ");
-        STDOUT.print(wav_players[i].isPlaying() ? "On" : "Off");
-        STDOUT.print(" (eof =  ");
-        STDOUT.print(wav_players[i].eof());
-        STDOUT.print(" volume = ");
-        STDOUT.print(wav_players[i].volume());
-        STDOUT.print(" refs = ");
-        STDOUT.print(wav_players[i].refs());
-        STDOUT.print(" fade speed = ");
-        STDOUT.print(wav_players[i].fade_speed());
-        STDOUT.println(")");
+	STDOUT << "Wav player " << i << ": "
+	       << (wav_players[i].isPlaying() ? "On" : "Off")
+	       << " (eof =  " << wav_players[i].eof()
+	       << " volume = " << wav_players[i].volume()
+	       << " refs = " << wav_players[i].refs()
+	       << " fade speed = " << wav_players[i].fade_speed()
+	       << " filename=" << wav_players[i].filename() << ")\n";
       }
       return true;
     }
@@ -117,8 +111,12 @@ Amplifier amplifier;
 void EnableAmplifier() {
   amplifier.Enable();
 }
+bool AmplifierIsActive() {
+  return amplifier.Active();
+}
 
 #else
 void EnableAmplifier() { }
+bool AmplifierIsActive() { return false; }
 #endif   // enable audio
 #endif

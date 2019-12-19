@@ -27,7 +27,7 @@ public:
       waiting_ = false;
       is_on_ = true;
     }
-    return base_.run(this);
+    return RunStyle(&base_, this);
   }
   OverDriveColor getColor(int led) { return base_.getColor(led); }
   bool is_on() const override { return is_on_; }

@@ -12,18 +12,33 @@ public:
   }
   void allow_disable() override { allow_disable_ = true; }
 
-  uint8_t refs_ = 0;
+  bool active_ = false;
+  bool SomeSubBladeIsActive() {
+    bool some_subblade_is_active = false;
+    SubBladeWrapper* tmp = this;
+    do {
+      some_subblade_is_active |= tmp->active_;
+      tmp = tmp->next_;
+    } while (tmp != this);
+    return some_subblade_is_active;
+  }
   void Activate() override {
-    if (refs_++ == 0) BladeWrapper::Activate();
+    if (!active_) {
+      if (!SomeSubBladeIsActive()) BladeWrapper::Activate();
+      active_ = true;
+    }
   }
   void Deactivate() override {
-    if (!--refs_) BladeWrapper::Deactivate();
-  }
-  void clear() override {
-    if (!offset_) BladeWrapper::clear();
+    if (active_) {
+      active_ = false;
+      if (!SomeSubBladeIsActive()) BladeWrapper::Deactivate();
+    }
   }
   virtual bool primary() const {
     return !offset_;
+  }
+  void clear() override {
+    if (primary()) BladeWrapper::clear();
   }
   void SetStyle(BladeStyle* style) override {
     // current_style should be nullptr;
@@ -60,34 +75,41 @@ public:
 
   // Bladestyle implementation
   virtual void activate() override {
-    current_style_->activate();
+    if (current_style_)
+      current_style_->activate();
   }
   virtual void deactivate() override {
-    current_style_->deactivate();
+    if (current_style_)
+      current_style_->deactivate();
   }
   virtual void run(BladeBase* blade) override {
     SubBladeWrapper* tmp = this;
     bool allow_disable = true;
     do {
       tmp->allow_disable_ = false;
-      tmp->current_style_->run(tmp);
+      if (tmp->current_style_)
+	tmp->current_style_->run(tmp);
       allow_disable &= tmp->allow_disable_;
       tmp = tmp->next_;
     } while(tmp != this);
     if (allow_disable) blade_->allow_disable();
   }
   bool HandlesColorChange() override {
+    if (current_style_)
+      return false;
     return current_style_->HandlesColorChange();
   }
 
   bool IsHandled(BladeEffectType effect) override {
+    if (current_style_)
+      return false;
     return current_style_->IsHandled(effect);
   }
 
  bool NoOnOff() override {
     SubBladeWrapper* tmp = this;
     do {
-      if (tmp->current_style_->NoOnOff()) return true;
+      if (tmp->current_style_ && tmp->current_style_->NoOnOff()) return true;
       tmp = tmp->next_;
     } while(tmp != this);
     return false;

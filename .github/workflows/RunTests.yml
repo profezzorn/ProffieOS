@@ -1,0 +1,19 @@
+name: C/C++ CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: test styles
+      run: cd styles && make test
+    - name: test common
+      run: cd common && make test
+    - name: test blades
+      run: cd blades && make test
+    - name: test sound
+      run: cd sound && make test

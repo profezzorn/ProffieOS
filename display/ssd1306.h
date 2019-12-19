@@ -422,7 +422,9 @@ public:
       loop_counter_.Update();
       lock_fb_ = false;
       scheduleFillBuffer();
+      I2CUnlock();
       while (millis() - frame_start_time_ < millis_to_display_) YIELD();
+      do { YIELD(); } while (!I2CLock());
     }
     
     STATE_MACHINE_END();

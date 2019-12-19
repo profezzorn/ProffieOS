@@ -10,6 +10,13 @@ enum BUTTON : uint32_t {
   BUTTON_DOWN = 16,
   BUTTON_LEFT = 32,
   BUTTON_RIGHT = 64,
+
+  // D-pad and FIRE/RELOAD/CLIP_DETECT have the same numbers,
+  // so you can't have a D-pad in a blaster.
+  BUTTON_FIRE = 8,
+  BUTTON_RELOAD = 16,
+  BUTTON_CLIP_DETECT = 32,
+    
   BUTTON_SELECT = 128,
   BUTTON_BLADE_DETECT = 256,
   MODE_ANY_BUTTON = 512,
@@ -22,6 +29,7 @@ enum EVENT : uint32_t {
   EVENT_PRESSED,
   EVENT_RELEASED,
   EVENT_HELD,
+  EVENT_HELD_MEDIUM,
   EVENT_HELD_LONG,
   EVENT_CLICK_SHORT,
   EVENT_CLICK_LONG,
