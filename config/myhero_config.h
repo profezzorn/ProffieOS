@@ -36,7 +36,7 @@ const unsigned int maxLedsPerStrip = 144;
 #ifdef CONFIG_PRESETS
 
 Preset presets[] = {
-#include "styles/Hero.h"
+#include "styles/HeroBlades.h"
 #include "styles/Vader.h"    
 #include "styles/StockBlades.h"    
 };
