@@ -6,6 +6,25 @@
 #include <stm32l4_gpio.h>
 #include <stm32l4_wiring_private.h>
 
+#ifdef ENABLE_TRACING
+// TODO: Move this somewhere more global
+const char* trace[128];
+int trace_pos;
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
+void DoTrace(const char* str) {
+  noInterrupts();
+  trace[trace_pos++ & 127] = str;
+  interrupts();
+}
+  
+#define TRACE(X) DoTrace(__FILE__ ":" TOSTRING(__LINE__) ": " X)
+#else
+#define TRACE(X) do { } while(0)
+#endif // ENABLE_TRACING
+
 namespace {
 const int timer_frequency = 80000000;  // 80Mhz
 };
@@ -106,6 +125,7 @@ public:
   }
   
   void show(int pin, int bits, int frequency, WS2811Client* client) override {
+    TRACE("show enter");
     while (!ws2811_dma_done) armv7m_core_yield();
     ((uint8_t*)displayMemory)[bits] = 0;
     int pulse_len = timer_frequency / frequency;
@@ -115,6 +135,7 @@ public:
     pin_ = pin;
     
     if (g_PWMInstances[instance] != TIMER_INSTANCE_TIM2) {
+      TRACE("proxy");
       // Proxy mode, make sure GPIO A/B doesn't fall asleep
       RCC->AHB2SMENR |= (RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN);
       
@@ -162,19 +183,26 @@ public:
       // STDOUT << data[bits -1] << "," << data[bits] << "," << data[bits+1] << "\n";
 #endif
       
+      TRACE("stop!");
       stm32l4_timer_stop(timer());
+      TRACE("cnt=0");
       timer()->TIM->CNT = 0;
       
       // armv7m_atomic_or(&timer()->TIM->CR1, TIM_CR1_ARPE);
       
+      TRACE("ch1");
       timer_channel(TIMER_CHANNEL_1, t1h);
+      TRACE("ch3");
       timer_channel(TIMER_CHANNEL_3, t0h);
       
+      TRACE("SR");
       timer()->TIM->SR = 0;
       
+      TRACE("CLR");
       armv7m_atomic_or(&timer()->TIM->DIER, TIM_DIER_UDE | TIM_DIER_CC1DE | TIM_DIER_CC3DE);
       armv7m_atomic_modify(&timer()->TIM->DIER, TIM_DIER_UDE | TIM_DIER_CC1DE | TIM_DIER_CC3DE, 0);
       
+      TRACE("DMA");
       stm32l4_dma_start(&dma_, offset + (uint32_t)(&(GPIO->BSRR)),
 			(uint32_t)&bit_,
 			bits,
@@ -201,16 +229,23 @@ public:
 			DMA_OPTION_MEMORY_DATA_SIZE_8 |
 			DMA_OPTION_PRIORITY_VERY_HIGH);
       
+      TRACE("GPIO");
       stm32l4_gpio_pin_configure(g_APinDescription[pin].pin,
 				 (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_OUTPUT));
       
+      TRACE("TRIGGER");
       // Trigger DMA on update
       armv7m_atomic_or(&timer()->TIM->DIER, TIM_DIER_UDE | TIM_DIER_CC1DE | TIM_DIER_CC3DE);
       
+      TRACE("START!");
+      noInterrupts();
       stm32l4_timer_start(timer(), false);
+      interrupts();
+      TRACE("running!");
 //      timer()->TIM->EGR = TIM_EGR_UG;
       
     } else {
+      TRACE("timer");
       stm32l4_dma_enable(&dma_, &dma_done_callback, (void*)client);
       
       volatile uint32_t* cmp_address = nullptr;
@@ -253,6 +288,7 @@ public:
       // Trigger DMA on update
       armv7m_atomic_or(&timer()->TIM->DIER, TIM_DIER_UDE);
     }
+    TRACE("show exit");
   }
   
   bool done() override {
@@ -262,6 +298,7 @@ public:
   static void dma_done_callback_ignore(void* context, uint32_t events) {
   }
   static void dma_done_callback(void* context, uint32_t events) {
+    TRACE("dma done enter");
     // Set the pin to low, normal output mode. This will keep the pin low even if we
     // re-use the timer for another show() call.
     digitalWrite(pin_, LOW);
@@ -279,6 +316,7 @@ public:
     // GPIO A/B may sleep on WFE now.
     RCC->AHB2SMENR &= ~(RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN);
     ((WS2811Client*)context)->done_callback();
+    TRACE("dma done exit");
   }
   
 private:
@@ -345,11 +383,13 @@ public:
   }
 
   void BeginFrame() {
+    TRACE("beginframe enter");
     while (Color8::num_bytes(byteorder_) * num_leds_ * 8 + 1 > (int)sizeof(displayMemory)) {
       STDOUT.print("Display memory is not big enough, increase maxLedsPerStrip!");
       num_leds_ /= 2;
     }
     while (!IsReadyForBeginFrame());
+    TRACE("exit");
   }
 
   void Set(int led, Color8 color) {
@@ -369,12 +409,14 @@ public:
   }
 
   void EndFrame() {
+    TRACE("endframe enter");
     if (!engine_) return;
     while (!IsReadyForEndFrame());
     done_ = false;
     frame_num_++;
     if (engine_)
       engine_->show(pin_, num_leds_ * Color8::num_bytes(byteorder_) * 8, frequency_, this);
+    TRACE("exit");
   }
 
   int num_leds() const { return num_leds_; }
