@@ -47,6 +47,7 @@ public:
   void Power(bool on) {
     if (on) EnableBooster();
     if (!powered_ && on) {
+      TRACE("Power on");
       pinMode(pin_.pin(), OUTPUT);
       pin_.BeginFrame();
       for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, Color8());
@@ -59,10 +60,11 @@ public:
       pin_.EndFrame();
       current_blade = NULL;
     } else if (powered_ && !on) {
+      TRACE("Power off");
       pin_.BeginFrame();
       for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, Color8());
-      pin_.EndFrame();
       while (!pin_.IsReadyForEndFrame());
+      pin_.EndFrame();
       power_->Power(on);
       pinMode(pin_.pin(), INPUT_ANALOG);
       current_blade = NULL;
@@ -72,6 +74,7 @@ public:
   }
 
   void Activate() override {
+    TRACE("Activate");
     STDOUT.print("WS2811 Blade with ");
     STDOUT.print(pin_.num_leds());
     STDOUT.println(" leds.");
@@ -83,6 +86,7 @@ public:
   }
 
   void Deactivate() override {
+    TRACE("Deactivate");
     Power(false);
     // de-init power pin?
     CommandParser::Unlink();
@@ -105,21 +109,28 @@ public:
   void allow_disable() override {
     if (!on_) allow_disable_ = true;
   }
-  virtual void SetStyle(BladeStyle* style) {
+  void SetStyle(BladeStyle* style) override{
+    TRACE("SetStyle");
     AbstractBlade::SetStyle(style);
     Power(true);
+  }
+  BladeStyle* UnSetStyle() override {
+    TRACE("UnSetStyle");
+    return AbstractBlade::UnSetStyle();
   }
   // SaberBase implementation.
   void SB_IsOn(bool* on) override {
     if (on_ || powered_) *on = true;
   }
   void SB_On() override {
+    TRACE("SB_On");
     AbstractBlade::SB_On();
     Power(true);
     on_ = true;
     power_off_requested_ = false;
   }
   void SB_Off(OffType off_type) override {
+    TRACE("SB_Off");
     AbstractBlade::SB_Off(off_type);
     on_ = false;
     if (off_type == OFF_IDLE) {
