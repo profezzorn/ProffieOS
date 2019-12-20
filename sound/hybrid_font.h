@@ -121,7 +121,6 @@ public:
     next_hum_player_.Free();
     hum_player_->PlayOnce(f);
     current_effect_length_ = hum_player_->length();
-
     if (loop) hum_player_->PlayLoop(loop);
   }
 
