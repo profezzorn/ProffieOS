@@ -29,7 +29,7 @@ const unsigned int maxLedsPerStrip = 144;
 //#define BLADE_ID_CLASS BridgedPullupBladeID<bladeIdentifyPin, BRIDGED_PIN>
 //#define SAVE_STATE
 // Max 20 characters
-/#define BLE_PASSWORD "625656"
+#define BLE_PASSWORD "625656"
 // Max 32 characters.
 #define BLE_NAME "Graflex1"
 // Max 9 characters
