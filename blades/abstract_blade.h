@@ -56,6 +56,7 @@ public:
     num_effects_ = std::min(num_effects_ + 1, NELEM(effects_));
   }
 
+  // Saber Effects
   void SB_Clash() override {
     addEffect(EFFECT_CLASH, (200 + random(700)) / 1000.0f);
   }
@@ -69,6 +70,7 @@ public:
     addEffect(EFFECT_FORCE, 1.0f);
   }
 
+  // Shared Effects
   void SB_On() override {
     addEffect(EFFECT_IGNITION, 0);
   }
@@ -107,6 +109,47 @@ public:
 
   bool IsPrimary() override {
     return GetPrimaryBlade() == this;
+  }
+
+  // Blaster Effects
+  void SB_Stun() override {
+    addEffect(EFFECT_STUN, 0);
+  }
+  void SB_Fire() override {
+    addEffect(EFFECT_FIRE, 0);
+  }
+  void SB_ClipIn() override {
+    addEffect(EFFECT_CLIP_IN, 0);
+  }
+  void SB_ClipOut() override {
+    addEffect(EFFECT_CLIP_OUT, 0);
+  }
+  void SB_Reload() override {
+    addEffect(EFFECT_RELOAD, 0);
+  }
+  void SB_Mode() override {
+    addEffect(EFFECT_MODE, 0);
+  }
+  void SB_Range() override {
+    addEffect(EFFECT_RANGE, 0);
+  }
+  void SB_Empty() override {
+    addEffect(EFFECT_EMPTY, 0);
+  }
+  void SB_Full() override {
+    addEffect(EFFECT_FULL, 0);
+  }
+  void SB_Jam() override {
+    addEffect(EFFECT_JAM, 0);
+  }
+  void SB_UnJam() override {
+    addEffect(EFFECT_UNJAM, 0);
+  }
+  void SB_PLIOn() override {
+    addEffect(EFFECT_PLI_ON, 0);
+  }
+  void SB_PLIOff() override {
+    addEffect(EFFECT_PLI_OFF, 0);
   }
 
 protected:

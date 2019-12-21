@@ -309,6 +309,29 @@ public:
   void SB_Force() override { PlayCommon(&SFX_force); }
   void SB_Blast() override { Play(&SFX_blaster, &SFX_blst); }
   void SB_Boot() override { PlayPolyphonic(&SFX_boot); }
+
+  // Blaster effects, auto fire is handled by begin/end lockup
+  void SB_Stun() override { PlayCommon(&SFX_stun); }
+  void SB_Fire() override { PlayCommon(&SFX_blast); }
+  void SB_ClipIn() override { PlayCommon(&SFX_clipin); }
+  void SB_ClipOut() override { PlayCommon(&SFX_clipout); }
+  void SB_Reload() override { PlayCommon(&SFX_reload); }
+  void SB_Mode() override {
+    if (SFX_mode) {
+      PlayCommon(&SFX_mode);
+      return;
+    }
+    // TODO: would rather do a Talkie to speak the mode we're in after mode sound
+    beeper.Beep(0.05, 2000.0);
+  }
+  void SB_Range() override { PlayCommon(&SFX_range); }
+  void SB_Empty() override { PlayCommon(&SFX_empty); }
+  void SB_Full() override { PlayCommon(&SFX_full); }
+  void SB_Jam() override { PlayCommon(&SFX_jam); }
+  void SB_UnJam() override { PlayCommon(&SFX_unjam); }
+  void SB_PLIOn() override { PlayCommon(&SFX_plion); }
+  void SB_PLIOff() override { PlayCommon(&SFX_plioff); }
+
   void SB_BladeDetect(bool detected) {
     Effect &X(detected ? SFX_bladein : SFX_bladeout);
     if (X) {

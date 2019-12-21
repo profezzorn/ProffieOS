@@ -16,6 +16,21 @@ enum BladeEffectType {
   EFFECT_IGNITION = 1 << 9,
   EFFECT_RETRACTION = 1 << 10,
   EFFECT_CHANGE = 1 << 11, // used for click to change
+
+  // Blaster Effect Types
+  EFFECT_STUN = 1 << 12, // used to pass STUN to allow alternate colors for stun type blasts
+  EFFECT_FIRE = 1 << 13,
+  EFFECT_CLIP_IN = 1 << 14,
+  EFFECT_CLIP_OUT = 1 << 15,
+  EFFECT_RELOAD = 1 << 16,
+  EFFECT_MODE = 1 << 17,
+  EFFECT_RANGE = 1 << 18,
+  EFFECT_EMPTY = 1 << 19,
+  EFFECT_FULL = 1 << 20,
+  EFFECT_JAM = 1 << 21,
+  EFFECT_UNJAM = 1 << 22,
+  EFFECT_PLI_ON = 1 << 23,
+  EFFECT_PLI_OFF = 1 << 24,
 };
 
 #include "../styles/blade_style.h"

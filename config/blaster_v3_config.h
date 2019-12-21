@@ -6,9 +6,12 @@
 const unsigned int maxLedsPerStrip = 144;
 #define CLASH_THRESHOLD_G 1.0
 #define ENABLE_AUDIO
+#define ENABLE_MOTION
 #define ENABLE_WS2811
 #define ENABLE_SD
 #define ENABLE_BLASTER_AUTO
+#define BLASTER_SHOTS_UNTIL_EMPTY 30
+#define BLASTER_JAM_PERCENTAGE 3
 #endif
 
 #ifdef CONFIG_PROP
@@ -19,8 +22,8 @@ const unsigned int maxLedsPerStrip = 144;
 Preset presets[] = {
   // Default basic blast color with red audio flicker on blast
   { "_blstr1", "tracks/mars.wav",
-    StylePtr<Lockup<BlastFadeout<Black,AudioFlicker<Black,Red>>,AudioFlicker<Black,Red>>>(),
-    StylePtr<Lockup<BlastFadeout<Black,AudioFlicker<Black,Red>>,AudioFlicker<Black,Red>>>() },
+    StylePtr<Lockup<BlastFadeout<BlastFadeout<Black,AudioFlicker<Black,Red>,250,EFFECT_FIRE>,AudioFlicker<Black,Blue>,1500,EFFECT_STUN>,AudioFlicker<Black,Red>>>(),
+    StylePtr<Lockup<BlastFadeout<BlastFadeout<Black,AudioFlicker<Black,Red>,250,EFFECT_FIRE>,AudioFlicker<Black,Blue>,1500,EFFECT_STUN>,AudioFlicker<Black,Red>>>() }
 };
 
 BladeConfig blades[] = {
@@ -32,6 +35,6 @@ BladeConfig blades[] = {
 #endif
 
 #ifdef CONFIG_BUTTONS
-Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
-Button AuxButton(BUTTON_AUX, auxPin, "aux");
+Button FireButton(BUTTON_FIRE, powerButtonPin, "fire");
+Button ModeButton(BUTTON_MODE_SELECT, auxPin, "modeselect");
 #endif
