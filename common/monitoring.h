@@ -69,4 +69,24 @@ private:
 
 extern Monitoring monitor;
 
+#ifdef ENABLE_TRACING
+// TODO: Move this somewhere more global
+const char* trace[128];
+int trace_pos;
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
+void DoTrace(const char* str) {
+  noInterrupts();
+  trace[trace_pos++ & 127] = str;
+  interrupts();
+}
+  
+#define TRACE(X) DoTrace(__FILE__ ":" TOSTRING(__LINE__) ": " X)
+#else
+#define TRACE(X) do { } while(0)
+#endif // ENABLE_TRACING
+
+
 #endif
