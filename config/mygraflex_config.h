@@ -17,7 +17,7 @@
 #define NUM_BUTTONS 2
 #define VOLUME 1500
 const unsigned int maxLedsPerStrip = 144;
-#define CLASH_THRESHOLD_G 3.5
+#define CLASH_THRESHOLD_G 2.0
 #define ENABLE_AUDIO
 #define ENABLE_MOTION 
 #define ENABLE_WS2811
@@ -29,12 +29,12 @@ const unsigned int maxLedsPerStrip = 144;
 //#define BLADE_ID_CLASS BridgedPullupBladeID<bladeIdentifyPin, BRIDGED_PIN>
 //#define SAVE_STATE
 // Max 20 characters
-///#define BLE_PASSWORD "625656"
+/#define BLE_PASSWORD "625656"
 // Max 32 characters.
-//#define BLE_NAME "Graflex1"
+#define BLE_NAME "Graflex1"
 // Max 9 characters
-//#define BLE_SHORTNAME "Saber"
-//#define ENABLE_SSD1306
+#define BLE_SHORTNAME "Saber"
+#define ENABLE_SSD1306
 #define SHARED_POWER_PINS
 //#define BLADE_ID_CLASS BridgedPullupBladeID<bladeIdentifyPin, bladePowerPin3>
 //#define BLADE_ID_CLASS ExternalPullupBladeID<bladeIdentifyPin, PULLUP_RESISTANCE>
