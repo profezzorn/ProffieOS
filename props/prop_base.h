@@ -247,6 +247,7 @@ public:
 
   // Select preset (font/style)
   virtual void SetPreset(int preset_num, bool announce) {
+    TRACE("start");
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
@@ -288,6 +289,7 @@ public:
 
     if (on) On();
     if (announce) SaberBase::DoNewFont();
+    TRACE("end");
   }
 
   // Go to the next Preset.
@@ -734,7 +736,7 @@ public:
     }
     if (battery_monitor.low()) {
       // TODO: FIXME
-      if (current_style() && current_style()->Charging()) {
+      if (current_style() && !current_style()->Charging()) {
         if (SaberBase::IsOn()) {
           STDOUT.print("Battery low, turning off. Battery voltage: ");
           STDOUT.println(battery_monitor.battery());
