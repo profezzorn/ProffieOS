@@ -368,6 +368,7 @@ public:
   } while(0);
 
     ONCEPERBLADE(ACTIVATE);
+    RestoreGlobalState();
 #ifdef SAVE_PRESET
     ResumePreset();
 #else
@@ -834,7 +835,7 @@ public:
       } else {
 #ifdef COLOR_CHANGE_DIRECT
         STDOUT << "Color change, TICK+\n";
-	SaberBase::UpdateVariation(1);
+        SaberBase::UpdateVariation(1);
 #else
         STDOUT << "Entering stepped color change mode.\n";
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
@@ -1157,12 +1158,11 @@ public:
       int32_t volume = strtol(arg, NULL, 0);
       if (volume >= 0 && volume <= 3000) {
         dynamic_mixer.set_volume(volume);
-	SaveGlobalState();
+        PollSaveColorChange();
       }
 #endif
       return true;
     }
-
     if (!strcmp(cmd, "mute")) {
       SetMute(true);
       return true;
