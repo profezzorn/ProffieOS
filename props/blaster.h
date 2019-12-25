@@ -10,16 +10,6 @@ public:
   Blaster() : PropBase() {}
   const char* name() override { return "Blaster"; }
 
-/*
-#ifdef DELAYED_OFF
-  bool powered_ = false;
-  void SetPower(bool on) { powered_ = on; }
-#else
-  constexpr bool powered_ = true;
-  void SetPower(bool on) {}
-#endif
-*/
-
   // Mode states to handle kill vs stun effects
   enum BlasterMode {
     MODE_STUN,
@@ -32,13 +22,7 @@ public:
   virtual void SetBlasterMode(BlasterMode to_mode) {
     if (!auto_firing_) {
       blaster_mode = to_mode;
-    
-#ifdef ENABLE_AUDIO
-      // Initiate mode change effect
-      if (SFX_mode.files_found()) {
-        hybrid_font.PlayCommon(&SFX_mode);
-      }
-#endif
+      SaberBase::DoMode();
     }
   }
 
@@ -61,23 +45,93 @@ public:
   }
 
   bool auto_firing_ = false;
+  int shots_fired_ = 0;
+  bool is_jammed_ = false;
+
+#ifdef BLASTER_SHOTS_UNTIL_EMPTY
+  const int max_shots_ = BLASTER_SHOTS_UNTIL_EMPTY;
+#else
+  const int max_shots_ = -1;
+#endif
+
+  virtual bool CheckJam(int percent) {
+    int random = rand() % 100;
+    return random <= percent ? true : false;
+  }
 
   virtual void Fire() {
-    if (!SaberBase::IsOn()) return; // Don't allow firing when off.
+#ifdef ENABLE_MOTION
+#ifdef BLASTER_JAM_PERCENTAGE
+    // If we're already jammed then we don't need to recheck. If we're not jammed then check if we just jammed.
+    is_jammed_ = is_jammed_ ? true : CheckJam(BLASTER_JAM_PERCENTAGE);
+
+    if (is_jammed_) {
+      SaberBase::DoJam();
+      return;
+    }
+#endif
+#endif
+
+    if (max_shots_ != -1) {
+      if (shots_fired_ >= max_shots_) {
+        SaberBase::DoEmpty();
+        return;
+      }
+    }
 
     if (blaster_mode == MODE_AUTO) {
+      SelectAutoFirePair(); // Set up the autofire pairing if the font suits it.
       SaberBase::SetLockup(LOCKUP_AUTOFIRE);
       SaberBase::DoBeginLockup();
       auto_firing_ = true;
     } else {
-      SaberBase::DoBlast();
-#ifdef ENABLE_AUDIO
       if (blaster_mode == MODE_STUN) {
-        hybrid_font.PlayCommon(&SFX_stun);
+        SaberBase::DoStun();
       } else {
-        hybrid_font.PlayCommon(&SFX_blast);
+        SaberBase::DoFire();
       }
-#endif
+
+      shots_fired_++;
+    }
+  }
+
+  virtual void SelectAutoFirePair() {
+    if (!SFX_auto.files_found() || !SFX_blast.files_found()) return;
+
+    int autoCount = SFX_auto.files_found();
+    int blastCount = SFX_blast.files_found();
+    int pairSelection;
+
+    // If we don't have a matched pair of autos and blasts, then don't override the sequence to get a matched pair.
+    if (autoCount == blastCount) {
+        pairSelection = rand() % autoCount;
+        SFX_auto.Select(pairSelection);
+        SFX_blast.Select(pairSelection);
+    }
+  }
+
+  virtual void Reload() {
+    shots_fired_ = 0;
+    SaberBase::DoReload();
+  }
+
+  virtual void ClipOut() {
+    if (max_shots_ != -1) shots_fired_ = max_shots_;
+    SaberBase::DoClipOut();
+  }
+
+  virtual void ClipIn() {
+    SaberBase::DoClipIn();
+  }
+
+  // Pull in parent's SetPreset, but turn the blaster on.
+  virtual void SetPreset(int preset_num, bool announce) override {
+    PropBase::SetPreset(preset_num, announce);
+
+    if (!SFX_poweron) {
+      if (!SaberBase::IsOn()) {
+        On();
+      }
     }
   }
 
@@ -152,51 +206,42 @@ public:
     PollNextAction();
   }
 
-  // Make clash do nothing
-  void Clash(bool stab) override {}
+  // Make clash do nothing except unjam if jammed.
+  void Clash(bool stab) override {
+    if (is_jammed_) {
+      is_jammed_ = false;
+      SaberBase::DoUnJam();
+    }
+  }
 
   // Make swings do nothing
   void DoMotion(const Vec3& motion, bool clear) override {}
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
-      case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
-        armed_ = false;
-#ifdef ENABLE_AUDIO
-        hybrid_font.PlayCommon(&SFX_unjam);
-#endif
-        On();
-        return true;
 
-      case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
-      case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_OFF):
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
-#ifdef ENABLE_AUDIO
-        hybrid_font.PlayCommon(&SFX_jam);
-#endif
-        Off();
-        return true;
-
-      case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_OFF):
-        next_preset();
-        return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
-        StartOrStopTrack();
-        return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_PRESSED, MODE_ON):
         NextBlasterMode();
         return true;
 
-      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_DOUBLE_CLICK, MODE_ON):
+        next_preset();
+        return true;
+
+      case EVENTID(BUTTON_RELOAD, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON):
+        Reload();
+        return true;
+
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_LONG, MODE_ON):
+        StartOrStopTrack();
+        return true;
+
+      case EVENTID(BUTTON_FIRE, EVENT_PRESSED, MODE_ON):
         Fire();
         return true;
 
-      case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON):
+      case EVENTID(BUTTON_FIRE, EVENT_RELEASED, MODE_ON):
         if (blaster_mode == MODE_AUTO) {
           if (SaberBase::Lockup()) {
             SaberBase::DoEndLockup();
@@ -206,15 +251,24 @@ public:
         }
         return true;
 
-      case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
-        beginArm();
-        break;
+      case EVENTID(BUTTON_CLIP_DETECT, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_CLIP_DETECT, EVENT_LATCH_ON, MODE_ON):
+        ClipIn();
+        return true;
 
-      case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ON):
-        selfDestruct();
-        return armed_;
+      case EVENTID(BUTTON_CLIP_DETECT, EVENT_RELEASED, MODE_ON):
+      case EVENTID(BUTTON_CLIP_DETECT, EVENT_LATCH_OFF, MODE_ON):
+        ClipOut();
+        return true;
 
-        // TODO: Long click when off?
+      // In the event of the presence of a power button, let it control the power on events.
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
+        On();
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
+        Off();
+        return true;
     }
     return false;
   }
