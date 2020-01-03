@@ -31,7 +31,7 @@ public:
   // effect is triggered. Defaults to 250.
   float ProffieOSSwingSpeedThreshold;
   // Bends the response curve between swing speed and swing volume.
-  // Defaults to 1.0 (no bend)
+  // Defaults to 0.5
   float ProffieOSSwingVolumeSharpness;
   // The volume when swings are at the swing speed threshold.
   // Defaults to 2.0
@@ -39,6 +39,8 @@ public:
   // Specify what fraction of swing that must be played before a
   // new swing can be started. Defaults to 0.5 (50%)
   float ProffieOSSwingOverlap;
+  // How much to duck the hum when the swing is playing.
+  // Defauls to 0.2 (hum volume is decreased by 20% of swing volume)
   float ProffieOSSmoothSwingDucking;
   // How slow (degrees per second) the swing has to be before it's
   // not considered a swing anymore. Defaults to 200.
@@ -46,7 +48,7 @@ public:
   // Specifies how agressive a swing has to be to be considered
   // a slash. Once we reach, ProffieOSSwingSpeedThreshold, rate of
   // swing speed change is used to determine if it's a swing or a
-  // slash. Defaults to 250 (degrees per second per second)
+  // slash. Defaults to 260 (degrees per second per second)
   float ProffieOSSlashAccelerationThreshold;
   // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
