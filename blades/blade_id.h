@@ -41,7 +41,7 @@ struct SnapshotBladeID {
 template<int PIN, int PULLUP_PIN>
 struct BridgedPullupBladeID {
   float id() {
-    pinMode(PIN, INPUT_PULLUP);
+    pinMode(PULLUP_PIN, INPUT_PULLUP);
 #ifdef TEENSYDUINO
     ExternalPullupBladeID<PIN, 33000> ID;
 #else    
@@ -51,7 +51,7 @@ struct BridgedPullupBladeID {
 #if PROFFIEBOARD_VERSION == 2
     ret += 470;
 #endif    
-    pinMode(PIN, INPUT_ANALOG);
+    pinMode(PULLUP_PIN, INPUT_ANALOG);
     return ret;
   }
 };

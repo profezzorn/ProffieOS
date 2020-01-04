@@ -722,6 +722,32 @@ public:
 #endif
   }
 
+  virtual void LowBatteryOff() {
+    if (SaberBase::IsOn()) {
+      STDOUT.print("Battery low, turning off. Battery voltage: ");
+      STDOUT.println(battery_monitor.battery());
+      Off();
+    }
+  }
+
+  virtual void CheckLowBattery() {
+    if (battery_monitor.low()) {
+      // TODO: FIXME
+      if (current_style() && !current_style()->Charging()) {
+	LowBatteryOff();
+	
+	if (millis() - last_beep_ > 5000) {
+#ifdef ENABLE_AUDIO
+	  // TODO: allow this to be replaced with WAV file
+	  talkie.Say(talkie_low_battery_15, 15);
+#endif
+	  STDOUT << "Battery low :" << battery_monitor.battery() << "\n";
+	  last_beep_ = millis();
+	}
+      }
+    }
+  }
+  
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
 
@@ -735,23 +761,7 @@ public:
       clash_pending_ = false;
       Clash2(pending_clash_is_stab_);
     }
-    if (battery_monitor.low()) {
-      // TODO: FIXME
-      if (current_style() && !current_style()->Charging()) {
-        if (SaberBase::IsOn()) {
-          STDOUT.print("Battery low, turning off. Battery voltage: ");
-          STDOUT.println(battery_monitor.battery());
-          Off();
-        } else if (millis() - last_beep_ > 5000) {
-          STDOUT.println("Battery low beep");
-#ifdef ENABLE_AUDIO
-          // TODO: allow this to be replaced with WAV file
-          talkie.Say(talkie_low_battery_15, 15);
-#endif
-          last_beep_ = millis();
-        }
-      }
-    }
+    CheckLowBattery();
 #ifdef ENABLE_AUDIO
     if (track_player_ && !track_player_->isPlaying()) {
       track_player_.Free();
