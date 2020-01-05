@@ -1,3 +1,31 @@
+// 1 Button:
+// Activate Muted - fast double click while OFF
+// Activate blade - short click while OFF
+// Play/Stop Music - hold 1 second and release while ON
+// Turn the blade off - hold and wait till blade is off while ON (like in Plecter boards)
+// Next Preset - hold 1 second and release while OFF
+// Previous Preset - hold and wait while OFF
+// Lockup - hold + hit clash while ON
+// Drag - hold + hit clash while ON pointing the blade tip down
+// Blaster Blocks - short click while ON
+// Force Effects - twist the hilt + press and hold the button while ON (while pointing up)
+// Enter Color Change mode - twist the hilt + press and hold the button while ON (pointing down)
+// Confirm selected color in Color Change mode - hold the button until confirmation sound
+//
+// 2 Buttons:
+// Activate Muted - fast double click Activation button while OFF
+// Activate blade - short click Activation button while OFF
+// Play/Stop Music - hold 1 second and release Activation button while OFF or ON
+// Turn the blade off - hold and wait till blade is off while ON (like in Plecter boards)
+// Next Preset - short click AUX button while OFF
+// Previous Preset - hold AUX and click Activation button while OFF
+// Lockup - hold AUX button while ON (like in Plecter boards)
+// Drag - hold AUX button while ON pointing the blade tip down
+// Blaster Blocks - short click AUX button while ON
+// Force Effects - short click Activation button while ON
+// Enter Color Change mode - hold AUX and click Activation button while ON
+// Confirm selected color in Color Change mode - hold the button until confirmation sound
+
 #ifndef PROPS_SABER_SHTOK_BUTTONS_H
 #define PROPS_SABER_SHTOK_BUTTONS_H
 
@@ -29,9 +57,6 @@ public:
 #if NUM_BUTTONS == 1
 
 // Turn Blade ON
-#if NUM_BUTTONS == 0
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-#endif
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
@@ -50,6 +75,16 @@ public:
 #endif
 	return true;
 
+// Previous Preset
+      case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_OFF):
+#ifdef DUAL_POWER_BUTTONS
+        aux_on_ = true;
+        On();
+#else
+        previous_preset();
+#endif
+	return true;
+
 // Activate Muted
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
 	if (millis() - activated_ < 500) {
@@ -61,25 +96,34 @@ public:
 
 // Turn Blade OFF	
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
-      case EVENTID(BUTTON_AUX2, EVENT_LATCH_OFF, MODE_ON):
-#if NUM_BUTTONS == 0
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-#endif
     if (!SaberBase::Lockup()) {
+#ifndef DISABLE_COLOR_CHANGE
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+            // Just exit color change mode.
+            // Don't turn saber off.
+            ToggleColorChangeMode();
+            return true;
+          }
+#endif
       Off();
     }
         return true;
 
-// Force
+// Force and Color Change mode
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
+#ifndef DISABLE_COLOR_CHANGE
+        if (accel_.x < -0.15) {
+          ToggleColorChangeMode();
+        } else {
+          SaberBase::DoForce();
+        }
+#else
         SaberBase::DoForce();
+#endif
 	return true;
 
 // Blaster Deflection
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
-// Avoid the base and the very tip.
-// TODO: Make blast only appear on one blade!
         SaberBase::DoBlast();
 	return true;
 
@@ -111,9 +155,6 @@ public:
 #elif NUM_BUTTONS == 2
 
 // Turn Blade ON
-#if NUM_BUTTONS == 0
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-#endif
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
@@ -145,10 +186,17 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_OFF, MODE_ON):
-#if NUM_BUTTONS == 0
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+    if (!SaberBase::Lockup()) {
+#ifndef DISABLE_COLOR_CHANGE
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+            // Just exit color change mode.
+            // Don't turn saber off.
+            ToggleColorChangeMode();
+            return true;
+          }
 #endif
-        Off();
+      Off();
+    }
         return true;
 
 // Force
@@ -156,10 +204,15 @@ public:
         SaberBase::DoForce();
 	return true;
 
+// Color Change mode
+#ifndef DISABLE_COLOR_CHANGE
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
+	ToggleColorChangeMode();
+	break;
+#endif
+
 // Blaster Deflection
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
-// Avoid the base and the very tip.
-// TODO: Make blast only appear on one blade!
         SaberBase::DoBlast();
 	return true;
 

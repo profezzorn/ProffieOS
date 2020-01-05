@@ -47,6 +47,7 @@ public:
   void Power(bool on) {
     if (on) EnableBooster();
     if (!powered_ && on) {
+      power_->Init();
       TRACE("Power on");
       pinMode(pin_.pin(), OUTPUT);
       pin_.BeginFrame();
@@ -67,6 +68,7 @@ public:
       pin_.EndFrame();
       power_->Power(on);
       pinMode(pin_.pin(), INPUT_ANALOG);
+      power_->DeInit();
       current_blade = NULL;
     }
     powered_ = on;
@@ -78,7 +80,6 @@ public:
     STDOUT.print("WS2811 Blade with ");
     STDOUT.print(pin_.num_leds());
     STDOUT.println(" leds.");
-    power_->Init();
     Power(true);
     CommandParser::Link();
     Looper::Link();
@@ -88,7 +89,6 @@ public:
   void Deactivate() override {
     TRACE("Deactivate");
     Power(false);
-    // de-init power pin?
     CommandParser::Unlink();
     Looper::Unlink();
     AbstractBlade::Deactivate();
