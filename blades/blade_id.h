@@ -7,8 +7,11 @@ template<int PIN, int PULLUP>
 struct ExternalPullupBladeID {
   float id() {
     int blade_id = LSAnalogRead(PIN, INPUT);
+//    STDOUT << "BLADE ID: " << blade_id << "\n";
     float volts = blade_id * 3.3f / 1024.0f;  // Volts at bladeIdentifyPin
+//    STDOUT << "VOLTS: " << volts << "\n";
     float amps = (3.3f - volts) / PULLUP;
+//    STDOUT << "AMPS: " << amps << "\n";
     float resistor = volts / amps;
     return resistor;
   }
@@ -45,7 +48,7 @@ struct BridgedPullupBladeID {
 #ifdef TEENSYDUINO
     ExternalPullupBladeID<PIN, 33000> ID;
 #else    
-    ExternalPullupBladeID<PIN, 40000> ID;
+    ExternalPullupBladeID<PIN, 37000> ID;
 #endif    
     float ret = ID.id();
 #if PROFFIEBOARD_VERSION == 2
@@ -66,6 +69,7 @@ struct EnablePowerBladeID {
     BLADE_ID blade_id;
     float ret = blade_id.id();
     power_pins.Power(false);
+    power_pins.DeInit();
     return ret;
   }
 };
@@ -75,17 +79,17 @@ struct EnablePowerBladeID {
 #ifndef BLADE_ID_CLASS
 
 #ifdef TEENSYDUINO
-#define BASIC_BLADE_ID_CLASS InternalPullupBladeID<bladeIdentifyPin>
+#define BLADE_ID_CLASS InternalPullupBladeID<bladeIdentifyPin>
 #else
-#define BASIC_BLADE_ID_CLASS SnapshotBladeID<bladeIdentifyPin>
-#endif
-
-#ifdef ENABLE_POWER_FOR_ID
-#define BLADE_ID_CLASS EnablePowerBladeID<ENABLE_POWER_FOR_ID, BASIC_BLADE_ID_CLASS>
-#else
-#define BLADE_ID_CLASS BASIC_BLADE_ID_CLASS
+#define BLADE_ID_CLASS SnapshotBladeID<bladeIdentifyPin>
 #endif
 
 #endif  // BLADE_ID_CLASS
+
+#ifdef ENABLE_POWER_FOR_ID
+#define BLADE_ID_CLASS_INTERNAL EnablePowerBladeID<ENABLE_POWER_FOR_ID, BLADE_ID_CLASS>
+#else
+#define BLADE_ID_CLASS_INTERNAL BLADE_ID_CLASS
+#endif
 
 #endif  // BLADES_BLADE_ID_H

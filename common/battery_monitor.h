@@ -18,7 +18,7 @@ BatteryMonitor() : reader_(batteryLevelPin,
   void SetLoad(bool on) {
     loaded_ = on;
   }
-  bool low() const { return millis() - last_ok_ > 1000; }
+  bool low() const { return low_count_ > 1000; }
   float battery_percent() {
     // Energy is roughly proportional to voltage squared.
     float v = battery();
@@ -45,7 +45,6 @@ protected:
   void Setup() override {
     last_voltage_ = battery_now();
     SetPinHigh(false);
-    last_ok_ = millis();
   }
   void Loop() override {
     if (reading_) {
@@ -53,7 +52,11 @@ protected:
       float v = battery_now();
       last_voltage_ = last_voltage_ * 0.997 + v * 0.003;
       reading_ = false;
-      if (!IsLow()) last_ok_ = millis();
+      if (IsLow()) {
+	low_count_++;
+      } else {
+	low_count_ = 0;
+      }
     }
     uint32_t now = micros();
     if (now - last_voltage_read_time_ >= 1000) {
@@ -138,7 +141,7 @@ private:
   float last_voltage_ = 0.0;
   uint32_t last_voltage_read_time_ = 0;
   uint32_t last_print_millis_;
-  uint32_t last_ok_;
+  uint32_t low_count_ = 0;
   AnalogReader reader_;
   bool reading_ = false;
 };

@@ -329,7 +329,7 @@ public:
 
   // Measure and return the blade identifier resistor.
   float id() {
-    BLADE_ID_CLASS blade_id;
+    BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
     STDOUT << "ID: " << ret << "\n";
 #ifdef BLADE_DETECT_PIN
