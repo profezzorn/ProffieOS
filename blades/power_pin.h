@@ -36,7 +36,7 @@ public:
       digitalWrite(PIN, 0);
     }
   }
-  staic void DeInit() {
+  static void DeInit() {
     if (--init_refs_ == 0) {
       pinMode(PIN, INPUT_ANALOG);
     }
