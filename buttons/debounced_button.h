@@ -10,13 +10,9 @@ public:
   void Update() {
     STATE_MACHINE_BEGIN();
     while (true) {
-      while (!Read()) YIELD();
-      pushed_ = true;
-      do {
-         if (Read()) last_on_ = millis();
-         YIELD();
-      } while (millis() - last_on_ < timeout());
-      pushed_ = false;
+      if (!Read()) last_off_ = millis();
+      pushed_ = millis() - last_off_ > timeout();
+      YIELD();
     }
     STATE_MACHINE_END();
   }
@@ -30,7 +26,7 @@ protected:
   virtual bool Read() = 0;
 
 private:
-  uint32_t last_on_;
+  uint32_t last_off_;
   bool pushed_ = false;
   StateMachineState state_machine_;
 };
