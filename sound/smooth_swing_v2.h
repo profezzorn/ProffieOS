@@ -64,7 +64,7 @@ public:
     // No point in picking a new random so soon after picking one.
     if (A.player && m - last_random_ < 1000) return;
     last_random_ = m;
-    int swing = random(swings_);
+    int swing = random(L->files_found());
     float start = m / 1000.0;
     A.Stop();
     B.Stop();
@@ -257,7 +257,6 @@ private:
   bool accent_swings_present = false;
   bool accent_slashes_present = false;
   BoxFilter<Vec3, 3> gyro_filter_;
-  int swings_;
   uint32_t last_micros_;
   SwingState state_ = SwingState::OFF;;
   Effect *L, *H;

@@ -18,17 +18,39 @@ public:
     CONFIG_VARIABLE(ProffieOSAnimationFrameRate, 0.0f);
   }
   // Igniter compat
+  // This specifies how many milliseconds before the end of the
+  // "out" sound the hum starts to fade in.
+  // Defaults to 100ms.
   int humStart;
+  // Hum Volume (0-16), defaults to 15.
   int volHum;
+  // Effect volume (0-16) defaults to 16.
   int volEff;
 
+  // How fast (degrees per second) we have to swing before a swing
+  // effect is triggered. Defaults to 250.
   float ProffieOSSwingSpeedThreshold;
+  // Bends the response curve between swing speed and swing volume.
+  // Defaults to 0.5
   float ProffieOSSwingVolumeSharpness;
+  // The volume when swings are at the swing speed threshold.
+  // Defaults to 2.0
   float ProffieOSMaxSwingVolume;
+  // Specify what fraction of swing that must be played before a
+  // new swing can be started. Defaults to 0.5 (50%)
   float ProffieOSSwingOverlap;
+  // How much to duck the hum when the swing is playing.
+  // Defauls to 0.2 (hum volume is decreased by 20% of swing volume)
   float ProffieOSSmoothSwingDucking;
+  // How slow (degrees per second) the swing has to be before it's
+  // not considered a swing anymore. Defaults to 200.
   float ProffieOSSwingLowerThreshold;
+  // Specifies how agressive a swing has to be to be considered
+  // a slash. Once we reach, ProffieOSSwingSpeedThreshold, rate of
+  // swing speed change is used to determine if it's a swing or a
+  // slash. Defaults to 260 (degrees per second per second)
   float ProffieOSSlashAccelerationThreshold;
+  // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
 };
 
@@ -54,16 +76,17 @@ public:
     guess_monophonic_ = false;
     if (monophonic_hum_) {
       if (SFX_clash || SFX_blaster || SFX_swing) {
-	if (SFX_humm) {
-	  guess_monophonic_ = false;
-	  STDOUT.print("plecter polyphonic");
-	} else {
-	  guess_monophonic_ = true;
-	  STDOUT.print("monophonic");
-	}
+        if (SFX_humm) {
+	  monophonic_hum_ = false;
+          guess_monophonic_ = false;
+          STDOUT.print("plecter polyphonic");
+        } else {
+          guess_monophonic_ = true;
+          STDOUT.print("monophonic");
+        }
       } else {
-	guess_monophonic_ = false;
-	STDOUT.print("hybrid");
+        guess_monophonic_ = false;
+        STDOUT.print("hybrid");
       }
     } else {
       guess_monophonic_ = false;
@@ -103,8 +126,8 @@ public:
     if (!next_hum_player_) {
       next_hum_player_ = GetFreeWavPlayer();
       if (!next_hum_player_) {
-	STDOUT.println("Out of WAV players!");
-	return;
+        STDOUT.println("Out of WAV players!");
+        return;
       }
     }
     if (hum_player_) {
@@ -203,7 +226,7 @@ public:
     if(swing_player_) {
       if (swing_player_->isPlaying()) {
         float accent_volume = powf(
-	  swing_strength, font_config.ProffieOSSwingVolumeSharpness) * font_config.ProffieOSMaxSwingVolume;
+          swing_strength, font_config.ProffieOSSwingVolumeSharpness) * font_config.ProffieOSMaxSwingVolume;
         swing_player_->set_fade_time(0.04);
         swing_player_->set_volume(accent_volume);
         mixhum = mixhum - mixhum * (font_config.ProffieOSSmoothSwingDucking * accent_volume);
@@ -224,7 +247,7 @@ public:
     if (SFX_preon) {
       RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&SFX_preon);
       if (tmp) {
-	*delay = std::max(*delay, tmp->length());
+        *delay = std::max(*delay, tmp->length());
       }
     }
   }
@@ -232,22 +255,28 @@ public:
   void SB_On() override {
     if (monophonic_hum_) {
       state_ = STATE_HUM_ON;
-      PlayMonophonic(&SFX_poweron, SFX_humm ? &SFX_humm : &SFX_hum);
+      PlayMonophonic(&SFX_poweron, &SFX_hum);
     } else {
       state_ = STATE_OUT;
       hum_player_ = GetFreeWavPlayer();
       if (hum_player_) {
-	hum_player_->set_volume_now(0);
-	hum_player_->PlayOnce(&SFX_hum);
-	hum_player_->PlayLoop(&SFX_hum);
-	hum_start_ = millis();
+        hum_player_->set_volume_now(0);
+        hum_player_->PlayOnce(SFX_humm ? &SFX_humm : &SFX_hum);
+        hum_player_->PlayLoop(SFX_humm ? &SFX_humm : &SFX_hum);
+        hum_start_ = millis();
       }
-      RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&SFX_out);
-      if (font_config.humStart && tmp) {
-	int delay_ms = 1000 * tmp->length() - font_config.humStart;
-	if (delay_ms > 0 && delay_ms < 30000) {
-	  hum_start_ += delay_ms;
-	}
+      RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(SFX_out ? &SFX_out : &SFX_poweron);
+      hum_fade_in_ = 0.2;
+      if (SFX_humm) {
+	hum_fade_in_ = tmp->length();
+	STDOUT << "HUM fade-in time: " << hum_fade_in_ << "\n";
+      }
+      else if (font_config.humStart && tmp) {
+        int delay_ms = 1000 * tmp->length() - font_config.humStart;
+        if (delay_ms > 0 && delay_ms < 30000) {
+          hum_start_ += delay_ms;
+        }
+	STDOUT << "humstart: " << font_config.humStart << "\n";
       }
     }
   }
@@ -255,35 +284,37 @@ public:
   void SB_Off(OffType off_type) override {
     switch (off_type) {
       case OFF_IDLE:
-	break;
+        break;
       case OFF_NORMAL:
-        if (monophonic_hum_) {
+        if (!SFX_in) {
           size_t total = SFX_poweroff.files_found() + SFX_pwroff.files_found();
-	  state_ = STATE_OFF;
           if (total) {
             if ((rand() % total) < SFX_poweroff.files_found()) {
               PlayMonophonic(&SFX_poweroff, NULL);
             } else {
               PlayMonophonic(&SFX_pwroff, NULL);
             }
-          } else {
-	    // No poweroff, just fade out...
-	    hum_player_->set_fade_time(0.2);
-	    hum_player_->FadeAndStop();
-	    hum_player_.Free();
-	  }
+	    hum_fade_out_ = current_effect_length_;
+          } else if (monophonic_hum_) {
+            // No poweroff, just fade out...
+            hum_player_->set_fade_time(0.2);
+            hum_player_->FadeAndStop();
+            hum_player_.Free();
+          }
         } else {
           state_ = STATE_HUM_FADE_OUT;
           PlayPolyphonic(&SFX_in);
+	  hum_fade_out_ = 0.2;
         }
+	state_ = monophonic_hum_ ? STATE_OFF : STATE_HUM_FADE_OUT;
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
-	  if (SFX_boom) PlayMonophonic(&SFX_boom, NULL);
-	  else PlayMonophonic(&SFX_clash, NULL);  // Thermal-D fallback
+          if (SFX_boom) PlayMonophonic(&SFX_boom, NULL);
+          else PlayMonophonic(&SFX_clash, NULL);  // Thermal-D fallback
         } else {
           state_ = STATE_HUM_FADE_OUT;
-	  PlayPolyphonic(&SFX_boom);
+          PlayPolyphonic(&SFX_boom);
         }
         break;
     }
@@ -300,6 +331,29 @@ public:
   void SB_Force() override { PlayCommon(&SFX_force); }
   void SB_Blast() override { Play(&SFX_blaster, &SFX_blst); }
   void SB_Boot() override { PlayPolyphonic(&SFX_boot); }
+
+  // Blaster effects, auto fire is handled by begin/end lockup
+  void SB_Stun() override { PlayCommon(&SFX_stun); }
+  void SB_Fire() override { PlayCommon(&SFX_blast); }
+  void SB_ClipIn() override { PlayCommon(&SFX_clipin); }
+  void SB_ClipOut() override { PlayCommon(&SFX_clipout); }
+  void SB_Reload() override { PlayCommon(&SFX_reload); }
+  void SB_Mode() override {
+    if (SFX_mode) {
+      PlayCommon(&SFX_mode);
+      return;
+    }
+    // TODO: would rather do a Talkie to speak the mode we're in after mode sound
+    beeper.Beep(0.05, 2000.0);
+  }
+  void SB_Range() override { PlayCommon(&SFX_range); }
+  void SB_Empty() override { PlayCommon(&SFX_empty); }
+  void SB_Full() override { PlayCommon(&SFX_full); }
+  void SB_Jam() override { PlayCommon(&SFX_jam); }
+  void SB_UnJam() override { PlayCommon(&SFX_unjam); }
+  void SB_PLIOn() override { PlayCommon(&SFX_plion); }
+  void SB_PLIOff() override { PlayCommon(&SFX_plioff); }
+
   void SB_BladeDetect(bool detected) {
     Effect &X(detected ? SFX_bladein : SFX_bladeout);
     if (X) {
@@ -320,24 +374,24 @@ public:
   void SB_Change(SaberBase::ChangeType change) override {
     switch (change) {
       case SaberBase::ENTER_COLOR_CHANGE:
-	if (!PlayPolyphonic(&SFX_ccbegin) && !PlayPolyphonic(&SFX_color)) {
-	  beeper.Beep(0.20, 1000.0);
-	  beeper.Beep(0.20, 1414.2);
-	  beeper.Beep(0.20, 2000.0);
-	}
-	break;
+        if (!PlayPolyphonic(&SFX_ccbegin) && !PlayPolyphonic(&SFX_color)) {
+          beeper.Beep(0.20, 1000.0);
+          beeper.Beep(0.20, 1414.2);
+          beeper.Beep(0.20, 2000.0);
+        }
+        break;
       case SaberBase::EXIT_COLOR_CHANGE:
-	if (!PlayPolyphonic(&SFX_ccend)) {
-	  beeper.Beep(0.20, 2000.0);
-	  beeper.Beep(0.20, 1414.2);
-	  beeper.Beep(0.20, 1000.0);
-	}
-	break;
+        if (!PlayPolyphonic(&SFX_ccend)) {
+          beeper.Beep(0.20, 2000.0);
+          beeper.Beep(0.20, 1414.2);
+          beeper.Beep(0.20, 1000.0);
+        }
+        break;
       case SaberBase::CHANGE_COLOR:
-	if (!PlayPolyphonic(&SFX_ccchange)) {
-	  beeper.Beep(0.05, 2000.0);
-	}
-	break;
+        if (!PlayPolyphonic(&SFX_ccchange)) {
+          beeper.Beep(0.05, 2000.0);
+        }
+        break;
     }
   }
 
@@ -346,23 +400,23 @@ public:
     Effect *loop = nullptr;
     switch (SaberBase::Lockup()) {
       case SaberBase::LOCKUP_ARMED:
-	if (SFX_bgnarm) once = &SFX_bgnarm;
-	if (SFX_armhum) loop = &SFX_armhum;
-	if (!SFX_armhum && SFX_swing) loop = &SFX_swing;  // Thermal-D fallback
-	break;
+        if (SFX_bgnarm) once = &SFX_bgnarm;
+        if (SFX_armhum) loop = &SFX_armhum;
+        if (!SFX_armhum && SFX_swing) loop = &SFX_swing;  // Thermal-D fallback
+        break;
       case SaberBase::LOCKUP_AUTOFIRE:
-  if (SFX_bgnauto) once = &SFX_bgnauto;
-  if (SFX_auto) loop = &SFX_auto;
-  break;
-      case SaberBase::LOCKUP_DRAG:
-	if (SFX_bgndrag) once = &SFX_bgndrag;
-	if (SFX_drag) loop = &SFX_drag;
-	// fall through
-      case SaberBase::LOCKUP_NORMAL:
-	if (!once && SFX_bgnlock) once = &SFX_bgnlock;
-	// fall through
-      case SaberBase::LOCKUP_NONE:
+	if (SFX_bgnauto) once = &SFX_bgnauto;
+	if (SFX_auto) loop = &SFX_auto;
 	break;
+      case SaberBase::LOCKUP_DRAG:
+        if (SFX_bgndrag) once = &SFX_bgndrag;
+        if (SFX_drag) loop = &SFX_drag;
+        // fall through
+      case SaberBase::LOCKUP_NORMAL:
+        if (!once && SFX_bgnlock) once = &SFX_bgnlock;
+        // fall through
+      case SaberBase::LOCKUP_NONE:
+        break;
     }
 
     if (!loop) loop = SFX_lockup ? &SFX_lockup : &SFX_lock;
@@ -374,8 +428,8 @@ public:
     } else {
       // Polyphonic
       if (!lock_player_) {
-	lock_player_ = PlayPolyphonic(once);
-	if (lock_player_) lock_player_->PlayLoop(loop);
+        lock_player_ = PlayPolyphonic(once);
+        if (lock_player_) lock_player_->PlayLoop(loop);
       }
     }
     if (once == loop) current_effect_length_ = 0;
@@ -385,21 +439,21 @@ public:
     Effect *end = nullptr;
     switch (SaberBase::Lockup()) {
       case SaberBase::LOCKUP_ARMED:
-	end = &SFX_endarm;
-	break;
+        end = &SFX_endarm;
+        break;
       case SaberBase::LOCKUP_AUTOFIRE:
-  if (SFX_endauto) end = &SFX_endauto; // if we have a transition use it
-  if (!end) end = &SFX_blast; // if we don't, end with a blast
-  break;
+        if (SFX_endauto) end = &SFX_endauto; // if we have a transition use it
+        if (!end) end = &SFX_blast; // if we don't, end with a blast
+        break;
       case SaberBase::LOCKUP_DRAG:
-	if (SFX_enddrag) end = &SFX_enddrag;
-	// fall through
+        if (SFX_enddrag) end = &SFX_enddrag;
+        // fall through
       case SaberBase::LOCKUP_NORMAL:
-	if (!end && SFX_endlock) end = &SFX_endlock;
-	if (!end) end = &SFX_clash;
-	// fall through
+        if (!end && SFX_endlock) end = &SFX_endlock;
+        if (!end) end = &SFX_clash;
+        // fall through
       case SaberBase::LOCKUP_NONE:
-	break;
+        break;
     }
 
     current_effect_length_ = 0;
@@ -410,7 +464,7 @@ public:
         if (PlayPolyphonic(end)) {
           // if playing an end lock fade the lockup faster
           lock_player_->set_fade_time(0.003);
-	}
+        }
       }
 
       lock_player_->FadeAndStop();
@@ -426,49 +480,49 @@ public:
   void SetHumVolume(float vol) override {
     if (!monophonic_hum_) {
       if (state_ != STATE_OFF && !hum_player_) {
-	hum_player_ = GetFreeWavPlayer();
-	if (hum_player_) {
-	  hum_player_->set_volume_now(0);
-	  hum_player_->PlayOnce(&SFX_hum);
-	  hum_player_->PlayLoop(&SFX_hum);
-	  hum_start_ = millis();
-	}
+        hum_player_ = GetFreeWavPlayer();
+        if (hum_player_) {
+          hum_player_->set_volume_now(0);
+          hum_player_->PlayOnce(SFX_humm ? &SFX_humm : &SFX_hum);
+          hum_player_->PlayLoop(SFX_humm ? &SFX_humm : &SFX_hum);
+          hum_start_ = millis();
+        }
       }
       if (!hum_player_) return;
       uint32_t m = micros();
       switch (state_) {
-	case STATE_OFF:
-	  volume_ = 0.0f;
-	  return;
-	case STATE_OUT:
-	  volume_ = 0.0f;
-	  if (millis() - hum_start_ < 0x7fffffffUL) {
-	    state_ = STATE_HUM_FADE_IN;
-	  }
-	  break;
-	case STATE_HUM_FADE_IN: {
-	  uint32_t delta = m - last_micros_;
-	  volume_ += (delta / 1000000.0) / 0.2; // 0.2 seconds
-	  if (volume_ >= 1.0f) {
-	    volume_ = 1.0f;
-	    state_ = STATE_HUM_ON;
-	  }
-	  break;
-	}
-	case STATE_HUM_ON:
-	  break;
-	case STATE_HUM_FADE_OUT: {
-	  SaberBase::RequestMotion();
-	  uint32_t delta = m - last_micros_;
-	  volume_ -= (delta / 1000000.0) / 0.2; // 0.2 seconds
-	  if (volume_ <= 0.0f) {
-	    volume_ = 0.0f;
-	    state_ = STATE_OFF;
-	    hum_player_->FadeAndStop();
-	    hum_player_.Free();
-	  }
-	  break;
-	}
+        case STATE_OFF:
+          volume_ = 0.0f;
+          return;
+        case STATE_OUT:
+          volume_ = 0.0f;
+          if (millis() - hum_start_ < 0x7fffffffUL) {
+            state_ = STATE_HUM_FADE_IN;
+          }
+          break;
+        case STATE_HUM_FADE_IN: {
+          uint32_t delta = m - last_micros_;
+          volume_ += (delta / 1000000.0) / hum_fade_in_; // 0.2 seconds
+          if (volume_ >= 1.0f) {
+            volume_ = 1.0f;
+            state_ = STATE_HUM_ON;
+          }
+          break;
+        }
+        case STATE_HUM_ON:
+          break;
+        case STATE_HUM_FADE_OUT: {
+          SaberBase::RequestMotion();
+          uint32_t delta = m - last_micros_;
+          volume_ -= (delta / 1000000.0) / hum_fade_out_; // 0.2 seconds
+          if (volume_ <= 0.0f) {
+            volume_ = 0.0f;
+            state_ = STATE_OFF;
+            hum_player_->FadeAndStop();
+            hum_player_.Free();
+          }
+          break;
+        }
       }
       last_micros_ = m;
       vol *= volume_;
@@ -481,8 +535,8 @@ public:
   void SB_Motion(const Vec3& gyro, bool clear) override {
     if (state_ != STATE_OFF && !(SFX_lockup && SaberBase::Lockup())) {
       StartSwing(gyro,
-		 font_config.ProffieOSSwingSpeedThreshold,
-		 font_config.ProffieOSSlashAccelerationThreshold);
+                 font_config.ProffieOSSwingSpeedThreshold,
+                 font_config.ProffieOSSlashAccelerationThreshold);
     }
   }
 
@@ -494,6 +548,8 @@ public:
  private:
   uint32_t last_micros_;
   uint32_t hum_start_;
+  float hum_fade_in_;
+  float hum_fade_out_;
   bool monophonic_hum_;
   bool guess_monophonic_;
   State state_;

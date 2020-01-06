@@ -219,7 +219,7 @@ protected:
       while (!TSC->ISR.get<TSC_IER_TYPE::EOA>()) YIELD();
 
       if (TSC->ISR.get<TSC_IER_TYPE::MCE>()) {
-	STDOUT.print("Touch error!");
+	STDOUT.print("Touch error!\n");
 	SLEEP(100);
 	// Error
       } else {

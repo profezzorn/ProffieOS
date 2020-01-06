@@ -246,7 +246,8 @@ public:
   }
 
   // Select preset (font/style)
-  void SetPreset(int preset_num, bool announce) {
+  virtual void SetPreset(int preset_num, bool announce) {
+    TRACE("start");
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
@@ -288,6 +289,7 @@ public:
 
     if (on) On();
     if (announce) SaberBase::DoNewFont();
+    TRACE("end");
   }
 
   // Go to the next Preset.
@@ -327,7 +329,7 @@ public:
 
   // Measure and return the blade identifier resistor.
   float id() {
-    BLADE_ID_CLASS blade_id;
+    BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
     STDOUT << "ID: " << ret << "\n";
 #ifdef BLADE_DETECT_PIN
@@ -366,6 +368,7 @@ public:
   } while(0);
 
     ONCEPERBLADE(ACTIVATE);
+    RestoreGlobalState();
 #ifdef SAVE_PRESET
     ResumePreset();
 #else
@@ -719,6 +722,32 @@ public:
 #endif
   }
 
+  virtual void LowBatteryOff() {
+    if (SaberBase::IsOn()) {
+      STDOUT.print("Battery low, turning off. Battery voltage: ");
+      STDOUT.println(battery_monitor.battery());
+      Off();
+    }
+  }
+
+  virtual void CheckLowBattery() {
+    if (battery_monitor.low()) {
+      // TODO: FIXME
+      if (current_style() && !current_style()->Charging()) {
+	LowBatteryOff();
+	
+	if (millis() - last_beep_ > 5000) {
+#ifdef ENABLE_AUDIO
+	  // TODO: allow this to be replaced with WAV file
+	  talkie.Say(talkie_low_battery_15, 15);
+#endif
+	  STDOUT << "Battery low :" << battery_monitor.battery() << "\n";
+	  last_beep_ = millis();
+	}
+      }
+    }
+  }
+  
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
 
@@ -732,23 +761,7 @@ public:
       clash_pending_ = false;
       Clash2(pending_clash_is_stab_);
     }
-    if (battery_monitor.low()) {
-      // TODO: FIXME
-      if (current_style() && current_style()->Charging()) {
-        if (SaberBase::IsOn()) {
-          STDOUT.print("Battery low, turning off. Battery voltage: ");
-          STDOUT.println(battery_monitor.battery());
-          Off();
-        } else if (millis() - last_beep_ > 5000) {
-          STDOUT.println("Battery low beep");
-#ifdef ENABLE_AUDIO
-          // TODO: allow this to be replaced with WAV file
-          talkie.Say(talkie_low_battery_15, 15);
-#endif
-          last_beep_ = millis();
-        }
-      }
-    }
+    CheckLowBattery();
 #ifdef ENABLE_AUDIO
     if (track_player_ && !track_player_->isPlaying()) {
       track_player_.Free();
@@ -832,7 +845,7 @@ public:
       } else {
 #ifdef COLOR_CHANGE_DIRECT
         STDOUT << "Color change, TICK+\n";
-	SaberBase::UpdateVariation(1);
+        SaberBase::UpdateVariation(1);
 #else
         STDOUT << "Entering stepped color change mode.\n";
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
@@ -1155,12 +1168,11 @@ public:
       int32_t volume = strtol(arg, NULL, 0);
       if (volume >= 0 && volume <= 3000) {
         dynamic_mixer.set_volume(volume);
-	SaveGlobalState();
+        PollSaveColorChange();
       }
 #endif
       return true;
     }
-
     if (!strcmp(cmd, "mute")) {
       SetMute(true);
       return true;
