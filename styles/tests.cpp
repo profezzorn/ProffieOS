@@ -48,7 +48,6 @@ struct SaberBase {
 
 struct  Print {
   void print(const char* s) { puts(s); }
-  void print(int v) { fprintf(stdout, "%d", v); }
   void print(int v, int base) { fprintf(stdout, "%d", v); }
   void print(float v) { fprintf(stdout, "%f", v); }
   void write(char s) { putchar(s); }
