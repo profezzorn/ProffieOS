@@ -58,16 +58,11 @@ public:
     float di = LED::MaxAmps - LED::P2Amps;
     float delta = dv / di;
     float amps = (V - LED::MaxVolts + LED::MaxAmps * delta) / (delta + LED::R);
-#ifndef NOTEST
     if (monitor.ShouldPrintMultiple(Monitoring::MonitorPWM)) {
-      STDOUT.print("AMPS = ");
-      STDOUT.print(amps);
-      STDOUT.print(" / ");
-      STDOUT.print(LED::MaxAmps);
-      STDOUT.print(" PWM = ");
-      STDOUT.println(100.0 * LED::MaxAmps / amps);
+      STDOUT << " V=" << V
+	     << " A=" << amps
+	     << " mult=" << (LED::MaxAmps / amps);
     }
-#endif
     if (amps <= LED::MaxAmps) {
       return 1.0f;
     }
@@ -79,7 +74,16 @@ public:
     return ColorSelector<LED>::Select(c);
   }
   int PWM(Color16 c) override {
-    return PWM_overdrive(c) * PWMMultiplier();
+    int pwm = PWM_overdrive(c);
+    float mult = PWMMultiplier();
+    if (monitor.ShouldPrintMultiple(Monitoring::MonitorPWM)) {
+      STDOUT << " color=" << c
+             << " channel=" << getColor8()
+             << " sel=" << pwm
+             << " pwm=" << (int)(pwm * mult)
+	     << "\n";
+    }
+    return pwm * mult;
   }
   Color8 getColor8() const {
     return ColorSelector<LED>::getColor8();
