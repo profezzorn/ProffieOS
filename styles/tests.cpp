@@ -44,6 +44,18 @@ struct SaberBase {
   }
 };
 
+#define HEX 16
+
+struct  Print {
+  void print(const char* s) { puts(s); }
+  void print(int v) { fprintf(stdout, "%d", v); }
+  void print(int v, int base) { fprintf(stdout, "%d", v); }
+  void print(float v) { fprintf(stdout, "%f", v); }
+  void write(char s) { putchar(s); }
+  template<class T>
+  void println(T s) { print(s); putchar('\n'); }
+};
+
 
 #include "../common/color.h"
 #include "../blades/blade_base.h"
