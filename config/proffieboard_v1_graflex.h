@@ -57,7 +57,7 @@ const unsigned int maxLedsPerStrip = 144;
 // TouchButton (similar to momentary button, but reacts to touch).
 // LatchingButton (on/off button, always controls ignition)
 
-TouchButton PowerButton(BUTTON_POWER, powerButtonPin, 2500, "pow");
+TouchButton PowerButton(BUTTON_POWER, powerButtonPin, 1500, "pow");
 Button AuxButton(BUTTON_AUX, auxPin, "aux");
 #endif
 
