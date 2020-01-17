@@ -127,6 +127,16 @@ class Color8 {
     return Color8(std::max(r, other.r), std::max(g, other.g), std::max(b, other.b));
   }
 
+  void printTo(Print& p) {
+    p.write('#');
+    if (r < 16) p.write('0');
+    p.print(r, HEX);
+    if (g < 16) p.write('0');
+    p.print(g, HEX);
+    if (b < 16) p.write('0');
+    p.print(b, HEX);
+  }
+
   uint8_t r, g, b;
 };
 
@@ -200,6 +210,15 @@ class Color16 {
     }
   }
 
+  void printTo(Print& p) {
+    p.write('#');
+    p.print(r);
+    p.write(',');
+    p.print(g);
+    p.write(',');
+    p.print(b);
+  }
+
 private:
   static int f(int n, int C, int MAX) {
     int k = n % 98304;
@@ -238,6 +257,11 @@ public:
 struct OverDriveColor {
   Color16 c;
   bool overdrive;
+  
+  void printTo(Print& p) {
+    if (overdrive) p.write('!');
+    c.printTo(p);
+  }
 };
 
 #endif
