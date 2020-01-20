@@ -88,7 +88,7 @@ class BlasterEncoder {
 public:
   void EncodeByte(IRInterface* output, uint8_t byte) {
     for (int i = 0; i < 8; i++) {
-      output->signal((i & 1) == 1, byte & 0x80 ? 800 : 450);
+      output->signal((i & 1) == 1, byte & 0x80 ? 800 : 400);
       byte <<= 1;
     }
   }
@@ -102,11 +102,16 @@ public:
   }
 };
 
-class BlasterSender : public BlasterEncoder, public SaberBase {
+class BlasterIRSender : public BlasterEncoder, public SaberBase {
 public:
   void SB_Fire() override {
     IRSender* sender = GetIRSender();
     Encode(sender, 1 /* team */, 3  /* damage */);
+    sender->send();
+  }
+  void SB_Stun() override {
+    IRSender* sender = GetIRSender();
+    Encode(sender, 1 /* team */, 1 /* damage */);
     sender->send();
   }
 };
