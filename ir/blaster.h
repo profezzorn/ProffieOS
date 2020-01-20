@@ -102,4 +102,13 @@ public:
   }
 };
 
+class BlasterSender : public BlasterEncoder, public SaberBase {
+public:
+  void SB_Fire() override {
+    IRSender* sender = GetIRSender();
+    Encode(sender, 1 /* team */, 3  /* damage */);
+    sender->send();
+  }
+};
+
 #endif
