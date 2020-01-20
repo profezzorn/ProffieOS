@@ -23,14 +23,21 @@ public:
   IrTransmitterSTM32() {
     stm32l4_timer_create(timer(), TIMER_INSTANCE_TIM16, STM32L4_PWM_IRQ_PRIORITY, 0);
     stm32l4_dma_create(&dma_, DMA_CHANNEL_DMA1_CH6_TIM16_UP, STM32L4_PWM_IRQ_PRIORITY); // Could be CH3 instead?
+
+    digitalWrite(pin(), LOW);
+    stm32l4_gpio_pin_configure(g_APinDescription[pin()].pin,
+			       (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_OUTPUT));
   }
   ~IrTransmitterSTM32() {
     stm32l4_timer_destroy(timer());
     stm32l4_dma_destroy(&dma_);
   }
 
+
+
   void StartBurst() {
     compact(); // sent_ should now be zero
+    STDOUT << "IR: sending " << to_send_ << " pulses.";
     int pulse_len = 3;
     int divider = stm32l4_timer_clock(timer()) / (frequency_ * pulse_len);
     stm32l4_timer_enable(timer(),
@@ -40,6 +47,7 @@ public:
     stm32l4_dma_enable(&dma_, &dma_done_callback, (void*)this);
     stm32l4_timer_stop(timer());
     timer()->TIM->CNT = 0;
+    timer()->TIM->RCR = 0;
     timer()->TIM->DCR = 0xC /* TIM_DMABase_RCR */ | 0x100 /* TIM_DMABurstLength_2Transfers */;
     
     armv7m_atomic_modify(&timer()->TIM->DIER, TIM_DIER_UDE | TIM_DIER_CC1DE | TIM_DIER_CC3DE, 0);
@@ -53,6 +61,7 @@ public:
 		      DMA_OPTION_MEMORY_DATA_SIZE_8 |
 		      DMA_OPTION_MEMORY_DATA_INCREMENT |
 		      DMA_OPTION_PRIORITY_HIGH);
+    sent_ = to_send_;
     
     armv7m_atomic_or(&timer()->TIM->CR1, TIM_CR1_ARPE);
     
@@ -117,8 +126,8 @@ public:
   virtual void signal(bool high, uint32_t us) override {
     int n = us * frequency_ / 1000000;
     WaitForSpace();
+    data_[pos_++] = n - 1;
     data_[pos_++] = high ? 1 : 0;
-    data_[pos_++] = n;
   }
 
   void Loop() override {
@@ -126,7 +135,9 @@ public:
   }
 
   void send() override {
-    signal(false, 5000);
+    signal(false, 10000); // 10ms of nothing
+    signal(false, 27);    // padding
+    signal(false, 27);    // padding
     to_send_ = pos_;
   }
 
