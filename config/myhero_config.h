@@ -13,7 +13,7 @@
 
 #ifdef CONFIG_TOP
 #include "proffieboard_v2_config.h"
-#define NUM_BLADES 3
+#define NUM_BLADES 1
 #define NUM_BUTTONS 2
 #define VOLUME 1500
 const unsigned int maxLedsPerStrip = 144;
@@ -42,15 +42,15 @@ Preset presets[] = {
 };
 
 BladeConfig blades[] = {
- { 645, // Blade ID used
+ { 0, // Blade ID used
   // 32" Neopixel
-   WS281XBladePtr<125, bladePin, Color8::GRB, PowerPINS<bladePowerPin2, bladePowerPin3> >(),
+   WS281XBladePtr<127, bladePin, Color8::GRB, PowerPINS<bladePowerPin2, bladePowerPin3> >(),
   // 2 neopixel chamber
-    WS281XBladePtr<2, blade2Pin, Color8::GRB, PowerPINS<bladePowerPin4> >(),
+    //WS281XBladePtr<2, blade2Pin, Color8::GRB, PowerPINS<bladePowerPin4> >(),
   // Control box green LED
-    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin5, -1, -1, -1>(),
+    //SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin5, -1, -1, -1>(),
   // Control box red LED
-    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
+   // SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
   
     CONFIGARRAY(presets) },
 };

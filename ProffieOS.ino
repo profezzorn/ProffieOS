@@ -33,9 +33,9 @@
 // #define CONFIG_FILE "config/toy_saber_config.h"
 // #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
-#define CONFIG_FILE "config/mympp_config.h"
+//#define CONFIG_FILE "config/mympp_config.h"
 //#define CONFIG_FILE "config/mygraflex_config.h"
-//#define CONFIG_FILE "config/myhero_config.h"
+#define CONFIG_FILE "config/myhero_config.h"
 
 
 #ifdef CONFIG_FILE_TEST
