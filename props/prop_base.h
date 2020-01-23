@@ -722,6 +722,15 @@ public:
 #endif
   }
 
+  void ListTracks(const char* dir) {
+    if (!LSFS::Exists(dir)) return;
+    for (LSFS::Iterator i2(dir); i2; ++i2) {
+      if (endswith(".wav", i2.name()) && i2.size() > 200000) {
+	STDOUT << dir << "/" << i2.name() << "\n";
+      }
+    }
+  }
+
   virtual void LowBatteryOff() {
     if (SaberBase::IsOn()) {
       STDOUT.print("Battery low, turning off. Battery voltage: ");
@@ -1206,39 +1215,14 @@ public:
 
 #ifdef ENABLE_SD
     if (!strcmp(cmd, "list_tracks")) {
+      // Tracks are must be in: tracks/*.wav or */tracks/*.wav
       LOCK_SD(true);
+      ListTracks("tracks");
       for (LSFS::Iterator iter("/"); iter; ++iter) {
         if (iter.isdir()) {
-          char fname[128];
-          strcpy(fname, iter.name());
-          strcat(fname, "/");
-          char* fend = fname + strlen(fname);
-          bool isfont = false;
-          if (!isfont) {
-            strcpy(fend, "hum.wav");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            strcpy(fend, "hum01.wav");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            strcpy(fend, "hum");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            for (LSFS::Iterator i2(iter); i2; ++i2) {
-              if (endswith(".wav", i2.name()) && i2.size() > 200000) {
-                strcpy(fend, i2.name());
-                STDOUT.println(fname);
-              }
-            }
-          }
-        } else {
-          if (endswith(".wav", iter.name()) && iter.size() > 200000) {
-            STDOUT.println(iter.name());
-          }
-        }
+	  PathHelper path(iter.name(), "tracks");
+	  ListTracks(path);
+	}
       }
       LOCK_SD(false);
       return true;
