@@ -3,6 +3,14 @@
 
 #include "../common/arg_parser.h"
 
+// Usage: RgbArg<ARG, DEFAULT_COLOR>
+// ARG: a number
+// DEFAULT_COLOR: Must be Rgb<> or Rgb16<>
+// Return value: COLOR
+// This is used to create templates that can be configured dynamically.
+// These templates can be assigned to presets from WebUSB or bluetooth.
+// See style_parser.h for more details.
+
 template<int ARG, class DEFAULT_COLOR>
 class RgbArg {
 public:

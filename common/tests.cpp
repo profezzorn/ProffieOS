@@ -55,9 +55,12 @@ char* itoa( int value, char *string, int radix )
 
 #include "lsfs.h"
 
+#define HEX 16
+
 struct  Print {
   void print(const char* s) { puts(s); }
   void print(float v) { fprintf(stdout, "%f", v); }
+  void print(int v, int base) { fprintf(stdout, "%d", v); }
   void write(char s) { putchar(s); }
   template<class T>
   void println(T s) { print(s); putchar('\n'); }

@@ -30,14 +30,14 @@
 const unsigned int maxLedsPerStrip = 144;
 
 // This defines how sensitive the clash detection is.
-#define CLASH_THRESHOLD_G 1.0
+#define CLASH_THRESHOLD_G 2.0
 
 // Define this if your power button is a touch button.
 #define POWER_TOUCHBUTTON_SENSITIVITY 1700
 // #define AUX_TOUCHBUTTON_SENSITIVITY 1700
 // #define AUX2_TOUCHBUTTON_SENSITIVITY 1700
 
-#define BLADE_ID_CLASS BridgedPullupBladeID<bladeIdentifyPin, blade2Pin>
+#define BLADE_ID_CLASS EnablePowerBladeID<PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>, BridgedPullupBladeID<bladeIdentifyPin, blade2Pin>>
 
 // Feature defines, these let you turn off large blocks of code
 // used for debugging.
@@ -57,7 +57,7 @@ const unsigned int maxLedsPerStrip = 144;
 // TouchButton (similar to momentary button, but reacts to touch).
 // LatchingButton (on/off button, always controls ignition)
 
-TouchButton PowerButton(BUTTON_POWER, powerButtonPin, 2500, "pow");
+TouchButton PowerButton(BUTTON_POWER, powerButtonPin, 1500, "pow");
 Button AuxButton(BUTTON_AUX, auxPin, "aux");
 #endif
 

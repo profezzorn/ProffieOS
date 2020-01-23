@@ -66,6 +66,7 @@ public:
       for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, Color8());
       while (!pin_.IsReadyForEndFrame());
       pin_.EndFrame();
+      while (!pin_.IsReadyForEndFrame());
       power_->Power(on);
       pinMode(pin_.pin(), INPUT_ANALOG);
       power_->DeInit();
