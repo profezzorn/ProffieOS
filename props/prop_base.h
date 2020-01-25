@@ -845,7 +845,11 @@ public:
     if (!current_style()) return;
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {
       current_tick_angle_ = fusor.angle2();
-      if (!current_style()->HandlesColorChange()) {
+      bool handles_color_change = false;
+#define CHECK_SUPPORTS_COLOR_CHANGE(N) \
+      handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->HandlesColorChange();
+      ONCEPERBLADE(CHECK_SUPPORTS_COLOR_CHANGE)
+      if (!handles_color_change) {
         STDOUT << "Entering smooth color change mode.\n";
         current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
         current_tick_angle_ = fmod(current_tick_angle_, M_PI * 2);
