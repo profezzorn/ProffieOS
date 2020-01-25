@@ -72,7 +72,7 @@ public:
     font_config.ReadInCurrentDir("config.ini");
     STDOUT.print("Activating ");
     // TODO: Find more reliable way to figure out if it's a monophonic or polyphonic font!!!!
-    monophonic_hum_ = SFX_poweron || SFX_poweroff || SFX_pwroff || SFX_blast;
+    monophonic_hum_ = SFX_poweron || SFX_poweroff || SFX_pwroff || SFX_stun;
     guess_monophonic_ = false;
     if (monophonic_hum_) {
       if (SFX_clash || SFX_blaster || SFX_swing) {
