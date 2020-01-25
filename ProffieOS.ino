@@ -669,6 +669,7 @@ CapTest captest;
 #include "ir/print.h"
 #include "ir/nec.h"
 #include "ir/rc6.h"
+#include "ir/stm32_ir.h"
 
 #ifndef TEENSYDUINO
 
