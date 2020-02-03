@@ -26,7 +26,7 @@ public:
     BladeEffect *e = effect_.Detect(blade);
     if (e) {
       clash_ = true;
-      stab_ = EFFECT == EFFECT_CLASH && e->type == EFFECT_STAB;
+      stab_ = EFFECT == EFFECT_CLASH && e->type == EFFECT_STAB && blade->num_leds() > 1;
     }
   }
   OverDriveColor getColor(int led) {

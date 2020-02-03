@@ -14,7 +14,7 @@ public:
     CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.2f);
     CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
-    CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 260.0f);
+    CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 130.0f);
     CONFIG_VARIABLE(ProffieOSAnimationFrameRate, 0.0f);
   }
   // Igniter compat
@@ -48,7 +48,7 @@ public:
   // Specifies how agressive a swing has to be to be considered
   // a slash. Once we reach, ProffieOSSwingSpeedThreshold, rate of
   // swing speed change is used to determine if it's a swing or a
-  // slash. Defaults to 260 (degrees per second per second)
+  // slash. Defaults to 130 (degrees per second per second)
   float ProffieOSSlashAccelerationThreshold;
   // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
@@ -72,7 +72,11 @@ public:
     font_config.ReadInCurrentDir("config.ini");
     STDOUT.print("Activating ");
     // TODO: Find more reliable way to figure out if it's a monophonic or polyphonic font!!!!
-    monophonic_hum_ = SFX_poweron || SFX_poweroff || SFX_pwroff || SFX_blast;
+    if (SFX_in || SFX_out) {
+      monophonic_hum_ = false;
+    } else {
+      monophonic_hum_ = SFX_poweron || SFX_poweroff || SFX_pwroff || SFX_blast;
+    }
     guess_monophonic_ = false;
     if (monophonic_hum_) {
       if (SFX_clash || SFX_blaster || SFX_swing) {

@@ -6,6 +6,13 @@ public:
   virtual void signal(bool high, uint32_t us) = 0;
 };
 
+class IRSender : public IRInterface {
+public:
+  virtual void send() = 0;
+};
+
+IRSender* GetIRSender();
+
 class IRDecoder;
 IRDecoder* ir_decoders = nullptr;
 
