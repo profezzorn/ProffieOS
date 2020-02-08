@@ -102,6 +102,7 @@ public:                                                         \
   virtual void SB_##NAME TYPED_ARGS {}
 
 #define SABERBASEFUNCTIONS()					\
+  SABERFUN(LowBatt, (), ());                     		\
   SABERFUN(Clash, (), ());					\
   SABERFUN(Stab, (), ());					\
   SABERFUN(PreOn, (float* delay), (delay));			\
