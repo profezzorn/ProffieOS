@@ -487,6 +487,9 @@ EFFECT(reload);
 EFFECT(stun);
 EFFECT(unjam);
 
+// battery low
+EFFECT(lowbatt);	// battery low
+
 // TODO: Optimize this and make it possible
 // have the WAV reader use this.
 class EffectFileReader : public FileReader {
