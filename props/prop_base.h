@@ -741,21 +741,22 @@ public:
 
   virtual void CheckLowBattery() {
     if (battery_monitor.low()) {
-      // TODO: FIXME
       if (current_style() && !current_style()->Charging()) {
-	LowBatteryOff();
-	
-	if (millis() - last_beep_ > 5000) {
+	if (SaberBase::IsOn()) {
+		LowBatteryOff();
+	} else if (millis() - last_beep_ > 15000) {  // (was 5000)
+		STDOUT.print(battery_monitor.battery());
+		STDOUT.println("v");
+		STDOUT.println(" ");
 #ifdef ENABLE_AUDIO
-	  // TODO: allow this to be replaced with WAV file
-	  talkie.Say(talkie_low_battery_15, 15);
+		SaberBase::DoLowBatt();
 #endif
-	  STDOUT << "Battery low :" << battery_monitor.battery() << "\n";
-	  last_beep_ = millis();
+		last_beep_ = millis();
 	}
       }
     }
   }
+
   
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
