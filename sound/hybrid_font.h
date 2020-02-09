@@ -548,21 +548,8 @@ public:
     return current_effect_length_;
   }
 
-  void SB_LowBatt() override
-  {
-    //play the fonts low battery sound if it exists.  Otherwise try to play a wave file on the root of the SD Card
-    if (SFX_lowbatt) {
-      PlayCommon(&SFX_lowbatt);
-    } else {
-      MountSDCard();
-      EnableAmplifier();
-      RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
-      if (player) {
-        player->Play("lowbatt.wav");
-      }
-    }
-  }
-
+  void SB_LowBatt() override { PlayCommon(&SFX_lowbatt); }
+	
  private:
   uint32_t last_micros_;
   uint32_t hum_start_;
