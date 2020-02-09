@@ -745,9 +745,7 @@ public:
 	if (SaberBase::IsOn()) {
 	  LowBatteryOff();
 	} else if (millis() - last_beep_ > 15000) {  // (was 5000)
-	  STDOUT.print(battery_monitor.battery());
-	  STDOUT.println("v");
-	  STDOUT.println(" ");
+	  STDOUT << "Low battery: " << battery_monitor_.battery() << " volts\n";
 	  SaberBase::DoLowBatt();
 	  last_beep_ = millis();
 	}
