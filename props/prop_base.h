@@ -748,9 +748,7 @@ public:
 	  STDOUT.print(battery_monitor.battery());
 	  STDOUT.println("v");
 	  STDOUT.println(" ");
-#ifdef ENABLE_AUDIO
 	  SaberBase::DoLowBatt();
-#endif
 	  last_beep_ = millis();
 	}
       }
