@@ -558,10 +558,7 @@ public:
       EnableAmplifier();
       RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
       if (player) {
-        STDOUT.print("Playing low battery lowbatt.wav");
         player->Play("lowbatt.wav");
-      } else {
-        STDOUT.println("No available WAV players.");
       }
     }
   }
