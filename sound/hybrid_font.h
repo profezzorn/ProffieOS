@@ -551,7 +551,7 @@ public:
   void SB_LowBatt() override
   {
     //play the fonts low battery sound if it exists.  Otherwise try to play a wave file on the root of the SD Card
-    if (SFX_lowbatt.files_found()) {
+    if (SFX_lowbatt) {
       PlayCommon(&SFX_lowbatt);
     } else {
       MountSDCard();
