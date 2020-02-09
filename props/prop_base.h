@@ -743,20 +743,19 @@ public:
     if (battery_monitor.low()) {
       if (current_style() && !current_style()->Charging()) {
 	if (SaberBase::IsOn()) {
-		LowBatteryOff();
+	  LowBatteryOff();
 	} else if (millis() - last_beep_ > 15000) {  // (was 5000)
-		STDOUT.print(battery_monitor.battery());
-		STDOUT.println("v");
-		STDOUT.println(" ");
+	  STDOUT.print(battery_monitor.battery());
+	  STDOUT.println("v");
+	  STDOUT.println(" ");
 #ifdef ENABLE_AUDIO
-		SaberBase::DoLowBatt();
+	  SaberBase::DoLowBatt();
 #endif
-		last_beep_ = millis();
+	  last_beep_ = millis();
 	}
       }
     }
   }
-
   
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
