@@ -283,7 +283,7 @@ public:
   // PI/2 = straight up, -PI/2 = straight down
   float angle1() {
     // use orientation!
-    return atan2f(sqrtf(down_.x * down_.x + down_.y * down_.y), down_.z);
+    return atan2f(down_.x, sqrtf(down_.z * down_.z + down_.y * down_.y));
   }
 
   // Twist angle.
