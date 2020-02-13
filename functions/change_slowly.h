@@ -20,9 +20,9 @@ public:
     last_micros_ = now;
 
     if (delta > 1000000) delta = 1;
-    delta *= speed_.getInteger();
+    delta *= speed_.getInteger(0);
     delta /= 1000000;
-    int target = f_.getInteger();
+    int target = f_.getInteger(0);
     if (delta > abs(value_ - target)) {
       value_ = target;
     } else  if (value_ < target) {
