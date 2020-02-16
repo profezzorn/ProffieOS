@@ -847,7 +847,7 @@ public:
       current_tick_angle_ = fusor.angle2();
       bool handles_color_change = false;
 #define CHECK_SUPPORTS_COLOR_CHANGE(N) \
-      handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->HandlesColorChange();
+      handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
       ONCEPERBLADE(CHECK_SUPPORTS_COLOR_CHANGE)
       if (!handles_color_change) {
         STDOUT << "Entering smooth color change mode.\n";

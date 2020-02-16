@@ -1,37 +1,54 @@
 #ifndef BLADES_BLADE_BASE_H
 #define BLADES_BLADE_BASE_H
 
-// Bitfield
-enum BladeEffectType {
-  EFFECT_NONE =  0x0,
-  EFFECT_CLASH = 1 << 0,
-  EFFECT_BLAST = 1 << 1,
-  EFFECT_FORCE = 1 << 2,
-  EFFECT_STAB =  1 << 3,
-  EFFECT_BOOT =  1 << 4,
-  EFFECT_LOCKUP_BEGIN = 1 << 5,
-  EFFECT_LOCKUP_END = 1 << 6,
-  EFFECT_DRAG_BEGIN = 1 << 7,
-  EFFECT_DRAG_END = 1 << 8,
-  EFFECT_IGNITION = 1 << 9,
-  EFFECT_RETRACTION = 1 << 10,
-  EFFECT_CHANGE = 1 << 11, // used for click to change
+#define DEFINE_ALL_EFFECTS()			\
+    DEFINE_EFFECT(NONE)				\
+    DEFINE_EFFECT(CLASH)			\
+    DEFINE_EFFECT(BLAST)			\
+    DEFINE_EFFECT(FORCE)			\
+    DEFINE_EFFECT(STAB)				\
+    DEFINE_EFFECT(BOOT)				\
+    DEFINE_EFFECT(LOCKUP_BEGIN)			\
+    DEFINE_EFFECT(LOCKUP_END)			\
+    DEFINE_EFFECT(DRAG_BEGIN)			\
+    DEFINE_EFFECT(DRAG_END)			\
+    DEFINE_EFFECT(IGNITION)			\
+    DEFINE_EFFECT(RETRACTION)			\
+    DEFINE_EFFECT(CHANGE)			\
+    /* Blaster effects */                       \
+    DEFINE_EFFECT(STUN)				\
+    DEFINE_EFFECT(FIRE)				\
+    DEFINE_EFFECT(CLIP_IN)			\
+    DEFINE_EFFECT(CLIP_OUT)			\
+    DEFINE_EFFECT(RELOAD)			\
+    DEFINE_EFFECT(MODE)				\
+    DEFINE_EFFECT(RANGE)			\
+    DEFINE_EFFECT(EMPTY)			\
+    DEFINE_EFFECT(FULL)				\
+    DEFINE_EFFECT(JAM)				\
+    DEFINE_EFFECT(UNJAM)			\
+    DEFINE_EFFECT(PLI_ON)			\
+    DEFINE_EFFECT(PLI_OFF)
 
-  // Blaster Effect Types
-  EFFECT_STUN = 1 << 12, // used to pass STUN to allow alternate colors for stun type blasts
-  EFFECT_FIRE = 1 << 13,
-  EFFECT_CLIP_IN = 1 << 14,
-  EFFECT_CLIP_OUT = 1 << 15,
-  EFFECT_RELOAD = 1 << 16,
-  EFFECT_MODE = 1 << 17,
-  EFFECT_RANGE = 1 << 18,
-  EFFECT_EMPTY = 1 << 19,
-  EFFECT_FULL = 1 << 20,
-  EFFECT_JAM = 1 << 21,
-  EFFECT_UNJAM = 1 << 22,
-  EFFECT_PLI_ON = 1 << 23,
-  EFFECT_PLI_OFF = 1 << 24,
+
+// Bitfield
+#define DEFINE_EFFECT(X) EFFECT_##X,
+enum class BladeEffectType {
+  DEFINE_ALL_EFFECTS()
 };
+#undef DEFINE_EFFECT
+
+#define DEFINE_EFFECT(X) constexpr BladeEffectType EFFECT_##X=BladeEffectType::EFFECT_##X;
+//#define DEFINE_EFFECT(X) using EFFECT_##X=BladeEffectType::EFFECT_##X;
+DEFINE_ALL_EFFECTS();
+#undef DEFINE_EFFECT
+
+  enum HandledFeature {
+    HANDLED_FEATURE_NONE = 0,
+    HANDLED_FEATURE_CHANGE = 1 << 0,
+    HANDLED_FEATURE_CHANGE_TICKED = 1 << 1,
+    HANDLED_FEATURE_STAB = 1 << 2,
+  };
 
 #include "../styles/blade_style.h"
 
@@ -83,62 +100,55 @@ public:
   virtual BladeStyle* current_style() const = 0;
 
   // Let the blade know that this style handles "effect".
-  static void HandleEffectType(BladeEffectType effect) {
-    handled_types_ = (BladeEffectType) ((int)handled_types_ | (int)effect);
+  static void HandleFeature(HandledFeature feature) {
+    handled_features_ = (HandledFeature) ((int)handled_features_ | (int)feature);
   }
 
   // Returns true if the current style handles a particular effect type.
-  static bool IsHandled(BladeEffectType effect) {
-    return (handled_types_ & effect) != 0;
+  static bool IsHandled(HandledFeature effect) {
+    return (handled_features_ & effect) != 0;
   }
 
-  static BladeEffectType GetHandledTypes() {
-    return handled_types_;
+  static HandledFeature GetHandledTypes() {
+    return handled_features_;
   }
   static void ResetHandledTypes() {
-    handled_types_ = EFFECT_NONE;
+    handled_features_ = HANDLED_FEATURE_NONE;
   }
 
   
  protected:
-  static BladeEffectType handled_types_;
+  static HandledFeature handled_features_;
 };
 
-BladeEffectType BladeBase::handled_types_ = EFFECT_NONE;
+HandledFeature BladeBase::handled_features_ = HANDLED_FEATURE_NONE;
 
 template<BladeEffectType effect>
 class OneshotEffectDetector {
 public:
   OneshotEffectDetector() {
-    BladeBase::HandleEffectType(effect);
+    switch (effect) {
+      case EFFECT_STAB:
+	BladeBase::HandleFeature(HANDLED_FEATURE_STAB);
+      default:
+	break;
+    }
   }
   BladeEffect* Detect(BladeBase* blade) {
     BladeEffect* effects;
     size_t n = blade->GetEffects(&effects);
-    BladeEffectType mask = effect;
     // If no other thing is handling stab, treat it like a clash.
     // But only for the primary blade...
-    if ((effect & EFFECT_CLASH) && !blade->current_style()->IsHandled(EFFECT_STAB) &&
-	blade->IsPrimary()) {
-      mask = (BladeEffectType)(((int)mask) | ((int)EFFECT_STAB));
-    }
+    bool match_stab = effect == EFFECT_CLASH &&
+      !blade->current_style()->IsHandled(HANDLED_FEATURE_STAB) &&
+      blade->IsPrimary();
     for (size_t i = 0; i < n; i++) {
-      if (mask & effects[i].type) {
+      if (effect == effects[i].type ||
+	  (match_stab && effects[i].type == EFFECT_STAB)) {
 	if (effects[i].start_micros == last_detected_)
 	  return nullptr;
 	last_detected_ = effects[i].start_micros;
 	return effects + i;
-      }
-    }
-    return nullptr;
-  }
-  BladeEffect* getDetected(BladeBase* blade) {
-    BladeEffect* effects;
-    size_t n = blade->GetEffects(&effects);
-    for (size_t i = 0; i < n; i++) {
-      if (effect & effects[i].type) {
-	if (effects[i].start_micros == last_detected_)
-	  return effects + i;
       }
     }
     return nullptr;

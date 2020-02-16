@@ -13,7 +13,8 @@ template<class TRANSITION, class... COLORS>
 class ColorChange {
 public:
   ColorChange() {
-    BladeBase::HandleEffectType(EFFECT_CHANGE);
+    BladeBase::HandleFeature(HANDLED_FEATURE_CHANGE);
+    BladeBase::HandleFeature(HANDLED_FEATURE_CHANGE_TICKED);
   }
   uint8_t GetVariation() {
     return (SaberBase::GetCurrentVariation() +

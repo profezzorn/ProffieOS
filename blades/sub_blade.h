@@ -94,13 +94,7 @@ public:
     } while(tmp != this);
     if (allow_disable) blade_->allow_disable();
   }
-  bool HandlesColorChange() override {
-    if (current_style_)
-      return false;
-    return current_style_->HandlesColorChange();
-  }
-
-  bool IsHandled(BladeEffectType effect) override {
+  bool IsHandled(HandledFeature effect) override {
     if (current_style_)
       return false;
     return current_style_->IsHandled(effect);

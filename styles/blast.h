@@ -46,7 +46,7 @@ public:
     int mix = 0;
     for (size_t i = 0; i < num_blasts_; i++) {
       const BladeEffect& b = effects_[i];
-      if (!(b.type & EFFECT)) continue;
+      if (!(b.type == EFFECT)) continue;
       uint32_t T = micros() - b.start_micros;
       int M = 1000 - T/FADEOUT_MS;
       if (M > 0) {
@@ -92,7 +92,7 @@ public:
     int mix = 0;
     for (size_t i = 0; i < num_blasts_; i++) {
       const BladeEffect& b = effects_[i];
-      if (!(b.type & EFFECT)) continue;
+      if (b.type != EFFECT) continue;
       uint32_t T = micros() - b.start_micros;
       int M = 1000 - T/FADEOUT_MS;
       if (M > 0) {
@@ -135,7 +135,7 @@ public:
     for (size_t i = 0; i < num_blasts_; i++) {
       // TODO(hubbe): Use sin_table and avoid floats
       const BladeEffect& b = effects_[i];
-      if (!(b.type & EFFECT)) continue;
+      if (b.type != EFFECT) continue;
       float x = (b.location - led/(float)num_leds_) * 30.0;
       uint32_t T = micros() - b.start_micros;
       float t = 0.5 + T / 200000.0;

@@ -47,11 +47,7 @@ public:
   virtual void run(BladeBase* blade) override {
     current_style_->run(this);
   }
-  bool HandlesColorChange() override {
-    return current_style_->HandlesColorChange();
-  }
-
-  bool IsHandled(BladeEffectType effect) override {
+  bool IsHandled(HandledFeature effect) override {
     return current_style_->IsHandled(effect);
   }
 
