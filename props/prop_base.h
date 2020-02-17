@@ -691,9 +691,9 @@ public:
       STDOUT.print(", ");
       STDOUT.println(gyro.z);
     }
-    if (fabs(gyro.x) > 200.0 &&
-        fabs(gyro.x) > 3.0f * abs(gyro.y) &&
-        fabs(gyro.x) > 3.0f * abs(gyro.z)) {
+    if (fabsf(gyro.x) > 200.0 &&
+        fabsf(gyro.x) > 3.0f * abs(gyro.y) &&
+        fabsf(gyro.x) > 3.0f * abs(gyro.z)) {
       DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
     } else {
       DoGesture(TWIST_CLOSE);
