@@ -13,8 +13,9 @@ template<int N = 2, int OFFSET = 0>
 class TwistAngle {
 public:
   void run(BladeBase* blade) {
-    int a = fusor.angle2() * 16384 / M_PI;
-    value_ = abs((((a + OFFSET) & 0X7fff) - 16384) * (N * 2));
+    int a = fusor.angle2() * 32768 / M_PI;
+    value_ = ((a + OFFSET) * N) & 0xffff;
+    if (value_ >= 0x8000) value_ = 0x10000 - value_;
   }
   int getInteger(int led) { return value_; }
 
