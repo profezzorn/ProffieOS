@@ -502,6 +502,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/sound_level.h"
 #include "functions/blade_angle.h"
 #include "functions/variation.h"
+#include "functions/twist_angle.h"
 
 // transitions
 #include "transitions/fade.h"
