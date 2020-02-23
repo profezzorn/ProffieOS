@@ -1630,15 +1630,15 @@ private:
   int space_ = 0;
 };
 
-Parser<SerialAdapter> parser;
+StaticWrapper<Parser<SerialAdapter>> parser;
 
 #ifdef ENABLE_SERIAL
-Parser<Serial3Adapter> serial_parser;
+StaticWrapper<Parser<Serial3Adapter>> serial_parser;
 #define ENABLE_SERIAL_COMMANDS
 #endif
 
 #ifdef USB_CLASS_WEBUSB
-Parser<WebUSBSerialAdapter> webusb_parser;
+StaticWrapper<Parser<WebUSBSerialAdapter>> webusb_parser;
 #endif
 
 #ifdef ENABLE_SERIAL_COMMANDS
@@ -1720,7 +1720,7 @@ class SerialCommands : public CommandParser {
   }
 };
 
-SerialCommands serial_commands;
+StaticWrapper<SerialCommands> serial_commands;
 
 #endif
 
@@ -1753,11 +1753,11 @@ SSD1306 display;
 
 #ifdef GYRO_CLASS
 // Can also be gyro+accel.
-GYRO_CLASS gyroscope;
+StaticWrapper<GYRO_CLASS> gyroscope;
 #endif
 
 #ifdef ACCEL_CLASS
-ACCEL_CLASS accelerometer;
+StaticWrapper<ACCEL_CLASS> accelerometer;
 #endif
 
 #endif   // ENABLE_MOTION
