@@ -3,22 +3,30 @@
 
 #include "../common/arg_parser.h"
 
-template<int ARG, int DEFAULT_VALUE>
-class IntArg {
+class IntArgBase {
 public:
-  IntArg() {
-    value_ = DEFAULT_VALUE;
+  void run(BladeBase* base) {}
+  int getInteger(int led) { return value_; }
+protected:
+  void init(int argnum) {
     char default_value[16];
-    itoa(DEFAULT_VALUE, default_value, 10);
-    const char* arg = CurrentArgParser->GetArg(ARG, "INT", default_value);
+    itoa(value_, default_value, 10);
+    const char* arg = CurrentArgParser->GetArg(argnum, "INT", default_value);
     if (arg) {
       value_ = strtol(arg, NULL, 0);
     }
   }
-  void run(BladeBase* base) {}
-  int getInteger(int led) { return value_; }
-private:
+  
   int value_;
+};
+
+template<int ARG, int DEFAULT_VALUE>
+class IntArg : public IntArgBase {
+public:
+  IntArg() {
+    value_ = DEFAULT_VALUE;
+    init(ARG);
+  }
 };
 
 #endif
