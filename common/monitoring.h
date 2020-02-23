@@ -71,8 +71,8 @@ extern Monitoring monitor;
 
 #ifdef ENABLE_TRACING
 // TODO: Move this somewhere more global
-const char* trace[128];
-int trace_pos;
+volatile const char* trace[128];
+volatile int trace_pos;
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
