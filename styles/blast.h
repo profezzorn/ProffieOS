@@ -26,23 +26,13 @@ static uint8_t blast_hump[32] = {
   26,22,18,14,11,9,7,5
 };
 
-template<class BASE,
-  class BLAST,
-  int FADEOUT_MS = 200,
+template<int FADEOUT_MS = 200,
   int WAVE_SIZE=100,
   int WAVE_MS=400,
   BladeEffectType EFFECT = EFFECT_BLAST>
-class Blast {
-public:
-  void run(BladeBase* blade) {
-    base_.run(blade);
-    blast_.run(blade);
-    num_leds_ = blade->num_leds();
-    num_blasts_ = blade->GetEffects(&effects_);
-  }
-  OverDriveColor getColor(int led) {
-    OverDriveColor base = base_.getColor(led);
-    if (num_blasts_ == 0) return base;
+class BlastBase {
+protected:
+  int getMix(int led) {
     int mix = 0;
     for (size_t i = 0; i < num_blasts_; i++) {
       const BladeEffect& b = effects_[i];
@@ -58,16 +48,40 @@ public:
 	}
       }
     }
+    return mix;
+  }
+
+  int num_leds_;
+  size_t num_blasts_;
+  BladeEffect* effects_;
+};
+
+
+template<class BASE,
+  class BLAST,
+  int FADEOUT_MS = 200,
+  int WAVE_SIZE=100,
+  int WAVE_MS=400,
+  BladeEffectType EFFECT = EFFECT_BLAST>
+class Blast : BlastBase<FADEOUT_MS, WAVE_SIZE, WAVE_MS, EFFECT> {
+public:
+  void run(BladeBase* blade) {
+    base_.run(blade);
+    blast_.run(blade);
+    this->num_leds_ = blade->num_leds();
+    this->num_blasts_ = blade->GetEffects(&this->effects_);
+  }
+  OverDriveColor getColor(int led) {
+    OverDriveColor base = base_.getColor(led);
+    if (!this->num_blasts_) return base;
     OverDriveColor blast = blast_.getColor(led);
+    int mix = this->getMix(led);
     base.c = base.c.mix(blast.c, std::min(mix, 256));
     return base;
   }
 private:
   BASE base_;
   BLAST blast_;
-  int num_leds_;
-  size_t num_blasts_;
-  BladeEffect* effects_;
 };
 
 // Usage: BlastFadeout<BASE, BLAST, FADEOUT_MS>
