@@ -801,7 +801,7 @@ public:
         break;
       }
       case SaberBase::COLOR_CHANGE_MODE_SMOOTH:
-        float a = fmod(fusor.angle2() - current_tick_angle_, M_PI * 2);
+        float a = fmodf(fusor.angle2() - current_tick_angle_, M_PI * 2);
         SaberBase::SetVariation(0x7fff & (int32_t)(a * (32768 / (M_PI * 2))));
         break;
     }
@@ -852,7 +852,7 @@ public:
       if (!handles_color_change) {
         STDOUT << "Entering smooth color change mode.\n";
         current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
-        current_tick_angle_ = fmod(current_tick_angle_, M_PI * 2);
+        current_tick_angle_ = fmodf(current_tick_angle_, M_PI * 2);
 
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
       } else {
