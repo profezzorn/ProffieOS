@@ -1471,7 +1471,7 @@ class Commands : public CommandParser {
   }
 };
 
-Commands commands;
+StaticWrapper<Commands> commands;
 
 class SerialAdapter {
 public:
