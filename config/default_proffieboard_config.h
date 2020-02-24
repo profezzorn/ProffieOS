@@ -20,7 +20,6 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_WS2811
 #define ENABLE_SD
 #define ENABLE_SERIAL
-#define ENABLE_TRACING
 #endif
 
 #ifdef CONFIG_PRESETS
