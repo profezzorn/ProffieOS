@@ -1,6 +1,8 @@
 #ifndef SOUND_DYNAMIC_MIXER_H
 #define SOUND_DYNAMIC_MIXER_H
 
+#include <algorithm>
+
 // Audio compressor, takes N input channels, sums them and divides the
 // result by the square root of the average volume.
 template<int N> class AudioDynamicMixer : public AudioStream, Looper {
@@ -59,7 +61,7 @@ public:
     int v = 0, v2 = 0;
     num_samples_ += elements;
     while (elements) {
-      int to_do = min(elements, (int)NELEM(sum));
+      int to_do = std::min(elements, (int)NELEM(sum));
       for (int i = 0; i < to_do; i++) sum[i] = 0;
       for (int i = 0; i < N; i++) {
 	if (!streams_[i]) continue;
@@ -78,8 +80,8 @@ public:
         v2 = v * volume_ / (my_sqrt(vol_) + 100);
 //	v2 = (int)((v * (float)volume_)/(sqrtf(vol_)+100.0));
         data[i] = clamptoi16(v2);
-        peak_sum_ = max(abs(v), peak_sum_);
-        peak_ = max(abs(v2), peak_);
+        peak_sum_ = std::max<int32_t>(abs(v), peak_sum_);
+        peak_ = std::max<int32_t>(abs(v2), peak_);
       }
       data += to_do;
       elements -= to_do;
