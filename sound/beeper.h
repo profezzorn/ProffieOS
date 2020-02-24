@@ -7,7 +7,7 @@ public:
   int read(int16_t *data, int elements) override {
     int e = elements;
     while (num_beeps_) {
-      int s = min(elements, beeps_[0].samples_);
+      int s = std::min(elements, beeps_[0].samples_);
       if (x_ == 0) {
         x_ = beeps_[0].f_;
 	if (x_ == 0) {
@@ -21,7 +21,7 @@ public:
 	  }
 	}
       }
-      s = min(s, x_);
+      s = std::min<int>(s, (int)x_);
       if (s <= 0) return e - elements;
       for (int i = 0; i < s; i++) data[i] = value_;
       data += s;
