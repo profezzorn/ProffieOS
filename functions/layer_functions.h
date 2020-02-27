@@ -1,5 +1,5 @@
 #ifndef FUNCTIONS_LAYER_FUNCTIONS_H
-#define FUNCTIONS_Layer_FUNCTIONS_H
+#define FUNCTIONS_LAYER_FUNCTIONS_H
 
 // Usage: LayerFunctions<F1, F2, ...>
 // F1, F2: FUNCTIONS
