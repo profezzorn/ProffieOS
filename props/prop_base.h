@@ -423,7 +423,9 @@ public:
     FileReader out;
     LSFS::Remove(filename);
     out.Create(filename);
+#ifdef ENABLE_AUDIO    
     out.write_key_value("volume", muted_volume_ ? muted_volume_ : dynamic_mixer.get_volume());
+#endif    
     out.write_key_value("end", "1");
     out.Close();
     LOCK_SD(false);
