@@ -1,5 +1,6 @@
 #ifndef FUNCTIONS_SOUND_LEVEL_H
 #define FUNCTIONS_SOUND_LEVEL_H
+#ifdef ENABLE_AUDIO
 
 // Usage: SmoothSoundLevel
 // Returns 0-32768 based on sound level.
@@ -24,5 +25,5 @@ class NoisySoundLevel {
   int getInteger(int led) { return value_; }
   int value_;
 };
-
+#endif  // ENABLE_AUDIO
 #endif
