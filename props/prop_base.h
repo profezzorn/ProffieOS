@@ -178,14 +178,23 @@ public:
     }
 #endif
 
-    strcpy(current_directory, dir);
-    if (strlen(current_directory) &&
-        current_directory[strlen(current_directory)-1] != '/') {
-      strcat(current_directory, "/");
+    char *b = current_directory;
+    for (const char *a = dir; *a; a++) {
+      // Skip trailing slash
+      if (*a == '/' && (a[1] == 0 || a[1] == ';'))
+        continue;
+      if (*a == ';') {
+        *(b++) = 0;
+        continue;
+      }
+      *(b++) = *a;
     }
+    // Two zeroes at end!
+    *(b++) = 0;
+    *(b++) = 0;
 
 #ifdef ENABLE_AUDIO
-    Effect::ScanDirectory(dir);
+    Effect::ScanCurrentDirectory();
     SaberBase* font = NULL;
     hybrid_font.Activate();
     font = &hybrid_font;
@@ -1087,7 +1096,9 @@ public:
     }
 #endif
     if (!strcmp(cmd, "pwd")) {
-      STDOUT.println(current_directory);
+      for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
+        STDOUT.println(dir);
+      }
       return true;
     }
     if (!strcmp(cmd, "n") || (!strcmp(cmd, "next") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {

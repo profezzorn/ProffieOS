@@ -347,7 +347,15 @@ Talkie talkie;
 
 #include "common/strfun.h"
 
+// Double-zero terminated array of search paths.
+// No trailing slashes!
 char current_directory[128];
+const char* next_current_directory(const char* dir) {
+  dir += strlen(dir);
+  dir ++;
+  if (!*dir) return NULL;
+  return dir;
+}
 
 #include "sound/effect.h"
 
