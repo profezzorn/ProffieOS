@@ -548,10 +548,8 @@ public:
     return current_effect_length_;
   }
 
-  void SB_LowBatt() override
-  {
+  void SB_LowBatt() override {
     //play the fonts low battery sound if it exists
-    //TODO: if lowbatt does not exist in the font, then play a global sound (instead of a beep or a talkie)
     if (SFX_lowbatt) {
       PlayCommon(&SFX_lowbatt);
     } else {
