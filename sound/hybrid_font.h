@@ -549,7 +549,7 @@ public:
   }
 
   void SB_LowBatt() override {
-    //play the fonts low battery sound if it exists
+    // play the fonts low battery sound if it exists
     if (SFX_lowbatt) {
       PlayCommon(&SFX_lowbatt);
     } else {
