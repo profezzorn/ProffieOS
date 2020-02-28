@@ -548,7 +548,17 @@ public:
     return current_effect_length_;
   }
 
-
+  void SB_LowBatt() override {
+    // play the fonts low battery sound if it exists
+    if (SFX_lowbatt) {
+      PlayCommon(&SFX_lowbatt);
+    } else {
+#ifdef ENABLE_AUDIO
+      talkie.Say(talkie_low_battery_15, 15);
+#endif
+    }
+  }
+	
  private:
   uint32_t last_micros_;
   uint32_t hum_start_;
