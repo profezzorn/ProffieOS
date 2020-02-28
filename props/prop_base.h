@@ -742,17 +742,16 @@ public:
   virtual void CheckLowBattery() {
     if (battery_monitor.low()) {
       if (current_style() && !current_style()->Charging()) {
-	if (SaberBase::IsOn()) {
-	  LowBatteryOff();
-	} else if (millis() - last_beep_ > 15000) {  // (was 5000)
-	  STDOUT << "Low battery: " << battery_monitor_.battery() << " volts\n";
-	  SaberBase::DoLowBatt();
-	  last_beep_ = millis();
+        LowBatteryOff();
+        if (millis() - last_beep_ > 15000) {  // (was 5000)
+          STDOUT << "Low battery: " << battery_monitor.battery() << " volts\n";
+          SaberBase::DoLowBatt();
+          last_beep_ = millis();
 	}
       }
     }
   }
-  
+
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
 
