@@ -555,7 +555,6 @@ public:
     if (SFX_lowbatt) {
       PlayCommon(&SFX_lowbatt);
     } else {
-      STDOUT << "Battery low :" << battery_monitor.battery() << "\n";
 #ifdef ENABLE_AUDIO
       talkie.Say(talkie_low_battery_15, 15);
 #endif
