@@ -1,7 +1,7 @@
 #ifndef STYLES_ALPHA_H
 #define STYLES_ALPHA_H
 
-
+// TODO: Make this take an arbitrary number of alpha functions and multiply them.
 template<class COLOR, class ALPHA>
 class AlphaL {
 public:
