@@ -25,5 +25,16 @@ class NoisySoundLevel {
   int getInteger(int led) { return value_; }
   int value_;
 };
+
+
+class NoisySoundLevelCompat {
+ public:
+  void run(BladeBase* blade) {
+    value_ = clampi32(dynamic_mixer.last_sum() << 3, 0, 32768);
+  }
+  int getInteger(int led) { return value_; }
+  int value_;
+};
+
 #endif  // ENABLE_AUDIO
 #endif

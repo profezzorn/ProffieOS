@@ -10,6 +10,8 @@
 
 class BladeBase;
 
+#if 0
+
 template<class A, class B>
 class AudioFlicker {
 public:
@@ -33,5 +35,18 @@ private:
   B b_;
   int mix_;
 };
+
+#else
+
+#include "alpha.h"
+#include "../functions/sound_level.h"
+#include "layers.h"
+
+template<class B>
+using AudioFlickerL = AlphaL<B, NoisySoundLevelCompat>;
+
+template<class A, class B>
+using AudioFlicker = Layers<A, AudioFlickerL<B>>;
+#endif
 
 #endif
