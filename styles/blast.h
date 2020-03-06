@@ -18,6 +18,7 @@
 
 class BladeBase;
 
+#if 0
 // Based on exp(-x*x)
 static uint8_t blast_hump[32] = {
   255,255,252,247,240,232,222,211,
@@ -83,6 +84,31 @@ private:
   BASE base_;
   BLAST blast_;
 };
+
+#else
+
+#include "alpha.h"
+#include "layers.h"
+#include "../functions/blast.h"
+
+template<
+  class BLAST,
+  int FADEOUT_MS = 200,
+  int WAVE_SIZE=100,
+  int WAVE_MS=400,
+  BladeEffectType EFFECT = EFFECT_BLAST>
+  using BlastL = AlphaL<BLAST, BlastF<FADEOUT_MS, WAVE_SIZE, WAVE_MS, EFFECT>>;
+
+template<class BASE,
+  class BLAST,
+  int FADEOUT_MS = 200,
+  int WAVE_SIZE=100,
+  int WAVE_MS=400,
+  BladeEffectType EFFECT = EFFECT_BLAST>
+  using Blast = Layers<BASE, BlastL<BLAST, FADEOUT_MS, WAVE_SIZE, WAVE_MS, EFFECT>>;
+
+
+#endif
 
 // Usage: BlastFadeout<BASE, BLAST, FADEOUT_MS>
 // BASE, BLAST: COLOR
