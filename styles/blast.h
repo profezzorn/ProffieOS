@@ -127,38 +127,6 @@ private:
 };
 
 
-#else
-
-#include "alpha.h"
-#include "layers.h"
-#include "../functions/blast.h"
-
-template<
-  class BLAST,
-  int FADEOUT_MS = 200,
-  int WAVE_SIZE=100,
-  int WAVE_MS=400,
-  BladeEffectType EFFECT = EFFECT_BLAST>
-  using BlastL = AlphaL<BLAST, BlastF<FADEOUT_MS, WAVE_SIZE, WAVE_MS, EFFECT>>;
-
-template<class BASE,
-  class BLAST,
-  int FADEOUT_MS = 200,
-  int WAVE_SIZE=100,
-  int WAVE_MS=400,
-  BladeEffectType EFFECT = EFFECT_BLAST>
-  using Blast = Layers<BASE, BlastL<BLAST, FADEOUT_MS, WAVE_SIZE, WAVE_MS, EFFECT>>;
-
-
-template<class BLAST, int FADEOUT_MS = 250, BladeEffectType EFFECT = EFFECT_BLAST>
-  using BlastFadeoutL = Alpha<BLAST, BlasteFadeoutF<FADEOUT_MS, EFFECT>>;
-
-template<class BASE, class BLAST, int FADEOUT_MS = 250, BladeEffectType EFFECT = EFFECT_BLAST>
-  using BlastFadeout = Layers<BASE, BlasteFadeoutL<BLAST, FADEOUT_MS, EFFECT>>;
-
-#endif
-
-
 // Usage: OriginalBlast<BASE, BLAST>
 // BASE, BLAST: COLOR
 // return value: COLOR
@@ -203,6 +171,45 @@ private:
   size_t num_blasts_;
   BladeEffect* effects_;
 };
+
+#else
+
+#include "alpha.h"
+#include "layers.h"
+#include "../functions/blast.h"
+
+template<
+  class BLAST,
+  int FADEOUT_MS = 200,
+  int WAVE_SIZE=100,
+  int WAVE_MS=400,
+  BladeEffectType EFFECT = EFFECT_BLAST>
+  using BlastL = AlphaL<BLAST, BlastF<FADEOUT_MS, WAVE_SIZE, WAVE_MS, EFFECT>>;
+
+template<class BASE,
+  class BLAST,
+  int FADEOUT_MS = 200,
+  int WAVE_SIZE=100,
+  int WAVE_MS=400,
+  BladeEffectType EFFECT = EFFECT_BLAST>
+  using Blast = Layers<BASE, BlastL<BLAST, FADEOUT_MS, WAVE_SIZE, WAVE_MS, EFFECT>>;
+
+
+template<class BLAST, int FADEOUT_MS = 250, BladeEffectType EFFECT = EFFECT_BLAST>
+  using BlastFadeoutL = AlphaL<BLAST, BlastFadeoutF<FADEOUT_MS, EFFECT>>;
+
+template<class BASE, class BLAST, int FADEOUT_MS = 250, BladeEffectType EFFECT = EFFECT_BLAST>
+  using BlastFadeout = Layers<BASE, BlastFadeoutL<BLAST, FADEOUT_MS, EFFECT>>;
+
+template<class BLAST, BladeEffectType EFFECT=EFFECT_BLAST>
+  using OriginalBlastL = AlphaL<BLAST, OriginalBlastF<EFFECT>>;
+
+template<class BASE, class BLAST, BladeEffectType EFFECT=EFFECT_BLAST>
+  using OriginalBlast = Layers<BASE, OriginalBlastL<BLAST, EFFECT>>;
+
+
+#endif
+
 
 
 #endif

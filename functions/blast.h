@@ -74,4 +74,35 @@ private:
   BladeEffect* effects_;
 };
 
+template<BladeEffectType EFFECT=EFFECT_BLAST>
+class OriginalBlastF {
+public:
+  void run(BladeBase* blade) {
+    num_leds_ = blade->num_leds();
+    num_blasts_ = blade->GetEffects(&effects_);
+  }
+  int getInteger(int led) {
+    if (num_blasts_ == 0) return 0;
+    float mix = 0.0;
+    for (size_t i = 0; i < num_blasts_; i++) {
+      // TODO(hubbe): Use sin_table and avoid floats
+      const BladeEffect& b = effects_[i];
+      if (b.type != EFFECT) continue;
+      float x = (b.location - led/(float)num_leds_) * 30.0;
+      uint32_t T = micros() - b.start_micros;
+      float t = 0.5 + T / 200000.0;
+      if (x == 0.0) {
+        mix += 2.0f / (t*t);
+      } else {
+        mix += std::max(0.0, 2.0 * sinf(x / (t*t)) / x);
+      }
+    }
+    return std::min(mix, 1.0) * 32768;
+  }
+private:
+  int num_leds_;
+  size_t num_blasts_;
+  BladeEffect* effects_;
+};
+
 #endif
