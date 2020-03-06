@@ -45,4 +45,33 @@ private:
   BladeEffect* effects_;
 };
 
+
+template<int FADEOUT_MS = 250, BladeEffectType EFFECT = EFFECT_BLAST>
+class BlastFadeoutF {
+public:
+  void run(BladeBase* blade) {
+    num_leds_ = blade->num_leds();
+    num_blasts_ = blade->GetEffects(&effects_);
+  }
+  int getColor(int led) {
+    if (num_blasts_ == 0) return 0;
+    int mix = 0;
+    for (size_t i = 0; i < num_blasts_; i++) {
+      const BladeEffect& b = effects_[i];
+      if (b.type != EFFECT) continue;
+      uint32_t T = micros() - b.start_micros;
+      int M = 1000 - T/FADEOUT_MS;
+      if (M > 0) {
+	mix += 32768 * M / 1000;
+      }
+    }
+    return std::min(mix, 32768);
+  }
+
+private:
+  int num_leds_;
+  size_t num_blasts_;
+  BladeEffect* effects_;
+};
+
 #endif
