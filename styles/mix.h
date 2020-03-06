@@ -20,16 +20,14 @@ public:
     b_.run(blade);
     f_.run(blade);
   }
-  OverDriveColor getColor(int led) {
-    OverDriveColor a = a_.getColor(led);
-    OverDriveColor b = b_.getColor(led);
-    a.c = a.c.mix3(b.c, f_.getInteger(led));
-    return a;
-  }
 private:
   A a_;
   B b_;
   F f_;
+public:
+  auto getColor(int led) -> decltype(MixColors(a_.getColor(led), b_.getColor(led), f_.getInteger(led), 15)) {
+    return MixColors(a_.getColor(led), b_.getColor(led), f_.getInteger(led), 15);
+  }
 };
 
 template<class... A> class MixHelper {};
@@ -40,11 +38,12 @@ public:
   void run(BladeBase* blade) {
     a_.run(blade);
   }
-  OverDriveColor getColor(int x, int led) {
-    return a_.getColor(led);
-  }
 private:
   A a_;
+public:
+  auto getColor(int x, int led) -> decltype(a_.getColor(led)) {
+    return a_.getColor(led);
+  }
 };
   
 template<class A, class... B>
@@ -54,13 +53,14 @@ public:
     a_.run(blade);
     b_.run(blade);
   }
-  OverDriveColor getColor(int x, int led) {
-    if (x == 0) return a_.getColor(led);
-    return b_.getColor(x - 1, led);
-  }
 private:
   A a_;
   MixHelper<B...> b_;
+public:  
+  auto getColor(int x, int led) -> decltype(MixColors(a_.getColor(led), b_.getColor(led), 1, 1)) {
+    if (x == 0) return a_.getColor(led);
+    return b_.getColor(x - 1, led);
+  }
 };
 
 
@@ -71,18 +71,17 @@ public:
     colors_.run(blade);
     f_.run(blade);
   }
-  OverDriveColor getColor(int led) {
-    int x = f_.getInteger(led);
-    x *= (sizeof...(COLORS) - 1);
-    OverDriveColor a = colors_.getColor(x >> 15, led);
-    OverDriveColor b = colors_.getColor((x >> 15) + 1, led);
-    a.c = a.c.mix3(b.c, x & 0x7fff);
-    return a;
-  }
 private:
-  A a_;
   MixHelper<A, B, COLORS...> colors_;
   F f_;
+public:  
+  auto getColor(int led) -> decltype(colors_.getColor(1,1)) {
+    int x = f_.getInteger(led);
+    x *= (sizeof...(COLORS) - 1);
+    auto a = colors_.getColor(x >> 15, led);
+    auto b = colors_.getColor((x >> 15) + 1, led);
+    return MixColors(a, b, x & 0x7fff, 15);
+  }
 };
 
 
