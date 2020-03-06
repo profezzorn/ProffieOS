@@ -331,7 +331,6 @@ const char* GetSaveDir();
 #include "sound/talkie.h"
 #include "sound/lightsaber_synth.h"
 
-AudioDynamicMixer<9> dynamic_mixer;
 Beeper beeper;
 Talkie talkie;
 
@@ -365,8 +364,9 @@ size_t WhatUnit(class BufferedWavPlayer* player);
 
 #include "sound/buffered_wav_player.h"
 
-BufferedWavPlayer wav_players[6];
+BufferedWavPlayer wav_players[7];
 RefPtr<BufferedWavPlayer> track_player_;
+AudioDynamicMixer<NELEM(wav_players) + 2> dynamic_mixer;
 
 RefPtr<BufferedWavPlayer> GetFreeWavPlayer()  {
   // Find a free wave playback unit.
