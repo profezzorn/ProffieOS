@@ -118,6 +118,7 @@ static uint8_t clash_hump[32] = {
   26,22,18,14,11,9,7,5
 };
 
+#if 0
 template<class T,
   class CLASH_COLOR = Rgb<255,255,255>,
   int CLASH_MILLIS = 40,
@@ -160,5 +161,55 @@ private:
   int clash_location_;
   CLASH_COLOR clash_color_;
 };
+
+#else
+
+template<
+  class CLASH_COLOR = Rgb<255,255,255>,
+  int CLASH_MILLIS = 40,
+  int CLASH_WIDTH_PERCENT = 50,
+  BladeEffectType EFFECT = EFFECT_CLASH>
+class LocalizedClashL {
+public:
+  void run(BladeBase* blade) {
+    clash_color_.run(blade);
+    // This should make us activate the clash at least one "frame".
+    if (BladeEffect* e = effect_.Detect(blade)) {
+      clash_ = true;
+      mult_ = NELEM(clash_hump) * 2 * 102400 / CLASH_WIDTH_PERCENT / blade->num_leds();
+      clash_location_ = e->location * blade->num_leds() * mult_;
+  } else if (micros() - effect_.last_detected_micros() < CLASH_MILLIS * 1000) {
+      clash_ = true;
+    } else {
+      clash_ = false;
+    }
+  }
+private:
+  OneshotEffectDetector<EFFECT> effect_;
+  bool clash_;
+  int mult_;
+  int clash_location_;
+  CLASH_COLOR clash_color_;
+public:
+  auto getColor(int led) -> decltype(clash_color_.getColor(led) * 1) {
+    decltype(clash_color_.getColor(led) * 1) ret(Color16(), false, 0);
+    if (clash_) {
+      uint32_t dist = abs(led * mult_ - clash_location_) / 1024;
+      if (dist < NELEM(clash_hump)) {
+	ret = clash_color_.getColor(led) * (clash_hump[dist] * 128);
+      }
+    }
+    return ret;
+  }
+
+};
+
+template<class T,
+  class CLASH_COLOR = Rgb<255,255,255>,
+  int CLASH_MILLIS = 40,
+  int CLASH_WIDTH_PERCENT = 50,
+  BladeEffectType EFFECT = EFFECT_CLASH>
+  using LocalizedClash = Layers<T, LocalizedClashL<CLASH_COLOR, CLASH_MILLIS, CLASH_WIDTH_PERCENT, EFFECT>>;
+#endif
 
 #endif
