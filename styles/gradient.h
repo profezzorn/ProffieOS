@@ -13,7 +13,10 @@ class BlaseBase;
 
 template<class... A>
 class GradientHelper {};
-  
+
+
+#if 0
+
 template<class A>
 class GradientHelper<A> {
 public:
@@ -60,5 +63,54 @@ private:
   GradientHelper<COLOR...> colors_;
   int mul_;
 };
+
+#else
+template<class A>
+class GradientHelper<A> {
+public:
+  static const size_t size = 0;
+  void run(BladeBase* blade) { a_.run(blade); }
+  A a_;
+  auto get(int led, int partition) -> decltype(a_.getColor(led)) {
+    return a_.getColor(led);
+  }
+};
+
+template<class A, class B, class... C>
+class GradientHelper<A, B, C...> {
+public:
+  static const size_t size = GradientHelper<B, C...>::size + 1;
+  void run(BladeBase* blade) {
+    a_.run(blade);
+    b_.run(blade);
+  }
+  A a_;
+  GradientHelper<B, C...> b_;
+  auto get(int led, int partition) -> decltype(MixColors(a_.getColor(0), b_.get(0,0), 1, 1)) {
+    if (partition <= 16384) {
+      return MixColors(a_.getColor(led), b_.a_.getColor(led), partition, 14);
+    } else {
+      return b_.get(led, partition - 16384);
+    }
+  }
+};
+
+template<class... COLOR>
+class Gradient {
+public:
+  void run(BladeBase* blade) {
+    colors_.run(blade);
+    mul_ =  (GradientHelper<COLOR...>::size << 14) / blade->num_leds();
+  }
+private:
+  GradientHelper<COLOR...> colors_;
+  int mul_;
+public:
+  auto getColor(int led) -> decltype(colors_.get(led, led * mul_)) {
+    return colors_.get(led, led * mul_);
+  }
+};
+
+#endif
 
 #endif
