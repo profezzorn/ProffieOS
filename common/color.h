@@ -303,6 +303,7 @@ inline Color16 operator+(const Color16& a, const Color16 &b) {
 // Unmultiplied RGBA, used as a temporary and makes optimization easier.
 struct RGBA_um {
   RGBA_um(Color16 c_, bool od, uint16_t a) : c(c_), overdrive(od), alpha(a) {}
+  RGBA_um(const OverDriveColor& o) : c(o.c), overdrive(o.overdrive), alpha(32768) {}
   Color16 c;
   bool overdrive;
   uint16_t alpha;
