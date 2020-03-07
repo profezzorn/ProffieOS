@@ -11,6 +11,8 @@
 // Each LED is randomly chosen as COLOR1 or COLOR2, then stays
 // that color for 1000/MILLIHZ seconds.
 
+#if 0
+
 template<class MILLIHZ, class COLOR1 = WHITE, class COLOR2 = BLACK>
 class RandomBlinkX {
 public:
@@ -36,6 +38,19 @@ private:
   unsigned short bits_[(maxLedsPerStrip + 15)/ 16];
   uint32_t last_update_;
 };
+
+#else
+
+#include "../functions/random_blink.h"
+
+template<class MILLIHZ, class COLOR1 = WHITE>
+  using RandomBlinkL = AlphaL<COLOR1, RandomBlinkF<MILLIHZ>>;
+
+template<class MILLIHZ, class COLOR1 = WHITE, class COLOR2 = BLACK>
+  using RandomBlinkX = Layers<COLOR2, RandomBlinkL<COLOR1, MILLIHZ>>;
+
+
+#endif
 
 template<int MILLIHZ, class COLOR1 = WHITE, class COLOR2 = BLACK>
   using RandomBlink = RandomBlinkX<Int<MILLIHZ>, COLOR1, COLOR2>;
