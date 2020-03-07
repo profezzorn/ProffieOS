@@ -182,15 +182,15 @@ public:
     }
   }
   RGBA getColor(int led) {
+    RGBA on_color = color_.getColor(led);
+    RGBA off_color = RGBA_um::Transparent();
     if (!begin_active_ && !end_active_) {
       if (active_) {
-	return color_.getColor(led);
+	return on_color;
       } else {
-	return RGBA_um::Transparent();
+	return off_color;
       }
     } else {
-      RGBA on_color = color_.getColor(led);
-      RGBA off_color = RGBA_um::Transparent();
       if (active_) {
 	return runBegin(runEnd(on_color, off_color, led), on_color, led);
       } else {
