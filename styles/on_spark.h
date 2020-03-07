@@ -9,6 +9,7 @@
 // When you turn the saber on, it starts with SPARK_COLOR, and then
 // fades to BASE over a peariod of MILLIS millseconds.
 
+#if 0
 // Let's us use a different color right in the beginning.
 template<class T, class SPARK_COLOR = Rgb<255,255,255>, class MILLIS = Int<200> >
 class OnSparkX {
@@ -44,6 +45,20 @@ private:
   uint32_t on_millis_;
   MILLIS millis_;
 };
+
+#else
+
+#include "alpha.h"
+#include "layers.h"
+#include "../functions/on_spark.h"
+
+template<class SPARK_COLOR = Rgb<255,255,255>, class MILLIS = Int<200> >
+  using OnSparkL = AlphaL<SPARK_COLOR, OnSparkF<MILLIS>>;
+
+template<class T, class SPARK_COLOR = Rgb<255,255,255>, class MILLIS = Int<200> >
+  using OnSparkX = Layers<T, OnSparkL<SPARK_COLOR, MILLIS>>;
+
+#endif
 
 template<class T, class SPARK_COLOR = Rgb<255,255,255>, int MILLIS = 200>
   using OnSpark = OnSparkX<T, SPARK_COLOR, Int<MILLIS>>;
