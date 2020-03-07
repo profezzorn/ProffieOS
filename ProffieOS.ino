@@ -320,30 +320,6 @@ void MountSDCard();
 const char* GetSaveDir();
 
 #include "common/lsfs.h"
-#ifdef ENABLE_AUDIO
-
-#include "sound/click_avoider_lin.h"
-#include "sound/waveform_sampler.h"
-#include "sound/audiostream.h"
-#include "sound/dac.h"
-#include "sound/dynamic_mixer.h"
-#include "sound/beeper.h"
-#include "sound/talkie.h"
-#include "sound/lightsaber_synth.h"
-
-Beeper beeper;
-Talkie talkie;
-
-// LightSaberSynth saber_synth;
-#include "sound/buffered_audio_stream.h"
-
-#else  // ENABLE_AUDIO
-
-#include "common/sd_card.h"
-#define LOCK_SD(X) do { } while(0)
-
-#endif  // ENABLE_AUDIO
-
 #include "common/strfun.h"
 
 // Double-zero terminated array of search paths.
@@ -356,78 +332,7 @@ const char* next_current_directory(const char* dir) {
   return dir;
 }
 
-#include "sound/effect.h"
-
-#ifdef ENABLE_AUDIO
-
-size_t WhatUnit(class BufferedWavPlayer* player);
-
-#include "sound/buffered_wav_player.h"
-
-BufferedWavPlayer wav_players[7];
-RefPtr<BufferedWavPlayer> track_player_;
-AudioDynamicMixer<NELEM(wav_players) + 2> dynamic_mixer;
-
-RefPtr<BufferedWavPlayer> GetFreeWavPlayer()  {
-  // Find a free wave playback unit.
-  for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
-    if (wav_players[unit].Available()) {
-      wav_players[unit].reset_volume();
-      return RefPtr<BufferedWavPlayer>(wav_players + unit);
-    }
-  }
-  return RefPtr<BufferedWavPlayer>();
-}
-
-RefPtr<BufferedWavPlayer> RequireFreeWavPlayer()  {
-  while (true) {
-    RefPtr<BufferedWavPlayer> ret = GetFreeWavPlayer();
-    if (ret) return ret;
-    STDOUT.println("Failed to get hum player, trying again!");
-    delay(100);
-  }
-}
-
-size_t WhatUnit(class BufferedWavPlayer* player) {
-  if (!player) return -1;
-  return player - wav_players;
-}
-
-void SetupStandardAudioLow() {
-//  audio_splicer.Deactivate();
-  for (size_t i = 0; i < NELEM(wav_players); i++) {
-    if (wav_players[i].refs() != 0) {
-      STDOUT.println("WARNING, wav player still referenced!");
-    }
-    dynamic_mixer.streams_[i] = wav_players + i;
-    wav_players[i].reset_volume();
-  }
-  dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
-  dynamic_mixer.streams_[NELEM(wav_players)+1] = &talkie;
-}
-
-void SetupStandardAudio() {
-  dac.SetStream(NULL);
-  SetupStandardAudioLow();
-  dac.SetStream(&dynamic_mixer);
-}
-
-
-#include "common/config_file.h"
-#include "sound/hybrid_font.h"
-
-HybridFont hybrid_font;
-
-#include "sound/smooth_swing_config.h"
-#include "sound/smooth_swing_cfx_config.h"
-#include "sound/looped_swing_wrapper.h"
-#include "sound/smooth_swing_v2.h"
-
-LoopedSwingWrapper looped_swing_wrapper;
-SmoothSwingV2 smooth_swing_v2;
-
-#endif  // ENABLE_AUDIO
-
+#include "sound/sound.h"
 #include "common/battery_monitor.h"
 #include "common/color.h"
 #include "common/range.h"
