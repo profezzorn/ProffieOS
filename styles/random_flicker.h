@@ -7,6 +7,7 @@
 // Mixes randomly between A and B.
 // mix is even over entire blade.
 
+#if 0
 template<class A, class B>
 class RandomFlicker {
 public:
@@ -26,5 +27,19 @@ private:
   B b_;
   int mix_;
 };
+
+#else
+
+#include "../functions/random.h"
+#include "alpha.h"
+#include "layers.h"
+
+template<class B>
+  using RandomL = AlphaL<B, RandomF>;
+
+template<class A, class B>
+  using RandomFlicker = Layers<A, RandomL<B>>;
+
+#endif
 
 #endif
