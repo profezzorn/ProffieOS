@@ -9,6 +9,7 @@
 
 class BladeBase;
 
+#if 0
 template<class A, class B, int HUMP_WIDTH>
 class HumpFlicker {
 public:
@@ -30,5 +31,19 @@ private:
   B b_;
   int pos_;
 };
+
+#else
+
+#include "../functions/bump.h"
+#include "alpha.h"
+#include "layers.h"
+
+template<class B, int HUMP_WIDTH>
+  using HumpFlickerL = AlphaL<B, HumpFlickerF<HUMP_WIDTH>>;
+template<class A, class B, int HUMP_WIDTH>
+  using HumpFlicker = Layers<A, HumpFlickerL<B, HUMP_WIDTH>>;
+
+
+#endif
 
 #endif
