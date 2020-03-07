@@ -12,6 +12,7 @@
 // Goes back and forth between COLOR1 and COLOR2.
 // A full transition from COLOR1 to COLOR2 and back again takes PULSE_MILLIS milliseconds.
 
+#if 0
 template<class COLOR1, class COLOR2, typename PULSE_MILLIS>
 class PulsingX {
 public:
@@ -41,6 +42,18 @@ private:
   uint32_t last_micros_;
   float pos_ = 0.0;
 };
+
+#else
+
+#include "../functions/sin.h"
+
+template<class COLOR2, typename PULSE_MILLIS>
+  using PulsingL = AlphaL<COLOR2, PulsingF<PULSE_MILLIS>>;
+
+template<class COLOR1, class COLOR2, typename PULSE_MILLIS>
+  using PulsingX = Layers<COLOR1, PulsingL<COLOR2, PULSE_MILLIS>>;
+
+#endif
 
 template<class COLOR1, class COLOR2, int PULSE_MILLIS>
   using Pulsing = PulsingX<COLOR1, COLOR2, Int<PULSE_MILLIS> >;

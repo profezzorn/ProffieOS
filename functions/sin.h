@@ -40,4 +40,25 @@ private:
   float pos_;
 };
 
+template<typename PULSE_MILLIS>
+class PulsingF {
+public:
+  void run(BladeBase* base) {
+    pulse_millis_.run(base);
+    uint32_t now = micros();
+    uint32_t delta = now - last_micros_;
+    last_micros_ = now;
+    pos_ = fract(pos_ + delta / (1000.0 * pulse_millis_.getInteger(0)));
+    mix_ = (sin_table[(int)floorf(pos_ * 0x400)] + 16384);
+  }
+
+  int getInteger(int led) { return mix_; }
+
+private:
+  PULSE_MILLIS pulse_millis_;
+  int mix_;
+  uint32_t last_micros_;
+  float pos_ = 0.0;
+};
+
 #endif
