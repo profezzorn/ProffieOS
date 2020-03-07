@@ -9,5 +9,11 @@ private:
   int mix_;
 };
 
+class RandomPerLEDF {
+public:
+  void run(BladeBase* blade) {  }
+  int getColor(int led) { return random(32768); }
+};
+
 
 #endif

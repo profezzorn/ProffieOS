@@ -7,6 +7,7 @@
 // Mixes randomly between A and B.
 // mix is chosen individually for every LED.
 
+#if 0
 template<class A, class B>
 class RandomPerLEDFlicker {
 public:
@@ -24,5 +25,19 @@ private:
   A a_;
   B b_;
 };
+
+#else
+
+#include "../functions/random.h"
+#include "alpha.h"
+#include "layers.h"
+
+template<class B>
+  using RandomPerLEDFlickerL = AlphaL<B, RandomPerLEDF>;
+
+template<class A, class B>
+  using RandomPerLEDFlicker = Layers<A, RandomPerLEDFlickerL<B>>;
+
+#endif
 
 #endif
