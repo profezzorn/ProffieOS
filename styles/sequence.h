@@ -14,6 +14,7 @@
 // Example, a red SOS pattern:
 // Sequence<RED, BLACK, 100, 37, 0b0001010100011100, 0b0111000111000101, 0b0100000000000000>
 
+#if 0
 template<class COLOR1, class COLOR2, int millis_per_bit, int bits, int ... sequence >
 class Sequence {
 public:
@@ -35,6 +36,19 @@ private:
   COLOR2 c2_;
   bool on_;
 };
+
+#else
+
+#include "../functions/sequence.h"
+
+template<class COLOR2, int millis_per_bit, int bits, int ... sequence >
+  using SequenceL = AlphaL<COLOR2, SequenceF<millis_per_bit, bits, sequence...>>;
+
+template<class COLOR1, class COLOR2, int millis_per_bit, int bits, int ... sequence >
+  using Sequence = Layers<COLOR1, SequenceL<COLOR2, millis_per_bit, bits, sequence...>>;
+
+
+#endif
 
 template<int millis_per_color, class... COLORS> 
 class ColorSequence {
