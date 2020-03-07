@@ -66,13 +66,15 @@ public:
       }
     }
   }
-  OverDriveColor getColor(int led) {
-    return colors_.getColor(n_, led);
-  }
 private:
   uint32_t last_micros_;
   int n_;
   MixHelper<COLORS...> colors_;
+
+public:  
+  auto getColor(int led) -> decltype(colors_.getColor(n_, led)) {
+    return colors_.getColor(n_, led);
+  }
 };
 
 #endif
