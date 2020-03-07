@@ -12,6 +12,8 @@
 // When the specified EFFECT happens (clash/blast/etc.) transition from COLOR to
 // EFFECT_COLOR using TRANSITION1. Then transition back using TRANSITION2.
 
+#if 0
+
 template<class T, class EFFECT_COLOR, class TRANSITION1, class TRANSITION2, BladeEffectType EFFECT>
 class TransitionEffect {
 public:
@@ -35,5 +37,40 @@ private:
   TrConcat<TRANSITION1, EFFECT_COLOR, TRANSITION2> transition_;
   OneshotEffectDetector<EFFECT> effect_;
 };
+
+#else
+
+template<class EFFECT_COLOR, class TRANSITION1, class TRANSITION2, BladeEffectType EFFECT>
+class TransitionEffectL {
+public:
+  void run(BladeBase* blade) {
+    transition_.run(blade);
+    if (effect_.Detect(blade)) {
+      transition_.begin();
+      run_ = true;
+    }
+    if (run_ && transition_.done()) run_ = false;
+  }
+  
+private:
+  bool run_ = false;
+  TrConcat<TRANSITION1, EFFECT_COLOR, TRANSITION2> transition_;
+  OneshotEffectDetector<EFFECT> effect_;
+public:
+  auto getColor(int led) -> decltype(transition_.getColor(RGBA_um::Transparent(),
+							  RGBA_um::Transparent(), 1)) {
+    if (run_) {
+      return transition_.getColor(RGBA_um::Transparent(),
+				  RGBA_um::Transparent(), led);
+    } else {
+      return RGBA_um::Transparent();
+    }
+  }
+};
+
+template<class T, class EFFECT_COLOR, class TRANSITION1, class TRANSITION2, BladeEffectType EFFECT>
+  using TransitionEffect = Layers<T, TransitionEffectL<EFFECT_COLOR, TRANSITION1, TRANSITION2, EFFECT>>;
+
+#endif
 
 #endif

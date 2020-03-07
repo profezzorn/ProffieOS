@@ -149,9 +149,9 @@ static int8_t color16_dither_matrix[4][4] = {
 
 class Color16 {
   public:
-  Color16() : r(0), g(0), b(0) {}
+  constexpr Color16() : r(0), g(0), b(0) {}
   Color16(const Color8& c) : r(c.r * 0x101), g(c.g * 0x101), b(c.b * 0x101) {}
-  Color16(uint16_t r_, uint16_t g_, uint16_t b_) : r(r_), g(g_), b(b_) {}
+  constexpr Color16(uint16_t r_, uint16_t g_, uint16_t b_) : r(r_), g(g_), b(b_) {}
   // x = 0..256
   Color16 mix(const Color16& other, int x) const {
     // Wonder if there is an instruction for this?
@@ -302,8 +302,9 @@ inline Color16 operator+(const Color16& a, const Color16 &b) {
 
 // Unmultiplied RGBA, used as a temporary and makes optimization easier.
 struct RGBA_um {
-  RGBA_um(Color16 c_, bool od, uint16_t a) : c(c_), overdrive(od), alpha(a) {}
-  RGBA_um(const OverDriveColor& o) : c(o.c), overdrive(o.overdrive), alpha(32768) {}
+  constexpr RGBA_um(Color16 c_, bool od, uint16_t a) : c(c_), overdrive(od), alpha(a) {}
+  constexpr RGBA_um(const OverDriveColor& o) : c(o.c), overdrive(o.overdrive), alpha(32768) {}
+  static RGBA_um Transparent() { return RGBA_um(Color16(), false, 0); }
   Color16 c;
   bool overdrive;
   uint16_t alpha;
@@ -318,7 +319,7 @@ struct RGBA_um {
 
 // Premultiplied ALPHA
 struct RGBA {
-  RGBA(Color16 c_, bool od, uint16_t a) : c(c_), overdrive(od), alpha(a) {}
+  constexpr RGBA(Color16 c_, bool od, uint16_t a) : c(c_), overdrive(od), alpha(a) {}
   RGBA(const RGBA_um& rgba) : c(rgba.c * rgba.alpha >> 15), overdrive(rgba.overdrive), alpha(rgba.alpha) {}
   RGBA(const OverDriveColor& o) : c(o.c), overdrive(o.overdrive), alpha(32768) {}
   Color16 c;
