@@ -49,4 +49,14 @@ public:
   }
 };
 
+// Simple semi-transparent color with 16-bit precision.
+template<int R, int G, int B, int A>
+class Rgba16 {
+public:
+  void run(BladeBase* base) {}
+  RGBA_um getColor(int led) {
+    return RGBA_um(Color16(R, G, B), false, A >> 1);
+  }
+};
+
 #endif
