@@ -12,6 +12,7 @@
 // Stroboscope-like effect, turns the color to STROBE_COLOR for STROBE_MILLIS
 // STROBE_FREQUENCY times per second.
 
+#if 0
 template<class T, class STROBE_COLOR, class STROBE_FREQUENCY, class STROBE_MILLIS>
 class StrobeX {
 public:
@@ -46,6 +47,18 @@ private:
   STROBE_MILLIS strobe_millis_;
   uint32_t strobe_start_;
 };
+
+#else
+
+#include "../functions/strobe.h"
+
+template<class STROBE_COLOR, class STROBE_FREQUENCY, class STROBE_MILLIS>
+  using StrobeL = AlphaL<STROBE_COLOR, StrobeF<STROBE_FREQUENCY, STROBE_MILLIS>>;
+
+template<class T, class STROBE_COLOR, class STROBE_FREQUENCY, class STROBE_MILLIS>
+  using StrobeX = Layers<T, StrobeL<STROBE_COLOR, STROBE_FREQUENCY, STROBE_MILLIS>>;
+
+#endif
 
 template<class T, class STROBE_COLOR, int STROBE_FREQUENCY, int STROBE_MILLIS = 1>
   using Strobe = StrobeX<T, STROBE_COLOR, Int<STROBE_FREQUENCY>, Int<STROBE_MILLIS> >;
