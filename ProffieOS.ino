@@ -544,11 +544,19 @@ template<class base_color,
          class lockup_flicker_color = WHITE,
          class blast_color = WHITE>
 StyleAllocator StyleNormalPtr() {
+#if 0
   typedef AudioFlicker<base_color, lockup_flicker_color> AddFlicker;
   typedef Blast<base_color, blast_color> AddBlast;
   typedef Lockup<AddBlast, AddFlicker> AddLockup;
   typedef SimpleClash<AddLockup, clash_color> AddClash;
   return StylePtr<InOutHelper<AddClash, out_millis, in_millis> >();
+#else
+ typedef Layers<base_color,
+                SimpleClashL<clash_color>,
+                LockupL<AudioFlickerL<lockup_flicker_color> >,
+                BlastL<blast_color> > Blade;
+  return StylePtr<InOutHelper<Blade, out_millis, in_millis> >();
+#endif  
 }
 
 // Arguments: color, clash color, turn-on/off time
