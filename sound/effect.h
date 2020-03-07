@@ -339,7 +339,7 @@ class Effect {
         const char* f = startswith(dir, filename);
         if (!f) continue;
         if (*f != '/') continue;
-        ScanAll(dir, f + 1, dir);
+        ScanAll(f + 1, dir);
       }
 #endif
 

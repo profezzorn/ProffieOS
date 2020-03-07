@@ -4,7 +4,7 @@
 class RandomF {
 public:
   void run(BladeBase* blade) { mix_ = random(32768); }
-  int getColor(int led) { return mix_; }
+  int getInteger(int led) { return mix_; }
 private:
   int mix_;
 };
@@ -12,7 +12,7 @@ private:
 class RandomPerLEDF {
 public:
   void run(BladeBase* blade) {  }
-  int getColor(int led) { return random(32768); }
+  int getInteger(int led) { return random(32768); }
 };
 
 

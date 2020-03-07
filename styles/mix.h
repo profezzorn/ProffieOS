@@ -57,7 +57,7 @@ private:
   A a_;
   MixHelper<B...> b_;
 public:  
-  auto getColor(int x, int led) -> decltype(MixColors(a_.getColor(led), b_.getColor(led), 1, 1)) {
+  auto getColor(int x, int led) -> decltype(MixColors(a_.getColor(led), b_.getColor(x - 1, led), 1, 1)) {
     if (x == 0) return a_.getColor(led);
     return b_.getColor(x - 1, led);
   }
