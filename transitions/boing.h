@@ -28,15 +28,11 @@ public:
       }
     }
   }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
-    OverDriveColor ret = a;
-    ret.c = a.c.mix2(b.c, fade_);
-    return ret;
-  }
 private:
   uint32_t fade_;
+public:  
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) AUTO_RETURN(MixColor(a, b, fade_, 14))
 };
 
 template<int MILLIS, int N> using TrBoing = TrBoingX<Int<MILLIS>, N>;

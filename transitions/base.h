@@ -1,6 +1,8 @@
 #ifndef TRANSITIONS_BASE_H
 #define TRANSITIONS_BASE_H
 
+#define AUTO_RETURN(X) -> decltype(X) { return (X); }
+
 template<class MILLIS>
 class TransitionBaseX {
 public:

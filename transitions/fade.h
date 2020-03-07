@@ -20,15 +20,11 @@ public:
       fade_ = (millis() - this->start_millis_) * 16384 / this->len_;
     }
   }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
-    OverDriveColor ret = a;
-    ret.c = a.c.mix2(b.c, fade_);
-    return ret;
-  }
 private:
   uint32_t fade_;
+public:  
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) AUTO_RETURN(MixColor(a, b, fade_, 14))
 };
 
 template<int MILLIS> using TrFade = TrFadeX<Int<MILLIS>>;
@@ -52,15 +48,11 @@ public:
       fade_ = (((x * x) >> 14) * ((3<<14) - x)) >> 16;
     }
   }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
-    OverDriveColor ret = a;
-    ret.c = a.c.mix2(b.c, fade_);
-    return ret;
-  }
 private:
   uint32_t fade_;
+public:  
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) AUTO_RETURN(MixColor(a, b, fade_, 14))
 };
 
 template<int MILLIS> using TrSmoothFade = TrSmoothFadeX<Int<MILLIS>>;

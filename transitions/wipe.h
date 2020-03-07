@@ -20,13 +20,10 @@ public:
       fade_ = (millis() - this->start_millis_) * 256 * blade->num_leds() / this->len_;
     }
   }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) -> decltype(MixColor(a,b,1,1)) {
     int mix = (Range(0, fade_) & Range(led << 8, (led << 8) + 256)).size();
-    OverDriveColor ret = a;
-    ret.c = a.c.mix(b.c, mix);
-    return ret;
+    return MixColor(a, b, mix, 8);
   }
 private:
   uint32_t fade_;
@@ -54,13 +51,10 @@ public:
 		    blade->num_leds() * 256);
     }
   }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) -> decltype(MixColor(a,b,1,1)) {
     int mix = (fade_ & Range(led << 8, (led << 8) + 256)).size();
-    OverDriveColor ret = a;
-    ret.c = a.c.mix(b.c, mix);
-    return ret;
+    return MixColor(a, b, mix, 8);
   }
 private:
   Range fade_;

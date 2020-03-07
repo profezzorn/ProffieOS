@@ -40,9 +40,8 @@ public:
       end_ = fract(pos_ + current_percentage / 100.0) * num_leds_;
     }
   }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) -> decltype(MixColor(a,b,1,1)) {
     Range led_range(led * 16384, led * 16384 + 16384);
     int mix = 0;
     if (start_ <= end_) {
@@ -51,9 +50,7 @@ public:
       mix = (Range(0, end_) & led_range).size() +
                   (Range(start_, num_leds_) & led_range).size();
     }
-    OverDriveColor ret = a;
-    ret.c = a.c.mix(b.c, mix);
-    return ret;
+    return MixColor(a, b, mix, 14);
   }
 private:
   float fade_ = 0.0;
