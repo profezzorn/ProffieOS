@@ -36,19 +36,20 @@ public:
     }
   }
 
-  OverDriveColor getColor(int led) {
-    OverDriveColor ret = colors_.getColor(variation_, led);
-    if (variation_ != old_variation_) {
-      OverDriveColor old = colors_.getColor(old_variation_, led);
-      ret = transition_.getColor(old, ret, led);
-    }
-    return ret;
-  }
 private:
   TRANSITION transition_;
   uint8_t variation_= 0;
   uint8_t old_variation_ = 0;
   MixHelper<COLORS...> colors_;
+public:
+  auto getColor(int led) -> decltype(transition_.getColor(colors_.getColor(variation_, led), colors_.getColor(variation_, led), led)) {
+    auto ret = colors_.getColor(variation_, led);
+    if (variation_ != old_variation_) {
+      auto old = colors_.getColor(old_variation_, led);
+      return transition_.getColor(old, ret, led);
+    }
+    return ret;
+  }
 };
 
 #endif
