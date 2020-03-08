@@ -9,6 +9,10 @@ HandledFeature FeatureForLockupType(SaberBase::LockupType t) {
       return HANDLED_FEATURE_NONE;
     case SaberBase::LOCKUP_DRAG:
       return HANDLED_FEATURE_DRAG;
+    case SaberBase::LOCKUP_LIGHTNING_BLOCK:
+      return HANDLED_FEATURE_LIGHTNING_BLOCK;
+    case SaberBase::LOCKUP_MELT:
+      return HANDLED_FEATURE_MELT;
   }
 }
 
@@ -38,6 +42,8 @@ public:
     OverDriveColor ret = base_.getColor(led);
     if (!handled_)
     switch (SaberBase::Lockup()) {
+      case SaberBase::LOCKUP_MELT:
+	// TODO: Better default for MELT
       case SaberBase::LOCKUP_DRAG: {
 	int blend = single_pixel_ ? 32768 : drag_shape_.getInteger(led) >> 1;
         if (!is_same_type<DRAG_COLOR, LOCKUP>::value) {
@@ -47,6 +53,8 @@ public:
 	}
 	break;
       }
+      case SaberBase::LOCKUP_LIGHTNING_BLOCK:
+	// TODO: Better default for LB
       case SaberBase::LOCKUP_NORMAL:
       case SaberBase::LOCKUP_ARMED:
       case SaberBase::LOCKUP_AUTOFIRE:
@@ -103,6 +111,8 @@ public:
     int blend = 0;
     if (handled_) return RGBA_um::Transparent();
     switch (SaberBase::Lockup()) {
+      case SaberBase::LOCKUP_MELT:
+	// TODO: Better default for MELT
       case SaberBase::LOCKUP_DRAG: {
 	blend = single_pixel_ ? 32768 : drag_shape_.getInteger(led);
         if (!is_same_type<DRAG_COLOR, LOCKUP>::value) {
@@ -110,6 +120,8 @@ public:
 	}
 	break;
       }
+      case SaberBase::LOCKUP_LIGHTNING_BLOCK:
+	// TODO: Better default for LB
       case SaberBase::LOCKUP_NORMAL:
       case SaberBase::LOCKUP_ARMED:
       case SaberBase::LOCKUP_AUTOFIRE:

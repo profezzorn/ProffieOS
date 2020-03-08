@@ -49,6 +49,8 @@ DEFINE_ALL_EFFECTS();
     HANDLED_FEATURE_CHANGE_TICKED = 1 << 1,
     HANDLED_FEATURE_STAB = 1 << 2,
     HANDLED_FEATURE_DRAG = 1 << 3,
+    HANDLED_FEATURE_MELT = 1 << 4,
+    HANDLED_FEATURE_LIGHTNING_BLOCK = 1 << 5,
   };
 
 #include "../styles/blade_style.h"

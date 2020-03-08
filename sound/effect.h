@@ -51,7 +51,7 @@ class Effect {
     UNKNOWN,
   };
 
-  enum class FilePattern {
+  enum class FilePattern : uint8_t {
     // No idea
     UNKNOWN,
     // NAMENNNN.WAV
@@ -62,7 +62,7 @@ class Effect {
     NONREDUNDANT_SUBDIRS,
   };
 
-  enum class FileType {
+  enum class FileType : uint8_t {
     SOUND,
     IMAGE,
     UNKNOWN,
@@ -471,6 +471,17 @@ EFFECT2(hswing, hswing);  // Looped swing, HIGH (plecter naming)
 EFFECT(bgndrag);
 EFFECT2(drag, drag);
 EFFECT(enddrag);
+
+// Melt is like drag, but for door melting. Falls back to "drag".
+EFFECT(bgnmelt);
+EFFECT2(melt, melt);
+EFFECT(endmelt);
+
+// Lightning block is like "lockup", but for blocking force lightning.
+// Falls back to standard lockup.
+EFFECT(bgnlb);
+EFFECT2(lb, lb);
+EFFECT(endlb);
 
 // Detonator effects
 EFFECT(bgnarm);

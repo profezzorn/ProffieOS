@@ -71,6 +71,8 @@ public:
     LOCKUP_DRAG,
     LOCKUP_ARMED,   // For detonators and such
     LOCKUP_AUTOFIRE, // For blasters and phasers
+    LOCKUP_MELT,     // For cutting through doors...
+    LOCKUP_LIGHTNING_BLOCK,  // Lightning block lockup
   };
   static LockupType Lockup() { return lockup_; }
   static void SetLockup(LockupType lockup) { lockup_ = lockup; }
