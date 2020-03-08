@@ -132,14 +132,6 @@ public:
 	SaberBase::DoBeginLockup();
 	return true;
 
-      case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ON | MODE_ANY_BUTTON):
-      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON | MODE_ANY_BUTTON):
-	if (SaberBase::Lockup() == SaberBase::LOCKUP_LIGHTNING_BLOCK) {
-	  SaberBase::DoEndockup();
-          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-	}
-	return true;
-
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_AUX):
         if (!SaberBase::Lockup()) {
