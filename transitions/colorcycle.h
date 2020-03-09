@@ -41,7 +41,7 @@ public:
     }
   }
   template<class A, class B>
-  auto getColor(const A& a, const B& b, int led) -> decltype(MixColor(a,b,1,1)) {
+  auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,b,1,1)) {
     Range led_range(led * 16384, led * 16384 + 16384);
     int mix = 0;
     if (start_ <= end_) {
@@ -50,7 +50,7 @@ public:
       mix = (Range(0, end_) & led_range).size() +
                   (Range(start_, num_leds_) & led_range).size();
     }
-    return MixColor(a, b, mix, 14);
+    return MixColors(a, b, mix, 14);
   }
 private:
   float fade_ = 0.0;

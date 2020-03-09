@@ -21,9 +21,9 @@ public:
     }
   }
   template<class A, class B>
-  auto getColor(const A& a, const B& b, int led) -> decltype(MixColor(a,b,1,1)) {
+  auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,b,1,1)) {
     int mix = (Range(0, fade_) & Range(led << 8, (led << 8) + 256)).size();
-    return MixColor(a, b, mix, 8);
+    return MixColors(a, b, mix, 8);
   }
 private:
   uint32_t fade_;
@@ -52,9 +52,9 @@ public:
     }
   }
   template<class A, class B>
-  auto getColor(const A& a, const B& b, int led) -> decltype(MixColor(a,b,1,1)) {
+  auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,b,1,1)) {
     int mix = (fade_ & Range(led << 8, (led << 8) + 256)).size();
-    return MixColor(a, b, mix, 8);
+    return MixColors(a, b, mix, 8);
   }
 private:
   Range fade_;

@@ -32,7 +32,7 @@ private:
   uint32_t fade_;
 public:  
   template<class A, class B>
-  auto getColor(const A& a, const B& b, int led) AUTO_RETURN(MixColor(a, b, fade_, 14))
+  auto getColor(const A& a, const B& b, int led) AUTO_RETURN(MixColors(a, b, fade_, 14))
 };
 
 template<int MILLIS, int N> using TrBoing = TrBoingX<Int<MILLIS>, N>;

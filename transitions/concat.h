@@ -38,8 +38,8 @@ private:
   INTERMEDIATE intermediate_;
 public:  
   template<class X, class Y>
-    auto getColor(const X& a, const Y& b, int led) -> decltype(MixColor(a_.getColor(a, intermediate_.getColor(led), led),
-									b_.getColor(intermediate_.getColor(led), b, led), 1,1)) {
+    auto getColor(const X& a, const Y& b, int led) -> decltype(MixColors(a_.getColor(a, intermediate_.getColor(led), led),
+								 	 b_.getColor(intermediate_.getColor(led), b, led), 1,1)) {
     if (done()) return b;
     auto intermediate = intermediate_.getColor(led);
     if (run_a_) {
