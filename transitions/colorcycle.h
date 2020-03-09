@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-// Usage: ColorCycleTr<MILLIS, START_RPM, END_RPM>
+// Usage: TrColorCycle<MILLIS, START_RPM, END_RPM>
 // MILLS:  number
 // START_RPM: a number (defaults to 0)
 // END_RPM: a number (defaults to 6000)
