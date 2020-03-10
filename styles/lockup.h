@@ -216,7 +216,7 @@ private:
   bool begin_active_;
   bool end_active_;
   BeginTr begin_tr_;
-  BeginTr end_tr_;
+  EndTr end_tr_;
 };
     
 template<
