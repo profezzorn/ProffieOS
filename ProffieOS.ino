@@ -400,6 +400,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/transition_effect.h"
 #include "styles/transition_loop.h"
 
+
 // functions
 #include "functions/ifon.h"
 #include "functions/change_slowly.h"
@@ -429,6 +430,9 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/boing.h"
 #include "transitions/random.h"
 #include "transitions/colorcycle.h"
+
+// responsive styles
+#include "styles/responsive_styles.h"
 
 // This macro has a problem with commas, please don't use it.
 #define EASYBLADE(COLOR, CLASH_COLOR) \
