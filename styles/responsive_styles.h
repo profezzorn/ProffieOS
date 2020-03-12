@@ -53,5 +53,14 @@ using ResponsiveClashL = TransitionEffectL<AlphaL<COLOR, Bump<Scale<BladeAngle<>
 template<class COLOR, class TR1, class TR2, int TOP = 28000, int BOTTOM = 8000, int SIZE = 8000>
 using ResponsiveBlastL = MultiTransitionEffectL<AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<SIZE>>>, TR1, TR2, EFFECT_BLAST> ;
 
+// ResponsiveStabL<STAB COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
+// Stab effect
+// Implements Stab effect that will change in size based on angle of the blade
+// TRANSITION1 & TRANSITION2 = transition Begin & End
+// SIZE1 & SIZE2 control Stab area limits for BladeAngle, 0 ~ 32768
+
+template<class COLOR, class TR1, class TR2, int SIZE1 = 14000, int SIZE2 = 8000>
+using ResponsiveStabL = TransitionEffectL<AlphaL<COLOR, SmoothStep<Int<32000>,Scale<BladeAngle<>,Int<SIZE1>,Int<SIZE2>>>>,TR1, TR2, EFFECT_STAB> ;
+
 
 #endif
