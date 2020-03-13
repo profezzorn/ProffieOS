@@ -430,6 +430,9 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/random.h"
 #include "transitions/colorcycle.h"
 
+//responsive styles
+#include "styles/responsive_styles.h"
+
 // This macro has a problem with commas, please don't use it.
 #define EASYBLADE(COLOR, CLASH_COLOR) \
   SimpleClash<Lockup<Blast<COLOR, WHITE>, AudioFlicker<COLOR, WHITE> >, CLASH_COLOR>
