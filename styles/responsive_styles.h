@@ -3,7 +3,7 @@
 
 // Responsive Effect/Style Aliases by Fett263, Responsive Effects use BladeAngle and TwistAngle to control effects. Defaults are set to simplify implementation.
 
-// These Styles all use Layers<> over a BASE Color/style
+// These Styles all use Layers<> over a BASE Color/Style
 
 // ResponsiveLockupL<LOCKUP COLOR, TRANSITION1, TRANSITION2, TOP, BOTTOM, SIZE>
 // Implements LocalizedLockup that will move based on the angle of the blade
