@@ -414,11 +414,11 @@ public:
 	break;
       case SaberBase::LOCKUP_LIGHTNING_BLOCK:
 	if (SFX_bgnlb) once = &SFX_bgnlb;
-	if (SFX_lb) once = &SFX_lb;
+	if (SFX_lb) loop = &SFX_lb;
 	goto normal_fallback;
       case SaberBase::LOCKUP_MELT:
 	if (SFX_bgnmelt) once = &SFX_bgnmelt;
-	if (SFX_melt) once = &SFX_melt;
+	if (SFX_melt) loop = &SFX_melt;
         // fall through
       case SaberBase::LOCKUP_DRAG:
         if (!once && SFX_bgndrag) once = &SFX_bgndrag;
