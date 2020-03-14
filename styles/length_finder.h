@@ -10,6 +10,10 @@
 template<class BASE = BLACK, class LIGHTUP = WHITE>
 class LengthFinder {
 public:
+  LengthFinder() {
+    BladeBase::HandleFeature(HANDLED_FEATURE_CHANGE);
+    BladeBase::HandleFeature(HANDLED_FEATURE_CHANGE_TICKED);
+  }
   void run(BladeBase* blade) {
     base_.run(blade);
     lightup_.run(blade);
