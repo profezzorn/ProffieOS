@@ -52,7 +52,8 @@ using ResponsiveClashL = TransitionEffectL<AlphaL<COLOR, Bump<Scale<BladeAngle<>
 // TOP = uppermost Blast position limit, BOTTOM = lowermost Blast position limit, 32768 = tip, 0 = hilt
 // SIZE controls blast size 0 ~ 32768
 
-template<class COLOR, class TR1, class TR2, int TOP = 28000, int BOTTOM = 8000, int SIZE = 8000>
+template<class COLOR, class TR1 = TrInstant, class TR2 = TrFade<200>, int TOP = 28000, int BOTTOM = 8000, int SIZE = 8000>
+
 using ResponsiveBlastL = MultiTransitionEffectL<AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<SIZE>>>, TR1, TR2, EFFECT_BLAST> ;
 
 // ResponsiveStabL<STAB COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
