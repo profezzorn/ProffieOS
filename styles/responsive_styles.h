@@ -35,7 +35,14 @@ using ResponsiveMeltL = LockupTrL<AlphaL<COLOR, SmoothStep<Int<30000>,Scale<Twis
 // TRANSITION1 & TRANSITION2 = transition Begin & End
 
 template<class COLOR, class TR1, class TR2>
-using ResponsiveLightningBlockL = LockupTrL<AlphaL<COLOR, LayerFunctions<Bump<Sin<Int<24>,Scale<BladeAngle<>,Int<14000>,Int<6000>>,Int<4000>>,Sin<Int<17>,Scale<TwistAngle<>,Int<12000>,Int<9000>>,Int<8000>>>,Bump<Sin<Int<27>,Scale<BladeAngle<>,Int<24000>,Int<10000>>,Int<8000>>,Sin<Int<20>,Scale<TwistAngle<>,Int<10000>,Int<7000>>,Int<2000>>>,Bump<Sin<Int<25>,Int<18000>,Scale<BladeAngle<24000,32768>,Int<22000>,Int<15000>>>,Sin<Int<10>,Scale<TwistAngle<>,Int<6000>,Int<1000>>,Int<0>>>,Bump<Sin<Int<31>,Scale<BladeAngle<22000,32768>,Int<30000>,Scale<BladeAngle<24000,32768>,Int<16000>,Int<10000>>>,Scale<BladeAngle<24000,32768>,Int<16000>,Int<8000>>>,Sin<Int<18>,Scale<TwistAngle<>,Int<8000>,Int<2000>>,Int<0>>>>>, TR1, TR2, SaberBase::LOCKUP_LIGHTNING_BLOCK> ;
+using ResponsiveLightningBlockL = LockupTrL<AlphaL<COLOR, 
+LayerFunctions<
+Bump<Sin<Int<24>,Scale<BladeAngle<>,Int<14000>,Int<6000>>,Int<4000>>,Sin<Int<17>,Scale<TwistAngle<>,Int<12000>,Int<9000>>,Int<8000>>>,
+Bump<Sin<Int<27>,Scale<BladeAngle<>,Int<24000>,Int<10000>>,Int<8000>>,Sin<Int<20>,Scale<TwistAngle<>,Int<10000>,Int<7000>>,Int<2000>>>,
+Bump<Sin<Int<25>,Int<18000>,Scale<BladeAngle<24000,32768>,Int<22000>,Int<15000>>>,Sin<Int<10>,Scale<TwistAngle<>,Int<6000>,Int<1000>>,Int<0>>>,
+Bump<Sin<Int<31>,Scale<BladeAngle<22000,32768>,Int<30000>,Scale<BladeAngle<24000,32768>,Int<16000>,Int<10000>>>,Scale<BladeAngle<24000,32768>,Int<16000>,Int<8000>>>,Sin<Int<18>,Scale<TwistAngle<>,Int<8000>,Int<2000>>,Int<0>>>>>, 
+TR1= TrInstant, TR2 = TrInstant, SaberBase::LOCKUP_LIGHTNING_BLOCK> ;
+
 
 // ResponsiveClashL<CLASH COLOR, TRANSITION1, TRANSITION2, TOP, BOTTOM, SIZE>
 // Implements LocalizedClash effect that mimics ResponsiveLockup location and size
