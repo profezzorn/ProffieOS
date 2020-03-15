@@ -43,7 +43,8 @@ using ResponsiveLightningBlockL = LockupTrL<AlphaL<COLOR, LayerFunctions<Bump<Si
 // TOP = uppermost Clash position limit, BOTTOM = lowermost Clash position limit, 32768 = tip, 0 = hilt
 // SIZE controls Clash area size 0 ~ 32768
 
-template<class COLOR, class TR1, class TR2, int TOP = 22000, int BOTTOM = 8000, int SIZE = 10000>
+template<class COLOR, class TR1 = TrInstant, class TR2 = TrFade<200>, int TOP = 22000, int BOTTOM = 8000, int SIZE = 10000>
+
 using ResponsiveClashL = TransitionEffectL<AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<SIZE>>>,TR1, TR2, EFFECT_CLASH> ;
 
 // ResponsiveBlastL<BLAST COLOR, TRANSITION1, TRANSITION2, TOP, BOTTOM, SIZE>
