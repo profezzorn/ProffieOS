@@ -11,7 +11,8 @@
 // TOP = uppermost lockup position limit, BOTTOM = lowermost lockup position limit, 32768 = tip, 0 = hilt
 // SIZE controls LOCKUP area size 0 ~ 32768
 
-template<class COLOR, class TR1, class TR2, int TOP = 26000, int BOTTOM = 4000, int SIZE = 10000>
+template<class COLOR, class TR1 = TrInstant, class TR2 = TrInstant, int TOP = 26000, int BOTTOM = 4000, int SIZE = 10000>
+
 using ResponsiveLockupL = LockupTrL<AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<SIZE>>>, TR1, TR2, SaberBase::LOCKUP_NORMAL> ; 
 
 // ResponsiveDragL<DRAG COLOR, TRANSTION1, TRANSITION2, SIZE1, SIZE2>
