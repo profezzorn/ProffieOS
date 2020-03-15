@@ -61,7 +61,8 @@ using ResponsiveBlastL = MultiTransitionEffectL<AlphaL<COLOR, Bump<Scale<BladeAn
 // TRANSITION1 & TRANSITION2 = transition Begin & End
 // SIZE1 & SIZE2 control Stab area limits for BladeAngle, 0 ~ 32768
 
-template<class COLOR, class TR1, class TR2, int SIZE1 = 14000, int SIZE2 = 8000>
+template<class COLOR, class TR1 = TrWipeIn<600>, class TR2 = TrWipe<600>, int SIZE1 = 14000, int SIZE2 = 8000>
+
 using ResponsiveStabL = TransitionEffectL<AlphaL<COLOR, SmoothStep<Int<32000>,Scale<BladeAngle<>,Int<SIZE1>,Int<SIZE2>>>>,TR1, TR2, EFFECT_STAB> ;
 
 
