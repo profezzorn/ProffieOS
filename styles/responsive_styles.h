@@ -19,7 +19,8 @@ using ResponsiveLockupL = LockupTrL<AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TO
 // TRANSITION1 & TRANSITION2 = transition Begin & End
 // SIZE1 & SIZE2 control limits for DRAG size with TwistAngle
 
-template<class COLOR, class TR1, class TR2, int SIZE1 = 2000, int SIZE2 = 10000>
+template<class COLOR, class TR1 = TrInstant, class TR2 = TrInstant, int SIZE1 = 2000, int SIZE2 = 10000>
+
 using ResponsiveDragL = LockupTrL<AlphaL<COLOR, SmoothStep<Int<32000>,Scale<TwistAngle<>,Int<SIZE1>,Int<SIZE2>>>>,TR1, TR2, SaberBase::LOCKUP_DRAG> ;
 
 // ResponsiveMeltL<MELT COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
