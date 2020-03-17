@@ -14,6 +14,7 @@ template<int MILLIS, int start_rpm=0, int end_rpm = 6000>
 class TrColorCycle : public TransitionBaseX<Int<MILLIS>> {
 public:
   void run(BladeBase* base) {
+    TransitionBaseX<Int<MILLIS>>::run(base);
     uint32_t now = micros();
     uint32_t delta = now - last_micros_;
     last_micros_ = now;

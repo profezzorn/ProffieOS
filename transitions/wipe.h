@@ -14,6 +14,7 @@ template<class MILLIS>
 class TrWipeX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* blade) {
+    TransitionBaseX<MILLIS>::run(blade);
     if (this->done()) {
       fade_ = blade->num_leds() * 256;
     } else {
@@ -43,6 +44,7 @@ public:
   TrWipeInX() : TransitionBaseX<MILLIS>(), fade_(0, 0) {}
 
   void run(BladeBase* blade) {
+    TransitionBaseX<MILLIS>::run(blade);
     if (this->done()) {
       fade_ = Range(0, blade->num_leds() * 256);
     } else {
