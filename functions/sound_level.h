@@ -27,6 +27,11 @@ class NoisySoundLevel {
 };
 
 
+// Usage: NoisySoundLevelCompat
+// Returns 0-32768 based on sound level.
+// This function is now used to implement the
+// AudioFlicker<> style, don't change it.
+// returned value: INTEGER
 class NoisySoundLevelCompat {
  public:
   void run(BladeBase* blade) {

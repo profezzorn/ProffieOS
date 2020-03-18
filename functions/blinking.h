@@ -8,7 +8,7 @@
 // BLINK_PROMILLE: a number, defaults to 500
 // BLINK_MILLIS_FUNC: FUNCTION
 // BLINK_PROMILLE_FUNC: FUNCTION
-// return value: INTEGER
+// return value: FUNCTION
 // Switches between 0 and 32768
 // A full cycle from 0 to 328768 and back again takes BLINK_MILLIS milliseconds.
 // If BLINK_PROMILLE is 500, we select A for the first half and B for the
