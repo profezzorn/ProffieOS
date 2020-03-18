@@ -137,7 +137,7 @@ public:
         }
         break;
 
-      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON | BUTTON_POWER):
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
 	SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
 	SaberBase::DoBeginLockup();
 	return true;
