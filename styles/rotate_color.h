@@ -3,8 +3,8 @@
 
 // Usage: RotateColorsX<ROTATION, COLOR>
 // ROTATION: FUNCTION
-// COLOR: COLOR
-// return value: COLOR
+// COLOR: COLOR or LAYER
+// return value: COLOR or LAYER (same as COLOR)
 //
 // ROTATION specifies how much to rotate the color in HSV (color wheel)
 // space. 0 = none, 32768 = 360degrees

@@ -3,15 +3,28 @@
 
 template<class F, class... B> class Mix {};
 
-// Usage: Mix<A, B, F>
+// Usage: Mix<F, A, B>
 // Mix between A and B using function F
 // F: INTEGER
 // A, B: COLOR
-// return value: COLOR
+// return value: COLOR or LAYER (if A or B is a layer)
 //
 // F = 0 -> return A
 // F = 16384 -> return (A+B)/2
 // F = 32768 -> return B
+
+// Usage: Mix<F, A, B, C, ....>
+// Mix between A and B using function F
+// F: INTEGER
+// A, B, C: COLOR
+// return value: COLOR or LAYER (if A or B is a layer)
+//
+// F = 0 -> return A
+// F = 1 -> mostly A, a little B
+// F = 2 -> a little more A, a little less B
+// F = 32767 -> mostly last color, a little of the last-but-one color
+// F = 32768 -> last color
+
 template<class F, class A, class B>
 class Mix<F, A, B> {
 public:
