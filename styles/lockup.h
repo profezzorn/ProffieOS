@@ -142,6 +142,16 @@ template<class BASE,
 #endif
 
 
+// Usage: LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE>
+// COLOR; COLOR or LAYER
+// BeginTr, EndTr: TRANSITION
+// LOCKUP_TYPE: a SaberBase::LockupType
+// Return type: LAYER
+// This layer creates a complete lockup effect.
+// When lockup is initiated, BeginTr is used to transition from transparent
+// to COLOR. When lockup ends, EndTr is used to transition from COLOR to
+// transparent again. If you wish to for your lockup to have a shape, you
+// can have COLOR be partially transparent to make the base layer show through.
 template<class COLOR,
   class BeginTr,
   class EndTr,
