@@ -11,35 +11,6 @@
 // Each LED is randomly chosen as COLOR1 or COLOR2, then stays
 // that color for 1000/MILLIHZ seconds.
 
-#if 0
-
-template<class MILLIHZ, class COLOR1 = WHITE, class COLOR2 = BLACK>
-class RandomBlinkX {
-public:
-  void run(BladeBase* blade) {
-    c1_.run(blade);
-    c2_.run(blade);
-    millihz_.run(blade);
-    uint32_t now = micros();
-    if (now - last_update_ > 1000000000U / millihz_.getInteger(0)) {
-      last_update_ = now;
-      size_t shorts = (blade->num_leds() + 15) / 16;
-      for (size_t i = 0; i < shorts; i++) bits_[i] = rand();
-    }
-  }
-  OverDriveColor getColor(int led) {
-    return (bits_[led>>4] >> (led & 0xf) & 1) ? c1_.getColor(led) : c2_.getColor(led);
-  }
-  
-private:
-  COLOR1 c1_;
-  COLOR2 c2_;
-  MILLIHZ millihz_;
-  unsigned short bits_[(maxLedsPerStrip + 15)/ 16];
-  uint32_t last_update_;
-};
-
-#else
 
 #include "../functions/random_blink.h"
 
@@ -48,9 +19,6 @@ template<class MILLIHZ, class COLOR1 = WHITE>
 
 template<class MILLIHZ, class COLOR1 = WHITE, class COLOR2 = BLACK>
   using RandomBlinkX = Layers<COLOR2, RandomBlinkL<COLOR1, MILLIHZ>>;
-
-
-#endif
 
 template<int MILLIHZ, class COLOR1 = WHITE, class COLOR2 = BLACK>
   using RandomBlink = RandomBlinkX<Int<MILLIHZ>, COLOR1, COLOR2>;
