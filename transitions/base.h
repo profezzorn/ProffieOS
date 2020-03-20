@@ -6,6 +6,7 @@
 template<class MILLIS>
 class TransitionBaseX {
 public:
+  void run(BladeBase* blade) { millis_.run(blade); }
   bool done() { return (millis() - start_millis_) > len_; }
   void begin() {
     start_millis_ = millis();

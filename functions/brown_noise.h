@@ -4,6 +4,7 @@
 // Usage: BrownNoiseF<GRADE>
 // return value: FUNCTION
 // Returns a value between 0 and 32768 with nearby pixels being similar.
+// GRADE controls how similar nearby pixels are.
 
 class BladeBase;
 

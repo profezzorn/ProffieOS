@@ -65,7 +65,7 @@ public:
   uint32_t on_pending_delay_;
 
   virtual void On() {
-    if (SaberBase::IsOn()) return;
+    if (SaberBase::IsOn() || on_pending_) return;
     if (current_style() && current_style()->NoOnOff())
       return;
     activated_ = millis();

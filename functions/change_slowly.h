@@ -3,8 +3,8 @@
 
 // Usage: ChangeSlowly<F, SPEED>
 // Changes F by no more than SPEED values per second.
-// F, SPEED: INTEGER
-// return value: INTEGER, same for all LEDs
+// F, SPEED: FUNCTION
+// return value: FUNCTION, same for all LEDs
 
 class BladeBase;
 

@@ -57,8 +57,8 @@ template<class WIDTH, class SPEED, class... COLORS>
 class StripesX {
 public:
   void run(BladeBase* base) {
-    colors_.run(base);
     width_.run(base);
+    speed_.run(base);
     colors_.run(base);
     
     uint32_t now_micros = micros();

@@ -10,34 +10,6 @@
 
 class BladeBase;
 
-#if 0
-
-template<class A, class B>
-class AudioFlicker {
-public:
-  void run(BladeBase* blade) {
-    a_.run(blade);
-    b_.run(blade);
-#ifdef ENABLE_AUDIO    
-    mix_ = clampi32(dynamic_mixer.last_sum() >> 4, 0, 255);
-#else
-    mix_ = 0;
-#endif
-  }
-  OverDriveColor getColor(int led) {
-    OverDriveColor a = a_.getColor(led);
-    OverDriveColor b = b_.getColor(led);
-    a.c = a.c.mix(b.c, mix_);
-    return a;
-  }
-private:
-  A a_;
-  B b_;
-  int mix_;
-};
-
-#else
-
 #include "alpha.h"
 #include "../functions/sound_level.h"
 #include "layers.h"
@@ -47,6 +19,5 @@ using AudioFlickerL = AlphaL<B, NoisySoundLevelCompat>;
 
 template<class A, class B>
 using AudioFlicker = Layers<A, AudioFlickerL<B>>;
-#endif
 
 #endif

@@ -17,6 +17,7 @@ template<class MILLIS, int N>
 class TrBoingX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* blade) {
+    TransitionBaseX<MILLIS>::run(blade);
     if (this->done()) {
       fade_ = 16384;
     } else {

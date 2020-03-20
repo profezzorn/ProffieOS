@@ -14,6 +14,7 @@ template<class MILLIS>
 class TrFadeX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* blade) {
+    TransitionBaseX<MILLIS>::run(blade);
     if (this->done()) {
       fade_ = 16384;
     } else {
@@ -41,6 +42,7 @@ template<class MILLIS>
 class TrSmoothFadeX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* blade) {
+    TransitionBaseX<MILLIS>::run(blade);
     if (this->done()) {
       fade_ = 16384;
     } else {

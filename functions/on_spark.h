@@ -1,6 +1,14 @@
 #ifndef FUNCTIONS_ON_SPARK_H
 #define FUNCTIONS_ON_SPARK_H
 
+// Usage: OnsparkF<MILLIS>
+// MILLIS: FUNCTION (defaults to Int<200>)
+// return value: FUNCTION
+// When the blade turns on, this function starts returning
+// 32768, then fades back to zero over MILLIS milliseconds.
+// This is intended to be used with Mix<> or AlphaL<> to
+// to create a flash of color or white when the blade ignites.
+
 template<class MILLIS = Int<200> >
 class OnSparkF {
 public:

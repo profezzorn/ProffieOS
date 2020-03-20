@@ -1,6 +1,10 @@
 #ifndef STYLES_LENGTH_FINDER_H
 #define STYLES_LENGTH_FINDER_H
 
+// Usage: LengthFinder<BASE, LIGHTUP>
+// or: LengthFinder<>
+// BASE, LIGHTUP: COLOR
+// Return value: COLOR
 // Lights up exactly one led, based on the current color change
 // variable. When changed, says what the current color change is
 // so that you know which led is lit up.
@@ -10,6 +14,10 @@
 template<class BASE = BLACK, class LIGHTUP = WHITE>
 class LengthFinder {
 public:
+  LengthFinder() {
+    BladeBase::HandleFeature(HANDLED_FEATURE_CHANGE);
+    BladeBase::HandleFeature(HANDLED_FEATURE_CHANGE_TICKED);
+  }
   void run(BladeBase* blade) {
     base_.run(blade);
     lightup_.run(blade);

@@ -1,6 +1,12 @@
 #ifndef FUNCTIONS_RANDOM_BLINK_H
 #define FUNCTIONS_RANDOM_BLINK_H
 
+// Usage: RandomBlinkF<MILLIHZ>
+// MILLHZ: FUNCTION
+// Randomly returns either 0 or 32768 for each LED. The returned value
+// is held, but changed to a new random value MILLIHZ * 1000 times per
+// second.
+
 template<class MILLIHZ>
 class RandomBlinkF {
 public:

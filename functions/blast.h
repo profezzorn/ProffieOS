@@ -1,6 +1,23 @@
 #ifndef FUNCTIONS_BLAST_H
 #define FUNCTIONS_BLAST_H
 
+// Usage: BlastF<FADEOUT_MS, WAVE_SIZE, WAVE_MS, EFFECT>
+// FADOUT_MS: a number (defaults to 200)
+// WAVE_SIZE: a number (defaults to 100)
+// WAVE_MS: a number (defaults to 400)
+// EFFECT: a BladeEffectType (defaults to EFFECT_BLAST)
+// returned value: FUNCTION
+// This function is intended to Mix<> or AlphaL<>, when a
+// a blast  occurs, it makes a wave starting at the blast.
+// location (which is currently random) and travels out
+// from that direction. At the peak, this function returns
+// 32768 and when there is no blash it returns zero.
+// The FADOUT_MS controls how long it takes the wave to
+// fade out. The WAVE_SIZE controls the width of the wave.
+// The WAVE_MS parameter controls the speed of the waves.
+// EFFECT can be used to trigger this effect by something
+// other than a blast effect.
+
 // Based on exp(-x*x)
 static uint8_t blast_hump[32] = {
   255,255,252,247,240,232,222,211,
@@ -46,6 +63,13 @@ private:
 };
 
 
+// Usage: BlastFadeoutF<FADEOUT_MS, EFFECT>
+// FADEOUT_MS: a number (defaults to 250)
+// EFFECT: a BladeEffectType (defaults to EFFECT_BLAST)
+// return value: FUNCTION
+// NOrmally returns 0, but returns up to 32768 when the
+// selected effect occurs. Then if fades back to zero over
+// FADEOUT_MS milliseconds.
 template<int FADEOUT_MS = 250, BladeEffectType EFFECT = EFFECT_BLAST>
 class BlastFadeoutF {
 public:
@@ -74,6 +98,11 @@ private:
   BladeEffect* effects_;
 };
 
+// Usage: OriginalBlastF<EFFECT>
+// EFFECT: a BladeEffectType (defaults to EFFECT_BLAST)
+// return value: FUNCTION
+// Original blast function. Normally returns zero, but
+// returns up to 32768 when the selected effect occurs.
 template<BladeEffectType EFFECT=EFFECT_BLAST>
 class OriginalBlastF {
 public:

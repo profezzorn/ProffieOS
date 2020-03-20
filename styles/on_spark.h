@@ -9,44 +9,6 @@
 // When you turn the saber on, it starts with SPARK_COLOR, and then
 // fades to BASE over a peariod of MILLIS millseconds.
 
-#if 0
-// Let's us use a different color right in the beginning.
-template<class T, class SPARK_COLOR = Rgb<255,255,255>, class MILLIS = Int<200> >
-class OnSparkX {
-public:
-  void run(BladeBase* blade) {
-    base_.run(blade);
-    millis_.run(blade);
-    spark_color_.run(blade);
-    uint32_t m = millis();
-    if (on_ != blade->is_on()) {
-      on_ = blade->is_on();
-      if (on_) on_millis_ = m;
-    }
-    uint32_t t = millis() - on_millis_;
-    uint32_t fade_millis = millis_.getInteger(0);
-    if (t < fade_millis) {
-      mix_ = 255 - 255 * t / fade_millis;
-    } else {
-      mix_ = 0;
-    }
-  }
-  OverDriveColor getColor(int led) {
-    OverDriveColor ret = base_.getColor(led);
-    OverDriveColor spark = spark_color_.getColor(led);
-    ret.c = ret.c.mix(spark.c, mix_);
-    return ret;
-  }
-private:
-  bool on_;
-  int mix_;
-  T base_;
-  SPARK_COLOR spark_color_;
-  uint32_t on_millis_;
-  MILLIS millis_;
-};
-
-#else
 
 #include "alpha.h"
 #include "layers.h"
@@ -57,8 +19,6 @@ template<class SPARK_COLOR = Rgb<255,255,255>, class MILLIS = Int<200> >
 
 template<class T, class SPARK_COLOR = Rgb<255,255,255>, class MILLIS = Int<200> >
   using OnSparkX = Layers<T, OnSparkL<SPARK_COLOR, MILLIS>>;
-
-#endif
 
 template<class T, class SPARK_COLOR = Rgb<255,255,255>, int MILLIS = 200>
   using OnSpark = OnSparkX<T, SPARK_COLOR, Int<MILLIS>>;
