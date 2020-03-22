@@ -110,18 +110,12 @@ public:
     }
 
     if (begin_active_) {
-      if (begin_tr_.done()) {
-	begin_active_ = false;
-      } else {
-	begin_tr_.run(blade);
-      }
+      begin_tr_.run(blade);
+      if (begin_tr_.done()) begin_active_ = false;
     }
     if (end_active_) {
-      if (end_tr_.done()) {
-	end_active_ = false;
-      } else {
-	end_tr_.run(blade);
-      }
+      end_tr_.run(blade);
+      if (end_tr_.done()) end_active_ = false;
     }
   }
 

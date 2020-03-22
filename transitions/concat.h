@@ -21,10 +21,8 @@ public:
   void run(BladeBase* blade) {
     intermediate_.run(blade);
     if (run_a_) {
-      if (!a_.done()) {
-	a_.run(blade);
-	return;
-      } 
+      a_.run(blade);
+      if (!a_.done()) return;
       run_a_ = false;
       b_.begin();
     }
@@ -32,7 +30,7 @@ public:
   }
   
 private:
-  bool run_a_;
+  bool run_a_ = false;
   A a_;
   TrConcat<B...> b_;
   INTERMEDIATE intermediate_;

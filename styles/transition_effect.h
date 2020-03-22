@@ -16,11 +16,11 @@ template<class EFFECT_COLOR, class TRANSITION1, class TRANSITION2, BladeEffectTy
 class TransitionEffectL {
 public:
   void run(BladeBase* blade) {
-    transition_.run(blade);
     if (effect_.Detect(blade)) {
       transition_.begin();
       run_ = true;
     }
+    transition_.run(blade);
     if (run_ && transition_.done()) run_ = false;
   }
   

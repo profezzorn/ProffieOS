@@ -15,11 +15,7 @@ class TrFadeX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* blade) {
     TransitionBaseX<MILLIS>::run(blade);
-    if (this->done()) {
-      fade_ = 16384;
-    } else {
-      fade_ = (millis() - this->start_millis_) * 16384 / this->len_;
-    }
+    fade_ = this->update(16384);
   }
 private:
   uint32_t fade_;
@@ -43,12 +39,8 @@ class TrSmoothFadeX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* blade) {
     TransitionBaseX<MILLIS>::run(blade);
-    if (this->done()) {
-      fade_ = 16384;
-    } else {
-      int x = (millis() - this->start_millis_) * 32768 / this->len_;
-      fade_ = (((x * x) >> 14) * ((3<<14) - x)) >> 16;
-    }
+    uint32_t x = this->update(32768);
+    fade_ = (((x * x) >> 14) * ((3<<14) - x)) >> 16;
   }
 private:
   uint32_t fade_;
