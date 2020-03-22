@@ -15,11 +15,7 @@ class TrWipeX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* blade) {
     TransitionBaseX<MILLIS>::run(blade);
-    if (this->done()) {
-      fade_ = blade->num_leds() * 256;
-    } else {
-      fade_ = (millis() - this->start_millis_) * 256 * blade->num_leds() / this->len_;
-    }
+    fade_ = this->update(256 * blade->num_leds());
   }
   template<class A, class B>
   auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,b,1,1)) {
@@ -45,13 +41,9 @@ public:
 
   void run(BladeBase* blade) {
     TransitionBaseX<MILLIS>::run(blade);
-    if (this->done()) {
-      fade_ = Range(0, blade->num_leds() * 256);
-    } else {
-      fade_ = Range(256 * blade->num_leds() -
-		    (millis() - this->start_millis_) * 256 * blade->num_leds() / this->len_,
-		    blade->num_leds() * 256);
-    }
+    fade_ = Range(256 * blade->num_leds() -
+		  this->update(256 * blade->num_leds()),
+		  blade->num_leds() * 256);
   }
   template<class A, class B>
   auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,b,1,1)) {

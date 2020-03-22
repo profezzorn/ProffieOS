@@ -18,15 +18,11 @@ class TrBoingX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* blade) {
     TransitionBaseX<MILLIS>::run(blade);
-    if (this->done()) {
-      fade_ = 16384;
+    fade_ = this->update(16384 * (N * 2 + 1));
+    if (fade_ & 0x4000) {
+      fade_ = 0x4000 - (fade_ & 0x3FFF);
     } else {
-      fade_ = (millis() - this->start_millis_) * 16384 * (N * 2 + 1) / this->len_;
-      if (fade_ & 0x4000) {
-	fade_ = 0x4000 - (fade_ & 0x3FFF);
-      } else {
-	fade_ &= 0x3FFF;
-      }
+      fade_ &= 0x3FFF;
     }
   }
 private:

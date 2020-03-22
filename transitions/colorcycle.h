@@ -19,12 +19,8 @@ public:
     uint32_t delta = now - last_micros_;
     last_micros_ = now;
     if (delta > 1000000) delta = 1;
-    
-    if (this->done()) {
-      fade_ = 1.0;
-    } else {
-      fade_ = (millis() - this->start_millis_) / (float)(this->len_);
-    }
+
+    fade_ = this->update(1.0f);
     
     float current_rpm = start_rpm * (1 - fade_) + end_rpm * fade_;
     float current_percentage = 100.0 * fade_;
