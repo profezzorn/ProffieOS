@@ -82,18 +82,12 @@ public:
     }
 
     if (out_active_) {
-      if (out_tr_.done()) {
-	out_active_ = false;
-      } else {
-	out_tr_.run(blade);
-      }
+      out_tr_.run(blade);
+      if (out_tr_.done()) out_active_ = false;
     }
     if (in_active_) {
-      if (in_tr_.done()) {
-	in_active_ = false;
-      } else {
-	in_tr_.run(blade);
-      }
+      in_tr_.run(blade);
+      if (in_tr_.done()) in_active_ = false;
     }
     if (ALLOW_DISABLE && is_same_type<OFF, Rgb<0,0,0> >::value &&
 	!on_ && !out_active_ && !in_active_)
