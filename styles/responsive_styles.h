@@ -79,8 +79,8 @@ using ResponsiveLightningBlockL =
 template<class COLOR,
          class TR1 = TrInstant,
          class TR2 = TrFade<200>,
-         int TOP = 22000,
-         int BOTTOM = 8000,
+         int TOP = 26000,
+         int BOTTOM = 4000,
          int SIZE = 10000>
 using ResponsiveClashL =
   TransitionEffectL<AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<SIZE>>>,
