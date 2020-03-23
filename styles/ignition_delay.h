@@ -9,16 +9,18 @@
 // the specified number of milliseconds. Intended for kylo-style
 // quillions.
 class BladeBase;
-template<int delay_millis, class BASE>
-class IgnitionDelay : public BladeWrapper {
+
+template<class MILLIS>
+class IgnitionDelayBase : public BladeWrapper {
 public:
-  bool run(BladeBase* base)  __attribute__((warn_unused_result)) {
+  void run(BladeBase* base) {
     blade_ = base;
     if (base->is_on()) {
       if (!waiting_) {
         waiting_ = true;
         wait_start_time_ = millis();
       }
+      int delay_millis = millis_.getInteger(0);
       uint32_t waited = millis() - wait_start_time_;
       if (waited > delay_millis) {
         is_on_ = true;
@@ -28,15 +30,28 @@ public:
       waiting_ = false;
       is_on_ = false;
     }
-    return RunStyle(&base_, this);
   }
-  OverDriveColor getColor(int led) { return base_.getColor(led); }
   bool is_on() const override { return is_on_; }
 private:
   bool is_on_ = false;
   bool waiting_ = false;
   uint32_t wait_start_time_;
+  MILLIS millis_;
+};
+
+template<class MILLIS, class BASE>
+class IgnitionDelayX : public IgnitionDelayBase<MILLIS> {
+public:
+  bool run(BladeBase* base)  __attribute__((warn_unused_result)) {
+    IgnitionDelayBase<MILLIS>::run(base);
+    return RunStyle(&base_, this);
+  }
+  OverDriveColor getColor(int led) { return base_.getColor(led); }
+private:
   BASE base_;
 };
+
+template<int delay_millis, class BASE>
+  using IgnitionDelay = IgnitionDelayX<Int<delay_millis>, BASE>;
 
 #endif
