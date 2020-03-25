@@ -14,6 +14,7 @@ template<class MILLIS>
 class IgnitionDelayBase : public BladeWrapper {
 public:
   void run(BladeBase* base) {
+    millis_.run(base);
     blade_ = base;
     if (base->is_on()) {
       if (!waiting_) {
