@@ -8,10 +8,11 @@
 // This class renders BASE as normal, but delays retraction by
 // the specified number of milliseconds.
 class BladeBase;
-template<int delay_millis, class BASE>
-class RetractionDelay : public BladeWrapper {
+template<class MILLIS>
+class RetractionDelayBase : public BladeWrapper {
 public:
-  bool run(BladeBase* base)  __attribute__((warn_unused_result)) {
+  void run(BladeBase* base) {
+    millis_.run(base);
     blade_ = base;
     if (!base->is_on()) {
       if (!waiting_) {
@@ -19,6 +20,7 @@ public:
         wait_start_time_ = millis();
       }
       uint32_t waited = millis() - wait_start_time_;
+      int delay_millis = millis_.getInteger(0);
       if (waited > delay_millis) {
         is_on_ = false;
         wait_start_time_ = millis() - delay_millis - 1;
@@ -27,15 +29,28 @@ public:
       waiting_ = false;
       is_on_ = true;
     }
-    return RunStyle(&base_, this);
   }
-  OverDriveColor getColor(int led) { return base_.getColor(led); }
   bool is_on() const override { return is_on_; }
 private:
   bool is_on_ = false;
   bool waiting_ = false;
   uint32_t wait_start_time_;
+  MILLIS millis_;
+};
+
+template<class MILLIS, class BASE>
+class RetractionDelayX : public RetractionDelayBase<MILLIS> {
+public:
+  bool run(BladeBase* base) __attribute__((warn_unused_result)) {
+    RetractionDelayBase<MILLIS>::run(base);
+    return RunStyle(&base_, this);
+  }
+  OverDriveColor getColor(int led) { return base_.getColor(led); }
+private:
   BASE base_;
 };
+
+template<int millis, class BASE>
+  using RetractionDelay = RetractionDelayX<Int<millis>, BASE>;
 
 #endif

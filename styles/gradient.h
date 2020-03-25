@@ -49,7 +49,7 @@ class Gradient {
 public:
   void run(BladeBase* blade) {
     colors_.run(blade);
-    mul_ =  (GradientHelper<COLOR...>::size << 14) / blade->num_leds();
+    mul_ =  (GradientHelper<COLOR...>::size << 14) / (blade->num_leds() - 1);
   }
 private:
   GradientHelper<COLOR...> colors_;
