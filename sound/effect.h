@@ -297,9 +297,9 @@ class Effect {
   }
 
   // Returns true if file was identified.
-  static bool ScanAll(const char *dir, const char* filename) {
+  static void ScanAll(const char *dir, const char* filename) {
     if (Effect::IdentifyExtension(filename) == Effect::UNKNOWN) {
-      return false;
+      return;
     }
 
 #if 0
@@ -314,10 +314,8 @@ class Effect {
         continue;
       if (e->Scan(filename)) {
         e->directory_ = dir;
-	return true;
       }
     }
-    return false;
   }
 
   static void ScanCurrentDirectory() {
@@ -345,7 +343,6 @@ class Effect {
 
 #ifdef ENABLE_SD
       if (LSFS::Exists(dir)) {
-        int total_identified = 0;
         for (LSFS::Iterator iter(dir); iter; ++iter) {
           if (iter.isdir()) {
             char fname[128];
@@ -354,22 +351,13 @@ class Effect {
             char* fend = fname + strlen(fname);
             for (LSFS::Iterator i2(iter); i2; ++i2) {
               strcpy(fend, i2.name());
-              if (ScanAll(dir, fname)) total_identified++;
+              ScanAll(dir, fname);
             }
           } else {
-            if (ScanAll(dir, iter.name())) total_identified++;
+            ScanAll(dir, iter.name());
           }
         }
 
-        for (Effect* e = all_effects; e; e = e->next_)
-          total_identified -= e->files_found();
-
-        if (total_identified) {
-          STDOUT.println("");
-          STDOUT.println("WARNING: This font seems to be missing some files!!");
-          talkie.Say(talkie_error_in_15, 15);
-          talkie.Say(talkie_font_directory_15, 15);
-        }
       }
 
 #ifdef ENABLE_AUDIO
@@ -383,6 +371,20 @@ class Effect {
 #endif   // ENABLE_AUDIO
 #endif   // ENABLE_SD
       STDOUT.println(" done");
+    }
+
+    bool warned = false;
+    for (Effect* e = all_effects; e; e = e->next_) {
+      if (e->files_found() != (size_t)(e->num_files_)) {
+	if (!warned) {
+	  warned = true;
+	  STDOUT.println("");
+	  STDOUT.println("WARNING: This font seems to be missing some files!!");
+	  talkie.Say(talkie_error_in_15, 15);
+	  talkie.Say(talkie_font_directory_15, 15);
+	}
+	e->Show();
+      }
     }
     LOCK_SD(false);
   }
