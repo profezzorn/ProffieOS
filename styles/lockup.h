@@ -2,6 +2,8 @@
 #define STYLES_LOCKUP_H
 
 #include "../functions/smoothstep.h"
+#include "../functions/sin.h"
+#include "../functions/layer_functions.h"
 
 HandledFeature FeatureForLockupType(SaberBase::LockupType t) {
   switch (t) {
@@ -24,7 +26,11 @@ HandledFeature FeatureForLockupType(SaberBase::LockupType t) {
 // Also handles "Drag" effect.
 template<
   class LOCKUP, class DRAG_COLOR = LOCKUP,
-  class LOCKUP_SHAPE = Int<32768>, class DRAG_SHAPE = SmoothStep<Int<28671>, Int<4096>> >
+  class LOCKUP_SHAPE = Int<32768>,
+  class DRAG_SHAPE = SmoothStep<Int<28671>, Int<4096>>,
+  class LB_SHAPE = LayerFunctions<Bump<Sin<Int<24>,Int<14000>,Int<4000>>,Int<10000>>,
+                                  Bump<Sin<Int<27>,Int<10000>,Int<20000>>,Int<8000>>,
+                                  Bump<Sin<Int<24>,Int<29000>,Int<20000>>,Int<6000>>> >
 class LockupL {
 public:
   void run(BladeBase* blade) {
@@ -43,6 +49,7 @@ private:
   DRAG_COLOR drag_;
   LOCKUP_SHAPE lockup_shape_;
   DRAG_SHAPE drag_shape_;
+  LB_SHAPE lb_shape_;
 public:
   auto getColor(int led) -> decltype(lockup_.getColor(led) * 1)  {
     // transparent
@@ -50,7 +57,7 @@ public:
     if (handled_) return RGBA_um::Transparent();
     switch (SaberBase::Lockup()) {
       case SaberBase::LOCKUP_MELT:
-	// TODO: Better default for MELT
+	// TODO: Better default for MELT?
       case SaberBase::LOCKUP_DRAG: {
 	blend = single_pixel_ ? 32768 : drag_shape_.getInteger(led);
         if (!is_same_type<DRAG_COLOR, LOCKUP>::value) {
@@ -59,7 +66,8 @@ public:
 	break;
       }
       case SaberBase::LOCKUP_LIGHTNING_BLOCK:
-	// TODO: Better default for LB
+	blend = lb_shape_.getInteger(led);
+	break;
       case SaberBase::LOCKUP_NORMAL:
       case SaberBase::LOCKUP_ARMED:
       case SaberBase::LOCKUP_AUTOFIRE:
