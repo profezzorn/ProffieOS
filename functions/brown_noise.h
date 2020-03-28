@@ -34,7 +34,7 @@ template<class SPEED>
 class SlowNoise {
 public:
   SlowNoise() {
-    rnd_ = random(32768000);
+    value_ = random(32768);
   }
   void run(BladeBase* blade) {
     speed_.run(blade);
@@ -45,14 +45,12 @@ public:
     int speed = speed_.getInteger(0);
     // This makes the random value update exactly 1000 times per second.
     while (delta--)
-      rnd_ = clampi32(rnd_ + (random(speed * 2 + 1) - speed), 0, 32768000);
-    value_ = rnd_ / 1000;
+      value_ = clampi32(value_ + (random(speed * 2 + 1) - speed), 0, 32768);
   }
   int getInteger(int led) { return value_ ; }
 private:
   SPEED speed_;
   uint32_t last_millis_;
-  int rnd_;
   int value_;
 };
 

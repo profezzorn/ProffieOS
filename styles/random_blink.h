@@ -18,7 +18,7 @@ template<class MILLIHZ, class COLOR1 = WHITE>
   using RandomBlinkL = AlphaL<COLOR1, RandomBlinkF<MILLIHZ>>;
 
 template<class MILLIHZ, class COLOR1 = WHITE, class COLOR2 = BLACK>
-  using RandomBlinkX = Layers<COLOR2, RandomBlinkL<COLOR1, MILLIHZ>>;
+  using RandomBlinkX = Layers<COLOR2, RandomBlinkL<MILLIHZ, COLOR1>>;
 
 template<int MILLIHZ, class COLOR1 = WHITE, class COLOR2 = BLACK>
   using RandomBlink = RandomBlinkX<Int<MILLIHZ>, COLOR1, COLOR2>;
