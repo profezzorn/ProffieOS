@@ -27,6 +27,7 @@ public:
     }
     return scale * t / len_;
   }
+  bool restart() const { return restart_; }
 private:
   bool restart_ = false;
   MILLIS millis_;

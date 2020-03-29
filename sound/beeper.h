@@ -5,6 +5,7 @@
 class Beeper : public AudioStream {
 public:
   int read(int16_t *data, int elements) override {
+    SCOPED_PROFILER();
     int e = elements;
     while (num_beeps_) {
       int s = std::min(elements, beeps_[0].samples_);

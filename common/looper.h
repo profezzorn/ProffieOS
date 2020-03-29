@@ -74,6 +74,13 @@ public:
       STDOUT.println("%");
       l->cycles_ = 0;
     }
+    loop_cycles = 0;
+  }
+  static uint64_t CountCycles() {
+    uint64_t cycles = loop_cycles;
+    for (Looper *l = loopers; l; l = l->next_looper_)
+      cycles += l->cycles_;
+    return cycles;
   }
 
 protected:
