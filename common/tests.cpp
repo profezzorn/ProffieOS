@@ -87,6 +87,7 @@ ConsoleHelper STDOUT;
 #define LOCK_SD(X) do { } while(0)
 #define noInterrupts() do{}while(0)
 #define interrupts() do{}while(0)
+#define SCOPED_PROFILER() do { } while(0)
 
 void PrintQuotedValue(const char *name, const char* str) {
   STDOUT.print(name);
