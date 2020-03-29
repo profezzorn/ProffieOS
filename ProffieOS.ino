@@ -431,6 +431,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/boing.h"
 #include "transitions/random.h"
 #include "transitions/colorcycle.h"
+#include "transitions/wave.h"
 
 //responsive styles
 #include "styles/responsive_styles.h"

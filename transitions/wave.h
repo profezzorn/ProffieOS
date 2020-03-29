@@ -8,6 +8,7 @@
 // colors like most transitions to. It's intended to be used with TransitionLoopL
 // or TransitionEffectL, which takes transitions that start and begin with the same
 // color.
+
 template<class COLOR, class FADEOUT_MS, class WAVE_SIZE, class WAVE_MS, class WAVE_CENTER>
 class TrWaveX : public TransitionBaseX<FADEOUT_MS> {
 public:
@@ -39,9 +40,10 @@ private:
 public:
   template<class A, class B>
   auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,color_.getColor(led),1,1)) {
-    int N = std::abs(location - offset_) * size_;
+    int N = std::abs(center_ - offset_) * size_;
+    int mix;
     if (N <= 32) {
-      mix = blast_hum[N] * mix_ >> 8;
+      mix = blast_hump[N] * mix_ >> 8;
     } else {
       mix = 0;
     }
