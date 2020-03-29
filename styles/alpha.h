@@ -24,8 +24,11 @@ private:
   ALPHA alpha_;
 
 public:
-  auto getColor(int led) -> decltype(color_.getColor(led) * alpha_.getInteger(led)) {
-    return color_.getColor(led) * alpha_.getInteger(led);  // clamp?
+  auto getColor(int led) -> decltype(color_.getColor(led) * alpha_.getInteger(led))  {
+//    SCOPED_PROFILER();
+    int alpha = alpha_.getInteger(led);
+    if (alpha == 0) return RGBA_um::Transparent();
+    return color_.getColor(led) * alpha;  // clamp?
   }
 };
 
