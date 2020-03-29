@@ -285,7 +285,7 @@ public:
   // PI/2 = straight up, -PI/2 = straight down
   float angle1() {
     // use orientation!
-    if (angle1_ != 1000.0f) {
+    if (angle1_ == 1000.0f) {
       angle1_ = atan2f(down_.x, sqrtf(down_.z * down_.z + down_.y * down_.y));
     }
     return angle1_;
@@ -294,7 +294,7 @@ public:
   // Twist angle.
   // Note: Twist speed is simply gyro().z!
   float angle2() {
-    if (angle2_ != 1000.0f) {
+    if (angle2_ == 1000.0f) {
       angle2_ = atan2f(down_.y, down_.z);
     }
     return angle2_;
