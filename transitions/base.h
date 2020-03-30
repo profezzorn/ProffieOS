@@ -27,6 +27,8 @@ public:
     }
     return scale * t / len_;
   }
+  bool restart() const { return restart_; }
+  uint32_t start_millis() { return start_millis_; }
 private:
   bool restart_ = false;
   MILLIS millis_;

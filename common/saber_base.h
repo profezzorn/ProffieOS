@@ -119,7 +119,7 @@ public:                                                         \
   SABERFUN(EndLockup, (), ());					\
   SABERFUN(Change, (ChangeType change_type), (change_type));	\
 								\
-  SABERFUN(Top, (), ());					\
+  SABERFUN(Top, (uint64_t total_cycles), (total_cycles));	\
   SABERFUN(Relax, (), ());					\
   SABERFUN(IsOn, (bool* on), (on));				\
   SABERFUN(Message, (const char* msg), (msg));  \

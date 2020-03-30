@@ -56,6 +56,7 @@ public:
 #endif
   
   int read(int16_t* data, int elements) override {
+    SCOPED_PROFILER();
     int32_t sum[AUDIO_BUFFER_SIZE / 2];
     int ret = elements;
     int v = 0, v2 = 0;

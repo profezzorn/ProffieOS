@@ -83,9 +83,9 @@ template<class COLOR,
          int BOTTOM = 4000,
          int SIZE = 10000>
 using ResponsiveClashL =
-  TransitionEffectL<AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<SIZE>>>,
-                    TR1,
-                    TR2,
+  TransitionEffectL<TrConcat<TR1,
+                             AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<SIZE>>>,
+                             TR2>,
                     EFFECT_CLASH>;
 
 // ResponsiveBlastL<BLAST COLOR, TRANSITION1, TRANSITION2, TOP, BOTTOM, SIZE>
@@ -100,9 +100,9 @@ template<class COLOR,
          int BOTTOM = 8000,
          int SIZE = 8000>
 using ResponsiveBlastL =
-  MultiTransitionEffectL<AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<SIZE>>>,
-                         TR1,
-                         TR2,
+  MultiTransitionEffectL<TrConcat<TR1,
+                                  AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<SIZE>>>,
+                                  TR2>,
                          EFFECT_BLAST>;
 
 // ResponsiveStabL<STAB COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
@@ -116,9 +116,9 @@ template<class COLOR,
          int SIZE1 = 14000,
          int SIZE2 = 8000>
 using ResponsiveStabL =
-  TransitionEffectL<AlphaL<COLOR, SmoothStep<Int<32000>,Scale<BladeAngle<>,Int<SIZE1>,Int<SIZE2>>>>,
-                    TR1,
-                    TR2,
+  TransitionEffectL<TrConcat<TR1,
+                             AlphaL<COLOR, SmoothStep<Int<32000>,Scale<BladeAngle<>,Int<SIZE1>,Int<SIZE2>>>>,
+                             TR2>,
                     EFFECT_STAB>;
 
 

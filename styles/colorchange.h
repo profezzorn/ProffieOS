@@ -27,7 +27,6 @@ public:
       old_variation_ = variation_;
       variation_ = GetVariation();
       transition_.begin();
-      transition_.run(blade);
     }
     if (variation_ != old_variation_) {
       transition_.run(blade);
@@ -43,6 +42,7 @@ private:
   MixHelper<COLORS...> colors_;
 public:
   auto getColor(int led) -> decltype(transition_.getColor(colors_.getColor(variation_, led), colors_.getColor(variation_, led), led)) {
+//    SCOPED_PROFILER();
     auto ret = colors_.getColor(variation_, led);
     if (variation_ != old_variation_) {
       auto old = colors_.getColor(old_variation_, led);

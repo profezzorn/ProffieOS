@@ -544,7 +544,7 @@ public:
     SaberBase::DoMotion(motion, clear);
   }
 
-  void SB_Top() override {
+  void SB_Top(uint64_t total_cycles) override {
     STDOUT.print("Acceleration measurements per second: ");
     accel_loop_counter_.Print();
     STDOUT.println("");

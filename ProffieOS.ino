@@ -255,6 +255,7 @@ public:
 #endif
 
 #include "common/scoped_cycle_counter.h"
+#include "common/profiling.h"
 
 uint64_t audio_dma_interrupt_cycles = 0;
 uint64_t wav_interrupt_cycles = 0;
@@ -430,6 +431,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/boing.h"
 #include "transitions/random.h"
 #include "transitions/colorcycle.h"
+#include "transitions/wave.h"
 
 //responsive styles
 #include "styles/responsive_styles.h"
@@ -987,7 +989,8 @@ class Commands : public CommandParser {
       float total_cycles =
         (float)(audio_dma_interrupt_cycles +
                  wav_interrupt_cycles +
-                 loop_cycles);
+		 Looper::CountCycles() +
+		 CountProfileCycles());
       STDOUT.print("Audio DMA: ");
       STDOUT.print(audio_dma_interrupt_cycles * 100.0f / total_cycles);
       STDOUT.println("%");
@@ -1000,12 +1003,12 @@ class Commands : public CommandParser {
       STDOUT.print("Global loops / second: ");
       global_loop_counter.Print();
       STDOUT.println("");
-      SaberBase::DoTop();
+      SaberBase::DoTop(total_cycles);
       Looper::LoopTop(total_cycles);
+      DumpProfileLocations(total_cycles);
       noInterrupts();
       audio_dma_interrupt_cycles = 0;
       wav_interrupt_cycles = 0;
-      loop_cycles = 0;
       interrupts();
       return true;
     }

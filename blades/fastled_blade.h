@@ -106,7 +106,7 @@ public:
     on_ = false;
   }
 
-  void SB_Top() override {
+  void SB_Top(uint64_t total_cycles) override {
     STDOUT.print("blade fps: ");
     loop_counter_.Print();
     STDOUT.println("");
