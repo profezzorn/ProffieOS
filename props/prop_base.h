@@ -64,8 +64,12 @@ public:
   uint32_t on_pending_base_;
   uint32_t on_pending_delay_;
 
+  virtual bool IsOn() {
+    return SaberBase::IsOn() || on_pending_;
+  }
+
   virtual void On() {
-    if (SaberBase::IsOn() || on_pending_) return;
+    if (IsOn()) return;
     if (current_style() && current_style()->NoOnOff())
       return;
     activated_ = millis();
@@ -90,6 +94,11 @@ public:
   }
 
   virtual void Off(OffType off_type = OFF_NORMAL) {
+    if (on_pending_) {
+      // Or is it better to wait until we turn on, and then turn off?
+      on_pending_ = false;
+      return;
+    }
     if (!SaberBase::IsOn()) return;
     if (SaberBase::Lockup()) {
       SaberBase::DoEndLockup();
@@ -922,7 +931,7 @@ public:
       STDOUT.print(" mods ");
       PrintButton(current_modifiers);
     }
-    if (SaberBase::IsOn()) STDOUT.print(" ON");
+    if (IsOn()) STDOUT.print(" ON");
     STDOUT.print(" millis=");
     STDOUT.println(millis());
   }
@@ -945,7 +954,7 @@ public:
       return true;
     }
     if (!strcmp(cmd, "get_on")) {
-      STDOUT.println(SaberBase::IsOn());
+      STDOUT.println(IsOn());
       return true;
     }
     if (!strcmp(cmd, "clash")) {
@@ -1300,11 +1309,11 @@ public:
         break;
     }
 
-    if (Event2(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
+    if (Event2(button, event, current_modifiers | (IsOn() ? MODE_ON : MODE_OFF))) {
       current_modifiers = BUTTON_NONE;
       return true;
     }
-    if (Event2(button, event,  MODE_ANY_BUTTON | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
+    if (Event2(button, event,  MODE_ANY_BUTTON | (IsOn() ? MODE_ON : MODE_OFF))) {
       current_modifiers = BUTTON_NONE;
       return true;
     }
