@@ -2,8 +2,11 @@
 #define STYLES_LOCKUP_H
 
 #include "../functions/smoothstep.h"
-#include "../functions/sin.h"
+#include "../functions/islessthan.h"
 #include "../functions/layer_functions.h"
+#include "../functions/scale.h"
+#include "../functions/brown_noise.h"
+
 
 HandledFeature FeatureForLockupType(SaberBase::LockupType t) {
   switch (t) {
