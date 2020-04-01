@@ -40,6 +40,7 @@ public:
       drag_.run(blade);
     lockup_shape_.run(blade);
     drag_shape_.run(blade);
+    lb_shape_.run(blade);
     handled_ = blade->current_style()->IsHandled(FeatureForLockupType(SaberBase::Lockup()));
   }
 private:
