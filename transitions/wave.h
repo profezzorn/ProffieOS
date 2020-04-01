@@ -9,19 +9,23 @@
 // or TransitionEffectL, which takes transitions that start and begin with the same
 // color.
 
-template<class COLOR, class FADEOUT_MS, class WAVE_SIZE, class WAVE_MS, class WAVE_CENTER>
+template<class COLOR,
+         class FADEOUT_MS = Int<200>,
+         class WAVE_SIZE = Int<100>,
+         class WAVE_MS = Int<400>,
+         class WAVE_CENTER = Int<16384>>
 class TrWaveX : public TransitionBaseX<FADEOUT_MS> {
 public:
   void run(BladeBase *blade) {
-    wave_size_.run();
-    wave_center_.run();
-    color_.run();
+    wave_size_.run(blade);
+    wave_center_.run(blade);
+    color_.run(blade);
     if (this->restart()) {
       center_ = wave_center_.getInteger(0);
       size_ = wave_size_.getInteger(0);
     }
     TransitionBaseX<FADEOUT_MS>::run(blade);
-    mix_ = this->update(32768); 
+    mix_ = 32768 - this->update(32768);
     num_leds_ = blade->num_leds();
     offset_ = (millis() - this->start_millis()) * 32768 / wave_ms_.getInteger(0);
   }
@@ -31,7 +35,7 @@ private:
   
   WAVE_SIZE wave_size_;
   int size_;
-  
+
   int mix_;
   int num_leds_;
   int offset_;
@@ -40,14 +44,15 @@ private:
 public:
   template<class A, class B>
   auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,color_.getColor(led),1,1)) {
-    int N = std::abs(center_ - offset_) * size_;
+    int dist = std::abs(center_ - led * 32768 / num_leds_);
+    int N = std::abs(dist - offset_) * size_ >> 15;
     int mix;
     if (N <= 32) {
       mix = blast_hump[N] * mix_ >> 8;
     } else {
       mix = 0;
     }
-    return MixColors(a, color_.getColor(led), mix_, 15);
+    return MixColors(a, color_.getColor(led), mix, 15);
   }
 };
    

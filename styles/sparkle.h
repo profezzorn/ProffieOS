@@ -3,7 +3,7 @@
 
 // Usage: Sparkle<BASE, SPARKLE_COLOR, SPARK_CHANCE_PROMILLE, SPARK_INTENSITY>
 // BASE: COLOR
-// CLASH_COLOR: COLOR (defaults to white)
+// SPARKLE_COLOR: COLOR (defaults to white)
 // SPARK_CHANCE_PROMILLE: a number
 // SPARK_INTENSITY: a number
 // Generally displays BASE, but creates little sparkles of SPARKLE_COLOR
