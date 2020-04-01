@@ -55,7 +55,7 @@ public:
     } else if (current_percentage == 0.0) {
       start_ = 0;
       end_ = 0;
-      keep_running = false;
+      keep_running = !is_same_type<OFF_COLOR, Rgb<0,0,0> >::value;
     } else {
       end_ = (pos + fraction) * num_leds_;
     }
