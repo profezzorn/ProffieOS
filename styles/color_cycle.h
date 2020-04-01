@@ -2,6 +2,7 @@
 #define STYLES_COLOR_CYCLE_H
 
 #include <algorithm>
+#include "rgb.h"
 
 // Usage: ColorCycle<COLOR, PERCENT, RPM>
 // or: ColorCycle<COLOR, PERCENT, RPM, ON_COLOR, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS, OFF_COLOR>

@@ -2,6 +2,7 @@
 #define STYLES_CYLON_H
 
 #include "../common/range.h"
+#include "rgb.h"
 
 // Usage: Cylon<COLOR, PERCENT, RPM>
 // or: ColorCycle<COLOR, PERCENT, RPM, ON_COLOR, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS, OFF_COLOR>
