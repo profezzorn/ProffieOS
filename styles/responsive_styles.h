@@ -99,8 +99,7 @@ template<class COLOR,
          int SPEED = 400,
          int TOP = 28000,
          int BOTTOM = 8000,
-         BladeEffectType EFFECT = EFFECT_BLAST
-         >
+         BladeEffectType EFFECT = EFFECT_BLAST>
 using ResponsiveBlastL =
          AlphaL<MultiTransitionEffectL<
                   TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>, Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>>,EFFECT>, 
@@ -119,13 +118,10 @@ template<class COLOR,
          int SPEED = 400,
          int TOP = 28000,
          int BOTTOM = 8000,
-         BladeEffectType EFFECT = EFFECT_BLAST
-         >
+         BladeEffectType EFFECT = EFFECT_BLAST>
 using ResponsiveBlastWaveL =
          MultiTransitionEffectL<
-                  TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>, Scale<BladeAngle<>, 
-                           Int<TOP>, 
-                           Int<BOTTOM>>>, 
+                  TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>, Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>>, 
                            EFFECT>;
 
 
@@ -140,14 +136,12 @@ template<class COLOR,
          int FADE = 400,
          int TOP = 28000,
          int BOTTOM = 8000,
-         BladeEffectType EFFECT = EFFECT_BLAST
-         >
+         BladeEffectType EFFECT = EFFECT_BLAST>
 using ResponsiveBlastFadeL =
-         MultiTransitionEffectL<
-                  TrConcat<TrInstant, 
-                           AlphaL<COLOR, Bump<Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>, Int<SIZE>>>,
-                           TrFade<FADE>>,
-                           EFFECT>;
+         MultiTransitionEffectL<TrConcat<TrInstant, 
+                                         AlphaL<COLOR, Bump<Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>, Int<SIZE>>>,
+                                         TrFade<FADE>>,
+                                EFFECT>;
 
 // ResponsiveStabL<STAB COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
 // Stab effect
