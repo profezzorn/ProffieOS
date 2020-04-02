@@ -2,8 +2,11 @@
 #define STYLES_LOCKUP_H
 
 #include "../functions/smoothstep.h"
-#include "../functions/sin.h"
+#include "../functions/islessthan.h"
 #include "../functions/layer_functions.h"
+#include "../functions/scale.h"
+#include "../functions/brown_noise.h"
+
 
 HandledFeature FeatureForLockupType(SaberBase::LockupType t) {
   switch (t) {
@@ -28,9 +31,12 @@ template<
   class LOCKUP, class DRAG_COLOR = LOCKUP,
   class LOCKUP_SHAPE = Int<32768>,
   class DRAG_SHAPE = SmoothStep<Int<28671>, Int<4096>>,
-  class LB_SHAPE = LayerFunctions<Bump<Sin<Int<24>,Int<14000>,Int<4000>>,Int<10000>>,
-                                  Bump<Sin<Int<27>,Int<10000>,Int<20000>>,Int<8000>>,
-                                  Bump<Sin<Int<24>,Int<29000>,Int<20000>>,Int<6000>>> >
+  class LB_SHAPE = LayerFunctions<Bump<Scale<SlowNoise<Int<2000>>,Int<3000>,Int<16000>>,
+				Scale<BrownNoiseF<Int<10>>,Int<14000>,Int<8000>>>,
+			Bump<Scale<SlowNoise<Int<2300>>,Int<26000>,Int<8000>>,
+				Scale<NoisySoundLevel,Int<5000>,Int<10000>>>,
+			Bump<Scale<SlowNoise<Int<2300>>,Int<20000>,Int<30000>>,
+				Scale<IsLessThan<SlowNoise<Int<1500>>,Int<8000>>,Scale<NoisySoundLevel,Int<5000>,Int<0>>,Int<0>>>>  >
 class LockupL {
 public:
   void run(BladeBase* blade) {
