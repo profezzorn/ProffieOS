@@ -86,7 +86,7 @@ using ResponsiveClashL =
                              TR2>,
                     EFFECT_CLASH>;
 
-// ResponsiveBlastL<BLAST COLOR, FADEOUT_MS, WAVE_SIZE, WAVE_SPEED, TOP, BOTTOM>
+// ResponsiveBlastL<BLAST COLOR, FADEOUT_MS, WAVE_SIZE, WAVE_SPEED, TOP, BOTTOM, EFFECT>
 // Implements Blast effect that will move based on angle of the blade instead of random location Blast will impact and disperse along the blade from original position
 // FADE = fade time ms
 // WAVE_SIZE = size
@@ -98,11 +98,12 @@ template<class COLOR,
          int SIZE = 100,
          int SPEED = 400,
          int TOP = 28000,
-         int BOTTOM = 8000
+         int BOTTOM = 8000,
+         BladeEffectType EFFECT = EFFECT_BLAST
          >
 using ResponsiveBlastL =
          AlphaL<MultiTransitionEffectL<
-                  TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>, Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>>,EFFECT_BLAST>, 
+                  TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>, Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>>,EFFECT>, 
                   Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<24000>>>;
 
 // ResponsiveBlastWaveL<BLAST COLOR, FADEOUT_MS, WAVE_SIZE, WAVE_SPEED, TOP, BOTTOM>
@@ -117,14 +118,15 @@ template<class COLOR,
          int SIZE = 100,
          int SPEED = 400,
          int TOP = 28000,
-         int BOTTOM = 8000
+         int BOTTOM = 8000,
+         BladeEffectType EFFECT = EFFECT_BLAST
          >
 using ResponsiveBlastWaveL =
          MultiTransitionEffectL<
                   TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>, Scale<BladeAngle<>, 
                            Int<TOP>, 
                            Int<BOTTOM>>>, 
-                           EFFECT_BLAST>;
+                           EFFECT>;
 
 
 // ResponsiveBlastFadeL<BLAST COLOR, SIZE, FADE, TOP, BOTTOM>
@@ -137,14 +139,15 @@ template<class COLOR,
          int SIZE = 8000,
          int FADE = 400,
          int TOP = 28000,
-         int BOTTOM = 8000
+         int BOTTOM = 8000,
+         BladeEffectType EFFECT = EFFECT_BLAST
          >
 using ResponsiveBlastFadeL =
          MultiTransitionEffectL<
                   TrConcat<TrInstant, 
                            AlphaL<COLOR, Bump<Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>, Int<SIZE>>>,
                            TrFade<FADE>>,
-                           EFFECT_BLAST>;
+                           EFFECT>;
 
 // ResponsiveStabL<STAB COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
 // Stab effect
