@@ -4,6 +4,7 @@
 #include "../transitions/concat.h"
 
 // Usage: TransitionEffect<COLOR, EFFECT_COLOR, TRANSITION1, TRANSITION2, EFFECT>
+// Or: TransitionEffectL<EFFECT_COLOR, TRANSITION1, TRANSITION2, EFFECT>
 // COLOR, EFFECT_COLOR: COLOR
 // TRANSITION1, TRANSITION2 : TRANSITION
 // EFFECT: effect type
