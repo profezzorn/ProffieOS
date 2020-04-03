@@ -5,6 +5,7 @@
 #include "layers.h"
 
 // Usage: SimpleClash<BASE, CLASH_COLOR, CLASH_MILLIS>
+// Or: SimpleClashL<CLASH_COLOR, CLASH_MILLIS>
 // BASE: COLOR
 // CLASH_COLOR: COLOR (defaults to white)
 // CLASH_MILLIS: a number (defaults to 40)
@@ -56,6 +57,7 @@ template<class T, class CLASH_COLOR = Rgb<255,255,255>, int CLASH_MILLIS = 40,
 
 
 // Usage: LocalizedClash<BASE, CLASH_COLOR, CLASH_MILLIS, CLASH_WIDTH_PERCENT=50>
+// Usage: LocalizedClashL<CLASH_COLOR, CLASH_MILLIS, CLASH_WIDTH_PERCENT=50>
 // BASE: COLOR
 // CLASH_COLOR: COLOR (defaults to white)
 // CLASH_MILLIS: a number (defaults to 40)
