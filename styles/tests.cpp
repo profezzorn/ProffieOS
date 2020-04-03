@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 // cruft
+#define SCOPED_PROFILER() do { } while(0)
 template<class A, class B>
 constexpr auto min(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::forward<B>(b)) {
   return a < b ? std::forward<A>(a) : std::forward<B>(b);

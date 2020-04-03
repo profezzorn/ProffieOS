@@ -67,6 +67,16 @@ public:
 #endif
         return true;
 
+	// Handle double-click with preon
+      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_OFF):
+	if (on_pending_) {
+          if (SetMute(true)) {
+            unmute_on_deactivation_ = true;
+          }
+	  return true;
+	}
+	return false;
+	
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
         if (millis() - activated_ < 500) {
           if (SetMute(true)) {
@@ -98,6 +108,7 @@ public:
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_ON):
         // Avoid the base and the very tip.
         // TODO: Make blast only appear on one blade!
         SaberBase::DoBlast();
@@ -126,12 +137,15 @@ public:
         }
         break;
 
-        // Stab Lockup? Long-Stab? Touche?
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
+	SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+	SaberBase::DoBeginLockup();
+	return true;
+
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_AUX):
         if (!SaberBase::Lockup()) {
-          // TODO: Make it possible to distinguish between drag and long-stab.
-          SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+          SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
           SaberBase::DoBeginLockup();
           return true;
         }

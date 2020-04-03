@@ -13,9 +13,8 @@ public:
   virtual bool done() = 0;
   virtual void begin() = 0;
   virtual void run(BladeBase* blade) = 0;
-  virtual OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) = 0;
+  virtual OverDriveColor getColor(const OverDriveColor& a, const OverDriveColor& b, int led) = 0;
+  virtual RGBA getColor(const RGBA& a, const RGBA& b, int led) = 0;
 };
 
 template<class TR>
@@ -27,6 +26,11 @@ public:
   OverDriveColor getColor(const OverDriveColor& a,
 			  const OverDriveColor& b,
 			  int led) override {
+    return tr_.getColor(a, b, led);
+  }
+  RGBA getColor(const RGBA& a,
+		const RGBA& b,
+		int led) override {
     return tr_.getColor(a, b, led);
   }
 public:
@@ -68,6 +72,11 @@ public:
   OverDriveColor getColor(const OverDriveColor& a,
 			  const OverDriveColor& b,
 			  int led) {
+    return selected_->getColor(a, b, led);
+  }
+  RGBA getColor(const RGBA& a,
+		const RGBA& b,
+		int led) {
     return selected_->getColor(a, b, led);
   }
 private:

@@ -21,16 +21,14 @@ struct FireConfig {
   }
 };
 
-
-template<class COLOR1, class COLOR2,
-  int DELAY = 0, int SPEED = 2,
+template<int DELAY = 0, int SPEED = 2,
   class NORM = FireConfig<0,2000,5>,
   class CLASH = FireConfig<3000,0,0>,
   class LOCK = FireConfig<0, 5000, 10>,
   class OFF = FireConfig<0, 0, NORM::Cooling>>
-class StyleFire {
-public:
-  StyleFire() {
+class StyleFireBase {
+protected:
+  StyleFireBase() {
     for (size_t i = 0; i < NELEM(heat_); i++) heat_[i] = 0;
   }
   enum OnState {
@@ -56,8 +54,6 @@ public:
   }
   bool run(BladeBase* blade) {
     bool keep_running = true;
-    c1_.run(blade);
-    c2_.run(blade);
     uint32_t m = millis();
     num_leds_ = blade->num_leds();
     if (m - last_update_ >= 10) {
@@ -91,8 +87,31 @@ public:
     return keep_running;
   }
 
+  OneshotEffectDetector<EFFECT_CLASH> clash_;
+  int num_leds_;
+  uint32_t last_update_;
+  unsigned short heat_[maxLedsPerStrip + 13];
+  OnState state_ = STATE_OFF;
+  uint32_t on_time_;
+};
+
+template<class COLOR1, class COLOR2,
+  int DELAY = 0, int SPEED = 2,
+  class NORM = FireConfig<0,2000,5>,
+  class CLASH = FireConfig<3000,0,0>,
+  class LOCK = FireConfig<0, 5000, 10>,
+  class OFF = FireConfig<0, 0, NORM::Cooling>>
+class StyleFire : StyleFireBase<DELAY, SPEED, NORM, CLASH, LOCK, OFF>{
+public:
+  StyleFire() {}
+  bool run(BladeBase* blade) {
+    c1_.run(blade);
+    c2_.run(blade);
+    return StyleFireBase<DELAY, SPEED, NORM, CLASH, LOCK, OFF>::run(blade);
+  }
+
   OverDriveColor getColor(int led) {
-    int h = heat_[num_leds_ - 1 - led];
+    int h = this->heat_[this->num_leds_ - 1 - led];
     OverDriveColor c;
     if (h < 256) {
       c.c = Color16().mix(c1_.getColor(led).c, h);
@@ -107,14 +126,8 @@ public:
   }
 
 private:
-  OneshotEffectDetector<EFFECT_CLASH> clash_;
   COLOR1 c1_;
   COLOR2 c2_;
-  int num_leds_;
-  uint32_t last_update_;
-  unsigned short heat_[maxLedsPerStrip + 13];
-  OnState state_ = STATE_OFF;
-  uint32_t on_time_;
 };
 
 

@@ -14,19 +14,13 @@ template<class MILLIS>
 class TrWipeX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* blade) {
-    if (this->done()) {
-      fade_ = blade->num_leds() * 256;
-    } else {
-      fade_ = (millis() - this->start_millis_) * 256 * blade->num_leds() / this->len_;
-    }
+    TransitionBaseX<MILLIS>::run(blade);
+    fade_ = this->update(256 * blade->num_leds());
   }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,b,1,1)) {
     int mix = (Range(0, fade_) & Range(led << 8, (led << 8) + 256)).size();
-    OverDriveColor ret = a;
-    ret.c = a.c.mix(b.c, mix);
-    return ret;
+    return MixColors(a, b, mix, 8);
   }
 private:
   uint32_t fade_;
@@ -46,21 +40,15 @@ public:
   TrWipeInX() : TransitionBaseX<MILLIS>(), fade_(0, 0) {}
 
   void run(BladeBase* blade) {
-    if (this->done()) {
-      fade_ = Range(0, blade->num_leds() * 256);
-    } else {
-      fade_ = Range(256 * blade->num_leds() -
-		    (millis() - this->start_millis_) * 256 * blade->num_leds() / this->len_,
-		    blade->num_leds() * 256);
-    }
+    TransitionBaseX<MILLIS>::run(blade);
+    fade_ = Range(256 * blade->num_leds() -
+		  this->update(256 * blade->num_leds()),
+		  blade->num_leds() * 256);
   }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,b,1,1)) {
     int mix = (fade_ & Range(led << 8, (led << 8) + 256)).size();
-    OverDriveColor ret = a;
-    ret.c = a.c.mix(b.c, mix);
-    return ret;
+    return MixColors(a, b, mix, 8);
   }
 private:
   Range fade_;

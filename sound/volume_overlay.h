@@ -17,6 +17,7 @@ public:
     volume_.set_speed(kDefaultSpeed);
   }
   int read(int16_t* data, int elements) override {
+    SCOPED_PROFILER();
     elements = T::read(data, elements);
     if (volume_.isConstant()) {
       int32_t mult = volume_.value();

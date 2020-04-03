@@ -11,20 +11,26 @@
 // These templates can be assigned to presets from WebUSB or bluetooth.
 // See style_parser.h for more details.
 
-template<int ARG, class DEFAULT_COLOR>
-class RgbArg {
+// Break out template-invariant functionality to save memory.
+class RgbArgBase {
 public:
-  RgbArg() {
+  void run(BladeBase* base) {}
+  OverDriveColor getColor(int led) {
+    OverDriveColor ret;
+    ret.c = color_;
+    ret.overdrive = false;
+    return ret;
+  }
+protected:
+  void init(int argnum) {
     char default_value[32];
-    DEFAULT_COLOR default_color; // Note, no run() call for default_color!
-    color_ = default_color.getColor(0).c;
     itoa(color_.r, default_value, 10);
     strcat(default_value, ",");
     itoa(color_.g, default_value + strlen(default_value), 10);
     strcat(default_value, ",");
     itoa(color_.b, default_value + strlen(default_value), 10);
     
-    const char* arg = CurrentArgParser->GetArg(ARG, "COLOR", default_value);
+    const char* arg = CurrentArgParser->GetArg(argnum, "COLOR", default_value);
     if (arg) {
       char* tmp;
       int r = strtol(arg, &tmp, 0);
@@ -34,15 +40,18 @@ public:
       color_ = Color16(r, g, b);
     }
   }
-  void run(BladeBase* base) {}
-  OverDriveColor getColor(int led) {
-    OverDriveColor ret;
-    ret.c = color_;
-    ret.overdrive = false;
-    return ret;
-  }
-private:
+
   Color16 color_;
+};
+
+template<int ARG, class DEFAULT_COLOR>
+class RgbArg : public RgbArgBase{
+public:
+  RgbArg() {
+    DEFAULT_COLOR default_color; // Note, no run() call for default_color!
+    color_ = default_color.getColor(0).c;
+    init(ARG);
+  }
 };
 
 #endif

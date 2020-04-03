@@ -412,11 +412,20 @@ public:
 	if (SFX_bgnauto) once = &SFX_bgnauto;
 	if (SFX_auto) loop = &SFX_auto;
 	break;
+      case SaberBase::LOCKUP_LIGHTNING_BLOCK:
+	if (SFX_bgnlb) once = &SFX_bgnlb;
+	if (SFX_lb) loop = &SFX_lb;
+	goto normal_fallback;
+      case SaberBase::LOCKUP_MELT:
+	if (SFX_bgnmelt) once = &SFX_bgnmelt;
+	if (SFX_melt) loop = &SFX_melt;
+        // fall through
       case SaberBase::LOCKUP_DRAG:
-        if (SFX_bgndrag) once = &SFX_bgndrag;
-        if (SFX_drag) loop = &SFX_drag;
+        if (!once && SFX_bgndrag) once = &SFX_bgndrag;
+        if (!loop && SFX_drag) loop = &SFX_drag;
         // fall through
       case SaberBase::LOCKUP_NORMAL:
+	normal_fallback:
         if (!once && SFX_bgnlock) once = &SFX_bgnlock;
         // fall through
       case SaberBase::LOCKUP_NONE:
@@ -449,10 +458,17 @@ public:
         if (SFX_endauto) end = &SFX_endauto; // if we have a transition use it
         if (!end) end = &SFX_blast; // if we don't, end with a blast
         break;
+      case SaberBase::LOCKUP_LIGHTNING_BLOCK:
+	if (SFX_endlb) end = &SFX_endlb;
+	goto normal_fallback_end;
+      case SaberBase::LOCKUP_MELT:
+	if (SFX_endmelt) end = &SFX_endmelt;
+        // fall through
       case SaberBase::LOCKUP_DRAG:
-        if (SFX_enddrag) end = &SFX_enddrag;
+        if (!end && SFX_enddrag) end = &SFX_enddrag;
         // fall through
       case SaberBase::LOCKUP_NORMAL:
+	normal_fallback_end:
         if (!end && SFX_endlock) end = &SFX_endlock;
         if (!end) end = &SFX_clash;
         // fall through
@@ -548,7 +564,17 @@ public:
     return current_effect_length_;
   }
 
-
+  void SB_LowBatt() override {
+    // play the fonts low battery sound if it exists
+    if (SFX_lowbatt) {
+      PlayCommon(&SFX_lowbatt);
+    } else {
+#ifdef ENABLE_AUDIO
+      talkie.Say(talkie_low_battery_15, 15);
+#endif
+    }
+  }
+	
  private:
   uint32_t last_micros_;
   uint32_t hum_start_;

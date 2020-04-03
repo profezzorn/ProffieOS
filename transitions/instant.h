@@ -9,11 +9,8 @@ public:
   bool done() { return true; }
   void begin() {}
   void run(BladeBase* blade) {}
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
-    return b;
-  }
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) AUTO_RETURN(b)
 };
 
 #endif

@@ -13,10 +13,12 @@
 template<class MILLIS>
 class TrDelayX : public TransitionBaseX<MILLIS> {
 public:
-  void run(BladeBase* blade) {}
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
+  void run(BladeBase* blade) {
+    TransitionBaseX<MILLIS>::run(blade);
+    this->update(0);
+  }
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,b,1,1)) {
     return this->done() ? b : a;
   }
 };

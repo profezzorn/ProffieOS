@@ -14,6 +14,7 @@ public:
   bool run(BladeBase* blade) __attribute__((warn_unused_result)) {
     base_.run(blade);
     extension_.run(blade);
+    off_color_.run(blade);
     on_ = blade->is_on();
     thres = (extension_.getInteger(0) * (blade->num_leds() + 4)) >> 7;
     if (ALLOW_DISABLE && is_same_type<OFF_COLOR, Rgb<0,0,0> >::value && thres == 0)
@@ -22,6 +23,7 @@ public:
   }
 
   OverDriveColor getColor(int led) {
+    SCOPED_PROFILER();
     OverDriveColor ret = base_.getColor(led);
     if (on_) {
       OverDriveColor spark = spark_color_.getColor(led);
@@ -29,7 +31,8 @@ public:
       ret.c = spark.c.mix(ret.c, spark_mix);
     }
     int black_mix = clampi32(thres - led * 256, 0, 255);
-    ret.c = Color16().mix(ret.c, black_mix);
+    OverDriveColor off_color  = off_color_.getColor(led);
+    ret.c = off_color.c.mix(ret.c, black_mix);
     return ret;
   }
 private:
@@ -38,6 +41,7 @@ private:
   int thres = 0;
   SPARK_COLOR spark_color_;
   EXTENSION extension_;
+  OFF_COLOR off_color_;
 };
 
 template<class T, int OUT_MILLIS, int IN_MILLIS, class SPARK_COLOR = Rgb<255,255,255>, class OFF_COLOR=Rgb<0,0,0>, bool ALLOW_DISABLE=1>

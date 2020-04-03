@@ -13,7 +13,8 @@ template<class TRANSITION, class... COLORS>
 class ColorChange {
 public:
   ColorChange() {
-    BladeBase::HandleEffectType(EFFECT_CHANGE);
+    BladeBase::HandleFeature(HANDLED_FEATURE_CHANGE);
+    BladeBase::HandleFeature(HANDLED_FEATURE_CHANGE_TICKED);
   }
   uint8_t GetVariation() {
     return (SaberBase::GetCurrentVariation() +
@@ -26,7 +27,6 @@ public:
       old_variation_ = variation_;
       variation_ = GetVariation();
       transition_.begin();
-      transition_.run(blade);
     }
     if (variation_ != old_variation_) {
       transition_.run(blade);
@@ -35,19 +35,21 @@ public:
     }
   }
 
-  OverDriveColor getColor(int led) {
-    OverDriveColor ret = colors_.getColor(variation_, led);
-    if (variation_ != old_variation_) {
-      OverDriveColor old = colors_.getColor(old_variation_, led);
-      ret = transition_.getColor(old, ret, led);
-    }
-    return ret;
-  }
 private:
   TRANSITION transition_;
   uint8_t variation_= 0;
   uint8_t old_variation_ = 0;
   MixHelper<COLORS...> colors_;
+public:
+  auto getColor(int led) -> decltype(transition_.getColor(colors_.getColor(variation_, led), colors_.getColor(variation_, led), led)) {
+//    SCOPED_PROFILER();
+    auto ret = colors_.getColor(variation_, led);
+    if (variation_ != old_variation_) {
+      auto old = colors_.getColor(old_variation_, led);
+      return transition_.getColor(old, ret, led);
+    }
+    return ret;
+  }
 };
 
 #endif

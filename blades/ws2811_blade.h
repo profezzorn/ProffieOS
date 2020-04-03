@@ -139,7 +139,7 @@ public:
     }
   }
 
-  void SB_Top() override {
+  void SB_Top(uint64_t total_cycles) override {
     STDOUT.print("blade fps: ");
     loop_counter_.Print();
     STDOUT.println("");
@@ -167,6 +167,7 @@ protected:
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (true) {
+    retry:
       while (!powered_ || !current_style_) {
 	loop_counter_.Reset();
 	YIELD();
@@ -189,17 +190,21 @@ protected:
       }
       current_blade = this;
       current_style_->run(this);
-      while (!pin_.IsReadyForBeginFrame()) YIELD();
-      // If Power() was called....
-      if (current_blade != this) continue;
+      while (!pin_.IsReadyForBeginFrame()) {
+	YIELD();
+	// If Power() was called....
+	if (current_blade != this) goto retry;
+      }
       pin_.BeginFrame();
       for (int i = 0; i < pin_.num_leds(); i++) {
 	pin_.Set(i, color_buffer[i]);
 	if (!(i & 0x1f)) Looper::DoHFLoop();
       }
-      while (!pin_.IsReadyForEndFrame()) YIELD();
-      // If Power() was called....
-      if (current_blade != this) continue;
+      while (!pin_.IsReadyForEndFrame()) {
+	YIELD();
+	// If Power() was called....
+	if (current_blade != this) goto retry;
+      }
       pin_.EndFrame();
       loop_counter_.Update();
       current_blade = NULL;

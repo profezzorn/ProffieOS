@@ -14,27 +14,14 @@
 // Example, a red SOS pattern:
 // Sequence<RED, BLACK, 100, 37, 0b0001010100011100, 0b0111000111000101, 0b0100000000000000>
 
-template<class COLOR1, class COLOR2, int millis_per_bit, int bits, int ... sequence >
-class Sequence {
-public:
-  void run(BladeBase* blade) {
-    static uint16_t sequence_[] = { sequence... };
-    c1_.run(blade);
-    c2_.run(blade);
+#include "../functions/sequence.h"
 
-    uint32_t now = millis();
-    uint32_t bit = (now / millis_per_bit) % std::min<size_t>(bits, sizeof...(sequence) * 16);
-    on_ = !!((sequence_[bit >> 4] >> ((~bit) & 0xf)) & 1);
-  }
-  OverDriveColor getColor(int led) {
-    return on_ ? c1_.getColor(led) : c2_.getColor(led);
-  }
-  
-private:
-  COLOR1 c1_;
-  COLOR2 c2_;
-  bool on_;
-};
+template<class COLOR2, int millis_per_bit, int bits, int ... sequence >
+  using SequenceL = AlphaL<COLOR2, SequenceF<millis_per_bit, bits, sequence...>>;
+
+template<class COLOR1, class COLOR2, int millis_per_bit, int bits, int ... sequence >
+  using Sequence = Layers<COLOR1, SequenceL<COLOR2, millis_per_bit, bits, sequence...>>;
+
 
 template<int millis_per_color, class... COLORS> 
 class ColorSequence {
@@ -52,13 +39,15 @@ public:
       }
     }
   }
-  OverDriveColor getColor(int led) {
-    return colors_.getColor(n_, led);
-  }
 private:
   uint32_t last_micros_;
   int n_;
   MixHelper<COLORS...> colors_;
+
+public:  
+  auto getColor(int led) -> decltype(colors_.getColor(n_, led)) {
+    return colors_.getColor(n_, led);
+  }
 };
 
 #endif

@@ -64,8 +64,12 @@ public:
   uint32_t on_pending_base_;
   uint32_t on_pending_delay_;
 
+  virtual bool IsOn() {
+    return SaberBase::IsOn() || on_pending_;
+  }
+
   virtual void On() {
-    if (SaberBase::IsOn()) return;
+    if (IsOn()) return;
     if (current_style() && current_style()->NoOnOff())
       return;
     activated_ = millis();
@@ -90,6 +94,11 @@ public:
   }
 
   virtual void Off(OffType off_type = OFF_NORMAL) {
+    if (on_pending_) {
+      // Or is it better to wait until we turn on, and then turn off?
+      on_pending_ = false;
+      return;
+    }
     if (!SaberBase::IsOn()) return;
     if (SaberBase::Lockup()) {
       SaberBase::DoEndLockup();
@@ -178,14 +187,23 @@ public:
     }
 #endif
 
-    strcpy(current_directory, dir);
-    if (strlen(current_directory) &&
-        current_directory[strlen(current_directory)-1] != '/') {
-      strcat(current_directory, "/");
+    char *b = current_directory;
+    for (const char *a = dir; *a; a++) {
+      // Skip trailing slash
+      if (*a == '/' && (a[1] == 0 || a[1] == ';'))
+        continue;
+      if (*a == ';') {
+        *(b++) = 0;
+        continue;
+      }
+      *(b++) = *a;
     }
+    // Two zeroes at end!
+    *(b++) = 0;
+    *(b++) = 0;
 
 #ifdef ENABLE_AUDIO
-    Effect::ScanDirectory(dir);
+    Effect::ScanCurrentDirectory();
     SaberBase* font = NULL;
     hybrid_font.Activate();
     font = &hybrid_font;
@@ -423,7 +441,9 @@ public:
     FileReader out;
     LSFS::Remove(filename);
     out.Create(filename);
+#ifdef ENABLE_AUDIO    
     out.write_key_value("volume", muted_volume_ ? muted_volume_ : dynamic_mixer.get_volume());
+#endif    
     out.write_key_value("end", "1");
     out.Close();
     LOCK_SD(false);
@@ -533,7 +553,7 @@ public:
     SaberBase::DoMotion(motion, clear);
   }
 
-  void SB_Top() override {
+  void SB_Top(uint64_t total_cycles) override {
     STDOUT.print("Acceleration measurements per second: ");
     accel_loop_counter_.Print();
     STDOUT.println("");
@@ -691,9 +711,9 @@ public:
       STDOUT.print(", ");
       STDOUT.println(gyro.z);
     }
-    if (fabs(gyro.x) > 200.0 &&
-        fabs(gyro.x) > 3.0f * abs(gyro.y) &&
-        fabs(gyro.x) > 3.0f * abs(gyro.z)) {
+    if (fabsf(gyro.x) > 200.0 &&
+        fabsf(gyro.x) > 3.0f * abs(gyro.y) &&
+        fabsf(gyro.x) > 3.0f * abs(gyro.z)) {
       DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
     } else {
       DoGesture(TWIST_CLOSE);
@@ -741,22 +761,17 @@ public:
 
   virtual void CheckLowBattery() {
     if (battery_monitor.low()) {
-      // TODO: FIXME
       if (current_style() && !current_style()->Charging()) {
-	LowBatteryOff();
-	
-	if (millis() - last_beep_ > 5000) {
-#ifdef ENABLE_AUDIO
-	  // TODO: allow this to be replaced with WAV file
-	  talkie.Say(talkie_low_battery_15, 15);
-#endif
-	  STDOUT << "Battery low :" << battery_monitor.battery() << "\n";
-	  last_beep_ = millis();
+        LowBatteryOff();
+        if (millis() - last_beep_ > 15000) {  // (was 5000)
+          STDOUT << "Low battery: " << battery_monitor.battery() << " volts\n";
+          SaberBase::DoLowBatt();
+          last_beep_ = millis();
 	}
       }
     }
   }
-  
+
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
 
@@ -801,7 +816,7 @@ public:
         break;
       }
       case SaberBase::COLOR_CHANGE_MODE_SMOOTH:
-        float a = fmod(fusor.angle2() - current_tick_angle_, M_PI * 2);
+        float a = fmodf(fusor.angle2() - current_tick_angle_, M_PI * 2);
         SaberBase::SetVariation(0x7fff & (int32_t)(a * (32768 / (M_PI * 2))));
         break;
     }
@@ -847,12 +862,12 @@ public:
       current_tick_angle_ = fusor.angle2();
       bool handles_color_change = false;
 #define CHECK_SUPPORTS_COLOR_CHANGE(N) \
-      handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->HandlesColorChange();
+      handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
       ONCEPERBLADE(CHECK_SUPPORTS_COLOR_CHANGE)
       if (!handles_color_change) {
         STDOUT << "Entering smooth color change mode.\n";
         current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
-        current_tick_angle_ = fmod(current_tick_angle_, M_PI * 2);
+        current_tick_angle_ = fmodf(current_tick_angle_, M_PI * 2);
 
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
       } else {
@@ -916,7 +931,7 @@ public:
       STDOUT.print(" mods ");
       PrintButton(current_modifiers);
     }
-    if (SaberBase::IsOn()) STDOUT.print(" ON");
+    if (IsOn()) STDOUT.print(" ON");
     STDOUT.print(" millis=");
     STDOUT.println(millis());
   }
@@ -939,7 +954,7 @@ public:
       return true;
     }
     if (!strcmp(cmd, "get_on")) {
-      STDOUT.println(SaberBase::IsOn());
+      STDOUT.println(IsOn());
       return true;
     }
     if (!strcmp(cmd, "clash")) {
@@ -1085,7 +1100,9 @@ public:
     }
 #endif
     if (!strcmp(cmd, "pwd")) {
-      STDOUT.println(current_directory);
+      for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
+        STDOUT.println(dir);
+      }
       return true;
     }
     if (!strcmp(cmd, "n") || (!strcmp(cmd, "next") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
@@ -1292,11 +1309,11 @@ public:
         break;
     }
 
-    if (Event2(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
+    if (Event2(button, event, current_modifiers | (IsOn() ? MODE_ON : MODE_OFF))) {
       current_modifiers = BUTTON_NONE;
       return true;
     }
-    if (Event2(button, event,  MODE_ANY_BUTTON | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
+    if (Event2(button, event,  MODE_ANY_BUTTON | (IsOn() ? MODE_ON : MODE_OFF))) {
       current_modifiers = BUTTON_NONE;
       return true;
     }

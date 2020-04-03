@@ -254,6 +254,24 @@ public:
 #error only 1 and 2 buttons are supported by this mod
 #endif
 
+#ifdef BLADE_DETECT_PIN
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
+        // Might need to do something cleaner, but let's try this for now.
+        blade_detected_ = true;
+        FindBladeAgain();
+        SaberBase::DoBladeDetect(true);
+        return true;
+
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
+        // Might need to do something cleaner, but let's try this for now.
+        blade_detected_ = false;
+        FindBladeAgain();
+        SaberBase::DoBladeDetect(false);
+        return true;
+#endif
+
       case EVENTID(BUTTON_AUX2, EVENT_CLICK_SHORT, MODE_OFF):
 #ifdef DUAL_POWER_BUTTONS
         next_preset();

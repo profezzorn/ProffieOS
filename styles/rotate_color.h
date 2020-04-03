@@ -3,8 +3,8 @@
 
 // Usage: RotateColorsX<ROTATION, COLOR>
 // ROTATION: FUNCTION
-// COLOR: COLOR
-// return value: COLOR
+// COLOR: COLOR or LAYER
+// return value: COLOR or LAYER (same as COLOR)
 //
 // ROTATION specifies how much to rotate the color in HSV (color wheel)
 // space. 0 = none, 32768 = 360degrees
@@ -17,14 +17,15 @@ public:
     return RunStyle(&color_, blade);
   }
 
-  OverDriveColor getColor(int led) {
-    OverDriveColor c = color_.getColor(led);
+private:
+  COLOR color_;
+  ROTATION rotation_;
+public:
+  auto getColor(int led) -> decltype(color_.getColor(led)) {
+    auto c = color_.getColor(led);
     c.c = c.c.rotate((rotation_.getInteger(led) & 0x7fff) * 3);
     return c;
   }
-
-  COLOR color_;
-  ROTATION rotation_;
 };
 
 template<int rotation, class COLOR> using RotateColors = RotateColorsX<Int<rotation>, COLOR>;

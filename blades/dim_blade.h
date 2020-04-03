@@ -39,23 +39,24 @@ public:
 
   // Bladestyle implementation
   virtual void activate() override {
-    current_style_->activate();
+    if (current_style_)
+      current_style_->activate();
   }
   virtual void deactivate() override {
-    current_style_->deactivate();
+    if (current_style_)
+      current_style_->deactivate();
   }
   virtual void run(BladeBase* blade) override {
+    if (current_style_)
     current_style_->run(this);
   }
-  bool HandlesColorChange() override {
-    return current_style_->HandlesColorChange();
-  }
-
-  bool IsHandled(BladeEffectType effect) override {
+  bool IsHandled(HandledFeature effect) override {
+    if (!current_style_) return false;
     return current_style_->IsHandled(effect);
   }
 
   bool NoOnOff() override {
+    if (!current_style_) return false;
     return current_style_->NoOnOff();
   }
   

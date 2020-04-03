@@ -17,26 +17,19 @@ template<class MILLIS, int N>
 class TrBoingX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* blade) {
-    if (this->done()) {
-      fade_ = 16384;
+    TransitionBaseX<MILLIS>::run(blade);
+    fade_ = this->update(16384 * (N * 2 + 1));
+    if (fade_ & 0x4000) {
+      fade_ = 0x4000 - (fade_ & 0x3FFF);
     } else {
-      fade_ = (millis() - this->start_millis_) * 16384 * (N * 2 + 1) / this->len_;
-      if (fade_ & 0x4000) {
-	fade_ = 0x4000 - (fade_ & 0x3FFF);
-      } else {
-	fade_ &= 0x3FFF;
-      }
+      fade_ &= 0x3FFF;
     }
-  }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
-    OverDriveColor ret = a;
-    ret.c = a.c.mix2(b.c, fade_);
-    return ret;
   }
 private:
   uint32_t fade_;
+public:  
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) AUTO_RETURN(MixColors(a, b, fade_, 14))
 };
 
 template<int MILLIS, int N> using TrBoing = TrBoingX<Int<MILLIS>, N>;
