@@ -3,6 +3,7 @@
 
 // usage: RandomBlink<MILLIHZ, COLOR1, COLOR2>
 // or: RandomBlinkX<MILLIHZ_CLASS, COLOR1, COLOR2>
+// or: RandomBlinkL<MILLIHZ_CLASS, COLOR1>
 // MILLIHZ: integer
 // MILLHZ_CLASS: NUMBER
 // COLOR1: COLOR (defaults to WHITE)
@@ -10,7 +11,6 @@
 // return value: COLOR
 // Each LED is randomly chosen as COLOR1 or COLOR2, then stays
 // that color for 1000/MILLIHZ seconds.
-
 
 #include "../functions/random_blink.h"
 
