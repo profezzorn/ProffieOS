@@ -2,6 +2,7 @@
 #define STYLES_HUMP_FLICKER_H
 
 // Usage: HumpFlicker<A, B, HUMP_WIDTH>
+// Or: HumpFlickerL<B, HUMP_WIDTH>
 // A, B: COLOR
 // HUMP_WIDTH: a number
 // return value: COLOR
