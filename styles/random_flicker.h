@@ -2,6 +2,7 @@
 #define STYLES_RANDOM_FLICKER_H
 
 // Usage: RandomFlicker<A, B>
+// Or: RandomL<B>
 // A, B: COLOR
 // return value: COLOR
 // Mixes randomly between A and B.

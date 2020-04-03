@@ -2,6 +2,7 @@
 #define STYLES_RANDOM_PER_LED_FLICKER_H
 
 // Usage: RandomPerLEDFlicker<A, B>
+// Or: RandomPerLEDFlickerL<B>
 // A, B: COLOR
 // return value: COLOR
 // Mixes randomly between A and B.
