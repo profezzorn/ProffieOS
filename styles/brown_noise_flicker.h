@@ -2,6 +2,7 @@
 #define STYLES_BROWN_NOISE_FLICKER_H
 
 // Usage: BrownNoiseFlicker<A, B, grade>
+// Or: BrownNoiseFlickerL<B, grade>
 // A, B: COLOR
 // grade: int
 // return value: COLOR
