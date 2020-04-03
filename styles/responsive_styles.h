@@ -22,7 +22,7 @@ using ResponsiveLockupL =
   LockupTrL<AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<SIZE>>>,
             TR1,
             TR2,
-            SaberBase::LOCKUP_NORMAL>; 
+            SaberBase::LOCKUP_NORMAL>;
 
 // ResponsiveDragL<DRAG COLOR, TRANSTION1, TRANSITION2, SIZE1, SIZE2>
 // Implements Drag that will increase or decrease in size based on turning hilt
@@ -106,9 +106,11 @@ template<class COLOR,
          int BOTTOM = 8000,
          BladeEffectType EFFECT = EFFECT_BLAST>
 using ResponsiveBlastL =
-         AlphaL<MultiTransitionEffectL<
-                  TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>, Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>>,EFFECT>, 
-                  Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<24000>>>;
+    AlphaL<
+         MultiTransitionEffectL<
+             TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>, Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>>,
+             EFFECT>,
+         Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<24000>>>;
 
 // ResponsiveBlastWaveL<BLAST COLOR, FADEOUT_MS, WAVE_SIZE, WAVE_SPEED, TOP, BOTTOM, EFFECT>
 // Implements Blast effect that will move based on angle of the blade instead of random location Blast will impact and split up and down the length of the blade from original position
@@ -126,12 +128,12 @@ template<class COLOR,
          int BOTTOM = 8000,
          BladeEffectType EFFECT = EFFECT_BLAST>
 using ResponsiveBlastWaveL =
-         MultiTransitionEffectL<
-                  TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>, Scale<BladeAngle<>, 
-                           Int<TOP>, 
-                           Int<BOTTOM>>>, 
-                           EFFECT>;
-
+    MultiTransitionEffectL<
+         TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>,
+              Scale<BladeAngle<>,
+                    Int<TOP>,
+                    Int<BOTTOM>>>,
+         EFFECT>;
 
 // ResponsiveBlastFadeL<BLAST COLOR, SIZE, FADE, TOP, BOTTOM, EFFECT>
 // Implements Blast effect that will move based on angle of the blade instead of random location Blast will impact and Fade in position
@@ -147,11 +149,11 @@ template<class COLOR,
          int BOTTOM = 8000,
          BladeEffectType EFFECT = EFFECT_BLAST>
 using ResponsiveBlastFadeL =
-         MultiTransitionEffectL<
-                  TrConcat<TrInstant, 
-                           AlphaL<COLOR, Bump<Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>, Int<SIZE>>>,
-                           TrFade<FADE>>,
-                           EFFECT>;
+    MultiTransitionEffectL<
+         TrConcat<TrInstant,
+                  AlphaL<COLOR, Bump<Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>, Int<SIZE>>>,
+                  TrFade<FADE>>,
+         EFFECT>;
 
 // ResponsiveStabL<STAB COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
 // Stab effect
