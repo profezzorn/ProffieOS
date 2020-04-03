@@ -2,6 +2,7 @@
 #define STYLES_TRANSITION_LOOP_H
 
 // Usage: TransitionLoop<COLOR, TRANSITION>
+// Or: TransitionLoopL<TRANSITION>
 // COLOR: COLOR
 // TRANSITION : TRANSITION
 // return value: COLOR
