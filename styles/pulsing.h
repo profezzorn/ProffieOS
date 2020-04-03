@@ -4,7 +4,8 @@
 #include "../functions/int.h"
 
 // Usage: Pulsing<A, B, PULSE_MILLIS>
-// or: Pulsing<A, B, PULSE_MILLIS_FUNC>
+// or: PulsingX<A, B, PULSE_MILLIS_FUNC>
+// or: PulsingL<B, PULSE_MILLIS_FUNC>
 // A, B: COLOR
 // PULSE_MILLIS: a number
 // PULSE_MILLIS_FUNC: FUNCTION
