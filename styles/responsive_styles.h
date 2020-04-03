@@ -28,7 +28,11 @@ using ResponsiveLockupL =
 // Implements Drag that will increase or decrease in size based on turning hilt
 // TRANSITION1 & TRANSITION2 = transition Begin & End
 // SIZE1 & SIZE2 control limits for DRAG size with TwistAngle
-template<class COLOR, class TR1 = TrInstant, class TR2 = TrInstant, int SIZE1 = 2000, int SIZE2 = 10000>
+template<class COLOR,
+         class TR1 = TrInstant,
+         class TR2 = TrInstant,
+         int SIZE1 = 2000,
+         int SIZE2 = 10000>
 using ResponsiveDragL =
   LockupTrL<AlphaL<COLOR, SmoothStep<Int<32000>,Scale<TwistAngle<>,Int<SIZE1>,Int<SIZE2>>>>,
             TR1,
@@ -36,8 +40,8 @@ using ResponsiveDragL =
             SaberBase::LOCKUP_DRAG>;
 
 // ResponsiveMeltL<MELT COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
-// Implements Melt effect for cutting through object, size will change to mimic metal heating and intensity
-// will increase or decrease based on turning hilt
+// Implements Melt effect for cutting through object, size will change to mimic metal
+// heating and intensity will increase or decrease based on turning hilt
 // TRANSITION1 & TRANSITION2 = transition Begin & End
 // SIZE1 & SIZE2 control MELT area limits for TwistAngle
 template<class COLOR = Mix<TwistAngle<>,OrangeRed,Red>,
