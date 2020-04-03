@@ -18,9 +18,13 @@ HandledFeature FeatureForLockupType(SaberBase::LockupType t) {
   }
 }
 
-// Usage: LockupL<BASE, LOCKUP, DRAG_COLOR>
+// Usage: Lockup<BASE, LOCKUP, DRAG_COLOR, LOCKUP_SHAPE, DRAG_SHAPE, LB_SHAPE>
+// Or: LockupL<LOCKUP, DRAG_COLOR, LOCKUP_SHAPE, DRAG_SHAPE, LB_SHAPE>
 // BASE, LOCKUP: COLOR
 // DRAG_COLOR: COLOR (defaults to the LOCKUP color)
+// LOCKUP_SHAPE: FUNCTION (defaults to Int<32768>)
+// DRAG_SHAPE: FUNCTION (defaults to SmoothStep<Int<28671>, Int<4096>>)
+// LB_SHAPE: FUNCTION (defaults to a suitable function)
 // return value: COLOR
 // Shows LOCKUP if the lockup state is true, otherwise BASE.
 // Also handles "Drag" effect.
@@ -87,7 +91,8 @@ template<class BASE,
   using Lockup = Layers<BASE, LockupL<LOCKUP, DRAG_COLOR, LOCKUP_SHAPE, DRAG_SHAPE>>;
 
 
-// Usage: LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE>
+// Usage: LockupTr<BASE, COLOR, BeginTr, EndTr, LOCKUP_TYPE>
+// Or: LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE>
 // COLOR; COLOR or LAYER
 // BeginTr, EndTr: TRANSITION
 // LOCKUP_TYPE: a SaberBase::LockupType
