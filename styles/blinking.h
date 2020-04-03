@@ -5,6 +5,7 @@
 
 // Usage: Blinking<A, B, BLINK_MILLIS, BLINK_PROMILLE>
 // or: BlinkingX<A, B, BLINK_MILLIS_FUNC, BLINK_PROMILLE_FUNC>
+// or: BlinkingL<B, BLINK_MILLIS_FUNC, BLINK_PROMILLE_FUNC>
 // A, B: COLOR
 // BLINK_MILLIS: a number
 // BLINK_PROMILLE: a number, defaults to 500
