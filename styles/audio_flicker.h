@@ -2,6 +2,7 @@
 #define STYLES_AUDIO_FLICKER_H
 
 // Usage: AudioFlicker<A, B>
+// Or: AudioFlickerL<B>
 // A, B: COLOR
 // return value: COLOR
 // Mixes between A and B based on audio. Quiet audio
