@@ -16,6 +16,8 @@
 // Blaster Blocks - short click while ON
 // Force Effects - hold + twist the hilt while ON (while pointing up)
 // Color Change mode - hold + twist the hilt while ON (pointing down)
+// Melt - hold while stabbing (clash with forward motion, horizontal)
+// 
 //
 // 2 Button:
 // POWER
@@ -27,6 +29,8 @@
 // Volume UP - short click while OFF and in VOLUME MENU
 // Prev Preset - hold and wait while OFF
 // Color Change mode - hold + toggle AUX while ON
+// Lightning Block - hold + CLASH when ON
+// Melt - hold while stabbing (clash with forward motion, horizontal)
 // AUX
 // Blaster blocks - short click while ON
 // Next Preset - short click while OFF
@@ -159,7 +163,10 @@ public:
 #endif
         return true;
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
-        StartOrStopTrack();
+        if (!SaberBase::Lockup() || 
+            SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+          StartOrStopTrack();
+        }
         return true;
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
         SaberBase::DoBlast();
@@ -229,10 +236,25 @@ public:
 #endif
         return true;
 
-    case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
+      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
+        if (!SaberBase::Lockup()) {          
+          SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+          SaberBase::DoBeginLockup();
+          return true;
+        }
+        break;
+#if NUM_BUTTONS > 1
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
+      SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+	  SaberBase::DoBeginLockup();
+	  return true;
+#else
+    case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
+#endif
 #ifndef SA22C_NO_LOCKUP_HOLD
     case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON):
+#else
+    case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
 #endif
       if (!SaberBase::Lockup()) {
         if (pointing_down_) {
