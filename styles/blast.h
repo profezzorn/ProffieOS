@@ -2,6 +2,7 @@
 #define STYLES_BLAST_H
 
 // Usage: Blast<BASE, BLAST, FADEOUT_MS, WAVE_SIZE, WAVE_MS>
+// Or: BlastL<BLAST, FADEOUT_MS, WAVE_SIZE, WAVE_MS>
 // BASE, BLAST: COLOR
 // FADEOUT_MS: a number (defaults to 150)
 // WAVE_SIZE: a number (defaults to 100)
@@ -16,9 +17,8 @@
 // travel slower. Finally FADEOUT_MS determines how fast the
 // humps fade back to the base color.
 
-class BladeBase;
-
 // Usage: BlastFadeout<BASE, BLAST, FADEOUT_MS>
+// Or: BlastFadeoutL<BLAST, FADEOUT_MS>
 // BASE, BLAST: COLOR
 // FADEOUT_MS: a number (defaults to 250)
 // return value: COLOR
@@ -26,8 +26,8 @@ class BladeBase;
 // is requested and then fades back to BASE. FADEOUT_MS
 // specifies out many milliseconds the fade takes.
 
-
 // Usage: OriginalBlast<BASE, BLAST>
+// Or: OriginalBlastL<BLAST>
 // BASE, BLAST: COLOR
 // return value: COLOR
 // Normally shows BASE, but creates a blast effect using
@@ -35,6 +35,7 @@ class BladeBase;
 // This was the original blast effect, but it is slow and not
 // very configurable.
 
+class BladeBase;
 
 #include "alpha.h"
 #include "layers.h"
