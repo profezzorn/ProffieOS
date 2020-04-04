@@ -36,9 +36,9 @@ public:
     BladeStyle *ret = current_style_;
     if (ret) {
       ret->deactivate();
+      num_effects_ = 0;
     }
     current_style_ = nullptr;
-    num_effects_ = 0;
     return ret;
   }
   
