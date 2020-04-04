@@ -30,7 +30,6 @@ public:
     if (current_style_) {
       current_style_->activate();
     }
-    num_effects_ = 0;
   }
 
   BladeStyle* UnSetStyle() override {
@@ -39,6 +38,7 @@ public:
       ret->deactivate();
     }
     current_style_ = nullptr;
+    num_effects_ = 0;
     return ret;
   }
   
