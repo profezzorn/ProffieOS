@@ -36,6 +36,7 @@ enum EVENT : uint32_t {
   EVENT_CLICK_SHORT,
   EVENT_CLICK_LONG,
   EVENT_DOUBLE_CLICK, // Note, will also generate a short click
+  EVENT_DOUBLE_CLICK_HELD,
   EVENT_LATCH_ON,
   EVENT_LATCH_OFF,
   EVENT_STAB,
