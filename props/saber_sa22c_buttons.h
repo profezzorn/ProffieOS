@@ -244,7 +244,7 @@ public:
         }
         break;
 #if NUM_BUTTONS > 1
-    case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
+    case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK_HELD, MODE_ON):
       SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
 	  SaberBase::DoBeginLockup();
 	  return true;

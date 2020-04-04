@@ -907,6 +907,7 @@ public:
       case EVENT_CLICK_SHORT: STDOUT.print("Shortclick"); break;
       case EVENT_CLICK_LONG: STDOUT.print("Longclick"); break;
       case EVENT_DOUBLE_CLICK: STDOUT.print("Doubleclick"); break;
+      case EVENT_DOUBLE_CLICK_HELD: STDOUT.print("Doubleclick AND Held"); break;
       case EVENT_LATCH_ON: STDOUT.print("On"); break;
       case EVENT_LATCH_OFF: STDOUT.print("Off"); break;
       case EVENT_STAB: STDOUT.print("Stab"); break;
