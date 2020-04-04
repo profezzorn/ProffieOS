@@ -77,7 +77,7 @@ public:
     num_leds_ = blade->num_leds();
     num_blasts_ = blade->GetEffects(&effects_);
   }
-  int getColor(int led) {
+  int getInteger(int led) {
     if (num_blasts_ == 0) return 0;
     int mix = 0;
     for (size_t i = 0; i < num_blasts_; i++) {
