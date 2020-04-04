@@ -23,21 +23,30 @@ protected:
     while (true) {
       while (!DebouncedRead()) YIELD();
       prop.Event(button_, EVENT_PRESSED);
-      if (millis() - push_millis_ < 500) {
-        prop.Event(button_, EVENT_DOUBLE_CLICK);
+      if (millis() - push_millis_ < 300) {
+        doubleclicked_ = true;
       } else {
         push_millis_ = millis();
         current_modifiers |= button_;
       }
       while (DebouncedRead()) {
         if (millis() - push_millis_ > 300) {
-          prop.Event(button_, EVENT_HELD);
+          if (!doubleclicked_) {
+            prop.Event(button_, EVENT_HELD);
+          } else {
+            prop.Event(button_, EVENT_DOUBLE_CLICK_HELD);
+            doubleclickedandheld_ = true;
+          }
           while (DebouncedRead()) {
             if (millis() - push_millis_ > 800){
-              prop.Event(button_, EVENT_HELD_MEDIUM);
+              if (!doubleclickedandheld_) {
+                prop.Event(button_, EVENT_HELD_MEDIUM);
+              }
               while (DebouncedRead()) {
                 if (millis() - push_millis_ > 2000) {
-                  prop.Event(button_, EVENT_HELD_LONG);
+                  if (!doubleclickedandheld_) { 
+                    prop.Event(button_, EVENT_HELD_LONG);
+                  }
                   while (DebouncedRead()) YIELD();
                 }
                 YIELD();
@@ -50,6 +59,13 @@ protected:
       }
       while (DebouncedRead()) YIELD();
       prop.Event(button_, EVENT_RELEASED);
+      if (doubleclicked_) {
+        if (!doubleclickedandheld_) {
+          prop.Event(button_, EVENT_DOUBLE_CLICK);
+        }
+        doubleclicked_ = false;
+      }
+      doubleclickedandheld_ = false;
       if (current_modifiers & button_) {
         current_modifiers &=~ button_;
         if (millis() - push_millis_ < 500) {
@@ -81,6 +97,8 @@ protected:
     STDOUT.println(" button");
   }
 
+  bool doubleclicked_ = false;
+  bool doubleclickedandheld_ = false;
   const char* name_;
   enum BUTTON button_;
   uint32_t push_millis_;
