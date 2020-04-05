@@ -61,8 +61,12 @@ struct ConfigFile {
 } while(0)
 
   void ReadInCurrentDir(const char* name) {
-    PathHelper full_name(current_directory, name);
-    Read(full_name);
+    // Search through all the directories.
+    for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
+      PathHelper full_name(dir, name);
+      if (Read(full_name) != ReadStatus::READ_FAIL)
+	return;
+    }
   }
 
   ReadStatus ReadINIFromDir(const char *dir, const char* basename) {
