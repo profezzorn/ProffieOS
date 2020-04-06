@@ -23,7 +23,7 @@ protected:
     while (true) {
       while (!DebouncedRead()) YIELD();
       prop.Event(button_, EVENT_PRESSED);
-      if (millis() - push_millis_ < 300) {
+      if (millis() - push_millis_ < 500) {
         doubleclicked_ = true;
       } else {
         push_millis_ = millis();
@@ -39,12 +39,12 @@ protected:
           }
           while (DebouncedRead()) {
             if (millis() - push_millis_ > 800){
-              if (!doubleclickedandheld_) {
+              if (!doubleclicked_) {
                 prop.Event(button_, EVENT_HELD_MEDIUM);
               }
               while (DebouncedRead()) {
                 if (millis() - push_millis_ > 2000) {
-                  if (!doubleclickedandheld_) { 
+                  if (!doubleclicked_) { 
                     prop.Event(button_, EVENT_HELD_LONG);
                   }
                   while (DebouncedRead()) YIELD();
