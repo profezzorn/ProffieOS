@@ -15,6 +15,7 @@
     DEFINE_EFFECT(IGNITION)			\
     DEFINE_EFFECT(RETRACTION)			\
     DEFINE_EFFECT(CHANGE)			\
+    DEFINE_EFFECT(NEWFONT)			\
     /* Blaster effects */                       \
     DEFINE_EFFECT(STUN)				\
     DEFINE_EFFECT(FIRE)				\

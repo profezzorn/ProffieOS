@@ -1,6 +1,8 @@
 #ifndef TRANSITIONS_WIPE_H
 #define TRANSITIONS_WIPE_H
 
+#include "wave.h"
+
 // Usage: TrWipeX<MILLIS_FUNCTION>
 // or: TrWipe<MILLIS>
 // MILLIS_FUNCTION: FUNCTION
@@ -55,5 +57,29 @@ private:
 };
 
 template<int MILLIS> using TrWipeIn = TrWipeInX<Int<MILLIS>>;
+
+// Usage: TrWipeSparkTip<SPARK_COLOR, MILLIS, SIZE>
+// SPARK_COLOR = COLOR
+// MILLIS = a number
+// SIZE = a number
+// return value: TRANSITION
+
+template<class SPARK_COLOR, class MILLIS, class SIZE = Int<400>> 
+	using TrWipeSparkTipX = TrJoin<TrWipeX<MILLIS>,TrWaveX<SPARK_COLOR,Int<400>,SIZE,MILLIS,Int<0>>>;
+
+template<class SPARK_COLOR, int MILLIS, int SIZE = 400> 
+	using TrWipeSparkTip = TrJoin<TrWipe<MILLIS>,TrWaveX<SPARK_COLOR,Int<400>,Int<SIZE>,Int<MILLIS>,Int<0>>>;
+
+// Usage: TrWipeInSparkTip<SPARK_COLOR, MILLIS, SIZE>
+// SPARK_COLOR = COLOR
+// MILLIS = a number
+// SIZE = a number
+// return value: TRANSITION
+
+template<class SPARK_COLOR, class MILLIS, class SIZE = Int<400>> 
+	using TrWipeInSparkTipX = TrJoin<TrWipeInX<MILLIS>,TrWaveX<SPARK_COLOR,Int<400>,SIZE,MILLIS,Int<32768>>>;
+
+template<class SPARK_COLOR, int MILLIS, int SIZE = 400> 
+	using TrWipeInSparkTip = TrJoin<TrWipeIn<MILLIS>,TrWaveX<SPARK_COLOR,Int<400>,Int<SIZE>,Int<MILLIS>,Int<32768>>>;
 
 #endif
