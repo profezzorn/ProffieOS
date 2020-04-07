@@ -111,7 +111,7 @@ public:
         Off();
         return true;
 
-      case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_OFF):
+      case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_PRESSED, MODE_OFF):
 	if (powered_) rotate_presets();
         return true;
 
