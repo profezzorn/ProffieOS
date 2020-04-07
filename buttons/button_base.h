@@ -42,11 +42,17 @@ protected:
             if (millis() - push_millis_ > 800){
               if (!doubleclicked_) {
                 prop.Event(button_, EVENT_HELD_MEDIUM);
+              } else {
+                prop.Event(button_, EVENT_DOUBLE_CLICK_HELD_MEDIUM);
+                doubleclickedandheld_ = true;
               }
               while (DebouncedRead()) {
                 if (millis() - push_millis_ > 2000) {
                   if (!doubleclicked_) { 
                     prop.Event(button_, EVENT_HELD_LONG);
+                  } else {
+                    prop.Event(button_, EVENT_DOUBLE_CLICK_HELD_LONG);
+                    doubleclickedandheld_ = true;
                   }
                   while (DebouncedRead()) YIELD();
                 }
