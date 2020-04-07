@@ -908,6 +908,8 @@ public:
       case EVENT_CLICK_LONG: STDOUT.print("Longclick"); break;
       case EVENT_DOUBLE_CLICK: STDOUT.print("Doubleclick Released"); break;
       case EVENT_DOUBLE_CLICK_HELD: STDOUT.print("Doubleclick AND Held"); break;
+      case EVENT_DOUBLE_CLICK_HELD_MEDIUM: STDOUT.print("Doubleclick AND Held Medium"); break;
+      case EVENT_DOUBLE_CLICK_HELD_LONG: STDOUT.print("Doubleclick AND Held Long"); break;
       case EVENT_DOUBLE_PRESSED: STDOUT.print("Double Pressed");break;
       case EVENT_LATCH_ON: STDOUT.print("On"); break;
       case EVENT_LATCH_OFF: STDOUT.print("Off"); break;
