@@ -70,6 +70,10 @@ public:
   }
 
   // Shared Effects
+  void SB_PreOn(float* delay) override {
+    addEffect(EFFECT_PREON, 0);
+  }
+
   void SB_On() override {
     addEffect(EFFECT_IGNITION, 0);
   }
