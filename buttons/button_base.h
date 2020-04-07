@@ -25,6 +25,7 @@ protected:
       prop.Event(button_, EVENT_PRESSED);
       if (millis() - push_millis_ < 500) {
         doubleclicked_ = true;
+        prop.Event(button_, EVENT_DOUBLE_CLICK_PRESSED);
       } else {
         push_millis_ = millis();
         current_modifiers |= button_;
