@@ -902,7 +902,7 @@ public:
   void PrintEvent(uint32_t e) {
     int cnt = 0;
     if (e >= EVENT_FIRST_PRESSED &&
-	e <= EVENT_FOURTH_SAVED_CLICK_LONG) {
+	e <= EVENT_FOURTH_CLICK_LONG) {
       cnt = (e - EVENT_PRESSED) / (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED);
       e -= (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED) * cnt;
     }
@@ -916,7 +916,6 @@ public:
       case EVENT_CLICK_SHORT: STDOUT.print("Shortclick"); break;
       case EVENT_CLICK_LONG: STDOUT.print("Longclick"); break;
       case EVENT_SAVED_CLICK_SHORT: STDOUT.print("SavedShortclick"); break;
-      case EVENT_SAVED_CLICK_LONG: STDOUT.print("SavedLongclick"); break;
       case EVENT_LATCH_ON: STDOUT.print("On"); break;
       case EVENT_LATCH_OFF: STDOUT.print("Off"); break;
       case EVENT_STAB: STDOUT.print("Stab"); break;
