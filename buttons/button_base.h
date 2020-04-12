@@ -3,6 +3,31 @@
 
 #include "debounced_button.h"
 
+// These timeouts can be configured in your config file.
+// Also, the prop file can set them, but should use #ifndef same as here
+// so that the prop file values can be overriden in the config file.
+
+#ifndef BUTTON_DOUBLE_CLICK_TIMEOUT
+#define BUTTON_DOUBLE_CLICK_TIMEOUT 500
+#endif
+
+#ifndef BUTTON_SHORT_CLICK_TIMEOUT
+#define BUTTON_SHORT_CLICK_TIMEOUT 500
+#endif
+
+#ifndef BUTTON_HELD_TIMEOUT
+#define BUTTON_HELD_TIMEOUT 300
+#endif
+
+#ifndef BUTTON_HELD_MEDIUM_TIMEOUT
+#define BUTTON_HELD_MEDIUM_TIMEOUT 800
+#endif
+
+#ifndef BUTTON_HELD_LONG_TIMEOUT
+#define BUTTON_HELD_LONG_TIMEOUT 2000
+#endif
+
+
 // Simple button handler. Keeps track of clicks and lengths of pushes.
 class ButtonBase : public Looper,
                    public CommandParser,
@@ -18,26 +43,51 @@ public:
   const char* name() override { return name_; }
 
 protected:
+  // We send two events:
+  // the event itself, and the event with a count, dependinging on how
+  // may double-presses there has been. The count starts at FIRST, that way
+  // the first event can be distinguished from the rest.
+  void Send(uint32_t event) {
+    prop.Event(button_, (EVENT)event);
+    prop.Event(button_, (EVENT)(event + (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED) * press_count_));
+  }
+
+  // We send the click immediately, but we also hold a "saved" event
+  // which is sent a little bit later unless a double-click occurs.
+  void SendClick(uint32_t event) {
+    Send(event);
+    saved_event_ = event + (EVENT_SAVED_CLICK_SHORT - EVENT_CLICK_SHORT);
+  }
+  
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (true) {
-      while (!DebouncedRead()) YIELD();
-      prop.Event(button_, EVENT_PRESSED);
-      if (millis() - push_millis_ < 500) {
-        prop.Event(button_, EVENT_DOUBLE_CLICK);
-      } else {
-        push_millis_ = millis();
-        current_modifiers |= button_;
+      while (!DebouncedRead()) {
+	if (saved_event_ &&
+	    millis() - push_millis_ > BUTTON_DOUBLE_CLICK_TIMEOUT) {
+	  Send(saved_event_);
+	  saved_event_ = 0;;
+	}
+	YIELD();
       }
+      saved_event_ = 0;
+      if (millis() - push_millis_ < BUTTON_DOUBLE_CLICK_TIMEOUT) {
+	if (press_count_ < 3) press_count_++;
+      } else {
+	press_count_ = 1;
+      }
+      Send(EVENT_PRESSED);
+      push_millis_ = millis();
+      current_modifiers |= button_;
       while (DebouncedRead()) {
-        if (millis() - push_millis_ > 300) {
-          prop.Event(button_, EVENT_HELD);
+        if (millis() - push_millis_ > BUTTON_HELD_TIMEOUT) {
+          Send(EVENT_HELD);
           while (DebouncedRead()) {
-            if (millis() - push_millis_ > 800){
-              prop.Event(button_, EVENT_HELD_MEDIUM);
+            if (millis() - push_millis_ > BUTTON_HELD_MEDIUM_TIMEOUT){
+              Send(EVENT_HELD_MEDIUM);
               while (DebouncedRead()) {
-                if (millis() - push_millis_ > 2000) {
-                  prop.Event(button_, EVENT_HELD_LONG);
+                if (millis() - push_millis_ > BUTTON_HELD_LONG_TIMEOUT) {
+                  Send(EVENT_HELD_LONG);
                   while (DebouncedRead()) YIELD();
                 }
                 YIELD();
@@ -49,13 +99,13 @@ protected:
         YIELD();
       }
       while (DebouncedRead()) YIELD();
-      prop.Event(button_, EVENT_RELEASED);
+      Send(EVENT_RELEASED);
       if (current_modifiers & button_) {
         current_modifiers &=~ button_;
-        if (millis() - push_millis_ < 500) {
-          prop.Event(button_, EVENT_CLICK_SHORT);
-        } else if (millis() - push_millis_ > 500 && millis() - push_millis_ < 2500) {
-          prop.Event(button_, EVENT_CLICK_LONG);
+        if (millis() - push_millis_ < BUTTON_SHORT_CLICK_TIMEOUT) {
+          SendClick(EVENT_CLICK_SHORT);
+        } else if (millis() - push_millis_ < 2500) {
+          SendClick(EVENT_CLICK_LONG);
         }
       } else {
         // someone ate our clicks
@@ -67,7 +117,7 @@ protected:
 
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, name_)) {
-      prop.Event(button_, EVENT_CLICK_SHORT);
+      Send(EVENT_CLICK_SHORT);
       return true;
     }
     return false;
@@ -84,7 +134,9 @@ protected:
   const char* name_;
   enum BUTTON button_;
   uint32_t push_millis_;
+  int press_count_ = 1;
   StateMachineState state_machine_;
+  uint32_t saved_event_ = 0;
 };
 
 #endif

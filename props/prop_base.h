@@ -899,14 +899,24 @@ public:
     if (b & MODE_ON) STDOUT.print("On");
   }
 
-  void PrintEvent(EVENT e) {
+  void PrintEvent(uint32_t e) {
+    int cnt = 0;
+    if (e >= EVENT_FIRST_PRESSED &&
+	e <= EVENT_FOURTH_SAVED_CLICK_LONG) {
+      cnt = (e - EVENT_PRESSED) / (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED);
+      e -= (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED) * cnt;
+    }
     switch (e) {
       case EVENT_NONE: STDOUT.print("None"); break;
       case EVENT_PRESSED: STDOUT.print("Pressed"); break;
       case EVENT_RELEASED: STDOUT.print("Released"); break;
+      case EVENT_HELD: STDOUT.print("Held"); break;
+      case EVENT_HELD_MEDIUM: STDOUT.print("HeldMedium"); break;
+      case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
       case EVENT_CLICK_SHORT: STDOUT.print("Shortclick"); break;
       case EVENT_CLICK_LONG: STDOUT.print("Longclick"); break;
-      case EVENT_DOUBLE_CLICK: STDOUT.print("Doubleclick"); break;
+      case EVENT_SAVED_CLICK_SHORT: STDOUT.print("SavedShortclick"); break;
+      case EVENT_SAVED_CLICK_LONG: STDOUT.print("SavedLongclick"); break;
       case EVENT_LATCH_ON: STDOUT.print("On"); break;
       case EVENT_LATCH_OFF: STDOUT.print("Off"); break;
       case EVENT_STAB: STDOUT.print("Stab"); break;
@@ -914,9 +924,11 @@ public:
       case EVENT_SHAKE: STDOUT.print("Shake"); break;
       case EVENT_TWIST: STDOUT.print("Twist"); break;
       case EVENT_CLASH: STDOUT.print("Clash"); break;
-      case EVENT_HELD: STDOUT.print("Held"); break;
-      case EVENT_HELD_MEDIUM: STDOUT.print("HeldMedium"); break;
-      case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
+      default: STDOUT.print("?"); STDOUT.print(e); break;
+    }
+    if (cnt) {
+      STDOUT.print('#');
+      STDOUT.print(cnt);
     }
   }
 
