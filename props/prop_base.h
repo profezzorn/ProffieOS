@@ -108,7 +108,7 @@ public:
     if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
       ToggleColorChangeMode();
     }
-#endif    
+#endif
     SaberBase::TurnOff(off_type);
     if (unmute_on_deactivation_) {
       unmute_on_deactivation_ = false;
@@ -433,7 +433,7 @@ public:
     if (saved_global_state.volume >= 0) {
       dynamic_mixer.set_volume(clampi32(saved_global_state.volume, 0, VOLUME));
     }
-#endif    
+#endif
   }
 
   void WriteGlobalState(const char* filename) {
@@ -441,9 +441,9 @@ public:
     FileReader out;
     LSFS::Remove(filename);
     out.Create(filename);
-#ifdef ENABLE_AUDIO    
+#ifdef ENABLE_AUDIO
     out.write_key_value("volume", muted_volume_ ? muted_volume_ : dynamic_mixer.get_volume());
-#endif    
+#endif
     out.write_key_value("end", "1");
     out.Close();
     LOCK_SD(false);
@@ -455,9 +455,9 @@ public:
     WriteGlobalState("global.tmp");
     WriteGlobalState("global.ini");
     saved_global_state.volume = dynamic_mixer.get_volume();
-#endif    
+#endif
   }
-  
+
   void FindBladeAgain() {
     if (!current_config) {
       // FindBlade() hasn't been called yet - ignore this.
@@ -884,7 +884,7 @@ public:
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
     }
   }
-#endif // DISABLE_COLOR_CHANGE  
+#endif // DISABLE_COLOR_CHANGE
 
   void PrintButton(uint32_t b) {
     if (b & BUTTON_POWER) STDOUT.print("Power");
@@ -899,18 +899,23 @@ public:
     if (b & MODE_ON) STDOUT.print("On");
   }
 
-  void PrintEvent(EVENT e) {
+  void PrintEvent(uint32_t e) {
+    int cnt = 0;
+    if (e >= EVENT_FIRST_PRESSED &&
+	e <= EVENT_FOURTH_CLICK_LONG) {
+      cnt = (e - EVENT_PRESSED) / (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED);
+      e -= (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED) * cnt;
+    }
     switch (e) {
       case EVENT_NONE: STDOUT.print("None"); break;
       case EVENT_PRESSED: STDOUT.print("Pressed"); break;
       case EVENT_RELEASED: STDOUT.print("Released"); break;
+      case EVENT_HELD: STDOUT.print("Held"); break;
+      case EVENT_HELD_MEDIUM: STDOUT.print("HeldMedium"); break;
+      case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
       case EVENT_CLICK_SHORT: STDOUT.print("Shortclick"); break;
       case EVENT_CLICK_LONG: STDOUT.print("Longclick"); break;
-      case EVENT_DOUBLE_CLICK: STDOUT.print("Doubleclick Released"); break;
-      case EVENT_DOUBLE_CLICK_HELD: STDOUT.print("Doubleclick AND Held"); break;
-      case EVENT_DOUBLE_CLICK_HELD_MEDIUM: STDOUT.print("Doubleclick AND Held Medium"); break;
-      case EVENT_DOUBLE_CLICK_HELD_LONG: STDOUT.print("Doubleclick AND Held Long"); break;
-      case EVENT_DOUBLE_PRESSED: STDOUT.print("Double Pressed");break;
+      case EVENT_SAVED_CLICK_SHORT: STDOUT.print("SavedShortclick"); break;
       case EVENT_LATCH_ON: STDOUT.print("On"); break;
       case EVENT_LATCH_OFF: STDOUT.print("Off"); break;
       case EVENT_STAB: STDOUT.print("Stab"); break;
@@ -918,9 +923,11 @@ public:
       case EVENT_SHAKE: STDOUT.print("Shake"); break;
       case EVENT_TWIST: STDOUT.print("Twist"); break;
       case EVENT_CLASH: STDOUT.print("Clash"); break;
-      case EVENT_HELD: STDOUT.print("Held"); break;
-      case EVENT_HELD_MEDIUM: STDOUT.print("HeldMedium"); break;
-      case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
+      default: STDOUT.print("?"); STDOUT.print(e); break;
+    }
+    if (cnt) {
+      STDOUT.print('#');
+      STDOUT.print(cnt);
     }
   }
 
