@@ -86,7 +86,7 @@ public:
 	return true;
 
 // Activate Muted
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_PRESSED, MODE_ON):
 	if (millis() - activated_ < 500) {
 	  if (SetMute(true)) {
 	    unmute_on_deactivation_ = true;
@@ -174,7 +174,7 @@ public:
 	return true;
 
 // Activate Muted
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_PRESSED, MODE_ON):
 	if (millis() - activated_ < 500) {
 	  if (SetMute(true)) {
 	    unmute_on_deactivation_ = true;

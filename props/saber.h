@@ -68,7 +68,7 @@ public:
         return true;
 
 	// Handle double-click with preon
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_OFF):
+      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_PRESSED, MODE_OFF):
 	if (on_pending_) {
           if (SetMute(true)) {
             unmute_on_deactivation_ = true;
@@ -77,7 +77,7 @@ public:
 	}
 	return false;
 	
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_PRESSED, MODE_ON):
         if (millis() - activated_ < 500) {
           if (SetMute(true)) {
             unmute_on_deactivation_ = true;
@@ -108,7 +108,7 @@ public:
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_DOUBLE_PRESSED, MODE_ON):
         // Avoid the base and the very tip.
         // TODO: Make blast only appear on one blade!
         SaberBase::DoBlast();
