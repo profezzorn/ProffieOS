@@ -1,4 +1,5 @@
 #include <vector>
+#include <set>
 #include <stdint.h>
 #include <math.h>
 #include <stdio.h>
@@ -58,7 +59,7 @@ char* itoa( int value, char *string, int radix )
 #define HEX 16
 
 struct  Print {
-  void print(const char* s) { puts(s); }
+  void print(const char* s) { fprintf(stdout, "%s", s); }
   void print(float v) { fprintf(stdout, "%f", v); }
   void print(int v, int base) { fprintf(stdout, "%d", v); }
   void write(char s) { putchar(s); }
@@ -143,13 +144,19 @@ BladeConfig* current_config;
 #define CHECK_LT(X, Y) do {                                             \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (!(x_ < y_)) { std::cerr << #X << " (" << x_ << ") >= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (!(x_ < y_)) { std::cerr << #X << " (" << x_ << ") < " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+} while(0)
+
+#define CHECK_LE(X, Y) do {                                             \
+  auto x_ = (X);                                                                \
+  auto y_ = (Y);                                                                \
+  if (!(x_ <= y_)) { std::cerr << #X << " (" << x_ << ") <= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
 #define CHECK_GT(X, Y) do {                                             \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (!(x_ > y_)) { std::cerr << #X << " (" << x_ << ") <= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (!(x_ > y_)) { std::cerr << #X << " (" << x_ << ") > " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
 #define CHECK_STREQ(X, Y) do {                                          \
@@ -498,7 +505,81 @@ void fuse_tests() {}
 // TODO: Write fuse tests that don't rely on speed()
 #endif
 
+std::set<int> N16;
+std::set<int> N15;
+int64_t tests = 0;
+
+void add2set(int i) {
+  if (i < 0) return;
+  if (i > 65535) return;
+  N16.insert(i);
+  if (i <= 32768) N15.insert(i);
+}
+
+template<class T1, class T2>
+void runPaintTest(T1 A, T2 B) {
+  RGBA ret = A << B;
+  tests++;
+  if (ret.c.r > ret.alpha * 2) {
+    STDOUT << "A = " << A << "B = " << B << "\n";
+    CHECK_LE(ret.c.r, ret.alpha * 2);
+  }
+
+  // Test mixing
+  for (int d : N15) {
+    tests++;
+    ret = MixColors(A, B, d, 15);
+    if (ret.c.r > ret.alpha * 2) {
+      STDOUT << "A = " << A << " B = " << B << " mix = " << d << "\n";
+      CHECK_LE(ret.c.r, ret.alpha * 2);
+    }
+  }
+}
+
+template<class T1>
+void runPaintTest(T1 A) {
+  for (int d : N15) {
+
+    tests++;
+    RGBA ret = A * d;
+    if (ret.c.r > ret.alpha * 2) {
+      STDOUT << "A = " << A << " mult = " << d << "\n";
+      CHECK_LE(ret.c.r, ret.alpha * 2);
+    }
+    
+    for (int c : N16) {
+      RGBA_um B(Color16(c,c,c), false, d);
+      runPaintTest(A, B);
+      if (c > d * 2) continue;
+      RGBA B2(Color16(c,c,c), false, d);
+      runPaintTest(A, B2);
+    }
+  }
+}
+
+void color_tests() {
+  for (int i = 0; i < 65536; i = i + 1 + (i >> 2) + (i >> 5) * 4711) {
+    add2set(i);
+    add2set(65535 - i);
+    add2set(32767 - i);
+    add2set(32768 + i);
+  }
+  STDOUT << " N16 size = " << N16.size() << " N15 size = " << N15.size() << "\n";
+  for (int a : N16) {
+    for (int b : N15) {
+      RGBA_um A(Color16(a,a,a), false, b);
+      runPaintTest(A);
+      if (a <= b * 2) {
+	RGBA A2(Color16(a,a,a), false, b);
+	runPaintTest(A2);
+      }
+    }
+  }
+  STDOUT << tests << " tests.\n";
+}
+
 int main() {
+  color_tests();
   fuse_tests();
   test_rotate();
   test_current_preset();
