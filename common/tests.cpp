@@ -509,6 +509,13 @@ std::set<int> N16;
 std::set<int> N15;
 int64_t tests = 0;
 
+#define CHECK_RET(EXTRAOUT)	do {					\
+  if (ret.c.r > ret.alpha * 2 || ret.alpha > 32768) {			\
+    STDOUT << " ret = " << ret << " @ " << __LINE__ << " " << EXTRAOUT << "\n"; \
+    exit(1);								\
+  }									\
+} while (0)
+
 void add2set(int i) {
   if (i < 0) return;
   if (i > 65535) return;
@@ -520,32 +527,29 @@ template<class T1, class T2>
 void runPaintTest(T1 A, T2 B) {
   RGBA ret = A << B;
   tests++;
-  if (ret.c.r > ret.alpha * 2) {
-    STDOUT << "A = " << A << "B = " << B << "\n";
-    CHECK_LE(ret.c.r, ret.alpha * 2);
-  }
+  CHECK_RET("A = " << A << "B = " << B);
 
   // Test mixing
   for (int d : N15) {
     tests++;
     ret = MixColors(A, B, d, 15);
-    if (ret.c.r > ret.alpha * 2) {
-      STDOUT << "A = " << A << " B = " << B << " mix = " << d << "\n";
-      CHECK_LE(ret.c.r, ret.alpha * 2);
-    }
+    CHECK_RET("A = " << A << " B = " << B << " mix = " << d);
+  }
+
+  // Test mixing
+  for (int d : N15) {
+    tests++;
+    ret = MixColors(A, B, d>>1, 14);
+    CHECK_RET("A = " << A << " B = " << B << " mix = " << (d >> 1));
   }
 }
 
 template<class T1>
 void runPaintTest(T1 A) {
   for (int d : N15) {
-
     tests++;
     RGBA ret = A * d;
-    if (ret.c.r > ret.alpha * 2) {
-      STDOUT << "A = " << A << " mult = " << d << "\n";
-      CHECK_LE(ret.c.r, ret.alpha * 2);
-    }
+    CHECK_RET("A = " << A << " mult = " << d);
     
     for (int c : N16) {
       RGBA_um B(Color16(c,c,c), false, d);

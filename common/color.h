@@ -352,7 +352,7 @@ inline OverDriveColor MixColors(OverDriveColor a, OverDriveColor b, int x, int s
 inline RGBA MixColors(RGBA a, RGBA b, int x, int shift) {
   return RGBA( (a.c * ((1 << shift) - x) + b.c * x) >> shift,
 	       x > (1 << (shift - 1)) ? b.overdrive : a.overdrive,
-	       (a.alpha * ((1 << shift) - x) + b.alpha * x + 0x7fff) >> shift);
+	       (a.alpha * ((1 << shift) - x) + b.alpha * x + ((1<<shift) - 1)) >> shift);
 }
 
 // Paint over operators
