@@ -342,7 +342,7 @@ inline RGBA_um operator*(const RGBA_um& a, uint16_t x) {
 }
 
 inline RGBA operator*(const RGBA& a, uint16_t x) {
-  return RGBA(a.c * x >> 15, a.overdrive, a.alpha * x >> 15);
+  return RGBA(a.c * x >> 15, a.overdrive, (a.alpha * x + 0x7fff) >> 15);
 }
 
 inline OverDriveColor MixColors(OverDriveColor a, OverDriveColor b, int x, int shift) {
@@ -352,7 +352,7 @@ inline OverDriveColor MixColors(OverDriveColor a, OverDriveColor b, int x, int s
 inline RGBA MixColors(RGBA a, RGBA b, int x, int shift) {
   return RGBA( (a.c * ((1 << shift) - x) + b.c * x) >> shift,
 	       x > (1 << (shift - 1)) ? b.overdrive : a.overdrive,
-	       (a.alpha * ((1 << shift) - x) + b.alpha * x) >> shift);
+	       (a.alpha * ((1 << shift) - x) + b.alpha * x + ((1<<shift) - 1)) >> shift);
 }
 
 // Paint over operators
@@ -396,7 +396,7 @@ inline RGBA operator<<(const RGBA& base, const RGBA_um& over) {
   uint16_t ac = 32768 - over.alpha;
   return RGBA((base.c * ac + over.c * over.alpha) >> 15,
 	      over.alpha >= 16384 ? over.overdrive : base.overdrive,
-	      (base.alpha * ac >> 15) + over.alpha);
+	      ((base.alpha * ac + 0x7fff) >> 15) + over.alpha);
 }
 
 inline RGBA operator<<(const RGBA& base, const RGBA& over) {
@@ -405,7 +405,7 @@ inline RGBA operator<<(const RGBA& base, const RGBA& over) {
   uint16_t ac = 32768 - over.alpha;
   return RGBA((base.c * ac >> 15) + over.c,
 	      over.alpha >= 16384 ? over.overdrive : base.overdrive,
-	      (base.alpha * ac >> 15) + over.alpha);
+	      ((base.alpha * ac + 0x7fff) >> 15) + over.alpha);
 }
 
 #endif
