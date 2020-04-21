@@ -99,16 +99,16 @@ using ResponsiveClashL =
 // EFFECT = effect type, defaults to EFFECT_BLAST
 
 template<class COLOR,
-         int FADE = 400,
-         int SIZE = 100,
-         int SPEED = 400,
+         class FADE = Int<400>,
+         class SIZE = Int<100>,
+         class SPEED = Int<400>,
          int TOP = 28000,
          int BOTTOM = 8000,
          BladeEffectType EFFECT = EFFECT_BLAST>
 using ResponsiveBlastL =
     AlphaL<
          MultiTransitionEffectL<
-             TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>, Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>>,
+             TrWaveX<COLOR, FADE, SIZE, SPEED, Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>>,
              EFFECT>,
          Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<24000>>>;
 
@@ -121,15 +121,15 @@ using ResponsiveBlastL =
 // EFFECT = effect type, defaults to EFFECT_BLAST
 
 template<class COLOR,
-         int FADE = 400,
-         int SIZE = 100,
-         int SPEED = 400,
+         class FADE = Int<400>,
+         class SIZE = Int<100>,
+         class SPEED = Int<400>,
          int TOP = 28000,
          int BOTTOM = 8000,
          BladeEffectType EFFECT = EFFECT_BLAST>
 using ResponsiveBlastWaveL =
     MultiTransitionEffectL<
-         TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>,
+         TrWaveX<COLOR, FADE, SIZE, SPEED,
               Scale<BladeAngle<>,
                     Int<TOP>,
                     Int<BOTTOM>>>,
@@ -143,16 +143,16 @@ using ResponsiveBlastWaveL =
 // EFFECT = effect type, defaults to EFFECT_BLAST
 
 template<class COLOR,
-         int SIZE = 8000,
-         int FADE = 400,
+         class SIZE = Int<8000>,
+         class FADE = Int<400>,
          int TOP = 28000,
          int BOTTOM = 8000,
          BladeEffectType EFFECT = EFFECT_BLAST>
 using ResponsiveBlastFadeL =
     MultiTransitionEffectL<
          TrConcat<TrInstant,
-                  AlphaL<COLOR, Bump<Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>, Int<SIZE>>>,
-                  TrFade<FADE>>,
+                  AlphaL<COLOR, Bump<Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>, SIZE>>,
+                  TrFadeX<FADE>>,
          EFFECT>;
 
 // ResponsiveStabL<STAB COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
