@@ -1522,10 +1522,7 @@ SSD1306 display;
 
 #ifdef ENABLE_MOTION
 
-#ifndef ORIENTATION
-#define ORIENTATION ORIENTATION_NORMAL
-#endif
-
+#include "motion/motion_util.h"
 #include "motion/mpu6050.h"
 #include "motion/lsm6ds3h.h"
 #include "motion/fxos8700.h"

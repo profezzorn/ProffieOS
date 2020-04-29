@@ -548,6 +548,7 @@ public:
       vol *= volume_;
     }
     if (!hum_player_) return;
+    vol *= font_config.volHum / 16.0;
     hum_player_->set_volume(vol);
   }
 
