@@ -16,6 +16,7 @@ DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4 + 1];
 #include "ws2811_serial.h"
 #define DefaultPinClass MonopodWSPin
 #endif
+#include "spiled_pin.h"
 
 Color16 color_buffer[maxLedsPerStrip];
 BladeBase* current_blade = NULL;
