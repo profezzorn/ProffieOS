@@ -18,6 +18,10 @@
 // Color Change - hold AUX and click PWR while ON to enter CCWheel, turn hilt to rotate through colors, click PWR to select/exit - if using "#define COLOR_CHANGE_DIRECT" in config each button press advances one Color at a time.
 // Next Preset - click AUX while OFF
 // Previous Preset - hold AUX and click PWR while OFF
+// Enter SA22C Volume Menu - hold and release AUX while OFF
+// Volume Up (10% increment, 100% max) - click PWR while in Volume Menu while OFF
+// Volume Down (10% increment) - click AUX while in Volume Menu while OFF
+// Exit Volume Menu - hold and release AUX while in Volume Menu while OFF
 
 #ifndef PROPS_SABER_FETT263_BUTTONS_H
 #define PROPS_SABER_FETT263_BUTTONS_H
@@ -49,6 +53,34 @@ public:
        }
    }
 
+// SA22C Volume Menu
+  void VolumeUp() {
+      STDOUT.println("Volume up");
+      if (dynamic_mixer.get_volume() < VOLUME) {
+        dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
+          dynamic_mixer.get_volume() + VOLUME * 0.10));
+        beeper.Beep(0.5, 2000);
+        STDOUT.print("Current Volume: ");
+        STDOUT.println(dynamic_mixer.get_volume());
+      }
+      else {
+        beeper.Beep(0.5, 3000);
+      }
+}
+   void VolumeDown() { 
+      STDOUT.println("Volume Down");
+      if (dynamic_mixer.get_volume() > (0.10 * VOLUME)) {
+        dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
+          dynamic_mixer.get_volume() - VOLUME * 0.10));
+        beeper.Beep(0.5, 2000);
+        STDOUT.print("Current Volume: ");
+        STDOUT.println(dynamic_mixer.get_volume());
+      }
+      else{
+        beeper.Beep(0.5, 1000);
+      }
+    }
+
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #ifdef DUAL_POWER_BUTTONS
     if (SaberBase::IsOn() && aux_on_) {
@@ -74,7 +106,11 @@ public:
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
         aux_on_ = false;
-        On();
+      if (mode_volume_) {
+          VolumeUp();
+        } else {
+          On();
+        }
         return true;
 
 #ifdef BLADE_DETECT_PIN
@@ -95,13 +131,13 @@ public:
         return true;
 #endif
 
+
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
-#ifdef DUAL_POWER_BUTTONS
-        aux_on_ = true;
-        On();
-#else
+      if (mode_volume_) {
+        VolumeDown();
+        } else {
         next_preset();
-#endif
+        }
         return true;
 
 	// Handle double-click with preon
@@ -211,6 +247,21 @@ public:
         SaberBase::RequestMotion();
         return true;
 
+case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
+    if (mode_volume_){
+      mode_volume_ = false;
+      hybrid_font.SB_Change(EXIT_COLOR_CHANGE);
+      // beeper.Beep(0.5, 3000);
+      STDOUT.println("Exit Volume Menu");
+    }
+    else{
+      mode_volume_ = true;
+      hybrid_font.SB_Change(ENTER_COLOR_CHANGE);
+      // beeper.Beep(0.5, 3000);
+      STDOUT.println("Enter Volume Menu");
+    }
+    return true;
+
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
 #if NUM_BUTTONS == 0
       case EVENTID(BUTTON_NONE, EVENT_SHAKE, MODE_OFF):
@@ -246,6 +297,8 @@ private:
   bool aux_on_ = true;
   bool pointing_down_ = false;
   bool swing_blast_ = false;
+  bool mode_volume_ = false;
+
 };
 
 #endif
