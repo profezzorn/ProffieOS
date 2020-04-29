@@ -1,5 +1,5 @@
 // Fett263 Buttons
-// Includes "Multi-Blast" Mode to enable Swing Blast control and SA22C voulme menu
+// Includes "Multi-Blast" Mode to enable Swing Blast control
 //
 // 2 Button Controls (PWR and AUX):
 // Ignite (ON) - click PWR while OFF
@@ -29,16 +29,17 @@
 #include "prop_base.h"
 #include "../sound/hybrid_font.h"
 
-#define PROP_TYPE Saber
+#undef PROP_TYPE
+#define PROP_TYPE SaberFett263Buttons
 
 //
 
 // The Saber class implements the basic states and actions
 // for the saber.
-class Saber : public PropBase {
+class SaberFett263Buttons : public PropBase {
 public:
-  Saber() : PropBase() {}
-  const char* name() override { return "Saber"; }
+  SaberFett263Buttons() : PropBase() {}
+  const char* name() override { return "SaberFett263Buttons"; }
 
 // EVENT_SWING
       bool swinging_ = false;
