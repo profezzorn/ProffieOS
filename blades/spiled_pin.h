@@ -59,8 +59,8 @@ public:
   void Set(int led, Color16 color) {
     uint8_t *output = ((uint8_t *)displayMemory) + (led + 1) * (1 + Color8::num_bytes(byteorder_));
     int MAX = std::max(color.r, std::max(color.g, color.b));
-    int output_level = (MAX + 2114) / 2115;
-    int mult = output_level == 0 ? 0 : 31 * 256 / output_level;
+    int output_level = (MAX + 2113) / 2117;
+    int mult = output_level == 0 ? 0 : 7930 / output_level;
     OutByte(0xE0 | output_level);
     for (int i = Color8::num_bytes(byteorder_) - 1; i >= 0; i--) {
       OutByte(color.getShort(byteorder_, i) * mult >> 16);
