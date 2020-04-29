@@ -1,5 +1,5 @@
 // Fett263 Buttons
-// Includes "Multi-Blast" Mode to enable Swing Blast control
+// Includes "Multi-Blast" Mode to enable Swing Blast control and SA22C voulme menu
 //
 // 2 Button Controls (PWR and AUX):
 // Ignite (ON) - click PWR while OFF
