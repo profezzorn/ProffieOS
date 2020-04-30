@@ -43,7 +43,7 @@ public:
       digitalWrite(CLOCK_PIN, LOW);
       digitalWrite(pin_, output & 0x80);
       delay_nanos(500000000 / frequency_);
-      output <<= 8;
+      output <<= 1;
       digitalWrite(CLOCK_PIN, HIGH);
       delay_nanos(500000000 / frequency_);
     }
