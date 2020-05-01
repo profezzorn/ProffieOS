@@ -15,7 +15,9 @@
 // Lightning Block - hold PWR and click AUX while ON
 // Melt - hold PWR (or AUX) and thrust forward and clash while ON
 // Force - hold and release PWR while ON
-// Color Change - hold AUX and click PWR while ON to enter CCWheel, turn hilt to rotate through colors, click PWR to select/exit - if using "#define COLOR_CHANGE_DIRECT" in config each button press advances one Color at a time.
+// Color Change - hold AUX and click PWR while ON to enter CCWheel, 
+// turn hilt to rotate through colors, click PWR to select/exit 
+// if using COLOR_CHANGE_DIRECT each button press advances one Color at a time
 // Next Preset - click AUX while OFF
 // Previous Preset - hold AUX and click PWR while OFF
 // Enter SA22C Volume Menu - hold and release AUX while OFF
@@ -31,8 +33,6 @@
 
 #undef PROP_TYPE
 #define PROP_TYPE SaberFett263Buttons
-
-//
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -83,12 +83,6 @@ public:
     }
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
-#ifdef DUAL_POWER_BUTTONS
-    if (SaberBase::IsOn() && aux_on_) {
-      if (button == BUTTON_POWER) button = BUTTON_AUX;
-      if (button == BUTTON_AUX) button = BUTTON_POWER;
-    }
-#endif
     switch (EVENTID(button, event, modifiers)) {
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
@@ -97,17 +91,13 @@ public:
         } else {
           pointing_down_ = false;
         }
-      return true;
+        return true;
 
-#if NUM_BUTTONS == 0
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-#endif
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
-        aux_on_ = false;
-      if (mode_volume_) {
+        if (mode_volume_) {
           VolumeUp();
         } else {
           On();
@@ -163,9 +153,7 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_OFF, MODE_ON):
-#if NUM_BUTTONS == 0
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-#endif
+
 #ifndef DISABLE_COLOR_CHANGE
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           // Just exit color change mode.
@@ -201,9 +189,6 @@ public:
          }
          return true;
 
-#if NUM_BUTTONS == 1
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
-#endif
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
         ToggleColorChangeMode();
@@ -250,38 +235,26 @@ public:
         SaberBase::RequestMotion();
         return true;
 
-case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
-    if (mode_volume_){
-      mode_volume_ = false;
-      hybrid_font.SB_Change(EXIT_COLOR_CHANGE);
-      // beeper.Beep(0.5, 3000);
-      STDOUT.println("Exit Volume Menu");
-    }
-    else{
-      mode_volume_ = true;
-      hybrid_font.SB_Change(ENTER_COLOR_CHANGE);
-      // beeper.Beep(0.5, 3000);
-      STDOUT.println("Enter Volume Menu");
-    }
-    return true;
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
+        if (mode_volume_) {
+          mode_volume_ = false;
+          hybrid_font.SB_Change(EXIT_COLOR_CHANGE);
+          // beeper.Beep(0.5, 3000);
+          STDOUT.println("Exit Volume Menu");
+        } else {
+          mode_volume_ = true;
+          hybrid_font.SB_Change(ENTER_COLOR_CHANGE);
+          // beeper.Beep(0.5, 3000);
+          STDOUT.println("Enter Volume Menu");
+       }
+       return true;
 
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-#if NUM_BUTTONS == 0
-      case EVENTID(BUTTON_NONE, EVENT_SHAKE, MODE_OFF):
-#endif
         next_preset();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
         previous_preset();
-        return true;
-
-      case EVENTID(BUTTON_AUX2, EVENT_CLICK_SHORT, MODE_OFF):
-#ifdef DUAL_POWER_BUTTONS
-        next_preset();
-#else
-        previous_preset();
-#endif
         return true;
 
         // Events that needs to be handled regardless of what other buttons
@@ -297,7 +270,6 @@ case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
     return false;
   }
 private:
-  bool aux_on_ = true;
   bool pointing_down_ = false;
   bool swing_blast_ = false;
   bool mode_volume_ = false;
