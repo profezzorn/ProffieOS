@@ -243,7 +243,10 @@ public:
     FileReader f, out;
     if (!OpenPresets(&f, "presets.ini")) {
       if (!UpdateINI()) CreateINI();
-      OpenPresets(&f, "presets.ini");
+      if (!OpenPresets(&f, "presets.ini")) {
+	STDOUT << "SAVING FAILED!!!!\n";
+	return;
+      }
     }
     PathHelper tmp_fn(GetSaveDir(), "presets.tmp");
     LSFS::Remove(tmp_fn);
