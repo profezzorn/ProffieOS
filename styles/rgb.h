@@ -40,7 +40,10 @@ template<int R, int G, int B>
 class Rgb16 {
 public:
   static Color16 color() { return Color16(R, G, B); }
-  void run(BladeBase* base) {}
+  bool run(BladeBase* base) {
+    if (R == 0 && G == 0 && B == 0) return false; // allow disable
+    return true;
+  }
   OverDriveColor getColor(int led) {
     OverDriveColor ret;
     ret.c = color();
