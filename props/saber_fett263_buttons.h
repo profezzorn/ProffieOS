@@ -4,7 +4,7 @@
 // 2 Button Controls (PWR and AUX):
 // Ignite (ON) - click PWR while OFF
 // Muted Ignition (ON) - double click PWR while OFF
-// Retract (OFF) - click PWR while ON
+// Retract (OFF) - click PWR while ON (not swinging)
 // Play Music Track - hold and release PWR while OFF
 // Blast - click AUX while ON
 // Multi-Blast Mode - hold and release AUX while ON to enter mode, Swing to initiate Blasts, click Aux to exit mode
@@ -162,8 +162,10 @@ public:
           return true;
         }
 #endif
-        swing_blast_ = false;
-        Off();
+        if (!swinging_) {
+	  swing_blast_ = false;
+          Off();
+	}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
