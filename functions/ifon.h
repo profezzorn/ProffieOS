@@ -82,7 +82,7 @@ public:
     return LayerRunResult::UNKNOWN;
   }
   int getInteger(int led) {
-    return clampi32(thres - led * 32768, 0, 32768);
+    return 32768 - clampi32(thres - led * 32768, 0, 32768);
   }
 private:
   EXTENSION extension_;
