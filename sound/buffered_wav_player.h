@@ -25,6 +25,23 @@ public:
     pause_ = false;
   }
 
+  bool PlayInCurrentDir(const char* name) {
+    for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
+      PathHelper full_name(dir, name);
+      LOCK_SD(true);
+      bool exists = LSFS::Exists(full_name);
+      LOCK_SD(false);
+      // Fill up audio buffers before we lock the SD again
+      AudioStreamWork::scheduleFillBuffer();
+      if (exists) {
+	Play(full_name);
+	return true;
+      }
+    }
+    return false;
+  }
+
+
   void PlayOnce(Effect* effect, float start = 0.0) {
     MountSDCard();
     EnableAmplifier();
