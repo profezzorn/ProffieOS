@@ -14,9 +14,14 @@
 template<class COLOR, class ALPHA>
 class AlphaL {
 public:
-  void run(BladeBase* blade) {
-    color_.run(blade);
-    alpha_.run(blade);
+  LayerRunResult run(BladeBase* blade) {
+    bool base_run_result = RunStyle(&color_, blade);
+    LayerRunResult ret = RunLayer(&alpha_, blade);
+    if (ret == LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION &&
+	base_run_result == true) {
+      return LayerRunResult::UNKNOWN;
+    }
+    return ret;
   }
 
 private:

@@ -69,6 +69,28 @@ private:
   int ret_;
 };
 
+
+template<class EXTENSION, bool ALLOW_DISABLE=1 >
+class InOutHelperF {
+public:
+  LayerRunResult run(BladeBase* blade) __attribute__((warn_unused_result)) {
+    extension_.run(blade);
+    thres = (extension_.getInteger(0) * blade->num_leds());
+
+    if (ALLOW_DISABLE && thres == 0)
+      return LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
+    return LayerRunResult::UNKNOWN;
+  }
+  int getInteger(int led) {
+    return clampi32(thres - led * 32768, 0, 32768);
+  }
+private:
+  EXTENSION extension_;
+  int thres = 0;
+};
+
+
+
 #include "trigger.h"
 #include "scale.h"
 

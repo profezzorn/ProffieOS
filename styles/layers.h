@@ -17,9 +17,18 @@ template<class BASE, class... LAYERS> class Layers {};
 template<class BASE, class L1>
 class Layers<BASE, L1> {
 public:
-  bool run(BladeBase* blade) {
-    layer_.run(blade);
-    return RunStyle(&base_, blade);
+  LayerRunResult run(BladeBase* blade) {
+    LayerRunResult base_run_result = RunLayer(&base_, blade);
+    LayerRunResult layer_run_result = RunLayer(&layer_, blade);
+    switch (layer_run_result) {
+      case LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION:
+	return LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
+      case LayerRunResult::TRANSPARENT_UNTIL_IGNITION:
+	return base_run_result;
+      case LayerRunResult::UNKNOWN:
+	break;
+    }
+    return LayerRunResult::UNKNOWN;
   }
 private:
   BASE base_;

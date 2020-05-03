@@ -16,7 +16,7 @@
 template<class TRANSITION, BladeEffectType EFFECT>
 class TransitionEffectL {
 public:
-  void run(BladeBase* blade) {
+  LayerRunResult run(BladeBase* blade) {
     if (effect_.Detect(blade)) {
       transition_.begin();
       run_ = true;
@@ -24,7 +24,12 @@ public:
     if (run_) {
       transition_.run(blade);
       if (transition_.done()) run_ = false;
+    } else {
+      if (EFFECT == EFFECT_BOOT) {
+	return  LayerRunResult::TRANSPARENT_UNTIL_IGNITION;
+      }
     }
+    return LayerRunResult::UNKNOWN;
   }
   
 private:
