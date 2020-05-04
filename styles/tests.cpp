@@ -18,6 +18,7 @@ float fract(float x) { return x - floor(x); }
 
 uint32_t micros_ = 0;
 uint32_t micros() { return micros_; }
+uint32_t millis() { return micros_ / 1000; }
 int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x < a) return a;
   if (x > b) return b;
@@ -63,6 +64,10 @@ struct  Print {
 #include "style_ptr.h"
 #include "colors.h"
 #include "inout_helper.h"
+#include "blast.h"
+#include "../transitions/base.h"
+#include "../transitions/join.h"
+#include "../transitions/wipe.h"
 
 bool on_ = true;
 bool allow_disable_ = false;
@@ -177,11 +182,10 @@ void test_cylon() {
   micros_ += 1000;				\
   /*  fprintf(stderr, "micros = %d on_ = %d\n", micros_, on_);	*/ 	\
   allow_disable_ = false;			\
-  t1.run(&mock_blade);				\
+  style->run(&mock_blade);			\
 } while(0)
 
-void test_inouthelper() {
-  Style<InOutHelper<Rgb16<65535,65535,65535>, 100, 100, Rgb16<0,0,0>>> t1;
+void test_inouthelper(BladeStyle* style) {
   MockBlade mock_blade;
   mock_blade.colors.resize(1);
   on_ = false;
@@ -230,6 +234,7 @@ void test_inouthelper() {
   }
   last = 65535;
   on_ = false;
+  STEP();
   for (int i = 0; i < 90; i++) {
     STEP();
     if (allow_disable_) {
@@ -237,7 +242,8 @@ void test_inouthelper() {
       exit(1);
     }
     if (mock_blade.colors[0].r >= last || mock_blade.colors[0].r == 0) {
-      fprintf(stderr, "InOutHelper failed to dim blade at t = %d\n", micros_);
+      fprintf(stderr, "InOutHelper failed to dim blade at t = %d r = %d last = %d\n", micros_,
+	      mock_blade.colors[0].r, last);
       exit(1);
     }
     last = mock_blade.colors[0].r;
@@ -253,6 +259,15 @@ void test_inouthelper() {
     fprintf(stderr, "InOutHelper fails to make blade completely black.\n");
     exit(1);
   }
+}
+
+void test_inouthelper() {
+  fprintf(stderr, "Testing InOutHelper...\n");
+  Style<InOutHelper<Rgb16<65535,65535,65535>, 100, 100, Rgb16<0,0,0>>> t1;
+  test_inouthelper(&t1);
+  fprintf(stderr, "Testing InOutTr...\n");
+  Style<InOutTr<Rgb16<65535,65535,65535>, TrWipe<100>, TrWipeIn<100>, Rgb16<0,0,0>>> t2;
+  test_inouthelper(&t2);
 }
 
 int main() {
