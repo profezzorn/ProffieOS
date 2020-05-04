@@ -38,7 +38,7 @@ private:
 template<class OUT_MILLIS, class IN_MILLIS>
 class InOutFuncX {
 public:
-  void run(BladeBase* blade) {
+  FunctionRunResult run(BladeBase* blade) {
     out_millis_.run(blade);
     in_millis_.run(blade);
     uint32_t now = micros();
@@ -58,6 +58,8 @@ public:
       extension = std::max(extension, 0.0f);
     }
     ret_ = extension * 32768.0;
+    if (!blade->is_on() && ret_ == 0) return FunctionRunResult::ZERO_UNTIL_IGNITION;
+    return FunctionRunResult::UNKNOWN;
   }
   int getInteger(int led) { return ret_; }
 
@@ -73,13 +75,17 @@ private:
 template<class EXTENSION, bool ALLOW_DISABLE=1 >
 class InOutHelperF {
 public:
-  LayerRunResult run(BladeBase* blade) __attribute__((warn_unused_result)) {
-    extension_.run(blade);
+  FunctionRunResult run(BladeBase* blade) __attribute__((warn_unused_result)) {
+    FunctionRunResult ret = RunFunction(&extension_, blade);
     thres = (extension_.getInteger(0) * blade->num_leds());
-
-    if (ALLOW_DISABLE && thres == 0)
-      return LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
-    return LayerRunResult::UNKNOWN;
+    if (ALLOW_DISABLE) {
+      switch (ret) {
+	case FunctionRunResult::ZERO_UNTIL_IGNITION: return FunctionRunResult::ONE_UNTIL_IGNITION;
+	case FunctionRunResult::ONE_UNTIL_IGNITION: return FunctionRunResult::ZERO_UNTIL_IGNITION;
+	case FunctionRunResult::UNKNOWN: break;
+      }
+    }
+    return FunctionRunResult::UNKNOWN;
   }
   int getInteger(int led) {
     return 32768 - clampi32(thres - led * 32768, 0, 32768);

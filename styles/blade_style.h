@@ -50,6 +50,12 @@ enum class LayerRunResult {
   TRANSPARENT_UNTIL_IGNITION,
 };
 
+enum class FunctionRunResult {
+  UNKNOWN,
+  ZERO_UNTIL_IGNITION,
+  ONE_UNTIL_IGNITION
+};
+
 template<class T, typename X> struct RunStyleHelper {
   static bool run(T* style, BladeBase* blade) {
     return style->run(blade);
@@ -65,7 +71,7 @@ template<class T> struct RunStyleHelper<T, void> {
 
 template<class T> struct RunStyleHelper<T, LayerRunResult> {
   static bool run(T* style, BladeBase* blade) {
-    return style->run(blade) == LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
+    return style->run(blade) != LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
   }
 };
 
@@ -100,6 +106,37 @@ template<class T> struct RunLayerHelper<T, bool> {
 template<class T>
 inline LayerRunResult RunLayer(T* style, BladeBase* blade) {
   return RunLayerHelper<T, decltype(style->run(blade))>::run(style, blade);
+};
+
+
+template<class T, typename X> struct RunFunctionHelper {
+  static FunctionRunResult run(T* style, BladeBase* blade) {
+    return style->ThisIsAnError();
+  }
+};
+
+template<class T> struct RunFunctionHelper<T, FunctionRunResult> {
+  static FunctionRunResult run(T* style, BladeBase* blade) {
+    return style->run(blade);
+  }
+};
+  
+template<class T> struct RunFunctionHelper<T, void> {
+  static FunctionRunResult run(T* style, BladeBase* blade) {
+    style->run(blade);
+    return FunctionRunResult::UNKNOWN;
+  }
+};
+  
+template<class T> struct RunFunctionHelper<T, bool> {
+  static FunctionRunResult run(T* style, BladeBase* blade) {
+    return style->ThisIsAnError();
+  }
+};
+  
+template<class T>
+inline FunctionRunResult RunFunction(T* style, BladeBase* blade) {
+  return RunFunctionHelper<T, decltype(style->run(blade))>::run(style, blade);
 };
 
 #endif

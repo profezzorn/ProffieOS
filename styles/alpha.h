@@ -15,13 +15,14 @@ template<class COLOR, class ALPHA>
 class AlphaL {
 public:
   LayerRunResult run(BladeBase* blade) {
-    bool base_run_result = RunStyle(&color_, blade);
-    LayerRunResult ret = RunLayer(&alpha_, blade);
-    if (ret == LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION &&
-	base_run_result == true) {
-      return LayerRunResult::UNKNOWN;
+    LayerRunResult base_run_result = RunLayer(&color_, blade);
+    FunctionRunResult ret = RunFunction(&alpha_, blade);
+    switch (ret) {
+      case FunctionRunResult::ONE_UNTIL_IGNITION: return base_run_result;
+      case FunctionRunResult::ZERO_UNTIL_IGNITION: return LayerRunResult::TRANSPARENT_UNTIL_IGNITION;
+      case FunctionRunResult::UNKNOWN: break;
     }
-    return ret;
+    return LayerRunResult::UNKNOWN;
   }
 
 private:

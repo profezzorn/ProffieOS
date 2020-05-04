@@ -65,6 +65,7 @@ struct  Print {
 #include "inout_helper.h"
 
 bool on_ = true;
+bool allow_disable_ = false;
 
 class MockBlade : public BladeBase {
 public:
@@ -83,7 +84,9 @@ public:
   size_t GetEffects(BladeEffect** blade_effects) override {
     return 0;
   }
-  void allow_disable() override { }
+  void allow_disable() override {
+    allow_disable_ = true;
+  }
   void Activate() override {
     fprintf(stderr, "NOT IMPLEMENTED\n");
     exit(1);
@@ -170,25 +173,84 @@ void test_cylon() {
 }
 
 
+#define STEP() do {				\
+  micros_ += 1000;				\
+  /*  fprintf(stderr, "micros = %d on_ = %d\n", micros_, on_);	*/ 	\
+  allow_disable_ = false;			\
+  t1.run(&mock_blade);				\
+} while(0)
+
 void test_inouthelper() {
   Style<InOutHelper<Rgb16<65535,65535,65535>, 100, 100, Rgb16<0,0,0>>> t1;
   MockBlade mock_blade;
   mock_blade.colors.resize(1);
   on_ = false;
   micros_ = 0;
-  t1.run(&mock_blade);
+  STEP();
+  
+  if (!allow_disable_) {
+    fprintf(stderr, "Should be able to turn off after first run.\n");
+    exit(1);
+  }
   if (mock_blade.colors[0].r != 0) {
     fprintf(stderr, "InOutHelper fails to make blade completely black.\n");
     exit(1);
   }
   on_ = true;
-  for (int i = 0; i < 200; i++) {
-    micros_ = i * 1000;
-    t1.run(&mock_blade);
+  int last = 0;
+
+  STEP();
+  if (allow_disable_) {
+    fprintf(stderr, "Should not be able to turn off when on.\n");
+    exit(1);
   }
-  t1.run(&mock_blade);
+
+  for (int i = 0; i < 90; i++) {
+    STEP();
+    if (allow_disable_) {
+      fprintf(stderr, "Should not be able to turn off when extending.\n");
+      exit(1);
+    }
+    if (mock_blade.colors[0].r <= last || mock_blade.colors[0].r == 65536) {
+      fprintf(stderr, "InOutHelper failed to brighten blade at t = %d red = %d last = %d\n", micros_, last, mock_blade.colors[0].r);
+      exit(1);
+    }
+    last = mock_blade.colors[0].r;
+  }
+  for (int i = 0; i < 110; i++) {
+    STEP();
+    if (allow_disable_) {
+      fprintf(stderr, "Should not be able to turn off when on.\n");
+      exit(1);
+    }
+  }
   if (mock_blade.colors[0].r != 65535) {
     fprintf(stderr, "InOutHelper fails to make blade completely white: %d != %d\n", mock_blade.colors[0].r, 65535);
+    exit(1);
+  }
+  last = 65535;
+  on_ = false;
+  for (int i = 0; i < 90; i++) {
+    STEP();
+    if (allow_disable_) {
+      fprintf(stderr, "Should not be able to turn off when retracting.\n");
+      exit(1);
+    }
+    if (mock_blade.colors[0].r >= last || mock_blade.colors[0].r == 0) {
+      fprintf(stderr, "InOutHelper failed to dim blade at t = %d\n", micros_);
+      exit(1);
+    }
+    last = mock_blade.colors[0].r;
+  }
+  for (int i = 0; i < 110; i++) {
+    STEP();
+  }
+  if (!allow_disable_) {
+    fprintf(stderr, "Should  be able to turn off when retracted.\n");
+    exit(1);
+  }
+  if (mock_blade.colors[0].r != 0) {
+    fprintf(stderr, "InOutHelper fails to make blade completely black.\n");
     exit(1);
   }
 }
