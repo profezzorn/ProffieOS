@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 // cruft
+#define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 #define SCOPED_PROFILER() do { } while(0)
 template<class A, class B>
 constexpr auto min(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::forward<B>(b)) {
@@ -25,6 +26,7 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   return x;
 }
 
+int random(int x) { return (random(x) & 0x7fffff) % x; }
 class Looper {
 public:
   static void DoHFLoop() {}
@@ -65,9 +67,15 @@ struct  Print {
 #include "colors.h"
 #include "inout_helper.h"
 #include "blast.h"
+#include "transition_effect.h"
 #include "../transitions/base.h"
 #include "../transitions/join.h"
 #include "../transitions/wipe.h"
+#include "../transitions/delay.h"
+#include "../transitions/concat.h"
+#include "../transitions/fade.h"
+#include "../transitions/instant.h"
+#include "../functions/bump.h"
 
 bool on_ = true;
 bool allow_disable_ = false;
@@ -268,6 +276,15 @@ void test_inouthelper() {
   fprintf(stderr, "Testing InOutTr...\n");
   Style<InOutTr<Rgb16<65535,65535,65535>, TrWipe<100>, TrWipeIn<100>, Rgb16<0,0,0>>> t2;
   test_inouthelper(&t2);
+  fprintf(stderr, "Testing InOutTr #2...\n");
+  Style<InOutTr<Rgb16<65535,65535,65535>,
+		TrWipe<100>,
+		TrWipeIn<100>,
+		Layers<Black,
+		       TransitionEffectL<TrConcat<TrDelay<1500>, Black, TrFade<1000>, AlphaL<Red, Bump<Int<0>, Int<6000>>>,TrFade<3000>>, EFFECT_BOOT>,
+		       TransitionEffectL<TrConcat<TrInstant, AlphaL<Red,Bump<Int<0>, Int<6000>>>,TrFade<3000>>,EFFECT_NEWFONT>>
+		>> t3;
+  test_inouthelper(&t3);
 }
 
 int main() {

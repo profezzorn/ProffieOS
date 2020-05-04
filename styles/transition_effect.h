@@ -24,7 +24,8 @@ public:
     if (run_) {
       transition_.run(blade);
       if (transition_.done()) run_ = false;
-    } else {
+    }
+    if (!run_) {
       switch (EFFECT) {
 	// This a list of effects that cannot occur after retraction is done.
 	case EFFECT_BOOT:
