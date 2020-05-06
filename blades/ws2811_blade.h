@@ -136,7 +136,6 @@ public:
     // This blade uses EFFECT_PREON, so we need to turn the power on now.
     if (IsHandled(HANDLED_FEATURE_PREON)) {
       Power(true);
-      on_ = true;
       power_off_requested_ = false;
     }
   }

@@ -107,7 +107,6 @@ public:
     if (IsHandled(HANDLED_FEATURE_PREON)) {
       Power(true);
       delay(10);
-      on_ = true;
     }
   }
   void SB_Off(OffType off_type) override {
