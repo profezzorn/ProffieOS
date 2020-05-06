@@ -53,6 +53,7 @@ DEFINE_ALL_EFFECTS();
     HANDLED_FEATURE_DRAG = 1 << 3,
     HANDLED_FEATURE_MELT = 1 << 4,
     HANDLED_FEATURE_LIGHTNING_BLOCK = 1 << 5,
+    HANDLED_FEATURE_PREON = 1 << 6,
   };
 
 #include "../styles/blade_style.h"
@@ -135,6 +136,10 @@ public:
     switch (effect) {
       case EFFECT_STAB:
 	BladeBase::HandleFeature(HANDLED_FEATURE_STAB);
+	break;
+      case EFFECT_PREON:
+	BladeBase::HandleFeature(HANDLED_FEATURE_PREON);
+	break;
       default:
 	break;
     }

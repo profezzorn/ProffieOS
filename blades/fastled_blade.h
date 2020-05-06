@@ -101,6 +101,15 @@ public:
     delay(10);
     on_ = true;
   }
+  void SB_PreOn(float* d) override {
+    AbstractBlade::SB_PreOn(d);
+    // This blade uses EFFECT_PREON, so we need to turn the power on now.
+    if (IsHandled(HANDLED_FEATURE_PREON)) {
+      Power(true);
+      delay(10);
+      on_ = true;
+    }
+  }
   void SB_Off(OffType off_type) override {
     AbstractBlade::SB_Off(off_type);
     on_ = false;
