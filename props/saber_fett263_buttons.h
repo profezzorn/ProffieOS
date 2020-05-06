@@ -193,7 +193,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
         ToggleColorChangeMode();
-        break;
+	return true;
 #endif
 	
         // Lockup
