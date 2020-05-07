@@ -16,6 +16,7 @@ DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4 + 1];
 #include "ws2811_serial.h"
 #define DefaultPinClass MonopodWSPin
 #endif
+#include "spiled_pin.h"
 
 Color16 color_buffer[maxLedsPerStrip];
 BladeBase* current_blade = NULL;
@@ -47,6 +48,7 @@ public:
   void Power(bool on) {
     if (on) EnableBooster();
     if (!powered_ && on) {
+      power_->Init();
       TRACE("Power on");
       pinMode(pin_.pin(), OUTPUT);
       pin_.BeginFrame();
@@ -65,8 +67,10 @@ public:
       for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, Color8());
       while (!pin_.IsReadyForEndFrame());
       pin_.EndFrame();
+      while (!pin_.IsReadyForEndFrame());
       power_->Power(on);
       pinMode(pin_.pin(), INPUT_ANALOG);
+      power_->DeInit();
       current_blade = NULL;
     }
     powered_ = on;
@@ -78,7 +82,6 @@ public:
     STDOUT.print("WS2811 Blade with ");
     STDOUT.print(pin_.num_leds());
     STDOUT.println(" leds.");
-    power_->Init();
     Power(true);
     CommandParser::Link();
     Looper::Link();
@@ -88,7 +91,6 @@ public:
   void Deactivate() override {
     TRACE("Deactivate");
     Power(false);
-    // de-init power pin?
     CommandParser::Unlink();
     Looper::Unlink();
     AbstractBlade::Deactivate();
@@ -129,6 +131,14 @@ public:
     on_ = true;
     power_off_requested_ = false;
   }
+  void SB_PreOn(float* delay) override {
+    AbstractBlade::SB_PreOn(delay);
+    // This blade uses EFFECT_PREON, so we need to turn the power on now.
+    if (IsHandled(HANDLED_FEATURE_PREON)) {
+      Power(true);
+      power_off_requested_ = false;
+    }
+  }
   void SB_Off(OffType off_type) override {
     TRACE("SB_Off");
     AbstractBlade::SB_Off(off_type);
@@ -138,7 +148,7 @@ public:
     }
   }
 
-  void SB_Top() override {
+  void SB_Top(uint64_t total_cycles) override {
     STDOUT.print("blade fps: ");
     loop_counter_.Print();
     STDOUT.println("");
@@ -166,6 +176,7 @@ protected:
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (true) {
+    retry:
       while (!powered_ || !current_style_) {
 	loop_counter_.Reset();
 	YIELD();
@@ -188,17 +199,21 @@ protected:
       }
       current_blade = this;
       current_style_->run(this);
-      while (!pin_.IsReadyForBeginFrame()) YIELD();
-      // If Power() was called....
-      if (current_blade != this) continue;
+      while (!pin_.IsReadyForBeginFrame()) {
+	YIELD();
+	// If Power() was called....
+	if (current_blade != this) goto retry;
+      }
       pin_.BeginFrame();
       for (int i = 0; i < pin_.num_leds(); i++) {
 	pin_.Set(i, color_buffer[i]);
 	if (!(i & 0x1f)) Looper::DoHFLoop();
       }
-      while (!pin_.IsReadyForEndFrame()) YIELD();
-      // If Power() was called....
-      if (current_blade != this) continue;
+      while (!pin_.IsReadyForEndFrame()) {
+	YIELD();
+	// If Power() was called....
+	if (current_blade != this) goto retry;
+      }
       pin_.EndFrame();
       loop_counter_.Update();
       current_blade = NULL;

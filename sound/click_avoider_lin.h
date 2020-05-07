@@ -1,6 +1,8 @@
 #ifndef SOUND_CLICK_AVOIDER_LIN_H
 #define SOUND_CLICK_AVOIDER_LIN_H
 
+#include <algorithm>
+
 // This class is used to control volumes without causing
 // clicking noises. Everytime you call advance(), the value
 // goes closer towards the target at a preset speed.
@@ -15,11 +17,11 @@ public:
   void advance() {
     uint32_t target = target_;
     if (current_ > target) {
-      current_ -= min(speed_, current_ - target);
+      current_ -= std::min(speed_, current_ - target);
       return;
     }
     if (current_ < target) {
-      current_ += min(speed_, target - current_);
+      current_ += std::min(speed_, target - current_);
       return;
     }
   }

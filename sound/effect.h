@@ -51,7 +51,7 @@ class Effect {
     UNKNOWN,
   };
 
-  enum class FilePattern {
+  enum class FilePattern : uint8_t {
     // No idea
     UNKNOWN,
     // NAMENNNN.WAV
@@ -62,7 +62,7 @@ class Effect {
     NONREDUNDANT_SUBDIRS,
   };
 
-  enum class FileType {
+  enum class FileType : uint8_t {
     SOUND,
     IMAGE,
     UNKNOWN,
@@ -112,6 +112,7 @@ class Effect {
     ext_ = UNKNOWN;
     selected_ = -1;
     num_files_ = 0;
+    directory_ = nullptr;
   }
 
   bool Scan(const char *filename) {
@@ -193,6 +194,8 @@ class Effect {
       if (files_found() != (size_t)num_files_) {
 	STDOUT << " SOME FILES ARE MISSING! " << files_found() << " != " << num_files_;
       }
+      STDOUT.print(" in ");
+      STDOUT.print(directory_);
       STDOUT.println("");
     }
   }
@@ -216,7 +219,7 @@ class Effect {
   }
 
   operator bool() const { return files_found() > 0; }
-  
+
   void Select(int n) {
     selected_ = n;
   }
@@ -250,7 +253,8 @@ class Effect {
 
   // Get the name of a specific file in the set.
   void GetName(char *filename, int n) const {
-    strcpy(filename, current_directory);
+    strcpy(filename, directory_);
+    if (*directory_) strcat(filename, "/");
     strcat(filename, name_);
     switch (file_pattern_) {
       case FilePattern::UNKNOWN:
@@ -293,9 +297,9 @@ class Effect {
   }
 
   // Returns true if file was identified.
-  static bool ScanAll(const char* filename) {
+  static void ScanAll(const char *dir, const char* filename) {
     if (Effect::IdentifyExtension(filename) == Effect::UNKNOWN) {
-      return false;
+      return;
     }
 
 #if 0
@@ -304,72 +308,84 @@ class Effect {
     STDOUT.println(filename);
 #endif
     for (Effect* e = all_effects; e; e = e->next_) {
+      // This effect has already been found in a previous
+      // directory, and it cannot be found in another directory.
+      if (e->directory_ && e->directory_ != dir)
+        continue;
       if (e->Scan(filename)) {
-	return true;
+        e->directory_ = dir;
       }
     }
-    return false;
   }
 
-  static void ScanDirectory(const char *directory) {
+  static void ScanCurrentDirectory() {
     LOCK_SD(true);
-    STDOUT.print("Scanning sound font: ");
-    STDOUT.print(directory);
     for (Effect* e = all_effects; e; e = e->next_) {
       e->reset();
     }
 
+    for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
+      STDOUT.print("Scanning sound font: ");
+      STDOUT.print(dir);
+
 #ifdef ENABLE_SERIALFLASH
-    // Scan serial flash.
-    SerialFlashChip::opendir();
-    uint32_t size;
-    char filename[128];
-    while (SerialFlashChip::readdir(filename, sizeof(filename), size)) {
-      const char* f = startswith(directory, filename);
-      if (f) ScanAll(f);
-    }
+      // Scan serial flash.
+      SerialFlashChip::opendir();
+      uint32_t size;
+      char filename[128];
+      while (SerialFlashChip::readdir(filename, sizeof(filename), size)) {
+        const char* f = startswith(dir, filename);
+        if (!f) continue;
+        if (*f != '/') continue;
+        ScanAll(f + 1, dir);
+      }
 #endif
 
 #ifdef ENABLE_SD
-    if (LSFS::Exists(directory)) {
-      int total_identified = 0;
-      for (LSFS::Iterator iter(directory); iter; ++iter) {
-        if (iter.isdir()) {
-          char fname[128];
-          strcpy(fname, iter.name());
-          strcat(fname, "/");
-          char* fend = fname + strlen(fname);
-          for (LSFS::Iterator i2(iter); i2; ++i2) {
-            strcpy(fend, i2.name());
-            if (ScanAll(fname)) total_identified++;
+      if (LSFS::Exists(dir)) {
+        for (LSFS::Iterator iter(dir); iter; ++iter) {
+          if (iter.isdir()) {
+            char fname[128];
+            strcpy(fname, iter.name());
+            strcat(fname, "/");
+            char* fend = fname + strlen(fname);
+            for (LSFS::Iterator i2(iter); i2; ++i2) {
+              strcpy(fend, i2.name());
+              ScanAll(dir, fname);
+            }
+          } else {
+            ScanAll(dir, iter.name());
           }
-        } else {
-          if (ScanAll(iter.name())) total_identified++;
         }
+
       }
 
-      for (Effect* e = all_effects; e; e = e->next_)
-	total_identified -= e->files_found();
-
-      if (total_identified) {
-	STDOUT.println("");
-	STDOUT.println("WARNING: This font seems to be missing some files!!");
-	talkie.Say(talkie_error_in_15, 15);
-	talkie.Say(talkie_font_directory_15, 15);
-      }
-    }
-    
 #ifdef ENABLE_AUDIO
-    else if (strlen(directory) > 8) { // TODO: Check individual path segments
-      talkie.Say(talkie_font_directory_15, 15);
-      talkie.Say(talkie_too_long_15, 15);
-    } else if (strlen(directory)) {
-      talkie.Say(talkie_font_directory_15, 15);
-      talkie.Say(talkie_not_found_15, 15);
-    }
+      else if (strlen(dir) > 8) { // TODO: Check individual path segments
+        talkie.Say(talkie_font_directory_15, 15);
+        talkie.Say(talkie_too_long_15, 15);
+      } else if (strlen(dir)) {
+        talkie.Say(talkie_font_directory_15, 15);
+        talkie.Say(talkie_not_found_15, 15);
+      }
 #endif   // ENABLE_AUDIO
 #endif   // ENABLE_SD
-    STDOUT.println(" done");
+      STDOUT.println(" done");
+    }
+
+    bool warned = false;
+    for (Effect* e = all_effects; e; e = e->next_) {
+      if (e->files_found() != (size_t)(e->num_files_)) {
+	if (!warned) {
+	  warned = true;
+	  STDOUT.println("");
+	  STDOUT.println("WARNING: This font seems to be missing some files!!");
+	  talkie.Say(talkie_error_in_15, 15);
+	  talkie.Say(talkie_font_directory_15, 15);
+	}
+	e->Show();
+      }
+    }
     LOCK_SD(false);
   }
 
@@ -405,6 +421,9 @@ private:
 
   // Image or sound?
   FileType file_type_;
+
+  // The files for this effect are in this directory.
+  const char* directory_;
 };
 
 
@@ -455,6 +474,17 @@ EFFECT(bgndrag);
 EFFECT2(drag, drag);
 EFFECT(enddrag);
 
+// Melt is like drag, but for door melting. Falls back to "drag".
+EFFECT(bgnmelt);
+EFFECT2(melt, melt);
+EFFECT(endmelt);
+
+// Lightning block is like "lockup", but for blocking force lightning.
+// Falls back to standard lockup.
+EFFECT(bgnlb);
+EFFECT2(lb, lb);
+EFFECT(endlb);
+
 // Detonator effects
 EFFECT(bgnarm);
 EFFECT2(armhum, armhum);
@@ -486,6 +516,9 @@ EFFECT(range);
 EFFECT(reload);
 EFFECT(stun);
 EFFECT(unjam);
+
+// battery low
+EFFECT(lowbatt);	// battery low
 
 // TODO: Optimize this and make it possible
 // have the WAV reader use this.

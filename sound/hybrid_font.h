@@ -14,21 +14,43 @@ public:
     CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
     CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.2f);
     CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
-    CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 260.0f);
+    CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 130.0f);
     CONFIG_VARIABLE(ProffieOSAnimationFrameRate, 0.0f);
   }
   // Igniter compat
+  // This specifies how many milliseconds before the end of the
+  // "out" sound the hum starts to fade in.
+  // Defaults to 100ms.
   int humStart;
+  // Hum Volume (0-16), defaults to 15.
   int volHum;
+  // Effect volume (0-16) defaults to 16.
   int volEff;
 
+  // How fast (degrees per second) we have to swing before a swing
+  // effect is triggered. Defaults to 250.
   float ProffieOSSwingSpeedThreshold;
+  // Bends the response curve between swing speed and swing volume.
+  // Defaults to 0.5
   float ProffieOSSwingVolumeSharpness;
+  // The volume when swings are at the swing speed threshold.
+  // Defaults to 2.0
   float ProffieOSMaxSwingVolume;
+  // Specify what fraction of swing that must be played before a
+  // new swing can be started. Defaults to 0.5 (50%)
   float ProffieOSSwingOverlap;
+  // How much to duck the hum when the swing is playing.
+  // Defauls to 0.2 (hum volume is decreased by 20% of swing volume)
   float ProffieOSSmoothSwingDucking;
+  // How slow (degrees per second) the swing has to be before it's
+  // not considered a swing anymore. Defaults to 200.
   float ProffieOSSwingLowerThreshold;
+  // Specifies how agressive a swing has to be to be considered
+  // a slash. Once we reach, ProffieOSSwingSpeedThreshold, rate of
+  // swing speed change is used to determine if it's a swing or a
+  // slash. Defaults to 130 (degrees per second per second)
   float ProffieOSSlashAccelerationThreshold;
+  // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
 };
 
@@ -50,7 +72,11 @@ public:
     font_config.ReadInCurrentDir("config.ini");
     STDOUT.print("Activating ");
     // TODO: Find more reliable way to figure out if it's a monophonic or polyphonic font!!!!
-    monophonic_hum_ = SFX_poweron || SFX_poweroff || SFX_pwroff || SFX_blast;
+    if (SFX_in || SFX_out) {
+      monophonic_hum_ = false;
+    } else {
+      monophonic_hum_ = SFX_poweron || SFX_poweroff || SFX_pwroff || SFX_blast;
+    }
     guess_monophonic_ = false;
     if (monophonic_hum_) {
       if (SFX_clash || SFX_blaster || SFX_swing) {
@@ -386,11 +412,20 @@ public:
 	if (SFX_bgnauto) once = &SFX_bgnauto;
 	if (SFX_auto) loop = &SFX_auto;
 	break;
+      case SaberBase::LOCKUP_LIGHTNING_BLOCK:
+	if (SFX_bgnlb) once = &SFX_bgnlb;
+	if (SFX_lb) loop = &SFX_lb;
+	goto normal_fallback;
+      case SaberBase::LOCKUP_MELT:
+	if (SFX_bgnmelt) once = &SFX_bgnmelt;
+	if (SFX_melt) loop = &SFX_melt;
+        // fall through
       case SaberBase::LOCKUP_DRAG:
-        if (SFX_bgndrag) once = &SFX_bgndrag;
-        if (SFX_drag) loop = &SFX_drag;
+        if (!once && SFX_bgndrag) once = &SFX_bgndrag;
+        if (!loop && SFX_drag) loop = &SFX_drag;
         // fall through
       case SaberBase::LOCKUP_NORMAL:
+	normal_fallback:
         if (!once && SFX_bgnlock) once = &SFX_bgnlock;
         // fall through
       case SaberBase::LOCKUP_NONE:
@@ -423,10 +458,17 @@ public:
         if (SFX_endauto) end = &SFX_endauto; // if we have a transition use it
         if (!end) end = &SFX_blast; // if we don't, end with a blast
         break;
+      case SaberBase::LOCKUP_LIGHTNING_BLOCK:
+	if (SFX_endlb) end = &SFX_endlb;
+	goto normal_fallback_end;
+      case SaberBase::LOCKUP_MELT:
+	if (SFX_endmelt) end = &SFX_endmelt;
+        // fall through
       case SaberBase::LOCKUP_DRAG:
-        if (SFX_enddrag) end = &SFX_enddrag;
+        if (!end && SFX_enddrag) end = &SFX_enddrag;
         // fall through
       case SaberBase::LOCKUP_NORMAL:
+	normal_fallback_end:
         if (!end && SFX_endlock) end = &SFX_endlock;
         if (!end) end = &SFX_clash;
         // fall through
@@ -506,6 +548,7 @@ public:
       vol *= volume_;
     }
     if (!hum_player_) return;
+    vol *= font_config.volHum / 16.0;
     hum_player_->set_volume(vol);
   }
 
@@ -522,7 +565,17 @@ public:
     return current_effect_length_;
   }
 
-
+  void SB_LowBatt() override {
+    // play the fonts low battery sound if it exists
+    if (SFX_lowbatt) {
+      PlayCommon(&SFX_lowbatt);
+    } else {
+#ifdef ENABLE_AUDIO
+      talkie.Say(talkie_low_battery_15, 15);
+#endif
+    }
+  }
+	
  private:
   uint32_t last_micros_;
   uint32_t hum_start_;

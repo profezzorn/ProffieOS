@@ -63,7 +63,7 @@ Preset presets[] = {
     StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>(), "strobe"},
   { "TeensySF", "tracks/venus.wav",
     &style_pov,
-    StyleNormalPtr<BLACK, BLACK, 300, 800>(), "POV"},
+    StyleNormalPtr<Mix<ChangeSlowly<Int<1>, Int<1>>, White, Black>, BLACK, 300, 800>(), "POV"},
   { "SmthJedi", "tracks/mars.wav",
     &style_charging,
     StyleNormalPtr<BLACK, BLACK, 300, 800>(), "Battery\nLevel"}

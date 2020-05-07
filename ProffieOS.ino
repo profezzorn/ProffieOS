@@ -261,6 +261,7 @@ public:
 #endif
 
 #include "common/scoped_cycle_counter.h"
+#include "common/profiling.h"
 
 uint64_t audio_dma_interrupt_cycles = 0;
 uint64_t wav_interrupt_cycles = 0;
@@ -326,106 +327,19 @@ void MountSDCard();
 const char* GetSaveDir();
 
 #include "common/lsfs.h"
-#ifdef ENABLE_AUDIO
-
-#include "sound/click_avoider_lin.h"
-#include "sound/waveform_sampler.h"
-#include "sound/audiostream.h"
-#include "sound/dac.h"
-#include "sound/dynamic_mixer.h"
-#include "sound/beeper.h"
-#include "sound/talkie.h"
-#include "sound/lightsaber_synth.h"
-
-AudioDynamicMixer<9> dynamic_mixer;
-Beeper beeper;
-Talkie talkie;
-
-// LightSaberSynth saber_synth;
-#include "sound/buffered_audio_stream.h"
-
-#else  // ENABLE_AUDIO
-
-#include "common/sd_card.h"
-#define LOCK_SD(X) do { } while(0)
-
-#endif  // ENABLE_AUDIO
-
 #include "common/strfun.h"
 
+// Double-zero terminated array of search paths.
+// No trailing slashes!
 char current_directory[128];
-
-#include "sound/effect.h"
-
-#ifdef ENABLE_AUDIO
-
-size_t WhatUnit(class BufferedWavPlayer* player);
-
-#include "sound/buffered_wav_player.h"
-
-BufferedWavPlayer wav_players[6];
-RefPtr<BufferedWavPlayer> track_player_;
-
-RefPtr<BufferedWavPlayer> GetFreeWavPlayer()  {
-  // Find a free wave playback unit.
-  for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
-    if (wav_players[unit].Available()) {
-      wav_players[unit].reset_volume();
-      return RefPtr<BufferedWavPlayer>(wav_players + unit);
-    }
-  }
-  return RefPtr<BufferedWavPlayer>();
+const char* next_current_directory(const char* dir) {
+  dir += strlen(dir);
+  dir ++;
+  if (!*dir) return NULL;
+  return dir;
 }
 
-RefPtr<BufferedWavPlayer> RequireFreeWavPlayer()  {
-  while (true) {
-    RefPtr<BufferedWavPlayer> ret = GetFreeWavPlayer();
-    if (ret) return ret;
-    STDOUT.println("Failed to get hum player, trying again!");
-    delay(100);
-  }
-}
-
-size_t WhatUnit(class BufferedWavPlayer* player) {
-  if (!player) return -1;
-  return player - wav_players;
-}
-
-void SetupStandardAudioLow() {
-//  audio_splicer.Deactivate();
-  for (size_t i = 0; i < NELEM(wav_players); i++) {
-    if (wav_players[i].refs() != 0) {
-      STDOUT.println("WARNING, wav player still referenced!");
-    }
-    dynamic_mixer.streams_[i] = wav_players + i;
-    wav_players[i].reset_volume();
-  }
-  dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
-  dynamic_mixer.streams_[NELEM(wav_players)+1] = &talkie;
-}
-
-void SetupStandardAudio() {
-  dac.SetStream(NULL);
-  SetupStandardAudioLow();
-  dac.SetStream(&dynamic_mixer);
-}
-
-
-#include "common/config_file.h"
-#include "sound/hybrid_font.h"
-
-HybridFont hybrid_font;
-
-#include "sound/smooth_swing_config.h"
-#include "sound/smooth_swing_cfx_config.h"
-#include "sound/looped_swing_wrapper.h"
-#include "sound/smooth_swing_v2.h"
-
-LoopedSwingWrapper looped_swing_wrapper;
-SmoothSwingV2 smooth_swing_v2;
-
-#endif  // ENABLE_AUDIO
-
+#include "sound/sound.h"
 #include "common/battery_monitor.h"
 #include "common/color.h"
 #include "common/range.h"
@@ -506,6 +420,11 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/smoothstep.h"
 #include "functions/swing_speed.h"
 #include "functions/sound_level.h"
+#include "functions/blade_angle.h"
+#include "functions/variation.h"
+#include "functions/twist_angle.h"
+#include "functions/layer_functions.h"
+#include "functions/islessthan.h"
 
 // transitions
 #include "transitions/fade.h"
@@ -518,6 +437,10 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/boing.h"
 #include "transitions/random.h"
 #include "transitions/colorcycle.h"
+#include "transitions/wave.h"
+
+//responsive styles
+#include "styles/responsive_styles.h"
 
 // This macro has a problem with commas, please don't use it.
 #define EASYBLADE(COLOR, CLASH_COLOR) \
@@ -538,11 +461,19 @@ template<class base_color,
          class lockup_flicker_color = WHITE,
          class blast_color = WHITE>
 StyleAllocator StyleNormalPtr() {
+#if 0
   typedef AudioFlicker<base_color, lockup_flicker_color> AddFlicker;
   typedef Blast<base_color, blast_color> AddBlast;
   typedef Lockup<AddBlast, AddFlicker> AddLockup;
   typedef SimpleClash<AddLockup, clash_color> AddClash;
   return StylePtr<InOutHelper<AddClash, out_millis, in_millis> >();
+#else
+ typedef Layers<base_color,
+                SimpleClashL<clash_color>,
+                LockupL<AudioFlickerL<lockup_flicker_color> >,
+                BlastL<blast_color> > Blade;
+  return StylePtr<InOutHelper<Blade, out_millis, in_millis> >();
+#endif  
 }
 
 // Arguments: color, clash color, turn-on/off time
@@ -675,6 +606,7 @@ CapTest captest;
 #include "ir/print.h"
 #include "ir/nec.h"
 #include "ir/rc6.h"
+#include "ir/stm32_ir.h"
 
 #ifndef TEENSYDUINO
 
@@ -697,150 +629,7 @@ LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN>>
     BladeDetect(BUTTON_BLADE_DETECT, BLADE_DETECT_PIN, "blade_detect");
 #endif
 
-
-struct SDTestHistogram {
-  SDTestHistogram() {
-    for (size_t col = 0; col < NELEM(counts); col++) counts[col] = 0;
-  }
-  void count(uint32_t m) {
-    // 10 ticks = 1 ms = > 1 tick == 100 us
-    samples++;
-    sum_micros+=m;
-    counts[clampi32(m/50, 0, NELEM(counts) - 1)]++;
-  }
-  void print(int rows) {
-    uint32_t max = 0;
-    for (size_t col = 0; col < NELEM(counts); col++) max = std::max(max, counts[col]);
-    float mul = rows / (float)max;
-    for (int row = rows; row >=0 ; row--) {
-      for (uint32_t col = 0; col < NELEM(counts); col++) {
-        float m = counts[col] * mul - row;
-	if (m > 0.5) STDOUT << ':';
-	else if (m > 0.0) STDOUT << '.';
-	else STDOUT << ' ';
-      }
-      STDOUT << "\n";
-    }
-    STDOUT << "x100us              1                   2                   3                   4                   5\n";
-    STDOUT << "0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0\n";
-  }
-  float average_us() { return sum_micros / (float)samples; }
-  float average_s() { return average_us() / 1000000; }
-  float average_kb_per_s() { return 0.5 / average_s(); }
-  float average_streams() { return average_kb_per_s() / 88.2; }
-  void print_averages() {
-    // STDOUT << "Sum micros: " << sum_micros << " samples: " << samples << "\n";
-    STDOUT << "Average time: " << average_us() << " us\n";
-  }
-  void print_speed() {
-    // STDOUT << "Sum micros: " << sum_micros << " samples: " << samples << "\n";
-    STDOUT << "Average speed: " << average_kb_per_s() << " kb/s, " << average_streams() << " simultaneous audio streams.\n";
-  }
-  uint32_t samples = 0;
-  uint32_t sum_micros = 0;
-  uint32_t counts[100];
-};
-
-class SDTestHelper {
-public:
-  SDTestHelper() {
-    LOCK_SD(true);
-  }
-  ~SDTestHelper() {
-    LOCK_SD(false);
-  }
-
-  void Print() {
-    STDOUT << "Time to open files: ";
-    open_histogram.print_averages();
-    open_histogram.print(10);
-    STDOUT << "Time to read blocks: ";
-    histogram.print_speed();
-    histogram.print(10);
-  }
-
-  void TestFile(const char* filename) {
-    uint8_t block[512];
-    uint32_t start_open = micros();
-    File f = LSFS::Open(filename);
-    if (!f) {
-      STDOUT << "Failed to open!";
-    }
-    open_histogram.count(micros() - start_open);
-
-    int cnt = 0;
-    uint32_t block_start = micros();
-    while (f.available()) {
-      uint32_t start = micros();
-      f.read(block, 512);
-      uint32_t end = micros();
-      histogram.count(end - start);
-      if (++cnt == 128) {
-        cnt = 0;
-        uint32_t block_time = micros() - block_start;
-	int streams = (int)((64.0 / 88.2) / (block_time * 0.000001));
-	if (streams < 10) STDOUT << (char)('0' + streams);
-	else if (streams < 36) STDOUT << (char)('A' + streams - 10);
-	else STDOUT << '!';
-	block_start = micros();
-        cnt = 0;
-      }
-    }
-    STDOUT << '\n';
-    f.close();
-  }
-
-  void TestFont() {
-    for (Effect* effect = all_effects; effect; effect = effect->next_) {
-      for (uint32_t i = 0; i < effect->files_found(); i++) {
-	Effect::FileID file_id(effect, i);
-	file_id.GetName(filename_);
-	TestFile(filename_);
-      }
-    }
-    Print();
-  }
-
-  void TestIterator(LSFS::Iterator& iter) {
-    STDOUT << "Testing " << filename_ << "\n";
-    char* fend = filename_;
-    int flen = strlen(filename_);
-    fend += flen;
-    if (flen && fend[-1] != '/') {
-      *fend = '/';
-      fend++;
-    }
-    for (; iter; ++iter) {
-      if (!strcmp(iter.name(), ".")) continue;
-      if (!strcmp(iter.name(), "..")) continue;
-      strcpy(fend, iter.name());
-      if (iter.isdir()) {
-	LSFS::Iterator i2(iter);
-	TestIterator(i2);
-      } else {
-	STDOUT << "Reading " << filename_ << ": ";
-        TestFile(filename_);
-      }
-    }
-    *fend = 0;
-  }
-
-  void TestDir(const char* dirname) {
-    if (*dirname && !LSFS::Exists(dirname)) {
-      STDOUT << "Directory " << dirname << " does not exist.\n";
-      return;
-    }
-    LSFS::Iterator iter(dirname);
-    strcpy(filename_, dirname);
-    TestIterator(iter);
-    Print();
-  }
-
-private:
-  char filename_[256];
-  SDTestHistogram histogram;
-  SDTestHistogram open_histogram;
-};
+#include "common/sd_test.h"
 
 class Commands : public CommandParser {
  public:
@@ -1206,7 +995,8 @@ class Commands : public CommandParser {
       float total_cycles =
         (float)(audio_dma_interrupt_cycles +
                  wav_interrupt_cycles +
-                 loop_cycles);
+		 Looper::CountCycles() +
+		 CountProfileCycles());
       STDOUT.print("Audio DMA: ");
       STDOUT.print(audio_dma_interrupt_cycles * 100.0f / total_cycles);
       STDOUT.println("%");
@@ -1219,12 +1009,12 @@ class Commands : public CommandParser {
       STDOUT.print("Global loops / second: ");
       global_loop_counter.Print();
       STDOUT.println("");
-      SaberBase::DoTop();
+      SaberBase::DoTop(total_cycles);
       Looper::LoopTop(total_cycles);
+      DumpProfileLocations(total_cycles);
       noInterrupts();
       audio_dma_interrupt_cycles = 0;
       wav_interrupt_cycles = 0;
-      loop_cycles = 0;
       interrupts();
       return true;
     }
@@ -1472,7 +1262,7 @@ class Commands : public CommandParser {
   }
 };
 
-Commands commands;
+StaticWrapper<Commands> commands;
 
 class SerialAdapter {
 public:
@@ -1631,15 +1421,15 @@ private:
   int space_ = 0;
 };
 
-Parser<SerialAdapter> parser;
+StaticWrapper<Parser<SerialAdapter>> parser;
 
 #ifdef ENABLE_SERIAL
-Parser<Serial3Adapter> serial_parser;
+StaticWrapper<Parser<Serial3Adapter>> serial_parser;
 #define ENABLE_SERIAL_COMMANDS
 #endif
 
 #ifdef USB_CLASS_WEBUSB
-Parser<WebUSBSerialAdapter> webusb_parser;
+StaticWrapper<Parser<WebUSBSerialAdapter>> webusb_parser;
 #endif
 
 #ifdef ENABLE_SERIAL_COMMANDS
@@ -1721,7 +1511,7 @@ class SerialCommands : public CommandParser {
   }
 };
 
-SerialCommands serial_commands;
+StaticWrapper<SerialCommands> serial_commands;
 
 #endif
 
@@ -1738,10 +1528,7 @@ SSD1306 display;
 
 #ifdef ENABLE_MOTION
 
-#ifndef ORIENTATION
-#define ORIENTATION ORIENTATION_NORMAL
-#endif
-
+#include "motion/motion_util.h"
 #include "motion/mpu6050.h"
 #include "motion/lsm6ds3h.h"
 #include "motion/fxos8700.h"
@@ -1754,11 +1541,11 @@ SSD1306 display;
 
 #ifdef GYRO_CLASS
 // Can also be gyro+accel.
-GYRO_CLASS gyroscope;
+StaticWrapper<GYRO_CLASS> gyroscope;
 #endif
 
 #ifdef ACCEL_CLASS
-ACCEL_CLASS accelerometer;
+StaticWrapper<ACCEL_CLASS> accelerometer;
 #endif
 
 #endif   // ENABLE_MOTION

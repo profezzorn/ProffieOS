@@ -21,32 +21,31 @@ public:
   void run(BladeBase* blade) {
     intermediate_.run(blade);
     if (run_a_) {
-      if (!a_.done()) {
-	a_.run(blade);
-	return;
-      } 
+      a_.run(blade);
+      if (!a_.done()) return;
       run_a_ = false;
       b_.begin();
     }
     b_.run(blade);
   }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
+  
+private:
+  bool run_a_ = false;
+  A a_;
+  TrConcat<B...> b_;
+  INTERMEDIATE intermediate_;
+public:  
+  template<class X, class Y>
+    auto getColor(const X& a, const Y& b, int led) -> decltype(MixColors(a_.getColor(a, intermediate_.getColor(led), led),
+								 	 b_.getColor(intermediate_.getColor(led), b, led), 1,1)) {
     if (done()) return b;
-    OverDriveColor intermediate = intermediate_.getColor(led);
+    auto intermediate = intermediate_.getColor(led);
     if (run_a_) {
       return a_.getColor(a, intermediate, led);
     } else {
       return b_.getColor(intermediate, b, led);
     }
   }
-  
-private:
-  bool run_a_;
-  A a_;
-  TrConcat<B...> b_;
-  INTERMEDIATE intermediate_;
 };
 
 #endif

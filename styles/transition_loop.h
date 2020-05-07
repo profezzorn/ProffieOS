@@ -2,6 +2,7 @@
 #define STYLES_TRANSITION_LOOP_H
 
 // Usage: TransitionLoop<COLOR, TRANSITION>
+// Or: TransitionLoopL<TRANSITION>
 // COLOR: COLOR
 // TRANSITION : TRANSITION
 // return value: COLOR
@@ -10,21 +11,26 @@
 // Makes more sense if TRANSITION is a TrConcat, as this will
 // transition to/from the intermediate steps in a loop.
 
-template<class T, class TRANSITION>
-class TransitionLoop {
+template<class TRANSITION>
+class TransitionLoopL {
 public:
   void run(BladeBase* blade) {
-    color_.run(blade);
-    transition_.run(blade);
     if (transition_.done()) transition_.begin();
-  }
-  OverDriveColor getColor(int led) {
-    OverDriveColor ret = color_.getColor(led);
-    return transition_.getColor(ret, ret, led);
+    transition_.run(blade);
   }
 private:
-  T color_;
   TRANSITION transition_;
+public:  
+  auto getColor(int led) -> decltype(transition_.getColor(RGBA_um::Transparent(),
+							  RGBA_um::Transparent(),
+							  led)) {
+    return transition_.getColor(RGBA_um::Transparent(),
+				RGBA_um::Transparent(),
+				led);
+  }
 };
+
+template<class T, class TRANSITION>
+  using TransitionLoop = Layers<T, TransitionLoopL<TRANSITION>>;
 
 #endif

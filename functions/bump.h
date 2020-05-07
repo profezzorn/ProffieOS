@@ -48,4 +48,19 @@ private:
   int shift_;
 };
 
+template<int HUMP_WIDTH>
+class HumpFlickerF {
+public:
+  void run(BladeBase* blade) {
+    int num_leds_ = blade->num_leds();
+    pos_ = random(num_leds_);
+  }
+  int getInteger(int led) {
+    return clampi32(abs(led - pos_) * 32768 / HUMP_WIDTH, 0, 32768);
+  }
+private:
+  int pos_;
+};
+
+
 #endif

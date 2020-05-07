@@ -80,7 +80,7 @@ private:
     for (int i = 0; i < 50; i++) {
       size_t max_space = 0;
       for (AudioStreamWork *d = data_streams; d; d=d->next_)
-        max_space = max(max_space, d->space_available());
+        max_space = std::max(max_space, d->space_available());
       if (max_space == 0) break;
       for (AudioStreamWork *d = data_streams; d; d=d->next_) {
         if (d->space_available() >= max_space)

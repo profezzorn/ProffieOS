@@ -71,6 +71,8 @@ public:
     LOCKUP_DRAG,
     LOCKUP_ARMED,   // For detonators and such
     LOCKUP_AUTOFIRE, // For blasters and phasers
+    LOCKUP_MELT,     // For cutting through doors...
+    LOCKUP_LIGHTNING_BLOCK,  // Lightning block lockup
   };
   static LockupType Lockup() { return lockup_; }
   static void SetLockup(LockupType lockup) { lockup_ = lockup; }
@@ -102,6 +104,7 @@ public:                                                         \
   virtual void SB_##NAME TYPED_ARGS {}
 
 #define SABERBASEFUNCTIONS()					\
+  SABERFUN(LowBatt, (), ());                     		\
   SABERFUN(Clash, (), ());					\
   SABERFUN(Stab, (), ());					\
   SABERFUN(PreOn, (float* delay), (delay));			\
@@ -116,7 +119,7 @@ public:                                                         \
   SABERFUN(EndLockup, (), ());					\
   SABERFUN(Change, (ChangeType change_type), (change_type));	\
 								\
-  SABERFUN(Top, (), ());					\
+  SABERFUN(Top, (uint64_t total_cycles), (total_cycles));	\
   SABERFUN(Relax, (), ());					\
   SABERFUN(IsOn, (bool* on), (on));				\
   SABERFUN(Message, (const char* msg), (msg));  \

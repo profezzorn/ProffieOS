@@ -15,11 +15,11 @@ struct HandledTypeResetter {
 };
 
 struct HandledTypeSaver {
-  HandledTypeSaver() { handled_types_ = BladeBase::GetHandledTypes(); }
-  bool IsHandled(BladeEffectType effect) {
-    return (handled_types_ & effect) != 0;
+  HandledTypeSaver() { handled_features_ = BladeBase::GetHandledTypes(); }
+  bool IsHandled(HandledFeature feature) {
+    return (handled_features_ & feature) != 0;
   }
-  BladeEffectType handled_types_;
+  HandledFeature handled_features_;
 };
 
 template<class T>
@@ -27,11 +27,7 @@ class Style : public BladeStyle {
 public:
   void activate() override { }
 
-  bool HandlesColorChange() override {
-    return handled_type_saver_.IsHandled(EFFECT_CHANGE);
-  }
-
-  bool IsHandled(BladeEffectType effect) override {
+  bool IsHandled(HandledFeature effect) override {
     return handled_type_saver_.IsHandled(effect);
   }
 
@@ -39,7 +35,7 @@ public:
     if (!RunStyle(&base_, blade))
       blade->allow_disable();
     int num_leds = blade->num_leds();
-    bool rotate = !HandlesColorChange() && blade->get_byteorder() != Color8::NONE;
+    bool rotate = !IsHandled(HANDLED_FEATURE_CHANGE) && blade->get_byteorder() != Color8::NONE;
 
     for (int i = 0; i < num_leds; i++) {
       OverDriveColor c = base_.getColor(i);

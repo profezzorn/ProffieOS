@@ -64,8 +64,12 @@ public:
   uint32_t on_pending_base_;
   uint32_t on_pending_delay_;
 
+  virtual bool IsOn() {
+    return SaberBase::IsOn() || on_pending_;
+  }
+
   virtual void On() {
-    if (SaberBase::IsOn()) return;
+    if (IsOn()) return;
     if (current_style() && current_style()->NoOnOff())
       return;
     activated_ = millis();
@@ -90,6 +94,11 @@ public:
   }
 
   virtual void Off(OffType off_type = OFF_NORMAL) {
+    if (on_pending_) {
+      // Or is it better to wait until we turn on, and then turn off?
+      on_pending_ = false;
+      return;
+    }
     if (!SaberBase::IsOn()) return;
     if (SaberBase::Lockup()) {
       SaberBase::DoEndLockup();
@@ -178,14 +187,23 @@ public:
     }
 #endif
 
-    strcpy(current_directory, dir);
-    if (strlen(current_directory) &&
-        current_directory[strlen(current_directory)-1] != '/') {
-      strcat(current_directory, "/");
+    char *b = current_directory;
+    for (const char *a = dir; *a; a++) {
+      // Skip trailing slash
+      if (*a == '/' && (a[1] == 0 || a[1] == ';'))
+        continue;
+      if (*a == ';') {
+        *(b++) = 0;
+        continue;
+      }
+      *(b++) = *a;
     }
+    // Two zeroes at end!
+    *(b++) = 0;
+    *(b++) = 0;
 
 #ifdef ENABLE_AUDIO
-    Effect::ScanDirectory(dir);
+    Effect::ScanCurrentDirectory();
     SaberBase* font = NULL;
     hybrid_font.Activate();
     font = &hybrid_font;
@@ -329,7 +347,7 @@ public:
 
   // Measure and return the blade identifier resistor.
   float id() {
-    BLADE_ID_CLASS blade_id;
+    BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
     STDOUT << "ID: " << ret << "\n";
 #ifdef BLADE_DETECT_PIN
@@ -349,7 +367,7 @@ public:
     if (NELEM(blades) > 1) {
       float resistor = id();
 
-      float best_err = 1000000.0;
+      float best_err = 100000000.0;
       for (size_t i = 0; i < NELEM(blades); i++) {
         float err = fabsf(resistor - blades[i].ohm);
         if (err < best_err) {
@@ -423,7 +441,9 @@ public:
     FileReader out;
     LSFS::Remove(filename);
     out.Create(filename);
+#ifdef ENABLE_AUDIO    
     out.write_key_value("volume", muted_volume_ ? muted_volume_ : dynamic_mixer.get_volume());
+#endif    
     out.write_key_value("end", "1");
     out.Close();
     LOCK_SD(false);
@@ -533,7 +553,7 @@ public:
     SaberBase::DoMotion(motion, clear);
   }
 
-  void SB_Top() override {
+  void SB_Top(uint64_t total_cycles) override {
     STDOUT.print("Acceleration measurements per second: ");
     accel_loop_counter_.Print();
     STDOUT.println("");
@@ -691,9 +711,9 @@ public:
       STDOUT.print(", ");
       STDOUT.println(gyro.z);
     }
-    if (fabs(gyro.x) > 200.0 &&
-        fabs(gyro.x) > 3.0f * abs(gyro.y) &&
-        fabs(gyro.x) > 3.0f * abs(gyro.z)) {
+    if (fabsf(gyro.x) > 200.0 &&
+        fabsf(gyro.x) > 3.0f * abs(gyro.y) &&
+        fabsf(gyro.x) > 3.0f * abs(gyro.z)) {
       DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
     } else {
       DoGesture(TWIST_CLOSE);
@@ -722,6 +742,36 @@ public:
 #endif
   }
 
+  void ListTracks(const char* dir) {
+    if (!LSFS::Exists(dir)) return;
+    for (LSFS::Iterator i2(dir); i2; ++i2) {
+      if (endswith(".wav", i2.name()) && i2.size() > 200000) {
+	STDOUT << dir << "/" << i2.name() << "\n";
+      }
+    }
+  }
+
+  virtual void LowBatteryOff() {
+    if (SaberBase::IsOn()) {
+      STDOUT.print("Battery low, turning off. Battery voltage: ");
+      STDOUT.println(battery_monitor.battery());
+      Off();
+    }
+  }
+
+  virtual void CheckLowBattery() {
+    if (battery_monitor.low()) {
+      if (current_style() && !current_style()->Charging()) {
+        LowBatteryOff();
+        if (millis() - last_beep_ > 15000) {  // (was 5000)
+          STDOUT << "Low battery: " << battery_monitor.battery() << " volts\n";
+          SaberBase::DoLowBatt();
+          last_beep_ = millis();
+	}
+      }
+    }
+  }
+
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
 
@@ -735,23 +785,7 @@ public:
       clash_pending_ = false;
       Clash2(pending_clash_is_stab_);
     }
-    if (battery_monitor.low()) {
-      // TODO: FIXME
-      if (current_style() && !current_style()->Charging()) {
-        if (SaberBase::IsOn()) {
-          STDOUT.print("Battery low, turning off. Battery voltage: ");
-          STDOUT.println(battery_monitor.battery());
-          Off();
-        } else if (millis() - last_beep_ > 5000) {
-          STDOUT.println("Battery low beep");
-#ifdef ENABLE_AUDIO
-          // TODO: allow this to be replaced with WAV file
-          talkie.Say(talkie_low_battery_15, 15);
-#endif
-          last_beep_ = millis();
-        }
-      }
-    }
+    CheckLowBattery();
 #ifdef ENABLE_AUDIO
     if (track_player_ && !track_player_->isPlaying()) {
       track_player_.Free();
@@ -782,7 +816,7 @@ public:
         break;
       }
       case SaberBase::COLOR_CHANGE_MODE_SMOOTH:
-        float a = fmod(fusor.angle2() - current_tick_angle_, M_PI * 2);
+        float a = fmodf(fusor.angle2() - current_tick_angle_, M_PI * 2);
         SaberBase::SetVariation(0x7fff & (int32_t)(a * (32768 / (M_PI * 2))));
         break;
     }
@@ -826,10 +860,14 @@ public:
     if (!current_style()) return;
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {
       current_tick_angle_ = fusor.angle2();
-      if (!current_style()->HandlesColorChange()) {
+      bool handles_color_change = false;
+#define CHECK_SUPPORTS_COLOR_CHANGE(N) \
+      handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
+      ONCEPERBLADE(CHECK_SUPPORTS_COLOR_CHANGE)
+      if (!handles_color_change) {
         STDOUT << "Entering smooth color change mode.\n";
         current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
-        current_tick_angle_ = fmod(current_tick_angle_, M_PI * 2);
+        current_tick_angle_ = fmodf(current_tick_angle_, M_PI * 2);
 
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
       } else {
@@ -861,14 +899,23 @@ public:
     if (b & MODE_ON) STDOUT.print("On");
   }
 
-  void PrintEvent(EVENT e) {
+  void PrintEvent(uint32_t e) {
+    int cnt = 0;
+    if (e >= EVENT_FIRST_PRESSED &&
+	e <= EVENT_FOURTH_CLICK_LONG) {
+      cnt = (e - EVENT_PRESSED) / (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED);
+      e -= (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED) * cnt;
+    }
     switch (e) {
       case EVENT_NONE: STDOUT.print("None"); break;
       case EVENT_PRESSED: STDOUT.print("Pressed"); break;
       case EVENT_RELEASED: STDOUT.print("Released"); break;
+      case EVENT_HELD: STDOUT.print("Held"); break;
+      case EVENT_HELD_MEDIUM: STDOUT.print("HeldMedium"); break;
+      case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
       case EVENT_CLICK_SHORT: STDOUT.print("Shortclick"); break;
       case EVENT_CLICK_LONG: STDOUT.print("Longclick"); break;
-      case EVENT_DOUBLE_CLICK: STDOUT.print("Doubleclick"); break;
+      case EVENT_SAVED_CLICK_SHORT: STDOUT.print("SavedShortclick"); break;
       case EVENT_LATCH_ON: STDOUT.print("On"); break;
       case EVENT_LATCH_OFF: STDOUT.print("Off"); break;
       case EVENT_STAB: STDOUT.print("Stab"); break;
@@ -876,9 +923,11 @@ public:
       case EVENT_SHAKE: STDOUT.print("Shake"); break;
       case EVENT_TWIST: STDOUT.print("Twist"); break;
       case EVENT_CLASH: STDOUT.print("Clash"); break;
-      case EVENT_HELD: STDOUT.print("Held"); break;
-      case EVENT_HELD_MEDIUM: STDOUT.print("HeldMedium"); break;
-      case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
+      default: STDOUT.print("?"); STDOUT.print(e); break;
+    }
+    if (cnt) {
+      STDOUT.print('#');
+      STDOUT.print(cnt);
     }
   }
 
@@ -893,7 +942,7 @@ public:
       STDOUT.print(" mods ");
       PrintButton(current_modifiers);
     }
-    if (SaberBase::IsOn()) STDOUT.print(" ON");
+    if (IsOn()) STDOUT.print(" ON");
     STDOUT.print(" millis=");
     STDOUT.println(millis());
   }
@@ -916,7 +965,7 @@ public:
       return true;
     }
     if (!strcmp(cmd, "get_on")) {
-      STDOUT.println(SaberBase::IsOn());
+      STDOUT.println(IsOn());
       return true;
     }
     if (!strcmp(cmd, "clash")) {
@@ -986,7 +1035,8 @@ public:
       if (player) {
         STDOUT.print("Playing ");
         STDOUT.println(arg);
-        player->Play(arg);
+	if (!player->PlayInCurrentDir(arg))
+	  player->Play(arg);
       } else {
         STDOUT.println("No available WAV players.");
       }
@@ -1062,7 +1112,9 @@ public:
     }
 #endif
     if (!strcmp(cmd, "pwd")) {
-      STDOUT.println(current_directory);
+      for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
+        STDOUT.println(dir);
+      }
       return true;
     }
     if (!strcmp(cmd, "n") || (!strcmp(cmd, "next") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
@@ -1196,39 +1248,14 @@ public:
 
 #ifdef ENABLE_SD
     if (!strcmp(cmd, "list_tracks")) {
+      // Tracks are must be in: tracks/*.wav or */tracks/*.wav
       LOCK_SD(true);
+      ListTracks("tracks");
       for (LSFS::Iterator iter("/"); iter; ++iter) {
         if (iter.isdir()) {
-          char fname[128];
-          strcpy(fname, iter.name());
-          strcat(fname, "/");
-          char* fend = fname + strlen(fname);
-          bool isfont = false;
-          if (!isfont) {
-            strcpy(fend, "hum.wav");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            strcpy(fend, "hum01.wav");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            strcpy(fend, "hum");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            for (LSFS::Iterator i2(iter); i2; ++i2) {
-              if (endswith(".wav", i2.name()) && i2.size() > 200000) {
-                strcpy(fend, i2.name());
-                STDOUT.println(fname);
-              }
-            }
-          }
-        } else {
-          if (endswith(".wav", iter.name()) && iter.size() > 200000) {
-            STDOUT.println(iter.name());
-          }
-        }
+	  PathHelper path(iter.name(), "tracks");
+	  ListTracks(path);
+	}
       }
       LOCK_SD(false);
       return true;
@@ -1294,11 +1321,11 @@ public:
         break;
     }
 
-    if (Event2(button, event, current_modifiers | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
+    if (Event2(button, event, current_modifiers | (IsOn() ? MODE_ON : MODE_OFF))) {
       current_modifiers = BUTTON_NONE;
       return true;
     }
-    if (Event2(button, event,  MODE_ANY_BUTTON | (SaberBase::IsOn() ? MODE_ON : MODE_OFF))) {
+    if (Event2(button, event,  MODE_ANY_BUTTON | (IsOn() ? MODE_ON : MODE_OFF))) {
       current_modifiers = BUTTON_NONE;
       return true;
     }

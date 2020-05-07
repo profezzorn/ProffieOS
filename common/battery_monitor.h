@@ -18,10 +18,7 @@ BatteryMonitor() : reader_(batteryLevelPin,
   void SetLoad(bool on) {
     loaded_ = on;
   }
-  bool low() const {
-    // Battery isn't low if it's not connected at all.
-    return battery() < (loaded_ ? 2.6 : 3.0) && battery() > 0.5;
-  }
+  bool low() const { return low_count_ > 1000; }
   float battery_percent() {
     // Energy is roughly proportional to voltage squared.
     float v = battery();
@@ -46,15 +43,20 @@ BatteryMonitor() : reader_(batteryLevelPin,
   }
 protected:
   void Setup() override {
-    really_old_voltage_ = old_voltage_ = last_voltage_ = battery_now();
+    last_voltage_ = battery_now();
     SetPinHigh(false);
   }
   void Loop() override {
     if (reading_) {
       if (!reader_.Done()) return;
       float v = battery_now();
-      last_voltage_ = last_voltage_ * 0.999 + v * 0.001;
+      last_voltage_ = last_voltage_ * 0.997 + v * 0.003;
       reading_ = false;
+      if (IsLow()) {
+	low_count_++;
+      } else {
+	low_count_ = 0;
+      }
     }
     uint32_t now = micros();
     if (now - last_voltage_read_time_ >= 1000) {
@@ -69,6 +71,16 @@ protected:
       STDOUT.println(battery());
       last_print_millis_ = millis();
     }
+  }
+
+  bool IsLow() {
+#if VERSION_MAJOR >= 4
+    if (USBD_Connected()) return false;
+#endif
+    // Battery isn't low if it's not connected at all.
+    if (battery() < 0.5) return false;
+    
+    return battery() < (loaded_ ? 2.6 : 3.0);
   }
 
   bool Parse(const char* cmd, const char* arg) override {
@@ -128,10 +140,8 @@ private:
   bool loaded_ = false;
   float last_voltage_ = 0.0;
   uint32_t last_voltage_read_time_ = 0;
-  float old_voltage_ = 0.0;
-  float really_old_voltage_ = 0.0;
   uint32_t last_print_millis_;
-  uint32_t last_beep_ = 0;
+  uint32_t low_count_ = 0;
   AnalogReader reader_;
   bool reading_ = false;
 };

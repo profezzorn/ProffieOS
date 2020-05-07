@@ -65,4 +65,22 @@ const char* mkstr(const char* str) {
   return ret;
 }
 
+template<class T>
+class StaticWrapper {
+public:
+  using pointer = typename std::add_pointer<T>::type;
+
+  template<class... Args>
+    StaticWrapper(Args && ...args) {
+    new (mData) T(std::forward<Args>(args)...);
+  }
+  
+  pointer operator ->() {
+    return reinterpret_cast<pointer>(mData);
+  }
+  
+private:
+  alignas(T) int8_t mData[sizeof(T)];
+};
+
 #endif

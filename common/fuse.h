@@ -191,6 +191,8 @@ public:
     gyro_ = gyro_extrapolator_.get(now);
     CHECK_NAN(gyro_);
     swing_speed_ = -1.0f;
+    angle1_ = 1000.0f;
+    angle2_ = 1000.0f;
 
     // Quat rotation = Quat(gyro_ * -(std::min(delta_t, 0.01f) * M_PI / 180.0));
     Quat rotation = Quat(1.0, gyro_ * -(std::min(delta_t, 0.01f) * M_PI / 180.0 / 2.0)).normalize();
@@ -221,7 +223,7 @@ public:
     //wGyro += (accel_ - down_).len2();
 
     // If acceleration is not 1.0G, don't trust it.
-    wGyro += fabs(accel_.len() - 1.0f) * 50.0;
+    wGyro += fabsf(accel_.len() - 1.0f) * 50.0;
 
     // If acceleration is changing rapidly, don't trust it.
     wGyro += accel_extrapolator_.slope().len() * 1000;
@@ -283,13 +285,19 @@ public:
   // PI/2 = straight up, -PI/2 = straight down
   float angle1() {
     // use orientation!
-    return atan2f(sqrtf(down_.x * down_.x + down_.y * down_.y), down_.z);
+    if (angle1_ == 1000.0f) {
+      angle1_ = atan2f(down_.x, sqrtf(down_.z * down_.z + down_.y * down_.y));
+    }
+    return angle1_;
   }
 
   // Twist angle.
   // Note: Twist speed is simply gyro().z!
   float angle2() {
-    return atan2f(down_.y, down_.z);
+    if (angle2_ == 1000.0f) {
+      angle2_ = atan2f(down_.y, down_.z);
+    }
+    return angle2_;
   }
 
   // 0 = up, +/-PI = down, PI/2 = left, -PI/2 = right
@@ -381,6 +389,8 @@ private:
   Vec3 accel_;
   Vec3 gyro_;
   float swing_speed_;
+  float angle1_;
+  float angle2_;
 };
 
 Fusor fusor;

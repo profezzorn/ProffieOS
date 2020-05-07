@@ -930,6 +930,7 @@ public:
 #endif
   
   int read(int16_t* data, int elements) override {
+    if (eof()) return 0;
     for (int i = 0; i < elements; i++) {
       data[i] = Get44kHz();
     }

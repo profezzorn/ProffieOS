@@ -169,7 +169,10 @@ private:
     else if (bits_ == 32) DecodeBytes2<32>();
   }
 
-  int ReadFile(int n) { return file_.Read(buffer + 8, n); }
+  int ReadFile(int n) {
+    SCOPED_PROFILER();
+    return file_.Read(buffer + 8, n);
+  }
 
   void loop() {
     STATE_MACHINE_BEGIN();
@@ -325,6 +328,7 @@ private:
 public:
   // Called from interrupt handler.
   int read(int16_t* dest, int to_read) override {
+    SCOPED_PROFILER();
     dest_ = dest;
     to_read_ = to_read;
     loop();

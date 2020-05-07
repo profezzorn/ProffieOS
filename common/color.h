@@ -127,6 +127,16 @@ class Color8 {
     return Color8(std::max(r, other.r), std::max(g, other.g), std::max(b, other.b));
   }
 
+  void printTo(Print& p) {
+    p.write('#');
+    if (r < 16) p.write('0');
+    p.print(r, HEX);
+    if (g < 16) p.write('0');
+    p.print(g, HEX);
+    if (b < 16) p.write('0');
+    p.print(b, HEX);
+  }
+
   uint8_t r, g, b;
 };
 
@@ -139,9 +149,9 @@ static int8_t color16_dither_matrix[4][4] = {
 
 class Color16 {
   public:
-  Color16() : r(0), g(0), b(0) {}
+  constexpr Color16() : r(0), g(0), b(0) {}
   Color16(const Color8& c) : r(c.r * 0x101), g(c.g * 0x101), b(c.b * 0x101) {}
-  Color16(uint16_t r_, uint16_t g_, uint16_t b_) : r(r_), g(g_), b(b_) {}
+  constexpr Color16(uint16_t r_, uint16_t g_, uint16_t b_) : r(r_), g(g_), b(b_) {}
   // x = 0..256
   Color16 mix(const Color16& other, int x) const {
     // Wonder if there is an instruction for this?
@@ -200,6 +210,15 @@ class Color16 {
     }
   }
 
+  void printTo(Print& p) {
+    p.write('#');
+    p.print(r);
+    p.write(',');
+    p.print(g);
+    p.write(',');
+    p.print(b);
+  }
+
 private:
   static int f(int n, int C, int MAX) {
     int k = n % 98304;
@@ -236,8 +255,157 @@ public:
 };
 
 struct OverDriveColor {
+  OverDriveColor() {}
+  OverDriveColor(const Color16 &c_, bool o) : c(c_), overdrive(o) {}
   Color16 c;
   bool overdrive;
+  
+  void printTo(Print& p) {
+    if (overdrive) p.write('!');
+    c.printTo(p);
+  }
 };
+
+// SIMPLE
+// Opaque.fade -> Opaque or Alpha?
+// Alpha.fade -> Alpha
+// PMAlpha.fade -> PMAlpha?
+// Opaque mix Opaque -> Opaque
+// Opaque mix Alpha -> PmAlpha
+// Opaque mix PmAlpha -> PmAlpha
+// Alpha mix PmAlpha -> PmAlpha
+// Opaque paste Opaque -> Opaque
+// Opaque paste Alpha -> Opaque
+// Opaque paste PmAlpha -> Opaque
+// Alpha paste Alpha -> PmAlpha
+// Alpha paste PmAlpha -> PmAlpha
+// Alpha paste PmAlpha -> PmAlpha
+
+// mix: A, B  A * (1-x) + B * x
+// paint B over A: B + A * (1 - B.a)
+
+struct Color32 {
+  Color32(uint32_t r_, uint32_t g_, uint32_t b_) : r(r_), g(g_), b(b_) {}
+  Color16 operator>>(int shift) {
+    return Color16(r >> shift, g >> shift, b >> shift);
+  }
+  Color32 operator+(const Color32& other) { return Color32(r + other.r, g + other.g, b + other.b); }
+  uint32_t r, g, b;
+};
+
+inline Color32 operator*(const Color16& c, uint16_t x) {
+  return Color32(c.r * x, c.g * x, c.b * x);
+}
+inline Color16 operator+(const Color16& a, const Color16 &b) {
+  return Color16(a.r + b.r, a.g + b.g, a.b + b.b);
+}
+
+// Unmultiplied RGBA, used as a temporary and makes optimization easier.
+struct RGBA_um {
+  constexpr RGBA_um(Color16 c_, bool od, uint16_t a) : c(c_), alpha(a), overdrive(od) {}
+  constexpr RGBA_um(const OverDriveColor& o) : c(o.c), alpha(32768), overdrive(o.overdrive) {}
+  static RGBA_um Transparent() { return RGBA_um(Color16(), false, 0); }
+  Color16 c;
+  uint16_t alpha;
+  bool overdrive;
+
+  void printTo(Print& p) {
+    if (overdrive) p.write('!');
+    c.printTo(p);
+    p.write(',');
+    p.print(alpha);
+  }
+};
+
+// Premultiplied ALPHA
+struct RGBA {
+  constexpr RGBA(Color16 c_, bool od, uint16_t a) : c(c_), alpha(a), overdrive(od) {}
+  RGBA(const RGBA_um& rgba) : c(rgba.c * rgba.alpha >> 15), alpha(rgba.alpha), overdrive(rgba.overdrive)  {}
+  RGBA(const OverDriveColor& o) : c(o.c), alpha(32768), overdrive(o.overdrive) {}
+  Color16 c;
+  uint16_t alpha;
+  bool overdrive;
+  void printTo(Print& p) {
+    if (overdrive) p.write('!');
+    c.printTo(p);
+    p.write('*');
+    p.print(alpha);
+  }
+};
+
+inline RGBA_um operator*(const OverDriveColor& a, uint16_t x) {
+  return RGBA_um(a.c, a.overdrive, x);
+}
+
+inline RGBA_um operator*(const RGBA_um& a, uint16_t x) {
+  return RGBA_um(a.c, a.overdrive, a.alpha * x >> 15);
+}
+
+inline RGBA operator*(const RGBA& a, uint16_t x) {
+  return RGBA(a.c * x >> 15, a.overdrive, (a.alpha * x + 0x7fff) >> 15);
+}
+
+inline OverDriveColor MixColors(OverDriveColor a, OverDriveColor b, int x, int shift) {
+  return OverDriveColor( (a.c * ((1 << shift) - x) + b.c * x) >> shift,
+			 x > (1 << (shift - 1)) ? b.overdrive : a.overdrive);
+}
+inline RGBA MixColors(RGBA a, RGBA b, int x, int shift) {
+  return RGBA( (a.c * ((1 << shift) - x) + b.c * x) >> shift,
+	       x > (1 << (shift - 1)) ? b.overdrive : a.overdrive,
+	       (a.alpha * ((1 << shift) - x) + b.alpha * x + ((1<<shift) - 1)) >> shift);
+}
+
+// Paint over operators
+// There is probably a better way to do this.
+inline OverDriveColor operator<<(const OverDriveColor& base, const RGBA_um& over) {
+  SCOPED_PROFILER();
+  if (!over.alpha) return base;
+  uint16_t ac = 32768 - over.alpha;
+  return OverDriveColor((base.c * ac + over.c * over.alpha) >> 15,
+			over.alpha >= 16384 ? over.overdrive : base.overdrive);
+}
+inline OverDriveColor operator<<(const OverDriveColor& base, const RGBA& over) {
+  SCOPED_PROFILER();
+  if (!over.alpha) return base;
+  uint16_t ac = 32768 - over.alpha;
+  return OverDriveColor((base.c * ac >> 15) + over.c,
+			over.alpha >= 16384 ? over.overdrive : base.overdrive);
+}
+
+inline RGBA operator<<(const RGBA_um& base, const RGBA_um& over) {
+  SCOPED_PROFILER();
+//  if (!over.alpha) return base;
+  uint16_t ac = 32768 - over.alpha;
+  return RGBA((base.c * (base.alpha * ac >> 15) + over.c * over.alpha) >> 15,
+	      over.alpha > 16384 ? over.overdrive : base.overdrive,
+	      (base.alpha * ac >> 15) + over.alpha);
+}
+
+inline RGBA operator<<(const RGBA_um& base, const RGBA& over) {
+  SCOPED_PROFILER();
+//  if (!over.alpha) return base;
+  uint16_t ac = 32768 - over.alpha;
+  return RGBA((base.c * (base.alpha * ac >> 15) >> 15) + over.c,
+	      over.alpha > 16384 ? over.overdrive : base.overdrive,
+	      (base.alpha * ac >> 15) + over.alpha);
+}
+
+inline RGBA operator<<(const RGBA& base, const RGBA_um& over) {
+  SCOPED_PROFILER();
+//  if (!over.alpha) return base;
+  uint16_t ac = 32768 - over.alpha;
+  return RGBA((base.c * ac + over.c * over.alpha) >> 15,
+	      over.alpha >= 16384 ? over.overdrive : base.overdrive,
+	      ((base.alpha * ac + 0x7fff) >> 15) + over.alpha);
+}
+
+inline RGBA operator<<(const RGBA& base, const RGBA& over) {
+    SCOPED_PROFILER();
+//  if (!over.alpha) return base;
+  uint16_t ac = 32768 - over.alpha;
+  return RGBA((base.c * ac >> 15) + over.c,
+	      over.alpha >= 16384 ? over.overdrive : base.overdrive,
+	      ((base.alpha * ac + 0x7fff) >> 15) + over.alpha);
+}
 
 #endif

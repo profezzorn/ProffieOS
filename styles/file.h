@@ -1,6 +1,8 @@
 #ifndef STYLES_FILE_H
 #define STYLES_FILE_H
 
+#ifdef ENABLE_AUDIO
+
 #include "../sound/audio_stream_work.h"
 
 template<int N = 170, int OFFSET=0, int FRAME_RATE_ENUMERATOR=30, int FRAME_RATE_DENOMINATOR=1>
@@ -85,5 +87,5 @@ private:
   int num_leds_;
 };
 
-
+#endif  // ENABLE_AUDIO
 #endif

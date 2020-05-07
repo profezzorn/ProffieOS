@@ -26,9 +26,9 @@ public:
     while (bufsize) {
       int to_copy = buffered();
       if (!to_copy) break;
-      to_copy = min(to_copy, bufsize);
+      to_copy = std::min(to_copy, bufsize);
       int start_pos = buf_start_ & (N-1);
-      to_copy = min(to_copy, N - start_pos);
+      to_copy = std::min(to_copy, N - start_pos);
       memcpy(buf, buffer_ + start_pos, sizeof(buf[0]) * to_copy);
       copied += to_copy;
       buf_start_ += to_copy;
@@ -77,7 +77,7 @@ private:
       size_t space = real_space_available();
       if (space) {
         size_t end_pos = buf_end_ & (N-1);
-        size_t to_read = min(space, N - end_pos);
+        size_t to_read = std::min(space, N - end_pos);
         int got = stream_->read(buffer_ + end_pos, to_read);
         if (got) {
           eof_ = false;

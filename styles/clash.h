@@ -2,8 +2,10 @@
 #define STYLES_SIMPLE_CLASH_H
 
 #include "../functions/smoothstep.h"
+#include "layers.h"
 
 // Usage: SimpleClash<BASE, CLASH_COLOR, CLASH_MILLIS>
+// Or: SimpleClashL<CLASH_COLOR, CLASH_MILLIS>
 // BASE: COLOR
 // CLASH_COLOR: COLOR (defaults to white)
 // CLASH_MILLIS: a number (defaults to 40)
@@ -11,13 +13,12 @@
 // Turns the blade to CLASH_COLOR for CLASH_MILLIS millseconds
 // when a clash occurs.
 
-template<class T, class CLASH_COLOR = Rgb<255,255,255>, int CLASH_MILLIS = 40,
+template<class CLASH_COLOR = Rgb<255,255,255>, int CLASH_MILLIS = 40,
   BladeEffectType EFFECT = EFFECT_CLASH,
   class STAB_SHAPE = SmoothStep<Int<16384>, Int<24000>> >
-class SimpleClash {
+class SimpleClashL {
 public:
   void run(BladeBase* blade) {
-    base_.run(blade);
     clash_color_.run(blade);
     stab_shape_.run(blade);
     // This should make us activate the clash at least one "frame".
@@ -26,33 +27,37 @@ public:
     BladeEffect *e = effect_.Detect(blade);
     if (e) {
       clash_ = true;
-      stab_ = EFFECT == EFFECT_CLASH && e->type == EFFECT_STAB;
-    }
-  }
-  OverDriveColor getColor(int led) {
-    if (clash_) {
-      OverDriveColor ret = clash_color_.getColor(led);
-      ret.overdrive = true;
-      if (stab_) {
-	OverDriveColor b = base_.getColor(led);
-	ret.c = b.c.mix2(ret.c, stab_shape_.getInteger(led)>>1);
-      }
-      return ret;
-    } else {
-      return base_.getColor(led);
+      stab_ = EFFECT == EFFECT_CLASH && e->type == EFFECT_STAB && blade->num_leds() > 1;
     }
   }
 private:
   OneshotEffectDetector<EFFECT> effect_;
   bool clash_ = false;
   bool stab_ = false;
-  T base_;
   CLASH_COLOR clash_color_;
   STAB_SHAPE stab_shape_;
+public:
+  auto getColor(int led) -> decltype(clash_color_.getColor(led) * stab_shape_.getInteger(led)) {
+    decltype(clash_color_.getColor(led) * stab_shape_.getInteger(led)) ret(Color16(), false, 0);
+    if (clash_) {
+      ret = clash_color_.getColor(led);
+      ret.overdrive = true;
+      if (stab_) {
+	ret = ret * stab_shape_.getInteger(led);
+      }
+    }
+    return ret;
+  }
 };
+
+template<class T, class CLASH_COLOR = Rgb<255,255,255>, int CLASH_MILLIS = 40,
+  BladeEffectType EFFECT = EFFECT_CLASH,
+  class STAB_SHAPE = SmoothStep<Int<16384>, Int<24000>> >
+  using SimpleClash = Layers<T, SimpleClashL<CLASH_COLOR, CLASH_MILLIS, EFFECT, STAB_SHAPE>>;
 
 
 // Usage: LocalizedClash<BASE, CLASH_COLOR, CLASH_MILLIS, CLASH_WIDTH_PERCENT=50>
+// Usage: LocalizedClashL<CLASH_COLOR, CLASH_MILLIS, CLASH_WIDTH_PERCENT=50>
 // BASE: COLOR
 // CLASH_COLOR: COLOR (defaults to white)
 // CLASH_MILLIS: a number (defaults to 40)
@@ -71,15 +76,14 @@ static uint8_t clash_hump[32] = {
   26,22,18,14,11,9,7,5
 };
 
-template<class T,
+template<
   class CLASH_COLOR = Rgb<255,255,255>,
   int CLASH_MILLIS = 40,
   int CLASH_WIDTH_PERCENT = 50,
   BladeEffectType EFFECT = EFFECT_CLASH>
-class LocalizedClash {
+class LocalizedClashL {
 public:
   void run(BladeBase* blade) {
-    base_.run(blade);
     clash_color_.run(blade);
     // This should make us activate the clash at least one "frame".
     if (BladeEffect* e = effect_.Detect(blade)) {
@@ -92,26 +96,31 @@ public:
       clash_ = false;
     }
   }
-  OverDriveColor getColor(int led) {
-    if (clash_) {
-      OverDriveColor ret = base_.getColor(led);
-      uint32_t dist = abs(led * mult_ - clash_location_) / 1024;
-      if (dist < NELEM(clash_hump)) {
-	OverDriveColor clash =  clash_color_.getColor(led);
-	ret.c = ret.c.mix(clash.c, clash_hump[dist]);
-      }
-      return ret;
-    } else {
-      return base_.getColor(led);
-    }
-  }
 private:
   OneshotEffectDetector<EFFECT> effect_;
   bool clash_;
-  T base_;
   int mult_;
   int clash_location_;
   CLASH_COLOR clash_color_;
+public:
+  auto getColor(int led) -> decltype(clash_color_.getColor(led) * 1) {
+    decltype(clash_color_.getColor(led) * 1) ret(Color16(), false, 0);
+    if (clash_) {
+      uint32_t dist = abs(led * mult_ - clash_location_) / 1024;
+      if (dist < NELEM(clash_hump)) {
+	ret = clash_color_.getColor(led) * (clash_hump[dist] * 128);
+      }
+    }
+    return ret;
+  }
+
 };
+
+template<class T,
+  class CLASH_COLOR = Rgb<255,255,255>,
+  int CLASH_MILLIS = 40,
+  int CLASH_WIDTH_PERCENT = 50,
+  BladeEffectType EFFECT = EFFECT_CLASH>
+  using LocalizedClash = Layers<T, LocalizedClashL<CLASH_COLOR, CLASH_MILLIS, CLASH_WIDTH_PERCENT, EFFECT>>;
 
 #endif

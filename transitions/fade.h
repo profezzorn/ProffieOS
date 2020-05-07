@@ -14,21 +14,14 @@ template<class MILLIS>
 class TrFadeX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* blade) {
-    if (this->done()) {
-      fade_ = 16384;
-    } else {
-      fade_ = (millis() - this->start_millis_) * 16384 / this->len_;
-    }
-  }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
-    OverDriveColor ret = a;
-    ret.c = a.c.mix2(b.c, fade_);
-    return ret;
+    TransitionBaseX<MILLIS>::run(blade);
+    fade_ = this->update(16384);
   }
 private:
   uint32_t fade_;
+public:  
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) AUTO_RETURN(MixColors(a, b, fade_, 14))
 };
 
 template<int MILLIS> using TrFade = TrFadeX<Int<MILLIS>>;
@@ -45,22 +38,15 @@ template<class MILLIS>
 class TrSmoothFadeX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* blade) {
-    if (this->done()) {
-      fade_ = 16384;
-    } else {
-      int x = (millis() - this->start_millis_) * 32768 / this->len_;
-      fade_ = (((x * x) >> 14) * ((3<<14) - x)) >> 16;
-    }
-  }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
-    OverDriveColor ret = a;
-    ret.c = a.c.mix2(b.c, fade_);
-    return ret;
+    TransitionBaseX<MILLIS>::run(blade);
+    uint32_t x = this->update(32768);
+    fade_ = (((x * x) >> 14) * ((3<<14) - x)) >> 16;
   }
 private:
   uint32_t fade_;
+public:  
+  template<class A, class B>
+  auto getColor(const A& a, const B& b, int led) AUTO_RETURN(MixColors(a, b, fade_, 14))
 };
 
 template<int MILLIS> using TrSmoothFade = TrSmoothFadeX<Int<MILLIS>>;

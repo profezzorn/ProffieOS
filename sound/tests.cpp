@@ -90,7 +90,10 @@ struct ConsoleHelper : public Print {
 
 ConsoleHelper STDOUT;
 #define default_output (&STDOUT)
-char current_directory[128] = "./";
+char current_directory[128] = "testfont\0\0";
+const char *next_current_directory(const char *dir) {
+  return NULL;
+}
 #define LOCK_SD(X) do { } while(0)
 
 struct TALKIEFAKE {
@@ -119,40 +122,40 @@ void touch(const char* filename) {
 void test_effects() {
   mktestdir();
   touch("testfont/hum.wav");
-  Effect::ScanDirectory("testfont");
+  Effect::ScanCurrentDirectory();
   CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   mkdir("testfont/hum", -1);
   touch("testfont/hum/._.hum.wav");
-  Effect::ScanDirectory("testfont");
+  Effect::ScanCurrentDirectory();
   CHECK_EQ(0, SFX_hum.files_found());
 
   mktestdir();
   touch("testfont/hum.wav");
   touch("testfont/.DS_Store");
   touch("testfont/._.DS_Store");
-  Effect::ScanDirectory("testfont");
+  Effect::ScanCurrentDirectory();
   CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   touch("testfont/hummus.wav");
-  Effect::ScanDirectory("testfont");
+  Effect::ScanCurrentDirectory();
   CHECK_EQ(0, SFX_hum.files_found());
 
   mktestdir();
   touch("testfont/hum1.wav");
-  Effect::ScanDirectory("testfont");
+  Effect::ScanCurrentDirectory();
   CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   touch("testfont/hum99.wav");
-  Effect::ScanDirectory("testfont");
+  Effect::ScanCurrentDirectory();
   CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   touch("testfont/99blarg.wav");
-  Effect::ScanDirectory("testfont");
+  Effect::ScanCurrentDirectory();
   CHECK_EQ(0, SFX_hum.files_found());
 
   mktestdir();
@@ -162,13 +165,13 @@ void test_effects() {
   touch("testfont/hum/.DS_Store");
   touch("testfont/hum/._.DS_Store");
   touch("testfont/hum/01.wav");
-  Effect::ScanDirectory("testfont");
+  Effect::ScanCurrentDirectory();
   CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   mkdir("testfont/hum", -1);
   touch("testfont/hum/hum01.wav");
-  Effect::ScanDirectory("testfont");
+  Effect::ScanCurrentDirectory();
   CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
@@ -178,14 +181,14 @@ void test_effects() {
   touch("testfont/hum/.DS_Store");
   touch("testfont/hum/._.DS_Store");
   touch("testfont/hum/hum01.wav");
-  Effect::ScanDirectory("testfont");
+  Effect::ScanCurrentDirectory();
   CHECK_EQ(1, SFX_hum.files_found());
 
   mktestdir();
   mkdir("testfont/hum", -1);
   touch("testfont/hum/.DS_Store");
   touch("testfont/hum/._.DS_Store");
-  Effect::ScanDirectory("testfont");
+  Effect::ScanCurrentDirectory();
   CHECK_EQ(0, SFX_hum.files_found());
 }
 

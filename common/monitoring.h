@@ -69,13 +69,13 @@ private:
 
 extern Monitoring monitor;
 
-#ifdef ENABLE_TRACING
-// TODO: Move this somewhere more global
-const char* trace[128];
-int trace_pos;
-
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
+
+#ifdef ENABLE_TRACING
+// TODO: Move this somewhere more global
+volatile const char* trace[128];
+volatile int trace_pos;
 
 void DoTrace(const char* str) {
   noInterrupts();

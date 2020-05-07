@@ -9,7 +9,6 @@ public:
   AbstractBlade() : SaberBase(NOLINK) {}
   void Activate() override {
     SaberBase::Link(this);
-    addEffect(EFFECT_BOOT, (200 + random(700)) / 1000.0f);
   }
   void Deactivate() override {
     SaberBase::Unlink(this);
@@ -30,13 +29,13 @@ public:
     if (current_style_) {
       current_style_->activate();
     }
-    num_effects_ = 0;
   }
 
   BladeStyle* UnSetStyle() override {
     BladeStyle *ret = current_style_;
     if (ret) {
       ret->deactivate();
+      num_effects_ = 0;
     }
     current_style_ = nullptr;
     return ret;
@@ -71,6 +70,10 @@ public:
   }
 
   // Shared Effects
+  void SB_PreOn(float* delay) override {
+    addEffect(EFFECT_PREON, 0);
+  }
+
   void SB_On() override {
     addEffect(EFFECT_IGNITION, 0);
   }
@@ -150,6 +153,12 @@ public:
   }
   void SB_PLIOff() override {
     addEffect(EFFECT_PLI_OFF, 0);
+  }
+  void SB_NewFont() override {
+    addEffect(EFFECT_NEWFONT, (200 + random(700)) / 1000.0f);
+  }
+  void SB_Boot() override {
+    addEffect(EFFECT_BOOT, (200 + random(700)) / 1000.0f);
   }
 
 protected:

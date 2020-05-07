@@ -125,8 +125,7 @@ public:
 
     blade->allow_disable();
   }
-  bool HandlesColorChange() override { return false; }
-  bool IsHandled(BladeEffectType effect) override { return false; }
+  bool IsHandled(HandledFeature effect) override { return false; }
 private:
   struct { uint32_t t; Vec3 accel; } accel_entries_[10];
   size_t entry_;

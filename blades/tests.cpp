@@ -8,6 +8,7 @@
 #define NOTEST
 
 // cruft
+#define SCOPED_PROFILER() do { } while(0)
 template<class A, class B>
 constexpr auto min(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::forward<B>(b)) {
   return a < b ? std::forward<A>(a) : std::forward<B>(b);
@@ -32,6 +33,35 @@ struct BM {
 };
 
 BM battery_monitor;
+
+#define HEX 16
+
+struct  Print {
+  void print(const char* s) { puts(s); }
+  void print(float v) { fprintf(stdout, "%f", v); }
+  void print(int v, int base) { fprintf(stdout, "%d", v); }
+  void write(char s) { putchar(s); }
+  template<class T>
+  void println(T s) { print(s); putchar('\n'); }
+};
+
+template<typename T, typename X = void> struct PrintHelper {
+  static void out(Print& p, T& x) { p.print(x); }
+};
+
+template<typename T> struct PrintHelper<T, decltype(((T*)0)->printTo(*(Print*)0))> {
+  static void out(Print& p, T& x) { x.printTo(p); }
+};
+
+struct ConsoleHelper : public Print {
+  template<typename T, typename Enable = void>
+  ConsoleHelper& operator<<(T v) {
+    PrintHelper<T>::out(*this, v);
+    return *this;
+  }
+};
+
+ConsoleHelper STDOUT;
 
 #include "../common/monitoring.h"
 #include "../common/color.h"
