@@ -67,16 +67,16 @@ public:
 #endif
         return true;
 
-	// Handle double-click with preon
+        // Handle double-click with preon
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_OFF):
-	if (on_pending_) {
+        if (on_pending_) {
           if (SetMute(true)) {
             unmute_on_deactivation_ = true;
           }
-	  return true;
-	}
-	return false;
-	
+          return true;
+        }
+        return false;
+
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
         if (millis() - activated_ < 500) {
           if (SetMute(true)) {
@@ -120,7 +120,7 @@ public:
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
         ToggleColorChangeMode();
-        break;
+        return true;
 #endif
 
         // Lockup
@@ -138,9 +138,9 @@ public:
         break;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
-	SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
-	SaberBase::DoBeginLockup();
-	return true;
+        SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+        SaberBase::DoBeginLockup();
+        return true;
 
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_AUX):
