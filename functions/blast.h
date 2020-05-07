@@ -126,7 +126,7 @@ public:
         mix += std::max(0.0, 2.0 * sinf(x / (t*t)) / x);
       }
     }
-    return std::min(mix, 1.0) * 32768;
+    return std::min<float>(mix, 1.0) * 32768;
   }
 private:
   int num_leds_;

@@ -26,7 +26,10 @@ template<int R, int G, int B>
 class Rgb {
 public:
   static Color16 color() { return Color16(Color8(R,G,B)); }
-  void run(BladeBase* base) {}
+  LayerRunResult run(BladeBase* base) {
+    if (R == 0 && G == 0 && B == 0) return LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
+    return LayerRunResult::UNKNOWN;
+  }
   OverDriveColor getColor(int led) {
     OverDriveColor ret;
     ret.c = color();
@@ -40,7 +43,10 @@ template<int R, int G, int B>
 class Rgb16 {
 public:
   static Color16 color() { return Color16(R, G, B); }
-  void run(BladeBase* base) {}
+  LayerRunResult run(BladeBase* base) {
+    if (R == 0 && G == 0 && B == 0) return LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
+    return LayerRunResult::UNKNOWN;
+  }
   OverDriveColor getColor(int led) {
     OverDriveColor ret;
     ret.c = color();

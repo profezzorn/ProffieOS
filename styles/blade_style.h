@@ -44,6 +44,18 @@ class StyleFactoryImpl : public StyleFactory {
   }
 };
 
+enum class LayerRunResult {
+  UNKNOWN,
+  OPAQUE_BLACK_UNTIL_IGNITION,
+  TRANSPARENT_UNTIL_IGNITION,
+};
+
+enum class FunctionRunResult {
+  UNKNOWN,
+  ZERO_UNTIL_IGNITION,
+  ONE_UNTIL_IGNITION
+};
+
 template<class T, typename X> struct RunStyleHelper {
   static bool run(T* style, BladeBase* blade) {
     return style->run(blade);
@@ -57,6 +69,12 @@ template<class T> struct RunStyleHelper<T, void> {
   }
 };
 
+template<class T> struct RunStyleHelper<T, LayerRunResult> {
+  static bool run(T* style, BladeBase* blade) {
+    return style->run(blade) != LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
+  }
+};
+
 // Helper function for running the run() function in a style and
 // returning a bool.
 // Since some run() functions return void, we need some template
@@ -65,5 +83,60 @@ template<class T>
 inline bool RunStyle(T* style, BladeBase* blade) {
   return RunStyleHelper<T, decltype(style->run(blade))>::run(style, blade);
 }
+
+template<class T, typename X> struct RunLayerHelper {
+  static LayerRunResult run(T* style, BladeBase* blade) {
+    style->run(blade);
+    return LayerRunResult::UNKNOWN;
+  }
+};
+
+template<class T> struct RunLayerHelper<T, LayerRunResult> {
+  static LayerRunResult run(T* style, BladeBase* blade) {
+    return style->run(blade);
+  }
+};
+  
+template<class T> struct RunLayerHelper<T, bool> {
+  static LayerRunResult run(T* style, BladeBase* blade) {
+    return style->run(blade) ? LayerRunResult::UNKNOWN : LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
+  }
+};
+  
+template<class T>
+inline LayerRunResult RunLayer(T* style, BladeBase* blade) {
+  return RunLayerHelper<T, decltype(style->run(blade))>::run(style, blade);
+};
+
+
+template<class T, typename X> struct RunFunctionHelper {
+  static FunctionRunResult run(T* style, BladeBase* blade) {
+    return style->ThisIsAnError();
+  }
+};
+
+template<class T> struct RunFunctionHelper<T, FunctionRunResult> {
+  static FunctionRunResult run(T* style, BladeBase* blade) {
+    return style->run(blade);
+  }
+};
+  
+template<class T> struct RunFunctionHelper<T, void> {
+  static FunctionRunResult run(T* style, BladeBase* blade) {
+    style->run(blade);
+    return FunctionRunResult::UNKNOWN;
+  }
+};
+  
+template<class T> struct RunFunctionHelper<T, bool> {
+  static FunctionRunResult run(T* style, BladeBase* blade) {
+    return style->ThisIsAnError();
+  }
+};
+  
+template<class T>
+inline FunctionRunResult RunFunction(T* style, BladeBase* blade) {
+  return RunFunctionHelper<T, decltype(style->run(blade))>::run(style, blade);
+};
 
 #endif

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 // cruft
+#define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 #define SCOPED_PROFILER() do { } while(0)
 template<class A, class B>
 constexpr auto min(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::forward<B>(b)) {
@@ -18,12 +19,14 @@ float fract(float x) { return x - floor(x); }
 
 uint32_t micros_ = 0;
 uint32_t micros() { return micros_; }
+uint32_t millis() { return micros_ / 1000; }
 int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x < a) return a;
   if (x > b) return b;
   return x;
 }
 
+int random(int x) { return (random(x) & 0x7fffff) % x; }
 class Looper {
 public:
   static void DoHFLoop() {}
@@ -63,8 +66,19 @@ struct  Print {
 #include "style_ptr.h"
 #include "colors.h"
 #include "inout_helper.h"
+#include "blast.h"
+#include "transition_effect.h"
+#include "../transitions/base.h"
+#include "../transitions/join.h"
+#include "../transitions/wipe.h"
+#include "../transitions/delay.h"
+#include "../transitions/concat.h"
+#include "../transitions/fade.h"
+#include "../transitions/instant.h"
+#include "../functions/bump.h"
 
 bool on_ = true;
+bool allow_disable_ = false;
 
 class MockBlade : public BladeBase {
 public:
@@ -83,7 +97,9 @@ public:
   size_t GetEffects(BladeEffect** blade_effects) override {
     return 0;
   }
-  void allow_disable() override { }
+  void allow_disable() override {
+    allow_disable_ = true;
+  }
   void Activate() override {
     fprintf(stderr, "NOT IMPLEMENTED\n");
     exit(1);
@@ -170,27 +186,105 @@ void test_cylon() {
 }
 
 
-void test_inouthelper() {
-  Style<InOutHelper<Rgb16<65535,65535,65535>, 100, 100, Rgb16<0,0,0>>> t1;
+#define STEP() do {				\
+  micros_ += 1000;				\
+  /*  fprintf(stderr, "micros = %d on_ = %d\n", micros_, on_);	*/ 	\
+  allow_disable_ = false;			\
+  style->run(&mock_blade);			\
+} while(0)
+
+void test_inouthelper(BladeStyle* style) {
   MockBlade mock_blade;
   mock_blade.colors.resize(1);
   on_ = false;
   micros_ = 0;
-  t1.run(&mock_blade);
+  STEP();
+  
+  if (!allow_disable_) {
+    fprintf(stderr, "Should be able to turn off after first run.\n");
+    exit(1);
+  }
   if (mock_blade.colors[0].r != 0) {
     fprintf(stderr, "InOutHelper fails to make blade completely black.\n");
     exit(1);
   }
   on_ = true;
-  for (int i = 0; i < 200; i++) {
-    micros_ = i * 1000;
-    t1.run(&mock_blade);
+  int last = 0;
+
+  STEP();
+  if (allow_disable_) {
+    fprintf(stderr, "Should not be able to turn off when on.\n");
+    exit(1);
   }
-  t1.run(&mock_blade);
+
+  for (int i = 0; i < 90; i++) {
+    STEP();
+    if (allow_disable_) {
+      fprintf(stderr, "Should not be able to turn off when extending.\n");
+      exit(1);
+    }
+    if (mock_blade.colors[0].r <= last || mock_blade.colors[0].r == 65536) {
+      fprintf(stderr, "InOutHelper failed to brighten blade at t = %d red = %d last = %d\n", micros_, last, mock_blade.colors[0].r);
+      exit(1);
+    }
+    last = mock_blade.colors[0].r;
+  }
+  for (int i = 0; i < 110; i++) {
+    STEP();
+    if (allow_disable_) {
+      fprintf(stderr, "Should not be able to turn off when on.\n");
+      exit(1);
+    }
+  }
   if (mock_blade.colors[0].r != 65535) {
     fprintf(stderr, "InOutHelper fails to make blade completely white: %d != %d\n", mock_blade.colors[0].r, 65535);
     exit(1);
   }
+  last = 65535;
+  on_ = false;
+  STEP();
+  for (int i = 0; i < 90; i++) {
+    STEP();
+    if (allow_disable_) {
+      fprintf(stderr, "Should not be able to turn off when retracting.\n");
+      exit(1);
+    }
+    if (mock_blade.colors[0].r >= last || mock_blade.colors[0].r == 0) {
+      fprintf(stderr, "InOutHelper failed to dim blade at t = %d r = %d last = %d\n", micros_,
+	      mock_blade.colors[0].r, last);
+      exit(1);
+    }
+    last = mock_blade.colors[0].r;
+  }
+  for (int i = 0; i < 110; i++) {
+    STEP();
+  }
+  if (!allow_disable_) {
+    fprintf(stderr, "Should  be able to turn off when retracted.\n");
+    exit(1);
+  }
+  if (mock_blade.colors[0].r != 0) {
+    fprintf(stderr, "InOutHelper fails to make blade completely black.\n");
+    exit(1);
+  }
+}
+
+void test_inouthelper() {
+  fprintf(stderr, "Testing InOutHelper...\n");
+  Style<InOutHelper<Rgb16<65535,65535,65535>, 100, 100, Rgb16<0,0,0>>> t1;
+  test_inouthelper(&t1);
+  fprintf(stderr, "Testing InOutTr...\n");
+  Style<InOutTr<Rgb16<65535,65535,65535>, TrWipe<100>, TrWipeIn<100>, Rgb16<0,0,0>>> t2;
+  test_inouthelper(&t2);
+  fprintf(stderr, "Testing InOutTr #2...\n");
+  Style<InOutTr<Rgb16<65535,65535,65535>,
+		TrWipe<100>,
+		TrWipeIn<100>,
+		Layers<Black,
+		       TransitionEffectL<TrConcat<TrDelay<1500>, Black, TrFade<1000>, AlphaL<Red, Bump<Int<0>, Int<6000>>>,TrFade<3000>>, EFFECT_BOOT>,
+		       TransitionEffectL<TrConcat<TrInstant, AlphaL<Red,Bump<Int<0>, Int<6000>>>,TrFade<3000>>,EFFECT_NEWFONT>>
+		>> t3;
+  test_inouthelper(&t3);
 }
 
 int main() {

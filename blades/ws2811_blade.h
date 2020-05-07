@@ -16,6 +16,7 @@ DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4 + 1];
 #include "ws2811_serial.h"
 #define DefaultPinClass MonopodWSPin
 #endif
+#include "spiled_pin.h"
 
 Color16 color_buffer[maxLedsPerStrip];
 BladeBase* current_blade = NULL;
@@ -129,6 +130,14 @@ public:
     Power(true);
     on_ = true;
     power_off_requested_ = false;
+  }
+  void SB_PreOn(float* delay) override {
+    AbstractBlade::SB_PreOn(delay);
+    // This blade uses EFFECT_PREON, so we need to turn the power on now.
+    if (IsHandled(HANDLED_FEATURE_PREON)) {
+      Power(true);
+      power_off_requested_ = false;
+    }
   }
   void SB_Off(OffType off_type) override {
     TRACE("SB_Off");
