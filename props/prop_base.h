@@ -1057,7 +1057,7 @@ public:
       if (track_player_) {
         STDOUT.print("Playing ");
         STDOUT.println(arg);
-	if (!track_player->PlayInCurrentDir(arg))
+	if (!track_player_->PlayInCurrentDir(arg))
 	  track_player_->Play(arg);
       } else {
         STDOUT.println("No available WAV players.");
