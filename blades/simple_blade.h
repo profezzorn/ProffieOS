@@ -211,6 +211,14 @@ public:
     on_ = true;
     Power(true);
   }
+  void SB_PreOn(float* delay) override {
+    AbstractBlade::SB_PreOn(delay);
+    // This blade uses EFFECT_PREON, so we need to turn the power on now.
+    if (IsHandled(HANDLED_FEATURE_PREON)) {
+      battery_monitor.SetLoad(true);
+      Power(true);
+    }
+  }
   void SB_Off(OffType off_type) override {
     AbstractBlade::SB_Off(off_type);
     battery_monitor.SetLoad(false);

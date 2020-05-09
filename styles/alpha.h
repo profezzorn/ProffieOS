@@ -14,9 +14,15 @@
 template<class COLOR, class ALPHA>
 class AlphaL {
 public:
-  void run(BladeBase* blade) {
-    color_.run(blade);
-    alpha_.run(blade);
+  LayerRunResult run(BladeBase* blade) {
+    LayerRunResult base_run_result = RunLayer(&color_, blade);
+    FunctionRunResult ret = RunFunction(&alpha_, blade);
+    switch (ret) {
+      case FunctionRunResult::ONE_UNTIL_IGNITION: return base_run_result;
+      case FunctionRunResult::ZERO_UNTIL_IGNITION: return LayerRunResult::TRANSPARENT_UNTIL_IGNITION;
+      case FunctionRunResult::UNKNOWN: break;
+    }
+    return LayerRunResult::UNKNOWN;
   }
 
 private:

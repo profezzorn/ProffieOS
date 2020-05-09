@@ -15,11 +15,11 @@
 template<class COLOR,
          class TR1 = TrInstant,
          class TR2 = TrInstant,
-         int TOP = 26000,
-         int BOTTOM = 4000,
-         int SIZE = 10000>
+         class TOP = Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,
+         class BOTTOM = Int<6000>,
+         class SIZE = Scale<SwingSpeed<100>,Int<9000>,Int<14000>>>
 using ResponsiveLockupL =
-  LockupTrL<AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<SIZE>>>,
+  LockupTrL<AlphaL<COLOR, Bump<Scale<BladeAngle<>,TOP,BOTTOM>,SIZE>>,
             TR1,
             TR2,
             SaberBase::LOCKUP_NORMAL>;
@@ -31,10 +31,10 @@ using ResponsiveLockupL =
 template<class COLOR,
          class TR1 = TrInstant,
          class TR2 = TrInstant,
-         int SIZE1 = 2000,
-         int SIZE2 = 10000>
+         class SIZE1 = Int<2000>,
+         class SIZE2 = Int<10000>>
 using ResponsiveDragL =
-  LockupTrL<AlphaL<COLOR, SmoothStep<Int<32000>,Scale<TwistAngle<>,Int<SIZE1>,Int<SIZE2>>>>,
+  LockupTrL<AlphaL<COLOR, SmoothStep<Int<32000>,Scale<TwistAngle<>,SIZE1,SIZE2>>>,
             TR1,
             TR2,
             SaberBase::LOCKUP_DRAG>;
@@ -47,10 +47,10 @@ using ResponsiveDragL =
 template<class COLOR = Mix<TwistAngle<>,OrangeRed,Red>,
          class TR1 = TrWipeIn<600>,
          class TR2 = TrWipe<600>,
-         int SIZE1 = 4000,
-         int SIZE2 = 10000>
+         class SIZE1 = Int<4000>,
+         class SIZE2 = Int<10000>>
 using ResponsiveMeltL =
-  LockupTrL<AlphaL<COLOR, SmoothStep<Int<30000>,Scale<TwistAngle<>,Int<SIZE1>,Int<SIZE2>>>>,
+  LockupTrL<AlphaL<COLOR, SmoothStep<Int<30000>,Scale<TwistAngle<>,SIZE1,SIZE2>>>,
             TR1,
             TR2,
             SaberBase::LOCKUP_MELT>;
@@ -81,12 +81,12 @@ using ResponsiveLightningBlockL =
 template<class COLOR,
          class TR1 = TrInstant,
          class TR2 = TrFade<200>,
-         int TOP = 26000,
-         int BOTTOM = 4000,
-         int SIZE = 10000>
+         class TOP = Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,
+         class BOTTOM = Int<6000>,
+         class SIZE = Int<10000>>
 using ResponsiveClashL =
   TransitionEffectL<TrConcat<TR1,
-                             AlphaL<COLOR, Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<SIZE>>>,
+                             AlphaL<COLOR, Bump<Scale<BladeAngle<>,TOP,BOTTOM>,SIZE>>,
                              TR2>,
                     EFFECT_CLASH>;
 
@@ -99,18 +99,18 @@ using ResponsiveClashL =
 // EFFECT = effect type, defaults to EFFECT_BLAST
 
 template<class COLOR,
-         int FADE = 400,
-         int SIZE = 100,
-         int SPEED = 400,
-         int TOP = 28000,
-         int BOTTOM = 8000,
+         class FADE = Int<400>,
+         class SIZE = Int<100>,
+         class SPEED = Int<400>,
+         class TOP = Int<28000>,
+         class BOTTOM = Int<8000>,
          BladeEffectType EFFECT = EFFECT_BLAST>
 using ResponsiveBlastL =
     AlphaL<
          MultiTransitionEffectL<
-             TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>, Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>>,
+             TrWaveX<COLOR, FADE, SIZE, SPEED, Scale<BladeAngle<>, TOP, BOTTOM>>,
              EFFECT>,
-         Bump<Scale<BladeAngle<>,Int<TOP>,Int<BOTTOM>>,Int<24000>>>;
+         Bump<Scale<BladeAngle<>,TOP,BOTTOM>,Int<24000>>>;
 
 // ResponsiveBlastWaveL<BLAST COLOR, FADEOUT_MS, WAVE_SIZE, WAVE_SPEED, TOP, BOTTOM, EFFECT>
 // Implements Blast effect that will move based on angle of the blade instead of random location Blast will impact and split up and down the length of the blade from original position
@@ -121,18 +121,18 @@ using ResponsiveBlastL =
 // EFFECT = effect type, defaults to EFFECT_BLAST
 
 template<class COLOR,
-         int FADE = 400,
-         int SIZE = 100,
-         int SPEED = 400,
-         int TOP = 28000,
-         int BOTTOM = 8000,
+         class FADE = Int<400>,
+         class SIZE = Int<100>,
+         class SPEED = Int<400>,
+         class TOP = Int<28000>,
+         class BOTTOM = Int<8000>,
          BladeEffectType EFFECT = EFFECT_BLAST>
 using ResponsiveBlastWaveL =
     MultiTransitionEffectL<
-         TrWaveX<COLOR, Int<FADE>, Int<SIZE>, Int<SPEED>,
+         TrWaveX<COLOR, FADE, SIZE, SPEED,
               Scale<BladeAngle<>,
-                    Int<TOP>,
-                    Int<BOTTOM>>>,
+                    TOP,
+                    BOTTOM>>,
          EFFECT>;
 
 // ResponsiveBlastFadeL<BLAST COLOR, SIZE, FADE, TOP, BOTTOM, EFFECT>
@@ -143,16 +143,16 @@ using ResponsiveBlastWaveL =
 // EFFECT = effect type, defaults to EFFECT_BLAST
 
 template<class COLOR,
-         int SIZE = 8000,
-         int FADE = 400,
-         int TOP = 28000,
-         int BOTTOM = 8000,
+         class SIZE = Int<8000>,
+         class FADE = Int<400>,
+         class TOP = Int<28000>,
+         class BOTTOM = Int<8000>,
          BladeEffectType EFFECT = EFFECT_BLAST>
 using ResponsiveBlastFadeL =
     MultiTransitionEffectL<
          TrConcat<TrInstant,
-                  AlphaL<COLOR, Bump<Scale<BladeAngle<>, Int<TOP>, Int<BOTTOM>>, Int<SIZE>>>,
-                  TrFade<FADE>>,
+                  AlphaL<COLOR, Bump<Scale<BladeAngle<>, TOP, BOTTOM>, SIZE>>,
+                  TrFadeX<FADE>>,
          EFFECT>;
 
 // ResponsiveStabL<STAB COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
@@ -163,11 +163,11 @@ using ResponsiveBlastFadeL =
 template<class COLOR,
          class TR1 = TrWipeIn<600>,
          class TR2 = TrWipe<600>,
-         int SIZE1 = 14000,
-         int SIZE2 = 8000>
+         class SIZE1 = Int<14000>,
+         class SIZE2 = Int<8000>>
 using ResponsiveStabL =
   TransitionEffectL<TrConcat<TR1,
-                             AlphaL<COLOR, SmoothStep<Int<32000>,Scale<BladeAngle<>,Int<SIZE1>,Int<SIZE2>>>>,
+                             AlphaL<COLOR, SmoothStep<Int<32000>,Scale<BladeAngle<>,SIZE1,SIZE2>>>,
                              TR2>,
                     EFFECT_STAB>;
 

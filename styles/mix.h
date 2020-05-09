@@ -90,7 +90,7 @@ private:
 public:  
   auto getColor(int led) -> decltype(colors_.getColor(1,1)) {
     int x = f_.getInteger(led);
-    x *= (sizeof...(COLORS) - 1);
+    x *= (sizeof...(COLORS) + 1);
     auto a = colors_.getColor(x >> 15, led);
     auto b = colors_.getColor((x >> 15) + 1, led);
     return MixColors(a, b, x & 0x7fff, 15);

@@ -48,8 +48,10 @@ protected:
   // may double-presses there has been. The count starts at FIRST, that way
   // the first event can be distinguished from the rest.
   void Send(uint32_t event) {
-    prop.Event(button_, (EVENT)event);
-    prop.Event(button_, (EVENT)(event + (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED) * press_count_));
+    if (!prop.Event(button_, (EVENT)(event + (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED) * press_count_))) {
+      // Only send the second event if the first event didn't trigger a response.
+      prop.Event(button_, (EVENT)event);
+    }
   }
 
   // We send the click immediately, but we also hold a "saved" event

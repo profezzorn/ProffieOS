@@ -367,7 +367,7 @@ public:
     if (NELEM(blades) > 1) {
       float resistor = id();
 
-      float best_err = 1000000.0;
+      float best_err = 100000000.0;
       for (size_t i = 0; i < NELEM(blades); i++) {
         float err = fabsf(resistor - blades[i].ohm);
         if (err < best_err) {
@@ -1035,7 +1035,8 @@ public:
       if (player) {
         STDOUT.print("Playing ");
         STDOUT.println(arg);
-        player->Play(arg);
+	if (!player->PlayInCurrentDir(arg))
+	  player->Play(arg);
       } else {
         STDOUT.println("No available WAV players.");
       }
@@ -1056,7 +1057,8 @@ public:
       if (track_player_) {
         STDOUT.print("Playing ");
         STDOUT.println(arg);
-        track_player_->Play(arg);
+	if (!track_player_->PlayInCurrentDir(arg))
+	  track_player_->Play(arg);
       } else {
         STDOUT.println("No available WAV players.");
       }
