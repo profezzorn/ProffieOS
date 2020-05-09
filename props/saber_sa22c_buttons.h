@@ -5,9 +5,7 @@
 // New #define SA22C_NO_LOCKUP_HOLD
 // reverts to lockup being triggered only by clash + aux in 2-button mode
 // Also sets multi-blast to trigger while holding aux and swinging, rather than
-// double click and hold while swinging
-//
-// Button configs:
+// double click and hold
 //
 // Gesture ignition
 // if you add #define SHTOK_GESTURE_IGNITION to your config file, you can
@@ -17,7 +15,10 @@
 // I've shortened the timeout for short and double click detection from 500ms
 // to 300ms.  I think it feels more responsive this way but still gives enough
 // timeout to ensure all button actions can be achieved consistently
+// I've included all button timings so they can be easily tweaked to suit 
+// individual tastes.
 //
+// Button configs:
 //
 // 1 Button:
 // Activate Muted - double click and hold while OFF
