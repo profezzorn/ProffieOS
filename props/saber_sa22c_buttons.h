@@ -15,7 +15,7 @@
 // I've shortened the timeout for short and double click detection from 500ms
 // to 300ms.  I think it feels more responsive this way but still gives enough
 // timeout to ensure all button actions can be achieved consistently
-// I've included all button timings so they can be easily tweaked to suit 
+// I've included all button timings so they can be easily tweaked to suit
 // individual tastes.
 //
 // Button configs:
@@ -278,7 +278,7 @@ public:
   case EVENTID(BUTTON_POWER, EVENT_THIRD_CLICK_SHORT, MODE_ON):
 #else
   // 2 and 3 button
-  case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_SHORT, MODE_ON):
+  case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
   case EVENTID(BUTTON_AUX, EVENT_SECOND_CLICK_SHORT, MODE_ON):
   case EVENTID(BUTTON_AUX, EVENT_THIRD_CLICK_SHORT, MODE_ON):
 #endif
@@ -293,7 +293,7 @@ public:
 #else
   // 2 and 3 button
 #ifndef SA22C_NO_LOCKUP_HOLD
-  case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD, MODE_ON):
+  case EVENTID(BUTTON_AUX, EVENT_SECOND_HELD, MODE_ON):
 #else
   // in SA22C_NO_LOCKUP_HOLD mode, multi-blaster is triggered by holding aux
   // while swinging
