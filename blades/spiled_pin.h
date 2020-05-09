@@ -2,7 +2,7 @@
 #define BLADES_SPILEDPIN_H
 
 template<int CLOCK_PIN>
-class SpiLedPin : public Looper {
+class SpiLedPin {
 public:
   SpiLedPin(int pin,
             int num_leds,
@@ -57,7 +57,6 @@ public:
   }
 
   void Set(int led, Color16 color) {
-    uint8_t *output = ((uint8_t *)displayMemory) + (led + 1) * (1 + Color8::num_bytes(byteorder_));
     int MAX = std::max(color.r, std::max(color.g, color.b));
     int output_level = (MAX + 2113) / 2117;
     int mult = output_level == 0 ? 0 : 7930 / output_level;
