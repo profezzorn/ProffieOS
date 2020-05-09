@@ -108,7 +108,7 @@ public:
     if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
       ToggleColorChangeMode();
     }
-#endif
+#endif    
     SaberBase::TurnOff(off_type);
     if (unmute_on_deactivation_) {
       unmute_on_deactivation_ = false;
@@ -433,7 +433,7 @@ public:
     if (saved_global_state.volume >= 0) {
       dynamic_mixer.set_volume(clampi32(saved_global_state.volume, 0, VOLUME));
     }
-#endif
+#endif    
   }
 
   void WriteGlobalState(const char* filename) {
@@ -441,9 +441,9 @@ public:
     FileReader out;
     LSFS::Remove(filename);
     out.Create(filename);
-#ifdef ENABLE_AUDIO
+#ifdef ENABLE_AUDIO    
     out.write_key_value("volume", muted_volume_ ? muted_volume_ : dynamic_mixer.get_volume());
-#endif
+#endif    
     out.write_key_value("end", "1");
     out.Close();
     LOCK_SD(false);
@@ -455,9 +455,9 @@ public:
     WriteGlobalState("global.tmp");
     WriteGlobalState("global.ini");
     saved_global_state.volume = dynamic_mixer.get_volume();
-#endif
+#endif    
   }
-
+  
   void FindBladeAgain() {
     if (!current_config) {
       // FindBlade() hasn't been called yet - ignore this.
@@ -884,7 +884,7 @@ public:
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
     }
   }
-#endif // DISABLE_COLOR_CHANGE
+#endif // DISABLE_COLOR_CHANGE  
 
   void PrintButton(uint32_t b) {
     if (b & BUTTON_POWER) STDOUT.print("Power");

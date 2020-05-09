@@ -60,7 +60,7 @@ protected:
     Send(event);
     saved_event_ = event + (EVENT_SAVED_CLICK_SHORT - EVENT_CLICK_SHORT);
   }
-
+  
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (true) {
@@ -134,8 +134,6 @@ protected:
     STDOUT.println(" button");
   }
 
-  bool doubleclicked_ = false;
-  bool doubleclickedandheld_ = false;
   const char* name_;
   enum BUTTON button_;
   uint32_t push_millis_;

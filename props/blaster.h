@@ -230,7 +230,7 @@ public:
         NextBlasterMode();
         return true;
 
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_DOUBLE_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_DOUBLE_CLICK, MODE_ON):
         next_preset();
         return true;
 
