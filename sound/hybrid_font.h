@@ -16,6 +16,7 @@ public:
     CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 130.0f);
     CONFIG_VARIABLE(ProffieOSAnimationFrameRate, 0.0f);
+    CONFIG_VARIABLE(ProffieOSSpinDegrees, 180.0f)
   }
   // Igniter compat
   // This specifies how many milliseconds before the end of the
@@ -52,6 +53,10 @@ public:
   float ProffieOSSlashAccelerationThreshold;
   // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
+  // number of degrees the blade must travel while staying above the
+  // swing threshold in order to trigger a spin sound.  Default is 360 or
+  // one full rotation.
+  float ProffieOSSpinDegrees;
 };
 
 FontConfigFile font_config;
@@ -214,7 +219,7 @@ public:
             }
             swinging_ = true;
           } else {
-            if (angle_ > 360) {
+            if (angle_ > font_config.ProffieOSSpinDegrees) {
               if (SFX_spin) {
                 swing_player_ = PlayPolyphonic(&SFX_spin);
               } else if (SFX_slsh) {
