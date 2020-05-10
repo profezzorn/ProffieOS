@@ -186,7 +186,13 @@ public:
     // Radians per second per second
     float rss = sqrtf(gyro_slope.z * gyro_slope.z + gyro_slope.y * gyro_slope.y) * (M_PI / 180);
     float swing_speed = fusor.swing_speed();
-    if (swing_speed > swingThreshold) {
+    uint32_t now = micros();
+    uint32_t delta_micros = now - last_swing_micros_;
+    last_swing_micros_ = now;
+    float delta = delta_micros * 0.000001;
+    angle_ += 0.98 * gyro.len() * delta;
+    angle_ += 0.02 * fusor.accel().len();
+      if (swing_speed > swingThreshold) {
       if (!guess_monophonic_) {
         if (swing_player_) {
           // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
@@ -207,11 +213,28 @@ public:
               swing_player_ = PlayPolyphonic(&SFX_swing);
             }
             swinging_ = true;
+          } else {
+            if (angle_ > 360) {
+              if (SFX_spin) {
+                swing_player_ = PlayPolyphonic(&SFX_spin);
+              } else if (SFX_slsh) {
+                swing_player_ = PlayPolyphonic(&SFX_slsh);
+              } else if (SFX_swng) {
+                swing_player_ = PlayPolyphonic(&SFX_swng);
+              } else {
+                swing_player_ = PlayPolyphonic(&SFX_swing);
+              }
+              angle_ = 0;
+            }
           }
         }
       } else if (!swinging_ && swing_speed > swingThreshold) {
         PlayMonophonic(&SFX_swing, &SFX_hum);
         swinging_ = true;
+        if (angle_ > 360 && swinging_) {
+          PlayMonophonic(&SFX_spin, &SFX_hum);
+          angle_ = 0;
+        }
       }
       float swing_strength = std::min<float>(1.0, swing_speed / swingThreshold);
       SetSwingVolume(swing_strength, 1.0);
@@ -434,7 +457,7 @@ public:
 
     if (!loop) loop = SFX_lockup ? &SFX_lockup : &SFX_lock;
     if (!once) once = loop;
-    
+
     if (SFX_lockup && !SFX_humm) {
       // Monophonic
       PlayMonophonic(once, loop);
@@ -575,17 +598,20 @@ public:
 #endif
     }
   }
-	
+
  private:
   uint32_t last_micros_;
+  uint32_t last_swing_micros_;
   uint32_t hum_start_;
   float hum_fade_in_;
   float hum_fade_out_;
+  float angle_;
   bool monophonic_hum_;
   bool guess_monophonic_;
   State state_;
   float volume_;
   float current_effect_length_ = 0.0;
+
 };
 
 #endif
