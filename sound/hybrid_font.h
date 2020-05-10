@@ -16,7 +16,7 @@ public:
     CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 130.0f);
     CONFIG_VARIABLE(ProffieOSAnimationFrameRate, 0.0f);
-    CONFIG_VARIABLE(ProffieOSSpinDegrees, 180.0f);
+    CONFIG_VARIABLE(ProffieOSSpinDegrees, 360.0f);
   }
   // Igniter compat
   // This specifies how many milliseconds before the end of the
