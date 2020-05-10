@@ -57,11 +57,11 @@
 // Color Change mode - hold + toggle AUX while ON
 // Lightning Block - double click and hold while ON
 // Melt - hold while stabbing (clash with forward motion, horizontal)
+// AUX
+// Blaster blocks - short click/double click/triple click while ON
 // Multi-Blast - double-click and hold for half a second
 //               to trigger blaster block, swing saber while in multi-blast mode
 //               to exit, double-click and hold for half a second
-// AUX
-// Blaster blocks - short click/double click/triple click while ON
 // Next Preset - short click while OFF
 // Lockup - hold while ON
 // Drag - hold while ON pointing the blade tip down
@@ -279,7 +279,7 @@ public:
 #else
   // 2 and 3 button
   case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-  case EVENTID(BUTTON_AUX, EVENT_SECOND_CLICK_SHORT, MODE_ON):
+  case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
   case EVENTID(BUTTON_AUX, EVENT_THIRD_CLICK_SHORT, MODE_ON):
 #endif
     swing_blast_ = false;
