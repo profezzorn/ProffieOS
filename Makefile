@@ -40,7 +40,7 @@ test1V:
 test2V:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/proffieboard_v2_verification_config.h\\\" BOARD_TAG=ProffieboardV2-L433CC OBJDIR=test-proffieboard-v2-verification
 
-Test2V:
+test2:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_v3_config.h\\\" BOARD_TAG=teensy36 OBJDIR=test-teensy36-default-v3
 
 test3:
