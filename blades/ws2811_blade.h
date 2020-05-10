@@ -82,7 +82,7 @@ public:
     STDOUT.print("WS2811 Blade with ");
     STDOUT.print(pin_.num_leds());
     STDOUT.println(" leds.");
-    Power(true);
+    run_ = true;
     CommandParser::Link();
     Looper::Link();
     AbstractBlade::Activate();
@@ -107,14 +107,14 @@ public:
   }
   void set(int led, Color16 c) override {
     color_buffer[led] = c;
-    }
+  }
   void allow_disable() override {
     if (!on_) allow_disable_ = true;
   }
   void SetStyle(BladeStyle* style) override{
     TRACE("SetStyle");
     AbstractBlade::SetStyle(style);
-    Power(true);
+    run_ = true;
   }
   BladeStyle* UnSetStyle() override {
     TRACE("UnSetStyle");
@@ -127,17 +127,15 @@ public:
   void SB_On() override {
     TRACE("SB_On");
     AbstractBlade::SB_On();
-    Power(true);
+    run_ = true;
     on_ = true;
     power_off_requested_ = false;
   }
   void SB_PreOn(float* delay) override {
     AbstractBlade::SB_PreOn(delay);
     // This blade uses EFFECT_PREON, so we need to turn the power on now.
-    if (IsHandled(HANDLED_FEATURE_PREON)) {
-      Power(true);
-      power_off_requested_ = false;
-    }
+    run_ = true;
+    power_off_requested_ = false;
   }
   void SB_Off(OffType off_type) override {
     TRACE("SB_Off");
@@ -171,61 +169,82 @@ public:
   void Help() override {
     STDOUT.println(" blade on/off - turn ws2811 blade on off");
   }
+  void PowerOff() {
+    if (!poweroff_delay_start_) {
+      poweroff_delay_start_ = millis();
+    }
+    if (millis() - poweroff_delay_start_ < poweroff_delay_ms_) {
+      return;
+    }
+    Power(false);
+    run_ = false;
+    power_off_requested_ = false;
+  }
 
+#define BLADE_YIELD() do {			\
+  YIELD();					\
+  /* If Power() was called.... */		\
+  if (current_blade != this) goto retry;	\
+} while(0)
+			     
 protected:
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (true) {
     retry:
-      while (!powered_ || !current_style_) {
+      if (current_blade == this) current_blade = NULL;
+      YIELD();
+      if (!current_style_ || !run_) {
 	loop_counter_.Reset();
-	YIELD();
+	continue;
       }
       // Wait until it's our turn.
-      while (current_blade) YIELD();
-      if (allow_disable_ || power_off_requested_) {
-	if (!on_) {
-	  if (!poweroff_delay_start_) {
-	    poweroff_delay_start_ = millis();
-	  }
-	  if (millis() - poweroff_delay_start_ < poweroff_delay_ms_) {
-	    YIELD();
-	    continue;
-	  }
-	  poweroff_delay_start_ = 0;
-	}
-	Power(on_);
+      if (current_blade) {
 	continue;
       }
       current_blade = this;
-      current_style_->run(this);
-      while (!pin_.IsReadyForBeginFrame()) {
-	YIELD();
-	// If Power() was called....
-	if (current_blade != this) goto retry;
+      if (power_off_requested_) {
+	PowerOff();
+	continue;
       }
+
+      allow_disable_ = false;
+      current_style_->run(this);
+
+      if (!powered_) {
+	if (allow_disable_) continue;
+	Power(true);
+      }
+
+      // Update pixels
+      while (!pin_.IsReadyForBeginFrame()) BLADE_YIELD();
       pin_.BeginFrame();
       for (int i = 0; i < pin_.num_leds(); i++) {
 	pin_.Set(i, color_buffer[i]);
 	if (!(i & 0x1f)) Looper::DoHFLoop();
       }
-      while (!pin_.IsReadyForEndFrame()) {
-	YIELD();
-	// If Power() was called....
-	if (current_blade != this) goto retry;
-      }
+      while (!pin_.IsReadyForEndFrame()) BLADE_YIELD();
       pin_.EndFrame();
       loop_counter_.Update();
-      current_blade = NULL;
-      YIELD();
+
+      if (powered_ && allow_disable_) {
+	PowerOff();
+	run_ = false;
+      }
     }
     STATE_MACHINE_END();
   }
   
 private:
+  // Loop should run.
+  bool run_ = false;
+  // Blade is "on"
   bool on_ = false;
+  // Blade has power
   bool powered_ = false;
+  // Style has indicated that it's ok to shutd down until the next wakeup event.
   bool allow_disable_ = false;
+  // We should power off and stop running, even if the blade is on.
   bool power_off_requested_ = false;
   uint32_t poweroff_delay_ms_;
   uint32_t poweroff_delay_start_ = 0;
