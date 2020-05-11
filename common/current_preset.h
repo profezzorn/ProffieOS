@@ -55,7 +55,7 @@ public:
   bool Read(FileReader* f) {
     int preset_count = 0;
     int current_style = 0;
-    if (f->Tell() == 0) preset_num = -1;
+    if (f->Tell() <= sizeof(install_time) + 11) preset_num = -1;
     preset_type = PRESET_DISK;
     
     for (; f->Available(); f->skipline()) {
@@ -76,6 +76,7 @@ public:
 	}
 	continue;
       }
+      if (!strcmp(variable, "installed")) continue;
       if (!preset_count) return false;
       if (f->Peek() != '=') continue;
       f->Read();
@@ -116,6 +117,7 @@ public:
 #define SET_PRESET_STYLE(N) if (current_style == N) { current_style##N = tmp; tmp = 0; }
 	ONCEPERBLADE(SET_PRESET_STYLE);
 	if (tmp) free(tmp);
+	continue;
       }
     }
     if (preset_count == 1) {
@@ -157,6 +159,21 @@ public:
       return false;
 
     if (f->FileSize() < 4) return false;
+    int pos = 0;
+#ifndef KEEP_SAVEFILES_WHEN_PROGRAMMING    
+    char variable[33];
+    f->readVariable(variable);
+    if (strcmp(variable, "installed")) return false;
+    if (f->Read() != '=') return false;
+    const char* tmp = install_time;
+    while (*tmp) {
+      if (f->Read() != *tmp) return false;
+      tmp++;
+    }
+    if (f->Read() != '\n') return false;
+    pos = f->Tell();
+#endif
+
     int p = f->FileSize() - 1;
     while (p > 0) { f->Seek(p); if (!isSpace(f->Read())) break; p--; }
     f->Seek(p - 3);
@@ -164,7 +181,7 @@ public:
     if (toLower(f->Read()) != 'e') return false;
     if (toLower(f->Read()) != 'n') return false;
     if (toLower(f->Read()) != 'd') return false;
-    f->Seek(0);
+    f->Seek(pos);
 
     return true;
   }
@@ -177,6 +194,7 @@ public:
       // Found valid tmp file
       LSFS::Remove(ini_fn);
       f.Create(ini_fn);
+      f.write_key_value("installed", install_time);
       while (f2.Available()) {
 	int to_copy = std::min<int>(f2.Available(), sizeof(buf));
 	if (f2.Read(buf, to_copy) != to_copy ||
@@ -198,6 +216,7 @@ public:
     FileReader f;
     PathHelper ini_fn(GetSaveDir(), "presets.ini");
     f.Create(ini_fn);
+    f.write_key_value("installed", install_time);
     CurrentPreset tmp;
     for (size_t i = 0; i < current_config->num_presets; i++) {
       tmp.Set(i);
@@ -251,6 +270,7 @@ public:
     PathHelper tmp_fn(GetSaveDir(), "presets.tmp");
     LSFS::Remove(tmp_fn);
     out.Create(tmp_fn);
+    out.write_key_value("installed", install_time);
     CurrentPreset tmp;
     int opos = 0;
     if (position == 0) {
