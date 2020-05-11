@@ -208,7 +208,9 @@ public:
    // 1 and 2 button: Previous Preset
   case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
 #endif
-    previous_preset();
+    if (!mode_volume_) {
+      previous_preset();
+    }
     return true;
 
 // Activate Muted
