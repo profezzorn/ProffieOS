@@ -194,10 +194,10 @@ public:
     uint32_t now = micros();
     uint32_t delta_micros = now - last_swing_micros_;
     last_swing_micros_ = now;
+    if (delta_micros > 1000000) delta_micros = 1;
     float delta = delta_micros * 0.000001;
-    angle_ += 0.98 * gyro.len() * delta;
-    angle_ += 0.02 * fusor.accel().len();
-      if (swing_speed > swingThreshold) {
+    angle_ += fusor.swing_speed() * delta;
+    if (swing_speed > swingThreshold) {
       if (!guess_monophonic_) {
         if (swing_player_) {
           // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
@@ -229,7 +229,7 @@ public:
               } else {
                 swing_player_ = PlayPolyphonic(&SFX_swing);
               }
-              angle_ = 0;
+              angle_ -= font_config.ProffieOSSpinDegrees;
             }
           }
         }
@@ -238,7 +238,7 @@ public:
         swinging_ = true;
         if (angle_ > 360 && swinging_) {
           PlayMonophonic(&SFX_spin, &SFX_hum);
-          angle_ = 0;
+          angle_ -= font_config.ProffieOSSpinDegrees;
         }
       }
       float swing_strength = std::min<float>(1.0, swing_speed / swingThreshold);
@@ -246,6 +246,7 @@ public:
     } else if (swing_speed <= font_config.ProffieOSSwingLowerThreshold) {
       swinging_ = false;
       swing_player_.Free();
+      angle_ = 0;
     }
     float vol = 1.0f;
     if (!swinging_) {
