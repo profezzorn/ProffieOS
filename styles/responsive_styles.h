@@ -15,7 +15,7 @@
 template<class COLOR,
          class TR1 = TrInstant,
          class TR2 = TrInstant,
-         class TOP = Scale<BladeAngle<>,Int<4000>,Int<28000>>,
+         class TOP = Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,
          class BOTTOM = Int<6000>,
          class SIZE = Scale<SwingSpeed<100>,Int<9000>,Int<14000>>>
 using ResponsiveLockupL =
@@ -81,7 +81,7 @@ using ResponsiveLightningBlockL =
 template<class COLOR,
          class TR1 = TrInstant,
          class TR2 = TrFade<200>,
-         class TOP = Scale<BladeAngle<>,Int<4000>,Int<28000>>,
+         class TOP = Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,
          class BOTTOM = Int<6000>,
          class SIZE = Int<10000>>
 using ResponsiveClashL =

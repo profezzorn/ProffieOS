@@ -17,6 +17,8 @@
 #define PROFFIE_TEST
 #define ENABLE_SD
 
+const char install_time[] = __DATE__ " " __TIME__;
+
 const char* GetSaveDir() { return NULL; }
 
 float fract(float x) { return x - floor(x); }
@@ -171,6 +173,7 @@ BladeConfig* current_config;
 void create_test_presets_ini(const char* filename, int presets, bool finish) {
   FILE* f = fopen(filename, "wct");
   CHECK(f);
+  fprintf(f, "installed=%s\n", install_time);
   for (int i = 0; i < presets; i++) {
     fprintf(f, "new_preset\n");
     fprintf(f, "FONT=font%d\n", i);
