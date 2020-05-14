@@ -47,30 +47,31 @@ protected:
     SetPinHigh(false);
   }
   void Loop() override {
-    if (reading_) {
-      if (!reader_.Done()) return;
-      float v = battery_now();
-      last_voltage_ = last_voltage_ * 0.997 + v * 0.003;
-      reading_ = false;
-      if (IsLow()) {
-	low_count_++;
-      } else {
-	low_count_ = 0;
-      }
-    }
-    uint32_t now = micros();
-    if (now - last_voltage_read_time_ >= 1000) {
-      if (!reader_.Start())
-        return;
-      reading_ = true;
-      last_voltage_read_time_ = now;
-    }
     if (monitor.ShouldPrint(Monitoring::MonitorBattery) ||
         millis() - last_print_millis_ > 20000) {
       STDOUT.print("Battery voltage: ");
       STDOUT.println(battery());
       last_print_millis_ = millis();
     }
+
+    STATE_MACHINE_BEGIN();
+    last_voltage_read_time_ = micros();
+    while (true) {
+      while (micros() - last_voltage_read_time_ < 1000) YIELD();
+      while (!reader_.Start()) YIELD();
+      while (!reader_.Done()) YIELD();
+      float v = battery_now();
+      uint32_t now = micros();
+      float mul = powf(0.05, (now - last_voltage_read_time_) / 1000000.0);
+      last_voltage_read_time_ = now;
+      last_voltage_ = last_voltage_ * mul + v * (1 - mul);
+      if (IsLow()) {
+	low_count_++;
+      } else {
+	low_count_ = 0;
+      }
+    }
+    STATE_MACHINE_END();
   }
 
   bool IsLow() {
@@ -103,8 +104,6 @@ protected:
     }
 #if 0
     if (!strcmp(cmd, "bstate")) {
-      STDOUT.print("reading = ");
-      STDOUT.println(reading_);
       STDOUT.print("Next state: ");
       STDOUT.println(reader_.state_machine_.next_state_);
       STDOUT.print("ADC SMP: ");
@@ -143,7 +142,6 @@ private:
   uint32_t last_print_millis_;
   uint32_t low_count_ = 0;
   AnalogReader reader_;
-  bool reading_ = false;
 };
 
 BatteryMonitor battery_monitor;
