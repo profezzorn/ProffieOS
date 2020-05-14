@@ -227,9 +227,11 @@ public:
             }
           }
         }
-      } else if (!swinging_ && swing_speed > swingThreshold) {
-        PlayMonophonic(&SFX_swing, &SFX_hum);
-        swinging_ = true;
+      } else if (swing_speed > swingThreshold) {
+        if (!swinging_) {
+          PlayMonophonic(&SFX_swing, &SFX_hum);
+          swinging_ = true;
+        }
         if (angle_ > 360 && swinging_) {
           if (SFX_spin) {
             PlayMonophonic(&SFX_spin, &SFX_hum);
