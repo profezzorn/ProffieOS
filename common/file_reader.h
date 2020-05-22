@@ -224,6 +224,14 @@ public:
     }
     return -1;
   }
+  bool Expect(const char* str) {
+    while (*str) {
+      if (Peek() != *str) return false;
+      Read();
+      str++;
+    }
+    return true;
+  }
   int AlignRead(int n) {
 #ifdef ENABLE_SD
     if (type_ == TYPE_SD) {

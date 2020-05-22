@@ -26,6 +26,14 @@ struct ConfigFile {
       if (f->Peek() != '=') continue;
       f->Read();
       f->skipwhite();
+#ifndef KEEP_SAVEFILES_WHEN_PROGRAMMING    
+      if (!strcmp(variable, "installed")) {
+	if (!f->Expect(install_time)) {
+	  return ReadStatus::READ_FAIL;
+	}
+	continue;
+      }
+#endif
       float v = f->readFloatValue();
 #if 0
       STDOUT.print(variable);

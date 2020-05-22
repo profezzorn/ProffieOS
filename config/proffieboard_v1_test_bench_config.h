@@ -42,7 +42,7 @@ const unsigned int maxLedsPerStrip = 196;
 // #define DISABLE_DIAGNOSTIC_COMMANDS
 // #define SAVE_COLOR_CHANGE
 // #define DISABLE_COLOR_CHANGE
-// #define SAVE_STATE
+#define SAVE_STATE
 
 // Must be 20 characters or less.
 // #define BLE_PASSWORD "password"
@@ -70,12 +70,25 @@ typedef Pulsing<Rgb<128,128,128>, Rgb16<50,50,50>, 3000> OffPulse;
 Preset testing_presets[] = {
 #if 1
   { "SmthFuzz", "tracks/cantina.wav",
-   StylePtr<InOutHelper<Layers<Red,AlphaL<White,LayerFunctions<
-            Bump<Scale<SlowNoise<Int<2000000>>,Int<14000>,Int<4000>>,Int<10000>>,
-            Bump<Scale<SlowNoise<Int<2000000>>,Int<10000>,Int<20000>>,Int<8000>>,
-            Bump<Scale<SlowNoise<Int<2000000>>,Int<29000>,Int<20000>>,Int<6000>>
-    >>>,300,500>>(),
+    StylePtr<Layers<RandomBlink<3000,Red,Black>,InOutTrL<TrWipe<300>,TrWipeIn<500>,Black>>>(),
+    StylePtr<ColorCycle<Rgb<0,0,50>, 10, 35, Cyan, 90, 1000, 6000>>(),
+    "ONE" },
+#endif  
+#if 0
+  { "SmthFuzz", "tracks/cantina.wav",
+    StylePtr<Layers<RandomBlink<3,Red,Black>,InOutTrL<TrWipe<300>,TrWipeIn<500>,Black>>>(),
+//    StylePtr<InOutHelper<Layers<Red,AlphaL<White,LayerFunctions<
+//            Bump<Scale<SlowNoise<Int<2000000>>,Int<14000>,Int<4000>>,Int<10000>>,
+//            Bump<Scale<SlowNoise<Int<2000000>>,Int<10000>,Int<20000>>,Int<8000>>,
+//            Bump<Scale<SlowNoise<Int<2000000>>,Int<29000>,Int<20000>>,Int<6000>>
+//    >>>,300,500>>(),
     StylePtr<InOutHelper<SimpleClash<Lockup<Blast<InOutSparkTip<AudioFlicker<ColorChange<TrSmoothFade<450>,Green,Blue,Rgb<25,25,255>,Red,Rgb<255,50,0>,Rgb<200,100,0>,Rgb16<34702,0,65535>>,ColorChange<TrSmoothFade<450>,Rgb<25,200,0>,Rgb<0,0,200>,Rgb<20,20,200>,Rgb<175,0,0>,Rgb<200,25,0>,Rgb<175,75,0>,Rgb<125,0,200>>>,600,400,Snow>,Rgb<100,100,255>,350,200,750>,Pulsing<Gradient<AudioFlicker<ColorChange<TrSmoothFade<450>,Green,Blue,Rgb<25,25,255>,Red,Rgb<255,50,0>,Rgb<200,100,0>,Rgb16<34702,0,65535>>,ColorChange<TrSmoothFade<450>,Rgb<25,200,0>,Rgb<0,0,200>,Rgb<20,20,200>,Rgb<175,0,0>,Rgb<200,25,0>,Rgb<175,75,0>,Rgb<125,0,200>>>,AudioFlicker<ColorChange<TrSmoothFade<450>,Green,Blue,Rgb<25,25,255>,Red,Rgb<255,50,0>,Rgb<200,100,0>,Rgb16<34702,0,65535>>,ColorChange<TrSmoothFade<450>,Rgb<25,200,0>,Rgb<0,0,200>,Rgb<20,20,200>,Rgb<175,0,0>,Rgb<200,25,0>,Rgb<175,75,0>,Rgb<125,0,200>>>,BrownNoiseFlicker<AliceBlue,Strobe<SteelBlue,White,50,1>,100>,AudioFlicker<ColorChange<TrSmoothFade<450>,Green,Blue,Rgb<25,25,255>,Red,Rgb<255,50,0>,Rgb<200,100,0>,Rgb16<34702,0,65535>>,ColorChange<TrSmoothFade<450>,Rgb<25,200,0>,Rgb<0,0,200>,Rgb<20,20,200>,Rgb<175,0,0>,Rgb<200,25,0>,Rgb<175,75,0>,Rgb<125,0,200>>>,AudioFlicker<ColorChange<TrSmoothFade<450>,Green,Blue,Rgb<25,25,255>,Red,Rgb<255,50,0>,Rgb<200,100,0>,Rgb16<34702,0,65535>>,ColorChange<TrSmoothFade<450>,Rgb<25,200,0>,Rgb<0,0,200>,Rgb<20,20,200>,Rgb<175,0,0>,Rgb<200,25,0>,Rgb<175,75,0>,Rgb<125,0,200>>>,AudioFlicker<ColorChange<TrSmoothFade<450>,Green,Blue,Rgb<25,25,255>,Red,Rgb<255,50,0>,Rgb<200,100,0>,Rgb16<34702,0,65535>>,ColorChange<TrSmoothFade<450>,Rgb<25,200,0>,Rgb<0,0,200>,Rgb<20,20,200>,Rgb<175,0,0>,Rgb<200,25,0>,Rgb<175,75,0>,Rgb<125,0,200>>>>,Gradient<AudioFlicker<ColorChange<TrSmoothFade<450>,Green,Blue,Rgb<25,25,255>,Red,Rgb<255,50,0>,Rgb<200,100,0>,Rgb16<34702,0,65535>>,ColorChange<TrSmoothFade<450>,Rgb<25,200,0>,Rgb<0,0,200>,Rgb<20,20,200>,Rgb<175,0,0>,Rgb<200,25,0>,Rgb<175,75,0>,Rgb<125,0,200>>>,AudioFlicker<ColorChange<TrSmoothFade<450>,Green,Blue,Rgb<25,25,255>,Red,Rgb<255,50,0>,Rgb<200,100,0>,Rgb16<34702,0,65535>>,ColorChange<TrSmoothFade<450>,Rgb<25,200,0>,Rgb<0,0,200>,Rgb<20,20,200>,Rgb<175,0,0>,Rgb<200,25,0>,Rgb<175,75,0>,Rgb<125,0,200>>>,BrownNoiseFlicker<Blue,Strobe<AliceBlue,White,50,1>,100>,AudioFlicker<ColorChange<TrSmoothFade<450>,Green,Blue,Rgb<25,25,255>,Red,Rgb<255,50,0>,Rgb<200,100,0>,Rgb16<34702,0,65535>>,ColorChange<TrSmoothFade<450>,Rgb<25,200,0>,Rgb<0,0,200>,Rgb<20,20,200>,Rgb<175,0,0>,Rgb<200,25,0>,Rgb<175,75,0>,Rgb<125,0,200>>>,AudioFlicker<ColorChange<TrSmoothFade<450>,Green,Blue,Rgb<25,25,255>,Red,Rgb<255,50,0>,Rgb<200,100,0>,Rgb16<34702,0,65535>>,ColorChange<TrSmoothFade<450>,Rgb<25,200,0>,Rgb<0,0,200>,Rgb<20,20,200>,Rgb<175,0,0>,Rgb<200,25,0>,Rgb<175,75,0>,Rgb<125,0,200>>>>,3500>,HumpFlicker<ColorChange<TrSmoothFade<450>,Rgb<100,75,200>,Rgb<100,75,200>,Rgb<200,75,100>,Rgb<200,75,100>,Rgb<100,75,200>,Rgb<100,75,200>,Rgb<100,75,200>>,ColorChange<TrSmoothFade<450>,Rgb<0,255,75>,Rgb<200,75,100>,Rgb<100,75,200>,Rgb<100,75,200>,Rgb<30,30,255>,Rgb<30,30,255>,Blue>,100>>,HumpFlicker<ColorChange<TrSmoothFade<450>,Rgb<100,75,200>,Rgb<100,75,200>,Rgb<200,75,100>,Rgb<200,75,100>,Rgb<100,75,200>,Rgb<100,75,200>,Rgb<100,75,200>>,ColorChange<TrSmoothFade<450>,Rgb<0,255,75>,Rgb<200,75,100>,Rgb<100,75,200>,Rgb<100,75,200>,Rgb<30,30,255>,Rgb<30,30,255>,Blue>,100>,250>,600,400>>(),
+    "ONE" },
+#endif  
+#if 0
+  { "SmthFuzz", "tracks/cantina.wav",
+    StylePtr<Layers<RandomBlink<3000,Red,Black>,InOutTrL<TrWipe<300>,TrWipeIn<500>,Black>>>(),
+    StylePtr<Layers<RandomBlink<3000,Red,Black>,InOutTrL<TrWipe<300>,TrWipeIn<500>,Black>>>(),
     "ONE" },
 #endif  
   { "SmthFuzz", "tracks/cantina.wav",
@@ -223,7 +236,8 @@ BladeConfig blades[] = {
     DimBlade(10.0, SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>())),
 //    DimBlade(5.0, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()),
 //    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
-    WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin2>>(),
+//    WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin2>>(),
+    WS2811BladePtr<30, WS2811_800kHz | WS2811_GRB, blade2Pin, PowerPINS<bladePowerPin2>>(),
     CONFIGARRAY(testing_presets) },
 //  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>>(), CONFIGARRAY(testing_presets) }
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
