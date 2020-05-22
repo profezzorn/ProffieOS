@@ -165,11 +165,7 @@ public:
     f->readVariable(variable);
     if (strcmp(variable, "installed")) return false;
     if (f->Read() != '=') return false;
-    const char* tmp = install_time;
-    while (*tmp) {
-      if (f->Read() != *tmp) return false;
-      tmp++;
-    }
+    if (!f->Expect(install_time)) return false;
     if (f->Read() != '\n') return false;
     pos = f->Tell();
 #endif
