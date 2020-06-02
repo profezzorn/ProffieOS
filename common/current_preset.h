@@ -153,11 +153,7 @@ public:
     return c == '\n' || c == '\r' || c == ' ' || c == '\t';
   }
 
-  bool OpenPresets(FileReader* f, const char* filename) {
-    PathHelper fn(GetSaveDir(), filename);
-    if (!f->Open(fn))
-      return false;
-
+  bool ValidatePresets(FileReader* f) {
     if (f->FileSize() < 4) return false;
     int pos = 0;
 #ifndef KEEP_SAVEFILES_WHEN_PROGRAMMING    
@@ -180,6 +176,20 @@ public:
     f->Seek(pos);
 
     return true;
+  }
+
+  bool OpenPresets(FileReader* f, const char* filename) {
+    PathHelper fn(GetSaveDir(), filename);
+    if (!f->Open(fn)) {
+      STDOUT << "Failed to open: " << filename << "\n";
+      return false;
+    }
+    if (ValidatePresets(f)) {
+      return true;
+    } else {
+      f->Close();
+      return false;
+    }
   }
 
   bool UpdateINI() {
@@ -211,7 +221,11 @@ public:
   bool CreateINI() {
     FileReader f;
     PathHelper ini_fn(GetSaveDir(), "presets.ini");
-    f.Create(ini_fn);
+    LSFS::Remove(ini_fn);
+    if (!f.Create(ini_fn)) {
+      STDOUT << "Failed to open " << ini_fn << " for write\n";
+      return false;
+    }
     f.write_key_value("installed", install_time);
     CurrentPreset tmp;
     for (size_t i = 0; i < current_config->num_presets; i++) {
