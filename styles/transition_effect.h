@@ -85,7 +85,7 @@ void run(BladeBase* blade) {
   
 private:
   size_t pos_ = 0;
-  bool run_[3];
+  bool run_[N];
   TRANSITION transitions_[N];
   OneshotEffectDetector<EFFECT> effect_;
 public:
