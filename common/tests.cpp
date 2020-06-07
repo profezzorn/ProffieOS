@@ -170,10 +170,11 @@ BladeConfig* current_config;
 } while(0)
 
 
-void create_test_presets_ini(const char* filename, int presets, bool finish) {
+void create_test_presets_ini(const char* filename, int presets, bool finish, const char* it) {
   FILE* f = fopen(filename, "wct");
   CHECK(f);
-  fprintf(f, "installed=%s\n", install_time);
+  if (it) 
+    fprintf(f, "installed=%s\n", it);
   for (int i = 0; i < presets; i++) {
     fprintf(f, "new_preset\n");
     fprintf(f, "FONT=font%d\n", i);
@@ -211,7 +212,7 @@ void test_current_preset() {
   CurrentPreset preset;
   // Cleanup
   RemovePresetINI();
-  create_test_presets_ini("presets.ini", 5, true);
+  create_test_presets_ini("presets.ini", 5, true, install_time);
   CHECK(preset.Load(0));
   CHECK_EQ(preset.preset_num, 0);
   CHECK_STREQ(preset.font.get(), "font0");
@@ -236,11 +237,19 @@ void test_current_preset() {
   RemovePresetINI();
 
   // Unterminated presets.ini, do not load.
-  create_test_presets_ini("presets.ini", 5, false);
+  create_test_presets_ini("presets.ini", 5, false, install_time);
+  CHECK(!preset.Load(0));
+
+  // Wrong install time presets.ini, do not load.
+  create_test_presets_ini("presets.ini", 5, false, "yesterday");
+  CHECK(!preset.Load(0));
+
+  // No install time, do not load.
+  create_test_presets_ini("presets.ini", 5, false, NULL);
   CHECK(!preset.Load(0));
 
   // Terminated tmp file, move and load
-  create_test_presets_ini("presets.tmp", 5, true);
+  create_test_presets_ini("presets.tmp", 5, true, install_time);
   CHECK(preset.Load(0));
   CHECK(LSFS::Exists("presets.ini"));
 
@@ -319,9 +328,9 @@ void test_rotate(Color16 c, int angle) {
   G+=V - C;
   B+=V - C;
   Color16 result(R*65535, G*65535, B*65535);
-  CHECK_NEAR(result.r, x.r, 2);
-  CHECK_NEAR(result.g, x.g, 2);
-  CHECK_NEAR(result.b, x.b, 2);
+  CHECK_NEAR(result.r, x.r, 5);
+  CHECK_NEAR(result.g, x.g, 5);
+  CHECK_NEAR(result.b, x.b, 5);
 }
 
 void test_rotate(Color16 c) {
@@ -343,6 +352,7 @@ void test_rotate() {
   test_rotate(Color16(65535,0,0));
   test_rotate(Color16(0,65535,0));
   test_rotate(Color16(0,0,65535));
+  test_rotate(Color16(Color8(0,135,255)));
 }
 
 
