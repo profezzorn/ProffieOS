@@ -182,6 +182,7 @@ void create_test_presets_ini(const char* filename, int presets, bool finish, con
     fprintf(f, "STYLE=style%d:2\n", i);
     fprintf(f, "STYLE=style%d:3\n", i);
     fprintf(f, "NAME=preset%d\n", i);
+    fprintf(f, "VARIATION=%d\n", i);
   }
   if (finish)
     fprintf(f, "END\n");
