@@ -168,22 +168,27 @@ BladeConfig* current_config;
   }						                        \
 } while(0)
 
+bool extras = false;
 
 void create_test_presets_ini(const char* filename, int presets, bool finish, const char* it) {
   FILE* f = fopen(filename, "wct");
   CHECK(f);
   if (it) 
     fprintf(f, "installed=%s\n", it);
+  if (extras) fprintf(f, "unknown_variable=blarg\n");
   for (int i = 0; i < presets; i++) {
     fprintf(f, "new_preset\n");
     fprintf(f, "FONT=font%d\n", i);
     fprintf(f, "TRACK=track%d\n", i);
     fprintf(f, "STYLE=style%d:1\n", i);
+    if (extras) fprintf(f, "unknown_variable=blarg\n");
     fprintf(f, "STYLE=style%d:2\n", i);
     fprintf(f, "STYLE=style%d:3\n", i);
     fprintf(f, "NAME=preset%d\n", i);
     fprintf(f, "VARIATION=%d\n", i);
+    if (extras) fprintf(f, "unknown_variable=blarg\n");
   }
+  if (extras) fprintf(f, "unknown_variable=blarg\n");
   if (finish)
     fprintf(f, "END\n");
   fclose(f);
@@ -599,6 +604,10 @@ int main() {
   color_tests();
   fuse_tests();
   test_rotate();
+  extras = false;
+  test_current_preset();
+  fprintf(stderr, "Extra variables enabled....\n");
+  extras = true;
   test_current_preset();
   byteorder_tests();
   extrapolator_test();

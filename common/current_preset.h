@@ -76,8 +76,7 @@ public:
 	}
 	continue;
       }
-      if (!strcmp(variable, "installed")) continue;
-      if (!preset_count) return false;
+      if (!preset_count) continue;
       if (f->Peek() != '=') continue;
       f->Read();
       f->skipspace();
