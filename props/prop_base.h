@@ -1014,6 +1014,33 @@ public:
       }
       return true;
     }
+    if (!strcmp(cmd, "lblock") || !strcmp(cmd, "lb")) {
+      STDOUT.print("lblock ");
+      if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
+	SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+	SaberBase::DoBeginLockup();
+	STDOUT.println("ON");
+      } else {
+	SaberBase::DoEndLockup();
+	SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+	STDOUT.println("OFF");
+      }
+      return true;
+    }
+    if (!strcmp(cmd, "melt")) {
+      STDOUT.print("melt ");
+      if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
+	SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+	SaberBase::DoBeginLockup();
+	STDOUT.println("ON");
+      } else {
+	SaberBase::DoEndLockup();
+	SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+	STDOUT.println("OFF");
+      }
+      return true;
+    }
+
 #ifdef ENABLE_AUDIO
 
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
@@ -1302,6 +1329,10 @@ public:
     STDOUT.println(" force - trigger a force push");
     STDOUT.println(" blast - trigger a blast");
     STDOUT.println(" lock - begin/end lockup");
+    STDOUT.println(" stab - trigger a stab");
+    STDOUT.println(" lock - begin/end lockup");
+    STDOUT.println(" lblock/lb - begin/end lightning block");
+    STDOUT.println(" melt - begin/end melt");
 #ifdef ENABLE_AUDIO
     STDOUT.println(" pwd - print current directory");
     STDOUT.println(" cd directory - change directory, and sound font");
