@@ -42,9 +42,8 @@ public:
   static void DoHFLoop() {}
 };
 
-char* itoa( int value, char *string, int radix )
+char* itoa( int value, char *ret, int radix )
 {
-  static char ret[33];
   sprintf(ret, "%d", value);
   return ret;
 }
