@@ -198,9 +198,9 @@ public:
     if (OpenPresets(&f2, "presets.tmp")) {
       uint8_t buf[512];
       // Found valid tmp file
+      f2.Seek(0);
       LSFS::Remove(ini_fn);
       f.Create(ini_fn);
-      f.write_key_value("installed", install_time);
       while (f2.Available()) {
 	int to_copy = std::min<int>(f2.Available(), sizeof(buf));
 	if (f2.Read(buf, to_copy) != to_copy ||
