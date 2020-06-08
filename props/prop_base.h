@@ -1328,7 +1328,6 @@ public:
     STDOUT.println(" on/off - turn saber on/off");
     STDOUT.println(" force - trigger a force push");
     STDOUT.println(" blast - trigger a blast");
-    STDOUT.println(" lock - begin/end lockup");
     STDOUT.println(" stab - trigger a stab");
     STDOUT.println(" lock - begin/end lockup");
     STDOUT.println(" lblock/lb - begin/end lightning block");
