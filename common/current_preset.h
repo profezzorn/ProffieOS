@@ -262,12 +262,7 @@ public:
     }
   }
 
-  // position = 0 -> first spot
-  // position = N -> last
-  // position = -1 -> delete
-  // To duplicate, set preset_num to -1
-  void SaveAt(int position) {
-    LOCK_SD(true);
+  void SaveAtLocked(int position) {
     FileReader f, out;
     if (!OpenPresets(&f, "presets.ini")) {
       if (!UpdateINI()) CreateINI();
@@ -301,6 +296,15 @@ public:
     out.Close();
     UpdateINI();
     preset_num = position;
+  }
+
+  // position = 0 -> first spot
+  // position = N -> last
+  // position = -1 -> delete
+  // To duplicate, set preset_num to -1
+  void SaveAt(int position) {
+    LOCK_SD(true);
+    SaveAtLocked(position);
     LOCK_SD(false);
   }
 
