@@ -35,7 +35,7 @@ public:
 
     float fade_delta = delta / 1000.0 / fade_time_millis;
     if (!base->is_on()) fade_delta = - fade_delta;
-    fade_ = std::max<float>(0.0, std::min(1.0, fade_ + fade_delta));
+    fade_ = std::max<float>(0.0f, std::min(1.0f, fade_ + fade_delta));
 
     float current_rpm = rpm * (1 - fade_) + on_rpm * fade_;
     float current_percentage =

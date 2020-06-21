@@ -145,9 +145,9 @@ public:
       hum_player_.Free();
       next_hum_player_->set_volume_now(0);
       next_hum_player_->set_fade_time(0.003);
-      next_hum_player_->set_volume(font_config.volEff / 16.0);
+      next_hum_player_->set_volume(font_config.volEff / 16.0f);
     } else {
-      next_hum_player_->set_volume_now(font_config.volEff / 16.0);
+      next_hum_player_->set_volume_now(font_config.volEff / 16.0f);
     }
     hum_player_ = next_hum_player_;
     next_hum_player_.Free();
@@ -161,7 +161,7 @@ public:
     if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
     RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
     if (player) {
-      player->set_volume_now(font_config.volEff / 16.0);
+      player->set_volume_now(font_config.volEff / 16.0f);
       player->PlayOnce(f);
       current_effect_length_ = player->length();
     }
