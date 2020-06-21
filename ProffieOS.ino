@@ -31,6 +31,7 @@
 // #define CONFIG_FILE "config/toy_saber_config.h"
 // #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
+// #define CONFIG_FILE "config/teensy_audio_shield_audiofx.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -127,7 +128,11 @@
 #ifdef TEENSYDUINO
 #include <DMAChannel.h>
 #include <usb_dev.h>
+
+#ifndef USE_TEENSY4
 #include <kinetis.h>
+#endif
+
 #include <i2c_t3.h>
 #include <SD.h>
 
@@ -548,7 +553,13 @@ class NoLED;
 #include "styles/length_finder.h"
 
 BladeConfig* current_config = nullptr;
-class BladeBase* GetPrimaryBlade() { return current_config->blade1; }
+class BladeBase* GetPrimaryBlade() {
+#if NUM_BLADES == 0
+  return nullptr;
+#else  
+  return current_config->blade1;
+#endif  
+}
 const char* GetSaveDir() {
   if (!current_config) return "";
   if (!current_config->save_dir) return "";
@@ -1586,7 +1597,10 @@ void setup() {
 #define PROFFIEOS_STARTUP_DELAY 1000
 #endif
   while (millis() - now < PROFFIEOS_STARTUP_DELAY) {
+#ifndef NO_BATTERY_MONITOR  
     srand((rand() * 917823) ^ LSAnalogRead(batteryLevelPin));
+#endif
+
 #ifdef BLADE_DETECT_PIN
     // Figure out if blade is connected or not.
     // Note that if PROFFIEOS_STARTUP_DELAY is smaller than
