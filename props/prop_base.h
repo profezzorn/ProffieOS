@@ -23,7 +23,11 @@ class PropBase : CommandParser, Looper, protected SaberBase {
 public:
   PropBase() : CommandParser() {}
   BladeStyle* current_style(){
+#if NUM_BLADES == 0
+    return nullptr;
+#else    
     return current_config->blade1->current_style();
+#endif    
   }
 
   bool NeedsPower() {
@@ -394,12 +398,16 @@ public:
 #endif
     return;
 
-   bad_blade:
+#if NUM_BLADES != 0    
+
+  bad_blade:
     STDOUT.println("BAD BLADE");
 #ifdef ENABLE_AUDIO
     talkie.Say(talkie_error_in_15, 15);
     talkie.Say(talkie_blade_array_15, 15);
 #endif
+
+#endif    
   }
 
   void ResumePreset() {

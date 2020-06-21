@@ -5,7 +5,9 @@
 
 #define CONFIGARRAY(X) X, NELEM(X)
 
-#if NUM_BLADES == 1
+#if NUM_BLADES == 0
+#define ONCEPERBLADE(F)
+#elif NUM_BLADES == 1
 #define ONCEPERBLADE(F) F(1)
 #elif NUM_BLADES == 2
 #define ONCEPERBLADE(F) F(1) F(2)
