@@ -223,6 +223,10 @@ class Effect {
   void Select(int n) {
     selected_ = n;
   }
+  void SelectNext() {
+    selected_++;
+    if (selected_ == (int)files_found()) selected_ = 0;
+  }
 
   Effect* GetFollowing() const {
     return following_;
