@@ -65,10 +65,12 @@ public:
       } else if (hold_) {
 	PlayLoop(&hold_);
       }
+      return true;
     }
     if (event == EVENT_RELEASED) {
       if (hold_) {
 	Stop();
+	return true;
       }
     }
     return false;
