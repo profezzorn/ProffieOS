@@ -39,6 +39,7 @@ public:
     if (!sgtl5000_enabled) {
       sgtl5000_1.enable();
       sgtl5000_1.volume(0.5);
+      sgtl5000_enabled = true;
     }
 #else    
     if (!digitalRead(amplifierPin)) {
@@ -69,8 +70,10 @@ protected:
       STDOUT.println("Amplifier off.");
       // digitalWrite(amplifierPin, LOW); // turn the amplifier off
 #ifdef AUDIO_CONTROL_SGTL5000
-      sgtl5000_1.volume(0.0);
-      sgtl5000_1.disable();
+      // Disable does nothing, so this is pointless.
+      // sgtl5000_1.volume(0.0);
+      // sgtl5000_1.disable();
+      // sgtl5000_enabled = false;
 #else
       pinMode(amplifierPin, INPUT_ANALOG); // Let the pull-down do the work
 #endif      
