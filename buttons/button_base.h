@@ -84,16 +84,16 @@ protected:
       Send(EVENT_PRESSED);
       push_millis_ = millis();
       current_modifiers |= button_;
-      while (DebouncedRead()) {
+      while (DebouncedRead() && (current_modifiers & button_)) {
         if (millis() - push_millis_ > BUTTON_HELD_TIMEOUT) {
           Send(EVENT_HELD);
-          while (DebouncedRead()) {
+          while (DebouncedRead() && (current_modifiers & button_)) {
             if (millis() - push_millis_ > BUTTON_HELD_MEDIUM_TIMEOUT){
               Send(EVENT_HELD_MEDIUM);
-              while (DebouncedRead()) {
+	      while (DebouncedRead() && (current_modifiers & button_)) {
                 if (millis() - push_millis_ > BUTTON_HELD_LONG_TIMEOUT) {
                   Send(EVENT_HELD_LONG);
-                  while (DebouncedRead()) YIELD();
+		  while (DebouncedRead() && (current_modifiers & button_)) YIELD();
                 }
                 YIELD();
               }
@@ -104,7 +104,9 @@ protected:
         YIELD();
       }
       while (DebouncedRead()) YIELD();
-      Send(EVENT_RELEASED);
+      if (current_modifiers & button_) {
+	Send(EVENT_RELEASED);
+      }
       if (current_modifiers & button_) {
         current_modifiers &=~ button_;
         if (millis() - push_millis_ < BUTTON_SHORT_CLICK_TIMEOUT) {
