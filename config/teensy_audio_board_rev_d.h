@@ -27,17 +27,18 @@ enum SaberPins {
   bladePin = -1,
   bladeIdentifyPin = -1,
 
-
+  // The first 8 pins are the same for Teensy 3.x and Teensy 4.x
   trigger1Pin = 0,
   trigger2Pin = 1,
   trigger3Pin = 2,
   trigger4Pin = 3,
   trigger5Pin = 4,
   trigger6Pin = 5,
-  trigger7Pin = 9,
-  trigger8Pin = 14,
-  trigger9Pin = 16,
-  trigger10Pin = 17,
+  trigger7Pin = 16,
+  trigger8Pin = 17,
+  
+  trigger9Pin = 9,
+  trigger10Pin = 14,
 };
 
 #ifndef TEENSYDUINO
