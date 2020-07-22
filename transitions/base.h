@@ -1,7 +1,9 @@
 #ifndef TRANSITIONS_BASE_H
 #define TRANSITIONS_BASE_H
 
-#define AUTO_RETURN(X) -> decltype(X) { return (X); }
+#include <type_traits>
+
+#define AUTO_RETURN(X) -> typename std::remove_const<typename std::remove_reference<decltype(X)>::type>::type { return (X); }
 
 template<class MILLIS>
 class TransitionBaseX {

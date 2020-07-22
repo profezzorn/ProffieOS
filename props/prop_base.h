@@ -414,6 +414,7 @@ public:
     FileReader out;
     LSFS::Remove(fn);
     out.Create(fn);
+    out.write_key_value("installed", install_time);
     out.write_key_value("preset", preset);
     out.write_key_value("end", "1");
     out.Close();
@@ -441,6 +442,7 @@ public:
     FileReader out;
     LSFS::Remove(filename);
     out.Create(filename);
+    out.write_key_value("installed", install_time);
 #ifdef ENABLE_AUDIO    
     out.write_key_value("volume", muted_volume_ ? muted_volume_ : dynamic_mixer.get_volume());
 #endif    
@@ -1012,6 +1014,33 @@ public:
       }
       return true;
     }
+    if (!strcmp(cmd, "lblock") || !strcmp(cmd, "lb")) {
+      STDOUT.print("lblock ");
+      if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
+	SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+	SaberBase::DoBeginLockup();
+	STDOUT.println("ON");
+      } else {
+	SaberBase::DoEndLockup();
+	SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+	STDOUT.println("OFF");
+      }
+      return true;
+    }
+    if (!strcmp(cmd, "melt")) {
+      STDOUT.print("melt ");
+      if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
+	SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+	SaberBase::DoBeginLockup();
+	STDOUT.println("ON");
+      } else {
+	SaberBase::DoEndLockup();
+	SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+	STDOUT.println("OFF");
+      }
+      return true;
+    }
+
 #ifdef ENABLE_AUDIO
 
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
@@ -1057,7 +1086,8 @@ public:
       if (track_player_) {
         STDOUT.print("Playing ");
         STDOUT.println(arg);
-        track_player_->Play(arg);
+	if (!track_player_->PlayInCurrentDir(arg))
+	  track_player_->Play(arg);
       } else {
         STDOUT.println("No available WAV players.");
       }
@@ -1298,7 +1328,10 @@ public:
     STDOUT.println(" on/off - turn saber on/off");
     STDOUT.println(" force - trigger a force push");
     STDOUT.println(" blast - trigger a blast");
+    STDOUT.println(" stab - trigger a stab");
     STDOUT.println(" lock - begin/end lockup");
+    STDOUT.println(" lblock/lb - begin/end lightning block");
+    STDOUT.println(" melt - begin/end melt");
 #ifdef ENABLE_AUDIO
     STDOUT.println(" pwd - print current directory");
     STDOUT.println(" cd directory - change directory, and sound font");

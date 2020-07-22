@@ -55,7 +55,7 @@ public:
   bool Read(FileReader* f) {
     int preset_count = 0;
     int current_style = 0;
-    if (f->Tell() == 0) preset_num = -1;
+    if (f->Tell() <= sizeof(install_time) + 11) preset_num = -1;
     preset_type = PRESET_DISK;
     
     for (; f->Available(); f->skipline()) {
@@ -76,7 +76,7 @@ public:
 	}
 	continue;
       }
-      if (!preset_count) return false;
+      if (!preset_count) continue;
       if (f->Peek() != '=') continue;
       f->Read();
       f->skipspace();
@@ -116,6 +116,7 @@ public:
 #define SET_PRESET_STYLE(N) if (current_style == N) { current_style##N = tmp; tmp = 0; }
 	ONCEPERBLADE(SET_PRESET_STYLE);
 	if (tmp) free(tmp);
+	continue;
       }
     }
     if (preset_count == 1) {
@@ -151,12 +152,19 @@ public:
     return c == '\n' || c == '\r' || c == ' ' || c == '\t';
   }
 
-  bool OpenPresets(FileReader* f, const char* filename) {
-    PathHelper fn(GetSaveDir(), filename);
-    if (!f->Open(fn))
-      return false;
-
+  bool ValidatePresets(FileReader* f) {
     if (f->FileSize() < 4) return false;
+    int pos = 0;
+#ifndef KEEP_SAVEFILES_WHEN_PROGRAMMING    
+    char variable[33];
+    f->readVariable(variable);
+    if (strcmp(variable, "installed")) return false;
+    if (f->Read() != '=') return false;
+    if (!f->Expect(install_time)) return false;
+    if (f->Read() != '\n') return false;
+    pos = f->Tell();
+#endif
+
     int p = f->FileSize() - 1;
     while (p > 0) { f->Seek(p); if (!isSpace(f->Read())) break; p--; }
     f->Seek(p - 3);
@@ -164,9 +172,23 @@ public:
     if (toLower(f->Read()) != 'e') return false;
     if (toLower(f->Read()) != 'n') return false;
     if (toLower(f->Read()) != 'd') return false;
-    f->Seek(0);
+    f->Seek(pos);
 
     return true;
+  }
+
+  bool OpenPresets(FileReader* f, const char* filename) {
+    PathHelper fn(GetSaveDir(), filename);
+    if (!f->Open(fn)) {
+      STDOUT << "Failed to open: " << filename << "\n";
+      return false;
+    }
+    if (ValidatePresets(f)) {
+      return true;
+    } else {
+      f->Close();
+      return false;
+    }
   }
 
   bool UpdateINI() {
@@ -175,6 +197,7 @@ public:
     if (OpenPresets(&f2, "presets.tmp")) {
       uint8_t buf[512];
       // Found valid tmp file
+      f2.Seek(0);
       LSFS::Remove(ini_fn);
       f.Create(ini_fn);
       while (f2.Available()) {
@@ -197,7 +220,12 @@ public:
   bool CreateINI() {
     FileReader f;
     PathHelper ini_fn(GetSaveDir(), "presets.ini");
-    f.Create(ini_fn);
+    LSFS::Remove(ini_fn);
+    if (!f.Create(ini_fn)) {
+      STDOUT << "Failed to open " << ini_fn << " for write\n";
+      return false;
+    }
+    f.write_key_value("installed", install_time);
     CurrentPreset tmp;
     for (size_t i = 0; i < current_config->num_presets; i++) {
       tmp.Set(i);
@@ -234,12 +262,7 @@ public:
     }
   }
 
-  // position = 0 -> first spot
-  // position = N -> last
-  // position = -1 -> delete
-  // To duplicate, set preset_num to -1
-  void SaveAt(int position) {
-    LOCK_SD(true);
+  void SaveAtLocked(int position) {
     FileReader f, out;
     if (!OpenPresets(&f, "presets.ini")) {
       if (!UpdateINI()) CreateINI();
@@ -251,6 +274,7 @@ public:
     PathHelper tmp_fn(GetSaveDir(), "presets.tmp");
     LSFS::Remove(tmp_fn);
     out.Create(tmp_fn);
+    out.write_key_value("installed", install_time);
     CurrentPreset tmp;
     int opos = 0;
     if (position == 0) {
@@ -272,6 +296,15 @@ public:
     out.Close();
     UpdateINI();
     preset_num = position;
+  }
+
+  // position = 0 -> first spot
+  // position = N -> last
+  // position = -1 -> delete
+  // To duplicate, set preset_num to -1
+  void SaveAt(int position) {
+    LOCK_SD(true);
+    SaveAtLocked(position);
     LOCK_SD(false);
   }
 
