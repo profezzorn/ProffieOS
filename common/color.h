@@ -83,6 +83,11 @@ class Color8 {
     return byteorder <= 0xfff ? 3 : 4;
   }
 
+  static constexpr int inline_num_bytes(int byteorder) __attribute__((always_inline)) {
+    return byteorder <= 0xfff ? 3 : 4;
+  }
+
+
   uint8_t getByte(int byteorder, int byte) {
     switch (byteorder >> (byte * 4) & 0x7) {
       default: return r;
@@ -94,7 +99,7 @@ class Color8 {
       case 7: return b - std::min(r, std::min(g, b));
     }
   }
-
+  
   // RGB combine X = X
   static Byteorder combine_byteorder(int byteorder1, int byteorder2) {
     int ret = 0;
@@ -139,6 +144,27 @@ class Color8 {
 
   uint8_t r, g, b;
 };
+
+template<int N> inline uint8_t GETBYTEN(const Color8& rgb)  __attribute__((always_inline));
+template<int N> inline uint8_t GETBYTEN(const Color8& rgb) { return rgb.r; }
+template<> inline uint8_t GETBYTEN<2>(const Color8& rgb)  __attribute__((always_inline));
+template<> inline uint8_t GETBYTEN<2>(const Color8& rgb) { return rgb.g; }
+template<> inline uint8_t GETBYTEN<3>(const Color8& rgb)  __attribute__((always_inline));
+template<> inline uint8_t GETBYTEN<3>(const Color8& rgb) { return rgb.b; }
+template<> inline uint8_t GETBYTEN<4>(const Color8& rgb)  __attribute__((always_inline));
+template<> inline uint8_t GETBYTEN<4>(const Color8& rgb) { return std::min(rgb.r, std::min(rgb.g, rgb.b)); }
+template<> inline uint8_t GETBYTEN<5>(const Color8& rgb)  __attribute__((always_inline));
+template<> inline uint8_t GETBYTEN<5>(const Color8& rgb) { return rgb.r - GETBYTEN<4>(rgb); }
+template<> inline uint8_t GETBYTEN<6>(const Color8& rgb)  __attribute__((always_inline));
+template<> inline uint8_t GETBYTEN<6>(const Color8& rgb) { return rgb.g - GETBYTEN<4>(rgb); }
+template<> inline uint8_t GETBYTEN<7>(const Color8& rgb)  __attribute__((always_inline));
+template<> inline uint8_t GETBYTEN<7>(const Color8& rgb) { return rgb.b - GETBYTEN<4>(rgb); }
+
+template<int BYTEORDER, int byte> static inline uint8_t GETBYTE(const Color8& rgb) __attribute__((always_inline));
+template<int BYTEORDER, int byte> static inline uint8_t GETBYTE(const Color8& rgb) {
+  return GETBYTEN<((BYTEORDER >> (byte * 4)) & 0x7)>(rgb);
+}
+
 
 static int8_t color16_dither_matrix[4][4] = {
   { -127, 111,  -76,  94 },
@@ -189,12 +215,24 @@ class Color16 {
   }
 
   Color8 dither(int n) const {
+#if (__CORTEX_M - 0 >= 0x04U)  /* only for Cortex-M4 and above */
+    if (n < 0) {
+      return Color8(__UQSUB16(r, -n) >> 8,
+		    __UQSUB16(g, -n) >> 8,
+		    __UQSUB16(b, -n) >> 8);
+    } else {
+      return Color8(__UQADD16(r, n) >> 8,
+		    __UQADD16(g, n) >> 8,
+		    __UQADD16(b, n) >> 8);
+    }
+#else
     return Color8(clampi32((r+n) >> 8, 0, 255),
                   clampi32((g+n) >> 8, 0, 255),
                   clampi32((b+n) >> 8, 0, 255));
+#endif    
   }
 
-  Color8 dither(int x, int y) const {
+  Color8 dither(int x, int y) const  {
     return dither(color16_dither_matrix[x & 3][y & 3]);
   }
 
