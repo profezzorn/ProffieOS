@@ -5,43 +5,51 @@
 
 #ifdef ENABLE_WS2811
 
-// Common
-DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4 + 1];
+Color16 color_buffer[maxLedsPerStrip];
+BladeBase* current_blade = NULL;
+
+class WS2811PIN {
+public:
+  virtual bool IsReadyForBeginFrame() = 0;
+  virtual void BeginFrame() = 0;
+  virtual bool IsReadyForEndFrame() = 0;
+  virtual void EndFrame() = 0;
+  virtual int num_leds() const = 0;
+  virtual Color8::Byteorder get_byteorder() const = 0;
+  virtual int pin() = 0; // FIXME: There may be more than one!! Need activate/deactivate instead
+};
 
 #if VERSION_MAJOR >= 4
+
+// Common, size adjusted to ~1000 interrupts per second.
+DMAMEM uint32_t displayMemory[400];
 #include "stm32l4_ws2811.h"
 #define DefaultPinClass WS2811Pin
+
 #else
+
+// Common
+DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4 + 1];
 #include "monopodws.h"
 #include "ws2811_serial.h"
 #define DefaultPinClass MonopodWSPin
 #endif
 #include "spiled_pin.h"
 
-Color16 color_buffer[maxLedsPerStrip];
-BladeBase* current_blade = NULL;
-
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
-template<class WS2811PIN>
 class WS2811_Blade : public AbstractBlade, CommandParser, Looper {
 public:
-  WS2811_Blade(int num_leds,
-	       int data_pin,
-	       Color8::Byteorder byteorder,
-	       int frequency,
-	       int reset_us,
-	       int t0h_us,
-	       int t1h_us,
-	       PowerPinInterface* power,
-	       uint32_t poweroff_delay_ms) :
+WS2811_Blade(WS2811PIN* pin,
+             PowerPinInterface* power,
+             uint32_t poweroff_delay_ms) :
     AbstractBlade(),
     CommandParser(NOLINK),
     Looper(NOLINK),
     poweroff_delay_ms_(poweroff_delay_ms),
     power_(power),
-    pin_(data_pin, num_leds, byteorder, frequency, reset_us, t0h_us, t1h_us) {
+    pin_(pin) {
     }
   const char* name() override { return "WS2811_Blade"; }
 
@@ -50,26 +58,26 @@ public:
     if (!powered_ && on) {
       power_->Init();
       TRACE("Power on");
-      pinMode(pin_.pin(), OUTPUT);
-      pin_.BeginFrame();
-      for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, Color8());
-      while (!pin_.IsReadyForEndFrame());
+      pinMode(pin_->pin(), OUTPUT);
+      pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) color_buffer[i] = Color16();
+      while (!pin_->IsReadyForEndFrame());
       power_->Power(on);
-      pin_.EndFrame();
-      pin_.BeginFrame();
-      pin_.EndFrame();
-      pin_.BeginFrame();
-      pin_.EndFrame();
+      pin_->EndFrame();
+      pin_->BeginFrame();
+      pin_->EndFrame();
+      pin_->BeginFrame();
+      pin_->EndFrame();
       current_blade = NULL;
     } else if (powered_ && !on) {
       TRACE("Power off");
-      pin_.BeginFrame();
-      for (int i = 0; i < pin_.num_leds(); i++) pin_.Set(i, Color8());
-      while (!pin_.IsReadyForEndFrame());
-      pin_.EndFrame();
-      while (!pin_.IsReadyForEndFrame());
+      pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) color_buffer[i] = Color16();
+      while (!pin_->IsReadyForEndFrame());
+      pin_->EndFrame();
+      while (!pin_->IsReadyForEndFrame());
       power_->Power(on);
-      pinMode(pin_.pin(), INPUT_ANALOG);
+      pinMode(pin_->pin(), INPUT_ANALOG);
       power_->DeInit();
       current_blade = NULL;
     }
@@ -80,7 +88,7 @@ public:
   void Activate() override {
     TRACE("Activate");
     STDOUT.print("WS2811 Blade with ");
-    STDOUT.print(pin_.num_leds());
+    STDOUT.print(pin_->num_leds());
     STDOUT.println(" leds.");
     run_ = true;
     CommandParser::Link();
@@ -97,10 +105,10 @@ public:
   }
   // BladeBase implementation
   int num_leds() const override {
-    return pin_.num_leds();
+    return pin_->num_leds();
   }
   Color8::Byteorder get_byteorder() const {
-    return pin_.get_byteorder();
+    return pin_->get_byteorder();
   }
   bool is_on() const override {
     return on_;
@@ -208,6 +216,10 @@ protected:
 	continue;
       }
 
+      // Update pixels
+      while (!pin_->IsReadyForBeginFrame()) BLADE_YIELD();
+      pin_->BeginFrame();
+      
       allow_disable_ = false;
       current_style_->run(this);
 
@@ -216,15 +228,8 @@ protected:
 	Power(true);
       }
 
-      // Update pixels
-      while (!pin_.IsReadyForBeginFrame()) BLADE_YIELD();
-      pin_.BeginFrame();
-      for (int i = 0; i < pin_.num_leds(); i++) {
-	pin_.Set(i, color_buffer[i]);
-	if (!(i & 0x1f)) Looper::DoHFLoop();
-      }
-      while (!pin_.IsReadyForEndFrame()) BLADE_YIELD();
-      pin_.EndFrame();
+      while (!pin_->IsReadyForEndFrame()) BLADE_YIELD();
+      pin_->EndFrame();
       loop_counter_.Update();
 
       if (powered_ && allow_disable_) {
@@ -251,7 +256,7 @@ private:
   LoopCounter loop_counter_;
   StateMachineState state_machine_;
   PowerPinInterface* power_;
-  WS2811PIN pin_;
+  WS2811PIN* pin_;
 };
 
 
@@ -266,20 +271,22 @@ private:
 #define WS2811_580kHz 0x30      // PL9823
 #define WS2811_ACTUALLY_800kHz 0x40      // Normally we use 740kHz instead of 800, this uses 800.
 
+constexpr Color8::Byteorder ByteOrderFromFlags(int CONFIG) {
+  return
+    (CONFIG & 0xf) == WS2811_RGB ? Color8::RGB :
+    (CONFIG & 0xf) == WS2811_RBG ? Color8::RBG :
+    (CONFIG & 0xf) == WS2811_GRB ? Color8::GRB :
+    (CONFIG & 0xf) == WS2811_GBR ? Color8::GBR :
+    Color8::BGR;
+}
+
 template<int LEDS, int CONFIG, int DATA_PIN = bladePin, class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>,
-          class PinClass = DefaultPinClass,
-  int reset_us=300, int t1h=294, int t0h=892,
+  template<int, Color8::Byteorder> class PinClass = DefaultPinClass,
+  int reset_us=300, int t0h=294, int t1h=892,
   int POWER_OFF_DELAY_MS=0>
 class BladeBase *WS2811BladePtr() {
   static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
   static POWER_PINS power_pins;
-  typename Color8::Byteorder byteorder = Color8::BGR;
-  switch (CONFIG & 0xf) {
-    case WS2811_RGB: byteorder = Color8::RGB; break;
-    case WS2811_RBG: byteorder = Color8::RBG; break;
-    case WS2811_GRB: byteorder = Color8::GRB; break;
-    case WS2811_GBR: byteorder = Color8::GBR; break;
-  }
 
   int frequency = 800000;
   switch (CONFIG & 0xf0) {
@@ -297,11 +304,9 @@ class BladeBase *WS2811BladePtr() {
       frequency = 800000;
       break;
   }
-    
-  static WS2811_Blade<PinClass> blade(LEDS, DATA_PIN, byteorder,
-				      frequency, reset_us,
-				      t1h, t0h, &power_pins,
-				      POWER_OFF_DELAY_MS);
+
+  static PinClass<DATA_PIN, ByteOrderFromFlags(CONFIG)> pin(LEDS, frequency, reset_us, t0h, t1h);
+  static WS2811_Blade blade(&pin, &power_pins, POWER_OFF_DELAY_MS);
   return &blade;
 }
 
@@ -309,15 +314,13 @@ template<int LEDS,
           int DATA_PIN = bladePin,
           Color8::Byteorder byteorder,
           class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>,
-          class PinClass = DefaultPinClass,
-          int frequency=800000, int reset_us=300, int t1h=294, int t0h=892,
+          template<int, Color8::Byteorder> class PinClass = DefaultPinClass,
+          int frequency=800000, int reset_us=300, int t0h=294, int t1h=892,
           int POWER_OFF_DELAY_MS = 0>
 class BladeBase *WS281XBladePtr() {
   static POWER_PINS power_pins;
-  static WS2811_Blade<PinClass> blade(LEDS, DATA_PIN, byteorder,
-				      frequency, reset_us,
-				      t1h, t0h, &power_pins,
-				      POWER_OFF_DELAY_MS);
+  static PinClass<DATA_PIN, byteorder> pin(LEDS, frequency, reset_us, t0h, t1h);
+  static WS2811_Blade blade(&pin, &power_pins, POWER_OFF_DELAY_MS);
   return &blade;
 }
 
