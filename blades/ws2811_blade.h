@@ -16,7 +16,7 @@ public:
   virtual void EndFrame() = 0;
   virtual int num_leds() const = 0;
   virtual Color8::Byteorder get_byteorder() const = 0;
-  virtual int pin() = 0; // FIXME: There may be more than one!! Need activate/deactivate instead
+  virtual void Enable(bool enable) = 0;
 };
 
 #if VERSION_MAJOR >= 4
@@ -58,7 +58,7 @@ WS2811_Blade(WS2811PIN* pin,
     if (!powered_ && on) {
       power_->Init();
       TRACE("Power on");
-      pinMode(pin_->pin(), OUTPUT);
+      pin_->Enable(true);
       pin_->BeginFrame();
       for (int i = 0; i < pin_->num_leds(); i++) color_buffer[i] = Color16();
       while (!pin_->IsReadyForEndFrame());
@@ -77,7 +77,7 @@ WS2811_Blade(WS2811PIN* pin,
       pin_->EndFrame();
       while (!pin_->IsReadyForEndFrame());
       power_->Power(on);
-      pinMode(pin_->pin(), INPUT_ANALOG);
+      pin_->Enable(false);
       power_->DeInit();
       current_blade = NULL;
     }
@@ -280,32 +280,22 @@ constexpr Color8::Byteorder ByteOrderFromFlags(int CONFIG) {
     Color8::BGR;
 }
 
+constexpr int FrequencyFromFlags(int CONFIG) {
+  return
+    (CONFIG & 0xf0) == WS2811_800kHz ? 740000 :
+    (CONFIG & 0xf0) == WS2811_400kHz ? 400000 :
+    (CONFIG & 0xf0) == WS2811_580kHz ? 580000 :
+    800000;
+}
+
 template<int LEDS, int CONFIG, int DATA_PIN = bladePin, class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>,
-  template<int, Color8::Byteorder> class PinClass = DefaultPinClass,
+  template<int, int, Color8::Byteorder, int, int, int, int> class PinClass = DefaultPinClass,
   int reset_us=300, int t0h=294, int t1h=892,
   int POWER_OFF_DELAY_MS=0>
 class BladeBase *WS2811BladePtr() {
   static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
   static POWER_PINS power_pins;
-
-  int frequency = 800000;
-  switch (CONFIG & 0xf0) {
-    case WS2811_800kHz:
-      frequency = 740000;
-      break;
-    case WS2811_400kHz:
-      frequency = 400000;
-      break;
-    case WS2811_580kHz:
-      frequency = 580000;
-      break;
-    case WS2813_800kHz:
-    case WS2811_ACTUALLY_800kHz:
-      frequency = 800000;
-      break;
-  }
-
-  static PinClass<DATA_PIN, ByteOrderFromFlags(CONFIG)> pin(LEDS, frequency, reset_us, t0h, t1h);
+  static PinClass<LEDS, DATA_PIN, ByteOrderFromFlags(CONFIG), FrequencyFromFlags(CONFIG), reset_us, t0h, t1h> pin;
   static WS2811_Blade blade(&pin, &power_pins, POWER_OFF_DELAY_MS);
   return &blade;
 }
@@ -314,15 +304,31 @@ template<int LEDS,
           int DATA_PIN = bladePin,
           Color8::Byteorder byteorder,
           class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>,
-          template<int, Color8::Byteorder> class PinClass = DefaultPinClass,
+          template<int, int, Color8::Byteorder, int, int, int, int> class PinClass = DefaultPinClass,
           int frequency=800000, int reset_us=300, int t0h=294, int t1h=892,
           int POWER_OFF_DELAY_MS = 0>
 class BladeBase *WS281XBladePtr() {
   static POWER_PINS power_pins;
-  static PinClass<DATA_PIN, byteorder> pin(LEDS, frequency, reset_us, t0h, t1h);
+  static PinClass<LEDS, DATA_PIN, byteorder, frequency, reset_us, t0h, t1h> pin;
   static WS2811_Blade blade(&pin, &power_pins, POWER_OFF_DELAY_MS);
   return &blade;
 }
+
+template<int LEDS,
+         int DATA_PIN = bladePin,
+         int CLOCK_PIN,
+         Color8::Byteorder byteorder,
+         class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>,
+         int max_frequency=800000,
+         template<int, int, int, Color8::Byteorder, int> class PinClass = SpiLedPin,
+         int POWER_OFF_DELAY_MS = 0>
+class BladeBase *SPIBladePtr() {
+  static POWER_PINS power_pins;
+  static PinClass<LEDS, CLOCK_PIN, DATA_PIN, byteorder, max_frequency> pin;
+  static WS2811_Blade blade(&pin, &power_pins, POWER_OFF_DELAY_MS);
+  return &blade;
+}
+
 
 #endif  // ENABLE_WS2811
 

@@ -483,8 +483,8 @@ public:
   // Note, t0h_us/t1h_us are out of 1250 us, even if the frequency is
   // not 800kHz. If you're reading the datasheet for a 400Hz strip, you
   // would need to divide by two.
-  WS2811PinBase(int8_t pin,
-		int num_leds,
+  WS2811PinBase(int num_leds,
+		int8_t pin,
 		int frequency,
 		int reset_us,
 		int t0h_us = 294,
@@ -546,7 +546,9 @@ public:
 
   int num_leds() const override { return num_leds_; }
   Color8::Byteorder get_byteorder() const override { return BYTEORDER; }
-  int pin() override { return pin_; }
+  void Enable(bool on) override {
+    pinMode(pin_, on ? OUTPUT : INPUT_ANALOG);
+  }
 
 private:
   void done_callback() override {
@@ -619,15 +621,10 @@ private:
   volatile uint32_t done_time_us_ = 0;
 };
 
-template<int PIN, Color8::Byteorder BYTEORDER>
+template<int LEDS, int PIN, Color8::Byteorder BYTEORDER, int frequency=800000, int reset_us=300, int t1h=294, int t0h=892>
 class WS2811Pin : public WS2811PinBase<BYTEORDER> {
 public:
-  WS2811Pin(int num_leds,
-	    int frequency,
-	    int reset_us,
-	    int t0h_us = 294,
-	    int t1h_us = 862) : WS2811PinBase<BYTEORDER>(PIN, num_leds, frequency, reset_us, t0h_us, t1h_us) {
-  }
+  WS2811Pin() : WS2811PinBase<BYTEORDER>(LEDS, PIN, frequency, reset_us, t0h, t1h) {}
 };
 
 #endif

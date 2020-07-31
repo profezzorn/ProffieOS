@@ -386,7 +386,7 @@ private:
       dest = (int16_t *)dac_dma_buffer;
       end = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*CHANNELS];
     }
-#ifdef TEENSYDUINO
+#ifdef __IMXRT1062__
     int16_t *clear_cache = dest;
 #endif    
     AudioStream *stream = stream_;
@@ -407,7 +407,7 @@ private:
       *(dest++) = (((uint16_t*)data)[i] + 32768) >> 4;
 #endif
     }
-#ifdef TEENSYDUINO    
+#ifdef __IMXRT1062__
     arm_dcache_flush_delete(clear_cache, sizeof(dac_dma_buffer)/2);
 #endif    
   }
