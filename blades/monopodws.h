@@ -389,14 +389,14 @@ MonopodWSPinBase(int num_leds, int pin, uint32_t frequency,
   void EndFrame() {
     while (!IsReadyForEndFrame());
     uint32_t *output = (uint32_t *)displayMemory;
-    for (int i = 0; i < num_leds_; i++) {
-      Color8 color = color_buffer[i].dither(frame_num_, i);
+    for (int j = 0; j < num_leds_; j++) {
+      Color8 color = color_buffer[j].dither(frame_num_, j);
       for (int i = Color8::num_bytes(BYTEORDER) - 1; i >= 0; i--) {
 	uint32_t tmp = color.getByte(BYTEORDER, i) * 0x8040201U;
 	*(output++) = zero4X_ - ((tmp >> 7) & 0x01010101U) * ones_;
 	*(output++) = zero4X_ - ((tmp >> 3) & 0x01010101U) * ones_;
       }
-      if ((i & 31) == 31) Looper::DoHFLoop();
+      if ((j & 31) == 31) Looper::DoHFLoop();
     }
     MonopodWS2811::show(pin_, ones_, num_leds_ * Color8::num_bytes(BYTEORDER) * 8, frequency_);
     start_micros_ = micros();
