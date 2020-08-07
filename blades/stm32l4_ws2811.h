@@ -621,7 +621,7 @@ private:
   volatile uint32_t done_time_us_ = 0;
 };
 
-template<int LEDS, int PIN, Color8::Byteorder BYTEORDER, int frequency=800000, int reset_us=300, int t1h=294, int t0h=892>
+template<int LEDS, int PIN, Color8::Byteorder BYTEORDER, int frequency=800000, int reset_us=300, int t0h=294, int t1h=892>
 class WS2811Pin : public WS2811PinBase<BYTEORDER> {
 public:
   WS2811Pin() : WS2811PinBase<BYTEORDER>(LEDS, PIN, frequency, reset_us, t0h, t1h) {}
