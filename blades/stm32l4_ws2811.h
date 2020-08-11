@@ -85,12 +85,15 @@ public:
   }
   
   WS2811EngineSTM32L4TIM2() {
-    stm32l4_timer_create(timer(), TIMER_INSTANCE_TIM2, STM32L4_PWM_IRQ_PRIORITY, 0);
-    stm32l4_dma_create(&dma_, DMA_CHANNEL_DMA1_CH2_TIM2_UP, STM32L4_PWM_IRQ_PRIORITY);
+    // Priority is 1 step above audio, because this code freezes if we
+    // miss an interrupt. If we miss an audio interrupt, we just get a small glitch.
+    int irq_priority = STM32L4_SAI_IRQ_PRIORITY - 1;
+    stm32l4_timer_create(timer(), TIMER_INSTANCE_TIM2, irq_priority, 0);
+    stm32l4_dma_create(&dma_, DMA_CHANNEL_DMA1_CH2_TIM2_UP, irq_priority);
     
     // For proxy mode
-    stm32l4_dma_create(&dma2_, DMA_CHANNEL_DMA1_CH1_TIM2_CH3, STM32L4_PWM_IRQ_PRIORITY);
-    stm32l4_dma_create(&dma3_, DMA_CHANNEL_DMA1_CH5_TIM2_CH1, STM32L4_PWM_IRQ_PRIORITY);
+    stm32l4_dma_create(&dma2_, DMA_CHANNEL_DMA1_CH1_TIM2_CH3, irq_priority);
+    stm32l4_dma_create(&dma3_, DMA_CHANNEL_DMA1_CH5_TIM2_CH1, irq_priority);
   }
   ~WS2811EngineSTM32L4TIM2() {
     stm32l4_timer_destroy(timer());
