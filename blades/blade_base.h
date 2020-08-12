@@ -1,16 +1,83 @@
 #ifndef BLADES_BLADE_BASE_H
 #define BLADES_BLADE_BASE_H
 
+#define DEFINE_ALL_EFFECTS()			\
+    DEFINE_EFFECT(NONE)				\
+    DEFINE_EFFECT(CLASH)			\
+    DEFINE_EFFECT(BLAST)			\
+    DEFINE_EFFECT(FORCE)			\
+    DEFINE_EFFECT(STAB)				\
+    DEFINE_EFFECT(BOOT)				\
+    DEFINE_EFFECT(LOCKUP_BEGIN)			\
+    DEFINE_EFFECT(LOCKUP_END)			\
+    DEFINE_EFFECT(DRAG_BEGIN)			\
+    DEFINE_EFFECT(DRAG_END)			\
+    DEFINE_EFFECT(PREON)			\
+    DEFINE_EFFECT(IGNITION)			\
+    DEFINE_EFFECT(RETRACTION)			\
+    DEFINE_EFFECT(CHANGE)			\
+    DEFINE_EFFECT(NEWFONT)			\
+    /* Blaster effects */                       \
+    DEFINE_EFFECT(STUN)				\
+    DEFINE_EFFECT(FIRE)				\
+    DEFINE_EFFECT(CLIP_IN)			\
+    DEFINE_EFFECT(CLIP_OUT)			\
+    DEFINE_EFFECT(RELOAD)			\
+    DEFINE_EFFECT(MODE)				\
+    DEFINE_EFFECT(RANGE)			\
+    DEFINE_EFFECT(EMPTY)			\
+    DEFINE_EFFECT(FULL)				\
+    DEFINE_EFFECT(JAM)				\
+    DEFINE_EFFECT(UNJAM)			\
+    DEFINE_EFFECT(PLI_ON)			\
+    DEFINE_EFFECT(PLI_OFF)
+
+
+// Bitfield
+#define DEFINE_EFFECT(X) EFFECT_##X,
+enum class BladeEffectType {
+  DEFINE_ALL_EFFECTS()
+};
+#undef DEFINE_EFFECT
+
+#define DEFINE_EFFECT(X) constexpr BladeEffectType EFFECT_##X=BladeEffectType::EFFECT_##X;
+//#define DEFINE_EFFECT(X) using EFFECT_##X=BladeEffectType::EFFECT_##X;
+DEFINE_ALL_EFFECTS();
+#undef DEFINE_EFFECT
+
+  enum HandledFeature {
+    HANDLED_FEATURE_NONE = 0,
+    HANDLED_FEATURE_CHANGE = 1 << 0,
+    HANDLED_FEATURE_CHANGE_TICKED = 1 << 1,
+    HANDLED_FEATURE_STAB = 1 << 2,
+    HANDLED_FEATURE_DRAG = 1 << 3,
+    HANDLED_FEATURE_MELT = 1 << 4,
+    HANDLED_FEATURE_LIGHTNING_BLOCK = 1 << 5,
+  };
+
 #include "../styles/blade_style.h"
+
+struct BladeEffect {
+  BladeEffectType type;
+
+  uint32_t start_micros;
+  float location; // 0 = base, 1 = tip
+};
 
 class BladeBase {
 public:
   // Returns number of LEDs in this blade.
   virtual int num_leds() const = 0;
 
+  // Returns the byte order of this blade.
+  virtual Color8::Byteorder get_byteorder() const = 0;
+
   // Returns true if the blade is supposed to be on.
   // false while "turning off".
   virtual bool is_on() const = 0;
+
+  // Return how many effects are in effect.
+  virtual size_t GetEffects(BladeEffect** blade_effects) = 0;
 
   // Set led 'led' to color 'c'.
   virtual void set(int led, Color16 c) = 0;
@@ -18,10 +85,6 @@ public:
   // Bypasses battery voltage based PWM, intended to be used for
   // brief flashes only.
   virtual void set_overdrive(int led, Color16 c) { set(led, c); }
-
-  // Returns true when a clash occurs.
-  // Returns true only once per clash.
-  virtual bool clash() = 0;
 
   // Clear blade colors.
   virtual void clear() {
@@ -32,31 +95,68 @@ public:
   // disable power now. (Usually called after is_on()
   // has returned false for some period of time.)
   virtual void allow_disable() = 0;
+  virtual bool IsPrimary() = 0;
 
   virtual void Activate() = 0;
+  virtual void Deactivate() = 0;
 
-  virtual BladeStyle* UnSetStyle() {
-    BladeStyle *ret = current_style_;
-    if (ret) {
-      ret->deactivate();
-    }
-    current_style_ = nullptr;
-    return ret;
-  }
-  virtual void SetStyle(BladeStyle* style) {
-    // current_style should be nullptr;
-    current_style_ = style;
-    if (current_style_) {
-      current_style_->activate();
-    }
+  virtual BladeStyle* UnSetStyle() = 0;
+  virtual void SetStyle(BladeStyle* style) = 0;
+  virtual BladeStyle* current_style() const = 0;
+
+  // Let the blade know that this style handles "effect".
+  static void HandleFeature(HandledFeature feature) {
+    handled_features_ = (HandledFeature) ((int)handled_features_ | (int)feature);
   }
 
-  BladeStyle* current_style() const {
-    return current_style_;
+  static HandledFeature GetHandledTypes() {
+    return handled_features_;
+  }
+  static void ResetHandledTypes() {
+    handled_features_ = HANDLED_FEATURE_NONE;
   }
 
+  
  protected:
-  BladeStyle *current_style_ = nullptr;
+  static HandledFeature handled_features_;
+};
+
+HandledFeature BladeBase::handled_features_ = HANDLED_FEATURE_NONE;
+
+template<BladeEffectType effect>
+class OneshotEffectDetector {
+public:
+  OneshotEffectDetector() {
+    switch (effect) {
+      case EFFECT_STAB:
+	BladeBase::HandleFeature(HANDLED_FEATURE_STAB);
+	break;
+      default:
+	break;
+    }
+  }
+  BladeEffect* Detect(BladeBase* blade) {
+    BladeEffect* effects;
+    size_t n = blade->GetEffects(&effects);
+    // If no other thing is handling stab, treat it like a clash.
+    // But only for the primary blade...
+    bool match_stab = effect == EFFECT_CLASH &&
+      !blade->current_style()->IsHandled(HANDLED_FEATURE_STAB) &&
+      blade->IsPrimary();
+    for (size_t i = 0; i < n; i++) {
+      if (effect == effects[i].type ||
+	  (match_stab && effects[i].type == EFFECT_STAB)) {
+	if (effects[i].start_micros == last_detected_)
+	  return nullptr;
+	last_detected_ = effects[i].start_micros;
+	return effects + i;
+      }
+    }
+    return nullptr;
+  }
+  uint32_t last_detected_micros() { return last_detected_; }
+private:
+  uint32_t last_detected_;
 };
 
 #endif

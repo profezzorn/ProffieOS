@@ -666,6 +666,8 @@ public:
     for (int i = 0; i < 10; i++) x[i] = 0;
   }
 
+  bool Empty() { return num_words == 0; }
+
   void Say(const uint8_t* addr, uint32_t rate = 25,
 	   const tms5100_coeffs* coeffs = &tms5220_coeff
 //	   const tms5100_coeffs* coeffs = &tms5110a_coeff
@@ -703,6 +705,61 @@ public:
       case 8: Say(spEIGHT); break;
       case 9: Say(spNINE); break;
     }
+  }
+
+  void SayNumber(int n) {
+    if (n == 0) {
+      Say(spZERO);
+      return;
+    }
+    if (n / 1000000) {
+      SayNumber(n/1000000);
+      Say(spMILLION);
+      n %= 1000000;
+    }
+    if (n / 1000) {
+      SayNumber(n/1000);
+      Say(spTHOUSAND);
+      n %= 1000;
+    }
+    if (n / 100) {
+      SayDigit(n / 100);
+      Say(spHUNDRED);
+      n %= 100;
+    }
+    switch (n / 10) {
+      case 9: Say(spNINETY); break;
+      case 8: Say(spEIGHTY); break;
+      case 7: Say(spSEVENTY); break;
+      case 6: Say(spSIXTY); break;
+      case 5: Say(spFIFTY); break;
+      case 4: Say(spFOURTY); break;
+      case 3: Say(spTHIRTY); break;
+      case 2: Say(spTWENTY); break;
+      case 1:
+	switch (n) {
+	  case 19: Say(spNINETEEN); return;
+	  case 18: Say(spEIGHTEEN); return;
+	  case 17: Say(spSEVENTEEN); return;
+	  case 16: Say(spSIXTEEN); return;
+	  case 15: Say(spFIFTEEN); return;
+	  case 14: Say(spFOURTEEN); return;
+	  case 13: Say(spTHIRTEEN); return;
+	  case 12: Say(spTWELVE); return;
+	  case 11: Say(spELEVEN); return;
+	  case 10: Say(spTEN); return;
+	}
+    }
+    n %= 10;
+    if (n) SayDigit(n);
+  }
+
+  void Say2Digits(int number) {
+    int x = 1;
+    while (x < number) x *= 10;
+    x /= 100;
+    if (x > 1) number -= number % x;
+    SayNumber(number);
   }
 
   // The ROMs used with the TI speech were serial, not byte wide.
@@ -883,6 +940,7 @@ public:
 #endif
   
   int read(int16_t* data, int elements) override {
+    if (eof()) return 0;
     for (int i = 0; i < elements; i++) {
       data[i] = Get44kHz();
     }

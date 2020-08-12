@@ -1,6 +1,8 @@
 #ifndef SOUND_DYNAMIC_MIXER_H
 #define SOUND_DYNAMIC_MIXER_H
 
+#include <algorithm>
+
 // Audio compressor, takes N input channels, sums them and divides the
 // result by the square root of the average volume.
 template<int N> class AudioDynamicMixer : public AudioStream, Looper {
@@ -12,6 +14,10 @@ public:
   }
   const char* name() override { return "AudioDynamicMixer"; }
 
+#if defined(STM32L433xx) && defined(__FAST_MATH__)
+  // Faster AND smaller
+  int my_sqrt(int x) { return sqrtf(x); }
+#else  
   // Calculate square root of |x|, using the previous square
   // root as a guess.
   int my_sqrt(int x) {
@@ -47,17 +53,23 @@ public:
     return last_square_ = under;
   }
   int last_square_ = 0;
-
+#endif
+  
   int read(int16_t* data, int elements) override {
+    SCOPED_PROFILER();
     int32_t sum[AUDIO_BUFFER_SIZE / 2];
     int ret = elements;
     int v = 0, v2 = 0;
     num_samples_ += elements;
     while (elements) {
-      int to_do = min(elements, (int)NELEM(sum));
+      int to_do = std::min(elements, (int)NELEM(sum));
       for (int i = 0; i < to_do; i++) sum[i] = 0;
       for (int i = 0; i < N; i++) {
-        int e = streams_[i] ? streams_[i]->read(data, to_do) : 0;
+	if (!streams_[i]) continue;
+        int e = streams_[i]->read(data, to_do);
+	if (e < to_do && !streams_[i]->eof()) {
+	  underflow_count_++;
+	}
         for (int j = 0; j < e; j++) {
           sum[j] += data[j];
         }
@@ -67,9 +79,10 @@ public:
         v = sum[i];
         vol_ = ((vol_ + abs(v)) * 255) >> 8;
         v2 = v * volume_ / (my_sqrt(vol_) + 100);
+//	v2 = (int)((v * (float)volume_)/(sqrtf(vol_)+100.0));
         data[i] = clamptoi16(v2);
-        peak_sum_ = max(abs(v), peak_sum_);
-        peak_ = max(abs(v2), peak_);
+        peak_sum_ = std::max<int32_t>(abs(v), peak_sum_);
+        peak_ = std::max<int32_t>(abs(v2), peak_);
       }
       data += to_do;
       elements -= to_do;
@@ -82,6 +95,16 @@ public:
   }
 
   void Loop() override {
+    uint32_t underflows = underflow_count_;
+    if (underflows != last_underflow_count_) {
+      if (millis() - last_printout_ > 100) {
+	uint32_t new_underflows = underflows - last_underflow_count_;
+	STDOUT.print("Audio underflows: ");
+	STDOUT.println(new_underflows);
+	last_underflow_count_ = underflows;
+	last_printout_ = millis();
+      }
+    }
     if (monitor.ShouldPrint(Monitoring::MonitorSamples)) {
       STDOUT.print("Samples: ");
       STDOUT.print(num_samples_);
@@ -94,7 +117,9 @@ public:
       STDOUT.print(" peak sum: ");
       STDOUT.print(peak_sum_);
       STDOUT.print(" peak: ");
-      STDOUT.println(peak_);
+      STDOUT.print(peak_);
+      STDOUT.print(" underflows: ");
+      STDOUT.println(underflow_count_);
       peak_sum_ = peak_ = 0;
     }
   }
@@ -109,6 +134,10 @@ public:
     return last_sum_;
   }
 
+  int32_t audio_volume() const {
+    return vol_;
+  }
+
   void set_volume(int32_t volume) { volume_ = volume; }
   int32_t get_volume() const { return volume_; }
 
@@ -120,6 +149,9 @@ public:
   int32_t peak_ = 0;
   int32_t num_samples_ = 0;
   int32_t volume_ = VOLUME;
+  volatile uint32_t underflow_count_ = 0;
+  uint32_t last_underflow_count_ = 0;
+  uint32_t last_printout_ = 0;
 //  int32_t sum_;
 //  ClickAvoiderLin volume_;
 };

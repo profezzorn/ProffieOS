@@ -2,10 +2,11 @@
 #define STYLES_CYLON_H
 
 #include "../common/range.h"
+#include "rgb.h"
 
 // Usage: Cylon<COLOR, PERCENT, RPM>
-// or: ColorCycle<COLOR, PERCENT, RPM, ON_COLOR, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS>
-// COLOR, ON_COLOR: COLOR
+// or: ColorCycle<COLOR, PERCENT, RPM, ON_COLOR, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS, OFF_COLOR>
+// COLOR, ON_COLOR, OFF_COLOR: COLOR
 // RPM, PERCENT, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS: a number
 // return value: COLOR
 // Cylon/Knight Rider effect, a section of the strip is
@@ -19,12 +20,15 @@ template<class COLOR, int percentage, int rpm,
          class ON_COLOR = COLOR,
          int on_percentage = percentage,
          int on_rpm = rpm,
-         int fade_time_millis = 1>
+         int fade_time_millis = 1,
+         class OFF_COLOR = Rgb<0,0,0> >
 class Cylon {
 public:
-  void run(BladeBase* base) {
+  bool run(BladeBase* base) {
+    bool keep_running = true;
     c_.run(base);
     on_c_.run(base);
+    off_c_.run(base);
 
     uint32_t now = micros();
     uint32_t delta = now - last_micros_;
@@ -33,7 +37,7 @@ public:
 
     float fade_delta = delta / 1000.0 / fade_time_millis;
     if (!base->is_on()) fade_delta = - fade_delta;
-    fade_ = max(0.0, min(1.0, fade_ + fade_delta));
+    fade_ = std::max<float>(0.0, std::min<float>(1.0, fade_ + fade_delta));
 
     float current_rpm = rpm * (1 - fade_) + on_rpm * fade_;
     float current_percentage =
@@ -41,7 +45,7 @@ public:
     fade_int_ = (int)(16384 * fade_);
     pos_ = fract(pos_ + delta / 60000000.0 * current_rpm);
     float fraction = current_percentage / 100.0;
-    float pos = 0.5 + sin(pos_ * M_PI * 2) * (1.0 - fraction) / 2.0 - fraction / 2.0;
+    float pos = 0.5 + sinf(pos_ * M_PI * 2) * (1.0 - fraction) / 2.0 - fraction / 2.0;
     num_leds_ = base->num_leds() * 16384;
     start_ = pos * num_leds_;
     end_ = (pos + fraction) * num_leds_;
@@ -51,20 +55,21 @@ public:
     } else if (current_percentage == 0.0) {
       start_ = 0;
       end_ = 0;
-      base->allow_disable();
+      keep_running = !is_same_type<OFF_COLOR, Rgb<0,0,0> >::value;
     } else {
       end_ = (pos + fraction) * num_leds_;
     }
+    return keep_running;
   }
   OverDriveColor getColor(int led) {
-    led *= 16384;
-    Range led_range(led, led + 16384);
+    Range led_range(led * 16384, led * 16384 + 16384);
     int black_mix = 0;
     black_mix = (Range(start_, end_) & led_range).size();
     OverDriveColor c = c_.getColor(led);
     OverDriveColor on_c = on_c_.getColor(led);
+    OverDriveColor off_c = off_c_.getColor(led);
     c.c = c.c.mix2(on_c.c, fade_int_);
-    c.c = Color16().mix2(c.c, black_mix);
+    c.c = off_c.c.mix2(c.c, black_mix);
     return c;
   }
 private:
@@ -76,6 +81,7 @@ private:
   uint32_t num_leds_;
   COLOR c_;
   ON_COLOR on_c_;
+  OFF_COLOR off_c_;
   uint32_t last_micros_;
 };
 

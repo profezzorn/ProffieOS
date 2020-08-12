@@ -31,16 +31,16 @@ public:
     low_ = GetFreeWavPlayer();
     if (low_) {
       low_->set_volume_now(0);
-      low_->PlayOnce(&swingl);
-      low_->PlayLoop(&swingl);
+      low_->PlayOnce(&SFX_swingl);
+      low_->PlayLoop(&SFX_swingl);
     } else {
       STDOUT.println("Looped swings cannot allocate wav player.");
     }
     high_ = GetFreeWavPlayer();
     if (high_) {
       high_->set_volume_now(0);
-      high_->PlayOnce(&swingh);
-      high_->PlayLoop(&swingh);
+      high_->PlayOnce(&SFX_swingh);
+      high_->PlayLoop(&SFX_swingh);
     } else {
       STDOUT.println("Looped swings cannot allocate wav player.");
     }
@@ -51,7 +51,7 @@ public:
     STDOUT.println(WhatUnit(high_));
 #endif
   }
-  void SB_Off() override {
+  void SB_Off(OffType off_type) override {
     if (low_) {
       low_->set_fade_time(0.3);
       low_->FadeAndStop();
@@ -62,19 +62,19 @@ public:
       high_->FadeAndStop();
       high_.Free();
     }
-    delegate_->SB_Off();
+    delegate_->SB_Off(off_type);
   }
 
   void SB_Motion(const Vec3& gyro, bool clear) override {
-    float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
+    float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
     uint32_t t = (millis() >> 2);
     float s = sin_table[t & 1023] * (1.0/16383);
     float c = sin_table[(t + 256) & 1023] * (1.0/16383);
     float blend = c * gyro.z + s * gyro.y;
     blend = clamp(blend / 150.0, -1.0, 1.0);
     float vol = 0.99 + clamp(speed/200.0, 0.0, 2.3);
-    float low = max(0, blend);
-    float high = max(0, -blend);
+    float low = std::max<float>(0, blend);
+    float high = std::max<float>(0, -blend);
     float hum = 1.0 - abs(blend);
 
     delegate_->SetHumVolume(vol * hum);

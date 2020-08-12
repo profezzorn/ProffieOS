@@ -24,10 +24,10 @@ public:
     uint32_t now = micros();
     uint64_t delta = now - last_micros_;
     last_micros_ = now;
-    pos_ = fract(pos_ + delta / 60000000.0 * rpm_.getInteger());
-    int high = high_.getInteger();
-    int low = low_.getInteger();
-    float tmp = sin_table[(int)floor(pos_ * 1024)] / 32768.0;
+    pos_ = fract(pos_ + delta / 60000000.0 * rpm_.getInteger(0));
+    int high = high_.getInteger(0);
+    int low = low_.getInteger(0);
+    float tmp = sin_table[(int)floorf(pos_ * 1024)] / 32768.0;
     value_ = (int)( (tmp + 0.5) * (high - low) + low );
   }
   int getInteger(int led) { return value_; }
@@ -38,6 +38,27 @@ private:
   int value_;
   uint32_t last_micros_;
   float pos_;
+};
+
+template<typename PULSE_MILLIS>
+class PulsingF {
+public:
+  void run(BladeBase* base) {
+    pulse_millis_.run(base);
+    uint32_t now = micros();
+    uint32_t delta = now - last_micros_;
+    last_micros_ = now;
+    pos_ = fract(pos_ + delta / (1000.0 * pulse_millis_.getInteger(0)));
+    mix_ = (sin_table[(int)floorf(pos_ * 0x400)] + 16384);
+  }
+
+  int getInteger(int led) { return mix_; }
+
+private:
+  PULSE_MILLIS pulse_millis_;
+  int mix_;
+  uint32_t last_micros_;
+  float pos_ = 0.0;
 };
 
 #endif

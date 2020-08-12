@@ -4,11 +4,12 @@
 #include "debounced_button.h"
 
 // Latching button
-class LatchingButton : public Looper,
-                       public CommandParser,
-                       public DebouncedButton {
+template<class BASE = DebouncedButton>
+class LatchingButtonTemplate : public Looper,
+  public CommandParser,
+  public BASE {
 public:
-  LatchingButton(enum BUTTON button, int pin, const char* name)
+  LatchingButtonTemplate(enum BUTTON button, int pin, const char* name)
     : Looper(),
       CommandParser(),
       name_(name),
@@ -22,14 +23,16 @@ public:
 
   const char* name() override { return name_; }
 
+  void Warmup() { Loop(); }
+
 protected:
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (true) {
-      while (!DebouncedRead()) YIELD();
-      saber.Event(button_, EVENT_LATCH_ON);
-      while (DebouncedRead()) YIELD();
-      saber.Event(button_, EVENT_LATCH_OFF);
+      while (!BASE::DebouncedRead()) YIELD();
+      prop.Event(button_, EVENT_LATCH_ON);
+      while (BASE::DebouncedRead()) YIELD();
+      prop.Event(button_, EVENT_LATCH_OFF);
     }
     STATE_MACHINE_END();
   }
@@ -37,9 +40,9 @@ protected:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, name_)) {
       if (current_modifiers & button_) {
-        saber.Event(button_, EVENT_LATCH_ON);
+        prop.Event(button_, EVENT_LATCH_ON);
       } else {
-        saber.Event(button_, EVENT_LATCH_OFF);
+        prop.Event(button_, EVENT_LATCH_OFF);
       }
       return true;
     }
@@ -62,6 +65,22 @@ protected:
   enum BUTTON button_;
   StateMachineState state_machine_;
   uint8_t pin_;
+};
+
+using LatchingButton = LatchingButtonTemplate<>;
+
+class InvertedLatchingButton : public LatchingButton {
+public:
+  InvertedLatchingButton(enum BUTTON button, int pin, const char* name)
+    : LatchingButton(button, pin, name) {
+#ifdef ENABLE_SNOOZE
+    snooze_digital.pinMode(pin, INPUT_PULLUP, FALLING);
+#endif
+  }
+
+  bool Read() override {
+    return digitalRead(pin_) == HIGH;
+  }
 };
 
 #endif

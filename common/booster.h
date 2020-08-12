@@ -17,7 +17,7 @@ public:
 #endif    
     uint32_t t = millis() - last_enabled_;
     if (t < 10000) return true;
-    if (saber.NeedsPower()) return true;
+    if (prop.NeedsPower()) return true;
     bool on = false;
     SaberBase::DoIsOn(&on);
     return on;
@@ -25,9 +25,11 @@ public:
 
   void Enable() {
     last_enabled_ = millis();
-    if (!digitalRead(boosterPin)) {
+    if (!on_) {
       battery_monitor.SetPinHigh(true);
+      pinMode(boosterPin, OUTPUT);
       digitalWrite(boosterPin, HIGH);
+      on_ = true;
       delay(10); // Give it a little time to wake up.
       battery_monitor.SetPinHigh(false);
     }
@@ -35,7 +37,9 @@ public:
 
 protected:
   void Setup() override {
+    on_ = false;
     pinMode(boosterPin, OUTPUT);
+    digitalWrite(boosterPin, LOW); // turn the booster off
     last_enabled_ = millis();
   }
 
@@ -43,12 +47,14 @@ protected:
     STATE_MACHINE_BEGIN();
     while (true) {
       while (Active()) YIELD();
-      // 100 * 0.1 s = 10 seconds
-      for (i_ = 0; i_ < 100 && !Active(); i_++)
+      // 10 * 0.1 s = 1 second
+      for (i_ = 0; i_ < 10 && !Active(); i_++)
 	SLEEP(100);
       if (Active()) continue;
       STDOUT.println("Booster off.");
       digitalWrite(boosterPin, LOW); // turn the booster off
+      // pinMode(amplifierPin, INPUT_ANALOG); // Let the pull-down do the work
+      on_ = false;
       while (!Active()) YIELD();
     }
     STATE_MACHINE_END();
@@ -57,7 +63,7 @@ protected:
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "booster")) {
       if (!strcmp(arg, "on")) {
-        digitalWrite(boosterPin, HIGH); // turn the booster off
+	Enable();
         return true;
       }
       if (!strcmp(arg, "off")) {
@@ -73,17 +79,18 @@ protected:
   }
 
 private:
+  bool on_;
   int i_;
   uint32_t last_enabled_;
 };
 
 Booster booster;
 
-void EnableBooster() {
+inline void EnableBooster() {
   booster.Enable();
 }
 
 #else
-void EnableBooster() { }
+inline void EnableBooster() { }
 #endif   // V4
 #endif

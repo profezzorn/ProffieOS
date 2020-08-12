@@ -189,4 +189,36 @@ struct NoLED {
   static const int Blue = 0;
 };
 
+// Basic RED led, no over-voltage protection
+struct CH1LED {
+  static constexpr float MaxAmps = 1.0;
+  static constexpr float MaxVolts = 1000.0;
+  static constexpr float P2Amps = 0.0;
+  static constexpr float P2Volts = 0.0;
+  static constexpr float R = 0.0;
+  static const int Red = 255;
+  static const int Green = 0;
+  static const int Blue = 0;
+};
+struct CH2LED {
+  static constexpr float MaxAmps = 1.0;
+  static constexpr float MaxVolts = 1000.0;
+  static constexpr float P2Amps = 0.0;
+  static constexpr float P2Volts = 0.0;
+  static constexpr float R = 0.0;
+  static const int Red = 0;
+  static const int Green = 255;
+  static const int Blue = 0;
+};
+struct CH3LED {
+  static constexpr float MaxAmps = 1.0;
+  static constexpr float MaxVolts = 1000.0;
+  static constexpr float P2Amps = 0.0;
+  static constexpr float P2Volts = 0.0;
+  static constexpr float R = 0.0;
+  static const int Red = 0;
+  static const int Green = 0;
+  static const int Blue = 255;
+};
+
 #endif

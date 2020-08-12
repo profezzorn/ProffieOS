@@ -3,8 +3,8 @@
 
 // Usage: ChangeSlowly<F, SPEED>
 // Changes F by no more than SPEED values per second.
-// F, SPEED: INTEGER
-// return value: INTEGER, same for all LEDs
+// F, SPEED: FUNCTION
+// return value: FUNCTION, same for all LEDs
 
 class BladeBase;
 
@@ -20,9 +20,9 @@ public:
     last_micros_ = now;
 
     if (delta > 1000000) delta = 1;
-    delta *= speed_.getInteger();
+    delta *= speed_.getInteger(0);
     delta /= 1000000;
-    uint32_t target = f_.getInteger();
+    int target = f_.getInteger(0);
     if (delta > abs(value_ - target)) {
       value_ = target;
     } else  if (value_ < target) {

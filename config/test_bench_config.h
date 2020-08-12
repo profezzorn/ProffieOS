@@ -22,13 +22,13 @@
 #define DUAL_POWER_BUTTONS
 
 // Volume, useful range is about 0-2000.
-#define VOLUME 1000
+#define VOLUME 100
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
 const unsigned int maxLedsPerStrip = 144;
 
-// This defines how sensetive the clash detection is.
+// This defines how sensitive the clash detection is.
 #define CLASH_THRESHOLD_G 1.0
 
 // Define this if your power button is a touch button.
@@ -45,7 +45,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_MOTION
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
-#define ENABLE_SERIAL
+// #define ENABLE_SERIAL
 
 // Must be 20 characters or less.
 #define BLE_PASSWORD "password"
@@ -55,7 +55,7 @@ const unsigned int maxLedsPerStrip = 144;
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
-#define ENABLE_SSD1306
+// #define ENABLE_SSD1306
 
 #endif
 
@@ -65,6 +65,11 @@ typedef RandomFlicker<Rgb<200,200,200>, Rgb<40,40,40>> OnPulse;
 typedef Pulsing<Rgb16<512,512,512>, Rgb16<50,50,50>, 3000> OffPulse;
 
 Preset testing_presets[] = {
+#if 1
+  { "TeensySF", "tracks/mars.wav",
+    StyleRainbowPtr<300, 800>(),
+    "cyan"},
+#endif  
 #if 0
   { "font02", "tracks/cantina.wav", 
     StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
@@ -89,7 +94,11 @@ Preset testing_presets[] = {
 
 BladeConfig blades[] = {
   // Testing configuration.
-  { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) }
+//  { 130000, SimpleBladePtr<CreeXPE2Red, CreeXPE2Green, Blue3mmLED, NoLED>(), CONFIGARRAY(testing_presets) }
+//  { 130000, WS2811BladePtr<97, WS2811_400kHz, 8, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets),  }
+//  { 130000, WS2811BladePtr<97, WS2811_400kHz, 8, PowerPINS<bladePowerPin1>, WS2811SerialPin>(), CONFIGARRAY(testing_presets),  }
+  { 130000, SubBlade(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()), CONFIGARRAY(testing_presets),  }
+
 };
 
 #endif

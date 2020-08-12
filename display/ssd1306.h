@@ -1,12 +1,17 @@
 #ifndef DISPLAY_SSD1306_H
 #define DISPLAY_SSD1306_H
 
+// Images/animations
+IMAGE_FILESET(font);
+IMAGE_FILESET(boot);
+
 struct Glyph {
-  int8_t skip;
-  int8_t xoffset;
-  int8_t yoffset;
-  uint8_t columns;
-  const uint32_t* data;
+  int32_t skip : 7;
+  int32_t xoffset : 7;
+  int32_t yoffset : 7;
+  int32_t columns : 8;
+  int32_t column_size : 3;
+  const void* data;
 };
 
 const uint32_t BatteryBar16_data[] = {
@@ -27,13 +32,13 @@ const uint32_t BatteryBar16_data[] = {
    0b00000111111111111111111111100000UL,
 };
 
-#define GLYPHDATA(X) NELEM(X), X
+#define GLYPHDATA(X) NELEM(X), sizeof((X)[0]) - 1, (const void*)X
 
 const Glyph BatteryBar16 = { 16, 0, 0, GLYPHDATA(BatteryBar16_data) };
 
 #include "StarJedi10Font.h"
 
-class SSD1306 : public I2CDevice, Looper, StateMachine, SaberBase {
+class SSD1306 : public I2CDevice, Looper, StateMachine, SaberBase, private AudioStreamWork {
 public:
   static const int WIDTH = 128;
   static const int HEIGHT = 32;
@@ -91,23 +96,46 @@ public:
     SCREEN_STARTUP,
     SCREEN_MESSAGE,
     SCREEN_PLI,
+    SCREEN_IMAGE,  // also for animations
+    SCREEN_OFF,
+  };
+
+  enum ScreenLayout {
+    LAYOUT_NATIVE,
+    LAYOUT_LANDSCAPE,
+    LAYOUT_PORTRAIT,
   };
 
   SSD1306() : I2CDevice(0x3C) { }
   void Send(int c) { writeByte(0, c); }
 
+  template<typename T>
+  void Draw2(int begin, int end, uint32_t* pos, int shift, const T* data) {
+    if (shift > 0) {
+      for (int i = begin; i < end; i++) pos[i] |= data[i] << shift;
+    } else if (shift < 0) {
+      for (int i = begin; i < end; i++) pos[i] |= data[i] >> -shift;
+    } else {
+      for (int i = begin; i < end; i++) pos[i] |= data[i];
+    }
+  }
+
   void Draw(const Glyph& glyph, int x, int y) {
     x += glyph.xoffset;
     y += glyph.yoffset;
-    int begin = max(0, -x);
-    int end = min(glyph.columns, WIDTH - x);
+    int begin = std::max<int>(0, -x);
+    int end = std::min<int>(glyph.columns, WIDTH - x);
     uint32_t *pos = frame_buffer_ + x;
-    if (y > 0) {
-      for (int i = begin; i < end; i++) pos[i] |= glyph.data[i] << y;
-    } else if (y < 0) {
-      for (int i = begin; i < end; i++) pos[i] |= glyph.data[i] >> -y;
-    } else {
-      for (int i = begin; i < end; i++) pos[i] |= glyph.data[i];
+    switch (glyph.column_size) {
+      case 0:
+	Draw2<uint8_t>(begin, end, pos, y, (const uint8_t*)glyph.data);
+	break;
+      case 1:
+	Draw2<uint16_t>(begin, end, pos, y, (const uint16_t*)glyph.data);
+	break;
+      case 3:
+	Draw2<uint32_t>(begin, end, pos, y, (const uint32_t*)glyph.data);
+	break;
     }
   }
 
@@ -122,7 +150,7 @@ public:
     }
     int max_bars = (end - start) / bar.skip;
     int pos = start;
-    int bars = floor(
+    int bars = floorf(
         battery_monitor.battery_percent() * (0.5 + max_bars) / 100);
     for (int i = 0; i < bars; i++) {
       Draw(bar, pos, 0);
@@ -144,42 +172,133 @@ public:
     }
   }
 
-  void FillFrameBuffer() {
-    memset(frame_buffer_, 0, sizeof(frame_buffer_));
 
-    if (millis() - displayed_when_ > 5000)
-      screen_ = SCREEN_PLI;
-
+  // Fill frame buffer and return how long to display it.
+  int FillFrameBuffer() {
     switch (screen_) {
+      default:
+      case SCREEN_OFF:
+	memset(frame_buffer_, 0, sizeof(frame_buffer_));
+	layout_ = LAYOUT_NATIVE;
+	xor_ = 0;
+	invert_y_ = false;
+	return 1000;
+	
       case SCREEN_STARTUP:
-        DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
-        DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
-        break;
+	memset(frame_buffer_, 0, sizeof(frame_buffer_));
+        // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
+        // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
+        DrawText("ProffieOS", 0,15, Starjedi10pt7bGlyphs);
+        DrawText(version,0,31, Starjedi10pt7bGlyphs);
+	screen_ = SCREEN_PLI;
+	layout_ = LAYOUT_NATIVE;
+	xor_ = 0;
+	invert_y_ = false;
+	return 5000;
 
       case SCREEN_PLI:
+	memset(frame_buffer_, 0, sizeof(frame_buffer_));
         DrawBatteryBar(BatteryBar16);
-        break;
+	layout_ = LAYOUT_NATIVE;
+	xor_ = 0;
+	invert_y_ = false;
+	return 200;  // redraw once every 200 ms
 
       case SCREEN_MESSAGE:
+	memset(frame_buffer_, 0, sizeof(frame_buffer_));
         if (strchr(message_, '\n')) {
           DrawText(message_, 0, 15, Starjedi10pt7bGlyphs);
         } else {
           DrawText(message_, 0, 23, Starjedi10pt7bGlyphs);
         }
+	screen_ = SCREEN_PLI;
+	layout_ = LAYOUT_NATIVE;
+	xor_ = 0;
+	invert_y_ = false;
+	return 5000;
+
+      case SCREEN_IMAGE:
+	MountSDCard();
+	if (!frame_available_) {
+	  scheduleFillBuffer();
+	  return 1;
+	}
+	if (eof_) {
+	  // STDOUT << "EOF " << frame_count_ << "\n";
+	  screen_ = SCREEN_PLI;
+	  if (frame_count_ == 1) return 5000;
+	  return FillFrameBuffer();
+	}
+	frame_count_++;
+	if (looped_frames_ > 1 && millis() - loop_start_ > 5000) {
+	  STDOUT << "END OF LOOP\n";
+	  screen_ = SCREEN_PLI;
+	}
+
+	if (font_config.ProffieOSAnimationFrameRate > 0.0) {
+	  return 1000 / font_config.ProffieOSAnimationFrameRate;
+	}
+	if (looped_frames_ > 1) {
+	  return 1000 / looped_frames_;
+	} else {
+	  return 41;   // ~24 fps
+	}
+    }
+  }
+
+  void SetScreenNow(Screen screen) {
+    millis_to_display_ = 0;
+    screen_ = screen;
+  }
+
+  void ShowFile(Effect* effect) {
+    MountSDCard();
+    eof_ = true;
+    file_.Play(effect);
+    frame_available_ = false;
+    loop_start_ = millis();
+    frame_count_ = 0;
+    SetScreenNow(SCREEN_IMAGE);
+    eof_ = false;
+  }
+
+  void ShowFile(const char* file) {
+    MountSDCard();
+    eof_ = true;
+    file_.Play(file);
+    frame_available_ = false;
+    loop_start_ = millis();
+    frame_count_ = 0;
+    SetScreenNow(SCREEN_IMAGE);
+    eof_ = false;
+  }
+
+  void SB_NewFont() override {
+    if (IMG_font) {
+      // Overrides message from below..
+      ShowFile(&IMG_font);
     }
   }
 
   void SB_Message(const char* text) override {
     strncpy(message_, text, sizeof(message_));
     message_[sizeof(message_)-1] = 0;
-    displayed_when_ = millis();
-    screen_ = SCREEN_MESSAGE;
+    SetScreenNow(SCREEN_MESSAGE);
   }
 
-  void SB_Top() override {
+  void SB_Top(uint64_t total_cycles) override {
     STDOUT.print("display fps: ");
     loop_counter_.Print();
     STDOUT.println("");
+  }
+
+  void SB_Off(OffType offtype) override {
+    // TODO: Make it so that screen can be
+    // powered down and up again properly.
+    // This only makes it black, which prevents burn-in.
+    if (offtype == OFF_IDLE) {
+      SetScreenNow(SCREEN_OFF);
+    }
   }
 
   void Loop() override {
@@ -222,10 +341,16 @@ public:
 
     STDOUT.println("Display initialized.");
     screen_ = SCREEN_STARTUP;
-    displayed_when_ = millis();
+    if (IMG_boot) {
+      ShowFile(&IMG_boot);
+    }
     
     while (true) {
-      FillFrameBuffer();
+      millis_to_display_ = FillFrameBuffer();
+      frame_start_time_ = millis();
+      lock_fb_ = true;
+      frame_available_ = false;
+
       Send(COLUMNADDR);
       Send(0);   // Column start address (0 = reset)
       Send(WIDTH-1); // Column end address (127 = reset)
@@ -254,25 +379,210 @@ public:
         Wire.beginTransmission(address_);
         Wire.write(0x40);
         for (uint8_t x=0; x<16; x++) {
-          Wire.write(((unsigned char*)frame_buffer_)[i]);
+	  uint8_t b;
+	  switch (layout_) {
+	    default:
+	    case LAYOUT_NATIVE:
+	      b = ((unsigned char *)frame_buffer_)[i];
+	      break;
+	    case LAYOUT_PORTRAIT:
+	      if (!invert_y_) {
+		b = ((unsigned char *)frame_buffer_)[511 - i];
+	      } else {
+		b = ((unsigned char *)frame_buffer_)[i ^ 3];
+	      }
+	      break;
+	    case LAYOUT_LANDSCAPE: {
+	      int x = i >> 2;
+	      int y = ((i & 3) << 3) + 7;
+	      int delta_pos = -16;
+	      if (invert_y_) {
+		y = 31 - y;
+		delta_pos = 16;
+	      }
+//	      STDOUT << " LANDSCAPE DECODE!! x = " << x << " y = " << y << "\n";
+	      
+	      int shift = 7 - (x & 7);
+	      uint8_t *pos =
+		((unsigned char*)frame_buffer_) + ((x>>3) + (y<<4));
+	      b = 0;
+	      for (int j = 0; j < 8; j++) {
+		b <<= 1;
+		b |= (*pos >> shift) & 1;
+		pos += delta_pos;
+	      }
+	    }
+	  }
+	  Wire.write(b ^ xor_);
           i++;
         }
         Wire.endTransmission();
-        YIELD();
+	I2CUnlock(); do { YIELD(); } while (!I2CLock());
       }
       loop_counter_.Update();
+      lock_fb_ = false;
+      scheduleFillBuffer();
+      I2CUnlock();
+      while (millis() - frame_start_time_ < millis_to_display_) YIELD();
+      do { YIELD(); } while (!I2CLock());
     }
     
     STATE_MACHINE_END();
   }
 
+#define TAG2(X, Y) (((X) << 8) | (Y))
+  int ReadColorAsGray(FileReader* f) {
+    uint8_t rgba[4];
+    f->Read(rgba, 4);
+    return rgba[0] + rgba[1] + rgba[2];
+  }
+
+  bool ReadImage(FileReader* f) {
+    uint32_t file_end = 0;
+    // STDOUT << "ReadImage " << f->Tell() << " size = " << f->FileSize() << "\n";
+    if (ypos_ >= looped_frames_) {
+      if (looped_frames_ > 1) f->Seek(0);
+      ypos_ = 0;
+      uint32_t file_start = f->Tell();
+      int a = f->Read();
+      int b = f->Read();
+      int width, height;
+      switch (TAG2(a, b)) {
+	default:
+	  STDOUT << "Unknown image format. a=" << a << " b=" << b << " pos=" << f->Tell() << "\n";
+	  return false;
+	  
+	case TAG2('P', '4'):
+	  // PBM
+	  f->skipwhite();
+	  width = f->readIntValue();
+	  f->skipwhite();
+	  height = f->readIntValue();
+	  f->Read();
+	  xor_ = 255;
+	  invert_y_ = false;
+	  break;
+	  
+	case TAG2('B', 'M'):
+	case TAG2('B', 'A'):
+	case TAG2('C', 'I'):
+	case TAG2('C', 'P'):
+	case TAG2('I', 'C'):
+	case TAG2('P', 'T'):
+	  // STDOUT << "BMP detected!\n";
+	  xor_ = 255;
+	  invert_y_ = true; // bmp data is bottom to top
+	  // BMP
+	  file_end = file_start + f->ReadType<uint32_t>();
+	  f->Skip(4);
+	  uint32_t offset = f->ReadType<uint32_t>();
+	  
+#if 0
+	  uint32_t ctable = f->Tell() + f->ReadType<uint32_t>();
+	  // STDOUT << "OFFSET = " << offset << " CTABLE=" << ctable << "\n";
+	  width = f->ReadType<uint32_t>();
+	  height = f->ReadType<uint32_t>();
+	  // STDOUT << "Width=" << width << " Height=" << height << "\n";
+	  f->Seek(ctable);
+	  int c0 = ReadColorAsGray(f);
+	  int c1 = ReadColorAsGray(f);
+	  xor_ = c0 > c1 ? 255 : 0;
+#else
+	  f->Skip(4);
+	  width = f->ReadType<uint32_t>();
+	  height = f->ReadType<uint32_t>();
+	  // STDOUT << "Width=" << width << " Height=" << height << "\n";
+#endif	  
+	  // First frame is near the end, seek to it.
+	  f->Seek(file_start + offset + width * height / 8 - 512);
+      }
+      if (width != 128 && width != 32) {
+	STDOUT << "Wrong size image: " << width << "x" << height << "\n";
+	return false;
+      }
+      if (width == 128) {
+	layout_ = LAYOUT_LANDSCAPE;
+	looped_frames_ = height / 32;
+      } else {
+	looped_frames_ = height / 128;
+      }
+    }
+    // STDOUT << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
+    if (f->Available() < sizeof(frame_buffer_)) return false;
+    f->Read((uint8_t*)frame_buffer_, sizeof(frame_buffer_));
+    ypos_++;
+    if (looped_frames_ > 1) {
+      if (ypos_ >= looped_frames_) {
+	f->Seek(f->FileSize());
+      } else {
+	if (invert_y_) {
+	  // Seek two frames back, because BMP are backwards.
+	  f->Seek(f->Tell() - 1024);
+	}
+      }
+    } else {
+      if (file_end) f->Seek(file_end);
+    }
+    return true;
+  }
+
+  // AudioStreamWork implementation
+  size_t space_available() const override {
+    if (eof_ || lock_fb_) return 0;
+    if (frame_available_) return 0;
+
+    // Always low priority
+    return 1;
+  }
+
+  bool FillBuffer() override {
+    if (eof_) return true;
+    if (file_.OpenFile()) {
+      if (!file_.IsOpen()) {
+	eof_ = true;
+	return false;
+      }
+      ypos_ = looped_frames_;
+    }
+    if (lock_fb_) return true;
+    if (!frame_available_) {
+      if (!ReadImage(&file_)) {
+	file_.Close();
+	eof_ = true;
+      }
+      frame_available_ = true;
+    }
+    return true;
+  }
+  void CloseFiles() override {
+    file_.Close();
+  }
+
+  // TODO: Don't update the display when we don't need to
+  // and return false here so that we can go into lower power modes.
+  void SB_IsOn(bool* on) override {
+    *on = true;
+  }
 private:
   uint16_t i;
+  uint8_t xor_ = 0;
+  bool invert_y_ = 0;
   uint32_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
   char message_[32];
-  uint32_t displayed_when_;
+  uint32_t millis_to_display_;
+  uint32_t frame_start_time_;
   Screen screen_;
+  int32_t ypos_ = 0;
+  volatile int32_t looped_frames_ = 0;
+  volatile ScreenLayout layout_;
+  uint32_t loop_start_;
+  uint32_t frame_count_ = 0;
+
+  EffectFileReader file_;
+  volatile bool frame_available_ = true;
+  volatile bool eof_ = true;
+  volatile bool lock_fb_ = false;
 };
 
 #endif

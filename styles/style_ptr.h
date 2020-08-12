@@ -10,24 +10,49 @@
 // this class, which implements the BladeStyle interface. We do this so that the
 // getColor calls will be inlined in this loop for speed.
 
+struct HandledTypeResetter {
+  HandledTypeResetter() { BladeBase::ResetHandledTypes(); }
+};
+
+struct HandledTypeSaver {
+  HandledTypeSaver() { handled_features_ = BladeBase::GetHandledTypes(); }
+  bool IsHandled(HandledFeature feature) {
+    return (handled_features_ & feature) != 0;
+  }
+  HandledFeature handled_features_;
+};
+
 template<class T>
 class Style : public BladeStyle {
 public:
   void activate() override { }
+
+  bool IsHandled(HandledFeature effect) override {
+    return handled_type_saver_.IsHandled(effect);
+  }
+
   void run(BladeBase* blade) override {
-    base_.run(blade);
+    if (!RunStyle(&base_, blade))
+      blade->allow_disable();
     int num_leds = blade->num_leds();
+    bool rotate = !IsHandled(HANDLED_FEATURE_CHANGE) && blade->get_byteorder() != Color8::NONE;
+
     for (int i = 0; i < num_leds; i++) {
       OverDriveColor c = base_.getColor(i);
+      if (rotate)
+	c.c = c.c.rotate((SaberBase::GetCurrentVariation() & 0x7fff) * 3);
       if (c.overdrive) {
          blade->set_overdrive(i, c.c);
       } else {
          blade->set(i, c.c);
       }
+      if (!(i & 0xf)) Looper::DoHFLoop();
     }
   }
 private:
+  HandledTypeResetter handled_type_resetter_;
   T base_;
+  HandledTypeSaver handled_type_saver_;
 };
 
 // Get a pointer to class.

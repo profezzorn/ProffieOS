@@ -5,6 +5,7 @@
 class Vec3 {
 public:
   Vec3(){}
+  Vec3(float v_) : x(v_), y(v_), z(v_) {}
   Vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
 
   enum ByteOrder {
@@ -20,27 +21,21 @@ public:
     ORIENTATION_TOP_TOWARDS_BLADE = 0x04,
     ORIENTATION_BOTTOM_TOWARDS_BLADE = 0x14,
   };
-  static int16_t GetShort(const unsigned char *data, int LSB) {
-    return (data[LSB] << 8) | data[1-LSB];
-  }
-  static Vec3 FromData(const unsigned char* data, float mul, int LSB,
-		       Orientation ORIENTATION) {
-    Vec3 ret;
-    ret.x = mul * GetShort(data + (0 + (ORIENTATION & 7)) % 6, LSB);
-    ret.y = mul * GetShort(data + (2 + (ORIENTATION & 7)) % 6, LSB);
-    ret.z = mul * GetShort(data + (4 + (ORIENTATION & 7)) % 6, LSB);
-    if (ORIENTATION & 0x10) {
-      ret.x = - ret.x;
-      ret.y = - ret.y;
-    }
-    return ret;
-  }
 
+  Vec3 operator+(const Vec3& o) const {
+    return Vec3(x + o.x, y + o.y, z + o.z);
+  }
+  Vec3 operator+(float f) const {
+    return Vec3(x + f, y + f, z + f);
+  }
   Vec3 operator-(const Vec3& o) const {
     return Vec3(x - o.x, y - o.y, z - o.z);
   }
-  Vec3 operator+(const Vec3& o) const {
-    return Vec3(x + o.x, y + o.y, z + o.z);
+  Vec3 operator-(float f) const {
+    return Vec3(x - f, y - f, z - f);
+  }
+  Vec3 operator-() const {
+    return Vec3(-x, -y, -z);
   }
   void operator+=(const Vec3& o)  {
     x += o.x;
@@ -50,14 +45,25 @@ public:
   Vec3 operator*(float f) const {
     return Vec3(x * f, y * f, z * f);
   }
+  Vec3 operator*=(float f) {
+    x*=f;
+    y*=f;
+    z*=f;
+    return *this;
+  }
   Vec3 operator/(int i) const {
     return Vec3(x / i, y / i, z / i);
   }
-  Vec3 dot(const Vec3& o) const {
-    return Vec3(x * o.x, y * o.y, z * o.z);
+  float dot(const Vec3& o) const {
+    return x * o.x + y * o.y + z * o.z;
+  }
+  Vec3 cross(const Vec3& o) const {
+    return Vec3(y * o.z - z * o.y,
+		z * o.x - x * o.z,
+		x * o.y - y * o.x);
   }
   float len2() const { return x*x + y*y + z*z; }
-  float len() const { return sqrt(len2()); }
+  float len() const { return sqrtf(len2()); }
 
   static void Rotate90(float& a, float& b) {
     float tmp = b;
@@ -75,6 +81,46 @@ public:
   void RotateX180() { Rotate180(y, z); }
   void RotateZ180() { Rotate180(x, y); }
   void RotateY180() { Rotate180(z, x); }
+
+  // TODO: Check if these three rotate the right direction
+  Vec3 RotateX(float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return Vec3(x, y * c + z * s, y * -s + z * c);
+  }
+  Vec3 RotateY(float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return Vec3(x * c - z * s, y, y * s + z * c);
+  }
+  Vec3 RotateZ(float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return Vec3(x * c - y * s, x * s + y * c, z);
+  }
+  Vec3 Rotate(Vec3 angles) {
+    return RotateX(angles.x).RotateY(angles.y).RotateZ(angles.z);
+  }
+
+  // move towards zero
+  Vec3 MTZ(float delta) {
+    float l = len();
+    float new_length = l - delta;
+    if (new_length <= 0.0) return Vec3(0.0f);
+    return (*this) * (new_length / l);
+  }
+
+  void printTo(Print& p) {
+    p.write('{');
+    p.print(x);
+    p.write(',');
+    p.write(' ');
+    p.print(y);
+    p.write(',');
+    p.write(' ');
+    p.print(z);
+    p.write('}');
+  }
   float x, y, z;
 };
 

@@ -128,8 +128,8 @@ protected:
       min_ = 10000000;
       max_ = 0;
     } else {
-      min_ = min(value, min_);
-      max_ = max(value, max_);
+      min_ = std::min(value, min_);
+      max_ = std::max(value, max_);
     }
     is_pushed_ = value < threshold_;
   }
@@ -219,7 +219,7 @@ protected:
       while (!TSC->ISR.get<TSC_IER_TYPE::EOA>()) YIELD();
 
       if (TSC->ISR.get<TSC_IER_TYPE::MCE>()) {
-	STDOUT.print("Touch error!");
+	STDOUT.print("Touch error!\n");
 	SLEEP(100);
 	// Error
       } else {

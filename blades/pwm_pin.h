@@ -9,6 +9,7 @@ void LSanalogWriteSetup(uint32_t pin) {
   analogWriteResolution(16);
   analogWriteFrequency(pin, 1000);
 }
+void LSanalogWriteTeardown(uint32_t pin) {}
 void LSanalogWrite(uint32_t pin, int value) {
   analogWrite(pin, value);
 }
@@ -17,11 +18,15 @@ void LSanalogWrite(uint32_t pin, int value) {
 
 namespace {
 static stm32l4_timer_t stm32l4_pwm[PWM_INSTANCE_COUNT];
+static uint8_t timer_use_counts[PWM_INSTANCE_COUNT];
 
 void SetupTimer(uint32_t instance) {
+  timer_use_counts[instance]++;
   if (stm32l4_pwm[instance].state == TIMER_STATE_NONE) {
     stm32l4_timer_create(&stm32l4_pwm[instance], g_PWMInstances[instance], 15, 0);
-    
+  }
+
+  if (stm32l4_pwm[instance].state == TIMER_STATE_INIT) {
     // 813 Hz, 32768 steps
     uint32_t carrier = 26666666;
     uint32_t modulus = 32768;
@@ -29,7 +34,7 @@ void SetupTimer(uint32_t instance) {
     
     if (divider == 0) divider = 1;
     
-    stm32l4_timer_enable(&stm32l4_pwm[instance], divider -1, modulus -1, TIMER_OPTION_COUNT_PRELOAD, NULL, NULL, 0);
+    stm32l4_timer_enable(&stm32l4_pwm[instance], divider -1, modulus -1, 0, NULL, NULL, 0);
     stm32l4_timer_start(&stm32l4_pwm[instance], false);
     if (instance)  {
       SetupTimer(0);
@@ -39,14 +44,27 @@ void SetupTimer(uint32_t instance) {
       noInterrupts();
       *to = *from + 10;
       interrupts();
+    } else {
+      // avoid slow startup
+      stm32l4_pwm[instance].TIM->CNT = 0;
     }
+    // Buffer counters from now on.
+    stm32l4_pwm[instance].TIM->CR1 |= TIM_CR1_ARPE;
+  }
+}
+
+void TeardownTimer(uint32_t instance) {
+  if (0 == --timer_use_counts[instance]) {
+    stm32l4_timer_stop(&stm32l4_pwm[instance]);
+    stm32l4_timer_disable(&stm32l4_pwm[instance]);
+    if (instance) TeardownTimer(0);
   }
 }
 
 void LSanalogWriteSetup(uint32_t pin) {
   // Handle the case the pin isn't usable as PIO
   if (pin >= NUM_TOTAL_PINS || g_APinDescription[pin].GPIO == NULL) {
-    Serial.println("Analog Setup: NOT A PIN: ");
+    Serial.print("Analog Setup: NOT A PIN: ");
     Serial.println(pin);
     return;
   }
@@ -61,7 +79,11 @@ void LSanalogWriteSetup(uint32_t pin) {
   stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, 0, TIMER_CONTROL_PWM);
   stm32l4_gpio_pin_configure(g_APinDescription[pin].pin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
 }
-// TODO: Shut down timer when we don't need it anymore.
+
+void LSanalogWriteTeardown(uint32_t pin) {
+  pinMode(pin, INPUT_ANALOG);
+  TeardownTimer(g_APinDescription[pin].pwm_instance);
+}
 
 void LSanalogWrite(uint32_t pin, int value) {
   TIM_TypeDef* TIM = stm32l4_pwm[g_APinDescription[pin].pwm_instance].TIM;
@@ -85,14 +107,17 @@ void LSanalogWrite(uint32_t pin, int value) {
 class PWMPinInterface {
 public:
   virtual void Activate() = 0;
+  virtual void Deactivate() = 0;
   virtual void set(const Color16& c) = 0;
   virtual void set_overdrive(const Color16& c) = 0;
+  virtual bool rgb() { return false; }
 };
 
 template<int PIN>
 class SimplePWMPin {
 public:
   void Activate() {
+    static_assert(PIN >= -1, "PIN is negative");
     LSanalogWriteSetup(PIN);
     LSanalogWrite(PIN, 0);  // make it black
   }

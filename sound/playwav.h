@@ -7,8 +7,8 @@
 
 // Simple upsampler code, doubles the number of samples with
 // 2-lobe lanczos upsampling.
-#define C1 24757
-#define C2 -8191
+#define UPSCALE_C1 24757
+#define UPSCALE_C2 -8191
 
 #if 1
 #define UPSAMPLE_FUNC(NAME, EMIT)                               \
@@ -17,10 +17,10 @@
     upsample_buf_##NAME##_b_ = upsample_buf_##NAME##_c_;        \
     upsample_buf_##NAME##_c_ = upsample_buf_##NAME##_d_;        \
     upsample_buf_##NAME##_d_ = sample;                          \
-    EMIT(clamptoi16((upsample_buf_##NAME##_a_ * C2 +            \
-          upsample_buf_##NAME##_b_ * C1 +                       \
-          upsample_buf_##NAME##_c_ * C1 +                       \
-                   upsample_buf_##NAME##_d_ * C2) >> 15));      \
+    EMIT(clamptoi16((upsample_buf_##NAME##_a_ * UPSCALE_C2 +            \
+          upsample_buf_##NAME##_b_ * UPSCALE_C1 +                       \
+          upsample_buf_##NAME##_c_ * UPSCALE_C1 +                       \
+                   upsample_buf_##NAME##_d_ * UPSCALE_C2) >> 15));      \
     EMIT(upsample_buf_##NAME##_c_);                             \
   }                                                             \
   void clear_##NAME() {                                         \
@@ -76,21 +76,25 @@ public:
   }
 
   void PlayOnce(Effect* effect, float start = 0.0) {
+    sample_bytes_ = 0;
     if (effect->Play(filename_)) {
       start_ = start;
       effect_ = nullptr;
       run_ = true;
     }
+    PlayLoop(effect->GetFollowing());
   }
   void PlayLoop(Effect* effect) {
     effect_ = effect;
   }
 
   void Stop() override {
+    noInterrupts();
+    run_ = false;
     state_machine_.reset_state_machine();
     effect_ = nullptr;
-    run_ = false;
     written_ = num_samples_ = 0;
+    interrupts();
   }
 
   bool isPlaying() const {
@@ -110,7 +114,7 @@ private:
   }
 
   template<int bits> int16_t read2() {
-    if (bits == 8) return *(ptr_++) << 8;
+    if (bits == 8) return (*(ptr_++) << 8) - 32768;
     ptr_ += bits / 8 - 2;
     return *((*((int16_t**)&ptr_))++);
   }
@@ -136,7 +140,7 @@ private:
       } else if (rate == AUDIO_RATE * 2) {
         Emit05(v);
       } else {
-        STDOUT.println("Unsupported rate.");
+        default_output->println("Unsupported rate.");
         Stop();
       }
     }
@@ -165,7 +169,10 @@ private:
     else if (bits_ == 32) DecodeBytes2<32>();
   }
 
-  int ReadFile(int n) { return file_.Read(buffer + 8, n); }
+  int ReadFile(int n) {
+    SCOPED_PROFILER();
+    return file_.Read(buffer + 8, n);
+  }
 
   void loop() {
     STATE_MACHINE_BEGIN();
@@ -177,16 +184,17 @@ private:
         if (!new_file_id_) goto fail;
         new_file_id_.GetName(filename_);
         run_ = true;
+	effect_ = effect_->GetFollowing();
       }
       if (new_file_id_ && new_file_id_ == old_file_id_) {
         // Minor optimization: If we're reading the same file
         // as before, then seek to 0 instead of open/close file.
         file_.Rewind();
       } else {
-	if (!file_.Open(filename_)) {
-	  STDOUT.print("File ");
-	  STDOUT.print(filename_);
-	  STDOUT.println(" not found.");
+	if (!file_.OpenFast(filename_)) {
+	  default_output->print("File ");
+	  default_output->print(filename_);
+	  default_output->println(" not found.");
 	  goto fail;
 	}
 	YIELD();
@@ -195,11 +203,11 @@ private:
       wav_ = endswith(".wav", filename_);
       if (wav_) {
         if (ReadFile(12) != 12) {
-          STDOUT.println("Failed to read 12 bytes.");
+          default_output->println("Failed to read 12 bytes.");
           goto fail;
         }
         if (header(0) != 0x46464952 || header(2) != 0x45564157) {
-          STDOUT.println("Not RIFF WAVE.");
+          default_output->println("Not RIFF WAVE.");
           YIELD();
           goto fail;
         }
@@ -207,7 +215,7 @@ private:
         // Look for FMT header.
         while (true) {
           if (ReadFile(8) != 8) {
-            STDOUT.println("Failed to read 8 bytes.");
+            default_output->println("Failed to read 8 bytes.");
             goto fail;
           }
 
@@ -217,19 +225,19 @@ private:
             continue;
           }
           if (len_ < 16) {
-            STDOUT.println("FMT header is wrong size..");
+            default_output->println("FMT header is wrong size..");
             goto fail;
           }
           break;
         }
         
         if (16 != ReadFile(16)) {
-          STDOUT.println("Read failed.");
+          default_output->println("Read failed.");
           goto fail;
         }
         if (len_ > 16) file_.Skip(len_ - 16);
         if ((header(0) & 0xffff) != 1) {
-          STDOUT.println("Wrong format.");
+          default_output->println("Wrong format.");
           goto fail;
         }
         channels_ = header(0) >> 16;
@@ -240,12 +248,12 @@ private:
          rate_ = 44100;
          bits_ = 16;
       }
-      STDOUT.print("channels: ");
-      STDOUT.print(channels_);
-      STDOUT.print(" rate: ");
-      STDOUT.print(rate_);
-      STDOUT.print(" bits: ");
-      STDOUT.println(bits_);
+      default_output->print("channels: ");
+      default_output->print(channels_);
+      default_output->print(" rate: ");
+      default_output->print(rate_);
+      default_output->print(" bits: ");
+      default_output->println(bits_);
 
       ptr_ = buffer + 8;
       end_ = buffer + 8;
@@ -274,8 +282,8 @@ private:
 
         while (len_) {
           {
-            int bytes_read = ReadFile(file_.AlignRead(min(len_, 512u)));
-            if (bytes_read == 0)
+            int bytes_read = ReadFile(file_.AlignRead(std::min<size_t>(len_, 512u)));
+            if (bytes_read <= 0)
               break;
             len_ -= bytes_read;
             end_ = buffer + 8 + bytes_read;
@@ -287,7 +295,7 @@ private:
               // Preload should go to here...
               while (to_read_ == 0) YIELD();
 
-              int n = min(num_samples_ - written_, to_read_);
+              int n = std::min<int>(num_samples_ - written_, to_read_);
               memcpy(dest_, samples_ + written_, n * 2);
               dest_ += n;
               written_ += n;
@@ -320,6 +328,7 @@ private:
 public:
   // Called from interrupt handler.
   int read(int16_t* dest, int to_read) override {
+    SCOPED_PROFILER();
     dest_ = dest;
     to_read_ = to_read;
     loop();
@@ -333,6 +342,21 @@ public:
   // Length, seconds.
   float length() const {
     return (float)(sample_bytes_) * 8 / (bits_ * rate_);
+  }
+
+  // Current position, seconds.
+  float pos() const {
+    if (!isPlaying()) return 0.0;
+    return (float)(sample_bytes_ - len_ + end_ - ptr_) * 8 / (bits_ * rate_);
+  }
+
+  void Close() {
+    file_.Close();
+    old_file_id_ = new_file_id_ = Effect::FileID();
+  }
+
+  const char* filename() const {
+    return filename_;
   }
 
 private:

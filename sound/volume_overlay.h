@@ -17,6 +17,7 @@ public:
     volume_.set_speed(kDefaultSpeed);
   }
   int read(int16_t* data, int elements) override {
+    SCOPED_PROFILER();
     elements = T::read(data, elements);
     if (volume_.isConstant()) {
       int32_t mult = volume_.value();
@@ -24,7 +25,8 @@ public:
         // Do nothing
       } else if (mult == 0) {
         if (stop_when_zero_) {
-          this->Stop();
+	  volume_.set_speed(kDefaultSpeed);
+	  T::Stop();
         }
         for (int i = 0; i < elements; i++) data[i] = 0;
       } else {
@@ -66,7 +68,10 @@ public:
     volume_.set_speed(speed);
   }
   void set_fade_time(float t) {
-    set_speed(max(1, (int)(kMaxVolume / t / AUDIO_RATE)));
+    set_speed(std::max<int>(1, (int)(kMaxVolume / t / AUDIO_RATE)));
+  }
+  float fade_speed() const {
+    return (kMaxVolume / (float)volume_.speed_) / AUDIO_RATE;
   }
   bool isOff() const {
     return volume_.isConstant() && volume_.value() == 0;

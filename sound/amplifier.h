@@ -3,6 +3,15 @@
 
 #ifdef ENABLE_AUDIO
 
+#include "dac.h"
+
+#ifdef AUDIO_CONTROL_SGTL5000
+#include <control_sgtl5000.h>
+AudioControlSGTL5000     sgtl5000_1;
+bool sgtl5000_enabled = false;
+#endif
+
+
 // Turns off amplifier when no audio is played.
 // Maybe name this IdleHelper or something instead??
 class Amplifier : Looper, StateMachine, CommandParser {
@@ -12,7 +21,7 @@ public:
 
   bool Active() {
 //    if (saber_synth.on_) return true;
-    if (audio_splicer.isPlaying()) return true;
+//    if (audio_splicer.isPlaying()) return true;
     if (beeper.isPlaying()) return true;
     if (talkie.isPlaying()) return true;
     for (size_t i = 0; i < NELEM(wav_players); i++)
@@ -24,18 +33,30 @@ public:
   }
 
   void Enable() {
+    dac.begin();
     last_enabled_ = millis();
+#ifdef AUDIO_CONTROL_SGTL5000
+    if (!sgtl5000_enabled) {
+      sgtl5000_1.enable();
+      sgtl5000_1.volume(0.5);
+      sgtl5000_enabled = true;
+    }
+#else    
     if (!digitalRead(amplifierPin)) {
       EnableBooster();
+      pinMode(amplifierPin, OUTPUT);
       digitalWrite(amplifierPin, HIGH);
       delay(10); // Give it a little time to wake up.
     }
+#endif    
   }
 
 protected:
   void Setup() override {
     // Audio setup
+#ifndef AUDIO_CONTROL_SGTL5000
     pinMode(amplifierPin, OUTPUT);
+#endif    
     SetupStandardAudio();
     last_enabled_ = millis();
   }
@@ -47,7 +68,17 @@ protected:
       SLEEP(20);
       if (Active()) continue;
       STDOUT.println("Amplifier off.");
-      digitalWrite(amplifierPin, LOW); // turn the amplifier off
+      // digitalWrite(amplifierPin, LOW); // turn the amplifier off
+#ifdef AUDIO_CONTROL_SGTL5000
+      // Disable does nothing, so this is pointless.
+      // sgtl5000_1.volume(0.0);
+      // sgtl5000_1.disable();
+      // sgtl5000_enabled = false;
+#else
+      pinMode(amplifierPin, INPUT_ANALOG); // Let the pull-down do the work
+#endif      
+      SLEEP(20);
+      dac.end();
       while (!Active()) YIELD();
     }
     STATE_MACHINE_END();
@@ -56,40 +87,43 @@ protected:
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "amp")) {
       if (!strcmp(arg, "on")) {
-        digitalWrite(amplifierPin, HIGH); // turn the amplifier off
+	Enable();
         return true;
       }
       if (!strcmp(arg, "off")) {
-        digitalWrite(amplifierPin, LOW); // turn the amplifier off
+#ifdef AUDIO_CONTROL_SGTL5000
+	sgtl5000_1.volume(0.0);
+	sgtl5000_1.disable();
+#else
+	pinMode(amplifierPin, INPUT_ANALOG); // Let the pull-down do the work
+#endif      
         return true;
       }
     }
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "whatison")) {
       bool on = false;
       SaberBase::DoIsOn(&on);
       STDOUT.print("Saber bases: ");
       STDOUT.println(on ? "On" : "Off");
-      STDOUT.print("Audio splicer: ");
-      STDOUT.println(audio_splicer.isPlaying() ? "On" : "Off");
+//      STDOUT.print("Audio splicer: ");
+//      STDOUT.println(audio_splicer.isPlaying() ? "On" : "Off");
       STDOUT.print("Beeper: ");
       STDOUT.println(beeper.isPlaying() ? "On" : "Off");
       STDOUT.print("Talker: ");
       STDOUT.println(talkie.isPlaying() ? "On" : "Off");
       for (size_t i = 0; i < NELEM(wav_players); i++) {
-        STDOUT.print("Wav player ");
-        STDOUT.print(i);
-        STDOUT.print(": ");
-        STDOUT.print(wav_players[i].isPlaying() ? "On" : "Off");
-        STDOUT.print(" (eof =  ");
-        STDOUT.print(wav_players[i].eof());
-        STDOUT.print(" volume = ");
-        STDOUT.print(wav_players[i].volume());
-        STDOUT.print(" refs = ");
-        STDOUT.print(wav_players[i].refs());
-        STDOUT.println(")");
+	STDOUT << "Wav player " << i << ": "
+	       << (wav_players[i].isPlaying() ? "On" : "Off")
+	       << " (eof =  " << wav_players[i].eof()
+	       << " volume = " << wav_players[i].volume()
+	       << " refs = " << wav_players[i].refs()
+	       << " fade speed = " << wav_players[i].fade_speed()
+	       << " filename=" << wav_players[i].filename() << ")\n";
       }
       return true;
     }
+#endif    
     return false;
   }
 
@@ -106,8 +140,12 @@ Amplifier amplifier;
 void EnableAmplifier() {
   amplifier.Enable();
 }
+bool AmplifierIsActive() {
+  return amplifier.Active();
+}
 
 #else
 void EnableAmplifier() { }
+bool AmplifierIsActive() { return false; }
 #endif   // enable audio
 #endif

@@ -166,9 +166,9 @@ public:
         if (status) {
           // gyroscope data available
           if (readBytes(OUT_X_MSB, databuffer, 6) == 6) {
-            SaberBase::DoAccel(
-              Vec3::FromData(databuffer, 4.0 / 32768.0, // 4 g range
-			     Vec3::BYTEORDER_MSB, Vec3::ORIENTATION),
+	    prop.DoAccel(
+              MotionUtil::FromData(databuffer, 4.0 / 32768.0, // 4 g range
+				   Vec3::BYTEORDER_MSB, Vec3::ORIENTATION),
 	      false);
           }
         }

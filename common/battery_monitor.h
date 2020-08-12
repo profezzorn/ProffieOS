@@ -1,8 +1,18 @@
 #ifndef COMMON_BATTERY_MONITOR_H
 #define COMMON_BATTERY_MONITOR_H
 
-class BatteryMonitor : Looper, CommandParser {
+#ifndef NO_BATTERY_MONITOR
+
+#include "analog_read.h"
+
+class BatteryMonitor : Looper, CommandParser, StateMachine {
 public:
+BatteryMonitor() : reader_(batteryLevelPin,
+			     INPUT
+#if VERSION_MAJOR == 5
+                             , 10e-6
+#endif
+   ) {}
   const char* name() override { return "BatteryMonitor"; }
   float battery() const {
     return last_voltage_;
@@ -10,15 +20,14 @@ public:
   void SetLoad(bool on) {
     loaded_ = on;
   }
-  bool low() const {
-    return battery() < (loaded_ ? 2.6 : 3.0);
-  }
+  bool low() const { return low_count_ > 1000; }
   float battery_percent() {
     // Energy is roughly proportional to voltage squared.
     float v = battery();
     float min_v = 3.0;
     float max_v = 4.2;
     return 100.0 * (v * v - min_v * min_v) / (max_v * max_v - min_v * min_v);
+//    return 100.0 * (v - min_v) / (max_v - min_v);
   }
   void SetPinHigh(bool go_high) {
     if (go_high) {
@@ -36,22 +45,45 @@ public:
   }
 protected:
   void Setup() override {
-    really_old_voltage_ = old_voltage_ = last_voltage_ = battery_now();
+    last_voltage_ = battery_now();
     SetPinHigh(false);
   }
   void Loop() override {
-    uint32_t now = micros();
-    if (now - last_voltage_read_time_ >= 1000) {
-      float v = battery_now();
-      last_voltage_ = last_voltage_ * 0.999 + v * 0.001;
-      last_voltage_read_time_ = now;
-    }
     if (monitor.ShouldPrint(Monitoring::MonitorBattery) ||
         millis() - last_print_millis_ > 20000) {
       STDOUT.print("Battery voltage: ");
       STDOUT.println(battery());
       last_print_millis_ = millis();
     }
+
+    STATE_MACHINE_BEGIN();
+    last_voltage_read_time_ = micros();
+    while (true) {
+      while (micros() - last_voltage_read_time_ < 1000) YIELD();
+      while (!reader_.Start()) YIELD();
+      while (!reader_.Done()) YIELD();
+      float v = battery_now();
+      uint32_t now = micros();
+      float mul = powf(0.05, (now - last_voltage_read_time_) / 1000000.0);
+      last_voltage_read_time_ = now;
+      last_voltage_ = last_voltage_ * mul + v * (1 - mul);
+      if (IsLow()) {
+	low_count_++;
+      } else {
+	low_count_ = 0;
+      }
+    }
+    STATE_MACHINE_END();
+  }
+
+  bool IsLow() {
+#if VERSION_MAJOR >= 4
+    if (USBD_Connected()) return false;
+#endif
+    // Battery isn't low if it's not connected at all.
+    if (battery() < 0.5) return false;
+    
+    return battery() < (loaded_ ? 2.6 : 3.0);
   }
 
   bool Parse(const char* cmd, const char* arg) override {
@@ -64,14 +96,25 @@ protected:
       float v = battery();
       STDOUT.println(v);
 #ifdef ENABLE_AUDIO
-      talkie.SayDigit((int)floor(v));
+      talkie.SayDigit((int)floorf(v));
       talkie.Say(spPOINT);
-      talkie.SayDigit(((int)floor(v * 10)) % 10);
-      talkie.SayDigit(((int)floor(v * 100)) % 10);
+      talkie.SayDigit(((int)floorf(v * 10)) % 10);
+      talkie.SayDigit(((int)floorf(v * 100)) % 10);
       talkie.Say(spVOLTS);
 #endif
       return true;
     }
+#if 0
+    if (!strcmp(cmd, "bstate")) {
+      STDOUT.print("Next state: ");
+      STDOUT.println(reader_.state_machine_.next_state_);
+      STDOUT.print("ADC SMP: ");
+      STDOUT.println(reader_.adc_smp_);
+      STDOUT.print("ADC state: ");
+      STDOUT.println(stm32l4_adc.state);
+      return true;
+    }
+#endif
     return false;
   }
   void Help() override {
@@ -80,26 +123,41 @@ protected:
 private:
   float battery_now() {
     // This is the volts on the battery monitor pin.
-    // TODO: analogRead can be very slow, make an async one and/or read it less often.
-    float volts = 3.3 * analogRead(batteryLevelPin) / 1024.0;
+    float volts = 3.3 * reader_.Value() / 1024.0;
+#if VERSION_MAJOR == 5
+    return volts * 2.0;
+#else
 #ifdef V2
     float pulldown = 220000;  // External pulldown
-    float pullup = 2000000;  // External pullup
+    float pullup = 2000000;   // External pullup
 #else
     float pulldown = 33000;  // Internal pulldown is 33kOhm
     float pullup = BATTERY_PULLUP_OHMS;  // External pullup
 #endif
     return volts * (1.0 + pullup / pulldown);
+#endif
   }
 
   bool loaded_ = false;
   float last_voltage_ = 0.0;
   uint32_t last_voltage_read_time_ = 0;
-  float old_voltage_ = 0.0;
-  float really_old_voltage_ = 0.0;
   uint32_t last_print_millis_;
-  uint32_t last_beep_ = 0;
+  uint32_t low_count_ = 0;
+  AnalogReader reader_;
 };
+
+#else  // NO_BATTERY_MONITOR
+
+class BatteryMonitor {
+public:
+  float battery() const { return 3.7f; }
+  void SetLoad(bool on) {}
+  bool low() const { return false; }
+  float battery_percent() { return 100.0f;  }
+  void SetPinHigh(bool go_high) {}
+};
+
+#endif  // NO_BATTERY_MONITOR
 
 BatteryMonitor battery_monitor;
 

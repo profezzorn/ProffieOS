@@ -11,11 +11,38 @@ public:
 
   void Activate(SaberBase* base_font) {
     STDOUT.println("Activating SmoothSwing V2");
+    if (SFX_swingl) {
+      L = &SFX_swingl;
+      H = &SFX_swingh;
+    } else {
+      L = &SFX_lswing;
+      H = &SFX_hswing;
+    }
     SetDelegate(base_font);
-    if (swingl.files_found() != swingh.files_found()) {
+    if (L->files_found() != H->files_found()) {
       STDOUT.println("Warning, swingl and swingh should have the same number of files.");
     }
-    swings_ = min(swingl.files_found(), swingh.files_found());
+    // check for swngxx files to use as accent swings
+    if ((SFX_swng || SFX_swing) > 0 && smooth_swing_config.AccentSwingSpeedThreshold > 0.0) {
+      STDOUT.println("Accent Swings Enabled.");
+      STDOUT.print("Polyphonic swings: ");
+      STDOUT.println(SFX_swng.files_found());
+      STDOUT.print("Monophonic swings: ");
+      STDOUT.println(SFX_swing.files_found());
+      accent_swings_present = true;
+      if (SFX_slsh && smooth_swing_config.AccentSlashAccelerationThreshold > 0.0) {
+        STDOUT.println("Accent Slashes Enabled.");
+        STDOUT.print("Polyphonic slashes: ");
+        STDOUT.println(SFX_slsh.files_found());
+        accent_slashes_present = true;
+      } else {
+        accent_slashes_present = false;
+        STDOUT.println("Accent Slashes NOT Detected: ");
+      }
+    } else {
+      accent_swings_present = false;
+      STDOUT.println("Accent Swings NOT Detected: ");
+    }
   }
 
   void Deactivate() {
@@ -37,14 +64,14 @@ public:
     // No point in picking a new random so soon after picking one.
     if (A.player && m - last_random_ < 1000) return;
     last_random_ = m;
-    int swing = random(swings_);
+    int swing = random(L->files_found());
     float start = m / 1000.0;
     A.Stop();
     B.Stop();
-    swingl.Select(swing);
-    swingh.Select(swing);
-    A.Play(&swingl, start);
-    B.Play(&swingh, start);
+    L->Select(swing);
+    H->Select(swing);
+    A.Play(L, start);
+    B.Play(H, start);
     if (random(2)) Swap();
     float t1_offset = random(1000) / 1000.0 * 50 + 10;
     A.SetTransition(t1_offset, smooth_swing_config.Transition1Degrees);
@@ -61,11 +88,11 @@ public:
       STDOUT.println("SmoothSwing V2 cannot allocate wav player.");
     }
   }
-  void SB_Off() override {
+  void SB_Off(OffType off_type) override {
     on_ = false;
     A.Off();
     B.Off();
-    delegate_->SB_Off();
+    delegate_->SB_Off(off_type);
   }
 
   enum class SwingState {
@@ -82,13 +109,13 @@ public:
     Vec3 gyro = gyro_filter_.filter(raw_gyro);
     // degrees per second
     // May not need to smooth gyro since volume is smoothed.
-    float speed = sqrt(gyro.z * gyro.z + gyro.y * gyro.y);
+    float speed = sqrtf(gyro.z * gyro.z + gyro.y * gyro.y);
     uint32_t t = micros();
     uint32_t delta = t - last_micros_;
     if (delta > 1000000) delta = 1;
     last_micros_ = t;
     float hum_volume = 1.0;
-    
+
     switch (state_) {
       case SwingState::OFF:
         if (speed < smooth_swing_config.SwingStrengthThreshold) {
@@ -101,11 +128,16 @@ public:
           break;
         }
         state_ = SwingState::ON;
-        
+
       case SwingState::ON:
+        // trigger accent swing
+        if (accent_swings_present && (A.isPlaying() || B.isPlaying())) {
+          delegate_->StartSwing(gyro, smooth_swing_config.AccentSwingSpeedThreshold,
+          smooth_swing_config.AccentSlashAccelerationThreshold);
+        }
         if (speed >= smooth_swing_config.SwingStrengthThreshold * 0.9) {
           float swing_strength =
-            min(1.0, speed / smooth_swing_config.SwingSensitivity);
+            std::min<float>(1.0, speed / smooth_swing_config.SwingSensitivity);
           A.rotate(-speed * delta / 1000000.0);
           // If the current transition is done, switch A & B,
           // and set the next transition to be 180 degrees from the one
@@ -119,7 +151,7 @@ public:
             mixab = clamp(- A.begin() / A.width, 0.0, 1.0);
 
           float mixhum =
-            pow(swing_strength, smooth_swing_config.SwingSharpness);
+            powf(swing_strength, smooth_swing_config.SwingSharpness);
 
           hum_volume =
             1.0 - mixhum * smooth_swing_config.MaximumHumDucking / 100.0;
@@ -144,8 +176,12 @@ public:
             STDOUT.print("  hum_volume: ");
             STDOUT.println(hum_volume);
           }
-          A.set_volume(mixhum * mixab);
-          B.set_volume(mixhum * (1.0 - mixab));
+          if (on_) {
+            // We need to stop setting the volume when off, or playback may never stop.
+            mixhum = delegate_->SetSwingVolume(swing_strength, mixhum);
+            A.set_volume(mixhum * mixab);
+            B.set_volume(mixhum * (1.0 - mixab));
+          }
           break;
         }
         A.set_volume(0);
@@ -175,9 +211,13 @@ private:
 	player = GetFreeWavPlayer();
 	if (!player) return;
       }
-      player->set_volume(0.0);
+      player->set_volume(0.0f);
       player->PlayOnce(effect, start);
       player->PlayLoop(effect);
+    }
+    bool isPlaying() {
+      if (!player) return false;
+      return player->isPlaying();
     }
     void Off() {
       if (!player) return;
@@ -214,10 +254,12 @@ private:
 
   uint32_t last_random_ = 0;
   bool on_ = false;;
+  bool accent_swings_present = false;
+  bool accent_slashes_present = false;
   BoxFilter<Vec3, 3> gyro_filter_;
-  int swings_;
   uint32_t last_micros_;
   SwingState state_ = SwingState::OFF;;
+  Effect *L, *H;
 };
 
 #endif

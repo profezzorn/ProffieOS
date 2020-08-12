@@ -1,12 +1,18 @@
 #ifndef BLADES_SIMPLE_BLADE_H
 #define BLADES_SIMPLE_BLADE_H
 
+#include "abstract_blade.h"
+
 template<int PIN, class LED>
 class PWMPin : public PWMPinInterface {
 public:
   void Activate() override {
+    static_assert(PIN >= 0, "PIN is negative?");
     LSanalogWriteSetup(PIN);
     LSanalogWrite(PIN, 0);  // make it black
+  }
+  void Deactivate() override {
+    LSanalogWriteTeardown(PIN);
   }
   void set(const Color16& c) override {
     LSanalogWrite(PIN, led_.PWM(c));
@@ -15,6 +21,8 @@ public:
     LSanalogWrite(PIN, led_.PWM_overdrive(c));
   }
 
+  Color8 getColor8() const { return led_.getColor8(); }
+
   DriveLogic<LED> led_;
 };
 
@@ -22,10 +30,30 @@ template<class LED>
 class PWMPin<-1, LED> : PWMPinInterface {
 public:
   void Activate() override {}
+  void Deactivate() override {}
   void set(const Color16& c) override {}
   void set_overdrive(const Color16& c) override {}
 };
 
+template<int PIN>
+class PWMPin<PIN, NoLED> : PWMPinInterface {
+public:
+  void Activate() override {}
+  void Deactivate() override {}
+  void set(const Color16& c) override {}
+  void set_overdrive(const Color16& c) override {}
+  Color8 getColor8() const { return Color8(0,0,0); }
+};
+
+template<>
+class PWMPin<-1, NoLED> : PWMPinInterface {
+public:
+  void Activate() override {}
+  void Deactivate() override {}
+  void set(const Color16& c) override {}
+  void set_overdrive(const Color16& c) override {}
+  Color8 getColor8() const { return Color8(0,0,0); }
+};
 template<class ... LEDS>
 class MultiChannelLED {};
 
@@ -33,8 +61,10 @@ template<>
 class MultiChannelLED<> : public PWMPinInterface {
 public:
   void Activate() override {}
+  void Deactivate() override {}
   void set(const Color16& c) override {}
   void set_overdrive(const Color16& c) override {}
+  Color8 getColor8() const { return Color8(0,0,0); }
 };
 
 template<class LED, class... LEDS>
@@ -44,6 +74,10 @@ public:
     led_.Activate();
     rest_.Activate();
   }
+  void Deactivate() override {
+    led_.Deactivate();
+    rest_.Deactivate();
+  }
   void set(const Color16& c) override {
     led_.set(c);
     rest_.set(c);
@@ -51,6 +85,9 @@ public:
   void set_overdrive(const Color16& c) override {
     led_.set_overdrive(c);
     rest_.set_overdrive(c);
+  }
+  Color8 getColor8() const {
+    return led_.getColor8() | rest_.getColor8();
   }
 private:
   LED led_;
@@ -66,6 +103,7 @@ public:
   static const size_t size = 0;
   void InitArray(PWMPinInterface** pos) {}
   void Activate() {}
+  void Deactivate() {}
 };
 
 template<class LED, class... LEDS>
@@ -80,6 +118,13 @@ public:
     led_.Activate();
     rest_.Activate();
   }
+  void Deactivate() {
+    led_.Deactivate();
+    rest_.Deactivate();
+  }
+  Color8 getColor8() const {
+    return led_.getColor8();
+  }
 private:
   LED led_;
   LEDArrayHelper<LEDS...> rest_;
@@ -90,10 +135,10 @@ private:
 // Note that this class does nothing when first constructed. It only starts
 // interacting with pins and timers after Activate() is called.
 template<class ... LEDS>
-class Simple_Blade : public SaberBase, CommandParser, Looper, public BladeBase {
+class Simple_Blade : public AbstractBlade, CommandParser, Looper {
 public:
   Simple_Blade() :
-    SaberBase(NOLINK),
+    AbstractBlade(),
     CommandParser(NOLINK),
     Looper(NOLINK) {
     led_structs_.InitArray(leds_);
@@ -102,16 +147,40 @@ public:
 
   void Activate() override {
     STDOUT.println("Simple Blade");
-    power_ = true;
-    led_structs_.Activate();
+    Power(true);
     CommandParser::Link();
     Looper::Link();
-    SaberBase::Link(this);
+    AbstractBlade::Activate();
+  }
+
+  void Deactivate() override {
+    Power(false);
+    AbstractBlade::Deactivate();
+    Looper::Unlink();
+    CommandParser::Unlink();
+  }
+
+  void Power(bool on) {
+    if (power_ != on) {
+      if (on) {
+	led_structs_.Activate();
+      } else {
+	led_structs_.Deactivate();
+      }
+      power_ = on;
+    }
   }
 
   // BladeBase implementation
   int num_leds() const override {
     return LEDArrayHelper<LEDS...>::size;
+  }
+  Color8::Byteorder get_byteorder() const override {
+    Color8 color = led_structs_.getColor8();
+    if (color.r && color.g && color.b) {
+      return Color8::RGB;
+    }
+    return Color8::NONE;
   }
   bool is_on() const override {
     return on_;
@@ -124,13 +193,12 @@ public:
     leds_[led]->set_overdrive(c);
   }
 
-  bool clash() override {
-    bool ret = clash_;
-    clash_ = false;
-    return ret;
-  }
   void allow_disable() override {
-    power_ = false;
+    if (!on_) Power(false);
+  }
+  virtual void SetStyle(BladeStyle* style) {
+    Power(true);
+    AbstractBlade::SetStyle(style);
   }
 
   // SaberBase implementation
@@ -138,26 +206,35 @@ public:
     if (on_ || power_) *on = true;
   }
   void SB_On() override {
+    AbstractBlade::SB_On();
     battery_monitor.SetLoad(true);
-    power_ = on_ = true;
+    on_ = true;
+    Power(true);
   }
-  void SB_Off() override {
+  void SB_PreOn(float* delay) override {
+    AbstractBlade::SB_PreOn(delay);
+    // This blade uses EFFECT_PREON, so we need to turn the power on now.
+    battery_monitor.SetLoad(true);
+    Power(true);
+  }
+  void SB_Off(OffType off_type) override {
+    AbstractBlade::SB_Off(off_type);
     battery_monitor.SetLoad(false);
     on_ = false;
-  }
-  void SB_Clash() override {
-    clash_ = true;
+    if (off_type == OFF_IDLE) {
+      Power(false);
+    }
   }
 
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-         SB_On();
-         return true;
+        SB_On();
+        return true;
       }
       if (!strcmp(arg, "off")) {
-         SB_Off();
-         return true;
+        SB_Off(OFF_NORMAL);
+        return true;
       }
     }
     return false;
@@ -170,7 +247,11 @@ public:
 protected:
   void Loop() override {
     if (!power_) return;
-    current_style_->run(this);
+    // Make sure the booster is running so we don't get low voltage
+    // and under-drive any FETs.
+    EnableBooster();
+    if (current_style_)
+      current_style_->run(this);
   }
 
 private:
@@ -179,7 +260,6 @@ private:
 
   bool on_ = false;
   bool power_ = false;
-  bool clash_ = false;
 };
 
 template<class LED1, class LED2, class LED3, class LED4,
