@@ -5,7 +5,11 @@
 
 #ifdef ENABLE_WS2811
 
-Color16 color_buffer[maxLedsPerStrip];
+#ifndef EXTRA_COLOR_BUFFER_SPACE
+#define EXTRA_COLOR_BUFFER_SPACE 0
+#endif
+
+Color16 color_buffer[maxLedsPerStrip + EXTRA_COLOR_BUFFER_SPACE];
 BladeBase* current_blade = NULL;
 
 class WS2811PIN {
