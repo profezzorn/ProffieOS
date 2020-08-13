@@ -15,6 +15,9 @@ public:
 class BuiltinPresetAllocator : public StyleFactory {
 public:
   BladeStyle* make() override {
+#if NUM_BLADES == 0
+    return nullptr;
+#else    
     // Technically we should call run on these.
     IntArg<1, 0> preset_arg;
     IntArg<2, 1> style_arg;
@@ -30,6 +33,7 @@ public:
     ONCEPERBLADE(GET_PRESET_STYLE);
     if (!allocator) return nullptr;
     return allocator->make();
+#endif    
   }
 };
 

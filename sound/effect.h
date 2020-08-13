@@ -223,6 +223,10 @@ class Effect {
   void Select(int n) {
     selected_ = n;
   }
+  void SelectNext() {
+    selected_++;
+    if (selected_ == (int)files_found()) selected_ = 0;
+  }
 
   Effect* GetFollowing() const {
     return following_;
@@ -447,6 +451,7 @@ EFFECT2(pwroff, pstoff);
 EFFECT(clash);
 EFFECT(force);    // also polyphonic
 EFFECT(stab);     // also polyphonic
+EFFECT(spin);     // also polyphonic
 EFFECT(blaster);
 EFFECT2(lockup, lockup);
 EFFECT(poweronf); // force poweron

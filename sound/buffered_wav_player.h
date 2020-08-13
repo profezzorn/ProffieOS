@@ -7,12 +7,15 @@
 class BufferedWavPlayer;
 size_t WhatUnit(class BufferedWavPlayer* player);
 
+#ifndef AUDIO_BUFFER_SIZE_BYTES
+#define AUDIO_BUFFER_SIZE_BYTES 512
+#endif
 
 // Combines a WavPlayer and a BufferedAudioStream into a
 // buffered wav player. When we start a new sample, we
 // make sure to fill up the buffer before we start playing it.
 // This minimizes latency while making sure to avoid any gaps.
-class BufferedWavPlayer : public VolumeOverlay<BufferedAudioStream<512> > {
+class BufferedWavPlayer : public VolumeOverlay<BufferedAudioStream<AUDIO_BUFFER_SIZE_BYTES> > {
 public:
   void Play(const char* filename) {
     MountSDCard();
@@ -87,18 +90,18 @@ public:
   // This makes a paused player report very little available space, which
   // means that it will be low priority for reading.
   size_t space_available() const override {
-    size_t ret = VolumeOverlay<BufferedAudioStream<512>>::space_available();
+    size_t ret = VolumeOverlay<BufferedAudioStream<AUDIO_BUFFER_SIZE_BYTES>>::space_available();
     if (pause_ && ret) ret = 2; // still slightly higher than FromFileStyle<>
     return ret;
   }
 
   int read(int16_t* dest, int to_read) override {
     if (pause_) return 0;
-    return VolumeOverlay<BufferedAudioStream<512> >::read(dest, to_read);
+    return VolumeOverlay<BufferedAudioStream<AUDIO_BUFFER_SIZE_BYTES> >::read(dest, to_read);
   }
   bool eof() const override {
     if (pause_) return true;
-    return VolumeOverlay<BufferedAudioStream<512> >::eof();
+    return VolumeOverlay<BufferedAudioStream<AUDIO_BUFFER_SIZE_BYTES> >::eof();
   }
 
   float length() const { return wav.length(); }

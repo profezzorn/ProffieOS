@@ -5,6 +5,13 @@
 
 #include "dac.h"
 
+#ifdef AUDIO_CONTROL_SGTL5000
+#include <control_sgtl5000.h>
+AudioControlSGTL5000     sgtl5000_1;
+bool sgtl5000_enabled = false;
+#endif
+
+
 // Turns off amplifier when no audio is played.
 // Maybe name this IdleHelper or something instead??
 class Amplifier : Looper, StateMachine, CommandParser {
@@ -28,18 +35,28 @@ public:
   void Enable() {
     dac.begin();
     last_enabled_ = millis();
+#ifdef AUDIO_CONTROL_SGTL5000
+    if (!sgtl5000_enabled) {
+      sgtl5000_1.enable();
+      sgtl5000_1.volume(0.5);
+      sgtl5000_enabled = true;
+    }
+#else    
     if (!digitalRead(amplifierPin)) {
       EnableBooster();
       pinMode(amplifierPin, OUTPUT);
       digitalWrite(amplifierPin, HIGH);
       delay(10); // Give it a little time to wake up.
     }
+#endif    
   }
 
 protected:
   void Setup() override {
     // Audio setup
+#ifndef AUDIO_CONTROL_SGTL5000
     pinMode(amplifierPin, OUTPUT);
+#endif    
     SetupStandardAudio();
     last_enabled_ = millis();
   }
@@ -52,7 +69,14 @@ protected:
       if (Active()) continue;
       STDOUT.println("Amplifier off.");
       // digitalWrite(amplifierPin, LOW); // turn the amplifier off
+#ifdef AUDIO_CONTROL_SGTL5000
+      // Disable does nothing, so this is pointless.
+      // sgtl5000_1.volume(0.0);
+      // sgtl5000_1.disable();
+      // sgtl5000_enabled = false;
+#else
       pinMode(amplifierPin, INPUT_ANALOG); // Let the pull-down do the work
+#endif      
       SLEEP(20);
       dac.end();
       while (!Active()) YIELD();
@@ -63,11 +87,16 @@ protected:
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "amp")) {
       if (!strcmp(arg, "on")) {
-        digitalWrite(amplifierPin, HIGH); // turn the amplifier off
+	Enable();
         return true;
       }
       if (!strcmp(arg, "off")) {
-        digitalWrite(amplifierPin, LOW); // turn the amplifier off
+#ifdef AUDIO_CONTROL_SGTL5000
+	sgtl5000_1.volume(0.0);
+	sgtl5000_1.disable();
+#else
+	pinMode(amplifierPin, INPUT_ANALOG); // Let the pull-down do the work
+#endif      
         return true;
       }
     }

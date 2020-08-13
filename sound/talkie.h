@@ -666,6 +666,8 @@ public:
     for (int i = 0; i < 10; i++) x[i] = 0;
   }
 
+  bool Empty() { return num_words == 0; }
+
   void Say(const uint8_t* addr, uint32_t rate = 25,
 	   const tms5100_coeffs* coeffs = &tms5220_coeff
 //	   const tms5100_coeffs* coeffs = &tms5110a_coeff
@@ -750,6 +752,14 @@ public:
     }
     n %= 10;
     if (n) SayDigit(n);
+  }
+
+  void Say2Digits(int number) {
+    int x = 1;
+    while (x < number) x *= 10;
+    x /= 100;
+    if (x > 1) number -= number % x;
+    SayNumber(number);
   }
 
   // The ROMs used with the TI speech were serial, not byte wide.

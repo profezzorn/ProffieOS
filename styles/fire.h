@@ -28,8 +28,8 @@ template<int DELAY = 0, int SPEED = 2,
   class OFF = FireConfig<0, 0, NORM::Cooling>>
 class StyleFireBase {
 protected:
-  StyleFireBase() {
-    for (size_t i = 0; i < NELEM(heat_); i++) heat_[i] = 0;
+  ~StyleFireBase() {
+    delete[] heat_;
   }
   enum OnState {
     STATE_OFF = 0,
@@ -56,6 +56,11 @@ protected:
     bool keep_running = true;
     uint32_t m = millis();
     num_leds_ = blade->num_leds();
+    if (!heat_) {
+      size_t N = num_leds_ + SPEED + 3;
+      heat_ = new unsigned short[N];
+      for (size_t i = 0; i < N; i++) heat_[i] = 0;
+    }
     if (m - last_update_ >= 10) {
       last_update_ = m;
 
@@ -90,7 +95,7 @@ protected:
   OneshotEffectDetector<EFFECT_CLASH> clash_;
   int num_leds_;
   uint32_t last_update_;
-  unsigned short heat_[maxLedsPerStrip + 13];
+  unsigned short* heat_ = 0;
   OnState state_ = STATE_OFF;
   uint32_t on_time_;
 };

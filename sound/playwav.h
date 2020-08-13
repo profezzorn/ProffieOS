@@ -114,7 +114,7 @@ private:
   }
 
   template<int bits> int16_t read2() {
-    if (bits == 8) return *(ptr_++) << 8;
+    if (bits == 8) return (*(ptr_++) << 8) - 32768;
     ptr_ += bits / 8 - 2;
     return *((*((int16_t**)&ptr_))++);
   }

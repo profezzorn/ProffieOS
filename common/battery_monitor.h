@@ -1,6 +1,8 @@
 #ifndef COMMON_BATTERY_MONITOR_H
 #define COMMON_BATTERY_MONITOR_H
 
+#ifndef NO_BATTERY_MONITOR
+
 #include "analog_read.h"
 
 class BatteryMonitor : Looper, CommandParser, StateMachine {
@@ -143,6 +145,19 @@ private:
   uint32_t low_count_ = 0;
   AnalogReader reader_;
 };
+
+#else  // NO_BATTERY_MONITOR
+
+class BatteryMonitor {
+public:
+  float battery() const { return 3.7f; }
+  void SetLoad(bool on) {}
+  bool low() const { return false; }
+  float battery_percent() { return 100.0f;  }
+  void SetPinHigh(bool go_high) {}
+};
+
+#endif  // NO_BATTERY_MONITOR
 
 BatteryMonitor battery_monitor;
 

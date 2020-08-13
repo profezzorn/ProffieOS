@@ -1,6 +1,10 @@
 #ifndef SOUND_DAC_H
 #define SOUND_DAC_H
 
+#if defined(__IMXRT1062__)
+void set_audioClock(int nfact, int32_t nmult, uint32_t ndiv,  bool force = false); // sets PLL4
+#endif
+
 // DMA-driven audio output.
 // Based on the Teensy Audio library code.
 #define AUDIO_BUFFER_SIZE 44
@@ -11,6 +15,8 @@
 #ifdef TEENSYDUINO
 // MCLK needs to be 48e6 / 1088 * 256 = 11.29411765 MHz -> 44.117647 kHz sample rate
 //
+#if defined(KINETISK) || defined(KINETISL)
+
 #if F_CPU == 96000000 || F_CPU == 48000000 || F_CPU == 24000000
   // PLL is at 96 MHz in these modes
   #define MCLK_MULT 2
@@ -56,6 +62,8 @@
 #endif
 #endif
 
+#endif // KINETISK/L
+
 #define CHANNELS 2
 
 #else // TEENSYDUINO
@@ -81,6 +89,8 @@ public:
     dma.begin(true); // Allocate the DMA channel first
 
 #ifdef USE_I2S
+
+#if defined(KINETISK) || defined(KINETISL)
     SIM_SCGC6 |= SIM_SCGC6_I2S;
     SIM_SCGC7 |= SIM_SCGC7_DMA;
     SIM_SCGC6 |= SIM_SCGC6_DMAMUX;
@@ -105,6 +115,62 @@ public:
     CORE_PIN9_CONFIG  = PORT_PCR_MUX(6); // pin  9, PTC3, I2S0_TX_BCLK
     CORE_PIN22_CONFIG = PORT_PCR_MUX(6); // pin 22, PTC1, I2S0_TXD0
 
+#elif defined(__IMXRT1062__)
+    
+    CCM_CCGR5 |= CCM_CCGR5_SAI1(CCM_CCGR_ON);
+    int fs = AUDIO_RATE;
+    // PLL between 27*24 = 648MHz und 54*24=1296MHz
+    int n1 = 4; //SAI prescaler 4 => (n1*n2) = multiple of 4
+    int n2 = 1 + (24000000 * 27) / (fs * 256 * n1);
+
+    double C = ((double)fs * 256 * n1 * n2) / 24000000;
+    int c0 = C;
+    int c2 = 10000;
+    int c1 = C * c2 - (c0 * c2);
+    set_audioClock(c0, c1, c2);
+
+    // clear SAI1_CLK register locations
+    CCM_CSCMR1 = (CCM_CSCMR1 & ~(CCM_CSCMR1_SAI1_CLK_SEL_MASK))
+      | CCM_CSCMR1_SAI1_CLK_SEL(2); // &0x03 // (0,1,2): PLL3PFD0, PLL5, PLL4
+    CCM_CS1CDR = (CCM_CS1CDR & ~(CCM_CS1CDR_SAI1_CLK_PRED_MASK | CCM_CS1CDR_SAI1_CLK_PODF_MASK))
+      | CCM_CS1CDR_SAI1_CLK_PRED(n1-1) // &0x07
+      | CCM_CS1CDR_SAI1_CLK_PODF(n2-1); // &0x3f
+    
+    // Select MCLK
+    IOMUXC_GPR_GPR1 = (IOMUXC_GPR_GPR1
+		       & ~(IOMUXC_GPR_GPR1_SAI1_MCLK1_SEL_MASK))
+      | (IOMUXC_GPR_GPR1_SAI1_MCLK_DIR | IOMUXC_GPR_GPR1_SAI1_MCLK1_SEL(0));
+
+    CORE_PIN23_CONFIG = 3;  //1:MCLK
+    CORE_PIN21_CONFIG = 3;  //1:RX_BCLK
+    CORE_PIN20_CONFIG = 3;  //1:RX_SYNC
+    
+    int rsync = 0;
+    int tsync = 1;
+
+    I2S1_TMR = 0;
+    //I2S1_TCSR = (1<<25); //Reset
+    I2S1_TCR1 = I2S_TCR1_RFW(1);
+    I2S1_TCR2 = I2S_TCR2_SYNC(tsync) | I2S_TCR2_BCP // sync=0; tx is async;
+      | (I2S_TCR2_BCD | I2S_TCR2_DIV((1)) | I2S_TCR2_MSEL(1));
+    I2S1_TCR3 = I2S_TCR3_TCE;
+    I2S1_TCR4 = I2S_TCR4_FRSZ((2-1)) | I2S_TCR4_SYWD((32-1)) | I2S_TCR4_MF
+      | I2S_TCR4_FSD | I2S_TCR4_FSE | I2S_TCR4_FSP;
+    I2S1_TCR5 = I2S_TCR5_WNW((32-1)) | I2S_TCR5_W0W((32-1)) | I2S_TCR5_FBT((32-1));
+    
+    I2S1_RMR = 0;
+    //I2S1_RCSR = (1<<25); //Reset
+    I2S1_RCR1 = I2S_RCR1_RFW(1);
+    I2S1_RCR2 = I2S_RCR2_SYNC(rsync) | I2S_RCR2_BCP  // sync=0; rx is async;
+      | (I2S_RCR2_BCD | I2S_RCR2_DIV((1)) | I2S_RCR2_MSEL(1));
+    I2S1_RCR3 = I2S_RCR3_RCE;
+    I2S1_RCR4 = I2S_RCR4_FRSZ((2-1)) | I2S_RCR4_SYWD((32-1)) | I2S_RCR4_MF
+      | I2S_RCR4_FSE | I2S_RCR4_FSP | I2S_RCR4_FSD;
+    I2S1_RCR5 = I2S_RCR5_WNW((32-1)) | I2S_RCR5_W0W((32-1)) | I2S_RCR5_FBT((32-1));
+
+    CORE_PIN7_CONFIG  = 3;  //1:TX_DATA0
+#endif
+
 #if defined(KINETISK)
     dma.TCD->SADDR = dac_dma_buffer;
     dma.TCD->SOFF = 2;
@@ -117,12 +183,29 @@ public:
     dma.TCD->DLASTSGA = 0;
     dma.TCD->BITER_ELINKNO = sizeof(dac_dma_buffer) / 2;
     dma.TCD->CSR = DMA_TCD_CSR_INTHALF | DMA_TCD_CSR_INTMAJOR;
-#endif
     dma.triggerAtHardwareEvent(DMAMUX_SOURCE_I2S0_TX);
     dma.enable();
     
     I2S0_TCSR = I2S_TCSR_SR;
     I2S0_TCSR = I2S_TCSR_TE | I2S_TCSR_BCE | I2S_TCSR_FRDE;
+#elif defined(__IMXRT1062__)
+    dma.TCD->SADDR = dac_dma_buffer;
+    dma.TCD->SOFF = 2;
+    dma.TCD->ATTR = DMA_TCD_ATTR_SSIZE(1) | DMA_TCD_ATTR_DSIZE(1);
+    dma.TCD->NBYTES_MLNO = 2;
+    dma.TCD->SLAST = -sizeof(dac_dma_buffer);
+    dma.TCD->DOFF = 0;
+    dma.TCD->CITER_ELINKNO = sizeof(dac_dma_buffer) / 2;
+    dma.TCD->DLASTSGA = 0;
+    dma.TCD->BITER_ELINKNO = sizeof(dac_dma_buffer) / 2;
+    dma.TCD->CSR = DMA_TCD_CSR_INTHALF | DMA_TCD_CSR_INTMAJOR;
+    dma.TCD->DADDR = (void *)((uint32_t)&I2S1_TDR0 + 2);
+    dma.triggerAtHardwareEvent(DMAMUX_SOURCE_SAI1_TX);
+    dma.enable();
+    
+    I2S1_RCSR |= I2S_RCSR_RE | I2S_RCSR_BCE;
+    I2S1_TCSR = I2S_TCSR_TE | I2S_TCSR_BCE | I2S_TCSR_FRDE;
+#endif
 
 #else   // USE_I2S
 
@@ -237,7 +320,7 @@ public:
       STDOUT.print("Current position: ");
       STDOUT.println(((uint16_t*)current_position()) - dac_dma_buffer);
       for (size_t i = 0; i < NELEM(dac_dma_buffer); i++) {
-#ifdef TEENSYDUINO	
+#if defined(TEENSYDUINO) && !defined(USE_I2S)
         STDOUT.print(dac_dma_buffer[i] - 2048);
 #else	
         STDOUT.print(dac_dma_buffer[i]);
@@ -303,6 +386,9 @@ private:
       dest = (int16_t *)dac_dma_buffer;
       end = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*CHANNELS];
     }
+#ifdef __IMXRT1062__
+    int16_t *clear_cache = dest;
+#endif    
     AudioStream *stream = stream_;
     int16_t data[AUDIO_BUFFER_SIZE];
     int n = 0;
@@ -321,6 +407,9 @@ private:
       *(dest++) = (((uint16_t*)data)[i] + 32768) >> 4;
 #endif
     }
+#ifdef __IMXRT1062__
+    arm_dcache_flush_delete(clear_cache, sizeof(dac_dma_buffer)/2);
+#endif    
   }
 
   bool on_ = false;
@@ -336,7 +425,7 @@ DMAChannel LS_DAC::dma(false);
 DMAChannel LS_DAC::dma;
 #endif  
 AudioStream * volatile LS_DAC::stream_ = nullptr;
-DMAMEM uint16_t LS_DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
+DMAMEM __attribute__((aligned(32))) uint16_t LS_DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
 
 LS_DAC dac;
 

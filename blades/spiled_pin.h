@@ -1,22 +1,20 @@
 #ifndef BLADES_SPILEDPIN_H
 #define BLADES_SPILEDPIN_H
 
-template<int CLOCK_PIN>
-class SpiLedPin {
+class SpiLedPinBase : public WS2811PIN {
 public:
-  SpiLedPin(int pin,
-            int num_leds,
-            Color8::Byteorder byteorder,
-            int frequency,
-            int reset_us,
-            int t0h_us = 294,
-            int t1h_us = 862) :
+  SpiLedPinBase(int num_leds,
+                int pin,
+                int clock_pin,
+                Color8::Byteorder byteorder,
+                int frequency) :
     pin_(pin),
+    clock_pin_(clock_pin),
     num_leds_(num_leds),
     frequency_(frequency),
     byteorder_(byteorder) {
-      pinMode(CLOCK_PIN, OUTPUT);
-      digitalWrite(CLOCK_PIN, HIGH);
+      pinMode(clock_pin_, OUTPUT);
+      digitalWrite(clock_pin_, HIGH);
       pinMode(pin, OUTPUT);
       digitalWrite(pin, HIGH);
   }
@@ -40,23 +38,16 @@ public:
 
   void OutByte(uint8_t output) {
     for (int bit = 0; bit < 8; bit++) {
-      digitalWrite(CLOCK_PIN, LOW);
+      digitalWrite(clock_pin_, LOW);
       digitalWrite(pin_, output & 0x80);
       delay_nanos(500000000 / frequency_);
       output <<= 1;
-      digitalWrite(CLOCK_PIN, HIGH);
+      digitalWrite(clock_pin_, HIGH);
       delay_nanos(500000000 / frequency_);
     }
   }
   
-  void BeginFrame() {
-    for (int i = Color8::num_bytes(byteorder_); i >= 0; i--) OutByte(0);
-  }
-  void EndFrame() {
-    for (int i = Color8::num_bytes(byteorder_); i >= 0; i--) OutByte(0xff);
-  }
-
-  void Set(int led, Color16 color) {
+  void OutColor(Color16 color) {
     int MAX = std::max(color.r, std::max(color.g, color.b));
     int output_level = (MAX + 2113) / 2117;
     int mult = output_level == 0 ? 0 : 7930 / output_level;
@@ -66,19 +57,38 @@ public:
     }
   }
 
-  void Set(int led, Color8 color) {
-    Set(led, Color16(color));
+
+  void BeginFrame() {
+    for (int i = Color8::num_bytes(byteorder_); i >= 0; i--) OutByte(0);
   }
 
-  int num_leds() const { return num_leds_; }
-  Color8::Byteorder get_byteorder() const { return byteorder_; }
-  uint8_t pin() const { return pin_; }
+  void EndFrame() {
+    for (int i = 0; i < num_leds_; i++) {
+      OutColor(color_buffer[i]);
+      if ((i & 31) == 31) Looper::DoHFLoop();
+    }
+    for (int i = Color8::num_bytes(byteorder_); i >= 0; i--) OutByte(0xff);
+  }
+
+  int num_leds() const override { return num_leds_; }
+  Color8::Byteorder get_byteorder() const override { return byteorder_; }
+  void Enable(bool on) override {
+    pinMode(pin_, on ? OUTPUT : INPUT_ANALOG);
+    pinMode(clock_pin_, on ? OUTPUT : INPUT_ANALOG);
+  }
 
 private:
   uint8_t pin_;
-  uint32_t num_leds_;
+  uint8_t clock_pin_;
+  int num_leds_;
   uint32_t frequency_;
   Color8::Byteorder byteorder_;
+};
+
+template<int LEDS, int DATA_PIN, int CLOCK_PIN, Color8::Byteorder byteorder, int max_frequency>
+class SpiLedPin : public SpiLedPinBase {
+public:
+  SpiLedPin() : SpiLedPinBase(LEDS, DATA_PIN, CLOCK_PIN, byteorder, max_frequency) {}
 };
 
 #endif

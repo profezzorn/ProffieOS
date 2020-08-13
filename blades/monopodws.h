@@ -348,12 +348,12 @@ DMAChannel MonopodWS2811::dma3;
 volatile bool MonopodWS2811::update_in_progress_ = false;
 volatile uint8_t MonopodWS2811::ones_;
 
-class MonopodWSPin {
+template<Color8::Byteorder BYTEORDER>
+class MonopodWSPinBase : public WS2811PIN {
 public:
-  MonopodWSPin(int pin, int num_leds, Color8::Byteorder byteorder, uint32_t frequency,
+MonopodWSPinBase(int num_leds, int pin, uint32_t frequency,
 	       uint32_t reset_us, uint32_t t0h_us, uint32_t t1h_us) :
     pin_(pin),
-    byteorder_(byteorder),
     num_leds_(num_leds),
     frequency_(frequency) {
     // These are for PORTB
@@ -379,7 +379,7 @@ public:
     return micros() - start_micros_ > num_leds_ * 24000000.0 / frequency_ + 300;
   }
   void BeginFrame() {
-    while (Color8::num_bytes(byteorder_) * num_leds_ * 8 + 1 > (int)sizeof(displayMemory)) {
+    while (Color8::num_bytes(BYTEORDER) * num_leds_ * 8 + 1 > (int)sizeof(displayMemory)) {
       STDOUT.print("Display memory is not big enough, increase maxLedsPerStrip!");
       num_leds_ /= 2;
     }
@@ -388,32 +388,40 @@ public:
   }
   void EndFrame() {
     while (!IsReadyForEndFrame());
-    MonopodWS2811::show(pin_, ones_, num_leds_ * Color8::num_bytes(byteorder_) * 8, frequency_);
+    uint32_t *output = (uint32_t *)displayMemory;
+    for (int j = 0; j < num_leds_; j++) {
+      Color8 color = color_buffer[j].dither(frame_num_, j);
+      for (int i = Color8::num_bytes(BYTEORDER) - 1; i >= 0; i--) {
+	uint32_t tmp = color.getByte(BYTEORDER, i) * 0x8040201U;
+	*(output++) = zero4X_ - ((tmp >> 7) & 0x01010101U) * ones_;
+	*(output++) = zero4X_ - ((tmp >> 3) & 0x01010101U) * ones_;
+      }
+      if ((j & 31) == 31) Looper::DoHFLoop();
+    }
+    MonopodWS2811::show(pin_, ones_, num_leds_ * Color8::num_bytes(BYTEORDER) * 8, frequency_);
     start_micros_ = micros();
   }
 
-  int num_leds() const { return num_leds_; }
-  Color8::Byteorder get_byteorder() const { return byteorder_; }
-  uint8_t pin() const { return pin_; }
+  int num_leds() const override { return num_leds_; }
+  Color8::Byteorder get_byteorder() const override { return BYTEORDER; }
+  void Enable(bool on) override {
+    pinMode(pin_, on ? OUTPUT : INPUT_ANALOG);
+  }
 
   uint8_t pin_;
   uint32_t zero4X_;
   uint8_t ones_;
-  Color8::Byteorder byteorder_;
   int num_leds_;
   uint32_t start_micros_;
   uint32_t frequency_;
   uint32_t frame_num_;
-  
-  void Set(int led, Color8 color) {
-    uint32_t *output = ((uint32_t *)displayMemory) + led * Color8::num_bytes(byteorder_) * 2;
-    for (int i = Color8::num_bytes(byteorder_) - 1; i >= 0; i--) {
-      uint32_t tmp = color.getByte(byteorder_, i) * 0x8040201U;
-      *(output++) = zero4X_ - ((tmp >> 7) & 0x01010101U) * ones_;
-      *(output++) = zero4X_ - ((tmp >> 3) & 0x01010101U) * ones_;
-    }
+};
+
+template<int LEDS, int PIN, Color8::Byteorder BYTEORDER, int frequency=800000, int reset_us=300, int t1h=294, int t0h=892>
+class MonopodWSPin : public MonopodWSPinBase<BYTEORDER> {
+public:
+  MonopodWSPin() : MonopodWSPinBase<BYTEORDER>(LEDS, PIN, frequency, reset_us, t0h, t1h) {
   }
-  void Set(int led, Color16 color) { Set(led, color.dither(frame_num_, led)); }
 };
 
 #endif
