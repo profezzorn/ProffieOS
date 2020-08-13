@@ -65,10 +65,10 @@ template<int MILLIS> using TrWipeIn = TrWipeInX<Int<MILLIS>>;
 // return value: TRANSITION
 
 template<class SPARK_COLOR, class MILLIS, class SIZE = Int<400>> 
-	using TrWipeSparkTipX = TrJoin<TrWipeX<MILLIS>,TrWaveX<SPARK_COLOR,Int<400>,SIZE,MILLIS,Int<0>>>;
+	using TrWipeSparkTipX = TrJoin<TrWipeX<MILLIS>,TrWaveX<SPARK_COLOR,MILLIS,SIZE,MILLIS,Int<0>>>;
 
 template<class SPARK_COLOR, int MILLIS, int SIZE = 400> 
-	using TrWipeSparkTip = TrJoin<TrWipe<MILLIS>,TrWaveX<SPARK_COLOR,Int<400>,Int<SIZE>,Int<MILLIS>,Int<0>>>;
+	using TrWipeSparkTip = TrJoin<TrWipe<MILLIS>,TrWaveX<SPARK_COLOR,Int<MILLIS>,Int<SIZE>,Int<MILLIS>,Int<0>>>;
 
 // Usage: TrWipeInSparkTip<SPARK_COLOR, MILLIS, SIZE>
 // SPARK_COLOR = COLOR
@@ -77,9 +77,9 @@ template<class SPARK_COLOR, int MILLIS, int SIZE = 400>
 // return value: TRANSITION
 
 template<class SPARK_COLOR, class MILLIS, class SIZE = Int<400>> 
-	using TrWipeInSparkTipX = TrJoin<TrWipeInX<MILLIS>,TrWaveX<SPARK_COLOR,Int<400>,SIZE,MILLIS,Int<32768>>>;
+	using TrWipeInSparkTipX = TrJoin<TrWipeInX<MILLIS>,TrWaveX<SPARK_COLOR,MILLIS,SIZE,MILLIS,Int<32768>>>;
 
 template<class SPARK_COLOR, int MILLIS, int SIZE = 400> 
-	using TrWipeInSparkTip = TrJoin<TrWipeIn<MILLIS>,TrWaveX<SPARK_COLOR,Int<400>,Int<SIZE>,Int<MILLIS>,Int<32768>>>;
+	using TrWipeInSparkTip = TrJoin<TrWipeIn<MILLIS>,TrWaveX<SPARK_COLOR,Int<MILLIS>,Int<SIZE>,Int<MILLIS>,Int<32768>>>;
 
 #endif
