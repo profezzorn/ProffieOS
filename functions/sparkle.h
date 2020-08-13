@@ -11,12 +11,17 @@
 template<int SPARK_CHANCE_PROMILLE = 300, int SPARK_INTENSITY = 1024>
 class SparkleF {
 public:
-  SparkleF() {
-    for (size_t i = 0; i < NELEM(sparks_); i++) sparks_[i] = 0;
+  ~SparkleF() {
+    delete[] sparks_; 
   }
 
   void run(BladeBase* blade) {
     uint32_t m = millis();
+    if (!sparks_) {
+      size_t N = blade->num_leds() + 4;
+      sparks_ = new short[N];
+      for (size_t i = 0; i < N; i++) sparks_[i] = 0;
+    }
     if (m - last_update_ >= 10) {
       last_update_ = m;
       uint16_t fifo[2];
@@ -46,7 +51,7 @@ public:
   int getInteger(int led) { return clampi32(sparks_[led + 2], 0, 256) << 7; }
 
 private:  
-  short sparks_[maxLedsPerStrip + 4];
+  short* sparks_ = 0;
   uint32_t last_update_;
 };
 
