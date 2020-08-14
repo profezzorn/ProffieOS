@@ -154,6 +154,10 @@ private:
       DecodeBytes4<bits, channels, 22050>();
     else if (rate_ == 11025)
       DecodeBytes4<bits, channels, 11025>();
+    else {
+      default_output->println("Unsupported rate.");
+      Stop();
+    }
   }
 
   template<int bits>
@@ -167,6 +171,10 @@ private:
     else if (bits_ == 16) DecodeBytes2<16>();
     else if (bits_ == 24) DecodeBytes2<24>();
     else if (bits_ == 32) DecodeBytes2<32>();
+    else {
+      default_output->println("Unsupported sample size.");
+      Stop();
+    }
   }
 
   int ReadFile(int n) {
