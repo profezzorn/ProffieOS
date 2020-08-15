@@ -14,6 +14,10 @@
 // WIDTH determines width of stripes
 // SPEED determines movement speed
 
+// If you have a ring of LEDs and you want the stripes to line up,
+// you'll need to set WIDTH using the following formula:
+// WIDTH = 50000 * NUM_LEDS_IN_RING / (NUM_COLORS * REPETITIONS * 341)
+
 template<class... A>
 class StripesHelper {};
   
