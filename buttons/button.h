@@ -33,21 +33,15 @@ protected:
 // For special setups were you want to hook up a momentary button to VCC(3.3V) or Vbat
 // and the other end to the inputs of the Proffieboard / Teensy 
 // 
-// For Proffieboards all inputs can handle Vbat, except for Data3 / blade3pin
-//
-// This class will add some additional bytes to your code, 
-// (224 bytes, for a 4 button setup with 2 button pullup, and 2 buttons pulldown)
-// However, if all of your used switches are made ButtonPullDown 
-// it will save you a couple of bytes compared to the original Button class 
-// (8 bytes for 4 button setup)
+// For Proffieboards V2 all inputs can handle Vbat, except for Data3 / blade3pin
 //
 // Usage example, put this in the button config section: 
-// ButtonPullDown PowerButton(BUTTON_POWER, powerButtonPin, "pow");  
+// PullDownButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");  
 //
 
-class ButtonPullDown : public ButtonBase{
+class PullDownButton : public ButtonBase{
 public:
-  ButtonPullDown(enum BUTTON button, int pin, const char* name) : ButtonBase(name, button), pin_(pin) {
+  PullDownButton(enum BUTTON button, int pin, const char* name) : ButtonBase(name, button), pin_(pin) {
     pinMode(pin, INPUT_PULLDOWN);
 #ifdef ENABLE_SNOOZE
     snooze_digital.pinMode(pin, INPUT_PULLDOWN, FALLING);
@@ -57,11 +51,8 @@ protected:
   uint8_t pin_;
 
   bool Read() override {
-	 return digitalRead(pin_) == HIGH;
+	return digitalRead(pin_) == HIGH;
   }
-   
 };
 
 #endif
-
-
