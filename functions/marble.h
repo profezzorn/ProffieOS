@@ -34,7 +34,7 @@ public:
     float rad = (pos_ + offset_.getInteger(0)/32768.0) * M_PI * 2.0;
     Vec3 down = fusor.accel();
     float gravity = gravity_.getInteger(0) / 32768.0;
-    float accel = (down.y * sin(rad) + down.z * cos(rad)) * gravity;
+    float accel = (down.y * sinf(rad) + down.z * cosf(rad)) * gravity;
     accel += acceleration_.getInteger(0) / 32768.0;
     accel -= speed_ * friction_.getInteger(0) / 32768.0;
     speed_ += accel * fraction;
