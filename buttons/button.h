@@ -33,7 +33,7 @@ protected:
 // For special setups were you want to hook up a momentary button to VCC(3.3V) or Vbat
 // and the other end to the inputs of the Proffieboard / Teensy 
 // 
-// For Proffieboards V2 all inputs can handle Vbat, except for Data3 / blade3pin
+// For Proffieboards V2 all inputs can handle Vbat, except for Data4 / blade4pin
 //
 // Usage example, put this in the button config section: 
 // PullDownButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");  
