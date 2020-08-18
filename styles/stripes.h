@@ -14,6 +14,10 @@
 // WIDTH determines width of stripes
 // SPEED determines movement speed
 
+// If you have a ring of LEDs and you want the stripes to line up,
+// you'll need to set WIDTH using the following formula:
+// WIDTH = 50000 * NUM_LEDS_IN_RING / (NUM_COLORS * REPETITIONS * 341)
+
 template<class... A>
 class StripesHelper {};
   
@@ -53,20 +57,18 @@ static inline int32_t MOD(int32_t x, int32_t m) {
   return m + ~(~x % m);
 }
 
-template<class WIDTH, class SPEED, class... COLORS>
-class StripesX {
+template<class... COLORS>
+class StripesBase {
 public:
-  void run(BladeBase* base) {
-    width_.run(base);
-    speed_.run(base);
+  void run(BladeBase* base, int width, int speed) {
     colors_.run(base);
     
     uint32_t now_micros = micros();
     int32_t delta_micros = now_micros - last_micros_;
     last_micros_ = now_micros;
 
-    m = MOD(m + delta_micros * speed_.getInteger(0) / 333, colors_.size * 341*1024);
-    mult_ = (50000*1024 / width_.getInteger(0));
+    m = MOD(m + delta_micros * speed / 333, colors_.size * 341*1024);
+    mult_ = (50000*1024 / width);
   }
   OverDriveColor getColor(int led) {
     // p = 0..341*len(colors)
@@ -81,11 +83,22 @@ public:
   }
 private:
   StripesHelper<COLORS...> colors_;
-  WIDTH width_;
   uint32_t mult_;
-  SPEED speed_;
   uint32_t last_micros_;
   int32_t m;
+};
+
+template<class WIDTH, class SPEED, class... COLORS>
+class StripesX : public StripesBase<COLORS...> {
+public:
+  void run(BladeBase* base) {
+    width_.run(base);
+    speed_.run(base);
+    StripesBase<COLORS...>::run(base, width_.getInteger(0), speed_.getInteger(0));
+  }
+private:
+  WIDTH width_;
+  SPEED speed_;
 };
 
 template<int WIDTH, int SPEED, class... COLORS>

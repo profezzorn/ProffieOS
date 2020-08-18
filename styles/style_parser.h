@@ -74,15 +74,20 @@ NamedStyle named_styles[] = {
     "Fire blade, warm color, hot color"
   },
   { "unstable",
-    StylePtr<InOutHelperX<LocalizedClash<Lockup<Blast<OnSpark<BrownNoiseFlicker<Strobe<RgbArg<1, Rgb<150, 0, 0>>,Sparkle<RgbArg<3, Rgb<255,40,0>>, RgbArg<4, Rgb<255,255,10>>,100,1024>,100,50>,Strobe<RgbArg<2, Red>,RgbArg<1, Rgb<150, 0, 0>>,50,5>,100>,White,100>,White,200,100,400>,AudioFlicker<OnSpark<BrownNoiseFlicker<Strobe<Black,Yellow,50,1>,Strobe<RgbArg<2, Red>,Black,50,1>,50>,White,200>,White>,AudioFlicker<OnSpark<BrownNoiseFlicker<Strobe<Black,Yellow,50,1>,Strobe<RgbArg<2, Red>,Black,50,1>,50>,White,200>,White>>,White,60,100>,InOutFuncX<IntArg<5, 100>,IntArg<5, 200>>,Black>>(),
+    StylePtr<InOutHelperX<LocalizedClash<Lockup<Blast<OnSpark<BrownNoiseFlicker<Strobe<RgbArg<1, Rgb<150, 0, 0>>,Sparkle<RgbArg<3, Rgb<255,40,0>>, RgbArg<4, Rgb<255,255,10>>,100,1024>,100,50>,Strobe<RgbArg<2, Red>,RgbArg<1, Rgb<150, 0, 0>>,50,5>,100>,White,100>,White,200,100,400>,AudioFlicker<OnSpark<BrownNoiseFlicker<Strobe<Black,Yellow,50,1>,Strobe<RgbArg<2, Red>,Black,50,1>,50>,White,200>,White>,AudioFlicker<OnSpark<BrownNoiseFlicker<Strobe<Black,Yellow,50,1>,Strobe<RgbArg<2, Red>,Black,50,1>,50>,White,200>,White>>,White,60,100>,InOutFuncX<IntArg<5, 100>,IntArg<6, 200>>,Black>>(),
     "Unstable blade, warm, warmer, hot, sparks, extension time, retraction time"
   },
   { "strobe",
-    StyleNormalPtrX<StrobeX<RgbArg<1, BLACK>, RgbArg<2, WHITE>, IntArg<3, 15>, IntArg<5, 1>>, Rainbow, IntArg<1, 300>, IntArg<2, 800>>(),
+    StyleNormalPtrX<StrobeX<RgbArg<1, BLACK>, RgbArg<2, WHITE>, IntArg<3, 15>, IntArg<4, 1>>, Rainbow, IntArg<5, 300>, IntArg<6, 800>>(),
     "Stroboscope, standby color, flash color, flash frequency, flash milliseconds, extension time, retraction time"
   },
   { "cycle",
-    StylePtr<ColorCycle<RgbArg<1, Blue>,0,1,SimpleClash<Lockup<Blast<AudioFlicker<RgbArg<2, Cyan>,RgbArg<1, Blue>>,RgbArg<3, Rgb<255,50,50>>>,HumpFlicker<RgbArg<4, Red>, RgbArg<2, Cyan>,100>>,White,40>,90,2000,1000>>(),
+    StylePtr<ColorCycle<RgbArg<1, Blue>,0,1,Layers<
+        AudioFlicker<RgbArg<3, Cyan>, RgbArg<2, Blue>>,
+        BlastL<RgbArg<4, Rgb<255,50,50>>>,
+        LockupL<HumpFlicker<RgbArg<5, Red>, RgbArg<3, Cyan>,100>>,
+        SimpleClashL<White>>,
+      100,2000,1000>>(),
     "Cycle blade, start color, base color, flicker color, blast color, lockup color"
   },
   { "rainbow", StyleRainbowPtrX<IntArg<1, 300>, IntArg<2, 800>>(),
