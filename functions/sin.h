@@ -40,6 +40,32 @@ private:
   float pos_;
 };
 
+template<class RPM, class LOWclass=Int<0>, class HIGHclass=Int<32768>>
+class Saw {
+public:
+  void run(BladeBase* blade) {
+    rpm_.run(blade);
+    high_.run(blade);
+    low_.run(blade);
+
+    uint32_t now = micros();
+    uint64_t delta = now - last_micros_;
+    last_micros_ = now;
+    pos_ = fract(pos_ + delta / 60000000.0 * rpm_.getInteger(0));
+    int high = high_.getInteger(0);
+    int low = low_.getInteger(0);
+    value_ = low + pos_ * (high - low);
+  }
+  int getInteger(int led) { return value_; }
+private:
+  RPM rpm_;
+  LOWclass low_;
+  HIGHclass high_;
+  int value_;
+  uint32_t last_micros_;
+  float pos_;
+};
+
 template<typename PULSE_MILLIS>
 class PulsingF {
 public:
