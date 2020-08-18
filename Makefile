@@ -1,5 +1,6 @@
 # Select one
-BOARD_TAG=Proffieboard-L433CC
+BOARD_TAG=ProffieboardV2-L433CC
+#BOARD_TAG=Proffieboard-L433CC
 #BOARD_TAG=teensy31
 
 # This should only need to be set if arduino is installed in a nonstandard location.
