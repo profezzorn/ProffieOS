@@ -188,7 +188,7 @@ public:
 	memset(frame_buffer_, 0, sizeof(frame_buffer_));
         // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
         // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
-        DrawText("ProffieOS", 0,15, Starjedi10pt7bGlyphs);
+        DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
         DrawText(version,0,31, Starjedi10pt7bGlyphs);
 	screen_ = SCREEN_PLI;
 	layout_ = LAYOUT_NATIVE;

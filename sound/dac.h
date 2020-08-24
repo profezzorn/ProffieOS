@@ -70,6 +70,22 @@ void set_audioClock(int nfact, int32_t nmult, uint32_t ndiv,  bool force = false
 
 #define CHANNELS 1
 
+
+void my_stm32l4_system_saiclk_configure_22579200()
+{
+  RCC->PLLSAI1CFGR &= ~RCC_PLLSAI1CFGR_PLLSAI1PEN;
+  RCC->CR &= ~RCC_CR_PLLSAI1ON;
+
+  /* Wait till the PLLSAI1 is turned off */
+  while (RCC->CR & RCC_CR_PLLSAI1RDY) {}
+
+  RCC->PLLSAI1CFGR = ((11 << 27) | (62 << 8) | RCC_PLLSAI1CFGR_PLLSAI1PEN);
+  RCC->CR |= RCC_CR_PLLSAI1ON;
+
+  /* Wait till the PLLSAI1 is ready */
+  while (!(RCC->CR & RCC_CR_PLLSAI1RDY)){}
+}
+
 #endif
 
 #else   // USE_I2S
@@ -116,7 +132,7 @@ public:
     CORE_PIN22_CONFIG = PORT_PCR_MUX(6); // pin 22, PTC1, I2S0_TXD0
 
 #elif defined(__IMXRT1062__)
-    
+
     CCM_CCGR5 |= CCM_CCGR5_SAI1(CCM_CCGR_ON);
     int fs = AUDIO_RATE;
     // PLL between 27*24 = 648MHz und 54*24=1296MHz
@@ -135,16 +151,16 @@ public:
     CCM_CS1CDR = (CCM_CS1CDR & ~(CCM_CS1CDR_SAI1_CLK_PRED_MASK | CCM_CS1CDR_SAI1_CLK_PODF_MASK))
       | CCM_CS1CDR_SAI1_CLK_PRED(n1-1) // &0x07
       | CCM_CS1CDR_SAI1_CLK_PODF(n2-1); // &0x3f
-    
+
     // Select MCLK
     IOMUXC_GPR_GPR1 = (IOMUXC_GPR_GPR1
-		       & ~(IOMUXC_GPR_GPR1_SAI1_MCLK1_SEL_MASK))
+                       & ~(IOMUXC_GPR_GPR1_SAI1_MCLK1_SEL_MASK))
       | (IOMUXC_GPR_GPR1_SAI1_MCLK_DIR | IOMUXC_GPR_GPR1_SAI1_MCLK1_SEL(0));
 
     CORE_PIN23_CONFIG = 3;  //1:MCLK
     CORE_PIN21_CONFIG = 3;  //1:RX_BCLK
     CORE_PIN20_CONFIG = 3;  //1:RX_SYNC
-    
+
     int rsync = 0;
     int tsync = 1;
 
@@ -157,7 +173,7 @@ public:
     I2S1_TCR4 = I2S_TCR4_FRSZ((2-1)) | I2S_TCR4_SYWD((32-1)) | I2S_TCR4_MF
       | I2S_TCR4_FSD | I2S_TCR4_FSE | I2S_TCR4_FSP;
     I2S1_TCR5 = I2S_TCR5_WNW((32-1)) | I2S_TCR5_W0W((32-1)) | I2S_TCR5_FBT((32-1));
-    
+
     I2S1_RMR = 0;
     //I2S1_RCSR = (1<<25); //Reset
     I2S1_RCR1 = I2S_RCR1_RFW(1);
@@ -185,7 +201,7 @@ public:
     dma.TCD->CSR = DMA_TCD_CSR_INTHALF | DMA_TCD_CSR_INTMAJOR;
     dma.triggerAtHardwareEvent(DMAMUX_SOURCE_I2S0_TX);
     dma.enable();
-    
+
     I2S0_TCSR = I2S_TCSR_SR;
     I2S0_TCSR = I2S_TCSR_TE | I2S_TCSR_BCE | I2S_TCSR_FRDE;
 #elif defined(__IMXRT1062__)
@@ -202,7 +218,7 @@ public:
     dma.TCD->DADDR = (void *)((uint32_t)&I2S1_TDR0 + 2);
     dma.triggerAtHardwareEvent(DMAMUX_SOURCE_SAI1_TX);
     dma.enable();
-    
+
     I2S1_RCSR |= I2S_RCSR_RE | I2S_RCSR_BCE;
     I2S1_TCSR = I2S_TCSR_TE | I2S_TCSR_BCE | I2S_TCSR_FRDE;
 #endif
@@ -244,6 +260,10 @@ public:
 #else  // teensyduino
     // check return value?
     stm32l4_dma_create(&dma, DMA_CHANNEL_DMA2_CH6_SAI1_A, STM32L4_SAI_IRQ_PRIORITY);
+#if defined(ENABLE_I2S_OUT) || defined(ENABLE_SPDIF_OUT)
+    stm32l4_dma_create(&dma2, DMA_CHANNEL_DMA2_CH7_SAI1_B, STM32L4_SAI_IRQ_PRIORITY);
+#endif
+
 #endif
   }
 
@@ -253,14 +273,41 @@ public:
     Setup();
 
     memset(dac_dma_buffer, 0, sizeof(dac_dma_buffer));
+#ifdef ENABLE_SPDIF_OUT
+    memset(dac_dma_buffer2, 0, sizeof(dac_dma_buffer2));
+#endif
+
 #ifndef TEENSYDUINO
+
     stm32l4_system_periph_enable(SYSTEM_PERIPH_SAI1);
     stm32l4_dma_enable(&dma, &isr, 0);
     SAI_Block_TypeDef *SAIx = SAI1_Block_A;
-    SAIx->CR1 = SAI_xCR1_DS_2 | SAI_xCR1_MONO | SAI_xCR1_CKSTR;
+    SAIx->CR1 = SAI_xCR1_DS_2 | SAI_xCR1_MONO | SAI_xCR1_CKSTR
+#ifdef ENABLE_SPDIF_OUT
+     | (1 << SAI_xCR1_MCKDIV_Pos)
+#endif
+    ;
     SAIx->FRCR = (31 << SAI_xFRCR_FRL_Pos) | (15 << SAI_xFRCR_FSALL_Pos) | SAI_xFRCR_FSDEF | SAI_xFRCR_FSOFF;
     SAIx->SLOTR = SAI_xSLOTR_NBSLOT_0 | (0x0003 << SAI_xSLOTR_SLOTEN_Pos) | SAI_xSLOTR_SLOTSZ_0;
+
+#ifdef ENABLE_I2S_OUT
+    stm32l4_dma_enable(&dma2, &isr2, 0);
+    SAI_Block_TypeDef *SAI2 = SAI1_Block_B;
+    SAI2->CR1 = SAI_xCR1_DS_2 | SAI_xCR1_MONO | SAI_xCR1_CKSTR;
+    SAI2->FRCR = (31 << SAI_xFRCR_FRL_Pos) | (15 << SAI_xFRCR_FSALL_Pos) | SAI_xFRCR_FSDEF | SAI_xFRCR_FSOFF;
+    SAI2->SLOTR = SAI_xSLOTR_NBSLOT_0 | (0x0003 << SAI_xSLOTR_SLOTEN_Pos) | SAI_xSLOTR_SLOTSZ_0;
+#endif
+
+#ifdef ENABLE_SPDIF_OUT
+    stm32l4_dma_enable(&dma2, &isr2, 0);
+    SAI_Block_TypeDef *SAI2 = SAI1_Block_B;
+    SAI2->CR1 = SAI_xCR1_PRTCFG_0;
+#endif
+
     stm32l4_system_saiclk_configure(SYSTEM_SAICLK_11289600);
+#ifdef ENABLE_SPDIF_OUT
+    my_stm32l4_system_saiclk_configure_22579200();
+#endif
     extern const stm32l4_sai_pins_t g_SAIPins;
     stm32l4_gpio_pin_configure(g_SAIPins.sck, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
     stm32l4_gpio_pin_configure(g_SAIPins.fs, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
@@ -274,13 +321,58 @@ public:
                       DMA_OPTION_MEMORY_DATA_INCREMENT |
                       DMA_OPTION_PRIORITY_HIGH |
                       DMA_OPTION_CIRCULAR);
-
     SAIx->CR1 |= SAI_xCR1_DMAEN;
+
+#ifdef ENABLE_I2S_OUT
+    // Neopixel data 3 pin is SCK
+    stm32l4_gpio_pin_configure(GPIO_PIN_PB3_SAI1_SCK_B, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+
+    // Neopixel data 4 is FS, it is also possible to use GPIO_PIN_PB6_SAI1_FS_B, which is the power button pin.
+    stm32l4_gpio_pin_configure(GPIO_PIN_PA4_SAI1_FS_B, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+
+    // aux/Button2 button pin is DATA
+    stm32l4_gpio_pin_configure(GPIO_PIN_PB5_SAI1_SD_B, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_dma_start(&dma2, (uint32_t)&SAI2->DR, (uint32_t)dac_dma_buffer, AUDIO_BUFFER_SIZE * 2,
+                      DMA_OPTION_EVENT_TRANSFER_DONE |
+                      DMA_OPTION_EVENT_TRANSFER_HALF |
+                      DMA_OPTION_MEMORY_TO_PERIPHERAL |
+                      DMA_OPTION_PERIPHERAL_DATA_SIZE_32 |
+                      DMA_OPTION_MEMORY_DATA_SIZE_16 |
+                      DMA_OPTION_MEMORY_DATA_INCREMENT |
+                      DMA_OPTION_PRIORITY_HIGH |
+                      DMA_OPTION_CIRCULAR);
+    SAI2->CR1 |= SAI_xCR1_DMAEN;
+#endif
+
+#ifdef ENABLE_SPDIF_OUT
+    // aux button pin becomes S/PDIF out
+    stm32l4_gpio_pin_configure(GPIO_PIN_PB5_SAI1_SD_B, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_dma_start(&dma2, (uint32_t)&SAI2->DR, (uint32_t)dac_dma_buffer2, AUDIO_BUFFER_SIZE * 2,
+                      DMA_OPTION_EVENT_TRANSFER_DONE |
+                      DMA_OPTION_EVENT_TRANSFER_HALF |
+                      DMA_OPTION_MEMORY_TO_PERIPHERAL |
+                      DMA_OPTION_PERIPHERAL_DATA_SIZE_32 |
+                      DMA_OPTION_MEMORY_DATA_SIZE_32 |
+                      DMA_OPTION_MEMORY_DATA_INCREMENT |
+                      DMA_OPTION_PRIORITY_HIGH |
+                      DMA_OPTION_CIRCULAR);
+    SAI2->CR1 |= SAI_xCR1_DMAEN;
+#endif
+
+    noInterrupts();
     if (!(SAIx->CR1 & SAI_xCR1_SAIEN))
     {
       SAIx->CR2 = SAI_xCR2_FTH_1;
       SAIx->CR1 |= SAI_xCR1_SAIEN;
     }
+#if defined(ENABLE_I2S_OUT) || defined(ENABLE_SPDIF_OUT)
+    if (!(SAI2->CR1 & SAI_xCR1_SAIEN))
+    {
+      SAI2->CR2 = SAI_xCR2_FTH_1;
+      SAI2->CR1 |= SAI_xCR1_SAIEN;
+    }
+#endif // I2S || SPDIF
+    interrupts();
 #endif
   }
 
@@ -293,15 +385,37 @@ public:
     SAIx->CR1 &=~ SAI_xCR1_SAIEN;
     // Poll until actually off
     while (SAIx->CR1 & SAI_xCR1_SAIEN);
-    
+
+#if defined(ENABLE_I2S_OUT) || defined(ENABLE_SPDIF_OUT)
+    SAI_Block_TypeDef *SAI2 = SAI1_Block_B;
+
+    SAI2->CR1 &=~ SAI_xCR1_SAIEN;
+    // Poll until actually off
+    while (SAI2->CR1 & SAI_xCR1_SAIEN);
+#endif
+
     stm32l4_system_saiclk_configure(SYSTEM_SAICLK_NONE);
 
     stm32l4_dma_disable(&dma);
+#if defined(ENABLE_I2S_OUT) || defined(ENABLE_SPDIF_OUT)
+    stm32l4_dma_disable(&dma2);
+#endif
     stm32l4_system_periph_disable(SYSTEM_PERIPH_SAI1);
     extern const stm32l4_sai_pins_t g_SAIPins;
     stm32l4_gpio_pin_configure(g_SAIPins.sck, (GPIO_PUPD_NONE | GPIO_MODE_ANALOG));
     stm32l4_gpio_pin_configure(g_SAIPins.fs, (GPIO_PUPD_NONE | GPIO_MODE_ANALOG));
     stm32l4_gpio_pin_configure(g_SAIPins.sd, (GPIO_PUPD_NONE | GPIO_MODE_ANALOG));
+
+#ifdef ENABLE_I2S_OUT
+    stm32l4_gpio_pin_configure(GPIO_PIN_PB3_SAI1_SCK_B, (GPIO_PUPD_NONE | GPIO_MODE_ANALOG));
+    stm32l4_gpio_pin_configure(GPIO_PIN_PA4_SAI1_FS_B, (GPIO_PUPD_NONE | GPIO_MODE_ANALOG));
+    stm32l4_gpio_pin_configure(GPIO_PIN_PB5_SAI1_SD_B, (GPIO_PUPD_NONE | GPIO_MODE_ANALOG));
+#endif
+
+#ifdef ENABLE_SPDIF_OUT
+    stm32l4_gpio_pin_configure(GPIO_PIN_PB5_SAI1_SD_B,  (GPIO_PUPD_NONE | GPIO_MODE_ANALOG));
+#endif
+
 #endif
   }
 
@@ -316,15 +430,15 @@ public:
       STDOUT.print(SAIx->CR1, HEX);
       STDOUT.print(" CR2: ");
       STDOUT.println(SAIx->CR2, HEX);
-#endif      
+#endif
       STDOUT.print("Current position: ");
       STDOUT.println(((uint16_t*)current_position()) - dac_dma_buffer);
       for (size_t i = 0; i < NELEM(dac_dma_buffer); i++) {
 #if defined(TEENSYDUINO) && !defined(USE_I2S)
         STDOUT.print(dac_dma_buffer[i] - 2048);
-#else	
+#else
         STDOUT.print(dac_dma_buffer[i]);
-#endif	
+#endif
         if ((i & 0xf) == 0xf)
           STDOUT.println("");
         else
@@ -333,7 +447,7 @@ public:
       STDOUT.println("");
       return true;
     }
-#endif    
+#endif
     return false;
   }
 
@@ -371,6 +485,9 @@ private:
     ScopedCycleCounter cc(audio_dma_interrupt_cycles);
     int16_t *dest, *end;
     uint32_t saddr = current_position();
+#ifdef ENABLE_SPDIF_OUT
+    uint32_t *spdif;
+#endif
 
 #ifdef TEENSYDUINO
     dma.clearInterrupt();
@@ -380,15 +497,21 @@ private:
       // so we must fill the second half
       dest = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*CHANNELS];
       end = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
+#ifdef ENABLE_SPDIF_OUT
+      spdif = dac_dma_buffer2 + AUDIO_BUFFER_SIZE * CHANNELS;
+#endif
     } else {
       // DMA is transmitting the second half of the buffer
       // so we must fill the first half
       dest = (int16_t *)dac_dma_buffer;
       end = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*CHANNELS];
+#ifdef ENABLE_SPDIF_OUT
+      spdif = dac_dma_buffer2;
+#endif
     }
 #ifdef __IMXRT1062__
     int16_t *clear_cache = dest;
-#endif    
+#endif
     AudioStream *stream = stream_;
     int16_t data[AUDIO_BUFFER_SIZE];
     int n = 0;
@@ -401,31 +524,51 @@ private:
 #if CHANNELS == 2
       // Duplicate sample to left and right channel.
       *(dest++) = data[i];
-#endif      
+#endif
       *(dest++) = data[i];
-#else
+#else // I2S
+      // For Teensy DAC
       *(dest++) = (((uint16_t*)data)[i] + 32768) >> 4;
+#endif
+#ifdef ENABLE_SPDIF_OUT
+      *(spdif++) = ((uint32_t)(data[i])) << 8;
+      *(spdif++) = ((uint32_t)(data[i])) << 8;
 #endif
     }
 #ifdef __IMXRT1062__
     arm_dcache_flush_delete(clear_cache, sizeof(dac_dma_buffer)/2);
-#endif    
+#endif
   }
+
+  static void isr2(void* arg, unsigned long int event) {}
 
   bool on_ = false;
   bool needs_setup_ = true;
   DMAMEM static uint16_t dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
   static AudioStream * volatile stream_;
   static DMAChannel dma;
+#if defined(ENABLE_I2S_OUT) || defined(ENABLE_SPDIF_OUT)
+  static DMAChannel dma2;
+#endif
+#ifdef ENABLE_SPDIF_OUT
+  DMAMEM static uint32_t dac_dma_buffer2[AUDIO_BUFFER_SIZE*2*2];
+#endif
 };
 
 #ifdef TEENSYDUINO
 DMAChannel LS_DAC::dma(false);
 #else
 DMAChannel LS_DAC::dma;
-#endif  
+#if defined(ENABLE_I2S_OUT) || defined(ENABLE_SPDIF_OUT)
+DMAChannel LS_DAC::dma2;
+#endif
+
+#endif
 AudioStream * volatile LS_DAC::stream_ = nullptr;
 DMAMEM __attribute__((aligned(32))) uint16_t LS_DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
+#ifdef ENABLE_SPDIF_OUT
+DMAMEM __attribute__((aligned(32))) uint32_t LS_DAC::dac_dma_buffer2[AUDIO_BUFFER_SIZE*2*2];
+#endif
 
 LS_DAC dac;
 
