@@ -29,10 +29,10 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
-#define CONFIG_FILE "config/proffieboard_v2_ob4.h"
+// #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -1316,6 +1316,82 @@ public:
   static const char* response_header() { return "-+=BEGIN_OUTPUT=+-\n"; }
   static const char* response_footer() { return "-+=END_OUTPUT=+-\n"; }
 };
+#endif
+
+#ifdef RFID_SERIAL
+class RFIDParser : public Looper {
+public:
+  RFIDParser() : Looper() {}
+  const char* name() override { return "Parser"; }
+  void Setup() override {
+    RFID_SERIAL.begin(9600);
+  }
+
+#define RFID_READCHAR() do {						\
+  state_machine_.sleep_until_ = millis();				\
+  while (!RFID_SERIAL.available()) {					\
+    if (millis() - state_machine_.sleep_until_ > 200) goto retry;	\
+    YIELD();								\
+  }									\
+  getc();								\
+} while (0)
+
+  int c, x;
+  uint64_t code;
+
+  void getc() {
+    c = RFID_SERIAL.read();
+    if (monitor.IsMonitoring(Monitoring::MonitorSerial)) {
+      default_output->print("SER: ");
+      default_output->println(c, HEX);
+    }
+  }
+
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+    retry:
+      RFID_READCHAR();
+      if (c != 2) goto retry;
+      code = 0;
+      for (x = 0; x < 10; x++) {
+	RFID_READCHAR();
+	code <<= 4;
+	if (c >= '0' && c <= '9') {
+	  code |= c - '0';
+	} else if (c >= 'A' && c <= 'F') {
+	  code |= c - ('A' - 10);
+	} else {
+	  goto retry;
+	}
+      }
+      RFID_READCHAR();
+      x = code ^ (code >> 24);
+      x ^= (x >> 8) ^ (x >> 16);
+      x &= 0xff;
+      if (c != x) goto retry;
+      RFID_READCHAR();
+      if (c == 3) {
+	default_output->print("RFID: ");
+	for (int i = 36; i >= 0; i-=4) {
+	  default_output->print((int)((code >> i) & 0xf), HEX);
+	}
+	default_output->println("");
+	for (size_t i = 0; i < NELEM(RFID_Commands); i++) {
+	  if (code == RFID_Commands[i].id) {
+	    CommandParser::DoParse(RFID_Commands[i].cmd, RFID_Commands[i].arg);
+	  }
+	}
+      }
+    }
+    STATE_MACHINE_END();
+  }
+
+private:
+  StateMachineState state_machine_;
+};
+
+StaticWrapper<RFIDParser> rfid_parser;
 #endif
 
 // Command-line parser. Easiest way to use it is to start the arduino
