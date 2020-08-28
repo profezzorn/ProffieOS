@@ -136,6 +136,7 @@
 
 #include <i2c_t3.h>
 #include <SD.h>
+#include <SPI.h>
 
 #define INPUT_ANALOG INPUT
 #else
@@ -162,7 +163,6 @@
 
 #endif
 
-#include <SPI.h>
 #include <math.h>
 #include <malloc.h>
 
@@ -1255,6 +1255,25 @@ class Commands : public CommandParser {
       STDOUT.println(USBD_Connected());
       return true;
     }
+#endif // ENABLE_DEVELOPER_COMMANDS
+
+#ifdef ENABLE_DEVELOPER_COMMANDS
+#ifdef HAVE_STM32L4_DMA_GET    
+    if (!strcmp(cmd, "dmamap")) {
+      for (int channel = 0; channel < 16; channel++) {
+	stm32l4_dma_t *dma = stm32l4_dma_get(channel);
+	if (dma) {
+	  STDOUT.print(" DMA");
+	  STDOUT.print( 1 +(channel / 8) );
+	  STDOUT.print("_CH");
+	  STDOUT.print( channel % 8 );
+	  STDOUT.print(" = ");
+	  STDOUT.println(dma->channel >> 4, HEX);
+	}
+      }
+      return true;
+    }
+#endif // HAVE_STM32L4_DMA_GET    
 #endif // ENABLE_DEVELOPER_COMMANDS
 
 #endif  // TEENSYDUINO
