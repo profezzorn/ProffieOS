@@ -349,7 +349,7 @@ public:
 
   // Length, seconds.
   float length() const {
-    return (float)(sample_bytes_) * 8 / (bits_ * rate_);
+    return (float)(sample_bytes_) * 8 / (bits_ * rate_ * channels_);
   }
 
   // Current position, seconds.
