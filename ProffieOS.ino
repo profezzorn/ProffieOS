@@ -1696,11 +1696,15 @@ void setup() {
   // Wait for all voltages to settle.
   // Accumulate some entrypy while we wait.
   uint32_t now = millis();
+
+int PROFFIEOS_STARTUP_DELAY = 1000;
 #ifdef DOSFS_CONFIG_STARTUP_DELAY
-#define PROFFIEOS_STARTUP_DELAY DOSFS_CONFIG_STARTUP_DELAY
-#else
-#define PROFFIEOS_STARTUP_DELAY 1000
+  PROFFIEOS_STARTUP_DELAY = DOSFS_CONFIG_STARTUP_DELAY;
 #endif
+#ifdef CONFIG_STARTUP_DELAY
+  PROFFIEOS_STARTUP_DELAY = std::max(CONFIG_STARTUP_DELAY, PROFFIEOS_STARTUP_DELAY);
+#endif
+
   while (millis() - now < PROFFIEOS_STARTUP_DELAY) {
 #ifndef NO_BATTERY_MONITOR  
     srand((rand() * 917823) ^ LSAnalogRead(batteryLevelPin));
