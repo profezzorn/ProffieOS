@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <cstdlib>
 #include <iostream>
+#include <string.h>
 
 #define DESCRIBE(X) case X: return #X
 
