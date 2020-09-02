@@ -142,7 +142,7 @@ protected:
   const char* name_;
   enum BUTTON button_;
   uint32_t push_millis_;
-  int press_count_ = 1;
+  int press_count_ = 0;
   StateMachineState state_machine_;
   uint32_t saved_event_ = 0;
 };
