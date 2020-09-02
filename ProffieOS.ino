@@ -29,10 +29,12 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+//#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
+#define CONFIG_FILE "config/aat_proffie_singleblade_config.h"
+
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -136,6 +138,7 @@
 
 #include <i2c_t3.h>
 #include <SD.h>
+//#include <SPI.h>
 
 #define INPUT_ANALOG INPUT
 #else
@@ -162,7 +165,6 @@
 
 #endif
 
-#include <SPI.h>
 #include <math.h>
 #include <malloc.h>
 
@@ -430,7 +432,9 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/circular_section.h"
 #include "functions/marble.h"
 #include "functions/slice.h"
-
+#include "functions/wav_time.h"
+#include "functions/pct.h"
+#include "functions/mult.h"
 // transitions
 #include "transitions/fade.h"
 #include "transitions/join.h"
@@ -782,9 +786,9 @@ class Commands : public CommandParser {
     if (!strcmp(cmd, "sdtest")) {
       SDTestHelper sdtester;
       if (e && !strcmp(e, "all")) {
-	sdtester.TestDir("");
+  sdtester.TestDir("");
       } else {
-	sdtester.TestFont();
+  sdtester.TestFont();
       }
       return true;
     }
@@ -1005,10 +1009,10 @@ class Commands : public CommandParser {
       // TODO: list cpu usage for various objects.
       float total_cycles =
         (float)(audio_dma_interrupt_cycles +
-	        pixel_dma_interrupt_cycles +
+          pixel_dma_interrupt_cycles +
                  wav_interrupt_cycles +
-		 Looper::CountCycles() +
-		 CountProfileCycles());
+     Looper::CountCycles() +
+     CountProfileCycles());
       STDOUT.print("Audio DMA: ");
       STDOUT.print(audio_dma_interrupt_cycles * 100.0f / total_cycles);
       STDOUT.println("%");
@@ -1257,6 +1261,26 @@ class Commands : public CommandParser {
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
 
+#ifdef ENABLE_DEVELOPER_COMMANDS
+//#define HAVE_STM32L4_DMA_GET
+#ifdef HAVE_STM32L4_DMA_GET    
+    if (!strcmp(cmd, "dmamap")) {
+      for (int channel = 0; channel < 16; channel++) {
+  stm32l4_dma_t *dma = stm32l4_dma_get(channel);
+  if (dma) {
+    STDOUT.print(" DMA");
+    STDOUT.print( 1 +(channel / 8) );
+    STDOUT.print("_CH");
+    STDOUT.print( channel % 8 );
+    STDOUT.print(" = ");
+    STDOUT.println(dma->channel >> 4, HEX);
+  }
+      }
+      return true;
+    }
+#endif // HAVE_STM32L4_DMA_GET    
+#endif // ENABLE_DEVELOPER_COMMANDS
+
 #endif  // TEENSYDUINO
 
     return false;
@@ -1327,13 +1351,13 @@ public:
     RFID_SERIAL.begin(9600);
   }
 
-#define RFID_READCHAR() do {						\
-  state_machine_.sleep_until_ = millis();				\
-  while (!RFID_SERIAL.available()) {					\
-    if (millis() - state_machine_.sleep_until_ > 200) goto retry;	\
-    YIELD();								\
-  }									\
-  getc();								\
+#define RFID_READCHAR() do {            \
+  state_machine_.sleep_until_ = millis();       \
+  while (!RFID_SERIAL.available()) {          \
+    if (millis() - state_machine_.sleep_until_ > 200) goto retry; \
+    YIELD();                \
+  }                 \
+  getc();               \
 } while (0)
 
   int c, x;
@@ -1355,15 +1379,15 @@ public:
       if (c != 2) goto retry;
       code = 0;
       for (x = 0; x < 10; x++) {
-	RFID_READCHAR();
-	code <<= 4;
-	if (c >= '0' && c <= '9') {
-	  code |= c - '0';
-	} else if (c >= 'A' && c <= 'F') {
-	  code |= c - ('A' - 10);
-	} else {
-	  goto retry;
-	}
+  RFID_READCHAR();
+  code <<= 4;
+  if (c >= '0' && c <= '9') {
+    code |= c - '0';
+  } else if (c >= 'A' && c <= 'F') {
+    code |= c - ('A' - 10);
+  } else {
+    goto retry;
+  }
       }
       RFID_READCHAR();
       x = code ^ (code >> 24);
@@ -1372,16 +1396,16 @@ public:
       if (c != x) goto retry;
       RFID_READCHAR();
       if (c == 3) {
-	default_output->print("RFID: ");
-	for (int i = 36; i >= 0; i-=4) {
-	  default_output->print((int)((code >> i) & 0xf), HEX);
-	}
-	default_output->println("");
-	for (size_t i = 0; i < NELEM(RFID_Commands); i++) {
-	  if (code == RFID_Commands[i].id) {
-	    CommandParser::DoParse(RFID_Commands[i].cmd, RFID_Commands[i].arg);
-	  }
-	}
+  default_output->print("RFID: ");
+  for (int i = 36; i >= 0; i-=4) {
+    default_output->print((int)((code >> i) & 0xf), HEX);
+  }
+  default_output->println("");
+  for (size_t i = 0; i < NELEM(RFID_Commands); i++) {
+    if (code == RFID_Commands[i].id) {
+      CommandParser::DoParse(RFID_Commands[i].cmd, RFID_Commands[i].arg);
+    }
+  }
       }
     }
     STATE_MACHINE_END();
@@ -1502,8 +1526,8 @@ public:
       default_output->println("");
     }
     if (!CommandParser::DoParse(cmd, e)) {
-      STDOUT.print("Whut? :");
-      STDOUT.println(cmd);
+      //STDOUT.print("Whut? :");
+      //STDOUT.println(cmd);
     }
     STDOUT.print(SA::response_footer());
     stdout_output = default_output;

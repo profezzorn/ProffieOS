@@ -112,6 +112,14 @@ public:
     return wav.filename();
   }
 
+  const char* effectname() const {
+    return wav.effectname();
+  }
+  
+  const char* effect2ndname() const {
+    return wav.effect2ndname();
+  }
+  
   void AddRef() { refs_++; }
   void SubRef() { refs_--; }
   bool Available() const { return refs_ == 0 && !isPlaying(); }

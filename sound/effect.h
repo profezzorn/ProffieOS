@@ -298,6 +298,10 @@ class Effect {
 
     default_output->print("Playing ");
     default_output->println(filename);
+    default_output->print(" effect:");
+    default_output->println(name_);
+    //setname(name_); // remember for wav_time function selection
+
   }
 
   // Returns true if file was identified.
@@ -394,6 +398,11 @@ class Effect {
   }
 
   Effect* next_;
+  Effect* current_;
+  
+  // All files must start with this prefix. Public so other functions can use it
+  const char* name_ = "";
+  
 private:
   Effect* following_ = nullptr;
 
@@ -413,10 +422,6 @@ private:
   bool unnumbered_file_found_;
 
   FilePattern file_pattern_ = FilePattern::UNKNOWN;
-
-  // All files must start with this prefix.
-  const char* name_;
-
   // If not -1, return this file.
   int16_t selected_;
 
