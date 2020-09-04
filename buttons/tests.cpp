@@ -177,12 +177,15 @@ public:
     last_button_ = button;
     last_event_ = event;
     current_test_->Test();
-    //    last_button_ = BUTTON_NONE;
-    //    last_event_ = EVENT_NONE;
-    
-    bool ret = accept_event_;
-    accept_event_ = false;
-    return ret;
+
+    if (accept_event_) {
+      accept_event_ = false;
+
+      current_modifiers &= button;
+      return true;
+    } else {
+      return false;
+    }
   }
 };
 
@@ -210,6 +213,17 @@ public:
     std::cerr << #X << " != " << #Y << " on line " << __LINE__ << std::endl; \
     std::cerr << #X << " = " << x  << std::endl;				\
     std:: cerr << #Y << " = " << y << std::endl;				\
+    exit(1);							\
+  }								\
+} while(0)
+
+#define EXPECT_EQ_EVENT(X,Y) do {					\
+  auto x = (X);							\
+  auto y = (Y);							\
+  if (x != y) {							\
+    std::cerr << #X << " != " << #Y << " on line " << __LINE__ << std::endl; \
+    std::cerr << #X << " = " << DescribeEvent(x) << "(" << x << ")"  << std::endl; \
+    std::cerr << #Y << " = " << DescribeEvent(y) << "(" << y << ")"  << std::endl; \
     exit(1);							\
   }								\
 } while(0)
@@ -246,7 +260,7 @@ void X::ActualTest()
     break;								\
   }									\
   EXPECT_EQ(last_button_, (B));						\
-  EXPECT_EQ(last_event_, (X));						\
+  EXPECT_EQ_EVENT(last_event_, (X));						\
   last_button_ = BUTTON_NONE;						\
   last_event_ = EVENT_NONE;						\
   /* fprintf(stderr, "Expectation met @%d\n", __LINE__); */		\
@@ -255,7 +269,6 @@ void X::ActualTest()
 #define ACCEPT_EVENT(B, X) do {			\
   EXPECT_EVENT(B, X);				\
   accept_event_ = true;				\
-  YIELD();                                      \
 } while(0)
 
 #undef SLEEP  
@@ -427,6 +440,93 @@ TEST(QuadClickTest) {
   SLEEP(300);
   EXPECT_EVENT(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT);
   EXPECT_EVENT(BUTTON_POWER, EVENT_SAVED_CLICK_SHORT);
+  STATE_MACHINE_END();
+}
+
+TEST(PressReleaseTest) {
+  STATE_MACHINE_BEGIN();
+  SLEEP(10000);
+  pow.pressed_ = true;
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_PRESSED);
+  ACCEPT_EVENT(BUTTON_POWER, EVENT_PRESSED);
+  SLEEP(300);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_HELD);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_HELD);
+  SLEEP(500);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_HELD_MEDIUM);
+  SLEEP(1200);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_HELD_LONG);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_HELD_LONG);
+  pow.pressed_ = false;
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_RELEASED);
+  ACCEPT_EVENT(BUTTON_POWER, EVENT_RELEASED);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_CLICK_LONG);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_CLICK_LONG);
+  STATE_MACHINE_END();
+}
+
+// In this two-button test, no events are accepted, so all events come through.
+TEST(TwoButtonClickTest) {
+  STATE_MACHINE_BEGIN();
+  SLEEP(10000);
+  pow.pressed_ = true;
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_PRESSED);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_PRESSED);
+  SLEEP(300);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_HELD);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_HELD);
+  SLEEP(100);
+  aux.pressed_ = true;
+  EXPECT_EVENT(BUTTON_AUX, EVENT_FIRST_PRESSED);
+  EXPECT_EVENT(BUTTON_AUX, EVENT_PRESSED);
+  SLEEP(100);
+  aux.pressed_ = false;
+  EXPECT_EVENT(BUTTON_AUX, EVENT_FIRST_RELEASED);
+  EXPECT_EVENT(BUTTON_AUX, EVENT_RELEASED);
+  EXPECT_EVENT(BUTTON_AUX, EVENT_FIRST_CLICK_SHORT);
+  EXPECT_EVENT(BUTTON_AUX, EVENT_CLICK_SHORT);
+  SLEEP(300);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_HELD_MEDIUM);
+  SLEEP(100);
+  EXPECT_EVENT(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT);
+  EXPECT_EVENT(BUTTON_AUX, EVENT_SAVED_CLICK_SHORT);
+  SLEEP(1100);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_HELD_LONG);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_HELD_LONG);
+  pow.pressed_ = false;
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_RELEASED);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_RELEASED);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_CLICK_LONG);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_CLICK_LONG);
+  STATE_MACHINE_END();
+}
+
+// In this two-button test, no events are accepted, so all events come through.
+TEST(TwoButtonClickTest2) {
+  STATE_MACHINE_BEGIN();
+  SLEEP(10000);
+  pow.pressed_ = true;
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_PRESSED);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_PRESSED);
+  SLEEP(300);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_FIRST_HELD);
+  EXPECT_EVENT(BUTTON_POWER, EVENT_HELD);
+  SLEEP(100);
+  aux.pressed_ = true;
+  EXPECT_EVENT(BUTTON_AUX, EVENT_FIRST_PRESSED);
+  EXPECT_EVENT(BUTTON_AUX, EVENT_PRESSED);
+  SLEEP(100);
+  aux.pressed_ = false;
+  EXPECT_EVENT(BUTTON_AUX, EVENT_FIRST_RELEASED);
+  EXPECT_EVENT(BUTTON_AUX, EVENT_RELEASED);
+  EXPECT_EVENT(BUTTON_AUX, EVENT_FIRST_CLICK_SHORT);
+  ACCEPT_EVENT(BUTTON_AUX, EVENT_CLICK_SHORT);
+  SLEEP(300);
+  SLEEP(100);
+  SLEEP(1100);
+  pow.pressed_ = false;
   STATE_MACHINE_END();
 }
 
