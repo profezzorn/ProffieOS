@@ -833,6 +833,7 @@ public:
     if (monitor.ShouldPrint(Monitoring::MonitorVariation)) {
       STDOUT << " variation = " << SaberBase::GetCurrentVariation()
              << " ccmode = " << SaberBase::GetColorChangeMode()
+	     << " color = " << current_config->blade1->current_style()->getColor(0)
              << "\n";
     }
 
@@ -1267,8 +1268,10 @@ public:
     }
 
     if (!strcmp(cmd, "set_preset") && arg) {
-      size_t preset = strtol(arg, NULL, 0);
-      SetPreset(preset, true);
+      int preset = strtol(arg, NULL, 0);
+      if (preset != current_preset_.preset_num) {
+	SetPreset(preset, true);
+      }
       return true;
     }
 
@@ -1363,11 +1366,11 @@ public:
     }
 
     if (Event2(button, event, current_modifiers | (IsOn() ? MODE_ON : MODE_OFF))) {
-      current_modifiers = BUTTON_NONE;
+      current_modifiers &= button;
       return true;
     }
     if (Event2(button, event,  MODE_ANY_BUTTON | (IsOn() ? MODE_ON : MODE_OFF))) {
-      current_modifiers = BUTTON_NONE;
+      // Not matching modifiers, so no need to clear them.
       return true;
     }
     return false;
