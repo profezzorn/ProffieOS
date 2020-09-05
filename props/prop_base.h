@@ -833,7 +833,7 @@ public:
     if (monitor.ShouldPrint(Monitoring::MonitorVariation)) {
       STDOUT << " variation = " << SaberBase::GetCurrentVariation()
              << " ccmode = " << SaberBase::GetColorChangeMode()
-	     << " color = " << current_config->blade1->current_style()->getColor(0)
+//	     << " color = " << current_config->blade1->current_style()->getColor(0)
              << "\n";
     }
 
