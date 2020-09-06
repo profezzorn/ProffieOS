@@ -381,13 +381,13 @@ public:
   }
 
   const char* effectname() const {
-	return current_->name_;  
-    //return effectname_;
+	//return Effect* current_->name_;  
+    return effectname_;
   }
   
   const char* effect2ndname() const {
-     return next_->name_;  
-     //return effect2ndname_;
+     //return Effect* next_->name_;  
+     return effect2ndname_;
   }  
   
   
