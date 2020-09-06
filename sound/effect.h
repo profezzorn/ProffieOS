@@ -297,9 +297,9 @@ class Effect {
     }
 
     default_output->print("Playing ");
-    default_output->println(filename);
+    default_output->print(filename);
     default_output->print(" effect:");
-    default_output->println(name_);
+    default_output->print(name_);
     //setname(name_); // remember for wav_time function selection
 
   }

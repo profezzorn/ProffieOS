@@ -86,7 +86,7 @@ public:
     }
     PlayLoop(effect->GetFollowing());
 	if(effect_->name_[0] > 96 && effect_->name_[0] < 123){ // is it readable ascii??
-		STDOUT << ", PlayLoop 2nd effect: " << effect_->name_;
+		STDOUT << ", PlayLoop 2nd effect: " << effect_->name_ << " ";
 		effect2ndname_ = effect_->name_;
 	}else{
 		STDOUT << ", no 2nd effect ";
@@ -265,12 +265,12 @@ private:
          rate_ = 44100;
          bits_ = 16;
       }
-      default_output->print("channels: ");
+      default_output->print(" channels: ");
       default_output->print(channels_);
       default_output->print(" rate: ");
       default_output->print(rate_);
       default_output->print(" bits: ");
-      default_output->println(bits_);
+      default_output->print(bits_);
 
       ptr_ = buffer + 8;
       end_ = buffer + 8;
@@ -300,7 +300,7 @@ private:
 		default_output->print(" length ");
 		default_output->print(length());
 		default_output->println(" [s]");
-		duration_ = length();
+//		duration_ = length();
         while (len_) {
           {
             int bytes_read = ReadFile(file_.AlignRead(std::min<size_t>(len_, 512u)));
@@ -365,11 +365,6 @@ public:
     return (float)(sample_bytes_) * 8 / (bits_ * rate_);
   }
 
-  // Length, seconds, retains constant
-  float duration() const {
-    return (float)(duration_);
-  }
-
   // Current position, seconds.
   float pos() const {
     if (!isPlaying()) return 0.0;
@@ -386,11 +381,13 @@ public:
   }
 
   const char* effectname() const {
-    return effectname_;
+	return current_->name_;  
+    //return effectname_;
   }
   
   const char* effect2ndname() const {
-     return effect2ndname_;
+     return next_->name_;  
+     //return effect2ndname_;
   }  
   
   
@@ -401,7 +398,6 @@ private:
   Effect::FileID new_file_id_;
   Effect::FileID old_file_id_;
   char filename_[128];
-  //const char* _2ndname_;
   const char* effectname_;
   const char* effect2ndname_;
 
@@ -420,7 +416,6 @@ private:
 
   size_t len_ = 0;
   volatile size_t sample_bytes_ = 0;
-  float duration_ = 0.0;
   unsigned char* ptr_;
   unsigned char* end_;
   unsigned char buffer[512 + 8]  __attribute__((aligned(4)));

@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "config/default_proffieboard_config.h"
+ #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -33,7 +33,6 @@
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
-#define CONFIG_FILE "config/aat_proffie_singleblade_config.h"
 
 
 #ifdef CONFIG_FILE_TEST
@@ -433,7 +432,6 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/marble.h"
 #include "functions/slice.h"
 #include "functions/wav_time.h"
-#include "functions/pct.h"
 #include "functions/mult.h"
 // transitions
 #include "transitions/fade.h"

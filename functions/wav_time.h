@@ -14,7 +14,7 @@ template<BladeEffectType EFFECT>
 class WavLen {
  public:
   void run(BladeBase* blade) {
-    found_ = false;
+    bool found_ = false;
 	eff_name_ = wav_effect.GetEffectName(EFFECT);//find correspondig SoundEffectName for BladeEffectType
 	for (size_t i = 0; i < NELEM(wav_players); i++) {
 	    if(strstr(eff_name_, wav_players[i].effectname()) && wav_players[i].isPlaying()) {found_ = true;idx=(int)i;}
@@ -42,8 +42,6 @@ class WavLen {
 private:
   int idx;
   const char* eff_name_;
-  //char *found_;
-  bool found_;
   bool shown_;  
   WavEffect wav_effect;
   
@@ -60,7 +58,7 @@ class WavPos {
  public:
   void run(BladeBase* blade) {
     m = millis();
-	found_ = false;
+	bool found_ = false;
 	eff_name_ = wav_effect.GetEffectName(EFFECT);
 	for (size_t i = 0; i < NELEM(wav_players); i++) {
 	    if(strstr(eff_name_, wav_players[i].effectname()) && wav_players[i].isPlaying()) {found_ = true; shown_=false;idx=(int)i;};
@@ -88,8 +86,6 @@ class WavPos {
 private:
   int idx;
   const char* eff_name_;
-  //char *found_;
-  bool found_;
   bool shown_;  
   WavEffect wav_effect;
   uint32_t m;
@@ -107,7 +103,7 @@ class WavRem {
  public:
   void run(BladeBase* blade) {
     m = millis();
-   found_ = false;
+    bool found_ = false;
 	eff_name_ = wav_effect.GetEffectName(EFFECT);
 	for (size_t i = 0; i < NELEM(wav_players); i++) {
 	    if(strstr(eff_name_, wav_players[i].effectname()) && wav_players[i].isPlaying()) {found_ = true; shown_ = false;idx=(int)i;} ;
@@ -135,8 +131,6 @@ class WavRem {
 private:
   int idx;
   const char* eff_name_;
-  //char *found_;
-  bool found_;
   bool shown_;  
   WavEffect wav_effect;
   uint32_t m;
