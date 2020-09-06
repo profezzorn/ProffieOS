@@ -77,7 +77,7 @@ protected:
       }
       saved_event_ = 0;
       if (millis() - push_millis_ < BUTTON_DOUBLE_CLICK_TIMEOUT) {
-	if (press_count_ < 3) press_count_++;
+	if (press_count_ < 4) press_count_++;
       } else {
 	press_count_ = 1;
       }
@@ -142,7 +142,7 @@ protected:
   const char* name_;
   enum BUTTON button_;
   uint32_t push_millis_;
-  int press_count_ = 1;
+  int press_count_ = 0;
   StateMachineState state_machine_;
   uint32_t saved_event_ = 0;
 };
