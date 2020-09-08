@@ -12,7 +12,7 @@
 #include "proffieboard_config.h"
 #define NUM_BLADES 2
 #define NUM_BUTTONS 2
-#define VOLUME 1000
+#define VOLUME 100
 const unsigned int maxLedsPerStrip = 144;
 #define CLASH_THRESHOLD_G 1.0
 #define ENABLE_AUDIO
@@ -20,11 +20,12 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_WS2811
 #define ENABLE_SD
 #define ENABLE_SERIAL
+#define ENABLE_MENU_DIMBLADE
 #endif
 
 #ifdef CONFIG_PRESETS
 Preset presets[] = {
-  { "TeensySF", "tracks/venus.wav",
+  { "common;TeensySF", "tracks/venus.wav", //menu sounds are in common folder
     StyleNormalPtr<CYAN, WHITE, 300, 800>(),
     StyleNormalPtr<CYAN, WHITE, 300, 800>(), "cyan"},
   { "SmthJedi", "tracks/mars.wav",
@@ -68,7 +69,9 @@ Preset presets[] = {
     StyleNormalPtr<BLACK, BLACK, 300, 800>(), "Battery\nLevel"}
 };
 BladeConfig blades[] = {
- { 0, WS2811BladePtr<97, WS2811_800kHz>(),
+ { 0, DimBlade(56.7,WS2811BladePtr<97, WS2811_800kHz>()), // sets initial blade brightness to 100.0% 
+                                                           // can be altered via menu or serial commands 
+                                                           // when ENABLE_MENU_DIMBLADE is defined
      SimpleBladePtr<CreeXPE2WhiteTemplate<550>,
                     CreeXPE2BlueTemplate<240>,
                     CreeXPE2BlueTemplate<240>, NoLED, bladePowerPin4, bladePowerPin5, bladePowerPin6, -1>(),
