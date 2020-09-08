@@ -295,6 +295,11 @@ SaberBase::ColorChangeMode SaberBase::color_change_mode_ =
 bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 uint32_t SaberBase::current_variation_ = 0;
+#ifdef ENABLE_MENU_DIMBLADE
+SaberBase::DimChangeMode SaberBase::dim_change_mode_ =
+  SaberBase::DIM_CHANGE_MODE_NONE;
+uint32_t SaberBase::current_brightness_; // does not need to be initialized, takes setting from config.h
+#endif
 
 #include "common/box_filter.h"
 
@@ -582,7 +587,7 @@ ArgParserInterface* CurrentArgParser;
 #undef CONFIG_PROP
 
 #ifndef PROP_TYPE
-#include "props/saber.h"
+#include "props/saber_aat_1_button.h"
 #endif
 
 PROP_TYPE prop;

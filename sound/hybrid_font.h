@@ -423,6 +423,22 @@ public:
           beeper.Beep(0.05, 2000.0);
         }
         break;
+#ifdef ENABLE_MENU_DIMBLADE
+      case SaberBase::ENTER_DIM_CHANGE:
+        if (!PlayPolyphonic(&SFX_dimbgn)) {
+          beeper.Beep(0.20, 1000.0);
+          beeper.Beep(0.20, 1414.2);
+          beeper.Beep(0.20, 2000.0);
+        }
+        break;
+      case SaberBase::EXIT_DIM_CHANGE:
+        if (!PlayPolyphonic(&SFX_dimend)) {
+          beeper.Beep(0.20, 2000.0);
+          beeper.Beep(0.20, 1414.2);
+          beeper.Beep(0.20, 1000.0);
+        }
+        break;
+#endif
     }
   }
 
