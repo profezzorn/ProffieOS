@@ -81,6 +81,10 @@ public:
     ENTER_COLOR_CHANGE,
     EXIT_COLOR_CHANGE,
     CHANGE_COLOR,
+#ifdef ENABLE_MENU_DIMBLADE
+    ENTER_DIM_CHANGE,
+    EXIT_DIM_CHANGE,
+#endif
   };
 
   // 1.0 = kDefaultVolume
@@ -196,12 +200,42 @@ public:                                                         \
     }
   }
 
+#ifdef ENABLE_MENU_DIMBLADE
+  static uint32_t GetCurrentBrightness() {
+    return current_brightness_;//value from 0~16384
+  }
+  // For smooth updates or restore.
+  static void SetBrightness(float v) {
+    current_brightness_ = (int)(v * 16384 / 100.0);  
+    current_brightness_ = clampi32(current_brightness_, 0, 16384) ;
+  }
+
+  enum DimChangeMode {
+    DIM_CHANGE_MODE_NONE,
+    DIM_CHANGE_MODE_SMOOTH
+  };
+
+  static DimChangeMode GetDimChangeMode() { return dim_change_mode_; }
+  static void SetDimChangeMode(DimChangeMode  mode) {
+    dim_change_mode_ = mode;
+    if (mode == DIM_CHANGE_MODE_NONE) {
+      DoChange(EXIT_DIM_CHANGE);
+    } else {
+      DoChange(ENTER_DIM_CHANGE);
+    }
+  }
+#endif
+
 private:
   static bool on_;
   static LockupType lockup_;
   static uint32_t last_motion_request_;
   static uint32_t current_variation_;
   static ColorChangeMode color_change_mode_;
+#ifdef ENABLE_MENU_DIMBLADE
+  static uint32_t current_brightness_;
+  static DimChangeMode dim_change_mode_;
+#endif
   SaberBase* next_saber_;
 };
 

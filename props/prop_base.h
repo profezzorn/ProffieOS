@@ -839,6 +839,18 @@ public:
 
 #endif
 
+#ifdef ENABLE_MENU_DIMBLADE
+   if (SaberBase::GetDimChangeMode() == SaberBase::DIM_CHANGE_MODE_SMOOTH) {
+        float delta = fmodf(fusor.angle2() - current_tick_angle_, M_PI * 2);//+ or - 2*pi from start point 0
+        current_tick_angle_ = fusor.angle2();
+        if (delta > M_PI) delta -= 2 * M_PI;//prevent pi jumps
+        if (delta < -M_PI) delta += 2 * M_PI;//prevent pi jumps
+        int32_t brightness_ = SaberBase::GetCurrentBrightness() + (int32_t)(delta * 5000); //a =+/- 1.5
+        brightness_ = clampi32(brightness_, 0, 16384);
+        SaberBase::SetBrightness((float)brightness_ / 16384.0 * 100);
+    }
+#endif
+
     Vec3 mss = fusor.mss();
     if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
         (mss.x > 7 || mss.x < -6)  &&
@@ -864,6 +876,23 @@ public:
 
 #ifdef IDLE_OFF_TIME
   uint32_t last_on_time_;
+#endif
+
+#ifdef ENABLE_MENU_DIMBLADE
+  //bool change_brightness_ = false;
+  //bool BrightnessChangeMode() { return change_brightness_; }
+  void ToggleBrightnessChangeMode() {
+    if (SaberBase::GetDimChangeMode() == SaberBase::DIM_CHANGE_MODE_NONE) {     
+      current_tick_angle_ = fusor.angle2();
+      //change_brightness_ =  true;
+      SaberBase::SetDimChangeMode(SaberBase::DIM_CHANGE_MODE_SMOOTH);
+    } else {
+        //change_brightness_ = false;
+        STDOUT.print("brightness set to: ");
+        STDOUT.println((float)SaberBase::GetCurrentBrightness()*100.0/16384.0);
+        SaberBase::SetDimChangeMode(SaberBase::DIM_CHANGE_MODE_NONE);
+    }
+  }
 #endif
 
 #ifndef DISABLE_COLOR_CHANGE
@@ -1283,6 +1312,24 @@ public:
     }
     if (!strcmp(cmd, "ccmode")) {
       ToggleColorChangeMode();
+      return true;
+    }
+#endif
+
+#ifdef ENABLE_MENU_DIMBLADE
+    if (!strcmp(cmd, "get_dim")) {
+      STDOUT.println((float)SaberBase::GetCurrentBrightness()/ 16384.0 *100.0);
+      return true;
+    }
+
+    if (!strcmp(cmd, "dimmode")) {
+      ToggleBrightnessChangeMode();
+      return true;
+    }
+
+    if (arg && (!strcmp(cmd, "dim"))) {
+      size_t dim = strtol(arg, NULL, 0);
+      SaberBase::SetBrightness((float)dim);
       return true;
     }
 #endif
