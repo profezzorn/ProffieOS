@@ -30,13 +30,12 @@ private:
 // Usage: Percentage<F, V>
 // Gets Percentage V of value F, 
 // Percentages over 100% are allowed and will effectively be a multiplier. 
-// Can be used to multiply or devide any number  
 // F, V: INTEGER
 // example Percentage<WavLen<EFFECT_IGNITION>,25>
-//   this will give you 25% of the length of the wav file
+// this will give you 25% of the length of the wav file
 // return value: INTEGER
 
 template<class F, int V> //floats do no work in class templates...
-  using Percentage = Mult< F, Int<(int)(V*32768/100.0f)>>;
+  using Percentage = Mult<F, Int<(int)(V * 32768 / 100.0f)>>;
 
 #endif
