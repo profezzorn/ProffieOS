@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "config/default_proffieboard_config.h"
+#define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -32,7 +32,7 @@
 // #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
-#define CONFIG_FILE "config/proffieboard_v2_ob4.h"
+// #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -136,6 +136,7 @@
 
 #include <i2c_t3.h>
 #include <SD.h>
+#include <SPI.h>
 
 #define INPUT_ANALOG INPUT
 #else
@@ -162,7 +163,6 @@
 
 #endif
 
-#include <SPI.h>
 #include <math.h>
 #include <malloc.h>
 
@@ -427,6 +427,9 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/twist_angle.h"
 #include "functions/layer_functions.h"
 #include "functions/islessthan.h"
+#include "functions/circular_section.h"
+#include "functions/marble.h"
+#include "functions/slice.h"
 
 // transitions
 #include "transitions/fade.h"
@@ -1254,6 +1257,25 @@ class Commands : public CommandParser {
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
 
+#ifdef ENABLE_DEVELOPER_COMMANDS
+#ifdef HAVE_STM32L4_DMA_GET    
+    if (!strcmp(cmd, "dmamap")) {
+      for (int channel = 0; channel < 16; channel++) {
+	stm32l4_dma_t *dma = stm32l4_dma_get(channel);
+	if (dma) {
+	  STDOUT.print(" DMA");
+	  STDOUT.print( 1 +(channel / 8) );
+	  STDOUT.print("_CH");
+	  STDOUT.print( channel % 8 );
+	  STDOUT.print(" = ");
+	  STDOUT.println(dma->channel >> 4, HEX);
+	}
+      }
+      return true;
+    }
+#endif // HAVE_STM32L4_DMA_GET    
+#endif // ENABLE_DEVELOPER_COMMANDS
+
 #endif  // TEENSYDUINO
 
     return false;
@@ -1313,6 +1335,82 @@ public:
   static const char* response_header() { return "-+=BEGIN_OUTPUT=+-\n"; }
   static const char* response_footer() { return "-+=END_OUTPUT=+-\n"; }
 };
+#endif
+
+#ifdef RFID_SERIAL
+class RFIDParser : public Looper {
+public:
+  RFIDParser() : Looper() {}
+  const char* name() override { return "Parser"; }
+  void Setup() override {
+    RFID_SERIAL.begin(9600);
+  }
+
+#define RFID_READCHAR() do {						\
+  state_machine_.sleep_until_ = millis();				\
+  while (!RFID_SERIAL.available()) {					\
+    if (millis() - state_machine_.sleep_until_ > 200) goto retry;	\
+    YIELD();								\
+  }									\
+  getc();								\
+} while (0)
+
+  int c, x;
+  uint64_t code;
+
+  void getc() {
+    c = RFID_SERIAL.read();
+    if (monitor.IsMonitoring(Monitoring::MonitorSerial)) {
+      default_output->print("SER: ");
+      default_output->println(c, HEX);
+    }
+  }
+
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+    retry:
+      RFID_READCHAR();
+      if (c != 2) goto retry;
+      code = 0;
+      for (x = 0; x < 10; x++) {
+	RFID_READCHAR();
+	code <<= 4;
+	if (c >= '0' && c <= '9') {
+	  code |= c - '0';
+	} else if (c >= 'A' && c <= 'F') {
+	  code |= c - ('A' - 10);
+	} else {
+	  goto retry;
+	}
+      }
+      RFID_READCHAR();
+      x = code ^ (code >> 24);
+      x ^= (x >> 8) ^ (x >> 16);
+      x &= 0xff;
+      if (c != x) goto retry;
+      RFID_READCHAR();
+      if (c == 3) {
+	default_output->print("RFID: ");
+	for (int i = 36; i >= 0; i-=4) {
+	  default_output->print((int)((code >> i) & 0xf), HEX);
+	}
+	default_output->println("");
+	for (size_t i = 0; i < NELEM(RFID_Commands); i++) {
+	  if (code == RFID_Commands[i].id) {
+	    CommandParser::DoParse(RFID_Commands[i].cmd, RFID_Commands[i].arg);
+	  }
+	}
+      }
+    }
+    STATE_MACHINE_END();
+  }
+
+private:
+  StateMachineState state_machine_;
+};
+
+StaticWrapper<RFIDParser> rfid_parser;
 #endif
 
 // Command-line parser. Easiest way to use it is to start the arduino
@@ -1599,10 +1697,21 @@ void setup() {
   // Accumulate some entrypy while we wait.
   uint32_t now = millis();
 #ifdef DOSFS_CONFIG_STARTUP_DELAY
-#define PROFFIEOS_STARTUP_DELAY DOSFS_CONFIG_STARTUP_DELAY
+#define PROFFIEOS_SD_STARTUP_DELAY DOSFS_CONFIG_STARTUP_DELAY
 #else
-#define PROFFIEOS_STARTUP_DELAY 1000
+#define PROFFIEOS_SD_STARTUP_DELAY 1000
 #endif
+
+#ifndef CONFIG_STARTUP_DELAY
+#define CONFIG_STARTUP_DELAY 0
+#endif
+
+#if PROFFIEOS_SD_STARTUP_DELAY > CONFIG_STARTUP_DELAY
+#define PROFFIEOS_STARTUP_DELAY PROFFIEOS_SD_STARTUP_DELAY
+#else
+#define PROFFIEOS_STARTUP_DELAY CONFIG_STARTUP_DELAY
+#endif
+
   while (millis() - now < PROFFIEOS_STARTUP_DELAY) {
 #ifndef NO_BATTERY_MONITOR  
     srand((rand() * 917823) ^ LSAnalogRead(batteryLevelPin));

@@ -44,6 +44,10 @@ const unsigned int maxLedsPerStrip = 196;
 // #define DISABLE_COLOR_CHANGE
 #define SAVE_STATE
 
+// #define ENABLE_I2S_OUT
+#define ENABLE_SPDIF_OUT
+#define RFID_SERIAL Serial3
+
 // Must be 20 characters or less.
 // #define BLE_PASSWORD "password"
 
@@ -66,6 +70,11 @@ const unsigned int maxLedsPerStrip = 196;
 
 typedef RandomFlicker<Rgb<200,200,200>, Rgb<40,40,40>> OnPulse;
 typedef Pulsing<Rgb<128,128,128>, Rgb16<50,50,50>, 3000> OffPulse;
+
+RFID_Command RFID_Commands[] = {
+  { 0x0000000C04ULL /* green */, "set_preset", "0" },
+  { 0x09003A8CDCULL,             "set_preset", "1" },
+};
 
 Preset testing_presets[] = {
 #if 1
@@ -266,7 +275,7 @@ BladeConfig blades[] = {
 
 //LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
-Button AuxButton(BUTTON_AUX, auxPin, "aux");
+// Button AuxButton(BUTTON_AUX, auxPin, "aux");
 // Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
 
 //TouchButton Aux2Button(BUTTON_AUX2, aux2Pin, 1700, "aux2");

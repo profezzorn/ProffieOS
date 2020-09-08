@@ -298,7 +298,7 @@ public:
       }
       RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(SFX_out ? &SFX_out : &SFX_poweron);
       hum_fade_in_ = 0.2;
-      if (SFX_humm) {
+      if (SFX_humm && tmp) {
 	hum_fade_in_ = tmp->length();
 	STDOUT << "HUM fade-in time: " << hum_fade_in_ << "\n";
       }

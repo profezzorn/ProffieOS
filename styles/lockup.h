@@ -21,7 +21,7 @@ HandledFeature FeatureForLockupType(SaberBase::LockupType t) {
   }
 }
 
-// Usage: Lockup<BASE, LOCKUP, DRAG_COLOR, LOCKUP_SHAPE, DRAG_SHAPE, LB_SHAPE>
+// Usage: Lockup<BASE, LOCKUP, DRAG_COLOR, LOCKUP_SHAPE, DRAG_SHAPE>
 // Or: LockupL<LOCKUP, DRAG_COLOR, LOCKUP_SHAPE, DRAG_SHAPE, LB_SHAPE>
 // BASE, LOCKUP: COLOR
 // DRAG_COLOR: COLOR (defaults to the LOCKUP color)
@@ -30,7 +30,8 @@ HandledFeature FeatureForLockupType(SaberBase::LockupType t) {
 // LB_SHAPE: FUNCTION (defaults to a suitable function)
 // return value: COLOR
 // Shows LOCKUP if the lockup state is true, otherwise BASE.
-// Also handles "Drag" effect.
+// Also handles Drag, Melt and Lightning Block lockup types unless those
+// are handled elsewhere in the same style.
 template<
   class LOCKUP, class DRAG_COLOR = LOCKUP,
   class LOCKUP_SHAPE = Int<32768>,

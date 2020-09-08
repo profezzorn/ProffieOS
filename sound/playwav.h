@@ -119,6 +119,15 @@ private:
     return *((*((int16_t**)&ptr_))++);
   }
 
+  void AbortDecodeBytes(const char* why) {
+    default_output->println(why);
+    len_ = 0;
+    to_read_ = 0;
+    ptr_ = end_;
+    run_ = false;
+    effect_ = nullptr;
+  }
+
   template<int bits, int channels, int rate>
   void DecodeBytes4() {
     while (ptr_ < end_ - channels * bits / 8 &&
@@ -140,8 +149,7 @@ private:
       } else if (rate == AUDIO_RATE * 2) {
         Emit05(v);
       } else {
-        default_output->println("Unsupported rate.");
-        Stop();
+	AbortDecodeBytes("Unsupported rate.");
       }
     }
   }
@@ -154,19 +162,23 @@ private:
       DecodeBytes4<bits, channels, 22050>();
     else if (rate_ == 11025)
       DecodeBytes4<bits, channels, 11025>();
+    else
+      AbortDecodeBytes("Unsupported rate.");
   }
 
   template<int bits>
   void DecodeBytes2() {
     if (channels_ == 1) DecodeBytes3<bits, 1>();
-    else DecodeBytes3<bits, 2>();
+    else if (channels_ == 2) DecodeBytes3<bits, 2>();
+    else AbortDecodeBytes("unsupported number of channels");
   }
 
   void DecodeBytes() {
     if (bits_ == 8) DecodeBytes2<8>();
     else if (bits_ == 16) DecodeBytes2<16>();
-    else if (bits_ == 24) DecodeBytes2<24>();
-    else if (bits_ == 32) DecodeBytes2<32>();
+//    else if (bits_ == 24) DecodeBytes2<24>();
+//    else if (bits_ == 32) DecodeBytes2<32>();
+    else AbortDecodeBytes("Unsupported sample size.");
   }
 
   int ReadFile(int n) {
@@ -341,7 +353,7 @@ public:
 
   // Length, seconds.
   float length() const {
-    return (float)(sample_bytes_) * 8 / (bits_ * rate_);
+    return (float)(sample_bytes_) * 8 / (bits_ * rate_ * channels_);
   }
 
   // Current position, seconds.

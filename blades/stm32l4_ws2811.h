@@ -514,7 +514,7 @@ public:
       STDOUT.print("Display memory is not big enough, increase maxLedsPerStrip!");
       return false;
     }
-    return color_buffer_ptr - color_buffer > num_leds_;
+    return color_buffer_ptr - color_buffer >= num_leds_;
   }
 
   void BeginFrame() override {

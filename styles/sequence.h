@@ -20,7 +20,7 @@ template<class COLOR2, int millis_per_bit, int bits, int ... sequence >
   using SequenceL = AlphaL<COLOR2, SequenceF<millis_per_bit, bits, sequence...>>;
 
 template<class COLOR1, class COLOR2, int millis_per_bit, int bits, int ... sequence >
-  using Sequence = Layers<COLOR1, SequenceL<COLOR2, millis_per_bit, bits, sequence...>>;
+  using Sequence = Layers<COLOR2, SequenceL<COLOR1, millis_per_bit, bits, sequence...>>;
 
 
 template<int millis_per_color, class... COLORS> 
