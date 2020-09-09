@@ -430,6 +430,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/circular_section.h"
 #include "functions/marble.h"
 #include "functions/slice.h"
+#include "functions/mult.h"
 
 // transitions
 #include "transitions/fade.h"
