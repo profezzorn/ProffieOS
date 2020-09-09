@@ -6,7 +6,7 @@
 // fixed point 16.15 arithmetic (32768 = 1.0)
 // (2*2 would not result in 4), 
 // (16384 * 16384 = 8192, representation of 0.5*0.5=0.25) 
-// all blade functions use this method of fixed point calculations
+// most blade functions use this method of fixed point calculations
 // F, V: INTEGER, 
 // return value: INTEGER
 
@@ -31,11 +31,11 @@ private:
 // Gets Percentage V of value F, 
 // Percentages over 100% are allowed and will effectively be a multiplier. 
 // F, V: INTEGER
-// example Percentage<WavLen<EFFECT_IGNITION>,25>
-// this will give you 25% of the length of the wav file
+// example Percentage<Int<16384>,25>
+// this will give you 25% of Int<16384> and returns Int<4096>
 // return value: INTEGER
 
 template<class F, int V> //floats do no work in class templates...
-  using Percentage = Mult<F, Int<(int)(V * 32768 / 100.0f)>>;
+  using Percentage = Mult<F, Int< V * 32768 / 100 >>;
 
 #endif
