@@ -52,7 +52,7 @@ template<class COLOR = Mix<TwistAngle<>,OrangeRed,Red>,
          class TR2 = TrWipe<600>,
          class SIZE1 = Int<4000>,
          class SIZE2 = Int<10000>,
-         class LOCATION - Int<30000>>
+         class LOCATION = Int<30000>>
 using ResponsiveMeltL =
   LockupTrL<AlphaL<COLOR, SmoothStep<LOCATION,Scale<TwistAngle<>,SIZE1,SIZE2>>>,
             TR1,
