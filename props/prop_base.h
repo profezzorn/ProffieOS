@@ -742,7 +742,7 @@ public:
       EnableAmplifier();
       track_player_ = GetFreeWavPlayer();
       if (track_player_) {
-        track_player_->Play(current_preset_.track.get());
+	track_player_->Play(current_preset_.track.get());
       } else {
         STDOUT.println("No available WAV players.");
       }
@@ -1268,6 +1268,12 @@ public:
     }
 
     if (!strcmp(cmd, "set_preset") && arg) {
+      int preset = strtol(arg, NULL, 0);
+      SetPreset(preset, true);
+      return true;
+    }
+
+    if (!strcmp(cmd, "change_preset") && arg) {
       int preset = strtol(arg, NULL, 0);
       if (preset != current_preset_.preset_num) {
 	SetPreset(preset, true);

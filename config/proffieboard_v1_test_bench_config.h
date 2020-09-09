@@ -72,8 +72,8 @@ typedef RandomFlicker<Rgb<200,200,200>, Rgb<40,40,40>> OnPulse;
 typedef Pulsing<Rgb<128,128,128>, Rgb16<50,50,50>, 3000> OffPulse;
 
 RFID_Command RFID_Commands[] = {
-  { 0x0000000C04ULL /* green */, "set_preset", "0" },
-  { 0x09003A8CDCULL,             "set_preset", "1" },
+  { 0x0000000C04ULL /* green */, "change_preset", "0" },
+  { 0x09003A8CDCULL,             "change_preset", "1" },
 };
 
 Preset testing_presets[] = {
