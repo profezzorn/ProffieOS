@@ -108,7 +108,7 @@ SaberFett263Buttons() : PropBase() {}
     }   
     
     if(auto_melt_on_) {
-       if (!swinging_ && fusor.swing_speed() > 60 && fusor.swing_speed() < 120 && millis() > clash_swing_ + (100 * LOCKUP_THRESHOLD_G)) {  
+       if (!swinging_ && fusor.swing_speed() > 90 && fusor.swing_speed() < 120 && millis() > clash_swing_ + (100 * LOCKUP_THRESHOLD_G)) {  
           if (SaberBase::Lockup()) {
           SaberBase::DoEndLockup();
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
