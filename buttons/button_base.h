@@ -104,9 +104,7 @@ protected:
         YIELD();
       }
       while (DebouncedRead()) YIELD();
-      if (current_modifiers & button_) {
-	Send(EVENT_RELEASED);
-      }
+      Send(EVENT_RELEASED);
       if (current_modifiers & button_) {
         current_modifiers &=~ button_;
         if (millis() - push_millis_ < BUTTON_SHORT_CLICK_TIMEOUT) {
