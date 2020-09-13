@@ -28,13 +28,15 @@ using ResponsiveLockupL =
 // Implements Drag that will increase or decrease in size based on turning hilt
 // TRANSITION1 & TRANSITION2 = transition Begin & End
 // SIZE1 & SIZE2 control limits for DRAG size with TwistAngle
+// LOCATION controls SmoothStep location
 template<class COLOR,
          class TR1 = TrInstant,
          class TR2 = TrInstant,
          class SIZE1 = Int<2000>,
-         class SIZE2 = Int<10000>>
+         class SIZE2 = Int<10000>,
+         class LOCATION = Int<32000>>
 using ResponsiveDragL =
-  LockupTrL<AlphaL<COLOR, SmoothStep<Int<32000>,Scale<TwistAngle<>,SIZE1,SIZE2>>>,
+  LockupTrL<AlphaL<COLOR, SmoothStep<LOCATION,Scale<TwistAngle<>,SIZE1,SIZE2>>>,
             TR1,
             TR2,
             SaberBase::LOCKUP_DRAG>;
@@ -44,13 +46,15 @@ using ResponsiveDragL =
 // heating and intensity will increase or decrease based on turning hilt
 // TRANSITION1 & TRANSITION2 = transition Begin & End
 // SIZE1 & SIZE2 control MELT area limits for TwistAngle
+// LOCATION control SmoothStep location
 template<class COLOR = Mix<TwistAngle<>,OrangeRed,Red>,
          class TR1 = TrWipeIn<600>,
          class TR2 = TrWipe<600>,
          class SIZE1 = Int<4000>,
-         class SIZE2 = Int<10000>>
+         class SIZE2 = Int<10000>,
+         class LOCATION = Int<30000>>
 using ResponsiveMeltL =
-  LockupTrL<AlphaL<COLOR, SmoothStep<Int<30000>,Scale<TwistAngle<>,SIZE1,SIZE2>>>,
+  LockupTrL<AlphaL<COLOR, SmoothStep<LOCATION,Scale<TwistAngle<>,SIZE1,SIZE2>>>,
             TR1,
             TR2,
             SaberBase::LOCKUP_MELT>;
@@ -160,14 +164,16 @@ using ResponsiveBlastFadeL =
 // Implements Stab effect that will change in size based on angle of the blade
 // TRANSITION1 & TRANSITION2 = transition Begin & End
 // SIZE1 & SIZE2 control Stab area limits for BladeAngle, 0 ~ 32768
+// LOCATION control SmoothStep location
 template<class COLOR,
          class TR1 = TrWipeIn<600>,
          class TR2 = TrWipe<600>,
          class SIZE1 = Int<14000>,
-         class SIZE2 = Int<8000>>
+         class SIZE2 = Int<8000>,
+         class LOCATION = Int<32000>>
 using ResponsiveStabL =
   TransitionEffectL<TrConcat<TR1,
-                             AlphaL<COLOR, SmoothStep<Int<32000>,Scale<BladeAngle<>,SIZE1,SIZE2>>>,
+                             AlphaL<COLOR, SmoothStep<LOCATION,Scale<BladeAngle<>,SIZE1,SIZE2>>>,
                              TR2>,
                     EFFECT_STAB>;
 
