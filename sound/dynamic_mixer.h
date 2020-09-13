@@ -57,7 +57,7 @@ public:
   
   int read(int16_t* data, int elements) override {
     SCOPED_PROFILER();
-    int32_t sum[AUDIO_BUFFER_SIZE / 2];
+    int32_t sum[AUDIO_BUFFER_SIZE];
     int ret = elements;
     int v = 0, v2 = 0;
     num_samples_ += elements;
@@ -79,7 +79,7 @@ public:
         v = sum[i];
         vol_ = ((vol_ + abs(v)) * 255) >> 8;
         v2 = v * volume_ / (my_sqrt(vol_) + 100);
-//	v2 = (int)((v * (float)volume_)/(sqrtf(vol_)+100.0));
+//	v2 = (int)((v * (float)volume_)/(sqrtf(vol_)+100.0f));
         data[i] = clamptoi16(v2);
         peak_sum_ = std::max<int32_t>(abs(v), peak_sum_);
         peak_ = std::max<int32_t>(abs(v2), peak_);
@@ -88,6 +88,43 @@ public:
       elements -= to_do;
     }
     last_sample_ = v2;
+    last_sum_ = v;
+    
+//    STDOUT.println(vol_);
+    return ret;
+  }
+
+  // No volume, no clamping!
+  int read(float* data, int elements) {
+    SCOPED_PROFILER();
+    int32_t sum[AUDIO_BUFFER_SIZE];
+    int16_t tmp[AUDIO_BUFFER_SIZE];
+    int ret = elements;
+    int v = 0, v2 = 0;
+    num_samples_ += elements;
+    while (elements) {
+      int to_do = std::min(elements, (int)NELEM(sum));
+      for (int i = 0; i < to_do; i++) sum[i] = 0;
+      for (int i = 0; i < N; i++) {
+	if (!streams_[i]) continue;
+        int e = streams_[i]->read(tmp, to_do);
+	if (e < to_do && !streams_[i]->eof()) {
+	  underflow_count_++;
+	}
+        for (int j = 0; j < e; j++) {
+          sum[j] += tmp[j];
+        }
+      }
+
+      for (int i = 0; i < to_do; i++) {
+        v = sum[i];
+        vol_ = ((vol_ + abs(v)) * 255) >> 8;
+	data[i] = v / (sqrtf(vol_) + 100.0f);
+      }
+      data += to_do;
+      elements -= to_do;
+    }
+    last_sample_ = v2 * volume_;
     last_sum_ = v;
     
 //    STDOUT.println(vol_);
@@ -155,5 +192,7 @@ public:
 //  int32_t sum_;
 //  ClickAvoiderLin volume_;
 };
+
+AudioDynamicMixer<NUM_WAV_PLAYERS + 2> dynamic_mixer;
 
 #endif

@@ -5,11 +5,6 @@
 void set_audioClock(int nfact, int32_t nmult, uint32_t ndiv,  bool force = false); // sets PLL4
 #endif
 
-// DMA-driven audio output.
-// Based on the Teensy Audio library code.
-#define AUDIO_BUFFER_SIZE 44
-#define AUDIO_RATE 44100
-
 #ifdef USE_I2S
 
 #ifdef TEENSYDUINO
@@ -274,7 +269,7 @@ public:
     Setup();
 
     memset(dac_dma_buffer, 0, sizeof(dac_dma_buffer));
-#ifdef ENABLE_SPDIF_OUT
+#if defined(ENABLE_SPDIF_OUT) || defined(ENABLE_I2S_OUT)
     memset(dac_dma_buffer2, 0, sizeof(dac_dma_buffer2));
 #endif
 
@@ -333,7 +328,7 @@ public:
 
     // aux/Button2 button pin is DATA
     stm32l4_gpio_pin_configure(GPIO_PIN_PB5_SAI1_SD_B, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
-    stm32l4_dma_start(&dma2, (uint32_t)&SAI2->DR, (uint32_t)dac_dma_buffer, AUDIO_BUFFER_SIZE * 2,
+    stm32l4_dma_start(&dma2, (uint32_t)&SAI2->DR, (uint32_t)dac_dma_buffer2, AUDIO_BUFFER_SIZE * 2,
                       DMA_OPTION_EVENT_TRANSFER_DONE |
                       DMA_OPTION_EVENT_TRANSFER_HALF |
                       DMA_OPTION_MEMORY_TO_PERIPHERAL |
@@ -463,6 +458,7 @@ public:
     STDOUT.println(" dacbuf - print the current contents of the dac buffer");
   }
 
+  // TODO: Replace with enable/disable
   void SetStream(class AudioStream* stream) {
     stream_ = stream;
   }
@@ -484,10 +480,13 @@ private:
 #endif
   {
     ScopedCycleCounter cc(audio_dma_interrupt_cycles);
-    int16_t *dest, *end;
+    int16_t *dest;
     uint32_t saddr = current_position();
 #ifdef ENABLE_SPDIF_OUT
-    uint32_t *spdif;
+    uint32_t *secondary;
+#endif
+#ifdef ENABLE_I2S_OUT
+    uint16_t *secondary;
 #endif
 
 #ifdef TEENSYDUINO
@@ -497,43 +496,67 @@ private:
       // DMA is transmitting the first half of the buffer
       // so we must fill the second half
       dest = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*CHANNELS];
-      end = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
-#ifdef ENABLE_SPDIF_OUT
-      spdif = dac_dma_buffer2 + AUDIO_BUFFER_SIZE * 2;
+#if defined(ENABLE_SPDIF_OUT) || defined(ENABLE_I2S_OUT)
+      secondary = dac_dma_buffer2 + AUDIO_BUFFER_SIZE * 2;
 #endif
     } else {
       // DMA is transmitting the second half of the buffer
       // so we must fill the first half
       dest = (int16_t *)dac_dma_buffer;
-      end = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*CHANNELS];
-#ifdef ENABLE_SPDIF_OUT
-      spdif = dac_dma_buffer2;
+#if defined(ENABLE_SPDIF_OUT) || defined(ENABLE_I2S_OUT)
+      secondary = dac_dma_buffer2;
 #endif
     }
 #ifdef __IMXRT1062__
     int16_t *clear_cache = dest;
 #endif
-    AudioStream *stream = stream_;
+
+#ifndef LINE_OUT_VOLUME
+// LINE_OUT_VOLUME can be defined as dynamic_mixer.get_volume() to follow normal volume.
+#define LINE_OUT_VOLUME 2000
+#endif      
+    
+#if defined(ENABLE_SPDIF_OUT) || defined(ENABLE_I2S_OUT)
+#define DAC_GET_FLOATS
+#endif
+
+#ifdef DAC_GET_FLOATS
+    float data[AUDIO_BUFFER_SIZE];
+#else    
     int16_t data[AUDIO_BUFFER_SIZE];
+#endif    
     int n = 0;
-    if (stream) {
-      n = stream->read(data, (end-dest) / CHANNELS);
+    if (stream_) {
+      n = dynamic_mixer.read(data, AUDIO_BUFFER_SIZE);
     }
     while (n < AUDIO_BUFFER_SIZE) data[n++] = 0;
     for (int i = 0; i < n; i++) {
-#ifdef USE_I2S
-#if CHANNELS == 2
-      // Duplicate sample to left and right channel.
-      *(dest++) = data[i];
-#endif
-      *(dest++) = data[i];
-#else // I2S
-      // For Teensy DAC
-      *(dest++) = (((uint16_t*)data)[i] + 32768) >> 4;
+
+#ifdef DAC_GET_FLOATS
+      int16_t sample = clamptoi16(data[i] * dynamic_mixer.get_volume());
+      
+#ifdef ENABLE_I2S_OUT
+      *(secondary++) = clamptoi16(data[i] * (LINE_OUT_VOLUME));
 #endif
 #ifdef ENABLE_SPDIF_OUT
-      *(spdif++) = ((uint32_t)(uint16_t)(data[i])) << 8;
-      *(spdif++) = ((uint32_t)(uint16_t)(data[i])) << 8;
+      int32_t sample24 = clamptoi24(data[i] * (LINE_OUT_VOLUME * 256));
+      *(secondary++) = sample24 & 0xFFFFFF;
+      *(secondary++) = sample24 & 0xFFFFFF;
+#endif
+      
+#else   // GET_FLOATS
+      int16_t sample = data[i];
+#endif  // GET_FLOATS
+
+#ifdef USE_I2S
+      *(dest++) = sample;
+#if CHANNELS == 2
+      // Duplicate sample to left and right channel.
+      *(dest++) = sample;
+#endif
+#else // I2S
+      // For Teensy DAC
+      *(dest++) = (((uint16_t)sample) + 32768) >> 4;
 #endif
     }
 #ifdef __IMXRT1062__
@@ -546,13 +569,16 @@ private:
   bool on_ = false;
   bool needs_setup_ = true;
   DMAMEM static uint16_t dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
+#ifdef ENABLE_SPDIF_OUT
+  DMAMEM static uint32_t dac_dma_buffer2[AUDIO_BUFFER_SIZE*2*2];
+#endif
+#ifdef ENABLE_I2S_OUT
+  DMAMEM static uint16_t dac_dma_buffer2[AUDIO_BUFFER_SIZE*2*CHANNELS];
+#endif
   static AudioStream * volatile stream_;
   static DMAChannel dma;
 #if defined(ENABLE_I2S_OUT) || defined(ENABLE_SPDIF_OUT)
   static DMAChannel dma2;
-#endif
-#ifdef ENABLE_SPDIF_OUT
-  DMAMEM static uint32_t dac_dma_buffer2[AUDIO_BUFFER_SIZE*2*2];
 #endif
 };
 
@@ -569,6 +595,9 @@ AudioStream * volatile LS_DAC::stream_ = nullptr;
 DMAMEM __attribute__((aligned(32))) uint16_t LS_DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
 #ifdef ENABLE_SPDIF_OUT
 DMAMEM __attribute__((aligned(32))) uint32_t LS_DAC::dac_dma_buffer2[AUDIO_BUFFER_SIZE*2*2];
+#endif
+#ifdef ENABLE_I2S_OUT
+DMAMEM __attribute__((aligned(32))) uint16_t LS_DAC::dac_dma_buffer2[AUDIO_BUFFER_SIZE*2*CHANNELS];
 #endif
 
 LS_DAC dac;

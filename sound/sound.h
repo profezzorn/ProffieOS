@@ -1,10 +1,15 @@
 #ifdef ENABLE_AUDIO
 
+// DMA-driven audio output.
+#define AUDIO_BUFFER_SIZE 44
+#define AUDIO_RATE 44100
+#define NUM_WAV_PLAYERS 7
+
 #include "click_avoider_lin.h"
 #include "waveform_sampler.h"
 #include "audiostream.h"
-#include "dac.h"
 #include "dynamic_mixer.h"
+#include "dac.h"
 #include "beeper.h"
 #include "talkie.h"
 #include "lightsaber_synth.h"
@@ -20,9 +25,8 @@ size_t WhatUnit(class BufferedWavPlayer* player);
 #include "effect.h"
 #include "buffered_wav_player.h"
 
-BufferedWavPlayer wav_players[7];
+BufferedWavPlayer wav_players[NUM_WAV_PLAYERS];
 RefPtr<BufferedWavPlayer> track_player_;
-AudioDynamicMixer<NELEM(wav_players) + 2> dynamic_mixer;
 
 RefPtr<BufferedWavPlayer> GetFreeWavPlayer()  {
   // Find a free wave playback unit.
