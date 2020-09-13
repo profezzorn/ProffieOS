@@ -354,6 +354,11 @@ public:
     BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
     STDOUT << "ID: " << ret << "\n";
+#ifdef SPEAK_BLADE_ID
+    talkie.Say(spI);
+    talkie.Say(spD);
+    talkie.SayNumber((int)ret);
+#endif    
 #ifdef BLADE_DETECT_PIN
     if (!blade_detected_) {
       STDOUT << "NO ";
