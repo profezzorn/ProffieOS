@@ -46,30 +46,29 @@
 // Volume Down (10% increment) - click AUX while in Volume Menu while OFF
 // Exit Volume Menu - hold and release AUX while in Volume Menu while OFF
 
+#ifndef PROPS_SABER_FETT263_G_BUTTONS_H
+#define PROPS_SABER_FETT263_G_BUTTONS_H
+
 #ifndef MOTION_TIMEOUT
 #define MOTION_TIMEOUT 60 * 15 * 1000
 #endif
 
-#ifndef LOCKUP_THRESHOLD_G
-#define LOCKUP_THRESHOLD_G 2.0
+#ifndef LOCKUP_THRESHOLD_DELAY
+#define LOCKUP_THRESHOLD_DELAY 2.0
 #endif 
-
-#ifndef PROPS_SABER_FETT263_G_BUTTONS_H
-#define PROPS_SABER_FETT263_G_BUTTONS_H
 
 #include "prop_base.h"
 #include "../sound/hybrid_font.h"
 
 #undef PROP_TYPE
-#define PROP_TYPE SaberFett263Buttons
+#define PROP_TYPE SaberFett263GButtons
 
 // The Saber class implements the basic states and actions
 // for the saber.
-class SaberFett263Buttons : public PropBase {
+class SaberFett263GButtons : public PropBase {
 public:
-SaberFett263Buttons() : PropBase() {}
-  const char* name() override { return "SaberFett263Buttons"; }
-
+SaberFett263GButtons() : PropBase() {}
+  const char* name() override { return "SaberFett263GButtons"; }
 
   // EVENT_SWING
   bool swinging_ = false;
@@ -79,36 +78,37 @@ SaberFett263Buttons() : PropBase() {}
       if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
         SaberBase::RequestMotion();
         if (!swinging_ && fusor.swing_speed() > 250) {
-            swinging_ = true;
-            Event(BUTTON_NONE, EVENT_SWING);
-            }
-            if (swinging_ && fusor.swing_speed() < 100) {
-            swinging_ = false;
-            }
+           swinging_ = true;
+           Event(BUTTON_NONE, EVENT_SWING);
+        }
+        if (swinging_ && fusor.swing_speed() < 100) {
+           swinging_ = false;
+        }
       }
     }
+	  
     if (!swinging_ && fusor.swing_speed() > 250) {
       swinging_ = true;
       Event(BUTTON_NONE, EVENT_SWING);
     }
-    if (!swinging_ && fusor.swing_speed() > 120 && fusor.swing_speed() < 250 && millis() > clash_swing_ + (100 * LOCKUP_THRESHOLD_G)) {
-    
+	  
     if(auto_lockup_on_) {
+       if (!swinging_ && fusor.swing_speed() > 120 && fusor.swing_speed() < 250 && millis() > clash_impact_ + (100 * LOCKUP_THRESHOLD_DELAY)) {
           if (SaberBase::Lockup()) {
-          SaberBase::DoEndLockup();
-          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-          auto_lockup_on_ = false;        
+             SaberBase::DoEndLockup();
+             SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+             auto_lockup_on_ = false;        
           } 
         }
     }
-
+	  
     if (swinging_ && fusor.swing_speed() < 100) {
       last_swing_ = millis();
       swinging_ = false;
     }   
     
     if(auto_melt_on_) {
-       if (!swinging_ && fusor.swing_speed() > 60 && fusor.swing_speed() < 120 && millis() > clash_swing_ + (100 * LOCKUP_THRESHOLD_G)) {  
+       if (!swinging_ && fusor.swing_speed() > 60 && fusor.swing_speed() < 120 && millis() > clash_impact_ + (100 * LOCKUP_THRESHOLD_DELAY)) {  
           if (SaberBase::Lockup()) {
           SaberBase::DoEndLockup();
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
@@ -116,9 +116,7 @@ SaberFett263Buttons() : PropBase() {}
           } 
         }
     }
-
  }
-  
 
   // SA22C Volume Menu
   void VolumeUp() {
@@ -129,8 +127,7 @@ SaberFett263Buttons() : PropBase() {}
       beeper.Beep(0.5, 2000);
       STDOUT.print("Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
-    }
-    else {
+    } else {
       beeper.Beep(0.5, 3000);
     }
   }
@@ -142,8 +139,7 @@ SaberFett263Buttons() : PropBase() {}
       beeper.Beep(0.5, 2000);
       STDOUT.print("Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
-    }
-    else{
+    } else {
       beeper.Beep(0.5, 1000);
     }
   }
@@ -325,97 +321,96 @@ SaberFett263Buttons() : PropBase() {}
         previous_preset();
         return true;
 
-// Gesture Controls
+       // Gesture Controls
 
-// Battle Mode
-case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
-    if (!battle_mode_) {
-       battle_mode_ = true;
-       hybrid_font.SB_Force();
-    } else {
-       battle_mode_ = false;
-       hybrid_font.SB_Force();
-    }
-    return true;
-
-// Auto Lockup Mode
-case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
-       if (battle_mode_) {
-       clash_swing_ = millis();
-       swing_blast_ = false;
-       if(clash_swing_ > last_swing_) {
-           SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-           swing_blast_ = false;
-           auto_lockup_on_ = true;
-           SaberBase::DoBeginLockup();
-           return true;
-       }
-      } else {
-           return false;
-	 }
-
-case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
-       if (battle_mode_) {
-       clash_swing_ = millis();
-       swing_blast_ = false;
-       if(clash_swing_ > last_swing_) {
-          if ((fusor.angle1() + M_PI / 2) * (32768 / M_PI) < 8000) {
-            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-          } else {
-            SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
-          }
-           swing_blast_ = false;
-           auto_melt_on_ = true;
-           SaberBase::DoBeginLockup();
-           return true;
-       }
+       // Battle Mode
+       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
+           if (!battle_mode_) {
+              battle_mode_ = true;
+              hybrid_font.SB_Force();
            } else {
-           return false;
+              battle_mode_ = false;
+              hybrid_font.SB_Force();
            }
+           return true;
+
+       // Auto Lockup Mode
+       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
+           if (battle_mode_) {
+              clash_impact_ = millis();
+              swing_blast_ = false;
+              if (clash_impact_ > last_swing_) {
+                 SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+                 swing_blast_ = false;
+                 auto_lockup_on_ = true;
+                 SaberBase::DoBeginLockup();
+                 return true;
+               }
+             } else {
+               return false;
+           }
+
+       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
+           if (battle_mode_) {
+              clash_impact_ = millis();
+              swing_blast_ = false;
+              if (clash_impact_ > last_swing_) {
+                 if ((fusor.angle1() + M_PI / 2) * (32768 / M_PI) < 8000) {
+                   SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+                 } else {
+                   SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+       	         }
+              swing_blast_ = false;
+              auto_melt_on_ = true;
+              SaberBase::DoBeginLockup();
+              return true;
+              }
+            } else {
+              return false;
+            }
 	
+       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):  
+           if(millis() > 3000) { 
+              On();
+              battle_mode_ = true;
+           }
+           return true;
 
-case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):  
-	  if(millis() > 3000) { 
-          On();
-          battle_mode_ = true;
-        }
-        return true;
+       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+           if (millis() > last_twist_ + 3000) {
+              Off();
+              last_twist_ = millis();
+              saber_off_time_ = millis();
+           }
+           return true;
 
-case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-        if (millis() > last_twist_ + 3000) {
-        Off();
-        last_twist_ = millis();
-        saber_off_time_ = millis();
-	   }
-        return true;
+       // Optional Gestures use defines to enable
 
-// Optional Gestures use defines to enable
+       #ifdef FETT263_STAB_ON
+       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
+           On();
+           return true;
+       #endif
 
-#ifdef FETT263_STAB_ON
-case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
-        On();
-        return true;
-#endif
+       #ifdef FETT263_TWIST_ON
+       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
+           if (millis() > last_twist_ + 3000) {
+              On();
+              last_twist_ = millis();
+           }
+           return true;
+       #endif
 
-#ifdef FETT263_TWIST_ON
-case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-        if (millis() > last_twist_ + 3000) {
-        On();
-        last_twist_ = millis();
-        }
-        return true;
-#endif
+       #ifdef FETT263_MULTI_PHASE
+       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
+           next_preset();
+           return true;
 
-#ifdef FETT263_MULTI_PHASE
-case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
-	   next_preset();
-        return true;
+       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
+           previous_preset();
+           return true;
 
-case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
-        previous_preset();
-        return true;
-
-#endif
+       #endif
         
         // Events that needs to be handled regardless of what other buttons
         // are pressed.
@@ -436,7 +431,7 @@ private:
   bool auto_lockup_on_ = false;
   bool auto_melt_on_ = false;
   bool battle_mode_ = false;
-  uint32_t clash_swing_ = millis();
+  uint32_t clash_impact_ = millis();
   uint32_t last_twist_ = millis();
   uint32_t last_swing_ = millis();
   uint32_t saber_off_time_ = millis();
