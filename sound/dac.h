@@ -348,7 +348,7 @@ public:
 #ifdef ENABLE_SPDIF_OUT
     // aux button pin becomes S/PDIF out
     stm32l4_gpio_pin_configure(GPIO_PIN_PB5_SAI1_SD_B, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
-    stm32l4_dma_start(&dma2, (uint32_t)&SAI2->DR, (uint32_t)dac_dma_buffer2, AUDIO_BUFFER_SIZE * 2,
+    stm32l4_dma_start(&dma2, (uint32_t)&SAI2->DR, (uint32_t)dac_dma_buffer2, AUDIO_BUFFER_SIZE * 2 * 2,
                       DMA_OPTION_EVENT_TRANSFER_DONE |
                       DMA_OPTION_EVENT_TRANSFER_HALF |
                       DMA_OPTION_MEMORY_TO_PERIPHERAL |
@@ -499,7 +499,7 @@ private:
       dest = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*CHANNELS];
       end = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
 #ifdef ENABLE_SPDIF_OUT
-      spdif = dac_dma_buffer2 + AUDIO_BUFFER_SIZE * CHANNELS;
+      spdif = dac_dma_buffer2 + AUDIO_BUFFER_SIZE * 2;
 #endif
     } else {
       // DMA is transmitting the second half of the buffer
@@ -532,8 +532,8 @@ private:
       *(dest++) = (((uint16_t*)data)[i] + 32768) >> 4;
 #endif
 #ifdef ENABLE_SPDIF_OUT
-      *(spdif++) = ((uint32_t)(data[i])) << 8;
-      *(spdif++) = ((uint32_t)(data[i])) << 8;
+      *(spdif++) = ((uint32_t)(uint16_t)(data[i])) << 8;
+      *(spdif++) = ((uint32_t)(uint16_t)(data[i])) << 8;
 #endif
     }
 #ifdef __IMXRT1062__
