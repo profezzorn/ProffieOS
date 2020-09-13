@@ -6,8 +6,8 @@
 // FETT263_BATTLE_MODE
 // To enable Battle Mode, Swing On and Twist Off gestures
 //
-// LOCKUP_THRESHOLD_DELAY 2.0
-// This is the "delay" threshold to determine Clash vs Lockup
+// LOCKUP_THRESHOLD_DELAY 200
+// This is the "delay" threshold in millis to determine Clash vs Lockup
 //
 // FETT263_STAB_ON 
 // To enable Stab On
@@ -57,7 +57,7 @@
 #endif
 
 #ifndef LOCKUP_THRESHOLD_DELAY
-#define LOCKUP_THRESHOLD_DELAY 2.0
+#define LOCKUP_THRESHOLD_DELAY 200
 #endif 
 
 #include "prop_base.h"
@@ -98,7 +98,7 @@ SaberFett263GButtons() : PropBase() {}
     }
 	  
     if(auto_lockup_on_) {
-       if (!swinging_ && fusor.swing_speed() > 120 && fusor.swing_speed() < 250 && millis() > clash_impact_millis_ + (100 * LOCKUP_THRESHOLD_DELAY)) {
+       if (!swinging_ && fusor.swing_speed() > 120 && fusor.swing_speed() < 250 && millis() > clash_impact_millis_ + LOCKUP_THRESHOLD_DELAY) {
           if (SaberBase::Lockup()) {
              SaberBase::DoEndLockup();
              SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
@@ -113,7 +113,7 @@ SaberFett263GButtons() : PropBase() {}
     }   
     
     if(auto_melt_on_) {
-       if (!swinging_ && fusor.swing_speed() > 60 && fusor.swing_speed() < 120 && millis() > clash_impact_millis_ + (100 * LOCKUP_THRESHOLD_DELAY)) {  
+       if (!swinging_ && fusor.swing_speed() > 60 && fusor.swing_speed() < 120 && millis() > clash_impact_millis_ + LOCKUP_THRESHOLD_DELAY) {  
           if (SaberBase::Lockup()) {
           SaberBase::DoEndLockup();
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
