@@ -319,6 +319,9 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
 int16_t clamptoi16(int32_t x) {
   return clampi32(x, -32768, 32767);
 }
+int32_t clamptoi24(int32_t x) {
+  return clampi32(x, -8388608, 8388607);
+}
 
 #include "common/sin_table.h"
 
