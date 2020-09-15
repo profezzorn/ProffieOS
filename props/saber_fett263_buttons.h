@@ -398,6 +398,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_STAB_ON
        case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
          On();
+         battle_mode_ = true;
          return true;
 #endif
 
@@ -406,6 +407,7 @@ SaberFett263Buttons() : PropBase() {}
          if (millis() - last_twist_ > 3000) {
            On();
            last_twist_ = millis();
+           battle_mode_ = true;
          }
          return true;
 #endif
