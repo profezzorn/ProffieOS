@@ -365,7 +365,7 @@ SaberFett263Buttons() : PropBase() {}
          clash_impact_millis_ = millis();
          swing_blast_ = false;
          if (!swinging_) {
-           if ((fusor.angle1() + M_PI / 2) * (32768 / M_PI) < 8000) {
+           if (fusor.angle1() < - M_PI / 4) {
              SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
              } else {
                SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
