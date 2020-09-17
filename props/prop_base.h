@@ -1377,11 +1377,12 @@ public:
     }
 
     if (Event2(button, event, current_modifiers | (IsOn() ? MODE_ON : MODE_OFF))) {
-      current_modifiers &= button;
+      current_modifiers = 0;
       return true;
     }
     if (Event2(button, event,  MODE_ANY_BUTTON | (IsOn() ? MODE_ON : MODE_OFF))) {
       // Not matching modifiers, so no need to clear them.
+      current_modifiers &= ~button;
       return true;
     }
     return false;
