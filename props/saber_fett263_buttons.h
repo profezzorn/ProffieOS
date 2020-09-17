@@ -86,7 +86,7 @@ SaberFett263Buttons() : PropBase() {}
   void Loop() override {
     PropBase::Loop();
     // Swing On gesture control this portion allows fine tuning of speed needed to ignite
-    if(!SaberBase::IsOn() ) {
+    if(!SaberBase::IsOn()) {
       if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
         SaberBase::RequestMotion();
       // Edit '250' value in line below to change swing on sensitivity, 250 ~ 400 work best in testing
@@ -115,7 +115,6 @@ SaberFett263Buttons() : PropBase() {}
         auto_lockup_on_ = false;        
       } 
     }
-    
 	  
     if (swinging_ && fusor.swing_speed() < 100) {
       swinging_ = false;
