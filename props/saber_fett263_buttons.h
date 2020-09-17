@@ -1,13 +1,20 @@
 // Fett263 Buttons with Gesture Controls and Battle Mode with Smart Lockup
 //
-// Includes Gesture Controls, "Battle Mode" with "Smart Lockup", "Multi-Blast" Mode (to enable Swing Blast control) and SA22C volume menu
+// Includes Gesture Controls, "Battle Mode" with "Smart Lockup", "Multi-Blast" Mode (to enable Swing Blast control) 
+// "Multi-Phase" Mode and SA22C volume menu
 // Optional Defines
 //
 // FETT263_BATTLE_MODE
-// To enable Battle Mode, Swing On and Twist Off gestures
+// To enable Battle Mode, Swing On and Twist Off gestures enabled automatically
 //
 // FETT263_LOCKUP_DELAY 200
 // This is the "delay" in millis to determine Clash vs Lockup
+//
+// FETT263_SWING_ON
+// To enable Swing On Ignition control (automatically enters Battle Mode)
+//
+// FETT263_TWIST_OFF
+// To enable Twist Off Retraction control
 //
 // FETT263_STAB_ON 
 // To enable Stab On Ignition control (automatically enters Battle Mode)
@@ -101,13 +108,12 @@ SaberFett263Buttons() : PropBase() {}
     if (auto_lockup_on_ && 
     !swinging_ && 
     fusor.swing_speed() > 120 && 
-    fusor.swing_speed() < 250 && 
     millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY) {
-        if (SaberBase::Lockup()) {
-          SaberBase::DoEndLockup();
-          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-          auto_lockup_on_ = false;        
-        } 
+      if (SaberBase::Lockup()) {
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        auto_lockup_on_ = false;        
+      } 
     }
     
 	  
@@ -118,13 +124,12 @@ SaberFett263Buttons() : PropBase() {}
     if (auto_melt_on_ &&
     !swinging_ && 
     fusor.swing_speed() > 60 && 
-    fusor.swing_speed() < 120 && 
     millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY) {  
-        if (SaberBase::Lockup()) {
-          SaberBase::DoEndLockup();
-          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-          auto_melt_on_ = false;        
-        } 
+      if (SaberBase::Lockup()) {
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        auto_melt_on_ = false;        
+      } 
     }
     
  }
@@ -337,13 +342,17 @@ SaberFett263Buttons() : PropBase() {}
        // Battle Mode
 		    
 #ifdef FETT263_BATTLE_MODE
+  #define FETT263_SWING_ON
+  #define FETT263_TWIST_OFF
        case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
          if (!battle_mode_) {
            battle_mode_ = true;
+           // Force sound plays when entering Battle Mode
            hybrid_font.SB_Force();
          } else {
            battle_mode_ = false;
-           hybrid_font.SB_Force();
+	   // Exit Color Change sound plays when exiting Battle Mode
+           hybrid_font.SB_Change(EXIT_COLOR_CHANGE);
          }
          return true;
 
@@ -375,14 +384,18 @@ SaberFett263Buttons() : PropBase() {}
          SaberBase::DoBeginLockup();
          return true;
          }
-	
+#endif
+		    
+#ifdef FETT263_SWING_ON
        case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):  
          if(millis() > 3000) { 
            On();
            battle_mode_ = true;
          }
          return true;
-
+#endif
+		    
+#ifdef FETT263_TWIST_OFF
        case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
          if (millis() - last_twist_ > 3000) {
            Off();
