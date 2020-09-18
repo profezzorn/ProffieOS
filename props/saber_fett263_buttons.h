@@ -124,7 +124,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
           auto_melt_on_ = false;        
     }
- }
+  }
 
   // SA22C Volume Menu
   void VolumeUp() {
@@ -378,7 +378,7 @@ SaberFett263Buttons() : PropBase() {}
 		    
 #ifdef FETT263_SWING_ON
        case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):  
-       // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
+         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
          if (millis() > 3000) { 
            On();
            battle_mode_ = true;
