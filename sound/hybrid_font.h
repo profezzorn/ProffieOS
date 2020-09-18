@@ -16,7 +16,9 @@ public:
     CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 130.0f);
     CONFIG_VARIABLE(ProffieOSAnimationFrameRate, 0.0f);
+#ifdef ENABLE_SPINS    
     CONFIG_VARIABLE(ProffieOSSpinDegrees, 360.0f);
+#endif    
   }
   // Igniter compat
   // This specifies how many milliseconds before the end of the
@@ -53,10 +55,12 @@ public:
   float ProffieOSSlashAccelerationThreshold;
   // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
+#ifdef ENABLE_SPINS  
   // number of degrees the blade must travel while staying above the
   // swing threshold in order to trigger a spin sound.  Default is 360 or
   // one full rotation.
   float ProffieOSSpinDegrees;
+#endif  
 };
 
 FontConfigFile font_config;
@@ -197,7 +201,9 @@ public:
     if (delta_micros > 1000000) delta_micros = 1;
     if (swing_speed > swingThreshold) {
       float delta = delta_micros * 0.000001;
+#ifdef ENABLE_SPINS      
       angle_ += swing_speed * delta;
+#endif      
       if (!guess_monophonic_) {
         if (swing_player_) {
           // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
@@ -219,12 +225,14 @@ public:
             }
             swinging_ = true;
           } else {
+#ifdef ENABLE_SPINS
             if (angle_ > font_config.ProffieOSSpinDegrees) {
               if (SFX_spin) {
                 swing_player_ = PlayPolyphonic(&SFX_spin);
               }
               angle_ -= font_config.ProffieOSSpinDegrees;
             }
+#endif	    
           }
         }
       } else if (swing_speed > swingThreshold) {
@@ -232,19 +240,23 @@ public:
           PlayMonophonic(&SFX_swing, &SFX_hum);
           swinging_ = true;
         }
+#ifdef ENABLE_SPINS	
         if (angle_ > 360 && swinging_) {
           if (SFX_spin) {
             PlayMonophonic(&SFX_spin, &SFX_hum);
           }
           angle_ -= font_config.ProffieOSSpinDegrees;
         }
+#endif	
       }
       float swing_strength = std::min<float>(1.0, swing_speed / swingThreshold);
       SetSwingVolume(swing_strength, 1.0);
     } else if (swing_speed <= font_config.ProffieOSSwingLowerThreshold) {
       swinging_ = false;
       swing_player_.Free();
+#ifdef ENABLE_SPINS      
       angle_ = 0;
+#endif      
     }
     float vol = 1.0f;
     if (!swinging_) {
@@ -609,7 +621,9 @@ public:
   uint32_t hum_start_;
   float hum_fade_in_;
   float hum_fade_out_;
+#ifdef ENABLE_SPINS      
   float angle_;
+#endif  
   bool monophonic_hum_;
   bool guess_monophonic_;
   State state_;

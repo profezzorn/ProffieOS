@@ -451,7 +451,9 @@ EFFECT2(pwroff, pstoff);
 EFFECT(clash);
 EFFECT(force);    // also polyphonic
 EFFECT(stab);     // also polyphonic
+#ifdef ENABLE_SPINS
 EFFECT(spin);     // also polyphonic
+#endif
 EFFECT(blaster);
 EFFECT2(lockup, lockup);
 EFFECT(poweronf); // force poweron
@@ -524,6 +526,9 @@ EFFECT(unjam);
 
 // battery low
 EFFECT(lowbatt);	// battery low
+
+// per-font tracks
+EFFECT(track);
 
 // TODO: Optimize this and make it possible
 // have the WAV reader use this.
