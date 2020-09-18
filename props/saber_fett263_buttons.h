@@ -106,12 +106,11 @@ SaberFett263Buttons() : PropBase() {}
     if (auto_lockup_on_ && 
         !swinging_ && 
         fusor.swing_speed() > 120 && 
-        millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY) {
-      if (SaberBase::Lockup()) {
-        SaberBase::DoEndLockup();
-        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-        auto_lockup_on_ = false;        
-      } 
+        millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY &&
+        SaberBase::Lockup()) {
+          SaberBase::DoEndLockup();
+          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+          auto_lockup_on_ = false;        
     }	  
     if (swinging_ && fusor.swing_speed() < 100) {
       swinging_ = false;
@@ -119,12 +118,11 @@ SaberFett263Buttons() : PropBase() {}
     if (auto_melt_on_ &&
         !swinging_ && 
         fusor.swing_speed() > 60 && 
-        millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY) {  
-      if (SaberBase::Lockup()) {
-        SaberBase::DoEndLockup();
-        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-        auto_melt_on_ = false;        
-      } 
+        millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY && 
+        SaberBase::Lockup()) {
+          SaberBase::DoEndLockup();
+          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+          auto_melt_on_ = false;        
     }
  }
 
@@ -357,7 +355,6 @@ SaberFett263Buttons() : PropBase() {}
          swing_blast_ = false;
          if (!swinging_) {
            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-           swing_blast_ = false;
            auto_lockup_on_ = true;
            SaberBase::DoBeginLockup();
 	 }
@@ -373,16 +370,16 @@ SaberFett263Buttons() : PropBase() {}
            } else {
              SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
        	   }
-         swing_blast_ = false;
-         auto_melt_on_ = true;
-         SaberBase::DoBeginLockup();
+           auto_melt_on_ = true;
+           SaberBase::DoBeginLockup();
          }
          return true;
 #endif
 		    
 #ifdef FETT263_SWING_ON
        case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):  
-         if(millis() > 3000) { 
+       // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
+         if (millis() > 3000) { 
            On();
            battle_mode_ = true;
          }
