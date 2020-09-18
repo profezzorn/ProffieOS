@@ -342,11 +342,11 @@ SaberFett263Buttons() : PropBase() {}
          if (!battle_mode_) {
            battle_mode_ = true;
            // Force sound plays when entering Battle Mode
-             hybrid_font.SB_Force();
+           hybrid_font.SB_Force();
          } else {
            battle_mode_ = false;
 	   // Exit Color Change sound plays when exiting Battle Mode
-             hybrid_font.SB_Change(EXIT_COLOR_CHANGE);
+           hybrid_font.SB_Change(EXIT_COLOR_CHANGE);
          }
          return true;
 
@@ -359,8 +359,7 @@ SaberFett263Buttons() : PropBase() {}
            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
            swing_blast_ = false;
            auto_lockup_on_ = true;
-             SaberBase::DoBeginLockup();
-           return true;
+           SaberBase::DoBeginLockup();
 	 }
          return true;
 
@@ -370,14 +369,13 @@ SaberFett263Buttons() : PropBase() {}
          swing_blast_ = false;
          if (!swinging_) {
            if (fusor.angle1() < - M_PI / 4) {
-               SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+             SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
            } else {
-               SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+             SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
        	   }
          swing_blast_ = false;
          auto_melt_on_ = true;
-           SaberBase::DoBeginLockup();
-         return true;
+         SaberBase::DoBeginLockup();
          }
          return true;
 #endif
