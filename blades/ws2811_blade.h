@@ -23,20 +23,21 @@ public:
   virtual void Enable(bool enable) = 0;
 };
 
-#if VERSION_MAJOR >= 4
-
-// Common, size adjusted to ~1000 interrupts per second.
-DMAMEM uint32_t displayMemory[400];
-#include "stm32l4_ws2811.h"
-#define DefaultPinClass WS2811Pin
-
-#else
-
-// Common
-DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4 + 1];
-#include "monopodws.h"
-#include "ws2811_serial.h"
-#define DefaultPinClass MonopodWSPin
+#if VERSION_MAJOR >= 4 //Proffieboard
+	// Common, size adjusted to ~1000 interrupts per second.
+	DMAMEM uint32_t displayMemory[400];
+	#include "stm32l4_ws2811.h"
+	#define DefaultPinClass WS2811Pin
+#else //Teensy's
+	#ifdef USE_TEENSY4
+		#include "monopodws_imxrt.h"
+	#else //Teensy3.2 and others
+		 // Common
+		DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4 + 1];//24bits RGB, 4 byte/int, enough for 1 blade.
+		#include "monopodws.h"
+		#include "ws2811_serial.h"
+	#endif	  
+ #define DefaultPinClass MonopodWSPin
 #endif
 #include "spiled_pin.h"
 
@@ -251,7 +252,7 @@ private:
   bool on_ = false;
   // Blade has power
   bool powered_ = false;
-  // Style has indicated that it's ok to shutd down until the next wakeup event.
+  // Style has indicated that it's ok to shut down until the next wakeup event.
   bool allow_disable_ = false;
   // We should power off and stop running, even if the blade is on.
   bool power_off_requested_ = false;

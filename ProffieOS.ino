@@ -21,7 +21,9 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+#define CONFIG_FILE "config/aat_teensy40_config.h" //Teensy 4.0
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -130,7 +132,9 @@
 #include <DMAChannel.h>
 #include <usb_dev.h>
 
-#ifndef USE_TEENSY4
+#ifdef USE_TEENSY4
+#include <Wire.h>
+#else
 #include <kinetis.h>
 #endif
 
@@ -1328,6 +1332,18 @@ public:
   static const char* response_footer() { return "-+=END_OUTPUT=+-\n"; }
 };
 
+#ifdef USE_TEENSY4
+class Serial4Adapter {
+public:
+  static void begin() { Serial4.begin(115200); }
+  static bool Connected() { return true; }
+  static bool AlwaysConnected() { return true; }
+  static Stream& stream() { return Serial3; }
+  static const char* response_header() { return "-+=BEGIN_OUTPUT=+-\n"; }
+  static const char* response_footer() { return "-+=END_OUTPUT=+-\n"; }
+};
+#endif
+
 #ifdef USB_CLASS_WEBUSB
 class WebUSBSerialAdapter {
 public:
@@ -1541,7 +1557,11 @@ private:
 StaticWrapper<Parser<SerialAdapter>> parser;
 
 #ifdef ENABLE_SERIAL
-StaticWrapper<Parser<Serial3Adapter>> serial_parser;
+#ifdef USE_TEENSY4
+  StaticWrapper<Parser<Serial4Adapter>> serial_parser; //teensy 4.0 has serial4 on pins 16/17 (7/8 already in use for I2S)
+#else
+  StaticWrapper<Parser<Serial3Adapter>> serial_parser; //teensy 3.2 has serial3 on pins 7/8
+#endif
 #define ENABLE_SERIAL_COMMANDS
 #endif
 
@@ -1646,7 +1666,11 @@ SSD1306 display;
 #ifdef ENABLE_MOTION
 
 #include "motion/motion_util.h"
-#include "motion/mpu6050.h"
+#ifdef USE_TEENSY4
+ #include "motion/mpu6050async.h"
+#else
+ #include "motion/mpu6050.h"
+#endif 
 #include "motion/lsm6ds3h.h"
 #include "motion/fxos8700.h"
 #include "motion/fxas21002.h"
@@ -1773,6 +1797,11 @@ void setup() {
     talkie.Say(talkie_not_found_15, 15);
   }
 #endif // ENABLE_AUDIO && ENABLE_SD
+
+#if defined(USE_TEENSY4) && defined(ENABLE_WS2811)
+  leds.begin(maxLedsPerStrip, displayMemory, drawingMemory, config_, numPins, pinList);
+#endif
+
 }
 
 #ifdef MTP_RX_ENDPOINT
@@ -1799,9 +1828,13 @@ MTPStorage_SerialFlash serialflash_storage(&mtpd);
 
 #include "common/clock_control.h"
 
+uint32_t start_ = millis();
+
 void loop() {
 #ifdef MTP_RX_ENDPOINT
   mtpd.loop();
 #endif
   Looper::DoLoop();
+
+  
 }

@@ -21,7 +21,7 @@ public:
         waiting_ = true;
         wait_start_time_ = millis();
       }
-      int delay_millis = millis_.getInteger(0);
+      uint32_t delay_millis = millis_.getInteger(0);
       uint32_t waited = millis() - wait_start_time_;
       if (waited > delay_millis) {
         is_on_ = true;

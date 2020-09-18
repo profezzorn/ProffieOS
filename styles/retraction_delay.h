@@ -20,7 +20,7 @@ public:
         wait_start_time_ = millis();
       }
       uint32_t waited = millis() - wait_start_time_;
-      int delay_millis = millis_.getInteger(0);
+      uint32_t delay_millis = millis_.getInteger(0);
       if (waited > delay_millis) {
         is_on_ = false;
         wait_start_time_ = millis() - delay_millis - 1;

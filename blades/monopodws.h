@@ -86,6 +86,13 @@ public:
   static void show(int pin, uint8_t ones, int bufsize, uint32_t frequency) {
     ones_ = ones;
     
+if(!(init_ & (1 << pin))) {	
+	  STDOUT.print("time: ");  
+	  STDOUT.print(millis());  
+	  STDOUT.print(", pin: ");  
+	  STDOUT.print(pin);  	
+	  STDOUT.print(", ones: ");  
+	  STDOUT.print(ones_);  	
     pinMode(pin, OUTPUT);
     digitalWrite(pin, LOW);
     int t0h = WS2811_TIMING_T0H;
@@ -106,6 +113,7 @@ public:
     //CORE_PIN4_CONFIG = PORT_PCR_MUX(3); // testing only
     
 #elif defined(__MK20DX256__)
+	  STDOUT.println("setup T3.2");  
     FTM2_SC = 0;
     FTM2_CNT = 0;
     uint32_t mod = (F_BUS + frequency / 2) / frequency;
@@ -158,7 +166,8 @@ public:
     //MCM_PLACR |= MCM_PLACR_ARB;
     
 #endif
-    
+
+//	  STDOUT.print(", setup DMA");  
     // DMA channel #1 sets WS2811 high at the beginning of each cycle
     dma1.source(ones_);
     dma1.destination(WS2811_PORT_SET);
@@ -188,6 +197,7 @@ public:
     dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM1_CH1);
     DMAPriorityOrder(dma3, dma2, dma1);
 #elif defined(__MK20DX256__)
+//	  STDOUT.print(", T32 set interrupt");  
     // route the edge detect interrupts to trigger the 3 channels
     dma1.triggerAtHardwareEvent(DMAMUX_SOURCE_PORTB);
     dma2.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_CH0);
@@ -212,9 +222,13 @@ public:
     dma3.triggerAtHardwareEvent(DMAMUX_SOURCE_FTM2_CH1);
 #endif
     
+//	  STDOUT.print(", T32 attach interrupt");  
     // enable a done interrupts when channel #3 completes
     dma3.attachInterrupt(isr);
+	init_ |= 1 << pin; // init for this pin can be skipped next time
+} // init_
     
+//update routine;	
 #if defined(__MK20DX128__)
     uint32_t cv = FTM1_C1V;
     noInterrupts();
@@ -239,6 +253,7 @@ public:
     FTM1_SC = FTM_SC_CLKS(1) | FTM_SC_PS(0); // restart FTM1 timer
     
 #elif defined(__MK20DX256__)
+//	  STDOUT.print(", T32 set FTM2");  
     FTM2_C0SC = 0x28;
     FTM2_C1SC = 0x28;
     delay(1);
@@ -323,6 +338,8 @@ public:
     dma3.enable();
     FTM2_SC = 0x188;
 #endif
+	  STDOUT.print("updating ");  
+	  STDOUT.println(pin);  
     //Serial1.print("3");
     interrupts();
     //Serial1.print("4");
@@ -338,6 +355,7 @@ private:
     update_in_progress_ = false;
   }
   static volatile bool update_in_progress_;
+  static volatile uint32_t init_;
   static DMAChannel dma1, dma2, dma3;
   static volatile uint8_t ones_;
 };
@@ -346,6 +364,7 @@ DMAChannel MonopodWS2811::dma1;
 DMAChannel MonopodWS2811::dma2;
 DMAChannel MonopodWS2811::dma3;
 volatile bool MonopodWS2811::update_in_progress_ = false;
+volatile uint32_t MonopodWS2811::init_ = 0x00000000;
 volatile uint8_t MonopodWS2811::ones_;
 
 template<Color8::Byteorder BYTEORDER>
@@ -370,13 +389,17 @@ MonopodWSPinBase(int num_leds, int pin, uint32_t frequency,
       default:
 	STDOUT.println("Invalid monopodws pin!");
     }
+			STDOUT.print("Monopod pin: ");
+			STDOUT.print(pin);
+			STDOUT.print(", ones_: ");
+			STDOUT.println(ones_);
     zero4X_ = ones_ * 0x01010101U;
   }
   bool IsReadyForBeginFrame() {
-    return !MonopodWS2811::busy();
+    return !MonopodWS2811::busy();//class itself, not instance
   }
   bool IsReadyForEndFrame() {
-    return micros() - start_micros_ > num_leds_ * 24000000.0 / frequency_ + 300;
+    return micros() - start_micros_ > num_leds_ * 24000000.0 / frequency_ + 300;//30us per led + 300us reset time
   }
   void BeginFrame() {
     while (Color8::num_bytes(BYTEORDER) * num_leds_ * 8 + 1 > (int)sizeof(displayMemory)) {
@@ -396,8 +419,9 @@ MonopodWSPinBase(int num_leds, int pin, uint32_t frequency,
 	*(output++) = zero4X_ - ((tmp >> 7) & 0x01010101U) * ones_;
 	*(output++) = zero4X_ - ((tmp >> 3) & 0x01010101U) * ones_;
       }
-      if ((j & 31) == 31) Looper::DoHFLoop();
+      if ((j & 31) == 31) Looper::DoHFLoop();//sort of yield?
     }
+	// explicit call to class, not instance, this is done every update of the leds.
     MonopodWS2811::show(pin_, ones_, num_leds_ * Color8::num_bytes(BYTEORDER) * 8, frequency_);
     start_micros_ = micros();
   }
