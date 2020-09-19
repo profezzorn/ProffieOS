@@ -4,6 +4,10 @@
 // Images/animations
 IMAGE_FILESET(font);
 IMAGE_FILESET(boot);
+IMAGE_FILESET(on);
+IMAGE_FILESET(clsh);
+IMAGE_FILESET(blst);
+IMAGE_FILESET(lock);
 
 struct Glyph {
   int32_t skip : 7;
@@ -183,7 +187,7 @@ public:
 	xor_ = 0;
 	invert_y_ = false;
 	return 1000;
-	
+
       case SCREEN_STARTUP:
 	memset(frame_buffer_, 0, sizeof(frame_buffer_));
         // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
@@ -231,8 +235,16 @@ public:
 	}
 	frame_count_++;
 	if (looped_frames_ > 1 && millis() - loop_start_ > 5000) {
-	  STDOUT << "END OF LOOP\n";
-	  screen_ = SCREEN_PLI;
+    if (!SaberBase::IsOn()) {
+      STDOUT << "END OF LOOP\n";
+      screen_ = SCREEN_PLI;
+    } else {
+      if (!SaberBase::Lockup()) {
+        ShowFile(&IMG_on);
+      } else {
+        ShowFile(&IMG_lock);
+      }
+    }
 	}
 
 	if (font_config.ProffieOSAnimationFrameRate > 0.0) {
@@ -280,6 +292,36 @@ public:
     }
   }
 
+  void SB_On() override {
+    if (IMG_on) {
+      ShowFile(&IMG_on);
+    }
+  }
+
+  void SB_Blast() override {
+    if (IMG_blst) {
+      ShowFile(&IMG_blst);
+    }
+  }
+
+  void SB_Clash() override {
+    if (IMG_clsh) {
+      ShowFile(&IMG_clsh);
+    }
+  }
+
+  void SB_BeginLockup() override {
+    if (IMG_lock) {
+      ShowFile(&IMG_lock);
+    }
+  }
+
+  void SB_EndLockup() override {
+    if (IMG_on) {
+      ShowFile(&IMG_on);
+    }
+  }
+
   void SB_Message(const char* text) override {
     strncpy(message_, text, sizeof(message_));
     message_[sizeof(message_)-1] = 0;
@@ -309,10 +351,10 @@ public:
     Send(DISPLAYOFF);                    // 0xAE
     Send(SETDISPLAYCLOCKDIV);            // 0xD5
     Send(0x80);                                  // the suggested ratio 0x80
-    
+
     Send(SETMULTIPLEX);                  // 0xA8
     Send(HEIGHT - 1);
-    
+
     Send(SETDISPLAYOFFSET);              // 0xD3
     Send(0x0);                                   // no offset
     Send(SETSTARTLINE | 0x0);            // line #0
@@ -334,7 +376,7 @@ public:
     Send(0x40);
     Send(DISPLAYALLON_RESUME);           // 0xA4
     Send(NORMALDISPLAY);                 // 0xA6
-    
+
     Send(DEACTIVATE_SCROLL);
 
     Send(DISPLAYON);                     //--turn on oled panel
@@ -344,7 +386,7 @@ public:
     if (IMG_boot) {
       ShowFile(&IMG_boot);
     }
-    
+
     while (true) {
       millis_to_display_ = FillFrameBuffer();
       frame_start_time_ = millis();
@@ -372,7 +414,7 @@ public:
       }
 
       //STDOUT.println(TWSR & 0x3, DEC);
-        
+
       // I2C
       for (i=0; i < WIDTH * HEIGHT / 8; ) {
         // send a bunch of data in one xmission
@@ -401,7 +443,7 @@ public:
 		delta_pos = 16;
 	      }
 //	      STDOUT << " LANDSCAPE DECODE!! x = " << x << " y = " << y << "\n";
-	      
+
 	      int shift = 7 - (x & 7);
 	      uint8_t *pos =
 		((unsigned char*)frame_buffer_) + ((x>>3) + (y<<4));
@@ -426,7 +468,7 @@ public:
       while (millis() - frame_start_time_ < millis_to_display_) YIELD();
       do { YIELD(); } while (!I2CLock());
     }
-    
+
     STATE_MACHINE_END();
   }
 
@@ -451,7 +493,7 @@ public:
 	default:
 	  STDOUT << "Unknown image format. a=" << a << " b=" << b << " pos=" << f->Tell() << "\n";
 	  return false;
-	  
+
 	case TAG2('P', '4'):
 	  // PBM
 	  f->skipwhite();
@@ -462,7 +504,7 @@ public:
 	  xor_ = 255;
 	  invert_y_ = false;
 	  break;
-	  
+
 	case TAG2('B', 'M'):
 	case TAG2('B', 'A'):
 	case TAG2('C', 'I'):
@@ -476,7 +518,7 @@ public:
 	  file_end = file_start + f->ReadType<uint32_t>();
 	  f->Skip(4);
 	  uint32_t offset = f->ReadType<uint32_t>();
-	  
+
 #if 0
 	  uint32_t ctable = f->Tell() + f->ReadType<uint32_t>();
 	  // STDOUT << "OFFSET = " << offset << " CTABLE=" << ctable << "\n";
@@ -492,7 +534,7 @@ public:
 	  width = f->ReadType<uint32_t>();
 	  height = f->ReadType<uint32_t>();
 	  // STDOUT << "Width=" << width << " Height=" << height << "\n";
-#endif	  
+#endif
 	  // First frame is near the end, seek to it.
 	  f->Seek(file_start + offset + width * height / 8 - 512);
       }
