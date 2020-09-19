@@ -136,9 +136,9 @@
 #include <Wire.h>
 #else
 #include <kinetis.h>
+#include <i2c_t3.h>
 #endif
 
-#include <i2c_t3.h>
 #include <SD.h>
 #include <SPI.h>
 
@@ -1338,7 +1338,7 @@ public:
   static void begin() { Serial4.begin(115200); }
   static bool Connected() { return true; }
   static bool AlwaysConnected() { return true; }
-  static Stream& stream() { return Serial3; }
+  static Stream& stream() { return Serial4; }
   static const char* response_header() { return "-+=BEGIN_OUTPUT=+-\n"; }
   static const char* response_footer() { return "-+=END_OUTPUT=+-\n"; }
 };
@@ -1666,11 +1666,7 @@ SSD1306 display;
 #ifdef ENABLE_MOTION
 
 #include "motion/motion_util.h"
-#ifdef USE_TEENSY4
- #include "motion/mpu6050async.h"
-#else
- #include "motion/mpu6050.h"
-#endif 
+#include "motion/mpu6050.h"
 #include "motion/lsm6ds3h.h"
 #include "motion/fxos8700.h"
 #include "motion/fxas21002.h"
@@ -1828,13 +1824,9 @@ MTPStorage_SerialFlash serialflash_storage(&mtpd);
 
 #include "common/clock_control.h"
 
-uint32_t start_ = millis();
-
 void loop() {
 #ifdef MTP_RX_ENDPOINT
   mtpd.loop();
 #endif
   Looper::DoLoop();
-
-  
 }

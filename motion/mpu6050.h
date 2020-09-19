@@ -100,6 +100,106 @@ public:
 
   MPU6050() : I2CDevice(0x68) {}
 
+#ifdef USE_TEENSY4 //use Wire.h and ASYNC to read MPU6050
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+
+    while (!i2cbus.inited()) YIELD();
+
+    while (1) {
+      first_motion_ = true;
+      first_accel_ = true;
+
+      STDOUT.print("Motion setup ... ");
+      while (!I2CLock()) YIELD(); //copied from lsm6ds3h.h
+
+      I2C_WRITE_BYTE_ASYNC(PWR_MGMT_1, 0); // wake up
+      I2C_WRITE_BYTE_ASYNC(CONFIG, 1);     // digital filter config ~180Hz, 1khz rate, 2ms delay
+      I2C_WRITE_BYTE_ASYNC(SMPLRT_DIV, 0); // sample rate  0= 1khz  1 = 500Hz, 2 = 333Hz
+      I2C_WRITE_BYTE_ASYNC(GYRO_CONFIG, 3 << 3); // 2000 degrees / s
+      I2C_WRITE_BYTE_ASYNC(ACCEL_CONFIG, 1 << 3); // 4g range
+      I2C_WRITE_BYTE_ASYNC(INT_PIN_CFG, 0x30);  // interrupt on data available, cleared on any read
+      I2C_WRITE_BYTE_ASYNC(INT_ENABLE, 1); // enable data ready interrupt
+      pinMode(motionSensorInterruptPin, INPUT);
+      I2C_READ_BYTES_ASYNC(WHO_AM_I, databuffer, 1);
+      if (databuffer[0] == 0x68) {
+        STDOUT.println("done.");
+      } else {
+        STDOUT.println("failed.");
+    goto i2c_timeout;
+      }
+
+      I2CUnlock();//copied from lsm6ds3h.h
+
+      last_event_ = millis();
+      while (true) {
+        YIELD();
+        if (!SaberBase::MotionRequested()) break;
+        if (!digitalRead(motionSensorInterruptPin)) {
+          if (millis() - last_event_ > I2C_TIMEOUT_MILLIS * 2) {
+            goto i2c_timeout;
+          }
+          continue;
+        } else {
+          last_event_ = millis();
+        }
+        while (!I2CLock()) YIELD();
+
+    // Do the accel data first to make clashes as fast as possible.
+         // accel data available
+        I2C_READ_BYTES_ASYNC(ACCEL_XOUT_H, databuffer, 14);
+        prop.DoAccel(
+              MotionUtil::FromData(databuffer, 4.0 / 32768.0,   // 4 g range
+                   Vec3::BYTEORDER_MSB, Vec3::ORIENTATION),
+          false);
+          first_accel_ = false;
+
+        // gyroscope data available
+        prop.DoMotion(
+              MotionUtil::FromData(databuffer+8, 2000.0 / 32768.0,  // 2000 dps
+                   Vec3::BYTEORDER_MSB, Vec3::ORIENTATION),
+          false);
+          first_motion_ = false;
+
+          // Temp data available
+          // TODO: Temp Shutdown
+            int16_t temp_data = (databuffer[6] << 8) + databuffer[7];
+            float temp = temp_data / 340.0 + 36.53;
+            if (monitor.ShouldPrint(Monitoring::MonitorTemp)) {
+              STDOUT.print("TEMP: ");
+              STDOUT.println(temp);
+            }
+      I2CUnlock(); //copied from lsm6ds3h.h
+      } //while(true)
+          
+          STDOUT.println("Motion disable.");
+
+          while (!I2CLock()) YIELD();
+          I2CUnlock();
+          
+          while (!SaberBase::MotionRequested()) YIELD();
+          continue;
+
+        i2c_timeout:
+          STDOUT.println("Motion chip timeout2, reboot2 motion chip!");
+          Reset();
+          SLEEP(20);
+          I2CUnlock();
+          SLEEP(20);
+    }//while(1)
+
+    STATE_MACHINE_END();
+  }//loop
+
+  uint8_t databuffer[14];
+  int status_reg;
+  uint32_t last_temp_;
+  uint32_t last_event_;
+  bool first_motion_;
+  bool first_accel_;
+
+#else //non async, motion interrupt pin is not required for this method of reading mpu6050
+
   void Loop() override {
     STATE_MACHINE_BEGIN();
 
@@ -134,21 +234,21 @@ public:
           break;
         }
         if (status_reg & 0x1) {
-	// Do the accel data first to make clashes as fast as possible.
+    // Do the accel data first to make clashes as fast as possible.
           // accel data available
           if (readBytes(ACCEL_XOUT_H, databuffer, 6) == 6) {
-	    prop.DoAccel(
+        prop.DoAccel(
               MotionUtil::FromData(databuffer, 4.0 / 32768.0,   // 4 g range
-				   Vec3::BYTEORDER_MSB, Vec3::ORIENTATION),
-	      false);
+                   Vec3::BYTEORDER_MSB, Vec3::ORIENTATION),
+          false);
           }
 
           // gyroscope data available
           if (readBytes(GYRO_XOUT_H, databuffer, 6) == 6) {
-	    prop.DoMotion(
+        prop.DoMotion(
               MotionUtil::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
-				   Vec3::BYTEORDER_MSB, Vec3::ORIENTATION),
-	      false);
+                   Vec3::BYTEORDER_MSB, Vec3::ORIENTATION),
+          false);
           }
 
           // Temp data available
@@ -166,6 +266,8 @@ public:
     }
     STATE_MACHINE_END();
   }
+
+#endif
 };
 
 #endif
