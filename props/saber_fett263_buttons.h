@@ -86,10 +86,10 @@ SaberFett263Buttons() : PropBase() {}
   void Loop() override {
     PropBase::Loop();
     // Swing On gesture control this portion allows fine tuning of speed needed to ignite
-    if(!SaberBase::IsOn()) {
+    if (!SaberBase::IsOn()) {
       if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
         SaberBase::RequestMotion();
-      // Edit '250' value in line below to change swing on sensitivity, 250 ~ 400 work best in testing
+        // Edit '250' value in line below to change swing on sensitivity, 250 ~ 400 work best in testing
         if (!swinging_ && fusor.swing_speed() > 250) {
           swinging_ = true;
           Event(BUTTON_NONE, EVENT_SWING);
@@ -108,9 +108,9 @@ SaberFett263Buttons() : PropBase() {}
           fusor.swing_speed() > 120 && 
           millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY &&
           SaberBase::Lockup()) {
-            SaberBase::DoEndLockup();
-            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-            auto_lockup_on_ = false;        
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        auto_lockup_on_ = false;        
       }	  
       if (swinging_ && fusor.swing_speed() < 100) {
         swinging_ = false;
@@ -120,9 +120,9 @@ SaberFett263Buttons() : PropBase() {}
           fusor.swing_speed() > 60 && 
           millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY && 
           SaberBase::Lockup()) {
-            SaberBase::DoEndLockup();
-            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-            auto_melt_on_ = false;        
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        auto_melt_on_ = false;        
       }
     }
   }
