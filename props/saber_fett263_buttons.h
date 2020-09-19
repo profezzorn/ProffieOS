@@ -1,10 +1,40 @@
-// Fett263 Buttons
-// Includes "Multi-Blast" Mode to enable Swing Blast control and SA22C volume menu
+// Fett263 Buttons with Gesture Controls and Battle Mode with Smart Lockup
+//
+// Includes Gesture Controls, "Battle Mode" with "Smart Lockup", "Multi-Blast" Mode (to enable Swing Blast control) 
+// "Multi-Phase" Mode and SA22C volume menu
+// Optional Defines
+//
+// FETT263_BATTLE_MODE
+// To enable Battle Mode, Swing On and Twist Off gestures enabled automatically
+//
+// FETT263_LOCKUP_DELAY 200
+// This is the "delay" in millis to determine Clash vs Lockup
+//
+// FETT263_SWING_ON
+// To enable Swing On Ignition control (automatically enters Battle Mode)
+//
+// FETT263_TWIST_OFF
+// To enable Twist Off Retraction control
+//
+// FETT263_STAB_ON 
+// To enable Stab On Ignition control (automatically enters Battle Mode)
+//
+// FETT263_TWIST_ON 
+// To enable Twist On Ignition control (automatically enters Battle Mode)
+//
+// FETT263_MULTI_PHASE
+// This will enable "live" preset change to create a "Multi-Phase" saber effect 
+// with preset changes on the fly while blade is ignited.
 //
 // 2 Button Controls (PWR and AUX):
-// Ignite (ON) - click PWR while OFF
+// "Battle Mode" - Swing while saber is OFF to ignite in Battle Mode
+// or hold AUX and Swing while blade is ON to toggle mode
+//
+// Ignite (ON) - click PWR while OFF or Swing Saber while OFF
+//
 // Muted Ignition (ON) - double click PWR while OFF
-// Retract (OFF) - click PWR while ON (not swinging)
+// Retract (OFF) - click PWR while ON (not swinging or in Battle Mode)
+// Twist Off (OFF) if in Battle Mode
 // Play Music Track - hold and release PWR while OFF
 // Blast - click AUX while ON
 // Multi-Blast Mode - hold and release AUX while ON to enter mode, Swing to initiate Blasts, click Aux to exit mode
@@ -19,7 +49,9 @@
 // turn hilt to rotate through colors, click PWR to select/exit
 // if using COLOR_CHANGE_DIRECT each button press advances one Color at a time
 // Next Preset - click AUX while OFF
+// MULTI_PHASE Next Preset - hold AUX and TWIST while ON (use define to enable)
 // Previous Preset - hold AUX and click PWR while OFF
+// MULTI_PHASE Previous Preset - hold PWR and TWIST while ON (use define to enable)
 // Enter SA22C Volume Menu - hold and release AUX while OFF
 // Volume Up (10% increment, 100% max) - click PWR while in Volume Menu while OFF
 // Volume Down (10% increment) - click AUX while in Volume Menu while OFF
@@ -27,6 +59,14 @@
 
 #ifndef PROPS_SABER_FETT263_BUTTONS_H
 #define PROPS_SABER_FETT263_BUTTONS_H
+
+#ifndef MOTION_TIMEOUT
+#define MOTION_TIMEOUT 60 * 15 * 1000
+#endif
+
+#ifndef FETT263_LOCKUP_DELAY
+#define FETT263_LOCKUP_DELAY 200
+#endif 
 
 #include "prop_base.h"
 #include "../sound/hybrid_font.h"
@@ -45,15 +85,48 @@ SaberFett263Buttons() : PropBase() {}
   bool swinging_ = false;
   void Loop() override {
     PropBase::Loop();
-    if (!swinging_ && fusor.swing_speed() > 250) {
-      swinging_ = true;
-      Event(BUTTON_NONE, EVENT_SWING);
-    }
-    if (swinging_ && fusor.swing_speed() < 100) {
-      swinging_ = false;
+    if (SaberBase::IsOn()) {
+      if (!swinging_ && fusor.swing_speed() > 250) {
+        swinging_ = true;
+        Event(BUTTON_NONE, EVENT_SWING);
+      }	  
+      if (auto_lockup_on_ && 
+          !swinging_ && 
+          fusor.swing_speed() > 120 && 
+          millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY &&
+          SaberBase::Lockup()) {
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        auto_lockup_on_ = false;        
+      }	  
+      if (swinging_ && fusor.swing_speed() < 100) {
+        swinging_ = false;
+      }    
+      if (auto_melt_on_ &&
+          !swinging_ && 
+          fusor.swing_speed() > 60 && 
+          millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY && 
+          SaberBase::Lockup()) {
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        auto_melt_on_ = false;        
+      }
+    } else {
+      // Swing On gesture control this portion allows fine tuning of speed needed to ignite
+      if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
+        SaberBase::RequestMotion();
+        // Edit '250' value in line below to change swing on sensitivity, 250 ~ 400 work best in testing
+        if (!swinging_ && fusor.swing_speed() > 250) {
+          swinging_ = true;
+          Event(BUTTON_NONE, EVENT_SWING);
+        }
+        if (swinging_ && fusor.swing_speed() < 100) {
+          swinging_ = false;
+        }
+      }
     }
   }
-
+	
   // SA22C Volume Menu
   void VolumeUp() {
     STDOUT.println("Volume up");
@@ -63,8 +136,7 @@ SaberFett263Buttons() : PropBase() {}
       beeper.Beep(0.5, 2000);
       STDOUT.print("Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
-    }
-    else {
+    } else {
       beeper.Beep(0.5, 3000);
     }
   }
@@ -76,8 +148,7 @@ SaberFett263Buttons() : PropBase() {}
       beeper.Beep(0.5, 2000);
       STDOUT.print("Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
-    }
-    else{
+    } else {
       beeper.Beep(0.5, 1000);
     }
   }
@@ -161,9 +232,10 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         }
 #endif
-        if (!swinging_) {
+        if (!swinging_ && !battle_mode_) {
           swing_blast_ = false;
           Off();
+          saber_off_time_ = millis();
         }
         return true;
 	
@@ -183,13 +255,13 @@ SaberFett263Buttons() : PropBase() {}
         swing_blast_ = true;
         hybrid_font.SB_Blast();
         return true;
-	
+
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
-	if (swing_blast_) {
+        if (swing_blast_) {
 	  SaberBase::DoBlast();
 	}
-	return true;
-	
+        return true;
+      
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
         ToggleColorChangeMode();
@@ -257,7 +329,113 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
         previous_preset();
         return true;
-	
+
+       // Gesture Controls
+		
+       // Battle Mode
+		    
+#ifdef FETT263_BATTLE_MODE
+#define FETT263_SWING_ON
+#define FETT263_TWIST_OFF
+       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
+         if (!battle_mode_) {
+           battle_mode_ = true;
+           // Force sound plays when entering Battle Mode
+           hybrid_font.SB_Force();
+         } else {
+           battle_mode_ = false;
+	   // Exit Color Change sound plays when exiting Battle Mode
+           hybrid_font.SB_Change(EXIT_COLOR_CHANGE);
+         }
+         return true;
+
+       // Auto Lockup Mode
+       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
+         if (!battle_mode_) return false;
+         clash_impact_millis_ = millis();
+         swing_blast_ = false;
+         if (!swinging_) {
+           SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+           auto_lockup_on_ = true;
+           SaberBase::DoBeginLockup();
+	 }
+         return true;
+
+       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
+         if (!battle_mode_) return false;
+         clash_impact_millis_ = millis();
+         swing_blast_ = false;
+         if (!swinging_) {
+           if (fusor.angle1() < - M_PI / 4) {
+             SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+           } else {
+             SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+       	   }
+           auto_melt_on_ = true;
+           SaberBase::DoBeginLockup();
+         }
+         return true;
+#endif
+	    
+#ifdef FETT263_SWING_ON
+       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):  
+         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
+         if (millis() > 3000) { 
+           On();
+           battle_mode_ = true;
+         }
+         return true;
+#endif
+		    
+#ifdef FETT263_TWIST_OFF
+       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+         // Delay twist events to prevent false trigger from over twisting
+         if (millis() - last_twist_ > 3000) {
+           Off();
+           last_twist_ = millis();
+           saber_off_time_ = millis();
+         }
+         return true;
+#endif
+
+       // Optional Gestures use defines to enable
+
+#ifdef FETT263_STAB_ON
+       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
+         On();
+         battle_mode_ = true;
+         return true;
+#endif
+
+#ifdef FETT263_TWIST_ON
+       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
+         // Delay twist events to prevent false trigger from over twisting
+         if (millis() - last_twist_ > 3000) {
+           On();
+           last_twist_ = millis();
+           battle_mode_ = true;
+         }
+         return true;
+#endif
+
+#ifdef FETT263_MULTI_PHASE
+       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
+         // Delay twist events to prevent false trigger from over twisting
+	 if (millis() - last_twist_ > 2000) {
+           last_twist_ = millis();
+           next_preset();
+	 }
+           return true;
+
+       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
+         // Delay twist events to prevent false trigger from over twisting
+	 if (millis() - last_twist_ > 2000) {
+           last_twist_ = millis();
+           previous_preset();
+	 }
+         return true;
+#endif
+        
         // Events that needs to be handled regardless of what other buttons
         // are pressed.
       case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
@@ -274,6 +452,12 @@ private:
   bool pointing_down_ = false;
   bool swing_blast_ = false;
   bool mode_volume_ = false;
+  bool auto_lockup_on_ = false;
+  bool auto_melt_on_ = false;
+  bool battle_mode_ = false;
+  uint32_t clash_impact_millis_ = millis();
+  uint32_t last_twist_ = millis();
+  uint32_t saber_off_time_ = millis();
 };
 
 #endif
