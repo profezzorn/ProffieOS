@@ -98,34 +98,35 @@ SaberFett263Buttons() : PropBase() {}
           swinging_ = false;
         }
       }
-    } 
-    if (!swinging_ && fusor.swing_speed() > 250) {
-      swinging_ = true;
-      Event(BUTTON_NONE, EVENT_SWING);
-    }	  
-    if (auto_lockup_on_ && 
-        !swinging_ && 
-        fusor.swing_speed() > 120 && 
-        millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY &&
-        SaberBase::Lockup()) {
-          SaberBase::DoEndLockup();
-          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-          auto_lockup_on_ = false;        
-    }	  
-    if (swinging_ && fusor.swing_speed() < 100) {
-      swinging_ = false;
-    }    
-    if (auto_melt_on_ &&
-        !swinging_ && 
-        fusor.swing_speed() > 60 && 
-        millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY && 
-        SaberBase::Lockup()) {
-          SaberBase::DoEndLockup();
-          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-          auto_melt_on_ = false;        
+    } else {
+      if (!swinging_ && fusor.swing_speed() > 250) {
+        swinging_ = true;
+        Event(BUTTON_NONE, EVENT_SWING);
+      }	  
+      if (auto_lockup_on_ && 
+          !swinging_ && 
+          fusor.swing_speed() > 120 && 
+          millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY &&
+          SaberBase::Lockup()) {
+            SaberBase::DoEndLockup();
+            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+            auto_lockup_on_ = false;        
+      }	  
+      if (swinging_ && fusor.swing_speed() < 100) {
+        swinging_ = false;
+      }    
+      if (auto_melt_on_ &&
+          !swinging_ && 
+          fusor.swing_speed() > 60 && 
+          millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY && 
+          SaberBase::Lockup()) {
+            SaberBase::DoEndLockup();
+            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+            auto_melt_on_ = false;        
+      }
     }
   }
-
+	
   // SA22C Volume Menu
   void VolumeUp() {
     STDOUT.println("Volume up");
@@ -375,7 +376,7 @@ SaberFett263Buttons() : PropBase() {}
          }
          return true;
 #endif
-		    
+	    
 #ifdef FETT263_SWING_ON
        case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):  
          // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
@@ -388,6 +389,7 @@ SaberFett263Buttons() : PropBase() {}
 		    
 #ifdef FETT263_TWIST_OFF
        case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+         // Delay twist events to prevent false trigger from over twisting
          if (millis() - last_twist_ > 3000) {
            Off();
            last_twist_ = millis();
@@ -407,6 +409,7 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_TWIST_ON
        case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
+         // Delay twist events to prevent false trigger from over twisting
          if (millis() - last_twist_ > 3000) {
            On();
            last_twist_ = millis();
@@ -417,11 +420,19 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_MULTI_PHASE
        case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
-         next_preset();
-         return true;
+         // Delay twist events to prevent false trigger from over twisting
+	 if (millis() - last_twist_ > 2000) {
+           last_twist_ = millis();
+           next_preset();
+	 }
+           return true;
 
        case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
-         previous_preset();
+         // Delay twist events to prevent false trigger from over twisting
+	 if (millis() - last_twist_ > 2000) {
+           last_twist_ = millis();
+           previous_preset();
+	 }
          return true;
 #endif
         
