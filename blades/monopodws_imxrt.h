@@ -78,7 +78,7 @@ MonopodWSPinBase(int num_leds, int pin, uint32_t frequency,
   }
   
   bool IsReadyForEndFrame() {
-        return millis() > (frame_sync_time_ + min_update_time_);//4ms =250fps, 5ms=200fps, 
+        return millis() - frame_sync_time_ >  min_update_time_;//4ms =250fps, 5ms=200fps, 
   }
   
   void BeginFrame() { //num_bytes(BYTEORDER) allows for RGBw

@@ -2,8 +2,9 @@
 #define SOUND_DAC_H
 
 #if defined(__IMXRT1062__) //Teensy 4.0, include, because direct include of imxrt_hw.h did not work??
-//#include <imxrt_hw.h>
-//void set_audioClock(int nfact, int32_t nmult, uint32_t ndiv,  bool force = false); // sets PLL4
+#ifdef AUDIO_CONTROL_SGTL5000
+void set_audioClock(int nfact, int32_t nmult, uint32_t ndiv,  bool force = false); // sets PLL4
+#else
 void set_audioClock(int nfact, int32_t nmult, uint32_t ndiv, bool force=false) // sets PLL4
 {
 	if (!force && (CCM_ANALOG_PLL_AUDIO & CCM_ANALOG_PLL_AUDIO_ENABLE)) return;
@@ -26,6 +27,8 @@ void set_audioClock(int nfact, int32_t nmult, uint32_t ndiv, bool force=false) /
 	CCM_ANALOG_PLL_AUDIO &= ~CCM_ANALOG_PLL_AUDIO_BYPASS;//Disable Bypass
 }
 #endif
+#endif
+
 #ifdef USE_I2S
 
 #ifdef TEENSYDUINO
