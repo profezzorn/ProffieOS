@@ -100,7 +100,7 @@ public:
 
   MPU6050() : I2CDevice(0x68) {}
 
-#ifdef ÀSYNC_READ_MOTION // use Wire.h and ASYNC to read MPU6050
+#ifdef ASYNC_READ_MOTION // use Wire.h and ASYNC to read MPU6050
   void Loop() override {
     STATE_MACHINE_BEGIN();
 
