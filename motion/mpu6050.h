@@ -100,7 +100,7 @@ public:
 
   MPU6050() : I2CDevice(0x68) {}
 
-#ifdef USE_TEENSY4 //use Wire.h and ASYNC to read MPU6050
+#ifdef ÀSYNC_READ_MOTION // use Wire.h and ASYNC to read MPU6050
   void Loop() override {
     STATE_MACHINE_BEGIN();
 
@@ -115,12 +115,12 @@ public:
 
       I2C_WRITE_BYTE_ASYNC(PWR_MGMT_1, 0); // wake up,
       I2C_WRITE_BYTE_ASYNC(CONFIG, 1);     // digital filter config ~180Hz, 
-                                           //1khz rate, 2ms delay
+                                           // 1khz rate, 2ms delay
       I2C_WRITE_BYTE_ASYNC(SMPLRT_DIV, 0); // sample rate  0 = 1khz, 1 = 500Hz
       I2C_WRITE_BYTE_ASYNC(GYRO_CONFIG, 3 << 3);  // 2000 degrees / s
       I2C_WRITE_BYTE_ASYNC(ACCEL_CONFIG, 1 << 3); // 4g range
       I2C_WRITE_BYTE_ASYNC(INT_PIN_CFG, 0x30);  // interrupt on data available, 
-                                                //cleared on any read
+                                                // cleared on any read
       I2C_WRITE_BYTE_ASYNC(INT_ENABLE, 1);      // enable data ready interrupt
       pinMode(motionSensorInterruptPin, INPUT);
       I2C_READ_BYTES_ASYNC(WHO_AM_I, databuffer, 1);
@@ -151,7 +151,7 @@ public:
         // accel data available
         I2C_READ_BYTES_ASYNC(ACCEL_XOUT_H, databuffer, 14);
         prop.DoAccel(
-              MotionUtil::FromData(databuffer, 4.0 / 32768.0,   // 4 g range
+              MotionUtil::FromData(databuffer, 4.0 / 32768.0,   // 4g range
               Vec3::BYTEORDER_MSB, Vec3::ORIENTATION),
               false);
         first_accel_ = false;
@@ -172,7 +172,7 @@ public:
           STDOUT.println(temp);
         }
         I2CUnlock(); 
-      } //while(true)
+      } // while(true)
           
       STDOUT.println("Motion disable.");
 
@@ -201,7 +201,7 @@ public:
   bool first_motion_;
   bool first_accel_;
 
-#else //non async, motion interrupt pin is not required for this method of reading mpu6050
+#else // non async, motion interrupt pin is not required for this method of reading mpu6050
 
   void Loop() override {
     STATE_MACHINE_BEGIN();
@@ -241,7 +241,7 @@ public:
           // accel data available
           if (readBytes(ACCEL_XOUT_H, databuffer, 6) == 6) {
             prop.DoAccel( 
-              MotionUtil::FromData(databuffer, 4.0 / 32768.0,   // 4 g range
+              MotionUtil::FromData(databuffer, 4.0 / 32768.0,   // 4g range
               Vec3::BYTEORDER_MSB, Vec3::ORIENTATION),
               false);
           }
