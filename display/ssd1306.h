@@ -234,17 +234,19 @@ public:
 	  return FillFrameBuffer();
 	}
 	frame_count_++;
-	if (looped_frames_ > 1 && millis() - loop_start_ > 5000) {
-    if (!SaberBase::IsOn()) {
+  if (!SaberBase::IsOn()) {
+	  if (looped_frames_ > 1 && millis() - loop_start_ > 5000) {
       STDOUT << "END OF LOOP\n";
       screen_ = SCREEN_PLI;
-    } else {
+      }
+  } else {
+    if (frame_count_ == looped_frames_ && frame_count_ > 1) {
       if (!SaberBase::Lockup()) {
         ShowFile(&IMG_on);
       } else {
         ShowFile(&IMG_lock);
       }
-    }
+    } 
 	}
 
 	if (font_config.ProffieOSAnimationFrameRate > 0.0) {
@@ -264,14 +266,16 @@ public:
   }
 
   void ShowFile(Effect* effect) {
-    MountSDCard();
-    eof_ = true;
-    file_.Play(effect);
-    frame_available_ = false;
-    loop_start_ = millis();
-    frame_count_ = 0;
-    SetScreenNow(SCREEN_IMAGE);
-    eof_ = false;
+    if (effect) {
+      MountSDCard();
+      eof_ = true;
+      file_.Play(effect);
+      frame_available_ = false;
+      loop_start_ = millis();
+      frame_count_ = 0;
+      SetScreenNow(SCREEN_IMAGE);
+      eof_ = false;
+    }
   }
 
   void ShowFile(const char* file) {
@@ -286,40 +290,27 @@ public:
   }
 
   void SB_NewFont() override {
-    if (IMG_font) {
-      // Overrides message from below..
-      ShowFile(&IMG_font);
-    }
+    ShowFile(&IMG_font);
   }
 
   void SB_On() override {
-    if (IMG_on) {
-      ShowFile(&IMG_on);
-    }
+    ShowFile(&IMG_on);
   }
 
   void SB_Blast() override {
-    if (IMG_blst) {
-      ShowFile(&IMG_blst);
-    }
+    ShowFile(&IMG_blst);
   }
 
   void SB_Clash() override {
-    if (IMG_clsh) {
-      ShowFile(&IMG_clsh);
-    }
+    ShowFile(&IMG_clsh);
   }
 
   void SB_BeginLockup() override {
-    if (IMG_lock) {
-      ShowFile(&IMG_lock);
-    }
+    ShowFile(&IMG_lock);
   }
 
   void SB_EndLockup() override {
-    if (IMG_on) {
-      ShowFile(&IMG_on);
-    }
+    ShowFile(&IMG_on);
   }
 
   void SB_Message(const char* text) override {
