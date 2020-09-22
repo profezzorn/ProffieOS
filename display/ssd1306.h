@@ -246,9 +246,18 @@ public:
       return font_config.ProffieOSImageDuration;
     } else if (looped_frames_ == 1 && frame_count_ > 1) {
       if (!SaberBase::Lockup()) {
-        ShowFile(&IMG_on);
+        if (!imgon_) {
+          ShowFile(&IMG_on);
+          imgon_ = true;
+        } else {
+      	  screen_ = SCREEN_PLI;
+        }
       } else {
         ShowFile(&IMG_lock);
+      }
+    } else if (looped_frames_ == frame_count_  && looped_frames_ > 1) {
+      if (!SaberBase::Lockup()) {
+        ShowFile(&IMG_on);
       }
     }
   }
@@ -299,14 +308,17 @@ public:
 
   void SB_On() override {
     ShowFile(&IMG_on);
+    imgon_ = true;
   }
 
   void SB_Blast() override {
     ShowFile(&IMG_blst);
+    imgon_ = false;
   }
 
   void SB_Clash() override {
     ShowFile(&IMG_clsh);
+    imgon_ = false;
   }
 
   void SB_BeginLockup() override {
@@ -315,6 +327,7 @@ public:
 
   void SB_EndLockup() override {
     ShowFile(&IMG_on);
+    imgon_ = true;
   }
 
   void SB_Message(const char* text) override {
@@ -604,6 +617,7 @@ private:
   uint16_t i;
   uint8_t xor_ = 0;
   bool invert_y_ = 0;
+  bool imgon_ = false;
   uint32_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
   char message_[32];
