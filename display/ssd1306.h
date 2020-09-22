@@ -243,7 +243,6 @@ public:
       if (!SaberBase::Lockup()) {
         if (!imgon_) {
           ShowFile(&IMG_on);
-          imgon_ = true;
         } else {
           screen_ = SCREEN_PLI;
         }
@@ -283,6 +282,11 @@ public:
       MountSDCard();
       eof_ = true;
       file_.Play(effect);
+      if (effect == &IMG_on) {
+        imgon_ = true;
+      } else {
+        imgon_ = false;
+      }
       frame_available_ = false;
       loop_start_ = millis();
       frame_count_ = 0;
@@ -308,17 +312,14 @@ public:
 
   void SB_On() override {
     ShowFile(&IMG_on);
-    imgon_ = true;
   }
 
   void SB_Blast() override {
     ShowFile(&IMG_blst);
-    imgon_ = false;
   }
 
   void SB_Clash() override {
     ShowFile(&IMG_clsh);
-    imgon_ = false;
   }
 
   void SB_BeginLockup() override {
@@ -327,7 +328,6 @@ public:
 
   void SB_EndLockup() override {
     ShowFile(&IMG_on);
-    imgon_ = true;
   }
 
   void SB_Message(const char* text) override {
