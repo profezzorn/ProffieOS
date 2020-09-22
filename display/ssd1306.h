@@ -198,7 +198,7 @@ public:
 	layout_ = LAYOUT_NATIVE;
 	xor_ = 0;
 	invert_y_ = false;
-	return 5000;
+	return font_config.ProffieOSImageDuration;
 
       case SCREEN_PLI:
 	memset(frame_buffer_, 0, sizeof(frame_buffer_));
@@ -219,7 +219,7 @@ public:
 	layout_ = LAYOUT_NATIVE;
 	xor_ = 0;
 	invert_y_ = false;
-	return 5000;
+	return font_config.ProffieOSImageDuration;
 
       case SCREEN_IMAGE:
 	MountSDCard();
@@ -229,25 +229,29 @@ public:
 	}
 	if (eof_) {
 	  // STDOUT << "EOF " << frame_count_ << "\n";
-	  screen_ = SCREEN_PLI;
-	  if (frame_count_ == 1) return 5000;
-	  return FillFrameBuffer();
+    if (!SaberBase::IsOn()) {
+	   screen_ = SCREEN_PLI;
+	    if (frame_count_ == 1) return font_config.ProffieOSImageDuration;
+	    return FillFrameBuffer();
+    }
 	}
 	frame_count_++;
   if (!SaberBase::IsOn()) {
-	  if (looped_frames_ > 1 && millis() - loop_start_ > 5000) {
-      STDOUT << "END OF LOOP\n";
-      screen_ = SCREEN_PLI;
-      }
+  	if (looped_frames_ > 1 && millis() - loop_start_ > font_config.ProffieOSImageDuration) {
+  	  STDOUT << "END OF LOOP\n";
+  	  screen_ = SCREEN_PLI;
+  	}
   } else {
-    if (frame_count_ == looped_frames_ && frame_count_ > 1) {
+    if (looped_frames_ == 1 && frame_count_ == 1) {
+      return font_config.ProffieOSImageDuration;
+    } else if (looped_frames_ == 1 && frame_count_ > 1) {
       if (!SaberBase::Lockup()) {
         ShowFile(&IMG_on);
       } else {
         ShowFile(&IMG_lock);
       }
-    } 
-	}
+    }
+  }
 
 	if (font_config.ProffieOSAnimationFrameRate > 0.0) {
 	  return 1000 / font_config.ProffieOSAnimationFrameRate;
