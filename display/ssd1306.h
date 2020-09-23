@@ -237,25 +237,27 @@ public:
 	}
 	frame_count_++;
   if (SaberBase::IsOn()) {
-    if (looped_frames_ == 1 && frame_count_ == 1) {
-      return font_config.ProffieOSImageDuration;
-    } else if (looped_frames_ == 1 && frame_count_ > 1) {
-      if (!SaberBase::Lockup()) {
-        if (!imgon_) {
-          ShowFile(&IMG_on);
+    // Single frame image
+    if (looped_frames_ == 1) {
+      if (frame_count_ == 1) return font_config.ProffieOSImageDuration;
+      if (frame_count_ > 1) {
+        if (SaberBase::Lockup()) {
+          ShowFile(&IMG_lock);
         } else {
           screen_ = SCREEN_PLI;
+          if (!imgon_) {
+            ShowFile(&IMG_on);
+          }
         }
-      } else {
-        ShowFile(&IMG_lock);
       }
-    } else if (looped_frames_ == frame_count_  && looped_frames_ > 1) {
+      // looped image
+    } else if (looped_frames_ == frame_count_) {
       if (!SaberBase::Lockup()) {
         ShowFile(&IMG_on);
       }
     }
   } else {
-    if (looped_frames_ > 1 && millis() - loop_start_ > font_config.ProffieOSImageDuration) {
+    if (millis() - loop_start_ > font_config.ProffieOSImageDuration) {
       STDOUT << "END OF LOOP\n";
       screen_ = SCREEN_PLI;
     }
@@ -282,11 +284,7 @@ public:
       MountSDCard();
       eof_ = true;
       file_.Play(effect);
-      if (effect == &IMG_on) {
-        imgon_ = true;
-      } else {
-        imgon_ = false;
-      }
+      imgon_ = effect == &IMG_on;
       frame_available_ = false;
       loop_start_ = millis();
       frame_count_ = 0;
