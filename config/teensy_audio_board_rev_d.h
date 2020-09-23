@@ -8,13 +8,13 @@
 enum SaberPins {
   // Bottom edge (in pin-out diagram)
   // sdCardSelectPin is actually used, and can be altered if desired. 
-  // needs an external 10K pullup to 3.3V, provided on aduio shield
+  // needs an external 10K pullup to 3.3V, provided on audio shield
   sdCardSelectPin = 10,           // (See File->Example->SD->ReadWrite for
                                   // other possible values.)
 
   // these values are just a reminder not to use these pins for anything else, 
   // they definitions are not actually used, and overwritten by the AUDIO_CONTROL_SGTL5000
-  spiDataOut = 11,                 // spi out, serial flash, spi led & sd card
+  spiDataOut = 11,                // spi out, serial flash, spi led & sd card
   spiDataIn = 12,                 // spi in, serial flash & sd card
   spiClock = 13,                  // spi clock, flash, spi led & sd card
 
@@ -23,17 +23,17 @@ enum SaberPins {
   i2cDataPin = 18,                // I2C bus, SGTL5000 control
   i2cClockPin = 19,               // I2C bus, SGTL5000 control
 
-//  auxPin = 15,                    // AUX button  ->> this is also Volume pin on audioshield, do not use
-//  powerButtonPin = 16,            // power button
-//  aux2Pin = 17,                   // AUX2 button
+//  auxPin = 15,                  // AUX button, (Volume control input, when potetiometer is mounted to the audioshield)
+//  powerButtonPin = 16,          // power button
+//  aux2Pin = 17,                 // AUX2 button
 
 // these values are just a reminder not to use these pins for anything else, 
 // they definitions are not actually used, and overwritten by the AUDIO_CONTROL_SGTL5000
   mclkPin = 23,                   // MCLK (digital audio)
   bclkPin = 21,                   // BCLK (digital audio)
   lrclkPin = 20,                  // LRCLK (digital audio) 
-  txd0Pin = 7,                    // TXD0 (digital audio)
-  rxd0Pin = 8,                    // RXD0 (digital audio)
+  txd0Pin = 7,                    // TXD0 (digital audio out)
+  rxd0Pin = 8,                    // RXD0 (digital audio in)
     
   bladePowerPin1 = -1,
   bladePowerPin2 = -1,
