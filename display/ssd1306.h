@@ -244,13 +244,13 @@ public:
         ShowFile(&IMG_lock);
         return 3600000;
       } else {
-        ShowFile(&IMG_on);
+        if (!static_on_) ShowFile(&IMG_on);
       }
-    // looped image
     } else {
+      // looped image
       if (looped_frames_ == frame_count_) {
         if (!SaberBase::Lockup()) {
-          ShowFile(&IMG_on);
+          if (!static_on_) ShowFile(&IMG_on);
         }
       }
     }
@@ -286,8 +286,8 @@ public:
       loop_start_ = millis();
       frame_count_ = 0;
       SetScreenNow(SCREEN_IMAGE);
-      static_on_ = effect == &IMG_on && looped_frames_ == 1;
       eof_ = false;
+      on_played_ = effect == &IMG_on;
     }
   }
 
@@ -304,6 +304,7 @@ public:
 
   void SB_NewFont() override {
     ShowFile(&IMG_font);
+    on_played_ = false;
   }
 
   void SB_On() override {
@@ -323,7 +324,7 @@ public:
   }
 
   void SB_EndLockup() override {
-    ShowFile(&IMG_on);
+    if (!static_on_) ShowFile(&IMG_on);
   }
 
   void SB_Message(const char* text) override {
@@ -552,6 +553,8 @@ public:
       } else {
 	looped_frames_ = height / 128;
       }
+      static_on_ = on_played_ && looped_frames_ == 1;
+      STDOUT.println(static_on_);
     }
     // STDOUT << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
     if (f->Available() < sizeof(frame_buffer_)) return false;
@@ -614,6 +617,7 @@ private:
   uint8_t xor_ = 0;
   bool invert_y_ = 0;
   bool static_on_ = false;
+  bool on_played_ = false;
   uint32_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
   char message_[32];
