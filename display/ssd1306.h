@@ -229,10 +229,10 @@ public:
 	}
 	if (eof_) {
 	  // STDOUT << "EOF " << frame_count_ << "\n";
-    if (!SaberBase::IsOn()) {
-	   screen_ = SCREEN_PLI;
-	    if (frame_count_ == 1) return font_config.ProffieOSImageDuration;
-	    return FillFrameBuffer();
+    if (!SaberBase::IsOn() || static_on_) {
+      screen_ = SCREEN_PLI;
+      if (frame_count_ == 1) return font_config.ProffieOSImageDuration;
+      return FillFrameBuffer();
     }
 	}
 	frame_count_++;
@@ -240,20 +240,18 @@ public:
     // Single frame image
     if (looped_frames_ == 1) {
       if (frame_count_ == 1) return font_config.ProffieOSImageDuration;
-      if (frame_count_ > 1) {
-        if (SaberBase::Lockup()) {
-          ShowFile(&IMG_lock);
-        } else {
-          screen_ = SCREEN_PLI;
-          if (!imgon_) {
-            ShowFile(&IMG_on);
-          }
-        }
-      }
-      // looped image
-    } else if (looped_frames_ == frame_count_) {
-      if (!SaberBase::Lockup()) {
+      if (SaberBase::Lockup()) {
+        ShowFile(&IMG_lock);
+        return 3600000;
+      } else {
         ShowFile(&IMG_on);
+      }
+    // looped image
+    } else {
+      if (looped_frames_ == frame_count_) {
+        if (!SaberBase::Lockup()) {
+          ShowFile(&IMG_on);
+        }
       }
     }
   } else {
@@ -284,11 +282,11 @@ public:
       MountSDCard();
       eof_ = true;
       file_.Play(effect);
-      imgon_ = effect == &IMG_on;
       frame_available_ = false;
       loop_start_ = millis();
       frame_count_ = 0;
       SetScreenNow(SCREEN_IMAGE);
+      static_on_ = effect == &IMG_on && looped_frames_ == 1;
       eof_ = false;
     }
   }
@@ -615,7 +613,7 @@ private:
   uint16_t i;
   uint8_t xor_ = 0;
   bool invert_y_ = 0;
-  bool imgon_ = false;
+  bool static_on_ = false;
   uint32_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
   char message_[32];
