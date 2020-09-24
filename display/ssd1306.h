@@ -229,7 +229,7 @@ public:
 	}
 	if (eof_) {
 	  // STDOUT << "EOF " << frame_count_ << "\n";
-    if (!SaberBase::IsOn() || static_on_) {
+    if (!SaberBase::IsOn()) {
       screen_ = SCREEN_PLI;
       if (frame_count_ == 1) return font_config.ProffieOSImageDuration;
       return FillFrameBuffer();
@@ -240,17 +240,19 @@ public:
     // Single frame image
     if (looped_frames_ == 1) {
       if (frame_count_ == 1) return font_config.ProffieOSImageDuration;
+      screen_ = SCREEN_PLI;
       if (SaberBase::Lockup()) {
         ShowFile(&IMG_lock);
         return 3600000;
       } else {
-        if (!static_on_) ShowFile(&IMG_on);
+        if (looped_on_) ShowFile(&IMG_on);
       }
     } else {
       // looped image
       if (looped_frames_ == frame_count_) {
         if (!SaberBase::Lockup()) {
-          if (!static_on_) ShowFile(&IMG_on);
+          screen_ = SCREEN_PLI;
+          if (looped_on_) ShowFile(&IMG_on);
         }
       }
     }
@@ -287,7 +289,7 @@ public:
       frame_count_ = 0;
       SetScreenNow(SCREEN_IMAGE);
       eof_ = false;
-      on_played_ = effect == &IMG_on;
+      current_effect_ = effect;
     }
   }
 
@@ -304,7 +306,6 @@ public:
 
   void SB_NewFont() override {
     ShowFile(&IMG_font);
-    on_played_ = false;
   }
 
   void SB_On() override {
@@ -324,7 +325,8 @@ public:
   }
 
   void SB_EndLockup() override {
-    if (!static_on_) ShowFile(&IMG_on);
+    screen_ = SCREEN_PLI;
+    if (looped_on_) ShowFile(&IMG_on);
   }
 
   void SB_Message(const char* text) override {
@@ -553,8 +555,9 @@ public:
       } else {
 	looped_frames_ = height / 128;
       }
-      static_on_ = on_played_ && looped_frames_ == 1;
-      STDOUT.println(static_on_);
+      if (current_effect_ == &IMG_on) {
+        looped_on_ = looped_frames_ > 1;
+      }
     }
     // STDOUT << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
     if (f->Available() < sizeof(frame_buffer_)) return false;
@@ -616,8 +619,8 @@ private:
   uint16_t i;
   uint8_t xor_ = 0;
   bool invert_y_ = 0;
-  bool static_on_ = false;
-  bool on_played_ = false;
+  bool looped_on_ = false;
+  Effect* current_effect_;
   uint32_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
   char message_[32];
