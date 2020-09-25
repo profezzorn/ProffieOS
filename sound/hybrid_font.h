@@ -200,8 +200,8 @@ public:
     last_swing_micros_ = now;
     if (delta_micros > 1000000) delta_micros = 1;
     if (swing_speed > swingThreshold) {
-      float delta = delta_micros * 0.000001;
 #ifdef ENABLE_SPINS      
+      float delta = delta_micros * 0.000001;
       angle_ += swing_speed * delta;
 #endif      
       if (!guess_monophonic_) {
