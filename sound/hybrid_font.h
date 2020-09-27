@@ -16,7 +16,11 @@ public:
     CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 130.0f);
     CONFIG_VARIABLE(ProffieOSAnimationFrameRate, 0.0f);
-    CONFIG_VARIABLE(ProffieOSImageDuration, 5000.0f);
+    CONFIG_VARIABLE(ProffieOSFontImageDuration, 5000.0f);
+    CONFIG_VARIABLE(ProffieOSOnImageDuration, 5000.0f);
+    CONFIG_VARIABLE(ProffieOSBlastImageDuration, 1000.0f);
+    CONFIG_VARIABLE(ProffieOSClashImageDuration, 1000.0f);
+    CONFIG_VARIABLE(ProffieOSForceImageDuration, 1000.0f);
 #ifdef ENABLE_SPINS
     CONFIG_VARIABLE(ProffieOSSpinDegrees, 360.0f);
 #endif
@@ -56,8 +60,16 @@ public:
   float ProffieOSSlashAccelerationThreshold;
   // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
-  // for OLED displays, the time a static BMP or loop will play
-  float ProffieOSImageDuration;
+  // for OLED displays, the time a static BMP or loop will play when saber is off
+  float ProffieOSFontImageDuration;
+  // for OLED displays, the time a font.bmp or boot.bmp will play
+  float ProffieOSOnImageDuration;
+  // for OLED displays, the time a blst.bmp will play
+  float ProffieOSBlastImageDuration;
+  // for OLED displays, the time a clsh.bmp will play
+  float ProffieOSClashImageDuration;
+  // for OLED displays, the time a force.bmp will play
+  float ProffieOSForceImageDuration;
 #ifdef ENABLE_SPINS
   // number of degrees the blade must travel while staying above the
   // swing threshold in order to trigger a spin sound.  Default is 360 or

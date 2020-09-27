@@ -8,6 +8,7 @@ IMAGE_FILESET(on);
 IMAGE_FILESET(clsh);
 IMAGE_FILESET(blst);
 IMAGE_FILESET(lock);
+IMAGE_FILESET(force);
 
 struct Glyph {
   int32_t skip : 7;
@@ -198,7 +199,7 @@ public:
 	layout_ = LAYOUT_NATIVE;
 	xor_ = 0;
 	invert_y_ = false;
-	return font_config.ProffieOSImageDuration;
+	return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
 	memset(frame_buffer_, 0, sizeof(frame_buffer_));
@@ -219,7 +220,7 @@ public:
 	layout_ = LAYOUT_NATIVE;
 	xor_ = 0;
 	invert_y_ = false;
-	return font_config.ProffieOSImageDuration;
+	return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_IMAGE:
 	MountSDCard();
@@ -231,7 +232,7 @@ public:
 	  // STDOUT << "EOF " << frame_count_ << "\n";
     if (!SaberBase::IsOn()) {
       screen_ = SCREEN_PLI;
-      if (frame_count_ == 1) return font_config.ProffieOSImageDuration;
+      if (frame_count_ == 1) return font_config.ProffieOSFontImageDuration;
       return FillFrameBuffer();
     }
 	}
@@ -239,7 +240,12 @@ public:
   if (SaberBase::IsOn()) {
     // Single frame image
     if (looped_frames_ == 1) {
-      if (frame_count_ == 1) return font_config.ProffieOSImageDuration;
+      if (frame_count_ == 1) {
+        if (current_effect_ == &IMG_on) return font_config.ProffieOSOnImageDuration;
+        if (current_effect_ == &IMG_blst) return font_config.ProffieOSBlastImageDuration;
+        if (current_effect_ == &IMG_clsh) return font_config.ProffieOSClashImageDuration;
+        if (current_effect_ == &IMG_force) return font_config.ProffieOSForceImageDuration;
+      }
       screen_ = SCREEN_PLI;
       if (SaberBase::Lockup()) {
         ShowFile(&IMG_lock);
@@ -250,14 +256,21 @@ public:
     } else {
       // looped image
       if (looped_frames_ == frame_count_) {
-        if (!SaberBase::Lockup()) {
-          screen_ = SCREEN_PLI;
-          if (looped_on_) ShowFile(&IMG_on);
+        if ((current_effect_ == &IMG_blst && millis() - loop_start_ >
+            font_config.ProffieOSBlastImageDuration) ||
+            (current_effect_ == &IMG_clsh && millis() - loop_start_ >
+            font_config.ProffieOSClashImageDuration) ||
+            (current_effect_ == &IMG_force && millis() - loop_start_ >
+            font_config.ProffieOSForceImageDuration)) {
+          if (!SaberBase::Lockup()) {
+            screen_ = SCREEN_PLI;
+            if (looped_on_) ShowFile(&IMG_on);
+          }
         }
       }
     }
   } else {
-    if (millis() - loop_start_ > font_config.ProffieOSImageDuration) {
+    if (millis() - loop_start_ > font_config.ProffieOSFontImageDuration) {
       STDOUT << "END OF LOOP\n";
       screen_ = SCREEN_PLI;
     }
@@ -320,6 +333,10 @@ public:
     ShowFile(&IMG_clsh);
   }
 
+  void SB_Force() override {
+    ShowFile(&IMG_force);
+  }
+
   void SB_BeginLockup() override {
     ShowFile(&IMG_lock);
   }
@@ -347,6 +364,8 @@ public:
     // This only makes it black, which prevents burn-in.
     if (offtype == OFF_IDLE) {
       SetScreenNow(SCREEN_OFF);
+    } else {
+      SetScreenNow(SCREEN_PLI);
     }
   }
 
@@ -619,7 +638,7 @@ private:
   uint16_t i;
   uint8_t xor_ = 0;
   bool invert_y_ = 0;
-  bool looped_on_ = false;
+  volatile bool looped_on_ = false;
   Effect* current_effect_;
   uint32_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
