@@ -4,6 +4,11 @@
 // Images/animations
 IMAGE_FILESET(font);
 IMAGE_FILESET(boot);
+IMAGE_FILESET(on);
+IMAGE_FILESET(clsh);
+IMAGE_FILESET(blst);
+IMAGE_FILESET(lock);
+IMAGE_FILESET(force);
 
 struct Glyph {
   int32_t skip : 7;
@@ -183,7 +188,7 @@ public:
 	xor_ = 0;
 	invert_y_ = false;
 	return 1000;
-	
+
       case SCREEN_STARTUP:
 	memset(frame_buffer_, 0, sizeof(frame_buffer_));
         // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
@@ -194,7 +199,7 @@ public:
 	layout_ = LAYOUT_NATIVE;
 	xor_ = 0;
 	invert_y_ = false;
-	return 5000;
+	return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
 	memset(frame_buffer_, 0, sizeof(frame_buffer_));
@@ -215,7 +220,7 @@ public:
 	layout_ = LAYOUT_NATIVE;
 	xor_ = 0;
 	invert_y_ = false;
-	return 5000;
+	return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_IMAGE:
 	MountSDCard();
@@ -225,15 +230,43 @@ public:
 	}
 	if (eof_) {
 	  // STDOUT << "EOF " << frame_count_ << "\n";
-	  screen_ = SCREEN_PLI;
-	  if (frame_count_ == 1) return 5000;
-	  return FillFrameBuffer();
+    if (!SaberBase::IsOn()) {
+      screen_ = SCREEN_PLI;
+      if (frame_count_ == 1) return font_config.ProffieOSFontImageDuration;
+      return FillFrameBuffer();
+    }
 	}
 	frame_count_++;
-	if (looped_frames_ > 1 && millis() - loop_start_ > 5000) {
-	  STDOUT << "END OF LOOP\n";
-	  screen_ = SCREEN_PLI;
-	}
+  if (SaberBase::IsOn()) {
+    // Single frame image
+    if (looped_frames_ == 1) {
+      if (frame_count_ == 1) {
+        return effect_display_duration_;
+      }
+      screen_ = SCREEN_PLI;
+      if (SaberBase::Lockup()) {
+        ShowFile(&IMG_lock, 3600000.0);
+        return 3600000;
+      } else {
+        if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+      }
+    } else {
+      // looped image
+      if (looped_frames_ == frame_count_) {
+        if (millis() - loop_start_ > effect_display_duration_) {
+          if (!SaberBase::Lockup()) {
+            screen_ = SCREEN_PLI;
+            if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+          }
+        }
+      }
+    }
+  } else {
+    if (millis() - loop_start_ > font_config.ProffieOSFontImageDuration) {
+      STDOUT << "END OF LOOP\n";
+      screen_ = SCREEN_PLI;
+    }
+  }
 
 	if (font_config.ProffieOSAnimationFrameRate > 0.0) {
 	  return 1000 / font_config.ProffieOSAnimationFrameRate;
@@ -251,15 +284,19 @@ public:
     screen_ = screen;
   }
 
-  void ShowFile(Effect* effect) {
-    MountSDCard();
-    eof_ = true;
-    file_.Play(effect);
-    frame_available_ = false;
-    loop_start_ = millis();
-    frame_count_ = 0;
-    SetScreenNow(SCREEN_IMAGE);
-    eof_ = false;
+  void ShowFile(Effect* effect, float duration) {
+    if (*effect) {
+      MountSDCard();
+      eof_ = true;
+      file_.Play(effect);
+      frame_available_ = false;
+      loop_start_ = millis();
+      frame_count_ = 0;
+      SetScreenNow(SCREEN_IMAGE);
+      eof_ = false;
+      current_effect_ = effect;
+      effect_display_duration_ = duration;
+    }
   }
 
   void ShowFile(const char* file) {
@@ -274,10 +311,32 @@ public:
   }
 
   void SB_NewFont() override {
-    if (IMG_font) {
-      // Overrides message from below..
-      ShowFile(&IMG_font);
-    }
+    ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
+  }
+
+  void SB_On() override {
+    ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+  }
+
+  void SB_Blast() override {
+    ShowFile(&IMG_blst, font_config.ProffieOSBlastImageDuration);
+  }
+
+  void SB_Clash() override {
+    ShowFile(&IMG_clsh, font_config.ProffieOSClashImageDuration);
+  }
+
+  void SB_Force() override {
+    ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
+  }
+
+  void SB_BeginLockup() override {
+    ShowFile(&IMG_lock, 3600000.0);
+  }
+
+  void SB_EndLockup() override {
+    screen_ = SCREEN_PLI;
+    if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
   }
 
   void SB_Message(const char* text) override {
@@ -298,6 +357,8 @@ public:
     // This only makes it black, which prevents burn-in.
     if (offtype == OFF_IDLE) {
       SetScreenNow(SCREEN_OFF);
+    } else {
+      SetScreenNow(SCREEN_PLI);
     }
   }
 
@@ -309,10 +370,10 @@ public:
     Send(DISPLAYOFF);                    // 0xAE
     Send(SETDISPLAYCLOCKDIV);            // 0xD5
     Send(0x80);                                  // the suggested ratio 0x80
-    
+
     Send(SETMULTIPLEX);                  // 0xA8
     Send(HEIGHT - 1);
-    
+
     Send(SETDISPLAYOFFSET);              // 0xD3
     Send(0x0);                                   // no offset
     Send(SETSTARTLINE | 0x0);            // line #0
@@ -334,7 +395,7 @@ public:
     Send(0x40);
     Send(DISPLAYALLON_RESUME);           // 0xA4
     Send(NORMALDISPLAY);                 // 0xA6
-    
+
     Send(DEACTIVATE_SCROLL);
 
     Send(DISPLAYON);                     //--turn on oled panel
@@ -342,9 +403,9 @@ public:
     STDOUT.println("Display initialized.");
     screen_ = SCREEN_STARTUP;
     if (IMG_boot) {
-      ShowFile(&IMG_boot);
+      ShowFile(&IMG_boot, font_config.ProffieOSFontImageDuration);
     }
-    
+
     while (true) {
       millis_to_display_ = FillFrameBuffer();
       frame_start_time_ = millis();
@@ -372,7 +433,7 @@ public:
       }
 
       //STDOUT.println(TWSR & 0x3, DEC);
-        
+
       // I2C
       for (i=0; i < WIDTH * HEIGHT / 8; ) {
         // send a bunch of data in one xmission
@@ -401,7 +462,7 @@ public:
 		delta_pos = 16;
 	      }
 //	      STDOUT << " LANDSCAPE DECODE!! x = " << x << " y = " << y << "\n";
-	      
+
 	      int shift = 7 - (x & 7);
 	      uint8_t *pos =
 		((unsigned char*)frame_buffer_) + ((x>>3) + (y<<4));
@@ -426,7 +487,7 @@ public:
       while (millis() - frame_start_time_ < millis_to_display_) YIELD();
       do { YIELD(); } while (!I2CLock());
     }
-    
+
     STATE_MACHINE_END();
   }
 
@@ -451,7 +512,7 @@ public:
 	default:
 	  STDOUT << "Unknown image format. a=" << a << " b=" << b << " pos=" << f->Tell() << "\n";
 	  return false;
-	  
+
 	case TAG2('P', '4'):
 	  // PBM
 	  f->skipwhite();
@@ -462,7 +523,7 @@ public:
 	  xor_ = 255;
 	  invert_y_ = false;
 	  break;
-	  
+
 	case TAG2('B', 'M'):
 	case TAG2('B', 'A'):
 	case TAG2('C', 'I'):
@@ -476,7 +537,7 @@ public:
 	  file_end = file_start + f->ReadType<uint32_t>();
 	  f->Skip(4);
 	  uint32_t offset = f->ReadType<uint32_t>();
-	  
+
 #if 0
 	  uint32_t ctable = f->Tell() + f->ReadType<uint32_t>();
 	  // STDOUT << "OFFSET = " << offset << " CTABLE=" << ctable << "\n";
@@ -492,7 +553,7 @@ public:
 	  width = f->ReadType<uint32_t>();
 	  height = f->ReadType<uint32_t>();
 	  // STDOUT << "Width=" << width << " Height=" << height << "\n";
-#endif	  
+#endif
 	  // First frame is near the end, seek to it.
 	  f->Seek(file_start + offset + width * height / 8 - 512);
       }
@@ -505,6 +566,9 @@ public:
 	looped_frames_ = height / 32;
       } else {
 	looped_frames_ = height / 128;
+      }
+      if (current_effect_ == &IMG_on) {
+        looped_on_ = looped_frames_ > 1;
       }
     }
     // STDOUT << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
@@ -567,6 +631,9 @@ private:
   uint16_t i;
   uint8_t xor_ = 0;
   bool invert_y_ = 0;
+  volatile bool looped_on_ = false;
+  volatile Effect* current_effect_;
+  volatile float effect_display_duration_;
   uint32_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
   char message_[32];
