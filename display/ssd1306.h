@@ -241,30 +241,22 @@ public:
     // Single frame image
     if (looped_frames_ == 1) {
       if (frame_count_ == 1) {
-        if (current_effect_ == &IMG_on) return font_config.ProffieOSOnImageDuration;
-        if (current_effect_ == &IMG_blst) return font_config.ProffieOSBlastImageDuration;
-        if (current_effect_ == &IMG_clsh) return font_config.ProffieOSClashImageDuration;
-        if (current_effect_ == &IMG_force) return font_config.ProffieOSForceImageDuration;
+        return effect_display_duration_;
       }
       screen_ = SCREEN_PLI;
       if (SaberBase::Lockup()) {
-        ShowFile(&IMG_lock);
+        ShowFile(&IMG_lock, 3600000.0);
         return 3600000;
       } else {
-        if (looped_on_) ShowFile(&IMG_on);
+        if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
       }
     } else {
       // looped image
       if (looped_frames_ == frame_count_) {
-        if ((current_effect_ == &IMG_blst && millis() - loop_start_ >
-            font_config.ProffieOSBlastImageDuration) ||
-            (current_effect_ == &IMG_clsh && millis() - loop_start_ >
-            font_config.ProffieOSClashImageDuration) ||
-            (current_effect_ == &IMG_force && millis() - loop_start_ >
-            font_config.ProffieOSForceImageDuration)) {
+        if (millis() - loop_start_ > effect_display_duration_) {
           if (!SaberBase::Lockup()) {
             screen_ = SCREEN_PLI;
-            if (looped_on_) ShowFile(&IMG_on);
+            if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
           }
         }
       }
@@ -292,7 +284,7 @@ public:
     screen_ = screen;
   }
 
-  void ShowFile(Effect* effect) {
+  void ShowFile(Effect* effect, float duration) {
     if (*effect) {
       MountSDCard();
       eof_ = true;
@@ -303,6 +295,7 @@ public:
       SetScreenNow(SCREEN_IMAGE);
       eof_ = false;
       current_effect_ = effect;
+      effect_display_duration_ = duration;
     }
   }
 
@@ -318,32 +311,32 @@ public:
   }
 
   void SB_NewFont() override {
-    ShowFile(&IMG_font);
+    ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
   }
 
   void SB_On() override {
-    ShowFile(&IMG_on);
+    ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
   }
 
   void SB_Blast() override {
-    ShowFile(&IMG_blst);
+    ShowFile(&IMG_blst, font_config.ProffieOSBlastImageDuration);
   }
 
   void SB_Clash() override {
-    ShowFile(&IMG_clsh);
+    ShowFile(&IMG_clsh, font_config.ProffieOSClashImageDuration);
   }
 
   void SB_Force() override {
-    ShowFile(&IMG_force);
+    ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
   }
 
   void SB_BeginLockup() override {
-    ShowFile(&IMG_lock);
+    ShowFile(&IMG_lock, 3600000.0);
   }
 
   void SB_EndLockup() override {
     screen_ = SCREEN_PLI;
-    if (looped_on_) ShowFile(&IMG_on);
+    if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
   }
 
   void SB_Message(const char* text) override {
@@ -410,7 +403,7 @@ public:
     STDOUT.println("Display initialized.");
     screen_ = SCREEN_STARTUP;
     if (IMG_boot) {
-      ShowFile(&IMG_boot);
+      ShowFile(&IMG_boot, font_config.ProffieOSFontImageDuration);
     }
 
     while (true) {
@@ -639,7 +632,8 @@ private:
   uint8_t xor_ = 0;
   bool invert_y_ = 0;
   volatile bool looped_on_ = false;
-  Effect* current_effect_;
+  volatile Effect* current_effect_;
+  volatile float effect_display_duration_;
   uint32_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
   char message_[32];

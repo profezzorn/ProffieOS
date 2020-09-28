@@ -19,7 +19,7 @@ public:
     CONFIG_VARIABLE(ProffieOSFontImageDuration, 5000.0f);
     CONFIG_VARIABLE(ProffieOSOnImageDuration, 5000.0f);
     CONFIG_VARIABLE(ProffieOSBlastImageDuration, 1000.0f);
-    CONFIG_VARIABLE(ProffieOSClashImageDuration, 1000.0f);
+    CONFIG_VARIABLE(ProffieOSClashImageDuration, 500.0f);
     CONFIG_VARIABLE(ProffieOSForceImageDuration, 1000.0f);
 #ifdef ENABLE_SPINS
     CONFIG_VARIABLE(ProffieOSSpinDegrees, 360.0f);
@@ -62,7 +62,7 @@ public:
   float ProffieOSAnimationFrameRate;
   // for OLED displays, the time a static BMP or loop will play when saber is off
   float ProffieOSFontImageDuration;
-  // for OLED displays, the time a font.bmp or boot.bmp will play
+  // for OLED displays, the time an on.bmp will play
   float ProffieOSOnImageDuration;
   // for OLED displays, the time a blst.bmp will play
   float ProffieOSBlastImageDuration;
