@@ -115,9 +115,9 @@ public:
     return StyleFireBase<DELAY, SPEED, NORM, CLASH, LOCK, OFF>::run(blade);
   }
 
-  OverDriveColor getColor(int led) {
+  SimpleColor getColor(int led) {
     int h = this->heat_[this->num_leds_ - 1 - led];
-    OverDriveColor c;
+    SimpleColor c;
     if (h < 256) {
       c.c = Color16().mix(c1_.getColor(led).c, h);
     } else if (h < 512) {

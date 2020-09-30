@@ -98,14 +98,11 @@ public:
   uint32_t FrameNum() override {
     return floor(getPlayer()->pos() * FRAME_RATE_ENUMERATOR / FRAME_RATE_DENOMINATOR);
   }
-  OverDriveColor getColor(int led) {
+  SimpleColor getColor(int led) {
     led = led * N / num_leds_ + OFFSET;
-    OverDriveColor ret;
-    ret.c = Color16(sqr(CurrentFrame().data[led*3]),
-		    sqr(CurrentFrame().data[led*3+1]),
-		    sqr(CurrentFrame().data[led*3+2]));
-    ret.overdrive = false;
-    return ret;
+    return SimpleColor(Color16(sqr(CurrentFrame().data[led*3]),
+			       sqr(CurrentFrame().data[led*3+1]),
+			       sqr(CurrentFrame().data[led*3+2])));
   }
 };
 
@@ -115,14 +112,11 @@ public:
   uint32_t FrameNum() override {
     return floor(getPlayer()->pos() * FRAME_RATE_ENUMERATOR / FRAME_RATE_DENOMINATOR);
   }
-  OverDriveColor getColor(int led) {
+  SimpleColor getColor(int led) {
     led = led * N / num_leds_ + OFFSET;
-    OverDriveColor ret;
-    ret.c = Color16(sqr(CurrentFrame().data[led*3]),
-		    sqr(CurrentFrame().data[led*3+1]),
-		    sqr(CurrentFrame().data[led*3+2]));
-    ret.overdrive = false;
-    return ret;
+    return SimpleColor(Color16(sqr(CurrentFrame().data[led*3]),
+			       sqr(CurrentFrame().data[led*3+1]),
+			       sqr(CurrentFrame().data[led*3+2])));
   }
 };
 
