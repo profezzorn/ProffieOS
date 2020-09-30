@@ -83,7 +83,7 @@ SaberFett263Buttons() : PropBase() {}
 
   void Loop() override {
     PropBase::Loop();
-    DetectTwists();
+    DetectTwist();
     DetectSwing();
     if (SaberBase::IsOn()) {
       if (auto_lockup_on_ &&

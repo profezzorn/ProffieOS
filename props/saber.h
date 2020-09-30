@@ -194,7 +194,7 @@ public:
 #if NUM_BUTTONS == 0
   void Loop() override {
     PropBase::Loop();
-    DetectTwists();
+    DetectTwist();
     DetectShake();
   }
 #endif  
