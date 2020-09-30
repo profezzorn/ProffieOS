@@ -510,7 +510,7 @@ public:
     float v = diff.len();
     // If we're spinning the saber, require a stronger acceleration
     // to activate the clash.
-    if (v > CLASH_THRESHOLD_G + filtered_gyro_.len() / 200.0) {
+    if (v > CLASH_THRESHOLD_G + fusor.gyro().len() / 200.0) {
       if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
         diff = -diff;
       }
@@ -527,7 +527,7 @@ public:
       STDOUT << "ACCEL: " << accel
              << " diff=" << diff
              << " v=" << v
-             << " fgl=" << (filtered_gyro_.len() / 200.0)
+             << " fgl=" << (fusor.gyro().len() / 200.0)
              << " accel_=" << accel_
              << " clear=" << clear
              << " millis=" << millis()
@@ -709,14 +709,7 @@ public:
     strokes[NELEM(strokes)-1].end_millis = 0;
   }
 
-  BoxFilter<Vec3, 5> gyro_filter_;
-  Vec3 filtered_gyro_;
   void SB_Motion(const Vec3& gyro, bool clear) override {
-    if (clear)
-      for (int i = 0; i < 4; i++)
-        gyro_filter_.filter(gyro);
-
-    filtered_gyro_ = gyro_filter_.filter(gyro);
     if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
       // Got gyro data
       STDOUT.print("GYRO: ");
