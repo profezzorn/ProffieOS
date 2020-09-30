@@ -81,17 +81,11 @@ public:
 SaberFett263Buttons() : PropBase() {}
   const char* name() override { return "SaberFett263Buttons"; }
 
-  // EVENT_SWING
-  bool swinging_ = false;
   void Loop() override {
     PropBase::Loop();
+    DetectTwists();
+    DetectSwing();
     if (SaberBase::IsOn()) {
-        // Edit '250' value in line below to change swing on sensitivity when on
-        // 250 ~ 400 work best in testing
-      if (!swinging_ && fusor.swing_speed() > 250) {
-        swinging_ = true;
-        Event(BUTTON_NONE, EVENT_SWING);
-      }
       if (auto_lockup_on_ &&
           !swinging_ &&
           fusor.swing_speed() > 120 &&
@@ -100,9 +94,6 @@ SaberFett263Buttons() : PropBase() {}
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         auto_lockup_on_ = false;
-      }
-      if (swinging_ && fusor.swing_speed() < 100) {
-        swinging_ = false;
       }
       if (auto_melt_on_ &&
           !swinging_ &&
@@ -122,9 +113,6 @@ SaberFett263Buttons() : PropBase() {}
         if (!swinging_ && fusor.swing_speed() > 250) {
           swinging_ = true;
           Event(BUTTON_NONE, EVENT_SWING);
-        }
-        if (swinging_ && fusor.swing_speed() < 100) {
-          swinging_ = false;
         }
       }
     }

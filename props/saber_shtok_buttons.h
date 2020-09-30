@@ -48,17 +48,9 @@ public:
 SaberShtokButtons() : PropBase() {}
   const char* name() override { return "SaberShtokButtons"; }
 
-// EVENT_SWING
-  bool swinging_ = false;
   void Loop() override {
     PropBase::Loop();
-    if (!swinging_ && fusor.swing_speed() > 250) {
-      swinging_ = true;
-      Event(BUTTON_NONE, EVENT_SWING);
-    }
-    if (swinging_ && fusor.swing_speed() < 100) {
-      swinging_ = false;
-    }
+    DetectSwing();
   }
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
