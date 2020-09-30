@@ -30,11 +30,8 @@ public:
     if (R == 0 && G == 0 && B == 0) return LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
     return LayerRunResult::UNKNOWN;
   }
-  OverDriveColor getColor(int led) {
-    OverDriveColor ret;
-    ret.c = color();
-    ret.overdrive = false;
-    return ret;
+  SimpleColor getColor(int led) {
+    return SimpleColor(color());
   }
 };
 

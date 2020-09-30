@@ -292,9 +292,19 @@ public:
   uint16_t r, g, b;
 };
 
+struct SimpleColor {
+  SimpleColor() {}
+  SimpleColor(const Color16 &c_) : c(c_) {}
+  Color16 c;
+  void printTo(Print& p) {
+    c.printTo(p);
+  }
+};
+
 struct OverDriveColor {
   OverDriveColor() {}
   OverDriveColor(const Color16 &c_, bool o) : c(c_), overdrive(o) {}
+  OverDriveColor(const SimpleColor &c_) : c(c_.c), overdrive(false) {}
   Color16 c;
   bool overdrive;
   
@@ -303,6 +313,7 @@ struct OverDriveColor {
     c.printTo(p);
   }
 };
+
 
 // SIMPLE
 // Opaque.fade -> Opaque or Alpha?
@@ -338,10 +349,27 @@ inline Color16 operator+(const Color16& a, const Color16 &b) {
   return Color16(a.r + b.r, a.g + b.g, a.b + b.b);
 }
 
+// Unmultiplied RGBA (no overdrive), used as a temporary and makes optimization easier.
+struct RGBA_um_nod {
+  constexpr RGBA_um_nod(Color16 c_, uint16_t a) : c(c_), alpha(a) {}
+  constexpr RGBA_um_nod(const SimpleColor& c_) : c(c_.c), alpha(32768) {}
+  static RGBA_um_nod Transparent() { return RGBA_um_nod(Color16(), 0); }
+  Color16 c;
+  uint16_t alpha;
+
+  void printTo(Print& p) {
+    c.printTo(p);
+    p.write(',');
+    p.print(alpha);
+  }
+};
+
 // Unmultiplied RGBA, used as a temporary and makes optimization easier.
 struct RGBA_um {
   constexpr RGBA_um(Color16 c_, bool od, uint16_t a) : c(c_), alpha(a), overdrive(od) {}
+  constexpr RGBA_um(const RGBA_um_nod& o) : c(o.c), alpha(32768), overdrive(false) {}
   constexpr RGBA_um(const OverDriveColor& o) : c(o.c), alpha(32768), overdrive(o.overdrive) {}
+  constexpr RGBA_um(const SimpleColor& o) : c(o.c), alpha(32768), overdrive(false) {}
   static RGBA_um Transparent() { return RGBA_um(Color16(), false, 0); }
   Color16 c;
   uint16_t alpha;
@@ -355,11 +383,28 @@ struct RGBA_um {
   }
 };
 
+// Premultiplied ALPHA, no overdrive
+struct RGBA_nod {
+  constexpr RGBA_nod(Color16 c_, uint16_t a) : c(c_), alpha(a) {}
+  RGBA_nod(const RGBA_um_nod& rgba) : c(rgba.c * rgba.alpha >> 15), alpha(rgba.alpha)  {}
+  RGBA_nod(const SimpleColor& o) : c(o.c), alpha(32768) {}
+  Color16 c;
+  uint16_t alpha;
+  void printTo(Print& p) {
+    c.printTo(p);
+    p.write('*');
+    p.print(alpha);
+  }
+};
+
 // Premultiplied ALPHA
 struct RGBA {
   constexpr RGBA(Color16 c_, bool od, uint16_t a) : c(c_), alpha(a), overdrive(od) {}
+  RGBA(const RGBA_nod& rgba) : c(rgba.c * rgba.alpha >> 15), alpha(rgba.alpha), overdrive(false)  {}
   RGBA(const RGBA_um& rgba) : c(rgba.c * rgba.alpha >> 15), alpha(rgba.alpha), overdrive(rgba.overdrive)  {}
+  RGBA(const RGBA_um_nod& rgba) : c(rgba.c * rgba.alpha >> 15), alpha(rgba.alpha), overdrive(false)  {}
   RGBA(const OverDriveColor& o) : c(o.c), alpha(32768), overdrive(o.overdrive) {}
+  RGBA(const SimpleColor& o) : c(o.c), alpha(32768), overdrive(false) {}
   Color16 c;
   uint16_t alpha;
   bool overdrive;
@@ -371,6 +416,10 @@ struct RGBA {
   }
 };
 
+inline RGBA_um_nod operator*(const SimpleColor& a, uint16_t x) {
+  return RGBA_um_nod(a.c, x);
+}
+
 inline RGBA_um operator*(const OverDriveColor& a, uint16_t x) {
   return RGBA_um(a.c, a.overdrive, x);
 }
@@ -379,13 +428,29 @@ inline RGBA_um operator*(const RGBA_um& a, uint16_t x) {
   return RGBA_um(a.c, a.overdrive, a.alpha * x >> 15);
 }
 
+inline RGBA_um_nod operator*(const RGBA_um_nod& a, uint16_t x) {
+  return RGBA_um_nod(a.c, a.alpha * x >> 15);
+}
+
+inline RGBA_nod operator*(const RGBA_nod& a, uint16_t x) {
+  return RGBA_nod(a.c * x >> 15, (a.alpha * x + 0x7fff) >> 15);
+}
+
 inline RGBA operator*(const RGBA& a, uint16_t x) {
   return RGBA(a.c * x >> 15, a.overdrive, (a.alpha * x + 0x7fff) >> 15);
+}
+
+inline SimpleColor MixColors(SimpleColor a, SimpleColor b, int x, int shift) {
+  return SimpleColor((a.c * ((1 << shift) - x) + b.c * x) >> shift);
 }
 
 inline OverDriveColor MixColors(OverDriveColor a, OverDriveColor b, int x, int shift) {
   return OverDriveColor( (a.c * ((1 << shift) - x) + b.c * x) >> shift,
 			 x > (1 << (shift - 1)) ? b.overdrive : a.overdrive);
+}
+inline RGBA_nod MixColors(RGBA_nod a, RGBA_nod b, int x, int shift) {
+  return RGBA_nod( (a.c * ((1 << shift) - x) + b.c * x) >> shift,
+	       (a.alpha * ((1 << shift) - x) + b.alpha * x + ((1<<shift) - 1)) >> shift);
 }
 inline RGBA MixColors(RGBA a, RGBA b, int x, int shift) {
   return RGBA( (a.c * ((1 << shift) - x) + b.c * x) >> shift,
@@ -393,8 +458,42 @@ inline RGBA MixColors(RGBA a, RGBA b, int x, int shift) {
 	       (a.alpha * ((1 << shift) - x) + b.alpha * x + ((1<<shift) - 1)) >> shift);
 }
 
+#define OverDriveColor_nod SimpleColor
+
+#define DISAMBIGUATE_MIXCOLORS1(A, B, C) \
+  inline auto MixColors(A a, B b, int x, int shift) -> decltype(MixColors(C(a), C(b), x, shift)) { return MixColors(C(a), C(b), x, shift); }
+#define DISAMBIGUATE_MIXCOLORS2(A, B, C)	\
+  DISAMBIGUATE_MIXCOLORS1(A##_nod, B, C)	\
+  DISAMBIGUATE_MIXCOLORS1(A, B##_nod, C)
+
+#define DISAMBIGUATE_MIXCOLORS3(A, B, C)	\
+  DISAMBIGUATE_MIXCOLORS1(A, B, C)		\
+  DISAMBIGUATE_MIXCOLORS2(A, B, C)
+
+DISAMBIGUATE_MIXCOLORS2(OverDriveColor, OverDriveColor, OverDriveColor)
+DISAMBIGUATE_MIXCOLORS3(OverDriveColor, RGBA_um, RGBA_um)
+DISAMBIGUATE_MIXCOLORS3(OverDriveColor, RGBA, RGBA)
+DISAMBIGUATE_MIXCOLORS3(RGBA_um, OverDriveColor, RGBA)
+DISAMBIGUATE_MIXCOLORS3(RGBA_um, RGBA_um, RGBA)
+DISAMBIGUATE_MIXCOLORS3(RGBA_um, RGBA, RGBA)
+DISAMBIGUATE_MIXCOLORS3(RGBA, OverDriveColor, RGBA)
+DISAMBIGUATE_MIXCOLORS3(RGBA, RGBA_um, RGBA)
+DISAMBIGUATE_MIXCOLORS2(RGBA, RGBA, RGBA)
+
+DISAMBIGUATE_MIXCOLORS1(RGBA_um_nod, SimpleColor, RGBA_nod)
+DISAMBIGUATE_MIXCOLORS1(RGBA_nod, SimpleColor, RGBA_nod)
+DISAMBIGUATE_MIXCOLORS1(SimpleColor, RGBA_um_nod, RGBA_nod)
+DISAMBIGUATE_MIXCOLORS1(SimpleColor, RGBA_nod, RGBA_nod)
+DISAMBIGUATE_MIXCOLORS1(RGBA_um_nod, RGBA_um_nod, RGBA_nod)
+
 // Paint over operators
 // There is probably a better way to do this.
+inline SimpleColor operator<<(const SimpleColor& base, const RGBA_um_nod& over) {
+  SCOPED_PROFILER();
+  if (!over.alpha) return base;
+  return SimpleColor((base.c * (32768 - over.alpha) + over.c * over.alpha) >> 15);
+}
+
 inline OverDriveColor operator<<(const OverDriveColor& base, const RGBA_um& over) {
   SCOPED_PROFILER();
   if (!over.alpha) return base;
@@ -402,12 +501,27 @@ inline OverDriveColor operator<<(const OverDriveColor& base, const RGBA_um& over
   return OverDriveColor((base.c * ac + over.c * over.alpha) >> 15,
 			over.alpha >= 16384 ? over.overdrive : base.overdrive);
 }
+
+inline SimpleColor operator<<(const SimpleColor& base, const RGBA_nod& over) {
+  SCOPED_PROFILER();
+  if (!over.alpha) return base;
+  return (base.c * (32768 - over.alpha) >> 15) + over.c;
+}
+
 inline OverDriveColor operator<<(const OverDriveColor& base, const RGBA& over) {
   SCOPED_PROFILER();
   if (!over.alpha) return base;
   uint16_t ac = 32768 - over.alpha;
   return OverDriveColor((base.c * ac >> 15) + over.c,
 			over.alpha >= 16384 ? over.overdrive : base.overdrive);
+}
+
+inline RGBA_nod operator<<(const RGBA_um_nod& base, const RGBA_um_nod& over) {
+  SCOPED_PROFILER();
+//  if (!over.alpha) return base;
+  uint16_t ac = 32768 - over.alpha;
+  return RGBA_nod((base.c * (base.alpha * ac >> 15) + over.c * over.alpha) >> 15,
+		  (base.alpha * ac >> 15) + over.alpha);
 }
 
 inline RGBA operator<<(const RGBA_um& base, const RGBA_um& over) {
@@ -419,6 +533,14 @@ inline RGBA operator<<(const RGBA_um& base, const RGBA_um& over) {
 	      (base.alpha * ac >> 15) + over.alpha);
 }
 
+inline RGBA_nod operator<<(const RGBA_um_nod& base, const RGBA_nod& over) {
+  SCOPED_PROFILER();
+//  if (!over.alpha) return base;
+  uint16_t ac = 32768 - over.alpha;
+  return RGBA_nod((base.c * (base.alpha * ac >> 15) >> 15) + over.c,
+		  (base.alpha * ac >> 15) + over.alpha);
+}
+
 inline RGBA operator<<(const RGBA_um& base, const RGBA& over) {
   SCOPED_PROFILER();
 //  if (!over.alpha) return base;
@@ -426,6 +548,14 @@ inline RGBA operator<<(const RGBA_um& base, const RGBA& over) {
   return RGBA((base.c * (base.alpha * ac >> 15) >> 15) + over.c,
 	      over.alpha > 16384 ? over.overdrive : base.overdrive,
 	      (base.alpha * ac >> 15) + over.alpha);
+}
+
+inline RGBA_nod operator<<(const RGBA_nod& base, const RGBA_um_nod& over) {
+  SCOPED_PROFILER();
+//  if (!over.alpha) return base;
+  uint16_t ac = 32768 - over.alpha;
+  return RGBA_nod((base.c * ac + over.c * over.alpha) >> 15,
+	      ((base.alpha * ac + 0x7fff) >> 15) + over.alpha);
 }
 
 inline RGBA operator<<(const RGBA& base, const RGBA_um& over) {
@@ -437,6 +567,14 @@ inline RGBA operator<<(const RGBA& base, const RGBA_um& over) {
 	      ((base.alpha * ac + 0x7fff) >> 15) + over.alpha);
 }
 
+inline RGBA_nod operator<<(const RGBA_nod& base, const RGBA_nod& over) {
+    SCOPED_PROFILER();
+//  if (!over.alpha) return base;
+  uint16_t ac = 32768 - over.alpha;
+  return RGBA_nod((base.c * ac >> 15) + over.c,
+		  ((base.alpha * ac + 0x7fff) >> 15) + over.alpha);
+}
+
 inline RGBA operator<<(const RGBA& base, const RGBA& over) {
     SCOPED_PROFILER();
 //  if (!over.alpha) return base;
@@ -445,5 +583,27 @@ inline RGBA operator<<(const RGBA& base, const RGBA& over) {
 	      over.alpha >= 16384 ? over.overdrive : base.overdrive,
 	      ((base.alpha * ac + 0x7fff) >> 15) + over.alpha);
 }
+
+
+// Disambiguation
+#define DISAMBIGUATE_OVER(A, B)						\
+  inline auto operator<<(const A##_nod & base, const B & over) ->decltype(A(base) << over) { return A(base) << over; } \
+  inline auto operator<<(const A & base, const B##_nod & over) ->decltype(base << B(over)) { return base << B(over); }
+
+#define DISAMBIGUATE_OVER2(A)			\
+  DISAMBIGUATE_OVER(OverDriveColor, A)		\
+  DISAMBIGUATE_OVER(RGBA_um, A)			\
+  DISAMBIGUATE_OVER(RGBA, A)
+
+DISAMBIGUATE_OVER2(RGBA_um)
+DISAMBIGUATE_OVER2(RGBA)
+
+#define MAKE_OVERDRIVE(A)					\
+  inline A OverDrive(A a) { a.overdrive = true; return a; }	\
+  inline A OverDrive(A##_nod a) { return OverDrive(A(a)); }
+
+MAKE_OVERDRIVE(OverDriveColor)
+MAKE_OVERDRIVE(RGBA_um)
+MAKE_OVERDRIVE(RGBA)
 
 #endif

@@ -94,8 +94,8 @@ public:
     for (int i = N - 1; i >= 0; i--) {
       size_t x = (i + pos_) % N;
       if (run_[x]) {
-	ret = ret << transitions_[x].getColor(RGBA_um::Transparent(),
-					      RGBA_um::Transparent(), led);
+	ret = ret << transitions_[x].getColor(RGBA_um_nod::Transparent(),
+					      RGBA_um_nod::Transparent(), led);
       }
     }
     return ret;

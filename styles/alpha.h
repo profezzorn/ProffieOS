@@ -33,7 +33,7 @@ public:
   auto getColor(int led) -> decltype(color_.getColor(led) * alpha_.getInteger(led))  {
 //    SCOPED_PROFILER();
     int alpha = alpha_.getInteger(led);
-    if (alpha == 0) return RGBA_um::Transparent();
+    if (alpha == 0) return RGBA_um_nod::Transparent();
     return color_.getColor(led) * alpha;  // clamp?
   }
 };

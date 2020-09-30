@@ -37,11 +37,10 @@ private:
   CLASH_COLOR clash_color_;
   STAB_SHAPE stab_shape_;
 public:
-  auto getColor(int led) -> decltype(clash_color_.getColor(led) * stab_shape_.getInteger(led)) {
-    decltype(clash_color_.getColor(led) * stab_shape_.getInteger(led)) ret(Color16(), false, 0);
+  auto getColor(int led) -> decltype(OverDrive(clash_color_.getColor(led) * stab_shape_.getInteger(led))) {
+    decltype(OverDrive(clash_color_.getColor(led) * stab_shape_.getInteger(led))) ret = RGBA_um_nod::Transparent();
     if (clash_) {
-      ret = clash_color_.getColor(led);
-      ret.overdrive = true;
+      ret = OverDrive(clash_color_.getColor(led));
       if (stab_) {
 	ret = ret * stab_shape_.getInteger(led);
       }
@@ -104,7 +103,7 @@ private:
   CLASH_COLOR clash_color_;
 public:
   auto getColor(int led) -> decltype(clash_color_.getColor(led) * 1) {
-    decltype(clash_color_.getColor(led) * 1) ret(Color16(), false, 0);
+    decltype(clash_color_.getColor(led) * 1) ret = RGBA_um_nod::Transparent();
     if (clash_) {
       uint32_t dist = abs(led * mult_ - clash_location_) / 1024;
       if (dist < NELEM(clash_hump)) {
