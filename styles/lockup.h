@@ -66,7 +66,7 @@ public:
   auto getColor(int led) -> decltype(lockup_.getColor(led) * 1)  {
     // transparent
     int blend = 0;
-    if (handled_) return RGBA_um::Transparent();
+    if (handled_) return RGBA_um_nod::Transparent();
     switch (SaberBase::Lockup()) {
       case SaberBase::LOCKUP_MELT:
 	// TODO: Better default for MELT?
@@ -86,7 +86,7 @@ public:
 	blend = lockup_shape_.getInteger(led);
 	break;
       case SaberBase::LOCKUP_NONE:
-	return RGBA_um::Transparent();
+	return RGBA_um_nod::Transparent();
     }
     return lockup_.getColor(led) * blend;
   }
@@ -156,7 +156,7 @@ public:
   }
   RGBA getColor(int led) {
     SCOPED_PROFILER();
-    RGBA off_color = RGBA_um::Transparent();
+    RGBA off_color = RGBA_um_nod::Transparent();
     if (!begin_active_ && !end_active_) {
       if (active_) {
 	return color_.getColor(led);
