@@ -93,12 +93,12 @@ public:
   RGBA getColor(int led) {
     if (!out_active_ && !in_active_) {
       if (on_) {
-	return RGBA_um::Transparent();
+	return RGBA_um_nod::Transparent();
       } else {
 	return off_color_.getColor(led);
       }
     } else {
-      RGBA on_color = RGBA_um::Transparent();
+      RGBA on_color = RGBA_um_nod::Transparent();
       RGBA off_color = off_color_.getColor(led);
       if (on_) {
 	return runOut(runIn(on_color, off_color, led), on_color, led);
