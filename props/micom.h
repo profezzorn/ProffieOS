@@ -20,7 +20,17 @@ AnswerEffectGroup* current_question_;
   SEPARATOR					\
   X(PREFIX##answer3)				\
   SEPARATOR					\
-  X(PREFIX##answer4)
+  X(PREFIX##answer4)				\
+  SEPARATOR					\
+  X(PREFIX##answer5)				\
+  SEPARATOR					\
+  X(PREFIX##answer6)				\
+  SEPARATOR					\
+  X(PREFIX##answer7)				\
+  SEPARATOR					\
+  X(PREFIX##answer8)
+
+#define MKNAMES(X) X, X "a1", X "a2", X "a3", X "a4", X "a5", X "a6", X "a7", X "a8"
 
 #define JUST_NAME(X) X##_name
 #define CONST_CHAR_NAME(X) const char* X##_name
@@ -85,9 +95,33 @@ public:
 	  return true;
 	}
 	break;
-      case BUTTON_TRIGGER_EIGHT:
-	// No answer, just cancel.
+      case BUTTON_TRIGGER_FIVE:
+	if (effect_answer5_) {
+	  Play(&effect_answer5_);
 	  current_question_ = nullptr;
+	  return true;
+	}
+	break;
+      case BUTTON_TRIGGER_SIX:
+	if (effect_answer6_) {
+	  Play(&effect_answer6_);
+	  current_question_ = nullptr;
+	  return true;
+	}
+	break;
+      case BUTTON_TRIGGER_SEVEN:
+	if (effect_answer7_) {
+	  Play(&effect_answer7_);
+	  current_question_ = nullptr;
+	  return true;
+	}
+	break;
+      case BUTTON_TRIGGER_EIGHT:
+	// Button 8 always cancels, but it can play a sound first.
+	if (effect_answer8_) {
+	  Play(&effect_answer8_);
+	}
+	current_question_ = nullptr;
 	return true;
 	
       default: break;
@@ -118,18 +152,8 @@ public:
   }
 };
 
-#define DEFINE_TRIGGER(X)			\
-TriggerEffectGroup trigger##X(                  \
-		   "t" #X "clk",		\
-                   "t" #X "clka1",		\
-                   "t" #X "clka2",		\
-                   "t" #X "clka3",		\
-                   "t" #X "clka4",		\
-		   "t" #X "hld",		\
-		   "t" #X "hlda1",		\
-		   "t" #X "hlda2",		\
-		   "t" #X "hlda3",		\
-		   "t" #X "hlda4")
+#define DEFINE_TRIGGER(X) \
+  TriggerEffectGroup trigger##X(MKNAMES("t" #X "clk"), MKNAMES("t" #X "hld"))
 
 DEFINE_TRIGGER(1);
 DEFINE_TRIGGER(2);
