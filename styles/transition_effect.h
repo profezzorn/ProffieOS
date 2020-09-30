@@ -48,13 +48,13 @@ private:
   TRANSITION transition_;
   OneshotEffectDetector<EFFECT> effect_;
 public:
-  auto getColor(int led) -> decltype(transition_.getColor(RGBA_um::Transparent(),
-							  RGBA_um::Transparent(), 1)) {
+  auto getColor(int led) -> decltype(transition_.getColor(RGBA_um_nod::Transparent(),
+							  RGBA_um_nod::Transparent(), 1)) {
     if (run_) {
-      return transition_.getColor(RGBA_um::Transparent(),
-				  RGBA_um::Transparent(), led);
+      return transition_.getColor(RGBA_um_nod::Transparent(),
+				  RGBA_um_nod::Transparent(), led);
     } else {
-      return RGBA_um::Transparent();
+      return RGBA_um_nod::Transparent();
     }
   }
 };
@@ -90,7 +90,7 @@ private:
   OneshotEffectDetector<EFFECT> effect_;
 public:
   RGBA getColor(int led) {
-    RGBA ret(RGBA_um::Transparent());
+    RGBA ret(RGBA_um_nod::Transparent());
     for (int i = N - 1; i >= 0; i--) {
       size_t x = (i + pos_) % N;
       if (run_[x]) {

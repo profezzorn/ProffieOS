@@ -21,11 +21,11 @@ public:
 private:
   TRANSITION transition_;
 public:  
-  auto getColor(int led) -> decltype(transition_.getColor(RGBA_um::Transparent(),
-							  RGBA_um::Transparent(),
+  auto getColor(int led) -> decltype(transition_.getColor(RGBA_um_nod::Transparent(),
+							  RGBA_um_nod::Transparent(),
 							  led)) {
-    return transition_.getColor(RGBA_um::Transparent(),
-				RGBA_um::Transparent(),
+    return transition_.getColor(RGBA_um_nod::Transparent(),
+				RGBA_um_nod::Transparent(),
 				led);
   }
 };
