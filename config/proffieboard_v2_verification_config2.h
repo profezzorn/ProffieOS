@@ -24,7 +24,7 @@ const unsigned int maxLedsPerStrip = 144;
 #endif
 
 #ifdef CONFIG_PROP
-#include "../props/saber_sa22c_buttons.h"
+#include "../props/saber_shtok_buttons.h"
 #endif
 
 #ifdef CONFIG_PRESETS

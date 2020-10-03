@@ -23,6 +23,10 @@ const unsigned int maxLedsPerStrip = 144;
 #define SHARED_POWER_PINS
 #endif
 
+#ifdef CONFIG_PROP
+#include "../props/saber_fett263_buttons.h"
+#endif
+
 #ifdef CONFIG_PRESETS
 Preset presets[] = {
   { "TeensySF", "tracks/venus.wav",

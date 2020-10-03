@@ -244,12 +244,12 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
         swing_blast_ = true;
-        hybrid_font.SB_Blast();
+        hybrid_font.SB_Effect(EFFECT_BLAST, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
         if (swing_blast_) {
-          SaberBase::DoBlast();
+	  hybrid_font.SB_Effect(EFFECT_BLAST, 0);
         }
         return true;
 

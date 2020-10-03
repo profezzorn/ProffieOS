@@ -35,7 +35,7 @@ public:
   virtual void SetBlasterMode(BlasterMode to_mode) {
     if (!auto_firing_) {
       blaster_mode = to_mode;
-      SaberBase::DoMode();
+      SaberBase::DoEffect(EFFECT_MODE, 0);
     }
   }
 
@@ -79,7 +79,7 @@ public:
     is_jammed_ = is_jammed_ ? true : CheckJam(BLASTER_JAM_PERCENTAGE);
 
     if (is_jammed_) {
-      SaberBase::DoJam();
+      SaberBase::DoEffect(EFFECT_JAM, 0);
       return;
     }
 #endif
@@ -87,7 +87,7 @@ public:
 
     if (max_shots_ != -1) {
       if (shots_fired_ >= max_shots_) {
-        SaberBase::DoEmpty();
+        SaberBase::DoEffect(EFFECT_EMPTY, 0);
         return;
       }
     }
@@ -99,9 +99,9 @@ public:
       auto_firing_ = true;
     } else {
       if (blaster_mode == MODE_STUN) {
-        SaberBase::DoStun();
+        SaberBase::DoEffect(EFFECT_STUN, 0);
       } else {
-        SaberBase::DoFire();
+        SaberBase::DoEffect(EFFECT_FIRE, 0);
       }
 
       shots_fired_++;
@@ -125,16 +125,16 @@ public:
 
   virtual void Reload() {
     shots_fired_ = 0;
-    SaberBase::DoReload();
+    SaberBase::DoEffect(EFFECT_RELOAD, 0);
   }
 
   virtual void ClipOut() {
     if (max_shots_ != -1) shots_fired_ = max_shots_;
-    SaberBase::DoClipOut();
+    SaberBase::DoEffect(EFFECT_CLIP_OUT, 0);
   }
 
   virtual void ClipIn() {
-    SaberBase::DoClipIn();
+    SaberBase::DoEffect(EFFECT_CLIP_IN, 0);
   }
 
   // Pull in parent's SetPreset, but turn the blaster on.
@@ -229,7 +229,7 @@ public:
   void Clash(bool stab) override {
     if (is_jammed_) {
       is_jammed_ = false;
-      SaberBase::DoUnJam();
+      SaberBase::DoEffect(EFFECT_UNJAM, 0);
     }
   }
 
@@ -313,8 +313,8 @@ public:
       case EFFECT_FULL: hybrid_font.PlayCommon(&SFX_full); return;
       case EFFECT_JAM: hybrid_font.PlayCommon(&SFX_jam); return;
       case EFFECT_UNJAM: hybrid_font.PlayCommon(&SFX_unjam); return;
-      case EFFECT_PLION: hybrid_font.PlayCommon(&SFX_plion); return;
-      case EFFECT_PLIOFF: hybrid_font.PlayCommon(&SFX_plioff); return;
+      case EFFECT_PLI_ON: hybrid_font.PlayCommon(&SFX_plion); return;
+      case EFFECT_PLI_OFF: hybrid_font.PlayCommon(&SFX_plioff); return;
 	
     }
   }

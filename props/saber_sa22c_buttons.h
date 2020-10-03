@@ -295,13 +295,8 @@ public:
   case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
 #endif
 #endif
-    if (!swing_blast_) {
-      swing_blast_ = true;
-      hybrid_font.SB_Blast();
-    } else {
-      swing_blast_ = false;
-      hybrid_font.SB_Blast();
-    }
+    swing_blast_ = !swing_blast_;
+    hybrid_font.SB_Effect(EFFECT_BLAST, 0);
     return true;
 
   case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
