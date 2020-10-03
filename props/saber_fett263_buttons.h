@@ -331,7 +331,7 @@ SaberFett263Buttons() : PropBase() {}
          if (!battle_mode_) {
            battle_mode_ = true;
            // Force sound plays when entering Battle Mode
-           hybrid_font.SB_Force();
+	   hybrid_font.SB_Effect(EFFECT_FORCE, 0);
          } else {
            battle_mode_ = false;
            // Exit Color Change sound plays when exiting Battle Mode
