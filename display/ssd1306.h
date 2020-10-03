@@ -310,33 +310,34 @@ public:
     eof_ = false;
   }
 
-  void SB_NewFont() override {
-    ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
-  }
-
   void SB_On() override {
     ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
   }
 
-  void SB_Blast() override {
-    ShowFile(&IMG_blst, font_config.ProffieOSBlastImageDuration);
-  }
+  void SB_Effect(EffectType effect, float location) override {
+    switch (effect) {
+      case EFFECT_NEWFONT:
+	ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
+	return;
+      case EFFECT_BLAST:
+	ShowFile(&IMG_blst, font_config.ProffieOSBlastImageDuration);
+	return;
+      case EFFECT_CLASH:
+	ShowFile(&IMG_clsh, font_config.ProffieOSClashImageDuration);
+	return;
+      case EFFECT_FORCE:
+	ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
+	return;
+      case EFFECT_LOCKUP_BEGIN:
+	ShowFile(&IMG_lock, 3600000.0);
+	return;
+      case EFFECT_LOCKUP_END:
+	screen_ = SCREEN_PLI;
+	if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+	return;
 
-  void SB_Clash() override {
-    ShowFile(&IMG_clsh, font_config.ProffieOSClashImageDuration);
-  }
-
-  void SB_Force() override {
-    ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
-  }
-
-  void SB_BeginLockup() override {
-    ShowFile(&IMG_lock, 3600000.0);
-  }
-
-  void SB_EndLockup() override {
-    screen_ = SCREEN_PLI;
-    if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+      default: break;
+    }
   }
 
   void SB_Message(const char* text) override {

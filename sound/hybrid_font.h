@@ -377,40 +377,23 @@ public:
         break;
     }
   }
-  void SB_Clash() override { Play(&SFX_clash, &SFX_clsh); }
-  void SB_Stab() override {
-    if (SFX_stab) {
-      PlayCommon(&SFX_stab);
-    } else {
-      // If no stab sounds are found, use a clash sound
-      SB_Clash();
-    }
-  }
-  void SB_Force() override { PlayCommon(&SFX_force); }
-  void SB_Blast() override { Play(&SFX_blaster, &SFX_blst); }
-  void SB_Boot() override { PlayPolyphonic(&SFX_boot); }
 
-  // Blaster effects, auto fire is handled by begin/end lockup
-  void SB_Stun() override { PlayCommon(&SFX_stun); }
-  void SB_Fire() override { PlayCommon(&SFX_blast); }
-  void SB_ClipIn() override { PlayCommon(&SFX_clipin); }
-  void SB_ClipOut() override { PlayCommon(&SFX_clipout); }
-  void SB_Reload() override { PlayCommon(&SFX_reload); }
-  void SB_Mode() override {
-    if (SFX_mode) {
-      PlayCommon(&SFX_mode);
-      return;
+  void SB_Effect(EffectType effect, float location) override {
+    switch (effect) {
+      default: return;
+      case EFFECT_STAB:
+	if (SFX_stab) { PlayCommon(&SFX_stab); return; }
+	// If no stab sounds are found, fall through to clash
+      case EFFECT_CLASH: Play(&SFX_clash, &SFX_clsh); return;
+      case EFFECT_FORCE: PlayCommon(&SFX_force); return;
+      case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); return;
+      case EFFECT_BOOT: PlayPolyphonic(&SFX_boot); return;
+      case EFFECT_NEWFONT: SB_NewFont(); return;
+      case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;
+      case EFFECT_LOCKUP_END: SB_EndLockup(); return;
+      case EFFECT_LOW_BATTERY: SB_LowBatt(); return;
     }
-    // TODO: would rather do a Talkie to speak the mode we're in after mode sound
-    beeper.Beep(0.05, 2000.0);
   }
-  void SB_Range() override { PlayCommon(&SFX_range); }
-  void SB_Empty() override { PlayCommon(&SFX_empty); }
-  void SB_Full() override { PlayCommon(&SFX_full); }
-  void SB_Jam() override { PlayCommon(&SFX_jam); }
-  void SB_UnJam() override { PlayCommon(&SFX_unjam); }
-  void SB_PLIOn() override { PlayCommon(&SFX_plion); }
-  void SB_PLIOff() override { PlayCommon(&SFX_plioff); }
 
   void SB_BladeDetect(bool detected) {
     Effect &X(detected ? SFX_bladein : SFX_bladeout);
@@ -424,7 +407,7 @@ public:
     }
     beeper.Beep(0.05, 2000.0);
   }
-  void SB_NewFont() override {
+  void SB_NewFont() {
     if (!PlayPolyphonic(&SFX_font)) {
       beeper.Beep(0.05, 2000.0);
     }
@@ -453,7 +436,7 @@ public:
     }
   }
 
-  void SB_BeginLockup() override {
+  void SB_BeginLockup() {
     Effect *once = nullptr;
     Effect *loop = nullptr;
     switch (SaberBase::Lockup()) {
@@ -502,7 +485,7 @@ public:
     if (once == loop) current_effect_length_ = 0;
   }
 
-  void SB_EndLockup() override {
+  void SB_EndLockup() {
     Effect *end = nullptr;
     switch (SaberBase::Lockup()) {
       case SaberBase::LOCKUP_ARMED:
@@ -619,7 +602,7 @@ public:
     return current_effect_length_;
   }
 
-  void SB_LowBatt() override {
+  void SB_LowBatt() {
     // play the fonts low battery sound if it exists
     if (SFX_lowbatt) {
       PlayCommon(&SFX_lowbatt);

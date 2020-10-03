@@ -10,6 +10,54 @@
 class SaberBase;
 extern SaberBase* saberbases;
 
+
+// An effect is a one-shot trigger for something
+// Effects may have a location, but do not generally have a "duration".
+// However, durations may be derived from blade styles or sound effect durations
+// associated with the effect.
+#define DEFINE_ALL_EFFECTS()			\
+    DEFINE_EFFECT(NONE)				\
+    DEFINE_EFFECT(CLASH)			\
+    DEFINE_EFFECT(BLAST)			\
+    DEFINE_EFFECT(FORCE)			\
+    DEFINE_EFFECT(STAB)				\
+    DEFINE_EFFECT(BOOT)				\
+    DEFINE_EFFECT(LOCKUP_BEGIN)			\
+    DEFINE_EFFECT(LOCKUP_END)			\
+    DEFINE_EFFECT(DRAG_BEGIN)			\
+    DEFINE_EFFECT(DRAG_END)			\
+    DEFINE_EFFECT(PREON)			\
+    DEFINE_EFFECT(IGNITION)			\
+    DEFINE_EFFECT(RETRACTION)			\
+    DEFINE_EFFECT(CHANGE)			\
+    DEFINE_EFFECT(NEWFONT)			\
+    DEFINE_EFFECT(LOW_BATTERY)			\
+    /* Blaster effects */                       \
+    DEFINE_EFFECT(STUN)				\
+    DEFINE_EFFECT(FIRE)				\
+    DEFINE_EFFECT(CLIP_IN)			\
+    DEFINE_EFFECT(CLIP_OUT)			\
+    DEFINE_EFFECT(RELOAD)			\
+    DEFINE_EFFECT(MODE)				\
+    DEFINE_EFFECT(RANGE)			\
+    DEFINE_EFFECT(EMPTY)			\
+    DEFINE_EFFECT(FULL)				\
+    DEFINE_EFFECT(JAM)				\
+    DEFINE_EFFECT(UNJAM)			\
+    DEFINE_EFFECT(PLI_ON)			\
+    DEFINE_EFFECT(PLI_OFF)
+
+
+#define DEFINE_EFFECT(X) EFFECT_##X,
+enum class EffectType {
+  DEFINE_ALL_EFFECTS()
+};
+#undef DEFINE_EFFECT
+
+#define DEFINE_EFFECT(X) constexpr EffectType EFFECT_##X=EffectType::EFFECT_##X;
+DEFINE_ALL_EFFECTS();
+#undef DEFINE_EFFECT
+
 class SaberBase {
 protected:
   void Link(SaberBase* x) {
@@ -103,41 +151,34 @@ public:                                                         \
                                                                 \
   virtual void SB_##NAME TYPED_ARGS {}
 
-#define SABERBASEFUNCTIONS()					\
-  SABERFUN(LowBatt, (), ());                     		\
-  SABERFUN(Clash, (), ());					\
-  SABERFUN(Stab, (), ());					\
-  SABERFUN(PreOn, (float* delay), (delay));			\
-  SABERFUN(On, (), ());						\
-  SABERFUN(Off, (OffType off_type), (off_type));		\
-  SABERFUN(Force, (), ());					\
-  SABERFUN(Blast, (), ());					\
-  SABERFUN(Boot, (), ());					\
-  SABERFUN(BladeDetect, (bool detected), (detected));		\
-  SABERFUN(NewFont, (), ());					\
-  SABERFUN(BeginLockup, (), ());				\
-  SABERFUN(EndLockup, (), ());					\
-  SABERFUN(Change, (ChangeType change_type), (change_type));	\
-								\
-  SABERFUN(Top, (uint64_t total_cycles), (total_cycles));	\
-  SABERFUN(Relax, (), ());					\
-  SABERFUN(IsOn, (bool* on), (on));				\
-  SABERFUN(Message, (const char* msg), (msg));  \
-  \
-  SABERFUN(Stun, (), ());          \
-  SABERFUN(Fire, (), ());          \
-  SABERFUN(ClipIn, (), ());          \
-  SABERFUN(ClipOut, (), ());          \
-  SABERFUN(Reload, (), ());          \
-  SABERFUN(Mode, (), ());          \
-  SABERFUN(Range, (), ());          \
-  SABERFUN(Empty, (), ());          \
-  SABERFUN(Full, (), ());          \
-  SABERFUN(Jam, (), ());          \
-  SABERFUN(UnJam, (), ());          \
-  SABERFUN(PLIOn, (), ());          \
-  SABERFUN(PLIOff, (), ());
+#define SABERBASEFUNCTIONS()						\
+  SABERFUN(Effect, (EffectType effect, float location), (effect, location)); \
+  SABERFUN(PreOn, (float* delay), (delay));				\
+  SABERFUN(On, (), ());                  				\
+  SABERFUN(Off, (OffType off_type), (off_type));			\
+  SABERFUN(BladeDetect, (bool detected), (detected));			\
+  SABERFUN(Change, (ChangeType change_type), (change_type));		\
+									\
+  SABERFUN(Top, (uint64_t total_cycles), (total_cycles));		\
+  SABERFUN(IsOn, (bool* on), (on));					\
+  SABERFUN(Message, (const char* msg), (msg));				\
+
+  
   SABERBASEFUNCTIONS();
+
+  static void DoEffectR(EffectType e) { DoEffect(e, (200 + random(700))/1000.0f); }
+  static void DoClash() { DoEffectR(EFFECT_CLASH); }
+  static void DoBlast() { DoEffectR(EFFECT_BLAST); }
+  static void DoForce() { DoEffectR(EFFECT_FORCE); }
+  static void DoStab() { DoEffect(EFFECT_STAB, 1.0f); }
+  static void DoBoot() { DoEffect(EFFECT_BOOT, 0); }
+  static void DoBeginLockup() { DoEffectR(EFFECT_LOCKUP_BEGIN); }
+  static void DoEndLockup() { DoEffect(EFFECT_LOCKUP_END, 0); }
+  static void DoChange() { DoEffect(EFFECT_CHANGE, 0); }
+  static void DoNewFont() { DoEffect(EFFECT_NEWFONT, 0); }
+  static void DoLowBatt() { DoEffect(EFFECT_LOW_BATTERY, 0); }
+  
+  
 #undef SABERFUN
 
   /* Swing rotation speed degrees per second */
