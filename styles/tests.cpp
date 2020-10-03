@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstdlib>
+#include <iostream>
 
 // cruft
 #define interrupts() do {} while(0)
@@ -29,6 +30,33 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   return x;
 }
 
+struct  Print {
+  void print(const char* s) { fprintf(stdout, "%s", s); }
+  void print(float v) { fprintf(stdout, "%f", v); }
+  void print(int v, int base) { fprintf(stdout, "%d", v); }
+  void write(char s) { putchar(s); }
+  template<class T>
+  void println(T s) { print(s); putchar('\n'); }
+};
+
+template<typename T, typename X = void> struct PrintHelper {
+  static void out(Print& p, T& x) { p.print(x); }
+};
+
+template<typename T> struct PrintHelper<T, decltype(((T*)0)->printTo(*(Print*)0))> {
+  static void out(Print& p, T& x) { x.printTo(p); }
+};
+
+struct ConsoleHelper : public Print {
+  template<typename T, typename Enable = void>
+  ConsoleHelper& operator<<(T v) {
+    PrintHelper<T>::out(*this, v);
+    return *this;
+  }
+};
+
+ConsoleHelper STDOUT;
+
 int random(int x) { return (random(x) & 0x7fffff) % x; }
 class Looper {
 public:
@@ -47,15 +75,15 @@ struct is_same_type<T, T> { static const bool value = true; };
 
 #define HEX 16
 
-struct  Print {
-  void print(const char* s) { puts(s); }
-  void print(int v, int base) { fprintf(stdout, "%d", v); }
-  void print(float v) { fprintf(stdout, "%f", v); }
-  void write(char s) { putchar(s); }
-  template<class T>
-  void println(T s) { print(s); putchar('\n'); }
+#define ENABLE_AUDIO
+
+struct MockDynamicMixer {
+  int32_t last_sample() const { return 4093; }
+  int32_t last_sum() const { return 16384; }
+  int32_t audio_volume() const { return 100000; }
 };
 
+MockDynamicMixer dynamic_mixer;
 
 #include "../common/color.h"
 #include "../blades/blade_base.h"
@@ -65,6 +93,13 @@ struct  Print {
 #include "inout_helper.h"
 #include "blast.h"
 #include "transition_effect.h"
+#include "audio_flicker.h"
+#include "pulsing.h"
+#include "../functions/bump.h"
+#include "lockup.h"
+#include "blinking.h"
+#include "clash.h"
+#include "color_cycle.h"
 #include "../transitions/base.h"
 #include "../transitions/join.h"
 #include "../transitions/wipe.h"
@@ -72,7 +107,6 @@ struct  Print {
 #include "../transitions/concat.h"
 #include "../transitions/fade.h"
 #include "../transitions/instant.h"
-#include "../functions/bump.h"
 
 SaberBase* saberbases = NULL;
 SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
@@ -200,6 +234,7 @@ void test_cylon() {
 
 void test_inouthelper(BladeStyle* style) {
   MockBlade mock_blade;
+  mock_blade.SetStyle(style);
   mock_blade.colors.resize(1);
   on_ = false;
   micros_ = 0;
@@ -274,6 +309,20 @@ void test_inouthelper(BladeStyle* style) {
   }
 }
 
+Color16 get_color_when_on(BladeStyle* style) {
+  MockBlade mock_blade;
+  mock_blade.SetStyle(style);
+  mock_blade.colors.resize(1);
+  on_ = false;
+  micros_ = 0;
+  STEP();
+  on_ = true;
+  int last = 0;
+
+  for (int i = 0; i < 10000; i++) STEP();
+  return mock_blade.colors[0];
+}
+
 void test_inouthelper() {
   fprintf(stderr, "Testing InOutHelper...\n");
   Style<InOutHelper<Rgb16<65535,65535,65535>, 100, 100, Rgb16<0,0,0>>> t1;
@@ -292,7 +341,28 @@ void test_inouthelper() {
   test_inouthelper(&t3);
 }
 
+void test_style1() {
+  Style<
+   Layers<
+     Green,
+     LockupTrL<Pulsing<Yellow,Red,1000>,TrInstant,TrInstant,SaberBase::LOCKUP_MELT>,
+     LockupL<Blinking<Green,Black,85,500>,AudioFlicker<Yellow,Blue>,Int<32768>,Int<32768>,Int<32768>> 
+     >
+    > t1;
+
+  Color16 c = get_color_when_on(&t1);
+  if (c.r != 0 || c.b != 0) {
+    fprintf(stderr, "Expecting only green.\n");
+    exit(1);
+  }
+  if (c.g < 32767) {
+    fprintf(stderr, "Not green enough (%d).\n", c.g);
+    exit(1);
+  }
+}
+
 int main() {
   test_cylon();
   test_inouthelper();
+  test_style1();
 }

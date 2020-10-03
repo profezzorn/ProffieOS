@@ -12,7 +12,7 @@
 // opaque. If the base color is transparent, the final result may also be transparent,
 // depending on what the layers paint on top of the base color.
 
-template<class BASE, class... LAYERS> class Layers {};
+template<class BASE, class... LAYERS> class Layers : public BASE {};
 
 template<class BASE, class L1>
 class Layers<BASE, L1> {
@@ -34,8 +34,10 @@ private:
   BASE base_;
   L1 layer_;
 public:
+  template<class T> T PRINT(T t, const char *f) { STDOUT << t << " @ " << f << "  type = " << __PRETTY_FUNCTION__ <<"\n"; return t; }
   auto getColor(int led) -> decltype(base_.getColor(led) << layer_.getColor(led)) {
     return base_.getColor(led) << layer_.getColor(led);
+//    return PRINT(base_.getColor(led) << PRINT(layer_.getColor(led), "layer"), __PRETTY_FUNCTION__);
   }
 
 };

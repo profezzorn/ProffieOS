@@ -367,7 +367,7 @@ struct RGBA_um_nod {
 // Unmultiplied RGBA, used as a temporary and makes optimization easier.
 struct RGBA_um {
   constexpr RGBA_um(Color16 c_, bool od, uint16_t a) : c(c_), alpha(a), overdrive(od) {}
-  constexpr RGBA_um(const RGBA_um_nod& o) : c(o.c), alpha(32768), overdrive(false) {}
+  constexpr RGBA_um(const RGBA_um_nod& o) : c(o.c), alpha(o.alpha), overdrive(false) {}
   constexpr RGBA_um(const OverDriveColor& o) : c(o.c), alpha(32768), overdrive(o.overdrive) {}
   constexpr RGBA_um(const SimpleColor& o) : c(o.c), alpha(32768), overdrive(false) {}
   static RGBA_um Transparent() { return RGBA_um(Color16(), false, 0); }
