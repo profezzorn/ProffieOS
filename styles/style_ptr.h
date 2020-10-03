@@ -25,18 +25,16 @@ struct HandledTypeSaver {
 class StyleBase : public BladeStyle {
 protected:
   void activate() override { }
-
-  bool IsHandled(HandledFeature effect) override {
-    return handled_type_saver_.IsHandled(effect);
-  }
-
   HandledTypeResetter handled_type_resetter_;
-  HandledTypeSaver handled_type_saver_;
 };
 
 template<class T>
 class Style : public StyleBase {
 public:
+  bool IsHandled(HandledFeature effect) override {
+    return handled_type_saver_.IsHandled(effect);
+  }
+
   void run(BladeBase* blade) override {
     if (!RunStyle(&base_, blade))
       blade->allow_disable();
@@ -57,6 +55,7 @@ public:
   }
 private:
   T base_;
+  HandledTypeSaver handled_type_saver_;
 };
 
 // Get a pointer to class.

@@ -57,7 +57,7 @@ struct ConsoleHelper : public Print {
 
 ConsoleHelper STDOUT;
 
-int random(int x) { return (random(x) & 0x7fffff) % x; }
+int random(int x) { return (rand() & 0x7fffff) % x; }
 class Looper {
 public:
   static void DoHFLoop() {}
@@ -323,6 +323,23 @@ Color16 get_color_when_on(BladeStyle* style) {
   return mock_blade.colors[0];
 }
 
+Color16 get_melt_color(BladeStyle* style) {
+  MockBlade mock_blade;
+  mock_blade.SetStyle(style);
+  mock_blade.colors.resize(10);
+  on_ = false;
+  micros_ = 0;
+  STEP();
+  on_ = true;
+  int last = 0;
+
+  STEP();
+  SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+  SaberBase::DoBeginLockup();
+  for (int i = 0; i < 10000; i++) STEP();
+  return mock_blade.colors[9];
+}
+
 void test_inouthelper() {
   fprintf(stderr, "Testing InOutHelper...\n");
   Style<InOutHelper<Rgb16<65535,65535,65535>, 100, 100, Rgb16<0,0,0>>> t1;
@@ -361,8 +378,39 @@ void test_style1() {
   }
 }
 
+
+void test_style2() {
+  Style<
+   Layers<
+	AudioFlicker<Rgb<0,128,0>,Green>,
+	BlastFadeoutL<Blue,400>,
+	LockupTrL<Pulsing<Yellow,Red,1000>,TrInstant,TrInstant,SaberBase::LOCKUP_MELT>,
+	LockupL<Blinking<Green,Black,85,500>,AudioFlicker<Yellow,Blue>,Int<32768>,Int<32768>,Int<32768>>,
+	SimpleClashL<Yellow,100,EFFECT_CLASH,SmoothStep<Int<0>,Int<24000>>>,
+	InOutTrL<TrWipeSparkTip<Yellow,300,100>,TrInstant,Pulsing<ColorCycle<Green,10,10,Cyan,100,3000,5000>,Black,2500>>>
+  > t1;
+
+  Color16 c = get_color_when_on(&t1);
+  if (c.r != 0 || c.b != 0) {
+    fprintf(stderr, "Expecting only green.\n");
+    exit(1);
+  }
+  if (c.g < 32767) {
+    fprintf(stderr, "Not green enough (%d).\n", c.g);
+    exit(1);
+  }
+
+  c = get_melt_color(&t1);
+  if (c.b != 0) {
+    fprintf(stderr, "Not expecting any blue in melt color!\n");
+    exit(1);
+  }
+}
+
+
 int main() {
   test_cylon();
   test_inouthelper();
   test_style1();
+  test_style2();
 }
