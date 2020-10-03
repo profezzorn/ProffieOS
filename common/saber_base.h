@@ -60,10 +60,17 @@ extern SaberBase* saberbases;
 enum class EffectType {
   DEFINE_ALL_EFFECTS()
 };
+enum class EffectTypeHelper {
+  DEFINE_ALL_EFFECTS()
+  NUMBER_OF_EFFECTS
+};
 #undef DEFINE_EFFECT
 
 #define DEFINE_EFFECT(X) constexpr EffectType EFFECT_##X=EffectType::EFFECT_##X;
 DEFINE_ALL_EFFECTS();
+
+// This can be used if we need to allocate an array with one entry per effect
+constexpr size_t NUMBER_OF_EFFECTS = (size_t)EffectTypeHelper::NUMBER_OF_EFFECTS;
 #undef DEFINE_EFFECT
 
 class SaberBase {
