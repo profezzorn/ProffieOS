@@ -17,6 +17,8 @@
 #define PROFFIE_TEST
 #define ENABLE_SD
 
+int random(int x) { return rand() % x; }
+
 const char install_time[] = __DATE__ " " __TIME__;
 
 const char* GetSaveDir() { return NULL; }
