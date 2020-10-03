@@ -6,6 +6,8 @@
 #include <cstdlib>
 
 // cruft
+#define interrupts() do {} while(0)
+#define noInterrupts() do {} while(0)
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 #define SCOPED_PROFILER() do { } while(0)
 template<class A, class B>
@@ -43,12 +45,6 @@ struct is_same_type<T, T> { static const bool value = true; };
 // This really ought to be a typedef, but it causes problems I don't understand.
 #define StyleAllocator class StyleFactory*
 
-struct SaberBase {
-  static uint32_t GetCurrentVariation() {
-    return 0;
-  }
-};
-
 #define HEX 16
 
 struct  Print {
@@ -77,6 +73,14 @@ struct  Print {
 #include "../transitions/fade.h"
 #include "../transitions/instant.h"
 #include "../functions/bump.h"
+
+SaberBase* saberbases = NULL;
+SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
+SaberBase::ColorChangeMode SaberBase::color_change_mode_ =
+  SaberBase::COLOR_CHANGE_MODE_NONE;
+bool SaberBase::on_ = false;
+uint32_t SaberBase::last_motion_request_ = 0;
+uint32_t SaberBase::current_variation_ = 0;
 
 bool on_ = true;
 bool allow_disable_ = false;

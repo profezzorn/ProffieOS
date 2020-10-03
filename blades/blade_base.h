@@ -1,6 +1,8 @@
 #ifndef BLADES_BLADE_BASE_H
 #define BLADES_BLADE_BASE_H
 
+#include "../common/saber_base.h"
+
 using BladeEffectType = EffectType;
 
   enum HandledFeature {
