@@ -49,11 +49,11 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(PLI_ON)			\
     DEFINE_EFFECT(PLI_OFF)                      \
     /* user-definable effects */                \
-    DEFINE_EFFECT(USER1);			\
-    DEFINE_EFFECT(USER2);			\
-    DEFINE_EFFECT(USER3);			\
-    DEFINE_EFFECT(USER4);			\
-    DEFINE_EFFECT(USER5);
+    DEFINE_EFFECT(USER1)			\
+    DEFINE_EFFECT(USER2)			\
+    DEFINE_EFFECT(USER3)			\
+    DEFINE_EFFECT(USER4)			\
+    DEFINE_EFFECT(USER5)
 
 
 #define DEFINE_EFFECT(X) EFFECT_##X,
