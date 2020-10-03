@@ -195,4 +195,48 @@ class BladeBase* SubBladeReverse(int first_led, int last_led, BladeBase* blade) 
   ret->SetupSubBlade(blade, last_led, last_led + 1 - first_led);
   return ret;
 }
+
+class SubBladeWrapperWithStride : public SubBladeWrapper {
+public:
+  void SetupStride(int stride) {
+    stride_ = stride;
+  }
+  void set(int led, Color16 c) override {
+    return blade_->set((led * stride_) + offset_, c);
+  }
+  void set_overdrive(int led, Color16 c) override {
+    return blade_->set_overdrive((led * stride_) + offset_, c);
+  }
+  
+protected:
+  int stride_;
+ };
+
+// Like SubBlade, but LEDs are indexed with an additional 'stride' parameter.
+class BladeBase* SubBladeWithStride(int first_led, int last_led, int stride, BladeBase* blade) {
+  if (blade)  {
+    first_subblade_wrapper = last_subblade_wrapper = NULL;
+  } else {
+    if (!first_subblade_wrapper) return NULL;
+    blade = first_subblade_wrapper->blade_;
+  }
+
+  if (last_led >= blade->num_leds()) {
+    return NULL;
+  }
+
+  SubBladeWrapperWithStride* ret = new SubBladeWrapperWithStride();
+  if (first_subblade_wrapper) {
+    ret->SetNext(last_subblade_wrapper);
+    first_subblade_wrapper->SetNext(ret);
+    last_subblade_wrapper = ret;
+  } else {
+    ret->SetNext(ret);
+    first_subblade_wrapper = last_subblade_wrapper = ret;
+  }
+  ret->SetupStride(stride);
+  ret->SetupSubBlade(blade, first_led, ((last_led + 1 - first_led)/stride));
+  return ret;
+}
+
 #endif
