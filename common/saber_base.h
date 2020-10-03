@@ -33,6 +33,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(CHANGE)			\
     DEFINE_EFFECT(NEWFONT)			\
     DEFINE_EFFECT(LOW_BATTERY)			\
+    DEFINE_EFFECT(POWERSAVE)                    \
     /* Blaster effects */                       \
     DEFINE_EFFECT(STUN)				\
     DEFINE_EFFECT(FIRE)				\
@@ -46,7 +47,13 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(JAM)				\
     DEFINE_EFFECT(UNJAM)			\
     DEFINE_EFFECT(PLI_ON)			\
-    DEFINE_EFFECT(PLI_OFF)
+    DEFINE_EFFECT(PLI_OFF)                      \
+    /* user-definable effects */                \
+    DEFINE_EFFECT(USER1);			\
+    DEFINE_EFFECT(USER2);			\
+    DEFINE_EFFECT(USER3);			\
+    DEFINE_EFFECT(USER4);			\
+    DEFINE_EFFECT(USER5);
 
 
 #define DEFINE_EFFECT(X) EFFECT_##X,
