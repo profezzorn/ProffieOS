@@ -645,7 +645,7 @@ private:
   volatile int32_t looped_frames_ = 0;
   volatile ScreenLayout layout_;
   uint32_t loop_start_;
-  uint32_t frame_count_ = 0;
+  int32_t frame_count_ = 0;
 
   EffectFileReader file_;
   volatile bool frame_available_ = true;
