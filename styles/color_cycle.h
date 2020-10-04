@@ -84,10 +84,6 @@ public:
     auto off_c = off_c_.getColor(led);
 
     return MixColors(off_c, MixColors(c, on_c, fade_int_, 15), black_mix, 15);
-
-    c.c = c.c.mix2(on_c.c, fade_int_);
-    c.c = off_c.c.mix2(c.c, black_mix);
-    return c;
   }
 };
 
