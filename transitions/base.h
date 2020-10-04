@@ -38,4 +38,35 @@ private:
   uint32_t len_ = 0;
 };
 
+
+template<class T>
+class TransitionHelper {
+public:
+  void begin() {
+    tr_.begin();
+    active_ = true;
+  }
+  void run(BladeBase * blade) {
+    if (active_) {
+      tr_.run(blade);
+      if (tr_.done()) active_ = false;
+    }
+  }
+
+  T tr_;
+  bool active_ = false;
+
+  operator bool() const { return active_; }
+
+  template<class A, class B>
+  auto getColor(A a, B b, int led) -> decltype(tr_.getColor(a, b, led)) {
+    if (active_)
+      return tr_.getColor(a, b, led);
+    else
+      return b;
+  }
+};
+
+
+
 #endif
