@@ -18,18 +18,19 @@ public:
     order_ = Color8::combine_byteorder(Color8::invert_byteorder(base->get_byteorder()), byteorder);
     return RunStyle(&color_, base);
   }
-  OverDriveColor getColor(int led) {
+  
+  COLOR color_;
+  Color8::Byteorder order_;
+
+  auto getColor(int led) -> decltype(color_.getColor(led)) {
     Color16 tmp;
-    OverDriveColor c = color_.getColor(led);
+    auto c = color_.getColor(led);
     tmp.r = c.c.getShort(order_, 2);
     tmp.g = c.c.getShort(order_, 1);
     tmp.b = c.c.getShort(order_, 0);
     c.c = tmp;
     return c;
   }
-  
-  COLOR color_;
-  Color8::Byteorder order_;
 };
 
 
