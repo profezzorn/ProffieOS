@@ -89,8 +89,8 @@ private:
   TRANSITION transitions_[N];
   OneshotEffectDetector<EFFECT> effect_;
 public:
-  RGBA getColor(int led) {
-    RGBA ret(RGBA_um_nod::Transparent());
+  auto getColor(int led) -> decltype(RGBA_um_nod::Transparent() << transitions_[0].getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led)) {
+    decltype(getColor(0)) ret(RGBA_um_nod::Transparent());
     for (int i = N - 1; i >= 0; i--) {
       size_t x = (i + pos_) % N;
       if (run_[x]) {
