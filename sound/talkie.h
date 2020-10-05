@@ -652,7 +652,11 @@ public:
   bool inited = false;
 };
 
-class Talkie : public AudioStream, CommandParser {
+class Talkie : public AudioStream
+#ifdef ENABLE_DEVELOPER_COMMANDS
+   , CommandParser
+#endif
+{
 public:
   struct Word {
     const uint8_t *ptr;
@@ -951,6 +955,7 @@ public:
   }
   void Stop() override {}
 
+#ifdef ENABLE_DEVELOPER_COMMANDS
   bool Parse(const char *cmd, const char* arg) override {
     uint32_t rate = 0;
     if (!strcmp(cmd, "say") && arg) {
@@ -1026,6 +1031,7 @@ public:
     STDOUT.println("say bof/sd/abort - test error messages");
     STDOUT.println("talkie HEXDATA - play talkie");
   }
+#endif
 
 private:
   const uint8_t * ptrAddr = NULL;
