@@ -11,6 +11,20 @@
 #define noInterrupts() do {} while(0)
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 #define SCOPED_PROFILER() do { } while(0)
+
+#define COMMON_FUSE_H
+
+struct MockFuse {
+  float angle1_ = 0.0;
+  float angle1() { return angle1_; }
+  float angle2_ = 0.0;
+  float angle2() { return angle2_; }
+  float swing_speed_ = 0.0;
+  float swing_speed() { return swing_speed_; }
+};
+
+MockFuse fusor;
+
 template<class A, class B>
 constexpr auto min(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::forward<B>(b)) {
   return a < b ? std::forward<A>(a) : std::forward<B>(b);
@@ -107,6 +121,14 @@ MockDynamicMixer dynamic_mixer;
 #include "../transitions/concat.h"
 #include "../transitions/fade.h"
 #include "../transitions/instant.h"
+#include "../functions/blade_angle.h"
+#include "../functions/twist_angle.h"
+#include "../functions/swing_speed.h"
+#include "mix.h"
+#include "strobe.h"
+#include "hump_flicker.h"
+#include "brown_noise_flicker.h"
+#include "responsive_styles.h"
 
 SaberBase* saberbases = NULL;
 SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
@@ -407,10 +429,32 @@ void test_style2() {
   }
 }
 
+void test_style3() {
+  Style<Layers<
+    Black,
+	  TransitionEffectL<TrWaveX<Green,Int<400>,Int<100>,Int<600>,Scale<BladeAngle<>,Scale<BladeAngle<0,16000>,Int<10000>,Int<30000>>,Int<10000>>>,EFFECT_LOCKUP_END>,
+	  ResponsiveLockupL<Blue,TrConcat<TrInstant,AlphaL<Red,Bump<Scale<BladeAngle<>,Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,Int<6000>>,Int<16000>>>,TrFade<400>>,TrInstant,Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,Int<6000>,Scale<SwingSpeed<100>,Int<10000>,Int<14000>>>,
+	  ResponsiveLightningBlockL<Strobe<White,AudioFlicker<White,Blue>,50,1>,TrConcat<TrInstant,AlphaL<White,Bump<Int<12000>,Int<18000>>>,TrFade<200>>,TrConcat<TrInstant,HumpFlickerL<AlphaL<White,Int<16000>>,30>,TrSmoothFade<600>>>,
+	  ResponsiveStabL<Orange>,
+	  ResponsiveBlastL<White,Int<400>,Scale<SwingSpeed<200>,Int<100>,Int<400>>>,
+	  ResponsiveClashL<White,TrInstant,TrFade<400>>,
+	  LockupTrL<AlphaL<BrownNoiseFlickerL<White,Int<300>>,SmoothStep<Int<30000>,Int<5000>>>,TrWipeIn<400>,TrFade<300>,SaberBase::LOCKUP_DRAG>,
+	  LockupTrL<AlphaL<Mix<TwistAngle<>,Coral,Orange>,SmoothStep<Int<28000>,Int<5000>>>,TrWipeIn<600>,TrFade<300>,SaberBase::LOCKUP_MELT>,
+	  InOutTrL<TrWipe<300>,TrWipeIn<500>>>> t1;
+
+  Color16 c = get_color_when_on(&t1);
+  if (c.r != 0 || c.g != 0 || c.b != 0) {
+    fprintf(stderr, "Expecting black.\n");
+    exit(1);
+  }
+
+}
+
 
 int main() {
   test_cylon();
   test_inouthelper();
   test_style1();
   test_style2();
+  test_style3();
 }

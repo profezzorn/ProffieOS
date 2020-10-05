@@ -138,7 +138,9 @@ private:
   TransitionHelper<BeginTr> begin_tr_;
   TransitionHelper<EndTr> end_tr_;
 public:
-  auto getColor(int led) -> decltype(end_tr_.getColor(begin_tr_.getColor(RGBA_um_nod::Transparent(), color_.getColor(led), led), RGBA_um_nod::Transparent(), led)) {
+  auto getColor(int led) -> decltype(
+    MixColors(end_tr_.getColor(begin_tr_.getColor(RGBA_um_nod::Transparent(), color_.getColor(led), led), RGBA_um_nod::Transparent(), led),
+	      begin_tr_.getColor(end_tr_.getColor(color_.getColor(0), RGBA_um_nod::Transparent(), led), color_.getColor(0), led), 1, 1)) {
     SCOPED_PROFILER();
     RGBA_um_nod off_color = RGBA_um_nod::Transparent();
     if (!begin_tr_ && !end_tr_) {
