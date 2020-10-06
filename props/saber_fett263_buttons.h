@@ -3,44 +3,7 @@
 // Includes Gesture Controls, "Battle Mode" with "Smart Lockup", "Multi-Blast" Mode (to enable Swing Blast control)
 // "Multi-Phase" Mode, "On Demand Power Save", "On Demand Battery Level", "Fast On" Ignition (no preon) and SA22C volume menu
 //
-// Optional Defines
-//
-// FETT263_BATTLE_MODE_ALWAYS_ON
-// Battle Mode is always on, normal controls deactivated
-// This will disable traditional Clash and Stab effects 
-//
-// FETT263_LOCKUP_DELAY 200
-// This is the "delay" in millis to determine Clash vs Lockup
-//
-// FETT263_BM_DISABLE_OFF_BUTTON
-// During Battle Mode Power Button Retraction is disabled
-//
-// FETT263_SWING_ON
-// To enable Swing On Ignition control (automatically enters Battle Mode, uses Fast On)
-//
-// FETT263_SWING_ON_NO_BM
-// To enable Swing On Ignition control but not activate Battle Mode
-//
-// FETT263_SWING_ON_SPEED 250
-// Adjust Swing Speed required for Ignition 250 ~ 500 recommended
-//
-// FETT263_TWIST_OFF
-// To enable Twist Off Retraction control
-//
-// FETT263_STAB_ON
-// To enable Stab On Ignition control (automatically enters Battle Mode, uses Fast On)
-//
-// FETT263_STAB_ON_NO_BM
-// To enable Stab On Ignition control but not activate Battle Mode
-//
-// FETT263_GESTURE_PREON
-// Disables Fast On ignition on gesture so Preon is used
-//
-// FETT263_MULTI_PHASE
-// This will enable "live" preset change to create a "Multi-Phase" saber effect
-// with preset changes on the fly while blade is ignited.
-//
-// 2 Button Controls (PWR and AUX):
+// 2 BUTTON CONTROLS (PWR and AUX):
 // "Battle Mode" - hold AUX and Swing while blade is ON to toggle mode ON/OFF
 // Ignite (ON) - click PWR while OFF (Swing On and Stab On available with defines)
 // Muted Ignition (ON) - double click PWR while OFF
@@ -49,10 +12,11 @@
 // Play Music Track - hold and release PWR while OFF
 // Blast - click AUX while ON
 // Multi-Blast Mode - hold and release AUX while ON to enter mode, Swing to initiate Blasts, click Aux to exit mode
+// lockup, clash, stab, melt, drag or any button presses automatically exits mode
 // Clash - clash blade while ON
 // Stab - thrust forward and clash blade while ON
 // Lockup - hold AUX and clash while ON
-// Drag - hold AUX and stab pointing down while ON
+// Drag - hold AUX and stab down while ON
 // Lightning Block - hold PWR and click AUX while ON
 // Melt - hold PWR (or AUX) and thrust forward and clash while ON
 // Force - hold and release PWR while ON
@@ -71,7 +35,57 @@
 // Volume Down (10% increment) - click AUX while in Volume Menu while OFF
 // Exit Volume Menu - hold and release AUX while in Volume Menu while OFF
 //
-// Custom sounds supported:
+// OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
+//
+// FETT263_BATTLE_MODE_ALWAYS_ON
+// Battle Mode is always on, normal controls deactivated
+// This will disable traditional Clash and Stab effects 
+//
+// FETT263_LOCKUP_DELAY 200
+// This is the "delay" in millis to determine Clash vs Lockup
+//
+// FETT263_BM_DISABLE_OFF_BUTTON
+// During Battle Mode Power Button Retraction is disabled
+//
+// FETT263_SWING_ON
+// To enable Swing On Ignition control (automatically enters Battle Mode, uses Fast On)
+//
+// FETT263_SWING_ON_NO_BM
+// To enable Swing On Ignition control but not activate Battle Mode
+//
+// FETT263_SWING_ON_PREON
+// Disables Fast On ignition for Swing On so Preon is used
+//
+// FETT263_SWING_ON_SPEED 250
+// Adjust Swing Speed required for Ignition 250 ~ 500 recommended
+//
+// FETT263_TWIST_OFF
+// To enable Twist Off Retraction control
+//
+// FETT263_TWIST_ON
+// To enable Twist On Ignition control (automatically enters Battle Mode, uses Fast On)
+//
+// FETT263_TWIST_ON_NO_BM
+// To enable Twist On Ignition control but not activate Battle Mode
+//
+// FETT263_TWIST_ON_PREON
+// Disables Fast On ignition for Twist On so Preon is used
+//
+// FETT263_STAB_ON
+// To enable Stab On Ignition control (automatically enters Battle Mode, uses Fast On)
+//
+// FETT263_STAB_ON_NO_BM
+// To enable Stab On Ignition control but not activate Battle Mode
+//
+// FETT263_STAB_ON_PREON
+// Disables Fast On ignition for Stab On so Preon is used
+//
+// FETT263_MULTI_PHASE
+// This will enable "live" preset change to create a "Multi-Phase" saber effect
+// with preset changes on the fly while blade is ignited.
+//
+// CUSTOM SOUNDS SUPPORTED (add to font to enable):
+//
 // On Demand Power Save - dim.wav
 // On Demand Battery Level - battery.wav
 // Battle Mode On (on toggle) - bmbegin.wav
@@ -101,8 +115,24 @@
 #error You cannot define both FETT263_SWING_ON and FETT263_SWING_ON_NO_BM
 #endif
 
+#if defined(FETT263_SWING_ON) && defined(FETT263_SWING_ON_PREON)
+#error You cannot define both FETT263_SWING_ON and FETT263_SWING_ON_PREON
+#endif
+
+#if defined(FETT263_TWIST_ON) && defined(FETT263_TWIST_ON_NO_BM)
+#error You cannot define both FETT263_TWIST_ON and FETT263_TWIST_ON_NO_BM
+#endif
+
+#if defined(FETT263_TWIST_ON) && defined(FETT263_TWIST_PREON)
+#error You cannot define both FETT263_TWIST_ON and FETT263_TWIST_ON_PREON
+#endif
+
 #if defined(FETT263_STAB_ON) && defined(FETT263_STAB_ON_NO_BM)
 #error You cannot define both FETT263_STAB_ON and FETT263_STAB_ON_NO_BM
+#endif
+
+#if defined(FETT263_STAB_ON) && defined(FETT263_STAB_PREON)
+#error You cannot define both FETT263_STAB_ON and FETT263_STAB_ON_PREON
 #endif
 
 #include "prop_base.h"
@@ -119,6 +149,7 @@ EFFECT(vmbegin);
 EFFECT(vmend);
 EFFECT(faston);
 EFFECT(blstbgn);
+EFFECT(blstend);
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -306,8 +337,12 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_ON):
         // Avoid the base and the very tip.
         // TODO: Make blast only appear on one blade!
-        swing_blast_ = false;
-        SaberBase::DoBlast();
+        if (swing_blast_) {
+	  swing_blast_ = false;
+	  hybrid_font.PlayCommon(&SFX_blstend);
+	} else {
+          SaberBase::DoBlast();
+	}
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
@@ -390,16 +425,7 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true;
 
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-        if (fusor.angle1() < - M_PI / 4) {
-          previous_preset();
-        } else {
-          next_preset();
-        }
-        return true;
-
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-        last_twist_ = millis();
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
         SaberBase::DoEffect(EFFECT_BATTERY, 0);
         return true;
 
@@ -444,19 +470,19 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true;
 
-      // Optional Gesture Controls
+      // Optional Gesture Controls (defines listed at top)
 		    
 #ifdef FETT263_SWING_ON
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
         if (millis() > 3000) {
-#ifndef FETT263_GESTURE_PREON
+#ifndef FETT263_SWING_ON_PREON
         FastOn();
 #endif
-#ifdef FETT263_GESTURE_PREON
+#ifdef FETT263_SWING_ON_PREON
         On();
 #endif
-#ifndef FETT263_STAB_ON_NO_BM
+#ifndef FETT263_SWING_ON_NO_BM
 	battle_mode_ = true;
 #endif
         }
@@ -477,12 +503,30 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 #endif
 
+#ifdef FETT263_TWIST_ON
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
+        // Delay twist events to prevent false trigger from over twisting
+        if (millis() - last_twist_ > 3000) {
+#ifndef FETT263_TWIST_ON_PREON
+          FastOn();
+#endif
+#ifdef FETT263_TWIST_ON_PREON
+          On();
+#endif
+#ifndef FETT263_TWIST_ON_NO_BM
+          battle_mode_ = true;
+#endif
+	}
+          last_twist_ = millis();
+	  return true;
+#endif
+		    
 #ifdef FETT263_STAB_ON
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
-#ifndef FETT263_GESTURE_PREON
+#ifndef FETT263_STAB_ON_PREON
         FastOn();
 #endif
-#ifdef FETT263_GESTURE_PREON
+#ifdef FETT263_STAB_ON_PREON
         On();
 #endif
 #ifndef FETT263_STAB_ON_NO_BM
