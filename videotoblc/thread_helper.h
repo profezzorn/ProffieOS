@@ -32,6 +32,7 @@ public:
   virtual void Worker() = 0;
   static void *WorkerWrapper(void *arg) {
     ((ThreaderBase *)arg)->Worker();
+    return nullptr;
   }
 
   void Run() {
