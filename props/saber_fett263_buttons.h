@@ -50,11 +50,13 @@
 // FETT263_SWING_ON
 // To enable Swing On Ignition control (automatically enters Battle Mode, uses Fast On)
 //
-// FETT263_SWING_ON_NO_BM
-// To enable Swing On Ignition control but not activate Battle Mode
+// or
 //
 // FETT263_SWING_ON_PREON
-// Disables Fast On ignition for Swing On so Preon is used
+// Disables Fast On ignition for Swing On so Preon is used (cannot be used with FETT263_SWING_ON)
+//
+// FETT263_SWING_ON_NO_BM
+// To enable Swing On Ignition control but not activate Battle Mode (works with SWING_ON_PREON only)
 //
 // FETT263_SWING_ON_SPEED 250
 // Adjust Swing Speed required for Ignition 250 ~ 500 recommended
@@ -65,20 +67,24 @@
 // FETT263_TWIST_ON
 // To enable Twist On Ignition control (automatically enters Battle Mode, uses Fast On)
 //
-// FETT263_TWIST_ON_NO_BM
-// To enable Twist On Ignition control but not activate Battle Mode
+// or
 //
 // FETT263_TWIST_ON_PREON
-// Disables Fast On ignition for Twist On so Preon is used
+// Disables Fast On ignition for Twist On so Preon is used (cannot be used with FETT263_TWIST_ON)
+//
+// FETT263_TWIST_ON_NO_BM
+// To enable Twist On Ignition control but not activate Battle Mode (works with TWIST_ON_PREON only)
 //
 // FETT263_STAB_ON
 // To enable Stab On Ignition control (automatically enters Battle Mode, uses Fast On)
 //
-// FETT263_STAB_ON_NO_BM
-// To enable Stab On Ignition control but not activate Battle Mode
+// or
 //
 // FETT263_STAB_ON_PREON
-// Disables Fast On ignition for Stab On so Preon is used
+// Disables Fast On ignition for Stab On so Preon is used (cannot be used with FETT263_STAB_ON)
+//
+// FETT263_STAB_ON_NO_BM
+// To enable Stab On Ignition control but not activate Battle Mode (works with STAB_ON_PREON only)
 //
 // FETT263_MULTI_PHASE
 // This will enable "live" preset change to create a "Multi-Phase" saber effect
@@ -343,7 +349,11 @@ SaberFett263Buttons() : PropBase() {}
         // TODO: Make blast only appear on one blade!
         if (swing_blast_) {
 	  swing_blast_ = false;
-	  hybrid_font.PlayCommon(&SFX_blstend);
+	  if (SFX_blstend) {
+            hybrid_font.PlayCommon(&SFX_blstend);
+	  } else {
+	    hybrid_font.DoEffect(EFFECT_FORCE, 0);
+	  }
 	} else {
           SaberBase::DoBlast();
 	}
@@ -351,7 +361,11 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
         swing_blast_ = true;
-        hybrid_font.PlayCommon(&SFX_blstbgn);
+	if (SFX_blstbgn) {
+          hybrid_font.PlayCommon(&SFX_blstbgn);
+	} else {
+	  hybrid_font.DoEffect(EFFECT_BLAST, 0);
+	}
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
@@ -418,13 +432,19 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
         if (mode_volume_) {
           mode_volume_ = false;
-          hybrid_font.PlayCommon(&SFX_vmend);
-          // beeper.Beep(0.5, 3000);
+          if (SFX_vmend) {
+	    hybrid_font.PlayCommon(&SFX_vmend);
+	  } else {
+            beeper.Beep(0.5, 3000);
+	  }
           STDOUT.println("Exit Volume Menu");
         } else {
           mode_volume_ = true;
-          hybrid_font.PlayCommon(&SFX_vmbegin);
-          // beeper.Beep(0.5, 3000);
+          if (SFX_vmbegin) {
+	    hybrid_font.PlayCommon(&SFX_vmbegin);
+	  } else {
+            beeper.Beep(0.5, 3000);
+	  }
           STDOUT.println("Enter Volume Menu");
         }
         return true;
@@ -439,10 +459,18 @@ SaberFett263Buttons() : PropBase() {}
        case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
          if (!battle_mode_) {
            battle_mode_ = true;
-           hybrid_font.PlayCommon(&SFX_bmbegin);
+           if (SFX_bmbegin) {
+	     hybrid_font.PlayCommon(&SFX_bmbegin);
+	   } else {
+	     hybrid_font.DoEffect(EFFECT_FORCE, 0);
+	   }
          } else {
            battle_mode_ = false;
-           hybrid_font.PlayCommon(&SFX_bmend);;
+           if (SFX_bmend) {
+	     hybrid_font.PlayCommon(&SFX_bmend);
+	   } else {
+	     beeper.Beep(0.5, 3000);   
+	   }
          }
          return true;
 #endif
@@ -588,6 +616,26 @@ SaberFett263Buttons() : PropBase() {}
     }
     return false;
   }
+	
+void SB_Effect(EffectType effect, float location) override {
+  switch (effect) {
+    case EFFECT_POWERSAVE:
+      if (SFX_dim) {
+        hybrid_font.PlayCommon(&SFX_dim);
+      } else {
+        beeper.Beep(0.5, 3000);
+      }
+      return;
+    case EFFECT_BATTERY:
+      if (SFX_battery) {
+        hybrid_font.PlayCommon(&SFX_battery); 
+      } else {
+	beeper.Beep(0.5, 3000);      
+      }
+      return;
+  }
+}
+
 private:
   bool pointing_down_ = false;
   bool swing_blast_ = false;
