@@ -3,12 +3,11 @@
 // Includes Gesture Controls, "Battle Mode" with "Smart Lockup", "Multi-Blast" Mode (to enable Swing Blast control)
 // "Multi-Phase" Mode, "On Demand Power Save", "On Demand Battery Level", "Fast On" Ignition (no preon) and SA22C volume menu
 //
-// 2 BUTTON CONTROLS (PWR and AUX):
+// DEFAULT 2 BUTTON CONTROLS (PWR and AUX):
 // "Battle Mode" - hold AUX and Swing while blade is ON to toggle mode ON/OFF
-// Ignite (ON) - click PWR while OFF (Swing On and Stab On available with defines)
+// Ignite (ON) - click PWR while OFF (Swing On, Twist On and Stab On available with defines)
 // Muted Ignition (ON) - double click PWR while OFF
-// Retract (OFF) - click PWR while ON (not swinging or in Battle Mode)
-// Twist Off (OFF) if in Battle Mode
+// Retract (OFF) - click PWR while ON (disabled during swinging, Twist Off available with define)
 // Play Music Track - hold and release PWR while OFF
 // Blast - click AUX while ON
 // Multi-Blast Mode - hold and release AUX while ON to enter mode, Swing to initiate Blasts, click Aux to exit mode
@@ -26,7 +25,7 @@
 // if using COLOR_CHANGE_DIRECT each button press advances one Color at a time
 //
 // Next Preset - click AUX while OFF (parallel or up)
-// Previous Preset - click Aux while OFF (point down)
+// Previous Preset - click Aux while OFF (pointing down)
 // MULTI_PHASE Next Preset - hold AUX and TWIST while ON (use define to enable)
 // MULTI_PHASE Previous Preset - hold PWR and TWIST while ON (use define to enable)
 // Battery Level - hold AUX and click PWR while OFF (requires style)
