@@ -1,4 +1,4 @@
-CFLAGS= -pthread -MD -ggdb
+CFLAGS= -pthread -MD -ggdb -O2
 CXXFLAGS=$(CFLAGS)
 LDFLAGS=-lm -lpthread
 
