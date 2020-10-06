@@ -282,7 +282,11 @@ SaberFett263Buttons() : PropBase() {}
         if (mode_volume_) {
           VolumeDown();
         } else {
-          next_preset();
+          if (fusor.angle1() < - M_PI / 3) {
+            previous_preset();
+          } else {
+            next_preset();
+          }
         }
         return true;
 
@@ -476,12 +480,19 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
         if (millis() > 3000) {
-#ifndef FETT263_SWING_ON_PREON
         FastOn();
+#ifndef FETT263_SWING_ON_NO_BM
+	battle_mode_ = true;
 #endif
+        }
+        return true;
+#endif
+
 #ifdef FETT263_SWING_ON_PREON
+      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
+        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
+        if (millis() > 3000) {
         On();
-#endif
 #ifndef FETT263_SWING_ON_NO_BM
 	battle_mode_ = true;
 #endif
@@ -507,12 +518,20 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
         // Delay twist events to prevent false trigger from over twisting
         if (millis() - last_twist_ > 3000) {
-#ifndef FETT263_TWIST_ON_PREON
           FastOn();
+#ifndef FETT263_TWIST_ON_NO_BM
+          battle_mode_ = true;
 #endif
+	}
+          last_twist_ = millis();
+	  return true;
+#endif
+
 #ifdef FETT263_TWIST_ON_PREON
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
+        // Delay twist events to prevent false trigger from over twisting
+        if (millis() - last_twist_ > 3000) {
           On();
-#endif
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
 #endif
@@ -523,18 +542,22 @@ SaberFett263Buttons() : PropBase() {}
 		    
 #ifdef FETT263_STAB_ON
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
-#ifndef FETT263_STAB_ON_PREON
         FastOn();
-#endif
-#ifdef FETT263_STAB_ON_PREON
-        On();
-#endif
 #ifndef FETT263_STAB_ON_NO_BM
         battle_mode_ = true;
 #endif
         return true;
 #endif
 
+#ifdef FETT263_STAB_ON_PREON
+      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
+        On();
+#ifndef FETT263_STAB_ON_NO_BM
+        battle_mode_ = true;
+#endif
+        return true;
+#endif
+		    
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
         // Delay twist events to prevent false trigger from over twisting
