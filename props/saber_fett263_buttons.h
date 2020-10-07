@@ -12,13 +12,22 @@
 // Blast - click AUX while ON
 // Multi-Blast Mode - hold and release AUX while ON to enter mode, Swing to initiate Blasts, click Aux to exit mode
 // lockup, clash, stab, melt, drag or any button presses automatically exits mode
+//
 // Clash - clash blade while ON
-// Stab - thrust forward and clash blade while ON
+// in Battle Mode clash and pull away quickly for "Clash" (requires BEGIN_LOCKUP and END_LOCKUP styles)
+//
 // Lockup - hold AUX and clash while ON
+// in Battle Mode clash and hold steady to activate, pull away to disengage
+//
 // Drag - hold AUX and stab down while ON
-// Lightning Block - hold PWR and click AUX while ON
+// in Battle Mode stab down, pull away to disengage
+//
 // Melt - hold PWR (or AUX) and thrust forward and clash while ON
+// in Battle Mode thrust and clash to engage, pull away to disengage
+//
+// Lightning Block - hold PWR and click AUX while ON
 // Force - hold and release PWR while ON
+// Stab - thrust forward and clash blade while ON - deactivated in Battle Mode
 // Power Save - hold Aux and click PWR while ON (pointing up) to use Power Save (requires style)
 // Color Change - hold AUX and click PWR while ON (parallel or down) to enter CCWheel,
 // turn hilt to rotate through colors, click PWR to select/exit
@@ -37,8 +46,15 @@
 // OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
 //
 // FETT263_BATTLE_MODE_ALWAYS_ON
-// Battle Mode is always on, normal controls deactivated
-// This will disable traditional Clash and Stab effects 
+// Battle Mode is always on, toggle controls deactivated
+// This will disable traditional Clash and Stab effects
+// (cannot be used with FETT263_BATTLE_MODE_START_ON)
+//
+// or
+//
+// FETT263_BATTLE_MODE_START_ON
+// Battle Mode is active with each ignition by default but can be toggled using Aux + Swing control 
+// (cannot be used with FETT263_BATTLE_MODE_ALWAYS_ON)
 //
 // FETT263_LOCKUP_DELAY 200
 // This is the "delay" in millis to determine Clash vs Lockup
@@ -55,7 +71,8 @@
 // Disables Fast On ignition for Swing On so Preon is used (cannot be used with FETT263_SWING_ON)
 //
 // FETT263_SWING_ON_NO_BM
-// To enable Swing On Ignition control but not activate Battle Mode (works with SWING_ON_PREON only)
+// To enable Swing On Ignition control but not activate Battle Mode
+// (Cannot be used with FETT263_SWING_ON, FETT263_BATTLE_MODE_ALWAYS_ON or FETT263_BATTLE_MODE_START_ON)
 //
 // FETT263_SWING_ON_SPEED 250
 // Adjust Swing Speed required for Ignition 250 ~ 500 recommended
@@ -72,7 +89,8 @@
 // Disables Fast On ignition for Twist On so Preon is used (cannot be used with FETT263_TWIST_ON)
 //
 // FETT263_TWIST_ON_NO_BM
-// To enable Twist On Ignition control but not activate Battle Mode (works with TWIST_ON_PREON only)
+// To enable Twist On Ignition control but not activate Battle Mode
+// (Cannot be used with FETT263_TWIST_ON, FETT263_BATTLE_MODE_ALWAYS_ON or FETT263_BATTLE_MODE_START_ON)
 //
 // FETT263_STAB_ON
 // To enable Stab On Ignition control (automatically enters Battle Mode, uses Fast On)
@@ -83,11 +101,15 @@
 // Disables Fast On ignition for Stab On so Preon is used (cannot be used with FETT263_STAB_ON)
 //
 // FETT263_STAB_ON_NO_BM
-// To enable Stab On Ignition control but not activate Battle Mode (works with STAB_ON_PREON only)
+// To enable Stab On Ignition control but not activate Battle Mode
+// (Cannot be used with FETT263_STAB_ON, FETT263_BATTLE_MODE_ALWAYS_ON or FETT263_BATTLE_MODE_START_ON)
 //
 // FETT263_MULTI_PHASE
-// This will enable "live" preset change to create a "Multi-Phase" saber effect
-// with preset changes on the fly while blade is ignited.
+// This will enable a preset change while ON to create a "Multi-Phase" saber effect
+//
+// MOTION_TIMEOUT 60 * 15 * 1000
+// This extends the motion timeout to 15 minutes to allow gesture ignition to remain active 
+// Increase/decrease the "15" value as needed
 //
 // CUSTOM SOUNDS SUPPORTED (add to font to enable):
 //
@@ -114,6 +136,34 @@
 
 #ifndef FETT263_LOCKUP_DELAY
 #define FETT263_LOCKUP_DELAY 200
+#endif
+
+#if defined(FETT263_BATTLE_MODE_ALWAYS_ON) && defined(FETT263_BATTLE_MODE_START_ON)
+#error You cannot define both FETT263_BATTLE_MODE_ALWAYS_ON and FETT263_BATTLE_MODE_START_ON
+#endif
+
+#if defined(FETT263_BATTLE_MODE_ALWAYS_ON) && defined(FETT263_SWING_ON_NO_BM)
+#error You cannot define both FETT263_BATTLE_MODE_ALWAYS_ON and FETT263_SWING_ON_NO_BM
+#endif
+
+#if defined(FETT263_BATTLE_MODE_ALWAYS_ON) && defined(FETT263_TWIST_ON_NO_BM)
+#error You cannot define both FETT263_BATTLE_MODE_ALWAYS_ON and FETT263_TWIST_ON_NO_BM
+#endif
+
+#if defined(FETT263_BATTLE_MODE_ALWAYS_ON) && defined(FETT263_STAB_ON_NO_BM)
+#error You cannot define both FETT263_BATTLE_MODE_ALWAYS_ON and FETT263_STAB_ON_NO_BM
+#endif
+
+#if defined(FETT263_BATTLE_MODE_START_ON) && defined(FETT263_SWING_ON_NO_BM)
+#error You cannot define both FETT263_BATTLE_MODE_START_ON and FETT263_SWING_ON_NO_BM
+#endif
+
+#if defined(FETT263_BATTLE_MODE_START_ON) && defined(FETT263_TWIST_ON_NO_BM)
+#error You cannot define both FETT263_BATTLE_MODE_START_ON and FETT263_TWIST_ON_NO_BM
+#endif
+
+#if defined(FETT263_BATTLE_MODE_START_ON) && defined(FETT263_STAB_ON_NO_BM)
+#error You cannot define both FETT263_BATTLE_MODE_START_ON and FETT263_STAB_ON_NO_BM
 #endif
 
 #if defined(FETT263_SWING_ON) && defined(FETT263_SWING_ON_NO_BM)
@@ -262,7 +312,13 @@ SaberFett263Buttons() : PropBase() {}
           VolumeUp();
         } else {
           On();
-        }
+#ifdef FETT263_BATTLE_MODE_ALWAYS_ON
+          battle_mode_ = true;
+#endif
+#ifdef FETT263_BATTLE_MODE_START_ON
+          battle_mode_ = true;
+#endif
+	}
         return true;
 
 #ifdef BLADE_DETECT_PIN
