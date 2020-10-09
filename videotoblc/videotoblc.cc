@@ -22,18 +22,7 @@ public:
   YuvStream(const std::string &filename) {
     cdiv = 2;
     setenv("FILE", filename.c_str(), 1);
-    int xsize;
-    int ysize;
-    f = popen("ffmpeg -i \"$FILE\" 2>&1 | sed -n 's@.*DAR \\([0-9]*\\):\\([0-9]*\\)[^0-9].*@\\1 \\2@gp'", "r");
-    if (fscanf(f, "%d %d", &xsize, &ysize) != 2) {
-      fprintf(stderr, "Failed to get aspect!\n");
-      exit(1);
-    }
-    fclose(f);
-    fprintf(stderr, "Input aspect %d / %d\n", xsize, ysize);
     
-    double yscale = (double)YSIZE / (double)ysize;
-    double xscale = yscale / squish_factor;
     std::string cmd = "ffmpeg -i \"$FILE\" -an -f yuv4mpegpipe -";
     fprintf(stderr, "Executing: %s\n", cmd.c_str());
     f = popen(cmd.c_str(), "r");
