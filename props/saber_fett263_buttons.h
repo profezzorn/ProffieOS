@@ -248,15 +248,6 @@ SaberFett263Buttons() : PropBase() {}
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         auto_melt_on_ = false;
       }
-      if (auto_melt_on_ && 
-          mss.y * mss.y + mss.z * mss.z < 16.0 &&
-          mss.x > 2  &&
-          millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY &&
-          SaberBase::Lockup() ) {
-        SaberBase::DoEndLockup();
-        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-        auto_melt_on_ = false;
-      }
 
       // EVENT_PUSH
       if (fabs(mss.x) < 3.0 && 
