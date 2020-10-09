@@ -206,16 +206,16 @@
 #undef PROP_TYPE
 #define PROP_TYPE SaberFett263Buttons
 
-EFFECT(dim);
-EFFECT(battery);
-EFFECT(bmbegin);
-EFFECT(bmend);
-EFFECT(vmbegin);
-EFFECT(vmend);
-EFFECT(faston);
-EFFECT(blstbgn);
-EFFECT(blstend);
-EFFECT(push);
+EFFECT(dim); // for EFFECT_POWERSAVE
+EFFECT(battery); // for EFFECT_BATTERY
+EFFECT(bmbegin); // for Begin Battle Mode
+EFFECT(bmend); // for End Battle Mode
+EFFECT(vmbegin); // for Begin Volume Menu
+EFFECT(vmend); // for End Volume Menu
+EFFECT(faston); // for EFFECT_FAST_ON
+EFFECT(blstbgn); // for Begin Multi-Blast
+EFFECT(blstend); // for End Multi-Blast
+EFFECT(push); // for Force Push gesture in Battle Mode
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -227,9 +227,9 @@ SaberFett263Buttons() : PropBase() {}
   void Loop() override {
     PropBase::Loop();
     DetectTwist();
-    DetectSwing();
     Vec3 mss = fusor.mss();
     if (SaberBase::IsOn()) {
+      DetectSwing();
       if (auto_lockup_on_ &&
           !swinging_ &&
           fusor.swing_speed() > 120 &&
@@ -690,7 +690,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_FORCE_PUSH
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
       if (battle_mode_ && 
-          millis() - last_push_ > 2000 ) {
+          millis() - last_push_ > 2000) {
         if (SFX_push) {
           hybrid_font.PlayCommon(&SFX_push);
         } else {
