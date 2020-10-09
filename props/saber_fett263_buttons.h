@@ -291,7 +291,6 @@ SaberFett263Buttons() : PropBase() {}
     SaberBase::TurnOn();
     // Optional effects
     SaberBase::DoEffect(EFFECT_FAST_ON, 0);
-    hybrid_font.PlayCommon(&SFX_faston);
   }
 
   // SA22C Volume Menu
@@ -748,8 +747,13 @@ void SB_Effect(EffectType effect, float location) override {
 	beeper.Beep(0.5, 3000);      
       }
       return;
+      }
+    case EFFECT_FAST_ON:
+      if (SFX_faston) {
+        hybrid_font.PlayCommon(&SFX_faston);
+      }
+      return;
   }
-}
 
 private:
   bool pointing_down_ = false;
