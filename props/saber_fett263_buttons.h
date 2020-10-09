@@ -4,6 +4,7 @@
 // "Multi-Phase" Mode, "On Demand Power Save", "On Demand Battery Level", "Fast On" Ignition (no preon) and SA22C volume menu
 //
 // DEFAULT 2 BUTTON CONTROLS (PWR and AUX):
+//
 // "Battle Mode" - hold AUX and Swing while blade is ON to toggle mode ON/OFF
 // Ignite (ON) - click PWR while OFF (Swing On, Twist On and Stab On available with defines)
 // Muted Ignition (ON) - double click PWR while OFF
@@ -11,28 +12,22 @@
 // Play Music Track - hold and release PWR while OFF
 // Blast - click AUX while ON
 // Multi-Blast Mode - hold and release AUX while ON to enter mode, Swing to initiate Blasts, click Aux to exit mode
-// lockup, clash, stab, melt, drag or any button presses automatically exits mode
-//
+//                    lockup, clash, stab, melt, drag or any button presses automatically exits mode
 // Clash - clash blade while ON
-// in Battle Mode clash and pull away quickly for "Clash" (requires BEGIN_LOCKUP and END_LOCKUP styles)
-//
+//         in Battle Mode clash and pull away quickly for "Clash" (requires BEGIN_LOCKUP and END_LOCKUP styles)
 // Lockup - hold AUX and clash while ON
-// in Battle Mode clash and hold steady to activate, pull away to disengage
-//
+//          in Battle Mode clash and hold steady to activate, pull away to disengage
 // Drag - hold AUX and stab down while ON
-// in Battle Mode stab down, pull away to disengage
-//
+//        in Battle Mode stab down, pull away to disengage
 // Melt - hold PWR (or AUX) and thrust forward and clash while ON
-// in Battle Mode thrust and clash to engage, pull away to disengage
-//
+//        in Battle Mode thrust and clash to engage, pull away to disengage
 // Lightning Block - hold PWR and click AUX while ON
 // Force - hold and release PWR while ON
 // Stab - thrust forward and clash blade while ON - deactivated in Battle Mode
 // Power Save - hold Aux and click PWR while ON (pointing up) to use Power Save (requires style)
 // Color Change - hold AUX and click PWR while ON (parallel or down) to enter CCWheel,
-// turn hilt to rotate through colors, click PWR to select/exit
-// if using COLOR_CHANGE_DIRECT each button press advances one Color at a time
-//
+//                turn hilt to rotate through colors, click PWR to select/exit
+//                if using COLOR_CHANGE_DIRECT each button press advances one Color at a time
 // Next Preset - click AUX while OFF (parallel or up)
 // Previous Preset - click Aux while OFF (pointing down)
 // MULTI_PHASE Next Preset - hold AUX and TWIST while ON (use define to enable)
@@ -103,6 +98,21 @@
 // FETT263_STAB_ON_NO_BM
 // To enable Stab On Ignition control but not activate Battle Mode
 // (Cannot be used with FETT263_STAB_ON, FETT263_BATTLE_MODE_ALWAYS_ON or FETT263_BATTLE_MODE_START_ON)
+//
+// FETT263_THRUST_ON
+// To enable Thrust On Ignition control (automatically enters Battle Mode, uses Fast On)
+//
+// or
+//
+// FETT263_THRUST_ON_PREON
+// Disables Fast On ignition for Thrust On so Preon is used (cannot be used with FETT263_THRUST_ON)
+//
+// FETT263_THRUST_ON_NO_BM
+// To enable Thrust On Ignition control but not activate Battle Mode (works with THRUST_ON_PREON only)
+//
+// FETT263_FORCE_PUSH
+// To enable gesture controlled Force Push during Battle Mode
+// (will use push.wav or force.wav if not present)
 //
 // FETT263_MULTI_PHASE
 // This will enable a preset change while ON to create a "Multi-Phase" saber effect
@@ -205,6 +215,7 @@ EFFECT(vmend);
 EFFECT(faston);
 EFFECT(blstbgn);
 EFFECT(blstend);
+EFFECT(push);
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -217,6 +228,7 @@ SaberFett263Buttons() : PropBase() {}
     PropBase::Loop();
     DetectTwist();
     DetectSwing();
+    Vec3 mss = fusor.mss();
     if (SaberBase::IsOn()) {
       if (auto_lockup_on_ &&
           !swinging_ &&
@@ -236,14 +248,39 @@ SaberFett263Buttons() : PropBase() {}
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         auto_melt_on_ = false;
       }
+      if (auto_melt_on_ && 
+          mss.y * mss.y + mss.z * mss.z < 16.0 &&
+          mss.x > 2  &&
+          millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY &&
+          SaberBase::Lockup() ) {
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        auto_melt_on_ = false;
+      }
+
+      // EVENT_PUSH
+      if (fabs(mss.x) < 3.0 && 
+          mss.y * mss.y + mss.z * mss.z > 120 &&
+          fusor.gyro().len2() < 1000 &&
+          fusor.swing_speed() < 30 &&
+          fusor.gyro().x < 10) {    
+        Event(BUTTON_NONE, EVENT_PUSH);
+      }
+
     } else {
-      // Swing On gesture control this portion allows fine tuning of speed needed to ignite
+      // EVENT_SWING - Swing On gesture control to allow fine tuning of speed needed to ignite
       if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
         SaberBase::RequestMotion();
         if (!swinging_ && fusor.swing_speed() > FETT263_SWING_ON_SPEED) {
           swinging_ = true;
           Event(BUTTON_NONE, EVENT_SWING);
         }
+      }
+      // EVENT_THRUST
+      if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
+        mss.x > 14  &&
+        fusor.swing_speed() < 150) {
+        Event(BUTTON_NONE, EVENT_THRUST);
       }
     }
   }
@@ -640,7 +677,40 @@ SaberFett263Buttons() : PropBase() {}
 #endif
         return true;
 #endif
-		    
+
+#ifdef FETT263_THRUST_ON
+      case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
+        FastOn();
+#ifndef FETT263_THRUST_ON_NO_BM
+        battle_mode_ = true;
+#endif
+        return true;
+#endif
+
+#ifdef FETT263_THRUST_ON_PREON
+      case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
+        On();
+#ifndef FETT263_THRUST_ON_NO_BM
+        battle_mode_ = true;
+#endif
+        return true;
+#endif
+
+#ifdef FETT263_FORCE_PUSH
+      case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
+      if (battle_mode_ && 
+          millis() - last_push_ > 2000 ) {
+        if (SFX_push) {
+          hybrid_font.PlayCommon(&SFX_push);
+        } else {
+          hybrid_font.DoEffect(EFFECT_FORCE, 0);
+        }
+        last_push_ = millis();
+      }
+      return true;
+
+#endif
+
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
         // Delay twist events to prevent false trigger from over twisting
@@ -700,6 +770,7 @@ private:
   bool battle_mode_ = false;
   uint32_t clash_impact_millis_ = millis();
   uint32_t last_twist_ = millis();
+  uint32_t last_push_ = millis();
   uint32_t saber_off_time_ = millis();
 };
 
