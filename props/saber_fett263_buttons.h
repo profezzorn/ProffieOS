@@ -252,9 +252,8 @@ SaberFett263Buttons() : PropBase() {}
       // EVENT_PUSH
       if (fabs(mss.x) < 3.0 && 
           mss.y * mss.y + mss.z * mss.z > 120 &&
-          fusor.gyro().len2() < 1000 &&
           fusor.swing_speed() < 30 &&
-          fusor.gyro().x < 10) {    
+          fabs(fusor.gyro().x) < 10) {    
         Event(BUTTON_NONE, EVENT_PUSH);
       }
 
