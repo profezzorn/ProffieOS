@@ -207,7 +207,7 @@
 #define PROP_TYPE SaberFett263Buttons
 
 EFFECT(dim); // for EFFECT_POWERSAVE
-EFFECT(battery); // for EFFECT_BATTERY
+EFFECT(battery); // for EFFECT_BATTERY_LEVEL
 EFFECT(bmbegin); // for Begin Battle Mode
 EFFECT(bmend); // for End Battle Mode
 EFFECT(vmbegin); // for Begin Volume Menu
@@ -533,7 +533,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
-        SaberBase::DoEffect(EFFECT_BATTERY, 0);
+        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
 
        // Battle Mode
@@ -742,7 +742,7 @@ void SB_Effect(EffectType effect, float location) override {
         beeper.Beep(0.5, 3000);
       }
       return;
-    case EFFECT_BATTERY:
+    case EFFECT_BATTERY_LEVEL:
       if (SFX_battery) {
         hybrid_font.PlayCommon(&SFX_battery); 
       } else {
