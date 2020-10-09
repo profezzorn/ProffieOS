@@ -45,6 +45,8 @@ endif
 
 ifndef ALTERNATE_CORE_PATH
     ALTERNATE_CORE_PATH := $(firstword \
+        $(call dir_if_exists,$(ARDUINO_PACKAGE_DIR)/proffieboard/hardware/stm32l4/1.1.0/) \
+        $(call dir_if_exists,$(ARDUINO_PACKAGE_DIR)/proffieboard/hardware/stm32l4/1.0.0/) \
         $(call dir_if_exists,$(ARDUINO_PACKAGE_DIR)/proffieboard/hardware/stm32l4/0.1.7/) \
         $(call dir_if_exists,$(ARDUINO_PACKAGE_DIR)/proffieboard/hardware/stm32l4/0.1.3/) \
         $(call dir_if_exists,$(HOME)/lib/arduino-STM32L4) )
