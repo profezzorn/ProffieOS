@@ -49,13 +49,22 @@ public:
     switch (type) {
       default: break;
       case EFFECT_LOCKUP_BEGIN:
-	if (SaberBase::Lockup() == LOCKUP_DRAG)
-	  type = EFFECT_DRAG_BEGIN;
+	switch (SaberBase::Lockup()) {
+	  case LOCKUP_DRAG:
+	    type = EFFECT_DRAG_BEGIN;
+	  case LOCKUP_NORMAL:
+	    break;
+	  default: return;
+	}
 	break;
       case EFFECT_LOCKUP_END:
-	if (SaberBase::Lockup() == LOCKUP_DRAG)
-	  type = EFFECT_DRAG_END;
-	break;
+	switch (SaberBase::Lockup()) {
+	  case LOCKUP_DRAG:
+	    type = EFFECT_DRAG_END;
+	  case LOCKUP_NORMAL:
+	    break;
+	  default: return;
+	}
     }
     for (size_t i = NELEM(effects_) - 1; i; i--) {
       effects_[i] = effects_[i-1];
