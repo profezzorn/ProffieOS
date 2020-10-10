@@ -291,6 +291,9 @@ SaberFett263Buttons() : PropBase() {}
     SaberBase::TurnOn();
     // Optional effects
     SaberBase::DoEffect(EFFECT_FAST_ON, 0);
+    if (SFX_faston) {
+      hybrid_font.PlayCommon(&SFX_faston);
+    }
   }
 
   // SA22C Volume Menu
@@ -428,17 +431,18 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_ON):
         // Avoid the base and the very tip.
         // TODO: Make blast only appear on one blade!
-        if (swing_blast_) {
-	  swing_blast_ = false;
-	  if (SFX_blstend) {
-            hybrid_font.PlayCommon(&SFX_blstend);
+        if(swing_blast_) {
+          swing_blast_ = false;
+          if (SFX_blstend) {
+            hybrid_font.PlayCommon(&SFX_blstbgn);
 	  } else {
-	    hybrid_font.DoEffect(EFFECT_FORCE, 0);
+	    hybrid_font.DoEffect(EFFECT_BLAST, 0);
 	  }
-	} else {
-          SaberBase::DoBlast();
-	}
         return true;
+	} else {
+        SaberBase::DoBlast();
+	}
+	return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
         swing_blast_ = true;
@@ -748,11 +752,6 @@ void SB_Effect(EffectType effect, float location) override {
       }
       return;
       }
-    case EFFECT_FAST_ON:
-      if (SFX_faston) {
-        hybrid_font.PlayCommon(&SFX_faston);
-      }
-      return;
   }
 
 private:
