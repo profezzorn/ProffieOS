@@ -48,7 +48,9 @@ Preset presets[] = {
     StylePtr<InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> >(),
     StylePtr<IgnitionDelay<100, InOutHelper<EASYBLADE(OnSpark<GREEN>, WHITE), 300, 800> > >(), "green"},
   { "TeensySF", "tracks/mercury.wav",
-    StyleNormalPtr<WHITE, RED, 300, 800, RED>(),
+    StylePtr<Layers<
+      Green,
+      InOutTrL<TrInstant,TrFade<300>,Red>>>(),
     StyleNormalPtr<WHITE, RED, 300, 800, RED>(), "white"},
   { "SmthJedi", "tracks/uranus.wav",
     StyleNormalPtr<AudioFlicker<YELLOW, WHITE>, BLUE, 300, 800>(),
