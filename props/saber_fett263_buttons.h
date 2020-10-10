@@ -48,7 +48,7 @@
 // or
 //
 // FETT263_BATTLE_MODE_START_ON
-// Battle Mode is active with each ignition by default but can be toggled using Aux + Swing control 
+// Battle Mode is active with each ignition by default but can be toggled using Aux + Swing control
 // (cannot be used with FETT263_BATTLE_MODE_ALWAYS_ON)
 //
 // FETT263_LOCKUP_DELAY 200
@@ -118,7 +118,7 @@
 // This will enable a preset change while ON to create a "Multi-Phase" saber effect
 //
 // MOTION_TIMEOUT 60 * 15 * 1000
-// This extends the motion timeout to 15 minutes to allow gesture ignition to remain active 
+// This extends the motion timeout to 15 minutes to allow gesture ignition to remain active
 // Increase/decrease the "15" value as needed
 //
 // CUSTOM SOUNDS SUPPORTED (add to font to enable):
@@ -250,10 +250,10 @@ SaberFett263Buttons() : PropBase() {}
       }
 
       // EVENT_PUSH
-      if (fabs(mss.x) < 3.0 && 
+      if (fabs(mss.x) < 3.0 &&
           mss.y * mss.y + mss.z * mss.z > 120 &&
           fusor.swing_speed() < 30 &&
-          fabs(fusor.gyro().x) < 10) {    
+          fabs(fusor.gyro().x) < 10) {
         Event(BUTTON_NONE, EVENT_PUSH);
       }
 
@@ -275,7 +275,7 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
-// Fast On Gesture Ignition
+  // Fast On Gesture Ignition
   virtual void FastOn() {
     if (IsOn()) return;
     if (current_style() && current_style()->NoOnOff())
@@ -306,6 +306,7 @@ SaberFett263Buttons() : PropBase() {}
       beeper.Beep(0.5, 3000);
     }
   }
+
   void VolumeDown() {
     STDOUT.println("Volume Down");
     if (dynamic_mixer.get_volume() > (0.10 * VOLUME)) {
@@ -344,7 +345,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_BATTLE_MODE_START_ON
           battle_mode_ = true;
 #endif
-	}
+        }
         return true;
 
 #ifdef BLADE_DETECT_PIN
@@ -411,11 +412,11 @@ SaberFett263Buttons() : PropBase() {}
         if (!swinging_) {
           swing_blast_ = false;
 #ifndef FETT263_BM_DISABLE_OFF_BUTTON
-	  Off();
+          Off();
           saber_off_time_ = millis();
 #endif
 #ifndef FETT263_BATTLE_MODE_ALWAYS_ON
-	  battle_mode_ = false;
+          battle_mode_ = false;
 #endif
         }
         return true;
@@ -432,30 +433,29 @@ SaberFett263Buttons() : PropBase() {}
           swing_blast_ = false;
           if (SFX_blstend) {
             hybrid_font.PlayCommon(&SFX_blstend);
-	  } else {
-	    SaberBase::DoBlast();
-	  }
-          return true;
-	  } else {
+          } else {
             SaberBase::DoBlast();
-	  }
-	return true;
+          }
+          return true;
+        } else {
+          SaberBase::DoBlast();
+        }
+        return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
         swing_blast_ = true;
-	if (SFX_blstbgn) {
+        if (SFX_blstbgn) {
           hybrid_font.PlayCommon(&SFX_blstbgn);
-	} else {
-	  hybrid_font.SB_Effect(EFFECT_BLAST, 0);
-	}
+        } else {
+          hybrid_font.SB_Effect(EFFECT_BLAST, 0);
+        }
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
         if (swing_blast_) {
-	  SaberBase::DoBlast();
+          SaberBase::DoBlast();
         }
         return true;
-
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
         if (fusor.angle1() >  M_PI / 3) {
@@ -465,11 +465,10 @@ SaberFett263Buttons() : PropBase() {}
           ToggleColorChangeMode();
 #endif
 #ifdef DISABLE_COLOR_CHANGE
-	  SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
+          SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
 #endif
-	}
+        }
         return true;
-
 
         // Lockup
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
@@ -515,18 +514,18 @@ SaberFett263Buttons() : PropBase() {}
         if (mode_volume_) {
           mode_volume_ = false;
           if (SFX_vmend) {
-	    hybrid_font.PlayCommon(&SFX_vmend);
-	  } else {
+            hybrid_font.PlayCommon(&SFX_vmend);
+          } else {
             beeper.Beep(0.5, 3000);
-	  }
+          }
           STDOUT.println("Exit Volume Menu");
         } else {
           mode_volume_ = true;
           if (SFX_vmbegin) {
-	    hybrid_font.PlayCommon(&SFX_vmbegin);
-	  } else {
+            hybrid_font.PlayCommon(&SFX_vmbegin);
+          } else {
             beeper.Beep(0.5, 3000);
-	  }
+          }
           STDOUT.println("Enter Volume Menu");
         }
         return true;
@@ -538,25 +537,25 @@ SaberFett263Buttons() : PropBase() {}
        // Battle Mode
 
 #ifndef FETT263_BATTLE_MODE_ALWAYS_ON
-       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
-         if (!battle_mode_) {
-           battle_mode_ = true;
-           if (SFX_bmbegin) {
-	     hybrid_font.PlayCommon(&SFX_bmbegin);
-	   } else {
-	     hybrid_font.DoEffect(EFFECT_FORCE, 0);
-	   }
-         } else {
-           battle_mode_ = false;
-           if (SFX_bmend) {
-	     hybrid_font.PlayCommon(&SFX_bmend);
-	   } else {
-	     beeper.Beep(0.5, 3000);   
-	   }
-         }
-         return true;
+      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
+        if (!battle_mode_) {
+          battle_mode_ = true;
+          if (SFX_bmbegin) {
+            hybrid_font.PlayCommon(&SFX_bmbegin);
+          } else {
+            hybrid_font.DoEffect(EFFECT_FORCE, 0);
+          }
+        } else {
+          battle_mode_ = false;
+          if (SFX_bmend) {
+            hybrid_font.PlayCommon(&SFX_bmend);
+          } else {
+            beeper.Beep(0.5, 3000);
+          }
+        }
+        return true;
 #endif
-		    
+
       // Auto Lockup Mode
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
         if (!battle_mode_) return false;
@@ -585,14 +584,14 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       // Optional Gesture Controls (defines listed at top)
-		    
+
 #ifdef FETT263_SWING_ON
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
         if (millis() > 3000) {
-        FastOn();
+          FastOn();
 #ifndef FETT263_SWING_ON_NO_BM
-	battle_mode_ = true;
+          battle_mode_ = true;
 #endif
         }
         return true;
@@ -602,9 +601,9 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
         if (millis() > 3000) {
-        On();
+          On();
 #ifndef FETT263_SWING_ON_NO_BM
-	battle_mode_ = true;
+          battle_mode_ = true;
 #endif
         }
         return true;
@@ -618,7 +617,7 @@ SaberFett263Buttons() : PropBase() {}
           last_twist_ = millis();
           saber_off_time_ = millis();
 #ifndef FETT263_BATTLE_MODE_ALWAYS_ON
-	  battle_mode_ = false;
+          battle_mode_ = false;
 #endif
         }
         return true;
@@ -632,9 +631,9 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
 #endif
-	}
-          last_twist_ = millis();
-	  return true;
+        }
+        last_twist_ = millis();
+        return true;
 #endif
 
 #ifdef FETT263_TWIST_ON_PREON
@@ -645,11 +644,11 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
 #endif
-	}
-          last_twist_ = millis();
-	  return true;
+        }
+        last_twist_ = millis();
+        return true;
 #endif
-		    
+
 #ifdef FETT263_STAB_ON
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
         FastOn();
@@ -688,16 +687,16 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_FORCE_PUSH
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
-      if (battle_mode_ && 
-          millis() - last_push_ > 2000) {
-        if (SFX_push) {
-          hybrid_font.PlayCommon(&SFX_push);
-        } else {
-          hybrid_font.DoEffect(EFFECT_FORCE, 0);
+        if (battle_mode_ &&
+            millis() - last_push_ > 2000) {
+          if (SFX_push) {
+            hybrid_font.PlayCommon(&SFX_push);
+          } else {
+            hybrid_font.DoEffect(EFFECT_FORCE, 0);
+          }
+          last_push_ = millis();
         }
-        last_push_ = millis();
-      }
-      return true;
+        return true;
 
 #endif
 
@@ -731,29 +730,29 @@ SaberFett263Buttons() : PropBase() {}
     }
     return false;
   }
-	
-void SB_Effect(EffectType effect, float location) override {
-  switch (effect) {
-    case EFFECT_POWERSAVE:
-      if (SFX_dim) {
-        hybrid_font.PlayCommon(&SFX_dim);
-      } else {
-        beeper.Beep(0.5, 3000);
-      }
-      return;
-    case EFFECT_BATTERY_LEVEL:
-      if (SFX_battery) {
-        hybrid_font.PlayCommon(&SFX_battery); 
-      } else {
-	beeper.Beep(0.5, 3000);      
-      }
-      return;
-     case EFFECT_FAST_ON:
-      if (SFX_faston) {
-        hybrid_font.PlayCommon(&SFX_faston); 
-      }
-      return;
-      }
+
+  void SB_Effect(EffectType effect, float location) override {
+    switch (effect) {
+      case EFFECT_POWERSAVE:
+        if (SFX_dim) {
+          hybrid_font.PlayCommon(&SFX_dim);
+        } else {
+          beeper.Beep(0.5, 3000);
+        }
+        return;
+      case EFFECT_BATTERY_LEVEL:
+        if (SFX_battery) {
+          hybrid_font.PlayCommon(&SFX_battery);
+        } else {
+          beeper.Beep(0.5, 3000);
+        }
+        return;
+      case EFFECT_FAST_ON:
+        if (SFX_faston) {
+          hybrid_font.PlayCommon(&SFX_faston);
+        }
+        return;
+    }
   }
 
 private:
