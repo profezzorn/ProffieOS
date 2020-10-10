@@ -73,7 +73,9 @@ private:
   TransitionHelper<OutTr> out_tr_;
   TransitionHelper<InTr> in_tr_;
 public:
-  auto getColor(int led) -> decltype(out_tr_.getColor(in_tr_.getColor(RGBA_um_nod::Transparent(), off_color_.getColor(led), led), RGBA_um_nod::Transparent(), led)) {
+  auto getColor(int led) -> decltype(
+    MixColors(out_tr_.getColor(in_tr_.getColor(RGBA_um_nod::Transparent(), off_color_.getColor(led), led), RGBA_um_nod::Transparent(), led),
+	      in_tr_.getColor(out_tr_.getColor(off_color_.getColor(led), RGBA_um_nod::Transparent(), led), off_color_.getColor(led), led), 1, 1)) {
     if (!out_tr_ && !in_tr_) {
       if (on_) {
 	return RGBA_um_nod::Transparent();
