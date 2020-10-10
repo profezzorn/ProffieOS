@@ -34,6 +34,8 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(NEWFONT)			\
     DEFINE_EFFECT(LOW_BATTERY)			\
     DEFINE_EFFECT(POWERSAVE)                    \
+    DEFINE_EFFECT(BATTERY_LEVEL)                \
+    DEFINE_EFFECT(FAST_ON)                      \
     /* Blaster effects */                       \
     DEFINE_EFFECT(STUN)				\
     DEFINE_EFFECT(FIRE)				\
