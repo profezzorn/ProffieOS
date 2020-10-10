@@ -291,9 +291,6 @@ SaberFett263Buttons() : PropBase() {}
     SaberBase::TurnOn();
     // Optional effects
     SaberBase::DoEffect(EFFECT_FAST_ON, 0);
-    if (SFX_faston) {
-      hybrid_font.PlayCommon(&SFX_faston);
-    }
   }
 
   // SA22C Volume Menu
@@ -434,14 +431,14 @@ SaberFett263Buttons() : PropBase() {}
         if(swing_blast_) {
           swing_blast_ = false;
           if (SFX_blstend) {
-            hybrid_font.PlayCommon(&SFX_blstbgn);
+            hybrid_font.PlayCommon(&SFX_blstend);
 	  } else {
-	    hybrid_font.DoEffect(EFFECT_BLAST, 0);
+	    SaberBase::DoBlast();
 	  }
-        return true;
-	} else {
-        SaberBase::DoBlast();
-	}
+          return true;
+	  } else {
+            SaberBase::DoBlast();
+	  }
 	return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
@@ -449,7 +446,7 @@ SaberFett263Buttons() : PropBase() {}
 	if (SFX_blstbgn) {
           hybrid_font.PlayCommon(&SFX_blstbgn);
 	} else {
-	  hybrid_font.DoEffect(EFFECT_BLAST, 0);
+	  hybrid_font.SB_Effect(EFFECT_BLAST, 0);
 	}
         return true;
 
@@ -749,6 +746,11 @@ void SB_Effect(EffectType effect, float location) override {
         hybrid_font.PlayCommon(&SFX_battery); 
       } else {
 	beeper.Beep(0.5, 3000);      
+      }
+      return;
+     case EFFECT_FAST_ON:
+      if (SFX_faston) {
+        hybrid_font.PlayCommon(&SFX_faston); 
       }
       return;
       }
