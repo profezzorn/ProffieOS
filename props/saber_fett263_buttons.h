@@ -412,8 +412,10 @@ SaberFett263Buttons() : PropBase() {}
         if (!swinging_) {
           swing_blast_ = false;
 #ifndef FETT263_BM_DISABLE_OFF_BUTTON
-          Off();
-          saber_off_time_ = millis();
+          if (!battle_mode_) {
+            Off();
+            saber_off_time_ = millis();
+          }
 #endif
 #ifndef FETT263_BATTLE_MODE_ALWAYS_ON
           battle_mode_ = false;
@@ -626,7 +628,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_TWIST_ON
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
         // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_ > 3000) {
+        if (millis() - last_twist_ > 2000) {
           FastOn();
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
@@ -639,7 +641,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_TWIST_ON_PREON
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
         // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_ > 3000) {
+        if (millis() - last_twist_ > 2000) {
           On();
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
