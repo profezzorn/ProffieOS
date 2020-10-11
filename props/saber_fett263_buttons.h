@@ -411,11 +411,15 @@ SaberFett263Buttons() : PropBase() {}
 #endif
         if (!swinging_) {
           swing_blast_ = false;
+#ifdef FETT263_BM_DISABLE_OFF_BUTTON
+        if (!battle_mode_) {
+          Off();
+          saber_off_time_ = millis();
+        }
+#endif
 #ifndef FETT263_BM_DISABLE_OFF_BUTTON
-          if (!battle_mode_) {
-            Off();
-            saber_off_time_ = millis();
-          }
+         Off();
+         saber_off_time_ = millis();
 #endif
 #ifndef FETT263_BATTLE_MODE_ALWAYS_ON
           battle_mode_ = false;
