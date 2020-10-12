@@ -22,19 +22,6 @@ public:
     return true;
   }
 
-  OverDriveColor getColor(int led) {
-    SCOPED_PROFILER();
-    OverDriveColor ret = base_.getColor(led);
-    if (on_) {
-      OverDriveColor spark = spark_color_.getColor(led);
-      int spark_mix = clampi32(thres - 1024 - led * 256, 0, 255);
-      ret.c = spark.c.mix(ret.c, spark_mix);
-    }
-    int black_mix = clampi32(thres - led * 256, 0, 255);
-    OverDriveColor off_color  = off_color_.getColor(led);
-    ret.c = off_color.c.mix(ret.c, black_mix);
-    return ret;
-  }
 private:
   T base_;
   bool on_;
@@ -42,6 +29,19 @@ private:
   SPARK_COLOR spark_color_;
   EXTENSION extension_;
   OFF_COLOR off_color_;
+public:
+  auto getColor(int led) -> decltype(MixColors(off_color_.getColor(0), MixColors(spark_color_.getColor(0), base_.getColor(0), 1, 8), 1, 8)) {
+    SCOPED_PROFILER();
+    decltype(getColor(0)) ret = base_.getColor(led);
+    if (on_) {
+      auto spark = spark_color_.getColor(led);
+      int spark_mix = clampi32(thres - 1024 - led * 256, 0, 255);
+      ret = MixColors(spark, ret, spark_mix, 8);
+    }
+    int black_mix = clampi32(thres - led * 256, 0, 255);
+    auto off_color  = off_color_.getColor(led);
+    return MixColors(off_color, ret, black_mix, 8);
+  }
 };
 
 template<class T, int OUT_MILLIS, int IN_MILLIS, class SPARK_COLOR = Rgb<255,255,255>, class OFF_COLOR=Rgb<0,0,0>, bool ALLOW_DISABLE=1>

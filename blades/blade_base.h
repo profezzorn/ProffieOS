@@ -1,49 +1,9 @@
 #ifndef BLADES_BLADE_BASE_H
 #define BLADES_BLADE_BASE_H
 
-#define DEFINE_ALL_EFFECTS()			\
-    DEFINE_EFFECT(NONE)				\
-    DEFINE_EFFECT(CLASH)			\
-    DEFINE_EFFECT(BLAST)			\
-    DEFINE_EFFECT(FORCE)			\
-    DEFINE_EFFECT(STAB)				\
-    DEFINE_EFFECT(BOOT)				\
-    DEFINE_EFFECT(LOCKUP_BEGIN)			\
-    DEFINE_EFFECT(LOCKUP_END)			\
-    DEFINE_EFFECT(DRAG_BEGIN)			\
-    DEFINE_EFFECT(DRAG_END)			\
-    DEFINE_EFFECT(PREON)			\
-    DEFINE_EFFECT(IGNITION)			\
-    DEFINE_EFFECT(RETRACTION)			\
-    DEFINE_EFFECT(CHANGE)			\
-    DEFINE_EFFECT(NEWFONT)			\
-    /* Blaster effects */                       \
-    DEFINE_EFFECT(STUN)				\
-    DEFINE_EFFECT(FIRE)				\
-    DEFINE_EFFECT(CLIP_IN)			\
-    DEFINE_EFFECT(CLIP_OUT)			\
-    DEFINE_EFFECT(RELOAD)			\
-    DEFINE_EFFECT(MODE)				\
-    DEFINE_EFFECT(RANGE)			\
-    DEFINE_EFFECT(EMPTY)			\
-    DEFINE_EFFECT(FULL)				\
-    DEFINE_EFFECT(JAM)				\
-    DEFINE_EFFECT(UNJAM)			\
-    DEFINE_EFFECT(PLI_ON)			\
-    DEFINE_EFFECT(PLI_OFF)
+#include "../common/saber_base.h"
 
-
-// Bitfield
-#define DEFINE_EFFECT(X) EFFECT_##X,
-enum class BladeEffectType {
-  DEFINE_ALL_EFFECTS()
-};
-#undef DEFINE_EFFECT
-
-#define DEFINE_EFFECT(X) constexpr BladeEffectType EFFECT_##X=BladeEffectType::EFFECT_##X;
-//#define DEFINE_EFFECT(X) using EFFECT_##X=BladeEffectType::EFFECT_##X;
-DEFINE_ALL_EFFECTS();
-#undef DEFINE_EFFECT
+using BladeEffectType = EffectType;
 
   enum HandledFeature {
     HANDLED_FEATURE_NONE = 0,

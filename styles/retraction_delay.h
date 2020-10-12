@@ -45,9 +45,10 @@ public:
     RetractionDelayBase<MILLIS>::run(base);
     return RunStyle(&base_, this);
   }
-  OverDriveColor getColor(int led) { return base_.getColor(led); }
 private:
   BASE base_;
+public:
+  auto getColor(int led) ->decltype(base_.getColor(led)) { return base_.getColor(led); }
 };
 
 template<int millis, class BASE>

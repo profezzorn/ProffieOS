@@ -104,15 +104,23 @@ public:
 
 class BlasterIRSender : public BlasterEncoder, public SaberBase {
 public:
-  void SB_Fire() override {
-    IRSender* sender = GetIRSender();
-    Encode(sender, 1 /* team */, 3  /* damage */);
-    sender->send();
-  }
-  void SB_Stun() override {
-    IRSender* sender = GetIRSender();
-    Encode(sender, 1 /* team */, 1 /* damage */);
-    sender->send();
+  void SB_Effect(EffectType effect, float location) {
+    IRSender* sender;
+    switch (effect) {
+      case EFFECT_FIRE:
+	sender= GetIRSender();
+	Encode(sender, 1 /* team */, 3  /* damage */);
+	sender->send();
+	return;
+	
+      case EFFECT_STUN:
+	sender = GetIRSender();
+	Encode(sender, 1 /* team */, 1 /* damage */);
+	sender->send();
+	return;
+
+      default: break;
+    }
   }
 };
 

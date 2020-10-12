@@ -3,15 +3,16 @@
 
 class ClashRecorder : public SaberBase {
 public:
-  void SB_Clash() override {
-    time_to_dump_ = NELEM(buffer_) / 2;
-    STDOUT.println("dumping soon...");
-    SaberBase::RequestMotion();
-  }
-  void SB_Stab() override {
-    time_to_dump_ = NELEM(buffer_) / 2;
-    STDOUT.println("dumping soon...");
-    SaberBase::RequestMotion();
+  void SB_Effect(EffectType effect, float location) override {
+    switch (effect) {
+      default: return;
+      case EFFECT_CLASH:
+      case EFFECT_STAB:
+	time_to_dump_ = NELEM(buffer_) / 2;
+	STDOUT.println("dumping soon...");
+	SaberBase::RequestMotion();
+    }
+	
   }
   void SB_Accel(const Vec3& accel, bool clear) override {
     SaberBase::RequestMotion();

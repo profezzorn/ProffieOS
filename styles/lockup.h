@@ -6,6 +6,7 @@
 #include "../functions/layer_functions.h"
 #include "../functions/scale.h"
 #include "../functions/brown_noise.h"
+#include "../transitions/base.h"
 
 
 HandledFeature FeatureForLockupType(SaberBase::LockupType t) {
@@ -66,7 +67,7 @@ public:
   auto getColor(int led) -> decltype(lockup_.getColor(led) * 1)  {
     // transparent
     int blend = 0;
-    if (handled_) return RGBA_um::Transparent();
+    if (handled_) return RGBA_um_nod::Transparent();
     switch (SaberBase::Lockup()) {
       case SaberBase::LOCKUP_MELT:
 	// TODO: Better default for MELT?
@@ -86,7 +87,7 @@ public:
 	blend = lockup_shape_.getInteger(led);
 	break;
       case SaberBase::LOCKUP_NONE:
-	return RGBA_um::Transparent();
+	return RGBA_um_nod::Transparent();
     }
     return lockup_.getColor(led) * blend;
   }
@@ -96,7 +97,6 @@ template<class BASE,
   class LOCKUP, class DRAG_COLOR = LOCKUP,
   class LOCKUP_SHAPE = Int<32768>, class DRAG_SHAPE = SmoothStep<Int<28671>, Int<4096>> >
   using Lockup = Layers<BASE, LockupL<LOCKUP, DRAG_COLOR, LOCKUP_SHAPE, DRAG_SHAPE>>;
-
 
 // Usage: LockupTr<BASE, COLOR, BeginTr, EndTr, LOCKUP_TYPE>
 // Or: LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE>
@@ -123,62 +123,41 @@ public:
     if (active_ != (SaberBase::Lockup() == LOCKUP_TYPE)) {
       if ((active_ = (SaberBase::Lockup() == LOCKUP_TYPE))) {
 	begin_tr_.begin();
-	begin_active_ = true;
       } else {
 	end_tr_.begin();
-	end_active_ = true;
       }
     }
 
-    if (begin_active_) {
-      begin_tr_.run(blade);
-      if (begin_tr_.done()) begin_active_ = false;
-    }
-    if (end_active_) {
-      end_tr_.run(blade);
-      if (end_tr_.done()) end_active_ = false;
-    }
+    begin_tr_.run(blade);
+    end_tr_.run(blade);
   }
 
-  RGBA runBegin(RGBA a, RGBA b, int led) {
-    if (begin_active_) {
-      return begin_tr_.getColor(a, b, led);
-    } else {
-      return b;
-    }
-  }
-  RGBA runEnd(RGBA a, RGBA b, int led) {
-    if (end_active_) {
-      return end_tr_.getColor(a, b, led);
-    } else {
-      return b;
-    }
-  }
-  RGBA getColor(int led) {
+private:
+  bool active_;
+  COLOR color_;
+  TransitionHelper<BeginTr> begin_tr_;
+  TransitionHelper<EndTr> end_tr_;
+public:
+  auto getColor(int led) -> decltype(
+    MixColors(end_tr_.getColor(begin_tr_.getColor(RGBA_um_nod::Transparent(), color_.getColor(led), led), RGBA_um_nod::Transparent(), led),
+	      begin_tr_.getColor(end_tr_.getColor(color_.getColor(0), RGBA_um_nod::Transparent(), led), color_.getColor(0), led), 1, 1)) {
     SCOPED_PROFILER();
-    RGBA off_color = RGBA_um::Transparent();
-    if (!begin_active_ && !end_active_) {
+    RGBA_um_nod off_color = RGBA_um_nod::Transparent();
+    if (!begin_tr_ && !end_tr_) {
       if (active_) {
 	return color_.getColor(led);
       } else {
 	return off_color;
       }
     } else {
-      RGBA on_color = color_.getColor(led);
+      auto on_color = color_.getColor(led);
       if (active_) {
-	return runBegin(runEnd(on_color, off_color, led), on_color, led);
+	return begin_tr_.getColor(end_tr_.getColor(on_color, off_color, led), on_color, led);
       } else {
-	return runEnd(runBegin(off_color, on_color, led), off_color, led);
+	return end_tr_.getColor(begin_tr_.getColor(off_color, on_color, led), off_color, led);
       }
     }
   }
-private:
-  bool active_;
-  COLOR color_;
-  bool begin_active_;
-  bool end_active_;
-  BeginTr begin_tr_;
-  EndTr end_tr_;
 };
     
 template<

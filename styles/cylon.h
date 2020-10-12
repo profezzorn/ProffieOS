@@ -61,17 +61,6 @@ public:
     }
     return keep_running;
   }
-  OverDriveColor getColor(int led) {
-    Range led_range(led * 16384, led * 16384 + 16384);
-    int black_mix = 0;
-    black_mix = (Range(start_, end_) & led_range).size();
-    OverDriveColor c = c_.getColor(led);
-    OverDriveColor on_c = on_c_.getColor(led);
-    OverDriveColor off_c = off_c_.getColor(led);
-    c.c = c.c.mix2(on_c.c, fade_int_);
-    c.c = off_c.c.mix2(c.c, black_mix);
-    return c;
-  }
 private:
   float fade_ = 0.0;
   int fade_int_;
@@ -83,6 +72,16 @@ private:
   ON_COLOR on_c_;
   OFF_COLOR off_c_;
   uint32_t last_micros_;
+public:
+  auto getColor(int led) -> decltype(MixColors(off_c_.getColor(0), MixColors(c_.getColor(0), on_c_.getColor(0), 1, 15), 1, 15)) {
+    Range led_range(led * 16384, led * 16384 + 16384);
+    int black_mix = 0;
+    black_mix = (Range(start_, end_) & led_range).size();
+    auto c = c_.getColor(led);
+    auto on_c = on_c_.getColor(led);
+    auto off_c = off_c_.getColor(led);
+    return MixColors(off_c, MixColors(c, on_c, fade_int_, 14),  black_mix, 14);
+  }
 };
 
 #endif

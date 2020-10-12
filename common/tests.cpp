@@ -17,6 +17,8 @@
 #define PROFFIE_TEST
 #define ENABLE_SD
 
+int random(int x) { return rand() % x; }
+
 const char install_time[] = __DATE__ " " __TIME__;
 
 const char* GetSaveDir() { return NULL; }
@@ -572,6 +574,8 @@ void runPaintTest(T1 A) {
     for (int c : N16) {
       RGBA_um B(Color16(c,c,c), false, d);
       runPaintTest(A, B);
+      RGBA_um_nod C(Color16(c,c,c), d);
+      runPaintTest(A, C);
       if (c > d * 2) continue;
       RGBA B2(Color16(c,c,c), false, d);
       runPaintTest(A, B2);
@@ -591,6 +595,8 @@ void color_tests() {
     for (int b : N15) {
       RGBA_um A(Color16(a,a,a), false, b);
       runPaintTest(A);
+      RGBA_um_nod A3(Color16(a,a,a), b);
+      runPaintTest(A3);
       if (a <= b * 2) {
 	RGBA A2(Color16(a,a,a), false, b);
 	runPaintTest(A2);

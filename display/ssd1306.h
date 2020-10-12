@@ -133,14 +133,14 @@ public:
     uint32_t *pos = frame_buffer_ + x;
     switch (glyph.column_size) {
       case 0:
-	Draw2<uint8_t>(begin, end, pos, y, (const uint8_t*)glyph.data);
-	break;
+        Draw2<uint8_t>(begin, end, pos, y, (const uint8_t*)glyph.data);
+        break;
       case 1:
-	Draw2<uint16_t>(begin, end, pos, y, (const uint16_t*)glyph.data);
-	break;
+        Draw2<uint16_t>(begin, end, pos, y, (const uint16_t*)glyph.data);
+        break;
       case 3:
-	Draw2<uint32_t>(begin, end, pos, y, (const uint32_t*)glyph.data);
-	break;
+        Draw2<uint32_t>(begin, end, pos, y, (const uint32_t*)glyph.data);
+        break;
     }
   }
 
@@ -183,99 +183,99 @@ public:
     switch (screen_) {
       default:
       case SCREEN_OFF:
-	memset(frame_buffer_, 0, sizeof(frame_buffer_));
-	layout_ = LAYOUT_NATIVE;
-	xor_ = 0;
-	invert_y_ = false;
-	return 1000;
+        memset(frame_buffer_, 0, sizeof(frame_buffer_));
+        layout_ = LAYOUT_NATIVE;
+        xor_ = 0;
+        invert_y_ = false;
+        return 1000;
 
       case SCREEN_STARTUP:
-	memset(frame_buffer_, 0, sizeof(frame_buffer_));
+        memset(frame_buffer_, 0, sizeof(frame_buffer_));
         // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
         // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
         DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
         DrawText(version,0,31, Starjedi10pt7bGlyphs);
-	screen_ = SCREEN_PLI;
-	layout_ = LAYOUT_NATIVE;
-	xor_ = 0;
-	invert_y_ = false;
-	return font_config.ProffieOSFontImageDuration;
+        screen_ = SCREEN_PLI;
+        layout_ = LAYOUT_NATIVE;
+        xor_ = 0;
+        invert_y_ = false;
+        return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
-	memset(frame_buffer_, 0, sizeof(frame_buffer_));
+        memset(frame_buffer_, 0, sizeof(frame_buffer_));
         DrawBatteryBar(BatteryBar16);
-	layout_ = LAYOUT_NATIVE;
-	xor_ = 0;
-	invert_y_ = false;
-	return 200;  // redraw once every 200 ms
+        layout_ = LAYOUT_NATIVE;
+        xor_ = 0;
+        invert_y_ = false;
+        return 200;  // redraw once every 200 ms
 
       case SCREEN_MESSAGE:
-	memset(frame_buffer_, 0, sizeof(frame_buffer_));
+        memset(frame_buffer_, 0, sizeof(frame_buffer_));
         if (strchr(message_, '\n')) {
           DrawText(message_, 0, 15, Starjedi10pt7bGlyphs);
         } else {
           DrawText(message_, 0, 23, Starjedi10pt7bGlyphs);
         }
-	screen_ = SCREEN_PLI;
-	layout_ = LAYOUT_NATIVE;
-	xor_ = 0;
-	invert_y_ = false;
-	return font_config.ProffieOSFontImageDuration;
+        screen_ = SCREEN_PLI;
+        layout_ = LAYOUT_NATIVE;
+        xor_ = 0;
+        invert_y_ = false;
+        return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_IMAGE:
-	MountSDCard();
-	if (!frame_available_) {
-	  scheduleFillBuffer();
-	  return 1;
-	}
-	if (eof_) {
-	  // STDOUT << "EOF " << frame_count_ << "\n";
-    if (!SaberBase::IsOn()) {
-      screen_ = SCREEN_PLI;
-      if (frame_count_ == 1) return font_config.ProffieOSFontImageDuration;
-      return FillFrameBuffer();
-    }
-	}
-	frame_count_++;
-  if (SaberBase::IsOn()) {
-    // Single frame image
-    if (looped_frames_ == 1) {
-      if (frame_count_ == 1) {
-        return effect_display_duration_;
-      }
-      screen_ = SCREEN_PLI;
-      if (SaberBase::Lockup()) {
-        ShowFile(&IMG_lock, 3600000.0);
-        return 3600000;
-      } else {
-        if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
-      }
-    } else {
-      // looped image
-      if (looped_frames_ == frame_count_) {
-        if (millis() - loop_start_ > effect_display_duration_) {
-          if (!SaberBase::Lockup()) {
+        MountSDCard();
+        if (!frame_available_) {
+          scheduleFillBuffer();
+          return 1;
+        }
+        if (eof_) {
+          // STDOUT << "EOF " << frame_count_ << "\n";
+          if (!SaberBase::IsOn()) {
             screen_ = SCREEN_PLI;
-            if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+            if (frame_count_ == 1) return font_config.ProffieOSFontImageDuration;
+            return FillFrameBuffer();
           }
         }
-      }
-    }
-  } else {
-    if (millis() - loop_start_ > font_config.ProffieOSFontImageDuration) {
-      STDOUT << "END OF LOOP\n";
-      screen_ = SCREEN_PLI;
-    }
-  }
+        frame_count_++;
+        if (SaberBase::IsOn()) {
+          // Single frame image
+          if (looped_frames_ == 1) {
+            if (frame_count_ == 1) {
+              return effect_display_duration_;
+            }
+            screen_ = SCREEN_PLI;
+            if (SaberBase::Lockup()) {
+              ShowFile(&IMG_lock, 3600000.0);
+              return 3600000;
+            } else {
+              if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+            }
+          } else {
+            // looped image
+            if (looped_frames_ == frame_count_) {
+              if (millis() - loop_start_ > effect_display_duration_) {
+                if (!SaberBase::Lockup()) {
+                  screen_ = SCREEN_PLI;
+                  if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+                }
+              }
+            }
+          }
+        } else {
+          if (millis() - loop_start_ > font_config.ProffieOSFontImageDuration) {
+            STDOUT << "END OF LOOP\n";
+            screen_ = SCREEN_PLI;
+          }
+        }
 
-	if (font_config.ProffieOSAnimationFrameRate > 0.0) {
-	  return 1000 / font_config.ProffieOSAnimationFrameRate;
-	}
-	if (looped_frames_ > 1) {
-	  return 1000 / looped_frames_;
-	} else {
-	  return 41;   // ~24 fps
-	}
+        if (font_config.ProffieOSAnimationFrameRate > 0.0) {
+          return 1000 / font_config.ProffieOSAnimationFrameRate;
+        }
+        if (looped_frames_ > 1) {
+          return 1000 / looped_frames_;
+        } else {
+          return 41;   // ~24 fps
+        }
     }
   }
 
@@ -310,33 +310,34 @@ public:
     eof_ = false;
   }
 
-  void SB_NewFont() override {
-    ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
-  }
-
   void SB_On() override {
     ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
   }
 
-  void SB_Blast() override {
-    ShowFile(&IMG_blst, font_config.ProffieOSBlastImageDuration);
-  }
+  void SB_Effect(EffectType effect, float location) override {
+    switch (effect) {
+      case EFFECT_NEWFONT:
+	ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
+	return;
+      case EFFECT_BLAST:
+	ShowFile(&IMG_blst, font_config.ProffieOSBlastImageDuration);
+	return;
+      case EFFECT_CLASH:
+	ShowFile(&IMG_clsh, font_config.ProffieOSClashImageDuration);
+	return;
+      case EFFECT_FORCE:
+	ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
+	return;
+      case EFFECT_LOCKUP_BEGIN:
+	ShowFile(&IMG_lock, 3600000.0);
+	return;
+      case EFFECT_LOCKUP_END:
+	screen_ = SCREEN_PLI;
+	if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+	return;
 
-  void SB_Clash() override {
-    ShowFile(&IMG_clsh, font_config.ProffieOSClashImageDuration);
-  }
-
-  void SB_Force() override {
-    ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
-  }
-
-  void SB_BeginLockup() override {
-    ShowFile(&IMG_lock, 3600000.0);
-  }
-
-  void SB_EndLockup() override {
-    screen_ = SCREEN_PLI;
-    if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+      default: break;
+    }
   }
 
   void SB_Message(const char* text) override {
@@ -440,45 +441,45 @@ public:
         Wire.beginTransmission(address_);
         Wire.write(0x40);
         for (uint8_t x=0; x<16; x++) {
-	  uint8_t b;
-	  switch (layout_) {
-	    default:
-	    case LAYOUT_NATIVE:
-	      b = ((unsigned char *)frame_buffer_)[i];
-	      break;
-	    case LAYOUT_PORTRAIT:
-	      if (!invert_y_) {
-		b = ((unsigned char *)frame_buffer_)[511 - i];
-	      } else {
-		b = ((unsigned char *)frame_buffer_)[i ^ 3];
-	      }
-	      break;
-	    case LAYOUT_LANDSCAPE: {
-	      int x = i >> 2;
-	      int y = ((i & 3) << 3) + 7;
-	      int delta_pos = -16;
-	      if (invert_y_) {
-		y = 31 - y;
-		delta_pos = 16;
-	      }
-//	      STDOUT << " LANDSCAPE DECODE!! x = " << x << " y = " << y << "\n";
+          uint8_t b;
+          switch (layout_) {
+            default:
+            case LAYOUT_NATIVE:
+              b = ((unsigned char *)frame_buffer_)[i];
+              break;
+            case LAYOUT_PORTRAIT:
+              if (!invert_y_) {
+                b = ((unsigned char *)frame_buffer_)[511 - i];
+              } else {
+                b = ((unsigned char *)frame_buffer_)[i ^ 3];
+              }
+              break;
+            case LAYOUT_LANDSCAPE: {
+              int x = i >> 2;
+              int y = ((i & 3) << 3) + 7;
+              int delta_pos = -16;
+              if (invert_y_) {
+                y = 31 - y;
+                delta_pos = 16;
+              }
+//            STDOUT << " LANDSCAPE DECODE!! x = " << x << " y = " << y << "\n";
 
-	      int shift = 7 - (x & 7);
-	      uint8_t *pos =
-		((unsigned char*)frame_buffer_) + ((x>>3) + (y<<4));
-	      b = 0;
-	      for (int j = 0; j < 8; j++) {
-		b <<= 1;
-		b |= (*pos >> shift) & 1;
-		pos += delta_pos;
-	      }
-	    }
-	  }
-	  Wire.write(b ^ xor_);
+              int shift = 7 - (x & 7);
+              uint8_t *pos =
+                ((unsigned char*)frame_buffer_) + ((x>>3) + (y<<4));
+              b = 0;
+              for (int j = 0; j < 8; j++) {
+                b <<= 1;
+                b |= (*pos >> shift) & 1;
+                pos += delta_pos;
+              }
+            }
+          }
+          Wire.write(b ^ xor_);
           i++;
         }
         Wire.endTransmission();
-	I2CUnlock(); do { YIELD(); } while (!I2CLock());
+        I2CUnlock(); do { YIELD(); } while (!I2CLock());
       }
       loop_counter_.Update();
       lock_fb_ = false;
@@ -509,63 +510,66 @@ public:
       int b = f->Read();
       int width, height;
       switch (TAG2(a, b)) {
-	default:
-	  STDOUT << "Unknown image format. a=" << a << " b=" << b << " pos=" << f->Tell() << "\n";
-	  return false;
+        default:
+          STDOUT << "Unknown image format. a=" << a << " b=" << b << " pos=" << f->Tell() << "\n";
+          return false;
 
-	case TAG2('P', '4'):
-	  // PBM
-	  f->skipwhite();
-	  width = f->readIntValue();
-	  f->skipwhite();
-	  height = f->readIntValue();
-	  f->Read();
-	  xor_ = 255;
-	  invert_y_ = false;
-	  break;
+        case TAG2('P', '4'):
+          // PBM
+          f->skipwhite();
+          width = f->readIntValue();
+          f->skipwhite();
+          height = f->readIntValue();
+          f->Read();
+          xor_ = 255;
+          invert_y_ = false;
+          break;
 
-	case TAG2('B', 'M'):
-	case TAG2('B', 'A'):
-	case TAG2('C', 'I'):
-	case TAG2('C', 'P'):
-	case TAG2('I', 'C'):
-	case TAG2('P', 'T'):
-	  // STDOUT << "BMP detected!\n";
-	  xor_ = 255;
-	  invert_y_ = true; // bmp data is bottom to top
-	  // BMP
-	  file_end = file_start + f->ReadType<uint32_t>();
-	  f->Skip(4);
-	  uint32_t offset = f->ReadType<uint32_t>();
+        case TAG2('B', 'M'):
+        case TAG2('B', 'A'):
+        case TAG2('C', 'I'):
+        case TAG2('C', 'P'):
+        case TAG2('I', 'C'):
+        case TAG2('P', 'T'):
+          // STDOUT << "BMP detected!\n";
+          xor_ = 255;
+          invert_y_ = true; // bmp data is bottom to top
+          // BMP
+          file_end = file_start + f->ReadType<uint32_t>();
+          f->Skip(4);
+          uint32_t offset = f->ReadType<uint32_t>();
 
 #if 0
-	  uint32_t ctable = f->Tell() + f->ReadType<uint32_t>();
-	  // STDOUT << "OFFSET = " << offset << " CTABLE=" << ctable << "\n";
-	  width = f->ReadType<uint32_t>();
-	  height = f->ReadType<uint32_t>();
-	  // STDOUT << "Width=" << width << " Height=" << height << "\n";
-	  f->Seek(ctable);
-	  int c0 = ReadColorAsGray(f);
-	  int c1 = ReadColorAsGray(f);
-	  xor_ = c0 > c1 ? 255 : 0;
+          uint32_t ctable = f->Tell() + f->ReadType<uint32_t>();
+          // STDOUT << "OFFSET = " << offset << " CTABLE=" << ctable << "\n";
+          width = f->ReadType<uint32_t>();
+          height = f->ReadType<uint32_t>();
+          // STDOUT << "Width=" << width << " Height=" << height << "\n";
+          f->Seek(ctable);
+          int c0 = ReadColorAsGray(f);
+          int c1 = ReadColorAsGray(f);
+          xor_ = c0 > c1 ? 255 : 0;
 #else
-	  f->Skip(4);
-	  width = f->ReadType<uint32_t>();
-	  height = f->ReadType<uint32_t>();
-	  // STDOUT << "Width=" << width << " Height=" << height << "\n";
+          f->Skip(4);
+          width = f->ReadType<uint32_t>();
+          height = f->ReadType<uint32_t>();
+          // STDOUT << "Width=" << width << " Height=" << height << "\n";
 #endif
-	  // First frame is near the end, seek to it.
-	  f->Seek(file_start + offset + width * height / 8 - 512);
+          // First frame is near the end, seek to it.
+          f->Seek(file_start + offset + width * height / 8 - 512);
       }
       if (width != 128 && width != 32) {
-	STDOUT << "Wrong size image: " << width << "x" << height << "\n";
-	return false;
+        STDOUT << "Wrong size image: " << width << "x" << height << "\n";
+        return false;
       }
       if (width == 128) {
-	layout_ = LAYOUT_LANDSCAPE;
-	looped_frames_ = height / 32;
+        layout_ = LAYOUT_LANDSCAPE;
+        looped_frames_ = height / 32;
       } else {
-	looped_frames_ = height / 128;
+        looped_frames_ = height / 128;
+      }
+      if (current_effect_ == &IMG_on) {
+        looped_on_ = looped_frames_ > 1;
       }
       if (current_effect_ == &IMG_on) {
         looped_on_ = looped_frames_ > 1;
@@ -577,12 +581,12 @@ public:
     ypos_++;
     if (looped_frames_ > 1) {
       if (ypos_ >= looped_frames_) {
-	f->Seek(f->FileSize());
+        f->Seek(f->FileSize());
       } else {
-	if (invert_y_) {
-	  // Seek two frames back, because BMP are backwards.
-	  f->Seek(f->Tell() - 1024);
-	}
+        if (invert_y_) {
+          // Seek two frames back, because BMP are backwards.
+          f->Seek(f->Tell() - 1024);
+        }
       }
     } else {
       if (file_end) f->Seek(file_end);
@@ -603,16 +607,16 @@ public:
     if (eof_) return true;
     if (file_.OpenFile()) {
       if (!file_.IsOpen()) {
-	eof_ = true;
-	return false;
+        eof_ = true;
+        return false;
       }
       ypos_ = looped_frames_;
     }
     if (lock_fb_) return true;
     if (!frame_available_) {
       if (!ReadImage(&file_)) {
-	file_.Close();
-	eof_ = true;
+        file_.Close();
+        eof_ = true;
       }
       frame_available_ = true;
     }
@@ -644,7 +648,7 @@ private:
   volatile int32_t looped_frames_ = 0;
   volatile ScreenLayout layout_;
   uint32_t loop_start_;
-  uint32_t frame_count_ = 0;
+  int32_t frame_count_ = 0;
 
   EffectFileReader file_;
   volatile bool frame_available_ = true;
