@@ -15,11 +15,8 @@
 class RgbArgBase {
 public:
   void run(BladeBase* base) {}
-  OverDriveColor getColor(int led) {
-    OverDriveColor ret;
-    ret.c = color_;
-    ret.overdrive = false;
-    return ret;
+  SimpleColor getColor(int led) {
+    return SimpleColor(color_);
   }
 protected:
   void init(int argnum) {

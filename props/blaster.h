@@ -5,6 +5,19 @@
 
 #define PROP_TYPE Blaster
 
+EFFECT(clipin);
+EFFECT(clipout);
+EFFECT(empty);
+EFFECT(full);
+EFFECT(jam);
+EFFECT(mode);
+EFFECT(plioff);
+EFFECT(plion);
+EFFECT(range);
+EFFECT(reload);
+EFFECT(stun);
+EFFECT(unjam);
+
 class Blaster : public PropBase {
 public:
   Blaster() : PropBase() {}
@@ -22,7 +35,7 @@ public:
   virtual void SetBlasterMode(BlasterMode to_mode) {
     if (!auto_firing_) {
       blaster_mode = to_mode;
-      SaberBase::DoMode();
+      SaberBase::DoEffect(EFFECT_MODE, 0);
     }
   }
 
@@ -66,7 +79,7 @@ public:
     is_jammed_ = is_jammed_ ? true : CheckJam(BLASTER_JAM_PERCENTAGE);
 
     if (is_jammed_) {
-      SaberBase::DoJam();
+      SaberBase::DoEffect(EFFECT_JAM, 0);
       return;
     }
 #endif
@@ -74,7 +87,7 @@ public:
 
     if (max_shots_ != -1) {
       if (shots_fired_ >= max_shots_) {
-        SaberBase::DoEmpty();
+        SaberBase::DoEffect(EFFECT_EMPTY, 0);
         return;
       }
     }
@@ -86,9 +99,9 @@ public:
       auto_firing_ = true;
     } else {
       if (blaster_mode == MODE_STUN) {
-        SaberBase::DoStun();
+        SaberBase::DoEffect(EFFECT_STUN, 0);
       } else {
-        SaberBase::DoFire();
+        SaberBase::DoEffect(EFFECT_FIRE, 0);
       }
 
       shots_fired_++;
@@ -112,16 +125,16 @@ public:
 
   virtual void Reload() {
     shots_fired_ = 0;
-    SaberBase::DoReload();
+    SaberBase::DoEffect(EFFECT_RELOAD, 0);
   }
 
   virtual void ClipOut() {
     if (max_shots_ != -1) shots_fired_ = max_shots_;
-    SaberBase::DoClipOut();
+    SaberBase::DoEffect(EFFECT_CLIP_OUT, 0);
   }
 
   virtual void ClipIn() {
-    SaberBase::DoClipIn();
+    SaberBase::DoEffect(EFFECT_CLIP_IN, 0);
   }
 
   // Pull in parent's SetPreset, but turn the blaster on.
@@ -216,7 +229,7 @@ public:
   void Clash(bool stab) override {
     if (is_jammed_) {
       is_jammed_ = false;
-      SaberBase::DoUnJam();
+      SaberBase::DoEffect(EFFECT_UNJAM, 0);
     }
   }
 
@@ -277,6 +290,34 @@ public:
         return true;
     }
     return false;
+  }
+
+  // Blaster effects, auto fire is handled by begin/end lockup
+  void SB_Effect(EffectType effect, float location) override {
+    switch (effect) {
+      default: return;
+      case EFFECT_STUN: hybrid_font.PlayCommon(&SFX_stun); return;
+      case EFFECT_FIRE: hybrid_font.PlayCommon(&SFX_blast); return;
+      case EFFECT_CLIP_IN: hybrid_font.PlayCommon(&SFX_clipin); return;
+      case EFFECT_CLIP_OUT: hybrid_font.PlayCommon(&SFX_clipout); return;
+      case EFFECT_RELOAD: hybrid_font.PlayCommon(&SFX_reload); return;
+      case EFFECT_MODE:
+	if (SFX_mode) {
+	  hybrid_font.PlayCommon(&SFX_mode);
+	  return;
+	}
+	// TODO: would rather do a Talkie to speak the mode we're in after mode sound
+	beeper.Beep(0.05, 2000.0);
+	return;
+      case EFFECT_RANGE: hybrid_font.PlayCommon(&SFX_range); return;
+      case EFFECT_EMPTY: hybrid_font.PlayCommon(&SFX_empty); return;
+      case EFFECT_FULL: hybrid_font.PlayCommon(&SFX_full); return;
+      case EFFECT_JAM: hybrid_font.PlayCommon(&SFX_jam); return;
+      case EFFECT_UNJAM: hybrid_font.PlayCommon(&SFX_unjam); return;
+      case EFFECT_PLI_ON: hybrid_font.PlayCommon(&SFX_plion); return;
+      case EFFECT_PLI_OFF: hybrid_font.PlayCommon(&SFX_plioff); return;
+	
+    }
   }
 };
 

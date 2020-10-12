@@ -30,11 +30,8 @@ public:
     if (R == 0 && G == 0 && B == 0) return LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
     return LayerRunResult::UNKNOWN;
   }
-  OverDriveColor getColor(int led) {
-    OverDriveColor ret;
-    ret.c = color();
-    ret.overdrive = false;
-    return ret;
+  SimpleColor getColor(int led) {
+    return SimpleColor(color());
   }
 };
 
@@ -47,12 +44,7 @@ public:
     if (R == 0 && G == 0 && B == 0) return LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
     return LayerRunResult::UNKNOWN;
   }
-  OverDriveColor getColor(int led) {
-    OverDriveColor ret;
-    ret.c = color();
-    ret.overdrive = false;
-    return ret;
-  }
+  SimpleColor getColor(int led) { return SimpleColor(color()); }
 };
 
 // Simple semi-transparent color with 16-bit precision.
@@ -60,8 +52,8 @@ template<int R, int G, int B, int A>
 class Rgba16 {
 public:
   void run(BladeBase* base) {}
-  RGBA_um getColor(int led) {
-    return RGBA_um(Color16(R, G, B), false, A >> 1);
+  RGBA_um_nod getColor(int led) {
+    return RGBA_um_nod(Color16(R, G, B), false, A >> 1);
   }
 };
 

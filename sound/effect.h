@@ -511,24 +511,9 @@ EFFECT2(auto,auto);
 EFFECT(endauto); // Doesn't exist in fonts, but I expect there may be use for autofire transitions
 
 EFFECT(blast); // Not to be confused with "blst" and "blaster" as blocking sounds in sabers
-EFFECT(clipin);
-EFFECT(clipout);
-EFFECT(empty);
-EFFECT(full);
-EFFECT(jam);
-EFFECT(mode);
-EFFECT(plioff);
-EFFECT(plion);
-EFFECT(range);
-EFFECT(reload);
-EFFECT(stun);
-EFFECT(unjam);
 
 // battery low
 EFFECT(lowbatt);	// battery low
-
-// per-font tracks
-EFFECT(track);
 
 // TODO: Optimize this and make it possible
 // have the WAV reader use this.

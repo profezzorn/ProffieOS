@@ -98,6 +98,8 @@ enum EVENT : uint32_t {
   EVENT_SHAKE,
   EVENT_TWIST,
   EVENT_CLASH,
+  EVENT_THRUST,
+  EVENT_PUSH,
 
     // For backwards compatibilty.
   EVENT_DOUBLE_CLICK = EVENT_SECOND_PRESSED,

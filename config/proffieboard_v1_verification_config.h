@@ -23,6 +23,10 @@ const unsigned int maxLedsPerStrip = 144;
 #define SHARED_POWER_PINS
 #endif
 
+#ifdef CONFIG_PROP
+#include "../props/saber_fett263_buttons.h"
+#endif
+
 #ifdef CONFIG_PRESETS
 Preset presets[] = {
   { "TeensySF", "tracks/venus.wav",
@@ -59,7 +63,10 @@ Preset presets[] = {
     StyleRainbowPtr<300, 800>(),
     StyleRainbowPtr<300, 800>(), "rainbow"},
   { "TthCrstl", "tracks/uranus.wav",
-    StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>(),
+    StylePtr<Layers<
+      Green,
+      TransitionEffectL<TrConcat<TrWipeIn<300>,AlphaL<Rgb<128,0,0>,SmoothStep<Int<20000>,Int<2000>>>,TrJoin<TrSmoothFade<900>,TrWipe<700>>>,EFFECT_STAB>,
+      InOutTrL<TrWipeSparkTip<White,250>,TrWipeInX<Int<700>>>>>(),
     StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>(), "strobe"},
   { "TeensySF", "tracks/venus.wav",
     &style_pov,

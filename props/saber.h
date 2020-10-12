@@ -191,6 +191,13 @@ public:
     }
     return false;
   }
+#if NUM_BUTTONS == 0
+  void Loop() override {
+    PropBase::Loop();
+    DetectTwist();
+    DetectShake();
+  }
+#endif  
 private:
   bool aux_on_ = true;
   bool pointing_down_ = false;

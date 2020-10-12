@@ -112,17 +112,10 @@ public:
   SaberSA22CButtons() : PropBase() {}
   const char* name() override { return "SaberSA22CButtons"; }
 
-  // EVENT_SWING
-  bool swinging_ = false;
   void Loop() override {
     PropBase::Loop();
-    if (!swinging_ && fusor.swing_speed() > 250) {
-      swinging_ = true;
-      Event(BUTTON_NONE, EVENT_SWING);
-    }
-    if (swinging_ && fusor.swing_speed() < 100) {
-      swinging_ = false;
-    }
+    DetectTwist();
+    DetectSwing();
   }
 
   void ChangeVolume(bool up) {
@@ -302,13 +295,8 @@ public:
   case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
 #endif
 #endif
-    if (!swing_blast_) {
-      swing_blast_ = true;
-      hybrid_font.SB_Blast();
-    } else {
-      swing_blast_ = false;
-      hybrid_font.SB_Blast();
-    }
+    swing_blast_ = !swing_blast_;
+    hybrid_font.SB_Effect(EFFECT_BLAST, 0);
     return true;
 
   case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
@@ -388,11 +376,13 @@ public:
 #endif
     if (!mode_volume_) {
       mode_volume_ = true;
-      beeper.Beep(0.5, 3000);
+      beeper.Beep(0.1, 2000);
+      beeper.Beep(0.1, 2500);
       STDOUT.println("Enter Volume Menu");
     } else {
       mode_volume_ = false;
-      beeper.Beep(0.5, 3000);
+      beeper.Beep(0.1, 2500);
+      beeper.Beep(0.1, 2000);
       STDOUT.println("Exit Volume Menu");
     }
     return true;

@@ -1,6 +1,8 @@
 test: tests
 	./tests
 
-tests: tests.cpp cylon.h style_ptr.h inout_helper.h ../functions/ifon.h alpha.h blade_style.h transition_effect.h layers.h *.h
-	g++ -O -g -std=c++11 -o tests tests.cpp -lm
+tests: tests.cpp
+	g++ -O -g -std=c++11 -MD -MP -o tests tests.cpp -lm
+
+-include *.d
 

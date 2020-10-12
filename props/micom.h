@@ -6,26 +6,33 @@
 RefPtr<BufferedWavPlayer> current_player_;
 Effect* now_playing_;
 Effect* play_next_;
-class TriggerEffectGroup;
-TriggerEffectGroup* current_question_;
+class AnswerEffectGroup;
+AnswerEffectGroup* current_question_;
 
 #define COMMA ,
 
-#define SUBNAMES(X, SEPARATOR)			\
-  X(click)					\
-  SEPARATOR                                     \
-  X(hold)					\
-  SEPARATOR                                     \
-  X(question)					\
-  SEPARATOR                                     \
-  X(answer1)					\
-  SEPARATOR                                     \
-  X(answer2)					\
-  SEPARATOR                                     \
-  X(answer3)					\
-  SEPARATOR                                     \
-  X(answer4)
+#define SUBNAMES(PREFIX, X, SEPARATOR)	\
+  X(PREFIX##base)				\
+  SEPARATOR					\
+  X(PREFIX##answer1)				\
+  SEPARATOR					\
+  X(PREFIX##answer2)				\
+  SEPARATOR					\
+  X(PREFIX##answer3)				\
+  SEPARATOR					\
+  X(PREFIX##answer4)				\
+  SEPARATOR					\
+  X(PREFIX##answer5)				\
+  SEPARATOR					\
+  X(PREFIX##answer6)				\
+  SEPARATOR					\
+  X(PREFIX##answer7)				\
+  SEPARATOR					\
+  X(PREFIX##answer8)
 
+#define MKNAMES(X) X, X "a1", X "a2", X "a3", X "a4", X "a5", X "a6", X "a7", X "a8"
+
+#define JUST_NAME(X) X##_name
 #define CONST_CHAR_NAME(X) const char* X##_name
 #define INIT_EFFECT(X) X##_(X##_name)
 #define DECLARE_EFFECT(X) Effect X##_;
@@ -43,65 +50,78 @@ void Play(Effect* f) {
   now_playing_ = f;
 }
 
-class TriggerEffectGroup {
+class AnswerEffectGroup {
 public:
-  TriggerEffectGroup(SUBNAMES(CONST_CHAR_NAME, COMMA)) : SUBNAMES(INIT_EFFECT, COMMA) {}
+  AnswerEffectGroup(SUBNAMES(effect_, CONST_CHAR_NAME, COMMA)) : SUBNAMES(effect_, INIT_EFFECT, COMMA) {}
 
-  SUBNAMES(DECLARE_EFFECT, );
+  SUBNAMES(effect_, DECLARE_EFFECT, );
 
-  
-  bool Event(EVENT event) {
-    if (event == EVENT_FIRST_SAVED_CLICK_SHORT) {
-      if (click_) Play(&click_);
-      return true;
+  bool Activate() {
+    if (!effect_base_) return false;
+    Play(&effect_base_);
+    if (effect_answer1_ || effect_answer2_ || effect_answer3_ || effect_answer4_) {
+      current_question_ = this;
     }
-    if (event == EVENT_HELD_LONG) {
-      if (question_) {
-	Play(&question_);
-	current_question_ = this;
-	return true;
-      }
-      if (hold_) {
-	Play(&hold_);
-	return true;
-      }
-    }
-    return false;
+    return true;
   }
 
   bool Answer(enum BUTTON button) {
     switch (button) {
       case BUTTON_TRIGGER_ONE:
-	if (answer1_) {
+	if (effect_answer1_) {
 	  // Repeat question, so we're still in the same question mode.
-	  Play(&answer1_);
+	  Play(&effect_answer1_);
 	  return true;
 	}
 	break;
       case BUTTON_TRIGGER_TWO:
-	if (answer2_) {
-	  Play(&answer2_);
+	if (effect_answer2_) {
+	  Play(&effect_answer2_);
 	  current_question_ = nullptr;
 	  return true;
 	}
 	break;
       case BUTTON_TRIGGER_THREE:
-	if (answer3_) {
-	  Play(&answer3_);
+	if (effect_answer3_) {
+	  Play(&effect_answer3_);
 	  current_question_ = nullptr;
 	  return true;
 	}
 	break;
       case BUTTON_TRIGGER_FOUR:
-	if (answer4_) {
-	  Play(&answer4_);
+	if (effect_answer4_) {
+	  Play(&effect_answer4_);
+	  current_question_ = nullptr;
+	  return true;
+	}
+	break;
+      case BUTTON_TRIGGER_FIVE:
+	if (effect_answer5_) {
+	  Play(&effect_answer5_);
+	  current_question_ = nullptr;
+	  return true;
+	}
+	break;
+      case BUTTON_TRIGGER_SIX:
+	if (effect_answer6_) {
+	  Play(&effect_answer6_);
+	  current_question_ = nullptr;
+	  return true;
+	}
+	break;
+      case BUTTON_TRIGGER_SEVEN:
+	if (effect_answer7_) {
+	  Play(&effect_answer7_);
 	  current_question_ = nullptr;
 	  return true;
 	}
 	break;
       case BUTTON_TRIGGER_EIGHT:
-	// No answer, just cancel.
-	  current_question_ = nullptr;
+	// Button 8 always cancels, but it can play a sound first.
+	if (effect_answer8_) {
+	  Play(&effect_answer8_);
+	}
+	current_question_ = nullptr;
 	return true;
 	
       default: break;
@@ -110,15 +130,30 @@ public:
   }
 };
 
-#define DEFINE_TRIGGER(X)			\
-TriggerEffectGroup trigger##X(                  \
-		   "t" #X "clk",		\
-		   "t" #X "hld",		\
-		   "t" #X "q",		        \
-                   "t" #X "a1",			\
-                   "t" #X "a2",			\
-                   "t" #X "a3",			\
-                   "t" #X "a4")
+class TriggerEffectGroup {
+public:
+  TriggerEffectGroup(SUBNAMES(clk, CONST_CHAR_NAME, COMMA),
+		     SUBNAMES(hld, CONST_CHAR_NAME, COMMA)) :
+                     clk(SUBNAMES(clk, JUST_NAME, COMMA)),
+		     hld(SUBNAMES(hld, JUST_NAME, COMMA))
+		     {}
+
+  AnswerEffectGroup clk;
+  AnswerEffectGroup hld;
+  
+  bool Event(EVENT event) {
+    if (event == EVENT_FIRST_SAVED_CLICK_SHORT) {
+      return clk.Activate();
+    }
+    if (event == EVENT_HELD_LONG) {
+      return hld.Activate();
+    }
+    return false;
+  }
+};
+
+#define DEFINE_TRIGGER(X) \
+  TriggerEffectGroup trigger##X(MKNAMES("t" #X "clk"), MKNAMES("t" #X "hld"))
 
 DEFINE_TRIGGER(1);
 DEFINE_TRIGGER(2);

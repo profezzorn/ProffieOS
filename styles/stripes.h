@@ -26,7 +26,7 @@ class StripesHelper<> {
 public:
   static const size_t size = 0;
   void run(BladeBase* blade) {}
-  void get(int led, int p, OverDriveColor* c) {}
+  void get(int led, int p, SimpleColor* c) {}
 };
 
 template<class A, class... B>
@@ -37,9 +37,9 @@ public:
     a_.run(blade);
     b_.run(blade);
   }
-  void get(int led, int p, OverDriveColor* ret) {
+  void get(int led, int p, SimpleColor* ret) {
     if (p > 0 && p < 512) {
-      OverDriveColor tmp = a_.getColor(led);
+      SimpleColor tmp = a_.getColor(led);
       int mul = sin_table[p];
       ret->c.r = clampi32(ret->c.r + ((tmp.c.r * mul) >> 14), 0, 65535);
       ret->c.g = clampi32(ret->c.g + ((tmp.c.g * mul) >> 14), 0, 65535);
@@ -70,12 +70,11 @@ public:
     m = MOD(m + delta_micros * speed / 333, colors_.size * 341*1024);
     mult_ = (50000*1024 / width);
   }
-  OverDriveColor getColor(int led) {
+  SimpleColor getColor(int led) {
     // p = 0..341*len(colors)
     int p = ((m + led * mult_) >> 10) % (colors_.size * 341);
     
-    OverDriveColor ret;
-    ret.overdrive = false;
+    SimpleColor ret;
     ret.c = Color16(0,0,0);
     colors_.get(led, p, &ret);
     colors_.get(led, p + 341 * colors_.size, &ret);
