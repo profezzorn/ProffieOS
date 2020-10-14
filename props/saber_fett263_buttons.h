@@ -110,15 +110,9 @@
 // FETT263_THRUST_ON_NO_BM
 // To enable Thrust On Ignition control but not activate Battle Mode (works with THRUST_ON_PREON only)
 //
-// FETT263_THRUST_LENGTH 50
-// Length of time the thrust gesture needs to continue to prevent false detection, defaults to 50 ms
-//
 // FETT263_FORCE_PUSH
 // To enable gesture controlled Force Push during Battle Mode
 // (will use push.wav or force.wav if not present)
-//
-// FETT263_PUSH_LENGTH 25
-// Length of time the push gesture needs to continue to prevent false detection, defaults to 25 ms
 //
 // FETT263_MULTI_PHASE
 // This will enable a preset change while ON to create a "Multi-Phase" saber effect
@@ -152,14 +146,6 @@
 
 #ifndef FETT263_LOCKUP_DELAY
 #define FETT263_LOCKUP_DELAY 200
-#endif
-
-#ifndef FETT263_THRUST_LENGTH
-#define FETT263_THRUST_LENGTH 50
-#endif
-
-#ifndef FETT263_PUSH_LENGTH
-#define FETT263_PUSH_LENGTH 25
 #endif
 
 #if defined(FETT263_BATTLE_MODE_ALWAYS_ON) && defined(FETT263_BATTLE_MODE_START_ON)
@@ -268,15 +254,12 @@ SaberFett263Buttons() : PropBase() {}
           mss.y * mss.y + mss.z * mss.z > 100 &&
           fusor.swing_speed() < 30 &&
           fabs(fusor.gyro().x) < 10) {
-          if (!push_begin_) {
-            push_gesture_ = millis();
-            push_begin_ = true;
-          } else {
-            if(millis() - push_gesture_ > FETT263_PUSH_LENGTH) {
-              Event(BUTTON_NONE, EVENT_PUSH);
-              push_begin_ = false;
-            }
-          }
+        if (millis() - push_begin_millis_ > 25) {
+          Event(BUTTON_NONE, EVENT_PUSH);
+          push_begin_millis_ = millis();
+        } else {
+          push_begin_millis_ = millis();
+        }
       }
 
     } else {
@@ -290,16 +273,13 @@ SaberFett263Buttons() : PropBase() {}
       }
       // EVENT_THRUST
       if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
-        mss.x > 14  &&
-        fusor.swing_speed() < 150) {
-        if (!thrust_begin_) {
-          thrust_gesture_ = millis();
-          thrust_begin_ = true;
+          mss.x > 14  &&
+          fusor.swing_speed() < 150) {
+        if (millis() - thrust_begin_millis_ > 50) {
+          Event(BUTTON_NONE, EVENT_THRUST);
+          thrust_begin_millis_ = millis();
         } else {
-          if (millis() - thrust_gesture_ > FETT263_THRUST_LENGTH) {
-            Event(BUTTON_NONE, EVENT_THRUST);
-            thrust_begin_ = false;
-          }
+          thrust_begin_millis_ = millis();
         }
       }
     }
@@ -798,10 +778,8 @@ private:
   bool auto_lockup_on_ = false;
   bool auto_melt_on_ = false;
   bool battle_mode_ = false;
-  bool thrust_begin_ = false;
-  bool push_begin_ = false;
-  uint32_t thrust_gesture_ = millis();
-  uint32_t push_gesture_ = millis();
+  uint32_t thrust_begin_millis_ = millis();
+  uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
   uint32_t last_twist_ = millis();
   uint32_t last_push_ = millis();
