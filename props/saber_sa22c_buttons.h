@@ -376,11 +376,13 @@ public:
 #endif
     if (!mode_volume_) {
       mode_volume_ = true;
-      beeper.Beep(0.5, 3000);
+      beeper.Beep(0.1, 2000);
+      beeper.Beep(0.1, 2500);
       STDOUT.println("Enter Volume Menu");
     } else {
       mode_volume_ = false;
-      beeper.Beep(0.5, 3000);
+      beeper.Beep(0.1, 2500);
+      beeper.Beep(0.1, 2000);
       STDOUT.println("Exit Volume Menu");
     }
     return true;
