@@ -1,6 +1,18 @@
 #ifndef FUNCTIONS_SLICE_H
 #define FUNCTIONS_SLICE_H
 
+// Usage: SliceF<DENSITY_FUNCTION>
+// or: SliceF<DENSITY_FUNCTION, OFFSET>
+// DENSITY_FUNCTION: 3DF 
+// OFFSET: integer, defaults to 20
+// return value: FUNCTION
+// The DENSITY_FUNCTION is a 3-dimensional function, f(x, y, z)
+// the SliceF function calculates the x/y/z coordinates based on the
+// angle of the blade. For now, the only density functions available
+// are SmokeDF and FastSmokeDF, which are basically the same thing.
+// This is very similar to how the POV blade works, but instead of
+// using a large data blob as input, it just uses another function
+// as input.
 class SmokeDF {
 public:
   float iTime = 0.0;
