@@ -271,6 +271,9 @@ SaberFett263Buttons() : PropBase() {}
       // EVENT_SWING - Swing On gesture control to allow fine tuning of speed needed to ignite
       if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
         SaberBase::RequestMotion();
+        if (swinging_ && fusor.swing_speed() < 90) {
+          swinging_ = false;
+        }
         if (!swinging_ && fusor.swing_speed() > FETT263_SWING_ON_SPEED) {
           swinging_ = true;
           Event(BUTTON_NONE, EVENT_SWING);
