@@ -257,10 +257,10 @@ SaberFett263Buttons() : PropBase() {}
 
       // EVENT_PUSH
       if (fabs(mss.x) < 3.0 &&
-          mss.y * mss.y + mss.z * mss.z > 100 &&
+          mss.y * mss.y + mss.z * mss.z > 70 &&
           fusor.swing_speed() < 30 &&
           fabs(fusor.gyro().x) < 10) {
-        if (millis() - push_begin_millis_ > 10) {
+        if (millis() - push_begin_millis_ > 5) {
           Event(BUTTON_NONE, EVENT_PUSH);
           push_begin_millis_ = millis();
         } 
