@@ -134,6 +134,7 @@
 // Battle Mode Off (on toggle) - bmend.wav
 // Enter Volume Menu - vmbegin.wav
 // Exit Volume Menu - vmend.wav
+// Force Push - push.wav
 // Fast On (optional) - faston.wav
 // Multi-Blast Mode On - blstbgn.wav
 // Multi-Blast Mode Off - blstend.wav
@@ -283,7 +284,7 @@ SaberFett263Buttons() : PropBase() {}
       if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
           mss.x > 14  &&
           fusor.swing_speed() < 150) {
-        if (millis() - thrust_begin_millis_ > 50) {
+        if (millis() - thrust_begin_millis_ > 15) {
           Event(BUTTON_NONE, EVENT_THRUST);
           thrust_begin_millis_ = millis();
         } 
