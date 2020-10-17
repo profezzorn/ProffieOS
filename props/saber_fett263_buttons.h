@@ -651,62 +651,72 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_TWIST_ON
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
         // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_ > 2000) {
+        if (millis() - last_twist_ > 2000 &&
+            millis() - saber_off_time_ > 1000) {
           FastOn();
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
 #endif
+          last_twist_ = millis();
         }
-        last_twist_ = millis();
         return true;
 #endif
 
 #ifdef FETT263_TWIST_ON_PREON
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
         // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_ > 2000) {
+        if (millis() - last_twist_ > 2000 &&
+            millis() - saber_off_time_ > 1000) {
           On();
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
 #endif
+          last_twist_ = millis();
         }
-        last_twist_ = millis();
         return true;
 #endif
 
 #ifdef FETT263_STAB_ON
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
-        FastOn();
+        if (millis() - saber_off_time_ > 1000) {
+          FastOn();
 #ifndef FETT263_STAB_ON_NO_BM
-        battle_mode_ = true;
+          battle_mode_ = true;
 #endif
+        }
         return true;
 #endif
 
 #ifdef FETT263_STAB_ON_PREON
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
-        On();
+        if (millis() - saber_off_time_ > 1000) {
+          On();
 #ifndef FETT263_STAB_ON_NO_BM
-        battle_mode_ = true;
+          battle_mode_ = true;
 #endif
+        }
         return true;
 #endif
 
 #ifdef FETT263_THRUST_ON
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
-        FastOn();
+        if (millis() - saber_off_time_ > 1000) {
+          FastOn();
 #ifndef FETT263_THRUST_ON_NO_BM
-        battle_mode_ = true;
+          battle_mode_ = true;
 #endif
+        }
         return true;
 #endif
 
 #ifdef FETT263_THRUST_ON_PREON
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
-        On();
+        if (millis() - saber_off_time_ > 1000) {
+          On();
 #ifndef FETT263_THRUST_ON_NO_BM
-        battle_mode_ = true;
+          battle_mode_ = true;
 #endif
+        }
         return true;
 #endif
 
