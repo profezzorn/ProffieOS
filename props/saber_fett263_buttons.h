@@ -260,7 +260,7 @@ SaberFett263Buttons() : PropBase() {}
           mss.y * mss.y + mss.z * mss.z > 70 &&
           fusor.swing_speed() < 30 &&
           fabs(fusor.gyro().x) < 10) {
-        if (abs(millis() - push_begin_millis_) > 5) {
+        if (millis() - push_begin_millis_ > 5) {
           Event(BUTTON_NONE, EVENT_PUSH);
           push_begin_millis_ = millis();
         } 
@@ -284,7 +284,7 @@ SaberFett263Buttons() : PropBase() {}
       if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
           mss.x > 14  &&
           fusor.swing_speed() < 150) {
-        if (abs(millis() - thrust_begin_millis_) > 15) {
+        if (millis() - thrust_begin_millis_ > 15) {
           Event(BUTTON_NONE, EVENT_THRUST);
           thrust_begin_millis_ = millis();
         } 
@@ -637,7 +637,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_TWIST_OFF
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
         // Delay twist events to prevent false trigger from over twisting
-        if (abs(millis() - last_twist_) > 3000) {
+        if (millis() - last_twist_ > 3000) {
           Off();
           last_twist_ = millis();
           saber_off_time_ = millis();
@@ -651,8 +651,8 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_TWIST_ON
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
         // Delay twist events to prevent false trigger from over twisting
-        if (abs(millis() - last_twist_) > 2000 &&
-            abs(millis() - saber_off_time_) > 1000) {
+        if (millis() - last_twist_ > 2000 &&
+            millis() - saber_off_time_ > 1000) {
           FastOn();
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
@@ -666,7 +666,7 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
         // Delay twist events to prevent false trigger from over twisting
         if (millis() - last_twist_ > 2000 &&
-            abs(millis() - saber_off_time_) > 1000) {
+            millis() - saber_off_time_ > 1000) {
           On();
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
@@ -678,7 +678,7 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_STAB_ON
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
-        if (abs(millis() - saber_off_time_) > 1000) {
+        if (millis() - saber_off_time_ > 1000) {
           FastOn();
 #ifndef FETT263_STAB_ON_NO_BM
           battle_mode_ = true;
@@ -689,7 +689,7 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_STAB_ON_PREON
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
-        if (abs(millis() - saber_off_time_) > 1000) {
+        if (millis() - saber_off_time_ > 1000) {
           On();
 #ifndef FETT263_STAB_ON_NO_BM
           battle_mode_ = true;
@@ -700,7 +700,7 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_THRUST_ON
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
-        if (abs(millis() - saber_off_time_) > 1000) {
+        if (millis() - saber_off_time_ > 1000) {
           FastOn();
 #ifndef FETT263_THRUST_ON_NO_BM
           battle_mode_ = true;
@@ -711,7 +711,7 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_THRUST_ON_PREON
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
-        if (abs(millis() - saber_off_time_) > 1000) {
+        if (millis() - saber_off_time_ > 1000) {
           On();
 #ifndef FETT263_THRUST_ON_NO_BM
           battle_mode_ = true;
@@ -723,7 +723,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_FORCE_PUSH
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
         if (battle_mode_ &&
-            abs(millis() - last_push_) > 2000) {
+            millis() - last_push_ > 2000) {
           if (SFX_push) {
             hybrid_font.PlayCommon(&SFX_push);
           } else {
@@ -738,7 +738,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
         // Delay twist events to prevent false trigger from over twisting
-        if (abs(millis() - last_twist_) > 2000) {
+        if (millis() - last_twist_ > 2000) {
           last_twist_ = millis();
           next_preset();
         }
@@ -746,7 +746,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
         // Delay twist events to prevent false trigger from over twisting
-        if (abs(millis() - last_twist_) > 2000) {
+        if (millis() - last_twist_ > 2000) {
           last_twist_ = millis();
           previous_preset();
         }
