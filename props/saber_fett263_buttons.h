@@ -119,6 +119,10 @@
 // To enable gesture controlled Force Push during Battle Mode
 // (will use push.wav or force.wav if not present)
 //
+// FETT263_FORCE_PUSH_ALWAYS_ON
+// To enable gesture controlled Force Push full time
+// (will use push.wav or force.wav if not present)
+//
 // FETT263_MULTI_PHASE
 // This will enable a preset change while ON to create a "Multi-Phase" saber effect
 //
@@ -204,6 +208,10 @@
 
 #if defined(FETT263_STAB_ON) && defined(FETT263_STAB_PREON)
 #error You cannot define both FETT263_STAB_ON and FETT263_STAB_ON_PREON
+#endif
+
+#if defined(FETT263_FORCE_PUSH_ALWAYS_ON) && defined(FETT263_FORCE_PUSH)
+#error You cannot define both FETT263_FORCE_PUSH_ALWAYS_ON and FETT263_FORCE_PUSH
 #endif
 
 #include "prop_base.h"
@@ -724,6 +732,20 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
         if (battle_mode_ &&
             millis() - last_push_ > 2000) {
+          if (SFX_push) {
+            hybrid_font.PlayCommon(&SFX_push);
+          } else {
+            hybrid_font.DoEffect(EFFECT_FORCE, 0);
+          }
+          last_push_ = millis();
+        }
+        return true;
+
+#endif
+        
+#ifdef FETT263_FORCE_PUSH_ALWAYS_ON
+      case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
+        if (millis() - last_push_ > 2000) {
           if (SFX_push) {
             hybrid_font.PlayCommon(&SFX_push);
           } else {
