@@ -186,24 +186,16 @@
 #error You cannot define both FETT263_BATTLE_MODE_START_ON and FETT263_STAB_ON_NO_BM
 #endif
 
-#if defined(FETT263_SWING_ON) && defined(FETT263_SWING_ON_NO_BM)
-#error You cannot define both FETT263_SWING_ON and FETT263_SWING_ON_NO_BM
+#if defined(FETT263_BATTLE_MODE_START_ON) && defined(FETT263_THRUST_ON_NO_BM)
+#error You cannot define both FETT263_BATTLE_MODE_START_ON and FETT263_STAB_ON_NO_BM
 #endif
 
 #if defined(FETT263_SWING_ON) && defined(FETT263_SWING_ON_PREON)
 #error You cannot define both FETT263_SWING_ON and FETT263_SWING_ON_PREON
 #endif
 
-#if defined(FETT263_TWIST_ON) && defined(FETT263_TWIST_ON_NO_BM)
-#error You cannot define both FETT263_TWIST_ON and FETT263_TWIST_ON_NO_BM
-#endif
-
 #if defined(FETT263_TWIST_ON) && defined(FETT263_TWIST_PREON)
 #error You cannot define both FETT263_TWIST_ON and FETT263_TWIST_ON_PREON
-#endif
-
-#if defined(FETT263_STAB_ON) && defined(FETT263_STAB_ON_NO_BM)
-#error You cannot define both FETT263_STAB_ON and FETT263_STAB_ON_NO_BM
 #endif
 
 #if defined(FETT263_STAB_ON) && defined(FETT263_STAB_PREON)
