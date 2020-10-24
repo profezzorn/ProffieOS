@@ -571,9 +571,6 @@ public:
       if (current_effect_ == &IMG_on) {
         looped_on_ = looped_frames_ > 1;
       }
-      if (current_effect_ == &IMG_on) {
-        looped_on_ = looped_frames_ > 1;
-      }
     }
     // STDOUT << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
     if (f->Available() < sizeof(frame_buffer_)) return false;
