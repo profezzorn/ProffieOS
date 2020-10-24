@@ -3,14 +3,17 @@
 
 #include <algorithm>
 
-// Usage: MarbleF<OFFSET, PERCENT, FRICTION, ACCELERATION, GRAVITY>
-// or: MarbleF<PERCENT, RPM, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS>
-// RPM, PERCENT, ON_PERCENT, ON_RPM, FADE_TIME_MILLIS: a number
-// return value: COLOR
-// This is intended for a small ring of neopixels
-// A section of the ring is lit at the specified color
-// and rotates at the specified speed. The size of the
-// lit up section is defined by "percentage".
+// Usage: MarbleF<OFFSET, FRICTION, ACCELERATION, GRAVITY>
+// OFFSET: FUNCTION  0-32768, adjust until "down" represents is actually down
+// FRICTION: FUNCTION, higher values makes the marble slow down, usually a constant
+// ACCELERATION: FUNCTION, a function specifying how much speed to add to the marble
+// GRAVITY: FUNCTION higher values makes the marble heavier
+// return value: FUNCTION  0-32768, representing point on a circle
+// This is intended for a small ring of neopixels.
+// It runs a simulation of a marble trapped in a circular
+// track and returns the position of that marble.
+// Meant to be used with CircularSectionF to turn the marble
+// position into a lighted up section.
 class BladeBase;
 template<class OFFSET,
          class FRICTION,

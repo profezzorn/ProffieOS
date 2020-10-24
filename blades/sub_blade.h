@@ -235,7 +235,7 @@ class BladeBase* SubBladeWithStride(int first_led, int last_led, int stride, Bla
     first_subblade_wrapper = last_subblade_wrapper = ret;
   }
   ret->SetupStride(stride);
-  ret->SetupSubBlade(blade, first_led, ((last_led + 1 - first_led)/stride));
+  ret->SetupSubBlade(blade, first_led, (last_led - first_led)/stride + 1);
   return ret;
 }
 
