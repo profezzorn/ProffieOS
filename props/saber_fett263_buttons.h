@@ -206,6 +206,54 @@
 #error You cannot define both FETT263_FORCE_PUSH_ALWAYS_ON and FETT263_FORCE_PUSH
 #endif
 
+#ifdef FETT263_SWING_ON
+#define SWING_GESTURE
+#endif
+
+#ifdef FETT263_SWING_ON_PREON
+#define SWING_GESTURE
+#endif
+
+#if defined(FETT263_SWING_ON_NO_BM) && !defined(SWING_GESTURE)
+#error FETT263_SWING_ON_NO_BM requires either FETT263_SWING_ON or FETT263_SWING_ON_PREON
+#endif
+
+#ifdef FETT263_STAB_ON
+#define STAB_GESTURE
+#endif
+
+#ifdef FETT263_STAB_ON_PREON
+#define STAB_GESTURE
+#endif
+
+#if defined(FETT263_STAB_ON_NO_BM) && !defined(STAB_GESTURE)
+#error FETT263_STAB_ON_NO_BM requires either FETT263_STAB_ON or FETT263_STAB_ON_PREON
+#endif
+
+#ifdef FETT263_TWIST_ON
+#define TWIST_GESTURE
+#endif
+
+#ifdef FETT263_TWIST_ON_PREON
+#define TWIST_GESTURE
+#endif
+
+#if defined(FETT263_TWIST_ON_NO_BM) && !defined(TWIST_GESTURE)
+#error FETT263_TWIST_ON_NO_BM requires either FETT263_TWIST_ON or FETT263_TWIST_ON_PREON
+#endif
+
+#ifdef FETT263_THRUST_ON
+#define THRUST_GESTURE
+#endif
+
+#ifdef FETT263_THRUST_ON_PREON
+#define THRUST_GESTURE
+#endif
+
+#if defined(FETT263_THRUST_ON_NO_BM) && !defined(THRUST_GESTURE)
+#error FETT263_THRUST_ON_NO_BM requires either FETT263_THRUST_ON or FETT263_THRUST_ON_PREON
+#endif
+
 #ifdef FETT263_FORCE_PUSH_ALWAYS_ON
 #define FORCE_PUSH_CONDITION true
 #define FETT263_FORCE_PUSH
