@@ -206,6 +206,13 @@
 #error You cannot define both FETT263_FORCE_PUSH_ALWAYS_ON and FETT263_FORCE_PUSH
 #endif
 
+#ifdef FETT263_FORCE_PUSH_ALWAYS_ON
+#define FORCE_PUSH_CONDITION true
+#define FETT263_FORCE_PUSH
+#else
+#define FORCE_PUSH_CONDITION battle_mode_
+#endif
+
 #include "prop_base.h"
 #include "../sound/hybrid_font.h"
 
@@ -722,22 +729,8 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_FORCE_PUSH
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
-        if (battle_mode_ &&
+        if (FORCE_PUSH_CONDITION &&
             millis() - last_push_ > 2000) {
-          if (SFX_push) {
-            hybrid_font.PlayCommon(&SFX_push);
-          } else {
-            hybrid_font.DoEffect(EFFECT_FORCE, 0);
-          }
-          last_push_ = millis();
-        }
-        return true;
-
-#endif
-        
-#ifdef FETT263_FORCE_PUSH_ALWAYS_ON
-      case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
-        if (millis() - last_push_ > 2000) {
           if (SFX_push) {
             hybrid_font.PlayCommon(&SFX_push);
           } else {
