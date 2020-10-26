@@ -9,10 +9,11 @@
 // Ignite (ON) - click PWR while OFF (Swing On, Twist On and Stab On available with defines)
 // Muted Ignition (ON) - double click PWR while OFF
 // Retract (OFF) - click PWR while ON (disabled during swinging, Twist Off available with define)
-// Play Music Track - hold and release PWR while OFF
+// Play/Stop Music Track - hold and release PWR while OFF or hold and release PWR while ON and pointing blade straight up
 // Blast - click AUX while ON
-// Multi-Blast Mode - hold and release AUX while ON to enter mode, Swing to initiate Blasts, click Aux to exit mode
-//                    lockup, clash, stab, melt, drag or any button presses automatically exits mode
+// Multi-Blast Mode - hold and release AUX while ON or in Battle Mode, click AUX and swing within 3 seconds to enter Mode,
+//                    while in Multi-Blast Mode every swing will trigger a Blast effect.
+//                    click AUX or lockup, clash, stab, melt, drag or any button presses automatically exits Mode
 // Clash - clash blade while ON
 //         in Battle Mode clash and pull away quickly for "Clash" (requires BEGIN_LOCKUP and END_LOCKUP styles)
 // Lockup - hold AUX and clash while ON
@@ -22,7 +23,7 @@
 // Melt - hold PWR (or AUX) and thrust forward and clash while ON
 //        in Battle Mode thrust and clash to engage, pull away to disengage
 // Lightning Block - hold PWR and click AUX while ON
-// Force - hold and release PWR while ON
+// Force - hold and release PWR while ON (not pointing straight up)
 // Stab - thrust forward and clash blade while ON - deactivated in Battle Mode
 // Power Save - hold Aux and click PWR while ON (pointing up) to use Power Save (requires style)
 // Color Change - hold AUX and click PWR while ON (parallel or down) to enter CCWheel,
@@ -322,7 +323,13 @@ SaberFett263Buttons() : PropBase() {}
       } else {
         push_begin_millis_ = millis();
       }
-
+      
+      // Multi-Blast detection
+      if (!swing_blast_ && battle_mode_ && millis() - last_blast_ < 3000 && fusor.swing_speed() > 250) {
+        SaberBase::DoBlast();
+        swing_blast_ = true;
+      }
+      
     } else {
       // EVENT_SWING - Swing On gesture control to allow fine tuning of speed needed to ignite
       if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
@@ -502,7 +509,11 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
-        SaberBase::DoForce();
+        if (fusor.angle1() >  M_PI / 3) {
+          StartOrStopTrack();
+        } else {
+          SaberBase::DoForce();
+        }
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
@@ -519,6 +530,9 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         } else {
           SaberBase::DoBlast();
+          if (battle_mode_) {
+            last_blast_ = millis();
+          }
         }
         return true;
 
@@ -855,6 +869,7 @@ private:
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
+  uint32_t last_blast_ = millis();
   uint32_t last_twist_ = millis();
   uint32_t last_push_ = millis();
   uint32_t saber_off_time_ = millis();
