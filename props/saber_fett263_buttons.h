@@ -11,9 +11,8 @@
 // Retract (OFF) - click PWR while ON (disabled during swinging, Twist Off available with define)
 // Play/Stop Music Track - hold and release PWR while OFF or hold and release PWR while ON and pointing blade straight up
 // Blast - click AUX while ON
-// Multi-Blast Mode - hold and release AUX while ON or in Battle Mode, click AUX and swing within 3 seconds to enter Mode,
-//                    while in Multi-Blast Mode every swing will trigger a Blast effect.
-//                    click AUX or lockup, clash, stab, melt, drag or any button presses automatically exits Mode
+// Multi-Blast Mode - hold and release AUX while ON to enter mode, Swing to initiate Blasts, click Aux to exit mode
+//                    lockup, clash, stab, melt, drag or any button presses automatically exits mode
 // Clash - clash blade while ON
 //         in Battle Mode clash and pull away quickly for "Clash" (requires BEGIN_LOCKUP and END_LOCKUP styles)
 // Lockup - hold AUX and clash while ON
@@ -324,12 +323,6 @@ SaberFett263Buttons() : PropBase() {}
         push_begin_millis_ = millis();
       }
       
-      // Multi-Blast detection
-      if (!swing_blast_ && battle_mode_ && millis() - last_blast_ < 3000 && fusor.swing_speed() > 250) {
-        SaberBase::DoBlast();
-        swing_blast_ = true;
-      }
-      
     } else {
       // EVENT_SWING - Swing On gesture control to allow fine tuning of speed needed to ignite
       if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
@@ -530,9 +523,6 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         } else {
           SaberBase::DoBlast();
-          if (battle_mode_) {
-            last_blast_ = millis();
-          }
         }
         return true;
 
@@ -869,7 +859,6 @@ private:
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
-  uint32_t last_blast_ = millis();
   uint32_t last_twist_ = millis();
   uint32_t last_push_ = millis();
   uint32_t saber_off_time_ = millis();
