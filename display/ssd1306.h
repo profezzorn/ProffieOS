@@ -383,11 +383,11 @@ public:
     Send(MEMORYMODE);                    // 0x20
     Send(0x01);                          // vertical address mode
     #ifndef OLED_FLIP_180		 // normal OLED operation
-    Send(SEGREMAP);
-    Send(COMSCANINC);
-    #else				 // allows for 180deg rotation of the OLED mapping
     Send(SEGREMAP | 0x1);
     Send(COMSCANDEC);
+    #else				 // allows for 180deg rotation of the OLED mapping
+    Send(SEGREMAP);
+    Send(COMSCANINC);
     #endif
 
     Send(SETCOMPINS);                    // 0xDA
