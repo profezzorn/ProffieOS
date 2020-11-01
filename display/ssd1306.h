@@ -388,7 +388,7 @@ public:
     #else				 // allows for 180deg rotation of the OLED mapping
     Send(SEGREMAP);
     Send(COMSCANINC);
-    #endif
+    #endif				// BC test branch/pull req
 
     Send(SETCOMPINS);                    // 0xDA
     Send(0x02);  // may need to be 0x12 for some displays
