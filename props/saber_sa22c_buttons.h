@@ -317,7 +317,7 @@ public:
       }
     }
     return true;
-      
+
             // Auto Lockup Mode
   case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
     if (!battle_mode_) return false;
@@ -510,7 +510,7 @@ public:
     return true;
 #else
   // 2 and 3 button Force effect
-  case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_SHORT, MODE_ON):
+  case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
     SaberBase::DoForce();
     return true;
   // 2 and 3 button color change
@@ -585,7 +585,7 @@ public:
   case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
 #endif
 #endif
-    if (!SaberBase::Lockup()) {
+    if (!SaberBase::Lockup() && !battle_mode_) {
       if (pointing_down_) {
         SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
       } else {
@@ -605,14 +605,17 @@ public:
   // 3 button
   case EVENTID(BUTTON_AUX2, EVENT_FIRST_HELD, MODE_ON):
 #endif
-    SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
-    swing_blast_ = false;
-    SaberBase::DoBeginLockup();
-    return true;
+    if (!battle_mode_) {
+      SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+      swing_blast_ = false;
+      SaberBase::DoBeginLockup();
+      return true;
+    }
+    break;
 
 // Melt
   case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
-    if (!SaberBase::Lockup()) {
+    if (!SaberBase::Lockup() && !battle_mode_) {
       SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
       swing_blast_ = false;
       SaberBase::DoBeginLockup();
