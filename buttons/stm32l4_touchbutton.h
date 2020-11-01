@@ -124,6 +124,14 @@ protected:
       STDOUT.print(max_);
       STDOUT.println(")");
 
+#ifdef SPEAK_TOUCH_VALUES
+      if (talkie.Empty()) {
+	talkie.Say2Digits(min_);
+	talkie.Say(spTO);
+	talkie.Say2Digits(max_);
+      }
+#endif
+
       print_next_ = false;
       min_ = 10000000;
       max_ = 0;

@@ -9,7 +9,7 @@
 // Ignite (ON) - click PWR while OFF (Swing On, Twist On and Stab On available with defines)
 // Muted Ignition (ON) - double click PWR while OFF
 // Retract (OFF) - click PWR while ON (disabled during swinging, Twist Off available with define)
-// Play Music Track - hold and release PWR while OFF
+// Play/Stop Music Track - hold and release PWR while OFF or hold and release PWR while ON and pointing blade straight up
 // Blast - click AUX while ON
 // Multi-Blast Mode - hold and release AUX while ON to enter mode, Swing to initiate Blasts, click Aux to exit mode
 //                    lockup, clash, stab, melt, drag or any button presses automatically exits mode
@@ -22,7 +22,7 @@
 // Melt - hold PWR (or AUX) and thrust forward and clash while ON
 //        in Battle Mode thrust and clash to engage, pull away to disengage
 // Lightning Block - hold PWR and click AUX while ON
-// Force - hold and release PWR while ON
+// Force - hold and release PWR while ON (not pointing straight up)
 // Stab - thrust forward and clash blade while ON - deactivated in Battle Mode
 // Power Save - hold Aux and click PWR while ON (pointing up) to use Power Save (requires style)
 // Color Change - hold AUX and click PWR while ON (parallel or down) to enter CCWheel,
@@ -119,6 +119,10 @@
 // To enable gesture controlled Force Push during Battle Mode
 // (will use push.wav or force.wav if not present)
 //
+// FETT263_FORCE_PUSH_ALWAYS_ON
+// To enable gesture controlled Force Push full time
+// (will use push.wav or force.wav if not present)
+//
 // FETT263_MULTI_PHASE
 // This will enable a preset change while ON to create a "Multi-Phase" saber effect
 //
@@ -182,28 +186,79 @@
 #error You cannot define both FETT263_BATTLE_MODE_START_ON and FETT263_STAB_ON_NO_BM
 #endif
 
-#if defined(FETT263_SWING_ON) && defined(FETT263_SWING_ON_NO_BM)
-#error You cannot define both FETT263_SWING_ON and FETT263_SWING_ON_NO_BM
+#if defined(FETT263_BATTLE_MODE_START_ON) && defined(FETT263_THRUST_ON_NO_BM)
+#error You cannot define both FETT263_BATTLE_MODE_START_ON and FETT263_STAB_ON_NO_BM
 #endif
 
 #if defined(FETT263_SWING_ON) && defined(FETT263_SWING_ON_PREON)
 #error You cannot define both FETT263_SWING_ON and FETT263_SWING_ON_PREON
 #endif
 
-#if defined(FETT263_TWIST_ON) && defined(FETT263_TWIST_ON_NO_BM)
-#error You cannot define both FETT263_TWIST_ON and FETT263_TWIST_ON_NO_BM
-#endif
-
 #if defined(FETT263_TWIST_ON) && defined(FETT263_TWIST_PREON)
 #error You cannot define both FETT263_TWIST_ON and FETT263_TWIST_ON_PREON
 #endif
 
-#if defined(FETT263_STAB_ON) && defined(FETT263_STAB_ON_NO_BM)
-#error You cannot define both FETT263_STAB_ON and FETT263_STAB_ON_NO_BM
-#endif
-
 #if defined(FETT263_STAB_ON) && defined(FETT263_STAB_PREON)
 #error You cannot define both FETT263_STAB_ON and FETT263_STAB_ON_PREON
+#endif
+
+#if defined(FETT263_FORCE_PUSH_ALWAYS_ON) && defined(FETT263_FORCE_PUSH)
+#error You cannot define both FETT263_FORCE_PUSH_ALWAYS_ON and FETT263_FORCE_PUSH
+#endif
+
+#ifdef FETT263_SWING_ON
+#define SWING_GESTURE
+#endif
+
+#ifdef FETT263_SWING_ON_PREON
+#define SWING_GESTURE
+#endif
+
+#if defined(FETT263_SWING_ON_NO_BM) && !defined(SWING_GESTURE)
+#error FETT263_SWING_ON_NO_BM requires either FETT263_SWING_ON or FETT263_SWING_ON_PREON
+#endif
+
+#ifdef FETT263_STAB_ON
+#define STAB_GESTURE
+#endif
+
+#ifdef FETT263_STAB_ON_PREON
+#define STAB_GESTURE
+#endif
+
+#if defined(FETT263_STAB_ON_NO_BM) && !defined(STAB_GESTURE)
+#error FETT263_STAB_ON_NO_BM requires either FETT263_STAB_ON or FETT263_STAB_ON_PREON
+#endif
+
+#ifdef FETT263_TWIST_ON
+#define TWIST_GESTURE
+#endif
+
+#ifdef FETT263_TWIST_ON_PREON
+#define TWIST_GESTURE
+#endif
+
+#if defined(FETT263_TWIST_ON_NO_BM) && !defined(TWIST_GESTURE)
+#error FETT263_TWIST_ON_NO_BM requires either FETT263_TWIST_ON or FETT263_TWIST_ON_PREON
+#endif
+
+#ifdef FETT263_THRUST_ON
+#define THRUST_GESTURE
+#endif
+
+#ifdef FETT263_THRUST_ON_PREON
+#define THRUST_GESTURE
+#endif
+
+#if defined(FETT263_THRUST_ON_NO_BM) && !defined(THRUST_GESTURE)
+#error FETT263_THRUST_ON_NO_BM requires either FETT263_THRUST_ON or FETT263_THRUST_ON_PREON
+#endif
+
+#ifdef FETT263_FORCE_PUSH_ALWAYS_ON
+#define FORCE_PUSH_CONDITION true
+#define FETT263_FORCE_PUSH
+#else
+#define FORCE_PUSH_CONDITION battle_mode_
 #endif
 
 #include "prop_base.h"
@@ -267,7 +322,7 @@ SaberFett263Buttons() : PropBase() {}
       } else {
         push_begin_millis_ = millis();
       }
-
+      
     } else {
       // EVENT_SWING - Swing On gesture control to allow fine tuning of speed needed to ignite
       if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
@@ -447,7 +502,11 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
-        SaberBase::DoForce();
+        if (fusor.angle1() >  M_PI / 3) {
+          StartOrStopTrack();
+        } else {
+          SaberBase::DoForce();
+        }
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
@@ -722,7 +781,7 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_FORCE_PUSH
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
-        if (battle_mode_ &&
+        if (FORCE_PUSH_CONDITION &&
             millis() - last_push_ > 2000) {
           if (SFX_push) {
             hybrid_font.PlayCommon(&SFX_push);
