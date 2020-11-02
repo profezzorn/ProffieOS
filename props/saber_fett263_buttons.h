@@ -806,7 +806,9 @@ SaberFett263Buttons() : PropBase() {}
         // Delay twist events to prevent false trigger from over twisting
         if (millis() - last_twist_ > 2000) {
           last_twist_ = millis();
+          Off();
           next_preset();
+          FastOn();
         }
         return true;
 
@@ -814,7 +816,9 @@ SaberFett263Buttons() : PropBase() {}
         // Delay twist events to prevent false trigger from over twisting
         if (millis() - last_twist_ > 2000) {
           last_twist_ = millis();
+          Off();
           previous_preset();
+          FastOn();
         }
         return true;
 #endif
