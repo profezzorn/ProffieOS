@@ -645,11 +645,10 @@ SaberFett263Buttons() : PropBase() {}
         if (!battle_mode_) return false;
         clash_impact_millis_ = millis();
         swing_blast_ = false;
-        if (!swinging_) {
-          SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-          auto_lockup_on_ = true;
-          SaberBase::DoBeginLockup();
-        }
+        if (swinging_) return false;
+        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+        auto_lockup_on_ = true;
+        SaberBase::DoBeginLockup();
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
