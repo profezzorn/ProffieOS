@@ -123,6 +123,10 @@
 // To enable gesture controlled Force Push full time
 // (will use push.wav or force.wav if not present)
 //
+// FETT263_FORCE_PUSH_LENGTH 5
+// Allows for adjustment to Push gesture length in millis needed to trigger Force Push
+// Recommended range 1 ~ 10, 1 = shortest, easiest to trigger, 10 = longest
+//
 // FETT263_MULTI_PHASE
 // This will enable a preset change while ON to create a "Multi-Phase" saber effect
 //
@@ -156,6 +160,10 @@
 
 #ifndef FETT263_LOCKUP_DELAY
 #define FETT263_LOCKUP_DELAY 200
+#endif
+
+#ifndef FETT263_FORCE_PUSH_LENGTH
+#define FETT263_FORCE_PUSH_LENGTH 5
 #endif
 
 #if defined(FETT263_BATTLE_MODE_ALWAYS_ON) && defined(FETT263_BATTLE_MODE_START_ON)
@@ -315,7 +323,7 @@ SaberFett263Buttons() : PropBase() {}
           mss.y * mss.y + mss.z * mss.z > 70 &&
           fusor.swing_speed() < 30 &&
           fabs(fusor.gyro().x) < 10) {
-        if (millis() - push_begin_millis_ > 5) {
+        if (millis() - push_begin_millis_ > FETT263_FORCE_PUSH_LENGTH) {
           Event(BUTTON_NONE, EVENT_PUSH);
           push_begin_millis_ = millis();
         } 
@@ -645,11 +653,10 @@ SaberFett263Buttons() : PropBase() {}
         if (!battle_mode_) return false;
         clash_impact_millis_ = millis();
         swing_blast_ = false;
-        if (!swinging_) {
-          SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-          auto_lockup_on_ = true;
-          SaberBase::DoBeginLockup();
-        }
+        if (swinging_) return false;
+        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+        auto_lockup_on_ = true;
+        SaberBase::DoBeginLockup();
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
@@ -799,7 +806,9 @@ SaberFett263Buttons() : PropBase() {}
         // Delay twist events to prevent false trigger from over twisting
         if (millis() - last_twist_ > 2000) {
           last_twist_ = millis();
+          Off();
           next_preset();
+          FastOn();
         }
         return true;
 
@@ -807,7 +816,9 @@ SaberFett263Buttons() : PropBase() {}
         // Delay twist events to prevent false trigger from over twisting
         if (millis() - last_twist_ > 2000) {
           last_twist_ = millis();
+          Off();
           previous_preset();
+          FastOn();
         }
         return true;
 #endif
