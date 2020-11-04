@@ -327,6 +327,7 @@ public:
   case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_ON):
 #endif
     if (!battle_mode_) {
+      STDOUT.println("Entering Battle Mode");
       battle_mode_ = true;
       if (SFX_bmbegin) {
         hybrid_font.PlayCommon(&SFX_bmbegin);
@@ -334,6 +335,7 @@ public:
         hybrid_font.DoEffect(EFFECT_FORCE, 0);
       }
     } else {
+      STDOUT.println("Exiting Battle Mode");
       battle_mode_ = false;
       if (SFX_bmend) {
         hybrid_font.PlayCommon(&SFX_bmend);
@@ -348,7 +350,7 @@ public:
     if (!battle_mode_) return false;
     clash_impact_millis_ = millis();
     swing_blast_ = false;
-    if (!swinging_) return false;
+    if (swinging_) return false;
     SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
     auto_lockup_on_ = true;
     SaberBase::DoBeginLockup();
@@ -376,6 +378,7 @@ public:
     if (millis() > 3000) {
       FastOn();
 #ifdef GESTURE_AUTO_BATTLE_MODE
+      STDOUT.println("Entering Battle Mode");
       battle_mode_ = true;
 #endif
     }
@@ -389,6 +392,7 @@ public:
         millis() - saber_off_time_ > 1000) {
       FastOn();
 #ifdef GESTURE_AUTO_BATTLE_MODE
+      STDOUT.println("Entering Battle Mode");
       battle_mode_ = true;
 #endif
       last_twist_ = millis();
@@ -413,6 +417,7 @@ public:
         if (millis() - saber_off_time_ > 1000) {
           FastOn();
 #ifdef GESTURE_AUTO_BATTLE_MODE
+          STDOUT.println("Entering Battle Mode");
           battle_mode_ = true;
 #endif
         }
@@ -424,6 +429,7 @@ public:
         if (millis() - saber_off_time_ > 1000) {
           FastOn();
 #ifdef GESTURE_AUTO_BATTLE_MODE
+          STDOUT.println("Entering Battle Mode");
           battle_mode_ = true;
 #endif
         }
