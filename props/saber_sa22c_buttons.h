@@ -13,14 +13,14 @@
 // Below are the options to add to the config to enable
 // the various gestures
 //
-// #define FETT263_STAB_ON
-// #define FETT263_SWING_ON
-// #define FETT263_TWIST_ON
-// #define FETT263_THRUST_ON
-// #define FETT263_TWIST_OFF 
-// #define FETT263_FORCE_PUSH
+// #define SA22C_STAB_ON
+// #define SA22C_SWING_ON
+// #define SA22C_TWIST_ON
+// #define SA22C_THRUST_ON
+// #define SA22C_TWIST_OFF
+// #define SA22C_FORCE_PUSH
 //
-// #define FETT263_FORCE_PUSH_LENGTH 5
+// #define SA22C_FORCE_PUSH_LENGTH 5
 // Allows for adjustment to Push gesture length in millis needed to trigger Force Push
 // Recommended range 1 ~ 10, 1 = shortest, easiest to trigger, 10 = longest
 //
@@ -30,6 +30,18 @@
 // #define GESTURE_AUTO_BATTLE_MODE
 //
 // Battle mode by fett263
+//
+// Once you enter battle mode, button functions will be disabled for lockup
+// stab, melt, etc.  Blaster blocks and lightning block will continue to be
+// triggered by button controls.  Automatic lockup/clash detection works
+// by measuring delay of the saber blade pulling back from the clash.
+// If you clash the blade and it does not pull back during the delay period,
+// it is assumed to be a lockup and the lockup effect will show on the blade.
+// If you clash the blade and pull away, only the bgn/end lockup effects will show.
+//
+// You can adjust the threshold of this detection by using
+// #define SA22C_LOCKUP_DELAY  (insert number here)
+// Default value is 200
 //
 // Battle mode features automatic clash and lockup detection plus a new
 // force push mode that will play a force or force push sound with a controlled
@@ -118,16 +130,16 @@
 #define MOTION_TIMEOUT 60 * 15 * 1000
 #endif
 
-#ifndef FETT263_SWING_ON_SPEED
-#define FETT263_SWING_ON_SPEED 250
+#ifndef SA22C_SWING_ON_SPEED
+#define SA22C_SWING_ON_SPEED 250
 #endif
 
-#ifndef FETT263_LOCKUP_DELAY
-#define FETT263_LOCKUP_DELAY 200
+#ifndef SA22C_LOCKUP_DELAY
+#define SA22C_LOCKUP_DELAY 200
 #endif
 
-#ifndef FETT263_FORCE_PUSH_LENGTH
-#define FETT263_FORCE_PUSH_LENGTH 5
+#ifndef SA22C_FORCE_PUSH_LENGTH
+#define SA22C_FORCE_PUSH_LENGTH 5
 #endif
 
 #ifndef BUTTON_DOUBLE_CLICK_TIMEOUT
@@ -150,19 +162,19 @@
 #define BUTTON_HELD_LONG_TIMEOUT 2000
 #endif
 
-#ifdef FETT263_SWING_ON
+#ifdef SA22C_SWING_ON
 #define SWING_GESTURE
 #endif
 
-#ifdef FETT263_STAB_ON
+#ifdef SA22C_STAB_ON
 #define STAB_GESTURE
 #endif
 
-#ifdef FETT263_TWIST_ON
+#ifdef SA22C_TWIST_ON
 #define TWIST_GESTURE
 #endif
 
-#ifdef FETT263_THRUST_ON
+#ifdef SA22C_THRUST_ON
 #define THRUST_GESTURE
 #endif
 
@@ -195,7 +207,7 @@ public:
       if (auto_lockup_on_ &&
           !swinging_ &&
           fusor.swing_speed() > 120 &&
-          millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY &&
+          millis() - clash_impact_millis_ > SA22C_LOCKUP_DELAY &&
           SaberBase::Lockup()) {
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
@@ -204,7 +216,7 @@ public:
       if (auto_melt_on_ &&
           !swinging_ &&
           fusor.swing_speed() > 60 &&
-          millis() - clash_impact_millis_ > FETT263_LOCKUP_DELAY &&
+          millis() - clash_impact_millis_ > SA22C_LOCKUP_DELAY &&
           SaberBase::Lockup()) {
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
@@ -216,7 +228,7 @@ public:
           mss.y * mss.y + mss.z * mss.z > 70 &&
           fusor.swing_speed() < 30 &&
           fabs(fusor.gyro().x) < 10) {
-        if (millis() - push_begin_millis_ > FETT263_FORCE_PUSH_LENGTH) {
+        if (millis() - push_begin_millis_ > SA22C_FORCE_PUSH_LENGTH) {
           Event(BUTTON_NONE, EVENT_PUSH);
           push_begin_millis_ = millis();
         }
@@ -231,7 +243,7 @@ public:
         if (swinging_ && fusor.swing_speed() < 90) {
           swinging_ = false;
         }
-        if (!swinging_ && fusor.swing_speed() > FETT263_SWING_ON_SPEED) {
+        if (!swinging_ && fusor.swing_speed() > SA22C_SWING_ON_SPEED) {
           swinging_ = true;
           Event(BUTTON_NONE, EVENT_SWING);
         }
@@ -331,7 +343,7 @@ public:
     }
     return true;
 
-            // Auto Lockup Mode
+  // Auto Lockup Mode
   case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
     if (!battle_mode_) return false;
     clash_impact_millis_ = millis();
@@ -358,7 +370,7 @@ public:
     return true;
 
   // Gesture Controls
-#ifdef FETT263_SWING_ON
+#ifdef SA22C_SWING_ON
   case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
     // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
     if (millis() > 3000) {
@@ -370,7 +382,7 @@ public:
     return true;
 #endif
 
-#ifdef FETT263_TWIST_ON
+#ifdef SA22C_TWIST_ON
   case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
     // Delay twist events to prevent false trigger from over twisting
     if (millis() - last_twist_ > 2000 &&
@@ -384,19 +396,19 @@ public:
     return true;
 #endif
 
-#ifdef FETT263_TWIST_OFF
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-        // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_ > 3000) {
-          Off();
-          last_twist_ = millis();
-          saber_off_time_ = millis();
-          battle_mode_ = false;
-        }
-        return true;
+#ifdef SA22C_TWIST_OFF
+  case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+    // Delay twist events to prevent false trigger from over twisting
+    if (millis() - last_twist_ > 3000) {
+      Off();
+      last_twist_ = millis();
+      saber_off_time_ = millis();
+      battle_mode_ = false;
+    }
+    return true;
 #endif
 
-#ifdef FETT263_STAB_ON
+#ifdef SA22C_STAB_ON
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
         if (millis() - saber_off_time_ > 1000) {
           FastOn();
@@ -407,7 +419,7 @@ public:
         return true;
 #endif
 
-#ifdef FETT263_THRUST_ON
+#ifdef SA22C_THRUST_ON
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
         if (millis() - saber_off_time_ > 1000) {
           FastOn();
@@ -418,7 +430,7 @@ public:
         return true;
 #endif
 
-#ifdef FETT263_FORCE_PUSH
+#ifdef SA22C_FORCE_PUSH
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
         if (FORCE_PUSH_CONDITION &&
             millis() - last_push_ > 2000) {
