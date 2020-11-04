@@ -9,16 +9,21 @@
 //
 // Gesture Controls
 // There are four gesture types: swing, stab, twist and thrust.  For simplicity,
-// using gesture ignition will automatically start the saber battle mode and
-// skip the preon effect.  Below are the options to add to the config to enable
+// using gesture ignition will automatically skip the preon effect.
+// Below are the options to add to the config to enable
 // the various gestures
 //
 // #define FETT263_STAB_ON
 // #define FETT263_SWING_ON
 // #define FETT263_TWIST_ON
 // #define FETT263_THRUST_ON
-// #define FETT263_TWIST_OFF
+// #define FETT263_TWIST_OFF (not available on one-button sabers)
 // #define FETT263_FORCE_PUSH
+//
+// If you want the gesture ignition to ALSO enter battle mode automatically
+// on ignition, add this define
+//
+// #define GESTURE_AUTO_BATTLE_MODE
 //
 // Battle mode by fett263
 //
@@ -351,7 +356,9 @@ public:
     // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
     if (millis() > 3000) {
       FastOn();
+#ifdef GESTURE_AUTO_BATTLE_MODE
       battle_mode_ = true;
+#endif
     }
     return true;
 #endif
@@ -362,7 +369,9 @@ public:
     if (millis() - last_twist_ > 2000 &&
         millis() - saber_off_time_ > 1000) {
       FastOn();
+#ifdef GESTURE_AUTO_BATTLE_MODE
       battle_mode_ = true;
+#endif
       last_twist_ = millis();
     }
     return true;
@@ -384,7 +393,9 @@ public:
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
         if (millis() - saber_off_time_ > 1000) {
           FastOn();
+#ifdef GESTURE_AUTO_BATTLE_MODE
           battle_mode_ = true;
+#endif
         }
         return true;
 #endif
@@ -393,7 +404,9 @@ public:
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
         if (millis() - saber_off_time_ > 1000) {
           FastOn();
+#ifdef GESTURE_AUTO_BATTLE_MODE
           battle_mode_ = true;
+#endif
         }
         return true;
 #endif
@@ -473,9 +486,6 @@ public:
 #else
 // 1 button
   case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_ON):
-#endif
-#ifdef SHTOK_GESTURE_IGNITION
-  case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
 #endif
     if (!SaberBase::Lockup()) {
 #ifndef DISABLE_COLOR_CHANGE
