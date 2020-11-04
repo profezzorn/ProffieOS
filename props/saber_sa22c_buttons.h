@@ -20,6 +20,10 @@
 // #define FETT263_TWIST_OFF (not available on one-button sabers)
 // #define FETT263_FORCE_PUSH
 //
+// #define FETT263_FORCE_PUSH_LENGTH 5
+// Allows for adjustment to Push gesture length in millis needed to trigger Force Push
+// Recommended range 1 ~ 10, 1 = shortest, easiest to trigger, 10 = longest
+//
 // If you want the gesture ignition to ALSO enter battle mode automatically
 // on ignition, add this define
 //
@@ -122,6 +126,10 @@
 #define FETT263_LOCKUP_DELAY 200
 #endif
 
+#ifndef FETT263_FORCE_PUSH_LENGTH
+#define FETT263_FORCE_PUSH_LENGTH 5
+#endif
+
 #ifndef BUTTON_DOUBLE_CLICK_TIMEOUT
 #define BUTTON_DOUBLE_CLICK_TIMEOUT 300
 #endif
@@ -208,7 +216,7 @@ public:
           mss.y * mss.y + mss.z * mss.z > 70 &&
           fusor.swing_speed() < 30 &&
           fabs(fusor.gyro().x) < 10) {
-        if (millis() - push_begin_millis_ > 5) {
+        if (millis() - push_begin_millis_ > FETT263_FORCE_PUSH_LENGTH) {
           Event(BUTTON_NONE, EVENT_PUSH);
           push_begin_millis_ = millis();
         }
@@ -328,11 +336,10 @@ public:
     if (!battle_mode_) return false;
     clash_impact_millis_ = millis();
     swing_blast_ = false;
-    if (!swinging_) {
-      SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-      auto_lockup_on_ = true;
-      SaberBase::DoBeginLockup();
-    }
+    if (!swinging_) return false;
+    SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+    auto_lockup_on_ = true;
+    SaberBase::DoBeginLockup();
     return true;
 
   case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
