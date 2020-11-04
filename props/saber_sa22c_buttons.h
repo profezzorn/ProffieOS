@@ -17,7 +17,7 @@
 // #define FETT263_SWING_ON
 // #define FETT263_TWIST_ON
 // #define FETT263_THRUST_ON
-// #define FETT263_TWIST_OFF (not available on one-button sabers)
+// #define FETT263_TWIST_OFF 
 // #define FETT263_FORCE_PUSH
 //
 // #define FETT263_FORCE_PUSH_LENGTH 5
