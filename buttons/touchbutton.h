@@ -145,7 +145,7 @@ protected:
 
   void Loop() override {
     ButtonBase::Loop();
-    if (monitor.ShouldPrint(Monitoring::MonitorTouch)) {
+    if (monitor.ShouldPrintMultiple(Monitoring::MonitorTouch)) {
       print_next_ = true;
     }
     STATE_MACHINE_BEGIN();
