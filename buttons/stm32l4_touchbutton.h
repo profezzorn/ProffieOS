@@ -145,7 +145,7 @@ protected:
   
   void Loop() override {
     ButtonBase::Loop();
-    if (monitor.ShouldPrint(Monitoring::MonitorTouch)) {
+    if (monitor.ShouldPrintMultiple(Monitoring::MonitorTouch)) {
       print_next_ = true;
     }
     STATE_MACHINE_BEGIN();
@@ -233,6 +233,11 @@ protected:
       } else {
 	Update(TSC->IOGCR[1]);
       }
+
+      TSC->IOCCR.set(TSC_IO_TYPE::G2_IO1(0) |
+		     TSC_IO_TYPE::G2_IO2(0) |
+		     TSC_IO_TYPE::G2_IO3(0) |
+		     TSC_IO_TYPE::G2_IO4(0));
       
       // Let someone else have a turn.
       current_button = NULL;
