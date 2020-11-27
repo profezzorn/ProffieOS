@@ -183,4 +183,53 @@ public:
   }
 };
 
+class NEC16BaseNoRepeat : public CommandParser, public EventHandler {
+public:
+  explicit NEC16BaseNoRepeat(uint8_t addr) : addr_(addr) {}
+  virtual const char* name() = 0;
+  virtual int getCmd(enum BUTTON button) = 0;
+  void Send(uint8_t cmd) {
+    IRSender* sender = GetIRSender();
+    NECEncoder().Encode16(sender, (addr_ << 8) | cmd);
+    sender->send();
+  }
+
+  bool Event(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+    int cmd = getCmd(button);
+    if (cmd == -1) return false;
+    if (event == EVENT_PRESSED) {
+      Send(cmd);
+      return true;
+    }
+    return false;
+  }
+
+  // CommandParser
+  void Help() override {
+    STDOUT << name() << " NN";
+  }
+
+  int dehexify(int x) {
+    if (x >= '0' && x <= '9') return x - '0';
+    if (x >= 'a' && x <= 'f') return x - 'a' + 10;
+    if (x >= 'A' && x <= 'F') return x - 'A' + 10;
+    return 0;
+  }
+
+  int dehexify2(const char *s) {
+    return (dehexify(s[0]) << 4) + dehexify(s[1]);
+  }
+
+  bool Parse(const char* cmd, const char* arg) override {
+    if (!strcmp(cmd, name()) && arg) {
+      Send(dehexify2(arg));
+      return true;
+    }
+    return false;
+  }
+
+private:
+  uint8_t addr_;
+};
+
 #endif

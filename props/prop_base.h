@@ -925,6 +925,7 @@ public:
 #endif // DISABLE_COLOR_CHANGE  
 
   void PrintButton(uint32_t b) {
+    if (b & MODE_ON) STDOUT.print("On");
     if (b & BUTTON_POWER) STDOUT.print("Power");
     if (b & BUTTON_AUX) STDOUT.print("Aux");
     if (b & BUTTON_AUX2) STDOUT.print("Aux2");
@@ -934,7 +935,30 @@ public:
     if (b & BUTTON_RIGHT) STDOUT.print("Right");
     if (b & BUTTON_SELECT) STDOUT.print("Select");
     if (b & BUTTON_BLADE_DETECT) STDOUT.print("Select");
-    if (b & MODE_ON) STDOUT.print("On");
+    if (b & BUTTON_FF) STDOUT.print("FF");
+    if (b & BUTTON_PLAY) STDOUT.print("Play");
+    if (b & BUTTON_REW) STDOUT.print("Rew");
+    if (b & BUTTON_REPEAT) STDOUT.print("Repeat");
+    if (b & BUTTON_SKIP) STDOUT.print("Skip");
+    if (b & BUTTON_NEXT) STDOUT.print("Next");
+    if (b & BUTTON_PAUSE) STDOUT.print("Pause");
+    if (b & BUTTON_PREV) STDOUT.print("Prev");
+    if (b & BUTTON_CHUP) STDOUT.print("Ch+");
+    if (b & BUTTON_CHDN) STDOUT.print("Ch-");
+    if (b & BUTTON_VOLUP) STDOUT.print("Vol+");
+    if (b & BUTTON_VOLDN) STDOUT.print("Vol-");
+    if (b & BUTTON_A) STDOUT.print("A");
+    if (b & BUTTON_B) STDOUT.print("B");
+    if (b & BUTTON_C) STDOUT.print("C");
+    if (b & BUTTON_D) STDOUT.print("D");
+    if (b & BUTTON_OPTIONS) STDOUT.print("Options");
+    if (b & BUTTON_MENU) STDOUT.print("Menu");
+    if (b & BUTTON_EXIT) STDOUT.print("Exit");
+    if (b & BUTTON_TOP1) STDOUT.print("Top1");
+    if (b & BUTTON_TOP2) STDOUT.print("Top2");
+    if (b & BUTTON_TOP3) STDOUT.print("Top3");
+    if (b & BUTTON_SCREEN_LEFT) STDOUT.print("ScrLeft");
+    if (b & BUTTON_SCREEN_RIGHT) STDOUT.print("ScrRight");
   }
 
   void PrintEvent(uint32_t e) {

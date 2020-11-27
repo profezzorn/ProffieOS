@@ -134,7 +134,9 @@ protected:
 		STDOUT.print("RC6 ");
 		STDOUT.print(ctrl, HEX);
 		STDOUT.print(" ");
-		STDOUT.println(info, HEX);
+		STDOUT.print(info, HEX);
+		STDOUT.print(" toggle = ");
+		STDOUT.println(toggle_);
 	      }
 	      goto fail;
 	    }
@@ -166,6 +168,7 @@ public:
     }
   }
   void EncodeRC6mode0(IRInterface* output, bool toggle, uint8_t ctrl, uint8_t info) {
+    STDOUT << "RC6 ENCODE " << toggle << " " << ctrl << " " << info << "\n";
     output->signal(true, 444 * 6);
     output->signal(false, 444 * 2);
     EncodeBit(output, true);
@@ -176,6 +179,77 @@ public:
     EncodeByte(output, ctrl);
     EncodeByte(output, info);
   }
+};
+
+
+class RC6Base : public Looper, public CommandParser, public EventHandler {
+public:
+  explicit RC6Base(uint8_t ctrl) : ctrl_(ctrl) {}
+  virtual int getInfo(enum BUTTON button) = 0;
+
+  void Send(uint8_t info) {
+    last_send_ = millis();
+    IRSender* sender = GetIRSender();
+    RC6Encoder().EncodeRC6mode0(sender, toggle_, ctrl_, info);
+    sender->send();
+  }
+
+  bool Event(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+    int info = getInfo(button);
+    if (info == -1) return false;
+    if (event == EVENT_PRESSED) {
+      if (repeat_ != -1) {
+	// Ignore multi-press buttons
+	return true;
+      }
+      repeat_ = info;
+      Send(info);
+      return true;
+    }
+    if (event == EVENT_RELEASED && info == repeat_) {
+      toggle_ = !toggle_;
+      repeat_ = -1;
+      return true;
+    }
+    return false;
+  }
+
+  // Looper
+  void Loop() override {
+    if (repeat_ != -1 && millis() - last_send_ > 120) {
+      Send(repeat_);
+    }
+  }
+
+  // CommandParser
+  void Help() override {
+    STDOUT << name() << " NN";
+  }
+
+  int dehexify(int x) {
+    if (x >= '0' && x <= '9') return x - '0';
+    if (x >= 'a' && x <= 'f') return x - 'a' + 10;
+    if (x >= 'A' && x <= 'F') return x - 'A' + 10;
+    return 0;
+  }
+
+  int dehexify2(const char *s) {
+    return (dehexify(s[0]) << 4) + dehexify(s[1]);
+  }
+
+  bool Parse(const char* cmd, const char* arg) override {
+    if (!strcmp(cmd, name()) && arg) {
+      Send(dehexify2(arg));
+      return true;
+    }
+    return false;
+  }
+
+private:
+  uint32_t last_send_ = 0;;
+  int repeat_ = -1;
+  uint8_t ctrl_;
+  bool toggle_ = false;
 };
 
 #endif

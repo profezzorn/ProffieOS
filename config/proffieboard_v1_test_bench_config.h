@@ -22,7 +22,7 @@
 #define DUAL_POWER_BUTTONS
 
 // Volume, useful range is about 0-2000.
-#define VOLUME 100
+#define VOLUME 200
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
@@ -38,15 +38,15 @@ const unsigned int maxLedsPerStrip = 196;
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
 // #define ENABLE_SERIAL
-// #define ENABLE_DEVELOPER_COMMANDS
+#define ENABLE_DEVELOPER_COMMANDS
 // #define DISABLE_DIAGNOSTIC_COMMANDS
 // #define SAVE_COLOR_CHANGE
 // #define DISABLE_COLOR_CHANGE
-#define SAVE_STATE
+// #define SAVE_STATE
 
 // #define ENABLE_I2S_OUT
-#define ENABLE_SPDIF_OUT
-#define RFID_SERIAL Serial3
+// #define ENABLE_SPDIF_OUT
+// #define RFID_SERIAL Serial3
 
 // Must be 20 characters or less.
 // #define BLE_PASSWORD "password"
@@ -60,7 +60,7 @@ const unsigned int maxLedsPerStrip = 196;
 
 // #define ENABLE_DEBUG
 
-#define IDLE_OFF_TIME 100000
+#define IDLE_OFF_TIME 10000
 
 // #define BLADE_DETECT_PIN aux2Pin
 
@@ -77,6 +77,19 @@ RFID_Command RFID_Commands[] = {
 };
 
 Preset testing_presets[] = {
+  { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<BLUE, WHITE, 300, 800>(),
+    StylePtr<ColorCycle<Rgb<0,0,50>, 10, 35, Cyan, 90, 1000, 6000>>(),
+    "BLUE" },
+#if 0
+  { "TeensySF", "tracks/venus.wav",
+    // Doesn't always turn off all the way!
+    StyleNormalPtr<ColorChange<TrRandom<TrWipeIn<200>, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(),
+//    StylePtr<InOutTr<BLUE, TrColorCycle<10000, 0, 6000>, TrFade<800>, RED> >(),
+    // StylePtr<InOutHelper<Stripes<20000,-60,HotPink,HotPink,Magenta,Magenta,Rgb<150,40,200>,Rgb<150,40,200>,Blue,Blue,DeepSkyBlue,DeepSkyBlue,Green,Green,Yellow,Yellow,DarkOrange,DarkOrange,Red,Red>,300,500,Black>>(),
+
+    StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
+    "cyan1"},
+#endif
 #if 1
   { "SmthFuzz", "tracks/cantina.wav",
     StylePtr<Layers<RandomBlink<3000,Red,Black>,InOutTrL<TrWipe<300>,TrWipeIn<500>,Black>>>(),
@@ -137,16 +150,6 @@ Preset testing_presets[] = {
 //    StylePtr<Rgb<0x00, 0xF2, 0xF3>>(),
     "=RainboW++\n++BladE++" },
 #endif  
-#if 0  
-  { "TeensySF", "tracks/venus.wav",
-    // Doesn't always turn off all the way!
-    StyleNormalPtr<ColorChange<TrRandom<TrWipeIn<200>, TrWipe<200>>,RED, GREEN, BLUE>, WHITE, 300, 800>(),
-//    StylePtr<InOutTr<BLUE, TrColorCycle<10000, 0, 6000>, TrFade<800>, RED> >(),
-    // StylePtr<InOutHelper<Stripes<20000,-60,HotPink,HotPink,Magenta,Magenta,Rgb<150,40,200>,Rgb<150,40,200>,Blue,Blue,DeepSkyBlue,DeepSkyBlue,Green,Green,Yellow,Yellow,DarkOrange,DarkOrange,Red,Red>,300,500,Black>>(),
-
-    StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
-    "cyan1"},
-#endif
 #if 0  
   { "SmthJedi", "tracks/venus.wav",
     StylePtr<RotateColors<10000, InOutTr<BLUE, TrColorCycle<10000>, TrFade<800>>>>(),
@@ -246,7 +249,8 @@ BladeConfig blades[] = {
 //    DimBlade(5.0, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()),
 //    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
 //    WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin2>>(),
-    WS2811BladePtr<30, WS2811_800kHz | WS2811_GRB, blade2Pin, PowerPINS<bladePowerPin2>>(),
+    SPIBladePtr<99, blade2Pin, blade3Pin, Color8::BGR, PowerPINS<bladePowerPin2>, 12000000> (),
+//    WS2811BladePtr<30, WS2811_800kHz | WS2811_GRB, blade2Pin, PowerPINS<bladePowerPin2>>(),
     CONFIGARRAY(testing_presets) },
 //  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>>(), CONFIGARRAY(testing_presets) }
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
@@ -275,10 +279,12 @@ BladeConfig blades[] = {
 
 //LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
-// Button AuxButton(BUTTON_AUX, auxPin, "aux");
-// Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
+Button AuxButton(BUTTON_AUX, auxPin, "aux");
+Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
 
-//TouchButton Aux2Button(BUTTON_AUX2, aux2Pin, 1700, "aux2");
+//TouchButton PowerButton(BUTTON_POWER, powerButtonPin, 900, "pow");
+//TouchButton AuxButton(BUTTON_AUX, auxPin, 900, "aux");
+//TouchButton Aux2Button(BUTTON_AUX2, aux2Pin, 900, "aux2");
 
 //IRReceiver<blade3Pin> ir_receiver;
 //BlasterDecoder blaster_decoder;
