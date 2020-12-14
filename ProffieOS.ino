@@ -35,7 +35,6 @@
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
 // #define CONFIG_FILE "config/proffieboard_v2_proffiemote.h"
-// #define CONFIG_FILE "config/testconfig.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -1167,25 +1166,17 @@ class Commands : public CommandParser {
       PRINTIFON(AHB1ENR,DMA2);
       PRINTIFON(AHB2ENR,GPIOA);
       PRINTIFON(AHB2ENR,GPIOB);
-#ifdef GPIOC_BASE
+#if defined(STM32L433xx) || defined(STM32L476xx) || defined(STM32L496xx)
       PRINTIFON(AHB2ENR,GPIOC);
-#endif      
-#ifdef GPIOD_BASE
       PRINTIFON(AHB2ENR,GPIOD);
-#endif      
-#ifdef GPIOE_BASE
       PRINTIFON(AHB2ENR,GPIOE);
 #endif
-#ifdef GPIOF_BASE
+#if defined(STM32L476xx) || defined(STM32L496xx)
       PRINTIFON(AHB2ENR,GPIOF);
-#endif
-#ifdef GPIOG_BASE
       PRINTIFON(AHB2ENR,GPIOG);
 #endif
-#ifdef GPIOH_BASE
       PRINTIFON(AHB2ENR,GPIOH);
-#endif      
-#ifdef GPIOI_BASE
+#if defined(STM32L496xx)
       PRINTIFON(AHB2ENR,GPIOI);
 #endif
       PRINTIFON(AHB2ENR,ADC);
@@ -1197,67 +1188,55 @@ class Commands : public CommandParser {
 #endif
       PRINTIFON(APB2ENR,USART1);
       PRINTIFON(APB1ENR1,USART2);
-#ifdef USART3_BASE
+#if defined(STM32L433xx) || defined(STM32L476xx) || defined(STM32L496xx)
       PRINTIFON(APB1ENR1,USART3);
 #endif
-#ifdef UART4_BASE
+#if defined(STM32L476xx) || defined(STM32L496xx)
       PRINTIFON(APB1ENR1,UART4);
-#endif
-#ifdef UART5_BASE
       PRINTIFON(APB1ENR1,UART5);
 #endif
       PRINTIFON(APB1ENR2,LPUART1);
       PRINTIFON(APB1ENR1,I2C1);
-#ifdef I2C2_BASE
+#if defined(STM32L433xx) || defined(STM32L476xx) || defined(STM32L496xx)
       PRINTIFON(APB1ENR1,I2C2);
 #endif
       PRINTIFON(APB1ENR1,I2C3);
-#ifdef I2C4_BASE
+#if defined(STM32L496xx)
       PRINTIFON(APB1ENR2,I2C4);
 #endif
       PRINTIFON(APB2ENR,SPI1);
-#ifdef SPI2_BASE
+#if defined(STM32L433xx) || defined(STM32L476xx) || defined(STM32L496xx)
       PRINTIFON(APB1ENR1,SPI2);
 #endif
       PRINTIFON(APB1ENR1,SPI3);
       PRINTIFON(APB1ENR1,CAN1);
-#ifdef CAN2_BASE
+#if defined(STM32L496xx)
       PRINTIFON(APB1ENR1,CAN2);
 #endif
       PRINTIFON(AHB3ENR,QSPI);
-#ifdef SDMMC1_BASE
+#if defined(STM32L433xx) || defined(STM32L476xx) || defined(STM32L496xx)
       PRINTIFON(APB2ENR,SDMMC1);
 #endif
       PRINTIFON(APB2ENR,SAI1);
-#ifdef SAI2_BASE
+#if defined(STM32L476xx) || defined(STM32L496xx)
       PRINTIFON(APB2ENR,SAI2);
-#endif      
-#ifdef DFSDM1_BASE
       PRINTIFON(APB2ENR,DFSDM1);
 #endif
       PRINTIFON(APB2ENR,TIM1);
       PRINTIFON(APB1ENR1,TIM2);
-#ifdef TIM3_BASE
+#if defined(STM32L476xx) || defined(STM32L496xx)
       PRINTIFON(APB1ENR1,TIM3);
-#endif      
-#ifdef TIM4_BASE
       PRINTIFON(APB1ENR1,TIM4);
-#endif      
-#ifdef TIM5_BASE
       PRINTIFON(APB1ENR1,TIM5);
 #endif
-#ifdef TIM6_BASE
       PRINTIFON(APB1ENR1,TIM6);
-#endif
-#ifdef TIM7_BASE
       PRINTIFON(APB1ENR1,TIM7);
-#endif
-#ifdef TIM8_BASE_
+#if defined(STM32L476xx) || defined(STM32L496xx)
       PRINTIFON(APB2ENR,TIM8);
 #endif
       PRINTIFON(APB2ENR,TIM15);
       PRINTIFON(APB2ENR,TIM16);
-#ifdef TIM17_BASE
+#if defined(STM32L476xx) || defined(STM32L496xx)
       PRINTIFON(APB2ENR,TIM17);
 #endif
       PRINTIFON(APB1ENR1,LPTIM1);
@@ -1267,18 +1246,14 @@ class Commands : public CommandParser {
       PRINTIFON(AHB1ENR, CRC);
       PRINTIFON(AHB1ENR, TSC);
       PRINTIFON(AHB2ENR, RNG);
-#ifdef LCD_BASE      
       PRINTIFON(APB1ENR1, LCD);
-#endif      
       PRINTIFON(APB1ENR1, RTCAPB);
       PRINTIFON(APB1ENR1, WWDG);
       PRINTIFON(APB1ENR1, CRS);
       PRINTIFON(APB1ENR1, CAN1);
       PRINTIFON(APB1ENR1, PWR);
       PRINTIFON(APB1ENR1, OPAMP);
-#ifdef SWPMI1_BASE      
       PRINTIFON(APB1ENR2, SWPMI1);
-#endif      
       PRINTIFON(APB2ENR, SYSCFG);
       PRINTIFON(APB2ENR, FW);
 
