@@ -49,6 +49,35 @@ public:
 #endif
 };
 
+
+class CatchCommandOutput : public Print {
+ public:
+  CatchCommandOutput(int target_line, char* buf, int bufsize) :
+    target_line_(target_line),
+    buf_(buf),
+    bufsize_(bufsize)  {
+  }
+  size_t write(uint8_t b) override {
+    if (b == '\n') { line_++; return 1; }
+    if (line_ == target_line_) {
+      if (bufsize_ > 1) {
+	*buf_ = b;
+	buf_++;
+	*buf_ = 0;
+	bufsize_--;
+      }
+    }
+    return 1;
+  }
+ int num_lines() { return line_ - 1; } // assume last line is empty
+private:
+ int target_line_ = 0;
+ int line_ = 1;
+
+ char* buf_;
+ size_t bufsize_;
+};
+
 extern ConsoleHelper STDOUT;
 
 #define DEFINE_COMMON_STDOUT_GLOBALS            \

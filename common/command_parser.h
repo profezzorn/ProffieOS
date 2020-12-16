@@ -51,4 +51,15 @@ private:
   CommandParser* next_parser_;
 };
 
+
+int RunCommandAndGetSingleLine(const char* cmd, const char* arg,
+			       int target_line, char* buf, int bufsize) {
+  CatchCommandOutput output_helper(target_line, buf, bufsize);
+  Print* saved_output = stdout_output;
+  stdout_output = &output_helper;
+  CommandParser::DoParse(cmd, arg);
+  stdout_output = saved_output;
+  return output_helper.num_lines();
+}
+
 #endif
