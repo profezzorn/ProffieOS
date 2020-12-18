@@ -51,6 +51,8 @@ private:
   CommandParser* next_parser_;
 };
 
+// This ifdef avoids problems with tests
+#ifdef DEFINE_COMMON_STDOUT_GLOBALS
 
 int RunCommandAndGetSingleLine(const char* cmd, const char* arg,
 			       int target_line, char* buf, int bufsize) {
@@ -61,5 +63,7 @@ int RunCommandAndGetSingleLine(const char* cmd, const char* arg,
   stdout_output = saved_output;
   return output_helper.num_lines();
 }
+
+#endif
 
 #endif
