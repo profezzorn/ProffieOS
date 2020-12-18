@@ -1166,9 +1166,13 @@ class Commands : public CommandParser {
       PRINTIFON(AHB1ENR,DMA2);
       PRINTIFON(AHB2ENR,GPIOA);
       PRINTIFON(AHB2ENR,GPIOB);
-#if defined(STM32L433xx) || defined(STM32L476xx) || defined(STM32L496xx)
+#ifdef GPIOC_BASE
       PRINTIFON(AHB2ENR,GPIOC);
+#endif      
+#ifdef GPIOD_BASE
       PRINTIFON(AHB2ENR,GPIOD);
+#endif      
+#ifdef GPIOE_BASE
       PRINTIFON(AHB2ENR,GPIOE);
 #endif
 #if defined(STM32L476xx) || defined(STM32L496xx)
@@ -1224,14 +1228,20 @@ class Commands : public CommandParser {
 #endif
       PRINTIFON(APB2ENR,TIM1);
       PRINTIFON(APB1ENR1,TIM2);
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#ifdef TIM3_BASE
       PRINTIFON(APB1ENR1,TIM3);
+#endif
+#ifdef TIM4_BASE
       PRINTIFON(APB1ENR1,TIM4);
+#endif
+#ifdef TIM5_BASE
       PRINTIFON(APB1ENR1,TIM5);
 #endif
       PRINTIFON(APB1ENR1,TIM6);
+#ifdef TIM7_BASE      
       PRINTIFON(APB1ENR1,TIM7);
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#endif
+#ifdef TIM8_BASE      
       PRINTIFON(APB2ENR,TIM8);
 #endif
       PRINTIFON(APB2ENR,TIM15);
@@ -1246,14 +1256,18 @@ class Commands : public CommandParser {
       PRINTIFON(AHB1ENR, CRC);
       PRINTIFON(AHB1ENR, TSC);
       PRINTIFON(AHB2ENR, RNG);
+#ifdef LCD_BASE
       PRINTIFON(APB1ENR1, LCD);
+#endif
       PRINTIFON(APB1ENR1, RTCAPB);
       PRINTIFON(APB1ENR1, WWDG);
       PRINTIFON(APB1ENR1, CRS);
       PRINTIFON(APB1ENR1, CAN1);
       PRINTIFON(APB1ENR1, PWR);
       PRINTIFON(APB1ENR1, OPAMP);
+#ifdef SWPMI1_BASE
       PRINTIFON(APB1ENR2, SWPMI1);
+#endif
       PRINTIFON(APB2ENR, SYSCFG);
       PRINTIFON(APB2ENR, FW);
 
