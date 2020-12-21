@@ -73,7 +73,7 @@
 #define PROPS_SABER_SHTOK_BUTTONS_H
 
 #ifndef MOTION_TIMEOUT
-#define MOTION_TIMEOUT 60 * 10 * 1000
+#define MOTION_TIMEOUT 60 * 1 * 1000
 #endif
 
 #include "prop_base.h"
