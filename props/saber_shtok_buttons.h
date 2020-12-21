@@ -1,6 +1,23 @@
+// 0 Buttons:
+// Activate Muted - None
+// Activate blade - forward thrust movement or sharp swing movement (Swing On)
+// Play/Stop Music - None
+// Turn the blade off - twist the saber like a bike handle holding the saber horizontally
+// Next Preset - shake the saber
+// Previous Preset - None
+// Lockup - automatic by default (Battle Mode) - activates when clash happens and keeps active until swing is registered
+// Drag - None
+// Blaster Blocks - None
+// Force Effects - perform a "push" gesture holding the saber vertically
+// Enter Color Change mode - None
+// Confirm selected color in Color Change mode - None
+// Melt - None
+// Lightning Block - None
+// Enter Multi-Block mode - None
+//
 // 1 Button:
 // Activate Muted - fast double click while OFF
-// Activate blade - short click while OFF or forward thrust movement + hit or backward thrust movement or sharp swing movement (Swing On)
+// Activate blade - short click while OFF or forward thrust movement + hit or forward thrust movement or sharp swing movement (Swing On)
 // Play/Stop Music - hold 1 second and release while ON
 // Turn the blade off - hold and wait till blade is off while ON (like in Plecter boards) or twist the saber like a bike handle
 // Next Preset - hold 1 second and release while OFF
@@ -20,7 +37,7 @@
 //
 // 2 Buttons:
 // Activate Muted - fast double click Activation button while OFF
-// Activate blade - short click Activation button while OFF or forward thrust movement + hit or backward thrust movement or sharp swing movement (Swing On)
+// Activate blade - short click Activation button while OFF or forward thrust movement + hit or forward thrust movement or sharp swing movement (Swing On)
 // Play/Stop Music - hold 1 second and release Activation button while OFF or ON
 // Turn the blade off - hold and wait till blade is off while ON (like in Plecter boards) or twist the saber like a bike handle
 // Next Preset - short click AUX button while OFF
@@ -56,7 +73,7 @@
 #define PROPS_SABER_SHTOK_BUTTONS_H
 
 #ifndef MOTION_TIMEOUT
-#define MOTION_TIMEOUT 60 * 15 * 1000
+#define MOTION_TIMEOUT 60 * 1 * 1000
 #endif
 
 #include "prop_base.h"
@@ -159,9 +176,167 @@ SaberShtokButtons() : PropBase() {}
         }
         return true;
 
+// 0-buttons code
+
+#if NUM_BUTTONS == 0
+
+// Turn Blade ON
+      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
+      case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
+          battle_mode_ = true;
+	  if(millis() > 3000) { 
+          On();
+        }
+        return true;
+
+// Next Preset
+      case EVENTID(BUTTON_NONE, EVENT_SHAKE, MODE_OFF):
+        next_preset();
+        return true;
+
+// Previous Preset
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
+        previous_preset();
+        return true;
+
+// Activate Muted
+      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
+        if (millis() - activated_ < 500) {
+          if (SetMute(true)) {
+            unmute_on_deactivation_ = true;
+          }
+        }
+        return true;
+
+// Turn Blade OFF
+      case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+	if (fusor.angle1() >  M_PI / 3) {
+	  return true;
+	} else {
+        if (!SaberBase::Lockup()) {
+#ifndef DISABLE_COLOR_CHANGE
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+            // Just exit color change mode.
+            // Don't turn saber off.
+            ToggleColorChangeMode();
+            return true;
+          }
+#endif
+          Off();
+          }
+        }
+        swing_blast_ = false;
+	saber_off_time_ = millis();
+        battle_mode_ = false;
+        return true;
+
+// Force
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
+        SaberBase::DoForce();
+        return true;
+
+// Color Change mode
+#ifndef DISABLE_COLOR_CHANGE
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
+        ToggleColorChangeMode();
+        break;
+#endif
+
+// Blaster Deflection
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
+        swing_blast_ = false;
+        SaberBase::DoBlast();
+        return true;
+
+// Multi-Blaster Deflection mode
+
+// Battle Mode
+      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
+      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
+        if (!battle_mode_) {
+          battle_mode_ = true;
+	  if(millis() > 3000) { 
+          On();
+        }
+          if (SFX_bmbegin) {
+            hybrid_font.PlayCommon(&SFX_bmbegin);
+          } else {
+            hybrid_font.DoEffect(EFFECT_FORCE, 0);
+          }
+        } else {
+          battle_mode_ = false;
+          if (SFX_bmend) {
+            hybrid_font.PlayCommon(&SFX_bmend);
+          } else {
+            beeper.Beep(0.5, 3000);
+          }
+        }
+        return true;
+
+    // Auto Lockup Mode
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
+        if (!battle_mode_) return false;
+        clash_impact_millis_ = millis();
+        swing_blast_ = false;
+        if (swinging_) return false;
+        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+        auto_lockup_on_ = true;
+        SaberBase::DoBeginLockup();
+        return true;
+
+// Push
+      case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
+        if (millis() - last_push_ > 2000) {
+          if (SFX_push) {
+            hybrid_font.PlayCommon(&SFX_push);
+          } else {
+            hybrid_font.DoEffect(EFFECT_FORCE, 0);
+          }
+          last_push_ = millis();
+        }
+        return true;
+
+// Lockup
+      case EVENTID(BUTTON_AUX, EVENT_HELD, MODE_ON):
+        if (!SaberBase::Lockup()) {
+          if (pointing_down_) {
+            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+          } else {
+            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+          }
+          swing_blast_ = false;
+          SaberBase::DoBeginLockup();
+          return true;
+        }
+        break;
+
+// Lightning Block
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
+        SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+        swing_blast_ = false;
+        SaberBase::DoBeginLockup();
+        return true;
+
+// Start or Stop Track
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
+        StartOrStopTrack();
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
+        SaberBase::RequestMotion();
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
+        next_preset();
+        return true;
+
+
 // 1-button code
 
-#if NUM_BUTTONS == 1
+#elif NUM_BUTTONS == 1
 
 // Turn Blade ON
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
@@ -194,6 +369,9 @@ SaberShtokButtons() : PropBase() {}
 // Turn Blade OFF
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+	if (fusor.angle1() >  M_PI / 3) {
+	  return true;
+	} else {
         if (!SaberBase::Lockup()) {
 #ifndef DISABLE_COLOR_CHANGE
           if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
@@ -204,10 +382,11 @@ SaberShtokButtons() : PropBase() {}
           }
 #endif
           Off();
+          }
         }
         swing_blast_ = false;
-saber_off_time_ = millis();
-          battle_mode_ = false;
+	saber_off_time_ = millis();
+        battle_mode_ = false;
         return true;
 
 // Force
@@ -241,8 +420,6 @@ saber_off_time_ = millis();
         return true;
 
 // Battle Mode
-
-#ifndef FETT263_BATTLE_MODE_ALWAYS_ON
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
         if (!battle_mode_) {
           battle_mode_ = true;
@@ -263,9 +440,8 @@ saber_off_time_ = millis();
           }
         }
         return true;
-#endif
 
-      // Auto Lockup Mode
+    // Auto Lockup Mode
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
         if (!battle_mode_) return false;
         clash_impact_millis_ = millis();
@@ -351,7 +527,6 @@ saber_off_time_ = millis();
 #elif NUM_BUTTONS == 2
 
 // Turn Blade ON
-            
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
@@ -370,6 +545,11 @@ saber_off_time_ = millis();
 #endif
         return true;
 
+// Previous Preset
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
+        previous_preset();
+        return true;
+
 // Activate Muted
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
         if (millis() - activated_ < 500) {
@@ -382,6 +562,9 @@ saber_off_time_ = millis();
 // Turn Blade OFF
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+	if (fusor.angle1() >  M_PI / 3) {
+	  return true;
+	} else {
         if (!SaberBase::Lockup()) {
 #ifndef DISABLE_COLOR_CHANGE
           if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
@@ -392,10 +575,11 @@ saber_off_time_ = millis();
           }
 #endif
           Off();
+          }
         }
         swing_blast_ = false;
-saber_off_time_ = millis();
-          battle_mode_ = false;
+	saber_off_time_ = millis();
+        battle_mode_ = false;
         return true;
 
 // Force
@@ -429,8 +613,6 @@ saber_off_time_ = millis();
         return true;
 
 // Battle Mode
-
-#ifndef FETT263_BATTLE_MODE_ALWAYS_ON
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
         if (!battle_mode_) {
@@ -452,9 +634,8 @@ saber_off_time_ = millis();
           }
         }
         return true;
-#endif
 
-      // Auto Lockup Mode
+    // Auto Lockup Mode
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
         if (!battle_mode_) return false;
         clash_impact_millis_ = millis();
@@ -538,14 +719,8 @@ saber_off_time_ = millis();
         next_preset();
         return true;
 
-
-// Previous Preset
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
-        previous_preset();
-        return true;
-
 #else
-#error only 1 and 2 buttons are supported by this mod
+#error only 0, 1 and 2 buttons are supported by this mod
 #endif
 
 #ifdef BLADE_DETECT_PIN
