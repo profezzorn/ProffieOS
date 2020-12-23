@@ -212,9 +212,6 @@ SaberShtokButtons() : PropBase() {}
 // Turn Blade OFF
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-	if (fusor.angle1() >  M_PI / 3) {
-	  return true;
-	} else {
         if (!SaberBase::Lockup()) {
 #ifndef DISABLE_COLOR_CHANGE
           if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
@@ -224,12 +221,13 @@ SaberShtokButtons() : PropBase() {}
             return true;
           }
 #endif
+        if (fusor.angle1() <  M_PI / 3) {
           Off();
-          }
-        }
         swing_blast_ = false;
-	saber_off_time_ = millis();
+ 	saber_off_time_ = millis();
         battle_mode_ = false;
+        }
+      }
         return true;
 
 // Force
@@ -369,9 +367,6 @@ SaberShtokButtons() : PropBase() {}
 // Turn Blade OFF
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-	if (fusor.angle1() >  M_PI / 3) {
-	  return true;
-	} else {
         if (!SaberBase::Lockup()) {
 #ifndef DISABLE_COLOR_CHANGE
           if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
@@ -381,12 +376,13 @@ SaberShtokButtons() : PropBase() {}
             return true;
           }
 #endif
+        if (fusor.angle1() <  M_PI / 3) {
           Off();
-          }
-        }
         swing_blast_ = false;
-	saber_off_time_ = millis();
+ 	saber_off_time_ = millis();
         battle_mode_ = false;
+        }
+      }
         return true;
 
 // Force
@@ -562,9 +558,6 @@ SaberShtokButtons() : PropBase() {}
 // Turn Blade OFF
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-	if (fusor.angle1() >  M_PI / 3) {
-	  return true;
-	} else {
         if (!SaberBase::Lockup()) {
 #ifndef DISABLE_COLOR_CHANGE
           if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
@@ -574,12 +567,13 @@ SaberShtokButtons() : PropBase() {}
             return true;
           }
 #endif
+        if (fusor.angle1() <  M_PI / 3) {
           Off();
-          }
-        }
         swing_blast_ = false;
-	saber_off_time_ = millis();
+ 	saber_off_time_ = millis();
         battle_mode_ = false;
+        }
+      }
         return true;
 
 // Force
