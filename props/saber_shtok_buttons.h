@@ -221,7 +221,7 @@ SaberShtokButtons() : PropBase() {}
             return true;
           }
 #endif
-        if (fusor.angle1() <  M_PI / 3) {
+        if (fusor.angle1() <  M_PI / 4) {
           Off();
         swing_blast_ = false;
  	saber_off_time_ = millis();
@@ -376,7 +376,7 @@ SaberShtokButtons() : PropBase() {}
             return true;
           }
 #endif
-        if (fusor.angle1() <  M_PI / 3) {
+        if (fusor.angle1() <  M_PI / 4) {
           Off();
         swing_blast_ = false;
  	saber_off_time_ = millis();
@@ -567,7 +567,7 @@ SaberShtokButtons() : PropBase() {}
             return true;
           }
 #endif
-        if (fusor.angle1() <  M_PI / 3) {
+        if (fusor.angle1() <  M_PI / 4) {
           Off();
         swing_blast_ = false;
  	saber_off_time_ = millis();
