@@ -3,14 +3,14 @@
 // Activate blade - forward thrust movement or sharp swing movement (Swing On)
 // Play/Stop Music - None
 // Turn the blade off - twist the saber like a bike handle holding the saber horizontally
-// Next Preset - shake the saber
+// Next Preset - shake the saber like a soda can while blade is OFF (hold the saber blade up and 45 degrees tilt)
 // Previous Preset - None
 // Lockup - automatic by default (Battle Mode) - activates when clash happens and keeps active until swing is registered
 // Drag - None
 // Blaster Blocks - None
 // Force Effects - perform a "push" gesture holding the saber vertically
-// Enter Color Change mode - None
-// Confirm selected color in Color Change mode - None
+// Enter Color Change mode - shake the saber like a soda can while blade is ON (hold the saber blade up and 45 degrees tilt)
+// Confirm selected color and exit Color Change mode - twist the saber like a bike handle holding the saber horizontally
 // Melt - None
 // Lightning Block - None
 // Enter Multi-Block mode - None
@@ -27,7 +27,7 @@
 // Blaster Blocks - short click while ON
 // Force Effects - hold the button + perform "push" gesture holding the hilt vertically
 // Enter Color Change mode - hold the button + twist the hilt then release the button while ON
-// Confirm selected color in Color Change mode - hold the button until confirmation sound
+// Confirm selected color and exit Color Change mode - hold the button until confirmation sound
 // Melt - hold the button + stab while ON
 // Lightning Block - fast double click + hold the button while ON
 // Enter Multi-Block mode - hold the button + swing the saber and release the button while ON (now swing the saber, blaster blocks will trigger automatically)
@@ -47,7 +47,7 @@
 // Blaster Blocks - short click AUX button while ON
 // Force Effects - short click Activation button while ON or perform "push" gesture holding the hilt vertically
 // Enter Color Change mode - hold AUX and quickly press and release Activation button while ON then release AUX button
-// Confirm selected color in Color Change mode - hold the button until confirmation sound
+// Confirm selected color and exit Color Change mode - hold the button until confirmation sound
 // Melt - hold AUX (or Activation) button + perform stab action while ON
 // Lightning Block - hold Activation button + short click AUX button while ON
 // Enter Multi-Block mode - hold the Activation button + swing the saber and release the button while ON (now swing the saber, blaster blocks will trigger automatically)
@@ -73,7 +73,7 @@
 #define PROPS_SABER_SHTOK_BUTTONS_H
 
 #ifndef MOTION_TIMEOUT
-#define MOTION_TIMEOUT 60 * 1 * 1000
+#define MOTION_TIMEOUT 60 * 5 * 1000
 #endif
 
 #include "prop_base.h"
@@ -102,6 +102,7 @@ SaberShtokButtons() : PropBase() {}
   void Loop() override {
     PropBase::Loop();
     DetectTwist();
+    DetectShake();
     Vec3 mss = fusor.mss();
     if (SaberBase::IsOn()) {
       DetectSwing();
@@ -196,9 +197,7 @@ SaberShtokButtons() : PropBase() {}
         return true;
 
 // Previous Preset
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
-        previous_preset();
-        return true;
+
 
 // Activate Muted
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
@@ -223,8 +222,8 @@ SaberShtokButtons() : PropBase() {}
 #endif
         if (fusor.angle1() <  M_PI / 4) {
           Off();
-        swing_blast_ = false;
  	saber_off_time_ = millis();
+        swing_blast_ = false;
         battle_mode_ = false;
         }
       }
@@ -237,7 +236,7 @@ SaberShtokButtons() : PropBase() {}
 
 // Color Change mode
 #ifndef DISABLE_COLOR_CHANGE
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
+      case EVENTID(BUTTON_NONE, EVENT_SHAKE, MODE_ON):
         ToggleColorChangeMode();
         break;
 #endif
@@ -311,25 +310,9 @@ SaberShtokButtons() : PropBase() {}
         break;
 
 // Lightning Block
-      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
-        SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
-        swing_blast_ = false;
-        SaberBase::DoBeginLockup();
-        return true;
+
 
 // Start or Stop Track
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
-        StartOrStopTrack();
-        return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
-        SaberBase::RequestMotion();
-        return true;
-
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-        next_preset();
-        return true;
 
 
 // 1-button code
@@ -378,8 +361,8 @@ SaberShtokButtons() : PropBase() {}
 #endif
         if (fusor.angle1() <  M_PI / 4) {
           Off();
-        swing_blast_ = false;
  	saber_off_time_ = millis();
+        swing_blast_ = false;
         battle_mode_ = false;
         }
       }
@@ -569,8 +552,8 @@ SaberShtokButtons() : PropBase() {}
 #endif
         if (fusor.angle1() <  M_PI / 4) {
           Off();
-        swing_blast_ = false;
  	saber_off_time_ = millis();
+        swing_blast_ = false;
         battle_mode_ = false;
         }
       }
