@@ -2,15 +2,15 @@
 // Activate Muted - None
 // Activate blade - forward thrust movement or sharp swing movement (Swing On)
 // Play/Stop Music - None
-// Turn the blade off - twist the saber like a bike handle holding the saber horizontally
-// Next Preset - shake the saber like a soda can while blade is OFF (hold the saber blade up and 45 degrees tilt)
+// Turn the blade off - twist the saber like a bike handle holding the saber horizontally or blade down
+// Next Preset - slightly shake the saber like a soda can while blade is OFF (hold the saber blade up in range up to 45 degrees tilt)
 // Previous Preset - None
 // Lockup - automatic by default (Battle Mode) - activates when clash happens and keeps active until swing is registered
 // Drag - None
 // Blaster Blocks - None
-// Force Effects - perform a "push" gesture holding the saber vertically
-// Enter Color Change mode - shake the saber like a soda can while blade is ON (hold the saber blade up and 45 degrees tilt)
-// Confirm selected color and exit Color Change mode - twist the saber like a bike handle holding the saber horizontally
+// Force Effects - perform a "push" gesture holding the saber vertically or horizontally perpendicular to the arm
+// Enter Color Change mode - slightly shake the saber like a soda can while blade is ON (hold the saber blade up in range up to 45 degrees tilt)
+// Confirm selected color and exit Color Change mode - twist the saber like a bike handle holding the saber horizontally or blade down
 // Melt - None
 // Lightning Block - None
 // Enter Multi-Block mode - None
@@ -181,22 +181,42 @@ SaberShtokButtons() : PropBase() {}
 
 #if NUM_BUTTONS == 0
 
-// Turn Blade ON
+// Turn Blade ON Swing
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
-      case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
           battle_mode_ = true;
 	  if(millis() > 3000) { 
           On();
+          }
+        return true;
+
+// Turn Blade ON Thrust
+      case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
+          battle_mode_ = true;
+	  if(millis() > 3000) { 
+        if (fusor.angle1() <  M_PI / 4) {
+          On();
+          }
         }
+        return true;
+
+   // Auto Lockup Mode
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
+        if (!battle_mode_) return false;
+        clash_impact_millis_ = millis();
+        swing_blast_ = false;
+        if (swinging_) return false;
+        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+        auto_lockup_on_ = true;
+        SaberBase::DoBeginLockup();
         return true;
 
 // Next Preset
       case EVENTID(BUTTON_NONE, EVENT_SHAKE, MODE_OFF):
+        if (fusor.angle1() >  M_PI / 4) {
         next_preset();
+        }
         return true;
-
-// Previous Preset
 
 
 // Activate Muted
@@ -208,8 +228,25 @@ SaberShtokButtons() : PropBase() {}
         }
         return true;
 
-// Turn Blade OFF
+// Turn Blade OFF Button
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
+        if (!SaberBase::Lockup()) {
+#ifndef DISABLE_COLOR_CHANGE
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+            // Just exit color change mode.
+            // Don't turn saber off.
+            ToggleColorChangeMode();
+            return true;
+          }
+#endif
+          Off();
+ 	saber_off_time_ = millis();
+        swing_blast_ = false;
+        battle_mode_ = false;
+      }
+        return true;
+
+// Turn Blade OFF Twist
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
         if (!SaberBase::Lockup()) {
 #ifndef DISABLE_COLOR_CHANGE
@@ -237,7 +274,9 @@ SaberShtokButtons() : PropBase() {}
 // Color Change mode
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_NONE, EVENT_SHAKE, MODE_ON):
+        if (fusor.angle1() >  M_PI / 4) {
         ToggleColorChangeMode();
+        }
         break;
 #endif
 
@@ -248,40 +287,6 @@ SaberShtokButtons() : PropBase() {}
         return true;
 
 // Multi-Blaster Deflection mode
-
-// Battle Mode
-      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
-      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
-        if (!battle_mode_) {
-          battle_mode_ = true;
-	  if(millis() > 3000) { 
-          On();
-        }
-          if (SFX_bmbegin) {
-            hybrid_font.PlayCommon(&SFX_bmbegin);
-          } else {
-            hybrid_font.DoEffect(EFFECT_FORCE, 0);
-          }
-        } else {
-          battle_mode_ = false;
-          if (SFX_bmend) {
-            hybrid_font.PlayCommon(&SFX_bmend);
-          } else {
-            beeper.Beep(0.5, 3000);
-          }
-        }
-        return true;
-
-    // Auto Lockup Mode
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
-        if (!battle_mode_) return false;
-        clash_impact_millis_ = millis();
-        swing_blast_ = false;
-        if (swinging_) return false;
-        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-        auto_lockup_on_ = true;
-        SaberBase::DoBeginLockup();
-        return true;
 
 // Push
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
@@ -347,8 +352,25 @@ SaberShtokButtons() : PropBase() {}
         }
         return true;
 
-// Turn Blade OFF
+// Turn Blade OFF Button
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
+        if (!SaberBase::Lockup()) {
+#ifndef DISABLE_COLOR_CHANGE
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+            // Just exit color change mode.
+            // Don't turn saber off.
+            ToggleColorChangeMode();
+            return true;
+          }
+#endif
+          Off();
+ 	saber_off_time_ = millis();
+        swing_blast_ = false;
+        battle_mode_ = false;
+      }
+        return true;
+
+// Turn Blade OFF Twist
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
         if (!SaberBase::Lockup()) {
 #ifndef DISABLE_COLOR_CHANGE
@@ -538,8 +560,25 @@ SaberShtokButtons() : PropBase() {}
         }
         return true;
 
-// Turn Blade OFF
+// Turn Blade OFF Button
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
+        if (!SaberBase::Lockup()) {
+#ifndef DISABLE_COLOR_CHANGE
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+            // Just exit color change mode.
+            // Don't turn saber off.
+            ToggleColorChangeMode();
+            return true;
+          }
+#endif
+          Off();
+ 	saber_off_time_ = millis();
+        swing_blast_ = false;
+        battle_mode_ = false;
+      }
+        return true;
+
+// Turn Blade OFF Twist
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
         if (!SaberBase::Lockup()) {
 #ifndef DISABLE_COLOR_CHANGE
