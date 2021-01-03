@@ -46,6 +46,7 @@ template<class T>
 class LSPtr {
 public:
   LSPtr() : ptr_(nullptr) {}
+  explicit LSPtr(const T* ptr) : ptr_(ptr) {}
   ~LSPtr() { Free(); }
   void Free() { LSFree(ptr_); }
   const T* get() const { return ptr_; }
