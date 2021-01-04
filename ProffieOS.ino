@@ -554,6 +554,7 @@ class NoLED;
 #include "blades/ws2811_blade.h"
 #include "blades/fastled_blade.h"
 #include "blades/simple_blade.h"
+#include "blades/saviblade.h"
 #include "blades/sub_blade.h"
 #include "blades/dim_blade.h"
 #include "blades/leds.h"
