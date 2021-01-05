@@ -12,7 +12,7 @@ public:
 #elif PROFFIEBOARD_VERSION == 2
     return 19;  // PB8
 #elif PROFFIEBOARD_VERSION == 3
-    return 19;  // PB8
+    return 21;  // PB6
 #else
 #error Unsupported IR hardware.
 #endif    

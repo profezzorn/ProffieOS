@@ -20,6 +20,9 @@ namespace {
 static stm32l4_timer_t stm32l4_pwm[PWM_INSTANCE_COUNT];
 static uint8_t timer_use_counts[PWM_INSTANCE_COUNT];
 
+#define PWM_SYNC_INSTANCE 3  // TIM15
+
+
 void SetupTimer(uint32_t instance) {
   timer_use_counts[instance]++;
   if (stm32l4_pwm[instance].state == TIMER_STATE_NONE) {
@@ -36,10 +39,11 @@ void SetupTimer(uint32_t instance) {
     
     stm32l4_timer_enable(&stm32l4_pwm[instance], divider -1, modulus -1, 0, NULL, NULL, 0);
     stm32l4_timer_start(&stm32l4_pwm[instance], false);
-    if (instance)  {
-      SetupTimer(0);
+    if (instance != PWM_SYNC_INSTANCE)  {
+      SetupTimer(PWM_SYNC_INSTANCE);
       // TIM16 cannot be synchronized in hardware, so let's do the best we can.
-      volatile uint32_t* from = &stm32l4_pwm[0].TIM->CNT;
+      // We use TIM15 to synchromize with, because it is used for PWM on all proffieboards.
+      volatile uint32_t* from = &stm32l4_pwm[PWM_SYNC_INSTANCE].TIM->CNT;
       volatile uint32_t* to = &stm32l4_pwm[instance].TIM->CNT;
       noInterrupts();
       *to = *from + 10;

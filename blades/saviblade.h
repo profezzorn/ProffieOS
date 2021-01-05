@@ -22,7 +22,7 @@ public:
 #ifdef TIM7_BASE
     stm32l4_timer_create(&timer_, TIMER_INSTANCE_TIM7, STM32L4_TONE_IRQ_PRIORITY, 0);
 #else
-    stm32l4_timer_create(&timer_, TIMER_INSTANCE_TIM3, STM32L4_TONE_IRQ_PRIORITY, 0);
+    stm32l4_timer_create(&timer_, TIMER_INSTANCE_TIM2, STM32L4_TONE_IRQ_PRIORITY, 0);
 #endif
     Power(true);
     Looper::Link();

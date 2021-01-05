@@ -319,15 +319,24 @@ public:
                       DMA_OPTION_CIRCULAR);
     SAIx->CR1 |= SAI_xCR1_DMAEN;
 
+#define SAIB_SCK g_SAI1Pins.sck
+#define SAIB_FS g_SAI1Pins.fs
+#define SAIB_SD g_SAI1Pins.sd
+    
+#if PROFFIEBOARD_VERSION < 3
+#undef SAIB_FS
+#define SAIB_FS GPIO_PIN_PA4_SAI1_FS_B
+#endif    
+
 #ifdef ENABLE_I2S_OUT
     // Neopixel data 3 pin is SCK
-    stm32l4_gpio_pin_configure(GPIO_PIN_PB3_SAI1_SCK_B, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_gpio_pin_configure(SAIB_SCK, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
 
     // Neopixel data 4 is FS, it is also possible to use GPIO_PIN_PB6_SAI1_FS_B, which is the power button pin.
-    stm32l4_gpio_pin_configure(GPIO_PIN_PA4_SAI1_FS_B, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_gpio_pin_configure(SAIB_FS, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
 
     // aux/Button2 button pin is DATA
-    stm32l4_gpio_pin_configure(GPIO_PIN_PB5_SAI1_SD_B, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_gpio_pin_configure(SAIB_SD, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
     stm32l4_dma_start(&dma2, (uint32_t)&SAI2->DR, (uint32_t)dac_dma_buffer2, AUDIO_BUFFER_SIZE * 2,
                       DMA_OPTION_EVENT_TRANSFER_DONE |
                       DMA_OPTION_EVENT_TRANSFER_HALF |
@@ -342,7 +351,7 @@ public:
 
 #ifdef ENABLE_SPDIF_OUT
     // aux button pin becomes S/PDIF out
-    stm32l4_gpio_pin_configure(GPIO_PIN_PB5_SAI1_SD_B, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+    stm32l4_gpio_pin_configure(SAIB_SD, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
     stm32l4_dma_start(&dma2, (uint32_t)&SAI2->DR, (uint32_t)dac_dma_buffer2, AUDIO_BUFFER_SIZE * 2 * 2,
                       DMA_OPTION_EVENT_TRANSFER_DONE |
                       DMA_OPTION_EVENT_TRANSFER_HALF |

@@ -32,9 +32,15 @@ public:
 
 volatile bool ws2811_dma_done = true;
 
-class WS2811EngineSTM32L4TIM2 : public WS2811Engine {
+class WS2811EngineSTM32L4 : public WS2811Engine {
 public:
+#if PROFFIEBOARD_VERSION == 3
+  static const int instance = 0;
+#define WS2811_TIMER_INSTANCE TIMER_INSTANCE_TIM1
+#else  
+#define WS2811_TIMER_INSTANCE TIMER_INSTANCE_TIM2
   static const int instance = 1;
+#endif  
   
   static stm32l4_timer_t* timer() {
     return &stm32l4_pwm[instance];
@@ -84,18 +90,27 @@ public:
     return true;
   }
   
-  WS2811EngineSTM32L4TIM2() {
+  WS2811EngineSTM32L4() {
     // Priority is 1 step above audio, because this code freezes if we
     // miss an interrupt. If we miss an audio interrupt, we just get a small glitch.
     int irq_priority = STM32L4_SAI_IRQ_PRIORITY - 1;
+#if PROFFIEBOARD_VERSION == 3
+    stm32l4_timer_create(timer(), TIMER_INSTANCE_TIM1, irq_priority, 0);
+    stm32l4_dma_create(&dma_, DMA_CHANNEL_DMA1_CH6_TIM1_UP, irq_priority);
+    
+    // For proxy mode
+    stm32l4_dma_create(&dma2_, DMA_CHANNEL_DMA1_CH7_TIM1_CH3, irq_priority);
+    stm32l4_dma_create(&dma3_, DMA_CHANNEL_DMA1_CH2_TIM1_CH1, irq_priority);
+#else
     stm32l4_timer_create(timer(), TIMER_INSTANCE_TIM2, irq_priority, 0);
     stm32l4_dma_create(&dma_, DMA_CHANNEL_DMA1_CH2_TIM2_UP, irq_priority);
     
     // For proxy mode
     stm32l4_dma_create(&dma2_, DMA_CHANNEL_DMA1_CH1_TIM2_CH3, irq_priority);
     stm32l4_dma_create(&dma3_, DMA_CHANNEL_DMA1_CH5_TIM2_CH1, irq_priority);
+#endif    
   }
-  ~WS2811EngineSTM32L4TIM2() {
+  ~WS2811EngineSTM32L4() {
     stm32l4_timer_destroy(timer());
     stm32l4_dma_destroy(&dma_);
     stm32l4_dma_destroy(&dma2_);
@@ -190,7 +205,7 @@ public:
     ws2811_dma_done = false;
     pin_ = pin;
     
-    if (g_PWMInstances[instance] != TIMER_INSTANCE_TIM2) {
+    if (g_PWMInstances[instance] != WS2811_TIMER_INSTANCE) {
       TRACE("proxy");
       // Proxy mode, make sure GPIO A/B doesn't fall asleep
       RCC->AHB2SMENR |= (RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN);
@@ -401,11 +416,11 @@ public:
   
   static void dma_refill_callback2(void* context, uint32_t events) {
     ScopedCycleCounter cc(pixel_dma_interrupt_cycles);
-    ((WS2811EngineSTM32L4TIM2*)context)->DoRefill2();
+    ((WS2811EngineSTM32L4*)context)->DoRefill2();
   }
   static void dma_refill_callback1(void* context, uint32_t events) {
     ScopedCycleCounter cc(pixel_dma_interrupt_cycles);
-    ((WS2811EngineSTM32L4TIM2*)context)->DoRefill1();
+    ((WS2811EngineSTM32L4*)context)->DoRefill1();
   }
   static void dma_done_callback_ignore(void* context, uint32_t events) {}
   static void dma_done_callback(void* context, uint32_t events) {
@@ -452,26 +467,26 @@ private:
   static stm32l4_dma_t dma3_;
 };
 
-WS2811Client* WS2811EngineSTM32L4TIM2::client_;
-uint32_t WS2811EngineSTM32L4TIM2::chunk_bits_;
-uint32_t WS2811EngineSTM32L4TIM2::chunk_size_;
-uint32_t WS2811EngineSTM32L4TIM2::bits_per_interrupt_;
-uint32_t WS2811EngineSTM32L4TIM2::sent_;
-uint32_t WS2811EngineSTM32L4TIM2::bits_to_send_;
-int WS2811EngineSTM32L4TIM2::pin_;
-uint8_t* WS2811EngineSTM32L4TIM2::begin_;
-uint8_t* WS2811EngineSTM32L4TIM2::end_;
-uint8_t* WS2811EngineSTM32L4TIM2::half_;
-uint8_t* WS2811EngineSTM32L4TIM2::dest_;
-stm32l4_timer_t WS2811EngineSTM32L4TIM2::timer_;
-stm32l4_dma_t WS2811EngineSTM32L4TIM2::dma_;
-stm32l4_dma_t WS2811EngineSTM32L4TIM2::dma2_;
-stm32l4_dma_t WS2811EngineSTM32L4TIM2::dma3_;
-volatile uint8_t WS2811EngineSTM32L4TIM2::bit_;
+WS2811Client* WS2811EngineSTM32L4::client_;
+uint32_t WS2811EngineSTM32L4::chunk_bits_;
+uint32_t WS2811EngineSTM32L4::chunk_size_;
+uint32_t WS2811EngineSTM32L4::bits_per_interrupt_;
+uint32_t WS2811EngineSTM32L4::sent_;
+uint32_t WS2811EngineSTM32L4::bits_to_send_;
+int WS2811EngineSTM32L4::pin_;
+uint8_t* WS2811EngineSTM32L4::begin_;
+uint8_t* WS2811EngineSTM32L4::end_;
+uint8_t* WS2811EngineSTM32L4::half_;
+uint8_t* WS2811EngineSTM32L4::dest_;
+stm32l4_timer_t WS2811EngineSTM32L4::timer_;
+stm32l4_dma_t WS2811EngineSTM32L4::dma_;
+stm32l4_dma_t WS2811EngineSTM32L4::dma2_;
+stm32l4_dma_t WS2811EngineSTM32L4::dma3_;
+volatile uint8_t WS2811EngineSTM32L4::bit_;
 
 
 WS2811Engine* GetWS2811Engine(int pin) {
-  static WS2811EngineSTM32L4TIM2 engine;
+  static WS2811EngineSTM32L4 engine;
   if (pin < 0) return nullptr;
   return &engine;
 }
