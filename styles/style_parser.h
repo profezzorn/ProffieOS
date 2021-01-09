@@ -32,7 +32,7 @@ public:
 #define GET_PRESET_STYLE(N) if (style == N) allocator = p->style_allocator##N;
     ONCEPERBLADE(GET_PRESET_STYLE);
     if (!allocator) return nullptr;
-    ArgParser ap(CurrentArgParser->GetArg(2, "", ""));
+    ArgParser ap(SkipWord(CurrentArgParser->GetArg(2, "", "")));
     CurrentArgParser = &ap;
     return allocator->make();
 #endif    
