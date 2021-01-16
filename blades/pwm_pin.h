@@ -125,6 +125,10 @@ public:
     LSanalogWriteSetup(PIN);
     LSanalogWrite(PIN, 0);  // make it black
   }
+  void Deactivate() {
+    LSanalogWrite(PIN, 0);  // make it black
+    LSanalogWriteTeardown(PIN);
+  }
   void set(int32_t v) {
     LSanalogWrite(PIN, v);
   }

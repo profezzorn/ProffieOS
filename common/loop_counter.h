@@ -3,6 +3,10 @@
 
 class LoopCounter {
 public:
+  float LoopsPerSecond() {
+    if (!millis_sum_) return 0.0;
+    return updates_ * 1000.0 / millis_sum_;
+  }
   void Print() {
     if (millis_sum_)
       STDOUT.print(updates_ * 1000.0 / millis_sum_);

@@ -60,7 +60,7 @@ const unsigned int maxLedsPerStrip = 196;
 
 // #define ENABLE_DEBUG
 
-#define IDLE_OFF_TIME 10000
+// #define IDLE_OFF_TIME 10000
 
 // #define BLADE_DETECT_PIN aux2Pin
 
@@ -246,13 +246,14 @@ BladeConfig blades[] = {
 //  { 1, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
   { 1,
 //    DimBlade(10.0, SubBladeReverse(0, 143, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>())),
-    DimBlade(10.0, SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>())),
+    DimBlade(10.0, SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<>>())),
 //    DimBlade(5.0, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()),
 //    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
 //    WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin2>>(),
 //    SPIBladePtr<99, blade2Pin, blade3Pin, Color8::BGR, PowerPINS<bladePowerPin2>, 12000000> (),
 //    WS2811BladePtr<30, WS2811_800kHz | WS2811_GRB, blade2Pin, PowerPINS<bladePowerPin2>>(),
-    SaviBladePtr<blade2Pin, PowerPINS<bladePowerPin2>>(),
+//    SaviBladePtr<blade2Pin, PowerPINS<bladePowerPin2>>(),
+    StringBladePtr<Blue3mmLED>(),
     CONFIGARRAY(testing_presets) },
 //  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>>(), CONFIGARRAY(testing_presets) }
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },

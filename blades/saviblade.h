@@ -234,14 +234,16 @@ private:
   volatile bool run_ = false;
 };
 
-
-
 template<int pin, class POWER_PINS = PowerPINS<> >
 class BladeBase *SaviBladePtr() {
   static POWER_PINS power_pins;
   static SaviBlade blade(pin, &power_pins);
   return &blade;
 }
+
+#if PROFFIEBOARD_VERSION - 0 >= 3 && !defined(NO_STATUS_LED)
+#define SaviBladePtr please_disable_status_led_to_use_savi_blade
+#endif
 
 #endif
 #endif

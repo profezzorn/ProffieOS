@@ -562,6 +562,7 @@ class NoLED;
 #include "common/preset.h"
 #include "common/blade_config.h"
 #include "common/current_preset.h"
+#include "common/status_led.h"
 #include "styles/style_parser.h"
 #include "styles/length_finder.h"
 
@@ -1034,6 +1035,9 @@ class Commands : public CommandParser {
       STDOUT.print("Global loops / second: ");
       global_loop_counter.Print();
       STDOUT.println("");
+      STDOUT.print("High frequency loops / second: ");
+      hf_loop_counter.Print();
+      STDOUT.println("");
       SaberBase::DoTop(total_cycles);
       Looper::LoopTop(total_cycles);
       DumpProfileLocations(total_cycles);
@@ -1120,6 +1124,12 @@ class Commands : public CommandParser {
         for (int j = 15; j >= 0; j--) {
           uint32_t now = ((GPIO->IDR >> j) & 1) | (((GPIO->ODR >> j) & 1) << 1);
           STDOUT.print("lhLH"[now]);
+          if (!(j & 3)) STDOUT.print(" ");
+        }
+        STDOUT.print("  ");
+        for (int j = 15; j >= 0; j--) {
+	  int afr = 0xf & (GPIO->AFR[j >> 3] >> ((j & 7) * 4));
+          STDOUT.print("0123456789ABCDEF"[afr]);
           if (!(j & 3)) STDOUT.print(" ");
         }
         STDOUT.println("");
