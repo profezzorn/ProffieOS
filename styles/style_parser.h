@@ -32,8 +32,9 @@ public:
 #define GET_PRESET_STYLE(N) if (style == N) allocator = p->style_allocator##N;
     ONCEPERBLADE(GET_PRESET_STYLE);
     if (!allocator) return nullptr;
-    ArgParser ap(SkipWord(CurrentArgParser->GetArg(2, "", "")));
-    CurrentArgParser = &ap;
+    CurrentArgParser->Shift(2);
+    // ArgParser ap(SkipWord(CurrentArgParser->GetArg(2, "", "")));
+    // CurrentArgParser = &ap;
     return allocator->make();
 #endif    
   }
@@ -106,24 +107,59 @@ public:
 
   NamedStyle* FindStyle(const char *name) {
     if (!name) return nullptr;
-    for (size_t i = 0; i < NELEM(named_styles); i++)
-      if (!strcmp(named_styles[i].name, name))
+    for (size_t i = 0; i < NELEM(named_styles); i++) {
+      if (FirstWord(name, named_styles[i].name)) {
 	return named_styles + i;
+      }
+    }
 
     return nullptr;
   }
 
   BladeStyle* Parse(const char* str) {
-    for (size_t i = 0; i < NELEM(named_styles); i++) {
-      if (FirstWord(str, named_styles[i].name)) {
-	ArgParser ap(SkipWord(str));
-	CurrentArgParser = &ap;
-	return named_styles[i].style_allocator->make();
-      }
-    }
-    return nullptr;
+    NamedStyle* style = FindStyle(str);
+    if (!style) return nullptr;
+    ArgParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    return style->style_allocator->make();
   }
 
+  // Get the Nth argument of a style string.
+  // The output will be copied to |output|.
+  // If the string itself doesn't contain that argument, the style
+  // will be parsed, and it's default argument will be returned.
+  bool GetArgument(const char* str, int argument, char* output) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    if (argument == 0) {
+      const char* tmp = SkipWord(str) - 1;
+      memcpy(output, str, tmp - str);
+      output[tmp-str] = 0;
+      return true;
+    }
+    GetArgParser ap(SkipWord(str), argument, output);
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    return ap.next();
+  }
+
+  // Replace the Nth argument of a style string with a new value and return
+  // the new style string. Missing arguments will be replaced with default
+  // values.
+  LSPtr<char> SetArgument(const char* str, int argument, const char* new_value) {
+    char tmp[256];  // maximum length for now
+    int output_args = std::max<int>(CountWords(str), argument + 1);
+    for (int i = 0; i < output_args; i++) {
+      if (i) strcat(tmp, " ");
+      if (i == argument) {
+	strcat(tmp, new_value);
+      } else {
+	GetArgument(str, i, tmp + strlen(tmp));
+      }
+    }
+    return LSPtr<char>(mkstr(tmp));
+  }
+  
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "list_named_styles")) {
       // Just print one per line.
