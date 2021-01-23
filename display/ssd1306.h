@@ -9,6 +9,7 @@ IMAGE_FILESET(clsh);
 IMAGE_FILESET(blst);
 IMAGE_FILESET(lock);
 IMAGE_FILESET(force);
+IMAGE_FILESET(idle); // BC idle.bmp play.
 
 struct Glyph {
   int32_t skip : 7;
@@ -42,6 +43,8 @@ const uint32_t BatteryBar16_data[] = {
 const Glyph BatteryBar16 = { 16, 0, 0, GLYPHDATA(BatteryBar16_data) };
 
 #include "StarJedi10Font.h"
+#include "Aurebesh10Font.h"
+//#include "StarJediRounded10Font.h"
 
 class SSD1306 : public I2CDevice, Looper, StateMachine, SaberBase, private AudioStreamWork {
 public:
@@ -201,8 +204,11 @@ public:
         invert_y_ = false;
         return font_config.ProffieOSFontImageDuration;
 
-      case SCREEN_PLI:
+      case SCREEN_PLI:      
         memset(frame_buffer_, 0, sizeof(frame_buffer_));
+      // BC idle.bmp play. 
+      // Need non-SDcard content at first so Mass Storage can work.
+          if (!just_booted_) ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
         DrawBatteryBar(BatteryBar16);
         layout_ = LAYOUT_NATIVE;
         xor_ = 0;
@@ -211,11 +217,20 @@ public:
 
       case SCREEN_MESSAGE:
         memset(frame_buffer_, 0, sizeof(frame_buffer_));
+    // BC Aurbesh Font option.
+    #ifdef AUREBESH
+        if (strchr(message_, '\n')) {
+          DrawText(message_, 0, 15, Aurebesh10pt7bGlyphs);
+        } else {
+          DrawText(message_, 0, 23, Aurebesh10pt7bGlyphs);
+        }
+    #else
         if (strchr(message_, '\n')) {
           DrawText(message_, 0, 15, Starjedi10pt7bGlyphs);
         } else {
           DrawText(message_, 0, 23, Starjedi10pt7bGlyphs);
         }
+    #endif
         screen_ = SCREEN_PLI;
         layout_ = LAYOUT_NATIVE;
         xor_ = 0;
@@ -229,10 +244,10 @@ public:
           return 1;
         }
         if (eof_) {
-          // STDOUT << "EOF " << frame_count_ << "\n";
+           //STDOUT << "EOF " << frame_count_ << "\n";
           if (!SaberBase::IsOn()) {
             screen_ = SCREEN_PLI;
-            if (frame_count_ == 1) return font_config.ProffieOSFontImageDuration;
+            if (frame_count_ == 1) return font_config.ProffieOSFontImageDuration; 
             return FillFrameBuffer();
           }
         }
@@ -248,12 +263,12 @@ public:
               ShowFile(&IMG_lock, 3600000.0);
               return 3600000;
             } else {
-              if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+              if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);  
             }
           } else {
             // looped image
             if (looped_frames_ == frame_count_) {
-              if (millis() - loop_start_ > effect_display_duration_) {
+              if (millis() - loop_start_ > effect_display_duration_) {       
                 if (!SaberBase::Lockup()) {
                   screen_ = SCREEN_PLI;
                   if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
@@ -262,12 +277,14 @@ public:
             }
           }
         } else {
+          //BC idle.bmp ply. Loop during SB_Off
+          if (current_effect_ == &IMG_idle) loop_start_ = millis();                                                                             
           if (millis() - loop_start_ > font_config.ProffieOSFontImageDuration) {
-            STDOUT << "END OF LOOP\n";
+            STDOUT << "END OF LOOP\n"; 
             screen_ = SCREEN_PLI;
           }
         }
-
+ 
         if (font_config.ProffieOSAnimationFrameRate > 0.0) {
           return 1000 / font_config.ProffieOSAnimationFrameRate;
         }
@@ -276,7 +293,7 @@ public:
         } else {
           return 41;   // ~24 fps
         }
-    }
+    } //switch end
   }
 
   void SetScreenNow(Screen screen) {
@@ -312,6 +329,9 @@ public:
 
   void SB_On() override {
     ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+    // BC idle.bmp play. 
+    // Waits to activate until first time blade on
+    just_booted_ = false; 
   }
 
   void SB_Effect(EffectType effect, float location) override {
@@ -357,6 +377,7 @@ public:
     // powered down and up again properly.
     // This only makes it black, which prevents burn-in.
     if (offtype == OFF_IDLE) {
+      STDOUT << "Screen going to sleep zzzzzzzzz\n";
       SetScreenNow(SCREEN_OFF);
     } else {
       SetScreenNow(SCREEN_PLI);
@@ -382,14 +403,13 @@ public:
     Send(0x14);
     Send(MEMORYMODE);                    // 0x20
     Send(0x01);                          // vertical address mode
-    #ifndef OLED_FLIP_180		 // normal OLED operation
+  #ifndef OLED_FLIP_180                  // BC flip define
     Send(SEGREMAP | 0x1);
     Send(COMSCANDEC);
-    #else				 // allows for 180deg rotation of the OLED mapping
+  #else
     Send(SEGREMAP);
     Send(COMSCANINC);
-    #endif
-
+  #endif
     Send(SETCOMPINS);                    // 0xDA
     Send(0x02);  // may need to be 0x12 for some displays
     Send(SETCONTRAST);                   // 0x81
@@ -656,6 +676,7 @@ private:
   volatile bool frame_available_ = true;
   volatile bool eof_ = true;
   volatile bool lock_fb_ = false;
+  bool just_booted_ = true; // BC idle.bmp play.
 };
 
 #endif
