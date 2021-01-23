@@ -283,7 +283,7 @@ public:
             screen_ = SCREEN_PLI;
           }
         }
- 
+
         if (font_config.ProffieOSAnimationFrameRate > 0.0) {
           return 1000 / font_config.ProffieOSAnimationFrameRate;
         }
