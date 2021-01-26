@@ -154,7 +154,9 @@ public:
       if (i == argument) {
 	strcat(tmp, new_value);
       } else {
-	GetArgument(str, i, tmp + strlen(tmp));
+	if (!GetArgument(str, i, tmp + strlen(tmp))) {
+	  strcat(tmp, "~");
+	}
       }
     }
     return LSPtr<char>(mkstr(tmp));
