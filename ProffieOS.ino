@@ -562,6 +562,7 @@ class NoLED;
 #include "common/current_preset.h"
 #include "styles/style_parser.h"
 #include "styles/length_finder.h"
+#include "styles/show_color.h"
 
 BladeConfig* current_config = nullptr;
 class BladeBase* GetPrimaryBlade() {
