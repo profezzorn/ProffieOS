@@ -337,6 +337,22 @@ void test_rotate(Color16 c, int angle) {
   CHECK_NEAR(result.r, x.r, 5);
   CHECK_NEAR(result.g, x.g, 5);
   CHECK_NEAR(result.b, x.b, 5);
+
+  // Test HSL
+  HSL hsl = c.toHSL();
+  hsl = hsl.rotate(angle / (float)(32768 * 3));
+//  fprintf(stderr, "Angle = %d HSL={%f,%f,%f} RGB=%d,%d,%d\n", angle, hsl.H, hsl.S, hsl.L, c.r, c.g, c.b);
+  CHECK_LE(0.0, hsl.H);
+  CHECK_LE(0.0, hsl.S);
+  CHECK_LE(0.0, hsl.L);
+  CHECK_LE(hsl.H, 1.0);
+  CHECK_LE(hsl.S, 1.0);
+  CHECK_LE(hsl.L, 1.0);
+  Color16 result2(hsl);
+//  fprintf(stderr, "result2 = %d, %d, %d\n", result2.r, result2.g, result2.b);
+  CHECK_NEAR(result2.r, x.r, 5);
+  CHECK_NEAR(result2.g, x.g, 5);
+  CHECK_NEAR(result2.b, x.b, 5);
 }
 
 void test_rotate(Color16 c) {
