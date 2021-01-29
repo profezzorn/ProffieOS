@@ -214,6 +214,17 @@ public:
     hybrid_font.SetHumVolume(1.0);
   }
 
+  void PrintButton(uint32_t b) override {
+    if (b & BUTTON_TRIGGER_ONE) STDOUT.print("T1");
+    if (b & BUTTON_TRIGGER_TWO) STDOUT.print("T2");
+    if (b & BUTTON_TRIGGER_THREE) STDOUT.print("T3");
+    if (b & BUTTON_TRIGGER_FOUR) STDOUT.print("T4");
+    if (b & BUTTON_TRIGGER_FIVE) STDOUT.print("T5");
+    if (b & BUTTON_TRIGGER_SIX) STDOUT.print("T6");
+    if (b & BUTTON_TRIGGER_SEVEN) STDOUT.print("T7");
+    if (b & BUTTON_TRIGGER_EIGHT) STDOUT.print("T8");
+    if (b & MODE_ON) STDOUT.print("On");
+  }
   // Make swings do nothing
   void DoMotion(const Vec3& motion, bool clear) override { }
 
@@ -234,8 +245,8 @@ public:
     }
 
     switch (EVENTID(button, event, modifiers & ~MODE_ON)) {
-      case EVENTID(BUTTON_TRIGGER_ONE, EVENT_HELD_LONG, BUTTON_TRIGGER_EIGHT):
-      case EVENTID(BUTTON_TRIGGER_EIGHT, EVENT_HELD_LONG, BUTTON_TRIGGER_ONE):
+      case EVENTID(BUTTON_TRIGGER_ONE, EVENT_HELD_MEDIUM, BUTTON_TRIGGER_EIGHT):
+      case EVENTID(BUTTON_TRIGGER_EIGHT, EVENT_HELD_MEDIUM, BUTTON_TRIGGER_ONE):
 	if (SaberBase::IsOn()) {
 	  Off();
 	  return true;

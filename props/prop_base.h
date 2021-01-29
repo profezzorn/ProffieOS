@@ -924,7 +924,7 @@ public:
   }
 #endif // DISABLE_COLOR_CHANGE  
 
-  void PrintButton(uint32_t b) {
+  virtual void PrintButton(uint32_t b) {
     if (b & BUTTON_POWER) STDOUT.print("Power");
     if (b & BUTTON_AUX) STDOUT.print("Aux");
     if (b & BUTTON_AUX2) STDOUT.print("Aux2");
