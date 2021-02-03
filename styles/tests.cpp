@@ -487,6 +487,7 @@ void test_style3() {
 
 void testGetArg(const char* str, int arg, const char* expected) {
   char tmp[1024];
+  fprintf(stderr, "testGetArg(%s, %d)\n", str, arg);
   if (!style_parser.GetArgument(str, arg, tmp)) {
     fprintf(stderr, "Expected to be able to get argument %d from %s\n", arg, str);
     exit(1);
@@ -509,6 +510,7 @@ void testNoArg(const char* str, int arg) {
 }
 
 void testSetArg(const char* str, int arg, const char* replacement, const char* expected) {
+  fprintf(stderr, "testSetArg(%s, %d)\n", str, arg);
   LSPtr<char> ret = style_parser.SetArgument(str, arg, replacement);
   if (strcmp(ret.get(), expected)) {
     fprintf(stderr, "Expected '%s' got '%s'\n", expected, ret.get());
