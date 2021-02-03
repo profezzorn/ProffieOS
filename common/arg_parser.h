@@ -48,8 +48,8 @@ public:
     while (true) {
       while (*ret == ' ' || *ret == '\t') ret++;
       if (!*ret) {
-	STDOUT.print("Missing argument ");
-	STDOUT.println(arg_num);
+	// STDOUT.print("Missing argument ");
+	// STDOUT.println(arg_num);
 	return default_value;
       }
       if (++arg == arg_num) return ret;
@@ -101,7 +101,11 @@ public:
 		     const char* default_value) override {
     const char* ret = ArgParser::GetArg(arg_num, name, default_value);
     if (current_arg == arg_num + offset) {
-      strcpy(output_, ret);
+
+      const char* tmp = SkipWord(ret);
+      while (tmp > ret && tmp[-1] == ' ') tmp--;
+      memcpy(output_, ret, tmp - ret);
+      output_[tmp-ret] = 0;
       found = true;
     }
     return ret;

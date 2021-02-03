@@ -132,7 +132,8 @@ public:
     NamedStyle* style = FindStyle(str);
     if (!style) return false;
     if (argument == 0) {
-      const char* tmp = SkipWord(str) - 1;
+      const char* tmp = SkipWord(str);
+      while (tmp > str && tmp[-1] == ' ') tmp--;
       memcpy(output, str, tmp - str);
       output[tmp-str] = 0;
       return true;
@@ -140,26 +141,33 @@ public:
     GetArgParser ap(SkipWord(str), argument, output);
     CurrentArgParser = &ap;
     delete style->style_allocator->make();
-    return ap.next();
+    bool ret = ap.next();
+    if (!ret) *output = 0;
+    return ret;
   }
 
   // Replace the Nth argument of a style string with a new value and return
   // the new style string. Missing arguments will be replaced with default
   // values.
   LSPtr<char> SetArgument(const char* str, int argument, const char* new_value) {
-    char tmp[256];  // maximum length for now
+    char ret[256];  // maximum length for now
+    char* tmp = ret;
     int output_args = std::max<int>(CountWords(str), argument + 1);
     for (int i = 0; i < output_args; i++) {
-      if (i) strcat(tmp, " ");
+      if (i) strcat(tmp++, " ");
       if (i == argument) {
 	strcat(tmp, new_value);
+	tmp += strlen(tmp);
       } else {
-	if (!GetArgument(str, i, tmp + strlen(tmp))) {
+	if (!GetArgument(str, i, tmp)) {
 	  strcat(tmp, "~");
 	}
+//	fprintf(stderr, "OUTPUT: %s\n", tmp);
+	tmp += strlen(tmp);
       }
     }
-    return LSPtr<char>(mkstr(tmp));
+    *tmp = 0;
+    return LSPtr<char>(mkstr(ret));
   }
   
   bool Parse(const char *cmd, const char* arg) override {
