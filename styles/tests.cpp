@@ -38,12 +38,13 @@ constexpr auto max(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::f
 }
 float fract(float x) { return x - floor(x); }
 
-int itoa(int value, char* str, int radix) {
+char* itoa(int value, char* str, int radix) {
   if (radix != 10) {
     fprintf(stderr, "Unexpected radix!\n");
     exit(1);
   }
   sprintf(str, "%d", value);
+  return str;
 }
 
 uint32_t micros_ = 0;
