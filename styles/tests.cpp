@@ -525,6 +525,9 @@ void test_argument_parsing() {
   testGetArg("standard", 3, "300");
   testGetArg("standard", 4, "800");
   testNoArg("standard", 5);
+  testGetArg("standard 1,1,1 2,2,2 3 4 5", 5, "5");
+  testNoArg("standard 1,1,1 2,2,2 3 4 ~", 5);
+  testGetArg("standard 1,1,1 2,2,2 3 4 5", 2, "2,2,2");
   testSetArg("standard 1,1,1 2,2,2 3 4", 1, "7,7,7", "standard 7,7,7 2,2,2 3 4");
   testSetArg("standard 1,1,1 2,2,2 3 4", 2, "7,7,7", "standard 1,1,1 7,7,7 3 4");
   testSetArg("standard 1,1,1 2,2,2 3 4", 3, "7", "standard 1,1,1 2,2,2 7 4");

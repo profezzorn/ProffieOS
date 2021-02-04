@@ -21,8 +21,13 @@ bool FirstWord(const char *str, const char *word) {
   return false;
 }
 
-const char* SkipWord(const char* str) {
+const char* SkipSpace(const char* str) {
   while (*str == ' ' || *str == '\t') str++;
+  return str;
+}
+
+const char* SkipWord(const char* str) {
+  str = SkipSpace(str);
   while (*str != ' ' && *str != '\t' && *str) str++;
   return str;
 }
@@ -103,7 +108,6 @@ public:
     if (current_arg == arg_num + offset) {
 
       const char* tmp = SkipWord(ret);
-      while (tmp > ret && tmp[-1] == ' ') tmp--;
       memcpy(output_, ret, tmp - ret);
       output_[tmp-ret] = 0;
       found = true;

@@ -131,19 +131,29 @@ public:
   bool GetArgument(const char* str, int argument, char* output) {
     NamedStyle* style = FindStyle(str);
     if (!style) return false;
-    if (argument == 0) {
+    if (argument < CountWords(str)) {
+      while (argument > 0) {
+	str = SkipWord(str);
+	argument--;
+      }
+      str = SkipSpace(str);
       const char* tmp = SkipWord(str);
-      while (tmp > str && tmp[-1] == ' ') tmp--;
       memcpy(output, str, tmp - str);
       output[tmp-str] = 0;
-      return true;
+    } else {
+      GetArgParser ap(SkipWord(str), argument, output);
+      CurrentArgParser = &ap;
+      delete style->style_allocator->make();
+      if (!ap.next()) {
+	*output = 0;
+	return false;
+      }
     }
-    GetArgParser ap(SkipWord(str), argument, output);
-    CurrentArgParser = &ap;
-    delete style->style_allocator->make();
-    bool ret = ap.next();
-    if (!ret) *output = 0;
-    return ret;
+    if (!strcmp(output, "~")) {
+      *output = 0;
+      return false;
+    }
+    return true;
   }
 
   // Replace the Nth argument of a style string with a new value and return
