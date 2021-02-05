@@ -12,6 +12,8 @@ private:
   static Color16 color_;
 };
 
+Color16 ShowColorStyle::color_;
+
 template<class T>
 class ShowColorAllBladesTemplate {
 public:
