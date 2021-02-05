@@ -6,7 +6,7 @@
 class ShowColorStyle {
 public:
   void run(BladeBase *blade) {}
-  Color16 getColor(int led) { return color_; }
+  SimpleColor getColor(int led) { return color_; }
   static void SetColor(Color16 color) { color_ = color; }
 private:
   static Color16 color_;
