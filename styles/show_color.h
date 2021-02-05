@@ -3,7 +3,7 @@
 
 #include "../common/preset.h"
 
-class ShowColorStyle : public BladeStyle {
+class ShowColorStyle {
 public:
   void run(BladeBase *blade) {}
   Color16 getColor(int led) { return color_; }
