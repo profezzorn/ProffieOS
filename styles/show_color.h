@@ -4,34 +4,31 @@
 #include "../common/preset.h"
 
 class ShowColorStyle : public BladeStyle {
-  bool NoOnOff() override { return true; }
-  bool Charging() override { return false; }
-  bool IsHandled(HandledFeature effect) override { return false; }
-  void activate() override {}
-
-  void run(BladeBase *blade) override {
-    int num_leds = blade->num_leds();
-    for (int i = 0; i < num_leds; i++) {
-      blade->set(i, color_);
-    }
-  }
-
-  void SetColor(Color16 color) { color_ = color; }
+public:
+  void run(BladeBase *blade) {}
+  Color16 getColor(int led) { return color_; }
+  static void SetColor(Color16 color) { color_ = color; }
 private:
-  Color16 color_;
+  static Color16 color_;
 };
 
-class ShowColorAllBlades : public ShowColorStyle {
+template<class T>
+class ShowColorAllBladesTemplate {
 public:
-  void Start() {
+  BladeStyle* make(const char* str) {
+    ArgParser ap(SkipWord(str));
+    return new Style<T>();
+  }
+  void Start(const char* str) {
 #define SHOW_COLOR_STYLE_START(N)				\
     style##N##_ = current_config->blade##N->UnSetStyle();	\
-    current_config->blade##N->SetStyle(this);
+    current_config->blade##N->SetStyle(make(str));
     ONCEPERBLADE(SHOW_COLOR_STYLE_START);
   }
+  void Start() { Start(""); }
   void Stop() {
 #define SHOW_COLOR_STYLE_STOP(N)			\
-    current_config->blade##N->UnSetStyle();		\
+    delete current_config->blade##N->UnSetStyle();	\
     current_config->blade##N->SetStyle(style##N##_);
     ONCEPERBLADE(SHOW_COLOR_STYLE_STOP);
   }
@@ -40,19 +37,25 @@ private:
   ONCEPERBLADE(SHOW_COLOR_STYLE_DEFINE)
 };
 
-class ShowColorSingleBlade : public ShowColorStyle {
+template<class T>
+class ShowColorSingleBladeTemplate {
 public:
-  void Start(int blade) {
+  BladeStyle* make(const char* str) {
+    ArgParser ap(SkipWord(str));
+    return new Style<T>();
+  }
+  void Start(int blade, const char* str) {
 #define SHOW_COLOR_STYLE_START2(N)				\
     case N:							\
       style_ = current_config->blade##N->UnSetStyle();	        \
-      current_config->blade##N->SetStyle(this);			\
+      current_config->blade##N->SetStyle(make(str));		\
       break;
 
     switch (blade) {
       ONCEPERBLADE(SHOW_COLOR_STYLE_START2)
     }
   }
+  void Start(int blade) { Start(blade, ""); }
   void Stop(int blade) {
 #define SHOW_COLOR_STYLE_STOP2(N)			\
     case N:						\
@@ -67,5 +70,8 @@ public:
 private:
   BladeStyle* style_;
 };
+
+using ShowColorAllBlades = ShowColorAllBladesTemplate<ShowColorStyle>();
+using ShowColorSingleBlade = ShowColorSingleBladeTemplate<ShowColorStyle>();
 
 #endif  // STYLES_SHOW_COLOR_H
