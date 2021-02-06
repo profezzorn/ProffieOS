@@ -19,6 +19,7 @@ class ShowColorAllBladesTemplate {
 public:
   BladeStyle* make(const char* str) {
     ArgParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
     return new Style<T>();
   }
   void Start(const char* str) {
