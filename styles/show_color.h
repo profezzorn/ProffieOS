@@ -45,6 +45,7 @@ class ShowColorSingleBladeTemplate {
 public:
   BladeStyle* make(const char* str) {
     ArgParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
     return new Style<T>();
   }
   void Start(int blade, const char* str) {
