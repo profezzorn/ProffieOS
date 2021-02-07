@@ -16,13 +16,32 @@ template<class A> class TrConcat<A> : public A {};
 template<class A, class INTERMEDIATE, class... B>
 class TrConcat<A, INTERMEDIATE, B...> {
 public:
-  void begin() { a_.begin(); run_a_ = true; }
+  TrConcat() {
+    new (&b_) TrConcat<B...>;
+  }
+  ~TrConcat() {
+    if (run_a_) {
+      a_.~A();
+    } else {
+      b_.~TrConcat<B...>();
+    }
+  }
+  void begin() {
+    if (!run_a_) {
+      b_.~TrConcat<B...>();
+      new (&a_) A;
+      run_a_ = true;
+    }
+    a_.begin();
+  }
   bool done() { return !run_a_ && b_.done(); }
   void run(BladeBase* blade) {
     intermediate_.run(blade);
     if (run_a_) {
       a_.run(blade);
       if (!a_.done()) return;
+      a_.~A();
+      new (&b_) TrConcat<B...>;
       run_a_ = false;
       b_.begin();
     }
@@ -31,8 +50,10 @@ public:
   
 private:
   bool run_a_ = false;
-  A a_;
-  TrConcat<B...> b_;
+  union {
+    A a_;
+    TrConcat<B...> b_;
+  };
   INTERMEDIATE intermediate_;
 public:  
   template<class X, class Y>
