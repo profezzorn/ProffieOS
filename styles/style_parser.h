@@ -124,6 +124,18 @@ public:
     return style->style_allocator->make();
   }
 
+  // Returns true if the listed style refereces the specified argument.
+  bool UsesArgument(const char* str, int argument) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    if (argument == 0) return true;
+    char unused_output[32];
+    GetArgParser ap(SkipWord(str), argument, unused_output);
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    return ap.next();
+  }
+
   // Get the Nth argument of a style string.
   // The output will be copied to |output|.
   // If the string itself doesn't contain that argument, the style
