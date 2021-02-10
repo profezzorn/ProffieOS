@@ -52,7 +52,7 @@ public:
     int arg = 0;
     while (true) {
       while (*ret == ' ' || *ret == '\t') ret++;
-      if (!*ret) {
+      if (!*ret || *ret == '~') {
 	// STDOUT.print("Missing argument ");
 	// STDOUT.println(arg_num);
 	return default_value;

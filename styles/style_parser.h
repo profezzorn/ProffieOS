@@ -143,24 +143,24 @@ public:
   bool GetArgument(const char* str, int argument, char* output) {
     NamedStyle* style = FindStyle(str);
     if (!style) return false;
-    if (argument < CountWords(str)) {
-      while (argument > 0) {
-	str = SkipWord(str);
-	argument--;
-      }
-      str = SkipSpace(str);
-      const char* tmp = SkipWord(str);
-      memcpy(output, str, tmp - str);
-      output[tmp-str] = 0;
-    } else {
+    if (argument >= 0) {
       GetArgParser ap(SkipWord(str), argument, output);
       CurrentArgParser = &ap;
       delete style->style_allocator->make();
-      if (!ap.next()) {
-	*output = 0;
-	return false;
-      }
+      if (ap.next()) return true;
     }
+    if (argument >= CountWords(str)) {
+      *output = 0;
+      return false;
+    }
+    while (argument > 0) {
+      str = SkipWord(str);
+      argument--;
+    }
+    str = SkipSpace(str);
+    const char* tmp = SkipWord(str);
+    memcpy(output, str, tmp - str);
+    output[tmp-str] = 0;
     if (!strcmp(output, "~")) {
       *output = 0;
       return false;
