@@ -522,6 +522,7 @@ void test_argument_parsing() {
   testGetArg("standard", 0, "standard");
   testGetArg("standard", 1, "0,65535,65535");
   testGetArg("standard ~", 1, "0,65535,65535");
+  testGetArg("standard ~ 1,0,0", 2, "1,0,0");
   testGetArg("standard", 2, "65535,65535,65535");
   testGetArg("standard", 3, "300");
   testGetArg("standard", 4, "800");
