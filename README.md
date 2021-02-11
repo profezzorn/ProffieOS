@@ -15,4 +15,4 @@ Proffie OS supports:
 * ProffieOS: https://fredrik.hubbe.net/lightsaber/proffieos.html
 * Proffieboard: https://fredrik.hubbe.net/lightsaber/v4/
 * TeensySaber: http://fredrik.hubbe.net/lightsaber/v3/
-* Support forum: http://imperialroyalarms.com/board/97/profezzorns-lab
+* Support forum: http://therebelarmory.com/board/97/profezzorns-lab
