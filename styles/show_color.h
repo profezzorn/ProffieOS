@@ -14,18 +14,22 @@ private:
 
 Color16 ShowColorStyle::color_;
 
-template<class T>
+template<class T, class SHORT_STYLE = ShowColorStyle>
 class ShowColorAllBladesTemplate {
 public:
-  BladeStyle* make(const char* str) {
+  void SetStyle(BladeBase *blade, const char* str) {
     ArgParser ap(SkipWord(str));
     CurrentArgParser = &ap;
-    return new Style<T>();
+    if (blade->num_leds() > 10) {
+      blade->SetStyle(new Style<T>());
+    } else {
+      blade->SetStyle(new Style<SHORT_STYLE>());
+    }
   }
   void Start(const char* str) {
 #define SHOW_COLOR_STYLE_START(N)				\
     style##N##_ = current_config->blade##N->UnSetStyle();	\
-    current_config->blade##N->SetStyle(make(str));
+    SetStyle(current_config->blade##N, str);
     ONCEPERBLADE(SHOW_COLOR_STYLE_START);
   }
   void Start() { Start(""); }
@@ -40,19 +44,23 @@ private:
   ONCEPERBLADE(SHOW_COLOR_STYLE_DEFINE)
 };
 
-template<class T>
+template<class T, class SHORT_STYLE = ShowColorStyle>
 class ShowColorSingleBladeTemplate {
 public:
-  BladeStyle* make(const char* str) {
+  void SetStyle(BladeBase *blade, const char* str) {
+    style_ = blade->UnSetStyle();
     ArgParser ap(SkipWord(str));
     CurrentArgParser = &ap;
-    return new Style<T>();
+    if (blade->num_leds() > 10) {
+      blade->SetStyle(new Style<T>());
+    } else {
+      blade->SetStyle(new Style<SHORT_STYLE>());
+    }
   }
   void Start(int blade, const char* str) {
-#define SHOW_COLOR_STYLE_START2(N)				\
-    case N:							\
-      style_ = current_config->blade##N->UnSetStyle();	        \
-      current_config->blade##N->SetStyle(make(str));		\
+#define SHOW_COLOR_STYLE_START2(N)		\
+    case N:					\
+      SetStyle(current_config->blade##N, str);	\
       break;
 
     switch (blade) {
