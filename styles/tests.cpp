@@ -518,6 +518,25 @@ void testSetArg(const char* str, int arg, const char* replacement, const char* e
   }
 }
 
+void testResetArguments(const char* from, const char* expected) {
+  fprintf(stderr, "testResetArguments(%s)\n", from);
+  LSPtr<char> ret = style_parser.ResetArguments(from);
+  if (strcmp(ret.get(), expected)) {
+    fprintf(stderr, "Expected '%s' got '%s'\n", expected, ret.get());
+    exit(1);
+  }
+}
+
+void testCopyArguments(const char* from, const char *to, const char* expected) {
+  fprintf(stderr, "testResetArguments(%s, %s)\n", from, to);
+  LSPtr<char> ret = style_parser.CopyArguments(from, to);
+  if (strcmp(ret.get(), expected)) {
+    fprintf(stderr, "Expected '%s' got '%s'\n", expected, ret.get());
+    exit(1);
+  }
+}
+
+
 void test_argument_parsing() {
   testGetArg("standard", 0, "standard");
   testGetArg("standard", 1, "0,65535,65535");
@@ -534,6 +553,9 @@ void test_argument_parsing() {
   testSetArg("standard 1,1,1 2,2,2 3 4", 2, "7,7,7", "standard 1,1,1 7,7,7 3 4");
   testSetArg("standard 1,1,1 2,2,2 3 4", 3, "7", "standard 1,1,1 2,2,2 7 4");
   testSetArg("standard 1,1,1 2,2,2 3 4", 4, "7", "standard 1,1,1 2,2,2 3 7");
+
+  testResetArguments("standard 1 2 3", "standard");
+  testCopyArguments("standard 1 2 3", "blarg 2 3 4", "blarg 1 2 3");
 }
 
 int main() {

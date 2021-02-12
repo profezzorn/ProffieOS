@@ -172,7 +172,7 @@ public:
   // the new style string. Missing arguments will be replaced with default
   // values.
   LSPtr<char> SetArgument(const char* str, int argument, const char* new_value) {
-    char ret[256];  // maximum length for now
+    char ret[512];  // maximum length for now
     char* tmp = ret;
     int output_args = std::max<int>(CountWords(str), argument + 1);
     for (int i = 0; i < output_args; i++) {
@@ -190,6 +190,43 @@ public:
     }
     *tmp = 0;
     return LSPtr<char>(mkstr(ret));
+  }
+
+  // Returns the length of the style identifier.
+  // The style identifier might be a single word, or it
+  // can be "builtin X Y" where X and Y are numbers.
+  int StyleIdentifierLength(const char* str) {
+    const char* end = SkipWord(str);
+    if (FirstWord(str, "builtin")) {
+      end = SkipWord(SkipWord(end));
+    }
+    return end - str;
+  }
+
+  // Truncates all arguments and just returns the style identifier.
+  LSPtr<char> ResetArguments(const char* str) {
+    int len = StyleIdentifierLength(str);
+    char* ret = (char*) malloc(len + 1);
+    if (ret) {
+      memcpy(ret, str, len);
+      ret[len] = 0;
+    }
+    return LSPtr<char>(ret);
+  }
+
+  // Takes the style identifier "builtin X Y" from |to| and the
+  // arguments from |from| and puts them together into one string.
+  LSPtr<char> CopyArguments(const char* from, const char* to) {
+    int from_style_length = StyleIdentifierLength(from);
+    int to_style_length = StyleIdentifierLength(to);
+    int len = strlen(from) - from_style_length + to_style_length;
+    char* ret = (char*) malloc(len);
+    if (ret) {
+      memcpy(ret, to, to_style_length);
+      ret[to_style_length] = 0;
+      strcat(ret, from + from_style_length);
+    }
+    return LSPtr<char>(ret);
   }
   
   bool Parse(const char *cmd, const char* arg) override {
