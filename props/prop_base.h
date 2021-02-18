@@ -13,8 +13,16 @@ class SavePresetStateFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
     CONFIG_VARIABLE(preset, 0);
+#ifdef DYNAMIC_BLADE_LENGTH
+#define BLADE_LEN_CONFIG_VARIABLE(N) CONFIG_VARIABLE(blade##N##len, -1);
+    ONCEPERBLADE(BLADE_LEN_CONFIG_VARIABLE);
+#endif    
   }
   int preset;
+#ifdef DYNAMIC_BLADE_LENGTH
+#define BLADE_LEN_VARIABLE(N) int blade##N##len;
+    ONCEPERBLADE(BLADE_LEN_VARIABLE);
+#endif    
 };
 
 
@@ -298,8 +306,20 @@ public:
       }
     }
 
+#ifdef DYNAMIC_BLADE_LENGTH
+    savestate_.ReadINIFromSaveDir("curstate");
+    
+#define SET_BLADE_STYLE(N) do {						\
+    BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
+    if (savestate_.blade##N##len != -1 && savestate_.blade##N##len != current_config->blade##N->num_leds()) { \
+      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);		\
+    }									\
+    current_config->blade##N->SetStyle(tmp);				\
+  } while (0);
+#else
 #define SET_BLADE_STYLE(N) \
     current_config->blade##N->SetStyle(style_parser.Parse(current_preset_.current_style##N.get()));
+#endif    
     ONCEPERBLADE(SET_BLADE_STYLE)
     chdir(current_preset_.font.get());
 
@@ -415,10 +435,11 @@ public:
 #endif    
   }
 
+  SavePresetStateFile savestate_;
+
   void ResumePreset() {
-    SavePresetStateFile savestate;
-    savestate.ReadINIFromSaveDir("curstate");
-    SetPreset(savestate.preset, false);
+    savestate_.ReadINIFromSaveDir("curstate");
+    SetPreset(savestate_.preset, false);
   }
 
   void WriteState(const char *filename, int preset) {
@@ -429,9 +450,35 @@ public:
     out.Create(fn);
     out.write_key_value("installed", install_time);
     out.write_key_value("preset", preset);
+#ifdef DYNAMIC_BLADE_LENGTH
+#define WRITE_BLADE_LENGTH(N) out.write_key_value("blade" #N "len", savestate_.blade##N##len);
+    ONCEPERBLADE(WRITE_BLADE_LENGTH);
+#endif    
     out.write_key_value("end", "1");
     out.Close();
     LOCK_SD(false);
+  }
+
+  // Blade length from config file.
+  int GetMaxBladeLength(int blade) {
+#define GET_SINGLE_MAX_BLADE_LENGTH(N) if (blade == N) return current_config->blade##N->num_leds();
+    ONCEPERBLADE(GET_SINGLE_MAX_BLADE_LENGTH)
+    return 0;
+  }
+  // If this returns -1 use GetMaxBladeLength()
+  int GetBladeLength(int blade) {
+#ifdef DYNAMIC_BLADE_LENGTH
+#define GET_SINGLE_BLADE_LENGTH(N) if (blade == N) return savestate_.blade##N##len;
+    ONCEPERBLADE(GET_SINGLE_BLADE_LENGTH)
+#endif
+    return -1;
+  }
+  // You'll need to reload the styles for this to take effect.
+  void SetBladeLength(int blade, int len) {
+#ifdef DYNAMIC_BLADE_LENGTH
+#define SET_SINGLE_BLADE_LENGTH(N) if (blade == N) savestate_.blade##N##len = len;
+    ONCEPERBLADE(SET_SINGLE_BLADE_LENGTH)
+#endif
   }
 
   void SaveState(int preset) {
