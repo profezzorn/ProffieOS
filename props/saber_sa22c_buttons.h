@@ -767,6 +767,8 @@ public:
           hybrid_font.PlayCommon(&SFX_faston);
         }
         return;
+
+      default: break; // avoids compiler warning
     }
   }
 
