@@ -110,7 +110,7 @@ public:
 	       (unsigned char *)&buffer, 144 * 3);
     // Rescale / transfer
     size_t num_leds = blade->num_leds();
-    for (size_t i = 0; i < maxLedsPerStrip; i++)
+    for (size_t i = 0; i < num_leds; i++)
       blade->set(i, buffer[i * 144 / num_leds]);
 #else
     uint8_t buffer[144];
@@ -119,7 +119,7 @@ public:
 	       (unsigned char *)&buffer, 144);
     // Rescale / transfer
     size_t num_leds = blade->num_leds();
-    for (size_t i = 0; i < maxLedsPerStrip; i++)
+    for (size_t i = 0; i < num_leds; i++)
       blade->set(i, image_color * buffer[i * 144 / num_leds]);
 #endif
 
