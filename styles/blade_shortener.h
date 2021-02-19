@@ -9,6 +9,7 @@ public:
   }
 
   void run(BladeBase* blade) override {
+    blade_ = blade;
     num_leds_ = std::min<int>(blade->num_leds(), num_leds_);
     style_->run(this);
   }
