@@ -312,7 +312,7 @@ public:
 #define SET_BLADE_STYLE(N) do {						\
     BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
     if (savestate_.blade##N##len != -1 && savestate_.blade##N##len != current_config->blade##N->num_leds()) { \
-      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);		\
+      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp, current_config->blade##N);	\
     }									\
     current_config->blade##N->SetStyle(tmp);				\
   } while (0);
