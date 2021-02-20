@@ -43,10 +43,14 @@ const Glyph BatteryBar16 = { 16, 0, 0, GLYPHDATA(BatteryBar16_data) };
 
 #include "StarJedi10Font.h"
 
-class SSD1306 : public I2CDevice, Looper, StateMachine, SaberBase, private AudioStreamWork {
+#ifndef MAX_GLYPH_HEIGHT
+#define MAX_GLYPH_HEIGHT 32
+#endif
+
+template<int WIDTH, class col_t>
+class SSD1306Template : public I2CDevice, Looper, StateMachine, SaberBase, private AudioStreamWork {
 public:
-  static const int WIDTH = 128;
-  static const int HEIGHT = 32;
+  static const int HEIGHT = sizeof(col_t) * 8;
   const char* name() override { return "SSD1306"; }
 
   enum Commands {
@@ -111,15 +115,16 @@ public:
     LAYOUT_PORTRAIT,
   };
 
-  SSD1306() : I2CDevice(0x3C) { }
+  SSD1306Template() : I2CDevice(0x3C) { }
+  explicit SSD1306Template(int id) : I2CDevice(id) { }
   void Send(int c) { writeByte(0, c); }
 
   template<typename T>
-  void Draw2(int begin, int end, uint32_t* pos, int shift, const T* data) {
+  void Draw2(int begin, int end, col_t* pos, int shift, const T* data) {
     if (shift > 0) {
-      for (int i = begin; i < end; i++) pos[i] |= data[i] << shift;
+      for (int i = begin; i < end; i++) pos[i] |= ((col_t)data[i]) << shift;
     } else if (shift < 0) {
-      for (int i = begin; i < end; i++) pos[i] |= data[i] >> -shift;
+      for (int i = begin; i < end; i++) pos[i] |= ((col_t)data[i]) >> -shift;
     } else {
       for (int i = begin; i < end; i++) pos[i] |= data[i];
     }
@@ -130,17 +135,26 @@ public:
     y += glyph.yoffset;
     int begin = std::max<int>(0, -x);
     int end = std::min<int>(glyph.columns, WIDTH - x);
-    uint32_t *pos = frame_buffer_ + x;
+    col_t *pos = frame_buffer_ + x;
     switch (glyph.column_size) {
       case 0:
         Draw2<uint8_t>(begin, end, pos, y, (const uint8_t*)glyph.data);
         break;
+#if MAX_GLYPH_HEIGHT >= 16
       case 1:
         Draw2<uint16_t>(begin, end, pos, y, (const uint16_t*)glyph.data);
         break;
+#endif	
+#if MAX_GLYPH_HEIGHT >= 32
       case 3:
         Draw2<uint32_t>(begin, end, pos, y, (const uint32_t*)glyph.data);
         break;
+#endif	
+#if MAX_GLYPH_HEIGHT >= 64
+      case 7:
+        Draw2<uint64_t>(begin, end, pos, y, (const uint64_t*)glyph.data);
+        break;
+#endif	
     }
   }
 
@@ -156,7 +170,7 @@ public:
     int max_bars = (end - start) / bar.skip;
     int pos = start;
     int bars = floorf(
-        battery_monitor.battery_percent() * (0.5 + max_bars) / 100);
+      battery_monitor.battery_percent() * (0.5 + max_bars) / 100);
     for (int i = 0; i < bars; i++) {
       Draw(bar, pos, 0);
       pos += bar.skip;
@@ -177,7 +191,6 @@ public:
     }
   }
 
-
   // Fill frame buffer and return how long to display it.
   int FillFrameBuffer() {
     switch (screen_) {
@@ -195,6 +208,10 @@ public:
         // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
         DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
         DrawText(version,0,31, Starjedi10pt7bGlyphs);
+	if (HEIGHT > 32) {
+	  DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
+	  DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
+	}
         screen_ = SCREEN_PLI;
         layout_ = LAYOUT_NATIVE;
         xor_ = 0;
@@ -204,6 +221,15 @@ public:
       case SCREEN_PLI:
         memset(frame_buffer_, 0, sizeof(frame_buffer_));
         DrawBatteryBar(BatteryBar16);
+	if (HEIGHT > 32) {
+	  char tmp[32];
+	  strcpy(tmp, "volts: x.xx");
+	  float v = battery_monitor.battery();
+	  tmp[7] = '0' + (int)floorf(v);
+	  tmp[9] = '0' + ((int)floorf(v * 10)) % 10;
+	  tmp[10] = '0' + ((int)floorf(v * 100)) % 10;
+	  DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
+	}
         layout_ = LAYOUT_NATIVE;
         xor_ = 0;
         invert_y_ = false;
@@ -214,7 +240,8 @@ public:
         if (strchr(message_, '\n')) {
           DrawText(message_, 0, 15, Starjedi10pt7bGlyphs);
         } else {
-          DrawText(message_, 0, 23, Starjedi10pt7bGlyphs);
+	  // centered
+          DrawText(message_, 0, HEIGHT / 2 + 7, Starjedi10pt7bGlyphs);
         }
         screen_ = SCREEN_PLI;
         layout_ = LAYOUT_NATIVE;
@@ -391,7 +418,11 @@ public:
     #endif
 
     Send(SETCOMPINS);                    // 0xDA
-    Send(0x02);  // may need to be 0x12 for some displays
+    if (HEIGHT == 64) {
+      Send(0x12);
+    } else {
+      Send(0x02);  // may need to be 0x12 for some displays
+    }
     Send(SETCONTRAST);                   // 0x81
     Send(0x8F);
 
@@ -445,7 +476,7 @@ public:
         // send a bunch of data in one xmission
         Wire.beginTransmission(address_);
         Wire.write(0x40);
-        for (uint8_t x=0; x<16; x++) {
+        for (uint8_t x=0; x<WIDTH/8; x++) {
           uint8_t b;
           switch (layout_) {
             default:
@@ -454,24 +485,24 @@ public:
               break;
             case LAYOUT_PORTRAIT:
               if (!invert_y_) {
-                b = ((unsigned char *)frame_buffer_)[511 - i];
+                b = ((unsigned char *)frame_buffer_)[sizeof(frame_buffer_) - 1 - i];
               } else {
-                b = ((unsigned char *)frame_buffer_)[i ^ 3];
+                b = ((unsigned char *)frame_buffer_)[i ^ (sizeof(col_t) - 1)];
               }
               break;
             case LAYOUT_LANDSCAPE: {
-              int x = i >> 2;
+              int x = i * sizeof(col_t);
               int y = ((i & 3) << 3) + 7;
-              int delta_pos = -16;
+              int delta_pos = -WIDTH / 8;
               if (invert_y_) {
-                y = 31 - y;
-                delta_pos = 16;
+                y = HEIGHT - 1 - y;
+                delta_pos = WIDTH / 8;
               }
 //            STDOUT << " LANDSCAPE DECODE!! x = " << x << " y = " << y << "\n";
 
               int shift = 7 - (x & 7);
               uint8_t *pos =
-                ((unsigned char*)frame_buffer_) + ((x>>3) + (y<<4));
+                ((unsigned char*)frame_buffer_) + ((x >> 3) + (y * (WIDTH/8)));
               b = 0;
               for (int j = 0; j < 8; j++) {
                 b <<= 1;
@@ -561,17 +592,17 @@ public:
           // STDOUT << "Width=" << width << " Height=" << height << "\n";
 #endif
           // First frame is near the end, seek to it.
-          f->Seek(file_start + offset + width * height / 8 - 512);
+          f->Seek(file_start + offset + width * height / 8 - sizeof(frame_buffer_));
       }
-      if (width != 128 && width != 32) {
+      if (width != WIDTH && width != HEIGHT) {
         STDOUT << "Wrong size image: " << width << "x" << height << "\n";
         return false;
       }
-      if (width == 128) {
+      if (width == WIDTH) {
         layout_ = LAYOUT_LANDSCAPE;
-        looped_frames_ = height / 32;
+        looped_frames_ = height / HEIGHT;
       } else {
-        looped_frames_ = height / 128;
+        looped_frames_ = height / WIDTH;
       }
       if (current_effect_ == &IMG_on) {
         looped_on_ = looped_frames_ > 1;
@@ -587,7 +618,7 @@ public:
       } else {
         if (invert_y_) {
           // Seek two frames back, because BMP are backwards.
-          f->Seek(f->Tell() - 1024);
+          f->Seek(f->Tell() - 2 * sizeof(frame_buffer_));
         }
       }
     } else {
@@ -640,7 +671,7 @@ private:
   volatile bool looped_on_ = false;
   volatile Effect* current_effect_;
   volatile float effect_display_duration_;
-  uint32_t frame_buffer_[WIDTH];
+  col_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
   char message_[32];
   uint32_t millis_to_display_;
@@ -657,5 +688,7 @@ private:
   volatile bool eof_ = true;
   volatile bool lock_fb_ = false;
 };
+
+using SSD1306 = SSD1306Template<128, uint32_t>;
 
 #endif
