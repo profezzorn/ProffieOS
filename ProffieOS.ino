@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,10 +29,11 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
+// #define CONFIG_FILE "config/testconfig.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -1546,8 +1547,7 @@ StaticWrapper<SerialCommands> serial_commands;
 
 #endif
 
-
-#if defined(ENABLE_MOTION) || defined(ENABLE_SSD1306)
+#if defined(ENABLE_MOTION) || defined(ENABLE_SSD1306) || defined(INCLUDE_SSD1306)
 #include "common/i2cdevice.h"
 I2CBus i2cbus;
 #endif
@@ -1556,6 +1556,11 @@ I2CBus i2cbus;
 #include "display/ssd1306.h"
 SSD1306 display;
 #endif
+
+#ifdef INCLUDE_SSD1306
+#include "display/ssd1306.h"
+#endif
+
 
 #ifdef ENABLE_MOTION
 
@@ -1719,3 +1724,8 @@ void loop() {
 #endif
   Looper::DoLoop();
 }
+
+#define CONFIG_BOTTOM
+#include CONFIG_FILE
+#undef CONFIG_BOTTOM
+
