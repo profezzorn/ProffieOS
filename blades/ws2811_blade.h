@@ -328,7 +328,7 @@ template<int LEDS,
          int POWER_OFF_DELAY_MS = 0>
 class BladeBase *SPIBladePtr() {
   static POWER_PINS power_pins;
-  static PinClass<LEDS, CLOCK_PIN, DATA_PIN, byteorder, max_frequency> pin;
+  static PinClass<LEDS, DATA_PIN, CLOCK_PIN, byteorder, max_frequency> pin;
   static WS2811_Blade blade(&pin, &power_pins, POWER_OFF_DELAY_MS);
   return &blade;
 }
