@@ -13,6 +13,11 @@ public:
   void run(BladeBase* blade) override {
     num_leds_ = std::min<int>(blade->num_leds(), num_leds_);
     style_->run(this);
+    // Fill rest of blade with black.
+    int blade_length = blade_->num_leds();
+    for (int i = num_leds_; i < blade_length; i++) {
+      blade->set(i, Color16());
+    }
   }
 
   void activate() override { style_->activate(); }
