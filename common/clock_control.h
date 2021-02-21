@@ -29,7 +29,13 @@ public:
 #else
       stm32l4_system_sysclk_configure(16000000, 8000000, 8000000);
 #endif
-      delay(50);
+#ifdef COMMON_I2CBUS_H
+      // Motion and other things might still be going on.
+      if (i2cbus.used())
+        delay(5);
+      else
+#endif
+        delay(50);
       stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
     }
   }
