@@ -64,7 +64,11 @@ public:
 #endif      
     STATE_MACHINE_END();
   }
-  
+
+  bool used() {
+    return millis() - last_request_millis_ < 2000;
+  }
+
   bool inited() {
     last_request_millis_ = millis();
     return i2c_detected_;
