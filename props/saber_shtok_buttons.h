@@ -3,13 +3,13 @@
 // Activate blade - forward thrust movement or sharp swing movement (Swing On)
 // Play/Stop Music - None
 // Turn the blade off - twist the saber like a bike handle holding the saber horizontally or blade down
-// Next Preset - slightly shake the saber like a soda can while blade is OFF (hold the saber blade up in range up to 45 degrees tilt)
+// Next Preset - slightly shake the saber like a soda can while blade is OFF (hold the saber vertically blade up in range up to 30 degrees tilt)
 // Previous Preset - None
 // Lockup - automatic by default (Battle Mode) - activates when clash happens and keeps active until swing is registered
 // Drag - None
 // Blaster Blocks - None
 // Force Effects - perform a "push" gesture holding the saber vertically or horizontally perpendicular to the arm
-// Enter Color Change mode - slightly shake the saber like a soda can while blade is ON (hold the saber blade up in range up to 45 degrees tilt)
+// Enter Color Change mode - slightly shake the saber like a soda can while blade is ON (hold the saber vertically blade up in range up to 30 degrees tilt)
 // Confirm selected color and exit Color Change mode - twist the saber like a bike handle holding the saber horizontally or blade down
 // Melt - None
 // Lightning Block - None
