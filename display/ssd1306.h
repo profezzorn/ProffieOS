@@ -44,7 +44,6 @@ const Glyph BatteryBar16 = { 16, 0, 0, GLYPHDATA(BatteryBar16_data) };
 
 #include "StarJedi10Font.h"
 #include "Aurebesh10Font.h"
-//#include "StarJediRounded10Font.h"
 
 class SSD1306 : public I2CDevice, Looper, StateMachine, SaberBase, private AudioStreamWork {
 public:
@@ -207,8 +206,11 @@ public:
       case SCREEN_PLI:
         memset(frame_buffer_, 0, sizeof(frame_buffer_));
       // Need non-SDcard content at first so Mass Storage can work.
-          if (!just_booted_) ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
-        DrawBatteryBar(BatteryBar16);
+          if (!just_booted_) {
+            ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
+          } else {
+            DrawBatteryBar(BatteryBar16);
+          }
         layout_ = LAYOUT_NATIVE;
         xor_ = 0;
         invert_y_ = false;
@@ -217,7 +219,7 @@ public:
       case SCREEN_MESSAGE:
         memset(frame_buffer_, 0, sizeof(frame_buffer_));
     // Aurbesh Font option.
-    #ifdef AUREBESH
+    #ifdef USE_AUREBESH_FONT
         if (strchr(message_, '\n')) {
           DrawText(message_, 0, 15, Aurebesh10pt7bGlyphs);
         } else {
