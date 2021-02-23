@@ -12,14 +12,14 @@
 class SaveGlobalStateFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
-#ifndef SAVE_VOLUME    
+#ifdef SAVE_VOLUME    
     CONFIG_VARIABLE(volume, -1);
 #endif
 #ifdef SAVE_BLADE_DIMMING
     CONFIG_VARIABLE(dimming, 16384);
 #endif    
   }
-#ifndef SAVE_VOLUME    
+#ifdef SAVE_VOLUME    
   int volume;
 #endif
 #ifdef SAVE_BLADE_DIMMING
@@ -542,7 +542,7 @@ public:
 #ifdef SAVE_VOLUME
     out.write_key_value("volume", muted_volume_ ? muted_volume_ : dynamic_mixer.get_volume());
 #endif    
-#ifdef DYNAMIC_BLADE_DIMMING
+#ifdef SAVE_BLADE_DIMMING
     out.write_key_value("dimming", SaberBase::GetCurrentDimming());
 #endif    
     out.write_key_value("end", "1");
@@ -551,11 +551,16 @@ public:
   }
 
   void SaveGlobalState() {
-#if defined(SAVE_VOLUME) || defined(DYNAMIC_BLADE_DIMMING)
+#if defined(SAVE_VOLUME) || defined(SAVE_BLADE_DIMMING)
     STDOUT.println("Saving Global State");
     WriteGlobalState("global.tmp");
     WriteGlobalState("global.ini");
+#ifdef SAVE_VOLUME    
     saved_global_state.volume = dynamic_mixer.get_volume();
+#endif
+#ifdef SAVE_BLADE_DIMMING
+    saved_global_state.dimming = SaberBase::GetCurrentDimming();
+#endif    
 #endif    
   }
   
