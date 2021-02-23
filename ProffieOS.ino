@@ -48,6 +48,7 @@
 #define SAVE_VOLUME
 #define SAVE_PRESET
 #define SAVE_COLOR_CHANGE
+#define SAVE_DYNAMIC_DIMMING
 #endif
 
 // #define ENABLE_DEBUG
@@ -296,6 +297,9 @@ SaberBase::ColorChangeMode SaberBase::color_change_mode_ =
 bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 uint32_t SaberBase::current_variation_ = 0;
+#ifdef DYNAMIC_BLADE_DIMMING
+int SaberBase::dimming_ = 16384;
+#endif
 
 #include "common/box_filter.h"
 

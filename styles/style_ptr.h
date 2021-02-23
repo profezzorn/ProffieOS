@@ -48,7 +48,12 @@ public:
       if (c.overdrive) {
          blade->set_overdrive(i, c.c);
       } else {
-         blade->set(i, c.c);
+#ifdef DYNAMIC_BLADE_DIMMING
+	c.c.r = clampi32((c.c.r * SaberBase::GetCurrentDimming()) >> 14, 0, 65535);
+	c.c.g = clampi32((c.c.g * SaberBase::GetCurrentDimming()) >> 14, 0, 65535);
+	c.c.b = clampi32((c.c.b * SaberBase::GetCurrentDimming()) >> 14, 0, 65535);
+#endif
+	blade->set(i, c.c);
       }
       if (!(i & 0xf)) Looper::DoHFLoop();
     }

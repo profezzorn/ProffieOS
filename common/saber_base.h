@@ -238,6 +238,12 @@ public:                                                         \
     current_variation_ = v;
   }
 
+#ifdef DYNAMIC_BLADE_DIMMING
+  static int dimming_;
+  static int GetCurrentDimming() { return dimming_; }
+  static void SetDimming(int dimming) { dimming_ = dimming; }
+#endif  
+
   enum ColorChangeMode {
     COLOR_CHANGE_MODE_NONE,
     COLOR_CHANGE_MODE_STEPPED,
