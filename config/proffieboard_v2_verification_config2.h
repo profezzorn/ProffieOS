@@ -22,6 +22,8 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_SSD1306
 #define SHARED_POWER_PINS
 #define DYNAMIC_BLADE_LENGTH
+#define DYNAMIC_BLADE_DIMMING
+#define SAVE_BLADE_DIMMING
 #endif
 
 #ifdef CONFIG_PROP
