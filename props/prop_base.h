@@ -333,7 +333,7 @@ public:
     savestate_.ReadINIFromSaveDir("curstate");
 #define WRAP_BLADE_SHORTERNER(N) \
     if (savestate_.blade##N##len != -1 && savestate_.blade##N##len != current_config->blade##N->num_leds()) { \
-      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);	\
+      tmp = new BladeShortenerWrapper(savestate_.blade##N##len);	\
     }
 #else
 #define WRAP_BLADE_SHORTERNER(N)
