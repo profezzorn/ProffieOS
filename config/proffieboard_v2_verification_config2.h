@@ -24,6 +24,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define DYNAMIC_BLADE_LENGTH
 #define DYNAMIC_BLADE_DIMMING
 #define SAVE_BLADE_DIMMING
+#define SAVE_VOLUME
 #endif
 
 #ifdef CONFIG_PROP
