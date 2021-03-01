@@ -1,15 +1,53 @@
-// sa22c props file, includes 1,2 and 3 button modes.  Incorporates multi-blast
-// by fett263, gesture ignition by ShtokyD, on-the-fly volume controls and
-// full access to all features with 1,2 or 3 button sabers
+// sa22c props file, includes 1,2 and 3 button modes.  Incorporates multi-blast,
+// battle mode and gesture ignitions from fett263 plus  on-the-fly volume
+// controls and full access to all features with 1,2 or 3 button sabers
 //
 // New #define SA22C_NO_LOCKUP_HOLD
 // reverts to lockup being triggered only by clash + aux in 2-button mode
 // Also sets multi-blast to trigger while holding aux and swinging, rather than
 // double click and hold
 //
-// Gesture ignition
-// if you add #define SHTOK_GESTURE_IGNITION to your config file, you can
-// turn on the saber using the stab motion, and turn off with a twist.
+// Gesture Controls
+// There are four gesture types: swing, stab, twist and thrust.  For simplicity,
+// using gesture ignition will automatically skip the preon effect.
+// Below are the options to add to the config to enable
+// the various gestures
+//
+// #define SA22C_STAB_ON
+// #define SA22C_SWING_ON
+// #define SA22C_TWIST_ON
+// #define SA22C_THRUST_ON
+// #define SA22C_TWIST_OFF
+// #define SA22C_FORCE_PUSH
+//
+// #define SA22C_FORCE_PUSH_LENGTH 5
+// Allows for adjustment to Push gesture length in millis needed to trigger Force Push
+// Recommended range 1 ~ 10, 1 = shortest, easiest to trigger, 10 = longest
+//
+// If you want the gesture ignition to ALSO enter battle mode automatically
+// on ignition, add this define
+//
+// #define GESTURE_AUTO_BATTLE_MODE
+//
+// Battle mode by fett263
+//
+// Once you enter battle mode, button functions will be disabled for lockup
+// stab, melt, etc.  Blaster blocks and lightning block will continue to be
+// triggered by button controls.  Automatic lockup/clash detection works
+// by measuring delay of the saber blade pulling back from the clash.
+// If you clash the blade and it does not pull back during the delay period,
+// it is assumed to be a lockup and the lockup effect will show on the blade.
+// If you clash the blade and pull away, only the bgn/end lockup effects will show.
+//
+// You can adjust the threshold of this detection by using
+// #define SA22C_LOCKUP_DELAY  (insert number here)
+// Default value is 200
+//
+// Battle mode features automatic clash and lockup detection plus a new
+// force push mode that will play a force or force push sound with a controlled
+// pushing gesture.  Automatic clash/lockup uses the pre and post lock effects
+// so your blade style and font MUST have those capabilities to support
+// battle mode.  Kudos to fett263 for his very impressive additions for OS 5
 //
 // Tightened click timings
 // I've shortened the timeout for short and double click detection from 500ms
@@ -36,6 +74,7 @@
 // Multi-Blast - hold while swinging for one second and release
 //               to trigger blaster block, swing saber while in multi-blast mode
 //               to exit, hold while swinging for one second and release
+// Battle Mode - triple-click and hold while on
 // Force Effects - hold + twist the hilt while ON (while pointing up)
 // Color Change mode - hold + twist the hilt while ON (pointing down)
 // Enter Volume - Menu hold + clash while OFF
@@ -57,6 +96,7 @@
 // Color Change mode - hold + toggle AUX while ON
 // Lightning Block - double click and hold while ON
 // Melt - hold while stabbing (clash with forward motion, horizontal)
+// Battle Mode - triple-click and hold for half a second while on
 // AUX
 // Blaster blocks - short click/double click/triple click while ON
 // Multi-Blast - double-click and hold for half a second
@@ -73,6 +113,7 @@
 //
 // AUX2
 // Lightning Block - hold while ON
+// Battle Mode - double-click and hold while on
 // Previous Preset - short click while OFF
 
 
@@ -84,6 +125,22 @@
 
 #undef PROP_TYPE
 #define PROP_TYPE SaberSA22CButtons
+
+#ifndef MOTION_TIMEOUT
+#define MOTION_TIMEOUT 60 * 15 * 1000
+#endif
+
+#ifndef SA22C_SWING_ON_SPEED
+#define SA22C_SWING_ON_SPEED 250
+#endif
+
+#ifndef SA22C_LOCKUP_DELAY
+#define SA22C_LOCKUP_DELAY 200
+#endif
+
+#ifndef SA22C_FORCE_PUSH_LENGTH
+#define SA22C_FORCE_PUSH_LENGTH 5
+#endif
 
 #ifndef BUTTON_DOUBLE_CLICK_TIMEOUT
 #define BUTTON_DOUBLE_CLICK_TIMEOUT 300
@@ -105,6 +162,35 @@
 #define BUTTON_HELD_LONG_TIMEOUT 2000
 #endif
 
+#ifdef SA22C_SWING_ON
+#define SWING_GESTURE
+#endif
+
+#ifdef SA22C_STAB_ON
+#define STAB_GESTURE
+#endif
+
+#ifdef SA22C_TWIST_ON
+#define TWIST_GESTURE
+#endif
+
+#ifdef SA22C_THRUST_ON
+#define THRUST_GESTURE
+#endif
+
+#define FORCE_PUSH_CONDITION battle_mode_
+
+EFFECT(dim); // for EFFECT_POWERSAVE
+EFFECT(battery); // for EFFECT_BATTERY_LEVEL
+EFFECT(bmbegin); // for Begin Battle Mode
+EFFECT(bmend); // for End Battle Mode
+EFFECT(vmbegin); // for Begin Volume Menu
+EFFECT(vmend); // for End Volume Menu
+EFFECT(faston); // for EFFECT_FAST_ON
+EFFECT(blstbgn); // for Begin Multi-Blast
+EFFECT(blstend); // for End Multi-Blast
+EFFECT(push); // for Force Push gesture in Battle Mode
+
 // The Saber class implements the basic states and actions
 // for the saber.
 class SaberSA22CButtons : public PropBase {
@@ -115,7 +201,83 @@ public:
   void Loop() override {
     PropBase::Loop();
     DetectTwist();
-    DetectSwing();
+    Vec3 mss = fusor.mss();
+    if (SaberBase::IsOn()) {
+      DetectSwing();
+      if (auto_lockup_on_ &&
+          !swinging_ &&
+          fusor.swing_speed() > 120 &&
+          millis() - clash_impact_millis_ > SA22C_LOCKUP_DELAY &&
+          SaberBase::Lockup()) {
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        auto_lockup_on_ = false;
+      }
+      if (auto_melt_on_ &&
+          !swinging_ &&
+          fusor.swing_speed() > 60 &&
+          millis() - clash_impact_millis_ > SA22C_LOCKUP_DELAY &&
+          SaberBase::Lockup()) {
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        auto_melt_on_ = false;
+      }
+
+      // EVENT_PUSH
+      if (fabs(mss.x) < 3.0 &&
+          mss.y * mss.y + mss.z * mss.z > 70 &&
+          fusor.swing_speed() < 30 &&
+          fabs(fusor.gyro().x) < 10) {
+        if (millis() - push_begin_millis_ > SA22C_FORCE_PUSH_LENGTH) {
+          Event(BUTTON_NONE, EVENT_PUSH);
+          push_begin_millis_ = millis();
+        }
+      } else {
+        push_begin_millis_ = millis();
+      }
+
+    } else {
+      // EVENT_SWING - Swing On gesture control to allow fine tuning of speed needed to ignite
+      if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
+        SaberBase::RequestMotion();
+        if (swinging_ && fusor.swing_speed() < 90) {
+          swinging_ = false;
+        }
+        if (!swinging_ && fusor.swing_speed() > SA22C_SWING_ON_SPEED) {
+          swinging_ = true;
+          Event(BUTTON_NONE, EVENT_SWING);
+        }
+      }
+      // EVENT_THRUST
+      if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
+          mss.x > 14  &&
+          fusor.swing_speed() < 150) {
+        if (millis() - thrust_begin_millis_ > 15) {
+          Event(BUTTON_NONE, EVENT_THRUST);
+          thrust_begin_millis_ = millis();
+        }
+      } else {
+        thrust_begin_millis_ = millis();
+      }
+    }
+  }
+
+  // Fast On Gesture Ignition
+  virtual void FastOn() {
+    if (IsOn()) return;
+    if (current_style() && current_style()->NoOnOff())
+      return;
+    activated_ = millis();
+    STDOUT.println("Ignition.");
+    MountSDCard();
+    EnableAmplifier();
+    SaberBase::RequestMotion();
+    // Avoid clashes a little bit while turning on.
+    // It might be a "clicky" power button...
+    IgnoreClash(500);
+    SaberBase::TurnOn();
+    // Optional effects
+    SaberBase::DoEffect(EFFECT_FAST_ON, 0);
   }
 
   void ChangeVolume(bool up) {
@@ -158,11 +320,139 @@ public:
         }
       return true;
 
+// Battle Mode
+#if NUM_BUTTONS == 3
+  case EVENTID(BUTTON_AUX2, EVENT_SECOND_HELD, MODE_ON):
+#else
+  case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_ON):
+#endif
+    if (!battle_mode_) {
+      STDOUT.println("Entering Battle Mode");
+      battle_mode_ = true;
+      if (SFX_bmbegin) {
+        hybrid_font.PlayCommon(&SFX_bmbegin);
+      } else {
+        hybrid_font.DoEffect(EFFECT_FORCE, 0);
+      }
+    } else {
+      STDOUT.println("Exiting Battle Mode");
+      battle_mode_ = false;
+      if (SFX_bmend) {
+        hybrid_font.PlayCommon(&SFX_bmend);
+      } else {
+        beeper.Beep(0.5, 3000);
+      }
+    }
+    return true;
+
+  // Auto Lockup Mode
+  case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
+    if (!battle_mode_) return false;
+    clash_impact_millis_ = millis();
+    swing_blast_ = false;
+    if (swinging_) return false;
+    SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+    auto_lockup_on_ = true;
+    SaberBase::DoBeginLockup();
+    return true;
+
+  case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
+    if (!battle_mode_) return false;
+    clash_impact_millis_ = millis();
+    swing_blast_ = false;
+    if (!swinging_) {
+      if (fusor.angle1() < - M_PI / 4) {
+        SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+      } else {
+        SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+      }
+      auto_melt_on_ = true;
+      SaberBase::DoBeginLockup();
+    }
+    return true;
+
+  // Gesture Controls
+#ifdef SA22C_SWING_ON
+  case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
+    // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
+    if (millis() > 3000) {
+      FastOn();
+#ifdef GESTURE_AUTO_BATTLE_MODE
+      STDOUT.println("Entering Battle Mode");
+      battle_mode_ = true;
+#endif
+    }
+    return true;
+#endif
+
+#ifdef SA22C_TWIST_ON
+  case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
+    // Delay twist events to prevent false trigger from over twisting
+    if (millis() - last_twist_ > 2000 &&
+        millis() - saber_off_time_ > 1000) {
+      FastOn();
+#ifdef GESTURE_AUTO_BATTLE_MODE
+      STDOUT.println("Entering Battle Mode");
+      battle_mode_ = true;
+#endif
+      last_twist_ = millis();
+    }
+    return true;
+#endif
+
+#ifdef SA22C_TWIST_OFF
+  case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+    // Delay twist events to prevent false trigger from over twisting
+    if (millis() - last_twist_ > 3000) {
+      Off();
+      last_twist_ = millis();
+      saber_off_time_ = millis();
+      battle_mode_ = false;
+    }
+    return true;
+#endif
+
+#ifdef SA22C_STAB_ON
+      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
+        if (millis() - saber_off_time_ > 1000) {
+          FastOn();
+#ifdef GESTURE_AUTO_BATTLE_MODE
+          STDOUT.println("Entering Battle Mode");
+          battle_mode_ = true;
+#endif
+        }
+        return true;
+#endif
+
+#ifdef SA22C_THRUST_ON
+      case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
+        if (millis() - saber_off_time_ > 1000) {
+          FastOn();
+#ifdef GESTURE_AUTO_BATTLE_MODE
+          STDOUT.println("Entering Battle Mode");
+          battle_mode_ = true;
+#endif
+        }
+        return true;
+#endif
+
+#ifdef SA22C_FORCE_PUSH
+      case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
+        if (FORCE_PUSH_CONDITION &&
+            millis() - last_push_ > 2000) {
+          if (SFX_push) {
+            hybrid_font.PlayCommon(&SFX_push);
+          } else {
+            hybrid_font.DoEffect(EFFECT_FORCE, 0);
+          }
+          last_push_ = millis();
+        }
+        return true;
+
+#endif
+
 // Saber ON AND Volume Up
   case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-#ifdef SHTOK_GESTURE_IGNITION
-  case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
-#endif
     if (!mode_volume_) {
       On();
     } else {
@@ -222,9 +512,6 @@ public:
 // 1 button
   case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_ON):
 #endif
-#ifdef SHTOK_GESTURE_IGNITION
-  case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-#endif
     if (!SaberBase::Lockup()) {
 #ifndef DISABLE_COLOR_CHANGE
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
@@ -234,8 +521,12 @@ public:
         return true;
       }
 #endif
-      Off();
+      if (!battle_mode_) {
+        Off();
+      }
     }
+    saber_off_time_ = millis();
+    battle_mode_ = false;
     swing_blast_ = false;
     return true;
 
@@ -254,7 +545,7 @@ public:
     return true;
 #else
   // 2 and 3 button Force effect
-  case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_SHORT, MODE_ON):
+  case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
     SaberBase::DoForce();
     return true;
   // 2 and 3 button color change
@@ -269,7 +560,7 @@ public:
 #if NUM_BUTTONS == 1
   // 1 button
   case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-  case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_SHORT, MODE_ON):
+  case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
   case EVENTID(BUTTON_POWER, EVENT_THIRD_CLICK_SHORT, MODE_ON):
 #else
   // 2 and 3 button
@@ -296,7 +587,19 @@ public:
 #endif
 #endif
     swing_blast_ = !swing_blast_;
-    hybrid_font.SB_Effect(EFFECT_BLAST, 0);
+    if (swing_blast_) {
+      if (SFX_blstbgn) {
+        hybrid_font.PlayCommon(&SFX_blstbgn);
+      } else {
+        hybrid_font.SB_Effect(EFFECT_BLAST, 0);
+      }
+    } else {
+      if (SFX_blstend) {
+        hybrid_font.PlayCommon(&SFX_blstend);
+      } else {
+        hybrid_font.SB_Effect(EFFECT_BLAST, 0);
+      }
+    }
     return true;
 
   case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
@@ -317,7 +620,7 @@ public:
   case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
 #endif
 #endif
-    if (!SaberBase::Lockup()) {
+    if (!SaberBase::Lockup() && !battle_mode_) {
       if (pointing_down_) {
         SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
       } else {
@@ -337,14 +640,17 @@ public:
   // 3 button
   case EVENTID(BUTTON_AUX2, EVENT_FIRST_HELD, MODE_ON):
 #endif
-    SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
-    swing_blast_ = false;
-    SaberBase::DoBeginLockup();
-    return true;
+    if (!battle_mode_) {
+      SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+      swing_blast_ = false;
+      SaberBase::DoBeginLockup();
+      return true;
+    }
+    break;
 
 // Melt
   case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
-    if (!SaberBase::Lockup()) {
+    if (!SaberBase::Lockup() && !battle_mode_) {
       SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
       swing_blast_ = false;
       SaberBase::DoBeginLockup();
@@ -376,13 +682,19 @@ public:
 #endif
     if (!mode_volume_) {
       mode_volume_ = true;
-      beeper.Beep(0.1, 2000);
-      beeper.Beep(0.1, 2500);
+      if (SFX_vmbegin) {
+        hybrid_font.PlayCommon(&SFX_vmbegin);
+      } else {
+        beeper.Beep(0.5, 3000);
+      }
       STDOUT.println("Enter Volume Menu");
     } else {
       mode_volume_ = false;
-      beeper.Beep(0.1, 2500);
-      beeper.Beep(0.1, 2000);
+      if (SFX_vmend) {
+        hybrid_font.PlayCommon(&SFX_vmend);
+      } else {
+        beeper.Beep(0.5, 3000);
+      }
       STDOUT.println("Exit Volume Menu");
     }
     return true;
@@ -433,10 +745,46 @@ public:
     }
     return false;
   }
+
+  void SB_Effect(EffectType effect, float location) override {
+    switch (effect) {
+      case EFFECT_POWERSAVE:
+        if (SFX_dim) {
+          hybrid_font.PlayCommon(&SFX_dim);
+        } else {
+          beeper.Beep(0.5, 3000);
+        }
+        return;
+      case EFFECT_BATTERY_LEVEL:
+        if (SFX_battery) {
+          hybrid_font.PlayCommon(&SFX_battery);
+        } else {
+          beeper.Beep(0.5, 3000);
+        }
+        return;
+      case EFFECT_FAST_ON:
+        if (SFX_faston) {
+          hybrid_font.PlayCommon(&SFX_faston);
+        }
+        return;
+
+      default: break; // avoids compiler warning
+    }
+  }
+
 private:
   bool pointing_down_ = false;
-  bool mode_volume_ = false;
   bool swing_blast_ = false;
+  bool mode_volume_ = false;
+  bool auto_lockup_on_ = false;
+  bool auto_melt_on_ = false;
+  bool battle_mode_ = false;
+  uint32_t thrust_begin_millis_ = millis();
+  uint32_t push_begin_millis_ = millis();
+  uint32_t clash_impact_millis_ = millis();
+  uint32_t last_twist_ = millis();
+  uint32_t last_push_ = millis();
+  uint32_t saber_off_time_ = millis();
 };
 
 #endif

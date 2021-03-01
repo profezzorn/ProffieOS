@@ -1,20 +1,46 @@
 #ifndef PROPS_PROP_BASE_H
 #define PROPS_PROP_BASE_H
 
+#if !defined(DYNAMIC_BLADE_DIMMING) && defined(SAVE_BLADE_DIMMING)
+#undef SAVE_BLADE_DIMMING
+#endif
+
+#if !defined(ENABLE_AUDIO) && defined(SAVE_VOLUME)
+#undef SAVE_VOLUME
+#endif
+
 class SaveGlobalStateFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
+#ifdef SAVE_VOLUME    
     CONFIG_VARIABLE(volume, -1);
+#endif
+#ifdef SAVE_BLADE_DIMMING
+    CONFIG_VARIABLE(dimming, 16384);
+#endif    
   }
+#ifdef SAVE_VOLUME    
   int volume;
+#endif
+#ifdef SAVE_BLADE_DIMMING
+  int dimming;
+#endif  
 };
 
 class SavePresetStateFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
     CONFIG_VARIABLE(preset, 0);
+#ifdef DYNAMIC_BLADE_LENGTH
+#define BLADE_LEN_CONFIG_VARIABLE(N) CONFIG_VARIABLE(blade##N##len, -1);
+    ONCEPERBLADE(BLADE_LEN_CONFIG_VARIABLE);
+#endif
   }
   int preset;
+#ifdef DYNAMIC_BLADE_LENGTH
+#define BLADE_LEN_VARIABLE(N) int blade##N##len;
+    ONCEPERBLADE(BLADE_LEN_VARIABLE);
+#endif    
 };
 
 
@@ -243,11 +269,16 @@ public:
   }
 
   void SaveVolumeIfNeeded() {
+    if (0
 #ifdef SAVE_VOLUME
-    if (dynamic_mixer.get_volume() != saved_global_state.volume) {
+      || dynamic_mixer.get_volume() != saved_global_state.volume
+#endif
+#ifdef SAVE_BLADE_DIMMING
+      || SaberBase::GetCurrentDimming() != saved_global_state.dimming
+#endif
+      ) {
       SaveGlobalState();
     }
-#endif
   }
 
   void SaveColorChangeIfNeeded() {
@@ -298,8 +329,23 @@ public:
       }
     }
 
-#define SET_BLADE_STYLE(N) \
-    current_config->blade##N->SetStyle(style_parser.Parse(current_preset_.current_style##N.get()));
+#ifdef DYNAMIC_BLADE_LENGTH
+    savestate_.ReadINIFromSaveDir("curstate");
+#define WRAP_BLADE_SHORTERNER(N) \
+    if (savestate_.blade##N##len != -1 && savestate_.blade##N##len != current_config->blade##N->num_leds()) { \
+      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);	\
+    }
+#else
+#define WRAP_BLADE_SHORTERNER(N)
+#endif
+
+    
+#define SET_BLADE_STYLE(N) do {						\
+    BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
+    WRAP_BLADE_SHORTERNER(N)                                            \
+    current_config->blade##N->SetStyle(tmp);				\
+  } while (0);
+
     ONCEPERBLADE(SET_BLADE_STYLE)
     chdir(current_preset_.font.get());
 
@@ -415,10 +461,11 @@ public:
 #endif    
   }
 
+  SavePresetStateFile savestate_;
+
   void ResumePreset() {
-    SavePresetStateFile savestate;
-    savestate.ReadINIFromSaveDir("curstate");
-    SetPreset(savestate.preset, false);
+    savestate_.ReadINIFromSaveDir("curstate");
+    SetPreset(savestate_.preset, false);
   }
 
   void WriteState(const char *filename, int preset) {
@@ -429,9 +476,37 @@ public:
     out.Create(fn);
     out.write_key_value("installed", install_time);
     out.write_key_value("preset", preset);
+#ifdef DYNAMIC_BLADE_LENGTH
+#define WRITE_BLADE_LENGTH(N) out.write_key_value("blade" #N "len", savestate_.blade##N##len);
+    ONCEPERBLADE(WRITE_BLADE_LENGTH);
+#endif    
     out.write_key_value("end", "1");
     out.Close();
     LOCK_SD(false);
+  }
+
+  // Blade length from config file.
+  int GetMaxBladeLength(int blade) {
+#define GET_SINGLE_MAX_BLADE_LENGTH(N) if (blade == N) return current_config->blade##N->num_leds();
+    ONCEPERBLADE(GET_SINGLE_MAX_BLADE_LENGTH)
+    return 0;
+  }
+
+  // If this returns -1 use GetMaxBladeLength()
+  int GetBladeLength(int blade) {
+#ifdef DYNAMIC_BLADE_LENGTH
+#define GET_SINGLE_BLADE_LENGTH(N) if (blade == N) return savestate_.blade##N##len;
+    ONCEPERBLADE(GET_SINGLE_BLADE_LENGTH)
+#endif
+    return -1;
+  }
+
+  // You'll need to reload the styles for this to take effect.
+  void SetBladeLength(int blade, int len) {
+#ifdef DYNAMIC_BLADE_LENGTH
+#define SET_SINGLE_BLADE_LENGTH(N) if (blade == N) savestate_.blade##N##len = len;
+    ONCEPERBLADE(SET_SINGLE_BLADE_LENGTH)
+#endif
   }
 
   void SaveState(int preset) {
@@ -442,12 +517,20 @@ public:
 
   SaveGlobalStateFile saved_global_state;
   void RestoreGlobalState() {
-#ifdef SAVE_VOLUME
+#if defined(SAVE_VOLUME) || defined(SAVE_BLADE_DIMMING)
     saved_global_state.ReadINIFromDir(NULL, "global");
+
+#ifdef SAVE_VOLUME
     if (saved_global_state.volume >= 0) {
       dynamic_mixer.set_volume(clampi32(saved_global_state.volume, 0, VOLUME));
     }
-#endif    
+#endif
+    
+#ifdef SAVE_BLADE_DIMMING
+    SaberBase::SetDimming(saved_global_state.dimming);
+#endif
+    
+#endif
   }
 
   void WriteGlobalState(const char* filename) {
@@ -456,8 +539,11 @@ public:
     LSFS::Remove(filename);
     out.Create(filename);
     out.write_key_value("installed", install_time);
-#ifdef ENABLE_AUDIO    
+#ifdef SAVE_VOLUME
     out.write_key_value("volume", muted_volume_ ? muted_volume_ : dynamic_mixer.get_volume());
+#endif    
+#ifdef SAVE_BLADE_DIMMING
+    out.write_key_value("dimming", SaberBase::GetCurrentDimming());
 #endif    
     out.write_key_value("end", "1");
     out.Close();
@@ -465,11 +551,16 @@ public:
   }
 
   void SaveGlobalState() {
-#ifdef SAVE_VOLUME
+#if defined(SAVE_VOLUME) || defined(SAVE_BLADE_DIMMING)
     STDOUT.println("Saving Global State");
     WriteGlobalState("global.tmp");
     WriteGlobalState("global.ini");
+#ifdef SAVE_VOLUME    
     saved_global_state.volume = dynamic_mixer.get_volume();
+#endif
+#ifdef SAVE_BLADE_DIMMING
+    saved_global_state.dimming = SaberBase::GetCurrentDimming();
+#endif    
 #endif    
   }
   
@@ -924,7 +1015,7 @@ public:
   }
 #endif // DISABLE_COLOR_CHANGE  
 
-  void PrintButton(uint32_t b) {
+  virtual void PrintButton(uint32_t b) {
     if (b & BUTTON_POWER) STDOUT.print("Power");
     if (b & BUTTON_AUX) STDOUT.print("Aux");
     if (b & BUTTON_AUX2) STDOUT.print("Aux2");
@@ -1260,6 +1351,37 @@ public:
       current_preset_.Print();
       return true;
     }
+
+#ifdef DYNAMIC_BLADE_LENGTH
+    if (!strcmp(cmd, "get_max_blade_length") && arg) {
+      STDOUT.println(GetMaxBladeLength(atoi(arg)));
+      return true;
+    }
+    if (!strcmp(cmd, "get_blade_length") && arg) {
+      STDOUT.println(GetBladeLength(atoi(arg)));
+      return true;
+    }
+    if (!strcmp(cmd, "set_blade_length") && arg) {
+      SetBladeLength(atoi(arg), atoi(SkipWord(arg)));
+#ifdef SAVE_PRESET
+      SaveState(current_preset_.preset_num);
+#endif
+      // Reload preset to make the change take effect.
+      SetPreset(current_preset_.preset_num, false);
+      return true;
+    }
+#endif
+
+#ifdef DYNAMIC_BLADE_DIMMING
+    if (!strcmp(cmd, "get_blade_dimming")) {
+      STDOUT.println(SaberBase::GetCurrentDimming());
+      return true;
+    }
+    if (!strcmp(cmd, "set_blade_dimming") && arg) {
+      SaberBase::SetDimming(atoi(arg));
+      return true;
+    }
+#endif
 
     if (!strcmp(cmd, "get_preset")) {
       STDOUT.println(current_preset_.preset_num);

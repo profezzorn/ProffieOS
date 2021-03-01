@@ -165,6 +165,18 @@ template<int BYTEORDER, int byte> static inline uint8_t GETBYTE(const Color8& rg
   return GETBYTEN<((BYTEORDER >> (byte * 4)) & 0x7)>(rgb);
 }
 
+class HSL {
+public:
+  HSL() : H(0), S(0), L(0) {}
+  HSL(float h, float s, float l) : H(h), S(s), L(l) {}
+  HSL rotate(float angle) {
+    return HSL(fract(H + angle), S, L);
+  }
+  float H; // 0 - 1.0
+  float S; // 0 - 1.0
+  float L; // 0 - 1.0
+};
+
 
 static int8_t color16_dither_matrix[4][4] = {
   { -127, 111,  -76,  94 },
@@ -287,6 +299,48 @@ public:
     return Color16(f(5*16384+H, C, MAX),
                    f(3*16384+H, C, MAX),
                    f(1*16384+H, C, MAX));
+  }
+
+  HSL toHSL() const {
+    int MAX = std::max(r, std::max(g, b));
+    int MIN = std::min(r, std::min(g, b));
+    int C = MAX - MIN;
+    int H;
+    // Note 16384 = 60 degrees.
+    if (C == 0) {
+      H = 0;
+    } else if (r == MAX) {
+      // r is biggest
+      H = 16384 * (g - b) / C;
+    } else if (g == MAX) {
+      // g is biggest
+      H = 16384 * (b - r) / C + 16384 * 2;
+    } else {
+      // b is biggest
+      H = 16384 * (r - g) / C + 16384 * 4;
+    }
+    int L = MIN + MAX;
+    float S = (MAX*2 - L) / (float)std::min<int>(L, 131072 - L);
+    return HSL(H / 98304.0, S, L / 131070.0);
+  }
+
+  explicit Color16(HSL hsl) {
+    float C = (1.0 - fabs(2 * hsl.L - 1.0)) * hsl.S;
+    float h = hsl.H * 6;
+    float X = C * (1 - fabs(fmod(h, 2.0) - 1));
+    float R=0.0, G=0.0, B=0.0;
+    switch ((int)floor(h)) {
+      case 0: R=C; G=X; break;
+      case 1: R=X; G=C; break;
+      case 2: G=C; B=X; break;
+      case 3: G=X; B=C; break;
+      case 4: R=X; B=C; break;
+      case 5: R=C; B=X; break;
+    }
+    float m = hsl.L - C / 2;
+    r = (R + m) * 65535;
+    g = (G + m) * 65535;
+    b = (B + m) * 65535;
   }
 
   uint16_t r, g, b;

@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,10 +29,11 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
+// #define CONFIG_FILE "config/testconfig.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -47,6 +48,7 @@
 #define SAVE_VOLUME
 #define SAVE_PRESET
 #define SAVE_COLOR_CHANGE
+#define SAVE_DYNAMIC_DIMMING
 #endif
 
 // #define ENABLE_DEBUG
@@ -295,6 +297,9 @@ SaberBase::ColorChangeMode SaberBase::color_change_mode_ =
 bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 uint32_t SaberBase::current_variation_ = 0;
+#ifdef DYNAMIC_BLADE_DIMMING
+int SaberBase::dimming_ = 16384;
+#endif
 
 #include "common/box_filter.h"
 
@@ -449,99 +454,9 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/colorcycle.h"
 #include "transitions/wave.h"
 
+#include "styles/legacy_styles.h"
 //responsive styles
 #include "styles/responsive_styles.h"
-
-// This macro has a problem with commas, please don't use it.
-#define EASYBLADE(COLOR, CLASH_COLOR) \
-  SimpleClash<Lockup<Blast<COLOR, WHITE>, AudioFlicker<COLOR, WHITE> >, CLASH_COLOR>
-
-// Use EasyBlade<COLOR, CLASH_COLOR> instead of EASYBLADE(COLOR, CLASH_COLOR)
-template<class color, class clash_color, class lockup_flicker_color = WHITE>
-using EasyBlade = SimpleClash<Lockup<Blast<color, WHITE>, AudioFlicker<color, lockup_flicker_color> >, clash_color>;
-
-// The following functions are mostly for illustration.
-// The templates above gives you more power and functionality.
-
-// Arguments: color, clash color, turn-on/off time
-template<class base_color,
-          class clash_color,
-          int out_millis,
-          int in_millis,
-         class lockup_flicker_color = WHITE,
-         class blast_color = WHITE>
-StyleAllocator StyleNormalPtr() {
-#if 0
-  typedef AudioFlicker<base_color, lockup_flicker_color> AddFlicker;
-  typedef Blast<base_color, blast_color> AddBlast;
-  typedef Lockup<AddBlast, AddFlicker> AddLockup;
-  typedef SimpleClash<AddLockup, clash_color> AddClash;
-  return StylePtr<InOutHelper<AddClash, out_millis, in_millis> >();
-#else
- typedef Layers<base_color,
-                SimpleClashL<clash_color>,
-                LockupL<AudioFlickerL<lockup_flicker_color> >,
-                BlastL<blast_color> > Blade;
-  return StylePtr<InOutHelper<Blade, out_millis, in_millis> >();
-#endif  
-}
-
-// Arguments: color, clash color, turn-on/off time
-template<class base_color,
-         class clash_color,
-         class out_millis,
-         class in_millis,
-         class lockup_flicker_color = WHITE,
-         class blast_color = WHITE>
-StyleAllocator StyleNormalPtrX() {
-  typedef AudioFlicker<base_color, lockup_flicker_color> AddFlicker;
-  typedef Blast<base_color, blast_color> AddBlast;
-  typedef Lockup<AddBlast, AddFlicker> AddLockup;
-  typedef SimpleClash<AddLockup, clash_color> AddClash;
-  return StylePtr<InOutHelperX<AddClash, InOutFuncX<out_millis, in_millis>> >();
-}
-
-// Rainbow blade.
-// Arguments: color, clash color, turn-on/off time
-template<int out_millis,
-          int in_millis,
-          class clash_color = WHITE,
-          class lockup_flicker_color = WHITE>
-StyleAllocator StyleRainbowPtr() {
-  typedef AudioFlicker<Rainbow, lockup_flicker_color> AddFlicker;
-  typedef Lockup<Rainbow, AddFlicker> AddLockup;
-  typedef SimpleClash<AddLockup, clash_color> AddClash;
-  return StylePtr<InOutHelper<AddClash, out_millis, in_millis> >();
-}
-
-// Rainbow blade.
-// Arguments: color, clash color, turn-on/off time
-template<class out_millis,
-          class in_millis,
-          class clash_color = WHITE,
-          class lockup_flicker_color = WHITE>
-StyleAllocator StyleRainbowPtrX() {
-  typedef AudioFlicker<Rainbow, lockup_flicker_color> AddFlicker;
-  typedef Lockup<Rainbow, AddFlicker> AddLockup;
-  typedef SimpleClash<AddLockup, clash_color> AddClash;
-  return StylePtr<InOutHelperX<AddClash, InOutFuncX<out_millis, in_millis>> >();
-}
-
-// Stroboscope, flickers the blade at the desired frequency.
-// Arguments: color, clash color, turn-on/off time
-template<class strobe_color,
-          class clash_color,
-          int frequency,
-          int out_millis,
-          int in_millis>
-StyleAllocator StyleStrobePtr() {
-  typedef Strobe<BLACK, strobe_color, frequency, 1> strobe;
-  typedef Strobe<BLACK, strobe_color, 3* frequency, 1> fast_strobe;
-  typedef Lockup<strobe, fast_strobe> AddLockup;
-  typedef SimpleClash<AddLockup, clash_color> clash;
-  return StylePtr<InOutHelper<clash, out_millis, in_millis> >();
-}
-
 #include "styles/pov.h"
 
 class NoLED;
@@ -552,6 +467,7 @@ class NoLED;
 #include "blades/ws2811_blade.h"
 #include "blades/fastled_blade.h"
 #include "blades/simple_blade.h"
+#include "blades/saviblade.h"
 #include "blades/sub_blade.h"
 #include "blades/dim_blade.h"
 #include "blades/leds.h"
@@ -561,6 +477,8 @@ class NoLED;
 #include "common/current_preset.h"
 #include "styles/style_parser.h"
 #include "styles/length_finder.h"
+#include "styles/show_color.h"
+#include "styles/blade_shortener.h"
 
 BladeConfig* current_config = nullptr;
 class BladeBase* GetPrimaryBlade() {
@@ -1633,8 +1551,7 @@ StaticWrapper<SerialCommands> serial_commands;
 
 #endif
 
-
-#if defined(ENABLE_MOTION) || defined(ENABLE_SSD1306)
+#if defined(ENABLE_MOTION) || defined(ENABLE_SSD1306) || defined(INCLUDE_SSD1306)
 #include "common/i2cdevice.h"
 I2CBus i2cbus;
 #endif
@@ -1643,6 +1560,11 @@ I2CBus i2cbus;
 #include "display/ssd1306.h"
 SSD1306 display;
 #endif
+
+#ifdef INCLUDE_SSD1306
+#include "display/ssd1306.h"
+#endif
+
 
 #ifdef ENABLE_MOTION
 
@@ -1806,3 +1728,8 @@ void loop() {
 #endif
   Looper::DoLoop();
 }
+
+#define CONFIG_BOTTOM
+#include CONFIG_FILE
+#undef CONFIG_BOTTOM
+

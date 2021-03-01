@@ -3,6 +3,10 @@
 
 #include "prop_base.h"
 
+#ifndef BUTTON_HELD_MEDIUM_TIMEOUT
+#define BUTTON_HELD_MEDIUM_TIMEOUT 1000
+#endif
+
 RefPtr<BufferedWavPlayer> current_player_;
 Effect* now_playing_;
 Effect* play_next_;
@@ -13,6 +17,8 @@ AnswerEffectGroup* current_question_;
 
 #define SUBNAMES(PREFIX, X, SEPARATOR)	\
   X(PREFIX##base)				\
+  SEPARATOR					\
+  X(PREFIX##loop)				\
   SEPARATOR					\
   X(PREFIX##answer1)				\
   SEPARATOR					\
@@ -30,7 +36,7 @@ AnswerEffectGroup* current_question_;
   SEPARATOR					\
   X(PREFIX##answer8)
 
-#define MKNAMES(X) X, X "a1", X "a2", X "a3", X "a4", X "a5", X "a6", X "a7", X "a8"
+#define MKNAMES(X) X, X "l", X "a1", X "a2", X "a3", X "a4", X "a5", X "a6", X "a7", X "a8"
 
 #define JUST_NAME(X) X##_name
 #define CONST_CHAR_NAME(X) const char* X##_name
@@ -40,7 +46,8 @@ AnswerEffectGroup* current_question_;
 void Play(Effect* f) {
   if (current_player_ && current_player_->isPlaying()) {
     if (now_playing_ == f) return;
-    play_next_ = f;
+    // uncomment to enqueue instead of ignore
+    // play_next_ = f;
     return;
   }
   if (!current_player_) current_player_ = GetFreeWavPlayer();
@@ -56,7 +63,22 @@ public:
 
   SUBNAMES(effect_, DECLARE_EFFECT, );
 
+  RefPtr<BufferedWavPlayer> loop_player_;
+  
   bool Activate() {
+    if (effect_loop_) {
+      if (loop_player_) {
+	loop_player_->FadeAndStop();
+	loop_player_.Free();
+      } else {
+	loop_player_ = GetFreeWavPlayer();
+	if (loop_player_) {
+	  loop_player_->PlayOnce(&effect_loop_);
+	  loop_player_->PlayLoop(&effect_loop_);
+	}
+      }
+      return true;
+    }
     if (!effect_base_) return false;
     Play(&effect_base_);
     if (effect_answer1_ || effect_answer2_ || effect_answer3_ || effect_answer4_) {
@@ -133,19 +155,25 @@ public:
 class TriggerEffectGroup {
 public:
   TriggerEffectGroup(SUBNAMES(clk, CONST_CHAR_NAME, COMMA),
+		     SUBNAMES(dcl, CONST_CHAR_NAME, COMMA),
 		     SUBNAMES(hld, CONST_CHAR_NAME, COMMA)) :
                      clk(SUBNAMES(clk, JUST_NAME, COMMA)),
+                     dcl(SUBNAMES(dcl, JUST_NAME, COMMA)),
 		     hld(SUBNAMES(hld, JUST_NAME, COMMA))
 		     {}
 
   AnswerEffectGroup clk;
+  AnswerEffectGroup dcl;
   AnswerEffectGroup hld;
   
   bool Event(EVENT event) {
     if (event == EVENT_FIRST_SAVED_CLICK_SHORT) {
       return clk.Activate();
     }
-    if (event == EVENT_HELD_LONG) {
+    if (event == EVENT_SECOND_SAVED_CLICK_SHORT) {
+      return dcl.Activate();
+    }
+    if (event == EVENT_HELD_MEDIUM) {
       return hld.Activate();
     }
     return false;
@@ -153,7 +181,7 @@ public:
 };
 
 #define DEFINE_TRIGGER(X) \
-  TriggerEffectGroup trigger##X(MKNAMES("t" #X "clk"), MKNAMES("t" #X "hld"))
+  TriggerEffectGroup trigger##X(MKNAMES("t" #X "clk"), MKNAMES("t" #X "dcl"), MKNAMES("t" #X "hld"))
 
 DEFINE_TRIGGER(1);
 DEFINE_TRIGGER(2);
@@ -186,6 +214,17 @@ public:
     hybrid_font.SetHumVolume(1.0);
   }
 
+  void PrintButton(uint32_t b) override {
+    if (b & BUTTON_TRIGGER_ONE) STDOUT.print("T1");
+    if (b & BUTTON_TRIGGER_TWO) STDOUT.print("T2");
+    if (b & BUTTON_TRIGGER_THREE) STDOUT.print("T3");
+    if (b & BUTTON_TRIGGER_FOUR) STDOUT.print("T4");
+    if (b & BUTTON_TRIGGER_FIVE) STDOUT.print("T5");
+    if (b & BUTTON_TRIGGER_SIX) STDOUT.print("T6");
+    if (b & BUTTON_TRIGGER_SEVEN) STDOUT.print("T7");
+    if (b & BUTTON_TRIGGER_EIGHT) STDOUT.print("T8");
+    if (b & MODE_ON) STDOUT.print("On");
+  }
   // Make swings do nothing
   void DoMotion(const Vec3& motion, bool clear) override { }
 
@@ -206,8 +245,8 @@ public:
     }
 
     switch (EVENTID(button, event, modifiers & ~MODE_ON)) {
-      case EVENTID(BUTTON_TRIGGER_ONE, EVENT_HELD_LONG, BUTTON_TRIGGER_EIGHT):
-      case EVENTID(BUTTON_TRIGGER_EIGHT, EVENT_HELD_LONG, BUTTON_TRIGGER_ONE):
+      case EVENTID(BUTTON_TRIGGER_ONE, EVENT_HELD_MEDIUM, BUTTON_TRIGGER_EIGHT):
+      case EVENTID(BUTTON_TRIGGER_EIGHT, EVENT_HELD_MEDIUM, BUTTON_TRIGGER_ONE):
 	if (SaberBase::IsOn()) {
 	  Off();
 	  return true;
