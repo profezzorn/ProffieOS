@@ -1,29 +1,29 @@
 #ifndef FUNCTIONS_SUM_H
 #define FUNCTIONS_SUM_H
 
-// Usage: SUM<A, B>
-// Adds A + B
+// Usage: SUM<A, B, ...>
+// Adds A + B...
 // A, B: INTEGER
 // return value: INTEGER
 
-class BladeBase;
+template<class ... REST> class Sum {};
 
-template<class A, class B>
-class Sum {
+template<class X> class Sum<X> : public X {};
+
+template<class A, class... B>
+class Sum<A, B...> {
 public:
   void run(BladeBase* blade) {
     a_.run(blade);
     b_.run(blade);
   }
   int getInteger(int led) {
-    sum_ = a_ + b_;
-    return sum_.getInteger(led);
+    return a_.getInteger(led) + b_.getInteger(led);
   }
 
 private:
   A a_;
-  B b_;
-  int sum_;
+  Sum<B...> b_;
 };
 
 #endif
