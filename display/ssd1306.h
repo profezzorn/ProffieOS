@@ -218,20 +218,19 @@ public:
 
       case SCREEN_MESSAGE:
         memset(frame_buffer_, 0, sizeof(frame_buffer_));
-    // Aurbesh Font option.
-    #ifdef USE_AUREBESH_FONT
+    // Aurebesh Font option.
+      #ifdef USE_AUREBESH_FONT
+      const Glyph* font = Aurebesh10pt7Glyphs;
+      #else
+      const Glyph* font = Starjedi10pt7bGlyphs;
+      #endif
+
         if (strchr(message_, '\n')) {
-          DrawText(message_, 0, 15, Aurebesh10pt7bGlyphs);
+          DrawText(message_, 0, 15, font);
         } else {
-          DrawText(message_, 0, 23, Aurebesh10pt7bGlyphs);
+          DrawText(message_, 0, 23, font);
         }
-    #else
-        if (strchr(message_, '\n')) {
-          DrawText(message_, 0, 15, Starjedi10pt7bGlyphs);
-        } else {
-          DrawText(message_, 0, 23, Starjedi10pt7bGlyphs);
-        }
-    #endif
+    
         screen_ = SCREEN_PLI;
         layout_ = LAYOUT_NATIVE;
         xor_ = 0;
@@ -330,7 +329,7 @@ public:
 
   void SB_On() override {
     ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
-    // Make idle.bmp wait until first time blade on
+    // Make idle.bmp wait until first time blade on so Mass Storage can work
     just_booted_ = false;
   }
 
