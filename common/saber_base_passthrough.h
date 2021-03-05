@@ -16,7 +16,7 @@ protected:
       SaberBase::Link(this);
     }
   }
-#define SABERFUN(NAME, TYPED_ARGS, ARGS)        \
+#define SABERFUN(NAME, EFFECT, TYPED_ARGS, ARGS)	\
   void SB_##NAME TYPED_ARGS override {          \
     delegate_->SB_##NAME ARGS;                  \
   }

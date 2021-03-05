@@ -297,6 +297,7 @@ SaberBase::ColorChangeMode SaberBase::color_change_mode_ =
 bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 uint32_t SaberBase::current_variation_ = 0;
+float SaberBase::sound_length = 0.0;
 #ifdef DYNAMIC_BLADE_DIMMING
 int SaberBase::dimming_ = 16384;
 #endif
@@ -440,6 +441,9 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/marble.h"
 #include "functions/slice.h"
 #include "functions/mult.h"
+#include "functions/wavlen.h"
+#include "functions/effect_position.h"
+#include "functions/time_since_effect.h"
 
 // transitions
 #include "transitions/fade.h"

@@ -45,7 +45,7 @@ public:
     return current_style_;
   }
   
-  void SB_Effect(BladeEffectType type, float location) {
+  void SB_Effect2(BladeEffectType type, float location) {
     switch (type) {
       default: break;
       case EFFECT_LOCKUP_BEGIN:
@@ -72,6 +72,7 @@ public:
     effects_[0].type = type;
     effects_[0].start_micros = micros();
     effects_[0].location = location;
+    effects_[0].sound_length = SaberBase::sound_length;
     num_effects_ = std::min(num_effects_ + 1, NELEM(effects_));
   }
   
@@ -81,21 +82,21 @@ public:
   }
 
   // Shared Effects
-  void SB_PreOn(float* delay) override {
-    SB_Effect(EFFECT_PREON, 0);
+  void SB_PreOn2(float* delay) override {
+    SB_Effect2(EFFECT_PREON, 0);
   }
 
-  void SB_On() override {
-    SB_Effect(EFFECT_IGNITION, 0);
+  void SB_On2() override {
+    SB_Effect2(EFFECT_IGNITION, 0);
   }
 
-  void SB_Off(OffType off_type) override {
+  void SB_Off2(OffType off_type) override {
     switch (off_type) {
       case OFF_BLAST:
-	SB_Effect(EFFECT_BLAST, (200 + random(700)) / 1000.0f);
+	SB_Effect2(EFFECT_BLAST, (200 + random(700)) / 1000.0f);
 	break;
       case OFF_NORMAL:
-	SB_Effect(EFFECT_RETRACTION, 0);
+	SB_Effect2(EFFECT_RETRACTION, 0);
         break;
       case OFF_IDLE:
 	// do nothing
