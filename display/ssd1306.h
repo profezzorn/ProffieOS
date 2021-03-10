@@ -220,7 +220,7 @@ public:
         memset(frame_buffer_, 0, sizeof(frame_buffer_));
     // Aurebesh Font option.
       #ifdef USE_AUREBESH_FONT
-      const Glyph* font = Aurebesh10pt7Glyphs;
+      const Glyph* font = Aurebesh10pt7bGlyphs;
       #else
       const Glyph* font = Starjedi10pt7bGlyphs;
       #endif
