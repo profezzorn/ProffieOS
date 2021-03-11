@@ -195,7 +195,7 @@ public:
   // Returns the length of the style identifier.
   // The style identifier might be a single word, or it
   // can be "builtin X Y" where X and Y are numbers.
-  int StyleIdentifierLength(const char* str) {
+  static int StyleIdentifierLength(const char* str) {
     const char* end = SkipWord(str);
     if (FirstWord(str, "builtin")) {
       end = SkipWord(SkipWord(end));
@@ -220,7 +220,7 @@ public:
     int from_style_length = StyleIdentifierLength(from);
     int to_style_length = StyleIdentifierLength(to);
     int len = strlen(from) - from_style_length + to_style_length;
-    char* ret = (char*) malloc(len);
+    char* ret = (char*) malloc(len + 1);
     if (ret) {
       memcpy(ret, to, to_style_length);
       ret[to_style_length] = 0;
@@ -228,7 +228,51 @@ public:
     }
     return LSPtr<char>(ret);
   }
-  
+
+  struct ArgumentHelper {
+    const char* str;
+    int parts[3];
+    ArgumentHelper(const char*str_, int n) : str(str_) {
+      parts[0]= StyleIdentifierLength(str);
+      const char* tmp = str + parts[0];
+      for (int i = 0; i < n; i++) {
+	tmp = SkipWord(tmp);
+      }
+      parts[1] = tmp - str;
+      parts[2] = strlen(str);
+    }
+    int partlen(int part) {
+      if (part == 0) return parts[0];
+      return parts[part] - parts[part - 1];
+    }
+    const char* partptr(int part) {
+      if (part == 0) return str;
+      return str + parts[part - 1];
+    }
+    void AppendPart(int part, char** to) {
+      int l = partlen(part);
+      memcpy(*to, partptr(part), l);
+      (*to) += l;
+      **to = 0;
+    }
+  };
+
+  // Takes the style identifier "builtin X Y" from |to| and the
+  // arguments from |from| and puts them together into one string.
+  // Arguments after |keep_arguments_after| are also taken from |to|.
+  LSPtr<char> CopyArguments(const char* from, const char* to, int keep_arguments_after) {
+    ArgumentHelper from_helper(from, keep_arguments_after);
+    ArgumentHelper to_helper(to, keep_arguments_after);
+    char* ret = (char*) malloc(from_helper.partlen(0) + to_helper.partlen(1) + from_helper.partlen(2) + 1);
+    if (ret) {
+      char* tmp = ret;
+      to_helper.AppendPart(0, &tmp);
+      from_helper.AppendPart(1, &tmp);
+      to_helper.AppendPart(2, &tmp);
+    }
+    return LSPtr<char>(ret);
+  }
+
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "list_named_styles")) {
       // Just print one per line.
