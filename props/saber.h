@@ -1,3 +1,27 @@
+/*
+How buttons behave when using this prop file:
+
+On/Off - Assuming you have at least one button, pressing it briefly should turn the saber on or off. If you have an AUX button, pressing it briefly should also turn the saber on and off, and power and AUX becomes swapped while the saber is on. If you have no buttons, you can turn the saber on and off by twisting your wrist back and forth. Note that the motion has to be done long enough to count, so a very quick flick of the wrist will not work.
+Turn on muted - double-click power button
+Next preset - While saber is off, Hold power button and hit the blade.
+Previous preset - hold AUX button and click the power button.
+Clash - hit the blade while saber is on.
+Lockup - While saber is on, hold power, then trigger a clash. Lockup releases when you let go of the power button.
+Drag - Like lockup, but point saber mostly down before holding power.
+Force - long-click AUX button
+Start soundtrack - Long-click the power button.
+Blaster block - short-click AUX button
+Enter/Exit Color Change mode - Hold Aux and click power while on. (ProffieOS 3.x and above)
+
+If you have a zero-button saber:
+
+Twist - turns the saber on and off.
+Point up and shake - next preset.
+If you have a one-button saber:
+
+Hold power and twist while on - Enters color change mode. (ProffieOS 3.x and above)
+*/
+
 #ifndef PROPS_SABER_H
 #define PROPS_SABER_H
 
