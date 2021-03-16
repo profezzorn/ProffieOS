@@ -39,7 +39,7 @@ public:
   }
   void get(int led, int p, SimpleColor* ret) {
     if (p > 0 && p < 512) {
-      SimpleColor tmp = a_.getColor(led);
+      OverDriveColor tmp = a_.getColor(led);
       int mul = sin_table[p];
       ret->c.r = clampi32(ret->c.r + ((tmp.c.r * mul) >> 14), 0, 65535);
       ret->c.g = clampi32(ret->c.g + ((tmp.c.g * mul) >> 14), 0, 65535);
