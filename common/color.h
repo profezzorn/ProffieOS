@@ -353,6 +353,7 @@ struct SimpleColor {
   void printTo(Print& p) {
     c.printTo(p);
   }
+  bool getOverdrive() const { return false; }
 };
 
 struct OverDriveColor {
@@ -366,6 +367,7 @@ struct OverDriveColor {
     if (overdrive) p.write('!');
     c.printTo(p);
   }
+  bool getOverdrive() const { return overdrive; }
 };
 
 
@@ -416,6 +418,7 @@ struct RGBA_um_nod {
     p.write(',');
     p.print(alpha);
   }
+  bool getOverdrive() const { return false; }
 };
 
 // Unmultiplied RGBA, used as a temporary and makes optimization easier.
@@ -435,6 +438,7 @@ struct RGBA_um {
     p.write(',');
     p.print(alpha);
   }
+  bool getOverdrive() const { return overdrive; }
 };
 
 // Premultiplied ALPHA, no overdrive
@@ -449,6 +453,7 @@ struct RGBA_nod {
     p.write('*');
     p.print(alpha);
   }
+  bool getOverdrive() const { return false; }
 };
 
 // Premultiplied ALPHA
@@ -468,6 +473,7 @@ struct RGBA {
     p.write('*');
     p.print(alpha);
   }
+  bool getOverdrive() const { return overdrive; }
 };
 
 inline RGBA_um_nod operator*(const SimpleColor& a, uint16_t x) {
