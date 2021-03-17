@@ -15,6 +15,7 @@ public:
     if (effect) value_ = effect->location * 32768;
   }
   int getInteger() { return value_; }
+  int getInteger(int led) { return value_; }
 private:
   int value_ = 0;
 };
