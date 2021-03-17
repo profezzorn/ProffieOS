@@ -30,6 +30,8 @@ public:
   virtual bool Charging() { return false; }
 
   virtual bool IsHandled(HandledFeature feature) = 0;
+  
+  virtual OverDriveColor getColor(int i) { return OverDriveColor(); }
 };
 
 class StyleFactory {

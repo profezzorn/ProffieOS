@@ -15,6 +15,7 @@ public:
     if (effect) value_ = (micros() - effect->start_micros) / 1000; // ms
   }
   int getInteger() { return value_; }
+  int getInteger(int led) { return value_; }
 private:
   int value_ = 0;
 };
