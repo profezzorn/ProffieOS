@@ -402,7 +402,7 @@ public:
     Send(0x14);
     Send(MEMORYMODE);                    // 0x20
     Send(0x01);                          // vertical address mode
-  #ifndef OLED_FLIP_180                  // flip define
+  #ifndef OLED_FLIP_180                  // allows for 180deg rotation of the OLED mapping
     Send(SEGREMAP | 0x1);
     Send(COMSCANDEC);
   #else
