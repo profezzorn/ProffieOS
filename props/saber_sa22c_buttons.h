@@ -180,16 +180,20 @@
 
 #define FORCE_PUSH_CONDITION battle_mode_
 
-EFFECT(dim); // for EFFECT_POWERSAVE
-EFFECT(battery); // for EFFECT_BATTERY_LEVEL
-EFFECT(bmbegin); // for Begin Battle Mode
-EFFECT(bmend); // for End Battle Mode
-EFFECT(vmbegin); // for Begin Volume Menu
-EFFECT(vmend); // for End Volume Menu
-EFFECT(faston); // for EFFECT_FAST_ON
-EFFECT(blstbgn); // for Begin Multi-Blast
-EFFECT(blstend); // for End Multi-Blast
-EFFECT(push); // for Force Push gesture in Battle Mode
+EFFECT(dim);      // for EFFECT_POWERSAVE
+EFFECT(battery);  // for EFFECT_BATTERY_LEVEL
+EFFECT(bmbegin);  // for Begin Battle Mode
+EFFECT(bmend);    // for End Battle Mode
+EFFECT(vmbegin);  // for Begin Volume Menu
+EFFECT(vmend);    // for End Volume Menu
+EFFECT(volup);    // for increse volume
+EFFECT(voldown);  // for decrease volume
+EFFECT(volmin);   // for minimum volume reached
+EFFECT(volmax);   // for maximum volume reached
+EFFECT(faston);   // for EFFECT_FAST_ON
+EFFECT(blstbgn);  // for Begin Multi-Blast
+EFFECT(blstend);  // for End Multi-Blast
+EFFECT(push);     // for Force Push gesture in Battle Mode
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -279,35 +283,97 @@ public:
     // Optional effects
     SaberBase::DoEffect(EFFECT_FAST_ON, 0);
   }
-
-  void ChangeVolume(bool up) {
-    if (up) {
-      STDOUT.println("Volume up");
-      if (dynamic_mixer.get_volume() < VOLUME) {
-        dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
-          dynamic_mixer.get_volume() + VOLUME * 0.10));
+  
+// Volume Menu
+  void VolumeUp() {
+    STDOUT.println("Volume up");
+    if (dynamic_mixer.get_volume() < VOLUME) {
+      dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
+        dynamic_mixer.get_volume() + VOLUME * 0.10));
+      if (SFX_volup) {
+        hybrid_font.PlayCommon(&SFX_volup);
+      } else {
         beeper.Beep(0.5, 2000);
-        STDOUT.print("Current Volume: ");
-        STDOUT.println(dynamic_mixer.get_volume());
       }
-      else {
-        beeper.Beep(0.5, 3000);
-      }
+      STDOUT.print("Volume Up - Current Volume: ");
+      STDOUT.println(dynamic_mixer.get_volume());
     } else {
-      STDOUT.println("Volume Down");
-      if (dynamic_mixer.get_volume() > (0.10 * VOLUME)) {
-        dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
-          dynamic_mixer.get_volume() - VOLUME * 0.10));
-        beeper.Beep(0.5, 2000);
-        STDOUT.print("Current Volume: ");
-        STDOUT.println(dynamic_mixer.get_volume());
-      }
-      else{
-        beeper.Beep(0.5, 1000);
-      }
+      // Cycle through ends of Volume Menu option
+      #ifdef VOLUME_MENU_CYCLE
+        if (!max_vol_reached_) {
+          if (SFX_volmax) {
+            hybrid_font.PlayCommon(&SFX_volmax);
+          } else {
+            beeper.Beep(0.5, 3000);
+          }
+          STDOUT.print("Maximum Volume: ");
+          max_vol_reached_ = true;
+        } else {
+          dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
+          dynamic_mixer.get_volume() - VOLUME * 0.90));
+          if (SFX_volmin) {
+            hybrid_font.PlayCommon(&SFX_volmin);
+          } else {
+            beeper.Beep(0.5, 1000);
+          }
+          STDOUT.print("Minimum Volume: ");
+          max_vol_reached_ = false;
+        }
+      #else
+        if (SFX_volmax) {
+          hybrid_font.PlayCommon(&SFX_volmax);
+        } else {
+          beeper.Beep(0.5, 3000);
+        }
+        STDOUT.print("Maximum Volume: ");
+      #endif
     }
   }
 
+  void VolumeDown() {
+    STDOUT.println("Volume Down");
+    if (dynamic_mixer.get_volume() > (0.10 * VOLUME)) {
+      dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
+        dynamic_mixer.get_volume() - VOLUME * 0.10));
+      if (SFX_voldown) {
+        hybrid_font.PlayCommon(&SFX_voldown);
+      } else {
+        beeper.Beep(0.5, 2000);
+      }
+      STDOUT.print("Volume Down - Current Volume: ");
+      STDOUT.println(dynamic_mixer.get_volume());
+    } else {
+      #ifdef VOLUME_MENU_CYCLE
+        if (!min_vol_reached_) {
+          if (SFX_volmin) {
+            hybrid_font.PlayCommon(&SFX_volmin);
+          } else {
+            beeper.Beep(0.5, 1000);
+          }
+          STDOUT.print("Minimum Volume: ");
+          min_vol_reached_ = true;
+        } else {
+          dynamic_mixer.set_volume(VOLUME);
+          if (SFX_volmax) {
+            hybrid_font.PlayCommon(&SFX_volmax);
+          } else {
+            beeper.Beep(0.5, 3000);
+          }
+          STDOUT.print("Maximum Volume: ");
+          min_vol_reached = false;
+        }
+      #else
+        if (SFX_volmin) {
+          hybrid_font.PlayCommon(&SFX_volmin);
+        } else {
+          beeper.Beep(0.5, 1000);
+        }
+        STDOUT.print("Minimum Volume: ");
+      #endif
+      
+    }
+  }
+  
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
@@ -466,7 +532,7 @@ public:
     if (!mode_volume_) {
       next_preset();
     } else {
-      ChangeVolume(false);
+      VolumeUp();
     }
     return true;
 #else
@@ -480,7 +546,7 @@ public:
     if (!mode_volume_) {
       next_preset();
     } else {
-      ChangeVolume(false);
+      VolumeDown();
     }
     return true;
 
@@ -779,6 +845,8 @@ private:
   bool auto_lockup_on_ = false;
   bool auto_melt_on_ = false;
   bool battle_mode_ = false;
+  bool max_vol_reached_ = false;
+  bool min_vol_reached_ = false;
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
