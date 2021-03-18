@@ -822,6 +822,14 @@ class Commands : public CommandParser {
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
 #endif
+
+#ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "sleep") && e) {
+      delay(atoi(e));
+      return true;
+    }
+#endif
+
 #ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "twiddle")) {
       int pin = strtol(e, NULL, 0);
