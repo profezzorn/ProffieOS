@@ -317,13 +317,6 @@ public:
     LOCK_SD(false);
   }
 
-void SetStyle(int blade, const char* style) {
-#define SET_STYLE_N(N) case N: current_style##N = style; break;
-  switch (blade) {
-    ONCEPERBLADE(SET_STYLE_N)
-  }
-}
-
 LSPtr<char> SetStyle(int blade, LSPtr<char> style) {
 #define SET_STYLE_N(N) case N: std::swap(current_style##N, style); break;
   switch (blade) {
