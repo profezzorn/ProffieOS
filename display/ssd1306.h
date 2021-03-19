@@ -216,7 +216,7 @@ public:
         invert_y_ = false;
         return 200;  // redraw once every 200 ms
 
-      case SCREEN_MESSAGE:
+      case SCREEN_MESSAGE: {
         memset(frame_buffer_, 0, sizeof(frame_buffer_));
     // Aurebesh Font option.
       #ifdef USE_AUREBESH_FONT
@@ -235,6 +235,7 @@ public:
         layout_ = LAYOUT_NATIVE;
         xor_ = 0;
         invert_y_ = false;
+      }
         return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_IMAGE:
