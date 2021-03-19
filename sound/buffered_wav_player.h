@@ -64,7 +64,7 @@ public:
       scheduleFillBuffer();
     }
     pause_ = false;
-    if (SaberBase::sound_length == 0.0 && effect->next != effect) {
+    if (SaberBase::sound_length == 0.0 && effect->GetFollowing() != effect) {
       SaberBase::sound_length = length();
     }
   }
