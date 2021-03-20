@@ -522,7 +522,7 @@ public:
     if (!mode_volume_) {
       On();
     } else {
-      ChangeVolume(true);
+      VolumeUp();
     }
     return true;
 
