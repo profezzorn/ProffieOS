@@ -316,6 +316,23 @@ public:
     if (!Load(preset)) Set(preset);
     LOCK_SD(false);
   }
+
+LSPtr<char> SetStyle(int blade, LSPtr<char> style) {
+#define SET_STYLE_N(N) case N: std::swap(current_style##N, style); break;
+  switch (blade) {
+    ONCEPERBLADE(SET_STYLE_N)
+  }
+  return style;
+}
+
+const char* GetStyle(int blade) {
+#define GET_STYLE_N(N) case N: return current_style##N.get();
+  switch (blade) {
+    ONCEPERBLADE(GET_STYLE_N)
+  }
+  return "";
+}
+
 };
 
 #endif
