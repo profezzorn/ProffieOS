@@ -1,3 +1,4 @@
+
 #ifndef DISPLAY_SSD1306_H
 #define DISPLAY_SSD1306_H
 
@@ -203,26 +204,31 @@ public:
         invert_y_ = false;
         return font_config.ProffieOSFontImageDuration;
 
-      case SCREEN_PLI:
-        memset(frame_buffer_, 0, sizeof(frame_buffer_));
-      // Need non-SDcard content at first so Mass Storage can work.
-          if (!just_booted_) {
-            ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
+case SCREEN_PLI:
+        memset(frame_buffer_, 0, sizeof(frame_buffer_));        
+        #ifdef USB_CLASS_MSC
+          if (USBD_Connected()) {           
+            DrawBatteryBar(BatteryBar16); // with nothing below in SCREEN_IMAGE loop, this is showing for fontImageDuration when NO USB connected
+                                          // after SB_Off or NEWFONT occurs....How can that be?
+            layout_ = LAYOUT_NATIVE;
+            xor_ = 0;
+            invert_y_ = false;
+            return 200;  // redraw once every 200 ms
           } else {
-            DrawBatteryBar(BatteryBar16);
-          }
-        layout_ = LAYOUT_NATIVE;
-        xor_ = 0;
-        invert_y_ = false;
-        return 200;  // redraw once every 200 ms
-
-      case SCREEN_MESSAGE: {
+            ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
+          }                  
+        #else
+        ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
+        #endif
+        return true;
+        
+case SCREEN_MESSAGE: {
         memset(frame_buffer_, 0, sizeof(frame_buffer_));
-    // Aurebesh Font option.
+      // Aurebesh Font option.
       #ifdef USE_AUREBESH_FONT
-      const Glyph* font = Aurebesh10pt7bGlyphs;
+        const Glyph* font = Aurebesh10pt7bGlyphs;
       #else
-      const Glyph* font = Starjedi10pt7bGlyphs;
+        const Glyph* font = Starjedi10pt7bGlyphs;
       #endif
 
         if (strchr(message_, '\n')) {
@@ -238,7 +244,7 @@ public:
       }
         return font_config.ProffieOSFontImageDuration;
 
-      case SCREEN_IMAGE:
+case SCREEN_IMAGE:
         MountSDCard();
         if (!frame_available_) {
           scheduleFillBuffer();
@@ -246,7 +252,7 @@ public:
         }
         if (eof_) {
           // STDOUT << "EOF " << frame_count_ << "\n";
-          if (!SaberBase::IsOn()) {
+          if (!SaberBase::IsOn()) {           
             screen_ = SCREEN_PLI;
             if (frame_count_ == 1) return font_config.ProffieOSFontImageDuration;
             return FillFrameBuffer();
@@ -278,18 +284,53 @@ public:
             }
           }
         } else {
-          // Loop idle.bmp during SB_Off
-          if (current_effect_ == &IMG_idle) loop_start_ = millis();                                         
+
+            // SB_Off state - need to inturrupt idle.bmp from looping in here somwhow when USB is connected. 
+            // The following all tried with SCREEN_PLI as is above, Mass Storage enabled.
+            
+            
+            // I'm stumped why this message IS shown when we're directly here because ShowFile(&IMG_boot or ShowFile(&IMG_font
+            // if (USBD_Connected()) {
+            //     if (current_effect_ != &IMG_boot || &IMG_font) {
+            //       STDOUT.println("------should not see this message. Current effect is boot ot font");
+            //       SetScreenNow(SCREEN_PLI); 
+            //     }
+            // }
+           
+            // This allows boot and font with USB in, SD card mounts to computer OK,
+            // Then once USB Disconnected, idle tries to play, but gets cut off every time it tries to loop and battery is 
+            // shown repleadedly for fontImageDuraation. No SD card mount to computer if reconnected.
+            // #ifdef USB_CLASS_MSC           
+            //   if (USBD_Connected() && current_effect_ == &IMG_idle) {  
+
+            //     SetScreenNow(SCREEN_PLI);
+            //   }
+            // #endif
+         
+          // Identical behavior to previous attempt
+          // if (current_effect_ == &IMG_idle) {
+          //   #ifdef USB_CLASS_MSC
+          //     if (USBD_Connected()) SetScreenNow(SCREEN_PLI);
+          //   #endif
+          //   loop_start_ = millis();
+          // }
+
+           // Loop idle.bmp during SB_Off
+          if (current_effect_ == &IMG_idle) loop_start_ = millis();
+
           if (millis() - loop_start_ > font_config.ProffieOSFontImageDuration) {
+            STDOUT.println("---------------Loop time expired, END OF LOOP TIME, Go To SCREEN_PLI (and play idle.bmp");
             STDOUT << "END OF LOOP\n";
             screen_ = SCREEN_PLI;
           }
         }
 
         if (font_config.ProffieOSAnimationFrameRate > 0.0) {
+          STDOUT.println("---------------frame rate 1");
           return 1000 / font_config.ProffieOSAnimationFrameRate;
         }
         if (looped_frames_ > 1) {
+          STDOUT.println("---------------frame rate 2");
           return 1000 / looped_frames_;
         } else {
           return 41;   // ~24 fps
@@ -310,6 +351,7 @@ public:
       frame_available_ = false;
       loop_start_ = millis();
       frame_count_ = 0;
+      STDOUT.println("---------------ShowFile SetScreenNow(SCREEN_IMAGE)");
       SetScreenNow(SCREEN_IMAGE);
       eof_ = false;
       current_effect_ = effect;
@@ -330,8 +372,6 @@ public:
 
   void SB_On() override {
     ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
-    // Make idle.bmp wait until first time blade on so Mass Storage can work
-    just_booted_ = false;
   }
 
   void SB_Effect(EffectType effect, float location) override {
@@ -391,7 +431,7 @@ public:
     // Init sequence
     Send(DISPLAYOFF);                    // 0xAE
     Send(SETDISPLAYCLOCKDIV);            // 0xD5
-    Send(0x80);                                  // the suggested ratio 0x80
+    Send(0x80);                          // the suggested ratio 0x80
 
     Send(SETMULTIPLEX);                  // 0xA8
     Send(HEIGHT - 1);
@@ -411,7 +451,7 @@ public:
     Send(COMSCANINC);
   #endif
     Send(SETCOMPINS);                    // 0xDA
-    Send(0x02);  // may need to be 0x12 for some displays
+    Send(0x02);                          // may need to be 0x12 for some displays
     Send(SETCONTRAST);                   // 0x81
     Send(0x8F);
 
@@ -676,7 +716,7 @@ private:
   volatile bool frame_available_ = true;
   volatile bool eof_ = true;
   volatile bool lock_fb_ = false;
-  bool just_booted_ = true;
+  //bool just_booted_ = true;
 };
 
 #endif
