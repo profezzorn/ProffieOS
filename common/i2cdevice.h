@@ -78,7 +78,8 @@ public:
     StateMachineState state_machine_;
 
 // If we fail we just retry over and over again until timeout
-#define FAIL() do { state_machine_.reset_state_machine(); return; } while(0);
+#define FAIL() do { state_machine_.reset_state_machine(); return; } while(0)
+#define PROGRESS() do { state_machine_.sleep_until_ = millis();	} while(0)
 
   inline void i2c_write_byte_loop(uint8_t reg, uint8_t data) {
     STATE_MACHINE_BEGIN();
@@ -102,6 +103,9 @@ public:
 
     // Wait for write to finish.
     while (!stm32l4_i2c_done(Wire._i2c)) YIELD();
+
+    // Progress was made.
+    PROGRESS();
 
     // Check status.
     if (stm32l4_i2c_status(Wire._i2c)) FAIL();
@@ -149,7 +153,10 @@ public:
 #define I2C_READ_BYTES_ASYNC(reg, data, bytes) do {			\
   state_machine_.sleep_until_ = millis();				\
   while (i2c_read_bytes_async(reg, data, bytes)) {			\
-    if (millis() - state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) goto i2c_timeout; \
+    if (millis() - state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) {	\
+      state_machine_.reset_state_machine();				\
+      goto i2c_timeout;							\
+    }									\
     YIELD();								\
   }									\
 } while(0)
@@ -157,7 +164,10 @@ public:
 #define I2C_WRITE_BYTE_ASYNC(reg, data) do {				\
   state_machine_.sleep_until_ = millis();				\
   while (i2c_write_byte_async(reg, data)) {				\
-    if (millis() - state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) goto i2c_timeout; \
+    if (millis() - state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) {	\
+      state_machine_.reset_state_machine();				\
+      goto i2c_timeout;							\
+    }									\
     YIELD();								\
   }									\
 } while(0)
