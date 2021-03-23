@@ -21,8 +21,10 @@ public:
     f_.run(blade);
     if (begin_) {
       begin_ = false;
-      unsigned int n = f_.getInteger(0);
-      selected_ = transitions_.get(n % sizeof...(TRANSITION));
+      int f = f_.getInteger(0);
+      while(f < 0) f += sizeof...(TRANSITION) << 8;
+      uint8_t selection = f % sizeof...(TRANSITION);
+      selected_ = transitions_.get(selection % sizeof...(TRANSITION));
       selected_->begin();
     }
       selected_->run(blade); 
