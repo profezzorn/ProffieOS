@@ -1,10 +1,10 @@
-#ifndef TRANSITIONS_OPTION_H
-#define TRANSITIONS_OPTION_H
+#ifndef TRANSITIONS_SELECT_H
+#define TRANSITIONS_SELECT_H
 
 #include "random.h"
 
-// Usage: TrOption<OPTION, TR1, TR2, ...>
-// OPTION: a number
+// Usage: TrSelect<SELECTION, TR1, TR2, ...>
+// SELECTION: FUNCTION
 // TR1, TR2: TRANSITION
 // return value: TRANSITION
 // transition option is picked from the specified list of
@@ -12,7 +12,7 @@
 // with Int<0> representing first transition
 
 template<class F, class... TRANSITION>
-class TrOption {
+class TrSelect {
 public:
   void begin() {
     begin_ = true;
@@ -28,9 +28,7 @@ public:
       selected_->run(blade); 
     }
 
-  RGBA getColor(const RGBA& a,
-		const RGBA& b,
-		int led) {
+  RGBA getColor(const RGBA& a, const RGBA& b, int led) {
     return selected_->getColor(a, b, led);
   }
   bool done() {
