@@ -21,32 +21,34 @@ public:
   void run(BladeBase* blade) {
     f_.run(blade);
     colors_.run(blade);
-    uint8_t selection = f_.getInteger(0);
-    if (selection != variation_) {
+    int f = f_.getInteger(0);
+    while(f < 0) f += sizeof...(COLORS) << 8;
+    uint8_t selection = f % sizeof...(COLORS);
+    if (selection != selection_) {
       // Start a transition
-      old_variation_ = variation_;
-      variation_ = f_.getInteger(0);
+      old_selection_ = selection_;
+      selection_ = f_.getInteger(0);
       transition_.begin();
     }
-    if (variation_ != old_variation_) {
+    if (selection_ != old_selection_) {
       transition_.run(blade);
       if (!transition_.done()) return;
-      old_variation_ = variation_;
+      old_selection_ = selection_;
     }
   }
 
 private:
   SELECTION f_;
   TRANSITION transition_;
-  uint8_t variation_= 0;
-  uint8_t old_variation_ = 0;
+  uint8_t selection_= 0;
+  uint8_t old_selection_ = 0;
   MixHelper<COLORS...> colors_;
 public:
-  auto getColor(int led) -> decltype(transition_.getColor(colors_.getColor(variation_, led), colors_.getColor(variation_, led), led)) {
+  auto getColor(int led) -> decltype(transition_.getColor(colors_.getColor(selection_, led), colors_.getColor(selection_, led), led)) {
 //    SCOPED_PROFILER();
-    auto ret = colors_.getColor(variation_, led);
-    if (variation_ != old_variation_) {
-      auto old = colors_.getColor(old_variation_, led);
+    auto ret = colors_.getColor(selection_, led);
+    if (selection_ != old_selection_) {
+      auto old = colors_.getColor(old_selection_, led);
       return transition_.getColor(old, ret, led);
     }
     return ret;
