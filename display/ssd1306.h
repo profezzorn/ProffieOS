@@ -244,11 +244,11 @@ public:
         DrawBatteryBar(BatteryBar16);
 	if (HEIGHT > 32) {
 	  char tmp[32];
-	  strcpy(tmp, "volts: x.xx");
+	  strcpy(tmp, "volts x.xx");
 	  float v = battery_monitor.battery();
-	  tmp[7] = '0' + (int)floorf(v);
-	  tmp[9] = '0' + ((int)floorf(v * 10)) % 10;
-	  tmp[10] = '0' + ((int)floorf(v * 100)) % 10;
+	  tmp[6] = '0' + (int)floorf(v);
+	  tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
+	  tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
 	  DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
 	}
         layout_ = LAYOUT_NATIVE;
@@ -512,8 +512,8 @@ public:
               }
               break;
             case LAYOUT_LANDSCAPE: {
-              int x = i * sizeof(col_t);
-              int y = ((i & 3) << 3) + 7;
+              int x = i / sizeof(col_t);
+              int y = ((i & (sizeof(col_t)-1)) << 3) + 7;
               int delta_pos = -WIDTH / 8;
               if (invert_y_) {
                 y = HEIGHT - 1 - y;
