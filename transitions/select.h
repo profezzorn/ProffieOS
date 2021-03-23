@@ -28,7 +28,7 @@ public:
       selected_->begin();
     }
       selected_->run(blade); 
-    }
+  }
 
   RGBA getColor(const RGBA& a, const RGBA& b, int led) {
     return selected_->getColor(a, b, led);
