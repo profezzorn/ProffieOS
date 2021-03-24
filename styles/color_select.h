@@ -1,6 +1,8 @@
 #ifndef STYLES_COLOR_SELECT_H
 #define STYLES_COLOR_SELECT_H
 
+#include "../functions/variation.h"
+
 // Usage: ColorSelect<SELECTION, TRANSITION, COLOR1, COLOR2, ...>
 // SELECTION: function
 // TRANSITION: transition
@@ -27,7 +29,7 @@ public:
     if (selection != selection_) {
       // Start a transition
       old_selection_ = selection_;
-      selection_ = f_.getInteger(0);
+      selection_ = f % sizeof...(COLORS);
       transition_.begin();
     }
     if (selection_ != old_selection_) {
