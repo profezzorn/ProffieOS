@@ -122,7 +122,7 @@ public:
       I2C_WRITE_BYTE_ASYNC(INT1_CTRL, 0x3);  // Activate INT on data ready
       pinMode(motionSensorInterruptPin, INPUT);
       I2C_READ_BYTES_ASYNC(WHO_AM_I, databuffer, 1);
-      if (databuffer[0] == 105) {
+      if (databuffer[0] == 105 || databuffer[0] == 106) {
         STDOUT.println("done.");
       } else {
         STDOUT.println("failed.");
