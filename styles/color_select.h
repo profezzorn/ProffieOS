@@ -16,7 +16,7 @@ template<class SELECTION, class TRANSITION, class... COLORS>
 class ColorSelect {
 public:
   ColorSelect() {
-    if (is_same_type<FUNC, Variation>::value) {
+    if (is_same_type<SELECTION, Variation>::value) {
       BladeBase::HandleFeature(HANDLED_FEATURE_CHANGE_TICKED);
     }
   }
