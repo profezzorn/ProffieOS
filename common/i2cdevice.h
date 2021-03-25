@@ -70,12 +70,12 @@ public:
   }
 
 #ifdef PROFFIEBOARD
-  private:
   // Without this define, the state machine gets mixed up with
   // inherited state machines later. No idea why that happens since
   // it is PRIVATE.
 #define state_machine_ temp_state_machine_
     StateMachineState state_machine_;
+  private:
 
 // If we fail we just retry over and over again until timeout
 #define FAIL() do { state_machine_.reset_state_machine(); return; } while(0)
@@ -151,10 +151,10 @@ public:
 #undef state_machine_
 
 #define I2C_READ_BYTES_ASYNC(reg, data, bytes) do {			\
-  state_machine_.sleep_until_ = millis();				\
+  temp_state_machine_.sleep_until_ = millis();				\
   while (i2c_read_bytes_async(reg, data, bytes)) {			\
-    if (millis() - state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) {	\
-      state_machine_.reset_state_machine();				\
+    if (millis() - temp_state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) { \
+      temp_state_machine_.reset_state_machine();			\
       goto i2c_timeout;							\
     }									\
     YIELD();								\
@@ -162,10 +162,10 @@ public:
 } while(0)
 
 #define I2C_WRITE_BYTE_ASYNC(reg, data) do {				\
-  state_machine_.sleep_until_ = millis();				\
+  temp_state_machine_.sleep_until_ = millis();				\
   while (i2c_write_byte_async(reg, data)) {				\
-    if (millis() - state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) {	\
-      state_machine_.reset_state_machine();				\
+    if (millis() - temp_state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) { \
+      temp_state_machine_.reset_state_machine();			\
       goto i2c_timeout;							\
     }									\
     YIELD();								\
@@ -177,9 +177,9 @@ public:
   void Reset() {}
 #define I2C_READ_BYTES_ASYNC(reg, data, bytes) do {			\
   StartReadBytes(reg, bytes);						\
-  state_machine_.sleep_until_ = millis();				\
+  temp_state_machine_.sleep_until_ = millis();				\
   while (Wire.available() < bytes) {					\
-    if (millis() - state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) goto i2c_timeout; \
+    if (millis() - temp_state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) goto i2c_timeout; \
     YIELD();								\
   }									\
   EndReadBytes(data, bytes);						\

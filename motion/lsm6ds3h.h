@@ -98,6 +98,12 @@ public:
   LSM6DS3H() : I2CDevice(106), Looper(HFLINK) {}
 
   void Loop() override {
+#if 0
+    // Uncomment this to debug motion timeouts.
+    SaberBase::RequestMotion();
+    if (!random(300)) delay(350);
+#endif
+
     STATE_MACHINE_BEGIN();
 
     while (!i2cbus.inited()) YIELD();
