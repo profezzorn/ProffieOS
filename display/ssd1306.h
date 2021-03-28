@@ -472,7 +472,13 @@ case SCREEN_IMAGE:
       ShowFile(&IMG_boot, font_config.ProffieOSFontImageDuration);
     }
 
-    while (true) {
+        while (true) {
+      STDOUT << "--------------------while(true)\n";
+      if (USBD_Connected()) {
+        STDOUT << "--------------------USBD_Connected\n";
+      } else {
+        STDOUT << "--------------------USBD NOT Connected\n";
+      }
       millis_to_display_ = FillFrameBuffer();
       frame_start_time_ = millis();
       lock_fb_ = true;
