@@ -46,10 +46,14 @@ const Glyph BatteryBar16 = { 16, 0, 0, GLYPHDATA(BatteryBar16_data) };
 #include "StarJedi10Font.h"
 #include "Aurebesh10Font.h"
 
-class SSD1306 : public I2CDevice, Looper, StateMachine, SaberBase, private AudioStreamWork {
+#ifndef MAX_GLYPH_HEIGHT
+#define MAX_GLYPH_HEIGHT 32
+#endif
+
+template<int WIDTH, class col_t>
+class SSD1306Template : public I2CDevice, Looper, StateMachine, SaberBase, private AudioStreamWork {
 public:
-  static const int WIDTH = 128;
-  static const int HEIGHT = 32;
+  static const int HEIGHT = sizeof(col_t) * 8;
   const char* name() override { return "SSD1306"; }
 
   enum Commands {
@@ -114,15 +118,37 @@ public:
     LAYOUT_PORTRAIT,
   };
 
-  SSD1306() : I2CDevice(0x3C) { }
+  SSD1306Template() : I2CDevice(0x3C) { }
+  explicit SSD1306Template(int id) : I2CDevice(id) { }
   void Send(int c) { writeByte(0, c); }
 
+  void SetPixel(int x, int y) {
+    frame_buffer_[x] |= ((col_t)1) << y;
+  }
+
+  // y1 < y2
+  void DrawVLine(int x, int y1, int y2) {
+    frame_buffer_[x] |= (((col_t)-1) >> (HEIGHT - (y2 - y1))) << y1;
+  }
+
+  // x1 < x2
+  void DrawHLine(int x1, int x2, int y) {
+    col_t tmp = ((col_t)1) << y;
+    for (int x = x1 ; x < x2; x++) frame_buffer_[x] |= tmp;
+  }
+
+  // x1 < x2, y1 < y2
+  void DrawRect(int x1, int x2, int y1, int y2) {
+    col_t tmp = (((col_t)-1) >> (HEIGHT - (y2 - y1))) << y1;
+    for (int x = x1 ; x < x2; x++) frame_buffer_[x] |= tmp;
+  }
+
   template<typename T>
-  void Draw2(int begin, int end, uint32_t* pos, int shift, const T* data) {
+  void Draw2(int begin, int end, col_t* pos, int shift, const T* data) {
     if (shift > 0) {
-      for (int i = begin; i < end; i++) pos[i] |= data[i] << shift;
+      for (int i = begin; i < end; i++) pos[i] |= ((col_t)data[i]) << shift;
     } else if (shift < 0) {
-      for (int i = begin; i < end; i++) pos[i] |= data[i] >> -shift;
+      for (int i = begin; i < end; i++) pos[i] |= ((col_t)data[i]) >> -shift;
     } else {
       for (int i = begin; i < end; i++) pos[i] |= data[i];
     }
@@ -133,17 +159,26 @@ public:
     y += glyph.yoffset;
     int begin = std::max<int>(0, -x);
     int end = std::min<int>(glyph.columns, WIDTH - x);
-    uint32_t *pos = frame_buffer_ + x;
+    col_t *pos = frame_buffer_ + x;
     switch (glyph.column_size) {
       case 0:
         Draw2<uint8_t>(begin, end, pos, y, (const uint8_t*)glyph.data);
         break;
+#if MAX_GLYPH_HEIGHT >= 16
       case 1:
         Draw2<uint16_t>(begin, end, pos, y, (const uint16_t*)glyph.data);
         break;
+#endif	
+#if MAX_GLYPH_HEIGHT >= 32
       case 3:
         Draw2<uint32_t>(begin, end, pos, y, (const uint32_t*)glyph.data);
         break;
+#endif	
+#if MAX_GLYPH_HEIGHT >= 64
+      case 7:
+        Draw2<uint64_t>(begin, end, pos, y, (const uint64_t*)glyph.data);
+        break;
+#endif	
     }
   }
 
@@ -159,7 +194,7 @@ public:
     int max_bars = (end - start) / bar.skip;
     int pos = start;
     int bars = floorf(
-        battery_monitor.battery_percent() * (0.5 + max_bars) / 100);
+      battery_monitor.battery_percent() * (0.5 + max_bars) / 100);
     for (int i = 0; i < bars; i++) {
       Draw(bar, pos, 0);
       pos += bar.skip;
@@ -180,7 +215,6 @@ public:
     }
   }
 
-
   // Fill frame buffer and return how long to display it.
   int FillFrameBuffer() {
     switch (screen_) {
@@ -196,47 +230,57 @@ public:
         memset(frame_buffer_, 0, sizeof(frame_buffer_));
         // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
         // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
-        DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
+	if (WIDTH < 128) {
+	  DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
+	} else {
+	  DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
+	}
         DrawText(version,0,31, Starjedi10pt7bGlyphs);
+	if (HEIGHT > 32) {
+	  DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
+	  DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
+	}
         screen_ = SCREEN_PLI;
         layout_ = LAYOUT_NATIVE;
         xor_ = 0;
         invert_y_ = false;
         return font_config.ProffieOSFontImageDuration;
 
-case SCREEN_PLI:
-        memset(frame_buffer_, 0, sizeof(frame_buffer_));        
-        #ifdef USB_CLASS_MSC
-          if (USBD_Connected()) {           
-            DrawBatteryBar(BatteryBar16); // with nothing below in SCREEN_IMAGE loop, this is showing for fontImageDuration when NO USB connected
-                                          // after SB_Off or NEWFONT occurs....How can that be?
-            layout_ = LAYOUT_NATIVE;
-            xor_ = 0;
-            invert_y_ = false;
-            return 200;  // redraw once every 200 ms
-          } else {
-            ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
-          }                  
-        #else
-        ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
-        #endif
-        return true;
-        
-case SCREEN_MESSAGE: {
+      case SCREEN_PLI:
         memset(frame_buffer_, 0, sizeof(frame_buffer_));
-      // Aurebesh Font option.
-      #ifdef USE_AUREBESH_FONT
-        const Glyph* font = Aurebesh10pt7bGlyphs;
-      #else
-        const Glyph* font = Starjedi10pt7bGlyphs;
-      #endif
+        if (IMG_idle) {
+          ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
+        } else {
+        DrawBatteryBar(BatteryBar16);
+        }
+	if (HEIGHT > 32) {
+	  char tmp[32];
+	  strcpy(tmp, "volts x.xx");
+	  float v = battery_monitor.battery();
+	  tmp[6] = '0' + (int)floorf(v);
+	  tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
+	  tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
+	  DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
+	}
+        layout_ = LAYOUT_NATIVE;
+        xor_ = 0;
+        invert_y_ = false;
+        return 200;  // redraw once every 200 ms
 
+      case SCREEN_MESSAGE: {
+        memset(frame_buffer_, 0, sizeof(frame_buffer_));
+    // Aurebesh Font option.
+        #ifdef USE_AUREBESH_FONT
+          const Glyph* font = Aurebesh10pt7bGlyphs;
+        #else
+          const Glyph* font = Starjedi10pt7bGlyphs;
+        #endif
         if (strchr(message_, '\n')) {
           DrawText(message_, 0, 15, font);
         } else {
-          DrawText(message_, 0, 23, font);
+	  // centered
+          DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
-    
         screen_ = SCREEN_PLI;
         layout_ = LAYOUT_NATIVE;
         xor_ = 0;
@@ -244,7 +288,7 @@ case SCREEN_MESSAGE: {
       }
         return font_config.ProffieOSFontImageDuration;
 
-case SCREEN_IMAGE:
+      case SCREEN_IMAGE:
         MountSDCard();
         if (!frame_available_) {
           scheduleFillBuffer();
@@ -252,7 +296,7 @@ case SCREEN_IMAGE:
         }
         if (eof_) {
           // STDOUT << "EOF " << frame_count_ << "\n";
-          if (!SaberBase::IsOn()) {           
+          if (!SaberBase::IsOn()) {
             screen_ = SCREEN_PLI;
             if (frame_count_ == 1) return font_config.ProffieOSFontImageDuration;
             return FillFrameBuffer();
@@ -284,53 +328,18 @@ case SCREEN_IMAGE:
             }
           }
         } else {
-
-            // SB_Off state - need to inturrupt idle.bmp from looping in here somwhow when USB is connected. 
-            // The following all tried with SCREEN_PLI as is above, Mass Storage enabled.
-            
-            
-            // I'm stumped why this message IS shown when we're directly here because ShowFile(&IMG_boot or ShowFile(&IMG_font
-            // if (USBD_Connected()) {
-            //     if (current_effect_ != &IMG_boot || &IMG_font) {
-            //       STDOUT.println("------should not see this message. Current effect is boot ot font");
-            //       SetScreenNow(SCREEN_PLI); 
-            //     }
-            // }
-           
-            // This allows boot and font with USB in, SD card mounts to computer OK,
-            // Then once USB Disconnected, idle tries to play, but gets cut off every time it tries to loop and battery is 
-            // shown repleadedly for fontImageDuraation. No SD card mount to computer if reconnected.
-            // #ifdef USB_CLASS_MSC           
-            //   if (USBD_Connected() && current_effect_ == &IMG_idle) {  
-
-            //     SetScreenNow(SCREEN_PLI);
-            //   }
-            // #endif
-         
-          // Identical behavior to previous attempt
-          // if (current_effect_ == &IMG_idle) {
-          //   #ifdef USB_CLASS_MSC
-          //     if (USBD_Connected()) SetScreenNow(SCREEN_PLI);
-          //   #endif
-          //   loop_start_ = millis();
-          // }
-
-           // Loop idle.bmp during SB_Off
+      // Loop idle.bmp during SB_Off
           if (current_effect_ == &IMG_idle) loop_start_ = millis();
-
           if (millis() - loop_start_ > font_config.ProffieOSFontImageDuration) {
-            STDOUT.println("---------------Loop time expired, END OF LOOP TIME, Go To SCREEN_PLI (and play idle.bmp");
             STDOUT << "END OF LOOP\n";
             screen_ = SCREEN_PLI;
           }
         }
 
         if (font_config.ProffieOSAnimationFrameRate > 0.0) {
-          STDOUT.println("---------------frame rate 1");
           return 1000 / font_config.ProffieOSAnimationFrameRate;
         }
         if (looped_frames_ > 1) {
-          STDOUT.println("---------------frame rate 2");
           return 1000 / looped_frames_;
         } else {
           return 41;   // ~24 fps
@@ -351,7 +360,6 @@ case SCREEN_IMAGE:
       frame_available_ = false;
       loop_start_ = millis();
       frame_count_ = 0;
-      STDOUT.println("---------------ShowFile SetScreenNow(SCREEN_IMAGE)");
       SetScreenNow(SCREEN_IMAGE);
       eof_ = false;
       current_effect_ = effect;
@@ -417,7 +425,6 @@ case SCREEN_IMAGE:
     // powered down and up again properly.
     // This only makes it black, which prevents burn-in.
     if (offtype == OFF_IDLE) {
-      STDOUT << "Screen going to sleep zzzzzzzzz\n";
       SetScreenNow(SCREEN_OFF);
     } else {
       SetScreenNow(SCREEN_PLI);
@@ -431,27 +438,38 @@ case SCREEN_IMAGE:
     // Init sequence
     Send(DISPLAYOFF);                    // 0xAE
     Send(SETDISPLAYCLOCKDIV);            // 0xD5
-    Send(0x80);                          // the suggested ratio 0x80
+    Send(0x80);                                  // the suggested ratio 0x80
 
     Send(SETMULTIPLEX);                  // 0xA8
     Send(HEIGHT - 1);
 
     Send(SETDISPLAYOFFSET);              // 0xD3
     Send(0x0);                                   // no offset
-    Send(SETSTARTLINE | 0x0);            // line #0
+
+    Send(SETSTARTLINE | 0x0);            // 0x40 line #0
+
     Send(CHARGEPUMP);                    // 0x8D
     Send(0x14);
+
     Send(MEMORYMODE);                    // 0x20
     Send(0x01);                          // vertical address mode
-  #ifndef OLED_FLIP_180                  // allows for 180deg rotation of the OLED mapping
-    Send(SEGREMAP | 0x1);
+
+#ifndef OLED_FLIP_180
+    // normal OLED operation
+    Send(SEGREMAP | 0x1);        // 0xa0 | 1
     Send(COMSCANDEC);
-  #else
+#else
+    // allows for 180deg rotation of the OLED mapping
     Send(SEGREMAP);
     Send(COMSCANINC);
-  #endif
+#endif
+
     Send(SETCOMPINS);                    // 0xDA
-    Send(0x02);                          // may need to be 0x12 for some displays
+    if (HEIGHT == 64 || WIDTH==64) {
+      Send(0x12);
+    } else {
+      Send(0x02);  // may need to be 0x12 for some displays
+    }
     Send(SETCONTRAST);                   // 0x81
     Send(0x8F);
 
@@ -472,37 +490,19 @@ case SCREEN_IMAGE:
       ShowFile(&IMG_boot, font_config.ProffieOSFontImageDuration);
     }
 
-        while (true) {
-      STDOUT << "--------------------while(true)\n";
-      if (USBD_Connected()) {
-        STDOUT << "--------------------USBD_Connected\n";
-      } else {
-        STDOUT << "--------------------USBD NOT Connected\n";
-      }
+    while (true) {
       millis_to_display_ = FillFrameBuffer();
       frame_start_time_ = millis();
       lock_fb_ = true;
       frame_available_ = false;
 
       Send(COLUMNADDR);
-      Send(0);   // Column start address (0 = reset)
-      Send(WIDTH-1); // Column end address (127 = reset)
+      Send((128 - WIDTH)/2);   // Column start address (0 = reset)
+      Send(WIDTH-1 + (128 - WIDTH)/2); // Column end address (127 = reset)
 
       Send(PAGEADDR);
       Send(0); // Page start address (0 = reset)
-      switch (HEIGHT) {
-        case 64:
-          Send(7); // Page end address
-          break;
-        case 32:
-          Send(3); // Page end address
-          break;
-        case 16:
-          Send(1); // Page end address
-          break;
-        default:
-          STDOUT.println("Unknown display height");
-      }
+      Send(sizeof(col_t) - 1);
 
       //STDOUT.println(TWSR & 0x3, DEC);
 
@@ -511,7 +511,7 @@ case SCREEN_IMAGE:
         // send a bunch of data in one xmission
         Wire.beginTransmission(address_);
         Wire.write(0x40);
-        for (uint8_t x=0; x<16; x++) {
+        for (uint8_t x=0; x<WIDTH/8; x++) {
           uint8_t b;
           switch (layout_) {
             default:
@@ -520,24 +520,24 @@ case SCREEN_IMAGE:
               break;
             case LAYOUT_PORTRAIT:
               if (!invert_y_) {
-                b = ((unsigned char *)frame_buffer_)[511 - i];
+                b = ((unsigned char *)frame_buffer_)[sizeof(frame_buffer_) - 1 - i];
               } else {
-                b = ((unsigned char *)frame_buffer_)[i ^ 3];
+                b = ((unsigned char *)frame_buffer_)[i ^ (sizeof(col_t) - 1)];
               }
               break;
             case LAYOUT_LANDSCAPE: {
-              int x = i >> 2;
-              int y = ((i & 3) << 3) + 7;
-              int delta_pos = -16;
+              int x = i / sizeof(col_t);
+              int y = ((i & (sizeof(col_t)-1)) << 3) + 7;
+              int delta_pos = -WIDTH / 8;
               if (invert_y_) {
-                y = 31 - y;
-                delta_pos = 16;
+                y = HEIGHT - 1 - y;
+                delta_pos = WIDTH / 8;
               }
 //            STDOUT << " LANDSCAPE DECODE!! x = " << x << " y = " << y << "\n";
 
               int shift = 7 - (x & 7);
               uint8_t *pos =
-                ((unsigned char*)frame_buffer_) + ((x>>3) + (y<<4));
+                ((unsigned char*)frame_buffer_) + ((x >> 3) + (y * (WIDTH/8)));
               b = 0;
               for (int j = 0; j < 8; j++) {
                 b <<= 1;
@@ -627,17 +627,17 @@ case SCREEN_IMAGE:
           // STDOUT << "Width=" << width << " Height=" << height << "\n";
 #endif
           // First frame is near the end, seek to it.
-          f->Seek(file_start + offset + width * height / 8 - 512);
+          f->Seek(file_start + offset + width * height / 8 - sizeof(frame_buffer_));
       }
-      if (width != 128 && width != 32) {
+      if (width != WIDTH && width != HEIGHT) {
         STDOUT << "Wrong size image: " << width << "x" << height << "\n";
         return false;
       }
-      if (width == 128) {
+      if (width == WIDTH) {
         layout_ = LAYOUT_LANDSCAPE;
-        looped_frames_ = height / 32;
+        looped_frames_ = height / HEIGHT;
       } else {
-        looped_frames_ = height / 128;
+        looped_frames_ = height / WIDTH;
       }
       if (current_effect_ == &IMG_on) {
         looped_on_ = looped_frames_ > 1;
@@ -653,7 +653,7 @@ case SCREEN_IMAGE:
       } else {
         if (invert_y_) {
           // Seek two frames back, because BMP are backwards.
-          f->Seek(f->Tell() - 1024);
+          f->Seek(f->Tell() - 2 * sizeof(frame_buffer_));
         }
       }
     } else {
@@ -706,7 +706,7 @@ private:
   volatile bool looped_on_ = false;
   volatile Effect* current_effect_;
   volatile float effect_display_duration_;
-  uint32_t frame_buffer_[WIDTH];
+  col_t frame_buffer_[WIDTH];
   LoopCounter loop_counter_;
   char message_[32];
   uint32_t millis_to_display_;
@@ -722,7 +722,8 @@ private:
   volatile bool frame_available_ = true;
   volatile bool eof_ = true;
   volatile bool lock_fb_ = false;
-  //bool just_booted_ = true;
 };
+
+using SSD1306 = SSD1306Template<128, uint32_t>;
 
 #endif
