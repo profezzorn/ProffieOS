@@ -36,6 +36,8 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(POWERSAVE)                    \
     DEFINE_EFFECT(BATTERY_LEVEL)                \
     DEFINE_EFFECT(FAST_ON)                      \
+    DEFINE_EFFECT(SWAP)            		\
+    DEFINE_EFFECT(MONOFORCE)       		\
     /* Blaster effects */                       \
     DEFINE_EFFECT(STUN)				\
     DEFINE_EFFECT(FIRE)				\
@@ -194,6 +196,7 @@ public:                                                         \
   static void DoClash() { DoEffectR(EFFECT_CLASH); }
   static void DoBlast() { DoEffectR(EFFECT_BLAST); }
   static void DoForce() { DoEffectR(EFFECT_FORCE); }
+  static void DoMonoForce() { DoEffectR(EFFECT_MONOFORCE); }
   static void DoStab() { DoEffect(EFFECT_STAB, 1.0f); }
   static void DoBoot() { DoEffect(EFFECT_BOOT, 0); }
   static void DoBeginLockup() { DoEffectR(EFFECT_LOCKUP_BEGIN); }
