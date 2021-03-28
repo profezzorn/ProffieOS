@@ -177,9 +177,9 @@ public:
   void Reset() {}
 #define I2C_READ_BYTES_ASYNC(reg, data, bytes) do {			\
   StartReadBytes(reg, bytes);						\
-  temp_state_machine_.sleep_until_ = millis();				\
+  state_machine_.sleep_until_ = millis();				\
   while (Wire.available() < bytes) {					\
-    if (millis() - temp_state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) goto i2c_timeout; \
+    if (millis() - state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) goto i2c_timeout; \
     YIELD();								\
   }									\
   EndReadBytes(data, bytes);						\
