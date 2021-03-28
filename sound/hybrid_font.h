@@ -245,7 +245,16 @@ public:
               if (SFX_spin) {
                 swing_player_ = PlayPolyphonic(&SFX_spin);
               }
-              angle_ -= font_config.ProffieOSSpinDegrees;
+#ifdef ENABLE_AUTO_SPINS_BLAST
+              if (millis() - last_blast_ < 2000) {
+                SaberBase::DoBlast();
+                last_blast_ = millis();
+                  STDOUT.println("Entering Auto Spin Blast mode");
+              } else {
+                STDOUT.println("Not in Auto Spin Blast mode");
+              }
+#endif   
+	      angle_ -= font_config.ProffieOSSpinDegrees;
             }
 #endif
           }
@@ -386,7 +395,7 @@ public:
 	// If no stab sounds are found, fall through to clash
       case EFFECT_CLASH: Play(&SFX_clash, &SFX_clsh); return;
       case EFFECT_FORCE: PlayCommon(&SFX_force); return;
-      case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); return;
+      case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); last_blast_ = millis(); return; 
       case EFFECT_BOOT: PlayPolyphonic(&SFX_boot); return;
       case EFFECT_NEWFONT: SB_NewFont(); return;
       case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;
@@ -603,13 +612,19 @@ public:
   }
 
   void SB_LowBatt() {
-    // play the fonts low battery sound if it exists
-    if (SFX_lowbatt) {
-      PlayCommon(&SFX_lowbatt);
-    } else {
-#ifdef ENABLE_AUDIO
-      talkie.Say(talkie_low_battery_15, 15);
-#endif
+    // play the font's low battery sound if it exists  
+    if (!low_batt_notify_) {             
+      if (SFX_lowbatt) {
+        PlayCommon(&SFX_lowbatt);
+      } else {
+  #ifdef ENABLE_AUDIO
+        talkie.Say(talkie_low_battery_15, 15);
+  #endif
+      }
+// For limiting Low Batt notifiation to one 
+  #ifdef LOW_BATT_ONCE
+        low_batt_notify_ = true;
+  #endif    
     }
   }
 
@@ -617,8 +632,10 @@ public:
   uint32_t last_micros_;
   uint32_t last_swing_micros_;
   uint32_t hum_start_;
+  uint32_t last_blast_ = millis();
   float hum_fade_in_;
   float hum_fade_out_;
+  bool low_batt_notify_ = false;
 #ifdef ENABLE_SPINS
   float angle_;
 #endif
