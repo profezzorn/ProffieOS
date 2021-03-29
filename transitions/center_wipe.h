@@ -23,19 +23,19 @@ public:
     uint32_t center = (pos_.getInteger(0) * blade->num_leds()) >> 7;
     uint32_t fade_top = this->update(256 * blade->num_leds() - center);
     uint32_t fade_bottom = this->update(center);
-    top_ = clampi32(center + fade_top, center, 256 * blade->num_leds());
-    bottom_ = clampi32(center - fade_bottom, 0, center);
+    uint32_t top = clampi32(center + fade_top, center, 256 * blade->num_leds());
+    uint32_t bottom = clampi32(center - fade_bottom, 0, center);
+    range_ = Range(bottom, top);
   }
 
   template<class A, class B>
   auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,b,1,1)) {
-        int mix = (Range(bottom_, top_) & Range(led << 8, (led << 8) + 256)).size();
+        int mix = (range_ & Range(led << 8, (led << 8) + 256)).size();
     return MixColors(a, b, mix, 8);
   }
 private:
   POSITION pos_;
-  uint32_t top_;
-  uint32_t bottom_;
+  Range range_;
 };
 
 template<int MILLIS, int POSITION = 16384> using TrCenterWipe = TrCenterWipeX<Int<MILLIS>, Int<POSITION>>;
@@ -60,19 +60,19 @@ public:
     uint32_t center = (pos_.getInteger(0) * blade->num_leds()) >> 7;
     uint32_t fade_top = this->update(256 * blade->num_leds() - center);
     uint32_t fade_bottom = this->update(center);
-    top_ = clampi32((256 * blade->num_leds()) - fade_top, center, 256 * blade->num_leds());
-    bottom_ = clampi32(0 + fade_bottom, 0, center);
+    uint32_t top = clampi32((256 * blade->num_leds()) - fade_top, center, 256 * blade->num_leds());
+    uint32_t bottom = clampi32(0 + fade_bottom, 0, center);
+    range_ = Range(bottom, top);
   }
 
   template<class A, class B>
   auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,b,1,1)) {
-        int mix = (Range(bottom_, top_) & Range(led << 8, (led << 8) + 256)).size();
+        int mix = (range_ & Range(led << 8, (led << 8) + 256)).size();
     return MixColors(b, a, mix, 8);
   }
 private:
   POSITION pos_;
-  uint32_t top_;
-  uint32_t bottom_;
+  Range range_;
 };
 
 template<int MILLIS, int POSITION = 16384> using TrCenterWipeIn = TrCenterWipeInX<Int<MILLIS>, Int<POSITION>>;
