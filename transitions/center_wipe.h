@@ -20,9 +20,9 @@ public:
   void run(BladeBase* blade) {
     pos_.run(blade);
     TransitionBaseX<MILLIS>::run(blade);
-    center = (pos_.getInteger(0) * blade->num_leds()) >> 7;
-    fade_top = this->update(256 * blade->num_leds() - center);
-    fade_bottom = this->update(center);
+    uint32_t center = (pos_.getInteger(0) * blade->num_leds()) >> 7;
+    uint32_t fade_top = this->update(256 * blade->num_leds() - center);
+    uint32_t fade_bottom = this->update(center);
     top_ = clampi32(center + fade_top, center, 256 * blade->num_leds());
     bottom_ = clampi32(center - fade_bottom, 0, center);
   }
@@ -34,9 +34,6 @@ public:
   }
 private:
   POSITION pos_;
-  uint32_t fade_top;
-  uint32_t fade_bottom;
-  uint32_t center;
   uint32_t top_;
   uint32_t bottom_;
 };
@@ -60,9 +57,9 @@ public:
   void run(BladeBase* blade) {
     pos_.run(blade);
     TransitionBaseX<MILLIS>::run(blade);
-    center = (pos_.getInteger(0) * blade->num_leds()) >> 7;
-    fade_top = this->update(256 * blade->num_leds() - center);
-    fade_bottom = this->update(center);
+    uint32_t center = (pos_.getInteger(0) * blade->num_leds()) >> 7;
+    uint32_t fade_top = this->update(256 * blade->num_leds() - center);
+    uint32_t fade_bottom = this->update(center);
     top_ = clampi32((256 * blade->num_leds()) - fade_top, center, 256 * blade->num_leds());
     bottom_ = clampi32(0 + fade_bottom, 0, center);
   }
@@ -74,9 +71,6 @@ public:
   }
 private:
   POSITION pos_;
-  uint32_t fade_top;
-  uint32_t fade_bottom;
-  uint32_t center;
   uint32_t top_;
   uint32_t bottom_;
 };
