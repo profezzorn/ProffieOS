@@ -55,7 +55,7 @@ AlphaL<TransitionEffectL<TrConcat<TrSmoothFade<500>,AlphaL<PulsingX<Mix<
     BatteryLevel,Red,Green>,Black,Scale<BatteryLevel,Int<200>,Int<4000>>>,
     SmoothStep<Scale<BatteryLevel,Int<0>,Int<35000>>,Int<-1>>>,
     TrSmoothFade<2000>>,EFFECT_BATTERY_LEVEL>,Ifon<Int<0>,Int<32768>>>
-------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
 Gesture Controls:
 There are four gesture types: swing, stab, thrust and twist.
