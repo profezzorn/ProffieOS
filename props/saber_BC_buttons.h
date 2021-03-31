@@ -412,6 +412,14 @@ public:
           Event(BUTTON_NONE, EVENT_SWING);
         }
       }
+      if ((speaking_) && (millis() - talkie_time_) > 1900) {
+        talkie.SayDigit((int)floorf(battery_monitor.battery()));
+        talkie.Say(spPOINT);
+        talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
+        talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
+        talkie.Say(spVOLTS);
+        speaking_ = false;
+      }      
     }
     // EVENT_THRUST
       if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
@@ -716,36 +724,19 @@ public:
         STDOUT.println("Exit Volume Menu");
       }
       return true;
-
 // Spoken Battery Level
   #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
   #else
     // 2 and 3 button
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
-  #endif
-      if (SFX_battlevel) {
+  #endif      
+      speaking = true;      
+      if (SFX_battlevel) {        
+        talkie_time_ = millis();
         hybrid_font.PlayCommon(&SFX_battlevel);
-        delay (1900);
-      } else {
-        talkie.SayDigit((int)floorf(battery_monitor.battery()));
       }
-      if (SFX_point) {
-        delay (600);
-        hybrid_font.PlayCommon(&SFX_point);
-        delay (600);
-      } else {
-        talkie.Say(spPOINT);
-      }
-      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
-      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
-      delay (1300);
-      if (SFX_volts) {
-        hybrid_font.PlayCommon(&SFX_volts);
-      } else {
-        talkie.Say(spVOLTS);
-      }
-    return true;
+      return true;
 
 // On Demand Battery Level
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
@@ -1054,14 +1045,16 @@ private:
   bool auto_melt_on_ = false;
   bool battle_mode_ = false;
   bool max_vol_reached_ = false;
-  bool min_vol_reached_ = false;
+  bool min_vol_reached_ = false;  
+  bool speaking_ = false;
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
   uint32_t last_twist_ = millis();
   uint32_t last_push_ = millis();
   uint32_t last_blast_ = millis();
-  uint32_t saber_off_time_ = millis();  
+  uint32_t saber_off_time_ = millis();   
+  uint32_t talkie_time_ = millis();
 };
 
 #endif
