@@ -532,7 +532,7 @@ public:
     if (!mode_volume_) {
       next_preset();
     } else {
-      VolumeUp();
+      VolumeDown();
     }
     return true;
 #else
