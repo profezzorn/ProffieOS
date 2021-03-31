@@ -684,12 +684,12 @@ public:
       }
       return true;
     case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_OFF):
-    if (!mode_volume_) {
-      previous_preset();
-    } else {
-      VolumeDown();
-    }
-    return true;
+      if (!mode_volume_) {
+        previous_preset();
+      } else {
+        VolumeDown();
+      }
+      return true;
 
 // Enter / Exit Volume MENU
   #if NUM_BUTTONS == 1
@@ -698,24 +698,24 @@ public:
     // 2 button
     case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
   #endif
-    if (!mode_volume_) {
-      mode_volume_ = true;
-      if (SFX_vmbegin) {
-        hybrid_font.PlayCommon(&SFX_vmbegin);
+      if (!mode_volume_) {
+        mode_volume_ = true;
+        if (SFX_vmbegin) {
+          hybrid_font.PlayCommon(&SFX_vmbegin);
+        } else {
+          beeper.Beep(0.5, 3000);
+        }
+        STDOUT.println("Enter Volume Menu");
       } else {
-        beeper.Beep(0.5, 3000);
+        mode_volume_ = false;
+        if (SFX_vmend) {
+          hybrid_font.PlayCommon(&SFX_vmend);
+        } else {
+          beeper.Beep(0.5, 3000);
+        }
+        STDOUT.println("Exit Volume Menu");
       }
-      STDOUT.println("Enter Volume Menu");
-    } else {
-      mode_volume_ = false;
-      if (SFX_vmend) {
-        hybrid_font.PlayCommon(&SFX_vmend);
-      } else {
-        beeper.Beep(0.5, 3000);
-      }
-      STDOUT.println("Exit Volume Menu");
-    }
-    return true;
+      return true;
 
 // Spoken Battery Level
   #if NUM_BUTTONS == 1
@@ -748,34 +748,34 @@ public:
     return true;
 
 // On Demand Battery Level
-  case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
-    if (!mode_volume_) {
-      SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-    }
-    return true;
+    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
+      if (!mode_volume_) {
+        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+      }
+      return true;
 
 // Turns Saber ON
-  case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-    // No power on without exiting Vol Menu first
-    if (!mode_volume_) {
-      On();
-    }
-    return true;
-
-// Activate Muted
-  case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
-    if (!mode_volume_) { 
-      if (SetMute(true)) {
-        unmute_on_deactivation_ = true;
+    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
+      // No power on without exiting Vol Menu first
+      if (!mode_volume_) {
         On();
       }
-    }
-    return true;
+      return true;
+
+// Activate Muted
+    case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
+      if (!mode_volume_) { 
+        if (SetMute(true)) {
+          unmute_on_deactivation_ = true;
+          On();
+        }
+      }
+      return true;
 
 // Stab 
-  case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
-    SaberBase::DoStab();
-  return true;
+    case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
+      SaberBase::DoStab();
+    return true;
 
 // Blaster Deflection
     // original sa22c mode if ENABLE_AUTO_SWING_BLAST is not defined
@@ -820,7 +820,7 @@ public:
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
       SaberBase::DoBlast();
       last_blast_ = millis();
-    return true;
+      return true;
     
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):   
       if (millis() - last_blast_ < 1000) {
@@ -855,22 +855,22 @@ public:
       break;
 
 // Melt
-  case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
-    clash_impact_millis_ = millis();
-    swing_blast_ = false;
-    if (!swinging_) {
-      SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
-      auto_melt_on_ = true;
-      SaberBase::DoBeginLockup();
-    }
-    return true;
+    case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
+      clash_impact_millis_ = millis();
+      swing_blast_ = false;
+      if (!swinging_) {
+        SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+        auto_melt_on_ = true;
+        SaberBase::DoBeginLockup();
+      }
+      return true;
 
 // Lightning Block
-  case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_ON):
-    SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
-    swing_blast_ = false;
-    SaberBase::DoBeginLockup();
-    return true;
+    case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_ON):
+      SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+      swing_blast_ = false;
+      SaberBase::DoBeginLockup();
+      return true;
 
 // Battle Mode
   #if NUM_BUTTONS == 1
@@ -902,41 +902,41 @@ public:
       return true;
 
   // Auto Lockup Mode
-  case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
-    if (!battle_mode_) return false;
-    clash_impact_millis_ = millis();
-    swing_blast_ = false;
-    if (swinging_) return false;
-    SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-    auto_lockup_on_ = true;
-    SaberBase::DoBeginLockup();
-    return true;
+    case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
+      if (!battle_mode_) return false;
+      clash_impact_millis_ = millis();
+      swing_blast_ = false;
+      if (swinging_) return false;
+      SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+      auto_lockup_on_ = true;
+      SaberBase::DoBeginLockup();
+      return true;
 
 // Color Change - pointing up
 // MonoForce  -   pointing down
 // Force -        NOT pointing up or down
-  case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
-    if (fusor.angle1() < - M_PI / 4) {      // pointing down
-      ToggleColorChangeMode();
+    case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
+      if (fusor.angle1() < - M_PI / 4) {      // pointing down
+        ToggleColorChangeMode();
+        return true;
+      }
+      if (fusor.angle1() >  M_PI / 3) {       // pointing up
+        hybrid_font.DoEffect(EFFECT_USER2, 0);
+      } else {
+        SaberBase::DoForce();                 // NOT pointing up or down
+      }
       return true;
-    }
-    if (fusor.angle1() >  M_PI / 3) {       // pointing up
-      hybrid_font.DoEffect(EFFECT_USER2, 0);
-    } else {
-      SaberBase::DoForce();                 // NOT pointing up or down
-    }
-    return true;
 
 // Quote
 // Revert colorchange witout saving (reset to Variation == 0)
-  case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
-    if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {   
-      ResetColorChangeMode();
+    case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
+      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {   
+        ResetColorChangeMode();
+        return true;
+      } else {
+        hybrid_font.PlayCommon(&SFX_quote);
+      }
       return true;
-    } else {
-      hybrid_font.PlayCommon(&SFX_quote);
-    }
-    return true;
 
 // Power Save blade dimming - pointing up
 // Swap effect - NOT pointing up
@@ -954,21 +954,21 @@ public:
       return true;
 
 // Turn Blade OFF
-  case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
-    if (!SaberBase::Lockup()) {
-      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-        // Just exit color change mode.
-        // Don't turn saber off.
-        ToggleColorChangeMode();
-        return true;
+    case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
+      if (!SaberBase::Lockup()) {
+        if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+          // Just exit color change mode.
+          // Don't turn saber off.
+          ToggleColorChangeMode();
+          return true;
+        }
+        if (!battle_mode_) {
+          Off();
+        }
       }
-      if (!battle_mode_) {
-        Off();
-      }
-    }
-    saber_off_time_ = millis();
-    swing_blast_ = false;
-    return true;
+      saber_off_time_ = millis();
+      swing_blast_ = false;
+      return true;
 
 // Blade Detect
   #ifdef BLADE_DETECT_PIN
