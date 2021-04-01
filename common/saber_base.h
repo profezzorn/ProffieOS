@@ -19,6 +19,7 @@ extern SaberBase* saberbases;
 #define DEFINE_ALL_EFFECTS()			\
     DEFINE_EFFECT(NONE)				\
     DEFINE_EFFECT(CLASH)			\
+    DEFINE_EFFECT(CLASH_UPDATE)			\
     DEFINE_EFFECT(BLAST)			\
     DEFINE_EFFECT(FORCE)			\
     DEFINE_EFFECT(STAB)				\
@@ -186,22 +187,44 @@ public:                                                         \
   SABERFUN(Top, EFFECT_NONE, (uint64_t total_cycles), (total_cycles));	\
   SABERFUN(IsOn, EFFECT_NONE, (bool* on), (on));			\
   SABERFUN(Message, EFFECT_NONE, (const char* msg), (msg));		\
-
   
   SABERBASEFUNCTIONS();
 
   static void DoEffectR(EffectType e) { DoEffect(e, (200 + random(700))/1000.0f); }
-  static void DoClash() { DoEffectR(EFFECT_CLASH); }
   static void DoBlast() { DoEffectR(EFFECT_BLAST); }
   static void DoForce() { DoEffectR(EFFECT_FORCE); }
-  static void DoStab() { DoEffect(EFFECT_STAB, 1.0f); }
   static void DoBoot() { DoEffect(EFFECT_BOOT, 0); }
   static void DoBeginLockup() { DoEffectR(EFFECT_LOCKUP_BEGIN); }
   static void DoEndLockup() { DoEffect(EFFECT_LOCKUP_END, 0); }
   static void DoChange() { DoEffect(EFFECT_CHANGE, 0); }
   static void DoNewFont() { DoEffect(EFFECT_NEWFONT, 0); }
   static void DoLowBatt() { DoEffect(EFFECT_LOW_BATTERY, 0); }
+
+  static float clash_strength_;
+
+  // Note, the full clash strength might not be known
+  // at the time that the EFFECT_CLASH event is emitted.
+  // In general, the full strength will be known a few
+  // milliseconds later. Every time the clash strength
+  // increases we also emit an EFFECT_CLASH_UPDATE event.
+  static float GetClashStrength() {
+    return clash_strength_;
+  }
   
+  static void DoClash(float strength) {
+    clash_strength_ = strength;
+    DoEffectR(EFFECT_CLASH);
+  }
+  static void DoStab(float strength) {
+    clash_strength_ = strength;
+    DoEffect(EFFECT_STAB, 1.0f);
+  }
+  static void UpdateClashStrength(float strength) {
+    if (strength > clash_strength_) {
+      clash_strength_ = strength;
+      DoEffect(EFFECT_CLASH_UPDATE, strength);
+    }
+  }
   
 #undef SABERFUN
 

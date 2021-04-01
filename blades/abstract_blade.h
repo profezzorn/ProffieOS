@@ -65,6 +65,8 @@ public:
 	    break;
 	  default: return;
 	}
+      case EFFECT_CLASH_UPDATE:
+        return;
     }
     for (size_t i = NELEM(effects_) - 1; i; i--) {
       effects_[i] = effects_[i-1];

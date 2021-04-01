@@ -220,6 +220,8 @@ public:
     PropBase::Loop();
     DetectTwist();
     DetectShake();
+    // DetectSwing();
+    // SaberBase::RequestMotion();
   }
 #endif  
 private:

@@ -89,6 +89,7 @@ public:
   uint32_t clash_timeout_ = 100;
   bool clash_pending_ = false;
   bool pending_clash_is_stab_ = false;
+  float pending_clash_strength_ = 0.0;
 
   bool on_pending_ = false;
   uint32_t on_pending_base_;
@@ -163,27 +164,32 @@ public:
     clash_timeout_ = ms;
   }
 
-  virtual void Clash2(bool stab) {
+  virtual void Clash2(bool stab, float strength) {
     if (Event(BUTTON_NONE, stab ? EVENT_STAB : EVENT_CLASH)) {
       IgnoreClash(400);
     } else {
       IgnoreClash(100);
       if (SaberBase::IsOn()) {
         if (stab) {
-          SaberBase::DoStab();
+          SaberBase::DoStab(strength);
         } else {
-          SaberBase::DoClash();
+          SaberBase::DoClash(strength);
         }
       }
     }
   }
 
-  virtual void Clash(bool stab) {
+  virtual void Clash(bool stab, float strength) {
     // No clashes in lockup mode.
     if (SaberBase::Lockup()) return;
     // TODO: Pick clash randomly and/or based on strength of clash.
     uint32_t t = millis();
     if (t - last_clash_ < clash_timeout_) {
+      if (clash_pending_) {
+	pending_clash_strength_ = std::max<float>(pending_clash_strength_, strength);
+      } else {
+	SaberBase::UpdateClashStrength(strength);
+      }
       last_clash_ = t; // Vibration cancellation
       return;
     }
@@ -194,9 +200,10 @@ public:
       clash_timeout_ = 3;
       clash_pending_ = true;
       pending_clash_is_stab_ = stab;
+      pending_clash_strength_ = strength;
       return;
     }
-    Clash2(stab);
+    Clash2(stab, strength);
   }
 
   bool chdir(const char* dir) {
@@ -628,7 +635,7 @@ public:
              << "\n";
 #endif
       // Needs de-bouncing
-      Clash(stab);
+      Clash(stab, v);
     }
     if (v > peak) {
       peak = v;
@@ -919,7 +926,7 @@ public:
 
     if (clash_pending_ && millis() - last_clash_ >= clash_timeout_) {
       clash_pending_ = false;
-      Clash2(pending_clash_is_stab_);
+      Clash2(pending_clash_is_stab_, pending_clash_strength_);
     }
     CheckLowBattery();
 #ifdef ENABLE_AUDIO
@@ -1100,11 +1107,11 @@ public:
       return true;
     }
     if (!strcmp(cmd, "clash")) {
-      Clash(false);
+      Clash(false, 10.0);
       return true;
     }
     if (!strcmp(cmd, "stab")) {
-      Clash(true);
+      Clash(true, 10.0);
       return true;
     }
     if (!strcmp(cmd, "force")) {
