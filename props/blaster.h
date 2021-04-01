@@ -226,7 +226,7 @@ public:
   }
 
   // Make clash do nothing except unjam if jammed.
-  void Clash(bool stab) override {
+  void Clash(bool stab, float strength) override {
     if (is_jammed_) {
       is_jammed_ = false;
       SaberBase::DoEffect(EFFECT_UNJAM, 0);

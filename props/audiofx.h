@@ -103,7 +103,7 @@ public:
   const char* name() override { return "AudioFx"; }
 #if NUM_BUTTONS >= 2
   // Make clash do nothing
-  void Clash(bool stab) override {}
+  void Clash(bool stab, float strength) override {}
 #endif
 
   // Make swings do nothing

@@ -298,6 +298,7 @@ bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 uint32_t SaberBase::current_variation_ = 0;
 float SaberBase::sound_length = 0.0;
+float SaberBase::clash_strength_ = 0.0;
 #ifdef DYNAMIC_BLADE_DIMMING
 int SaberBase::dimming_ = 16384;
 #endif
