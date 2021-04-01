@@ -731,7 +731,7 @@ public:
     // 2 and 3 button
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
   #endif      
-      speaking = true;      
+      speaking_ = true;      
       if (SFX_battlevel) {        
         talkie_time_ = millis();
         hybrid_font.PlayCommon(&SFX_battlevel);
