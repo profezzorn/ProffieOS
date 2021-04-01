@@ -115,7 +115,7 @@ public:
       STDOUT.print("Motion setup ... ");
       while (!I2CLock()) YIELD();
 
-      I2C_WRITE_BYTE_ASYNC(CTRL1_XL, 0x88);  // 1.66kHz accel, 4G range
+      I2C_WRITE_BYTE_ASYNC(CTRL1_XL, 0x84);  // 1.66kHz accel, 16G range
       I2C_WRITE_BYTE_ASYNC(CTRL2_G, 0x8C);   // 1.66kHz gyro, 2000 dps
       I2C_WRITE_BYTE_ASYNC(CTRL3_C, 0x44);   // ?
       I2C_WRITE_BYTE_ASYNC(CTRL4_C, 0x00);
@@ -153,7 +153,7 @@ public:
 	I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 12);
 	// accel data available
 	prop.DoAccel(
-	  MotionUtil::FromData(databuffer + 6, 4.0 / 32768.0,   // 4 g range
+	  MotionUtil::FromData(databuffer + 6, 16.0 / 32768.0,   // 16 g range
 			       Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
 	  first_accel_);
 	first_accel_ = false;
