@@ -307,7 +307,7 @@ public:
 
   // Select preset (font/style)
   virtual void SetPreset(int preset_num, bool announce) {
-    TRACE("start");
+    TRACE(PROP, "start");
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
@@ -364,7 +364,7 @@ public:
 
     if (on) On();
     if (announce) SaberBase::DoNewFont();
-    TRACE("end");
+    TRACE(PROP, "end");
   }
 
   // Go to the next Preset.
