@@ -268,7 +268,8 @@ public:
 #endif
 #endif
     // goes towards 1.0 when moving.
-    float gyro_factor = powf(0.01, delta_t / wGyro);
+    // float gyro_factor = powf(0.01, delta_t / wGyro);
+    float gyro_factor = expf(logf(0.01) * delta_t / wGyro);
     CHECK_NAN(gyro_factor);
     down_ = down_ *  gyro_factor + accel_ * (1.0 - gyro_factor);
     // Might be a good idea to normalize down_, but then
