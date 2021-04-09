@@ -218,9 +218,9 @@ class Effect {
     return ret;
   }
 
-  size_t get_min_file() { return min_file_;}
+  size_t get_min_file() const { return min_file_; }
 	
-  const char* get_directory() { return directory_;}
+  const char* get_directory() const { return directory_; }
 	
   operator bool() const { return files_found() > 0; }
 
