@@ -136,6 +136,12 @@ public:
   T& last() { return v_[entry_]; }
   uint32_t last_time() { return t_[entry_]; }
 
+  void dump() {
+    for (size_t i = 0; i < SIZE; i++) {
+      STDOUT << " " << t_[i] <<" " << " " << v_[i] << "\n";
+    }
+  }
+
   uint32_t t_[SIZE];
   T v_[SIZE];
   size_t entry_;
@@ -385,6 +391,21 @@ public:
 #ifdef FUSE_SPEED
   Vec3 speed() { return speed_; }  // m/s
 #endif
+
+  void dump() {
+    STDOUT << " Accel=" << accel_ << " ("<<  accel_.len() << ")"
+	   << " Gyro=" << gyro_ << " (" << gyro_.len() << ")"
+	   << " down=" << down_ << " (" << down_.len() << ")"
+	   << " mss=" << mss_  << " (" << mss_.len() << ")"
+	   << " swing speed=" << swing_speed()
+	   << " gyro slope=" << gyro_slope().len()
+	   << " now = " << micros()
+	   << "\n";
+    STDOUT << " acceleration extrapolator data:\n";
+    accel_extrapolator_.dump();
+    STDOUT << " gyro extrapolator data:\n";
+    gyro_extrapolator_.dump();
+  }
 
 private:
   Extrapolator<Vec3> accel_extrapolator_;

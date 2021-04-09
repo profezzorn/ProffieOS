@@ -1004,6 +1004,12 @@ class Commands : public CommandParser {
       return true;
     }
 #ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "dumpfusor")) {
+      fusor.dump();
+      return true;
+    }
+#endif
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "stm32info")) {
       STDOUT.print("VBAT: ");
       STDOUT.println(STM32.getVBAT());
