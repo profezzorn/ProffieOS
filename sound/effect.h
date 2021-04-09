@@ -218,6 +218,10 @@ class Effect {
     return ret;
   }
 
+  size_t get_min_file() { return min_file_;}
+	
+  const char* get_directory() { return directory_;}
+	
   operator bool() const { return files_found() > 0; }
 
   void Select(int n) {
