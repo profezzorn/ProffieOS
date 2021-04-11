@@ -277,10 +277,6 @@ public:                                                         \
   static void SetVariation(uint32_t v) {
     current_variation_ = v;
   }
-  // For zoomed update
-  static void ZoomVariation(int delta) {
-    current_variation_ += delta;
-  }
 
 #ifdef DYNAMIC_BLADE_DIMMING
   static int dimming_;
