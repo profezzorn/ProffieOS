@@ -76,6 +76,16 @@ DEFINE_ALL_EFFECTS();
 constexpr size_t NUMBER_OF_EFFECTS = (size_t)EffectTypeHelper::NUMBER_OF_EFFECTS;
 #undef DEFINE_EFFECT
 
+#ifdef ENABLE_ALL_MENU_OPTIONS
+#define DYNAMIC_BLADE_LENGTH
+#define DYNAMIC_BLADE_DIMMING
+#define DYNAMIC_CLASH_THRESHOLD
+#define SAVE_VOLUME
+#define SAVE_BLADE_DIMMING
+#define SAVE_CLASH_THRESHOLD
+#define SAVE_COLOR_CHANGE
+#endif
+
 class SaberBase {
 protected:
   void Link(SaberBase* x) {
@@ -267,6 +277,10 @@ public:                                                         \
   static void SetVariation(uint32_t v) {
     current_variation_ = v;
   }
+  // For zoomed update
+  static void ZoomVariation(int delta) {
+    current_variation_ += delta;
+  }
 
 #ifdef DYNAMIC_BLADE_DIMMING
   static int dimming_;
@@ -277,7 +291,8 @@ public:                                                         \
   enum ColorChangeMode {
     COLOR_CHANGE_MODE_NONE,
     COLOR_CHANGE_MODE_STEPPED,
-    COLOR_CHANGE_MODE_SMOOTH
+    COLOR_CHANGE_MODE_SMOOTH,
+    COLOR_CHANGE_MODE_ZOOMED,
   };
 
   static ColorChangeMode GetColorChangeMode() { return color_change_mode_; }
