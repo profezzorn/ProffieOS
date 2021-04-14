@@ -1,12 +1,9 @@
 /*
 saber_BC_buttons.h
-
 Includes 1 and 2 button controls.
 Incorporates an intuitive control scheme so button actions are consistant 
 whether blade is on or off.
-
 Includes:
-
 sa22c's multi-blast, Battle Mode and gesture ignitions from fett263, 
 enhanced sa22c's on-the-fly volume controls with custom prompts and sounds 
 via the following wav files: 
@@ -22,7 +19,6 @@ point.wav
 volts.wav
 If you're using a female voice versions of these wavs, the spoken digits 
 will more closely match the wavs if you use #define FEMALE_TALKIE_VOICE
-
 EFFECT_USER1 - use as a standalone trigger for EffectSequence<>,
                 - ie:EffectSequence<EFFECT_USER1, item1, item2...> 
                 - Custom swap.wav files can be used as a sound effect, 
@@ -38,57 +34,45 @@ Added Prev/Next preset control while blade is on.
 Force Push is always available, not just in Battle Mode.
 Melt is always available as no button, with pull-away or button to end
 Drag is always clash with button pressed while pointing down.
-
 Optional #defines:
-
 #define ENABLE_AUTO_SWING_BLAST - Multi-blast initiated by simply swinging 
                                   within 1 second of last blast.
                                   Exit by not swinging for 1 second.
 #define VOLUME_MENU_CYCLE - This allows the Volume menu to loop through from 
                             maximum back to minimum and vice versa.
-
 On-Demand battery level - A layer built into the blade styles.
       - This example style reacts as the battery gets weaker by pulsing quicker, 
         the blade length shortens, and color changes from Green to Red:
-
 AlphaL<TransitionEffectL<TrConcat<TrSmoothFade<500>,AlphaL<PulsingX<Mix<
     BatteryLevel,Red,Green>,Black,Scale<BatteryLevel,Int<200>,Int<4000>>>,
     SmoothStep<Scale<BatteryLevel,Int<0>,Int<35000>>,Int<-1>>>,
     TrSmoothFade<2000>>,EFFECT_BATTERY_LEVEL>,Ifon<Int<0>,Int<32768>>>
 ------------------------------------------------------------------------------
-
 Gesture Controls:
 There are four gesture types: swing, stab, thrust and twist.
 For simplicity, using gesture ignition will automatically skip the preon effect.
 Below are the options to add to the config to enable the various gestures:
-
 #define BC_SWING_ON
 #define BC_STAB_ON
 #define BC_THRUST_ON
 #define BC_TWIST_ON
 #define BC_TWIST_OFF
-
 Force Push:
 This mode plays a force sound (or force push sound if the font contains it) with
 a controlled pushing gesture, and is always available, not just in Battle Mode.
 To enable this feature, add this define:
 #define BC_FORCE_PUSH 
-
 #define BC_FORCE_PUSH_LENGTH
 Used for adjustment to the Push gesture length in millis needed to trigger
 Force Push. Recommended range 1 ~ 10, 
 1 = shortest, easiest to trigger, 10 = longest. Default value is 5.
-
-
 If you want the gesture ignition to ALSO enter battle mode automatically
 on ignition, add this define:
 #define BC_GESTURE_AUTO_BATTLE_MODE
-
 Battle mode by fett263, BC modified version:
 Once you enter battle mode, buttons are not used for lockup.
 Clashing the blade against something will automatically do lockup and then end 
 when you pull away.
-
 Automatic lockup and grazing clash (swinging through) detection works
 by measuring delay of the saber blade pulling back from the clash.
 If you clash the blade and it does not pull back during the delay period,
@@ -104,24 +88,19 @@ hold any button while clashing.
 Automatic clash/lockup uses the pre and post lockup effects
 so your blade style and font MUST have those capabilities to support
 battle mode.  
-
 Melt will automatically trigger with no buttons when you physically 
 stab something, and end when you pull away or push any button.
-
 Stab will trigger either with no buttons and thrusting forward,
 or with any button and physically stabbing something.
-
 Tightened click timings.
 The timeouts for short and double click detection are shortened 
 from the stock 500ms to 300ms to feel more responsive but still give enough
 timeout to ensure all button actions can be achieved consistently.
 All button timings are included below so they can be easily tweaked to suit
 individual tastes.
-
 ====================== 1 BUTTON CONTROLS ========================
 | Sorted by ON or OFF state: (what it's like while using saber) |
 =================================================================
-
 *************   WHILE SABER BLADE IS OFF   ***************
 Play/Stop Track -       4x click POW
 Next Preset -           Long click and release POW
@@ -136,7 +115,6 @@ On-Demand Batt Level -  Double click POW
                         (requires EFFECT_BATTERY_LEVEL to be in blade style)
 Turn blade ON -         Short click POW (or gestures if defined)
 Turn blade ON Muted -   Triple click and hold POW
-
 *************   WHILE SABER BLADE IS ON   ****************
 Play/Stop Track -       4x click POW
 Next Preset -           Long click and release POW while pointing up
@@ -180,7 +158,7 @@ Color Change Mode -     Hold POW + Twist the hilt (while pointing down),
             - Triple click POW to exit without changing color. 
     ColorChange explained:
       If the style uses ColorChange<>, when you activate color change mode, 
-      there will be up to 12 steps per rotation with a little sound at each step.   
+      there will be up to 12 steps per rotation with a little sound at each step.   
       If it does not use ColorChange<>, the color wheel will be activated, 
       which has 32768 steps per rotation.
       COLOR_CHANGE_DIRECT makes it so that IF the style uses ColorChange<>, 
@@ -194,11 +172,9 @@ Power Save Dim Blade -  4x click and hold POW medium (while pointing up)
               (To use Power Save requires AlphaL based EffectSequence in style)
 Turn off blade -        Hold and wait until blade is off 
                         or use #define BC_TWIST_OFF gesture
-
 ====================== 2 BUTTON CONTROLS ========================
 | Sorted by ON or OFF state: (what it's like while using saber) |
 =================================================================
-
 *************   WHILE SABER BLADE IS OFF   ***************
 Play/Stop Track -       Hold AUX + Double click POW
 Next Preset -           Long click and release POW 
@@ -214,7 +190,6 @@ On-Demand Batt Level -  Double click POW
                         (requires EFFECT_BATTERY_LEVEL to be in blade style)
 Activate -              Short click POW (or gestures if defined)
 Activate Muted -        Triple click and hold POW
-
 *************   WHILE SABER BLADE IS ON   ****************
 Play/Stop Track -       Hold AUX + Double click POW
 Next Preset -           Hold AUX + Long click and release POW while pointing up
@@ -258,7 +233,7 @@ Color Change Mode -     Hold POW + Twist the hilt (while pointing down),
             - Triple click POW to exit without changing color
     ColorChange explained:
       If the style uses ColorChange<>, when you activate color change mode, 
-      there will be up to 12 steps per rotation with a little sound at each step.   
+      there will be up to 12 steps per rotation with a little sound at each step.   
       If it does not use ColorChange<>, the color wheel will be activated, 
       which has 32768 steps per rotation.
       COLOR_CHANGE_DIRECT makes it so that IF the style uses ColorChange<>, 
@@ -411,15 +386,7 @@ public:
           swinging_ = true;
           Event(BUTTON_NONE, EVENT_SWING);
         }
-      }
-      if ((speaking_) && (millis() - talkie_time_) > 1900) {
-        talkie.SayDigit((int)floorf(battery_monitor.battery()));
-        talkie.Say(spPOINT);
-        talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
-        talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
-        talkie.Say(spVOLTS);
-        speaking_ = false;
-      }      
+      }    
     }
     // EVENT_THRUST
       if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
@@ -724,18 +691,39 @@ public:
         STDOUT.println("Exit Volume Menu");
       }
       return true;
+      
 // Spoken Battery Level
   #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
   #else
     // 2 and 3 button
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
-  #endif      
-      speaking_ = true;      
+  #endif 
       if (SFX_battlevel) {        
-        talkie_time_ = millis();
         hybrid_font.PlayCommon(&SFX_battlevel);
+        talkie.Say(spPAUSE1);
+        talkie.Say(spPAUSE1);
+        talkie.Say(spPAUSE1);
+        talkie.Say(spPAUSE1);
+        talkie.Say(spPAUSE1);
+        talkie.Say(spPAUSE1);
+        talkie.Say(spPAUSE1);
+        talkie.Say(spPAUSE1);
+        talkie.Say(spPAUSE1);
+      talkie.SayDigit((int)floorf(battery_monitor.battery()));
+    } else {
+      talkie.Say(spBATTLEVCURR);
+      talkie.SayDigit((int)floorf(battery_monitor.battery()));
+    }
+      if (SFX_battlevel) {
+        talkie.Say(spPAUSE1);
+        talkie.Say(spPAUSE1);
+      } else {
+        talkie.Say(spPOINT);
       }
+      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
+      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
+      if (!SFX_battlevel) talkie.Say(spVOLTS);
       return true;
 
 // On Demand Battery Level
@@ -1045,16 +1033,14 @@ private:
   bool auto_melt_on_ = false;
   bool battle_mode_ = false;
   bool max_vol_reached_ = false;
-  bool min_vol_reached_ = false;  
-  bool speaking_ = false;
+  bool min_vol_reached_ = false;
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
   uint32_t last_twist_ = millis();
   uint32_t last_push_ = millis();
   uint32_t last_blast_ = millis();
-  uint32_t saber_off_time_ = millis();   
-  uint32_t talkie_time_ = millis();
+  uint32_t saber_off_time_ = millis();
 };
 
 #endif
