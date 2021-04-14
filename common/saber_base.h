@@ -76,16 +76,6 @@ DEFINE_ALL_EFFECTS();
 constexpr size_t NUMBER_OF_EFFECTS = (size_t)EffectTypeHelper::NUMBER_OF_EFFECTS;
 #undef DEFINE_EFFECT
 
-#ifdef ENABLE_ALL_MENU_OPTIONS
-#define DYNAMIC_BLADE_LENGTH
-#define DYNAMIC_BLADE_DIMMING
-#define DYNAMIC_CLASH_THRESHOLD
-#define SAVE_VOLUME
-#define SAVE_BLADE_DIMMING
-#define SAVE_CLASH_THRESHOLD
-#define SAVE_COLOR_CHANGE
-#endif
-
 class SaberBase {
 protected:
   void Link(SaberBase* x) {
