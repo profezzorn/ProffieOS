@@ -420,6 +420,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/transition_loop.h"
 #include "styles/effect_sequence.h"
 #include "styles/color_select.h"
+#include "styles/remap.h"
 
 // functions
 #include "functions/ifon.h"
