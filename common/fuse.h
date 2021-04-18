@@ -4,6 +4,7 @@
 #include "vec3.h"
 #include "quat.h"
 #include "saber_base.h"
+#include "extrapolator.h"
 
 // #define FUSE_SPEED
 
@@ -45,125 +46,6 @@ int nan_count = 0;
 
 #endif
 
-
-#if 1
-template<class T, int SIZE = 10>
-class Extrapolator {
-public:
-  Extrapolator() {
-    uint32_t now = micros();
-    for (int i = 0; i < SIZE; i++) {
-      v_[i] = T(0);
-      t_[i] = now;
-    }
-  }
-  T get() { return get(micros()); }
-
-  T avg_;
-  T slope_;
-  float avg_t_;
-  bool needs_update_ = true;
-  void update() {
-    if (!needs_update_) return;
-    needs_update_ = false;
-    uint32_t now = t_[entry_];
-    T sum(0.0f);
-    float sum_t = 0.0;
-    for (size_t i = 0; i < SIZE; i++) {
-      float t = now - t_[i];
-      sum_t += t;
-      sum += v_[i];
-    }
-    avg_ = sum * (1.0 / SIZE);
-    CHECK_NAN(avg_);
-    avg_t_ = sum_t / SIZE;
-    CHECK_NAN(avg_t_);
-
-#if 0
-    // Enable this code if response becomes too slow in low-power mode
-    if (avg_t > 200000 /* 200ms */) {
-      // Just use last value if everything is too spread out.
-      avg_ = last();
-      slope_ = T(0.0f);
-      return;
-    }
-#endif    
-
-    T dot_sum(0.0f);
-    float t_square_sum = 0.0;
-    for (size_t i = 0; i < SIZE; i++) {
-      float t = avg_t_ - (now - t_[i]);
-      T v = v_[i] - avg_;
-      t_square_sum += t * t;
-      dot_sum += v * t;
-    }
-    CHECK_NAN(dot_sum);
-    CHECK_NAN(t_square_sum);
-    CHECK_NAN(sum);
-    if (t_square_sum == 0.0) {
-      slope_ = T(0.0f);
-    } else {
-      slope_ = dot_sum * (1.0 / t_square_sum);
-      CHECK_NAN(slope_);
-    }
-  }
-  T get(uint32_t now) {
-    update();
-    return avg_ + slope_ * (now - t_[entry_] + avg_t_);
-  }
-  T slope() {
-    update();
-    return slope_;
-  }
-  void push(const T& value, uint32_t now) {
-    entry_++;
-    if (entry_ >= SIZE) entry_ = 0;
-    v_[entry_] = value;
-    t_[entry_] = now;
-    values_++;
-    needs_update_ = true;
-  }
-  void push(const T& value) {
-    push(value, micros());
-  }
-  void clear(const T& value) {
-    uint32_t now = micros();
-    for (int i = 0; i < SIZE; i++)
-      push(value, now);
-    values_ = 1;
-  }
-  bool ready() { return values_ >= SIZE; }
-  T& last() { return v_[entry_]; }
-  uint32_t last_time() { return t_[entry_]; }
-
-  void dump() {
-    for (size_t i = 0; i < SIZE; i++) {
-      STDOUT << " " << t_[i] <<" " << " " << v_[i] << "\n";
-    }
-  }
-
-  uint32_t t_[SIZE];
-  T v_[SIZE];
-  size_t entry_;
-  size_t values_;
-};
-#else
-template<class T, int SIZE = 10>
-class Extrapolator {
-public:
-  Extrapolator() {}
-  T get() { return get(micros()); }
-  T get(uint32_t now) { return value_; }
-  T slope() { return 0.0; }
-  void push(const T& value, uint32_t now) { value_ = value; t_ = now; }
-  void push(const T& value) { push(value, micros());  }
-  void clear(const T& value) { value_ = value;  }
-  bool ready() { return true; }
-  uint32_t last_time() { return t_; }
-  T value_;
-  uint32_t t_;
-};
-#endif
 class Fusor : public SaberBase, Looper {
 public:
   Fusor() :
