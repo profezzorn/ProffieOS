@@ -42,6 +42,11 @@ public:
     y += o.y;
     z += o.z;
   }
+  void operator-=(const Vec3& o)  {
+    x -= o.x;
+    y -= o.y;
+    z -= o.z;
+  }
   Vec3 operator*(float f) const {
     return Vec3(x * f, y * f, z * f);
   }
