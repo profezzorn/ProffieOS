@@ -963,18 +963,11 @@ public:
         float a = fusor.angle2() - current_tick_angle_;
         if (a > M_PI) a-=M_PI*2;
         if (a < -M_PI) a+=M_PI*2;
-        if (a > ZOOM_ANGLE * 2/3) {
-          current_tick_angle_ += ZOOM_ANGLE;
-          if (current_tick_angle_ > M_PI) current_tick_angle_ -= M_PI * 2;
-          STDOUT << "TICK+\n";
-          SaberBase::UpdateVariation(1);
-        }
-        if (a < -ZOOM_ANGLE * 2/3) {
-          current_tick_angle_ -= ZOOM_ANGLE;
-          if (current_tick_angle_ < M_PI) current_tick_angle_ += M_PI * 2;
-          STDOUT << "TICK-\n";
-          SaberBase::UpdateVariation(-1);
-        }
+        int steps = (int)floor(fabs(a) / ZOOM_ANGLE - 0.3);
+        if (steps < 0) steps = 0;
+        if (a < 0) steps = -steps;
+        current_tick_angle_ += ZOOM_ANGLE * steps;
+        SaberBase::SetVariation(0x7fff & (SaberBase::GetCurrentVariation() + steps));
         break;
       }
       case SaberBase::COLOR_CHANGE_MODE_SMOOTH:
