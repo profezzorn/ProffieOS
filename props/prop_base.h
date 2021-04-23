@@ -224,7 +224,7 @@ public:
     Clash2(stab, strength);
   }
 
-  bool chdir(const char* dir) {
+  virtual bool chdir(const char* dir) {
     if (strlen(dir) > 1 && dir[strlen(dir)-1] == '/') {
       STDOUT.println("Directory must not end with slash.");
       return false;
@@ -1506,6 +1506,17 @@ public:
       return true;
     }
 
+    if (!strcmp(cmd, "list_current_tracks")) {
+      // Tracks must be in: font/tracks/*.wav 
+      LOCK_SD(true);
+      for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
+        PathHelper path(dir, "tracks");
+        ListTracks(path);
+      }
+      LOCK_SD(false);
+      return true;
+    }
+	  
     if (!strcmp(cmd, "list_fonts")) {
       LOCK_SD(true);
       for (LSFS::Iterator iter("/"); iter; ++iter) {
