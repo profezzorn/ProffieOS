@@ -3,7 +3,7 @@
 
 //Returns led as value between 0 ~ 32768
 
-class Ramp {
+class RampF {
 public:
   void run(BladeBase* blade) {
     num_leds_ = blade->num_leds();
