@@ -164,9 +164,11 @@ public:
   }
 	
 #ifdef DYNAMIC_CLASH_THRESHOLD
-  static float clash_threshold_;
-  static float GetCurrentClashThreshold() { return clash_threshold_; }
-  static void SetClashThreshold(float clash_threshold) { clash_threshold_ = clash_threshold; }
+  float clash_threshold_;
+  float GetCurrentClashThreshold() { return clash_threshold_; }
+  void SetClashThreshold(float clash_threshold) { clash_threshold_ = clash_threshold; }
+  #undef CLASH_THRESHOLD_G
+  #define CLASH_THRESHOLD_G clash_threshold_
 #endif 
 	
   void IgnoreClash(size_t ms) {
@@ -634,9 +636,6 @@ public:
     float v = diff.len();
     // If we're spinning the saber, require a stronger acceleration
     // to activate the clash.
-#ifdef DYNAMIC_CLASH_THRESHOLD
-    if (v > clash_threshold_ + fusor.gyro().len() / 200.0) {
-#else
     if (v > CLASH_THRESHOLD_G + fusor.gyro().len() / 200.0) {
 #endif
       if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
@@ -1589,9 +1588,5 @@ protected:
   CurrentPreset current_preset_;
   LoopCounter accel_loop_counter_;
 };
-
-#ifdef DYNAMIC_CLASH_THRESHOLD
-  float PropBase::clash_threshold_;
-#endif
 
 #endif
