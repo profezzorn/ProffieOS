@@ -1,6 +1,10 @@
 #ifndef PROPS_PROP_BASE_H
 #define PROPS_PROP_BASE_H
 
+#if !defined(DYNAMIC_CLASH_THRESHOLD) && defined(SAVE_CLASH_THRESHOLD)
+#undef SAVE_CLASH_THRESHOLD
+#endif
+
 #if !defined(DYNAMIC_BLADE_DIMMING) && defined(SAVE_BLADE_DIMMING)
 #undef SAVE_BLADE_DIMMING
 #endif
@@ -12,6 +16,9 @@
 class SaveGlobalStateFile : public ConfigFile {
 public:
   void SetVariable(const char* variable, float v) override {
+#ifdef SAVE_CLASH_THRESHOLD
+    CONFIG_VARIABLE(clash_threshold, CLASH_THRESHOLD_G);
+#endif
 #ifdef SAVE_VOLUME    
     CONFIG_VARIABLE(volume, -1);
 #endif
@@ -19,6 +26,9 @@ public:
     CONFIG_VARIABLE(dimming, 16384);
 #endif    
   }
+#ifdef SAVE_CLASH_THRESHOLD
+  float clash_threshold;
+#endif
 #ifdef SAVE_VOLUME    
   int volume;
 #endif
@@ -152,7 +162,15 @@ public:
       SetMute(false);
     }
   }
-
+	
+#ifdef DYNAMIC_CLASH_THRESHOLD
+  float clash_threshold_;
+  float GetCurrentClashThreshold() { return clash_threshold_; }
+  void SetClashThreshold(float clash_threshold) { clash_threshold_ = clash_threshold; }
+  #undef CLASH_THRESHOLD_G
+  #define CLASH_THRESHOLD_G clash_threshold_
+#endif 
+	
   void IgnoreClash(size_t ms) {
     if (clash_pending_) return;
     uint32_t now = millis();
@@ -524,9 +542,13 @@ public:
 
   SaveGlobalStateFile saved_global_state;
   void RestoreGlobalState() {
-#if defined(SAVE_VOLUME) || defined(SAVE_BLADE_DIMMING)
+#if defined(SAVE_VOLUME) || defined(SAVE_BLADE_DIMMING) || defined(SAVE_CLASH_THRESHOLD)
     saved_global_state.ReadINIFromDir(NULL, "global");
 
+#ifdef SAVE_CLASH_THRESHOLD
+    SetClashThreshold(saved_global_state.clash_threshold);
+#endif
+	  
 #ifdef SAVE_VOLUME
     if (saved_global_state.volume >= 0) {
       dynamic_mixer.set_volume(clampi32(saved_global_state.volume, 0, VOLUME));
@@ -546,6 +568,9 @@ public:
     LSFS::Remove(filename);
     out.Create(filename);
     out.write_key_value("installed", install_time);
+#ifdef SAVE_CLASH_THRESHOLD
+    out.write_key_value_float("clash_threshold", GetCurrentClashThreshold());
+#endif
 #ifdef SAVE_VOLUME
     out.write_key_value("volume", muted_volume_ ? muted_volume_ : dynamic_mixer.get_volume());
 #endif    
@@ -558,10 +583,13 @@ public:
   }
 
   void SaveGlobalState() {
-#if defined(SAVE_VOLUME) || defined(SAVE_BLADE_DIMMING)
+#if defined(SAVE_VOLUME) || defined(SAVE_BLADE_DIMMING) || defined(SAVE_CLASH_THRESHOLD)
     STDOUT.println("Saving Global State");
     WriteGlobalState("global.tmp");
     WriteGlobalState("global.ini");
+#ifdef SAVE_CLASH_THRESHOLD
+    saved_global_state.clash_threshold = GetCurrentClashThreshold();
+#endif
 #ifdef SAVE_VOLUME    
     saved_global_state.volume = dynamic_mixer.get_volume();
 #endif
