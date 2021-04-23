@@ -38,4 +38,8 @@ public:
   }
 };
 
+// To enable Gradient/Mixes constricted within Bump<> and SmoothStep<> layers
+// Example: AlphaMixL<Bump<Int<16384>,Int<16384>>,Red,Green,Blue> will produce a gradient within the Bump 
+template<class MIX, class... COLORS> using AlphaMixL = AlphaL<Mix<MIX, COLORS...>, MIX>;
+
 #endif
