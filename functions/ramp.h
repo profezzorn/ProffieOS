@@ -1,7 +1,9 @@
 #ifndef FUNCTIONS_RAMP_H
 #define FUNCTIONS_RAMP_H
 
-//Returns led as value between 0 ~ 32768
+// Returns led as value between 0 ~ 32768
+// Keeps existing mapping for pixels when used with Remap<>
+// Example: Remap<RampF,COLOR>
 
 class RampF {
 public:
