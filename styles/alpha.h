@@ -38,6 +38,7 @@ public:
   }
 };
 
+// To enable Gradient/Mixes constricted within Bump<> and SmoothStep<> layers
 template<class MIX, class... COLORS> using AlphaMixL = AlphaL<Mix<MIX, COLORS...>, MIX>;
 
 #endif
