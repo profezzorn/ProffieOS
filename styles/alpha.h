@@ -38,4 +38,6 @@ public:
   }
 };
 
+template<class MIX, class... COLORS> using AlphaMixL = AlphaL<Mix<MIX, COLORS...>, MIX>;
+
 #endif
