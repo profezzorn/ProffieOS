@@ -224,7 +224,7 @@ public:
     Clash2(stab, strength);
   }
 
-  bool chdir(const char* dir) {
+  virtual bool chdir(const char* dir) {
     if (strlen(dir) > 1 && dir[strlen(dir)-1] == '/') {
       STDOUT.println("Directory must not end with slash.");
       return false;
