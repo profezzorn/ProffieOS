@@ -637,7 +637,6 @@ public:
     // If we're spinning the saber, require a stronger acceleration
     // to activate the clash.
     if (v > CLASH_THRESHOLD_G + fusor.gyro().len() / 200.0) {
-#endif
       if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
         diff = -diff;
       }
