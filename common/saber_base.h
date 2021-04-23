@@ -277,7 +277,8 @@ public:                                                         \
   enum ColorChangeMode {
     COLOR_CHANGE_MODE_NONE,
     COLOR_CHANGE_MODE_STEPPED,
-    COLOR_CHANGE_MODE_SMOOTH
+    COLOR_CHANGE_MODE_SMOOTH,
+    COLOR_CHANGE_MODE_ZOOMED,
   };
 
   static ColorChangeMode GetColorChangeMode() { return color_change_mode_; }

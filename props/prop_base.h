@@ -958,6 +958,18 @@ public:
         }
         break;
       }
+      case SaberBase::COLOR_CHANGE_MODE_ZOOMED: {
+#define ZOOM_ANGLE (M_PI * 2 / 2000)
+        float a = fusor.angle2() - current_tick_angle_;
+        if (a > M_PI) a-=M_PI*2;
+        if (a < -M_PI) a+=M_PI*2;
+        int steps = (int)floor(fabs(a) / ZOOM_ANGLE - 0.3);
+        if (steps < 0) steps = 0;
+        if (a < 0) steps = -steps;
+        current_tick_angle_ += ZOOM_ANGLE * steps;
+        SaberBase::SetVariation(0x7fff & (SaberBase::GetCurrentVariation() + steps));
+        break;
+      }
       case SaberBase::COLOR_CHANGE_MODE_SMOOTH:
         float a = fmodf(fusor.angle2() - current_tick_angle_, M_PI * 2);
         SaberBase::SetVariation(0x7fff & (int32_t)(a * (32768 / (M_PI * 2))));
