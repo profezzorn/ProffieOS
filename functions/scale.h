@@ -47,4 +47,6 @@ private:
   F f_;
 };
 
+template<class F> using InvertF = Scale<F, Int<32768>, Int<0>>;
+
 #endif
