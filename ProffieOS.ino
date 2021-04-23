@@ -448,6 +448,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/effect_position.h"
 #include "functions/time_since_effect.h"
 #include "functions/sum.h"
+#include "functions/ramp.h"
 
 // transitions
 #include "transitions/fade.h"
