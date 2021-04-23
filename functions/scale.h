@@ -47,4 +47,8 @@ private:
   F f_;
 };
 
+// To simplify inverting a function's returned value
+// Example InvertF<BladeAngle<>> will return 0 when up and 32768 when down
+template<class F> using InvertF = Scale<F, Int<32768>, Int<0>>;
+
 #endif
