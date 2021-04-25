@@ -1,6 +1,8 @@
 #ifndef STYLES_ALPHA_H
 #define STYLES_ALPHA_H
 
+#include "mix.h"
+
 // Usage: AlphaL<COLOR, ALPHA>
 // COLOR: COLOR or LAYER
 // ALPHA: FUNCTION
@@ -37,5 +39,9 @@ public:
     return color_.getColor(led) * alpha;  // clamp?
   }
 };
+
+// To enable Gradient/Mixes constricted within Bump<> and SmoothStep<> layers
+// Example: AlphaMixL<Bump<Int<16384>,Int<16384>>,Red,Green,Blue> will produce a gradient within the Bump 
+template<class MIX, class... COLORS> using AlphaMixL = AlphaL<Mix<MIX, COLORS...>, MIX>;
 
 #endif
