@@ -10,14 +10,12 @@ class CenterDistF {
 public:
   void run(BladeBase* blade) {
     center_.run(blade);
-    center = center_.getInteger(0);
     num_leds_ = blade->num_leds();
   }
-  int getInteger(int led) { return abs(led * 32768 / num_leds_ - center); }
+  int getInteger(int led) { return abs(led * 32768 / num_leds_ - center_.getInteger(0)); }
 
 private:
   CENTER center_;
-  int center;
   int num_leds_;
 };
 
