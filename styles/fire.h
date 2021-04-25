@@ -152,5 +152,12 @@ StyleAllocator StyleFirePtr() {
   return &factory;
 }
 
+// Base Fire, no Clash, Lockup or Off state
+template<class COLOR1, class COLOR2, int DELAY=0, int SPEED=2, int BASE=0, int RAND=2000, int COOLING=5> 
+using Fire = StyleFire<COLOR1, COLOR2, DELAY, SPEED, 
+                FireConfig<BASE, RAND, COOLING>, 
+                FireConfig<BASE, RAND, COOLING>, 
+                FireConfig<BASE, RAND, COOLING>, 
+                FireConfig<BASE, RAND, COOLING>>;
 
 #endif
