@@ -152,7 +152,7 @@ StyleAllocator StyleFirePtr() {
   return &factory;
 }
 
-// Base Fire, no Clash, Lockup or Off state
+// Simplified Fire, negates Clash, Lockup or Off FireConfig<> to use Fire with other Layered effects
 template<class COLOR1, class COLOR2, int DELAY=0, int SPEED=2, int BASE=0, int RAND=2000, int COOLING=5> 
 using Fire = StyleFire<COLOR1, COLOR2, DELAY, SPEED, 
                 FireConfig<BASE, RAND, COOLING>, 
