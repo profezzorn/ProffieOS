@@ -20,7 +20,7 @@
 
 // You can have multiple configuration files, and specify which one
 // to use here.
-
+#define CONFIG_FILE "config/aat_teensy_singleblade_config.h"
 // #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
@@ -29,7 +29,7 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
@@ -1495,6 +1495,142 @@ private:
 };
 
 StaticWrapper<Parser<SerialAdapter>> parser;
+
+#ifdef TEENSYDUINO
+#include "common/_usb_rawhid.h"
+#if defined(RAWHID_INTERFACE)
+class RawHIDParser: Looper, StateMachine  {
+public:
+  RawHIDParser(): Looper() {}
+  const char* name() { return "HIDParser"; }
+
+  void setup() {
+    //nothing todo here;
+  }
+
+  void Loop() override {
+    STATE_MACHINE_BEGIN();
+    while (true) {
+//      while (!SA::Connected()) YIELD();
+//      if (!SA::AlwaysConnected()) {
+//        STDOUT.println("Welcome to ProffieOS, type 'help' for more info.");
+//      }
+
+      //while (SA::Connected()) {
+      while (true) {
+        while (!SerialHID.available()) YIELD();
+        if (SerialHID.recv(incommingReport, 1) > 0){
+        _idx = 0;
+        int c = 0xFF;
+        do{   
+          int c = incommingReport[_idx];
+          if (c == 0) { break; }
+  
+          if (c == '\n' || c == '\r') {
+            if (cmd_) ParseLine();
+            len_ = 0;
+            space_ = 0;
+            c = 0;
+            free(cmd_);
+            cmd_ = nullptr;
+            _idx++;
+            if (_idx > 63) _idx = 63;
+            continue;
+          }
+          if (len_ + 1 >= space_) {
+            int new_space = space_ * 3 / 2 + 8;
+            char* tmp = (char*)realloc(cmd_, new_space);
+            if (tmp) {
+              space_ = new_space;
+              cmd_ = tmp;
+            } else {
+              STDOUT.println("Line too long.");
+              len_ = 0;
+              space_ = 0;
+              free(cmd_);
+              cmd_ = nullptr;
+              continue;
+            }
+          }
+          cmd_[len_] = c;
+          cmd_[len_ + 1] = 0;
+          len_++;
+          _idx++;
+          if (_idx > 63) _idx = 63;
+        }while (c > 0 && _idx < 64);//do while
+        
+       }//If rawHID
+      }//while true
+      
+      len_ = 0;
+      space_ = 0;
+      free(cmd_);
+      cmd_ = nullptr;
+    } //while true
+     STATE_MACHINE_END();
+ } //void loop
+
+  void ParseLine() {
+    if (len_ == 0) return;
+    while (len_ > 0 && (cmd_[len_-1] == '\r' || cmd_[len_-1] == ' ')) {
+      len_--;
+      cmd_[len_] = 0;
+    }
+    if (cmd_[0] == '#') {
+      Serial.println(cmd_);
+      return;
+    }
+    stdout_output = nullptr; //reroute output to SerialHID
+    STDOUT.print(response_header());
+    char *cmd = cmd_;
+    while (*cmd == ' ') cmd++;
+    char *e = cmd;
+    while (*e != ' ' && *e) e++;
+    if (*e) {
+      *e = 0;
+      e++;  // e is now argument (if any)
+    } else {
+      e = nullptr;
+    }
+    Serial.print("Received command: ");
+    Serial.print(cmd);
+    if (e) {
+      Serial.print(" arg: ");
+      Serial.print(e);
+    }
+    Serial.print(" HEX ");
+    for (size_t i = 0; i < strlen(cmd); i++) {
+      Serial.print(cmd[i], HEX);
+      Serial.print(" ");
+    }
+    Serial.println("");
+    if (!CommandParser::DoParse(cmd, e)) {
+      STDOUT.print("Whut? :");
+      STDOUT.println(cmd);
+    }
+    STDOUT.print(response_footer());
+    stdout_output = default_output;
+  }
+
+private:
+  int len_ = 0;
+  char* cmd_ = nullptr;
+  int space_ = 0;
+  uint8_t _idx = 0; 
+  uint8_t outgoingReport[64];
+  uint8_t incommingReport[64];
+  static bool Connected() { return true; }
+  static bool AlwaysConnected() { return true; }
+  static const char* response_header() { return "-+=BEGIN_OUTPUT=+-\n"; }
+  static const char* response_footer() { return "-+=END_OUTPUT=+-\n"; }
+
+
+};
+
+StaticWrapper<RawHIDParser> serialhid_parser;
+#endif  //#if defined(RAWHID_INTERFACE)
+#endif  //#ifdef Teensyduino
+
 
 #ifdef ENABLE_SERIAL
 StaticWrapper<Parser<Serial3Adapter>> serial_parser;
