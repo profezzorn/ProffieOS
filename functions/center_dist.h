@@ -12,7 +12,7 @@ public:
     center_.run(blade);
     num_leds_ = blade->num_leds();
   }
-  int getInteger(int led) { return abs(led * 32768 / num_leds_ - center_.getInteger(0)); }
+  int getInteger(int led) { return abs(led * 32768 / num_leds_ - center_.getInteger(led)); }
 
 private:
   CENTER center_;
