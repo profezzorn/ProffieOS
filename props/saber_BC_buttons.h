@@ -1,5 +1,12 @@
 /*
 saber_BC_buttons.h
+ http://fredrik.hubbe.net/lightsaber/proffieos.html
+ Copyright (c) 2016-2019 Fredrik Hubinette
+ Copyright (c) 2021 Brian Conner with contributions by:
+ Fredrik Hubinette, Fernando DeRosa, and Matthew McGeary.
+ Distributed under the terms of the GNU General Public License v3.
+ http://www.gnu.org/licenses/
+ 
 Includes 1 and 2 button controls.
 Incorporates an intuitive control scheme so button actions are consistant 
 whether blade is on or off.
@@ -13,12 +20,10 @@ volchangedown.wav
 volchangeup.wav
 volmax.wav
 volmin.wav
-Custom spoken battery level uses the following wavs:
-battlevel.wav
-point.wav
-volts.wav
-If you're using a female voice versions of these wavs, the spoken digits 
-will more closely match the wavs if you use #define FEMALE_TALKIE_VOICE
+
+To use a female voice version of the battery level spoken digits, use:
+#define FEMALE_TALKIE_VOICE
+
 EFFECT_USER1 - use as a standalone trigger for EffectSequence<>,
                 - ie:EffectSequence<EFFECT_USER1, item1, item2...> 
                 - Custom swap.wav files can be used as a sound effect, 
@@ -699,32 +704,12 @@ public:
     // 2 and 3 button
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
   #endif 
-      if (SFX_battlevel) {        
-        hybrid_font.PlayCommon(&SFX_battlevel);
-        talkie.Say(spPAUSE1);
-        talkie.Say(spPAUSE1);
-        talkie.Say(spPAUSE1);
-        talkie.Say(spPAUSE1);
-        talkie.Say(spPAUSE1);
-        talkie.Say(spPAUSE1);
-        talkie.Say(spPAUSE1);
-        talkie.Say(spPAUSE1);
-        talkie.Say(spPAUSE1);
-      talkie.SayDigit((int)floorf(battery_monitor.battery()));
-    } else {
-      talkie.Say(spBATTLEVCURR);
-      talkie.SayDigit((int)floorf(battery_monitor.battery()));
-    }
-      if (SFX_battlevel) {
-        talkie.Say(spPAUSE1);
-        talkie.Say(spPAUSE1);
-      } else {
-        talkie.Say(spPOINT);
-      }
-      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
-      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
-      if (!SFX_battlevel) talkie.Say(spVOLTS);
-      return true;
+    talkie.SayDigit((int)floorf(battery_monitor.battery()));
+    talkie.Say(spPOINT);
+    talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
+    talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
+    talkie.Say(spVOLTS);
+    return true;
 
 // On Demand Battery Level
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
