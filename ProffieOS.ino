@@ -51,6 +51,16 @@
 #define SAVE_DYNAMIC_DIMMING
 #endif
 
+#ifdef ENABLE_ALL_MENU_OPTIONS
+#define DYNAMIC_BLADE_LENGTH
+#define DYNAMIC_BLADE_DIMMING
+#define DYNAMIC_CLASH_THRESHOLD
+#define SAVE_VOLUME
+#define SAVE_BLADE_DIMMING
+#define SAVE_CLASH_THRESHOLD
+#define SAVE_COLOR_CHANGE
+#endif
+
 // #define ENABLE_DEBUG
 
 
@@ -449,6 +459,8 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/time_since_effect.h"
 #include "functions/sum.h"
 #include "functions/ramp.h"
+#include "functions/center_dist.h"
+#include "functions/linear_section.h"
 
 // transitions
 #include "transitions/fade.h"
