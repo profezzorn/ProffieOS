@@ -460,6 +460,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/sum.h"
 #include "functions/ramp.h"
 #include "functions/center_dist.h"
+#include "functions/linear_section.h"
 
 // transitions
 #include "transitions/fade.h"
