@@ -306,8 +306,19 @@ public:
 	  hybrid_font.PlayCommon(&SFX_mode);
 	  return;
 	}
-	// TODO: would rather do a Talkie to speak the mode we're in after mode sound
-	beeper.Beep(0.05, 2000.0);
+	if (blaster_mode == MODE_STUN) {
+	  talkie.Say(spSTUN); return;
+	} else {
+	  if (blaster_mode == MODE_KILL) {
+	    talkie.Say(spKILL); return;
+	  } else {
+	    if (blaster_mode == MODE_AUTO) {
+	      talkie.Say(spAUTO); return;
+	    } else {
+	      beeper.Beep(0.05, 2000.0);
+	    }
+	  }
+	}
 	return;
       case EFFECT_RANGE: hybrid_font.PlayCommon(&SFX_range); return;
       case EFFECT_EMPTY: hybrid_font.PlayCommon(&SFX_empty); return;
