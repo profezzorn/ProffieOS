@@ -16,8 +16,7 @@ public:
   FunctionRunResult run(BladeBase* base) {
     pos_.run(base);
     FunctionRunResult ret = RunFunction(&fraction_, base);
-    uint32_t num_leds_;
-    num_leds_ = base->num_leds();
+    int num_leds = base->num_leds();
     int fraction = fraction_.getInteger(0);
     int pos = pos_.getInteger(0);
     range_ = Range(clampi32((pos - fraction / 2) * num_leds, 0, 32768 * num_leds), clampi32((pos + fraction / 2) * num_leds, 0, 32768 * num_leds));
