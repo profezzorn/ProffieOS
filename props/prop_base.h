@@ -1505,17 +1505,6 @@ public:
       LOCK_SD(false);
       return true;
     }
-
-    if (!strcmp(cmd, "list_current_tracks")) {
-      // Tracks must be in: font/tracks/*.wav 
-      LOCK_SD(true);
-      for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
-        PathHelper path(dir, "tracks");
-        ListTracks(path);
-      }
-      LOCK_SD(false);
-      return true;
-    }
 	  
     if (!strcmp(cmd, "list_fonts")) {
       LOCK_SD(true);
