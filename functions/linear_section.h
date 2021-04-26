@@ -16,12 +16,11 @@ public:
   FunctionRunResult run(BladeBase* base) {
     pos_.run(base);
     FunctionRunResult ret = RunFunction(&fraction_, base);
-    num_leds = base->num_leds();
+    uint32_t num_leds_;
+    num_leds_ = base->num_leds();
     int fraction = fraction_.getInteger(0);
     int pos = pos_.getInteger(0);
-    start = clampi32((pos - fraction / 2) * num_leds, 0, 32768 * num_leds);
-    end = clampi32((pos + fraction / 2) * num_leds, 0, 32768 * num_leds);
-    range_ = Range(start, end);
+    range_ = Range(clampi32((pos - fraction / 2) * num_leds, 0, 32768 * num_leds), clampi32((pos + fraction / 2) * num_leds, 0, 32768 * num_leds));
     return ret;
   }
   int getInteger(int led) {
@@ -32,9 +31,6 @@ private:
   POSITION pos_;
   FRACTION fraction_;
   Range range_;
-  uint32_t start;
-  uint32_t end;
-  uint32_t num_leds;
 };
 
 #endif
