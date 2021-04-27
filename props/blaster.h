@@ -228,7 +228,7 @@ public:
   }
 
   // Make clash do nothing except unjam if jammed.
-  void Clash(bool stab, float strength) override {
+  void Clash(bool stab) override {
     if (is_jammed_) {
       is_jammed_ = false;
       SaberBase::DoEffect(EFFECT_UNJAM, 0);
@@ -241,14 +241,18 @@ public:
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
 
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
         NextBlasterMode();
         return true;
 
       case EVENTID(BUTTON_MODE_SELECT, EVENT_DOUBLE_CLICK, MODE_ON):
         next_preset();
         return true;
-
+        
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_CLICK_LONG, MODE_ON):
+        previous_preset();
+        return true;
+        
       case EVENTID(BUTTON_RELOAD, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON):
         Reload();
@@ -318,16 +322,28 @@ public:
   void SayMode() {
     switch(blaster_mode) {
       case MODE_STUN:
-      if (SFX_mdstun) hybrid_font.PlayCommon(&SFX_mdstun); return;
-      talkie.Say(spSTUN);
+        if (SFX_mdstun) {
+          hybrid_font.PlayCommon(&SFX_mdstun);
+          return;
+        } else {
+          talkie.Say(spSTUN);
+        }
       return;
       case MODE_KILL:
-      if (SFX_mdkill) hybrid_font.PlayCommon(&SFX_mdkill); return;
-      talkie.Say(spKILL);      
+        if (SFX_mdkill) {
+          hybrid_font.PlayCommon(&SFX_mdkill);
+          return;
+        } else {
+          talkie.Say(spKILL);      
+        }
       return;
       case MODE_AUTO:
-      if (SFX_mdauto) hybrid_font.PlayCommon(&SFX_mdauto); return;
-      talkie.Say(spAUTOFIRE);       
+        if (SFX_mdauto) {
+          hybrid_font.PlayCommon(&SFX_mdauto);
+          return;
+        } else {
+          talkie.Say(spAUTOFIRE);       
+        }
       return;
     }
   }
