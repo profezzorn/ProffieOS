@@ -318,15 +318,15 @@ public:
   void SayMode() {
     switch(blaster_mode) {
       case MODE_STUN:
-      //if (SFX_mdstun) hybrid_font.PlayCommon(&SFX_mdstun); return;
+      if (SFX_mdstun) hybrid_font.PlayCommon(&SFX_mdstun); return;
       talkie.Say(spSTUN);
       return;
       case MODE_KILL:
-      //if (SFX_mdkill) hybrid_font.PlayCommon(&SFX_mdkill); return;
+      if (SFX_mdkill) hybrid_font.PlayCommon(&SFX_mdkill); return;
       talkie.Say(spKILL);      
       return;
       case MODE_AUTO:
-      //if (SFX_mdauto) hybrid_font.PlayCommon(&SFX_mdauto); return;
+      if (SFX_mdauto) hybrid_font.PlayCommon(&SFX_mdauto); return;
       talkie.Say(spAUTOFIRE);       
       return;
     }
