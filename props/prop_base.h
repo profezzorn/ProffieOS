@@ -622,7 +622,7 @@ public:
   }
 
   void SB_Message(const char* text) override {
-    STDOUT.print("DISPLAY: ");
+    STDOUT.print("DISPLAY: \n");
     STDOUT.println(text);
   }
 
