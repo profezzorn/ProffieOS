@@ -57,6 +57,7 @@ const unsigned int maxLedsPerStrip = 196;
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
 //#define ENABLE_SSD1306
+#define INCLUDE_SSD1306
 
 // #define ENABLE_DEBUG
 
@@ -287,4 +288,8 @@ Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 //NECDecoder nec_decoder;
 //RC6Decoder rc6_decoder;
 //PrintDecoder print_decoder;
+#endif
+
+#ifdef CONFIG_BOTTOM
+SSD1306Template<64, uint32_t> display;
 #endif
