@@ -301,8 +301,9 @@ public:
   bool ready() { return micros() - last_micros_ < 50000; }
 
 private:
-  Extrapolator<Vec3, 16> accel_extrapolator_;
-  Extrapolator<Vec3, 16> gyro_extrapolator_;
+  static const int filter_hz = 80;
+  Extrapolator<Vec3, ACCEL_MEASUREMENTS_PER_SECOND/filter_hz> accel_extrapolator_;
+  Extrapolator<Vec3, GYRO_MEASUREMENTS_PER_SECOND/filter_hz> gyro_extrapolator_;
 
 #ifdef FUSE_SPEED
   Vec3 speed_;

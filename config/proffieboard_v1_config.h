@@ -9,6 +9,8 @@
 #define PROFFIEBOARD
 #define USE_I2S
 #define GYRO_CLASS LSM6DS3H
+#define GYRO_MEASUREMENTS_PER_SECOND 1600
+#define ACCEL_MEASUREMENTS_PER_SECOND 1600
 
 // Proffieboard pin map
 enum SaberPins {
