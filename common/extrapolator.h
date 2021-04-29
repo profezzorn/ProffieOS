@@ -16,7 +16,7 @@ class IncrementalLine {
   float t_square_sum_;
   T sum_;
   T dot_sum_;
-  bool needs_update_ = true;
+  volatile bool needs_update_ = true;
  public:
   void Start(uint32_t t) {
     start_ = t;
@@ -46,6 +46,7 @@ class IncrementalLine {
   }
 
  private:
+  uint32_t start_copy_;
   T avg_;
   T slope_;
   float avg_t_;
@@ -53,21 +54,25 @@ class IncrementalLine {
   void update() {
     if (!needs_update_) return;
     needs_update_ = false;
-    avg_t_ = sum_t_ / samples_;
-    avg_ = sum_ / samples_;
-    float t_square_sum = t_square_sum_ + avg_t_ * avg_t_ * samples_ - 2.0 * sum_t_ * avg_t_;
+    noInterrupts();
+    start_copy_ = start_;
+    float inv = 1.0f / samples_;
+    avg_t_ = sum_t_ * inv;
+    avg_ = sum_ * inv;
+    float t_square_sum = t_square_sum_ + avg_t_ * sum_t_ - 2.0 * sum_t_ * avg_t_;
     T dot_sum = dot_sum_ - sum_ * avg_t_;
     if (t_square_sum == 0.0) {
       slope_ = T(0.0f);
     } else {
       slope_ = dot_sum * (1.0 / t_square_sum);
     }
+    interrupts();
   }
 
  public:
   T get(uint32_t now) {
     update();
-    float t = now - start_;
+    float t = now - start_copy_;
     return avg_ + slope_ * (t - avg_t_);
   }
 

@@ -38,7 +38,7 @@ const unsigned int maxLedsPerStrip = 196;
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
 // #define ENABLE_SERIAL
-// #define ENABLE_DEVELOPER_COMMANDS
+#define ENABLE_DEVELOPER_COMMANDS
 // #define DISABLE_DIAGNOSTIC_COMMANDS
 // #define SAVE_COLOR_CHANGE
 // #define DISABLE_COLOR_CHANGE
@@ -64,6 +64,11 @@ const unsigned int maxLedsPerStrip = 196;
 #define IDLE_OFF_TIME 100000
 
 // #define BLADE_DETECT_PIN aux2Pin
+
+// #define ENABLE_TRACING TRACE_CATEGORY_MOTION | TRACE_CATEGORY_I2C
+
+#define FILTER_CUTOFF_FREQUENCY 150
+#define FILTER_ORDER 8
 
 #endif
 

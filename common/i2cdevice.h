@@ -6,30 +6,71 @@
 extern I2CBus i2cbus;
 
 class I2CDevice;
-static I2CDevice* current_i2c_device = nullptr;
-static I2CDevice* next_i2c_device = nullptr;
+I2CDevice* current_i2c_device = nullptr;
+I2CDevice* last_i2c_device = nullptr;
 
 class I2CDevice {
 public:
   explicit I2CDevice(uint8_t address) : address_(address) {}
+  virtual void RunLocked() {}
+  I2CDevice *next = nullptr;
+
   bool I2CLock() {
     if (!i2cbus.inited()) return false;
+    noInterrupts();
     if (current_i2c_device) {
-      next_i2c_device = this;
+      interrupts();
       return false;
     }
-    // 1-level fairness...
-    if (next_i2c_device && next_i2c_device != this) {
-      return false;
-    }
-    next_i2c_device = nullptr;
     current_i2c_device = this;
+    last_i2c_device = this;
+    interrupts();
+    TRACE(I2C, "locked");
     return true;
   }
-  void I2CUnlock() {
-    if (current_i2c_device == this)
-      current_i2c_device = nullptr;
+
+  bool I2CLockAndRun() {
+    noInterrupts();
+    if (current_i2c_device) {
+      if (current_i2c_device == this || last_i2c_device == this || next) {
+	TRACE(I2C, "in progress");
+	interrupts();
+	return false;
+      } else {
+	TRACE(I2C, "queued");
+	last_i2c_device->next = this;
+	last_i2c_device = this;
+	interrupts();
+      }
+    } else {
+      TRACE(I2C, "running now!");
+      current_i2c_device = this;
+      last_i2c_device = this;
+      interrupts();
+      RunLocked();
+    }
+    return true;
   }
+  
+  void I2CUnlock() {
+    noInterrupts();
+    if (current_i2c_device == this) {
+      if (next) {
+	TRACE(I2C, "next");
+	current_i2c_device = next;
+	next = nullptr;
+	interrupts();
+	current_i2c_device->RunLocked();
+	return;
+      } else {
+	TRACE(I2C, "free");
+	current_i2c_device = nullptr;
+	last_i2c_device = nullptr;
+      }
+    }
+    interrupts();
+  }
+
   bool writeByte(uint8_t reg, uint8_t data) {
     Wire.beginTransmission(address_);
     Wire.write(reg);
