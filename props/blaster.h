@@ -35,7 +35,7 @@ public:
     MODE_AUTO
   };
 
-  BlasterMode blaster_mode = MODE_KILL;
+  BlasterMode blaster_mode = MODE_STUN;
 
   virtual void SetBlasterMode(BlasterMode to_mode) {
     if (!auto_firing_) {
