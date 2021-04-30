@@ -81,7 +81,6 @@ public:
       size_ = spark_size_.getInteger(0);
     }
     TransitionBaseX<SPARK_MS>::run(blade);
-    mix_ = this->update(32768);
     num_leds_ = blade->num_leds();
     offset_ = (millis() - this->start_millis()) * 32768 / spark_ms_.getInteger(0);
   }
@@ -92,7 +91,6 @@ private:
   SPARK_SIZE spark_size_;
   int size_;
 
-  int mix_;
   int num_leds_;
   int offset_;
   SPARK_MS spark_ms_;
@@ -104,7 +102,7 @@ public:
     int N = std::abs(dist - offset_) * size_ >> 15;
     int mix;
     if (N <= 32) {
-      mix = blast_hump[N] * mix_ >> 8;
+      mix = blast_hump[N] * 32768 >> 8;
     } else {
       mix = 0;
     }
