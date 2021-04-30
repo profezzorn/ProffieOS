@@ -587,7 +587,7 @@ public:
       GetChunk();
       size = chunk_size + 1;
     }
-    if (!stm32l4_i2c_notify(Wire._i2c, &SSD1306Template::DataSent, this, I2C_EVENT_TRANSMIT_DONE)) {
+    if (!stm32l4_i2c_notify(Wire._i2c, &SSD1306Template::DataSent, this, (I2C_EVENT_ADDRESS_NACK | I2C_EVENT_DATA_NACK | I2C_EVENT_ARBITRATION_LOST | I2C_EVENT_BUS_ERROR | I2C_EVENT_OVERRUN | I2C_EVENT_RECEIVE_DONE | I2C_EVENT_TRANSMIT_DONE | I2C_EVENT_TRANSFER_DONE))) {
       goto fail;
     }
     if (!stm32l4_i2c_transmit(Wire._i2c, address_, chunk, size, 0)) {

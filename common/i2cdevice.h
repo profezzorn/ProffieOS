@@ -6,8 +6,8 @@
 extern I2CBus i2cbus;
 
 class I2CDevice;
-I2CDevice* current_i2c_device = nullptr;
-I2CDevice* last_i2c_device = nullptr;
+I2CDevice* volatile current_i2c_device = nullptr;
+I2CDevice* volatile last_i2c_device = nullptr;
 
 class I2CDevice {
 public:
@@ -228,9 +228,17 @@ public:
 #define I2C_WRITE_BYTE_ASYNC(reg, data) writeByte(reg, data)
 #endif
 
-  
-protected:
   uint8_t address_;
 };
+
+void DumpI2CDevice(const char* desc, I2CDevice *device) {
+  STDOUT << desc << ": " << (long)device
+	 << " id= " << (device ? device->address_ : 0)
+	 << " next= " << (long)(device ? device->next : 0) << "\n";
+}
+void DumpI2CState() {
+  DumpI2CDevice("current", current_i2c_device);
+  DumpI2CDevice("last", last_i2c_device);
+}
 
 #endif

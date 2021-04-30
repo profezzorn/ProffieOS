@@ -1044,10 +1044,8 @@ class Commands : public CommandParser {
 #endif // ENABLE_DEVELOPER_COMMANDS
 #ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "i2cstate")) {
-      extern I2CDevice* current_i2c_device;
-      extern I2CDevice* last_i2c_device;
-      STDOUT << "current i2c: " << (long)current_i2c_device << "\n";
-      STDOUT << "last i2c: " << (long)last_i2c_device << "\n";
+      extern void DumpI2CState();
+      DumpI2CState();
       return true;
     }
 #endif // ENABLE_DEVELOPER_COMMANDS

@@ -234,7 +234,7 @@ public:
       TRACE(MOTION, "nothing pending2");
       goto fail;
     }
-    if (!stm32l4_i2c_notify(Wire._i2c, &LSM6DS3H::DataReceived, this, I2C_EVENT_TRANSFER_DONE)) {
+    if (!stm32l4_i2c_notify(Wire._i2c, &LSM6DS3H::DataReceived, this, (I2C_EVENT_ADDRESS_NACK | I2C_EVENT_DATA_NACK | I2C_EVENT_ARBITRATION_LOST | I2C_EVENT_BUS_ERROR | I2C_EVENT_OVERRUN | I2C_EVENT_RECEIVE_DONE | I2C_EVENT_TRANSMIT_DONE | I2C_EVENT_TRANSFER_DONE))) {
       TRACE(MOTION, "notify fail");
       goto fail;
     }
