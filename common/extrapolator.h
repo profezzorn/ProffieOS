@@ -122,7 +122,7 @@ public:
 
   void dump() {
     for (size_t i = 0; i < SIZE; i++) {
-      STDOUT << " " << data_[i].t <<" " << " " << data_[i].t << "\n";
+      STDOUT << " " << data_[i].t <<" " << " " << data_[i].v << "\n";
     }
   }
 
