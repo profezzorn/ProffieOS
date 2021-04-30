@@ -10,6 +10,7 @@ EFFECT(clipout);
 EFFECT(empty);
 EFFECT(full);
 EFFECT(jam);
+EFFECT(mode);
 EFFECT(plioff);
 EFFECT(plion);
 EFFECT(range);
@@ -19,7 +20,9 @@ EFFECT(unjam);
 EFFECT(mdstun);
 EFFECT(mdkill);
 EFFECT(mdauto);
-
+// For mode sounds, specific "mdstun", "mdkill", and "mdauto" may be used.
+// If just a single "mode" sound for all switches exists, that will be used.
+// If no mode sounds exist in the font, a talkie version will speak the mode on switching.
 class Blaster : public PropBase {
 public:
   Blaster() : PropBase() {}
@@ -32,7 +35,7 @@ public:
     MODE_AUTO
   };
 
-  BlasterMode blaster_mode = MODE_STUN;
+  BlasterMode blaster_mode = MODE_KILL;
 
   virtual void SetBlasterMode(BlasterMode to_mode) {
     if (!auto_firing_) {
@@ -228,7 +231,7 @@ public:
   }
 
   // Make clash do nothing except unjam if jammed.
-  void Clash(bool stab) override {
+  void Clash(bool stab, float strength) override {
     if (is_jammed_) {
       is_jammed_ = false;
       SaberBase::DoEffect(EFFECT_UNJAM, 0);
@@ -320,31 +323,34 @@ public:
   }
 
   void SayMode() {
-    switch(blaster_mode) {
+    switch (blaster_mode) {
       case MODE_STUN:
         if (SFX_mdstun) {
           hybrid_font.PlayCommon(&SFX_mdstun);
-          return;
+        } else if (SFX_mode) {
+          hybrid_font.PlayCommon(&SFX_mode);
         } else {
           talkie.Say(spSTUN);
         }
-      return;
+      break;
       case MODE_KILL:
         if (SFX_mdkill) {
           hybrid_font.PlayCommon(&SFX_mdkill);
-          return;
+        } else if (SFX_mode) {
+          hybrid_font.PlayCommon(&SFX_mode);
         } else {
           talkie.Say(spKILL);      
         }
-      return;
+      break;
       case MODE_AUTO:
         if (SFX_mdauto) {
           hybrid_font.PlayCommon(&SFX_mdauto);
-          return;
+        } else if (SFX_mode) {
+          hybrid_font.PlayCommon(&SFX_mode);
         } else {
           talkie.Say(spAUTOFIRE);       
         }
-      return;
+      break;
     }
   }
 };
