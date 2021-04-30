@@ -56,7 +56,14 @@ public:
     return MixColors(a, color_.getColor(led), mix, 15);
   }
 };
-   
+
+// TrSparkX generates a wave without Fade over the length of the blade from 
+// SPARK_CENTER. Unlike other transitions, this effect starts and ends
+// at the same color, and the wave is drawn using COLOR instead of the start/end
+// colors like most transitions to. It's intended to be used with TransitionLoopL
+// or TransitionEffectL, which takes transitions that start and begin with the same
+// color.
+
 template<class COLOR,
          class SPARK_SIZE = Int<100>,
          class SPARK_MS = Int<400>,
