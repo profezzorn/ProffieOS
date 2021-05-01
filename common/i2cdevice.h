@@ -30,6 +30,7 @@ public:
   }
 
   bool I2CLockAndRun() {
+    if (!i2cbus.inited()) return false;
     noInterrupts();
     if (current_i2c_device) {
       if (current_i2c_device == this || last_i2c_device == this || next) {
