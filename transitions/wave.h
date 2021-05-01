@@ -74,7 +74,6 @@ public:
   void run(BladeBase *blade) {
     spark_size_.run(blade);
     spark_center_.run(blade);
-    spark_ms_.run(blade);
     color_.run(blade);
     if (this->restart()) {
       center_ = spark_center_.getInteger(0);
@@ -82,7 +81,7 @@ public:
     }
     TransitionBaseX<SPARK_MS>::run(blade);
     num_leds_ = blade->num_leds();
-    offset_ = (millis() - this->start_millis()) * 32768 / spark_ms_.getInteger(0);
+    offset_ = this->update(32768);
   }
 private:
   SPARK_CENTER spark_center_;
@@ -93,7 +92,6 @@ private:
 
   int num_leds_;
   int offset_;
-  SPARK_MS spark_ms_;
   COLOR color_;
 public:
   template<class A, class B>
@@ -102,7 +100,7 @@ public:
     int N = std::abs(dist - offset_) * size_ >> 15;
     int mix;
     if (N <= 32) {
-      mix = blast_hump[N] * 32768 >> 8;
+      mix = blast_hump[N] << 7;
     } else {
       mix = 0;
     }
