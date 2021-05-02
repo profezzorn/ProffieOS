@@ -278,6 +278,7 @@ public:
 
 uint64_t audio_dma_interrupt_cycles = 0;
 uint64_t pixel_dma_interrupt_cycles = 0;
+uint64_t motion_interrupt_cycles = 0;
 uint64_t wav_interrupt_cycles = 0;
 uint64_t loop_cycles = 0;
 
@@ -589,6 +590,8 @@ LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN>>
 #endif
 
 #include "common/sd_test.h"
+
+class I2CDevice;
 
 class Commands : public CommandParser {
  public:
@@ -962,6 +965,7 @@ class Commands : public CommandParser {
       float total_cycles =
         (float)(audio_dma_interrupt_cycles +
 	        pixel_dma_interrupt_cycles +
+		motion_interrupt_cycles +
                  wav_interrupt_cycles +
 		 Looper::CountCycles() +
 		 CountProfileCycles());
@@ -977,6 +981,9 @@ class Commands : public CommandParser {
       STDOUT.print("LOOP: ");
       STDOUT.print(loop_cycles * 100.0f / total_cycles);
       STDOUT.println("%");
+      STDOUT.print("Motion: ");
+      STDOUT.print(motion_interrupt_cycles * 100.0f / total_cycles);
+      STDOUT.println("%");
       STDOUT.print("Global loops / second: ");
       global_loop_counter.Print();
       STDOUT.println("");
@@ -986,6 +993,7 @@ class Commands : public CommandParser {
       noInterrupts();
       audio_dma_interrupt_cycles = 0;
       pixel_dma_interrupt_cycles = 0;
+      motion_interrupt_cycles = 0;
       wav_interrupt_cycles = 0;
       interrupts();
       return true;
@@ -1031,6 +1039,13 @@ class Commands : public CommandParser {
       STDOUT.println(STM32.getVREF());
       STDOUT.print("TEMP: ");
       STDOUT.println(STM32.getTemperature());
+      return true;
+    }
+#endif // ENABLE_DEVELOPER_COMMANDS
+#ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "i2cstate")) {
+      extern void DumpI2CState();
+      DumpI2CState();
       return true;
     }
 #endif // ENABLE_DEVELOPER_COMMANDS

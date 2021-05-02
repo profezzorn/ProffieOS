@@ -6,6 +6,8 @@
 #define VERSION_MINOR 0
 #define GYRO_CLASS FXAS21002
 #define ACCEL_CLASS FXOS8700
+#define GYRO_MEASUREMENTS_PER_SECOND 800
+#define ACCEL_MEASUREMENTS_PER_SECOND 800
 
 // Teensy 3.2 pin map:
 // A lot of these can be changed, but be careful, because:

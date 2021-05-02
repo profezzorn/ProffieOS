@@ -38,4 +38,4 @@ class Remap {
   }
 };
 
-#endif STYLES_REMAP_H
+#endif  // STYLES_REMAP_H

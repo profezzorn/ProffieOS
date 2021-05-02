@@ -158,7 +158,7 @@ public:
         int status = readByte(STATUS);
         if (status == -1) {
           // motion fail, reboot gyro chip.
-          STDOUT.println("Motion chip timeout, reboot motion chip!");
+          STDOUT.println("Motion chip timeout, trying auto-reboot of motion chip!");
           // writeByte(CTRL3_C, 1);
           delay(20);
           break;
