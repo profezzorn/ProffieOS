@@ -17,7 +17,12 @@ EFFECT(range);
 EFFECT(reload);
 EFFECT(stun);
 EFFECT(unjam);
-
+EFFECT(mdstun);
+EFFECT(mdkill);
+EFFECT(mdauto);
+// For mode sounds, specific "mdstun", "mdkill", and "mdauto" may be used.
+// If just a single "mode" sound for all switches exists, that will be used.
+// If no mode sounds exist in the font, a talkie version will speak the mode on switching.
 class Blaster : public PropBase {
 public:
   Blaster() : PropBase() {}
@@ -239,14 +244,18 @@ public:
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
 
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
         NextBlasterMode();
         return true;
 
       case EVENTID(BUTTON_MODE_SELECT, EVENT_DOUBLE_CLICK, MODE_ON):
         next_preset();
         return true;
-
+        
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_CLICK_LONG, MODE_ON):
+        previous_preset();
+        return true;
+        
       case EVENTID(BUTTON_RELOAD, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON):
         Reload();
@@ -292,7 +301,7 @@ public:
     return false;
   }
 
-  // Blaster effects, auto fire is handled by begin/end lockup
+   // Blaster effects, auto fire is handled by begin/end lockup
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
       default: return;
@@ -301,14 +310,7 @@ public:
       case EFFECT_CLIP_IN: hybrid_font.PlayCommon(&SFX_clipin); return;
       case EFFECT_CLIP_OUT: hybrid_font.PlayCommon(&SFX_clipout); return;
       case EFFECT_RELOAD: hybrid_font.PlayCommon(&SFX_reload); return;
-      case EFFECT_MODE:
-	if (SFX_mode) {
-	  hybrid_font.PlayCommon(&SFX_mode);
-	  return;
-	}
-	// TODO: would rather do a Talkie to speak the mode we're in after mode sound
-	beeper.Beep(0.05, 2000.0);
-	return;
+      case EFFECT_MODE: SayMode(); return;
       case EFFECT_RANGE: hybrid_font.PlayCommon(&SFX_range); return;
       case EFFECT_EMPTY: hybrid_font.PlayCommon(&SFX_empty); return;
       case EFFECT_FULL: hybrid_font.PlayCommon(&SFX_full); return;
@@ -316,7 +318,39 @@ public:
       case EFFECT_UNJAM: hybrid_font.PlayCommon(&SFX_unjam); return;
       case EFFECT_PLI_ON: hybrid_font.PlayCommon(&SFX_plion); return;
       case EFFECT_PLI_OFF: hybrid_font.PlayCommon(&SFX_plioff); return;
-	
+  
+    }
+  }
+
+  void SayMode() {
+    switch (blaster_mode) {
+      case MODE_STUN:
+        if (SFX_mdstun) {
+          hybrid_font.PlayCommon(&SFX_mdstun);
+        } else if (SFX_mode) {
+          hybrid_font.PlayCommon(&SFX_mode);
+        } else {
+          talkie.Say(spSTUN);
+        }
+      break;
+      case MODE_KILL:
+        if (SFX_mdkill) {
+          hybrid_font.PlayCommon(&SFX_mdkill);
+        } else if (SFX_mode) {
+          hybrid_font.PlayCommon(&SFX_mode);
+        } else {
+          talkie.Say(spKILL);      
+        }
+      break;
+      case MODE_AUTO:
+        if (SFX_mdauto) {
+          hybrid_font.PlayCommon(&SFX_mdauto);
+        } else if (SFX_mode) {
+          hybrid_font.PlayCommon(&SFX_mode);
+        } else {
+          talkie.Say(spAUTOFIRE);       
+        }
+      break;
     }
   }
 };
