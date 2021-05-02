@@ -86,8 +86,6 @@ EFFECT(dim); // for EFFECT_POWERSAVE
 EFFECT(battery); // for EFFECT_BATTERY_LEVEL
 EFFECT(bmbegin); // for Begin Battle Mode
 EFFECT(bmend); // for End Battle Mode
-EFFECT(vmbegin); // for Begin Volume Menu
-EFFECT(vmend); // for End Volume Menu
 EFFECT(faston); // for EFFECT_FAST_ON
 EFFECT(blstbgn); // for Begin Multi-Blast
 EFFECT(blstend); // for End Multi-Blast
@@ -313,11 +311,6 @@ SaberShtokButtons() : PropBase() {}
           return true;
         }
         break;
-
-// Lightning Block
-
-
-// Start or Stop Track
 
 
 // 1-button code
