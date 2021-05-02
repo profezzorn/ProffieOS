@@ -683,7 +683,8 @@ public:
         if (SFX_vmbegin) {
           hybrid_font.PlayCommon(&SFX_vmbegin);
         } else {
-          beeper.Beep(0.5, 3000);
+          beeper.Beep(0.1, 2000);
+          beeper.Beep(0.1, 2500);
         }
         STDOUT.println("Enter Volume Menu");
       } else {
@@ -691,7 +692,8 @@ public:
         if (SFX_vmend) {
           hybrid_font.PlayCommon(&SFX_vmend);
         } else {
-          beeper.Beep(0.5, 3000);
+          beeper.Beep(0.1, 2500);
+          beeper.Beep(0.1, 2000);
         }
         STDOUT.println("Exit Volume Menu");
       }
