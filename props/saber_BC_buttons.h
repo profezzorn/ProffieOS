@@ -16,8 +16,8 @@ enhanced sa22c's on-the-fly volume controls with custom prompts and sounds
 via the following wav files: 
 vmbegin.wav
 vmend.wav
-volchangedown.wav
-volchangeup.wav
+voldown.wav
+volup.wav
 volmax.wav
 volmin.wav
 
