@@ -580,9 +580,10 @@ public:
   void RunLocked() override {
     size_t size;
     if (i < 0) {
-      chunk[0] = transactions[NELEM(transactions)+i];
+      chunk[0] = 0;
+      chunk[1] = transactions[NELEM(transactions)+i];
       i++;
-      size = 1;
+      size = 2;
     } else {
       GetChunk();
       size = chunk_size + 1;
