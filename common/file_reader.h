@@ -410,6 +410,15 @@ public:
     itoa(v, value, 10);
     write_key_value(key, value);
   }
+// to save float with two decimal places
+  void write_key_value_float(const char* key, float f) {
+    char new_value[16];
+    itoa((int)floorf(f), new_value, 10);
+    strcat(new_value, ".");
+    itoa(((int)floorf(f * 10)) % 10, new_value + strlen(new_value), 10);
+    itoa(((int)floorf(f * 100)) % 10, new_value + strlen(new_value), 10);
+    write_key_value(key, new_value);
+  }
 private:
   enum {
 #ifdef ENABLE_SD

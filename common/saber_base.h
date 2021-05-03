@@ -19,6 +19,7 @@ extern SaberBase* saberbases;
 #define DEFINE_ALL_EFFECTS()			\
     DEFINE_EFFECT(NONE)				\
     DEFINE_EFFECT(CLASH)			\
+    DEFINE_EFFECT(CLASH_UPDATE)			\
     DEFINE_EFFECT(BLAST)			\
     DEFINE_EFFECT(FORCE)			\
     DEFINE_EFFECT(STAB)				\
@@ -156,45 +157,74 @@ public:
     return mixhum;
   }
 
-#define SABERFUN(NAME, TYPED_ARGS, ARGS)                        \
+  static float sound_length;
+
+#define SABERFUN(NAME, EFFECT, TYPED_ARGS, ARGS)		\
 public:                                                         \
   static void Do##NAME TYPED_ARGS {                             \
+    sound_length = 0.0                                          \
     CHECK_LL(SaberBase, saberbases, next_saber_);               \
     for (SaberBase *p = saberbases; p; p = p->next_saber_) {    \
       p->SB_##NAME ARGS;                                        \
     }                                                           \
+    for (SaberBase *p = saberbases; p; p = p->next_saber_) {    \
+      p->SB_##NAME##2 ARGS;                                     \
+    }                                                           \
     CHECK_LL(SaberBase, saberbases, next_saber_);               \
   }                                                             \
                                                                 \
-  virtual void SB_##NAME TYPED_ARGS {}
+  virtual void SB_##NAME TYPED_ARGS {}                          \
+  virtual void SB_##NAME##2 TYPED_ARGS {}
 
 #define SABERBASEFUNCTIONS()						\
-  SABERFUN(Effect, (EffectType effect, float location), (effect, location)); \
-  SABERFUN(PreOn, (float* delay), (delay));				\
-  SABERFUN(On, (), ());                  				\
-  SABERFUN(Off, (OffType off_type), (off_type));			\
-  SABERFUN(BladeDetect, (bool detected), (detected));			\
-  SABERFUN(Change, (ChangeType change_type), (change_type));		\
+  SABERFUN(Effect, effect, (EffectType effect, float location), (effect, location)); \
+  SABERFUN(PreOn, EFFECT_PREON, (float* delay), (delay));			\
+  SABERFUN(On, EFFECT_IGNITION, (), ());				\
+  SABERFUN(Off, EFFECT_RETRACTION, (OffType off_type), (off_type));	\
+  SABERFUN(BladeDetect, EFFECT_NONE, (bool detected), (detected));	\
+  SABERFUN(Change, EFFECT_CHANGE, (ChangeType change_type), (change_type)); \
 									\
-  SABERFUN(Top, (uint64_t total_cycles), (total_cycles));		\
-  SABERFUN(IsOn, (bool* on), (on));					\
-  SABERFUN(Message, (const char* msg), (msg));				\
-
+  SABERFUN(Top, EFFECT_NONE, (uint64_t total_cycles), (total_cycles));	\
+  SABERFUN(IsOn, EFFECT_NONE, (bool* on), (on));			\
+  SABERFUN(Message, EFFECT_NONE, (const char* msg), (msg));		\
   
   SABERBASEFUNCTIONS();
 
   static void DoEffectR(EffectType e) { DoEffect(e, (200 + random(700))/1000.0f); }
-  static void DoClash() { DoEffectR(EFFECT_CLASH); }
   static void DoBlast() { DoEffectR(EFFECT_BLAST); }
   static void DoForce() { DoEffectR(EFFECT_FORCE); }
-  static void DoStab() { DoEffect(EFFECT_STAB, 1.0f); }
   static void DoBoot() { DoEffect(EFFECT_BOOT, 0); }
   static void DoBeginLockup() { DoEffectR(EFFECT_LOCKUP_BEGIN); }
   static void DoEndLockup() { DoEffect(EFFECT_LOCKUP_END, 0); }
   static void DoChange() { DoEffect(EFFECT_CHANGE, 0); }
   static void DoNewFont() { DoEffect(EFFECT_NEWFONT, 0); }
   static void DoLowBatt() { DoEffect(EFFECT_LOW_BATTERY, 0); }
+
+  static float clash_strength_;
+
+  // Note, the full clash strength might not be known
+  // at the time that the EFFECT_CLASH event is emitted.
+  // In general, the full strength will be known a few
+  // milliseconds later. Every time the clash strength
+  // increases we also emit an EFFECT_CLASH_UPDATE event.
+  static float GetClashStrength() {
+    return clash_strength_;
+  }
   
+  static void DoClash(float strength) {
+    clash_strength_ = strength;
+    DoEffectR(EFFECT_CLASH);
+  }
+  static void DoStab(float strength) {
+    clash_strength_ = strength;
+    DoEffect(EFFECT_STAB, 1.0f);
+  }
+  static void UpdateClashStrength(float strength) {
+    if (strength > clash_strength_) {
+      clash_strength_ = strength;
+      DoEffect(EFFECT_CLASH_UPDATE, strength);
+    }
+  }
   
 #undef SABERFUN
 
@@ -238,10 +268,17 @@ public:                                                         \
     current_variation_ = v;
   }
 
+#ifdef DYNAMIC_BLADE_DIMMING
+  static int dimming_;
+  static int GetCurrentDimming() { return dimming_; }
+  static void SetDimming(int dimming) { dimming_ = dimming; }
+#endif  
+
   enum ColorChangeMode {
     COLOR_CHANGE_MODE_NONE,
     COLOR_CHANGE_MODE_STEPPED,
-    COLOR_CHANGE_MODE_SMOOTH
+    COLOR_CHANGE_MODE_SMOOTH,
+    COLOR_CHANGE_MODE_ZOOMED,
   };
 
   static ColorChangeMode GetColorChangeMode() { return color_change_mode_; }

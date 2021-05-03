@@ -3,14 +3,14 @@
 
 class BladeShortenerWrapper : public BladeStyle, public BladeWrapper {
 public:
-  BladeShortenerWrapper(int len, BladeStyle* style, BladeBase* blade) : num_leds_(len), style_(style) {
-    blade_ = blade;
+  BladeShortenerWrapper(int len, BladeStyle* style) : num_leds_(len), style_(style) {
   }
   ~BladeShortenerWrapper() {
     delete style_;
   }
 
   void run(BladeBase* blade) override {
+    blade_ = blade;
     num_leds_ = std::min<int>(blade->num_leds(), num_leds_);
     style_->run(this);
     // Fill rest of blade with black.

@@ -173,6 +173,7 @@ SaberBase::ColorChangeMode SaberBase::color_change_mode_ =
 bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 uint32_t SaberBase::current_variation_ = 0;
+float SaberBase::sound_length = 0.0;
 
 bool on_ = true;
 bool allow_disable_ = false;
@@ -528,8 +529,17 @@ void testResetArguments(const char* from, const char* expected) {
 }
 
 void testCopyArguments(const char* from, const char *to, const char* expected) {
-  fprintf(stderr, "testResetArguments(%s, %s)\n", from, to);
+  fprintf(stderr, "testCopyArguments(%s, %s)\n", from, to);
   LSPtr<char> ret = style_parser.CopyArguments(from, to);
+  if (strcmp(ret.get(), expected)) {
+    fprintf(stderr, "Expected '%s' got '%s'\n", expected, ret.get());
+    exit(1);
+  }
+}
+
+void testCopyArguments(const char* from, const char *to, int N, const char* expected) {
+  fprintf(stderr, "testCopyArguments(%s, %s, %d)\n", from, to, N);
+  LSPtr<char> ret = style_parser.CopyArguments(from, to, N);
   if (strcmp(ret.get(), expected)) {
     fprintf(stderr, "Expected '%s' got '%s'\n", expected, ret.get());
     exit(1);
@@ -556,6 +566,13 @@ void test_argument_parsing() {
 
   testResetArguments("standard 1 2 3", "standard");
   testCopyArguments("standard 1 2 3", "blarg 2 3 4", "blarg 1 2 3");
+
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 4, "blarg 1 2 3");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 3, "blarg 1 2 3");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 2, "blarg 1 2 9");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 1, "blarg 1 8 9");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 0, "blarg 7 8 9");
+
 }
 
 int main() {

@@ -199,7 +199,7 @@ public:
   const char* name() override { return "MiCOM"; }
 #if NUM_BUTTONS >= 2
   // Make clash do nothing
-  void Clash(bool stab) override {}
+  void Clash(bool stab, float strength) override {}
 #endif
   void Loop() {
     PropBase::Loop();

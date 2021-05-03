@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,10 +29,11 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
+// #define CONFIG_FILE "config/testconfig.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -46,6 +47,17 @@
 #ifdef SAVE_STATE
 #define SAVE_VOLUME
 #define SAVE_PRESET
+#define SAVE_COLOR_CHANGE
+#define SAVE_DYNAMIC_DIMMING
+#endif
+
+#ifdef ENABLE_ALL_MENU_OPTIONS
+#define DYNAMIC_BLADE_LENGTH
+#define DYNAMIC_BLADE_DIMMING
+#define DYNAMIC_CLASH_THRESHOLD
+#define SAVE_VOLUME
+#define SAVE_BLADE_DIMMING
+#define SAVE_CLASH_THRESHOLD
 #define SAVE_COLOR_CHANGE
 #endif
 
@@ -266,6 +278,7 @@ public:
 
 uint64_t audio_dma_interrupt_cycles = 0;
 uint64_t pixel_dma_interrupt_cycles = 0;
+uint64_t motion_interrupt_cycles = 0;
 uint64_t wav_interrupt_cycles = 0;
 uint64_t loop_cycles = 0;
 
@@ -295,6 +308,11 @@ SaberBase::ColorChangeMode SaberBase::color_change_mode_ =
 bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 uint32_t SaberBase::current_variation_ = 0;
+float SaberBase::sound_length = 0.0;
+float SaberBase::clash_strength_ = 0.0;
+#ifdef DYNAMIC_BLADE_DIMMING
+int SaberBase::dimming_ = 16384;
+#endif
 
 #include "common/box_filter.h"
 
@@ -412,6 +430,8 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/transition_effect.h"
 #include "styles/transition_loop.h"
 #include "styles/effect_sequence.h"
+#include "styles/color_select.h"
+#include "styles/remap.h"
 
 // functions
 #include "functions/ifon.h"
@@ -435,6 +455,13 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/marble.h"
 #include "functions/slice.h"
 #include "functions/mult.h"
+#include "functions/wavlen.h"
+#include "functions/effect_position.h"
+#include "functions/time_since_effect.h"
+#include "functions/sum.h"
+#include "functions/ramp.h"
+#include "functions/center_dist.h"
+#include "functions/linear_section.h"
 
 // transitions
 #include "transitions/fade.h"
@@ -448,6 +475,9 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/random.h"
 #include "transitions/colorcycle.h"
 #include "transitions/wave.h"
+#include "transitions/select.h"
+#include "transitions/extend.h"
+#include "transitions/center_wipe.h"
 
 #include "styles/legacy_styles.h"
 //responsive styles
@@ -528,6 +558,7 @@ CapTest captest;
 #else
 #include "buttons/stm32l4_touchbutton.h"
 #endif
+#include "buttons/rotary.h"
 
 #include "ir/ir.h"
 #include "ir/receiver.h"
@@ -559,6 +590,8 @@ LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN>>
 #endif
 
 #include "common/sd_test.h"
+
+class I2CDevice;
 
 class Commands : public CommandParser {
  public:
@@ -811,6 +844,14 @@ class Commands : public CommandParser {
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
 #endif
+
+#ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "sleep") && e) {
+      delay(atoi(e));
+      return true;
+    }
+#endif
+
 #ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "twiddle")) {
       int pin = strtol(e, NULL, 0);
@@ -924,6 +965,7 @@ class Commands : public CommandParser {
       float total_cycles =
         (float)(audio_dma_interrupt_cycles +
 	        pixel_dma_interrupt_cycles +
+		motion_interrupt_cycles +
                  wav_interrupt_cycles +
 		 Looper::CountCycles() +
 		 CountProfileCycles());
@@ -939,6 +981,9 @@ class Commands : public CommandParser {
       STDOUT.print("LOOP: ");
       STDOUT.print(loop_cycles * 100.0f / total_cycles);
       STDOUT.println("%");
+      STDOUT.print("Motion: ");
+      STDOUT.print(motion_interrupt_cycles * 100.0f / total_cycles);
+      STDOUT.println("%");
       STDOUT.print("Global loops / second: ");
       global_loop_counter.Print();
       STDOUT.println("");
@@ -948,6 +993,7 @@ class Commands : public CommandParser {
       noInterrupts();
       audio_dma_interrupt_cycles = 0;
       pixel_dma_interrupt_cycles = 0;
+      motion_interrupt_cycles = 0;
       wav_interrupt_cycles = 0;
       interrupts();
       return true;
@@ -980,6 +1026,12 @@ class Commands : public CommandParser {
       return true;
     }
 #ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "dumpfusor")) {
+      fusor.dump();
+      return true;
+    }
+#endif
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "stm32info")) {
       STDOUT.print("VBAT: ");
       STDOUT.println(STM32.getVBAT());
@@ -987,6 +1039,13 @@ class Commands : public CommandParser {
       STDOUT.println(STM32.getVREF());
       STDOUT.print("TEMP: ");
       STDOUT.println(STM32.getTemperature());
+      return true;
+    }
+#endif // ENABLE_DEVELOPER_COMMANDS
+#ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "i2cstate")) {
+      extern void DumpI2CState();
+      DumpI2CState();
       return true;
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
@@ -1546,8 +1605,7 @@ StaticWrapper<SerialCommands> serial_commands;
 
 #endif
 
-
-#if defined(ENABLE_MOTION) || defined(ENABLE_SSD1306)
+#if defined(ENABLE_MOTION) || defined(ENABLE_SSD1306) || defined(INCLUDE_SSD1306)
 #include "common/i2cdevice.h"
 I2CBus i2cbus;
 #endif
@@ -1556,6 +1614,11 @@ I2CBus i2cbus;
 #include "display/ssd1306.h"
 SSD1306 display;
 #endif
+
+#ifdef INCLUDE_SSD1306
+#include "display/ssd1306.h"
+#endif
+
 
 #ifdef ENABLE_MOTION
 
@@ -1719,3 +1782,8 @@ void loop() {
 #endif
   Looper::DoLoop();
 }
+
+#define CONFIG_BOTTOM
+#include CONFIG_FILE
+#undef CONFIG_BOTTOM
+

@@ -22,6 +22,7 @@ struct BladeEffect {
 
   uint32_t start_micros;
   float location; // 0 = base, 1 = tip
+  float sound_length;
 };
 
 class BladeBase {
@@ -83,6 +84,8 @@ public:
 
 HandledFeature BladeBase::handled_features_ = HANDLED_FEATURE_NONE;
 
+BladeEffect* last_detected_blade_effect = NULL;
+
 template<BladeEffectType effect>
 class OneshotEffectDetector {
 public:
@@ -109,9 +112,11 @@ public:
 	if (effects[i].start_micros == last_detected_)
 	  return nullptr;
 	last_detected_ = effects[i].start_micros;
+	last_detected_blade_effect = effects + i;
 	return effects + i;
       }
     }
+    last_detected_blade_effect = nullptr;
     return nullptr;
   }
   uint32_t last_detected_micros() { return last_detected_; }

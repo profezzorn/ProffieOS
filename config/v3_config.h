@@ -8,6 +8,8 @@
 #define V3
 #define USE_I2S
 #define GYRO_CLASS LSM6DS3H
+#define GYRO_MEASUREMENTS_PER_SECOND 1600
+#define ACCEL_MEASUREMENTS_PER_SECOND 1600
 
 // Teensy 3.2 pin map:
 // A lot of these can be changed, but be careful, because:

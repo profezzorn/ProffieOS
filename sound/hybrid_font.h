@@ -316,11 +316,13 @@ public:
       PlayMonophonic(&SFX_poweron, &SFX_hum);
     } else {
       state_ = STATE_OUT;
-      hum_player_ = GetFreeWavPlayer();
-      if (hum_player_) {
-        hum_player_->set_volume_now(0);
-        hum_player_->PlayOnce(SFX_humm ? &SFX_humm : &SFX_hum);
-        hum_player_->PlayLoop(SFX_humm ? &SFX_humm : &SFX_hum);
+      if (!hum_player_) {
+	hum_player_ = GetFreeWavPlayer();
+	if (hum_player_) {
+	  hum_player_->set_volume_now(0);
+	  hum_player_->PlayOnce(SFX_humm ? &SFX_humm : &SFX_hum);
+	  hum_player_->PlayLoop(SFX_humm ? &SFX_humm : &SFX_hum);
+	}
         hum_start_ = millis();
       }
       RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(SFX_out ? &SFX_out : &SFX_poweron);

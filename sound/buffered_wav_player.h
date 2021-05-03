@@ -64,6 +64,9 @@ public:
       scheduleFillBuffer();
     }
     pause_ = false;
+    if (SaberBase::sound_length == 0.0 && effect->GetFollowing() != effect) {
+      SaberBase::sound_length = length();
+    }
   }
   void PlayLoop(Effect* effect) { wav.PlayLoop(effect); }
 

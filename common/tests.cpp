@@ -16,6 +16,8 @@
 #define NUM_BLADES 3
 #define PROFFIE_TEST
 #define ENABLE_SD
+#define GYRO_MEASUREMENTS_PER_SECOND 1600
+#define ACCEL_MEASUREMENTS_PER_SECOND 1600
 
 int random(int x) { return rand() % x; }
 
