@@ -147,8 +147,9 @@ public:
 
       while (SaberBase::MotionRequested()) {
 	Poll();
-	if (millis() - last_event_ > I2C_TIMEOUT_MILLIS * 2) {
+	if ((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31) {
 	  TRACE(MOTION, "timeout");
+	  STDOUT.println("Motion timeout.");
 	  break;
 	}
 	YIELD();
