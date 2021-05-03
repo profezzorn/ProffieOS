@@ -706,11 +706,13 @@ public:
     // 2 and 3 button
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
   #endif 
-    talkie.SayDigit((int)floorf(battery_monitor.battery()));
-    talkie.Say(spPOINT);
-    talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
-    talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
-    talkie.Say(spVOLTS);
+    if (!mode_volume_) {
+      talkie.SayDigit((int)floorf(battery_monitor.battery()));
+      talkie.Say(spPOINT);
+      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
+      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
+      talkie.Say(spVOLTS);
+    }
     return true;
 
 // On Demand Battery Level
@@ -740,7 +742,7 @@ public:
 
 // Stab 
     case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
-      SaberBase::DoStab();
+      SaberBase::DoStab(2.0);
     return true;
 
 // Blaster Deflection
