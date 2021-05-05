@@ -59,7 +59,9 @@ void Play(Effect* f) {
 
 class AnswerEffectGroup {
 public:
-  AnswerEffectGroup(SUBNAMES(effect_, CONST_CHAR_NAME, COMMA)) : SUBNAMES(effect_, INIT_EFFECT, COMMA) {}
+  AnswerEffectGroup(SUBNAMES(effect_, CONST_CHAR_NAME, COMMA)) : SUBNAMES(effect_, INIT_EFFECT, COMMA) {
+    effect_loop_.SetFollowing(&effect_loop_);
+  }
 
   SUBNAMES(effect_, DECLARE_EFFECT, );
 
