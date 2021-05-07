@@ -129,6 +129,25 @@ private:
   const char* str_;
 };
 
+class GetMaxArgParser : public ArgParserInterface {
+public:
+  const char* GetArg(int arg_num,
+		     const char* name,
+		     const char* default_value) override {
+    max_ = std::max<int>(max_, arg_num + offset_);
+    return default_value;
+  }
+  void Shift(int words) override {
+    offset_ += words;
+  }
+  int max_arg() {
+    return max_;
+  }
+private:
+  int offset_ = 0;
+  int max_ = 0;
+};
+
 extern ArgParserInterface* CurrentArgParser;
 
 #endif

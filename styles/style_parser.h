@@ -136,6 +136,16 @@ public:
     return ap.next();
   }
 
+  // Returns true if the listed style refereces the specified argument.
+  int MaxUsedArgument(const char* str) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    GetMaxArgParser ap;
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    return ap.max_arg();
+  }
+
   // Get the Nth argument of a style string.
   // The output will be copied to |output|.
   // If the string itself doesn't contain that argument, the style
