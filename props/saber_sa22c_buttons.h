@@ -360,7 +360,7 @@ public:
             beeper.Beep(0.5, 3000);
           }
           STDOUT.print("Maximum Volume: ");
-          min_vol_reached = false;
+          min_vol_reached_ = false;
         }
       #else
         if (SFX_volmin) {
