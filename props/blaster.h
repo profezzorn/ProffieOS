@@ -23,7 +23,7 @@ EFFECT(mdauto);
 // For mode sounds, specific "mdstun", "mdkill", and "mdauto" may be used.
 // If just a single "mode" sound for all switches exists, that will be used.
 // If no mode sounds exist in the font, a talkie version will speak the mode on switching.
-class Blaster : public PropBase {
+class Blaster : public virtual PropBase {
 public:
   Blaster() : PropBase() {}
   const char* name() override { return "Blaster"; }

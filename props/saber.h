@@ -31,7 +31,7 @@ Hold power and twist while on - Enters color change mode. (ProffieOS 3.x and abo
 
 // The Saber class implements the basic states and actions
 // for the saber.
-class Saber : public PropBase {
+class Saber : public virtual PropBase {
 public:
   Saber() : PropBase() {}
   const char* name() override { return "Saber"; }

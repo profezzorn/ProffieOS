@@ -339,7 +339,7 @@ EFFECT(volts);      // for Spoken Battery Level
 
 // The Saber class implements the basic states and actions
 // for the saber.
-class SaberBCButtons : public PropBase {
+class SaberBCButtons : public virtual PropBase {
 public:
   SaberBCButtons() : PropBase() {}
   const char* name() override { return "SaberBCButtons"; }
