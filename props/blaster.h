@@ -1,3 +1,39 @@
+/* 
+blaster.h
+http://fredrik.hubbe.net/lightsaber/proffieos.html
+Copyright (c) 2016-2019 Fredrik Hubinette
+Distributed under the terms of the GNU General Public License v3.
+http://www.gnu.org/licenses/
+
+---- Basic blaster prop use. ----
+Default Startup Mode = STUN
+Add the following to your config file if so desired:
+	#define BLASTER_SHOTS_UNTIL_EMPTY 15 (whatever number)
+	#define BLASTER_JAM_PERCENTAGE if this is not defined, random from 0-100%.
+
+Blaster Buttons: FIRE and MODE
+(Blaster is always on with power, unless dedicated Power button is installed.)
+
+Cycle Modes - 						Click MODE
+Next Preset - 						Double click MODE
+Previous Preset - 					Double click and hold MODE, release after a second
+Reload - 						Hold for 2 seconds and release (Or Click Reload if dedicated button installed)
+Start/Stop Track - 					Hold MODE until track plays or stops
+Fire - 							Click FIRE (Hold to Auto Fire / Rapid Fire)
+Clip In - 						Clip Detect pad Latched On ( or Hold Momentary button)
+Clip out - 						Clip Detect pad Latched Off ( or release Momentary button)
+Unjam - 						Bang the blaster.
+(If 3rd button (POW))
+	Power On / Off - 				Click POW
+
+Wavs to use for switching Modes:
+	mdstun.wav
+	mdkill.wav
+	mdauto.wav
+- If these are not present, mode.wav will be used for all modes.
+- If no mode.wav either, then Talkie voice speaks selected mode.
+*/
+
 #ifndef PROPS_BLASTER_H
 #define PROPS_BLASTER_H
 
