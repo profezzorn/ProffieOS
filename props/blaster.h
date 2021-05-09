@@ -1,3 +1,33 @@
+/* Basic blaster prop use.
+
+Default Startup Mode = STUN
+Add the following to your config file if so desired:
+	#define BLASTER_SHOTS_UNTIL_EMPTY 15 (whatever number)
+	#define BLASTER_JAM_PERCENTAGE if this is not defined, random from 0-100%.
+
+Blaster Buttons: FIRE and MODE
+(Blaster is always on with power, unless dedicated Power button is installed.)
+
+Cycle Modes - 						Click MODE
+Next Preset - 						Double click MODE
+Previous Preset - 					Double click and hold MODE, release after a second
+Reload - 							Hold for 2 seconds and release (Or Click Reload if dedicated button insatlled))
+Start/Stop Track - 					Hold MODE until track plays or stops
+Fire - 								Click FIRE (Hold to Auto Fire / Rapid Fire)
+Clip In - 							Clip Detect pad Latched On ( or Hold Momentary button)
+Clip out - 							Clip Detect pad Latched Off ( or release Momentary button)
+Unjam - 							Bang the blaster.
+(If 3rd button (POW))
+	Power On / Off - 				Click POW
+
+Wavs to use for switching Modes:
+	mdstun.wav
+	mdkill.wav
+	mdauto.wav
+- If these are not present, mode.wav will be used for all modes.
+- If no mode.wav either, then Talkie voice speaks selected mode.
+*/
+  
 #ifndef PROPS_BLASTER_H
 #define PROPS_BLASTER_H
 
@@ -23,7 +53,7 @@ EFFECT(mdauto);
 // For mode sounds, specific "mdstun", "mdkill", and "mdauto" may be used.
 // If just a single "mode" sound for all switches exists, that will be used.
 // If no mode sounds exist in the font, a talkie version will speak the mode on switching.
-class Blaster : public PropBase {
+class Blaster : public virtual PropBase {
 public:
   Blaster() : PropBase() {}
   const char* name() override { return "Blaster"; }
@@ -297,6 +327,24 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
         Off();
         return true;
+		    
+  #ifdef BLADE_DETECT_PIN
+    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
+    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
+      // Might need to do something cleaner, but let's try this for now.
+      blade_detected_ = true;
+      FindBladeAgain();
+      SaberBase::DoBladeDetect(true);
+      return true;
+
+    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
+    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
+      // Might need to do something cleaner, but let's try this for now.
+      blade_detected_ = false;
+      FindBladeAgain();
+      SaberBase::DoBladeDetect(false);
+      return true;
+  #endif
     }
     return false;
   }

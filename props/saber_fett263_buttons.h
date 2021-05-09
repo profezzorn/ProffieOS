@@ -288,7 +288,7 @@ EFFECT(push); // for Force Push gesture in Battle Mode
 
 // The Saber class implements the basic states and actions
 // for the saber.
-class SaberFett263Buttons : public PropBase {
+class SaberFett263Buttons : public virtual PropBase {
 public:
 SaberFett263Buttons() : PropBase() {}
   const char* name() override { return "SaberFett263Buttons"; }
