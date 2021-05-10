@@ -29,7 +29,7 @@ public:
       if (delta > 1000000) delta = 1;
       delta *= speed_.getInteger(0);
       delta /= 1000000;
-      int target = f_.getInteger(0);
+      int target = current;
       if (delta > abs(value_ - target)) {
         value_ = target;
       } else if (value_ < target) {
