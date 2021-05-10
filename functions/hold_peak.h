@@ -52,7 +52,7 @@ private:
   int current;
   uint32_t last_micros = 0;
   uint32_t hold_millis;
-  uin32_t last_peak = millis();
+  uint32_t last_peak = millis();
 };
 
 #endif
