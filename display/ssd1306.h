@@ -47,77 +47,14 @@ const Glyph BatteryBar16 = { 16, 0, 0, GLYPHDATA(BatteryBar16_data) };
 #define MAX_GLYPH_HEIGHT 32
 #endif
 
+class Display;
+
 template<int WIDTH, class col_t>
-class SSD1306Template : public I2CDevice, Looper, StateMachine, SaberBase, private AudioStreamWork {
+class DisplayControllerBase {
 public:
   static const int HEIGHT = sizeof(col_t) * 8;
-  const char* name() override { return "SSD1306"; }
 
-  enum Commands {
-    SETCONTRAST = 0x81,
-    DISPLAYALLON_RESUME = 0xA4,
-    DISPLAYALLON = 0xA5,
-    NORMALDISPLAY = 0xA6,
-    INVERTDISPLAY = 0xA7,
-    DISPLAYOFF = 0xAE,
-    DISPLAYON = 0xAF,
-
-    SETDISPLAYOFFSET = 0xD3,
-    SETCOMPINS = 0xDA,
-
-    SETVCOMDETECT = 0xDB,
-
-    SETDISPLAYCLOCKDIV = 0xD5,
-    SETPRECHARGE = 0xD9,
-
-    SETMULTIPLEX = 0xA8,
-
-    SETLOWCOLUMN = 0x00,
-    SETHIGHCOLUMN = 0x10,
-
-    SETSTARTLINE = 0x40,
-
-    MEMORYMODE = 0x20,
-    COLUMNADDR = 0x21,
-    PAGEADDR   = 0x22,
-
-    COMSCANINC = 0xC0,
-    COMSCANDEC = 0xC8,
-
-    SEGREMAP = 0xA0,
-
-    CHARGEPUMP = 0x8D,
-
-    EXTERNALVCC = 0x1,
-    SWITCHCAPVCC = 0x2,
-
-    // Scrolling commands
-    ACTIVATE_SCROLL = 0x2F,
-    DEACTIVATE_SCROLL = 0x2E,
-    SET_VERTICAL_SCROLL_AREA = 0xA3,
-    RIGHT_HORIZONTAL_SCROLL = 0x26,
-    LEFT_HORIZONTAL_SCROLL = 0x27,
-    VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL = 0x29,
-    VERTICAL_AND_LEFT_HORIZONTAL_SCROLL = 0x2A,
-  };
-
-  enum Screen {
-    SCREEN_STARTUP,
-    SCREEN_MESSAGE,
-    SCREEN_PLI,
-    SCREEN_IMAGE,  // also for animations
-    SCREEN_OFF,
-  };
-
-  enum ScreenLayout {
-    LAYOUT_NATIVE,
-    LAYOUT_LANDSCAPE,
-    LAYOUT_PORTRAIT,
-  };
-
-  SSD1306Template() : I2CDevice(0x3C) { }
-  explicit SSD1306Template(int id) : I2CDevice(id) { }
-  void Send(int c) { writeByte(0, c); }
+  colt_t* frame_buffer_;
 
   void SetPixel(int x, int y) {
     frame_buffer_[x] |= ((col_t)1) << y;
@@ -197,6 +134,7 @@ public:
       pos += bar.skip;
     }
   }
+
   void DrawText(const char* str,
                 int x, int y,
                 const Glyph* font) {
@@ -211,9 +149,190 @@ public:
       str++;
     }
   }
+  virtual void FillFrameBuffer() = 0;
+};
+
+template<int WIDTH, class col_t>
+class AbstractDisplayCOntroller : public DisplayControllerBase<WIDTH, col_t>, private AudioStreamWork {
+public:
+  void SetScreenNow(Screen screen) {
+    millis_to_display_ = 0;
+    screen_ = screen;
+  }
+
+  void ShowFile(Effect* effect, float duration) {
+    if (*effect) {
+      MountSDCard();
+      eof_ = true;
+      file_.Play(effect);
+      frame_available_ = false;
+      loop_start_ = millis();
+      frame_count_ = 0;
+      SetScreenNow(SCREEN_IMAGE);
+      eof_ = false;
+      current_effect_ = effect;
+      effect_display_duration_ = duration;
+    }
+  }
+
+  void ShowFile(const char* file) {
+    MountSDCard();
+    eof_ = true;
+    file_.Play(file);
+    frame_available_ = false;
+    loop_start_ = millis();
+    frame_count_ = 0;
+    SetScreenNow(SCREEN_IMAGE);
+    eof_ = false;
+  }
+
+
+  // AudioStreamWork implementation
+  size_t space_available() const override {
+    if (eof_ || lock_fb_) return 0;
+    if (frame_available_) return 0;
+
+    // Always low priority
+    return 1;
+  }
+
+#define TAG2(X, Y) (((X) << 8) | (Y))
+  int ReadColorAsGray(FileReader* f) {
+    uint8_t rgba[4];
+    f->Read(rgba, 4);
+    return rgba[0] + rgba[1] + rgba[2];
+  }
+
+  bool ReadImage(FileReader* f) {
+    uint32_t file_end = 0;
+    // STDOUT << "ReadImage " << f->Tell() << " size = " << f->FileSize() << "\n";
+    if (ypos_ >= looped_frames_) {
+      if (looped_frames_ > 1) f->Seek(0);
+      ypos_ = 0;
+      uint32_t file_start = f->Tell();
+      int a = f->Read();
+      int b = f->Read();
+      int width, height;
+      switch (TAG2(a, b)) {
+        default:
+          STDOUT << "Unknown image format. a=" << a << " b=" << b << " pos=" << f->Tell() << "\n";
+          return false;
+
+        case TAG2('P', '4'):
+          // PBM
+          f->skipwhite();
+          width = f->readIntValue();
+          f->skipwhite();
+          height = f->readIntValue();
+          f->Read();
+          xor_ = 255;
+          invert_y_ = false;
+          break;
+
+        case TAG2('B', 'M'):
+        case TAG2('B', 'A'):
+        case TAG2('C', 'I'):
+        case TAG2('C', 'P'):
+        case TAG2('I', 'C'):
+        case TAG2('P', 'T'):
+          // STDOUT << "BMP detected!\n";
+          xor_ = 255;
+          invert_y_ = true; // bmp data is bottom to top
+          // BMP
+          file_end = file_start + f->ReadType<uint32_t>();
+          f->Skip(4);
+          uint32_t offset = f->ReadType<uint32_t>();
+
+#if 0
+          uint32_t ctable = f->Tell() + f->ReadType<uint32_t>();
+          // STDOUT << "OFFSET = " << offset << " CTABLE=" << ctable << "\n";
+          width = f->ReadType<uint32_t>();
+          height = f->ReadType<uint32_t>();
+          // STDOUT << "Width=" << width << " Height=" << height << "\n";
+          f->Seek(ctable);
+          int c0 = ReadColorAsGray(f);
+          int c1 = ReadColorAsGray(f);
+          xor_ = c0 > c1 ? 255 : 0;
+#else
+          f->Skip(4);
+          width = f->ReadType<uint32_t>();
+          height = f->ReadType<uint32_t>();
+          // STDOUT << "Width=" << width << " Height=" << height << "\n";
+#endif
+          // First frame is near the end, seek to it.
+          f->Seek(file_start + offset + width * height / 8 - sizeof(frame_buffer_));
+      }
+      if (width != WIDTH && width != HEIGHT) {
+        STDOUT << "Wrong size image: " << width << "x" << height << "\n";
+        return false;
+      }
+      if (width == WIDTH) {
+        layout_ = LAYOUT_LANDSCAPE;
+        looped_frames_ = height / HEIGHT;
+      } else {
+        looped_frames_ = height / WIDTH;
+      }
+      if (current_effect_ == &IMG_on) {
+        looped_on_ = looped_frames_ > 1;
+      }
+    }
+    // STDOUT << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
+    if (f->Available() < sizeof(frame_buffer_)) return false;
+    f->Read((uint8_t*)frame_buffer_, sizeof(frame_buffer_));
+    ypos_++;
+    if (looped_frames_ > 1) {
+      if (ypos_ >= looped_frames_) {
+        f->Seek(f->FileSize());
+      } else {
+        if (invert_y_) {
+          // Seek two frames back, because BMP are backwards.
+          f->Seek(f->Tell() - 2 * sizeof(frame_buffer_));
+        }
+      }
+    } else {
+      if (file_end) f->Seek(file_end);
+    }
+    return true;
+  }
+
+  bool FillBuffer() override {
+    if (eof_) return true;
+    if (file_.OpenFile()) {
+      if (!file_.IsOpen()) {
+        eof_ = true;
+        return false;
+      }
+      ypos_ = looped_frames_;
+    }
+    if (lock_fb_) return true;
+    if (!frame_available_) {
+      if (!ReadImage(&file_)) {
+        file_.Close();
+        eof_ = true;
+      }
+      frame_available_ = true;
+    }
+    return true;
+  }
+  void CloseFiles() override {
+    file_.Close();
+  }
+};
+
+template<int WIDTH, class col_t>
+class StandardDisplayController : public AbstractDisplayCOntroller<WIDTH, col_t>, SaberBase {
+public:
+  enum Screen {
+    SCREEN_STARTUP,
+    SCREEN_MESSAGE,
+    SCREEN_PLI,
+    SCREEN_IMAGE,  // also for animations
+    SCREEN_OFF,
+  };
+
 
   // Fill frame buffer and return how long to display it.
-  int FillFrameBuffer() {
+  int FillFrameBuffer() override {
     switch (screen_) {
       default:
       case SCREEN_OFF:
@@ -331,37 +450,6 @@ public:
     }
   }
 
-  void SetScreenNow(Screen screen) {
-    millis_to_display_ = 0;
-    screen_ = screen;
-  }
-
-  void ShowFile(Effect* effect, float duration) {
-    if (*effect) {
-      MountSDCard();
-      eof_ = true;
-      file_.Play(effect);
-      frame_available_ = false;
-      loop_start_ = millis();
-      frame_count_ = 0;
-      SetScreenNow(SCREEN_IMAGE);
-      eof_ = false;
-      current_effect_ = effect;
-      effect_display_duration_ = duration;
-    }
-  }
-
-  void ShowFile(const char* file) {
-    MountSDCard();
-    eof_ = true;
-    file_.Play(file);
-    frame_available_ = false;
-    loop_start_ = millis();
-    frame_count_ = 0;
-    SetScreenNow(SCREEN_IMAGE);
-    eof_ = false;
-  }
-
   void SB_On() override {
     ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
   }
@@ -414,6 +502,80 @@ public:
       SetScreenNow(SCREEN_PLI);
     }
   }
+
+  // TODO: Don't update the display when we don't need to
+  // and return false here so that we can go into lower power modes.
+  void SB_IsOn(bool* on) override {
+    *on = true;
+  }
+
+private:
+  LoopCounter loop_counter_;
+};
+
+template<int WIDTH, class col_t>
+class SSD1306Template : public I2CDevice, Looper, StateMachine, SaberBase, private AudioStreamWork {
+public:
+  static const int HEIGHT = sizeof(col_t) * 8;
+  const char* name() override { return "SSD1306"; }
+
+  enum Commands {
+    SETCONTRAST = 0x81,
+    DISPLAYALLON_RESUME = 0xA4,
+    DISPLAYALLON = 0xA5,
+    NORMALDISPLAY = 0xA6,
+    INVERTDISPLAY = 0xA7,
+    DISPLAYOFF = 0xAE,
+    DISPLAYON = 0xAF,
+
+    SETDISPLAYOFFSET = 0xD3,
+    SETCOMPINS = 0xDA,
+
+    SETVCOMDETECT = 0xDB,
+
+    SETDISPLAYCLOCKDIV = 0xD5,
+    SETPRECHARGE = 0xD9,
+
+    SETMULTIPLEX = 0xA8,
+
+    SETLOWCOLUMN = 0x00,
+    SETHIGHCOLUMN = 0x10,
+
+    SETSTARTLINE = 0x40,
+
+    MEMORYMODE = 0x20,
+    COLUMNADDR = 0x21,
+    PAGEADDR   = 0x22,
+
+    COMSCANINC = 0xC0,
+    COMSCANDEC = 0xC8,
+
+    SEGREMAP = 0xA0,
+
+    CHARGEPUMP = 0x8D,
+
+    EXTERNALVCC = 0x1,
+    SWITCHCAPVCC = 0x2,
+
+    // Scrolling commands
+    ACTIVATE_SCROLL = 0x2F,
+    DEACTIVATE_SCROLL = 0x2E,
+    SET_VERTICAL_SCROLL_AREA = 0xA3,
+    RIGHT_HORIZONTAL_SCROLL = 0x26,
+    LEFT_HORIZONTAL_SCROLL = 0x27,
+    VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL = 0x29,
+    VERTICAL_AND_LEFT_HORIZONTAL_SCROLL = 0x2A,
+  };
+
+  enum ScreenLayout {
+    LAYOUT_NATIVE,
+    LAYOUT_LANDSCAPE,
+    LAYOUT_PORTRAIT,
+  };
+
+  SSD1306Template() : I2CDevice(0x3C) { }
+  explicit SSD1306Template(int id) : I2CDevice(id) { }
+  void Send(int c) { writeByte(0, c); }
 
   static const size_t chunk_size = WIDTH * HEIGHT / 8 / 16;
   static const size_t num_chunks = WIDTH * HEIGHT / 8 / chunk_size;
@@ -612,142 +774,6 @@ public:
   }
 #endif  
 
-#define TAG2(X, Y) (((X) << 8) | (Y))
-  int ReadColorAsGray(FileReader* f) {
-    uint8_t rgba[4];
-    f->Read(rgba, 4);
-    return rgba[0] + rgba[1] + rgba[2];
-  }
-
-  bool ReadImage(FileReader* f) {
-    uint32_t file_end = 0;
-    // STDOUT << "ReadImage " << f->Tell() << " size = " << f->FileSize() << "\n";
-    if (ypos_ >= looped_frames_) {
-      if (looped_frames_ > 1) f->Seek(0);
-      ypos_ = 0;
-      uint32_t file_start = f->Tell();
-      int a = f->Read();
-      int b = f->Read();
-      int width, height;
-      switch (TAG2(a, b)) {
-        default:
-          STDOUT << "Unknown image format. a=" << a << " b=" << b << " pos=" << f->Tell() << "\n";
-          return false;
-
-        case TAG2('P', '4'):
-          // PBM
-          f->skipwhite();
-          width = f->readIntValue();
-          f->skipwhite();
-          height = f->readIntValue();
-          f->Read();
-          xor_ = 255;
-          invert_y_ = false;
-          break;
-
-        case TAG2('B', 'M'):
-        case TAG2('B', 'A'):
-        case TAG2('C', 'I'):
-        case TAG2('C', 'P'):
-        case TAG2('I', 'C'):
-        case TAG2('P', 'T'):
-          // STDOUT << "BMP detected!\n";
-          xor_ = 255;
-          invert_y_ = true; // bmp data is bottom to top
-          // BMP
-          file_end = file_start + f->ReadType<uint32_t>();
-          f->Skip(4);
-          uint32_t offset = f->ReadType<uint32_t>();
-
-#if 0
-          uint32_t ctable = f->Tell() + f->ReadType<uint32_t>();
-          // STDOUT << "OFFSET = " << offset << " CTABLE=" << ctable << "\n";
-          width = f->ReadType<uint32_t>();
-          height = f->ReadType<uint32_t>();
-          // STDOUT << "Width=" << width << " Height=" << height << "\n";
-          f->Seek(ctable);
-          int c0 = ReadColorAsGray(f);
-          int c1 = ReadColorAsGray(f);
-          xor_ = c0 > c1 ? 255 : 0;
-#else
-          f->Skip(4);
-          width = f->ReadType<uint32_t>();
-          height = f->ReadType<uint32_t>();
-          // STDOUT << "Width=" << width << " Height=" << height << "\n";
-#endif
-          // First frame is near the end, seek to it.
-          f->Seek(file_start + offset + width * height / 8 - sizeof(frame_buffer_));
-      }
-      if (width != WIDTH && width != HEIGHT) {
-        STDOUT << "Wrong size image: " << width << "x" << height << "\n";
-        return false;
-      }
-      if (width == WIDTH) {
-        layout_ = LAYOUT_LANDSCAPE;
-        looped_frames_ = height / HEIGHT;
-      } else {
-        looped_frames_ = height / WIDTH;
-      }
-      if (current_effect_ == &IMG_on) {
-        looped_on_ = looped_frames_ > 1;
-      }
-    }
-    // STDOUT << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
-    if (f->Available() < sizeof(frame_buffer_)) return false;
-    f->Read((uint8_t*)frame_buffer_, sizeof(frame_buffer_));
-    ypos_++;
-    if (looped_frames_ > 1) {
-      if (ypos_ >= looped_frames_) {
-        f->Seek(f->FileSize());
-      } else {
-        if (invert_y_) {
-          // Seek two frames back, because BMP are backwards.
-          f->Seek(f->Tell() - 2 * sizeof(frame_buffer_));
-        }
-      }
-    } else {
-      if (file_end) f->Seek(file_end);
-    }
-    return true;
-  }
-
-  // AudioStreamWork implementation
-  size_t space_available() const override {
-    if (eof_ || lock_fb_) return 0;
-    if (frame_available_) return 0;
-
-    // Always low priority
-    return 1;
-  }
-
-  bool FillBuffer() override {
-    if (eof_) return true;
-    if (file_.OpenFile()) {
-      if (!file_.IsOpen()) {
-        eof_ = true;
-        return false;
-      }
-      ypos_ = looped_frames_;
-    }
-    if (lock_fb_) return true;
-    if (!frame_available_) {
-      if (!ReadImage(&file_)) {
-        file_.Close();
-        eof_ = true;
-      }
-      frame_available_ = true;
-    }
-    return true;
-  }
-  void CloseFiles() override {
-    file_.Close();
-  }
-
-  // TODO: Don't update the display when we don't need to
-  // and return false here so that we can go into lower power modes.
-  void SB_IsOn(bool* on) override {
-    *on = true;
-  }
 private:
   int i;
   uint8_t xor_ = 0;
@@ -756,7 +782,6 @@ private:
   volatile Effect* current_effect_;
   volatile float effect_display_duration_;
   col_t frame_buffer_[WIDTH];
-  LoopCounter loop_counter_;
   char message_[32];
   uint32_t millis_to_display_;
   uint32_t frame_start_time_;
