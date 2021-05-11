@@ -59,7 +59,9 @@ void Play(Effect* f) {
 
 class AnswerEffectGroup {
 public:
-  AnswerEffectGroup(SUBNAMES(effect_, CONST_CHAR_NAME, COMMA)) : SUBNAMES(effect_, INIT_EFFECT, COMMA) {}
+  AnswerEffectGroup(SUBNAMES(effect_, CONST_CHAR_NAME, COMMA)) : SUBNAMES(effect_, INIT_EFFECT, COMMA) {
+    effect_loop_.SetFollowing(&effect_loop_);
+  }
 
   SUBNAMES(effect_, DECLARE_EFFECT, );
 
@@ -194,7 +196,7 @@ DEFINE_TRIGGER(8);
 
 #define PROP_TYPE AudioFx
 
-class AudioFx : public PropBase {
+class AudioFx : public virtual PropBase {
 public:
   const char* name() override { return "MiCOM"; }
 #if NUM_BUTTONS >= 2

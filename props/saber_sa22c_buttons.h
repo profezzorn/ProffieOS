@@ -197,7 +197,7 @@ EFFECT(push);     // for Force Push gesture in Battle Mode
 
 // The Saber class implements the basic states and actions
 // for the saber.
-class SaberSA22CButtons : public PropBase {
+class SaberSA22CButtons : public virtual PropBase {
 public:
   SaberSA22CButtons() : PropBase() {}
   const char* name() override { return "SaberSA22CButtons"; }
@@ -360,7 +360,7 @@ public:
             beeper.Beep(0.5, 3000);
           }
           STDOUT.print("Maximum Volume: ");
-          min_vol_reached = false;
+          min_vol_reached_ = false;
         }
       #else
         if (SFX_volmin) {

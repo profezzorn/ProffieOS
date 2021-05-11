@@ -339,7 +339,7 @@ EFFECT(volts);      // for Spoken Battery Level
 
 // The Saber class implements the basic states and actions
 // for the saber.
-class SaberBCButtons : public PropBase {
+class SaberBCButtons : public virtual PropBase {
 public:
   SaberBCButtons() : PropBase() {}
   const char* name() override { return "SaberBCButtons"; }
@@ -683,7 +683,8 @@ public:
         if (SFX_vmbegin) {
           hybrid_font.PlayCommon(&SFX_vmbegin);
         } else {
-          beeper.Beep(0.5, 3000);
+          beeper.Beep(0.1, 2000);
+          beeper.Beep(0.1, 2500);
         }
         STDOUT.println("Enter Volume Menu");
       } else {
@@ -691,7 +692,8 @@ public:
         if (SFX_vmend) {
           hybrid_font.PlayCommon(&SFX_vmend);
         } else {
-          beeper.Beep(0.5, 3000);
+          beeper.Beep(0.1, 2500);
+          beeper.Beep(0.1, 2000);
         }
         STDOUT.println("Exit Volume Menu");
       }
@@ -704,11 +706,13 @@ public:
     // 2 and 3 button
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
   #endif 
-    talkie.SayDigit((int)floorf(battery_monitor.battery()));
-    talkie.Say(spPOINT);
-    talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
-    talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
-    talkie.Say(spVOLTS);
+    if (!mode_volume_) {
+      talkie.SayDigit((int)floorf(battery_monitor.battery()));
+      talkie.Say(spPOINT);
+      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
+      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
+      talkie.Say(spVOLTS);
+    }
     return true;
 
 // On Demand Battery Level
@@ -738,7 +742,7 @@ public:
 
 // Stab 
     case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
-      SaberBase::DoStab();
+      SaberBase::DoStab(2.0);
     return true;
 
 // Blaster Deflection
