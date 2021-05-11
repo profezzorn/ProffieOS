@@ -14,10 +14,10 @@ class HoldPeakF {
 public:
   void run(BladeBase* blade) {
     f_.run(blade);
-    current = f_.getInteger(0);
-    hold_time_millis.run(blade);
-    hold_millis = hold_time_millis.getInteger(0);
     speed_.run(blade);
+    hold_time_millis.run(blade);
+    current = f_.getInteger(0);
+    hold_millis = hold_time_millis.getInteger(0);
     uint32_t now = micros();
     uint64_t delta = now - last_micros;
     last_micros = now;
@@ -29,11 +29,8 @@ public:
       if (delta > 1000000) delta = 1;
       delta *= speed_.getInteger(0);
       delta /= 1000000;
-      int target = current;
-      if (delta > abs(value_ - target)) {
-        value_ = target;
-      } else if (value_ < target) {
-        value_ += delta;
+      if (delta > (value_ - current)) {
+        value_ = current;
       } else {
         value_ -= delta;
       }
