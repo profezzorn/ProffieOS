@@ -59,6 +59,7 @@ class CatchCommandOutput : public Print {
   }
   size_t write(uint8_t b) override {
     if (b == '\n') { line_++; return 1; }
+    if (b == '\r') return 1;	  
     if (line_ == target_line_) {
       if (bufsize_ > 1) {
 	*buf_ = b;
