@@ -140,7 +140,7 @@ public:
   int MaxUsedArgument(const char* str) {
     NamedStyle* style = FindStyle(str);
     if (!style) return false;
-    GetMaxArgParser ap;
+    GetMaxArgParser ap(SkipWord(str));
     CurrentArgParser = &ap;
     delete style->style_allocator->make();
     // Ignore the two "builtin" arguments
