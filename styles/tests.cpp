@@ -546,6 +546,15 @@ void testCopyArguments(const char* from, const char *to, int N, const char* expe
   }
 }
 
+void testMaxUsedArgument(const char* from, int expected) {
+  fprintf(stderr, "testMaxUsedArgument(%s)\n", from);
+  int args = style_parser.MaxUsedArgument(from);
+  if (args != expected) {
+    fprintf(stderr, "Expected %d got %d\n", expected, args);
+    exit(1);
+  }
+}
+
 
 void test_argument_parsing() {
   testGetArg("standard", 0, "standard");
@@ -573,6 +582,9 @@ void test_argument_parsing() {
   testCopyArguments("standard 1 2 3", "blarg 7 8 9", 1, "blarg 1 8 9");
   testCopyArguments("standard 1 2 3", "blarg 7 8 9", 0, "blarg 7 8 9");
 
+  testMaxUsedArgument("charging", 0);
+  testMaxUsedArgument("rainbow", 2);
+  testMaxUsedArgument("fire", 2);
 }
 
 int main() {

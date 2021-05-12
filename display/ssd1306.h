@@ -798,8 +798,10 @@ private:
   volatile bool lock_fb_ = false;
 };
 
+#ifdef PROFFIEBOARD
 template<int WIDTH, class col_t>
 constexpr uint8_t SSD1306Template<WIDTH, col_t>::transactions[];
+#endif
 
 using SSD1306 = SSD1306Template<128, uint32_t>;
 
