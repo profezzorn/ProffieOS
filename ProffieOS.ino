@@ -559,6 +559,7 @@ CapTest captest;
 #include "buttons/stm32l4_touchbutton.h"
 #endif
 #include "buttons/rotary.h"
+#include "buttons/pots.h"
 
 #include "ir/ir.h"
 #include "ir/receiver.h"
