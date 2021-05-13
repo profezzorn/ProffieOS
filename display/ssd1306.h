@@ -54,7 +54,90 @@ class DisplayControllerBase {
 public:
   static const int HEIGHT = sizeof(col_t) * 8;
 
-  colt_t* frame_buffer_;
+  col_t* frame_buffer_;
+
+  void Clear() {
+    memset(frame_buffer_, 0, WIDTH * HEIGHT / 8);
+  }
+
+  void Invert() {
+    for (int i = 0; i < wIDTH; i++) {
+      frame_buffer_[i] ^= (col_t)-1;
+    }
+  }
+
+  void TransposeSquareInPlace(col_t* A) {
+    int j, k; 
+    col_t m, t; 
+    
+    m = (1 << ( sizeof(col_t) * 4)) - 1;
+    for (j = sizeof(col_t)*4; j != 0; j = j >> 1, m = m ^ (m << j)) {
+      for (k = 0; k < (sizeof(col_t) * 8); k = (k + j + 1) & ~j) {
+	t = (A[k] ^ (A[k+j] >> j)) & m; 
+	A[k] = A[k] ^ t; 
+	A[k+j] = A[k+j] ^ (t << j); 
+      } 
+    }
+  }
+
+  void FlipX() {
+    for (int i = 0; i < wIDTH / 2; i++) {
+      std::swap(frame_buffer_[i], frame_buffer_[WIDTH - 1 - i]);
+    }
+  }
+
+  col_t ReverseBits(col_t word) {
+    int j;
+    col_t m = (1 << ( sizeof(col_t) * 4)) - 1;
+    for (j = sizeof(col_t)*4; j != 0; j = j >> 1, m = m ^ (m << j)) {
+      word = ((word >> j) & m) | ((word & m) << j)
+    }
+  }
+  void FlipY() {
+    for (int w = 0; w < WIDTH; w++) {
+      frame_buffer_[w] = ReverseBits(frame_buffer_[w]);
+    }
+  }
+
+  col_t ReverseBytes(col_t word) {
+    int j;
+    col_t m = (1 << ( sizeof(col_t) * 4)) - 1;
+    for (j = sizeof(col_t)*4; j != 4; j = j >> 1, m = m ^ (m << j)) {
+      word = ((word >> j) & m) | ((word & m) << j)
+    }
+  }
+  void ConvertPortrait() {
+    for (int w = 0; w < WIDTH; w++) {
+      frame_buffer_[w] = ReverseBytes(frame_buffer_[w]);
+    }
+  }
+
+  void ConvertToRowMajor(bool invert_y) {
+    constexpr size_t wordsize = sizeof(col_t) * 8;
+    uint32_t bits[(width + 31) / 32];
+    for (uint32_t j = 0; j < NELEM(bits); j++) bits[j] = 0;
+    for (int w = 0; w < WIDTH; w++) {
+      if ((bits[w >> 5] >> (w & 31)) & 1) {
+	// this word has already been moved
+	continue;
+      }
+      size_t blocks_per_row = WIDTH / (sizeof(col_t) * 8);
+
+      int from = w;
+      do {
+	col_t tmp = frame_buffer_[from];
+	int block_x = from % blocks_per_row;
+	int row = from / blocks_per_row;
+	if (!invert_y) row = wordsize - 1 - row;
+	int dest = block_x * wordsize + row;
+	std::swap(tmp, frame_buffer_[dest]);
+	bits[dest >> 5] |= 1 << (dest & 31);
+	from = dest;
+      } while (from != w);
+    }
+    for(int w = 0; w < WIDTH; w += wordsize)
+      TransposeSquareInPlace(frame_buffer_ + w);
+  }
 
   void SetPixel(int x, int y) {
     frame_buffer_[x] |= ((col_t)1) << y;
@@ -153,8 +236,219 @@ public:
 };
 
 template<int WIDTH, class col_t>
-class AbstractDisplayCOntroller : public DisplayControllerBase<WIDTH, col_t>, private AudioStreamWork {
+class StandardDisplayController : public DisplayControllerBase<WIDTH, col_t>, SaberBase, private AudioStreamWork{
 public:
+  enum Screen {
+    SCREEN_STARTUP,
+    SCREEN_MESSAGE,
+    SCREEN_PLI,
+    SCREEN_IMAGE,  // also for animations
+    SCREEN_OFF,
+  };
+
+  enum ScreenLayout {
+    LAYOUT_NATIVE,
+    LAYOUT_LANDSCAPE,
+    LAYOUT_PORTRAIT,
+  };
+
+  // Clear and go to native mode.
+  void Clear() {
+    DisplayControllerBase<WIDTH, col_t>::Clear();
+    layout_ = LAYOUT_NATIVE;
+    xor_ = 0;
+    invert_y_ = false;
+  }
+
+  // Idempotent
+  void ConvertToNative() {
+    switch (layout_) {
+    case LAYOUT_NATIVE:
+      break;
+    case LAYOUT_LANDSCAPE:
+      ConvertToRowMajor(invert_y_);
+      invert_y_ = false;
+      break;
+    case LAYOUT_PORTRAIT:
+      ConvertPortrait();
+    }
+    layout_ = LAYOUT_NATIVE;
+    if (invert_y_) {
+      FlipY();
+      invert_y_ = false;
+    }
+    if (xor_) {
+      Invert();
+      xor_ = 0;
+    }
+  }
+
+  // Fill frame buffer and return how long to display it.
+  int FillFrameBuffer() override {
+    switch (screen_) {
+      default:
+      case SCREEN_OFF:
+	Clear();
+        return 1000;
+
+      case SCREEN_STARTUP:
+	Clear();
+        // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
+        // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
+	if (WIDTH < 128) {
+	  DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
+	} else {
+	  DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
+	}
+        DrawText(version,0,31, Starjedi10pt7bGlyphs);
+	if (HEIGHT > 32) {
+	  DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
+	  DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
+	}
+        screen_ = SCREEN_PLI;
+        return font_config.ProffieOSFontImageDuration;
+
+      case SCREEN_PLI:
+	Clear();
+        DrawBatteryBar(BatteryBar16);
+	if (HEIGHT > 32) {
+	  char tmp[32];
+	  strcpy(tmp, "volts x.xx");
+	  float v = battery_monitor.battery();
+	  tmp[6] = '0' + (int)floorf(v);
+	  tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
+	  tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
+	  DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
+	}
+        return 200;  // redraw once every 200 ms
+
+      case SCREEN_MESSAGE:
+	Clear();
+        if (strchr(message_, '\n')) {
+          DrawText(message_, 0, 15, Starjedi10pt7bGlyphs);
+        } else {
+	  // centered
+          DrawText(message_, 0, HEIGHT / 2 + 7, Starjedi10pt7bGlyphs);
+        }
+        screen_ = SCREEN_PLI;
+        return font_config.ProffieOSFontImageDuration;
+
+      case SCREEN_IMAGE:
+        MountSDCard();
+        if (!frame_available_) {
+          scheduleFillBuffer();
+          return 1;
+        }
+        if (eof_) {
+          // STDOUT << "EOF " << frame_count_ << "\n";
+          if (!SaberBase::IsOn()) {
+            screen_ = SCREEN_PLI;
+            if (frame_count_ == 1) return font_config.ProffieOSFontImageDuration;
+            return FillFrameBuffer();
+          }
+        }
+        frame_count_++;
+        if (SaberBase::IsOn()) {
+          // Single frame image
+          if (looped_frames_ == 1) {
+            if (frame_count_ == 1) {
+              return effect_display_duration_;
+            }
+            screen_ = SCREEN_PLI;
+            if (SaberBase::Lockup()) {
+              ShowFile(&IMG_lock, 3600000.0);
+              return 3600000;
+            } else {
+              if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+            }
+          } else {
+            // looped image
+            if (looped_frames_ == frame_count_) {
+              if (millis() - loop_start_ > effect_display_duration_) {
+                if (!SaberBase::Lockup()) {
+                  screen_ = SCREEN_PLI;
+                  if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+                }
+              }
+            }
+          }
+        } else {
+          if (millis() - loop_start_ > font_config.ProffieOSFontImageDuration) {
+            STDOUT << "END OF LOOP\n";
+            screen_ = SCREEN_PLI;
+          }
+        }
+
+        if (font_config.ProffieOSAnimationFrameRate > 0.0) {
+          return 1000 / font_config.ProffieOSAnimationFrameRate;
+        }
+        if (looped_frames_ > 1) {
+          return 1000 / looped_frames_;
+        } else {
+          return 41;   // ~24 fps
+        }
+    }
+  }
+
+  void SB_On() override {
+    ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+  }
+
+  void SB_Effect(EffectType effect, float location) override {
+    switch (effect) {
+      case EFFECT_NEWFONT:
+	ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
+	return;
+      case EFFECT_BLAST:
+	ShowFile(&IMG_blst, font_config.ProffieOSBlastImageDuration);
+	return;
+      case EFFECT_CLASH:
+	ShowFile(&IMG_clsh, font_config.ProffieOSClashImageDuration);
+	return;
+      case EFFECT_FORCE:
+	ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
+	return;
+      case EFFECT_LOCKUP_BEGIN:
+	ShowFile(&IMG_lock, 3600000.0);
+	return;
+      case EFFECT_LOCKUP_END:
+	screen_ = SCREEN_PLI;
+	if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+	return;
+
+      default: break;
+    }
+  }
+
+  void SB_Message(const char* text) override {
+    strncpy(message_, text, sizeof(message_));
+    message_[sizeof(message_)-1] = 0;
+    SetScreenNow(SCREEN_MESSAGE);
+  }
+
+  void SB_Top(uint64_t total_cycles) override {
+    STDOUT.print("display fps: ");
+    loop_counter_.Print();
+    STDOUT.println("");
+  }
+
+  void SB_Off(OffType offtype) override {
+    // TODO: Make it so that screen can be
+    // powered down and up again properly.
+    // This only makes it black, which prevents burn-in.
+    if (offtype == OFF_IDLE) {
+      SetScreenNow(SCREEN_OFF);
+    } else {
+      SetScreenNow(SCREEN_PLI);
+    }
+  }
+
+  // TODO: Don't update the display when we don't need to
+  // and return false here so that we can go into lower power modes.
+  void SB_IsOn(bool* on) override {
+    *on = true;
+  }
+
   void SetScreenNow(Screen screen) {
     millis_to_display_ = 0;
     screen_ = screen;
@@ -317,199 +611,15 @@ public:
   void CloseFiles() override {
     file_.Close();
   }
-};
-
-template<int WIDTH, class col_t>
-class StandardDisplayController : public AbstractDisplayCOntroller<WIDTH, col_t>, SaberBase {
-public:
-  enum Screen {
-    SCREEN_STARTUP,
-    SCREEN_MESSAGE,
-    SCREEN_PLI,
-    SCREEN_IMAGE,  // also for animations
-    SCREEN_OFF,
-  };
-
-
-  // Fill frame buffer and return how long to display it.
-  int FillFrameBuffer() override {
-    switch (screen_) {
-      default:
-      case SCREEN_OFF:
-        memset(frame_buffer_, 0, sizeof(frame_buffer_));
-        layout_ = LAYOUT_NATIVE;
-        xor_ = 0;
-        invert_y_ = false;
-        return 1000;
-
-      case SCREEN_STARTUP:
-        memset(frame_buffer_, 0, sizeof(frame_buffer_));
-        // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
-        // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
-	if (WIDTH < 128) {
-	  DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
-	} else {
-	  DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
-	}
-        DrawText(version,0,31, Starjedi10pt7bGlyphs);
-	if (HEIGHT > 32) {
-	  DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
-	  DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
-	}
-        screen_ = SCREEN_PLI;
-        layout_ = LAYOUT_NATIVE;
-        xor_ = 0;
-        invert_y_ = false;
-        return font_config.ProffieOSFontImageDuration;
-
-      case SCREEN_PLI:
-        memset(frame_buffer_, 0, sizeof(frame_buffer_));
-        DrawBatteryBar(BatteryBar16);
-	if (HEIGHT > 32) {
-	  char tmp[32];
-	  strcpy(tmp, "volts x.xx");
-	  float v = battery_monitor.battery();
-	  tmp[6] = '0' + (int)floorf(v);
-	  tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
-	  tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
-	  DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
-	}
-        layout_ = LAYOUT_NATIVE;
-        xor_ = 0;
-        invert_y_ = false;
-        return 200;  // redraw once every 200 ms
-
-      case SCREEN_MESSAGE:
-        memset(frame_buffer_, 0, sizeof(frame_buffer_));
-        if (strchr(message_, '\n')) {
-          DrawText(message_, 0, 15, Starjedi10pt7bGlyphs);
-        } else {
-	  // centered
-          DrawText(message_, 0, HEIGHT / 2 + 7, Starjedi10pt7bGlyphs);
-        }
-        screen_ = SCREEN_PLI;
-        layout_ = LAYOUT_NATIVE;
-        xor_ = 0;
-        invert_y_ = false;
-        return font_config.ProffieOSFontImageDuration;
-
-      case SCREEN_IMAGE:
-        MountSDCard();
-        if (!frame_available_) {
-          scheduleFillBuffer();
-          return 1;
-        }
-        if (eof_) {
-          // STDOUT << "EOF " << frame_count_ << "\n";
-          if (!SaberBase::IsOn()) {
-            screen_ = SCREEN_PLI;
-            if (frame_count_ == 1) return font_config.ProffieOSFontImageDuration;
-            return FillFrameBuffer();
-          }
-        }
-        frame_count_++;
-        if (SaberBase::IsOn()) {
-          // Single frame image
-          if (looped_frames_ == 1) {
-            if (frame_count_ == 1) {
-              return effect_display_duration_;
-            }
-            screen_ = SCREEN_PLI;
-            if (SaberBase::Lockup()) {
-              ShowFile(&IMG_lock, 3600000.0);
-              return 3600000;
-            } else {
-              if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
-            }
-          } else {
-            // looped image
-            if (looped_frames_ == frame_count_) {
-              if (millis() - loop_start_ > effect_display_duration_) {
-                if (!SaberBase::Lockup()) {
-                  screen_ = SCREEN_PLI;
-                  if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
-                }
-              }
-            }
-          }
-        } else {
-          if (millis() - loop_start_ > font_config.ProffieOSFontImageDuration) {
-            STDOUT << "END OF LOOP\n";
-            screen_ = SCREEN_PLI;
-          }
-        }
-
-        if (font_config.ProffieOSAnimationFrameRate > 0.0) {
-          return 1000 / font_config.ProffieOSAnimationFrameRate;
-        }
-        if (looped_frames_ > 1) {
-          return 1000 / looped_frames_;
-        } else {
-          return 41;   // ~24 fps
-        }
-    }
-  }
-
-  void SB_On() override {
-    ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
-  }
-
-  void SB_Effect(EffectType effect, float location) override {
-    switch (effect) {
-      case EFFECT_NEWFONT:
-	ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
-	return;
-      case EFFECT_BLAST:
-	ShowFile(&IMG_blst, font_config.ProffieOSBlastImageDuration);
-	return;
-      case EFFECT_CLASH:
-	ShowFile(&IMG_clsh, font_config.ProffieOSClashImageDuration);
-	return;
-      case EFFECT_FORCE:
-	ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
-	return;
-      case EFFECT_LOCKUP_BEGIN:
-	ShowFile(&IMG_lock, 3600000.0);
-	return;
-      case EFFECT_LOCKUP_END:
-	screen_ = SCREEN_PLI;
-	if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
-	return;
-
-      default: break;
-    }
-  }
-
-  void SB_Message(const char* text) override {
-    strncpy(message_, text, sizeof(message_));
-    message_[sizeof(message_)-1] = 0;
-    SetScreenNow(SCREEN_MESSAGE);
-  }
-
-  void SB_Top(uint64_t total_cycles) override {
-    STDOUT.print("display fps: ");
-    loop_counter_.Print();
-    STDOUT.println("");
-  }
-
-  void SB_Off(OffType offtype) override {
-    // TODO: Make it so that screen can be
-    // powered down and up again properly.
-    // This only makes it black, which prevents burn-in.
-    if (offtype == OFF_IDLE) {
-      SetScreenNow(SCREEN_OFF);
-    } else {
-      SetScreenNow(SCREEN_PLI);
-    }
-  }
-
-  // TODO: Don't update the display when we don't need to
-  // and return false here so that we can go into lower power modes.
-  void SB_IsOn(bool* on) override {
-    *on = true;
-  }
 
 private:
+  uint8_t xor_ = 0;
+  bool invert_y_ = 0;
+  volatile ScreenLayout layout_;
+  Screen screen_ = SCREEN_STARTUP;
+  EffectFileReader file_;
+  volatile bool frame_available_ = true;
+  volatile bool eof_ = true;
   LoopCounter loop_counter_;
 };
 
@@ -567,11 +677,6 @@ public:
     VERTICAL_AND_LEFT_HORIZONTAL_SCROLL = 0x2A,
   };
 
-  enum ScreenLayout {
-    LAYOUT_NATIVE,
-    LAYOUT_LANDSCAPE,
-    LAYOUT_PORTRAIT,
-  };
 
   SSD1306Template() : I2CDevice(0x3C) { }
   explicit SSD1306Template(int id) : I2CDevice(id) { }
@@ -582,44 +687,7 @@ public:
   uint8_t chunk[chunk_size + 1];
   void GetChunk() {
     chunk[0] = 0x40;
-    for (size_t byte=1; byte <= chunk_size; byte++) {
-      uint8_t b;
-      switch (layout_) {
-      default:
-      case LAYOUT_NATIVE:
-	b = ((unsigned char *)frame_buffer_)[i];
-	break;
-      case LAYOUT_PORTRAIT:
-	if (!invert_y_) {
-	  b = ((unsigned char *)frame_buffer_)[sizeof(frame_buffer_) - 1 - i];
-	} else {
-	  b = ((unsigned char *)frame_buffer_)[i ^ (sizeof(col_t) - 1)];
-	}
-	break;
-      case LAYOUT_LANDSCAPE: {
-	int x = i / sizeof(col_t);
-	int y = ((i & (sizeof(col_t)-1)) << 3) + 7;
-	int delta_pos = -WIDTH / 8;
-	if (invert_y_) {
-	  y = HEIGHT - 1 - y;
-	  delta_pos = WIDTH / 8;
-	}
-	//            STDOUT << " LANDSCAPE DECODE!! x = " << x << " y = " << y << "\n";
-
-	int shift = 7 - (x & 7);
-	uint8_t *pos =
-	  ((unsigned char*)frame_buffer_) + ((x >> 3) + (y * (WIDTH/8)));
-	b = 0;
-	for (int j = 0; j < 8; j++) {
-	  b <<= 1;
-	  b |= (*pos >> shift) & 1;
-	  pos += delta_pos;
-	}
-      }
-      }
-      chunk[byte] = b ^ xor_;
-      i++;
-    }
+    memcpy(chunk + 1, i + (unsigned char *)frame_buffer_, chunk_size);
   }
 							 
   void Loop() override {
@@ -776,8 +844,6 @@ public:
 
 private:
   int i;
-  uint8_t xor_ = 0;
-  bool invert_y_ = 0;
   volatile bool looped_on_ = false;
   volatile Effect* current_effect_;
   volatile float effect_display_duration_;
@@ -785,16 +851,11 @@ private:
   char message_[32];
   uint32_t millis_to_display_;
   uint32_t frame_start_time_;
-  Screen screen_;
   int32_t ypos_ = 0;
   volatile int32_t looped_frames_ = 0;
-  volatile ScreenLayout layout_;
   uint32_t loop_start_;
   int32_t frame_count_ = 0;
 
-  EffectFileReader file_;
-  volatile bool frame_available_ = true;
-  volatile bool eof_ = true;
   volatile bool lock_fb_ = false;
 };
 
