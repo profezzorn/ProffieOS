@@ -37,8 +37,6 @@ const Glyph BatteryBar16 = { 16, 0, 0, GLYPHDATA(BatteryBar16_data) };
 #define MAX_GLYPH_HEIGHT 32
 #endif
 
-class Display;
-
 template<int Width, class col_t>
 class MonoFrame {
 public:

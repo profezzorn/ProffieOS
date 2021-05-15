@@ -12,9 +12,28 @@ IMAGE_FILESET(blst);
 IMAGE_FILESET(lock);
 IMAGE_FILESET(force);
 
-template<int WIDTH, class col_t>
-class StandardDisplayController : public MonoFrame<WIDTH, col_t>, SaberBase, private AudioStreamWork{
+
+template<int Width, class col_t>
+class Display {
 public:
+  virtual void Page() = 0;
+  virtual void SB_Top() = 0;
+};
+
+template<int Width, class col_t>
+class DisplayControllerBase : public MonoFrame<Width, col_t> {
+public:
+  // Return zero if frame is not yet ready.
+  // May be called before it's time to actually display next frame.
+  virtual int FillFrameBuffer() = 0;
+  virtual void SetDisplay(Display<Width, col_t>* display) = 0;
+};
+
+template<int Width, class col_t>
+class StandardDisplayController : public DisplayControllerBase<Width, col_t>, SaberBase, private AudioStreamWork {
+public:
+  static const int WIDTH = Width;
+  static const int HEIGHT = sizeof(col_t) * 8;
   enum Screen {
     SCREEN_STARTUP,
     SCREEN_MESSAGE,
@@ -29,9 +48,14 @@ public:
     LAYOUT_PORTRAIT,
   };
 
+  Display<Width, col_t>* display_;
+  virtual void SetDisplay(Display<Width, col_t>* display) override {
+    display_ = display;
+  }
+
   // Clear and go to native mode.
   void Clear() {
-    DisplayControllerBase<WIDTH, col_t>::Clear();
+    MonoFrame<WIDTH, col_t>::Clear();
     layout_ = LAYOUT_NATIVE;
     xor_ = 0;
     invert_y_ = false;
@@ -43,25 +67,25 @@ public:
     case LAYOUT_NATIVE:
       break;
     case LAYOUT_LANDSCAPE:
-      ConvertToRowMajor(invert_y_);
+      MonoFrame<WIDTH, col_t>::ConvertLandscape(invert_y_);
       invert_y_ = false;
       break;
     case LAYOUT_PORTRAIT:
-      ConvertPortrait();
+      MonoFrame<WIDTH, col_t>::ConvertPortrait();
     }
     layout_ = LAYOUT_NATIVE;
     if (invert_y_) {
-      FlipY();
+      MonoFrame<WIDTH, col_t>::FlipY();
       invert_y_ = false;
     }
     if (xor_) {
-      Invert();
+      MonoFrame<WIDTH, col_t>::Invert();
       xor_ = 0;
     }
   }
 
   // Fill frame buffer and return how long to display it.
-  int FillFrameBuffer() {
+  int FillFrameBuffer() override {
     switch (screen_) {
       default:
       case SCREEN_OFF:
@@ -73,21 +97,21 @@ public:
         // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
         // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
 	if (WIDTH < 128) {
-	  DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
+	  MonoFrame<WIDTH, col_t>::DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
 	} else {
-	  DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
+	  MonoFrame<WIDTH, col_t>::DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
 	}
-        DrawText(version,0,31, Starjedi10pt7bGlyphs);
+	MonoFrame<WIDTH, col_t>::DrawText(version,0,31, Starjedi10pt7bGlyphs);
 	if (HEIGHT > 32) {
-	  DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
-	  DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
+	  MonoFrame<WIDTH, col_t>::DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
+	  MonoFrame<WIDTH, col_t>::DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
 	}
         screen_ = SCREEN_PLI;
         return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
 	Clear();
-        DrawBatteryBar(BatteryBar16);
+        MonoFrame<WIDTH, col_t>::DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
 	if (HEIGHT > 32) {
 	  char tmp[32];
 	  strcpy(tmp, "volts x.xx");
@@ -95,17 +119,17 @@ public:
 	  tmp[6] = '0' + (int)floorf(v);
 	  tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
 	  tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
-	  DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
+	  MonoFrame<WIDTH, col_t>::DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
 	}
         return 200;  // redraw once every 200 ms
 
       case SCREEN_MESSAGE:
 	Clear();
         if (strchr(message_, '\n')) {
-          DrawText(message_, 0, 15, Starjedi10pt7bGlyphs);
+          MonoFrame<WIDTH, col_t>::DrawText(message_, 0, 15, Starjedi10pt7bGlyphs);
         } else {
 	  // centered
-          DrawText(message_, 0, HEIGHT / 2 + 7, Starjedi10pt7bGlyphs);
+          MonoFrame<WIDTH, col_t>::DrawText(message_, 0, HEIGHT / 2 + 7, Starjedi10pt7bGlyphs);
         }
         screen_ = SCREEN_PLI;
         return font_config.ProffieOSFontImageDuration;
@@ -113,9 +137,13 @@ public:
       case SCREEN_IMAGE:
         MountSDCard();
         if (!frame_available_) {
+	  lock_fb_ = false;
           scheduleFillBuffer();
-          return 1;
+	  if (!frame_available_) {
+	    return 0;
+	  }
         }
+	lock_fb_ = true;
         if (eof_) {
           // STDOUT << "EOF " << frame_count_ << "\n";
           if (!SaberBase::IsOn()) {
@@ -129,11 +157,14 @@ public:
           // Single frame image
           if (looped_frames_ == 1) {
             if (frame_count_ == 1) {
+	      ConvertToNative();
+	      frame_available_ = false;
               return effect_display_duration_;
             }
             screen_ = SCREEN_PLI;
             if (SaberBase::Lockup()) {
               ShowFile(&IMG_lock, 3600000.0);
+	      ConvertToNative();
               return 3600000;
             } else {
               if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
@@ -155,7 +186,8 @@ public:
             screen_ = SCREEN_PLI;
           }
         }
-
+	ConvertToNative();
+	frame_available_ = false;
         if (font_config.ProffieOSAnimationFrameRate > 0.0) {
           return 1000 / font_config.ProffieOSAnimationFrameRate;
         }
@@ -173,6 +205,11 @@ public:
 
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
+      case EFFECT_BOOT:
+	if (IMG_boot) {
+	  ShowFile(&IMG_boot, font_config.ProffieOSFontImageDuration);
+	}
+	return;
       case EFFECT_NEWFONT:
 	ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
 	return;
@@ -204,9 +241,7 @@ public:
   }
 
   void SB_Top(uint64_t total_cycles) override {
-    STDOUT.print("display fps: ");
-    loop_counter_.Print();
-    STDOUT.println("");
+    display_->SB_Top();
   }
 
   void SB_Off(OffType offtype) override {
@@ -227,8 +262,8 @@ public:
   }
 
   void SetScreenNow(Screen screen) {
-    millis_to_display_ = 0;
     screen_ = screen;
+    display_->Page();
   }
 
   void ShowFile(Effect* effect, float duration) {
@@ -331,7 +366,7 @@ public:
           // STDOUT << "Width=" << width << " Height=" << height << "\n";
 #endif
           // First frame is near the end, seek to it.
-          f->Seek(file_start + offset + width * height / 8 - sizeof(frame_buffer_));
+          f->Seek(file_start + offset + width * height / 8 - sizeof(MonoFrame<WIDTH, col_t>::frame_buffer_));
       }
       if (width != WIDTH && width != HEIGHT) {
         STDOUT << "Wrong size image: " << width << "x" << height << "\n";
@@ -348,8 +383,8 @@ public:
       }
     }
     // STDOUT << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
-    if (f->Available() < sizeof(frame_buffer_)) return false;
-    f->Read((uint8_t*)frame_buffer_, sizeof(frame_buffer_));
+    if (f->Available() < sizeof(MonoFrame<WIDTH, col_t>::frame_buffer_)) return false;
+    f->Read((uint8_t*)MonoFrame<WIDTH, col_t>::frame_buffer_, sizeof(MonoFrame<WIDTH, col_t>::frame_buffer_));
     ypos_++;
     if (looped_frames_ > 1) {
       if (ypos_ >= looped_frames_) {
@@ -357,7 +392,7 @@ public:
       } else {
         if (invert_y_) {
           // Seek two frames back, because BMP are backwards.
-          f->Seek(f->Tell() - 2 * sizeof(frame_buffer_));
+          f->Seek(f->Tell() - 2 * sizeof(MonoFrame<WIDTH, col_t>::frame_buffer_));
         }
       }
     } else {
@@ -390,18 +425,33 @@ public:
   }
 
 private:
+  // Variables related to frame buffer layout.
   uint8_t xor_ = 0;
   bool invert_y_ = 0;
   volatile ScreenLayout layout_;
+
+  // Screen state
   Screen screen_ = SCREEN_STARTUP;
+  char message_[32];
+
+  // File reading
   EffectFileReader file_;
   volatile bool frame_available_ = true;
   volatile bool eof_ = true;
-  LoopCounter loop_counter_;
+  int32_t frame_count_ = 0;
+  volatile int32_t looped_frames_ = 0;
+  int32_t ypos_ = 0;
+  bool lock_fb_ = false;
+
+  // True if IMG_on is looped.
+  volatile bool looped_on_ = false;
+  volatile float effect_display_duration_;
+  uint32_t loop_start_;
+  volatile Effect* current_effect_;
 };
 
 template<int WIDTH, class col_t>
-class SSD1306Template : public I2CDevice, Looper, StateMachine, SaberBase, private AudioStreamWork {
+class SSD1306Template : public Display<WIDTH, col_t>, I2CDevice, Looper, StateMachine {
 public:
   static const int HEIGHT = sizeof(col_t) * 8;
   const char* name() override { return "SSD1306"; }
@@ -454,17 +504,40 @@ public:
     VERTICAL_AND_LEFT_HORIZONTAL_SCROLL = 0x2A,
   };
 
+  void SetController(DisplayControllerBase<WIDTH, col_t>* controller) {
+    controller_ = controller;
+    controller->SetDisplay(this);
+  }
 
-  SSD1306Template() : I2CDevice(0x3C) { }
-  explicit SSD1306Template(int id) : I2CDevice(id) { }
+  explicit SSD1306Template(DisplayControllerBase<WIDTH, col_t>* controller) : I2CDevice(0x3C) {
+    SetController(controller);
+  }
+  explicit SSD1306Template(DisplayControllerBase<WIDTH, col_t>* controller, int id) : I2CDevice(id) {
+    SetController(controller);
+  }
   void Send(int c) { writeByte(0, c); }
 
   static const size_t chunk_size = WIDTH * HEIGHT / 8 / 16;
   static const size_t num_chunks = WIDTH * HEIGHT / 8 / chunk_size;
+
   uint8_t chunk[chunk_size + 1];
   void GetChunk() {
     chunk[0] = 0x40;
-    memcpy(chunk + 1, i + (unsigned char *)frame_buffer_, chunk_size);
+    memcpy(chunk + 1, i + (unsigned char *)controller_->frame_buffer_, chunk_size);
+  }
+
+  int FillFrameBuffer() {
+    return controller_->FillFrameBuffer();
+  }
+
+  void Page() override {
+    millis_to_display_ = 0;
+    next_millis_to_display_ = 0;
+  }
+  void SB_Top() override {
+    STDOUT.print("display fps: ");
+    loop_counter_.Print();
+    STDOUT.println("");
   }
 							 
   void Loop() override {
@@ -475,7 +548,7 @@ public:
     // Init sequence
     Send(DISPLAYOFF);                    // 0xAE
     Send(SETDISPLAYCLOCKDIV);            // 0xD5
-    Send(0x80);                                  // the suggested ratio 0x80
+    Send(0x80);                          // the suggested ratio 0x80
 
     Send(SETMULTIPLEX);                  // 0xA8
     Send(HEIGHT - 1);
@@ -524,24 +597,23 @@ public:
     I2CUnlock();
 
     STDOUT.println("Display initialized.");
-    screen_ = SCREEN_STARTUP;
-    if (IMG_boot) {
-      ShowFile(&IMG_boot, font_config.ProffieOSFontImageDuration);
-    }
 
     while (true) {
-      millis_to_display_ = FillFrameBuffer();
+      millis_to_display_ = next_millis_to_display_;
+      next_millis_to_display_ = 0;
+      while (millis_to_display_ == 0) {
+	YIELD();
+	millis_to_display_ = FillFrameBuffer();
+      }
       frame_start_time_ = millis();
       lock_fb_ = true;
-      frame_available_ = false;
 
       // I2C
+      loop_counter_.Update();
 #ifdef PROFFIEBOARD
       i = -(int)NELEM(transactions);
       I2CLockAndRun();
       while (lock_fb_) YIELD();
-      loop_counter_.Update();
-      scheduleFillBuffer();
 #else
       do { YIELD(); } while (!I2CLock());
       Send(COLUMNADDR);
@@ -564,12 +636,15 @@ public:
         Wire.endTransmission();
         I2CUnlock(); do { YIELD(); } while (!I2CLock());
       }
-      loop_counter_.Update();
       lock_fb_ = false;
-      scheduleFillBuffer();
       I2CUnlock();
-#endif      
-      while (millis() - frame_start_time_ < millis_to_display_) YIELD();
+#endif
+      while (millis() - frame_start_time_ < millis_to_display_) {
+	if (next_millis_to_display_ == 0) {
+	  next_millis_to_display_ = FillFrameBuffer();
+	}
+	YIELD();
+      }
     }
 
     STATE_MACHINE_END();
@@ -621,19 +696,12 @@ public:
 
 private:
   int i;
-  volatile bool looped_on_ = false;
-  volatile Effect* current_effect_;
-  volatile float effect_display_duration_;
-  col_t frame_buffer_[WIDTH];
-  char message_[32];
   uint32_t millis_to_display_;
+  uint32_t next_millis_to_display_;
   uint32_t frame_start_time_;
-  int32_t ypos_ = 0;
-  volatile int32_t looped_frames_ = 0;
-  uint32_t loop_start_;
-  int32_t frame_count_ = 0;
-
   volatile bool lock_fb_ = false;
+  DisplayControllerBase<WIDTH, col_t>* controller_;
+  LoopCounter loop_counter_;
 };
 
 #ifdef PROFFIEBOARD
