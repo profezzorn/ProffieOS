@@ -61,7 +61,7 @@ public:
     m = 1;
     m = (m << ( sizeof(col_t) * 4)) - 1;
     for (j = sizeof(col_t)*4; j != 0; j = j >> 1, m = m ^ (m << j)) {
-      for (k = 0; k < (sizeof(col_t) * 8); k = (k + j + 1) & ~j) {
+      for (k = 0; k < (int)(sizeof(col_t) * 8); k = (k + j + 1) & ~j) {
 	t = (A[k] ^ (A[k+j] >> j)) & m; 
 	A[k] = A[k] ^ t; 
 	A[k+j] = A[k+j] ^ (t << j); 

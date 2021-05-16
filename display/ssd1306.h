@@ -136,14 +136,6 @@ public:
 
       case SCREEN_IMAGE:
         MountSDCard();
-        if (!frame_available_) {
-	  lock_fb_ = false;
-          scheduleFillBuffer();
-	  if (!frame_available_) {
-	    return 0;
-	  }
-        }
-	lock_fb_ = true;
         if (eof_) {
           // STDOUT << "EOF " << frame_count_ << "\n";
           if (!SaberBase::IsOn()) {
@@ -152,6 +144,14 @@ public:
             return FillFrameBuffer();
           }
         }
+        if (!frame_available_) {
+	  lock_fb_ = false;
+          scheduleFillBuffer();
+	  if (!frame_available_) {
+	    return 0;
+	  }
+        }
+	lock_fb_ = true;
         frame_count_++;
         if (SaberBase::IsOn()) {
           // Single frame image
@@ -669,6 +669,7 @@ public:
     } else {
       GetChunk();
       size = chunk_size + 1;
+      i += chunk_size;
     }
     if (!stm32l4_i2c_notify(Wire._i2c, &SSD1306Template::DataSent, this, (I2C_EVENT_ADDRESS_NACK | I2C_EVENT_DATA_NACK | I2C_EVENT_ARBITRATION_LOST | I2C_EVENT_BUS_ERROR | I2C_EVENT_OVERRUN | I2C_EVENT_RECEIVE_DONE | I2C_EVENT_TRANSMIT_DONE | I2C_EVENT_TRANSFER_DONE))) {
       goto fail;
