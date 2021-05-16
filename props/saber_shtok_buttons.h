@@ -34,6 +34,11 @@
 // Exit Multi-Block mode - short click the button while ON
 // Enter Battle Mode - hold the button + use "Gesture/Swing Ignition" then release the button while OFF (blade will turn ON in Battle Mode)
 // Exit Battle Mode - turn the blade OFF
+// Enter Volume Menu - hold + clash while OFF
+// Volume DOWN - hold and release while in Volume Menu
+// Volume UP - short click while in Volume Menu
+// Exit Volume Menu - hold + clash while OFF and in Volume Menu
+// Battery Level - triple click while OFF
 //
 // 2 Buttons:
 // Activate Muted - fast double click Activation button while OFF
@@ -54,6 +59,11 @@
 // Exit Multi-Block mode - short click AUX button while ON
 // Enter Battle Mode - hold the AUX button + swing the saber and release the button while ON or hold the Activation button + use "Gesture/Swing Ignition" then release the button while OFF (blade will turn ON in Battle Mode)
 // Exit Battle Mode - hold the AUX button + swing the saber and release the button while ON or turn the blade OFF
+// Enter Volume Menu - long click AUX button while OFF
+// Volume UP - short click Activation button while OFF and in Volume Menu
+// Volume DOWN - short click AUX button while OFF and in Volume Menu
+// Exit Volume Menu - long click AUX button while OFF and in Volume Menu
+// Battery level - hold AUX button while OFF
 //
 //
 // CUSTOM SOUNDS SUPPORTED (add to font to enable):
@@ -86,6 +96,8 @@ EFFECT(dim); // for EFFECT_POWERSAVE
 EFFECT(battery); // for EFFECT_BATTERY_LEVEL
 EFFECT(bmbegin); // for Begin Battle Mode
 EFFECT(bmend); // for End Battle Mode
+EFFECT(vmbegin); // for Begin Volume Menu
+EFFECT(vmend); // for End Volume Menu
 EFFECT(faston); // for EFFECT_FAST_ON
 EFFECT(blstbgn); // for Begin Multi-Blast
 EFFECT(blstend); // for End Multi-Blast
@@ -164,6 +176,36 @@ SaberShtokButtons() : PropBase() {}
     }
   }
 
+// SA22C Volume Menu
+  void ChangeVolume(bool up) {
+    if (up) {
+      STDOUT.println("Volume up");
+      if (dynamic_mixer.get_volume() < VOLUME) {
+        dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
+          dynamic_mixer.get_volume() + VOLUME * 0.10));
+        beeper.Beep(0.5, 2000);
+        STDOUT.print("Current Volume: ");
+        STDOUT.println(dynamic_mixer.get_volume());
+      }
+      else {
+        beeper.Beep(0.5, 3000);
+      }
+    } else {
+      STDOUT.println("Volume Down");
+      if (dynamic_mixer.get_volume() > (0.10 * VOLUME)) {
+        dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
+          dynamic_mixer.get_volume() - VOLUME * 0.10));
+        beeper.Beep(0.5, 2000);
+        STDOUT.print("Current Volume: ");
+        STDOUT.println(dynamic_mixer.get_volume());
+      }
+      else{
+        beeper.Beep(0.5, 1000);
+      }
+    }
+  }
+
+
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
@@ -174,6 +216,8 @@ SaberShtokButtons() : PropBase() {}
           pointing_down_ = false;
         }
         return true;
+
+
 
 // 0-buttons code
 
@@ -198,7 +242,7 @@ SaberShtokButtons() : PropBase() {}
         }
         return true;
 
-   // Auto Lockup Mode
+// Auto Lockup Mode
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
         if (!battle_mode_) return false;
         clash_impact_millis_ = millis();
@@ -284,8 +328,6 @@ SaberShtokButtons() : PropBase() {}
         SaberBase::DoBlast();
         return true;
 
-// Multi-Blaster Deflection mode
-
 // Push
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
         if (millis() - last_push_ > 2000) {
@@ -313,23 +355,32 @@ SaberShtokButtons() : PropBase() {}
         break;
 
 
+
 // 1-button code
 
 #elif NUM_BUTTONS == 1
 
-// Turn Blade ON
+// Turn Blade ON and Volume Up
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
-	  if(millis() > 3000) { 
-          On();
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
+	if(millis() > 3000) { 
+          if (!mode_volume_) {
+      On();
+    } else {
+      ChangeVolume(true);
+    }
         }
-        return true;       
+    return true;      
             
-// Next Preset
+// Next Preset and Volume Down
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
-        next_preset();
-        return true;
+    if (!mode_volume_) {
+      next_preset();
+    } else {
+      ChangeVolume(false);
+    }
+    return true;
 
 // Previous Preset
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_OFF):
@@ -337,12 +388,11 @@ SaberShtokButtons() : PropBase() {}
         return true;
 
 // Activate Muted
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
-        if (millis() - activated_ < 500) {
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
           if (SetMute(true)) {
             unmute_on_deactivation_ = true;
+            On();
           }
-        }
         return true;
 
 // Turn Blade OFF Button
@@ -435,7 +485,7 @@ SaberShtokButtons() : PropBase() {}
         }
         return true;
 
-    // Auto Lockup Mode
+// Auto Lockup Mode
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
         if (!battle_mode_) return false;
         clash_impact_millis_ = millis();
@@ -511,33 +561,57 @@ SaberShtokButtons() : PropBase() {}
         StartOrStopTrack();
         return true;
 
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
-        SaberBase::RequestMotion();
-        return true;
+// Enter Volume Menu
+  case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
+    if (!mode_volume_) {
+      mode_volume_ = true;
+      beeper.Beep(0.1, 2000);
+      beeper.Beep(0.1, 2500);
+      STDOUT.println("Enter Volume Menu");
+    } else {
+      mode_volume_ = false;
+      beeper.Beep(0.1, 2500);
+      beeper.Beep(0.1, 2000);
+      STDOUT.println("Exit Volume Menu");
+    }
+    return true;
+
+// Battery level
+  case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+    talkie.SayDigit((int)floorf(battery_monitor.battery()));
+    talkie.Say(spPOINT);
+    talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
+    talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
+    talkie.Say(spVOLTS);
+    return true;
+
 
 
 // 2-button code
 
 #elif NUM_BUTTONS == 2
 
-// Turn Blade ON
+// Turn Blade ON and Volume Up
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
-      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF):
-	  if(millis() > 3000) { 
-          On();
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
+	if(millis() > 3000) { 
+          if (!mode_volume_) {
+      On();
+    } else {
+      ChangeVolume(true);
+    }
         }
-        return true;
+    return true;
 
-// Next Preset
+// Next Preset and Volume Down
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
-#ifdef DUAL_POWER_BUTTONS
-        aux_on_ = true;
-        On();
-#else
-        next_preset();
-#endif
-        return true;
+    if (!mode_volume_) {
+      next_preset();
+    } else {
+      ChangeVolume(false);
+    }
+    return true;
 
 // Previous Preset
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
@@ -545,12 +619,11 @@ SaberShtokButtons() : PropBase() {}
         return true;
 
 // Activate Muted
-      case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
-        if (millis() - activated_ < 500) {
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
           if (SetMute(true)) {
             unmute_on_deactivation_ = true;
+            On();
           }
-        }
         return true;
 
 // Turn Blade OFF Button
@@ -644,7 +717,7 @@ SaberShtokButtons() : PropBase() {}
         }
         return true;
 
-    // Auto Lockup Mode
+// Auto Lockup Mode
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
         if (!battle_mode_) return false;
         clash_impact_millis_ = millis();
@@ -720,17 +793,34 @@ SaberShtokButtons() : PropBase() {}
         StartOrStopTrack();
         return true;
 
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
-        SaberBase::RequestMotion();
-        return true;
-
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-        next_preset();
-        return true;
 
 #else
 #error only 0, 1 and 2 buttons are supported by this mod
 #endif
+
+// Enter Volume Menu
+  case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
+    if (!mode_volume_) {
+      mode_volume_ = true;
+      beeper.Beep(0.1, 2000);
+      beeper.Beep(0.1, 2500);
+      STDOUT.println("Enter Volume Menu");
+    } else {
+      mode_volume_ = false;
+      beeper.Beep(0.1, 2500);
+      beeper.Beep(0.1, 2000);
+      STDOUT.println("Exit Volume Menu");
+    }
+    return true;
+
+// Battery level
+  case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
+    talkie.SayDigit((int)floorf(battery_monitor.battery()));
+    talkie.Say(spPOINT);
+    talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
+    talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
+    talkie.Say(spVOLTS);
+    return true;
 
 #ifdef BLADE_DETECT_PIN
       case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
@@ -802,6 +892,7 @@ private:
   bool auto_lockup_on_ = false;
   bool auto_melt_on_ = false;
   bool battle_mode_ = false;
+  bool mode_volume_ = false;
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
