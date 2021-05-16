@@ -15,25 +15,21 @@ public:
   void run(BladeBase* blade) {
     f_.run(blade);
     speed_.run(blade);
-    hold_time_millis.run(blade);
-    current = f_.getInteger(0);
-    hold_millis = hold_time_millis.getInteger(0);
+    hold_time_millis_.run(blade);
+    int current = f_.getInteger(0);
+    uint32_t hold_millis = hold_time_millis_.getInteger(0);
     uint32_t now = micros();
-    uint64_t delta = now - last_micros;
-    last_micros = now;
-    if (current > value_) {
-      value_ = current;
-      last_peak = millis();
-    }
-    if (value_ > current && millis() - last_peak > hold_millis) {
+    uint64_t delta = now - last_micros_;
+    last_micros_ = now;
+    if (millis() - last_peak_ > hold_millis) {
       if (delta > 1000000) delta = 1;
       delta *= speed_.getInteger(0);
       delta /= 1000000;
-      if (delta > (value_ - current)) {
-        value_ = current;
-      } else {
-        value_ -= delta;
-      }
+      value_ -= delta;
+    }
+    if (current > value_) {
+      value_ = current;
+      last_peak_ = millis();
     }
   }
 
@@ -43,13 +39,11 @@ public:
 
 private:
   F f_;
-  HOLD_MILLIS hold_time_millis;
+  HOLD_MILLIS hold_time_millis_;
   SPEED speed_;
   int value_ = 0;
-  int current;
-  uint32_t last_micros = 0;
-  uint32_t hold_millis;
-  uint32_t last_peak = millis();
+  uint32_t last_micros_ = 0;
+  uint32_t last_peak_ = millis();
 };
 
 #endif
