@@ -184,6 +184,7 @@ public:
   }
 
   virtual void Clash2(bool stab, float strength) {
+    SaberBase::SetClashStrength(strength);
     if (Event(BUTTON_NONE, stab ? EVENT_STAB : EVENT_CLASH)) {
       IgnoreClash(400);
     } else {
@@ -191,9 +192,9 @@ public:
       // Saber must be on and not in lockup mode for stab/clash.
       if (SaberBase::IsOn() && !SaberBase::Lockup()) {
         if (stab) {
-          SaberBase::DoStab(strength);
+          SaberBase::DoStab();
         } else {
-          SaberBase::DoClash(strength);
+          SaberBase::DoClash();
         }
       }
     }

@@ -210,13 +210,15 @@ public:                                                         \
   static float GetClashStrength() {
     return clash_strength_;
   }
-  
-  static void DoClash(float strength) {
+
+  // Strength is for all types of clashes.
+  void SetClashStrength(float strength) {
     clash_strength_ = strength;
+  }
+  static void DoClash() {
     DoEffectR(EFFECT_CLASH);
   }
-  static void DoStab(float strength) {
-    clash_strength_ = strength;
+  static void DoStab() {
     DoEffect(EFFECT_STAB, 1.0f);
   }
   static void UpdateClashStrength(float strength) {
