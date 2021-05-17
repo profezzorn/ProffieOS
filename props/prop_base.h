@@ -188,7 +188,8 @@ public:
       IgnoreClash(400);
     } else {
       IgnoreClash(100);
-      if (SaberBase::IsOn()) {
+      // Saber must be on and not in lockup mode for stab/clash.
+      if (SaberBase::IsOn() && !SaberBase::Lockup()) {
         if (stab) {
           SaberBase::DoStab(strength);
         } else {
@@ -199,8 +200,6 @@ public:
   }
 
   virtual void Clash(bool stab, float strength) {
-    // No clashes in lockup mode.
-    if (SaberBase::Lockup()) return;
     // TODO: Pick clash randomly and/or based on strength of clash.
     uint32_t t = millis();
     if (t - last_clash_ < clash_timeout_) {
