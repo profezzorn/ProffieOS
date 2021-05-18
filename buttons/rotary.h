@@ -15,14 +15,14 @@ public:
 };
 
 template<int howmuch=32768 / 20>
-class SmoothChageVariationRotaryReceiver : public RotaryReceiver {
+class SmoothChangeVariationRotaryReceiver : public RotaryReceiver {
 public:
   void Update(int delta) override {
     SaberBase::SetVariation(0x7fff & (SaberBase::GetCurrentVariation() + howmuch * delta));
   }
 };
 
-class TickedChageVariationRotaryReceiver : public RotaryReceiver {
+class TickedChangeVariationRotaryReceiver : public RotaryReceiver {
 public:
   void Update(int delta) override {
     SaberBase::UpdateVariation(delta);

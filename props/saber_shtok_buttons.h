@@ -144,7 +144,7 @@ SaberShtokButtons() : PropBase() {}
 // Multi-Blaster Deflection mode
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
         swing_blast_ = true;
-        hybrid_font.SB_Blast();
+        SaberBase::DoBlast();
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):

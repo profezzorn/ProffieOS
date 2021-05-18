@@ -742,7 +742,8 @@ public:
 
 // Stab 
     case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
-      SaberBase::DoStab(2.0);
+      SaberBase::SetClashStrength(2.0);
+      SaberBase::DoStab();
     return true;
 
 // Blaster Deflection
