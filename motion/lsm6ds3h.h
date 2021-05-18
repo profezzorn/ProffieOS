@@ -97,7 +97,7 @@ public:
 
   LSM6DS3H() : I2CDevice(106), Looper(
 #ifndef PROFFIEBOARD
-    HFLOOP
+    HFLINK
 #endif    
   ) {}
 
