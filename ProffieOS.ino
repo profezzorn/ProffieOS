@@ -560,6 +560,7 @@ CapTest captest;
 #include "buttons/stm32l4_touchbutton.h"
 #endif
 #include "buttons/rotary.h"
+#include "buttons/pots.h"
 
 #include "ir/ir.h"
 #include "ir/receiver.h"
@@ -1613,7 +1614,9 @@ I2CBus i2cbus;
 
 #ifdef ENABLE_SSD1306
 #include "display/ssd1306.h"
-SSD1306 display;
+
+StandardDisplayController<128, uint32_t> display_controller;
+SSD1306Template<128, uint32_t> display(&display_controller);
 #endif
 
 #ifdef INCLUDE_SSD1306

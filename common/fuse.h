@@ -8,6 +8,13 @@
 
 // #define FUSE_SPEED
 
+#ifndef ACCEL_MEASUREMENTS_PER_SECOND
+#define ACCEL_MEASUREMENTS_PER_SECOND 800
+#endif
+#ifndef GYRO_MEASUREMENTS_PER_SECOND
+#define GYRO_MEASUREMENTS_PER_SECOND 800
+#endif
+
 #if 1 // def DEBUG
 
 #if 0
@@ -168,18 +175,18 @@ public:
     CHECK_NAN(down_.x);
 
     if (monitor.ShouldPrint(Monitoring::MonitorFusion)) {
-      STDOUT << " Accel=" << accel_ << "(" << accel_.len() << ")"
-             << " Gyro=" << gyro_
+      STDOUT << "Acl" << accel_ << "(" << accel_.len() << ")"
+             << " Gyro" << gyro_
         // << " rotation=" << rotation << "(" << rotation.len() << ")"
-             << " down=" << down_ << " (" << down_.len() << ")"
-             << " mss=" << mss_  << " (" << mss_.len() << ")"
+             << " dn" << down_ << "(" << down_.len() << ")"
+             << " mss" << mss_  << "(" << mss_.len() << ")"
         //     << " Speed=" << speed_ << " (" << speed_.len() << ")"
-             << " swing speed=" << swing_speed()
+             << " ss=" << swing_speed()
              << " wGyro=" << wGyro
-             << " delta_t=" << (delta_t * 1000)
+             << " dt=" << (delta_t * 1000)
 //           << " delta factor=" << delta_factor
-             << " gyro factor=" << gyro_factor
-             << " gyro slope=" << gyro_slope().len()
+             << " factor=" << gyro_factor
+             << " slope=" << gyro_slope().len()
              << "\n";
     }
   }

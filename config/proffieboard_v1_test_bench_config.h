@@ -296,5 +296,6 @@ Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 #endif
 
 #ifdef CONFIG_BOTTOM
-SSD1306Template<64, uint32_t> display;
+StandardDisplayController<64, uint32_t> display_controller;
+SSD1306Template<64, uint32_t> display(&display_controller);
 #endif
