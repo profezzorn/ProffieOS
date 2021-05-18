@@ -129,4 +129,25 @@ public:
   float x, y, z;
 };
 
+struct Motion {
+  Motion() {}
+  explicit Motion(float v) : accel(v), gyro(v) {}
+  Motion(const Vec3& a, const Vec3& g) : accel(a), gyro(g) {}
+
+  Motion operator+(const Motion& o) const { return Motion(accel + o.accel, gyro + o.gyro); }
+  Motion operator-(const Motion& o) const { return Motion(accel - o.accel, gyro - o.gyro); }
+  Motion operator*(float f) const { return Motion(accel * f, gyro * f); }
+  void operator+=(const Motion& o) {
+    accel += o.accel;
+    gyro += o.gyro;
+  }
+  void operator-=(const Motion& o) {
+    accel -= o.accel;
+    gyro -= o.gyro;
+  }
+  
+  Vec3 accel;
+  Vec3 gyro;
+};
+
 #endif

@@ -97,6 +97,7 @@ public:
   uint32_t activated_ = 0;
   uint32_t last_clash_ = 0;
   uint32_t clash_timeout_ = 100;
+
   bool clash_pending_ = false;
   bool pending_clash_is_stab_ = false;
   float pending_clash_strength_ = 0.0;
@@ -616,7 +617,7 @@ public:
   } while(0);
 
     ONCEPERBLADE(DEACTIVATE);
-
+    SaveVolumeIfNeeded();
     FindBlade();
   }
 
@@ -625,15 +626,24 @@ public:
     STDOUT.println(text);
   }
 
-  float peak = 0.0;
-  Vec3 at_peak;
+  // Potentially called from interrupt!
+  virtual void DoMotion(const Vec3& motion, bool clear) {
+    fusor.DoMotion(motion, clear);
+  }
+
+  // Potentially called from interrupt!
   virtual void DoAccel(const Vec3& accel, bool clear) {
-    SaberBase::DoAccel(accel, clear);
+    fusor.DoAccel(accel, clear);
     accel_loop_counter_.Update();
-    if (clear) accel_ = accel;
     Vec3 diff = (accel - fusor.down());
-    if (clear) diff = Vec3(0,0,0);
-    float v = diff.len();
+    float v;
+    if (clear) {
+      accel_ = accel;
+      diff = Vec3(0,0,0);
+      v = 0.0;
+    } else {
+      v = diff.len();
+    }
     // If we're spinning the saber, require a stronger acceleration
     // to activate the clash.
     if (v > CLASH_THRESHOLD_G + fusor.gyro().len() / 200.0) {
@@ -641,57 +651,17 @@ public:
         diff = -diff;
       }
       bool stab = diff.x < - 2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z) &&
-#if 0
-      Vec3 speed = fusor.speed();
-        // Speed checks simply don't work yet
-        speed.y * speed.y + speed.z * speed.z < 5.0 && // TODO: Make this tighter
-        speed.x > 0.1 &&
-#endif
         fusor.swing_speed() < 150;
 
-#if 1
-      STDOUT << "ACCEL: " << accel
-             << " diff=" << diff
-             << " v=" << v
-             << " fgl=" << (fusor.gyro().len() / 200.0)
-             << " accel_=" << accel_
-             << " clear=" << clear
-             << " millis=" << millis()
-             << " swing_speed=" << fusor.swing_speed()
-             << " mss=" << fusor.mss()
-             << " stab=" << stab
-             << "\n";
-#endif
-      // Needs de-bouncing
-      Clash(stab, v);
-    }
-    if (v > peak) {
-      peak = v;
-      at_peak = accel_ - accel;
+      if (clash_pending1_) {
+	pending_clash_strength1_ = std::max<float>(v, (float)pending_clash_strength1_);
+      } else {
+	clash_pending1_ = true;
+	pending_clash_is_stab1_ = stab;
+	pending_clash_strength1_ = v;
+      }
     }
     accel_ = accel;
-    if (monitor.ShouldPrint(Monitoring::MonitorClash)) {
-      STDOUT.print("ACCEL: ");
-      STDOUT.print(accel.x);
-      STDOUT.print(", ");
-      STDOUT.print(accel.y);
-      STDOUT.print(", ");
-      STDOUT.print(accel.z);
-      STDOUT.print(" peak ");
-      STDOUT.print(at_peak.x);
-      STDOUT.print(", ");
-      STDOUT.print(at_peak.y);
-      STDOUT.print(", ");
-      STDOUT.print(at_peak.z);
-      STDOUT.print(" (");
-      STDOUT.print(peak);
-      STDOUT.println(")");
-      peak = 0.0;
-    }
-  }
-
-  virtual void DoMotion(const Vec3& motion, bool clear) {
-    SaberBase::DoMotion(motion, clear);
   }
 
   void SB_Top(uint64_t total_cycles) override {
@@ -943,15 +913,38 @@ public:
     }
   }
 
+
+  uint32_t last_motion_call_millis_;
+  void CallMotion() {
+    if (millis() == last_motion_call_millis_) return;
+    if (!fusor.ready()) return;
+    bool clear = millis() - last_motion_call_millis_ > 100;
+    last_motion_call_millis_ = millis();
+    SaberBase::DoAccel(fusor.accel(), clear);
+    SaberBase::DoMotion(fusor.gyro(), clear);
+
+    if (monitor.ShouldPrint(Monitoring::MonitorClash)) {
+      STDOUT << "ACCEL: " << fusor.accel() << "\n";
+    }
+  }
+  volatile bool clash_pending1_ = false;
+  volatile bool pending_clash_is_stab1_ = false;
+  volatile float pending_clash_strength1_ = 0.0;
+
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
 
   void Loop() override {
+    CallMotion();
+    
     if (on_pending_ && millis() - on_pending_base_ >= on_pending_delay_) {
       on_pending_ = false;
       SaberBase::TurnOn();
     }
-
+    if (clash_pending1_) {
+      clash_pending1_ = false;
+      Clash(pending_clash_is_stab1_, pending_clash_strength1_);
+    }
     if (clash_pending_ && millis() - last_clash_ >= clash_timeout_) {
       clash_pending_ = false;
       Clash2(pending_clash_is_stab_, pending_clash_strength_);
@@ -1009,7 +1002,6 @@ public:
 //	     << " color = " << current_config->blade1->current_style()->getColor(0)
              << "\n";
     }
-
 #endif
 
 

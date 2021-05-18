@@ -46,7 +46,14 @@ int nan_count = 0;
 
 #endif
 
-class Fusor : public SaberBase, Looper {
+float exp2_fast(float x) {
+  int i = floorf(x);
+  x -= i;
+  return ldexpf(-8.24264/(x-3.41421)-1.41421356237, i);
+}
+
+
+class Fusor : public Looper {
 public:
   Fusor() :
 #ifdef FUSE_SPEED
@@ -55,7 +62,7 @@ public:
     down_(0.0), last_micros_(0) {
   }
   const char* name() override { return "Fusor"; }
-  void SB_Motion(const Vec3& gyro, bool clear) override {
+  void DoMotion(const Vec3& gyro, bool clear) {
     CHECK_NAN(gyro);
     if (clear) {
       gyro_extrapolator_.clear(gyro);
@@ -63,7 +70,7 @@ public:
       gyro_extrapolator_.push(gyro);
     }
   }
-  void SB_Accel(const Vec3& accel, bool clear) override {
+  void DoAccel(const Vec3& accel, bool clear) {
     CHECK_NAN(accel);
     if (clear) {
       accel_extrapolator_.clear(accel);
@@ -151,6 +158,7 @@ public:
 #endif
     // goes towards 1.0 when moving.
     // float gyro_factor = powf(0.01, delta_t / wGyro);
+    // float gyro_factor = expf(logf(0.01) * delta_t / wGyro);
     float gyro_factor = expf(logf(0.01) * delta_t / wGyro);
     CHECK_NAN(gyro_factor);
     down_ = down_ *  gyro_factor + accel_ * (1.0 - gyro_factor);
@@ -290,9 +298,12 @@ public:
     gyro_extrapolator_.dump();
   }
 
+  bool ready() { return micros() - last_micros_ < 50000; }
+
 private:
-  Extrapolator<Vec3> accel_extrapolator_;
-  Extrapolator<Vec3> gyro_extrapolator_;
+  static const int filter_hz = 80;
+  Extrapolator<Vec3, ACCEL_MEASUREMENTS_PER_SECOND/filter_hz> accel_extrapolator_;
+  Extrapolator<Vec3, GYRO_MEASUREMENTS_PER_SECOND/filter_hz> gyro_extrapolator_;
 
 #ifdef FUSE_SPEED
   Vec3 speed_;

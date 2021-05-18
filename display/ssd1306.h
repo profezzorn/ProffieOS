@@ -415,9 +415,55 @@ public:
     }
   }
 
+  static const size_t chunk_size = WIDTH * HEIGHT / 8 / 16;
+  static const size_t num_chunks = WIDTH * HEIGHT / 8 / chunk_size;
+  uint8_t chunk[chunk_size + 1];
+  void GetChunk() {
+    chunk[0] = 0x40;
+    for (size_t byte=1; byte <= chunk_size; byte++) {
+      uint8_t b;
+      switch (layout_) {
+      default:
+      case LAYOUT_NATIVE:
+	b = ((unsigned char *)frame_buffer_)[i];
+	break;
+      case LAYOUT_PORTRAIT:
+	if (!invert_y_) {
+	  b = ((unsigned char *)frame_buffer_)[sizeof(frame_buffer_) - 1 - i];
+	} else {
+	  b = ((unsigned char *)frame_buffer_)[i ^ (sizeof(col_t) - 1)];
+	}
+	break;
+      case LAYOUT_LANDSCAPE: {
+	int x = i / sizeof(col_t);
+	int y = ((i & (sizeof(col_t)-1)) << 3) + 7;
+	int delta_pos = -WIDTH / 8;
+	if (invert_y_) {
+	  y = HEIGHT - 1 - y;
+	  delta_pos = WIDTH / 8;
+	}
+	//            STDOUT << " LANDSCAPE DECODE!! x = " << x << " y = " << y << "\n";
+
+	int shift = 7 - (x & 7);
+	uint8_t *pos =
+	  ((unsigned char*)frame_buffer_) + ((x >> 3) + (y * (WIDTH/8)));
+	b = 0;
+	for (int j = 0; j < 8; j++) {
+	  b <<= 1;
+	  b |= (*pos >> shift) & 1;
+	  pos += delta_pos;
+	}
+      }
+      }
+      chunk[byte] = b ^ xor_;
+      i++;
+    }
+  }
+							 
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (!i2cbus.inited()) YIELD();
+    while (!I2CLock()) YIELD();
 
     // Init sequence
     Send(DISPLAYOFF);                    // 0xAE
@@ -468,6 +514,8 @@ public:
 
     Send(DISPLAYON);                     //--turn on oled panel
 
+    I2CUnlock();
+
     STDOUT.println("Display initialized.");
     screen_ = SCREEN_STARTUP;
     if (IMG_boot) {
@@ -480,6 +528,15 @@ public:
       lock_fb_ = true;
       frame_available_ = false;
 
+      // I2C
+#ifdef PROFFIEBOARD
+      i = -(int)NELEM(transactions);
+      I2CLockAndRun();
+      while (lock_fb_) YIELD();
+      loop_counter_.Update();
+      scheduleFillBuffer();
+#else
+      do { YIELD(); } while (!I2CLock());
       Send(COLUMNADDR);
       Send((128 - WIDTH)/2);   // Column start address (0 = reset)
       Send(WIDTH-1 + (128 - WIDTH)/2); // Column end address (127 = reset)
@@ -490,49 +547,13 @@ public:
 
       //STDOUT.println(TWSR & 0x3, DEC);
 
-      // I2C
       for (i=0; i < WIDTH * HEIGHT / 8; ) {
         // send a bunch of data in one xmission
         Wire.beginTransmission(address_);
-        Wire.write(0x40);
-        for (uint8_t x=0; x<WIDTH/8; x++) {
-          uint8_t b;
-          switch (layout_) {
-            default:
-            case LAYOUT_NATIVE:
-              b = ((unsigned char *)frame_buffer_)[i];
-              break;
-            case LAYOUT_PORTRAIT:
-              if (!invert_y_) {
-                b = ((unsigned char *)frame_buffer_)[sizeof(frame_buffer_) - 1 - i];
-              } else {
-                b = ((unsigned char *)frame_buffer_)[i ^ (sizeof(col_t) - 1)];
-              }
-              break;
-            case LAYOUT_LANDSCAPE: {
-              int x = i / sizeof(col_t);
-              int y = ((i & (sizeof(col_t)-1)) << 3) + 7;
-              int delta_pos = -WIDTH / 8;
-              if (invert_y_) {
-                y = HEIGHT - 1 - y;
-                delta_pos = WIDTH / 8;
-              }
-//            STDOUT << " LANDSCAPE DECODE!! x = " << x << " y = " << y << "\n";
-
-              int shift = 7 - (x & 7);
-              uint8_t *pos =
-                ((unsigned char*)frame_buffer_) + ((x >> 3) + (y * (WIDTH/8)));
-              b = 0;
-              for (int j = 0; j < 8; j++) {
-                b <<= 1;
-                b |= (*pos >> shift) & 1;
-                pos += delta_pos;
-              }
-            }
-          }
-          Wire.write(b ^ xor_);
-          i++;
-        }
+	GetChunk();
+	for (size_t x=0; x <= chunk_size; x++) {
+	  Wire.write(chunk[x]);
+	}
         Wire.endTransmission();
         I2CUnlock(); do { YIELD(); } while (!I2CLock());
       }
@@ -540,12 +561,55 @@ public:
       lock_fb_ = false;
       scheduleFillBuffer();
       I2CUnlock();
+#endif      
       while (millis() - frame_start_time_ < millis_to_display_) YIELD();
-      do { YIELD(); } while (!I2CLock());
     }
 
     STATE_MACHINE_END();
   }
+
+#ifdef PROFFIEBOARD
+  static constexpr uint8_t transactions[] = {
+      COLUMNADDR,
+      (128 - WIDTH)/2,   // Column start address (0 = reset)
+      WIDTH-1 + (128 - WIDTH)/2, // Column end address (127 = reset)
+      PAGEADDR,
+      0,  // Page start address (0 = reset)
+      sizeof(col_t) - 1
+  };
+  void RunLocked() override {
+    size_t size;
+    if (i < 0) {
+      chunk[0] = transactions[NELEM(transactions)+i];
+      i++;
+      size = 1;
+    } else {
+      GetChunk();
+      size = chunk_size + 1;
+    }
+    if (!stm32l4_i2c_notify(Wire._i2c, &SSD1306Template::DataSent, this, (I2C_EVENT_ADDRESS_NACK | I2C_EVENT_DATA_NACK | I2C_EVENT_ARBITRATION_LOST | I2C_EVENT_BUS_ERROR | I2C_EVENT_OVERRUN | I2C_EVENT_RECEIVE_DONE | I2C_EVENT_TRANSMIT_DONE | I2C_EVENT_TRANSFER_DONE))) {
+      goto fail;
+    }
+    if (!stm32l4_i2c_transmit(Wire._i2c, address_, chunk, size, 0)) {
+      goto fail;
+    }
+    return;
+  fail:
+    lock_fb_ = false;
+    I2CUnlock();
+    return;
+  }
+  static void DataSent(void *x, unsigned long event) { ((SSD1306Template*)x)->DataSent(); }
+  void DataSent() {
+    stm32l4_i2c_notify(Wire._i2c, nullptr, 0, 0);
+    I2CUnlock();
+    if (i < WIDTH * HEIGHT / 8) {
+      I2CLockAndRun();
+    } else {
+      lock_fb_ = false;
+    }
+  }
+#endif  
 
 #define TAG2(X, Y) (((X) << 8) | (Y))
   int ReadColorAsGray(FileReader* f) {
@@ -684,7 +748,7 @@ public:
     *on = true;
   }
 private:
-  uint16_t i;
+  int i;
   uint8_t xor_ = 0;
   bool invert_y_ = 0;
   volatile bool looped_on_ = false;
@@ -707,6 +771,9 @@ private:
   volatile bool eof_ = true;
   volatile bool lock_fb_ = false;
 };
+
+template<int WIDTH, class col_t>
+constexpr uint8_t SSD1306Template<WIDTH, col_t>::transactions[];
 
 using SSD1306 = SSD1306Template<128, uint32_t>;
 

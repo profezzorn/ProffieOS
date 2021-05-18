@@ -55,18 +55,18 @@ public:
       Wire.begin();
       Wire.setClock(400000);
       i2c_detected_ = true;
-      while (millis() - last_request_millis_ < 2000) YIELD();
+      while (used()) YIELD();
       i2c_detected_ = false;
       STDOUT.println("I2C sleeping..");
       Wire.end();
-      while (millis() - last_request_millis_ >= 2000) YIELD();
+      while (!used()) YIELD();
       }
 #endif      
     STATE_MACHINE_END();
   }
 
   bool used() {
-    return millis() - last_request_millis_ < 2000;
+    return !((last_request_millis_ + 2000 - millis()) >> 31);
   }
 
   bool inited() {
