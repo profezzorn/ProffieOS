@@ -10,13 +10,13 @@
 // returned value: INTEGER
 
 template<class MIN, class MAX>
-class ClashImpactX {
+class ClashImpactF {
 public:
   void run(BladeBase* base) {
-    min_.run(base);
-    max_.run(base);
+    min_cents_.run(base);
+    max_cents_.run(base);
     float i = SaberBase::GetClashStrength();
-    value_ = clampi32(((i - min_.getInteger(0)) / max_.getInteger(0)) * 32768, 0, 32768);
+    value_ = clampi32(((i - (min_cents_.getInteger(0) / 100)) / (max_cents_.getInteger(0) / 100)) * 32768, 0, 32768);
   }
 
   int getInteger(int led) {
@@ -24,12 +24,12 @@ public:
   }
 
 private:
-  MIN min_;
-  MAX max_;
+  MIN min_cents_;
+  MAX max_cents_;
   int value_;
 };
 
-template<int MIN = 2, int MAX = 14>
-using ClashImpact = ClashImpactX<Int<MIN>, Int<MAX>>;
+template<int MIN = 200, int MAX = 1400>
+using ClashImpact = ClashImpactF<Int<MIN>, Int<MAX>>;
 
 #endif
