@@ -64,7 +64,8 @@ protected:
       while (!reader_.Done()) YIELD();
       float v = battery_now();
       uint32_t now = micros();
-      float mul = powf(0.05, (now - last_voltage_read_time_) / 1000000.0);
+      // float mul = powf(0.05, (now - last_voltage_read_time_) / 1000000.0);
+      float mul = expf(logf(0.05) * (now - last_voltage_read_time_) / 1000000.0);
       last_voltage_read_time_ = now;
       last_voltage_ = last_voltage_ * mul + v * (1 - mul);
       if (IsLow()) {

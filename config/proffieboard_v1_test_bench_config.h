@@ -57,12 +57,18 @@ const unsigned int maxLedsPerStrip = 196;
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
 //#define ENABLE_SSD1306
+#define INCLUDE_SSD1306
 
 // #define ENABLE_DEBUG
 
 // #define IDLE_OFF_TIME 10000
 
 // #define BLADE_DETECT_PIN aux2Pin
+
+// #define ENABLE_TRACING TRACE_CATEGORY_MOTION | TRACE_CATEGORY_I2C
+
+#define FILTER_CUTOFF_FREQUENCY 150
+#define FILTER_ORDER 8
 
 #endif
 
@@ -294,4 +300,9 @@ Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
 //NECDecoder nec_decoder;
 //RC6Decoder rc6_decoder;
 //PrintDecoder print_decoder;
+#endif
+
+#ifdef CONFIG_BOTTOM
+StandardDisplayController<64, uint32_t> display_controller;
+SSD1306Template<64, uint32_t> display(&display_controller);
 #endif

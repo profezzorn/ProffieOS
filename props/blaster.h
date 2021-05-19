@@ -1,3 +1,33 @@
+/* Basic blaster prop use.
+
+Default Startup Mode = STUN
+Add the following to your config file if so desired:
+	#define BLASTER_SHOTS_UNTIL_EMPTY 15 (whatever number)
+	#define BLASTER_JAM_PERCENTAGE if this is not defined, random from 0-100%.
+
+Blaster Buttons: FIRE and MODE
+(Blaster is always on with power, unless dedicated Power button is installed.)
+
+Cycle Modes - 						Click MODE
+Next Preset - 						Double click MODE
+Previous Preset - 					Double click and hold MODE, release after a second
+Reload - 							Hold for 2 seconds and release (Or Click Reload if dedicated button insatlled))
+Start/Stop Track - 					Hold MODE until track plays or stops
+Fire - 								Click FIRE (Hold to Auto Fire / Rapid Fire)
+Clip In - 							Clip Detect pad Latched On ( or Hold Momentary button)
+Clip out - 							Clip Detect pad Latched Off ( or release Momentary button)
+Unjam - 							Bang the blaster.
+(If 3rd button (POW))
+	Power On / Off - 				Click POW
+
+Wavs to use for switching Modes:
+	mdstun.wav
+	mdkill.wav
+	mdauto.wav
+- If these are not present, mode.wav will be used for all modes.
+- If no mode.wav either, then Talkie voice speaks selected mode.
+*/
+  
 #ifndef PROPS_BLASTER_H
 #define PROPS_BLASTER_H
 
@@ -17,8 +47,13 @@ EFFECT(range);
 EFFECT(reload);
 EFFECT(stun);
 EFFECT(unjam);
-
-class Blaster : public PropBase {
+EFFECT(mdstun);
+EFFECT(mdkill);
+EFFECT(mdauto);
+// For mode sounds, specific "mdstun", "mdkill", and "mdauto" may be used.
+// If just a single "mode" sound for all switches exists, that will be used.
+// If no mode sounds exist in the font, a talkie version will speak the mode on switching.
+class Blaster : public virtual PropBase {
 public:
   Blaster() : PropBase() {}
   const char* name() override { return "Blaster"; }
@@ -226,7 +261,7 @@ public:
   }
 
   // Make clash do nothing except unjam if jammed.
-  void Clash(bool stab) override {
+  void Clash(bool stab, float strength) override {
     if (is_jammed_) {
       is_jammed_ = false;
       SaberBase::DoEffect(EFFECT_UNJAM, 0);
@@ -239,14 +274,18 @@ public:
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
 
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_PRESSED, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
         NextBlasterMode();
         return true;
 
       case EVENTID(BUTTON_MODE_SELECT, EVENT_DOUBLE_CLICK, MODE_ON):
         next_preset();
         return true;
-
+        
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_CLICK_LONG, MODE_ON):
+        previous_preset();
+        return true;
+        
       case EVENTID(BUTTON_RELOAD, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON):
         Reload();
@@ -288,11 +327,29 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
         Off();
         return true;
+		    
+  #ifdef BLADE_DETECT_PIN
+    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
+    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
+      // Might need to do something cleaner, but let's try this for now.
+      blade_detected_ = true;
+      FindBladeAgain();
+      SaberBase::DoBladeDetect(true);
+      return true;
+
+    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
+    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
+      // Might need to do something cleaner, but let's try this for now.
+      blade_detected_ = false;
+      FindBladeAgain();
+      SaberBase::DoBladeDetect(false);
+      return true;
+  #endif
     }
     return false;
   }
 
-  // Blaster effects, auto fire is handled by begin/end lockup
+   // Blaster effects, auto fire is handled by begin/end lockup
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
       default: return;
@@ -301,14 +358,7 @@ public:
       case EFFECT_CLIP_IN: hybrid_font.PlayCommon(&SFX_clipin); return;
       case EFFECT_CLIP_OUT: hybrid_font.PlayCommon(&SFX_clipout); return;
       case EFFECT_RELOAD: hybrid_font.PlayCommon(&SFX_reload); return;
-      case EFFECT_MODE:
-	if (SFX_mode) {
-	  hybrid_font.PlayCommon(&SFX_mode);
-	  return;
-	}
-	// TODO: would rather do a Talkie to speak the mode we're in after mode sound
-	beeper.Beep(0.05, 2000.0);
-	return;
+      case EFFECT_MODE: SayMode(); return;
       case EFFECT_RANGE: hybrid_font.PlayCommon(&SFX_range); return;
       case EFFECT_EMPTY: hybrid_font.PlayCommon(&SFX_empty); return;
       case EFFECT_FULL: hybrid_font.PlayCommon(&SFX_full); return;
@@ -316,7 +366,39 @@ public:
       case EFFECT_UNJAM: hybrid_font.PlayCommon(&SFX_unjam); return;
       case EFFECT_PLI_ON: hybrid_font.PlayCommon(&SFX_plion); return;
       case EFFECT_PLI_OFF: hybrid_font.PlayCommon(&SFX_plioff); return;
-	
+  
+    }
+  }
+
+  void SayMode() {
+    switch (blaster_mode) {
+      case MODE_STUN:
+        if (SFX_mdstun) {
+          hybrid_font.PlayCommon(&SFX_mdstun);
+        } else if (SFX_mode) {
+          hybrid_font.PlayCommon(&SFX_mode);
+        } else {
+          talkie.Say(spSTUN);
+        }
+      break;
+      case MODE_KILL:
+        if (SFX_mdkill) {
+          hybrid_font.PlayCommon(&SFX_mdkill);
+        } else if (SFX_mode) {
+          hybrid_font.PlayCommon(&SFX_mode);
+        } else {
+          talkie.Say(spKILL);      
+        }
+      break;
+      case MODE_AUTO:
+        if (SFX_mdauto) {
+          hybrid_font.PlayCommon(&SFX_mdauto);
+        } else if (SFX_mode) {
+          hybrid_font.PlayCommon(&SFX_mode);
+        } else {
+          talkie.Say(spAUTOFIRE);       
+        }
+      break;
     }
   }
 };

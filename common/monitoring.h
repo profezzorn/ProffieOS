@@ -72,7 +72,22 @@ extern Monitoring monitor;
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 
+#define TRACE_CATEGORY_BLADE 0x1
+#define TRACE_CATEGORY_MOTION 0x2
+#define TRACE_CATEGORY_IR 0x4
+#define TRACE_CATEGORY_PROP 0x8
+#define TRACE_CATEGORY_I2C 0x10
+
+#define TRACE_EXPAND_AGAIN(CAT) (CAT)
+#define TRACE_CATEGORY(CAT) TRACE_EXPAND_AGAIN(TRACE_CATEGORY_##CAT)
+
 #ifdef ENABLE_TRACING
+#if (ENABLE_TRACING - 0) == 0
+#define TRACING_CATEGORIES -1
+#else
+#define TRACING_CATEGORIES ENABLE_TRACING
+#endif
+
 // TODO: Move this somewhere more global
 volatile const char* trace[128];
 volatile int trace_pos;
@@ -82,10 +97,17 @@ void DoTrace(const char* str) {
   trace[trace_pos++ & 127] = str;
   interrupts();
 }
-  
-#define TRACE(X) DoTrace(__FILE__ ":" TOSTRING(__LINE__) ": " X)
+
+#define TRACE(CAT, X) do {				\
+  if (TRACE_CATEGORY(CAT) & (TRACING_CATEGORIES))       \
+    DoTrace(__FILE__ ":" TOSTRING(__LINE__) ": " X);	\
+} while(0)
 #else
-#define TRACE(X) do { } while(0)
+#define TRACING_CATEGORIES 0
+#define TRACE(CAT, X) do {				\
+  if (TRACE_CATEGORY(CAT) & (TRACING_CATEGORIES))       \
+    do { } while(0);					\
+} while(0)
 #endif // ENABLE_TRACING
 
 

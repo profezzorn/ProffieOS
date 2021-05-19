@@ -184,7 +184,7 @@ public:
       continue;
 
       i2c_timeout:
-        STDOUT.println("Motion chip timeout, reboot motion chip!");
+        STDOUT.println("Motion chip timeout, trying auto-reboot of motion chip!");
         Reset();
         SLEEP(20);
         I2CUnlock();

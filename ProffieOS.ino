@@ -34,7 +34,7 @@
 // #define CONFIG_FILE "config/proffieboard_v1_graflex.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
-// #define CONFIG_FILE "config/proffieboard_v2_proffiemote.h"
+// #define CONFIG_FILE "config/testconfig.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -48,6 +48,17 @@
 #ifdef SAVE_STATE
 #define SAVE_VOLUME
 #define SAVE_PRESET
+#define SAVE_COLOR_CHANGE
+#define SAVE_DYNAMIC_DIMMING
+#endif
+
+#ifdef ENABLE_ALL_MENU_OPTIONS
+#define DYNAMIC_BLADE_LENGTH
+#define DYNAMIC_BLADE_DIMMING
+#define DYNAMIC_CLASH_THRESHOLD
+#define SAVE_VOLUME
+#define SAVE_BLADE_DIMMING
+#define SAVE_CLASH_THRESHOLD
 #define SAVE_COLOR_CHANGE
 #endif
 
@@ -268,6 +279,7 @@ public:
 
 uint64_t audio_dma_interrupt_cycles = 0;
 uint64_t pixel_dma_interrupt_cycles = 0;
+uint64_t motion_interrupt_cycles = 0;
 uint64_t wav_interrupt_cycles = 0;
 uint64_t loop_cycles = 0;
 
@@ -297,6 +309,11 @@ SaberBase::ColorChangeMode SaberBase::color_change_mode_ =
 bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 uint32_t SaberBase::current_variation_ = 0;
+float SaberBase::sound_length = 0.0;
+float SaberBase::clash_strength_ = 0.0;
+#ifdef DYNAMIC_BLADE_DIMMING
+int SaberBase::dimming_ = 16384;
+#endif
 
 #include "common/box_filter.h"
 
@@ -414,6 +431,8 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/transition_effect.h"
 #include "styles/transition_loop.h"
 #include "styles/effect_sequence.h"
+#include "styles/color_select.h"
+#include "styles/remap.h"
 
 // functions
 #include "functions/ifon.h"
@@ -437,6 +456,14 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/marble.h"
 #include "functions/slice.h"
 #include "functions/mult.h"
+#include "functions/wavlen.h"
+#include "functions/effect_position.h"
+#include "functions/time_since_effect.h"
+#include "functions/sum.h"
+#include "functions/ramp.h"
+#include "functions/center_dist.h"
+#include "functions/linear_section.h"
+#include "functions/hold_peak.h"
 
 // transitions
 #include "transitions/fade.h"
@@ -450,100 +477,13 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/random.h"
 #include "transitions/colorcycle.h"
 #include "transitions/wave.h"
+#include "transitions/select.h"
+#include "transitions/extend.h"
+#include "transitions/center_wipe.h"
 
+#include "styles/legacy_styles.h"
 //responsive styles
 #include "styles/responsive_styles.h"
-
-// This macro has a problem with commas, please don't use it.
-#define EASYBLADE(COLOR, CLASH_COLOR) \
-  SimpleClash<Lockup<Blast<COLOR, WHITE>, AudioFlicker<COLOR, WHITE> >, CLASH_COLOR>
-
-// Use EasyBlade<COLOR, CLASH_COLOR> instead of EASYBLADE(COLOR, CLASH_COLOR)
-template<class color, class clash_color, class lockup_flicker_color = WHITE>
-using EasyBlade = SimpleClash<Lockup<Blast<color, WHITE>, AudioFlicker<color, lockup_flicker_color> >, clash_color>;
-
-// The following functions are mostly for illustration.
-// The templates above gives you more power and functionality.
-
-// Arguments: color, clash color, turn-on/off time
-template<class base_color,
-          class clash_color,
-          int out_millis,
-          int in_millis,
-         class lockup_flicker_color = WHITE,
-         class blast_color = WHITE>
-StyleAllocator StyleNormalPtr() {
-#if 0
-  typedef AudioFlicker<base_color, lockup_flicker_color> AddFlicker;
-  typedef Blast<base_color, blast_color> AddBlast;
-  typedef Lockup<AddBlast, AddFlicker> AddLockup;
-  typedef SimpleClash<AddLockup, clash_color> AddClash;
-  return StylePtr<InOutHelper<AddClash, out_millis, in_millis> >();
-#else
- typedef Layers<base_color,
-                SimpleClashL<clash_color>,
-                LockupL<AudioFlickerL<lockup_flicker_color> >,
-                BlastL<blast_color> > Blade;
-  return StylePtr<InOutHelper<Blade, out_millis, in_millis> >();
-#endif  
-}
-
-// Arguments: color, clash color, turn-on/off time
-template<class base_color,
-         class clash_color,
-         class out_millis,
-         class in_millis,
-         class lockup_flicker_color = WHITE,
-         class blast_color = WHITE>
-StyleAllocator StyleNormalPtrX() {
-  typedef AudioFlicker<base_color, lockup_flicker_color> AddFlicker;
-  typedef Blast<base_color, blast_color> AddBlast;
-  typedef Lockup<AddBlast, AddFlicker> AddLockup;
-  typedef SimpleClash<AddLockup, clash_color> AddClash;
-  return StylePtr<InOutHelperX<AddClash, InOutFuncX<out_millis, in_millis>> >();
-}
-
-// Rainbow blade.
-// Arguments: color, clash color, turn-on/off time
-template<int out_millis,
-          int in_millis,
-          class clash_color = WHITE,
-          class lockup_flicker_color = WHITE>
-StyleAllocator StyleRainbowPtr() {
-  typedef AudioFlicker<Rainbow, lockup_flicker_color> AddFlicker;
-  typedef Lockup<Rainbow, AddFlicker> AddLockup;
-  typedef SimpleClash<AddLockup, clash_color> AddClash;
-  return StylePtr<InOutHelper<AddClash, out_millis, in_millis> >();
-}
-
-// Rainbow blade.
-// Arguments: color, clash color, turn-on/off time
-template<class out_millis,
-          class in_millis,
-          class clash_color = WHITE,
-          class lockup_flicker_color = WHITE>
-StyleAllocator StyleRainbowPtrX() {
-  typedef AudioFlicker<Rainbow, lockup_flicker_color> AddFlicker;
-  typedef Lockup<Rainbow, AddFlicker> AddLockup;
-  typedef SimpleClash<AddLockup, clash_color> AddClash;
-  return StylePtr<InOutHelperX<AddClash, InOutFuncX<out_millis, in_millis>> >();
-}
-
-// Stroboscope, flickers the blade at the desired frequency.
-// Arguments: color, clash color, turn-on/off time
-template<class strobe_color,
-          class clash_color,
-          int frequency,
-          int out_millis,
-          int in_millis>
-StyleAllocator StyleStrobePtr() {
-  typedef Strobe<BLACK, strobe_color, frequency, 1> strobe;
-  typedef Strobe<BLACK, strobe_color, 3* frequency, 1> fast_strobe;
-  typedef Lockup<strobe, fast_strobe> AddLockup;
-  typedef SimpleClash<AddLockup, clash_color> clash;
-  return StylePtr<InOutHelper<clash, out_millis, in_millis> >();
-}
-
 #include "styles/pov.h"
 
 class NoLED;
@@ -565,6 +505,8 @@ class NoLED;
 #include "common/status_led.h"
 #include "styles/style_parser.h"
 #include "styles/length_finder.h"
+#include "styles/show_color.h"
+#include "styles/blade_shortener.h"
 
 BladeConfig* current_config = nullptr;
 class BladeBase* GetPrimaryBlade() {
@@ -619,7 +561,12 @@ CapTest captest;
 #else
 #include "buttons/stm32l4_touchbutton.h"
 #endif
+<<<<<<< HEAD
 #include "buttons/matrix.h"
+=======
+#include "buttons/rotary.h"
+#include "buttons/pots.h"
+>>>>>>> 0809685bf93520df93cad7433128ad8b2c1a99ed
 
 #include "ir/ir.h"
 #include "ir/receiver.h"
@@ -652,6 +599,8 @@ LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN>>
 #endif
 
 #include "common/sd_test.h"
+
+class I2CDevice;
 
 class Commands : public CommandParser {
  public:
@@ -904,6 +853,14 @@ class Commands : public CommandParser {
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
 #endif
+
+#ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "sleep") && e) {
+      delay(atoi(e));
+      return true;
+    }
+#endif
+
 #ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "twiddle")) {
       int pin = strtol(e, NULL, 0);
@@ -1017,6 +974,7 @@ class Commands : public CommandParser {
       float total_cycles =
         (float)(audio_dma_interrupt_cycles +
 	        pixel_dma_interrupt_cycles +
+		motion_interrupt_cycles +
                  wav_interrupt_cycles +
 		 Looper::CountCycles() +
 		 CountProfileCycles());
@@ -1032,6 +990,9 @@ class Commands : public CommandParser {
       STDOUT.print("LOOP: ");
       STDOUT.print(loop_cycles * 100.0f / total_cycles);
       STDOUT.println("%");
+      STDOUT.print("Motion: ");
+      STDOUT.print(motion_interrupt_cycles * 100.0f / total_cycles);
+      STDOUT.println("%");
       STDOUT.print("Global loops / second: ");
       global_loop_counter.Print();
       STDOUT.println("");
@@ -1044,6 +1005,7 @@ class Commands : public CommandParser {
       noInterrupts();
       audio_dma_interrupt_cycles = 0;
       pixel_dma_interrupt_cycles = 0;
+      motion_interrupt_cycles = 0;
       wav_interrupt_cycles = 0;
       interrupts();
       return true;
@@ -1076,6 +1038,12 @@ class Commands : public CommandParser {
       return true;
     }
 #ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "dumpfusor")) {
+      fusor.dump();
+      return true;
+    }
+#endif
+#ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "stm32info")) {
       STDOUT.print("VBAT: ");
       STDOUT.println(STM32.getVBAT());
@@ -1083,6 +1051,13 @@ class Commands : public CommandParser {
       STDOUT.println(STM32.getVREF());
       STDOUT.print("TEMP: ");
       STDOUT.println(STM32.getTemperature());
+      return true;
+    }
+#endif // ENABLE_DEVELOPER_COMMANDS
+#ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "i2cstate")) {
+      extern void DumpI2CState();
+      DumpI2CState();
       return true;
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
@@ -1662,16 +1637,22 @@ StaticWrapper<SerialCommands> serial_commands;
 
 #endif
 
-
-#if defined(ENABLE_MOTION) || defined(ENABLE_SSD1306)
+#if defined(ENABLE_MOTION) || defined(ENABLE_SSD1306) || defined(INCLUDE_SSD1306)
 #include "common/i2cdevice.h"
 I2CBus i2cbus;
 #endif
 
 #ifdef ENABLE_SSD1306
 #include "display/ssd1306.h"
-SSD1306 display;
+
+StandardDisplayController<128, uint32_t> display_controller;
+SSD1306Template<128, uint32_t> display(&display_controller);
 #endif
+
+#ifdef INCLUDE_SSD1306
+#include "display/ssd1306.h"
+#endif
+
 
 #ifdef ENABLE_MOTION
 
@@ -1835,3 +1816,8 @@ void loop() {
 #endif
   Looper::DoLoop();
 }
+
+#define CONFIG_BOTTOM
+#include CONFIG_FILE
+#undef CONFIG_BOTTOM
+

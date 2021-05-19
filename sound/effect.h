@@ -218,6 +218,10 @@ class Effect {
     return ret;
   }
 
+  size_t get_min_file() const { return min_file_; }
+	
+  const char* get_directory() const { return directory_; }
+	
   operator bool() const { return files_found() > 0; }
 
   void Select(int n) {
@@ -236,7 +240,11 @@ class Effect {
     following_ = following;
   }
 
-  FileID RandomFile() const {
+#ifdef NO_REPEAT_RANDOM
+  int last_;
+#endif
+
+  FileID RandomFile() {
     int num_files = files_found();
     if (num_files < 1) {
       default_output->print("No sounds found: ");
@@ -244,6 +252,18 @@ class Effect {
       return FileID();
     }
     int n = rand() % num_files;
+#ifdef NO_REPEAT_RANDOM
+    switch (num_files) {
+      default:
+	while (n == last_) n = rand() % num_files;
+	break;
+      case 2:
+	if (n == last_) n = rand() % num_files;
+      case 1:
+	break;
+    }
+    last_ = n;
+#endif
     if (selected_ != -1) n = selected_;
     return FileID(this, n);
   }

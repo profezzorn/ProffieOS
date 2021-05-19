@@ -37,16 +37,23 @@ ARDMK_VENDOR        = teensy
 ARDUINO_CORE_PATH   = $(ARDUINO_DIR)/hardware/teensy/avr/cores/teensy3
 BOARDS_TXT          = $(ARDUINO_DIR)/hardware/$(ARDMK_VENDOR)/avr/boards.txt
 
+ifndef FINDFIRSTKEY
+# result = $(call FINDFIRSTKEY, 'boardname', 'parameter')
+FINDFIRSTKEY = $(shell if [ -f $(BOARDS_TXT) ]; \
+then \
+  grep -Ev '^\#' $(BOARDS_TXT) | \
+  sed -n "s@^[ \t]*$(1).$(2)\.\([^.]*\)=.*@\1@gp" ; \
+fi)
+endif
 
 ifndef F_CPU
   ifndef BOARD_SUB
-    SPEEDS := $(call PARSE_BOARD,"$(BOARD_TAG),menu.speed.*.build.fcpu") # Obtain sequence of supported frequencies.
-    SPEEDS := $(shell printf "%d\n" $(SPEEDS) | sort -g) # Sort it, just in case. Printf to re-append newlines so that sort works.
-    F_CPU := $(lastword $(SPEEDS)) # List is sorted in ascending order. Take the fastest speed.
-    #$(info "speeds is " $(SPEEDS))  # Good for debugging
-  else
-    F_CPU := $(call PARSE_BOARD,$(BOARD_TAG),menu.speed.$(BOARD_SUB).build.fcpu)
+    # Pick the speed based on the default, which is usually the fastest non-overclock speed.
+    SPEED_KEYS := $(call FINDFIRSTKEY,"$(BOARD_TAG),menu.speed")
+    # $(info "SPEED_KEYS is $(SPEED_KEYS)")
+    BOARD_SUB := $(firstword $(SPEED_KEYS))
   endif
+  F_CPU := $(call PARSE_BOARD,$(BOARD_TAG),menu.speed.$(BOARD_SUB).build.fcpu)
 endif
 
 # if boards.txt gets modified, look there, else hard code it

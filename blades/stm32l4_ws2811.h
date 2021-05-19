@@ -173,7 +173,7 @@ public:
   }
   
   void show(int pin, int leds, int frequency, WS2811Client* client) override {
-    TRACE("show enter");
+    TRACE(BLADE, "show enter");
     while (!ws2811_dma_done) armv7m_core_yield();
     client_ = client;
 
@@ -206,7 +206,7 @@ public:
     pin_ = pin;
     
     if (g_PWMInstances[instance] != WS2811_TIMER_INSTANCE) {
-      TRACE("proxy");
+      TRACE(BLADE, "proxy");
       // Proxy mode, make sure GPIO A/B doesn't fall asleep
       RCC->AHB2SMENR |= (RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN);
       
@@ -245,26 +245,26 @@ public:
       // STDOUT << data[bits -1] << "," << data[bits] << "," << data[bits+1] << "\n";
 #endif
       
-      TRACE("stop!");
+      TRACE(BLADE, "stop!");
       stm32l4_timer_stop(timer());
-      TRACE("cnt=0");
+      TRACE(BLADE, "cnt=0");
       timer()->TIM->CNT = 0;
       
       // armv7m_atomic_or(&timer()->TIM->CR1, TIM_CR1_ARPE);
       
-      TRACE("ch1");
+      TRACE(BLADE, "ch1");
       timer_channel(TIMER_CHANNEL_1, t1h);
-      TRACE("ch3");
+      TRACE(BLADE, "ch3");
       timer_channel(TIMER_CHANNEL_3, t0h);
       
-      TRACE("SR");
+      TRACE(BLADE, "SR");
       timer()->TIM->SR = 0;
       
-      TRACE("CLR");
+      TRACE(BLADE, "CLR");
       armv7m_atomic_or(&timer()->TIM->DIER, TIM_DIER_UDE | TIM_DIER_CC1DE | TIM_DIER_CC3DE);
       armv7m_atomic_modify(&timer()->TIM->DIER, TIM_DIER_UDE | TIM_DIER_CC1DE | TIM_DIER_CC3DE, 0);
       
-      TRACE("DMA");
+      TRACE(BLADE, "DMA");
       stm32l4_dma_start(&dma_, offset + (uint32_t)(&(GPIO->BSRR)),
 			(uint32_t)&bit_,
 			bits,
@@ -274,7 +274,7 @@ public:
 			DMA_OPTION_MEMORY_DATA_SIZE_8 |
 			DMA_OPTION_PRIORITY_VERY_HIGH);
       if (CIRCULAR) {
-	TRACE("circular!");
+	TRACE(BLADE, "circular!");
 	bits_to_send_ = bits + 1;
 	stm32l4_dma_start(&dma2_, offset + (uint32_t)(&(GPIO->BRR)),
 			  (uint32_t)begin_,
@@ -288,7 +288,7 @@ public:
 			  DMA_OPTION_PRIORITY_VERY_HIGH |
 			  DMA_OPTION_CIRCULAR);
       } else {
-	TRACE("linear");
+	TRACE(BLADE, "linear");
 	stm32l4_dma_start(&dma2_, offset + (uint32_t)(&(GPIO->BRR)),
 			  (uint32_t)begin_,
 			  bits + 1,
@@ -309,23 +309,23 @@ public:
 			DMA_OPTION_PRIORITY_VERY_HIGH);
 
       
-      TRACE("GPIO");
+      TRACE(BLADE, "GPIO");
       stm32l4_gpio_pin_configure(g_APinDescription[pin].pin,
 				 (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_OUTPUT));
       
-      TRACE("TRIGGER");
+      TRACE(BLADE, "TRIGGER");
       // Trigger DMA on update
       armv7m_atomic_or(&timer()->TIM->DIER, TIM_DIER_UDE | TIM_DIER_CC1DE | TIM_DIER_CC3DE);
       
-      TRACE("START!");
+      TRACE(BLADE, "START!");
       noInterrupts();
       stm32l4_timer_start(timer(), false);
       interrupts();
-      TRACE("running!");
+      TRACE(BLADE, "running!");
 //      timer()->TIM->EGR = TIM_EGR_UG;
       
     } else {
-      TRACE("timer");
+      TRACE(BLADE, "timer");
       client->set01(client_->get_t0h(), client_->get_t1h());
       Fill(false);
       
@@ -355,7 +355,7 @@ public:
       armv7m_atomic_modify(&timer()->TIM->DIER, TIM_DIER_UDE | TIM_DIER_CC1DE | TIM_DIER_CC3DE, 0);
 
       if (CIRCULAR) {
-	TRACE("circular!");
+	TRACE(BLADE, "circular!");
 	stm32l4_dma_start(&dma_, (uint32_t)cmp_address,
 			  (uint32_t)begin_,
 			  bits_per_interrupt_ * 2,
@@ -369,7 +369,7 @@ public:
 			  DMA_OPTION_CIRCULAR);
 	bits_to_send_ = bits + 1;
       } else {
-	TRACE("linear");
+	TRACE(BLADE, "linear");
 	stm32l4_dma_start(&dma_, (uint32_t)cmp_address,
 			  (uint32_t)begin_,
 			  bits + 1,
@@ -392,7 +392,7 @@ public:
       // Trigger DMA on update
       armv7m_atomic_or(&timer()->TIM->DIER, TIM_DIER_UDE);
     }
-    TRACE("show exit");
+    TRACE(BLADE, "show exit");
   }
   
   bool done() override {
@@ -400,7 +400,7 @@ public:
   }
 
   void DoRefill1() {
-    TRACE("DoRefill1");
+    TRACE(BLADE, "DoRefill1");
     sent_ += bits_per_interrupt_;
     if (sent_ > bits_to_send_) {
       dma_done_callback((void*)client_, 0);
@@ -409,7 +409,7 @@ public:
     }
   }
   void DoRefill2() {
-    TRACE("DoRefill2");
+    TRACE(BLADE, "DoRefill2");
     // Done callback will be called by the other dma.
     Fill(stm32l4_dma_count(&dma2_) >= (half_ - begin_));
   }
@@ -424,7 +424,7 @@ public:
   }
   static void dma_done_callback_ignore(void* context, uint32_t events) {}
   static void dma_done_callback(void* context, uint32_t events) {
-    TRACE("dma done enter");
+    TRACE(BLADE, "dma done enter");
     // Set the pin to low, normal output mode. This will keep the pin low even if we
     // re-use the timer for another show() call.
     digitalWrite(pin_, LOW);
@@ -442,7 +442,7 @@ public:
     // GPIO A/B may sleep on WFE now.
     RCC->AHB2SMENR &= ~(RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN);
     ((WS2811Client*)context)->done_callback();
-    TRACE("dma done exit");
+    TRACE(BLADE, "dma done exit");
   }
   
 private:
@@ -533,9 +533,9 @@ public:
   }
 
   void BeginFrame() override {
-    TRACE("beginframe enter");
+    TRACE(BLADE, "beginframe enter");
     while (!IsReadyForBeginFrame()) armv7m_core_yield();
-    TRACE("exit");
+    TRACE(BLADE, "exit");
   }
 
   bool IsReadyForEndFrame() override {
@@ -544,7 +544,7 @@ public:
   }
 
   void EndFrame() override {
-    TRACE("endframe enter");
+    TRACE(BLADE, "endframe enter");
     if (!engine_) return;
     while (!IsReadyForEndFrame()) armv7m_core_yield();
 
@@ -559,7 +559,7 @@ public:
       color_buffer_ptr = pos;
       engine_->show(pin_, num_leds_, frequency_, this);
     }
-    TRACE("exit");
+    TRACE(BLADE, "exit");
   }
 
   int num_leds() const override { return num_leds_; }

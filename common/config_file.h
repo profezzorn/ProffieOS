@@ -12,7 +12,7 @@ struct ConfigFile {
     READ_OK,
     READ_END,
   };
-  ReadStatus Read(FileReader* f) {
+  virtual ReadStatus Read(FileReader* f) {
     SetVariable("=", 0.0);  // This resets all variables.
     if (!f || !f->IsOpen()) return ReadStatus::READ_FAIL;
     for (; f->Available(); f->skipline()) {

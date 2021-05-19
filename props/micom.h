@@ -59,7 +59,9 @@ void Play(Effect* f) {
 
 class AnswerEffectGroup {
 public:
-  AnswerEffectGroup(SUBNAMES(effect_, CONST_CHAR_NAME, COMMA)) : SUBNAMES(effect_, INIT_EFFECT, COMMA) {}
+  AnswerEffectGroup(SUBNAMES(effect_, CONST_CHAR_NAME, COMMA)) : SUBNAMES(effect_, INIT_EFFECT, COMMA) {
+    effect_loop_.SetFollowing(&effect_loop_);
+  }
 
   SUBNAMES(effect_, DECLARE_EFFECT, );
 
@@ -194,12 +196,12 @@ DEFINE_TRIGGER(8);
 
 #define PROP_TYPE AudioFx
 
-class AudioFx : public PropBase {
+class AudioFx : public virtual PropBase {
 public:
   const char* name() override { return "MiCOM"; }
 #if NUM_BUTTONS >= 2
   // Make clash do nothing
-  void Clash(bool stab) override {}
+  void Clash(bool stab, float strength) override {}
 #endif
   void Loop() {
     PropBase::Loop();
@@ -214,6 +216,17 @@ public:
     hybrid_font.SetHumVolume(1.0);
   }
 
+  void PrintButton(uint32_t b) override {
+    if (b & BUTTON_TRIGGER_ONE) STDOUT.print("T1");
+    if (b & BUTTON_TRIGGER_TWO) STDOUT.print("T2");
+    if (b & BUTTON_TRIGGER_THREE) STDOUT.print("T3");
+    if (b & BUTTON_TRIGGER_FOUR) STDOUT.print("T4");
+    if (b & BUTTON_TRIGGER_FIVE) STDOUT.print("T5");
+    if (b & BUTTON_TRIGGER_SIX) STDOUT.print("T6");
+    if (b & BUTTON_TRIGGER_SEVEN) STDOUT.print("T7");
+    if (b & BUTTON_TRIGGER_EIGHT) STDOUT.print("T8");
+    if (b & MODE_ON) STDOUT.print("On");
+  }
   // Make swings do nothing
   void DoMotion(const Vec3& motion, bool clear) override { }
 
@@ -234,8 +247,8 @@ public:
     }
 
     switch (EVENTID(button, event, modifiers & ~MODE_ON)) {
-      case EVENTID(BUTTON_TRIGGER_ONE, EVENT_HELD_LONG, BUTTON_TRIGGER_EIGHT):
-      case EVENTID(BUTTON_TRIGGER_EIGHT, EVENT_HELD_LONG, BUTTON_TRIGGER_ONE):
+      case EVENTID(BUTTON_TRIGGER_ONE, EVENT_HELD_MEDIUM, BUTTON_TRIGGER_EIGHT):
+      case EVENTID(BUTTON_TRIGGER_EIGHT, EVENT_HELD_MEDIUM, BUTTON_TRIGGER_ONE):
 	if (SaberBase::IsOn()) {
 	  Off();
 	  return true;

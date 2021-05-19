@@ -5,12 +5,15 @@
 #include <stdlib.h>
 #include <cstdlib>
 #include <iostream>
+#include <string.h>
 
 // cruft
 #define interrupts() do {} while(0)
 #define noInterrupts() do {} while(0)
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 #define SCOPED_PROFILER() do { } while(0)
+
+#define PROFFIE_TEST
 
 #define COMMON_FUSE_H
 
@@ -34,6 +37,15 @@ constexpr auto max(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::f
   return a >= b ? std::forward<A>(a) : std::forward<B>(b);
 }
 float fract(float x) { return x - floor(x); }
+
+char* itoa(int value, char* str, int radix) {
+  if (radix != 10) {
+    fprintf(stderr, "Unexpected radix!\n");
+    exit(1);
+  }
+  sprintf(str, "%d", value);
+  return str;
+}
 
 uint32_t micros_ = 0;
 uint32_t micros() { return micros_; }
@@ -129,6 +141,30 @@ MockDynamicMixer dynamic_mixer;
 #include "hump_flicker.h"
 #include "brown_noise_flicker.h"
 #include "responsive_styles.h"
+#include "rainbow.h"
+#include "legacy_styles.h"
+#include "rgb_arg.h"
+#include "inout_sparktip.h"
+#include "on_spark.h"
+#include "gradient.h"
+#include "fire.h"
+#include "sparkle.h"
+#include "../common/command_parser.h"
+#include "../common/arg_parser.h"
+CommandParser* parsers = NULL;
+ArgParserInterface* CurrentArgParser;
+
+class StyleCharging : public BladeStyle {
+public:
+  void activate() override {}
+  void run(BladeBase *blade) override {};
+  bool NoOnOff() override { return true; }
+  bool Charging() override { return true; }
+  bool IsHandled(HandledFeature effect) override { return false; }
+};
+StyleFactoryImpl<StyleCharging> style_charging;
+
+#include "style_parser.h"
 
 SaberBase* saberbases = NULL;
 SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
@@ -137,6 +173,7 @@ SaberBase::ColorChangeMode SaberBase::color_change_mode_ =
 bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 uint32_t SaberBase::current_variation_ = 0;
+float SaberBase::sound_length = 0.0;
 
 bool on_ = true;
 bool allow_disable_ = false;
@@ -447,9 +484,108 @@ void test_style3() {
     fprintf(stderr, "Expecting black.\n");
     exit(1);
   }
-
 }
 
+void testGetArg(const char* str, int arg, const char* expected) {
+  char tmp[1024];
+  fprintf(stderr, "testGetArg(%s, %d)\n", str, arg);
+  if (!style_parser.GetArgument(str, arg, tmp)) {
+    fprintf(stderr, "Expected to be able to get argument %d from %s\n", arg, str);
+    exit(1);
+  }
+  if (strcmp(tmp, expected)) {
+    fprintf(stderr, "Expected '%s', but got '%s' for argument %d from %s\n", expected, tmp, arg, str);
+    exit(1);
+  }
+}
+void testNoArg(const char* str, int arg) {
+  char tmp[1024];
+  if (style_parser.GetArgument(str, arg, tmp)) {
+    fprintf(stderr, "Expected to NOT be able to get argument %d from %s\n", arg, str);
+    exit(1);
+  }
+  if (*tmp) {
+    fprintf(stderr, "When returning false, GetArgument should return an empty string!\n");
+    exit(1);
+  }
+}
+
+void testSetArg(const char* str, int arg, const char* replacement, const char* expected) {
+  fprintf(stderr, "testSetArg(%s, %d)\n", str, arg);
+  LSPtr<char> ret = style_parser.SetArgument(str, arg, replacement);
+  if (strcmp(ret.get(), expected)) {
+    fprintf(stderr, "Expected '%s' got '%s'\n", expected, ret.get());
+    exit(1);
+  }
+}
+
+void testResetArguments(const char* from, const char* expected) {
+  fprintf(stderr, "testResetArguments(%s)\n", from);
+  LSPtr<char> ret = style_parser.ResetArguments(from);
+  if (strcmp(ret.get(), expected)) {
+    fprintf(stderr, "Expected '%s' got '%s'\n", expected, ret.get());
+    exit(1);
+  }
+}
+
+void testCopyArguments(const char* from, const char *to, const char* expected) {
+  fprintf(stderr, "testCopyArguments(%s, %s)\n", from, to);
+  LSPtr<char> ret = style_parser.CopyArguments(from, to);
+  if (strcmp(ret.get(), expected)) {
+    fprintf(stderr, "Expected '%s' got '%s'\n", expected, ret.get());
+    exit(1);
+  }
+}
+
+void testCopyArguments(const char* from, const char *to, int N, const char* expected) {
+  fprintf(stderr, "testCopyArguments(%s, %s, %d)\n", from, to, N);
+  LSPtr<char> ret = style_parser.CopyArguments(from, to, N);
+  if (strcmp(ret.get(), expected)) {
+    fprintf(stderr, "Expected '%s' got '%s'\n", expected, ret.get());
+    exit(1);
+  }
+}
+
+void testMaxUsedArgument(const char* from, int expected) {
+  fprintf(stderr, "testMaxUsedArgument(%s)\n", from);
+  int args = style_parser.MaxUsedArgument(from);
+  if (args != expected) {
+    fprintf(stderr, "Expected %d got %d\n", expected, args);
+    exit(1);
+  }
+}
+
+
+void test_argument_parsing() {
+  testGetArg("standard", 0, "standard");
+  testGetArg("standard", 1, "0,65535,65535");
+  testGetArg("standard ~", 1, "0,65535,65535");
+  testGetArg("standard ~ 1,0,0", 2, "1,0,0");
+  testGetArg("standard", 2, "65535,65535,65535");
+  testGetArg("standard", 3, "300");
+  testGetArg("standard", 4, "800");
+  testNoArg("standard", 5);
+  testGetArg("standard 1,1,1 2,2,2 3 4 5", 5, "5");
+  testNoArg("standard 1,1,1 2,2,2 3 4 ~", 5);
+  testGetArg("standard 1,1,1 2,2,2 3 4 5", 2, "2,2,2");
+  testSetArg("standard 1,1,1 2,2,2 3 4", 1, "7,7,7", "standard 7,7,7 2,2,2 3 4");
+  testSetArg("standard 1,1,1 2,2,2 3 4", 2, "7,7,7", "standard 1,1,1 7,7,7 3 4");
+  testSetArg("standard 1,1,1 2,2,2 3 4", 3, "7", "standard 1,1,1 2,2,2 7 4");
+  testSetArg("standard 1,1,1 2,2,2 3 4", 4, "7", "standard 1,1,1 2,2,2 3 7");
+
+  testResetArguments("standard 1 2 3", "standard");
+  testCopyArguments("standard 1 2 3", "blarg 2 3 4", "blarg 1 2 3");
+
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 4, "blarg 1 2 3");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 3, "blarg 1 2 3");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 2, "blarg 1 2 9");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 1, "blarg 1 8 9");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 0, "blarg 7 8 9");
+
+  testMaxUsedArgument("charging", 0);
+  testMaxUsedArgument("rainbow", 2);
+  testMaxUsedArgument("fire", 2);
+}
 
 int main() {
   test_cylon();
@@ -457,4 +593,5 @@ int main() {
   test_style1();
   test_style2();
   test_style3();
+  test_argument_parsing();
 }

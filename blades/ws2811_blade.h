@@ -61,7 +61,7 @@ WS2811_Blade(WS2811PIN* pin,
     if (on) EnableBooster();
     if (!powered_ && on) {
       power_->Init();
-      TRACE("Power on");
+      TRACE(BLADE, "Power on");
       pin_->Enable(true);
       pin_->BeginFrame();
       for (int i = 0; i < pin_->num_leds(); i++) color_buffer[i] = Color16();
@@ -74,7 +74,7 @@ WS2811_Blade(WS2811PIN* pin,
       pin_->EndFrame();
       current_blade = NULL;
     } else if (powered_ && !on) {
-      TRACE("Power off");
+      TRACE(BLADE, "Power off");
       pin_->BeginFrame();
       for (int i = 0; i < pin_->num_leds(); i++) color_buffer[i] = Color16();
       while (!pin_->IsReadyForEndFrame());
@@ -90,7 +90,7 @@ WS2811_Blade(WS2811PIN* pin,
   }
 
   void Activate() override {
-    TRACE("Activate");
+    TRACE(BLADE, "Activate");
     STDOUT.print("WS2811 Blade with ");
     STDOUT.print(pin_->num_leds());
     STDOUT.println(" leds.");
@@ -101,7 +101,7 @@ WS2811_Blade(WS2811PIN* pin,
   }
 
   void Deactivate() override {
-    TRACE("Deactivate");
+    TRACE(BLADE, "Deactivate");
     Power(false);
     CommandParser::Unlink();
     Looper::Unlink();
@@ -124,12 +124,12 @@ WS2811_Blade(WS2811PIN* pin,
     if (!on_) allow_disable_ = true;
   }
   void SetStyle(BladeStyle* style) override{
-    TRACE("SetStyle");
+    TRACE(BLADE, "SetStyle");
     AbstractBlade::SetStyle(style);
     run_ = true;
   }
   BladeStyle* UnSetStyle() override {
-    TRACE("UnSetStyle");
+    TRACE(BLADE, "UnSetStyle");
     return AbstractBlade::UnSetStyle();
   }
   // SaberBase implementation.
@@ -137,7 +137,7 @@ WS2811_Blade(WS2811PIN* pin,
     if (on_ || powered_) *on = true;
   }
   void SB_On() override {
-    TRACE("SB_On");
+    TRACE(BLADE, "SB_On");
     AbstractBlade::SB_On();
     run_ = true;
     on_ = true;
@@ -150,7 +150,7 @@ WS2811_Blade(WS2811PIN* pin,
     power_off_requested_ = false;
   }
   void SB_Off(OffType off_type) override {
-    TRACE("SB_Off");
+    TRACE(BLADE, "SB_Off");
     AbstractBlade::SB_Off(off_type);
     on_ = false;
     if (off_type == OFF_IDLE) {

@@ -959,6 +959,11 @@ public:
   bool Parse(const char *cmd, const char* arg) override {
     uint32_t rate = 0;
     if (!strcmp(cmd, "say") && arg) {
+      if (!strcmp(arg, "bfd")) {
+  	Say(talkie_error_in_15, 15);
+  	Say(talkie_font_directory_15, 15);
+  	return true;
+      }
       if (!strcmp(arg, "bof")) {
 	Say(talkie_font_directory_15, 15);
 	Say(talkie_not_found_15, 15);
