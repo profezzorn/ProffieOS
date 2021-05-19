@@ -561,12 +561,9 @@ CapTest captest;
 #else
 #include "buttons/stm32l4_touchbutton.h"
 #endif
-<<<<<<< HEAD
 #include "buttons/matrix.h"
-=======
 #include "buttons/rotary.h"
 #include "buttons/pots.h"
->>>>>>> 0809685bf93520df93cad7433128ad8b2c1a99ed
 
 #include "ir/ir.h"
 #include "ir/receiver.h"
