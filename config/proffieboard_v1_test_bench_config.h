@@ -56,8 +56,8 @@ const unsigned int maxLedsPerStrip = 196;
 // #define ENABLE_WATCHDOG
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
-//#define ENABLE_SSD1306
-#define INCLUDE_SSD1306
+#define ENABLE_SSD1306
+//#define INCLUDE_SSD1306
 
 // #define ENABLE_DEBUG
 
@@ -83,9 +83,15 @@ RFID_Command RFID_Commands[] = {
 };
 
 Preset testing_presets[] = {
+  { "TeensySF", "tracks/mars.wav",
+    StyleNormalPtr<BLUE, WHITE, 300, 800>(),
+    StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
+    "BLUE" },
+#if 0  
   { "TeensySF", "tracks/cantina.wav", StyleNormalPtr<BLUE, WHITE, 300, 800>(),
     StylePtr<ColorCycle<Rgb<0,0,50>, 10, 35, Cyan, 90, 1000, 6000>>(),
-    "BLUE" },
+     "BLUE" },
+#endif  
 #if 0
   { "TeensySF", "tracks/venus.wav",
     // Doesn't always turn off all the way!
@@ -96,7 +102,7 @@ Preset testing_presets[] = {
     StylePtr<InOutHelper<EASYBLADE(OnPulse, WHITE), 300, 800, OffPulse> >(),
     "cyan1"},
 #endif
-#if 1
+#if 0
   { "SmthFuzz", "tracks/cantina.wav",
     StylePtr<Layers<RandomBlink<3000,Red,Black>,InOutTrL<TrWipe<300>,TrWipeIn<500>,Black>>>(),
     // StylePtr<ColorCycle<Rgb<0,0,50>, 10, 35, Cyan, 90, 1000, 6000>>(),
@@ -252,14 +258,15 @@ BladeConfig blades[] = {
 //  { 1, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
   { 1,
 //    DimBlade(10.0, SubBladeReverse(0, 143, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>())),
-    DimBlade(10.0, SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<>>())),
+//    DimBlade(10.0, SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<>>())),
+    DimBlade(10.0, SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>())),
 //    DimBlade(5.0, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()),
-//    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
+    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
 //    WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin2>>(),
 //    SPIBladePtr<99, blade2Pin, blade3Pin, Color8::BGR, PowerPINS<bladePowerPin2>, 12000000> (),
 //    WS2811BladePtr<30, WS2811_800kHz | WS2811_GRB, blade2Pin, PowerPINS<bladePowerPin2>>(),
 //    SaviBladePtr<blade2Pin, PowerPINS<bladePowerPin2>>(),
-    StringBladePtr<Blue3mmLED>(),
+//    StringBladePtr<Blue3mmLED>(),
     CONFIGARRAY(testing_presets) },
 //  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>>(), CONFIGARRAY(testing_presets) }
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
@@ -303,6 +310,6 @@ Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
 #endif
 
 #ifdef CONFIG_BOTTOM
-StandardDisplayController<64, uint32_t> display_controller;
-SSD1306Template<64, uint32_t> display(&display_controller);
+//StandardDisplayController<64, uint32_t> display_controller;
+//SSD1306Template<64, uint32_t> display(&display_controller);
 #endif
