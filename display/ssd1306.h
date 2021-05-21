@@ -63,24 +63,22 @@ public:
 
   // Idempotent
   void ConvertToNative() {
+    bool invert_y = invert_y_;
     switch (layout_) {
     case LAYOUT_NATIVE:
       break;
     case LAYOUT_LANDSCAPE:
-      MonoFrame<WIDTH, col_t>::ConvertLandscape(invert_y_);
-      invert_y_ = false;
+      MonoFrame<WIDTH, col_t>::ConvertLandscape(invert_y);
+      invert_y = false;
       break;
     case LAYOUT_PORTRAIT:
       MonoFrame<WIDTH, col_t>::ConvertPortrait();
     }
-    layout_ = LAYOUT_NATIVE;
-    if (invert_y_) {
+    if (invert_y) {
       MonoFrame<WIDTH, col_t>::FlipY();
-      invert_y_ = false;
     }
     if (xor_) {
       MonoFrame<WIDTH, col_t>::Invert();
-      xor_ = 0;
     }
   }
 
