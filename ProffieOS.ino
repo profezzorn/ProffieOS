@@ -991,6 +991,9 @@ class Commands : public CommandParser {
       STDOUT.print("Global loops / second: ");
       global_loop_counter.Print();
       STDOUT.println("");
+      STDOUT.print("High frequency loops / second: ");
+      hf_loop_counter.Print();
+      STDOUT.println("");
       SaberBase::DoTop(total_cycles);
       Looper::LoopTop(total_cycles);
       DumpProfileLocations(total_cycles);
