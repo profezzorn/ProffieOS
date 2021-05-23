@@ -7,7 +7,6 @@ class Looper;
 Looper* loopers = NULL;
 Looper* hf_loopers = NULL;
 LoopCounter global_loop_counter;
-LoopCounter hf_loop_counter;
 class Looper {
 public:
   void Link() {
@@ -50,7 +49,6 @@ public:
       l->Loop();
     }
     global_loop_counter.Update();
-    hf_loop_counter.Update();
   }
   static void DoHFLoop() {
     ScopedCycleCounter cc(loop_cycles);
@@ -61,7 +59,7 @@ public:
       ScopedCycleCounter cc2(l->cycles_);
       l->Loop();
     }
-    hf_loop_counter.Update();
+    global_loop_counter.Update();
   }
   static void DoSetup() {
     for (Looper *l = loopers; l; l = l->next_looper_) {
