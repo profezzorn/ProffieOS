@@ -561,7 +561,6 @@ CapTest captest;
 #else
 #include "buttons/stm32l4_touchbutton.h"
 #endif
-#include "buttons/matrix.h"
 #include "buttons/rotary.h"
 #include "buttons/pots.h"
 
@@ -570,7 +569,6 @@ CapTest captest;
 #include "ir/blaster.h"
 #include "ir/print.h"
 #include "ir/nec.h"
-#include "ir/rc5.h"
 #include "ir/rc6.h"
 #include "ir/stm32_ir.h"
 
