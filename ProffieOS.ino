@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-// #define CONFIG_FILE "config/default_proffieboard_config.h"
+#define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -29,8 +29,9 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
+// #define CONFIG_FILE "config/proffieboard_v1_graflex.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
 // #define CONFIG_FILE "config/testconfig.h"
@@ -501,6 +502,7 @@ class NoLED;
 #include "common/preset.h"
 #include "common/blade_config.h"
 #include "common/current_preset.h"
+#include "common/status_led.h"
 #include "styles/style_parser.h"
 #include "styles/length_finder.h"
 #include "styles/show_color.h"
@@ -1091,6 +1093,12 @@ class Commands : public CommandParser {
           STDOUT.print("lhLH"[now]);
           if (!(j & 3)) STDOUT.print(" ");
         }
+        STDOUT.print("  ");
+        for (int j = 15; j >= 0; j--) {
+	  int afr = 0xf & (GPIO->AFR[j >> 3] >> ((j & 7) * 4));
+          STDOUT.print("0123456789ABCDEF"[afr]);
+          if (!(j & 3)) STDOUT.print(" ");
+        }
         STDOUT.println("");
       }
       return true;
@@ -1136,9 +1144,13 @@ class Commands : public CommandParser {
       PRINTIFON(AHB1ENR,DMA2);
       PRINTIFON(AHB2ENR,GPIOA);
       PRINTIFON(AHB2ENR,GPIOB);
-#if defined(STM32L433xx) || defined(STM32L476xx) || defined(STM32L496xx)
+#ifdef GPIOC_BASE
       PRINTIFON(AHB2ENR,GPIOC);
+#endif      
+#ifdef GPIOD_BASE
       PRINTIFON(AHB2ENR,GPIOD);
+#endif      
+#ifdef GPIOE_BASE
       PRINTIFON(AHB2ENR,GPIOE);
 #endif
 #if defined(STM32L476xx) || defined(STM32L496xx)
@@ -1194,14 +1206,20 @@ class Commands : public CommandParser {
 #endif
       PRINTIFON(APB2ENR,TIM1);
       PRINTIFON(APB1ENR1,TIM2);
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#ifdef TIM3_BASE
       PRINTIFON(APB1ENR1,TIM3);
+#endif
+#ifdef TIM4_BASE
       PRINTIFON(APB1ENR1,TIM4);
+#endif
+#ifdef TIM5_BASE
       PRINTIFON(APB1ENR1,TIM5);
 #endif
       PRINTIFON(APB1ENR1,TIM6);
+#ifdef TIM7_BASE      
       PRINTIFON(APB1ENR1,TIM7);
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#endif
+#ifdef TIM8_BASE      
       PRINTIFON(APB2ENR,TIM8);
 #endif
       PRINTIFON(APB2ENR,TIM15);
@@ -1216,14 +1234,18 @@ class Commands : public CommandParser {
       PRINTIFON(AHB1ENR, CRC);
       PRINTIFON(AHB1ENR, TSC);
       PRINTIFON(AHB2ENR, RNG);
+#ifdef LCD_BASE
       PRINTIFON(APB1ENR1, LCD);
+#endif
       PRINTIFON(APB1ENR1, RTCAPB);
       PRINTIFON(APB1ENR1, WWDG);
       PRINTIFON(APB1ENR1, CRS);
       PRINTIFON(APB1ENR1, CAN1);
       PRINTIFON(APB1ENR1, PWR);
       PRINTIFON(APB1ENR1, OPAMP);
+#ifdef SWPMI1_BASE
       PRINTIFON(APB1ENR2, SWPMI1);
+#endif
       PRINTIFON(APB2ENR, SYSCFG);
       PRINTIFON(APB2ENR, FW);
 
