@@ -38,7 +38,7 @@ public:
 #ifdef AUDIO_CONTROL_SGTL5000
     if (!sgtl5000_enabled) {
       sgtl5000_1.enable();
-      sgtl5000_1.volume(0.5);
+      sgtl5000_1.volume(0.7);
       sgtl5000_enabled = true;
     }
 #else    
