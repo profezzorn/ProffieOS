@@ -80,7 +80,7 @@ Optional Gesture Controls (if enabled)
 
 "Battle Mode" Controls* - While ON
     *may vary by defines
-  Enter/Exit Battle Mode = Hold AUX + Swing
+  Enter/Exit Battle Mode = Hold AUX
   Clash / Lockup = controlled by gesture
     Clash blade
       If blade swings through the clash it will do a "glancing Clash"
@@ -1744,16 +1744,16 @@ SaberFett263Buttons() : PropBase() {}
     savestate_.ReadINIFromSaveDir("curstate");
 #define WRAP_BLADE_SHORTERNER(N) \
     if (savestate_.blade##N##len != -1 && savestate_.blade##N##len != current_config->blade##N->num_leds()) { \
-      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);	\
+      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp); \
     }
 #else
 #define WRAP_BLADE_SHORTERNER(N)
 #endif
 
-#define SET_BLADE_STYLE(N) do {						\
+#define SET_BLADE_STYLE(N) do {           \
     BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
     WRAP_BLADE_SHORTERNER(N)                                            \
-    current_config->blade##N->SetStyle(tmp);				\
+    current_config->blade##N->SetStyle(tmp);        \
   } while (0);
 
     ONCEPERBLADE(SET_BLADE_STYLE)
@@ -2121,6 +2121,8 @@ void PlayMenuSound(const char* file) {
         if (menu_ && menu_type_ == TRACK_PLAYER) {
           track_mode_ = PLAYBACK_ROTATE;
           PlayMenuSound("mrotate.wav");
+          menu_ = false;
+          menu_type_ = MENU_TOP;
           return true;
         }
         return true;
@@ -2129,6 +2131,8 @@ void PlayMenuSound(const char* file) {
         if (menu_ && menu_type_ == TRACK_PLAYER) {
           track_mode_ = PLAYBACK_LOOP;
           PlayMenuSound("mloop.wav");
+          menu_ = false;
+          menu_type_ = MENU_TOP;
           return true;
         }
         return true;
@@ -2146,10 +2150,24 @@ void PlayMenuSound(const char* file) {
           wav_player.Free();
           return true;
         } else {
-          menu_ = true;
-          menu_type_ = MENU_VOLUME;
-          current_menu_angle_ = fusor.angle2();
-          PlayMenuSound("vmbegin.wav");
+#ifndef FETT263_BATTLE_MODE_ALWAYS_ON
+          if (!battle_mode_) {
+            battle_mode_ = true;
+            if (SFX_bmbegin) {
+              hybrid_font.PlayCommon(&SFX_bmbegin);
+            } else {
+              hybrid_font.DoEffect(EFFECT_FORCE, 0);
+            }
+          } else {
+            battle_mode_ = false;
+            if (SFX_bmend) {
+              hybrid_font.PlayCommon(&SFX_bmend);
+            } else {
+              beeper.Beep(0.5, 3000);
+            }
+          }
+          return true;
+#endif
         } 
         return true;
 
@@ -2727,7 +2745,7 @@ void PlayMenuSound(const char* file) {
           UpdateStyle(current_preset_.preset_num);
           return true;
         }
-        if (!menu_) return false;
+        if (!menu_) return true;
         switch (menu_type_) {
           case MENU_PRESET:
             previous_preset_fast();
@@ -3304,7 +3322,7 @@ void PlayMenuSound(const char* file) {
           return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF):
-        if (!menu_) return false;
+        if (!menu_) return true;
         switch (menu_type_) {
           case MENU_PRESET:
             next_preset();
@@ -3343,7 +3361,7 @@ void PlayMenuSound(const char* file) {
           return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF):
-        if (!menu_) return false;
+        if (!menu_) return true;
         switch (menu_type_) {
           case MENU_PRESET:
             previous_preset();
@@ -4881,15 +4899,6 @@ void PlayMenuSound(const char* file) {
         // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
         track_mode_ = PLAYBACK_OFF;
-        StartOrStopTrack();
-        return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
-        SaberBase::RequestMotion();
-        return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_OFF):
-        track_mode_ = PLAYBACK_OFF;
         if (track_player_) {
           track_player_->Stop();
           track_player_.Free();
@@ -4904,6 +4913,10 @@ void PlayMenuSound(const char* file) {
         }
         return true;
 
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
+        SaberBase::RequestMotion();
+        return true;
+
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
 #ifdef FETT263_SAY_BATTERY
         PlayMenuSound("mbatt.wav");
@@ -4912,27 +4925,6 @@ void PlayMenuSound(const char* file) {
 #endif
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
-
-       // Battle Mode
-#ifndef FETT263_BATTLE_MODE_ALWAYS_ON
-      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
-        if (!battle_mode_) {
-          battle_mode_ = true;
-          if (SFX_bmbegin) {
-            hybrid_font.PlayCommon(&SFX_bmbegin);
-          } else {
-            hybrid_font.DoEffect(EFFECT_FORCE, 0);
-          }
-        } else {
-          battle_mode_ = false;
-          if (SFX_bmend) {
-            hybrid_font.PlayCommon(&SFX_bmend);
-          } else {
-            beeper.Beep(0.5, 3000);
-          }
-        }
-        return true;
-#endif
 
       // Gesture Sleep Toggle
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_POWER):
