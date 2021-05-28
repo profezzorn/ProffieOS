@@ -1,16 +1,15 @@
-// Fett263 Buttons with Gesture Controls, Battle Mode, Edit Mode, Track Player, Quote/Force Player
-//
-// ProffieOS: Control software for lightsabers and other props.
-// http://fredrik.hubbe.net/lightsaber/teensy_saber.html
-// Copyright (c) 2016-2019 Fredrik Hubinette
-//
-// Fett263 Button (prop) file, "Battle Mode", "Edit Mode", "Track Player"
-// Copyright (c) 2020-2021 Fernando da Rosa
-//
-// Includes Gesture Controls, "Battle Mode" with "Smart Lockup", "Multi-Blast" Mode (to enable Swing Blast control)
-// "Multi-Phase" Mode, "On Demand Power Save", "On Demand Battery Level", "Fast On" Ignition (no preon) and SA22C volume menu
-//
-/*
+/* Fett263 Buttons for use with 2 Button Sabers (PWR, AUX)
+Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force Player, Real Clash, Choreography Mode
+   Dual Mode Ignition Sounds, Multi-Phase Control, Multi-Blast
+
+ ProffieOS: Control software for lightsabers and other props.
+ http://fredrik.hubbe.net/lightsaber/teensy_saber.html
+ Copyright (c) 2016-2019 Fredrik Hubinette
+
+ Fett263 Button (prop) file, "Battle Mode 2.0", "Edit Mode", "Track Player", "Real Clash", "Choreography Mode", "Dual Mode Ignition",
+ "Multi-Phase", "Multi-Blast"
+ Copyright (c) 2020-2021 Fernando da Rosa
+
 2 Button Control (this file does not support 1 button)
 
 Standard Controls While Blade is OFF
