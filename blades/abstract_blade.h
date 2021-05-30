@@ -65,6 +65,7 @@ public:
 	    break;
 	  default: return;
 	}
+	break;
       case EFFECT_CLASH_UPDATE:
         return;
     }

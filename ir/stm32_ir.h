@@ -11,6 +11,8 @@ public:
     return 6; // PB8
 #elif PROFFIEBOARD_VERSION == 2
     return 19;  // PB8
+#elif PROFFIEBOARD_VERSION == 3
+    return 21;  // PB6
 #else
 #error Unsupported IR hardware.
 #endif    
@@ -124,10 +126,15 @@ public:
 
   // IRInterface
   virtual void signal(bool high, uint32_t us) override {
+//    STDOUT << "SIGNAL " << high << " for " << us << " pos = " << pos_ << "\n";;
     int n = us * frequency_ / 1000000;
-    WaitForSpace();
-    data_[pos_++] = n - 1;
-    data_[pos_++] = high ? 1 : 0;
+    while (n) {
+      int x = std::min(n, 256);
+      n -= x;
+      WaitForSpace();
+      data_[pos_++] = x - 1;
+      data_[pos_++] = high ? 1 : 0;
+    }
   }
 
   void Loop() override {

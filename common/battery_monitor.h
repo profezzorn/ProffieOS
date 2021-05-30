@@ -125,7 +125,7 @@ private:
   float battery_now() {
     // This is the volts on the battery monitor pin.
     float volts = 3.3 * reader_.Value() / 1024.0;
-#if VERSION_MAJOR == 5
+#if VERSION_MAJOR == 5 || VERSION_MAJOR == 6
     return volts * 2.0;
 #else
 #ifdef V2
