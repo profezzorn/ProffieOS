@@ -32,6 +32,7 @@ const uint32_t BatteryBar16_data[] = {
 const Glyph BatteryBar16 = { 16, 0, 0, GLYPHDATA(BatteryBar16_data) };
 
 #include "StarJedi10Font.h"
+#include "Aurebesh10Font.h"
 
 #ifndef MAX_GLYPH_HEIGHT
 #define MAX_GLYPH_HEIGHT 32
