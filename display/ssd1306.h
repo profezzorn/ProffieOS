@@ -136,8 +136,8 @@ public:
           MonoFrame<WIDTH, col_t>::DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
         screen_ = SCREEN_PLI;
-      }
         return font_config.ProffieOSFontImageDuration;
+      }
 
       case SCREEN_IMAGE:
         MountSDCard();
