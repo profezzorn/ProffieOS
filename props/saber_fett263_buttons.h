@@ -160,101 +160,101 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   The value for hardest clash level to select clash sound
   Range 8 ~ 16
 
-  FETT263_BATTLE_MODE_ALWAYS_ON
-  Battle Mode is always on, toggle controls deactivated
-  This will disable traditional Clash and Stab effects
-  (cannot be used with FETT263_BATTLE_MODE_START_ON)
+  == BATTLE MODE OPTIONS ==
+    Battle Mode is enabled via controls by default in this prop, you can customize further with these defines
 
-  or
+    FETT263_BATTLE_MODE_ALWAYS_ON - Battle Mode is always on, toggle controls deactivated
+      This will disable traditional Clash and Stab effects (cannot be used with FETT263_BATTLE_MODE_START_ON)
 
-  FETT263_BATTLE_MODE_START_ON
-  Battle Mode is active with each ignition by default but can be toggled using Aux + Swing control
-  (cannot be used with FETT263_BATTLE_MODE_ALWAYS_ON)
+    FETT263_BATTLE_MODE_START_ON - Battle Mode is active with each ignition by default but can be toggled using Aux + Swing control
+      (cannot be used with FETT263_BATTLE_MODE_ALWAYS_ON)
 
-  FETT263_LOCKUP_DELAY 200
-  This is the "delay" in millis to determine Clash vs Lockup
+    FETT263_LOCKUP_DELAY 200
+      This is the "delay" in millis to determine Clash vs Lockup
 
-  FETT263_BM_CLASH_DETECT 4
-  The max value to use clashes in Battle Mode 2.0, clashes used on clash strength below this value
-  This allows light clashes to produce clash effects instead of using Begin/End Lockup
-  (above this value Clash is performed by quick pull away using Begin/End Lockup sounds and effect)
-  Range 0 ~ 6 (note 0 will use Battle Mode 1.0 with all clashes being Begin/End Lockup)
+    FETT263_BM_CLASH_DETECT 4
+      The max value to use clashes in Battle Mode 2.0, clashes used on clash strength below this value
+      This allows light clashes to produce clash effects instead of using Begin/End Lockup
+      (above this value Clash is performed by quick pull away using Begin/End Lockup sounds and effect)
+      Range 0 ~ 6 (note 0 will use Battle Mode 1.0 with all clashes being Begin/End Lockup)
 
-  FETT263_BM_DISABLE_OFF_BUTTON
-  During Battle Mode Power Button Retraction is disabled
+    FETT263_BM_DISABLE_OFF_BUTTON
+      During Battle Mode Power Button Retraction is disabled
 
-  FETT263_SWING_ON
-  To enable Swing On Ignition control (automatically enters Battle Mode, uses Fast On)
+  == Swing On ==
+    Gesture Ignition via Swing
+    You can use one of the following defines to enable swing on:
 
-  or
+      FETT263_SWING_ON - To enable Swing On Ignition control (automatically enters Battle Mode, uses Fast On)
 
-  FETT263_SWING_ON_PREON
-  Disables Fast On ignition for Swing On so Preon is used (cannot be used with FETT263_SWING_ON)
+      FETT263_SWING_ON_PREON - Disables Fast On ignition for Swing On so Preon is used (cannot be used with FETT263_SWING_ON)
 
-  FETT263_SWING_ON_NO_BM
-  To enable Swing On Ignition control but not activate Battle Mode
-  (Combine with FETT263_SWING_ON or FETT263_SWING_ON_PREON, 
-  cannot be used with FETT263_BATTLE_MODE_ALWAYS_ON or FETT263_BATTLE_MODE_START_ON)
+    FETT263_SWING_ON_NO_BM - To enable Swing On Ignition control but not activate Battle Mode
+        (Combine with FETT263_SWING_ON or FETT263_SWING_ON_PREON, 
+        cannot be used with FETT263_BATTLE_MODE_ALWAYS_ON or FETT263_BATTLE_MODE_START_ON)
 
-  FETT263_SWING_ON_SPEED 250
-  Adjust Swing Speed required for Ignition 250 ~ 500 recommended
+    FETT263_SWING_ON_SPEED 250
+      Adjust Swing Speed required for Ignition 250 ~ 500 recommended
 
-  FETT263_TWIST_OFF
-  To enable Twist Off Retraction control
+  == Twist Off ==
+    Gesture Retraction via Twist (back and forth)
 
-  FETT263_TWIST_ON
-  To enable Twist On Ignition control (automatically enters Battle Mode, uses Fast On)
+    FETT263_TWIST_OFF
+    To enable Twist Off Retraction control
 
-  or
+  == Twist On ==
+    Gesture Ignition via Twist (back and forth)
+    You can use one of the following defines to enable twist on:
 
-  FETT263_TWIST_ON_PREON
-  Disables Fast On ignition for Twist On so Preon is used (cannot be used with FETT263_TWIST_ON)
+      FETT263_TWIST_ON - To enable Twist On Ignition control (automatically enters Battle Mode, uses Fast On)
 
-  FETT263_TWIST_ON_NO_BM
-  To enable Twist On Ignition control but not activate Battle Mode
-  (Combine with FETT263_TWIST_ON or FETT263_TWIST_ON_PREON, 
-  cannot be used with FETT263_BATTLE_MODE_ALWAYS_ON or FETT263_BATTLE_MODE_START_ON)
+      FETT263_TWIST_ON_PREON - Disables Fast On ignition for Twist On so Preon is used (cannot be used with FETT263_TWIST_ON)
 
-  FETT263_STAB_ON
-  To enable Stab On Ignition control (automatically enters Battle Mode, uses Fast On)
+    FETT263_TWIST_ON_NO_BM - To enable Twist On Ignition control but not activate Battle Mode
+      (Combine with FETT263_TWIST_ON or FETT263_TWIST_ON_PREON, 
+      cannot be used with FETT263_BATTLE_MODE_ALWAYS_ON or FETT263_BATTLE_MODE_START_ON)
 
-  or
+  == Stab On ==
+    Gesture Ignition via Stab (linear movement + clash at tip of blade)
+    You can use one of the following defines to enable stab on:
 
-  FETT263_STAB_ON_PREON
-  Disables Fast On ignition for Stab On so Preon is used (cannot be used with FETT263_STAB_ON)
+      FETT263_STAB_ON - To enable Stab On Ignition control (automatically enters Battle Mode, uses Fast On)
 
-  FETT263_STAB_ON_NO_BM
-  To enable Stab On Ignition control but not activate Battle Mode
-  (Combine with FETT263_STAB_ON or FETT263_STAB_ON_PREON, 
-  cannot be used with FETT263_BATTLE_MODE_ALWAYS_ON or FETT263_BATTLE_MODE_START_ON)
+      FETT263_STAB_ON_PREON - Disables Fast On ignition for Stab On so Preon is used (cannot be used with FETT263_STAB_ON)
 
-  FETT263_THRUST_ON
-  To enable Thrust On Ignition control (automatically enters Battle Mode, uses Fast On)
+    FETT263_STAB_ON_NO_BM - To enable Stab On Ignition control but not activate Battle Mode
+    (Combine with FETT263_STAB_ON or FETT263_STAB_ON_PREON, 
+    cannot be used with FETT263_BATTLE_MODE_ALWAYS_ON or FETT263_BATTLE_MODE_START_ON)
 
-  or
+  == Thrust On ==
+    Gesture Ignition via Thrust (linear movement)
+    You can use one of the following defines to enable thrust on:
 
-  FETT263_THRUST_ON_PREON
-  Disables Fast On ignition for Thrust On so Preon is used (cannot be used with FETT263_THRUST_ON)
+      FETT263_THRUST_ON - To enable Thrust On Ignition control (automatically enters Battle Mode, uses Fast On)
 
-  FETT263_THRUST_ON_NO_BM
-  To enable Thrust On Ignition control but not activate Battle Mode 
-  (Combine with FETT263_THRUST_ON or FETT263_THRUST_ON_PREON, 
-  cannot be used with FETT263_BATTLE_MODE_ALWAYS_ON or FETT263_BATTLE_MODE_START_ON)
+      FETT263_THRUST_ON_PREON - Disables Fast On ignition for Thrust On so Preon is used (cannot be used with FETT263_THRUST_ON)
 
-  FETT263_SAVE_GESTURE_OFF
-  Save "Gesture Sleep" setting to turn gestures off on boot
+    FETT263_THRUST_ON_NO_BM - To enable Thrust On Ignition control but not activate Battle Mode 
+      (Combine with FETT263_THRUST_ON or FETT263_THRUST_ON_PREON, 
+      cannot be used with FETT263_BATTLE_MODE_ALWAYS_ON or FETT263_BATTLE_MODE_START_ON)
 
-  FETT263_FORCE_PUSH
-  To enable gesture controlled Force Push during Battle Mode
-  (will use push.wav or force.wav if not present)
+  == Gesture Sleep ==
+  Toggle Gesture Ignition and Retraction detection to disable or enable gesture options
 
-  FETT263_FORCE_PUSH_ALWAYS_ON
-  To enable gesture controlled Force Push full time
-  (will use push.wav or force.wav if not present)
+  FETT263_SAVE_GESTURE_OFF - Save "Gesture Sleep" setting to turn gesture ignitions and retractions off on boot
 
-  FETT263_FORCE_PUSH_LENGTH 5
-  Allows for adjustment to Push gesture length in millis needed to trigger Force Push
-  Recommended range 1 ~ 10, 1 = shortest, easiest to trigger, 10 = longest
+  == Force Push ==
+    Push movement triggers push.wav (or force.wav if push.wav is not present)
+    You can use one of the following defines to enable force push:
+
+      FETT263_FORCE_PUSH - To enable gesture controlled Force Push during Battle Mode
+        (will use push.wav or force.wav if not present)
+
+      FETT263_FORCE_PUSH_ALWAYS_ON - To enable gesture controlled Force Push full time
+        (will use push.wav or force.wav if not present)
+
+    FETT263_FORCE_PUSH_LENGTH 5 - Allows for adjustment to Push gesture length in millis needed to trigger Force Push
+      Recommended range 1 ~ 10, 1 = shortest, easiest to trigger, 10 = longest
 
   FETT263_MULTI_PHASE
   This will enable a preset change while ON to create a "Multi-Phase" saber effect
@@ -494,21 +494,20 @@ public:
 #else
     CONFIG_VARIABLE(maxclash, 16);
 #endif
-
 }
-  bool gestureon;
-  bool swingon;
-  int swingonspeed;
-  bool twiston;
-  bool thruston;
-  bool stabon;
-  bool forcepush;
-  int forcepushlen;
-  int lockupdelay;
-  bool twistoff;
-  bool powerlock;
-  int clashdetect;
-  int maxclash;
+  bool gestureon; // gesture controls on/off for use with "Gesture Sleep"
+  bool swingon; // Swing On ignition
+  int swingonspeed; // Swing On speed (200 ~ 500 range)
+  bool twiston; // Twist On ignition
+  bool thruston; // Thrust On ignition
+  bool stabon; // Stab On ignition
+  bool forcepush; // Force Push
+  int forcepushlen; // Force Push Length
+  int lockupdelay; // Lockup Delay (for Battle Mode)
+  bool twistoff; // Twist Off retraction
+  bool powerlock; // diable PWR button for retraction, for use with "Power Lock" mode to prevent button turning saber off
+  int clashdetect; // maximum Clash Strength to detect Clash during Battle Mode (0 ~ 10 range)
+  int maxclash; // maximum Clash Strength for Clash Sound and Detection works with CLASH_THRESHOLD_G to create range of Clash Strength (8 ~ 16 range)
 
 };
 
@@ -576,7 +575,6 @@ public:
   };
 
   FormEntry clash_rec[32];
- 
 };
 #endif
 
