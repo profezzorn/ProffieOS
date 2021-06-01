@@ -17,19 +17,19 @@ Standard Controls While Blade is OFF
   Change Preset (one at a time*) = Click AUX 
     *if pointing down will go to previous
   NEW! Scroll Presets (using twist menu) = Long Click AUX
-  Turn Right = Next Preset
-  Turn Left = Previous Preset
-  Click PWR = Select Preset
-  Click AUX = go to First Preset
+    Turn Right = Next Preset
+    Turn Left = Previous Preset
+    Click PWR = Select Preset
+    Click AUX = go to First Preset
   Play Track = Long Click PWR pointing up
   NEW! Track Player = Long Click PWR parallel
-  Turn Right = Next Track
-  Turn Left = Previous Track
-  Click PWR = Play Current Track Once
-  Click AUX = Random (will play current track and then randomly select next tracks)
-  Hold PWR + Turn Right = Rotate (will play current track and then next sequential tracks)
-  Hold PWR + Turn Left = Loop Current Track
-  Long Click PWR = Stop Track Player
+    Turn Right = Next Track
+    Turn Left = Previous Track
+    Click PWR = Play Current Track Once
+    Click AUX = Random (will play current track and then randomly select next tracks)
+    Hold PWR + Turn Right = Rotate (will play current track and then next sequential tracks)
+    Hold PWR + Turn Left = Loop Current Track
+    Long Click PWR = Stop Track Player
   NEW! Toggle Gesture Sleep* = Hold PWR + Twist
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
