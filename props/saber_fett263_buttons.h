@@ -799,6 +799,7 @@ SaberFett263Buttons() : PropBase() {}
     return Color16();
   }
 
+  // Show Full Blade Preview
   void ShowFull() {
     show_color_.Start(blade_num_);
     ShowColorStyle::SetColor(GetColorArg(blade_num_, effect_num_)); 
@@ -807,6 +808,7 @@ SaberFett263Buttons() : PropBase() {}
     hsl_angle_ = fusor.angle2();
   }
 
+  // Show Partial Blade Preview (Clash, Lockup, Drag, Melt, Preon, Emitter)
   void ShowPart() {
     ShowColorStyle::SetColor(GetColorArg(blade_num_, effect_num_)); 
     saved_color_ = GetColorArg(blade_num_, effect_num_);
