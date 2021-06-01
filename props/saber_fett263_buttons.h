@@ -580,31 +580,18 @@ public:
 
 #ifdef FETT263_EDIT_MODE_MENU
 // Edit Length 
-// NewLength gets length value from menu for use in LengthEdit
-class NewLength {
-public:
-  static int length_;
-  static void EditLength(int length) {
-    length_ = length - 1;
-    return;
-  }
-  static int GetNewLength() {
-    return length_;
-  }
-};
-
-int NewLength::length_ = 0;
+int length_edit_length = 0;
 
 // Edit Length Preview for Edit Mode
-// LengthEdit uses blade color and creates single white pixel at last pixel from NewLength, black above last pixel
+// LengthEdit uses blade color and creates single white pixel at last pixel, black above last pixel
 template<class BASE, class LIGHTUP, class BLACK = BLACK>
-class LengthEdit : protected NewLength {
+class LengthEdit {
 public:
   void run(BladeBase* blade) {
     base_.run(blade);
     lightup_.run(blade);
     black_.run(blade);
-    led_ = NewLength::GetNewLength();
+    led_ = length_edit_length;
   }
 
   OverDriveColor getColor(int led) {
@@ -675,21 +662,12 @@ class IntEdit : protected NewInt {
     { 0, 0, 65535 }
   };
 
-#ifdef FETT263_EDIT_MODE_MENU
-// The Saber class implements the basic states and actions
-// for the saber.
-class SaberFett263Buttons : public virtual PropBase, protected NewLength {
-public:
-SaberFett263Buttons() : PropBase(), NewLength() {}
-  const char* name() override { return "SaberFett263Buttons"; }
-#else
 // The Saber class implements the basic states and actions
 // for the saber.
 class SaberFett263Buttons : public virtual PropBase {
 public:
 SaberFett263Buttons() : PropBase() {}
   const char* name() override { return "SaberFett263Buttons"; }
-#endif
 
   GestureControlFile saved_gesture_control;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -860,7 +838,7 @@ SaberFett263Buttons() : PropBase() {}
 
   void LengthPreview(int blade) {
     show_length_.Start(blade);
-    NewLength::EditLength(blade_length_);
+    length_edit_length = blade_length_ - 1;
     ShowColorStyle::SetColor(GetColorArg(blade_num_, 1)); 
   }
 
@@ -2441,7 +2419,7 @@ void PlayMenuSound(const char* file) {
             // Edit Blade Length
             if (blade_length_ < max_length_) {
               blade_length_ += 1;
-              NewLength::EditLength(blade_length_);
+              length_edit_length = blade_length_ - 1;
               PlayMenuSound("mup.wav");
               SetBladeLength(blade_num_, blade_length_);
               SaveState(current_preset_.preset_num);
@@ -3006,7 +2984,7 @@ void PlayMenuSound(const char* file) {
             if (blade_length_ > 2) {
               blade_length_ -= 1;
               PlayMenuSound("mdown.wav");
-              NewLength::EditLength(blade_length_);
+              length_edit_length = blade_length_ - 1;
               SetBladeLength(blade_num_, blade_length_);
               SaveState(current_preset_.preset_num);
             } else {
@@ -3893,7 +3871,7 @@ void PlayMenuSound(const char* file) {
               announce_menu_ = true;
               return true;
             case MENU_LENGTH:
-              menu_type_ = MENU_TOP;
+              menu_type_ = MENU_SETTING_SUB;
               PlayMenuSound("msave.wav");
               current_preset_.Save();
               show_length_.Stop(blade_num_);
