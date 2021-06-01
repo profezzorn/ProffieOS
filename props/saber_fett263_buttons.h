@@ -935,23 +935,21 @@ SaberFett263Buttons() : PropBase() {}
 
   void NewColor(int blade, int effect) {
     char new_color[32];
-    switch (color_mode_) {
+    Color16 color_source;
+     switch (color_mode_) {
       case COLOR_LIST:
       case CC_COLOR_LIST:
-        itoa(Color16(color_list_[dial_]).r, new_color, 10);
-        strcat(new_color, ",");
-        itoa(Color16(color_list_[dial_]).g, new_color + strlen(new_color), 10);
-        strcat(new_color, ",");
-        itoa(Color16(color_list_[dial_]).b, new_color + strlen(new_color), 10);
+        color_source = Color16(color_list_[dial_]);
         break;
       default:
-        itoa(Color16(hsl).r, new_color, 10);
-        strcat(new_color, ",");
-        itoa(Color16(hsl).g, new_color + strlen(new_color), 10);
-        strcat(new_color, ",");
-        itoa(Color16(hsl).b, new_color + strlen(new_color), 10);
+        color_source = Color16(hsl);
         break;
     }
+    itoa(Color16(color_source).r, new_color, 10);
+    strcat(new_color, ",");
+    itoa(Color16(color_source).g, new_color + strlen(new_color), 10);
+    strcat(new_color, ",");
+    itoa(Color16(color_source).b, new_color + strlen(new_color), 10);
     current_preset_.SetStyle(blade,style_parser.SetArgument(current_preset_.GetStyle(blade), effect + 2, new_color));
     if (color_mode_ != CC_COLOR_LIST) color_mode_ = NONE;
   }
