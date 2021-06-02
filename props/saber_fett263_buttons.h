@@ -2513,7 +2513,7 @@ void PlayMenuSound(const char* file) {
               calc_ += 1;
             }
             if (calc_ >= 16) {
-              calc_ = 10;
+              calc_ = 16;
               PlayMenuSound("mmax.wav");
             }
             say_type_ = SAY_DIGIT;
