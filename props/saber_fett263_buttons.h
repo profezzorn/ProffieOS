@@ -620,7 +620,7 @@ class IntEdit {
 #endif
   
 // Color List
-  static constexpr Color16 color_list_[] = {
+static constexpr Color16 color_list_[] = {
     { 65535, 0, 0 }, // Red
     { 65535, 3598, 0 }, // OrangeRed
     { 65535, 17476, 0 }, // DarkOrange
@@ -649,7 +649,53 @@ class IntEdit {
     { 65535, 48059, 27756 }, // NavajoWhite
     { 65535, 65535, 65535 }, // White
     { 0, 0, 65535 }
-  };
+};
+
+struct SoundToPlay {
+  const char* filename_;
+  Effect* effect_;
+  int selection_;
+
+  SoundToPlay() :filename_(nullptr), effect_(nullptr) {}
+  SoundToPlay(const char* file) : filename_(file){  }
+  SoundToPlay(Effect* effect, int selection = -1) : filename_(nullptr), effect_(effect), selection_(selection) {}
+  bool Play(BufferedWavPlayer* player) {
+     if (filename_)   return player->PlayInCurrentDir(filename_);
+     effect_->Select(selection_);
+     player->PlayOnce(effect_);
+     return true;
+   }
+   bool isSet() {
+      return filename_ != nullptr || effect_ != nullptr;
+   }
+};
+
+template<int QueueLength>
+class SoundQueue {
+public:
+   bool Play(SoundToPlay p) {
+     if (sounds_ < QueueLength) {
+       queue_[sounds_++] = p;
+       return true;
+     }
+     return false;
+   }
+   // Called from Loop()
+ void Poll(RefPtr<BufferedWavPlayer>& player) {
+      if (sounds_ &&  (!player || !player->isPlaying())) {
+          if (!player) {
+            player = GetFreeWavPlayer();
+            if (!player) return;
+          }
+          queue_[0].Play(player.get());
+          sounds_--;
+          for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
+      }
+   }
+   private:
+     int sounds_;
+     SoundToPlay queue_[QueueLength];
+};
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -967,53 +1013,104 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
-    enum PlayNumber {
-    PLAY_NONE,
-    PLAY_FIRST,
-    PLAY_POINT,
-    PLAY_HUNDRED,
-    PLAY_THOUSAND,
-    PLAY_SECOND,
-    PLAY_THIRD,
-    PLAY_VOLTS,
-  };
+  SoundQueue<16> sound_queue_;
 
   enum SayType {
-    SAY_NONE,
     SAY_BATTERY,
     SAY_DECIMAL,
-    SAY_DIGIT,
-    SAY_HUNDRED,
-    SAY_THOUSAND,
+    SAY_WHOLE,
   };
 
-  void SayNumber (float number) {
-    switch (say_type_) {
-      case SAY_BATTERY:
-      case SAY_DECIMAL:
-        say1_ = (int)floorf(number);
-        say2_ = ((int)floorf(number * 10)) % 10;
-        say3_ = ((int)floorf(number * 100)) % 10;
-        break;
-      case SAY_DIGIT:
-        say1_ = number;
-        break;
-      case SAY_HUNDRED:
-        say1_ = (int)floorf((number / 100));
-        break;
-      case SAY_THOUSAND:
-        say1_ = ((int)floorf(number / 1000)) % 10;
-        say2_ = ((int)floorf((number - (say1_ * 1000)))) % 10;
-        break;
-      default:
-        say1_ = 0;
-        say2_ = 0;
-        say3_ = 0;
-        break;        
+  void TensValue(int number) {
+    if (number <= 20) {
+      sound_queue_.Play(SoundToPlay(&SFX_mnum, number - 1));
+    } else {
+      int tens = ((int)floorf(number / 10)) % 10;
+      number -= (tens * 10);
+      switch (tens) {
+        default:
+        case 2:
+          sound_queue_.Play(SoundToPlay(&SFX_mnum, (tens * 10) - 1));
+          break;
+        case 3:
+          sound_queue_.Play(SoundToPlay("thirty.wav"));
+          break;
+        case 4:
+          sound_queue_.Play(SoundToPlay("forty.wav"));
+          break;
+        case 5:
+          sound_queue_.Play(SoundToPlay("fifty.wav"));
+          break;              
+        case 6:
+          sound_queue_.Play(SoundToPlay("sixty.wav"));
+          break;  
+        case 7:
+          sound_queue_.Play(SoundToPlay("seventy.wav"));
+          break;
+        case 8:
+          sound_queue_.Play(SoundToPlay("eighty.wav"));
+          break;  
+        case 9:
+          sound_queue_.Play(SoundToPlay("ninety.wav"));
+          break;  
+      }
+      if (number != 0) sound_queue_.Play(SoundToPlay(&SFX_mnum, number - 1));
     }
-    play_number_ = PLAY_FIRST;
   }
 
+  void SayNumber (float number, SayType say_type) {
+    int thousand = ((int)floorf(number / 1000)) % 100;
+    int hundred = ((int)floorf(number / 100)) % 10;
+    int ones = ((int)floorf(number)) % 100;
+    int tenths = ((int)floorf(number * 10)) % 10;
+    int hundredths = ((int)floorf(number * 100)) % 10;
+    switch (say_type) {
+      case SAY_BATTERY:
+      case SAY_DECIMAL:
+        // Battery Level prompt
+        if (say_type == SAY_BATTERY) sound_queue_.Play(SoundToPlay("mbatt.wav"));
+        // Tens & Ones
+        if (number == 0) {
+          sound_queue_.Play(SoundToPlay("mzero.wav"));
+        } else {
+          TensValue(ones);
+        }
+        // Decimal / Point
+        sound_queue_.Play(SoundToPlay("mpoint.wav"));
+        // Tenths
+        if (tenths == 0) {
+          sound_queue_.Play(SoundToPlay("mzero.wav"));
+        } else {
+          sound_queue_.Play(SoundToPlay(&SFX_mnum, tenths - 1));
+        }
+        // Hundredths
+        if (hundredths != 0) sound_queue_.Play(SoundToPlay(&SFX_mnum, hundredths - 1));
+        // Volts prompt
+        if (say_type == SAY_BATTERY) sound_queue_.Play(SoundToPlay("mvolts.wav"));
+        break;
+      case SAY_WHOLE:
+        // Thousands
+        if (thousand > 0) {
+          TensValue(thousand);
+          sound_queue_.Play(SoundToPlay("thousand.wav"));
+        }
+        // Hundred
+        if (hundred > 0) {
+          sound_queue_.Play(SoundToPlay(&SFX_mnum, hundred - 1));
+          sound_queue_.Play(SoundToPlay("hundred.wav"));          
+        }
+        // Tens & Ones
+        if (ones == 0) {
+          if ((thousand + hundred) == 0) sound_queue_.Play(SoundToPlay("mzero.wav"));
+        } else {
+          TensValue(ones);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+   
   enum ClashType {
     CLASH_NONE,
     CLASH_CHECK,
@@ -1119,162 +1216,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
       }
     }
-    if (say_type_ != SAY_NONE && !wav_player->isPlaying()) {
-      switch (say_type_) {
-        case SAY_BATTERY:
-          switch (play_number_) {
-            case PLAY_FIRST:
-              if (say1_ == 0) {
-                PlayMenuSound("mzero.wav");
-              } else {
-                SFX_mnum.Select(say1_ - 1); 
-                wav_player->PlayOnce(&SFX_mnum, 0.0);
-              }
-              play_number_ = PLAY_POINT;
-              break;
-            case PLAY_POINT:
-              PlayMenuSound("mpoint.wav");
-              play_number_ = PLAY_SECOND;
-              break;
-            case PLAY_SECOND:
-              if (say2_ == 0) {
-                PlayMenuSound("mzero.wav");
-              } else {
-                SFX_mnum.Select(say2_ - 1); 
-                wav_player->PlayOnce(&SFX_mnum, 0.0);
-              }
-              play_number_ = PLAY_THIRD;
-              break;
-            case PLAY_THIRD:
-              if (say3_ != 0) {
-                SFX_mnum.Select(say3_ - 1);
-                wav_player->PlayOnce(&SFX_mnum, 0.0);
-              } 
-              play_number_ = PLAY_VOLTS;
-              break;
-            case PLAY_VOLTS:
-              PlayMenuSound("mvolts.wav");
-              play_number_ = PLAY_NONE;
-              say_type_ = SAY_NONE;
-              wav_player.Free();
-              break;
-            default:  
-              play_number_ = PLAY_NONE;
-              say_type_ = SAY_NONE;
-              break;
-          }
-          break;
-        case SAY_DECIMAL:
-          switch (play_number_) {
-            case PLAY_FIRST:
-              if (say1_ == 0) {
-                PlayMenuSound("mzero.wav");
-              } else {
-                SFX_mnum.Select(say1_ - 1);
-                wav_player->PlayOnce(&SFX_mnum, 0.0);
-              }
-              play_number_ = PLAY_POINT;
-              break;
-            case PLAY_POINT:
-              PlayMenuSound("mpoint.wav");
-              play_number_ = PLAY_SECOND;
-              break;
-            case PLAY_SECOND:
-              if (say2_ == 0) {
-                PlayMenuSound("mzero.wav");
-              } else {
-                SFX_mnum.Select(say2_ - 1);
-                wav_player->PlayOnce(&SFX_mnum, 0.0);
-              }
-              play_number_ = PLAY_THIRD;
-              break;
-            case PLAY_THIRD:
-              if (say3_ != 0) {
-                SFX_mnum.Select(say3_ - 1); 
-                wav_player->PlayOnce(&SFX_mnum, 0.0);
-              } 
-              play_number_ = PLAY_NONE;
-              say_type_ = SAY_NONE;
-              wav_player.Free();
-              break;
-            default:  
-              play_number_ = PLAY_NONE;
-              say_type_ = SAY_NONE;
-              break;
-          }
-          break;
-        case SAY_HUNDRED:
-          switch (play_number_) {
-            case PLAY_FIRST:
-              SFX_mnum.Select(say1_ - 1);
-              wav_player->PlayOnce(&SFX_mnum, 0.0);
-              play_number_ = PLAY_HUNDRED;
-              break;
-            case PLAY_HUNDRED:
-              PlayMenuSound("hundred.wav");
-              play_number_ = PLAY_NONE;
-              say_type_ = SAY_NONE;
-              wav_player.Free();
-              break;
-            default:  
-              play_number_ = PLAY_NONE;
-              say_type_ = SAY_NONE;
-              break;
-          }              
-          break;
-        case SAY_DIGIT:
-          switch (play_number_) {
-            case PLAY_FIRST:
-              SFX_mnum.Select(say1_ - 1);
-              wav_player->PlayOnce(&SFX_mnum, 0.0);
-              play_number_ = PLAY_NONE;
-              break;
-            case PLAY_NONE:
-              say_type_ = SAY_NONE;              
-              wav_player.Free();
-              break;
-            default:  
-              play_number_ = PLAY_NONE;
-              say_type_ = SAY_NONE;
-              break;          
-          }
-        case SAY_THOUSAND:
-          switch (play_number_) {
-            case PLAY_FIRST:
-              SFX_mnum.Select(say1_ - 1);
-              wav_player->PlayOnce(&SFX_mnum, 0.0);
-              play_number_ = PLAY_THOUSAND;
-              break;
-            case PLAY_THOUSAND:
-              PlayMenuSound("thousand.wav");
-              if (say2_ > 0) {
-                play_number_ = PLAY_SECOND;
-              } else {
-                play_number_ = PLAY_NONE;
-                say_type_ = SAY_NONE;
-                wav_player.Free();
-              }
-              break;
-            case PLAY_SECOND:
-              SFX_mnum.Select(say2_ - 1);
-              wav_player->PlayOnce(&SFX_mnum, 0.0);
-              play_number_ = PLAY_HUNDRED;
-              break;            
-            case PLAY_HUNDRED:
-              PlayMenuSound("hundred.wav");
-              play_number_ = PLAY_NONE;
-              say_type_ = SAY_NONE;
-              wav_player.Free();              
-            default:  
-              play_number_ = PLAY_NONE;
-              say_type_ = SAY_NONE;
-              break;
-          } 
-          break;
-        default:
-          break;
-      }
-    }
+    sound_queue_.Poll(wav_player);
 #ifdef FETT263_EDIT_MODE_MENU      
     if (next_event_ && !wav_player->isPlaying()) {
       switch (menu_type_) {
@@ -2469,14 +2411,13 @@ void PlayMenuSound(const char* file) {
           case MENU_SWINGON_SPEED:
             if (calc_ < 600) {
               PlayMenuSound("mup.wav");
-              calc_ += 100;
+              calc_ += 50;
             }
             if (calc_ >= 600) {
               calc_ = 600;
               PlayMenuSound("mmax.wav");
             }
-            say_type_ = SAY_HUNDRED;
-            SayNumber(calc_);
+            SayNumber(calc_, SAY_WHOLE);
             return true;
           case MENU_TWISTON:
             choice_ = true;
@@ -2504,8 +2445,7 @@ void PlayMenuSound(const char* file) {
               calc_ = 10;
               PlayMenuSound("mmax.wav");
             }
-            say_type_ = SAY_DIGIT;
-            SayNumber(calc_);
+            SayNumber(calc_, SAY_WHOLE);
             return true;
           case MENU_MAX_CLASH:
             if (calc_ < 16) {
@@ -2516,8 +2456,7 @@ void PlayMenuSound(const char* file) {
               calc_ = 16;
               PlayMenuSound("mmax.wav");
             }
-            say_type_ = SAY_DIGIT;
-            SayNumber(calc_);
+            SayNumber(calc_, SAY_WHOLE);
             return true;
           case MENU_TWISTOFF:
             choice_ = true;
@@ -2532,13 +2471,7 @@ void PlayMenuSound(const char* file) {
               calc_ = 1200;
               PlayMenuSound("mmax.wav");
             }
-            if (calc_ >= 1000) {
-              say_type_ = SAY_THOUSAND;
-              SayNumber(calc_);
-            } else {
-              say_type_ = SAY_HUNDRED;
-              SayNumber(calc_);
-            }  
+            SayNumber(calc_, SAY_WHOLE);
             return true;
           case MENU_POWERLOCK:
             choice_ = true;
@@ -2578,8 +2511,7 @@ void PlayMenuSound(const char* file) {
               clash_t_ += 0.25;
               if (clash_t_ > 4.0) clash_t_ = 4.0;
             }
-            say_type_ = SAY_DECIMAL;
-            SayNumber(clash_t_);
+            SayNumber(clash_t_, SAY_DECIMAL);
             return true;
           case MENU_DIM_BLADE:
             dim = std::min<float>(dim + 0.1, 1.0);
@@ -3033,14 +2965,13 @@ void PlayMenuSound(const char* file) {
           case MENU_SWINGON_SPEED:
             if (calc_ > 200) {
               PlayMenuSound("mdown.wav");
-              calc_ -= 100;
+              calc_ -= 50;
             }
             if (calc_ <= 200) {
               calc_ = 200;
               PlayMenuSound("mmin.wav");
             }
-            say_type_ = SAY_HUNDRED;
-            SayNumber(calc_);
+            SayNumber(calc_, SAY_WHOLE);
             return true;
           case MENU_TWISTON:
             choice_ = false;
@@ -3068,8 +2999,7 @@ void PlayMenuSound(const char* file) {
               calc_ = 1;
               PlayMenuSound("mmin.wav");
             }
-            say_type_ = SAY_DIGIT;
-            SayNumber(calc_);
+            SayNumber(calc_, SAY_WHOLE);
             return true;
           case MENU_MAX_CLASH:
             if (calc_ > 8) {
@@ -3080,8 +3010,7 @@ void PlayMenuSound(const char* file) {
               calc_ = 8;
               PlayMenuSound("mmin.wav");
             }
-            say_type_ = SAY_DIGIT;
-            SayNumber(calc_);
+            SayNumber(calc_, SAY_WHOLE);
             return true;
           case MENU_TWISTOFF:
             choice_ = false;
@@ -3096,13 +3025,7 @@ void PlayMenuSound(const char* file) {
               calc_ = 200;
               PlayMenuSound("mmin.wav");
             }
-            if (calc_ >= 1000) {
-              say_type_ = SAY_THOUSAND;
-              SayNumber(calc_);
-            } else {
-              say_type_ = SAY_HUNDRED;
-              SayNumber(calc_);
-            }  
+            SayNumber(calc_, SAY_WHOLE); 
             return true;
           case MENU_POWERLOCK:
             choice_ = false;
@@ -3143,8 +3066,7 @@ void PlayMenuSound(const char* file) {
               clash_t_ -= 0.25;
               if (clash_t_ < 1.0) clash_t_ = 1.0;
             }
-            say_type_ = SAY_DECIMAL;
-            SayNumber(clash_t_);
+            SayNumber(clash_t_, SAY_DECIMAL);
             return true;
           case MENU_DIM_BLADE:
             dim = std::max<float>(dim - 0.1, 0.2);
@@ -3909,8 +3831,7 @@ void PlayMenuSound(const char* file) {
                   menu_type_ = MENU_SWINGON_SPEED;
                   PlayMenuSound("mselect.wav");
                   calc_ = saved_gesture_control.swingonspeed;
-                  say_type_ = SAY_HUNDRED;
-                  SayNumber(calc_);
+                  SayNumber(calc_, SAY_WHOLE);
                   break;
                 case 3:
                   menu_type_ = MENU_TWISTON;
@@ -3956,8 +3877,7 @@ void PlayMenuSound(const char* file) {
                   menu_type_ = MENU_FORCEPUSH_LENGTH;
                   PlayMenuSound("mselect.wav");
                   calc_ = saved_gesture_control.forcepushlen;
-                  say_type_ = SAY_DIGIT;
-                  SayNumber(calc_);
+                  SayNumber(calc_, SAY_WHOLE);
                   break;
                 case 8:
                   menu_type_ = MENU_TWISTOFF;
@@ -3973,20 +3893,13 @@ void PlayMenuSound(const char* file) {
                   menu_type_ = MENU_LOCKUP_DELAY;
                   PlayMenuSound("mselect.wav");
                   calc_ = saved_gesture_control.lockupdelay;
-                  if (calc_ >= 1000) {
-                    say_type_ = SAY_THOUSAND;
-                    SayNumber(calc_);
-                  } else {
-                    say_type_ = SAY_HUNDRED;
-                    SayNumber(calc_);
-                  }                
+                  SayNumber(calc_, SAY_WHOLE);             
                   break;
                 case 10:
                   menu_type_ = MENU_CLASH_DETECT;
                   PlayMenuSound("mselect.wav");
                   calc_ = saved_gesture_control.clashdetect;
-                  say_type_ = SAY_DIGIT;
-                  SayNumber(calc_);
+                  SayNumber(calc_, SAY_WHOLE);
                   break;
                 case 11:
                   menu_type_ = MENU_POWERLOCK;
@@ -4002,8 +3915,7 @@ void PlayMenuSound(const char* file) {
                   menu_type_ = MENU_MAX_CLASH;
                   PlayMenuSound("mselect.wav");
                   calc_ = saved_gesture_control.maxclash;
-                  say_type_ = SAY_DIGIT;
-                  SayNumber(calc_);
+                  SayNumber(calc_, SAY_WHOLE);
                   break;
                 default:
                   break;
@@ -4153,8 +4065,7 @@ void PlayMenuSound(const char* file) {
                 case 4:
                   menu_type_ = MENU_CLASH_THRESHOLD;
                   clash_t_ = GetCurrentClashThreshold();
-                  say_type_ = SAY_DECIMAL;
-                  SayNumber(clash_t_);
+                  SayNumber(clash_t_, SAY_DECIMAL);
                   PlayMenuSound("mselect.wav");
                   break;
                 case 5:
@@ -4867,9 +4778,7 @@ void PlayMenuSound(const char* file) {
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
 #ifdef FETT263_SAY_BATTERY
-        PlayMenuSound("mbatt.wav");
-        say_type_ = SAY_BATTERY;
-        SayNumber(battery_monitor.battery());
+        SayNumber(battery_monitor.battery(), SAY_BATTERY);
 #endif
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
@@ -5329,8 +5238,6 @@ private:
   float impact_angle_ = 0.0;
   float clash_impact_ = 0.0;
   ClashType clash_type_ = CLASH_NONE;
-  PlayNumber play_number_ = PLAY_NONE;
-  SayType say_type_ = SAY_NONE;
   MenuType menu_type_ = MENU_TOP;
   int menu_top_pos_ = 0;
   int menu_sub_pos_ = 0;
@@ -5338,9 +5245,6 @@ private:
   int track_num_;
   int num_tracks_;
   int ignite_time_;
-  int say1_;
-  int say2_;
-  int say3_;
   int dial_ = -1;
   int sub_dial_;
   float change_ = 0.0;
