@@ -1292,15 +1292,16 @@ SaberFett263Buttons() : PropBase() {}
         }
         next_event_ = false;
       } else {
-      switch (menu_type_) {
-        case MENU_IGNITION_TIME:
-        case MENU_RETRACTION_TIME:
-          next_event_ = false;
-          SetInOut();
-          break;
-        default:
-          next_event_ = false;
-          break;
+        switch (menu_type_) {
+          case MENU_IGNITION_TIME:
+          case MENU_RETRACTION_TIME:
+            next_event_ = false;
+            SetInOut();
+            break;
+          default:
+            next_event_ = false;
+            break;
+        }
       }
     }
     if (off_event_ && millis() - last_rotate_ > 200) {
