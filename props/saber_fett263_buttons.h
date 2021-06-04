@@ -33,6 +33,10 @@ Standard Controls While Blade is OFF
   NEW! Toggle Gesture Sleep* = Hold PWR + Twist
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
+  NEW Control! Volume Menu = Hold PWR, Click AUX
+    Turn Right = Increase Volume (to max)
+    Turn Left = Decrease Volume (to min)
+    Click PWR or AUX = Exit
   Check Battery Level*  = Hold AUX, Click PWR
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY define
 Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
@@ -1874,7 +1878,11 @@ void PlayMenuSound(const char* file) {
             case MENU_VOLUME:
               menu_ = false;
               menu_type_ = MENU_TOP;
-              PlayMenuSound("msave.wav");
+              if (SFX_vmend) {
+                PlayMenuSound("vmend.wav");
+              } else {
+                PlayMenuSound("mexit.wav");
+              }
               wav_player.Free();
               break;
             case MENU_PRESET:
@@ -1931,6 +1939,19 @@ void PlayMenuSound(const char* file) {
         return true;
 #endif
 
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_POWER):
+        if (!menu_) {
+          current_menu_angle_ = fusor.angle2();
+          menu_ = true;
+          menu_type_ = MENU_VOLUME;
+          if (SFX_vmbegin) {
+            PlayMenuSound("vmbegin.wav");
+          } else {
+            PlayMenuSound("mvolume.wav");
+          }
+        }
+        return true;
+          
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
         current_menu_angle_ = fusor.angle2();
         PlayMenuSound("mpreset.wav");
@@ -1958,7 +1979,11 @@ void PlayMenuSound(const char* file) {
               return true;
               break;
             case MENU_VOLUME:
-              PlayMenuSound("mexit.wav");
+              if (SFX_vmend) {
+                PlayMenuSound("vmend.wav");
+              } else {
+                PlayMenuSound("mexit.wav");
+              }
               menu_ = false;
               menu_type_ = MENU_TOP;
               wav_player.Free();
