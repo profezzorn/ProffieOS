@@ -878,6 +878,68 @@ SaberFett263Buttons() : PropBase() {}
     length_edit_length = blade_length_ - 1;
     ShowColorStyle::SetColor(GetColorArg(blade_num_, 1)); 
   }
+  
+  void MenuSave() {
+     sound_queue_.Play(SoundToPlay("msave.wav"));
+     MenuPrompt();
+  }
+  
+  void MenuSelect() {
+     sound_queue_.Play(SoundToPlay("mselect.wav"));
+     MenuPrompt();
+  }
+  
+  void MenuConfirm() {
+     sound_queue_.Play(SoundToPlay("mconfirm.wav"));
+     MenuPrompt();
+  }
+   
+  void MenuCancel() {
+     sound_queue_.Play(SoundToPlay("mcancel.wav"));
+     MenuPrompt();
+  }
+  
+  void MenuRevert() {
+     sound_queue_.Play(SoundToPlay("mrevert.wav"));
+     MenuPrompt();
+  }
+   
+  void MenuPrompt() {
+    switch (menu_type_) {
+      case MENU_TOP:
+        sound_queue_.Play(SoundToPlay("mmain.wav"));
+        break;
+      case MENU_COLOR_SUB:
+        sound_queue_.Play(SoundToPlay("mcolorsb.wav"));
+        break;
+      case MENU_COLOR_MODE:
+        sound_queue_.Play(SoundToPlay("mcolorop.wav"));
+        break;
+#if (NUM_BLADES > 1)
+      case MENU_BLADE_COLOR:
+        sound_queue_.Play(SoundToPlay("mblade.wav"));
+        break;
+      case MENU_BLADE_STYLE:
+        sound_queue_.Play(SoundToPlay("mblade.wav"));
+        break;
+      case MENU_BLADE_LENGTH:
+        sound_queue_.Play(SoundToPlay("mblade.wav"));
+        break;
+#endif
+      case MENU_GESTURE_SUB:
+        sound_queue_.Play(SoundToPlay("mgestsub.wav"));
+        break;
+      case MENU_SETTING_SUB:
+        sound_queue_.Play(SoundToPlay("msetsub.wav"));
+        break;
+      case MENU_EFFECT:
+        sound_queue_.Play(SoundToPlay("meffect.wav"));
+        break;
+      case MENU_STYLE_SETTING_SUB:
+        sound_queue_.Play(SoundToPlay("mstylstm.wav"));
+        break;
+    }    
+  }
 
   void SetCopy() {
     effect_num_ = 16;
@@ -940,7 +1002,6 @@ SaberFett263Buttons() : PropBase() {}
     itoa(calc_, style_arg, 10);
     current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), set_num_ + 2, style_arg));
     current_preset_.Save();
-    PlayMenuSound("msave.wav");
     switch (set_num_) {
       case 21:
         show_clash_location_.Stop(blade_num_);
@@ -955,11 +1016,10 @@ SaberFett263Buttons() : PropBase() {}
     }
     UpdateStyle(current_preset_.preset_num);
     menu_type_ = MENU_STYLE_SETTING_SUB;
-    announce_menu_ = true;
+    MenuSave();
   }
 
   void CancelStyleSetting() {
-    PlayMenuSound("mcancel.wav");
     switch (set_num_) {
       case 21:
         show_clash_location_.Stop(blade_num_);
@@ -975,7 +1035,7 @@ SaberFett263Buttons() : PropBase() {}
     }
     UpdateStyle(current_preset_.preset_num);
     menu_type_ = MENU_STYLE_SETTING_SUB;
-    announce_menu_ = true;
+    MenuCancel();
   }
 #endif
 
@@ -3289,8 +3349,7 @@ void PlayMenuSound(const char* file) {
 #ifdef FETT263_EDIT_MODE_MENU
           if (menu_type_ == MENU_COLOR) {
             menu_type_ = MENU_TOP;
-            PlayMenuSound("msave.wav");
-            announce_menu_ = true;
+            MenuSave();
           }
 #endif
           return true;
@@ -3346,8 +3405,7 @@ void PlayMenuSound(const char* file) {
 #ifdef FETT263_EDIT_MODE_MENU
             case MENU_VOLUME:
               menu_type_ = MENU_SETTING_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;          
             case MENU_TOP:
               switch (menu_top_pos_) {
@@ -3439,8 +3497,7 @@ void PlayMenuSound(const char* file) {
               tmp = current_preset_.GetStyle(blade_num_);
               style_num_ = FirstWord(tmp, "builtin") ? atoi(SkipWord(tmp)) : 0; 
               style_revert_ = style_num_;               
-              PlayMenuSound("mselect.wav");
-              announce_menu_ = true;
+              MenuSelect();
               return true;
             case MENU_BLADE_COLOR:
 #if (NUM_BLADES > 2)
@@ -3467,8 +3524,7 @@ void PlayMenuSound(const char* file) {
             case MENU_BLADE_COPY:
               menu_type_ = MENU_COPY_COLOR;
               SetCopy();
-              PlayMenuSound("mconfirm.wav");
-              announce_menu_ = true;
+              MenuConfirm();
               return true;
             case MENU_BLADE_SETTING:
               if (blade_num_ == 0) {
@@ -3499,8 +3555,7 @@ void PlayMenuSound(const char* file) {
                 show_preview_.Stop(blade_preview_);
                 UpdateStyle(current_preset_.preset_num);
                 menu_type_ = MENU_COLOR_SUB;
-                PlayMenuSound("mselect.wav");
-                announce_menu_ = true;
+                MenuSelect();
                 choice_ = false;
                 blade_preview_ = 0;
                 return true;
@@ -3513,12 +3568,10 @@ void PlayMenuSound(const char* file) {
               current_preset_.Save();
 #if (NUM_BLADES == 1)
               menu_type_ = MENU_TOP;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
 #else           
               menu_type_ = MENU_BLADE_STYLE;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
 #endif
               return true;
             case MENU_COLOR:
@@ -3708,8 +3761,7 @@ void PlayMenuSound(const char* file) {
               current_preset_.Save();
               show_color_.Stop(blade_num_);
               UpdateStyle(current_preset_.preset_num);
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               color_mode_ = NONE;
               return true;
             case COLOR_BLAST:
@@ -3723,8 +3775,7 @@ void PlayMenuSound(const char* file) {
               current_preset_.Save();
               bump_color_.Stop(blade_num_);
               UpdateStyle(current_preset_.preset_num);
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               color_mode_ = NONE;
               return true;
             case COLOR_DRAG:
@@ -3736,8 +3787,7 @@ void PlayMenuSound(const char* file) {
               current_preset_.Save();
               tip_color_.Stop(blade_num_);
               UpdateStyle(current_preset_.preset_num);
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               color_mode_ = NONE;
               return true;
             case COLOR_PREON:
@@ -3749,8 +3799,7 @@ void PlayMenuSound(const char* file) {
               current_preset_.Save();
               pre_color_.Stop(blade_num_);
               UpdateStyle(current_preset_.preset_num);
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               color_mode_ = NONE;
               return true;
             case COLOR_EMITTER:
@@ -3761,15 +3810,13 @@ void PlayMenuSound(const char* file) {
               current_preset_.Save();
               hilt_color_.Stop(blade_num_);
               UpdateStyle(current_preset_.preset_num);
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               color_mode_ = NONE;
               return true;
             case MENU_FONT:
               restore_point = nullptr;
               menu_type_ = MENU_TOP;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_TRACK:
               restore_point = nullptr;
@@ -3778,24 +3825,21 @@ void PlayMenuSound(const char* file) {
                 track_player_.Free();
               }
               menu_type_ = MENU_TOP;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_LENGTH:
               menu_type_ = MENU_SETTING_SUB;
-              PlayMenuSound("msave.wav");
               current_preset_.Save();
               show_length_.Stop(blade_num_);
               UpdateStyle(current_preset_.preset_num);
-              announce_menu_ = true;
+              MenuSave();
             case MENU_COPY:          
               if (choice_) {
                 int32_t pos = current_preset_.preset_num;
                 current_preset_.preset_num = -1;
                 current_preset_.SaveAt(pos);
-                PlayMenuSound("mselect.wav");
                 menu_type_ = MENU_TOP;
-                announce_menu_ = true;
+                MenuSelect();
                 choice_ = false;
                 return true;
               }
@@ -3808,9 +3852,8 @@ void PlayMenuSound(const char* file) {
                 current_preset_.Save();
                 UpdateStyle(current_preset_.preset_num);
                 menu_type_ = MENU_COLOR_SUB;
-                PlayMenuSound("mselect.wav");
+                MenuSelect();
                 choice_ = false;
-                announce_menu_ = true;
                 return true;
               }
               PlayMenuSound("mconfirm.wav");
@@ -3930,15 +3973,13 @@ void PlayMenuSound(const char* file) {
                 SaveGestureState();
               }
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_SWINGON_SPEED:
               saved_gesture_control.swingonspeed = calc_;
               SaveGestureState();
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_TWISTON:
               if (choice_) {
@@ -3949,8 +3990,7 @@ void PlayMenuSound(const char* file) {
                 SaveGestureState();
               }
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_THRUSTON:
               if (choice_) {
@@ -3961,8 +4001,7 @@ void PlayMenuSound(const char* file) {
                 SaveGestureState();
               }
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_STABON:
               if (choice_) {
@@ -3973,8 +4012,7 @@ void PlayMenuSound(const char* file) {
                 SaveGestureState();
               }
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_FORCEPUSH:
               if (choice_) {
@@ -3985,15 +4023,13 @@ void PlayMenuSound(const char* file) {
                 SaveGestureState();
               }
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_FORCEPUSH_LENGTH:
               saved_gesture_control.forcepushlen = calc_;
               SaveGestureState();
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_TWISTOFF:
               if (choice_) {
@@ -4004,22 +4040,19 @@ void PlayMenuSound(const char* file) {
                 SaveGestureState();
               }
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_LOCKUP_DELAY:
               saved_gesture_control.lockupdelay = calc_;
               SaveGestureState();
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_CLASH_DETECT:
               saved_gesture_control.clashdetect = calc_;
               SaveGestureState();
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_POWERLOCK:
               if (choice_) {
@@ -4030,15 +4063,13 @@ void PlayMenuSound(const char* file) {
                 SaveGestureState();
               }
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_MAX_CLASH:
               saved_gesture_control.maxclash = calc_;
               SaveGestureState();
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("msave.wav");
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_SETTING_SUB:
               switch (menu_sub_pos_) {
@@ -4096,15 +4127,13 @@ void PlayMenuSound(const char* file) {
             case MENU_CLASH_THRESHOLD:
               SetClashThreshold(clash_t_);
               SaveGlobalState();
-              PlayMenuSound("msave.wav");
               menu_type_ = MENU_SETTING_SUB;
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_DIM_BLADE:
               SaveGlobalState();
-              PlayMenuSound("msave.wav");
               menu_type_ = MENU_SETTING_SUB;
-              announce_menu_ = true;
+              MenuSave();
               return true;
             case MENU_STYLE_SETTING_SUB:
               char argspace[32];
@@ -4189,19 +4218,17 @@ void PlayMenuSound(const char* file) {
             case MENU_PREON_OPTION:
             case MENU_PREON_SIZE:
                menu_type_ = MENU_STYLE_SETTING_SUB;
-               PlayMenuSound("msave.wav");
                current_preset_.Save();
-               announce_menu_ = true;
+               MenuSave();
                return true;
             case MENU_RETRACTION_OPTION:
             case MENU_RETRACTION_TIME:
                menu_type_ = MENU_STYLE_SETTING_SUB;
-               PlayMenuSound("msave.wav");
                char style_arg[10];
                itoa(ignite_time_, style_arg, 10);
                current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 19, style_arg));
                current_preset_.Save();
-               announce_menu_ = true;
+               MenuSave();
                return true;
             case MENU_CLASH_LOCATION:
             case MENU_DRAG_SIZE:
@@ -4211,10 +4238,9 @@ void PlayMenuSound(const char* file) {
             case MENU_DELETE:
               if (choice_) {
                 current_preset_.SaveAt(-1);
-                PlayMenuSound("maccept.wav");
                 choice_ = false;
                 menu_type_ = MENU_TOP;
-                announce_menu_ = true;
+                MenuSelect();
                 return true;
               }
               PlayMenuSound("maffirm.wav");
@@ -4293,44 +4319,38 @@ void PlayMenuSound(const char* file) {
             case MENU_VOLUME:
               menu_type_ = MENU_SETTING_SUB;
               dynamic_mixer.set_volume(VOLUME);
-              PlayMenuSound("mrevert.wav");
-              announce_menu_ = true;
+              MenuRevert();
               return true;
 #if (NUM_BLADES > 1)
             case MENU_BLADE_STYLE:
               menu_type_ = MENU_TOP;
               show_preview_.Stop(blade_preview_);
               blade_preview_ = 0;
-              PlayMenuSound("mcancel.wav");
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case MENU_BLADE_COLOR:
               menu_type_ = MENU_TOP;
               show_preview_.Stop(blade_preview_);
               blade_preview_ = 0;
-              PlayMenuSound("mcancel.wav");
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case MENU_BLADE_COPY:
               menu_type_ = MENU_COLOR_SUB;
               show_preview_.Stop(blade_preview_);
               blade_preview_ = 0;
-              PlayMenuSound("mcancel.wav");
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case MENU_BLADE_LENGTH:
               menu_type_ = MENU_SETTING_SUB;
               show_preview_.Stop(blade_preview_);
               blade_preview_ = 0;
-              PlayMenuSound("mcancel.wav");
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case MENU_COPY_COLOR:
               menu_type_ = MENU_COLOR_SUB;
               show_preview_.Stop(blade_preview_);
-              PlayMenuSound("mcancel.wav");
               blade_preview_ = 0;
-              announce_menu_ = true;
+              MenuCancel();
               return true;
 #endif
             case MENU_STYLE:
@@ -4341,47 +4361,40 @@ void PlayMenuSound(const char* file) {
               UpdateStyle(current_preset_.preset_num);
 #if (NUM_BLADES == 1)
               menu_type_ = MENU_TOP;
-              PlayMenuSound("mrevert.wav");
-              announce_menu_ = true;
+              MenuRevert();
 #else
               menu_type_ = MENU_BLADE_STYLE;
-              PlayMenuSound("mrevert.wav");
-              announce_menu_ = true;
+              MenuRevert();
 #endif
               return true;
             case MENU_COLOR:
               menu_type_ = MENU_TOP;
-              PlayMenuSound("mcancel.wav");
               SaberBase::SetVariation(color_revert_);
               ToggleColorChangeMode();
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case MENU_COLOR_SUB:
 #if NUM_BLADES == 1
               menu_type_ = MENU_TOP;
-              PlayMenuSound("mcancel.wav");
-              announce_menu_ = true;
+              MenuCancel();
               return true;
 #else
               menu_type_ = MENU_BLADE_COLOR;
               show_preview_.Stop(blade_preview_);
               blade_preview_ = 0;
-              PlayMenuSound("mcancel.wav");
               blade_num_ = 0;
-              announce_menu_ = true;
+              MenuCancel();
               return true;
 #endif
             case MENU_COLOR_MODE:
               edit_color_ = false;
               menu_type_ = MENU_EFFECT;
-              PlayMenuSound("mcancel.wav");
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case MENU_EFFECT:
               edit_color_ = false;
               menu_type_ = MENU_COLOR_SUB;
-              PlayMenuSound("mcancel.wav");
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case COLOR_BASE:
             case COLOR_ALT:
@@ -4393,8 +4406,7 @@ void PlayMenuSound(const char* file) {
               edit_color_ = false;
               twist_menu_ = M_PI / 4;
               show_color_.Stop(blade_num_);
-              PlayMenuSound("mrevert.wav");
-              announce_menu_ = true;
+              MenuRevert();
               color_mode_ = NONE;
               return true;
             case COLOR_BLAST:
@@ -4406,8 +4418,7 @@ void PlayMenuSound(const char* file) {
               edit_color_ = false;
               twist_menu_ = M_PI / 4;
               bump_color_.Stop(blade_num_);
-              PlayMenuSound("mrevert.wav");
-              announce_menu_ = true;
+              MenuRevert();
               color_mode_ = NONE;
               return true;
             case COLOR_DRAG:
@@ -4417,8 +4428,7 @@ void PlayMenuSound(const char* file) {
               edit_color_ = false;
               twist_menu_ = M_PI / 4;
               tip_color_.Stop(blade_num_);
-              PlayMenuSound("mrevert.wav");
-              announce_menu_ = true;
+              MenuRevert();
               color_mode_ = NONE;
               return true;
             case COLOR_PREON:
@@ -4429,17 +4439,15 @@ void PlayMenuSound(const char* file) {
               edit_color_ = false;
               twist_menu_ = M_PI / 4;
               hilt_color_.Stop(blade_num_);
-              PlayMenuSound("mrevert.wav");
-              announce_menu_ = true;
+              MenuRevert();
               color_mode_ = NONE;
               return true;
             case MENU_FONT:
               if (restore_point.get()) current_preset_.font = std::move(restore_point);
               current_preset_.Save();
               UpdateFont(current_preset_.preset_num);
-              PlayMenuSound("mrevert.wav");
               menu_type_ = MENU_TOP;
-              announce_menu_ = true;
+              MenuRevert();
               return true;
             case MENU_TRACK:
               if (track_player_) {
@@ -4449,33 +4457,28 @@ void PlayMenuSound(const char* file) {
               if (restore_point.get()) current_preset_.track = std::move(restore_point);
               current_preset_.Save();
               menu_type_ = MENU_TOP;
-              PlayMenuSound("mrevert.wav");
-              announce_menu_ = true;
+              MenuRevert();
               return true;
             case MENU_LENGTH:
               menu_type_ = MENU_SETTING_SUB;
               SetBladeLength(blade_num_, length_revert_);
               SaveState(current_preset_.preset_num);
-              PlayMenuSound("mrevert.wav");
-              announce_menu_ = true;
+              MenuRevert();
               show_length_.Stop(blade_num_);
               UpdateStyle(current_preset_.preset_num);
               return true;
             case MENU_COPY:
               choice_ = false;
               menu_type_ = MENU_TOP;
-              PlayMenuSound("mcancel.wav");
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case MENU_RESET_COLOR:
               menu_type_ = MENU_COLOR_SUB;
-              PlayMenuSound("mcancel.wav");
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case MENU_GESTURE_SUB:
               menu_type_ = MENU_SETTING_SUB;
-              PlayMenuSound("mcancel.wav");
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case MENU_SWINGON:
             case MENU_SWINGON_SPEED:
@@ -4490,31 +4493,26 @@ void PlayMenuSound(const char* file) {
             case MENU_POWERLOCK:
             case MENU_MAX_CLASH:
               menu_type_ = MENU_GESTURE_SUB;
-              PlayMenuSound("mcancel.wav");
-              announce_menu_ = true;
+              MenuCancel();
               return true;           
             case MENU_SETTING_SUB:
-              PlayMenuSound("mcancel.wav");
               menu_type_ = MENU_TOP;
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case MENU_CLASH_THRESHOLD:
-              PlayMenuSound("mcancel.wav");
               menu_type_ = MENU_SETTING_SUB;
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case MENU_DIM_BLADE:
-              PlayMenuSound("mrevert.wav");
               SaberBase::SetDimming(pow(dim_revert_, 2.5) * 16384);
               UpdateStyle(current_preset_.preset_num);
               menu_type_ = MENU_SETTING_SUB;
               SaveGlobalState();
-              announce_menu_ = true;
+              MenuRevert();
               return true;
             case MENU_STYLE_SETTING_SUB:
-              PlayMenuSound("mcancel.wav");
               menu_type_ = MENU_SETTING_SUB;
-              announce_menu_ = true;
+              MenuCancel();
               return true;
             case MENU_STYLE_OPTION:
             case MENU_IGNITION_OPTION:
@@ -4525,8 +4523,7 @@ void PlayMenuSound(const char* file) {
             case MENU_PREON_SIZE:
               menu_type_ = MENU_STYLE_SETTING_SUB;
               RevertInOut();
-              PlayMenuSound("mrevert.wav");
-              announce_menu_ = true;
+              MenuRevert();
               return true;
             case MENU_CLASH_LOCATION:
             case MENU_DRAG_SIZE:
@@ -4538,8 +4535,7 @@ void PlayMenuSound(const char* file) {
             default:
               choice_ = false;
               menu_type_ = MENU_TOP;
-              PlayMenuSound("mcancel.wav");
-              announce_menu_ = true;
+              MenuCancel();
               return true;
 #endif
           }
