@@ -1279,6 +1279,19 @@ SaberFett263Buttons() : PropBase() {}
     sound_queue_.Poll(wav_player);
 #ifdef FETT263_EDIT_MODE_MENU      
     if (next_event_ && !wav_player->isPlaying()) {
+      if (rehearse_) {
+        if (SaberBase::IsOn()) {
+          rehearse_ = false;
+          Off();
+#ifdef FETT263_SAVE_CHOREOGRAPHY
+          SaveChoreo();
+#endif
+        } else {
+          PlayMenuSound("rehrsbgn.wav");
+          FastOn();
+        }
+        next_event_ = false;
+      } else {
       switch (menu_type_) {
         case MENU_IGNITION_TIME:
         case MENU_RETRACTION_TIME:
@@ -1301,22 +1314,6 @@ SaberFett263Buttons() : PropBase() {}
       FastOn();
     }
 #endif
-    if (announce_menu_ && !wav_player->isPlaying()) {
-      if (rehearse_) {
-        if (SaberBase::IsOn()) {
-          rehearse_ = false;
-          Off();
-#ifdef FETT263_SAVE_CHOREOGRAPHY
-          SaveChoreo();
-#endif
-        } else {
-          PlayMenuSound("rehrsbgn.wav");
-          FastOn();
-        }
-      } 
-        announce_menu_ = false;  
-    } 
-
 #ifdef FETT263_EDIT_MODE_MENU
       if (edit_color_ && color_mode_ != COLOR_LIST) {
 #define H_CHANGE (M_PI / 98304)
@@ -3326,7 +3323,7 @@ void PlayMenuSound(const char* file) {
           PlayMenuSound("rehrsend.wav");
           clash_count_ += 1;
           saved_choreography.clash_rec[clash_count_].stance = SavedRehearsal::STANCE_END;
-          announce_menu_ = true;
+          next_event_ = true;
           clash_count_ = 0;
           if (SFX_clsh) {
             SFX_clsh.Select(-1);
@@ -4785,7 +4782,7 @@ void PlayMenuSound(const char* file) {
           PlayMenuSound("nochreo.wav");
           rehearse_ = true;
           clash_count_ = -1;
-          announce_menu_ = true;
+          next_event_ = true;
         }
         return true;
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_AUX):
@@ -4801,7 +4798,7 @@ void PlayMenuSound(const char* file) {
           PlayMenuSound("nochreo.wav");
           rehearse_ = true;
           clash_count_ = -1;
-          announce_menu_ = true;
+          next_event_ = true;
         }
         return true;
 #endif
@@ -5181,7 +5178,6 @@ private:
   bool auto_melt_on_ = false;
   bool battle_mode_ = false;
   bool menu_ = false;
-  bool announce_menu_ = false;
   bool force_quote_ = false;
   bool rehearse_ = false;
   bool choreo_ = false;
