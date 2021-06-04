@@ -1313,44 +1313,7 @@ SaberFett263Buttons() : PropBase() {}
           PlayMenuSound("rehrsbgn.wav");
           FastOn();
         }
-      } else {
-#ifdef FETT263_EDIT_MODE_MENU        
-        switch (menu_type_) {
-          case MENU_TOP:
-            PlayMenuSound("mmain.wav");
-            break;
-          case MENU_COLOR_SUB:
-            PlayMenuSound("mcolorsb.wav");
-            break;
-          case MENU_COLOR_MODE:
-            PlayMenuSound("mcolorop.wav");
-            break;
-#if (NUM_BLADES > 1)
-          case MENU_BLADE_COLOR:
-            PlayMenuSound("mblade.wav");
-            break;
-          case MENU_BLADE_STYLE:
-            PlayMenuSound("mblade.wav");
-            break;
-          case MENU_BLADE_LENGTH:
-            PlayMenuSound("mblade.wav");
-            break;
-#endif
-          case MENU_GESTURE_SUB:
-            PlayMenuSound("mgestsub.wav");
-            break;
-          case MENU_SETTING_SUB:
-            PlayMenuSound("msetsub.wav");
-            break;
-          case MENU_EFFECT:
-            PlayMenuSound("meffect.wav");
-            break;
-          case MENU_STYLE_SETTING_SUB:
-            PlayMenuSound("mstylstm.wav");
-            break;
-        }
-#endif
-      }
+      } 
         announce_menu_ = false;  
     } 
 
