@@ -11,7 +11,7 @@ IMAGE_FILESET(clsh);
 IMAGE_FILESET(blst);
 IMAGE_FILESET(lock);
 IMAGE_FILESET(force);
-
+IMAGE_FILESET(idle);
 
 template<int Width, class col_t>
 class Display {
@@ -109,7 +109,15 @@ public:
 
       case SCREEN_PLI:
 	Clear();
-        MonoFrame<WIDTH, col_t>::DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
+        if (!just_booted_) {
+          if (&IMG_idle) {
+            ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
+          } else {
+            MonoFrame<WIDTH, col_t>::DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
+          }
+        } else {
+          MonoFrame<WIDTH, col_t>::DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
+        }
 	if (HEIGHT > 32) {
 	  char tmp[32];
 	  strcpy(tmp, "volts x.xx");
@@ -186,6 +194,8 @@ public:
             }
           }
         } else {
+          // Loop idle.bmp during SB_Off
+          if (current_effect_ == &IMG_idle) loop_start_ = millis();
           if (millis() - loop_start_ > font_config.ProffieOSFontImageDuration) {
             STDOUT << "END OF LOOP\n";
             screen_ = SCREEN_PLI;
@@ -206,6 +216,7 @@ public:
 
   void SB_On() override {
     ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+    just_booted_ = false;
   }
 
   void SB_Effect(EffectType effect, float location) override {
@@ -254,6 +265,7 @@ public:
     // powered down and up again properly.
     // This only makes it black, which prevents burn-in.
     if (offtype == OFF_IDLE) {
+      STDOUT << "Screen going to sleep zzzzzzzzz\n";
       SetScreenNow(SCREEN_OFF);
     } else {
       SetScreenNow(SCREEN_PLI);
@@ -453,6 +465,7 @@ private:
   volatile float effect_display_duration_;
   uint32_t loop_start_;
   volatile Effect* current_effect_;
+  bool just_booted_ = true;
 };
 
 template<int WIDTH, class col_t>
