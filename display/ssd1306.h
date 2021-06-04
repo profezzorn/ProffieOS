@@ -121,16 +121,23 @@ public:
 	}
         return 200;  // redraw once every 200 ms
 
-      case SCREEN_MESSAGE:
+      case SCREEN_MESSAGE: {
 	Clear();
+     // Aurebesh Font option.
+      #ifdef USE_AUREBESH_FONT
+        const Glyph* font = Aurebesh10pt7bGlyphs;
+      #else
+        const Glyph* font = Starjedi10pt7bGlyphs;
+      #endif
         if (strchr(message_, '\n')) {
-          MonoFrame<WIDTH, col_t>::DrawText(message_, 0, 15, Starjedi10pt7bGlyphs);
+          MonoFrame<WIDTH, col_t>::DrawText(message_, 0, 15, font);
         } else {
 	  // centered
-          MonoFrame<WIDTH, col_t>::DrawText(message_, 0, HEIGHT / 2 + 7, Starjedi10pt7bGlyphs);
+          MonoFrame<WIDTH, col_t>::DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
         screen_ = SCREEN_PLI;
         return font_config.ProffieOSFontImageDuration;
+      }
 
       case SCREEN_IMAGE:
         MountSDCard();
