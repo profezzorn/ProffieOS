@@ -16,7 +16,9 @@ public:
     min_cents_.run(base);
     max_cents_.run(base);
     float i = SaberBase::GetClashStrength();
-    value_ = clampi32(((i - (min_cents_.getInteger(0) / 100)) / (max_cents_.getInteger(0) / 100)) * 32768, 0, 32768);
+    float min = min_cents_.getInteger(0) / 100;
+    float max = max_cents_.getInteger(0) / 100;
+    value_ = clampi32((i - min) * 32768 / (max - min), 0, 32768);
   }
 
   int getInteger(int led) {
