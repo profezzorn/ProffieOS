@@ -42,9 +42,8 @@ enum SaberPins {
   blade5Pin = 7,                  // Free1 PB3
   blade6Pin = 8,                  // Free2 PB10
   blade7Pin = 9,                  // Free3 PB11 + PC2
-  blade8Pin = 6,                  // PA4
-  blade9Pin = 16,                 // also uart PC0
-  blade10Pin = 17,                // also uart PC1
+  blade8Pin = 16,                 // also uart PC0
+  blade9Pin = 17,                 // also uart PC1
 
   // Blade power control
   bladePowerPin1 = 20,            // blade power control PA1
