@@ -9,7 +9,7 @@
 // Returns 0-32768 based on impact strength of clash
 // returned value: INTEGER
 
-template<class MIN, class MAX>
+template<class MIN = Int<200>, class MAX = Int<1600>>
 class ClashImpactFX {
 public:
   void run(BladeBase* base) {
