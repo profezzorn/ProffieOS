@@ -9,7 +9,7 @@ class BatteryMonitor : Looper, CommandParser, StateMachine {
 public:
 BatteryMonitor() : reader_(batteryLevelPin,
 			     INPUT
-#if VERSION_MAJOR == 5
+#if VERSION_MAJOR == 5 || VERSION_MAJOR == 6
                              , 10e-6
 #endif
    ) {}
@@ -64,7 +64,8 @@ protected:
       while (!reader_.Done()) YIELD();
       float v = battery_now();
       uint32_t now = micros();
-      float mul = powf(0.05, (now - last_voltage_read_time_) / 1000000.0);
+      // float mul = powf(0.05, (now - last_voltage_read_time_) / 1000000.0);
+      float mul = expf(logf(0.05) * (now - last_voltage_read_time_) / 1000000.0);
       last_voltage_read_time_ = now;
       last_voltage_ = last_voltage_ * mul + v * (1 - mul);
       if (IsLow()) {
@@ -124,7 +125,7 @@ private:
   float battery_now() {
     // This is the volts on the battery monitor pin.
     float volts = 3.3 * reader_.Value() / 1024.0;
-#if VERSION_MAJOR == 5
+#if VERSION_MAJOR == 5 || VERSION_MAJOR == 6
     return volts * 2.0;
 #else
 #ifdef V2

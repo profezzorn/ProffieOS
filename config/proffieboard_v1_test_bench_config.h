@@ -38,7 +38,7 @@ const unsigned int maxLedsPerStrip = 196;
 // #define ENABLE_SNOOZE
 #define ENABLE_WS2811
 // #define ENABLE_SERIAL
-// #define ENABLE_DEVELOPER_COMMANDS
+#define ENABLE_DEVELOPER_COMMANDS
 // #define DISABLE_DIAGNOSTIC_COMMANDS
 // #define SAVE_COLOR_CHANGE
 // #define DISABLE_COLOR_CHANGE
@@ -57,12 +57,18 @@ const unsigned int maxLedsPerStrip = 196;
 #define ENABLE_SD
 // #define ENABLE_SERIALFLASH
 //#define ENABLE_SSD1306
+#define INCLUDE_SSD1306
 
 // #define ENABLE_DEBUG
 
 #define IDLE_OFF_TIME 100000
 
 // #define BLADE_DETECT_PIN aux2Pin
+
+// #define ENABLE_TRACING TRACE_CATEGORY_MOTION | TRACE_CATEGORY_I2C
+
+#define FILTER_CUTOFF_FREQUENCY 150
+#define FILTER_ORDER 8
 
 #endif
 
@@ -80,7 +86,8 @@ Preset testing_presets[] = {
 #if 1
   { "SmthFuzz", "tracks/cantina.wav",
     StylePtr<Layers<RandomBlink<3000,Red,Black>,InOutTrL<TrWipe<300>,TrWipeIn<500>,Black>>>(),
-    StylePtr<ColorCycle<Rgb<0,0,50>, 10, 35, Cyan, 90, 1000, 6000>>(),
+    // StylePtr<ColorCycle<Rgb<0,0,50>, 10, 35, Cyan, 90, 1000, 6000>>(),
+    StylePtr<Red>(),
     "ONE" },
 #endif  
 #if 0
@@ -246,7 +253,8 @@ BladeConfig blades[] = {
 //    DimBlade(5.0, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()),
 //    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
 //    WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin2>>(),
-    WS2811BladePtr<30, WS2811_800kHz | WS2811_GRB, blade2Pin, PowerPINS<bladePowerPin2>>(),
+//    WS2811BladePtr<30, WS2811_800kHz | WS2811_GRB, blade2Pin, PowerPINS<bladePowerPin2>>(),
+    SaviBladePtr<blade2Pin, PowerPINS<bladePowerPin2>>(),
     CONFIGARRAY(testing_presets) },
 //  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>>(), CONFIGARRAY(testing_presets) }
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
@@ -285,4 +293,9 @@ Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 //NECDecoder nec_decoder;
 //RC6Decoder rc6_decoder;
 //PrintDecoder print_decoder;
+#endif
+
+#ifdef CONFIG_BOTTOM
+StandardDisplayController<64, uint32_t> display_controller;
+SSD1306Template<64, uint32_t> display(&display_controller);
 #endif

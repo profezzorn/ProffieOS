@@ -32,6 +32,9 @@ public:
 #define GET_PRESET_STYLE(N) if (style == N) allocator = p->style_allocator##N;
     ONCEPERBLADE(GET_PRESET_STYLE);
     if (!allocator) return nullptr;
+    CurrentArgParser->Shift(2);
+    // ArgParser ap(SkipWord(CurrentArgParser->GetArg(2, "", "")));
+    // CurrentArgParser = &ap;
     return allocator->make();
 #endif    
   }
@@ -104,22 +107,182 @@ public:
 
   NamedStyle* FindStyle(const char *name) {
     if (!name) return nullptr;
-    for (size_t i = 0; i < NELEM(named_styles); i++)
-      if (!strcmp(named_styles[i].name, name))
+    for (size_t i = 0; i < NELEM(named_styles); i++) {
+      if (FirstWord(name, named_styles[i].name)) {
 	return named_styles + i;
+      }
+    }
 
     return nullptr;
   }
 
   BladeStyle* Parse(const char* str) {
-    for (size_t i = 0; i < NELEM(named_styles); i++) {
-      if (FirstWord(str, named_styles[i].name)) {
-	ArgParser ap(SkipWord(str));
-	CurrentArgParser = &ap;
-	return named_styles[i].style_allocator->make();
+    NamedStyle* style = FindStyle(str);
+    if (!style) return nullptr;
+    ArgParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    return style->style_allocator->make();
+  }
+
+  // Returns true if the listed style refereces the specified argument.
+  bool UsesArgument(const char* str, int argument) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    if (argument == 0) return true;
+    char unused_output[32];
+    GetArgParser ap(SkipWord(str), argument, unused_output);
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    return ap.next();
+  }
+
+  // Returns true if the listed style refereces the specified argument.
+  int MaxUsedArgument(const char* str) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    GetMaxArgParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    // Ignore the two "builtin" arguments
+    if (FirstWord(str, "builtin") && ap.max_arg() <= 2) return 0;
+    return ap.max_arg();
+  }
+
+  // Get the Nth argument of a style string.
+  // The output will be copied to |output|.
+  // If the string itself doesn't contain that argument, the style
+  // will be parsed, and it's default argument will be returned.
+  bool GetArgument(const char* str, int argument, char* output) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    if (argument >= 0) {
+      GetArgParser ap(SkipWord(str), argument, output);
+      CurrentArgParser = &ap;
+      delete style->style_allocator->make();
+      if (ap.next()) return true;
+    }
+    if (argument >= CountWords(str)) {
+      *output = 0;
+      return false;
+    }
+    while (argument > 0) {
+      str = SkipWord(str);
+      argument--;
+    }
+    str = SkipSpace(str);
+    const char* tmp = SkipWord(str);
+    memcpy(output, str, tmp - str);
+    output[tmp-str] = 0;
+    if (!strcmp(output, "~")) {
+      *output = 0;
+      return false;
+    }
+    return true;
+  }
+
+  // Replace the Nth argument of a style string with a new value and return
+  // the new style string. Missing arguments will be replaced with default
+  // values.
+  LSPtr<char> SetArgument(const char* str, int argument, const char* new_value) {
+    char ret[512];  // maximum length for now
+    char* tmp = ret;
+    int output_args = std::max<int>(CountWords(str), argument + 1);
+    for (int i = 0; i < output_args; i++) {
+      if (i) strcat(tmp++, " ");
+      if (i == argument) {
+	strcat(tmp, new_value);
+	tmp += strlen(tmp);
+      } else {
+	if (!GetArgument(str, i, tmp)) {
+	  strcat(tmp, "~");
+	}
+//	fprintf(stderr, "OUTPUT: %s\n", tmp);
+	tmp += strlen(tmp);
       }
     }
-    return nullptr;
+    *tmp = 0;
+    return LSPtr<char>(mkstr(ret));
+  }
+
+  // Returns the length of the style identifier.
+  // The style identifier might be a single word, or it
+  // can be "builtin X Y" where X and Y are numbers.
+  static int StyleIdentifierLength(const char* str) {
+    const char* end = SkipWord(str);
+    if (FirstWord(str, "builtin")) {
+      end = SkipWord(SkipWord(end));
+    }
+    return end - str;
+  }
+
+  // Truncates all arguments and just returns the style identifier.
+  LSPtr<char> ResetArguments(const char* str) {
+    int len = StyleIdentifierLength(str);
+    char* ret = (char*) malloc(len + 1);
+    if (ret) {
+      memcpy(ret, str, len);
+      ret[len] = 0;
+    }
+    return LSPtr<char>(ret);
+  }
+
+  // Takes the style identifier "builtin X Y" from |to| and the
+  // arguments from |from| and puts them together into one string.
+  LSPtr<char> CopyArguments(const char* from, const char* to) {
+    int from_style_length = StyleIdentifierLength(from);
+    int to_style_length = StyleIdentifierLength(to);
+    int len = strlen(from) - from_style_length + to_style_length;
+    char* ret = (char*) malloc(len + 1);
+    if (ret) {
+      memcpy(ret, to, to_style_length);
+      ret[to_style_length] = 0;
+      strcat(ret, from + from_style_length);
+    }
+    return LSPtr<char>(ret);
+  }
+
+  struct ArgumentHelper {
+    const char* str;
+    int parts[3];
+    ArgumentHelper(const char*str_, int n) : str(str_) {
+      parts[0]= StyleIdentifierLength(str);
+      const char* tmp = str + parts[0];
+      for (int i = 0; i < n; i++) {
+	tmp = SkipWord(tmp);
+      }
+      parts[1] = tmp - str;
+      parts[2] = strlen(str);
+    }
+    int partlen(int part) {
+      if (part == 0) return parts[0];
+      return parts[part] - parts[part - 1];
+    }
+    const char* partptr(int part) {
+      if (part == 0) return str;
+      return str + parts[part - 1];
+    }
+    void AppendPart(int part, char** to) {
+      int l = partlen(part);
+      memcpy(*to, partptr(part), l);
+      (*to) += l;
+      **to = 0;
+    }
+  };
+
+  // Takes the style identifier "builtin X Y" from |to| and the
+  // arguments from |from| and puts them together into one string.
+  // Arguments after |keep_arguments_after| are also taken from |to|.
+  LSPtr<char> CopyArguments(const char* from, const char* to, int keep_arguments_after) {
+    ArgumentHelper from_helper(from, keep_arguments_after);
+    ArgumentHelper to_helper(to, keep_arguments_after);
+    char* ret = (char*) malloc(from_helper.partlen(0) + to_helper.partlen(1) + from_helper.partlen(2) + 1);
+    if (ret) {
+      char* tmp = ret;
+      to_helper.AppendPart(0, &tmp);
+      from_helper.AppendPart(1, &tmp);
+      to_helper.AppendPart(2, &tmp);
+    }
+    return LSPtr<char>(ret);
   }
 
   bool Parse(const char *cmd, const char* arg) override {

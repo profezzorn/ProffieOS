@@ -100,7 +100,7 @@ EFFECT(faston); // for EFFECT_FAST_ON
 EFFECT(push); // for Force Push gesture in Battle Mode
 
 // The Saber class implements the basic states and actions for the saber.
-class SaberShtokButtons : public PropBase {
+class SaberShtokButtons : public virtual PropBase {
 public:
 SaberShtokButtons() : PropBase() {}
   const char* name() override { return "SaberShtokButtons"; }

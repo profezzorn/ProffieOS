@@ -11,6 +11,8 @@ public:
     return 6; // PB8
 #elif PROFFIEBOARD_VERSION == 2
     return 19;  // PB8
+#elif PROFFIEBOARD_VERSION == 3
+    return 21;  // PB6
 #else
 #error Unsupported IR hardware.
 #endif    
@@ -71,7 +73,7 @@ public:
 			       (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
     // Trigger DMA on update
     armv7m_atomic_or(&timer()->TIM->DIER, TIM_DIER_UDE);
-    TRACE("show exit");
+    TRACE(IR, "show exit");
   }
 
   static void dma_done_callback(void* context, uint32_t events) {
@@ -79,7 +81,7 @@ public:
   }
 
   void dma_done_callback2(uint32_t events) {
-    TRACE("dma done enter");
+    TRACE(IR, "dma done enter");
     // Set the pin to low, normal output mode. This will keep the pin low even if we
     // re-use the timer for another show() call.
     digitalWrite(pin(), LOW);
@@ -90,7 +92,7 @@ public:
     stm32l4_dma_stop(&dma_);
     stm32l4_dma_disable(&dma_);
     sending_ = false;
-    TRACE("dma done exit");
+    TRACE(IR, "dma done exit");
   }
   
   void compact() {
@@ -124,10 +126,15 @@ public:
 
   // IRInterface
   virtual void signal(bool high, uint32_t us) override {
+//    STDOUT << "SIGNAL " << high << " for " << us << " pos = " << pos_ << "\n";;
     int n = us * frequency_ / 1000000;
-    WaitForSpace();
-    data_[pos_++] = n - 1;
-    data_[pos_++] = high ? 1 : 0;
+    while (n) {
+      int x = std::min(n, 256);
+      n -= x;
+      WaitForSpace();
+      data_[pos_++] = x - 1;
+      data_[pos_++] = high ? 1 : 0;
+    }
   }
 
   void Loop() override {

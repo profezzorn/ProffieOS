@@ -10,11 +10,11 @@
 // return value: COLOR
 // Tron-like transition.
 class BladeBase;
-template<int MILLIS, int start_rpm=0, int end_rpm = 6000>
-class TrColorCycle : public TransitionBaseX<Int<MILLIS>> {
+template<class MILLIS, int start_rpm=0, int end_rpm = 6000>
+class TrColorCycleX : public TransitionBaseX<MILLIS> {
 public:
   void run(BladeBase* base) {
-    TransitionBaseX<Int<MILLIS>>::run(base);
+    TransitionBaseX<MILLIS>::run(base);
     uint32_t now = micros();
     uint32_t delta = now - last_micros_;
     last_micros_ = now;
@@ -57,5 +57,7 @@ private:
   uint32_t num_leds_;
   uint32_t last_micros_;
 };
+
+template<int MILLIS, int start_rpm=0, int end_rpm = 6000> using TrColorCycle = TrColorCycleX<Int<MILLIS>, start_rpm, end_rpm>;
 
 #endif

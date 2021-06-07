@@ -13,7 +13,6 @@ public:
   virtual bool done() = 0;
   virtual void begin() = 0;
   virtual void run(BladeBase* blade) = 0;
-  virtual OverDriveColor getColor(const OverDriveColor& a, const OverDriveColor& b, int led) = 0;
   virtual RGBA getColor(const RGBA& a, const RGBA& b, int led) = 0;
 };
 
@@ -23,11 +22,6 @@ public:
   bool done() override { return tr_.done(); }
   void begin() override { tr_.begin(); }
   void run(BladeBase* blade) override { tr_.run(blade); }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) override {
-    return tr_.getColor(a, b, led);
-  }
   RGBA getColor(const RGBA& a,
 		const RGBA& b,
 		int led) override {
@@ -69,11 +63,6 @@ public:
   }
   bool done() { return selected_->done(); }
   void run(BladeBase* blade) { selected_->run(blade); }
-  OverDriveColor getColor(const OverDriveColor& a,
-			  const OverDriveColor& b,
-			  int led) {
-    return selected_->getColor(a, b, led);
-  }
   RGBA getColor(const RGBA& a,
 		const RGBA& b,
 		int led) {
