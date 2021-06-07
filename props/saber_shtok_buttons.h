@@ -96,11 +96,7 @@ EFFECT(dim); // for EFFECT_POWERSAVE
 EFFECT(battery); // for EFFECT_BATTERY_LEVEL
 EFFECT(bmbegin); // for Begin Battle Mode
 EFFECT(bmend); // for End Battle Mode
-EFFECT(vmbegin); // for Begin Volume Menu
-EFFECT(vmend); // for End Volume Menu
 EFFECT(faston); // for EFFECT_FAST_ON
-EFFECT(blstbgn); // for Begin Multi-Blast
-EFFECT(blstend); // for End Multi-Blast
 EFFECT(push); // for Force Push gesture in Battle Mode
 
 // The Saber class implements the basic states and actions for the saber.
@@ -442,7 +438,7 @@ SaberShtokButtons() : PropBase() {}
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
         ToggleColorChangeMode();
-        break;
+        return true;
 #endif
 
 // Blaster Deflection
@@ -556,7 +552,7 @@ SaberShtokButtons() : PropBase() {}
         }
         break;
 
-// Start or Stop Track
+// Start or Stop Music Track
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
         StartOrStopTrack();
         return true;
@@ -673,7 +669,7 @@ SaberShtokButtons() : PropBase() {}
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
         ToggleColorChangeMode();
-        break;
+        return true;
 #endif
 
 // Blaster Deflection
@@ -787,7 +783,7 @@ SaberShtokButtons() : PropBase() {}
         }
         break;
 
-// Start or Stop Track
+// Start or Stop Music Track
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
         StartOrStopTrack();
