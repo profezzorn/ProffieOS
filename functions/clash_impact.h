@@ -3,7 +3,7 @@
 
 #include "../common/saber_base.h"
 
-// Usage: ClashImpact<MIN, MAX>
+// Usage: ClashImpactFX<MIN, MAX>
 // MIN is minimum value Clash is detected (recommended range 0 ~ 500, default is 200)
 // MAX is maximum impact to return 32768 (recommended range 1000 ~ 1600, default is 1600)
 // Returns 0-32768 based on impact strength of clash
