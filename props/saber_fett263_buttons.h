@@ -774,7 +774,7 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_EDIT_MODE_MENU
   // Color / Style Editing
-  HSL hsl;
+  HSL hsl_;
   ShowColorSingleBladeTemplate<RotateColorsX<Variation,ShowColorStyle>> show_color_;
   ShowColorSingleBladeTemplate<Mix<Bump<Int<16384>,Int<14000>>,RotateColorsX<Variation,RgbArg<1,Rgb<255,0,0>>>,ShowColorStyle>> bump_color_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<26000>,Int<8000>>,RotateColorsX<Variation,RgbArg<1,Rgb<255,0,0>>>,ShowColorStyle>> tip_color_;
@@ -805,7 +805,7 @@ SaberFett263Buttons() : PropBase() {}
     show_color_.Start(blade_num_);
     ShowColorStyle::SetColor(GetColorArg(blade_num_, effect_num_)); 
     saved_color_ = GetColorArg(blade_num_, effect_num_);
-    hsl = saved_color_.toHSL();
+    hsl_ = saved_color_.toHSL();
     hsl_angle_ = fusor.angle2();
   }
 
@@ -813,7 +813,7 @@ SaberFett263Buttons() : PropBase() {}
   void ShowPart() {
     ShowColorStyle::SetColor(GetColorArg(blade_num_, effect_num_)); 
     saved_color_ = GetColorArg(blade_num_, effect_num_);
-    hsl = saved_color_.toHSL();
+    hsl_ = saved_color_.toHSL();
     hsl_angle_ = fusor.angle2();
   }
 
@@ -904,7 +904,7 @@ SaberFett263Buttons() : PropBase() {}
     if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 2)) break;
     }
     saved_color_ = GetColorArg(blade_num_, effect_num_);
-    hsl = saved_color_.toHSL();
+    hsl_ = saved_color_.toHSL();
     NewColor(blade_num_, effect_num_);
     current_preset_.Save();
     effect_num_ = 0;
@@ -1003,7 +1003,7 @@ SaberFett263Buttons() : PropBase() {}
         color_source = Color16(color_list_[dial_]);
         break;
       default:
-        color_source = Color16(hsl);
+        color_source = Color16(hsl_);
         break;
     }
     itoa(Color16(color_source).r, new_color, 10);
@@ -1285,33 +1285,33 @@ SaberFett263Buttons() : PropBase() {}
           if (a > H_ANGLE * 2/3) {
             hsl_angle_ += H_ANGLE;
             if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI * 2;
-            hsl.H = fract(hsl.H + H_CHANGE);
+            hsl_.H = fract(hsl_.H + H_CHANGE);
           }
           if (a < -H_ANGLE * 2/3) {
             hsl_angle_ -= H_ANGLE;
             if (hsl_angle_ < M_PI) hsl_angle_ += M_PI * 2;
-            hsl.H = fract(hsl.H - H_CHANGE);
+            hsl_.H = fract(hsl_.H - H_CHANGE);
           }
           break;
         case ZOOM_COLOR:
           if (a > EDIT_MODE_ZOOM * 2/3) {
             hsl_angle_ += EDIT_MODE_ZOOM;
             if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI * 2;
-            hsl.H = fract(hsl.H + H_CHANGE);
+            hsl_.H = fract(hsl_.H + H_CHANGE);
           }
           if (a < -EDIT_MODE_ZOOM * 2/3) {
             hsl_angle_ -= EDIT_MODE_ZOOM;
             if (hsl_angle_ < M_PI) hsl_angle_ += M_PI * 2;
-            hsl.H = fract(hsl.H - H_CHANGE);
+            hsl_.H = fract(hsl_.H - H_CHANGE);
           }
           break;
         case EDIT_WHITE:
           if (a > L_ANGLE * 2/3) {
             hsl_angle_ += L_ANGLE;
             if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI * 2;
-            if (hsl.L < 1.0) {
-              hsl.L = clamp(hsl.L + 0.01, 0.5, 1.0);
-              if (hsl.L == 1.0) {
+            if (hsl_.L < 1.0) {
+              hsl_.L = clamp(hsl_.L + 0.01, 0.5, 1.0);
+              if (hsl_.L == 1.0) {
                 PlayMenuSound("mmax.wav");
                 hsl_angle_ = fusor.angle2();
               }
@@ -1320,9 +1320,9 @@ SaberFett263Buttons() : PropBase() {}
           if (a < -L_ANGLE * 2/3) {
             hsl_angle_ -= L_ANGLE;
             if (hsl_angle_ < M_PI) hsl_angle_ += M_PI * 2;
-            if (hsl.L > 0.5) {
-              hsl.L = clamp(hsl.L - 0.01, 0.5, 1.0);
-              if (hsl.L == 0.5) {
+            if (hsl_.L > 0.5) {
+              hsl_.L = clamp(hsl_.L - 0.01, 0.5, 1.0);
+              if (hsl_.L == 0.5) {
                 PlayMenuSound("mmin.wav");
                 hsl_angle_ = fusor.angle2();
               }
@@ -1333,9 +1333,9 @@ SaberFett263Buttons() : PropBase() {}
           if (a > L_ANGLE * 2/3) {
             hsl_angle_ += L_ANGLE;
             if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI * 2;
-            if (hsl.L < 0.5) {
-              hsl.L = clamp(hsl.L + 0.01, 0.01, 0.5);
-              if (hsl.L == 0.5) {
+            if (hsl_.L < 0.5) {
+              hsl_.L = clamp(hsl_.L + 0.01, 0.01, 0.5);
+              if (hsl_.L == 0.5) {
                 PlayMenuSound("mmax.wav");
                 hsl_angle_ = fusor.angle2();
               }
@@ -1344,9 +1344,9 @@ SaberFett263Buttons() : PropBase() {}
           if (a < -L_ANGLE * 2/3) {
             hsl_angle_ -= L_ANGLE;
             if (hsl_angle_ < M_PI) hsl_angle_ += M_PI * 2;
-            if (hsl.L > 0.01) {
-              hsl.L = clamp(hsl.L - 0.01, 0.01, 0.5);
-              if (hsl.L == 0.01) {
+            if (hsl_.L > 0.01) {
+              hsl_.L = clamp(hsl_.L - 0.01, 0.01, 0.5);
+              if (hsl_.L == 0.01) {
                 PlayMenuSound("mmin.wav");
                 hsl_angle_ = fusor.angle2();
               }
@@ -1354,7 +1354,7 @@ SaberFett263Buttons() : PropBase() {}
           }
           break;         
         }
-        ShowColorStyle::SetColor(Color16(hsl));
+        ShowColorStyle::SetColor(Color16(hsl_));
       }
 #endif
     if (SaberBase::IsOn()) {
@@ -3566,17 +3566,17 @@ void PlayMenuSound(const char* file) {
                   break;
                 case 1:
                   color_mode_ = EDIT_COLOR;
-                  hsl.S = 1.0;
+                  hsl_.S = 1.0;
                   break;
                 case 2: 
                   color_mode_ = EDIT_WHITE;
                   twist_menu_ = M_PI / 18;
-                  hsl.S = 1.0;
+                  hsl_.S = 1.0;
                   break;
                 case 3: 
                   color_mode_ = EDIT_BLACK;
                   twist_menu_ = M_PI / 36;
-                  hsl.S = 1.0;
+                  hsl_.S = 1.0;
                   break;
                 default:
                   break;
@@ -4499,7 +4499,7 @@ void PlayMenuSound(const char* file) {
         if (menu_) {
           if (color_mode_ == COLOR_LIST || color_mode_ == EDIT_COLOR) {
             if (color_mode_ == COLOR_LIST) {
-              hsl = Color16(color_list_[dial_]).toHSL();
+              hsl_ = Color16(color_list_[dial_]).toHSL();
             }
             color_mode_ = ZOOM_COLOR;
             hsl_angle_ = fusor.angle2();
