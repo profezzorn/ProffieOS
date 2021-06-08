@@ -512,7 +512,6 @@ public:
   bool powerlock; // diable PWR button for retraction, for use with "Power Lock" mode to prevent button turning saber off
   int clashdetect; // maximum Clash Strength to detect Clash during Battle Mode (0 ~ 10 range)
   int maxclash; // maximum Clash Strength for Clash Sound and Detection works with CLASH_THRESHOLD_G to create range of Clash Strength (8 ~ 16 range)
-
 };
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -611,13 +610,11 @@ private:
 };
 
 // Edit Style Settings
-static int int_edit_ = 0;
+static int int_edit = 0;
 
 class IntEdit {
   public:
-    int int_edit;
     void run(BladeBase* blade) {
-    int_edit = int_edit_;
     }
     int getInteger(int led) { return int_edit; }    
 };
@@ -2627,7 +2624,7 @@ void PlayMenuSound(const char* file) {
           case MENU_EMITTER_SIZE:
           case MENU_PREON_SIZE:
             calc_ += 1000;
-            int_edit_ = calc_;
+            int_edit = calc_;
             PlayMenuSound("mup.wav");
             return true;
           case MENU_DRAG_SIZE:
@@ -2640,7 +2637,7 @@ void PlayMenuSound(const char* file) {
                 PlayMenuSound("mmax.wav");
               }
             }
-            int_edit_ = calc_;
+            int_edit = calc_;
             return true;
           case MENU_COPY:
             choice_ = true;
@@ -3202,7 +3199,7 @@ void PlayMenuSound(const char* file) {
                 PlayMenuSound("mmin.wav");
               }
             }
-            int_edit_ = calc_;
+            int_edit = calc_;
             return true;
           case MENU_DRAG_SIZE:
             if (calc_ < 32768) {
@@ -3214,7 +3211,7 @@ void PlayMenuSound(const char* file) {
                 PlayMenuSound("mmin.wav");
               }
             }
-            int_edit_ = calc_;
+            int_edit = calc_;
             PlayMenuSound("mdown.wav");
             return true;
           case MENU_COPY:
@@ -4116,7 +4113,7 @@ void PlayMenuSound(const char* file) {
               char argspace[32];
               style_parser.GetArgument(current_preset_.GetStyle(blade_num_), set_num_ + 2, argspace);
               calc_ = strtol(argspace, NULL, 0);
-              int_edit_ = calc_;
+              int_edit = calc_;
               PlayMenuSound("mselect.wav");
               if (NUM_BLADES == 1) blade_num_ = 1;
               switch (set_num_) {
