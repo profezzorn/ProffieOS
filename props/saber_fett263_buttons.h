@@ -1326,11 +1326,11 @@ SaberFett263Buttons() : PropBase() {}
 #define H_ANGLE (M_PI / 16384)
 #define EDIT_MODE_ZOOM (M_PI * 2 / 2000)
       float a = fusor.angle2() - hsl_angle_;
+      if (a > M_PI) a-=M_PI*2;      
+      if (a < -M_PI) a+=M_PI*2;
       switch (color_mode_) {
         default: break;
         case EDIT_COLOR:
-          if (a > M_PI) a-=M_PI*2;      
-          if (a < -M_PI) a+=M_PI*2;
           if (a > H_ANGLE * 2/3) {
             hsl_angle_ += H_ANGLE;
             if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI * 2;
@@ -1341,11 +1341,8 @@ SaberFett263Buttons() : PropBase() {}
             if (hsl_angle_ < M_PI) hsl_angle_ += M_PI * 2;
             hsl.H = fract(hsl.H - H_CHANGE);
           }
-          ShowColorStyle::SetColor(Color16(hsl));
           break;
         case ZOOM_COLOR:
-          if (a > M_PI) a-=M_PI*2;
-          if (a < -M_PI) a+=M_PI*2;
           if (a > EDIT_MODE_ZOOM * 2/3) {
             hsl_angle_ += EDIT_MODE_ZOOM;
             if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI * 2;
@@ -1356,11 +1353,8 @@ SaberFett263Buttons() : PropBase() {}
             if (hsl_angle_ < M_PI) hsl_angle_ += M_PI * 2;
             hsl.H = fract(hsl.H - H_CHANGE);
           }
-          ShowColorStyle::SetColor(Color16(hsl));
           break;
         case EDIT_WHITE:
-          if (a > M_PI) a-=M_PI*2;
-          if (a < -M_PI) a+=M_PI*2;
           if (a > L_ANGLE * 2/3) {
             hsl_angle_ += L_ANGLE;
             if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI * 2;
@@ -1383,11 +1377,8 @@ SaberFett263Buttons() : PropBase() {}
               }
             }
           }
-          ShowColorStyle::SetColor(Color16(hsl));
           break;
         case EDIT_BLACK:
-          if (a > M_PI) a-=M_PI*2;
-          if (a < -M_PI) a+=M_PI*2;
           if (a > L_ANGLE * 2/3) {
             hsl_angle_ += L_ANGLE;
             if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI * 2;
@@ -1410,9 +1401,9 @@ SaberFett263Buttons() : PropBase() {}
               }
             }
           }
-          ShowColorStyle::SetColor(Color16(hsl));
           break;         
         }
+        ShowColorStyle::SetColor(Color16(hsl));
       }
 #endif
     if (SaberBase::IsOn()) {
