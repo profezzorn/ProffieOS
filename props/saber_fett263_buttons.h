@@ -1912,9 +1912,6 @@ void PlayMenuSound(const char* file) {
             case MENU_PRESET:
               PlayMenuSound("mselect.wav");
               first_preset();
-              if (SFX_quote) {
-                SFX_quote.Select(-1);
-              }
               menu_ = false;
               menu_type_ = MENU_TOP;
               wav_player.Free();
@@ -1945,9 +1942,6 @@ void PlayMenuSound(const char* file) {
             previous_preset();
           } else {
             next_preset();
-          }
-          if (SFX_quote) {
-            SFX_quote.Select(-1);
           }
         }
         return true;
@@ -2076,9 +2070,6 @@ void PlayMenuSound(const char* file) {
         switch (menu_type_) {
           case MENU_PRESET:
             next_preset_fast();
-            if (SFX_quote) {
-              SFX_quote.Select(-1);
-            }
             return true;
           case MENU_VOLUME:
              VolumeUp();
@@ -3185,9 +3176,6 @@ void PlayMenuSound(const char* file) {
         switch (menu_type_) {
           case MENU_PRESET:
             next_preset();
-            if (SFX_quote) {
-              SFX_quote.Select(-1);
-            }
             return true;
           case MENU_VOLUME:
             VolumeUp();
@@ -4235,9 +4223,6 @@ void PlayMenuSound(const char* file) {
               return true;
             case MENU_PRESET:
               first_preset();
-              if (SFX_quote) {
-                SFX_quote.Select(-1);
-              }
               menu_type_ = MENU_TOP;
               menu_ = false;
               PlayMenuSound("mselect.wav");
@@ -5065,10 +5050,6 @@ void PlayMenuSound(const char* file) {
         if (millis() - last_twist_ > 2000) {
           last_twist_ = millis();
           Off();
-          next_preset();
-            if (SFX_quote) {
-              SFX_quote.Select(-1);
-            }
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectOut();
 #endif        
@@ -5082,9 +5063,6 @@ void PlayMenuSound(const char* file) {
           last_twist_ = millis();
           Off();
           previous_preset();
-            if (SFX_quote) {
-              SFX_quote.Select(-1);
-            }
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectOut();
 #endif        
