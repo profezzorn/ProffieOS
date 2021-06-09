@@ -1144,7 +1144,7 @@ SaberFett263Buttons() : PropBase() {}
   };
 
 #ifdef FETT263_CLASH_STRENGTH_SOUND
-  void SelectClashFile() {
+  void RealClashSound() {
     if (clash_type_ == CLASH_BATTLE_MODE) {
       if (SaberBase::GetClashStrength() < saved_gesture_control.clashdetect) {
         clash_type_ = CLASH_NORMAL;
@@ -1222,7 +1222,7 @@ SaberFett263Buttons() : PropBase() {}
       }
       if (clash_type_ != CLASH_LOCKUP_END) {
 #ifdef FETT263_CLASH_STRENGTH_SOUND
-        SelectClashFile();
+        RealClashSound();
 #else
       if (SaberBase::GetClashStrength() < saved_gesture_control.clashdetect) {
         SaberBase::DoClash();
@@ -1377,7 +1377,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::Lockup()) {
 #ifdef FETT263_CLASH_STRENGTH_SOUND
         clash_type_ = CLASH_LOCKUP_END;
-        SelectClashFile();
+        RealClashSound();
 #else
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
@@ -5083,7 +5083,7 @@ void PlayMenuSound(const char* file) {
         if (SaberBase::Lockup()) {
 #ifdef FETT263_CLASH_STRENGTH_SOUND
           clash_type_ = CLASH_LOCKUP_END;
-          SelectClashFile();
+          RealClashSound();
 #else
           SaberBase::DoEndLockup();
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
