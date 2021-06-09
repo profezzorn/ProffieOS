@@ -5118,15 +5118,15 @@ void PlayMenuSound(const char* file) {
   }
 
 private:
-  bool swing_blast_ = false;
-  bool check_blast_ = false;
-  bool auto_lockup_on_ = false;
-  bool auto_melt_on_ = false;
-  bool battle_mode_ = false;
-  bool menu_ = false;
-  bool force_quote_ = false;
-  bool rehearse_ = false;
-  bool choreo_ = false;
+  bool swing_blast_ = false; // Multi-Blast Mode (Swing = Blast Deflect)
+  bool check_blast_ = false; // Check if Multi-Blast mode should be enabled (Battle Mode)
+  bool auto_lockup_on_ = false; // Battle Mode Lockup active
+  bool auto_melt_on_ = false; // Battle Mode Melt/Drag active
+  bool battle_mode_ = false; // Battle Mode active
+  bool menu_ = false; // Edit Mode / Menu System active
+  bool force_quote_ = false; // Quote Player active (in place of force effect)
+  bool rehearse_ = false; // Rehearsal Mode active
+  bool choreo_ = false; // Choreography Mode active
   uint32_t thrust_begin_millis_;
   uint32_t push_begin_millis_;
   uint32_t clash_impact_millis_;
@@ -5134,10 +5134,7 @@ private:
   uint32_t last_push_;
   uint32_t last_blast_;
   uint32_t saber_off_time_;
-  uint32_t preset_change_;
   uint32_t last_rotate_;
-  float impact_angle_ = 0.0;
-  float clash_impact_ = 0.0;
   ClashType clash_type_ = CLASH_NONE;
   MenuType menu_type_ = MENU_TOP;
   int menu_top_pos_ = 0;
@@ -5151,11 +5148,11 @@ private:
   float change_ = 0.0;
   float twist_menu_ = M_PI / 4;
 #ifdef FETT263_EDIT_MODE_MENU
-  bool choice_ = false;
-  bool next_event_ = false;
-  bool off_event_ = false;
-  bool restart_ = false;
-  bool edit_color_ = false;
+  bool choice_ = false; // Edit Mode selection confirmed
+  bool next_event_ = false; // Do next event in Edit Mode
+  bool off_event_ = false; // Do off event in Edit Mode
+  bool restart_ = false; // Ignite blade after off event in Edit Mode
+  bool edit_color_ = false; // Color Editing Mode active
   uint32_t color_revert_;
   float change_h_ = 0.0;
   float hsl_angle_ = 0.0;
@@ -5179,7 +5176,7 @@ private:
   int calc_;
 #endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
-  int clash_count_ = -1;
+  int clash_count_ = -1; // Choreography Mode Clash counter
 #endif
 };
 
