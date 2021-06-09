@@ -53,7 +53,7 @@ public:
 #endif    
 };
 
-  struct SoundToPlay {
+struct SoundToPlay {
   const char* filename_;
   Effect* effect_;
   int selection_;
