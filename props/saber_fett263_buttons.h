@@ -305,7 +305,7 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #define FETT263_FORCE_PUSH_LENGTH 5
 #endif
 
-#if (NUM_BUTTONS < 2)
+#if NUM_BUTTONS < 2
 #error /props/saber_fett263_buttons.h requires 2 buttons for operation
 #endif
 
@@ -784,7 +784,7 @@ SaberFett263Buttons() : PropBase() {}
   ShowColorSingleBladeTemplate<Mix<Bump<IntEdit,Int<10000>>,Black,ShowColorStyle>> show_clash_location_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<6000>>,Black,ShowColorStyle>> show_drag_size_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<-6000>>,Black,ShowColorStyle>> show_emitter_size_;
-#if (NUM_BLADES > 1)
+#if NUM_BLADES > 1
   ShowColorSingleBladeTemplate<Pulsing<RotateColorsX<Variation,ShowColorStyle>,Black,800>> show_preview_;
 #endif
 
@@ -817,7 +817,7 @@ SaberFett263Buttons() : PropBase() {}
     hsl_angle_ = fusor.angle2();
   }
 
-#if (NUM_BLADES > 1)
+#if NUM_BLADES > 1
   void BladePreview(int blade) {
     if (blade_preview_ > 0) {
       show_preview_.Stop(blade_preview_);
@@ -870,7 +870,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_COLOR_MODE:
         sound_queue_.Play(SoundToPlay("mcolorop.wav"));
         break;
-#if (NUM_BLADES > 1)
+#if NUM_BLADES > 1
       case MENU_BLADE_COLOR:
         sound_queue_.Play(SoundToPlay("mblade.wav"));
         break;
@@ -1525,7 +1525,7 @@ SaberFett263Buttons() : PropBase() {}
     MENU_COLOR_MODE,
     MENU_EFFECT,
     MENU_RESET_COLOR,
-#if (NUM_BLADES > 1)
+#if NUM_BLADES > 1
     MENU_COPY_COLOR,
     MENU_BLADE_STYLE,
     MENU_BLADE_COLOR,
@@ -2105,7 +2105,7 @@ void PlayMenuSound(const char* file) {
                 break;
            }
             return true;
-#if (NUM_BLADES > 1)
+#if NUM_BLADES > 1
           case MENU_BLADE_STYLE:
             if (blade_num_ == NUM_BLADES) blade_num_ = 0;
             blade_num_ += 1;
@@ -2646,7 +2646,7 @@ void PlayMenuSound(const char* file) {
                 break;
             }
             return true;
-#if (NUM_BLADES > 1)
+#if NUM_BLADES > 1
           case MENU_BLADE_STYLE:
             if (blade_num_ <= 1) blade_num_ = NUM_BLADES + 1;
             blade_num_ -= 1;
@@ -3326,7 +3326,7 @@ void PlayMenuSound(const char* file) {
             case MENU_TOP:
               switch (menu_top_pos_) {
                 case 1:   
-#if (NUM_BLADES == 1)
+#if NUM_BLADES == 1
                   menu_type_ = MENU_STYLE;
                   num_presets_ = current_config->num_presets;
                   blade_num_ = 1;
@@ -3349,7 +3349,7 @@ void PlayMenuSound(const char* file) {
                     ToggleColorChangeMode();
                     break;
                   } else {
-#if (NUM_BLADES == 1)
+#if NUM_BLADES == 1
                   blade_num_ = 1;
                   menu_type_ = MENU_COLOR_SUB;
                   menu_sub_pos_ = 0;
@@ -3400,7 +3400,7 @@ void PlayMenuSound(const char* file) {
                   break;
               }
               return true;
-#if (NUM_BLADES > 1)           
+#if NUM_BLADES > 1          
             case MENU_BLADE_STYLE:
               if (blade_num_ == 0) {
                 PlayMenuSound("mblade.wav");
@@ -3416,7 +3416,7 @@ void PlayMenuSound(const char* file) {
               MenuSelect();
               return true;
             case MENU_BLADE_COLOR:
-#if (NUM_BLADES > 2)
+#if NUM_BLADES > 2
               menu_type_ = MENU_COLOR_SUB;
               menu_sub_pos_ = 0;
               copy_blade_ = blade_num_;
@@ -3482,7 +3482,7 @@ void PlayMenuSound(const char* file) {
             case MENU_STYLE:
               restore_point = nullptr; 
               current_preset_.Save();
-#if (NUM_BLADES == 1)
+#if NUM_BLADES == 1
               menu_type_ = MENU_TOP;
               MenuSave();
 #else           
@@ -3493,7 +3493,7 @@ void PlayMenuSound(const char* file) {
             case MENU_COLOR:
               return true;
             case MENU_COLOR_SUB:
-#if (NUM_BLADES == 1)
+#if NUM_BLADES == 1
               switch (menu_sub_pos_) {
                 case 1:
                   menu_type_ = MENU_EFFECT;
@@ -3506,7 +3506,7 @@ void PlayMenuSound(const char* file) {
                 default:
                   PlayMenuSound("moption.wav");
               }
-#elif (NUM_BLADES == 2)
+#elif NUM_BLADES == 2
               switch (menu_sub_pos_) {
                 case 1:
                   menu_type_ = MENU_EFFECT;
@@ -3995,7 +3995,7 @@ void PlayMenuSound(const char* file) {
                   break;
                 case 2:
                   effect_num_ = 0;
-#if (NUM_BLADES == 1)
+#if NUM_BLADES == 1
                   menu_type_ = MENU_STYLE_SETTING_SUB;
                   PlayMenuSound("moption.wav");
                   blade_num_ = 1;
@@ -4016,7 +4016,7 @@ void PlayMenuSound(const char* file) {
                   PlayMenuSound("mselect.wav");
                   break;
                 case 5:
-#if (NUM_BLADES == 1)
+#if NUM_BLADES == 1
                   menu_type_ = MENU_LENGTH;
                   SaveState(current_preset_.preset_num);
                   blade_num_ = 1;
@@ -4234,7 +4234,7 @@ void PlayMenuSound(const char* file) {
               dynamic_mixer.set_volume(VOLUME);
               MenuRevert();
               return true;
-#if (NUM_BLADES > 1)
+#if NUM_BLADES > 1
             case MENU_BLADE_STYLE:
               menu_type_ = MENU_TOP;
               show_preview_.Stop(blade_preview_);
@@ -4272,7 +4272,7 @@ void PlayMenuSound(const char* file) {
               current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg)); 
               current_preset_.Save();
               UpdateStyle(current_preset_.preset_num);
-#if (NUM_BLADES == 1)
+#if NUM_BLADES == 1
               menu_type_ = MENU_TOP;
               MenuRevert();
 #else
