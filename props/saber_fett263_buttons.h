@@ -958,13 +958,17 @@ SaberFett263Buttons() : PropBase() {}
     itoa(calc_, style_arg, 10);
     current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), set_num_ + 2, style_arg));
     current_preset_.Save();
+    // Handle location/size preview in Style Settings
     switch (set_num_) {
+      // Stop Clash Location Preview
       case 21:
         show_clash_location_.Stop(blade_num_);
         break;
+      // Stop Drag Size Preview
       case 22:
         show_drag_size_.Stop(blade_num_);
         break;
+      // Stop Emitter Size Preview
       case 23:
         show_emitter_size_.Stop(blade_num_);
       default:
