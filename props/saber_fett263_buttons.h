@@ -705,7 +705,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_SAVE_CHOREOGRAPHY
   void RestoreChoreo() {
     saved_choreography.ReadInCurrentDir("choreo.ini");
-    }
+  }
 
   void WriteChoreo(const char* filename) {
     const char* dir = nullptr;
@@ -902,7 +902,7 @@ SaberFett263Buttons() : PropBase() {}
     char set_copy[16];
     while (true) {
       effect_num_ -= 1;
-    if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 2)) break;
+      if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 2)) break;
     }
     saved_color_ = GetColorArg(blade_num_, effect_num_);
     hsl_ = saved_color_.toHSL();
