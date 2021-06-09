@@ -800,7 +800,7 @@ SaberFett263Buttons() : PropBase() {}
     return Color16();
   }
 
-  // Show Full Blade Preview
+  // Show Full Blade Preview for Color Editing
   void ShowFull() {
     show_color_.Start(blade_num_);
     ShowColorStyle::SetColor(GetColorArg(blade_num_, effect_num_)); 
@@ -809,7 +809,7 @@ SaberFett263Buttons() : PropBase() {}
     hsl_angle_ = fusor.angle2();
   }
 
-  // Show Partial Blade Preview (Clash, Lockup, Drag, Melt, Preon, Emitter)
+  // Show Partial Blade Preview (Clash, Lockup, Drag, Melt, Preon, Emitter) for Color Editing
   void ShowPart() {
     ShowColorStyle::SetColor(GetColorArg(blade_num_, effect_num_)); 
     saved_color_ = GetColorArg(blade_num_, effect_num_);
@@ -896,7 +896,8 @@ SaberFett263Buttons() : PropBase() {}
     }    
   }
 
-  void SetCopy() {
+  // Copy Colors Function
+  void SetColorCopy() {
     effect_num_ = 16;
     char set_copy[16];
     while (true) {
@@ -3439,7 +3440,7 @@ void PlayMenuSound(const char* file) {
 #endif
             case MENU_BLADE_COPY:
               menu_type_ = MENU_COPY_COLOR;
-              SetCopy();
+              SetColorCopy();
               MenuConfirm();
               return true;
             case MENU_BLADE_SETTING:
@@ -3514,7 +3515,7 @@ void PlayMenuSound(const char* file) {
                   break;
                 case 2:
                   menu_type_ = MENU_COPY_COLOR;
-                  SetCopy();
+                  SetColorCopy();
                   PlayMenuSound("mconfirm.wav");
                   break;
                 case 3:
@@ -3532,7 +3533,7 @@ void PlayMenuSound(const char* file) {
                   break;
                 case 2:
                   menu_type_ = MENU_BLADE_COPY;
-                  SetCopy();
+                  SetColorCopy();
                   PlayMenuSound("mblade.wav");
                   break;
                 case 3:
