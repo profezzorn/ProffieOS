@@ -1373,44 +1373,12 @@ SaberFett263Buttons() : PropBase() {}
     if (menu_ || color_mode_ == CC_COLOR_LIST) {
       DetectMenuTurn();
     }
-
-// Fett263 Track Player
     if (track_mode_ != PLAYBACK_OFF) {
-      if (!track_player_) {
-#ifdef ENABLE_AUDIO
-        if (track_num_ == -1 && track_mode_ == PLAYBACK_LOOP) {
-          StartOrStopTrack();
-        } else {
-          if (track_num_ > num_tracks_) track_num_ = 0;
-          switch (track_mode_) {
-            case PLAYBACK_ROTATE:
-              track_num_ += 1;
-              break;
-            case PLAYBACK_RANDOM:
-              track_num_ = rand() % num_tracks_;
-              if (track_num_ < 0) track_num_ = num_tracks_ - 1;
-              break;
-            default:
-              break;
-          }
-          char playtrack[128];
-          RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, playtrack, sizeof(playtrack));
-          MountSDCard();
-          EnableAmplifier();
-          track_player_ = GetFreeWavPlayer();
-          if (track_player_) {
-            track_player_->Play(playtrack);
-          } else {
-            STDOUT.println("No available WAV players.");
-          }
-        }
-#else
-        STDOUT.println("Audio disabled.");
-#endif
-      }
+      TrackPlayer();
     }
   }
 
+  // Fett263 Track Player
   enum TrackMode {
     PLAYBACK_OFF,
     PLAYBACK_LOOP,
@@ -1418,6 +1386,41 @@ SaberFett263Buttons() : PropBase() {}
     PLAYBACK_RANDOM,
   };
 
+  void TrackPlayer() {
+    if (!track_player_) {
+#ifdef ENABLE_AUDIO
+      if (track_num_ == -1 && track_mode_ == PLAYBACK_LOOP) {
+        StartOrStopTrack();
+      } else {
+        if (track_num_ > num_tracks_) track_num_ = 0;
+        switch (track_mode_) {
+          case PLAYBACK_ROTATE:
+            track_num_ += 1;
+            break;
+          case PLAYBACK_RANDOM:
+            track_num_ = rand() % num_tracks_;
+            if (track_num_ < 0) track_num_ = num_tracks_ - 1;
+            break;
+          default:
+            break;
+        }
+        char playtrack[128];
+        RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, playtrack, sizeof(playtrack));
+        MountSDCard();
+        EnableAmplifier();
+        track_player_ = GetFreeWavPlayer();
+        if (track_player_) {
+          track_player_->Play(playtrack);
+        } else {
+          STDOUT.println("No available WAV players.");
+        }
+      }
+#else
+      STDOUT.println("Audio disabled.");
+#endif
+    }
+  }   
+   
   void DetectMenuTurn() {
      if (millis() - last_rotate_ > 1000) {
       float a = fusor.angle2() - current_menu_angle_;
