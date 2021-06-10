@@ -1370,28 +1370,8 @@ SaberFett263Buttons() : PropBase() {}
         thrust_begin_millis_ = millis();
       }
     }
-// FETT263 Twist Menu
     if (menu_ || color_mode_ == CC_COLOR_LIST) {
-      if (millis() - last_rotate_ > 1000) {
-        float a = fusor.angle2() - current_menu_angle_;
-        if (a > M_PI) a-=M_PI*2;
-        if (a < -M_PI) a+=M_PI*2;
-        change_ = a;
-        if (a > twist_menu_ * 2/3) {
-          current_menu_angle_ += twist_menu_;
-          if (current_menu_angle_ > M_PI) current_menu_angle_ -= M_PI * 2;
-          Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-          current_menu_angle_ = fusor.angle2();
-          last_rotate_ = millis();
-        }
-        if (a < -twist_menu_ * 2/3) {
-          current_menu_angle_ -= twist_menu_;
-          if (current_menu_angle_ < M_PI) current_menu_angle_ += M_PI * 2;
-          Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-          current_menu_angle_ = fusor.angle2();
-          last_rotate_ = millis();
-        }
-      }
+      DetectMenuTurn();
     }
 
 // Fett263 Track Player
@@ -1437,6 +1417,29 @@ SaberFett263Buttons() : PropBase() {}
     PLAYBACK_ROTATE,
     PLAYBACK_RANDOM,
   };
+
+  void DetectMenuTurn() {
+     if (millis() - last_rotate_ > 1000) {
+      float a = fusor.angle2() - current_menu_angle_;
+      if (a > M_PI) a-=M_PI*2;
+      if (a < -M_PI) a+=M_PI*2;
+      change_ = a;
+      if (a > twist_menu_ * 2/3) {
+        current_menu_angle_ += twist_menu_;
+        if (current_menu_angle_ > M_PI) current_menu_angle_ -= M_PI * 2;
+        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+        current_menu_angle_ = fusor.angle2();
+        last_rotate_ = millis();
+      }
+      if (a < -twist_menu_ * 2/3) {
+        current_menu_angle_ -= twist_menu_;
+        if (current_menu_angle_ < M_PI) current_menu_angle_ += M_PI * 2;
+        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+        current_menu_angle_ = fusor.angle2();
+        last_rotate_ = millis();
+      }
+    }
+  }
 
 #ifdef FETT263_EDIT_MODE_MENU
 #define SUBMENUS 9
@@ -1742,6 +1745,7 @@ SaberFett263Buttons() : PropBase() {}
             break;
           default:
             PlayMenuSound("moption.wav");
+            break;
         }
   #else 
         switch (menu_sub_pos_) {
@@ -1968,6 +1972,7 @@ SaberFett263Buttons() : PropBase() {}
         show_length_.Stop(blade_num_);
         UpdateStyle(current_preset_.preset_num);
         MenuSave();
+        break;
       case MENU_COPY:          
         if (choice_) {
           int32_t pos = current_preset_.preset_num;
@@ -2455,7 +2460,7 @@ SaberFett263Buttons() : PropBase() {}
             PlayMenuSound("mexit.wav");
             break;
        }
-        break;
+       break;
   #if NUM_BLADES > 1
       case MENU_BLADE_STYLE:
         if (blade_num_ == NUM_BLADES) blade_num_ = 0;
@@ -2485,7 +2490,6 @@ SaberFett263Buttons() : PropBase() {}
         BladePreview(copy_blade_);
         SFX_mnum.Select(copy_blade_ - 1); 
         wav_player->PlayOnce(&SFX_mnum, 0.0);
-        break;
         break;           
       case MENU_BLADE_LENGTH:
         if (blade_num_ == NUM_BLADES) blade_num_ = 0;
@@ -2661,7 +2665,6 @@ SaberFett263Buttons() : PropBase() {}
         UpdateFont(current_preset_.preset_num);
         hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
         break;
-        break;
       case MENU_TRACK:
         if (track_player_) {
           track_player_->Stop();
@@ -2674,7 +2677,6 @@ SaberFett263Buttons() : PropBase() {}
         current_preset_.track = mkstr(track);
         current_preset_.Save();
         StartOrStopTrack();
-        break;
         break;
       case MENU_LENGTH:
         // Edit Blade Length
@@ -3046,7 +3048,6 @@ SaberFett263Buttons() : PropBase() {}
         SFX_mnum.Select(copy_blade_ - 1); 
         wav_player->PlayOnce(&SFX_mnum, 0.0);
         break;
-        break;
       case MENU_BLADE_LENGTH:
         if (blade_num_ <= 1) blade_num_ = NUM_BLADES + 1;
         blade_num_ -= 1;
@@ -3174,8 +3175,8 @@ SaberFett263Buttons() : PropBase() {}
         }
         break;
       case MENU_COLOR_MODE:
-        if (sub_dial_ < 0) sub_dial_ = 5;
-        sub_dial_ = (sub_dial_ - 1) % 4;
+        sub_dial_ -= 1;
+        if (sub_dial_ < 0) sub_dial_ = 3;
         switch (sub_dial_) {
           case 0:
             // Color List
@@ -3194,7 +3195,6 @@ SaberFett263Buttons() : PropBase() {}
             PlayMenuSound("mblack.wav");
             break;
           default:
-            PlayMenuSound("moption.wav");
             break;
           }
           break;
@@ -3232,7 +3232,6 @@ SaberFett263Buttons() : PropBase() {}
         UpdateFont(current_preset_.preset_num);
         hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
         break;
-        break;
       case MENU_TRACK:
         if (track_player_) {
           track_player_->Stop();
@@ -3245,7 +3244,6 @@ SaberFett263Buttons() : PropBase() {}
         current_preset_.track = mkstr(track);
         current_preset_.Save();
         StartOrStopTrack();
-        break;
         break;
       case MENU_LENGTH:
         if (blade_length_ > 2) {
