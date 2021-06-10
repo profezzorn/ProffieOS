@@ -1222,36 +1222,33 @@ SaberFett263Buttons() : PropBase() {}
       float a = fusor.angle2() - hsl_angle_;
       if (a > M_PI) a-=M_PI*2;      
       if (a < -M_PI) a+=M_PI*2;
+      float angle = 100;
+      switch (color_mode_) {
+        case EDIT_COLOR: angle = H_ANGLE; break;
+        case ZOOM_COLOR: angle = EDIT_MODE_ZOOM; break;
+        case EDIT_WHITE:
+        case EDIT_BLACK: angle = L_ANGLE; break;
+        default: break;
+      }
+      int steps = 0;
+      if (a > angle * 2/3) {
+        hsl_angle_ += angle;
+        if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI*2;
+        steps++;
+      }
+      if (a < -angle * 2/3) {
+        hsl_angle_ -= angle;
+        if (hsl_angle_ < M_PI) hsl_angle_ += M_PI*2;
+        steps--;
+      }
       switch (color_mode_) {
         default: break;
         case EDIT_COLOR:
-          if (a > H_ANGLE * 2/3) {
-            hsl_angle_ += H_ANGLE;
-            if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI * 2;
-            hsl_.H = fract(hsl_.H + H_CHANGE);
-          }
-          if (a < -H_ANGLE * 2/3) {
-            hsl_angle_ -= H_ANGLE;
-            if (hsl_angle_ < M_PI) hsl_angle_ += M_PI * 2;
-            hsl_.H = fract(hsl_.H - H_CHANGE);
-          }
-          break;
         case ZOOM_COLOR:
-          if (a > EDIT_MODE_ZOOM * 2/3) {
-            hsl_angle_ += EDIT_MODE_ZOOM;
-            if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI * 2;
-            hsl_.H = fract(hsl_.H + H_CHANGE);
-          }
-          if (a < -EDIT_MODE_ZOOM * 2/3) {
-            hsl_angle_ -= EDIT_MODE_ZOOM;
-            if (hsl_angle_ < M_PI) hsl_angle_ += M_PI * 2;
-            hsl_.H = fract(hsl_.H - H_CHANGE);
-          }
+          hsl_.H = fract(hsl_.H - H_CHANGE * steps);
           break;
         case EDIT_WHITE:
-          if (a > L_ANGLE * 2/3) {
-            hsl_angle_ += L_ANGLE;
-            if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI * 2;
+          if (steps > 0) {
             if (hsl_.L < 1.0) {
               hsl_.L = clamp(hsl_.L + 0.01, 0.5, 1.0);
               if (hsl_.L == 1.0) {
@@ -1260,9 +1257,7 @@ SaberFett263Buttons() : PropBase() {}
               }
             }
           }
-          if (a < -L_ANGLE * 2/3) {
-            hsl_angle_ -= L_ANGLE;
-            if (hsl_angle_ < M_PI) hsl_angle_ += M_PI * 2;
+          if (steps < 0) {
             if (hsl_.L > 0.5) {
               hsl_.L = clamp(hsl_.L - 0.01, 0.5, 1.0);
               if (hsl_.L == 0.5) {
@@ -1273,9 +1268,7 @@ SaberFett263Buttons() : PropBase() {}
           }
           break;
         case EDIT_BLACK:
-          if (a > L_ANGLE * 2/3) {
-            hsl_angle_ += L_ANGLE;
-            if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI * 2;
+          if (steps > 0) {
             if (hsl_.L < 0.5) {
               hsl_.L = clamp(hsl_.L + 0.01, 0.01, 0.5);
               if (hsl_.L == 0.5) {
@@ -1284,9 +1277,7 @@ SaberFett263Buttons() : PropBase() {}
               }
             }
           }
-          if (a < -L_ANGLE * 2/3) {
-            hsl_angle_ -= L_ANGLE;
-            if (hsl_angle_ < M_PI) hsl_angle_ += M_PI * 2;
+          if (steps < 0) {
             if (hsl_.L > 0.01) {
               hsl_.L = clamp(hsl_.L - 0.01, 0.01, 0.5);
               if (hsl_.L == 0.01) {
