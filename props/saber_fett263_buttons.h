@@ -937,6 +937,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
+  // Preview Color Editing on Blade
   void NewColor(int blade, int effect) {
     char new_color[32];
     Color16 color_source;
@@ -3907,7 +3908,7 @@ SaberFett263Buttons() : PropBase() {}
     TRACE(PROP, "end");
   }
 
-// Update Font/ Save Style
+// Update Font / Save Style in Edit Mode, skips Preon effect (except for Preon Editing previews) using FastOn
   virtual void UpdateFont(int preset_num) {
     TRACE(PROP, "start");
     bool on = SaberBase::IsOn();
@@ -3965,7 +3966,7 @@ SaberFett263Buttons() : PropBase() {}
     UpdateFont(0);
 }
 
-  // Go to the next Preset with update.
+  // Go to the next Preset skipping Preon effect with FastOn.
   virtual void next_preset_fast() {
 #ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num + 1);
@@ -3973,7 +3974,7 @@ SaberFett263Buttons() : PropBase() {}
     UpdateFont(current_preset_.preset_num + 1);
   }
 
-  // Go to the previous Preset with update.
+  // Go to the previous Preset skipping Preon effect with FastOn.
   virtual void previous_preset_fast() {
 #ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num - 1);
