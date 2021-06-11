@@ -3983,7 +3983,8 @@ SaberFett263Buttons() : PropBase() {}
   }
 
 #ifdef FETT263_DUAL_MODE_SOUND
-  void SelectOut() {
+  // Select out.wav based on blade orientation, up = odd, down = even
+  void SelectIgnitionSound() {
       Effect* effect;
       if (SFX_poweron) {
         effect = &SFX_poweron;
@@ -4092,7 +4093,7 @@ void PlayMenuSound(const char* file) {
           return true;
         } else {
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectOut();
+          SelectIgnitionSound();
 #endif          
           if (SFX_preon) {
             On();
@@ -4836,7 +4837,7 @@ void PlayMenuSound(const char* file) {
         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
         if (!menu_ && millis() > 3000) {
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectOut();
+          SelectIgnitionSound();
 #endif
           if (SFX_preon) {
             On();
@@ -4855,7 +4856,7 @@ void PlayMenuSound(const char* file) {
         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
         if (!menu_ && millis() > 3000) {
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectOut();
+          SelectIgnitionSound();
 #endif
           FastOn();
 #ifndef FETT263_SWING_ON_NO_BM
@@ -4908,7 +4909,7 @@ void PlayMenuSound(const char* file) {
         if (!menu_ && millis() - last_twist_ > 2000 &&
             millis() - saber_off_time_ > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectOut();
+          SelectIgnitionSound();
 #endif
           if (SFX_preon) {
             On();
@@ -4930,7 +4931,7 @@ void PlayMenuSound(const char* file) {
         if (!menu_ && millis() - last_twist_ > 2000 &&
             millis() - saber_off_time_ > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectOut();
+          SelectIgnitionSound();
 #endif        
           FastOn();
 #ifndef FETT263_TWIST_ON_NO_BM
@@ -4947,7 +4948,7 @@ void PlayMenuSound(const char* file) {
         if (!saved_gesture_control.stabon) return true;
         if (!menu_ && millis() - saber_off_time_ > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectOut();
+          SelectIgnitionSound();
 #endif        
           if (SFX_preon) {
             On();
@@ -4965,7 +4966,7 @@ void PlayMenuSound(const char* file) {
         if (!saved_gesture_control.stabon) return true;
         if (!menu_ && millis() - saber_off_time_ > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectOut();
+          SelectIgnitionSound();
 #endif        
           FastOn();
 #ifndef FETT263_STAB_ON_NO_BM
@@ -4981,7 +4982,7 @@ void PlayMenuSound(const char* file) {
         if (!saved_gesture_control.thruston) return true;
         if (!menu_ && millis() - saber_off_time_ > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectOut();
+          SelectIgnitionSound();
 #endif        
           if (SFX_preon) {
             On();
@@ -4999,7 +5000,7 @@ void PlayMenuSound(const char* file) {
         if (!saved_gesture_control.thruston) return true;
         if (!menu_ && millis() - saber_off_time_ > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectOut();
+          SelectIgnitionSound();
 #endif        
           FastOn();
 #ifndef FETT263_THRUST_ON_NO_BM
@@ -5029,7 +5030,7 @@ void PlayMenuSound(const char* file) {
           last_twist_ = millis();
           Off();
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectOut();
+          SelectIgnitionSound();
 #endif        
           FastOn();
         }
@@ -5042,7 +5043,7 @@ void PlayMenuSound(const char* file) {
           Off();
           previous_preset();
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectOut();
+          SelectIgnitionSound();
 #endif        
           FastOn();
         }
