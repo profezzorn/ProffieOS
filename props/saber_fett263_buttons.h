@@ -972,7 +972,11 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 
   SoundQueue<16> sound_queue_;
-
+  
+  bool Play(const char *sound) {
+    return Play(SoundToPlay(sound));
+  }
+  
   enum SayType {
     SAY_BATTERY,
     SAY_DECIMAL,
