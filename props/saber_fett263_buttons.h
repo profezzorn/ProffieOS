@@ -4157,6 +4157,7 @@ void PlayMenuSound(const char* file) {
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):          
+        // Track Player - Play Random
         if (menu_) {        
           if (menu_type_ == TRACK_PLAYER) {
             track_mode_ = PLAYBACK_RANDOM;
@@ -4201,6 +4202,7 @@ void PlayMenuSound(const char* file) {
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF | BUTTON_POWER):
 #ifdef FETT263_EDIT_MODE_MENU
+        // Enter Edit Mode
         if (!menu_) {
           if (track_player_) {
             track_player_->Stop();
@@ -4223,6 +4225,7 @@ void PlayMenuSound(const char* file) {
           FastOn();
         } 
 #else
+        // If Edit Mode Menu Disabled Save .ini files for SD card editing
         GenerateIniFiles();
         PlayMenuSound("msave.wav");
 #endif
