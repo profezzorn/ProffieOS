@@ -14,20 +14,45 @@ IMAGE_FILESET(force);
 
 
 template<int Width, class col_t>
-class Display {
+class Display : public MonoFrame<Width, col_t> {
 public:
   virtual void Page() = 0;
   virtual void SB_Top() = 0;
 };
 
 template<int Width, class col_t>
-class DisplayControllerBase : public MonoFrame<Width, col_t> {
+class DisplayControllerBase {
 public:
   // Return zero if frame is not yet ready.
   // May be called before it's time to actually display next frame.
-  virtual int FillFrameBuffer() = 0;
+  virtual int FillFrameBuffer(bool advance) = 0;
   virtual void SetDisplay(Display<Width, col_t>* display) = 0;
 };
+
+#if 0
+class DisplayHelper {
+  DisplayControllerBase *a;
+  int t_;
+  int FillFrameBuffer() {
+    t_ += a->FillFrameBuffer(t_ <= 0);
+  }
+  void Advance(int t) { t_ -= t; }
+};
+class Combine {
+  DisplayHelper a_, b_;
+  int last_t_;
+
+  int FilleFrameBuffer(bool advance) {
+    if (advance) {
+      a_.Advance(last_t_);
+      b_.Advance(last_t_);
+    }
+    int last_t_ = a_.FillFrameBuffer();
+    if (last_t_ > 0) last_t_ = std::min(last_t_, b_.FillFrameBuffer());
+    return last_t_;
+  }
+};
+#endif
 
 template<int Width, class col_t>
 class StandardDisplayController : public DisplayControllerBase<Width, col_t>, SaberBase, private AudioStreamWork {
@@ -55,7 +80,7 @@ public:
 
   // Clear and go to native mode.
   void Clear() {
-    MonoFrame<WIDTH, col_t>::Clear();
+    display_->Clear();
     layout_ = LAYOUT_NATIVE;
     xor_ = 0;
     invert_y_ = false;
@@ -68,22 +93,22 @@ public:
     case LAYOUT_NATIVE:
       break;
     case LAYOUT_LANDSCAPE:
-      MonoFrame<WIDTH, col_t>::ConvertLandscape(invert_y);
+      display_->ConvertLandscape(invert_y);
       invert_y = false;
       break;
     case LAYOUT_PORTRAIT:
-      MonoFrame<WIDTH, col_t>::ConvertPortrait();
+      display_->ConvertPortrait();
     }
     if (invert_y) {
-      MonoFrame<WIDTH, col_t>::FlipY();
+      display_->FlipY();
     }
     if (xor_) {
-      MonoFrame<WIDTH, col_t>::Invert();
+      display_->Invert();
     }
   }
 
   // Fill frame buffer and return how long to display it.
-  int FillFrameBuffer() override {
+  int FillFrameBuffer(bool advance) override {
     switch (screen_) {
       default:
       case SCREEN_OFF:
@@ -95,21 +120,21 @@ public:
         // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
         // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
 	if (WIDTH < 128) {
-	  MonoFrame<WIDTH, col_t>::DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
+	  display_->DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
 	} else {
-	  MonoFrame<WIDTH, col_t>::DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
+	  display_->DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
 	}
-	MonoFrame<WIDTH, col_t>::DrawText(version,0,31, Starjedi10pt7bGlyphs);
+	display_->DrawText(version,0,31, Starjedi10pt7bGlyphs);
 	if (HEIGHT > 32) {
-	  MonoFrame<WIDTH, col_t>::DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
-	  MonoFrame<WIDTH, col_t>::DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
+	  display_->DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
+	  display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
 	}
         screen_ = SCREEN_PLI;
         return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
 	Clear();
-        MonoFrame<WIDTH, col_t>::DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
+	display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
 	if (HEIGHT > 32) {
 	  char tmp[32];
 	  strcpy(tmp, "volts x.xx");
@@ -117,23 +142,23 @@ public:
 	  tmp[6] = '0' + (int)floorf(v);
 	  tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
 	  tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
-	  MonoFrame<WIDTH, col_t>::DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
+	  display_->DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
 	}
         return 200;  // redraw once every 200 ms
 
       case SCREEN_MESSAGE: {
 	Clear();
-     // Aurebesh Font option.
-      #ifdef USE_AUREBESH_FONT
+	// Aurebesh Font option.
+#ifdef USE_AUREBESH_FONT
         const Glyph* font = Aurebesh10pt7bGlyphs;
-      #else
+#else
         const Glyph* font = Starjedi10pt7bGlyphs;
-      #endif
+#endif
         if (strchr(message_, '\n')) {
-          MonoFrame<WIDTH, col_t>::DrawText(message_, 0, 15, font);
+          display_->DrawText(message_, 0, 15, font);
         } else {
 	  // centered
-          MonoFrame<WIDTH, col_t>::DrawText(message_, 0, HEIGHT / 2 + 7, font);
+          display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
         screen_ = SCREEN_PLI;
         return font_config.ProffieOSFontImageDuration;
@@ -146,10 +171,11 @@ public:
           if (!SaberBase::IsOn()) {
             screen_ = SCREEN_PLI;
             if (frame_count_ == 1) return font_config.ProffieOSFontImageDuration;
-            return FillFrameBuffer();
+            return FillFrameBuffer(advance);
           }
         }
         if (!frame_available_) {
+	  advance_ = advance;
 	  lock_fb_ = false;
           scheduleFillBuffer();
 	  if (!frame_available_) {
@@ -389,7 +415,7 @@ public:
     }
     // STDOUT << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
     if (f->Available() < sizeof(MonoFrame<WIDTH, col_t>::frame_buffer_)) return false;
-    f->Read((uint8_t*)MonoFrame<WIDTH, col_t>::frame_buffer_, sizeof(MonoFrame<WIDTH, col_t>::frame_buffer_));
+    f->Read((uint8_t*)display_->frame_buffer_, sizeof(MonoFrame<WIDTH, col_t>::frame_buffer_));
     ypos_++;
     if (looped_frames_ > 1) {
       if (ypos_ >= looped_frames_) {
@@ -417,6 +443,12 @@ public:
     }
     if (lock_fb_) return true;
     if (!frame_available_) {
+      if (!advance_) {
+	file_.Seek(last_file_pos_);
+      } else {
+	advance_ = false;
+      }
+      last_file_pos_ = file_.Tell();
       if (!ReadImage(&file_)) {
         file_.Close();
         eof_ = true;
@@ -447,6 +479,8 @@ private:
   volatile int32_t looped_frames_ = 0;
   int32_t ypos_ = 0;
   bool lock_fb_ = false;
+  uint32_t last_file_pos_ = 0;
+  volatile bool advance_ = true;
 
   // True if IMG_on is looped.
   volatile bool looped_on_ = false;
@@ -528,11 +562,11 @@ public:
   uint8_t chunk[chunk_size + 1];
   void GetChunk() {
     chunk[0] = 0x40;
-    memcpy(chunk + 1, i + (unsigned char *)controller_->frame_buffer_, chunk_size);
+    memcpy(chunk + 1, i + (unsigned char *)Display<WIDTH, col_t>::frame_buffer_, chunk_size);
   }
 
   int FillFrameBuffer() {
-    return controller_->FillFrameBuffer();
+    return controller_->FillFrameBuffer(true);
   }
 
   void Page() override {
