@@ -897,18 +897,15 @@ SaberFett263Buttons() : PropBase() {}
     itoa(calc_, style_arg, 10);
     current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), set_num_ + 2, style_arg));
     current_preset_.Save();
-    // Handle location/size preview in Style Settings
+    // Stop location/size previews in Style Settings Mode
     switch (set_num_) {
-      // Stop Clash Location Preview
-      case 21:
+      case LOCKUP_POSITION_ARG:
         show_lockup_position_.Stop(blade_num_);
         break;
-      // Stop Drag Size Preview
-      case 22:
+      case DRAG_SIZE_ARG:
         show_drag_size_.Stop(blade_num_);
         break;
-      // Stop Emitter Size Preview
-      case 23:
+      case EMITTER_SIZE_ARG:
         show_emitter_size_.Stop(blade_num_);
       default:
         break;
@@ -919,14 +916,15 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void CancelStyleSetting() {
+    // Stop location/size preview in Style Settings Mode
     switch (set_num_) {
-      case 21:
+      case LOCKUP_POSITION_ARG:
         show_lockup_position_.Stop(blade_num_);
         break;
-      case 22:
+      case DRAG_SIZE_ARG:
         show_drag_size_.Stop(blade_num_);
         break;
-      case 23:
+      case EMITTER_SIZE_ARG:
         show_emitter_size_.Stop(blade_num_);
         break;
       default:
@@ -1490,7 +1488,7 @@ SaberFett263Buttons() : PropBase() {}
     MENU_IGNITION_TIME,
     MENU_RETRACTION_OPTION,
     MENU_RETRACTION_TIME,
-    MENU_CLASH_LOCATION,
+    MENU_LOCKUP_POSITION,
     MENU_DRAG_SIZE,
     MENU_EMITTER_SIZE,
     MENU_PREON_OPTION,
@@ -1789,87 +1787,72 @@ SaberFett263Buttons() : PropBase() {}
             break;
         }
         switch (effect_num_) {
-          case 1:
-            // Base Color Edit
+          case BASE_COLOR_ARG:
             menu_type_ = COLOR_BASE;
             ShowFull();
             break;
-          case 2:
-            // Alt Color Edit
+          case ALT_COLOR_ARG:
             menu_type_ = COLOR_ALT;
             ShowFull();
             break;
-          case 3:
-            // Blast Color Edit
+          case BLAST_COLOR_ARG:
             menu_type_ = COLOR_BLAST;
             bump_color_.Start(blade_num_, SkipWord(SkipWord(current_preset_.GetStyle(blade_num_))));                 
             ShowPart();
             break;
-          case 4:
-            // Clash Color Edit
+          case CLASH_COLOR_ARG:
             menu_type_ = COLOR_CLASH;
             bump_color_.Start(blade_num_, SkipWord(SkipWord(current_preset_.GetStyle(blade_num_))));                 
             ShowPart();
             break;
-          case 5:
-            // Lockup Color Edit
+          case LOCKUP_COLOR_ARG:
             menu_type_ = COLOR_LOCKUP;
             bump_color_.Start(blade_num_, SkipWord(SkipWord(current_preset_.GetStyle(blade_num_))));                 
             ShowPart();
             break;
-          case 6:
-            // Drag Color Edit
+          case DRAG_COLOR_ARG:
             menu_type_ = COLOR_DRAG;
             tip_color_.Start(blade_num_, SkipWord(SkipWord(current_preset_.GetStyle(blade_num_))));
             ShowPart();
             break;
-          case 7:
-            // Lightning Block Color Edit
+          case LB_COLOR_ARG:
             menu_type_ = COLOR_LB;
             bump_color_.Start(blade_num_, SkipWord(SkipWord(current_preset_.GetStyle(blade_num_))));                 
             ShowPart();
             break;
-          case 8:
-            // Stab Color Edit
+          case STAB_COLOR_ARG:
             menu_type_ = COLOR_STAB;
             tip_color_.Start(blade_num_, SkipWord(SkipWord(current_preset_.GetStyle(blade_num_))));
             ShowPart();
             break;
-          case 9:
-            // PreOn Color Edit
+          case PREON_COLOR_ARG:
             menu_type_ = COLOR_PREON;
             pre_color_.Start(blade_num_, SkipWord(SkipWord(current_preset_.GetStyle(blade_num_))));
             ShowPart();
             break;
-          case 10:
-            // Ignition Color Edit
+          case IGNITION_COLOR_ARG:
             menu_type_ = COLOR_IGNITE;
             ShowFull();
             break;
-          case 11:
-            // Retraction Color Edit
+          case RETRACTION_COLOR_ARG:
             menu_type_ = COLOR_RETRACT;
             ShowFull();
             break;
-          case 12:
-            // PstOff Color Edit
+          case POSTOFF_COLOR_ARG:
             menu_type_ = COLOR_PSTOFF;
             pre_color_.Start(blade_num_, SkipWord(SkipWord(current_preset_.GetStyle(blade_num_))));
             ShowPart();
             break;
-          case 13:
-            // Swing Color Edit
+          case SWING_COLOR_ARG:
             menu_type_ = COLOR_SWING;
             ShowFull();
             break;
-          case 14:
-            // Emitter Color Edit
+          case EMITTER_COLOR_ARG:
             menu_type_ = COLOR_EMITTER;
             hilt_color_.Start(blade_num_, SkipWord(SkipWord(current_preset_.GetStyle(blade_num_))));
             ShowPart();
             break;
-          case 15:
-            // Off Color Edit
+          case OFF_COLOR_ARG:
             menu_type_ = COLOR_OFF;
             ShowFull();
             break;
@@ -2279,20 +2262,20 @@ SaberFett263Buttons() : PropBase() {}
         PlayMenuSound("mselect.wav");
         if (NUM_BLADES == 1) blade_num_ = 1;
         switch (set_num_) {
-          case 16:
+          case STYLE_OPTION_ARG:
             menu_type_ = MENU_STYLE_OPTION;
             arg_revert_ = strtol (argspace, NULL, 0);
             break;
-          case 17:
+          case IGNITION_OPTION_ARG:
             menu_type_ = MENU_IGNITION_OPTION;
             arg_revert_ = strtol (argspace, NULL, 0);
             break;
-          case 18:
+          case IGNITION_TIME_ARG:
             PlayMenuSound("mselect.wav");
             menu_type_ = MENU_IGNITION_TIME;
             arg_revert_ = strtol (argspace, NULL, 0);
             break;
-          case 19:
+          case RETRACTION_OPTION_ARG:
             PlayMenuSound("mselect.wav");
             menu_type_ = MENU_RETRACTION_OPTION;
             char ig[32];
@@ -2301,7 +2284,7 @@ SaberFett263Buttons() : PropBase() {}
             current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 19, "1"));
             arg_revert_ = strtol(argspace, NULL, 0);
             break;
-          case 20:
+          case RETRACTION_TIME_ARG:
             PlayMenuSound("mselect.wav");
             menu_type_ = MENU_RETRACTION_TIME;
             char igt[32];
@@ -2310,32 +2293,32 @@ SaberFett263Buttons() : PropBase() {}
             current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 19, "1"));
             arg_revert_ = strtol(argspace, NULL, 0);
             break;
-          case 21:
+          case LOCKUP_POSITION_ARG:
             PlayMenuSound("mselect.wav");
-            menu_type_ = MENU_CLASH_LOCATION;
+            menu_type_ = MENU_LOCKUP_POSITION;
             ShowColorStyle::SetColor(GetColorArg(blade_num_, 4));
             show_lockup_position_.Start(blade_num_);
             break;
-          case 22:
+          case DRAG_SIZE_ARG:
             PlayMenuSound("mselect.wav");
             menu_type_ = MENU_DRAG_SIZE;
             ShowColorStyle::SetColor(GetColorArg(blade_num_, 6));
             show_drag_size_.Start(blade_num_);
             break;
-          case 23:
+          case EMITTER_SIZE_ARG:
             PlayMenuSound("mselect.wav");
             menu_type_ = MENU_EMITTER_SIZE;
             ShowColorStyle::SetColor(GetColorArg(blade_num_, 1));
             show_emitter_size_.Start(blade_num_);
             break;
-          case 24:
+          case PREON_OPTION_ARG:
             PlayMenuSound("moption.wav");
             if (SFX_preon) {
               menu_type_ = MENU_PREON_OPTION;
               arg_revert_ = strtol (argspace, NULL, 0);
             }
             break;
-          case 25:
+          case PREON_SIZE_ARG:
             if (!SFX_preon) {
               PlayMenuSound("moption.wav");
             } else {
@@ -2366,7 +2349,7 @@ SaberFett263Buttons() : PropBase() {}
          current_preset_.Save();
          MenuSave();
          break;
-      case MENU_CLASH_LOCATION:
+      case MENU_LOCKUP_POSITION:
       case MENU_DRAG_SIZE:
       case MENU_EMITTER_SIZE:
         SaveStyleSetting();
@@ -2391,26 +2374,41 @@ SaberFett263Buttons() : PropBase() {}
       }
   }
 
-// Edit Mode Dial Right      
-  void MenuDialRight() {
+// Edit Mode Dial
+  void MenuDial(int direction) {
     switch (menu_type_) {
+      default:
+        break;
       case MENU_PRESET:
-        if (SaberBase::IsOn()) {
-          next_preset_fast();
+        if (direction > 0) {
+          if (SaberBase::IsOn()) {
+            next_preset_fast();
+          } else {
+            next_preset();
+          }
         } else {
-          next_preset();
+          if (SaberBase::IsOn()) {
+            previous_preset_fast();
+          } else {
+            previous_preset();
+          }
         }
         break;
       case MENU_VOLUME:
-         VolumeUp();
-         break;
+        if (direction > 0) {
+          VolumeUp();
+        } else {
+          VolumeDown();
+        }
+        break;
       case TRACK_PLAYER:
         if (track_player_) {
           track_player_->Stop();
           track_player_.Free();
         }
-        track_num_ += 1;
+        track_num_ += direction;
         if (track_num_ > num_tracks_ - 1) track_num_ = 0;
+        if (track_num_ < 0) track_num_ = num_tracks_ - 1;
         char playtrack[128];
         RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, playtrack, sizeof(playtrack));
   #ifdef ENABLE_AUDIO
@@ -2428,8 +2426,9 @@ SaberFett263Buttons() : PropBase() {}
         break;
   #ifdef FETT263_EDIT_MODE_MENU
       case MENU_TOP:
-        menu_top_pos_ = (menu_top_pos_ + 1) % SUBMENUS;
-        if (menu_top_pos_ == 0) menu_top_pos_ = 1;
+        menu_top_pos_ += direction;
+        if (menu_top_pos_ <= 0) menu_top_pos_ = SUBMENUS;
+        if (menu_top_pos_ > SUBMENUS) menu_top_pos_ = 1;
         switch (menu_top_pos_) {
           case 1:
             PlayMenuSound("mstyle.wav");
@@ -2459,61 +2458,53 @@ SaberFett263Buttons() : PropBase() {}
        break;
   #if NUM_BLADES > 1
       case MENU_BLADE_STYLE:
-        if (blade_num_ == NUM_BLADES) blade_num_ = 0;
-        blade_num_ += 1;
-        BladePreview(blade_num_);
-        SFX_mnum.Select(blade_num_ - 1); 
-        wav_player->PlayOnce(&SFX_mnum, 0.0);
-        break;
       case MENU_BLADE_COLOR:
-        if (blade_num_ == NUM_BLADES) blade_num_ = 0;
-        blade_num_ += 1;
-        BladePreview(blade_num_);
-        SFX_mnum.Select(blade_num_ - 1); 
-        wav_player->PlayOnce(&SFX_mnum, 0.0);
-        break;
       case MENU_BLADE_SETTING:
-        if (blade_num_ == NUM_BLADES) blade_num_ = 0;
-        blade_num_ += 1;
-        BladePreview(blade_num_);
-        SFX_mnum.Select(blade_num_ - 1); 
-        wav_player->PlayOnce(&SFX_mnum, 0.0);
-        break;
-      case MENU_BLADE_COPY:
-        copy_blade_ = (copy_blade_ + 1) % NUM_BLADES + 1;
-        if (copy_blade_ == 0) copy_blade_ = (copy_blade_ + 1) % NUM_BLADES + 1;
-        if (copy_blade_ == blade_num_) copy_blade_ = (copy_blade_ + 1) % NUM_BLADES + 1;
-        BladePreview(copy_blade_);
-        SFX_mnum.Select(copy_blade_ - 1); 
-        wav_player->PlayOnce(&SFX_mnum, 0.0);
-        break;           
+      case MENU_BLADE_COPY:            
       case MENU_BLADE_LENGTH:
-        if (blade_num_ == NUM_BLADES) blade_num_ = 0;
-        blade_num_ += 1;
+        blade_num_ += direction;
+        if (blade_num_ > NUM_BLADES) blade_num_ = 1;
+        if (blade_num_ < 1) blade_num_ = NUM_BLADES;
         BladePreview(blade_num_);
         SFX_mnum.Select(blade_num_ - 1); 
         wav_player->PlayOnce(&SFX_mnum, 0.0);
         break;
       case MENU_COPY_COLOR:
-        choice_ = true;
-        PlayMenuSound("mconfirm.wav");
+      case MENU_RESET_COLOR:           
+      case MENU_COPY:
+      case MENU_DELETE:
+        if (direction > 0) {
+          choice_ = true;
+          PlayMenuSound("mconfirm.wav");
+        } else {
+          choice_ = false;
+          PlayMenuSound("mcancel.wav");
+        }
         break;
+      }
   #endif
       case MENU_STYLE:
-        style_num_ = (style_num_ + 1)% num_presets_;
+        style_num_ += direction;
+        if (style_num_ < 0) style_num_ = num_presets_ - 1;
+        if (style_num_ > num_presets_ - 1) style_num_ = 0;
         char style_arg[10];
         itoa(style_num_, style_arg, 10);
         current_preset_.SetStyle(blade_num_, style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg)); 
         current_preset_.Save();
-        PlayMenuSound("mup.wav");
+        if (direction > 0) {
+          PlayMenuSound("mup.wav");
+        } else {
+          PlayMenuSound("mdown.wav");
+        }
         UpdateStyle(current_preset_.preset_num);
         break;
       case MENU_COLOR:
         break;
       case MENU_COLOR_SUB:
   #if NUM_BLADES == 1
-        menu_sub_pos_ = (menu_sub_pos_ + 1) % 3;
-        if (menu_sub_pos_ == 0) menu_sub_pos_ = 1;
+        menu_sub_pos_ += direction;
+        if (menu_sub_pos_ <= 0) menu_sub_pos_ = 2;
+        if (menu_sub_pos_ > 2) menu_sub_pos_ = 1;
         switch (menu_sub_pos_) {
           case 1:
             PlayMenuSound("mcolorop.wav");
@@ -2523,8 +2514,9 @@ SaberFett263Buttons() : PropBase() {}
             break;
         }
   #else
-        menu_sub_pos_ = (menu_sub_pos_ + 1) % 4;
-        if (menu_sub_pos_ == 0) menu_sub_pos_ = 1;
+        menu_sub_pos_ += direction;
+        if (menu_sub_pos_ <= 0) menu_sub_pos_ = 3;
+        if (menu_sub_pos_ > 3) menu_sub_pos_ = 1;
         switch (menu_sub_pos_) {
           case 1:
             PlayMenuSound("mcolorop.wav");
@@ -2540,75 +2532,63 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_EFFECT:
         while (true) {
-          effect_num_ = (effect_num_ + 1)% COLOR_SUB;
+          effect_num_ += direction;
+          if (effect_num_ <= 0) effect_num_ = COLOR_SUB;
+          if (effect_num_ > COLOR_SUB) effect_num_ = 1;
           if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 2)) break;
         }
-        if (effect_num_ == 0) effect_num_ = 1;
         switch (effect_num_) {
-          case 1:
-            // Base Color Edit
+          case BASE_COLOR_ARG:
             PlayMenuSound("mbase.wav");
             break;
-          case 2:
-            // Alt Color Edit
+          case ALT_COLOR_ARG:
             PlayMenuSound("malt.wav");
             break;
-          case 3:
-            // Blast Color Edit
+          case BLAST_COLOR_ARG:
             PlayMenuSound("mblast.wav");
             break;
-          case 4:
-            // Clash Color Edit
+          case CLASH_COLOR_ARG:
             PlayMenuSound("mclash.wav");
             break;
-          case 5:
-            // Lockup Color Edit
+          case LOCKUP_COLOR_ARG:
             PlayMenuSound("mlockup.wav");
             break;
-          case 6:
-            // Drag Color Edit
+          case DRAG_COLOR_ARG:
             PlayMenuSound("mdrag.wav");
             break;
-          case 7:
-            // Lightning Block Color Edit
+          case LB_COLOR_ARG:
             PlayMenuSound("mlb.wav");
             break;
-          case 8:
-            // Stab Color Edit
+          case STAB_COLOR_ARG:
             PlayMenuSound("mstab.wav");
             break;
-          case 9:
-            // PreOn Color Edit
+          case PREON_COLOR_ARG:
             PlayMenuSound("mpreon.wav");
             break;
-          case 10:
-            // Ignition Color Edit
+          case IGNITION_COLOR_ARG:
             PlayMenuSound("mignite.wav");
             break;
-          case 11:
-            // Retraction Color Edit
+          case RETRACTION_COLOR_ARG:
             PlayMenuSound("mretract.wav");
             break;
-          case 12:
-            // PstOff Color Edit
+          case POSTOFF_COLOR_ARG:
             PlayMenuSound("mpstoff.wav");
             break;
-          case 13:
-            // Swing Color Edit
+          case SWING_COLOR_ARG:
             PlayMenuSound("mswing.wav");
             break;
-          case 14:
-            // Emitter Color Edit
+          case EMITTER_COLOR_ARG:
             PlayMenuSound("memitter.wav");
             break;
-          case 15:
-            // Off Color Edit
+          case OFF_COLOR_ARG:
             PlayMenuSound("moff.wav");
             break;
         }
         break;
       case MENU_COLOR_MODE:
-        sub_dial_ = (sub_dial_ + 1) % 4;
+        sub_dial_ += direction;
+        if (sub_dial_ < 0) sub_dial_ = 3;
+        if (sub_dial_ > 3) sub_dial_ = 0;
         switch (sub_dial_) {
           case 0:
             PlayMenuSound("mcolorlt.wav");
@@ -2644,15 +2624,22 @@ SaberFett263Buttons() : PropBase() {}
       case COLOR_OFF:
         // Color List
         if (color_mode_ == COLOR_LIST) {
-          dial_ = (dial_ + 1) % NELEM(color_list_);
+          dial_ += direction;
+          if (dial_ < 0) dial_ = NELEM(color_list_) - 1;
+          if (dial_ > NELEM(color_list_) - 1) dial_ = 0;
           ShowColorStyle::SetColor(Color16(color_list_[dial_]));
-          PlayMenuSound("mup.wav");
+          if (direction > 0) {
+            PlayMenuSound("mup.wav");
+          } else {
+            PlayMenuSound("mdown.wav");
+          }
           break;
         }
         break;
       case MENU_FONT:
-        font_num_ += 1;
-        if (font_num_ >= num_fonts_) font_num_ = 0;
+        font_num_ += direction;
+        if (font_num_ > num_fonts_ - 1) font_num_ = 1;
+        if (font_num_ <= 0) font_num_ = num_fonts_ - 1;
         char font[128];
         RunCommandAndGetSingleLine("list_fonts", nullptr, font_num_, font, sizeof(font));
         strcat(font, ";common");
@@ -2666,8 +2653,9 @@ SaberFett263Buttons() : PropBase() {}
           track_player_->Stop();
           track_player_.Free();
         }
-        track_num_ += 1;
-        if (track_num_ >= num_tracks_) track_num_ = 0;
+        track_num_ += direction;
+        if (track_num_ > num_tracks_ - 1) track_num_ = 1;
+        if (track_num_ <= 0) track_num_ = num_tracks_ - 1;
         char track[128];
         RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, track, sizeof(track));
         current_preset_.track = mkstr(track);
@@ -2676,220 +2664,294 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_LENGTH:
         // Edit Blade Length
-        if (blade_length_ < max_length_) {
-          blade_length_ += 1;
+        if (blade_length_ < max_length_ && blade_length_ > 2) {
+          blade_length_ += direction;
           length_edit_length = blade_length_ - 1;
-          PlayMenuSound("mup.wav");
+          if (direction > 0) {
+            PlayMenuSound("mup.wav");
+          } else {
+            PlayMenuSound("mdown.wav");
+          }
           SetBladeLength(blade_num_, blade_length_);
           SaveState(current_preset_.preset_num);
         } else {
-          PlayMenuSound("mmax.wav");
+          if (blade_length_ == max_length_) PlayMenuSound("mmax.wav");
+          if (blade_length_ == 1) PlayMenuSound("mmin.wav");
         }
-        break;
-      case MENU_RESET_COLOR:           
-        choice_ = true;
-        PlayMenuSound("maccept.wav");
         break;         
       case MENU_GESTURE_SUB:
-        effect_num_ += 1;
-        if (effect_num_ == GESTURE_OPTIONS + 1) effect_num_ = 1;
+        effect_num_ += direction;
+        if (effect_num_ <= 0) effect_num_ = GESTURE_OPTIONS;
+        if (effect_num_ > GESTURE_OPTIONS) effect_num_ = 1;
         switch (effect_num_) {
           case 1:
+          // Swing Ignition
             PlayMenuSound("mswingon.wav");
             break;
           case 2:
+          // Swing On Speed
             PlayMenuSound("mswingsp.wav");
             break;
           case 3:
+          // Twist Ignition
             PlayMenuSound("mtwiston.wav");
             break;
           case 4:
+          // Thrust Ignition
             PlayMenuSound("mthrston.wav");
             break;
           case 5:
+          // Stab Ignition
             PlayMenuSound("mstabon.wav");
             break;
           case 6:
+          // Force Push
             PlayMenuSound("mpush.wav");
             break;
           case 7:
+          // Force Push Length
             PlayMenuSound("mpushlen.wav");
             break;
           case 8:
+          // Twist Retraction
             PlayMenuSound("mtwstoff.wav");
             break;
           case 9:
+          // Lockup Delay
             PlayMenuSound("mlockdly.wav");
             break;
           case 10:
+          // Clash Detection Level
             PlayMenuSound("mbmclash.wav");
             break;
           case 11:
+          // Power Lock
             PlayMenuSound("mpwrlock.wav");
             break;
           case 12:
+          // Maximum Clash Strength
             PlayMenuSound("maxclash.wav");
             break;
         }
         break;
       case MENU_SWINGON:
-        choice_ = true;
-        PlayMenuSound("menable.wav");
+      case MENU_TWISTON:
+      case MENU_THRUSTON:
+      case MENU_STABON:
+      case MENU_FORCEPUSH:
+      case MENU_TWISTOFF:
+      case MENU_POWERLOCK:
+        if (direction > 0) {
+          choice_ = true;
+          PlayMenuSound("menable.wav");
+        } else {
+          choice_ = false;
+          PlayMenuSound("mdisable.wav");
+        }
         break;         
       case MENU_SWINGON_SPEED:
-        if (calc_ < 600) {
-          PlayMenuSound("mup.wav");
-          calc_ += 50;
-        }
-        if (calc_ >= 600) {
-          calc_ = 600;
-          PlayMenuSound("mmax.wav");
+        if (direction > 0) {
+          if (calc_ < 600) {
+            PlayMenuSound("mup.wav");
+            calc_ += 50;
+          }
+          if (calc_ >= 600) {
+            calc_ = 600;
+            PlayMenuSound("mmax.wav");
+          }
+        } else {
+          if (calc_ > 200) {
+            PlayMenuSound("mdown.wav");
+            calc_ -= 50;
+          }
+          if (calc_ <= 200) {
+            calc_ = 200;
+            PlayMenuSound("mmin.wav");
+          }
         }
         SayNumber(calc_, SAY_WHOLE);
         break;
-      case MENU_TWISTON:
-        choice_ = true;
-        PlayMenuSound("menable.wav");
-        break;         
-      case MENU_THRUSTON:
-        choice_ = true;
-        PlayMenuSound("menable.wav");
-        break;         
-      case MENU_STABON:
-        choice_ = true;
-        PlayMenuSound("menable.wav");
-        break;         
-      case MENU_FORCEPUSH:
-        choice_ = true;
-        PlayMenuSound("menable.wav");
-        break;         
       case MENU_FORCEPUSH_LENGTH:
       case MENU_CLASH_DETECT:
-        if (calc_ < 10) {
-          PlayMenuSound("mup.wav");
-          calc_ += 1;
-        }
-        if (calc_ >= 10) {
-          calc_ = 10;
-          PlayMenuSound("mmax.wav");
+        if (direction > 0) {
+          if (calc_ < 10) {
+            PlayMenuSound("mup.wav");
+            calc_ += 1;
+          }
+          if (calc_ >= 10) {
+            calc_ = 10;
+            PlayMenuSound("mmax.wav");
+          }
+        } else {
+          if (calc_ > 1) {
+            PlayMenuSound("mdown.wav");
+            calc_ -= 1;
+          }
+          if (calc_ <= 1) {
+            calc_ = 1;
+            PlayMenuSound("mmin.wav");
+          }          
         }
         SayNumber(calc_, SAY_WHOLE);
         break;
       case MENU_MAX_CLASH:
-        if (calc_ < 16) {
-          PlayMenuSound("mup.wav");
-          calc_ += 1;
-        }
-        if (calc_ >= 16) {
-          calc_ = 16;
-          PlayMenuSound("mmax.wav");
+        if (direction > 0) {
+          if (calc_ < 16) {
+            PlayMenuSound("mup.wav");
+            calc_ += 1;
+          }
+          if (calc_ >= 16) {
+            calc_ = 16;
+            PlayMenuSound("mmax.wav");
+          }
+        } else {
+          if (calc_ > 8) {
+            PlayMenuSound("mdown.wav");
+            calc_ -= 1;
+          }
+          if (calc_ <= 8) {
+            calc_ = 8;
+            PlayMenuSound("mmin.wav");
+          }          
         }
         SayNumber(calc_, SAY_WHOLE);
-        break;
-      case MENU_TWISTOFF:
-        choice_ = true;
-        PlayMenuSound("menable.wav");
         break;         
       case MENU_LOCKUP_DELAY:
-        if (calc_ < 1200) {
-          PlayMenuSound("mup.wav");
-          calc_ += 100;
-        }
-        if (calc_ >= 1200) {
-          calc_ = 1200;
-          PlayMenuSound("mmax.wav");
+        if (direction > 0) {
+          if (calc_ < 1200) {
+            PlayMenuSound("mup.wav");
+            calc_ += 100;
+          }
+          if (calc_ >= 1200) {
+            calc_ = 1200;
+            PlayMenuSound("mmax.wav");
+          }
+        } else {
+          if (calc_ > 200) {
+            PlayMenuSound("mdown.wav");
+            calc_ -= 100;
+          }
+          if (calc_ <= 200) {
+            calc_ = 200;
+            PlayMenuSound("mmin.wav");
+          }
         }
         SayNumber(calc_, SAY_WHOLE);
-        break;
-      case MENU_POWERLOCK:
-        choice_ = true;
-        PlayMenuSound("menable.wav");
         break;         
       case MENU_SETTING_SUB:
-        if (menu_sub_pos_ == SET_SUBMENUS) menu_sub_pos_ = 0;
-        menu_sub_pos_ += 1;
+        menu_sub_pos_ += direction;
+        if (menu_sub_pos_ <= 0) menu_sub_pos_ = SET_SUBMENUS;
+        if (menu_sub_pos_ > SET_SUBMENUS) menu_sub_pos_ = 1;
         switch (menu_sub_pos_) {
           case 1:
+          // Edit Volume
             PlayMenuSound("mvolume.wav");
             break;
           case 2:
+          // Edit Style Settings
             PlayMenuSound("mstylset.wav");
             break;
           case 3:
+          // Edit Control Settings
             PlayMenuSound("mcontrol.wav");
             break;
           case 4:
+          // Edit Clash Threshold
             PlayMenuSound("mclashth.wav");
             break;
           case 5:
+          // Edit Blade Length
             PlayMenuSound("mlength.wav");
             break;
           case 6:
+          // Edit Brightness
             PlayMenuSound("mdim.wav");
           default:
             break;
         }
         break;
       case MENU_CLASH_THRESHOLD:
-        if (clash_t_ >= 4.0) {
-          PlayMenuSound("mmax.wav");
-          clash_t_ = 4.0;
+        if (direction > 0) {
+          if (clash_t_ >= 4.0) {
+            PlayMenuSound("mmax.wav");
+            clash_t_ = 4.0;
+          } else {
+            PlayMenuSound("mup.wav");
+            clash_t_ += 0.25;
+            if (clash_t_ > 4.0) clash_t_ = 4.0;
+          }
         } else {
-          PlayMenuSound("mup.wav");
-          clash_t_ += 0.25;
-          if (clash_t_ > 4.0) clash_t_ = 4.0;
+          if (clash_t_ <= 1.0) {
+            PlayMenuSound("mmin.wav");
+            clash_t_ = 1.0;
+          } else {
+            PlayMenuSound("mdown.wav");
+            clash_t_ -= 0.25;
+            if (clash_t_ < 1.0) clash_t_ = 1.0;
+          }          
         }
         SayNumber(clash_t_, SAY_DECIMAL);
         break;
       case MENU_DIM_BLADE:
-        dim = std::min<float>(dim + 0.1, 1.0);
-        if (dim == 1.0) {
-          PlayMenuSound("mmax.wav");
+        if (direction > 0) {
+          dim = std::min<float>(dim + 0.1, 1.0);
+          if (dim == 1.0) {
+            PlayMenuSound("mmax.wav");
+          } else {
+            PlayMenuSound("mup.wav");
+          }
         } else {
-          PlayMenuSound("mup.wav");
+          dim = std::max<float>(dim - 0.1, 0.2);
+          if (dim == 0.2) {
+            PlayMenuSound("mmin.wav");
+          } else {
+            PlayMenuSound("mdown.wav");
+          }          
         }
         SaberBase::SetDimming(pow(dim, 2.2) * 16384);
         break;
       case MENU_STYLE_SETTING_SUB:
         while (true) {
-          effect_num_ = (effect_num_ + 1)% STYLE_SETTINGS;
-          if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 17)) break;
+          effect_num_ += direction;
+          if (effect_num_ <= 1) effect_num_ = STYLE_SETTINGS;
+          if (effect_num_ > STYLE_SETTINGS) effect_num_ = 1;
+          if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 15)) break;
         }
-        if (effect_num_ == 0) effect_num_ = 1;
+        // Convert to Settings Arg Number
         set_num_ = effect_num_ + 15;
         switch (set_num_) {
-          case 16:
+          case STYLE_OPTION_ARG:
             PlayMenuSound("mstylopt.wav");
             break;
-          case 17:
+          case IGNITION_OPTION_ARG:
             PlayMenuSound("migopt.wav");
             break;
-          case 18:
+          case IGNITION_TIME_ARG:
             PlayMenuSound("mouttime.wav");
             break;
-          case 19:
+          case RETRACTION_OPTION_ARG:
             PlayMenuSound("mrtopt.wav");
             break;
-          case 20:
+          case RETRACTION_TIME_ARG:
             PlayMenuSound("mintime.wav");
             break;
-          case 21:
+          case LOCKUP_POSITION_ARG:
             PlayMenuSound("mlockpos.wav");
             break;
-          case 22:
+          case DRAG_SIZE_ARG:
             PlayMenuSound("mdragsz.wav");
             break;
-          case 23:
+          case EMITTER_SIZE_ARG:
             PlayMenuSound("memitsz.wav");
             break;
-          case 24:
+          case PREON_OPTION_ARG:
             if (SFX_preon) {
               PlayMenuSound("mpreopt.wav");
             } else {
               effect_num_ = 0;
             }
             break;
-          case 25:
+          case PREON_SIZE_ARG:
             if (SFX_preon) {
               PlayMenuSound("mpreonsz.wav");
             } else {
@@ -2903,634 +2965,81 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_IGNITION_TIME:
       case MENU_RETRACTION_TIME:
-        calc_ += 100;
-        SetInOut();
+        if (direction > 0) {
+          calc_ += 100;
+          SetInOut();
+        } else {
+          if (calc_ >= 100) {
+            calc_ -= 100;
+            if (calc_ >= 100) {
+              SetInOut();
+            } else {
+            calc_ = 0;
+            PlayMenuSound("mauto.wav");
+            next_event_ = true;
+            }
+          } else {
+            calc_ = 0;
+            PlayMenuSound("mauto.wav");
+            next_event_ = true;
+          }
+        }
         break;
       case MENU_STYLE_OPTION:
       case MENU_IGNITION_OPTION:
       case MENU_RETRACTION_OPTION:
       case MENU_PREON_OPTION:
-        calc_ += 1;
-        if (calc_ > 99) calc_ = 0;
-        SetInOut();
+        calc_ += direction;
+        if (calc_ > 32768) calc_ = 0;
+        if (calc_ < 0) calc_ = 32768;
+        SetInOut();      
         break;
-      case MENU_CLASH_LOCATION:
+      case MENU_LOCKUP_POSITION:
       case MENU_EMITTER_SIZE:
       case MENU_PREON_SIZE:
-        calc_ += 1000;
-        int_edit = calc_;
-        PlayMenuSound("mup.wav");
-        break;
-      case MENU_DRAG_SIZE:
-        if (calc_ > 1000) {
-          calc_ -= 1000;
+        if (direction > 0) {
+          calc_ += 1000;
           PlayMenuSound("mup.wav");
         } else {
-          if (calc_ < 1000) {
-            calc_ = 0;
-            PlayMenuSound("mmax.wav");
+          if (calc_ > 0) {
+            calc_ -= 1000;
+            PlayMenuSound("mdown.wav");
+          } else {
+            if (calc_ < 1000) {
+              calc_ = 0;
+              PlayMenuSound("mmin.wav");
+            }
           }
         }
         int_edit = calc_;
         break;
-      case MENU_COPY:
-        choice_ = true;
-        PlayMenuSound("maccept.wav");
-        break;
-      case MENU_DELETE:
-        choice_ = true;
-        PlayMenuSound("maccept.wav");
+      case MENU_DRAG_SIZE:
+        if (direction > 0) {
+          if (calc_ > 1000) {
+            calc_ -= 1000;
+            PlayMenuSound("mup.wav");
+          } else {
+            if (calc_ < 1000) {
+              calc_ = 0;
+              PlayMenuSound("mmax.wav");
+            }
+          }
+        } else {
+          if (calc_ < 32768) {
+            calc_ += 1000;
+            PlayMenuSound("mdown.wav");
+          } else {
+            if (calc_ >= 32768) {
+              calc_ = 32768;
+              PlayMenuSound("mmin.wav");
+            }
+          }
+        }
+        int_edit = calc_;
         break;
   #endif            
       }
-  }
-
-// Edit Mode Dial Left
-  void MenuDialLeft() {
-    switch (menu_type_) {
-      case MENU_PRESET:
-        if (SaberBase::IsOn()) {
-          previous_preset_fast();
-        } else {
-          previous_preset();
-        }
-        break;
-      case MENU_VOLUME:
-        VolumeDown();
-        break;
-      case TRACK_PLAYER:
-        if (track_player_) {
-          track_player_->Stop();
-          track_player_.Free();
-        }
-        track_num_ -= 1;
-        if (track_num_ < 0) track_num_ = num_tracks_ - 1;
-        char playtrack[128];
-        RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, playtrack, sizeof(playtrack));
-#ifdef ENABLE_AUDIO
-        MountSDCard();
-        EnableAmplifier();
-        track_player_ = GetFreeWavPlayer();
-        if (track_player_) {
-          track_player_->Play(playtrack);
-        } else {
-          STDOUT.println("No available WAV players.");
-        }
-#else
-        STDOUT.println("Audio disabled.");
-#endif
-        break;
-#ifdef FETT263_EDIT_MODE_MENU
-      case MENU_TOP:
-        if (menu_top_pos_ <= 1) menu_top_pos_ = SUBMENUS;  
-        menu_top_pos_ = menu_top_pos_ - 1;
-        switch (menu_top_pos_) {
-          case 1:
-            PlayMenuSound("mstyle.wav");
-            break;
-          case 2:
-            PlayMenuSound("mcolor.wav");
-            break;
-          case 3:
-            PlayMenuSound("mfont.wav");
-            break;
-          case 4:
-            PlayMenuSound("mtrack.wav");
-            break;
-          case 5:
-            PlayMenuSound("msetting.wav");
-            break;
-          case 6:
-            PlayMenuSound("mcopy.wav");
-            break;
-          case 7:
-            PlayMenuSound("mdelete.wav");
-            break;
-          case 8:
-            PlayMenuSound("mexit.wav");
-            break;
-        }
-        break;
-#if NUM_BLADES > 1
-      case MENU_BLADE_STYLE:
-        if (blade_num_ <= 1) blade_num_ = NUM_BLADES + 1;
-        blade_num_ -= 1;
-        BladePreview(blade_num_);
-        SFX_mnum.Select(blade_num_ - 1); 
-        wav_player->PlayOnce(&SFX_mnum, 0.0);
-        break;
-      case MENU_BLADE_SETTING:
-        if (blade_num_ <= 1) blade_num_ = NUM_BLADES + 1;
-        blade_num_ -= 1;
-        BladePreview(blade_num_);
-        SFX_mnum.Select(blade_num_ - 1); 
-        wav_player->PlayOnce(&SFX_mnum, 0.0);
-        break;
-      case MENU_BLADE_COLOR:
-        if (blade_num_ <= 1) blade_num_ = NUM_BLADES + 1;
-        blade_num_ -= 1;
-        BladePreview(blade_num_);
-        SFX_mnum.Select(blade_num_ - 1); 
-        wav_player->PlayOnce(&SFX_mnum, 0.0);
-        break;
-      case MENU_BLADE_COPY:
-        if (copy_blade_ <= 1) copy_blade_ = NUM_BLADES + 1;
-        copy_blade_ -= 1;
-        if (copy_blade_ == blade_num_) {
-          copy_blade_ -= 1;
-          if (copy_blade_ == 0) copy_blade_ = NUM_BLADES;
-        }
-        BladePreview(copy_blade_);
-        SFX_mnum.Select(copy_blade_ - 1); 
-        wav_player->PlayOnce(&SFX_mnum, 0.0);
-        break;
-      case MENU_BLADE_LENGTH:
-        if (blade_num_ <= 1) blade_num_ = NUM_BLADES + 1;
-        blade_num_ -= 1;
-        BladePreview(blade_num_);
-        SFX_mnum.Select(blade_num_ - 1); 
-        wav_player->PlayOnce(&SFX_mnum, 0.0);
-        break;
-      case MENU_COPY_COLOR:
-        choice_ = false;
-        PlayMenuSound("mcancel.wav");
-        break;
-#endif           
-      case MENU_STYLE:
-        style_num_ -= 1;
-        if (style_num_ < 0) style_num_ = num_presets_ - 1;
-        char style_arg[10];
-        itoa(style_num_, style_arg, 10);
-        current_preset_.SetStyle(blade_num_, style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg)); 
-        current_preset_.Save();
-        UpdateStyle(current_preset_.preset_num);
-        PlayMenuSound("mdown.wav");
-        break;
-      case MENU_COLOR:
-        break;
-      case MENU_COLOR_SUB:
-#if NUM_BLADES == 1
-        menu_sub_pos_ -= 1;
-        if (menu_sub_pos_ < 1) menu_sub_pos_ = 2;  
-        switch (menu_sub_pos_) {
-          case 1:
-            // Color Options
-            PlayMenuSound("mcolorop.wav");
-            break;
-          case 2:
-            // Reset Colors
-            PlayMenuSound("mresetc.wav");
-            break;
-        }
-#else
-        menu_sub_pos_ -= 1;
-        if (menu_sub_pos_ < 1) menu_sub_pos_ = 3;  
-        switch (menu_sub_pos_) {
-          case 1:
-            // Color Options
-            PlayMenuSound("mcolorop.wav");
-            break;
-          case 2:
-            // Copy Colors
-            PlayMenuSound("mcopyc.wav");
-            break;
-          case 3:
-            // Reset Colors
-            PlayMenuSound("mresetc.wav");
-            break;
-        }
-#endif
-        break;
-      case MENU_EFFECT:
-        while (true) {
-          if (effect_num_ == 0) effect_num_ = COLOR_SUB + 1;
-          effect_num_ -= 1;
-          if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 2)) break;
-        }
-        switch (effect_num_) {
-          case 1:
-            // Base Color Edit
-            PlayMenuSound("mbase.wav");
-            break;
-          case 2:
-            // Alt Color Edit
-            PlayMenuSound("malt.wav");
-            break;
-          case 3:
-           // Blast Color Edit
-           PlayMenuSound("mblast.wav");
-           break;
-          case 4:
-            // Clash Color Edit
-            PlayMenuSound("mclash.wav");
-            break;
-          case 5:
-            // Lockup Color Edit
-            PlayMenuSound("mlockup.wav");
-            break;
-          case 6:
-            // Drag Color Edit
-            PlayMenuSound("mdrag.wav");
-            break;
-          case 7:
-            // Lightning Block Color Edit
-            PlayMenuSound("mlb.wav");
-            break;
-          case 8:
-            // Stab Color Edit
-            PlayMenuSound("mstab.wav");
-            break;
-          case 9:
-            // PreOn Color Edit
-            PlayMenuSound("mpreon.wav");
-            break;
-          case 10:
-            // Ignition Color Edit
-            PlayMenuSound("mignite.wav");
-            break;
-          case 11:
-            // Retraction Color Edit
-            PlayMenuSound("mretract.wav");
-            break;
-          case 12:
-            // PstOff Color Edit
-            PlayMenuSound("mpstoff.wav");
-            break;
-          case 13:
-            // Swing Color Edit
-            PlayMenuSound("mswing.wav");
-            break;
-          case 14:
-            // Emitter Color Edit
-            PlayMenuSound("memitter.wav");
-            break;
-          case 15:
-            // Off Color Edit
-            PlayMenuSound("moff.wav");
-            break;
-        }
-        break;
-      case MENU_COLOR_MODE:
-        sub_dial_ -= 1;
-        if (sub_dial_ < 0) sub_dial_ = 3;
-        switch (sub_dial_) {
-          case 0:
-            // Color List
-            PlayMenuSound("mcolorlt.wav");
-             break;
-          case 1:
-            // Adjust Color Hue
-            PlayMenuSound("mhue.wav");
-            break;
-          case 2:
-            // Adjust White Level
-            PlayMenuSound("mwhite.wav");
-            break;
-          case 3:
-            // Adjust Black Level
-            PlayMenuSound("mblack.wav");
-            break;
-          default:
-            break;
-          }
-          break;
-      case COLOR_BASE:
-      case COLOR_ALT:
-      case COLOR_BLAST:
-      case COLOR_CLASH:
-      case COLOR_LOCKUP:
-      case COLOR_DRAG:
-      case COLOR_LB:
-      case COLOR_STAB:
-      case COLOR_PREON:
-      case COLOR_IGNITE:
-      case COLOR_RETRACT:
-      case COLOR_PSTOFF:
-      case COLOR_SWING:
-      case COLOR_EMITTER:
-      case COLOR_OFF:
-        // Color List
-        if (color_mode_ == COLOR_LIST) {
-          if (dial_ <= 0) dial_ = NELEM(color_list_);
-          dial_ = dial_ - 1;
-          ShowColorStyle::SetColor(Color16(color_list_[dial_]));
-          PlayMenuSound("mdown.wav");
-        }
-        break;
-      case MENU_FONT:
-        font_num_ -= 1;
-        if (font_num_ < 0) font_num_ = num_fonts_ - 1;
-        char font[128];
-        RunCommandAndGetSingleLine("list_fonts", nullptr, font_num_, font, sizeof(font));
-        strcat(font, ";common");
-        current_preset_.font = mkstr(font);
-        current_preset_.Save();
-        UpdateFont(current_preset_.preset_num);
-        hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
-        break;
-      case MENU_TRACK:
-        if (track_player_) {
-          track_player_->Stop();
-          track_player_.Free();
-        }
-        track_num_ -= 1;
-        if (track_num_ < 0) track_num_ = num_tracks_ - 1;
-        char track[128];
-        RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, track, sizeof(track));
-        current_preset_.track = mkstr(track);
-        current_preset_.Save();
-        StartOrStopTrack();
-        break;
-      case MENU_LENGTH:
-        if (blade_length_ > 2) {
-          blade_length_ -= 1;
-          PlayMenuSound("mdown.wav");
-          length_edit_length = blade_length_ - 1;
-          SetBladeLength(blade_num_, blade_length_);
-          SaveState(current_preset_.preset_num);
-        } else {
-          PlayMenuSound("mmin.wav");
-        }
-        break;
-      case MENU_RESET_COLOR:
-        choice_ = false;
-        PlayMenuSound("mcancel.wav");
-        break;
-      case MENU_GESTURE_SUB:
-        effect_num_ -= 1;
-        if (effect_num_ < 1) effect_num_ = GESTURE_OPTIONS;
-        switch (effect_num_) {
-          case 1:
-            PlayMenuSound("mswingon.wav");
-            break;
-          case 2:
-            PlayMenuSound("mswingsp.wav");
-            break;
-          case 3:
-            PlayMenuSound("mtwiston.wav");
-            break;
-          case 4:
-            PlayMenuSound("mthrston.wav");
-            break;
-          case 5:
-            PlayMenuSound("mstabon.wav");
-            break;
-          case 6:
-            PlayMenuSound("mpush.wav");
-            break;
-          case 7:
-            PlayMenuSound("mpushlen.wav");
-            break;
-          case 8:
-            PlayMenuSound("mtwstoff.wav");
-            break;
-          case 9:
-            PlayMenuSound("mlockdly.wav");
-            break;
-          case 10:
-            PlayMenuSound("mbmclash.wav");
-            break;
-          case 11:
-            PlayMenuSound("mpwrlock.wav");
-            break;
-          case 12:
-            PlayMenuSound("maxclash.wav");
-            break;
-        }
-        break;
-      case MENU_SWINGON:
-        choice_ = false;
-        PlayMenuSound("mdisable.wav");
-        break;         
-      case MENU_SWINGON_SPEED:
-        if (calc_ > 200) {
-          PlayMenuSound("mdown.wav");
-          calc_ -= 50;
-        }
-        if (calc_ <= 200) {
-          calc_ = 200;
-          PlayMenuSound("mmin.wav");
-        }
-        SayNumber(calc_, SAY_WHOLE);
-        break;
-      case MENU_TWISTON:
-        choice_ = false;
-        PlayMenuSound("mdisable.wav");
-        break;         
-      case MENU_THRUSTON:
-        choice_ = false;
-        PlayMenuSound("mdisable.wav");
-        break;         
-      case MENU_STABON:
-        choice_ = false;
-        PlayMenuSound("mdisable.wav");
-        break;         
-      case MENU_FORCEPUSH:
-        choice_ = false;
-        PlayMenuSound("mdisable.wav");
-        break;         
-      case MENU_FORCEPUSH_LENGTH:
-      case MENU_CLASH_DETECT:
-        if (calc_ > 1) {
-          PlayMenuSound("mdown.wav");
-          calc_ -= 1;
-        }
-        if (calc_ <= 1) {
-          calc_ = 1;
-          PlayMenuSound("mmin.wav");
-        }
-        SayNumber(calc_, SAY_WHOLE);
-        break;
-      case MENU_MAX_CLASH:
-        if (calc_ > 8) {
-          PlayMenuSound("mdown.wav");
-          calc_ -= 1;
-        }
-        if (calc_ <= 8) {
-          calc_ = 8;
-          PlayMenuSound("mmin.wav");
-        }
-        SayNumber(calc_, SAY_WHOLE);
-        break;
-      case MENU_TWISTOFF:
-        choice_ = false;
-        PlayMenuSound("mdisable.wav");
-        break;         
-      case MENU_LOCKUP_DELAY:
-        if (calc_ > 200) {
-          PlayMenuSound("mdown.wav");
-          calc_ -= 100;
-        }
-        if (calc_ <= 200) {
-          calc_ = 200;
-          PlayMenuSound("mmin.wav");
-        }
-        SayNumber(calc_, SAY_WHOLE); 
-        break;
-      case MENU_POWERLOCK:
-        choice_ = false;
-        PlayMenuSound("mdisable.wav");
-        break;         
-      case MENU_SETTING_SUB:
-        if (menu_sub_pos_ <= 1) menu_sub_pos_ = SET_SUBMENUS + 1;
-        menu_sub_pos_ -= 1;
-        switch (menu_sub_pos_) {
-          case 1:
-            PlayMenuSound("mvolume.wav");
-            break;
-          case 2:
-            PlayMenuSound("mstylset.wav");
-            break;
-          case 3:
-            PlayMenuSound("mcontrol.wav");
-            break;
-          case 4:
-            PlayMenuSound("mclashth.wav");
-            break;
-          case 5:
-            PlayMenuSound("mlength.wav");
-            break;
-          case 6:
-            PlayMenuSound("mdim.wav");
-            break;
-          default:
-            break;
-        }
-        break;
-      case MENU_CLASH_THRESHOLD:
-        if (clash_t_ <= 1.0) {
-          PlayMenuSound("mmin.wav");
-          clash_t_ = 1.0;
-        } else {
-          PlayMenuSound("mdown.wav");
-          clash_t_ -= 0.25;
-          if (clash_t_ < 1.0) clash_t_ = 1.0;
-        }
-        SayNumber(clash_t_, SAY_DECIMAL);
-        break;
-      case MENU_DIM_BLADE:
-        dim = std::max<float>(dim - 0.1, 0.2);
-        if (dim == 0.2) {
-          PlayMenuSound("mmin.wav");
-        } else {
-          PlayMenuSound("mdown.wav");
-        }
-        SaberBase::SetDimming(pow(dim, 2.2) * 16384);
-        break;
-      case MENU_STYLE_SETTING_SUB:
-        while (true) {
-          if (effect_num_ == 0) effect_num_ = STYLE_SETTINGS + 1;
-          effect_num_ -= 1;
-          if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 17)) break;
-        }
-        set_num_ = effect_num_ + 15;
-        switch (set_num_) {
-          case 16:
-            PlayMenuSound("mstylopt.wav");
-            break;
-          case 17:
-            PlayMenuSound("migopt.wav");
-            break;
-          case 18:
-            PlayMenuSound("mouttime.wav");
-            break;
-          case 19:
-            PlayMenuSound("mrtopt.wav");
-            break;
-          case 20:
-            PlayMenuSound("mintime.wav");
-            break;
-          case 21:
-            PlayMenuSound("mlockpos.wav");
-            break;
-          case 22:
-            PlayMenuSound("mdragsz.wav");
-            break;
-          case 23:
-            PlayMenuSound("memitsz.wav");
-            break;
-          case 24:
-            if (SFX_preon) {
-              PlayMenuSound("mpreopt.wav");
-            } else {
-              effect_num_ = STYLE_SETTINGS + 1;
-            }
-            break;
-          case 25:
-            if (SFX_preon) {
-              PlayMenuSound("mpreonsz.wav");
-            } else {
-              effect_num_ = STYLE_SETTINGS + 1;
-            }
-            break;
-          default:
-            PlayMenuSound("moption.wav");
-            break;
-        }
-        break;
-      case MENU_IGNITION_TIME:
-      case MENU_RETRACTION_TIME:
-        if (calc_ >= 100) {
-          calc_ -= 100;
-          if (calc_ >= 100) {
-            SetInOut();
-          } else {
-          calc_ = 0;
-          PlayMenuSound("mauto.wav");
-          next_event_ = true;
-          }
-        } else {
-          calc_ = 0;
-          PlayMenuSound("mauto.wav");
-          next_event_ = true;
-        }
-        break;
-      case MENU_STYLE_OPTION:
-      case MENU_IGNITION_OPTION:
-      case MENU_RETRACTION_OPTION:
-      case MENU_PREON_OPTION:
-        calc_ -= 1;
-        if (calc_ < 0) calc_ = 99;
-        SetInOut();
-        break;
-      case MENU_CLASH_LOCATION:
-      case MENU_EMITTER_SIZE:
-      case MENU_PREON_SIZE:
-        if (calc_ > 0) {
-          calc_ -= 1000;
-          PlayMenuSound("mdown.wav");
-        } else {
-          if (calc_ < 1000) {
-            calc_ = 0;
-            PlayMenuSound("mmin.wav");
-          }
-        }
-        int_edit = calc_;
-        break;
-      case MENU_DRAG_SIZE:
-        if (calc_ < 32768) {
-          calc_ += 1000;
-          PlayMenuSound("mdown.wav");
-        } else {
-          if (calc_ >= 32768) {
-            calc_ = 33000;
-            PlayMenuSound("mmin.wav");
-          }
-        }
-        int_edit = calc_;
-        PlayMenuSound("mdown.wav");
-        break;
-      case MENU_COPY:
-        choice_ = false;
-        PlayMenuSound("mcancel.wav");
-        break;
-      case MENU_DELETE:
-        choice_ = false;
-        PlayMenuSound("mcancel.wav");           
-        break;
-#endif            
-      }
-  }
+    } 
 
 // Edit Mode Undo (AUX Button)
   void MenuUndo() {
@@ -3755,7 +3264,7 @@ SaberFett263Buttons() : PropBase() {}
         RevertInOut();
         MenuRevert();
         break;
-      case MENU_CLASH_LOCATION:
+      case MENU_LOCKUP_POSITION:
       case MENU_DRAG_SIZE:
       case MENU_EMITTER_SIZE:
         CancelStyleSetting();
@@ -4297,7 +3806,7 @@ void PlayMenuSound(const char* file) {
           UpdateStyle(current_preset_.preset_num);   
           return true;
         }
-        if (menu_) MenuDialRight();
+        if (menu_) MenuDial(1);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON):
@@ -4311,15 +3820,15 @@ void PlayMenuSound(const char* file) {
           UpdateStyle(current_preset_.preset_num);
           return true;
         }
-        if (menu_) MenuDialLeft();
+        if (menu_) MenuDial(-1);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF):
-        if (menu_) MenuDialRight();
+        if (menu_) MenuDial(1);
         return true;
  
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF):
-        if (menu_) MenuDialLeft();
+        if (menu_) MenuDial(-1);
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
