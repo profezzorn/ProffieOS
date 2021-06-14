@@ -315,6 +315,10 @@ Turn off blade -        Hold POW and wait until blade is off,
 #define THRUST_GESTURE
 #endif
 
+#if defined(NO_BLADE_NO_GEST_ONOFF) && !defined(BLADE_DETECT_PIN)
+#error Using NO_BLADE_NO_GEST_ONOFF requires a BLADE_DETECT_PIN to be defined 
+#endif
+
 EFFECT(dim);        // for EFFECT_POWERSAVE
 EFFECT(battery);    // for EFFECT_BATTERY_LEVEL
 EFFECT(bmbegin);    // for Begin Battle Mode
@@ -1040,7 +1044,6 @@ private:
   bool battle_mode_ = false;
   bool max_vol_reached_ = false;
   bool min_vol_reached_ = false;
-  bool blade_detected_ = true;
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
