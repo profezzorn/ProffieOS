@@ -2481,7 +2481,6 @@ SaberFett263Buttons() : PropBase() {}
           PlayMenuSound("mcancel.wav");
         }
         break;
-      }
   #endif
       case MENU_STYLE:
         style_num_ += direction;
