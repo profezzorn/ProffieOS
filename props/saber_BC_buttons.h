@@ -66,7 +66,8 @@ Below are the options to add to the config to enable the various gestures:
 #define BC_TWIST_ON
 #define BC_TWIST_OFF
 #define NO_BLADE_NO_GEST_ONOFF
-- If using blade detect, NOBLADE = No Gesture ignitions or retractions
+- If using blade detect, Gesture ignitions or retractions are disabled.
+  **NOTE** Only works when a BLADE_DETECT_PIN is defined. 
 #define BC_FORCE_PUSH
 - This mode plays a force sound (or force push sound if the font contains it) with
   a controlled pushing gesture, and is always available, not just in Battle Mode.
@@ -121,7 +122,7 @@ Volume Menu:
 Spoken Battery Level -  Triple click POW.
 On-Demand Batt Level -  Double click POW.
                         (requires EFFECT_BATTERY_LEVEL to be in blade style)
-Turn blade ON -         Short click POW. (or gestures if defined)
+Turn blade ON -         Short click POW. (or gestures if defined for FastOn)
 Turn blade ON Muted -   Triple click and hold POW.
 *************   WHILE SABER BLADE IS ON   ****************
 Play/Stop Track -       4x click POW.
@@ -194,8 +195,8 @@ Volume Menu:
 Spoken Battery Level -  Hold AUX until it talks.
 On-Demand Batt Level -  Double click POW.
                         (requires EFFECT_BATTERY_LEVEL to be in blade style)
-Activate -              Short click POW. (or gestures if defined)
-Activate Muted -        Triple click and hold POW.
+Turn blade ON -         Short click POW. (or gestures if defined for FastOn)
+Turn blade ON Muted -   Triple click and hold POW.
 *************   WHILE SABER BLADE IS ON   ****************
 Play/Stop Track -       Hold AUX + Double click POW.
 Next Preset -           Hold AUX + Long click and release POW while pointing up.
@@ -1039,6 +1040,7 @@ private:
   bool battle_mode_ = false;
   bool max_vol_reached_ = false;
   bool min_vol_reached_ = false;
+  bool blade_detected_ = true;
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
