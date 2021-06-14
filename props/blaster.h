@@ -8,17 +8,18 @@ Add the following to your config file if so desired:
 Blaster Buttons: FIRE and MODE
 (Blaster is always on with power, unless dedicated Power button is installed.)
 
-Cycle Modes - 						Click MODE
-Next Preset - 						Double click MODE
-Previous Preset - 					Double click and hold MODE, release after a second
-Reload - 							Hold for 2 seconds and release (Or Click Reload if dedicated button insatlled))
-Start/Stop Track - 					Hold MODE until track plays or stops
-Fire - 								Click FIRE (Hold to Auto Fire / Rapid Fire)
-Clip In - 							Clip Detect pad Latched On ( or Hold Momentary button)
-Clip out - 							Clip Detect pad Latched Off ( or release Momentary button)
-Unjam - 							Bang the blaster.
-(If 3rd button (POW))
-	Power On / Off - 				Click POW
+Cycle Modes -           Click MODE
+Next Preset -           Double click MODE
+Previous Preset -       Double click and hold MODE, release after a second
+Reload -                Hold for 2 seconds and release (Or Click Reload if dedicated button insatlled))
+Start/Stop Track -      Hold MODE until track plays or stops
+Fire -                  Click FIRE (Hold to Auto Fire / Rapid Fire)
+Clip In -               Clip Detect pad Latched On ( or Hold Momentary button)
+Clip out -              Clip Detect pad Latched Off ( or release Momentary button)
+Unjam -                 Bang the blaster.
+- If there's a 3rd button for Power,
+Power On / Off -	Click POWER
+
 
 Wavs to use for switching Modes:
 	mdstun.wav
