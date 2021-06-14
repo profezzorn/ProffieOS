@@ -782,7 +782,7 @@ SaberFett263Buttons() : PropBase() {}
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<7000>,Int<-6000>>,RotateColorsX<Variation,RgbArg<1,Rgb<255,0,0>>>,ShowColorStyle>> hilt_color_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<7000>,Int<-6000>>,Black,RotateColorsX<Variation,ShowColorStyle>>> pre_color_;
   ShowColorSingleBladeTemplate<LengthEdit<RotateColorsX<Variation,ShowColorStyle>,Pulsing<White,Rgb<100,100,100>,800>>> show_length_;
-  ShowColorSingleBladeTemplate<Mix<Bump<IntEdit,Int<10000>>,Black,ShowColorStyle>> show_clash_location_;
+  ShowColorSingleBladeTemplate<Mix<Bump<IntEdit,Int<10000>>,Black,ShowColorStyle>> show_lockup_position_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<6000>>,Black,ShowColorStyle>> show_drag_size_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<-6000>>,Black,ShowColorStyle>> show_emitter_size_;
 #if NUM_BLADES > 1
@@ -901,7 +901,7 @@ SaberFett263Buttons() : PropBase() {}
     switch (set_num_) {
       // Stop Clash Location Preview
       case 21:
-        show_clash_location_.Stop(blade_num_);
+        show_lockup_position_.Stop(blade_num_);
         break;
       // Stop Drag Size Preview
       case 22:
@@ -921,7 +921,7 @@ SaberFett263Buttons() : PropBase() {}
   void CancelStyleSetting() {
     switch (set_num_) {
       case 21:
-        show_clash_location_.Stop(blade_num_);
+        show_lockup_position_.Stop(blade_num_);
         break;
       case 22:
         show_drag_size_.Stop(blade_num_);
@@ -2314,7 +2314,7 @@ SaberFett263Buttons() : PropBase() {}
             PlayMenuSound("mselect.wav");
             menu_type_ = MENU_CLASH_LOCATION;
             ShowColorStyle::SetColor(GetColorArg(blade_num_, 4));
-            show_clash_location_.Start(blade_num_);
+            show_lockup_position_.Start(blade_num_);
             break;
           case 22:
             PlayMenuSound("mselect.wav");
