@@ -429,6 +429,7 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #include "../common/file_reader.h"
 #include "../common/malloc_helper.h"
 #include "../common/color.h"
+#include "../styles/edit_mode.h"
 #endif
 
 #undef PROP_TYPE
