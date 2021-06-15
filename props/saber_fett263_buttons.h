@@ -1082,6 +1082,12 @@ SaberFett263Buttons() : PropBase() {}
   };
 
 #ifdef FETT263_CLASH_STRENGTH_SOUND
+  void SelectFloat(Effect* effect, float value) {
+    int f = effect->files_found() - 1;
+    int file_number = clamp(f * value, 0, f);
+    effect->Select(file_number);
+  }
+   
   void HandleClash() {
     if (clash_type_ == CLASH_BATTLE_MODE) {
       if (SaberBase::GetClashStrength() < saved_gesture_control.clashdetect) {
@@ -1091,8 +1097,6 @@ SaberFett263Buttons() : PropBase() {}
         auto_lockup_on_ = true;
       }
     }
-    int files;
-    int file_number;
     if (saved_gesture_control.maxclash < 8) saved_gesture_control.maxclash = 8;
     float clash_value = (SaberBase::GetClashStrength() - GetCurrentClashThreshold()) / saved_gesture_control.maxclash;
     switch (clash_type_) {
@@ -1100,28 +1104,20 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case CLASH_NORMAL:
         if (SFX_clash) {
-          files = SFX_clash.files_found() - 1;
-          file_number = clamp(files * clash_value, 0, files);
-          SFX_clash.Select(file_number);
+          SelectFloat(&SFX_clash, clash_value);
         } else {
-          files = SFX_clsh.files_found() - 1;
-          file_number = clamp(files * clash_value, 0, files);
-          SFX_clsh.Select(file_number);
+          SelectFloat(&SFX_clsh, clash_value);
         }
         SaberBase::DoClash();
         break;
       case CLASH_STAB:
         if (SFX_stab) {
-          files = SFX_stab.files_found() - 1;
+          SelectFloat(&SFX_stab, clash_value);
         } else {
           if (SFX_clash) {
-            files = SFX_clash.files_found() - 1;
-            file_number = clamp(files * clash_value, 0, files);
-            SFX_clash.Select(file_number);
+            SelectFloat(&SFX_clash, clash_value);
           } else {
-            files = SFX_clsh.files_found() - 1;
-            file_number = clamp(files * clash_value, 0, files);
-            SFX_clsh.Select(file_number);
+            SelectFloat(&SFX_clsh, clash_value);
           }          
         }
         SaberBase::DoStab();
@@ -1129,16 +1125,15 @@ SaberFett263Buttons() : PropBase() {}
       case CLASH_LOCKUP:
         if (battle_mode_) clash_value = (SaberBase::GetClashStrength() - saved_gesture_control.clashdetect) / saved_gesture_control.maxclash;
         if (SFX_bgnlock) {
-          files = SFX_bgnlock.files_found() - 1;
-          file_number = clamp(files * clash_value, 0, files);
+          SelectFloat(&SFX_bgnlock, clash_value);
         }
         SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
         SaberBase::DoBeginLockup();
         break;
       case CLASH_LOCKUP_END:
         if (SFX_endlock) {
-          files = SFX_endlock.files_found() - 1;
-          file_number = clamp(files * (fusor.swing_speed() / 600), 0, files);
+          float swing_value = fusor.swing_speed() / 600;
+          SelectFloat(&SFX_endlock, swing_value);
         }
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
