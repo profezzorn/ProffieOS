@@ -936,7 +936,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
-  // Preview Color Editing on Blade
+  // Saves New Color from Edit Mode Preview Styles to Preset
   void NewColor(int blade, int effect) {
     char new_color[32];
     Color16 color_source;
@@ -1361,9 +1361,7 @@ SaberFett263Buttons() : PropBase() {}
         thrust_begin_millis_ = millis();
       }
     }
-    if (menu_ || color_mode_ == CC_COLOR_LIST) {
-      DetectMenuTurn();
-    }
+    DetectMenuTurn();
     if (track_mode_ != PLAYBACK_OFF) {
       TrackPlayer();
     }
@@ -1413,24 +1411,23 @@ SaberFett263Buttons() : PropBase() {}
   }   
    
   void DetectMenuTurn() {
-     if (millis() - last_rotate_ > 1000) {
-      float a = fusor.angle2() - current_menu_angle_;
-      if (a > M_PI) a-=M_PI*2;
-      if (a < -M_PI) a+=M_PI*2;
-      change_ = a;
-      if (a > twist_menu_ * 2/3) {
-        current_menu_angle_ += twist_menu_;
-        if (current_menu_angle_ > M_PI) current_menu_angle_ -= M_PI * 2;
-        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-        current_menu_angle_ = fusor.angle2();
-        last_rotate_ = millis();
-      }
-      if (a < -twist_menu_ * 2/3) {
-        current_menu_angle_ -= twist_menu_;
-        if (current_menu_angle_ < M_PI) current_menu_angle_ += M_PI * 2;
-        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-        current_menu_angle_ = fusor.angle2();
-        last_rotate_ = millis();
+     if (menu_ || color_mode_ == CC_COLOR_LIST) {
+       if (millis() - last_rotate_ > 1000) {
+        float a = fusor.angle2() - current_menu_angle_;
+        if (a > M_PI) a-=M_PI*2;
+        if (a < -M_PI) a+=M_PI*2;
+        if (a > twist_menu_ * 2/3) {
+          current_menu_angle_ += twist_menu_;
+          if (current_menu_angle_ > M_PI) current_menu_angle_ -= M_PI * 2;
+          Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+          last_rotate_ = millis();
+        }
+        if (a < -twist_menu_ * 2/3) {
+          current_menu_angle_ -= twist_menu_;
+          if (current_menu_angle_ < M_PI) current_menu_angle_ += M_PI * 2;
+          Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+          last_rotate_ = millis();
+        }
       }
     }
   }
@@ -4618,53 +4615,48 @@ private:
   bool force_quote_ = false; // Quote Player active (in place of force effect)
   bool rehearse_ = false; // Rehearsal Mode active
   bool choreo_ = false; // Choreography Mode active
-  uint32_t thrust_begin_millis_;
-  uint32_t push_begin_millis_;
-  uint32_t clash_impact_millis_;
-  uint32_t last_twist_;
-  uint32_t last_push_;
-  uint32_t last_blast_;
-  uint32_t saber_off_time_;
-  uint32_t last_rotate_;
+  uint32_t thrust_begin_millis_; // Thrust timer
+  uint32_t push_begin_millis_; // Push timer
+  uint32_t clash_impact_millis_; // Clash timer
+  uint32_t last_twist_; // Last Twist (to prevent gesture spamming)
+  uint32_t last_push_; // Last Push (to prevent gesture spamming)
+  uint32_t last_blast_; // Last Blast (for Battle Mode Multi-Blast detection)
+  uint32_t saber_off_time_; // Off timer
+  uint32_t last_rotate_; // Last Rotation (to prevent gesture spamming)
   ClashType clash_type_ = CLASH_NONE;
   MenuType menu_type_ = MENU_TOP;
-  int menu_top_pos_ = 0;
-  int menu_sub_pos_ = 0;
+  int menu_top_pos_ = 0; // Top menu dial position
+  int menu_sub_pos_ = 0; // Sub menu dial position
   TrackMode track_mode_ = PLAYBACK_OFF;
-  int track_num_;
-  int num_tracks_;
-  int ignite_time_;
-  int dial_ = -1;
-  int sub_dial_;
-  float change_ = 0.0;
-  float twist_menu_ = M_PI / 4;
+  int track_num_; // Track Number for Track Player
+  int num_tracks_; // Number of Tracks Found
+  int ignite_time_; // Ignition timer for Edit Mode retraction preview
+  int dial_ = -1; // Menu dial "tick"
+  int sub_dial_; // Sub menu dial "tick"
+  float twist_menu_ = M_PI / 4; // Twist Menu sensitivity
 #ifdef FETT263_EDIT_MODE_MENU
   bool choice_ = false; // Edit Mode selection confirmed
   bool next_event_ = false; // Do next event in Edit Mode
   bool off_event_ = false; // Do off event in Edit Mode
   bool restart_ = false; // Ignite blade after off event in Edit Mode
   bool edit_color_ = false; // Color Editing Mode active
-  uint32_t color_revert_;
-  float change_h_ = 0.0;
-  float hsl_angle_ = 0.0;
-  int blade_number_ = 0;
-  int preset_count_;
-  int style_;
-  int blade_preview_ = 0;
+  uint32_t color_revert_; // ColorChange revert value
+  float hsl_angle_ = 0.0; // HSL angle for Color Editing
+  int blade_preview_ = 0; // Blade number for "preview" style
   Color16 saved_color_;
   EditColorMode color_mode_;
-  int style_num_;
-  int font_num_;
-  int num_fonts_;
-  int num_presets_;
-  int blade_num_;
-  int copy_blade_;
-  int effect_num_;
-  int set_num_;
-  int style_revert_;
-  int length_revert_;
-  int arg_revert_;
-  int calc_;
+  int style_num_; // Style Number for Edit Style
+  int font_num_; // Font Number for Edit Font
+  int num_fonts_; // Number of Fonts found
+  int num_presets_; // Number of Presets
+  int blade_num_; // Active Blade Number
+  int copy_blade_; // Blade to Copy from
+  int effect_num_; // Effect Arg Number
+  int set_num_; // Settings Arg Number
+  int style_revert_; // Original Style Number for Revert
+  int length_revert_; // Original Blade Length for Revert
+  int arg_revert_; // Original Arg vale for Revert
+  int calc_; // Calculated value for Settings Arg
 #endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
   int clash_count_ = -1; // Choreography Mode Clash counter
