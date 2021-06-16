@@ -80,6 +80,8 @@ struct EnablePowerBladeID {
 
 #ifdef TEENSYDUINO
 #define BLADE_ID_CLASS InternalPullupBladeID<bladeIdentifyPin>
+#elif PROFFIEBOARD_VERSION - 0 >= 3
+#define BLADE_ID_CLASS BridgedPullupBladeID<bladeIdentifyPin, bladePin>
 #else
 #define BLADE_ID_CLASS SnapshotBladeID<bladeIdentifyPin>
 #endif
