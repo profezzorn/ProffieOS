@@ -2902,7 +2902,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_STYLE_SETTING_SUB:
         while (true) {
           effect_num_ += direction;
-          if (effect_num_ <= 1) effect_num_ = STYLE_SETTINGS;
+          if (effect_num_ < 1) effect_num_ = STYLE_SETTINGS;
           if (effect_num_ > STYLE_SETTINGS) effect_num_ = 1;
           if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 15)) break;
         }
