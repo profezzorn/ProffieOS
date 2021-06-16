@@ -42,6 +42,7 @@ public:
 template<class STYLE>
 class StyleFactoryImpl : public StyleFactory {
   BladeStyle* make() override {
+  STDOUT << "Style size = " << sizeof(STYLE) << "\n";
     return new STYLE();
   }
 };
