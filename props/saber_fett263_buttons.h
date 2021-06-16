@@ -2901,10 +2901,18 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_STYLE_SETTING_SUB:
         while (true) {
-          effect_num_ += direction;
-          if (effect_num_ < 1) effect_num_ = STYLE_SETTINGS;
-          if (effect_num_ > STYLE_SETTINGS) effect_num_ = 1;
-          if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 15)) break;
+          if (direction > 0) {
+            effect_num_ += direction;
+            if (effect_num_ > STYLE_SETTINGS) effect_num_ = 1;
+            // Detect preon.wav for setting preview (cannot be shown without) 
+            if (!SFX_preon && effect_num_ >= STYLE_SETTINGS - 2) effect_num_ = 1;
+          } else {
+            effect_num_ += direction;
+            if (effect_num_ <= 0) effect_num_ = STYLE_SETTINGS;
+            // Detect preon.wav for setting preview (cannot be shown without) 
+            if (!SFX_preon && effect_num_ >= STYLE_SETTINGS - 2) effect_num_ = STYLE_SETTINGS - 3;
+          }
+          if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 17)) break;
         }
         // Convert to Settings Arg Number
         set_num_ = effect_num_ + 15;
@@ -2934,18 +2942,10 @@ SaberFett263Buttons() : PropBase() {}
             PlayMenuSound("memitsz.wav");
             break;
           case PREON_OPTION_ARG:
-            if (SFX_preon) {
-              PlayMenuSound("mpreopt.wav");
-            } else {
-              effect_num_ = 0;
-            }
+            PlayMenuSound("mpreopt.wav");
             break;
           case PREON_SIZE_ARG:
-            if (SFX_preon) {
-              PlayMenuSound("mpreonsz.wav");
-            } else {
-              effect_num_ = 0;
-            }
+            PlayMenuSound("mpreonsz.wav");
             break;
           default:
             PlayMenuSound("moption.wav");
