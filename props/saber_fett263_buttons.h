@@ -611,14 +611,17 @@ private:
 };
 
 // Edit Style Settings
-static int int_edit = 0;
 
 class IntEdit {
   public:
-    void run(BladeBase* blade) {
-    }
-    int getInteger(int led) { return int_edit; }    
+    void run(BladeBase* blade) {  }
+    int getInteger(int led) { return int_edit_; }
+    static void SetIntValue(int value) { int_edit_ = value; }
+ private:
+   static int int_edit_;
 };
+
+int IntEdit::int_edit_ = 0;
 #endif
   
 // Color List
@@ -2247,7 +2250,7 @@ SaberFett263Buttons() : PropBase() {}
         char argspace[32];
         style_parser.GetArgument(current_preset_.GetStyle(blade_num_), set_num_ + 2, argspace);
         calc_ = strtol(argspace, NULL, 0);
-        int_edit = calc_;
+        IntEdit::SetIntValue(calc_);
         PlayMenuSound("mselect.wav");
         if (NUM_BLADES == 1) blade_num_ = 1;
         switch (set_num_) {
@@ -3001,7 +3004,7 @@ SaberFett263Buttons() : PropBase() {}
             }
           }
         }
-        int_edit = calc_;
+        IntEdit::SetIntValue(calc_);
         break;
       case MENU_DRAG_SIZE:
         if (direction > 0) {
@@ -3025,7 +3028,7 @@ SaberFett263Buttons() : PropBase() {}
             }
           }
         }
-        int_edit = calc_;
+        IntEdit::SetIntValue(calc_);
         break;
   #endif            
       }
