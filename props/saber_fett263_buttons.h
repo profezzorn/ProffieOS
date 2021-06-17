@@ -835,7 +835,7 @@ SaberFett263Buttons() : PropBase() {}
     ShowColorStyle::SetColor(GetColorArg(blade_num_, 1)); 
   }
  
-  // Copy Colors Function
+  // Copy Color Arguments from one blade to another
   void SetColorCopy() {
     effect_num_ = 16;
     char set_copy[16];
@@ -850,6 +850,7 @@ SaberFett263Buttons() : PropBase() {}
     effect_num_ = 0;
   }
 
+  // Set In/Out (Ignition/Retraction) Arguments 
   void SetInOut() {
     char style_arg[10];
     itoa(calc_, style_arg, 10);
