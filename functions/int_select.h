@@ -1,7 +1,7 @@
 #ifndef FUNCTIONS_INT_SELECT_H
 #define FUNCTIONS_INT_SELECT_H
 
-// Usage: IntSelect<SELECTION, N>
+// Usage: IntSelect<SELECTION, Int1, Int2...>
 // SELECTION: FUNCTION
 // Returns SELECTION of N
 // N: numbers
@@ -29,7 +29,7 @@ public:
   int getInteger(int led) { return value_; }
 
 private:
-	F f_;
+  F f_;
   int value_;
 };
 
