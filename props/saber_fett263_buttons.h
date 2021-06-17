@@ -2477,7 +2477,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_STYLE:
         style_num_ += direction;
         if (style_num_ < 0) style_num_ = num_presets_ - 1;
-        if (style_num_ > num_presets_ - 1) style_num_ = 0;
+        if (style_num_ >= num_presets_) style_num_ = 0;
         char style_arg[10];
         itoa(style_num_, style_arg, 10);
         current_preset_.SetStyle(blade_num_, style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg)); 
