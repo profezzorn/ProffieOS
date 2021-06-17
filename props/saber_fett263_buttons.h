@@ -1576,7 +1576,6 @@ SaberFett263Buttons() : PropBase() {}
             menu_type_ = MENU_FONT;
             font_num_ = 0;                                               
             num_fonts_ = RunCommandAndGetSingleLine("list_fonts", nullptr, 0, 0, 0);
-            if (!restore_point.get()) restore_point = std::move(current_preset_.font);
             PlayMenuSound("mselect.wav");
             break;
           case 4:
@@ -1584,7 +1583,6 @@ SaberFett263Buttons() : PropBase() {}
             StartOrStopTrack();
             menu_type_ = MENU_TRACK;
             track_num_ = 0;
-            if (!restore_point.get()) restore_point = std::move(current_preset_.track);
             PlayMenuSound("mselect.wav");
             break;
           case 5:
@@ -2626,6 +2624,7 @@ SaberFett263Buttons() : PropBase() {}
         }
         break;
       case MENU_FONT:
+        if (!restore_point.get()) restore_point = std::move(current_preset_.font);
         font_num_ += direction;
         if (font_num_ > num_fonts_ - 1) font_num_ = 1;
         if (font_num_ <= 0) font_num_ = num_fonts_ - 1;
@@ -2642,6 +2641,7 @@ SaberFett263Buttons() : PropBase() {}
           track_player_->Stop();
           track_player_.Free();
         }
+        if (!restore_point.get()) restore_point = std::move(current_preset_.track);
         track_num_ += direction;
         if (track_num_ > num_tracks_ - 1) track_num_ = 1;
         if (track_num_ <= 0) track_num_ = num_tracks_ - 1;
@@ -3172,6 +3172,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_FONT:
         if (restore_point.get()) current_preset_.font = std::move(restore_point);
+        restore_point = nullptr;
         current_preset_.Save();
         UpdateFont(current_preset_.preset_num);
         menu_type_ = MENU_TOP;
@@ -3183,6 +3184,7 @@ SaberFett263Buttons() : PropBase() {}
           track_player_.Free();
         }
         if (restore_point.get()) current_preset_.track = std::move(restore_point);
+        restore_point = nullptr;
         current_preset_.Save();
         menu_type_ = MENU_TOP;
         MenuRevert();
