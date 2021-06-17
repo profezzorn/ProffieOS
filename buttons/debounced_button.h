@@ -10,9 +10,15 @@ public:
   void Update() {
     STATE_MACHINE_BEGIN();
     while (true) {
-      if (!Read()) last_off_ = millis();
-      pushed_ = millis() - last_off_ > timeout();
+      pushed_ = false;
+      last_off_ = millis();
       YIELD();
+      if (!Read()) continue;
+      YIELD();
+      while (Read()) {
+	pushed_ = millis() - last_off_ > timeout();
+	YIELD();
+      }
     }
     STATE_MACHINE_END();
   }
