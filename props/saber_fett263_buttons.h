@@ -896,6 +896,7 @@ SaberFett263Buttons() : PropBase() {}
     UpdateFont(current_preset_.preset_num);
   }
 
+  // Save Style Settings (IntArg values)
   void SaveStyleSetting() {
     char style_arg[10];
     itoa(calc_, style_arg, 10);
@@ -1379,7 +1380,7 @@ SaberFett263Buttons() : PropBase() {}
         if (track_num_ == -1 && track_mode_ == PLAYBACK_LOOP) {
           StartOrStopTrack();
         } else {
-          if (track_num_ > num_tracks_) track_num_ = 0;
+          if (track_num_ >= num_tracks_) track_num_ = 0;
           switch (track_mode_) {
             case PLAYBACK_ROTATE:
               track_num_ += 1;
@@ -1526,6 +1527,7 @@ SaberFett263Buttons() : PropBase() {}
         rehearse_ = true;
         MenuExit();
         FastOn();
+        break;
       case MENU_VOLUME:
         if (SaberBase::IsOn()) {
           menu_type_ = MENU_SETTING_SUB;
@@ -2399,7 +2401,7 @@ SaberFett263Buttons() : PropBase() {}
           track_player_.Free();
         }
         track_num_ += direction;
-        if (track_num_ > num_tracks_ - 1) track_num_ = 0;
+        if (track_num_ >= num_tracks_) track_num_ = 0;
         if (track_num_ < 0) track_num_ = num_tracks_ - 1;
         char playtrack[128];
         RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, playtrack, sizeof(playtrack));
