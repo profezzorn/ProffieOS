@@ -1513,6 +1513,22 @@ SaberFett263Buttons() : PropBase() {}
 #endif  
   };
 
+  enum GestureControls {
+    GESTURE_MENU = 0,
+    SWINGON_IGNITION = 1,
+    SWINGON_SPEED = 2,
+    TWIST_IGNITION = 3,
+    THRUST_IGNITION = 4,
+    STAB_IGNITION = 5,
+    FORCE_PUSH = 6,
+    FORCE_PUSH_LENGTH = 7,
+    TWIST_RETRACTION = 8,
+    LOCKUP_DELAY = 9,
+    CLASH_DETECTION = 10,
+    POWER_LOCK = 11,
+    MAX_CLASH = 12,
+  };
+   
 // Edit Mode Menu Select (PWR Button)
   void MenuChoice() {
     const char* tmp; 
@@ -1972,7 +1988,7 @@ SaberFett263Buttons() : PropBase() {}
         PlayMenuSound("mconfirm.wav");
         break;
       case MENU_GESTURE_SUB:
-        switch (effect_num_) {
+        switch (gesture_num_) {
           case 1:
             menu_type_ = MENU_SWINGON;
             if (saved_gesture_control.swingon) {
@@ -2204,7 +2220,7 @@ SaberFett263Buttons() : PropBase() {}
           case 3:
             menu_type_ = MENU_GESTURE_SUB;
             PlayMenuSound("moption.wav");
-            effect_num_ = 0;
+            gesture_num_ = 0;
             break;
           case 4:
             menu_type_ = MENU_CLASH_THRESHOLD;
@@ -2675,56 +2691,47 @@ SaberFett263Buttons() : PropBase() {}
         }
         break;         
       case MENU_GESTURE_SUB:
-        effect_num_ += direction;
-        if (effect_num_ <= 0) effect_num_ = GESTURE_OPTIONS;
-        if (effect_num_ > GESTURE_OPTIONS) effect_num_ = 1;
-        switch (effect_num_) {
-          case 1:
-          // Swing Ignition
+        gesture_num_ += direction;
+        if (gesture_num_ <= 0) gesture_num_ = GESTURE_OPTIONS;
+        if (gesture_num_ > GESTURE_OPTIONS) gesture_num_ = 1;
+        switch (gesture_num_) {
+          default:
+            PlayMenuSound("moption.wav");
+            break;
+          case SWINGON_IGNITION:
             PlayMenuSound("mswingon.wav");
             break;
-          case 2:
-          // Swing On Speed
+          case SWINGON_SPEED:
             PlayMenuSound("mswingsp.wav");
             break;
-          case 3:
-          // Twist Ignition
+          case TWIST_IGNITION:
             PlayMenuSound("mtwiston.wav");
             break;
-          case 4:
-          // Thrust Ignition
+          case THRUST_IGNITION:
             PlayMenuSound("mthrston.wav");
             break;
-          case 5:
-          // Stab Ignition
+          case STAB_IGNITION:
             PlayMenuSound("mstabon.wav");
             break;
-          case 6:
-          // Force Push
+          case FORCE_PUSH:
             PlayMenuSound("mpush.wav");
             break;
-          case 7:
-          // Force Push Length
+          case FORCE_PUSH_LENGTH:
             PlayMenuSound("mpushlen.wav");
             break;
-          case 8:
-          // Twist Retraction
+          case TWIST_RETRACTION:
             PlayMenuSound("mtwstoff.wav");
             break;
-          case 9:
-          // Lockup Delay
+          case LOCKUP_DELAY:
             PlayMenuSound("mlockdly.wav");
             break;
-          case 10:
-          // Clash Detection Level
+          case CLASH_DETECTION:
             PlayMenuSound("mbmclash.wav");
             break;
-          case 11:
-          // Power Lock
+          case POWER_LOCK:
             PlayMenuSound("mpwrlock.wav");
             break;
-          case 12:
-          // Maximum Clash Strength
+          case MAX_CLASH:
             PlayMenuSound("maxclash.wav");
             break;
         }
@@ -4634,6 +4641,7 @@ private:
   int ignite_time_; // Ignition timer for Edit Mode retraction preview
   int dial_ = -1; // Menu dial "tick"
   int sub_dial_; // Sub menu dial "tick"
+  int gesture_num_;
   float twist_menu_ = M_PI / 4; // Twist Menu sensitivity
 #ifdef FETT263_EDIT_MODE_MENU
   bool choice_ = false; // Edit Mode selection confirmed
