@@ -1513,8 +1513,27 @@ SaberFett263Buttons() : PropBase() {}
 #endif  
   };
 
+  enum MainMenu {
+    EDIT_STYLE = 1,
+    EDIT_COLORS = 2,
+    EDIT_FONT = 3,
+    EDIT_TRACK = 4,
+    EDIT_SETTINGS = 5,
+    COPY_PRESET = 6,
+    DELETE_PRESET = 7,
+    EXIT_MENU = 8,
+  };
+   
+  enum SettingsMenu {
+    EDIT_VOLUME = 1,
+    EDIT_STYLE_SETTINGS = 2,
+    EDIT_CONTROL_SETTINGS = 3,
+    EDIT_CLASH_THRESHOLD = 4,
+    EDIT_BLADE_LENGTH = 5,
+    EDIT_BRIGHTNESS = 6,
+  };
+   
   enum GestureControls {
-    GESTURE_MENU = 0,
     SWINGON_IGNITION = 1,
     SWINGON_SPEED = 2,
     TWIST_IGNITION = 3,
@@ -1555,7 +1574,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_EDIT_MODE_MENU        
       case MENU_TOP:
         switch (menu_top_pos_) {
-          case 1:   
+          case EDIT_STYLE:   
   #if NUM_BLADES == 1
             menu_type_ = MENU_STYLE;
             num_presets_ = current_config->num_presets;
@@ -1571,7 +1590,7 @@ SaberFett263Buttons() : PropBase() {}
             PlayMenuSound("mblade.wav");
             break;
   #endif
-          case 2:
+          case EDIT_COLORS:
             if (style_parser.MaxUsedArgument(current_preset_.GetStyle(1)) == 0) {
               menu_type_ = MENU_COLOR;
               PlayMenuSound("mselect.wav");
@@ -1594,33 +1613,33 @@ SaberFett263Buttons() : PropBase() {}
   #endif
             }
             break; 
-          case 3:
+          case EDIT_FONT:
             menu_type_ = MENU_FONT;
             font_num_ = 0;                                               
             num_fonts_ = RunCommandAndGetSingleLine("list_fonts", nullptr, 0, 0, 0);
             PlayMenuSound("mselect.wav");
             break;
-          case 4:
+          case EDIT_TRACK:
             num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
             StartOrStopTrack();
             menu_type_ = MENU_TRACK;
             track_num_ = 0;
             PlayMenuSound("mselect.wav");
             break;
-          case 5:
+          case EDIT_SETTINGS:
             menu_type_ = MENU_SETTING_SUB;
             PlayMenuSound("moption.wav");
             menu_sub_pos_ = 0;
             break;
-          case 6:
+          case COPY_PRESET:
             menu_type_ = MENU_COPY;
             PlayMenuSound("mconfirm.wav");
             break;
-          case 7:
+          case DELETE_PRESET:
             menu_type_ = MENU_DELETE;
             PlayMenuSound("mconfirm.wav");
             break;
-          case 8:
+          case EXIT_MENU:
             PlayMenuSound("mselect.wav");
             MenuExit();
             break;
@@ -2845,28 +2864,22 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_sub_pos_ <= 0) menu_sub_pos_ = SET_SUBMENUS;
         if (menu_sub_pos_ > SET_SUBMENUS) menu_sub_pos_ = 1;
         switch (menu_sub_pos_) {
-          case 1:
-          // Edit Volume
+          case EDIT_VOLUME:
             PlayMenuSound("mvolume.wav");
             break;
-          case 2:
-          // Edit Style Settings
+          case EDIT_STYLE_SETTINGS:
             PlayMenuSound("mstylset.wav");
             break;
-          case 3:
-          // Edit Control Settings
+          case EDIT_CONTROL_SETTINGS:
             PlayMenuSound("mcontrol.wav");
             break;
-          case 4:
-          // Edit Clash Threshold
+          case EDIT_CLASH_THRESHOLD:
             PlayMenuSound("mclashth.wav");
             break;
-          case 5:
-          // Edit Blade Length
+          case EDIT_BLADE_LENGTH:
             PlayMenuSound("mlength.wav");
             break;
-          case 6:
-          // Edit Brightness
+          case EDIT_BRIGHTNESS:
             PlayMenuSound("mdim.wav");
           default:
             break;
