@@ -1523,6 +1523,13 @@ SaberFett263Buttons() : PropBase() {}
     DELETE_PRESET = 7,
     EXIT_MENU = 8,
   };
+  
+  enum ColorOptions {
+    COLOR_LIST_MODE = 0,
+    COLOR_HUE_MODE = 1,
+    WHITE_MODE = 2,
+    BLACK_MODE = 3,
+  }; 
    
   enum SettingsMenu {
     EDIT_VOLUME = 1,
@@ -1787,21 +1794,21 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_COLOR_MODE:
         edit_color_ = true;
         switch (sub_dial_) {
-          case 0:
+          case COLOR_LIST_MODE:
             twist_menu_ = M_PI / 6;
             dial_ = -1;
             color_mode_ = COLOR_LIST;
             break;
-          case 1:
+          case COLOR_HUE_MODE:
             color_mode_ = EDIT_COLOR;
             hsl_.S = 1.0;
             break;
-          case 2: 
+          case WHITE_MODE: 
             color_mode_ = EDIT_WHITE;
             twist_menu_ = M_PI / 18;
             hsl_.S = 1.0;
             break;
-          case 3: 
+          case BLACK_MODE: 
             color_mode_ = EDIT_BLACK;
             twist_menu_ = M_PI / 36;
             hsl_.S = 1.0;
@@ -2610,16 +2617,16 @@ SaberFett263Buttons() : PropBase() {}
         if (sub_dial_ < 0) sub_dial_ = 3;
         if (sub_dial_ > 3) sub_dial_ = 0;
         switch (sub_dial_) {
-          case 0:
+          case COLOR_LIST_MODE:
             PlayMenuSound("mcolorlt.wav");
             break;
-          case 1:
+          case COLOR_HUE_MODE:
             PlayMenuSound("mhue.wav");
             break;
-          case 2:
+          case WHITE_MODE:
             PlayMenuSound("mwhite.wav");
             break;
-          case 3:
+          case BLACK_MODE:
             PlayMenuSound("mblack.wav");
             break;
           default:
