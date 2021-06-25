@@ -1662,26 +1662,21 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_BLADE_COLOR:
   #if NUM_BLADES > 2
-        menu_type_ = MENU_COLOR_SUB;
-        menu_sub_pos_ = 0;
         copy_blade_ = blade_num_;
-        show_preview_.Stop(blade_preview_);
-        blade_preview_ = 0;
         PlayMenuSound("mcolorsb.wav");
-        break;
   #else
-        menu_type_ = MENU_COLOR_SUB;
         if (blade_num_ == 1) {
           copy_blade_ = 2;
         } else {
           copy_blade_ = 1;
         }
+        PlayMenuSound("moption.wav");
+  #endif
+        menu_type_ = MENU_COLOR_SUB;
         menu_sub_pos_ = 0;
         show_preview_.Stop(blade_preview_);
         blade_preview_ = 0;
-        PlayMenuSound("moption.wav");
         break;
-  #endif
       case MENU_BLADE_COPY:
         menu_type_ = MENU_COPY_COLOR;
         SetColorCopy();
@@ -2258,13 +2253,12 @@ SaberFett263Buttons() : PropBase() {}
             length_revert_ = blade_length_;
             LengthPreview(blade_num_);
             PlayMenuSound("mselect.wav");
-            break;
   #else
             menu_type_ = MENU_BLADE_LENGTH;
             blade_num_ = 0;
             PlayMenuSound("mblade.wav");
-            break; 
   #endif             
+          break;
           case 6:
             menu_type_ = MENU_DIM_BLADE;
             dim_revert_ = dim = pow(SaberBase::GetCurrentDimming() / 16384.0, 1/2.5);
@@ -2493,7 +2487,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_BLADE_LENGTH:
         blade_num_ += direction;
         if (blade_num_ > NUM_BLADES) blade_num_ = 1;
-        if (blade_num_ < 1) blade_num_ = NUM_BLADES;
+        if (blade_num_ == 0) blade_num_ = NUM_BLADES;
         BladePreview(blade_num_);
         SFX_mnum.Select(blade_num_ - 1); 
         wav_player->PlayOnce(&SFX_mnum, 0.0);
@@ -2529,8 +2523,8 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_COLOR:
         break;
       case MENU_COLOR_SUB:
-  #if NUM_BLADES == 1
         menu_sub_pos_ += direction;
+  #if NUM_BLADES == 1
         if (menu_sub_pos_ <= 0) menu_sub_pos_ = 2;
         if (menu_sub_pos_ > 2) menu_sub_pos_ = 1;
         switch (menu_sub_pos_) {
@@ -2542,7 +2536,6 @@ SaberFett263Buttons() : PropBase() {}
             break;
         }
   #else
-        menu_sub_pos_ += direction;
         if (menu_sub_pos_ <= 0) menu_sub_pos_ = 3;
         if (menu_sub_pos_ > 3) menu_sub_pos_ = 1;
         switch (menu_sub_pos_) {
