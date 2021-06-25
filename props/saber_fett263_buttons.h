@@ -1724,11 +1724,10 @@ SaberFett263Buttons() : PropBase() {}
         current_preset_.Save();
   #if NUM_BLADES == 1
         menu_type_ = MENU_TOP;
-        MenuSave();
   #else           
         menu_type_ = MENU_BLADE_STYLE;
-        MenuSave();
   #endif
+        MenuSave();
         break;
       case MENU_COLOR:
         break;
