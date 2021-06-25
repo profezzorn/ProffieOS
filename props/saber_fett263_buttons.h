@@ -2498,7 +2498,8 @@ SaberFett263Buttons() : PropBase() {}
         SFX_mnum.Select(blade_num_ - 1); 
         wav_player->PlayOnce(&SFX_mnum, 0.0);
         break;
-      case MENU_COPY_COLOR:
+      case MENU_COPY_COLOR: 
+#endif
       case MENU_RESET_COLOR:           
       case MENU_COPY:
       case MENU_DELETE:
@@ -2510,7 +2511,6 @@ SaberFett263Buttons() : PropBase() {}
           PlayMenuSound("mcancel.wav");
         }
         break;
-  #endif
       case MENU_STYLE:
         style_num_ += direction;
         if (style_num_ < 0) style_num_ = num_presets_ - 1;
