@@ -7,7 +7,7 @@
 #include "../functions/wavlen.h"
 // Edit Mode Style Arguments / Variables
 
-enum ArgumentNames {
+enum RgbArgumentNames {
   BASE_COLOR_ARG = 1, // Primary Base Color
   ALT_COLOR_ARG = 2, // Alternate or Force Color (free-use)
   BLAST_COLOR_ARG = 3, // Blast Color
@@ -23,6 +23,9 @@ enum ArgumentNames {
   SWING_COLOR_ARG = 13, // Swing Color (Responsive Swing Effects)
   EMITTER_COLOR_ARG = 14, // Emitter Color (Emitter Spark) can be used for PostOff
   OFF_COLOR_ARG = 15, // Off Color (Color when blade is Off, for crystals and accents)
+};
+
+enum IntArgumentNames {
   STYLE_OPTION_ARG = 16, // Style Option
   IGNITION_OPTION_ARG = 17, // Ignition Options
   IGNITION_TIME_ARG = 18, // used in IgnitionTime alias
