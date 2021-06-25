@@ -982,6 +982,7 @@ SaberFett263Buttons() : PropBase() {}
     SAY_BATTERY,
     SAY_DECIMAL,
     SAY_WHOLE,
+    SAY_MILLIS,
   };
 
   void TensValue(int number) {
@@ -1052,6 +1053,7 @@ SaberFett263Buttons() : PropBase() {}
         if (say_type == SAY_BATTERY) sound_queue_.Play(SoundToPlay("mvolts.wav"));
         break;
       case SAY_WHOLE:
+      case SAY_MILLIS:
         // Thousands
         if (thousand > 0) {
           TensValue(thousand);
@@ -1068,6 +1070,7 @@ SaberFett263Buttons() : PropBase() {}
         } else {
           TensValue(ones);
         }
+        if (say_type == SAY_MILLIS) sound_queue_.Play(SoundToPlay("mmillis.wav"));
         break;
       default:
         break;
@@ -2009,7 +2012,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_GESTURE_SUB:
         switch (gesture_num_) {
-          case 1:
+          case SWINGON_IGNITION:
             menu_type_ = MENU_SWINGON;
             if (saved_gesture_control.swingon) {
               PlayMenuSound("mtrue.wav");
@@ -2019,13 +2022,13 @@ SaberFett263Buttons() : PropBase() {}
               choice_ = false;
             }
             break;
-          case 2:
+          case SWINGON_SPEED:
             menu_type_ = MENU_SWINGON_SPEED;
             PlayMenuSound("mselect.wav");
             calc_ = saved_gesture_control.swingonspeed;
             SayNumber(calc_, SAY_WHOLE);
             break;
-          case 3:
+          case TWIST_IGNITION:
             menu_type_ = MENU_TWISTON;
             if (saved_gesture_control.twiston) {
               PlayMenuSound("mtrue.wav");
@@ -2035,7 +2038,7 @@ SaberFett263Buttons() : PropBase() {}
               choice_ = false;
             }
             break;
-          case 4:
+          case THRUST_IGNITION:
             menu_type_ = MENU_THRUSTON;
             if (saved_gesture_control.thruston) {
               PlayMenuSound("mtrue.wav");
@@ -2045,7 +2048,7 @@ SaberFett263Buttons() : PropBase() {}
               choice_ = false;
             }
             break;
-          case 5:
+          case STAB_IGNITION:
             menu_type_ = MENU_STABON;
             if (saved_gesture_control.stabon) {
               PlayMenuSound("mtrue.wav");
@@ -2055,7 +2058,7 @@ SaberFett263Buttons() : PropBase() {}
               choice_ = false;
             }
             break;
-          case 6:
+          case FORCE_PUSH:
             menu_type_ = MENU_FORCEPUSH;               
             if (saved_gesture_control.forcepush) {
               PlayMenuSound("mtrue.wav");
@@ -2065,13 +2068,13 @@ SaberFett263Buttons() : PropBase() {}
               choice_ = false;
             }
             break;
-          case 7:
+          case FORCE_PUSH_LENGTH:
             menu_type_ = MENU_FORCEPUSH_LENGTH;
             PlayMenuSound("mselect.wav");
             calc_ = saved_gesture_control.forcepushlen;
             SayNumber(calc_, SAY_WHOLE);
             break;
-          case 8:
+          case TWIST_RETRACTION:
             menu_type_ = MENU_TWISTOFF;
             if (saved_gesture_control.twistoff) {
               PlayMenuSound("mtrue.wav");
@@ -2081,19 +2084,19 @@ SaberFett263Buttons() : PropBase() {}
               choice_ = false;
             }
             break;
-          case 9:
+          case LOCKUP_DELAY:
             menu_type_ = MENU_LOCKUP_DELAY;
             PlayMenuSound("mselect.wav");
             calc_ = saved_gesture_control.lockupdelay;
-            SayNumber(calc_, SAY_WHOLE);             
+            SayNumber(calc_, SAY_MILLIS);             
             break;
-          case 10:
+          case CLASH_DETECTION:
             menu_type_ = MENU_CLASH_DETECT;
             PlayMenuSound("mselect.wav");
             calc_ = saved_gesture_control.clashdetect;
             SayNumber(calc_, SAY_WHOLE);
             break;
-          case 11:
+          case POWER_LOCK:
             menu_type_ = MENU_POWERLOCK;
             if (saved_gesture_control.powerlock) {
               PlayMenuSound("mtrue.wav");
@@ -2103,7 +2106,7 @@ SaberFett263Buttons() : PropBase() {}
               choice_ = false;
             }
             break;
-          case 12:
+          case MAX_CLASH:
             menu_type_ = MENU_MAX_CLASH;
             PlayMenuSound("mselect.wav");
             calc_ = saved_gesture_control.maxclash;
@@ -2856,7 +2859,7 @@ SaberFett263Buttons() : PropBase() {}
             PlayMenuSound("mmin.wav");
           }
         }
-        SayNumber(calc_, SAY_WHOLE);
+        SayNumber(calc_, SAY_MILLIS);
         break;         
       case MENU_SETTING_SUB:
         menu_sub_pos_ += direction;
