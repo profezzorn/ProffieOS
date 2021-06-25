@@ -2551,7 +2551,7 @@ SaberFett263Buttons() : PropBase() {}
   #endif
         break;
       case MENU_EFFECT:
-        while (true) {
+        for (int i = 0; i < 50; i++) {
           effect_num_ += direction;
           if (effect_num_ <= 0) effect_num_ = COLOR_SUB;
           if (effect_num_ > COLOR_SUB) effect_num_ = 1;
@@ -2918,7 +2918,7 @@ SaberFett263Buttons() : PropBase() {}
         SaberBase::SetDimming(pow(dim, 2.2) * 16384);
         break;
       case MENU_STYLE_SETTING_SUB:
-        while (true) {
+        for (int i = 0; i < 50; i++) {
           if (direction > 0) {
             effect_num_ += direction;
             if (effect_num_ > STYLE_SETTINGS) effect_num_ = 1;
