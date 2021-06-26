@@ -652,8 +652,7 @@ static constexpr Color16 color_list_[] = {
     { 65535, 51142, 30582 }, // Moccasin
     { 65535, 62708, 40349 }, // LemonChiffon
     { 65535, 48059, 27756 }, // NavajoWhite
-    { 65535, 65535, 65535 }, // White
-    { 0, 0, 65535 }
+    { 65535, 65535, 65535 } // White
 };
 
 // The Saber class implements the basic states and actions
