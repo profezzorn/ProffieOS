@@ -75,25 +75,25 @@ struct SoundToPlay {
 template<int QueueLength>
 class SoundQueue {
 public:
-   bool Play(SoundToPlay p) {
-     if (sounds_ < QueueLength) {
-       queue_[sounds_++] = p;
-       return true;
-     }
-     return false;
-   }
-   // Called from Loop()
- void Poll(RefPtr<BufferedWavPlayer>& player) {
-      if (sounds_ &&  (!player || !player->isPlaying())) {
-          if (!player) {
-            player = GetFreeWavPlayer();
-            if (!player) return;
-          }
-          queue_[0].Play(player.get());
-          sounds_--;
-          for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
+  bool Play(SoundToPlay p) {
+    if (sounds_ < QueueLength) {
+      queue_[sounds_++] = p;
+      return true;
+    }
+    return false;
+  }
+  // Called from Loop()
+  void Poll(RefPtr<BufferedWavPlayer>& player) {
+    if (sounds_ &&  (!player || !player->isPlaying())) {
+      if (!player) {
+        player = GetFreeWavPlayer();
+        if (!player) return;
       }
-   }
+      queue_[0].Play(player.get());
+      sounds_--;
+      for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
+    }
+  }
 private:
   int sounds_;
   SoundToPlay queue_[QueueLength];
