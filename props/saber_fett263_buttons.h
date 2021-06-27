@@ -510,7 +510,9 @@ public:
   int forcepushlen; // Force Push Length
   int lockupdelay; // Lockup Delay (for Battle Mode)
   bool twistoff; // Twist Off retraction
-  bool powerlock; // diable PWR button for retraction, for use with "Power Lock" mode to prevent button turning saber off
+  // disable PWR button for retraction, for use with "Power Lock" mode 
+  // to prevent button turning saber off
+  bool powerlock;
   int clashdetect; // maximum Clash Strength to detect Clash during Battle Mode (0 ~ 10 range)
   int maxclash; // maximum Clash Strength for Clash Sound and Detection works with CLASH_THRESHOLD_G to create range of Clash Strength (8 ~ 16 range)
 };
@@ -3539,7 +3541,9 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
-  // Fast On Gesture Ignition
+  // Fast On, like On() but skips preon sound and effect so ignition is immediate
+  // For use with gestures where immediate response makes more sense
+  // and in Edit Mode previews
   virtual void FastOn() {
     if (IsOn()) return;
     if (current_style() && current_style()->NoOnOff())
