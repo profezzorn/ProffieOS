@@ -1528,6 +1528,15 @@ SaberFett263Buttons() : PropBase() {}
     EXIT_MENU = 8,
   };
   
+  enum ColorSubMenu {
+    EDIT_EFFECT_COLOR = 1,
+#if NUM_BLADES == 1
+    RESET_COLORS = 2,
+#else
+    COPY_COLORS = 2,
+    RESET_COLORS = 3,
+#endif
+  };
   enum ColorOptions {
     COLOR_LIST_MODE = 0,
     COLOR_HUE_MODE = 1,
@@ -1745,11 +1754,11 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_COLOR_SUB:
   #if NUM_BLADES == 1
         switch (menu_sub_pos_) {
-          case 1:
+          case EDIT_EFFECT_COLOR:
             menu_type_ = MENU_EFFECT;
             PlayMenuSound("meffect.wav");
             break;
-          case 2:
+          case RESET_COLORS:
             menu_type_ = MENU_RESET_COLOR;
             PlayMenuSound("mconfirm.wav");
             break;
@@ -1758,16 +1767,16 @@ SaberFett263Buttons() : PropBase() {}
         }
   #elif NUM_BLADES == 2
         switch (menu_sub_pos_) {
-          case 1:
+          case EDIT_EFFECT_COLOR:
             menu_type_ = MENU_EFFECT;
             PlayMenuSound("meffect.wav");
             break;
-          case 2:
+          case COPY_COLOR:
             menu_type_ = MENU_COPY_COLOR;
             SetColorCopy();
             PlayMenuSound("mconfirm.wav");
             break;
-          case 3:
+          case RESET_COLORS:
             menu_type_ = MENU_RESET_COLOR;
             PlayMenuSound("mconfirm.wav");
             break;
@@ -1777,16 +1786,16 @@ SaberFett263Buttons() : PropBase() {}
         }
   #else 
         switch (menu_sub_pos_) {
-          case 1:
+          case EDIT_EFFECT_COLOR:
             menu_type_ = MENU_EFFECT;
             PlayMenuSound("meffect.wav");
             break;
-          case 2:
+          case COPY_COLOR:
             menu_type_ = MENU_BLADE_COPY;
             SetColorCopy();
             PlayMenuSound("mblade.wav");
             break;
-          case 3:
+          case RESET_COLOR:
             menu_type_ = MENU_RESET_COLOR;
             PlayMenuSound("mconfirm.wav");
             break;
@@ -2226,11 +2235,11 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_SETTING_SUB:
         switch (menu_sub_pos_) {
-          case 1:
+          case EDIT_VOLUME:
             menu_type_ = MENU_VOLUME;
             PlayMenuSound("mselect.wav");
             break;
-          case 2:
+          case EDIT_STYLE_SETTINGS:
             effect_num_ = 0;
   #if NUM_BLADES == 1
             menu_type_ = MENU_STYLE_SETTING_SUB;
@@ -2241,18 +2250,18 @@ SaberFett263Buttons() : PropBase() {}
             PlayMenuSound("mblade.wav");
   #endif
             break;
-          case 3:
+          case EDIT_CONTROL_SETTINGS:
             menu_type_ = MENU_GESTURE_SUB;
             PlayMenuSound("moption.wav");
             gesture_num_ = 0;
             break;
-          case 4:
+          case EDIT_CLASH_THRESHOLD:
             menu_type_ = MENU_CLASH_THRESHOLD;
             clash_t_ = GetCurrentClashThreshold();
             SayNumber(clash_t_, SAY_DECIMAL);
             PlayMenuSound("mselect.wav");
             break;
-          case 5:
+          case EDIT_BLADE_LENGTH:
   #if NUM_BLADES == 1
             menu_type_ = MENU_LENGTH;
             SaveState(current_preset_.preset_num);
@@ -2269,7 +2278,7 @@ SaberFett263Buttons() : PropBase() {}
             PlayMenuSound("mblade.wav");
   #endif             
           break;
-          case 6:
+          case EDIT_BRIGHTNESS:
             menu_type_ = MENU_DIM_BLADE;
             dim_revert_ = dim = pow(SaberBase::GetCurrentDimming() / 16384.0, 1/2.5);
             PlayMenuSound("mselect.wav");
@@ -2463,28 +2472,28 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_top_pos_ <= 0) menu_top_pos_ = SUBMENUS;
         if (menu_top_pos_ > SUBMENUS) menu_top_pos_ = 1;
         switch (menu_top_pos_) {
-          case 1:
+          case EDIT_STYLE:
             PlayMenuSound("mstyle.wav");
             break;
-          case 2:
+          case EDIT_COLORS:
             PlayMenuSound("mcolor.wav");
             break;
-          case 3:
+          case EDIT_FONT:
             PlayMenuSound("mfont.wav");
             break;
-          case 4:
+          case EDIT_TRACK:
             PlayMenuSound("mtrack.wav");
             break;
-          case 5:
+          case EDIT_SETTINGS:
             PlayMenuSound("msetting.wav");
             break;
-          case 6:
+          case COPY_PRESET:
             PlayMenuSound("mcopy.wav");
             break;
-          case 7:
+          case DELETE_PRESET:
             PlayMenuSound("mdelete.wav");
             break;
-          case 8:
+          case EXIT_MENU:
             PlayMenuSound("mexit.wav");
             break;
        }
@@ -2538,10 +2547,10 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_sub_pos_ <= 0) menu_sub_pos_ = 2;
         if (menu_sub_pos_ > 2) menu_sub_pos_ = 1;
         switch (menu_sub_pos_) {
-          case 1:
+          case EDIT_EFFECT_COLOR:
             PlayMenuSound("mcolorop.wav");
             break;
-          case 2:
+          case RESET_COLORS:
             PlayMenuSound("mresetc.wav");
             break;
         }
@@ -2549,13 +2558,13 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_sub_pos_ <= 0) menu_sub_pos_ = 3;
         if (menu_sub_pos_ > 3) menu_sub_pos_ = 1;
         switch (menu_sub_pos_) {
-          case 1:
+          case EDIT_EFFECT_COLOR:
             PlayMenuSound("mcolorop.wav");
             break;
-          case 2:
+          case COPY_COLOR:
             PlayMenuSound("mcopyc.wav");
             break;
-          case 3:
+          case RESET_COLORS:
             PlayMenuSound("mresetc.wav");
             break;
         }
