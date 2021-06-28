@@ -1091,12 +1091,6 @@ SaberFett263Buttons() : PropBase() {}
   };
 
 #ifdef FETT263_CLASH_STRENGTH_SOUND
-  void SelectFloat(Effect* effect, float value) {
-    int f = effect->files_found() - 1;
-    int file_number = clamp(f * value, 0, f);
-    effect->Select(file_number);
-  }
-   
   void HandleClash() {
     if (clash_type_ == CLASH_BATTLE_MODE) {
       if (SaberBase::GetClashStrength() < saved_gesture_control.clashdetect) {
@@ -1113,20 +1107,20 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case CLASH_NORMAL:
         if (SFX_clash) {
-          SelectFloat(&SFX_clash, clash_value);
+          SFX_clash.SelectFloat(clash_value);
         } else {
-          SelectFloat(&SFX_clsh, clash_value);
+          SFX_clsh.SelectFloat(clash_value);
         }
         SaberBase::DoClash();
         break;
       case CLASH_STAB:
         if (SFX_stab) {
-          SelectFloat(&SFX_stab, clash_value);
+          SFX_stab.SelectFloat(clash_value);
         } else {
           if (SFX_clash) {
-            SelectFloat(&SFX_clash, clash_value);
+            SFX_clash.SelectFloat(clash_value);
           } else {
-            SelectFloat(&SFX_clsh, clash_value);
+            SFX_clsh.SelectFloat(clash_value);
           }          
         }
         SaberBase::DoStab();
@@ -1134,7 +1128,7 @@ SaberFett263Buttons() : PropBase() {}
       case CLASH_LOCKUP:
         if (battle_mode_) clash_value = (SaberBase::GetClashStrength() - saved_gesture_control.clashdetect) / saved_gesture_control.maxclash;
         if (SFX_bgnlock) {
-          SelectFloat(&SFX_bgnlock, clash_value);
+          SFX_bgnlock.SelectFloat(clash_value);
         }
         SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
         SaberBase::DoBeginLockup();
@@ -1142,7 +1136,7 @@ SaberFett263Buttons() : PropBase() {}
       case CLASH_LOCKUP_END:
         if (SFX_endlock) {
           float swing_value = fusor.swing_speed() / 600;
-          SelectFloat(&SFX_endlock, swing_value);
+          SFX_endlock.SelectFloat(swing_value);
         }
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
