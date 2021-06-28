@@ -231,7 +231,11 @@ class Effect {
     selected_++;
     if (selected_ == (int)files_found()) selected_ = 0;
   }
-
+  void SelectFloat(float value) {
+    int f = files_found() - 1;
+    selected_ = clamp(f * value, 0, f);
+  }
+	
   Effect* GetFollowing() const {
     return following_;
   }
