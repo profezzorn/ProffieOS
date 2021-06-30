@@ -4665,11 +4665,13 @@ private:
   int gesture_num_;
   float twist_menu_ = M_PI / 4; // Twist Menu sensitivity
 #ifdef FETT263_EDIT_MODE_MENU
-  bool choice_ = false; // Edit Mode selection confirmation 
-   // for True/False control when deleting, disabling/enabling or copying
-  bool next_event_ = false; // Do next event in Edit Mode, allows an action/wav to complete before 
-   // "next event" begins, for use with choreography and ignition/retraction previews where menu sound
-   // would otherwise be truncated by change in state
+  bool choice_ = false;
+  // Edit Mode selection confirmation 
+  // for True/False control when deleting, disabling/enabling or copying
+  bool next_event_ = false;
+  // Do next event in Edit Mode, allows an action/wav to complete before 
+  // "next event" begins, for use with choreography and ignition/retraction previews where menu sound
+  // would otherwise be truncated by change in state
   bool off_event_ = false; // Do off event in Edit Mode
   bool restart_ = false; // Ignite blade after off event in Edit Mode
   bool edit_color_ = false; // Color Editing Mode active
@@ -4689,7 +4691,9 @@ private:
   int style_revert_; // Original Style Number for Revert
   int length_revert_; // Original Blade Length for Revert
   int arg_revert_; // Original Arg vale for Revert
-  int calc_; // Calculated value for Settings Arg
+  int calc_; 
+  // Calculated value for IntArg (Settings Arguments)
+  // used to add or subtract from original saved value by dial
 #endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
   int clash_count_ = -1; // Choreography Mode Clash counter
