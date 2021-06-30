@@ -35,6 +35,7 @@ Wavs to use for switching Modes:
 #include "prop_base.h"
 
 #define PROP_TYPE Blaster
+#define PROP_HAS_BULLET_COUNT
 
 EFFECT(clipin);
 EFFECT(clipout);
@@ -102,6 +103,10 @@ public:
 #else
   const int max_shots_ = -1;
 #endif
+
+  virtual int GetBulletCount() {
+    return shorts_fired_ - max_shots_;
+  }
 
   virtual bool CheckJam(int percent) {
     int random = rand() % 100;
