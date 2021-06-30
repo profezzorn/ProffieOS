@@ -121,7 +121,8 @@ Volume Menu:
        Volume DOWN -    Double click and hold POW  while in Volume Menu.
 Spoken Battery Level -  Triple click POW.
 On-Demand Batt Level -  Double click POW.
-                        (requires EFFECT_BATTERY_LEVEL to be in blade style)
+                        (requires EFFECT_BATTERY_LEVEL to be in blade style,
+                        and uses battery.wav sound effect.)
 Turn blade ON -         Short click POW. (or gestures if defined for FastOn)
 Turn blade ON Muted -   Triple click and hold POW.
 *************   WHILE SABER BLADE IS ON   ****************
@@ -194,7 +195,8 @@ Volume Menu:
                         (click then long click) while in Volume Menu.
 Spoken Battery Level -  Hold AUX until it talks.
 On-Demand Batt Level -  Double click POW.
-                        (requires EFFECT_BATTERY_LEVEL to be in blade style)
+                        (requires EFFECT_BATTERY_LEVEL to be in blade style,
+                        and uses battery.wav sound effect.)
 Turn blade ON -         Short click POW. (or gestures if defined for FastOn)
 Turn blade ON Muted -   Triple click and hold POW.
 *************   WHILE SABER BLADE IS ON   ****************
