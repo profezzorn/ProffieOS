@@ -872,7 +872,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_RETRACTION_OPTION:
         UpdateStyle(current_preset_.preset_num);
         off_event_ = true;
-        last_rotate_ = millis();
+        last_rotate_millis_ = millis();
         break;
       default:
         break;
@@ -1200,13 +1200,13 @@ SaberFett263Buttons() : PropBase() {}
         }
       }
     }
-    if (off_event_ && millis() - last_rotate_ > 200) {
+    if (off_event_ && millis() - last_rotate_millis_ > 200) {
       Off();
       off_event_ = false;
       restart_ = true;
-      last_rotate_ = millis();
+      last_rotate_millis_ = millis();
     }
-    if (restart_ && millis() - last_rotate_ > calc_ + 1000) {
+    if (restart_ && millis() - last_rotate_millis_ > calc_ + 1000) {
       restart_ = false;
       FastOn();
     }
@@ -1337,7 +1337,7 @@ SaberFett263Buttons() : PropBase() {}
       
     } else {
       // EVENT_SWING - Swing On gesture control to allow fine tuning of speed needed to ignite
-      if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
+      if (millis() - saber_off_time_millis_ < MOTION_TIMEOUT) {
         SaberBase::RequestMotion();
         if (swinging_ && fusor.swing_speed() < 90) {
           swinging_ = false;
@@ -1408,7 +1408,7 @@ SaberFett263Buttons() : PropBase() {}
    
   void DetectMenuTurn() {
      if (menu_ || color_mode_ == CC_COLOR_LIST) {
-       if (millis() - last_rotate_ > 1000) {
+       if (millis() - last_rotate_millis_ > 1000) {
         float a = fusor.angle2() - current_menu_angle_;
         if (a > M_PI) a-=M_PI*2;
         if (a < -M_PI) a+=M_PI*2;
@@ -1416,13 +1416,13 @@ SaberFett263Buttons() : PropBase() {}
           current_menu_angle_ += twist_menu_;
           if (current_menu_angle_ > M_PI) current_menu_angle_ -= M_PI * 2;
           Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-          last_rotate_ = millis();
+          last_rotate_millis_ = millis();
         }
         if (a < -twist_menu_ * 2/3) {
           current_menu_angle_ -= twist_menu_;
           if (current_menu_angle_ < M_PI) current_menu_angle_ += M_PI * 2;
           Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-          last_rotate_ = millis();
+          last_rotate_millis_ = millis();
         }
       }
     }
@@ -1608,7 +1608,7 @@ SaberFett263Buttons() : PropBase() {}
             if (style_parser.MaxUsedArgument(current_preset_.GetStyle(1)) == 0) {
               menu_type_ = MENU_COLOR;
               PlayMenuSound("mselect.wav");
-              color_revert_ = SaberBase::GetCurrentVariation();
+              variation_revert_ = SaberBase::GetCurrentVariation();
               ToggleColorChangeMode();
               break;
             } else {
@@ -3129,7 +3129,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_COLOR:
         menu_type_ = MENU_TOP;
-        SaberBase::SetVariation(color_revert_);
+        SaberBase::SetVariation(variation_revert_);
         ToggleColorChangeMode();
         MenuCancel();
         break;
@@ -3932,12 +3932,12 @@ void PlayMenuSound(const char* file) {
 #ifdef FETT263_BM_DISABLE_OFF_BUTTON
             if (!battle_mode_ && !saved_gesture_control.powerlock) {
               Off();
-              saber_off_time_ = millis();
+              saber_off_time_millis_ = millis();
             }
 #else
             if (!saved_gesture_control.powerlock) {
             Off();
-            saber_off_time_ = millis();
+            saber_off_time_millis_ = millis();
             battle_mode_ = false;
             }
 #endif
@@ -3990,7 +3990,7 @@ void PlayMenuSound(const char* file) {
           } else {
             SaberBase::DoBlast();
             check_blast_ = true;
-            last_blast_ = millis();
+            last_blast_millis_ = millis();
           }
           return true;
         }
@@ -4059,7 +4059,7 @@ void PlayMenuSound(const char* file) {
           return true;  
         }
         if (check_blast_ && battle_mode_ || rehearse_) {
-          if (!swing_blast_ && millis() - last_blast_ > 2000) {
+          if (!swing_blast_ && millis() - last_blast_millis_ > 2000) {
             swing_blast_ = true;
             hybrid_font.PlayCommon(&SFX_blstbgn);
             SaberBase::DoBlast();
@@ -4408,7 +4408,7 @@ void PlayMenuSound(const char* file) {
         if (!saved_gesture_control.twistoff) return true;
         if (menu_) return true;
         // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_ > 3000) {
+        if (millis() - last_twist_millis_ > 3000) {
 #ifdef FETT263_SAVE_CHOREOGRAPHY
           if (choreo_) {
             if (saved_choreography.clash_rec[clash_count_].stance == SavedRehearsal::STANCE_END) {
@@ -4431,8 +4431,8 @@ void PlayMenuSound(const char* file) {
           }
 #endif
           Off();
-          last_twist_ = millis();
-          saber_off_time_ = millis();
+          last_twist_millis_ = millis();
+          saber_off_time_millis_ = millis();
 #ifndef FETT263_BATTLE_MODE_ALWAYS_ON
           battle_mode_ = false;
 #endif
@@ -4444,8 +4444,8 @@ void PlayMenuSound(const char* file) {
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.twiston) return true;
         // Delay twist events to prevent false trigger from over twisting
-        if (!menu_ && millis() - last_twist_ > 2000 &&
-            millis() - saber_off_time_ > 2000) {
+        if (!menu_ && millis() - last_twist_millis_ > 2000 &&
+            millis() - saber_off_time_millis_ > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -4458,7 +4458,7 @@ void PlayMenuSound(const char* file) {
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
 #endif
-          last_twist_ = millis();
+          last_twist_millis_ = millis();
         }
         return true;
 #else
@@ -4466,8 +4466,8 @@ void PlayMenuSound(const char* file) {
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.twiston) return true;
         // Delay twist events to prevent false trigger from over twisting
-        if (!menu_ && millis() - last_twist_ > 2000 &&
-            millis() - saber_off_time_ > 2000) {
+        if (!menu_ && millis() - last_twist_millis_ > 2000 &&
+            millis() - saber_off_time_millis_ > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif        
@@ -4475,7 +4475,7 @@ void PlayMenuSound(const char* file) {
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
 #endif
-          last_twist_ = millis();
+          last_twist_millis_ = millis();
         }
         return true;
 #endif
@@ -4484,7 +4484,7 @@ void PlayMenuSound(const char* file) {
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.stabon) return true;
-        if (!menu_ && millis() - saber_off_time_ > 2000) {
+        if (!menu_ && millis() - saber_off_time_millis_ > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif        
@@ -4502,7 +4502,7 @@ void PlayMenuSound(const char* file) {
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.stabon) return true;
-        if (!menu_ && millis() - saber_off_time_ > 2000) {
+        if (!menu_ && millis() - saber_off_time_millis_ > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif        
@@ -4518,7 +4518,7 @@ void PlayMenuSound(const char* file) {
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.thruston) return true;
-        if (!menu_ && millis() - saber_off_time_ > 2000) {
+        if (!menu_ && millis() - saber_off_time_millis_ > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif        
@@ -4536,7 +4536,7 @@ void PlayMenuSound(const char* file) {
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.thruston) return true;
-        if (!menu_ && millis() - saber_off_time_ > 2000) {
+        if (!menu_ && millis() - saber_off_time_millis_ > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif        
@@ -4551,21 +4551,21 @@ void PlayMenuSound(const char* file) {
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
         if (!saved_gesture_control.forcepush) return true;
         if (FORCE_PUSH_CONDITION &&
-           millis() - last_push_ > 2000) {
+           millis() - last_push_millis_ > 2000) {
           if (SFX_push) {
             hybrid_font.PlayCommon(&SFX_push);
           } else {
             hybrid_font.DoEffect(EFFECT_FORCE, 0);
           }
-          last_push_ = millis();
+          last_push_millis_ = millis();
         }
         return true;
 
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
         // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_ > 2000) {
-          last_twist_ = millis();
+        if (millis() - last_twist_millis_ > 2000) {
+          last_twist_millis_ = millis();
           Off();
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
@@ -4576,8 +4576,8 @@ void PlayMenuSound(const char* file) {
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
         // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_ > 2000) {
-          last_twist_ = millis();
+        if (millis() - last_twist_millis_ > 2000) {
+          last_twist_millis_ = millis();
           Off();
           previous_preset();
 #ifdef FETT263_DUAL_MODE_SOUND
@@ -4647,11 +4647,11 @@ private:
   uint32_t thrust_begin_millis_; // Thrust timer
   uint32_t push_begin_millis_; // Push timer
   uint32_t clash_impact_millis_; // Clash timer
-  uint32_t last_twist_; // Last Twist (to prevent gesture spamming)
-  uint32_t last_push_; // Last Push (to prevent gesture spamming)
-  uint32_t last_blast_; // Last Blast (for Battle Mode Multi-Blast detection)
-  uint32_t saber_off_time_; // Off timer
-  uint32_t last_rotate_; // Last Rotation (to prevent gesture spamming)
+  uint32_t last_twist_millis_; // Last Twist (to prevent gesture spamming)
+  uint32_t last_push_millis_; // Last Push (to prevent gesture spamming)
+  uint32_t last_blast_millis_; // Last Blast (for Battle Mode Multi-Blast detection)
+  uint32_t saber_off_time_millis_; // Off timer
+  uint32_t last_rotate_millis_; // Last Rotation (to prevent gesture spamming)
   ClashType clash_type_ = CLASH_NONE;
   MenuType menu_type_ = MENU_TOP;
   int menu_top_pos_ = 0; // Top menu dial position
@@ -4665,21 +4665,24 @@ private:
   int gesture_num_;
   float twist_menu_ = M_PI / 4; // Twist Menu sensitivity
 #ifdef FETT263_EDIT_MODE_MENU
-  bool choice_ = false; // Edit Mode selection confirmed
-  bool next_event_ = false; // Do next event in Edit Mode
+  bool choice_ = false; // Edit Mode selection confirmation 
+   // for True/False control when deleting, disabling/enabling or copying
+  bool next_event_ = false; // Do next event in Edit Mode, allows an action/wav to complete before 
+   // "next event" begins, for use with choreography and ignition/retraction previews where menu sound
+   // would otherwise be truncated by change in state
   bool off_event_ = false; // Do off event in Edit Mode
   bool restart_ = false; // Ignite blade after off event in Edit Mode
   bool edit_color_ = false; // Color Editing Mode active
-  uint32_t color_revert_; // ColorChange revert value
+  uint32_t variation_revert_; // Variation revert value
   float hsl_angle_ = 0.0; // HSL angle for Color Editing
   int blade_preview_ = 0; // Blade number for "preview" style
   Color16 saved_color_;
   EditColorMode color_mode_;
-  int style_num_; // Style Number for Edit Style
-  int font_num_; // Font Number for Edit Font
-  int num_fonts_; // Number of Fonts found
-  int num_presets_; // Number of Presets
-  int blade_num_; // Active Blade Number
+  int style_num_; // builtin style number for selection in Edit Mode, based on original config
+  int font_num_; // Font number from list_fonts array for use in Edit Mode dial
+  int num_fonts_; // Total number of fonts from list_fonts array
+  int num_presets_; // Total number of builtin styles based on original config
+  int blade_num_; // Active Blade Number for editing
   int copy_blade_; // Blade to Copy from
   int effect_num_; // Effect Arg Number
   int set_num_; // Settings Arg Number
