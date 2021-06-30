@@ -62,6 +62,30 @@ class DualProp : public virtual PropBase, public A, public B {
 template<class Saber, class Blaster>
 class SaberBlasterProp : public virtual Saber, public virtual Blaster {
  public:
+  uint32_t map_button(uint32_t b) {
+    switch (b) {
+#if NUM_BUTTONS == 3
+        case BUTTON_AUX: return BUTTON_FIRE;
+        case BUTTON_AUX2: return BUTTON_MODE_SELECT;
+#else
+        case BUTTON_POWER: return  BUTTON_FIRE;
+        case BUTTON_AUX: return BUTTON_MODE_SELECT;
+#endif
+      default: return b;
+    }
+  }
+  uint32_t reverse_map_button(uint32_t b) {
+    switch (b) {
+#if NUM_BUTTONS == 3
+        case BUTTON_FIRE: return BUTTON_AUX;
+        case BUTTON_MODE_SELECT: return BUTTON_AUX2;
+#else
+        case BUTTON_FIRE: return  BUTTON_POWER;
+        case BUTTON_MODE_SELECT: return BUTTON_AUX;
+#endif
+      default: return b;
+    }
+  }
   const char* name() override { return "DualProp"; }
   bool Event(enum BUTTON button, EVENT event) override {
     if (button == BUTTON_BLADE_DETECT) {
@@ -84,23 +108,20 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
     if (Saber::blade_detected_) {
       return Saber::Event(button, event);
     } else {
-      switch (button) {
-#if NUM_BUTTONS == 3
-        case BUTTON_AUX: button = BUTTON_FIRE; break;
-        case BUTTON_AUX2: button = BUTTON_MODE_SELECT; break;
-#else
-        case BUTTON_POWER:
-	  if (!Saber::IsOn()) {
-	    Saber::On();
-	    return true;
-	  }
-	  button = BUTTON_FIRE;
-	  break;
-        case BUTTON_AUX: button = BUTTON_MODE_SELECT; break;
-#endif
-	default: break;
-      }
-      return Blaster::Event(button, event);
+      button = static_cast<enum BUTTON>(map_button(button));
+
+      // Map modifiers
+      uint32_t m = current_modifiers;
+      current_modifiers = 0;
+      for (; m; m &= m - 1) current_modifiers |= map_button(m & -m);
+
+      bool ret = Blaster::Event(button, event);
+
+      // Map modifiers back
+      m = current_modifiers;
+      current_modifiers = 0;
+      for (; m; m &= m - 1) current_modifiers |= reverse_map_button(m & -m);
+      return ret;
     }
   }
 
