@@ -1405,6 +1405,16 @@ SaberFett263Buttons() : PropBase() {}
       }
     }
   }
+  
+  void StopTrackPlayer() {
+    track_mode_ = PLAYBACK_OFF;
+    if (track_player_) {
+      track_player_->Stop();
+      track_player_.Free();
+    } else {
+      StartOrStopTrack();
+    }
+  }
    
   void DetectMenuTurn() {
      if (menu_ || color_mode_ == CC_COLOR_LIST) {
@@ -3740,10 +3750,8 @@ void PlayMenuSound(const char* file) {
         // Enter Edit Mode
         if (!menu_) {
           if (track_player_) {
-            track_player_->Stop();
-            track_player_.Free();
+            StopTrackPlayer();
           }
-          track_mode_ = PLAYBACK_OFF;
           if (!SFX_medit) {
               talkie.Say(talkie_error_in_15, 15);
               talkie.Say(talkie_font_directory_15, 15);
@@ -4011,8 +4019,11 @@ void PlayMenuSound(const char* file) {
         }
 #endif        
         if (fusor.angle1() > M_PI / 3) {
-          track_mode_ = PLAYBACK_OFF;
-          StartOrStopTrack();
+          if (track_player_) {
+            StopTrackPlayer();
+          } else {
+            StartOrStopTrack();
+          }
           return true;
         } else {
           if (SFX_quote) { 
@@ -4176,10 +4187,8 @@ void PlayMenuSound(const char* file) {
 
         // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
-        track_mode_ = PLAYBACK_OFF;
         if (track_player_) {
-          track_player_->Stop();
-          track_player_.Free();
+          StopTrackPlayer();
           return true;
         } else {
           if (fusor.angle1() > M_PI / 3) {
