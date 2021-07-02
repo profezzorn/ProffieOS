@@ -232,7 +232,7 @@ class Effect {
     if (selected_ == (int)files_found()) selected_ = 0;
   }
   void SelectFloat(float value) {
-    int f = files_found() - 1;
+    int f = files_found();
     selected_ = clamp(f * value, 0, f);
   }
 	
