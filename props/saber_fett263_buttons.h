@@ -897,7 +897,7 @@ SaberFett263Buttons() : PropBase() {}
     UpdateFont(current_preset_.preset_num);
   }
 
-  // Save Style Settings (IntArg values)
+  // Save IntArg values 16 ~ 25 from Edit Mode Menu selection
   void SaveStyleSetting() {
     char style_arg[10];
     itoa(calc_, style_arg, 10);
@@ -4700,9 +4700,9 @@ private:
   int style_revert_; // Original Style Number for Revert
   int length_revert_; // Original Blade Length for Revert
   int arg_revert_; // Original Arg vale for Revert
-  int calc_; 
   // Calculated value for IntArg (Settings Arguments)
   // used to add or subtract from original saved value by dial
+  int calc_; 
 #endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
   int clash_count_ = -1; // Choreography Mode Clash counter
