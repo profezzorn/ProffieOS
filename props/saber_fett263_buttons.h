@@ -857,6 +857,7 @@ SaberFett263Buttons() : PropBase() {}
   // Set In/Out (Ignition/Retraction) Arguments 
   void SetInOut() {
     char style_arg[10];
+    // Reminder - use search and replace to rename "calc_" per PR comments
     itoa(calc_, style_arg, 10);
     current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), set_num_ + 2, style_arg));
     current_preset_.Save();
@@ -988,6 +989,7 @@ SaberFett263Buttons() : PropBase() {}
 
   void TensValue(int number) {
     if (number <= 20) {
+      // Reminder - use search and replace "Play(SoundToPlay())" per PR comments
       sound_queue_.Play(SoundToPlay(&SFX_mnum, number - 1));
     } else {
       int tens = ((int)floorf(number / 10)) % 10;
