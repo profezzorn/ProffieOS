@@ -6,8 +6,8 @@
 // depends on the blade.
 class Color8 {
   public:
-  Color8() : r(0), g(0), b(0) {}
-  Color8(uint8_t r_, uint8_t g_, uint8_t b_) : r(r_), g(g_), b(b_) {}
+  constexpr Color8() : r(0), g(0), b(0) {}
+  constexpr Color8(uint8_t r_, uint8_t g_, uint8_t b_) : r(r_), g(g_), b(b_) {}
   // x = 0..256
   Color8 mix(const Color8& other, int x) const {
     // Wonder if there is an instruction for this?
@@ -188,7 +188,7 @@ static int8_t color16_dither_matrix[4][4] = {
 class Color16 {
   public:
   constexpr Color16() : r(0), g(0), b(0) {}
-  Color16(const Color8& c) : r(c.r * 0x101), g(c.g * 0x101), b(c.b * 0x101) {}
+  constexpr Color16(const Color8& c) : r(c.r * 0x101), g(c.g * 0x101), b(c.b * 0x101) {}
   constexpr Color16(uint16_t r_, uint16_t g_, uint16_t b_) : r(r_), g(g_), b(b_) {}
   // x = 0..256
   Color16 mix(const Color16& other, int x) const {
