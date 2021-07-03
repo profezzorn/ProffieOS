@@ -3125,7 +3125,7 @@ SaberFett263Buttons() : PropBase() {}
         MenuCancel();
         break;
 #endif
-      case MENU_STYLE:
+      case MENU_STYLE: {
         char style_arg[10];
         itoa(style_revert_, style_arg, 10);
         current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg)); 
@@ -3139,6 +3139,7 @@ SaberFett263Buttons() : PropBase() {}
         MenuRevert();
 #endif
         break;
+      }
       case MENU_COLOR:
         menu_type_ = MENU_TOP;
         SaberBase::SetVariation(variation_revert_);
