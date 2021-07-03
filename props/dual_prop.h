@@ -60,52 +60,81 @@ class DualProp : public virtual PropBase, public A, public B {
 };
 
 template<class Saber, class Blaster>
-class SaberBlasterProp : public virtual PropBase, public Saber, public Blaster {
+class SaberBlasterProp : public virtual Saber, public virtual Blaster {
  public:
+  uint32_t map_button(uint32_t b) {
+    switch (b) {
+#if NUM_BUTTONS == 3
+        case BUTTON_AUX: return BUTTON_FIRE;
+        case BUTTON_AUX2: return BUTTON_MODE_SELECT;
+#else
+        case BUTTON_POWER: return  BUTTON_FIRE;
+        case BUTTON_AUX: return BUTTON_MODE_SELECT;
+#endif
+      default: return b;
+    }
+  }
+  uint32_t reverse_map_button(uint32_t b) {
+    switch (b) {
+#if NUM_BUTTONS == 3
+        case BUTTON_FIRE: return BUTTON_AUX;
+        case BUTTON_MODE_SELECT: return BUTTON_AUX2;
+#else
+        case BUTTON_FIRE: return  BUTTON_POWER;
+        case BUTTON_MODE_SELECT: return BUTTON_AUX;
+#endif
+      default: return b;
+    }
+  }
   const char* name() override { return "DualProp"; }
-  bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
-    switch (EVENTID(button, event, modifiers)) {
-     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
-     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
-      Off();
-      blade_detected_ = true;
-      FindBladeAgain();
-      SaberBase::DoBladeDetect(true);
-      return true;
+  bool Event(enum BUTTON button, EVENT event) override {
+    if (button == BUTTON_BLADE_DETECT) {
+      if (event == EVENT_LATCH_ON) {
+	Saber::Off();
+	Saber::blade_detected_ = true;
+	Saber::FindBladeAgain();
+	SaberBase::DoBladeDetect(true);
+	current_modifiers = 0;
+	return true;
+      } else  if (event == EVENT_LATCH_OFF) {
+	Saber::Off();
+	Saber::blade_detected_ = false;
+	Saber::FindBladeAgain();
+	SaberBase::DoBladeDetect(false);
+	current_modifiers = 0;
+	return true;
+      }
+    }
+    if (Saber::blade_detected_) {
+      return Saber::Event(button, event);
+    } else {
+      button = static_cast<enum BUTTON>(map_button(button));
 
-     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
-     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
-      Off();
-      blade_detected_ = false;
-      FindBladeAgain();
-      SaberBase::DoBladeDetect(false);
-      return true;
-    }    
-    
-    if (blade_detected_) {
+      // Map modifiers
+      uint32_t m = current_modifiers;
+      current_modifiers = 0;
+      for (; m; m &= m - 1) current_modifiers |= map_button(m & -m);
+
+      bool ret = Blaster::Event(button, event);
+
+      // Map modifiers back
+      m = current_modifiers;
+      current_modifiers = 0;
+      for (; m; m &= m - 1) current_modifiers |= reverse_map_button(m & -m);
+      return ret;
+    }
+  }
+
+  bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+    if (Saber::blade_detected_) {
       return Saber::Event2(button, event, modifiers);
     } else {
-      switch (button) {
-#if NUM_BUTTONS == 3
-        case BUTTON_AUX: button = BUTTON_FIRE; break;
-        case BUTTON_AUX2: button = BUTTON_MODE_SELECT; break;
-#else
-        case BUTTON_POWER:
-	  if (!IsOn()) {
-	    On();
-	    return true;
-	  }
-	  button = BUTTON_FIRE;
-	  break;
-        case BUTTON_AUX: button = BUTTON_MODE_SELECT; break;
-#endif
-      }
       return Blaster::Event2(button, event, modifiers);
     }
   }
 
   void SetPreset(int preset_num, bool announce) override {
-    if (blade_detected_) {
+    if (Saber::blade_detected_) {
       Saber::SetPreset(preset_num, announce);
     } else {
       Blaster::SetPreset(preset_num, announce);
@@ -113,15 +142,23 @@ class SaberBlasterProp : public virtual PropBase, public Saber, public Blaster {
   }
 
   void Loop() override {
-    if (blade_detected_) {
+    if (Saber::blade_detected_) {
       Saber::Loop();
     } else {
       Blaster::Loop();
     }
   }
 
+  void DoMotion(const Vec3& motion, bool clear) override {
+    if (Saber::blade_detected_) {
+      Saber::DoMotion(motion, clear);
+    } else {
+      Blaster::DoMotion(motion, clear);
+    }
+  }
+
   void Clash(bool stab, float strength) override {
-    if (blade_detected_) {
+    if (Saber::blade_detected_) {
       Saber::Clash(stab, strength);
     } else {
       Blaster::Clash(stab, strength);
@@ -129,7 +166,7 @@ class SaberBlasterProp : public virtual PropBase, public Saber, public Blaster {
   }
   
   void SB_Effect(EffectType effect, float location) override {
-    if (blade_detected_) {
+    if (Saber::blade_detected_) {
       Saber::SB_Effect(effect, location);
     } else {
       Blaster::SB_Effect(effect, location);

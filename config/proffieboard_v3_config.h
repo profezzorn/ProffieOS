@@ -42,9 +42,8 @@ enum SaberPins {
   blade5Pin = 7,                  // Free1 PB3
   blade6Pin = 8,                  // Free2 PB10
   blade7Pin = 9,                  // Free3 PB11 + PC2
-  blade8Pin = 6,                  // PA4
-  blade9Pin = 16,                 // also uart PC0
-  blade10Pin = 17,                // also uart PC1
+  blade8Pin = 16,                 // also uart PC0
+  blade9Pin = 17,                 // also uart PC1
 
   // Blade power control
   bladePowerPin1 = 20,            // blade power control PA1
@@ -93,6 +92,6 @@ enum SaberPins {
 #if PROFFIEBOARD_VERSION - 0 != 3
 #error Please select Proffieboard V3 in Tools->Board
 #endif
-#if DOSFS_SDCARD - 0 == 0
-#error Tools->DOSFS should be set to SDCARD (SPI)
+#if DOSFS_SDCARD - 0 < 2
+#error Tools->DOSFS should be set to SDIO (High Speed)
 #endif

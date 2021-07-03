@@ -8,17 +8,17 @@ Add the following to your config file if so desired:
 Blaster Buttons: FIRE and MODE
 (Blaster is always on with power, unless dedicated Power button is installed.)
 
-Cycle Modes - 						Click MODE
-Next Preset - 						Double click MODE
-Previous Preset - 					Double click and hold MODE, release after a second
-Reload - 							Hold for 2 seconds and release (Or Click Reload if dedicated button insatlled))
-Start/Stop Track - 					Hold MODE until track plays or stops
-Fire - 								Click FIRE (Hold to Auto Fire / Rapid Fire)
-Clip In - 							Clip Detect pad Latched On ( or Hold Momentary button)
-Clip out - 							Clip Detect pad Latched Off ( or release Momentary button)
-Unjam - 							Bang the blaster.
-(If 3rd button (POW))
-	Power On / Off - 				Click POW
+Cycle Modes -           Click MODE.
+Next Preset -           Long click and release MODE.
+Previous Preset -       Double click and hold MODE, release after a second.
+Reload -                Hold MODE until Reloaded. (Or Click Reload if dedicated button insatlled)
+Start/Stop Track -      Double click MODE.
+Fire -                  Click FIRE. (Hold to Auto Fire / Rapid Fire)
+Clip In -               Clip Detect pad Latched On. ( or Hold Momentary button)
+Clip out -              Clip Detect pad Latched Off. ( or release Momentary button)
+Unjam -                 Bang the blaster.
+- If there's a 3rd button for Power,
+Power On / Off -        Click POWER.
 
 Wavs to use for switching Modes:
 	mdstun.wav
@@ -34,6 +34,7 @@ Wavs to use for switching Modes:
 #include "prop_base.h"
 
 #define PROP_TYPE Blaster
+#define PROP_HAS_BULLET_COUNT
 
 EFFECT(clipin);
 EFFECT(clipout);
@@ -101,6 +102,10 @@ public:
 #else
   const int max_shots_ = -1;
 #endif
+
+  virtual int GetBulletCount() {
+    return shorts_fired_ - max_shots_;
+  }
 
   virtual bool CheckJam(int percent) {
     int random = rand() % 100;
@@ -277,11 +282,10 @@ public:
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
         NextBlasterMode();
         return true;
-
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_DOUBLE_CLICK, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_CLICK_LONG, MODE_ON):
         next_preset();
         return true;
-        
+
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_CLICK_LONG, MODE_ON):
         previous_preset();
         return true;
@@ -291,7 +295,7 @@ public:
         Reload();
         return true;
 
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_LONG, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_DOUBLE_CLICK, MODE_ON):
         StartOrStopTrack();
         return true;
 
@@ -404,3 +408,4 @@ public:
 };
 
 #endif
+
