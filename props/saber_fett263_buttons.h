@@ -628,33 +628,33 @@ int IntEdit::int_edit_ = 0;
   
 // Color List
 static constexpr Color16 color_list_[] = {
-  { 65535, 0, 0 }, // Red
-  { 65535, 3598, 0 }, // OrangeRed
-  { 65535, 17476, 0 }, // DarkOrange
-  { 65535, 24929, 0 }, // Orange
+  Red::color(),
+  OrangeRed::color(),
+  DarkOrange::color(),
+  Orange::color(),
   { 46260, 33410, 0 }, // Gold
-  { 65535, 65535, 0 }, // Yellow
-  { 27756, 65535, 1542 }, // GreenYellow
-  { 0, 65535, 0 }, // Green
-  { 14135, 65535, 43433 }, // Aquamarine
-  { 0, 65535, 65535 }, // Cyan
-  { 0, 34695, 65535 }, // DeepSkyBlue
-  { 514, 18504, 65535 }, // DodgerBlue
-  { 0, 0, 65535 }, // Blue
+  Yellow::color(),
+  GreenYellow::color(),
+  Green::color(),
+  Aquamarine::color(),
+  Cyan::color(),
+  DeepSkyBlue::color(),
+  DodgerBlue::color(),
+  Blue::color(),
   { 7710, 15420, 51400 }, // IceBlue
   { 11102, 92, 53864 }, // Indigo
   { 24000, 0, 50536 }, // Purple
   { 30324, 0, 49768 }, // DeepPurple
-  { 48768, 0, 48768 }, // Magenta
-  { 65535, 0, 19275 }, // DeepPink
+  Magenta::color(),
+  DeepPink::color(),
   { 25700, 25700, 38550 }, // Silver
   { 21845, 21845, 51400 }, // Glacier
   { 46260, 46260, 65535 }, // IceWhite
-  { 49087, 65535, 65535 }, // LightCyan
-  { 65535, 51142, 30582 }, // Moccasin
-  { 65535, 62708, 40349 }, // LemonChiffon
-  { 65535, 48059, 27756 }, // NavajoWhite
-  { 65535, 65535, 65535 } // White
+  LightCyan::color(),
+  Moccasin::color(),
+  LemonChiffon::color(),
+  NavajoWhite::color(),
+  White::color()
 };
 
 // The Saber class implements the basic states and actions
