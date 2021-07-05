@@ -1575,7 +1575,18 @@ SaberFett263Buttons() : PropBase() {}
     GESTURE_POWER_LOCK = 11,
     GESTURE_MAX_CLASH = 12,
   };
-   
+
+// Gesture Control Boolean Menu
+  void EnterBooleanMenu(MenuType t, bool current_value) {
+    menu_type_ = t;
+    choice_ = current_value;
+    if (current_value) {
+      PlayMenuSound("mtrue.wav");
+    } else {
+      PlayMenuSound("mfalse.wav");
+    }
+  }
+
 // Edit Mode Menu Select (PWR Button)
   void MenuChoice() {
     const char* tmp; 
@@ -2031,14 +2042,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_GESTURE_SUB:
         switch (gesture_num_) {
           case GESTURE_SWINGON_IGNITION:
-            menu_type_ = MENU_SWINGON;
-            if (saved_gesture_control.swingon) {
-              PlayMenuSound("mtrue.wav");
-              choice_ = true;
-            } else {
-              PlayMenuSound("mfalse.wav");
-              choice_ = false;
-            }
+            EnterBooleanMenu(MENU_SWINGON, saved_gesture_control.swingon);
             break;
           case GESTURE_SWINGON_SPEED:
             menu_type_ = MENU_SWINGON_SPEED;
@@ -2047,44 +2051,16 @@ SaberFett263Buttons() : PropBase() {}
             SayNumber(calc_, SAY_WHOLE);
             break;
           case GESTURE_TWIST_IGNITION:
-            menu_type_ = MENU_TWISTON;
-            if (saved_gesture_control.twiston) {
-              PlayMenuSound("mtrue.wav");
-              choice_ = true;
-            } else {
-              PlayMenuSound("mfalse.wav");
-              choice_ = false;
-            }
+            EnterBooleanMenu(MENU_TWISTON, saved_gesture_control.twiston);
             break;
           case GESTURE_THRUST_IGNITION:
-            menu_type_ = MENU_THRUSTON;
-            if (saved_gesture_control.thruston) {
-              PlayMenuSound("mtrue.wav");
-              choice_ = true;
-            } else {
-              PlayMenuSound("mfalse.wav");
-              choice_ = false;
-            }
+            EnterBooleanMenu(MENU_THRUSTON, saved_gesture_control.thruston);
             break;
           case GESTURE_STAB_IGNITION:
-            menu_type_ = MENU_STABON;
-            if (saved_gesture_control.stabon) {
-              PlayMenuSound("mtrue.wav");
-              choice_ = true;
-            } else {
-              PlayMenuSound("mfalse.wav");
-              choice_ = false;
-            }
+            EnterBooleanMenu(MENU_STABON, saved_gesture_control.stabon);
             break;
           case GESTURE_FORCE_PUSH:
-            menu_type_ = MENU_FORCEPUSH;               
-            if (saved_gesture_control.forcepush) {
-              PlayMenuSound("mtrue.wav");
-              choice_ = true;
-            } else {
-              PlayMenuSound("mfalse.wav");
-              choice_ = false;
-            }
+            EnterBooleanMenu(MENU_FORCEPUSH, saved_gesture_control.forcepush);
             break;
           case GESTURE_FORCE_PUSH_LENGTH:
             menu_type_ = MENU_FORCEPUSH_LENGTH;
@@ -2093,14 +2069,7 @@ SaberFett263Buttons() : PropBase() {}
             SayNumber(calc_, SAY_WHOLE);
             break;
           case GESTURE_TWIST_RETRACTION:
-            menu_type_ = MENU_TWISTOFF;
-            if (saved_gesture_control.twistoff) {
-              PlayMenuSound("mtrue.wav");
-              choice_ = true;
-            } else {
-              PlayMenuSound("mfalse.wav");
-              choice_ = false;
-            }
+            EnterBooleanMenu(MENU_TWISTOFF, saved_gesture_control.twistoff);
             break;
           case GESTURE_LOCKUP_DELAY:
             menu_type_ = MENU_LOCKUP_DELAY;
@@ -2115,14 +2084,7 @@ SaberFett263Buttons() : PropBase() {}
             SayNumber(calc_, SAY_WHOLE);
             break;
           case GESTURE_POWER_LOCK:
-            menu_type_ = MENU_POWERLOCK;
-            if (saved_gesture_control.powerlock) {
-              PlayMenuSound("mtrue.wav");
-              choice_ = true;
-            } else {
-              PlayMenuSound("mfalse.wav");
-              choice_ = false;
-            }
+            EnterBooleanMenu(MENU_POWERLOCK, saved_gesture_control.powerlock);
             break;
           case GESTURE_MAX_CLASH:
             menu_type_ = MENU_MAX_CLASH;
