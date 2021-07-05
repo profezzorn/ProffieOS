@@ -865,9 +865,11 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_STYLE_OPTION:
       case MENU_IGNITION_TIME:
       case MENU_IGNITION_OPTION:
+        UpdateFont(current_preset_.preset_num, false);
+        break;          
       case MENU_PREON_OPTION:
       case MENU_PREON_SIZE:
-        UpdateFont(current_preset_.preset_num);
+        UpdateFont(current_preset_.preset_num, true);
         break;
       case MENU_RETRACTION_TIME:
       case MENU_RETRACTION_OPTION:
@@ -895,7 +897,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
     }
     current_preset_.Save();
-    UpdateFont(current_preset_.preset_num);
+    UpdateFont(current_preset_.preset_num, false);
   }
 
   // Save IntArg values 16 ~ 25 from Edit Mode Menu selection
@@ -2692,7 +2694,7 @@ SaberFett263Buttons() : PropBase() {}
         strcat(font, ";common");
         current_preset_.font = mkstr(font);
         current_preset_.Save();
-        UpdateFont(current_preset_.preset_num);
+        UpdateFont(current_preset_.preset_num, false);
         hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
         break;
       case MENU_TRACK:
@@ -3219,7 +3221,7 @@ SaberFett263Buttons() : PropBase() {}
         if (restore_point.get()) current_preset_.font = std::move(restore_point);
         restore_point = nullptr;
         current_preset_.Save();
-        UpdateFont(current_preset_.preset_num);
+        UpdateFont(current_preset_.preset_num, false);
         menu_type_ = MENU_TOP;
         MenuRevert();
         break;
@@ -3455,7 +3457,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 
 // Update Font / Save Style in Edit Mode, skips Preon effect (except for Preon Editing previews) using FastOn
-  virtual void UpdateFont(int preset_num) {
+  virtual void UpdateFont(int preset_num, bool preon) {
     TRACE(PROP, "start");
     bool on = SaberBase::IsOn();
     if (on) Off();
@@ -3476,15 +3478,11 @@ SaberFett263Buttons() : PropBase() {}
     SaberBase::SetVariation(0);
 #endif
     if (on) {
-#ifdef FETT263_EDIT_MODE_MENU
-      if (menu_type_ == MENU_PREON_OPTION || menu_type_ == MENU_PREON_SIZE) {
+      if (preon) {
         On();
       } else {
         FastOn();
-      }
-#else
-      FastOn();
-#endif      
+      }     
     }
     TRACE(PROP, "end");
   }
@@ -3509,7 +3507,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef SAVE_PRESET
     SaveState(0);
 #endif
-    UpdateFont(0);
+    UpdateFont(0, false);
 }
 
   // Go to the next Preset skipping Preon effect with FastOn.
@@ -3517,7 +3515,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num + 1);
 #endif
-    UpdateFont(current_preset_.preset_num + 1);
+    UpdateFont(current_preset_.preset_num + 1, false);
   }
 
   // Go to the previous Preset skipping Preon effect with FastOn.
@@ -3525,7 +3523,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num - 1);
 #endif
-    UpdateFont(current_preset_.preset_num - 1);
+    UpdateFont(current_preset_.preset_num - 1, false);
   }
 
 #ifdef FETT263_DUAL_MODE_SOUND
