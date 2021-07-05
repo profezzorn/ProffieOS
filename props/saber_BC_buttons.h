@@ -420,7 +420,39 @@ public:
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
   }
 
-// Fast On Gesture Ignition
+// Match preon.wav to out.wav
+  virtual void SelectIgnitionPair() {
+    if (!SFX_preon.files_found()) return;
+
+    int preonCount = SFX_preon.files_found();
+    int outCount = SFX_out.files_found();
+    int pairIgnition;
+
+    // If we don't have the same number of preon/out files, then don't bother getting a matched pair.
+    if (preonCount == outCount) {
+        pairIgnition = rand() % preonCount;
+        SFX_preon.Select(pairIgnition);
+        SFX_out.Select(pairIgnition);
+    }
+  }
+
+// Match pstoff.wav to in.wav
+  virtual void SelectRetractionPair() {
+    if (!SFX_pstoff.files_found()) return;
+
+    int pstoffCount = SFX_pstoff.files_found();
+    int inCount = SFX_in.files_found();
+    int pairIgnition;
+
+    // If we don't have the same number of pstoff/in files, then don't bother getting a matched pair.
+    if (pstoffCount == inCount) {
+        pairIgnition = rand() % pstoffCount;
+        SFX_pstoff.Select(pairIgnition);
+        SFX_in.Select(pairIgnition);
+    }
+  }
+ 
+ // Fast On Gesture Ignition
   virtual void FastOn() {
     if (IsOn()) return;
     if (current_style() && current_style()->NoOnOff()) return;
@@ -579,6 +611,7 @@ public:
   #endif
       // Delay twist events to prevent false trigger from over twisting
       if (millis() - last_twist_ > 3000) {
+        SelectRetractionPair();
         Off();
         last_twist_ = millis();
         saber_off_time_ = millis();
@@ -744,6 +777,7 @@ public:
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       // No power on without exiting Vol Menu first
       if (!mode_volume_) {
+        SelectIgnitionPair();
         On();
       }
       return true;
@@ -753,6 +787,7 @@ public:
       if (!mode_volume_) {
         if (SetMute(true)) {
           unmute_on_deactivation_ = true;
+          SelectIgnitionPair();
           On();
         }
       }
@@ -954,6 +989,7 @@ public:
           return true;
         }
         if (!battle_mode_) {
+          SelectRetractionPair();
           Off();
         }
       }
