@@ -945,6 +945,86 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
+// Edit Color
+#define H_CHANGE (M_PI / 98304)
+#define L_ANGLE (M_PI / 30)
+#define H_ANGLE (M_PI / 16384)
+#define EDIT_MODE_ZOOM (M_PI * 2 / 2000)
+  void EditColor() {
+    if (edit_color_ && color_mode_ != COLOR_LIST) {
+      float a = fusor.angle2() - hsl_angle_;
+      if (a > M_PI) a-=M_PI*2;      
+      if (a < -M_PI) a+=M_PI*2;
+      float angle = 100;
+      switch (color_mode_) {
+        case EDIT_COLOR: angle = H_ANGLE; break;
+        case ZOOM_COLOR: angle = EDIT_MODE_ZOOM; break;
+        case EDIT_WHITE:
+        case EDIT_BLACK: angle = L_ANGLE; break;
+        default: break;
+      }
+      int steps = 0;
+      if (a > angle * 2/3) {
+        hsl_angle_ += angle;
+        if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI*2;
+        steps++;
+      }
+      if (a < -angle * 2/3) {
+        hsl_angle_ -= angle;
+        if (hsl_angle_ < M_PI) hsl_angle_ += M_PI*2;
+        steps--;
+      }
+      switch (color_mode_) {
+        default: break;
+        case EDIT_COLOR:
+        case ZOOM_COLOR:
+          hsl_.H = fract(hsl_.H - H_CHANGE * steps);
+          break;
+        case EDIT_WHITE:
+          if (steps > 0) {
+            if (hsl_.L < 1.0) {
+              hsl_.L = clamp(hsl_.L + 0.01, 0.5, 1.0);
+              if (hsl_.L == 1.0) {
+                PlayMenuSound("mmax.wav");
+                hsl_angle_ = fusor.angle2();
+              }
+            }
+          }
+          if (steps < 0) {
+            if (hsl_.L > 0.5) {
+              hsl_.L = clamp(hsl_.L - 0.01, 0.5, 1.0);
+              if (hsl_.L == 0.5) {
+                PlayMenuSound("mmin.wav");
+                hsl_angle_ = fusor.angle2();
+              }
+            }
+          }
+          break;
+        case EDIT_BLACK:
+          if (steps > 0) {
+            if (hsl_.L < 0.5) {
+              hsl_.L = clamp(hsl_.L + 0.01, 0.01, 0.5);
+              if (hsl_.L == 0.5) {
+                PlayMenuSound("mmax.wav");
+                hsl_angle_ = fusor.angle2();
+              }
+            }
+          }
+          if (steps < 0) {
+            if (hsl_.L > 0.01) {
+              hsl_.L = clamp(hsl_.L - 0.01, 0.01, 0.5);
+              if (hsl_.L == 0.01) {
+                PlayMenuSound("mmin.wav");
+                hsl_angle_ = fusor.angle2();
+              }
+            }
+          }
+          break;         
+      }
+      ShowColorStyle::SetColor(Color16(hsl_));
+    }  
+  }
+   
   // Saves New Color from Edit Mode Preview Styles to Preset
   void NewColor(int blade, int effect) {
     char new_color[32];
@@ -1081,6 +1161,46 @@ SaberFett263Buttons() : PropBase() {}
         break;
     }
   }
+  
+  // Check Event "Delays" for Edit Mode for Ignition/Retraction/Preon Settings Previews and Choreography Save
+  void CheckEvent() {
+    if (next_event_ && !wav_player->isPlaying()) {
+      if (rehearse_) {
+        if (SaberBase::IsOn()) {
+          rehearse_ = false;
+          Off();
+#ifdef FETT263_SAVE_CHOREOGRAPHY
+          SaveChoreo();
+#endif
+        } else {
+          PlayMenuSound("rehrsbgn.wav");
+          FastOn();
+        }
+        next_event_ = false;
+      } else {
+        switch (menu_type_) {
+          case MENU_IGNITION_TIME:
+          case MENU_RETRACTION_TIME:
+            next_event_ = false;
+            SetInOut();
+            break;
+          default:
+            next_event_ = false;
+            break;
+        }
+      }
+    }
+    if (off_event_ && millis() - last_rotate_millis_ > 200) {
+      Off();
+      off_event_ = false;
+      restart_ = true;
+      last_rotate_millis_ = millis();
+    }
+    if (restart_ && millis() - last_rotate_millis_ > calc_ + 1000) {
+      restart_ = false;
+      FastOn();
+    }
+  }
    
   enum ClashType {
     CLASH_NONE,
@@ -1178,120 +1298,8 @@ SaberFett263Buttons() : PropBase() {}
     }
     sound_queue_.Poll(wav_player);
 #ifdef FETT263_EDIT_MODE_MENU      
-    if (next_event_ && !wav_player->isPlaying()) {
-      if (rehearse_) {
-        if (SaberBase::IsOn()) {
-          rehearse_ = false;
-          Off();
-#ifdef FETT263_SAVE_CHOREOGRAPHY
-          SaveChoreo();
-#endif
-        } else {
-          PlayMenuSound("rehrsbgn.wav");
-          FastOn();
-        }
-        next_event_ = false;
-      } else {
-        switch (menu_type_) {
-          case MENU_IGNITION_TIME:
-          case MENU_RETRACTION_TIME:
-            next_event_ = false;
-            SetInOut();
-            break;
-          default:
-            next_event_ = false;
-            break;
-        }
-      }
-    }
-    if (off_event_ && millis() - last_rotate_millis_ > 200) {
-      Off();
-      off_event_ = false;
-      restart_ = true;
-      last_rotate_millis_ = millis();
-    }
-    if (restart_ && millis() - last_rotate_millis_ > calc_ + 1000) {
-      restart_ = false;
-      FastOn();
-    }
-#endif
-#ifdef FETT263_EDIT_MODE_MENU
-      if (edit_color_ && color_mode_ != COLOR_LIST) {
-#define H_CHANGE (M_PI / 98304)
-#define L_ANGLE (M_PI / 30)
-#define H_ANGLE (M_PI / 16384)
-#define EDIT_MODE_ZOOM (M_PI * 2 / 2000)
-      float a = fusor.angle2() - hsl_angle_;
-      if (a > M_PI) a-=M_PI*2;      
-      if (a < -M_PI) a+=M_PI*2;
-      float angle = 100;
-      switch (color_mode_) {
-        case EDIT_COLOR: angle = H_ANGLE; break;
-        case ZOOM_COLOR: angle = EDIT_MODE_ZOOM; break;
-        case EDIT_WHITE:
-        case EDIT_BLACK: angle = L_ANGLE; break;
-        default: break;
-      }
-      int steps = 0;
-      if (a > angle * 2/3) {
-        hsl_angle_ += angle;
-        if (hsl_angle_ > M_PI) hsl_angle_ -= M_PI*2;
-        steps++;
-      }
-      if (a < -angle * 2/3) {
-        hsl_angle_ -= angle;
-        if (hsl_angle_ < M_PI) hsl_angle_ += M_PI*2;
-        steps--;
-      }
-      switch (color_mode_) {
-        default: break;
-        case EDIT_COLOR:
-        case ZOOM_COLOR:
-          hsl_.H = fract(hsl_.H - H_CHANGE * steps);
-          break;
-        case EDIT_WHITE:
-          if (steps > 0) {
-            if (hsl_.L < 1.0) {
-              hsl_.L = clamp(hsl_.L + 0.01, 0.5, 1.0);
-              if (hsl_.L == 1.0) {
-                PlayMenuSound("mmax.wav");
-                hsl_angle_ = fusor.angle2();
-              }
-            }
-          }
-          if (steps < 0) {
-            if (hsl_.L > 0.5) {
-              hsl_.L = clamp(hsl_.L - 0.01, 0.5, 1.0);
-              if (hsl_.L == 0.5) {
-                PlayMenuSound("mmin.wav");
-                hsl_angle_ = fusor.angle2();
-              }
-            }
-          }
-          break;
-        case EDIT_BLACK:
-          if (steps > 0) {
-            if (hsl_.L < 0.5) {
-              hsl_.L = clamp(hsl_.L + 0.01, 0.01, 0.5);
-              if (hsl_.L == 0.5) {
-                PlayMenuSound("mmax.wav");
-                hsl_angle_ = fusor.angle2();
-              }
-            }
-          }
-          if (steps < 0) {
-            if (hsl_.L > 0.01) {
-              hsl_.L = clamp(hsl_.L - 0.01, 0.01, 0.5);
-              if (hsl_.L == 0.01) {
-                PlayMenuSound("mmin.wav");
-                hsl_angle_ = fusor.angle2();
-              }
-            }
-          }
-          break;         
-        }
-        ShowColorStyle::SetColor(Color16(hsl_));
-      }
+    CheckEvent();
+    EditColor();
 #endif
     if (SaberBase::IsOn()) {
       DetectSwing();
