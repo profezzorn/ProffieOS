@@ -777,9 +777,9 @@ SaberFett263Buttons() : PropBase() {}
     SaveGestureState();
   }
 
-#ifdef FETT263_EDIT_MODE_MENU
   // Color / Style Editing
   HSL hsl_;
+#ifdef FETT263_EDIT_MODE_MENU
   ShowColorSingleBladeTemplate<RotateColorsX<Variation,ShowColorStyle>> show_color_;
   ShowColorSingleBladeTemplate<Mix<Bump<Int<16384>,Int<14000>>,RotateColorsX<Variation,RgbArg<1,Rgb<255,0,0>>>,ShowColorStyle>> bump_color_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<26000>,Int<8000>>,RotateColorsX<Variation,RgbArg<1,Rgb<255,0,0>>>,ShowColorStyle>> tip_color_;
@@ -1177,6 +1177,7 @@ SaberFett263Buttons() : PropBase() {}
           FastOn();
         }
         next_event_ = false;
+#ifdef FETT263_EDIT_MODE_MENU         
       } else {
         switch (menu_type_) {
           case MENU_IGNITION_TIME:
@@ -1188,8 +1189,10 @@ SaberFett263Buttons() : PropBase() {}
             next_event_ = false;
             break;
         }
+#endif         
       }
     }
+#ifdef FETT263_EDIT_MODE_MENU      
     if (off_event_ && millis() - last_rotate_millis_ > 200) {
       Off();
       off_event_ = false;
@@ -1200,6 +1203,7 @@ SaberFett263Buttons() : PropBase() {}
       restart_ = false;
       FastOn();
     }
+#endif     
   }
    
   enum ClashType {
@@ -1297,8 +1301,10 @@ SaberFett263Buttons() : PropBase() {}
       }
     }
     sound_queue_.Poll(wav_player);
-#ifdef FETT263_EDIT_MODE_MENU      
+#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_SAVE_CHOREOGRAPHY)
     CheckEvent();
+#endif
+#ifdef FETT263_EDIT_MODE_MENU
     EditColor();
 #endif
     if (SaberBase::IsOn()) {
@@ -1594,7 +1600,8 @@ SaberFett263Buttons() : PropBase() {}
       PlayMenuSound("mfalse.wav");
     }
   }
-
+   
+#ifdef FETT263_EDIT_MODE_MENU  
 // Color Edit Helper Functions
   void SaveColorEdit() {
     menu_type_ = MENU_COLOR_MODE;
@@ -1605,12 +1612,13 @@ SaberFett263Buttons() : PropBase() {}
     color_mode_ = NONE;
   }
   
-  void RevertColorEdit() {
+  void RevertColorEdit() {       
     menu_type_ = MENU_COLOR_MODE;
     edit_color_ = false;
     twist_menu_ = M_PI / 4;
     color_mode_ = NONE;
   }
+#endif
 
 // Edit Mode Menu Select (PWR Button)
   void MenuChoice() {
@@ -1629,7 +1637,9 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_VOLUME:
         if (SaberBase::IsOn()) {
+#ifdef FETT263_EDIT_MODE_MENU           
           menu_type_ = MENU_SETTING_SUB;
+#endif           
           MenuSave();
         } else {
           MenuExit();
@@ -3320,7 +3330,8 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_TOP:
         sound_queue_.Play(SoundToPlay("mmain.wav"));
         break;
-      case MENU_COLOR_SUB:
+#ifdef FETT263_EDIT_MODE_MENU
+       case MENU_COLOR_SUB:
         sound_queue_.Play(SoundToPlay("mcolorsb.wav"));
         break;
       case MENU_COLOR_MODE:
@@ -3349,19 +3360,18 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_STYLE_SETTING_SUB:
         sound_queue_.Play(SoundToPlay("mstylstm.wav"));
         break;
+#endif          
     }    
   }
 
   enum EditColorMode {
     NONE,
     CC_COLOR_LIST,
-#ifdef FETT263_EDIT_MODE_MENU
     COLOR_LIST,
+    EDIT_COLOR,     
     EDIT_BLACK,
-    EDIT_COLOR,
     EDIT_WHITE,
     ZOOM_COLOR,
-#endif
   };
 
 #define CC_NEW_COLOR(N) NewColor(N,1);
@@ -4621,29 +4631,29 @@ private:
   int sub_dial_; // Sub menu dial "tick"
   int gesture_num_;
   float twist_menu_ = M_PI / 4; // Twist Menu sensitivity
-#ifdef FETT263_EDIT_MODE_MENU
   bool choice_ = false;
   // Edit Mode selection confirmation 
   // for True/False control when deleting, disabling/enabling or copying
+  bool off_event_ = false; // Do off event in Edit Mode
+  bool restart_ = false; // Ignite blade after off event in Edit Mode   
   bool next_event_ = false;
   // Do next event in Edit Mode, allows an action/wav to complete before 
   // "next event" begins, for use with choreography and ignition/retraction previews where menu sound
   // would otherwise be truncated by change in state
-  bool off_event_ = false; // Do off event in Edit Mode
-  bool restart_ = false; // Ignite blade after off event in Edit Mode
-  bool edit_color_ = false; // Color Editing Mode active
-  uint32_t variation_revert_; // Variation revert value
-  float hsl_angle_ = 0.0; // HSL angle for Color Editing
-  int blade_preview_ = 0; // Blade number for "preview" style
-  Color16 saved_color_;
   EditColorMode color_mode_;
+  bool edit_color_ = false; // Color Editing Mode active
+  float hsl_angle_ = 0.0; // HSL angle for Color Editing
+#ifdef FETT263_EDIT_MODE_MENU
+  uint32_t variation_revert_; // Variation revert value
+  Color16 saved_color_;
+  int blade_preview_ = 0; // Blade number for "preview" style
   int style_num_; // builtin style number for selection in Edit Mode, based on original config
   int font_num_; // Font number from list_fonts array for use in Edit Mode dial
   int num_fonts_; // Total number of fonts from list_fonts array
   int num_presets_; // Total number of builtin styles based on original config
   int blade_num_; // Active Blade Number for editing
-  int copy_blade_; // Blade to Copy from
   int effect_num_; // Effect Arg Number
+  int copy_blade_; // Blade to Copy from
   int set_num_; // Settings Arg Number
   int style_revert_; // Original Style Number for Revert
   int length_revert_; // Original Blade Length for Revert
