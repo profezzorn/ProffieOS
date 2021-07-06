@@ -1595,6 +1595,23 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
+// Color Edit Helper Functions
+  void SaveColorEdit() {
+    menu_type_ = MENU_COLOR_MODE;
+    edit_color_ = false;
+    twist_menu_ = M_PI / 4;
+    NewColor(blade_num_, effect_num_); 
+    current_preset_.Save();
+    color_mode_ = NONE;
+  }
+  
+  void RevertColorEdit() {
+    menu_type_ = MENU_COLOR_MODE;
+    edit_color_ = false;
+    twist_menu_ = M_PI / 4;
+    color_mode_ = NONE;
+  }
+
 // Edit Mode Menu Select (PWR Button)
   void MenuChoice() {
     const char* tmp; 
@@ -1942,64 +1959,39 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_COLOR_RETRACT:
       case MENU_COLOR_SWING:
       case MENU_COLOR_OFF:
-        menu_type_ = MENU_COLOR_MODE;
-        edit_color_ = false;
-        twist_menu_ = M_PI / 4;
-        NewColor(blade_num_, effect_num_); 
-        current_preset_.Save();
+        SaveColorEdit();
         show_color_.Stop(blade_num_);
         UpdateStyle(current_preset_.preset_num);
         MenuSave();
-        color_mode_ = NONE;
         break;
       case MENU_COLOR_BLAST:
       case MENU_COLOR_CLASH:
       case MENU_COLOR_LOCKUP:
       case MENU_COLOR_LB:
-        menu_type_ = MENU_COLOR_MODE;
-        edit_color_ = false;
-        twist_menu_ = M_PI / 4;
-        NewColor(blade_num_, effect_num_); 
-        current_preset_.Save();
+        SaveColorEdit();
         bump_color_.Stop(blade_num_);
         UpdateStyle(current_preset_.preset_num);
         MenuSave();
-        color_mode_ = NONE;
         break;
       case MENU_COLOR_DRAG:
       case MENU_COLOR_STAB:
-        menu_type_ = MENU_COLOR_MODE;
-        edit_color_ = false;
-        twist_menu_ = M_PI / 4;
-        NewColor(blade_num_, effect_num_); 
-        current_preset_.Save();
+        SaveColorEdit();
         tip_color_.Stop(blade_num_);
         UpdateStyle(current_preset_.preset_num);
         MenuSave();
-        color_mode_ = NONE;
         break;
       case MENU_COLOR_PREON:
       case MENU_COLOR_PSTOFF:
-        menu_type_ = MENU_COLOR_MODE;
-        edit_color_ = false;
-        twist_menu_ = M_PI / 4;
-        NewColor(blade_num_, effect_num_); 
-        current_preset_.Save();
+        SaveColorEdit();
         pre_color_.Stop(blade_num_);
         UpdateStyle(current_preset_.preset_num);
         MenuSave();
-        color_mode_ = NONE;
         break;
       case MENU_COLOR_EMITTER:
-        menu_type_ = MENU_COLOR_MODE;
-        edit_color_ = false;
-        twist_menu_ = M_PI / 4;
-        NewColor(blade_num_, effect_num_); 
-        current_preset_.Save();
+        SaveColorEdit();
         hilt_color_.Stop(blade_num_);
         UpdateStyle(current_preset_.preset_num);
         MenuSave();
-        color_mode_ = NONE;
         break;
       case MENU_FONT:
         restore_point = nullptr;
@@ -3147,45 +3139,30 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_COLOR_RETRACT:
       case MENU_COLOR_SWING:
       case MENU_COLOR_OFF:
-        menu_type_ = MENU_COLOR_MODE;
-        edit_color_ = false;
-        twist_menu_ = M_PI / 4;
+        RevertColorEdit();
         show_color_.Stop(blade_num_);
         MenuRevert();
-        color_mode_ = NONE;
         break;
       case MENU_COLOR_BLAST:
       case MENU_COLOR_CLASH:
       case MENU_COLOR_LOCKUP:
       case MENU_COLOR_LB:
-        menu_type_ = MENU_COLOR_MODE;
-        color_mode_ = NONE;
-        edit_color_ = false;
-        twist_menu_ = M_PI / 4;
+        RevertColorEdit();
         bump_color_.Stop(blade_num_);
         MenuRevert();
-        color_mode_ = NONE;
         break;
       case MENU_COLOR_DRAG:
       case MENU_COLOR_STAB:
-        menu_type_ = MENU_COLOR_MODE;
-        color_mode_ = NONE;
-        edit_color_ = false;
-        twist_menu_ = M_PI / 4;
+        RevertColorEdit();
         tip_color_.Stop(blade_num_);
         MenuRevert();
-        color_mode_ = NONE;
         break;
       case MENU_COLOR_PREON:
       case MENU_COLOR_PSTOFF:
       case MENU_COLOR_EMITTER:
-        menu_type_ = MENU_COLOR_MODE;
-        color_mode_ = NONE;
-        edit_color_ = false;
-        twist_menu_ = M_PI / 4;
+        RevertColorEdit();
         hilt_color_.Stop(blade_num_);
         MenuRevert();
-        color_mode_ = NONE;
         break;
       case MENU_FONT:
         if (restore_point.get()) current_preset_.font = std::move(restore_point);
