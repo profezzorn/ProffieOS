@@ -110,6 +110,38 @@ public:
     return SaberBase::IsOn() || on_pending_;
   }
 
+// Match preon.wav to out.wav
+  virtual void SelectIgnitionPair() {
+    if (!SFX_preon.files_found()) return;
+
+    int preonCount = SFX_preon.files_found();
+    int outCount = SFX_out.files_found();
+    int pairIgnition;
+
+    // If we don't have the same number of preon/out files, then don't bother getting a matched pair.
+    if (preonCount == outCount) {
+        pairIgnition = rand() % preonCount;
+        SFX_preon.Select(pairIgnition);
+        SFX_out.Select(pairIgnition);
+    }
+  }
+
+// Match pstoff.wav to in.wav
+  virtual void SelectRetractionPair() {
+    if (!SFX_pstoff.files_found()) return;
+
+    int pstoffCount = SFX_pstoff.files_found();
+    int inCount = SFX_in.files_found();
+    int pairIgnition;
+
+    // If we don't have the same number of pstoff/in files, then don't bother getting a matched pair.
+    if (pstoffCount == inCount) {
+        pairIgnition = rand() % pstoffCount;
+        SFX_pstoff.Select(pairIgnition);
+        SFX_in.Select(pairIgnition);
+    }
+  }
+	
   virtual void On() {
     if (IsOn()) return;
     if (current_style() && current_style()->NoOnOff())
@@ -125,6 +157,9 @@ public:
     IgnoreClash(300);
 
     float preon_time = 0.0;
+#ifdef PREONS_MATCH_OUTS
+    SelectIgnitionPair();
+#endif
     SaberBase::DoPreOn(&preon_time);
     if (preon_time > 0.0) {
       on_pending_ = true;
@@ -150,7 +185,10 @@ public:
     if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
       ToggleColorChangeMode();
     }
-#endif    
+#endif
+#ifdef PSTOFFS_MATCH_INS
+    SelectRetractionPair();
+#endif
     SaberBase::TurnOff(off_type);
     if (unmute_on_deactivation_) {
       unmute_on_deactivation_ = false;
