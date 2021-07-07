@@ -770,6 +770,125 @@ SaberFett263Buttons() : PropBase() {}
     WriteChoreo("choreo.tmp");
     WriteChoreo("choreo.ini");
   }
+
+  void BeginRehearsal() {
+    memset(saved_choreography.clash_rec, 0, sizeof(saved_choreography.clash_rec));
+    clash_count_ = -1;
+    rehearse_ = true;
+    PlayMenuSound("rehrsbgn.wav");
+    FastOn();
+  }
+  
+  void RehearseLockup() {  
+    clash_count_ += 1;
+    saved_choreography.clash_rec[clash_count_].stance = SavedRehearsal::STANCE_LOCKUP;
+    int file_num1;
+    int file_num2;
+    int file_num3;
+    file_num1 = rand() % SFX_bgnlock.files_found();
+    SFX_bgnlock.Select(file_num1);
+    saved_choreography.clash_rec[clash_count_].sound_number1 = file_num1;
+    if (SFX_lock) {
+      file_num2 = rand() % SFX_lock.files_found();
+      SFX_lock.Select(file_num2);
+      saved_choreography.clash_rec[clash_count_].sound_number2 = file_num2;
+    } else {
+      file_num2 = rand() % SFX_lockup.files_found();
+      SFX_lockup.Select(file_num2);
+      saved_choreography.clash_rec[clash_count_].sound_number2 = file_num2;
+    }
+    file_num3 = rand() % SFX_endlock.files_found();
+    SFX_endlock.Select(file_num3);
+    saved_choreography.clash_rec[clash_count_].sound_number3 = file_num3;
+  }
+   
+  void RehearseClash() {
+    clash_count_ += 1;
+    saved_choreography.clash_rec[clash_count_].stance = SavedRehearsal::STANCE_CLASH;
+    int file_num1;
+    if (SFX_clsh) {
+      file_num1 = rand() % SFX_clsh.files_found();
+      SFX_clsh.Select(file_num1);
+      saved_choreography.clash_rec[clash_count_].sound_number1 = file_num1;
+    } else {
+      file_num1 = rand() % SFX_clash.files_found();
+      SFX_clash.Select(file_num1);
+      saved_choreography.clash_rec[clash_count_].sound_number1 = file_num1;
+    }
+    SaberBase::DoClash();
+  }
+   
+  void EndRehearsal() {
+     PlayMenuSound("rehrsend.wav");
+     clash_count_ += 1;
+     saved_choreography.clash_rec[clash_count_].stance = SavedRehearsal::STANCE_END;
+     next_event_ = true;
+     clash_count_ = 0;
+     if (SFX_clsh) {
+       SFX_clsh.Select(-1);
+     } else {
+       SFX_clash.Select(-1);
+     }
+     if (SFX_lock) {
+       SFX_lock.Select(-1);
+     } else {
+       SFX_lockup.Select(-1);
+     }
+     SFX_bgnlock.Select(-1);
+     SFX_endlock.Select(-1);    
+  }
+   
+  void BeginChoreo() {  
+    PlayMenuSound("chreobgn.wav");
+    choreo_ = true;
+    battle_mode_ = true;
+    clash_count_ = 0;
+    FastOn();
+  }
+  
+   void ChoreoClash() {
+     if (SFX_clsh) {
+       SFX_clsh.Select(saved_choreography.clash_rec[clash_count_].sound_number1);
+     } else {
+       SFX_clash.Select(saved_choreography.clash_rec[clash_count_].sound_number1);
+     }
+     check_blast_ = false;
+     swing_blast_ = false;
+     clash_count_ += 1;
+     SaberBase::DoClash();
+   }
+  
+   void ChoreoLockup() {
+     SFX_bgnlock.Select(saved_choreography.clash_rec[clash_count_].sound_number1);
+     if (SFX_lock) {
+       SFX_lock.Select(saved_choreography.clash_rec[clash_count_].sound_number2);
+     } else {
+       SFX_lockup.Select(saved_choreography.clash_rec[clash_count_].sound_number2);
+     }
+     SFX_endlock.Select(saved_choreography.clash_rec[clash_count_].sound_number3);
+     check_blast_ = false;
+     swing_blast_ = false;
+     clash_count_ += 1;
+     SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+     SaberBase::DoBeginLockup();
+     auto_lockup_on_ = true;
+   }
+   
+  void EndChoreo() {
+    choreo_ = false;
+    if (SFX_clsh) {
+      SFX_clsh.Select(-1);
+    } else {
+      SFX_clash.Select(-1);
+    }
+    if (SFX_lock) {
+      SFX_lock.Select(-1);
+    } else {
+      SFX_lockup.Select(-1);
+    }
+    SFX_bgnlock.Select(-1);
+    SFX_endlock.Select(-1);     
+  }
 #endif
 
   void GenerateIniFiles() {
@@ -3855,23 +3974,7 @@ void PlayMenuSound(const char* file) {
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
-          PlayMenuSound("rehrsend.wav");
-          clash_count_ += 1;
-          saved_choreography.clash_rec[clash_count_].stance = SavedRehearsal::STANCE_END;
-          next_event_ = true;
-          clash_count_ = 0;
-          if (SFX_clsh) {
-            SFX_clsh.Select(-1);
-          } else {
-            SFX_clash.Select(-1);
-          }
-          if (SFX_lock) {
-            SFX_lock.Select(-1);
-          } else {
-            SFX_lockup.Select(-1);
-          }
-          SFX_bgnlock.Select(-1);
-          SFX_endlock.Select(-1);
+          EndRehearsal();
           return true;
         } else {
           return false;
@@ -3909,19 +4012,7 @@ void PlayMenuSound(const char* file) {
 #endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
             if (choreo_ && saved_choreography.clash_rec[clash_count_].stance == SavedRehearsal::STANCE_END) {
-              choreo_ = false;
-              if (SFX_clsh) {
-                SFX_clsh.Select(-1);
-              } else {
-                SFX_clash.Select(-1);
-              }
-              if (SFX_lock) {
-                SFX_lock.Select(-1);
-              } else {
-                SFX_lockup.Select(-1);
-              }
-              SFX_bgnlock.Select(-1);
-              SFX_endlock.Select(-1);
+              EndChoreo();
             }
 #endif        
 #ifdef FETT263_BATTLE_MODE_ALWAYS_ON
@@ -4077,26 +4168,7 @@ void PlayMenuSound(const char* file) {
         if (menu_) return true;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
-          clash_count_ += 1;
-          saved_choreography.clash_rec[clash_count_].stance = SavedRehearsal::STANCE_LOCKUP;
-          int file_num1;
-          int file_num2;
-          int file_num3;
-          file_num1 = rand() % SFX_bgnlock.files_found();
-          SFX_bgnlock.Select(file_num1);
-          saved_choreography.clash_rec[clash_count_].sound_number1 = file_num1;
-          if (SFX_lock) {
-            file_num2 = rand() % SFX_lock.files_found();
-            SFX_lock.Select(file_num2);
-            saved_choreography.clash_rec[clash_count_].sound_number2 = file_num2;
-          } else {
-            file_num2 = rand() % SFX_lockup.files_found();
-            SFX_lockup.Select(file_num2);
-            saved_choreography.clash_rec[clash_count_].sound_number2 = file_num2;
-          }
-          file_num3 = rand() % SFX_endlock.files_found();
-          SFX_endlock.Select(file_num3);
-          saved_choreography.clash_rec[clash_count_].sound_number3 = file_num3;
+          RehearseLockup();
         }
 #endif
         if (!SaberBase::Lockup()) {
@@ -4190,30 +4262,21 @@ void PlayMenuSound(const char* file) {
 #ifdef FETT263_SAVE_CHOREOGRAPHY
       // Rehearsal Mode
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_AUX):
+      // Check for existing rehearsal and prompt to overwrite or keep via menu    
       if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
         PlayMenuSound("rehrsnew.wav");
         menu_ = true;
         menu_type_ = MENU_REHEARSE;
         return true;
       } else {
-        memset(saved_choreography.clash_rec, 0, sizeof(saved_choreography.clash_rec));
-        clash_count_ = -1;
-        rehearse_ = true;
-        PlayMenuSound("rehrsbgn.wav");
-        STDOUT.println("Enter Rehearsal Mode");
-        FastOn();
+        BeginRehearsal();
       }
       return true;
 
       // Choreographed Battle Mode
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF):
         if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
-          PlayMenuSound("chreobgn.wav");
-          choreo_ = true;
-          battle_mode_ = true;
-          clash_count_ = 0;
-          STDOUT.println("Entering Choreography Mode");
-          FastOn();
+          BeginChoreo();
           return true;
         } else {
           PlayMenuSound("nochreo.wav");
@@ -4224,12 +4287,7 @@ void PlayMenuSound(const char* file) {
         return true;
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_AUX):
         if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
-          PlayMenuSound("chreobgn.wav");
-          choreo_ = true;
-          battle_mode_ = true;
-          clash_count_ = 0;
-          STDOUT.println("Entering Choreography Mode");
-          FastOn();
+          BeginChoreo();
           return true;
         } else {
           PlayMenuSound("nochreo.wav");
@@ -4245,19 +4303,7 @@ void PlayMenuSound(const char* file) {
         if (menu_ || SaberBase::Lockup()) return true;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
-          clash_count_ += 1;
-          saved_choreography.clash_rec[clash_count_].stance = SavedRehearsal::STANCE_CLASH;
-          int file_num1;
-          if (SFX_clsh) {
-            file_num1 = rand() % SFX_clsh.files_found();
-            SFX_clsh.Select(file_num1);
-            saved_choreography.clash_rec[clash_count_].sound_number1 = file_num1;
-          } else {
-            file_num1 = rand() % SFX_clash.files_found();
-            SFX_clash.Select(file_num1);
-            saved_choreography.clash_rec[clash_count_].sound_number1 = file_num1;
-          }
-          SaberBase::DoClash();
+          RehearseClash();
           return true;
         }
 #endif
@@ -4273,25 +4319,11 @@ void PlayMenuSound(const char* file) {
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (choreo_) {
           if (saved_choreography.clash_rec[clash_count_].stance == SavedRehearsal::STANCE_CLASH) {
-            if (SFX_clsh) {
-              SFX_clsh.Select(saved_choreography.clash_rec[clash_count_].sound_number1);
-            } else {
-              SFX_clash.Select(saved_choreography.clash_rec[clash_count_].sound_number1);
-            }
-            check_blast_ = false;
-            swing_blast_ = false;
-            clash_count_ += 1;
-            SaberBase::DoClash();
+            ChoreoClash();
             return true;
           } else {
-            SFX_bgnlock.Select(saved_choreography.clash_rec[clash_count_].sound_number1);
-            if (SFX_lock) {
-              SFX_lock.Select(saved_choreography.clash_rec[clash_count_].sound_number2);
-            } else {
-              SFX_lockup.Select(saved_choreography.clash_rec[clash_count_].sound_number2);
-            }
-            SFX_endlock.Select(saved_choreography.clash_rec[clash_count_].sound_number3);
-            clash_count_ += 1;
+            ChoreoLockup();
+            return true;
           }
         }
 #endif
