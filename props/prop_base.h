@@ -124,8 +124,8 @@ public:
     // It might be a "clicky" power button...
     IgnoreClash(300);
 
-    float preon_time = 0.0;
-    SaberBase::DoPreOn(&preon_time);
+    SaberBase::DoPreOn();
+    float preon_time = SaberBase::sound_length;
     if (preon_time > 0.0) {
       on_pending_ = true;
       on_pending_base_ = millis();

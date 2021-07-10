@@ -178,7 +178,6 @@ public:                                                         \
 
 #define SABERBASEFUNCTIONS()						\
   SABERFUN(Effect, effect, (EffectType effect, float location), (effect, location)); \
-  SABERFUN(PreOn, EFFECT_PREON, (float* delay), (delay));			\
   SABERFUN(On, EFFECT_IGNITION, (), ());				\
   SABERFUN(Off, EFFECT_RETRACTION, (OffType off_type), (off_type));	\
   SABERFUN(BladeDetect, EFFECT_NONE, (bool detected), (detected));	\
@@ -194,6 +193,7 @@ public:                                                         \
   static void DoBlast() { DoEffectR(EFFECT_BLAST); }
   static void DoForce() { DoEffectR(EFFECT_FORCE); }
   static void DoBoot() { DoEffect(EFFECT_BOOT, 0); }
+  static void DoPreOn() { DoEffect(EFFECT_PREON, 0); }
   static void DoBeginLockup() { DoEffectR(EFFECT_LOCKUP_BEGIN); }
   static void DoEndLockup() { DoEffect(EFFECT_LOCKUP_END, 0); }
   static void DoChange() { DoEffect(EFFECT_CHANGE, 0); }

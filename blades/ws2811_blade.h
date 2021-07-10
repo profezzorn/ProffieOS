@@ -143,11 +143,13 @@ WS2811_Blade(WS2811PIN* pin,
     on_ = true;
     power_off_requested_ = false;
   }
-  void SB_PreOn(float* delay) override {
-    AbstractBlade::SB_PreOn(delay);
-    // This blade uses EFFECT_PREON, so we need to turn the power on now.
-    run_ = true;
-    power_off_requested_ = false;
+  void SB_Effect2(BladeEffectType type, float location) override {
+    AbstractBlade::SB_Effect2(type, location);
+    if (type == EFFECT_PREON) {
+      // This blade uses EFFECT_PREON, so we need to turn the power on now.
+      run_ = true;
+      power_off_requested_ = false;
+    }
   }
   void SB_Off(OffType off_type) override {
     TRACE(BLADE, "SB_Off");
