@@ -104,7 +104,7 @@ public:
 #endif
 
   virtual int GetBulletCount() {
-    return shorts_fired_ - max_shots_;
+    return shots_fired_ - max_shots_;
   }
 
   virtual bool CheckJam(int percent) {
