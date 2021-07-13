@@ -597,16 +597,14 @@ public:
     base_.run(blade);
     lightup_.run(blade);
     black_.run(blade);
-    led_ = length_edit_length;
   }
 
   OverDriveColor getColor(int led) {
-    if (led == led_) return lightup_.getColor(led);
-    if (led > led_) return black_.getColor(led);
+    if (led == length_edit_length) return lightup_.getColor(led);
+    if (led > length_edit_length) return black_.getColor(led);
     return base_.getColor(led);
   }
 private:
-  int led_;
   BASE base_;
   LIGHTUP lightup_;
   BLACK black_;
@@ -1894,6 +1892,7 @@ SaberFett263Buttons() : PropBase() {}
         blade_length_ = GetBladeLength(blade_num_);
         if (blade_length_ < 1) blade_length_ = max_length_;
         length_revert_ = blade_length_;
+        SayNumber(blade_length_, SAY_WHOLE);
         LengthPreview(blade_num_);
         menu_type_ = MENU_LENGTH;
         break;
@@ -2356,9 +2355,9 @@ SaberFett263Buttons() : PropBase() {}
             break;
           case EDIT_CLASH_THRESHOLD:
             menu_type_ = MENU_CLASH_THRESHOLD;
+            PlayMenuSound("mselect.wav");
             clash_t_ = GetCurrentClashThreshold();
             SayNumber(clash_t_, SAY_DECIMAL);
-            PlayMenuSound("mselect.wav");
             break;
           case EDIT_BLADE_LENGTH:
   #if NUM_BLADES == 1
@@ -2367,10 +2366,11 @@ SaberFett263Buttons() : PropBase() {}
             blade_num_ = 1;
             max_length_ = GetMaxBladeLength(blade_num_);
             blade_length_ = GetBladeLength(blade_num_);
+            PlayMenuSound("mselect.wav");  
             if (blade_length_ < 1) blade_length_ = max_length_;
             length_revert_ = blade_length_;
             LengthPreview(blade_num_);
-            PlayMenuSound("mselect.wav");
+            SayNumber(blade_length_, SAY_WHOLE);
   #else
             menu_type_ = MENU_BLADE_LENGTH;
             blade_num_ = 0;
@@ -2805,20 +2805,19 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_LENGTH:
         // Edit Blade Length
-        if (blade_length_ < max_length_ && blade_length_ > 2) {
-          blade_length_ += direction;
-          length_edit_length = blade_length_ - 1;
-          if (direction > 0) {
-            PlayMenuSound("mup.wav");
-          } else {
-            PlayMenuSound("mdown.wav");
-          }
-          SetBladeLength(blade_num_, blade_length_);
-          SaveState(current_preset_.preset_num);
-        } else {
-          if (blade_length_ == max_length_) PlayMenuSound("mmax.wav");
-          if (blade_length_ == 1) PlayMenuSound("mmin.wav");
+        blade_length_ += direction;
+        length_edit_length = blade_length_ - 1;
+        if (blade_length_ == max_length_) {
+          PlayMenuSound("mmax.wav");
+          break;
         }
+        if (blade_length_ == 1) {
+          PlayMenuSound("mmin.wav");
+          break;
+        }
+        SayNumber(blade_length_, SAY_WHOLE);
+        SetBladeLength(blade_num_, blade_length_);
+        SaveState(current_preset_.preset_num);
         break;         
       case MENU_GESTURE_SUB:
         gesture_num_ += direction;
