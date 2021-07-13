@@ -957,7 +957,7 @@ SaberFett263Buttons() : PropBase() {}
   }
  
   // Copy Color Arguments from one blade to another
-  void SetColorCopy() {
+  void CopyColors() {
     effect_num_ = 16;
     char set_copy[16];
     while (true) {
@@ -1870,7 +1870,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_BLADE_COPY:
         menu_type_ = MENU_COPY_COLOR;
-        SetColorCopy();
+        CopyColors();
         MenuConfirm();
         break;
       case MENU_BLADE_SETTING:
@@ -1945,7 +1945,7 @@ SaberFett263Buttons() : PropBase() {}
             break;
           case COPY_COLOR:
             menu_type_ = MENU_COPY_COLOR;
-            SetColorCopy();
+            CopyColors();
             PlayMenuSound("mconfirm.wav");
             break;
           case RESET_COLORS:
@@ -1964,7 +1964,7 @@ SaberFett263Buttons() : PropBase() {}
             break;
           case COPY_COLOR:
             menu_type_ = MENU_BLADE_COPY;
-            SetColorCopy();
+            CopyColors();
             PlayMenuSound("mblade.wav");
             break;
           case RESET_COLOR:
