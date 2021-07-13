@@ -135,7 +135,7 @@ public:
       case SCREEN_PLI:
 	Clear();
         if (!just_booted_) {
-          if (&IMG_idle) {
+          if (IMG_idle) {
             ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
           } else {
             display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
