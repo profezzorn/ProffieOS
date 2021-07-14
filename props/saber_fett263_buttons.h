@@ -1940,7 +1940,7 @@ SaberFett263Buttons() : PropBase() {}
             menu_type_ = MENU_EFFECT;
             PlayMenuSound("meffect.wav");
             break;
-          case COPY_COLOR:
+          case COPY_COLORS:
             menu_type_ = MENU_COPY_COLOR;
             CopyColors();
             PlayMenuSound("mconfirm.wav");
@@ -1959,12 +1959,12 @@ SaberFett263Buttons() : PropBase() {}
             menu_type_ = MENU_EFFECT;
             PlayMenuSound("meffect.wav");
             break;
-          case COPY_COLOR:
+          case COPY_COLORS:
             menu_type_ = MENU_BLADE_COPY;
             CopyColors();
             PlayMenuSound("mblade.wav");
             break;
-          case RESET_COLOR:
+          case RESET_COLORS:
             menu_type_ = MENU_RESET_COLOR;
             PlayMenuSound("mconfirm.wav");
             break;
@@ -2657,7 +2657,7 @@ SaberFett263Buttons() : PropBase() {}
           case EDIT_EFFECT_COLOR:
             PlayMenuSound("mcolorop.wav");
             break;
-          case COPY_COLOR:
+          case COPY_COLORS:
             PlayMenuSound("mcopyc.wav");
             break;
           case RESET_COLORS:
