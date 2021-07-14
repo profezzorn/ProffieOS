@@ -113,8 +113,6 @@ public:
     last_send_ = millis();
   }
 
-  void SB_PreOn(float* delay) override {}
-  
   void SB_Off(OffType off_type) override {
     AbstractBlade::SB_Off(off_type);
     battery_monitor.SetLoad(false);

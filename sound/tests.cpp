@@ -44,6 +44,12 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x > b) return b;
   return x;
 }
+// clamp(x, a, b) makes sure that x is between a and b.
+float clamp(float x, float a, float b) {
+  if (x < a) return a;
+  if (x > b) return b;
+  return x;
+}
 
 class Looper {
 public:
