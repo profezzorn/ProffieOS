@@ -52,7 +52,7 @@
 #define SAVE_DYNAMIC_DIMMING
 #endif
 
-#ifdef ENABLE_ALL_MENU_OPTIONS
+#ifdef ENABLE_ALL_EDIT_OPTIONS
 #define DYNAMIC_BLADE_LENGTH
 #define DYNAMIC_BLADE_DIMMING
 #define DYNAMIC_CLASH_THRESHOLD
@@ -433,6 +433,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "styles/effect_sequence.h"
 #include "styles/color_select.h"
 #include "styles/remap.h"
+#include "styles/edit_mode.h"
 
 // functions
 #include "functions/ifon.h"
