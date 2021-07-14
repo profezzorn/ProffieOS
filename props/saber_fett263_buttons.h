@@ -128,7 +128,7 @@ Rehearsal / Choreography Modes*
   Turn Off = Hold AUX + Hold PWR
 
 Edit Mode*
-    *requires FETT263_EDIT_MODE_MENU & ENABLE_ALL_MENU_OPTIONS defines
+    *requires FETT263_EDIT_MODE_MENU & ENABLE_ALL_EDIT_OPTIONS defines
     *requires /common folder with all menu prompt sounds
   Enter Edit Mode = While Off, Hold AUX + Hold PWR
     If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
@@ -147,7 +147,7 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
 
   FETT263_EDIT_MODE_MENU
   Enable Edit Mode Menu System
-  Requires ENABLE_ALL_MENU_OPTIONS
+  Requires ENABLE_ALL_EDIT_OPTIONS
 
   FETT263_SAVE_CHOREOGRAPHY
   Enables Enhanced Battle Mode with Saved Choreography
@@ -309,8 +309,8 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #error /props/saber_fett263_buttons.h requires 2 buttons for operation
 #endif
 
-#if defined(FETT263_EDIT_MODE_MENU) && !defined(ENABLE_ALL_MENU_OPTIONS)
-#error ENABLE_ALL_MENU_OPTIONS must be defined to enable FETT263_EDIT_MODE_MENU
+#if defined(FETT263_EDIT_MODE_MENU) && !defined(ENABLE_ALL_EDIT_OPTIONS)
+#error ENABLE_ALL_EDIT_OPTIONS must be defined to enable FETT263_EDIT_MODE_MENU
 #endif
 
 #if defined(FETT263_BATTLE_MODE_ALWAYS_ON) && defined(FETT263_BATTLE_MODE_START_ON)
