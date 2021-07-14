@@ -1774,13 +1774,12 @@ SaberFett263Buttons() : PropBase() {}
             style_num_ = FirstWord(tmp, "builtin") ? atoi(SkipWord(tmp)) : 0; 
             style_revert_ = style_num_;               
             PlayMenuSound("mselect.wav");
-            break;
   #else
             menu_type_ = MENU_BLADE_STYLE;
             blade_num_ = 0;
             PlayMenuSound("mblade.wav");
-            break;
   #endif
+            break;
           case EDIT_COLORS:
             if (style_parser.MaxUsedArgument(current_preset_.GetStyle(1)) == 0) {
               menu_type_ = MENU_COLOR;
@@ -1795,12 +1794,10 @@ SaberFett263Buttons() : PropBase() {}
             menu_sub_pos_ = 0;
             PlayMenuSound("mcolorsb.wav");
             effect_num_ = 0;
-            break;
   #else
             menu_type_ = MENU_BLADE_COLOR;
             blade_num_ = 0;
-            PlayMenuSound("mblade.wav");
-            break;                
+            PlayMenuSound("mblade.wav");               
   #endif
             }
             break; 
