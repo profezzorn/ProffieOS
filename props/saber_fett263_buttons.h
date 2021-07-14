@@ -965,7 +965,6 @@ SaberFett263Buttons() : PropBase() {}
   // Copy Color Arguments from one blade to another
   void CopyColors() {
     effect_num_ = 16;
-    char set_copy[16];
     while (true) {
       effect_num_ -= 1;
       if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 2)) break;
@@ -3638,6 +3637,8 @@ SaberFett263Buttons() : PropBase() {}
   } while (0);
 
     ONCEPERBLADE(SET_BLADE_STYLE)
+
+#undef SET_BLADE_STYLE
 
 #ifdef SAVE_COLOR_CHANGE
     SaberBase::SetVariation(current_preset_.variation);
