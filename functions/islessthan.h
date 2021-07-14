@@ -25,4 +25,6 @@ private:
   V v_;
 };
 
+template<class F, class V> using IsGreaterThan = IsLessThan<V, F>;
+
 #endif

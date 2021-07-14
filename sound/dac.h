@@ -256,7 +256,11 @@ public:
 
 #else  // teensyduino
     // check return value?
+#if PROFFIEBOARD_VERSION == 3
+    stm32l4_dma_create(&dma, DMA_CHANNEL_DMA2_CH1_SAI1_A, STM32L4_SAI_IRQ_PRIORITY);
+#else
     stm32l4_dma_create(&dma, DMA_CHANNEL_DMA2_CH6_SAI1_A, STM32L4_SAI_IRQ_PRIORITY);
+#endif
 #if defined(ENABLE_I2S_OUT) || defined(ENABLE_SPDIF_OUT)
     stm32l4_dma_create(&dma2, DMA_CHANNEL_DMA2_CH2_SAI1_B, STM32L4_SAI_IRQ_PRIORITY);
     // stm32l4_dma_create(&dma2, DMA_CHANNEL_DMA2_CH7_SAI1_B, STM32L4_SAI_IRQ_PRIORITY);
@@ -323,9 +327,9 @@ public:
                       DMA_OPTION_CIRCULAR);
     SAIx->CR1 |= SAI_xCR1_DMAEN;
 
-#define SAIB_SCK g_SAI1Pins.sck
-#define SAIB_FS g_SAI1Pins.fs
-#define SAIB_SD g_SAI1Pins.sd
+#define SAIB_SCK g_SAIPins.sck
+#define SAIB_FS g_SAIPins.fs
+#define SAIB_SD g_SAIPins.sd
     
 #if PROFFIEBOARD_VERSION < 3
 #undef SAIB_FS

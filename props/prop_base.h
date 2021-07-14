@@ -53,6 +53,51 @@ public:
 #endif    
 };
 
+struct SoundToPlay {
+  const char* filename_;
+  Effect* effect_;
+  int selection_;
+
+  SoundToPlay() :filename_(nullptr), effect_(nullptr) {}
+  SoundToPlay(const char* file) : filename_(file){  }
+  SoundToPlay(Effect* effect, int selection = -1) : filename_(nullptr), effect_(effect), selection_(selection) {}
+  bool Play(BufferedWavPlayer* player) {
+     if (filename_)   return player->PlayInCurrentDir(filename_);
+     effect_->Select(selection_);
+     player->PlayOnce(effect_);
+     return true;
+   }
+   bool isSet() {
+      return filename_ != nullptr || effect_ != nullptr;
+   }
+};
+
+template<int QueueLength>
+class SoundQueue {
+public:
+  bool Play(SoundToPlay p) {
+    if (sounds_ < QueueLength) {
+      queue_[sounds_++] = p;
+      return true;
+    }
+    return false;
+  }
+  // Called from Loop()
+  void Poll(RefPtr<BufferedWavPlayer>& player) {
+    if (sounds_ &&  (!player || !player->isPlaying())) {
+      if (!player) {
+        player = GetFreeWavPlayer();
+        if (!player) return;
+      }
+      queue_[0].Play(player.get());
+      sounds_--;
+      for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
+    }
+  }
+private:
+  int sounds_;
+  SoundToPlay queue_[QueueLength];
+};
 
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase {
@@ -124,8 +169,8 @@ public:
     // It might be a "clicky" power button...
     IgnoreClash(300);
 
-    float preon_time = 0.0;
-    SaberBase::DoPreOn(&preon_time);
+    SaberBase::DoPreOn();
+    float preon_time = SaberBase::sound_length;
     if (preon_time > 0.0) {
       on_pending_ = true;
       on_pending_base_ = millis();
