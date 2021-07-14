@@ -1017,47 +1017,36 @@ SaberFett263Buttons() : PropBase() {}
     UpdateFont(current_preset_.preset_num, false);
   }
 
+  // Stop location/size previews in Style Settings Mode 
+  void StopSettingPreview() {
+    switch (set_num_) {
+      case LOCKUP_POSITION_ARG:
+        show_lockup_position_.Stop(blade_num_);
+        break;
+      case DRAG_SIZE_ARG:
+        show_drag_size_.Stop(blade_num_);
+        break;
+      case EMITTER_SIZE_ARG:
+        show_emitter_size_.Stop(blade_num_);
+      default:
+        break;
+    }
+    UpdateStyle(current_preset_.preset_num);
+    menu_type_ = MENU_STYLE_SETTING_SUB;
+  }
+   
   // Save IntArg values 16 ~ 25 from Edit Mode Menu selection
   void SaveStyleSetting() {
     char style_arg[10];
     itoa(calc_, style_arg, 10);
     current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), set_num_ + 2, style_arg));
     current_preset_.Save();
-    // Stop location/size previews in Style Settings Mode
-    switch (set_num_) {
-      case LOCKUP_POSITION_ARG:
-        show_lockup_position_.Stop(blade_num_);
-        break;
-      case DRAG_SIZE_ARG:
-        show_drag_size_.Stop(blade_num_);
-        break;
-      case EMITTER_SIZE_ARG:
-        show_emitter_size_.Stop(blade_num_);
-      default:
-        break;
-    }
-    UpdateStyle(current_preset_.preset_num);
-    menu_type_ = MENU_STYLE_SETTING_SUB;
+    StopSettingPreview();
     MenuSave();
   }
 
   void CancelStyleSetting() {
-    // Stop location/size preview in Style Settings Mode
-    switch (set_num_) {
-      case LOCKUP_POSITION_ARG:
-        show_lockup_position_.Stop(blade_num_);
-        break;
-      case DRAG_SIZE_ARG:
-        show_drag_size_.Stop(blade_num_);
-        break;
-      case EMITTER_SIZE_ARG:
-        show_emitter_size_.Stop(blade_num_);
-        break;
-      default:
-        break;
-    }
-    UpdateStyle(current_preset_.preset_num);
-    menu_type_ = MENU_STYLE_SETTING_SUB;
+    StopSettingPreview();
     MenuCancel();
   }
 #endif
