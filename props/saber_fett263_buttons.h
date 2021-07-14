@@ -164,6 +164,12 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   The value for hardest clash level to select clash sound
   Range 8 ~ 16
 
+  FETT263_SAY_COLOR_LIST
+  Spoken Color Names replace default sounds during Color List Mode (requires .wav files)
+
+  FETT263_SAY_BATTERY
+  Spoken Battery Level during On Demand Battery Level effect (requires .wav files)
+  
   == BATTLE MODE OPTIONS ==
     Battle Mode is enabled via controls by default in this prop, you can customize further with these defines
 
@@ -1267,7 +1273,127 @@ SaberFett263Buttons() : PropBase() {}
         break;
     }
   }
-  
+   
+#ifdef FETT263_SAY_COLOR_LIST
+  // Enables Color Names to be said during Color List rotation
+  enum SayColorName {
+    SAY_RED = 0,
+    SAY_ORANGERED = 1,
+    SAY_DARKORANGE = 2,
+    SAY_ORANGE = 3,
+    SAY_GOLD = 4,
+    SAY_YELLOW = 5,
+    SAY_GREENYELLOW = 6,
+    SAY_GREEN = 7,
+    SAY_AQUAMARINE = 8, 
+    SAY_CYAN = 9,
+    SAY_DEEPSKYBLUE = 10,
+    SAY_DODGERBLUE = 11,
+    SAY_BLUE = 12,
+    SAY_ICEBLUE = 13,
+    SAY_INDIGO = 14,
+    SAY_PURPLE = 15,
+    SAY_DEEPPURPLE = 16,
+    SAY_MAGENTA = 17,
+    SAY_DEEPPINK = 18,
+    SAY_SILVER = 19,
+    SAY_GLACIER = 20,
+    SAY_ICEWHITE = 21,
+    SAY_LIGHTCYAN = 22,
+    SAY_MOCCASIN = 23,
+    SAY_LEMONCHIFFON = 24,
+    SAY_NAVAJOWHITE = 25,
+    SAY_WHITE = 26
+  };
+
+  void SayColor(int n) {
+    switch(n) {
+      default:
+        break;
+      case SAY_RED:
+        PlayMenuSound("red.wav"); // Red
+        break;
+      case SAY_ORANGERED:
+        PlayMenuSound("orngred.wav"); // OrangeRed
+        break;
+      case SAY_DARKORANGE:
+        PlayMenuSound("darkorng.wav"); // DarkOrange
+        break;
+      case SAY_ORANGE:
+        PlayMenuSound("orange.wav"); // Orange
+        break;
+      case SAY_GOLD:        
+        PlayMenuSound("gold.wav"); // Gold
+        break;
+      case SAY_YELLOW:        
+        PlayMenuSound("yellow.wav"); // Yellow
+        break;
+      case SAY_GREENYELLOW:        
+        PlayMenuSound("grnyellw.wav"); // GreenYellow
+        break;
+      case SAY_GREEN:
+        PlayMenuSound("green.wav"); // Green
+        break;
+      case SAY_AQUAMARINE:        
+        PlayMenuSound("aquamrn.wav"); // Aquamarine
+        break;
+      case SAY_CYAN:        
+        PlayMenuSound("cyan.wav"); // Cyan
+        break;
+      case SAY_DEEPSKYBLUE:        
+        PlayMenuSound("dskyblue.wav"); // DeepSkyBlue
+        break;
+      case SAY_DODGERBLUE:        
+        PlayMenuSound("ddgrblue.wav"); // DodgerBlue
+        break;
+      case SAY_BLUE:
+        PlayMenuSound("blue.wav"); // Blue
+        break;
+      case SAY_ICEBLUE:        
+        PlayMenuSound("iceblue.wav"); // IceBlue
+        break;
+      case SAY_INDIGO:        
+        PlayMenuSound("indigo.wav"); // Indigo
+        break;
+      case SAY_PURPLE:        
+        PlayMenuSound("purple.wav"); // Purple
+        break;
+      case SAY_DEEPPURPLE:        
+        PlayMenuSound("dppurple.wav"); // DeepPurple
+        break;
+      case SAY_MAGENTA:        
+        PlayMenuSound("magneta.wav"); // Magenta
+        break;
+      case SAY_DEEPPINK:        
+        PlayMenuSound("deeppink.wav"); // DeepPink
+        break;
+      case SAY_SILVER:        
+        PlayMenuSound("silver.wav"); // Silver
+        break;
+      case SAY_GLACIER:        
+        PlayMenuSound("glacier.wav"); // Glacier
+        break;
+      case SAY_ICEWHITE:        
+        PlayMenuSound("icewhite.wav"); // IceWhite
+        break;
+      case SAY_LIGHTCYAN:        
+        PlayMenuSound("lghtcyan.wav"); // LightCyan
+        break;
+      case SAY_MOCCASIN:        
+        PlayMenuSound("moccasin.wav"); // Moccasin
+        break;
+      case SAY_LEMONCHIFFON:        
+        PlayMenuSound("lmnchiff.wav"); // LemonChiffon
+        break;
+      case SAY_NAVAJOWHITE:        
+        PlayMenuSound("nvjwhite.wav"); // NavajoWhite
+        break;
+      case SAY_WHITE:        
+        PlayMenuSound("white.wav"); // White
+    }
+  }
+  #endif
+   
   // Check Event "Delays" for Edit Mode for Ignition/Retraction/Preon Settings Previews and Choreography Save
   void CheckEvent() {
     if (next_event_ && !wav_player->isPlaying()) {
@@ -2753,11 +2879,15 @@ SaberFett263Buttons() : PropBase() {}
           if (dial_ < 0) dial_ = NELEM(color_list_) - 1;
           if (dial_ > NELEM(color_list_) - 1) dial_ = 0;
           ShowColorStyle::SetColor(Color16(color_list_[dial_]));
+#ifdef FETT263_SAY_COLOR_LIST
+          SayColor(dial_);
+#else          
           if (direction > 0) {
             PlayMenuSound("mup.wav");
           } else {
             PlayMenuSound("mdown.wav");
           }
+#endif 
           break;
         }
         break;
@@ -3897,7 +4027,11 @@ void PlayMenuSound(const char* file) {
           dial_ = (dial_ + 1) % NELEM(color_list_);
           ONCEPERBLADE(CC_NEW_COLOR)
           current_preset_.Save();
+#ifdef FETT263_SAY_COLOR_LIST
+          SayColor(dial_);
+#else          
           hybrid_font.PlayCommon(&SFX_ccchange);
+#endif 
           UpdateStyle(current_preset_.preset_num);   
           return true;
         }
@@ -3911,7 +4045,11 @@ void PlayMenuSound(const char* file) {
           dial_ = dial_ - 1;
           ONCEPERBLADE(CC_NEW_COLOR)
           current_preset_.Save();
+#ifdef FETT263_SAY_COLOR_LIST
+          SayColor(dial_);
+#else          
           hybrid_font.PlayCommon(&SFX_ccchange);
+#endif 
           UpdateStyle(current_preset_.preset_num);
           return true;
         }
