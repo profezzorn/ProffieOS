@@ -84,11 +84,6 @@ public:
     return GetPrimaryBlade() == this;
   }
 
-  // Shared Effects
-  void SB_PreOn2(float* delay) override {
-    SB_Effect2(EFFECT_PREON, 0);
-  }
-
   void SB_On2() override {
     SB_Effect2(EFFECT_IGNITION, 0);
   }

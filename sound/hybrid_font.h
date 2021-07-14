@@ -281,7 +281,7 @@ public:
   }
 
   float SetSwingVolume(float swing_strength, float mixhum) override {
-    if(swing_player_) {
+    if (swing_player_) {
       if (swing_player_->isPlaying()) {
         float accent_volume = powf(
           swing_strength, font_config.ProffieOSSwingVolumeSharpness) * font_config.ProffieOSMaxSwingVolume;
@@ -298,15 +298,6 @@ public:
       return mixhum;
     } else {
       return 0.0;
-    }
-  }
-
-  void SB_PreOn(float* delay) override {
-    if (SFX_preon) {
-      RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&SFX_preon);
-      if (tmp) {
-        *delay = std::max(*delay, tmp->length());
-      }
     }
   }
 
@@ -383,6 +374,8 @@ public:
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
       default: return;
+      case EFFECT_PREON:  if (SFX_preon) PlayPolyphonic(&SFX_preon);
+      return;
       case EFFECT_STAB:
 	if (SFX_stab) { PlayCommon(&SFX_stab); return; }
 	// If no stab sounds are found, fall through to clash

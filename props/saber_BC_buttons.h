@@ -900,8 +900,8 @@ public:
       SaberBase::DoBeginLockup();
       return true;
 
-// Color Change - pointing up
-// MonoForce  -   pointing down
+// Color Change - pointing down
+// MonoForce  -   pointing up
 // Force -        NOT pointing up or down
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
       // pointing down
