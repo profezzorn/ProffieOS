@@ -730,7 +730,7 @@ SaberFett263Buttons() : PropBase() {}
     FileReader out;
     LSFS::Remove(full_name);
     out.Create(full_name);
-    for (int i = 0; i < NELEM(saved_choreography.clash_rec); i++) {
+    for (size_t i = 0; i < NELEM(saved_choreography.clash_rec); i++) {
       char value[64];
       switch (saved_choreography.clash_rec[i].stance) {
         case SavedRehearsal::STANCE_CLASH:
