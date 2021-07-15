@@ -3623,17 +3623,17 @@ SaberFett263Buttons() : PropBase() {}
     savestate_.ReadINIFromSaveDir("curstate");
 #define WRAP_BLADE_SHORTERNER(N) \
     if (savestate_.blade##N##len != -1 && savestate_.blade##N##len != current_config->blade##N->num_leds()) { \
-      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);	\
+      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);   \
     }
 #else
 #define WRAP_BLADE_SHORTERNER(N)
 #endif
 
     
-#define SET_BLADE_STYLE(N) do {						\
+#define SET_BLADE_STYLE(N) do {                                         \
     BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
     WRAP_BLADE_SHORTERNER(N)                                            \
-    current_config->blade##N->SetStyle(tmp);				\
+    current_config->blade##N->SetStyle(tmp);                            \
   } while (0);
 
     ONCEPERBLADE(SET_BLADE_STYLE)
