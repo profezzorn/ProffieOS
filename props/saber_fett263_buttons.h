@@ -997,7 +997,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_RETRACTION_OPTION:
         UpdateStyle(current_preset_.preset_num);
         off_event_ = true;
-        last_rotate_millis_ = millis();
+        restart_millis_ = millis();
         break;
       default:
         break;
@@ -1424,13 +1424,13 @@ SaberFett263Buttons() : PropBase() {}
       }
     }
 #ifdef FETT263_EDIT_MODE_MENU      
-    if (off_event_ && millis() - last_rotate_millis_ > 200) {
+    if (off_event_ && millis() - restart_millis_ > 200) {
       Off();
       off_event_ = false;
       restart_ = true;
-      last_rotate_millis_ = millis();
+      restart_millis_ = millis();
     }
-    if (restart_ && millis() - last_rotate_millis_ > calc_ + 1000) {
+    if (restart_ && (int)(millis() - restart_millis_) > calc_ + 1000) {
       restart_ = false;
       FastOn();
     }
@@ -4775,6 +4775,7 @@ private:
   uint32_t last_blast_millis_; // Last Blast (for Battle Mode Multi-Blast detection)
   uint32_t saber_off_time_millis_; // Off timer
   uint32_t last_rotate_millis_; // Last Rotation (to prevent gesture spamming)
+  uint32_t restart_millis_; // Used to time restarts to show preon timing.
   ClashType clash_type_ = CLASH_NONE;
   MenuType menu_type_ = MENU_TOP;
   int menu_top_pos_ = 0; // Top menu dial position
