@@ -4013,7 +4013,7 @@ void PlayMenuSound(const char* file) {
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON | BUTTON_POWER):
-        if (!menu_ && saved_gesture_control.powerlock || choreo_) {
+        if ((!menu_ && saved_gesture_control.powerlock) || choreo_) {
           wav_player.Free();
           choreo_ = false;
           battle_mode_ = false;
@@ -4242,7 +4242,7 @@ void PlayMenuSound(const char* file) {
           SaberBase::DoBlast();
           return true;  
         }
-        if (check_blast_ && battle_mode_ || rehearse_) {
+        if ((check_blast_ && battle_mode_) || rehearse_) {
           if (!swing_blast_ && millis() - last_blast_millis_ > 2000) {
             swing_blast_ = true;
             hybrid_font.PlayCommon(&SFX_blstbgn);
