@@ -3529,7 +3529,7 @@ SaberFett263Buttons() : PropBase() {}
         }
         break;
       default:
-	break;
+        break;
     }
     menu_type_ = MENU_TOP;
     menu_ = false;
@@ -3806,8 +3806,8 @@ RefPtr<BufferedWavPlayer> wav_player;
 // Menu Sound Player
 void PlayMenuSound(const char* file) {
   if (!wav_player) {
-  wav_player = GetFreeWavPlayer();
-  if (!wav_player) return;
+    wav_player = GetFreeWavPlayer();
+    if (!wav_player) return;
   }
   wav_player->set_volume_now(1.0);
   if (wav_player->PlayInCurrentDir(file)) return;
