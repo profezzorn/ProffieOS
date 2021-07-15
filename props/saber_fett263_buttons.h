@@ -568,6 +568,7 @@ public:
       return ReadStatus:: READ_END;
       break;
     }
+    return ReadStatus:: READ_OK;
   }
 
   void SetVariable(const char* variable, float v) override {
@@ -3527,6 +3528,8 @@ SaberFett263Buttons() : PropBase() {}
           PlayMenuSound("mexit.wav");
         }
         break;
+      default:
+	break;
     }
     menu_type_ = MENU_TOP;
     menu_ = false;
@@ -3593,7 +3596,9 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_STYLE_SETTING_SUB:
         sound_queue_.Play(SoundToPlay("mstylstm.wav"));
         break;
-#endif          
+#endif
+      default:
+        break;
     }    
   }
 
