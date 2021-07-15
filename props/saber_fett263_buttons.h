@@ -513,8 +513,8 @@ public:
   bool thruston; // Thrust On ignition
   bool stabon; // Stab On ignition
   bool forcepush; // Force Push
-  int forcepushlen; // Force Push Length
-  int lockupdelay; // Lockup Delay (for Battle Mode)
+  uint32_t forcepushlen; // Force Push Length
+  uint32_t lockupdelay; // Lockup Delay (for Battle Mode)
   bool twistoff; // Twist Off retraction
   // disable PWR button for retraction, for use with "Power Lock" mode 
   // to prevent button turning saber off
@@ -2876,7 +2876,7 @@ SaberFett263Buttons() : PropBase() {}
         if (color_mode_ == COLOR_LIST) {
           dial_ += direction;
           if (dial_ < 0) dial_ = NELEM(color_list_) - 1;
-          if (dial_ > NELEM(color_list_) - 1) dial_ = 0;
+          if (dial_ > (int)NELEM(color_list_) - 1) dial_ = 0;
           ShowColorStyle::SetColor(Color16(color_list_[dial_]));
 #ifdef FETT263_SAY_COLOR_LIST
           SayColor(dial_);
@@ -3508,7 +3508,7 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
-// Edit Mode Exit
+  // Exit Edit Mode
   void MenuExit() {
     switch (menu_type_) {
 #ifdef FETT263_SAVE_CHOREOGRAPHY      
