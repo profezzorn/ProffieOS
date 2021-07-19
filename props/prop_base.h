@@ -83,11 +83,12 @@ public:
     return false;
   }
   // Called from Loop()
-  void Poll(RefPtr<BufferedWavPlayer>& player) {
+  void PollSoundQueue(RefPtr<BufferedWavPlayer>& player) {
     if (sounds_ &&  (!player || !player->isPlaying())) {
       if (!player) {
         player = GetFreeWavPlayer();
         if (!player) return;
+	player->set_volume_now(1.0);
       }
       queue_[0].Play(player.get());
       sounds_--;
