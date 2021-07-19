@@ -433,10 +433,11 @@ LINKER_SCRIPTS := -T$(ALTERNATE_CORE_PATH)/variants/$(VARIANT)/$(BOARD_LINKER_SC
 OTHER_LIBS := $(call PARSE_BOARD,$(BOARD_TAG),build.flags.libs)
 
 LDFLAGS += --specs=nano.specs -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--start-group
-ifeq ($(BOARD_TAG),ProffieboardV2-L433CC)
-  LDFLAGS += -L$(LIB_PATH) -lstm32l433 -larm_cortexM4lf_math -lc -lm
+ifeq ($(BOARD_TAG),ProffieboardV3-L452RE)
+  LDFLAGS += -L$(LIB_PATH) -lstm32l452 -larm_cortexM4lf_math -lm
 else
-  LDFLAGS += -L$(LIB_PATH) -lstm32l452 -larm_cortexM4lf_math -lc -lm
+  LDFLAGS += -L$(LIB_PATH) -lstm32l433 -larm_cortexM4lf_math -lm
+  # LDFLAGS += -L$(LIB_PATH) -lstm32l433 -larm_cortexM4lf_math -lc -lm
 endif
 
 # OpenOCD reset command only for now
