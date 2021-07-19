@@ -4022,7 +4022,7 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
           menu_ = false;
           menu_type_ = MENU_TOP;
-          PlayMenuSound("mup.wav"); 
+	  SayUp();
           return true;
         } 
         return false;
