@@ -128,7 +128,7 @@ Rehearsal / Choreography Modes*
   Turn Off = Hold AUX + Hold PWR
 
 Edit Mode*
-    *requires FETT263_EDIT_MODE_MENU & ENABLE_ALL_MENU_OPTIONS defines
+    *requires FETT263_EDIT_MODE_MENU & ENABLE_ALL_EDIT_OPTIONS defines
     *requires /common folder with all menu prompt sounds
   Enter Edit Mode = While Off, Hold AUX + Hold PWR
     If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
@@ -147,7 +147,7 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
 
   FETT263_EDIT_MODE_MENU
   Enable Edit Mode Menu System
-  Requires ENABLE_ALL_MENU_OPTIONS
+  Requires ENABLE_ALL_EDIT_OPTIONS
 
   FETT263_SAVE_CHOREOGRAPHY
   Enables Enhanced Battle Mode with Saved Choreography
@@ -164,6 +164,12 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   The value for hardest clash level to select clash sound
   Range 8 ~ 16
 
+  FETT263_SAY_COLOR_LIST
+  Spoken Color Names replace default sounds during Color List Mode (requires .wav files)
+
+  FETT263_SAY_BATTERY
+  Spoken Battery Level during On Demand Battery Level effect (requires .wav files)
+  
   == BATTLE MODE OPTIONS ==
     Battle Mode is enabled via controls by default in this prop, you can customize further with these defines
 
@@ -309,8 +315,8 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #error /props/saber_fett263_buttons.h requires 2 buttons for operation
 #endif
 
-#if defined(FETT263_EDIT_MODE_MENU) && !defined(ENABLE_ALL_MENU_OPTIONS)
-#error ENABLE_ALL_MENU_OPTIONS must be defined to enable FETT263_EDIT_MODE_MENU
+#if defined(FETT263_EDIT_MODE_MENU) && !defined(ENABLE_ALL_EDIT_OPTIONS)
+#error ENABLE_ALL_EDIT_OPTIONS must be defined to enable FETT263_EDIT_MODE_MENU
 #endif
 
 #if defined(FETT263_BATTLE_MODE_ALWAYS_ON) && defined(FETT263_BATTLE_MODE_START_ON)
@@ -507,8 +513,8 @@ public:
   bool thruston; // Thrust On ignition
   bool stabon; // Stab On ignition
   bool forcepush; // Force Push
-  int forcepushlen; // Force Push Length
-  int lockupdelay; // Lockup Delay (for Battle Mode)
+  uint32_t forcepushlen; // Force Push Length
+  uint32_t lockupdelay; // Lockup Delay (for Battle Mode)
   bool twistoff; // Twist Off retraction
   // disable PWR button for retraction, for use with "Power Lock" mode 
   // to prevent button turning saber off
@@ -562,6 +568,7 @@ public:
       return ReadStatus:: READ_END;
       break;
     }
+    return ReadStatus:: READ_OK;
   }
 
   void SetVariable(const char* variable, float v) override {
@@ -724,7 +731,7 @@ SaberFett263Buttons() : PropBase() {}
     FileReader out;
     LSFS::Remove(full_name);
     out.Create(full_name);
-    for (int i = 0; i < NELEM(saved_choreography.clash_rec); i++) {
+    for (size_t i = 0; i < NELEM(saved_choreography.clash_rec); i++) {
       char value[64];
       switch (saved_choreography.clash_rec[i].stance) {
         case SavedRehearsal::STANCE_CLASH:
@@ -959,7 +966,6 @@ SaberFett263Buttons() : PropBase() {}
   // Copy Color Arguments from one blade to another
   void CopyColors() {
     effect_num_ = 16;
-    char set_copy[16];
     while (true) {
       effect_num_ -= 1;
       if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 2)) break;
@@ -992,7 +998,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_RETRACTION_OPTION:
         UpdateStyle(current_preset_.preset_num);
         off_event_ = true;
-        last_rotate_millis_ = millis();
+        restart_millis_ = millis();
         break;
       default:
         break;
@@ -1267,7 +1273,127 @@ SaberFett263Buttons() : PropBase() {}
         break;
     }
   }
-  
+   
+#ifdef FETT263_SAY_COLOR_LIST
+  // Enables Color Names to be said during Color List rotation
+  enum SayColorName {
+    SAY_RED = 0,
+    SAY_ORANGERED = 1,
+    SAY_DARKORANGE = 2,
+    SAY_ORANGE = 3,
+    SAY_GOLD = 4,
+    SAY_YELLOW = 5,
+    SAY_GREENYELLOW = 6,
+    SAY_GREEN = 7,
+    SAY_AQUAMARINE = 8, 
+    SAY_CYAN = 9,
+    SAY_DEEPSKYBLUE = 10,
+    SAY_DODGERBLUE = 11,
+    SAY_BLUE = 12,
+    SAY_ICEBLUE = 13,
+    SAY_INDIGO = 14,
+    SAY_PURPLE = 15,
+    SAY_DEEPPURPLE = 16,
+    SAY_MAGENTA = 17,
+    SAY_DEEPPINK = 18,
+    SAY_SILVER = 19,
+    SAY_GLACIER = 20,
+    SAY_ICEWHITE = 21,
+    SAY_LIGHTCYAN = 22,
+    SAY_MOCCASIN = 23,
+    SAY_LEMONCHIFFON = 24,
+    SAY_NAVAJOWHITE = 25,
+    SAY_WHITE = 26
+  };
+
+  void SayColor(int n) {
+    switch(n) {
+      default:
+        break;
+      case SAY_RED:
+        PlayMenuSound("red.wav"); // Red
+        break;
+      case SAY_ORANGERED:
+        PlayMenuSound("orngred.wav"); // OrangeRed
+        break;
+      case SAY_DARKORANGE:
+        PlayMenuSound("darkorng.wav"); // DarkOrange
+        break;
+      case SAY_ORANGE:
+        PlayMenuSound("orange.wav"); // Orange
+        break;
+      case SAY_GOLD:        
+        PlayMenuSound("gold.wav"); // Gold
+        break;
+      case SAY_YELLOW:        
+        PlayMenuSound("yellow.wav"); // Yellow
+        break;
+      case SAY_GREENYELLOW:        
+        PlayMenuSound("grnyellw.wav"); // GreenYellow
+        break;
+      case SAY_GREEN:
+        PlayMenuSound("green.wav"); // Green
+        break;
+      case SAY_AQUAMARINE:        
+        PlayMenuSound("aquamrn.wav"); // Aquamarine
+        break;
+      case SAY_CYAN:        
+        PlayMenuSound("cyan.wav"); // Cyan
+        break;
+      case SAY_DEEPSKYBLUE:        
+        PlayMenuSound("dskyblue.wav"); // DeepSkyBlue
+        break;
+      case SAY_DODGERBLUE:        
+        PlayMenuSound("ddgrblue.wav"); // DodgerBlue
+        break;
+      case SAY_BLUE:
+        PlayMenuSound("blue.wav"); // Blue
+        break;
+      case SAY_ICEBLUE:        
+        PlayMenuSound("iceblue.wav"); // IceBlue
+        break;
+      case SAY_INDIGO:        
+        PlayMenuSound("indigo.wav"); // Indigo
+        break;
+      case SAY_PURPLE:        
+        PlayMenuSound("purple.wav"); // Purple
+        break;
+      case SAY_DEEPPURPLE:        
+        PlayMenuSound("dppurple.wav"); // DeepPurple
+        break;
+      case SAY_MAGENTA:        
+        PlayMenuSound("magneta.wav"); // Magenta
+        break;
+      case SAY_DEEPPINK:        
+        PlayMenuSound("deeppink.wav"); // DeepPink
+        break;
+      case SAY_SILVER:        
+        PlayMenuSound("silver.wav"); // Silver
+        break;
+      case SAY_GLACIER:        
+        PlayMenuSound("glacier.wav"); // Glacier
+        break;
+      case SAY_ICEWHITE:        
+        PlayMenuSound("icewhite.wav"); // IceWhite
+        break;
+      case SAY_LIGHTCYAN:        
+        PlayMenuSound("lghtcyan.wav"); // LightCyan
+        break;
+      case SAY_MOCCASIN:        
+        PlayMenuSound("moccasin.wav"); // Moccasin
+        break;
+      case SAY_LEMONCHIFFON:        
+        PlayMenuSound("lmnchiff.wav"); // LemonChiffon
+        break;
+      case SAY_NAVAJOWHITE:        
+        PlayMenuSound("nvjwhite.wav"); // NavajoWhite
+        break;
+      case SAY_WHITE:        
+        PlayMenuSound("white.wav"); // White
+    }
+  }
+  #endif
+   
   // Check Event "Delays" for Edit Mode for Ignition/Retraction/Preon Settings Previews and Choreography Save
   void CheckEvent() {
     if (next_event_ && !wav_player->isPlaying()) {
@@ -1299,13 +1425,13 @@ SaberFett263Buttons() : PropBase() {}
       }
     }
 #ifdef FETT263_EDIT_MODE_MENU      
-    if (off_event_ && millis() - last_rotate_millis_ > 200) {
+    if (off_event_ && millis() - restart_millis_ > 200) {
       Off();
       off_event_ = false;
       restart_ = true;
-      last_rotate_millis_ = millis();
+      restart_millis_ = millis();
     }
-    if (restart_ && millis() - last_rotate_millis_ > calc_ + 1000) {
+    if (restart_ && (int)(millis() - restart_millis_) > calc_ + 1000) {
       restart_ = false;
       FastOn();
     }
@@ -2751,13 +2877,17 @@ SaberFett263Buttons() : PropBase() {}
         if (color_mode_ == COLOR_LIST) {
           dial_ += direction;
           if (dial_ < 0) dial_ = NELEM(color_list_) - 1;
-          if (dial_ > NELEM(color_list_) - 1) dial_ = 0;
+          if (dial_ > (int)NELEM(color_list_) - 1) dial_ = 0;
           ShowColorStyle::SetColor(Color16(color_list_[dial_]));
+#ifdef FETT263_SAY_COLOR_LIST
+          SayColor(dial_);
+#else          
           if (direction > 0) {
             PlayMenuSound("mup.wav");
           } else {
             PlayMenuSound("mdown.wav");
           }
+#endif 
           break;
         }
         break;
@@ -3379,7 +3509,7 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
-// Edit Mode Exit
+  // Exit Edit Mode
   void MenuExit() {
     switch (menu_type_) {
 #ifdef FETT263_SAVE_CHOREOGRAPHY      
@@ -3397,6 +3527,8 @@ SaberFett263Buttons() : PropBase() {}
         } else {
           PlayMenuSound("mexit.wav");
         }
+        break;
+      default:
         break;
     }
     menu_type_ = MENU_TOP;
@@ -3464,7 +3596,9 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_STYLE_SETTING_SUB:
         sound_queue_.Play(SoundToPlay("mstylstm.wav"));
         break;
-#endif          
+#endif
+      default:
+        break;
     }    
   }
 
@@ -3494,20 +3628,22 @@ SaberFett263Buttons() : PropBase() {}
     savestate_.ReadINIFromSaveDir("curstate");
 #define WRAP_BLADE_SHORTERNER(N) \
     if (savestate_.blade##N##len != -1 && savestate_.blade##N##len != current_config->blade##N->num_leds()) { \
-      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);	\
+      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);   \
     }
 #else
 #define WRAP_BLADE_SHORTERNER(N)
 #endif
 
     
-#define SET_BLADE_STYLE(N) do {						\
+#define SET_BLADE_STYLE(N) do {                                         \
     BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
     WRAP_BLADE_SHORTERNER(N)                                            \
-    current_config->blade##N->SetStyle(tmp);				\
+    current_config->blade##N->SetStyle(tmp);                            \
   } while (0);
 
     ONCEPERBLADE(SET_BLADE_STYLE)
+
+#undef SET_BLADE_STYLE
 
 #ifdef SAVE_COLOR_CHANGE
     SaberBase::SetVariation(current_preset_.variation);
@@ -3670,8 +3806,8 @@ RefPtr<BufferedWavPlayer> wav_player;
 // Menu Sound Player
 void PlayMenuSound(const char* file) {
   if (!wav_player) {
-  wav_player = GetFreeWavPlayer();
-  if (!wav_player) return;
+    wav_player = GetFreeWavPlayer();
+    if (!wav_player) return;
   }
   wav_player->set_volume_now(1.0);
   if (wav_player->PlayInCurrentDir(file)) return;
@@ -3882,7 +4018,7 @@ void PlayMenuSound(const char* file) {
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON | BUTTON_POWER):
-        if (!menu_ && saved_gesture_control.powerlock || choreo_) {
+        if ((!menu_ && saved_gesture_control.powerlock) || choreo_) {
           wav_player.Free();
           choreo_ = false;
           battle_mode_ = false;
@@ -3897,7 +4033,11 @@ void PlayMenuSound(const char* file) {
           dial_ = (dial_ + 1) % NELEM(color_list_);
           ONCEPERBLADE(CC_NEW_COLOR)
           current_preset_.Save();
+#ifdef FETT263_SAY_COLOR_LIST
+          SayColor(dial_);
+#else          
           hybrid_font.PlayCommon(&SFX_ccchange);
+#endif 
           UpdateStyle(current_preset_.preset_num);   
           return true;
         }
@@ -3911,7 +4051,11 @@ void PlayMenuSound(const char* file) {
           dial_ = dial_ - 1;
           ONCEPERBLADE(CC_NEW_COLOR)
           current_preset_.Save();
+#ifdef FETT263_SAY_COLOR_LIST
+          SayColor(dial_);
+#else          
           hybrid_font.PlayCommon(&SFX_ccchange);
+#endif 
           UpdateStyle(current_preset_.preset_num);
           return true;
         }
@@ -4103,7 +4247,7 @@ void PlayMenuSound(const char* file) {
           SaberBase::DoBlast();
           return true;  
         }
-        if (check_blast_ && battle_mode_ || rehearse_) {
+        if ((check_blast_ && battle_mode_) || rehearse_) {
           if (!swing_blast_ && millis() - last_blast_millis_ > 2000) {
             swing_blast_ = true;
             hybrid_font.PlayCommon(&SFX_blstbgn);
@@ -4636,6 +4780,7 @@ private:
   uint32_t last_blast_millis_; // Last Blast (for Battle Mode Multi-Blast detection)
   uint32_t saber_off_time_millis_; // Off timer
   uint32_t last_rotate_millis_; // Last Rotation (to prevent gesture spamming)
+  uint32_t restart_millis_; // Used to time restarts to show preon timing.
   ClashType clash_type_ = CLASH_NONE;
   MenuType menu_type_ = MENU_TOP;
   int menu_top_pos_ = 0; // Top menu dial position
