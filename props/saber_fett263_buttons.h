@@ -3289,12 +3289,6 @@ SaberFett263Buttons() : PropBase() {}
         PlayMenuSound("mexit.wav");
         MenuExit();
         break;
-      case MENU_PRESET:
-        first_preset();
-        PlayMenuSound("mselect.wav");
-        menu_type_ = MENU_TOP;
-        menu_ = false;
-        break;
 #ifdef FETT263_EDIT_MODE_MENU
       case MENU_VOLUME:
         menu_type_ = MENU_SETTING_SUB;
@@ -3518,8 +3512,8 @@ SaberFett263Buttons() : PropBase() {}
         break;
 #endif
       case MENU_PRESET:
-        PlayMenuSound("mselect.wav");
         first_preset();
+        PlayMenuSound("mselect.wav");
         break;
       case MENU_VOLUME:
         if (SFX_vmend) {
@@ -3939,6 +3933,7 @@ void PlayMenuSound(const char* file) {
         if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
           menu_ = false;
           menu_type_ = MENU_TOP;
+          PlayMenuSound("mup.wav"); 
           return true;
         } 
         return false;
