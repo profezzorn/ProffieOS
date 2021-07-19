@@ -6,7 +6,7 @@
 #include "../functions/sum.h"
 
 // Usage: TrCenterWipeX<POSITION_FUNCTION, MILLIS_FUNCTION>
-// or: TrCenterWipeX<POSITION, MILLIS>
+// or: TrCenterWipe<POSITION, MILLIS>
 // POSITION_FUNCTION & MILLIS_FUNCTION: FUNCTION
 // POSITION: Int
 // MILLIS: a number
@@ -43,7 +43,7 @@ template<class COLOR, class MILLIS, class POSITION = Int<16384>> using TrCenterW
 template<class COLOR, int MILLIS, int POSITION = 16384> using TrCenterWipeSpark = TrJoin<TrCenterWipeX<Int<MILLIS>, Int<POSITION>>,TrWaveX<COLOR, Sum<Int<MILLIS>, Int<MILLIS>, Int<MILLIS>, Int<MILLIS>>, Int<200>, Sum<Int<MILLIS>, Int<MILLIS>>, Int<POSITION>>>;
 
 // Usage: TrCenterWipeInX<POSITION_FUNCTION, MILLIS_FUNCTION>
-// or: TrCenterWipeInX<POSITION, MILLIS>
+// or: TrCenterWipeIn<POSITION, MILLIS>
 // POSITION_FUNCTION & MILLIS_FUNCTION: FUNCTION
 // POSITION: Int
 // MILLIS: a number
