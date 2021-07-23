@@ -466,6 +466,37 @@ enum SayType {
   SAY_MILLIS,
 };
 
+EFFECT(clrlst); // spoken color names for SAY_COLOR_LIST
+enum ColorNumber {
+  COLOR_RED = 1,
+  COLOR_ORANGERED = 2,
+  COLOR_DARKORANGE = 3,
+  COLOR_ORANGE = 4,
+  COLOR_GOLD = 5,
+  COLOR_YELLOW = 6,
+  COLOR_GREENYELLOW = 7,
+  COLOR_GREEN = 8,
+  COLOR_AQUAMARINE = 9,
+  COLOR_CYAN = 10,
+  COLOR_DEEPSKYBLUE = 11,
+  COLOR_DODGERBLUE = 12,
+  COLOR_BLUE = 13,
+  COLOR_ICEBLUE = 14,
+  COLOR_INDIGO = 15,
+  COLOR_PURPLE = 16,
+  COLOR_DEEPPURPLE = 17,
+  COLOR_MAGENTA = 18,
+  COLOR_DEEPPINK = 19,
+  COLOR_SILVER = 20,
+  COLOR_GLACIER = 21,
+  COLOR_ICEWHITE = 22,
+  COLOR_LIGHTCYAN = 23,   
+  COLOR_MOCCASIN = 24,
+  COLOR_LEMONCHIFFON = 25,
+  COLOR_NAVAJOWHITE = 26,
+  COLOR_WHITE = 27,
+};
+
 class SoundLibrary {
 public:
   SoundQueue<16> sound_queue_;
@@ -568,37 +599,7 @@ public:
     }
   }
 
-  // Enables Color Names to be said during Color List rotation
-  enum SayColorName {
-    SAY_RED = 0,
-    SAY_ORANGERED = 1,
-    SAY_DARKORANGE = 2,
-    SAY_ORANGE = 3,
-    SAY_GOLD = 4,
-    SAY_YELLOW = 5,
-    SAY_GREENYELLOW = 6,
-    SAY_GREEN = 7,
-    SAY_AQUAMARINE = 8,
-    SAY_CYAN = 9,
-    SAY_DEEPSKYBLUE = 10,
-    SAY_DODGERBLUE = 11,
-    SAY_BLUE = 12,
-    SAY_ICEBLUE = 13,
-    SAY_INDIGO = 14,
-    SAY_PURPLE = 15,
-    SAY_DEEPPURPLE = 16,
-    SAY_MAGENTA = 17,
-    SAY_DEEPPINK = 18,
-    SAY_SILVER = 19,
-    SAY_GLACIER = 20,
-    SAY_ICEWHITE = 21,
-    SAY_LIGHTCYAN = 22,
-    SAY_MOCCASIN = 23,
-    SAY_LEMONCHIFFON = 24,
-    SAY_NAVAJOWHITE = 25,
-    SAY_WHITE = 26
-  };
-
+  void SayAccept () { Play("maccept.wav"); }
   void SayAdjustBlackLevel() { Play("mblack.wav"); }
   void SayAdjustColorHue() { Play("mhue.wav"); }
   void SayAdjustWhiteLevel() { Play("mwhite.wav"); }
@@ -621,7 +622,7 @@ public:
   void SayCopyPreset() { Play("mcopy.wav"); }
   void SayDeletePreset() { Play("mdelete.wav"); }
   void SayDisabled() { Play("mfalse.wav"); }
-  void SayDown() { Play("mdown.wav"); }
+  void SayDown() { Play("mdown.wav"); } // Sound for decrease
   void SayDragColor() { Play("mdrag.wav"); }
   void SayDragSize() { Play("mdragsz.wav"); }
   void SayEditBladeLength() { Play("mlength.wav"); }
@@ -630,8 +631,8 @@ public:
   void SayEditColor() { Play("mcolor.wav"); }
   void SayEditControlSettings() { Play("mcontrol.wav"); }
   void SayEditFont() { Play("mfont.wav"); }
-  void SayEditMode() { Play("medit.wav"); }   // 1-sec leading delay
-  void SayEditSettings() { Play("msettings.wav"); }
+  void SayEditMode() { Play("medit.wav"); }   // 1-sec leading silencec delay
+  void SayEditSettings() { Play("msetting.wav"); }
   void SayEditStyle() { Play("mstyle.wav"); }
   void SayEditStyleSettings() { Play("mstylset.wav"); }
   void SayEditTrack() { Play("mtrack.wav"); }
@@ -653,6 +654,7 @@ public:
   void SayLockupColor() { Play("mlockup.wav"); }
   void SayLockupDelay() { Play("mlockdly.wav"); }
   void SayLoop() { Play("mloop.wav"); }
+  void SayMainMenu() { Play("mmain.wav"); }
   void SayMaximum() { Play("mmax.wav"); }
   void SayMaximumClashStrength() { Play("maxclash.wav"); }
   void SayMaximumVolume() { Play("volmax.wav"); }
@@ -676,7 +678,7 @@ public:
   void SayRevert() { Play("mrevert.wav"); }
   void SayRotate() { Play("mrotate.wav"); }
   void SaySave() { Play("msave.wav"); }
-  void SaySelect() { Play("mselect.wav"); } // OK / Affermative
+  void SaySelect() { Play("mselect.wav"); } // Sound for OK / Affirmative / Enter
   void SaySelectBlade() { Play("mblade.wav"); }
   void SaySelectEffect() { Play("meffect.wav"); }
   void SaySelectOption() { Play("moption.wav"); }
@@ -690,100 +692,17 @@ public:
   void SayThrustIgnition() { Play("mthrston..wav"); }
   void SayTwistIgnition() { Play("mtwiston.wav"); }
   void SayTwistRetraction() { Play("mtwstoff.wav"); }
-  void SayUp() { Play("mup.wav"); }
+  void SayUp() { Play("mup.wav"); } // Sound for increase
   void SayVolumeMenuEnd() { Play("vmend.wav"); }
-  void SayVolumeUp() { Play("volup.wav"); }
-  void SayZoom() { Play("mzoom.wav"); } // Zoom in for color menu "zooming in"
-  void SayVolumeDown() { Play("voldown.wav"); }
+  void SayVolumeUp() { Play("volup.wav"); } // Sound for increasing volume
+  void SayZoom() { Play("mzoom.wav"); } // Sound for color menu "zooming in"
+  void SayVolumeDown() { Play("voldown.wav"); } // Sound for decreasing volume
   void SayGestureMenu() { Play("mgestsub.wav"); }
   void SaySettingsMenu() { Play("msetsub.wav"); }
   void SayStyleSettings() { Play("stylstm.wav"); }
 
   void SayColor(int n) {
-    switch(n) {
-      default:
-        break;
-      case SAY_RED:
-        Play("red.wav"); // Red
-        break;
-      case SAY_ORANGERED:
-        Play("orngred.wav"); // OrangeRed
-        break;
-      case SAY_DARKORANGE:
-        Play("darkorng.wav"); // DarkOrange
-        break;
-      case SAY_ORANGE:
-        Play("orange.wav"); // Orange
-        break;
-      case SAY_GOLD:
-        Play("gold.wav"); // Gold
-        break;
-      case SAY_YELLOW:
-        Play("yellow.wav"); // Yellow
-        break;
-      case SAY_GREENYELLOW:
-        Play("grnyellw.wav"); // GreenYellow
-        break;
-      case SAY_GREEN:
-        Play("green.wav"); // Green
-        break;
-      case SAY_AQUAMARINE:
-        Play("aquamrn.wav"); // Aquamarine
-        break;
-      case SAY_CYAN:
-        Play("cyan.wav"); // Cyan
-        break;
-      case SAY_DEEPSKYBLUE:
-        Play("dskyblue.wav"); // DeepSkyBlue
-        break;
-      case SAY_DODGERBLUE:
-        Play("ddgrblue.wav"); // DodgerBlue
-        break;
-      case SAY_BLUE:
-        Play("blue.wav"); // Blue
-        break;
-      case SAY_ICEBLUE:
-        Play("iceblue.wav"); // IceBlue
-        break;
-      case SAY_INDIGO:
-        Play("indigo.wav"); // Indigo
-        break;
-      case SAY_PURPLE:
-        Play("purple.wav"); // Purple
-        break;
-      case SAY_DEEPPURPLE:
-        Play("dppurple.wav"); // DeepPurple
-        break;
-      case SAY_MAGENTA:
-        Play("magneta.wav"); // Magenta
-        break;
-      case SAY_DEEPPINK:
-        Play("deeppink.wav"); // DeepPink
-        break;
-      case SAY_SILVER:
-        Play("silver.wav"); // Silver
-        break;
-      case SAY_GLACIER:
-        Play("glacier.wav"); // Glacier
-        break;
-      case SAY_ICEWHITE:
-        Play("icewhite.wav"); // IceWhite
-        break;
-      case SAY_LIGHTCYAN:
-        Play("lghtcyan.wav"); // LightCyan
-        break;
-      case SAY_MOCCASIN:
-        Play("moccasin.wav"); // Moccasin
-        break;
-      case SAY_LEMONCHIFFON:
-        Play("lmnchiff.wav"); // LemonChiffon
-        break;
-      case SAY_NAVAJOWHITE:
-        Play("nvjwhite.wav"); // NavajoWhite
-        break;
-      case SAY_WHITE:
-        Play("white.wav"); // White
-    }
+    Play(SoundToPlay(&SFX_clrlst, n));
   }
 
   void SayBool(bool v) {
@@ -973,34 +892,36 @@ int IntEdit::int_edit_ = 0;
 #endif
 
 // Color List
-static constexpr Color16 color_list_[] = {
-  Red::color(),
-  OrangeRed::color(),
-  DarkOrange::color(),
-  Orange::color(),
-  { 46260, 33410, 0 }, // Gold
-  Yellow::color(),
-  GreenYellow::color(),
-  Green::color(),
-  Aquamarine::color(),
-  Cyan::color(),
-  DeepSkyBlue::color(),
-  DodgerBlue::color(),
-  Blue::color(),
-  { 7710, 15420, 51400 }, // IceBlue
-  { 11102, 92, 53864 }, // Indigo
-  { 24000, 0, 50536 }, // Purple
-  { 30324, 0, 49768 }, // DeepPurple
-  Magenta::color(),
-  DeepPink::color(),
-  { 25700, 25700, 38550 }, // Silver
-  { 21845, 21845, 51400 }, // Glacier
-  { 46260, 46260, 65535 }, // IceWhite
-  LightCyan::color(),
-  Moccasin::color(),
-  LemonChiffon::color(),
-  NavajoWhite::color(),
-  White::color()
+struct ColorListEntry { Color16 color; ColorNumber color_number; };
+
+static constexpr ColorListEntry color_list_[] = {
+  { Red::color(), COLOR_RED },
+  { OrangeRed::color(), COLOR_ORANGERED },
+  { DarkOrange::color(), COLOR_DARKORANGE },
+  { Orange::color(), COLOR_ORANGE },
+  { { 46260, 33410, 0 }, COLOR_GOLD }, // Gold
+  { Yellow::color(), COLOR_YELLOW },
+  { GreenYellow::color(), COLOR_GREENYELLOW },
+  { Green::color(), COLOR_GREEN },
+  { Aquamarine::color(), COLOR_AQUAMARINE },
+  { Cyan::color(), COLOR_CYAN },
+  { DeepSkyBlue::color(), COLOR_DEEPSKYBLUE },
+  { DodgerBlue::color(), COLOR_DODGERBLUE },
+  { Blue::color(), COLOR_BLUE },
+  { { 7710, 15420, 51400 }, COLOR_ICEBLUE }, // IceBlue
+  { { 11102, 92, 53864 }, COLOR_INDIGO }, // Indigo
+  { { 24000, 0, 50536 }, COLOR_PURPLE }, // Purple
+  { { 30324, 0, 49768 }, COLOR_DEEPPURPLE }, // DeepPurple
+  { Magenta::color(), COLOR_MAGENTA },
+  { DeepPink::color(), COLOR_DEEPPINK },
+  { { 25700, 25700, 38550 }, COLOR_SILVER }, // Silver
+  { { 21845, 21845, 51400 }, COLOR_GLACIER }, // Glacier
+  { { 46260, 46260, 65535 }, COLOR_ICEWHITE }, // IceWhite
+  { LightCyan::color(), COLOR_LIGHTCYAN },
+  { Moccasin::color(), COLOR_MOCCASIN },
+  { LemonChiffon::color(), COLOR_LEMONCHIFFON },
+  { NavajoWhite::color(), COLOR_NAVAJOWHITE },
+  { White::color(), COLOR_WHITE }
 };
 
 // The Saber class implements the basic states and actions
@@ -1485,7 +1406,7 @@ SaberFett263Buttons() : PropBase() {}
      switch (color_mode_) {
       case COLOR_LIST:
       case CC_COLOR_LIST:
-        color_source = Color16(color_list_[dial_]);
+        color_source = Color16(color_list_[dial_].color);
         break;
       default:
         color_source = Color16(hsl_);
@@ -2799,7 +2720,7 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_top_pos_ > SUBMENUS) menu_top_pos_ = 1;
         switch (menu_top_pos_) {
           case EDIT_STYLE:
-	    sound_library_.SayStyleOptions();
+	    sound_library_.SayEditStyle();
             break;
           case EDIT_COLORS:
 	    sound_library_.SayEditColor();
@@ -2844,7 +2765,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_DELETE:
         if (direction > 0) {
           choice_ = true;
-          sound_library_.SayConfirm();
+          sound_library_.SayAccept();
         } else {
           choice_ = false;
 	  sound_library_.SayCancel();
@@ -2993,9 +2914,9 @@ SaberFett263Buttons() : PropBase() {}
           dial_ += direction;
           if (dial_ < 0) dial_ = NELEM(color_list_) - 1;
           if (dial_ > (int)NELEM(color_list_) - 1) dial_ = 0;
-          ShowColorStyle::SetColor(Color16(color_list_[dial_]));
+          ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
 #ifdef FETT263_SAY_COLOR_LIST
-          sound_library_.SayColor(dial_);
+          sound_library_.SayColor(color_list_[dial_].color_number - 1);
 #else
           if (direction > 0) {
             sound_library_.SayUp();
@@ -3668,7 +3589,7 @@ SaberFett263Buttons() : PropBase() {}
   void MenuPrompt() {
     switch (menu_type_) {
       case MENU_TOP:
-	sound_library_.SayMinimum();
+	sound_library_.SayMainMenu();
         break;
 #ifdef FETT263_EDIT_MODE_MENU
       case MENU_COLOR_SUB:
@@ -4124,7 +4045,7 @@ SaberFett263Buttons() : PropBase() {}
           ONCEPERBLADE(CC_NEW_COLOR)
           current_preset_.Save();
 #ifdef FETT263_SAY_COLOR_LIST
-          sound_library_.SayColor(dial_);
+          sound_library_.SayColor(color_list_[dial_].color_number - 1);
 #else
           hybrid_font.PlayCommon(&SFX_ccchange);
 #endif
@@ -4142,7 +4063,7 @@ SaberFett263Buttons() : PropBase() {}
           ONCEPERBLADE(CC_NEW_COLOR)
           current_preset_.Save();
 #ifdef FETT263_SAY_COLOR_LIST
-          sound_library_.SayColor(dial_);
+          sound_library_.SayColor(color_list_[dial_].color_number - 1);
 #else
           hybrid_font.PlayCommon(&SFX_ccchange);
 #endif
@@ -4277,7 +4198,7 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) {
           if (color_mode_ == COLOR_LIST || color_mode_ == EDIT_COLOR) {
             if (color_mode_ == COLOR_LIST) {
-              hsl_ = Color16(color_list_[dial_]).toHSL();
+              hsl_ = Color16(color_list_[dial_].color).toHSL();
             }
             color_mode_ = ZOOM_COLOR;
             hsl_angle_ = fusor.angle2();
