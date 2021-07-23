@@ -196,7 +196,7 @@ DEFINE_TRIGGER(8);
 
 #define PROP_TYPE AudioFx
 
-class AudioFx : public virtual PropBase {
+class AudioFx : public PROP_INHERIT_PREFIX PropBase {
 public:
   const char* name() override { return "MiCOM"; }
 #if NUM_BUTTONS >= 2
