@@ -3,7 +3,7 @@
 
 #ifndef PROP_INHERIT_PREFIX
 #define PROP_INHERIT_PREFIX
-#define
+#endif
 
 #if !defined(DYNAMIC_CLASH_THRESHOLD) && defined(SAVE_CLASH_THRESHOLD)
 #undef SAVE_CLASH_THRESHOLD
