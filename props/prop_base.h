@@ -59,7 +59,7 @@ struct SoundToPlay {
   int selection_;
 
   SoundToPlay() :filename_(nullptr), effect_(nullptr) {}
-  SoundToPlay(const char* file) : filename_(file){  }
+  explicit SoundToPlay(const char* file) : filename_(file){  }
   SoundToPlay(Effect* effect, int selection = -1) : filename_(nullptr), effect_(effect), selection_(selection) {}
   bool Play(BufferedWavPlayer* player) {
      if (filename_) return player->PlayInCurrentDir(filename_);
@@ -81,6 +81,9 @@ public:
       return true;
     }
     return false;
+  }
+  bool Play(const char* p) {
+    return Play(SoundToPlay(p));
   }
   // Called from Loop()
   void PollSoundQueue(RefPtr<BufferedWavPlayer>& player) {
