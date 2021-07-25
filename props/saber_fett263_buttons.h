@@ -467,6 +467,7 @@ enum SayType {
 };
 
 EFFECT(clrlst); // spoken color names for SAY_COLOR_LIST
+// New colors should be added at end of enum and assigned numbers for each COLOR_ should not be changed.
 enum ColorNumber {
   COLOR_RED = 1,
   COLOR_ORANGERED = 2,
@@ -695,14 +696,14 @@ public:
   void SayUp() { Play("mup.wav"); } // Sound for increase
   void SayVolumeMenuEnd() { Play("vmend.wav"); }
   void SayVolumeUp() { Play("volup.wav"); } // Sound for increasing volume
-  void SayZoom() { Play("mzoom.wav"); } // Sound for color menu "zooming in"
+  void SayZoomingIn() { Play("mzoom.wav"); } // Sound for color menu "zooming in"
   void SayVolumeDown() { Play("voldown.wav"); } // Sound for decreasing volume
   void SayGestureMenu() { Play("mgestsub.wav"); }
   void SaySettingsMenu() { Play("msetsub.wav"); }
   void SayStyleSettings() { Play("stylstm.wav"); }
 
   void SayColor(int n) {
-    Play(SoundToPlay(&SFX_clrlst, n));
+    Play(SoundToPlay(&SFX_clrlst, n - 1));
   }
 
   void SayBool(bool v) {
@@ -899,7 +900,7 @@ static constexpr ColorListEntry color_list_[] = {
   { OrangeRed::color(), COLOR_ORANGERED },
   { DarkOrange::color(), COLOR_DARKORANGE },
   { Orange::color(), COLOR_ORANGE },
-  { { 46260, 33410, 0 }, COLOR_GOLD }, // Gold
+  { { 46260, 33410, 0 }, COLOR_GOLD },
   { Yellow::color(), COLOR_YELLOW },
   { GreenYellow::color(), COLOR_GREENYELLOW },
   { Green::color(), COLOR_GREEN },
@@ -908,15 +909,15 @@ static constexpr ColorListEntry color_list_[] = {
   { DeepSkyBlue::color(), COLOR_DEEPSKYBLUE },
   { DodgerBlue::color(), COLOR_DODGERBLUE },
   { Blue::color(), COLOR_BLUE },
-  { { 7710, 15420, 51400 }, COLOR_ICEBLUE }, // IceBlue
-  { { 11102, 92, 53864 }, COLOR_INDIGO }, // Indigo
-  { { 24000, 0, 50536 }, COLOR_PURPLE }, // Purple
-  { { 30324, 0, 49768 }, COLOR_DEEPPURPLE }, // DeepPurple
+  { { 7710, 15420, 51400 }, COLOR_ICEBLUE },
+  { { 11102, 92, 53864 }, COLOR_INDIGO },
+  { { 24000, 0, 50536 }, COLOR_PURPLE },
+  { { 30324, 0, 49768 }, COLOR_DEEPPURPLE },
   { Magenta::color(), COLOR_MAGENTA },
   { DeepPink::color(), COLOR_DEEPPINK },
-  { { 25700, 25700, 38550 }, COLOR_SILVER }, // Silver
-  { { 21845, 21845, 51400 }, COLOR_GLACIER }, // Glacier
-  { { 46260, 46260, 65535 }, COLOR_ICEWHITE }, // IceWhite
+  { { 25700, 25700, 38550 }, COLOR_SILVER },
+  { { 21845, 21845, 51400 }, COLOR_GLACIER },
+  { { 46260, 46260, 65535 }, COLOR_ICEWHITE },
   { LightCyan::color(), COLOR_LIGHTCYAN },
   { Moccasin::color(), COLOR_MOCCASIN },
   { LemonChiffon::color(), COLOR_LEMONCHIFFON },
@@ -2552,6 +2553,7 @@ SaberFett263Buttons() : PropBase() {}
       switch (set_num_) {
 	case PREON_OPTION_ARG:
         case PREON_SIZE_ARG:
+          // sound for preon menus chosen below, based on if SFX_preon exists or not
 	  break;
 	default:
 	  sound_library_.SaySelect();
@@ -2918,7 +2920,7 @@ SaberFett263Buttons() : PropBase() {}
           if (dial_ > (int)NELEM(color_list_) - 1) dial_ = 0;
           ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
 #ifdef FETT263_SAY_COLOR_LIST
-          sound_library_.SayColor(color_list_[dial_].color_number - 1);
+          sound_library_.SayColor(color_list_[dial_].color_number);
 #else
           if (direction > 0) {
             sound_library_.SayUp();
@@ -4047,7 +4049,7 @@ SaberFett263Buttons() : PropBase() {}
           ONCEPERBLADE(CC_NEW_COLOR)
           current_preset_.Save();
 #ifdef FETT263_SAY_COLOR_LIST
-          sound_library_.SayColor(color_list_[dial_].color_number - 1);
+          sound_library_.SayColor(color_list_[dial_].color_number);
 #else
           hybrid_font.PlayCommon(&SFX_ccchange);
 #endif
@@ -4065,7 +4067,7 @@ SaberFett263Buttons() : PropBase() {}
           ONCEPERBLADE(CC_NEW_COLOR)
           current_preset_.Save();
 #ifdef FETT263_SAY_COLOR_LIST
-          sound_library_.SayColor(color_list_[dial_].color_number - 1);
+          sound_library_.SayColor(color_list_[dial_].color_number);
 #else
           hybrid_font.PlayCommon(&SFX_ccchange);
 #endif
@@ -4087,7 +4089,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef COLORWHEEL_ZOOM
         if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
           SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
-	  sound_library_.SayZoom();
+	  sound_library_.SayZoomingIn();
           return true;
         }
 #endif
@@ -4204,7 +4206,7 @@ SaberFett263Buttons() : PropBase() {}
             }
             color_mode_ = ZOOM_COLOR;
             hsl_angle_ = fusor.angle2();
-	    sound_library_.SayZoom();
+	    sound_library_.SayZoomingIn();
             return true;
           }
         }
