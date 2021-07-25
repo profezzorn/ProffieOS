@@ -631,7 +631,7 @@ public:
   void SayEditColor() { Play("mcolor.wav"); }
   void SayEditControlSettings() { Play("mcontrol.wav"); }
   void SayEditFont() { Play("mfont.wav"); }
-  void SayEditMode() { Play("medit.wav"); }   // 1-sec leading silencec delay
+  void SayEditMode() { Play("medit.wav"); }   // 1-sec leading silence delay
   void SayEditSettings() { Play("msetting.wav"); }
   void SayEditStyle() { Play("mstyle.wav"); }
   void SayEditStyleSettings() { Play("mstylset.wav"); }
@@ -689,7 +689,7 @@ public:
   void SaySwingColor() { Play("mswing.wav"); }
   void SaySwingIgnition() { Play("mswingon.wav"); }
   void SaySwingOnSpeed() { Play("mswingsp.wav"); }
-  void SayThrustIgnition() { Play("mthrston..wav"); }
+  void SayThrustIgnition() { Play("mthrston.wav"); }
   void SayTwistIgnition() { Play("mtwiston.wav"); }
   void SayTwistRetraction() { Play("mtwstoff.wav"); }
   void SayUp() { Play("mup.wav"); } // Sound for increase
