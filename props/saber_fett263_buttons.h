@@ -702,7 +702,7 @@ public:
   void SaySettingsMenu() { Play("msetsub.wav"); }
   void SayStyleSettings() { Play("stylstm.wav"); }
 
-  void SayColor(int n) {
+  void SayColor(ColorNumber n) {
     Play(SoundToPlay(&SFX_clrlst, n - 1));
   }
 
