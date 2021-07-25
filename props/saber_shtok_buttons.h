@@ -43,7 +43,7 @@
 #define PROP_TYPE SaberShtokButtons
 
 // The Saber class implements the basic states and actions for the saber.
-class SaberShtokButtons : public virtual PropBase {
+class SaberShtokButtons : public PROP_INHERIT_PREFIX PropBase {
 public:
 SaberShtokButtons() : PropBase() {}
   const char* name() override { return "SaberShtokButtons"; }

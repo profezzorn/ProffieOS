@@ -927,7 +927,7 @@ static constexpr ColorListEntry color_list_[] = {
 
 // The Saber class implements the basic states and actions
 // for the saber.
-class SaberFett263Buttons : public virtual PropBase {
+class SaberFett263Buttons : public PROP_INHERIT_PREFIX PropBase {
 public:
 SaberFett263Buttons() : PropBase() {}
   const char* name() override { return "SaberFett263Buttons"; }

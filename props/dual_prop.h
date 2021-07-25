@@ -3,15 +3,21 @@
 
 // How to use:
 // #ifdef CONFIG_PROP
+// #include "../props/dual_prop.h"
 // #include "../props/saber_sa22c_buttons.h"
 // #include "../props/blaster.h"
-// #include "../props/dual_prop.h"
 // #undef PROP_TYPE
 // #define PROP_TYPE DualProp<SaberSA22CButtons, Blaster>
 // #endif
 
 #ifndef DUAL_PROP_CONDITION
 #define DUAL_PROP_CONDITION blade_detected_
+#endif
+
+#ifdef DUAL_PROP_PREFIX
+#error dual_prop.h must be included first
+#else
+#define PROP_INHERIT_PREFIX virtual
 #endif
 
 template<class A, class B>

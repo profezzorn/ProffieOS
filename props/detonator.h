@@ -5,7 +5,7 @@
 
 #define PROP_TYPE Detonator
 
-class Detonator : public virtual PropBase {
+class Detonator : public PROP_INHERIT_PREFIX PropBase {
 public:
   Detonator() : PropBase() {}
   const char* name() override { return "Detonator"; }
