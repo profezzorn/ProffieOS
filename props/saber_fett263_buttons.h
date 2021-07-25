@@ -1176,7 +1176,7 @@ SaberFett263Buttons() : PropBase() {}
   ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<6000>>,Black,ShowColorStyle>> show_drag_size_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<-6000>>,Black,ShowColorStyle>> show_emitter_size_;
 #if NUM_BLADES > 1
-  ShowColorSingleBladeTemplate<Pulsing<RotateColorsX<Variation,ShowColorStyle>,Black,800>> show_preview_;
+  ShowColorSingleBladeTemplate<Pulsing<RotateColorsX<Variation,ShowColorStyle>,Black,800>,Pulsing<RotateColorsX<Variation,ShowColorStyle>,Black,800>> show_preview_;
 #endif
 
   Color16 GetColorArg(int blade, int arg) {
@@ -2548,8 +2548,15 @@ SaberFett263Buttons() : PropBase() {}
       style_parser.GetArgument(current_preset_.GetStyle(blade_num_), set_num_ + 2, argspace);
       calc_ = strtol(argspace, NULL, 0);
       IntEdit::SetIntValue(calc_);
-      sound_library_.SaySelect();
       if (NUM_BLADES == 1) blade_num_ = 1;
+      switch (set_num_) {
+	case PREON_OPTION_ARG:
+        case PREON_SIZE_ARG:
+	  break;
+	default:
+	  sound_library_.SaySelect();
+	  break;
+      }
       switch (set_num_) {
       case STYLE_OPTION_ARG:
 	menu_type_ = MENU_STYLE_OPTION;
@@ -2560,12 +2567,10 @@ SaberFett263Buttons() : PropBase() {}
 	arg_revert_ = strtol (argspace, NULL, 0);
 	break;
       case IGNITION_TIME_ARG:
-	sound_library_.SaySelect();
 	menu_type_ = MENU_IGNITION_TIME;
 	arg_revert_ = strtol (argspace, NULL, 0);
 	break;
       case RETRACTION_OPTION_ARG:
-	sound_library_.SaySelect();
 	menu_type_ = MENU_RETRACTION_OPTION;
 	char ig[32];
 	style_parser.GetArgument(current_preset_.GetStyle(blade_num_), 19, ig);
@@ -2574,7 +2579,6 @@ SaberFett263Buttons() : PropBase() {}
 	arg_revert_ = strtol(argspace, NULL, 0);
 	break;
       case RETRACTION_TIME_ARG:
-	sound_library_.SaySelect();
 	menu_type_ = MENU_RETRACTION_TIME;
 	char igt[32];
 	style_parser.GetArgument(current_preset_.GetStyle(blade_num_), 19, igt);
@@ -2583,26 +2587,25 @@ SaberFett263Buttons() : PropBase() {}
 	arg_revert_ = strtol(argspace, NULL, 0);
 	break;
       case LOCKUP_POSITION_ARG:
-	sound_library_.SaySelect();
 	menu_type_ = MENU_LOCKUP_POSITION;
 	ShowColorStyle::SetColor(GetColorArg(blade_num_, 4));
 	show_lockup_position_.Start(blade_num_);
 	break;
       case DRAG_SIZE_ARG:
-	sound_library_.SaySelect();
 	menu_type_ = MENU_DRAG_SIZE;
 	ShowColorStyle::SetColor(GetColorArg(blade_num_, 6));
 	show_drag_size_.Start(blade_num_);
 	break;
       case EMITTER_SIZE_ARG:
-	sound_library_.SaySelect();
 	menu_type_ = MENU_EMITTER_SIZE;
 	ShowColorStyle::SetColor(GetColorArg(blade_num_, 1));
 	show_emitter_size_.Start(blade_num_);
 	break;
       case PREON_OPTION_ARG:
-	sound_library_.SaySelectOption();
-	if (SFX_preon) {
+	if (!SFX_preon) {
+	  sound_library_.SaySelectOption();
+	} else {
+	  sound_library_.SaySelect();
 	  menu_type_ = MENU_PREON_OPTION;
 	  arg_revert_ = strtol (argspace, NULL, 0);
 	}
@@ -2755,8 +2758,7 @@ SaberFett263Buttons() : PropBase() {}
         if (blade_num_ > NUM_BLADES) blade_num_ = 1;
         if (blade_num_ == 0) blade_num_ = NUM_BLADES;
         BladePreview(blade_num_);
-        SFX_mnum.Select(blade_num_ - 1);
-        wav_player->PlayOnce(&SFX_mnum, 0.0);
+        sound_library_.SayNumber(blade_num_, SAY_WHOLE);
         break;
       case MENU_COPY_COLOR:
 #endif
