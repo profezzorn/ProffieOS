@@ -122,19 +122,55 @@ protected:
   }
 
   bool Parse(const char* cmd, const char* arg) override {
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS    
     if (!strcmp(cmd, name_)) {
-      Send(EVENT_CLICK_SHORT);
+      EVENT e = EVENT_CLICK_SHORT;
+      int cnt = 0;
+      if (arg) {
+	if (strlen(arg) > 2) {
+	  bool ret;
+	  current_modifiers |= button_;
+	  char *tmp = strchr(arg, ' ');
+	  if (tmp) {
+	    char cmd2[32];
+	    memcpy(cmd2, arg, tmp - arg);
+	    cmd2[tmp-arg] = 0;
+	    ret = CommandParser::DoParse(cmd2, tmp + 1);
+	  } else {
+	    ret = CommandParser::DoParse(arg, NULL);
+	  }
+	  current_modifiers &=~ button_;
+	  return ret;
+	}
+	switch (arg[0]) {
+	case 'p': e = EVENT_PRESSED; break;
+	case 'r': e = EVENT_RELEASED; break;
+	case 'h': e = EVENT_HELD; break;
+	case 'm': e = EVENT_HELD_MEDIUM; break;
+	case 'l': e = EVENT_HELD_LONG; break;
+	case 'S': e = EVENT_CLICK_SHORT; break;
+	case 's': e = EVENT_SAVED_CLICK_SHORT; break;
+	case 'L': e = EVENT_CLICK_LONG; break;
+	}
+	if (strlen(arg) > 1) {
+	  cnt = atoi(arg + 1);
+	}
+      }
+      prop.Event(button_, (EVENT)(e + (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED) * cnt));
       return true;
     }
+#endif    
     return false;
   }
 
   void Help() override {
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS    
     STDOUT.print(" ");
     STDOUT.print(name_);
     STDOUT.print(" - clicks the ");
     STDOUT.print(name_);
     STDOUT.println(" button");
+#endif
   }
 
   const char* name_;
