@@ -2766,7 +2766,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_BLADE_LENGTH:
         blade_num_ += direction;
         if (blade_num_ > NUM_BLADES) blade_num_ = 1;
-        if (blade_num_ == 0) blade_num_ = NUM_BLADES;
+        if (blade_num_ <= 0) blade_num_ = NUM_BLADES;
         BladePreview(blade_num_);
         sound_library_.SayNumber(blade_num_, SAY_WHOLE);
         break;
@@ -4106,6 +4106,7 @@ SaberFett263Buttons() : PropBase() {}
           show_color_all_.Stop();
           color_mode_ = NONE;
           UpdateStyle(current_preset_.preset_num);
+	  return true;
         }
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           ToggleColorChangeMode();
@@ -4113,6 +4114,7 @@ SaberFett263Buttons() : PropBase() {}
           if (menu_type_ == MENU_COLOR) {
             menu_type_ = MENU_TOP;
             MenuSave();
+	    return true;
           }
 #endif
           return true;
