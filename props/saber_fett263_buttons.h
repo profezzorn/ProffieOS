@@ -3627,7 +3627,7 @@ SaberFett263Buttons() : PropBase() {}
 	sound_library_.SaySelectEffect();
         break;
       case MENU_STYLE_SETTING_SUB:
-	sound_library_.SaySelectEffect();
+	sound_library_.SaySelectOption();
         break;
 #endif
       default:
