@@ -166,6 +166,9 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
 
   FETT263_SAY_COLOR_LIST
   Spoken Color Names replace default sounds during Color List Mode (requires .wav files)
+  
+  FETT263_SAY_COLOR_LIST_CC
+  Spoken Color Names replace default sounds during Color Change "CC" Color List Mode (requires .wav files)
 
   FETT263_SAY_BATTERY
   Spoken Battery Level during On Demand Battery Level effect (requires .wav files)
@@ -4069,7 +4072,7 @@ SaberFett263Buttons() : PropBase() {}
           if (dial_ <= 0) dial_ = NELEM(color_list_);
           dial_ = dial_ - 1;
           ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
-#ifdef FETT263_SAY_COLOR_LIST
+#ifdef FETT263_SAY_COLOR_LIST_CC
           sound_library_.SayColor(color_list_[dial_].color_number);
 #else
           hybrid_font.PlayCommon(&SFX_ccchange);
