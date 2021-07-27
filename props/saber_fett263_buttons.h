@@ -1406,8 +1406,6 @@ SaberFett263Buttons() : PropBase() {}
 
   // Saves New Color from Edit Mode Preview Styles to Preset
 	
-#define NEW_COLOR_ALL_BLADES(N) current_preset_.SetStyle(N,style_parser.SetArgument(current_preset_.GetStyle(N), effect + 2, new_color));
-
   void NewColor(int blade, int effect) {
     char new_color[32];
     Color16 color_source;
@@ -1426,7 +1424,12 @@ SaberFett263Buttons() : PropBase() {}
     strcat(new_color, ",");
     itoa(Color16(color_source).b, new_color + strlen(new_color), 10);
     if (color_mode_ == CC_COLOR_LIST) {
-      ONCEPERBLADE(NEW_COLOR_ALL_BLADES);
+      int i = 0;
+      while (true) {
+	i += 1;
+	current_preset_.SetStyle(i,style_parser.SetArgument(current_preset_.GetStyle(i), effect + 2, new_color));
+	if (i == NUM_BLADES) break;
+      }
     } else {
       current_preset_.SetStyle(blade,style_parser.SetArgument(current_preset_.GetStyle(blade), effect + 2, new_color));
       color_mode_ = NONE;
