@@ -1167,6 +1167,18 @@ SaberFett263Buttons() : PropBase() {}
     SaveGestureState();
   }
 
+  Color16 GetColorArg(int blade, int arg) {
+    char argspace[32];
+    if (style_parser.GetArgument(current_preset_.GetStyle(blade), arg + 2, argspace)) {
+      char* tmp;
+      int r = strtol(argspace, &tmp, 0);
+      int g = strtol(tmp+1, &tmp, 0);
+      int b = strtol(tmp+1, NULL, 0);
+      return Color16(r,g,b);
+    }
+    return Color16();
+  }
+	
   // Color / Style Editing
   HSL hsl_;
   ShowColorAllBladesTemplate<ShowColorStyle> show_color_all_;
@@ -1183,18 +1195,6 @@ SaberFett263Buttons() : PropBase() {}
 #if NUM_BLADES > 1
   ShowColorSingleBladeTemplate<Pulsing<ShowColorStyle,Black,800>,Pulsing<ShowColorStyle,Black,800>> show_preview_;
 #endif
-
-  Color16 GetColorArg(int blade, int arg) {
-    char argspace[32];
-    if (style_parser.GetArgument(current_preset_.GetStyle(blade), arg + 2, argspace)) {
-      char* tmp;
-      int r = strtol(argspace, &tmp, 0);
-      int g = strtol(tmp+1, &tmp, 0);
-      int b = strtol(tmp+1, NULL, 0);
-      return Color16(r,g,b);
-    }
-    return Color16();
-  }
 
   // Show Full Blade Preview for Color Editing
   void ShowFull() {
