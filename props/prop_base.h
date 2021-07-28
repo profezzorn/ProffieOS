@@ -223,6 +223,8 @@ public:
   void SetClashThreshold(float clash_threshold) { clash_threshold_ = clash_threshold; }
   #undef CLASH_THRESHOLD_G
   #define CLASH_THRESHOLD_G clash_threshold_
+#else
+  float GetCurrentClashThreshold() { return CLASH_THRESHOLD_G; }
 #endif
 
   void IgnoreClash(size_t ms) {
