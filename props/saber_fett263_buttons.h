@@ -3721,6 +3721,16 @@ SaberFett263Buttons() : PropBase() {}
       LOCK_SD(false);
       return true;
     }
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
+    if (!strcmp(cmd, "left") || !strcmp(cmd, "l")) {
+      MenuDial(-1);
+      return true;
+    }
+    if (!strcmp(cmd, "right") || !strcmp(cmd, "r")) {
+      MenuDial(1);
+      return true;
+    }
+#endif    
     return false;
   }
 
