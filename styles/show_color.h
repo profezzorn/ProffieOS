@@ -71,7 +71,7 @@ public:
   void Stop(int blade) {
 #define SHOW_COLOR_STYLE_STOP2(N)			\
     case N:						\
-      current_config->blade##N->UnSetStyle();		\
+      delete current_config->blade##N->UnSetStyle();	\
       current_config->blade##N->SetStyle(style_);	\
       break;
 
