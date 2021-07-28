@@ -166,6 +166,9 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
 
   FETT263_SAY_COLOR_LIST
   Spoken Color Names replace default sounds during Color List Mode (requires .wav files)
+  
+  FETT263_SAY_COLOR_LIST_CC
+  Spoken Color Names replace default sounds during Color Change "CC" Color List Mode (requires .wav files)
 
   FETT263_SAY_BATTERY
   Spoken Battery Level during On Demand Battery Level effect (requires .wav files)
@@ -1164,22 +1167,6 @@ SaberFett263Buttons() : PropBase() {}
     SaveGestureState();
   }
 
-  // Color / Style Editing
-  HSL hsl_;
-#ifdef FETT263_EDIT_MODE_MENU
-  ShowColorSingleBladeTemplate<RotateColorsX<Variation,ShowColorStyle>> show_color_;
-  ShowColorSingleBladeTemplate<Mix<Bump<Int<16384>,Int<14000>>,RotateColorsX<Variation,RgbArg<1,Rgb<255,0,0>>>,ShowColorStyle>> bump_color_;
-  ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<26000>,Int<8000>>,RotateColorsX<Variation,RgbArg<1,Rgb<255,0,0>>>,ShowColorStyle>> tip_color_;
-  ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<7000>,Int<-6000>>,RotateColorsX<Variation,RgbArg<1,Rgb<255,0,0>>>,ShowColorStyle>> hilt_color_;
-  ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<7000>,Int<-6000>>,Black,RotateColorsX<Variation,ShowColorStyle>>> pre_color_;
-  ShowColorSingleBladeTemplate<LengthEdit<RotateColorsX<Variation,ShowColorStyle>,Pulsing<White,Rgb<100,100,100>,800>>> show_length_;
-  ShowColorSingleBladeTemplate<Mix<Bump<IntEdit,Int<10000>>,Black,ShowColorStyle>> show_lockup_position_;
-  ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<6000>>,Black,ShowColorStyle>> show_drag_size_;
-  ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<-6000>>,Black,ShowColorStyle>> show_emitter_size_;
-#if NUM_BLADES > 1
-  ShowColorSingleBladeTemplate<Pulsing<RotateColorsX<Variation,ShowColorStyle>,Black,800>,Pulsing<RotateColorsX<Variation,ShowColorStyle>,Black,800>> show_preview_;
-#endif
-
   Color16 GetColorArg(int blade, int arg) {
     char argspace[32];
     if (style_parser.GetArgument(current_preset_.GetStyle(blade), arg + 2, argspace)) {
@@ -1191,6 +1178,23 @@ SaberFett263Buttons() : PropBase() {}
     }
     return Color16();
   }
+	
+  // Color / Style Editing
+  HSL hsl_;
+  ShowColorAllBladesTemplate<ShowColorStyle> show_color_all_;
+#ifdef FETT263_EDIT_MODE_MENU
+  ShowColorSingleBladeTemplate<ShowColorStyle> show_color_;
+  ShowColorSingleBladeTemplate<Mix<Bump<Int<16384>,Int<14000>>,RgbArg<1,Rgb<255,0,0>>,ShowColorStyle>> bump_color_;
+  ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<26000>,Int<8000>>,RgbArg<1,Rgb<255,0,0>>,ShowColorStyle>> tip_color_;
+  ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<7000>,Int<-6000>>,RgbArg<1,Rgb<255,0,0>>,ShowColorStyle>> hilt_color_;
+  ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<7000>,Int<-6000>>,Black,ShowColorStyle>> pre_color_;
+  ShowColorSingleBladeTemplate<LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>> show_length_;
+  ShowColorSingleBladeTemplate<Mix<Bump<IntEdit,Int<10000>>,Black,ShowColorStyle>> show_lockup_position_;
+  ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<6000>>,Black,ShowColorStyle>> show_drag_size_;
+  ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<-6000>>,Black,ShowColorStyle>> show_emitter_size_;
+#if NUM_BLADES > 1
+  ShowColorSingleBladeTemplate<Pulsing<ShowColorStyle,Black,800>,Pulsing<ShowColorStyle,Black,800>> show_preview_;
+#endif
 
   // Show Full Blade Preview for Color Editing
   void ShowFull() {
@@ -1401,6 +1405,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   // Saves New Color from Edit Mode Preview Styles to Preset
+	
   void NewColor(int blade, int effect) {
     char new_color[32];
     Color16 color_source;
@@ -1418,8 +1423,18 @@ SaberFett263Buttons() : PropBase() {}
     itoa(Color16(color_source).g, new_color + strlen(new_color), 10);
     strcat(new_color, ",");
     itoa(Color16(color_source).b, new_color + strlen(new_color), 10);
+#if NUM_BLADES > 1
+    if (color_mode_ == CC_COLOR_LIST) {
+      for (int i = 1; i <= NUM_BLADES; i++) {
+        current_preset_.SetStyle(i,style_parser.SetArgument(current_preset_.GetStyle(i), effect + 2, new_color));
+      }
+    } else {
+      current_preset_.SetStyle(blade,style_parser.SetArgument(current_preset_.GetStyle(blade), effect + 2, new_color));
+    }
+#else
     current_preset_.SetStyle(blade,style_parser.SetArgument(current_preset_.GetStyle(blade), effect + 2, new_color));
-    if (color_mode_ != CC_COLOR_LIST) color_mode_ = NONE;
+#endif
+    color_mode_ = NONE;
   }
 
   void Setup() override {
@@ -2758,7 +2773,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_BLADE_LENGTH:
         blade_num_ += direction;
         if (blade_num_ > NUM_BLADES) blade_num_ = 1;
-        if (blade_num_ == 0) blade_num_ = NUM_BLADES;
+        if (blade_num_ <= 0) blade_num_ = NUM_BLADES;
         BladePreview(blade_num_);
         sound_library_.SayNumber(blade_num_, SAY_WHOLE);
         break;
@@ -3619,7 +3634,7 @@ SaberFett263Buttons() : PropBase() {}
 	sound_library_.SaySelectEffect();
         break;
       case MENU_STYLE_SETTING_SUB:
-	sound_library_.SaySelectEffect();
+	sound_library_.SaySelectOption();
         break;
 #endif
       default:
@@ -3636,8 +3651,6 @@ SaberFett263Buttons() : PropBase() {}
     EDIT_WHITE,
     ZOOM_COLOR,
   };
-
-#define CC_NEW_COLOR(N) NewColor(N,1);
 
 // Update Style
   virtual void UpdateStyle(int preset_num) {
@@ -4046,14 +4059,12 @@ SaberFett263Buttons() : PropBase() {}
         if (wav_player->isPlaying()) return true;
         if (color_mode_ == CC_COLOR_LIST) {
           dial_ = (dial_ + 1) % NELEM(color_list_);
-          ONCEPERBLADE(CC_NEW_COLOR)
-          current_preset_.Save();
+          ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
 #ifdef FETT263_SAY_COLOR_LIST
           sound_library_.SayColor(color_list_[dial_].color_number);
 #else
           hybrid_font.PlayCommon(&SFX_ccchange);
 #endif
-          UpdateStyle(current_preset_.preset_num);
           return true;
         }
         if (menu_) MenuDial(1);
@@ -4064,14 +4075,12 @@ SaberFett263Buttons() : PropBase() {}
         if (color_mode_ == CC_COLOR_LIST) {
           if (dial_ <= 0) dial_ = NELEM(color_list_);
           dial_ = dial_ - 1;
-          ONCEPERBLADE(CC_NEW_COLOR)
-          current_preset_.Save();
-#ifdef FETT263_SAY_COLOR_LIST
+          ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
+#ifdef FETT263_SAY_COLOR_LIST_CC
           sound_library_.SayColor(color_list_[dial_].color_number);
 #else
           hybrid_font.PlayCommon(&SFX_ccchange);
 #endif
-          UpdateStyle(current_preset_.preset_num);
           return true;
         }
         if (menu_) MenuDial(-1);
@@ -4098,9 +4107,12 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
 #ifndef DISABLE_COLOR_CHANGE
         if (color_mode_ == CC_COLOR_LIST) {
-          color_mode_ = NONE;
           hybrid_font.PlayCommon(&SFX_ccend);
-          return true;
+          NewColor(1, BASE_COLOR_ARG);
+          current_preset_.Save();
+          show_color_all_.Stop();
+          UpdateStyle(current_preset_.preset_num);
+	  return true;
         }
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           ToggleColorChangeMode();
@@ -4108,6 +4120,7 @@ SaberFett263Buttons() : PropBase() {}
           if (menu_type_ == MENU_COLOR) {
             menu_type_ = MENU_TOP;
             MenuSave();
+	    return true;
           }
 #endif
           return true;
@@ -4179,6 +4192,12 @@ SaberFett263Buttons() : PropBase() {}
             ToggleColorChangeMode();
             return true;
           }
+          if (color_mode_ == CC_COLOR_LIST) {
+            color_mode_ = NONE;
+            show_color_all_.Stop();
+            sound_library_.SayRevert();
+            return true;
+          }		
           if (swing_blast_) {
             check_blast_ = false;
             swing_blast_ = false;
@@ -4290,8 +4309,14 @@ SaberFett263Buttons() : PropBase() {}
             handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
             ONCEPERBLADE(USES_COLOR_CHANGE)
             if (!handles_color_change) {
-              current_preset_.Save();
               color_mode_ = CC_COLOR_LIST;
+              show_color_all_.Start();
+              for (int i = 1; i <= NUM_BLADES; i++) {
+		if (style_parser.UsesArgument(current_preset_.GetStyle(i), BASE_COLOR_ARG + 2)) {
+                  ShowColorStyle::SetColor(GetColorArg(i, BASE_COLOR_ARG));
+                  break;
+		}
+              }
               current_menu_angle_ = fusor.angle2();
               dial_ = -1;
               hybrid_font.PlayCommon(&SFX_ccbegin);
