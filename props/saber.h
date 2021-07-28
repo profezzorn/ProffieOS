@@ -33,7 +33,7 @@ Enter/Exit Color Change - 1 button saber = Hold button and Twist.
 
 // The Saber class implements the basic states and actions
 // for the saber.
-class Saber : public virtual PropBase {
+class Saber : public PROP_INHERIT_PREFIX PropBase {
 public:
   Saber() : PropBase() {}
   const char* name() override { return "Saber"; }
