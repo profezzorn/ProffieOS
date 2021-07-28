@@ -4312,8 +4312,10 @@ SaberFett263Buttons() : PropBase() {}
               color_mode_ = CC_COLOR_LIST;
               show_color_all_.Start();
               for (int i = 1; i <= NUM_BLADES; i++) {
-                ShowColorStyle::SetColor(GetColorArg(i, BASE_COLOR_ARG));
-                if (style_parser.UsesArgument(current_preset_.GetStyle(i), BASE_COLOR_ARG + 2)) break;
+		if (style_parser.UsesArgument(current_preset_.GetStyle(i), BASE_COLOR_ARG + 2)) {
+                  ShowColorStyle::SetColor(GetColorArg(i, BASE_COLOR_ARG));
+                  break;
+		}
               }
               current_menu_angle_ = fusor.angle2();
               dial_ = -1;
