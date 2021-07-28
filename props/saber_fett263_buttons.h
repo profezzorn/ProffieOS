@@ -1423,17 +1423,18 @@ SaberFett263Buttons() : PropBase() {}
     itoa(Color16(color_source).g, new_color + strlen(new_color), 10);
     strcat(new_color, ",");
     itoa(Color16(color_source).b, new_color + strlen(new_color), 10);
+#if NUM_BLADES > 1
     if (color_mode_ == CC_COLOR_LIST) {
-      int i = 0;
-      while (true) {
-	i += 1;
-	current_preset_.SetStyle(i,style_parser.SetArgument(current_preset_.GetStyle(i), effect + 2, new_color));
-	if (i == NUM_BLADES) break;
+      for (int i = 1; i <= NUM_BLADES; i++) {
+        current_preset_.SetStyle(i,style_parser.SetArgument(current_preset_.GetStyle(i), effect + 2, new_color));
       }
     } else {
       current_preset_.SetStyle(blade,style_parser.SetArgument(current_preset_.GetStyle(blade), effect + 2, new_color));
-      color_mode_ = NONE;
     }
+#else
+    current_preset_.SetStyle(blade,style_parser.SetArgument(current_preset_.GetStyle(blade), effect + 2, new_color));
+#endif
+    color_mode_ = NONE;
   }
 
   void Setup() override {
@@ -4110,7 +4111,6 @@ SaberFett263Buttons() : PropBase() {}
           NewColor(1, BASE_COLOR_ARG);
           current_preset_.Save();
           show_color_all_.Stop();
-          color_mode_ = NONE;
           UpdateStyle(current_preset_.preset_num);
 	  return true;
         }
@@ -4311,7 +4311,7 @@ SaberFett263Buttons() : PropBase() {}
             if (!handles_color_change) {
               color_mode_ = CC_COLOR_LIST;
               show_color_all_.Start();
-              for (int i = 0; i < NUM_BLADES; i++) {
+              for (int i = 1; i <= NUM_BLADES; i++) {
                 ShowColorStyle::SetColor(GetColorArg(i, BASE_COLOR_ARG));
                 if (style_parser.UsesArgument(current_preset_.GetStyle(i), BASE_COLOR_ARG + 2)) break;
               }
