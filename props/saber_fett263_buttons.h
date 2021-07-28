@@ -1169,8 +1169,8 @@ SaberFett263Buttons() : PropBase() {}
 
   // Color / Style Editing
   HSL hsl_;
-#ifdef FETT263_EDIT_MODE_MENU
   ShowColorAllBladesTemplate<ShowColorStyle> show_color_all_;
+#ifdef FETT263_EDIT_MODE_MENU
   ShowColorSingleBladeTemplate<ShowColorStyle> show_color_;
   ShowColorSingleBladeTemplate<Mix<Bump<Int<16384>,Int<14000>>,RgbArg<1,Rgb<255,0,0>>,ShowColorStyle>> bump_color_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<26000>,Int<8000>>,RgbArg<1,Rgb<255,0,0>>,ShowColorStyle>> tip_color_;
