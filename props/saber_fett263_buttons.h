@@ -1188,7 +1188,7 @@ SaberFett263Buttons() : PropBase() {}
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<26000>,Int<8000>>,RgbArg<1,Rgb<255,0,0>>,ShowColorStyle>> tip_color_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<7000>,Int<-6000>>,RgbArg<1,Rgb<255,0,0>>,ShowColorStyle>> hilt_color_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<7000>,Int<-6000>>,Black,ShowColorStyle>> pre_color_;
-  ShowColorSingleBladeTemplate<LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>> show_length_;
+  ShowColorSingleBladeTemplate<LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>,LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>> show_length_;
   ShowColorSingleBladeTemplate<Mix<Bump<IntEdit,Int<10000>>,Black,ShowColorStyle>> show_lockup_position_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<6000>>,Black,ShowColorStyle>> show_drag_size_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<-6000>>,Black,ShowColorStyle>> show_emitter_size_;
@@ -1681,17 +1681,17 @@ SaberFett263Buttons() : PropBase() {}
     if (track_mode_ != PLAYBACK_OFF) {
       if (!track_player_) {
 #ifdef ENABLE_AUDIO
-        if (track_num_ == -1 && track_mode_ == PLAYBACK_LOOP) {
+        if (track_num_ >= 0 && track_mode_ == PLAYBACK_LOOP) {
           StartOrStopTrack();
         } else {
-          if (track_num_ >= num_tracks_) track_num_ = 0;
+          if (track_num_ > num_tracks_) track_num_ = 1;
           switch (track_mode_) {
             case PLAYBACK_ROTATE:
               track_num_ += 1;
               break;
             case PLAYBACK_RANDOM:
               track_num_ = rand() % num_tracks_;
-              if (track_num_ < 0) track_num_ = num_tracks_ - 1;
+              if (track_num_ <= 0) track_num_ = num_tracks_;
               break;
             default:
               break;
@@ -2716,8 +2716,8 @@ SaberFett263Buttons() : PropBase() {}
           track_player_.Free();
         }
         track_num_ += direction;
-        if (track_num_ >= num_tracks_) track_num_ = 0;
-        if (track_num_ < 0) track_num_ = num_tracks_ - 1;
+        if (track_num_ > num_tracks_) track_num_ = 1;
+        if (track_num_ <= 0) track_num_ = num_tracks_;
         char playtrack[128];
         RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, playtrack, sizeof(playtrack));
   #ifdef ENABLE_AUDIO
@@ -2975,17 +2975,16 @@ SaberFett263Buttons() : PropBase() {}
         StartOrStopTrack();
         break;
       case MENU_LENGTH:
-        // Edit Blade Length
         blade_length_ += direction;
-        length_edit_length = blade_length_ - 1;
-        if (blade_length_ == max_length_) {
+        if (blade_length_ >= max_length_) {
           sound_library_.SayMaximum();
-          break;
+          blade_length_ = max_length_;
         }
-        if (blade_length_ == 1) {
+        if (blade_length_ <= 1) {
           sound_library_.SayMinimum();
-          break;
+          blade_length_ = 1;
         }
+        length_edit_length = blade_length_ - 1;
         sound_library_.SayNumber(blade_length_, SAY_WHOLE);
         SetBladeLength(blade_num_, blade_length_);
         SaveState(current_preset_.preset_num);
@@ -4404,7 +4403,7 @@ SaberFett263Buttons() : PropBase() {}
             StartOrStopTrack();
             return true;
           } else {
-            track_num_ = -1;
+            track_num_ = 0;
             num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
             sound_library_.SaySelect();
             current_menu_angle_ = fusor.angle2();
