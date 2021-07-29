@@ -1188,7 +1188,7 @@ SaberFett263Buttons() : PropBase() {}
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<26000>,Int<8000>>,RgbArg<1,Rgb<255,0,0>>,ShowColorStyle>> tip_color_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<7000>,Int<-6000>>,RgbArg<1,Rgb<255,0,0>>,ShowColorStyle>> hilt_color_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<7000>,Int<-6000>>,Black,ShowColorStyle>> pre_color_;
-  ShowColorSingleBladeTemplate<LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>> show_length_;
+  ShowColorSingleBladeTemplate<LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>,LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>> show_length_;
   ShowColorSingleBladeTemplate<Mix<Bump<IntEdit,Int<10000>>,Black,ShowColorStyle>> show_lockup_position_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<6000>>,Black,ShowColorStyle>> show_drag_size_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<-6000>>,Black,ShowColorStyle>> show_emitter_size_;
@@ -2975,17 +2975,16 @@ SaberFett263Buttons() : PropBase() {}
         StartOrStopTrack();
         break;
       case MENU_LENGTH:
-        // Edit Blade Length
         blade_length_ += direction;
-        length_edit_length = blade_length_ - 1;
-        if (blade_length_ == max_length_) {
+        if (blade_length_ >= max_length_) {
           sound_library_.SayMaximum();
-          break;
+          blade_length_ = max_length_;
         }
-        if (blade_length_ == 1) {
+        if (blade_length_ <= 1) {
           sound_library_.SayMinimum();
-          break;
+          blade_length_ = 1;
         }
+        length_edit_length = blade_length_ - 1;
         sound_library_.SayNumber(blade_length_, SAY_WHOLE);
         SetBladeLength(blade_num_, blade_length_);
         SaveState(current_preset_.preset_num);
