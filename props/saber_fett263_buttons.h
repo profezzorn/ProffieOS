@@ -1681,17 +1681,17 @@ SaberFett263Buttons() : PropBase() {}
     if (track_mode_ != PLAYBACK_OFF) {
       if (!track_player_) {
 #ifdef ENABLE_AUDIO
-        if (track_num_ == -1 && track_mode_ == PLAYBACK_LOOP) {
+        if (track_num_ >= 0 && track_mode_ == PLAYBACK_LOOP) {
           StartOrStopTrack();
         } else {
-          if (track_num_ >= num_tracks_) track_num_ = 0;
+          if (track_num_ > num_tracks_) track_num_ = 1;
           switch (track_mode_) {
             case PLAYBACK_ROTATE:
               track_num_ += 1;
               break;
             case PLAYBACK_RANDOM:
               track_num_ = rand() % num_tracks_;
-              if (track_num_ < 0) track_num_ = num_tracks_ - 1;
+              if (track_num_ <= 0) track_num_ = num_tracks_;
               break;
             default:
               break;
@@ -2716,8 +2716,8 @@ SaberFett263Buttons() : PropBase() {}
           track_player_.Free();
         }
         track_num_ += direction;
-        if (track_num_ >= num_tracks_) track_num_ = 0;
-        if (track_num_ < 0) track_num_ = num_tracks_ - 1;
+        if (track_num_ > num_tracks_) track_num_ = 1;
+        if (track_num_ <= 0) track_num_ = num_tracks_;
         char playtrack[128];
         RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, playtrack, sizeof(playtrack));
   #ifdef ENABLE_AUDIO
@@ -4403,7 +4403,7 @@ SaberFett263Buttons() : PropBase() {}
             StartOrStopTrack();
             return true;
           } else {
-            track_num_ = -1;
+            track_num_ = 0;
             num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
             sound_library_.SaySelect();
             current_menu_angle_ = fusor.angle2();
