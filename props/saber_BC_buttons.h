@@ -265,6 +265,10 @@ Turn off blade -        Hold POW and wait until blade is off,
 #undef PROP_TYPE
 #define PROP_TYPE SaberBCButtons
 
+#ifndef CONFIG_STARTUP_DELAY
+#define CONFIG_STARTUP_DELAY 0
+#endif
+
 #ifndef MOTION_TIMEOUT
 #define MOTION_TIMEOUT 60 * 15 * 1000
 #endif
@@ -544,7 +548,7 @@ public:
   #endif
       // Due to motion chip startup on boot creating false ignition
       // we delay Swing On at boot for 3000ms
-      if (millis() > 3000) {
+      if (millis() > (CONFIG_STARTUP_DELAY + 3000)) {
         FastOn();
   #ifdef BC_GESTURE_AUTO_BATTLE_MODE
         STDOUT.println("Entering Battle Mode");
