@@ -15,7 +15,7 @@ enum RgbArgumentName {
   LOCKUP_COLOR_ARG = 5, // Lockup Color
   DRAG_COLOR_ARG = 6, // Drag Color
   LB_COLOR_ARG = 7, // Lightning Block Color
-  STAB_COLOR_ARG = 8, // Stab Color
+  STAB_COLOR_ARG = 8, // Stab/Melt Color
   PREON_COLOR_ARG = 9, // PreOn Color
   IGNITION_COLOR_ARG = 10, // Ignition (Power Up) Color
   RETRACTION_COLOR_ARG = 11, // Retraction (Cool Down) Color
@@ -29,13 +29,18 @@ enum IntArgumentName {
   STYLE_OPTION_ARG = 16, // Style Option
   IGNITION_OPTION_ARG = 17, // Ignition Options
   IGNITION_TIME_ARG = 18, // used in IgnitionTime alias
-  RETRACTION_OPTION_ARG = 19, // Retraction Options
-  RETRACTION_TIME_ARG = 20, // used in RetractionTime alias
-  LOCKUP_POSITION_ARG = 21, // Clash/Lockup Location for Responsive Effects (mid-point)
-  DRAG_SIZE_ARG = 22, // Drag Size 
-  EMITTER_SIZE_ARG = 23, // Emitter Size (Emitter Spark), can be used for PostOff
-  PREON_OPTION_ARG = 24, // PreOn Option
-  PREON_SIZE_ARG = 25, // PreOn Size
+  IGNITION_DELAY_ARG = 19, // Ignition Delay Time
+  RETRACTION_OPTION_ARG = 20, // Retraction Options
+  RETRACTION_TIME_ARG = 21, // used in RetractionTime alias
+  RETRACTION_DELAY_ARG = 22, // Retraction Delay Time
+  LOCKUP_POSITION_ARG = 23, // Clash/Lockup Location for Responsive Effects (mid-point)
+  DRAG_SIZE_ARG = 24, // Drag Size
+  MELT_SIZE_ARG = 25, // Melt Size
+  SWING_OPTION_ARG = 26, // Swing Options (Responsive Swing Effects)
+  EMITTER_SIZE_ARG = 27, // Emitter Size (Emitter Spark), can be used for PostOff
+  OFF_OPTION_ARG = 28, // Off Options (when blade is Off, for crystals and accents)
+  PREON_OPTION_ARG = 29, // PreOn Option
+  PREON_SIZE_ARG = 30, // PreOn Size
 };
 
 // IgnitionTime = 18 - uses "Auto" feature with WavLen when = 0
