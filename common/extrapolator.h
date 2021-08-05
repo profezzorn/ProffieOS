@@ -99,7 +99,7 @@ public:
     data_[entry_].t = now;
     line_.Add(data_[entry_]);
 
-    if ((values_++ & 1024) == 1023) {
+    if ((values_++ & 1023) == 1023) {
       // recalculate to avoid building errors
       line_.Start(data_[(entry_ + 1) % SIZE].t);
       for (size_t i = 0; i < SIZE; i++) {
