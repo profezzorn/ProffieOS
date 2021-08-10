@@ -7,35 +7,40 @@
 #include "../functions/wavlen.h"
 // Edit Mode Style Arguments / Variables
 
-enum RgbArgumentName {
+enum ArgumentName {
   BASE_COLOR_ARG = 1, // Primary Base Color
   ALT_COLOR_ARG = 2, // Alternate or Force Color (free-use)
-  BLAST_COLOR_ARG = 3, // Blast Color
-  CLASH_COLOR_ARG = 4, // Clash Color
-  LOCKUP_COLOR_ARG = 5, // Lockup Color
-  DRAG_COLOR_ARG = 6, // Drag Color
-  LB_COLOR_ARG = 7, // Lightning Block Color
-  STAB_COLOR_ARG = 8, // Stab Color
-  PREON_COLOR_ARG = 9, // PreOn Color
-  IGNITION_COLOR_ARG = 10, // Ignition (Power Up) Color
-  RETRACTION_COLOR_ARG = 11, // Retraction (Cool Down) Color
-  POSTOFF_COLOR_ARG = 12, // PostOff Color
-  SWING_COLOR_ARG = 13, // Swing Color (Responsive Swing Effects)
-  EMITTER_COLOR_ARG = 14, // Emitter Color (Emitter Spark) can be used for PostOff
-  OFF_COLOR_ARG = 15, // Off Color (Color when blade is Off, for crystals and accents)
-};
-
-enum IntArgumentName {
-  STYLE_OPTION_ARG = 16, // Style Option
-  IGNITION_OPTION_ARG = 17, // Ignition Options
-  IGNITION_TIME_ARG = 18, // used in IgnitionTime alias
-  RETRACTION_OPTION_ARG = 19, // Retraction Options
-  RETRACTION_TIME_ARG = 20, // used in RetractionTime alias
-  LOCKUP_POSITION_ARG = 21, // Clash/Lockup Location for Responsive Effects (mid-point)
-  DRAG_SIZE_ARG = 22, // Drag Size 
-  EMITTER_SIZE_ARG = 23, // Emitter Size (Emitter Spark), can be used for PostOff
-  PREON_OPTION_ARG = 24, // PreOn Option
-  PREON_SIZE_ARG = 25, // PreOn Size
+  STYLE_OPTION_ARG = 3, // Style Option
+  IGNITION_OPTION_ARG = 4, // Ignition Options
+  IGNITION_TIME_ARG = 5, // used in IgnitionTime alias
+  IGNITION_DELAY_ARG = 6, // Ignition Delay Time
+  IGNITION_COLOR_ARG = 7, // Ignition "Power Up" Color
+  IGNITION_POWER_UP_ARG = 8, // Ignition "Power Up" Options
+  BLAST_COLOR_ARG = 9, // Blast Color
+  CLASH_COLOR_ARG = 10, // Clash Color
+  LOCKUP_COLOR_ARG = 11, // Lockup Color
+  LOCKUP_POSITION_ARG = 12, // Clash/Lockup Location for Responsive Effects (mid-point)
+  DRAG_COLOR_ARG = 13, // Drag Color
+  DRAG_SIZE_ARG = 14, // Drag Size
+  LB_COLOR_ARG = 15, // Lightning Block Color
+  STAB_COLOR_ARG = 16, // Stab / Melt Color
+  MELT_SIZE_ARG = 17, // Stab / Melt Size
+  SWING_COLOR_ARG = 18, // Swing Color (Responsive Swing Effects)
+  SWING_OPTION_ARG = 19, // Swing Options (Responsive Swing Effects) 
+  EMITTER_COLOR_ARG = 20, // Emitter Color (Emitter Spark) can be used for PostOff 
+  EMITTER_SIZE_ARG = 21, // Emitter Size (Emitter Spark), can be used for PostOff 
+  PREON_COLOR_ARG = 22, // PreOn Color
+  PREON_OPTION_ARG = 23, // PreOn Option
+  PREON_SIZE_ARG = 24, // PreOn Size 
+  RETRACTION_OPTION_ARG = 25, // Retraction Options
+  RETRACTION_TIME_ARG = 26, // used in RetractionTime alias
+  RETRACTION_DELAY_ARG = 27, // Retraction Delay Time
+  RETRACTION_COLOR_ARG = 28, // Retraction "Cool Down" Color
+  RETRACTION_COOL_DOWN_ARG = 29, // Retraction "Cool Down" Options
+  POSTOFF_COLOR_ARG = 30, // PostOff Color  
+  OFF_COLOR_ARG = 31, // Off Color (Color when blade is Off for crystals and accents)
+  OFF_OPTION_ARG = 32, // Off Options (when blade is Off, for crystals and accents)
+  LAST_ARG = OFF_OPTION_ARG, // End of Argument List
 };
 
 // IgnitionTime = 18 - uses "Auto" feature with WavLen when = 0

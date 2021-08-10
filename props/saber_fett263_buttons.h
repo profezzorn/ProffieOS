@@ -928,6 +928,47 @@ static constexpr ColorListEntry color_list_[] = {
   { White::color(), COLOR_WHITE }
 };
 
+// Edit Color Submenu
+const int rgb_arg_menu_[] {
+  BASE_COLOR_ARG,
+  ALT_COLOR_ARG,
+  BLAST_COLOR_ARG,
+  CLASH_COLOR_ARG,
+  LOCKUP_COLOR_ARG,
+  DRAG_COLOR_ARG,
+  LB_COLOR_ARG,
+  STAB_COLOR_ARG,
+  PREON_COLOR_ARG,
+  IGNITION_COLOR_ARG,
+  RETRACTION_COLOR_ARG,
+  POSTOFF_COLOR_ARG,
+  SWING_COLOR_ARG,
+  EMITTER_COLOR_ARG,
+  OFF_COLOR_ARG
+};
+
+// Edit Style Setting Submenu
+const int int_arg_menu_[] {
+  STYLE_OPTION_ARG,
+  IGNITION_OPTION_ARG,
+  IGNITION_TIME_ARG,
+  IGNITION_DELAY_ARG,
+  IGNITION_POWER_UP_ARG,
+  RETRACTION_OPTION_ARG,
+  RETRACTION_TIME_ARG,
+  RETRACTION_DELAY_ARG,
+  RETRACTION_COOL_DOWN_ARG,
+  LOCKUP_POSITION_ARG,
+  DRAG_SIZE_ARG,
+  MELT_SIZE_ARG,
+  SWING_OPTION_ARG,
+  EMITTER_SIZE_ARG,
+  OFF_OPTION_ARG,
+  // preon always needs to be last options to allow check for SFX_preon in menu
+  PREON_OPTION_ARG,
+  PREON_SIZE_ARG
+};
+
 // The Saber class implements the basic states and actions
 // for the saber.
 class SaberFett263Buttons : public PROP_INHERIT_PREFIX PropBase {
@@ -2046,6 +2087,7 @@ SaberFett263Buttons() : PropBase() {}
       blade_preview_ = 0;
       menu_type_ = MENU_STYLE_SETTING_SUB;
       sound_library_.SaySelectOption();
+      arg_dial_ = -1;		    
       break;
     case MENU_BLADE_LENGTH:
       sound_library_.SaySelect();
@@ -2093,6 +2135,7 @@ SaberFett263Buttons() : PropBase() {}
       case EDIT_EFFECT_COLOR:
 	menu_type_ = MENU_EFFECT;
 	sound_library_.SaySelectEffect();
+	arg_dial_ = -1;
 	break;
       case RESET_COLORS:
 	menu_type_ = MENU_RESET_COLOR;
@@ -2106,6 +2149,7 @@ SaberFett263Buttons() : PropBase() {}
       case EDIT_EFFECT_COLOR:
 	menu_type_ = MENU_EFFECT;
 	sound_library_.SaySelectEffect();
+	arg_dial_ = -1;
 	break;
       case COPY_COLORS:
 	menu_type_ = MENU_COPY_COLOR;
@@ -2125,6 +2169,7 @@ SaberFett263Buttons() : PropBase() {}
       case EDIT_EFFECT_COLOR:
 	menu_type_ = MENU_EFFECT;
 	sound_library_.SaySelectEffect();
+	arg_dial_ = -1;
 	break;
       case COPY_COLORS:
 	menu_type_ = MENU_BLADE_COPY;
@@ -2506,6 +2551,7 @@ SaberFett263Buttons() : PropBase() {}
 #if NUM_BLADES == 1
 	menu_type_ = MENU_STYLE_SETTING_SUB;
 	sound_library_.SaySelectOption();
+	arg_dial_ = -1;
 	blade_num_ = 1;
 #else
 	menu_type_ = MENU_BLADE_SETTING;
@@ -2605,17 +2651,17 @@ SaberFett263Buttons() : PropBase() {}
 	break;
       case LOCKUP_POSITION_ARG:
 	menu_type_ = MENU_LOCKUP_POSITION;
-	ShowColorStyle::SetColor(GetColorArg(blade_num_, 4));
+	ShowColorStyle::SetColor(GetColorArg(blade_num_, LOCKUP_COLOR_ARG));
 	show_lockup_position_.Start(blade_num_);
 	break;
       case DRAG_SIZE_ARG:
 	menu_type_ = MENU_DRAG_SIZE;
-	ShowColorStyle::SetColor(GetColorArg(blade_num_, 6));
+	ShowColorStyle::SetColor(GetColorArg(blade_num_, DRAG_COLOR_ARG));
 	show_drag_size_.Start(blade_num_);
 	break;
       case EMITTER_SIZE_ARG:
 	menu_type_ = MENU_EMITTER_SIZE;
-	ShowColorStyle::SetColor(GetColorArg(blade_num_, 1));
+	ShowColorStyle::SetColor(GetColorArg(blade_num_, EMITTER_COLOR_ARG));
 	show_emitter_size_.Start(blade_num_);
 	break;
       case PREON_OPTION_ARG:
@@ -2837,10 +2883,11 @@ SaberFett263Buttons() : PropBase() {}
   #endif
         break;
       case MENU_EFFECT:
-        for (int i = 0; i < 50; i++) {
-          effect_num_ += direction;
-          if (effect_num_ <= 0) effect_num_ = COLOR_SUB;
-          if (effect_num_ > COLOR_SUB) effect_num_ = 1;
+        for (int i = 0; i < NELEM(rgb_arg_menu_); i++) {
+          arg_dial_ += direction;
+          if (arg_dial_ < 0) arg_dial_ = NELEM(rgb_arg_menu_) - 1;
+          if (arg_dial_ >= NELEM(rgb_arg_menu_)) arg_dial_ = 0;
+          effect_num_ = rgb_arg_menu_[arg_dial_];
           if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 2)) break;
         }
         switch (effect_num_) {
@@ -3201,22 +3248,20 @@ SaberFett263Buttons() : PropBase() {}
         SaberBase::SetDimming(pow(dim, 2.2) * 16384);
         break;
       case MENU_STYLE_SETTING_SUB:
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < NELEM(int_arg_menu_); i++) {
+          arg_dial_ += direction;
           if (direction > 0) {
-            effect_num_ += direction;
-            if (effect_num_ > STYLE_SETTINGS) effect_num_ = 1;
-            // Detect preon.wav for setting preview (cannot be shown without)
-            if (!SFX_preon && effect_num_ >= STYLE_SETTINGS - 2) effect_num_ = 1;
+            // Detect preon.wav for setting preview (cannot be shown without so skip over)
+            if (!SFX_preon && (int_arg_menu_[arg_dial_] == PREON_OPTION_ARG || int_arg_menu_[arg_dial_] == PREON_SIZE_ARG)) arg_dial_ = 0;
+            if (arg_dial_ > NELEM(int_arg_menu_) - 1) arg_dial_ = 0;
           } else {
-            effect_num_ += direction;
-            if (effect_num_ <= 0) effect_num_ = STYLE_SETTINGS;
-            // Detect preon.wav for setting preview (cannot be shown without)
-            if (!SFX_preon && effect_num_ >= STYLE_SETTINGS - 2) effect_num_ = STYLE_SETTINGS - 3;
+            // Detect preon.wav for setting preview (cannot be shown without so skip over)            
+            if (!SFX_preon && (int_arg_menu_[arg_dial_] == PREON_OPTION_ARG || int_arg_menu_[arg_dial_] == PREON_SIZE_ARG)) arg_dial_ = NELEM(int_arg_menu_) - 3;
+            if (arg_dial_ < 0) arg_dial_ = NELEM(int_arg_menu_) - 1;
           }
-          if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 17)) break;
+          set_num_ = int_arg_menu_[arg_dial_];
+          if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), set_num_ + 2)) break;
         }
-        // Convert to Settings Arg Number
-        set_num_ = effect_num_ + 15;
         switch (set_num_) {
           case STYLE_OPTION_ARG:
 	    sound_library_.SayStyleOptions();
@@ -4840,6 +4885,7 @@ private:
   int ignite_time_; // Ignition timer for Edit Mode retraction preview
   int dial_ = -1; // Menu dial "tick"
   int sub_dial_; // Sub menu dial "tick"
+  int arg_dial_; // Argument Sub menu dial "tick"
   int gesture_num_;
   float twist_menu_ = M_PI / 4; // Twist Menu sensitivity
   bool choice_ = false;
