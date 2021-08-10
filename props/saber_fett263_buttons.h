@@ -1988,7 +1988,7 @@ SaberFett263Buttons() : PropBase() {}
 #else
 	menu_type_ = MENU_BLADE_STYLE;
 	blade_num_ = 0;
-	sound_library_.SaySelectBlade();
+	sound_library_.SayStyleMenu();
 #endif
 	break;
       case EDIT_COLORS:
@@ -2053,7 +2053,7 @@ SaberFett263Buttons() : PropBase() {}
       show_preview_.Stop(blade_preview_);
       blade_preview_ = 0;
       menu_type_ = MENU_STYLE_SUB;
-      sound_library_.SaySelectOption();
+      sound_library_.SayStyleMenu();
       break;
     case MENU_BLADE_COLOR:
 #if NUM_BLADES > 2
