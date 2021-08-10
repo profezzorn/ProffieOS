@@ -1980,7 +1980,7 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_TOP:
       switch (menu_top_pos_) {
       case EDIT_STYLE:
-#if NUM_BLADES == 1		      
+#if NUM_BLADES == 1
 	menu_type_ = MENU_STYLE_SUB;
 	menu_sub_pos_ = 0;
 	blade_num_ = 1;
