@@ -687,8 +687,10 @@ public:
   void SaySelectEffect() { Play("meffect.wav"); }
   void SaySelectOption() { Play("moption.wav"); }
   void SaySelectPreset() { Play("mpreset.wav"); }
+  void SaySelectStyle() { Play("mstylsel.wav"); }
   void SayStabIgnition() { Play("mstabon.wav"); }
   void SayStabColor() { Play("mstab.wav"); }
+  void SayStyleMenu() { Play("mstylesb.wav"); }
   void SayStyleOptions() { Play("mstylopt.wav"); }
   void SaySwingColor() { Play("mswing.wav"); }
   void SaySwingIgnition() { Play("mswingon.wav"); }
@@ -1790,7 +1792,7 @@ SaberFett263Buttons() : PropBase() {}
 #define COLOR_SUB 15
 #define COLOR_OPTIONS 3
 #define GESTURE_OPTIONS 12
-#define SET_SUBMENUS 6
+#define SET_SUBMENUS 5
 #define STYLE_SETTINGS 10
 #endif
 
@@ -1811,6 +1813,7 @@ SaberFett263Buttons() : PropBase() {}
     MENU_DELETE,
     MENU_RESET,
     MENU_EXIT,
+    MENU_STYLE_SUB,
     MENU_COLOR_SUB,
     MENU_COLOR_MODE,
     MENU_EFFECT,
@@ -1820,7 +1823,6 @@ SaberFett263Buttons() : PropBase() {}
     MENU_BLADE_STYLE,
     MENU_BLADE_COLOR,
     MENU_BLADE_COPY,
-    MENU_BLADE_SETTING,
     MENU_BLADE_LENGTH,
 #endif
     MENU_GESTURE_SUB,
@@ -1879,6 +1881,11 @@ SaberFett263Buttons() : PropBase() {}
     EXIT_MENU = 8,
   };
 
+  enum StyleSubMenu {
+    EDIT_STYLE_SELECT = 1,
+    EDIT_STYLE_SETTINGS = 2,
+  };
+	
   enum ColorSubMenu {
     EDIT_EFFECT_COLOR = 1,
 #if NUM_BLADES == 1
@@ -1897,11 +1904,10 @@ SaberFett263Buttons() : PropBase() {}
 
   enum SettingsMenu {
     EDIT_VOLUME = 1,
-    EDIT_STYLE_SETTINGS = 2,
-    EDIT_CONTROL_SETTINGS = 3,
-    EDIT_CLASH_THRESHOLD = 4,
-    EDIT_BLADE_LENGTH = 5,
-    EDIT_BRIGHTNESS = 6,
+    EDIT_CONTROL_SETTINGS = 2,
+    EDIT_CLASH_THRESHOLD = 3,
+    EDIT_BLADE_LENGTH = 4,
+    EDIT_BRIGHTNESS = 5,
   };
 
   enum GestureControls {
@@ -1974,14 +1980,11 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_TOP:
       switch (menu_top_pos_) {
       case EDIT_STYLE:
-#if NUM_BLADES == 1
-	menu_type_ = MENU_STYLE;
-	num_presets_ = current_config->num_presets;
+#if NUM_BLADES == 1		      
+	menu_type_ = MENU_STYLE_SUB;
+	menu_sub_pos_ = 0;
 	blade_num_ = 1;
-	tmp = current_preset_.GetStyle(blade_num_);
-	style_num_ = FirstWord(tmp, "builtin") ? atoi(SkipWord(tmp)) : 0;
-	style_revert_ = style_num_;
-	sound_library_.SaySelect();
+        sound_library_.SaySelectOption();		      
 #else
 	menu_type_ = MENU_BLADE_STYLE;
 	blade_num_ = 0;
@@ -2049,12 +2052,8 @@ SaberFett263Buttons() : PropBase() {}
       }
       show_preview_.Stop(blade_preview_);
       blade_preview_ = 0;
-      menu_type_ = MENU_STYLE;
-      num_presets_ = current_config->num_presets;
-      tmp = current_preset_.GetStyle(blade_num_);
-      style_num_ = FirstWord(tmp, "builtin") ? atoi(SkipWord(tmp)) : 0;
-      style_revert_ = style_num_;
-      MenuSelect();
+      menu_type_ = MENU_STYLE_SUB;
+      sound_library_.SaySelectOption();
       break;
     case MENU_BLADE_COLOR:
 #if NUM_BLADES > 2
@@ -2077,17 +2076,6 @@ SaberFett263Buttons() : PropBase() {}
       menu_type_ = MENU_COPY_COLOR;
       CopyColors();
       MenuConfirm();
-      break;
-    case MENU_BLADE_SETTING:
-      if (blade_num_ == 0) {
-	sound_library_.SaySelectBlade();
-	break;
-      }
-      show_preview_.Stop(blade_preview_);
-      blade_preview_ = 0;
-      menu_type_ = MENU_STYLE_SETTING_SUB;
-      sound_library_.SaySelectOption();
-      arg_dial_ = -1;		    
       break;
     case MENU_BLADE_LENGTH:
       sound_library_.SaySelect();
@@ -2117,14 +2105,31 @@ SaberFett263Buttons() : PropBase() {}
       sound_library_.SayConfirm();
       break;
 #endif
+    case MENU_STYLE_SUB:
+      switch (menu_sub_pos_) {
+        case EDIT_STYLE_SELECT:
+	  menu_type_ = MENU_STYLE;
+	  num_presets_ = current_config->num_presets;
+	  tmp = current_preset_.GetStyle(blade_num_);
+	  style_num_ = FirstWord(tmp, "builtin") ? atoi(SkipWord(tmp)) : 0;
+	  style_revert_ = style_num_;
+	  sound_library_.SaySelect();
+	  sound_library_.SayNumber(style_num_, SAY_WHOLE);
+	  break;
+        case EDIT_STYLE_SETTINGS:
+	  effect_num_ = 0;
+	  menu_type_ = MENU_STYLE_SETTING_SUB;
+	  sound_library_.SaySelectOption();
+	  arg_dial_ = -1;
+	  break;
+        default:
+          sound_library_.SaySelectOption();
+      }
+      break;
     case MENU_STYLE:
       restore_point = nullptr;
       current_preset_.Save();
-#if NUM_BLADES == 1
-      menu_type_ = MENU_TOP;
-#else
-      menu_type_ = MENU_BLADE_STYLE;
-#endif
+      menu_type_ = MENU_STYLE_SUB;
       MenuSave();
       break;
     case MENU_COLOR:
@@ -2546,18 +2551,6 @@ SaberFett263Buttons() : PropBase() {}
 	menu_type_ = MENU_VOLUME;
 	sound_library_.SaySelect();
 	break;
-      case EDIT_STYLE_SETTINGS:
-	effect_num_ = 0;
-#if NUM_BLADES == 1
-	menu_type_ = MENU_STYLE_SETTING_SUB;
-	sound_library_.SaySelectOption();
-	arg_dial_ = -1;
-	blade_num_ = 1;
-#else
-	menu_type_ = MENU_BLADE_SETTING;
-	sound_library_.SaySelectBlade();
-#endif
-	break;
       case EDIT_CONTROL_SETTINGS:
 	menu_type_ = MENU_GESTURE_SUB;
 	sound_library_.SaySelectOption();
@@ -2814,7 +2807,6 @@ SaberFett263Buttons() : PropBase() {}
   #if NUM_BLADES > 1
       case MENU_BLADE_STYLE:
       case MENU_BLADE_COLOR:
-      case MENU_BLADE_SETTING:
       case MENU_BLADE_COPY:
       case MENU_BLADE_LENGTH:
         blade_num_ += direction;
@@ -2836,6 +2828,22 @@ SaberFett263Buttons() : PropBase() {}
 	  sound_library_.SayCancel();
         }
         break;
+      case MENU_STYLE_SUB:
+        menu_sub_pos_ += direction;
+        if (menu_sub_pos_ <= 0) menu_sub_pos_ = 2;
+        if (menu_sub_pos_ > 2) menu_sub_pos_ = 1;
+	switch (menu_sub_pos_) {
+	  case EDIT_STYLE_SELECT:
+	    sound_library_.SaySelectStyle();
+	    break;
+          case EDIT_STYLE_SETTINGS:
+	    sound_library_.SayEditStyleSettings();
+            break;
+	  default:
+	    sound_library_.SaySelectOption();
+	    break;
+	}
+	break;
       case MENU_STYLE:
         style_num_ += direction;
         if (style_num_ < 0) style_num_ = num_presets_ - 1;
@@ -2844,11 +2852,7 @@ SaberFett263Buttons() : PropBase() {}
         itoa(style_num_, style_arg, 10);
         current_preset_.SetStyle(blade_num_, style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg));
         current_preset_.Save();
-        if (direction > 0) {
-          sound_library_.SayUp();
-        } else {
-	  sound_library_.SayDown();
-        }
+        sound_library_.SayNumber(style_num_, SAY_WHOLE);
         UpdateStyle(current_preset_.preset_num);
         break;
       case MENU_COLOR:
@@ -3189,9 +3193,6 @@ SaberFett263Buttons() : PropBase() {}
           case EDIT_VOLUME:
 	    sound_library_.SayEditVolume();
             break;
-          case EDIT_STYLE_SETTINGS:
-	    sound_library_.SayEditStyleSettings();
-            break;
           case EDIT_CONTROL_SETTINGS:
 	    sound_library_.SayEditControlSettings();
             break;
@@ -3421,6 +3422,14 @@ SaberFett263Buttons() : PropBase() {}
         MenuCancel();
         break;
 #endif
+      case MENU_STYLE_SUB:
+#if NUM_BLADES == 1
+        menu_type_ = MENU_TOP;
+#else
+        menu_type_ = MENU_BLADE_STYLE;
+#endif
+	MenuCancel();
+	break;
       case MENU_STYLE: {
         char style_arg[10];
         itoa(style_revert_, style_arg, 10);
@@ -3428,7 +3437,7 @@ SaberFett263Buttons() : PropBase() {}
         current_preset_.Save();
         UpdateStyle(current_preset_.preset_num);
 #if NUM_BLADES == 1
-        menu_type_ = MENU_TOP;
+        menu_type_ = MENU_STYLE_SUB;
         MenuRevert();
 #else
         menu_type_ = MENU_BLADE_STYLE;
@@ -3567,7 +3576,7 @@ SaberFett263Buttons() : PropBase() {}
         MenuRevert();
         break;
       case MENU_STYLE_SETTING_SUB:
-        menu_type_ = MENU_SETTING_SUB;
+        menu_type_ = MENU_STYLE_SUB;
         MenuCancel();
         break;
       case MENU_STYLE_OPTION:
@@ -3655,6 +3664,9 @@ SaberFett263Buttons() : PropBase() {}
 	sound_library_.SayMainMenu();
         break;
 #ifdef FETT263_EDIT_MODE_MENU
+      case MENU_STYLE_SUB:
+        sound_library_.SayStyleMenu();
+        break;
       case MENU_COLOR_SUB:
 	sound_library_.SayColorMenu();
 	break;
