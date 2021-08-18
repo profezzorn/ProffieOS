@@ -1986,7 +1986,7 @@ SaberFett263Buttons() : PropBase() {}
 	menu_type_ = MENU_STYLE_SUB;
 	menu_sub_pos_ = 0;
 	blade_num_ = 1;
-        sound_library_.SayStyleMenu();		      
+        sound_library_.SaySelectOption();		      
 #else
 	menu_type_ = MENU_BLADE_STYLE;
 	blade_num_ = 0;
