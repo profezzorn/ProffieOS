@@ -666,6 +666,7 @@ public:
   void SayMininumVolume() { Play("volmin.wav"); }
   void SayNoChoreographyAvailable() { Play("nochreo.wav"); }
   void SayOffColor() { Play("moff.wav"); }
+  void SayOption() { Play("moptnum.wav"); }
   void SayPostOffColor() { Play("mpstoff.wav"); }
   void SayPowerLock() { Play("mpwrlock.wav"); }
   void SayPreonColor() { Play("mpreon.wav"); }
@@ -690,6 +691,7 @@ public:
   void SaySelectStyle() { Play("mstylsel.wav"); }
   void SayStabIgnition() { Play("mstabon.wav"); }
   void SayStabColor() { Play("mstab.wav"); }
+  void SayStyle() { Play("mstylnum.wav"); }
   void SayStyleMenu() { Play("mstylesb.wav"); }
   void SayStyleOptions() { Play("mstylopt.wav"); }
   void SaySwingColor() { Play("mswing.wav"); }
@@ -1333,6 +1335,19 @@ SaberFett263Buttons() : PropBase() {}
     UpdateFont(current_preset_.preset_num, false);
   }
 
+    
+  void SayStyleNumber(int style_num) {
+    sound_library_.SayStyle();
+    sound_library_.SayNumber(style_num, SAY_WHOLE);
+    if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), STYLE_OPTION_ARG + 2)) {
+      char argspace[32];
+      style_parser.GetArgument(current_preset_.GetStyle(blade_num_), STYLE_OPTION_ARG + 2, argspace);
+      int opt = strtol(argspace, NULL, 0);
+      sound_library_.SayOption();
+      sound_library_.SayNumber(opt, SAY_WHOLE);
+    }
+  }
+	
   // Stop location/size previews in Style Settings Mode
   void StopSettingPreview() {
     switch (set_num_) {
@@ -1988,7 +2003,7 @@ SaberFett263Buttons() : PropBase() {}
 #else
 	menu_type_ = MENU_BLADE_STYLE;
 	blade_num_ = 0;
-	sound_library_.SayStyleMenu();
+	sound_library_.SaySelectBlade();
 #endif
 	break;
       case EDIT_COLORS:
@@ -2053,7 +2068,7 @@ SaberFett263Buttons() : PropBase() {}
       show_preview_.Stop(blade_preview_);
       blade_preview_ = 0;
       menu_type_ = MENU_STYLE_SUB;
-      sound_library_.SayStyleMenu();
+      sound_library_.SaySelectOption();
       break;
     case MENU_BLADE_COLOR:
 #if NUM_BLADES > 2
@@ -2114,7 +2129,7 @@ SaberFett263Buttons() : PropBase() {}
 	  style_num_ = FirstWord(tmp, "builtin") ? atoi(SkipWord(tmp)) : 0;
 	  style_revert_ = style_num_;
 	  sound_library_.SaySelect();
-	  sound_library_.SayNumber(style_num_, SAY_WHOLE);
+          SayStyleNumber(style_num_);
 	  break;
         case EDIT_STYLE_SETTINGS:
 	  effect_num_ = 0;
@@ -2617,10 +2632,14 @@ SaberFett263Buttons() : PropBase() {}
       case STYLE_OPTION_ARG:
 	menu_type_ = MENU_STYLE_OPTION;
 	arg_revert_ = strtol (argspace, NULL, 0);
+        sound_library_.SayOption();
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
 	break;
       case IGNITION_OPTION_ARG:
 	menu_type_ = MENU_IGNITION_OPTION;
 	arg_revert_ = strtol (argspace, NULL, 0);
+        sound_library_.SayOption();
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
 	break;
       case IGNITION_TIME_ARG:
 	menu_type_ = MENU_IGNITION_TIME;
@@ -2633,6 +2652,8 @@ SaberFett263Buttons() : PropBase() {}
 	ignite_time_ = strtol(ig, NULL, 0);
 	current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 19, "1"));
 	arg_revert_ = strtol(argspace, NULL, 0);
+        sound_library_.SayOption();
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
 	break;
       case RETRACTION_TIME_ARG:
 	menu_type_ = MENU_RETRACTION_TIME;
@@ -2664,6 +2685,8 @@ SaberFett263Buttons() : PropBase() {}
 	  sound_library_.SaySelect();
 	  menu_type_ = MENU_PREON_OPTION;
 	  arg_revert_ = strtol (argspace, NULL, 0);
+          sound_library_.SayOption();
+          sound_library_.SayNumber(calc_, SAY_WHOLE);
 	}
 	break;
       case PREON_SIZE_ARG:
@@ -2852,8 +2875,8 @@ SaberFett263Buttons() : PropBase() {}
         itoa(style_num_, style_arg, 10);
         current_preset_.SetStyle(blade_num_, style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg));
         current_preset_.Save();
-        sound_library_.SayNumber(style_num_, SAY_WHOLE);
         UpdateStyle(current_preset_.preset_num);
+        SayStyleNumber(style_num_);
         break;
       case MENU_COLOR:
         break;
@@ -3329,6 +3352,8 @@ SaberFett263Buttons() : PropBase() {}
         if (calc_ > 32768) calc_ = 0;
         if (calc_ < 0) calc_ = 32768;
         SetInOut();
+        sound_library_.SayOption();
+        sound_library_.SayNumber(calc_, SAY_WHOLE);		    
         break;
       case MENU_LOCKUP_POSITION:
       case MENU_EMITTER_SIZE:
