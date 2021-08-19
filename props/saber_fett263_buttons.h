@@ -1335,6 +1335,19 @@ SaberFett263Buttons() : PropBase() {}
     UpdateFont(current_preset_.preset_num, false);
   }
 
+    
+  void SayStyleNumber(int style_num) {
+    sound_library_.SayStyle();
+    sound_library_.SayNumber(style_num, SAY_WHOLE);
+    if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), STYLE_OPTION_ARG + 2)) {
+      char argspace[32];
+      style_parser.GetArgument(current_preset_.GetStyle(blade_num_), STYLE_OPTION_ARG + 2, argspace);
+      int opt = strtol(argspace, NULL, 0);
+      sound_library_.SayOption();
+      sound_library_.SayNumber(opt, SAY_WHOLE);
+    }
+  }
+	
   // Stop location/size previews in Style Settings Mode
   void StopSettingPreview() {
     switch (set_num_) {
@@ -2055,7 +2068,7 @@ SaberFett263Buttons() : PropBase() {}
       show_preview_.Stop(blade_preview_);
       blade_preview_ = 0;
       menu_type_ = MENU_STYLE_SUB;
-      sound_library_.SayStyleMenu();
+      sound_library_.SaySelectOption();
       break;
     case MENU_BLADE_COLOR:
 #if NUM_BLADES > 2
@@ -2116,15 +2129,7 @@ SaberFett263Buttons() : PropBase() {}
 	  style_num_ = FirstWord(tmp, "builtin") ? atoi(SkipWord(tmp)) : 0;
 	  style_revert_ = style_num_;
 	  sound_library_.SaySelect();
-          sound_library_.SayStyle();
-          sound_library_.SayNumber(style_num_, SAY_WHOLE);
-          if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), STYLE_OPTION_ARG + 2)) {
-            char argspace[32];
-            style_parser.GetArgument(current_preset_.GetStyle(blade_num_), STYLE_OPTION_ARG + 2, argspace);
-            int opt = strtol(argspace, NULL, 0);
-            sound_library_.SayOption();
-            sound_library_.SayNumber(opt, SAY_WHOLE);
-          }
+          SayStyleNumber(style_num_);
 	  break;
         case EDIT_STYLE_SETTINGS:
 	  effect_num_ = 0;
@@ -2871,15 +2876,7 @@ SaberFett263Buttons() : PropBase() {}
         current_preset_.SetStyle(blade_num_, style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg));
         current_preset_.Save();
         UpdateStyle(current_preset_.preset_num);
-        sound_library_.SayStyle();
-        sound_library_.SayNumber(style_num_, SAY_WHOLE);
-        if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), STYLE_OPTION_ARG + 2)) {
-          char argspace[32];
-          style_parser.GetArgument(current_preset_.GetStyle(blade_num_), STYLE_OPTION_ARG + 2, argspace);
-          int opt = strtol(argspace, NULL, 0);
-          sound_library_.SayOption();
-          sound_library_.SayNumber(opt, SAY_WHOLE);
-        }
+        SayStyleNumber(style_num_);
         break;
       case MENU_COLOR:
         break;
