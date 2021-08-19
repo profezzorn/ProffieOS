@@ -2638,7 +2638,7 @@ SaberFett263Buttons() : PropBase() {}
 	break;
       case IGNITION_TIME_ARG:
 	menu_type_ = MENU_IGNITION_TIME;
-	arg_revert_ = strtol (argspace, NULL, 0);		      
+	arg_revert_ = strtol (argspace, NULL, 0);
 	break;
       case RETRACTION_OPTION_ARG:
 	menu_type_ = MENU_RETRACTION_OPTION;
