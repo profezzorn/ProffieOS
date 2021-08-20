@@ -43,10 +43,10 @@ enum ArgumentName {
   LAST_ARG = OFF_OPTION_ARG, // End of Argument List
 };
 
-// IgnitionTime = 18 - uses "Auto" feature with WavLen when = 0
+// IgnitionTime = IGNITION_TIME_ARG - uses "Auto" feature with WavLen when = 0
 template<int DEFAULT_VALUE = 300> using IgnitionTime = Scale<IsLessThan<IntArg<IGNITION_TIME_ARG,DEFAULT_VALUE>,Int<1>>,IntArg<IGNITION_TIME_ARG,DEFAULT_VALUE>,WavLen<EFFECT_IGNITION>>;
 
-// RetractionTime = 20 - uses "Auto" feature with WavLen when = 0
+// RetractionTime = RETRACTION_TIME_ARG - uses "Auto" feature with WavLen when = 0
 template<int DEFAULT_VALUE = 0> using RetractionTime = Scale<IsLessThan<IntArg<RETRACTION_TIME_ARG,DEFAULT_VALUE>,Int<1>>,IntArg<RETRACTION_TIME_ARG,DEFAULT_VALUE>,WavLen<EFFECT_RETRACTION>>;
 
 #endif
