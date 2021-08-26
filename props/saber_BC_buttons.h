@@ -850,12 +850,10 @@ public:
     case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
       clash_impact_millis_ = millis();
       swing_blast_ = false;
-      if (!SaberBase::Lockup()) {
-        if (!swinging_) {
+      if (!SaberBase::Lockup() && !swinging_) {
           SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
           auto_melt_on_ = true;
           SaberBase::DoBeginLockup();
-        }
       }
       return true;
 
