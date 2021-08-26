@@ -285,6 +285,62 @@ public:
     return LSPtr<char>(ret);
   }
 
+  struct ArgumentIterator {
+    const char* start;
+    const char* end;
+    ArgumentIterator(const char* str_) : start(str_) {
+      end = str_ + StyleIdentifierLength(str_);
+    }
+    void next() {
+      start = end;
+      end = SkipWord(end);
+    }
+    int len() const { return end - start; }
+    void append(char** to) const {
+      int l = len();
+      memcpy(*to, start, l);
+      (*to) += l;
+      **to = 0;
+    }
+    operator bool() const { return *start; }
+  };
+
+  // Takes the style identifier "builtin X Y" from |to| and the
+  // arguments from |from| and puts them together into one string.
+  // Arguments listed in |arguments_to_keep| are also taken from the |from| string.
+  LSPtr<char> CopyArguments(const char* from, const char* to, const int* arguments_to_keep, size_t arguments_to_keep_len) {
+    int len = 0;
+    {
+      ArgumentIterator FROM(from);
+      ArgumentIterator TO(to);
+      for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
+	bool keep = false;
+	for (size_t x = 0; x < arguments_to_keep_len; x++) if (arguments_to_keep[x] == arg) { keep = true; break; }
+	if (keep && FROM) {
+	  len += FROM.len();
+	} else {
+	  len += TO.len();
+	}
+      }
+    }
+    char* ret = (char*) malloc(len + 1);
+    if (ret) {
+      char* tmp = ret;
+      ArgumentIterator FROM(from);
+      ArgumentIterator TO(to);
+      for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
+	bool keep = false;
+	for (size_t x = 0; x < arguments_to_keep_len; x++) if (arguments_to_keep[x] == arg) { keep = true; break; }
+	if (keep && FROM) {
+	  FROM.append(&tmp);
+	} else {
+	  TO.append(&tmp);
+	}
+      }
+    }
+    return LSPtr<char>(ret);
+  }
+
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "list_named_styles")) {
       // Just print one per line.
