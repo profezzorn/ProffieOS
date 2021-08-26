@@ -622,6 +622,7 @@ public:
   void SayColorOptions() { Play("mcolorop.wav"); }
   void SayConfirm() { Play("mconfirm.wav"); }
   void SayConfirmSelection() { Play("maffirm.wav"); }
+  void SayCoolDownOptions() { Play("mcooldwn.wav"); }
   void SayCopyColors() { Play("mcopyc.wav"); }
   void SayCopyPreset() { Play("mcopy.wav"); }
   void SayDeletePreset() { Play("mdelete.wav"); }
@@ -669,6 +670,7 @@ public:
   void SayOption() { Play("moptnum.wav"); }
   void SayPostOffColor() { Play("mpstoff.wav"); }
   void SayPowerLock() { Play("mpwrlock.wav"); }
+  void SayPowerUpOptions() { Play("mpwrup.wav"); }
   void SayPreonColor() { Play("mpreon.wav"); }
   void SayPreonOptions() { Play("mpreopt.wav"); }
   void SayPreonSize() { Play("mpreonsz.wav"); }
@@ -1300,6 +1302,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_STYLE_OPTION:
       case MENU_IGNITION_TIME:
       case MENU_IGNITION_OPTION:
+      case IGNITION_POWER_UP_ARG:
         UpdateFont(current_preset_.preset_num, false);
         break;
       case MENU_PREON_OPTION:
@@ -1308,6 +1311,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_RETRACTION_TIME:
       case MENU_RETRACTION_OPTION:
+      case RETRACTION_COOL_DOWN_ARG:
         UpdateStyle(current_preset_.preset_num);
         off_event_ = true;
         restart_millis_ = millis();
@@ -1324,9 +1328,10 @@ SaberFett263Buttons() : PropBase() {}
     switch (menu_type_) {
       case MENU_RETRACTION_OPTION:
       case MENU_RETRACTION_TIME:
+      case RETRACTION_COOL_DOWN_ARG:
         char ig[10];
         itoa(ignite_time_, ig, 10);
-        current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 19, ig));
+        current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), RETRACTION_TIME_ARG, ig));
         break;
       default:
         break;
@@ -1804,11 +1809,9 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_EDIT_MODE_MENU
 #define SUBMENUS 9
-#define COLOR_SUB 15
 #define COLOR_OPTIONS 3
 #define GESTURE_OPTIONS 12
 #define SET_SUBMENUS 5
-#define STYLE_SETTINGS 10
 #endif
 
   enum MenuType {
@@ -1853,8 +1856,10 @@ SaberFett263Buttons() : PropBase() {}
     MENU_STYLE_OPTION,
     MENU_IGNITION_OPTION,
     MENU_IGNITION_TIME,
+    MENU_IGNITION_POWER_UP_OPTION,
     MENU_RETRACTION_OPTION,
     MENU_RETRACTION_TIME,
+    MENU_RETRACTION_COOL_DOWN_OPTION,
     MENU_LOCKUP_POSITION,
     MENU_DRAG_SIZE,
     MENU_EMITTER_SIZE,
@@ -2645,12 +2650,18 @@ SaberFett263Buttons() : PropBase() {}
 	menu_type_ = MENU_IGNITION_TIME;
 	arg_revert_ = strtol (argspace, NULL, 0);
 	break;
+      case IGNITION_POWER_UP_ARG:
+        menu_type_ = MENU_IGNITION_POWER_UP_OPTION;
+        arg_revert_ = strtol (argspace, NULL, 0); 
+        sound_library_.SayOption();
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
+        break;
       case RETRACTION_OPTION_ARG:
 	menu_type_ = MENU_RETRACTION_OPTION;
 	char ig[32];
-	style_parser.GetArgument(current_preset_.GetStyle(blade_num_), 19, ig);
+	style_parser.GetArgument(current_preset_.GetStyle(blade_num_), RETRACTION_TIME_ARG, ig);
 	ignite_time_ = strtol(ig, NULL, 0);
-	current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 19, "1"));
+	current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), RETRACTION_TIME_ARG, "1"));
 	arg_revert_ = strtol(argspace, NULL, 0);
         sound_library_.SayOption();
         sound_library_.SayNumber(calc_, SAY_WHOLE);
@@ -2658,11 +2669,21 @@ SaberFett263Buttons() : PropBase() {}
       case RETRACTION_TIME_ARG:
 	menu_type_ = MENU_RETRACTION_TIME;
 	char igt[32];
-	style_parser.GetArgument(current_preset_.GetStyle(blade_num_), 19, igt);
+	style_parser.GetArgument(current_preset_.GetStyle(blade_num_), RETRACTION_TIME_ARG, igt);
 	ignite_time_ = strtol(igt, NULL, 0);
-	current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 19, "1"));
+	current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), RETRACTION_TIME_ARG, "1"));
 	arg_revert_ = strtol(argspace, NULL, 0);
 	break;
+      case RETRACTION_COOL_DOWN_ARG:
+        menu_type_ = MENU_RETRACTION_COOL_DOWN_OPTION;
+        char igc[32];
+        style_parser.GetArgument(current_preset_.GetStyle(blade_num_), RETRACTION_TIME_ARG, igc);
+        ignite_time_ = strtol(igc, NULL, 0);
+        current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), RETRACTION_TIME_ARG, "1"));
+        arg_revert_ = strtol(argspace, NULL, 0);
+        sound_library_.SayOption();
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
+        break;
       case LOCKUP_POSITION_ARG:
 	menu_type_ = MENU_LOCKUP_POSITION;
 	ShowColorStyle::SetColor(GetColorArg(blade_num_, LOCKUP_COLOR_ARG));
@@ -2705,6 +2726,7 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_STYLE_OPTION:
     case MENU_IGNITION_OPTION:
     case MENU_IGNITION_TIME:
+    case MENU_IGNITION_POWER_UP_OPTION:
     case MENU_PREON_OPTION:
     case MENU_PREON_SIZE:
       menu_type_ = MENU_STYLE_SETTING_SUB;
@@ -2713,10 +2735,11 @@ SaberFett263Buttons() : PropBase() {}
       break;
     case MENU_RETRACTION_OPTION:
     case MENU_RETRACTION_TIME:
+    case MENU_RETRACTION_COOL_DOWN_OPTION:
       menu_type_ = MENU_STYLE_SETTING_SUB;
       char style_arg[10];
       itoa(ignite_time_, style_arg, 10);
-      current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 19, style_arg));
+      current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), RETRACTION_TIME_ARG, style_arg));
       current_preset_.Save();
       MenuSave();
       break;
@@ -3296,11 +3319,17 @@ SaberFett263Buttons() : PropBase() {}
           case IGNITION_TIME_ARG:
 	    sound_library_.SayIgnitionTime();
             break;
+          case IGNITION_POWER_UP_ARG:
+            sound_library_.SayPowerUpOptions();
+            break;
           case RETRACTION_OPTION_ARG:
 	    sound_library_.SayRetractionOptions();
             break;
           case RETRACTION_TIME_ARG:
 	    sound_library_.SayRetractionTime();
+            break;
+          case RETRACTION_COOL_DOWN_ARG:
+            sound_library_.SayCoolDownOptions();
             break;
           case LOCKUP_POSITION_ARG:
 	    sound_library_.SayClashLockupPosition();
@@ -3346,7 +3375,9 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_STYLE_OPTION:
       case MENU_IGNITION_OPTION:
+      case MENU_IGNITION_POWER_UP_OPTION:
       case MENU_RETRACTION_OPTION:
+      case MENU_RETRACTION_COOL_DOWN_OPTION:
       case MENU_PREON_OPTION:
         calc_ += direction;
         if (calc_ > 32768) calc_ = 0;
@@ -3607,8 +3638,10 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_STYLE_OPTION:
       case MENU_IGNITION_OPTION:
       case MENU_IGNITION_TIME:
+      case MENU_IGNITION_POWER_UP_OPTION:
       case MENU_RETRACTION_OPTION:
       case MENU_RETRACTION_TIME:
+      case MENU_RETRACTION_COOL_DOWN_OPTION:
       case MENU_PREON_OPTION:
       case MENU_PREON_SIZE:
         menu_type_ = MENU_STYLE_SETTING_SUB;
