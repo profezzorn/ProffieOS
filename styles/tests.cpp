@@ -541,7 +541,15 @@ void testCopyArguments(const char* from, const char *to, int N, const char* expe
   fprintf(stderr, "testCopyArguments(%s, %s, %d)\n", from, to, N);
   LSPtr<char> ret = style_parser.CopyArguments(from, to, N);
   if (strcmp(ret.get(), expected)) {
-    fprintf(stderr, "Expected '%s' got '%s'\n", expected, ret.get());
+    fprintf(stderr, "Expected '%s' got '%s' (1)\n", expected, ret.get());
+    exit(1);
+  }
+
+  int to_keep[50];
+  for (int i = 0; i < N; i++) to_keep[i] = i+1;
+  LSPtr<char> ret2 = style_parser.CopyArguments(from, to, to_keep, N);
+  if (strcmp(ret2.get(), expected)) {
+    fprintf(stderr, "Expected '%s' got '%s' (2)\n", expected, ret2.get());
     exit(1);
   }
 }
