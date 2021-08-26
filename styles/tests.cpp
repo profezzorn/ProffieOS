@@ -554,6 +554,19 @@ void testCopyArguments(const char* from, const char *to, int N, const char* expe
   }
 }
 
+void testCopyArguments(const char* from, const char *to, int keep1, int keep2, int keep3, const char* expected) {
+  int to_keep[3];
+  to_keep[0] = keep1;
+  to_keep[1] = keep2;
+  to_keep[2] = keep3;
+  fprintf(stderr, "testCopyArguments(%s, %s, %d, %d, %d)\n", from, to, keep1, keep2, keep3);
+  LSPtr<char> ret = style_parser.CopyArguments(from, to, to_keep, 3);
+  if (strcmp(ret.get(), expected)) {
+    fprintf(stderr, "Expected '%s' got '%s' (1)\n", expected, ret.get());
+    exit(1);
+  }
+}
+
 void testMaxUsedArgument(const char* from, int expected) {
   fprintf(stderr, "testMaxUsedArgument(%s)\n", from);
   int args = style_parser.MaxUsedArgument(from);
@@ -589,6 +602,12 @@ void test_argument_parsing() {
   testCopyArguments("standard 1 2 3", "blarg 7 8 9", 2, "blarg 1 2 9");
   testCopyArguments("standard 1 2 3", "blarg 7 8 9", 1, "blarg 1 8 9");
   testCopyArguments("standard 1 2 3", "blarg 7 8 9", 0, "blarg 7 8 9");
+
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 1, 2, 3, "blarg 1 2 3");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 1, 1, 1, "blarg 1 8 9");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 1, 1, 3, "blarg 1 8 3");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9 A B C", 1, 1, 3, "blarg 1 8 3 A B C");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9 A B C", 4, 5, 6, "blarg 7 8 9 ~ ~ ~");
 
   testMaxUsedArgument("charging", 0);
   testMaxUsedArgument("rainbow", 2);
