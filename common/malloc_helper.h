@@ -41,6 +41,19 @@ void LSFree(T *memory) {
   if (IsHeap(memory)) LSFreeObject((T*)memory);
 }
 
+#if defined(DEBUG) || defined(ENABLE_DEVELOPER_COMMANDS)
+template<>
+void LSFree<char>(char *memory) {
+  if (IsHeap(memory)) {
+    // Lets fill the memory with "FREE" to detect use-after-free scenarios.
+    for (char* tmp = memory; *tmp; tmp++) {
+      *tmp = "FREE"[3 & (long)tmp];
+    }
+    LSFreeObject(memory);
+  }
+}
+#endif
+
 // Movable, but not copyable
 template<class T>
 class LSPtr {

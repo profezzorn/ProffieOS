@@ -608,6 +608,8 @@ void test_argument_parsing() {
   testCopyArguments("standard 1 2 3", "blarg 7 8 9", 1, 1, 3, "blarg 1 8 3");
   testCopyArguments("standard 1 2 3", "blarg 7 8 9 A B C", 1, 1, 3, "blarg 1 8 3 A B C");
   testCopyArguments("standard 1 2 3", "blarg 7 8 9 A B C", 4, 5, 6, "blarg 7 8 9 ~ ~ ~");
+  testCopyArguments("standard 1 2 3 4 5 6", "blarg 7 8 9", 1, 2, 3, "blarg 1 2 3 ~ ~ ~");
+  testCopyArguments("standard 1 22 333 44444 55555 666666", "blarg 7 8 9", 1, 2, 3, "blarg 1 22 333 ~ ~ ~");
 
   testMaxUsedArgument("charging", 0);
   testMaxUsedArgument("rainbow", 2);
