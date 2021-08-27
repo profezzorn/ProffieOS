@@ -295,15 +295,26 @@ public:
       start = end;
       end = SkipWord(end);
     }
-    int len() const { return end - start; }
+    operator bool() const { return end > start; }
+    int len() const {
+      if (end == start) return 2;
+      return end - start;
+    }
     void append(char** to) const {
       int l = len();
-      memcpy(*to, start, l);
+      memcpy(*to, end == start ? " ~" : start, l);
       (*to) += l;
       **to = 0;
     }
-    operator bool() const { return *start; }
   };
+
+  static bool keep(int arg, const int* arguments_to_keep, size_t arguments_to_keep_len) {
+    if (arg == 0) return true;
+    for (size_t x = 0; x < arguments_to_keep_len; x++)
+      if (arguments_to_keep[x] == arg)
+	return true;
+    return false;
+  }
 
   // Takes the style identifier "builtin X Y" from |to| and the
   // arguments from |from| and puts them together into one string.
@@ -314,12 +325,10 @@ public:
       ArgumentIterator FROM(from);
       ArgumentIterator TO(to);
       for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
-	bool keep = false;
-	for (size_t x = 0; x < arguments_to_keep_len; x++) if (arguments_to_keep[x] == arg) { keep = true; break; }
-	if (keep && FROM) {
-	  len += FROM.len();
-	} else {
+	if (keep(arg, arguments_to_keep, arguments_to_keep_len)) {
 	  len += TO.len();
+	} else {
+	  len += FROM.len();
 	}
       }
     }
@@ -329,15 +338,19 @@ public:
       ArgumentIterator FROM(from);
       ArgumentIterator TO(to);
       for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
-	bool keep = false;
-	for (size_t x = 0; x < arguments_to_keep_len; x++) if (arguments_to_keep[x] == arg) { keep = true; break; }
-	if (keep && FROM) {
-	  FROM.append(&tmp);
-	} else {
+	if (keep(arg, arguments_to_keep, arguments_to_keep_len)) {
 	  TO.append(&tmp);
+	} else {
+	  FROM.append(&tmp);
 	}
       }
     }
+    // STDOUT << "CopyArguments(from=" << from << " to=" << to << ") = " << ret << "\n";
+#if defined(DEBUG) || defined(ENABLE_DEBUG_COMMANDS)
+    if (strlen(ret) != len) {
+      STDOUT << "FATAL ERROR IN COPYARGUMENTS: len = " << len << " strlen = " << strlen(ret) << "\n";
+    }
+#endif    
     return LSPtr<char>(ret);
   }
 
