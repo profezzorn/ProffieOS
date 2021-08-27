@@ -233,7 +233,7 @@ class Effect {
   }
   void SelectFloat(float value) {
     int f = files_found();
-    selected_ = clamp(floorf(f * value), 0, f);
+    selected_ = clamp(floorf(f * value), 0, f - 1);
   }
 	
   Effect* GetFollowing() const {
