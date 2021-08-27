@@ -4634,7 +4634,7 @@ SaberFett263Buttons() : PropBase() {}
 
 
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
-        if (menu_) return true;
+        if (menu_ || SaberBase::Lockup()) return true;
         clash_impact_millis_ = millis();
         if (!battle_mode_) {
 #ifdef FETT263_CLASH_STRENGTH_SOUND
