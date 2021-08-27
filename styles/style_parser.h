@@ -309,6 +309,7 @@ public:
   };
 
   static bool keep(int arg, const int* arguments_to_keep, size_t arguments_to_keep_len) {
+    if (arg == 0) return true;
     for (size_t x = 0; x < arguments_to_keep_len; x++)
       if (arguments_to_keep[x] == arg)
 	return true;
@@ -325,9 +326,9 @@ public:
       ArgumentIterator TO(to);
       for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
 	if (keep(arg, arguments_to_keep, arguments_to_keep_len)) {
-	  len += FROM.len();
-	} else {
 	  len += TO.len();
+	} else {
+	  len += FROM.len();
 	}
       }
     }
@@ -338,13 +339,18 @@ public:
       ArgumentIterator TO(to);
       for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
 	if (keep(arg, arguments_to_keep, arguments_to_keep_len)) {
-	  FROM.append(&tmp);
-	} else {
 	  TO.append(&tmp);
+	} else {
+	  FROM.append(&tmp);
 	}
       }
     }
     // STDOUT << "CopyArguments(from=" << from << " to=" << to << ") = " << ret << "\n";
+#if defined(DEBUG) || defined(ENABLE_DEBUG_COMMANDS)
+    if (strlen(ret) != len) {
+      STDOUT << "FATAL ERROR IN COPYARGUMENTS: len = " << len << " strlen = " << strlen(ret) << "\n";
+    }
+#endif    
     return LSPtr<char>(ret);
   }
 
