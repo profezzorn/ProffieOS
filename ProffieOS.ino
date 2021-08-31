@@ -287,6 +287,22 @@ uint64_t loop_cycles = 0;
 
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 
+#ifdef DOSFS_CONFIG_STARTUP_DELAY
+#define PROFFIEOS_SD_STARTUP_DELAY DOSFS_CONFIG_STARTUP_DELAY
+#else
+#define PROFFIEOS_SD_STARTUP_DELAY 1000
+#endif
+
+#ifndef CONFIG_STARTUP_DELAY
+#define CONFIG_STARTUP_DELAY 0
+#endif
+
+#if PROFFIEOS_SD_STARTUP_DELAY > CONFIG_STARTUP_DELAY
+#define PROFFIEOS_STARTUP_DELAY PROFFIEOS_SD_STARTUP_DELAY
+#else
+#define PROFFIEOS_STARTUP_DELAY CONFIG_STARTUP_DELAY
+#endif
+
 #include "common/linked_list.h"
 #include "common/looper.h"
 #include "common/command_parser.h"
@@ -1709,21 +1725,6 @@ void setup() {
   // Wait for all voltages to settle.
   // Accumulate some entrypy while we wait.
   uint32_t now = millis();
-#ifdef DOSFS_CONFIG_STARTUP_DELAY
-#define PROFFIEOS_SD_STARTUP_DELAY DOSFS_CONFIG_STARTUP_DELAY
-#else
-#define PROFFIEOS_SD_STARTUP_DELAY 1000
-#endif
-
-#ifndef CONFIG_STARTUP_DELAY
-#define CONFIG_STARTUP_DELAY 0
-#endif
-
-#if PROFFIEOS_SD_STARTUP_DELAY > CONFIG_STARTUP_DELAY
-#define PROFFIEOS_STARTUP_DELAY PROFFIEOS_SD_STARTUP_DELAY
-#else
-#define PROFFIEOS_STARTUP_DELAY CONFIG_STARTUP_DELAY
-#endif
 
   while (millis() - now < PROFFIEOS_STARTUP_DELAY) {
 #ifndef NO_BATTERY_MONITOR  

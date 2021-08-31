@@ -24,10 +24,10 @@ const unsigned int maxLedsPerStrip = 144;
 #endif
 
 #ifdef CONFIG_PROP
+#include "../props/dual_prop.h"
 #include "../props/saber.h"
 #undef PROP_TYPE
 #include "../props/blaster.h"
-#include "../props/dual_prop.h"
 #undef PROP_TYPE
 #define PROP_TYPE SaberBlasterProp<Saber, Blaster>
 #endif
