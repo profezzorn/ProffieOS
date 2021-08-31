@@ -29,6 +29,7 @@ public:
   }
 
   bool PlayInCurrentDir(const char* name) {
+    STDOUT << "Playing " << name << ", ";
     for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
       PathHelper full_name(dir, name);
       LOCK_SD(true);
@@ -41,6 +42,7 @@ public:
 	return true;
       }
     }
+    STDOUT << "(not found)\n";
     return false;
   }
 

@@ -346,7 +346,7 @@ public:
       }
     }
     // STDOUT << "CopyArguments(from=" << from << " to=" << to << ") = " << ret << "\n";
-#if defined(DEBUG) || defined(ENABLE_DEBUG_COMMANDS)
+#if defined(DEBUG)
     if (strlen(ret) != len) {
       STDOUT << "FATAL ERROR IN COPYARGUMENTS: len = " << len << " strlen = " << strlen(ret) << "\n";
     }

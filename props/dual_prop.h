@@ -14,11 +14,13 @@
 #define DUAL_PROP_CONDITION blade_detected_
 #endif
 
-#ifdef DUAL_PROP_PREFIX
+#ifdef PROP_INHERIT_PREFIX
 #error dual_prop.h must be included first
 #else
 #define PROP_INHERIT_PREFIX virtual
 #endif
+
+#include "prop_base.h"
 
 template<class A, class B>
 class DualProp : public virtual PropBase, public A, public B {
