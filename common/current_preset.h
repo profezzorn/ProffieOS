@@ -49,7 +49,6 @@ public:
     if (!IsValidStyleString(s)) {
       while (true) {
 	STDOUT << "INVALID STYLE STRING " << s << " @ " << file << ":" << line << "\n";
-	delay(1000);
       }
     }
     return s;
@@ -59,7 +58,6 @@ public:
     if (!IsValidStyleString(s.get())) {
       while (true) {
 	STDOUT << "INVALID STYLE STRING " << s.get() << " @ " << file << ":" << line << "\n";
-	delay(1000);
       }
     }
     return s;
@@ -160,7 +158,7 @@ public:
       if (!strcmp(variable, "style")) {
 	current_style++;
 	char* tmp = f->readString();
-	ValidateStyleString(tmp);
+	(void)ValidateStyleString(tmp);
 #define SET_PRESET_STYLE(N) if (current_style == N) { current_style##N = tmp; tmp = 0; }
 	ONCEPERBLADE(SET_PRESET_STYLE);
 	if (tmp) free(tmp);

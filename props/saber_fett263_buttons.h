@@ -2936,10 +2936,10 @@ SaberFett263Buttons() : PropBase() {}
   #endif
         break;
       case MENU_EFFECT:
-        for (int i = 0; i < NELEM(rgb_arg_menu_); i++) {
+        for (int i = 0; i < (int)NELEM(rgb_arg_menu_); i++) {
           arg_dial_ += direction;
           if (arg_dial_ < 0) arg_dial_ = NELEM(rgb_arg_menu_) - 1;
-          if (arg_dial_ >= NELEM(rgb_arg_menu_)) arg_dial_ = 0;
+          if (arg_dial_ >= (int)NELEM(rgb_arg_menu_)) arg_dial_ = 0;
           effect_num_ = rgb_arg_menu_[arg_dial_];
           if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 2)) break;
         }
@@ -3298,12 +3298,12 @@ SaberFett263Buttons() : PropBase() {}
         SaberBase::SetDimming(pow(dim, 2.2) * 16384);
         break;
       case MENU_STYLE_SETTING_SUB:
-        for (int i = 0; i < NELEM(int_arg_menu_); i++) {
+        for (int i = 0; i < (int)NELEM(int_arg_menu_); i++) {
           arg_dial_ += direction;
           if (direction > 0) {
             // Detect preon.wav for setting preview (cannot be shown without so skip over)
             if (!SFX_preon && (int_arg_menu_[arg_dial_] == PREON_OPTION_ARG || int_arg_menu_[arg_dial_] == PREON_SIZE_ARG)) arg_dial_ = 0;
-            if (arg_dial_ > NELEM(int_arg_menu_) - 1) arg_dial_ = 0;
+            if (arg_dial_ > (int)NELEM(int_arg_menu_) - 1) arg_dial_ = 0;
           } else {
             // Detect preon.wav for setting preview (cannot be shown without so skip over)            
             if (!SFX_preon && (int_arg_menu_[arg_dial_] == PREON_OPTION_ARG || int_arg_menu_[arg_dial_] == PREON_SIZE_ARG)) arg_dial_ = NELEM(int_arg_menu_) - 3;

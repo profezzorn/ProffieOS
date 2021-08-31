@@ -130,7 +130,7 @@ protected:
 	if (strlen(arg) > 2) {
 	  bool ret;
 	  current_modifiers |= button_;
-	  char *tmp = strchr(arg, ' ');
+	  const char *tmp = strchr(arg, ' ');
 	  if (tmp) {
 	    char cmd2[32];
 	    memcpy(cmd2, arg, tmp - arg);
