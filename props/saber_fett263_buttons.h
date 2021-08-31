@@ -1475,6 +1475,7 @@ SaberFett263Buttons() : PropBase() {}
   // Saves New Color from Edit Mode Preview Styles to Preset
 	
   void NewColor(int blade, int effect) {
+    STDOUT << "NewColor(" << blade << "," << effect << ")\n";
     char new_color[32];
     Color16 color_source;
      switch (color_mode_) {
@@ -2119,8 +2120,10 @@ SaberFett263Buttons() : PropBase() {}
       break;
     case MENU_COPY_COLOR:
       if (choice_) {
-	current_preset_.SetStyle(copy_blade_, style_parser.CopyArguments(current_preset_.GetStyle(blade_num_), current_preset_.GetStyle(copy_blade_)));
+	current_preset_.SetStyle(copy_blade_, style_parser.CopyArguments(current_preset_.GetStyle(blade_num_), current_preset_.GetStyle(copy_blade_), int_arg_menu_, NELEM(int_arg_menu_)));
+	DOVALIDATE(current_preset_);
 	current_preset_.Save();
+	DOVALIDATE(current_preset_);
 	show_preview_.Stop(blade_preview_);
 	UpdateStyle(current_preset_.preset_num);
 	menu_type_ = MENU_COLOR_SUB;
@@ -2954,10 +2957,10 @@ SaberFett263Buttons() : PropBase() {}
   #endif
         break;
       case MENU_EFFECT:
-        for (int i = 0; i < NELEM(rgb_arg_menu_); i++) {
+        for (int i = 0; i < (int)NELEM(rgb_arg_menu_); i++) {
           arg_dial_ += direction;
           if (arg_dial_ < 0) arg_dial_ = NELEM(rgb_arg_menu_) - 1;
-          if (arg_dial_ >= NELEM(rgb_arg_menu_)) arg_dial_ = 0;
+          if (arg_dial_ >= (int)NELEM(rgb_arg_menu_)) arg_dial_ = 0;
           effect_num_ = rgb_arg_menu_[arg_dial_];
           if (style_parser.UsesArgument(current_preset_.GetStyle(blade_num_), effect_num_ + 2)) break;
         }
@@ -3316,12 +3319,12 @@ SaberFett263Buttons() : PropBase() {}
         SaberBase::SetDimming(pow(dim, 2.2) * 16384);
         break;
       case MENU_STYLE_SETTING_SUB:
-        for (int i = 0; i < NELEM(int_arg_menu_); i++) {
+        for (int i = 0; i < (int)NELEM(int_arg_menu_); i++) {
           arg_dial_ += direction;
           if (direction > 0) {
             // Detect preon.wav for setting preview (cannot be shown without so skip over)
             if (!SFX_preon && (int_arg_menu_[arg_dial_] == PREON_OPTION_ARG || int_arg_menu_[arg_dial_] == PREON_SIZE_ARG)) arg_dial_ = 0;
-            if (arg_dial_ > NELEM(int_arg_menu_) - 1) arg_dial_ = 0;
+            if (arg_dial_ > (int)NELEM(int_arg_menu_) - 1) arg_dial_ = 0;
           } else {
             // Detect preon.wav for setting preview (cannot be shown without so skip over)            
             if (!SFX_preon && (int_arg_menu_[arg_dial_] == PREON_OPTION_ARG || int_arg_menu_[arg_dial_] == PREON_SIZE_ARG)) arg_dial_ = NELEM(int_arg_menu_) - 3;

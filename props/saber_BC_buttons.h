@@ -545,7 +545,7 @@ public:
   #endif
       // Due to motion chip startup on boot creating false ignition
       // we delay Swing On at boot for 3000ms
-      if (millis() > 3000) {
+    if (millis() > (PROFFIEOS_STARTUP_DELAY + 3000)) {
         FastOn();
   #ifdef BC_GESTURE_AUTO_BATTLE_MODE
         STDOUT.println("Entering Battle Mode");
