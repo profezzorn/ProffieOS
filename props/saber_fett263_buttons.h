@@ -1470,6 +1470,7 @@ SaberFett263Buttons() : PropBase() {}
   // Saves New Color from Edit Mode Preview Styles to Preset
 	
   void NewColor(int blade, int effect) {
+    STDOUT << "NewColor(" << blade << "," << effect << ")\n";
     char new_color[32];
     Color16 color_source;
      switch (color_mode_) {
@@ -2112,8 +2113,10 @@ SaberFett263Buttons() : PropBase() {}
       break;
     case MENU_COPY_COLOR:
       if (choice_) {
-	current_preset_.SetStyle(copy_blade_, style_parser.CopyArguments(current_preset_.GetStyle(blade_num_), current_preset_.GetStyle(copy_blade_)));
+	current_preset_.SetStyle(copy_blade_, style_parser.CopyArguments(current_preset_.GetStyle(blade_num_), current_preset_.GetStyle(copy_blade_), int_arg_menu_, NELEM(int_arg_menu_)));
+	DOVALIDATE(current_preset_);
 	current_preset_.Save();
+	DOVALIDATE(current_preset_);
 	show_preview_.Stop(blade_preview_);
 	UpdateStyle(current_preset_.preset_num);
 	menu_type_ = MENU_COLOR_SUB;

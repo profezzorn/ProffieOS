@@ -30,6 +30,53 @@ public:
     return ret;
   }
 
+  static bool IsValidStyleString(const char* s) {
+    if (strlen(s) < 5) return false;
+    for (; *s != ' '; s++) {
+      if (*s >= 'a' && *s <= 'z') continue;
+      return false;
+    }
+    for (; *s; s++) {
+      if (*s >= '0' && *s <= '9') continue;
+      if (*s == ' ') continue;
+      if (*s == ',') continue;
+      return false;
+    }
+    return true;
+  }
+
+  static const char* ValidateStyleStringF(const char* s, const char* file, int line) {
+    if (!IsValidStyleString(s)) {
+      while (true) {
+	STDOUT << "INVALID STYLE STRING " << s << " @ " << file << ":" << line << "\n";
+	delay(1000);
+      }
+    }
+    return s;
+  }
+
+  static const LSPtr<char> ValidateStyleStringF(LSPtr<char> s, const char* file, int line) {
+    if (!IsValidStyleString(s.get())) {
+      while (true) {
+	STDOUT << "INVALID STYLE STRING " << s.get() << " @ " << file << ":" << line << "\n";
+	delay(1000);
+      }
+    }
+    return s;
+  }
+
+#define VALIDATE_STYLE_STRING(N) ValidateStyleString(PRE.current_style##N.get());    
+
+#ifdef DEBUG
+#define ValidateStyleString(X) CurrentPreset::ValidateStyleStringF((X), __FILE__, __LINE__)
+#define VSS(X) CurrentPreset::ValidateStyleStringF((X), __FILE__, __LINE__)
+#define DOVALIDATE(X) do { CurrentPreset&PRE=(X); ONCEPERBLADE(VALIDATE_STYLE_STRING); } while(0)
+#else
+#define ValidateStyleString(X) (X)
+#define VSS(X) (X)
+#define DOVALIDATE(X) do {  } while(0)
+#endif
+
   void Clear() {
     font = "";
     track = "";
@@ -46,7 +93,7 @@ public:
     preset_num = num;
     font = preset->font;
     track = preset->track;
-#define MAKE_STYLE_STRING(N) current_style##N = mk_builtin_str(num, N);
+#define MAKE_STYLE_STRING(N) current_style##N = ValidateStyleString(mk_builtin_str(num, N));
     ONCEPERBLADE(MAKE_STYLE_STRING);
     name = preset->name;
     variation = 0;
@@ -113,6 +160,7 @@ public:
       if (!strcmp(variable, "style")) {
 	current_style++;
 	char* tmp = f->readString();
+	ValidateStyleString(tmp);
 #define SET_PRESET_STYLE(N) if (current_style == N) { current_style##N = tmp; tmp = 0; }
 	ONCEPERBLADE(SET_PRESET_STYLE);
 	if (tmp) free(tmp);
@@ -127,10 +175,14 @@ public:
   }
 
   bool Write(FileReader* f) {
+    DOVALIDATE(*this);
     f->Write("new_preset\n");
+    DOVALIDATE(*this);
     f->write_key_value("font", font.get());
+    DOVALIDATE(*this);
     f->write_key_value("track", track.get());
-#define WRITE_PRESET_STYLE(N) f->write_key_value("style", current_style##N.get());
+    DOVALIDATE(*this);
+#define WRITE_PRESET_STYLE(N) f->write_key_value("style", ValidateStyleString(current_style##N.get()));
     ONCEPERBLADE(WRITE_PRESET_STYLE);
     f->write_key_value("name", name.get());
     char tmp[12];
@@ -142,7 +194,7 @@ public:
   void Print() {
     PrintQuotedValue("FONT", font.get());
     PrintQuotedValue("TRACK", track.get());
-#define PRINT_PRESET_STYLE(N) PrintQuotedValue("STYLE" #N, current_style##N.get());
+#define PRINT_PRESET_STYLE(N) PrintQuotedValue("STYLE" #N, ValidateStyleString(current_style##N.get()));
     ONCEPERBLADE(PRINT_PRESET_STYLE);
     PrintQuotedValue("NAME", name.get());
     STDOUT << "VARIATION=" << variation << "\n";
@@ -229,6 +281,7 @@ public:
     CurrentPreset tmp;
     for (size_t i = 0; i < current_config->num_presets; i++) {
       tmp.Set(i);
+      DOVALIDATE(tmp);
       tmp.Write(&f);
     }
     f.Write("end\n");
@@ -263,6 +316,7 @@ public:
   }
 
   void SaveAtLocked(int position) {
+    DOVALIDATE(*this);
     FileReader f, out;
     if (!OpenPresets(&f, "presets.ini")) {
       if (!UpdateINI()) CreateINI();
@@ -271,21 +325,28 @@ public:
 	return;
       }
     }
+    DOVALIDATE(*this);
     PathHelper tmp_fn(GetSaveDir(), "presets.tmp");
+    DOVALIDATE(*this);
     LSFS::Remove(tmp_fn);
+    DOVALIDATE(*this);
     out.Create(tmp_fn);
+    DOVALIDATE(*this);
     out.write_key_value("installed", install_time);
     CurrentPreset tmp;
     int opos = 0;
     if (position == 0) {
+      DOVALIDATE(*this);
       Write(&out);
       opos++;
     }
     while (tmp.Read(&f)) {
       if (tmp.preset_num != preset_num) {
+	DOVALIDATE(tmp);
 	tmp.Write(&out);
 	opos++;
 	if (position == opos) {
+	  DOVALIDATE(*this);
 	  Write(&out);
 	  opos++;
 	}
@@ -317,14 +378,16 @@ public:
     LOCK_SD(false);
   }
 
-LSPtr<char> SetStyle(int blade, LSPtr<char> style) {
-#define SET_STYLE_N(N) case N: std::swap(current_style##N, style); break;
+void SetStyle(int blade, LSPtr<char> style) {
+  DOVALIDATE(*this);
+  ValidateStyleString(style.get());
+#define SET_STYLE_N(N) case N: current_style##N = std::move(style); break;
   switch (blade) {
     ONCEPERBLADE(SET_STYLE_N)
   }
-  return style;
+  DOVALIDATE(*this);
 }
-
+  
 const char* GetStyle(int blade) {
 #define GET_STYLE_N(N) case N: return current_style##N.get();
   switch (blade) {
