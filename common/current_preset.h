@@ -22,12 +22,14 @@ public:
     itoa(num, tmp + strlen(tmp), 10);
     strcat(tmp, " ");
     itoa(N, tmp + strlen(tmp), 10);
-    char *ret = (char *)malloc(strlen(tmp)+1);
-    if (!ret) return "";
-//    STDOUT.print("MALLOC ");
-//    STDOUT.println((uint32_t)ret, HEX);
-    strcpy(ret, tmp);
-    return ret;
+    return mkstr(tmp);
+  }
+
+  const char *mk_preset_name(int num) {
+    char tmp[30];
+    strcpy(tmp, "Preset: ");
+    itoa(num + 1, tmp + strlen(tmp), 10);
+    return mkstr(tmp);
   }
 
   static bool IsValidStyleString(const char* s) {
@@ -93,7 +95,11 @@ public:
     track = preset->track;
 #define MAKE_STYLE_STRING(N) current_style##N = ValidateStyleString(mk_builtin_str(num, N));
     ONCEPERBLADE(MAKE_STYLE_STRING);
-    name = preset->name;
+    if (preset->name && strlen(preset->name)) {
+      name = preset->name;
+    } else {
+      name = mk_preset_name(num);
+    }
     variation = 0;
   }
 

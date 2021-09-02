@@ -63,12 +63,13 @@ public:
   void Shift(int words) override {
     while (words-- > 0) str_ = SkipWord(str_);
   }
-private:
+protected:
   const char* str_;
 };
 
-class ArgParserPrinter : public ArgParserInterface {
+class ArgParserPrinter : public ArgParser {
 public:
+  ArgParserPrinter(const char* data) : ArgParser(data), data_(data) {}
   const char* GetArg(int arg_num,
 		     const char* name,
 		     const char* default_value) override {
@@ -77,22 +78,33 @@ public:
       STDOUT.print(name);
       STDOUT.print(" ");
       STDOUT.println(default_value);
-      try_again = true;
       current_arg++;
     }
-    return nullptr;
+    if (arg_num > max_arg) {
+      max_arg = arg_num;
+    }
+    return ArgParser::GetArg(arg_num, name, default_value);
   }
   bool next() {
+    if (current_arg == start_current_arg) {
+      STDOUT.println("VOID ~");
+      current_arg++;
+    }
+    start_current_arg = current_arg;
     offset = 0;
-    bool ret = try_again;
-    try_again = false;
-    return ret;
+    str_ = data_; // reset ArgParser
+    return max_arg > current_arg;
   }
   
-  void Shift(int words) override { offset += words; }
+  void Shift(int words) override {
+    offset += words;
+    ArgParser::Shift(words);
+  }
   int offset = 0;
-  bool try_again = false;
+  int max_arg = 0;
   int current_arg = 1;
+  int start_current_arg = 1;
+  const char* data_;
 };
 
 
