@@ -98,7 +98,16 @@ NamedStyle named_styles[] = {
   },
   { "charging", &style_charging, "Charging style" },
   { "builtin", &builtin_preset_allocator,
-    "builtin preset styles, preset num, style index"
+    // TODO: Support multiple argument templates.
+    "builtin preset styles, "
+    "preset number, blade number, "
+    "base color, alt color, style option, "
+    "ignition option, ignition time, ignition delay, ignition color, ignition power up argument, "
+    "blast color, clash color, lockup color, lockup position, drag color, drag size, lb color "
+    "stab color, melt size, swing color, swing option, emitter color, emitter size, "
+    "preon color, preon option, preon size, "
+    "retraction option, retraction time, retraction delay, retraction color, retraction cool down, "
+    "postoff color, off color, off option"
   },
 };
 
@@ -357,8 +366,14 @@ public:
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "list_named_styles")) {
       // Just print one per line.
-      for (size_t i = 0; i < NELEM(named_styles); i++) {
+      // Skip the last one (builtin)
+      for (size_t i = 0; i < NELEM(named_styles) - 1; i++) {
 	STDOUT.println(named_styles[i].name);
+      }
+      for (size_t i = 0; i < current_config->num_presets; i++) {
+	for (size_t j = 1; j <= NUM_BLADES; j++) {
+	  STDOUT << "builtin " << i << " " << j << "\n";
+	}
       }
       return true;
     }
@@ -366,7 +381,7 @@ public:
     if (!strcmp("describe_named_style", cmd)) {
       if (NamedStyle* style = FindStyle(arg)) {
 	STDOUT.println(style->description);
-	ArgParserPrinter arg_parser_printer;
+	ArgParserPrinter arg_parser_printer(SkipWord(arg));
 	CurrentArgParser = &arg_parser_printer;
 	do {
 	  BladeStyle* tmp = style->style_allocator->make();
