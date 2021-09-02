@@ -12,6 +12,11 @@
 #define noInterrupts() do {} while(0)
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 #define SCOPED_PROFILER() do { } while(0)
+#define NUM_BLADES 1
+
+struct CONFIG { struct Preset* presets; size_t num_presets;};
+CONFIG preset = { 0,0 };
+CONFIG* current_config = &preset;
 
 #define PROFFIE_TEST
 
