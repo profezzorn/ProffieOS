@@ -664,6 +664,7 @@ public:
   void SayMaximum() { Play("mmax.wav"); }
   void SayMaximumClashStrength() { Play("maxclash.wav"); }
   void SayMaximumVolume() { Play("volmax.wav"); }
+  void SayMeltSize() { Play("mmeltsz.wav"); }
   void SayMinimum() { Play("mmin.wav"); }
   void SayMininumVolume() { Play("volmin.wav"); }
   void SayNoChoreographyAvailable() { Play("nochreo.wav"); }
@@ -1365,6 +1366,7 @@ SaberFett263Buttons() : PropBase() {}
         show_lockup_position_.Stop(blade_num_);
         break;
       case DRAG_SIZE_ARG:
+      case MELT_SIZE_ARG:
         show_drag_size_.Stop(blade_num_);
         break;
       case EMITTER_SIZE_ARG:
@@ -1870,6 +1872,7 @@ SaberFett263Buttons() : PropBase() {}
     MENU_RETRACTION_DELAY,
     MENU_LOCKUP_POSITION,
     MENU_DRAG_SIZE,
+    MENU_MELT_SIZE,
     MENU_EMITTER_SIZE,
     MENU_PREON_OPTION,
     MENU_PREON_SIZE,
@@ -2716,6 +2719,11 @@ SaberFett263Buttons() : PropBase() {}
 	ShowColorStyle::SetColor(GetColorArg(blade_num_, DRAG_COLOR_ARG));
 	show_drag_size_.Start(blade_num_);
 	break;
+      case MELT_SIZE_ARG:
+        menu_type_ = MENU_MELT_SIZE;
+        ShowColorStyle::SetColor(GetColorArg(blade_num_, DRAG_COLOR_ARG));
+        show_drag_size_.Start(blade_num_);
+        break;
       case EMITTER_SIZE_ARG:
 	menu_type_ = MENU_EMITTER_SIZE;
 	ShowColorStyle::SetColor(GetColorArg(blade_num_, EMITTER_COLOR_ARG));
@@ -2769,6 +2777,7 @@ SaberFett263Buttons() : PropBase() {}
       break;
     case MENU_LOCKUP_POSITION:
     case MENU_DRAG_SIZE:
+    case MENU_MELT_SIZE:
     case MENU_EMITTER_SIZE:
       SaveStyleSetting();
       break;
@@ -3367,6 +3376,9 @@ SaberFett263Buttons() : PropBase() {}
           case DRAG_SIZE_ARG:
 	    sound_library_.SayDragSize();
             break;
+          case MELT_SIZE_ARG:
+            sound_library_.SayMeltSize();
+            break;
           case EMITTER_SIZE_ARG:
 	    sound_library_.SayEmitterSize();
             break;
@@ -3440,6 +3452,7 @@ SaberFett263Buttons() : PropBase() {}
         IntEdit::SetIntValue(calc_);
         break;
       case MENU_DRAG_SIZE:
+      case MENU_MELT_SIZE:
         if (direction > 0) {
           if (calc_ > 1000) {
             calc_ -= 1000;
@@ -3686,6 +3699,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_LOCKUP_POSITION:
       case MENU_DRAG_SIZE:
+      case MENU_MELT_SIZE:
       case MENU_EMITTER_SIZE:
         CancelStyleSetting();
         break;
