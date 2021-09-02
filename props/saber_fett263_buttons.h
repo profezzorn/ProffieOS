@@ -138,7 +138,8 @@ Edit Mode*
     Rotate Back, Decrease Value, Confirm "No" = Turn Left
     Select, Save, Enter = Click PWR
     Cancel, Revert, Go Back = Click AUX
-  To Exit Edit Mode - Hold AUX
+    Go to Main Menu (from sub-menu) - Hold AUX
+    Exit Edit Mode - Hold AUX (or rotate to "Exit") while in Main Menu
 
   "Edit Color" Additional Control
     "Color List" and "Adjust Color Hue" Zoom Mode = Long Click PWR
@@ -4192,9 +4193,13 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON):
         if (menu_) {
-	  sound_library_.SayExit();
-          menu_ = false;
-          menu_type_ = MENU_TOP;
+          if (menu_type_ == MENU_TOP) {
+            sound_library_.SayExit();
+            menu_ = false;
+          } else {
+            menu_type_ = MENU_TOP;
+            MenuCancel();
+          }
           return true;
         }
         if (rehearse_) {
@@ -4400,8 +4405,8 @@ SaberFett263Buttons() : PropBase() {}
             color_mode_ = ZOOM_COLOR;
             hsl_angle_ = fusor.angle2();
 	    sound_library_.SayZoomingIn();
-            return true;
           }
+          return true;
         }
 #endif
         if (fusor.angle1() > M_PI / 3) {
