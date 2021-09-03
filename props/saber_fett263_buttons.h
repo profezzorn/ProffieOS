@@ -3531,6 +3531,7 @@ SaberFett263Buttons() : PropBase() {}
         menu_type_ = MENU_TOP;
 #else
         menu_type_ = MENU_BLADE_STYLE;
+	blade_num_ = 0;
 #endif
 	MenuCancel();
 	break;
@@ -3546,6 +3547,7 @@ SaberFett263Buttons() : PropBase() {}
 #else
         menu_type_ = MENU_BLADE_STYLE;
         MenuRevert();
+	blade_num_ = 0;
 #endif
         break;
       }
