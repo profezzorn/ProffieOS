@@ -1,6 +1,8 @@
 #ifndef COMMON_ARG_PARSER_H
 #define COMMON_ARG_PARSER_H
 
+#include "strfun.h"
+
 class ArgParserInterface {
 public:
   virtual const char* GetArg(int arg_num,
@@ -66,7 +68,7 @@ public:
     return ArgParser::GetArg(arg_num, name, default_value);
   }
   bool next() {
-    if (current_arg == start_current_arg) {
+    if (current_arg == start_current_arg && max_arg > current_arg) {
       STDOUT.println("VOID ~");
       current_arg++;
     }
