@@ -3919,15 +3919,42 @@ SaberFett263Buttons() : PropBase() {}
   }
 
 #ifdef FETT263_DUAL_MODE_SOUND
-  // Select out.wav based on blade orientation, up = odd, down = even
+  // Select preon wav based on blade orientation if more than 1 file, up = odd, down = even
+  void SelectPreonSound() {
+    Effect* effect;
+    effect = &SFX_preon;
+    SelectSFXEvenOdd(effect);
+  }
+
+  // Select ignition wav based on blade orientation, up = odd, down = even
   void SelectIgnitionSound() {
-      Effect* effect;
-      if (SFX_poweron) {
-        effect = &SFX_poweron;
-      } else {
-        effect = &SFX_out;
-      }
-      int f = effect->files_found();
+    Effect* effect;
+    if (SFX_poweron) {
+      effect = &SFX_poweron;
+    } else {
+      effect = &SFX_out;
+    }
+    SelectSFXEvenOdd(effect);
+  }
+
+  // Select retraction wav based on blade orientation, up = odd, down = even
+  // Do not mix poweroff.wav and pwroff.wav files in font or selection will not work
+  void SelectRetractionSound() {
+    Effect* effect;
+    if (SFX_poweroff) {
+      effect = &SFX_poweroff;
+    } else if (SFX_pwroff) {
+      effect = &SFX_pwroff;
+    } else {
+      effect = &SFX_in;
+    }
+    SelectSFXEvenOdd(effect);
+  }
+
+  // Select wav file based on blade orientation, up = odd, down = even
+  void SelectSFXEvenOdd(Effect* effect) {
+    int f = effect->files_found();
+    if (f > 1) {
       if (fusor.angle1() > 0) {
         f = (rand() % ((f + 1)/ 2)) * 2;
       } else {
@@ -3935,6 +3962,7 @@ SaberFett263Buttons() : PropBase() {}
       }
       effect->Select(f);
     }
+  }
 #endif
 
   void PlayQuote() {
@@ -4023,6 +4051,9 @@ SaberFett263Buttons() : PropBase() {}
           SelectIgnitionSound();
 #endif
           if (SFX_preon) {
+#ifdef FETT263_DUAL_MODE_SOUND
+            SelectPreonSound();
+#endif
             On();
           } else {
             FastOn();
@@ -4211,6 +4242,9 @@ SaberFett263Buttons() : PropBase() {}
           wav_player.Free();
           choreo_ = false;
           battle_mode_ = false;
+#ifdef FETT263_DUAL_MODE_SOUND
+          SelectRetractionSound();
+#endif
           Off();
         }
         return true;
@@ -4318,11 +4352,17 @@ SaberFett263Buttons() : PropBase() {}
             swing_blast_ = false;
 #ifdef FETT263_BM_DISABLE_OFF_BUTTON
             if (!battle_mode_ && !saved_gesture_control.powerlock) {
+#ifdef FETT263_DUAL_MODE_SOUND
+              SelectRetractionSound();
+#endif
               Off();
               saber_off_time_millis_ = millis();
             }
 #else
             if (!saved_gesture_control.powerlock) {
+#ifdef FETT263_DUAL_MODE_SOUND
+              SelectRetractionSound();
+#endif
             Off();
             saber_off_time_millis_ = millis();
             battle_mode_ = false;
@@ -4707,6 +4747,9 @@ SaberFett263Buttons() : PropBase() {}
           SelectIgnitionSound();
 #endif
           if (SFX_preon) {
+#ifdef FETT263_DUAL_MODE_SOUND
+            SelectPreonSound();
+#endif  
             On();
           } else {
             FastOn();
@@ -4759,6 +4802,9 @@ SaberFett263Buttons() : PropBase() {}
             }
           }
 #endif
+#ifdef FETT263_DUAL_MODE_SOUND          
+          SelectRetractionSound();
+#endif  
           Off();
           last_twist_millis_ = millis();
           saber_off_time_millis_ = millis();
@@ -4779,6 +4825,9 @@ SaberFett263Buttons() : PropBase() {}
           SelectIgnitionSound();
 #endif
           if (SFX_preon) {
+#ifdef FETT263_DUAL_MODE_SOUND
+            SelectPreonSound();
+#endif
             On();
           } else {
             FastOn();
@@ -4818,6 +4867,9 @@ SaberFett263Buttons() : PropBase() {}
           SelectIgnitionSound();
 #endif
           if (SFX_preon) {
+#ifdef FETT263_DUAL_MODE_SOUND
+            SelectPreonSound();
+#endif
             On();
           } else {
             FastOn();
@@ -4852,6 +4904,9 @@ SaberFett263Buttons() : PropBase() {}
           SelectIgnitionSound();
 #endif
           if (SFX_preon) {
+#ifdef FETT263_DUAL_MODE_SOUND
+            SelectPreonSound();
+#endif
             On();
           } else {
             FastOn();
