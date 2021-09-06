@@ -44,6 +44,16 @@ struct ConfigFile {
     const char* variable_;
     float v_;
   };
+  struct PrintVariableOP : public VariableOP {
+    explicit PrintVariableOP(const char* variable) : variable_(variable) { }
+    void run(const char* name, VariableBase* var) override {
+      if (!strcasecmp(name, variable_)) {
+	STDOUT.println(var->get());
+      }
+    }
+  private:
+    const char* variable_;
+  };
 
   struct SaveVariableOP : public VariableOP {
     SaveVariableOP(FileReader& f) : f_(f) {}
@@ -122,6 +132,20 @@ struct ConfigFile {
     out.write_key_value("end", "1");
     out.Close();
     LOCK_SD(false);
+  }
+
+  void Print(const char* variable) {
+    ConfigFile::PrintVariableOP op(variable);
+    iterateVariables(&op);
+  }
+  
+  void Set(const char* var_and_value) {
+    char variable[32];
+    const char* nw = SkipWord(var_and_value);
+    memcpy(variable, var_and_value, nw - var_and_value);
+    variable[nw - var_and_value] = 0;
+    ConfigFile::SetVariableOP op(variable, parsefloat(nw));
+    iterateVariables(&op);
   }
 
   ReadStatus Read(const char *filename) {
