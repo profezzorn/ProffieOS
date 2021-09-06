@@ -1,6 +1,8 @@
 #ifndef COMMON_ARG_PARSER_H
 #define COMMON_ARG_PARSER_H
 
+#include "strfun.h"
+
 class ArgParserInterface {
 public:
   virtual const char* GetArg(int arg_num,

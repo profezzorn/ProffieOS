@@ -1441,6 +1441,18 @@ public:
     }
 #endif
 
+#ifdef DYNAMIC_CLASH_THRESHOLD
+    if (!strcmp(cmd, "get_clash_threshold")) {
+      STDOUT.println(GetCurrentClashThreshold());
+      return true;
+    }
+    if (!strcmp(cmd, "set_clash_threshold") && arg) {
+      SetClashThreshold(parsefloat(arg));
+      return true;
+    }
+#endif    
+    
+
     if (!strcmp(cmd, "get_preset")) {
       STDOUT.println(current_preset_.preset_num);
       return true;
