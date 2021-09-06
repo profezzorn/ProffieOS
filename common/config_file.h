@@ -7,6 +7,50 @@
 // TODO(hubbe): Read config files from serialflash.
 struct ConfigFile {
 
+  struct VariableBase {
+    virtual void set(float v) = 0;
+    virtual float get() = 0;
+    virtual void setDefault() = 0;
+  };
+
+  template<class T>
+  struct Variable : public VariableBase {
+    Variable(T& var, T def) : var_(var), def_(def) {}
+    void set(float value) override { var_ = value; }
+    float get() override { return var_; }
+    void setDefault() override { var_ = def_; }
+  private:
+    T& var_;
+    T def_;
+  };
+
+  struct VariableOP {
+    virtual void run(const char* name, VariableBase* var) = 0;
+  };
+
+  struct SetDefaultOP : public VariableOP {
+    void run(const char* name, VariableBase* var) override {
+      var->setDefault();
+    }
+  };
+  struct SetVariableOP : public VariableOP {
+    SetVariableOP(const char* variable, float v) : variable_(variable), v_(v) { }
+    void run(const char* name, VariableBase* var) override {
+      if (!strcasecmp(name, variable_)) {
+	var->set(v_);
+      }
+    }
+  private:
+    const char* variable_;
+    float v_;
+  };
+
+  template<class T>
+  void DoVariableOp(VariableOP *op, const char* name, T& ref, T def) {
+    Variable<T> var(ref, def);
+    op->run(name, &var);
+  }
+
   enum class ReadStatus {
     READ_FAIL,
     READ_OK,
@@ -45,7 +89,18 @@ struct ConfigFile {
     return ReadStatus::READ_OK;
   }
 
-  virtual void SetVariable(const char* variable, float v) = 0;
+
+  virtual void SetVariable(const char* variable, float v) {
+    if (!strcmp(variable, "=")) {
+      SetDefaultOP op;
+      iterateVariables(&op);
+    } else {
+      SetVariableOP op(variable, v);
+      iterateVariables(&op);
+    }
+  }
+
+  virtual void iterateVariables(VariableOP *op) {}
 
   ReadStatus Read(const char *filename) {
     LOCK_SD(true);
@@ -67,6 +122,8 @@ struct ConfigFile {
       return;                                   \
     }                                           \
 } while(0)
+
+#define CONFIG_VARIABLE2(X, DEF) DoVariableOp<decltype(X)>(op, #X, X, DEF)
 
   void ReadInCurrentDir(const char* name) {
     // Search through all the directories.

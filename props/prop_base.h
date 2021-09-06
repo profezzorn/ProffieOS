@@ -19,15 +19,15 @@
 
 class SaveGlobalStateFile : public ConfigFile {
 public:
-  void SetVariable(const char* variable, float v) override {
+  void iterateVariables(VariableOP *op) override {
 #ifdef SAVE_CLASH_THRESHOLD
-    CONFIG_VARIABLE(clash_threshold, CLASH_THRESHOLD_G);
+    CONFIG_VARIABLE2(clash_threshold, CLASH_THRESHOLD_G);
 #endif
 #ifdef SAVE_VOLUME
-    CONFIG_VARIABLE(volume, -1);
+    CONFIG_VARIABLE2(volume, -1);
 #endif
 #ifdef SAVE_BLADE_DIMMING
-    CONFIG_VARIABLE(dimming, 16384);
+    CONFIG_VARIABLE2(dimming, 16384);
 #endif
   }
 #ifdef SAVE_CLASH_THRESHOLD
@@ -43,10 +43,10 @@ public:
 
 class SavePresetStateFile : public ConfigFile {
 public:
-  void SetVariable(const char* variable, float v) override {
-    CONFIG_VARIABLE(preset, 0);
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(preset, 0);
 #ifdef DYNAMIC_BLADE_LENGTH
-#define BLADE_LEN_CONFIG_VARIABLE(N) CONFIG_VARIABLE(blade##N##len, -1);
+#define BLADE_LEN_CONFIG_VARIABLE(N) CONFIG_VARIABLE2(blade##N##len, -1);
     ONCEPERBLADE(BLADE_LEN_CONFIG_VARIABLE);
 #endif
   }

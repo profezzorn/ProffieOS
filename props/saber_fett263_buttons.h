@@ -732,51 +732,51 @@ SoundLibrary sound_library_;
 
 class GestureControlFile : public ConfigFile {
 public:
-  void SetVariable(const char* variable, float v) override {
-    CONFIG_VARIABLE(gestureon, 1);
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(gestureon, 1);
 #ifdef SWING_GESTURE
-    CONFIG_VARIABLE(swingon, 1);
+    CONFIG_VARIABLE2(swingon, 1);
 #else
-    CONFIG_VARIABLE(swingon, 0);
+    CONFIG_VARIABLE2(swingon, 0);
 #endif
-    CONFIG_VARIABLE(swingonspeed, FETT263_SWING_ON_SPEED);
+    CONFIG_VARIABLE2(swingonspeed, FETT263_SWING_ON_SPEED);
 #ifdef TWIST_GESTURE
-    CONFIG_VARIABLE(twiston, 1);
+    CONFIG_VARIABLE2(twiston, 1);
 #else
-    CONFIG_VARIABLE(twiston, 0);
+    CONFIG_VARIABLE2(twiston, 0);
 #endif
 #ifdef THRUST_GESTURE
-    CONFIG_VARIABLE(thruston, 1);
+    CONFIG_VARIABLE2(thruston, 1);
 #else
-    CONFIG_VARIABLE(thruston, 0);
+    CONFIG_VARIABLE2(thruston, 0);
 #endif
 #ifdef STAB_GESTURE
-    CONFIG_VARIABLE(stabon, 1);
+    CONFIG_VARIABLE2(stabon, 1);
 #else
-    CONFIG_VARIABLE(stabon, 0);
+    CONFIG_VARIABLE2(stabon, 0);
 #endif
 #ifdef FETT263_TWIST_OFF
-    CONFIG_VARIABLE(twistoff, 1);
+    CONFIG_VARIABLE2(twistoff, 1);
 #else
-    CONFIG_VARIABLE(twistoff, 0);
+    CONFIG_VARIABLE2(twistoff, 0);
 #endif
 #ifdef FETT263_POWER_LOCK
-    CONFIG_VARIABLE(powerlock, 1);
+    CONFIG_VARIABLE2(powerlock, 1);
 #else
-    CONFIG_VARIABLE(powerlock, 0);
+    CONFIG_VARIABLE2(powerlock, 0);
 #endif
 #ifdef FORCE_PUSH_CONDITION
-    CONFIG_VARIABLE(forcepush, 1);
+    CONFIG_VARIABLE2(forcepush, 1);
 #else
-    CONFIG_VARIABLE(forcepush, 0);
+    CONFIG_VARIABLE2(forcepush, 0);
 #endif
-    CONFIG_VARIABLE(forcepushlen, FETT263_FORCE_PUSH_LENGTH);
-    CONFIG_VARIABLE(lockupdelay, FETT263_LOCKUP_DELAY);
-    CONFIG_VARIABLE(clashdetect, FETT263_BM_CLASH_DETECT);
+    CONFIG_VARIABLE2(forcepushlen, FETT263_FORCE_PUSH_LENGTH);
+    CONFIG_VARIABLE2(lockupdelay, FETT263_LOCKUP_DELAY);
+    CONFIG_VARIABLE2(clashdetect, FETT263_BM_CLASH_DETECT);
 #ifdef FETT263_MAX_CLASH
-    CONFIG_VARIABLE(maxclash, FETT263_MAX_CLASH);
+    CONFIG_VARIABLE2(maxclash, FETT263_MAX_CLASH);
 #else
-    CONFIG_VARIABLE(maxclash, 16);
+    CONFIG_VARIABLE2(maxclash, 16);
 #endif
 }
   bool gestureon; // gesture controls on/off for use with "Gesture Sleep"
