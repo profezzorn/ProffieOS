@@ -3,17 +3,17 @@
 
 class SmoothSwingConfigFile : public ConfigFile {
 public:
-  void SetVariable(const char* variable, float v) override {
-    CONFIG_VARIABLE(Version, 2);
-    CONFIG_VARIABLE(SwingSensitivity, 450.0f);
-    CONFIG_VARIABLE(MaximumHumDucking, 75.0f);
-    CONFIG_VARIABLE(SwingSharpness, 1.75f);
-    CONFIG_VARIABLE(SwingStrengthThreshold, 20.0f);
-    CONFIG_VARIABLE(Transition1Degrees, 45.0f);
-    CONFIG_VARIABLE(Transition2Degrees, 160.0f);
-    CONFIG_VARIABLE(MaxSwingVolume, 3.0f);
-    CONFIG_VARIABLE(AccentSwingSpeedThreshold, 0.0f);
-    CONFIG_VARIABLE(AccentSlashAccelerationThreshold, 260.0f);
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(Version, 2);
+    CONFIG_VARIABLE2(SwingSensitivity, 450.0f);
+    CONFIG_VARIABLE2(MaximumHumDucking, 75.0f);
+    CONFIG_VARIABLE2(SwingSharpness, 1.75f);
+    CONFIG_VARIABLE2(SwingStrengthThreshold, 20.0f);
+    CONFIG_VARIABLE2(Transition1Degrees, 45.0f);
+    CONFIG_VARIABLE2(Transition2Degrees, 160.0f);
+    CONFIG_VARIABLE2(MaxSwingVolume, 3.0f);
+    CONFIG_VARIABLE2(AccentSwingSpeedThreshold, 0.0f);
+    CONFIG_VARIABLE2(AccentSlashAccelerationThreshold, 260.0f);
   };
 
   int  Version;

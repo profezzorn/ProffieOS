@@ -21,26 +21,6 @@ bool FirstWord(const char *str, const char *word) {
   return false;
 }
 
-const char* SkipSpace(const char* str) {
-  while (*str == ' ' || *str == '\t') str++;
-  return str;
-}
-
-const char* SkipWord(const char* str) {
-  str = SkipSpace(str);
-  while (*str != ' ' && *str != '\t' && *str) str++;
-  return str;
-}
-
-int CountWords(const char* str) {
-  int words = 0;
-  while (*str) {
-    str = SkipWord(str);
-    words++;
-  }
-  return words;
-}
-
 class ArgParser : public ArgParserInterface {
 public:
   ArgParser(const char* data) : str_(data) {}

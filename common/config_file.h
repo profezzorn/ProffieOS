@@ -7,6 +7,69 @@
 // TODO(hubbe): Read config files from serialflash.
 struct ConfigFile {
 
+  struct VariableBase {
+    virtual void set(float v) = 0;
+    virtual float get() = 0;
+    virtual void setDefault() = 0;
+  };
+
+  template<class T>
+  struct Variable : public VariableBase {
+    Variable(T& var, T def) : var_(var), def_(def) {}
+    void set(float value) override { var_ = value; }
+    float get() override { return var_; }
+    void setDefault() override { var_ = def_; }
+  private:
+    T& var_;
+    T def_;
+  };
+
+  struct VariableOP {
+    virtual void run(const char* name, VariableBase* var) = 0;
+  };
+
+  struct SetDefaultOP : public VariableOP {
+    void run(const char* name, VariableBase* var) override {
+      var->setDefault();
+    }
+  };
+  struct SetVariableOP : public VariableOP {
+    SetVariableOP(const char* variable, float v) : variable_(variable), v_(v) { }
+    void run(const char* name, VariableBase* var) override {
+      if (!strcasecmp(name, variable_)) {
+	var->set(v_);
+      }
+    }
+  private:
+    const char* variable_;
+    float v_;
+  };
+  struct PrintVariableOP : public VariableOP {
+    explicit PrintVariableOP(const char* variable) : variable_(variable) { }
+    void run(const char* name, VariableBase* var) override {
+      if (!strcasecmp(name, variable_)) {
+	STDOUT.println(var->get());
+      }
+    }
+  private:
+    const char* variable_;
+  };
+
+  struct SaveVariableOP : public VariableOP {
+    SaveVariableOP(FileReader& f) : f_(f) {}
+    void run(const char* name, VariableBase* var) override {
+      f_.write_key_value_float(name, var->get());
+    }
+  private:
+    FileReader& f_;
+  };
+
+  template<class T>
+  void DoVariableOp(VariableOP *op, const char* name, T& ref, T def) {
+    Variable<T> var(ref, def);
+    op->run(name, &var);
+  }
+
   enum class ReadStatus {
     READ_FAIL,
     READ_OK,
@@ -45,7 +108,45 @@ struct ConfigFile {
     return ReadStatus::READ_OK;
   }
 
-  virtual void SetVariable(const char* variable, float v) = 0;
+
+  virtual void SetVariable(const char* variable, float v) {
+    if (!strcmp(variable, "=")) {
+      SetDefaultOP op;
+      iterateVariables(&op);
+    } else {
+      SetVariableOP op(variable, v);
+      iterateVariables(&op);
+    }
+  }
+
+  virtual void iterateVariables(VariableOP *op) {}
+
+  void Write(const char* filename) {
+    LOCK_SD(true);
+    FileReader out;
+    LSFS::Remove(filename);
+    out.Create(filename);
+    out.write_key_value("installed", install_time);
+    SaveVariableOP op(out);
+    iterateVariables(&op);
+    out.write_key_value("end", "1");
+    out.Close();
+    LOCK_SD(false);
+  }
+
+  void Print(const char* variable) {
+    ConfigFile::PrintVariableOP op(variable);
+    iterateVariables(&op);
+  }
+  
+  void Set(const char* var_and_value) {
+    char variable[32];
+    const char* nw = SkipWord(var_and_value);
+    memcpy(variable, var_and_value, nw - var_and_value);
+    variable[nw - var_and_value] = 0;
+    ConfigFile::SetVariableOP op(variable, parsefloat(nw));
+    iterateVariables(&op);
+  }
 
   ReadStatus Read(const char *filename) {
     LOCK_SD(true);
@@ -57,16 +158,7 @@ struct ConfigFile {
     return ret;
   }
 
-#define CONFIG_VARIABLE(X, DEF) do {            \
-    if (variable[0] == '=') X = DEF;            \
-    else if (!strcasecmp(variable, #X)) {       \
-      X = v;                                    \
-      STDOUT.print(variable);                   \
-      STDOUT.print("=");                        \
-      STDOUT.println(v);                        \
-      return;                                   \
-    }                                           \
-} while(0)
+#define CONFIG_VARIABLE2(X, DEF) DoVariableOp<decltype(X)>(op, #X, X, DEF)
 
   void ReadInCurrentDir(const char* name) {
     // Search through all the directories.
