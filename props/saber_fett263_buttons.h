@@ -3898,6 +3898,14 @@ SaberFett263Buttons() : PropBase() {}
       LOCK_SD(false);
       return true;
     }
+    if (!strcmp(cmd, "get_gesture") && arg) {
+      saved_gesture_control.Print(arg);
+      return true;
+    }
+    if (!strcmp(cmd, "set_gesture") && arg) {
+      saved_gesture_control.Set(arg);
+      return true;
+    }
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "left") || !strcmp(cmd, "l")) {
       MenuDial(-1);
