@@ -45,6 +45,15 @@ struct ConfigFile {
     float v_;
   };
 
+  struct SaveVariableOP : public VariableOP {
+    SaveVariableOP(FileReader& f) : f_(f) {}
+    void run(const char* name, VariableBase* var) override {
+      f_.write_key_value_float(name, var->get());
+    }
+  private:
+    FileReader& f_;
+  };
+
   template<class T>
   void DoVariableOp(VariableOP *op, const char* name, T& ref, T def) {
     Variable<T> var(ref, def);
@@ -102,6 +111,19 @@ struct ConfigFile {
 
   virtual void iterateVariables(VariableOP *op) {}
 
+  void Write(const char* filename) {
+    LOCK_SD(true);
+    FileReader out;
+    LSFS::Remove(filename);
+    out.Create(filename);
+    out.write_key_value("installed", install_time);
+    SaveVariableOP op(out);
+    iterateVariables(&op);
+    out.write_key_value("end", "1");
+    out.Close();
+    LOCK_SD(false);
+  }
+
   ReadStatus Read(const char *filename) {
     LOCK_SD(true);
     FileReader f;
@@ -111,17 +133,6 @@ struct ConfigFile {
     LOCK_SD(false);
     return ret;
   }
-
-#define CONFIG_VARIABLE(X, DEF) do {            \
-    if (variable[0] == '=') X = DEF;            \
-    else if (!strcasecmp(variable, #X)) {       \
-      X = v;                                    \
-      STDOUT.print(variable);                   \
-      STDOUT.print("=");                        \
-      STDOUT.println(v);                        \
-      return;                                   \
-    }                                           \
-} while(0)
 
 #define CONFIG_VARIABLE2(X, DEF) DoVariableOp<decltype(X)>(op, #X, X, DEF)
 

@@ -994,38 +994,10 @@ SaberFett263Buttons() : PropBase() {}
     saved_gesture_control.ReadINIFromDir(NULL, "gesture");
   }
 
-  void WriteGestureState(const char* filename) {
-    LOCK_SD(true);
-    FileReader out;
-    LSFS::Remove(filename);
-    out.Create(filename);
-    out.write_key_value("installed", install_time);
-#ifdef FETT263_SAVE_GESTURE_OFF
-    out.write_key_value("gestureon", saved_gesture_control.gestureon);
-#else
-    out.write_key_value("gestureon", 1);
-#endif
-    out.write_key_value("swingon", saved_gesture_control.swingon);
-    out.write_key_value("swingonspeed", saved_gesture_control.swingonspeed);
-    out.write_key_value("twiston", saved_gesture_control.twiston);
-    out.write_key_value("stabon", saved_gesture_control.stabon);
-    out.write_key_value("thruston", saved_gesture_control.thruston);
-    out.write_key_value("twistoff", saved_gesture_control.twistoff);
-    out.write_key_value("powerlock", saved_gesture_control.powerlock);
-    out.write_key_value("forcepush", saved_gesture_control.forcepush);
-    out.write_key_value("forcepushlen", saved_gesture_control.forcepushlen);
-    out.write_key_value("lockupdelay", saved_gesture_control.lockupdelay);
-    out.write_key_value("clashdetect", saved_gesture_control.clashdetect);
-    out.write_key_value("maxclash", saved_gesture_control.maxclash);
-    out.write_key_value("end", "1");
-    out.Close();
-    LOCK_SD(false);
-  }
-
   void SaveGestureState() {
     STDOUT.println("Saving Gesture State");
-    WriteGestureState("gesture.tmp");
-    WriteGestureState("gesture.ini");
+    saved_gesture_control.Write("gesture.tmp");
+    saved_gesture_control.Write("gesture.ini");
   }
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
