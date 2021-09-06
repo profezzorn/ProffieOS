@@ -4,25 +4,25 @@
 
 class FontConfigFile : public ConfigFile {
 public:
-  void SetVariable(const char* variable, float v) override {
-    CONFIG_VARIABLE(humStart, 100);
-    CONFIG_VARIABLE(volHum, 15);
-    CONFIG_VARIABLE(volEff, 16);
-    CONFIG_VARIABLE(ProffieOSSwingSpeedThreshold, 250.0f);
-    CONFIG_VARIABLE(ProffieOSSwingVolumeSharpness, 0.5f);
-    CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 2.0f);
-    CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
-    CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.2f);
-    CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
-    CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 130.0f);
-    CONFIG_VARIABLE(ProffieOSAnimationFrameRate, 0.0f);
-    CONFIG_VARIABLE(ProffieOSFontImageDuration, 5000.0f);
-    CONFIG_VARIABLE(ProffieOSOnImageDuration, 5000.0f);
-    CONFIG_VARIABLE(ProffieOSBlastImageDuration, 1000.0f);
-    CONFIG_VARIABLE(ProffieOSClashImageDuration, 500.0f);
-    CONFIG_VARIABLE(ProffieOSForceImageDuration, 1000.0f);
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(humStart, 100);
+    CONFIG_VARIABLE2(volHum, 15);
+    CONFIG_VARIABLE2(volEff, 16);
+    CONFIG_VARIABLE2(ProffieOSSwingSpeedThreshold, 250.0f);
+    CONFIG_VARIABLE2(ProffieOSSwingVolumeSharpness, 0.5f);
+    CONFIG_VARIABLE2(ProffieOSMaxSwingVolume, 2.0f);
+    CONFIG_VARIABLE2(ProffieOSSwingOverlap, 0.5f);
+    CONFIG_VARIABLE2(ProffieOSSmoothSwingDucking, 0.2f);
+    CONFIG_VARIABLE2(ProffieOSSwingLowerThreshold, 200.0f);
+    CONFIG_VARIABLE2(ProffieOSSlashAccelerationThreshold, 130.0f);
+    CONFIG_VARIABLE2(ProffieOSAnimationFrameRate, 0.0f);
+    CONFIG_VARIABLE2(ProffieOSFontImageDuration, 5000.0f);
+    CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
+    CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClashImageDuration, 500.0f);
+    CONFIG_VARIABLE2(ProffieOSForceImageDuration, 1000.0f);
 #ifdef ENABLE_SPINS
-    CONFIG_VARIABLE(ProffieOSSpinDegrees, 360.0f);
+    CONFIG_VARIABLE2(ProffieOSSpinDegrees, 360.0f);
 #endif
   }
   // Igniter compat
