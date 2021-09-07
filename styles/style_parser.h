@@ -103,7 +103,7 @@ NamedStyle named_styles[] = {
     "preset number, blade number, "
     "base color, alt color, style option, "
     "ignition option, ignition time, ignition delay, ignition color, ignition power up argument, "
-    "blast color, clash color, lockup color, lockup position, drag color, drag size, lb color "
+    "blast color, clash color, lockup color, lockup position, drag color, drag size, lb color, "
     "stab color, melt size, swing color, swing option, emitter color, emitter size, "
     "preon color, preon option, preon size, "
     "retraction option, retraction time, retraction delay, retraction color, retraction cool down, "
