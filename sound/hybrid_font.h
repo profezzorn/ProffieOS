@@ -21,6 +21,8 @@ public:
     CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSClashImageDuration, 500.0f);
     CONFIG_VARIABLE2(ProffieOSForceImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSMinSwingAcceleration, 0.0f);
+    CONFIG_VARIABLE2(ProffieOSMaxSwingAcceleration, 0.0f);
 #ifdef ENABLE_SPINS
     CONFIG_VARIABLE2(ProffieOSSpinDegrees, 360.0f);
 #endif
@@ -70,6 +72,13 @@ public:
   float ProffieOSClashImageDuration;
   // for OLED displays, the time a force.bmp will play
   float ProffieOSForceImageDuration;
+  // Minimum acceleration for Accent Swing file Selection
+  // recommended value is 20.0 ~ 30.0
+  float ProffieOSMinSwingAcceleration;
+  // Maximum acceleration for Accent Swing file Selection
+  // must be higher than Min value to enable selection
+  // recommended value is 100.0 ~ 150.0
+  float ProffieOSMaxSwingAcceleration;
 #ifdef ENABLE_SPINS
   // number of degrees the blade must travel while staying above the
   // swing threshold in order to trigger a spin sound.  Default is 360 or
@@ -231,13 +240,25 @@ public:
         }
         if (!swing_player_) {
           if (!swinging_) {
-            if (rss > slashThreshold && SFX_slsh) {
-              swing_player_ = PlayPolyphonic(&SFX_slsh);
-            } else if (SFX_swng) {
-              swing_player_ = PlayPolyphonic(&SFX_swng);
-            } else {
-              swing_player_ = PlayPolyphonic(&SFX_swing);
+            Effect* effect;
+            if (font_config.ProffieOSMaxSwingAcceleration > font_config.ProffieOSMinSwingAcceleration) {
+              float s = (rss - font_config.ProffieOSMinSwingAcceleration) / font_config.ProffieOSMaxSwingAcceleration;
+              if (SFX_swng) {
+                effect = &SFX_swng;
+              } else {
+                effect = &SFX_swing;               
+              }
+              effect.SelectFloat(s);
+            } else {           
+              if (rss > slashThreshold && SFX_slsh) {
+                effect = &SFX_slsh;
+              } else if (SFX_swng) {
+                effect = &SFX_swng;
+              } else {
+                effect = &SFX_swing;
+              }
             }
+            swing_player_ = PlayPolyphonic(effect);
             swinging_ = true;
           } else {
 #ifdef ENABLE_SPINS
