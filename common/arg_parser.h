@@ -68,6 +68,7 @@ public:
     return ArgParser::GetArg(arg_num, name, default_value);
   }
   bool next() {
+//    STDOUT << current_arg << " " << max_arg << "\n";
     if (current_arg == start_current_arg && max_arg > current_arg) {
       STDOUT.println("VOID ~");
       current_arg++;
@@ -75,7 +76,7 @@ public:
     start_current_arg = current_arg;
     offset = 0;
     str_ = data_; // reset ArgParser
-    return max_arg > current_arg;
+    return current_arg <= max_arg;
   }
   
   void Shift(int words) override {
