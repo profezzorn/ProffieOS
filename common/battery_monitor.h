@@ -97,7 +97,6 @@ protected:
       float v = battery();
       STDOUT.println(v);
 #ifdef ENABLE_AUDIO
-      talkie.Say(spBATTERYLEVEL);
       talkie.SayDigit((int)floorf(v));
       talkie.Say(spPOINT);
       talkie.SayDigit(((int)floorf(v * 10)) % 10);
@@ -106,17 +105,6 @@ protected:
 #endif
       return true;
     }
-    if (!strcmp(cmd, "battery_percentage")) {
-      STDOUT.print("Battery percentage: ");
-      float p = battery_percent();
-      STDOUT.println(p);
-#ifdef ENABLE_AUDIO
-      talkie.Say(spBATTERYLEVEL);
-      talkie.SayNumber((int)floorf(p));
-      talkie.Say(spPERCENT);
-#endif
-      return true;
-    }	  
 #if 0
     if (!strcmp(cmd, "bstate")) {
       STDOUT.print("Next state: ");
@@ -132,7 +120,6 @@ protected:
   }
   void Help() override {
     STDOUT.println(" batt[ery[_voltage]] - show battery voltage");
-    STDOUT.println(" battery_percentage - show battery %");
   }
 private:
   float battery_now() {
