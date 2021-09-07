@@ -21,6 +21,8 @@ public:
     CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSClashImageDuration, 500.0f);
     CONFIG_VARIABLE2(ProffieOSForceImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSMinSwingAcceleration, 0.0f);
+    CONFIG_VARIABLE2(ProffieOSMaxSwingAcceleration, 0.0f);
 #ifdef ENABLE_SPINS
     CONFIG_VARIABLE2(ProffieOSSpinDegrees, 360.0f);
 #endif
