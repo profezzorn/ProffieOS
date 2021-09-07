@@ -231,22 +231,18 @@ class Effect {
     selected_++;
     if (selected_ == (int)files_found()) selected_ = 0;
   }
-#ifdef NO_REPEAT_RANDOM
-  int last_selected_;
-#endif
   void SelectFloat(float value) {
     int f = files_found();
     selected_ = clamp(floorf(f * value), 0, f - 1);
 #ifdef NO_REPEAT_RANDOM
-    if (selected_ == last_selected_) {
+    if (f > 1 && selected_ == last_) {
       if (f == 2) {
-        selected_ = rand() % num_files_;
+        selected_ = -1;
       } else {
-        if (selected_ == (int)files_found()) {
+        if (selected_ == f - 1) {
           selected_ -= 1;
         } else {
-          int n = rand() % 2;
-          if (selected_ >= 1 && n == 2) {
+          if (selected_ >= 1 && rand() % 2 == 1) {
             selected_ -= 1;
           } else {
             selected_ += 1;
@@ -254,7 +250,7 @@ class Effect {
         }
       }
     }
-    last_selected_ = selected_;
+    last_ = selected_;
 #endif
   }
 	
