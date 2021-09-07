@@ -1,6 +1,8 @@
 #ifndef COMMON_ARG_PARSER_H
 #define COMMON_ARG_PARSER_H
 
+#include "strfun.h"
+
 class ArgParserInterface {
 public:
   virtual const char* GetArg(int arg_num,
@@ -19,26 +21,6 @@ bool FirstWord(const char *str, const char *word) {
   if (*word) return false;
   if (*str == ' ' || *str == '\t') return true;
   return false;
-}
-
-const char* SkipSpace(const char* str) {
-  while (*str == ' ' || *str == '\t') str++;
-  return str;
-}
-
-const char* SkipWord(const char* str) {
-  str = SkipSpace(str);
-  while (*str != ' ' && *str != '\t' && *str) str++;
-  return str;
-}
-
-int CountWords(const char* str) {
-  int words = 0;
-  while (*str) {
-    str = SkipWord(str);
-    words++;
-  }
-  return words;
 }
 
 class ArgParser : public ArgParserInterface {
@@ -86,14 +68,15 @@ public:
     return ArgParser::GetArg(arg_num, name, default_value);
   }
   bool next() {
-    if (current_arg == start_current_arg) {
+//    STDOUT << current_arg << " " << max_arg << "\n";
+    if (current_arg == start_current_arg && max_arg > current_arg) {
       STDOUT.println("VOID ~");
       current_arg++;
     }
     start_current_arg = current_arg;
     offset = 0;
     str_ = data_; // reset ArgParser
-    return max_arg > current_arg;
+    return current_arg <= max_arg;
   }
   
   void Shift(int words) override {

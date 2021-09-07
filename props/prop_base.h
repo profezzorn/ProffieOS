@@ -19,15 +19,15 @@
 
 class SaveGlobalStateFile : public ConfigFile {
 public:
-  void SetVariable(const char* variable, float v) override {
+  void iterateVariables(VariableOP *op) override {
 #ifdef SAVE_CLASH_THRESHOLD
-    CONFIG_VARIABLE(clash_threshold, CLASH_THRESHOLD_G);
+    CONFIG_VARIABLE2(clash_threshold, CLASH_THRESHOLD_G);
 #endif
 #ifdef SAVE_VOLUME
-    CONFIG_VARIABLE(volume, -1);
+    CONFIG_VARIABLE2(volume, -1);
 #endif
 #ifdef SAVE_BLADE_DIMMING
-    CONFIG_VARIABLE(dimming, 16384);
+    CONFIG_VARIABLE2(dimming, 16384);
 #endif
   }
 #ifdef SAVE_CLASH_THRESHOLD
@@ -43,10 +43,10 @@ public:
 
 class SavePresetStateFile : public ConfigFile {
 public:
-  void SetVariable(const char* variable, float v) override {
-    CONFIG_VARIABLE(preset, 0);
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(preset, 0);
 #ifdef DYNAMIC_BLADE_LENGTH
-#define BLADE_LEN_CONFIG_VARIABLE(N) CONFIG_VARIABLE(blade##N##len, -1);
+#define BLADE_LEN_CONFIG_VARIABLE(N) CONFIG_VARIABLE2(blade##N##len, -1);
     ONCEPERBLADE(BLADE_LEN_CONFIG_VARIABLE);
 #endif
   }
@@ -549,23 +549,6 @@ public:
     SetPreset(savestate_.preset, false);
   }
 
-  void WriteState(const char *filename, int preset) {
-    PathHelper fn(GetSaveDir(), filename);
-    LOCK_SD(true);
-    FileReader out;
-    LSFS::Remove(fn);
-    out.Create(fn);
-    out.write_key_value("installed", install_time);
-    out.write_key_value("preset", preset);
-#ifdef DYNAMIC_BLADE_LENGTH
-#define WRITE_BLADE_LENGTH(N) out.write_key_value("blade" #N "len", savestate_.blade##N##len);
-    ONCEPERBLADE(WRITE_BLADE_LENGTH);
-#endif
-    out.write_key_value("end", "1");
-    out.Close();
-    LOCK_SD(false);
-  }
-
   // Blade length from config file.
   int GetMaxBladeLength(int blade) {
 #define GET_SINGLE_MAX_BLADE_LENGTH(N) if (blade == N) return current_config->blade##N->num_leds();
@@ -592,8 +575,9 @@ public:
 
   void SaveState(int preset) {
     STDOUT.println("Saving Current Preset");
-    WriteState("curstate.tmp", preset);
-    WriteState("curstate.ini", preset);
+    savestate_.preset = preset;
+    savestate_.Write("curstate.tmp");
+    savestate_.Write("curstate.ini");
   }
 
   SaveGlobalStateFile saved_global_state;
@@ -618,31 +602,9 @@ public:
 #endif
   }
 
-  void WriteGlobalState(const char* filename) {
-    LOCK_SD(true);
-    FileReader out;
-    LSFS::Remove(filename);
-    out.Create(filename);
-    out.write_key_value("installed", install_time);
-#ifdef SAVE_CLASH_THRESHOLD
-    out.write_key_value_float("clash_threshold", GetCurrentClashThreshold());
-#endif
-#ifdef SAVE_VOLUME
-    out.write_key_value("volume", muted_volume_ ? muted_volume_ : dynamic_mixer.get_volume());
-#endif
-#ifdef SAVE_BLADE_DIMMING
-    out.write_key_value("dimming", SaberBase::GetCurrentDimming());
-#endif
-    out.write_key_value("end", "1");
-    out.Close();
-    LOCK_SD(false);
-  }
-
   void SaveGlobalState() {
 #if defined(SAVE_VOLUME) || defined(SAVE_BLADE_DIMMING) || defined(SAVE_CLASH_THRESHOLD)
     STDOUT.println("Saving Global State");
-    WriteGlobalState("global.tmp");
-    WriteGlobalState("global.ini");
 #ifdef SAVE_CLASH_THRESHOLD
     saved_global_state.clash_threshold = GetCurrentClashThreshold();
 #endif
@@ -652,6 +614,8 @@ public:
 #ifdef SAVE_BLADE_DIMMING
     saved_global_state.dimming = SaberBase::GetCurrentDimming();
 #endif
+    saved_global_state.Write("global.tmp");
+    saved_global_state.Write("global.ini");
 #endif
   }
 
@@ -1476,6 +1440,18 @@ public:
       return true;
     }
 #endif
+
+#ifdef DYNAMIC_CLASH_THRESHOLD
+    if (!strcmp(cmd, "get_clash_threshold")) {
+      STDOUT.println(GetCurrentClashThreshold());
+      return true;
+    }
+    if (!strcmp(cmd, "set_clash_threshold") && arg) {
+      SetClashThreshold(parsefloat(arg));
+      return true;
+    }
+#endif    
+    
 
     if (!strcmp(cmd, "get_preset")) {
       STDOUT.println(current_preset_.preset_num);

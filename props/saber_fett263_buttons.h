@@ -138,7 +138,8 @@ Edit Mode*
     Rotate Back, Decrease Value, Confirm "No" = Turn Left
     Select, Save, Enter = Click PWR
     Cancel, Revert, Go Back = Click AUX
-  To Exit Edit Mode - Hold AUX
+    Go to Main Menu (from sub-menu) - Hold AUX
+    Exit Edit Mode - Hold AUX (or rotate to "Exit") while in Main Menu
 
   "Edit Color" Additional Control
     "Color List" and "Adjust Color Hue" Zoom Mode = Long Click PWR
@@ -732,51 +733,51 @@ SoundLibrary sound_library_;
 
 class GestureControlFile : public ConfigFile {
 public:
-  void SetVariable(const char* variable, float v) override {
-    CONFIG_VARIABLE(gestureon, 1);
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(gestureon, 1);
 #ifdef SWING_GESTURE
-    CONFIG_VARIABLE(swingon, 1);
+    CONFIG_VARIABLE2(swingon, 1);
 #else
-    CONFIG_VARIABLE(swingon, 0);
+    CONFIG_VARIABLE2(swingon, 0);
 #endif
-    CONFIG_VARIABLE(swingonspeed, FETT263_SWING_ON_SPEED);
+    CONFIG_VARIABLE2(swingonspeed, FETT263_SWING_ON_SPEED);
 #ifdef TWIST_GESTURE
-    CONFIG_VARIABLE(twiston, 1);
+    CONFIG_VARIABLE2(twiston, 1);
 #else
-    CONFIG_VARIABLE(twiston, 0);
+    CONFIG_VARIABLE2(twiston, 0);
 #endif
 #ifdef THRUST_GESTURE
-    CONFIG_VARIABLE(thruston, 1);
+    CONFIG_VARIABLE2(thruston, 1);
 #else
-    CONFIG_VARIABLE(thruston, 0);
+    CONFIG_VARIABLE2(thruston, 0);
 #endif
 #ifdef STAB_GESTURE
-    CONFIG_VARIABLE(stabon, 1);
+    CONFIG_VARIABLE2(stabon, 1);
 #else
-    CONFIG_VARIABLE(stabon, 0);
+    CONFIG_VARIABLE2(stabon, 0);
 #endif
 #ifdef FETT263_TWIST_OFF
-    CONFIG_VARIABLE(twistoff, 1);
+    CONFIG_VARIABLE2(twistoff, 1);
 #else
-    CONFIG_VARIABLE(twistoff, 0);
+    CONFIG_VARIABLE2(twistoff, 0);
 #endif
 #ifdef FETT263_POWER_LOCK
-    CONFIG_VARIABLE(powerlock, 1);
+    CONFIG_VARIABLE2(powerlock, 1);
 #else
-    CONFIG_VARIABLE(powerlock, 0);
+    CONFIG_VARIABLE2(powerlock, 0);
 #endif
 #ifdef FORCE_PUSH_CONDITION
-    CONFIG_VARIABLE(forcepush, 1);
+    CONFIG_VARIABLE2(forcepush, 1);
 #else
-    CONFIG_VARIABLE(forcepush, 0);
+    CONFIG_VARIABLE2(forcepush, 0);
 #endif
-    CONFIG_VARIABLE(forcepushlen, FETT263_FORCE_PUSH_LENGTH);
-    CONFIG_VARIABLE(lockupdelay, FETT263_LOCKUP_DELAY);
-    CONFIG_VARIABLE(clashdetect, FETT263_BM_CLASH_DETECT);
+    CONFIG_VARIABLE2(forcepushlen, FETT263_FORCE_PUSH_LENGTH);
+    CONFIG_VARIABLE2(lockupdelay, FETT263_LOCKUP_DELAY);
+    CONFIG_VARIABLE2(clashdetect, FETT263_BM_CLASH_DETECT);
 #ifdef FETT263_MAX_CLASH
-    CONFIG_VARIABLE(maxclash, FETT263_MAX_CLASH);
+    CONFIG_VARIABLE2(maxclash, FETT263_MAX_CLASH);
 #else
-    CONFIG_VARIABLE(maxclash, 16);
+    CONFIG_VARIABLE2(maxclash, 16);
 #endif
 }
   bool gestureon; // gesture controls on/off for use with "Gesture Sleep"
@@ -994,38 +995,10 @@ SaberFett263Buttons() : PropBase() {}
     saved_gesture_control.ReadINIFromDir(NULL, "gesture");
   }
 
-  void WriteGestureState(const char* filename) {
-    LOCK_SD(true);
-    FileReader out;
-    LSFS::Remove(filename);
-    out.Create(filename);
-    out.write_key_value("installed", install_time);
-#ifdef FETT263_SAVE_GESTURE_OFF
-    out.write_key_value("gestureon", saved_gesture_control.gestureon);
-#else
-    out.write_key_value("gestureon", 1);
-#endif
-    out.write_key_value("swingon", saved_gesture_control.swingon);
-    out.write_key_value("swingonspeed", saved_gesture_control.swingonspeed);
-    out.write_key_value("twiston", saved_gesture_control.twiston);
-    out.write_key_value("stabon", saved_gesture_control.stabon);
-    out.write_key_value("thruston", saved_gesture_control.thruston);
-    out.write_key_value("twistoff", saved_gesture_control.twistoff);
-    out.write_key_value("powerlock", saved_gesture_control.powerlock);
-    out.write_key_value("forcepush", saved_gesture_control.forcepush);
-    out.write_key_value("forcepushlen", saved_gesture_control.forcepushlen);
-    out.write_key_value("lockupdelay", saved_gesture_control.lockupdelay);
-    out.write_key_value("clashdetect", saved_gesture_control.clashdetect);
-    out.write_key_value("maxclash", saved_gesture_control.maxclash);
-    out.write_key_value("end", "1");
-    out.Close();
-    LOCK_SD(false);
-  }
-
   void SaveGestureState() {
     STDOUT.println("Saving Gesture State");
-    WriteGestureState("gesture.tmp");
-    WriteGestureState("gesture.ini");
+    saved_gesture_control.Write("gesture.tmp");
+    saved_gesture_control.Write("gesture.ini");
   }
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -3530,6 +3503,7 @@ SaberFett263Buttons() : PropBase() {}
         menu_type_ = MENU_TOP;
 #else
         menu_type_ = MENU_BLADE_STYLE;
+	blade_num_ = 0;
 #endif
 	MenuCancel();
 	break;
@@ -3545,6 +3519,7 @@ SaberFett263Buttons() : PropBase() {}
 #else
         menu_type_ = MENU_BLADE_STYLE;
         MenuRevert();
+	blade_num_ = 0;
 #endif
         break;
       }
@@ -3898,6 +3873,14 @@ SaberFett263Buttons() : PropBase() {}
       LOCK_SD(false);
       return true;
     }
+    if (!strcmp(cmd, "get_gesture") && arg) {
+      saved_gesture_control.Print(arg);
+      return true;
+    }
+    if (!strcmp(cmd, "set_gesture") && arg) {
+      saved_gesture_control.Set(arg);
+      return true;
+    }
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "left") || !strcmp(cmd, "l")) {
       MenuDial(-1);
@@ -4192,9 +4175,13 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON):
         if (menu_) {
-	  sound_library_.SayExit();
-          menu_ = false;
-          menu_type_ = MENU_TOP;
+          if (menu_type_ == MENU_TOP) {
+            sound_library_.SayExit();
+            menu_ = false;
+          } else {
+            menu_type_ = MENU_TOP;
+            MenuCancel();
+          }
           return true;
         }
         if (rehearse_) {
@@ -4400,8 +4387,8 @@ SaberFett263Buttons() : PropBase() {}
             color_mode_ = ZOOM_COLOR;
             hsl_angle_ = fusor.angle2();
 	    sound_library_.SayZoomingIn();
-            return true;
           }
+          return true;
         }
 #endif
         if (fusor.angle1() > M_PI / 3) {
