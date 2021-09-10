@@ -233,7 +233,14 @@ class Effect {
   }
   void SelectFloat(float value) {
     int f = files_found();
-    selected_ = clamp(floorf(f * value), 0, f - 1);
+    int sel = clamp(floorf(f * value), 0, f - 1);
+#ifdef NO_REPEAT_RANDOM
+    for (int i = 0; i < 3 && (sel == selected_ || (sel == last_ && (rand() & 1))); i++) {
+      sel = clamp(sel + 1 - (rand() & 2), 0, f - 1);
+    }
+    last_ = selected_;
+#endif
+    selected_ = sel;
   }
 	
   Effect* GetFollowing() const {
@@ -255,9 +262,13 @@ class Effect {
       default_output->println(name_);
       return FileID();
     }
-    int n = rand() % num_files;
+    int n;
+    if (selected_ != -1) {
+      n = selected_;
+    } else {
+      n = rand() % num_files;
 #ifdef NO_REPEAT_RANDOM
-    switch (num_files) {
+      switch (num_files) {
       default:
 	while (n == last_) n = rand() % num_files;
 	break;
@@ -265,10 +276,10 @@ class Effect {
 	if (n == last_) n = rand() % num_files;
       case 1:
 	break;
-    }
-    last_ = n;
+      }
+      last_ = n;
 #endif
-    if (selected_ != -1) n = selected_;
+    }
     return FileID(this, n);
   }
 
