@@ -3921,9 +3921,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
   // Select preon wav based on blade orientation if more than 1 file, up = odd, down = even
   void SelectPreonSound() {
-    Effect* effect;
-    effect = &SFX_preon;
-    SelectSFXEvenOdd(effect);
+    SelectSFXEvenOdd(&SFX_preon);
   }
 
   // Select ignition wav based on blade orientation, up = odd, down = even
