@@ -241,22 +241,16 @@ public:
         if (!swing_player_) {
           if (!swinging_) {
             Effect* effect;
-            if (font_config.ProffieOSMaxSwingAcceleration > font_config.ProffieOSMinSwingAcceleration) {
+	    if (rss > slashThreshold && SFX_slsh) {
+              effect = &SFX_slsh;
+            } else if (SFX_swng) {
+              effect = &SFX_swng;
+            } else {
+              effect = &SFX_swing;
+            }
+	    if (font_config.ProffieOSMaxSwingAcceleration > font_config.ProffieOSMinSwingAcceleration) {
               float s = (rss - font_config.ProffieOSMinSwingAcceleration) / font_config.ProffieOSMaxSwingAcceleration;
-              if (SFX_swng) {
-                effect = &SFX_swng;
-              } else {
-                effect = &SFX_swing;               
-              }
-              effect->SelectFloat(s);
-            } else {           
-              if (rss > slashThreshold && SFX_slsh) {
-                effect = &SFX_slsh;
-              } else if (SFX_swng) {
-                effect = &SFX_swng;
-              } else {
-                effect = &SFX_swing;
-              }
+	      effect->SelectFloat(s);
             }
             swing_player_ = PlayPolyphonic(effect);
             swinging_ = true;
