@@ -2377,7 +2377,7 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_RESET_COLOR:
       if (choice_) {
 	SaberBase::SetVariation(0);
-	current_preset_.SetStyle(blade_num_,  style_parser.ResetArguments(current_preset_.GetStyle(blade_num_)));
+	current_preset_.SetStyle(blade_num_, style_parser.CopyArguments("~", current_preset_.GetStyle(blade_num_),  int_arg_menu_, NELEM(int_arg_menu_)));
 	current_preset_.Save();
 	UpdateStyle(current_preset_.preset_num);
 	menu_type_ = MENU_COLOR_SUB;
