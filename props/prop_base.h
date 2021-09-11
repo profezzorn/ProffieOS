@@ -357,6 +357,9 @@ public:
 #ifdef SAVE_BLADE_DIMMING
       || SaberBase::GetCurrentDimming() != saved_global_state.dimming
 #endif
+#ifdef SAVE_CLASH_THRESHOLD
+      || GetCurrentClashThreshold() != saved_global_state.clash_threshold
+#endif	
       ) {
       SaveGlobalState();
     }
@@ -573,11 +576,16 @@ public:
 #endif
   }
 
+  void WriteState(const char* filename) {
+    PathHelper fn(GetSaveDir(), filename);
+    savestate_.Write(fn);
+  }
+
   void SaveState(int preset) {
     STDOUT.println("Saving Current Preset");
     savestate_.preset = preset;
-    savestate_.Write("curstate.tmp");
-    savestate_.Write("curstate.ini");
+    WriteState("curstate.tmp");
+    WriteState("curstate.ini");
   }
 
   SaveGlobalStateFile saved_global_state;
@@ -1451,7 +1459,6 @@ public:
       return true;
     }
 #endif    
-    
 
     if (!strcmp(cmd, "get_preset")) {
       STDOUT.println(current_preset_.preset_num);
