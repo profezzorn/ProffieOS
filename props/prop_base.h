@@ -1429,9 +1429,7 @@ public:
     }
     if (!strcmp(cmd, "set_blade_length") && arg) {
       SetBladeLength(atoi(arg), atoi(SkipWord(arg)));
-#ifdef SAVE_PRESET
       SaveState(current_preset_.preset_num);
-#endif
       // Reload preset to make the change take effect.
       SetPreset(current_preset_.preset_num, false);
       return true;
