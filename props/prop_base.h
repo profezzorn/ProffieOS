@@ -113,32 +113,13 @@ public:
 // Match preon.wav to out.wav
   virtual void SelectIgnitionPair() {
     if (!SFX_preon.files_found()) return;
-
     int preonCount = SFX_preon.files_found();
     int outCount = SFX_out.files_found();
-    int pairIgnition;
-
     // If we don't have the same number of preon/out files, then don't bother getting a matched pair.
     if (preonCount == outCount) {
-        pairIgnition = rand() % preonCount;
-        SFX_preon.Select(pairIgnition);
-        SFX_out.Select(pairIgnition);
-    }
-  }
-
-// Match pstoff.wav to in.wav
-  virtual void SelectRetractionPair() {
-    if (!SFX_pstoff.files_found()) return;
-
-    int pstoffCount = SFX_pstoff.files_found();
-    int inCount = SFX_in.files_found();
-    int pairIgnition;
-
-    // If we don't have the same number of pstoff/in files, then don't bother getting a matched pair.
-    if (pstoffCount == inCount) {
-        pairIgnition = rand() % pstoffCount;
-        SFX_pstoff.Select(pairIgnition);
-        SFX_in.Select(pairIgnition);
+      int pairIgnition = rand() % preonCount;
+      SFX_preon.Select(pairIgnition);
+      SFX_out.Select(pairIgnition);
     }
   }
 	
@@ -167,6 +148,19 @@ public:
       on_pending_delay_ = preon_time * 1000;
     } else {
       SaberBase::TurnOn();
+    }
+  }
+
+// Match pstoff.wav to in.wav
+  virtual void SelectRetractionPair() {
+    if (!SFX_pstoff.files_found()) return;
+    int pstoffCount = SFX_pstoff.files_found();
+    int inCount = SFX_in.files_found();
+    // If we don't have the same number of pstoff/in files, then don't bother getting a matched pair.
+    if (pstoffCount == inCount) {
+      int pairIgnition = rand() % pstoffCount;
+      SFX_pstoff.Select(pairIgnition);
+      SFX_in.Select(pairIgnition);
     }
   }
 
