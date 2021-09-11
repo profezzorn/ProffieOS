@@ -43,6 +43,7 @@ public:
 BuiltinPresetAllocator builtin_preset_allocator;
 
 NamedStyle named_styles[] = {
+#ifndef DISABLE_BASIC_PARSER_STYLES
   { "standard", StyleNormalPtrX<RgbArg<1, CYAN>, RgbArg<2, WHITE>, IntArg<3, 300>, IntArg<4, 800>>(),
     "Standard blade, color, clash color, extension time, retraction time",
   },
@@ -97,6 +98,7 @@ NamedStyle named_styles[] = {
     "Rainbow blade, extension time, retraction time"
   },
   { "charging", &style_charging, "Charging style" },
+#endif
   { "builtin", &builtin_preset_allocator,
     // TODO: Support multiple argument templates.
     "builtin preset styles, "
