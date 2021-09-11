@@ -3879,6 +3879,7 @@ SaberFett263Buttons() : PropBase() {}
     }
     if (!strcmp(cmd, "set_gesture") && arg) {
       saved_gesture_control.Set(arg);
+      SaveGestureState();
       return true;
     }
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
