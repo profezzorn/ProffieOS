@@ -5,7 +5,13 @@
 
 class IntArgBase {
 public:
-  void run(BladeBase* base) {}
+  FunctionRunResult run(BladeBase* base) {
+    switch (value_) {
+      case 0: return FunctionRunResult::ZERO_UNTIL_IGNITION;
+      case 32768: return FunctionRunResult::ONE_UNTIL_IGNITION;
+      default: return FunctionRunResult::UNKNOWN;
+    }
+  }
   int getInteger(int led) { return value_; }
 protected:
   void init(int argnum) {
