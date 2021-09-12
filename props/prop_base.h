@@ -112,14 +112,14 @@ public:
 
 // Match preon.wav to out.wav
   virtual void SelectIgnitionPair() {
-    if (!SFX_preon.files_found()) return;
     int preonCount = SFX_preon.files_found();
     int outCount = SFX_out.files_found();
     // If we don't have the same number of preon/out files, then don't bother getting a matched pair.
     if (preonCount == outCount) {
-      int pairIgnition = rand() % preonCount;
+      int pairIgnition = rand() % preon_file_num_;
       SFX_preon.Select(pairIgnition);
       SFX_out.Select(pairIgnition);
+      STDOUT << "preon/out matched files # " << (pairIgnition + 1) << "\n";
     }
   }
 	
