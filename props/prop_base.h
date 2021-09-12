@@ -158,9 +158,38 @@ public:
   bool on_pending_ = false;
   uint32_t on_pending_base_;
   uint32_t on_pending_delay_;
+  float preon_file_num_= 0;
 
   virtual bool IsOn() {
     return SaberBase::IsOn() || on_pending_;
+  }
+
+  virtual void GetPreonFileNum() {
+    if (!SFX_preon.files_found()) return;
+    int preon_num = rand() % SFX_preon.files_found();
+    preon_file_num_ = preon_num;
+    STDOUT << "GetPreonFileNum: preon_num = " << preon_num << "\n";
+ }
+
+  virtual void MatchPreonToBlade() {
+    int preon_choice = preon_file_num_;
+    switch(preon_choice) {
+      case 0: 
+        SFX_preon.Select(preon_choice);
+        hybrid_font.DoEffect(EFFECT_PREON1, 0);
+        STDOUT << "case 0 - playing preon # " << (preon_choice +1) << "\n";
+        return;
+      case 1: 
+        SFX_preon.Select(preon_choice);
+        hybrid_font.DoEffect(EFFECT_PREON2, 0);
+        STDOUT << "case 1 - playing preon # " << (preon_choice +1) << "\n";
+        return; 
+      case 2: 
+        SFX_preon.Select(preon_choice);
+        hybrid_font.DoEffect(EFFECT_PREON3, 0);
+        STDOUT << "case 2 - playing preon # " << (preon_choice +1) << "\n";
+        return;
+    }
   }
 
   virtual void On() {
@@ -177,6 +206,10 @@ public:
     // It might be a "clicky" power button...
     IgnoreClash(300);
 
+    GetPreonFileNum();
+#ifdef PREONS_MATCH_BLADE_EFFECTS
+    MatchPreonToBlade();
+#endif     
     SaberBase::DoPreOn();
     float preon_time = SaberBase::sound_length;
     if (preon_time > 0.0) {
