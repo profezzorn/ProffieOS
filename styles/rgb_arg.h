@@ -15,7 +15,7 @@
 class RgbArgBase {
 public:
   LayerRunResult run(BladeBase* base) {
-    if (color.r == 0 && color_.g == 0 && color_.b == 0)
+    if (color_.r == 0 && color_.g == 0 && color_.b == 0)
       return LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
     return LayerRunResult::UNKNOWN;
   }
