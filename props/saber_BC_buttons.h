@@ -37,10 +37,11 @@ EFFECT_USER2 - for blade effects with sounds that might work better without hum,
 Added quote sound so force.wavs can remain as force.
              - Add quote.wav files to font to use.
 Added Play / Stop track control while blade is on.
-Added Prev/Next preset control while blade is on.
+Added Prev/Next preset control while blade is on by pointing blade up.
 Force Push is always available, not just in Battle Mode.
 Melt is always available as no button, with pull-away or button to end
 Drag is always clash with button pressed while pointing down.
+Preon is skipped if pointing up, as well as when "live" switching presets a.k.a. "Dual Phase".
 
 Optional #defines:
 #define ENABLE_AUTO_SWING_BLAST - Multi-blast initiated by simply swinging
@@ -411,15 +412,6 @@ public:
       }
   }
 
-// Revert colorchange witout saving (reset to Variation == 0)
-  void ResetColorChangeMode() {
-    if (!current_style()) return;
-      STDOUT << "Reset Color Variation" << "\n";
-      SetVariation(0);
-      STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
-      SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
-  }
-
 // Fast On Gesture Ignition
   virtual void FastOn() {
     if (IsOn()) return;
@@ -437,6 +429,53 @@ public:
     SaberBase::DoEffect(EFFECT_FAST_ON, 0);
   }
 
+  // Go to the next Preset skipping Preon effect with FastOn.
+  virtual void next_preset_fast() {
+#ifdef SAVE_PRESET
+    SaveState(current_preset_.preset_num + 1);
+#endif
+    UpdateFont(current_preset_.preset_num + 1, false);
+  }
+
+  // Go to the previous Preset skipping Preon effect with FastOn.
+  virtual void previous_preset_fast() {
+#ifdef SAVE_PRESET
+    SaveState(current_preset_.preset_num - 1);
+#endif
+    UpdateFont(current_preset_.preset_num - 1, false);
+  }
+
+// Update Font / Save Style in Edit Mode, skips Preon effect (except for Preon Editing previews) using FastOn
+  virtual void UpdateFont(int preset_num, bool preon) {
+    TRACE(PROP, "start");
+    bool on = SaberBase::IsOn();
+    if (on) Off();
+    SaveColorChangeIfNeeded();
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+#define UNSET_BLADE_STYLE(N) \
+    delete current_config->blade##N->UnSetStyle();
+    ONCEPERBLADE(UNSET_BLADE_STYLE)
+    current_preset_.SetPreset(preset_num);
+#define SET_BLADE_STYLE(N) \
+    current_config->blade##N->SetStyle(style_parser.Parse(current_preset_.current_style##N.get()));
+    ONCEPERBLADE(SET_BLADE_STYLE)
+    chdir(current_preset_.font.get());
+#ifdef SAVE_COLOR_CHANGE
+    SaberBase::SetVariation(current_preset_.variation);
+#else
+    SaberBase::SetVariation(0);
+#endif
+    if (on) {
+      if (preon) {
+        On();
+      } else {
+        FastOn();
+      }
+    }
+    TRACE(PROP, "end");
+  }
+ 
 // SA22C Volume Menu
   void VolumeUp() {
     if (dynamic_mixer.get_volume() < VOLUME) {
@@ -661,7 +700,7 @@ public:
     if (fusor.angle1() >  M_PI / 3) {
       //Don't change preset if in colorchange mode
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
-        next_preset();
+        next_preset_fast();
       }
       return true;
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
@@ -682,7 +721,7 @@ public:
     if (fusor.angle1() >  M_PI / 3) {
       //Don't change preset if in colorchange mode
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
-        previous_preset();
+        previous_preset_fast();
       }
       return true;
     case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_OFF):
@@ -748,7 +787,12 @@ public:
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       // No power on without exiting Vol Menu first
       if (!mode_volume_) {
-        On();
+      // Bypass preon if pointing up  
+        if (fusor.angle1() >  M_PI / 3) {
+          SaberBase::TurnOn();
+        } else {
+          On();
+        }
       }
       return true;
 
@@ -926,7 +970,10 @@ public:
 // Revert colorchange witout saving (reset to Variation == 0)
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-        ResetColorChangeMode();
+        STDOUT << "Reset Color Variation" << "\n";
+        SetVariation(0);
+        STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
+        SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
         return true;
       } else {
         hybrid_font.PlayCommon(&SFX_quote);
