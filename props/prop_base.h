@@ -172,6 +172,7 @@ public:
  }
 
   virtual void MatchPreonToBlade() {
+    if (!SFX_preon.files_found()) return;
     int preon_choice = preon_file_num_;
     switch(preon_choice) {
       case 0: 
