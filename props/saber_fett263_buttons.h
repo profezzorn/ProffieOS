@@ -460,7 +460,7 @@ EFFECT(quote); // quote on force effect
 EFFECT(medit); // Edit Mode
 #endif
 
-#include "sound/sound_library.h"
+#include "../sound/sound_library.h"
 
 class GestureControlFile : public ConfigFile {
 public:
