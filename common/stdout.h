@@ -49,6 +49,11 @@ public:
 #endif
 };
 
+template<typename T>
+Print& operator<<(Print& p, T v) {
+  PrintHelper<const T>::out(p, v);
+  return p;
+}
 
 class CatchCommandOutput : public Print {
  public:
@@ -85,5 +90,6 @@ extern ConsoleHelper STDOUT;
 Print* default_output = &Serial;                \
 Print* stdout_output = &Serial;                 \
 ConsoleHelper STDOUT
+#define STDERR (*default_output)
 
 #endif
