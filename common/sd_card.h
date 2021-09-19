@@ -13,7 +13,7 @@ public:
 
   bool Active() {
 #ifdef ENABLE_AUDIO    
-    if (amplifier.Active() || AudioStreamWork::sd_is_locked()) {
+    if (amplifier.Active() || AudioStreamWork::sd_is_locked() || AudioStreamWork::SDActive()) {
       last_enabled_ = millis();
       return true;
     }

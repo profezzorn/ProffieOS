@@ -121,7 +121,7 @@ public:
       default:
       case SCREEN_OFF:
 	Clear();
-        return 1000;
+        return 3600000; // Long time!
 
       case SCREEN_STARTUP:
 	Clear();
@@ -173,7 +173,7 @@ public:
           display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
         screen_ = SCREEN_PLI;
-	t_ = 0;
+	t_ = -(uint32_t)font_config.ProffieOSFontImageDuration;
 	// STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
         return font_config.ProffieOSFontImageDuration;
       }
@@ -182,7 +182,7 @@ public:
         MountSDCard();
 	int count = 0;
 	while (!frame_available_) {
-	  if (count++ > 30) return 10000;
+	  if (count++ > 3) return 0;
 	  if (eof_) advance = false;
 	  advance_ = advance;
 	  lock_fb_ = false;
@@ -673,7 +673,7 @@ public:
       loop_counter_.Update();
 #ifdef PROFFIEBOARD
       i = -(int)NELEM(transactions);
-      I2CLockAndRun();
+      while (!I2CLockAndRun()) YIELD();
       while (lock_fb_) YIELD();
 #else
       do { YIELD(); } while (!I2CLock());
