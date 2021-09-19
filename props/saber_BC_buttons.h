@@ -43,7 +43,6 @@ Melt is always available as no button, with pull-away or button to end
 Drag is always clash with button pressed while pointing down.
 
 Optional #defines:
-#define SPOKEN_BATTERY_PERCENT  - Spoken battery level in % instead of voltage.
 #define ENABLE_AUTO_SWING_BLAST - Multi-blast initiated by simply swinging
                                   within 1 second of last blast.
                                   Exit by not swinging for 1 second.
@@ -339,6 +338,9 @@ EFFECT(push);       // for Force Push gesture
 EFFECT(quote);      // for playing quotes
 EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 EFFECT(swap);       // for standalone triggering EffectSequence<>
+EFFECT(battlevel);  // for Spoken Battery Level
+EFFECT(point);      // for Spoken Battery Level
+EFFECT(volts);      // for Spoken Battery Level
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -727,18 +729,11 @@ public:
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
   #endif
     if (!mode_volume_) {
-  #ifdef SPOKEN_BATTERY_PERCENT
-      talkie.Say(spBATTERYLEVEL);
-      talkie.SayNumber((int)floorf(battery_monitor.battery_percent()));
-      talkie.Say(spPERCENT);
-  #else // Volts
-      talkie.Say(spBATTERYLEVEL);
       talkie.SayDigit((int)floorf(battery_monitor.battery()));
       talkie.Say(spPOINT);
       talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
       talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
       talkie.Say(spVOLTS);
-  #endif
     }
     return true;
 
