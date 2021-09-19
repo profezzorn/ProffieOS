@@ -107,9 +107,16 @@ public:
     }
   }
 
+  uint32_t last_delay_ = 0;
+  uint32_t t_ = 0;  // time since we switched screen
+
   // Fill frame buffer and return how long to display it.
   int FillFrameBuffer(bool advance) override {
-    if (screen_ != SCREEN_PLI) pli_millis_ = 0;
+    if (advance) t_ += last_delay_;
+    return last_delay_ = FillFrameBuffer2(advance);
+  }
+    
+  int FillFrameBuffer2(bool advance) {
     switch (screen_) {
       default:
       case SCREEN_OFF:
@@ -134,9 +141,9 @@ public:
         return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
-	if (!SaberBase::IsOn() && pli_millis_ > font_config.ProffieOSFontImageDuration) {
+	if (!SaberBase::IsOn() && t_ > font_config.ProffieOSFontImageDuration) {
 	  screen_ = SCREEN_OFF;
-	  return FillFrameBuffer(advance);
+	  return FillFrameBuffer2(advance);
 	}
 	Clear();
 	display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
@@ -149,8 +156,6 @@ public:
 	  tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
 	  display_->DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
 	}
-	// STDERR << "PLI, millis = 200\n";
-	pli_millis_ += 200;
         return 200;  // redraw once every 200 ms
 
       case SCREEN_MESSAGE: {
@@ -168,25 +173,32 @@ public:
           display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
         screen_ = SCREEN_PLI;
+	t_ = 0;
 	// STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
         return font_config.ProffieOSFontImageDuration;
       }
 
       case SCREEN_IMAGE:
         MountSDCard();
-        if (!eof_) {
-	  if (!frame_available_) {
-	    advance_ = advance;
-	    lock_fb_ = false;
-	    scheduleFillBuffer();
-	    if (!frame_available_) {
-	      return 0;
-	    }
+	int count = 0;
+	while (!frame_available_) {
+	  if (count++ > 30) return 10000;
+	  if (eof_) advance = false;
+	  advance_ = advance;
+	  lock_fb_ = false;
+	  scheduleFillBuffer();
+	}
+	lock_fb_ = true;
+        if (eof_) {
+	  // STDERR << "FRAME COUNT @ EOF= " << frame_count_ << " left=" << (effect_display_duration_ - t_) <<  "\n";
+	  if (frame_count_ == 1 && t_ < effect_display_duration_) {
+	    ConvertToNative();
+	    frame_available_ = false;
+	    return effect_display_duration_ - t_;
 	  }
-	  lock_fb_ = true;
-	  frame_count_++;
-	  
-	  if (looped_frames_ == 1 || millis() - loop_start_ < effect_display_duration_) {
+	} else {
+	  if (frame_available_ && advance) frame_count_++;
+	  if (looped_frames_ == 1 || t_ < effect_display_duration_) {
 	    ConvertToNative();
 	    frame_available_ = false;
 	    if (font_config.ProffieOSAnimationFrameRate > 0.0) {
@@ -199,24 +211,21 @@ public:
 	      return 41;   // ~24 fps
 	    }
 	  }
-	} else {
-	  // STDERR << "FRAME COUNT @ EOF= " << frame_count_ << "\n";
-	  if (frame_count_ == 1) {
-	    frame_count_ = 0;
-	    return effect_display_duration_;
-	  }
 	}
-	
+
+	// STDERR << "MOVING ON...\n";
+
+	// This image/animation is done, time to choose the next thing to display.
 	screen_ = SCREEN_PLI;
+	t_ = 0;
         if (SaberBase::IsOn()) {
-	  // Single frame image
 	  if (SaberBase::Lockup()) {
 	    ShowFile(&IMG_lock, 3600000.0);
 	  } else if (looped_on_) {
 	    ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
 	  }
         }
-	return FillFrameBuffer(advance);
+	return FillFrameBuffer2(advance);
     }
   }
 
@@ -283,6 +292,7 @@ public:
   }
 
   void SetScreenNow(Screen screen) {
+    last_delay_ = t_ = 0;
     screen_ = screen;
     display_->Page();
   }
@@ -293,7 +303,6 @@ public:
       eof_ = true;
       file_.Play(effect);
       frame_available_ = false;
-      loop_start_ = millis();
       frame_count_ = 0;
       SetScreenNow(SCREEN_IMAGE);
       eof_ = false;
@@ -307,7 +316,6 @@ public:
     eof_ = true;
     file_.Play(file);
     frame_available_ = false;
-    loop_start_ = millis();
     frame_count_ = 0;
     SetScreenNow(SCREEN_IMAGE);
     eof_ = false;
@@ -316,7 +324,8 @@ public:
 
   // AudioStreamWork implementation
   size_t space_available() const override {
-    if (eof_ || lock_fb_) return 0;
+    if (lock_fb_) return 0;
+    if (eof_ && advance_) return 0;
     if (frame_available_) return 0;
 
     // Always low priority
@@ -333,7 +342,7 @@ public:
   bool ReadImage(FileReader* f) {
     uint32_t file_end = 0;
     // STDERR << "ReadImage " << f->Tell() << " size = " << f->FileSize() << "\n";
-    if (ypos_ >= looped_frames_) {
+    if (ypos_ >= looped_frames_ || ypos_ == 0) {
       if (looped_frames_ > 1) f->Seek(0);
       ypos_ = 0;
       uint32_t file_start = f->Tell();
@@ -422,36 +431,58 @@ public:
     return true;
   }
 
+  struct ReadState {
+    int ypos = 0;
+    uint32_t file_pos = 0;
+  };
+  
   bool FillBuffer() override {
-    if (eof_) return true;
+    if (eof_ && advance_) {
+      // STDERR << "e&a\n";
+      return true;
+    }
     if (file_.OpenFile()) {
       if (!file_.IsOpen()) {
         eof_ = true;
+	// STDERR << "not open\n";
         return false;
       }
       ypos_ = looped_frames_;
     }
-    if (lock_fb_) return true;
+    if (lock_fb_) {
+      // STDERR << "locked\n";
+      return true;
+    }
     if (!frame_available_) {
-      // STDERR << "ADVANCE=" << advance_ << " last_file_pos_= " << last_file_pos_ << "\n";
+      // STDERR << "ADVANCE=" << advance_ << " last_file_pos_= " << last_state_.file_pos << " ypos=" << last_state_.ypos << "\n";
       if (!advance_) {
-	file_.Seek(last_file_pos_);
+	file_.Seek(last_state_.file_pos);
+	ypos_ = last_state_.ypos;
       } else {
 	advance_ = false;
       }
-      last_file_pos_ = file_.Tell();
-      if (!ReadImage(&file_)) {
-        file_.Close();
-        eof_ = true;
-      } else {
+      ReadState state;
+      state.ypos = ypos_;
+      state.file_pos = file_.Tell();
+      if (ReadImage(&file_)) {
 	frame_available_ = true;
+	last_state_ = state;
+      } else {
+	STDERR << "read image fail\n";
+        eof_ = true;
       }
     }
     return true;
   }
+
+  bool IsActive() override {
+    return screen_ == SCREEN_IMAGE;
+  }
+  
   void CloseFiles() override {
     file_.Close();
   }
+
 
 private:
   // Variables related to frame buffer layout.
@@ -471,15 +502,13 @@ private:
   volatile int32_t looped_frames_ = 0;
   int32_t ypos_ = 0;
   bool lock_fb_ = false;
-  uint32_t last_file_pos_ = 0;
+  ReadState last_state_;
   volatile bool advance_ = true;
 
   // True if IMG_on is looped.
   volatile bool looped_on_ = false;
   volatile float effect_display_duration_;
-  uint32_t loop_start_;
   volatile Effect* current_effect_;
-  uint32_t pli_millis_;
 };
 
 template<int WIDTH, class col_t>

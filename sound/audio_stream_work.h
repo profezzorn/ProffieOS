@@ -62,8 +62,15 @@ public:
     for (AudioStreamWork *d = data_streams; d; d=d->next_)
       d->CloseFiles();
   }
+  static bool SDActive() {
+    for (AudioStreamWork *d = data_streams; d; d=d->next_)
+      if (d->IsActive())
+	return true;
+    return false;
+  }
 protected:
   virtual bool FillBuffer() = 0;
+  virtual bool IsActive() { return false; }
   virtual void CloseFiles() = 0;
   virtual size_t space_available() const = 0;
 
