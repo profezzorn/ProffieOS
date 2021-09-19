@@ -60,6 +60,7 @@ public:
   static const int WIDTH = Width;
   static const int HEIGHT = sizeof(col_t) * 8;
   enum Screen {
+    SCREEN_UNSET,
     SCREEN_STARTUP,
     SCREEN_MESSAGE,
     SCREEN_PLI,
@@ -112,13 +113,22 @@ public:
 
   // Fill frame buffer and return how long to display it.
   int FillFrameBuffer(bool advance) override {
-    if (advance) t_ += last_delay_;
+    if (advance) {
+      if (next_screen_ != SCREEN_UNSET) {
+	screen_ = next_screen_;
+	next_screen_ = SCREEN_UNSET;
+	t_ = 0;
+      } else {
+	t_ += last_delay_;
+      }
+    }
     return last_delay_ = FillFrameBuffer2(advance);
   }
     
   int FillFrameBuffer2(bool advance) {
     switch (screen_) {
       default:
+      case SCREEN_UNSET:
       case SCREEN_OFF:
 	Clear();
         return 3600000; // Long time!
@@ -137,7 +147,7 @@ public:
 	  display_->DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
 	  display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
 	}
-        screen_ = SCREEN_PLI;
+        next_screen_ = SCREEN_PLI;
         return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
@@ -172,8 +182,7 @@ public:
 	  // centered
           display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
-        screen_ = SCREEN_PLI;
-	t_ = -(uint32_t)font_config.ProffieOSFontImageDuration;
+        next_screen_ = SCREEN_PLI;
 	// STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
         return font_config.ProffieOSFontImageDuration;
       }
@@ -492,6 +501,7 @@ private:
 
   // Screen state
   Screen screen_ = SCREEN_STARTUP;
+  Screen next_screen_ = SCREEN_UNSET;
   char message_[32];
 
   // File reading
