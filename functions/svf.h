@@ -44,6 +44,7 @@ class SVFWrapper<SingleValueAdapter<SVF>> : public SVF {};
 
 template<class SVF, int A, int B>
 class SVFWrapper<Scale<SingleValueAdapter<SVF>, Int<A>, Int<B>>> {
+ public:
   FunctionRunResult run(BladeBase* blade) { return RunFunction(&svf_, blade); }
   int calculate(BladeBase* blade) {
     return (svf_.calculate(blade) * (B - A) >> 15) + A;
