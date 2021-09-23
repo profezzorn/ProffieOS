@@ -22,8 +22,8 @@ public:
     wave_ms_.run(blade);
     color_.run(blade);
     if (this->restart()) {
-      center_ = wave_center_.getInteger(0);
-      size_ = wave_size_.getInteger(0);
+      center_ = wave_center_.calculate(blade);
+      size_ = wave_size_.calculate(blade);
     }
     TransitionBaseX<FADEOUT_MS>::run(blade);
     mix_ = 32768 - this->update(32768);
@@ -31,10 +31,10 @@ public:
     offset_ = (millis() - this->start_millis()) * 32768 / wave_ms_.getInteger(0);
   }
 private:
-  WAVE_CENTER wave_center_;
+  SVFWrapper<WAVE_CENTER> wave_center_;
   int center_;
   
-  WAVE_SIZE wave_size_;
+  SVFWrapper<WAVE_SIZE> wave_size_;
   int size_;
 
   int mix_;
