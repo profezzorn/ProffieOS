@@ -1520,7 +1520,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 
 #ifdef FETT263_EDIT_MODE_MENU
-#define SUBMENUS 9
+#define SUBMENUS 8
 #define COLOR_OPTIONS 3
 #define GESTURE_OPTIONS 12
 #define SET_SUBMENUS 5
@@ -1787,6 +1787,7 @@ SaberFett263Buttons() : PropBase() {}
       }
       show_preview_.Stop(blade_preview_);
       blade_preview_ = 0;
+      menu_sub_pos_ = 0;
       menu_type_ = MENU_STYLE_SUB;
       sound_library_.SaySelectOption();
       break;
