@@ -86,6 +86,8 @@ Optional Gesture Controls (if enabled)
   Clash / Lockup = controlled by gesture
     Clash blade
       If blade swings through the clash it will do a "glancing Clash"
+      If using FETT263_BM_CLASH_DETECT 6 define (Battle Mode 2.0) normal clash used for hits below the
+        FETT263_BM_CLASH_DETECT value (1 ~ 8), if undefined or equal to 0 then Battle Mode 1.0 is used.
       If blade stops/slows on clash the saber will initiate Begin Lockup
       To perform a "clash" do an immediate Pull Away this will transition from Begin Lockup to End Lockup in quick succession
       To Lockup, steady the blade after Clash
@@ -186,11 +188,11 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
     FETT263_LOCKUP_DELAY 200
       This is the "delay" in millis to determine Clash vs Lockup
 
-    FETT263_BM_CLASH_DETECT 4
+    FETT263_BM_CLASH_DETECT 6
       The max value to use clashes in Battle Mode 2.0, clashes used on clash strength below this value
       This allows light clashes to produce clash effects instead of using Begin/End Lockup
       (above this value Clash is performed by quick pull away using Begin/End Lockup sounds and effect)
-      Range 0 ~ 6 (note 0 will use Battle Mode 1.0 with all clashes being Begin/End Lockup)
+      Range 0 ~ 8 (note 0 will use Battle Mode 1.0 with all clashes being Begin/End Lockup)
 
     FETT263_BM_DISABLE_OFF_BUTTON
       During Battle Mode Power Button Retraction is disabled
