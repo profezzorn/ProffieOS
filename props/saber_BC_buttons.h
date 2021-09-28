@@ -806,7 +806,7 @@ public:
       if (!mode_volume_) {
       // Bypass preon if pointing up  
         if (fusor.angle1() >  M_PI / 3) {
-          SaberBase::TurnOn();
+          FastOn();
         } else {
           On();
         }
