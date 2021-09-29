@@ -14,6 +14,9 @@ class WS2811Client {
 public:
   virtual void done_callback() = 0;
   virtual int chunk_size() = 0;
+  virtual int pin() = 0;
+  virtual int frequency() = 0;
+  virtual int num_leds() = 0;
   virtual void read(uint8_t* dest) = 0;
   virtual uint8_t get_t0h() = 0;
   virtual uint8_t get_t1h() = 0;
@@ -26,7 +29,7 @@ Color16* volatile color_buffer_ptr = color_buffer + NELEM(color_buffer);
 
 class WS2811Engine {
 public:
-  virtual void show(int pin, int bits, int frequency, WS2811Client* client) = 0;
+  virtual void show(WS2811Client* client) = 0;
   virtual bool done() = 0;
 };
 
@@ -172,7 +175,10 @@ public:
     }
   }
   
-  void show(int pin, int leds, int frequency, WS2811Client* client) override {
+  void show(WS2811Client* client) override {
+    int pin = client->pin();
+    int leds = client->num_leds();
+    int frequency = client->frequency();
     TRACE(BLADE, "show enter");
     while (!ws2811_dma_done) armv7m_core_yield();
     client_ = client;
@@ -557,7 +563,7 @@ public:
     if (engine_) {
       done_ = false;
       color_buffer_ptr = pos;
-      engine_->show(pin_, num_leds_, frequency_, this);
+      engine_->show(this);
     }
     TRACE(BLADE, "exit");
   }
@@ -611,6 +617,10 @@ private:
   int chunk_size() override {
     return Color8::num_bytes(BYTEORDER) * 8;
   }
+  
+  int pin() override { return pin_; }
+  int frequency() override { return frequency_; }
+  int num_leds() override { return num_leds_; }
 
   void set01(uint8_t zero, uint8_t one) override {
     zero4X_ = zero * 0x01010101;
