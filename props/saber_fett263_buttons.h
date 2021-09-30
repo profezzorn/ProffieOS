@@ -3701,10 +3701,10 @@ SaberFett263Buttons() : PropBase() {}
   void PlayQuote() {
     if (SFX_quote) {
       SFX_quote.SelectNext();
-      wav_player->PlayOnce(&SFX_quote, 0.0);
+      hybrid_font.PlayCommon(&SFX_quote);
     } else {
       SFX_force.SelectNext();
-      wav_player->PlayOnce(&SFX_force, 0.0);
+      hybrid_font.PlayCommon(&SFX_force);
     }
   }
 
