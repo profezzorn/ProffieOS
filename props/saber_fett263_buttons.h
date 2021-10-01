@@ -72,10 +72,10 @@ Standard Controls While Blade is ON
   NEW! Hold PWR to enter ZOOM mode to fine-tune color, Release PWR to save
   Power Save* = Hold AUX + Click PWR (pointing up)
     *requires EFFECT_POWERSAVE in style
-  Multi-Phase Preset Change*
+  NEW Control! Multi-Phase Preset Change*
     *requires FETT263_MULTI_PHASE define
-    Hold AUX + Twist =  Next Preset
-    Hold PWR + Twist = Previous Preset
+    Hold AUX + Twist Right (Clockwise) =  Next Preset
+    Hold AUX + Twist Left (Counter-Clockwise) = Previous Preset
 Optional Gesture Controls (if enabled)
   Retract Blade
     Twist Off
@@ -4677,29 +4677,20 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
 #ifdef FETT263_MULTI_PHASE
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
-        // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_millis_ > 2000) {
-          last_twist_millis_ = millis();
-          Off();
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
+        if (menu_) return true;
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectIgnitionSound();
+        SelectIgnitionSound();
 #endif
-          FastOn();
-        }
+        next_preset_fast();
         return true;
 
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
-        // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_millis_ > 2000) {
-          last_twist_millis_ = millis();
-          Off();
-          previous_preset();
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
+        if (menu_) return true;
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectIgnitionSound();
+        SelectIgnitionSound();
 #endif
-          FastOn();
-        }
+        previous_preset_fast();
         return true;
 #endif
 
