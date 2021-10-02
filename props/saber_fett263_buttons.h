@@ -4678,27 +4678,26 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
+	if (menu_) return true;
         // Delay twist events to prevent false trigger from over twisting
         if (millis() - last_twist_millis_ > 2000) {
           last_twist_millis_ = millis();
-          Off();
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
-          FastOn();
+          next_preset_fast();
         }
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
+	if (menu_) return true;
         // Delay twist events to prevent false trigger from over twisting
         if (millis() - last_twist_millis_ > 2000) {
           last_twist_millis_ = millis();
-          Off();
-          previous_preset();
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
-          FastOn();
+          previous_preset_fast();
         }
         return true;
 #endif
