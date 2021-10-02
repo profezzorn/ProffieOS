@@ -34,9 +34,8 @@ public:
 } while(0)
 
 // Position where we are reading colors from the color buffer.
-// Positions below this pointer are already been read and can be reused.
-Color16* volatile color_buffer_ptr = color_buffer + NELEM(color_buffer);
-Color16* color_buffer_front = color_buffer;
+Color16* volatile color_buffer_ptr = color_buffer;
+uint32_t color_buffer_size = 0;
 
 class WS2811Engine {
 public:
@@ -64,14 +63,14 @@ public:
     TRACE(BLADE, "kick");
     if (!ws2811_dma_done) return;
     if (!client_) return;
-    if (color_buffer_ptr == color_buffer + NELEM(color_buffer)) return;
+    PROFFIEOS_ASSERT(color_buffer_size);
     show();
   }
 
   void queue(WS2811Client* client) override {
     TRACE(BLADE, "queue");
     client->next_ws2811_client_ = nullptr;
-    PROFFIEOS_ASSERT(color_buffer_ptr - color_buffer_front < NELEM(color_buffer));
+    PROFFIEOS_ASSERT(color_buffer_size);
     noInterrupts();
     if (!client_) {
       last_client_ = client_ = client;
@@ -181,7 +180,6 @@ public:
   }
 
   void FillTo(uint8_t* end) {
-    WS2811Client* client = client_;
 #if 0    
     while (dest_ < end) {
       if (!chunk_bits_) {
@@ -498,7 +496,7 @@ public:
     client_->done_callback();
     noInterrupts();
     client_ = client_->next_ws2811_client_;
-    PROFFIEOS_ASSERT( !client_ || (color_buffer_ptr - color_buffer_front < NELEM(color_buffer)) );
+    PROFFIEOS_ASSERT( !client_ || color_buffer_size );
     interrupts();
     armv7m_pendsv_enqueue((armv7m_pendsv_routine_t)static_kick, (void *)this, 0);
     TRACE(BLADE, "dma done exit");
@@ -592,40 +590,33 @@ public:
 #endif    
   }
 
-  void PollShift() {
-    if (color_buffer_ptr < color_buffer + NELEM(color_buffer)) return;
-    size_t N = color_buffer_front - color_buffer;
-    if (!N) return;
-    Color16 *ptr = color_buffer + NELEM(color_buffer) - N;;
-    memmove(ptr, color_buffer, N * sizeof(color_buffer[0]));
-    color_buffer_ptr = ptr;
-    color_buffer_front = color_buffer;
-    if (engine_) engine_->kick();
-  }
-
   bool IsReadyForBeginFrame() override {
-    PollShift();
     if (num_leds_ > NELEM(color_buffer)) {
       STDOUT.print("Display memory is not big enough, increase maxLedsPerStrip!");
       return false;
     }
-    return color_buffer_ptr - color_buffer_front >= num_leds_;
+    return NELEM(color_buffer) - color_buffer_size >= num_leds_;
   }
 
   Color16* BeginFrame() override {
     TRACE(BLADE, "beginframe enter");
     while (!IsReadyForBeginFrame()) armv7m_core_yield();
     TRACE(BLADE, "exit");
-    return color_buffer_front;
+
+    noInterrupts();
+    Color16 *ret = color_buffer_ptr + color_buffer_size;
+    interrupts();
+
+    if (ret >= color_buffer + NELEM(color_buffer)) ret -= NELEM(color_buffer);
+    return ret;
   }
 
   bool IsReadyForEndFrame() override {
-    PollShift();
     return done_ && (micros() - done_time_us_) > reset_us_;
   }
 
   void EndFrame() override {
-    color_buffer_front += num_leds_;
+    armv7m_atomic_add(&color_buffer_size, num_leds_);
     TRACE(BLADE, "endframe enter");
     if (!engine_) return;
     while (!IsReadyForEndFrame()) armv7m_core_yield();
@@ -652,6 +643,7 @@ private:
   }
 
   void read(uint8_t* dest) override __attribute__((optimize("Ofast"))) {
+    PROFFIEOS_ASSERT(color_buffer_size);
     Color16* pos = color_buffer_ptr;
     uint32_t* output = (uint32_t*) dest;
     Color8 color = pos->dither(frame_num_, pos - color_buffer);
@@ -677,8 +669,11 @@ private:
     tmp = GETBYTE<BYTEORDER, 0>(color) * 0x8040201U;
     *(output++) = zero4X_ ^ ((tmp >> 7) & 0x01010101U) * one_minus_zero_;
     *(output++) = zero4X_ ^ ((tmp >> 3) & 0x01010101U) * one_minus_zero_;
-#endif    
-    color_buffer_ptr = pos + 1;
+#endif
+    pos++;
+    if (pos == color_buffer + NELEM(color_buffer)) pos = color_buffer;
+    armv7m_atomic_sub(&color_buffer_size, 1);
+    color_buffer_ptr = pos;
   }
 
   int chunk_size() override {
