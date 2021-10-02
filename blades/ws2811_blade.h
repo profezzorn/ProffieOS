@@ -15,7 +15,7 @@ BladeBase* current_blade = NULL;
 class WS2811PIN {
 public:
   virtual bool IsReadyForBeginFrame() = 0;
-  virtual void BeginFrame() = 0;
+  virtual Color16 *BeginFrame() = 0;
   virtual bool IsReadyForEndFrame() = 0;
   virtual void EndFrame() = 0;
   virtual int num_leds() const = 0;
@@ -63,23 +63,23 @@ WS2811_Blade(WS2811PIN* pin,
       power_->Init();
       TRACE(BLADE, "Power on");
       pin_->Enable(true);
-      pin_->BeginFrame();
-      for (int i = 0; i < pin_->num_leds(); i++) color_buffer[i] = Color16();
+      Color16* C = pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) C[i] = Color16();
       while (!pin_->IsReadyForEndFrame());
       power_->Power(on);
       pin_->EndFrame();
-      pin_->BeginFrame();
+      C = pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) C[i] = Color16();
       pin_->EndFrame();
-      pin_->BeginFrame();
+      C = pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) C[i] = Color16();
       pin_->EndFrame();
       current_blade = NULL;
     } else if (powered_ && !on) {
       TRACE(BLADE, "Power off");
-      pin_->BeginFrame();
-      for (int i = 0; i < pin_->num_leds(); i++) color_buffer[i] = Color16();
-      while (!pin_->IsReadyForEndFrame());
+      Color16* C = pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) C[i] = Color16();
       pin_->EndFrame();
-      while (!pin_->IsReadyForEndFrame());
       power_->Power(on);
       pin_->Enable(false);
       power_->DeInit();
@@ -118,7 +118,7 @@ WS2811_Blade(WS2811PIN* pin,
     return on_;
   }
   void set(int led, Color16 c) override {
-    color_buffer[led] = c;
+    colors_[led] = c;
   }
   void allow_disable() override {
     if (!on_) allow_disable_ = true;
@@ -224,7 +224,7 @@ protected:
 
       // Update pixels
       while (!pin_->IsReadyForBeginFrame()) BLADE_YIELD();
-      pin_->BeginFrame();
+      colors_ = pin_->BeginFrame();
       
       allow_disable_ = false;
       current_style_->run(this);
@@ -263,6 +263,7 @@ private:
   StateMachineState state_machine_;
   PowerPinInterface* power_;
   WS2811PIN* pin_;
+  Color16* colors_;
 };
 
 

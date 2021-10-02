@@ -58,8 +58,9 @@ public:
   }
 
 
-  void BeginFrame() {
+  Color16* BeginFrame() {
     for (int i = Color8::num_bytes(byteorder_); i >= 0; i--) OutByte(0);
+    return color_buffer;
   }
 
   void EndFrame() {
