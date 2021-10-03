@@ -25,8 +25,8 @@ public:
 
 #if VERSION_MAJOR >= 4
 
-// Common, size adjusted to ~1000 interrupts per second.
-DMAMEM uint32_t displayMemory[400];
+// Common, size adjusted to ~2000 interrupts per second.
+DMAMEM uint32_t displayMemory[200];
 #include "stm32l4_ws2811.h"
 #define DefaultPinClass WS2811Pin
 
