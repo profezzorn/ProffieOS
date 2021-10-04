@@ -63,7 +63,7 @@
 // it into a stream of samples. Note that because it can
 // spend some time reading data between samples, the
 // reader must have enough buffers to provide smooth playback.
-class PlayWav : StateMachine, public AudioStream {
+class PlayWav : StateMachine, public ProffieOSAudioStream {
 public:
   void Play(const char* filename) {
     if (!*filename) return;

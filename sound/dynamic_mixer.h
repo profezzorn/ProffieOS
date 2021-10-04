@@ -5,7 +5,7 @@
 
 // Audio compressor, takes N input channels, sums them and divides the
 // result by the square root of the average volume.
-template<int N> class AudioDynamicMixer : public AudioStream, Looper {
+template<int N> class AudioDynamicMixer : public ProffieOSAudioStream, Looper {
 public:
   AudioDynamicMixer() {
     for (int i = 0; i < N; i++) {
@@ -178,7 +178,7 @@ public:
   void set_volume(int32_t volume) { volume_ = volume; }
   int32_t get_volume() const { return volume_; }
 
-  AudioStream* streams_[N];
+  ProffieOSAudioStream* streams_[N];
   int32_t vol_ = 0;
   int32_t last_sample_ = 0;
   int32_t last_sum_ = 0;

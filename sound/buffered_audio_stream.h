@@ -13,7 +13,7 @@
 // only modified in read();
 // N needs to be power of 2
 template<int N>
-class BufferedAudioStream : public AudioStream, public AudioStreamWork {
+class BufferedAudioStream : public ProffieOSAudioStream, public AudioStreamWork {
 public:
   BufferedAudioStream() : AudioStreamWork() {
   }
@@ -58,7 +58,7 @@ public:
   size_t space_available() const override {
     return real_space_available();
   }
-  void SetStream(AudioStream* stream) {
+  void SetStream(ProffieOSAudioStream* stream) {
     stop_requested_ = false;
     eof_ = false;
     stream_ = stream;
@@ -91,7 +91,7 @@ private:
     }
     return stream_ && space_available() > 0 && !eof_;
   }
-  AudioStream* volatile stream_ = 0;
+  ProffieOSAudioStream* volatile stream_ = 0;
   // Note, these are assumed to be atomic, 8-bit processors won't work.
   volatile size_t buf_start_ = 0;
   volatile size_t buf_end_ = 0;

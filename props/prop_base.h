@@ -95,7 +95,7 @@ public:
       if (!player) {
         player = GetFreeWavPlayer();
         if (!player) return;
-	player->set_volume_now(1.0);
+	player->set_volume_now(1.0f);
       }
       queue_[0].Play(player.get());
       sounds_--;
