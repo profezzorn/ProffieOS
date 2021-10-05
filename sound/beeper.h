@@ -2,7 +2,7 @@
 #define SOUND_BEEPER_H
 
 // Beeper class, used for warning beeps and such.
-class Beeper : public AudioStream {
+class Beeper : public ProffieOSAudioStream {
 public:
   int read(int16_t *data, int elements) override {
     SCOPED_PROFILER();
