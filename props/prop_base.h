@@ -460,6 +460,70 @@ public:
     SetPreset(current_preset_.preset_num - 1, true);
   }
 
+// Fast On Gesture Ignition
+  virtual void FastOn() {
+    if (IsOn()) return;
+    if (current_style() && current_style()->NoOnOff()) return;
+    activated_ = millis();
+    STDOUT.println("Ignition.");
+    MountSDCard();
+    EnableAmplifier();
+    SaberBase::RequestMotion();
+    // Avoid clashes a little bit while turning on.
+    // It might be a "clicky" power button...
+    IgnoreClash(500);
+    SaberBase::TurnOn();
+    // Note - faston.wav does not replace out.wav, but plays concurrently.
+    SaberBase::DoEffect(EFFECT_FAST_ON, 0);
+  }
+
+  // Go to the next Preset skipping Preon effect with FastOn.
+  virtual void next_preset_fast() {
+#ifdef SAVE_PRESET
+    SaveState(current_preset_.preset_num + 1);
+#endif
+    UpdateFont(current_preset_.preset_num + 1, false);
+  }
+
+  // Go to the previous Preset skipping Preon effect with FastOn.
+  virtual void previous_preset_fast() {
+#ifdef SAVE_PRESET
+    SaveState(current_preset_.preset_num - 1);
+#endif
+    UpdateFont(current_preset_.preset_num - 1, false);
+  }
+
+// Update Font / Save Style in Edit Mode, skips Preon effect (except for Preon Editing previews) using FastOn
+  virtual void UpdateFont(int preset_num, bool preon) {
+    TRACE(PROP, "start");
+    bool on = SaberBase::IsOn();
+    if (on) Off();
+    SaveColorChangeIfNeeded();
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+#define UNSET_BLADE_STYLE(N) \
+    delete current_config->blade##N->UnSetStyle();
+    ONCEPERBLADE(UNSET_BLADE_STYLE)
+    current_preset_.SetPreset(preset_num);
+#define SET_BLADE_STYLE_FAST(N) \
+    current_config->blade##N->SetStyle(style_parser.Parse(current_preset_.current_style##N.get()));
+    ONCEPERBLADE(SET_BLADE_STYLE_FAST)
+    chdir(current_preset_.font.get());
+#ifdef SAVE_COLOR_CHANGE
+    SaberBase::SetVariation(current_preset_.variation);
+#else
+    SaberBase::SetVariation(0);
+#endif
+    if (on) {
+      if (preon) {
+        On();
+      } else {
+        FastOn();
+      }
+    }
+    TRACE(PROP, "end");
+  }
+
   // Rotates presets backwards and saves.
   virtual void rotate_presets() {
 #ifdef IDLE_OFF_TIME
