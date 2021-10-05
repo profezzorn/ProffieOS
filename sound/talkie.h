@@ -652,7 +652,7 @@ public:
   bool inited = false;
 };
 
-class Talkie : public AudioStream
+class Talkie : public ProffieOSAudioStream
 #ifdef ENABLE_DEVELOPER_COMMANDS
    , CommandParser
 #endif

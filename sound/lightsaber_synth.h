@@ -1,7 +1,7 @@
 #ifndef SOUND_LIGHTSABER_SYNTH_H
 #define SOUND_LIGHTSABER_SYNTH_H
 
-class LightSaberSynth : public AudioStream, Looper {
+class LightSaberSynth : public ProffieOSAudioStream, Looper {
 public:
   const char* name() override { return "LightSaberSynth"; }
 

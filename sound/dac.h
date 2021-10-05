@@ -476,7 +476,7 @@ public:
   }
 
   // TODO: Replace with enable/disable
-  void SetStream(class AudioStream* stream) {
+  void SetStream(class ProffieOSAudioStream* stream) {
     stream_ = stream;
   }
 
@@ -603,7 +603,7 @@ private:
 #ifdef ENABLE_I2S_OUT
   DMAMEM static uint16_t dac_dma_buffer2[AUDIO_BUFFER_SIZE*2*CHANNELS];
 #endif
-  static AudioStream * volatile stream_;
+  static ProffieOSAudioStream * volatile stream_;
   static DMAChannel dma;
 #if defined(ENABLE_I2S_OUT) || defined(ENABLE_SPDIF_OUT)
   static DMAChannel dma2;
@@ -626,7 +626,7 @@ DMAChannel LS_DAC::dma2;
 #endif
 
 #endif
-AudioStream * volatile LS_DAC::stream_ = nullptr;
+ProffieOSAudioStream * volatile LS_DAC::stream_ = nullptr;
 DMAMEM __attribute__((aligned(32))) uint16_t LS_DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
 #ifdef ENABLE_SPDIF_OUT
 DMAMEM __attribute__((aligned(32))) uint32_t LS_DAC::dac_dma_buffer2[AUDIO_BUFFER_SIZE*2*2];
