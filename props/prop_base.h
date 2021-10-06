@@ -460,8 +460,10 @@ public:
     SetPreset(current_preset_.preset_num - 1, true);
   }
 
-// Fast On Gesture Ignition
-  virtual void FastOn() {
+// Fast On Gesture Ignition, like On() but skips preon sound and effect so ignition is immediate.
+// For use with gestures where immediate response makes more sense
+// Note - faston.wav does not replace out.wav, but plays concurrently.
+	virtual void FastOn() {
     if (IsOn()) return;
     if (current_style() && current_style()->NoOnOff()) return;
     activated_ = millis();
@@ -473,7 +475,6 @@ public:
     // It might be a "clicky" power button...
     IgnoreClash(500);
     SaberBase::TurnOn();
-    // Note - faston.wav does not replace out.wav, but plays concurrently.
     SaberBase::DoEffect(EFFECT_FAST_ON, 0);
   }
 
