@@ -1241,8 +1241,9 @@ SaberFett263Buttons() : PropBase() {}
           SaveChoreo();
         }
         next_event_ = false;
-      } else {
+      } else 
 #endif
+      {
 #ifdef FETT263_EDIT_MODE_MENU
         switch (menu_type_) {
           case MENU_IGNITION_TIME:
@@ -1255,9 +1256,7 @@ SaberFett263Buttons() : PropBase() {}
             break;
         }
 #endif
-#ifdef FETT263_SAVE_CHOREOGRAPHY
       }
-#endif
     }
 #ifdef FETT263_EDIT_MODE_MENU
     if (off_event_ && millis() - restart_millis_ > 200) {
