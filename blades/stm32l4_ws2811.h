@@ -24,7 +24,7 @@ public:
   WS2811Client* volatile next_ws2811_client_ = nullptr;
 };
 
-// #define PROFFIEOS_ASSERT(X) do {} while(0)
+#ifdef DEBUG
 #define PROFFIEOS_ASSERT(X) do {					\
   if (!(X)) {								\
     interrupts();							\
@@ -32,6 +32,9 @@ public:
     while(true);							\
   }									\
 } while(0)
+#else
+#define PROFFIEOS_ASSERT(X) do {} while(0)
+#endif
 
 // Position where we are reading colors from the color buffer.
 Color16* volatile color_buffer_ptr = color_buffer;
