@@ -61,9 +61,9 @@ Standard Controls While Blade is ON
   Melt Effect = Hold AUX + Stab Parallel or Up
   Lightning Block Effect = Hold PWR + click AUX
   NEW! Force/Quote = Long Click PWR (parallel or down)
-    If pointing down will toggle Force/Quote and play
-    *Quote plays sequentially
-    If parallel will do Force/Quote
+    If quotes exist in current font pointing down will toggle between Force/Quote and play
+    *Quotes play sequentially 1,2,3...
+    If parallel will do Force/Quote based on current mode
   Start/Stop Tracks = Long Click PWR (pointing up)
     *default track only (use Track Player while OFF to select tracks or playback modes)
   Color Change = Hold AUX + Click PWR (parallel or down)
@@ -4186,11 +4186,7 @@ SaberFett263Buttons() : PropBase() {}
         } else {
           if (SFX_quote) {      
             if (fusor.angle1() < - M_PI / 3)  {
-              if (!force_quote_) {
-                force_quote_ = true;
-              } else {
-                force_quote_ = false;
-              }
+              force_quote_ = !force_quote_;
             }
             ForceQuote();
           } else {
