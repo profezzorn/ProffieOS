@@ -3981,11 +3981,13 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON | BUTTON_POWER):
+        if ((!menu_ && saved_gesture_control.powerlock)
 #ifdef FETT263_SAVE_CHOREOGRAPHY
-        if ((!menu_ && saved_gesture_control.powerlock) || choreo_) {
+	|| choreo_
+#endif
+        ) {
+#ifdef FETT263_SAVE_CHOREOGRAPHY
           choreo_ = false;
-#else
-	if (!menu_ && saved_gesture_control.powerlock) {
 #endif
 	  wav_player.Free();
           battle_mode_ = false;
