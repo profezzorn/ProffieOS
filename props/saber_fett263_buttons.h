@@ -3706,13 +3706,12 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
-  void PlayQuote() {
-    if (SFX_quote) {
+  void ForceQuote() {
+    if (force_quote_) {
       SFX_quote.SelectNext();
       hybrid_font.PlayCommon(&SFX_quote);
     } else {
-      SFX_force.SelectNext();
-      hybrid_font.PlayCommon(&SFX_force);
+      SaberBase::DoForce();
     }
   }
 
@@ -4185,29 +4184,16 @@ SaberFett263Buttons() : PropBase() {}
           }
           return true;
         } else {
-          if (SFX_quote) {
-            if (fusor.angle1() > - M_PI / 3 && fusor.angle1() < M_PI / 3)  {
-              if (force_quote_) {
-                PlayQuote();
-                return true;
-              } else {
-                SaberBase::DoForce();
-                return true;
-              }
-            } else {
+          if (SFX_quote) {      
+            if (fusor.angle1() < - M_PI / 3)  {
               if (!force_quote_) {
                 force_quote_ = true;
-                PlayQuote();
-                return true;
-              }
-              if (force_quote_) {
+              } else {
                 force_quote_ = false;
-                SaberBase::DoForce();
-                return true;
               }
             }
+            ForceQuote();
           } else {
-            force_quote_ = false;
             SaberBase::DoForce();
           }
         }
