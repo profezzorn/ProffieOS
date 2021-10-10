@@ -68,6 +68,7 @@ public:
   void Play(const char* filename) {
     if (!*filename) return;
     strcpy(filename_, filename);
+    new_file_id_ = Effect::FileID();
     run_ = true;
   }
 
@@ -194,7 +195,6 @@ private:
     STATE_MACHINE_BEGIN();
     while (true) {
       while (!run_ && !effect_) YIELD();
-      new_file_id_ = Effect::FileID();
       if (!run_) {
 	new_file_id_ = old_file_id_.GetFollowing(effect_);
         if (!new_file_id_) goto fail;

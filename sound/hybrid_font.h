@@ -362,9 +362,11 @@ public:
   Effect* getHum() { return SFX_humm ? &SFX_humm : &SFX_hum; }
 
   void SB_Preon() {
-    if (&SFX_preon) {
+    if (SFX_preon) {
       SFX_preon.SetFollowing(getOut());
-      RefPtr<BufferedWavPlayer> player = PlayPolyphonic(&SFX_preon);
+      // PlayCommon(&SFX_preon);
+      RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&SFX_preon);
+      
       if (monophonic_hum_) {
 	getOut()->SetFollowing(getHum());
       }
@@ -627,7 +629,7 @@ public:
 
   void SetHumVolume(float vol) override {
     if (!monophonic_hum_) {
-      if (state_ != STATE_OFF && !hum_player_) {
+      if (active_state() && !hum_player_) {
         hum_player_ = GetFreeWavPlayer();
         if (hum_player_) {
           hum_player_->set_volume_now(0);
@@ -639,6 +641,7 @@ public:
       if (!hum_player_) return;
       uint32_t m = micros();
       switch (state_) {
+        case STATE_WAIT_FOR_ON:
         case STATE_OFF:
           volume_ = 0.0f;
           return;
@@ -691,8 +694,8 @@ public:
     }
     if (check_postoff_) {
       SaberBase::RequestMotion();
-      if (!(hum_player_ && hum_player_->isPlaying() ||
-	    GetWavPlayerPlaying(&SFX_in))) {
+      if (!(hum_player_ && hum_player_->isPlaying()) ||
+	    GetWavPlayerPlaying(&SFX_in)) {
 	check_postoff_ = false;
 	SaberBase::DoEffect(EFFECT_POSTOFF, 0);
       }

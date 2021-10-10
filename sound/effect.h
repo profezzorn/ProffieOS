@@ -126,6 +126,8 @@ class Effect {
     selected_ = -1;
     num_files_ = 0;
     directory_ = nullptr;
+    volume_ = 100;
+    paired_ = false;
   }
 
   bool Scan(const char *filename) {
@@ -351,7 +353,7 @@ class Effect {
   void SetPaired(bool i) { paired_ = i; }
   bool GetPaired() const { return paired_; }
   void SetVolume(uint8_t v) { volume_ = v; }
-  bool GetVolume() const { return volume_; }
+  uint8_t GetVolume() const { return volume_; }
   const char* GetName() const { return name_; }
 
   // Returns true if file was identified.
@@ -464,7 +466,7 @@ private:
   int8_t digits_;
 
   // Volume adjustment in percent.
-  int8_t volume_ = 100;
+  uint8_t volume_;
 
   // If true. there is an un-numbered file as well.
   bool unnumbered_file_found_ : 1;

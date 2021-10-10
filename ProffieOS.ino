@@ -29,12 +29,12 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 // #define CONFIG_FILE "config/proffieboard_v1_graflex.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
-#define CONFIG_FILE "config/testconfig.h"
+// #define CONFIG_FILE "config/testconfig.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE

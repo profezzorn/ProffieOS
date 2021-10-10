@@ -50,7 +50,7 @@ public:
   void PlayOnce(Effect* effect, float start = 0.0) {
     MountSDCard();
     EnableAmplifier();
-    set_volume_now(volume() * effect->GetVolume() / 100);
+    set_volume_now(volume_target() * effect->GetVolume() / 100);
     STDOUT << "unit = " << WhatUnit(this) << " vol = " << volume() << ", ";
 
     pause_ = true;
