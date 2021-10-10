@@ -3929,22 +3929,6 @@ SaberFett263Buttons() : PropBase() {}
 #endif
         return true;
 
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
-        if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
-          track_mode_ = PLAYBACK_ROTATE;
-	  sound_library_.SayRotate();
-          return true;
-        }
-        return false;
-
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
-        if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
-          track_mode_ = PLAYBACK_LOOP;
-	  sound_library_.SayLoop();
-          return true;
-        }
-        return false;
-
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON):
         if (menu_) {
           if (menu_type_ == MENU_TOP) {
@@ -3997,55 +3981,6 @@ SaberFett263Buttons() : PropBase() {}
           Off();
         }
         return true;
-
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON):
-        if (wav_player && wav_player->isPlaying()) return true;
-        if (color_mode_ == CC_COLOR_LIST) {
-          dial_ = (dial_ + 1) % NELEM(color_list_);
-          ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
-#ifdef FETT263_SAY_COLOR_LIST
-          sound_library_.SayColor(color_list_[dial_].color_number);
-#else
-          hybrid_font.PlayCommon(&SFX_ccchange);
-#endif
-          return true;
-        }
-        if (menu_) MenuDial(1);
-        return true;
-
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON):
-        if (wav_player && wav_player->isPlaying()) return true;
-        if (color_mode_ == CC_COLOR_LIST) {
-          if (dial_ <= 0) dial_ = NELEM(color_list_);
-          dial_ = dial_ - 1;
-          ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
-#ifdef FETT263_SAY_COLOR_LIST_CC
-          sound_library_.SayColor(color_list_[dial_].color_number);
-#else
-          hybrid_font.PlayCommon(&SFX_ccchange);
-#endif
-          return true;
-        }
-        if (menu_) MenuDial(-1);
-        return true;
-
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF):
-        if (menu_) MenuDial(1);
-        return true;
-
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF):
-        if (menu_) MenuDial(-1);
-        return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
-#ifdef COLORWHEEL_ZOOM
-        if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
-          SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
-	  sound_library_.SayZoomingIn();
-          return true;
-        }
-#endif
-        return false;
 
       case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
 #ifndef DISABLE_COLOR_CHANGE
@@ -4205,21 +4140,6 @@ SaberFett263Buttons() : PropBase() {}
           hybrid_font.PlayCommon(&SFX_blstbgn);
         } else {
           hybrid_font.SB_Effect(EFFECT_BLAST, 0);
-        }
-        return true;
-
-      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
-        if (swing_blast_) {
-          SaberBase::DoBlast();
-          return true;
-        } else {
-          if (check_blast_) {
-            if (millis() - last_blast_millis_ < 2000) {
-              swing_blast_ = true;
-              SaberBase::DoBlast();
-            }
-            check_blast_ = false;
-          }
         }
         return true;
 
@@ -4456,6 +4376,113 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true;
 
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
+#ifdef COLORWHEEL_ZOOM
+        if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
+          SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
+	  sound_library_.SayZoomingIn();
+          return true;
+        }
+#endif
+        return false;
+		    
+#ifdef FETT263_MULTI_PHASE
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
+	if (menu_) return true;
+        // Delay twist events to prevent false trigger from over twisting
+        if (millis() - last_twist_millis_ > 2000) {
+          last_twist_millis_ = millis();
+#ifdef FETT263_DUAL_MODE_SOUND
+          SelectIgnitionSound();
+#endif
+          next_preset_fast();
+        }
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
+	if (menu_) return true;
+        // Delay twist events to prevent false trigger from over twisting
+        if (millis() - last_twist_millis_ > 2000) {
+          last_twist_millis_ = millis();
+#ifdef FETT263_DUAL_MODE_SOUND
+          SelectIgnitionSound();
+#endif
+          previous_preset_fast();
+        }
+        return true;
+#endif
+
+// Gesture Controls (not button specific)
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON):
+        if (wav_player && wav_player->isPlaying()) return true;
+        if (color_mode_ == CC_COLOR_LIST) {
+          dial_ = (dial_ + 1) % NELEM(color_list_);
+          ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
+#ifdef FETT263_SAY_COLOR_LIST
+          sound_library_.SayColor(color_list_[dial_].color_number);
+#else
+          hybrid_font.PlayCommon(&SFX_ccchange);
+#endif
+          return true;
+        }
+        if (menu_) MenuDial(1);
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON):
+        if (wav_player && wav_player->isPlaying()) return true;
+        if (color_mode_ == CC_COLOR_LIST) {
+          if (dial_ <= 0) dial_ = NELEM(color_list_);
+          dial_ = dial_ - 1;
+          ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
+#ifdef FETT263_SAY_COLOR_LIST_CC
+          sound_library_.SayColor(color_list_[dial_].color_number);
+#else
+          hybrid_font.PlayCommon(&SFX_ccchange);
+#endif
+          return true;
+        }
+        if (menu_) MenuDial(-1);
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF):
+        if (menu_) MenuDial(1);
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF):
+        if (menu_) MenuDial(-1);
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
+        if (swing_blast_) {
+          SaberBase::DoBlast();
+          return true;
+        } else {
+          if (check_blast_) {
+            if (millis() - last_blast_millis_ < 2000) {
+              swing_blast_ = true;
+              SaberBase::DoBlast();
+            }
+            check_blast_ = false;
+          }
+        }
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
+        if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
+          track_mode_ = PLAYBACK_ROTATE;
+	  sound_library_.SayRotate();
+          return true;
+        }
+        return false;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
+        if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
+          track_mode_ = PLAYBACK_LOOP;
+	  sound_library_.SayLoop();
+          return true;
+        }
+        return false;
+
       // Optional Gesture Controls (defines listed at top)
 
 #ifdef FETT263_SWING_ON_PREON
@@ -4665,32 +4692,6 @@ SaberFett263Buttons() : PropBase() {}
           last_push_millis_ = millis();
         }
         return true;
-
-#ifdef FETT263_MULTI_PHASE
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
-	if (menu_) return true;
-        // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_millis_ > 2000) {
-          last_twist_millis_ = millis();
-#ifdef FETT263_DUAL_MODE_SOUND
-          SelectIgnitionSound();
-#endif
-          next_preset_fast();
-        }
-        return true;
-
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
-	if (menu_) return true;
-        // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_millis_ > 2000) {
-          last_twist_millis_ = millis();
-#ifdef FETT263_DUAL_MODE_SOUND
-          SelectIgnitionSound();
-#endif
-          previous_preset_fast();
-        }
-        return true;
-#endif
 
       // Events that needs to be handled regardless of what other buttons
       // are pressed.
