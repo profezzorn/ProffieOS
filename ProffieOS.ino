@@ -21,7 +21,7 @@
 // You can have multiple configuration files, and specify which one
 // to use here.
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -34,7 +34,7 @@
 // #define CONFIG_FILE "config/proffieboard_v1_graflex.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
-// #define CONFIG_FILE "config/testconfig.h"
+#define CONFIG_FILE "config/testconfig.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE

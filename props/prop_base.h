@@ -156,8 +156,6 @@ public:
   float pending_clash_strength_ = 0.0;
 
   bool on_pending_ = false;
-  uint32_t on_pending_base_;
-  uint32_t on_pending_delay_;
 
   virtual bool IsOn() {
     return SaberBase::IsOn() || on_pending_;
@@ -178,20 +176,19 @@ public:
     IgnoreClash(300);
 
     SaberBase::DoPreOn();
-    float preon_time = SaberBase::sound_length;
-    if (preon_time > 0.0) {
-      on_pending_ = true;
-      on_pending_base_ = millis();
-      on_pending_delay_ = preon_time * 1000;
-    } else {
-      SaberBase::TurnOn();
-    }
+    on_pending_ = true;
+    // Hybrid font will call SaberBase::TurnOn() for us.
+  }
+
+  void SB_On() override {
+    on_pending_ = false;
   }
 
   virtual void Off(OffType off_type = OFF_NORMAL) {
     if (on_pending_) {
       // Or is it better to wait until we turn on, and then turn off?
       on_pending_ = false;
+      SaberBase::TurnOff(SaberBase::OFF_CANCEL_PREON);
       return;
     }
     if (!SaberBase::IsOn()) return;
@@ -963,11 +960,6 @@ public:
 
   void Loop() override {
     CallMotion();
-
-    if (on_pending_ && millis() - on_pending_base_ >= on_pending_delay_) {
-      on_pending_ = false;
-      SaberBase::TurnOn();
-    }
     if (clash_pending1_) {
       clash_pending1_ = false;
       Clash(pending_clash_is_stab1_, pending_clash_strength1_);

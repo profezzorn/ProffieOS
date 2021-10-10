@@ -50,11 +50,8 @@ public:
   void PlayOnce(Effect* effect, float start = 0.0) {
     MountSDCard();
     EnableAmplifier();
-    STDOUT.print("unit = ");
-    STDOUT.print(WhatUnit(this));
-    STDOUT.print(" vol = ");
-    STDOUT.print(volume());
-    STDOUT.print(", ");
+    set_volume_now(volume() * effect->GetVolume() / 100);
+    STDOUT << "unit = " << WhatUnit(this) << " vol = " << volume() << ", ";
 
     pause_ = true;
     clear();
@@ -82,6 +79,10 @@ public:
 
   const char* Filename() const {
     return wav.Filename();
+  }
+
+  Effect::FileID current_file_id() const {
+    return wav.current_file_id();
   }
   
   bool isPlaying() const {
