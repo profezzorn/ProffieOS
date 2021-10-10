@@ -63,22 +63,22 @@ WS2811_Blade(WS2811PIN* pin,
       power_->Init();
       TRACE(BLADE, "Power on");
       pin_->Enable(true);
-      Color16* C = pin_->BeginFrame();
-      for (int i = 0; i < pin_->num_leds(); i++) C[i] = Color16();
+      colors_ = pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
       while (!pin_->IsReadyForEndFrame());
       power_->Power(on);
       pin_->EndFrame();
-      C = pin_->BeginFrame();
-      for (int i = 0; i < pin_->num_leds(); i++) C[i] = Color16();
+      colors_ = pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
       pin_->EndFrame();
-      C = pin_->BeginFrame();
-      for (int i = 0; i < pin_->num_leds(); i++) C[i] = Color16();
+      colors_ = pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
       pin_->EndFrame();
       current_blade = NULL;
     } else if (powered_ && !on) {
       TRACE(BLADE, "Power off");
-      Color16* C = pin_->BeginFrame();
-      for (int i = 0; i < pin_->num_leds(); i++) C[i] = Color16();
+      colors_ = pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
       pin_->EndFrame();
       power_->Power(on);
       pin_->Enable(false);
@@ -118,7 +118,9 @@ WS2811_Blade(WS2811PIN* pin,
     return on_;
   }
   void set(int led, Color16 c) override {
-    colors_[led] = c;
+    Color16* pos = colors_ + led;
+    if (pos >= color_buffer + NELEM(color_buffer)) pos -= NELEM(color_buffer);
+    *pos = c;
   }
   void allow_disable() override {
     if (!on_) allow_disable_ = true;

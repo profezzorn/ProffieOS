@@ -97,6 +97,7 @@ public:
 	SB_Effect2(EFFECT_RETRACTION, 0);
         break;
       case OFF_IDLE:
+      case OFF_CANCEL_PREON:
 	// do nothing
 	break;
     }

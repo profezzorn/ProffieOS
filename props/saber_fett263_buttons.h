@@ -61,9 +61,9 @@ Standard Controls While Blade is ON
   Melt Effect = Hold AUX + Stab Parallel or Up
   Lightning Block Effect = Hold PWR + click AUX
   NEW! Force/Quote = Long Click PWR (parallel or down)
-    If pointing down will toggle Force/Quote and play
-    *Quote plays sequentially
-    If parallel will do Force/Quote
+    If quotes exist in current font pointing down will toggle between Force/Quote and play
+    *Quotes play sequentially 1,2,3...
+    If parallel will do Force/Quote based on current mode
   Start/Stop Tracks = Long Click PWR (pointing up)
     *default track only (use Track Player while OFF to select tracks or playback modes)
   Color Change = Hold AUX + Click PWR (parallel or down)
@@ -115,7 +115,10 @@ Optional Gesture Controls (if enabled)
 
 Rehearsal / Choreography Modes*
   *requires FETT263_SAVE_CHOREOGRAPHY define
-  Begin Rehearsal = While Off, Hold AUX + Twist
+  Begin Rehearsal** = While Off, Hold AUX + Twist
+      **If a Saved Rehearsal Exists it will prompt you to "Replace?"
+        To confirm Turn the hilt Right (Clockwise) to "Accept" and Click PWR to begin a new Rehearsal
+        To keep saved rehearsal Click AUX and Rehearsal Mode will be cancelled.
     Saber will Ignite in Rehearsal Mode
     In Rehearsal Mode, standard Clash and Lockup controls are used to record sequence
   Clash = Clash
@@ -1230,20 +1233,18 @@ SaberFett263Buttons() : PropBase() {}
   // Check Event "Delays" for Edit Mode for Ignition/Retraction/Preon Settings Previews and Choreography Save
   void CheckEvent() {
     if (next_event_ && !wav_player->isPlaying()) {
+#ifdef FETT263_SAVE_CHOREOGRAPHY
       if (rehearse_) {
         if (SaberBase::IsOn()) {
           rehearse_ = false;
           Off();
-#ifdef FETT263_SAVE_CHOREOGRAPHY
           SaveChoreo();
-#endif
-        } else {
-	  sound_library_.SayRehearseBegin();
-          FastOn();
         }
         next_event_ = false;
+      } else 
+#endif
+      {
 #ifdef FETT263_EDIT_MODE_MENU
-      } else {
         switch (menu_type_) {
           case MENU_IGNITION_TIME:
           case MENU_RETRACTION_TIME:
@@ -1531,7 +1532,9 @@ SaberFett263Buttons() : PropBase() {}
     MENU_PRESET,
     MENU_VOLUME,
     MENU_TRACK_PLAYER,
+#ifdef FETT263_SAVE_CHOREOGRAPHY
     MENU_REHEARSE,
+#endif
 #ifdef FETT263_EDIT_MODE_MENU
     MENU_STYLE,
     MENU_COLOR,
@@ -1695,12 +1698,16 @@ SaberFett263Buttons() : PropBase() {}
       menu_type_ = MENU_TOP;
       menu_ = false;
       break;
+#ifdef FETT263_SAVE_CHOREOGRAPHY
     case MENU_REHEARSE:
-      sound_library_.SayRehearseBegin();
-      rehearse_ = true;
-      MenuExit();
-      FastOn();
+      if (choice_) {
+        menu_ = false;
+        BeginRehearsal();
+      } else {
+        MenuExit();
+      }
       break;
+#endif
     case MENU_VOLUME:
       if (SaberBase::IsOn()) {
 #ifdef FETT263_EDIT_MODE_MENU
@@ -2604,6 +2611,9 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_RESET_COLOR:
       case MENU_COPY:
       case MENU_DELETE:
+#ifdef FETT263_SAVE_CHOREOGRAPHY
+      case MENU_REHEARSE:
+#endif
         if (direction > 0) {
           choice_ = true;
           sound_library_.SayAccept();
@@ -3696,13 +3706,12 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
-  void PlayQuote() {
-    if (SFX_quote) {
+  void ForceQuote() {
+    if (force_quote_) {
       SFX_quote.SelectNext();
       hybrid_font.PlayCommon(&SFX_quote);
     } else {
-      SFX_force.SelectNext();
-      hybrid_font.PlayCommon(&SFX_force);
+      SaberBase::DoForce();
     }
   }
 
@@ -3946,11 +3955,13 @@ SaberFett263Buttons() : PropBase() {}
           }
           return true;
         }
+#ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
 	  sound_library_.SayCancel();
           rehearse_ = false;
           return true;
         }
+#endif
         if (!battle_mode_) {
           battle_mode_ = true;
           if (SFX_bmbegin) {
@@ -3969,9 +3980,15 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON | BUTTON_POWER):
-        if ((!menu_ && saved_gesture_control.powerlock) || choreo_) {
-          wav_player.Free();
+        if ((!menu_ && saved_gesture_control.powerlock)
+#ifdef FETT263_SAVE_CHOREOGRAPHY
+	|| choreo_
+#endif
+        ) {
+#ifdef FETT263_SAVE_CHOREOGRAPHY
           choreo_ = false;
+#endif
+	  wav_player.Free();
           battle_mode_ = false;
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectRetractionSound();
@@ -3979,7 +3996,6 @@ SaberFett263Buttons() : PropBase() {}
           Off();
         }
         return true;
-
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON):
         if (wav_player && wav_player->isPlaying()) return true;
@@ -4054,16 +4070,14 @@ SaberFett263Buttons() : PropBase() {}
 #endif
         return false;
 
-      case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
 #ifdef FETT263_SAVE_CHOREOGRAPHY
+      case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
         if (rehearse_) {
           EndRehearsal();
           return true;
-        } else {
-          return false;
         }
+	return false;
 #endif
-        return true;
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
@@ -4170,29 +4184,12 @@ SaberFett263Buttons() : PropBase() {}
           }
           return true;
         } else {
-          if (SFX_quote) {
-            if (fusor.angle1() > - M_PI / 3 && fusor.angle1() < M_PI / 3)  {
-              if (force_quote_) {
-                PlayQuote();
-                return true;
-              } else {
-                SaberBase::DoForce();
-                return true;
-              }
-            } else {
-              if (!force_quote_) {
-                force_quote_ = true;
-                PlayQuote();
-                return true;
-              }
-              if (force_quote_) {
-                force_quote_ = false;
-                SaberBase::DoForce();
-                return true;
-              }
+          if (SFX_quote) {      
+            if (fusor.angle1() < - M_PI / 3)  {
+              force_quote_ = !force_quote_;
             }
+            ForceQuote();
           } else {
-            force_quote_ = false;
             SaberBase::DoForce();
           }
         }
@@ -4213,7 +4210,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::DoBlast();
           return true;
         }
-        if ((check_blast_ && battle_mode_) || rehearse_) {
+        if (check_blast_ && battle_mode_) {
           if (!swing_blast_ && millis() - last_blast_millis_ > 2000) {
             swing_blast_ = true;
             hybrid_font.PlayCommon(&SFX_blstbgn);
@@ -4381,9 +4378,6 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         } else {
 	  sound_library_.SayNoChoreographyAvailable();
-          rehearse_ = true;
-          clash_count_ = -1;
-          next_event_ = true;
         }
         return true;
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_AUX):
@@ -4392,9 +4386,6 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         } else {
 	  sound_library_.SayNoChoreographyAvailable();
-          rehearse_ = true;
-          clash_count_ = -1;
-          next_event_ = true;
         }
         return true;
 #endif
@@ -4756,8 +4747,10 @@ private:
   bool battle_mode_ = false; // Battle Mode active
   bool menu_ = false; // Edit Mode / Menu System active
   bool force_quote_ = false; // Quote Player active (in place of force effect)
+#ifdef FETT263_SAVE_CHOREOGRAPHY
   bool rehearse_ = false; // Rehearsal Mode active
   bool choreo_ = false; // Choreography Mode active
+#endif
   uint32_t thrust_begin_millis_; // Thrust timer
   uint32_t push_begin_millis_; // Push timer
   uint32_t clash_impact_millis_; // Clash timer

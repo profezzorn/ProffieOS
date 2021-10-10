@@ -29,6 +29,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(DRAG_BEGIN)			\
     DEFINE_EFFECT(DRAG_END)			\
     DEFINE_EFFECT(PREON)			\
+    DEFINE_EFFECT(POSTOFF)			\
     DEFINE_EFFECT(IGNITION)			\
     DEFINE_EFFECT(RETRACTION)			\
     DEFINE_EFFECT(CHANGE)			\
@@ -107,6 +108,7 @@ public:
     OFF_NORMAL,
     OFF_BLAST,
     OFF_IDLE,
+    OFF_CANCEL_PREON,
   };
 
   static bool IsOn() { return on_; }
@@ -152,6 +154,7 @@ public:
   // 1.0 = kDefaultVolume
   // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
+  virtual void UpdateState() {}
   virtual void StartSwing(const Vec3& gyro, float swingThreshold, float slashThreshold) {}
   virtual float SetSwingVolume(float swing_strength, float mixhum) {
     return mixhum;

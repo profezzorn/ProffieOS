@@ -102,6 +102,7 @@ public:
   };
 
   void SB_Motion(const Vec3& raw_gyro, bool clear) override {
+    delegate_->UpdateState();
     if (clear) {
       gyro_filter_.filter(raw_gyro);
       gyro_filter_.filter(raw_gyro);
