@@ -26,6 +26,36 @@ public:
 #ifdef ENABLE_SPINS
     CONFIG_VARIABLE2(ProffieOSSpinDegrees, 360.0f);
 #endif
+    for (Effect* e = all_effects; e; e = e->next_) {
+      char name[32];
+      strcpy(name, "ProffieOS.SFX.");
+      strcat(name, e->GetName());
+      char* x = name + strlen(name);
+
+      struct PairedVariable : public VariableBase {
+	Effect* e_;
+	PairedVariable(Effect* e) : e_(e) {}
+	void set(float value) override { e_->SetPaired(value > 0.5); }
+	float get() override { return e_->GetPaired(); }
+	void setDefault() override { e_->SetPaired(false);  }
+      };
+      
+      strcpy(x, "paired");
+      PairedVariable var1(e);
+      op->run(name, &var1);
+
+      struct VolumeVariable : public VariableBase {
+	Effect* e_;
+	VolumeVariable(Effect* e) : e_(e) {}
+	void set(float value) override { e_->SetVolume(value); }
+	float get() override { return e_->GetVolume(); }
+	void setDefault() override { e_->SetVolume(100);  }
+      };
+      
+      strcpy(x, "volume");
+      VolumeVariable var2(e);
+      op->run(name, &var2);
+    }
   }
   // Igniter compat
   // This specifies how many milliseconds before the end of the
@@ -138,11 +168,23 @@ public:
 
   enum State {
     STATE_OFF,
+    STATE_WAIT_FOR_ON,
     STATE_OUT,
     STATE_HUM_FADE_IN,
     STATE_HUM_ON,
     STATE_HUM_FADE_OUT,
   };
+
+  bool active_state() {
+    switch (state_) {
+    case STATE_OFF:
+    case STATE_WAIT_FOR_ON:
+      return false;
+    default:
+      break;
+    }
+    return true;
+  }
 
   void Deactivate() {
     lock_player_.Free();
@@ -316,10 +358,38 @@ public:
     }
   }
 
+  Effect* getOut() { return SFX_out ? &SFX_out : &SFX_poweron; }
+  Effect* getHum() { return SFX_humm ? &SFX_humm : &SFX_hum; }
+
+  void SB_Preon() {
+    if (SFX_preon) {
+      SFX_preon.SetFollowing(getOut());
+      // PlayCommon(&SFX_preon);
+      RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&SFX_preon);
+      
+      if (monophonic_hum_) {
+	getOut()->SetFollowing(getHum());
+      }
+    }
+    SaberBase::RequestMotion();
+    state_ = STATE_WAIT_FOR_ON;
+  }
+
+  void SB_Postoff() {
+    // Postoff was alredy started by linked wav players, we just need to find
+    // the length so that WavLen<> can use it.
+    RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(&SFX_pstoff);
+    SaberBase::sound_length = tmp ? tmp->length() : 0.0f;
+  }
+
   void SB_On() override {
+    // If preon exists, we've already queed up playing the poweron and hum.
+    bool already_started = state_ == STATE_WAIT_FOR_ON && SFX_preon;
     if (monophonic_hum_) {
+      if (!already_started) {
+	PlayMonophonic(&SFX_poweron, &SFX_hum);
+      }
       state_ = STATE_HUM_ON;
-      PlayMonophonic(&SFX_poweron, &SFX_hum);
     } else {
       state_ = STATE_OUT;
       if (!hum_player_) {
@@ -331,7 +401,14 @@ public:
 	}
         hum_start_ = millis();
       }
-      RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(SFX_out ? &SFX_out : &SFX_poweron);
+      RefPtr<BufferedWavPlayer> tmp;
+      if (already_started) {
+	tmp = GetWavPlayerPlaying(getOut());
+	// Set the length for WavLen<>
+	SaberBase::sound_length = tmp ? tmp->length() : 0.0f;
+      } else {
+	tmp = PlayPolyphonic(getOut());
+      }
       hum_fade_in_ = 0.2;
       if (SFX_humm && tmp) {
 	hum_fade_in_ = tmp->length();
@@ -349,6 +426,11 @@ public:
 
   void SB_Off(OffType off_type) override {
     switch (off_type) {
+      case OFF_CANCEL_PREON:
+	if (state_ == STATE_WAIT_FOR_ON) {
+	  state_ = STATE_OFF;
+	}
+	break;
       case OFF_IDLE:
         break;
       case OFF_NORMAL:
@@ -373,6 +455,7 @@ public:
 	  hum_fade_out_ = 0.2;
         }
 	state_ = monophonic_hum_ ? STATE_OFF : STATE_HUM_FADE_OUT;
+	check_postoff_ = !!SFX_pstoff;
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
@@ -389,8 +472,8 @@ public:
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
       default: return;
-      case EFFECT_PREON:  if (SFX_preon) PlayPolyphonic(&SFX_preon);
-      return;
+    case EFFECT_PREON: SB_Preon(); return;
+    case EFFECT_POSTOFF: SB_Postoff(); return;
       case EFFECT_STAB:
 	if (SFX_stab) { PlayCommon(&SFX_stab); return; }
 	// If no stab sounds are found, fall through to clash
@@ -546,7 +629,7 @@ public:
 
   void SetHumVolume(float vol) override {
     if (!monophonic_hum_) {
-      if (state_ != STATE_OFF && !hum_player_) {
+      if (active_state() && !hum_player_) {
         hum_player_ = GetFreeWavPlayer();
         if (hum_player_) {
           hum_player_->set_volume_now(0);
@@ -558,6 +641,7 @@ public:
       if (!hum_player_) return;
       uint32_t m = micros();
       switch (state_) {
+        case STATE_WAIT_FOR_ON:
         case STATE_OFF:
           volume_ = 0.0f;
           return;
@@ -599,12 +683,31 @@ public:
     hum_player_->set_volume(vol);
   }
 
+  bool check_postoff_ = false;
+  void UpdateState() {
+    if (state_ == STATE_WAIT_FOR_ON) {
+      SaberBase::RequestMotion();
+      if (!GetWavPlayerPlaying(&SFX_preon)) {
+	SaberBase::TurnOn();
+	return;
+      }
+    }
+    if (check_postoff_) {
+      SaberBase::RequestMotion();
+      if (!(hum_player_ && hum_player_->isPlaying()) ||
+	    GetWavPlayerPlaying(&SFX_in)) {
+	check_postoff_ = false;
+	SaberBase::DoEffect(EFFECT_POSTOFF, 0);
+      }
+    }
+  }
   bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
-    if (state_ != STATE_OFF && !(SFX_lockup && SaberBase::Lockup())) {
+    UpdateState();
+    if (active_state() && !(SFX_lockup && SaberBase::Lockup())) {
       StartSwing(gyro,
-                 font_config.ProffieOSSwingSpeedThreshold,
-                 font_config.ProffieOSSlashAccelerationThreshold);
+		 font_config.ProffieOSSwingSpeedThreshold,
+		 font_config.ProffieOSSlashAccelerationThreshold);
     }
   }
 

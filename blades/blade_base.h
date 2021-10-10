@@ -109,10 +109,10 @@ public:
     for (size_t i = 0; i < n; i++) {
       if (effect == effects[i].type ||
 	  (match_stab && effects[i].type == EFFECT_STAB)) {
+	last_detected_blade_effect = effects + i;
 	if (effects[i].start_micros == last_detected_)
 	  return nullptr;
 	last_detected_ = effects[i].start_micros;
-	last_detected_blade_effect = effects + i;
 	return effects + i;
       }
     }

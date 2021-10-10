@@ -36,6 +36,19 @@ class Effect {
       effect_->GetName(filename, file_);
     }
 
+    const Effect* GetEffect() const { return effect_; }
+
+    // Maybe this should always use effect_->following_ ??
+    FileID GetFollowing(Effect* effect) {
+      if (effect_ &&
+	  effect_->paired_ &&
+	  effect_->files_found() == effect->files_found()) {
+	return FileID(effect, file_);
+      } else {
+	return effect->RandomFile();
+      }
+    }
+
    private:
     const Effect* effect_;
     int file_;
@@ -113,6 +126,8 @@ class Effect {
     selected_ = -1;
     num_files_ = 0;
     directory_ = nullptr;
+    volume_ = 100;
+    paired_ = false;
   }
 
   bool Scan(const char *filename) {
@@ -335,6 +350,12 @@ class Effect {
     default_output->println(filename);
   }
 
+  void SetPaired(bool i) { paired_ = i; }
+  bool GetPaired() const { return paired_; }
+  void SetVolume(uint8_t v) { volume_ = v; }
+  uint8_t GetVolume() const { return volume_; }
+  const char* GetName() const { return name_; }
+
   // Returns true if file was identified.
   static void ScanAll(const char *dir, const char* filename) {
     if (Effect::IdentifyExtension(filename) == Effect::UNKNOWN) {
@@ -444,8 +465,16 @@ private:
   // Leading zeroes are used to make it this many digits.
   int8_t digits_;
 
+  // Volume adjustment in percent.
+  uint8_t volume_;
+
   // If true. there is an un-numbered file as well.
-  bool unnumbered_file_found_;
+  bool unnumbered_file_found_ : 1;
+
+  // If true, we play the same sound number is used when
+  // we play the |folowing_| sound, unless one was specifically
+  // selected.
+  bool paired_ : 1;
 
   FilePattern file_pattern_ = FilePattern::UNKNOWN;
 
