@@ -4155,8 +4155,10 @@ SaberFett263Buttons() : PropBase() {}
             return true;
           } else {
             SaberBase::DoBlast();
-            check_blast_ = true;
-            last_blast_millis_ = millis();
+	    if (battle_mode_) {
+              check_blast_ = true;
+              last_blast_millis_ = millis();
+	    }
           }
           return true;
         }
@@ -4209,14 +4211,13 @@ SaberFett263Buttons() : PropBase() {}
         if (swing_blast_) {
           SaberBase::DoBlast();
           return true;
-        }
-        if (check_blast_ && battle_mode_) {
-          if (!swing_blast_ && millis() - last_blast_millis_ > 2000) {
-            swing_blast_ = true;
-            hybrid_font.PlayCommon(&SFX_blstbgn);
-            SaberBase::DoBlast();
+        } else {
+          if (check_blast_) {
+            if (millis() - last_blast_millis_ < 2000) {
+              swing_blast_ = true;
+              SaberBase::DoBlast();
+            }
             check_blast_ = false;
-            return true;
           }
         }
         return true;
