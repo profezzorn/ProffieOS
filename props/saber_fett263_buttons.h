@@ -1688,6 +1688,13 @@ SaberFett263Buttons() : PropBase() {}
     color_mode_ = NONE;
   }
 #endif
+	
+// Start Menu Mode
+  void StartMenu(MenuType menu) {
+    current_menu_angle_ = fusor.angle2();
+    menu_type_ = menu;
+    menu_ = true;
+  }
 
 // Edit Mode Menu Select (PWR Button)
   void MenuChoice() {
@@ -3836,9 +3843,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_POWER):
         if (!menu_) {
-          current_menu_angle_ = fusor.angle2();
-          menu_ = true;
-          menu_type_ = MENU_VOLUME;
+	  StartMenu(MENU_VOLUME);
           if (SFX_vmbegin) {
 	    sound_library_.SayEnterVolumeMenu();
           } else {
@@ -3848,10 +3853,8 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
-        current_menu_angle_ = fusor.angle2();
+        StartMenu(MENU_PRESET);
 	sound_library_.SaySelectPreset();
-        menu_ = true;
-        menu_type_ = MENU_PRESET;
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
@@ -3915,10 +3918,8 @@ SaberFett263Buttons() : PropBase() {}
           STDOUT.println("Enter Edit Mode");
           GenerateIniFiles();
 	  sound_library_.SayEditMode();
-          current_menu_angle_ = fusor.angle2();
+          StartMenu(MENU_TOP);
           menu_top_pos_ = 0;
-          menu_ = true;
-          menu_type_ = MENU_TOP;
           FastOn();
         }
 #else
@@ -4327,10 +4328,8 @@ SaberFett263Buttons() : PropBase() {}
             track_num_ = 0;
             num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
             sound_library_.SaySelect();
-            current_menu_angle_ = fusor.angle2();
-            menu_ = true;
-            menu_type_ = MENU_TRACK_PLAYER;
-            StartOrStopTrack();
+            StartMenu(MENU_TRACK_PLAYER);
+	    StartOrStopTrack();
             return true;
           }
         }
@@ -4364,8 +4363,7 @@ SaberFett263Buttons() : PropBase() {}
       // Check for existing rehearsal and prompt to overwrite or keep via menu
       if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
 	sound_library_.SayRehearseNew();
-        menu_ = true;
-        menu_type_ = MENU_REHEARSE;
+        StartMenu(MENU_REHEARSE);
         return true;
       } else {
         BeginRehearsal();
