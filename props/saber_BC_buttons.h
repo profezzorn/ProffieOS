@@ -420,23 +420,6 @@ public:
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
   }
 
-// Fast On Gesture Ignition
-  virtual void FastOn() {
-    if (IsOn()) return;
-    if (current_style() && current_style()->NoOnOff()) return;
-    activated_ = millis();
-    STDOUT.println("Ignition.");
-    MountSDCard();
-    EnableAmplifier();
-    SaberBase::RequestMotion();
-    // Avoid clashes a little bit while turning on.
-    // It might be a "clicky" power button...
-    IgnoreClash(500);
-    SaberBase::TurnOn();
-    // Optional effects
-    SaberBase::DoEffect(EFFECT_FAST_ON, 0);
-  }
-
 // SA22C Volume Menu
   void VolumeUp() {
     if (dynamic_mixer.get_volume() < VOLUME) {
