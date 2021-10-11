@@ -301,6 +301,8 @@ public:
   }
 
   void SetScreenNow(Screen screen) {
+    // No need to wake the sleeping bear just to tell it to go to bed again.
+    if (screen == SCREEN_OFF && screen_ == SCREEN_OFF) return;
     last_delay_ = t_ = 0;
     screen_ = screen;
     display_->Page();

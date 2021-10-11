@@ -37,6 +37,7 @@ class Effect {
     }
 
     const Effect* GetEffect() const { return effect_; }
+    int GetFileNum() const { return file_; }
 
     // Maybe this should always use effect_->following_ ??
     FileID GetFollowing(Effect* effect) {
