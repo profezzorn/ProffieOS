@@ -15,24 +15,29 @@
 // straight up. Any angle below the horizon will also return zero.
 // returned value: FUNCTION, same for all leds
 
+#include "svf.h"
+
 template<class MIN = Int<0>, class MAX = Int<32768>>
-class BladeAngleX {
+class BladeAngleXSVF {
 public:
   void run(BladeBase* blade) {
     min_.run(blade);
     max_.run(blade);
+  }
+  int calculate(BladeBase* blade) {
     int min = min_.getInteger(0);
     int max = max_.getInteger(0);
     // v is 0-32768, 0 = straight down, 32768 = straight up
     float v = (fusor.angle1() + M_PI / 2) * 32768 / M_PI;
-    value_ = clampi32((v - min) * 32768.0f / (max - min), 0, 32768);
+    return clampi32((v - min) * 32768.0f / (max - min), 0, 32768);
   }
-  int getInteger(int led) { return value_; }
 
   MIN min_;
   MAX max_;
-  int value_;
 };
+
+template<class MIN = Int<0>, class MAX = Int<32768>>
+using BladeAngleX = SingleValueAdapter<BladeAngleXSVF<MIN, MAX>>;
 
 template<int MIN = 0, int MAX = 32768>
 using BladeAngle = BladeAngleX<Int<MIN>, Int<MAX>>;
