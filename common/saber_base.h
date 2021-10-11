@@ -154,7 +154,6 @@ public:
   // 1.0 = kDefaultVolume
   // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
-  virtual void UpdateState() {}
   virtual void StartSwing(const Vec3& gyro, float swingThreshold, float slashThreshold) {}
   virtual float SetSwingVolume(float swing_strength, float mixhum) {
     return mixhum;

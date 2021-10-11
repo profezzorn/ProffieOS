@@ -127,9 +127,10 @@ FontConfigFile font_config;
 // When an effect happens, like "clash", we do a short cross-fade
 // to transition to the new sound, then we play that sound until
 // it ends and gaplessly transition back to the hum sound.
-class HybridFont : public SaberBase {
+class HybridFont : public SaberBase, public Looper {
 public:
-  HybridFont() : SaberBase(NOLINK) { }
+  const char* name() override { return "Hybrid Font"; }
+  HybridFont() : SaberBase(NOLINK), Looper(NOLINK) { }
   void Activate() {
     SetupStandardAudio();
     font_config.ReadInCurrentDir("config.ini");
@@ -162,6 +163,7 @@ public:
 
     STDOUT.println(" font.");
     SaberBase::Link(this);
+    Looper::Link();
     SetHumVolume(1.0);
     state_ = STATE_OFF;
   }
@@ -192,6 +194,7 @@ public:
     next_hum_player_.Free();
     swing_player_.Free();
     SaberBase::Unlink(this);
+    Looper::Unlink();
     state_ = STATE_OFF;
   }
 
@@ -693,16 +696,14 @@ public:
   }
 
   bool check_postoff_ = false;
-  void UpdateState() {
+  void Loop() override {
     if (state_ == STATE_WAIT_FOR_ON) {
-      SaberBase::RequestMotion();
       if (!GetWavPlayerPlaying(&SFX_preon)) {
 	SaberBase::TurnOn();
 	return;
       }
     }
     if (check_postoff_) {
-      SaberBase::RequestMotion();
       if (!(hum_player_ && hum_player_->isPlaying()) ||
 	    GetWavPlayerPlaying(&SFX_in)) {
 	check_postoff_ = false;
@@ -712,7 +713,6 @@ public:
   }
   bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
-    UpdateState();
     if (active_state() && !(SFX_lockup && SaberBase::Lockup())) {
       StartSwing(gyro,
 		 font_config.ProffieOSSwingSpeedThreshold,
