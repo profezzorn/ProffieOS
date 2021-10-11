@@ -162,22 +162,16 @@ public:
   }
 
   virtual void On() {
-    if (IsOn()) return;
-    if (current_style() && current_style()->NoOnOff())
-      return;
-    activated_ = millis();
-    STDOUT.println("Ignition.");
-    MountSDCard();
-    EnableAmplifier();
-    SaberBase::RequestMotion();
-
-    // Avoid clashes a little bit while turning on.
-    // It might be a "clicky" power button...
-    IgnoreClash(300);
-
+    if (!CommonIgnition()) return;
     SaberBase::DoPreOn();
     on_pending_ = true;
     // Hybrid font will call SaberBase::TurnOn() for us.
+  }
+
+  void FastOn() {
+    if (!CommonIgnition()) return;
+    SaberBase::TurnOn();
+    SaberBase::DoEffect(EFFECT_FAST_ON, 0);
   }
 
   void SB_On() override {
@@ -379,37 +373,39 @@ public:
     SaveVolumeIfNeeded();
   }
 
-  // Select preset (font/style)
-  virtual void SetPreset(int preset_num, bool announce) {
-    TRACE(PROP, "start");
+  bool BladeOff() {
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
     bool on = SaberBase::IsOn();
     if (on) Off();
-    SaveColorChangeIfNeeded();
-    // First free all styles, then allocate new ones to avoid memory
-    // fragmentation.
+    return on;
+  }
+
+  void UnsetCurrentStyles() {
 #define UNSET_BLADE_STYLE(N) \
     delete current_config->blade##N->UnSetStyle();
     ONCEPERBLADE(UNSET_BLADE_STYLE)
-    current_preset_.SetPreset(preset_num);
-    if (announce) {
-      if (current_preset_.name.get()) {
-        SaberBase::DoMessage(current_preset_.name.get());
-      } else {
-        char message[64];
-        strcpy(message, "Preset: ");
-        itoa(current_preset_.preset_num + 1,
-             message + strlen(message), 10);
-        strcat(message, "\n");
-        strncat(message + strlen(message),
-                current_preset_.font.get(), sizeof(message) - strlen(message));
-        message[sizeof(message) - 1] = 0;
-        SaberBase::DoMessage(message);
-      }
-    }
+    current_preset_.SetPreset(current_preset_.preset_num);
+  }
 
+  void AnnouncePreset() {
+    if (current_preset_.name.get()) {
+      SaberBase::DoMessage(current_preset_.name.get());
+    } else {
+      char message[64];
+      strcpy(message, "Preset: ");
+      itoa(current_preset_.preset_num + 1,
+           message + strlen(message), 10);
+      strcat(message, "\n");
+      strncat(message + strlen(message),
+              current_preset_.font.get(), sizeof(message) - strlen(message));
+      message[sizeof(message) - 1] = 0;
+      SaberBase::DoMessage(message);
+    }
+  }
+
+  void SetBladeLength() {
 #ifdef DYNAMIC_BLADE_LENGTH
     savestate_.ReadINIFromSaveDir("curstate");
 #define WRAP_BLADE_SHORTERNER(N) \
@@ -419,8 +415,9 @@ public:
 #else
 #define WRAP_BLADE_SHORTERNER(N)
 #endif
+  }
 
-
+  void SetBladeStyle() {
 #define SET_BLADE_STYLE(N) do {                                         \
     BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
     WRAP_BLADE_SHORTERNER(N)                                            \
@@ -435,9 +432,54 @@ public:
 #else
     SaberBase::SetVariation(0);
 #endif
+  }
 
+  // Select preset (font/style)
+  virtual void SetPreset(int preset_num, bool announce) {
+    TRACE(PROP, "start");
+    bool on = BladeOff();
+    SaveColorChangeIfNeeded();
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+    UnsetCurrentStyles();
+    if (announce) {
+      AnnouncePreset();
+    }
+    SetBladeLength();
+    SetBladeStyle();
     if (on) On();
     if (announce) SaberBase::DoNewFont();
+    TRACE(PROP, "end");
+  }
+
+  // Update Blade Style (no On/Off for use in Edit Mode)
+  void UpdateStyle(int preset_num) {
+    TRACE(PROP, "start");
+    SaveColorChangeIfNeeded();
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+    UnsetCurrentStyles();
+    SetBladeLength();
+    SetBladeStyle();
+    TRACE(PROP, "end");
+  }
+
+  // Update Font / Save Style in Edit Mode, skips Preon effect (except for Preon Editing previews) using FastOn
+  void UpdateFont(int preset_num, bool preon) {
+    TRACE(PROP, "start");
+    bool on = BladeOff();
+    SaveColorChangeIfNeeded();
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+    UnsetCurrentStyles();
+    SetBladeStyle();
+    if (on) {
+      if (preon) {
+        On();
+      } else {
+        FastOn();
+      }
+    }
     TRACE(PROP, "end");
   }
 
@@ -449,6 +491,14 @@ public:
     SetPreset(current_preset_.preset_num + 1, true);
   }
 
+  // Go to the next Preset skipping NewFont and Preon effects using FastOn.
+  void next_preset_fast() {
+#ifdef SAVE_PRESET
+    SaveState(current_preset_.preset_num + 1);
+#endif
+    UpdateFont(current_preset_.preset_num + 1, false);
+  }
+
   // Go to the previous Preset.
   virtual void previous_preset() {
 #ifdef SAVE_PRESET
@@ -456,6 +506,22 @@ public:
 #endif
     SetPreset(current_preset_.preset_num - 1, true);
   }
+
+  // Go to the previous Preset skipping NewFont and Preon effects using FastOn.
+  void previous_preset_fast() {
+#ifdef SAVE_PRESET
+    SaveState(current_preset_.preset_num - 1);
+#endif
+    UpdateFont(current_preset_.preset_num - 1, false);
+  }
+
+  // Go to first Preset.
+  void first_preset() {
+#ifdef SAVE_PRESET
+    SaveState(0);
+#endif
+    UpdateFont(0, false);
+}
 
   // Rotates presets backwards and saves.
   virtual void rotate_presets() {
@@ -1602,6 +1668,23 @@ public:
   }
 
   virtual bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) = 0;
+
+private:
+  bool CommonIgnition() {
+    if (IsOn()) return false;
+    if (current_style() && current_style()->NoOnOff())
+      return false;
+    activated_ = millis();
+    STDOUT.println("Ignition.");
+    MountSDCard();
+    EnableAmplifier();
+    SaberBase::RequestMotion();
+
+    // Avoid clashes a little bit while turning on.
+    // It might be a "clicky" power button...
+    IgnoreClash(300);
+    return true;
+  }
 
 protected:
   CurrentPreset current_preset_;
