@@ -1,8 +1,8 @@
 #ifndef FUNCTIONS_WAVELEN_H
 #define FUNCTIONS_WAVELEN_H
 
-// Usage: Wavnum<>
-// Or: Wavnum<EFFECT>
+// Usage: WavNum<>
+// Or: WavNum<EFFECT>
 // EFFECT: effect type
 // return value: INTEGER
 //
@@ -10,7 +10,7 @@
 // First file returns 0. Even if the file is called 'clash1.wav'.
 
 template<EffectType T = EFFECT_NONE>
-class Wavnum {
+class WavNum {
 public:
   void run(BladeBase* blade) {
     BladeEffect* effect;
