@@ -154,18 +154,23 @@ public:
   // 1.0 = kDefaultVolume
   // This is really just for sound fonts.
   virtual void SetHumVolume(float volume) {}
-  virtual void UpdateState() {}
   virtual void StartSwing(const Vec3& gyro, float swingThreshold, float slashThreshold) {}
   virtual float SetSwingVolume(float swing_strength, float mixhum) {
     return mixhum;
   }
 
   static float sound_length;
+  static int sound_number;
+
+  static void ClearSoundInfo() {
+    sound_length = 0.0;
+    sound_number = -1;
+  }
 
 #define SABERFUN(NAME, EFFECT, TYPED_ARGS, ARGS)		\
 public:                                                         \
   static void Do##NAME TYPED_ARGS {                             \
-    sound_length = 0.0                                          \
+    ClearSoundInfo();				                \
     CHECK_LL(SaberBase, saberbases, next_saber_);               \
     for (SaberBase *p = saberbases; p; p = p->next_saber_) {    \
       p->SB_##NAME ARGS;                                        \
