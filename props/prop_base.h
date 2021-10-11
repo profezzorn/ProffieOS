@@ -382,27 +382,11 @@ public:
     return on;
   }
 
-  void UnsetCurrentStyles() {
+  void UnsetCurrentStyles(int preset_num) {
 #define UNSET_BLADE_STYLE(N) \
     delete current_config->blade##N->UnSetStyle();
     ONCEPERBLADE(UNSET_BLADE_STYLE)
-    current_preset_.SetPreset(current_preset_.preset_num);
-  }
-
-  void AnnouncePreset() {
-    if (current_preset_.name.get()) {
-      SaberBase::DoMessage(current_preset_.name.get());
-    } else {
-      char message[64];
-      strcpy(message, "Preset: ");
-      itoa(current_preset_.preset_num + 1,
-           message + strlen(message), 10);
-      strcat(message, "\n");
-      strncat(message + strlen(message),
-              current_preset_.font.get(), sizeof(message) - strlen(message));
-      message[sizeof(message) - 1] = 0;
-      SaberBase::DoMessage(message);
-    }
+    current_preset_.SetPreset(preset_num);
   }
 
   void SetBladeLength() {
@@ -441,7 +425,7 @@ public:
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    UnsetCurrentStyles();
+    UnsetCurrentStyles(preset_num);
     if (announce) {
       AnnouncePreset();
     }
@@ -458,7 +442,7 @@ public:
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    UnsetCurrentStyles();
+    UnsetCurrentStyles(preset_num);
     SetBladeLength();
     SetBladeStyle();
     TRACE(PROP, "end");
@@ -471,7 +455,7 @@ public:
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    UnsetCurrentStyles();
+    UnsetCurrentStyles(preset_num);
     SetBladeStyle();
     if (on) {
       if (preon) {
@@ -1670,6 +1654,22 @@ public:
   virtual bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) = 0;
 
 private:
+  void AnnouncePreset() {
+    if (current_preset_.name.get()) {
+      SaberBase::DoMessage(current_preset_.name.get());
+    } else {
+      char message[64];
+      strcpy(message, "Preset: ");
+      itoa(current_preset_.preset_num + 1,
+           message + strlen(message), 10);
+      strcat(message, "\n");
+      strncat(message + strlen(message),
+              current_preset_.font.get(), sizeof(message) - strlen(message));
+      message[sizeof(message) - 1] = 0;
+      SaberBase::DoMessage(message);
+    }
+  }
+
   bool CommonIgnition() {
     if (IsOn()) return false;
     if (current_style() && current_style()->NoOnOff())
