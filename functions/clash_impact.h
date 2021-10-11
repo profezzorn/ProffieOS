@@ -9,27 +9,29 @@
 // Returns 0-32768 based on impact strength of clash
 // returned value: INTEGER
 
+#include "svf.h"
+
 template<class MIN = Int<200>, class MAX = Int<1600>>
-class ClashImpactFX {
+class ClashImpactFXSVF {
 public:
   void run(BladeBase* base) {
     min_cents_.run(base);
     max_cents_.run(base);
+  }
+  int calculate(BladeBase* base) {
     float i = SaberBase::GetClashStrength() * 100;
     int min = min_cents_.getInteger(0);
     int max = max_cents_.getInteger(0);
-    value_ = clampi32((i - min) * 32768 / max, 0, 32768);
-  }
-
-  int getInteger(int led) {
-    return value_;
+    return clampi32((i - min) * 32768 / max, 0, 32768);
   }
 
 private:
   MIN min_cents_;
   MAX max_cents_;
-  int value_;
 };
+
+template<class MIN = Int<200>, class MAX = Int<1600>>
+using ClashImpactFX = SingleValueAdapter<ClashImpactFXSVF<MIN, MAX>>;
 
 template<int MIN = 200, int MAX = 1600>
 using ClashImpactF = ClashImpactFX<Int<MIN>, Int<MAX>>;
