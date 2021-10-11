@@ -237,13 +237,14 @@ public:
   bool IsReadyForEndFrame() {
     return micros() - start_micros_ > required_micros_ + 301;
   }
-  void BeginFrame() {
+  Color16* BeginFrame() {
     while (Color8::num_bytes(byteorder_) * num_leds_ * 8 + 1 > (int)sizeof(displayMemory)) {
       STDOUT.print("Display memory is not big enough, increase maxLedsPerStrip!");
       num_leds_ /= 2;
     }
     while (!IsReadyForBeginFrame()) yield();
     frame_num_++;
+    return color_buffer;
   }
   void EndFrame() {
     while (!IsReadyForEndFrame()) yield();

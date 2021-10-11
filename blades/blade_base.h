@@ -23,6 +23,7 @@ struct BladeEffect {
   uint32_t start_micros;
   float location; // 0 = base, 1 = tip
   float sound_length;
+  int wavnum;
 };
 
 class BladeBase {
@@ -109,10 +110,10 @@ public:
     for (size_t i = 0; i < n; i++) {
       if (effect == effects[i].type ||
 	  (match_stab && effects[i].type == EFFECT_STAB)) {
+	last_detected_blade_effect = effects + i;
 	if (effects[i].start_micros == last_detected_)
 	  return nullptr;
 	last_detected_ = effects[i].start_micros;
-	last_detected_blade_effect = effects + i;
 	return effects + i;
       }
     }

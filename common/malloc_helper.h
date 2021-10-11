@@ -79,9 +79,7 @@ public:
     return *this;
   }
   // move constructor
-  LSPtr(LSPtr&& other) {
-    set(other.take());
-  }
+  LSPtr(LSPtr&& other) : ptr_(other.take()) {}
 private:
   LSPtr(LSPtr&); // prevent copy constructor
   LSPtr& operator=(const LSPtr&); // prevent copy assignment

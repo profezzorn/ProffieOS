@@ -46,15 +46,16 @@ public:
     return false;
   }
 
+  void UpdateSaberBaseSoundInfo() {
+    SaberBase::sound_length = length();
+    SaberBase::sound_number = current_file_id().GetFileNum();
+  }
 
   void PlayOnce(Effect* effect, float start = 0.0) {
     MountSDCard();
     EnableAmplifier();
-    STDOUT.print("unit = ");
-    STDOUT.print(WhatUnit(this));
-    STDOUT.print(" vol = ");
-    STDOUT.print(volume());
-    STDOUT.print(", ");
+    set_volume_now(volume_target() * effect->GetVolume() / 100);
+    STDOUT << "unit = " << WhatUnit(this) << " vol = " << volume() << ", ";
 
     pause_ = true;
     clear();
@@ -67,7 +68,7 @@ public:
     }
     pause_ = false;
     if (SaberBase::sound_length == 0.0 && effect->GetFollowing() != effect) {
-      SaberBase::sound_length = length();
+      UpdateSaberBaseSoundInfo();
     }
   }
   void PlayLoop(Effect* effect) { wav.PlayLoop(effect); }
@@ -82,6 +83,10 @@ public:
 
   const char* Filename() const {
     return wav.Filename();
+  }
+
+  Effect::FileID current_file_id() const {
+    return wav.current_file_id();
   }
   
   bool isPlaying() const {

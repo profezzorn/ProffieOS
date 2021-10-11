@@ -29,6 +29,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(DRAG_BEGIN)			\
     DEFINE_EFFECT(DRAG_END)			\
     DEFINE_EFFECT(PREON)			\
+    DEFINE_EFFECT(POSTOFF)			\
     DEFINE_EFFECT(IGNITION)			\
     DEFINE_EFFECT(RETRACTION)			\
     DEFINE_EFFECT(CHANGE)			\
@@ -107,6 +108,7 @@ public:
     OFF_NORMAL,
     OFF_BLAST,
     OFF_IDLE,
+    OFF_CANCEL_PREON,
   };
 
   static bool IsOn() { return on_; }
@@ -158,11 +160,17 @@ public:
   }
 
   static float sound_length;
+  static int sound_number;
+
+  static void ClearSoundInfo() {
+    sound_length = 0.0;
+    sound_number = -1;
+  }
 
 #define SABERFUN(NAME, EFFECT, TYPED_ARGS, ARGS)		\
 public:                                                         \
   static void Do##NAME TYPED_ARGS {                             \
-    sound_length = 0.0                                          \
+    ClearSoundInfo();				                \
     CHECK_LL(SaberBase, saberbases, next_saber_);               \
     for (SaberBase *p = saberbases; p; p = p->next_saber_) {    \
       p->SB_##NAME ARGS;                                        \

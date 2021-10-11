@@ -17,7 +17,7 @@ public:
   size_t GetEffects(BladeEffect** blade_effects) override {
     *blade_effects = effects_;
     while (num_effects_ &&
-           micros() - effects_[num_effects_-1].start_micros > 5000000) {
+           micros() - effects_[num_effects_-1].start_micros > 7000000) {
       num_effects_--;
     }
     return num_effects_;
@@ -76,6 +76,7 @@ public:
     effects_[0].start_micros = micros();
     effects_[0].location = location;
     effects_[0].sound_length = SaberBase::sound_length;
+    effects_[0].wavnum = SaberBase::sound_number;
     num_effects_ = std::min(num_effects_ + 1, NELEM(effects_));
   }
   
@@ -97,6 +98,7 @@ public:
 	SB_Effect2(EFFECT_RETRACTION, 0);
         break;
       case OFF_IDLE:
+      case OFF_CANCEL_PREON:
 	// do nothing
 	break;
     }
@@ -106,7 +108,7 @@ protected:
   BladeStyle *current_style_ = nullptr;
 private:
   size_t num_effects_ = 0;
-  BladeEffect effects_[4];
+  BladeEffect effects_[5];
 };
 
 #endif
