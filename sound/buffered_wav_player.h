@@ -46,6 +46,10 @@ public:
     return false;
   }
 
+  void UpdateSaberBaseSoundInfo() {
+    SaberBase::sound_length = length();
+    SaberBase::sound_number = current_file_id().GetFileNum();
+  }
 
   void PlayOnce(Effect* effect, float start = 0.0) {
     MountSDCard();
@@ -64,7 +68,7 @@ public:
     }
     pause_ = false;
     if (SaberBase::sound_length == 0.0 && effect->GetFollowing() != effect) {
-      SaberBase::sound_length = length();
+      UpdateSaberBaseSoundInfo();
     }
   }
   void PlayLoop(Effect* effect) { wav.PlayLoop(effect); }

@@ -326,6 +326,7 @@ bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 uint32_t SaberBase::current_variation_ = 0;
 float SaberBase::sound_length = 0.0;
+int SaberBase::sound_number = -1;
 float SaberBase::clash_strength_ = 0.0;
 #ifdef DYNAMIC_BLADE_DIMMING
 int SaberBase::dimming_ = 16384;
@@ -475,6 +476,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/slice.h"
 #include "functions/mult.h"
 #include "functions/wavlen.h"
+#include "functions/wavnum.h"
 #include "functions/effect_position.h"
 #include "functions/time_since_effect.h"
 #include "functions/sum.h"

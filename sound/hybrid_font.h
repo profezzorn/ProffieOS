@@ -379,6 +379,11 @@ public:
     // Postoff was alredy started by linked wav players, we just need to find
     // the length so that WavLen<> can use it.
     RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(&SFX_pstoff);
+    if (tmp) {
+      tmp->UpdateSaberBaseSoundInfo();
+    } else {
+      SaberBase::ClearSoundInfo();
+    }
     SaberBase::sound_length = tmp ? tmp->length() : 0.0f;
   }
 
@@ -405,7 +410,11 @@ public:
       if (already_started) {
 	tmp = GetWavPlayerPlaying(getOut());
 	// Set the length for WavLen<>
-	SaberBase::sound_length = tmp ? tmp->length() : 0.0f;
+	if (tmp) {
+	  tmp->UpdateSaberBaseSoundInfo();
+	} else {
+	  SaberBase::ClearSoundInfo();
+	}
       } else {
 	tmp = PlayPolyphonic(getOut());
       }
