@@ -51,4 +51,36 @@ private:
 // Example InvertF<BladeAngle<>> will return 0 when up and 32768 when down
 template<class F> using InvertF = Scale<F, Int<32768>, Int<0>>;
 
+template<class SVF, int A, int B>
+class SVFWrapper<Scale<SingleValueAdapter<SVF>, Int<A>, Int<B>>> {
+ public:
+  void run(BladeBase* blade) { svf_.run(blade); }
+  int calculate(BladeBase* blade) {
+    return (svf_.calculate(blade) * (B - A) >> 15) + A;
+  }
+ private:
+  SVF svf_;
+};
+
+template<class SVFF, class SVFA, class SVFB>
+class SVFWrapper<Scale<SingleValueAdapter<SVFF>,
+		       SingleValueAdapter<SVFA>,
+		       SingleValueAdapter<SVFB>>> {
+ public:
+  void run(BladeBase* blade) {
+    svff_.run(blade);
+    svfa_.run(blade);
+    svfb_.run(blade);
+  }
+  int calculate(BladeBase* blade) {
+    int a = svfa_.calculate(blade);
+    int b = svfb_.calculate(blade);
+    return (svff_.calculate(blade) * (b - a) >> 15) + a;
+  }
+ private:
+  SVFF svff_;
+  SVFA svfa_;
+  SVFB svfb_;
+};
+
 #endif

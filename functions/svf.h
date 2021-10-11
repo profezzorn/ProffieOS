@@ -1,7 +1,6 @@
 #ifndef FUNCTIONS_SVF_H
 #define FUNCTIONS_SVF_H
 
-#include "scale.h"
 #include "int.h"
 
 // An SVF is a FUNCTION that always returns the same value for all LEDs.
@@ -42,15 +41,5 @@ private:
 template<class SVF>
 class SVFWrapper<SingleValueAdapter<SVF>> : public SVF {};
 
-template<class SVF, int A, int B>
-class SVFWrapper<Scale<SingleValueAdapter<SVF>, Int<A>, Int<B>>> {
- public:
-  FunctionRunResult run(BladeBase* blade) { return RunFunction(&svf_, blade); }
-  int calculate(BladeBase* blade) {
-    return (svf_.calculate(blade) * (B - A) >> 15) + A;
-  }
- private:
-  SVF svf_;
-};
 
 #endif
