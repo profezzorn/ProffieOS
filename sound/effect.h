@@ -37,10 +37,7 @@ class Effect {
     }
 
     const Effect* GetEffect() const { return effect_; }
-    int GetFileNum() const {
-      if (effect_) return effect_->min_file_ + file_;
-      return file_;
-    }
+    int GetFileNum() const { return file_; }
 
     // Maybe this should always use effect_->following_ ??
     FileID GetFollowing(Effect* effect) {
