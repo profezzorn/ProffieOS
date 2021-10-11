@@ -3540,76 +3540,6 @@ SaberFett263Buttons() : PropBase() {}
     ZOOM_COLOR,
   };
 
-// Update Style
-  virtual void UpdateStyle(int preset_num) {
-    TRACE(PROP, "start");
-    SaveColorChangeIfNeeded();
-    // First free all styles, then allocate new ones to avoid memory
-    // fragmentation.
-#define UNSET_BLADE_STYLE(N) \
-    delete current_config->blade##N->UnSetStyle();
-    ONCEPERBLADE(UNSET_BLADE_STYLE)
-    current_preset_.SetPreset(preset_num);
-#ifdef DYNAMIC_BLADE_LENGTH
-    savestate_.ReadINIFromSaveDir("curstate");
-#define WRAP_BLADE_SHORTERNER(N) \
-    if (savestate_.blade##N##len != -1 && savestate_.blade##N##len != current_config->blade##N->num_leds()) { \
-      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);   \
-    }
-#else
-#define WRAP_BLADE_SHORTERNER(N)
-#endif
-
-
-#define SET_BLADE_STYLE(N) do {                                         \
-    BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
-    WRAP_BLADE_SHORTERNER(N)                                            \
-    current_config->blade##N->SetStyle(tmp);                            \
-  } while (0);
-
-    ONCEPERBLADE(SET_BLADE_STYLE)
-
-#undef SET_BLADE_STYLE
-
-#ifdef SAVE_COLOR_CHANGE
-    SaberBase::SetVariation(current_preset_.variation);
-#else
-    SaberBase::SetVariation(0);
-#endif
-    TRACE(PROP, "end");
-  }
-
-// Update Font / Save Style in Edit Mode, skips Preon effect (except for Preon Editing previews) using FastOn
-  virtual void UpdateFont(int preset_num, bool preon) {
-    TRACE(PROP, "start");
-    bool on = SaberBase::IsOn();
-    if (on) Off();
-    SaveColorChangeIfNeeded();
-    // First free all styles, then allocate new ones to avoid memory
-    // fragmentation.
-#define UNSET_BLADE_STYLE(N) \
-    delete current_config->blade##N->UnSetStyle();
-    ONCEPERBLADE(UNSET_BLADE_STYLE)
-    current_preset_.SetPreset(preset_num);
-#define SET_BLADE_STYLE(N) \
-    current_config->blade##N->SetStyle(style_parser.Parse(current_preset_.current_style##N.get()));
-    ONCEPERBLADE(SET_BLADE_STYLE)
-    chdir(current_preset_.font.get());
-#ifdef SAVE_COLOR_CHANGE
-    SaberBase::SetVariation(current_preset_.variation);
-#else
-    SaberBase::SetVariation(0);
-#endif
-    if (on) {
-      if (preon) {
-        On();
-      } else {
-        FastOn();
-      }
-    }
-    TRACE(PROP, "end");
-  }
-
   bool Parse(const char *cmd, const char* arg) override {
     if (PropBase::Parse(cmd, arg)) return true;
     if (!strcmp(cmd, "list_current_tracks")) {
@@ -3642,30 +3572,6 @@ SaberFett263Buttons() : PropBase() {}
     }
 #endif    
     return false;
-  }
-
-  // Go to first Preset.
-  virtual void first_preset() {
-#ifdef SAVE_PRESET
-    SaveState(0);
-#endif
-    UpdateFont(0, false);
-}
-
-  // Go to the next Preset skipping Preon effect with FastOn.
-  virtual void next_preset_fast() {
-#ifdef SAVE_PRESET
-    SaveState(current_preset_.preset_num + 1);
-#endif
-    UpdateFont(current_preset_.preset_num + 1, false);
-  }
-
-  // Go to the previous Preset skipping Preon effect with FastOn.
-  virtual void previous_preset_fast() {
-#ifdef SAVE_PRESET
-    SaveState(current_preset_.preset_num - 1);
-#endif
-    UpdateFont(current_preset_.preset_num - 1, false);
   }
 
 #ifdef FETT263_DUAL_MODE_SOUND
@@ -3720,26 +3626,6 @@ SaberFett263Buttons() : PropBase() {}
     } else {
       SaberBase::DoForce();
     }
-  }
-
-  // Fast On, like On() but skips preon sound and effect so ignition is immediate
-  // For use with gestures where immediate response makes more sense
-  // and in Edit Mode previews
-  virtual void FastOn() {
-    if (IsOn()) return;
-    if (current_style() && current_style()->NoOnOff())
-      return;
-    activated_ = millis();
-    STDOUT.println("Ignition.");
-    MountSDCard();
-    EnableAmplifier();
-    SaberBase::RequestMotion();
-    // Avoid clashes a little bit while turning on.
-    // It might be a "clicky" power button...
-    IgnoreClash(500);
-    SaberBase::TurnOn();
-    // Optional effects
-    SaberBase::DoEffect(EFFECT_FAST_ON, 0);
   }
 
   // SA22C Volume Menu
