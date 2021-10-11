@@ -6,12 +6,8 @@
 // EFFECT: effect type
 // return value: INTEGER
 //
-// Wavnum (length of wav file) takes the duration of a wav file sound
-// and can be used to replace time integer arguments in a blade style.
-// Example: TrFadeX<Wavnum<EFFECT_RETRACTION>>
-// When used as Wavnum<> inside a TransitionEffectL whose EFFECT is already specified, 
-// then it will automatically use the right effect.
-// Example: TransitionEffectL<TrConcat<TrWipex<Wavnum<>>,White,TrWipeX<Wavnum<>>>,EFFECT_BLAST>
+// Returns which file was actually played.
+// First file returns 0. Even if the file is called 'clash1.wav'.
 
 template<EffectType T = EFFECT_NONE>
 class Wavnum {
