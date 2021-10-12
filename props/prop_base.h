@@ -448,8 +448,8 @@ public:
     TRACE(PROP, "end");
   }
 
-    // Update Font & Style, skips Preon effect using FastOn (for use in Edit Mode and "fast" preset changes)
-  void UpdatePreset(int preset_num) {
+    // Set/Update Font & Style, skips Preon effect using FastOn (for use in Edit Mode and "fast" preset changes)
+  void SetPresetFast(int preset_num) {
     TRACE(PROP, "start");
     bool on = BladeOff();
     SaveColorChangeIfNeeded();
@@ -457,9 +457,7 @@ public:
     // fragmentation.
     UnsetCurrentStyles(preset_num);
     SetBladeStyle();
-    if (on) {
-      FastOn();
-    }
+    if (on) FastOn();
     TRACE(PROP, "end");
   }
 
@@ -472,9 +470,7 @@ public:
     // fragmentation.
     UnsetCurrentStyles(preset_num);
     SetBladeStyle();
-    if (on) {
-      On();
-    }
+    if (on) On();
     TRACE(PROP, "end");
   }
 	
@@ -491,7 +487,7 @@ public:
 #ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num + 1);
 #endif
-    UpdatePreset(current_preset_.preset_num + 1);
+    SetPresetFast(current_preset_.preset_num + 1);
   }
 
   // Go to the previous Preset.
@@ -507,7 +503,7 @@ public:
 #ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num - 1);
 #endif
-    UpdatePreset(current_preset_.preset_num - 1);
+    SetPresetFast(current_preset_.preset_num - 1);
   }
 
   // Go to first Preset.
@@ -515,7 +511,7 @@ public:
 #ifdef SAVE_PRESET
     SaveState(0);
 #endif
-    UpdatePreset(0);
+    SetPreset(0, true);
 }
 
   // Rotates presets backwards and saves.
