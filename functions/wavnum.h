@@ -1,5 +1,5 @@
-#ifndef FUNCTIONS_WAVELEN_H
-#define FUNCTIONS_WAVELEN_H
+#ifndef FUNCTIONS_WAVENUM_H
+#define FUNCTIONS_WAVENUM_H
 
 // Usage: WavNum<>
 // Or: WavNum<EFFECT>

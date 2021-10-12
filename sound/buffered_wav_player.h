@@ -76,6 +76,7 @@ public:
   void Stop() override {
     pause_ = true;
     wav.Stop();
+    wav.Close();
     clear();
   }
 

@@ -30,6 +30,7 @@ public:
       char name[32];
       strcpy(name, "ProffieOS.SFX.");
       strcat(name, e->GetName());
+      strcat(name, ".");
       char* x = name + strlen(name);
 
       struct PairedVariable : public VariableBase {
@@ -387,7 +388,6 @@ public:
     } else {
       SaberBase::ClearSoundInfo();
     }
-    SaberBase::sound_length = tmp ? tmp->length() : 0.0f;
   }
 
   void SB_On() override {
@@ -704,8 +704,9 @@ public:
       }
     }
     if (check_postoff_) {
-      if (!(hum_player_ && hum_player_->isPlaying()) ||
-	    GetWavPlayerPlaying(&SFX_in)) {
+      if (!GetWavPlayerPlaying(&SFX_in) &&
+	  !GetWavPlayerPlaying(&SFX_poweroff) &&
+	  !GetWavPlayerPlaying(&SFX_pwroff)) {
 	check_postoff_ = false;
 	SaberBase::DoEffect(EFFECT_POSTOFF, 0);
       }
