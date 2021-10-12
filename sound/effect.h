@@ -43,7 +43,8 @@ class Effect {
     FileID GetFollowing(Effect* effect) {
       if (effect_ &&
 	  effect_->paired_ &&
-	  effect_->files_found() == effect->files_found()) {
+	  effect_->files_found() == effect->files_found() &&
+	  effect->selected_ == -1) {
 	return FileID(effect, file_);
       } else {
 	return effect->RandomFile();
