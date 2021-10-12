@@ -437,12 +437,12 @@ public:
   }
 
   // Update Blade Style (no On/Off for use in Edit Mode)
-  void UpdateStyle(int preset_num) {
+  void UpdateStyle() {
     TRACE(PROP, "start");
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    UnsetCurrentStyles(preset_num);
+    UnsetCurrentStyles(current_preset_.preset_num);
     SetBladeLength();
     SetBladeStyle();
     TRACE(PROP, "end");
