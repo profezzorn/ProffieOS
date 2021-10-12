@@ -448,7 +448,7 @@ public:
     TRACE(PROP, "end");
   }
 
-  // Update Font / IntArg in Edit Mode, skips Preon effect using FastOn
+    // Update Font & Style, skips Preon effect using FastOn (for use in Edit Mode and "fast" preset changes)
   void UpdatePreset(int preset_num) {
     TRACE(PROP, "start");
     bool on = BladeOff();
