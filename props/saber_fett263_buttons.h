@@ -1026,7 +1026,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_RETRACTION_OPTION:
       case MENU_RETRACTION_COOL_DOWN_OPTION:
       case MENU_RETRACTION_DELAY:
-        UpdateStyle(current_preset_.preset_num);
+        UpdateStyle();
         off_event_ = true;
         restart_millis_ = millis();
         break;
@@ -1083,7 +1083,7 @@ SaberFett263Buttons() : PropBase() {}
       default:
         break;
     }
-    UpdateStyle(current_preset_.preset_num);
+    UpdateStyle();
     menu_type_ = MENU_STYLE_SETTING_SUB;
   }
 
@@ -1847,7 +1847,7 @@ SaberFett263Buttons() : PropBase() {}
 	current_preset_.Save();
 	DOVALIDATE(current_preset_);
 	show_preview_.Stop(blade_preview_);
-	UpdateStyle(current_preset_.preset_num);
+	UpdateStyle();
 	menu_type_ = MENU_COLOR_SUB;
 	MenuSelect();
 	choice_ = false;
@@ -2055,7 +2055,7 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_COLOR_OFF:
       SaveColorEdit();
       show_color_.Stop(blade_num_);
-      UpdateStyle(current_preset_.preset_num);
+      UpdateStyle();
       MenuSave();
       break;
     case MENU_COLOR_BLAST:
@@ -2064,27 +2064,27 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_COLOR_LB:
       SaveColorEdit();
       bump_color_.Stop(blade_num_);
-      UpdateStyle(current_preset_.preset_num);
+      UpdateStyle();
       MenuSave();
       break;
     case MENU_COLOR_DRAG:
     case MENU_COLOR_STAB:
       SaveColorEdit();
       tip_color_.Stop(blade_num_);
-      UpdateStyle(current_preset_.preset_num);
+      UpdateStyle();
       MenuSave();
       break;
     case MENU_COLOR_PREON:
     case MENU_COLOR_PSTOFF:
       SaveColorEdit();
       pre_color_.Stop(blade_num_);
-      UpdateStyle(current_preset_.preset_num);
+      UpdateStyle();
       MenuSave();
       break;
     case MENU_COLOR_EMITTER:
       SaveColorEdit();
       hilt_color_.Stop(blade_num_);
-      UpdateStyle(current_preset_.preset_num);
+      UpdateStyle();
       MenuSave();
       break;
     case MENU_FONT:
@@ -2105,7 +2105,7 @@ SaberFett263Buttons() : PropBase() {}
       menu_type_ = MENU_SETTING_SUB;
       current_preset_.Save();
       show_length_.Stop(blade_num_);
-      UpdateStyle(current_preset_.preset_num);
+      UpdateStyle();
       MenuSave();
       break;
     case MENU_COPY:
@@ -2125,7 +2125,7 @@ SaberFett263Buttons() : PropBase() {}
 	SaberBase::SetVariation(0);
 	current_preset_.SetStyle(blade_num_, style_parser.CopyArguments("~", current_preset_.GetStyle(blade_num_),  int_arg_menu_, NELEM(int_arg_menu_)));
 	current_preset_.Save();
-	UpdateStyle(current_preset_.preset_num);
+	UpdateStyle();
 	menu_type_ = MENU_COLOR_SUB;
 	MenuSelect();
 	choice_ = false;
@@ -2653,7 +2653,7 @@ SaberFett263Buttons() : PropBase() {}
         itoa(style_num_, style_arg, 10);
         current_preset_.SetStyle(blade_num_, style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg));
         current_preset_.Save();
-        UpdateStyle(current_preset_.preset_num);
+        UpdateStyle();
         SayStyleNumber(style_num_);
         break;
       case MENU_COLOR:
@@ -3261,7 +3261,7 @@ SaberFett263Buttons() : PropBase() {}
         itoa(style_revert_, style_arg, 10);
         current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg));
         current_preset_.Save();
-        UpdateStyle(current_preset_.preset_num);
+        UpdateStyle();
 #if NUM_BLADES == 1
         menu_type_ = MENU_STYLE_SUB;
         MenuRevert();
@@ -3357,7 +3357,7 @@ SaberFett263Buttons() : PropBase() {}
         SaveState(current_preset_.preset_num);
         MenuRevert();
         show_length_.Stop(blade_num_);
-        UpdateStyle(current_preset_.preset_num);
+        UpdateStyle();
         break;
       case MENU_COPY:
         choice_ = false;
@@ -3397,7 +3397,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_DIM_BLADE:
         SaberBase::SetDimming(pow(dim_revert_, 2.5) * 16384);
-        UpdateStyle(current_preset_.preset_num);
+        UpdateStyle();
         menu_type_ = MENU_SETTING_SUB;
         SaveGlobalState();
         MenuRevert();
@@ -3875,7 +3875,7 @@ SaberFett263Buttons() : PropBase() {}
           NewColor(1, BASE_COLOR_ARG);
           current_preset_.Save();
           show_color_all_.Stop();
-          UpdateStyle(current_preset_.preset_num);
+          UpdateStyle();
 	  return true;
         }
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
