@@ -1016,11 +1016,11 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_IGNITION_OPTION:
       case MENU_IGNITION_POWER_UP_OPTION:
       case MENU_IGNITION_DELAY:
-        UpdateFont(current_preset_.preset_num, false);
+        UpdatePreset(current_preset_.preset_num);
         break;
       case MENU_PREON_OPTION:
       case MENU_PREON_SIZE:
-        UpdateFont(current_preset_.preset_num, true);
+        UpdatePreon(current_preset_.preset_num);
         break;
       case MENU_RETRACTION_TIME:
       case MENU_RETRACTION_OPTION:
@@ -1052,7 +1052,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
     }
     current_preset_.Save();
-    UpdateFont(current_preset_.preset_num, false);
+    UpdatePreset(current_preset_.preset_num);
   }
 
     
@@ -2808,7 +2808,7 @@ SaberFett263Buttons() : PropBase() {}
         strcat(font, ";common");
         current_preset_.font = mkstr(font);
         current_preset_.Save();
-        UpdateFont(current_preset_.preset_num, false);
+        UpdatePreset(current_preset_.preset_num);
         hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
         break;
       case MENU_TRACK:
@@ -3336,7 +3336,7 @@ SaberFett263Buttons() : PropBase() {}
         if (restore_point.get()) current_preset_.font = std::move(restore_point);
         restore_point = nullptr;
         current_preset_.Save();
-        UpdateFont(current_preset_.preset_num, false);
+        UpdatePreset(current_preset_.preset_num);
         menu_type_ = MENU_TOP;
         MenuRevert();
         break;
