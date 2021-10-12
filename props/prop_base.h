@@ -448,8 +448,8 @@ public:
     TRACE(PROP, "end");
   }
 
-  // Update Font / Save Style in Edit Mode, skips Preon effect (except for Preon Editing previews) using FastOn
-  void UpdateFont(int preset_num, bool preon) {
+  // Update Font / IntArg in Edit Mode, skips Preon effect using FastOn
+  void UpdatePreset(int preset_num) {
     TRACE(PROP, "start");
     bool on = BladeOff();
     SaveColorChangeIfNeeded();
@@ -458,15 +458,26 @@ public:
     UnsetCurrentStyles(preset_num);
     SetBladeStyle();
     if (on) {
-      if (preon) {
-        On();
-      } else {
-        FastOn();
-      }
+      FastOn();
     }
     TRACE(PROP, "end");
   }
 
+  // Update Preon IntArg in Edit Mode
+  void UpdatePreon(int preset_num) {
+    TRACE(PROP, "start");
+    bool on = BladeOff();
+    SaveColorChangeIfNeeded();
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+    UnsetCurrentStyles(preset_num);
+    SetBladeStyle();
+    if (on) {
+      On();
+    }
+    TRACE(PROP, "end");
+  }
+	
   // Go to the next Preset.
   virtual void next_preset() {
 #ifdef SAVE_PRESET
@@ -480,7 +491,7 @@ public:
 #ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num + 1);
 #endif
-    UpdateFont(current_preset_.preset_num + 1, false);
+    UpdatePreset(current_preset_.preset_num + 1);
   }
 
   // Go to the previous Preset.
@@ -496,7 +507,7 @@ public:
 #ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num - 1);
 #endif
-    UpdateFont(current_preset_.preset_num - 1, false);
+    UpdatePreset(current_preset_.preset_num - 1);
   }
 
   // Go to first Preset.
@@ -504,7 +515,7 @@ public:
 #ifdef SAVE_PRESET
     SaveState(0);
 #endif
-    UpdateFont(0, false);
+    UpdatePreset(0);
 }
 
   // Rotates presets backwards and saves.
