@@ -30,6 +30,7 @@ public:
       char name[32];
       strcpy(name, "ProffieOS.SFX.");
       strcat(name, e->GetName());
+      strcat(name, ".");
       char* x = name + strlen(name);
 
       struct PairedVariable : public VariableBase {
