@@ -382,11 +382,10 @@ public:
     return on;
   }
 
-  void UnsetCurrentStyles(int preset_num) {
+  void FreeBladeStyles(int preset_num) {
 #define UNSET_BLADE_STYLE(N) \
     delete current_config->blade##N->UnSetStyle();
     ONCEPERBLADE(UNSET_BLADE_STYLE)
-    current_preset_.SetPreset(preset_num);
   }
 
   void SetBladeLength() {
@@ -401,7 +400,7 @@ public:
 #endif
   }
 
-  void SetBladeStyle() {
+  void AllocateBladeStyles() {
 #define SET_BLADE_STYLE(N) do {                                         \
     BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
     WRAP_BLADE_SHORTERNER(N)                                            \
@@ -425,12 +424,11 @@ public:
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    UnsetCurrentStyles(preset_num);
-    if (announce) {
-      AnnouncePreset();
-    }
+    FreeBladeStyles(preset_num);
+    if (announce) AnnouncePreset();
+    current_preset_.SetPreset(preset_num);
     SetBladeLength();
-    SetBladeStyle();
+    AllocateBladeStyles();
     if (on) On();
     if (announce) SaberBase::DoNewFont();
     TRACE(PROP, "end");
@@ -442,9 +440,10 @@ public:
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    UnsetCurrentStyles(current_preset_.preset_num);
+    FreeBladeStyles(current_preset_.preset_num);
+    current_preset_.SetPreset(current_preset_.preset_num);
     SetBladeLength();
-    SetBladeStyle();
+    AllocateBladeStyles();
     TRACE(PROP, "end");
   }
 
@@ -455,8 +454,9 @@ public:
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    UnsetCurrentStyles(preset_num);
-    SetBladeStyle();
+    FreeBladeStyles(preset_num);
+    current_preset_.SetPreset(preset_num);
+    AllocateBladeStyles();
     if (on) FastOn();
     TRACE(PROP, "end");
   }
@@ -468,8 +468,9 @@ public:
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    UnsetCurrentStyles(preset_num);
-    SetBladeStyle();
+    FreeBladeStyles(preset_num);
+    current_preset_.SetPreset(preset_num);
+    AllocateBladeStyles();
     if (on) On();
     TRACE(PROP, "end");
   }
