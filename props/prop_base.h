@@ -1145,11 +1145,11 @@ public:
       FindBladeAgain();
       return true;
     }
-    if (!strcmp(cmd, "on")) {
+    if (!strcmp(cmd, "on") || !strcmp(cmd, "out")) {
       On();
       return true;
     }
-    if (!strcmp(cmd, "off")) {
+    if (!strcmp(cmd, "off") || !strcmp(cmd, "in")) {
       Off();
       return true;
     }
