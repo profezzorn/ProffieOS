@@ -388,7 +388,7 @@ public:
     ONCEPERBLADE(UNSET_BLADE_STYLE)
   }
 
-  void SetBladeLength() {
+  void AllocateBladeStyles() {
 #ifdef DYNAMIC_BLADE_LENGTH
     savestate_.ReadINIFromSaveDir("curstate");
 #define WRAP_BLADE_SHORTERNER(N) \
@@ -398,9 +398,6 @@ public:
 #else
 #define WRAP_BLADE_SHORTERNER(N)
 #endif
-  }
-
-  void AllocateBladeStyles() {
 #define SET_BLADE_STYLE(N) do {                                         \
     BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
     WRAP_BLADE_SHORTERNER(N)                                            \
@@ -427,7 +424,6 @@ public:
     FreeBladeStyles(preset_num);
     if (announce) AnnouncePreset();
     current_preset_.SetPreset(preset_num);
-    SetBladeLength();
     AllocateBladeStyles();
     if (on) On();
     if (announce) SaberBase::DoNewFont();
@@ -442,7 +438,6 @@ public:
     // fragmentation.
     FreeBladeStyles(current_preset_.preset_num);
     current_preset_.SetPreset(current_preset_.preset_num);
-    SetBladeLength();
     AllocateBladeStyles();
     TRACE(PROP, "end");
   }
@@ -506,14 +501,6 @@ public:
 #endif
     SetPresetFast(current_preset_.preset_num - 1);
   }
-
-  // Go to first Preset.
-  void first_preset() {
-#ifdef SAVE_PRESET
-    SaveState(0);
-#endif
-    SetPreset(0, true);
-}
 
   // Rotates presets backwards and saves.
   virtual void rotate_presets() {
