@@ -3630,6 +3630,14 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
+  // Go to first Preset.
+  void first_preset() {
+#ifdef SAVE_PRESET
+    SaveState(0);
+#endif
+    SetPreset(0, true);
+}
+	
   // SA22C Volume Menu
   void VolumeUp() {
     STDOUT.println("Volume up");
