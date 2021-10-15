@@ -1020,7 +1020,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_PREON_OPTION:
       case MENU_PREON_SIZE:
-        UpdatePreon(current_preset_.preset_num);
+        UpdatePreon();
         break;
       case MENU_RETRACTION_TIME:
       case MENU_RETRACTION_OPTION:
