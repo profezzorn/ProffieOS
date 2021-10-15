@@ -405,7 +405,6 @@ public:
   } while (0);
 
     ONCEPERBLADE(SET_BLADE_STYLE)
-    chdir(current_preset_.font.get());
 
 #ifdef SAVE_COLOR_CHANGE
     SaberBase::SetVariation(current_preset_.variation);
@@ -425,6 +424,7 @@ public:
     if (announce) AnnouncePreset();
     current_preset_.SetPreset(preset_num);
     AllocateBladeStyles();
+    chdir(current_preset_.font.get());
     if (on) On();
     if (announce) SaberBase::DoNewFont();
     TRACE(PROP, "end");
@@ -452,6 +452,7 @@ public:
     FreeBladeStyles();
     current_preset_.SetPreset(preset_num);
     AllocateBladeStyles();
+    chdir(current_preset_.font.get());
     if (on) FastOn();
     TRACE(PROP, "end");
   }
@@ -466,6 +467,7 @@ public:
     FreeBladeStyles();
     current_preset_.SetPreset(current_preset_.preset_num);
     AllocateBladeStyles();
+    chdir(current_preset_.font.get());
     if (on) On();
     TRACE(PROP, "end");
   }
