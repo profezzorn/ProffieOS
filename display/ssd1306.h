@@ -124,6 +124,18 @@ public:
     }
     return last_delay_ = FillFrameBuffer2(advance);
   }
+
+  void ShowDefault() {
+    screen_ = SCREEN_PLI;
+    t_ = 0;
+    if (SaberBase::IsOn()) {
+      if (SaberBase::Lockup() && IMG_lock) {
+	ShowFile(&IMG_lock, 3600000.0);
+      } else if (looped_on_) {
+	ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+      }
+    }
+  }
     
   int FillFrameBuffer2(bool advance) {
     switch (screen_) {
@@ -225,21 +237,17 @@ public:
 	// STDERR << "MOVING ON...\n";
 
 	// This image/animation is done, time to choose the next thing to display.
-	screen_ = SCREEN_PLI;
-	t_ = 0;
-        if (SaberBase::IsOn()) {
-	  if (SaberBase::Lockup()) {
-	    ShowFile(&IMG_lock, 3600000.0);
-	  } else if (looped_on_) {
-	    ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
-	  }
-        }
+	ShowDefault();
 	return FillFrameBuffer2(advance);
     }
   }
 
   void SB_On() override {
-    ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+    if (!ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration)) {
+      ShowDefault();
+      last_delay_ = t_ = 0;
+      display_->Page();
+    }
   }
 
   void SB_Effect(EffectType effect, float location) override {
@@ -262,12 +270,9 @@ public:
 	ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
 	return;
       case EFFECT_LOCKUP_BEGIN:
-	ShowFile(&IMG_lock, 3600000.0);
-	return;
       case EFFECT_LOCKUP_END:
-	screen_ = SCREEN_OFF;
-	if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
-	return;
+	ShowDefault();
+	break;
 
       default: break;
     }
@@ -308,18 +313,18 @@ public:
     display_->Page();
   }
 
-  void ShowFile(Effect* effect, float duration) {
-    if (*effect) {
-      MountSDCard();
-      eof_ = true;
-      file_.Play(effect);
-      frame_available_ = false;
-      frame_count_ = 0;
-      SetScreenNow(SCREEN_IMAGE);
-      eof_ = false;
-      current_effect_ = effect;
-      effect_display_duration_ = duration;
-    }
+  bool ShowFile(Effect* effect, float duration) {
+    if (!*effect) return false;
+    MountSDCard();
+    eof_ = true;
+    file_.Play(effect);
+    frame_available_ = false;
+    frame_count_ = 0;
+    SetScreenNow(SCREEN_IMAGE);
+    eof_ = false;
+    current_effect_ = effect;
+    effect_display_duration_ = duration;
+    return true;
   }
 
   void ShowFile(const char* file) {
