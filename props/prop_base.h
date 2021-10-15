@@ -382,7 +382,7 @@ public:
     return on;
   }
 
-  void FreeBladeStyles(int preset_num) {
+  void FreeBladeStyles() {
 #define UNSET_BLADE_STYLE(N) \
     delete current_config->blade##N->UnSetStyle();
     ONCEPERBLADE(UNSET_BLADE_STYLE)
@@ -421,7 +421,7 @@ public:
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    FreeBladeStyles(preset_num);
+    FreeBladeStyles();
     if (announce) AnnouncePreset();
     current_preset_.SetPreset(preset_num);
     AllocateBladeStyles();
@@ -436,7 +436,7 @@ public:
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    FreeBladeStyles(current_preset_.preset_num);
+    FreeBladeStyles();
     current_preset_.SetPreset(current_preset_.preset_num);
     AllocateBladeStyles();
     TRACE(PROP, "end");
@@ -449,7 +449,7 @@ public:
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    FreeBladeStyles(preset_num);
+    FreeBladeStyles();
     current_preset_.SetPreset(preset_num);
     AllocateBladeStyles();
     if (on) FastOn();
@@ -457,14 +457,14 @@ public:
   }
 
   // Update Preon IntArg in Edit Mode
-  void UpdatePreon(int preset_num) {
+  void UpdatePreon() {
     TRACE(PROP, "start");
     bool on = BladeOff();
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    FreeBladeStyles(preset_num);
-    current_preset_.SetPreset(preset_num);
+    FreeBladeStyles();
+    current_preset_.SetPreset(current_preset_.preset_num);
     AllocateBladeStyles();
     if (on) On();
     TRACE(PROP, "end");
