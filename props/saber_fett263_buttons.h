@@ -2954,12 +2954,12 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SayMaximum();
           }
         } else {
-          if (calc_ > 8) {
+          if (calc_ > GetCurrentClashThreshold()) {
 	    sound_library_.SayDown();
             calc_ -= 1;
           }
-          if (calc_ <= 8) {
-            calc_ = 8;
+          if (calc_ <= GetCurrentClashThreshold()) {
+            calc_ = GetCurrentClashThreshold();
             sound_library_.SayMinimum();
           }
         }
