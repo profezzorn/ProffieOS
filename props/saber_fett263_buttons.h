@@ -3012,13 +3012,13 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_CLASH_THRESHOLD:
         if (direction > 0) {
-          if (clash_t_ >= 4.0) {
+          if (clash_t_ >= saved_gesture_control.maxclash) {
             sound_library_.SayMaximum();
-            clash_t_ = 4.0;
+            clash_t_ = saved_gesture_control.maxclash;
           } else {
             sound_library_.SayUp();
             clash_t_ += 0.25;
-            if (clash_t_ > 4.0) clash_t_ = 4.0;
+            if (clash_t_ > saved_gesture_control.maxclash) clash_t_ = saved_gesture_control.maxclash;
           }
         } else {
           if (clash_t_ <= 1.0) {
