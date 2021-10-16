@@ -1016,17 +1016,17 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_IGNITION_OPTION:
       case MENU_IGNITION_POWER_UP_OPTION:
       case MENU_IGNITION_DELAY:
-        UpdateFont(current_preset_.preset_num, false);
+        SetPresetFast(current_preset_.preset_num);
         break;
       case MENU_PREON_OPTION:
       case MENU_PREON_SIZE:
-        UpdateFont(current_preset_.preset_num, true);
+        UpdatePreon();
         break;
       case MENU_RETRACTION_TIME:
       case MENU_RETRACTION_OPTION:
       case MENU_RETRACTION_COOL_DOWN_OPTION:
       case MENU_RETRACTION_DELAY:
-        UpdateStyle(current_preset_.preset_num);
+        UpdateStyle();
         off_event_ = true;
         restart_millis_ = millis();
         break;
@@ -1052,7 +1052,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
     }
     current_preset_.Save();
-    UpdateFont(current_preset_.preset_num, false);
+    SetPresetFast(current_preset_.preset_num);
   }
 
     
@@ -1083,7 +1083,7 @@ SaberFett263Buttons() : PropBase() {}
       default:
         break;
     }
-    UpdateStyle(current_preset_.preset_num);
+    UpdateStyle();
     menu_type_ = MENU_STYLE_SETTING_SUB;
   }
 
@@ -1847,7 +1847,7 @@ SaberFett263Buttons() : PropBase() {}
 	current_preset_.Save();
 	DOVALIDATE(current_preset_);
 	show_preview_.Stop(blade_preview_);
-	UpdateStyle(current_preset_.preset_num);
+	UpdateStyle();
 	menu_type_ = MENU_COLOR_SUB;
 	MenuSelect();
 	choice_ = false;
@@ -2055,7 +2055,7 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_COLOR_OFF:
       SaveColorEdit();
       show_color_.Stop(blade_num_);
-      UpdateStyle(current_preset_.preset_num);
+      UpdateStyle();
       MenuSave();
       break;
     case MENU_COLOR_BLAST:
@@ -2064,27 +2064,27 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_COLOR_LB:
       SaveColorEdit();
       bump_color_.Stop(blade_num_);
-      UpdateStyle(current_preset_.preset_num);
+      UpdateStyle();
       MenuSave();
       break;
     case MENU_COLOR_DRAG:
     case MENU_COLOR_STAB:
       SaveColorEdit();
       tip_color_.Stop(blade_num_);
-      UpdateStyle(current_preset_.preset_num);
+      UpdateStyle();
       MenuSave();
       break;
     case MENU_COLOR_PREON:
     case MENU_COLOR_PSTOFF:
       SaveColorEdit();
       pre_color_.Stop(blade_num_);
-      UpdateStyle(current_preset_.preset_num);
+      UpdateStyle();
       MenuSave();
       break;
     case MENU_COLOR_EMITTER:
       SaveColorEdit();
       hilt_color_.Stop(blade_num_);
-      UpdateStyle(current_preset_.preset_num);
+      UpdateStyle();
       MenuSave();
       break;
     case MENU_FONT:
@@ -2105,7 +2105,7 @@ SaberFett263Buttons() : PropBase() {}
       menu_type_ = MENU_SETTING_SUB;
       current_preset_.Save();
       show_length_.Stop(blade_num_);
-      UpdateStyle(current_preset_.preset_num);
+      UpdateStyle();
       MenuSave();
       break;
     case MENU_COPY:
@@ -2125,7 +2125,7 @@ SaberFett263Buttons() : PropBase() {}
 	SaberBase::SetVariation(0);
 	current_preset_.SetStyle(blade_num_, style_parser.CopyArguments("~", current_preset_.GetStyle(blade_num_),  int_arg_menu_, NELEM(int_arg_menu_)));
 	current_preset_.Save();
-	UpdateStyle(current_preset_.preset_num);
+	UpdateStyle();
 	menu_type_ = MENU_COLOR_SUB;
 	MenuSelect();
 	choice_ = false;
@@ -2653,7 +2653,7 @@ SaberFett263Buttons() : PropBase() {}
         itoa(style_num_, style_arg, 10);
         current_preset_.SetStyle(blade_num_, style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg));
         current_preset_.Save();
-        UpdateStyle(current_preset_.preset_num);
+        UpdateStyle();
         SayStyleNumber(style_num_);
         break;
       case MENU_COLOR:
@@ -2808,7 +2808,8 @@ SaberFett263Buttons() : PropBase() {}
         strcat(font, ";common");
         current_preset_.font = mkstr(font);
         current_preset_.Save();
-        UpdateFont(current_preset_.preset_num, false);
+	// Reload Font Fast
+        SetPresetFast(current_preset_.preset_num);
         hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
         break;
       case MENU_TRACK:
@@ -3261,7 +3262,7 @@ SaberFett263Buttons() : PropBase() {}
         itoa(style_revert_, style_arg, 10);
         current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg));
         current_preset_.Save();
-        UpdateStyle(current_preset_.preset_num);
+        UpdateStyle();
 #if NUM_BLADES == 1
         menu_type_ = MENU_STYLE_SUB;
         MenuRevert();
@@ -3336,7 +3337,8 @@ SaberFett263Buttons() : PropBase() {}
         if (restore_point.get()) current_preset_.font = std::move(restore_point);
         restore_point = nullptr;
         current_preset_.Save();
-        UpdateFont(current_preset_.preset_num, false);
+	// Reload Font Fast
+        SetPresetFast(current_preset_.preset_num);
         menu_type_ = MENU_TOP;
         MenuRevert();
         break;
@@ -3357,7 +3359,7 @@ SaberFett263Buttons() : PropBase() {}
         SaveState(current_preset_.preset_num);
         MenuRevert();
         show_length_.Stop(blade_num_);
-        UpdateStyle(current_preset_.preset_num);
+        UpdateStyle();
         break;
       case MENU_COPY:
         choice_ = false;
@@ -3397,7 +3399,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_DIM_BLADE:
         SaberBase::SetDimming(pow(dim_revert_, 2.5) * 16384);
-        UpdateStyle(current_preset_.preset_num);
+        UpdateStyle();
         menu_type_ = MENU_SETTING_SUB;
         SaveGlobalState();
         MenuRevert();
@@ -3540,76 +3542,6 @@ SaberFett263Buttons() : PropBase() {}
     ZOOM_COLOR,
   };
 
-// Update Style
-  virtual void UpdateStyle(int preset_num) {
-    TRACE(PROP, "start");
-    SaveColorChangeIfNeeded();
-    // First free all styles, then allocate new ones to avoid memory
-    // fragmentation.
-#define UNSET_BLADE_STYLE(N) \
-    delete current_config->blade##N->UnSetStyle();
-    ONCEPERBLADE(UNSET_BLADE_STYLE)
-    current_preset_.SetPreset(preset_num);
-#ifdef DYNAMIC_BLADE_LENGTH
-    savestate_.ReadINIFromSaveDir("curstate");
-#define WRAP_BLADE_SHORTERNER(N) \
-    if (savestate_.blade##N##len != -1 && savestate_.blade##N##len != current_config->blade##N->num_leds()) { \
-      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);   \
-    }
-#else
-#define WRAP_BLADE_SHORTERNER(N)
-#endif
-
-
-#define SET_BLADE_STYLE(N) do {                                         \
-    BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
-    WRAP_BLADE_SHORTERNER(N)                                            \
-    current_config->blade##N->SetStyle(tmp);                            \
-  } while (0);
-
-    ONCEPERBLADE(SET_BLADE_STYLE)
-
-#undef SET_BLADE_STYLE
-
-#ifdef SAVE_COLOR_CHANGE
-    SaberBase::SetVariation(current_preset_.variation);
-#else
-    SaberBase::SetVariation(0);
-#endif
-    TRACE(PROP, "end");
-  }
-
-// Update Font / Save Style in Edit Mode, skips Preon effect (except for Preon Editing previews) using FastOn
-  virtual void UpdateFont(int preset_num, bool preon) {
-    TRACE(PROP, "start");
-    bool on = SaberBase::IsOn();
-    if (on) Off();
-    SaveColorChangeIfNeeded();
-    // First free all styles, then allocate new ones to avoid memory
-    // fragmentation.
-#define UNSET_BLADE_STYLE(N) \
-    delete current_config->blade##N->UnSetStyle();
-    ONCEPERBLADE(UNSET_BLADE_STYLE)
-    current_preset_.SetPreset(preset_num);
-#define SET_BLADE_STYLE(N) \
-    current_config->blade##N->SetStyle(style_parser.Parse(current_preset_.current_style##N.get()));
-    ONCEPERBLADE(SET_BLADE_STYLE)
-    chdir(current_preset_.font.get());
-#ifdef SAVE_COLOR_CHANGE
-    SaberBase::SetVariation(current_preset_.variation);
-#else
-    SaberBase::SetVariation(0);
-#endif
-    if (on) {
-      if (preon) {
-        On();
-      } else {
-        FastOn();
-      }
-    }
-    TRACE(PROP, "end");
-  }
-
   bool Parse(const char *cmd, const char* arg) override {
     if (PropBase::Parse(cmd, arg)) return true;
     if (!strcmp(cmd, "list_current_tracks")) {
@@ -3642,30 +3574,6 @@ SaberFett263Buttons() : PropBase() {}
     }
 #endif    
     return false;
-  }
-
-  // Go to first Preset.
-  virtual void first_preset() {
-#ifdef SAVE_PRESET
-    SaveState(0);
-#endif
-    UpdateFont(0, false);
-}
-
-  // Go to the next Preset skipping Preon effect with FastOn.
-  virtual void next_preset_fast() {
-#ifdef SAVE_PRESET
-    SaveState(current_preset_.preset_num + 1);
-#endif
-    UpdateFont(current_preset_.preset_num + 1, false);
-  }
-
-  // Go to the previous Preset skipping Preon effect with FastOn.
-  virtual void previous_preset_fast() {
-#ifdef SAVE_PRESET
-    SaveState(current_preset_.preset_num - 1);
-#endif
-    UpdateFont(current_preset_.preset_num - 1, false);
   }
 
 #ifdef FETT263_DUAL_MODE_SOUND
@@ -3722,26 +3630,14 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
-  // Fast On, like On() but skips preon sound and effect so ignition is immediate
-  // For use with gestures where immediate response makes more sense
-  // and in Edit Mode previews
-  virtual void FastOn() {
-    if (IsOn()) return;
-    if (current_style() && current_style()->NoOnOff())
-      return;
-    activated_ = millis();
-    STDOUT.println("Ignition.");
-    MountSDCard();
-    EnableAmplifier();
-    SaberBase::RequestMotion();
-    // Avoid clashes a little bit while turning on.
-    // It might be a "clicky" power button...
-    IgnoreClash(500);
-    SaberBase::TurnOn();
-    // Optional effects
-    SaberBase::DoEffect(EFFECT_FAST_ON, 0);
-  }
-
+  // Go to first Preset.
+  void first_preset() {
+#ifdef SAVE_PRESET
+    SaveState(0);
+#endif
+    SetPreset(0, true);
+}
+	
   // SA22C Volume Menu
   void VolumeUp() {
     STDOUT.println("Volume up");
@@ -3989,7 +3885,7 @@ SaberFett263Buttons() : PropBase() {}
           NewColor(1, BASE_COLOR_ARG);
           current_preset_.Save();
           show_color_all_.Stop();
-          UpdateStyle(current_preset_.preset_num);
+          UpdateStyle();
 	  return true;
         }
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {

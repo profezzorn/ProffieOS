@@ -339,7 +339,7 @@ public:
     skipspace();
     for (int i = 0; i < 32; i++) {
       int c = toLower(Peek());
-      if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_') {
+      if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '.') {
 	Read();
 	variable[i] = c;
 	variable[i+1] = 0;

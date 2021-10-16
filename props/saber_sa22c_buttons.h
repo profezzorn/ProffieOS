@@ -266,24 +266,6 @@ public:
     }
   }
 
-  // Fast On Gesture Ignition
-  virtual void FastOn() {
-    if (IsOn()) return;
-    if (current_style() && current_style()->NoOnOff())
-      return;
-    activated_ = millis();
-    STDOUT.println("Ignition.");
-    MountSDCard();
-    EnableAmplifier();
-    SaberBase::RequestMotion();
-    // Avoid clashes a little bit while turning on.
-    // It might be a "clicky" power button...
-    IgnoreClash(500);
-    SaberBase::TurnOn();
-    // Optional effects
-    SaberBase::DoEffect(EFFECT_FAST_ON, 0);
-  }
-  
 // Volume Menu
   void VolumeUp() {
     STDOUT.println("Volume up");
