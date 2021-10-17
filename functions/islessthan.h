@@ -25,6 +25,23 @@ private:
   V v_;
 };
 
+template<class SVFA, class SVFB>
+class SVFWrapper<IsLessThan<SingleValueAdapter<SVFA>,
+			    SingleValueAdapter<SVFB>>> {
+ public:
+  void run(BladeBase* blade) {
+    svfa_.run(blade);
+    svfb_.run(blade);
+  }
+  int calculate(BladeBase* blade) {
+    return (svfa_.calculate(blade) < svfb_.calculate(blade)) << 15;
+  }
+ private:
+  SVFA svfa_;
+  SVFB svfb_;
+};
+
+
 template<class F, class V> using IsGreaterThan = IsLessThan<V, F>;
 
 #endif
