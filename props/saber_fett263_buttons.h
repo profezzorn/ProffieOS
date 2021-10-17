@@ -4163,7 +4163,7 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
 #if defined (FETT263_SAY_BATTERY_PERCENT)
         sound_library_.SayBatteryLevel();
-        sound_library_.SayNumber(battery_monitor.battery_percent()), SAY_WHOLE);
+        sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
         sound_library_.SayPercent();
 #elif defined(FETT263_SAY_BATTERY_VOLTS)
         sound_library_.SayBatteryLevel();
