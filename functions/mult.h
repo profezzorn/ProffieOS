@@ -27,6 +27,29 @@ private:
   V v_;
 };
 
+template<class F, class V>
+class MultSVF {
+public:
+  void run(BladeBase* blade) {
+    f_.run(blade);
+    v_.run(blade);
+  }
+  int calculate(BladeBase* blade) {
+    return (f_.calculate(blade) * v_.calculate(blade)) >> 15;
+  }
+private:
+  F f_;
+  V v_;
+};
+
+template<class SVFA, class SVFB>
+class Mult<SingleValueAdapter<SVFA>,
+	   SingleValueAdapter<SVFB>> : public SingleValueAdapter<MultSVF<SVFA, SVFB>> {};
+
+template<class SVFA, class SVFB>
+class SVFWrapper<Mult<SingleValueAdapter<SVFA>,
+		      SingleValueAdapter<SVFB>>> : public Mult<SVFA, SVFB> {};
+
 // Usage: Percentage<F, V>
 // Gets Percentage V of value F, 
 // Percentages over 100% are allowed and will effectively be a multiplier. 
