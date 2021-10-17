@@ -383,10 +383,6 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #define FETT263_MAX_CLASH 16
 #endif
 
-#if (FETT263_MAX_CLASH <= CLASH_THRESHOLD_G)
-#error CLASH_THRESHOLD_G must be less than FETT263_MAX_CLASH
-#endif
-
 #ifdef FETT263_SWING_ON
 #define SWING_GESTURE
 #endif
