@@ -33,6 +33,7 @@ private:
   int mul_;
 };
 
+#if 0
 // Optimized specialization
 template<class F, int A, int B>
 class Scale<F, Int<A>, Int<B>> {
@@ -46,6 +47,7 @@ public:
 private:
   F f_;
 };
+#endif
 
 // To simplify inverting a function's returned value
 // Example InvertF<BladeAngle<>> will return 0 when up and 32768 when down
@@ -63,9 +65,7 @@ class SVFWrapper<Scale<SingleValueAdapter<SVF>, Int<A>, Int<B>>> {
 };
 
 template<class SVFF, class SVFA, class SVFB>
-class SVFWrapper<Scale<SingleValueAdapter<SVFF>,
-		       SingleValueAdapter<SVFA>,
-		       SingleValueAdapter<SVFB>>> {
+class ScaleSVF {
  public:
   void run(BladeBase* blade) {
     svff_.run(blade);
@@ -82,5 +82,15 @@ class SVFWrapper<Scale<SingleValueAdapter<SVFF>,
   SVFA svfa_;
   SVFB svfb_;
 };
+
+template<class SVFF, class SVFA, class SVFB>
+class Scale<SingleValueAdapter<SVFF>,
+            SingleValueAdapter<SVFA>,
+            SingleValueAdapter<SVFB>> : public SingleValueAdapter<ScaleSVF<SVFF, SVFA, SVFB>> {};
+
+//template<class SVFF, class SVFA, class SVFB>
+//class SVFWrapper<Scale<SingleValueAdapter<SVFF>,
+//		       SingleValueAdapter<SVFA>,
+//		       SingleValueAdapter<SVFB>>> : public ScaleSVF<SVFF, SVFA, SVFB> {};
 
 #endif

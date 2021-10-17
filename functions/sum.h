@@ -26,4 +26,22 @@ private:
   Sum<B...> b_;
 };
 
+#if 0
+template<class SVFA, class SVFB>
+class SVFWrapper<Sum<SingleValueAdapter<SVFA>,
+		     SingleValueAdapter<SVFB>>> {
+ public:
+  void run(BladeBase* blade) {
+    svfa_.run(blade);
+    svfb_.run(blade);
+  }
+  int calculate(BladeBase* blade) {
+    return (svfa_.calculate(blade) + svfb_.calculate(blade));
+  }
+ private:
+  SVFA svfa_;
+  SVFB svfb_;
+};
+#endif
+
 #endif
