@@ -23,10 +23,8 @@ public:
 };
 
 // Optimized specialization
-//template<int N>
-//class SingleValueAdapter<IntSVF<N>> : public IntSVF<N> {};
-template<int N>
-class SVFWrapper<IntSVF<N>> : public IntSVF<N> {};
+template<int N> class SingleValueAdapter<IntSVF<N>> : public IntSVF<N> {};
+template<int N> class SVFWrapper<IntSVF<N>> : public IntSVF<N> {};
 
 template<int N>
 using Int = SingleValueAdapter<IntSVF<N>>;

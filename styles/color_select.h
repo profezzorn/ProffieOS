@@ -2,6 +2,7 @@
 #define STYLES_COLOR_SELECT_H
 
 #include "../functions/variation.h"
+#include "../functions/svf.h"
 
 // Usage: ColorSelect<SELECTION, TRANSITION, COLOR1, COLOR2, ...>
 // SELECTION: function
@@ -23,7 +24,7 @@ public:
   void run(BladeBase* blade) {
     f_.run(blade);
     colors_.run(blade);
-    int f = f_.getInteger(0);
+    int f = f_.calculate(blade);
     while(f < 0) f += sizeof...(COLORS) << 8;
     uint8_t selection = f % sizeof...(COLORS);
     if (selection != selection_) {
@@ -40,7 +41,7 @@ public:
   }
 
 private:
-  SELECTION f_;
+  SVFWrapper<SELECTION> f_;
   TRANSITION transition_;
   uint8_t selection_= 0;
   uint8_t old_selection_ = 0;
