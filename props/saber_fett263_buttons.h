@@ -176,8 +176,11 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_SAY_COLOR_LIST_CC
   Spoken Color Names replace default sounds during Color Change "CC" Color List Mode (requires .wav files)
 
-  FETT263_SAY_BATTERY
-  Spoken Battery Level during On Demand Battery Level effect (requires .wav files)
+  FETT263_SAY_BATTERY_VOLTS
+  Spoken Battery Level as volts during On Demand Battery Level effect (requires .wav files)
+  
+  FETT263_SAY_BATTERY_PERCENT
+  Spoken Battery Level as percent during On Demand Battery Level effect (requires .wav files)
 
   == BATTLE MODE OPTIONS ==
     Battle Mode is enabled via controls by default in this prop, you can customize further with these defines
@@ -2173,7 +2176,8 @@ SaberFett263Buttons() : PropBase() {}
 	menu_type_ = MENU_LOCKUP_DELAY;
 	sound_library_.SaySelect();
 	calc_ = saved_gesture_control.lockupdelay;
-	sound_library_.SayNumber(calc_, SAY_MILLIS);
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
+        sound_library_.SayMillis();
 	break;
       case GESTURE_CLASH_DETECTION:
 	menu_type_ = MENU_CLASH_DETECT;
@@ -2989,7 +2993,8 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SayMinimum();
           }
         }
-        sound_library_.SayNumber(calc_, SAY_MILLIS);
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
+        sound_library_.SayMillis();
         break;
       case MENU_SETTING_SUB:
         menu_sub_pos_ += direction;
@@ -4160,8 +4165,14 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
-#ifdef FETT263_SAY_BATTERY
-        sound_library_.SayNumber(battery_monitor.battery(), SAY_BATTERY);
+#if defined (FETT263_SAY_BATTERY_PERCENT)
+        sound_library_.SayBatteryLevel();
+        sound_library_.SayNumber(battery_monitor.battery_percent()), SAY_WHOLE);
+        sound_library_.SayPercent();
+#elif defined(FETT263_SAY_BATTERY_VOLTS)
+        sound_library_.SayBatteryLevel();
+        sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
+        sound_library_.SayVolts();
 #endif
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
