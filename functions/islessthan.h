@@ -42,8 +42,12 @@ class IsLessThanSVF {
 };
 
 template<class SVFA, class SVFB>
+class IsLessThan<SingleValueAdapter<SVFA>,
+		 SingleValueAdapter<SVFB>> : public SingleValueAdapter<IsLessThanSVF<SVFA, SVFB>> {};
+
+template<class SVFA, class SVFB>
 class SVFWrapper<IsLessThan<SingleValueAdapter<SVFA>,
-			    SingleValueAdapter<SVFB>>> : public SingleValueAdapter<IsLessThanSVF<SVFA, SVFB>> {};
+			    SingleValueAdapter<SVFB>>> : public IsLessThanSVF<SVFA, SVFB> {};
 
 template<class F, class V> using IsGreaterThan = IsLessThan<V, F>;
 
