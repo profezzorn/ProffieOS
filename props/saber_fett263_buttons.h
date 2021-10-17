@@ -380,6 +380,10 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #define FETT263_MAX_CLASH 16
 #endif
 
+#if (FETT263_MAX_CLASH <= CLASH_THRESHOLD_G)
+#error CLASH_THRESHOLD_G must be less than FETT263_MAX_CLASH
+#endif
+
 #ifdef FETT263_SWING_ON
 #define SWING_GESTURE
 #endif
@@ -2954,12 +2958,12 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SayMaximum();
           }
         } else {
-          if (calc_ > 8) {
+          if (calc_ > GetCurrentClashThreshold()) {
 	    sound_library_.SayDown();
             calc_ -= 1;
           }
-          if (calc_ <= 8) {
-            calc_ = 8;
+          if (calc_ <= GetCurrentClashThreshold()) {
+            calc_ = GetCurrentClashThreshold();
             sound_library_.SayMinimum();
           }
         }
@@ -3012,13 +3016,13 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_CLASH_THRESHOLD:
         if (direction > 0) {
-          if (clash_t_ >= 4.0) {
+          if (clash_t_ >= saved_gesture_control.maxclash) {
             sound_library_.SayMaximum();
-            clash_t_ = 4.0;
+            clash_t_ = saved_gesture_control.maxclash;
           } else {
             sound_library_.SayUp();
             clash_t_ += 0.25;
-            if (clash_t_ > 4.0) clash_t_ = 4.0;
+            if (clash_t_ > saved_gesture_control.maxclash) clash_t_ = saved_gesture_control.maxclash;
           }
         } else {
           if (clash_t_ <= 1.0) {
