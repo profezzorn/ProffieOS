@@ -486,6 +486,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/hold_peak.h"
 #include "functions/clash_impact.h"
 #include "functions/effect_increment.h"
+#include "functions/increment.h"
 
 // transitions
 #include "transitions/fade.h"
