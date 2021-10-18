@@ -4,10 +4,8 @@
 // Sound library
 EFFECT(mnum); // menu numbers
 enum SayType {
-  SAY_BATTERY,
   SAY_DECIMAL,
   SAY_WHOLE,
-  SAY_MILLIS,
 };
 
 EFFECT(clrlst); // spoken color names for SAY_COLOR_LIST
@@ -96,10 +94,7 @@ public:
     int tenths = ((int)floorf(number * 10)) % 10;
     int hundredths = ((int)floorf(number * 100)) % 10;
     switch (say_type) {
-      case SAY_BATTERY:
-      case SAY_DECIMAL:
-        // Battery Level prompt
-        if (say_type == SAY_BATTERY) Play(SoundToPlay("mbatt.wav"));
+       case SAY_DECIMAL:
         // Tens & Ones
         if (number == 0) {
 	  Play(SoundToPlay("mzero.wav"));
@@ -116,11 +111,8 @@ public:
         }
         // Hundredths
         if (hundredths != 0) Play(SoundToPlay(&SFX_mnum, hundredths - 1));
-        // Volts prompt
-        if (say_type == SAY_BATTERY) Play("mvolts.wav");
         break;
       case SAY_WHOLE:
-      case SAY_MILLIS:
         // Thousands
         if (thousand > 0) {
           TensValue(thousand);
@@ -137,7 +129,6 @@ public:
         } else {
           TensValue(ones);
         }
-        if (say_type == SAY_MILLIS) Play("mmillis.wav");
         break;
       default:
         break;
@@ -151,6 +142,7 @@ public:
   void SayAltColor() { Play("malt.wav"); }
   void SayAuto() { Play("mauto.wav"); }
   void SayBaseColor() { Play("mbase.wav"); }
+  void SayBatteryLevel() { Play("mbatt.wav"); }
   void SayBlastColor() { Play("mblast.wav"); }
   void SayCancel() { Play("mcancel.wav"); }
   void SayChoreographyBegin() { Play("chreobgn.wav"); }
@@ -206,11 +198,13 @@ public:
   void SayMaximumClashStrength() { Play("maxclash.wav"); }
   void SayMaximumVolume() { Play("volmax.wav"); }
   void SayMeltSize() { Play("mmeltsz.wav"); }
+  void SayMillis() { Play("mmillis.wav"); }
   void SayMinimum() { Play("mmin.wav"); }
   void SayMininumVolume() { Play("volmin.wav"); }
   void SayNoChoreographyAvailable() { Play("nochreo.wav"); }
   void SayOffColor() { Play("moff.wav"); }
   void SayOption() { Play("moptnum.wav"); }
+  void SayPercent() { Play("mpercent.wav"); }
   void SayPostOffColor() { Play("mpstoff.wav"); }
   void SayPowerLock() { Play("mpwrlock.wav"); }
   void SayPowerUpOptions() { Play("mpwrup.wav"); }
@@ -247,6 +241,7 @@ public:
   void SayTwistIgnition() { Play("mtwiston.wav"); }
   void SayTwistRetraction() { Play("mtwstoff.wav"); }
   void SayUp() { Play("mup.wav"); } // Sound for increase
+  void SayVolts() { Play("mvolts.wav"); }
   void SayVolumeMenuEnd() { Play("vmend.wav"); }
   void SayVolumeUp() { Play("volup.wav"); } // Sound for increasing volume
   void SayZoomingIn() { Play("mzoom.wav"); } // Sound for color menu "zooming in"

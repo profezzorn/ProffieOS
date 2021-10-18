@@ -176,8 +176,11 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_SAY_COLOR_LIST_CC
   Spoken Color Names replace default sounds during Color Change "CC" Color List Mode (requires .wav files)
 
-  FETT263_SAY_BATTERY
-  Spoken Battery Level during On Demand Battery Level effect (requires .wav files)
+  FETT263_SAY_BATTERY_VOLTS
+  Spoken Battery Level as volts during On Demand Battery Level effect (requires .wav files)
+  
+  FETT263_SAY_BATTERY_PERCENT
+  Spoken Battery Level as percent during On Demand Battery Level effect (requires .wav files)
 
   == BATTLE MODE OPTIONS ==
     Battle Mode is enabled via controls by default in this prop, you can customize further with these defines
@@ -2169,7 +2172,8 @@ SaberFett263Buttons() : PropBase() {}
 	menu_type_ = MENU_LOCKUP_DELAY;
 	sound_library_.SaySelect();
 	calc_ = saved_gesture_control.lockupdelay;
-	sound_library_.SayNumber(calc_, SAY_MILLIS);
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
+        sound_library_.SayMillis();
 	break;
       case GESTURE_CLASH_DETECTION:
 	menu_type_ = MENU_CLASH_DETECT;
@@ -2954,12 +2958,12 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SayMaximum();
           }
         } else {
-          if (calc_ > 8) {
+          if (calc_ > GetCurrentClashThreshold()) {
 	    sound_library_.SayDown();
             calc_ -= 1;
           }
-          if (calc_ <= 8) {
-            calc_ = 8;
+          if (calc_ <= GetCurrentClashThreshold()) {
+            calc_ = GetCurrentClashThreshold();
             sound_library_.SayMinimum();
           }
         }
@@ -2985,7 +2989,8 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SayMinimum();
           }
         }
-        sound_library_.SayNumber(calc_, SAY_MILLIS);
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
+        sound_library_.SayMillis();
         break;
       case MENU_SETTING_SUB:
         menu_sub_pos_ += direction;
@@ -3012,13 +3017,13 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_CLASH_THRESHOLD:
         if (direction > 0) {
-          if (clash_t_ >= 4.0) {
+          if (clash_t_ >= saved_gesture_control.maxclash) {
             sound_library_.SayMaximum();
-            clash_t_ = 4.0;
+            clash_t_ = saved_gesture_control.maxclash;
           } else {
             sound_library_.SayUp();
             clash_t_ += 0.25;
-            if (clash_t_ > 4.0) clash_t_ = 4.0;
+            if (clash_t_ > saved_gesture_control.maxclash) clash_t_ = saved_gesture_control.maxclash;
           }
         } else {
           if (clash_t_ <= 1.0) {
@@ -3682,6 +3687,81 @@ SaberFett263Buttons() : PropBase() {}
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
 
+#ifdef BLADE_DETECT_PIN
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
+        // Might need to do something cleaner, but let's try this for now.
+        blade_detected_ = true;
+#ifdef FETT263_SAVE_GESTURE_OFF
+        RestoreGestureState();
+#else
+        saved_gesture_control.gestureon = true;
+#endif
+        FindBladeAgain();
+        SaberBase::DoBladeDetect(true);
+        return true;
+
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
+        // Might need to do something cleaner, but let's try this for now.
+        blade_detected_ = false;
+#ifdef FETT263_SAVE_GESTURE_OFF
+        SaveGestureState();
+#endif
+        saved_gesture_control.gestureon = false;
+        FindBladeAgain();
+        SaberBase::DoBladeDetect(false);
+        return true;
+#endif
+
+      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_OFF):
+        if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
+          menu_ = false;
+          menu_type_ = MENU_TOP;
+	  sound_library_.SayUp();
+          return true;
+        }
+        return false;
+
+      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
+#ifndef DISABLE_COLOR_CHANGE
+        if (color_mode_ == CC_COLOR_LIST) {
+          hybrid_font.PlayCommon(&SFX_ccend);
+          NewColor(1, BASE_COLOR_ARG);
+          current_preset_.Save();
+          show_color_all_.Stop();
+          UpdateStyle();
+	  return true;
+        }
+        if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+          ToggleColorChangeMode();
+#ifdef FETT263_EDIT_MODE_MENU
+          if (menu_type_ == MENU_COLOR) {
+            menu_type_ = MENU_TOP;
+            MenuSave();
+	    return true;
+          }
+#endif
+          return true;
+        }
+#endif
+        return false;
+
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
+        SaberBase::RequestMotion();
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
+#ifdef COLORWHEEL_ZOOM
+        if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
+          SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
+	  sound_library_.SayZoomingIn();
+          return true;
+        }
+#endif
+        return false;
+		    
+// 2 Button Controls	    
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
@@ -3709,33 +3789,6 @@ SaberFett263Buttons() : PropBase() {}
 #endif
         }
         return true;
-
-#ifdef BLADE_DETECT_PIN
-      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
-      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
-        // Might need to do something cleaner, but let's try this for now.
-        blade_detected_ = true;
-#ifdef FETT263_SAVE_GESTURE_OFF
-        RestoreGestureState();
-#else
-        saved_gesture_control.gestureon = true;
-#endif
-        FindBladeAgain();
-        SaberBase::DoBladeDetect(true);
-        return true;
-
-      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
-      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
-        // Might need to do something cleaner, but let's try this for now.
-        blade_detected_ = false;
-#ifdef FETT263_SAVE_GESTURE_OFF
-        SaveGestureState();
-#endif
-        saved_gesture_control.gestureon = false;
-        FindBladeAgain();
-        SaberBase::DoBladeDetect(false);
-        return true;
-#endif
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_POWER):
         if (!menu_) {
@@ -3788,15 +3841,6 @@ SaberFett263Buttons() : PropBase() {}
           }
         }
         return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_OFF):
-        if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
-          menu_ = false;
-          menu_type_ = MENU_TOP;
-	  sound_library_.SayUp();
-          return true;
-        }
-        return false;
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF | BUTTON_POWER):
 #ifdef FETT263_EDIT_MODE_MENU
@@ -3877,30 +3921,6 @@ SaberFett263Buttons() : PropBase() {}
           Off();
         }
         return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
-#ifndef DISABLE_COLOR_CHANGE
-        if (color_mode_ == CC_COLOR_LIST) {
-          hybrid_font.PlayCommon(&SFX_ccend);
-          NewColor(1, BASE_COLOR_ARG);
-          current_preset_.Save();
-          show_color_all_.Stop();
-          UpdateStyle();
-	  return true;
-        }
-        if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-          ToggleColorChangeMode();
-#ifdef FETT263_EDIT_MODE_MENU
-          if (menu_type_ == MENU_COLOR) {
-            menu_type_ = MENU_TOP;
-            MenuSave();
-	    return true;
-          }
-#endif
-          return true;
-        }
-#endif
-        return false;
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
@@ -4151,26 +4171,17 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true;
 
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
-        SaberBase::RequestMotion();
-        return true;
-
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
-#ifdef FETT263_SAY_BATTERY
-        sound_library_.SayNumber(battery_monitor.battery(), SAY_BATTERY);
+#if defined (FETT263_SAY_BATTERY_PERCENT)
+        sound_library_.SayBatteryLevel();
+        sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
+        sound_library_.SayPercent();
+#elif defined(FETT263_SAY_BATTERY_VOLTS)
+        sound_library_.SayBatteryLevel();
+        sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
+        sound_library_.SayVolts();
 #endif
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-        return true;
-
-      // Gesture Sleep Toggle
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_POWER):
-        if (!saved_gesture_control.gestureon) {
-          saved_gesture_control.gestureon = true;
-	  sound_library_.SayGesturesOn();
-        } else {
-          saved_gesture_control.gestureon = false;
-	  sound_library_.SayGesturesOff();
-        }
         return true;
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -4204,83 +4215,6 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true;
 #endif
-
-      // Auto Lockup Mode
-      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
-        if (menu_ || SaberBase::Lockup()) return true;
-#ifdef FETT263_SAVE_CHOREOGRAPHY
-        if (rehearse_) {
-          RehearseClash();
-          return true;
-        }
-#endif
-        if (!battle_mode_ || swinging_) {
-          clash_impact_millis_ = millis();
-#ifdef FETT263_CLASH_STRENGTH_SOUND
-          clash_type_ = CLASH_NORMAL;
-#else
-          SaberBase::DoClash();
-#endif
-          return true;
-        }
-#ifdef FETT263_SAVE_CHOREOGRAPHY
-        if (choreo_) {
-          if (saved_choreography.clash_rec[clash_count_].stance == SavedRehearsal::STANCE_CLASH) {
-            ChoreoClash();
-            return true;
-          } else {
-            ChoreoLockup();
-            return true;
-          }
-        }
-#endif
-        clash_impact_millis_ = millis();
-        check_blast_ = false;
-        swing_blast_ = false;
-        if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
-          SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-          SaberBase::DoBeginLockup();
-          auto_melt_on_ = true;
-          return true;
-        }
-        clash_type_ = CLASH_BATTLE_MODE;
-        return true;
-
-
-      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
-        if (menu_ || SaberBase::Lockup()) return true;
-        clash_impact_millis_ = millis();
-        if (!battle_mode_) {
-#ifdef FETT263_CLASH_STRENGTH_SOUND
-          clash_impact_millis_ = millis();
-          clash_type_ = CLASH_STAB;
-#else
-          SaberBase::DoStab();
-#endif
-          return true;
-        }
-        check_blast_ = false;
-        swing_blast_ = false;
-        if (!swinging_) {
-          if (fusor.angle1() < - M_PI / 4) {
-            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-          } else {
-            SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
-          }
-          auto_melt_on_ = true;
-          SaberBase::DoBeginLockup();
-        }
-        return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
-#ifdef COLORWHEEL_ZOOM
-        if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
-          SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
-	  sound_library_.SayZoomingIn();
-          return true;
-        }
-#endif
-        return false;
 		    
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
@@ -4348,6 +4282,17 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) MenuDial(-1);
         return true;
 
+      // Gesture Sleep Toggle
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_POWER):
+        if (!saved_gesture_control.gestureon) {
+          saved_gesture_control.gestureon = true;
+	  sound_library_.SayGesturesOn();
+        } else {
+          saved_gesture_control.gestureon = false;
+	  sound_library_.SayGesturesOff();
+        }
+        return true;
+
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
         if (swing_blast_) {
           SaberBase::DoBlast();
@@ -4378,6 +4323,73 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         }
         return false;
+		    
+      // Auto Lockup Mode
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
+        if (menu_ || SaberBase::Lockup()) return true;
+#ifdef FETT263_SAVE_CHOREOGRAPHY
+        if (rehearse_) {
+          RehearseClash();
+          return true;
+        }
+#endif
+        if (!battle_mode_ || swinging_) {
+          clash_impact_millis_ = millis();
+#ifdef FETT263_CLASH_STRENGTH_SOUND
+          clash_type_ = CLASH_NORMAL;
+#else
+          SaberBase::DoClash();
+#endif
+          return true;
+        }
+#ifdef FETT263_SAVE_CHOREOGRAPHY
+        if (choreo_) {
+          if (saved_choreography.clash_rec[clash_count_].stance == SavedRehearsal::STANCE_CLASH) {
+            ChoreoClash();
+            return true;
+          } else {
+            ChoreoLockup();
+            return true;
+          }
+        }
+#endif
+        clash_impact_millis_ = millis();
+        check_blast_ = false;
+        swing_blast_ = false;
+        if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+          SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+          SaberBase::DoBeginLockup();
+          auto_melt_on_ = true;
+          return true;
+        }
+        clash_type_ = CLASH_BATTLE_MODE;
+        return true;
+
+
+      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
+        if (menu_ || SaberBase::Lockup()) return true;
+        clash_impact_millis_ = millis();
+        if (!battle_mode_) {
+#ifdef FETT263_CLASH_STRENGTH_SOUND
+          clash_impact_millis_ = millis();
+          clash_type_ = CLASH_STAB;
+#else
+          SaberBase::DoStab();
+#endif
+          return true;
+        }
+        check_blast_ = false;
+        swing_blast_ = false;
+        if (!swinging_) {
+          if (fusor.angle1() < - M_PI / 4) {
+            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+          } else {
+            SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+          }
+          auto_melt_on_ = true;
+          SaberBase::DoBeginLockup();
+        }
+        return true;
 
       // Optional Gesture Controls (defines listed at top)
 
