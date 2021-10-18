@@ -375,6 +375,16 @@ void test_inouthelper(BladeStyle* style) {
   }
 }
 
+template<class T>
+class TestStyle : public Style<T> {
+public:
+  TestStyle() {
+    fprintf(stderr, "%s: RAM USAGE: %lu\n",
+	    __PRETTY_FUNCTION__,
+	    sizeof(*this));
+  }
+};
+
 Color16 get_color_when_on(BladeStyle* style) {
   MockBlade mock_blade;
   mock_blade.SetStyle(style);
@@ -446,7 +456,7 @@ void test_style1() {
 
 
 void test_style2() {
-  Style<
+  TestStyle<
    Layers<
 	AudioFlicker<Rgb<0,128,0>,Green>,
 	BlastFadeoutL<Blue,400>,
@@ -474,7 +484,7 @@ void test_style2() {
 }
 
 void test_style3() {
-  Style<Layers<
+  TestStyle<Layers<
     Black,
 	  TransitionEffectL<TrWaveX<Green,Int<400>,Int<100>,Int<600>,Scale<BladeAngle<>,Scale<BladeAngle<0,16000>,Int<10000>,Int<30000>>,Int<10000>>>,EFFECT_LOCKUP_END>,
 	  ResponsiveLockupL<Blue,TrConcat<TrInstant,AlphaL<Red,Bump<Scale<BladeAngle<>,Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,Int<6000>>,Int<16000>>>,TrFade<400>>,TrInstant,Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,Int<6000>,Scale<SwingSpeed<100>,Int<10000>,Int<14000>>>,
