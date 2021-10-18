@@ -501,6 +501,7 @@ private:
 #define EFFECT2(X, Y) Effect SFX_##X(#X, &SFX_##Y)
 #define IMAGE_FILESET(X) Effect IMG_##X(#X, nullptr, Effect::FileType::IMAGE)
 
+EFFECT(preamble);
 EFFECT(preon);
 EFFECT(pstoff);
 

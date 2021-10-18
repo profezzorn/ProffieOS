@@ -362,18 +362,29 @@ public:
     }
   }
 
+  Effect* getPreon() { return SFX_preon ? &SFX_preon : &SFX_out; }
   Effect* getOut() { return SFX_out ? &SFX_out : &SFX_poweron; }
   Effect* getHum() { return SFX_humm ? &SFX_humm : &SFX_hum; }
 
   void SB_Preon() {
     if (SFX_preon) {
       SFX_preon.SetFollowing(getOut());
-      // PlayCommon(&SFX_preon);
-      RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&SFX_preon);
-      
-      if (monophonic_hum_) {
-	getOut()->SetFollowing(getHum());
+      if (SFX_preamble) { // play preamble, then preon
+          SFX_preamble.SetFollowing(getPreon());
+          RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&SFX_preamble);
+      } else { // just play the preon
+          // PlayCommon(&SFX_preon);
+          RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&SFX_preon);
       }
+    } else { // no preon, but maybe a preamble
+        if (SFX_preamble) {
+            SFX_preamble.SetFollowing(getOut());
+            RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&SFX_preamble);
+        }
+    }
+    
+    if (monophonic_hum_) {
+        getOut()->SetFollowing(getHum());
     }
     SaberBase::RequestMotion();
     state_ = STATE_WAIT_FOR_ON;
@@ -392,7 +403,7 @@ public:
 
   void SB_On() override {
     // If preon exists, we've already queed up playing the poweron and hum.
-    bool already_started = state_ == STATE_WAIT_FOR_ON && SFX_preon;
+    bool already_started = state_ == STATE_WAIT_FOR_ON && (SFX_preon || SFX_preamble);
     if (monophonic_hum_) {
       if (!already_started) {
 	PlayMonophonic(&SFX_poweron, &SFX_hum);
@@ -698,7 +709,7 @@ public:
   bool check_postoff_ = false;
   void Loop() override {
     if (state_ == STATE_WAIT_FOR_ON) {
-      if (!GetWavPlayerPlaying(&SFX_preon)) {
+      if ((!GetWavPlayerPlaying(&SFX_preon)) && (!GetWavPlayerPlaying(&SFX_preamble))) {
 	SaberBase::TurnOn();
 	return;
       }
