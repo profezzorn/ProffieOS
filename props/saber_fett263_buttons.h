@@ -47,8 +47,9 @@ Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
     Thrust On
 
 Standard Controls While Blade is ON
-  Turn Off / Retract Blade* = Click PWR
+  Turn Off / Retract Blade* = Click PWR (Hold PWR**)
     *if PowerLock is disabled
+    **using FETT263_HOLD_BUTTON_OFF define
   Turn Off / Retract Blade (PowerLock Mode) = Hold PWR + Hold AUX
   Blast Effect = Click Aux
   Multi-Blast Mode = Long Click Aux
@@ -56,7 +57,9 @@ Standard Controls While Blade is ON
     To exit, click AUX or do Clash
   Clash Effect = Clash Saber
   Stab Effect = Stab (thrust and impact tip of blade on object)
-  Lockup Effect = Hold PWR + Clash Saber
+  Lockup Effect = Hold PWR + Clash Saber (Hold AUX**)
+      **using FETT263_HOLD_BUTTON_LOCKUP
+      **Battle Mode changes to Hold AUX + Swing with this define
   Drag Effect = Hold AUX + Stab Down
   Melt Effect = Hold AUX + Stab Parallel or Up
   Lightning Block Effect = Hold PWR + click AUX
@@ -69,7 +72,9 @@ Standard Controls While Blade is ON
   Color Change = Hold AUX + Click PWR (parallel or down)
     Rotate Hilt to select color (unless ColorChange click to Change style is active)
     Click PWR to save
-  NEW! Hold PWR to enter ZOOM mode to fine-tune color, Release PWR to save
+    NEW! ColorWheel "Zoom"* = Hold PWR, Release to Save
+      *if COLORWHEEL_ZOOM defined
+      *While in ColorWheel you can Hold PWR down to zoom in color for easier selection
   Power Save* = Hold AUX + Click PWR (pointing up)
     *requires EFFECT_POWERSAVE in style
   Multi-Phase Preset Change*
@@ -82,7 +87,8 @@ Optional Gesture Controls (if enabled)
 
 "Battle Mode" Controls* - While ON
     *may vary by defines
-  Enter/Exit Battle Mode = Hold AUX
+  Enter/Exit Battle Mode = Hold AUX (Hold AUX + Swing**)
+      **if FETT263_HOLD_BUTTON_LOCKUP defined
   Clash / Lockup = controlled by gesture
     Clash blade
       If blade swings through the clash it will do a "glancing Clash"
@@ -284,6 +290,20 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   MOTION_TIMEOUT 60 * 15 * 1000
   This extends the motion timeout to 15 minutes to allow gesture ignition to remain active
   Increase/decrease the "15" value as needed
+  
+  COLORWHEEL_ZOOM
+  This will enable "Zoom" mode in ColorWheel (does not apply to Color Change using Color List for Edit Mode styles)
+  
+  FETT263_QUOTE_PLAYER_START_ON
+  This will set Force / Quote Player to play Quote by default (if in font)
+  
+== SA22C 2 Button Variations ==
+  FETT263_HOLD_BUTTON_OFF - Changes to Hold PWR to turn Off / Retract
+  
+  FETT263_HOLD_BUTTON_LOCKUP - Enables Hold AUX for Lockup*
+    Cannot be used with FETT263_SAVE_CHOREOGRAPHY
+    *Clash Strength / Clash Impact effects and sounds for Lockup negated
+    *Battle Mode control changes to hold AUX + Swing
 
 CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
@@ -325,6 +345,10 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #if NUM_BUTTONS < 2
 #error /props/saber_fett263_buttons.h requires 2 buttons for operation
+#endif
+
+#if defined(FETT263_HOLD_BUTTON_LOCKUP) && defined(FETT263_SAVE_CHOREOGRAPHY)
+#error FETT263_HOLD_BUTTON_LOCKUP cannot be used with FETT263_SAVE_CHOREOGRAPHY
 #endif
 
 #if defined(FETT263_EDIT_MODE_MENU) && !defined(ENABLE_ALL_EDIT_OPTIONS)
@@ -3868,6 +3892,21 @@ SaberFett263Buttons() : PropBase() {}
 	sound_library_.SaySave();
 #endif
         return true;
+		    
+#ifdef FETT263_HOLD_BUTTON_LOCKUP
+      case EVENTID(BUTTON_AUX, EVENT_HELD_MEDIUM, MODE_ON):
+	if (menu_) {
+	  return false;
+	  break;
+	}
+        if (!SaberBase::Lockup()) {
+          SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+          swing_blast_ = false;
+          SaberBase::SetClashStrength(8);
+          SaberBase::DoBeginLockup();
+          return true;
+        } 
+#endif
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON):
         if (menu_) {
@@ -3887,6 +3926,27 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         }
 #endif
+#ifndef FETT263_HOLD_BUTTON_LOCKUP
+        if (!battle_mode_) {
+          battle_mode_ = true;
+          if (SFX_bmbegin) {
+            hybrid_font.PlayCommon(&SFX_bmbegin);
+          } else {
+            hybrid_font.DoEffect(EFFECT_FORCE, 0);
+          }
+        } else {
+          battle_mode_ = false;
+          if (SFX_bmend) {
+            hybrid_font.PlayCommon(&SFX_bmend);
+          } else {
+            beeper.Beep(0.5, 3000);
+          }
+        }
+#endif
+        return true;
+
+#ifdef FETT263_HOLD_BUTTON_LOCKUP
+      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
         if (!battle_mode_) {
           battle_mode_ = true;
           if (SFX_bmbegin) {
@@ -3903,6 +3963,7 @@ SaberFett263Buttons() : PropBase() {}
           }
         }
         return true;
+#endif
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON | BUTTON_POWER):
         if ((!menu_ && saved_gesture_control.powerlock)
@@ -3922,14 +3983,28 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true;
 
-#ifdef FETT263_SAVE_CHOREOGRAPHY
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
+	if (menu_) return true;
+#ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
           EndRehearsal();
           return true;
         }
-	return false;
 #endif
+#ifdef FETT263_HOLD_BUTTON_OFF
+        if (!swinging_) {
+          check_blast_ = false;
+          swing_blast_ = false;
+#ifdef FETT263_DUAL_MODE_SOUND
+          SelectRetractionSound();
+#endif
+          Off();
+          saber_off_time_millis_ = millis();
+          battle_mode_ = false;
+    return true;
+        }
+#endif
+	return false;
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
@@ -3944,6 +4019,7 @@ SaberFett263Buttons() : PropBase() {}
           MenuChoice();
           return true;
         } else {
+#ifndef FETT263_HOLD_BUTTON_OFF
           if (!swinging_) {
             check_blast_ = false;
             swing_blast_ = false;
@@ -3974,6 +4050,7 @@ SaberFett263Buttons() : PropBase() {}
             battle_mode_ = true;
 #endif
           }
+#endif
           return true;
         }
 
@@ -4654,7 +4731,11 @@ private:
   bool auto_melt_on_ = false; // Battle Mode Melt/Drag active
   bool battle_mode_ = false; // Battle Mode active
   bool menu_ = false; // Edit Mode / Menu System active
+#ifdef FETT263_QUOTE_PLAYER_START_ON
+  bool force_quote_ = true; // Quote Player active (in place of force effect)
+#else
   bool force_quote_ = false; // Quote Player active (in place of force effect)
+#endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
   bool rehearse_ = false; // Rehearsal Mode active
   bool choreo_ = false; // Choreography Mode active
