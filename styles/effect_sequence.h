@@ -12,6 +12,7 @@ public:
     if (effect_.Detect(blade)) {
 	n_ = (n_ + 1) % sizeof...(COLORS);
     }
+    last_detected_blade_effect = nullptr;
   }
 private:
   OneshotEffectDetector<EFFECT> effect_;
@@ -22,7 +23,6 @@ public:
   auto getColor(int led) -> decltype(colors_.getColor(n_, led)) {
     return colors_.getColor(n_, led);
   }
-
 };
 
 #endif
