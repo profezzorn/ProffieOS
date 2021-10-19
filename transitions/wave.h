@@ -31,7 +31,7 @@ public:
     offset_ = (millis() - this->start_millis()) * 32768 / wave_ms_.getInteger(0);
   }
 private:
-  WAVE_CENTER wave_center_;
+  PONUA WAVE_CENTER wave_center_;
   int center_;
   
   PONUA WAVE_SIZE wave_size_;
@@ -84,7 +84,7 @@ public:
     offset_ = this->update(32768);
   }
 private:
-  SPARK_CENTER spark_center_;
+  PONUA SPARK_CENTER spark_center_;
   int center_;
   
   PONUA SPARK_SIZE spark_size_;
