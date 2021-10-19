@@ -42,8 +42,8 @@ public:
   int getInteger(int led) { return value_; }
 
 private:
-  BLINK_MILLIS pulse_millis_;
-  BLINK_PROMILLE pulse_promille_;
+  PONUA BLINK_MILLIS pulse_millis_;
+  PONUA BLINK_PROMILLE pulse_promille_;
   uint32_t pulse_start_micros_;
   int value_;
 };

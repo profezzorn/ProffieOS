@@ -44,7 +44,7 @@ public:
     return (f_.getInteger(led) * (B - A) >> 15) + A;
   }
 private:
-  F f_;
+  PONUA F f_;
 };
 
 // To simplify inverting a function's returned value

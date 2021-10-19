@@ -18,8 +18,8 @@ public:
   }
 
 private:
-  COLOR color_;
-  ROTATION rotation_;
+  PONUA COLOR color_;
+  PONUA ROTATION rotation_;
 public:
   auto getColor(int led) -> decltype(color_.getColor(led)) {
     auto c = color_.getColor(led);

@@ -81,10 +81,10 @@ class Trigger {
   }
   int getInteger(int led) const { return value_; }
  private:
-  DELAY_MILLIS delay_millis_;
-  FADE_IN_MILLIS fade_in_millis_;
-  SUSTAIN_MILLIS sustain_millis_;
-  FADE_OUT_MILLIS fade_out_millis_;
+  PONUA DELAY_MILLIS delay_millis_;
+  PONUA FADE_IN_MILLIS fade_in_millis_;
+  PONUA SUSTAIN_MILLIS sustain_millis_;
+  PONUA FADE_OUT_MILLIS fade_out_millis_;
   int value_;
   uint8_t trigger_state_ = TRIGGER_OFF;
   uint32_t start_time_;
