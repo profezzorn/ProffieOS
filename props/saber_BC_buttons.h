@@ -1,65 +1,65 @@
 /*
 saber_BC_buttons.h
- http://fredrik.hubbe.net/lightsaber/proffieos.html
- Copyright (c) 2016-2019 Fredrik Hubinette
- Copyright (c) 2021 Brian Conner with contributions by:
- Fredrik Hubinette, Fernando DeRosa, and Matthew McGeary.
- Distributed under the terms of the GNU General Public License v3.
- http://www.gnu.org/licenses/
+  http://fredrik.hubbe.net/lightsaber/proffieos.html
+  Copyright (c) 2016-2019 Fredrik Hubinette
+  Copyright (c) 2021 Brian Conner with contributions by:
+  Fredrik Hubinette, Fernando DeRosa, and Matthew McGeary.
+  Distributed under the terms of the GNU General Public License v3.
+  http://www.gnu.org/licenses/
  
 Includes 1 and 2 button controls.
 Incorporates an intuitive control scheme so button actions are consistant
 whether blade is on or off.
+Best if used with OS6 ProffieOS_Voicepack spoken menu prompts.
+Download your choice of language and variation here:
+http://fredrik.hubbe.net/lightsaber/sound/
+
 Features:
-sa22c's original multi-blast, Battle Mode and gesture ignitions from fett263,
-enhanced sa22c's on-the-fly volume controls with custom prompts and sounds
-via the following wav files:
-vmbegin.wav
-vmend.wav
-voldown.wav
-volup.wav
-volmax.wav
-volmin.wav
-
-To use a female voice version of the battery level spoken digits, use:
-#define FEMALE_TALKIE_VOICE
-
-EFFECT_USER1 - use as a standalone trigger for EffectSequence<>,
-               for example as a way to have multiple blade styles in one preset.
-             - Usage:EffectSequence<EFFECT_USER1, item1, item2...>
-             - Custom swap.wav files can be used as the sound effect,
-               otherwise ccchange.wavs are used.
-EFFECT_USER2 - for blade effects with sounds that might work better without hum,
-               this plays sounds monophonically.
-               (think seismic charge silence, iceblade etc...)
-             - monosfx.wav files are used. It can be just the sound, or a
-               blade effect too by using EFFECT_USER2 in a TransitionEffectL.
-Added quote sound so force.wavs can remain as force.
+- Live preset changing while blade is running (skips font.wav and preon).
+- Auto multi-blaster block or sa22c's original multi-blast.
+- Battle Mode and gesture ignitions from fett263
+- Spoken Battery level, with percentage option.
+- Added quote sound so force.wavs can remain as force.
              - Add quote.wav files to font to use.
-Added Play / Stop track control while blade is on.
-Added Prev/Next preset control while blade is on.
-Force Push is always available, not just in Battle Mode.
-Melt is always available as no button, with pull-away or button to end
-Drag is always clash with button pressed while pointing down.
+- Added Play / Stop track control while blade is on.
+- Added Prev/Next preset control while blade is on by pointing blade up.
+- Force Push is always available, not just in Battle Mode.
+- Melt is always available as no button, with pull-away or button to end
+- Drag is always clash with button pressed while pointing down.
+- Preon is skipped if pointing up, as well as when "live" switching presets a.k.a. "Dual Phase".
+- No blade = no gestures option if Blade Detect is used.
+- Use wav files for talkie things.
+- Enhanced sa22c's on-the-fly volume controls with custom prompts and sounds, and cycle through.
+
+Optional Blade style elements:
+On-Demand battery level - A layer built into the blade styles that reacts 
+                          as the battery gets weaker, changing blade color 
+                          from Green to Red, and the blade length shortens:
+EFFECT_USER1            - use as a standalone trigger for EffectSequence<>,
+                          for example as a way to have multiple blade styles in one preset.
+                        - Usage:EffectSequence<EFFECT_USER1, item1, item2...>
+                        - Custom swap.wav files can be used as the sound effect,
+                          otherwise ccchange.wav is used.
+EFFECT_USER2            - for blade effects with sounds that might work better without hum,
+                          this plays sounds monophonically.
+                          (think seismic charge silence, iceblade etc...)
+                        - monosfx.wav files are used. It can be just the sound, or a
+                          blade effect too by using EFFECT_USER2 in a TransitionEffectL.
 
 Optional #defines:
 #define ENABLE_AUTO_SWING_BLAST - Multi-blast initiated by simply swinging
                                   within 1 second of last blast.
                                   Exit by not swinging for 1 second.
-#define VOLUME_MENU_CYCLE - This allows the Volume menu to loop through from
-                            maximum back to minimum and vice versa.
-On-Demand battery level - A layer built into the blade styles.
-      - This example style reacts as the battery gets weaker by pulsing quicker,
-        the blade length shortens, and color changes from Green to Red:
-AlphaL<TransitionEffectL<TrConcat<TrSmoothFade<500>,AlphaL<PulsingX<Mix<
-    BatteryLevel,Red,Green>,Black,Scale<BatteryLevel,Int<200>,Int<4000>>>,
-    SmoothStep<Scale<BatteryLevel,Int<0>,Int<35000>>,Int<-1>>>,
-    TrSmoothFade<2000>>,EFFECT_BATTERY_LEVEL>,Ifon<Int<0>,Int<32768>>>
+#define VOLUME_MENU_CYCLE       - This allows the Volume menu to loop through from
+                                  maximum back to minimum and vice versa.
+#define FEMALE_TALKIE_VOICE     - To use a female voice version of onboard Talkie.
+#define NO_VOLUME_MENU          - Option to omit On-the-fly Volume menu control with buttons.
+
 ------------------------------------------------------------------------------
 Gesture Controls:
-There are four gesture types: swing, stab, thrust and twist.
-For simplicity, using gesture ignition will automatically skip the preon effect.
-Below are the options to add to the config to enable the various gestures:
+- There are four gesture types: swing, stab, thrust and twist.
+  For simplicity, using gesture ignition will automatically skip the preon effect.
+  Below are the options to add to the config to enable the various gestures:
 #define BC_SWING_ON
 #define BC_STAB_ON
 #define BC_THRUST_ON
@@ -67,192 +67,204 @@ Below are the options to add to the config to enable the various gestures:
 #define BC_TWIST_OFF
 #define NO_BLADE_NO_GEST_ONOFF
 - If using blade detect, Gesture ignitions or retractions are disabled.
-  **NOTE** Only works when a BLADE_DETECT_PIN is defined. 
+  **NOTE** Only works when a BLADE_DETECT_PIN is defined.
+  
 #define BC_FORCE_PUSH
 - This mode plays a force sound (or force push sound if the font contains it) with
   a controlled pushing gesture, and is always available, not just in Battle Mode.
+  
 #define BC_FORCE_PUSH_LENGTH
 - Used for adjustment to the Push gesture length in millis needed to trigger
   Force Push. Recommended range 1 ~ 10,
   1 = shortest, easiest to trigger, 10 = longest. Default value is 5.
+  
 #define BC_GESTURE_AUTO_BATTLE_MODE
 - Makes gesture ignition ALSO enter battle mode automatically on ignition.
 
 Battle mode by fett263, BC modified version:
-Once you enter battle mode, buttons are not used for lockup.
-Clashing the blade against something will automatically do lockup and then end
-when you pull away.
-Automatic lockup and grazing clash (swinging through) detection works
-by measuring delay of the saber blade pulling back from the clash.
-If you clash the blade and it does not pull back during the delay period,
-it is assumed to be a lockup and the lockup effect will show on the blade.
-If you clash the blade and pull away, only the bgn/end lockup effects will show.
-You can adjust the threshold of this detection by using:
+- Once you enter battle mode, buttons are not used for lockup.
+  Clashing the blade against something will automatically do lockup and then end
+  when you pull away.
+- Automatic lockup and grazing clash (swinging through) detection works
+  by measuring delay of the saber blade pulling back from the clash.
+  If you clash the blade and it does not pull back during the delay period,
+  it is assumed to be a lockup and the lockup effect will show on the blade.
+  If you clash the blade and pull away, only the bgn/end lockup effects will show.
+  You can adjust the threshold of this detection by using:
 #define BC_LOCKUP_DELAY (insert number here)
-Default value is 200.
-If you don't rebound off the object (opponent's blade) but instead clash while
-swinging through, clash will automatically trigger.
-To manually override the auto-lockup temporarily and get a regular clash,
-hold any button while clashing.
-Automatic clash/lockup uses the pre and post lockup effects
-so your blade style and font MUST have those capabilities to support
-battle mode.
-Melt will automatically trigger with no buttons when you physically
-stab something, and end when you pull away or push any button.
-Stab will trigger either with no buttons and thrusting forward,
-or with any button and physically stabbing something.
-Tightened click timings.
-The timeouts for short and double click detection are shortened
-from the stock 500ms to 300ms to feel more responsive but still give enough
-timeout to ensure all button actions can be achieved consistently.
-All button timings are included below so they can be easily tweaked to suit
-individual tastes.
+  Default value is 200.
+  If you don't rebound off the object (opponent's blade) but instead clash while
+  swinging through, clash will automatically trigger.
+- To manually override the auto-lockup temporarily and get a regular clash,
+  hold any button while clashing.
+- Automatic clash/lockup uses the pre and post lockup effects
+  so your blade style and font MUST have those capabilities to support
+  battle mode.
+
+- Melt will automatically trigger with no buttons when you physically
+  stab something, and end when you pull away or push any button.
+
+- Stab will trigger either with no buttons and thrusting forward,
+  or with any button and physically stabbing something.
+
 ====================== 1 BUTTON CONTROLS ========================
 | Sorted by ON or OFF state: (what it's like while using saber) |
 =================================================================
+
 *************   WHILE SABER BLADE IS OFF   ***************
-Play/Stop Track -       4x click POW.
-Next Preset -           Long click and release POW.
-Prev Preset -           Double click and hold POW, release after a second.
+Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
+Turn ON without preon - Short click POW while pointing up.
+Turn blade ON Muted   - 4x click and hold POW.
+Next Preset           - Long click and release POW.
+Prev Preset           - Double click and hold POW, release after a second.
                         (click then long click)
+Play/Stop Track       - 4x click POW.
 Volume Menu:
-       Enter/Exit -     Hold POW + Clash.
-       Volume UP -      Long click and release POW while in Volume Menu.
-       Volume DOWN -    Double click and hold POW  while in Volume Menu.
-Spoken Battery Level -  Triple click POW.
-On-Demand Batt Level -  Double click POW.
+        Enter/Exit    - Hold POW + Clash.
+        Volume UP     - Long click and release POW while in Volume Menu. (just like next preset)
+        Volume DOWN   - Double click and hold POW, release after a second while in Volume Menu.
+                        (click then long click, just like next preset)
+Spoken Battery Level:
+        in volts      - Triple click POW.
+        in percentage - Triple click and hold POW.
+On-Demand Batt Level  - Double click POW.
                         (requires EFFECT_BATTERY_LEVEL to be in blade style,
                         and uses battery.wav sound effect.)
-Turn blade ON -         Short click POW. (or gestures if defined for FastOn)
-Turn blade ON Muted -   Triple click and hold POW.
+                        
 *************   WHILE SABER BLADE IS ON   ****************
-Play/Stop Track -       4x click POW.
-Next Preset -           Long click and release POW while pointing up.
-Prev Preset -           Double click and release POW after a second
-                        (click then long click) while pointing up.
-Clash -                 No buttons, just hit the blade against something.
+Play/Stop Track       - 4x click POW.
+Next Preset           - Long click and release POW while pointing up.
+Prev Preset           - Double click and release POW after a second
+                        while pointing up. (click then long click)
+Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold POW and Clash to temporarily
                         override the auto-lockup and do regular Clash.
-Stab -                  Either no button and just Thrust forward,
+Stab                  - Either no button and just Thrust forward,
                         or Hold any button and physically stab something.
                         Works in Battle Mode!
-Blaster Blocks -        Click or Double click POW.
-Multi-Blast mode - sa22c version
+Blaster Blocks        - Click or Double click POW.
+Multi-Blast mode      - sa22c version:
                         To start, hold POW then release while swinging.
                         To trigger Blaster Block, swing saber while in
                         Multi-Blast mode.
                         To stop, hold AUX then release while swinging.
-Auto Swing Blast -      Timed. To start, swing within 1 second of doing
+Auto Swing Blast      - Timed. To start, swing within 1 second of doing
                         button activated Blaster Block.
                         To trigger auto blaster blocks, swing saber
                         within 1 second of last Swing Blast block.
                         To stop, stop swinging for 1 second.
-Lockup -                Hold POW + Clash.
+Lockup                - Hold POW + Clash.
                         In Battle Mode, just Clash and stay there,
                         pull away or press POW to end lockup.
-Drag -                  Hold POW + Clash while pointing down.
-Melt -                  No button, just stab something. pull away or
+Drag                  - Hold POW + Clash while pointing down.
+Melt                  - No button, just stab something. pull away or
                         press POW to end.
-Lightning Block -       Double click and hold POW.
-Battle Mode -           Triple click and hold POW to enter and exit.
+Lightning Block       - Double click and hold POW.
+Battle Mode           - Triple click and hold POW to enter and exit.
                         Power OFF is disabled while in Battle Mode,
                         YOU MUST EXIT THE MODE WITH THIS COMBO FIRST.
-Force Effect -          Hold POW + Twist. (while NOT pointing up or down)
-Monophonic Force -      Hold POW + Twist. (while pointing up)
-Color Change Mode -     Hold POW + Twist. (while pointing down)
-            - Rotate hilt to cycle through all available colors, or
-            - Click POW to change if ColorChange<> used in blade style,
-            - Click + hold POW to save color selection and exit.
-            - Triple click POW to exit without changing color.
+Force Effect          - Hold POW + Twist. (while NOT pointing up or down)
+Monophonic Force      - Hold POW + Twist. (while pointing up)
+Color Change Mode     - Hold POW + Twist. (while pointing down)
+                        - Rotate hilt to cycle through all available colors, or
+                        - Click POW to change if ColorChange<> used in blade style,
+                        - Click + hold POW to save color selection and exit.
+                        - Triple click POW to exit without changing color.
     ColorChange explained:
-      If the style uses ColorChange<>, when you activate color change mode,
-      there will be up to 12 steps per rotation with a little sound at each step.
-      If it does not use ColorChange<>, the color wheel will be activated,
-      which has 32768 steps per rotation.
-      COLOR_CHANGE_DIRECT makes it so that IF the style uses ColorChange<>,
-      when you activate color change mode, it will immediately go to the
-      next color and exit color change mode. If the style does not use
-      ColorChange<>, it has no effect.
-Quote Player -          Triple click POW.
-Force Push -            Push hilt perpendicularly from a stop.
+          If the style uses ColorChange<>, when you activate color change mode,
+          there will be up to 12 steps per rotation with a little sound at each step.
+          If it does not use ColorChange<>, the color wheel will be activated,
+          which has 32768 steps per rotation.
+          COLOR_CHANGE_DIRECT makes it so that IF the style uses ColorChange<>,
+          when you activate color change mode, it will immediately go to the
+          next color and exit color change mode. If the style does not use
+          ColorChange<>, it has no effect.
+Quote Player          - Triple click POW.
+Force Push            - Push hilt perpendicularly from a stop.
 Swap (EffectSequence) - 4x click and hold POW medium. (while NOT pointing up)
-Power Save Dim Blade -  4x click and hold POW medium. (while pointing up)
-              (To use Power Save requires AlphaL based EffectSequence in style)
-Turn off blade -        Hold POW and wait until blade is off,
+Power Save Dim Blade  - 4x click and hold POW medium. (while pointing up)
+          (To use Power Save requires AlphaL based EffectSequence in style)
+Turn off blade        - Hold POW and wait until blade is off,
                         or Twist if using #define BC_TWIST_OFF.
+
 ====================== 2 BUTTON CONTROLS ========================
 | Sorted by ON or OFF state: (what it's like while using saber) |
 =================================================================
+
 *************   WHILE SABER BLADE IS OFF   ***************
-Play/Stop Track -       Hold AUX + Double click POW.
-Next Preset -           Long click and release POW.
-Prev Preset -           Double click and hold POW, release after a second.
+Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
+Turn ON without preon - Short click POW while pointing up.
+Turn blade ON Muted   - 4x click and hold POW.
+Next Preset           - Long click and release POW.
+Prev Preset           - Double click and hold POW, release after a second.
                         (click then long click)
+Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
-       Enter/Exit -     Long click and release AUX.
-       Volume UP -      Long click and release POW while in Volume Menu.
-       Volume DOWN -    Double click and hold POW, release after a second
-                        (click then long click) while in Volume Menu.
-Spoken Battery Level -  Hold AUX until it talks.
-On-Demand Batt Level -  Double click POW.
+        Enter/Exit    - Long click and release AUX.
+        Volume UP     - Long click and release POW while in Volume Menu. (just like next preset)
+        Volume DOWN   - Double click and hold POW, release after a second while in Volume Menu.
+                        (click then long click, just like next preset)
+Spoken Battery Level:
+        in volts      - Triple click POW.
+        in percentage - Triple click and hold POW.
+On-Demand Batt Level  - Double click POW.
                         (requires EFFECT_BATTERY_LEVEL to be in blade style,
                         and uses battery.wav sound effect.)
-Turn blade ON -         Short click POW. (or gestures if defined for FastOn)
-Turn blade ON Muted -   Triple click and hold POW.
+
 *************   WHILE SABER BLADE IS ON   ****************
-Play/Stop Track -       Hold AUX + Double click POW.
-Next Preset -           Hold AUX + Long click and release POW while pointing up.
-Prev Preset -           Hold AUX + Double click and hold POW for a second
+Play/Stop Track       - Hold AUX + Double click POW.
+Next Preset           - Hold AUX + Long click and release POW while pointing up.
+Prev Preset           - Hold AUX + Double click and hold POW for a second
                         (click then long click) while pointing up.
-Clash -                 No buttons, just hit the blade against something.
+Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold any button and Clash to
                         temporarily override the auto-lockup and do regular Clash.
-Stab -                  Either no button and just Thrust forward, or
+Stab                  - Either no button and just Thrust forward, or
                         Hold any button and physically stab something.
                         Works in Battle Mode!
-Blaster Blocks -        Click or Double click POW.
-Multi-Blast mode - sa22c version
+Blaster Blocks        - Click or Double click POW.
+Multi-Blast mode      - sa22c version:
                         To start, hold POW then release while swinging.
                         To trigger Blaster Block, swing saber while in
                         Multi-Blast mode.
                         To stop, hold AUX then release while swinging.
-Auto Swing Blast -      Timed. To start, swing within 1 second of doing
-                        button activated Blaster Blocks.
+Auto Swing Blast      - Timed. To start, swing within 1 second of doing
+                        button activated Blaster Block.
                         To trigger auto blaster blocks, swing saber
                         within 1 second of last Swing Blast block.
                         To stop, stop swinging for 1 second.
-Lockup -                Hold AUX + Clash.
+Lockup                - Hold AUX + Clash.
                         In Battle Mode, just Clash and stay there,
                         pull away or press any button to end lockup.
-Drag -                  Hold AUX + Clash while pointing down.
-Melt -                  No button, just stab something,
+Drag                  - Hold AUX + Clash while pointing down.
+Melt                  - No button, just stab something,
                         pull away or press any button to end.
-Lightning Block -       Double click and hold POW
-Battle Mode -           Hold POW + Click AUX to enter and exit.
+Lightning Block       - Double click and hold POW.
+Battle Mode           - Hold POW + Click AUX to enter and exit.
                         Power OFF is disabled while in Battle Mode,
                         YOU MUST EXIT THE MODE WITH THIS COMBO FIRST.
-Force Effect -          Hold POW + Twist. (while NOT pointing up or down)
-Monophonic Force -      Hold POW + Twist. (while pointing up)
-Color Change Mode -     Hold POW + Twist. (while pointing down)
-            - Rotate hilt to cycle through all available colors, or
-            - Click AUX to change if ColorChange<> used in blade style,
-            - Click + hold POW to save color selection and exit.
-            - Triple click POW to exit without changing color.
+Force Effect          - Hold POW + Twist. (while NOT pointing up or down)
+Monophonic Force      - Hold POW + Twist. (while pointing up)
+Color Change Mode     - Hold POW + Twist. (while pointing down)
+                        - Rotate hilt to cycle through all available colors, or
+                        - Click AUX to change if ColorChange<> used in blade style,
+                        - Click + hold POW to save color selection and exit.
+                        - Triple click POW to exit without changing color.
     ColorChange explained:
-      If the style uses ColorChange<>, when you activate color change mode,
-      there will be up to 12 steps per rotation with a little sound at each step.
-      If it does not use ColorChange<>, the color wheel will be activated,
-      which has 32768 steps per rotation.
-      COLOR_CHANGE_DIRECT makes it so that IF the style uses ColorChange<>,
-      when you activate color change mode, it will immediately go to the
-      next color and exit color change mode. If the style does not use
-      ColorChange<>, it has no effect.
-Quote Player -          Triple click POW.
-Force Push -            Push hilt perpendicularly from a stop.
+          If the style uses ColorChange<>, when you activate color change mode,
+          there will be up to 12 steps per rotation with a little sound at each step.
+          If it does not use ColorChange<>, the color wheel will be activated,
+          which has 32768 steps per rotation.
+          COLOR_CHANGE_DIRECT makes it so that IF the style uses ColorChange<>,
+          when you activate color change mode, it will immediately go to the
+          next color and exit color change mode. If the style does not use
+          ColorChange<>, it has no effect.
+Quote Player          - Triple click POW.
+Force Push            - Push hilt perpendicularly from a stop.
 Swap (EffectSequence) - Hold AUX + Twist. (while NOT pointing up)
-Power Save Dim Blade -  Hold AUX + Twist. (while pointing up)
-              (To use Power Save requires AlphaL based EffectSequence in style)
-Turn off blade -        Hold POW and wait until blade is off,
+Power Save Dim Blade  - Hold AUX + Twist. (while pointing up)
+          (To use Power Save requires AlphaL based EffectSequence in style)
+Turn off blade        - Hold POW and wait until blade is off,
                         or Twist if using #define BC_TWIST_OFF.
 */
 
@@ -278,7 +290,7 @@ Turn off blade -        Hold POW and wait until blade is off,
 #endif
 
 #ifndef BC_FORCE_PUSH_LENGTH
-#define BC_FORCE_PUSH_LENGTH 4
+#define BC_FORCE_PUSH_LENGTH 5
 #endif
 
 #ifndef BUTTON_DOUBLE_CLICK_TIMEOUT
@@ -294,7 +306,7 @@ Turn off blade -        Hold POW and wait until blade is off,
 #endif
 
 #ifndef BUTTON_HELD_MEDIUM_TIMEOUT
-#define BUTTON_HELD_MEDIUM_TIMEOUT 1500
+#define BUTTON_HELD_MEDIUM_TIMEOUT 800
 #endif
 
 #ifndef BUTTON_HELD_LONG_TIMEOUT
@@ -332,15 +344,14 @@ EFFECT(voldown);    // for decrease volume
 EFFECT(volmin);     // for minimum volume reached
 EFFECT(volmax);     // for maximum volume reached
 EFFECT(faston);     // for EFFECT_FAST_ON
+                    // *note* faston.wav does not replace out.wav.
+                    // they play layered and concurrently.
 EFFECT(blstbgn);    // for Begin Multi-Blast
 EFFECT(blstend);    // for End Multi-Blast
 EFFECT(push);       // for Force Push gesture
 EFFECT(quote);      // for playing quotes
 EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 EFFECT(swap);       // for standalone triggering EffectSequence<>
-EFFECT(battlevel);  // for Spoken Battery Level
-EFFECT(point);      // for Spoken Battery Level
-EFFECT(volts);      // for Spoken Battery Level
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -353,6 +364,7 @@ public:
     PropBase::Loop();
     DetectTwist();
     Vec3 mss = fusor.mss();
+    sound_library_.Poll(wav_player);
     if (SaberBase::IsOn()) {
       DetectSwing();
       if (auto_lockup_on_ &&
@@ -411,22 +423,13 @@ public:
       }
   }
 
-// Revert colorchange witout saving (reset to Variation == 0)
-  void ResetColorChangeMode() {
-    if (!current_style()) return;
-      STDOUT << "Reset Color Variation" << "\n";
-      SetVariation(0);
-      STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
-      SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
-  }
-
-// SA22C Volume Menu
+  // Volume Menu
   void VolumeUp() {
     if (dynamic_mixer.get_volume() < VOLUME) {
       dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
         dynamic_mixer.get_volume() + VOLUME * 0.10));
       if (SFX_volup) {
-        hybrid_font.PlayCommon(&SFX_volup);
+        sound_library_.SayVolumeUp();
       } else {
         beeper.Beep(0.5, 2000);
       }
@@ -437,7 +440,7 @@ public:
       #ifdef VOLUME_MENU_CYCLE
         if (!max_vol_reached_) {
           if (SFX_volmax) {
-            hybrid_font.PlayCommon(&SFX_volmax);
+            sound_library_.SayMaximumVolume();
           } else {
             beeper.Beep(0.5, 3000);
           }
@@ -447,7 +450,7 @@ public:
           dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
           dynamic_mixer.get_volume() - VOLUME * 0.90));
           if (SFX_volmin) {
-            hybrid_font.PlayCommon(&SFX_volmin);
+            sound_library_.SayMininumVolume();
           } else {
             beeper.Beep(0.5, 1000);
           }
@@ -456,7 +459,7 @@ public:
         }
       #else
         if (SFX_volmax) {
-          hybrid_font.PlayCommon(&SFX_volmax);
+          sound_library_.SayMaximumVolume();
         } else {
           beeper.Beep(0.5, 3000);
         }
@@ -470,7 +473,7 @@ public:
       dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
         dynamic_mixer.get_volume() - VOLUME * 0.10));
       if (SFX_voldown) {
-        hybrid_font.PlayCommon(&SFX_voldown);
+        sound_library_.SayVolumeDown();
       } else {
         beeper.Beep(0.5, 2000);
       }
@@ -480,7 +483,7 @@ public:
       #ifdef VOLUME_MENU_CYCLE
         if (!min_vol_reached_) {
           if (SFX_volmin) {
-            hybrid_font.PlayCommon(&SFX_volmin);
+            sound_library_.SayMininumVolume();
           } else {
             beeper.Beep(0.5, 1000);
           }
@@ -489,7 +492,7 @@ public:
         } else {
           dynamic_mixer.set_volume(VOLUME);
           if (SFX_volmax) {
-            hybrid_font.PlayCommon(&SFX_volmax);
+            sound_library_.SayMaximumVolume();
           } else {
             beeper.Beep(0.5, 3000);
           }
@@ -498,7 +501,7 @@ public:
         }
       #else
         if (SFX_volmin) {
-          hybrid_font.PlayCommon(&SFX_volmin);
+          sound_library_.SayMininumVolume();
         } else {
           beeper.Beep(0.5, 1000);
         }
@@ -506,6 +509,8 @@ public:
       #endif
     }
   }
+
+  RefPtr<BufferedWavPlayer> wav_player;
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
@@ -641,19 +646,20 @@ public:
   // 2 button
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON | BUTTON_AUX):
   #endif
-    if (fusor.angle1() >  M_PI / 3) {
-      //Don't change preset if in colorchange mode
-      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
-        next_preset();
+      // Bypass NewFont and preon if pointing up.
+      if (fusor.angle1() >  M_PI / 3) {
+        //Don't change preset if in colorchange mode
+        if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
+          next_preset_fast();
       }
       return true;
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
-    if (!mode_volume_) {
-      next_preset();
-    } else {
-      VolumeUp();
-    }
-    return true;
+      if (!mode_volume_) {
+        next_preset();
+      } else {
+        VolumeUp();
+      }
+      return true;
 
 // Previous Preset AND Volume Down
   #if NUM_BUTTONS == 1
@@ -662,10 +668,11 @@ public:
   // 2 button
     case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON | BUTTON_AUX):
   #endif
-    if (fusor.angle1() >  M_PI / 3) {
-      //Don't change preset if in colorchange mode
-      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
-        previous_preset();
+      // Bypass NewFont and preon if pointing up.
+      if (fusor.angle1() >  M_PI / 3) {
+        //Don't change preset if in colorchange mode
+        if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
+          previous_preset_fast();
       }
       return true;
     case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_OFF):
@@ -677,52 +684,64 @@ public:
       return true;
 
 // Enter / Exit Volume MENU
-  #if NUM_BUTTONS == 1
-    case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-  #else
-    // 2 button
-    case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
+  #ifndef NO_VOLUME_MENU
+    #if NUM_BUTTONS == 1
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
+    #else
+      // 2 button
+      case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
+    #endif
   #endif
+        if (!mode_volume_) {
+          mode_volume_ = true;
+          if (SFX_vmbegin) {
+            sound_library_.SayEnterVolumeMenu();
+          } else {
+            beeper.Beep(0.1, 2000);
+            beeper.Beep(0.1, 2500);
+          }
+          STDOUT.println("Enter Volume Menu");
+        } else {
+          mode_volume_ = false;
+          if (SFX_vmend) {
+            sound_library_.SayVolumeMenuEnd();
+          } else {
+            beeper.Beep(0.1, 2500);
+            beeper.Beep(0.1, 2000);
+          }
+          STDOUT.println("Exit Volume Menu");
+        }
+        return true;
+      
+// Spoken Battery Level in volts
+    case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       if (!mode_volume_) {
-        mode_volume_ = true;
-        if (SFX_vmbegin) {
-          hybrid_font.PlayCommon(&SFX_vmbegin);
-        } else {
-          beeper.Beep(0.1, 2000);
-          beeper.Beep(0.1, 2500);
-        }
-        STDOUT.println("Enter Volume Menu");
-      } else {
-        mode_volume_ = false;
-        if (SFX_vmend) {
-          hybrid_font.PlayCommon(&SFX_vmend);
-        } else {
-          beeper.Beep(0.1, 2500);
-          beeper.Beep(0.1, 2000);
-        }
-        STDOUT.println("Exit Volume Menu");
+        sound_library_.SayBatteryLevel();
+        sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
+        sound_library_.SayVolts();
+        STDOUT.println(battery_monitor.battery());
+        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+        wav_player.Free(); // needed?
+      }
+    return true;
+
+// Spoken Battery Level in percentage
+    case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
+      if (!mode_volume_) {
+        sound_library_.SayBatteryLevel();
+        sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
+        sound_library_.SayPercent();
+        STDOUT.println(battery_monitor.battery_percent());
+        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+        wav_player.Free(); // needed?
       }
       return true;
-      
-// Spoken Battery Level
-  #if NUM_BUTTONS == 1
-    case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
-  #else
-    // 2 and 3 button
-    case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
-  #endif
-    if (!mode_volume_) {
-      talkie.SayDigit((int)floorf(battery_monitor.battery()));
-      talkie.Say(spPOINT);
-      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
-      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
-      talkie.Say(spVOLTS);
-    }
-    return true;
 
 // On Demand Battery Level
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
       if (!mode_volume_) {
+        STDOUT.println(battery_monitor.battery());
+        STDOUT.println(battery_monitor.battery_percent());
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
@@ -731,7 +750,12 @@ public:
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       // No power on without exiting Vol Menu first
       if (!mode_volume_) {
-        On();
+      // Bypass preon if pointing up         
+        if (fusor.angle1() >  M_PI / 3) {
+          FastOn();
+        } else {
+          On();
+        }
       }
       return true;
 
@@ -858,7 +882,7 @@ public:
         STDOUT.println("Entering Battle Mode");
         battle_mode_ = true;
         if (SFX_bmbegin) {
-          hybrid_font.PlayCommon(&SFX_bmbegin);
+          sound_library_.SayBattleModeBegin();
           STDOUT.println("-----------------playing bmbegin.wav");
         } else {
           hybrid_font.DoEffect(EFFECT_FORCE, 0);
@@ -868,7 +892,7 @@ public:
         STDOUT.println("Exiting Battle Mode");
         battle_mode_ = false;
         if (SFX_bmend) {
-          hybrid_font.PlayCommon(&SFX_bmend);
+          sound_library_.SayBattleModeEnd();
           STDOUT.println("-----------------playing bmend.wav");
         } else {
           beeper.Beep(0.5, 3000);
@@ -909,7 +933,10 @@ public:
 // Revert colorchange witout saving (reset to Variation == 0)
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-        ResetColorChangeMode();
+        STDOUT << "Reset Color Variation" << "\n";
+        SetVariation(0);
+        STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
+        SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
         return true;
       } else {
         hybrid_font.PlayCommon(&SFX_quote);
@@ -938,6 +965,7 @@ public:
           // Just exit color change mode.
           // Don't turn saber off.
           ToggleColorChangeMode();
+          STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
           return true;
         }
         if (!battle_mode_) {
@@ -999,7 +1027,13 @@ public:
         if (SFX_battery) {
           hybrid_font.PlayCommon(&SFX_battery);
         } else {
-          beeper.Beep(0.5, 3000);
+          beeper.Beep(1.0, 475);
+          beeper.Beep(0.5, 693);
+          beeper.Beep(0.16, 625);
+          beeper.Beep(0.16, 595);
+          beeper.Beep(0.16, 525);
+          beeper.Beep(1.1, 950);
+          beeper.Beep(0.5, 693);
         }
         return;
       case EFFECT_FAST_ON: // Gesture on, bybass preon
