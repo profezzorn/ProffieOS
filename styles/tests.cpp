@@ -61,33 +61,6 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   return x;
 }
 
-struct  Print {
-  void print(const char* s) { fprintf(stdout, "%s", s); }
-  void print(float v) { fprintf(stdout, "%f", v); }
-  void print(int v, int base) { fprintf(stdout, "%d", v); }
-  void write(char s) { putchar(s); }
-  template<class T>
-  void println(T s) { print(s); putchar('\n'); }
-};
-
-template<typename T, typename X = void> struct PrintHelper {
-  static void out(Print& p, T& x) { p.print(x); }
-};
-
-template<typename T> struct PrintHelper<T, decltype(((T*)0)->printTo(*(Print*)0))> {
-  static void out(Print& p, T& x) { x.printTo(p); }
-};
-
-struct ConsoleHelper : public Print {
-  template<typename T, typename Enable = void>
-  ConsoleHelper& operator<<(T v) {
-    PrintHelper<T>::out(*this, v);
-    return *this;
-  }
-};
-
-ConsoleHelper STDOUT;
-
 int random(int x) { return (rand() & 0x7fffff) % x; }
 class Looper {
 public:
@@ -116,6 +89,15 @@ struct MockDynamicMixer {
 
 MockDynamicMixer dynamic_mixer;
 
+#include "../common/common.h"
+#include "../common/stdout.h"
+Print* default_output;
+Print* stdout_output;
+ConsoleHelper STDOUT;
+
+Monitoring monitor;
+
+#include "../common/stdout.h"
 #include "../common/color.h"
 #include "../blades/blade_base.h"
 #include "cylon.h"
