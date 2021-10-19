@@ -473,8 +473,16 @@ void test_style2() {
   }
 }
 
+template<class T>
+class StyleTester : public Style<T> {
+public:
+  void StyleType() {
+    fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
+  }
+};
+
 void test_style3() {
-  Style<Layers<
+  StyleTester<Layers<
     Black,
 	  TransitionEffectL<TrWaveX<Green,Int<400>,Int<100>,Int<600>,Scale<BladeAngle<>,Scale<BladeAngle<0,16000>,Int<10000>,Int<30000>>,Int<10000>>>,EFFECT_LOCKUP_END>,
 	  ResponsiveLockupL<Blue,TrConcat<TrInstant,AlphaL<Red,Bump<Scale<BladeAngle<>,Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,Int<6000>>,Int<16000>>>,TrFade<400>>,TrInstant,Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,Int<6000>,Scale<SwingSpeed<100>,Int<10000>,Int<14000>>>,
@@ -485,6 +493,9 @@ void test_style3() {
 	  LockupTrL<AlphaL<BrownNoiseFlickerL<White,Int<300>>,SmoothStep<Int<30000>,Int<5000>>>,TrWipeIn<400>,TrFade<300>,SaberBase::LOCKUP_DRAG>,
 	  LockupTrL<AlphaL<Mix<TwistAngle<>,Coral,Orange>,SmoothStep<Int<28000>,Int<5000>>>,TrWipeIn<600>,TrFade<300>,SaberBase::LOCKUP_MELT>,
 	  InOutTrL<TrWipe<300>,TrWipeIn<500>>>> t1;
+
+  t1.StyleType();
+  fprintf(stderr, "RAM USAGE: %ld\n", sizeof(t1));
 
   Color16 c = get_color_when_on(&t1);
   if (c.r != 0 || c.g != 0 || c.b != 0) {

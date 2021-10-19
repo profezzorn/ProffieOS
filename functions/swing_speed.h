@@ -16,7 +16,7 @@ class SwingSpeedX {
    value_ = clampi32(v * 32768, 0, 32768);
   }
   int getInteger(int led) { return value_; }
-  MAX max_;
+  PONUA MAX max_;
   int value_;
 };
 

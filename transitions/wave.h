@@ -34,14 +34,14 @@ private:
   WAVE_CENTER wave_center_;
   int center_;
   
-  WAVE_SIZE wave_size_;
+  PONUA WAVE_SIZE wave_size_;
   int size_;
 
   int mix_;
   int num_leds_;
   int offset_;
-  WAVE_MS wave_ms_;
-  COLOR color_;
+  PONUA WAVE_MS wave_ms_;
+  PONUA COLOR color_;
 public:
   template<class A, class B>
   auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,color_.getColor(led),1,1)) {
@@ -87,12 +87,12 @@ private:
   SPARK_CENTER spark_center_;
   int center_;
   
-  SPARK_SIZE spark_size_;
+  PONUA SPARK_SIZE spark_size_;
   int size_;
 
   int num_leds_;
   int offset_;
-  COLOR color_;
+  PONUA COLOR color_;
 public:
   template<class A, class B>
   auto getColor(const A& a, const B& b, int led) -> decltype(MixColors(a,color_.getColor(led),1,1)) {
