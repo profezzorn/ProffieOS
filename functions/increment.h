@@ -25,14 +25,14 @@ public:
     int threshold = v_.getInteger(0);
     if (f >= threshold) {
       if (!active_) {
-        value_ += i_.getInteger(0);;
+        value_ += i_.getInteger(0);
+        value_ %= max_.getInteger(0);
         active_ = true;
       }      
     }
     if (f < threshold * hyst_.getInteger(0) / 100) {
       active_ = false;
     }
-    value_ %= max_.getInteger(0);
   }
   int getInteger(int led) { return value_; }
 
