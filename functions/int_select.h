@@ -30,7 +30,7 @@ public:
   int getInteger(int led) { return value_; }
 
 private:
-  F f_;
+  PONUA F f_;
   int value_;
 };
 

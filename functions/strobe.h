@@ -29,8 +29,8 @@ public:
    int getInteger(int led) { return strobe_  * 32768; }
 private:
   bool strobe_;
-  STROBE_FREQUENCY strobe_frequency_;
-  STROBE_MILLIS strobe_millis_;
+  PONUA STROBE_FREQUENCY strobe_frequency_;
+  PONUA STROBE_MILLIS strobe_millis_;
   uint32_t strobe_start_;
 };
 

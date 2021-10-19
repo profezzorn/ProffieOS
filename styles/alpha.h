@@ -28,8 +28,8 @@ public:
   }
 
 private:
-  COLOR color_;
-  ALPHA alpha_;
+  PONUA COLOR color_;
+  PONUA ALPHA alpha_;
 
 public:
   auto getColor(int led) -> decltype(color_.getColor(led) * alpha_.getInteger(led))  {

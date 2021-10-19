@@ -34,8 +34,8 @@ private:
   OneshotEffectDetector<EFFECT> effect_;
   bool clash_ = false;
   bool stab_ = false;
-  CLASH_COLOR clash_color_;
-  STAB_SHAPE stab_shape_;
+  PONUA CLASH_COLOR clash_color_;
+  PONUA STAB_SHAPE stab_shape_;
 public:
   auto getColor(int led) -> decltype(OverDrive(clash_color_.getColor(led) * stab_shape_.getInteger(led))) {
     decltype(OverDrive(clash_color_.getColor(led) * stab_shape_.getInteger(led))) ret = RGBA_um_nod::Transparent();
@@ -100,7 +100,7 @@ private:
   bool clash_;
   int mult_;
   int clash_location_;
-  CLASH_COLOR clash_color_;
+  PONUA CLASH_COLOR clash_color_;
 public:
   auto getColor(int led) -> decltype(clash_color_.getColor(led) * 1) {
     decltype(clash_color_.getColor(led) * 1) ret = RGBA_um_nod::Transparent();

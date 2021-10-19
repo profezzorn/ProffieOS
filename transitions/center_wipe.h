@@ -34,7 +34,7 @@ public:
     return MixColors(a, b, mix, 8);
   }
 private:
-  POSITION pos_;
+  PONUA POSITION pos_;
   Range range_;
 };
 
@@ -71,7 +71,7 @@ public:
     return MixColors(b, a, mix, 8);
   }
 private:
-  POSITION pos_;
+  PONUA POSITION pos_;
   Range range_;
 };
 

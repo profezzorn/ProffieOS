@@ -24,7 +24,7 @@ public:
   }
   
 private:
-  MILLIHZ millihz_;
+  PONUA MILLIHZ millihz_;
   unsigned short bits_[(maxLedsPerStrip + 15)/ 16];
   uint32_t last_update_;
 };

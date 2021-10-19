@@ -42,7 +42,7 @@ public:
 template<class STYLE>
 class StyleFactoryImpl : public StyleFactory {
   BladeStyle* make() override {
-    //    STDERR << "Style RAM = " << sizeof(STYLE);
+    STDERR << "Style RAM = " << sizeof(STYLE) << "\n";
     return new STYLE();
   }
 };

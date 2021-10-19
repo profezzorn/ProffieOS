@@ -27,8 +27,8 @@ public:
     return (Range(range_) & led_range).size();
   }
 private:
-  POSITION pos_;
-  FRACTION fraction_;
+  PONUA POSITION pos_;
+  PONUA FRACTION fraction_;
   Range range_;
 };
 

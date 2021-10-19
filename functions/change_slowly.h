@@ -35,8 +35,8 @@ public:
     return value_;
   }
 private:
-  F f_;
-  SPEED speed_;
+  PONUA F f_;
+  PONUA SPEED speed_;
   int value_ = 0;
   uint32_t last_micros_ = 0;
 };

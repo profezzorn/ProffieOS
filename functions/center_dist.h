@@ -15,7 +15,7 @@ public:
   int getInteger(int led) { return abs(led * 32768 / num_leds_ - center_.getInteger(led)); }
 
 private:
-  CENTER center_;
+  PONUA CENTER center_;
   int num_leds_;
 };
 
