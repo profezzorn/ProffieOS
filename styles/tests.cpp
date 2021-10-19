@@ -379,9 +379,19 @@ template<class T>
 class TestStyle : public Style<T> {
 public:
   TestStyle() {
-    fprintf(stderr, "%s: RAM USAGE: %lu\n",
-	    __PRETTY_FUNCTION__,
-	    sizeof(*this));
+    fprintf(stderr, "RAM: %lu (%s)\n",
+	    sizeof(*this),
+	    __PRETTY_FUNCTION__);
+  }
+};
+
+template<class T>
+class PrintTypeSize  : public T {
+public:
+  PrintTypeSize() {
+    fprintf(stderr, "RAM: %lu (%s)\n",
+	    sizeof(*this),
+	    __PRETTY_FUNCTION__);
   }
 };
 
@@ -456,7 +466,7 @@ void test_style1() {
 
 
 void test_style2() {
-  TestStyle<
+  Style<
    Layers<
 	AudioFlicker<Rgb<0,128,0>,Green>,
 	BlastFadeoutL<Blue,400>,
@@ -501,6 +511,20 @@ void test_style3() {
     fprintf(stderr, "Expecting black.\n");
     exit(1);
   }
+}
+
+void test_style4() {
+  PrintTypeSize<Int<1>> t1;
+  PrintTypeSize<IntSVF<1>> t11;
+  PrintTypeSize<BladeAngle<0,16000>> t2;
+  PrintTypeSize<BladeAngleXSVF<Int<0>,Int<16000>>> t22;
+  PrintTypeSize<SVFWrapper<BladeAngle<0,16000>>> t3;
+  PrintTypeSize<
+    Scale<BladeAngle<0,16000>,Int<10000>,Int<30000>>
+    > t4;
+  PrintTypeSize<
+    Scale<BladeAngle<>,Scale<BladeAngle<0,16000>,Int<10000>,Int<30000>>,Int<10000>>
+    > t5;
 }
 
 void testGetArg(const char* str, int arg, const char* expected) {
@@ -634,6 +658,7 @@ void test_argument_parsing() {
 }
 
 int main() {
+  test_style4();
   test_cylon();
   test_inouthelper();
   test_style1();

@@ -17,6 +17,7 @@
 
 #include "svf.h"
 
+#if 0
 template<class MIN = Int<0>, class MAX = Int<32768>>
 class BladeAngleXSVF {
 public:
@@ -35,6 +36,26 @@ public:
   MIN min_;
   MAX max_;
 };
+#else
+template<class MIN = Int<0>, class MAX = Int<32768>>
+class BladeAngleXSVF {
+public:
+  void run(BladeBase* blade) {
+    min_.run(blade);
+    max_.run(blade);
+  }
+  int calculate(BladeBase* blade) {
+    int min = min_.calculate(blade);
+    int max = max_.calculate(blade);
+    // v is 0-32768, 0 = straight down, 32768 = straight up
+    float v = (fusor.angle1() + M_PI / 2) * 32768 / M_PI;
+    return clampi32((v - min) * 32768.0f / (max - min), 0, 32768);
+  }
+
+  SVFWrapper<MIN> min_;
+  SVFWrapper<MAX> max_;
+};
+#endif
 
 template<class MIN = Int<0>, class MAX = Int<32768>>
 using BladeAngleX = SingleValueAdapter<BladeAngleXSVF<MIN, MAX>>;
