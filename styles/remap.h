@@ -2,6 +2,7 @@
 #define STYLES_REMAP_H
 
 // Remap, remap LED positions
+// Usage: Remap<F,COLOR>
 // F: FUNCTION - the remapping function
 // COLOR: COLOR - color values to remap
 // Returns: COLOR
