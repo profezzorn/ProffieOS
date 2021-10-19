@@ -11,7 +11,7 @@
 class BladeBase;
 
 template<class F, class A, class B>
-class Scale {
+class ScaleBase {
 public:
   void run(BladeBase* blade) {
     f_.run(blade);
@@ -33,10 +33,8 @@ private:
   int mul_;
 };
 
-#if 0
-// Optimized specialization
 template<class F, int A, int B>
-class Scale<F, Int<A>, Int<B>> {
+class ScaleBase<F, Int<A>, Int<B>> {
 public:
   void run(BladeBase* blade) {
     f_.run(blade);
@@ -46,22 +44,6 @@ public:
   }
 private:
   PONUA F f_;
-};
-#endif
-
-// To simplify inverting a function's returned value
-// Example InvertF<BladeAngle<>> will return 0 when up and 32768 when down
-template<class F> using InvertF = Scale<F, Int<32768>, Int<0>>;
-
-template<class SVF, int A, int B>
-class SVFWrapper<Scale<SingleValueAdapter<SVF>, Int<A>, Int<B>>> {
- public:
-  void run(BladeBase* blade) { svf_.run(blade); }
-  int calculate(BladeBase* blade) {
-    return (svf_.calculate(blade) * (B - A) >> 15) + A;
-  }
- private:
-  SVF svf_;
 };
 
 template<class SVFF, class SVFA, class SVFB>
@@ -83,14 +65,17 @@ class ScaleSVF {
   PONUA SVFB svfb_;
 };
 
-template<class SVFF, class SVFA, class SVFB>
-class Scale<SingleValueAdapter<SVFF>,
-            SingleValueAdapter<SVFA>,
-            SingleValueAdapter<SVFB>> : public SingleValueAdapter<ScaleSVF<SVFF, SVFA, SVFB>> {};
+template<class F, class A, class B> struct ScaleFinder { typedef ScaleBase<F, A, B> ScaleClass; };
+template<class F, class A, class B>
+struct ScaleFinder<SingleValueAdapter<F>,
+		   SingleValueAdapter<A>,
+		   SingleValueAdapter<B>> {  typedef SingleValueAdapter<ScaleSVF<F, A, B>> ScaleClass; };
+template<class F, class A, class B>
+using Scale = typename ScaleFinder<F, A, B>::ScaleClass;
+  
+// To simplify inverting a function's returned value
+// Example InvertF<BladeAngle<>> will return 0 when up and 32768 when down
+template<class F> using InvertF = Scale<F, Int<32768>, Int<0>>;
 
-//template<class SVFF, class SVFA, class SVFB>
-//class SVFWrapper<Scale<SingleValueAdapter<SVFF>,
-//		       SingleValueAdapter<SVFA>,
-//		       SingleValueAdapter<SVFB>>> : public ScaleSVF<SVFF, SVFA, SVFB> {};
 
 #endif
