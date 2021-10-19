@@ -32,7 +32,7 @@ public:
   }
   bool done() { return extending_ && millis_.done(); }
  private:
-  TransitionBaseX<MILLIS> millis_;
+  PONUA TransitionBaseX<MILLIS> millis_;
   bool extending_ = false;
 };
 

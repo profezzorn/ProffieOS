@@ -29,8 +29,8 @@ public:
   }
   int getInteger(int led) { return value_; }
 
-  MIN min_;
-  MAX max_;
+  PONUA MIN min_;
+  PONUA MAX max_;
   int value_;
 };
 

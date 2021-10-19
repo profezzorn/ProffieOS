@@ -32,9 +32,9 @@ public:
   }
   int getInteger(int led) { return value_; }
 private:
-  RPM rpm_;
-  LOWclass low_;
-  HIGHclass high_;
+  PONUA RPM rpm_;
+  PONUA LOWclass low_;
+  PONUA HIGHclass high_;
   int value_;
   uint32_t last_micros_;
   float pos_;
@@ -58,9 +58,9 @@ public:
   }
   int getInteger(int led) { return value_; }
 private:
-  RPM rpm_;
-  LOWclass low_;
-  HIGHclass high_;
+  PONUA RPM rpm_;
+  PONUA LOWclass low_;
+  PONUA HIGHclass high_;
   int value_;
   uint32_t last_micros_;
   float pos_;
@@ -81,7 +81,7 @@ public:
   int getInteger(int led) { return mix_; }
 
 private:
-  PULSE_MILLIS pulse_millis_;
+  PONUA PULSE_MILLIS pulse_millis_;
   int mix_;
   uint32_t last_micros_;
   float pos_ = 0.0;

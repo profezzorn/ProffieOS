@@ -23,8 +23,8 @@ public:
     return (f_.getInteger(led) * v_.getInteger(led)) >> 15;
   }
 private:
-  F f_;
-  V v_;
+  PONUA F f_;
+  PONUA V v_;
 };
 
 // Usage: Percentage<F, V>

@@ -41,8 +41,8 @@ public:
     return bump_shape[p] * (128 - m) + bump_shape[p+1] * m;
   }
 private:
-  BUMP_POSITION pos_;
-  BUMP_WIDTH_FRACTION fraction_;
+  PONUA BUMP_POSITION pos_;
+  PONUA BUMP_WIDTH_FRACTION fraction_;
   int location_;
   int mult_;
 };

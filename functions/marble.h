@@ -46,10 +46,10 @@ public:
   }
   int getInteger(int led) { return value_; }
 private:
-  OFFSET offset_;
-  FRICTION friction_;
-  ACCELERATION acceleration_;
-  GRAVITY gravity_;
+  PONUA OFFSET offset_;
+  PONUA FRICTION friction_;
+  PONUA ACCELERATION acceleration_;
+  PONUA GRAVITY gravity_;
   
   float pos_ = 0.0;
   float speed_ = 0.0;

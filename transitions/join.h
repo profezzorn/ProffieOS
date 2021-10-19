@@ -22,8 +22,8 @@ class TrJoin<A, B...> {
     b_.run(blade);
   }
 private:
-  A a_;
-  TrJoin<B...> b_;
+  PONUA A a_;
+  PONUA TrJoin<B...> b_;
 public:
   template<class X, class Y>
     auto getColor(const X& a, const Y& b, int led) AUTO_RETURN(b_.getColor(a_.getColor(a, b, led), b, led))
@@ -49,8 +49,8 @@ class TrJoinR<A, B...> {
     b_.run(blade);
   }
 private:
-  A a_;
-  TrJoinR<B...> b_;
+  PONUA A a_;
+  PONUA TrJoinR<B...> b_;
 public:
   template<class X, class Y>
     auto getColor(const X& a, const Y& b, int led) AUTO_RETURN(b_.getColor(a, a_.getColor(a, b, led), led));

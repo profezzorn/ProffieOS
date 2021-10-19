@@ -26,9 +26,9 @@ public:
     return (f_.getInteger(led) * mul_ >> 15) + add_;
   }
 private:
-  F f_;
-  A a_;
-  B b_;
+  PONUA F f_;
+  PONUA A a_;
+  PONUA B b_;
   int add_;
   int mul_;
 };
@@ -44,7 +44,7 @@ public:
     return (f_.getInteger(led) * (B - A) >> 15) + A;
   }
 private:
-  F f_;
+  PONUA F f_;
 };
 
 // To simplify inverting a function's returned value

@@ -18,6 +18,7 @@
 #define ENABLE_SD
 #define GYRO_MEASUREMENTS_PER_SECOND 1600
 #define ACCEL_MEASUREMENTS_PER_SECOND 1600
+#define HEX 16
 
 int random(int x) { return rand() % x; }
 
@@ -61,39 +62,15 @@ char* itoa( int value, char *ret, int radix )
 
 #include "lsfs.h"
 
-#define HEX 16
-
-struct  Print {
-  void print(const char* s) { fprintf(stdout, "%s", s); }
-  void print(float v) { fprintf(stdout, "%f", v); }
-  void print(int v, int base) { fprintf(stdout, "%d", v); }
-  void write(char s) { putchar(s); }
-  template<class T>
-  void println(T s) { print(s); putchar('\n'); }
-};
-
-template<typename T, typename X = void> struct PrintHelper {
-  static void out(Print& p, T& x) { p.print(x); }
-};
-
-template<typename T> struct PrintHelper<T, decltype(((T*)0)->printTo(*(Print*)0))> {
-  static void out(Print& p, T& x) { x.printTo(p); }
-};
-
-struct ConsoleHelper : public Print {
-  template<typename T, typename Enable = void>
-  ConsoleHelper& operator<<(T v) {
-    PrintHelper<T>::out(*this, v);
-    return *this;
-  }
-};
-
-ConsoleHelper STDOUT;
-
 #define LOCK_SD(X) do { } while(0)
 #define noInterrupts() do{}while(0)
 #define interrupts() do{}while(0)
 #define SCOPED_PROFILER() do { } while(0)
+
+#include "stdout.h"
+Print* default_output;
+Print* stdout_output;
+ConsoleHelper STDOUT;
 
 void PrintQuotedValue(const char *name, const char* str) {
   STDOUT.print(name);
@@ -114,7 +91,6 @@ void PrintQuotedValue(const char *name, const char* str) {
   }
   STDOUT.write('\n');
 }
-
 
 #include "monitoring.h"
 #include "current_preset.h"

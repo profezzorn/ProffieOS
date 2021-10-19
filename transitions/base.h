@@ -33,7 +33,7 @@ public:
   uint32_t start_millis() { return start_millis_; }
 private:
   bool restart_ = false;
-  MILLIS millis_;
+  PONUA MILLIS millis_;
   uint32_t start_millis_;
   uint32_t len_ = 0;
 };

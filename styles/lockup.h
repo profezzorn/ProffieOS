@@ -58,11 +58,11 @@ public:
 private:
   bool handled_;
   bool single_pixel_;
-  LOCKUP lockup_;
-  DRAG_COLOR drag_;
-  LOCKUP_SHAPE lockup_shape_;
-  DRAG_SHAPE drag_shape_;
-  LB_SHAPE lb_shape_;
+  PONUA LOCKUP lockup_;
+  PONUA DRAG_COLOR drag_;
+  PONUA LOCKUP_SHAPE lockup_shape_;
+  PONUA DRAG_SHAPE drag_shape_;
+  PONUA LB_SHAPE lb_shape_;
 public:
   auto getColor(int led) -> decltype(lockup_.getColor(led) * 1)  {
     // transparent
@@ -134,7 +134,7 @@ public:
 
 private:
   bool active_;
-  COLOR color_;
+  PONUA COLOR color_;
   TransitionHelper<BeginTr> begin_tr_;
   TransitionHelper<EndTr> end_tr_;
 public:
