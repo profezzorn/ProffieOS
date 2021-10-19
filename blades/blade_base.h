@@ -99,7 +99,7 @@ public:
 	break;
     }
   }
-  BladeEffect* Detect(BladeBase* blade) {
+  BladeEffect* Find(BladeBase* blade) {
     BladeEffect* effects;
     size_t n = blade->GetEffects(&effects);
     // If no other thing is handling stab, treat it like a clash.
@@ -110,15 +110,29 @@ public:
     for (size_t i = 0; i < n; i++) {
       if (effect == effects[i].type ||
 	  (match_stab && effects[i].type == EFFECT_STAB)) {
-	last_detected_blade_effect = effects + i;
-	if (effects[i].start_micros == last_detected_)
-	  return nullptr;
-	last_detected_ = effects[i].start_micros;
 	return effects + i;
       }
     }
-    last_detected_blade_effect = nullptr;
     return nullptr;
+  }
+  BladeEffect* Detect(BladeBase* blade) {
+    BladeEffect* e = Find(blade);
+    if (!e) return nullptr;
+    if (e->start_micros == last_detected_)
+      return nullptr;
+    last_detected_ = e->start_micros;
+    return e;
+  }
+  // Like "Detect", but also sets last_detected_blade_effect
+  // so what WavLen<> and friends can find the detected effect.
+  BladeEffect* DetectScoped(BladeBase* blade) {
+    BladeEffect* e = Find(blade);
+    last_detected_blade_effect = e;
+    if (!e) return nullptr;
+    if (e->start_micros == last_detected_)
+      return nullptr;
+    last_detected_ = e->start_micros;
+    return e;
   }
   uint32_t last_detected_micros() { return last_detected_; }
 private:
