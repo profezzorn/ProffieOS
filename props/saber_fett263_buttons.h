@@ -4325,7 +4325,7 @@ SaberFett263Buttons() : PropBase() {}
         if (color_mode_ == CC_COLOR_LIST) {
           dial_ = (dial_ + 1) % NELEM(color_list_);
           ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
-#ifdef FETT263_SAY_COLOR_LIST
+#ifdef FETT263_SAY_COLOR_LIST_CC
           sound_library_.SayColor(color_list_[dial_].color_number);
 #else
           hybrid_font.PlayCommon(&SFX_ccchange);
