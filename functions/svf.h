@@ -24,7 +24,7 @@ public:
     value_ = single_value_function_.calculate(blade);
     return ret;
   }
-  SVF single_value_function_;
+  PONUA SVF single_value_function_;
 };
 
 // Converts a FUNCTION to an SVF
@@ -34,7 +34,7 @@ public:
   FunctionRunResult run(BladeBase* blade) { return RunFunction(&f_, blade); }
   int calculate(BladeBase* blade) { return f_.getInteger(0); }
 private:
-  FUNC f_;
+  PONUA FUNC f_;
 };
 
 // Optimized specializations

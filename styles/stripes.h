@@ -96,8 +96,8 @@ public:
     StripesBase<COLORS...>::run(base, width_.getInteger(0), speed_.getInteger(0));
   }
 private:
-  WIDTH width_;
-  SPEED speed_;
+  PONUA WIDTH width_;
+  PONUA SPEED speed_;
 };
 
 template<int WIDTH, int SPEED, class... COLORS>

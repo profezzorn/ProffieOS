@@ -21,8 +21,8 @@ public:
 
 private:
   OneshotEffectDetector<EFFECT> effect_;
-  I i_;
-  MAX max_;
+  PONUA I i_;
+  PONUA MAX max_;
   int value_;
 };
 

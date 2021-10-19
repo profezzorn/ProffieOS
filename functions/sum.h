@@ -22,8 +22,8 @@ public:
   }
 
 private:
-  A a_;
-  Sum<B...> b_;
+  PONUA A a_;
+  PONUA Sum<B...> b_;
 };
 
 #if 0

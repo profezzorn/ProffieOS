@@ -21,8 +21,8 @@ public:
   }
 
 private:
-  F f_;
-  V v_;
+  PONUA F f_;
+  PONUA V v_;
 };
 
 

@@ -34,8 +34,8 @@ public:
     return (((x * x) >> 14) * ((3<<14) - x)) >> 15;
   }
   
-  POS pos_;
-  WIDTH width_;
+  PONUA POS pos_;
+  PONUA WIDTH width_;
   int mult_;
   int location_;
 };

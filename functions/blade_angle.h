@@ -33,8 +33,8 @@ public:
     return clampi32((v - min) * 32768.0f / (max - min), 0, 32768);
   }
 
-  MIN min_;
-  MAX max_;
+  PONUA MIN min_;
+  PONUA MAX max_;
 };
 #else
 template<class MIN = Int<0>, class MAX = Int<32768>>
@@ -52,8 +52,8 @@ public:
     return clampi32((v - min) * 32768.0f / (max - min), 0, 32768);
   }
 
-  SVFWrapper<MIN> min_;
-  SVFWrapper<MAX> max_;
+  PONUA SVFWrapper<MIN> min_;
+  PONUA SVFWrapper<MAX> max_;
 };
 #endif
 

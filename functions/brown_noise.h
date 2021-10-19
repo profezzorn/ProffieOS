@@ -21,7 +21,7 @@ public:
     return mix_;
   }
 private:
-  GRADE grade_;
+  PONUA GRADE grade_;
   uint16_t mix_;
 };
 
@@ -49,7 +49,7 @@ public:
   }
   int getInteger(int led) { return value_ ; }
 private:
-  SPEED speed_;
+  PONUA SPEED speed_;
   uint32_t last_millis_;
   int value_;
 };

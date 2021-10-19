@@ -34,8 +34,8 @@ public:
     return LayerRunResult::UNKNOWN;
   }
 private:
-  BASE base_;
-  L1 layer_;
+  PONUA BASE base_;
+  PONUA L1 layer_;
 public:
   template<class T> T PRINT(T t, const char *f) { STDOUT << t << " @ " << f << "  type = " << __PRETTY_FUNCTION__ <<"\n"; return t; }
   auto getColor(int led) -> decltype(base_.getColor(led) << layer_.getColor(led)) {

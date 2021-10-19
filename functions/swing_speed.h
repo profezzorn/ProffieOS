@@ -17,7 +17,7 @@ class SwingSpeedSVF {
    return clampi32(v * 32768, 0, 32768);
   }
 private:
-  SVFWrapper<MAX> max_;
+  PONUA SVFWrapper<MAX> max_;
 };
 
 template<class MAX>

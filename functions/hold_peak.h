@@ -38,9 +38,9 @@ public:
   }
 
 private:
-  F f_;
-  HOLD_MILLIS hold_time_millis_;
-  SPEED speed_;
+  PONUA F f_;
+  PONUA HOLD_MILLIS hold_time_millis_;
+  PONUA SPEED speed_;
   int value_ = 0;
   uint32_t last_micros_ = 0;
   uint32_t last_peak_ = millis();

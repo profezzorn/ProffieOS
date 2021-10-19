@@ -35,7 +35,7 @@ private:
   bool is_on_ = false;
   bool waiting_ = false;
   uint32_t wait_start_time_;
-  MILLIS millis_;
+  PONUA MILLIS millis_;
 };
 
 template<class MILLIS, class BASE>
