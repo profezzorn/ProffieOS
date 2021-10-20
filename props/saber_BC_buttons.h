@@ -27,7 +27,7 @@ Features:
 - Drag is always clash with button pressed while pointing down.
 - No blade = no gestures option if Blade Detect is used.
 - Use wav files for talkie things.
-- Optinal On-the-fly volume controls with cycle through min and max levels.
+- Optional On-the-fly volume controls with cycle through min and max levels.
 
 Optional Blade style elements:
 On-Demand battery level - A layer built into the blade styles that reacts 
