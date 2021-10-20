@@ -941,7 +941,6 @@ public:
           // Just exit color change mode.
           // Don't turn saber off.
           ToggleColorChangeMode();
-          STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
           return true;
         }
   #endif
