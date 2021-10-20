@@ -4243,8 +4243,10 @@ SaberFett263Buttons() : PropBase() {}
           } else {
             track_num_ = 0;
             num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
-            sound_library_.SaySelect();
-            StartMenu(MENU_TRACK_PLAYER);
+            if (num_tracks_ > 0) {
+              sound_library_.SaySelect();
+              StartMenu(MENU_TRACK_PLAYER);
+	    }
 	    StartOrStopTrack();
             return true;
           }
