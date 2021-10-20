@@ -4252,7 +4252,7 @@ SaberFett263Buttons() : PropBase() {}
               sound_library_.SayLoop();
               track_mode_ = PLAYBACK_LOOP;
             }
-	    StartOrStopTrack();
+            StartOrStopTrack();
             return true;
           }
         }
