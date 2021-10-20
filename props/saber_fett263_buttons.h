@@ -9,6 +9,9 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
  Fett263 Button (prop) file, "Battle Mode 2.0", "Edit Mode", "Track Player", "Real Clash", "Choreography Mode", "Dual Mode Ignition",
  "Multi-Phase", "Multi-Blast"
  Copyright (c) 2020-2021 Fernando da Rosa
+ 
+ Voice Prompts and sounds required for certain features and should be included in /common folder or /font folder on SD card.
+   Free prompts (courtesy of Brian Conner) available here: http://fredrik.hubbe.net/lightsaber/sound/
 
 2 Button Control (this file does not support 1 button)
 
