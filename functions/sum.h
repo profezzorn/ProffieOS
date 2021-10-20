@@ -6,12 +6,8 @@
 // A, B: INTEGER
 // return value: INTEGER
 
-template<class ... REST> class Sum {};
-
-template<class X> class Sum<X> : public X {};
-
-template<class A, class... B>
-class Sum<A, B...> {
+template<class A, class B>
+class SumBase {
 public:
   void run(BladeBase* blade) {
     a_.run(blade);
@@ -23,13 +19,11 @@ public:
 
 private:
   PONUA A a_;
-  PONUA Sum<B...> b_;
+  PONUA B b_;
 };
 
-#if 0
 template<class SVFA, class SVFB>
-class SVFWrapper<Sum<SingleValueAdapter<SVFA>,
-		     SingleValueAdapter<SVFB>>> {
+class SumSVF {
  public:
   void run(BladeBase* blade) {
     svfa_.run(blade);
@@ -39,9 +33,21 @@ class SVFWrapper<Sum<SingleValueAdapter<SVFA>,
     return (svfa_.calculate(blade) + svfb_.calculate(blade));
   }
  private:
-  SVFA svfa_;
-  SVFB svfb_;
+  PONUA SVFA svfa_;
+  PONUA SVFB svfb_;
 };
-#endif
+
+// SVF promotion.
+template<class F, class V> struct SumFinder3 { typedef SumBase<F, V> SumClass; };
+template<class F, class V> struct SumFinder3<SingleValueAdapter<F>, SingleValueAdapter<V>> {
+  typedef SingleValueAdapter<SumSVF<F, V>> SumClass;
+};
+template<class F, class V> using SumFinder2 = typename SumFinder3<F, V>::SumClass;
+
+// Make Sum<> handle arbitrary number of arguments.
+template<class ... VALUES> struct SumFinder {};
+template<class A> struct SumFinder<A> { typedef A SumClass; };
+template<class A, class ... B> struct SumFinder<A, B...> { typedef SumFinder2<A, typename SumFinder<B...>::SumClass> SumClass; };
+template<class ... VALUES> using Sum = typename SumFinder<VALUES...>::SumClass;
 
 #endif

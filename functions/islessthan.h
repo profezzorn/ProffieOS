@@ -10,7 +10,7 @@
 class BladeBase;
 
 template<class F, class V>
-class IsLessThan {
+class IsLessThanBase {
 public:
   void run(BladeBase* blade) {
     f_.run(blade);
@@ -25,7 +25,6 @@ private:
   PONUA V v_;
 };
 
-
 template<class SVFA, class SVFB>
 class IsLessThanSVF {
  public:
@@ -37,17 +36,15 @@ class IsLessThanSVF {
     return (svfa_.calculate(blade) < svfb_.calculate(blade)) << 15;
   }
  private:
-  SVFA svfa_;
-  SVFB svfb_;
+  PONUA SVFA svfa_;
+  PONUA SVFB svfb_;
 };
 
-template<class SVFA, class SVFB>
-class IsLessThan<SingleValueAdapter<SVFA>,
-		 SingleValueAdapter<SVFB>> : public SingleValueAdapter<IsLessThanSVF<SVFA, SVFB>> {};
-
-template<class SVFA, class SVFB>
-class SVFWrapper<IsLessThan<SingleValueAdapter<SVFA>,
-			    SingleValueAdapter<SVFB>>> : public IsLessThanSVF<SVFA, SVFB> {};
+template<class F, class V> struct IsLessThanFinder { typedef IsLessThanBase<F, V> IsLessThanClass; };
+template<class F, class V> struct IsLessThanFinder<SingleValueAdapter<F>, SingleValueAdapter<V>> {
+  typedef SingleValueAdapter<IsLessThanSVF<F, V>> IsLessThanClass;
+};
+template<class F, class V> using IsLessThan = typename IsLessThanFinder<F, V>::IsLessThanClass;
 
 template<class F, class V> using IsGreaterThan = IsLessThan<V, F>;
 

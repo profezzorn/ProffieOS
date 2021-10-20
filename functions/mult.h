@@ -42,11 +42,11 @@ private:
   PONUA V v_;
 };
 
-template<class F, class V> class MultFinder { typedef MultBase<F, V> MultClass; }
-template<class F, class V> class MultFinder<SingleValueAdapter<F>, SingleValueAdapter<V>> {
+template<class F, class V> struct MultFinder { typedef MultBase<F, V> MultClass; };
+template<class F, class V> struct MultFinder<SingleValueAdapter<F>, SingleValueAdapter<V>> {
   typedef SingleValueAdapter<MultSVF<F, V>> MultClass;
 };
-template<class F, class V> using Mult = MultFinder<F, V>::MultClass;
+template<class F, class V> using Mult = typename MultFinder<F, V>::MultClass;
 
 // Usage: Percentage<F, V>
 // Gets Percentage V of value F, 
