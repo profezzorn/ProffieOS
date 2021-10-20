@@ -423,7 +423,7 @@ public:
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
   }
 
-// SA22C Volume Menu
+// Volume Menu
   void VolumeUp() {
     if (dynamic_mixer.get_volume() < VOLUME) {
       dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
@@ -762,42 +762,6 @@ public:
     return true;
 
 // Blaster Deflection
-    // original sa22c mode if ENABLE_AUTO_SWING_BLAST is not defined
-  #ifndef ENABLE_AUTO_SWING_BLAST
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
-      swing_blast_ = false;
-      SaberBase::DoBlast();
-    return true;
-
-  // Multi-Blaster Deflection mode
-    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
-      swing_blast_ = !swing_blast_;
-      if (swing_blast_) {
-        if (SFX_blstbgn) {
-          hybrid_font.PlayCommon(&SFX_blstbgn);
-          STDOUT.println("Entering Swing Blast mode");
-        } else {
-          hybrid_font.SB_Effect(EFFECT_BLAST, 0);
-        }
-      } else {
-        if (SFX_blstend) {
-          hybrid_font.PlayCommon(&SFX_blstend);
-          STDOUT.println("Exiting Swing Blast mode");
-        } else {
-          hybrid_font.SB_Effect(EFFECT_BLAST, 0);
-        }
-      }
-      return true;
-
-    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
-      if (swing_blast_) {
-        SaberBase::DoBlast();
-      }
-      return true;
-  #else
-      
-  // AUTO_SWING_BLAST if swing within 1 second
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
       //Don't blast if in colorchange mode
@@ -805,7 +769,8 @@ public:
       SaberBase::DoBlast();
       last_blast_ = millis();
       return true;
-    
+  #ifndef ENABLE_AUTO_SWING_BLAST
+    // Auto enter/exit multi-blast block with swings if swing within 1 second  
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
       if (millis() - last_blast_ < 1000) {
         SaberBase::DoBlast();
@@ -813,8 +778,8 @@ public:
         STDOUT.println("Auto Swing Blast mode");
       }
       break;
-  #endif  // ENABLE_AUTO_SWING_BLAST
-
+  #endif
+        
 // Lockup
   #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
