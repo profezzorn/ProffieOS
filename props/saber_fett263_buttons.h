@@ -25,7 +25,9 @@ Standard Controls While Blade is OFF
     Click PWR = Select Preset
     Click AUX = go to First Preset
   Play Track = Long Click PWR pointing up
-  NEW! Track Player = Long Click PWR parallel
+  NEW! Track Player* = Long Click PWR parallel
+  *requires tracks in either font/tracks/ or common/tracks
+  *if no tracks in font or common will "Loop" default track
     Turn Right = Next Track
     Turn Left = Previous Track
     Click PWR = Play Current Track Once
@@ -4246,6 +4248,9 @@ SaberFett263Buttons() : PropBase() {}
             if (num_tracks_ > 0) {
               sound_library_.SaySelect();
               StartMenu(MENU_TRACK_PLAYER);
+	    } else {
+	      sound_library_.SayLoop();
+              track_mode_ = PLAYBACK_LOOP;
 	    }
 	    StartOrStopTrack();
             return true;
