@@ -339,9 +339,8 @@ EFFECT(push);       // for Force Push gesture
 EFFECT(quote);      // for playing quotes
 EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 EFFECT(swap);       // for standalone triggering EffectSequence<>
-EFFECT(battlevel);  // for Spoken Battery Level
-EFFECT(point);      // for Spoken Battery Level
-EFFECT(volts);      // for Spoken Battery Level
+
+#include "../sound/sound_library.h"
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -354,6 +353,7 @@ public:
     PropBase::Loop();
     DetectTwist();
     Vec3 mss = fusor.mss();
+    sound_library_.Poll(wav_player);
     if (SaberBase::IsOn()) {
       DetectSwing();
       if (auto_lockup_on_ &&
@@ -427,7 +427,7 @@ public:
       dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
         dynamic_mixer.get_volume() + VOLUME * 0.10));
       if (SFX_volup) {
-        hybrid_font.PlayCommon(&SFX_volup);
+        sound_library_.SayVolumeUp();
       } else {
         beeper.Beep(0.5, 2000);
       }
@@ -438,7 +438,7 @@ public:
       #ifdef VOLUME_MENU_CYCLE
         if (!max_vol_reached_) {
           if (SFX_volmax) {
-            hybrid_font.PlayCommon(&SFX_volmax);
+            sound_library_.SayMaximumVolume();
           } else {
             beeper.Beep(0.5, 3000);
           }
@@ -448,7 +448,7 @@ public:
           dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
           dynamic_mixer.get_volume() - VOLUME * 0.90));
           if (SFX_volmin) {
-            hybrid_font.PlayCommon(&SFX_volmin);
+            sound_library_.SayMininumVolume();
           } else {
             beeper.Beep(0.5, 1000);
           }
@@ -457,7 +457,7 @@ public:
         }
       #else
         if (SFX_volmax) {
-          hybrid_font.PlayCommon(&SFX_volmax);
+          sound_library_.SayMaximumVolume();
         } else {
           beeper.Beep(0.5, 3000);
         }
@@ -471,7 +471,7 @@ public:
       dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
         dynamic_mixer.get_volume() - VOLUME * 0.10));
       if (SFX_voldown) {
-        hybrid_font.PlayCommon(&SFX_voldown);
+        sound_library_.SayVolumeDown();
       } else {
         beeper.Beep(0.5, 2000);
       }
@@ -481,7 +481,7 @@ public:
       #ifdef VOLUME_MENU_CYCLE
         if (!min_vol_reached_) {
           if (SFX_volmin) {
-            hybrid_font.PlayCommon(&SFX_volmin);
+            sound_library_.SayMininumVolume();
           } else {
             beeper.Beep(0.5, 1000);
           }
@@ -490,7 +490,7 @@ public:
         } else {
           dynamic_mixer.set_volume(VOLUME);
           if (SFX_volmax) {
-            hybrid_font.PlayCommon(&SFX_volmax);
+            sound_library_.SayMaximumVolume();
           } else {
             beeper.Beep(0.5, 3000);
           }
@@ -499,7 +499,7 @@ public:
         }
       #else
         if (SFX_volmin) {
-          hybrid_font.PlayCommon(&SFX_volmin);
+          sound_library_.SayMininumVolume();
         } else {
           beeper.Beep(0.5, 1000);
         }
@@ -507,6 +507,8 @@ public:
       #endif
     }
   }
+
+  RefPtr<BufferedWavPlayer> wav_player;
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
@@ -687,7 +689,7 @@ public:
       if (!mode_volume_) {
         mode_volume_ = true;
         if (SFX_vmbegin) {
-          hybrid_font.PlayCommon(&SFX_vmbegin);
+          sound_library_.SayEnterVolumeMenu();
         } else {
           beeper.Beep(0.1, 2000);
           beeper.Beep(0.1, 2500);
@@ -696,7 +698,7 @@ public:
       } else {
         mode_volume_ = false;
         if (SFX_vmend) {
-          hybrid_font.PlayCommon(&SFX_vmend);
+          sound_library_.SayVolumeMenuEnd();
         } else {
           beeper.Beep(0.1, 2500);
           beeper.Beep(0.1, 2000);
@@ -705,25 +707,35 @@ public:
       }
       return true;
       
-// Spoken Battery Level
-  #if NUM_BUTTONS == 1
+// Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
-  #else
-    // 2 and 3 button
-    case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
-  #endif
-    if (!mode_volume_) {
-      talkie.SayDigit((int)floorf(battery_monitor.battery()));
-      talkie.Say(spPOINT);
-      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
-      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
-      talkie.Say(spVOLTS);
-    }
+      if (!mode_volume_) {
+        sound_library_.SayBatteryLevel();
+        sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
+        sound_library_.SayVolts();
+        STDOUT.println(battery_monitor.battery());
+        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+        wav_player.Free(); // needed?
+      }
     return true;
+
+// Spoken Battery Level in percentage
+    case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
+      if (!mode_volume_) {
+        sound_library_.SayBatteryLevel();
+        sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
+        sound_library_.SayPercent();
+        STDOUT.println(battery_monitor.battery_percent());
+        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+        wav_player.Free(); // needed?
+      }
+      return true;
 
 // On Demand Battery Level
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
       if (!mode_volume_) {
+        STDOUT.println(battery_monitor.battery());
+        STDOUT.println(battery_monitor.battery_percent());
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
@@ -824,7 +836,7 @@ public:
         STDOUT.println("Entering Battle Mode");
         battle_mode_ = true;
         if (SFX_bmbegin) {
-          hybrid_font.PlayCommon(&SFX_bmbegin);
+          sound_library_.SayBattleModeBegin();
           STDOUT.println("-----------------playing bmbegin.wav");
         } else {
           hybrid_font.DoEffect(EFFECT_FORCE, 0);
@@ -834,7 +846,7 @@ public:
         STDOUT.println("Exiting Battle Mode");
         battle_mode_ = false;
         if (SFX_bmend) {
-          hybrid_font.PlayCommon(&SFX_bmend);
+          sound_library_.SayBattleModeEnd();
           STDOUT.println("-----------------playing bmend.wav");
         } else {
           beeper.Beep(0.5, 3000);
