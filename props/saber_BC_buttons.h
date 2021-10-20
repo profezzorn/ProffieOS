@@ -412,15 +412,6 @@ public:
       }
   }
 
-// Revert colorchange witout saving (reset to Variation == 0)
-  void ResetColorChangeMode() {
-    if (!current_style()) return;
-      STDOUT << "Reset Color Variation" << "\n";
-      SetVariation(0);
-      STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
-      SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
-  }
-
 // SA22C Volume Menu
   void VolumeUp() {
     if (dynamic_mixer.get_volume() < VOLUME) {
@@ -910,7 +901,10 @@ public:
 // Revert colorchange witout saving (reset to Variation == 0)
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-        ResetColorChangeMode();
+        STDOUT << "Reset Color Variation" << "\n";
+        SetVariation(0);
+        STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
+        SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
         return true;
       } else {
         hybrid_font.PlayCommon(&SFX_quote);
