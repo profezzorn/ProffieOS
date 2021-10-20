@@ -3,7 +3,7 @@ saber_BC_buttons.h
   http://fredrik.hubbe.net/lightsaber/proffieos.html
   Copyright (c) 2016-2019 Fredrik Hubinette
   Copyright (c) 2021 Brian Conner with contributions by:
-  Fredrik Hubinette, Fernando DeRosa, and Matthew McGeary.
+  Fredrik Hubinette, Fernando da Rosa, and Matthew McGeary.
   Distributed under the terms of the GNU General Public License v3.
   http://www.gnu.org/licenses/
  
@@ -16,20 +16,18 @@ http://fredrik.hubbe.net/lightsaber/sound/
 
 Features:
 - Live preset changing while blade is running (skips font.wav and preon).
-- Auto multi-blaster block or sa22c's original multi-blast.
-- Battle Mode and gesture ignitions from fett263
+- Battle Mode, gesture ignitions, and multi-blast based on fett263's work.
+- Auto enter/exit multi-blaster block mode 
 - Spoken Battery level, with percentage option.
 - Added quote sound so force.wavs can remain as force.
              - Add quote.wav files to font to use.
-- Added Play / Stop track control while blade is on.
-- Added Prev/Next preset control while blade is on by pointing blade up.
+- Play / Stop track control while blade is on.
 - Force Push is always available, not just in Battle Mode.
 - Melt is always available as no button, with pull-away or button to end
 - Drag is always clash with button pressed while pointing down.
-- Preon is skipped if pointing up, as well as when "live" switching presets a.k.a. "Dual Phase".
 - No blade = no gestures option if Blade Detect is used.
 - Use wav files for talkie things.
-- Enhanced sa22c's on-the-fly volume controls with custom prompts and sounds, and cycle through.
+- Optinal On-the-fly volume controls with cycle through min and max levels.
 
 Optional Blade style elements:
 On-Demand battery level - A layer built into the blade styles that reacts 
@@ -776,42 +774,6 @@ public:
     return true;
 
 // Blaster Deflection
-    // original sa22c mode if ENABLE_AUTO_SWING_BLAST is not defined
-  #ifndef ENABLE_AUTO_SWING_BLAST
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
-      swing_blast_ = false;
-      SaberBase::DoBlast();
-    return true;
-
-  // Multi-Blaster Deflection mode
-    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
-      swing_blast_ = !swing_blast_;
-      if (swing_blast_) {
-        if (SFX_blstbgn) {
-          hybrid_font.PlayCommon(&SFX_blstbgn);
-          STDOUT.println("Entering Swing Blast mode");
-        } else {
-          hybrid_font.SB_Effect(EFFECT_BLAST, 0);
-        }
-      } else {
-        if (SFX_blstend) {
-          hybrid_font.PlayCommon(&SFX_blstend);
-          STDOUT.println("Exiting Swing Blast mode");
-        } else {
-          hybrid_font.SB_Effect(EFFECT_BLAST, 0);
-        }
-      }
-      return true;
-
-    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
-      if (swing_blast_) {
-        SaberBase::DoBlast();
-      }
-      return true;
-  #else
-      
-  // AUTO_SWING_BLAST if swing within 1 second
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
       //Don't blast if in colorchange mode
@@ -819,7 +781,8 @@ public:
       SaberBase::DoBlast();
       last_blast_ = millis();
       return true;
-    
+  #ifndef ENABLE_AUTO_SWING_BLAST
+    // Auto enter/exit multi-blast block with swings if swing within 1 second  
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
       if (millis() - last_blast_ < 1000) {
         SaberBase::DoBlast();
