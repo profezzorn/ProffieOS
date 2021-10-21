@@ -279,7 +279,7 @@ Turn off blade        - Hold POW and wait until blade is off,
 #endif
 
 #ifndef BC_FORCE_PUSH_LENGTH
-#define BC_FORCE_PUSH_LENGTH 4
+#define BC_FORCE_PUSH_LENGTH 5
 #endif
 
 #ifndef BUTTON_DOUBLE_CLICK_TIMEOUT
@@ -295,7 +295,7 @@ Turn off blade        - Hold POW and wait until blade is off,
 #endif
 
 #ifndef BUTTON_HELD_MEDIUM_TIMEOUT
-#define BUTTON_HELD_MEDIUM_TIMEOUT 1500
+#define BUTTON_HELD_MEDIUM_TIMEOUT 800
 #endif
 
 #ifndef BUTTON_HELD_LONG_TIMEOUT
