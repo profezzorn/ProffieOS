@@ -143,13 +143,11 @@ public:
   void SayAuto() { Play("mauto.wav"); }
   void SayBaseColor() { Play("mbase.wav"); }
   void SayBatteryLevel() { Play("mbatt.wav"); }
-  void SayTheBatteryLevelIs() { Play("battlevl.wav"); }
-  void SayBattleModeBegin() { Play("bmbegin.wav"); }
-  void SayBattleModeEnd() { Play("bmend.wav"); }
+  void SayBattleMode() { Play("bmbegin.wav"); }
+  void SayBeginChoreography() { Play("chreobgn.wav"); }   // 1-sec leading silence delay
+  void SayBeginRehearsal() { Play("rehrsbgn.wav"); }
   void SayBlastColor() { Play("mblast.wav"); }
   void SayCancel() { Play("mcancel.wav"); }
-  void SayChoreographyBegin() { Play("chreobgn.wav"); }
-  void SayChoreographyEnd() { Play("chreoend.wav"); }
   void SayClashColor() { Play("mclash.wav"); }
   void SayClashDetectionLevel() { Play("mbmclash.wav"); }
   void SayClashLockupPosition() { Play("mlockpos.wav"); }
@@ -181,10 +179,14 @@ public:
   void SayEmitterColor() { Play("memitter.wav"); }
   void SayEmitterSize() { Play("memitsz.wav"); }
   void SayEnabled() { Play("mtrue.wav"); }
-  void SayEnterVolumeMenu() { Play("vmbegin.wav"); }
+  void SayEndBattleMode() { Play("bmend.wav"); }
+  void SayEndChoreography() { Play("chreoend.wav"); }
+  void SayEndRehearsal() { Play("rehrsend.wav"); }
   void SayExit() { Play("mexit.wav"); }
+  void SayExitingVolumeMenu() { Play("vmend.wav"); }
   void SayForcePush() { Play("mpush.wav"); }
   void SayForcePushLength() { Play("mpushlen.wav"); }
+  void SayGestureMenu() { Play("mgestsub.wav"); }
   void SayGesturesOff() { Play("mgestoff.wav"); }
   void SayGesturesOn() { Play("mgeston.wav"); }
   void SayIgnitionColor() { Play("mignite.wav"); }
@@ -197,12 +199,12 @@ public:
   void SayLockupDelay() { Play("mlockdly.wav"); }
   void SayLoop() { Play("mloop.wav"); }
   void SayMainMenu() { Play("mmain.wav"); }
-  void SayMaximum() { Play("mmax.wav"); }
+  void SayMaximumSetting() { Play("mmax.wav"); }
   void SayMaximumClashStrength() { Play("maxclash.wav"); }
   void SayMaximumVolume() { Play("volmax.wav"); }
   void SayMeltSize() { Play("mmeltsz.wav"); }
   void SayMillis() { Play("mmillis.wav"); }
-  void SayMinimum() { Play("mmin.wav"); }
+  void SayMinimumSetting() { Play("mmin.wav"); }
   void SayMininumVolume() { Play("volmin.wav"); }
   void SayNoChoreographyAvailable() { Play("nochreo.wav"); }
   void SayOffColor() { Play("moff.wav"); }
@@ -215,9 +217,7 @@ public:
   void SayPreonOptions() { Play("mpreopt.wav"); }
   void SayPreonSize() { Play("mpreonsz.wav"); }
   void SayRandom() { Play("mrandom.wav"); }
-  void SayRehearseBegin() { Play("rehrsbgn.wav"); }
-  void SayRehearseEnd() { Play("rehrsend.wav"); }
-  void SayRehearseNew() { Play("rehrsnew.wav"); } // rename?
+  void SayReplaceRehearsal() { Play("rehrsnew.wav"); } // rename?
   void SayResetColors() { Play("mresetc.wav"); }
   void SayRetractionColor() { Play("mretract.wav"); }
   void SayRetractionDelay() { Play("mrtdelay.wav"); }
@@ -232,26 +232,26 @@ public:
   void SaySelectOption() { Play("moption.wav"); }
   void SaySelectPreset() { Play("mpreset.wav"); }
   void SaySelectStyle() { Play("mstylsel.wav"); }
+  void SaySettingsMenu() { Play("msetsub.wav"); }
   void SayStabIgnition() { Play("mstabon.wav"); }
   void SayStabColor() { Play("mstab.wav"); }
   void SayStyle() { Play("mstylnum.wav"); }
   void SayStyleMenu() { Play("mstylesb.wav"); }
   void SayStyleOptions() { Play("mstylopt.wav"); }
+  void SayStyleSettings() { Play("stylstm.wav"); }
   void SaySwingColor() { Play("mswing.wav"); }
   void SaySwingIgnition() { Play("mswingon.wav"); }
   void SaySwingOnSpeed() { Play("mswingsp.wav"); }
+  void SayTheBatteryLevelIs() { Play("battlevl.wav"); }
   void SayThrustIgnition() { Play("mthrston.wav"); }
   void SayTwistIgnition() { Play("mtwiston.wav"); }
   void SayTwistRetraction() { Play("mtwstoff.wav"); }
   void SayUp() { Play("mup.wav"); } // Sound for increase
   void SayVolts() { Play("mvolts.wav"); }
-  void SayVolumeMenuEnd() { Play("vmend.wav"); }
+  void SayVolumeMenu() { Play("vmbegin.wav"); }
   void SayVolumeUp() { Play("volup.wav"); } // Sound for increasing volume
-  void SayZoomingIn() { Play("mzoom.wav"); } // Sound for color menu "zooming in"
   void SayVolumeDown() { Play("voldown.wav"); } // Sound for decreasing volume
-  void SayGestureMenu() { Play("mgestsub.wav"); }
-  void SaySettingsMenu() { Play("msetsub.wav"); }
-  void SayStyleSettings() { Play("stylstm.wav"); }
+  void SayZoomingIn() { Play("mzoom.wav"); } // Sound for color menu "zooming in"
 
   void SayColor(ColorNumber n) {
     Play(SoundToPlay(&SFX_clrlst, n - 1));
