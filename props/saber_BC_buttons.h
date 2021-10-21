@@ -333,6 +333,8 @@ EFFECT(voldown);    // for decrease volume
 EFFECT(volmin);     // for minimum volume reached
 EFFECT(volmax);     // for maximum volume reached
 EFFECT(faston);     // for EFFECT_FAST_ON
+                    // *note* faston.wav does not replace out.wav.
+                    // they play layered and concurrently.
 EFFECT(blstbgn);    // for Begin Multi-Blast
 EFFECT(blstend);    // for End Multi-Blast
 EFFECT(push);       // for Force Push gesture
@@ -642,10 +644,11 @@ public:
   // 2 button
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON | BUTTON_AUX):
   #endif
+    // Bypass NewFont and preon if pointing up.
     if (fusor.angle1() >  M_PI / 3) {
       //Don't change preset if in colorchange mode
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
-        next_preset();
+        next_preset_fast();
       }
       return true;
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
@@ -663,10 +666,11 @@ public:
   // 2 button
     case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON | BUTTON_AUX):
   #endif
-    if (fusor.angle1() >  M_PI / 3) {
-      //Don't change preset if in colorchange mode
-      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
-        previous_preset();
+      // Bypass NewFont and preon if pointing up.
+      if (fusor.angle1() >  M_PI / 3) {
+        //Don't change preset if in colorchange mode
+        if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
+          previous_preset_fast();
       }
       return true;
     case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_OFF):
@@ -732,7 +736,12 @@ public:
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       // No power on without exiting Vol Menu first
       if (!mode_volume_) {
-        On();
+      // Bypass preon if pointing up         
+        if (fusor.angle1() >  M_PI / 3) {
+          FastOn();
+        } else {
+          On();
+        }
       }
       return true;
 
@@ -770,7 +779,7 @@ public:
       }
       break;
   #endif
-
+        
 // Lockup
   #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
