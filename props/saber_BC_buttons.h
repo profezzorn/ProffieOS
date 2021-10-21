@@ -693,7 +693,7 @@ public:
       if (!mode_volume_) {
         mode_volume_ = true;
         if (SFX_vmbegin) {
-          sound_library_.SayEnterVolumeMenu();
+          sound_library_.SayVolumeMenu();
         } else {
           beeper.Beep(0.1, 2000);
           beeper.Beep(0.1, 2500);
@@ -702,7 +702,7 @@ public:
       } else {
         mode_volume_ = false;
         if (SFX_vmend) {
-          sound_library_.SayVolumeMenuEnd();
+          sound_library_.SayExitingVolumeMenu();
         } else {
           beeper.Beep(0.1, 2500);
           beeper.Beep(0.1, 2000);
@@ -714,7 +714,7 @@ public:
 // Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       if (!mode_volume_) {
-        sound_library_.SayBatteryLevel();
+        sound_library_.SayBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
         sound_library_.SayVolts();
         STDOUT.println(battery_monitor.battery());
@@ -726,7 +726,7 @@ public:
 // Spoken Battery Level in percentage
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
       if (!mode_volume_) {
-        sound_library_.SayBatteryLevel();
+        sound_library_.SayBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
         sound_library_.SayPercent();
         STDOUT.println(battery_monitor.battery_percent());
@@ -845,7 +845,7 @@ public:
         STDOUT.println("Entering Battle Mode");
         battle_mode_ = true;
         if (SFX_bmbegin) {
-          sound_library_.SayBattleModeBegin();
+          sound_library_.SayBattleMode();
           STDOUT.println("-----------------playing bmbegin.wav");
         } else {
           hybrid_font.DoEffect(EFFECT_FORCE, 0);
@@ -855,7 +855,7 @@ public:
         STDOUT.println("Exiting Battle Mode");
         battle_mode_ = false;
         if (SFX_bmend) {
-          sound_library_.SayBattleModeEnd();
+          sound_library_.SayEndBattleMode();
           STDOUT.println("-----------------playing bmend.wav");
         } else {
           beeper.Beep(0.5, 3000);
