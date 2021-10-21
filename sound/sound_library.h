@@ -143,7 +143,7 @@ public:
   void SayAuto() { Play("mauto.wav"); }
   void SayBaseColor() { Play("mbase.wav"); }
   void SayBatteryLevel() { Play("mbatt.wav"); }
-  void SayBatteryLevelIs() { Play("battlevl.wav"); } // "The battery level is..."
+  void SayTheBatteryLevelIs() { Play("battlevl.wav"); }
   void SayBattleModeBegin() { Play("bmbegin.wav"); }
   void SayBattleModeEnd() { Play("bmend.wav"); }
   void SayBlastColor() { Play("mblast.wav"); }
