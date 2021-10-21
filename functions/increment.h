@@ -37,11 +37,11 @@ public:
   int getInteger(int led) { return value_; }
 
 private:
-  F f_;
-  V v_;
-  I i_;
-  MAX max_;
-  HYST_PERCENT hyst_;
+  PONUA F f_;
+  PONUA V v_;
+  PONUA I i_;
+  PONUA MAX max_;
+  PONUA HYST_PERCENT hyst_;
   bool active_ = false;
   int value_;
 };
