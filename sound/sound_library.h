@@ -248,7 +248,7 @@ public:
   void SayTwistRetraction() { Play("mtwstoff.wav"); }
   void SayUp() { Play("mup.wav"); } // Sound for increase
   void SayVolts() { Play("mvolts.wav"); }
-  void SayVolumeMenu() { Play("spkvmbegin.wav"); }
+  void SayVolumeMenu() { Play("spkvmbgn.wav"); }
   void SayVolumeUp() { Play("volup.wav"); } // Sound for increasing volume
   void SayVolumeDown() { Play("voldown.wav"); } // Sound for decreasing volume
   void SayZoomingIn() { Play("mzoom.wav"); } // Sound for color menu "zooming in"
