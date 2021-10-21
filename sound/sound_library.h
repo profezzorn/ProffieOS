@@ -143,7 +143,7 @@ public:
   void SayAuto() { Play("mauto.wav"); }
   void SayBaseColor() { Play("mbase.wav"); }
   void SayBatteryLevel() { Play("mbatt.wav"); }
-  void SayBattleMode() { Play("bmbegin.wav"); }
+  void SayBattleMode() { Play("spkbmbgn.wav"); }
   void SayBeginChoreography() { Play("chreobgn.wav"); }   // 1-sec leading silence delay
   void SayBeginRehearsal() { Play("rehrsbgn.wav"); }
   void SayBlastColor() { Play("mblast.wav"); }
@@ -179,11 +179,11 @@ public:
   void SayEmitterColor() { Play("memitter.wav"); }
   void SayEmitterSize() { Play("memitsz.wav"); }
   void SayEnabled() { Play("mtrue.wav"); }
-  void SayEndBattleMode() { Play("bmend.wav"); }
+  void SayEndBattleMode() { Play("spkbmend.wav"); }
   void SayEndChoreography() { Play("chreoend.wav"); }
   void SayEndRehearsal() { Play("rehrsend.wav"); }
   void SayExit() { Play("mexit.wav"); }
-  void SayExitingVolumeMenu() { Play("vmend.wav"); }
+  void SayExitingVolumeMenu() { Play("spkvmend.wav"); }
   void SayForcePush() { Play("mpush.wav"); }
   void SayForcePushLength() { Play("mpushlen.wav"); }
   void SayGestureMenu() { Play("mgestsub.wav"); }
@@ -248,7 +248,7 @@ public:
   void SayTwistRetraction() { Play("mtwstoff.wav"); }
   void SayUp() { Play("mup.wav"); } // Sound for increase
   void SayVolts() { Play("mvolts.wav"); }
-  void SayVolumeMenu() { Play("vmbegin.wav"); }
+  void SayVolumeMenu() { Play("spkvmbegin.wav"); }
   void SayVolumeUp() { Play("volup.wav"); } // Sound for increasing volume
   void SayVolumeDown() { Play("voldown.wav"); } // Sound for decreasing volume
   void SayZoomingIn() { Play("mzoom.wav"); } // Sound for color menu "zooming in"
