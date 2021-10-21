@@ -858,10 +858,12 @@ public:
 // Force -        NOT pointing up or down
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
       // pointing down
+  #ifndef DISABLE_COLOR_CHANGE
       if (fusor.angle1() < - M_PI / 4) {
         ToggleColorChangeMode();
         return true;
       }
+  #endif
       // pointing up
       if (fusor.angle1() >  M_PI / 3) {
         hybrid_font.DoEffect(EFFECT_USER2, 0);
@@ -900,12 +902,14 @@ public:
 // Turn Blade OFF
     case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
       if (!SaberBase::Lockup()) {
+  #ifndef DISABLE_COLOR_CHANGE
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           // Just exit color change mode.
           // Don't turn saber off.
           ToggleColorChangeMode();
           return true;
         }
+  #endif
         if (!battle_mode_) {
           Off();
         }
