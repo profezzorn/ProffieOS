@@ -143,6 +143,9 @@ public:
   void SayAuto() { Play("mauto.wav"); }
   void SayBaseColor() { Play("mbase.wav"); }
   void SayBatteryLevel() { Play("mbatt.wav"); }
+  void SayBatteryLevelIs() { Play("battlevl.wav"); } // Sentence form
+  void SayBattleModeBegin() { Play("bmbegin.wav"); }
+  void SayBattleModeEnd() { Play("bmend.wav"); }
   void SayBlastColor() { Play("mblast.wav"); }
   void SayCancel() { Play("mcancel.wav"); }
   void SayChoreographyBegin() { Play("chreobgn.wav"); }
