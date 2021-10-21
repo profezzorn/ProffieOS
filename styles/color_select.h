@@ -40,11 +40,11 @@ public:
   }
 
 private:
-  SELECTION f_;
-  TRANSITION transition_;
+  PONUA SELECTION f_;
+  PONUA TRANSITION transition_;
   uint8_t selection_= 0;
   uint8_t old_selection_ = 0;
-  MixHelper<COLORS...> colors_;
+  PONUA MixHelper<COLORS...> colors_;
 public:
   auto getColor(int led) -> decltype(transition_.getColor(colors_.getColor(selection_, led), colors_.getColor(selection_, led), led)) {
 //    SCOPED_PROFILER();
