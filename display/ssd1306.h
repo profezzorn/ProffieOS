@@ -11,7 +11,7 @@ IMAGE_FILESET(clsh);
 IMAGE_FILESET(blst);
 IMAGE_FILESET(lock);
 IMAGE_FILESET(force);
-
+IMAGE_FILESET(idle);
 
 template<int Width, class col_t>
 class Display : public MonoFrame<Width, col_t> {
@@ -124,15 +124,39 @@ public:
     }
     return last_delay_ = FillFrameBuffer2(advance);
   }
-
-  void ShowDefault() {
+  
+int ShowBatteryMeter() {
+    STDOUT.println("---- ShowBatteryMeter()");
+    Clear();
+    display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
+    if (HEIGHT > 32) {
+      char tmp[32];
+      strcpy(tmp, "volts x.xx");
+      float v = battery_monitor.battery();
+      tmp[6] = '0' + (int)floorf(v);
+      tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
+      tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
+      display_->DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
+    }
+    return 200;  // redraw once every 200 ms
+  }
+  
+    void ShowDefault() {
     screen_ = SCREEN_PLI;
     t_ = 0;
     if (SaberBase::IsOn()) {
       if (SaberBase::Lockup() && IMG_lock) {
-	ShowFile(&IMG_lock, 3600000.0);
+        ShowFile(&IMG_lock, 3600000.0);
       } else if (looped_on_) {
-	ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+      	ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+      }
+    } else { // blade is off
+      if (USBD_Connected()) {
+        STDOUT.println("---- ShowDefault() - USBD_Connected");
+        ShowBatteryMeter();
+      } else { 
+        if (looped_idle_) ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
+	STDOUT.println("---- ShowDefault() - !USBD_Connected");
       }
     }
   }
@@ -163,21 +187,25 @@ public:
         return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
-	if (!SaberBase::IsOn() && t_ > font_config.ProffieOSFontImageDuration) {
-	  screen_ = SCREEN_OFF;
-	  return FillFrameBuffer2(advance);
-	}
-	Clear();
-	display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
-	if (HEIGHT > 32) {
-	  char tmp[32];
-	  strcpy(tmp, "volts x.xx");
-	  float v = battery_monitor.battery();
-	  tmp[6] = '0' + (int)floorf(v);
-	  tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
-	  tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
-	  display_->DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
-	}
+    #ifdef USB_CLASS_MSC
+        if (USBD_Connected()) {
+          STDOUT.println("---- USBD_Connected");
+          ShowBatteryMeter();
+        } else {
+          STDOUT.println("---- !USBD_Connected");
+          if (!just_booted_ && IMG_idle) {
+            ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
+          } else {
+            ShowBatteryMeter();
+  	  }
+        }
+    #else
+        if (!just_booted_ && IMG_idle) {
+          ShowFile(&IMG_idle, font_config.ProffieOSOnImageDuration);
+        } else {
+          ShowBatteryMeter();
+        }
+    #endif
         return 200;  // redraw once every 200 ms
 
       case SCREEN_MESSAGE: {
@@ -248,6 +276,7 @@ public:
       last_delay_ = t_ = 0;
       display_->Page();
     }
+    just_booted_ = false;
   }
 
   void SB_Effect(EffectType effect, float location) override {
@@ -426,6 +455,9 @@ public:
       }
       if (current_effect_ == &IMG_on) {
         looped_on_ = looped_frames_ > 1;
+      }
+      if (current_effect_ == &IMG_idle) { // BC
+        looped_idle_ = looped_frames_ > 1;
       }
     }
     // STDERR << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
