@@ -4,26 +4,59 @@
 
 class FontConfigFile : public ConfigFile {
 public:
-  void SetVariable(const char* variable, float v) override {
-    CONFIG_VARIABLE(humStart, 100);
-    CONFIG_VARIABLE(volHum, 15);
-    CONFIG_VARIABLE(volEff, 16);
-    CONFIG_VARIABLE(ProffieOSSwingSpeedThreshold, 250.0f);
-    CONFIG_VARIABLE(ProffieOSSwingVolumeSharpness, 0.5f);
-    CONFIG_VARIABLE(ProffieOSMaxSwingVolume, 2.0f);
-    CONFIG_VARIABLE(ProffieOSSwingOverlap, 0.5f);
-    CONFIG_VARIABLE(ProffieOSSmoothSwingDucking, 0.2f);
-    CONFIG_VARIABLE(ProffieOSSwingLowerThreshold, 200.0f);
-    CONFIG_VARIABLE(ProffieOSSlashAccelerationThreshold, 130.0f);
-    CONFIG_VARIABLE(ProffieOSAnimationFrameRate, 0.0f);
-    CONFIG_VARIABLE(ProffieOSFontImageDuration, 5000.0f);
-    CONFIG_VARIABLE(ProffieOSOnImageDuration, 5000.0f);
-    CONFIG_VARIABLE(ProffieOSBlastImageDuration, 1000.0f);
-    CONFIG_VARIABLE(ProffieOSClashImageDuration, 500.0f);
-    CONFIG_VARIABLE(ProffieOSForceImageDuration, 1000.0f);
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(humStart, 100);
+    CONFIG_VARIABLE2(volHum, 15);
+    CONFIG_VARIABLE2(volEff, 16);
+    CONFIG_VARIABLE2(ProffieOSSwingSpeedThreshold, 250.0f);
+    CONFIG_VARIABLE2(ProffieOSSwingVolumeSharpness, 0.5f);
+    CONFIG_VARIABLE2(ProffieOSMaxSwingVolume, 2.0f);
+    CONFIG_VARIABLE2(ProffieOSSwingOverlap, 0.5f);
+    CONFIG_VARIABLE2(ProffieOSSmoothSwingDucking, 0.2f);
+    CONFIG_VARIABLE2(ProffieOSSwingLowerThreshold, 200.0f);
+    CONFIG_VARIABLE2(ProffieOSSlashAccelerationThreshold, 130.0f);
+    CONFIG_VARIABLE2(ProffieOSAnimationFrameRate, 0.0f);
+    CONFIG_VARIABLE2(ProffieOSFontImageDuration, 5000.0f);
+    CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
+    CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClashImageDuration, 500.0f);
+    CONFIG_VARIABLE2(ProffieOSForceImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSMinSwingAcceleration, 0.0f);
+    CONFIG_VARIABLE2(ProffieOSMaxSwingAcceleration, 0.0f);
 #ifdef ENABLE_SPINS
-    CONFIG_VARIABLE(ProffieOSSpinDegrees, 360.0f);
+    CONFIG_VARIABLE2(ProffieOSSpinDegrees, 360.0f);
 #endif
+    for (Effect* e = all_effects; e; e = e->next_) {
+      char name[32];
+      strcpy(name, "ProffieOS.SFX.");
+      strcat(name, e->GetName());
+      strcat(name, ".");
+      char* x = name + strlen(name);
+
+      struct PairedVariable : public VariableBase {
+	Effect* e_;
+	PairedVariable(Effect* e) : e_(e) {}
+	void set(float value) override { e_->SetPaired(value > 0.5); }
+	float get() override { return e_->GetPaired(); }
+	void setDefault() override { e_->SetPaired(false);  }
+      };
+      
+      strcpy(x, "paired");
+      PairedVariable var1(e);
+      op->run(name, &var1);
+
+      struct VolumeVariable : public VariableBase {
+	Effect* e_;
+	VolumeVariable(Effect* e) : e_(e) {}
+	void set(float value) override { e_->SetVolume(value); }
+	float get() override { return e_->GetVolume(); }
+	void setDefault() override { e_->SetVolume(100);  }
+      };
+      
+      strcpy(x, "volume");
+      VolumeVariable var2(e);
+      op->run(name, &var2);
+    }
   }
   // Igniter compat
   // This specifies how many milliseconds before the end of the
@@ -70,6 +103,13 @@ public:
   float ProffieOSClashImageDuration;
   // for OLED displays, the time a force.bmp will play
   float ProffieOSForceImageDuration;
+  // Minimum acceleration for Accent Swing file Selection
+  // recommended value is 20.0 ~ 30.0
+  float ProffieOSMinSwingAcceleration;
+  // Maximum acceleration for Accent Swing file Selection
+  // must be higher than Min value to enable selection
+  // recommended value is 100.0 ~ 150.0
+  float ProffieOSMaxSwingAcceleration;
 #ifdef ENABLE_SPINS
   // number of degrees the blade must travel while staying above the
   // swing threshold in order to trigger a spin sound.  Default is 360 or
@@ -88,9 +128,10 @@ FontConfigFile font_config;
 // When an effect happens, like "clash", we do a short cross-fade
 // to transition to the new sound, then we play that sound until
 // it ends and gaplessly transition back to the hum sound.
-class HybridFont : public SaberBase {
+class HybridFont : public SaberBase, public Looper {
 public:
-  HybridFont() : SaberBase(NOLINK) { }
+  const char* name() override { return "Hybrid Font"; }
+  HybridFont() : SaberBase(NOLINK), Looper(NOLINK) { }
   void Activate() {
     SetupStandardAudio();
     font_config.ReadInCurrentDir("config.ini");
@@ -123,17 +164,30 @@ public:
 
     STDOUT.println(" font.");
     SaberBase::Link(this);
+    Looper::Link();
     SetHumVolume(1.0);
     state_ = STATE_OFF;
   }
 
   enum State {
     STATE_OFF,
+    STATE_WAIT_FOR_ON,
     STATE_OUT,
     STATE_HUM_FADE_IN,
     STATE_HUM_ON,
     STATE_HUM_FADE_OUT,
   };
+
+  bool active_state() {
+    switch (state_) {
+    case STATE_OFF:
+    case STATE_WAIT_FOR_ON:
+      return false;
+    default:
+      break;
+    }
+    return true;
+  }
 
   void Deactivate() {
     lock_player_.Free();
@@ -141,6 +195,7 @@ public:
     next_hum_player_.Free();
     swing_player_.Free();
     SaberBase::Unlink(this);
+    Looper::Unlink();
     state_ = STATE_OFF;
   }
 
@@ -231,13 +286,19 @@ public:
         }
         if (!swing_player_) {
           if (!swinging_) {
-            if (rss > slashThreshold && SFX_slsh) {
-              swing_player_ = PlayPolyphonic(&SFX_slsh);
+            Effect* effect;
+	    if (rss > slashThreshold && SFX_slsh) {
+              effect = &SFX_slsh;
             } else if (SFX_swng) {
-              swing_player_ = PlayPolyphonic(&SFX_swng);
+              effect = &SFX_swng;
             } else {
-              swing_player_ = PlayPolyphonic(&SFX_swing);
+              effect = &SFX_swing;
             }
+	    if (font_config.ProffieOSMaxSwingAcceleration > font_config.ProffieOSMinSwingAcceleration) {
+              float s = (rss - font_config.ProffieOSMinSwingAcceleration) / font_config.ProffieOSMaxSwingAcceleration;
+	      effect->SelectFloat(s);
+            }
+            swing_player_ = PlayPolyphonic(effect);
             swinging_ = true;
           } else {
 #ifdef ENABLE_SPINS
@@ -281,7 +342,7 @@ public:
   }
 
   float SetSwingVolume(float swing_strength, float mixhum) override {
-    if(swing_player_) {
+    if (swing_player_) {
       if (swing_player_->isPlaying()) {
         float accent_volume = powf(
           swing_strength, font_config.ProffieOSSwingVolumeSharpness) * font_config.ProffieOSMaxSwingVolume;
@@ -301,19 +362,42 @@ public:
     }
   }
 
-  void SB_PreOn(float* delay) override {
+  Effect* getOut() { return SFX_out ? &SFX_out : &SFX_poweron; }
+  Effect* getHum() { return SFX_humm ? &SFX_humm : &SFX_hum; }
+
+  void SB_Preon() {
     if (SFX_preon) {
+      SFX_preon.SetFollowing(getOut());
+      // PlayCommon(&SFX_preon);
       RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&SFX_preon);
-      if (tmp) {
-        *delay = std::max(*delay, tmp->length());
+      
+      if (monophonic_hum_) {
+	getOut()->SetFollowing(getHum());
       }
+    }
+    SaberBase::RequestMotion();
+    state_ = STATE_WAIT_FOR_ON;
+  }
+
+  void SB_Postoff() {
+    // Postoff was alredy started by linked wav players, we just need to find
+    // the length so that WavLen<> can use it.
+    RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(&SFX_pstoff);
+    if (tmp) {
+      tmp->UpdateSaberBaseSoundInfo();
+    } else {
+      SaberBase::ClearSoundInfo();
     }
   }
 
   void SB_On() override {
+    // If preon exists, we've already queed up playing the poweron and hum.
+    bool already_started = state_ == STATE_WAIT_FOR_ON && SFX_preon;
     if (monophonic_hum_) {
+      if (!already_started) {
+	PlayMonophonic(&SFX_poweron, &SFX_hum);
+      }
       state_ = STATE_HUM_ON;
-      PlayMonophonic(&SFX_poweron, &SFX_hum);
     } else {
       state_ = STATE_OUT;
       if (!hum_player_) {
@@ -325,7 +409,18 @@ public:
 	}
         hum_start_ = millis();
       }
-      RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(SFX_out ? &SFX_out : &SFX_poweron);
+      RefPtr<BufferedWavPlayer> tmp;
+      if (already_started) {
+	tmp = GetWavPlayerPlaying(getOut());
+	// Set the length for WavLen<>
+	if (tmp) {
+	  tmp->UpdateSaberBaseSoundInfo();
+	} else {
+	  SaberBase::ClearSoundInfo();
+	}
+      } else {
+	tmp = PlayPolyphonic(getOut());
+      }
       hum_fade_in_ = 0.2;
       if (SFX_humm && tmp) {
 	hum_fade_in_ = tmp->length();
@@ -343,6 +438,11 @@ public:
 
   void SB_Off(OffType off_type) override {
     switch (off_type) {
+      case OFF_CANCEL_PREON:
+	if (state_ == STATE_WAIT_FOR_ON) {
+	  state_ = STATE_OFF;
+	}
+	break;
       case OFF_IDLE:
         break;
       case OFF_NORMAL:
@@ -367,6 +467,7 @@ public:
 	  hum_fade_out_ = 0.2;
         }
 	state_ = monophonic_hum_ ? STATE_OFF : STATE_HUM_FADE_OUT;
+	check_postoff_ = !!SFX_pstoff;
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
@@ -383,6 +484,8 @@ public:
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
       default: return;
+    case EFFECT_PREON: SB_Preon(); return;
+    case EFFECT_POSTOFF: SB_Postoff(); return;
       case EFFECT_STAB:
 	if (SFX_stab) { PlayCommon(&SFX_stab); return; }
 	// If no stab sounds are found, fall through to clash
@@ -538,7 +641,7 @@ public:
 
   void SetHumVolume(float vol) override {
     if (!monophonic_hum_) {
-      if (state_ != STATE_OFF && !hum_player_) {
+      if (active_state() && !hum_player_) {
         hum_player_ = GetFreeWavPlayer();
         if (hum_player_) {
           hum_player_->set_volume_now(0);
@@ -550,6 +653,7 @@ public:
       if (!hum_player_) return;
       uint32_t m = micros();
       switch (state_) {
+        case STATE_WAIT_FOR_ON:
         case STATE_OFF:
           volume_ = 0.0f;
           return;
@@ -591,12 +695,29 @@ public:
     hum_player_->set_volume(vol);
   }
 
+  bool check_postoff_ = false;
+  void Loop() override {
+    if (state_ == STATE_WAIT_FOR_ON) {
+      if (!GetWavPlayerPlaying(&SFX_preon)) {
+	SaberBase::TurnOn();
+	return;
+      }
+    }
+    if (check_postoff_) {
+      if (!GetWavPlayerPlaying(&SFX_in) &&
+	  !GetWavPlayerPlaying(&SFX_poweroff) &&
+	  !GetWavPlayerPlaying(&SFX_pwroff)) {
+	check_postoff_ = false;
+	SaberBase::DoEffect(EFFECT_POSTOFF, 0);
+      }
+    }
+  }
   bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
-    if (state_ != STATE_OFF && !(SFX_lockup && SaberBase::Lockup())) {
+    if (active_state() && !(SFX_lockup && SaberBase::Lockup())) {
       StartSwing(gyro,
-                 font_config.ProffieOSSwingSpeedThreshold,
-                 font_config.ProffieOSSlashAccelerationThreshold);
+		 font_config.ProffieOSSwingSpeedThreshold,
+		 font_config.ProffieOSSlashAccelerationThreshold);
     }
   }
 

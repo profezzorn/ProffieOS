@@ -80,7 +80,7 @@ public:
   }
 private:
   Vec3 angle_;
-  DF df_;
+  PONUA DF df_;
 };
 
 #endif

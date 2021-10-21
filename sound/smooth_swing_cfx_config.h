@@ -3,16 +3,16 @@
 
 class SmoothSwingCFXConfigFile : public ConfigFile {
 public:
-  void SetVariable(const char* variable, float v) override {
-    CONFIG_VARIABLE(smooth_mode, 1);
-    CONFIG_VARIABLE(smooth_sens, 450.0f);
-    CONFIG_VARIABLE(smooth_dampen, 75.0f);
-    CONFIG_VARIABLE(smooth_sharp, 1.75f);
-    CONFIG_VARIABLE(smooth_gate, 20.0f);
-    CONFIG_VARIABLE(smooth_width1, 45.0f);
-    CONFIG_VARIABLE(smooth_width2, 160.0f);
-    CONFIG_VARIABLE(smooth_gain, 100.0f);
-    CONFIG_VARIABLE(hswing, 450.0f);
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(smooth_mode, 1);
+    CONFIG_VARIABLE2(smooth_sens, 450.0f);
+    CONFIG_VARIABLE2(smooth_dampen, 75.0f);
+    CONFIG_VARIABLE2(smooth_sharp, 1.75f);
+    CONFIG_VARIABLE2(smooth_gate, 20.0f);
+    CONFIG_VARIABLE2(smooth_width1, 45.0f);
+    CONFIG_VARIABLE2(smooth_width2, 160.0f);
+    CONFIG_VARIABLE2(smooth_gain, 100.0f);
+    CONFIG_VARIABLE2(hswing, 450.0f);
   };
 
   int smooth_mode;

@@ -43,6 +43,7 @@ public:
 BuiltinPresetAllocator builtin_preset_allocator;
 
 NamedStyle named_styles[] = {
+#ifndef DISABLE_BASIC_PARSER_STYLES
   { "standard", StyleNormalPtrX<RgbArg<1, CYAN>, RgbArg<2, WHITE>, IntArg<3, 300>, IntArg<4, 800>>(),
     "Standard blade, color, clash color, extension time, retraction time",
   },
@@ -97,8 +98,18 @@ NamedStyle named_styles[] = {
     "Rainbow blade, extension time, retraction time"
   },
   { "charging", &style_charging, "Charging style" },
+#endif
   { "builtin", &builtin_preset_allocator,
-    "builtin preset styles, preset num, style index"
+    // TODO: Support multiple argument templates.
+    "builtin preset styles, "
+    "preset number, blade number, "
+    "base color, alt color, style option, "
+    "ignition option, ignition time, ignition delay, ignition color, ignition power up, "
+    "blast color, clash color, lockup color, lockup position, drag color, drag size, lb color, "
+    "stab color, melt size, swing color, swing option, emitter color, emitter size, "
+    "preon color, preon option, preon size, "
+    "retraction option, retraction time, retraction delay, retraction color, retract cooldown, "
+    "postoff color, off color, off option"
   },
 };
 
@@ -285,11 +296,86 @@ public:
     return LSPtr<char>(ret);
   }
 
+  struct ArgumentIterator {
+    const char* start;
+    const char* end;
+    ArgumentIterator(const char* str_) : start(str_) {
+      end = str_ + StyleIdentifierLength(str_);
+    }
+    void next() {
+      start = end;
+      end = SkipWord(end);
+    }
+    operator bool() const { return end > start; }
+    int len() const {
+      if (end == start) return 2;
+      return end - start;
+    }
+    void append(char** to) const {
+      int l = len();
+      memcpy(*to, end == start ? " ~" : start, l);
+      (*to) += l;
+      **to = 0;
+    }
+  };
+
+  static bool keep(int arg, const int* arguments_to_keep, size_t arguments_to_keep_len) {
+    if (arg == 0) return true;
+    for (size_t x = 0; x < arguments_to_keep_len; x++)
+      if (arguments_to_keep[x] == arg)
+	return true;
+    return false;
+  }
+
+  // Takes the style identifier "builtin X Y" from |to| and the
+  // arguments from |from| and puts them together into one string.
+  // Arguments listed in |arguments_to_keep| are also taken from the |from| string.
+  LSPtr<char> CopyArguments(const char* from, const char* to, const int* arguments_to_keep, size_t arguments_to_keep_len) {
+    int len = 0;
+    {
+      ArgumentIterator FROM(from);
+      ArgumentIterator TO(to);
+      for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
+	if (keep(arg, arguments_to_keep, arguments_to_keep_len)) {
+	  len += TO.len();
+	} else {
+	  len += FROM.len();
+	}
+      }
+    }
+    char* ret = (char*) malloc(len + 1);
+    if (ret) {
+      char* tmp = ret;
+      ArgumentIterator FROM(from);
+      ArgumentIterator TO(to);
+      for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
+	if (keep(arg, arguments_to_keep, arguments_to_keep_len)) {
+	  TO.append(&tmp);
+	} else {
+	  FROM.append(&tmp);
+	}
+      }
+    }
+    // STDOUT << "CopyArguments(from=" << from << " to=" << to << ") = " << ret << "\n";
+#if defined(DEBUG)
+    if (strlen(ret) != len) {
+      STDOUT << "FATAL ERROR IN COPYARGUMENTS: len = " << len << " strlen = " << strlen(ret) << "\n";
+    }
+#endif    
+    return LSPtr<char>(ret);
+  }
+
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "list_named_styles")) {
       // Just print one per line.
-      for (size_t i = 0; i < NELEM(named_styles); i++) {
+      // Skip the last one (builtin)
+      for (size_t i = 0; i < NELEM(named_styles) - 1; i++) {
 	STDOUT.println(named_styles[i].name);
+      }
+      for (size_t i = 0; i < current_config->num_presets; i++) {
+	for (size_t j = 1; j <= NUM_BLADES; j++) {
+	  STDOUT << "builtin " << i << " " << j << "\n";
+	}
       }
       return true;
     }
@@ -297,7 +383,7 @@ public:
     if (!strcmp("describe_named_style", cmd)) {
       if (NamedStyle* style = FindStyle(arg)) {
 	STDOUT.println(style->description);
-	ArgParserPrinter arg_parser_printer;
+	ArgParserPrinter arg_parser_printer(SkipWord(arg));
 	CurrentArgParser = &arg_parser_printer;
 	do {
 	  BladeStyle* tmp = style->style_allocator->make();

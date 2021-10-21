@@ -14,7 +14,11 @@
 // Break out template-invariant functionality to save memory.
 class RgbArgBase {
 public:
-  void run(BladeBase* base) {}
+  LayerRunResult run(BladeBase* base) {
+    if (color_.r == 0 && color_.g == 0 && color_.b == 0)
+      return LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
+    return LayerRunResult::UNKNOWN;
+  }
   SimpleColor getColor(int led) {
     return SimpleColor(color_);
   }

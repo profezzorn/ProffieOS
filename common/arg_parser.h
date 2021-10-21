@@ -1,6 +1,8 @@
 #ifndef COMMON_ARG_PARSER_H
 #define COMMON_ARG_PARSER_H
 
+#include "strfun.h"
+
 class ArgParserInterface {
 public:
   virtual const char* GetArg(int arg_num,
@@ -19,26 +21,6 @@ bool FirstWord(const char *str, const char *word) {
   if (*word) return false;
   if (*str == ' ' || *str == '\t') return true;
   return false;
-}
-
-const char* SkipSpace(const char* str) {
-  while (*str == ' ' || *str == '\t') str++;
-  return str;
-}
-
-const char* SkipWord(const char* str) {
-  str = SkipSpace(str);
-  while (*str != ' ' && *str != '\t' && *str) str++;
-  return str;
-}
-
-int CountWords(const char* str) {
-  int words = 0;
-  while (*str) {
-    str = SkipWord(str);
-    words++;
-  }
-  return words;
 }
 
 class ArgParser : public ArgParserInterface {
@@ -63,12 +45,13 @@ public:
   void Shift(int words) override {
     while (words-- > 0) str_ = SkipWord(str_);
   }
-private:
+protected:
   const char* str_;
 };
 
-class ArgParserPrinter : public ArgParserInterface {
+class ArgParserPrinter : public ArgParser {
 public:
+  ArgParserPrinter(const char* data) : ArgParser(data), data_(data) {}
   const char* GetArg(int arg_num,
 		     const char* name,
 		     const char* default_value) override {
@@ -77,22 +60,34 @@ public:
       STDOUT.print(name);
       STDOUT.print(" ");
       STDOUT.println(default_value);
-      try_again = true;
       current_arg++;
     }
-    return nullptr;
+    if (arg_num > max_arg) {
+      max_arg = arg_num;
+    }
+    return ArgParser::GetArg(arg_num, name, default_value);
   }
   bool next() {
+//    STDOUT << current_arg << " " << max_arg << "\n";
+    if (current_arg == start_current_arg && max_arg > current_arg) {
+      STDOUT.println("VOID ~");
+      current_arg++;
+    }
+    start_current_arg = current_arg;
     offset = 0;
-    bool ret = try_again;
-    try_again = false;
-    return ret;
+    str_ = data_; // reset ArgParser
+    return current_arg <= max_arg;
   }
   
-  void Shift(int words) override { offset += words; }
+  void Shift(int words) override {
+    offset += words;
+    ArgParser::Shift(words);
+  }
   int offset = 0;
-  bool try_again = false;
+  int max_arg = 0;
   int current_arg = 1;
+  int start_current_arg = 1;
+  const char* data_;
 };
 
 

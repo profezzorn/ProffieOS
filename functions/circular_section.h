@@ -49,8 +49,8 @@ public:
     return black_mix;
   }
 private:
-  POSITION pos_;
-  FRACTION fraction_;
+  PONUA POSITION pos_;
+  PONUA FRACTION fraction_;
   
   uint32_t start_;
   uint32_t end_;

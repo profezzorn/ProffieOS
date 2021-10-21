@@ -21,8 +21,10 @@ public:
   }
 
 private:
-  F f_;
-  V v_;
+  PONUA F f_;
+  PONUA V v_;
 };
+
+template<class F, class V> using IsGreaterThan = IsLessThan<V, F>;
 
 #endif

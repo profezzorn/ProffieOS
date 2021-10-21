@@ -63,11 +63,12 @@
 // it into a stream of samples. Note that because it can
 // spend some time reading data between samples, the
 // reader must have enough buffers to provide smooth playback.
-class PlayWav : StateMachine, public AudioStream {
+class PlayWav : StateMachine, public ProffieOSAudioStream {
 public:
   void Play(const char* filename) {
     if (!*filename) return;
     strcpy(filename_, filename);
+    new_file_id_ = Effect::FileID();
     run_ = true;
   }
 
@@ -77,7 +78,9 @@ public:
 
   void PlayOnce(Effect* effect, float start = 0.0) {
     sample_bytes_ = 0;
-    if (effect->Play(filename_)) {
+    new_file_id_ = effect->RandomFile();
+    if (new_file_id_) {
+      new_file_id_.GetName(filename_);
       start_ = start;
       effect_ = nullptr;
       run_ = true;
@@ -192,9 +195,8 @@ private:
     STATE_MACHINE_BEGIN();
     while (true) {
       while (!run_ && !effect_) YIELD();
-      new_file_id_ = Effect::FileID();
       if (!run_) {
-        new_file_id_ = effect_->RandomFile();
+	new_file_id_ = old_file_id_.GetFollowing(effect_);
         if (!new_file_id_) goto fail;
         new_file_id_.GetName(filename_);
         run_ = true;
@@ -373,9 +375,14 @@ public:
     return filename_;
   }
 
+  Effect::FileID current_file_id() const {
+    return new_file_id_;
+  }
+
 private:
   volatile bool run_ = false;
   Effect* volatile effect_ = nullptr;
+  // If we're playing from an Effect, this file ID is the file we're actually playing.
   Effect::FileID new_file_id_;
   Effect::FileID old_file_id_;
   char filename_[128];

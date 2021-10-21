@@ -34,9 +34,9 @@ public:
     f_.run(blade);
   }
 private:
-  A a_;
-  B b_;
-  F f_;
+  PONUA A a_;
+  PONUA B b_;
+  PONUA F f_;
 public:
   auto getColor(int led) -> decltype(MixColors(a_.getColor(led), b_.getColor(led), f_.getInteger(led), 15)) {
     return MixColors(a_.getColor(led), b_.getColor(led), f_.getInteger(led), 15);
@@ -52,7 +52,7 @@ public:
     a_.run(blade);
   }
 private:
-  A a_;
+  PONUA A a_;
 public:
   auto getColor(int x, int led) -> decltype(a_.getColor(led)) {
     return a_.getColor(led);
@@ -67,8 +67,8 @@ public:
     b_.run(blade);
   }
 private:
-  A a_;
-  MixHelper<B...> b_;
+  PONUA A a_;
+  PONUA MixHelper<B...> b_;
 public:  
   auto getColor(int x, int led) -> decltype(MixColors(a_.getColor(led), b_.getColor(x - 1, led), 1, 1)) {
     if (x == 0) return a_.getColor(led);
@@ -85,8 +85,8 @@ public:
     f_.run(blade);
   }
 private:
-  MixHelper<A, B, COLORS...> colors_;
-  F f_;
+  PONUA MixHelper<A, B, COLORS...> colors_;
+  PONUA F f_;
 public:  
   auto getColor(int led) -> decltype(colors_.getColor(1,1)) {
     int x = f_.getInteger(led);

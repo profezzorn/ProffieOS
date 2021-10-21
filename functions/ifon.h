@@ -25,8 +25,8 @@ public:
   }
 
 private:
-  IFON ifon_;
-  IFOFF ifoff_;
+  PONUA IFON ifon_;
+  PONUA IFOFF ifoff_;
   bool on_;
 };
 
@@ -64,8 +64,8 @@ public:
   int getInteger(int led) { return ret_; }
 
 private:
-  OUT_MILLIS out_millis_;
-  IN_MILLIS in_millis_;
+  PONUA OUT_MILLIS out_millis_;
+  PONUA IN_MILLIS in_millis_;
   float extension = 0.0;
   uint32_t last_micros_;
   int ret_;
@@ -91,7 +91,7 @@ public:
     return 32768 - clampi32(thres - led * 32768, 0, 32768);
   }
 private:
-  EXTENSION extension_;
+  PONUA EXTENSION extension_;
   int thres = 0;
 };
 

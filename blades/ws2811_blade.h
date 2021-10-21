@@ -15,7 +15,7 @@ BladeBase* current_blade = NULL;
 class WS2811PIN {
 public:
   virtual bool IsReadyForBeginFrame() = 0;
-  virtual void BeginFrame() = 0;
+  virtual Color16 *BeginFrame() = 0;
   virtual bool IsReadyForEndFrame() = 0;
   virtual void EndFrame() = 0;
   virtual int num_leds() const = 0;
@@ -25,8 +25,8 @@ public:
 
 #if VERSION_MAJOR >= 4
 
-// Common, size adjusted to ~1000 interrupts per second.
-DMAMEM uint32_t displayMemory[400];
+// Common, size adjusted to ~2000 interrupts per second.
+DMAMEM uint32_t displayMemory[200];
 #include "stm32l4_ws2811.h"
 #define DefaultPinClass WS2811Pin
 
@@ -63,23 +63,23 @@ WS2811_Blade(WS2811PIN* pin,
       power_->Init();
       TRACE(BLADE, "Power on");
       pin_->Enable(true);
-      pin_->BeginFrame();
-      for (int i = 0; i < pin_->num_leds(); i++) color_buffer[i] = Color16();
+      colors_ = pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
       while (!pin_->IsReadyForEndFrame());
       power_->Power(on);
       pin_->EndFrame();
-      pin_->BeginFrame();
+      colors_ = pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
       pin_->EndFrame();
-      pin_->BeginFrame();
+      colors_ = pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
       pin_->EndFrame();
       current_blade = NULL;
     } else if (powered_ && !on) {
       TRACE(BLADE, "Power off");
-      pin_->BeginFrame();
-      for (int i = 0; i < pin_->num_leds(); i++) color_buffer[i] = Color16();
-      while (!pin_->IsReadyForEndFrame());
+      colors_ = pin_->BeginFrame();
+      for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
       pin_->EndFrame();
-      while (!pin_->IsReadyForEndFrame());
       power_->Power(on);
       pin_->Enable(false);
       power_->DeInit();
@@ -118,7 +118,9 @@ WS2811_Blade(WS2811PIN* pin,
     return on_;
   }
   void set(int led, Color16 c) override {
-    color_buffer[led] = c;
+    Color16* pos = colors_ + led;
+    if (pos >= color_buffer + NELEM(color_buffer)) pos -= NELEM(color_buffer);
+    *pos = c;
   }
   void allow_disable() override {
     if (!on_) allow_disable_ = true;
@@ -143,11 +145,13 @@ WS2811_Blade(WS2811PIN* pin,
     on_ = true;
     power_off_requested_ = false;
   }
-  void SB_PreOn(float* delay) override {
-    AbstractBlade::SB_PreOn(delay);
-    // This blade uses EFFECT_PREON, so we need to turn the power on now.
-    run_ = true;
-    power_off_requested_ = false;
+  void SB_Effect2(BladeEffectType type, float location) override {
+    AbstractBlade::SB_Effect2(type, location);
+    if (type == EFFECT_PREON) {
+      // This blade uses EFFECT_PREON, so we need to turn the power on now.
+      run_ = true;
+      power_off_requested_ = false;
+    }
   }
   void SB_Off(OffType off_type) override {
     TRACE(BLADE, "SB_Off");
@@ -222,7 +226,7 @@ protected:
 
       // Update pixels
       while (!pin_->IsReadyForBeginFrame()) BLADE_YIELD();
-      pin_->BeginFrame();
+      colors_ = pin_->BeginFrame();
       
       allow_disable_ = false;
       current_style_->run(this);
@@ -261,6 +265,7 @@ private:
   StateMachineState state_machine_;
   PowerPinInterface* power_;
   WS2811PIN* pin_;
+  Color16* colors_;
 };
 
 

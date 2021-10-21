@@ -164,8 +164,9 @@ SAM_CORE_S_SRCS := $(wildcard $(SAM_CORE_PATH)/*.S)
 
 # Use arm-toolchain from Arduino install if exists and user has not defined global version
 ifndef ARM_TOOLS_DIR
-#    ARM_TOOLS_DIR = $(call dir_if_exists,$(wildcard $(ARDUINO_PACKAGE_DIR)/$(ARDMK_VENDOR)/tools/$(TOOL_PREFIX)-gcc/7-2017q4))
-    ARM_TOOLS_DIR = $(call dir_if_exists,$(wildcard $(ARDUINO_PACKAGE_DIR)/$(ARDMK_VENDOR)/tools/$(TOOL_PREFIX)-gcc/*))
+#    ARM_TOOLS_DIR = $(call dir_if_exists,$(wildcard $(ARDUINO_PACKAGE_DIR)/$(ARDMK_VENDOR)/tools/$(TOOL_PREFIX)-gcc/9-2020-q2-update))
+#    ARM_TOOLS_DIR = $(call dir_if_exists,$(wildcard $(ARDUINO_PACKAGE_DIR)/$(ARDMK_VENDOR)/tools/$(TOOL_PREFIX)-gcc/*))
+    ARM_TOOLS_DIR = $(call dir_if_exists,$(wildcard $(ARDUINO_PACKAGE_DIR)/proffieboard/tools/$(TOOL_PREFIX)-gcc/*))
 
     $(call show_config_variable,ARM_TOOLS_DIR,[COMPUTED],(from ARDUINO_PACKAGE_DIR))
 else
@@ -405,14 +406,20 @@ CPPFLAGS += -DMD -DUSB_TYPE=$(USB_TYPE) '-DUSB_PRODUCT=$(USB_PRODUCT)' '-DUSB_MA
 # Get extra define flags from boards.txt
 EXFLAGS := $(shell echo $(call PARSE_BOARD,$(BOARD_TAG),build.extra_flags) | grep -oE '(-D)[^ ]+')
 $(call show_config_variable,EXTRA FLAGS,[COMPUTED])
-XFLAGS=-ffast-math -fsingle-precision-constant -D__FPU_PRESENT=1 -march=armv7e-m -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mabi=aapcs -mslow-flash-data -DDOSFS_SDCARD=1 -DUSB_DID=0xffff -D_SYSTEM_CORE_CLOCK_=80000000L -D_ARDUINO_STM32L4
+XFLAGS=-ffast-math -fsingle-precision-constant -D__FPU_PRESENT=1 -march=armv7e-m -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mabi=aapcs -mslow-flash-data -DUSB_DID=0xffff -D_SYSTEM_CORE_CLOCK_=80000000L -D_ARDUINO_STM32L4
+
+ifeq ($(BOARD_TAG),ProffieboardV2-L433CC)
+  XFLAGS += -DDOSFS_SDCARD=1
+else
+  XFLAGS += -DDOSFS_SDCARD=3
+endif
 
 # Strip only defines from extra flags as boards file appends user {build.usb}
 CPPFLAGS += $(EXFLAGS) $(XFLAGS)
 CPPFLAGS += -DUSB_VID=$(USB_VID)
 CPPFLAGS += -DUSB_PID=$(USB_PID)
 # Cortex compiler flags
-CPPFLAGS += -mthumb -nostdlib -fno-exceptions -Wl,-Map=$(OBJDIR)/$(TARGET).map
+CPPFLAGS += -mthumb -nostdlib -fno-exceptions -Wl,-Map=$(OBJDIR)/$(TARGET).map 
 #CPPFLAGS += -mthumb -nostdlib --param max-inline-insns-single=500 -fno-exceptions -Wl,-Map=$(OBJDIR)/$(TARGET).map
 CXXFLAGS += -fno-rtti -fno-threadsafe-statics -felide-constructors -std=gnu++11
 
@@ -426,7 +433,12 @@ LINKER_SCRIPTS := -T$(ALTERNATE_CORE_PATH)/variants/$(VARIANT)/$(BOARD_LINKER_SC
 OTHER_LIBS := $(call PARSE_BOARD,$(BOARD_TAG),build.flags.libs)
 
 LDFLAGS += --specs=nano.specs -mthumb -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--start-group
-LDFLAGS += -L$(LIB_PATH) -lstm32l433 -larm_cortexM4lf_math -lc -lm
+ifeq ($(BOARD_TAG),ProffieboardV3-L452RE)
+  LDFLAGS += -L$(LIB_PATH) -lstm32l452 -larm_cortexM4lf_math -lm
+else
+  LDFLAGS += -L$(LIB_PATH) -lstm32l433 -larm_cortexM4lf_math -lm
+  # LDFLAGS += -L$(LIB_PATH) -lstm32l433 -larm_cortexM4lf_math -lc -lm
+endif
 
 # OpenOCD reset command only for now
 ifeq ($(strip $(UPLOAD_TOOL)), openocd)

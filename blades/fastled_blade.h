@@ -101,11 +101,14 @@ public:
     delay(10);
     on_ = true;
   }
-  void SB_PreOn(float* d) override {
-    AbstractBlade::SB_PreOn(d);
-    Power(true);
-    delay(10);
+  void SB_Effect2(BladeEffectType type, float location) override {
+    AbstractBlade::SB_Effect2(type, location);
+    if (type == EFFECT_PREON) {
+      Power(true);
+      delay(10);
+    }
   }
+  
   void SB_Off(OffType off_type) override {
     AbstractBlade::SB_Off(off_type);
     on_ = false;

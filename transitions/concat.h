@@ -59,7 +59,7 @@ private:
     A a_;
     TrConcat<B...> b_;
   };
-  INTERMEDIATE intermediate_;
+  PONUA INTERMEDIATE intermediate_;
 public:  
   template<class X, class Y>
     auto getColor(const X& a, const Y& b, int led) -> decltype(MixColors(a_.getColor(a, intermediate_.getColor(led), led),
@@ -94,9 +94,9 @@ public:
   
 private:
   bool run_a_ = false;
-  A a_;
-  TrConcat<B...> b_;
-  INTERMEDIATE intermediate_;
+  PONUA A a_;
+  PONUA TrConcat<B...> b_;
+  PONUA INTERMEDIATE intermediate_;
 public:  
   template<class X, class Y>
     auto getColor(const X& a, const Y& b, int led) -> decltype(MixColors(a_.getColor(a, intermediate_.getColor(led), led),

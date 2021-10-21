@@ -12,6 +12,11 @@
 #define noInterrupts() do {} while(0)
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 #define SCOPED_PROFILER() do { } while(0)
+#define NUM_BLADES 1
+
+struct CONFIG { struct Preset* presets; size_t num_presets;};
+CONFIG preset = { 0,0 };
+CONFIG* current_config = &preset;
 
 #define PROFFIE_TEST
 
@@ -56,33 +61,6 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   return x;
 }
 
-struct  Print {
-  void print(const char* s) { fprintf(stdout, "%s", s); }
-  void print(float v) { fprintf(stdout, "%f", v); }
-  void print(int v, int base) { fprintf(stdout, "%d", v); }
-  void write(char s) { putchar(s); }
-  template<class T>
-  void println(T s) { print(s); putchar('\n'); }
-};
-
-template<typename T, typename X = void> struct PrintHelper {
-  static void out(Print& p, T& x) { p.print(x); }
-};
-
-template<typename T> struct PrintHelper<T, decltype(((T*)0)->printTo(*(Print*)0))> {
-  static void out(Print& p, T& x) { x.printTo(p); }
-};
-
-struct ConsoleHelper : public Print {
-  template<typename T, typename Enable = void>
-  ConsoleHelper& operator<<(T v) {
-    PrintHelper<T>::out(*this, v);
-    return *this;
-  }
-};
-
-ConsoleHelper STDOUT;
-
 int random(int x) { return (rand() & 0x7fffff) % x; }
 class Looper {
 public:
@@ -111,6 +89,15 @@ struct MockDynamicMixer {
 
 MockDynamicMixer dynamic_mixer;
 
+#include "../common/common.h"
+#include "../common/stdout.h"
+Print* default_output;
+Print* stdout_output;
+ConsoleHelper STDOUT;
+
+Monitoring monitor;
+
+#include "../common/stdout.h"
 #include "../common/color.h"
 #include "../blades/blade_base.h"
 #include "cylon.h"
@@ -174,6 +161,8 @@ bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 uint32_t SaberBase::current_variation_ = 0;
 float SaberBase::sound_length = 0.0;
+int SaberBase::sound_number = -1;
+
 
 bool on_ = true;
 bool allow_disable_ = false;
@@ -466,8 +455,16 @@ void test_style2() {
   }
 }
 
+template<class T>
+class StyleTester : public Style<T> {
+public:
+  void StyleType() {
+    fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
+  }
+};
+
 void test_style3() {
-  Style<Layers<
+  StyleTester<Layers<
     Black,
 	  TransitionEffectL<TrWaveX<Green,Int<400>,Int<100>,Int<600>,Scale<BladeAngle<>,Scale<BladeAngle<0,16000>,Int<10000>,Int<30000>>,Int<10000>>>,EFFECT_LOCKUP_END>,
 	  ResponsiveLockupL<Blue,TrConcat<TrInstant,AlphaL<Red,Bump<Scale<BladeAngle<>,Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,Int<6000>>,Int<16000>>>,TrFade<400>>,TrInstant,Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,Int<6000>,Scale<SwingSpeed<100>,Int<10000>,Int<14000>>>,
@@ -478,6 +475,9 @@ void test_style3() {
 	  LockupTrL<AlphaL<BrownNoiseFlickerL<White,Int<300>>,SmoothStep<Int<30000>,Int<5000>>>,TrWipeIn<400>,TrFade<300>,SaberBase::LOCKUP_DRAG>,
 	  LockupTrL<AlphaL<Mix<TwistAngle<>,Coral,Orange>,SmoothStep<Int<28000>,Int<5000>>>,TrWipeIn<600>,TrFade<300>,SaberBase::LOCKUP_MELT>,
 	  InOutTrL<TrWipe<300>,TrWipeIn<500>>>> t1;
+
+  t1.StyleType();
+  fprintf(stderr, "RAM USAGE: %ld\n", sizeof(t1));
 
   Color16 c = get_color_when_on(&t1);
   if (c.r != 0 || c.g != 0 || c.b != 0) {
@@ -541,7 +541,28 @@ void testCopyArguments(const char* from, const char *to, int N, const char* expe
   fprintf(stderr, "testCopyArguments(%s, %s, %d)\n", from, to, N);
   LSPtr<char> ret = style_parser.CopyArguments(from, to, N);
   if (strcmp(ret.get(), expected)) {
-    fprintf(stderr, "Expected '%s' got '%s'\n", expected, ret.get());
+    fprintf(stderr, "Expected '%s' got '%s' (1)\n", expected, ret.get());
+    exit(1);
+  }
+
+  int to_keep[50];
+  for (int i = 0; i < 50; i++) to_keep[i] = N + i + 1;
+  LSPtr<char> ret2 = style_parser.CopyArguments(from, to, to_keep, 50);
+  if (strcmp(ret2.get(), expected)) {
+    fprintf(stderr, "Expected '%s' got '%s' (2)\n", expected, ret2.get());
+    exit(1);
+  }
+}
+
+void testCopyArguments(const char* from, const char *to, int keep1, int keep2, int keep3, const char* expected) {
+  int to_keep[3];
+  to_keep[0] = keep1;
+  to_keep[1] = keep2;
+  to_keep[2] = keep3;
+  fprintf(stderr, "testCopyArguments(%s, %s, %d, %d, %d)\n", from, to, keep1, keep2, keep3);
+  LSPtr<char> ret = style_parser.CopyArguments(from, to, to_keep, 3);
+  if (strcmp(ret.get(), expected)) {
+    fprintf(stderr, "Expected '%s' got '%s' (1)\n", expected, ret.get());
     exit(1);
   }
 }
@@ -581,6 +602,14 @@ void test_argument_parsing() {
   testCopyArguments("standard 1 2 3", "blarg 7 8 9", 2, "blarg 1 2 9");
   testCopyArguments("standard 1 2 3", "blarg 7 8 9", 1, "blarg 1 8 9");
   testCopyArguments("standard 1 2 3", "blarg 7 8 9", 0, "blarg 7 8 9");
+
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 1, 2, 3, "blarg 7 8 9");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 1, 1, 1, "blarg 7 2 3");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9", 1, 1, 3, "blarg 7 2 9");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9 A B C", 1, 1, 3, "blarg 7 2 9 ~ ~ ~");
+  testCopyArguments("standard 1 2 3", "blarg 7 8 9 A B C", 4, 5, 6, "blarg 1 2 3 A B C");
+  testCopyArguments("standard 1 2 3 4 5 6", "blarg 7 8 9", 1, 2, 3, "blarg 7 8 9 4 5 6");
+  testCopyArguments("standard 1 22 333 44444 55555 666666", "blarg 7 8 9", 1, 2, 3, "blarg 7 8 9 44444 55555 666666");
 
   testMaxUsedArgument("charging", 0);
   testMaxUsedArgument("rainbow", 2);

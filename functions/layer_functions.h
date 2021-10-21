@@ -24,8 +24,8 @@ class LayerFunctions<A, B...> {
   }
 
 private:
-  A a_;
-  LayerFunctions<B...> b_;
+  PONUA A a_;
+  PONUA LayerFunctions<B...> b_;
 };
 
 #endif

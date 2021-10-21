@@ -24,7 +24,11 @@ public:
   
   IrTransmitterSTM32() {
     stm32l4_timer_create(timer(), TIMER_INSTANCE_TIM16, STM32L4_PWM_IRQ_PRIORITY, 0);
-    stm32l4_dma_create(&dma_, DMA_CHANNEL_DMA1_CH6_TIM16_UP, STM32L4_PWM_IRQ_PRIORITY); // Could be CH3 instead?
+#if PROFFIEBOARD_VERSION == 3
+    stm32l4_dma_create(&dma_, DMA_CHANNEL_DMA1_CH3_TIM16_UP, STM32L4_PWM_IRQ_PRIORITY);
+#else
+    stm32l4_dma_create(&dma_, DMA_CHANNEL_DMA1_CH6_TIM16_UP, STM32L4_PWM_IRQ_PRIORITY);
+#endif
 
     digitalWrite(pin(), LOW);
     stm32l4_gpio_pin_configure(g_APinDescription[pin()].pin,

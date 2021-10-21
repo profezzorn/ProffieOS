@@ -47,4 +47,55 @@ bool endswith(const char *postfix, const char* x) {
   return true;
 }
 
+const char* SkipSpace(const char* str) {
+  while (*str == ' ' || *str == '\t') str++;
+  return str;
+}
+
+const char* SkipWord(const char* str) {
+  str = SkipSpace(str);
+  while (*str != ' ' && *str != '\t' && *str) str++;
+  return str;
+}
+
+int CountWords(const char* str) {
+  int words = 0;
+  while (*str) {
+    str = SkipWord(str);
+    words++;
+  }
+  return words;
+}
+
+float parsefloat(const char* s) {
+  float ret = 0.0;
+  float sign = 1.0;
+  float mult = 1.0;
+  s = SkipSpace(s);
+  if (*s == '-') {
+    sign = -1.0;
+    s++;
+  }
+  while (*s) {
+    int c = *s;
+    if (c >= '0' && c <= '9') {
+      if (mult == 1.0) {
+	ret = (c - '0') + 10 * ret;
+      } else {
+	ret += (c - '0') * mult;
+	mult /= 10.0;
+      }
+      s++;
+    } else if (c == '.') {
+      if (mult != 1.0) return ret * sign;
+      // Time to read decimals.
+      mult /= 10.0;
+      s++;
+    } else {
+      return ret * sign;
+    }
+  }
+  return ret * sign;
+}
+
 #endif

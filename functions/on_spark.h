@@ -32,7 +32,7 @@ private:
   bool on_;
   int mix_;
   uint32_t on_millis_;
-  MILLIS millis_;
+  PONUA MILLIS millis_;
 };
 
 #endif

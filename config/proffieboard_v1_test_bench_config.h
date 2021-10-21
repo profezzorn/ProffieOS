@@ -66,6 +66,7 @@ const unsigned int maxLedsPerStrip = 196;
 // #define BLADE_DETECT_PIN aux2Pin
 
 // #define ENABLE_TRACING TRACE_CATEGORY_MOTION | TRACE_CATEGORY_I2C
+#define ENABLE_TRACING TRACE_CATEGORY_BLADE
 
 #define FILTER_CUTOFF_FREQUENCY 150
 #define FILTER_ORDER 8
@@ -85,9 +86,11 @@ RFID_Command RFID_Commands[] = {
 Preset testing_presets[] = {
 #if 1
   { "SmthFuzz", "tracks/cantina.wav",
-    StylePtr<Layers<RandomBlink<3000,Red,Black>,InOutTrL<TrWipe<300>,TrWipeIn<500>,Black>>>(),
+    StyleRainbowPtr<300, 800>(),
+    StyleRainbowPtr<300, 800>(),
+    //StylePtr<Layers<RandomBlink<3000,Red,Black>,InOutTrL<TrWipe<300>,TrWipeIn<500>,Black>>>(),
     // StylePtr<ColorCycle<Rgb<0,0,50>, 10, 35, Cyan, 90, 1000, 6000>>(),
-    StylePtr<Red>(),
+    // StylePtr<Red>(),
     "ONE" },
 #endif  
 #if 0
@@ -216,8 +219,6 @@ Preset testing_presets[] = {
     StylePtr<InOutHelper<SimpleClash<Lockup<Blast<OnSpark<HumpFlicker<BLACK, BLUE, 5>, WHITE, 250>, YELLOW>, AudioFlicker<OnSpark<BLUE, WHITE, 200>, YELLOW>>, AudioFlicker<BLUE, YELLOW>, 200>, 400, 800>>(),
     "ONOFF" },
 #endif
-  { "font02", "tracks/cantina.wav", StyleRainbowPtr<300, 800>(),
-    "=RainboW++\n++BladE++" },
   { "graflex4", "tracks/title.wav", StyleNormalPtr<CYAN, WHITE, 300, 800>(), "cyan" },
   { "graflex4", "tracks/cantina.wav", StyleNormalPtr<BLUE, RED, 300, 800>(), "blue" },
   { "caliban", "tracks/duel.wav", StyleFirePtr<RED, YELLOW>(), "red fire" },
@@ -252,9 +253,9 @@ BladeConfig blades[] = {
     DimBlade(10.0, SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>())),
 //    DimBlade(5.0, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()),
 //    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
-//    WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin2>>(),
+    WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin2>>(),
 //    WS2811BladePtr<30, WS2811_800kHz | WS2811_GRB, blade2Pin, PowerPINS<bladePowerPin2>>(),
-    SaviBladePtr<blade2Pin, PowerPINS<bladePowerPin2>>(),
+//    SaviBladePtr<blade2Pin, PowerPINS<bladePowerPin2>>(),
     CONFIGARRAY(testing_presets) },
 //  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>>(), CONFIGARRAY(testing_presets) }
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
@@ -296,6 +297,6 @@ Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 #endif
 
 #ifdef CONFIG_BOTTOM
-StandardDisplayController<64, uint32_t> display_controller;
-SSD1306Template<64, uint32_t> display(&display_controller);
+StandardDisplayController<128, uint32_t> display_controller;
+SSD1306Template<128, uint32_t> display(&display_controller);
 #endif

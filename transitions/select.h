@@ -41,8 +41,8 @@ public:
 
 private:
   bool begin_ = false;
-  F f_;
-  TrHelper<TRANSITION...> transitions_;
+  PONUA F f_;
+  PONUA TrHelper<TRANSITION...> transitions_;
   TransitionInterface* selected_ = nullptr;
 };
 

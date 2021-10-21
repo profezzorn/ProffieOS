@@ -256,7 +256,11 @@ public:
 
 #else  // teensyduino
     // check return value?
+#if PROFFIEBOARD_VERSION == 3
+    stm32l4_dma_create(&dma, DMA_CHANNEL_DMA2_CH1_SAI1_A, STM32L4_SAI_IRQ_PRIORITY);
+#else
     stm32l4_dma_create(&dma, DMA_CHANNEL_DMA2_CH6_SAI1_A, STM32L4_SAI_IRQ_PRIORITY);
+#endif
 #if defined(ENABLE_I2S_OUT) || defined(ENABLE_SPDIF_OUT)
     stm32l4_dma_create(&dma2, DMA_CHANNEL_DMA2_CH2_SAI1_B, STM32L4_SAI_IRQ_PRIORITY);
     // stm32l4_dma_create(&dma2, DMA_CHANNEL_DMA2_CH7_SAI1_B, STM32L4_SAI_IRQ_PRIORITY);
@@ -323,9 +327,9 @@ public:
                       DMA_OPTION_CIRCULAR);
     SAIx->CR1 |= SAI_xCR1_DMAEN;
 
-#define SAIB_SCK g_SAI1Pins.sck
-#define SAIB_FS g_SAI1Pins.fs
-#define SAIB_SD g_SAI1Pins.sd
+#define SAIB_SCK g_SAIPins.sck
+#define SAIB_FS g_SAIPins.fs
+#define SAIB_SD g_SAIPins.sd
     
 #if PROFFIEBOARD_VERSION < 3
 #undef SAIB_FS
@@ -472,7 +476,7 @@ public:
   }
 
   // TODO: Replace with enable/disable
-  void SetStream(class AudioStream* stream) {
+  void SetStream(class ProffieOSAudioStream* stream) {
     stream_ = stream;
   }
 
@@ -599,7 +603,7 @@ private:
 #ifdef ENABLE_I2S_OUT
   DMAMEM static uint16_t dac_dma_buffer2[AUDIO_BUFFER_SIZE*2*CHANNELS];
 #endif
-  static AudioStream * volatile stream_;
+  static ProffieOSAudioStream * volatile stream_;
   static DMAChannel dma;
 #if defined(ENABLE_I2S_OUT) || defined(ENABLE_SPDIF_OUT)
   static DMAChannel dma2;
@@ -622,7 +626,7 @@ DMAChannel LS_DAC::dma2;
 #endif
 
 #endif
-AudioStream * volatile LS_DAC::stream_ = nullptr;
+ProffieOSAudioStream * volatile LS_DAC::stream_ = nullptr;
 DMAMEM __attribute__((aligned(32))) uint16_t LS_DAC::dac_dma_buffer[AUDIO_BUFFER_SIZE*2*CHANNELS];
 #ifdef ENABLE_SPDIF_OUT
 DMAMEM __attribute__((aligned(32))) uint32_t LS_DAC::dac_dma_buffer2[AUDIO_BUFFER_SIZE*2*2];

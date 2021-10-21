@@ -46,6 +46,9 @@ public:
   float volume() {
     return volume_.value() * (1.0f / (1 << kVolumeShift));
   }
+  int volume_target() {
+    return volume_.target_;
+  }
   void set_volume(int vol) {
     volume_.set_target(vol);
   }

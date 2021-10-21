@@ -29,6 +29,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(DRAG_BEGIN)			\
     DEFINE_EFFECT(DRAG_END)			\
     DEFINE_EFFECT(PREON)			\
+    DEFINE_EFFECT(POSTOFF)			\
     DEFINE_EFFECT(IGNITION)			\
     DEFINE_EFFECT(RETRACTION)			\
     DEFINE_EFFECT(CHANGE)			\
@@ -107,6 +108,7 @@ public:
     OFF_NORMAL,
     OFF_BLAST,
     OFF_IDLE,
+    OFF_CANCEL_PREON,
   };
 
   static bool IsOn() { return on_; }
@@ -158,11 +160,17 @@ public:
   }
 
   static float sound_length;
+  static int sound_number;
+
+  static void ClearSoundInfo() {
+    sound_length = 0.0;
+    sound_number = -1;
+  }
 
 #define SABERFUN(NAME, EFFECT, TYPED_ARGS, ARGS)		\
 public:                                                         \
   static void Do##NAME TYPED_ARGS {                             \
-    sound_length = 0.0                                          \
+    ClearSoundInfo();				                \
     CHECK_LL(SaberBase, saberbases, next_saber_);               \
     for (SaberBase *p = saberbases; p; p = p->next_saber_) {    \
       p->SB_##NAME ARGS;                                        \
@@ -178,7 +186,6 @@ public:                                                         \
 
 #define SABERBASEFUNCTIONS()						\
   SABERFUN(Effect, effect, (EffectType effect, float location), (effect, location)); \
-  SABERFUN(PreOn, EFFECT_PREON, (float* delay), (delay));			\
   SABERFUN(On, EFFECT_IGNITION, (), ());				\
   SABERFUN(Off, EFFECT_RETRACTION, (OffType off_type), (off_type));	\
   SABERFUN(BladeDetect, EFFECT_NONE, (bool detected), (detected));	\
@@ -194,6 +201,7 @@ public:                                                         \
   static void DoBlast() { DoEffectR(EFFECT_BLAST); }
   static void DoForce() { DoEffectR(EFFECT_FORCE); }
   static void DoBoot() { DoEffect(EFFECT_BOOT, 0); }
+  static void DoPreOn() { DoEffect(EFFECT_PREON, 0); }
   static void DoBeginLockup() { DoEffectR(EFFECT_LOCKUP_BEGIN); }
   static void DoEndLockup() { DoEffect(EFFECT_LOCKUP_END, 0); }
   static void DoChange() { DoEffect(EFFECT_CHANGE, 0); }

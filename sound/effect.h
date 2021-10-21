@@ -36,6 +36,21 @@ class Effect {
       effect_->GetName(filename, file_);
     }
 
+    const Effect* GetEffect() const { return effect_; }
+    int GetFileNum() const { return file_; }
+
+    // Maybe this should always use effect_->following_ ??
+    FileID GetFollowing(Effect* effect) {
+      if (effect_ &&
+	  effect_->paired_ &&
+	  effect_->files_found() == effect->files_found() &&
+	  effect->selected_ == -1) {
+	return FileID(effect, file_);
+      } else {
+	return effect->RandomFile();
+      }
+    }
+
    private:
     const Effect* effect_;
     int file_;
@@ -113,6 +128,8 @@ class Effect {
     selected_ = -1;
     num_files_ = 0;
     directory_ = nullptr;
+    volume_ = 100;
+    paired_ = false;
   }
 
   bool Scan(const char *filename) {
@@ -231,7 +248,18 @@ class Effect {
     selected_++;
     if (selected_ == (int)files_found()) selected_ = 0;
   }
-
+  void SelectFloat(float value) {
+    int f = files_found();
+    int sel = clamp(floorf(f * value), 0, f - 1);
+#ifdef NO_REPEAT_RANDOM
+    for (int i = 0; i < 3 && (sel == selected_ || (sel == last_ && (rand() & 1))); i++) {
+      sel = clamp(sel + 1 - (rand() & 2), 0, f - 1);
+    }
+    last_ = selected_;
+#endif
+    selected_ = sel;
+  }
+	
   Effect* GetFollowing() const {
     return following_;
   }
@@ -251,9 +279,13 @@ class Effect {
       default_output->println(name_);
       return FileID();
     }
-    int n = rand() % num_files;
+    int n;
+    if (selected_ != -1) {
+      n = selected_;
+    } else {
+      n = rand() % num_files;
 #ifdef NO_REPEAT_RANDOM
-    switch (num_files) {
+      switch (num_files) {
       default:
 	while (n == last_) n = rand() % num_files;
 	break;
@@ -261,10 +293,10 @@ class Effect {
 	if (n == last_) n = rand() % num_files;
       case 1:
 	break;
-    }
-    last_ = n;
+      }
+      last_ = n;
 #endif
-    if (selected_ != -1) n = selected_;
+    }
     return FileID(this, n);
   }
 
@@ -319,6 +351,12 @@ class Effect {
     default_output->print("Playing ");
     default_output->println(filename);
   }
+
+  void SetPaired(bool i) { paired_ = i; }
+  bool GetPaired() const { return paired_; }
+  void SetVolume(uint8_t v) { volume_ = v; }
+  uint8_t GetVolume() const { return volume_; }
+  const char* GetName() const { return name_; }
 
   // Returns true if file was identified.
   static void ScanAll(const char *dir, const char* filename) {
@@ -429,8 +467,16 @@ private:
   // Leading zeroes are used to make it this many digits.
   int8_t digits_;
 
+  // Volume adjustment in percent.
+  uint8_t volume_;
+
   // If true. there is an un-numbered file as well.
-  bool unnumbered_file_found_;
+  bool unnumbered_file_found_ : 1;
+
+  // If true, we play the same sound number is used when
+  // we play the |folowing_| sound, unless one was specifically
+  // selected.
+  bool paired_ : 1;
 
   FilePattern file_pattern_ = FilePattern::UNKNOWN;
 

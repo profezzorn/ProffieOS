@@ -14,20 +14,45 @@ IMAGE_FILESET(force);
 
 
 template<int Width, class col_t>
-class Display {
+class Display : public MonoFrame<Width, col_t> {
 public:
   virtual void Page() = 0;
   virtual void SB_Top() = 0;
 };
 
 template<int Width, class col_t>
-class DisplayControllerBase : public MonoFrame<Width, col_t> {
+class DisplayControllerBase {
 public:
   // Return zero if frame is not yet ready.
   // May be called before it's time to actually display next frame.
-  virtual int FillFrameBuffer() = 0;
+  virtual int FillFrameBuffer(bool advance) = 0;
   virtual void SetDisplay(Display<Width, col_t>* display) = 0;
 };
+
+#if 0
+class DisplayHelper {
+  DisplayControllerBase *a;
+  int t_;
+  int FillFrameBuffer() {
+    t_ += a->FillFrameBuffer(t_ <= 0);
+  }
+  void Advance(int t) { t_ -= t; }
+};
+class Combine {
+  DisplayHelper a_, b_;
+  int last_t_;
+
+  int FilleFrameBuffer(bool advance) {
+    if (advance) {
+      a_.Advance(last_t_);
+      b_.Advance(last_t_);
+    }
+    int last_t_ = a_.FillFrameBuffer();
+    if (last_t_ > 0) last_t_ = std::min(last_t_, b_.FillFrameBuffer());
+    return last_t_;
+  }
+};
+#endif
 
 template<int Width, class col_t>
 class StandardDisplayController : public DisplayControllerBase<Width, col_t>, SaberBase, private AudioStreamWork {
@@ -35,6 +60,7 @@ public:
   static const int WIDTH = Width;
   static const int HEIGHT = sizeof(col_t) * 8;
   enum Screen {
+    SCREEN_UNSET,
     SCREEN_STARTUP,
     SCREEN_MESSAGE,
     SCREEN_PLI,
@@ -55,7 +81,7 @@ public:
 
   // Clear and go to native mode.
   void Clear() {
-    MonoFrame<WIDTH, col_t>::Clear();
+    display_->Clear();
     layout_ = LAYOUT_NATIVE;
     xor_ = 0;
     invert_y_ = false;
@@ -68,48 +94,81 @@ public:
     case LAYOUT_NATIVE:
       break;
     case LAYOUT_LANDSCAPE:
-      MonoFrame<WIDTH, col_t>::ConvertLandscape(invert_y);
+      display_->ConvertLandscape(invert_y);
       invert_y = false;
       break;
     case LAYOUT_PORTRAIT:
-      MonoFrame<WIDTH, col_t>::ConvertPortrait();
+      display_->ConvertPortrait();
     }
     if (invert_y) {
-      MonoFrame<WIDTH, col_t>::FlipY();
+      display_->FlipY();
     }
     if (xor_) {
-      MonoFrame<WIDTH, col_t>::Invert();
+      display_->Invert();
     }
   }
 
+  uint32_t last_delay_ = 0;
+  uint32_t t_ = 0;  // time since we switched screen
+
   // Fill frame buffer and return how long to display it.
-  int FillFrameBuffer() override {
+  int FillFrameBuffer(bool advance) override {
+    if (advance) {
+      if (next_screen_ != SCREEN_UNSET) {
+	screen_ = next_screen_;
+	next_screen_ = SCREEN_UNSET;
+	t_ = 0;
+      } else {
+	t_ += last_delay_;
+      }
+    }
+    return last_delay_ = FillFrameBuffer2(advance);
+  }
+
+  void ShowDefault() {
+    screen_ = SCREEN_PLI;
+    t_ = 0;
+    if (SaberBase::IsOn()) {
+      if (SaberBase::Lockup() && IMG_lock) {
+	ShowFile(&IMG_lock, 3600000.0);
+      } else if (looped_on_) {
+	ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+      }
+    }
+  }
+    
+  int FillFrameBuffer2(bool advance) {
     switch (screen_) {
       default:
+      case SCREEN_UNSET:
       case SCREEN_OFF:
 	Clear();
-        return 1000;
+        return 3600000; // Long time!
 
       case SCREEN_STARTUP:
 	Clear();
         // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
         // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
 	if (WIDTH < 128) {
-	  MonoFrame<WIDTH, col_t>::DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
+	  display_->DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
 	} else {
-	  MonoFrame<WIDTH, col_t>::DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
+	  display_->DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
 	}
-	MonoFrame<WIDTH, col_t>::DrawText(version,0,31, Starjedi10pt7bGlyphs);
+	display_->DrawText(version,0,31, Starjedi10pt7bGlyphs);
 	if (HEIGHT > 32) {
-	  MonoFrame<WIDTH, col_t>::DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
-	  MonoFrame<WIDTH, col_t>::DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
+	  display_->DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
+	  display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
 	}
-        screen_ = SCREEN_PLI;
+        next_screen_ = SCREEN_PLI;
         return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
+	if (!SaberBase::IsOn() && t_ > font_config.ProffieOSFontImageDuration) {
+	  screen_ = SCREEN_OFF;
+	  return FillFrameBuffer2(advance);
+	}
 	Clear();
-        MonoFrame<WIDTH, col_t>::DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
+	display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
 	if (HEIGHT > 32) {
 	  char tmp[32];
 	  strcpy(tmp, "volts x.xx");
@@ -117,95 +176,78 @@ public:
 	  tmp[6] = '0' + (int)floorf(v);
 	  tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
 	  tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
-	  MonoFrame<WIDTH, col_t>::DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
+	  display_->DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
 	}
         return 200;  // redraw once every 200 ms
 
       case SCREEN_MESSAGE: {
 	Clear();
-     // Aurebesh Font option.
-      #ifdef USE_AUREBESH_FONT
+	// Aurebesh Font option.
+#ifdef USE_AUREBESH_FONT
         const Glyph* font = Aurebesh10pt7bGlyphs;
-      #else
+#else
         const Glyph* font = Starjedi10pt7bGlyphs;
-      #endif
+#endif
         if (strchr(message_, '\n')) {
-          MonoFrame<WIDTH, col_t>::DrawText(message_, 0, 15, font);
+          display_->DrawText(message_, 0, 15, font);
         } else {
 	  // centered
-          MonoFrame<WIDTH, col_t>::DrawText(message_, 0, HEIGHT / 2 + 7, font);
+          display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
-        screen_ = SCREEN_PLI;
+        next_screen_ = SCREEN_PLI;
+	// STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
         return font_config.ProffieOSFontImageDuration;
       }
 
       case SCREEN_IMAGE:
         MountSDCard();
-        if (eof_) {
-          // STDOUT << "EOF " << frame_count_ << "\n";
-          if (!SaberBase::IsOn()) {
-            screen_ = SCREEN_PLI;
-            if (frame_count_ == 1) return font_config.ProffieOSFontImageDuration;
-            return FillFrameBuffer();
-          }
-        }
-        if (!frame_available_) {
+	int count = 0;
+	while (!frame_available_) {
+	  if (count++ > 3) return 0;
+	  if (eof_) advance = false;
+	  advance_ = advance;
 	  lock_fb_ = false;
-          scheduleFillBuffer();
-	  if (!frame_available_) {
-	    return 0;
-	  }
-        }
+	  scheduleFillBuffer();
+	}
 	lock_fb_ = true;
-        frame_count_++;
-        if (SaberBase::IsOn()) {
-          // Single frame image
-          if (looped_frames_ == 1) {
-            if (frame_count_ == 1) {
-	      ConvertToNative();
-	      frame_available_ = false;
-              return effect_display_duration_;
-            }
-            screen_ = SCREEN_PLI;
-            if (SaberBase::Lockup()) {
-              ShowFile(&IMG_lock, 3600000.0);
-	      ConvertToNative();
-              return 3600000;
-            } else {
-              if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
-            }
-          } else {
-            // looped image
-            if (looped_frames_ == frame_count_) {
-              if (millis() - loop_start_ > effect_display_duration_) {
-                if (!SaberBase::Lockup()) {
-                  screen_ = SCREEN_PLI;
-                  if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
-                }
-              }
-            }
-          }
-        } else {
-          if (millis() - loop_start_ > font_config.ProffieOSFontImageDuration) {
-            STDOUT << "END OF LOOP\n";
-            screen_ = SCREEN_PLI;
-          }
-        }
-	ConvertToNative();
-	frame_available_ = false;
-        if (font_config.ProffieOSAnimationFrameRate > 0.0) {
-          return 1000 / font_config.ProffieOSAnimationFrameRate;
-        }
-        if (looped_frames_ > 1) {
-          return 1000 / looped_frames_;
-        } else {
-          return 41;   // ~24 fps
-        }
+        if (eof_) {
+	  // STDERR << "FRAME COUNT @ EOF= " << frame_count_ << " left=" << (effect_display_duration_ - t_) <<  "\n";
+	  if (frame_count_ == 1 && t_ < effect_display_duration_) {
+	    ConvertToNative();
+	    frame_available_ = false;
+	    return effect_display_duration_ - t_;
+	  }
+	} else {
+	  if (frame_available_ && advance) frame_count_++;
+	  if (looped_frames_ == 1 || t_ < effect_display_duration_) {
+	    ConvertToNative();
+	    frame_available_ = false;
+	    if (font_config.ProffieOSAnimationFrameRate > 0.0) {
+	      return 1000 / font_config.ProffieOSAnimationFrameRate;
+	    }
+	    if (looped_frames_ > 1) {
+	      return 1000 / looped_frames_;
+	    } else {
+	      // STDERR << "-> 41\n";
+	      return 41;   // ~24 fps
+	    }
+	  }
+	}
+
+	// STDERR << "MOVING ON...\n";
+
+	// This image/animation is done, time to choose the next thing to display.
+	ShowDefault();
+	return FillFrameBuffer2(advance);
     }
   }
 
   void SB_On() override {
-    ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+    if (!ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration)) {
+      ShowDefault();
+      last_delay_ = t_ = 0;
+      display_->Page();
+    }
   }
 
   void SB_Effect(EffectType effect, float location) override {
@@ -228,12 +270,9 @@ public:
 	ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
 	return;
       case EFFECT_LOCKUP_BEGIN:
-	ShowFile(&IMG_lock, 3600000.0);
-	return;
       case EFFECT_LOCKUP_END:
-	screen_ = SCREEN_PLI;
-	if (looped_on_) ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
-	return;
+	ShowDefault();
+	break;
 
       default: break;
     }
@@ -267,23 +306,25 @@ public:
   }
 
   void SetScreenNow(Screen screen) {
+    // No need to wake the sleeping bear just to tell it to go to bed again.
+    if (screen == SCREEN_OFF && screen_ == SCREEN_OFF) return;
+    last_delay_ = t_ = 0;
     screen_ = screen;
     display_->Page();
   }
 
-  void ShowFile(Effect* effect, float duration) {
-    if (*effect) {
-      MountSDCard();
-      eof_ = true;
-      file_.Play(effect);
-      frame_available_ = false;
-      loop_start_ = millis();
-      frame_count_ = 0;
-      SetScreenNow(SCREEN_IMAGE);
-      eof_ = false;
-      current_effect_ = effect;
-      effect_display_duration_ = duration;
-    }
+  bool ShowFile(Effect* effect, float duration) {
+    if (!*effect) return false;
+    MountSDCard();
+    eof_ = true;
+    file_.Play(effect);
+    frame_available_ = false;
+    frame_count_ = 0;
+    SetScreenNow(SCREEN_IMAGE);
+    eof_ = false;
+    current_effect_ = effect;
+    effect_display_duration_ = duration;
+    return true;
   }
 
   void ShowFile(const char* file) {
@@ -291,7 +332,6 @@ public:
     eof_ = true;
     file_.Play(file);
     frame_available_ = false;
-    loop_start_ = millis();
     frame_count_ = 0;
     SetScreenNow(SCREEN_IMAGE);
     eof_ = false;
@@ -300,7 +340,8 @@ public:
 
   // AudioStreamWork implementation
   size_t space_available() const override {
-    if (eof_ || lock_fb_) return 0;
+    if (lock_fb_) return 0;
+    if (eof_ && advance_) return 0;
     if (frame_available_) return 0;
 
     // Always low priority
@@ -316,8 +357,8 @@ public:
 
   bool ReadImage(FileReader* f) {
     uint32_t file_end = 0;
-    // STDOUT << "ReadImage " << f->Tell() << " size = " << f->FileSize() << "\n";
-    if (ypos_ >= looped_frames_) {
+    // STDERR << "ReadImage " << f->Tell() << " size = " << f->FileSize() << "\n";
+    if (ypos_ >= looped_frames_ || ypos_ == 0) {
       if (looped_frames_ > 1) f->Seek(0);
       ypos_ = 0;
       uint32_t file_start = f->Tell();
@@ -326,7 +367,7 @@ public:
       int width, height;
       switch (TAG2(a, b)) {
         default:
-          STDOUT << "Unknown image format. a=" << a << " b=" << b << " pos=" << f->Tell() << "\n";
+          STDERR << "Unknown image format. a=" << a << " b=" << b << " pos=" << f->Tell() << "\n";
           return false;
 
         case TAG2('P', '4'):
@@ -346,7 +387,7 @@ public:
         case TAG2('C', 'P'):
         case TAG2('I', 'C'):
         case TAG2('P', 'T'):
-          // STDOUT << "BMP detected!\n";
+          // STDERR << "BMP detected!\n";
           xor_ = 255;
           invert_y_ = true; // bmp data is bottom to top
           // BMP
@@ -356,10 +397,10 @@ public:
 
 #if 0
           uint32_t ctable = f->Tell() + f->ReadType<uint32_t>();
-          // STDOUT << "OFFSET = " << offset << " CTABLE=" << ctable << "\n";
+          // STDERR << "OFFSET = " << offset << " CTABLE=" << ctable << "\n";
           width = f->ReadType<uint32_t>();
           height = f->ReadType<uint32_t>();
-          // STDOUT << "Width=" << width << " Height=" << height << "\n";
+          // STDERR << "Width=" << width << " Height=" << height << "\n";
           f->Seek(ctable);
           int c0 = ReadColorAsGray(f);
           int c1 = ReadColorAsGray(f);
@@ -368,13 +409,13 @@ public:
           f->Skip(4);
           width = f->ReadType<uint32_t>();
           height = f->ReadType<uint32_t>();
-          // STDOUT << "Width=" << width << " Height=" << height << "\n";
+          // STDERR << "Width=" << width << " Height=" << height << "\n";
 #endif
           // First frame is near the end, seek to it.
           f->Seek(file_start + offset + width * height / 8 - sizeof(MonoFrame<WIDTH, col_t>::frame_buffer_));
       }
       if (width != WIDTH && width != HEIGHT) {
-        STDOUT << "Wrong size image: " << width << "x" << height << "\n";
+        STDERR << "Wrong size image: " << width << "x" << height << "\n";
         return false;
       }
       if (width == WIDTH) {
@@ -387,9 +428,9 @@ public:
         looped_on_ = looped_frames_ > 1;
       }
     }
-    // STDOUT << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
+    // STDERR << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
     if (f->Available() < sizeof(MonoFrame<WIDTH, col_t>::frame_buffer_)) return false;
-    f->Read((uint8_t*)MonoFrame<WIDTH, col_t>::frame_buffer_, sizeof(MonoFrame<WIDTH, col_t>::frame_buffer_));
+    f->Read((uint8_t*)display_->frame_buffer_, sizeof(MonoFrame<WIDTH, col_t>::frame_buffer_));
     ypos_++;
     if (looped_frames_ > 1) {
       if (ypos_ >= looped_frames_) {
@@ -406,28 +447,58 @@ public:
     return true;
   }
 
+  struct ReadState {
+    int ypos = 0;
+    uint32_t file_pos = 0;
+  };
+  
   bool FillBuffer() override {
-    if (eof_) return true;
+    if (eof_ && advance_) {
+      // STDERR << "e&a\n";
+      return true;
+    }
     if (file_.OpenFile()) {
       if (!file_.IsOpen()) {
         eof_ = true;
+	// STDERR << "not open\n";
         return false;
       }
       ypos_ = looped_frames_;
     }
-    if (lock_fb_) return true;
+    if (lock_fb_) {
+      // STDERR << "locked\n";
+      return true;
+    }
     if (!frame_available_) {
-      if (!ReadImage(&file_)) {
-        file_.Close();
+      // STDERR << "ADVANCE=" << advance_ << " last_file_pos_= " << last_state_.file_pos << " ypos=" << last_state_.ypos << "\n";
+      if (!advance_) {
+	file_.Seek(last_state_.file_pos);
+	ypos_ = last_state_.ypos;
+      } else {
+	advance_ = false;
+      }
+      ReadState state;
+      state.ypos = ypos_;
+      state.file_pos = file_.Tell();
+      if (ReadImage(&file_)) {
+	frame_available_ = true;
+	last_state_ = state;
+      } else {
+	STDERR << "read image fail\n";
         eof_ = true;
       }
-      frame_available_ = true;
     }
     return true;
   }
+
+  bool IsActive() override {
+    return screen_ == SCREEN_IMAGE;
+  }
+  
   void CloseFiles() override {
     file_.Close();
   }
+
 
 private:
   // Variables related to frame buffer layout.
@@ -437,6 +508,7 @@ private:
 
   // Screen state
   Screen screen_ = SCREEN_STARTUP;
+  Screen next_screen_ = SCREEN_UNSET;
   char message_[32];
 
   // File reading
@@ -447,11 +519,12 @@ private:
   volatile int32_t looped_frames_ = 0;
   int32_t ypos_ = 0;
   bool lock_fb_ = false;
+  ReadState last_state_;
+  volatile bool advance_ = true;
 
   // True if IMG_on is looped.
   volatile bool looped_on_ = false;
   volatile float effect_display_duration_;
-  uint32_t loop_start_;
   volatile Effect* current_effect_;
 };
 
@@ -528,11 +601,11 @@ public:
   uint8_t chunk[chunk_size + 1];
   void GetChunk() {
     chunk[0] = 0x40;
-    memcpy(chunk + 1, i + (unsigned char *)controller_->frame_buffer_, chunk_size);
+    memcpy(chunk + 1, i + (unsigned char *)Display<WIDTH, col_t>::frame_buffer_, chunk_size);
   }
 
   int FillFrameBuffer() {
-    return controller_->FillFrameBuffer();
+    return controller_->FillFrameBuffer(true);
   }
 
   void Page() override {
@@ -617,7 +690,7 @@ public:
       loop_counter_.Update();
 #ifdef PROFFIEBOARD
       i = -(int)NELEM(transactions);
-      I2CLockAndRun();
+      while (!I2CLockAndRun()) YIELD();
       while (lock_fb_) YIELD();
 #else
       do { YIELD(); } while (!I2CLock());

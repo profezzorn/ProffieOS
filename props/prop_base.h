@@ -1,6 +1,10 @@
 #ifndef PROPS_PROP_BASE_H
 #define PROPS_PROP_BASE_H
 
+#ifndef PROP_INHERIT_PREFIX
+#define PROP_INHERIT_PREFIX
+#endif
+
 #if !defined(DYNAMIC_CLASH_THRESHOLD) && defined(SAVE_CLASH_THRESHOLD)
 #undef SAVE_CLASH_THRESHOLD
 #endif
@@ -15,34 +19,34 @@
 
 class SaveGlobalStateFile : public ConfigFile {
 public:
-  void SetVariable(const char* variable, float v) override {
+  void iterateVariables(VariableOP *op) override {
 #ifdef SAVE_CLASH_THRESHOLD
-    CONFIG_VARIABLE(clash_threshold, CLASH_THRESHOLD_G);
+    CONFIG_VARIABLE2(clash_threshold, CLASH_THRESHOLD_G);
 #endif
-#ifdef SAVE_VOLUME    
-    CONFIG_VARIABLE(volume, -1);
+#ifdef SAVE_VOLUME
+    CONFIG_VARIABLE2(volume, -1);
 #endif
 #ifdef SAVE_BLADE_DIMMING
-    CONFIG_VARIABLE(dimming, 16384);
-#endif    
+    CONFIG_VARIABLE2(dimming, 16384);
+#endif
   }
 #ifdef SAVE_CLASH_THRESHOLD
   float clash_threshold;
 #endif
-#ifdef SAVE_VOLUME    
+#ifdef SAVE_VOLUME
   int volume;
 #endif
 #ifdef SAVE_BLADE_DIMMING
   int dimming;
-#endif  
+#endif
 };
 
 class SavePresetStateFile : public ConfigFile {
 public:
-  void SetVariable(const char* variable, float v) override {
-    CONFIG_VARIABLE(preset, 0);
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(preset, 0);
 #ifdef DYNAMIC_BLADE_LENGTH
-#define BLADE_LEN_CONFIG_VARIABLE(N) CONFIG_VARIABLE(blade##N##len, -1);
+#define BLADE_LEN_CONFIG_VARIABLE(N) CONFIG_VARIABLE2(blade##N##len, -1);
     ONCEPERBLADE(BLADE_LEN_CONFIG_VARIABLE);
 #endif
   }
@@ -50,9 +54,58 @@ public:
 #ifdef DYNAMIC_BLADE_LENGTH
 #define BLADE_LEN_VARIABLE(N) int blade##N##len;
     ONCEPERBLADE(BLADE_LEN_VARIABLE);
-#endif    
+#endif
 };
 
+struct SoundToPlay {
+  const char* filename_;
+  Effect* effect_;
+  int selection_;
+
+  SoundToPlay() :filename_(nullptr), effect_(nullptr) {}
+  explicit SoundToPlay(const char* file) : filename_(file){  }
+  SoundToPlay(Effect* effect, int selection = -1) : filename_(nullptr), effect_(effect), selection_(selection) {}
+  bool Play(BufferedWavPlayer* player) {
+     if (filename_) return player->PlayInCurrentDir(filename_);
+     effect_->Select(selection_);
+     player->PlayOnce(effect_);
+     return true;
+   }
+   bool isSet() {
+      return filename_ != nullptr || effect_ != nullptr;
+   }
+};
+
+template<int QueueLength>
+class SoundQueue {
+public:
+  bool Play(SoundToPlay p) {
+    if (sounds_ < QueueLength) {
+      queue_[sounds_++] = p;
+      return true;
+    }
+    return false;
+  }
+  bool Play(const char* p) {
+    return Play(SoundToPlay(p));
+  }
+  // Called from Loop()
+  void PollSoundQueue(RefPtr<BufferedWavPlayer>& player) {
+    if (sounds_ &&  (!player || !player->isPlaying())) {
+      if (!player) {
+        player = GetFreeWavPlayer();
+        if (!player) return;
+	player->set_volume_now(1.0f);
+      }
+      queue_[0].Play(player.get());
+      sounds_--;
+      for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
+    }
+  }
+private:
+  int sounds_;
+  SoundToPlay queue_[QueueLength];
+};
 
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase {
@@ -61,9 +114,9 @@ public:
   BladeStyle* current_style(){
 #if NUM_BLADES == 0
     return nullptr;
-#else    
+#else
     return current_config->blade1->current_style();
-#endif    
+#endif
   }
 
   bool NeedsPower() {
@@ -103,42 +156,33 @@ public:
   float pending_clash_strength_ = 0.0;
 
   bool on_pending_ = false;
-  uint32_t on_pending_base_;
-  uint32_t on_pending_delay_;
 
   virtual bool IsOn() {
     return SaberBase::IsOn() || on_pending_;
   }
 
   virtual void On() {
-    if (IsOn()) return;
-    if (current_style() && current_style()->NoOnOff())
-      return;
-    activated_ = millis();
-    STDOUT.println("Ignition.");
-    MountSDCard();
-    EnableAmplifier();
-    SaberBase::RequestMotion();
+    if (!CommonIgnition()) return;
+    SaberBase::DoPreOn();
+    on_pending_ = true;
+    // Hybrid font will call SaberBase::TurnOn() for us.
+  }
 
-    // Avoid clashes a little bit while turning on.
-    // It might be a "clicky" power button...
-    IgnoreClash(300);
+  void FastOn() {
+    if (!CommonIgnition()) return;
+    SaberBase::TurnOn();
+    SaberBase::DoEffect(EFFECT_FAST_ON, 0);
+  }
 
-    float preon_time = 0.0;
-    SaberBase::DoPreOn(&preon_time);
-    if (preon_time > 0.0) {
-      on_pending_ = true;
-      on_pending_base_ = millis();
-      on_pending_delay_ = preon_time * 1000;
-    } else {
-      SaberBase::TurnOn();
-    }
+  void SB_On() override {
+    on_pending_ = false;
   }
 
   virtual void Off(OffType off_type = OFF_NORMAL) {
     if (on_pending_) {
       // Or is it better to wait until we turn on, and then turn off?
       on_pending_ = false;
+      SaberBase::TurnOff(SaberBase::OFF_CANCEL_PREON);
       return;
     }
     if (!SaberBase::IsOn()) return;
@@ -150,7 +194,7 @@ public:
     if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
       ToggleColorChangeMode();
     }
-#endif    
+#endif
     SaberBase::TurnOff(off_type);
     if (unmute_on_deactivation_) {
       unmute_on_deactivation_ = false;
@@ -163,15 +207,17 @@ public:
       SetMute(false);
     }
   }
-	
+
 #ifdef DYNAMIC_CLASH_THRESHOLD
   float clash_threshold_;
   float GetCurrentClashThreshold() { return clash_threshold_; }
   void SetClashThreshold(float clash_threshold) { clash_threshold_ = clash_threshold; }
   #undef CLASH_THRESHOLD_G
   #define CLASH_THRESHOLD_G clash_threshold_
-#endif 
-	
+#else
+  float GetCurrentClashThreshold() { return CLASH_THRESHOLD_G; }
+#endif
+
   void IgnoreClash(size_t ms) {
     if (clash_pending_) return;
     uint32_t now = millis();
@@ -205,9 +251,9 @@ public:
     uint32_t t = millis();
     if (t - last_clash_ < clash_timeout_) {
       if (clash_pending_) {
-	pending_clash_strength_ = std::max<float>(pending_clash_strength_, strength);
+        pending_clash_strength_ = std::max<float>(pending_clash_strength_, strength);
       } else {
-	SaberBase::UpdateClashStrength(strength);
+        SaberBase::UpdateClashStrength(strength);
       }
       last_clash_ = t; // Vibration cancellation
       return;
@@ -267,18 +313,18 @@ public:
       smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
       if (SFX_lswing) {
         smooth_swing_cfx_config.ReadInCurrentDir("font_config.txt");
-	// map CFX values to Proffie (sourced from font_config.txt in font folder)
-	smooth_swing_config.SwingSensitivity = smooth_swing_cfx_config.smooth_sens;
-	smooth_swing_config.MaximumHumDucking = smooth_swing_cfx_config.smooth_dampen;
-	smooth_swing_config.SwingSharpness = smooth_swing_cfx_config.smooth_sharp;
-	smooth_swing_config.SwingStrengthThreshold = smooth_swing_cfx_config.smooth_gate;
-	smooth_swing_config.Transition1Degrees = smooth_swing_cfx_config.smooth_width1;
-	smooth_swing_config.Transition2Degrees = smooth_swing_cfx_config.smooth_width2;
-	smooth_swing_config.MaxSwingVolume = smooth_swing_cfx_config.smooth_gain * 3 / 100;
-	smooth_swing_config.AccentSwingSpeedThreshold = smooth_swing_cfx_config.hswing;
-	smooth_swing_config.Version = 2;
+        // map CFX values to Proffie (sourced from font_config.txt in font folder)
+        smooth_swing_config.SwingSensitivity = smooth_swing_cfx_config.smooth_sens;
+        smooth_swing_config.MaximumHumDucking = smooth_swing_cfx_config.smooth_dampen;
+        smooth_swing_config.SwingSharpness = smooth_swing_cfx_config.smooth_sharp;
+        smooth_swing_config.SwingStrengthThreshold = smooth_swing_cfx_config.smooth_gate;
+        smooth_swing_config.Transition1Degrees = smooth_swing_cfx_config.smooth_width1;
+        smooth_swing_config.Transition2Degrees = smooth_swing_cfx_config.smooth_width2;
+        smooth_swing_config.MaxSwingVolume = smooth_swing_cfx_config.smooth_gain * 3 / 100;
+        smooth_swing_config.AccentSwingSpeedThreshold = smooth_swing_cfx_config.hswing;
+        smooth_swing_config.Version = 2;
       } else if (!SFX_swingl) {
-	smooth_swing_config.Version = 0;
+        smooth_swing_config.Version = 0;
       }
       switch (smooth_swing_config.Version) {
         case 1:
@@ -302,6 +348,9 @@ public:
 #ifdef SAVE_BLADE_DIMMING
       || SaberBase::GetCurrentDimming() != saved_global_state.dimming
 #endif
+#ifdef SAVE_CLASH_THRESHOLD
+      || GetCurrentClashThreshold() != saved_global_state.clash_threshold
+#endif	
       ) {
       SaveGlobalState();
     }
@@ -324,68 +373,105 @@ public:
     SaveVolumeIfNeeded();
   }
 
-  // Select preset (font/style)
-  virtual void SetPreset(int preset_num, bool announce) {
-    TRACE(PROP, "start");
+  bool BladeOff() {
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
     bool on = SaberBase::IsOn();
     if (on) Off();
-    SaveColorChangeIfNeeded();
-    // First free all styles, then allocate new ones to avoid memory
-    // fragmentation.
+    return on;
+  }
+
+  void FreeBladeStyles() {
 #define UNSET_BLADE_STYLE(N) \
     delete current_config->blade##N->UnSetStyle();
     ONCEPERBLADE(UNSET_BLADE_STYLE)
-    current_preset_.SetPreset(preset_num);
-    if (announce) {
-      if (current_preset_.name.get()) {
-        SaberBase::DoMessage(current_preset_.name.get());
-      } else {
-        char message[64];
-        strcpy(message, "Preset: ");
-        itoa(current_preset_.preset_num + 1,
-             message + strlen(message), 10);
-        strcat(message, "\n");
-        strncat(message + strlen(message),
-                current_preset_.font.get(), sizeof(message) - strlen(message));
-        message[sizeof(message) - 1] = 0;
-        SaberBase::DoMessage(message);
-      }
-    }
+  }
 
+  void AllocateBladeStyles() {
 #ifdef DYNAMIC_BLADE_LENGTH
     savestate_.ReadINIFromSaveDir("curstate");
 #define WRAP_BLADE_SHORTERNER(N) \
     if (savestate_.blade##N##len != -1 && savestate_.blade##N##len != current_config->blade##N->num_leds()) { \
-      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);	\
+      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);   \
     }
 #else
 #define WRAP_BLADE_SHORTERNER(N)
 #endif
-
-    
-#define SET_BLADE_STYLE(N) do {						\
+#define SET_BLADE_STYLE(N) do {                                         \
     BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
     WRAP_BLADE_SHORTERNER(N)                                            \
-    current_config->blade##N->SetStyle(tmp);				\
+    current_config->blade##N->SetStyle(tmp);                            \
   } while (0);
 
     ONCEPERBLADE(SET_BLADE_STYLE)
-    chdir(current_preset_.font.get());
 
 #ifdef SAVE_COLOR_CHANGE
     SaberBase::SetVariation(current_preset_.variation);
 #else
     SaberBase::SetVariation(0);
 #endif
+  }
 
+  // Select preset (font/style)
+  virtual void SetPreset(int preset_num, bool announce) {
+    TRACE(PROP, "start");
+    bool on = BladeOff();
+    SaveColorChangeIfNeeded();
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+    FreeBladeStyles();
+    if (announce) AnnouncePreset();
+    current_preset_.SetPreset(preset_num);
+    AllocateBladeStyles();
+    chdir(current_preset_.font.get());
     if (on) On();
     if (announce) SaberBase::DoNewFont();
     TRACE(PROP, "end");
   }
 
+  // Update Blade Style (no On/Off for use in Edit Mode)
+  void UpdateStyle() {
+    TRACE(PROP, "start");
+    SaveColorChangeIfNeeded();
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+    FreeBladeStyles();
+    current_preset_.SetPreset(current_preset_.preset_num);
+    AllocateBladeStyles();
+    TRACE(PROP, "end");
+  }
+
+    // Set/Update Font & Style, skips Preon effect using FastOn (for use in Edit Mode and "fast" preset changes)
+  void SetPresetFast(int preset_num) {
+    TRACE(PROP, "start");
+    bool on = BladeOff();
+    SaveColorChangeIfNeeded();
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+    FreeBladeStyles();
+    current_preset_.SetPreset(preset_num);
+    AllocateBladeStyles();
+    chdir(current_preset_.font.get());
+    if (on) FastOn();
+    TRACE(PROP, "end");
+  }
+
+  // Update Preon IntArg in Edit Mode
+  void UpdatePreon() {
+    TRACE(PROP, "start");
+    bool on = BladeOff();
+    SaveColorChangeIfNeeded();
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+    FreeBladeStyles();
+    current_preset_.SetPreset(current_preset_.preset_num);
+    AllocateBladeStyles();
+    chdir(current_preset_.font.get());
+    if (on) On();
+    TRACE(PROP, "end");
+  }
+	
   // Go to the next Preset.
   virtual void next_preset() {
 #ifdef SAVE_PRESET
@@ -394,12 +480,28 @@ public:
     SetPreset(current_preset_.preset_num + 1, true);
   }
 
+  // Go to the next Preset skipping NewFont and Preon effects using FastOn.
+  void next_preset_fast() {
+#ifdef SAVE_PRESET
+    SaveState(current_preset_.preset_num + 1);
+#endif
+    SetPresetFast(current_preset_.preset_num + 1);
+  }
+
   // Go to the previous Preset.
   virtual void previous_preset() {
 #ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num - 1);
 #endif
     SetPreset(current_preset_.preset_num - 1, true);
+  }
+
+  // Go to the previous Preset skipping NewFont and Preon effects using FastOn.
+  void previous_preset_fast() {
+#ifdef SAVE_PRESET
+    SaveState(current_preset_.preset_num - 1);
+#endif
+    SetPresetFast(current_preset_.preset_num - 1);
   }
 
   // Rotates presets backwards and saves.
@@ -430,7 +532,7 @@ public:
     talkie.Say(spI);
     talkie.Say(spD);
     talkie.SayNumber((int)ret);
-#endif    
+#endif
 #ifdef BLADE_DETECT_PIN
     if (!blade_detected_) {
       STDOUT << "NO ";
@@ -475,7 +577,7 @@ public:
 #endif
     return;
 
-#if NUM_BLADES != 0    
+#if NUM_BLADES != 0
 
   bad_blade:
     STDOUT.println("BAD BLADE");
@@ -484,7 +586,7 @@ public:
     talkie.Say(talkie_blade_array_15, 15);
 #endif
 
-#endif    
+#endif
   }
 
   SavePresetStateFile savestate_;
@@ -492,23 +594,6 @@ public:
   void ResumePreset() {
     savestate_.ReadINIFromSaveDir("curstate");
     SetPreset(savestate_.preset, false);
-  }
-
-  void WriteState(const char *filename, int preset) {
-    PathHelper fn(GetSaveDir(), filename);
-    LOCK_SD(true);
-    FileReader out;
-    LSFS::Remove(fn);
-    out.Create(fn);
-    out.write_key_value("installed", install_time);
-    out.write_key_value("preset", preset);
-#ifdef DYNAMIC_BLADE_LENGTH
-#define WRITE_BLADE_LENGTH(N) out.write_key_value("blade" #N "len", savestate_.blade##N##len);
-    ONCEPERBLADE(WRITE_BLADE_LENGTH);
-#endif    
-    out.write_key_value("end", "1");
-    out.Close();
-    LOCK_SD(false);
   }
 
   // Blade length from config file.
@@ -535,10 +620,16 @@ public:
 #endif
   }
 
+  void WriteState(const char* filename) {
+    PathHelper fn(GetSaveDir(), filename);
+    savestate_.Write(fn);
+  }
+
   void SaveState(int preset) {
     STDOUT.println("Saving Current Preset");
-    WriteState("curstate.tmp", preset);
-    WriteState("curstate.ini", preset);
+    savestate_.preset = preset;
+    WriteState("curstate.tmp");
+    WriteState("curstate.ini");
   }
 
   SaveGlobalStateFile saved_global_state;
@@ -549,57 +640,37 @@ public:
 #ifdef SAVE_CLASH_THRESHOLD
     SetClashThreshold(saved_global_state.clash_threshold);
 #endif
-	  
+
 #ifdef SAVE_VOLUME
     if (saved_global_state.volume >= 0) {
       dynamic_mixer.set_volume(clampi32(saved_global_state.volume, 0, VOLUME));
     }
 #endif
-    
+
 #ifdef SAVE_BLADE_DIMMING
     SaberBase::SetDimming(saved_global_state.dimming);
 #endif
-    
-#endif
-  }
 
-  void WriteGlobalState(const char* filename) {
-    LOCK_SD(true);
-    FileReader out;
-    LSFS::Remove(filename);
-    out.Create(filename);
-    out.write_key_value("installed", install_time);
-#ifdef SAVE_CLASH_THRESHOLD
-    out.write_key_value_float("clash_threshold", GetCurrentClashThreshold());
 #endif
-#ifdef SAVE_VOLUME
-    out.write_key_value("volume", muted_volume_ ? muted_volume_ : dynamic_mixer.get_volume());
-#endif    
-#ifdef SAVE_BLADE_DIMMING
-    out.write_key_value("dimming", SaberBase::GetCurrentDimming());
-#endif    
-    out.write_key_value("end", "1");
-    out.Close();
-    LOCK_SD(false);
   }
 
   void SaveGlobalState() {
 #if defined(SAVE_VOLUME) || defined(SAVE_BLADE_DIMMING) || defined(SAVE_CLASH_THRESHOLD)
     STDOUT.println("Saving Global State");
-    WriteGlobalState("global.tmp");
-    WriteGlobalState("global.ini");
 #ifdef SAVE_CLASH_THRESHOLD
     saved_global_state.clash_threshold = GetCurrentClashThreshold();
 #endif
-#ifdef SAVE_VOLUME    
+#ifdef SAVE_VOLUME
     saved_global_state.volume = dynamic_mixer.get_volume();
 #endif
 #ifdef SAVE_BLADE_DIMMING
     saved_global_state.dimming = SaberBase::GetCurrentDimming();
-#endif    
-#endif    
+#endif
+    saved_global_state.Write("global.tmp");
+    saved_global_state.Write("global.ini");
+#endif
   }
-  
+
   void FindBladeAgain() {
     if (!current_config) {
       // FindBlade() hasn't been called yet - ignore this.
@@ -654,11 +725,11 @@ public:
         fusor.swing_speed() < 150;
 
       if (clash_pending1_) {
-	pending_clash_strength1_ = std::max<float>(v, (float)pending_clash_strength1_);
+        pending_clash_strength1_ = std::max<float>(v, (float)pending_clash_strength1_);
       } else {
-	clash_pending1_ = true;
-	pending_clash_is_stab1_ = stab;
-	pending_clash_strength1_ = v;
+        clash_pending1_ = true;
+        pending_clash_is_stab1_ = stab;
+        pending_clash_strength1_ = v;
       }
     }
     accel_ = accel;
@@ -787,22 +858,22 @@ public:
     }
     if (process) {
       if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
-	   strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
-	  (strokes[NELEM(strokes)-1].type == TWIST_RIGHT &&
-	   strokes[NELEM(strokes)-2].type == TWIST_LEFT)) {
-	if (strokes[NELEM(strokes) -1].length() > 90UL &&
-	    strokes[NELEM(strokes) -1].length() < 300UL &&
-	    strokes[NELEM(strokes) -2].length() > 90UL &&
-	    strokes[NELEM(strokes) -2].length() < 300UL) {
-	  uint32_t separation =
-	    strokes[NELEM(strokes)-1].start_millis -
-	    strokes[NELEM(strokes)-2].end_millis;
-	  if (separation < 200UL) {
-	    STDOUT.println("TWIST");
-	    // We have a twisting gesture.
-	    Event(BUTTON_NONE, EVENT_TWIST);
-	  }
-	}
+           strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
+          (strokes[NELEM(strokes)-1].type == TWIST_RIGHT &&
+           strokes[NELEM(strokes)-2].type == TWIST_LEFT)) {
+        if (strokes[NELEM(strokes) -1].length() > 90UL &&
+            strokes[NELEM(strokes) -1].length() < 300UL &&
+            strokes[NELEM(strokes) -2].length() > 90UL &&
+            strokes[NELEM(strokes) -2].length() < 300UL) {
+          uint32_t separation =
+            strokes[NELEM(strokes)-1].start_millis -
+            strokes[NELEM(strokes)-2].end_millis;
+          if (separation < 200UL) {
+            STDOUT.println("TWIST");
+            // We have a twisting gesture.
+            Event(BUTTON_NONE, EVENT_TWIST);
+          }
+        }
       }
     }
   }
@@ -821,18 +892,18 @@ public:
     if (process) {
       int i;
       for (i = 0; i < 5; i++) {
-	if (strokes[NELEM(strokes)-1-i].type !=
-	    ((i & 1) ? SHAKE_REW : SHAKE_FWD)) break;
-	if (i) {
-	  uint32_t separation =
-	    strokes[NELEM(strokes)-i].start_millis -
-	    strokes[NELEM(strokes)-1-i].end_millis;
-	  if (separation > 250) break;
-	}
+        if (strokes[NELEM(strokes)-1-i].type !=
+            ((i & 1) ? SHAKE_REW : SHAKE_FWD)) break;
+        if (i) {
+          uint32_t separation =
+            strokes[NELEM(strokes)-i].start_millis -
+            strokes[NELEM(strokes)-1-i].end_millis;
+          if (separation > 250) break;
+        }
       }
       if (i == 5) {
-	strokes[NELEM(strokes)-1].type = SHAKE_CLOSE;
-	Event(BUTTON_NONE, EVENT_SHAKE);
+        strokes[NELEM(strokes)-1].type = SHAKE_CLOSE;
+        Event(BUTTON_NONE, EVENT_SHAKE);
       }
     }
   }
@@ -848,7 +919,7 @@ public:
       swinging_ = false;
     }
   }
-  
+
   void SB_Motion(const Vec3& gyro, bool clear) override {
     if (monitor.ShouldPrint(Monitoring::MonitorGyro)) {
       // Got gyro data
@@ -873,7 +944,7 @@ public:
       EnableAmplifier();
       track_player_ = GetFreeWavPlayer();
       if (track_player_) {
-	track_player_->Play(current_preset_.track.get());
+        track_player_->Play(current_preset_.track.get());
       } else {
         STDOUT.println("No available WAV players.");
       }
@@ -887,7 +958,7 @@ public:
     if (!LSFS::Exists(dir)) return;
     for (LSFS::Iterator i2(dir); i2; ++i2) {
       if (endswith(".wav", i2.name()) && i2.size() > 200000) {
-	STDOUT << dir << "/" << i2.name() << "\n";
+        STDOUT << dir << "/" << i2.name() << "\n";
       }
     }
   }
@@ -908,7 +979,7 @@ public:
           STDOUT << "Low battery: " << battery_monitor.battery() << " volts\n";
           SaberBase::DoLowBatt();
           last_beep_ = millis();
-	}
+        }
       }
     }
   }
@@ -936,11 +1007,6 @@ public:
 
   void Loop() override {
     CallMotion();
-    
-    if (on_pending_ && millis() - on_pending_base_ >= on_pending_delay_) {
-      on_pending_ = false;
-      SaberBase::TurnOn();
-    }
     if (clash_pending1_) {
       clash_pending1_ = false;
       Clash(pending_clash_is_stab1_, pending_clash_strength1_);
@@ -999,7 +1065,7 @@ public:
     if (monitor.ShouldPrint(Monitoring::MonitorVariation)) {
       STDOUT << " variation = " << SaberBase::GetCurrentVariation()
              << " ccmode = " << SaberBase::GetColorChangeMode()
-//	     << " color = " << current_config->blade1->current_style()->getColor(0)
+//           << " color = " << current_config->blade1->current_style()->getColor(0)
              << "\n";
     }
 #endif
@@ -1052,7 +1118,7 @@ public:
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
     }
   }
-#endif // DISABLE_COLOR_CHANGE  
+#endif // DISABLE_COLOR_CHANGE
 
   virtual void PrintButton(uint32_t b) {
     if (b & BUTTON_POWER) STDOUT.print("Power");
@@ -1070,7 +1136,7 @@ public:
   void PrintEvent(uint32_t e) {
     int cnt = 0;
     if (e >= EVENT_FIRST_PRESSED &&
-	e <= EVENT_FOURTH_CLICK_LONG) {
+        e <= EVENT_FOURTH_CLICK_LONG) {
       cnt = (e - EVENT_PRESSED) / (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED);
       e -= (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED) * cnt;
     }
@@ -1185,26 +1251,26 @@ public:
     if (!strcmp(cmd, "lblock") || !strcmp(cmd, "lb")) {
       STDOUT.print("lblock ");
       if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
-	SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
-	SaberBase::DoBeginLockup();
-	STDOUT.println("ON");
+        SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+        SaberBase::DoBeginLockup();
+        STDOUT.println("ON");
       } else {
-	SaberBase::DoEndLockup();
-	SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-	STDOUT.println("OFF");
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        STDOUT.println("OFF");
       }
       return true;
     }
     if (!strcmp(cmd, "melt")) {
       STDOUT.print("melt ");
       if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
-	SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
-	SaberBase::DoBeginLockup();
-	STDOUT.println("ON");
+        SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+        SaberBase::DoBeginLockup();
+        STDOUT.println("ON");
       } else {
-	SaberBase::DoEndLockup();
-	SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-	STDOUT.println("OFF");
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        STDOUT.println("OFF");
       }
       return true;
     }
@@ -1232,8 +1298,8 @@ public:
       if (player) {
         STDOUT.print("Playing ");
         STDOUT.println(arg);
-	if (!player->PlayInCurrentDir(arg))
-	  player->Play(arg);
+        if (!player->PlayInCurrentDir(arg))
+          player->Play(arg);
       } else {
         STDOUT.println("No available WAV players.");
       }
@@ -1254,8 +1320,8 @@ public:
       if (track_player_) {
         STDOUT.print("Playing ");
         STDOUT.println(arg);
-	if (!track_player_->PlayInCurrentDir(arg))
-	  track_player_->Play(arg);
+        if (!track_player_->PlayInCurrentDir(arg))
+          track_player_->Play(arg);
       } else {
         STDOUT.println("No available WAV players.");
       }
@@ -1402,9 +1468,7 @@ public:
     }
     if (!strcmp(cmd, "set_blade_length") && arg) {
       SetBladeLength(atoi(arg), atoi(SkipWord(arg)));
-#ifdef SAVE_PRESET
       SaveState(current_preset_.preset_num);
-#endif
       // Reload preset to make the change take effect.
       SetPreset(current_preset_.preset_num, false);
       return true;
@@ -1421,6 +1485,17 @@ public:
       return true;
     }
 #endif
+
+#ifdef DYNAMIC_CLASH_THRESHOLD
+    if (!strcmp(cmd, "get_clash_threshold")) {
+      STDOUT.println(GetCurrentClashThreshold());
+      return true;
+    }
+    if (!strcmp(cmd, "set_clash_threshold") && arg) {
+      SetClashThreshold(parsefloat(arg));
+      return true;
+    }
+#endif    
 
     if (!strcmp(cmd, "get_preset")) {
       STDOUT.println(current_preset_.preset_num);
@@ -1466,7 +1541,7 @@ public:
     if (!strcmp(cmd, "change_preset") && arg) {
       int preset = strtol(arg, NULL, 0);
       if (preset != current_preset_.preset_num) {
-	SetPreset(preset, true);
+        SetPreset(preset, true);
       }
       return true;
     }
@@ -1490,14 +1565,14 @@ public:
       ListTracks("tracks");
       for (LSFS::Iterator iter("/"); iter; ++iter) {
         if (iter.isdir()) {
-	  PathHelper path(iter.name(), "tracks");
-	  ListTracks(path);
-	}
+          PathHelper path(iter.name(), "tracks");
+          ListTracks(path);
+        }
       }
       LOCK_SD(false);
       return true;
     }
-	  
+
     if (!strcmp(cmd, "list_fonts")) {
       LOCK_SD(true);
       for (LSFS::Iterator iter("/"); iter; ++iter) {
@@ -1574,6 +1649,39 @@ public:
   }
 
   virtual bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) = 0;
+
+private:
+  void AnnouncePreset() {
+    if (current_preset_.name.get()) {
+      SaberBase::DoMessage(current_preset_.name.get());
+    } else {
+      char message[64];
+      strcpy(message, "Preset: ");
+      itoa(current_preset_.preset_num + 1,
+           message + strlen(message), 10);
+      strcat(message, "\n");
+      strncat(message + strlen(message),
+              current_preset_.font.get(), sizeof(message) - strlen(message));
+      message[sizeof(message) - 1] = 0;
+      SaberBase::DoMessage(message);
+    }
+  }
+
+  bool CommonIgnition() {
+    if (IsOn()) return false;
+    if (current_style() && current_style()->NoOnOff())
+      return false;
+    activated_ = millis();
+    STDOUT.println("Ignition.");
+    MountSDCard();
+    EnableAmplifier();
+    SaberBase::RequestMotion();
+
+    // Avoid clashes a little bit while turning on.
+    // It might be a "clicky" power button...
+    IgnoreClash(300);
+    return true;
+  }
 
 protected:
   CurrentPreset current_preset_;

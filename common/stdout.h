@@ -3,9 +3,25 @@
 
 #include "monitoring.h"
 
+#ifdef PROFFIE_TEST
+struct Print {
+  void print(const char* s) { fprintf(stdout, "%s", s); }
+  void print(float v) { fprintf(stdout, "%f", v); }
+  void print(int v, int base) { fprintf(stdout, "%d", v); }
+  void write(char s) { putchar(s); }
+  template<class T>
+  void println(T s) { print(s); putchar('\n'); }
+  virtual size_t write(uint8_t s) { putchar(s); return 1; }
+  virtual size_t write(const uint8_t *buffer, size_t size) {
+    for (size_t i = 0; i < size; i++) write(buffer[i]);
+    return size;
+  }
+
+};
+#endif
+
 extern Print* default_output;
 extern Print* stdout_output;
-
 
 template<typename T, typename X = void> struct PrintHelper {
   static void out(Print& p, T& x) { p.print(x); }
@@ -49,6 +65,11 @@ public:
 #endif
 };
 
+template<typename T>
+Print& operator<<(Print& p, T v) {
+  PrintHelper<const T>::out(p, v);
+  return p;
+}
 
 class CatchCommandOutput : public Print {
  public:
@@ -85,5 +106,6 @@ extern ConsoleHelper STDOUT;
 Print* default_output = &Serial;                \
 Print* stdout_output = &Serial;                 \
 ConsoleHelper STDOUT
+#define STDERR (*default_output)
 
 #endif
