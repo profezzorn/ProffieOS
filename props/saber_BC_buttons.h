@@ -356,6 +356,7 @@ public:
     DetectTwist();
     Vec3 mss = fusor.mss();
     sound_library_.Poll(wav_player);
+    if (wav_player && !wav_player->IsPlaying()) wav_player.Free();
     if (SaberBase::IsOn()) {
       DetectSwing();
       if (auto_lockup_on_ &&
@@ -719,7 +720,6 @@ public:
         sound_library_.SayVolts();
         STDOUT.println(battery_monitor.battery());
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-        wav_player.Free(); // needed?
       }
     return true;
 
@@ -731,7 +731,6 @@ public:
         sound_library_.SayPercent();
         STDOUT.println(battery_monitor.battery_percent());
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-        wav_player.Free(); // needed?
       }
       return true;
 
