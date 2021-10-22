@@ -23,7 +23,7 @@ public:
   void run(BladeBase* blade) {
     pos_.run(blade);
     fraction_.run(blade);
-    int fraction = fraction_.getInteger(0);
+    int fraction = fraction_.calculate(blade);
     if (fraction == 0) {
       mult_ = 1;
       location_ = -10000;
@@ -31,7 +31,7 @@ public:
     }
     float mult = 32 * 2.0 * 128 * 32768 / fraction / blade->num_leds();
     mult_ = mult;
-    location_ = (pos_.getInteger(0) * blade->num_leds() * mult) / 32768;
+    location_ = (pos_.calculate(blade) * blade->num_leds() * mult) / 32768;
   }
   int getInteger(int led) {
     uint32_t dist = abs(led * mult_ - location_);
@@ -41,8 +41,8 @@ public:
     return bump_shape[p] * (128 - m) + bump_shape[p+1] * m;
   }
 private:
-  PONUA BUMP_POSITION pos_;
-  PONUA BUMP_WIDTH_FRACTION fraction_;
+  PONUA SVFWrapper<BUMP_POSITION> pos_;
+  PONUA SVFWrapper<BUMP_WIDTH_FRACTION> fraction_;
   int location_;
   int mult_;
 };

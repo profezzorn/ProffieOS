@@ -6,13 +6,13 @@
 // Returns a random number between 0 and 32768.
 // All LEDS gets the same value.
 
-class RandomF {
+class RandomFSVF {
 public:
-  void run(BladeBase* blade) { mix_ = random(32768); }
-  int getInteger(int led) { return mix_; }
-private:
-  int mix_;
+  int calculate(BladeBase* blade) { return random(32768); }
+  void run(BladeBase* blade) {}
 };
+
+using RandomF = SingleValueAdapter<RandomFSVF>;
 
 // Usage: RandomPerLEDF
 // Return value: FUNCTION

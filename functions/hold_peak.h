@@ -16,14 +16,14 @@ public:
     f_.run(blade);
     speed_.run(blade);
     hold_time_millis_.run(blade);
-    int current = f_.getInteger(0);
-    uint32_t hold_millis = hold_time_millis_.getInteger(0);
+    int current = f_.calculate(blade);
+    uint32_t hold_millis = hold_time_millis_.calculate(blade);
     uint32_t now = micros();
     uint64_t delta = now - last_micros_;
     last_micros_ = now;
     if (millis() - last_peak_ > hold_millis) {
       if (delta > 1000000) delta = 1;
-      delta *= speed_.getInteger(0);
+      delta *= speed_.calculate(blade);
       delta /= 1000000;
       value_ -= delta;
     }
@@ -38,9 +38,9 @@ public:
   }
 
 private:
-  PONUA F f_;
-  PONUA HOLD_MILLIS hold_time_millis_;
-  PONUA SPEED speed_;
+  PONUA SVFWrapper<F> f_;
+  PONUA SVFWrapper<HOLD_MILLIS> hold_time_millis_;
+  PONUA SVFWrapper<SPEED> speed_;
   int value_ = 0;
   uint32_t last_micros_ = 0;
   uint32_t last_peak_ = millis();

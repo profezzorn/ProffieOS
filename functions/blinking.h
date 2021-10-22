@@ -29,7 +29,7 @@ public:
 
   int calculate(BladeBase* base) {
     uint32_t now = micros();
-    uint32_t pulse_millis = pulse_millis_.getInteger(0);
+    uint32_t pulse_millis = pulse_millis_.calculate(base);
     if (pulse_millis <= 0) return 0;
     uint32_t pulse_progress_micros = now - pulse_start_micros_;
     if (pulse_progress_micros > pulse_millis * 1000) {
@@ -42,12 +42,12 @@ public:
       pulse_progress_micros = now - pulse_start_micros_;
     }
     int32_t pulse_progress_promille = pulse_progress_micros / pulse_millis;
-    return pulse_progress_promille <= pulse_promille_.getInteger(0) ? 0 : 32768;
+    return pulse_progress_promille <= pulse_promille_.calculate(base) ? 0 : 32768;
   }
 
 private:
-  PONUA BLINK_MILLIS pulse_millis_;
-  PONUA BLINK_PROMILLE pulse_promille_;
+  PONUA SVFWrapper<BLINK_MILLIS> pulse_millis_;
+  PONUA SVFWrapper<BLINK_PROMILLE> pulse_promille_;
   uint32_t pulse_start_micros_;
 };
 
