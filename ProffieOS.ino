@@ -504,6 +504,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/select.h"
 #include "transitions/extend.h"
 #include "transitions/center_wipe.h"
+#include "transitions/sequence.h"
 
 #include "styles/legacy_styles.h"
 //responsive styles
