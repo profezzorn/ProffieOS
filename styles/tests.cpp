@@ -123,6 +123,7 @@ Monitoring monitor;
 #include "../functions/blade_angle.h"
 #include "../functions/twist_angle.h"
 #include "../functions/swing_speed.h"
+#include "../functions/wavlen.h"
 #include "mix.h"
 #include "strobe.h"
 #include "hump_flicker.h"
@@ -497,6 +498,14 @@ void test_style3() {
 }
 
 void test_style4() {
+  ArgParser ap("foobar");
+  CurrentArgParser = &ap;
+
+  PrintTypeSize<IsLessThan< IntArg<3,600> , Int<1>>> x2;
+  PrintTypeSize<IntArg<3,600>> x3;
+  PrintTypeSize<WavLen<EFFECT_RETRACTION>> x4;
+  PrintTypeSize<Scale<IsLessThan< IntArg<3,600> , Int<1>>, IntArg<3,600>, WavLen<EFFECT_RETRACTION>>> x1;
+
   PrintTypeSize<Int<1>> t1;
   PrintTypeSize<IntSVF<1>> t11;
   PrintTypeSize<BladeAngle<0,16000>> t2;

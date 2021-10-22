@@ -17,8 +17,8 @@ public:
     f_.run(blade);
     a_.run(blade);
     b_.run(blade);
-    int a = a_.getInteger(0);
-    int b = b_.getInteger(0);
+    int a = a_.calculate(blade);
+    int b = b_.calculate(blade);
     mul_ = (b - a);
     add_ = a;
   }
@@ -27,8 +27,8 @@ public:
   }
 private:
   PONUA F f_;
-  PONUA A a_;
-  PONUA B b_;
+  PONUA SVFWrapper<A> a_;
+  PONUA SVFWrapper<B> b_;
   int add_;
   int mul_;
 };
@@ -46,7 +46,7 @@ private:
   PONUA F f_;
 };
 
-template<class SVFF, class SVFA, class SVFB>
+template<class SVFF, class A, class B>
 class ScaleSVF {
  public:
   void run(BladeBase* blade) {
@@ -61,15 +61,13 @@ class ScaleSVF {
   }
  private:
   PONUA SVFF svff_;
-  PONUA SVFA svfa_;
-  PONUA SVFB svfb_;
+  PONUA SVFWrapper<A> svfa_;
+  PONUA SVFWrapper<B> svfb_;
 };
 
 template<class F, class A, class B> struct ScaleFinder { typedef ScaleBase<F, A, B> ScaleClass; };
 template<class F, class A, class B>
-struct ScaleFinder<SingleValueAdapter<F>,
-		   SingleValueAdapter<A>,
-		   SingleValueAdapter<B>> {  typedef SingleValueAdapter<ScaleSVF<F, A, B>> ScaleClass; };
+struct ScaleFinder<SingleValueAdapter<F>, A, B> { typedef SingleValueAdapter<ScaleSVF<F, A, B>> ScaleClass; };
 template<class F, class A, class B>
 using Scale = typename ScaleFinder<F, A, B>::ScaleClass;
   
