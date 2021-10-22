@@ -844,7 +844,7 @@ public:
         STDOUT.println("Entering Battle Mode");
         battle_mode_ = true;
         if (SFX_bmbegin) {
-          sound_library_.SayBattleModeBegin();
+          hybrid_font.PlayCommon(&SFX_bmbegin);
           STDOUT.println("-----------------playing bmbegin.wav");
         } else {
           hybrid_font.DoEffect(EFFECT_FORCE, 0);
@@ -854,7 +854,7 @@ public:
         STDOUT.println("Exiting Battle Mode");
         battle_mode_ = false;
         if (SFX_bmend) {
-          sound_library_.SayBattleModeEnd();
+          hybrid_font.PlayCommon(&SFX_bmbegin);
           STDOUT.println("-----------------playing bmend.wav");
         } else {
           beeper.Beep(0.5, 3000);
