@@ -715,7 +715,7 @@ public:
 // Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       if (!mode_volume_) {
-        sound_library_.SayBatteryLevel();
+        sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
         sound_library_.SayVolts();
         STDOUT.println(battery_monitor.battery());
@@ -726,7 +726,7 @@ public:
 // Spoken Battery Level in percentage
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
       if (!mode_volume_) {
-        sound_library_.SayBatteryLevel();
+        sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
         sound_library_.SayPercent();
         STDOUT.println(battery_monitor.battery_percent());
