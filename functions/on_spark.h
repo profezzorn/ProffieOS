@@ -22,7 +22,7 @@ public:
       if (on_) on_millis_ = m;
     }
     uint32_t t = millis() - on_millis_;
-    uint32_t fade_millis = millis_.getInteger(0);
+    uint32_t fade_millis = millis_.calculate(blade);
     if (t < fade_millis) {
       return 32768 - 32768 * t / fade_millis;
     } else {
@@ -32,7 +32,7 @@ public:
 private:
   bool on_;
   uint32_t on_millis_;
-  PONUA MILLIS millis_;
+  PONUA SVFWrapper<MILLIS> millis_;
 };
 
 template<class MILLIS = Int<200> >

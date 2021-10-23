@@ -93,11 +93,11 @@ public:
   void run(BladeBase* base) {
     width_.run(base);
     speed_.run(base);
-    StripesBase<COLORS...>::run(base, width_.getInteger(0), speed_.getInteger(0));
+    StripesBase<COLORS...>::run(base, width_.calculate(base), speed_.calculate(base));
   }
 private:
-  PONUA WIDTH width_;
-  PONUA SPEED speed_;
+  PONUA SVFWrapper<WIDTH> width_;
+  PONUA SVFWrapper<SPEED> speed_;
 };
 
 template<int WIDTH, int SPEED, class... COLORS>

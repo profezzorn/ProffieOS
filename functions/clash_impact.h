@@ -20,14 +20,14 @@ public:
   }
   int calculate(BladeBase* base) {
     float i = SaberBase::GetClashStrength() * 100;
-    int min = min_cents_.getInteger(0);
-    int max = max_cents_.getInteger(0);
+    int min = min_cents_.calculate(base);
+    int max = max_cents_.calculate(base);
     return clampi32((i - min) * 32768 / max, 0, 32768);
   }
 
 private:
-  PONUA MIN min_cents_;
-  PONUA MAX max_cents_;
+  PONUA SVVWrapper<MIN> min_cents_;
+  PONUA SFVWrapper<MAX> max_cents_;
 };
 
 template<class MIN = Int<200>, class MAX = Int<1600>>

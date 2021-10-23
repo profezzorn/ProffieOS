@@ -84,12 +84,12 @@ public:
     uint32_t now = micros();
     uint32_t delta = now - last_micros_;
     last_micros_ = now;
-    pos_ = fract(pos_ + delta / (1000.0 * pulse_millis_.getInteger(0)));
+    pos_ = fract(pos_ + delta / (1000.0 * pulse_millis_.calculate(base)));
     return (sin_table[(int)floorf(pos_ * 0x400)] + 16384);
   }
 
 private:
-  PONUA PULSE_MILLIS pulse_millis_;
+  PONUA SVFWrapper<PULSE_MILLIS> pulse_millis_;
   uint32_t last_micros_;
   float pos_ = 0.0;
 };

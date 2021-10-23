@@ -50,11 +50,11 @@ public:
          // be insanely high.
          extension = 0.00001;
       } else {
- 	extension += delta / (out_millis_.getInteger(0) * 1000.0);
+ 	extension += delta / (out_millis_.calculate(blade) * 1000.0);
 	extension = std::min(extension, 1.0f);
       }
     } else {
-      extension -= delta / (in_millis_.getInteger(0) * 1000.0);
+      extension -= delta / (in_millis_.calculate(blade) * 1000.0);
       extension = std::max(extension, 0.0f);
     }
     ret_ = extension * 32768.0;
@@ -64,8 +64,8 @@ public:
   int getInteger(int led) { return ret_; }
 
 private:
-  PONUA OUT_MILLIS out_millis_;
-  PONUA IN_MILLIS in_millis_;
+  PONUA SVFWrapper<OUT_MILLIS> out_millis_;
+  PONUA SVFWrapper<IN_MILLIS> in_millis_;
   float extension = 0.0;
   uint32_t last_micros_;
   int ret_;
@@ -77,7 +77,7 @@ class InOutHelperF {
 public:
   FunctionRunResult run(BladeBase* blade) __attribute__((warn_unused_result)) {
     FunctionRunResult ret = RunFunction(&extension_, blade);
-    thres = (extension_.getInteger(0) * blade->num_leds());
+    thres = (extension_.calculate(blade) * blade->num_leds());
     if (ALLOW_DISABLE) {
       switch (ret) {
 	case FunctionRunResult::ZERO_UNTIL_IGNITION: return FunctionRunResult::ONE_UNTIL_IGNITION;
@@ -91,7 +91,7 @@ public:
     return 32768 - clampi32(thres - led * 32768, 0, 32768);
   }
 private:
-  PONUA EXTENSION extension_;
+  PONUA SVFWrapper<EXTENSION> extension_;
   int thres = 0;
 };
 

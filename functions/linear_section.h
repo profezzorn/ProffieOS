@@ -17,8 +17,8 @@ public:
     pos_.run(base);
     FunctionRunResult ret = RunFunction(&fraction_, base);
     int num_leds = base->num_leds();
-    int fraction = fraction_.getInteger(0);
-    int pos = pos_.getInteger(0);
+    int fraction = fraction_.calculate(base);
+    int pos = pos_.calculate(base);
     range_ = Range(clampi32((pos - fraction / 2) * num_leds, 0, 32768 * num_leds), clampi32((pos + fraction / 2) * num_leds, 0, 32768 * num_leds));
     return ret;
   }
@@ -27,8 +27,8 @@ public:
     return (Range(range_) & led_range).size();
   }
 private:
-  PONUA POSITION pos_;
-  PONUA FRACTION fraction_;
+  PONUA SVFWrapper<POSITION> pos_;
+  PONUA SVFWrapper<FRACTION> fraction_;
   Range range_;
 };
 

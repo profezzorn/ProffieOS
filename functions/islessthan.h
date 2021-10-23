@@ -17,7 +17,7 @@ public:
     v_.run(blade);
   }
   int getInteger(int led) {
-    return (f_.getInteger(led) < v_.getInteger(0)) << 15;
+    return (f_.getInteger(led) < v_.getInteger(led)) << 15;
   }
 
 private:

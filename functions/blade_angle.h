@@ -17,26 +17,6 @@
 
 #include "svf.h"
 
-#if 0
-template<class MIN = Int<0>, class MAX = Int<32768>>
-class BladeAngleXSVF {
-public:
-  void run(BladeBase* blade) {
-    min_.run(blade);
-    max_.run(blade);
-  }
-  int calculate(BladeBase* blade) {
-    int min = min_.getInteger(0);
-    int max = max_.getInteger(0);
-    // v is 0-32768, 0 = straight down, 32768 = straight up
-    float v = (fusor.angle1() + M_PI / 2) * 32768 / M_PI;
-    return clampi32((v - min) * 32768.0f / (max - min), 0, 32768);
-  }
-
-  PONUA MIN min_;
-  PONUA MAX max_;
-};
-#else
 template<class MIN = Int<0>, class MAX = Int<32768>>
 class BladeAngleXSVF {
 public:
@@ -55,7 +35,6 @@ public:
   PONUA SVFWrapper<MIN> min_;
   PONUA SVFWrapper<MAX> max_;
 };
-#endif
 
 template<class MIN = Int<0>, class MAX = Int<32768>>
 using BladeAngleX = SingleValueAdapter<BladeAngleXSVF<MIN, MAX>>;

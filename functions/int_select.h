@@ -13,7 +13,7 @@ class IntSelect {
 public:
   FunctionRunResult run(BladeBase* blade) {
     FunctionRunResult frr = RunFunction(&f_, blade);
-    int f = f_.getInteger(0);
+    int f = f_.calculate(blade);
     while(f < 0) f += sizeof...(N) << 8;
     f = f % sizeof...(N);
     const static int values[] = { N ... };
@@ -30,7 +30,7 @@ public:
   int getInteger(int led) { return value_; }
 
 private:
-  PONUA F f_;
+  PONUA SFVWrapper<F> f_;
   int value_;
 };
 
