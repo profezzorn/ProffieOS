@@ -41,7 +41,7 @@ public:
 
 private:
   bool begin_ = false;
-  PONUA SVFWraper<F> f_;
+  PONUA SVFWrapper<F> f_;
   PONUA TrHelper<TRANSITION...> transitions_;
   TransitionInterface* selected_ = nullptr;
 };

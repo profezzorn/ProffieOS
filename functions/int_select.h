@@ -1,6 +1,8 @@
 #ifndef FUNCTIONS_INT_SELECT_H
 #define FUNCTIONS_INT_SELECT_H
 
+#include "svf.h"
+
 // Usage: IntSelect<SELECTION, Int1, Int2...>
 // SELECTION: FUNCTION
 // Returns SELECTION of N 
@@ -30,7 +32,7 @@ public:
   int getInteger(int led) { return value_; }
 
 private:
-  PONUA SFVWrapper<F> f_;
+  PONUA SVFWrapper<F> f_;
   int value_;
 };
 

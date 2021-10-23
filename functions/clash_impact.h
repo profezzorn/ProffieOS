@@ -26,8 +26,8 @@ public:
   }
 
 private:
-  PONUA SVVWrapper<MIN> min_cents_;
-  PONUA SFVWrapper<MAX> max_cents_;
+  PONUA SVFWrapper<MIN> min_cents_;
+  PONUA SVFWrapper<MAX> max_cents_;
 };
 
 template<class MIN = Int<200>, class MAX = Int<1600>>
