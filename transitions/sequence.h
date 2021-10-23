@@ -13,12 +13,11 @@ class TrSequence {
 public:
   void begin() {
     begin_ = true;
-    n_ = (n_ + 1) % sizeof...(TRANSITION);
   }
   void run(BladeBase* blade) {
     if (begin_) {
       begin_ = false;
-      while(n_ < 0) n_ += sizeof...(TRANSITION) << 8;
+      n_ = (n_ + 1) % sizeof...(TRANSITION);
       uint8_t selection = n_ % sizeof...(TRANSITION);
       selected_ = transitions_.get(selection % sizeof...(TRANSITION));
       selected_->begin();
