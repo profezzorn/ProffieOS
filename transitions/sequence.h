@@ -18,8 +18,7 @@ public:
     if (begin_) {
       begin_ = false;
       n_ = (n_ + 1) % sizeof...(TRANSITION);
-      uint8_t selection = n_ % sizeof...(TRANSITION);
-      selected_ = transitions_.get(selection % sizeof...(TRANSITION));
+      selected_ = transitions_.get(n_);
       selected_->begin();
     }
       selected_->run(blade); 
