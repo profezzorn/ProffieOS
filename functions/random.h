@@ -25,5 +25,21 @@ public:
   int getInteger(int led) { return random(32768); }
 };
 
+// Usage: EffectRandomF<EFFECT>
+// Returns a random value between 0 and 32768 each time EVENT is triggered
+// return value: INTEGER
+
+template<BladeEffectType EFFECT>
+class EffectRandomF {
+public:
+  void run(BladeBase* blade) {
+    if (effect_.Detect(blade)) value_ = random(32768);
+  }
+  int getInteger(int led) { return value_; }
+
+private:
+  OneshotEffectDetector<EFFECT> effect_;
+  int value_;
+};
 
 #endif

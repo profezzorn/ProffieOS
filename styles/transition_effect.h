@@ -17,7 +17,7 @@ template<class TRANSITION, BladeEffectType EFFECT>
 class TransitionEffectL {
 public:
   LayerRunResult run(BladeBase* blade) {
-    if (effect_.Detect(blade)) {
+    if (effect_.DetectScoped(blade)) {
       transition_.begin();
       run_ = true;
     }
@@ -25,6 +25,7 @@ public:
       transition_.run(blade);
       if (transition_.done()) run_ = false;
     }
+    last_detected_blade_effect = nullptr;
     if (!run_) {
       switch (EFFECT) {
 	// This a list of effects that cannot occur after retraction is done.
@@ -69,24 +70,28 @@ public:
 
 void run(BladeBase* blade) {
     for (size_t i = 0; i < N; i++) 
-    if (effect_.Detect(blade)) {
+    if (effect_.DetectScoped(blade)) {
       transitions_[pos_].begin();
       run_[pos_] = true;
+      effects_[pos_] = last_detected_blade_effect;
       pos_++;
       if (pos_ >= N) pos_ = 0;
     }
     for (size_t i = 0; i < N; i++) {
       if (run_[i]) {
+	last_detected_blade_effect = effects_[i];
 	transitions_[i].run(blade);
 	if (transitions_[i].done()) run_[i] = false;
       }
     }
+    last_detected_blade_effect = nullptr;
   }
   
 private:
   size_t pos_ = 0;
   bool run_[N];
   TRANSITION transitions_[N];
+  BladeEffect* effects_[N];
   OneshotEffectDetector<EFFECT> effect_;
 public:
   auto getColor(int led) -> decltype(RGBA_um_nod::Transparent() << transitions_[0].getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led)) {
