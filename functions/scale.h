@@ -11,14 +11,14 @@
 class BladeBase;
 
 template<class F, class A, class B>
-class Scale {
+class ScaleBase {
 public:
   void run(BladeBase* blade) {
     f_.run(blade);
     a_.run(blade);
     b_.run(blade);
-    int a = a_.getInteger(0);
-    int b = b_.getInteger(0);
+    int a = a_.calculate(blade);
+    int b = b_.calculate(blade);
     mul_ = (b - a);
     add_ = a;
   }
@@ -27,15 +27,14 @@ public:
   }
 private:
   PONUA F f_;
-  PONUA A a_;
-  PONUA B b_;
+  PONUA SVFWrapper<A> a_;
+  PONUA SVFWrapper<B> b_;
   int add_;
   int mul_;
 };
 
-// Optimized specialization
 template<class F, int A, int B>
-class Scale<F, Int<A>, Int<B>> {
+class ScaleBase<F, Int<A>, Int<B>> {
 public:
   void run(BladeBase* blade) {
     f_.run(blade);
@@ -47,8 +46,34 @@ private:
   PONUA F f_;
 };
 
+template<class SVFF, class A, class B>
+class ScaleSVF {
+ public:
+  void run(BladeBase* blade) {
+    svff_.run(blade);
+    svfa_.run(blade);
+    svfb_.run(blade);
+  }
+  int calculate(BladeBase* blade) {
+    int a = svfa_.calculate(blade);
+    int b = svfb_.calculate(blade);
+    return (svff_.calculate(blade) * (b - a) >> 15) + a;
+  }
+ private:
+  PONUA SVFF svff_;
+  PONUA SVFWrapper<A> svfa_;
+  PONUA SVFWrapper<B> svfb_;
+};
+
+template<class F, class A, class B> struct ScaleFinder { typedef ScaleBase<F, A, B> ScaleClass; };
+template<class F, class A, class B>
+struct ScaleFinder<SingleValueAdapter<F>, A, B> { typedef SingleValueAdapter<ScaleSVF<F, A, B>> ScaleClass; };
+template<class F, class A, class B>
+using Scale = typename ScaleFinder<F, A, B>::ScaleClass;
+  
 // To simplify inverting a function's returned value
 // Example InvertF<BladeAngle<>> will return 0 when up and 32768 when down
 template<class F> using InvertF = Scale<F, Int<32768>, Int<0>>;
+
 
 #endif

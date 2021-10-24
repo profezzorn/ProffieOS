@@ -21,13 +21,13 @@ public:
     f_.run(blade);
     if (begin_) {
       begin_ = false;
-      int f = f_.getInteger(0);
+      int f = f_.calculate(blade);
       while(f < 0) f += sizeof...(TRANSITION) << 8;
       uint8_t selection = f % sizeof...(TRANSITION);
       selected_ = transitions_.get(selection % sizeof...(TRANSITION));
       selected_->begin();
     }
-      selected_->run(blade); 
+    selected_->run(blade); 
   }
 
   RGBA getColor(const RGBA& a, const RGBA& b, int led) {
@@ -41,7 +41,7 @@ public:
 
 private:
   bool begin_ = false;
-  PONUA F f_;
+  PONUA SVFWrapper<F> f_;
   PONUA TrHelper<TRANSITION...> transitions_;
   TransitionInterface* selected_ = nullptr;
 };

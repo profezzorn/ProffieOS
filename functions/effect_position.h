@@ -1,10 +1,13 @@
 #ifndef FUNCTIONS_EFFECTPOS_H
 #define FUNCTIONS_EFFECTPOS_H
 
+#include "svf.h"
+
 template<EffectType T = EFFECT_NONE>
-class EffectPosition {
+class EffectPositionSVF {
 public:
-  void run(BladeBase* blade) {
+  void run(BladeBase* blade) {}
+  int calculate(BladeBase* blade) {
     BladeEffect* effect;
     if (T == EFFECT_NONE) {
       effect = last_detected_blade_effect;
@@ -12,12 +15,12 @@ public:
       OneshotEffectDetector<T> detector;
       effect = detector.Detect(blade);
     }
-    if (effect) value_ = effect->location * 32768;
+    if (effect) return effect->location * 32768;
+    return 0;
   }
-  int getInteger() { return value_; }
-  int getInteger(int led) { return value_; }
-private:
-  int value_ = 0;
 };
+
+template<EffectType T = EFFECT_NONE>
+using EffectPosition = SingleValueAdapter<EffectPositionSVF<T>>;
 
 #endif

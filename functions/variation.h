@@ -11,16 +11,25 @@
 // Note that if any blade styles are using ColorChange<>,
 // the variation will return "ticked" values: 0, 1, 2, etc.
 
-class Variation {
+class VariationSVF {
  public:
-  Variation() {
+  VariationSVF() {
     BladeBase::HandleFeature(HANDLED_FEATURE_CHANGE);
   }
   void run(BladeBase* blade) {
+  }
+  int calculate(BladeBase* blade) {
+    return SaberBase::GetCurrentVariation() & 0x7fff;
   }
   int getInteger(int led) {
     return SaberBase::GetCurrentVariation() & 0x7fff;
   }
 };
+
+// Optimized specialization
+template<> class SingleValueAdapter<VariationSVF> : public VariationSVF {};
+template<> class SVFWrapper<VariationSVF> : public VariationSVF {};
+
+using Variation = SingleValueAdapter<VariationSVF>;
 
 #endif
