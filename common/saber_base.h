@@ -133,6 +133,12 @@ public:
     last_motion_request_ = millis();
   }
 
+  static void DumpMotionRequest() {
+    STDOUT << "Motion requested: " << MotionRequested()
+	   << " (millis() - last_motion_request=" << (millis() - last_motion_request_)
+	   << ")\n";
+  }
+
   enum LockupType {
     LOCKUP_NONE,
     LOCKUP_NORMAL,
