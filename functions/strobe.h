@@ -16,8 +16,8 @@ public:
      strobe_frequency_.run(blade);
      strobe_millis_.run(blade);
      uint32_t m = millis();
-     uint32_t strobe_millis = strobe_millis_.getInteger(0);
-     uint32_t strobe_frequency = strobe_frequency_.getInteger(0);
+     uint32_t strobe_millis = strobe_millis_.calculate(0);
+     uint32_t strobe_frequency = strobe_frequency_.calculate(0);
      uint32_t timeout = strobe_ ?  strobe_millis : (1000 / strobe_frequency);
      if (m - strobe_start_ > timeout) {
         strobe_start_ += timeout;
@@ -29,8 +29,8 @@ public:
    int getInteger(int led) { return strobe_  * 32768; }
 private:
   bool strobe_;
-  PONUA STROBE_FREQUENCY strobe_frequency_;
-  PONUA STROBE_MILLIS strobe_millis_;
+  PONUA SVFWrapper<STROBE_FREQUENCY> strobe_frequency_;
+  PONUA SVFWrapper<STROBE_MILLIS> strobe_millis_;
   uint32_t strobe_start_;
 };
 

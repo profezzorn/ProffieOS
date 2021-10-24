@@ -1,6 +1,8 @@
 #ifndef FUNCTIONS_INT_SELECT_H
 #define FUNCTIONS_INT_SELECT_H
 
+#include "svf.h"
+
 // Usage: IntSelect<SELECTION, Int1, Int2...>
 // SELECTION: FUNCTION
 // Returns SELECTION of N 
@@ -13,7 +15,7 @@ class IntSelect {
 public:
   FunctionRunResult run(BladeBase* blade) {
     FunctionRunResult frr = RunFunction(&f_, blade);
-    int f = f_.getInteger(0);
+    int f = f_.calculate(blade);
     while(f < 0) f += sizeof...(N) << 8;
     f = f % sizeof...(N);
     const static int values[] = { N ... };
@@ -30,7 +32,7 @@ public:
   int getInteger(int led) { return value_; }
 
 private:
-  PONUA F f_;
+  PONUA SVFWrapper<F> f_;
   int value_;
 };
 

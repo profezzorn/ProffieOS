@@ -13,16 +13,16 @@ public:
   void run(BladeBase* blade) {
     i_.run(blade);
     max_.run(blade);
-    int i = i_.getInteger(0);
+    int i = i_.calculate(blade);
     if (effect_.Detect(blade)) value_ += i;
-    value_ %= max_.getInteger(0);
+    value_ %= max_.calculate(blade);
   }
   int getInteger(int led) { return value_; }
 
 private:
   OneshotEffectDetector<EFFECT> effect_;
-  PONUA I i_;
-  PONUA MAX max_;
+  PONUA SVFWrapper<I> i_;
+  PONUA SVFWrapper<MAX> max_;
   int value_;
 };
 

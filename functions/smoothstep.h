@@ -16,7 +16,7 @@ public:
   void run(BladeBase* blade) {
     pos_.run(blade);
     width_.run(blade);
-    int width = width_.getInteger(0);
+    int width = width_.calculate(blade);
     float mult;
     if (width == 0) {
       mult = 32768;
@@ -24,7 +24,7 @@ public:
       mult = 32768 * 32768.0 / width / blade->num_leds();
     }
     mult_ = mult;
-    location_ = blade->num_leds() * mult * (pos_.getInteger(0) - width/2) / 32768;
+    location_ = blade->num_leds() * mult * (pos_.calculate(blade) - width/2) / 32768;
   }
   
   int getInteger(int led) {
@@ -34,8 +34,8 @@ public:
     return (((x * x) >> 14) * ((3<<14) - x)) >> 15;
   }
   
-  PONUA POS pos_;
-  PONUA WIDTH width_;
+  PONUA SVFWrapper<POS> pos_;
+  PONUA SVFWrapper<WIDTH> width_;
   int mult_;
   int location_;
 };

@@ -1,4 +1,5 @@
 #ifndef SOUND_FILTER_H
+#define SOUND_FILTER_H
 #include <complex>
 
 namespace Filter {

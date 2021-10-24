@@ -12,7 +12,7 @@ public:
     millis_.run(blade);
     if (restart_ ) {
       start_millis_ = millis();
-      len_ = millis_.getInteger(0);
+      len_ = millis_.calculate(blade);
       restart_ = false;
     }
   }
@@ -33,7 +33,7 @@ public:
   uint32_t start_millis() { return start_millis_; }
 private:
   bool restart_ = false;
-  PONUA MILLIS millis_;
+  PONUA SVFWrapper<MILLIS> millis_;
   uint32_t start_millis_;
   uint32_t len_ = 0;
 };

@@ -9,6 +9,9 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
  Fett263 Button (prop) file, "Battle Mode 2.0", "Edit Mode", "Track Player", "Real Clash", "Choreography Mode", "Dual Mode Ignition",
  "Multi-Phase", "Multi-Blast"
  Copyright (c) 2020-2021 Fernando da Rosa
+ 
+ Voice Prompts and sounds required for certain features and should be included in /common folder or /font folder on SD card.
+   Free prompts (courtesy of Brian Conner) available here: http://fredrik.hubbe.net/lightsaber/sound/
 
 2 Button Control (this file does not support 1 button)
 
@@ -22,7 +25,9 @@ Standard Controls While Blade is OFF
     Click PWR = Select Preset
     Click AUX = go to First Preset
   Play Track = Long Click PWR pointing up
-  NEW! Track Player = Long Click PWR parallel
+  NEW! Track Player* = Long Click PWR parallel
+  *requires tracks in either font/tracks/ or common/tracks/
+  *if no tracks in font or common will "Loop" default track
     Turn Right = Next Track
     Turn Left = Previous Track
     Click PWR = Play Current Track Once
@@ -4240,9 +4245,14 @@ SaberFett263Buttons() : PropBase() {}
           } else {
             track_num_ = 0;
             num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
-            sound_library_.SaySelect();
-            StartMenu(MENU_TRACK_PLAYER);
-	    StartOrStopTrack();
+            if (num_tracks_ > 0) {
+              sound_library_.SaySelect();
+              StartMenu(MENU_TRACK_PLAYER);
+            } else {
+              sound_library_.SayLoop();
+              track_mode_ = PLAYBACK_LOOP;
+            }
+            StartOrStopTrack();
             return true;
           }
         }
@@ -4325,7 +4335,7 @@ SaberFett263Buttons() : PropBase() {}
         if (color_mode_ == CC_COLOR_LIST) {
           dial_ = (dial_ + 1) % NELEM(color_list_);
           ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
-#ifdef FETT263_SAY_COLOR_LIST
+#ifdef FETT263_SAY_COLOR_LIST_CC
           sound_library_.SayColor(color_list_[dial_].color_number);
 #else
           hybrid_font.PlayCommon(&SFX_ccchange);

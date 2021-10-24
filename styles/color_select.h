@@ -2,6 +2,7 @@
 #define STYLES_COLOR_SELECT_H
 
 #include "../functions/variation.h"
+#include "../functions/svf.h"
 
 // Usage: ColorSelect<SELECTION, TRANSITION, COLOR1, COLOR2, ...>
 // SELECTION: function
@@ -23,7 +24,7 @@ public:
   void run(BladeBase* blade) {
     f_.run(blade);
     colors_.run(blade);
-    int f = f_.getInteger(0);
+    int f = f_.calculate(blade);
     while(f < 0) f += sizeof...(COLORS) << 8;
     uint8_t selection = f % sizeof...(COLORS);
     if (selection != selection_) {
@@ -40,11 +41,11 @@ public:
   }
 
 private:
-  SELECTION f_;
-  TRANSITION transition_;
+  PONUA SVFWrapper<SELECTION> f_;
+  PONUA TRANSITION transition_;
   uint8_t selection_= 0;
   uint8_t old_selection_ = 0;
-  MixHelper<COLORS...> colors_;
+  PONUA MixHelper<COLORS...> colors_;
 public:
   auto getColor(int led) -> decltype(transition_.getColor(colors_.getColor(selection_, led), colors_.getColor(selection_, led), led)) {
 //    SCOPED_PROFILER();

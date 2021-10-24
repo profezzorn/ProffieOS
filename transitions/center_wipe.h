@@ -20,7 +20,7 @@ public:
   void run(BladeBase* blade) {
     pos_.run(blade);
     TransitionBaseX<MILLIS>::run(blade);
-    uint32_t center = (pos_.getInteger(0) * blade->num_leds()) >> 7;
+    uint32_t center = (pos_.calculate(blade) * blade->num_leds()) >> 7;
     uint32_t fade_top = this->update(256 * blade->num_leds() - center);
     uint32_t fade_bottom = this->update(center);
     uint32_t top = clampi32(center + fade_top, center, 256 * blade->num_leds());
@@ -34,7 +34,7 @@ public:
     return MixColors(a, b, mix, 8);
   }
 private:
-  PONUA POSITION pos_;
+  PONUA SVFWrapper<POSITION> pos_;
   Range range_;
 };
 
@@ -57,7 +57,7 @@ public:
   void run(BladeBase* blade) {
     pos_.run(blade);
     TransitionBaseX<MILLIS>::run(blade);
-    uint32_t center = (pos_.getInteger(0) * blade->num_leds()) >> 7;
+    uint32_t center = (pos_.calculate(blade) * blade->num_leds()) >> 7;
     uint32_t fade_top = this->update(256 * blade->num_leds() - center);
     uint32_t fade_bottom = this->update(center);
     uint32_t top = clampi32((256 * blade->num_leds()) - fade_top, center, 256 * blade->num_leds());
@@ -71,7 +71,7 @@ public:
     return MixColors(b, a, mix, 8);
   }
 private:
-  PONUA POSITION pos_;
+  PONUA SVFWrapper<POSITION> pos_;
   Range range_;
 };
 
