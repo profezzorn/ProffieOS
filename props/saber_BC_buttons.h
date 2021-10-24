@@ -692,7 +692,6 @@ public:
       // 2 button
       case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
     #endif
-  #endif
       if (!mode_volume_) {
         mode_volume_ = true;
         if (SFX_vmbegin) {
@@ -713,6 +712,7 @@ public:
         STDOUT.println("Exit Volume Menu");
       }
       return true;
+  #endif
       
 // Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
