@@ -4132,7 +4132,7 @@ SaberFett263Buttons() : PropBase() {}
   }
         return true;
 
-      case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_LONG, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_ON):
         if (!battle_mode_) {
           battle_mode_ = true;
           if (SFX_bmbegin) {
