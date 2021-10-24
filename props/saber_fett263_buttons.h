@@ -1,4 +1,5 @@
-/* Fett263 Buttons for use with 2 Button Sabers (PWR, AUX)
+/* Fett263 Buttons for use with 1, 2 or 3 Button Sabers*
+*1 Button Controls based on SA22C prop
 Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force Player, Real Clash, Choreography Mode
    Dual Mode Ignition Sounds, Multi-Phase Control, Multi-Blast
 
@@ -13,10 +14,11 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
  Voice Prompts and sounds required for certain features and should be included in /common folder or /font folder on SD card.
    Free prompts (courtesy of Brian Conner) available here: http://fredrik.hubbe.net/lightsaber/sound/
 
-2 Button Control (this file does not support 1 button)
+---------- 2 / 3 Button Controls ----------
 
 Standard Controls While Blade is OFF
   Turn On / Ignite Saber = Click PWR
+  Turn On / Ignite Saber (Muted) = Double Click PWR
   Change Preset (one at a time*) = Click AUX
     *if pointing down will go to previous
   NEW! Scroll Presets (using twist menu) = Long Click AUX
@@ -159,6 +161,120 @@ Edit Mode*
 
   "Edit Color" Additional Control
     "Color List" and "Adjust Color Hue" Zoom Mode = Long Click PWR
+
+---------- 1 Button Controls (based on SA22C prop) ----------
+
+Standard Controls While Blade is OFF
+  Turn On / Ignite Saber = Click PWR
+  Turn On / Ignite Saber (Muted) = Double Click and Hold PWR
+  NEW Control! Start / Stop Tracks = Double Click PWR (pointing up)
+  NEW! Track Player* = Double Click PWR (parallel or down)
+    *if only default track exists in current preset, track will "Loop"
+    Turn Right = Next Track
+    Turn Left = Previous Track
+    Click PWR = Play Current Track Once
+    Hold PWR = Random (will play current track and then randomly select next tracks)
+    Hold PWR + Turn Right = Rotate (will play current track and then next sequential tracks)
+    Hold PWR + Turn Left = Loop Current Track
+  NEW! Toggle Gesture Sleep* = Hold PWR + Twist
+    *toggles gesture controls on/off
+    *gestures sleep automatically if Blade Detect is enabled and blade is missing
+  Next Preset = Long Click PWR (parallel or up)
+  NEW Control! Previous Preset = Long Click PWR (pointing down)
+  NEW! Scroll Presets (using twist menu) = Triple Click PWR
+    Turn Right = Next Preset
+    Turn Left = Previous Preset
+    Click PWR = Select Preset
+    Long Click PWR = First Preset
+  NEW Control! Volume Menu = Hold PWR + Clash
+    Turn Right = Increase Volume (to max)
+    Turn Left = Decrease Volume (to min)
+    Click PWR = Exit
+  NEW Control! Battery Level = Triple Click and Hold PWR
+
+Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
+  Ignite Saber
+    Swing On
+    Stab On
+    Twist On
+    Thrust On
+
+Standard Controls While Blade is ON
+  Turn Off / Retract Blade = Hold PWR
+  Clash Effect = Clash Saber
+  Lockup Effect = Hold PWR + Clash
+  Stab Effect = Stab (thrust with impact at tip of blade)
+  NEW Control! Drag Effect = Hold PWR + Stab (pointing down)
+  Melt Effect = Hold PWR + Stab (parallel or up)
+  Lightning Block = Double Click and Hold PWR
+  Blast Effect = Click / Double Click / Triple Click PWR
+  Multi-Blast Mode = Hold PWR + Swing
+    Each Swing in Multi-Blast Mode will deflect Blast effect
+    To exit, click PWR or do Clash
+  NEW! Force/Quote = Long Click PWR
+    If pointing down will toggle Force/Quote mode and do Force Effect or play Quote accordingly
+    *Quote plays sequentially
+    If parallel will do Force/Quote
+  NEW! Stop Track* - Double Click PWR
+    *if track is playing while ON
+    To start/select track saber must be OFF
+  NEW Control! Color Change = 4 Clicks PWR (parallel or down)
+    NEW! ColorWheel "Zoom"* = Hold PWR, Release to Save
+      *if COLORWHEEL_ZOOM defined
+      *While in ColorWheel you can Hold PWR down to zoom in color for easier selection
+  NEW! Power Save* = 4 Clicks PWR (pointing up)
+    *requires EFFECT_POWERSAVE in style
+  Multi-Phase Preset Change*
+    *requires FETT263_MULTI_PHASE define
+    Hold PWR + Twist (parallel or up) =  Next Preset 
+    Hold PWR + Twist (pointing down) = Previous Preset
+
+Optional Gesture Controls (if enabled)
+  Retract Blade
+    Twist Off
+
+"Battle Mode" Controls* - While ON
+    *may vary by defines
+  Enter/Exit Battle Mode = Triple Click and Hold PWR
+  Clash / Lockup = controlled by gesture
+    Clash blade
+      If blade swings through the clash it will do a "glancing Clash"
+      If using FETT263_BM_CLASH_DETECT 6 define (Battle Mode 2.0) normal clash used for hits below the
+        FETT263_BM_CLASH_DETECT value (1 ~ 8), if undefined or equal to 0 then Battle Mode 1.0 is used.
+      If blade stops/slows on clash the saber will initiate Begin Lockup
+      To perform a "clash" do an immediate Pull Away this will transition from Begin Lockup to End Lockup in quick succession
+      To Lockup, steady the blade after Clash
+      To end Lockup do Pull Away
+  Drag / Melt = controlled by gesture
+    Stab (thrust with impact at tip of blade)
+      If pointing down Drag will initiate
+      To end Drag pull blade up from floor at an angle
+      If parallel or up Melt will initiate
+      To end Melt pull blade away from object at an angle
+  Blast Effect = Click AUX
+    NEW! swing within 2 seconds to enter Multi-Blast Mode
+  Lightning Block = Double Click and Hold PWR
+  Force Push* = Push Saber
+    *requires FETT263_FORCE_PUSH
+
+Edit Mode*
+    *requires FETT263_EDIT_MODE_MENU & ENABLE_ALL_EDIT_OPTIONS defines
+    *requires /common folder with all menu prompt sounds
+  Enter Edit Mode = While Off, Hold PWR
+    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
+
+  While in Edit Mode controls are as follows:
+    Rotate Forward, Increase Value, Confirm "Yes" = Turn Right
+    Rotate Back, Decrease Value, Confirm "No" = Turn Left
+    Select, Save, Enter = Click PWR
+    Cancel, Revert, Go Back = Long Click PWR
+    Go to Main Menu (from sub-menu) - Hold PWR
+    Exit Edit Mode - Hold PWR (or rotate to "Exit") while in Main Menu
+
+  "Edit Color" Additional Control
+    "Color List" and "Adjust Color Hue" Zoom Mode = Double Click PWR
+
+---------- || ----------
 
 OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
 
@@ -348,8 +464,16 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #define FETT263_FORCE_PUSH_LENGTH 5
 #endif
 
-#if NUM_BUTTONS < 2
-#error /props/saber_fett263_buttons.h requires 2 buttons for operation
+#if NUM_BUTTONS < 1
+#error /props/saber_fett263_buttons.h requires 1, 2 or 3 Buttons for operation
+#endif
+
+#if (NUM_BUTTONS == 1) && defined(FETT263_SAVE_CHOREOGRAPHY)
+#error CHROEOGRAPHY MODE not available for 1 Button Sabers, 2 Buttons required
+#endif
+
+#if defined(FETT263_HOLD_BUTTON_LOCKUP) && NUM_BUTTONS == 1
+#error FETT263_HOLD_BUTTON_LOCKUP cannot be used with 1 Button Controls
 #endif
 
 #if defined(FETT263_HOLD_BUTTON_LOCKUP) && defined(FETT263_SAVE_CHOREOGRAPHY)
@@ -465,6 +589,37 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #define FETT263_FORCE_PUSH
 #else
 #define FORCE_PUSH_CONDITION battle_mode_
+#endif
+
+#if NUM_BUTTONS == 1
+/* Tightened click timings
+SA22C shortened the timeout for short and double click detection from 500ms
+to 300ms.  I think it feels more responsive this way but still gives enough
+timeout to ensure all button actions can be achieved consistently
+SA22C included all button timings so they can be easily tweaked to suit
+individual tastes.
+*/
+
+#ifndef BUTTON_DOUBLE_CLICK_TIMEOUT
+#define BUTTON_DOUBLE_CLICK_TIMEOUT 300
+#endif
+
+#ifndef BUTTON_SHORT_CLICK_TIMEOUT
+#define BUTTON_SHORT_CLICK_TIMEOUT 300
+#endif
+
+#ifndef BUTTON_HELD_TIMEOUT
+#define BUTTON_HELD_TIMEOUT 300
+#endif
+
+#ifndef BUTTON_HELD_MEDIUM_TIMEOUT
+#define BUTTON_HELD_MEDIUM_TIMEOUT 1000
+#endif
+
+#ifndef BUTTON_HELD_LONG_TIMEOUT
+#define BUTTON_HELD_LONG_TIMEOUT 2000
+#endif
+
 #endif
 
 #include "prop_base.h"
@@ -3789,8 +3944,410 @@ SaberFett263Buttons() : PropBase() {}
         }
 #endif
         return false;
-		    
-// 2 Button Controls	    
+
+#if NUM_BUTTONS == 1
+// 1 Button Specific (based on SA22C's prop)
+
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
+          if (menu_) {
+            MenuChoice();
+            return true;
+          } else {
+#ifdef FETT263_DUAL_MODE_SOUND
+            SelectIgnitionSound();
+#endif
+            if (SFX_preon) {
+#ifdef FETT263_DUAL_MODE_SOUND
+              SelectPreonSound();
+#endif
+              On();
+            } else {
+              FastOn();
+            }
+#ifdef FETT263_BATTLE_MODE_ALWAYS_ON
+            battle_mode_ = true;
+#endif
+#ifdef FETT263_BATTLE_MODE_START_ON
+            battle_mode_ = true;
+#endif
+          }
+          return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
+        if (menu_) {
+          if (menu_type_ = MENU_PRESET) {
+            first_preset();
+            MenuExit();
+            return true;
+          }
+          MenuUndo();
+        } else {
+          if (fusor.angle1() < - M_PI / 4) {
+            previous_preset();
+          } else {
+            next_preset();
+          }        
+        }
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
+        if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
+          track_mode_ = PLAYBACK_RANDOM;
+          sound_library_.SayRandom();
+          MenuExit();
+          return true;
+        }
+#ifdef FETT263_EDIT_MODE_MENU
+        // Enter Edit Mode
+        if (!menu_) {
+          if (track_player_) {
+            StopTrackPlayer();
+          }
+          if (!SFX_medit) {
+              talkie.Say(talkie_error_in_15, 15);
+              talkie.Say(talkie_font_directory_15, 15);
+              STDOUT.println("Edit Mode prompts missing");
+              return true;
+          }
+          STDOUT.println("Enter Edit Mode");
+          GenerateIniFiles();
+          sound_library_.SayEditMode();
+          StartMenu(MENU_TOP);
+          menu_top_pos_ = 0;
+          FastOn();
+        }
+#else
+        // If Edit Mode Menu Disabled Save .ini files for SD card editing
+        GenerateIniFiles();
+        sound_library_.SaySave();
+#endif
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
+        if (menu_) return true;
+        if (SetMute(true)) {
+          unmute_on_deactivation_ = true;
+          FastOn();
+        }
+        return false;
+
+      case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_OFF):
+#if defined (FETT263_SAY_BATTERY_PERCENT)
+        sound_library_.SayBatteryLevel();
+        sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
+        sound_library_.SayPercent();
+#elif defined(FETT263_SAY_BATTERY_VOLTS)
+        sound_library_.SayBatteryLevel();
+        sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
+        sound_library_.SayVolts();
+#endif
+        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON):
+#ifdef FETT263_EDIT_MODE_MENU
+        if (menu_) {
+          if (color_mode_ == COLOR_LIST || color_mode_ == EDIT_COLOR) {
+            if (color_mode_ == COLOR_LIST) {
+              hsl_ = Color16(color_list_[dial_].color).toHSL();
+            }
+            color_mode_ = ZOOM_COLOR;
+            hsl_angle_ = fusor.angle2();
+            sound_library_.SayZoomingIn();
+          } else {
+            MenuUndo();
+          }
+          return true;
+        }
+#endif
+        if (SFX_quote) {      
+          if (fusor.angle1() < - M_PI / 3)  {
+            force_quote_ = !force_quote_;
+          }
+          ForceQuote();
+        } else {
+          SaberBase::DoForce();  
+        }
+  return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_PRESSED, MODE_ON):
+#ifdef COLORWHEEL_ZOOM
+        if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
+          SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
+          sound_library_.SayZoomingIn();
+          return true;
+        }
+#endif
+        return false;
+
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_RELEASED, MODE_ON):
+#ifndef DISABLE_COLOR_CHANGE
+        if (color_mode_ == CC_COLOR_LIST) {
+          hybrid_font.PlayCommon(&SFX_ccend);
+          NewColor(1, BASE_COLOR_ARG);
+          current_preset_.Save();
+          show_color_all_.Stop();
+          UpdateStyle();
+    return true;
+        }
+        if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+          ToggleColorChangeMode();
+#ifdef FETT263_EDIT_MODE_MENU
+          if (menu_type_ == MENU_COLOR) {
+            menu_type_ = MENU_TOP;
+            MenuSave();
+      return true;
+          }
+#endif
+          return true;
+        }
+#endif
+        return false;
+
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_ON):
+        if (color_mode_ == CC_COLOR_LIST) return true;
+        if (menu_) {
+          if (menu_type_ == MENU_TOP) {
+            sound_library_.SayExit();
+            menu_ = false;
+          } else {
+            menu_type_ = MENU_TOP;
+            MenuCancel();
+          }
+          return true;
+        }
+        if (!SaberBase::Lockup()) {
+#ifndef DISABLE_COLOR_CHANGE
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+            // Just exit color change mode.
+            // Don't turn saber off.
+            ToggleColorChangeMode();
+            return true;
+          }
+#endif
+          Off();
+          saber_off_time_millis_ = millis();
+          battle_mode_ = false;
+          swing_blast_ = false;
+  }
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_LONG, MODE_ON):
+        if (!battle_mode_) {
+          battle_mode_ = true;
+          if (SFX_bmbegin) {
+            hybrid_font.PlayCommon(&SFX_bmbegin);
+          } else {
+            hybrid_font.DoEffect(EFFECT_FORCE, 0);
+          }
+        } else {
+          battle_mode_ = false;
+          if (SFX_bmend) {
+            hybrid_font.PlayCommon(&SFX_bmend);
+          } else {
+            beeper.Beep(0.5, 3000);
+          }
+        }
+        return true;
+
+#ifdef FETT263_MULTI_PHASE
+      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
+        if (menu_) return true;
+        if (fusor.angle1() < - M_PI / 4) {
+          previous_preset_fast();
+        } else {
+          next_preset_fast();
+        }
+        return true;
+#endif
+
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+#ifndef DISABLE_COLOR_CHANGE
+          if (color_mode_ == CC_COLOR_LIST) {
+            hybrid_font.PlayCommon(&SFX_ccend);
+            NewColor(1, BASE_COLOR_ARG);
+            current_preset_.Save();
+            show_color_all_.Stop();
+            UpdateStyle();
+      return true;
+          }
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+            ToggleColorChangeMode();
+            return true;
+          }
+#endif      
+        if (menu_) {
+          MenuChoice();
+          return true;
+        }
+        if (battle_mode_ && !swing_blast_) {
+          check_blast_ = true;
+          last_blast_millis_ = millis();
+        }
+        swing_blast_ = false;
+        SaberBase::DoBlast();
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
+        if (menu_) return true;
+        if (track_player_) {
+          StopTrackPlayer();
+          return true;
+        }
+        if (battle_mode_ && !swing_blast_) {
+          check_blast_ = true;
+          last_blast_millis_ = millis();
+        }
+        swing_blast_ = false;
+        SaberBase::DoBlast();
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
+        if (menu_) return true;
+        if (battle_mode_ && !swing_blast_) {
+          check_blast_ = true;
+          last_blast_millis_ = millis();
+        }
+        swing_blast_ = false;
+        SaberBase::DoBlast();
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_SHORT, MODE_ON):
+        if (fusor.angle1() > M_PI / 3) {
+          SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
+        } else {
+#ifndef DISABLE_COLOR_CHANGE
+          bool uses_rgb_arg;
+          #define USES_RGB_ARG(N) \
+          uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(N), 3);
+          ONCEPERBLADE(USES_RGB_ARG)
+          if (!uses_rgb_arg) {
+            ToggleColorChangeMode();
+          } else {
+            bool handles_color_change;
+          #define USES_COLOR_CHANGE(N) \
+            handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
+            ONCEPERBLADE(USES_COLOR_CHANGE)
+            if (!handles_color_change) {
+              color_mode_ = CC_COLOR_LIST;
+              show_color_all_.Start();
+              for (int i = 1; i <= NUM_BLADES; i++) {
+                if (style_parser.UsesArgument(current_preset_.GetStyle(i), BASE_COLOR_ARG + 2)) {
+                  ShowColorStyle::SetColor(GetColorArg(i, BASE_COLOR_ARG));
+                  break;
+                }
+              }
+              current_menu_angle_ = fusor.angle2();
+              dial_ = -1;
+              hybrid_font.PlayCommon(&SFX_ccbegin);
+            } else {
+              ToggleColorChangeMode();
+            }
+          }
+#endif
+#ifdef DISABLE_COLOR_CHANGE
+          SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
+#endif
+        }
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
+        if (menu_) return true;
+        swing_blast_ = !swing_blast_;
+        if (swing_blast_) {
+          if (SFX_blstbgn) {
+            hybrid_font.PlayCommon(&SFX_blstbgn);
+          } else {
+            hybrid_font.SB_Effect(EFFECT_BLAST, 0);
+          }
+        } else {
+          if (SFX_blstend) {
+            hybrid_font.PlayCommon(&SFX_blstend);
+          } else {
+            hybrid_font.SB_Effect(EFFECT_BLAST, 0);
+          }
+        }
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
+        if (menu_) return true;
+        if (!SaberBase::Lockup()) {
+          SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+          swing_blast_ = false;
+          SaberBase::DoBeginLockup();
+          return true;
+        }
+        break;
+
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD, MODE_ON):
+        if (menu_) return true;
+        SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+        swing_blast_ = false;
+        SaberBase::DoBeginLockup();
+        return true;
+        break;
+
+      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
+        if (menu_) return true;
+        if (!SaberBase::Lockup()) {
+          if (fusor.angle1() < - M_PI / 4) {
+            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+          } else {
+            SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+          }
+          check_blast_ = false;
+          swing_blast_ = false;
+          SaberBase::DoBeginLockup();
+          return true;
+        }
+        return true;
+        break;
+
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
+        if (track_player_) {
+          StopTrackPlayer();
+    track_mode_ = PLAYBACK_OFF;
+          return true;
+        } else {
+          if (fusor.angle1() > M_PI / 3) {
+            StartOrStopTrack();
+            return true;
+          } else {
+            track_num_ = 0;
+            num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
+      if (num_tracks_ > 0) {
+              sound_library_.SaySelect();
+              StartMenu(MENU_TRACK_PLAYER);
+      } else {
+              sound_library_.SayLoop();
+              track_mode_ = PLAYBACK_LOOP;
+            }
+            StartOrStopTrack();
+            return true;
+          }
+        }
+          return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
+        if (!menu_) {
+          StartMenu(MENU_VOLUME);
+          if (SFX_vmbegin) {
+            sound_library_.SayEnterVolumeMenu();
+          } else {
+            sound_library_.SayEditVolume();
+          }
+        }
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+        if (!menu_) {
+          StartMenu(MENU_PRESET);
+          sound_library_.SaySelectPreset();
+          return true;
+        }
+        return true; 
+#else
+// 2 Button Controls    
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
@@ -4329,6 +4886,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 #endif
 
+#endif
 // Gesture Controls (not button specific)
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON):
         if (wav_player && wav_player->isPlaying()) return true;
