@@ -146,8 +146,8 @@ public:
   void SayTheBatteryLevelIs() { Play("battlevl.wav"); }
   void SayBlastColor() { Play("mblast.wav"); }
   void SayCancel() { Play("mcancel.wav"); }
-  void SayBeginChoreography() { Play("chreobgn.wav"); }
-  void SayEndChoreography() { Play("chreoend.wav"); }
+  void SayChoreographyBegin() { Play("chreobgn.wav"); }
+  void SayChoreographyEnd() { Play("chreoend.wav"); }
   void SayClashColor() { Play("mclash.wav"); }
   void SayClashDetectionLevel() { Play("mbmclash.wav"); }
   void SayClashLockupPosition() { Play("mlockpos.wav"); }
@@ -213,9 +213,9 @@ public:
   void SayPreonOptions() { Play("mpreopt.wav"); }
   void SayPreonSize() { Play("mpreonsz.wav"); }
   void SayRandom() { Play("mrandom.wav"); }
-  void SayBeginRehearsal() { Play("rehrsbgn.wav"); }
-  void SayEndRehearsal() { Play("rehrsend.wav"); }
-  void SayReplaceRehearsal() { Play("rehrsnew.wav"); }
+  void SayRehearseBegin() { Play("rehrsbgn.wav"); }
+  void SayRehearseEnd() { Play("rehrsend.wav"); }
+  void SayRehearseNew() { Play("rehrsnew.wav"); } // rename?
   void SayResetColors() { Play("mresetc.wav"); }
   void SayRetractionColor() { Play("mretract.wav"); }
   void SayRetractionDelay() { Play("mrtdelay.wav"); }
