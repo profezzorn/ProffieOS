@@ -356,7 +356,7 @@ public:
     DetectTwist();
     Vec3 mss = fusor.mss();
     sound_library_.Poll(wav_player);
-    if (wav_player && !wav_player->IsPlaying()) wav_player.Free();
+    if (wav_player && !wav_player->isPlaying()) wav_player.Free();
     if (SaberBase::IsOn()) {
       DetectSwing();
       if (auto_lockup_on_ &&
