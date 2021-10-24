@@ -837,7 +837,7 @@ SaberFett263Buttons() : PropBase() {}
     memset(saved_choreography.clash_rec, 0, sizeof(saved_choreography.clash_rec));
     clash_count_ = -1;
     rehearse_ = true;
-    sound_library_.SayBeginRehearsal();
+    sound_library_.SayRehearseBegin();
     FastOn();
   }
 
@@ -881,7 +881,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void EndRehearsal() {
-    sound_library_.SayEndRehearsal();
+    sound_library_.SayRehearseEnd();
     clash_count_ += 1;
     saved_choreography.clash_rec[clash_count_].stance = SavedRehearsal::STANCE_END;
     next_event_ = true;
@@ -901,7 +901,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void BeginChoreo() {
-    sound_library_.SayBeginChoreography();
+    sound_library_.SayChoreographyBegin();
     choreo_ = true;
     battle_mode_ = true;
     clash_count_ = 0;
@@ -1410,7 +1410,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_SAVE_CHOREOGRAPHY
       if (choreo_ && saved_choreography.clash_rec[clash_count_].stance == SavedRehearsal::STANCE_END) {
         choreo_ = false;
-        sound_library_.SayEndChoreography();
+	sound_library_.SayChoreographyEnd();
       }
 #endif
       if (auto_lockup_on_ &&
@@ -3479,7 +3479,7 @@ SaberFett263Buttons() : PropBase() {}
     switch (menu_type_) {
 #ifdef FETT263_SAVE_CHOREOGRAPHY
       case MENU_REHEARSE:
-	sound_library_.SayReplaceRehearsal();
+	sound_library_.SayKeepRehearsal();
         break;
 #endif
       case MENU_PRESET:
@@ -4276,7 +4276,7 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_AUX):
       // Check for existing rehearsal and prompt to overwrite or keep via menu
       if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
-	sound_library_.SayNewRehearsal();
+	sound_library_.SayRehearseNew();
         StartMenu(MENU_REHEARSE);
         return true;
       } else {
