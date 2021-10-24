@@ -42,14 +42,14 @@ public:
     uint32_t delta = now - last_millis_;
     if (delta > 100) delta = 1;
     last_millis_ = now;
-    int speed = speed_.getInteger(0);
+    int speed = speed_.calculate(blade);
     // This makes the random value update exactly 1000 times per second.
     while (delta--)
       value_ = clampi32(value_ + (random(speed * 2 + 1) - speed), 0, 32768);
   }
   int getInteger(int led) { return value_ ; }
 private:
-  PONUA SPEED speed_;
+  PONUA SVFWrapper<SPEED> speed_;
   uint32_t last_millis_;
   int value_;
 };

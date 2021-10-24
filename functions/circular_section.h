@@ -22,7 +22,7 @@ public:
     FunctionRunResult ret = RunFunction(&fraction_, base);
     
     num_leds_ = base->num_leds();;
-    int fraction = fraction_.getInteger(0);
+    int fraction = fraction_.calculate(base);
     if (fraction == 32768) {
       start_ = 0;
       end_ = num_leds_ * 32768;
@@ -30,7 +30,7 @@ public:
       start_ = 0;
       end_ = 0;
     } else {
-      int pos = pos_.getInteger(0);
+      int pos = pos_.calculate(base);
       start_ = ((pos + 32768 - fraction / 2) & 32767) * num_leds_;
       end_ = ((pos + fraction / 2) & 32767) * num_leds_;
     }
@@ -49,8 +49,8 @@ public:
     return black_mix;
   }
 private:
-  PONUA POSITION pos_;
-  PONUA FRACTION fraction_;
+  PONUA SVFWrapper<POSITION> pos_;
+  PONUA SVFWrapper<FRACTION> fraction_;
   
   uint32_t start_;
   uint32_t end_;

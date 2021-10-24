@@ -1,6 +1,9 @@
 #ifndef STYLES_LAYERS_H
 #define STYLES_LAYERS_H
 
+#include "alpha.h"
+#include "../functions/int.h"
+
 // Usage: Layers<BASE, LAYER1, LAYER2, ...>
 // BASE: COLOR or LAYER
 // LAYER1, LAYER2: LAYER
@@ -39,7 +42,6 @@ public:
     return base_.getColor(led) << layer_.getColor(led);
 //    return PRINT(base_.getColor(led) << PRINT(layer_.getColor(led), "layer"), __PRETTY_FUNCTION__);
   }
-
 };
 
 template<class BASE, class L1, class L2, class... LAYERS>

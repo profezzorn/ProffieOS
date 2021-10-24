@@ -5,41 +5,43 @@
 // Usage: SmoothSoundLevel
 // Returns 0-32768 based on sound level.
 // returned value: INTEGER
-class SmoothSoundLevel {
+class SmoothSoundLevelSVF {
  public:
-  void run(BladeBase* blade) {
-    value_ = clampi32(sqrtf(dynamic_mixer.audio_volume()) * 20, 0, 32768);
+  void run(BladeBase* blade) {}
+  int calculate(BladeBase* blade) {
+    return clampi32(sqrtf(dynamic_mixer.audio_volume()) * 20, 0, 32768);
   }
-  int getInteger(int led) { return value_; }
-  int value_;
 };
+
+using SmoothSoundLevel = SingleValueAdapter<SmoothSoundLevelSVF>;
 
 // Usage: NoisySoundLevel
 // Returns 0-32768 based on sound level.
 // returned value: INTEGER
-class NoisySoundLevel {
+class NoisySoundLevelSVF {
  public:
-  void run(BladeBase* blade) {
-    value_ = clampi32(dynamic_mixer.last_sum() * 3, 0, 32768);
+  void run(BladeBase* blade) {}
+  int calculate(BladeBase* blade) {
+    return clampi32(dynamic_mixer.last_sum() * 3, 0, 32768);
   }
-  int getInteger(int led) { return value_; }
-  int value_;
 };
 
+using NoisySoundLevel = SingleValueAdapter<NoisySoundLevelSVF>;
 
 // Usage: NoisySoundLevelCompat
 // Returns 0-32768 based on sound level.
 // This function is now used to implement the
 // AudioFlicker<> style, don't change it.
 // returned value: INTEGER
-class NoisySoundLevelCompat {
+class NoisySoundLevelCompatSVF {
  public:
-  void run(BladeBase* blade) {
-    value_ = clampi32(dynamic_mixer.last_sum() << 3, 0, 32768);
+  void run(BladeBase* blade) {}
+  int calculate(BladeBase* blade) {
+    return clampi32(dynamic_mixer.last_sum() << 3, 0, 32768);
   }
-  int getInteger(int led) { return value_; }
-  int value_;
 };
+
+using NoisySoundLevelCompat = SingleValueAdapter<NoisySoundLevelCompatSVF>;
 
 #endif  // ENABLE_AUDIO
 #endif

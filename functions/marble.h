@@ -34,22 +34,22 @@ public:
     if (delta > 1000000) delta = 1;
     float fraction = delta / 1000000.0;
 
-    float rad = (pos_ + offset_.getInteger(0)/32768.0) * M_PI * 2.0;
+    float rad = (pos_ + offset_.calculate(base)/32768.0) * M_PI * 2.0;
     Vec3 down = fusor.accel();
-    float gravity = gravity_.getInteger(0) / 32768.0;
+    float gravity = gravity_.calculate(base) / 32768.0;
     float accel = (down.y * sinf(rad) + down.z * cosf(rad)) * gravity;
-    accel += acceleration_.getInteger(0) / 32768.0;
-    accel -= speed_ * friction_.getInteger(0) / 32768.0;
+    accel += acceleration_.calculate(base) / 32768.0;
+    accel -= speed_ * friction_.calculate(base) / 32768.0;
     speed_ += accel * fraction;
     pos_ = fract(pos_ + speed_ * fraction);
     value_ = pos_ * 32768;
   }
   int getInteger(int led) { return value_; }
 private:
-  PONUA OFFSET offset_;
-  PONUA FRICTION friction_;
-  PONUA ACCELERATION acceleration_;
-  PONUA GRAVITY gravity_;
+  PONUA SVFWrapper<OFFSET> offset_;
+  PONUA SVFWrapper<FRICTION> friction_;
+  PONUA SVFWrapper<ACCELERATION> acceleration_;
+  PONUA SVFWrapper<GRAVITY> gravity_;
   
   float pos_ = 0.0;
   float speed_ = 0.0;

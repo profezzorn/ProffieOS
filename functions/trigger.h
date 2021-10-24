@@ -43,7 +43,7 @@ class Trigger {
     uint32_t t = micros() - start_time_;
 
     while (true) {
-      uint32_t micros_for_state = get_millis_for_state() * 1000;
+      uint32_t micros_for_state = get_millis_for_state(blade) * 1000;
       if (t < micros_for_state) {
 	switch (trigger_state_) {
 	case TRIGGER_DELAY:
@@ -68,12 +68,12 @@ class Trigger {
       start_time_ += micros_for_state;
     }
   }
-  uint32_t get_millis_for_state() {
+  uint32_t get_millis_for_state(BladeBase* base) {
     switch (trigger_state_) {
-    case TRIGGER_DELAY: return delay_millis_.getInteger(0);
-    case TRIGGER_ATTACK: return fade_in_millis_.getInteger(0);
-    case TRIGGER_SUSTAIN: return sustain_millis_.getInteger(0);
-    case TRIGGER_RELEASE: return fade_out_millis_.getInteger(0);
+    case TRIGGER_DELAY: return delay_millis_.calculate(base);
+    case TRIGGER_ATTACK: return fade_in_millis_.calculate(base);
+    case TRIGGER_SUSTAIN: return sustain_millis_.calculate(base);
+    case TRIGGER_RELEASE: return fade_out_millis_.calculate(base);
     case TRIGGER_OFF:
       break;
     }
@@ -81,10 +81,10 @@ class Trigger {
   }
   int getInteger(int led) const { return value_; }
  private:
-  PONUA DELAY_MILLIS delay_millis_;
-  PONUA FADE_IN_MILLIS fade_in_millis_;
-  PONUA SUSTAIN_MILLIS sustain_millis_;
-  PONUA FADE_OUT_MILLIS fade_out_millis_;
+  PONUA SVFWrapper<DELAY_MILLIS> delay_millis_;
+  PONUA SVFWrapper<FADE_IN_MILLIS> fade_in_millis_;
+  PONUA SVFWrapper<SUSTAIN_MILLIS> sustain_millis_;
+  PONUA SVFWrapper<FADE_OUT_MILLIS> fade_out_millis_;
   int value_;
   uint8_t trigger_state_ = TRIGGER_OFF;
   uint32_t start_time_;

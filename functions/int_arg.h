@@ -2,6 +2,7 @@
 #define FUNCTIONS_INT_ARG_H
 
 #include "../common/arg_parser.h"
+#include "svf.h"
 
 class IntArgBase {
 public:
@@ -13,6 +14,7 @@ public:
     }
   }
   int getInteger(int led) { return value_; }
+  int calculate(BladeBase* blade) { return value_; }
 protected:
   void init(int argnum) {
     char default_value[16];
@@ -27,12 +29,21 @@ protected:
 };
 
 template<int ARG, int DEFAULT_VALUE>
-class IntArg : public IntArgBase {
+class IntArgSVF : public IntArgBase {
 public:
-  IntArg() {
+  IntArgSVF() {
     value_ = DEFAULT_VALUE;
     init(ARG);
   }
 };
+
+// Optimized specialization
+template<int ARG, int DEFAULT_VALUE>
+class SingleValueAdapter<IntArgSVF<ARG, DEFAULT_VALUE>> : public IntArgSVF<ARG, DEFAULT_VALUE> {};
+template<int ARG, int DEFAULT_VALUE>
+class SVFWrapper<IntArgSVF<ARG, DEFAULT_VALUE>> : public IntArgSVF<ARG, DEFAULT_VALUE> {};
+
+template<int ARG, int DEFAULT_VALUE>
+using IntArg = SingleValueAdapter<IntArgSVF<ARG, DEFAULT_VALUE>>;
 
 #endif

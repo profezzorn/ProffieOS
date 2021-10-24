@@ -10,16 +10,18 @@
 // returned value: FUNCTION, same for all leds
 
 template<int N = 2, int OFFSET = 0>
-class TwistAngle {
+class TwistAngleSVF {
 public:
-  void run(BladeBase* blade) {
+  void run(BladeBase* blade) {}
+  int calculate(BladeBase* blade) {
     int a = fusor.angle2() * 32768 / M_PI;
-    value_ = ((a + OFFSET) * N) & 0xffff;
-    if (value_ >= 0x8000) value_ = 0x10000 - value_;
+    int value = ((a + OFFSET) * N) & 0xffff;
+    if (value >= 0x8000) value = 0x10000 - value;
+    return value;
   }
-  int getInteger(int led) { return value_; }
-
-  int value_;
 };
+
+template<int N = 2, int OFFSET = 0>
+using TwistAngle = SingleValueAdapter<TwistAngleSVF<N, OFFSET>>;
 
 #endif
