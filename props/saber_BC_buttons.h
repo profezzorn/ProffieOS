@@ -685,11 +685,13 @@ public:
       return true;
 
 // Enter / Exit Volume MENU
-  #if NUM_BUTTONS == 1
-    case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-  #else
-    // 2 button
-    case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
+  #ifndef NO_VOLUME_MENU
+    #if NUM_BUTTONS == 1
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
+    #else
+      // 2 button
+      case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
+    #endif
   #endif
       if (!mode_volume_) {
         mode_volume_ = true;
