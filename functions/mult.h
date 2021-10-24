@@ -13,7 +13,7 @@
 class BladeBase;
 
 template<class F, class V>
-class Mult {
+class MultBase {
 public:
   void run(BladeBase* blade) {
     f_.run(blade);
@@ -26,6 +26,27 @@ private:
   PONUA F f_;
   PONUA V v_;
 };
+
+template<class F, class V>
+class MultSVF {
+public:
+  void run(BladeBase* blade) {
+    f_.run(blade);
+    v_.run(blade);
+  }
+  int calculate(BladeBase* blade) {
+    return (f_.calculate(blade) * v_.calculate(blade)) >> 15;
+  }
+private:
+  PONUA F f_;
+  PONUA V v_;
+};
+
+template<class F, class V> struct MultFinder { typedef MultBase<F, V> MultClass; };
+template<class F, class V> struct MultFinder<SingleValueAdapter<F>, SingleValueAdapter<V>> {
+  typedef SingleValueAdapter<MultSVF<F, V>> MultClass;
+};
+template<class F, class V> using Mult = typename MultFinder<F, V>::MultClass;
 
 // Usage: Percentage<F, V>
 // Gets Percentage V of value F, 

@@ -22,25 +22,25 @@ public:
     wave_ms_.run(blade);
     color_.run(blade);
     if (this->restart()) {
-      center_ = wave_center_.getInteger(0);
-      size_ = wave_size_.getInteger(0);
+      center_ = wave_center_.calculate(blade);
+      size_ = wave_size_.calculate(blade);
     }
     TransitionBaseX<FADEOUT_MS>::run(blade);
     mix_ = 32768 - this->update(32768);
     num_leds_ = blade->num_leds();
-    offset_ = (millis() - this->start_millis()) * 32768 / wave_ms_.getInteger(0);
+    offset_ = (millis() - this->start_millis()) * 32768 / wave_ms_.calculate(blade);
   }
 private:
-  PONUA WAVE_CENTER wave_center_;
+  PONUA SVFWrapper<WAVE_CENTER> wave_center_;
   int center_;
   
-  PONUA WAVE_SIZE wave_size_;
+  PONUA SVFWrapper<WAVE_SIZE> wave_size_;
   int size_;
 
   int mix_;
   int num_leds_;
   int offset_;
-  PONUA WAVE_MS wave_ms_;
+  PONUA SVFWrapper<WAVE_MS> wave_ms_;
   PONUA COLOR color_;
 public:
   template<class A, class B>
@@ -76,18 +76,18 @@ public:
     spark_center_.run(blade);
     color_.run(blade);
     if (this->restart()) {
-      center_ = spark_center_.getInteger(0);
-      size_ = spark_size_.getInteger(0);
+      center_ = spark_center_.calculate(blade);
+      size_ = spark_size_.calculate(blade);
     }
     TransitionBaseX<SPARK_MS>::run(blade);
     num_leds_ = blade->num_leds();
     offset_ = this->update(32768);
   }
 private:
-  PONUA SPARK_CENTER spark_center_;
+  PONUA SVFWrapper<SPARK_CENTER> spark_center_;
   int center_;
   
-  PONUA SPARK_SIZE spark_size_;
+  PONUA SVFWrapper<SPARK_SIZE> spark_size_;
   int size_;
 
   int num_leds_;
