@@ -759,7 +759,7 @@ public:
       return true;
 
 // Activate Muted
-    case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD, MODE_OFF):
       if (!mode_volume_) {
         if (SetMute(true)) {
           unmute_on_deactivation_ = true;
