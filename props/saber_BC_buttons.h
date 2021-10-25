@@ -991,7 +991,13 @@ public:
         if (SFX_battery) {
           hybrid_font.PlayCommon(&SFX_battery);
         } else {
-          beeper.Beep(0.5, 3000);
+          beeper.Beep(1.0, 475);
+          beeper.Beep(0.5, 693);
+          beeper.Beep(0.16, 625);
+          beeper.Beep(0.16, 595);
+          beeper.Beep(0.16, 525);
+          beeper.Beep(1.1, 950);
+          beeper.Beep(0.5, 693);
         }
         return;
       case EFFECT_FAST_ON: // Gesture on, bybass preon
