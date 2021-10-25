@@ -71,10 +71,10 @@ Standard Controls While Blade is ON
   Melt Effect = Hold AUX + Stab Parallel or Up
   Lightning Block Effect = Hold PWR + click AUX
   NEW! Force/Quote = Long Click PWR (parallel or down)
-    If quotes exist in current font pointing down will toggle between Force/Quote and play
+    If quotes exist in current font pointing straight down will toggle between Force/Quote and play
     *Quotes play sequentially 1,2,3...
     If parallel will do Force/Quote based on current mode
-  Start/Stop Tracks = Long Click PWR (pointing up)
+  Start/Stop Tracks = Long Click PWR (pointing straight up)
     *default track only (use Track Player while OFF to select tracks or playback modes)
   Color Change = Hold AUX + Click PWR (parallel or down)
     Rotate Hilt to select color (unless ColorChange click to Change style is active)
@@ -82,7 +82,7 @@ Standard Controls While Blade is ON
     NEW! ColorWheel "Zoom"* = Hold PWR, Release to Save
       *if COLORWHEEL_ZOOM defined
       *While in ColorWheel you can Hold PWR down to zoom in color for easier selection
-  Power Save* = Hold AUX + Click PWR (pointing up)
+  Power Save* = Hold AUX + Click PWR (pointing straight up)
     *requires EFFECT_POWERSAVE in style
   Multi-Phase Preset Change*
     *requires FETT263_MULTI_PHASE define
@@ -167,7 +167,7 @@ Edit Mode*
 Standard Controls While Blade is OFF
   Turn On / Ignite Saber = Click PWR
   Turn On / Ignite Saber (Muted) = Double Click and Hold PWR
-  NEW Control! Start / Stop Tracks = Double Click PWR (pointing up)
+  NEW Control! Start / Stop Tracks = Double Click PWR (pointing straight up)
   NEW! Track Player* = Double Click PWR (parallel or down)
     *if only default track exists in current preset, track will "Loop"
     Turn Right = Next Track
@@ -204,7 +204,7 @@ Standard Controls While Blade is ON
   Clash Effect = Clash Saber
   Lockup Effect = Hold PWR + Clash
   Stab Effect = Stab (thrust with impact at tip of blade)
-  NEW Control! Drag Effect = Hold PWR + Stab (pointing down)
+  NEW Control! Drag Effect = Hold PWR + Stab (pointing straight down)
   Melt Effect = Hold PWR + Stab (parallel or up)
   Lightning Block = Double Click and Hold PWR
   Blast Effect = Click / Double Click / Triple Click PWR
@@ -222,7 +222,7 @@ Standard Controls While Blade is ON
     NEW! ColorWheel "Zoom"* = Hold PWR, Release to Save
       *if COLORWHEEL_ZOOM defined
       *While in ColorWheel you can Hold PWR down to zoom in color for easier selection
-  NEW! Power Save* = 4 Clicks PWR (pointing up)
+  NEW! Power Save* = 4 Clicks PWR (pointing straight up)
     *requires EFFECT_POWERSAVE in style
   Multi-Phase Preset Change*
     *requires FETT263_MULTI_PHASE define
@@ -3982,7 +3982,7 @@ SaberFett263Buttons() : PropBase() {}
           }
           MenuUndo();
         } else {
-          if (fusor.angle1() < - M_PI / 4) {
+          if (fusor.angle1() < - M_PI / 3) {
             previous_preset();
           } else {
             next_preset();
@@ -4153,7 +4153,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
         if (menu_) return true;
-        if (fusor.angle1() < - M_PI / 4) {
+        if (fusor.angle1() < - M_PI / 3) {
           previous_preset_fast();
         } else {
           next_preset_fast();
