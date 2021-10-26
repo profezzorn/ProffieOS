@@ -3771,6 +3771,26 @@ SaberFett263Buttons() : PropBase() {}
     SelectSFXEvenOdd(&SFX_preon);
   }
 
+  void DoIgnition() {
+#ifdef FETT263_DUAL_MODE_SOUND
+    SelectIgnitionSound();
+#endif
+    if (SFX_preon) {
+#ifdef FETT263_DUAL_MODE_SOUND
+    SelectPreonSound();
+#endif
+      On();
+    } else {
+      FastOn();
+    }
+#ifdef FETT263_BATTLE_MODE_ALWAYS_ON
+    battle_mode_ = true;
+#endif
+#ifdef FETT263_BATTLE_MODE_START_ON
+    battle_mode_ = true;
+#endif
+  }
+	
   // Select ignition wav based on blade orientation, up = odd, down = even
   void SelectIgnitionSound() {
     Effect* effect;
@@ -3953,23 +3973,7 @@ SaberFett263Buttons() : PropBase() {}
             MenuChoice();
             return true;
           } else {
-#ifdef FETT263_DUAL_MODE_SOUND
-            SelectIgnitionSound();
-#endif
-            if (SFX_preon) {
-#ifdef FETT263_DUAL_MODE_SOUND
-              SelectPreonSound();
-#endif
-              On();
-            } else {
-              FastOn();
-            }
-#ifdef FETT263_BATTLE_MODE_ALWAYS_ON
-            battle_mode_ = true;
-#endif
-#ifdef FETT263_BATTLE_MODE_START_ON
-            battle_mode_ = true;
-#endif
+            DoIgnition();
           }
           return true;
 
@@ -4356,23 +4360,7 @@ SaberFett263Buttons() : PropBase() {}
           MenuChoice();
           return true;
         } else {
-#ifdef FETT263_DUAL_MODE_SOUND
-          SelectIgnitionSound();
-#endif
-          if (SFX_preon) {
-#ifdef FETT263_DUAL_MODE_SOUND
-            SelectPreonSound();
-#endif
-            On();
-          } else {
-            FastOn();
-          }
-#ifdef FETT263_BATTLE_MODE_ALWAYS_ON
-          battle_mode_ = true;
-#endif
-#ifdef FETT263_BATTLE_MODE_START_ON
-          battle_mode_ = true;
-#endif
+          DoIgnition();
         }
         return true;
 
