@@ -1875,7 +1875,26 @@ SaberFett263Buttons() : PropBase() {}
     color_mode_ = NONE;
   }
 #endif
-	
+
+// Edit Mode
+  void StartEditMode() {
+    if (track_player_) {
+      StopTrackPlayer();
+    }
+    if (!SFX_medit) {
+      talkie.Say(talkie_error_in_15, 15);
+      talkie.Say(talkie_font_directory_15, 15);
+      STDOUT.println("Edit Mode prompts missing");
+    } else {
+      STDOUT.println("Enter Edit Mode");
+      GenerateIniFiles();
+      sound_library_.SayEditMode();
+      StartMenu(MENU_TOP);
+      menu_top_pos_ = 0;
+      FastOn();
+    }
+  }
+
 // Start Menu Mode
   void StartMenu(MenuType menu) {
     current_menu_angle_ = fusor.angle2();
@@ -4004,21 +4023,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_EDIT_MODE_MENU
         // Enter Edit Mode
         if (!menu_) {
-          if (track_player_) {
-            StopTrackPlayer();
-          }
-          if (!SFX_medit) {
-              talkie.Say(talkie_error_in_15, 15);
-              talkie.Say(talkie_font_directory_15, 15);
-              STDOUT.println("Edit Mode prompts missing");
-              return true;
-          }
-          STDOUT.println("Enter Edit Mode");
-          GenerateIniFiles();
-          sound_library_.SayEditMode();
-          StartMenu(MENU_TOP);
-          menu_top_pos_ = 0;
-          FastOn();
+          StartEditMode();
         }
 #else
         // If Edit Mode Menu Disabled Save .ini files for SD card editing
@@ -4420,26 +4425,12 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_EDIT_MODE_MENU
         // Enter Edit Mode
         if (!menu_) {
-          if (track_player_) {
-            StopTrackPlayer();
-          }
-          if (!SFX_medit) {
-              talkie.Say(talkie_error_in_15, 15);
-              talkie.Say(talkie_font_directory_15, 15);
-              STDOUT.println("Edit Mode prompts missing");
-              return true;
-          }
-          STDOUT.println("Enter Edit Mode");
-          GenerateIniFiles();
-	  sound_library_.SayEditMode();
-          StartMenu(MENU_TOP);
-          menu_top_pos_ = 0;
-          FastOn();
+          StartEditMode();
         }
 #else
         // If Edit Mode Menu Disabled Save .ini files for SD card editing
         GenerateIniFiles();
-	sound_library_.SaySave();
+        sound_library_.SaySave();
 #endif
         return true;
 		    
