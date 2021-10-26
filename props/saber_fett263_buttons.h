@@ -1876,6 +1876,16 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
+// Color Edit Zoom
+  void DoColorZoom() {
+    if (color_mode_ == COLOR_LIST) {
+      hsl_ = Color16(color_list_[dial_].color).toHSL();
+    }
+    color_mode_ = ZOOM_COLOR;
+    hsl_angle_ = fusor.angle2();
+    sound_library_.SayZoomingIn();
+  }
+
 // Edit Mode
   void StartEditMode() {
     if (track_player_) {
@@ -3992,7 +4002,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef COLORWHEEL_ZOOM
         if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
           SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
-	  sound_library_.SayZoomingIn();
+          sound_library_.SayZoomingIn();
           return true;
         }
 #endif
@@ -4062,12 +4072,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_EDIT_MODE_MENU
         if (menu_) {
           if (color_mode_ == COLOR_LIST || color_mode_ == EDIT_COLOR) {
-            if (color_mode_ == COLOR_LIST) {
-              hsl_ = Color16(color_list_[dial_].color).toHSL();
-            }
-            color_mode_ = ZOOM_COLOR;
-            hsl_angle_ = fusor.angle2();
-            sound_library_.SayZoomingIn();
+            DoColorZoom();
           } else {
             MenuUndo();
           }
@@ -4643,12 +4648,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_EDIT_MODE_MENU
         if (menu_) {
           if (color_mode_ == COLOR_LIST || color_mode_ == EDIT_COLOR) {
-            if (color_mode_ == COLOR_LIST) {
-              hsl_ = Color16(color_list_[dial_].color).toHSL();
-            }
-            color_mode_ = ZOOM_COLOR;
-            hsl_angle_ = fusor.angle2();
-	    sound_library_.SayZoomingIn();
+            DoColorZoom();
           }
           return true;
         }
