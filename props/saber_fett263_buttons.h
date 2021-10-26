@@ -1886,6 +1886,15 @@ SaberFett263Buttons() : PropBase() {}
     sound_library_.SayZoomingIn();
   }
 
+// End CC Color List
+  void EndCCColorList() {
+    hybrid_font.PlayCommon(&SFX_ccend);
+    NewColor(1, BASE_COLOR_ARG);
+    current_preset_.Save();
+    show_color_all_.Stop();
+    UpdateStyle();
+  }
+
 // Edit Mode
   void StartEditMode() {
     if (track_player_) {
@@ -3973,12 +3982,7 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
 #ifndef DISABLE_COLOR_CHANGE
         if (color_mode_ == CC_COLOR_LIST) {
-          hybrid_font.PlayCommon(&SFX_ccend);
-          NewColor(1, BASE_COLOR_ARG);
-          current_preset_.Save();
-          show_color_all_.Stop();
-          UpdateStyle();
-	  return true;
+          EndCCColorList();
         }
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           ToggleColorChangeMode();
@@ -4102,12 +4106,8 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_POWER, EVENT_FIRST_RELEASED, MODE_ON):
 #ifndef DISABLE_COLOR_CHANGE
         if (color_mode_ == CC_COLOR_LIST) {
-          hybrid_font.PlayCommon(&SFX_ccend);
-          NewColor(1, BASE_COLOR_ARG);
-          current_preset_.Save();
-          show_color_all_.Stop();
-          UpdateStyle();
-    return true;
+          EndCCColorList();
+          return true;
         }
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           ToggleColorChangeMode();
@@ -4115,7 +4115,7 @@ SaberFett263Buttons() : PropBase() {}
           if (menu_type_ == MENU_COLOR) {
             menu_type_ = MENU_TOP;
             MenuSave();
-      return true;
+            return true;
           }
 #endif
           return true;
@@ -4183,12 +4183,8 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
 #ifndef DISABLE_COLOR_CHANGE
           if (color_mode_ == CC_COLOR_LIST) {
-            hybrid_font.PlayCommon(&SFX_ccend);
-            NewColor(1, BASE_COLOR_ARG);
-            current_preset_.Save();
-            show_color_all_.Stop();
-            UpdateStyle();
-      return true;
+            EndCCColorList();
+            return true;
           }
           if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
             ToggleColorChangeMode();
