@@ -3975,7 +3975,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
         if (menu_) {
-          if (menu_type_ = MENU_PRESET) {
+          if (menu_type_ == MENU_PRESET) {
             first_preset();
             MenuExit();
             return true;
