@@ -3858,6 +3858,20 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
+  // Battery Level
+  void DoBattery() {
+#if defined (FETT263_SAY_BATTERY_PERCENT)
+    sound_library_.SayBatteryLevel();
+    sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
+    sound_library_.SayPercent();
+#elif defined(FETT263_SAY_BATTERY_VOLTS)
+    sound_library_.SayBatteryLevel();
+    sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
+    sound_library_.SayVolts();
+#endif
+    SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+  }
+
   // Go to first Preset.
   void first_preset() {
 #ifdef SAVE_PRESET
@@ -4041,16 +4055,7 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_OFF):
-#if defined (FETT263_SAY_BATTERY_PERCENT)
-        sound_library_.SayBatteryLevel();
-        sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
-        sound_library_.SayPercent();
-#elif defined(FETT263_SAY_BATTERY_VOLTS)
-        sound_library_.SayBatteryLevel();
-        sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
-        sound_library_.SayVolts();
-#endif
-        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+        DoBattery();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON):
@@ -4795,16 +4800,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
-#if defined (FETT263_SAY_BATTERY_PERCENT)
-        sound_library_.SayBatteryLevel();
-        sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
-        sound_library_.SayPercent();
-#elif defined(FETT263_SAY_BATTERY_VOLTS)
-        sound_library_.SayBatteryLevel();
-        sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
-        sound_library_.SayVolts();
-#endif
-        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+        DoBattery();
         return true;
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
