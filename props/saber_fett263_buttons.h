@@ -3859,6 +3859,24 @@ SaberFett263Buttons() : PropBase() {}
     }	  
   }
 
+// Toggle Multi-Blast
+  void ToggleMultiBlast() {
+    swing_blast_ = !swing_blast_;
+    if (swing_blast_) {
+      if (SFX_blstbgn) {
+        hybrid_font.PlayCommon(&SFX_blstbgn);
+      } else {
+        hybrid_font.SB_Effect(EFFECT_BLAST, 0);
+      }
+    } else {
+      if (SFX_blstend) {
+        hybrid_font.PlayCommon(&SFX_blstend);
+      } else {
+        hybrid_font.SB_Effect(EFFECT_BLAST, 0);
+      }
+    }
+  }
+
 // Toggle Battle Mode Multi-Blast
   void ToggleBMMultiBlast() {
     if (battle_mode_ && !swing_blast_) {
@@ -4287,20 +4305,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
         if (menu_) return true;
-        swing_blast_ = !swing_blast_;
-        if (swing_blast_) {
-          if (SFX_blstbgn) {
-            hybrid_font.PlayCommon(&SFX_blstbgn);
-          } else {
-            hybrid_font.SB_Effect(EFFECT_BLAST, 0);
-          }
-        } else {
-          if (SFX_blstend) {
-            hybrid_font.PlayCommon(&SFX_blstend);
-          } else {
-            hybrid_font.SB_Effect(EFFECT_BLAST, 0);
-          }
-        }
+          ToggleMultiBlast();
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
@@ -4661,12 +4666,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
         if (menu_) return true;
-        swing_blast_ = true;
-        if (SFX_blstbgn) {
-          hybrid_font.PlayCommon(&SFX_blstbgn);
-        } else {
-          hybrid_font.SB_Effect(EFFECT_BLAST, 0);
-        }
+          ToggleMultiBlast();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
