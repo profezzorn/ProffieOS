@@ -1404,6 +1404,37 @@ SaberFett263Buttons() : PropBase() {}
     color_mode_ = NONE;
   }
 
+// Check ColorChange Mode
+  void CheckCCMode() {
+    bool uses_rgb_arg;
+    #define USES_RGB_ARG(N) \
+    uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(N), 3);
+    ONCEPERBLADE(USES_RGB_ARG)
+    if (!uses_rgb_arg) {
+      ToggleColorChangeMode();
+    } else {
+      bool handles_color_change;
+    #define USES_COLOR_CHANGE(N) \
+      handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
+      ONCEPERBLADE(USES_COLOR_CHANGE)
+      if (!handles_color_change) {
+        color_mode_ = CC_COLOR_LIST;
+        show_color_all_.Start();
+        for (int i = 1; i <= NUM_BLADES; i++) {
+          if (style_parser.UsesArgument(current_preset_.GetStyle(i), BASE_COLOR_ARG + 2)) {
+            ShowColorStyle::SetColor(GetColorArg(i, BASE_COLOR_ARG));
+            break;
+          }
+        }
+        current_menu_angle_ = fusor.angle2();
+        dial_ = -1;
+        hybrid_font.PlayCommon(&SFX_ccbegin);
+      } else {
+        ToggleColorChangeMode();
+      }
+    }	  
+  }
+
   void Setup() override {
     RestoreGestureState();
   }
@@ -4246,33 +4277,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
         } else {
 #ifndef DISABLE_COLOR_CHANGE
-          bool uses_rgb_arg;
-          #define USES_RGB_ARG(N) \
-          uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(N), 3);
-          ONCEPERBLADE(USES_RGB_ARG)
-          if (!uses_rgb_arg) {
-            ToggleColorChangeMode();
-          } else {
-            bool handles_color_change;
-          #define USES_COLOR_CHANGE(N) \
-            handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
-            ONCEPERBLADE(USES_COLOR_CHANGE)
-            if (!handles_color_change) {
-              color_mode_ = CC_COLOR_LIST;
-              show_color_all_.Start();
-              for (int i = 1; i <= NUM_BLADES; i++) {
-                if (style_parser.UsesArgument(current_preset_.GetStyle(i), BASE_COLOR_ARG + 2)) {
-                  ShowColorStyle::SetColor(GetColorArg(i, BASE_COLOR_ARG));
-                  break;
-                }
-              }
-              current_menu_angle_ = fusor.angle2();
-              dial_ = -1;
-              hybrid_font.PlayCommon(&SFX_ccbegin);
-            } else {
-              ToggleColorChangeMode();
-            }
-          }
+          CheckCCMode();
 #endif
 #ifdef DISABLE_COLOR_CHANGE
           SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
@@ -4669,33 +4674,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
         } else {
 #ifndef DISABLE_COLOR_CHANGE
-          bool uses_rgb_arg;
-          #define USES_RGB_ARG(N) \
-          uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(N), 3);
-          ONCEPERBLADE(USES_RGB_ARG)
-          if (!uses_rgb_arg) {
-            ToggleColorChangeMode();
-          } else {
-            bool handles_color_change;
-          #define USES_COLOR_CHANGE(N) \
-            handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
-            ONCEPERBLADE(USES_COLOR_CHANGE)
-            if (!handles_color_change) {
-              color_mode_ = CC_COLOR_LIST;
-              show_color_all_.Start();
-              for (int i = 1; i <= NUM_BLADES; i++) {
-		if (style_parser.UsesArgument(current_preset_.GetStyle(i), BASE_COLOR_ARG + 2)) {
-                  ShowColorStyle::SetColor(GetColorArg(i, BASE_COLOR_ARG));
-                  break;
-		}
-              }
-              current_menu_angle_ = fusor.angle2();
-              dial_ = -1;
-              hybrid_font.PlayCommon(&SFX_ccbegin);
-            } else {
-              ToggleColorChangeMode();
-            }
-          }
+          CheckCCMode();
 #endif
 #ifdef DISABLE_COLOR_CHANGE
           SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
