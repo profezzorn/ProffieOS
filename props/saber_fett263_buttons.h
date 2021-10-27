@@ -22,16 +22,16 @@ Standard Controls While Blade is OFF
   Change Preset (one at a time*) = Click AUX
     *if pointing down will go to previous
   NEW! Scroll Presets (using twist menu) = Long Click AUX
-    Turn Right = Next Preset
-    Turn Left = Previous Preset
+    Turn Right (Stepped) = Next Preset
+    Turn Left (Stepped) = Previous Preset
     Click PWR = Select Preset
     Click AUX = go to First Preset
   Play Track = Long Click PWR pointing up
   NEW! Track Player* = Long Click PWR parallel
   *requires tracks in either font/tracks/ or common/tracks/
   *if no tracks in font or common will "Loop" default track
-    Turn Right = Next Track
-    Turn Left = Previous Track
+    Turn Right (Stepped) = Next Track
+    Turn Left (Stepped) = Previous Track
     Click PWR = Play Current Track Once
     Click AUX = Random (will play current track and then randomly select next tracks)
     Hold PWR + Turn Right = Rotate (will play current track and then next sequential tracks)
@@ -41,8 +41,8 @@ Standard Controls While Blade is OFF
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
   NEW Control! Volume Menu = Hold PWR, Click AUX
-    Turn Right = Increase Volume (to max)
-    Turn Left = Decrease Volume (to min)
+    Turn Right (Stepped) = Increase Volume (to max)
+    Turn Left (Stepped) = Decrease Volume (to min)
     Click PWR or AUX = Exit
   Check Battery Level*  = Hold AUX, Click PWR
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY define
@@ -152,8 +152,8 @@ Edit Mode*
     If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
 
   While in Edit Mode controls are as follows:
-    Rotate Forward, Increase Value, Confirm "Yes" = Turn Right
-    Rotate Back, Decrease Value, Confirm "No" = Turn Left
+    Rotate Forward, Increase Value, Confirm "Yes" = Turn Right (Stepped)
+    Rotate Back, Decrease Value, Confirm "No" = Turn Left (Stepped)
     Select, Save, Enter = Click PWR
     Cancel, Revert, Go Back = Click AUX
     Go to Main Menu (from sub-menu) - Hold AUX
@@ -170,8 +170,8 @@ Standard Controls While Blade is OFF
   NEW Control! Start / Stop Tracks = Double Click PWR (pointing straight up)
   NEW! Track Player* = Double Click PWR (parallel or down)
     *if only default track exists in current preset, track will "Loop"
-    Turn Right = Next Track
-    Turn Left = Previous Track
+    Turn Right (Stepped) = Next Track
+    Turn Left (Stepped) = Previous Track
     Click PWR = Play Current Track Once
     Hold PWR = Random (will play current track and then randomly select next tracks)
     Hold PWR + Turn Right = Rotate (will play current track and then next sequential tracks)
@@ -182,13 +182,13 @@ Standard Controls While Blade is OFF
   Next Preset = Long Click PWR (parallel or up)
   NEW Control! Previous Preset = Long Click PWR (pointing down)
   NEW! Scroll Presets (using twist menu) = Triple Click PWR
-    Turn Right = Next Preset
-    Turn Left = Previous Preset
+    Turn Right (Stepped) = Next Preset
+    Turn Left (Stepped) = Previous Preset
     Click PWR = Select Preset
     Long Click PWR = First Preset
   NEW Control! Volume Menu = Hold PWR + Clash
-    Turn Right = Increase Volume (to max)
-    Turn Left = Decrease Volume (to min)
+    Turn Right (Stepped) = Increase Volume (to max)
+    Turn Left (Stepped) = Decrease Volume (to min)
     Click PWR = Exit
   NEW Control! Battery Level = Triple Click and Hold PWR
 
@@ -264,8 +264,8 @@ Edit Mode*
     If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
 
   While in Edit Mode controls are as follows:
-    Rotate Forward, Increase Value, Confirm "Yes" = Turn Right
-    Rotate Back, Decrease Value, Confirm "No" = Turn Left
+    Rotate Forward, Increase Value, Confirm "Yes" = Turn Right (Stepped)
+    Rotate Back, Decrease Value, Confirm "No" = Turn Left (Stepped)
     Select, Save, Enter = Click PWR
     Cancel, Revert, Go Back = Long Click PWR
     Go to Main Menu (from sub-menu) - Hold PWR
