@@ -1673,6 +1673,19 @@ SaberFett263Buttons() : PropBase() {}
     PLAYBACK_RANDOM,
   };
 
+  void StartTrackPlayer() {
+    track_num_ = 0;
+    num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
+    if (num_tracks_ > 0) {
+      sound_library_.SaySelect();
+      StartMenu(MENU_TRACK_PLAYER);
+    } else {
+      sound_library_.SayLoop();
+      track_mode_ = PLAYBACK_LOOP;
+    }
+    StartOrStopTrack(); 
+  }
+
   void TrackPlayer() {
     if (track_mode_ != PLAYBACK_OFF) {
       if (!track_player_) {
@@ -4063,7 +4076,7 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
           menu_ = false;
           menu_type_ = MENU_TOP;
-	  sound_library_.SayUp();
+          sound_library_.SayUp();
           return true;
         }
         return false;
@@ -4345,23 +4358,14 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
         if (track_player_) {
           StopTrackPlayer();
-    track_mode_ = PLAYBACK_OFF;
+          track_mode_ = PLAYBACK_OFF;
           return true;
         } else {
           if (fusor.angle1() > M_PI / 3) {
             StartOrStopTrack();
             return true;
           } else {
-            track_num_ = 0;
-            num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
-      if (num_tracks_ > 0) {
-              sound_library_.SaySelect();
-              StartMenu(MENU_TRACK_PLAYER);
-      } else {
-              sound_library_.SayLoop();
-              track_mode_ = PLAYBACK_LOOP;
-            }
-            StartOrStopTrack();
+
             return true;
           }
         }
@@ -4403,16 +4407,16 @@ SaberFett263Buttons() : PropBase() {}
         if (!menu_) {
 	  StartMenu(MENU_VOLUME);
           if (SFX_vmbegin) {
-	    sound_library_.SayEnterVolumeMenu();
+            sound_library_.SayEnterVolumeMenu();
           } else {
-	    sound_library_.SayEditVolume();
+            sound_library_.SayEditVolume();
           }
         }
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
         StartMenu(MENU_PRESET);
-	sound_library_.SaySelectPreset();
+        sound_library_.SaySelectPreset();
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
@@ -4420,7 +4424,7 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) {
           if (menu_type_ == MENU_TRACK_PLAYER) {
             track_mode_ = PLAYBACK_RANDOM;
-	    sound_library_.SayRandom();
+            sound_library_.SayRandom();
           }
           MenuExit();
           return true;
@@ -4745,16 +4749,7 @@ SaberFett263Buttons() : PropBase() {}
             StartOrStopTrack();
             return true;
           } else {
-            track_num_ = 0;
-            num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
-            if (num_tracks_ > 0) {
-              sound_library_.SaySelect();
-              StartMenu(MENU_TRACK_PLAYER);
-            } else {
-              sound_library_.SayLoop();
-              track_mode_ = PLAYBACK_LOOP;
-            }
-            StartOrStopTrack();
+            StartTrackPlayer();
             return true;
           }
         }
