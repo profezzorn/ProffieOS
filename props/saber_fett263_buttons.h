@@ -1997,76 +1997,76 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_EDIT_MODE_MENU
     case MENU_TOP:
       switch (menu_top_pos_) {
-      case EDIT_STYLE:
+        case EDIT_STYLE:
 #if NUM_BLADES == 1
-  menu_type_ = MENU_STYLE_SUB;
-  menu_sub_pos_ = 0;
-  blade_num_ = 1;
-        sound_library_.SaySelectOption();         
+          menu_type_ = MENU_STYLE_SUB;
+          menu_sub_pos_ = 0;
+          blade_num_ = 1;
+          sound_library_.SaySelectOption();         
 #else
-  menu_type_ = MENU_BLADE_STYLE;
-  blade_num_ = 0;
-  sound_library_.SaySelectBlade();
+          menu_type_ = MENU_BLADE_STYLE;
+          blade_num_ = 0;
+          sound_library_.SaySelectBlade();
 #endif
-  break;
-      case EDIT_COLORS:
-  if (style_parser.MaxUsedArgument(current_preset_.GetStyle(1)) == 0) {
-    menu_type_ = MENU_COLOR;
-    sound_library_.SaySelect();
-    variation_revert_ = SaberBase::GetCurrentVariation();
-    ToggleColorChangeMode();
-    break;
-  } else {
+          break;
+        case EDIT_COLORS:
+          if (style_parser.MaxUsedArgument(current_preset_.GetStyle(1)) == 0) {
+            menu_type_ = MENU_COLOR;
+            sound_library_.SaySelect();
+            variation_revert_ = SaberBase::GetCurrentVariation();
+            ToggleColorChangeMode();
+            break;
+          } else {
 #if NUM_BLADES == 1
-    blade_num_ = 1;
-    menu_type_ = MENU_COLOR_SUB;
-    menu_sub_pos_ = 0;
-    sound_library_.SayColorMenu();
-    effect_num_ = 0;
+            blade_num_ = 1;
+            menu_type_ = MENU_COLOR_SUB;
+            menu_sub_pos_ = 0;
+            sound_library_.SayColorMenu();
+            effect_num_ = 0;
 #else
-    menu_type_ = MENU_BLADE_COLOR;
-    blade_num_ = 0;
-    sound_library_.SaySelectBlade();
+            menu_type_ = MENU_BLADE_COLOR;
+            blade_num_ = 0;
+            sound_library_.SaySelectBlade();
 #endif
   }
-  break;
-      case EDIT_FONT:
-  menu_type_ = MENU_FONT;
-  font_num_ = 0;
-  num_fonts_ = RunCommandAndGetSingleLine("list_fonts", nullptr, 0, 0, 0);
-  sound_library_.SaySelect();
-  break;
-      case EDIT_TRACK:
-  num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
-  StartOrStopTrack();
-  menu_type_ = MENU_TRACK;
-  track_num_ = 0;
-  sound_library_.SaySelect();
-  break;
-      case EDIT_SETTINGS:
-  menu_type_ = MENU_SETTING_SUB;
-  sound_library_.SaySelectOption();
-  menu_sub_pos_ = 0;
-  break;
-      case COPY_PRESET:
-  menu_type_ = MENU_COPY;
-  sound_library_.SayConfirm();
-  break;
-      case DELETE_PRESET:
-  menu_type_ = MENU_DELETE;
-  sound_library_.SayConfirm();
-  break;
-      case EXIT_MENU:
-  sound_library_.SaySelect();
-  MenuExit();
-  break;
+          break;
+        case EDIT_FONT:
+          menu_type_ = MENU_FONT;
+          font_num_ = 0;
+          num_fonts_ = RunCommandAndGetSingleLine("list_fonts", nullptr, 0, 0, 0);
+          sound_library_.SaySelect();
+          break;
+        case EDIT_TRACK:
+          num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
+          StartOrStopTrack();
+          menu_type_ = MENU_TRACK;
+          track_num_ = 0;
+          sound_library_.SaySelect();
+          break;
+        case EDIT_SETTINGS:
+          menu_type_ = MENU_SETTING_SUB;
+          sound_library_.SaySelectOption();
+          menu_sub_pos_ = 0;
+          break;
+        case COPY_PRESET:
+          menu_type_ = MENU_COPY;
+          sound_library_.SayConfirm();
+          break;
+        case DELETE_PRESET:
+          menu_type_ = MENU_DELETE;
+          sound_library_.SayConfirm();
+          break;
+        case EXIT_MENU:
+          sound_library_.SaySelect();
+          MenuExit();
+          break;
       }
       break;
 #if NUM_BLADES > 1
     case MENU_BLADE_STYLE:
       if (blade_num_ == 0) {
-  sound_library_.SaySelectBlade();
-  break;
+        sound_library_.SaySelectBlade();
+        break;
       }
       show_preview_.Stop(blade_preview_);
       blade_preview_ = 0;
@@ -2080,9 +2080,9 @@ SaberFett263Buttons() : PropBase() {}
       sound_library_.SayColorMenu();
 #else
       if (blade_num_ == 1) {
-  copy_blade_ = 2;
+        copy_blade_ = 2;
       } else {
-  copy_blade_ = 1;
+        copy_blade_ = 1;
       }
       sound_library_.SaySelectOption();
 #endif
@@ -2129,20 +2129,20 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_STYLE_SUB:
       switch (menu_sub_pos_) {
         case EDIT_STYLE_SELECT:
-    menu_type_ = MENU_STYLE;
-    num_presets_ = current_config->num_presets;
-    tmp = current_preset_.GetStyle(blade_num_);
-    style_num_ = FirstWord(tmp, "builtin") ? atoi(SkipWord(tmp)) : 0;
-    style_revert_ = style_num_;
-    sound_library_.SaySelect();
+          menu_type_ = MENU_STYLE;
+          num_presets_ = current_config->num_presets;
+          tmp = current_preset_.GetStyle(blade_num_);
+          style_num_ = FirstWord(tmp, "builtin") ? atoi(SkipWord(tmp)) : 0;
+          style_revert_ = style_num_;
+          sound_library_.SaySelect();
           SayStyleNumber(style_num_);
-    break;
+          break;
         case EDIT_STYLE_SETTINGS:
-    effect_num_ = 0;
-    menu_type_ = MENU_STYLE_SETTING_SUB;
-    sound_library_.SaySelectOption();
-    arg_dial_ = -1;
-    break;
+          effect_num_ = 0;
+          menu_type_ = MENU_STYLE_SETTING_SUB;
+          sound_library_.SaySelectOption();
+          arg_dial_ = -1;
+          break;
         default:
           sound_library_.SaySelectOption();
       }
@@ -2158,37 +2158,37 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_COLOR_SUB:
 #if NUM_BLADES == 1
       switch (menu_sub_pos_) {
-      case EDIT_EFFECT_COLOR:
-  menu_type_ = MENU_EFFECT;
-  sound_library_.SaySelectEffect();
-  arg_dial_ = -1;
-  break;
-      case RESET_COLORS:
-  menu_type_ = MENU_RESET_COLOR;
-  sound_library_.SayConfirm();
-  break;
-      default:
-  sound_library_.SaySelectOption();
+        case EDIT_EFFECT_COLOR:
+          menu_type_ = MENU_EFFECT;
+          sound_library_.SaySelectEffect();
+          arg_dial_ = -1;
+          break;
+        case RESET_COLORS:
+          menu_type_ = MENU_RESET_COLOR;
+          sound_library_.SayConfirm();
+          break;
+        default:
+          sound_library_.SaySelectOption();
       }
 #elif NUM_BLADES == 2
       switch (menu_sub_pos_) {
-      case EDIT_EFFECT_COLOR:
-        menu_type_ = MENU_EFFECT;
-        sound_library_.SaySelectEffect();
-        arg_dial_ = -1;
-        break;
-      case COPY_COLORS:
-        menu_type_ = MENU_COPY_COLOR;
-        CopyColors();
-        sound_library_.SayConfirm();
-        break;
-      case RESET_COLORS:
-        menu_type_ = MENU_RESET_COLOR;
-        sound_library_.SayConfirm();
-        break;
-      default:
-        sound_library_.SaySelectOption();
-        break;
+        case EDIT_EFFECT_COLOR:
+          menu_type_ = MENU_EFFECT;
+          sound_library_.SaySelectEffect();
+          arg_dial_ = -1;
+          break;
+        case COPY_COLORS:
+          menu_type_ = MENU_COPY_COLOR;
+          CopyColors();
+          sound_library_.SayConfirm();
+          break;
+        case RESET_COLORS:
+          menu_type_ = MENU_RESET_COLOR;
+          sound_library_.SayConfirm();
+          break;
+        default:
+          sound_library_.SaySelectOption();
+          break;
       }
 #else
       switch (menu_sub_pos_) {
@@ -2197,17 +2197,17 @@ SaberFett263Buttons() : PropBase() {}
           sound_library_.SaySelectEffect();
           arg_dial_ = -1;
           break;
-      case COPY_COLORS:
-        menu_type_ = MENU_BLADE_COPY;
-        CopyColors();
-        sound_library_.SaySelectBlade();
-        break;
-      case RESET_COLORS:
-        menu_type_ = MENU_RESET_COLOR;
-        sound_library_.SayConfirm();
-        break;
-      default:
-        sound_library_.SaySelectOption();
+        case COPY_COLORS:
+          menu_type_ = MENU_BLADE_COPY;
+          CopyColors();
+          sound_library_.SaySelectBlade();
+          break;
+        case RESET_COLORS:
+          menu_type_ = MENU_RESET_COLOR;
+          sound_library_.SayConfirm();
+          break;
+        default:
+          sound_library_.SaySelectOption();
       }
 #endif
       break;
@@ -2847,28 +2847,28 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_top_pos_ > SUBMENUS) menu_top_pos_ = 1;
         switch (menu_top_pos_) {
           case EDIT_STYLE:
-	    sound_library_.SayEditStyle();
+            sound_library_.SayEditStyle();
             break;
           case EDIT_COLORS:
-	    sound_library_.SayEditColor();
+            sound_library_.SayEditColor();
             break;
           case EDIT_FONT:
-	    sound_library_.SayEditFont();
+            sound_library_.SayEditFont();
             break;
           case EDIT_TRACK:
-	    sound_library_.SayEditTrack();
+            sound_library_.SayEditTrack();
             break;
           case EDIT_SETTINGS:
-	    sound_library_.SayEditSettings();
+            sound_library_.SayEditSettings();
             break;
           case COPY_PRESET:
-	    sound_library_.SayCopyPreset();
+            sound_library_.SayCopyPreset();
             break;
           case DELETE_PRESET:
-	    sound_library_.SayDeletePreset();
+            sound_library_.SayDeletePreset();
             break;
           case EXIT_MENU:
-	    sound_library_.SayExit();
+            sound_library_.SayExit();
             break;
        }
        break;
@@ -2896,7 +2896,7 @@ SaberFett263Buttons() : PropBase() {}
           sound_library_.SayAccept();
         } else {
           choice_ = false;
-	  sound_library_.SayCancel();
+          sound_library_.SayCancel();
         }
         break;
       case MENU_STYLE_SUB:
@@ -2905,13 +2905,13 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_sub_pos_ > 2) menu_sub_pos_ = 1;
 	switch (menu_sub_pos_) {
 	  case EDIT_STYLE_SELECT:
-	    sound_library_.SaySelectStyle();
+            sound_library_.SaySelectStyle();
 	    break;
           case EDIT_STYLE_SETTINGS:
-	    sound_library_.SayEditStyleSettings();
+            sound_library_.SayEditStyleSettings();
             break;
 	  default:
-	    sound_library_.SaySelectOption();
+            sound_library_.SaySelectOption();
 	    break;
 	}
 	break;
@@ -2935,10 +2935,10 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_sub_pos_ > 2) menu_sub_pos_ = 1;
         switch (menu_sub_pos_) {
           case EDIT_EFFECT_COLOR:
-	    sound_library_.SayColorOptions();
+            sound_library_.SayColorOptions();
             break;
           case RESET_COLORS:
-	    sound_library_.SayResetColors();
+            sound_library_.SayResetColors();
             break;
         }
   #else
@@ -2946,13 +2946,13 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_sub_pos_ > 3) menu_sub_pos_ = 1;
         switch (menu_sub_pos_) {
           case EDIT_EFFECT_COLOR:
-	    sound_library_.SayColorOptions();
+            sound_library_.SayColorOptions();
             break;
           case COPY_COLORS:
-	    sound_library_.SayCopyColors();
+            sound_library_.SayCopyColors();
             break;
           case RESET_COLORS:
-	    sound_library_.SayResetColors();
+            sound_library_.SayResetColors();
             break;
         }
   #endif
@@ -2967,49 +2967,49 @@ SaberFett263Buttons() : PropBase() {}
         }
         switch (effect_num_) {
           case BASE_COLOR_ARG:
-	    sound_library_.SayBaseColor();
+            sound_library_.SayBaseColor();
             break;
           case ALT_COLOR_ARG:
-	    sound_library_.SayAltColor();
+            sound_library_.SayAltColor();
             break;
           case BLAST_COLOR_ARG:
-	    sound_library_.SayBlastColor();
+            sound_library_.SayBlastColor();
             break;
           case CLASH_COLOR_ARG:
-	    sound_library_.SayClashColor();
+            sound_library_.SayClashColor();
             break;
           case LOCKUP_COLOR_ARG:
-	    sound_library_.SayLockupColor();
+            sound_library_.SayLockupColor();
             break;
           case DRAG_COLOR_ARG:
-	    sound_library_.SayDragColor();
+            sound_library_.SayDragColor();
             break;
           case LB_COLOR_ARG:
-	    sound_library_.SayLightningBlockColor();
+            sound_library_.SayLightningBlockColor();
             break;
           case STAB_COLOR_ARG:
-	    sound_library_.SayStabColor();
+            sound_library_.SayStabColor();
             break;
           case PREON_COLOR_ARG:
-	    sound_library_.SayPreonColor();
+            sound_library_.SayPreonColor();
             break;
           case IGNITION_COLOR_ARG:
-	    sound_library_.SayIgnitionColor();
+            sound_library_.SayIgnitionColor();
             break;
           case RETRACTION_COLOR_ARG:
-	    sound_library_.SayRetractionColor();
+            sound_library_.SayRetractionColor();
             break;
           case POSTOFF_COLOR_ARG:
-	    sound_library_.SayPostOffColor();
+            sound_library_.SayPostOffColor();
             break;
           case SWING_COLOR_ARG:
-	    sound_library_.SaySwingColor();
+            sound_library_.SaySwingColor();
             break;
           case EMITTER_COLOR_ARG:
-	    sound_library_.SayEmitterColor();
+            sound_library_.SayEmitterColor();
             break;
           case OFF_COLOR_ARG:
-	    sound_library_.SayOffColor();
+            sound_library_.SayOffColor();
             break;
         }
         break;
@@ -3019,16 +3019,16 @@ SaberFett263Buttons() : PropBase() {}
         if (sub_dial_ > 3) sub_dial_ = 0;
         switch (sub_dial_) {
           case COLOR_LIST_MODE:
-	    sound_library_.SayColorList();
+            sound_library_.SayColorList();
             break;
           case COLOR_HUE_MODE:
-	    sound_library_.SayAdjustColorHue();
+            sound_library_.SayAdjustColorHue();
             break;
           case WHITE_MODE:
-	    sound_library_.SayAdjustWhiteLevel();
+            sound_library_.SayAdjustWhiteLevel();
             break;
           case BLACK_MODE:
-	    sound_library_.SayAdjustBlackLevel();
+            sound_library_.SayAdjustBlackLevel();
             break;
           default:
             sound_library_.SaySelectOption();
@@ -3121,40 +3121,40 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SaySelectOption();
             break;
           case GESTURE_SWINGON_IGNITION:
-	    sound_library_.SaySwingIgnition();
+            sound_library_.SaySwingIgnition();
             break;
           case GESTURE_SWINGON_SPEED:
-	    sound_library_.SaySwingOnSpeed();
+            sound_library_.SaySwingOnSpeed();
             break;
           case GESTURE_TWIST_IGNITION:
-	    sound_library_.SayTwistIgnition();
+            sound_library_.SayTwistIgnition();
             break;
           case GESTURE_THRUST_IGNITION:
-	    sound_library_.SayThrustIgnition();
+            sound_library_.SayThrustIgnition();
             break;
           case GESTURE_STAB_IGNITION:
-	    sound_library_.SayStabIgnition();
+            sound_library_.SayStabIgnition();
             break;
           case GESTURE_FORCE_PUSH:
-	    sound_library_.SayForcePush();
+            sound_library_.SayForcePush();
             break;
           case GESTURE_FORCE_PUSH_LENGTH:
-	    sound_library_.SayForcePushLength();
+            sound_library_.SayForcePushLength();
             break;
           case GESTURE_TWIST_RETRACTION:
-	    sound_library_.SayTwistRetraction();
+            sound_library_.SayTwistRetraction();
             break;
           case GESTURE_LOCKUP_DELAY:
-	    sound_library_.SayLockupDelay();
+            sound_library_.SayLockupDelay();
             break;
           case GESTURE_CLASH_DETECTION:
-	    sound_library_.SayClashDetectionLevel();
+            sound_library_.SayClashDetectionLevel();
             break;
           case GESTURE_POWER_LOCK:
-	    sound_library_.SayPowerLock();
+            sound_library_.SayPowerLock();
             break;
           case GESTURE_MAX_CLASH:
-	    sound_library_.SayMaximumClashStrength();
+            sound_library_.SayMaximumClashStrength();
             break;
         }
         break;
@@ -3166,7 +3166,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_TWISTOFF:
       case MENU_POWERLOCK:
         choice_ = direction > 0;
-	sound_library_.SayBool(choice_);
+        sound_library_.SayBool(choice_);
         break;
       case MENU_SWINGON_SPEED:
         if (direction > 0) {
@@ -3180,7 +3180,7 @@ SaberFett263Buttons() : PropBase() {}
           }
         } else {
           if (calc_ > 200) {
-	    sound_library_.SayDown();
+            sound_library_.SayDown();
             calc_ -= 50;
           }
           if (calc_ <= 200) {
@@ -3225,7 +3225,7 @@ SaberFett263Buttons() : PropBase() {}
           }
         } else {
           if (calc_ > GetCurrentClashThreshold()) {
-	    sound_library_.SayDown();
+            sound_library_.SayDown();
             calc_ -= 1;
           }
           if (calc_ <= GetCurrentClashThreshold()) {
@@ -3247,7 +3247,7 @@ SaberFett263Buttons() : PropBase() {}
           }
         } else {
           if (calc_ > 200) {
-	    sound_library_.SayDown();
+            sound_library_.SayDown();
             calc_ -= 100;
           }
           if (calc_ <= 200) {
