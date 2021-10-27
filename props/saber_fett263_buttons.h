@@ -1404,7 +1404,7 @@ SaberFett263Buttons() : PropBase() {}
     color_mode_ = NONE;
   }
 
-// Check ColorChange Mode
+  // Check if current style uses RgbArg for CC_COLOR_LIST
   void CheckCCMode() {
     bool uses_rgb_arg;
     #define USES_RGB_ARG(N) \
@@ -1920,7 +1920,6 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
-// Color Edit Zoom
   void DoColorZoom() {
     if (color_mode_ == COLOR_LIST) {
       hsl_ = Color16(color_list_[dial_].color).toHSL();
@@ -1930,16 +1929,16 @@ SaberFett263Buttons() : PropBase() {}
     sound_library_.SayZoomingIn();
   }
 
-// End CC Color List
-  void EndCCColorList() {
+  bool EndCCColorList() {
+    if (color_mode_ != CC_COLOR_LIST) return false;
     hybrid_font.PlayCommon(&SFX_ccend);
     NewColor(1, BASE_COLOR_ARG);
     current_preset_.Save();
     show_color_all_.Stop();
     UpdateStyle();
+    return true;
   }
 
-// Edit Mode
   void StartEditMode() {
     if (track_player_) {
       StopTrackPlayer();
@@ -3853,7 +3852,6 @@ SaberFett263Buttons() : PropBase() {}
     SelectSFXEvenOdd(&SFX_preon);
   }
 
-// Toggle Battle Mode
   void ToggleBattleMode() {
     if (!battle_mode_) {
       battle_mode_ = true;
@@ -3872,7 +3870,6 @@ SaberFett263Buttons() : PropBase() {}
     }	  
   }
 
-// Toggle Multi-Blast
   void ToggleMultiBlast() {
     swing_blast_ = !swing_blast_;
     if (swing_blast_) {
@@ -3890,8 +3887,7 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
-// Toggle Battle Mode Multi-Blast
-  void ToggleBMMultiBlast() {
+  void ToggleBattleModeMultiBlast() {
     if (battle_mode_ && !swing_blast_) {
       check_blast_ = true;
       last_blast_millis_ = millis();
@@ -3899,9 +3895,7 @@ SaberFett263Buttons() : PropBase() {}
     swing_blast_ = false;
   }
 
-
-// Check Blast
-  void DoCheckBlast() {
+  void DoCheckMultiBlast() {
     if (check_blast_) {
       if (millis() - last_blast_millis_ < 2000) {
         swing_blast_ = true;
@@ -4083,9 +4077,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
 #ifndef DISABLE_COLOR_CHANGE
-        if (color_mode_ == CC_COLOR_LIST) {
-          EndCCColorList();
-        }
+        if (EndCCColorList()) return true;
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           ToggleColorChangeMode();
 #ifdef FETT263_EDIT_MODE_MENU
@@ -4207,10 +4199,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_RELEASED, MODE_ON):
 #ifndef DISABLE_COLOR_CHANGE
-        if (color_mode_ == CC_COLOR_LIST) {
-          EndCCColorList();
-          return true;
-        }
+        if (EndCCColorList()) return true;
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           ToggleColorChangeMode();
 #ifdef FETT263_EDIT_MODE_MENU
@@ -4270,10 +4259,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
 #ifndef DISABLE_COLOR_CHANGE
-          if (color_mode_ == CC_COLOR_LIST) {
-            EndCCColorList();
-            return true;
-          }
+          if (EndCCColorList()) return true;
           if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
             ToggleColorChangeMode();
             return true;
@@ -4283,7 +4269,7 @@ SaberFett263Buttons() : PropBase() {}
           MenuChoice();
           return true;
         }
-        ToggleBMMultiBlast();
+        ToggleBattleModeMultiBlast();
         SaberBase::DoBlast();
         return true;
 
@@ -4293,13 +4279,13 @@ SaberFett263Buttons() : PropBase() {}
           StopTrackPlayer();
           return true;
         }
-        ToggleBMMultiBlast();
+        ToggleBattleModeMultiBlast();
         SaberBase::DoBlast();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
         if (menu_) return true;
-        ToggleBMMultiBlast();
+        ToggleBattleModeMultiBlast();
         SaberBase::DoBlast();
         return true;
 
@@ -4874,7 +4860,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::DoBlast();
           return true;
         } else {
-          DoCheckBlast();
+          DoCheckMultiBlast();
         }
         return true;
 
