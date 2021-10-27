@@ -4365,7 +4365,7 @@ SaberFett263Buttons() : PropBase() {}
             StartOrStopTrack();
             return true;
           } else {
-
+            StartTrackPlayer();
             return true;
           }
         }
