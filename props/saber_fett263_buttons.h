@@ -251,7 +251,7 @@ Optional Gesture Controls (if enabled)
       To end Drag pull blade up from floor at an angle
       If parallel or up Melt will initiate
       To end Melt pull blade away from object at an angle
-  Blast Effect = Click AUX
+  Blast Effect = Click PWR
     NEW! swing within 2 seconds to enter Multi-Blast Mode
   Lightning Block = Double Click and Hold PWR
   Force Push* = Push Saber
