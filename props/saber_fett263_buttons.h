@@ -3809,6 +3809,25 @@ SaberFett263Buttons() : PropBase() {}
     SelectSFXEvenOdd(&SFX_preon);
   }
 
+// Toggle Battle Mode
+  void ToggleBattleMode() {
+    if (!battle_mode_) {
+      battle_mode_ = true;
+      if (SFX_bmbegin) {
+        hybrid_font.PlayCommon(&SFX_bmbegin);
+      } else {
+        hybrid_font.DoEffect(EFFECT_FORCE, 0);
+      }
+    } else {
+      battle_mode_ = false;
+      if (SFX_bmend) {
+        hybrid_font.PlayCommon(&SFX_bmend);
+      } else {
+        beeper.Beep(0.5, 3000);
+      }
+    }	  
+  }
+	
   void DoIgnition() {
 #ifdef FETT263_DUAL_MODE_SOUND
     SelectIgnitionSound();
@@ -4152,21 +4171,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_ON):
-        if (!battle_mode_) {
-          battle_mode_ = true;
-          if (SFX_bmbegin) {
-            hybrid_font.PlayCommon(&SFX_bmbegin);
-          } else {
-            hybrid_font.DoEffect(EFFECT_FORCE, 0);
-          }
-        } else {
-          battle_mode_ = false;
-          if (SFX_bmend) {
-            hybrid_font.PlayCommon(&SFX_bmend);
-          } else {
-            beeper.Beep(0.5, 3000);
-          }
-        }
+        ToggleBattleMode();
         return true;
 
 #ifdef FETT263_MULTI_PHASE
@@ -4474,41 +4479,13 @@ SaberFett263Buttons() : PropBase() {}
         }
 #endif
 #ifndef FETT263_HOLD_BUTTON_LOCKUP
-        if (!battle_mode_) {
-          battle_mode_ = true;
-          if (SFX_bmbegin) {
-            hybrid_font.PlayCommon(&SFX_bmbegin);
-          } else {
-            hybrid_font.DoEffect(EFFECT_FORCE, 0);
-          }
-        } else {
-          battle_mode_ = false;
-          if (SFX_bmend) {
-            hybrid_font.PlayCommon(&SFX_bmend);
-          } else {
-            beeper.Beep(0.5, 3000);
-          }
-        }
+        ToggleBattleMode();
 #endif
         return true;
 
 #ifdef FETT263_HOLD_BUTTON_LOCKUP
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
-        if (!battle_mode_) {
-          battle_mode_ = true;
-          if (SFX_bmbegin) {
-            hybrid_font.PlayCommon(&SFX_bmbegin);
-          } else {
-            hybrid_font.DoEffect(EFFECT_FORCE, 0);
-          }
-        } else {
-          battle_mode_ = false;
-          if (SFX_bmend) {
-            hybrid_font.PlayCommon(&SFX_bmend);
-          } else {
-            beeper.Beep(0.5, 3000);
-          }
-        }
+        ToggleBattleMode();
         return true;
 #endif
 
