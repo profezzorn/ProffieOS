@@ -45,7 +45,7 @@ Standard Controls While Blade is OFF
     Turn Left (Stepped) = Decrease Volume (to min)
     Click PWR or AUX = Exit
   Check Battery Level*  = Hold AUX, Click PWR
-    *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY define
+    *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_VOLTS or FETT263_SAY_BATTERY_PERCENT define
 Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
   Ignite Saber
     Swing On
@@ -5184,7 +5184,7 @@ SaberFett263Buttons() : PropBase() {}
           beeper.Beep(0.5, 3000);
         }
         return;
-#ifndef FETT263_SAY_BATTERY
+#if !defined(FETT263_SAY_BATTERY_VOLTS) && !defined(FETT263_SAY_BATTERY_PERCENT)
       case EFFECT_BATTERY_LEVEL:
         if (SFX_battery) {
           hybrid_font.PlayCommon(&SFX_battery);
