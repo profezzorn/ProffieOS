@@ -3827,6 +3827,27 @@ SaberFett263Buttons() : PropBase() {}
       }
     }	  
   }
+
+// Toggle Battle Mode Multi-Blast
+  void ToggleBMMultiBlast() {
+    if (battle_mode_ && !swing_blast_) {
+      check_blast_ = true;
+      last_blast_millis_ = millis();
+    }
+    swing_blast_ = false;
+  }
+
+
+// Check Blast
+  void DoCheckBlast() {
+    if (check_blast_) {
+      if (millis() - last_blast_millis_ < 2000) {
+        swing_blast_ = true;
+        SaberBase::DoBlast();
+      }
+      check_blast_ = false;
+    }	  
+  }
 	
   void DoIgnition() {
 #ifdef FETT263_DUAL_MODE_SOUND
@@ -4200,11 +4221,7 @@ SaberFett263Buttons() : PropBase() {}
           MenuChoice();
           return true;
         }
-        if (battle_mode_ && !swing_blast_) {
-          check_blast_ = true;
-          last_blast_millis_ = millis();
-        }
-        swing_blast_ = false;
+        ToggleBMMultiBlast();
         SaberBase::DoBlast();
         return true;
 
@@ -4214,21 +4231,13 @@ SaberFett263Buttons() : PropBase() {}
           StopTrackPlayer();
           return true;
         }
-        if (battle_mode_ && !swing_blast_) {
-          check_blast_ = true;
-          last_blast_millis_ = millis();
-        }
-        swing_blast_ = false;
+        ToggleBMMultiBlast();
         SaberBase::DoBlast();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
         if (menu_) return true;
-        if (battle_mode_ && !swing_blast_) {
-          check_blast_ = true;
-          last_blast_millis_ = millis();
-        }
-        swing_blast_ = false;
+        ToggleBMMultiBlast();
         SaberBase::DoBlast();
         return true;
 
@@ -4891,13 +4900,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::DoBlast();
           return true;
         } else {
-          if (check_blast_) {
-            if (millis() - last_blast_millis_ < 2000) {
-              swing_blast_ = true;
-              SaberBase::DoBlast();
-            }
-            check_blast_ = false;
-          }
+          DoCheckBlast();
         }
         return true;
 
