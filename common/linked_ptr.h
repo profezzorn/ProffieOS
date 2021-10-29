@@ -7,8 +7,8 @@
 template<class T, class Free>
 class LinkedPtr {
 public:
-  LinkedPtr() : next_(this), prev_(this), ptr_(nullptr) {}
-  explicit LinkedPtr(T* p) : ptr_(p), next_(this), prev_(this) {}
+  LinkedPtr() : ptr_(nullptr), prev_(this), next_(this) {}
+  explicit LinkedPtr(T* p) : ptr_(p), prev_(this), next_(this) {}
   ~LinkedPtr() { leave(); }
   LinkedPtr(LinkedPtr const& other) { join(other); }
   LinkedPtr& operator=(LinkedPtr const& other) {
