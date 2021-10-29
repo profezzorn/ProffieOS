@@ -290,6 +290,13 @@ public:
   Vec3 speed() { return speed_; }  // m/s
 #endif
 
+  float rss() {
+    Vec3 gyro_slope = gyro_extrapolator_.slope() * 1000000;
+    // Radians per second per second
+    float rss = sqrtf(gyro_slope.z * gyro_slope.z + gyro_slope.y * gyro_slope.y) * (M_PI / 180);
+    return rss;
+  }
+
   void dump() {
     STDOUT << " Accel=" << accel_ << " ("<<  accel_.len() << ")"
 	   << " Gyro=" << gyro_ << " (" << gyro_.len() << ")"
