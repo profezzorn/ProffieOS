@@ -28,9 +28,9 @@ using SwingSpeed = SwingSpeedX<Int<MAX>>;
 
 // Usage: SwingAcceleration<MAX>
 // Returns 0-32768 based on swing acceleration
-// MAX defaults to 100
+// MAX defaults to 150
 // returned value: INTEGER
-template<class MAX = Int<100>>
+template<class MAX = Int<130>>
 class SwingAccelerationSVF {
  public:
   void run(BladeBase* blade) { max_.run(blade); }
@@ -43,10 +43,10 @@ private:
   PONUA SVFWrapper<MAX> max_;
 };
 
-template<class MAX = Int<100>>
+template<class MAX = Int<130>>
 using SwingAccelerationX = SingleValueAdapter<SwingAccelerationSVF<MAX>>;
 
-template<int MAX = 100>
+template<int MAX = 130>
 using SwingAcceleration = SwingAccelerationX<Int<MAX>>;
 
 #endif
