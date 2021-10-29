@@ -356,7 +356,7 @@ public:
     DetectTwist();
     Vec3 mss = fusor.mss();
     sound_library_.Poll(wav_player);
-    if (wav_player && !wav_player->IsPlaying()) wav_player.Free();
+    if (wav_player && !wav_player->isPlaying()) wav_player.Free();
     if (SaberBase::IsOn()) {
       DetectSwing();
       if (auto_lockup_on_ &&
@@ -528,13 +528,13 @@ public:
 // Gesture Ignition Controls
   #ifdef BC_SWING_ON
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
-    if (mode_volume_) return false;  
+      if (mode_volume_) return false;  
   #ifdef NO_BLADE_NO_GEST_ONOFF
-    if (!blade_detected_) return false;
+      if (!blade_detected_) return false;
   #endif
       // Due to motion chip startup on boot creating false ignition
       // we delay Swing On at boot for 3000ms
-    if (millis() > (PROFFIEOS_STARTUP_DELAY + 3000)) {
+      if (millis() > (PROFFIEOS_STARTUP_DELAY + 3000)) {
         FastOn();
   #ifdef BC_GESTURE_AUTO_BATTLE_MODE
         STDOUT.println("Entering Battle Mode");
@@ -546,13 +546,13 @@ public:
 
   #ifdef BC_TWIST_ON
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-    if (mode_volume_) return false;
+      if (mode_volume_) return false;
   #ifdef NO_BLADE_NO_GEST_ONOFF
-    if (!blade_detected_) return false;
+      if (!blade_detected_) return false;
   #endif
       // Delay twist events to prevent false trigger from over twisting
       if (millis() - last_twist_ > 2000 &&
-          millis() - saber_off_time_ > 1000) {
+        millis() - saber_off_time_ > 1000) {
         FastOn();
   #ifdef BC_GESTURE_AUTO_BATTLE_MODE
         STDOUT.println("Entering Battle Mode");
@@ -566,7 +566,7 @@ public:
   #ifdef BC_TWIST_OFF
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
   #ifdef NO_BLADE_NO_GEST_ONOFF
-    if (!blade_detected_) return false;
+      if (!blade_detected_) return false;
   #endif
       // Delay twist events to prevent false trigger from over twisting
       if (millis() - last_twist_ > 3000) {
@@ -580,9 +580,9 @@ public:
 
   #ifdef BC_STAB_ON
     case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
-    if (mode_volume_) return false;
+      if (mode_volume_) return false;
   #ifdef NO_BLADE_NO_GEST_ONOFF
-    if (!blade_detected_) return false;
+      if (!blade_detected_) return false;
   #endif
       // Delay Stab On at boot
       if (millis() - saber_off_time_ > 1000) {
@@ -597,9 +597,9 @@ public:
 
   #ifdef BC_THRUST_ON
     case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
-    if (mode_volume_) return false;
+      if (mode_volume_) return false;
   #ifdef NO_BLADE_NO_GEST_ONOFF
-    if (!blade_detected_) return false;
+      if (!blade_detected_) return false;
   #endif
       // Delay Thrust On at boot
       if (millis() - saber_off_time_ > 1000) {
@@ -647,20 +647,20 @@ public:
   // 2 button
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON | BUTTON_AUX):
   #endif
-    // Bypass NewFont and preon if pointing up.
-    if (fusor.angle1() >  M_PI / 3) {
-      //Don't change preset if in colorchange mode
-      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
-        next_preset_fast();
+      // Bypass NewFont and preon if pointing up.
+      if (fusor.angle1() >  M_PI / 3) {
+        // Don't change preset if in colorchange mode
+        if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
+          next_preset_fast();
       }
       return true;
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
-    if (!mode_volume_) {
-      next_preset();
-    } else {
-      VolumeUp();
-    }
-    return true;
+      if (!mode_volume_) {
+        next_preset();
+      } else {
+        VolumeUp();
+      }
+      return true;
 
 // Previous Preset AND Volume Down
   #if NUM_BUTTONS == 1
@@ -685,32 +685,34 @@ public:
       return true;
 
 // Enter / Exit Volume MENU
-  #if NUM_BUTTONS == 1
-    case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-  #else
-    // 2 button
-    case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
+  #ifndef NO_VOLUME_MENU
+    #if NUM_BUTTONS == 1
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
+    #else
+      // 2 button
+      case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
+    #endif
+        if (!mode_volume_) {
+          mode_volume_ = true;
+          if (SFX_vmbegin) {
+            sound_library_.SayEnterVolumeMenu();
+          } else {
+            beeper.Beep(0.1, 2000);
+            beeper.Beep(0.1, 2500);
+          }
+          STDOUT.println("Enter Volume Menu");
+        } else {
+          mode_volume_ = false;
+          if (SFX_vmend) {
+            sound_library_.SayVolumeMenuEnd();
+          } else {
+            beeper.Beep(0.1, 2500);
+            beeper.Beep(0.1, 2000);
+          }
+          STDOUT.println("Exit Volume Menu");
+        }
+        return true;
   #endif
-      if (!mode_volume_) {
-        mode_volume_ = true;
-        if (SFX_vmbegin) {
-          sound_library_.SayEnterVolumeMenu();
-        } else {
-          beeper.Beep(0.1, 2000);
-          beeper.Beep(0.1, 2500);
-        }
-        STDOUT.println("Enter Volume Menu");
-      } else {
-        mode_volume_ = false;
-        if (SFX_vmend) {
-          sound_library_.SayVolumeMenuEnd();
-        } else {
-          beeper.Beep(0.1, 2500);
-          beeper.Beep(0.1, 2000);
-        }
-        STDOUT.println("Exit Volume Menu");
-      }
-      return true;
       
 // Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
@@ -757,7 +759,7 @@ public:
       return true;
 
 // Activate Muted
-    case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD, MODE_OFF):
       if (!mode_volume_) {
         if (SetMute(true)) {
           unmute_on_deactivation_ = true;
@@ -989,7 +991,13 @@ public:
         if (SFX_battery) {
           hybrid_font.PlayCommon(&SFX_battery);
         } else {
-          beeper.Beep(0.5, 3000);
+          beeper.Beep(1.0, 475);
+          beeper.Beep(0.5, 693);
+          beeper.Beep(0.16, 625);
+          beeper.Beep(0.16, 595);
+          beeper.Beep(0.16, 525);
+          beeper.Beep(1.1, 950);
+          beeper.Beep(0.5, 693);
         }
         return;
       case EFFECT_FAST_ON: // Gesture on, bybass preon
