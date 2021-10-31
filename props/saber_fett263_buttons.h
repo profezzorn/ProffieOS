@@ -1918,6 +1918,24 @@ SaberFett263Buttons() : PropBase() {}
     twist_menu_ = M_PI / 4;
     color_mode_ = NONE;
   }
+
+  void StartEditMode() {
+    if (track_player_) {
+      StopTrackPlayer();
+    }
+    if (!SFX_medit) {
+      talkie.Say(talkie_error_in_15, 15);
+      talkie.Say(talkie_font_directory_15, 15);
+      STDOUT.println("Edit Mode prompts missing");
+    } else {
+      STDOUT.println("Enter Edit Mode");
+      GenerateIniFiles();
+      sound_library_.SayEditMode();
+      StartMenu(MENU_TOP);
+      menu_top_pos_ = 0;
+      FastOn();
+    }
+  }
 #endif
 
   void DoColorZoom() {
@@ -1937,24 +1955,6 @@ SaberFett263Buttons() : PropBase() {}
     show_color_all_.Stop();
     UpdateStyle();
     return true;
-  }
-
-  void StartEditMode() {
-    if (track_player_) {
-      StopTrackPlayer();
-    }
-    if (!SFX_medit) {
-      talkie.Say(talkie_error_in_15, 15);
-      talkie.Say(talkie_font_directory_15, 15);
-      STDOUT.println("Edit Mode prompts missing");
-    } else {
-      STDOUT.println("Enter Edit Mode");
-      GenerateIniFiles();
-      sound_library_.SayEditMode();
-      StartMenu(MENU_TOP);
-      menu_top_pos_ = 0;
-      FastOn();
-    }
   }
 
 // Start Menu Mode
