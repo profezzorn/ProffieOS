@@ -3895,7 +3895,7 @@ SaberFett263Buttons() : PropBase() {}
     swing_blast_ = false;
   }
 
-  void DoCheckMultiBlast() {
+  void DoAutoMultiBlast() {
     if (check_blast_) {
       if (millis() - last_blast_millis_ < 2000) {
         swing_blast_ = true;
@@ -4860,7 +4860,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::DoBlast();
           return true;
         } else {
-          DoCheckMultiBlast();
+          DoAutoMultiBlast();
         }
         return true;
 
