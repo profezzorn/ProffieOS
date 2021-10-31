@@ -12,7 +12,6 @@ class SwingSpeedSVF {
  public:
   void run(BladeBase* blade) { max_.run(blade); }
  int calculate(BladeBase* blade) {
-   max_.run(blade);
    float v = fusor.swing_speed() / max_.calculate(blade);
    return clampi32(v * 32768, 0, 32768);
   }
@@ -35,8 +34,7 @@ class SwingAccelerationSVF {
  public:
   void run(BladeBase* blade) { max_.run(blade); }
  int calculate(BladeBase* blade) {
-   max_.run(blade);
-   float v = fusor.rss() / max_.calculate(blade);
+   float v = fusor.swing_accel() / max_.calculate(blade);
    return clampi32(v * 32768, 0, 32768);
   }
 private:
