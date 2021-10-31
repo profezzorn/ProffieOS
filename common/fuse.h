@@ -295,8 +295,11 @@ public:
 	   << " Gyro=" << gyro_ << " (" << gyro_.len() << ")"
 	   << " down=" << down_ << " (" << down_.len() << ")"
 	   << " mss=" << mss_  << " (" << mss_.len() << ")"
+	   << "\n";
+    STDOUT << " ready=" << ready()
 	   << " swing speed=" << swing_speed()
 	   << " gyro slope=" << gyro_slope().len()
+	   << " last_micros_ = " << last_micros_
 	   << " now = " << micros()
 	   << "\n";
     STDOUT << " acceleration extrapolator data:\n";
