@@ -1404,8 +1404,8 @@ SaberFett263Buttons() : PropBase() {}
     color_mode_ = NONE;
   }
 
-  // Check if current style uses RgbArg for CC_COLOR_LIST
-  void CheckCCMode() {
+  // Toggles ColorChange Mode if current style uses RgbArg to CC_COLOR_LIST
+  void ToggleCCMode() {
     bool uses_rgb_arg;
     #define USES_RGB_ARG(N) \
     uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(N), 3);
@@ -4294,7 +4294,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
         } else {
 #ifndef DISABLE_COLOR_CHANGE
-          CheckCCMode();
+          ToggleCCMode();
 #endif
 #ifdef DISABLE_COLOR_CHANGE
           SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
@@ -4664,7 +4664,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
         } else {
 #ifndef DISABLE_COLOR_CHANGE
-          CheckCCMode();
+          ToggleCCMode();
 #endif
 #ifdef DISABLE_COLOR_CHANGE
           SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
