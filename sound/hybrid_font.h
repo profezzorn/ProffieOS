@@ -263,7 +263,7 @@ public:
   void StartSwing(const Vec3& gyro, float swingThreshold, float slashThreshold) override {
     Vec3 gyro_slope = fusor.gyro_slope();
     // Radians per second per second
-    float rss = fusor.rss();
+    float rss = fusor.swing_accel();
     float swing_speed = fusor.swing_speed();
     uint32_t now = micros();
     uint32_t delta_micros = now - last_swing_micros_;
