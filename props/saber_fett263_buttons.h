@@ -4806,7 +4806,10 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 // Gesture Controls (not button specific)
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON):
-        if (wav_player && wav_player->isPlaying()) return true;
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+	}
         if (color_mode_ == CC_COLOR_LIST) {
           dial_ = (dial_ + 1) % NELEM(color_list_);
           ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
@@ -4821,7 +4824,10 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON):
-        if (wav_player && wav_player->isPlaying()) return true;
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+	}
         if (color_mode_ == CC_COLOR_LIST) {
           if (dial_ <= 0) dial_ = NELEM(color_list_);
           dial_ = dial_ - 1;
