@@ -4843,10 +4843,18 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF):
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+        }
         if (menu_) MenuDial(1);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF):
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+        }
         if (menu_) MenuDial(-1);
         return true;
 
@@ -4871,6 +4879,10 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+        }
         if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
           track_mode_ = PLAYBACK_ROTATE;
 	  sound_library_.SayRotate();
@@ -4879,6 +4891,10 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+        }
         if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
           track_mode_ = PLAYBACK_LOOP;
 	  sound_library_.SayLoop();
