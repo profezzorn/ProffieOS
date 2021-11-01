@@ -290,13 +290,22 @@ public:
   Vec3 speed() { return speed_; }  // m/s
 #endif
 
+  // Acceleration into swing in radians per second per second
+  float swing_accel() {
+    Vec3 gyro_slope_ = gyro_slope();
+    return sqrtf(gyro_slope_.z * gyro_slope_.z + gyro_slope_.y * gyro_slope_.y) * (M_PI / 180);
+  }
+
   void dump() {
     STDOUT << " Accel=" << accel_ << " ("<<  accel_.len() << ")"
 	   << " Gyro=" << gyro_ << " (" << gyro_.len() << ")"
 	   << " down=" << down_ << " (" << down_.len() << ")"
 	   << " mss=" << mss_  << " (" << mss_.len() << ")"
+	   << "\n";
+    STDOUT << " ready=" << ready()
 	   << " swing speed=" << swing_speed()
 	   << " gyro slope=" << gyro_slope().len()
+	   << " last_micros_ = " << last_micros_
 	   << " now = " << micros()
 	   << "\n";
     STDOUT << " acceleration extrapolator data:\n";
