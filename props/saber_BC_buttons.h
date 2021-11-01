@@ -27,7 +27,7 @@ Features:
 - Drag is always clash with button pressed while pointing down.
 - No blade = no gestures option if Blade Detect is used.
 - Use wav files for talkie things.
-- Optinal On-the-fly volume controls with cycle through min and max levels.
+- Optional On-the-fly volume controls with cycle through min and max levels.
 
 Optional Blade style elements:
 On-Demand battery level - A layer built into the blade styles that reacts 
@@ -782,7 +782,7 @@ public:
       SaberBase::DoBlast();
       last_blast_ = millis();
       return true;
-  #ifndef ENABLE_AUTO_SWING_BLAST
+  #ifdef ENABLE_AUTO_SWING_BLAST
     // Auto enter/exit multi-blast block with swings if swing within 1 second  
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
       if (millis() - last_blast_ < 1000) {
