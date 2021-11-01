@@ -81,6 +81,22 @@ class IncrementalLine {
     return slope_;
   }
   int samples() const { return samples_; }
+
+  void dump() {
+    STDOUT
+      << " START=" << start_
+      << " samples=" << samples_
+      << " S(t^2)=" << t_square_sum_
+      << " sum=" << sum_
+      << " S(.)=" << dot_sum_
+      << "\n";
+    STDOUT
+      << " start_copy=" << start_copy_
+      << " avg=" << avg_
+      << " slope=" << slope_
+      << " avg_t=" << avg_t_
+      << "\n";
+  }
 };
 
 template<class T, int SIZE = 10>
@@ -121,9 +137,11 @@ public:
   uint32_t last_time() { return data_[entry_].t; }
 
   void dump() {
+    line_.dump();
     for (size_t i = 0; i < SIZE; i++) {
       STDOUT << " " << data_[i].t <<" " << " " << data_[i].v << "\n";
     }
+    STDOUT << " ready=" << ready() << "\n";
   }
 
   ExtrapolatorData<T> data_[SIZE];
