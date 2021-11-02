@@ -280,7 +280,7 @@ Edit Mode*
     Exit Edit Mode - Hold PWR (or rotate to "Exit") while in Main Menu
 
   "Edit Color" Additional Control
-    "Color List" and "Adjust Color Hue" Zoom Mode = Double Click PWR
+    "Color List" and "Adjust Color Hue" Zoom Mode = Long Click PWR
 
 ---------- || ----------
 
