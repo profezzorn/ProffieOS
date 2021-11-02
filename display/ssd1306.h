@@ -11,7 +11,7 @@ IMAGE_FILESET(clsh);
 IMAGE_FILESET(blst);
 IMAGE_FILESET(lock);
 IMAGE_FILESET(force);
-
+IMAGE_FILESET(idle);
 
 template<int Width, class col_t>
 class Display : public MonoFrame<Width, col_t> {
@@ -74,6 +74,12 @@ public:
     LAYOUT_PORTRAIT,
   };
 
+  enum class Tristate : uint8_t {
+    Unknown,
+    True,
+    False
+  };
+
   Display<Width, col_t>* display_;
   virtual void SetDisplay(Display<Width, col_t>* display) override {
     display_ = display;
@@ -131,8 +137,13 @@ public:
     if (SaberBase::IsOn()) {
       if (SaberBase::Lockup() && IMG_lock) {
 	ShowFile(&IMG_lock, 3600000.0);
-      } else if (looped_on_) {
+      } else if (looped_on_ == Tristate::True) {
 	ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+      }
+    } else {
+      // Off
+      if (looped_idle_ != Tristate::False) {
+	ShowFile(&IMG_idle, 3600000.0);
       }
     }
   }
@@ -200,6 +211,13 @@ public:
       }
 
       case SCREEN_IMAGE:
+#ifdef USB_CLASS_MSC
+	if (looped_idle_ == Tristate::True && current_effect_ == &IMG_idle && USBD_Configured()) {
+	  // We are idle-looping, and usb is connected. Time to stop.
+	  SB_Message("usb");
+	  return FillFrameBuffer2(advance);
+	}
+#endif	
         MountSDCard();
 	int count = 0;
 	while (!frame_available_) {
@@ -255,10 +273,18 @@ public:
       case EFFECT_BOOT:
 	if (IMG_boot) {
 	  ShowFile(&IMG_boot, font_config.ProffieOSFontImageDuration);
+	} else if (IMG_idle) {
+	  ShowFile(&IMG_idle, 3600000.0);
 	}
 	return;
       case EFFECT_NEWFONT:
-	ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
+	looped_on_ = Tristate::Unknown;
+	looped_idle_ = Tristate::Unknown;
+	if (IMG_font) {
+	  ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
+	} else if (IMG_idle) {
+	  ShowFile(&IMG_idle, 3600000.0);
+	}
 	return;
       case EFFECT_BLAST:
 	ShowFile(&IMG_blst, font_config.ProffieOSBlastImageDuration);
@@ -294,6 +320,8 @@ public:
     // This only makes it black, which prevents burn-in.
     if (offtype == OFF_IDLE) {
       SetScreenNow(SCREEN_OFF);
+    } else if (IMG_idle) {
+      ShowFile(&IMG_idle, 3600000.0);
     } else {
       SetScreenNow(SCREEN_PLI);
     }
@@ -425,7 +453,10 @@ public:
         looped_frames_ = height / WIDTH;
       }
       if (current_effect_ == &IMG_on) {
-        looped_on_ = looped_frames_ > 1;
+        looped_on_ = looped_frames_ > 1 ? Tristate::True : Tristate::False;
+      }
+      if (current_effect_ == &IMG_idle) {
+        looped_idle_ = looped_frames_ > 1 ? Tristate::True : Tristate::False;
       }
     }
     // STDERR << "ypos=" << ypos_ << " avail=" << f->Available() << "\n";
@@ -523,7 +554,9 @@ private:
   volatile bool advance_ = true;
 
   // True if IMG_on is looped.
-  volatile bool looped_on_ = false;
+  volatile Tristate looped_on_ = Tristate::Unknown;
+  // True if IMG_idle is looped.
+  volatile Tristate looped_idle_ = Tristate::Unknown;
   volatile float effect_display_duration_;
   volatile Effect* current_effect_;
 };
