@@ -13,6 +13,7 @@ class I2CDevice {
 public:
   explicit I2CDevice(uint8_t address) : address_(address) {}
   virtual void RunLocked() {}
+  virtual void Dump() {}
   I2CDevice *next = nullptr;
 
   bool I2CLock() {
@@ -236,8 +237,11 @@ void DumpI2CDevice(const char* desc, I2CDevice *device) {
   STDOUT << desc << ": " << (long)device
 	 << " id= " << (device ? device->address_ : 0)
 	 << " next= " << (long)(device ? device->next : 0) << "\n";
+  if (device) device->Dump();
 }
+
 void DumpI2CState() {
+  i2cbus.dump();
   DumpI2CDevice("current", current_i2c_device);
   DumpI2CDevice("last", last_i2c_device);
 }
