@@ -29,6 +29,7 @@ struct MockFuse {
   float angle2() { return angle2_; }
   float swing_speed_ = 0.0;
   float swing_speed() { return swing_speed_; }
+  float swing_accel() { return 0.0; }
 };
 
 MockFuse fusor;

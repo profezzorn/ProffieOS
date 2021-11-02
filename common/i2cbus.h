@@ -72,7 +72,14 @@ public:
   bool inited() {
     last_request_millis_ = millis();
     return i2c_detected_;
-  };
+  }
+
+  void dump() {
+    STDOUT << "I2CBUS: last_request = " << last_request_millis_ << " (now = " << millis() << ")"
+	   << " i2c_detected_ = " << i2c_detected_
+	   << " used = " << used()
+	   << "\n";
+  }
   
 private:
   uint32_t last_request_millis_ = 0;

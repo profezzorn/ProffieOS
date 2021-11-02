@@ -214,6 +214,12 @@ public:
     STATE_MACHINE_END();
   }
 
+  void Dump() override {
+    STDOUT << "LSM6DS3H: last_event_ " << last_event_
+	   << " LINE: " << state_machine_.next_state_
+	   << "\n";
+  }
+
 #ifdef PROFFIEBOARD  
   static void irq(void* context) { ((LSM6DS3H*)context)->Poll(); }
   static void do_nothing(void* context) {}
