@@ -25,7 +25,9 @@ Standard Controls While Blade is OFF
     Turn Right (Stepped) = Next Preset
     Turn Left (Stepped) = Previous Preset
     Click PWR = Select Preset
+      Increment by 5 = Hold PWR + Turn Right
     Click AUX = go to First Preset
+      Increment by 5 = Hold PWR + Turn Left
   Play Track = Long Click PWR pointing up
   NEW! Track Player* = Long Click PWR parallel
   *requires tracks in either font/tracks/ or common/tracks/
@@ -153,7 +155,9 @@ Edit Mode*
 
   While in Edit Mode controls are as follows:
     Rotate Forward, Increase Value, Confirm "Yes" = Turn Right (Stepped)
+      Increment by 5 (Fonts, Tracks, Blade Length) = Hold PWR + Turn Right
     Rotate Back, Decrease Value, Confirm "No" = Turn Left (Stepped)
+      Increment by 5 (Fonts, Tracks, Blade Length) = Hold PWR + Turn Right
     Select, Save, Enter = Click PWR
     Cancel, Revert, Go Back = Click AUX
     Go to Main Menu (from sub-menu) - Hold AUX
@@ -183,7 +187,9 @@ Standard Controls While Blade is OFF
   NEW Control! Previous Preset = Long Click PWR (pointing down)
   NEW! Scroll Presets (using twist menu) = Triple Click PWR
     Turn Right (Stepped) = Next Preset
+      Increment by 5 = Hold PWR + Turn Right
     Turn Left (Stepped) = Previous Preset
+      Increment by 5 = Hold PWR + Turn Left
     Click PWR = Select Preset
     Long Click PWR = First Preset
   NEW Control! Volume Menu = Hold PWR + Clash
@@ -265,7 +271,9 @@ Edit Mode*
 
   While in Edit Mode controls are as follows:
     Rotate Forward, Increase Value, Confirm "Yes" = Turn Right (Stepped)
+      Increment by 5 (Fonts, Tracks, Blade Length) = Hold PWR + Turn Right
     Rotate Back, Decrease Value, Confirm "No" = Turn Left (Stepped)
+      Increment by 5 (Fonts, Tracks, Blade Length) = Hold PWR + Turn Right
     Select, Save, Enter = Click PWR
     Cancel, Revert, Go Back = Long Click PWR
     Go to Main Menu (from sub-menu) - Hold PWR
@@ -2789,6 +2797,22 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
+  void MenuDialIncrement(int direction) {
+    switch (menu_type_) {
+      case MENU_PRESET:
+#ifdef FETT263_EDIT_MODE_MENU
+      case MENU_FONT:
+      case MENU_TRACK:
+      case MENU_LENGTH:
+#endif
+        direction *= 5;
+        break;
+      default:
+        break;
+    }
+    MenuDial(direction);
+  }
+
 // Edit Mode Dial
   void MenuDial(int direction) {
     switch (menu_type_) {
@@ -4878,15 +4902,36 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true;
 
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+        }
+        if (menu_) MenuDialIncrement(1);
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+        }        
+        if (menu_) MenuDialIncrement(-1);
+        return true;
+
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
         if (wav_player && wav_player->isPlaying()) {
           current_menu_angle_ = fusor.angle2();
           return true;
         }
-        if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
-          track_mode_ = PLAYBACK_ROTATE;
-          sound_library_.SayRotate();
-          return true;
+        if (menu_) {
+          if (menu_type_ == MENU_TRACK_PLAYER) {
+            track_mode_ = PLAYBACK_ROTATE;
+            sound_library_.SayRotate();
+            return true;
+          } else {
+            MenuDialIncrement(1);
+            return true;
+          }
         }
         return false;
 
@@ -4895,10 +4940,15 @@ SaberFett263Buttons() : PropBase() {}
           current_menu_angle_ = fusor.angle2();
           return true;
         }
-        if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
-          track_mode_ = PLAYBACK_LOOP;
-          sound_library_.SayLoop();
-          return true;
+        if (menu_) {
+          if (menu_type_ == MENU_TRACK_PLAYER) {
+            track_mode_ = PLAYBACK_LOOP;
+            sound_library_.SayLoop();
+            return true;
+          } else {
+            MenuDialIncrement(-1);
+            return true;
+          }
         }
         return false;
 		    
