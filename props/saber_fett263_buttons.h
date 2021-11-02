@@ -3846,12 +3846,6 @@ SaberFett263Buttons() : PropBase() {}
     return false;
   }
 
-#ifdef FETT263_DUAL_MODE_SOUND
-  // Select preon wav based on blade orientation if more than 1 file, up = odd, down = even
-  void SelectPreonSound() {
-    SelectSFXEvenOdd(&SFX_preon);
-  }
-
   void ToggleBattleMode() {
     if (!battle_mode_) {
       battle_mode_ = true;
@@ -3925,6 +3919,12 @@ SaberFett263Buttons() : PropBase() {}
 #endif
   }
 	
+#ifdef FETT263_DUAL_MODE_SOUND
+  // Select preon wav based on blade orientation if more than 1 file, up = odd, down = even
+  void SelectPreonSound() {
+    SelectSFXEvenOdd(&SFX_preon);
+  }
+
   // Select ignition wav based on blade orientation, up = odd, down = even
   void SelectIgnitionSound() {
     Effect* effect;
@@ -4806,7 +4806,10 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 // Gesture Controls (not button specific)
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON):
-        if (wav_player && wav_player->isPlaying()) return true;
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+        }
         if (color_mode_ == CC_COLOR_LIST) {
           dial_ = (dial_ + 1) % NELEM(color_list_);
           ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
@@ -4821,7 +4824,10 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON):
-        if (wav_player && wav_player->isPlaying()) return true;
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+        }
         if (color_mode_ == CC_COLOR_LIST) {
           if (dial_ <= 0) dial_ = NELEM(color_list_);
           dial_ = dial_ - 1;
@@ -4837,10 +4843,18 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF):
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+        }
         if (menu_) MenuDial(1);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF):
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+        }
         if (menu_) MenuDial(-1);
         return true;
 
@@ -4865,17 +4879,25 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+        }
         if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
           track_mode_ = PLAYBACK_ROTATE;
-	  sound_library_.SayRotate();
+          sound_library_.SayRotate();
           return true;
         }
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
+        if (wav_player && wav_player->isPlaying()) {
+          current_menu_angle_ = fusor.angle2();
+          return true;
+        }
         if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
           track_mode_ = PLAYBACK_LOOP;
-	  sound_library_.SayLoop();
+          sound_library_.SayLoop();
           return true;
         }
         return false;
