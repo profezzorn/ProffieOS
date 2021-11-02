@@ -621,17 +621,26 @@ public:
       return true;
   #endif  // BC_FORCE_PUSH
 
-// Start or Stop Track
-  #if NUM_BUTTONS == 1
-    case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_OFF):
-    case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_ON):
-  #else
-    // 2 or 3 button
-    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON | BUTTON_AUX):
-    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
-  #endif
+// Turns Saber ON
+    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
+      // No power on without exiting Vol Menu first
       if (!mode_volume_) {
-        StartOrStopTrack();
+      // Bypass preon if pointing up         
+        if (fusor.angle1() >  M_PI / 3) {
+          FastOn();
+        } else {
+          On();
+        }
+      }
+      return true;
+
+// Turn Saber ON Muted
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD, MODE_OFF):
+      if (!mode_volume_) {
+        if (SetMute(true)) {
+          unmute_on_deactivation_ = true;
+          On();
+        }
       }
       return true;
 
@@ -679,6 +688,20 @@ public:
       }
       return true;
 
+// Start or Stop Track
+  #if NUM_BUTTONS == 1
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_OFF):
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_ON):
+  #else
+    // 2 or 3 button
+    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON | BUTTON_AUX):
+    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
+  #endif
+      if (!mode_volume_) {
+        StartOrStopTrack();
+      }
+      return true;
+
 // Enter / Exit Volume MENU
   #ifndef NO_VOLUME_MENU
     #if NUM_BUTTONS == 1
@@ -708,7 +731,7 @@ public:
         }
         return true;
   #endif
-      
+
 // Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       if (!mode_volume_) {
@@ -737,29 +760,6 @@ public:
         STDOUT.println(battery_monitor.battery());
         STDOUT.println(battery_monitor.battery_percent());
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-      }
-      return true;
-
-// Turns Saber ON
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-      // No power on without exiting Vol Menu first
-      if (!mode_volume_) {
-      // Bypass preon if pointing up         
-        if (fusor.angle1() >  M_PI / 3) {
-          FastOn();
-        } else {
-          On();
-        }
-      }
-      return true;
-
-// Activate Muted
-    case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD, MODE_OFF):
-      if (!mode_volume_) {
-        if (SetMute(true)) {
-          unmute_on_deactivation_ = true;
-          On();
-        }
       }
       return true;
 
