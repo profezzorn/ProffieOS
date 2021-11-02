@@ -23,7 +23,7 @@ Features:
              - Add quote.wav files to font to use.
 - Play / Stop track control while blade is on.
 - Force Push is always available, not just in Battle Mode.
-- Melt is always available as no button, with pull-away or button to end
+- Melt is always available as no button, with pull-away or button to end.
 - Drag is always clash with button pressed while pointing down.
 - No blade = no gestures option if Blade Detect is used.
 - Use wav files for talkie things.
@@ -78,7 +78,7 @@ Gesture Controls:
 #define BC_GESTURE_AUTO_BATTLE_MODE
 - Makes gesture ignition ALSO enter battle mode automatically on ignition.
 
-Battle mode by fett263, BC modified version:
+"Battle Mode 1.0" by fett263, BC modified version:
 - Once you enter battle mode, buttons are not used for lockup.
   Clashing the blade against something will automatically do lockup and then end
   when you pull away.
@@ -121,7 +121,7 @@ Volume Menu:
         Volume UP     - Long click and release POW while in Volume Menu. (just like next preset)
         Volume DOWN   - Double click and hold POW, release after a second while in Volume Menu.
                         (click then long click, just like next preset)
-Spoken Battery Level:
+Spoken Battery Level
         in volts      - Triple click POW.
         in percentage - Triple click and hold POW.
 On-Demand Batt Level  - Double click POW.
@@ -160,7 +160,7 @@ Force Effect          - Hold POW + Twist. (while NOT pointing up or down)
 Monophonic Force      - Hold POW + Twist. (while pointing up)
 Color Change Mode     - Hold POW + Twist. (while pointing down)
                         - Rotate hilt to cycle through all available colors, or
-                        - Click AUX to change if ColorChange<> used in blade style,
+                        - Click POW to change if ColorChange<> used in blade style,
                         - Click + hold POW to save color selection and exit.
                         - Triple click POW to exit without changing color.
     ColorChange explained:
@@ -175,7 +175,7 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
 Quote Player          - Triple click POW.
 Force Push            - Push hilt perpendicularly from a stop.
 Swap (EffectSequence) - 4x click and hold POW medium. (while NOT pointing up)
-Power Save Dim Blade  - 4x click and hold POW medium. (while pointing up)
+PowerSave Dim Blade   - 4x click and hold POW medium. (while pointing up)
           (To use Power Save requires AlphaL based EffectSequence in style)
 Turn off blade        - Hold POW and wait until blade is off,
                         or Twist if using #define BC_TWIST_OFF.
@@ -197,7 +197,7 @@ Volume Menu:
         Volume UP     - Long click and release POW while in Volume Menu. (just like next preset)
         Volume DOWN   - Double click and hold POW, release after a second while in Volume Menu.
                         (click then long click, just like next preset)
-Spoken Battery Level:
+Spoken Battery Level
         in volts      - Triple click POW.
         in percentage - Triple click and hold POW.
 On-Demand Batt Level  - Double click POW.
@@ -251,7 +251,7 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
 Quote Player          - Triple click POW.
 Force Push            - Push hilt perpendicularly from a stop.
 Swap (EffectSequence) - Hold AUX + Twist. (while NOT pointing up)
-Power Save Dim Blade  - Hold AUX + Twist. (while pointing up)
+PowerSave Dim Blade   - Hold AUX + Twist. (while pointing up)
           (To use Power Save requires AlphaL based EffectSequence in style)
 Turn off blade        - Hold POW and wait until blade is off,
                         or Twist if using #define BC_TWIST_OFF.
@@ -518,11 +518,6 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
-        if (accel_.x < -0.15) {
-          pointing_down_ = true;
-        } else {
-          pointing_down_ = false;
-        }
       return true;
 
 // Gesture Ignition Controls
@@ -626,17 +621,26 @@ public:
       return true;
   #endif  // BC_FORCE_PUSH
 
-// Start or Stop Track
-  #if NUM_BUTTONS == 1
-    case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_OFF):
-    case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_ON):
-  #else
-    // 2 or 3 button
-    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON | BUTTON_AUX):
-    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
-  #endif
+// Turns Saber ON
+    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
+      // No power on without exiting Vol Menu first
       if (!mode_volume_) {
-        StartOrStopTrack();
+      // Bypass preon if pointing up         
+        if (fusor.angle1() >  M_PI / 3) {
+          FastOn();
+        } else {
+          On();
+        }
+      }
+      return true;
+
+// Turn Saber ON Muted
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD, MODE_OFF):
+      if (!mode_volume_) {
+        if (SetMute(true)) {
+          unmute_on_deactivation_ = true;
+          On();
+        }
       }
       return true;
 
@@ -684,6 +688,20 @@ public:
       }
       return true;
 
+// Start or Stop Track
+  #if NUM_BUTTONS == 1
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_OFF):
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_ON):
+  #else
+    // 2 or 3 button
+    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON | BUTTON_AUX):
+    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
+  #endif
+      if (!mode_volume_) {
+        StartOrStopTrack();
+      }
+      return true;
+
 // Enter / Exit Volume MENU
   #ifndef NO_VOLUME_MENU
     #if NUM_BUTTONS == 1
@@ -713,7 +731,7 @@ public:
         }
         return true;
   #endif
-      
+
 // Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       if (!mode_volume_) {
@@ -742,29 +760,6 @@ public:
         STDOUT.println(battery_monitor.battery());
         STDOUT.println(battery_monitor.battery_percent());
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-      }
-      return true;
-
-// Turns Saber ON
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-      // No power on without exiting Vol Menu first
-      if (!mode_volume_) {
-      // Bypass preon if pointing up         
-        if (fusor.angle1() >  M_PI / 3) {
-          FastOn();
-        } else {
-          On();
-        }
-      }
-      return true;
-
-// Activate Muted
-    case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD, MODE_OFF):
-      if (!mode_volume_) {
-        if (SetMute(true)) {
-          unmute_on_deactivation_ = true;
-          On();
-        }
       }
       return true;
 
@@ -801,7 +796,8 @@ public:
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
   #endif
       if (!SaberBase::Lockup()) {
-        if (pointing_down_) {
+        //pointing down
+        if (fusor.angle1() < - M_PI / 4) {
           SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
         } else {
           if (!battle_mode_) {
@@ -811,7 +807,6 @@ public:
             break;
           }
         }
-        swing_blast_ = false;
         SaberBase::DoBeginLockup();
         return true;
       }
@@ -820,7 +815,6 @@ public:
 // Melt
     case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
       clash_impact_millis_ = millis();
-      swing_blast_ = false;
       if (!SaberBase::Lockup() && !swinging_) {
         SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
         auto_melt_on_ = true;
@@ -831,7 +825,6 @@ public:
 // Lightning Block
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_ON):
       SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
-      swing_blast_ = false;
       SaberBase::DoBeginLockup();
       return true;
 
@@ -866,10 +859,9 @@ public:
 
   // Auto Lockup Mode
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
-      if (!battle_mode_) return false;
+      if (!battle_mode_ || swinging_) return false;
       clash_impact_millis_ = millis();
       swing_blast_ = false;
-      if (swinging_) return false;
       SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
       auto_lockup_on_ = true;
       SaberBase::DoBeginLockup();
@@ -913,7 +905,8 @@ public:
   #else
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
   #endif
-      if (fusor.angle1() >  M_PI / 3) {       // pointing up
+      // pointing up
+      if (fusor.angle1() >  M_PI / 3) {
         SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
         return true;
       } else {
@@ -937,7 +930,6 @@ public:
         }
       }
       saber_off_time_ = millis();
-      swing_blast_ = false;
       return true;
 
 // Blade Detect
@@ -959,7 +951,7 @@ public:
       return true;
   #endif
 
-// Events that needs to be handled regardless of what other buttons are pressed.
+// Events that need to be handled regardless of what other buttons are pressed.
     case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
     case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_OFF):
     case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_OFF):
@@ -1023,8 +1015,6 @@ public:
   }
 
 private:
-  bool pointing_down_ = false;
-  bool swing_blast_ = false;
   bool mode_volume_ = false;
   bool auto_lockup_on_ = false;
   bool auto_melt_on_ = false;
