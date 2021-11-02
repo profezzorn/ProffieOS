@@ -91,6 +91,8 @@ template<class WIDTH, class SPEED, class... COLORS>
 class StripesX : public StripesBase<COLORS...> {
 public:
   void run(BladeBase* base) {
+    // Width cannot be zero.
+    static_assert(!is_same_type<WIDTH, Int<0>>::value);
     width_.run(base);
     speed_.run(base);
     StripesBase<COLORS...>::run(base, width_.calculate(base), speed_.calculate(base));
