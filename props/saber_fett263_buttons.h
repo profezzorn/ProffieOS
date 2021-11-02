@@ -23,11 +23,11 @@ Standard Controls While Blade is OFF
     *if pointing down will go to previous
   NEW! Scroll Presets (using twist menu) = Long Click AUX
     Turn Right (Stepped) = Next Preset
-    Turn Left (Stepped) = Previous Preset
-    Click PWR = Select Preset
       Increment by 5 = Hold PWR + Turn Right
-    Click AUX = go to First Preset
+    Turn Left (Stepped) = Previous Preset
       Increment by 5 = Hold PWR + Turn Left
+    Click PWR = Select Preset
+    Click AUX = go to First Preset
   Play Track = Long Click PWR pointing up
   NEW! Track Player* = Long Click PWR parallel
   *requires tracks in either font/tracks/ or common/tracks/
