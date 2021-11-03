@@ -166,6 +166,12 @@ public:
     for (int x = x1 ; x < x2; x++) frame_buffer_[x] |= tmp;
   }
 
+  // x1 < x2, y1 < y2
+  void ClearRect(int x1, int x2, int y1, int y2) {
+    col_t tmp = ~(((col_t)-1) >> (HEIGHT - (y2 - y1))) << y1;
+    for (int x = x1 ; x < x2; x++) frame_buffer_[x] &= tmp;
+  }
+
   template<typename T>
   void Draw2(int begin, int end, col_t* pos, int shift, const T* data) {
     if (shift > 0) {
