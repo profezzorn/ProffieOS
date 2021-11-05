@@ -421,8 +421,8 @@ public:
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
     FreeBladeStyles();
-    if (announce) AnnouncePreset();
     current_preset_.SetPreset(preset_num);
+    if (announce) AnnouncePreset();
     AllocateBladeStyles();
     chdir(current_preset_.font.get());
     if (on) On();
