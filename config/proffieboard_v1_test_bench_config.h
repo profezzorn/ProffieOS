@@ -71,7 +71,15 @@ const unsigned int maxLedsPerStrip = 196;
 #define FILTER_CUTOFF_FREQUENCY 150
 #define FILTER_ORDER 8
 
+#define BLASTER_SHOTS_UNTIL_EMPTY 144
+
+#endif  // CONFIG_TOP
+
+
+#ifdef CONFIG_PROP
+#include "../props/blaster.h"
 #endif
+
 
 #ifdef CONFIG_PRESETS
 
@@ -284,6 +292,10 @@ BladeConfig blades[] = {
 
 //LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
+
+Button FireButton(BUTTON_FIRE, auxPin, "fire");
+Button ModeButton(BUTTON_MODE_SELECT, powerButtonPin, "modeselect");
+
 // Button AuxButton(BUTTON_AUX, auxPin, "aux");
 // Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");
 
@@ -297,6 +309,25 @@ Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 #endif
 
 #ifdef CONFIG_BOTTOM
+
+#if 0
 StandardDisplayController<128, uint32_t> display_controller;
+#endif
+
+#if 1
+DisplayHelper<128, uint32_t,
+  BaseLayerOp<StandardDisplayController>,
+  ClearRectangleOp<10, 80, 8, 24>,
+  WriteBulletCountOp<10, 20, 5>
+> display_controller;
+#endif
+
+#if 0
+DisplayHelper<128, uint32_t,
+  ClearScreenOp,
+  WriteBulletCountOp<10, 20, 5>
+> display_controller;
+#endif
+
 SSD1306Template<128, uint32_t> display(&display_controller);
 #endif

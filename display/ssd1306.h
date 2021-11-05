@@ -13,11 +13,21 @@ IMAGE_FILESET(lock);
 IMAGE_FILESET(force);
 IMAGE_FILESET(idle);
 
+enum Screen {
+  SCREEN_UNSET,
+  SCREEN_STARTUP,
+  SCREEN_MESSAGE,
+  SCREEN_PLI,
+  SCREEN_IMAGE,  // also for animations
+  SCREEN_OFF,
+};
+
 template<int Width, class col_t>
 class Display : public MonoFrame<Width, col_t> {
 public:
   virtual void Page() = 0;
   virtual void SB_Top() = 0;
+  virtual Screen GetScreen() = 0;
 };
 
 template<int Width, class col_t>
@@ -27,7 +37,154 @@ public:
   // May be called before it's time to actually display next frame.
   virtual int FillFrameBuffer(bool advance) = 0;
   virtual void SetDisplay(Display<Width, col_t>* display) = 0;
+  virtual Screen GetScreen() { return SCREEN_UNSET; }
 };
+
+template<int Width, class col_t>
+class AbstractDisplayController : public DisplayControllerBase<Width, col_t> {
+public:
+  Display<Width, col_t>* display_;
+  void SetDisplay(Display<Width, col_t>* display) override {
+    display_ = display;
+  }
+  bool ImageScreen() { return display_ && display_->GetScreen() == SCREEN_IMAGE; }
+};
+
+template<int Width, class col_t>
+class DisplayHelper1 {
+public:
+  DisplayControllerBase<Width, col_t> *a;
+  int t_;
+  int FillFrameBuffer() {
+    if (t_ <= 0) {
+      t_ += a->FillFrameBuffer(true);
+    } else {
+      a->FillFrameBuffer(false);
+    }
+    return t_;
+  }
+  void SetDisplay(Display<Width, col_t>* display)  {
+    a->SetDisplay(display);
+  }
+  virtual Screen GetScreen() {
+    return a->GetScreen();
+  }
+  void Advance(int t) { t_ -= t; }
+};
+
+template<int Width, class col_t, class... OPS> class DisplayHelper2 {};
+template<int Width, class col_t>
+class DisplayHelper2<Width, col_t> {
+ public:
+  void set(DisplayHelper1<Width, col_t>* out) { }
+};
+
+template<int Width, class col_t, class OP, class... OPS>
+class DisplayHelper2<Width, col_t, OP, OPS...> {
+ public:
+  void set(DisplayHelper1<Width, col_t>* out) {
+    out->a = &op_;
+    rest_.set(out + 1);
+  }
+ private:
+  typename OP::template Controller<Width, col_t> op_;
+  DisplayHelper2<Width, col_t, OPS...> rest_;
+};
+
+template<int Width, class col_t, class... OPERATIONS>
+class DisplayHelper : public DisplayControllerBase<Width, col_t> {
+public:
+  int last_t_;
+  DisplayHelper1<Width, col_t> operations_[sizeof...(OPERATIONS)];
+  DisplayHelper2<Width, col_t, OPERATIONS ...> ops_;
+  
+  DisplayHelper() {
+    ops_.set(operations_);
+  }
+  void SetDisplay(Display<Width, col_t>* display) override {
+    for (size_t i = 0; i < sizeof...(OPERATIONS); i++) {
+      operations_[i].SetDisplay(display);
+    }
+  }
+  Screen GetScreen() override {
+    Screen ret;
+    for (size_t i = 0; i < sizeof...(OPERATIONS); i++) {
+      ret = operations_[i].GetScreen();
+      if (ret != SCREEN_UNSET) return ret;
+    }
+    return SCREEN_UNSET;
+  }
+
+  int FillFrameBuffer(bool advance) override {
+    for (size_t i = 0; i < sizeof...(OPERATIONS); i++) {
+      operations_[i].Advance(last_t_);
+    }
+    last_t_ = 10000;
+    for (size_t i = 0; last_t_ && i < sizeof...(OPERATIONS); i++) {
+      last_t_ = std::min(last_t_, operations_[i].FillFrameBuffer());
+    }
+    return last_t_;
+  }
+};
+
+
+// Operations
+
+// Clear entire screen.
+// Intended to be used as base layer.
+struct ClearScreenOp {
+  template<int Width, class col_t> struct Controller : public AbstractDisplayController<Width, col_t> {
+    Screen GetScreen() override { return SCREEN_IMAGE; }
+    int FillFrameBuffer(bool advance) override {
+      this->display_->ClearRect(0, Width, 0, sizeof(col_t) * 8);
+      return 1000; // Never changes.
+    }
+  };
+};
+
+
+// Op wrapper, skips the op if the base is not an image.
+template<template<int, class> class T>
+struct IfImageOp {
+  template<int Width, class col_t> struct Controller : public T<Width, col_t> {
+    int FillFrameBuffer(bool advance) override {
+      if (!this->ImageScreen()) return 1000;
+      return typename T<Width, col_t>::FillFrameBuffer(advance);
+    }
+  };
+};
+
+
+// Clear a rectangle.
+template<int x1, int x2, int y1, int y2> struct ClearRectangleOp {
+  template<int Width, class col_t> struct Controller : public AbstractDisplayController<Width, col_t> {
+    int FillFrameBuffer(bool advance) override {
+      this->display_->ClearRect(x1, x2, y1, y2);
+      return 1000; // Never changes.
+    }
+  };
+};
+
+// TODO: Figure out how to replace this ifdef with std::enable_if
+#ifdef PROP_HAS_BULLET_COUNT
+
+// Draw bullet count on the screen.
+// May need to be combined with a ClearRectangleOp
+template<int x, int y, int digits> struct WriteBulletCountOp {
+  template<int Width, class col_t> struct Controller : public AbstractDisplayController<Width, col_t> {
+    int FillFrameBuffer(bool advance) override {
+      char tmp[30];
+      for (int i = 0; i < digits; i++) tmp[i] = '0';
+      itoa(prop.GetBulletCount(), tmp+digits, 10);
+      this->display_->DrawText(tmp + std::min<int>(digits, strlen(tmp+digits)), x, y, Starjedi10pt7bGlyphs);
+      return 50; // new frame in 50 ms or less.
+    }
+  };
+};
+
+#endif
+
+
 
 #if 0
 class DisplayHelper {
@@ -59,14 +216,6 @@ class StandardDisplayController : public DisplayControllerBase<Width, col_t>, Sa
 public:
   static const int WIDTH = Width;
   static const int HEIGHT = sizeof(col_t) * 8;
-  enum Screen {
-    SCREEN_UNSET,
-    SCREEN_STARTUP,
-    SCREEN_MESSAGE,
-    SCREEN_PLI,
-    SCREEN_IMAGE,  // also for animations
-    SCREEN_OFF,
-  };
 
   enum ScreenLayout {
     LAYOUT_NATIVE,
@@ -561,6 +710,11 @@ private:
   volatile Effect* current_effect_;
 };
 
+template<template<int, class> class T>
+struct BaseLayerOp {
+  template<int Width, class col_t> struct Controller : public T<Width, col_t> {};
+};
+
 template<int WIDTH, class col_t>
 class SSD1306Template : public Display<WIDTH, col_t>, I2CDevice, Looper, StateMachine {
 public:
@@ -651,6 +805,10 @@ public:
     STDOUT.println("");
   }
 							 
+  Screen GetScreen() override {
+    return controller_->GetScreen();
+  }
+
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (!i2cbus.inited()) YIELD();
