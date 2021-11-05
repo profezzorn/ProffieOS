@@ -4118,6 +4118,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
         SaberBase::RequestMotion();
+        saber_off_time_millis_ = millis();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
