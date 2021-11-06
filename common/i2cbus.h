@@ -79,6 +79,9 @@ public:
 	   << " i2c_detected_ = " << i2c_detected_
 	   << " used = " << used()
 	   << "\n";
+#ifdef PROFFIEBOARD  
+    STDOUT << "I2C STATE: " << Wire._i2c->state << "\n";
+#endif      
   }
   
 private:
