@@ -147,11 +147,8 @@ WS2811_Blade(WS2811PIN* pin,
   }
   void SB_Effect2(BladeEffectType type, float location) override {
     AbstractBlade::SB_Effect2(type, location);
-    if (type == EFFECT_PREON) {
-      // This blade uses EFFECT_PREON, so we need to turn the power on now.
-      run_ = true;
-      power_off_requested_ = false;
-    }
+    run_ = true;
+    power_off_requested_ = false;
   }
   void SB_Off(OffType off_type) override {
     TRACE(BLADE, "SB_Off");
@@ -300,7 +297,7 @@ constexpr int FrequencyFromFlags(int CONFIG) {
 template<int LEDS, int CONFIG, int DATA_PIN = bladePin, class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>,
   template<int, int, Color8::Byteorder, int, int, int, int> class PinClass = DefaultPinClass,
   int reset_us=300, int t0h=294, int t1h=892,
-  int POWER_OFF_DELAY_MS=0>
+  int POWER_OFF_DELAY_MS=3000>
 class BladeBase *WS2811BladePtr() {
   static_assert(LEDS <= maxLedsPerStrip, "update maxLedsPerStrip");
   static POWER_PINS power_pins;
@@ -315,7 +312,7 @@ template<int LEDS,
           class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>,
           template<int, int, Color8::Byteorder, int, int, int, int> class PinClass = DefaultPinClass,
           int frequency=800000, int reset_us=300, int t0h=294, int t1h=892,
-          int POWER_OFF_DELAY_MS = 0>
+          int POWER_OFF_DELAY_MS = 3000>
 class BladeBase *WS281XBladePtr() {
   static POWER_PINS power_pins;
   static PinClass<LEDS, DATA_PIN, byteorder, frequency, reset_us, t0h, t1h> pin;
@@ -330,7 +327,7 @@ template<int LEDS,
          class POWER_PINS = PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>,
          int max_frequency=800000,
          template<int, int, int, Color8::Byteorder, int> class PinClass = SpiLedPin,
-         int POWER_OFF_DELAY_MS = 0>
+         int POWER_OFF_DELAY_MS = 3000>
 class BladeBase *SPIBladePtr() {
   static POWER_PINS power_pins;
   static PinClass<LEDS, DATA_PIN, CLOCK_PIN, byteorder, max_frequency> pin;
