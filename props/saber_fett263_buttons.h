@@ -4401,7 +4401,12 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true; 
 #else
-// 2 Button Controls    
+// 2 Button Controls
+      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_OFF):
+        SaberBase::RequestMotion();
+        saber_off_time_millis_ = millis();
+        return true;
+
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
