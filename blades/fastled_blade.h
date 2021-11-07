@@ -103,7 +103,7 @@ public:
   }
   void SB_Effect2(BladeEffectType type, float location) override {
     AbstractBlade::SB_Effect2(type, location);
-    if (type == EFFECT_PREON) {
+    if (!powered_) {
       Power(true);
       delay(10);
     }

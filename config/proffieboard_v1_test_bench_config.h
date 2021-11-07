@@ -76,9 +76,9 @@ const unsigned int maxLedsPerStrip = 196;
 #endif  // CONFIG_TOP
 
 
-#ifdef CONFIG_PROP
-#include "../props/blaster.h"
-#endif
+//#ifdef CONFIG_PROP
+//#include "../props/blaster.h"
+//#endif
 
 
 #ifdef CONFIG_PRESETS
@@ -310,11 +310,11 @@ Button ModeButton(BUTTON_MODE_SELECT, powerButtonPin, "modeselect");
 
 #ifdef CONFIG_BOTTOM
 
-#if 0
+#if 1
 StandardDisplayController<128, uint32_t> display_controller;
 #endif
 
-#if 1
+#if 0
 DisplayHelper<128, uint32_t,
   BaseLayerOp<StandardDisplayController>,
   ClearRectangleOp<10, 80, 8, 24>,
