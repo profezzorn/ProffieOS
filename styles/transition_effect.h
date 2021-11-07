@@ -27,19 +27,9 @@ public:
     }
     last_detected_blade_effect = nullptr;
     if (!run_) {
-      switch (EFFECT) {
-	// This a list of effects that cannot occur after retraction is done.
-	case EFFECT_BOOT:
-	case EFFECT_PREON:
-	case EFFECT_IGNITION:
-	case EFFECT_RETRACTION:
-
-	  // NEWFONT is a special case, it CAN occur after retraction is done, but
-	  // we also power the blade on at that time, so it's fine.
-	case EFFECT_NEWFONT:
-	  return LayerRunResult::TRANSPARENT_UNTIL_IGNITION;
-	default: break;
-      }
+      // All effects now wake the blade up again if needed, so it's safe to
+      // always return TRANSPARENT_UNTIL_IGNITION
+      return LayerRunResult::TRANSPARENT_UNTIL_IGNITION;
     }
     return LayerRunResult::UNKNOWN;
   }

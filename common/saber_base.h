@@ -307,10 +307,11 @@ public:                                                         \
     }
   }
 
+  // Not private for debugging purposes only.
+  static uint32_t last_motion_request_;
 private:
   static bool on_;
   static LockupType lockup_;
-  static uint32_t last_motion_request_;
   static uint32_t current_variation_;
   static ColorChangeMode color_change_mode_;
   SaberBase* next_saber_;

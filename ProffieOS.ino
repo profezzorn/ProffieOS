@@ -564,6 +564,12 @@ ArgParserInterface* CurrentArgParser;
 PROP_TYPE prop;
 
 #if 0
+#include "scripts/test_motion_timeout.h"
+#warning MOTION TEST SCRIPT ACTIVE
+MotionTimeoutScript script;
+#endif
+
+#if 0
 #include "scripts/v3_test_script.h"
 #warning !!! V3 TEST SCRIPT ACTIVE !!!
 V3TestScript script;
