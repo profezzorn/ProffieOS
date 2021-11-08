@@ -16,12 +16,13 @@ public:
   virtual void Dump() {}
   I2CDevice *next = nullptr;
 
-  bool I2CLock() {
+  bool I2CLock(bool recapture = false) {
     if (!i2cbus.inited()) return false;
     noInterrupts();
     if (current_i2c_device) {
+      bool ret = recapture && current_i2c_device == this;
       interrupts();
-      return false;
+      return ret;
     }
     current_i2c_device = this;
     last_i2c_device = this;

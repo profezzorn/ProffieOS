@@ -9,7 +9,8 @@
 // Returns 32768 once for each time the given effect occurs.
 template<BladeEffectType EFFECT>
 class EffectPulseSVF {
-  int run(BladeBase* blade) {}
+public:
+  void run(BladeBase* blade) {}
   int calculate(BladeBase* blade) {
     return effect_.Detect(blade) ? 32768 : 0;
   }
@@ -35,7 +36,7 @@ public:
     reset_pulse_.run(blade);
     max_.run(blade);
     i_.run(blade);
-    if (pulse_.reset(blade)) {
+    if (reset_pulse_.calculate(blade)) {
       value_ = 0;
     }
     if (pulse_.calculate(blade)) {
