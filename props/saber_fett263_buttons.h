@@ -4276,11 +4276,18 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
         if (menu_) return true;
-        if (fusor.angle1() < - M_PI / 3) {
-          previous_preset_fast();
-        } else {
-          next_preset_fast();
-        }
+        // Delay twist events to prevent false trigger from over twisting
+        if (millis() - last_twist_millis_ > 2000) {
+          last_twist_millis_ = millis();
+#ifdef FETT263_DUAL_MODE_SOUND
+          SelectIgnitionSound();
+#endif
+          if (fusor.angle1() < - M_PI / 3) {
+            previous_preset_fast();
+          } else {
+            next_preset_fast();
+          }
+	}
         return true;
 #endif
 
@@ -4892,13 +4899,17 @@ SaberFett263Buttons() : PropBase() {}
 
       // Gesture Sleep Toggle
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_POWER):
-        if (!saved_gesture_control.gestureon) {
-          saved_gesture_control.gestureon = true;
-	  sound_library_.SayGesturesOn();
-        } else {
-          saved_gesture_control.gestureon = false;
-	  sound_library_.SayGesturesOff();
-        }
+        // Delay twist events to prevent false trigger from over twisting
+        if (millis() - last_twist_millis_ > 2000) {
+          last_twist_millis_ = millis();
+          if (!saved_gesture_control.gestureon) {
+            saved_gesture_control.gestureon = true;
+            sound_library_.SayGesturesOn();
+          } else {
+            saved_gesture_control.gestureon = false;
+            sound_library_.SayGesturesOff();
+          }
+	}
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
