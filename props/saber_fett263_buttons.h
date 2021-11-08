@@ -1740,21 +1740,23 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void DetectMenuTurn() {
-     if (millis() - last_rotate_millis_ > 1000) {
-      float a = fusor.angle2() - current_menu_angle_;
-      if (a > M_PI) a-=M_PI*2;
-      if (a < -M_PI) a+=M_PI*2;
-      if (a > twist_menu_ * 2/3) {
-        current_menu_angle_ += twist_menu_;
-        if (current_menu_angle_ > M_PI) current_menu_angle_ -= M_PI * 2;
-        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-        last_rotate_millis_ = millis();
-      }
-      if (a < -twist_menu_ * 2/3) {
-        current_menu_angle_ -= twist_menu_;
-        if (current_menu_angle_ < M_PI) current_menu_angle_ += M_PI * 2;
-        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-        last_rotate_millis_ = millis();
+    if (menu_) {
+      if (millis() - last_rotate_millis_ > 1000) {
+        float a = fusor.angle2() - current_menu_angle_;
+        if (a > M_PI) a-=M_PI*2;
+        if (a < -M_PI) a+=M_PI*2;
+        if (a > twist_menu_ * 2/3) {
+          current_menu_angle_ += twist_menu_;
+          if (current_menu_angle_ > M_PI) current_menu_angle_ -= M_PI * 2;
+          Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+          last_rotate_millis_ = millis();
+        }
+        if (a < -twist_menu_ * 2/3) {
+          current_menu_angle_ -= twist_menu_;
+          if (current_menu_angle_ < M_PI) current_menu_angle_ += M_PI * 2;
+          Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+          last_rotate_millis_ = millis();
+        }
       }
     }
   }
@@ -4118,6 +4120,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
         SaberBase::RequestMotion();
+        saber_off_time_millis_ = millis();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
@@ -4273,11 +4276,18 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
         if (menu_) return true;
-        if (fusor.angle1() < - M_PI / 3) {
-          previous_preset_fast();
-        } else {
-          next_preset_fast();
-        }
+        // Delay twist events to prevent false trigger from over twisting
+        if (millis() - last_twist_millis_ > 2000) {
+          last_twist_millis_ = millis();
+#ifdef FETT263_DUAL_MODE_SOUND
+          SelectIgnitionSound();
+#endif
+          if (fusor.angle1() < - M_PI / 3) {
+            previous_preset_fast();
+          } else {
+            next_preset_fast();
+          }
+	}
         return true;
 #endif
 
@@ -4400,7 +4410,12 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true; 
 #else
-// 2 Button Controls    
+// 2 Button Controls
+      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_OFF):
+        SaberBase::RequestMotion();
+        saber_off_time_millis_ = millis();
+        return true;
+
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
@@ -4772,15 +4787,18 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_SAVE_CHOREOGRAPHY
       // Rehearsal Mode
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_AUX):
-      // Check for existing rehearsal and prompt to overwrite or keep via menu
-      if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
-	sound_library_.SayRehearseNew();
-        StartMenu(MENU_REHEARSE);
+        if (millis() - last_twist_millis_ > 2000) {
+          last_twist_millis_ = millis();
+          // Check for existing rehearsal and prompt to overwrite or keep via menu
+          if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
+            sound_library_.SayRehearseNew();
+            StartMenu(MENU_REHEARSE);
+            return true;
+          } else {
+            BeginRehearsal();
+          }
+	}
         return true;
-      } else {
-        BeginRehearsal();
-      }
-      return true;
 
       // Choreographed Battle Mode
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF):
@@ -4884,13 +4902,17 @@ SaberFett263Buttons() : PropBase() {}
 
       // Gesture Sleep Toggle
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_POWER):
-        if (!saved_gesture_control.gestureon) {
-          saved_gesture_control.gestureon = true;
-	  sound_library_.SayGesturesOn();
-        } else {
-          saved_gesture_control.gestureon = false;
-	  sound_library_.SayGesturesOff();
-        }
+        // Delay twist events to prevent false trigger from over twisting
+        if (millis() - last_twist_millis_ > 2000) {
+          last_twist_millis_ = millis();
+          if (!saved_gesture_control.gestureon) {
+            saved_gesture_control.gestureon = true;
+            sound_library_.SayGesturesOn();
+          } else {
+            saved_gesture_control.gestureon = false;
+            sound_library_.SayGesturesOff();
+          }
+	}
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
