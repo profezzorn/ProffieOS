@@ -10,7 +10,7 @@
 template<BladeEffectType EFFECT>
 class EffectPulseSVF {
 public:
-  int run(BladeBase* blade) {}
+  void run(BladeBase* blade) {}
   int calculate(BladeBase* blade) {
     return effect_.Detect(blade) ? 32768 : 0;
   }
