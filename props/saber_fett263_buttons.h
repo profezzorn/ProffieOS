@@ -1740,21 +1740,23 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void DetectMenuTurn() {
-     if (millis() - last_rotate_millis_ > 1000) {
-      float a = fusor.angle2() - current_menu_angle_;
-      if (a > M_PI) a-=M_PI*2;
-      if (a < -M_PI) a+=M_PI*2;
-      if (a > twist_menu_ * 2/3) {
-        current_menu_angle_ += twist_menu_;
-        if (current_menu_angle_ > M_PI) current_menu_angle_ -= M_PI * 2;
-        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-        last_rotate_millis_ = millis();
-      }
-      if (a < -twist_menu_ * 2/3) {
-        current_menu_angle_ -= twist_menu_;
-        if (current_menu_angle_ < M_PI) current_menu_angle_ += M_PI * 2;
-        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-        last_rotate_millis_ = millis();
+    if (menu_) {
+      if (millis() - last_rotate_millis_ > 1000) {
+        float a = fusor.angle2() - current_menu_angle_;
+        if (a > M_PI) a-=M_PI*2;
+        if (a < -M_PI) a+=M_PI*2;
+        if (a > twist_menu_ * 2/3) {
+          current_menu_angle_ += twist_menu_;
+          if (current_menu_angle_ > M_PI) current_menu_angle_ -= M_PI * 2;
+          Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+          last_rotate_millis_ = millis();
+        }
+        if (a < -twist_menu_ * 2/3) {
+          current_menu_angle_ -= twist_menu_;
+          if (current_menu_angle_ < M_PI) current_menu_angle_ += M_PI * 2;
+          Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+          last_rotate_millis_ = millis();
+        }
       }
     }
   }
