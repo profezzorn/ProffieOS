@@ -55,7 +55,7 @@ public:
     int f = f_.calculate(blade);
     int threshold = threshold_.calculate(blade);
     if (triggered_) {
-      if (f < threshold * hyst_percent_.calculate(blade)) {
+      if (f < threshold * hyst_percent_.calculate(blade) / 100) {
 	triggered_ = false;
       }
     } else {
