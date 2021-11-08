@@ -169,7 +169,7 @@ public:
 	} else {
 	  last_event_ = millis();
 	}
-        while (!I2CLock()) YIELD();
+        while (!I2CLock((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31)) YIELD();
 	
 	I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 12);
 	// accel data available
