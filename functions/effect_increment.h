@@ -36,7 +36,7 @@ public:
     reset_pulse_.run(blade);
     max_.run(blade);
     i_.run(blade);
-    if (pulse_.reset(blade)) {
+    if (reset_pulse_.calculate(blade)) {
       value_ = 0;
     }
     if (pulse_.calculate(blade)) {
