@@ -33,7 +33,7 @@ template<class PULSE, class MAX = Int<32768>, class INCREMENT = Int<1>>
 using IncrementModuloF = SingleValueAdapter<IncrementModuloFSVF<PULSE, MAX, INCREMENT>>;
 
 template<class PULSE, class MAX, class INCREMENT>
-class SingleValueAdapter<IncrementModuloFSVF<PULSE, MAX, INCREMENT>> : IncrementModuloFSVF<PULSE, MAX, INCREMENT> {};
+class SingleValueAdapter<IncrementModuloFSVF<PULSE, MAX, INCREMENT>> : public IncrementModuloFSVF<PULSE, MAX, INCREMENT> {};
 
 
 // Usage: ThresholdPulseF<F, THRESHOLD, HYST_PERCENT>
@@ -55,7 +55,7 @@ public:
     int f = f_.calculate(blade);
     int threshold = threshold_.calculate(blade);
     if (triggered_) {
-      if (f < threshold * hyst_percent_.calculate(blade)) {
+      if (f < threshold * hyst_percent_.calculate(blade) / 100) {
 	triggered_ = false;
       }
     } else {
