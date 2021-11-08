@@ -4787,15 +4787,18 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_SAVE_CHOREOGRAPHY
       // Rehearsal Mode
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_AUX):
-      // Check for existing rehearsal and prompt to overwrite or keep via menu
-      if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
-	sound_library_.SayRehearseNew();
-        StartMenu(MENU_REHEARSE);
+        if (millis() - last_twist_millis_ > 2000) {
+          last_twist_millis_ = millis();
+          // Check for existing rehearsal and prompt to overwrite or keep via menu
+          if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
+            sound_library_.SayRehearseNew();
+            StartMenu(MENU_REHEARSE);
+            return true;
+          } else {
+            BeginRehearsal();
+          }
+	}
         return true;
-      } else {
-        BeginRehearsal();
-      }
-      return true;
 
       // Choreographed Battle Mode
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF):
