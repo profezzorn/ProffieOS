@@ -48,6 +48,9 @@ Standard Controls While Blade is OFF
     Click PWR or AUX = Exit
   Check Battery Level*  = Hold AUX, Click PWR
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_VOLTS or FETT263_SAY_BATTERY_PERCENT define
+  NEW! Change Font
+    Next Font = Hold AUX + Long Click PWR (parallel or up)
+    Previous Font= Hold AUX + Long Click PWR (down)
 Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
   Ignite Saber
     Swing On
@@ -86,6 +89,9 @@ Standard Controls While Blade is ON
       *While in ColorWheel you can Hold PWR down to zoom in color for easier selection
   Power Save* = Hold AUX + Click PWR (pointing straight up)
     *requires EFFECT_POWERSAVE in style
+  NEW! Change Style (All Blades)
+    Next Style = Hold AUX + Long Click PWR (parallel or up)
+    Previous Style = Hold AUX + Long Click PWR (down)
   Multi-Phase Preset Change*
     *requires FETT263_MULTI_PHASE define
     Hold AUX + Twist =  Next Preset
@@ -197,6 +203,9 @@ Standard Controls While Blade is OFF
     Turn Left (Stepped) = Decrease Volume (to min)
     Click PWR = Exit
   NEW Control! Battery Level = Triple Click and Hold PWR
+  NEW! Change Font
+    Next Font = Triple Click + Long Click PWR (parallel or up)
+    Previous Font = Triple Click + Long Click PWR (down)
 
 Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
   Ignite Saber
@@ -234,6 +243,9 @@ Standard Controls While Blade is ON
     *requires FETT263_MULTI_PHASE define
     Hold PWR + Twist (parallel or up) =  Next Preset 
     Hold PWR + Twist (pointing down) = Previous Preset
+  NEW! Change Style (All Blades)
+    Next Style = Triple Click + Long Click PWR (parallel or up)
+    Previous Style = Triple Click + Long Click PWR (down)
 
 Optional Gesture Controls (if enabled)
   Retract Blade
@@ -1911,6 +1923,45 @@ SaberFett263Buttons() : PropBase() {}
     sound_library_.SayBool(current_value);
   }
 
+  int GetStyleNumber(int blade_num) {
+    const char* tmp;
+    tmp = current_preset_.GetStyle(blade_num);
+    int style_num = FirstWord(tmp, "builtin") ? atoi(SkipWord(tmp)) : 0;
+    return style_num;
+  }
+
+  void ChangeStyleNumber(int blade_num, int direction) {
+    int num_presets = current_config->num_presets;
+    style_num_ += direction;
+    if (style_num_ < 0) style_num_ = num_presets - 1;
+    if (style_num_ >= num_presets) style_num_ = 0;
+    char style_arg[10];
+    itoa(style_num_, style_arg, 10);
+    current_preset_.SetStyle(blade_num, style_parser.SetArgument(current_preset_.GetStyle(blade_num), 1, style_arg));
+  }
+
+  void ChangeStyleNumberAllBlades(int direction) {
+    for (int i = 1; i <= NUM_BLADES; i++) {
+      style_num_ = GetStyleNumber(i);
+      ChangeStyleNumber(i, direction);
+    }
+    current_preset_.Save();
+    UpdateStyle();
+  }
+
+  void ChangeFont(int direction) {
+    font_num_ += direction;
+    if (font_num_ > num_fonts_ - 1) font_num_ = 1;
+    if (font_num_ <= 0) font_num_ = num_fonts_ - 1;
+    char font[128];
+    RunCommandAndGetSingleLine("list_fonts", nullptr, font_num_, font, sizeof(font));
+    strcat(font, ";common");
+    current_preset_.font = mkstr(font);
+    current_preset_.Save();
+    SetPresetFast(current_preset_.preset_num);
+    hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
+  }
+
 #ifdef FETT263_EDIT_MODE_MENU
 // Color Edit Helper Functions
   void SaveColorEdit() {
@@ -1976,7 +2027,6 @@ SaberFett263Buttons() : PropBase() {}
 
 // Edit Mode Menu Select (PWR Button)
   void MenuChoice() {
-    const char* tmp;
     switch (menu_type_) {
     case MENU_PRESET:
       sound_library_.SaySelect();
@@ -2139,10 +2189,7 @@ SaberFett263Buttons() : PropBase() {}
       switch (menu_sub_pos_) {
         case EDIT_STYLE_SELECT:
           menu_type_ = MENU_STYLE;
-          num_presets_ = current_config->num_presets;
-          tmp = current_preset_.GetStyle(blade_num_);
-          style_num_ = FirstWord(tmp, "builtin") ? atoi(SkipWord(tmp)) : 0;
-          style_revert_ = style_num_;
+          style_num_ = style_revert_ = GetStyleNumber(blade_num_);
           sound_library_.SaySelect();
           SayStyleNumber(style_num_);
           break;
@@ -2941,12 +2988,7 @@ SaberFett263Buttons() : PropBase() {}
 	}
 	break;
       case MENU_STYLE:
-        style_num_ += direction;
-        if (style_num_ < 0) style_num_ = num_presets_ - 1;
-        if (style_num_ >= num_presets_) style_num_ = 0;
-        char style_arg[10];
-        itoa(style_num_, style_arg, 10);
-        current_preset_.SetStyle(blade_num_, style_parser.SetArgument(current_preset_.GetStyle(blade_num_), 1, style_arg));
+        ChangeStyleNumber(blade_num_, direction);
         current_preset_.Save();
         UpdateStyle();
         SayStyleNumber(style_num_);
@@ -3095,17 +3137,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_FONT:
         if (!restore_point.get()) restore_point = std::move(current_preset_.font);
-        font_num_ += direction;
-        if (font_num_ > num_fonts_ - 1) font_num_ = 1;
-        if (font_num_ <= 0) font_num_ = num_fonts_ - 1;
-        char font[128];
-        RunCommandAndGetSingleLine("list_fonts", nullptr, font_num_, font, sizeof(font));
-        strcat(font, ";common");
-        current_preset_.font = mkstr(font);
-        current_preset_.Save();
-	// Reload Font Fast
-        SetPresetFast(current_preset_.preset_num);
-        hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
+        ChangeFont(direction);
         break;
       case MENU_TRACK:
         if (track_player_) {
@@ -4336,6 +4368,26 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true;
 
+      case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_ON):
+        if (menu_) return true;
+        if (fusor.angle1() < - M_PI / 3) {
+          ChangeStyleNumberAllBlades(-1);
+        } else {
+          ChangeStyleNumberAllBlades(1);      
+        }
+        hybrid_font.PlayCommon(&SFX_ccchange);
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_OFF):
+        if (menu_) return true;
+        num_fonts_ = RunCommandAndGetSingleLine("list_fonts", nullptr, 0, 0, 0);
+        if (fusor.angle1() < - M_PI / 3) {
+          ChangeFont(-1);
+        } else {
+          ChangeFont(1);
+        }
+        return true;
+
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
         if (menu_) return true;
           ToggleMultiBlast();
@@ -4536,6 +4588,26 @@ SaberFett263Buttons() : PropBase() {}
         ToggleBattleMode();
         return true;
 #endif
+
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON | BUTTON_AUX):
+        if (menu_) return true;
+        if (fusor.angle1() < - M_PI / 3) {
+          ChangeStyleNumberAllBlades(-1);
+        } else {
+          ChangeStyleNumberAllBlades(1);      
+        }
+        hybrid_font.PlayCommon(&SFX_ccchange);
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF | BUTTON_AUX):
+        if (menu_) return true;
+        num_fonts_ = RunCommandAndGetSingleLine("list_fonts", nullptr, 0, 0, 0);
+        if (fusor.angle1() < - M_PI / 3) {
+          ChangeFont(-1);
+        } else {
+          ChangeFont(1);
+        }
+        return true;
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON | BUTTON_POWER):
         if ((!menu_ && saved_gesture_control.powerlock)
@@ -5347,14 +5419,13 @@ private:
   EditColorMode color_mode_;
   bool edit_color_ = false; // Color Editing Mode active
   float hsl_angle_ = 0.0; // HSL angle for Color Editing
+  int style_num_; // builtin style number for selection in Edit Mode, based on original config
+  int font_num_; // Font number from list_fonts array for use in Edit Mode dial
+  int num_fonts_; // Total number of fonts from list_fonts array
 #ifdef FETT263_EDIT_MODE_MENU
   uint32_t variation_revert_; // Variation revert value
   Color16 saved_color_;
   int blade_preview_ = 0; // Blade number for "preview" style
-  int style_num_; // builtin style number for selection in Edit Mode, based on original config
-  int font_num_; // Font number from list_fonts array for use in Edit Mode dial
-  int num_fonts_; // Total number of fonts from list_fonts array
-  int num_presets_; // Total number of builtin styles based on original config
   int blade_num_; // Active Blade Number for editing
   int effect_num_; // Effect Arg Number
   int copy_blade_; // Blade to Copy from
