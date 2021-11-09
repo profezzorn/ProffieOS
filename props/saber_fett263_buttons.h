@@ -1932,27 +1932,29 @@ SaberFett263Buttons() : PropBase() {}
 
   void ChangeStyleNumber(int blade_num, int direction) {
     int num_presets = current_config->num_presets;
-    style_num_ += direction;
-    if (style_num_ < 0) style_num_ = num_presets - 1;
-    if (style_num_ >= num_presets) style_num_ = 0;
+    int style_num = GetStyleNumber(blade_num);
+    style_num += direction;
+    if (style_num < 0) style_num = num_presets - 1;
+    if (style_num >= num_presets) style_num = 0;
     char style_arg[10];
-    itoa(style_num_, style_arg, 10);
+    itoa(style_num, style_arg, 10);
     current_preset_.SetStyle(blade_num, style_parser.SetArgument(current_preset_.GetStyle(blade_num), 1, style_arg));
   }
 
   void ChangeStyleNumberAllBlades(int direction) {
     for (int i = 1; i <= NUM_BLADES; i++) {
-      style_num_ = GetStyleNumber(i);
       ChangeStyleNumber(i, direction);
     }
     current_preset_.Save();
     UpdateStyle();
   }
 
+  // Uses font_num_ value for starting font, not current font
   void ChangeFont(int direction) {
+    int num_fonts = RunCommandAndGetSingleLine("list_fonts", nullptr, 0, 0, 0);
     font_num_ += direction;
-    if (font_num_ > num_fonts_ - 1) font_num_ = 1;
-    if (font_num_ <= 0) font_num_ = num_fonts_ - 1;
+    if (font_num_ > num_fonts - 1) font_num_ = 1;
+    if (font_num_ <= 0) font_num_ = num_fonts - 1;
     char font[128];
     RunCommandAndGetSingleLine("list_fonts", nullptr, font_num_, font, sizeof(font));
     strcat(font, ";common");
@@ -2092,7 +2094,6 @@ SaberFett263Buttons() : PropBase() {}
         case EDIT_FONT:
           menu_type_ = MENU_FONT;
           font_num_ = 0;
-          num_fonts_ = RunCommandAndGetSingleLine("list_fonts", nullptr, 0, 0, 0);
           sound_library_.SaySelect();
           break;
         case EDIT_TRACK:
@@ -2189,9 +2190,9 @@ SaberFett263Buttons() : PropBase() {}
       switch (menu_sub_pos_) {
         case EDIT_STYLE_SELECT:
           menu_type_ = MENU_STYLE;
-          style_num_ = style_revert_ = GetStyleNumber(blade_num_);
+          style_revert_ = GetStyleNumber(blade_num_);
           sound_library_.SaySelect();
-          SayStyleNumber(style_num_);
+          SayStyleNumber(style_revert_);
           break;
         case EDIT_STYLE_SETTINGS:
           effect_num_ = 0;
@@ -2991,7 +2992,7 @@ SaberFett263Buttons() : PropBase() {}
         ChangeStyleNumber(blade_num_, direction);
         current_preset_.Save();
         UpdateStyle();
-        SayStyleNumber(style_num_);
+        SayStyleNumber(GetStyleNumber(blade_num_));
         break;
       case MENU_COLOR:
         break;
@@ -4370,22 +4371,13 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_ON):
         if (menu_) return true;
-        if (fusor.angle1() < - M_PI / 3) {
-          ChangeStyleNumberAllBlades(-1);
-        } else {
-          ChangeStyleNumberAllBlades(1);      
-        }
+        ChangeStyleNumberAllBlades(fusor.angle1() < - M_PI / 3 ? -1 : 1);
         hybrid_font.PlayCommon(&SFX_ccchange);
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_OFF):
         if (menu_) return true;
-        num_fonts_ = RunCommandAndGetSingleLine("list_fonts", nullptr, 0, 0, 0);
-        if (fusor.angle1() < - M_PI / 3) {
-          ChangeFont(-1);
-        } else {
-          ChangeFont(1);
-        }
+        ChangeFont(fusor.angle1() < - M_PI / 3 ? -1 : 1);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
@@ -4591,22 +4583,13 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON | BUTTON_AUX):
         if (menu_) return true;
-        if (fusor.angle1() < - M_PI / 3) {
-          ChangeStyleNumberAllBlades(-1);
-        } else {
-          ChangeStyleNumberAllBlades(1);      
-        }
+        ChangeStyleNumberAllBlades(fusor.angle1() < - M_PI / 3 ? -1 : 1);
         hybrid_font.PlayCommon(&SFX_ccchange);
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF | BUTTON_AUX):
         if (menu_) return true;
-        num_fonts_ = RunCommandAndGetSingleLine("list_fonts", nullptr, 0, 0, 0);
-        if (fusor.angle1() < - M_PI / 3) {
-          ChangeFont(-1);
-        } else {
-          ChangeFont(1);
-        }
+        ChangeFont(fusor.angle1() < - M_PI / 3 ? -1 : 1);
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON | BUTTON_POWER):
@@ -5419,9 +5402,7 @@ private:
   EditColorMode color_mode_;
   bool edit_color_ = false; // Color Editing Mode active
   float hsl_angle_ = 0.0; // HSL angle for Color Editing
-  int style_num_; // builtin style number for selection in Edit Mode, based on original config
   int font_num_; // Font number from list_fonts array for use in Edit Mode dial
-  int num_fonts_; // Total number of fonts from list_fonts array
 #ifdef FETT263_EDIT_MODE_MENU
   uint32_t variation_revert_; // Variation revert value
   Color16 saved_color_;
