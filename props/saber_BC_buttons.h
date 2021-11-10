@@ -772,7 +772,7 @@ public:
 // Blaster Deflection
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
-      //Don't blast if in colorchange mode
+      // Don't blast if in colorchange mode
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
       SaberBase::DoBlast();
       last_blast_ = millis();
@@ -796,7 +796,7 @@ public:
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
   #endif
       if (!SaberBase::Lockup()) {
-        //pointing down
+        // pointing down
         if (fusor.angle1() < - M_PI / 4) {
           SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
         } else {
@@ -861,7 +861,6 @@ public:
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
       if (!battle_mode_ || swinging_) return false;
       clash_impact_millis_ = millis();
-      swing_blast_ = false;
       SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
       auto_lockup_on_ = true;
       SaberBase::DoBeginLockup();
