@@ -1752,7 +1752,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void DetectMenuTurn() {
-    if (menu_) {
+    if (menu_ || color_mode_ == CC_COLOR_LIST) {
       if (millis() - last_rotate_millis_ > 1000) {
         float a = fusor.angle2() - current_menu_angle_;
         if (a > M_PI) a-=M_PI*2;
