@@ -92,7 +92,7 @@ class StripesX : public StripesBase<COLORS...> {
 public:
   void run(BladeBase* base) {
     // Width cannot be zero.
-    static_assert(!is_same_type<WIDTH, Int<0>>::value);
+    static_assert(!is_same_type<WIDTH, Int<0>>::value, "Stripes cannot have a zero WIDTH");
     width_.run(base);
     speed_.run(base);
     StripesBase<COLORS...>::run(base, width_.calculate(base), speed_.calculate(base));
