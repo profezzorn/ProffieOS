@@ -849,7 +849,7 @@ public:
         STDOUT.println("Exiting Battle Mode");
         battle_mode_ = false;
         if (SFX_bmend) {
-          hybrid_font.PlayCommon(&SFX_bmbegin);
+          hybrid_font.PlayCommon(&SFX_bmend);
           STDOUT.println("-----------------playing bmend.wav");
         } else {
           beeper.Beep(0.5, 3000);
