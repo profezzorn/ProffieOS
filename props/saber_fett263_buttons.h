@@ -1853,6 +1853,7 @@ SaberFett263Buttons() : PropBase() {}
     MENU_LOCKUP_POSITION,
     MENU_DRAG_SIZE,
     MENU_MELT_SIZE,
+    MENU_SWING_OPTION,
     MENU_EMITTER_SIZE,
     MENU_PREON_OPTION,
     MENU_PREON_SIZE,
@@ -2790,6 +2791,12 @@ SaberFett263Buttons() : PropBase() {}
           ShowColorStyle::SetColor(GetColorArg(blade_num_, DRAG_COLOR_ARG));
           show_drag_size_.Start(blade_num_);
           break;
+        case SWING_OPTION_ARG:
+          menu_type_ = MENU_SWING_OPTION;
+          arg_revert_ = strtol (argspace, NULL, 0);
+          sound_library_.SayOption();
+          sound_library_.SayNumber(calc_, SAY_WHOLE);
+          break;
         case EMITTER_SIZE_ARG:
           menu_type_ = MENU_EMITTER_SIZE;
           ShowColorStyle::SetColor(GetColorArg(blade_num_, EMITTER_COLOR_ARG));
@@ -2824,6 +2831,7 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_IGNITION_TIME:
     case MENU_IGNITION_POWER_UP_OPTION:
     case MENU_IGNITION_DELAY:
+    case MENU_SWING_OPTION:
     case MENU_PREON_OPTION:
     case MENU_PREON_SIZE:
       menu_type_ = MENU_STYLE_SETTING_SUB;
@@ -3438,6 +3446,9 @@ SaberFett263Buttons() : PropBase() {}
           case MELT_SIZE_ARG:
             sound_library_.SayMeltSize();
             break;
+          case SWING_OPTION_ARG:
+            sound_library_.SaySwingOption();
+            break;
           case EMITTER_SIZE_ARG:
 	    sound_library_.SayEmitterSize();
             break;
@@ -3483,6 +3494,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_IGNITION_POWER_UP_OPTION:
       case MENU_RETRACTION_OPTION:
       case MENU_RETRACTION_COOL_DOWN_OPTION:
+      case MENU_SWING_OPTION:
       case MENU_PREON_OPTION:
         calc_ += direction;
         if (calc_ > 32768) calc_ = 0;
@@ -3753,6 +3765,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_RETRACTION_TIME:
       case MENU_RETRACTION_COOL_DOWN_OPTION:
       case MENU_RETRACTION_DELAY:
+      case MENU_SWING_OPTION:
       case MENU_PREON_OPTION:
       case MENU_PREON_SIZE:
         menu_type_ = MENU_STYLE_SETTING_SUB;

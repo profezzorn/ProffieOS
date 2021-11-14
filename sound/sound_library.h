@@ -238,6 +238,7 @@ public:
   void SaySwingColor() { Play("mswing.wav"); }
   void SaySwingIgnition() { Play("mswingon.wav"); }
   void SaySwingOnSpeed() { Play("mswingsp.wav"); }
+  void SaySwingOption() { Play("mswngopt.wav"); }
   void SayThrustIgnition() { Play("mthrston.wav"); }
   void SayTwistIgnition() { Play("mtwiston.wav"); }
   void SayTwistRetraction() { Play("mtwstoff.wav"); }
