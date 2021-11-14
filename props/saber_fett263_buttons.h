@@ -1764,6 +1764,13 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
+  void SelectPreset(int preset) {
+#ifdef SAVE_PRESET
+    SaveState(preset);
+#endif
+    SetPreset(preset, true);
+  }
+
   void DetectMenuTurn() {
     if (menu_ || color_mode_ == CC_COLOR_LIST) {
       if (millis() - last_rotate_millis_ > 1000) {
@@ -2886,13 +2893,13 @@ SaberFett263Buttons() : PropBase() {}
           if (SaberBase::IsOn()) {
             next_preset_fast();
           } else {
-            next_preset();
+            SelectPreset(current_preset_.preset_num + direction);
           }
         } else {
           if (SaberBase::IsOn()) {
             previous_preset_fast();
           } else {
-            previous_preset();
+            SelectPreset(current_preset_.preset_num + direction);
           }
         }
         break;
