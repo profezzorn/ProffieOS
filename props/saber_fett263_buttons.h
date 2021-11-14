@@ -1073,6 +1073,7 @@ SaberFett263Buttons() : PropBase() {}
     }
     SFX_bgnlock.Select(-1);
     SFX_endlock.Select(-1);
+    wav_player.Free();
   }
 
   void BeginChoreo() {
@@ -1126,6 +1127,7 @@ SaberFett263Buttons() : PropBase() {}
     SFX_bgnlock.Select(-1);
     SFX_endlock.Select(-1);
   }
+  wav_player.Free();
 #endif
 
   void GenerateIniFiles() {
@@ -2038,6 +2040,7 @@ SaberFett263Buttons() : PropBase() {}
     current_preset_.Save();
     show_color_all_.Stop();
     UpdateStyle();
+    wav_player.Free();
     return true;
   }
 
@@ -4722,6 +4725,7 @@ SaberFett263Buttons() : PropBase() {}
             color_mode_ = NONE;
             show_color_all_.Stop();
             sound_library_.SayRevert();
+            wav_player.Free();
             return true;
           }		
           if (swing_blast_) {
