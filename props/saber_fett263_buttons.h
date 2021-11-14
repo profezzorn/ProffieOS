@@ -3819,8 +3819,30 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void MenuCancel() {
-    sound_library_.SayCancel();
-    MenuPrompt();
+    switch (menu_type_) {
+      case MENU_COLOR_BASE:
+      case MENU_COLOR_ALT:
+      case MENU_COLOR_BLAST:
+      case MENU_COLOR_CLASH:
+      case MENU_COLOR_LOCKUP:
+      case MENU_COLOR_DRAG:
+      case MENU_COLOR_LB:
+      case MENU_COLOR_STAB:
+      case MENU_COLOR_PREON:
+      case MENU_COLOR_IGNITE:
+      case MENU_COLOR_RETRACT:
+      case MENU_COLOR_PSTOFF:
+      case MENU_COLOR_SWING:
+      case MENU_COLOR_EMITTER:
+      case MENU_COLOR_OFF:
+      case MENU_LENGTH:
+        MenuUndo();
+        break;
+      default:
+        sound_library_.SayCancel();
+        MenuPrompt();
+        break;
+    }
   }
 
   void MenuRevert() {
@@ -4209,6 +4231,7 @@ SaberFett263Buttons() : PropBase() {}
           MenuExit();
           return true;
         }
+        if (menu_) return true;
 #ifdef FETT263_EDIT_MODE_MENU
         // Enter Edit Mode
         if (!menu_) {
