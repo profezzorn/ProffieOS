@@ -1682,7 +1682,11 @@ SaberFett263Buttons() : PropBase() {}
       }
     }
     DetectMenuTurn();
+#ifdef ENABLE_AUDIO    
     TrackPlayer();
+#else
+    STDOUT.println("Audio disabled.");
+#endif
   }
 
   // Fett263 Track Player
@@ -1694,23 +1698,25 @@ SaberFett263Buttons() : PropBase() {}
   };
 
   void StartTrackPlayer() {
-    track_num_ = 0;
     num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
     if (num_tracks_ > 0) {
       sound_library_.SaySelect();
       StartMenu(MENU_TRACK_PLAYER);
+      track_num_ = 1;
+      PlayTrack();
     } else {
+      // Loop default track if tracks not found
       sound_library_.SayLoop();
+      track_num_ = 0;
       track_mode_ = PLAYBACK_LOOP;
+      StartOrStopTrack();
     }
-    StartOrStopTrack(); 
   }
 
   void TrackPlayer() {
     if (track_mode_ != PLAYBACK_OFF) {
       if (!track_player_) {
-#ifdef ENABLE_AUDIO
-        if (track_num_ >= 0 && track_mode_ == PLAYBACK_LOOP) {
+        if (track_num_ <= 0 && track_mode_ == PLAYBACK_LOOP) {
           StartOrStopTrack();
         } else {
           if (track_num_ > num_tracks_) track_num_ = 1;
@@ -1725,19 +1731,26 @@ SaberFett263Buttons() : PropBase() {}
             default:
               break;
           }
-          char playtrack[128];
-          RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, playtrack, sizeof(playtrack));
-          track_player_ = GetFreeWavPlayer();
-          if (track_player_) {
-            track_player_->Play(playtrack);
-          } else {
-            STDOUT.println("No available WAV players.");
-          }
+          PlayTrack();
         }
-#else
-        STDOUT.println("Audio disabled.");
-#endif
       }
+    } else {
+      if (track_player_ && !track_player_->isPlaying()) {
+        track_player_.Free();
+      }
+    }
+  }
+
+  void PlayTrack() {
+    char playtrack[128];
+    RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, playtrack, sizeof(playtrack));
+    MountSDCard();
+    EnableAmplifier();
+    track_player_ = GetFreeWavPlayer();
+    if (track_player_) {
+      track_player_->Play(playtrack);
+    } else {
+      STDOUT.println("No available WAV players.");
     }
   }
 
@@ -1749,6 +1762,13 @@ SaberFett263Buttons() : PropBase() {}
     } else {
       StartOrStopTrack();
     }
+  }
+
+  void SelectPreset(int preset) {
+#ifdef SAVE_PRESET
+    SaveState(preset);
+#endif
+    SetPreset(preset, true);
   }
 
   void DetectMenuTurn() {
@@ -2873,13 +2893,13 @@ SaberFett263Buttons() : PropBase() {}
           if (SaberBase::IsOn()) {
             next_preset_fast();
           } else {
-            next_preset();
+            SelectPreset(current_preset_.preset_num + direction);
           }
         } else {
           if (SaberBase::IsOn()) {
             previous_preset_fast();
           } else {
-            previous_preset();
+            SelectPreset(current_preset_.preset_num + direction);
           }
         }
         break;
@@ -2898,20 +2918,7 @@ SaberFett263Buttons() : PropBase() {}
         track_num_ += direction;
         if (track_num_ > num_tracks_) track_num_ = 1;
         if (track_num_ <= 0) track_num_ = num_tracks_;
-        char playtrack[128];
-        RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, playtrack, sizeof(playtrack));
-  #ifdef ENABLE_AUDIO
-        MountSDCard();
-        EnableAmplifier();
-        track_player_ = GetFreeWavPlayer();
-        if (track_player_) {
-          track_player_->Play(playtrack);
-        } else {
-          STDOUT.println("No available WAV players.");
-        }
-  #else
-        STDOUT.println("Audio disabled.");
-  #endif
+        PlayTrack();
         break;
   #ifdef FETT263_EDIT_MODE_MENU
       case MENU_TOP:
@@ -4420,6 +4427,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
 
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
+#ifdef ENABLE_AUDIO
         if (track_player_) {
           StopTrackPlayer();
           track_mode_ = PLAYBACK_OFF;
@@ -4433,7 +4441,10 @@ SaberFett263Buttons() : PropBase() {}
             return true;
           }
         }
-          return true;
+#else
+        STDOUT.println("Audio disabled.");
+#endif
+        return true;
 
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
         if (!menu_) {
@@ -4821,6 +4832,7 @@ SaberFett263Buttons() : PropBase() {}
 
         // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
+#ifdef ENABLE_AUDIO
         if (track_player_) {
           StopTrackPlayer();
           return true;
@@ -4833,6 +4845,9 @@ SaberFett263Buttons() : PropBase() {}
             return true;
           }
         }
+#else
+        STDOUT.println("Audio disabled.");
+#endif
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
