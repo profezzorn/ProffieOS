@@ -82,11 +82,15 @@ Standard Controls While Blade is ON
   Start/Stop Tracks = Long Click PWR (pointing straight up)
     *default track only (use Track Player while OFF to select tracks or playback modes)
   Color Change = Hold AUX + Click PWR (parallel or down)
-    Rotate Hilt to select color (unless ColorChange click to Change style is active)
+    Rotate Hilt to select color (unless ColorChange<> style is used with COLOR_CHANGE_DIRECT*)
+      If styles use Edit Mode Color Editing styles, Color List is used
+      If styles use ColorChange<> then colors within the style are used
+        *if COLOR_CHANGE_DIRECT is defined then each click will change color instead of turn
+      Otherwise ColorWheel is used per style set up.
     Click PWR to save
-    NEW! ColorWheel "Zoom"* = Hold PWR, Release to Save
-      *if COLORWHEEL_ZOOM defined
-      *While in ColorWheel you can Hold PWR down to zoom in color for easier selection
+    NEW! Color Zoom* = Hold PWR, Release to Save
+      *For Color List or ColorWheel you can Hold PWR down to zoom in color for easier selection
+       Release PWR to save
   Power Save* = Hold AUX + Click PWR (pointing straight up)
     *requires EFFECT_POWERSAVE in style
   NEW! Change Style (All Blades)
@@ -170,7 +174,7 @@ Edit Mode*
     Exit Edit Mode - Hold AUX (or rotate to "Exit") while in Main Menu
 
   "Edit Color" Additional Control
-    "Color List" and "Adjust Color Hue" Zoom Mode = Long Click PWR
+    "Color List" and "Adjust Color Hue" Zoom Mode = Hold PWR while turning to Zoom color in, release to save
 
 ---------- 1 Button Controls (based on SA22C prop) ----------
 
@@ -234,9 +238,15 @@ Standard Controls While Blade is ON
     *if track is playing while ON
     To start/select track saber must be OFF
   NEW Control! Color Change = 4 Clicks PWR (parallel or down)
-    NEW! ColorWheel "Zoom"* = Hold PWR, Release to Save
-      *if COLORWHEEL_ZOOM defined
-      *While in ColorWheel you can Hold PWR down to zoom in color for easier selection
+    Rotate Hilt to select color (unless ColorChange<> style is used with COLOR_CHANGE_DIRECT*)
+      If styles use Edit Mode Color Editing styles, Color List is used
+      If styles use ColorChange<> then colors within the style are used
+        *if COLOR_CHANGE_DIRECT is defined then each click will change color instead of turn
+      Otherwise ColorWheel is used per style set up.
+    Click PWR to save
+    NEW! Color Zoom* = Hold PWR, Release to Save
+      *For Color List or ColorWheel you can Hold PWR down to zoom in color for easier selection
+       Release PWR to save
   NEW! Power Save* = 4 Clicks PWR (pointing straight up)
     *requires EFFECT_POWERSAVE in style
   Multi-Phase Preset Change*
@@ -292,7 +302,7 @@ Edit Mode*
     Exit Edit Mode - Hold PWR (or rotate to "Exit") while in Main Menu
 
   "Edit Color" Additional Control
-    "Color List" and "Adjust Color Hue" Zoom Mode = Long Click PWR
+    "Color List" and "Adjust Color Hue" Zoom Mode = Hold PWR while turning to Zoom color in, release to save
 
 ---------- || ----------
 
@@ -431,9 +441,6 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   MOTION_TIMEOUT 60 * 15 * 1000
   This extends the motion timeout to 15 minutes to allow gesture ignition to remain active
   Increase/decrease the "15" value as needed
-  
-  COLORWHEEL_ZOOM
-  This will enable "Zoom" mode in ColorWheel (does not apply to Color Change using Color List for Edit Mode styles)
   
   FETT263_QUOTE_PLAYER_START_ON
   This will set Force / Quote Player to play Quote by default (if in font)
@@ -1325,7 +1332,10 @@ SaberFett263Buttons() : PropBase() {}
       float angle = 100;
       switch (color_mode_) {
         case EDIT_COLOR: angle = H_ANGLE; break;
-        case ZOOM_COLOR: angle = EDIT_MODE_ZOOM; break;
+        case ZOOM_COLOR:
+        case CC_ZOOM_COLOR:
+          angle = EDIT_MODE_ZOOM;
+          break;
         case EDIT_WHITE:
         case EDIT_BLACK: angle = L_ANGLE; break;
         default: break;
@@ -1345,6 +1355,7 @@ SaberFett263Buttons() : PropBase() {}
         default: break;
         case EDIT_COLOR:
         case ZOOM_COLOR:
+        case CC_ZOOM_COLOR:
           hsl_.H = fract(hsl_.H - H_CHANGE * steps);
           break;
         case EDIT_WHITE:
@@ -1413,7 +1424,7 @@ SaberFett263Buttons() : PropBase() {}
     strcat(new_color, ",");
     itoa(Color16(color_source).b, new_color + strlen(new_color), 10);
 #if NUM_BLADES > 1
-    if (color_mode_ == CC_COLOR_LIST) {
+    if (color_mode_ == CC_COLOR_LIST  || color_mode_ == CC_ZOOM_COLOR) {
       for (int i = 1; i <= NUM_BLADES; i++) {
         current_preset_.SetStyle(i,style_parser.SetArgument(current_preset_.GetStyle(i), effect + 2, new_color));
       }
@@ -1610,9 +1621,7 @@ SaberFett263Buttons() : PropBase() {}
 #if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_SAVE_CHOREOGRAPHY)
     CheckEvent();
 #endif
-#ifdef FETT263_EDIT_MODE_MENU
     EditColor();
-#endif
     if (SaberBase::IsOn()) {
       DetectSwing();
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -2024,24 +2033,88 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
-  void DoColorZoom() {
-    if (color_mode_ == COLOR_LIST) {
-      hsl_ = Color16(color_list_[dial_].color).toHSL();
+  bool CancelShowColor() {
+    switch (menu_type_) {
+#ifdef FETT263_EDIT_MODE_MENU
+      case MENU_COLOR_BASE:
+      case MENU_COLOR_ALT:
+      case MENU_COLOR_IGNITE:
+      case MENU_COLOR_RETRACT:
+      case MENU_COLOR_SWING:
+      case MENU_COLOR_OFF:
+      case MENU_COLOR_BLAST:
+      case MENU_COLOR_CLASH:
+      case MENU_COLOR_LOCKUP:
+      case MENU_COLOR_LB:
+      case MENU_COLOR_DRAG:
+      case MENU_COLOR_STAB:
+      case MENU_COLOR_PREON:
+      case MENU_COLOR_PSTOFF:
+      case MENU_COLOR_EMITTER:
+      case MENU_LENGTH:
+#if NUM_BLADES > 1
+      case MENU_BLADE_STYLE:
+      case MENU_BLADE_COLOR:
+      case MENU_BLADE_COPY:
+      case MENU_BLADE_LENGTH:
+      case MENU_COPY_COLOR:
+#endif
+        MenuUndo();
+        return true;
+        break;
+#endif
+      default:
+        return false;
+        break;
     }
-    color_mode_ = ZOOM_COLOR;
-    hsl_angle_ = fusor.angle2();
-    sound_library_.SayZoomingIn();
   }
 
-  bool EndCCColorList() {
-    if (color_mode_ != CC_COLOR_LIST) return false;
-    hybrid_font.PlayCommon(&SFX_ccend);
-    NewColor(1, BASE_COLOR_ARG);
-    current_preset_.Save();
-    show_color_all_.Stop();
-    UpdateStyle();
-    wav_player.Free();
-    return true;
+  bool DoColorZoom() {
+    if (color_mode_ == COLOR_LIST || color_mode_ == CC_COLOR_LIST) {
+      hsl_ = Color16(color_list_[dial_].color).toHSL();
+    }
+    switch (color_mode_) {
+      case COLOR_LIST:
+      case EDIT_COLOR:
+        color_mode_ = ZOOM_COLOR;
+        hsl_angle_ = fusor.angle2();
+        return true;
+        break;
+      case CC_COLOR_LIST:
+        color_mode_ = CC_ZOOM_COLOR;
+        edit_color_ = true;
+        hsl_angle_ = fusor.angle2();
+        return true;
+        break;
+      default:
+        return false;
+        break;
+    }
+  }
+
+  bool EndColorZoom() {
+    switch(color_mode_) {
+      case ZOOM_COLOR:
+      case EDIT_COLOR:
+      case COLOR_LIST:
+        MenuChoice();
+        return true;
+        break;
+      case CC_COLOR_LIST:
+      case CC_ZOOM_COLOR:
+        edit_color_ = false;
+        hybrid_font.PlayCommon(&SFX_ccend);
+        NewColor(1, BASE_COLOR_ARG);
+        current_preset_.Save();
+        show_color_all_.Stop();
+        UpdateStyle();
+        wav_player.Free();
+        return true;
+        break;
+      default:
+        return false;
+        break;
+    }
   }
 
 // Start Menu Mode
@@ -3887,6 +3960,7 @@ SaberFett263Buttons() : PropBase() {}
   enum EditColorMode {
     NONE,
     CC_COLOR_LIST,
+    CC_ZOOM_COLOR,
     COLOR_LIST,
     EDIT_COLOR,
     EDIT_BLACK,
@@ -4157,37 +4231,10 @@ SaberFett263Buttons() : PropBase() {}
         }
         return false;
 
-      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
-#ifndef DISABLE_COLOR_CHANGE
-        if (EndCCColorList()) return true;
-        if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-          ToggleColorChangeMode();
-#ifdef FETT263_EDIT_MODE_MENU
-          if (menu_type_ == MENU_COLOR) {
-            menu_type_ = MENU_TOP;
-            MenuSave();
-	    return true;
-          }
-#endif
-          return true;
-        }
-#endif
-        return false;
-
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
         SaberBase::RequestMotion();
         saber_off_time_millis_ = millis();
         return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
-#ifdef COLORWHEEL_ZOOM
-        if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
-          SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
-          sound_library_.SayZoomingIn();
-          return true;
-        }
-#endif
-        return false;
 
 #if NUM_BUTTONS == 1
 // 1 Button Specific (based on SA22C's prop)
@@ -4251,12 +4298,9 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON):
 #ifdef FETT263_EDIT_MODE_MENU
+        if (CancelShowColor()) return true;
         if (menu_) {
-          if (color_mode_ == COLOR_LIST || color_mode_ == EDIT_COLOR) {
-            DoColorZoom();
-          } else {
-            MenuUndo();
-          }
+          MenuUndo();
           return true;
         }
 #endif
@@ -4271,7 +4315,8 @@ SaberFett263Buttons() : PropBase() {}
   return true;
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_PRESSED, MODE_ON):
-#ifdef COLORWHEEL_ZOOM
+#ifndef DISABLE_COLOR_CHANGE
+        if (DoColorZoom()) return true;
         if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
           SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
           sound_library_.SayZoomingIn();
@@ -4282,7 +4327,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_RELEASED, MODE_ON):
 #ifndef DISABLE_COLOR_CHANGE
-        if (EndCCColorList()) return true;
+        if (EndColorZoom()) return true;
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           ToggleColorChangeMode();
 #ifdef FETT263_EDIT_MODE_MENU
@@ -4298,7 +4343,10 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_ON):
-        if (color_mode_ == CC_COLOR_LIST) return true;
+        if (color_mode_ == CC_COLOR_LIST || color_mode_ == CC_ZOOM_COLOR) return true;
+#ifdef FETT263_EDIT_MODE_MENU
+        if (CancelShowColor()) return true;
+#endif
         if (menu_) {
           if (menu_type_ == MENU_TOP) {
             sound_library_.SayExit();
@@ -4314,7 +4362,9 @@ SaberFett263Buttons() : PropBase() {}
           if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
             // Just exit color change mode.
             // Don't turn saber off.
-            ToggleColorChangeMode();
+            if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_ZOOMED) {
+              ToggleColorChangeMode();
+            }
             return true;
           }
 #endif
@@ -4349,11 +4399,11 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
 #ifndef DISABLE_COLOR_CHANGE
-          if (EndCCColorList()) return true;
-          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-            ToggleColorChangeMode();
-            return true;
-          }
+        if (EndColorZoom()) return true;
+        if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+          ToggleColorChangeMode();
+          return true;
+        }
 #endif      
         if (menu_) {
           MenuChoice();
@@ -4563,9 +4613,40 @@ SaberFett263Buttons() : PropBase() {}
         sound_library_.SaySave();
 #endif
         return true;
-		    
+
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
+#ifndef DISABLE_COLOR_CHANGE
+        if (DoColorZoom()) return true;
+        if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
+          SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
+          sound_library_.SayZoomingIn();
+          return true;
+        }
+#endif
+        return false;
+
+      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
+#ifndef DISABLE_COLOR_CHANGE
+        if (EndColorZoom()) return true;
+        if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+          ToggleColorChangeMode();
+#ifdef FETT263_EDIT_MODE_MENU
+          if (menu_type_ == MENU_COLOR) {
+            menu_type_ = MENU_TOP;
+            MenuSave();
+	    return true;
+          }
+#endif
+          return true;
+        }
+#endif
+        return false;
+
 #ifdef FETT263_HOLD_BUTTON_LOCKUP
       case EVENTID(BUTTON_AUX, EVENT_HELD_MEDIUM, MODE_ON):
+#ifdef FETT263_EDIT_MODE_MENU
+	if (CancelShowColor()) return false;
+#endif
 	if (menu_) {
 	  return false;
 	  break;
@@ -4580,6 +4661,9 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON):
+#ifdef FETT263_EDIT_MODE_MENU
+	if (CancelShowColor()) return false;
+#endif
         if (menu_) {
           if (menu_type_ == MENU_TOP) {
             sound_library_.SayExit();
@@ -4750,12 +4834,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON):
 #ifdef FETT263_EDIT_MODE_MENU
-        if (menu_) {
-          if (color_mode_ == COLOR_LIST || color_mode_ == EDIT_COLOR) {
-            DoColorZoom();
-          }
-          return true;
-        }
+        if (menu_ || CancelShowColor()) return true;
 #endif
         if (fusor.angle1() > M_PI / 3) {
           if (track_player_) {
@@ -4777,11 +4856,12 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
-        if (menu_) return true;
-          ToggleMultiBlast();
+        if (menu_ || CancelShowColor()) return true;
+        ToggleMultiBlast();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
+        if (menu_ || CancelShowColor()) return true;
         if (fusor.angle1() > M_PI / 3) {
           SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
         } else {
@@ -4824,6 +4904,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
+        if (menu_ || CancelShowColor()) return true;
         SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
         check_blast_ = false;
         swing_blast_ = false;
