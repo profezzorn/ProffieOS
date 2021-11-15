@@ -2033,6 +2033,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
+  // Check to see if ShowColor style is being used and use MenuUndo to properly close if button presses or holds not in menu are used
   bool CancelShowColor() {
     switch (menu_type_) {
 #ifdef FETT263_EDIT_MODE_MENU
@@ -2092,6 +2093,7 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
+  // If Color Zoom mode is active save NewColor and end ShowColor style
   bool EndColorZoom() {
     switch(color_mode_) {
       case ZOOM_COLOR:
@@ -4634,7 +4636,7 @@ SaberFett263Buttons() : PropBase() {}
           if (menu_type_ == MENU_COLOR) {
             menu_type_ = MENU_TOP;
             MenuSave();
-	    return true;
+            return true;
           }
 #endif
           return true;
