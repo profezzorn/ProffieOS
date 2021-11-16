@@ -65,7 +65,7 @@ WS2811_Blade(WS2811PIN* pin,
       pin_->Enable(true);
       colors_ = pin_->BeginFrame();
       for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
-      while (!pin_->IsReadyForEndFrame());
+      while (!pin_->IsReadyForEndFrame()) armv7m_core_yield();
       power_->Power(on);
       pin_->EndFrame();
       colors_ = pin_->BeginFrame();
@@ -80,6 +80,8 @@ WS2811_Blade(WS2811PIN* pin,
       colors_ = pin_->BeginFrame();
       for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
       pin_->EndFrame();
+      // Wait until it's sent before powering off.
+      while (!pin_->IsReadyForEndFrame()) armv7m_core_yield();
       power_->Power(on);
       pin_->Enable(false);
       power_->DeInit();

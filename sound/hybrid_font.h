@@ -372,6 +372,7 @@ public:
       
       if (monophonic_hum_) {
 	getOut()->SetFollowing(getHum());
+	hum_player_ = tmp;
       }
     }
     SaberBase::RequestMotion();
