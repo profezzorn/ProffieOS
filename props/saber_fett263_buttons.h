@@ -358,7 +358,7 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
       Range 0 ~ 8 (note 0 will use Battle Mode 1.0 with all clashes being Begin/End Lockup)
 
     FETT263_BM_DISABLE_OFF_BUTTON
-      During Battle Mode Power Button Retraction is disabled
+      During Battle Mode Power Button Retraction is disabled for normal 2 button control
 
   == Swing On ==
     Gesture Ignition via Swing
