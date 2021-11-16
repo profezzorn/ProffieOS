@@ -1134,7 +1134,6 @@ SaberFett263Buttons() : PropBase() {}
     SFX_bgnlock.Select(-1);
     SFX_endlock.Select(-1);
   }
-  wav_player.Free();
 #endif
 
   void GenerateIniFiles() {
