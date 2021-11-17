@@ -432,7 +432,8 @@ public:
       if (SFX_volup) {
         sound_library_.SayVolumeUp();
       } else {
-        beeper.Beep(0.5, 2000);
+        beeper.Beep(0.10, 2000);
+        beeper.Beep(0.20, 2500);
       }
       STDOUT.print("Volume Up - Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
@@ -476,7 +477,8 @@ public:
       if (SFX_voldown) {
         sound_library_.SayVolumeDown();
       } else {
-        beeper.Beep(0.5, 2000);
+        beeper.Beep(0.10, 2000);
+        beeper.Beep(0.20, 1500);
       }
       STDOUT.print("Volume Down - Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
@@ -715,8 +717,9 @@ public:
           if (SFX_vmbegin) {
             sound_library_.SayEnterVolumeMenu();
           } else {
+            beeper.Beep(0.1, 1000);
             beeper.Beep(0.1, 2000);
-            beeper.Beep(0.1, 2500);
+            beeper.Beep(0.1, 3000);
           }
           STDOUT.println("Enter Volume Menu");
         } else {
@@ -724,8 +727,9 @@ public:
           if (SFX_vmend) {
             sound_library_.SayVolumeMenuEnd();
           } else {
-            beeper.Beep(0.1, 2500);
+            beeper.Beep(0.1, 3000);
             beeper.Beep(0.1, 2000);
+            beeper.Beep(0.1, 1000);
           }
           STDOUT.println("Exit Volume Menu");
         }
@@ -975,7 +979,10 @@ public:
         if (SFX_dim) {
           hybrid_font.PlayCommon(&SFX_dim);
         } else {
-          beeper.Beep(0.5, 3000);
+          beeper.Beep(0.1, 1300);
+          beeper.Beep(0.1, 900);
+          beeper.Beep(0.1, 600);
+          beeper.Beep(0.1, 300);
         }
         return;
       case EFFECT_BATTERY_LEVEL: // On-Demand Battery Level
