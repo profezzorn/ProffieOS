@@ -1118,10 +1118,17 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void BeginChoreo() {
-    sound_library_.SayChoreographyBegin();
-    choreo_ = true;
+    if (saved_choreography.isIntialized()) {
+      sound_library_.SayChoreographyBegin();
+      choreo_ = true;
+      clash_count_ = 0;
+    } else {
+      sound_library_.SayNoChoreographyAvailable();
+    }
+#ifdef FETT263_DUAL_MODE_SOUND
+    SelectIgnitionSound();
+#endif
     battle_mode_ = true;
-    clash_count_ = 0;
     FastOn();
   }
 
@@ -4360,16 +4367,7 @@ SaberFett263Buttons() : PropBase() {}
 
       // Choreographed Battle Mode
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
-#ifdef FETT263_DUAL_MODE_SOUND
-          SelectIgnitionSound();
-#endif
-        if (saved_choreography.isIntialized()) {
-          BeginChoreo();
-          return true;
-        } else {
-          sound_library_.SayNoChoreographyAvailable();
-          FastOn();
-        }
+        BeginChoreo();
         return true;
 #endif
 
@@ -5055,29 +5053,11 @@ SaberFett263Buttons() : PropBase() {}
 
       // Choreographed Battle Mode
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF):
-#ifdef FETT263_DUAL_MODE_SOUND
-          SelectIgnitionSound();
-#endif
-        if (saved_choreography.isIntialized()) {
-          BeginChoreo();
-          return true;
-        } else {
-          sound_library_.SayNoChoreographyAvailable();
-          FastOn();
-        }
+        BeginChoreo();
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_AUX):
-#ifdef FETT263_DUAL_MODE_SOUND
-          SelectIgnitionSound();
-#endif
-        if (saved_choreography.isIntialized()) {
-          BeginChoreo();
-          return true;
-        } else {
-          sound_library_.SayNoChoreographyAvailable();
-          FastOn();
-        }
+        BeginChoreo();
         return true;
 #endif
 		    
