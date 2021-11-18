@@ -971,6 +971,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 
   void RestoreGestureState() {
+    if (saved_choreography.isIntialized()) memset(saved_choreography.clash_rec, 0, sizeof(saved_choreography.clash_rec));
     saved_gesture_control.ReadINIFromDir(NULL, "gesture");
   }
 
