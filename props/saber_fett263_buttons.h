@@ -2076,16 +2076,14 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
-  void DoCopyPreset() {
-    CopyPreset();
-    sound_library_.SayCopyPreset();
-    wav_player.Free();
-  }
-
-  void CopyPreset() {
+  void CopyPreset(bool announce) {
     int32_t pos = current_preset_.preset_num;
     current_preset_.preset_num = -1;
     current_preset_.SaveAt(pos);
+    if (announce) {
+      sound_library_.SayCopyPreset();
+      wav_player.Free();
+    }
   }
 
   // Check to see if ShowColor style is being used and use MenuUndo to properly close if button presses or holds not in menu are used
@@ -2590,7 +2588,7 @@ SaberFett263Buttons() : PropBase() {}
       break;
     case MENU_COPY:
       if (choice_) {
-        CopyPreset();
+        CopyPreset(false);
         menu_type_ = MENU_TOP;
         MenuSelect();
         choice_ = false;
@@ -4554,7 +4552,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         if (menu_) return true;
-        DoCopyPreset();
+        CopyPreset(true);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
@@ -4669,7 +4667,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF | BUTTON_POWER):
         if (menu_) return true;
-        DoCopyPreset();
+        CopyPreset(true);
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
