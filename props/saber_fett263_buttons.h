@@ -4735,7 +4735,11 @@ SaberFett263Buttons() : PropBase() {}
 	  break;
 	}
         if (!SaberBase::Lockup()) {
-          SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+          if (fusor.angle1() < - M_PI / 4) {
+            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+          } else {
+            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+	  }
           swing_blast_ = false;
           SaberBase::SetClashStrength(8);
           SaberBase::DoBeginLockup();
