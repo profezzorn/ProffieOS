@@ -158,6 +158,8 @@ Rehearsal / Choreography Modes*
   Begin Choreography = While Off, Hold AUX - or - Hold AUX + Swing
     During Choreography Mode Clashes, Lockups and sound files are replayed in sequence
     When recorded sequence completes the saber goes into Battle Mode automatically
+    If no saved rehearsal is available for font saber will ignite in Battle Mode*
+    *may vary by define
     During Choreography PWR button is disabled
   Turn Off = Hold AUX + Hold PWR
 
@@ -311,6 +313,8 @@ Rehearsal / Choreography Modes*
   Begin Choreography = While Off, Hold PWR + Swing
     During Choreography Mode Clashes, Lockups and sound files are replayed in sequence
     When recorded sequence completes the saber goes into Battle Mode automatically
+    If no saved rehearsal is available for font saber will ignite in Battle Mode*
+    *may vary by define
   End Choreography = Hold PWR
 
 Edit Mode*
@@ -4356,11 +4360,15 @@ SaberFett263Buttons() : PropBase() {}
 
       // Choreographed Battle Mode
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
+#ifdef FETT263_DUAL_MODE_SOUND
+          SelectIgnitionSound();
+#endif
         if (saved_choreography.isIntialized()) {
           BeginChoreo();
           return true;
         } else {
           sound_library_.SayNoChoreographyAvailable();
+          FastOn();
         }
         return true;
 #endif
@@ -5047,19 +5055,28 @@ SaberFett263Buttons() : PropBase() {}
 
       // Choreographed Battle Mode
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF):
+#ifdef FETT263_DUAL_MODE_SOUND
+          SelectIgnitionSound();
+#endif
         if (saved_choreography.isIntialized()) {
           BeginChoreo();
           return true;
         } else {
-	  sound_library_.SayNoChoreographyAvailable();
+          sound_library_.SayNoChoreographyAvailable();
+          FastOn();
         }
         return true;
+
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_AUX):
+#ifdef FETT263_DUAL_MODE_SOUND
+          SelectIgnitionSound();
+#endif
         if (saved_choreography.isIntialized()) {
           BeginChoreo();
           return true;
         } else {
-	  sound_library_.SayNoChoreographyAvailable();
+          sound_library_.SayNoChoreographyAvailable();
+          FastOn();
         }
         return true;
 #endif
