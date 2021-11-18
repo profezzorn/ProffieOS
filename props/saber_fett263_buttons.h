@@ -822,6 +822,11 @@ public:
   void SetVariable(const char* variable, float v) override {
   }
 
+  bool isIntialized() {
+    if (clash_rec[0].stance == STANCE_CLASH || clash_rec[0].stance == STANCE_LOCKUP) return true;
+      return false;
+  }
+
   enum FormStance {
     STANCE_END = 0,
     STANCE_CLASH,
@@ -4339,7 +4344,7 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         }
         // Check for existing rehearsal and prompt to overwrite or keep via menu
-        if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
+        if (saved_choreography.isIntialized()) {
           sound_library_.SayRehearseNew();
           StartMenu(MENU_REHEARSE);
           return true;
@@ -4350,7 +4355,7 @@ SaberFett263Buttons() : PropBase() {}
 
       // Choreographed Battle Mode
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
-        if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
+        if (saved_choreography.isIntialized()) {
           BeginChoreo();
           return true;
         } else {
@@ -5029,7 +5034,7 @@ SaberFett263Buttons() : PropBase() {}
         if (millis() - last_twist_millis_ > 2000) {
           last_twist_millis_ = millis();
           // Check for existing rehearsal and prompt to overwrite or keep via menu
-          if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
+        if (saved_choreography.isIntialized()) {
             sound_library_.SayRehearseNew();
             StartMenu(MENU_REHEARSE);
             return true;
@@ -5041,7 +5046,7 @@ SaberFett263Buttons() : PropBase() {}
 
       // Choreographed Battle Mode
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF):
-        if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
+        if (saved_choreography.isIntialized()) {
           BeginChoreo();
           return true;
         } else {
@@ -5049,7 +5054,7 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true;
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_AUX):
-        if (saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_CLASH || saved_choreography.clash_rec[0].stance == SavedRehearsal::STANCE_LOCKUP) {
+        if (saved_choreography.isIntialized()) {
           BeginChoreo();
           return true;
         } else {
