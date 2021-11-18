@@ -4146,6 +4146,7 @@ SaberFett263Buttons() : PropBase() {}
       effect = &SFX_in;
     }
     SelectSFXEvenOdd(effect);
+    if (SFX_pstoff) SelectSFXEvenOdd(&SFX_pstoff);
   }
 
   // Select wav file based on blade orientation, up = odd, down = even
