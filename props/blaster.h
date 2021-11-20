@@ -273,8 +273,10 @@ public:
     }
   }
 
+#ifndef PROPS_DUAL_PROP_H
   // Make swings do nothing
   void DoMotion(const Vec3& motion, bool clear) override {}
+#endif
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
