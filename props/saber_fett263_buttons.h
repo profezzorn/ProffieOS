@@ -55,6 +55,8 @@ Standard Controls While Blade is OFF
   NEW! Change Font
     Next Font = Hold AUX + Long Click PWR (parallel or up)
     Previous Font= Hold AUX + Long Click PWR (down)
+  NEW! Copy Preset = Hold PWR + Long Click AUX
+
 Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
   Ignite Saber
     Swing On
@@ -222,6 +224,7 @@ Standard Controls While Blade is OFF
   NEW! Change Font
     Next Font = Triple Click + Long Click PWR (parallel or up)
     Previous Font = Triple Click + Long Click PWR (down)
+  NEW! Copy Preset = Quadruple (Four) Click + Hold PWR
 
 Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
   Ignite Saber
@@ -2073,6 +2076,16 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
+  void CopyPreset(bool announce) {
+    int32_t pos = current_preset_.preset_num;
+    current_preset_.preset_num = -1;
+    current_preset_.SaveAt(pos);
+    if (announce) {
+      sound_library_.SayCopyPreset();
+      wav_player.Free();
+    }
+  }
+
   // Check to see if ShowColor style is being used and use MenuUndo to properly close if button presses or holds not in menu are used
   bool CancelShowColor() {
     switch (menu_type_) {
@@ -2575,9 +2588,7 @@ SaberFett263Buttons() : PropBase() {}
       break;
     case MENU_COPY:
       if (choice_) {
-        int32_t pos = current_preset_.preset_num;
-        current_preset_.preset_num = -1;
-        current_preset_.SaveAt(pos);
+        CopyPreset(false);
         menu_type_ = MENU_TOP;
         MenuSelect();
         choice_ = false;
@@ -4539,6 +4550,11 @@ SaberFett263Buttons() : PropBase() {}
         ChangeFont(fusor.angle1() < - M_PI / 3 ? -1 : 1);
         return true;
 
+      case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
+        if (menu_) return true;
+        CopyPreset(true);
+        return true;
+
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
         if (menu_) return true;
           ToggleMultiBlast();
@@ -4647,6 +4663,11 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
         StartMenu(MENU_PRESET);
         sound_library_.SaySelectPreset();
+        return true;
+
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF | BUTTON_POWER):
+        if (menu_) return true;
+        CopyPreset(true);
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
