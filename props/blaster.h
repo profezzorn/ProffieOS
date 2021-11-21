@@ -273,6 +273,7 @@ public:
     }
   }
 
+  // Make swings do nothing
   void DoMotion(const Vec3& motion, bool clear) override {
     PropBase::DoMotion(Vec3(), clear);
   }
