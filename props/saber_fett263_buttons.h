@@ -5300,8 +5300,8 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
-        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
-        if (!menu_ && millis() > 3000) {
+        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 2000ms
+        if (!menu_ && millis() > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5322,8 +5322,8 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
-        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
-        if (!menu_ && millis() > 3000) {
+        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 2000ms
+        if (!menu_ && millis() > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5485,7 +5485,7 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
         if (!saved_gesture_control.forcepush) return true;
         if (FORCE_PUSH_CONDITION &&
-           millis() - last_push_millis_ > 2000) {
+           millis() - last_push_millis_ > 1000) {
           if (SFX_push) {
             hybrid_font.PlayCommon(&SFX_push);
           } else {
