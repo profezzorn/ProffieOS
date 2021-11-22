@@ -377,7 +377,7 @@ public:
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
-    bool on = SaberBase::IsOn();
+    bool on = IsOn();
     if (on) Off();
     return on;
   }
