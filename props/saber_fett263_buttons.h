@@ -1165,6 +1165,7 @@ SaberFett263Buttons() : PropBase() {}
 
   void EndChoreo() {
     choreo_ = false;
+    sound_library_.SayChoreographyEnd();
     if (SFX_clsh) {
       SFX_clsh.Select(-1);
     } else {
@@ -1669,8 +1670,7 @@ SaberFett263Buttons() : PropBase() {}
       DetectSwing();
 #ifdef FETT263_SAVE_CHOREOGRAPHY
       if (choreo_ && saved_choreography.clash_rec[clash_count_].stance == SavedRehearsal::STANCE_END) {
-        choreo_ = false;
-        sound_library_.SayChoreographyEnd();
+        EndChoreo();
       }
 #endif
       if (auto_lockup_on_ &&
@@ -4362,11 +4362,6 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_SAVE_CHOREOGRAPHY
       // Rehearsal Mode
       case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_LONG, MODE_OFF):
-        if (rehearse_) {
-          sound_library_.SayCancel();
-          rehearse_ = false;
-          return true;
-        }
         // Check for existing rehearsal and prompt to overwrite or keep via menu
         if (saved_choreography.isIntialized()) {
           sound_library_.SayRehearseNew();
@@ -4473,7 +4468,12 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_ON):
-        ToggleBattleMode();
+        if (rehearse_) {
+          sound_library_.SayCancel();
+          rehearse_ = false;
+        } else {
+          ToggleBattleMode();
+        }
         return true;
 
 #ifdef FETT263_MULTI_PHASE
