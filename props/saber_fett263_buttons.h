@@ -4468,12 +4468,14 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_ON):
+#ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
           sound_library_.SayCancel();
           rehearse_ = false;
-        } else {
-          ToggleBattleMode();
+          return true;
         }
+#endif
+        ToggleBattleMode();
         return true;
 
 #ifdef FETT263_MULTI_PHASE
