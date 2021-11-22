@@ -274,7 +274,9 @@ public:
   }
 
   // Make swings do nothing
-  void DoMotion(const Vec3& motion, bool clear) override {}
+  void DoMotion(const Vec3& motion, bool clear) override {
+    PropBase::DoMotion(Vec3(0), clear);
+  }
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
