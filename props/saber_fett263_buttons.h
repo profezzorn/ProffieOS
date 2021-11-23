@@ -4479,18 +4479,14 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
         if (menu_) return true;
-        // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_millis_ > 2000) {
-          last_twist_millis_ = millis();
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectIgnitionSound();
+        SelectIgnitionSound();
 #endif
-          if (fusor.angle1() < - M_PI / 3) {
-            previous_preset_fast();
-          } else {
-            next_preset_fast();
-          }
-	}
+        if (fusor.angle1() < - M_PI / 3) {
+          previous_preset_fast();
+        } else {
+          next_preset_fast();
+        }
         return true;
 #endif
 
@@ -5064,8 +5060,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_SAVE_CHOREOGRAPHY
       // Rehearsal Mode
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_AUX):
-        if (millis() - last_twist_millis_ > 2000) {
-          last_twist_millis_ = millis();
+        if (!menu_) {
           // Check for existing rehearsal and prompt to overwrite or keep via menu
         if (saved_choreography.isIntialized()) {
             sound_library_.SayRehearseNew();
@@ -5090,26 +5085,18 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
 	if (menu_) return true;
-        // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_millis_ > 2000) {
-          last_twist_millis_ = millis();
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectIgnitionSound();
+        SelectIgnitionSound();
 #endif
-          next_preset_fast();
-        }
+        next_preset_fast();
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
 	if (menu_) return true;
-        // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_millis_ > 2000) {
-          last_twist_millis_ = millis();
 #ifdef FETT263_DUAL_MODE_SOUND
-          SelectIgnitionSound();
+        SelectIgnitionSound();
 #endif
-          previous_preset_fast();
-        }
+        previous_preset_fast();
         return true;
 #endif
 
@@ -5170,9 +5157,7 @@ SaberFett263Buttons() : PropBase() {}
 
       // Gesture Sleep Toggle
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_POWER):
-        // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_millis_ > 2000) {
-          last_twist_millis_ = millis();
+        if (!menu_) {
           if (!saved_gesture_control.gestureon) {
             saved_gesture_control.gestureon = true;
             sound_library_.SayGesturesOn();
@@ -5315,8 +5300,8 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
-        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
-        if (!menu_ && millis() > 3000) {
+        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 2000ms
+        if (!menu_ && millis() > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5337,8 +5322,8 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
-        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
-        if (!menu_ && millis() > 3000) {
+        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 2000ms
+        if (!menu_ && millis() > 2000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5353,39 +5338,34 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
         if (!saved_gesture_control.twistoff) return true;
         if (menu_) return true;
-        // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_millis_ > 3000) {
 #ifdef FETT263_SAVE_CHOREOGRAPHY
-          if (choreo_) {
-            if (saved_choreography.clash_rec[clash_count_].stance == SavedRehearsal::STANCE_END) {
-            if (SFX_clsh) {
-              SFX_clsh.Select(-1);
-            } else {
-              SFX_clash.Select(-1);
-            }
-            if (SFX_lock) {
-              SFX_lock.Select(-1);
-            } else {
-              SFX_lockup.Select(-1);
-            }
-            SFX_bgnlock.Select(-1);
-            SFX_endlock.Select(-1);
-            choreo_ = false;
-            } else {
-              return true;
-            }
+        if (choreo_) {
+          if (saved_choreography.clash_rec[clash_count_].stance == SavedRehearsal::STANCE_END) {
+          if (SFX_clsh) {
+            SFX_clsh.Select(-1);
+          } else {
+            SFX_clash.Select(-1);
           }
+          if (SFX_lock) {
+            SFX_lock.Select(-1);
+          } else {
+            SFX_lockup.Select(-1);
+          }
+          SFX_bgnlock.Select(-1);
+          SFX_endlock.Select(-1);
+          choreo_ = false;
+          } else {
+            return true;
+          }
+        }
 #endif
 #ifdef FETT263_DUAL_MODE_SOUND          
-          SelectRetractionSound();
+        SelectRetractionSound();
 #endif  
-          Off();
-          last_twist_millis_ = millis();
-          saber_off_time_millis_ = millis();
+        Off();
 #ifndef FETT263_BATTLE_MODE_ALWAYS_ON
-          battle_mode_ = false;
+        battle_mode_ = false;
 #endif
-        }
         return true;
 
 #ifdef FETT263_TWIST_ON_PREON
@@ -5393,8 +5373,7 @@ SaberFett263Buttons() : PropBase() {}
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.twiston) return true;
         // Delay twist events to prevent false trigger from over twisting
-        if (!menu_ && millis() - last_twist_millis_ > 2000 &&
-            millis() - saber_off_time_millis_ > 2000) {
+        if (!menu_) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5410,7 +5389,6 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
 #endif
-          last_twist_millis_ = millis();
         }
         return true;
 #else
@@ -5418,8 +5396,7 @@ SaberFett263Buttons() : PropBase() {}
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.twiston) return true;
         // Delay twist events to prevent false trigger from over twisting
-        if (!menu_ && millis() - last_twist_millis_ > 2000 &&
-            millis() - saber_off_time_millis_ > 2000) {
+        if (!menu_) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5427,7 +5404,6 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
 #endif
-          last_twist_millis_ = millis();
         }
         return true;
 #endif
@@ -5436,7 +5412,7 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.stabon) return true;
-        if (!menu_ && millis() - saber_off_time_millis_ > 2000) {
+        if (!menu_) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5457,7 +5433,7 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.stabon) return true;
-        if (!menu_ && millis() - saber_off_time_millis_ > 2000) {
+        if (!menu_) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5473,7 +5449,7 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.thruston) return true;
-        if (!menu_ && millis() - saber_off_time_millis_ > 2000) {
+        if (!menu_) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5494,7 +5470,7 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.thruston) return true;
-        if (!menu_ && millis() - saber_off_time_millis_ > 2000) {
+        if (!menu_) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5509,7 +5485,7 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
         if (!saved_gesture_control.forcepush) return true;
         if (FORCE_PUSH_CONDITION &&
-           millis() - last_push_millis_ > 2000) {
+           millis() - last_push_millis_ > 1000) {
           if (SFX_push) {
             hybrid_font.PlayCommon(&SFX_push);
           } else {
@@ -5584,7 +5560,6 @@ private:
   uint32_t thrust_begin_millis_; // Thrust timer
   uint32_t push_begin_millis_; // Push timer
   uint32_t clash_impact_millis_; // Clash timer
-  uint32_t last_twist_millis_; // Last Twist (to prevent gesture spamming)
   uint32_t last_push_millis_; // Last Push (to prevent gesture spamming)
   uint32_t last_blast_millis_; // Last Blast (for Battle Mode Multi-Blast detection)
   uint32_t saber_off_time_millis_; // Off timer
