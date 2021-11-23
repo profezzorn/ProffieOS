@@ -280,11 +280,11 @@ public:
     return last_delay_ = FillFrameBuffer2(advance);
   }
 
-  void ShowDefault() {
+  void ShowDefault(bool ignore_lockup = false) {
     screen_ = SCREEN_PLI;
     t_ = 0;
     if (SaberBase::IsOn()) {
-      if (SaberBase::Lockup() && IMG_lock) {
+      if (SaberBase::Lockup() && IMG_lock && !ignore_lockup) {
 	ShowFile(&IMG_lock, 3600000.0);
       } else if (looped_on_ == Tristate::True) {
 	ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
@@ -446,7 +446,7 @@ public:
 	return;
       case EFFECT_LOCKUP_BEGIN:
       case EFFECT_LOCKUP_END:
-	ShowDefault();
+	ShowDefault(true);
 	break;
 
       default: break;
