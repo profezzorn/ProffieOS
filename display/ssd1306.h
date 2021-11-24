@@ -354,7 +354,12 @@ public:
 	  // centered
           display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
-        next_screen_ = SCREEN_PLI;
+        if (IMG_idle) {
+          current_effect_ = &IMG_idle;
+          next_screen_ = SCREEN_IMAGE;
+        } else {
+          next_screen_ = SCREEN_PLI;
+        }
 	// STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
         return font_config.ProffieOSFontImageDuration;
       }
@@ -431,8 +436,8 @@ public:
 	looped_idle_ = Tristate::Unknown;
 	if (IMG_font) {
 	  ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
-	} else if (IMG_idle) {
-	  ShowFile(&IMG_idle, 3600000.0);
+        } else {
+          SetScreenNow(SCREEN_MESSAGE);
 	}
 	return;
       case EFFECT_BLAST:
