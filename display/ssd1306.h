@@ -445,6 +445,8 @@ public:
 	ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
 	return;
       case EFFECT_LOCKUP_BEGIN:
+	ShowDefault();
+	return;
       case EFFECT_LOCKUP_END:
 	ShowDefault(true);
 	break;
