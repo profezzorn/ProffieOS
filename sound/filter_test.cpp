@@ -60,11 +60,16 @@ std::string skipChunk(std::string chnk) {
 }
 
 std::string readWav(std::string wav) {
-  if (wav.substr(0, 8) != "RIFFWAVE") {
-    fprintf(stderr, "Not a WAV\n");
+  if (chunkType(wav) != "RIFF") {
+    fprintf(stderr, "Not a RIFF\n");
     return "";
   }
-  wav = wav.substr(8);
+  wav = deChunk(wav);
+  if (chunkType(wav) != "WAVE") {
+    fprintf(stderr, "Not a WAVE\n");
+    return "";
+  }
+  wav = wav.substr(4);
   std::string ret = "";
   if (chunkType(wav) != "data ") {
     wav = skipChunk(wav);
