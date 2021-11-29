@@ -4352,6 +4352,7 @@ SaberFett263Buttons() : PropBase() {}
         }
 #else
         // If Edit Mode Menu Disabled Save .ini files for SD card editing
+        if (menu_) return true;
         GenerateIniFiles();
         sound_library_.SaySave();
 #endif
@@ -4373,6 +4374,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_SAVE_CHOREOGRAPHY
       // Rehearsal Mode
       case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_LONG, MODE_OFF):
+        if (menu_) return true;
         // Check for existing rehearsal and prompt to overwrite or keep via menu
         if (saved_choreography.isIntialized()) {
           sound_library_.SayRehearseNew();
@@ -4385,6 +4387,7 @@ SaberFett263Buttons() : PropBase() {}
 
       // Choreographed Battle Mode
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
+        if (menu_) return true;
         BeginChoreo();
         return true;
 #endif
@@ -4459,6 +4462,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_ON):
+        if (menu_ || CheckShowColorCC()) return true;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
           sound_library_.SayCancel();
@@ -4590,6 +4594,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
 
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
+        if (menu_) return true;
 #ifdef ENABLE_AUDIO
         if (track_player_) {
           StopTrackPlayer();
@@ -4651,6 +4656,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
+        if (menu_) return true;
         StartMenu(MENU_PRESET);
         sound_library_.SaySelectPreset();
         return true;
@@ -4680,6 +4686,7 @@ SaberFett263Buttons() : PropBase() {}
 
         // Handle double-click with preon
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_OFF):
+        if (menu_) return true;
         if (on_pending_) {
           if (SetMute(true)) {
             unmute_on_deactivation_ = true;
@@ -4705,6 +4712,7 @@ SaberFett263Buttons() : PropBase() {}
         }
 #else
         // If Edit Mode Menu Disabled Save .ini files for SD card editing
+        if (menu_) return true;
         GenerateIniFiles();
         sound_library_.SaySave();
 #endif
@@ -5027,6 +5035,7 @@ SaberFett263Buttons() : PropBase() {}
 
         // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
+        if (menu_) return true;
 #ifdef ENABLE_AUDIO
         if (track_player_) {
           StopTrackPlayer();
@@ -5046,6 +5055,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
+        if (menu_) return true;
         DoBattery();
         return true;
 
@@ -5066,10 +5076,12 @@ SaberFett263Buttons() : PropBase() {}
 
       // Choreographed Battle Mode
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF):
+        if (menu_) return true;
         BeginChoreo();
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_AUX):
+        if (menu_) return true;
         BeginChoreo();
         return true;
 #endif
