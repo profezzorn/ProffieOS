@@ -3039,7 +3039,7 @@ SaberFett263Buttons() : PropBase() {}
             previous_preset_fast();
           }
         } else {
-          int preset = (current_preset_.preset_num + direction) % num_presets_;
+          int preset = (current_preset_.preset_num + direction) % GetNumberOfPresets();
           SelectPreset(preset);
         }
         break;
@@ -4331,7 +4331,6 @@ SaberFett263Buttons() : PropBase() {}
         }
         if (!menu_) {
           StartMenu(MENU_PRESET);
-          num_presets_ = GetNumberOfPresets();
           sound_library_.SaySelectPreset();
           return true;
         }
@@ -4664,7 +4663,6 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
         StartMenu(MENU_PRESET);
-        num_presets_ = GetNumberOfPresets();
         sound_library_.SaySelectPreset();
         return true;
 
@@ -5584,7 +5582,6 @@ private:
   int sub_dial_; // Sub menu dial "tick"
   int arg_dial_; // Argument Sub menu dial "tick"
   int gesture_num_;
-  int num_presets_; // Number of Presets Found
   float twist_menu_ = M_PI / 4; // Twist Menu sensitivity
   bool choice_ = false;
   // Edit Mode selection confirmation
