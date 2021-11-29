@@ -4664,7 +4664,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
         StartMenu(MENU_PRESET);
-        num_presets_ = GetNumberOfPresets() - 1;
+        num_presets_ = GetNumberOfPresets();
         sound_library_.SaySelectPreset();
         return true;
 
