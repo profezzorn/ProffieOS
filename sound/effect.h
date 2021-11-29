@@ -427,6 +427,7 @@ class Effect {
         talkie.Say(talkie_font_directory_15, 15);
         talkie.Say(talkie_too_long_15, 15);
       } else if (strlen(dir)) {
+	STDOUT.println(" Font directory not found.");
         talkie.Say(talkie_font_directory_15, 15);
         talkie.Say(talkie_not_found_15, 15);
       }
