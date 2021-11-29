@@ -2039,6 +2039,12 @@ SaberFett263Buttons() : PropBase() {}
     hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
   }
 
+  int GetNumberOfPresets() {
+    CurrentPreset tmp;
+    tmp.SetPreset(-1);
+    return tmp.preset_num;
+  }
+
 #ifdef FETT263_EDIT_MODE_MENU
 // Color Edit Helper Functions
   void SaveColorEdit() {
@@ -3026,18 +3032,15 @@ SaberFett263Buttons() : PropBase() {}
       default:
         break;
       case MENU_PRESET:
-        if (direction > 0) {
-          if (SaberBase::IsOn()) {
+        if (SaberBase::IsOn()) {
+          if (direction > 0) {
             next_preset_fast();
           } else {
-            SelectPreset(current_preset_.preset_num + direction);
+            previous_preset_fast();
           }
         } else {
-          if (SaberBase::IsOn()) {
-            previous_preset_fast();
-          } else {
-            SelectPreset(current_preset_.preset_num + direction);
-          }
+          int preset = (current_preset_.preset_num + direction) % num_presets_;
+          SelectPreset(preset);
         }
         break;
       case MENU_VOLUME:
@@ -4328,6 +4331,7 @@ SaberFett263Buttons() : PropBase() {}
         }
         if (!menu_) {
           StartMenu(MENU_PRESET);
+          num_presets_ = GetNumberOfPresets() - 1;
           sound_library_.SaySelectPreset();
           return true;
         }
@@ -4660,6 +4664,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF):
         StartMenu(MENU_PRESET);
+        num_presets_ = GetNumberOfPresets() - 1;
         sound_library_.SaySelectPreset();
         return true;
 
@@ -5579,6 +5584,7 @@ private:
   int sub_dial_; // Sub menu dial "tick"
   int arg_dial_; // Argument Sub menu dial "tick"
   int gesture_num_;
+  int num_presets_; // Number of Presets Found
   float twist_menu_ = M_PI / 4; // Twist Menu sensitivity
   bool choice_ = false;
   // Edit Mode selection confirmation
