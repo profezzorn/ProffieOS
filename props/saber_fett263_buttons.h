@@ -2038,7 +2038,7 @@ SaberFett263Buttons() : PropBase() {}
   int GetNumberOfPresets() {
     CurrentPreset tmp;
     tmp.SetPreset(-1);
-    return tmp.preset_num - 1;
+    return tmp.preset_num + 1;
   }
 
 #ifdef FETT263_EDIT_MODE_MENU
@@ -3048,7 +3048,8 @@ SaberFett263Buttons() : PropBase() {}
             previous_preset_fast();
           }
         } else {
-          int preset = (current_preset_.preset_num + direction) % GetNumberOfPresets();
+          int num_presets = GetNumberOfPresets();
+          int preset = (current_preset_.preset_num + num_presets * 10 + direction) % num_presets;
           SelectPreset(preset);
         }
         break;
