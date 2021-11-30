@@ -1827,22 +1827,16 @@ SaberFett263Buttons() : PropBase() {}
 
   void DetectMenuTurn() {
     if (menu_ || color_mode_ == CC_COLOR_LIST) {
-      if (millis() - last_rotate_millis_ > 1000) {
-        float a = fusor.angle2() - current_menu_angle_;
-        if (a > M_PI) a-=M_PI*2;
-        if (a < -M_PI) a+=M_PI*2;
-        if (a > twist_menu_ * 2/3) {
-          current_menu_angle_ += twist_menu_;
-          if (current_menu_angle_ > M_PI) current_menu_angle_ -= M_PI * 2;
-          Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-          last_rotate_millis_ = millis();
-        }
-        if (a < -twist_menu_ * 2/3) {
-          current_menu_angle_ -= twist_menu_;
-          if (current_menu_angle_ < M_PI) current_menu_angle_ += M_PI * 2;
-          Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-          last_rotate_millis_ = millis();
-        }
+      float a = fusor.angle2() - current_menu_angle_;
+      if (a > M_PI) a-=M_PI*2;
+      if (a < -M_PI) a+=M_PI*2;
+      if (a > twist_menu_ * 2/3) {
+        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+        current_menu_angle_ = fusor.angle2();
+      }
+      if (a < -twist_menu_ * 2/3) {
+        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+        current_menu_angle_ = fusor.angle2();
       }
     }
   }
@@ -5565,7 +5559,6 @@ private:
   uint32_t last_push_millis_; // Last Push (to prevent gesture spamming)
   uint32_t last_blast_millis_; // Last Blast (for Battle Mode Multi-Blast detection)
   uint32_t saber_off_time_millis_; // Off timer
-  uint32_t last_rotate_millis_; // Last Rotation (to prevent gesture spamming)
   uint32_t restart_millis_; // Used to time restarts to show preon timing.
   ClashType clash_type_ = CLASH_NONE;
   MenuType menu_type_ = MENU_TOP;
