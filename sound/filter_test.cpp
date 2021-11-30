@@ -11,7 +11,7 @@
 
 #define AUDIO_RATE 44100
 #define FILTER_CUTOFF_FREQUENCY 150
-#define FILTER_ORDER 4
+#define FILTER_ORDER 10
 
 #include "filter.h"
 
@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
   for (int i = 0; i < input.length() / 2 / 4; i++) {
     float tmp[4];
     for (int j = 0; j < 4; j++) {
-      tmp[j] = UNSTRINGIFY<uint16_t>(input.c_str() + (i*4+j)*2) / 32768.0;
+      tmp[j] = UNSTRINGIFY<int16_t>(input.c_str() + (i*4+j)*2) / 32768.0;
     }
     filter.Run4(tmp);
     for (int j = 0; j < 4; j++) {
