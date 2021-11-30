@@ -22,6 +22,7 @@ struct C {
   }
   constexpr double real() const { return real_; }
   constexpr double imag() const { return imag_; }
+  constexpr double abs() const { return sqrt(len2()); }
 private:
   constexpr double len2() const { return real_*real_ + imag_*imag_; }
   double real_;
@@ -49,6 +50,7 @@ struct ButterWorthProtoType {
   static constexpr C zero(size_t k) {
     return C(0.0, 0.0);
   }
+  static constexpr double gain() { return 1.0; }
 };
 
 
@@ -59,6 +61,7 @@ struct ConvertToHighPass {
   static constexpr double f() { return 2 * tan(M_PI * cutoff_frequency / sampling_frequency); }
   static constexpr C pole(size_t k) { return C(f()) / T::pole(k); }
   static constexpr C zero(size_t k) { return C(0.0, 0.0); }
+  static constexpr double gain() { return T::gain(); }
 };
 
 
@@ -69,6 +72,22 @@ struct BLT {
   static constexpr C blt(C s) { return (C(2) + s) / (C(2) - s); }
   static constexpr C pole(size_t k) { return blt(T::pole(k)); }
   static constexpr C zero(size_t k) { return blt(T::zero(k)); }
+
+  static constexpr double gain_from_pole(size_t k) {
+    return (C(2) - T::pole(k)).abs();
+  }
+  static constexpr double gain_from_zero(size_t k) {
+    return (C(2) - T::zero(k)).abs();
+  }
+  static constexpr double pole_gain_prod(size_t i = 0) {
+    return i == T::poles ? 1.0 : gain_from_pole(i) * pole_gain_prod(i + 1);
+  }
+  static constexpr double zero_gain_prod(size_t i = 0) {
+    return i == T::zeroes ? 1.0 : gain_from_zero(i) * zero_gain_prod(i + 1);
+  }
+  static constexpr double gain() {
+    return T::gain() * pole_gain_prod() / zero_gain_prod();
+  }
 };
 
 template<class T>
@@ -76,6 +95,7 @@ struct Bilinear {
   // currently, order must be even!
   static const size_t order = T::poles > T::zeroes ? T::poles : T::zeroes;
   static const size_t biquads = (order + 1) / 2;
+  static constexpr double gain = T::gain();
   static constexpr double b0(size_t k) { return 1.0; }
   static constexpr double b1(size_t k) { return -(T::zero(k * 2) + T::zero(k * 2 + 1)).real(); }
   static constexpr double b2(size_t k) { return  (T::zero(k * 2) * T::zero(k * 2 + 1)).real(); }
@@ -86,20 +106,21 @@ struct Bilinear {
 
 
 #if 1
-template<class T, size_t k>
+#define FILTER_TYPE double
+
+  template<class T, size_t k>
 struct BQ {
-  static constexpr float b0 = T::b0(k);
-  static constexpr float b1 = T::b1(k);
-  static constexpr float b2 = T::b2(k);
-  static constexpr float a0 = T::a0(k);
-  static constexpr float a1 = T::a1(k);
-  static constexpr float a2 = T::a2(k);
+  static constexpr FILTER_TYPE b0 = T::b0(k);
+  static constexpr FILTER_TYPE b1 = T::b1(k);
+  static constexpr FILTER_TYPE b2 = T::b2(k);
+  static constexpr FILTER_TYPE a0 = T::a0(k);
+  static constexpr FILTER_TYPE a1 = T::a1(k);
+  static constexpr FILTER_TYPE a2 = T::a2(k);
 };
 
 #define BIQUAD(X, XN, XN1, XN2, YN1, YN2) \
   BQ<T,X>::b0 * XN + BQ<T,X>::b1 * XN1 + BQ<T,X>::b2 * XN2 - BQ<T,X>::a1 * YN1 - BQ<T,X>::a2 * YN2
 
-#define FILTER_TYPE float
 #define FILTER_FROM_FLOAT(X) X
 #define FILTER_TO_FLOAT(X) X
 
@@ -247,7 +268,12 @@ class Biquad {
     inout[3] = FILTER_TO_FLOAT(D8x5);
 #else
 #error UNSUPPORTED FILTER ORDER
-#endif    
+#endif
+    FILTER_TYPE gain_inv = 1.0 / T::gain;
+    inout[0] *= gain_inv;
+    inout[1] *= gain_inv;
+    inout[2] *= gain_inv;
+    inout[3] *= gain_inv;
   }
 };
 
