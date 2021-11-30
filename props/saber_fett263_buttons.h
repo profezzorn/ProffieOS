@@ -1339,7 +1339,9 @@ SaberFett263Buttons() : PropBase() {}
         show_drag_size_.Stop(blade_num_);
         break;
       case EMITTER_SIZE_ARG:
+      case PREON_SIZE_ARG:
         show_emitter_size_.Stop(blade_num_);
+        break;
       default:
         break;
     }
@@ -1827,22 +1829,16 @@ SaberFett263Buttons() : PropBase() {}
 
   void DetectMenuTurn() {
     if (menu_ || color_mode_ == CC_COLOR_LIST) {
-      if (millis() - last_rotate_millis_ > 1000) {
-        float a = fusor.angle2() - current_menu_angle_;
-        if (a > M_PI) a-=M_PI*2;
-        if (a < -M_PI) a+=M_PI*2;
-        if (a > twist_menu_ * 2/3) {
-          current_menu_angle_ += twist_menu_;
-          if (current_menu_angle_ > M_PI) current_menu_angle_ -= M_PI * 2;
-          Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-          last_rotate_millis_ = millis();
-        }
-        if (a < -twist_menu_ * 2/3) {
-          current_menu_angle_ -= twist_menu_;
-          if (current_menu_angle_ < M_PI) current_menu_angle_ += M_PI * 2;
-          Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-          last_rotate_millis_ = millis();
-        }
+      float a = fusor.angle2() - current_menu_angle_;
+      if (a > M_PI) a-=M_PI*2;
+      if (a < -M_PI) a+=M_PI*2;
+      if (a > twist_menu_ * 2/3) {
+        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+        current_menu_angle_ = fusor.angle2();
+      }
+      if (a < -twist_menu_ * 2/3) {
+        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+        current_menu_angle_ = fusor.angle2();
       }
     }
   }
@@ -2949,8 +2945,8 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SaySelect();
             menu_type_ = MENU_PREON_OPTION;
             arg_revert_ = strtol (argspace, NULL, 0);
-                  sound_library_.SayOption();
-                  sound_library_.SayNumber(calc_, SAY_WHOLE);
+            sound_library_.SayOption();
+            sound_library_.SayNumber(calc_, SAY_WHOLE);
           }
           break;
         case PREON_SIZE_ARG:
@@ -2960,6 +2956,8 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SaySelect();
             menu_type_ = MENU_PREON_SIZE;
             arg_revert_ = strtol (argspace, NULL, 0);
+            ShowColorStyle::SetColor(GetColorArg(blade_num_, PREON_COLOR_ARG));
+            show_emitter_size_.Start(blade_num_);
           }
           break;
         default:
@@ -2973,7 +2971,6 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_IGNITION_DELAY:
     case MENU_SWING_OPTION:
     case MENU_PREON_OPTION:
-    case MENU_PREON_SIZE:
       menu_type_ = MENU_STYLE_SETTING_SUB;
       current_preset_.Save();
       MenuSave();
@@ -2993,6 +2990,7 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_DRAG_SIZE:
     case MENU_MELT_SIZE:
     case MENU_EMITTER_SIZE:
+    case MENU_PREON_SIZE:
       SaveStyleSetting();
       break;
     case MENU_DELETE:
@@ -3607,27 +3605,29 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_RETRACTION_TIME:
       case MENU_IGNITION_DELAY:
       case MENU_RETRACTION_DELAY:
-        if (direction > 0) {
-          calc_ += 100;
-          SetInOut();
-        } else {
-          if (calc_ >= 100) {
-            calc_ -= 100;
-            if (calc_ >= 100) {
-              SetInOut();
-	      next_event_ = true;
-	      break;
-            } 
+        if (SaberBase::IsOn()) {
+          if (direction > 0) {
+            calc_ += 100;
+            SetInOut();
           } else {
-            calc_ = 0;
-            if (menu_type_ == MENU_IGNITION_DELAY || menu_type_ == MENU_RETRACTION_DELAY) {
-              sound_library_.SayMinimum();
+            if (calc_ >= 100) {
+              calc_ -= 100;
+              if (calc_ >= 100) {
+                SetInOut();
+	        next_event_ = true;
+	        break;
+              } 
             } else {
-              sound_library_.SayAuto();
+              calc_ = 0;
+              if (menu_type_ == MENU_IGNITION_DELAY || menu_type_ == MENU_RETRACTION_DELAY) {
+                sound_library_.SayMinimum();
+              } else {
+                sound_library_.SayAuto();
+              }
+              next_event_ = true;
             }
-            next_event_ = true;
           }
-        }
+	}
         break;
       case MENU_STYLE_OPTION:
       case MENU_IGNITION_OPTION:
@@ -3636,12 +3636,14 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_RETRACTION_COOL_DOWN_OPTION:
       case MENU_SWING_OPTION:
       case MENU_PREON_OPTION:
-        calc_ += direction;
-        if (calc_ > 32768) calc_ = 0;
-        if (calc_ < 0) calc_ = 32768;
-        SetInOut();
-        sound_library_.SayOption();
-        sound_library_.SayNumber(calc_, SAY_WHOLE);		    
+        if (SaberBase::IsOn()) {
+          calc_ += direction;
+          if (calc_ > 32768) calc_ = 0;
+          if (calc_ < 0) calc_ = 32768;
+          SetInOut();
+          sound_library_.SayOption();
+          sound_library_.SayNumber(calc_, SAY_WHOLE);
+	}
         break;
       case MENU_LOCKUP_POSITION:
       case MENU_EMITTER_SIZE:
@@ -5569,7 +5571,6 @@ private:
   uint32_t last_push_millis_; // Last Push (to prevent gesture spamming)
   uint32_t last_blast_millis_; // Last Blast (for Battle Mode Multi-Blast detection)
   uint32_t saber_off_time_millis_; // Off timer
-  uint32_t last_rotate_millis_; // Last Rotation (to prevent gesture spamming)
   uint32_t restart_millis_; // Used to time restarts to show preon timing.
   ClashType clash_type_ = CLASH_NONE;
   MenuType menu_type_ = MENU_TOP;
