@@ -419,29 +419,30 @@ class Effect {
             ScanAll(dir, iter.name());
           }
         }
-
-      }
-
+      } else {
 #ifdef ENABLE_AUDIO
 #if VERSION_MAJOR < 4
-      else if (strlen(dir) > 8) { // TODO: Check individual path segments
-        STDOUT << "\nFont directory not found\n";
-        STDOUT << " and name exceeds 8 characters: " << dir << "\n";
-        talkie.Say(talkie_font_directory_15, 15);
-        talkie.Say(talkie_too_long_15, 15);
-      } else if (strlen(dir)) {
-        STDOUT << "\nFont directory not found: " << dir << "\n";
-        talkie.Say(talkie_font_directory_15, 15);
-        talkie.Say(talkie_not_found_15, 15);
-      } 
+        if (strlen(dir) > 8) { // TODO: Check individual path segments
+          STDOUT.println(" done");
+          STDOUT << "Font directory not found,\n";
+          STDOUT << "and name exceeds 8 characters: " << dir << "\n";
+          talkie.Say(talkie_font_directory_15, 15);
+          talkie.Say(talkie_too_long_15, 15);
+        } else if (strlen(dir)) {
+          STDOUT.println(" done");
+          STDOUT << "Font directory not found: " << dir << "\n";
+          talkie.Say(talkie_font_directory_15, 15);
+          talkie.Say(talkie_not_found_15, 15);
+        } 
 #else
-      else if (strlen(dir)) {
-        STDOUT << "\nFont directory not found: " << dir << "\n";
-        talkie.Say(talkie_font_directory_15, 15);
-        talkie.Say(talkie_not_found_15, 15);
-      }
+        if (strlen(dir)) {
+          STDOUT << "Font directory not found: " << dir << "\n";
+          talkie.Say(talkie_font_directory_15, 15);
+          talkie.Say(talkie_not_found_15, 15);
+        }
 #endif   // VERSION_MAJOR < 4
 #endif   // ENABLE_AUDIO
+      }
 #endif   // ENABLE_SD
       STDOUT.println(" done");
     }
