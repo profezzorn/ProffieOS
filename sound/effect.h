@@ -419,20 +419,23 @@ class Effect {
             ScanAll(dir, iter.name());
           }
         }
-
-      }
-
+	STDOUT.println(" done");
+      } else {
+	STDOUT.println(" NOT FOUND!");
 #ifdef ENABLE_AUDIO
-      else if (strlen(dir) > 8) { // TODO: Check individual path segments
-        talkie.Say(talkie_font_directory_15, 15);
-        talkie.Say(talkie_too_long_15, 15);
-      } else if (strlen(dir)) {
-        talkie.Say(talkie_font_directory_15, 15);
-        talkie.Say(talkie_not_found_15, 15);
-      }
+#if VERSION_MAJOR <= 3	
+	if (strlen(dir) > 8) { // TODO: Check individual path segments
+	  talkie.Say(talkie_font_directory_15, 15);
+	  talkie.Say(talkie_too_long_15, 15);
+	} else
+#endif
+        if (strlen(dir)) {
+	  talkie.Say(talkie_font_directory_15, 15);
+	  talkie.Say(talkie_not_found_15, 15);
+	}
 #endif   // ENABLE_AUDIO
+      }
 #endif   // ENABLE_SD
-      STDOUT.println(" done");
     }
 
     bool warned = false;
