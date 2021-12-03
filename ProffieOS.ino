@@ -29,7 +29,7 @@
 // #define CONFIG_FILE "config/owk_v2_config.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
-#define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+// #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 // #define CONFIG_FILE "config/proffieboard_v1_graflex.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
@@ -39,6 +39,10 @@
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
 #define CONFIG_FILE CONFIG_FILE_TEST
+#endif
+
+#ifndef CONFIG_FILE
+#error Please set CONFIG_FILE as shown above.
 #endif
 
 #define CONFIG_TOP
