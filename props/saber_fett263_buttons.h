@@ -1775,10 +1775,10 @@ SaberFett263Buttons() : PropBase() {}
         if (track_num_ <= 0 && track_mode_ == PLAYBACK_LOOP) {
           StartOrStopTrack();
         } else {
-          if (track_num_ > num_tracks_) track_num_ = 1;
           switch (track_mode_) {
             case PLAYBACK_ROTATE:
               track_num_ += 1;
+              if (track_num_ > num_tracks_) track_num_ = 1;
               break;
             case PLAYBACK_RANDOM:
               track_num_ = rand() % num_tracks_;
@@ -2033,6 +2033,12 @@ SaberFett263Buttons() : PropBase() {}
     current_preset_.Save();
     SetPresetFast(current_preset_.preset_num);
     hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
+  }
+
+  int GetNumberOfPresets() {
+    CurrentPreset tmp;
+    tmp.SetPreset(-1);
+    return tmp.preset_num + 1;
   }
 
 #ifdef FETT263_EDIT_MODE_MENU
@@ -3035,18 +3041,16 @@ SaberFett263Buttons() : PropBase() {}
       default:
         break;
       case MENU_PRESET:
-        if (direction > 0) {
-          if (SaberBase::IsOn()) {
+        if (SaberBase::IsOn()) {
+          if (direction > 0) {
             next_preset_fast();
           } else {
-            SelectPreset(current_preset_.preset_num + direction);
+            previous_preset_fast();
           }
         } else {
-          if (SaberBase::IsOn()) {
-            previous_preset_fast();
-          } else {
-            SelectPreset(current_preset_.preset_num + direction);
-          }
+          int num_presets = GetNumberOfPresets();
+          int preset = (current_preset_.preset_num + num_presets * 10 + direction) % num_presets;
+          SelectPreset(preset);
         }
         break;
       case MENU_VOLUME:
