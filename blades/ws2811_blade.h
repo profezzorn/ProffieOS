@@ -29,6 +29,7 @@ public:
 DMAMEM uint32_t displayMemory[200];
 #include "stm32l4_ws2811.h"
 #define DefaultPinClass WS2811Pin
+#define ProffieOS_yield() armv7m_core_yield()
 
 #else
 
@@ -37,6 +38,8 @@ DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4 + 1];
 #include "monopodws.h"
 #include "ws2811_serial.h"
 #define DefaultPinClass MonopodWSPin
+#define ProffieOS_yield() do { } while(0)
+
 #endif
 #include "spiled_pin.h"
 
@@ -65,7 +68,7 @@ WS2811_Blade(WS2811PIN* pin,
       pin_->Enable(true);
       colors_ = pin_->BeginFrame();
       for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
-      while (!pin_->IsReadyForEndFrame()) armv7m_core_yield();
+      while (!pin_->IsReadyForEndFrame()) ProffieOS_yield();
       power_->Power(on);
       pin_->EndFrame();
       colors_ = pin_->BeginFrame();
@@ -81,7 +84,7 @@ WS2811_Blade(WS2811PIN* pin,
       for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
       pin_->EndFrame();
       // Wait until it's sent before powering off.
-      while (!pin_->IsReadyForEndFrame()) armv7m_core_yield();
+      while (!pin_->IsReadyForEndFrame())  ProffieOS_yield();
       power_->Power(on);
       pin_->Enable(false);
       power_->DeInit();
