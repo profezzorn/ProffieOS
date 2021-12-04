@@ -52,6 +52,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(UNJAM)			\
     DEFINE_EFFECT(PLI_ON)			\
     DEFINE_EFFECT(PLI_OFF)                      \
+    DEFINE_EFFECT(DESTRUCT)                     \
     /* user-definable effects */                \
     DEFINE_EFFECT(USER1)			\
     DEFINE_EFFECT(USER2)			\
