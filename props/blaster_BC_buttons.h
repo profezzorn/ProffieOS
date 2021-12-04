@@ -20,7 +20,8 @@ Defaults to KILL on boot.
 Separate clipin/clipout/reload sounds to match stun mode.
 -(requires clipins, clipouts, and reloads.wavs in font)
 No jam if empty.
-
+Autofire mode counts bullets and causes empty if
+#define BLASTER_SHOTS_UNTIL_EMPTY is specified.
 
 Requires minimum 2 buttons for operation
 *note - config can use NUM_BUTTONS 1 for saber mode when using dual_prop.
@@ -46,7 +47,8 @@ Optional defines:
 
 Optional Blade style elements:
   EFFECT_DESTRUCT                       - use in blade style to animate self destruct.
-  EFFECT_BATTERY LEVEL                  -
+  EFFECT_BATTERY LEVEL                  - requires EFFECT_BATTERY_LEVEL to be in blade style,
+                                          and uses battery.wav sound effect.
 
 ==========================================
 | 2 Buttons: FIRE and MODE (POW and AUX) |
