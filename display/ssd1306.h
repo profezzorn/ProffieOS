@@ -12,6 +12,12 @@ IMAGE_FILESET(blst);
 IMAGE_FILESET(lock);
 IMAGE_FILESET(force);
 IMAGE_FILESET(idle);
+IMAGE_FILESET(reload);
+IMAGE_FILESET(empty);
+IMAGE_FILESET(jam);
+IMAGE_FILESET(clipin);
+IMAGE_FILESET(clipout);
+IMAGE_FILESET(destruct);
 
 enum Screen {
   SCREEN_UNSET,
@@ -323,10 +329,12 @@ public:
         return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
-	if (!SaberBase::IsOn() && t_ > font_config.ProffieOSFontImageDuration) {
-	  screen_ = SCREEN_OFF;
-	  return FillFrameBuffer2(advance);
-	}
+        // This turns off the screen after a few seconds.
+        // Preffered (?) to allow screen to display until IDLE_OFF_TIME    
+        // if (!SaberBase::IsOn() && t_ > font_config.ProffieOSFontImageDuration) {
+        //   screen_ = SCREEN_OFF;
+        //   return FillFrameBuffer2(advance);
+        // }
 	Clear();
 	display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
 	if (HEIGHT > 32) {
@@ -435,26 +443,83 @@ public:
 	  ShowFile(&IMG_idle, 3600000.0);
 	}
 	return;
-      case EFFECT_BLAST:
-	ShowFile(&IMG_blst, font_config.ProffieOSBlastImageDuration);
-	return;
-      case EFFECT_CLASH:
-	ShowFile(&IMG_clsh, font_config.ProffieOSClashImageDuration);
-	return;
-      case EFFECT_FORCE:
-	ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
-	return;
       case EFFECT_LOCKUP_BEGIN:
 	ShowDefault();
 	return;
       case EFFECT_LOCKUP_END:
 	ShowDefault(true);
-	break;
-
+	return;
+      case EFFECT_BATTERY_LEVEL:
+        // Show battery meter for ProffieOSFontImageDuration??
+        SetScreenNow(SCREEN_PLI);
+        return;
+#ifndef OLED_SYNCED_EFFECTS // a better name is welcomed
+      case EFFECT_FORCE:
+        ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
+        return;
+      case EFFECT_BLAST:
+        ShowFile(&IMG_blst, font_config.ProffieOSBlastImageDuration);
+        return;
+      case EFFECT_CLASH:
+        ShowFile(&IMG_clsh, font_config.ProffieOSClashImageDuration);
+        return;
+      case EFFECT_RELOAD:
+        ShowFile(&IMG_reload, font_config.ProffieOSReloadImageDuration);
+        return;
+      case EFFECT_EMPTY:
+        ShowFile(&IMG_empty, font_config.ProffieOSEmptyImageDuration);
+        return;
+      case EFFECT_JAM:
+        ShowFile(&IMG_jam, font_config.ProffieOSJamImageDuration);
+        return;
+      case EFFECT_CLIP_IN:
+        ShowFile(&IMG_clipin, font_config.ProffieOSClipinImageDuration);
+        return;
+      case EFFECT_CLIP_OUT:
+        ShowFile(&IMG_clipout, font_config.ProffieOSClipoutImageDuration);
+        return;
+#endif
+        break;
       default: break;
     }
   }
 
+    void SB_Effect2(EffectType effect, float location) override {
+    switch (effect) {
+      case EFFECT_DESTRUCT:
+        ShowFile(&IMG_destruct, SaberBase::sound_length * 1000);
+        return;
+        // STDOUT.println(SaberBase::sound_length * 1000);
+#ifdef OLED_SYNCED_EFFECTS
+      case EFFECT_FORCE:
+        ShowFile(&IMG_force, SaberBase::sound_length * 1000);
+        return;
+      case EFFECT_BLAST:
+        ShowFile(&IMG_blst, SaberBase::sound_length * 1000);
+        return;
+      case EFFECT_CLASH:
+        ShowFile(&IMG_clsh, SaberBase::sound_length * 1000);
+        return;
+      case EFFECT_RELOAD:
+        ShowFile(&IMG_reload, SaberBase::sound_length * 1000);
+        return;
+      case EFFECT_EMPTY:
+        ShowFile(&IMG_empty, SaberBase::sound_length * 1000);
+        return;
+      case EFFECT_JAM:
+        ShowFile(&IMG_jam, SaberBase::sound_length * 1000);
+        return;
+      case EFFECT_CLIP_IN:
+        ShowFile(&IMG_clipin, SaberBase::sound_length * 1000);
+        return;
+      case EFFECT_CLIP_OUT:
+        ShowFile(&IMG_clipout, SaberBase::sound_length * 1000);
+        return;
+#endif
+        break;
+      default: break;
+    }
+  } 
   void SB_Message(const char* text) override {
     strncpy(message_, text, sizeof(message_));
     message_[sizeof(message_)-1] = 0;
