@@ -21,6 +21,12 @@ public:
     CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSClashImageDuration, 500.0f);
     CONFIG_VARIABLE2(ProffieOSForceImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSReloadImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSEmptyImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSJamImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClipinImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClipoutImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSDestructImageDuration, 10000.0f);
     CONFIG_VARIABLE2(ProffieOSMinSwingAcceleration, 0.0f);
     CONFIG_VARIABLE2(ProffieOSMaxSwingAcceleration, 0.0f);
 #ifdef ENABLE_SPINS
@@ -103,6 +109,12 @@ public:
   float ProffieOSClashImageDuration;
   // for OLED displays, the time a force.bmp will play
   float ProffieOSForceImageDuration;
+  float ProffieOSReloadImageDuration;
+  float ProffieOSEmptyImageDuration;
+  float ProffieOSJamImageDuration;
+  float ProffieOSClipinImageDuration;
+  float ProffieOSClipoutImageDuration;
+  float ProffieOSDestructImageDuration;
   // Minimum acceleration for Accent Swing file Selection
   // recommended value is 20.0 ~ 30.0
   float ProffieOSMinSwingAcceleration;
