@@ -210,6 +210,7 @@ public:
   bool min_vol_reached_ = false;
   bool stun_mode_ = false;
   bool empty_ = false;
+  bool no_clip_ = false;
 
 #ifdef BLASTER_SHOTS_UNTIL_EMPTY
   const int max_shots_ = BLASTER_SHOTS_UNTIL_EMPTY;
@@ -288,10 +289,17 @@ public:
   virtual void ClipOut() {
     if (max_shots_ != -1) shots_fired_ = max_shots_;
     SaberBase::DoEffect(EFFECT_CLIP_OUT, 0);
+    no_clip_ = true;
   }
 
   virtual void ClipIn() {
     SaberBase::DoEffect(EFFECT_CLIP_IN, 0);
+    shots_fired_ = 0;
+    empty_ = false;
+    is_jammed_ = false;
+    no_clip_ = false;
+    STDOUT << "************** just set no_clip_ = false \n";
+
   }
 
   // Pull in parent's SetPreset, but turn the blaster on.
@@ -509,6 +517,8 @@ RefPtr<BufferedWavPlayer> wav_player;
 // Cycle Mode
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON | BUTTON_CLIP_DETECT):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF | BUTTON_CLIP_DETECT):
         if (mode_volume_) return false;
         NextBlasterMode();
         return true;
@@ -516,6 +526,8 @@ RefPtr<BufferedWavPlayer> wav_player;
 // Next Preset / Volume Up
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_CLICK_LONG, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_CLICK_LONG, MODE_OFF):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_CLICK_LONG, MODE_ON | BUTTON_CLIP_DETECT):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_CLICK_LONG, MODE_OFF | BUTTON_CLIP_DETECT):
         if (!mode_volume_) {
           next_preset();
         } else {
@@ -526,6 +538,8 @@ RefPtr<BufferedWavPlayer> wav_player;
 // Previous Preset / Volume Down
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_CLICK_LONG, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_CLICK_LONG, MODE_OFF):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_CLICK_LONG, MODE_ON | BUTTON_CLIP_DETECT):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_CLICK_LONG, MODE_OFF | BUTTON_CLIP_DETECT):
         if (!mode_volume_) {
           previous_preset();
         } else {
@@ -535,6 +549,8 @@ RefPtr<BufferedWavPlayer> wav_player;
 // Start or Stop Track
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_OFF):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_ON | BUTTON_CLIP_DETECT):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_OFF | BUTTON_CLIP_DETECT):
         if (mode_volume_) return false;
         StartOrStopTrack();
         return true;
@@ -542,6 +558,8 @@ RefPtr<BufferedWavPlayer> wav_player;
 // Enter / Exit Volume Menu
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FOURTH_HELD, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FOURTH_HELD, MODE_OFF):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FOURTH_HELD, MODE_ON | BUTTON_CLIP_DETECT):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FOURTH_HELD, MODE_OFF | BUTTON_CLIP_DETECT):
         if (!mode_volume_) {
           mode_volume_ = true;
           if (SFX_vmbegin) {
@@ -568,6 +586,8 @@ RefPtr<BufferedWavPlayer> wav_player;
 // Spoken Battery Level in volts / show battery meter on LEDs
       case EVENTID(BUTTON_MODE_SELECT, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON | BUTTON_CLIP_DETECT):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF | BUTTON_CLIP_DETECT):
         if (mode_volume_) return false;
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
@@ -579,6 +599,8 @@ RefPtr<BufferedWavPlayer> wav_player;
 // Spoken Battery Level in percentage / show battery meter on LEDs
       case EVENTID(BUTTON_MODE_SELECT, EVENT_THIRD_HELD, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_THIRD_HELD, MODE_OFF):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_THIRD_HELD, MODE_ON | BUTTON_CLIP_DETECT):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_THIRD_HELD, MODE_OFF | BUTTON_CLIP_DETECT):
         if (mode_volume_) return false;
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
@@ -590,6 +612,8 @@ RefPtr<BufferedWavPlayer> wav_player;
 // On Demand Battery Level
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_HELD_MEDIUM, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_HELD_MEDIUM, MODE_ON | BUTTON_CLIP_DETECT):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_HELD_MEDIUM, MODE_OFF | BUTTON_CLIP_DETECT):
         if (mode_volume_) return false;
         STDOUT.println(battery_monitor.battery());
         STDOUT.println(battery_monitor.battery_percent());
@@ -599,15 +623,27 @@ RefPtr<BufferedWavPlayer> wav_player;
 // Reload
       case EVENTID(BUTTON_RELOAD, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON | BUTTON_CLIP_DETECT):
         if (mode_volume_) return false;
-        Reload();
-        return true;
+        if (no_clip_) {
+          SaberBase::DoEffect(EFFECT_EMPTY, 0); 
+          return true;
+        } else {
+          Reload();
+          return true;
+        }
 
 // Fire
    case EVENTID(BUTTON_FIRE, EVENT_PRESSED, MODE_ON):
+   case EVENTID(BUTTON_FIRE, EVENT_PRESSED, MODE_ON | BUTTON_CLIP_DETECT):
         if (mode_volume_) return false;
-        Fire();
-        return true;
+        if (no_clip_) {
+          SaberBase::DoEffect(EFFECT_EMPTY, 0); 
+          return true;
+        } else {
+          Fire();
+          return true;
+        }
 
       case EVENTID(BUTTON_FIRE, EVENT_RELEASED, MODE_ON):
         if (mode_volume_) return false;
@@ -759,4 +795,5 @@ RefPtr<BufferedWavPlayer> wav_player;
 };
 
 #endif
+
 
