@@ -298,8 +298,6 @@ public:
     empty_ = false;
     is_jammed_ = false;
     no_clip_ = false;
-    STDOUT << "************** just set no_clip_ = false \n";
-
   }
 
   // Pull in parent's SetPreset, but turn the blaster on.
