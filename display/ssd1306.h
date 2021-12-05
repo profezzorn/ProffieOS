@@ -835,14 +835,23 @@ public:
     Send(MEMORYMODE);                    // 0x20
     Send(0x01);                          // vertical address mode
 
-#ifndef OLED_FLIP_180
+#if defined (OLED_FLIP_180)
+#if defined(OLED_MIRRORED)
+    // Flip 180 and mirrored OLED operation
+    Send(SEGREMAP | 0x1);        // 0xa0 | 1
+#else
+    // Flip 180
+    Send(SEGREMAP);        // 0xa0 | 1
+#endif
+    Send(COMSCANINC);
+#elif defined (OLED_MIRRORED)
+    // mirrored OLED operation
+    Send(SEGREMAP);        // 0xa0 | 1
+    Send(COMSCANDEC);
+#else
     // normal OLED operation
     Send(SEGREMAP | 0x1);        // 0xa0 | 1
     Send(COMSCANDEC);
-#else
-    // allows for 180deg rotation of the OLED mapping
-    Send(SEGREMAP);
-    Send(COMSCANINC);
 #endif
 
     Send(SETCOMPINS);                    // 0xDA
