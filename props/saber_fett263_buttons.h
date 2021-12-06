@@ -2035,6 +2035,12 @@ SaberFett263Buttons() : PropBase() {}
     hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
   }
 
+  int GetNumberOfPresets() {
+    CurrentPreset tmp;
+    tmp.SetPreset(-1);
+    return tmp.preset_num + 1;
+  }
+
 #ifdef FETT263_EDIT_MODE_MENU
 // Color Edit Helper Functions
   void SaveColorEdit() {
@@ -3035,18 +3041,16 @@ SaberFett263Buttons() : PropBase() {}
       default:
         break;
       case MENU_PRESET:
-        if (direction > 0) {
-          if (SaberBase::IsOn()) {
+        if (SaberBase::IsOn()) {
+          if (direction > 0) {
             next_preset_fast();
           } else {
-            SelectPreset(current_preset_.preset_num + direction);
+            previous_preset_fast();
           }
         } else {
-          if (SaberBase::IsOn()) {
-            previous_preset_fast();
-          } else {
-            SelectPreset(current_preset_.preset_num + direction);
-          }
+          int num_presets = GetNumberOfPresets();
+          int preset = (current_preset_.preset_num + num_presets * 10 + direction) % num_presets;
+          SelectPreset(preset);
         }
         break;
       case MENU_VOLUME:
