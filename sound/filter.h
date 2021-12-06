@@ -106,7 +106,7 @@ struct Bilinear {
 
 
 #if 1
-#define FILTER_TYPE double
+#define FILTER_TYPE float
 
   template<class T, size_t k>
 struct BQ {
