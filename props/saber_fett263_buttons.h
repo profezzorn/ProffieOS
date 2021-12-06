@@ -1775,10 +1775,10 @@ SaberFett263Buttons() : PropBase() {}
         if (track_num_ <= 0 && track_mode_ == PLAYBACK_LOOP) {
           StartOrStopTrack();
         } else {
-          if (track_num_ > num_tracks_) track_num_ = 1;
           switch (track_mode_) {
             case PLAYBACK_ROTATE:
               track_num_ += 1;
+              if (track_num_ > num_tracks_) track_num_ = 1;
               break;
             case PLAYBACK_RANDOM:
               track_num_ = rand() % num_tracks_;
