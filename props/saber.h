@@ -116,6 +116,8 @@ public:
       case EVENTID(BUTTON_AUX, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_OFF, MODE_ON):
 #if NUM_BUTTONS == 0
+#undef NEED_DETECT_TWIST
+#define NEED_DETECT_TWIST
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
 #endif
 #ifndef DISABLE_COLOR_CHANGE
@@ -140,10 +142,12 @@ public:
         SaberBase::DoBlast();
         return true;
 
+#ifndef DISABLE_COLOR_CHANGE
 #if NUM_BUTTONS == 1
+#undef NEED_DETECT_TWIST
+#define NEED_DETECT_TWIST
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
 #endif
-#ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
         ToggleColorChangeMode();
         return true;
@@ -188,6 +192,7 @@ public:
 
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
 #if NUM_BUTTONS == 0
+#define NEED_DETECT_SHAKE
       case EVENTID(BUTTON_NONE, EVENT_SHAKE, MODE_OFF):
 #endif
         next_preset();
@@ -217,15 +222,26 @@ public:
     }
     return false;
   }
-#if NUM_BUTTONS == 0
+
+#if defined(NEED_DETECT_SHAKE) || defined(NEED_DETECT_TWIST)
   void Loop() override {
     PropBase::Loop();
+
+#ifdef NEED_DETECT_TWIST
     DetectTwist();
+#endif
+
+#ifdef NEED_DETECT_SHAKE
     DetectShake();
+#endif
     // DetectSwing();
-    // SaberBase::RequestMotion();
+
+#if NUM_BUTTONS == 0
+    SaberBase::RequestMotion();
+#endif
   }
-#endif  
+#endif
+
 private:
   bool aux_on_ = true;
   bool pointing_down_ = false;
