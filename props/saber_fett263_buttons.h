@@ -4726,9 +4726,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
 #ifndef DISABLE_COLOR_CHANGE
-        if (DoColorZoom()) return true;
-        if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
-          SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
+        if (DoColorZoom()) {
           sound_library_.SayZoomingIn();
           return true;
         }
