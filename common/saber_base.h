@@ -303,7 +303,7 @@ public:                                                         \
     if (mode == COLOR_CHANGE_MODE_NONE) {
       DoChange(EXIT_COLOR_CHANGE);
     } else {
-      DoChange(ENTER_COLOR_CHANGE);
+      if (mode != COLOR_CHANGE_MODE_ZOOMED) DoChange(ENTER_COLOR_CHANGE);
     }
   }
 
