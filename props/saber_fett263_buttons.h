@@ -2024,8 +2024,8 @@ SaberFett263Buttons() : PropBase() {}
   void ChangeFont(int direction) {
     int num_fonts = RunCommandAndGetSingleLine("list_fonts", nullptr, 0, 0, 0);
     font_num_ += direction;
-    if (font_num_ > num_fonts - 1) font_num_ = 1;
-    if (font_num_ <= 0) font_num_ = num_fonts - 1;
+    if (font_num_ > num_fonts) font_num_ = 1;
+    if (font_num_ <= 0) font_num_ = num_fonts;
     char font[128];
     RunCommandAndGetSingleLine("list_fonts", nullptr, font_num_, font, sizeof(font));
     strcat(font, ";common");
