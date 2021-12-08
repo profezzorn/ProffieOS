@@ -2024,8 +2024,8 @@ SaberFett263Buttons() : PropBase() {}
   void ChangeFont(int direction) {
     int num_fonts = RunCommandAndGetSingleLine("list_fonts", nullptr, 0, 0, 0);
     font_num_ += direction;
-    if (font_num_ > num_fonts - 1) font_num_ = 1;
-    if (font_num_ <= 0) font_num_ = num_fonts - 1;
+    if (font_num_ > num_fonts) font_num_ = 1;
+    if (font_num_ <= 0) font_num_ = num_fonts;
     char font[128];
     RunCommandAndGetSingleLine("list_fonts", nullptr, font_num_, font, sizeof(font));
     strcat(font, ";common");
@@ -3303,8 +3303,8 @@ SaberFett263Buttons() : PropBase() {}
         }
         if (!restore_point.get()) restore_point = std::move(current_preset_.track);
         track_num_ += direction;
-        if (track_num_ > num_tracks_ - 1) track_num_ = 1;
-        if (track_num_ <= 0) track_num_ = num_tracks_ - 1;
+        if (track_num_ > num_tracks_) track_num_ = 1;
+        if (track_num_ <= 0) track_num_ = num_tracks_;
         char track[128];
         RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, track, sizeof(track));
         current_preset_.track = mkstr(track);
