@@ -2090,9 +2090,8 @@ SaberFett263Buttons() : PropBase() {}
 
   // Check if ShowColor for ColorChange / Color Editing is active to prevent other events
   bool CheckShowColorCC() {
-    if (color_mode_ == CC_COLOR_LIST || color_mode_ == CC_ZOOM_COLOR) {
-      return true;
-    }
+    if (color_mode_ == CC_COLOR_LIST || color_mode_ == CC_ZOOM_COLOR) return true;
+    if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return true;
     return false;
   }
 
