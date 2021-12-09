@@ -98,13 +98,13 @@ Wavs to use for talking Mode (else Talkie voice):
 Additionally:
   quote.wav      // for playing quotes
   in.wav         // for blaster power off
-  out.wav        // for blaster powewr on
+  out.wav        // for blaster power on
   destruct.wav   // for self destruct overload
   boom.wav       // for self destruct explosion
   clipins.wv
   clipouts.wav
-  reloads.wav    // these 3 are used to match the more "plasmatic" stun sound>
-These are likely best kept in a 'common' folder in your Font Search Path
+  reloads.wav    // these last 3 are used to match the more "plasmatic" stun sound.
+These are likely best kept in a 'common' folder in your Font Search Path:
   battery.wav    // for EFFECT_BATTERY_LEVEL
   vmbegin.wav    // for Begin Volume Menu
   vmend.wav      // for End Volume Menu
@@ -112,10 +112,9 @@ These are likely best kept in a 'common' folder in your Font Search Path
   voldown.wav    // for decrease volume
   volmin.wav     // for minimum volume reached
   volmax.wav     // for maximum volume reached
-  quote.wav      // for playing quotes
-  in.wav         // for blaster power off
-  out.wav        // for blaster powewr on
+
 */
+
 
 #ifndef PROPS_BLASTER_BC_H
 #define PROPS_BLASTER_BC_H
