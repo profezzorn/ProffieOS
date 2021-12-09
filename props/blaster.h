@@ -54,7 +54,7 @@ EFFECT(mdauto);
 // For mode sounds, specific "mdstun", "mdkill", and "mdauto" may be used.
 // If just a single "mode" sound for all switches exists, that will be used.
 // If no mode sounds exist in the font, a talkie version will speak the mode on switching.
-class Blaster : public PROP_INHERIT_PREFIX PropBase {
+class Blaster : public PROP_INHERIT_PREFIX PropBase, StateMachine {
 public:
   Blaster() : PropBase() {}
   const char* name() override { return "Blaster"; }
@@ -93,9 +93,10 @@ public:
     }
   }
 
-  bool auto_firing_ = false;
   int shots_fired_ = 0;
+  bool auto_firing_ = false;
   bool is_jammed_ = false;
+  bool empty_ = false;
 
 #ifdef BLASTER_SHOTS_UNTIL_EMPTY
   const int max_shots_ = BLASTER_SHOTS_UNTIL_EMPTY;
@@ -112,38 +113,43 @@ public:
     return random <= percent ? true : false;
   }
 
+  virtual void CheckEmpty() {
+    if (max_shots_ != -1 && shots_fired_ >= max_shots_) {
+      empty_ = true;
+      SaberBase::DoEffect(EFFECT_EMPTY, 0);
+      return;
+    }
+  }
+
+  uint32_t auto_time_;
   virtual void Fire() {
 #ifdef ENABLE_MOTION
 #ifdef BLASTER_JAM_PERCENTAGE
     // If we're already jammed then we don't need to recheck. If we're not jammed then check if we just jammed.
     is_jammed_ = is_jammed_ ? true : CheckJam(BLASTER_JAM_PERCENTAGE);
-
-    if (is_jammed_) {
+    if (is_jammed_ && !empty_) {
+      // Don't jam if empty
       SaberBase::DoEffect(EFFECT_JAM, 0);
       return;
     }
 #endif
 #endif
-
-    if (max_shots_ != -1) {
-      if (shots_fired_ >= max_shots_) {
-        SaberBase::DoEffect(EFFECT_EMPTY, 0);
-        return;
-      }
-    }
-
+    CheckEmpty();
+    if (empty_) return;
     if (blaster_mode == MODE_AUTO) {
       SelectAutoFirePair(); // Set up the autofire pairing if the font suits it.
       SaberBase::SetLockup(LOCKUP_AUTOFIRE);
       SaberBase::DoBeginLockup();
       auto_firing_ = true;
+      auto_time_ = millis();
     } else {
       if (blaster_mode == MODE_STUN) {
         SaberBase::DoEffect(EFFECT_STUN, 0);
+        STDOUT << "STUN - Remaining shots = " << GetBulletCount() << "\n";
       } else {
         SaberBase::DoEffect(EFFECT_FIRE, 0);
+        STDOUT << "FIRE - Remaining shots = " << GetBulletCount() << "\n";
       }
-
       shots_fired_++;
     }
   }
@@ -164,8 +170,10 @@ public:
   }
 
   virtual void Reload() {
-    shots_fired_ = 0;
     SaberBase::DoEffect(EFFECT_RELOAD, 0);
+    shots_fired_ = 0;
+    empty_ = false;
+    is_jammed_ = false;
   }
 
   virtual void ClipOut() {
@@ -180,7 +188,6 @@ public:
   // Pull in parent's SetPreset, but turn the blaster on.
   void SetPreset(int preset_num, bool announce) override {
     PropBase::SetPreset(preset_num, announce);
-
     if (!SFX_poweron) {
       if (!SaberBase::IsOn()) {
         On();
@@ -260,9 +267,39 @@ public:
     }
   }
 
+  RefPtr<BufferedWavPlayer> tmp;
+  uint32_t len;
+
   void Loop() override {
     PropBase::Loop();
     PollNextAction();
+
+    STATE_MACHINE_BEGIN();
+    while (true) {
+      if (auto_firing_) {
+        tmp = GetWavPlayerPlaying(&SFX_auto);
+        // Set the length for WavLen<>
+        if (tmp) {
+          tmp->UpdateSaberBaseSoundInfo();
+        } else {
+          SaberBase::ClearSoundInfo();
+        }
+        if (millis() - auto_time_ > 1000 * tmp->length()) {
+          shots_fired_++;
+          auto_time_ = millis();
+          STDOUT << "AUTOFIRING - Remaining shots = " << GetBulletCount() << "\n";
+          CheckEmpty();
+          if (empty_) {
+            SaberBase::DoEndLockup();
+            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+            auto_firing_ = false;
+            return;
+          }
+        }
+      }
+    YIELD();
+    }
+    STATE_MACHINE_END();
   }
 
   // Make clash do nothing except unjam if jammed.
@@ -363,7 +400,12 @@ public:
       case EFFECT_FIRE: hybrid_font.PlayCommon(&SFX_blast); return;
       case EFFECT_CLIP_IN: hybrid_font.PlayCommon(&SFX_clipin); return;
       case EFFECT_CLIP_OUT: hybrid_font.PlayCommon(&SFX_clipout); return;
-      case EFFECT_RELOAD: hybrid_font.PlayCommon(&SFX_reload); return;
+      case EFFECT_RELOAD:
+        if (shots_fired_ == 0 && SFX_full) {
+          hybrid_font.PlayCommon(&SFX_full); return;
+        } else {
+	  hybrid_font.PlayCommon(&SFX_reload); return;
+	}
       case EFFECT_MODE: SayMode(); return;
       case EFFECT_RANGE: hybrid_font.PlayCommon(&SFX_range); return;
       case EFFECT_EMPTY: hybrid_font.PlayCommon(&SFX_empty); return;
