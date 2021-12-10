@@ -1834,10 +1834,12 @@ SaberFett263Buttons() : PropBase() {}
       if (a < -M_PI) a+=M_PI*2;
       if (a > twist_menu_ * 2/3) {
         Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+        STDOUT.println("EVENT MENU TURN RIGHT");
         current_menu_angle_ = fusor.angle2();
       }
       if (a < -twist_menu_ * 2/3) {
         Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+        STDOUT.println("EVENT MENU TURN LEFT");
         current_menu_angle_ = fusor.angle2();
       }
     }
