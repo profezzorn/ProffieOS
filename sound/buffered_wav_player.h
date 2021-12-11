@@ -127,6 +127,14 @@ public:
   void SubRef() { refs_--; }
   bool Available() const { return refs_ == 0 && !isPlaying(); }
   uint32_t refs() const { return refs_; }
+
+  void dump() {
+    STDOUT << " pause=" << pause_
+	   << " buffered=" << buffered()
+	   << " wav.isPlaying()=" << wav.isPlaying()
+	   << "\n";
+    wav.dump();
+  }
 private:
   uint32_t refs_ = 0;
 
