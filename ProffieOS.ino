@@ -888,6 +888,7 @@ class Commands : public CommandParser {
         if (e && atoi(e) != i) continue;
         wav_players[i].dump();
       }
+      return true;
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
 #endif
