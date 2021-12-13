@@ -303,8 +303,8 @@ public:                                                         \
     color_change_mode_ = mode;
     if (mode == COLOR_CHANGE_MODE_NONE) {
       DoChange(EXIT_COLOR_CHANGE);
-    } else {
-      if (prev_mode == COLOR_CHANGE_MODE_NONE) DoChange(ENTER_COLOR_CHANGE);
+    } else if (prev_mode == COLOR_CHANGE_MODE_NONE) {
+      DoChange(ENTER_COLOR_CHANGE);
     }
   }
 
