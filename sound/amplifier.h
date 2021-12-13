@@ -43,6 +43,7 @@ public:
     }
 #else    
     if (!on_) {
+      on_ = true;
       EnableBooster();
       pinMode(amplifierPin, OUTPUT);
       digitalWrite(amplifierPin, HIGH);
