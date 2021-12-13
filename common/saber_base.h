@@ -299,11 +299,12 @@ public:                                                         \
 
   static ColorChangeMode GetColorChangeMode() { return color_change_mode_; }
   static void SetColorChangeMode(ColorChangeMode  mode) {
+    ColorChangeMode prev_mode = color_change_mode_;
     color_change_mode_ = mode;
     if (mode == COLOR_CHANGE_MODE_NONE) {
       DoChange(EXIT_COLOR_CHANGE);
     } else {
-      if (mode != COLOR_CHANGE_MODE_ZOOMED) DoChange(ENTER_COLOR_CHANGE);
+      if (prev_mode == COLOR_CHANGE_MODE_NONE) DoChange(ENTER_COLOR_CHANGE);
     }
   }
 
