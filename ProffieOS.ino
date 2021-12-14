@@ -882,6 +882,15 @@ class Commands : public CommandParser {
       return true;
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
+#ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "dumpwavplayer")) {
+      for (size_t i = 0; i < NELEM(wav_players); i++) {
+        if (e && atoi(e) != i) continue;
+        wav_players[i].dump();
+      }
+      return true;
+    }
+#endif // ENABLE_DEVELOPER_COMMANDS
 #endif
 
 #ifdef ENABLE_DEVELOPER_COMMANDS

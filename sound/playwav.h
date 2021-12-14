@@ -379,6 +379,14 @@ public:
     return new_file_id_;
   }
 
+  void dump() {
+    STDOUT << " run=" << run_
+	   << " filename=" << filename()
+	   << " pos=" << pos()
+	   << " len=" << length()
+	   << "\n";
+  }
+
 private:
   volatile bool run_ = false;
   Effect* volatile effect_ = nullptr;
