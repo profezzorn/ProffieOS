@@ -42,7 +42,8 @@ public:
       sgtl5000_enabled = true;
     }
 #else    
-    if (!digitalRead(amplifierPin)) {
+    if (!on_) {
+      on_ = true;
       EnableBooster();
       pinMode(amplifierPin, OUTPUT);
       digitalWrite(amplifierPin, HIGH);
@@ -68,6 +69,7 @@ protected:
       SLEEP(20);
       if (Active()) continue;
       STDOUT.println("Amplifier off.");
+      on_ = false;
       // digitalWrite(amplifierPin, LOW); // turn the amplifier off
 #ifdef AUDIO_CONTROL_SGTL5000
       // Disable does nothing, so this is pointless.
@@ -78,6 +80,7 @@ protected:
       pinMode(amplifierPin, INPUT_ANALOG); // Let the pull-down do the work
 #endif      
       SLEEP(20);
+      if (on_) continue;
       dac.end();
       while (!Active()) YIELD();
     }
@@ -132,6 +135,7 @@ protected:
   }
 
 private:
+  bool on_ = false;
   uint32_t last_enabled_;
 };
 
