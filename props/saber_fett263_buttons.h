@@ -21,7 +21,8 @@ NOTE:
   Hold = hold button down
   
 Standard Controls While Blade is OFF
-  Turn On / Ignite Saber = Click PWR
+  Turn On / Ignite Saber* = Click PWR
+    *If FETT263_MOTION_WAKE_POWER_BUTTON defined first Click will Wake up motion detection and boot sound will play
   Turn On / Ignite Saber (Muted) = Double Click PWR
   Change Preset (one at a time*) = Click AUX
     *if pointing down will go to previous
@@ -476,6 +477,10 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   MOTION_TIMEOUT 60 * 15 * 1000
   This extends the motion timeout to 15 minutes to allow gesture ignition to remain active
   Increase/decrease the "15" value as needed
+  
+  FETT263_MOTION_WAKE_POWER_BUTTON
+  Enables a click on POWER Button to Wake Up Gestures after MOTION_TIMEOUT without igniting blade.  
+  Saber will play boot sound and gestures will be active.
   
   FETT263_QUOTE_PLAYER_START_ON
   This will set Force / Quote Player to play Quote by default (if in font)
@@ -4303,10 +4308,12 @@ SaberFett263Buttons() : PropBase() {}
         }
         return false;
 
+#ifndef FETT263_MOTION_WAKE_POWER_BUTTON
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
         SaberBase::RequestMotion();
         saber_off_time_millis_ = millis();
         return true;
+#endif
 
 #if NUM_BUTTONS == 1
 // 1 Button Specific (based on SA22C's prop)
@@ -4315,7 +4322,18 @@ SaberFett263Buttons() : PropBase() {}
           if (menu_) {
             MenuChoice();
             return true;
-          } else {
+#ifdef FETT263_MOTION_WAKE_POWER_BUTTON
+          } else if (!SaberBase::MotionRequested()) {
+            SaberBase::RequestMotion();
+            saber_off_time_millis_ = millis();
+            if (SFX_boot) {
+              hybrid_font.PlayCommon(&SFX_boot);
+	    } else {
+              sound_library_.SayUp();
+	    }
+            return true;
+#endif
+	  } else {
             DoIgnition();
           }
           return true;
@@ -4646,6 +4664,16 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) {
           MenuChoice();
           return true;
+#ifdef FETT263_MOTION_WAKE_POWER_BUTTON
+        } else if (!SaberBase::MotionRequested()) {
+            SaberBase::RequestMotion();
+            saber_off_time_millis_ = millis();
+            if (SFX_boot) {
+              hybrid_font.PlayCommon(&SFX_boot);
+	    } else {
+              sound_library_.SayUp();
+	    }
+#endif
         } else {
           DoIgnition();
         }
