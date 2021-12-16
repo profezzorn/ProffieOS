@@ -4323,17 +4323,17 @@ SaberFett263Buttons() : PropBase() {}
             MenuChoice();
             return true;
 #ifdef FETT263_MOTION_WAKE_POWER_BUTTON
-          } else if (!SaberBase::MotionRequested()) {
+          } else if (millis() - saber_off_time_millis_ > MOTION_TIMEOUT) {
             SaberBase::RequestMotion();
             saber_off_time_millis_ = millis();
             if (SFX_boot) {
               hybrid_font.PlayCommon(&SFX_boot);
-	    } else {
+            } else {
               sound_library_.SayUp();
-	    }
+            }
             return true;
 #endif
-	  } else {
+          } else {
             DoIgnition();
           }
           return true;
@@ -4665,14 +4665,15 @@ SaberFett263Buttons() : PropBase() {}
           MenuChoice();
           return true;
 #ifdef FETT263_MOTION_WAKE_POWER_BUTTON
-        } else if (!SaberBase::MotionRequested()) {
-            SaberBase::RequestMotion();
-            saber_off_time_millis_ = millis();
-            if (SFX_boot) {
-              hybrid_font.PlayCommon(&SFX_boot);
-	    } else {
-              sound_library_.SayUp();
-	    }
+        } else if (millis() - saber_off_time_millis_ > MOTION_TIMEOUT) {
+          SaberBase::RequestMotion();
+          saber_off_time_millis_ = millis();
+          if (SFX_boot) {
+            hybrid_font.PlayCommon(&SFX_boot);
+          } else {
+            sound_library_.SayUp();
+          }
+          return true;
 #endif
         } else {
           DoIgnition();
