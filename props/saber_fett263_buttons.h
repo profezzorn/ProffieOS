@@ -194,7 +194,8 @@ NOTE:
   Click + Long Click = do X clicks then do long click (so Double Click + Long Click would be click twice then do a long click)
 
 Standard Controls While Blade is OFF
-  Turn On / Ignite Saber = Click PWR
+  Turn On / Ignite Saber* = Click PWR
+    *If FETT263_MOTION_WAKE_POWER_BUTTON defined first Click will Wake up motion detection and boot sound will play  
   NEW Control! Turn On / Ignite Saber (Muted) = Click + Long Click PWR
   NEW Control! Start / Stop Tracks = Double Click PWR (pointing straight up)
   NEW! Track Player* = Double Click PWR (parallel or down)
