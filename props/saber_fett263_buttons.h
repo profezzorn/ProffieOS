@@ -4323,7 +4323,7 @@ SaberFett263Buttons() : PropBase() {}
             MenuChoice();
             return true;
 #ifdef FETT263_MOTION_WAKE_POWER_BUTTON
-          } else if (millis() - saber_off_time_millis_ > MOTION_TIMEOUT) {
+          } else if (!SaberBase::MotionRequested()) {
             SaberBase::RequestMotion();
             saber_off_time_millis_ = millis();
             if (SFX_boot) {
@@ -4665,7 +4665,7 @@ SaberFett263Buttons() : PropBase() {}
           MenuChoice();
           return true;
 #ifdef FETT263_MOTION_WAKE_POWER_BUTTON
-        } else if (millis() - saber_off_time_millis_ > MOTION_TIMEOUT) {
+        } else if (!SaberBase::MotionRequested()) {
           SaberBase::RequestMotion();
           saber_off_time_millis_ = millis();
           if (SFX_boot) {
@@ -5340,7 +5340,7 @@ SaberFett263Buttons() : PropBase() {}
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 2000ms
-        if (!menu_ && millis() > 2000) {
+        if (!menu_ && millis() - saber_off_time_millis_ > 1000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
