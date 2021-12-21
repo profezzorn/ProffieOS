@@ -21,7 +21,8 @@ NOTE:
   Hold = hold button down
   
 Standard Controls While Blade is OFF
-  Turn On / Ignite Saber = Click PWR
+  Turn On / Ignite Saber* = Click PWR
+    *If FETT263_MOTION_WAKE_POWER_BUTTON defined first Click will Wake up motion detection and boot sound will play
   Turn On / Ignite Saber (Muted) = Double Click PWR
   Change Preset (one at a time*) = Click AUX
     *if pointing down will go to previous
@@ -193,7 +194,8 @@ NOTE:
   Click + Long Click = do X clicks then do long click (so Double Click + Long Click would be click twice then do a long click)
 
 Standard Controls While Blade is OFF
-  Turn On / Ignite Saber = Click PWR
+  Turn On / Ignite Saber* = Click PWR
+    *If FETT263_MOTION_WAKE_POWER_BUTTON defined first Click will Wake up motion detection and boot sound will play  
   NEW Control! Turn On / Ignite Saber (Muted) = Click + Long Click PWR
   NEW Control! Start / Stop Tracks = Double Click PWR (pointing straight up)
   NEW! Track Player* = Double Click PWR (parallel or down)
@@ -476,6 +478,10 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   MOTION_TIMEOUT 60 * 15 * 1000
   This extends the motion timeout to 15 minutes to allow gesture ignition to remain active
   Increase/decrease the "15" value as needed
+  
+  FETT263_MOTION_WAKE_POWER_BUTTON
+  Enables a click on POWER Button to Wake Up Gestures after MOTION_TIMEOUT without igniting blade.  
+  Saber will play boot sound and gestures will be active.
   
   FETT263_QUOTE_PLAYER_START_ON
   This will set Force / Quote Player to play Quote by default (if in font)
@@ -4303,10 +4309,12 @@ SaberFett263Buttons() : PropBase() {}
         }
         return false;
 
+#ifndef FETT263_MOTION_WAKE_POWER_BUTTON
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
         SaberBase::RequestMotion();
         saber_off_time_millis_ = millis();
         return true;
+#endif
 
 #if NUM_BUTTONS == 1
 // 1 Button Specific (based on SA22C's prop)
@@ -4315,6 +4323,17 @@ SaberFett263Buttons() : PropBase() {}
           if (menu_) {
             MenuChoice();
             return true;
+#ifdef FETT263_MOTION_WAKE_POWER_BUTTON
+          } else if (!SaberBase::MotionRequested()) {
+            SaberBase::RequestMotion();
+            saber_off_time_millis_ = millis();
+            if (SFX_boot) {
+              hybrid_font.PlayCommon(&SFX_boot);
+            } else {
+              sound_library_.SayUp();
+            }
+            return true;
+#endif
           } else {
             DoIgnition();
           }
@@ -4646,6 +4665,17 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) {
           MenuChoice();
           return true;
+#ifdef FETT263_MOTION_WAKE_POWER_BUTTON
+        } else if (!SaberBase::MotionRequested()) {
+          SaberBase::RequestMotion();
+          saber_off_time_millis_ = millis();
+          if (SFX_boot) {
+            hybrid_font.PlayCommon(&SFX_boot);
+          } else {
+            sound_library_.SayUp();
+          }
+          return true;
+#endif
         } else {
           DoIgnition();
         }
@@ -5311,7 +5341,7 @@ SaberFett263Buttons() : PropBase() {}
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 2000ms
-        if (!menu_ && millis() > 2000) {
+        if (!menu_ && millis() - saber_off_time_millis_ > 1000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5333,7 +5363,7 @@ SaberFett263Buttons() : PropBase() {}
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 2000ms
-        if (!menu_ && millis() > 2000) {
+        if (!menu_ && millis() - saber_off_time_millis_ > 1000) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
