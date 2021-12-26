@@ -1,7 +1,7 @@
 // 0 Buttons:
 // Activate Muted - None
-// Activate blade - forward thrust movement or sharp swing movement (Swing On)
-// Play/Stop Music - None
+// Activate blade - forward or backward horizontal thrust movement or sharp swing movement (Swing On)
+// Play/Stop Music - hit the saber (perform clash event) holding the blade up while it's OFF
 // Turn the blade off - twist the saber like a bike handle holding the saber horizontally or blade down
 // Next Preset - slightly shake the saber like a soda can while blade is OFF (hold the saber vertically blade up in range up to 30 degrees tilt)
 // Previous Preset - None
@@ -10,7 +10,7 @@
 // Blaster Blocks - None
 // Force Effects - perform a "push" gesture holding the saber vertically or horizontally perpendicular to the arm
 // Enter Color Change mode - slightly shake the saber like a soda can while blade is ON (hold the saber vertically blade up in range up to 30 degrees tilt)
-// Confirm selected color and exit Color Change mode - twist the saber like a bike handle holding the saber horizontally or blade down
+// Confirm selected color and exit Color Change mode - while in Color Change mode hit the saber (perform clash event)
 // Melt - None
 // Lightning Block - None
 // Enter Multi-Block mode - None
@@ -240,6 +240,12 @@ SaberShtokButtons() : PropBase() {}
 
 // Auto Lockup Mode
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
+#ifndef DISABLE_COLOR_CHANGE
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+            ToggleColorChangeMode();
+            return true;
+          }
+#endif            
         if (!battle_mode_) return false;
         clash_impact_millis_ = millis();
         swing_blast_ = false;
@@ -247,8 +253,8 @@ SaberShtokButtons() : PropBase() {}
         SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
         auto_lockup_on_ = true;
         SaberBase::DoBeginLockup();
-        return true;
-
+        return true;          
+            
 // Next Preset
       case EVENTID(BUTTON_NONE, EVENT_SHAKE, MODE_OFF):
         if (fusor.angle1() >  M_PI / 4) {
@@ -317,7 +323,7 @@ SaberShtokButtons() : PropBase() {}
         }
         break;
 #endif
-
+            
 // Blaster Deflection
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
         swing_blast_ = false;
@@ -349,6 +355,13 @@ SaberShtokButtons() : PropBase() {}
           return true;
         }
         break;
+
+// Start or Stop Music Track
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF):
+         if (fusor.angle1() >  M_PI / 4) {
+        StartOrStopTrack();
+        }
+        return true; 
 
 
 
