@@ -199,7 +199,6 @@ public:                                                         \
 									\
   SABERFUN(Top, EFFECT_NONE, (uint64_t total_cycles), (total_cycles));	\
   SABERFUN(IsOn, EFFECT_NONE, (bool* on), (on));			\
-  SABERFUN(Message, EFFECT_NONE, (const char* msg), (msg));		\
   
   SABERBASEFUNCTIONS();
 

@@ -14,6 +14,8 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
  Voice Prompts and sounds required for certain features and should be included in /common folder or /font folder on SD card.
    Free prompts (courtesy of Brian Conner) available here: http://fredrik.hubbe.net/lightsaber/sound/
 
+ Track Player requires track files to be located in /font/tracks for font specific tracks or /common/tracks for universal (all presets) or a combination of the two.
+ 
 ---------- 2 / 3 Button Controls ----------
 NOTE: 
   Click = do short click
@@ -5340,8 +5342,8 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
-        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 2000ms
-        if (!menu_ && millis() - saber_off_time_millis_ > 1000) {
+        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot or motion restart for 1500ms
+        if (!menu_ && millis() - saber_off_time_millis_ > 1500) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5362,8 +5364,8 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
-        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 2000ms
-        if (!menu_ && millis() - saber_off_time_millis_ > 1000) {
+        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot or motion restart for 1500ms
+        if (!menu_ && millis() - saber_off_time_millis_ > 1500) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
