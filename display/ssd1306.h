@@ -20,6 +20,7 @@ enum Screen {
   SCREEN_PLI,
   SCREEN_IMAGE,  // also for animations
   SCREEN_OFF,
+  SCREEN_DEFAULT
 };
 
 template<int Width, class col_t>
@@ -354,7 +355,7 @@ public:
 	  // centered
           display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
-        next_screen_ = SCREEN_PLI;
+        next_screen_ = SCREEN_DEFAULT;
 	// STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
         return font_config.ProffieOSFontImageDuration;
       }
@@ -368,13 +369,15 @@ public:
 	}
 #endif	
         MountSDCard();
-	int count = 0;
-	while (!frame_available_) {
-	  if (count++ > 3) return 0;
-	  if (eof_) advance = false;
-	  advance_ = advance;
-	  lock_fb_ = false;
-	  scheduleFillBuffer();
+	{
+	  int count = 0;
+	  while (!frame_available_) {
+	    if (count++ > 3) return 0;
+	    if (eof_) advance = false;
+	    advance_ = advance;
+	    lock_fb_ = false;
+	    scheduleFillBuffer();
+	  }
 	}
 	lock_fb_ = true;
         if (eof_) {
@@ -402,8 +405,8 @@ public:
 	}
 
 	// STDERR << "MOVING ON...\n";
-
 	// This image/animation is done, time to choose the next thing to display.
+      case SCREEN_DEFAULT:
 	ShowDefault();
 	return FillFrameBuffer2(advance);
     }
@@ -431,6 +434,8 @@ public:
 	looped_idle_ = Tristate::Unknown;
 	if (IMG_font) {
 	  ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
+	} else if (prop.current_preset_name()) {
+	  SB_Message(prop.current_preset_name());
 	} else if (IMG_idle) {
 	  ShowFile(&IMG_idle, 3600000.0);
 	}
@@ -455,7 +460,7 @@ public:
     }
   }
 
-  void SB_Message(const char* text) override {
+  void SB_Message(const char* text) {
     strncpy(message_, text, sizeof(message_));
     message_[sizeof(message_)-1] = 0;
     SetScreenNow(SCREEN_MESSAGE);

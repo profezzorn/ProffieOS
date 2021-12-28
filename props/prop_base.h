@@ -119,6 +119,10 @@ public:
 #endif
   }
 
+  const char* current_preset_name() {
+    return current_preset_.name.get();
+  }
+
   bool NeedsPower() {
     if (SaberBase::IsOn()) return true;
     if (current_style() && current_style()->NoOnOff())
@@ -422,11 +426,13 @@ public:
     // fragmentation.
     FreeBladeStyles();
     current_preset_.SetPreset(preset_num);
-    if (announce) AnnouncePreset();
     AllocateBladeStyles();
     chdir(current_preset_.font.get());
     if (on) On();
-    if (announce) SaberBase::DoNewFont();
+    if (announce) {
+      STDOUT << "DISPLAY: " << current_preset_name() << "\n";
+      SaberBase::DoNewFont();
+    }
     TRACE(PROP, "end");
   }
 
@@ -690,11 +696,6 @@ public:
     ONCEPERBLADE(DEACTIVATE);
     SaveVolumeIfNeeded();
     FindBlade();
-  }
-
-  void SB_Message(const char* text) override {
-    STDOUT.print("DISPLAY: ");
-    STDOUT.println(text);
   }
 
   // Potentially called from interrupt!
@@ -1393,10 +1394,6 @@ public:
       rotate_presets();
       return true;
     }
-    if (!strcmp(cmd, "message") && arg) {
-      SaberBase::DoMessage(arg);
-      return true;
-    }
 
     if (!strcmp(cmd, "list_presets")) {
       CurrentPreset tmp;
@@ -1651,22 +1648,6 @@ public:
   virtual bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) = 0;
 
 private:
-  void AnnouncePreset() {
-    if (current_preset_.name.get()) {
-      SaberBase::DoMessage(current_preset_.name.get());
-    } else {
-      char message[64];
-      strcpy(message, "Preset: ");
-      itoa(current_preset_.preset_num + 1,
-           message + strlen(message), 10);
-      strcat(message, "\n");
-      strncat(message + strlen(message),
-              current_preset_.font.get(), sizeof(message) - strlen(message));
-      message[sizeof(message) - 1] = 0;
-      SaberBase::DoMessage(message);
-    }
-  }
-
   bool CommonIgnition() {
     if (IsOn()) return false;
     if (current_style() && current_style()->NoOnOff())
