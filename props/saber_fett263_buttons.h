@@ -14,6 +14,8 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
  Voice Prompts and sounds required for certain features and should be included in /common folder or /font folder on SD card.
    Free prompts (courtesy of Brian Conner) available here: http://fredrik.hubbe.net/lightsaber/sound/
 
+ Track Player requires track files to be located in /font/tracks for font specific tracks or /common/tracks for universal (all presets) or a combination of the two.
+ 
 ---------- 2 / 3 Button Controls ----------
 NOTE: 
   Click = do short click

@@ -20,6 +20,7 @@ enum Screen {
   SCREEN_PLI,
   SCREEN_IMAGE,  // also for animations
   SCREEN_OFF,
+  SCREEN_DEFAULT
 };
 
 template<int Width, class col_t>
@@ -280,19 +281,31 @@ public:
     return last_delay_ = FillFrameBuffer2(advance);
   }
 
+#ifdef USB_CLASS_MSC
+  bool EscapeIdleIfNeeded() {
+    return looped_idle_ == Tristate::True && USBD_Configured();
+  }
+#else
+  bool EscapeIdleIfNeeded() { return false; }
+#endif	
+
   void ShowDefault(bool ignore_lockup = false) {
     screen_ = SCREEN_PLI;
     t_ = 0;
     if (SaberBase::IsOn()) {
       if (SaberBase::Lockup() && IMG_lock && !ignore_lockup) {
-	ShowFile(&IMG_lock, 3600000.0);
+	SetFile(&IMG_lock, 3600000.0);
       } else if (looped_on_ == Tristate::True) {
-	ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+	SetFile(&IMG_on, font_config.ProffieOSOnImageDuration);
       }
     } else {
       // Off
       if (looped_idle_ != Tristate::False) {
-	ShowFile(&IMG_idle, 3600000.0);
+	if (EscapeIdleIfNeeded()) {
+	  SetMessage("usb");
+	} else {
+	  SetFile(&IMG_idle, 3600000.0);
+	}
       }
     }
   }
@@ -354,27 +367,27 @@ public:
 	  // centered
           display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
-        next_screen_ = SCREEN_PLI;
+        next_screen_ = SCREEN_DEFAULT;
 	// STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
         return font_config.ProffieOSFontImageDuration;
       }
 
       case SCREEN_IMAGE:
-#ifdef USB_CLASS_MSC
-	if (looped_idle_ == Tristate::True && current_effect_ == &IMG_idle && USBD_Configured()) {
+	if (EscapeIdleIfNeeded() && current_effect_ == &IMG_idle) {
 	  // We are idle-looping, and usb is connected. Time to stop.
-	  SB_Message("usb");
+	  SetMessage("usb");
 	  return FillFrameBuffer2(advance);
 	}
-#endif	
         MountSDCard();
-	int count = 0;
-	while (!frame_available_) {
-	  if (count++ > 3) return 0;
-	  if (eof_) advance = false;
-	  advance_ = advance;
-	  lock_fb_ = false;
-	  scheduleFillBuffer();
+	{
+	  int count = 0;
+	  while (!frame_available_) {
+	    if (count++ > 3) return 0;
+	    if (eof_) advance = false;
+	    advance_ = advance;
+	    lock_fb_ = false;
+	    scheduleFillBuffer();
+	  }
 	}
 	lock_fb_ = true;
         if (eof_) {
@@ -402,8 +415,8 @@ public:
 	}
 
 	// STDERR << "MOVING ON...\n";
-
 	// This image/animation is done, time to choose the next thing to display.
+      case SCREEN_DEFAULT:
 	ShowDefault();
 	return FillFrameBuffer2(advance);
     }
@@ -431,6 +444,9 @@ public:
 	looped_idle_ = Tristate::Unknown;
 	if (IMG_font) {
 	  ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
+	} else if (prop.current_preset_name()) {
+	  SetMessage(prop.current_preset_name());
+	  SetScreenNow(SCREEN_MESSAGE);
 	} else if (IMG_idle) {
 	  ShowFile(&IMG_idle, 3600000.0);
 	}
@@ -455,10 +471,10 @@ public:
     }
   }
 
-  void SB_Message(const char* text) override {
+  void SetMessage(const char* text) {
     strncpy(message_, text, sizeof(message_));
     message_[sizeof(message_)-1] = 0;
-    SetScreenNow(SCREEN_MESSAGE);
+    screen_ = SCREEN_MESSAGE;
   }
 
   void SB_Top(uint64_t total_cycles) override {
@@ -492,17 +508,24 @@ public:
     display_->Page();
   }
 
-  bool ShowFile(Effect* effect, float duration) {
+  bool SetFile(Effect* effect, float duration) {
     if (!*effect) return false;
     MountSDCard();
     eof_ = true;
     file_.Play(effect);
     frame_available_ = false;
     frame_count_ = 0;
-    SetScreenNow(SCREEN_IMAGE);
+    screen_ = SCREEN_IMAGE;
     eof_ = false;
     current_effect_ = effect;
     effect_display_duration_ = duration;
+    return true;
+  }
+
+  bool ShowFile(Effect* effect, float duration) {
+    if (SetFile(effect, duration)) {
+      SetScreenNow(SCREEN_IMAGE);
+    }
     return true;
   }
 
