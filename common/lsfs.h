@@ -318,6 +318,7 @@ public:
     return DOSFS.exists(path);
   }
   static bool Remove(const char* path) {
+    if (!mounted_) return false;
     return DOSFS.remove(path);
   }
   static File Open(const char* path) {
