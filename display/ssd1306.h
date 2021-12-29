@@ -414,9 +414,9 @@ public:
 	  }
 	}
 
-	// STDERR << "MOVING ON...\n";
 	// This image/animation is done, time to choose the next thing to display.
       case SCREEN_DEFAULT:
+	// STDERR << "MOVING ON...\n";
 	ShowDefault();
 	return FillFrameBuffer2(advance);
     }
@@ -504,7 +504,7 @@ public:
     // No need to wake the sleeping bear just to tell it to go to bed again.
     if (screen == SCREEN_OFF && screen_ == SCREEN_OFF) return;
     last_delay_ = t_ = 0;
-    screen_ = screen;
+    next_screen_ = screen_ = screen;
     display_->Page();
   }
 
@@ -898,6 +898,7 @@ public:
       while (millis_to_display_ == 0) {
 	YIELD();
 	millis_to_display_ = FillFrameBuffer();
+	// STDERR << "millis_to_display_ = " << millis_to_display_ << "\n";
       }
       frame_start_time_ = millis();
       lock_fb_ = true;
@@ -936,6 +937,7 @@ public:
       while (millis() - frame_start_time_ < millis_to_display_) {
 	if (next_millis_to_display_ == 0) {
 	  next_millis_to_display_ = FillFrameBuffer();
+	  // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
 	}
 	YIELD();
       }
