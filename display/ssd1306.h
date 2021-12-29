@@ -1,6 +1,10 @@
 #ifndef DISPLAY_SSD1306_H
 #define DISPLAY_SSD1306_H
 
+#ifndef OLED_OFF_TIME
+#define OLED_OFF_TIME font_config.ProffieOSFontImageDuration
+#endif
+
 #include "monoframe.h"
 
 // Images/animations
@@ -336,10 +340,10 @@ public:
         return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
-	if (!SaberBase::IsOn() && t_ > font_config.ProffieOSFontImageDuration) {
-	  screen_ = SCREEN_OFF;
-	  return FillFrameBuffer2(advance);
-	}
+        if (!IMG_idle && !SaberBase::IsOn() && t_ > OLED_OFF_TIME) {
+          screen_ = SCREEN_OFF;
+          return FillFrameBuffer2(advance);
+        }
 	Clear();
 	display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
 	if (HEIGHT > 32) {
