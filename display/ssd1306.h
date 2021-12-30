@@ -1,8 +1,8 @@
 #ifndef DISPLAY_SSD1306_H
 #define DISPLAY_SSD1306_H
 
-#ifndef OLED_OFF_TIME
-#define OLED_OFF_TIME font_config.ProffieOSFontImageDuration
+#ifndef PLI_OFF_TIME
+#define PLI_OFF_TIME font_config.ProffieOSFontImageDuration
 #endif
 
 #include "monoframe.h"
@@ -340,7 +340,7 @@ public:
         return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
-        if (!SaberBase::IsOn() && t_ > OLED_OFF_TIME) {
+        if (!SaberBase::IsOn() && t_ > PLI_OFF_TIME) {
           screen_ = SCREEN_OFF;
           return FillFrameBuffer2(advance);
         }
