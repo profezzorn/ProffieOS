@@ -43,6 +43,7 @@ public:
   virtual int FillFrameBuffer(bool advance) = 0;
   virtual void SetDisplay(Display<Width, col_t>* display) = 0;
   virtual Screen GetScreen() { return SCREEN_UNSET; }
+  virtual void usb_connected() = 0;
 };
 
 template<int Width, class col_t>
@@ -71,9 +72,8 @@ public:
   void SetDisplay(Display<Width, col_t>* display)  {
     a->SetDisplay(display);
   }
-  virtual Screen GetScreen() {
-    return a->GetScreen();
-  }
+  Screen GetScreen() override { return a->GetScreen(); }
+  void usb_connected() override { a->usb_connected(); }
   void Advance(int t) { t_ -= t; }
 };
 
@@ -102,7 +102,7 @@ public:
   int last_t_;
   DisplayHelper1<Width, col_t> operations_[sizeof...(OPERATIONS)];
   DisplayHelper2<Width, col_t, OPERATIONS ...> ops_;
-  
+
   DisplayHelper() {
     ops_.set(operations_);
   }
@@ -118,6 +118,11 @@ public:
       if (ret != SCREEN_UNSET) return ret;
     }
     return SCREEN_UNSET;
+  }
+  void usb_connected() override {
+    for (size_t i = 0; i < sizeof...(OPERATIONS); i++) {
+      operations_[i].usb_connected();
+    }
   }
 
   int FillFrameBuffer(bool advance) override {
@@ -291,7 +296,7 @@ public:
   }
 #else
   bool EscapeIdleIfNeeded() { return false; }
-#endif	
+#endif
 
   void ShowDefault(bool ignore_lockup = false) {
     screen_ = SCREEN_PLI;
@@ -313,7 +318,7 @@ public:
       }
     }
   }
-    
+
   int FillFrameBuffer2(bool advance) {
     switch (screen_) {
       default:
@@ -431,6 +436,14 @@ public:
       ShowDefault();
       last_delay_ = t_ = 0;
       display_->Page();
+    }
+  }
+
+  void usb_connected() override {
+    if (EscapeIdleIfNeeded() && current_effect_ == &IMG_idle) {
+      // We are idle-looping, and usb is connected. Time to stop.
+      SetMessage("usb");
+      SetScreenNow(SCREEN_MESSAGE);
     }
   }
 
@@ -660,7 +673,7 @@ public:
     int ypos = 0;
     uint32_t file_pos = 0;
   };
-  
+
   bool FillBuffer() override {
     if (eof_ && advance_) {
       // STDERR << "e&a\n";
@@ -703,7 +716,7 @@ public:
   bool IsActive() override {
     return screen_ == SCREEN_IMAGE;
   }
-  
+
   void CloseFiles() override {
     file_.Close();
   }
@@ -833,13 +846,21 @@ public:
     loop_counter_.Print();
     STDOUT.println("");
   }
-							 
+
   Screen GetScreen() override {
     return controller_->GetScreen();
   }
 
+
   void Loop() override {
-    STATE_MACHINE_BEGIN();
+#ifdef USB_CLASS_MSC
+    static bool last_connected = false;
+    bool connected = USBD_Configured();
+    if (connected && !last_connected) controller_->usb_connected();
+    last_connected = connected;
+#endif
+
+  STATE_MACHINE_BEGIN();
     while (!i2cbus.inited()) YIELD();
     while (!I2CLock()) YIELD();
 
@@ -993,7 +1014,7 @@ public:
       lock_fb_ = false;
     }
   }
-#endif  
+#endif
 
 private:
   int i;
