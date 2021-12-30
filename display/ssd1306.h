@@ -340,7 +340,7 @@ public:
         return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
-        if (!IMG_idle && !SaberBase::IsOn() && t_ > OLED_OFF_TIME) {
+        if (!SaberBase::IsOn() && t_ > OLED_OFF_TIME) {
           screen_ = SCREEN_OFF;
           return FillFrameBuffer2(advance);
         }
