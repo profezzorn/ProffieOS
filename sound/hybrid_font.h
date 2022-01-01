@@ -450,9 +450,9 @@ public:
           size_t total = SFX_poweroff.files_found() + SFX_pwroff.files_found();
           if (total) {
             if ((rand() % total) < SFX_poweroff.files_found()) {
-              PlayMonophonic(&SFX_poweroff, NULL);
+              PlayCommon(&SFX_poweroff);
             } else {
-              PlayMonophonic(&SFX_pwroff, NULL);
+              PlayCommon(&SFX_pwroff);
             }
 	    hum_fade_out_ = current_effect_length_;
           } else if (monophonic_hum_) {
