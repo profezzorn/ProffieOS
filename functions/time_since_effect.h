@@ -1,6 +1,16 @@
 #ifndef FUNCTIONS_TIME_SINCE_EFFECT_H
 #define FUNCTIONS_TIME_SINCE_EFFECT_H
 
+// Usage: TimeSinceEffect<>
+// Or: TimeSinceEffect<EFFECT>
+// EFFECT: effect type
+// return value: INTEGER
+//
+// TimeSinceEffect returns the number of milliseconds since a particular
+// effect occured.
+// When used as TimeSinceEffect<> inside a TransitionEffectL whose EFFECT is already specified, 
+// then it will automatically use the right effect.
+
 template<EffectType T = EFFECT_NONE>
 class TimeSinceEffect {
 public:
