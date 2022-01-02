@@ -448,12 +448,18 @@ public:
       case OFF_NORMAL:
         if (!SFX_in) {
           size_t total = SFX_poweroff.files_found() + SFX_pwroff.files_found();
+	  Effect* effect;
           if (total) {
             if ((rand() % total) < SFX_poweroff.files_found()) {
-              PlayMonophonic(&SFX_poweroff, NULL);
+	      effect = &SFX_poweroff;
             } else {
-              PlayMonophonic(&SFX_pwroff, NULL);
+	      effect = &SFX_pwroff;
             }
+	    if (monophonic_hum_) {
+	      PlayMonophonic(effect, NULL);
+	    } else {
+	      PlayPolyphonic(effect);
+	    }
 	    hum_fade_out_ = current_effect_length_;
           } else if (monophonic_hum_) {
             // No poweroff, just fade out...
