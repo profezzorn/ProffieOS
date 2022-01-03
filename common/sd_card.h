@@ -22,6 +22,9 @@ public:
       last_enabled_ = millis();
       return true;
     }
+#ifdef USB_CLASS_MSC
+    if (USBD_Configured()) return false;
+#endif
     uint32_t t = millis() - last_enabled_;
     if (t < 1000) return true;
     return false;
