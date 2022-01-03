@@ -448,14 +448,23 @@ public:
       case OFF_NORMAL:
         if (!SFX_in) {
           size_t total = SFX_poweroff.files_found() + SFX_pwroff.files_found();
+	  Effect* effect;
           if (total) {
             if ((rand() % total) < SFX_poweroff.files_found()) {
-              PlayMonophonic(&SFX_poweroff, NULL);
+	      effect = &SFX_poweroff;
             } else {
-              PlayMonophonic(&SFX_pwroff, NULL);
+	      effect = &SFX_pwroff;
             }
+	    if (monophonic_hum_) {
+	      state_ = STATE_OFF;
+	      PlayMonophonic(effect, NULL);
+	    } else {
+	      state_ = STATE_HUM_FADE_OUT;
+	      PlayPolyphonic(effect);
+	    }
 	    hum_fade_out_ = current_effect_length_;
           } else if (monophonic_hum_) {
+	    state_ = STATE_OFF;
             // No poweroff, just fade out...
             hum_player_->set_fade_time(0.2);
             hum_player_->FadeAndStop();
@@ -466,7 +475,6 @@ public:
           PlayPolyphonic(&SFX_in);
 	  hum_fade_out_ = 0.2;
         }
-	state_ = monophonic_hum_ ? STATE_OFF : STATE_HUM_FADE_OUT;
 	check_postoff_ = !!SFX_pstoff;
         break;
       case OFF_BLAST:

@@ -1,6 +1,10 @@
 #ifndef DISPLAY_SSD1306_H
 #define DISPLAY_SSD1306_H
 
+#ifndef PLI_OFF_TIME
+#define PLI_OFF_TIME font_config.ProffieOSFontImageDuration
+#endif
+
 #include "monoframe.h"
 
 // Images/animations
@@ -39,6 +43,7 @@ public:
   virtual int FillFrameBuffer(bool advance) = 0;
   virtual void SetDisplay(Display<Width, col_t>* display) = 0;
   virtual Screen GetScreen() { return SCREEN_UNSET; }
+  virtual void usb_connected() = 0;
 };
 
 template<int Width, class col_t>
@@ -67,9 +72,8 @@ public:
   void SetDisplay(Display<Width, col_t>* display)  {
     a->SetDisplay(display);
   }
-  virtual Screen GetScreen() {
-    return a->GetScreen();
-  }
+  Screen GetScreen() override { return a->GetScreen(); }
+  void usb_connected() override { a->usb_connected(); }
   void Advance(int t) { t_ -= t; }
 };
 
@@ -98,7 +102,7 @@ public:
   int last_t_;
   DisplayHelper1<Width, col_t> operations_[sizeof...(OPERATIONS)];
   DisplayHelper2<Width, col_t, OPERATIONS ...> ops_;
-  
+
   DisplayHelper() {
     ops_.set(operations_);
   }
@@ -114,6 +118,11 @@ public:
       if (ret != SCREEN_UNSET) return ret;
     }
     return SCREEN_UNSET;
+  }
+  void usb_connected() override {
+    for (size_t i = 0; i < sizeof...(OPERATIONS); i++) {
+      operations_[i].usb_connected();
+    }
   }
 
   int FillFrameBuffer(bool advance) override {
@@ -287,7 +296,7 @@ public:
   }
 #else
   bool EscapeIdleIfNeeded() { return false; }
-#endif	
+#endif
 
   void ShowDefault(bool ignore_lockup = false) {
     screen_ = SCREEN_PLI;
@@ -309,7 +318,7 @@ public:
       }
     }
   }
-    
+
   int FillFrameBuffer2(bool advance) {
     switch (screen_) {
       default:
@@ -336,10 +345,10 @@ public:
         return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
-	if (!SaberBase::IsOn() && t_ > font_config.ProffieOSFontImageDuration) {
-	  screen_ = SCREEN_OFF;
-	  return FillFrameBuffer2(advance);
-	}
+        if (!SaberBase::IsOn() && t_ > PLI_OFF_TIME) {
+          screen_ = SCREEN_OFF;
+          return FillFrameBuffer2(advance);
+        }
 	Clear();
 	display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
 	if (HEIGHT > 32) {
@@ -414,9 +423,9 @@ public:
 	  }
 	}
 
-	// STDERR << "MOVING ON...\n";
 	// This image/animation is done, time to choose the next thing to display.
       case SCREEN_DEFAULT:
+	// STDERR << "MOVING ON...\n";
 	ShowDefault();
 	return FillFrameBuffer2(advance);
     }
@@ -427,6 +436,14 @@ public:
       ShowDefault();
       last_delay_ = t_ = 0;
       display_->Page();
+    }
+  }
+
+  void usb_connected() override {
+    if (EscapeIdleIfNeeded() && current_effect_ == &IMG_idle) {
+      // We are idle-looping, and usb is connected. Time to stop.
+      SetMessage("usb");
+      SetScreenNow(SCREEN_MESSAGE);
     }
   }
 
@@ -504,7 +521,7 @@ public:
     // No need to wake the sleeping bear just to tell it to go to bed again.
     if (screen == SCREEN_OFF && screen_ == SCREEN_OFF) return;
     last_delay_ = t_ = 0;
-    screen_ = screen;
+    next_screen_ = screen_ = screen;
     display_->Page();
   }
 
@@ -656,7 +673,7 @@ public:
     int ypos = 0;
     uint32_t file_pos = 0;
   };
-  
+
   bool FillBuffer() override {
     if (eof_ && advance_) {
       // STDERR << "e&a\n";
@@ -699,7 +716,7 @@ public:
   bool IsActive() override {
     return screen_ == SCREEN_IMAGE;
   }
-  
+
   void CloseFiles() override {
     file_.Close();
   }
@@ -829,13 +846,21 @@ public:
     loop_counter_.Print();
     STDOUT.println("");
   }
-							 
+
   Screen GetScreen() override {
     return controller_->GetScreen();
   }
 
+
   void Loop() override {
-    STATE_MACHINE_BEGIN();
+#ifdef USB_CLASS_MSC
+    static bool last_connected = false;
+    bool connected = USBD_Configured();
+    if (connected && !last_connected) controller_->usb_connected();
+    last_connected = connected;
+#endif
+
+  STATE_MACHINE_BEGIN();
     while (!i2cbus.inited()) YIELD();
     while (!I2CLock()) YIELD();
 
@@ -898,6 +923,7 @@ public:
       while (millis_to_display_ == 0) {
 	YIELD();
 	millis_to_display_ = FillFrameBuffer();
+	// STDERR << "millis_to_display_ = " << millis_to_display_ << "\n";
       }
       frame_start_time_ = millis();
       lock_fb_ = true;
@@ -936,6 +962,7 @@ public:
       while (millis() - frame_start_time_ < millis_to_display_) {
 	if (next_millis_to_display_ == 0) {
 	  next_millis_to_display_ = FillFrameBuffer();
+	  // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
 	}
 	YIELD();
       }
@@ -987,7 +1014,7 @@ public:
       lock_fb_ = false;
     }
   }
-#endif  
+#endif
 
 private:
   int i;
