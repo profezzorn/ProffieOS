@@ -1498,7 +1498,9 @@ SaberFett263Buttons() : PropBase() {}
     uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(N), 3);
     ONCEPERBLADE(USES_RGB_ARG)
     if (!uses_rgb_arg) {
+#ifndef DISABLE_COLOR_CHANGE
       ToggleColorChangeMode();
+#endif
     } else {
       bool handles_color_change;
     #define USES_COLOR_CHANGE(N) \
@@ -1517,7 +1519,9 @@ SaberFett263Buttons() : PropBase() {}
         dial_ = -1;
         hybrid_font.PlayCommon(&SFX_ccbegin);
       } else {
+#ifndef DISABLE_COLOR_CHANGE
         ToggleColorChangeMode();
+#endif
       }
     }	  
   }
@@ -2166,10 +2170,12 @@ SaberFett263Buttons() : PropBase() {}
 
   // If Color Zoom mode is active save NewColor and end ShowColor style
   bool EndColorZoom() {
+#ifndef DISABLE_COLOR_CHANGE
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_ZOOMED) {
       ToggleColorChangeMode();
       return true;
     }
+#endif
     switch(color_mode_) {
       case ZOOM_COLOR:
       case EDIT_COLOR:
@@ -2246,10 +2252,12 @@ SaberFett263Buttons() : PropBase() {}
           break;
         case EDIT_COLORS:
           if (style_parser.MaxUsedArgument(current_preset_.GetStyle(1)) == 0) {
+#ifndef DISABLE_COLOR_CHANGE
             menu_type_ = MENU_COLOR;
             sound_library_.SaySelect();
             variation_revert_ = SaberBase::GetCurrentVariation();
             ToggleColorChangeMode();
+#endif
             break;
           } else {
 #if NUM_BLADES == 1
@@ -3778,8 +3786,10 @@ SaberFett263Buttons() : PropBase() {}
       }
       case MENU_COLOR:
         menu_type_ = MENU_TOP;
+#ifndef DISABLE_COLOR_CHANGE
         SaberBase::SetVariation(variation_revert_);
         ToggleColorChangeMode();
+#endif
         MenuCancel();
         break;
       case MENU_COLOR_SUB:
@@ -4944,11 +4954,13 @@ SaberFett263Buttons() : PropBase() {}
         } else {
           // Avoid the base and the very tip.
           // TODO: Make blast only appear on one blade!
+#ifndef DISABLE_COLOR_CHANGE
           if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
             SaberBase::SetVariation(0);
             ToggleColorChangeMode();
             return true;
           }
+#endif
           if (color_mode_ == CC_COLOR_LIST) {
             color_mode_ = NONE;
             show_color_all_.Stop();
