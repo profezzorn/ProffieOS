@@ -1574,7 +1574,7 @@ SaberFett263Buttons() : PropBase() {}
       restart_ = true;
       restart_millis_ = millis();
     }
-    if (restart_ && (int)(millis() - restart_millis_) > calc_ + 1000) {
+    if (restart_ && (int)(millis() - restart_millis_) > ignite_time_ + 1000) {
       restart_ = false;
       FastOn();
     }
@@ -3660,7 +3660,11 @@ SaberFett263Buttons() : PropBase() {}
         if (SaberBase::IsOn()) {
           calc_ += direction;
           if (calc_ > 32768) calc_ = 0;
-          if (calc_ < 0) calc_ = 32768;
+          if (calc_ < 0) {
+            calc_ = 0;
+            sound_library_.SayMinimum();
+            break;
+          }
           SetInOut();
           sound_library_.SayOption();
           sound_library_.SayNumber(calc_, SAY_WHOLE);

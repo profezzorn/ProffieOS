@@ -14,6 +14,13 @@
 #define SCOPED_PROFILER() do { } while(0)
 #define NUM_BLADES 1
 
+// clamp(x, a, b) makes sure that x is between a and b.
+float clamp(float x, float a, float b) {
+  if (x < a) return a;
+  if (x > b) return b;
+  return x;
+}
+
 struct CONFIG { struct Preset* presets; size_t num_presets;};
 CONFIG preset = { 0,0 };
 CONFIG* current_config = &preset;
@@ -114,6 +121,9 @@ Monitoring monitor;
 #include "blinking.h"
 #include "clash.h"
 #include "color_cycle.h"
+#include "edit_mode.h"
+#include "remap.h"
+#include "stripes.h"
 #include "../transitions/base.h"
 #include "../transitions/join.h"
 #include "../transitions/wipe.h"
@@ -121,10 +131,14 @@ Monitoring monitor;
 #include "../transitions/concat.h"
 #include "../transitions/fade.h"
 #include "../transitions/instant.h"
+#include "../transitions/random.h"
 #include "../functions/blade_angle.h"
 #include "../functions/twist_angle.h"
 #include "../functions/swing_speed.h"
 #include "../functions/wavlen.h"
+#include "../functions/center_dist.h"
+#include "../functions/effect_position.h"
+#include "../functions/random.h"
 #include "mix.h"
 #include "strobe.h"
 #include "hump_flicker.h"
@@ -518,6 +532,35 @@ void test_style4() {
   PrintTypeSize<
     Scale<BladeAngle<>,Scale<BladeAngle<0,16000>,Int<10000>,Int<30000>>,Int<10000>>
     > t5;
+}
+
+void TestCompileStyle() {
+  TestStyle<Layers<
+    Blue,
+    MultiTransitionEffectL<
+      TrRandom<
+        TrConcat<
+          TrInstant, AlphaL<RgbArg<BLAST_COLOR_ARG, Rgb<255, 255, 255>>,
+                            Bump<Int<16384>, Int<6000>>>,
+          TrFade<50>, AlphaL<RgbArg<BLAST_COLOR_ARG, Rgb<255, 255, 255>>, Int<0>>,
+          TrWaveX<
+            Remap<
+              CenterDistF<EffectPosition<>>,
+              Stripes<1500, -2000, RgbArg<BLAST_COLOR_ARG, Rgb<255, 255, 255>>,
+                      Mix<Int<2096>, Black,
+                          RgbArg<BLAST_COLOR_ARG, Rgb<255, 255, 255>>>>>,
+            Int<160>, Int<100>, Int<300>, EffectPosition<>>>,
+        TrConcat<TrInstant,
+                 AlphaL<RgbArg<BLAST_COLOR_ARG, Rgb<255, 255, 255>>,
+                        Bump<EffectPosition<>, Scale<EffectRandomF<EFFECT_BLAST>,
+                                                     Int<7000>, Int<10000>>>>,
+                 TrFade<300>>,
+        TrWaveX<RgbArg<BLAST_COLOR_ARG, Rgb<255, 255, 255>>,
+                Scale<EffectRandomF<EFFECT_BLAST>, Int<100>, Int<400>>, Int<100>,
+                Scale<EffectRandomF<EFFECT_BLAST>, Int<100>, Int<400>>,
+                Scale<EffectRandomF<EFFECT_BLAST>, Int<28000>, Int<8000>>>>,
+      EFFECT_BLAST>,
+    InOutTrL<TrWipe<300>, TrWipeIn<500>>>> t1;
 }
 
 void testGetArg(const char* str, int arg, const char* expected) {
