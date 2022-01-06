@@ -111,10 +111,11 @@ private:
 class PropBase : CommandParser, Looper, protected SaberBase {
 public:
   PropBase() : CommandParser() {}
-  BladeStyle* current_style(){
+  BladeStyle* current_style() {
 #if NUM_BLADES == 0
     return nullptr;
 #else
+    if (!current_config->blade1) return nullptr;
     return current_config->blade1->current_style();
 #endif
   }
