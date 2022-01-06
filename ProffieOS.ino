@@ -16,14 +16,14 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
--------------------------------------------------------------------
-You can have multiple configuration files, and specify which one
-to use here by removing the comment slashes at the beginning.
-**NOTE** Only ONE line should be left uncommented at a time!
-Add the slashes to any that you are not uploading.
 */
+
+/*-------------------------------------------------------------------
+-  You can have multiple configuration files, and specify which one -
+-  to use here by removing the comment slashes at the beginning.    -
+-  **NOTE** Only ONE line should be left uncommented at a time!     -
+-  Add the slashes to any that you are not uploading.               -
+*/-------------------------------------------------------------------
 
 // #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h"
 
