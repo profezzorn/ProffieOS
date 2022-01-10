@@ -469,7 +469,10 @@ public:
             hum_player_->set_fade_time(0.2);
             hum_player_->FadeAndStop();
             hum_player_.Free();
-          }
+          } else {
+          state_ = STATE_HUM_FADE_OUT;
+          hum_fade_out_ = 0.2;
+        }
         } else {
           state_ = STATE_HUM_FADE_OUT;
           PlayPolyphonic(&SFX_in);
