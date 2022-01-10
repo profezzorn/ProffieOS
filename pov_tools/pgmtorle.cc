@@ -247,7 +247,7 @@ int main(int argc, char** argv) {
     while (blob.size() < pos + output.size()) {
       blob.push_back(output[blob.size() - pos]);
     }
-    offsets.push_back( std::make_pair<int, int>(pos, output.size()) );
+    offsets.push_back( std::pair<int, int>(pos, output.size()) );
   }
 
   printf("const unsigned char imagedata[] = {");
