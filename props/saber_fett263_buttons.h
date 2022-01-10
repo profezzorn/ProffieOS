@@ -1547,6 +1547,7 @@ SaberFett263Buttons() : PropBase() {}
         if (SaberBase::IsOn()) {
           rehearse_ = false;
           Off();
+          saber_off_time_millis_ = millis();
           SaveChoreo();
         }
         next_event_ = false;
@@ -5421,6 +5422,7 @@ SaberFett263Buttons() : PropBase() {}
         SelectRetractionSound();
 #endif  
         Off();
+        saber_off_time_millis_ = millis();
 #ifndef FETT263_BATTLE_MODE_ALWAYS_ON
         battle_mode_ = false;
 #endif
@@ -5621,7 +5623,7 @@ private:
   uint32_t clash_impact_millis_; // Clash timer
   uint32_t last_push_millis_; // Last Push (to prevent gesture spamming)
   uint32_t last_blast_millis_; // Last Blast (for Battle Mode Multi-Blast detection)
-  uint32_t saber_off_time_millis_; // Off timer
+  uint32_t saber_off_time_millis_ = 2100; // Off timer
   uint32_t restart_millis_; // Used to time restarts to show preon timing.
   ClashType clash_type_ = CLASH_NONE;
   MenuType menu_type_ = MENU_TOP;
