@@ -58,14 +58,15 @@ class MultiTransitionEffectL {
 public:
   MultiTransitionEffectL() { for (size_t i = 0; i < N; i++) run_[i] = false; }
 
-void run(BladeBase* blade) {
-    for (size_t i = 0; i < N; i++) 
-    if (effect_.DetectScoped(blade)) {
-      transitions_[pos_].begin();
-      run_[pos_] = true;
-      effects_[pos_] = last_detected_blade_effect;
-      pos_++;
-      if (pos_ >= N) pos_ = 0;
+  void run(BladeBase* blade) {
+    for (size_t i = 0; i < N; i++) {
+      if (effect_.DetectScoped(blade)) {
+	transitions_[pos_].begin();
+	run_[pos_] = true;
+	effects_[pos_] = last_detected_blade_effect;
+	pos_++;
+	if (pos_ >= N) pos_ = 0;
+      }
     }
     for (size_t i = 0; i < N; i++) {
       if (run_[i]) {
