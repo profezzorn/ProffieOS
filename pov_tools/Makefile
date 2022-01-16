@@ -1,4 +1,4 @@
-ALL: image.h image_pgm.h
+ALL: image.h image_pgm.h preview.png
 
 image.h: pnmtorle pnmwindshieldwiper 1024px-Star_Wars_Logo.svg.png
 	pngtopnm 1024px-Star_Wars_Logo.svg.png | ./pnmwindshieldwiper | pnmscale -height 144 | ./pnmtorle >image.h
