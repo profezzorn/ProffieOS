@@ -13,7 +13,6 @@
 // dotstar APA102 pixels would be fast enough to do the effect
 // full justice, but I haven't tried that.
 
-#include "star_wars_logo_pov_data.h"
 
 void rle_decode(const unsigned char *input,
                  unsigned char *output,
