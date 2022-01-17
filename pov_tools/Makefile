@@ -14,16 +14,16 @@ image_8bit.h: pnmquantizedtorle pnmwindshieldwiper $(IMAGE)
 preview.png: pnmwindshieldwiper $(IMAGE)
 	pngtopnm $(IMAGE) | ./pnmwindshieldwiper | pnmscale -reduce 10 | pnmtopng >preview.png
 
-pnmtorle: pnmtorle.cc
+pnmtorle: pnmtorle.cc common.h rle.h
 	g++ -O2 pnmtorle.cc -o pnmtorle -g -lm
 
-pgmtorle: pgmtorle.cc
+pgmtorle: pgmtorle.cc common.h rle.h
 	g++ -O2 pgmtorle.cc -o pgmtorle -g -lm
 
-pnmquantizedtorle: pnmquantizedtorle.cc
+pnmquantizedtorle: pnmquantizedtorle.cc  common.h rle.h
 	g++ -O2 pnmquantizedtorle.cc -o pnmquantizedtorle -g -lm
 
-pnmwindshieldwiper: pnmwindshieldwiper.cc
+pnmwindshieldwiper: pnmwindshieldwiper.cc common.h
 	g++ -O2 pnmwindshieldwiper.cc -o pnmwindshieldwiper -g -lm
 
 1024px-Star_Wars_Logo.svg.png:
