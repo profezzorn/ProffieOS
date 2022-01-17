@@ -1,32 +1,29 @@
+OUTPUT ?= $(wildcard *.png)
+
 ALL: image.h image_pgm.h image_8bit.h preview.png
 
-IMAGE=1024px-Star_Wars_Logo.svg.png
+image.h: pnmtorle pnmwindshieldwiper *.png
+	pngtopnm *.png | ./pnmwindshieldwiper | pnmscale -height $(HEIGHT) | ./pnmtorle > ../styles/$(basename $(OUTPUT))_$(HEIGHT)_FC_POV_data.h
 
-image.h: pnmtorle pnmwindshieldwiper $(IMAGE)
-	pngtopnm $(IMAGE) | ./pnmwindshieldwiper | pnmscale -reduce 10 | ./pnmtorle >image.h
+image_pgm.h: pgmtorle pnmwindshieldwiper *.png
+	pngtopnm *.png | ./pnmwindshieldwiper | pnmscale -height $(HEIGHT) | ./pgmtorle > ../styles/$(basename $(OUTPUT))_$(HEIGHT)_SC_POV_data.h
 
-image_pgm.h: pgmtorle pnmwindshieldwiper $(IMAGE)
-	pngtopnm $(IMAGE) | ./pnmwindshieldwiper | pnmscale -reduce 10 | ./pgmtorle >image_pgm.h
+image_8bit.h: pnmquantizedtorle pnmwindshieldwiper *.png
+	pngtopnm *.png | ./pnmwindshieldwiper | pnmscale -height $(HEIGHT) | pnmquant 256 | ./pnmquantizedtorle > ../styles/$(basename $(OUTPUT))_$(HEIGHT)_8b_POV_data.h
 
-image_8bit.h: pnmquantizedtorle pnmwindshieldwiper $(IMAGE)
-	pngtopnm $(IMAGE) | ./pnmwindshieldwiper | pnmscale -reduce 10 | pnmquant 256 | ./pnmquantizedtorle >image_8bit.h
-
-preview.png: pnmwindshieldwiper $(IMAGE)
-	pngtopnm $(IMAGE) | ./pnmwindshieldwiper | pnmscale -reduce 10 | pnmtopng >preview.png
+preview.png: pnmwindshieldwiper *.png
+	pngtopnm *.png | ./pnmwindshieldwiper | pnmscale -height $(HEIGHT) | pnmtopng > $(basename $(OUTPUT))_$(HEIGHT)_preview.png
 
 pnmtorle: pnmtorle.cc
-	g++ -O2 pnmtorle.cc -o pnmtorle -g -lm
+	g++ -O2 pnmtorle.cc -o pnmtorle -lm
 
 pgmtorle: pgmtorle.cc
-	g++ -O2 pgmtorle.cc -o pgmtorle -g -lm
+	g++ -O2 pgmtorle.cc -o pgmtorle -lm
 
 pnmquantizedtorle: pnmquantizedtorle.cc
-	g++ -O2 pnmquantizedtorle.cc -o pnmquantizedtorle -g -lm
+	g++ -O2 pnmquantizedtorle.cc -o pnmquantizedtorle -lm
 
 pnmwindshieldwiper: pnmwindshieldwiper.cc
-	g++ -O2 pnmwindshieldwiper.cc -o pnmwindshieldwiper -g -lm
-
-1024px-Star_Wars_Logo.svg.png:
-	wget https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Star_Wars_Logo.svg/1024px-Star_Wars_Logo.svg.png
+	g++ -O2 pnmwindshieldwiper.cc -o pnmwindshieldwiper -lm
 
 
