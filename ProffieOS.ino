@@ -417,6 +417,10 @@ struct is_same_type { static const bool value = false; };
 template<class T>
 struct is_same_type<T, T> { static const bool value = true; };
 
+#define CONFIG_POV
+#include CONFIG_FILE
+#undef CONFIG_POV
+
 // This really ought to be a typedef, but it causes problems I don't understand.
 #define StyleAllocator class StyleFactory*
 
