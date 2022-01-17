@@ -268,5 +268,6 @@ int main(int argc, char** argv) {
 	 (int)(pow(brightest.r, 2.2) * 255.0),
 	 (int)(pow(brightest.g, 2.2) * 255.0),
 	 (int)(pow(brightest.b, 2.2) * 255.0));
+  printf("#define POV_DATA_HEIGHT (%ld)\n", image.ysize());
   fprintf(stderr, " %d bytes\n", (int)(offsets.size() * 2 + blob.size()));
 }
