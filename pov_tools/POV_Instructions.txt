@@ -1,0 +1,63 @@
+# EZ-POV 
+Use ProffieOS POV Tools to create Point-Of-View images that show when you swing the blade.  
+Under the hood:  
+pnmtorle - Converts a full-color image to hex data to be included in the code.  
+pgmtorle - Converts a single-color image to hex data to be included in the code.  
+pnmwindshieldwiper - Scales the image and bends it so that it will work on a swinging blade.  
+
+### Operating System Requirements:  
+### Windows (Windows 10 at time of writing):  
+
+Install Windows Subsystem for Linux  
+- Get Ubuntu App in the Microsoft Store. (required for “bash” and other commands). Download but don't choose open once it finishes installing. 
+https://www.microsoft.com/en-us/p/ubuntu/9nblggh4msv6?activetab=pivot:overviewtab
+- Type “Turn Windows features on or off” into the Windows search, open the top result, scroll down and enable "Windows Subsystem for Linux".
+- Click "OK", then click "Reboot Now". 
+- Open the Ubuntu app and wait while it says "Installing, this may take a few minutes...".
+- Choose a username and password. Once you get a green prompt (should be username+computername), close the window.
+- Type “WSL” into the windows search and click that cheeky penguin image.  
+
+Install g++ and netpbm
+- It goes without saying that you hit the return key after each of the following entries.
+- In the command line window that opened, type "sudo apt-get update". Enter your password.
+- When that finishes, type "sudo apt-get install build-essential gdb".
+- Answer the question with "y".
+- When that finishes, type "sudo apt install netpbm".
+- Answer the question with "y".
+
+### MacOS:
+- Install Homebrew https://treehouse.github.io/installation-guides/mac/homebrew
+- Install netpbm (In Terminal, type "brew install netpbm").  
+
+### Linux
+- Install netpbm http://netpbm.sourceforge.net/
+
+---------------------------------------------------------------------------------------
+
+### Make POV files
+
+- Put a .png image you want to convert into the pov_tools folder. (Simple, single color images work best at the moment)  
+If there are any spaces in your filenames, the script will change them to underscores for you before processing.
+If you have no images but want to try the sample Star Wars logo .png, run the script anyway and it will download and processed for you :)  
+
+Each time you make a new POV image, you must first clear out any existing .png files from the pov_tools folder.
+If you don't, a message will give you a chance to fix that, then try again.
+
+- Windows: Doubleclick "create_POV_data_files-Win.bat"  
+    (If Microsoft Defender pops up a warning, click "More Info" then "Run anyway")  
+    Mac or Linux: Doubleclick "create_POV_data_files"
+- Choose a height for the resulting image (should probably be the blade length)
+- Check the resulting *preview.png, where * is your original filename. It should look windshieldwiper warped.
+- The required data files *_POV_data.h have been written to the ProffieOS/styles folder.
+- Edit the `#include` line toward the top of ProffieOS/styles/pov.h to be the data file you want to use.
+- If you processed a Single Color source file, use the resulting *_SC_POV_data.h file.
+- If you processed a Full Color source file, then use the resulting *_FC_POV_data.h file.
+- Then you just use the POV blade style in a preset::
+```
+{ "Font", "tracks/track.wav",
+   &style_pov, 
+  "my_pov"},
+  ```
+
+Swing the blade in a steady movement to see the image in the air. A long-exposure capture showcases the result best.
+Enjoy!  (⌐■_■)

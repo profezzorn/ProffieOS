@@ -1,0 +1,41 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+clear
+echo ""
+files=$(ls 2>/dev/null -Ubad1 -- *.png | wc -l)
+find . -type f -name "* *" | while read file; do mv "$file" ${file// /_}; done
+
+if [ "$files" -lt 1 ]; then
+	echo "OOPS, no .png files found!"
+	echo ""
+	echo "Let's download an example for you to try :)"
+	echo "DOWNLOADING: Star Wars Logo example image.........."
+	echo ""
+	wget https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Star_Wars_Logo.svg/1024px-Star_Wars_Logo.svg.png&>/dev/null &
+	echo "Hit ENTER to process the image, or type q to exit."
+	read delay
+	if [ "$delay" = "q" ]; then exit
+	fi
+	echo ""
+	make HEIGHT=144
+	exit
+fi
+if [ "$files" -ge 2 ]; then
+	echo "OOPS, too many .png files found!"
+	echo ""
+	echo "There needs to be only ONE source .png image in the pov_tools folder."
+	echo "Please fix that then press ENTER to try again"
+	echo "or type 'q' to quit for now."
+	read fix
+	if [ "$fix" = "q" ]; then exit
+	else
+		exec "./create_POV_data_files"
+	fi
+fi
+echo""
+echo "What height do you want the resulting image to be?"
+echo "(This should probably be the blade length in pixels)"
+	echo "HEIGHT? :"
+	read HEIGHT
+	make HEIGHT=$HEIGHT
