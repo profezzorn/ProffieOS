@@ -4,7 +4,7 @@
 //  - Two buttons: one POW, one AUX.
 //  - A 144 pixel blade on LED 2&3 and data 1 pads.
 // Examples given for:
-// - POV data file inclusion
+// - POV data file define
 // - Custom prop file inclusion (Fett263) with suggested minimum of #defines.
 // - OS6 Edit Mode compliant blade style
 // - POV blade style
@@ -34,11 +34,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define FETT263_SAY_COLOR_LIST_CC   // recommended to enable spoken color names for Color List Color Change Mode
 #define DISABLE_BASIC_PARSER_STYLES // recommended for memory saving and using built-in styles for ProffieOS Workbench
 #define DISABLE_DIAGNOSTIC_COMMANDS // recommended for additional memory saving, will disable most Serial Monitor commands.
-
-#endif
-
-#ifdef CONFIG_POV
-#include "../styles/star_wars_logo_pov_data.h"
+#define POV_FILE_INCLUDE "image_data.h" // If no file provided like this, the default Star Wars logo will be used.
 #endif
 
 #ifdef CONFIG_PROP
