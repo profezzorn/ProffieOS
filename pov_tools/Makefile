@@ -4,13 +4,13 @@ IMAGE=1024px-Star_Wars_Logo.svg.png
 OPTIONS=
 
 image.h: pnmtorle pnmwindshieldwiper $(IMAGE)
-	anytopnm $(IMAGE) | ./pnmwindshieldwiper $(OPTIONS) | pnmscale -reduce 10 | ./pnmtorle >image.h
+	anytopnm $(IMAGE) | ./pnmwindshieldwiper $(OPTIONS) | pnmscale -reduce 10 | ./pnmtorle > ../styles/image.h
 
 image_pgm.h: pgmtorle pnmwindshieldwiper $(IMAGE)
-	anytopnm $(IMAGE) | ./pnmwindshieldwiper  $(OPTIONS) | pnmscale -reduce 10 | ./pgmtorle >image_pgm.h
+	anytopnm $(IMAGE) | ./pnmwindshieldwiper  $(OPTIONS) | pnmscale -reduce 10 | ./pgmtorle > ../styles/image_pgm.h
 
 image_8bit.h: pnmquantizedtorle pnmwindshieldwiper $(IMAGE)
-	anytopnm $(IMAGE) | ./pnmwindshieldwiper  $(OPTIONS) | pnmscale -reduce 10 | pnmquant 256 | ./pnmquantizedtorle >image_8bit.h
+	anytopnm $(IMAGE) | ./pnmwindshieldwiper  $(OPTIONS) | pnmscale -reduce 10 | pnmquant 256 | ./pnmquantizedtorle > ../styles/image_8bit.h
 
 preview.png: pnmwindshieldwiper $(IMAGE)
 	anytopnm $(IMAGE) | ./pnmwindshieldwiper  $(OPTIONS) | pnmscale -reduce 10 | pnmquant 256 | pnmtopng >preview.png
