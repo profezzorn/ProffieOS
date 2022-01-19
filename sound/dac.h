@@ -4,7 +4,35 @@
 #include "filter.h"
 
 #if defined(__IMXRT1062__)
-void set_audioClock(int nfact, int32_t nmult, uint32_t ndiv,  bool force = false); // sets PLL4
+#define IMXRT_CACHE_ENABLED 2 // 0=disabled, 1=WT, 2= WB
+
+#include <Arduino.h>
+#include <imxrt.h>
+
+FLASHMEM
+void my_set_audioClock(int nfact, int32_t nmult, uint32_t ndiv, bool force) // sets PLL4
+{
+	if (!force && (CCM_ANALOG_PLL_AUDIO & CCM_ANALOG_PLL_AUDIO_ENABLE)) return;
+
+	CCM_ANALOG_PLL_AUDIO = CCM_ANALOG_PLL_AUDIO_BYPASS | CCM_ANALOG_PLL_AUDIO_ENABLE
+			     | CCM_ANALOG_PLL_AUDIO_POST_DIV_SELECT(2) // 2: 1/4; 1: 1/2; 0: 1/1
+			     | CCM_ANALOG_PLL_AUDIO_DIV_SELECT(nfact);
+
+	CCM_ANALOG_PLL_AUDIO_NUM   = nmult & CCM_ANALOG_PLL_AUDIO_NUM_MASK;
+	CCM_ANALOG_PLL_AUDIO_DENOM = ndiv & CCM_ANALOG_PLL_AUDIO_DENOM_MASK;
+
+	CCM_ANALOG_PLL_AUDIO &= ~CCM_ANALOG_PLL_AUDIO_POWERDOWN;//Switch on PLL
+	while (!(CCM_ANALOG_PLL_AUDIO & CCM_ANALOG_PLL_AUDIO_LOCK)) {}; //Wait for pll-lock
+
+	const int div_post_pll = 1; // other values: 2,4
+	CCM_ANALOG_MISC2 &= ~(CCM_ANALOG_MISC2_DIV_MSB | CCM_ANALOG_MISC2_DIV_LSB);
+	if(div_post_pll>1) CCM_ANALOG_MISC2 |= CCM_ANALOG_MISC2_DIV_LSB;
+	if(div_post_pll>3) CCM_ANALOG_MISC2 |= CCM_ANALOG_MISC2_DIV_MSB;
+
+	CCM_ANALOG_PLL_AUDIO &= ~CCM_ANALOG_PLL_AUDIO_BYPASS;//Disable Bypass
+}
+
+
 #endif
 
 #ifdef USE_I2S
@@ -140,7 +168,7 @@ public:
     int c0 = C;
     int c2 = 10000;
     int c1 = C * c2 - (c0 * c2);
-    set_audioClock(c0, c1, c2);
+    my_set_audioClock(c0, c1, c2, false);
 
     // clear SAI1_CLK register locations
     CCM_CSCMR1 = (CCM_CSCMR1 & ~(CCM_CSCMR1_SAI1_CLK_SEL_MASK))
@@ -154,7 +182,11 @@ public:
                        & ~(IOMUXC_GPR_GPR1_SAI1_MCLK1_SEL_MASK))
       | (IOMUXC_GPR_GPR1_SAI1_MCLK_DIR | IOMUXC_GPR_GPR1_SAI1_MCLK1_SEL(0));
 
+#ifdef AUDIO_CONTROL_SGTL5000
+    // Most I2C boards don't need the MCLK, but the audio shield does.
     CORE_PIN23_CONFIG = 3;  //1:MCLK
+#endif
+    
     CORE_PIN21_CONFIG = 3;  //1:RX_BCLK
     CORE_PIN20_CONFIG = 3;  //1:RX_SYNC
 

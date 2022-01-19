@@ -7,7 +7,7 @@ enum NoLink { NOLINK = 17 };
 // Magic type for HF linking
 enum HFLink { HFLINK = 18 };
 
-#ifdef DEBUG
+#ifdef ENABLE_DEBUG
 
 #define CHECK_LL(T, START, NEXT) do {                                   \
   int len = 0;                                                          \
