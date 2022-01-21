@@ -124,7 +124,7 @@ public:
     // Rescale / transfer
     size_t num_leds = blade->num_leds();
     for (size_t i = 0; i < num_leds; i++) {
-#if POV_8BIT
+#ifdef POV_8BIT
       blade->set(i, pov_color_map[buffer[i * POV_DATA_HEIGHT / num_leds]]);
 #else
       blade->set(i, image_color * buffer[i * POV_DATA_HEIGHT / num_leds]);
