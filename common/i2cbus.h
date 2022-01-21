@@ -46,7 +46,9 @@ public:
     STDOUT.println("I2C pullups found, initializing...");
     Wire.begin();
     Wire.setClock(400000);
+#ifndef USE_TEENSY4
     Wire.setDefaultTimeout(I2C_TIMEOUT_MILLIS * 1000);
+#endif
     i2c_detected_ = true;
     Looper::Unlink();
 #else

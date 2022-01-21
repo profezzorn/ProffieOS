@@ -155,9 +155,14 @@
 
 #ifndef USE_TEENSY4
 #include <kinetis.h>
+#include <i2c_t3.h>
+#else
+// This is a hack to let me access the internal stuff..
+#define private public
+#include <Wire.h>
+#undef private
 #endif
 
-#include <i2c_t3.h>
 #include <SD.h>
 #include <SPI.h>
 

@@ -77,6 +77,7 @@ protected:
 private:
   static void ProcessAudioStreams() {
     ScopedCycleCounter cc(wav_interrupt_cycles);
+    Looper::CheckFrozen();
     if (sd_locked) {
       fill_buffers_pending_ = false;
       return;

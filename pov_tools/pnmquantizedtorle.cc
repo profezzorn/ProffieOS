@@ -31,29 +31,27 @@ int main(int argc, char** argv) {
   std::vector<unsigned char> blob;
   std::vector<std::pair<int, int> > offsets;
 
+  RGB<float> colormap[256];
+  int num_colors = 0;
+
   for (int x = 0; x < image.xsize(); x++) {
     std::vector<unsigned char> data;
     for (int y = image.ysize() - 1; y >= 0; y--) {
-      data.push_back((int)(pow(image.get(x, y).r, 2.2) * 255.0));
-      data.push_back((int)(pow(image.get(x, y).g, 2.2) * 255.0));
-      data.push_back((int)(pow(image.get(x, y).b, 2.2) * 255.0));
-#if 0
-      if (data[data.size()-1] != 0 || 
-	  data[data.size()-2] != 0 ||
-	  data[data.size()-3] != 0) {
-	static int cnt = 0;
-	if (cnt++ < 100) {
-	  fprintf(stderr, "%d %d %d %f %f %f\n",
-		  data[data.size()-3],
-		  data[data.size()-2],
-		  data[data.size()-1],
-		  image.get(x,y).r,
-		  image.get(x,y).g,
-		  image.get(x,y).b);
-		  
+      int c;
+      for (c = 0; c < num_colors; c++) {
+	if (image.get(x, y) == colormap[c]) {
+	  data.push_back(c);
+	  break;
 	}
       }
-#endif
+      if (c == num_colors) {
+	if (num_colors == 256) {
+	  fprintf(stderr, "Too many colors in image!\n");
+	  exit(1);
+	}
+	colormap[num_colors] = image.get(x, y);
+	num_colors++;
+      }
     }
     std::vector<unsigned char> output(data.size() * 2 + 2);
     int output_length = output.size();
@@ -85,7 +83,16 @@ int main(int argc, char** argv) {
     printf(" %d", offsets[i].first);
   }
   printf("};\n");
-  printf("#define POV_RGB\n");
+  printf("const Color16 pov_color_map[] = {");
+  for (int i = 0; i < num_colors; i++) {
+    if (i) printf(",");
+    printf("\n  Color16(%d, %d, %d)",
+	   (int)(pow(colormap[i].r, 2.2) * 65535.0),
+	   (int)(pow(colormap[i].g, 2.2) * 65535.0),
+	   (int)(pow(colormap[i].b, 2.2) * 65535.0));
+  }
+  printf("};\n");
+  printf("#define POV_8BIT\n");
   printf("#define POV_DATA_HEIGHT (%ld)\n", image.ysize());
-  fprintf(stderr, " %d bytes\n", (int)(offsets.size() * 2 + blob.size()));
+  fprintf(stderr, " %d bytes\n", (int)(offsets.size() * 2 + blob.size() + num_colors * 6));
 }
