@@ -13,7 +13,11 @@
 // dotstar APA102 pixels would be fast enough to do the effect
 // full justice, but I haven't tried that.
 
+#ifdef POV_INCLUDE_FILE
+#include POV_INCLUDE_FILE
+#else
 #include "star_wars_logo_pov_data.h"
+#endif
 
 void rle_decode(const unsigned char *input,
                  unsigned char *output,
@@ -104,23 +108,28 @@ public:
       return;
     }
 #ifdef POV_RGB
-    Color8 buffer[144];
+    Color8 buffer[POV_DATA_HEIGHT];
     int col = fraction * NELEM(imageoffsets);
     rle_decode(imagedata + imageoffsets[col],
-	       (unsigned char *)&buffer, 144 * 3);
+	       (unsigned char *)&buffer, POV_DATA_HEIGHT * 3);
     // Rescale / transfer
     size_t num_leds = blade->num_leds();
     for (size_t i = 0; i < num_leds; i++)
-      blade->set(i, buffer[i * 144 / num_leds]);
+      blade->set(i, buffer[i * POV_DATA_HEIGHT / num_leds]);
 #else
-    uint8_t buffer[144];
+    uint8_t buffer[POV_DATA_HEIGHT];
     int col = fraction * NELEM(imageoffsets);
     rle_decode(imagedata + imageoffsets[col],
-	       (unsigned char *)&buffer, 144);
+	       (unsigned char *)&buffer, POV_DATA_HEIGHT);
     // Rescale / transfer
     size_t num_leds = blade->num_leds();
-    for (size_t i = 0; i < num_leds; i++)
-      blade->set(i, image_color * buffer[i * 144 / num_leds]);
+    for (size_t i = 0; i < num_leds; i++) {
+#ifdef POV_8BIT
+      blade->set(i, pov_color_map[buffer[i * POV_DATA_HEIGHT / num_leds]]);
+#else
+      blade->set(i, image_color * buffer[i * POV_DATA_HEIGHT / num_leds]);
+#endif
+    } 
 #endif
 
     blade->allow_disable();

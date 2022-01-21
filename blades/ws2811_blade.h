@@ -17,6 +17,7 @@ public:
   virtual bool IsReadyForBeginFrame() = 0;
   virtual Color16 *BeginFrame() = 0;
   virtual bool IsReadyForEndFrame() = 0;
+  virtual void WaitUntilReadyForEndFrame();
   virtual void EndFrame() = 0;
   virtual int num_leds() const = 0;
   virtual Color8::Byteorder get_byteorder() const = 0;
@@ -35,13 +36,23 @@ DMAMEM uint32_t displayMemory[200];
 
 // Common
 DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4 + 1];
+#ifndef USE_TEENSY4
 #include "monopodws.h"
 #include "ws2811_serial.h"
 #define DefaultPinClass MonopodWSPin
+#else
+#include "teensy4_ws2811.h"
+#define DefaultPinClass OctopodWSPin
+#endif
 #define ProffieOS_yield() do { } while(0)
 
 #endif
 #include "spiled_pin.h"
+
+
+void WS2811PIN::WaitUntilReadyForEndFrame() {
+  while (!IsReadyForEndFrame()) ProffieOS_yield();
+}
 
 // WS2811-type blade implementation.
 // Note that this class does nothing when first constructed. It only starts
@@ -68,7 +79,7 @@ WS2811_Blade(WS2811PIN* pin,
       pin_->Enable(true);
       colors_ = pin_->BeginFrame();
       for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
-      while (!pin_->IsReadyForEndFrame()) ProffieOS_yield();
+      pin_->WaitUntilReadyForEndFrame();
       power_->Power(on);
       pin_->EndFrame();
       colors_ = pin_->BeginFrame();
@@ -84,7 +95,7 @@ WS2811_Blade(WS2811PIN* pin,
       for (int i = 0; i < pin_->num_leds(); i++) set(i, Color16());
       pin_->EndFrame();
       // Wait until it's sent before powering off.
-      while (!pin_->IsReadyForEndFrame())  ProffieOS_yield();
+      pin_->WaitUntilReadyForEndFrame();
       power_->Power(on);
       pin_->Enable(false);
       power_->DeInit();
@@ -124,7 +135,8 @@ WS2811_Blade(WS2811PIN* pin,
   }
   void set(int led, Color16 c) override {
     Color16* pos = colors_ + led;
-    if (pos >= color_buffer + NELEM(color_buffer)) pos -= NELEM(color_buffer);
+    if (colors_ >= color_buffer && colors_ < color_buffer + NELEM(color_buffer) &&
+	pos >= color_buffer + NELEM(color_buffer)) pos -= NELEM(color_buffer);
     *pos = c;
   }
   void allow_disable() override {
@@ -249,6 +261,12 @@ protected:
     }
     STATE_MACHINE_END();
   }
+
+#ifdef ENABLE_DEBUG
+  void LoopDebug() override {
+    STDERR << "stuck somewhere after: " << state_machine_.next_state_ << "\n";
+  }
+#endif
   
 private:
   // Loop should run.
@@ -271,6 +289,8 @@ private:
 };
 
 
+#ifndef WS2811_GBR
+
 #define WS2811_RGB      0       // The WS2811 datasheet documents this way
 #define WS2811_RBG      1
 #define WS2811_GRB      2       // Most LED strips are wired this way
@@ -281,6 +301,8 @@ private:
 #define WS2813_800kHz 0x20      // WS2813 are close to 800 kHz but has 300 us frame set delay
 #define WS2811_580kHz 0x30      // PL9823
 #define WS2811_ACTUALLY_800kHz 0x40      // Normally we use 740kHz instead of 800, this uses 800.
+
+#endif
 
 constexpr Color8::Byteorder ByteOrderFromFlags(int CONFIG) {
   return
@@ -295,7 +317,9 @@ constexpr int FrequencyFromFlags(int CONFIG) {
   return
     (CONFIG & 0xf0) == WS2811_800kHz ? 740000 :
     (CONFIG & 0xf0) == WS2811_400kHz ? 400000 :
+#ifdef WS2811_580kHz
     (CONFIG & 0xf0) == WS2811_580kHz ? 580000 :
+#endif
     800000;
 }
 

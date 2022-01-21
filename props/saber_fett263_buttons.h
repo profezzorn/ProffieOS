@@ -1547,6 +1547,7 @@ SaberFett263Buttons() : PropBase() {}
         if (SaberBase::IsOn()) {
           rehearse_ = false;
           Off();
+          saber_off_time_millis_ = millis();
           SaveChoreo();
         }
         next_event_ = false;
@@ -5421,6 +5422,7 @@ SaberFett263Buttons() : PropBase() {}
         SelectRetractionSound();
 #endif  
         Off();
+        saber_off_time_millis_ = millis();
 #ifndef FETT263_BATTLE_MODE_ALWAYS_ON
         battle_mode_ = false;
 #endif

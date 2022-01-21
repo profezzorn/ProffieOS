@@ -130,7 +130,7 @@ public:
     while (true) {
       while (!SA::Connected()) YIELD();
       if (!SA::AlwaysConnected()) {
-        STDOUT.println("Welcome to ProffieOS, type 'help' for more info.");
+        STDOUT << "Welcome to ProffieOS " << version << ". Type 'help' for more info.\n";
       }
 
       while (SA::Connected()) {
