@@ -43,8 +43,8 @@ const unsigned int maxLedsPerStrip = 144;
 Preset presets[] = {
 
 { "Fallen;common", "Fallen/tracks/JFO6.wav",
-/* © Fett263 FallenOrder (Primary Blade) OS6 Style
-fett263-proffieOS6-style-library.html#FallenOrder
+/* copyright Fett263 FallenOrder (Primary Blade) OS6 Style
+https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#FallenOrder
 OS6.5 v1.0
 This Style Contains 648 Unique Combinations
 Style Options:
@@ -83,8 +83,8 @@ StylePtr<Layers<
   TransitionEffectL<TrSelect<IntArg<PREON_OPTION_ARG,0>,TrInstant,TrConcat<TrFadeX<Mult<Int<8192>,WavLen<EFFECT_PREON>>>,AlphaL<HumpFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,10>,SmoothStep<IntArg<PREON_SIZE_ARG,2000>,Int<-4000>>>,TrFadeX<Mult<Int<8192>,WavLen<EFFECT_PREON>>>,AlphaL<HumpFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,15>,SmoothStep<Sum<Int<2000>,IntArg<PREON_SIZE_ARG,2000>>,Int<-4000>>>,TrFadeX<Mult<Int<8192>,WavLen<EFFECT_PREON>>>,AlphaL<HumpFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,20>,SmoothStep<Sum<Int<4000>,IntArg<PREON_SIZE_ARG,2000>>,Int<-4000>>>,TrBoingX<Mult<Int<8192>,WavLen<EFFECT_PREON>>,3>>,TrConcat<TrInstant,AlphaL<BrownNoiseFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,Int<30>>,SmoothStep<Scale<SlowNoise<Int<2000>>,IntArg<PREON_SIZE_ARG,2000>,Sum<IntArg<PREON_SIZE_ARG,2000>,Int<4000>>>,Int<-2000>>>,TrDelayX<WavLen<EFFECT_PREON>>>>,EFFECT_PREON>,
   TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>>>(),
 
-/* © Fett263 FallenOrder (Crystal Chamber) OS6 Style
-fett263-proffieOS6-style-library.html#FallenOrder
+/* copyright Fett263 FallenOrder (Crystal Chamber) OS6 Style
+https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#FallenOrder
 OS6.5 v1.0
 This Style Contains 72 Unique Combinations
 Style Options:
@@ -112,8 +112,8 @@ StylePtr<Layers<
 },
 
 { "Luke;common", "Luke/tracks/LukeTheme.wav",
-/* © Fett263 Static/Flicker (Primary Blade) OS6 Style
-fett263-proffieOS6-style-library.html#Static/Flicker
+/* copyright Fett263 Static/Flicker (Primary Blade) OS6 Style
+https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#Static/Flicker
 OS6.5 v1.0
 This Style Contains 1296 Unique Combinations
 Style Options:
@@ -154,8 +154,8 @@ StylePtr<Layers<
   TransitionEffectL<TrSelect<IntArg<PREON_OPTION_ARG,0>,TrInstant,TrConcat<TrFadeX<Mult<Int<8192>,WavLen<EFFECT_PREON>>>,AlphaL<HumpFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,10>,SmoothStep<IntArg<PREON_SIZE_ARG,2000>,Int<-4000>>>,TrFadeX<Mult<Int<8192>,WavLen<EFFECT_PREON>>>,AlphaL<HumpFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,15>,SmoothStep<Sum<Int<2000>,IntArg<PREON_SIZE_ARG,2000>>,Int<-4000>>>,TrFadeX<Mult<Int<8192>,WavLen<EFFECT_PREON>>>,AlphaL<HumpFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,20>,SmoothStep<Sum<Int<4000>,IntArg<PREON_SIZE_ARG,2000>>,Int<-4000>>>,TrBoingX<Mult<Int<8192>,WavLen<EFFECT_PREON>>,3>>,TrConcat<TrInstant,AlphaL<BrownNoiseFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,Int<30>>,SmoothStep<Scale<SlowNoise<Int<2000>>,IntArg<PREON_SIZE_ARG,2000>,Sum<IntArg<PREON_SIZE_ARG,2000>,Int<4000>>>,Int<-2000>>>,TrDelayX<WavLen<EFFECT_PREON>>>>,EFFECT_PREON>,
   TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>>>(),
 
-/* © Fett263 Static/Flicker (Crystal Chamber) OS6 Style
-fett263-proffieOS6-style-library.html#Static/Flicker
+/* copyright Fett263 Static/Flicker (Crystal Chamber) OS6 Style
+https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#Static/Flicker
 OS6.5 v1.0
 This Style Contains 144 Unique Combinations
 Style Options:
@@ -185,8 +185,8 @@ StylePtr<Layers<
 },
 
 { "Kylo;common", "Kylo/tracks/KyloTheme.wav",
-/* © Fett263 KyloRen (Primary Blade) OS6 Style
-fett263-proffieOS6-style-library.html#KyloRen
+/* copyright Fett263 KyloRen (Primary Blade) OS6 Style
+https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#KyloRen
 OS6.5 v1.0
 This Style Contains 324 Unique Combinations
 Style Options:
@@ -223,8 +223,8 @@ StylePtr<Layers<
   InOutTrL<TrSelect<IntArg<IGNITION_OPTION_ARG,0>,TrWipeX<IgnitionTime<300>>,TrWipeSparkTipX<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,IgnitionTime<300>>,TrWipeX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<IgnitionTime<300>,Int<16384>>,IgnitionTime<300>>>>,TrSelect<IntArg<RETRACTION_OPTION_ARG,0>,TrWipeInX<RetractionTime<0>>,TrWipeX<RetractionTime<0>>,TrWipeInX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<RetractionTime<0>,Int<16384>>,RetractionTime<0>>>>,Black>,
   TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>>>(),
 
-/* © Fett263 KyloRen (Crystal Chamber) OS6 Style
-fett263-proffieOS6-style-library.html#KyloRen
+/* copyright Fett263 KyloRen (Crystal Chamber) OS6 Style
+https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#KyloRen
 OS6.5 v1.0
 This Style Contains 72 Unique Combinations
 Style Options:
@@ -252,8 +252,8 @@ StylePtr<Layers<
 },
 
 { "Maul;common", "Maul/tracks/DuelofFates.wav",
-/* © Fett263 UnstableBlades (Primary Blade) OS6 Style
-fett263-proffieOS6-style-library.html#UnstableBlades
+/* copyright Fett263 UnstableBlades (Primary Blade) OS6 Style
+https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#UnstableBlades
 OS6.5 v1.0
 This Style Contains 162 Unique Combinations
 Base Style: Unstable Rage
@@ -288,8 +288,8 @@ StylePtr<Layers<
   InOutTrL<TrSelect<IntArg<IGNITION_OPTION_ARG,0>,TrWipeX<IgnitionTime<300>>,TrWipeSparkTipX<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,IgnitionTime<300>>,TrWipeX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<IgnitionTime<300>,Int<16384>>,IgnitionTime<300>>>>,TrSelect<IntArg<RETRACTION_OPTION_ARG,0>,TrWipeInX<RetractionTime<0>>,TrWipeX<RetractionTime<0>>,TrWipeInX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<RetractionTime<0>,Int<16384>>,RetractionTime<0>>>>,Black>,
   TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>>>(),
 
-/* © Fett263 UnstableBlades (Crystal Chamber) OS6 Style
-fett263-proffieOS6-style-library.html#UnstableBlades
+/* copyright Fett263 UnstableBlades (Crystal Chamber) OS6 Style
+https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#UnstableBlades
 OS6.5 v1.0
 This Style Contains 36 Unique Combinations
 Base Style: Unstable Rage
@@ -315,8 +315,8 @@ StylePtr<
 },
 
 { "Dark;common", "Dark/tracks/mars.wav",
-/* © Fett263 DarkSaber (Primary Blade) OS6 Style
-fett263-proffieOS6-style-library.html#DarkSaber
+/* copyright Fett263 DarkSaber (Primary Blade) OS6 Style
+https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#DarkSaber
 OS6.5 v1.0
 This Style Contains 162 Unique Combinations
 Base Style: Darksaber
@@ -351,8 +351,8 @@ StylePtr<Layers<
   InOutTrL<TrSelect<IntArg<IGNITION_OPTION_ARG,0>,TrWipeX<IgnitionTime<300>>,TrWipeSparkTipX<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,IgnitionTime<300>>,TrWipeX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<IgnitionTime<300>,Int<16384>>,IgnitionTime<300>>>>,TrSelect<IntArg<RETRACTION_OPTION_ARG,0>,TrWipeInX<RetractionTime<0>>,TrWipeX<RetractionTime<0>>,TrWipeInX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<RetractionTime<0>,Int<16384>>,RetractionTime<0>>>>,Black>,
   TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>>>(),
 
-/* © Fett263 DarkSaber (Crystal Chamber) OS6 Style
-fett263-proffieOS6-style-library.html#DarkSaber
+/* copyright Fett263 DarkSaber (Crystal Chamber) OS6 Style
+https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#DarkSaber
 OS6.5 v1.0
 This Style Contains 36 Unique Combinations
 Base Style: Darksaber
