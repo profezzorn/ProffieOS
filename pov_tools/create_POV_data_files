@@ -214,4 +214,5 @@ echo "Single color image data file:"
 echo "	ProffieOS/styles/"$sourcebase"_"$HEIGHT"_SC_POV_data.h"
 echo "256 color image data file:"
 echo "	ProffieOS/styles/"$sourcebase"_"$HEIGHT"_8b_POV_data.h"
+rm pnmtorle; rm pnmquantizedtorle; rm pgmtorle; rm pnmwindshieldwiper
 exit
