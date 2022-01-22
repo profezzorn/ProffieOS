@@ -1,20 +1,21 @@
-// This is a sample configuration file for use with OS6 and above.
-// This saber has:
-//  - Proffieboard V2.2.
-//  - Two buttons: one POW, one AUX.
-//  - A 144 pixel blade on LED 2&3 and data 1 pads.
-// Examples given for:
-// - POV data file define
-// - Custom prop file inclusion (Fett263) with suggested minimum of #defines.
-// - OS6 Edit Mode compliant blade style
-// - POV blade style
-//
-// More info on Edit Mode can be found here: 
-// https://fett263.s3.us-east-2.amazonaws.com/proffieOS6-edit-mode.html
-// More info on using POV can be found here:
-// https://github.com/profezzorn/ProffieOS/wiki/POV-(Point-Of-View)
-// If you have a saber similar to this one, make a copy and use the copy.
+/*
+This is a sample configuration file for use with OS6 and above.
+This saber has:
+ - Proffieboard V2.2.
+ - Two buttons: one POW, one AUX.
+ - A 144 pixel blade on LED 2&3 and data 1 pads.
+Examples given for:
+- POV data file define
+- Custom prop file inclusion (Fett263) with suggested minimum of #defines.
+- OS6 Edit Mode compliant blade style
+- POV blade style
 
+More info on Edit Mode can be found here: 
+https://fett263.s3.us-east-2.amazonaws.com/proffieOS6-edit-mode.html
+More info on using POV can be found here:
+https://github.com/profezzorn/ProffieOS/wiki/POV-(Persistance-Of-Vision)
+If you have a saber similar to this one, make a copy and use the copy.
+*/
 
 #ifdef CONFIG_TOP
 #include "proffieboard_v2_config.h"
