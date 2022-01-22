@@ -1,6 +1,6 @@
 
 # create_POV_data_files (script)
-Use ProffieOS POV Tools to create Point-Of-View images that show when you swing the blade. 
+Use ProffieOS POV Tools to create Persistence-Of-Vision images that show when you swing the blade. 
 This script utilizes the existing Makefile in the pov_tools folder.
 Images can be created without this script via command line by typing 'make'.
 Arguments may be provided as 'OPTIONS=--height=N  --length=N --offset=N'
