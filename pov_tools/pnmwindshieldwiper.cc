@@ -30,7 +30,7 @@ TooDee<RGB<float> > image;
 TooDee<RGB<float> > output;
 
 double scale = 0.0001;
-double len = 36.0;
+double len = 39.0;
 double base_len = 18.0;
 double height = base_len + len / 2.0;
 double max_angle = M_PI / 4.0;
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
 	fprintf(stderr, " -h N / --height=N  : Set height, defaults to 144.\n");
 	fprintf(stderr, " -w N / --width=N   : Set width, defaults to height * 3\n");
 	fprintf(stderr, " -s N / --scale=N   : Set oversampling scale, defaults to 10\n");
-	fprintf(stderr, " -l N / --length=N  : Set blade length, defauls to 36\n");
+	fprintf(stderr, " -l N / --length=N  : Set blade length, defauls to 39\n");
 	fprintf(stderr, " -o N / --offset=N  : Set fulcrum offset, defaulits to 18\n");
 	fprintf(stderr, " -d N / --degrees=N : Set wipe degrees, defaults to 90\n");
 	fprintf(stderr, " -f / --fill        : Scale image to fill entire wipe\n");
