@@ -11,6 +11,8 @@ preset=0
 pngcount=0
 wscount=0
 rename=0
+remove=0
+
 echo ""
 echo "Welcome! Let's make some POV images!"
 echo ""
@@ -61,19 +63,22 @@ if [ "$pngcount" -ge 2 ]; then
 	echo "Type q to quit."
 	read -p $'Press ENTER to start over.\n' fix
 	case $fix in
-		r) rm *preview*.png;
-			echo ""
-			echo "Files containing *preview* deleted if they existed"
-			# give user time to read message
-			read -n 1 -r -s -p $'Press any key to continue.\n'
-			exec "./create_POV_data_files";;
+		r) remove=1;;
 		q) exit;;
 		*) exec "./create_POV_data_files";;
 	esac
 fi
+if [[ $remove == 1 ]]; then
+	rm *preview*.png;
+	echo ""
+	echo "Files containing *preview* deleted if they existed"
+	# give user time to read message
+	read -n 1 -r -s -p $'Press any key to continue.\n'
+	exec "./create_POV_data_files"
+fi
 
 # if only one file, but has whitespace in file name, offer underscores
-if [ "$wscount" != 0 ]; then
+if [[ $wscount != 0 ]]; then
 	echo ""
 	echo "OOPS! Spaces found in .png image file name. That's not ideal. "
 	echo ""
