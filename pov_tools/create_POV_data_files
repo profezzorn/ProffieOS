@@ -137,7 +137,7 @@ while [[ $valid_option != 1 ]]; do
 		5) height_only=1; valid_option=1;;
 		6) valid_option=1;;
 #		7) ------ ADDITIONAL USER PRESETS CAN BE ADDED HERE LIKE THIS-------
-#		9) ------ or move 4 & 5 down to keep them all together -------------
+#		9) ------ or move 5 & 6 down to keep them all together -------------
 #       *) H is amount of pixels in your blade,
 #       *) L is the length of that blade in the unit of the distance of your choosing (most common inches or centimeters)
 #       *) O is offset - the distance (same unit as L) from the bottom of the blade to the fulcrum (e.g. the joint you are swinging with)
