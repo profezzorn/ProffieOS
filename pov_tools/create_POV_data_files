@@ -82,7 +82,7 @@ if [[ $wscount != 0 ]]; then
 	echo ""
 	echo "OOPS! Spaces found in .png image file name. That's not ideal. "
 	echo ""
-	echo "Type y to to automatically rename them with underscores,"
+	echo "Type y to automatically rename them with underscores,"
 	echo "type q to quit,"
 	read -p $'or press ENTER to start over..\n' us
 	case $us in
@@ -152,7 +152,7 @@ validinput=0
 while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
 	echo ""
 	read -p $'How many pixels are in your blade? (Press ENTER for default 144)\n' height
-	if [[ $height == "" ]]; then height=144 length=39 offset=18 validinput=1; echo "Default 144"
+	if [[ $height == "" ]]; then height=144 validinput=1; echo "Default 144"
 	elif [[ $height == "q" ]]; then exit
 	elif [[ $height -gt 576 ]]; then
 		echo "! That is likely impossible."
@@ -209,7 +209,7 @@ if [ $height_only != 1 ]; then
 	while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
         echo ""
         echo "How many "$units" distance from the bottom of the blade to the fulcrum?"
-        echo "The fulcrum is usually the swinging joint) (Press ENTER for default $offset_default) "
+        echo "The fulcrum is the pivot point. (Press ENTER for default $offset_default) "
 		read offset
 		if [[ $units == "inches" ]]; then max=30; else max=76; fi
 		if [[ $offset == "" ]]; then  offset=$offset_default validinput=1; echo "Default $offset_default"
