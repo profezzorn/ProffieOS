@@ -18,7 +18,7 @@ echo "Found these image files:"
 # get file names and quantity of existing .png files
 # check for whitespace in name
 for pngs in `find . -maxdepth 1 -type f -name "*.png"`; do
-	for strip in ${pngs[@]}; do	echo "${strip##*/}"; done
+	for strip in ${pngs[@]}; do echo "${strip##*/}"; done
 	pngcount=$((pngcount+1))
 	if [[ $pngs = *" "* ]]; then wscount=$((wscount+1)); fi
 done
@@ -98,7 +98,7 @@ echo ""
 echo "Using source image file: $pngname"
 echo ""
 
-# check for 'preview'in filename
+# check for 'preview' in filename
 if [[ $pngname == *"preview"* ]]; then
 	echo "OOPS! Source file name can not contain 'preview'."
 	echo "Please use a different file name."
@@ -124,20 +124,20 @@ while [[ $valid_option != 1 ]]; do
     echo "q - to quit"
 	read option
 	case $option in
-		"")	echo "! Some option is needed. Please try again"; echo "";;
-		1)	height=144 length=39 offset=18 HEIGHT=144 preset=1 valid_option=1;;
-		2)	height=97 length=63 offset=50 HEIGHT=97 preset=1 valid_option=1;;
-		3)	height=72 length=50 offset=15 HEIGHT=72 preset=1 valid_option=1;;
-		4)  height=72 length=50 offset=39 HEIGHT=72 preset=1 valid_option=1;;
-		5)  height_only=1; valid_option=1;;
-		6)  valid_option=1;;
+		"") echo "! Some option is needed. Please try again"; echo "";;
+		1) height=144 length=39 offset=18 HEIGHT=144 preset=1 valid_option=1;;
+		2) height=97 length=63 offset=50 HEIGHT=97 preset=1 valid_option=1;;
+		3) height=72 length=50 offset=15 HEIGHT=72 preset=1 valid_option=1;;
+		4) height=72 length=50 offset=39 HEIGHT=72 preset=1 valid_option=1;;
+		5) height_only=1; valid_option=1;;
+		6) valid_option=1;;
 #		7) ------ ADDITIONAL USER PRESETS CAN BE ADDED HERE LIKE THIS-------
-#		9)		 or move 4 & 5 down to keep them all together
+#		9) ------ or move 4 & 5 down to keep them all together -------------
 #       *) H is amount of pixels in your blade,
 #       *) L is the length of that blade in the unit of the distance of your choosing (most common inches or centimeters)
 #       *) O is offset - the distance (same unit as L) from the bottom of the blade to the fulcrum (e.g. the joint you are swinging with)
-		q)	exit;;
-		*)	echo ""
+		q) exit;;
+		*) echo ""
 			echo "! Not a valid option, Please try again,"
 			echo "or type q to quit. "; echo "";;
 	esac
@@ -170,19 +170,19 @@ if [ $height_only != 1 ]; then
         echo "What is your preferred unit of measuring distance? (i - inches, c - cm) "
         read pref
         case $pref in
-            "") echo "! Some option is needed. Please try again"; echo "";;
-            i)  calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144 * 100 / 254))e-3"); offset_default=18; validinput=1; units="inches"; echo "";;
-            c)  calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144))e-3"); offset_default=46; validinput=1; units="centimeters"; echo "";;
-            q) exit;;
-            *)  echo ""
-				echo "! Not a valid option, Please choose inches or cm,"
-				echo "or type q to quit. "; echo "";;
+		"") echo "! Some option is needed. Please try again"; echo "";;
+		i)  calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144 * 100 / 254))e-3"); offset_default=18; validinput=1; units="inches"; echo "";;
+		c)  calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144))e-3"); offset_default=46; validinput=1; units="centimeters"; echo "";;
+		q) exit;;
+		*)  echo ""
+		echo "! Not a valid option, Please choose inches or cm,"
+		echo "or type q to quit. "; echo "";;
         esac
     done
 
 	validinput=0
 	while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
-        echo ""
+		echo ""
 		echo "How many $units is your blade? (Press ENTER for calculated default $calc_len)" 
 		read length
 		if [[ $units == "inches" ]]; then max=48; else max=122; fi
@@ -194,7 +194,7 @@ if [ $height_only != 1 ]; then
 			echo ""
 		elif [[ $length =~ ^[0-9]{1,3}$ ]]; then validinput=1
 		else
-            echo ""
+			echo ""
 			echo "! Not a valid option, Please try again,"
 			echo "or type q to quit. "; echo ""
 		fi
@@ -215,14 +215,14 @@ if [ $height_only != 1 ]; then
 			echo ""
 		elif [[ $length =~ ^[0-9]{1,3}$ ]]; then validinput=1
 		else
-            echo ""
+			echo ""
 			echo "! Not a valid option, Please try again,"
 			echo "or type q to quit. "; echo ""
 		fi
 	done
 
 else # height_only
-	length=39 offset=18
+length=39 offset=18
 fi
 
 make IMAGE=$image OPTIONS="--height=$height  --length=$length --offset=$offset"; HEIGHT=$height;
