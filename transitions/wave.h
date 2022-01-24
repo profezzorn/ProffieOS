@@ -73,6 +73,7 @@ class TrSparkX : public TransitionBaseX<SPARK_MS> {
 public:
 
   void run(BladeBase *blade) {
+    static_assert(!is_same_type<SPARK_MS, Int<0>>::value);
     spark_size_.run(blade);
     spark_center_.run(blade);
     color_.run(blade);
