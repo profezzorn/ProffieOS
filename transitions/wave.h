@@ -17,6 +17,7 @@ template<class COLOR,
 class TrWaveX : public TransitionBaseX<FADEOUT_MS> {
 public:
   void run(BladeBase *blade) {
+    static_assert(!is_same_type<WAVE_MS, Int<0>>::value);
     wave_size_.run(blade);
     wave_center_.run(blade);
     wave_ms_.run(blade);

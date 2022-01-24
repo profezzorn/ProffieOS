@@ -18,8 +18,14 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// You can have multiple configuration files, and specify which one
-// to use here.
+/*-----------------------------------------------------------------*\
+|  You can have multiple configuration files, and specify which one |
+|  to use here by removing the two slashes at the beginning.        |
+|  **NOTE** Only ONE line should be left uncommented at a time!     |
+|  Add the slashes to any that you are not using.                   |
+\*-----------------------------------------------------------------*/
+
+// #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h"
 
 // #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
@@ -149,9 +155,14 @@
 
 #ifndef USE_TEENSY4
 #include <kinetis.h>
+#include <i2c_t3.h>
+#else
+// This is a hack to let me access the internal stuff..
+#define private public
+#include <Wire.h>
+#undef private
 #endif
 
-#include <i2c_t3.h>
 #include <SD.h>
 #include <SPI.h>
 

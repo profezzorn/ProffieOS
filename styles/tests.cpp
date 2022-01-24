@@ -124,8 +124,11 @@ Monitoring monitor;
 #include "edit_mode.h"
 #include "remap.h"
 #include "stripes.h"
+#include "transition_loop.h"
+#include "sequence.h"
 #include "../transitions/base.h"
 #include "../transitions/join.h"
+#include "../transitions/boing.h"
 #include "../transitions/wipe.h"
 #include "../transitions/delay.h"
 #include "../transitions/concat.h"
@@ -563,6 +566,25 @@ void TestCompileStyle() {
     InOutTrL<TrWipe<300>, TrWipeIn<500>>>> t1;
 }
 
+
+void test_style5() {
+  TestStyle<Layers<
+    Blue,
+      AlphaL<
+        PulsingL<
+            TransitionLoop<
+                AlphaL<ColorSequence<3500,Cyan,Black,Rgb<25,10,255>,Black>,Int<8000>>,
+                TrRandom<
+                    TrConcat<TrBoing<500,2>,Black,TrInstant>,
+                    TrJoinR<
+                        TrJoin<TrWipeInX<Int<300>>,TrWaveX<White,Int<400>,Int<600>,Int<300>,Int<32768>>>,
+                        TrJoin<TrWipeX<  Int<300>>,TrWaveX<White,Int<400>,Int<600>,Int<300>,Int<0>>>>>>,
+        Int<1500>>,
+    Int<16000>>
+	      >> t1;
+  Color16 c = get_color_when_on(&t1);
+}
+
 void testGetArg(const char* str, int arg, const char* expected) {
   char tmp[1024];
   fprintf(stderr, "testGetArg(%s, %d)\n", str, arg);
@@ -694,6 +716,7 @@ void test_argument_parsing() {
 }
 
 int main() {
+  test_style5();
   test_style4();
   test_cylon();
   test_inouthelper();
