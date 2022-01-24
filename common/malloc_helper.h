@@ -41,7 +41,7 @@ void LSFree(T *memory) {
   if (IsHeap(memory)) LSFreeObject((T*)memory);
 }
 
-#if defined(DEBUG) || defined(ENABLE_DEVELOPER_COMMANDS)
+#if defined(ENABLE_DEBUG) || defined(ENABLE_DEVELOPER_COMMANDS)
 template<>
 void LSFree<char>(char *memory) {
   if (IsHeap(memory)) {

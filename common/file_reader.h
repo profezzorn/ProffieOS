@@ -2,7 +2,6 @@
 #define COMMON_FILE_READER_H
 
 #include <new>
-#include <algorithm>
 
 #include "lsfs.h"
 

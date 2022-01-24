@@ -14,6 +14,7 @@
 template<class TRANSITION>
 class TransitionLoopL {
 public:
+  TransitionLoopL() { transition_.begin(); }
   void run(BladeBase* blade) {
     if (transition_.done()) transition_.begin();
     transition_.run(blade);

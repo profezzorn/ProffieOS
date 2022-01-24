@@ -67,7 +67,7 @@ public:
 
 #define VALIDATE_STYLE_STRING(N) ValidateStyleString(PRE.current_style##N.get());    
 
-#ifdef DEBUG
+#ifdef ENABLE_DEBUG
 #define ValidateStyleString(X) CurrentPreset::ValidateStyleStringF((X), __FILE__, __LINE__)
 #define VSS(X) CurrentPreset::ValidateStyleStringF((X), __FILE__, __LINE__)
 #define DOVALIDATE(X) do { CurrentPreset&PRE=(X); ONCEPERBLADE(VALIDATE_STYLE_STRING); } while(0)

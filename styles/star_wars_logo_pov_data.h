@@ -2167,3 +2167,4 @@ const uint16_t imageoffsets[] = {
  31244, 31244, 31244, 31244, 31244, 31244, 31244, 31244, 31244, 31244};
 
 const Color8 image_color(255, 207, 2);
+#define POV_DATA_HEIGHT 144

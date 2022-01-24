@@ -1,6 +1,9 @@
 #ifndef COMMON_COMMON_H
 #define COMMON_COMMON_H
 
+// For std::min, and other things.
+#include <algorithm>
+
 // For static_assert, and other things.
 #include <type_traits>
 
