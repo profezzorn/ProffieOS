@@ -12,6 +12,7 @@ pngcount=0
 wscount=0
 rename=0
 remove=0
+download=0
 
 echo ""
 echo "Welcome! Let's make some POV images!"
@@ -29,7 +30,7 @@ echo ".png files found: " $pngcount
 echo ".png files with spaces in file name: " $wscount
 
 # If NO images in the folder, offer logo
-if [ $pngcount -lt 1 ]; then
+if [[ $pngcount -lt 1 ]]; then
 	echo ""
 	echo "OOPS! No .png image files found!"
 	echo ""
@@ -50,7 +51,7 @@ if [[ $download == 1 ]]; then
 fi
 
 # Check if too many files, get it down to one
-if [ "$pngcount" -ge 2 ]; then
+if [[ $pngcount -ge 2 ]]; then
 	echo ""
 	echo "OOPS! Too many .png image files found!"
 	echo ""
@@ -120,27 +121,27 @@ image=$pngs
 valid_option=0
 while [[ $valid_option != 1 ]]; do
     echo "Please select the settings you want to create the POV image with: "
-    echo "1 - Preset 1 (HEIGHT=144, LENGTH=39, OFFSET=18)"
-    echo "2 - Preset 2 (HEIGHT=97,  LENGTH=63, OFFSET=50)"
-    echo "3 - Preset 3 (HEIGHT=72,  LENGTH=50, OFFSET=15)"
-    echo "4 - Preset 4 (HEIGHT=72,  LENGTH=50, OFFSET=39)"
+    echo "1 - Preset 1 (height=144, length=39, offset=18)"
+    echo "2 - Preset 2 (height=97,  length=63, offset=50)"
+    echo "3 - Preset 3 (height=72,  length=50, offset=15)"
+    echo "4 - Preset 4 (height=72,  length=50, offset=39)"
     echo "5 - Height entry only"
     echo "6 - Custom options"
     echo "q - to quit"
 	read option
 	case $option in
 		"") echo "! Some option is needed. Please try again"; echo "";;
-		1) height=144 length=39 offset=18 HEIGHT=144 preset=1 valid_option=1;;
-		2) height=97 length=63 offset=50 HEIGHT=97 preset=1 valid_option=1;;
-		3) height=72 length=50 offset=15 HEIGHT=72 preset=1 valid_option=1;;
-		4) height=72 length=50 offset=39 HEIGHT=72 preset=1 valid_option=1;;
+		1) height=144 length=39 offset=18 preset=1 valid_option=1;;
+		2) height=97 length=63 offset=50 preset=1 valid_option=1;;
+		3) height=72 length=50 offset=15 preset=1 valid_option=1;;
+		4) height=72 length=50 offset=39 preset=1 valid_option=1;;
 		5) height_only=1; valid_option=1;;
 		6) valid_option=1;;
 #		7) ------ ADDITIONAL USER PRESETS CAN BE ADDED HERE LIKE THIS-------
-#		9) ------ or move 5 & 6 down to keep them all together -------------
-#       *) H is amount of pixels in your blade,
-#       *) L is the length of that blade in the unit of the distance of your choosing (most common inches or centimeters)
-#       *) O is offset - the distance (same unit as L) from the bottom of the blade to the fulcrum (e.g. the joint you are swinging with)
+#		8) ------ or move 5 & 6 down to keep them all together -------------
+#      	height is amount of pixels in your blade,
+#      	length is the length of that blade in the unit of the distance of your choosing (most common inches or centimeters)
+#      	offset - the distance (same unit as L) from the bottom of the blade to the fulcrum (e.g. the joint you are swinging with)
 		q) exit;;
 		*) echo ""
 			echo "! Not a valid option, Please try again,"
@@ -168,7 +169,7 @@ while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
 	fi
 done
 
-if [ $height_only != 1 ]; then
+if [[ $height_only != 1 ]]; then
 	validinput=0
 	while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
         echo ""
@@ -230,22 +231,21 @@ else # height_only
 length=39 offset=18
 fi
 
-make IMAGE=$image OPTIONS="--height=$height  --length=$length --offset=$offset"; HEIGHT=$height;
-mv ./preview.png ./"${pngbase}"_"${HEIGHT}"_preview.png
-mv ./image.h ../styles/"${pngbase}"_"${HEIGHT}"_FC_POV_data.h
-mv ./image_pgm.h ../styles/"${pngbase}"_"${HEIGHT}"_SC_POV_data.h
-mv ./image_8bit.h ../styles/"${pngbase}"_"${HEIGHT}"_8b_POV_data.h
+make IMAGE=$image OPTIONS="--height=$height  --length=$length --offset=$offset"
+mv ./preview.png ./"${pngbase}"_"${height}"_preview.png
+mv ./image.h ../styles/"${pngbase}"_"${height}"_FC_POV_data.h
+mv ./image_pgm.h ../styles/"${pngbase}"_"${height}"_SC_POV_data.h
+mv ./image_8bit.h ../styles/"${pngbase}"_"${height}"_8b_POV_data.h
 echo ""
 echo ""
 echo "Conversion DONE! Find your files as shown below."
 echo ""
 echo "preview image:"
-echo "	ProffieOS/pov_tools/"$pngbase"_"$HEIGHT"_preview.png"
+echo "	ProffieOS/pov_tools/"$pngbase"_"$height"_preview.png"
 echo "Full color image data file:"
-echo "	ProffieOS/styles/"$pngbase"_"$HEIGHT"_FC_POV_data.h"
+echo "	ProffieOS/styles/"$pngbase"_"$height"_FC_POV_data.h"
 echo "Single color image data file:"
-echo "	ProffieOS/styles/"$pngbase"_"$HEIGHT"_SC_POV_data.h"
+echo "	ProffieOS/styles/"$pngbase"_"$height"_SC_POV_data.h"
 echo "256 color image data file:"
-echo "	ProffieOS/styles/"$pngbase"_"$HEIGHT"_8b_POV_data.h"
-rm pnmtorle; rm pnmquantizedtorle; rm pgmtorle; rm pnmwindshieldwiper
+echo "	ProffieOS/styles/"$pngbase"_"$height"_8b_POV_data.h"
 exit
