@@ -1,3 +1,19 @@
+/*
+This is a sample configuration file for use with OS6 and above.
+This saber has:
+ - Proffieboard V2.2.
+ - Two buttons: one POW, one AUX.
+ - A 136 pixel blade on LED 2&3 and data 1 pads.
+ - A 6 pixel accent/crystal strip on LED4 and data 2 pads.
+Examples given for:
+- Custom prop file inclusion (Fett263) with suggested minimum of #defines.
+- OS6 Edit Mode compliant blade style
+
+More info on Edit Mode can be found here: 
+https://fett263.s3.us-east-2.amazonaws.com/proffieOS6-edit-mode.html
+If you have a saber similar to this one, make a copy and use the copy.
+*/
+
 #ifdef CONFIG_TOP
 #include "proffieboard_v2_config.h"
 #define NUM_BLADES 2
@@ -81,7 +97,8 @@ StylePtr<Layers<
   LockupTrL<AlphaL<Remap<Scale<RampF,Int<65536>,Int<0>>,StaticFire<Mix<TwistAngle<>,OrangeRed,DarkOrange>,Mix<TwistAngle<>,OrangeRed,Orange>,0,3,5,3000,10>>,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrConcat<TrWipeIn<100>,AlphaL<Red,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrExtend<4000,TrFade<300>>,AlphaL<Mix<TwistAngle<>,Red,Orange>,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrFade<4000>>,TrWipe<200>,SaberBase::LOCKUP_MELT>,
   InOutTrL<TrSelect<IntArg<IGNITION_OPTION_ARG,0>,TrWipeX<IgnitionTime<300>>,TrWipeSparkTipX<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,IgnitionTime<300>>,TrWipeX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<IgnitionTime<300>,Int<16384>>,IgnitionTime<300>>>>,TrSelect<IntArg<RETRACTION_OPTION_ARG,0>,TrWipeInX<RetractionTime<0>>,TrWipeInX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<RetractionTime<0>,Int<16384>>,RetractionTime<0>>>>,Black>,
   TransitionEffectL<TrSelect<IntArg<PREON_OPTION_ARG,0>,TrInstant,TrConcat<TrFadeX<Mult<Int<8192>,WavLen<EFFECT_PREON>>>,AlphaL<HumpFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,10>,SmoothStep<IntArg<PREON_SIZE_ARG,2000>,Int<-4000>>>,TrFadeX<Mult<Int<8192>,WavLen<EFFECT_PREON>>>,AlphaL<HumpFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,15>,SmoothStep<Sum<Int<2000>,IntArg<PREON_SIZE_ARG,2000>>,Int<-4000>>>,TrFadeX<Mult<Int<8192>,WavLen<EFFECT_PREON>>>,AlphaL<HumpFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,20>,SmoothStep<Sum<Int<4000>,IntArg<PREON_SIZE_ARG,2000>>,Int<-4000>>>,TrBoingX<Mult<Int<8192>,WavLen<EFFECT_PREON>>,3>>,TrConcat<TrInstant,AlphaL<BrownNoiseFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,Int<30>>,SmoothStep<Scale<SlowNoise<Int<2000>>,IntArg<PREON_SIZE_ARG,2000>,Sum<IntArg<PREON_SIZE_ARG,2000>,Int<4000>>>,Int<-2000>>>,TrDelayX<WavLen<EFFECT_PREON>>>>,EFFECT_PREON>,
-  TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>>>(),
+  TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>
+>>(),
 
 /* copyright Fett263 FallenOrder (Crystal Chamber) OS6 Style
 https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#FallenOrder
@@ -106,10 +123,9 @@ StylePtr<Layers<
   TransitionEffectL<TrConcat<TrExtend<30000,TrFade<300>>,Pulsing<RgbArg<SWING_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<SWING_COLOR_ARG,Rgb<255,0,0>>>,3000>,TrFade<300>>,EFFECT_FORCE>>,
   TransitionEffectL<TrSelect<IntArg<IGNITION_POWER_UP_ARG,0>,TrInstant,TrConcat<TrExtendX<IgnitionTime<0>,TrInstant>,Stripes<3000,-3500,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,RandomPerLEDFlicker<Mix<Int<7710>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Black>,BrownNoiseFlicker<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,200>,RandomPerLEDFlicker<Mix<Int<3137>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>>>,TrFade<800>>,TrConcat<TrExtendX<IgnitionTime<0>,TrInstant>,Stripes<5000,-2500,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<7710>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>>,TrFade<800>>>,EFFECT_IGNITION>,
   TransitionEffectL<TrSelect<IntArg<RETRACTION_COOL_DOWN_ARG,0>,TrInstant,TrConcat<TrExtendX<RetractionTime<0>,TrInstant>,Stripes<3000,3500,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,RandomPerLEDFlicker<Mix<Int<7710>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Black>,BrownNoiseFlicker<RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,200>,RandomPerLEDFlicker<Mix<Int<3137>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>>>,TrFade<800>>,TrConcat<TrExtendX<RetractionTime<0>,TrInstant>,Stripes<5000,2500,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<7710>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>>,TrFade<800>>>,EFFECT_RETRACTION>,
-  InOutTrL<TrInstant,TrInstant,ColorSelect<IntArg<OFF_OPTION_ARG,0>,TrInstant,TransitionLoop<RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,TrConcat<TrBoing<1200,2>,Mix<Int<1285>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,TrFade<1200>>>,Stripes<5000,-2500,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>>>>>(),
-
-"preset 1"
-},
+  InOutTrL<TrInstant,TrInstant,ColorSelect<IntArg<OFF_OPTION_ARG,0>,TrInstant,TransitionLoop<RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,TrConcat<TrBoing<1200,2>,Mix<Int<1285>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,TrFade<1200>>>,Stripes<5000,-2500,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>>>
+>>(),
+"preset 1" },
 
 { "Luke;common", "Luke/tracks/LukeTheme.wav",
 /* copyright Fett263 Static/Flicker (Primary Blade) OS6 Style
@@ -152,7 +168,8 @@ StylePtr<Layers<
   LockupTrL<AlphaL<Remap<Scale<RampF,Int<65536>,Int<0>>,StaticFire<Mix<TwistAngle<>,OrangeRed,DarkOrange>,Mix<TwistAngle<>,OrangeRed,Orange>,0,3,5,3000,10>>,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrConcat<TrWipeIn<100>,AlphaL<Red,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrExtend<4000,TrFade<300>>,AlphaL<Mix<TwistAngle<>,Red,Orange>,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrFade<4000>>,TrWipe<200>,SaberBase::LOCKUP_MELT>,
   InOutTrL<TrSelect<IntArg<IGNITION_OPTION_ARG,0>,TrWipeX<IgnitionTime<300>>,TrWipeSparkTipX<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,IgnitionTime<300>>,TrWipeX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<IgnitionTime<300>,Int<16384>>,IgnitionTime<300>>>>,TrSelect<IntArg<RETRACTION_OPTION_ARG,0>,TrWipeInX<RetractionTime<0>>,TrWipeInX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<RetractionTime<0>,Int<16384>>,RetractionTime<0>>>>,Black>,
   TransitionEffectL<TrSelect<IntArg<PREON_OPTION_ARG,0>,TrInstant,TrConcat<TrFadeX<Mult<Int<8192>,WavLen<EFFECT_PREON>>>,AlphaL<HumpFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,10>,SmoothStep<IntArg<PREON_SIZE_ARG,2000>,Int<-4000>>>,TrFadeX<Mult<Int<8192>,WavLen<EFFECT_PREON>>>,AlphaL<HumpFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,15>,SmoothStep<Sum<Int<2000>,IntArg<PREON_SIZE_ARG,2000>>,Int<-4000>>>,TrFadeX<Mult<Int<8192>,WavLen<EFFECT_PREON>>>,AlphaL<HumpFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,20>,SmoothStep<Sum<Int<4000>,IntArg<PREON_SIZE_ARG,2000>>,Int<-4000>>>,TrBoingX<Mult<Int<8192>,WavLen<EFFECT_PREON>>,3>>,TrConcat<TrInstant,AlphaL<BrownNoiseFlickerL<RgbArg<PREON_COLOR_ARG,Rgb<255,255,255>>,Int<30>>,SmoothStep<Scale<SlowNoise<Int<2000>>,IntArg<PREON_SIZE_ARG,2000>,Sum<IntArg<PREON_SIZE_ARG,2000>,Int<4000>>>,Int<-2000>>>,TrDelayX<WavLen<EFFECT_PREON>>>>,EFFECT_PREON>,
-  TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>>>(),
+  TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>
+>>(),
 
 /* copyright Fett263 Static/Flicker (Crystal Chamber) OS6 Style
 https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#Static/Flicker
@@ -179,10 +196,9 @@ StylePtr<Layers<
   TransitionEffectL<TrConcat<TrExtend<30000,TrFade<300>>,Pulsing<RgbArg<SWING_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<SWING_COLOR_ARG,Rgb<255,0,0>>>,3000>,TrFade<300>>,EFFECT_FORCE>>,
   TransitionEffectL<TrSelect<IntArg<IGNITION_POWER_UP_ARG,0>,TrInstant,TrConcat<TrExtendX<IgnitionTime<0>,TrInstant>,Stripes<3000,-3500,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,RandomPerLEDFlicker<Mix<Int<7710>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Black>,BrownNoiseFlicker<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,200>,RandomPerLEDFlicker<Mix<Int<3137>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>>>,TrFade<800>>,TrConcat<TrExtendX<IgnitionTime<0>,TrInstant>,Stripes<5000,-2500,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<7710>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>>,TrFade<800>>>,EFFECT_IGNITION>,
   TransitionEffectL<TrSelect<IntArg<RETRACTION_COOL_DOWN_ARG,0>,TrInstant,TrConcat<TrExtendX<RetractionTime<0>,TrInstant>,Stripes<3000,3500,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,RandomPerLEDFlicker<Mix<Int<7710>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Black>,BrownNoiseFlicker<RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,200>,RandomPerLEDFlicker<Mix<Int<3137>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>>>,TrFade<800>>,TrConcat<TrExtendX<RetractionTime<0>,TrInstant>,Stripes<5000,2500,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<7710>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>>,TrFade<800>>>,EFFECT_RETRACTION>,
-  InOutTrL<TrInstant,TrInstant,ColorSelect<IntArg<OFF_OPTION_ARG,0>,TrInstant,TransitionLoop<RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,TrConcat<TrBoing<1200,2>,Mix<Int<1285>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,TrFade<1200>>>,Stripes<5000,-2500,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>>>>>(),
-
-"preset 2"
-},
+  InOutTrL<TrInstant,TrInstant,ColorSelect<IntArg<OFF_OPTION_ARG,0>,TrInstant,TransitionLoop<RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,TrConcat<TrBoing<1200,2>,Mix<Int<1285>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,TrFade<1200>>>,Stripes<5000,-2500,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>>>
+>>(),
+"preset 2" },
 
 { "Kylo;common", "Kylo/tracks/KyloTheme.wav",
 /* copyright Fett263 KyloRen (Primary Blade) OS6 Style
@@ -221,7 +237,8 @@ StylePtr<Layers<
   LockupTrL<AlphaL<RandomPerLEDFlickerL<RgbArg<DRAG_COLOR_ARG,Rgb<255,255,255>>>,SmoothStep<IntArg<DRAG_SIZE_ARG,26000>,Int<3000>>>,TrConcat<TrExtend<4000,TrWipeIn<200>>,AlphaL<BrownNoiseFlickerL<RgbArg<DRAG_COLOR_ARG,Rgb<255,255,255>>,Int<300>>,SmoothStep<IntArg<DRAG_SIZE_ARG,26000>,Int<3000>>>,TrFade<4000>>,TrFade<300>,SaberBase::LOCKUP_DRAG>,
   LockupTrL<AlphaL<Remap<Scale<RampF,Int<65536>,Int<0>>,StaticFire<Mix<TwistAngle<>,OrangeRed,DarkOrange>,Mix<TwistAngle<>,OrangeRed,Orange>,0,3,5,3000,10>>,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrConcat<TrWipeIn<100>,AlphaL<Red,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrExtend<4000,TrFade<300>>,AlphaL<Mix<TwistAngle<>,Red,Orange>,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrFade<4000>>,TrWipe<200>,SaberBase::LOCKUP_MELT>,
   InOutTrL<TrSelect<IntArg<IGNITION_OPTION_ARG,0>,TrWipeX<IgnitionTime<300>>,TrWipeSparkTipX<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,IgnitionTime<300>>,TrWipeX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<IgnitionTime<300>,Int<16384>>,IgnitionTime<300>>>>,TrSelect<IntArg<RETRACTION_OPTION_ARG,0>,TrWipeInX<RetractionTime<0>>,TrWipeX<RetractionTime<0>>,TrWipeInX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<RetractionTime<0>,Int<16384>>,RetractionTime<0>>>>,Black>,
-  TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>>>(),
+  TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>
+>>(),
 
 /* copyright Fett263 KyloRen (Crystal Chamber) OS6 Style
 https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#KyloRen
@@ -246,10 +263,9 @@ StylePtr<Layers<
   TransitionEffectL<TrConcat<TrExtend<30000,TrFade<300>>,Pulsing<RgbArg<SWING_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<SWING_COLOR_ARG,Rgb<255,0,0>>>,3000>,TrFade<300>>,EFFECT_FORCE>>,
   TransitionEffectL<TrSelect<IntArg<IGNITION_POWER_UP_ARG,0>,TrInstant,TrConcat<TrExtendX<IgnitionTime<0>,TrInstant>,Stripes<3000,-3500,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,RandomPerLEDFlicker<Mix<Int<7710>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Black>,BrownNoiseFlicker<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,200>,RandomPerLEDFlicker<Mix<Int<3137>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>>>,TrFade<800>>,TrConcat<TrExtendX<IgnitionTime<0>,TrInstant>,Stripes<5000,-2500,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<7710>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>>,TrFade<800>>>,EFFECT_IGNITION>,
   TransitionEffectL<TrSelect<IntArg<RETRACTION_COOL_DOWN_ARG,0>,TrInstant,TrConcat<TrExtendX<RetractionTime<0>,TrInstant>,Stripes<3000,3500,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,RandomPerLEDFlicker<Mix<Int<7710>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Black>,BrownNoiseFlicker<RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,200>,RandomPerLEDFlicker<Mix<Int<3137>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>>>,TrFade<800>>,TrConcat<TrExtendX<RetractionTime<0>,TrInstant>,Stripes<5000,2500,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<7710>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>>,TrFade<800>>>,EFFECT_RETRACTION>,
-  InOutTrL<TrInstant,TrInstant,ColorSelect<IntArg<OFF_OPTION_ARG,0>,TrInstant,TransitionLoop<RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,TrConcat<TrBoing<1200,2>,Mix<Int<1285>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,TrFade<1200>>>,Stripes<5000,-2500,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>>>>>(),
-
-"preset 3"
-},
+  InOutTrL<TrInstant,TrInstant,ColorSelect<IntArg<OFF_OPTION_ARG,0>,TrInstant,TransitionLoop<RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,TrConcat<TrBoing<1200,2>,Mix<Int<1285>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,TrFade<1200>>>,Stripes<5000,-2500,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>>>
+>>(), 
+"preset 3" },
 
 { "Maul;common", "Maul/tracks/DuelofFates.wav",
 /* copyright Fett263 UnstableBlades (Primary Blade) OS6 Style
@@ -286,7 +302,8 @@ StylePtr<Layers<
   LockupTrL<AlphaL<RandomPerLEDFlickerL<RgbArg<DRAG_COLOR_ARG,Rgb<255,255,255>>>,SmoothStep<IntArg<DRAG_SIZE_ARG,26000>,Int<3000>>>,TrConcat<TrExtend<4000,TrWipeIn<200>>,AlphaL<BrownNoiseFlickerL<RgbArg<DRAG_COLOR_ARG,Rgb<255,255,255>>,Int<300>>,SmoothStep<IntArg<DRAG_SIZE_ARG,26000>,Int<3000>>>,TrFade<4000>>,TrFade<300>,SaberBase::LOCKUP_DRAG>,
   LockupTrL<AlphaL<Remap<Scale<RampF,Int<65536>,Int<0>>,StaticFire<Mix<TwistAngle<>,OrangeRed,DarkOrange>,Mix<TwistAngle<>,OrangeRed,Orange>,0,3,5,3000,10>>,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrConcat<TrWipeIn<100>,AlphaL<Red,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrExtend<4000,TrFade<300>>,AlphaL<Mix<TwistAngle<>,Red,Orange>,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrFade<4000>>,TrWipe<200>,SaberBase::LOCKUP_MELT>,
   InOutTrL<TrSelect<IntArg<IGNITION_OPTION_ARG,0>,TrWipeX<IgnitionTime<300>>,TrWipeSparkTipX<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,IgnitionTime<300>>,TrWipeX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<IgnitionTime<300>,Int<16384>>,IgnitionTime<300>>>>,TrSelect<IntArg<RETRACTION_OPTION_ARG,0>,TrWipeInX<RetractionTime<0>>,TrWipeX<RetractionTime<0>>,TrWipeInX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<RetractionTime<0>,Int<16384>>,RetractionTime<0>>>>,Black>,
-  TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>>>(),
+  TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>
+>>(),
 
 /* copyright Fett263 UnstableBlades (Crystal Chamber) OS6 Style
 https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#UnstableBlades
@@ -309,10 +326,9 @@ StylePtr<
   TransitionEffectL<TrConcat<TrExtend<30000,TrFade<300>>,Pulsing<RgbArg<SWING_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<SWING_COLOR_ARG,Rgb<255,0,0>>>,3000>,TrFade<300>>,EFFECT_FORCE>>,
   TransitionEffectL<TrSelect<IntArg<IGNITION_POWER_UP_ARG,0>,TrInstant,TrConcat<TrExtendX<IgnitionTime<0>,TrInstant>,Stripes<3000,-3500,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,RandomPerLEDFlicker<Mix<Int<7710>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Black>,BrownNoiseFlicker<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,200>,RandomPerLEDFlicker<Mix<Int<3137>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>>>,TrFade<800>>,TrConcat<TrExtendX<IgnitionTime<0>,TrInstant>,Stripes<5000,-2500,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<7710>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>>,TrFade<800>>>,EFFECT_IGNITION>,
   TransitionEffectL<TrSelect<IntArg<RETRACTION_COOL_DOWN_ARG,0>,TrInstant,TrConcat<TrExtendX<RetractionTime<0>,TrInstant>,Stripes<3000,3500,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,RandomPerLEDFlicker<Mix<Int<7710>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Black>,BrownNoiseFlicker<RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,200>,RandomPerLEDFlicker<Mix<Int<3137>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>>>,TrFade<800>>,TrConcat<TrExtendX<RetractionTime<0>,TrInstant>,Stripes<5000,2500,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<7710>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>>,TrFade<800>>>,EFFECT_RETRACTION>,
-  InOutTrL<TrInstant,TrInstant,ColorSelect<IntArg<OFF_OPTION_ARG,0>,TrInstant,TransitionLoop<RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,TrConcat<TrBoing<1200,2>,Mix<Int<1285>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,TrFade<1200>>>,Stripes<5000,-2500,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>>>>>(),
-
-"preset 4"
-},
+  InOutTrL<TrInstant,TrInstant,ColorSelect<IntArg<OFF_OPTION_ARG,0>,TrInstant,TransitionLoop<RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,TrConcat<TrBoing<1200,2>,Mix<Int<1285>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,TrFade<1200>>>,Stripes<5000,-2500,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>>>
+>>(),
+"preset 4" },
 
 { "Dark;common", "Dark/tracks/mars.wav",
 /* copyright Fett263 DarkSaber (Primary Blade) OS6 Style
@@ -349,7 +365,8 @@ StylePtr<Layers<
   LockupTrL<AlphaL<RandomPerLEDFlickerL<RgbArg<DRAG_COLOR_ARG,Rgb<255,255,255>>>,SmoothStep<IntArg<DRAG_SIZE_ARG,26000>,Int<3000>>>,TrConcat<TrExtend<4000,TrWipeIn<200>>,AlphaL<BrownNoiseFlickerL<RgbArg<DRAG_COLOR_ARG,Rgb<255,255,255>>,Int<300>>,SmoothStep<IntArg<DRAG_SIZE_ARG,26000>,Int<3000>>>,TrFade<4000>>,TrFade<300>,SaberBase::LOCKUP_DRAG>,
   LockupTrL<AlphaL<Remap<Scale<RampF,Int<65536>,Int<0>>,StaticFire<Mix<TwistAngle<>,OrangeRed,DarkOrange>,Mix<TwistAngle<>,OrangeRed,Orange>,0,3,5,3000,10>>,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrConcat<TrWipeIn<100>,AlphaL<Red,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrExtend<4000,TrFade<300>>,AlphaL<Mix<TwistAngle<>,Red,Orange>,SmoothStep<IntArg<MELT_SIZE_ARG,26000>,Int<4000>>>,TrFade<4000>>,TrWipe<200>,SaberBase::LOCKUP_MELT>,
   InOutTrL<TrSelect<IntArg<IGNITION_OPTION_ARG,0>,TrWipeX<IgnitionTime<300>>,TrWipeSparkTipX<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,IgnitionTime<300>>,TrWipeX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<IgnitionTime<300>,Int<16384>>,IgnitionTime<300>>>>,TrSelect<IntArg<RETRACTION_OPTION_ARG,0>,TrWipeInX<RetractionTime<0>>,TrWipeX<RetractionTime<0>>,TrWipeInX<Scale<IsLessThan<BladeAngle<>,Int<16000>>,Mult<RetractionTime<0>,Int<16384>>,RetractionTime<0>>>>,Black>,
-  TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>>>(),
+  TransitionEffectL<TrConcat<TrExtend<2000,TrInstant>,AlphaL<Mix<BatteryLevel,Red,Green>,Bump<BatteryLevel,Int<10000>>>,TrFade<300>>,EFFECT_BATTERY_LEVEL>
+>>(),
 
 /* copyright Fett263 DarkSaber (Crystal Chamber) OS6 Style
 https://fett263.s3.us-east-2.amazonaws.com/fett263-proffieOS6-style-library.html#DarkSaber
@@ -372,15 +389,14 @@ StylePtr<Layers<
   TransitionEffectL<TrConcat<TrExtend<30000,TrFade<300>>,Pulsing<RgbArg<SWING_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<SWING_COLOR_ARG,Rgb<255,0,0>>>,3000>,TrFade<300>>,EFFECT_FORCE>>,
   TransitionEffectL<TrSelect<IntArg<IGNITION_POWER_UP_ARG,0>,TrInstant,TrConcat<TrExtendX<IgnitionTime<0>,TrInstant>,Stripes<3000,-3500,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,RandomPerLEDFlicker<Mix<Int<7710>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Black>,BrownNoiseFlicker<RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,200>,RandomPerLEDFlicker<Mix<Int<3137>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>>>,TrFade<800>>,TrConcat<TrExtendX<IgnitionTime<0>,TrInstant>,Stripes<5000,-2500,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<7710>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<IGNITION_COLOR_ARG,Rgb<255,255,255>>>>,TrFade<800>>>,EFFECT_IGNITION>,
   TransitionEffectL<TrSelect<IntArg<RETRACTION_COOL_DOWN_ARG,0>,TrInstant,TrConcat<TrExtendX<RetractionTime<0>,TrInstant>,Stripes<3000,3500,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,RandomPerLEDFlicker<Mix<Int<7710>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Black>,BrownNoiseFlicker<RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,200>,RandomPerLEDFlicker<Mix<Int<3137>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>>>,TrFade<800>>,TrConcat<TrExtendX<RetractionTime<0>,TrInstant>,Stripes<5000,2500,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>,Mix<Int<7710>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>,Mix<Int<3855>,Black,RgbArg<RETRACTION_COLOR_ARG,Rgb<255,255,255>>>>,TrFade<800>>>,EFFECT_RETRACTION>,
-  InOutTrL<TrInstant,TrInstant,ColorSelect<IntArg<OFF_OPTION_ARG,0>,TrInstant,TransitionLoop<RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,TrConcat<TrBoing<1200,2>,Mix<Int<1285>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,TrFade<1200>>>,Stripes<5000,-2500,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>>>>>(),
-
-"preset 5"
-},
+  InOutTrL<TrInstant,TrInstant,ColorSelect<IntArg<OFF_OPTION_ARG,0>,TrInstant,TransitionLoop<RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,TrConcat<TrBoing<1200,2>,Mix<Int<1285>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,TrFade<1200>>>,Stripes<5000,-2500,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>,Mix<Int<16384>,Black,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>,RgbArg<OFF_COLOR_ARG,Rgb<255,0,0>>>>>
+>>(),
+"preset 5" },
 
 };
 
 BladeConfig blades[] = {
-  { 0, WS281XBladePtr<125, bladePin, Color8::GRB, PowerPINS<bladePowerPin2, bladePowerPin3> >(),
+  { 0, WS281XBladePtr<136, bladePin, Color8::GRB, PowerPINS<bladePowerPin2, bladePowerPin3> >(),
     WS281XBladePtr<6, blade2Pin, Color8::GRB, PowerPINS<bladePowerPin4> >()
   , CONFIGARRAY(presets) },
 };
