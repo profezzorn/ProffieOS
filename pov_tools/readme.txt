@@ -63,6 +63,7 @@ They will be formatted "sourceFileName_height_colorProfile_POV_data.h"
 If you used a Single Color source file, use the resulting SC_POV_data.h file.  
 If you used a Full Color source file, then use the resulting FC_POV_data.h file.  
 If you used a Full Color source file, memory use might be less by choosing the 8b_POV_data.h file.  
+- A running log of your conversion history with the setting used is written to POV_conversions.log.  
 
 - To use the POV data file for a blade style, first tell the OS which one with the following line added to your config file  
 in the CONFIG_TOP section: `#define POV_INCLUDE_FILE "dataFileNameHere.h"`  
