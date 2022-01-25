@@ -1,9 +1,9 @@
 
 # create_POV_data_files (script)
-Use ProffieOS POV Tools to create Persistence-Of-Vision images that show when you swing the blade. 
-This script utilizes the existing Makefile in the pov_tools folder.
-Images can be created without this script via command line by typing 'make'.
-Arguments may be provided as 'OPTIONS=--height=N  --length=N --offset=N'
+Use ProffieOS POV Tools to create Persistence-Of-Vision images that show when you swing the blade.  
+This script utilizes the existing Makefile in the pov_tools folder.  
+Images can be created without this script via command line by typing 'make'.  
+Arguments may be provided as 'OPTIONS=--height=N  --length=N --offset=N'  
 
 Under the hood:   
 pnmtorle - Converts a full-color image to hex data to be included in the code.  
@@ -42,12 +42,9 @@ Install g++ and netpbm
 
 ### Make POV files
 
-- Put a .png image you want to convert into the pov_tools folder.  
-If there are any spaces in your filenames, the script will change them to underscores for you before processing.  
-If you have no images, you can run the script anyway and it will download the sample Star Wars logo and process it for you :)  
-Each time you make a new POV image, there needs to be only the ONE target source image in the pov_tools folder.  
-The script will present an option to remove the previous preview image, however, if any extra image files don't  
-contain 'preview' in the name, you'll need to manually remove them.  
+- Put one or more .png images that you want to convert into the pov_tools folder.  
+If you have no images, you can run the script anyway and it can download the sample Star Wars logo and process it for you :)  
+File names that contain 'preview' will be ignored as valid source image files. 
 
 To run the script:  
 - Windows: Double click "create_POV_data_files-Win.bat"  
@@ -56,18 +53,19 @@ To run the script:
 
 - Choose a sizing option from the list. There are some preset sizes plus 'Height entry only' and 'Custom size' options.  
 (Height is the number of pixels in the blade)  
-You may want to choose 'Custom' first to get an idea of what gets calculated, then once familiar, presets will make more sense.  
+You may want to choose 'Custom' first to get an idea of what gets calculated, then the presets will make more sense.  
+Once familiar, you can customize the presets by editing that section of the script.  
 
-- Check the resulting *preview.png in the pov_tools folder. It should look windshieldwiper warped.  
+All valid .png files in the pov_tools folder will be processed to the setting you chose.
+- Check the resulting *preview.png in the pov_tools folder. It should look warped like a windshield shape.  
 - The image data files are written directly to the ProffieOS/styles folder.  
-They will be formatted BASENAME_HEIGHT_COLOR PROFILE.  
+They will be formatted "SOURCE FILE NAME_HEIGHT_COLOR PROFILE_data.h"  
 If you used a Single Color source file, use the resulting SC_POV_data.h file.  
 If you used a Full Color source file, then use the resulting FC_POV_data.h file.  
 If you used a Full Color source file, memory use might be less by choosing the 8b_POV_data.h file.  
 
-- To use the POV data file for a blade style, first tell the OS which one  
-with the following line added to your config file in the CONFIG_TOP section:  
-`#define POV_INCLUDE_FILE "dataFileNameHere.h"`  
+- To use the POV data file for a blade style, first tell the OS which one with the following line added to your config file  
+in the CONFIG_TOP section: `#define POV_INCLUDE_FILE "dataFileNameHere.h"`  
 
 - Then you just use the POV blade style in a preset:  
 ```
@@ -76,6 +74,6 @@ with the following line added to your config file in the CONFIG_TOP section:
   "my_pov"},
   ```
 
-Swing the blade in a steady movement to see the image in the air. A long-exposure capture showcases the result best.  
+Swing the blade in a steady, quick movement to see the image in the air. A long-exposure camera capture showcases the result best.  
 Enjoy!  (⌐■_■) NoSloppy
 -- credits: Thanks profezzorn for overseeing/providing options, kaQnub for Windows testing/contributions.
