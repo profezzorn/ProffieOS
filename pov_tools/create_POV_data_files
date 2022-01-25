@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # create_POV_data_files
-
+# version - all .png files that don't contain 'preview' are processed
 OIFS="$IFS"
 IFS=$'\n'
 cd "$(dirname "$0")"
@@ -11,26 +11,22 @@ preset=0
 pngcount=0
 wscount=0
 rename=0
-remove=0
 download=0
 
 echo ""
 echo "Welcome! Let's make some POV images!"
 echo ""
 echo "Found these image files:"
-# get file names and quantity of existing .png files
-# check for whitespace in name
-for pngs in `find . -maxdepth 1 -type f -name "*.png"`; do
+
+# get .png files except containing 'preview' and build array
+pngs=($(find . -maxdepth 1 -type f -name "*.png" ! -name "*preview*"))
 	for strip in ${pngs[@]}; do echo "${strip##*/}"; done
-	pngcount=$((pngcount+1))
-	if [[ $pngs = *" "* ]]; then wscount=$((wscount+1)); fi
-done
+# get number of files in array
+files=${#pngs[@]}
 echo ""
-echo ".png files found: " $pngcount
-echo ".png files with spaces in file name: " $wscount
 
 # If NO images in the folder, offer logo
-if [[ $pngcount -lt 1 ]]; then
+if [[ $files -lt 1 ]]; then
 	echo ""
 	echo "OOPS! No .png image files found!"
 	echo ""
@@ -50,77 +46,9 @@ if [[ $download == 1 ]]; then
 	pngs=$"1024px-Star_Wars_Logo.svg.png"
 fi
 
-# Check if too many files, get it down to one
-if [[ $pngcount -ge 2 ]]; then
-	echo ""
-	echo "OOPS! Too many .png image files found!"
-	echo ""
-	echo "There needs to be only ONE source .png image in the pov_tools folder."
-	echo ""
-	echo "Type r to remove ALL FILES with 'preview' in the name. "
-	echo "    If the additional filenames do not contain 'preview',"
-	echo "    manually delete all files except your source image."
-	echo ""
-	echo "Type q to quit."
-	read -p $'Press ENTER to start over.\n' fix
-	case $fix in
-		r) remove=1;;
-		q) exit;;
-		*) exec "./create_POV_data_files";;
-	esac
-fi
-if [[ $remove == 1 ]]; then
-	rm *preview*.png;
-	echo ""
-	echo "Files containing *preview* deleted if they existed"
-	# give user time to read message
-	read -n 1 -r -s -p $'Press any key to continue.\n'
-	exec "./create_POV_data_files"
-fi
-
-# if only one file, but has whitespace in file name, offer underscores
-if [[ $wscount != 0 ]]; then
-	echo ""
-	echo "OOPS! Spaces found in .png image file name. That's not ideal. "
-	echo ""
-	echo "Type y to automatically rename them with underscores,"
-	echo "type q to quit,"
-	read -p $'or press ENTER to start over..\n' us
-	case $us in
-		y) rename=1;;
-		q) exit;;
-		*) exec "./create_POV_data_files";;
-	esac
-fi
-if [[ $rename == 1 ]]; then
-	mv "$pngs" ${pngs// /_}
-	# get new file name now that we changed it
-	pngs=$(find . -maxdepth 1 -type f -name "*.png")
-fi
-
-pngname="${pngs##*/}"
-pngbase="${pngname%.*}"
-echo ""
-echo "Using source image file: $pngname"
-echo ""
-
-# check for 'preview' in filename
-if [[ $pngname == *"preview"* ]]; then
-	echo "OOPS! Source file name can not contain 'preview'."
-	echo "Please use a different file name."
-	echo "Type q to quit,"
-	read -p $'or press ENTER to start over..\n' retry
-	case $retry in
-		q) exit;;
-		*) exec "./create_POV_data_files";;
-	esac
-fi
-
-image=$pngs
-
 valid_option=0
 while [[ $valid_option != 1 ]]; do
-    echo "Please select the settings you want to create the POV image with: "
+    echo "Please select the settings you want to create the POV image(s) with: "
     echo "1 - Preset 1 (height=144, length=39, offset=18)"
     echo "2 - Preset 2 (height=97,  length=63, offset=50)"
     echo "3 - Preset 3 (height=72,  length=50, offset=15)"
@@ -137,7 +65,7 @@ while [[ $valid_option != 1 ]]; do
 		4) height=72 length=50 offset=39 preset=1 valid_option=1;;
 		5) height_only=1; valid_option=1;;
 		6) valid_option=1;;
-#		7) ------ ADDITIONAL USER PRESETS CAN BE ADDED HERE LIKE THIS-------
+#		7) ------ ADDITIONAL USER PRESETS CAN BE ADDED HERE -------
 #		8) ------ or move 5 & 6 down to keep them all together -------------
 #      	height is amount of pixels in your blade,
 #      	length is the length of that blade in the unit of the distance of your choosing (most common inches or centimeters)
@@ -177,8 +105,8 @@ if [[ $height_only != 1 ]]; then
         read pref
         case $pref in
 		"") echo "! Some option is needed. Please try again"; echo "";;
-		i)  calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144 * 100 / 254))e-3"); offset_default=18; validinput=1; units="inches"; echo "";;
-		c)  calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144))e-3"); offset_default=46; validinput=1; units="centimeters"; echo "";;
+		i)  calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144 * 100 / 254))e-3"); offset_default=18 validinput=1 units="inches";;
+		c)  calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144))e-3"); offset_default=46; validinput=1; units="centimeters";;
 		q) exit;;
 		*)  echo ""
 		echo "! Not a valid option, Please choose inches or cm,"
@@ -228,24 +156,41 @@ if [[ $height_only != 1 ]]; then
 	done
 
 else # height_only
-length=39 offset=18
+	length=39 offset=18
 fi
 
-make IMAGE=$image OPTIONS="--height=$height  --length=$length --offset=$offset"
-mv ./preview.png ./"${pngbase}"_"${height}"_preview.png
-mv ./image.h ../styles/"${pngbase}"_"${height}"_FC_POV_data.h
-mv ./image_pgm.h ../styles/"${pngbase}"_"${height}"_SC_POV_data.h
-mv ./image_8bit.h ../styles/"${pngbase}"_"${height}"_8b_POV_data.h
-echo ""
-echo ""
-echo "Conversion DONE! Find your files as shown below."
-echo ""
-echo "preview image:"
-echo "	ProffieOS/pov_tools/"$pngbase"_"$height"_preview.png"
-echo "Full color image data file:"
-echo "	ProffieOS/styles/"$pngbase"_"$height"_FC_POV_data.h"
-echo "Single color image data file:"
-echo "	ProffieOS/styles/"$pngbase"_"$height"_SC_POV_data.h"
-echo "256 color image data file:"
-echo "	ProffieOS/styles/"$pngbase"_"$height"_8b_POV_data.h"
+echo "Number of images to process: " $files
+for process in "${pngs[@]}";do
+	# strip path for displaying file name to be processed
+	pngname="${process##*/}"
+    # additionally remove extension and spaces for finished file name
+	pngnoext="${pngname%.*}"
+	pngbase="${pngnoext// /_}"
+	echo ""
+	echo "Processing source image file: $pngname"
+	echo ""
+	# Rename to maketmp.png for make
+	cp $process ./maketmp.png
+	make IMAGE=./maketmp.png OPTIONS="--height=$height  --length=$length --offset=$offset"
+	#removing maketmp.png now that we're done with it
+	rm -- ./maketmp.png
+	mv ./preview.png ./${pngbase}_${height}_preview.png
+	mv ./image.h ../styles/${pngbase}_${height}_FC_POV_data.h
+	mv ./image_pgm.h ../styles/${pngbase}_${height}_SC_POV_data.h
+	mv ./image_8bit.h ../styles/${pngbase}_${height}_8b_POV_data.h
+	echo ""
+	echo ""
+	echo "Conversion DONE! Find your files as shown below."
+	echo ""
+	echo "preview image:"
+	echo "	ProffieOS/pov_tools/"$pngbase"_"$height"_preview.png"
+	echo "Full color image data file:"
+	echo "	ProffieOS/styles/"$pngbase"_"$height"_FC_POV_data.h"
+	echo "Single color image data file:"
+	echo "	ProffieOS/styles/"$pngbase"_"$height"_SC_POV_data.h"
+	echo "256 color image data file:"
+	echo "	ProffieOS/styles/"$pngbase"_"$height"_8b_POV_data.h"
+	echo ""
+	echo ""
+done
 exit
