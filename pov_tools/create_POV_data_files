@@ -48,14 +48,14 @@ fi
 
 valid_option=0
 while [[ $valid_option != 1 ]]; do
-    echo "Please select the settings you want to create the POV image(s) with: "
-    echo "1 - Preset 1 (height=144, length=39, offset=18)"
-    echo "2 - Preset 2 (height=97,  length=63, offset=50)"
-    echo "3 - Preset 3 (height=72,  length=50, offset=15)"
-    echo "4 - Preset 4 (height=72,  length=50, offset=39)"
-    echo "5 - Height entry only"
-    echo "6 - Custom options"
-    echo "q - to quit"
+	echo "Please select the settings you want to create the POV image(s) with: "
+	echo "1 - Preset 1 (height=144, length=39, offset=18)"
+	echo "2 - Preset 2 (height=97, length=63, offset=50)"
+	echo "3 - Preset 3 (height=72, length=50, offset=15)"
+	echo "4 - Preset 4 (height=72, length=50, offset=39)"
+	echo "5 - Height entry only"
+	echo "6 - Custom options"
+	echo "q - to quit"
 	read option
 	case $option in
 		"") echo "! Some option is needed. Please try again"; echo "";;
@@ -67,9 +67,9 @@ while [[ $valid_option != 1 ]]; do
 		6) valid_option=1;;
 #		7) ------ ADDITIONAL USER PRESETS CAN BE ADDED HERE -------
 #		8) ------ or move 5 & 6 down to keep them all together -------------
-#      	height is amount of pixels in your blade,
-#      	length is the length of that blade in the unit of the distance of your choosing (most common inches or centimeters)
-#      	offset - the distance (same unit as L) from the bottom of the blade to the fulcrum (e.g. the joint you are swinging with)
+#		height is amount of pixels in your blade,
+#		length is the length of that blade in the unit of the distance of your choosing (most common inches or centimeters)
+#		offset - the distance (same unit as L) from the bottom of the blade to the fulcrum (e.g. the joint you are swinging with)
 		q) exit;;
 		*) echo ""
 			echo "! Not a valid option, Please try again,"
@@ -80,7 +80,8 @@ done
 validinput=0
 while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
 	echo ""
-	read -p $'How many pixels are in your blade? (Press ENTER for default 144)\n' height
+	echo "How many pixels are in your blade? (Press ENTER for default 144)"
+	read height
 	if [[ $height == "" ]]; then height=144 validinput=1; echo "Default 144"
 	elif [[ $height == "q" ]]; then exit
 	elif [[ $height -gt 576 ]]; then
@@ -100,19 +101,19 @@ done
 if [[ $height_only != 1 ]]; then
 	validinput=0
 	while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
-        echo ""
-        echo "What is your preferred unit of measuring distance? (i - inches, c - cm) "
-        read pref
-        case $pref in
+		echo ""
+		echo "What is your preferred unit of measuring distance? (i - inches, c - cm) "
+		read pref
+		case $pref in
 		"") echo "! Some option is needed. Please try again"; echo "";;
-		i)  calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144 * 100 / 254))e-3"); offset_default=18 validinput=1 units="inches";;
-		c)  calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144))e-3"); offset_default=46; validinput=1; units="centimeters";;
+		i) calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144 * 100 / 254))e-3"); offset_default=18 validinput=1 units="inches";;
+		c) calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144))e-3"); offset_default=46; validinput=1; units="centimeters";;
 		q) exit;;
-		*)  echo ""
+		*) echo ""
 		echo "! Not a valid option, Please choose inches or cm,"
 		echo "or type q to quit. "; echo "";;
-        esac
-    done
+		esac
+	done
 
 	validinput=0
 	while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
@@ -136,12 +137,12 @@ if [[ $height_only != 1 ]]; then
 
 	validinput=0
 	while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
-        echo ""
-        echo "How many "$units" distance from the bottom of the blade to the fulcrum?"
-        echo "The fulcrum is the pivot point. (Press ENTER for default $offset_default) "
+		echo ""
+		echo "How many "$units" distance from the bottom of the blade to the fulcrum?"
+		echo "The fulcrum is the pivot point. (Press ENTER for default $offset_default) "
 		read offset
 		if [[ $units == "inches" ]]; then max=30; else max=76; fi
-		if [[ $offset == "" ]]; then  offset=$offset_default validinput=1; echo "Default $offset_default"
+		if [[ $offset == "" ]]; then offset=$offset_default validinput=1; echo "Default $offset_default"
 		elif [[ $offset == "q" ]]; then exit
 		elif [[ $offset -gt $max ]]; then
 			echo "! That is likely impossible."
@@ -163,7 +164,7 @@ echo "Number of images to process: " $files
 for process in "${pngs[@]}";do
 	# strip path for displaying file name to be processed
 	pngname="${process##*/}"
-    	# additionally remove extension and spaces for finished file name
+	# additionally remove extension and spaces for finished file name
 	pngnoext="${pngname%.*}"
 	pngbase="${pngnoext// /_}"
 	echo ""
@@ -171,7 +172,7 @@ for process in "${pngs[@]}";do
 	echo ""
 	# Rename to maketmp.png for make
 	cp $process ./maketmp.png
-	make IMAGE=./maketmp.png OPTIONS="--height=$height  --length=$length --offset=$offset"
+	make IMAGE=./maketmp.png OPTIONS="--height=$height --length=$length --offset=$offset"
 	#removing maketmp.png now that we're done with it
 	rm -- ./maketmp.png
 	mv ./preview.png ./${pngbase}_${height}_preview.png
