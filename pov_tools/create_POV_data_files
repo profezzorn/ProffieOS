@@ -163,7 +163,7 @@ echo "Number of images to process: " $files
 for process in "${pngs[@]}";do
 	# strip path for displaying file name to be processed
 	pngname="${process##*/}"
-    # additionally remove extension and spaces for finished file name
+    	# additionally remove extension and spaces for finished file name
 	pngnoext="${pngname%.*}"
 	pngbase="${pngnoext// /_}"
 	echo ""
