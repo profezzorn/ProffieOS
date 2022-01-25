@@ -8,19 +8,15 @@ cd "$(dirname "$0")"
 clear
 height_only=0
 preset=0
-pngcount=0
-wscount=0
-rename=0
 download=0
 
 echo ""
 echo "Welcome! Let's make some POV images!"
 echo ""
 echo "Found these image files:"
-
 # get .png files except containing 'preview' and build array
 pngs=($(find . -maxdepth 1 -type f -name "*.png" ! -name "*preview*"))
-	for strip in ${pngs[@]}; do echo "${strip##*/}"; done
+for strip in ${pngs[@]}; do echo "${strip##*/}"; done
 # get number of files in array
 files=${#pngs[@]}
 echo ""
