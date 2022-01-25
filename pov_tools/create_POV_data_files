@@ -158,7 +158,7 @@ if [[ $height_only != 1 ]]; then
 	done
 
 else # height_only
-units="inches" length=$(printf %.0f "$((10**3 * 144 * 100 / 144 * 100 / 254))e-3") offset=18
+units="inches" length=$(printf %.0f "$((10**3 * $height * 100 / 144 * 100 / 254))e-3") offset=18
 fi
 
 echo "Number of images to process: " $files
