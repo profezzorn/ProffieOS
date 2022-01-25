@@ -59,7 +59,7 @@ Once familiar, you can customize the presets by editing that section of the scri
 All valid .png files in the pov_tools folder will be processed to the setting you chose.
 - Check the resulting *preview.png in the pov_tools folder. It should look warped like a windshield shape.  
 - The image data files are written directly to the ProffieOS/styles folder.  
-They will be formatted "SOURCE FILE NAME_HEIGHT_COLOR PROFILE_data.h"  
+They will be formatted "sourceFileName_height_colorProfile_POV_data.h"  
 If you used a Single Color source file, use the resulting SC_POV_data.h file.  
 If you used a Full Color source file, then use the resulting FC_POV_data.h file.  
 If you used a Full Color source file, memory use might be less by choosing the 8b_POV_data.h file.  
