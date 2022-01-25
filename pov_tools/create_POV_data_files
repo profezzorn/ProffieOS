@@ -181,7 +181,7 @@ for process in "${pngs[@]}";do
 	mv ./image_pgm.h ../styles/${pngbase}_${height}_SC_POV_data.h
 	mv ./image_8bit.h ../styles/${pngbase}_${height}_8b_POV_data.h
 	printf $'\nDate processesd: '$(date)$'\n' >> POV_conversions.log
-	printf $'POV image files created:\n'${pngbase}_${height}_FC_POV_data.h$'\n'${pngbase}_${height}_SC_POV_data.h$'\n'${pngbase}_${height}_8b_POV_data.h$'\n' >> POV_conversions.log
+	printf $'POV image files created in /styles:\n'${pngbase}_${height}_FC_POV_data.h$'\n'${pngbase}_${height}_SC_POV_data.h$'\n'${pngbase}_${height}_8b_POV_data.h$'\n' >> POV_conversions.log
 	printf $'Settings used: units= '$units' height= '$height' length = '$length' offset= '$offset$'\n' >> POV_conversions.log
 	echo ""
 	echo ""
