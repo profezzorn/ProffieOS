@@ -44,11 +44,16 @@ fi
 
 valid_option=0
 while [[ $valid_option != 1 ]]; do
-	echo "Please select the settings you want to create the POV image(s) with: "
-	echo "1 - Preset 1 (height=144, length=39, offset=18)"
-	echo "2 - Preset 2 (height=97, length=63, offset=50)"
-	echo "3 - Preset 3 (height=72, length=50, offset=15)"
-	echo "4 - Preset 4 (height=72, length=50, offset=39)"
+	echo "Please select the settings you want to create the POV image(s) with:"
+	echo "	height - number of pixels in your blade (one strip emitter to tip)"
+	echo "	length - blade length in the measurement unit of choice"
+	echo "	offset - the distance (in same unit as L) from the bottom of the blade"
+	echo "			 to the fulcrum (e.g. the joint you are swinging with)"
+	echo ""
+	echo "1 - Preset 1 (units=inches height=144 length=39 offset=18)"
+	echo "2 - Preset 2 (units=centimeters height=97 length=63 offset=50)"
+	echo "3 - Preset 3 (units=centimeters height=72 length=50 offset=15)"
+	echo "4 - Preset 4 (units=centimeters height=72 length=50 offset=39)"
 	echo "5 - Height entry only"
 	echo "6 - Custom options"
 	echo "q - to quit"
