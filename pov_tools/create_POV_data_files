@@ -48,7 +48,7 @@ while [[ $valid_option != 1 ]]; do
 	echo "	height - number of pixels in your blade (one strip emitter to tip)"
 	echo "	length - blade length in the measurement unit of choice"
 	echo "	offset - the distance (in same unit as L) from the bottom of the blade"
-	echo "			 to the fulcrum (e.g. the joint you are swinging with)"
+	echo "		 to the fulcrum (e.g. the joint you are swinging with)"
 	echo ""
 	echo "1 - Preset 1 (units=inches height=144 length=39 offset=18)"
 	echo "2 - Preset 2 (units=centimeters height=97 length=63 offset=50)"
