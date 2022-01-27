@@ -53,4 +53,5 @@ pnmwindshieldwiper: pnmwindshieldwiper.cc common.h
 
 
 clean:
-	rm preview.png image_{rgb,8bit,pgm}.h preview_{rgb,8bit,pgm}.png pov_renderer_{rgb,8bit,pgm}
+	rm preview.png || :
+	for x in rgb 8bit pgm ; do rm image_$$x.h preview_$$x.png pov_renderer_$$x || : ; done
