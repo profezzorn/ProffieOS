@@ -737,13 +737,19 @@ public:
   }
 
   void SB_LowBatt() {
-    // play the fonts low battery sound if it exists
-    if (SFX_lowbatt) {
-      PlayCommon(&SFX_lowbatt);
-    } else {
+    // play the font's low battery sound if it exists
+    if (!low_batt_notify_) {
+      if (SFX_lowbatt) {
+        PlayCommon(&SFX_lowbatt);
+      } else {
 #ifdef ENABLE_AUDIO
       talkie.Say(talkie_low_battery_15, 15);
 #endif
+      }
+// Option to limit Low Batt notification to only play once
+#ifdef LOW_BATT_ONCE           
+    low_batt_notify_ = true;
+#endif    
     }
   }
 
@@ -758,6 +764,7 @@ public:
 #endif
   bool monophonic_hum_;
   bool guess_monophonic_;
+  bool low_batt_notify_ = false;
   State state_;
   float volume_;
   float current_effect_length_ = 0.0;
