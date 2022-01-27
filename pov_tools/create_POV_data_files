@@ -177,7 +177,7 @@ for process in "${pngs[@]}";do
 	#removing maketmp.png now that we're done with it
 	rm -- ./maketmp.png
 	mv ./preview.png ./${pngbase}_${height}_preview.png
-	mv ./image.h ../styles/${pngbase}_${height}_FC_POV_data.h
+	mv ./image_rgb.h ../styles/${pngbase}_${height}_FC_POV_data.h
 	mv ./image_pgm.h ../styles/${pngbase}_${height}_SC_POV_data.h
 	mv ./image_8bit.h ../styles/${pngbase}_${height}_8b_POV_data.h
 	printf $'\nDate processesd: '$(date)$'\n' >> POV_conversions.log
