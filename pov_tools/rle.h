@@ -70,3 +70,38 @@ void rle_encode(const unsigned char *input,
   assert(olen <= *output_length);
   *output_length = olen;
 }
+
+void rle_decode(const unsigned char *input,
+                 unsigned char *output,
+                 int output_length) {
+  int olen = 0;
+  while (olen < output_length) {
+    if (*input == 255) {
+      int i;
+      int offset = input[1]+1;
+      int len = input[2];
+      input += 3;
+      for (i = 0; i < len; i++) {
+         *output = output[-offset];
+         output++;
+         olen++;
+      }
+    }
+    else if (*input < 128) {
+      memcpy(output, input+1, *input + 1);
+      output += *input + 1;
+      olen += *input + 1;
+      input += *input + 2;
+    } else {
+      memset(output, input[1], *input - 128 + 2);
+      output += *input - 128 + 2;
+      olen += *input - 128 + 2;
+      input += 2;
+    }
+  }
+  if (olen > output_length) {
+    fprintf(stderr, "Output buffer overflow!\n");
+    exit(1);
+  }
+}
+
