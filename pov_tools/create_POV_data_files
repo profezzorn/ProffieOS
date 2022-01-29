@@ -70,7 +70,7 @@ while [[ $valid_option != 1 ]]; do
 #		8) ------ or move 5 & 6 down to keep them all together -------------
 #		height is amount of pixels in your blade,
 #		length is the length of that blade in the unit of the distance of your choosing (most common inches or centimeters)
-#		offset - the distance (same unit as L) from the bottom of the blade to the fulcrum (e.g. the joint you are swinging with)
+#		offset - the distance (same unit as length) from the bottom of the blade to the fulcrum (e.g. the joint you are swinging with)
 		q) exit;;
 		*) echo ""
 			echo "! Not a valid option, Please try again,"
