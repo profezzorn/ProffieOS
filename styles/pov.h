@@ -107,9 +107,9 @@ public:
       blade->clear();
       return;
     }
+    int col = fraction * (NELEM(imageoffsets) - 1);
 #ifdef POV_RGB
     Color8 buffer[POV_DATA_HEIGHT];
-    int col = fraction * NELEM(imageoffsets);
     rle_decode(imagedata + imageoffsets[col],
 	       (unsigned char *)&buffer, POV_DATA_HEIGHT * 3);
     // Rescale / transfer
@@ -118,7 +118,6 @@ public:
       blade->set(i, buffer[i * POV_DATA_HEIGHT / num_leds]);
 #else
     uint8_t buffer[POV_DATA_HEIGHT];
-    int col = fraction * NELEM(imageoffsets);
     rle_decode(imagedata + imageoffsets[col],
 	       (unsigned char *)&buffer, POV_DATA_HEIGHT);
     // Rescale / transfer
