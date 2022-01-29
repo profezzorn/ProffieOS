@@ -13,7 +13,46 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-void rle_encode(const unsigned char *input,
+#include <alloca.h>
+
+void rle_decode(const unsigned char *input,
+                 unsigned char *output,
+                 int output_length) {
+  int olen = 0;
+  while (olen < output_length) {
+    if (*input == 255) {
+      int i;
+      int offset = input[1]+1;
+      int len = input[2];
+      input += 3;
+      for (i = 0; i < len; i++) {
+         *output = output[-offset];
+         output++;
+         olen++;
+      }
+      assert(olen <= output_length);
+    }
+    else if (*input < 128) {
+      memcpy(output, input+1, *input + 1);
+      output += *input + 1;
+      olen += *input + 1;
+      input += *input + 2;
+      assert(olen <= output_length);
+    } else {
+      memset(output, input[1], *input - 128 + 2);
+      output += *input - 128 + 2;
+      olen += *input - 128 + 2;
+      input += 2;
+      assert(olen <= output_length);
+    }
+  }
+  if (olen > output_length) {
+    fprintf(stderr, "Output buffer overflow!\n");
+    exit(1);
+  }
+}
+
+void rle_encode_internal(const unsigned char *input,
                 int input_length,
                 unsigned char *output,
                 int *output_length) {
@@ -57,7 +96,7 @@ void rle_encode(const unsigned char *input,
       output[olen++] = input[i];
       i += l;
     } else {
-      if (VALID_CNT) {
+      if (VALID_CNT && *cnt < 127) {
         (*cnt)++;
       } else {
         cnt = output+olen;
@@ -71,37 +110,15 @@ void rle_encode(const unsigned char *input,
   *output_length = olen;
 }
 
-void rle_decode(const unsigned char *input,
-                 unsigned char *output,
-                 int output_length) {
-  int olen = 0;
-  while (olen < output_length) {
-    if (*input == 255) {
-      int i;
-      int offset = input[1]+1;
-      int len = input[2];
-      input += 3;
-      for (i = 0; i < len; i++) {
-         *output = output[-offset];
-         output++;
-         olen++;
-      }
-    }
-    else if (*input < 128) {
-      memcpy(output, input+1, *input + 1);
-      output += *input + 1;
-      olen += *input + 1;
-      input += *input + 2;
-    } else {
-      memset(output, input[1], *input - 128 + 2);
-      output += *input - 128 + 2;
-      olen += *input - 128 + 2;
-      input += 2;
-    }
-  }
-  if (olen > output_length) {
-    fprintf(stderr, "Output buffer overflow!\n");
-    exit(1);
-  }
-}
 
+void rle_encode(const unsigned char *input,
+                int input_length,
+                unsigned char *output,
+                int *output_length) {
+  rle_encode_internal(input, input_length, output, output_length);
+  unsigned char *tmp = (unsigned char*)alloca(input_length * 2);
+  tmp[input_length] = 253;
+  rle_decode(output, tmp, input_length);
+  assert(tmp[input_length] == 253);
+  assert(!memcmp(tmp, input, input_length));
+}
