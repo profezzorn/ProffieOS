@@ -53,7 +53,7 @@ while [[ $valid_option != 1 ]]; do
 	echo "1 - Preset 1 (units=inches height=144 length=39 offset=18)"
 	echo "2 - Preset 2 (units=centimeters height=97 length=63 offset=50)"
 	echo "3 - Preset 3 (units=centimeters height=72 length=50 offset=15)"
-	echo "4 - Preset 4 (units=centimeters height=72 length=50 offset=15 No-autoscale fill)"
+	echo "4 - Preset 4 (units=centimeters height=72 length=50 offset=15 --fill)"
 	echo "5 - Height entry only"
 	echo "6 - Custom options"
 	echo "q - to quit"
