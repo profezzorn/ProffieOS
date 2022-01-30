@@ -9,7 +9,6 @@ clear
 height_only=0
 preset=0
 download=0
-scalefit=0
 
 echo ""
 echo "Welcome! Let's make some POV images!"
@@ -72,6 +71,8 @@ while [[ $valid_option != 1 ]]; do
 #		height is amount of pixels in your blade,
 #		length is the length of that blade in the unit of the distance of your choosing (most common inches or centimeters)
 #		offset - the distance (same unit as length) from the bottom of the blade to the fulcrum (e.g. the joint you are swinging with)
+#		--fill - a flag for the tools to NOT auto-scale content to fit the wipe zone, but show full raster instead.
+#			 (Good for landscape images where content position matters)
 		q) exit;;
 		*) echo ""
 			echo "! Not a valid option, Please try again,"
@@ -164,7 +165,7 @@ if [[ $height_only != 1 ]]; then
 		echo "Do you want to auto-scale the content to fit the entire wipe ? (y/n)"
 		echo "(Default = Yes) "
 		read fit
-		if [[ $fit == "y" ]] || [[ $fit == "" ]]; then scalefit=1 validinput=1;
+		if [[ $fit == "y" ]] || [[ $fit == "" ]]; then validinput=1;
 		elif [[ $fit == "n" ]]; then fill="--fill" validinput=1;
 		elif [[ $fit == "q" ]]; then exit
 		else
@@ -200,10 +201,10 @@ for process in "${pngs[@]}";do
 	printf $'\nDate processesd: '$(date)$'\n' >> POV_conversions.log
 	printf $'POV image files created in /styles:\n'${pngbase}_${height}_FC_POV_data.h$'\n'${pngbase}_${height}_SC_POV_data.h$'\n'${pngbase}_${height}_8b_POV_data.h$'\n' >> POV_conversions.log
 	printf $'Settings used:\nheight = '$height$' pixels\nlength = '$length' '$units$'\noffset = '$offset' '$units$'\n' >> POV_conversions.log
-	if [[ $scalefit == 1 ]]; then 
-		printf $'Scale to fit = YES'; printf $'Scale to fit = YES\n' >> POV_conversions.log; 
-	else 
+	if [[ $fill == "--fill" ]]; then
 		printf $'Scale to fit = NO'; printf $'Scale to fit = NO\n' >> POV_conversions.log;
+	else
+		printf $'Scale to fit = YES'; printf $'Scale to fit = YES\n' >> POV_conversions.log;
 	fi
 	echo ""
 	echo ""
