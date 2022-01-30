@@ -233,8 +233,6 @@ public:
     }
   }
 
-  RefPtr<BufferedWavPlayer> auto_player_;
-
   uint32_t auto_time_;
   virtual void Fire() {
     CheckEmpty();
