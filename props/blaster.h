@@ -117,40 +117,6 @@ public:
     if (max_shots_ != -1 && shots_fired_ >= max_shots_) {
       empty_ = true;
       SaberBase::DoEffect(EFFECT_EMPTY, 0);
-      return;
-    }
-  }
-
-  uint32_t auto_time_;
-  virtual void Fire() {
-#ifdef ENABLE_MOTION
-#ifdef BLASTER_JAM_PERCENTAGE
-    // If we're already jammed then we don't need to recheck. If we're not jammed then check if we just jammed.
-    is_jammed_ = is_jammed_ ? true : CheckJam(BLASTER_JAM_PERCENTAGE);
-    if (is_jammed_ && !empty_) {
-      // Don't jam if empty
-      SaberBase::DoEffect(EFFECT_JAM, 0);
-      return;
-    }
-#endif
-#endif
-    CheckEmpty();
-    if (empty_) return;
-    if (blaster_mode == MODE_AUTO) {
-      SelectAutoFirePair(); // Set up the autofire pairing if the font suits it.
-      SaberBase::SetLockup(LOCKUP_AUTOFIRE);
-      SaberBase::DoBeginLockup();
-      auto_firing_ = true;
-      auto_time_ = millis();
-    } else {
-      if (blaster_mode == MODE_STUN) {
-        SaberBase::DoEffect(EFFECT_STUN, 0);
-        STDOUT << "******** STUN - Remaining shots = " << GetBulletCount() << "\n";
-      } else {
-        SaberBase::DoEffect(EFFECT_FIRE, 0);
-        STDOUT << "******** FIRE - Remaining shots = " << GetBulletCount() << "\n";
-      }
-      shots_fired_++;
     }
   }
 
@@ -241,7 +207,6 @@ public:
     }
   }
 
-  uint32_t len;
   void beginArm() {
     SaberBase::SetLockup(SaberBase::LOCKUP_ARMED);
     SaberBase::DoBeginLockup();
@@ -270,14 +235,54 @@ public:
 
   RefPtr<BufferedWavPlayer> auto_player_;
 
+  uint32_t auto_time_;
+  virtual void Fire() {
+    CheckEmpty();
+    if (empty_) return;
+#ifdef ENABLE_MOTION
+#ifdef BLASTER_JAM_PERCENTAGE
+    // If we're already jammed then we don't need to recheck. If we're not jammed then check if we just jammed.
+    is_jammed_ = is_jammed_ ? true : CheckJam(BLASTER_JAM_PERCENTAGE);
+    if (is_jammed_) {
+      // Don't jam if empty
+      SaberBase::DoEffect(EFFECT_JAM, 0);
+      return;
+    }
+#endif
+#endif
+    if (blaster_mode == MODE_AUTO) {
+      SelectAutoFirePair(); // Set up the autofire pairing if the font suits it.
+      SaberBase::SetLockup(LOCKUP_AUTOFIRE);
+      SaberBase::DoBeginLockup();
+      auto_firing_ = true;
+      auto_time_ = millis();
+
+      // GET auto.wav length here
+        if (!auto_player_) {
+        auto_player_ = GetWavPlayerPlaying(&SFX_auto);
+        }
+
+    } else {
+      if (blaster_mode == MODE_STUN) {
+        SaberBase::DoEffect(EFFECT_STUN, 0);
+        STDOUT << "******** STUN - Remaining shots = " << GetBulletCount() << "\n";
+      } else {
+        SaberBase::DoEffect(EFFECT_FIRE, 0);
+        STDOUT << "******** FIRE - Remaining shots = " << GetBulletCount() << "\n";
+      }
+      shots_fired_++;
+    }
+  }
+  
+  RefPtr<BufferedWavPlayer> auto_player_;
+
   void Loop() override {
     PropBase::Loop();
     PollNextAction();
-    if (auto_firing_ && GetWavPlayerPlaying(&SFX_auto)) {
-      if (!auto_player_) {
-        auto_player_ = GetWavPlayerPlaying(&SFX_auto);
-      }
+    if (auto_firing_) {
+      // do stuff
       if (millis() - auto_time_ > 1000 * auto_player_->length()) {
+        // NULL POINTER because it doesn't know auto_player_ ?
         shots_fired_++;
         auto_time_ = millis();
         STDOUT << "******** AUTOFIRING - Remaining shots = " << GetBulletCount() << "\n";
@@ -286,6 +291,7 @@ public:
           SaberBase::DoEndLockup();
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
           auto_firing_ = false;
+          auto_player_.Free();
           return;
         }
       }
