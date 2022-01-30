@@ -54,7 +54,7 @@ EFFECT(mdauto);
 // For mode sounds, specific "mdstun", "mdkill", and "mdauto" may be used.
 // If just a single "mode" sound for all switches exists, that will be used.
 // If no mode sounds exist in the font, a talkie version will speak the mode on switching.
-class Blaster : public PROP_INHERIT_PREFIX PropBase, StateMachine {
+class Blaster : public PROP_INHERIT_PREFIX PropBase {
 public:
   Blaster() : PropBase() {}
   const char* name() override { return "Blaster"; }
@@ -145,10 +145,10 @@ public:
     } else {
       if (blaster_mode == MODE_STUN) {
         SaberBase::DoEffect(EFFECT_STUN, 0);
-        STDOUT << "STUN - Remaining shots = " << GetBulletCount() << "\n";
+        STDOUT << "******** STUN - Remaining shots = " << GetBulletCount() << "\n";
       } else {
         SaberBase::DoEffect(EFFECT_FIRE, 0);
-        STDOUT << "FIRE - Remaining shots = " << GetBulletCount() << "\n";
+        STDOUT << "******** FIRE - Remaining shots = " << GetBulletCount() << "\n";
       }
       shots_fired_++;
     }
@@ -184,6 +184,7 @@ public:
   virtual void ClipIn() {
     SaberBase::DoEffect(EFFECT_CLIP_IN, 0);
   }
+
   // Pull in parent's SetPreset, but turn the blaster on.
   void SetPreset(int preset_num, bool announce) override {
     PropBase::SetPreset(preset_num, announce);
@@ -239,7 +240,8 @@ public:
       next_action_ = NEXT_ACTION_NOTHING;
     }
   }
-  
+
+  uint32_t len;
   void beginArm() {
     SaberBase::SetLockup(SaberBase::LOCKUP_ARMED);
     SaberBase::DoBeginLockup();
@@ -266,39 +268,28 @@ public:
     }
   }
 
-  RefPtr<BufferedWavPlayer> tmp;
-  uint32_t len;
+  RefPtr<BufferedWavPlayer> auto_player_;
 
   void Loop() override {
     PropBase::Loop();
     PollNextAction();
-	  
-    STATE_MACHINE_BEGIN();
-    while (true) {
-      if (auto_firing_) {
-        tmp = GetWavPlayerPlaying(&SFX_auto);
-        // Set the length for WavLen<>
-        if (tmp) {
-          tmp->UpdateSaberBaseSoundInfo();
-        } else {
-          SaberBase::ClearSoundInfo();
-        }
-        if (millis() - auto_time_ > 1000 * tmp->length()) {
-          shots_fired_++;
-          auto_time_ = millis();
-          STDOUT << "AUTOFIRING - Remaining shots = " << GetBulletCount() << "\n";
-          CheckEmpty();
-          if (empty_) {
-            SaberBase::DoEndLockup();
-            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-            auto_firing_ = false;
-            return;
-          }
+    if (auto_firing_ && GetWavPlayerPlaying(&SFX_auto)) {
+      if (!auto_player_) {
+        auto_player_ = GetWavPlayerPlaying(&SFX_auto);
+      }
+      if (millis() - auto_time_ > 1000 * auto_player_->length()) {
+        shots_fired_++;
+        auto_time_ = millis();
+        STDOUT << "******** AUTOFIRING - Remaining shots = " << GetBulletCount() << "\n";
+        CheckEmpty();
+        if (empty_) {
+          SaberBase::DoEndLockup();
+          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+          auto_firing_ = false;
+          return;
         }
       }
-    YIELD();
     }
-    STATE_MACHINE_END();
   }
 
   // Make clash do nothing except unjam if jammed.
@@ -369,7 +360,7 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
         Off();
         return true;
-		    
+
   #ifdef BLADE_DETECT_PIN
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
@@ -451,4 +442,3 @@ public:
 };
 
 #endif
-
