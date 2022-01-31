@@ -49,32 +49,14 @@ void rle_decode(const unsigned char *input,
   }
 }
 
-// POV writer.
-template<int MIN_DEGREES=-45, int MAX_DEGREES=45, bool REPEAT=false, bool MIRROR=true>
-class StylePOV {
-  public:
+class POVStyleBase {
+public:
   void run(BladeBase* blade) {
-    float degrees = fusor.pov_angle() * 180.0 / M_PI;
-    float fraction = (degrees - MIN_DEGREES) / (MAX_DEGREES - MIN_DEGREES);
-    if (REPEAT) {
-      if (MIRROR) {
-	fraction = fract(fraction / 2.0) * fraction;
-	if (fraction > 1.0) {
-	  fraction = 2.0 - fraction;
-	}
-      } else {
-	fraction = fract(fraction);
-      }
-    } else {
-      if (fraction < 0 || fraction > 1.0) {
-	blade->clear();
-	return;
-      }
-    }
-    int col = fraction * (NELEM(imageoffsets) - 1);
+    num_leds_ = blade->num_leds();
+  }
+  void RenderColumn(int col) {
     rle_decode(imagedata + imageoffsets[col],
 	       (unsigned char *)&buffer_, sizeof(buffer_));
-    num_leds_ = blade->num_leds();
   }
   SimpleColor getColor(int led) {
     Color16 c;
@@ -95,6 +77,54 @@ private:
 #else
   uint8_t buffer_[POV_DATA_HEIGHT];
 #endif
+};
+
+// POV writer.
+template<int MIN_DEGREES=-45, int MAX_DEGREES=45, bool REPEAT=false, bool MIRROR=true>
+class StylePOV : public POVStyleBase {
+  public:
+  void run(BladeBase* blade) {
+    float degrees = fusor.pov_angle() * 180.0 / M_PI;
+    float fraction = (degrees - MIN_DEGREES) / (MAX_DEGREES - MIN_DEGREES);
+    if (REPEAT) {
+      if (MIRROR) {
+	fraction = fract(fraction / 2.0) * fraction;
+	if (fraction > 1.0) {
+	  fraction = 2.0 - fraction;
+	}
+      } else {
+	fraction = fract(fraction);
+      }
+    } else {
+      if (fraction < 0 || fraction > 1.0) {
+	blade->clear();
+	return;
+      }
+    }
+    POVStyleBase::run(blade);
+    RenderColumn(fraction * (NELEM(imageoffsets) - 1));
+  }
+};
+
+
+// ContinuousPOV
+template<int DEGREES=90>
+class ContinousPOV : public POVStyleBase {
+  public:
+  void run(BladeBase* blade) {
+    POVStyleBase::run(blade);
+    uint32_t t = micros();
+    uint32_t delta = t - last_micros_;
+    if (delta > 1000000) delta = 1;
+    last_micros_ = t;
+    float swing_speed = fusor.swing_speed();
+    angle_ = fract(angle_ + swing_speed * delta / 1000000.0 / DEGREES);
+    RenderColumn(angle_ * (NELEM(imageoffsets) - 1));
+  }
+
+private:
+  uint32_t last_micros_ = 0;
+  float angle_ = 0.0; // 0..1.0, where 1.0 represents DEGREES degrees.
 };
 
 StyleFactoryImpl<Style<StylePOV<>>> style_pov;
