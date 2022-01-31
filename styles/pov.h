@@ -109,7 +109,7 @@ class StylePOV : public POVStyleBase {
 
 // ContinuousPOV
 template<int DEGREES=90>
-class ContinousPOV : public POVStyleBase {
+class ContinuousPOV : public POVStyleBase {
   public:
   void run(BladeBase* blade) {
     POVStyleBase::run(blade);
