@@ -340,6 +340,7 @@ public:
             SaberBase::DoEndLockup();
             SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
             auto_firing_ = false;
+            auto_player_.Free();
           }
         }
         return true;
