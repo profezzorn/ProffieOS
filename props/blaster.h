@@ -233,6 +233,8 @@ public:
     }
   }
 
+   RefPtr<BufferedWavPlayer> auto_player_;
+
   uint32_t auto_time_;
   virtual void Fire() {
     CheckEmpty();
@@ -242,24 +244,23 @@ public:
     // If we're already jammed then we don't need to recheck. If we're not jammed then check if we just jammed.
     is_jammed_ = is_jammed_ ? true : CheckJam(BLASTER_JAM_PERCENTAGE);
     if (is_jammed_) {
-      // Don't jam if empty
       SaberBase::DoEffect(EFFECT_JAM, 0);
       return;
     }
 #endif
 #endif
     if (blaster_mode == MODE_AUTO) {
-      SelectAutoFirePair(); // Set up the autofire pairing if the font suits it.
+      // Set up the autofire pairing if the font suits it.
+      SelectAutoFirePair(); 
       SaberBase::SetLockup(LOCKUP_AUTOFIRE);
       SaberBase::DoBeginLockup();
       auto_firing_ = true;
       auto_time_ = millis();
 
-      // GET auto.wav length here
-        if (!auto_player_) {
+      // GET auto.wav here
+      if (!auto_player_) {
         auto_player_ = GetWavPlayerPlaying(&SFX_auto);
         }
-
     } else {
       if (blaster_mode == MODE_STUN) {
         SaberBase::DoEffect(EFFECT_STUN, 0);
@@ -271,26 +272,25 @@ public:
       shots_fired_++;
     }
   }
-  
-  RefPtr<BufferedWavPlayer> auto_player_;
 
   void Loop() override {
     PropBase::Loop();
     PollNextAction();
     if (auto_firing_) {
-      // do stuff
-      if (millis() - auto_time_ > 1000 * auto_player_->length()) {
-        // NULL POINTER because it doesn't know auto_player_ ?
-        shots_fired_++;
-        auto_time_ = millis();
-        STDOUT << "******** AUTOFIRING - Remaining shots = " << GetBulletCount() << "\n";
-        CheckEmpty();
-        if (empty_) {
-          SaberBase::DoEndLockup();
-          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-          auto_firing_ = false;
-          auto_player_.Free();
-          return;
+      if (&auto_player_) {
+        STDOUT << "*************************** &auto_player_ works, but Why is it half speed!!???\n";
+        STDOUT << millis() - auto_time_;
+        if (millis() - auto_time_ > 1000 * auto_player_->length()) {
+          shots_fired_++;
+          auto_time_ = millis();
+          STDOUT << "******** AUTOFIRING - Remaining shots = " << GetBulletCount() << "\n";
+          CheckEmpty();
+          if (empty_) {
+            SaberBase::DoEndLockup();
+            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+            auto_firing_ = false;
+            return;
+          }
         }
       }
     }
