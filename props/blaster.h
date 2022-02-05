@@ -278,7 +278,6 @@ public:
     PollNextAction();
     if (auto_firing_) {
       if (&auto_player_) {
-        STDOUT << millis() - auto_time_;
         if (millis() - auto_time_ > 1000 * auto_player_->length()) {
           shots_fired_++;
           auto_time_ = millis();
