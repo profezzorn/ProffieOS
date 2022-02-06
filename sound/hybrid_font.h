@@ -230,38 +230,40 @@ public:
     if (loop) hum_player_->PlayLoop(loop);
   }
 
-  RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
+   RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
     EnableAmplifier();
     if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
     RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
     if (!player) {
       STDOUT.println("Out of WAV players! Getting more...");
-      float oldest_ = 0;
-      uint32_t kill_ = 0;
+      float highest_progress = 0;
+      uint32_t player_to_restart = 0;
       // check wavplayers, rule out hum and smoothswings then kill oldest one 
       for (size_t i = 0; i < NELEM(wav_players); i++) {
-        if (wav_players[i].isPlaying() && wav_players[i].current_file_id().GetEffect() == f) {
+        if (wav_players[i].isPlaying() && 
+          wav_players[i].current_file_id().GetEffect() == f &&
+          wav_players[i].refs() == 0) {
           float pos = wav_players[i].pos();
-          if (pos > oldest_) {
-            oldest_ = pos;
-            kill_ = i;
+          if (pos > highest_progress) {
+            highest_progress = pos;
+            player_to_restart = i;
           }    
         } else {
           // unsuccessful acquisition. Let's try again.
-          if (i == 6) return player;
+          if (i == NELEM(wav_players)) return player;
         }
       }
-      if (wav_players[kill_].pos() > .002) {
-        wav_players[kill_].set_fade_time(0.001);
-        wav_players[kill_].FadeAndStop();
-        STDOUT << "Killing off " << wav_players[kill_].filename() << "\n";
-        while(wav_players[kill_].isPlaying()) {
+      if (wav_players[player_to_restart].pos() > .002) {
+        wav_players[player_to_restart].set_fade_time(0.001);
+        wav_players[player_to_restart].FadeAndStop();
+        STDOUT << "Killing off " << wav_players[player_to_restart].filename() << "\n";
+        while (wav_players[player_to_restart].isPlaying()) {
 #ifdef VERSION_MAJOR >= 4
           armv7m_core_yield();
 #endif
         }
       }
-      player = GetFreeWavPlayer();
+      player = RefPtr<BufferedWavPlayer>(wav_players + player_to_restart);
     }
     player->set_volume_now(font_config.volEff / 16.0f);
     player->PlayOnce(f);
