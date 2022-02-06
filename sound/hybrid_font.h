@@ -234,11 +234,38 @@ public:
     EnableAmplifier();
     if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
     RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
-    if (player) {
-      player->set_volume_now(font_config.volEff / 16.0f);
-      player->PlayOnce(f);
-      current_effect_length_ = player->length();
+    if (!player) {
+      STDOUT.println("Out of WAV players! Getting more...");
+      float oldest_ = 0;
+      uint32_t kill_ = 0;
+      // check wavplayers, rule out hum and smoothswings then kill oldest one 
+      for (size_t i = 0; i < NELEM(wav_players); i++) {
+        if (wav_players[i].isPlaying() && wav_players[i].current_file_id().GetEffect() == f) {
+          float pos = wav_players[i].pos();
+          if (pos > oldest_) {
+            oldest_ = pos;
+            kill_ = i;
+          }    
+        } else {
+          // unsuccessful acquisition. Let's try again.
+          if (i == 6) return player;
+        }
+      }
+      if (wav_players[kill_].pos() > .002) {
+        wav_players[kill_].set_fade_time(0.001);
+        wav_players[kill_].FadeAndStop();
+        STDOUT << "Killing off " << wav_players[kill_].filename() << "\n";
+        while(wav_players[kill_].isPlaying()) {
+#ifdef VERSION_MAJOR >= 4
+          armv7m_core_yield();
+#endif
+        }
+      }
+      player = GetFreeWavPlayer();
     }
+    player->set_volume_now(font_config.volEff / 16.0f);
+    player->PlayOnce(f);
+    current_effect_length_ = player->length();
     return player;
   }
 
