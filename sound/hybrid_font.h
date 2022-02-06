@@ -230,7 +230,7 @@ public:
     if (loop) hum_player_->PlayLoop(loop);
   }
 
-   RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
+  RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
     EnableAmplifier();
     if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
     RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
