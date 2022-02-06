@@ -203,6 +203,7 @@ public:
   RefPtr<BufferedWavPlayer> next_hum_player_;
   RefPtr<BufferedWavPlayer> swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
+  RefPtr<BufferedWavPlayer> free_player_;
 
   void PlayMonophonic(Effect* f, Effect* loop)  {
     EnableAmplifier();
@@ -230,18 +231,17 @@ public:
     if (loop) hum_player_->PlayLoop(loop);
   }
 
-  RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
-    EnableAmplifier();
-    if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
-    RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
-    if (!player) {
+
+  RefPtr<BufferedWavPlayer> GetOrFreeWavPlayer(Effect* e) {
+    free_player_ = GetFreeWavPlayer();
+    if (!free_player_) {
       STDOUT.println("Out of WAV players! Getting more...");
       float highest_progress = 0;
       uint32_t player_to_restart = 0;
       // check wavplayers, rule out hum and smoothswings then kill oldest one 
       for (size_t i = 0; i < NELEM(wav_players); i++) {
         if (wav_players[i].isPlaying() && 
-          wav_players[i].current_file_id().GetEffect() == f &&
+          wav_players[i].current_file_id().GetEffect() == e &&
           wav_players[i].refs() == 0) {
           float pos = wav_players[i].pos();
           if (pos > highest_progress) {
@@ -250,7 +250,7 @@ public:
           }    
         } else {
           // unsuccessful acquisition. Let's try again.
-          if (i == NELEM(wav_players)) return player;
+          if (i == NELEM(wav_players)) return free_player_;
         }
       }
       if (wav_players[player_to_restart].pos() > .002) {
@@ -263,13 +263,21 @@ public:
 #endif
         }
       }
-      player = RefPtr<BufferedWavPlayer>(wav_players + player_to_restart);
+      free_player_ = RefPtr<BufferedWavPlayer>(wav_players + player_to_restart);
     }
-    player->set_volume_now(font_config.volEff / 16.0f);
-    player->PlayOnce(f);
-    current_effect_length_ = player->length();
-    return player;
+    return free_player_;
   }
+
+  RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
+    EnableAmplifier();
+    if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
+    GetOrFreeWavPlayer(f);
+    free_player_->set_volume_now(font_config.volEff / 16.0f);
+    free_player_->PlayOnce(f);
+    current_effect_length_ = free_player_->length();
+    return free_player_;
+  }
+
 
   void Play(Effect* monophonic, Effect* polyphonic) {
     if (polyphonic->files_found()) {
