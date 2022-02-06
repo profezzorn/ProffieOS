@@ -233,7 +233,7 @@ public:
     }
   }
 
-   RefPtr<BufferedWavPlayer> auto_player_;
+  RefPtr<BufferedWavPlayer> auto_player_;
 
   uint32_t auto_time_;
   virtual void Fire() {
@@ -251,16 +251,15 @@ public:
 #endif
     if (blaster_mode == MODE_AUTO) {
       // Set up the autofire pairing if the font suits it.
-      SelectAutoFirePair(); 
-      SaberBase::SetLockup(LOCKUP_AUTOFIRE);
-      SaberBase::DoBeginLockup();
+      SelectAutoFirePair();
       auto_firing_ = true;
       auto_time_ = millis();
+      SaberBase::SetLockup(LOCKUP_AUTOFIRE);
+      SaberBase::DoBeginLockup();
+      STDOUT << "***************************** OK Going to GetNewestAutoWav() with &SFX_auto in tow\n";
+      GetNewestAutoWav(&SFX_auto);
+      STDOUT << "***************************** Back here now and doing autofire like I should. \n";
 
-      // GET auto.wav here
-      if (!auto_player_) {
-        auto_player_ = GetWavPlayerPlaying(&SFX_auto);
-        }
     } else {
       if (blaster_mode == MODE_STUN) {
         SaberBase::DoEffect(EFFECT_STUN, 0);
@@ -273,12 +272,39 @@ public:
     }
   }
 
+  RefPtr<BufferedWavPlayer> GetNewestAutoWav(Effect* a) {
+    // auto_player_ = GetWavPlayerPlaying(&SFX_auto);
+    float lowest_progress = 360000;
+    uint32_t player_to_choose = 0;
+    // check wavplayers playing auto.wav, choose newest to use 
+    for (size_t i = 0; i < NELEM(wav_players); i++) {
+    STDOUT << "***************************** Now inside GetNewestAutoWav for-loop.   i = " << i << "\n";
+// about check wavplayers for auto.wav, and is not referenced
+        if (wav_players[i].isPlaying() &&
+        wav_players[i].current_file_id().GetEffect() == a &&
+        wav_players[i].refs() == 0) {
+        STDOUT << "***************************** This if-clause is not turning up true EVER. trying to do stuff \n";
+        float pos = wav_players[i].pos();
+        if (pos < lowest_progress) {
+          STDOUT << "***************************** pos < lowest_progress = " << pos << "\n";
+          lowest_progress = pos;
+          player_to_choose = i;
+          STDOUT << "***************************** player_to_choose = " << player_to_choose << "\n";
+        }    
+      }
+    }
+    STDOUT << "***************************** for-loop done, chosen player = " << player_to_choose << " \n";
+    auto_player_ = RefPtr<BufferedWavPlayer>(wav_players + player_to_choose);
+    return auto_player_;
+  }
+
+
   void Loop() override {
     PropBase::Loop();
     PollNextAction();
     if (auto_firing_) {
-      if (&auto_player_) {
-        if (millis() - auto_time_ > 1000 * auto_player_->length()) {
+      if (auto_player_) {
+        if (millis() - auto_time_ > 1000 * (auto_player_)->length()) {
           shots_fired_++;
           auto_time_ = millis();
           STDOUT << "******** AUTOFIRING - Remaining shots = " << GetBulletCount() << "\n";
@@ -287,6 +313,7 @@ public:
             SaberBase::DoEndLockup();
             SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
             auto_firing_ = false;
+            auto_player_.Free();
             return;
           }
         }
