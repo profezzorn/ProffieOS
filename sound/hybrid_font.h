@@ -231,13 +231,12 @@ public:
     if (loop) hum_player_->PlayLoop(loop);
   }
 
-
   RefPtr<BufferedWavPlayer> GetOrFreeWavPlayer(Effect* e) {
     free_player_ = GetFreeWavPlayer();
     if (!free_player_) {
       STDOUT.println("Out of WAV players! Getting more...");
       float highest_progress = 0;
-      uint32_t player_to_restart = 0;
+      int player_to_restart = -1;
       // check wavplayers, rule out hum and smoothswings then kill oldest one 
       for (size_t i = 0; i < NELEM(wav_players); i++) {
         if (wav_players[i].isPlaying() && 
@@ -250,10 +249,10 @@ public:
           }    
         } else {
           // unsuccessful acquisition. Let's try again.
-          if (i == NELEM(wav_players)) return free_player_;
+          if (player_to_restart == -1) return RefPtr<BufferedWavPlayer>(nullptr);
         }
       }
-      if (wav_players[player_to_restart].pos() > .002) {
+      if (wav_players[player_to_restart].length() - wav_players[player_to_restart].pos() > .002) {
         wav_players[player_to_restart].set_fade_time(0.001);
         wav_players[player_to_restart].FadeAndStop();
         STDOUT << "Killing off " << wav_players[player_to_restart].filename() << "\n";
@@ -262,6 +261,8 @@ public:
           armv7m_core_yield();
 #endif
         }
+      } else {
+        return RefPtr<BufferedWavPlayer>(nullptr);
       }
       free_player_ = RefPtr<BufferedWavPlayer>(wav_players + player_to_restart);
     }
@@ -277,7 +278,6 @@ public:
     current_effect_length_ = free_player_->length();
     return free_player_;
   }
-
 
   void Play(Effect* monophonic, Effect* polyphonic) {
     if (polyphonic->files_found()) {
