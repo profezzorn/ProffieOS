@@ -240,29 +240,22 @@ public:
       // check wavplayers, rule out hum and smoothswings then kill oldest one 
       for (size_t i = 0; i < NELEM(wav_players); i++) {
         if (wav_players[i].isPlaying() && 
-          wav_players[i].current_file_id().GetEffect() == e &&
+          wav_players[i].current_file_id().GetEffect() &&
           wav_players[i].refs() == 0) {
           float pos = wav_players[i].pos();
           if (pos > highest_progress) {
             highest_progress = pos;
             player_to_restart = i;
           }    
-        } else {
-          // unsuccessful acquisition. Let's try again.
-          if (player_to_restart == -1) return RefPtr<BufferedWavPlayer>(nullptr);
         }
       }
-      if (wav_players[player_to_restart].length() - wav_players[player_to_restart].pos() > .002) {
-        wav_players[player_to_restart].set_fade_time(0.001);
-        wav_players[player_to_restart].FadeAndStop();
-        STDOUT << "Killing off " << wav_players[player_to_restart].filename() << "\n";
-        while (wav_players[player_to_restart].isPlaying()) {
+      wav_players[player_to_restart].set_fade_time(0.001);
+      wav_players[player_to_restart].FadeAndStop();
+      STDOUT << "Stopping wav_player playing " << wav_players[player_to_restart].filename() << "\n";
+      while (wav_players[player_to_restart].isPlaying()) {
 #ifdef VERSION_MAJOR >= 4
-          armv7m_core_yield();
+        armv7m_core_yield();
 #endif
-        }
-      } else {
-        return RefPtr<BufferedWavPlayer>(nullptr);
       }
       free_player_ = RefPtr<BufferedWavPlayer>(wav_players + player_to_restart);
     }
