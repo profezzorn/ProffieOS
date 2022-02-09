@@ -1,6 +1,7 @@
 #ifndef MOTION_LSM6DS3H_H
 #define MOTION_LSM6DS3H_H
 
+// Supports LSM6DS3, LSM6DSM and LSM6DSO
 class LSM6DS3H : public I2CDevice, Looper, StateMachine {
 public:
   const char* name() override { return "LSM6DS3H"; }
@@ -116,9 +117,18 @@ public:
       first_motion_ = true;
       first_accel_ = true;
       
-      STDOUT.print("Motion setup ... ");
+      STDOUT.print("Motion chip ... ");
       while (!I2CLock()) YIELD();
 
+      I2C_READ_BYTES_ASYNC(WHO_AM_I, databuffer, 1);
+      id_ = databuffer[0];
+      STDOUT.print(id_);
+      if (id_  == 105 || id_ == 106 || id_ == 108) {
+        STDOUT.println(" found.");
+      } else  {
+        STDOUT.println(" not found.");
+	goto i2c_timeout;
+      }
       I2C_WRITE_BYTE_ASYNC(CTRL1_XL, 0x84);  // 1.66kHz accel, 16G range
       I2C_WRITE_BYTE_ASYNC(CTRL2_G, 0x8C);   // 1.66kHz gyro, 2000 dps
       I2C_WRITE_BYTE_ASYNC(CTRL3_C, 0x44);   // ?
@@ -129,14 +139,9 @@ public:
       I2C_WRITE_BYTE_ASYNC(CTRL8_XL, 0x00);
       I2C_WRITE_BYTE_ASYNC(CTRL9_XL, 0x38);  // accel xyz enable
       I2C_WRITE_BYTE_ASYNC(CTRL10_C, 0x38);  // gyro xyz enable
-      I2C_WRITE_BYTE_ASYNC(INT1_CTRL, 0x3);  // Activate INT on data ready
-      pinMode(motionSensorInterruptPin, INPUT);
-      I2C_READ_BYTES_ASYNC(WHO_AM_I, databuffer, 1);
-      if (databuffer[0] == 105 || databuffer[0] == 106) {
-        STDOUT.println("done.");
-      } else {
-        STDOUT.println("failed.");
-	goto i2c_timeout;
+      if (motionSensorInterruptPin != -1) {
+	I2C_WRITE_BYTE_ASYNC(INT1_CTRL, 0x3);  // Activate INT on data ready
+	pinMode(motionSensorInterruptPin, INPUT);
       }
       I2CUnlock();
 
@@ -161,15 +166,21 @@ public:
       while (true) {
 	YIELD();
 	if (!SaberBase::MotionRequested()) break;
-	if (!digitalRead(motionSensorInterruptPin)) {
-	  if (millis() - last_event_ > I2C_TIMEOUT_MILLIS * 2) {
-	    goto i2c_timeout;
-	  }
-	  continue;
+	if (motionSensorInterruptPin == -1) {
+	  while (!I2CLock((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31)) YIELD();
+	  I2C_READ_BYTES_ASYNC(STATUS_REG, databuffer, 1);
+	  if ((databuffer[0] & 3) != 3) continue;
 	} else {
-	  last_event_ = millis();
+	  if (!digitalRead(motionSensorInterruptPin)) {
+	    if (millis() - last_event_ > I2C_TIMEOUT_MILLIS * 2) {
+	      goto i2c_timeout;
+	    }
+	    continue;
+	  } else {
+	    last_event_ = millis();
+	  }
+	  while (!I2CLock((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31)) YIELD();
 	}
-        while (!I2CLock((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31)) YIELD();
 	
 	I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 12);
 	// accel data available
@@ -288,6 +299,7 @@ public:
   volatile uint32_t last_event_;
   bool first_motion_;
   bool first_accel_;
+  uint8_t id_ = 105;
 };
 
 #endif
