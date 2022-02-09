@@ -15,19 +15,23 @@ Download your choice of language and variation here:
 http://fredrik.hubbe.net/lightsaber/sound/
 
 Features:
+- Alt blade independent ignition and retraction (such as for a staff saber.)
 - Live preset changing while blade is running (skips font.wav and preon).
 - Battle Mode, gesture ignitions, and multi-blast based on fett263's work.
 - Auto enter/exit multi-blaster block mode 
-- Spoken Battery level, with percentage option.
-- Added quote sound so force.wavs can remain as force.
-             - Add quote.wav files to font to use.
+- Spoken Battery level in volts OR percentage. Both always available.
+- Dedicated Quote sounds - Always available. force.wavs can remain as force.
+                           Add quote.wav files to font to use.
 - Play / Stop track control while blade is on.
 - Force Push is always available, not just in Battle Mode.
 - Melt is always available as no button, with pull-away or button to end.
 - Drag is always clash with button pressed while pointing down.
-- No blade = no gestures option if Blade Detect is used.
+- No blade inserted = no gestures option if Blade Detect is used.
 - Use wav files for talkie things.
 - Optional On-the-fly volume controls with cycle through min and max levels.
+- SPAM BLAST - Enter this mode to make the button super sensitive for 
+                          multiple blaster blocks. Presses are prioritized over
+                          other features. No limits, no lag when "rapid firing".
 
 Optional Blade style elements:
 On-Demand battery level - A layer built into the blade styles that reacts 
@@ -43,7 +47,25 @@ EFFECT_USER2            - for blade effects with sounds that might work better w
                           (think seismic charge silence, iceblade etc...)
                         - monosfx.wav files are used. It can be just the sound, or a
                           blade effect too by using EFFECT_USER2 in a TransitionEffectL.
+EFFECT_USER4            - Alt blade power control, such as for a staff 2nd blade.
+                          Independent extention retraction on EFFECT_USER4 button combo.
+                          If normal power off is used, both blades turn off.
+                          Example blade style template to use this feature:
+  StylePtr<Layers<Black,AlphaL<
+    // The following Red can be replaced by a Layers<> with your exising style stuff in it, 
+    // from the base blade color down to, but not including, the InOutTrL.
+    Red,
+    IsGreaterThan<EffectIncrementF<EFFECT_USER4,Int<32768>,Int<16384>>,Int<100>>>,
+    EffectSequence<EFFECT_USER4,
+      TransitionEffectL<TrConcat<TrInstant,Black,TrWipe<500>>,EFFECT_USER4>,
+      TransitionEffectL<TrConcat<TrInstant,
+      // This Red should be the same as the base blade color layer
+      Red,
+      TrWipeInX<Int<600>>>,EFFECT_USER4>>,
+    InOutTrL<TrInstant,TrWipeInX<WavLen<EFFECT_RETRACTION>>>>>(),
+    
 Optional #defines:
+#define BC_SWAP                 - Enable to use Swap feature instead of SPAM BLAST mode.
 #define ENABLE_AUTO_SWING_BLAST - Multi-blast initiated by simply swinging
                                   within 1 second of last blast.
                                   Exit by not swinging for 1 second.
@@ -63,7 +85,8 @@ Gesture Controls:
 #define BC_TWIST_ON
 #define BC_TWIST_OFF
 #define NO_BLADE_NO_GEST_ONOFF
-- If using blade detect, Gesture ignitions or retractions are disabled.
+- If using blade detect, Gesture ignitions or retractions are 
+  disabled when no blade is used.
   **NOTE** Only works when a BLADE_DETECT_PIN is defined. 
 
 #define BC_FORCE_PUSH
@@ -140,8 +163,12 @@ Stab                  - Either no button and just Thrust forward,
                         or Hold any button and physically stab something.
                         Works in Battle Mode!
 Blaster Blocks        - Click or Double click POW.
+Spam Blaster Blocks   - 4x click and hold to toggle mode ON/OFF. Plays mzoom.wav
+                        This makes the button super sensitive for multiple blaster blocks.
+                        Note that it gets in the way of normal features, 
+                        so turn off when you're done spamming.
 Auto Swing Blast      - if #define ENABLE_AUTO_SWING_BLAST is active,
-                        swinging within 1 second of doing button activated 
+                        swinging within 1 second of doing a button activated 
                         Blaster Block will start this timed mode.
                         To trigger auto blaster blocks, swing saber
                         within 1 second of last Swing Blast block.
@@ -159,10 +186,10 @@ Battle Mode           - Triple click and hold POW to enter and exit.
 Force Effect          - Hold POW + Twist. (while NOT pointing up or down)
 Monophonic Force      - Hold POW + Twist. (while pointing up)
 Color Change Mode     - Hold POW + Twist. (while pointing down)
-                        - Rotate hilt to cycle through all available colors, or
-                        - Click POW to change if ColorChange<> used in blade style,
-                        - Click + hold POW to save color selection and exit.
-                        - Triple click POW to exit without changing color.
+                          Rotate hilt to cycle through all available colors, or
+                          Click POW to change if ColorChange<> used in blade style,
+                          Click + hold POW to save color selection and exit.
+                          Triple click POW to exit without changing color.
     ColorChange explained:
           If the style uses ColorChange<>, when you activate color change mode,
           there will be up to 12 steps per rotation with a little sound at each step.
@@ -174,11 +201,18 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
           ColorChange<>, it has no effect.
 Quote Player          - Triple click POW.
 Force Push            - Push hilt perpendicularly from a stop.
-Swap (EffectSequence) - 4x click and hold POW medium. (while NOT pointing up)
+Swap                  - If #define BC_SWAP is active, this replaces SPAM BLAST.
+                        4x click and hold POW. (while NOT pointing up)
+                        * Requires #define BC_SWAP and an EFFECT_USER1 in blade style.
 PowerSave Dim Blade   - 4x click and hold POW medium. (while pointing up)
-          (To use Power Save requires AlphaL based EffectSequence in style)
-Turn off blade        - Hold POW and wait until blade is off,
-                        or Twist if using #define BC_TWIST_OFF.
+                        To use Power Save requires AlphaL based EffectSequence in style.
+Turn ON/OFF Alt blade - Double click and hold POW, release after a second.
+                        (click then long click) Same action as previous preset.
+                        Also works using Aux button on 2 button sabers even if 
+                        running 1 button controls with NUM_BUTTONS 1.
+                        If held too long, Lightning Block will trigger.
+                        * Requires EFFECT_USER4 in blade style, see example above.
+Turn OFF ALL blades   - Hold POW and wait until blade is off,
 
 ====================== 2 BUTTON CONTROLS ========================
 | Sorted by ON or OFF state: (what it's like while using saber) |
@@ -216,8 +250,12 @@ Stab                  - Either no button and just Thrust forward, or
                         Hold any button and physically stab something.
                         Works in Battle Mode!
 Blaster Blocks        - Click or Double click POW.
+Spam Blaster Blocks   - 4x click and hold to toggle mode ON/OFF. Plays mzoom.wav
+                        This makes the button super sensitive for multiple blaster blocks.
+                        Note that it gets in the way of normal features, 
+                        so turn off when you're done spamming.
 Auto Swing Blast      - if #define ENABLE_AUTO_SWING_BLAST is active,
-                        swinging within 1 second of doing button activated 
+                        swinging within 1 second of doing a button activated 
                         Blaster Block will start this timed mode.
                         To trigger auto blaster blocks, swing saber
                         within 1 second of last Swing Blast block.
@@ -235,10 +273,10 @@ Battle Mode           - Hold POW + Click AUX to enter and exit.
 Force Effect          - Hold POW + Twist. (while NOT pointing up or down)
 Monophonic Force      - Hold POW + Twist. (while pointing up)
 Color Change Mode     - Hold POW + Twist. (while pointing down)
-                        - Rotate hilt to cycle through all available colors, or
-                        - Click AUX to change if ColorChange<> used in blade style,
-                        - Click + hold POW to save color selection and exit.
-                        - Triple click POW to exit without changing color.
+                          Rotate hilt to cycle through all available colors, or
+                          Click AUX to change if ColorChange<> used in blade style,
+                          Click + hold POW to save color selection and exit.
+                          Triple click POW to exit without changing color.
     ColorChange explained:
           If the style uses ColorChange<>, when you activate color change mode,
           there will be up to 12 steps per rotation with a little sound at each step.
@@ -250,10 +288,13 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
           ColorChange<>, it has no effect.
 Quote Player          - Triple click POW.
 Force Push            - Push hilt perpendicularly from a stop.
-Swap (EffectSequence) - Hold AUX + Twist. (while NOT pointing up)
+Swap                  - If #define BC_SWAP is active, this replaces SPAM BLAST.
+                        Hold AUX + Twist. (while NOT pointing up)
+                        * Requires an EffectSequence<EFFECT_USER1...> in blade style.
 PowerSave Dim Blade   - Hold AUX + Twist. (while pointing up)
-          (To use Power Save requires AlphaL based EffectSequence in style)
-Turn off blade        - Hold POW and wait until blade is off,
+                        To use Power Save requires AlphaL based EffectSequence in style.
+Turn ON/OFF Alt blade - Press and hold AUX.
+Turn off ALL blades   - Hold POW and wait until blade is off,
                         or Twist if using #define BC_TWIST_OFF.
 */
 
@@ -517,7 +558,6 @@ public:
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
       return true;
@@ -571,6 +611,10 @@ public:
         last_twist_ = millis();
         saber_off_time_ = millis();
         battle_mode_ = false;
+        if (alt_blade_on_) {
+          hybrid_font.DoEffect(EFFECT_USER4, 0);
+          alt_blade_on_ = false;
+        }
       }
       return true;
   #endif  // BC_TWIST_OFF
@@ -646,6 +690,19 @@ public:
       }
       return true;
 
+// Turn Alt blade on/off using Aux button
+// Works on 2 button sabers even if running 1 button controls
+    case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD, MODE_ON):
+      hybrid_font.DoEffect(EFFECT_USER4, 0);
+      if (!alt_blade_on_) {
+        hybrid_font.PlayCommon(&SFX_out);
+        alt_blade_on_ = true;
+      } else {
+        hybrid_font.PlayCommon(&SFX_in);
+        alt_blade_on_ = false;
+      }
+      return true;
+
 // Next Preset AND Volume Up
   #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON):
@@ -680,8 +737,19 @@ public:
         //Don't change preset if in colorchange mode
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
           previous_preset_fast();
+      } else {
+        // Alt blade control
+        hybrid_font.DoEffect(EFFECT_USER4, 0);
+      if (!alt_blade_on_) {
+          hybrid_font.PlayCommon(&SFX_out);
+          alt_blade_on_ = true;
+        } else {
+          hybrid_font.PlayCommon(&SFX_in);
+          alt_blade_on_ = false;
+        }
       }
       return true;
+
     case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_OFF):
       if (!mode_volume_) {
         previous_preset();
@@ -774,23 +842,36 @@ public:
     return true;
 
 // Blaster Deflection
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
-      // Don't blast if in colorchange mode
-      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
-      SaberBase::DoBlast();
-      last_blast_ = millis();
-      return true;
-  #ifdef ENABLE_AUTO_SWING_BLAST
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
+        if (!spam_blast_) { 
+          //Don't blast if in colorchange mode
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
+            SaberBase::DoBlast();
+            last_blast_ = millis();
+          }
+          return true;
+
+      // SPAM BLAST mode uses
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
+        if (spam_blast_) { 
+          //Don't blast if in colorchange mode
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
+            SaberBase::DoBlast();
+            last_blast_ = millis();
+          }
+          return true;
+
     // Auto enter/exit multi-blast block with swings if swing within 1 second  
-    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
-      if (millis() - last_blast_ < 1000) {
-        SaberBase::DoBlast();
-        last_blast_ = millis();
-        STDOUT.println("Auto Swing Blast mode");
-      }
-      break;
-  #endif
+#ifdef ENABLE_AUTO_SWING_BLAST
+      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
+        if (millis() - last_blast_ < 1000) {
+          SaberBase::DoBlast();
+          last_blast_ = millis();
+          STDOUT.println("Auto Swing Blast mode");
+        }
+        break;
+#endif
         
 // Lockup
   #if NUM_BUTTONS == 1
@@ -902,7 +983,7 @@ public:
       return true;
 
 // Power Save blade dimming - pointing up
-// Swap effect - NOT pointing up
+// SPAM BLAST mode or Swap effect - NOT pointing up
   #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_ON):
   #else
@@ -913,7 +994,17 @@ public:
         SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
         return true;
       } else {
+  #ifndef BC_SWAP
+        sound_library_.SayZoomingIn();
+        if (!spam_blast_) {
+          spam_blast_ = true;
+        } else { 
+          spam_blast_ = false;
+        }
+        return true;
+  #else
         hybrid_font.DoEffect(EFFECT_USER1, 0);
+  #endif
       }
       return true;
 
@@ -929,11 +1020,16 @@ public:
         }
   #endif
         if (!battle_mode_) {
+          if (alt_blade_on_) {
+            hybrid_font.DoEffect(EFFECT_USER4, 0);
+            alt_blade_on_ = false;
+          }
           Off();
         }
       }
       saber_off_time_ = millis();
       return true;
+
 
 // Blade Detect
   #ifdef BLADE_DETECT_PIN
@@ -1027,6 +1123,8 @@ private:
   bool battle_mode_ = false;
   bool max_vol_reached_ = false;
   bool min_vol_reached_ = false;
+  bool spam_blast_ = false;
+  bool alt_blade_on_ = false;
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
