@@ -1030,7 +1030,6 @@ public:
       saber_off_time_ = millis();
       return true;
 
-
 // Blade Detect
   #ifdef BLADE_DETECT_PIN
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
