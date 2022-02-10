@@ -235,29 +235,37 @@ public:
     free_player_ = GetFreeWavPlayer();
     if (!free_player_) {
       STDOUT.println("Out of WAV players! Getting more...");
-      float highest_progress = 0;
+      float highest_progress = 0.00;
       int player_to_restart = -1;
-      // check wavplayers, rule out hum and smoothswings then kill oldest one 
+      int count = 0;
+      // check wavplayers, rule out non-effects, then kill oldest one
+      // IF it's not the only instance playing. 
       for (size_t i = 0; i < NELEM(wav_players); i++) {
-        if (wav_players[i].isPlaying() && 
-          wav_players[i].current_file_id().GetEffect() &&
+        if (wav_players[i].isPlaying() &&
+          wav_players[i].current_file_id().GetEffect() == e &&
           wav_players[i].refs() == 0) {
           float pos = wav_players[i].pos();
           if (pos > highest_progress) {
             highest_progress = pos;
             player_to_restart = i;
-          }    
+          }
+          Effect e = wav_players[i].GetEffect();
+          for (size_t j = 0; j < NELEM(wav_players); i++) {
+            if (wav_players[j].GetEffect() == e) count++;
+          }            
         }
       }
-      wav_players[player_to_restart].set_fade_time(0.001);
-      wav_players[player_to_restart].FadeAndStop();
-      STDOUT << "Stopping wav_player playing " << wav_players[player_to_restart].filename() << "\n";
-      while (wav_players[player_to_restart].isPlaying()) {
+      if (player_to_restart >= 0 && count > 1) {
+        wav_players[player_to_restart].set_fade_time(0.001);
+        wav_players[player_to_restart].FadeAndStop();
+        STDOUT << "Stopping wav_player " << i << "playing " << wav_players[player_to_restart].filename() << "\n";
+        while (wav_players[player_to_restart].isPlaying()) {
 #ifdef VERSION_MAJOR >= 4
-        armv7m_core_yield();
+          armv7m_core_yield();
 #endif
-      }
-      free_player_ = RefPtr<BufferedWavPlayer>(wav_players + player_to_restart);
+        }
+        free_player_ = RefPtr<BufferedWavPlayer>(wav_players + player_to_restart);
+      } else return RefPtr<BufferedWavPlayer>();
     }
     return free_player_;
   }
