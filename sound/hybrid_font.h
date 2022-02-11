@@ -281,7 +281,7 @@ public:
           free_player = RefPtr<BufferedWavPlayer>(wav_players + saved_player_to_restart_);
         }
       }
-      return RefPtr<BufferedWavPlayer>(); // failure to fulfill is same lag as just waiting like we did before all this. Not great.
+      return RefPtr<BufferedWavPlayer>();
     }
     return free_player;
   }
