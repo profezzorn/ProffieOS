@@ -1664,15 +1664,23 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_CLASH_STRENGTH_SOUND
         HandleClash();
 #else
-      if (SaberBase::GetClashStrength() < saved_gesture_control.clashdetect) {
-        SaberBase::DoClash();
-        clash_type_ = CLASH_NONE;
-      } else {
-        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-        SaberBase::DoBeginLockup();
-        auto_lockup_on_ = true;
-        clash_type_ = CLASH_NONE;
-      }
+        if (clash_type_ == CLASH_BATTLE_MODE) {
+          if (SaberBase::GetClashStrength() < saved_gesture_control.clashdetect) {
+            SaberBase::DoClash();
+            clash_type_ = CLASH_NONE;
+          } else {
+            SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+            SaberBase::DoBeginLockup();
+            auto_lockup_on_ = true;
+            clash_type_ = CLASH_NONE;
+          }
+        } else if (clash_type_ == CLASH_STAB) {
+          SaberBase::DoClash();
+          clash_type_ = CLASH_NONE;
+	} else {
+          SaberBase::DoClash();
+          clash_type_ = CLASH_NONE;
+        }
 #endif
       }
     }
