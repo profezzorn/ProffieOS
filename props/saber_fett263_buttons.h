@@ -1674,9 +1674,6 @@ SaberFett263Buttons() : PropBase() {}
             auto_lockup_on_ = true;
             clash_type_ = CLASH_NONE;
           }
-        } else if (clash_type_ == CLASH_STAB) {
-          SaberBase::DoClash();
-          clash_type_ = CLASH_NONE;
 	} else {
           SaberBase::DoClash();
           clash_type_ = CLASH_NONE;
