@@ -3,7 +3,7 @@
 
 #include "svf.h"
 
-// Usage: IncremendModulo<PULSE, MAX, INCREMENT>
+// Usage: IncrementModulo<PULSE, MAX, INCREMENT>
 // PULSE: FUNCTION (pulse type)
 // MAX: FUNCTION (not zero) defaults to Int<32768>
 // INCREMENT: FUNCTION defaults to Int<1>

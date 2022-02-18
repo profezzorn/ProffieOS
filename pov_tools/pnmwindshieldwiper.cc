@@ -60,18 +60,6 @@ bool zero(int x, int y) {
   return tmp.r < 0.1 && tmp.g < 0.1 && tmp.b < 0.1;
 }
 
-void write_ppm(const TooDee<RGB<float> >& tmp, FILE* f) {
-  int maxvalue = 255;
-  fprintf(f, "P6\n%lu %lu\n%d\n", tmp.xsize(), tmp.ysize(), maxvalue);
-  for (size_t y = 0; y < tmp.ysize(); y++) {
-    for (size_t x = 0; x < tmp.xsize(); x++) {
-      putc(std::min<int>(maxvalue, tmp.get(x, y).r * maxvalue), f);
-      putc(std::min<int>(maxvalue, tmp.get(x, y).g * maxvalue), f);
-      putc(std::min<int>(maxvalue, tmp.get(x, y).b * maxvalue), f);
-    }
-  }
-}
-
 enum TMP {
   bo = 1,
   bi = 2,

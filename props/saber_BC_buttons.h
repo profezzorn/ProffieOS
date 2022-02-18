@@ -742,10 +742,10 @@ public:
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
         sound_library_.SayVolts();
-        STDOUT.println(battery_monitor.battery());
+        STDOUT<< "Battery Voltage: " << battery_monitor.battery() << "\n";
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
-    return true;
+      return true;
 
 // Spoken Battery Level in percentage
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
@@ -753,7 +753,7 @@ public:
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
         sound_library_.SayPercent();
-        STDOUT.println(battery_monitor.battery_percent());
+        STDOUT<< "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
@@ -761,8 +761,8 @@ public:
 // On Demand Battery Level
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
       if (!mode_volume_) {
-        STDOUT.println(battery_monitor.battery());
-        STDOUT.println(battery_monitor.battery_percent());
+        STDOUT<< "Battery Voltage: " << battery_monitor.battery() << "\n";
+        STDOUT<< "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
