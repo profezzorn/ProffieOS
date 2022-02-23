@@ -1496,7 +1496,6 @@ SaberFett263Buttons() : PropBase() {}
     bool uses_rgb_arg = false;
     for (int i = 1; i <= NUM_BLADES; i++)
       uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(i), 3);
-    ONCEPERBLADE(USES_RGB_ARG)
     if (!uses_rgb_arg) {
 #ifndef DISABLE_COLOR_CHANGE
       ToggleColorChangeMode();
