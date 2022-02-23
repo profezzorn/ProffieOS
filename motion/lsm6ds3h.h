@@ -226,7 +226,7 @@ public:
     i2c_timeout:
       STDOUT.println("Motion chip timeout, trying auto-reboot of motion chip!");
       while (!I2CLock(true)) YIELD();
-      DumpI2CState();
+      Reset();
       SLEEP(20);
 #define i2c_timeout i2c_timeout2
       I2C_WRITE_BYTE_ASYNC(CTRL3_C, 1);
