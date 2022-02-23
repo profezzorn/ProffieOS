@@ -102,6 +102,14 @@ public:
 #endif    
   ) {}
 
+#define I2CLOCK() do {							\
+  state_machine_.sleep_until_ = millis();				\
+  while (!I2CLock()) {							\
+    if (millis() - state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) goto i2c_timeout; \
+    YIELD();								\
+  }									\
+} while(0)
+    
   void Loop() override {
 #if 0
     // Uncomment this to debug motion timeouts.
@@ -118,7 +126,7 @@ public:
       first_accel_ = true;
       
       STDOUT.print("Motion chip ... ");
-      while (!I2CLock()) YIELD();
+      I2CLOCK();
 
       I2C_READ_BYTES_ASYNC(WHO_AM_I, databuffer, 1);
       id_ = databuffer[0];
@@ -155,7 +163,9 @@ public:
 	if ((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31) {
 	  TRACE(MOTION, "timeout");
 	  STDOUT.println("Motion timeout.");
-	  break;
+	  stm32l4_exti_notify(&stm32l4_exti, g_APinDescription[motionSensorInterruptPin].pin,
+			      EXTI_CONTROL_DISABLE, &LSM6DS3H::do_nothing, nullptr);
+	  goto i2c_timeout;
 	}
 	YIELD();
       }
@@ -169,7 +179,10 @@ public:
 	if (motionSensorInterruptPin == -1) {
 	  while (!I2CLock((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31)) YIELD();
 	  I2C_READ_BYTES_ASYNC(STATUS_REG, databuffer, 1);
-	  if ((databuffer[0] & 3) != 3) continue;
+	  if ((databuffer[0] & 3) != 3) {
+	    I2CUnlock();
+	    continue;
+	  }
 	} else {
 	  if (!digitalRead(motionSensorInterruptPin)) {
 	    if (millis() - last_event_ > I2C_TIMEOUT_MILLIS * 2) {
@@ -202,7 +215,7 @@ public:
 #endif      
       STDOUT.println("Motion disable.");
 
-      while (!I2CLock()) YIELD();
+      I2CLOCK();
       I2C_WRITE_BYTE_ASYNC(CTRL2_G, 0x0);  // accel disable
       I2C_WRITE_BYTE_ASYNC(CTRL1_XL, 0x0);  // gyro disable
       I2CUnlock();
@@ -212,7 +225,8 @@ public:
 
     i2c_timeout:
       STDOUT.println("Motion chip timeout, trying auto-reboot of motion chip!");
-      Reset();
+      while (!I2CLock(true)) YIELD();
+      DumpI2CState();
       SLEEP(20);
 #define i2c_timeout i2c_timeout2
       I2C_WRITE_BYTE_ASYNC(CTRL3_C, 1);

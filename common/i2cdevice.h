@@ -174,10 +174,13 @@ public:
       if (!stm32l4_i2c_reset(Wire._i2c)) break;
       delay(1);
     }
+    Wire._i2c->state = I2C_STATE_READY;
     if (i == 10) {
-      Wire._i2c->state = I2C_STATE_READY;
       stm32l4_i2c_reset(Wire._i2c);
     }
+    Wire.end();
+    delay(1);
+    Wire.begin();
     state_machine_.reset_state_machine();
   }
   bool i2c_read_bytes_async(uint8_t reg, uint8_t* data, size_t bytes) {
