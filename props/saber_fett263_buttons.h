@@ -1493,9 +1493,9 @@ SaberFett263Buttons() : PropBase() {}
 
   // Toggles ColorChange Mode if current style uses RgbArg to CC_COLOR_LIST
   void ToggleCCMode() {
-    bool uses_rgb_arg;
-    #define USES_RGB_ARG(N) \
-    uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(N), 3);
+    bool uses_rgb_arg = false;
+    for (int i = 1; i <= NUM_BLADES; i++)
+      uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(i), 3);
     ONCEPERBLADE(USES_RGB_ARG)
     if (!uses_rgb_arg) {
 #ifndef DISABLE_COLOR_CHANGE
