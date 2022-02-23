@@ -5295,7 +5295,7 @@ SaberFett263Buttons() : PropBase() {}
         }
 #endif
         // Allow normal clashes if blade continues to swing after clash detected in Battle Mode
-        if ((!battle_mode_) || (battle_mode_ && swinging_)) {
+        if (!battle_mode_ || swinging_) {
           clash_impact_millis_ = millis();
 #ifdef FETT263_CLASH_STRENGTH_SOUND
           clash_type_ = CLASH_NORMAL;
