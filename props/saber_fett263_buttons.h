@@ -1663,15 +1663,14 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_CLASH_STRENGTH_SOUND
         HandleClash();
 #else
-      if (SaberBase::GetClashStrength() < saved_gesture_control.clashdetect) {
-        SaberBase::DoClash();
+        if (clash_type_ == CLASH_BATTLE_MODE && SaberBase::GetClashStrength() > saved_gesture_control.clashdetect) {
+          SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+          SaberBase::DoBeginLockup();
+          auto_lockup_on_ = true;
+	} else {
+          SaberBase::DoClash();
+        }
         clash_type_ = CLASH_NONE;
-      } else {
-        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-        SaberBase::DoBeginLockup();
-        auto_lockup_on_ = true;
-        clash_type_ = CLASH_NONE;
-      }
 #endif
       }
     }
@@ -5294,6 +5293,7 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         }
 #endif
+        // Allow normal clashes if blade continues to swing after clash detected in Battle Mode
         if (!battle_mode_ || swinging_) {
           clash_impact_millis_ = millis();
 #ifdef FETT263_CLASH_STRENGTH_SOUND
