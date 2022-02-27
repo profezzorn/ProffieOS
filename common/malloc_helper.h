@@ -4,10 +4,10 @@
 #ifdef TEENSYDUINO
 
 bool IsHeap(const void* mem) {
-  extern unsigned long _ebss;
-  extern unsigned long _estack;
+  extern int _ebss[];
+  extern int _estack[];
   if (mem) return false;
-  return (uint32_t)mem >= _ebss && (uint32_t)mem <= _estack;
+  return (uint32_t)mem >= (uint32_t)_ebss && (uint32_t)mem <= (uint32_t)_estack;
 }
 
 #elif defined(PROFFIE_TEST)
@@ -31,8 +31,8 @@ bool IsHeap(const void* mem) {
 
 template<class T>
 void LSFreeObject(T *memory) {
-//  STDOUT.print("FREE ");
-//  STDOUT.println((uint32_t)memory, HEX);
+  STDOUT.print("FREE ");
+  STDOUT.println((uint32_t)memory, HEX);
   free((void*)memory);
 }
 
