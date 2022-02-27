@@ -57,6 +57,7 @@ public:
 #endif
 };
 
+#ifdef ENABLE_AUDIO
 struct SoundToPlay {
   const char* filename_;
   Effect* effect_;
@@ -106,6 +107,7 @@ private:
   int sounds_;
   SoundToPlay queue_[QueueLength];
 };
+#endif
 
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase {
@@ -309,8 +311,8 @@ public:
     *(b++) = 0;
     *(b++) = 0;
 
-#ifdef ENABLE_AUDIO
     Effect::ScanCurrentDirectory();
+#ifdef ENABLE_AUDIO
     SaberBase* font = NULL;
     hybrid_font.Activate();
     font = &hybrid_font;
