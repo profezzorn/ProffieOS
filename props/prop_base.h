@@ -555,6 +555,8 @@ public:
   // Called from setup to identify the blade and select the right
   // Blade driver, style and sound font.
   void FindBlade() {
+    static_assert(NELEM(blades) > 0, "blades array cannot be empty");
+    
     size_t best_config = 0;
     if (NELEM(blades) > 1) {
       float resistor = id();
