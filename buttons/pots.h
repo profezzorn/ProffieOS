@@ -14,12 +14,14 @@ public:
   }
 };
 
+#ifdef ENABLE_AUDIO
 class ChangeVolumeAnalogReceiver : public AnalogReceiver {
 public:
   void Set(float value) override {
     dynamic_mixer.set_volume(VOLUME * value);
   }
 };
+#endif
 
 class BasePotClass : public Looper, StateMachine {
 public:
