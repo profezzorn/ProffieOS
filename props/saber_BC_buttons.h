@@ -694,13 +694,6 @@ public:
 // Works on 2 button sabers even if running 1 button controls
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD, MODE_ON):
       hybrid_font.DoEffect(EFFECT_USER4, 0);
-      if (!alt_blade_on_) {
-        hybrid_font.PlayCommon(&SFX_out);
-        alt_blade_on_ = true;
-      } else {
-        hybrid_font.PlayCommon(&SFX_in);
-        alt_blade_on_ = false;
-      }
       return true;
 
 // Next Preset AND Volume Up
@@ -740,13 +733,6 @@ public:
       } else {
         // Alt blade control
         hybrid_font.DoEffect(EFFECT_USER4, 0);
-      if (!alt_blade_on_) {
-          hybrid_font.PlayCommon(&SFX_out);
-          alt_blade_on_ = true;
-        } else {
-          hybrid_font.PlayCommon(&SFX_in);
-          alt_blade_on_ = false;
-        }
       }
       return true;
 
@@ -1112,6 +1098,14 @@ public:
           hybrid_font.DoEffect(EFFECT_FORCE, 0);
         }
         return;
+      case EFFECT_USER4: // Alt blade
+        if (!alt_blade_on_) {
+        hybrid_font.PlayCommon(&SFX_out);
+        alt_blade_on_ = true;
+      } else {
+        hybrid_font.PlayCommon(&SFX_in);
+        alt_blade_on_ = false;
+      }
     }
   }
 
