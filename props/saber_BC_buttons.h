@@ -1100,12 +1100,12 @@ public:
         return;
       case EFFECT_USER4: // Alt blade
         if (!alt_blade_on_) {
-        hybrid_font.PlayCommon(&SFX_out);
-        alt_blade_on_ = true;
-      } else {
-        hybrid_font.PlayCommon(&SFX_in);
-        alt_blade_on_ = false;
-      }
+          hybrid_font.PlayCommon(&SFX_out);
+          alt_blade_on_ = true;
+        } else {
+          hybrid_font.PlayCommon(&SFX_in);
+          alt_blade_on_ = false;
+        }
     }
   }
 
