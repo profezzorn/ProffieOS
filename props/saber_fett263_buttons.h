@@ -4344,7 +4344,7 @@ SaberFett263Buttons() : PropBase() {}
             SaberBase::RequestMotion();
             saber_off_time_millis_ = millis();
             if (SFX_boot) {
-              hybrid_font.PlayCommon(&SFX_boot);
+              hybrid_font.PlayPolyphonic(&SFX_boot);
             } else {
               sound_library_.SayUp();
             }
@@ -4686,7 +4686,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::RequestMotion();
           saber_off_time_millis_ = millis();
           if (SFX_boot) {
-            hybrid_font.PlayCommon(&SFX_boot);
+            hybrid_font.PlayPolyphonic(&SFX_boot);
           } else {
             sound_library_.SayUp();
           }
