@@ -32,7 +32,7 @@ bool IsHeap(const void* mem) {
 template<class T>
 void LSFreeObject(T *memory) {
   STDOUT.print("FREE ");
-  STDOUT.println((uint32_t)memory, HEX);
+  STDOUT.println((ptrdiff_t)memory, HEX);
   free((void*)memory);
 }
 
