@@ -17,11 +17,11 @@ class TrExtendX : public TRANSITION {
 public:
   void run(BladeBase* blade) {
     TRANSITION::run(blade);
-    millis_.run(blade);
     if (!extending_ && TRANSITION::done()) {
       extending_ = true;
       millis_.begin();
     }
+    millis_.run(blade);
     if (extending_) {
       millis_.update(0);
     }
