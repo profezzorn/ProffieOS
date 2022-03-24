@@ -61,7 +61,9 @@ void TeardownTimer(uint32_t instance) {
   if (0 == --timer_use_counts[instance]) {
     stm32l4_timer_stop(&stm32l4_pwm[instance]);
     stm32l4_timer_disable(&stm32l4_pwm[instance]);
-    if (instance) TeardownTimer(0);
+    if (instance != PWM_SYNC_INSTANCE) {
+      TeardownTimer(PWM_SYNC_INSTANCE);
+    }
   }
 }
 

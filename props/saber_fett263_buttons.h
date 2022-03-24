@@ -97,6 +97,7 @@ Standard Controls While Blade is ON
         *if COLOR_CHANGE_DIRECT is defined then each click will change color instead of turn
       Otherwise ColorWheel is used per style set up.
     Click PWR to save
+    Click AUX to revert
     NEW! Color Zoom* = Hold PWR, Release to Save
       *For Color List or ColorWheel you can Hold PWR down to zoom in color for easier selection
        Release PWR to save
@@ -1493,10 +1494,9 @@ SaberFett263Buttons() : PropBase() {}
 
   // Toggles ColorChange Mode if current style uses RgbArg to CC_COLOR_LIST
   void ToggleCCMode() {
-    bool uses_rgb_arg;
-    #define USES_RGB_ARG(N) \
-    uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(N), 3);
-    ONCEPERBLADE(USES_RGB_ARG)
+    bool uses_rgb_arg = false;
+    for (int i = 1; i <= NUM_BLADES; i++)
+      uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(i), 3);
     if (!uses_rgb_arg) {
 #ifndef DISABLE_COLOR_CHANGE
       ToggleColorChangeMode();
@@ -1664,15 +1664,14 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_CLASH_STRENGTH_SOUND
         HandleClash();
 #else
-      if (SaberBase::GetClashStrength() < saved_gesture_control.clashdetect) {
-        SaberBase::DoClash();
+        if (clash_type_ == CLASH_BATTLE_MODE && SaberBase::GetClashStrength() > saved_gesture_control.clashdetect) {
+          SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+          SaberBase::DoBeginLockup();
+          auto_lockup_on_ = true;
+	} else {
+          SaberBase::DoClash();
+        }
         clash_type_ = CLASH_NONE;
-      } else {
-        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-        SaberBase::DoBeginLockup();
-        auto_lockup_on_ = true;
-        clash_type_ = CLASH_NONE;
-      }
 #endif
       }
     }
@@ -4345,7 +4344,7 @@ SaberFett263Buttons() : PropBase() {}
             SaberBase::RequestMotion();
             saber_off_time_millis_ = millis();
             if (SFX_boot) {
-              hybrid_font.PlayCommon(&SFX_boot);
+              hybrid_font.PlayPolyphonic(&SFX_boot);
             } else {
               sound_library_.SayUp();
             }
@@ -4687,7 +4686,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::RequestMotion();
           saber_off_time_millis_ = millis();
           if (SFX_boot) {
-            hybrid_font.PlayCommon(&SFX_boot);
+            hybrid_font.PlayPolyphonic(&SFX_boot);
           } else {
             sound_library_.SayUp();
           }
@@ -5295,6 +5294,7 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         }
 #endif
+        // Allow normal clashes if blade continues to swing after clash detected in Battle Mode
         if (!battle_mode_ || swinging_) {
           clash_impact_millis_ = millis();
 #ifdef FETT263_CLASH_STRENGTH_SOUND

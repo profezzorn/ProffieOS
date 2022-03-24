@@ -21,8 +21,8 @@ public:
       extending_ = true;
       millis_.begin();
     }
+    millis_.run(blade);
     if (extending_) {
-      millis_.run(blade);
       millis_.update(0);
     }
   }

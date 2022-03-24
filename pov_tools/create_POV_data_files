@@ -1,0 +1,224 @@
+#!/bin/bash
+
+# create_POV_data_files
+# version - all .png files that don't contain 'preview' are processed
+OIFS="$IFS"
+IFS=$'\n'
+cd "$(dirname "$0")"
+clear
+height_only=0
+preset=0
+download=0
+
+echo ""
+echo "Welcome! Let's make some POV images!"
+echo ""
+echo "Found these image files:"
+# get .png files except containing 'preview' and build array
+pngs=($(find . -maxdepth 1 -type f -name "*.png" ! -name "*preview*"))
+for strip in ${pngs[@]}; do echo "${strip##*/}"; done
+# get number of files in array
+files=${#pngs[@]}
+echo ""
+
+# If NO images in the folder, offer logo
+if [[ $files -lt 1 ]]; then
+	echo ""
+	echo "OOPS! No .png image files found!"
+	echo ""
+	echo "Do you want to download a sample Star Wars logo image?"
+	echo "Type y for yes,"
+	echo "type q to quit,"
+	read -p $'or press ENTER to start over..\n' dl
+	case $dl in
+		y) download=1;;
+		q) exit;;
+		*) exec "./create_POV_data_files";;
+	esac
+fi
+if [[ $download == 1 ]]; then
+	echo ""
+	wget https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Star_Wars_Logo.svg/1024px-Star_Wars_Logo.svg.png
+	pngs=$"1024px-Star_Wars_Logo.svg.png"
+fi
+
+valid_option=0
+while [[ $valid_option != 1 ]]; do
+	echo "Please select the settings you want to create the POV image(s) with:"
+	echo "	height - number of pixels in your blade (one strip emitter to tip)"
+	echo "	length - blade length in the measurement unit of choice"
+	echo "	offset - the distance (in same unit as length) from the bottom of the"
+	echo "		 blade to the fulcrum (e.g. the joint you are swinging with)"
+	echo ""
+	echo "1 - Preset 1 (units=inches height=144 length=39 offset=18)"
+	echo "2 - Preset 2 (units=centimeters height=97 length=63 offset=50)"
+	echo "3 - Preset 3 (units=centimeters height=72 length=50 offset=15)"
+	echo "4 - Preset 4 (units=centimeters height=72 length=50 offset=15 --fill)"
+	echo "5 - Height entry only"
+	echo "6 - Custom options"
+	echo "q - to quit"
+	read option
+	case $option in
+		"") echo "! Some option is needed. Please try again"; echo "";;
+		1) units="inches" height=144 length=39 offset=18 preset=1 valid_option=1;;
+		2) units="centimeters" height=97 length=63 offset=50 preset=1 valid_option=1;;
+		3) units="centimeters" height=72 length=50 offset=15 preset=1 valid_option=1;;
+		4) units="centimeters" height=72 length=50 offset=15 fill="--fill" preset=1 valid_option=1;;
+		5) height_only=1 valid_option=1;;
+		6) valid_option=1;;
+#		7) ------ ADDITIONAL USER PRESETS CAN BE ADDED HERE -------
+#		8) ------ or move 5 & 6 down to keep them all together -------------
+#		height is amount of pixels in your blade,
+#		length is the length of that blade in the unit of the distance of your choosing (most common inches or centimeters)
+#		offset - the distance (same unit as length) from the bottom of the blade to the fulcrum (e.g. the joint you are swinging with)
+#		--fill - a flag for the tools to NOT auto-scale content to fit the wipe zone, but show full raster instead.
+#			 (Good for landscape images where content position matters)
+		q) exit;;
+		*) echo ""
+			echo "! Not a valid option, Please try again,"
+			echo "or type q to quit. "; echo "";;
+	esac
+done
+
+validinput=0
+while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
+	echo ""
+	echo "How many pixels are in your blade? (Press ENTER for default 144)"
+	read height
+	if [[ $height == "" ]]; then height=144 validinput=1; echo "Default 144"
+	elif [[ $height == "q" ]]; then exit
+	elif [[ $height -gt 576 ]]; then
+		echo "! That is likely impossible."
+		echo "  Please try again or type 'q' to quit.";	echo ""	
+	elif [[ $height -gt 264 ]]; then
+		read -p $'Are you sure there are that many pixels?? (y/n)\n' too_many
+		if [[ $too_many == "y" ]]; then validinput=1; else echo ""; fi
+	elif [[ $height =~ ^[0-9]{1,3}$ ]]; then validinput=1
+	else
+		echo ""
+		echo "! Not a valid option, Please try again,"
+		echo "or type q to quit. "; echo ""
+	fi
+done
+
+if [[ $height_only != 1 ]]; then
+	validinput=0
+	while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
+		echo ""
+		echo "What is your preferred unit of measuring distance? (i - inches, c - cm) "
+		read pref
+		case $pref in
+		"") echo "! Some option is needed. Please try again"; echo "";;
+		i) calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144 * 100 / 254))e-3"); offset_default=18 validinput=1 units="inches";;
+		c) calc_len=$(printf %.0f "$((10**3 * $height * 100 / 144))e-3"); offset_default=46; validinput=1; units="centimeters";;
+		q) exit;;
+		*) echo ""
+		echo "! Not a valid option, Please choose inches or cm,"
+		echo "or type q to quit. "; echo "";;
+		esac
+	done
+
+	validinput=0
+	while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
+		echo ""
+		echo "How many $units is your blade? (Press ENTER for calculated default $calc_len)" 
+		read length
+		if [[ $units == "inches" ]]; then max=48; else max=122; fi
+		if [[ $length == "" ]]; then length=$calc_len validinput=1; echo "Default $calc_len"
+		elif [[ $length == "q" ]]; then exit
+		elif [[ $length -gt $max ]]; then
+			echo "! That is likely impossible."
+			echo "  Please try again or type 'q' to quit."
+			echo ""
+		elif [[ $length =~ ^[0-9]{1,3}$ ]]; then validinput=1
+		else
+			echo ""
+			echo "! Not a valid option, Please try again,"
+			echo "or type q to quit. "; echo ""
+		fi
+	done
+
+	validinput=0
+	while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
+		echo ""
+		echo "How many "$units" distance from the bottom of the blade to the fulcrum?"
+		echo "The fulcrum is the pivot point. (Press ENTER for default $offset_default) "
+		read offset
+		if [[ $units == "inches" ]]; then max=30; else max=76; fi
+		if [[ $offset == "" ]]; then offset=$offset_default validinput=1; echo "Default $offset_default"
+		elif [[ $offset == "q" ]]; then exit
+		elif [[ $offset -gt $max ]]; then
+			echo "! That is likely impossible."
+			echo "  Please try again or type 'q' to quit."
+			echo ""
+		elif [[ $length =~ ^[0-9]{1,3}$ ]]; then validinput=1
+		else
+			echo ""
+			echo "! Not a valid option, Please try again,"
+			echo "or type q to quit. "; echo ""
+		fi
+	done
+
+	validinput=0
+	while [[ $validinput != 1 ]] && [[ $preset == 0 ]]; do
+		echo ""
+		echo "Do you want to auto-scale the content to fit the entire wipe ? (y/n)"
+		echo "(Default = Yes) "
+		read fit
+		if [[ $fit == "y" ]] || [[ $fit == "" ]]; then validinput=1;
+		elif [[ $fit == "n" ]]; then fill="--fill" validinput=1;
+		elif [[ $fit == "q" ]]; then exit
+		else
+			echo ""
+			echo "! Not a valid option, Please try again,"
+			echo "or type q to quit. "; echo ""
+		fi
+	done
+
+else # height_only
+units="inches" length=$(printf %.0f "$((10**3 * $height * 100 / 144 * 100 / 254))e-3") offset=18
+fi
+
+echo "Number of images to process: " $files
+for process in "${pngs[@]}";do
+	# strip path for displaying file name to be processed
+	pngname="${process##*/}"
+	# additionally remove extension and spaces for finished file name
+	pngnoext="${pngname%.*}"
+	pngbase="${pngnoext// /_}"
+	echo ""
+	echo "Processing source image file: $pngname"
+	echo ""
+	# Rename to maketmp.png for make
+	cp $process ./maketmp.png
+	make IMAGE=./maketmp.png OPTIONS="--height=$height --length=$length --offset=$offset $fill"
+	#removing maketmp.png now that we're done with it
+	rm -- ./maketmp.png
+	mv ./preview.png ./${pngbase}_${height}_preview.png
+	mv ./image_rgb.h ../styles/${pngbase}_${height}_FC_POV_data.h
+	mv ./image_pgm.h ../styles/${pngbase}_${height}_SC_POV_data.h
+	mv ./image_8bit.h ../styles/${pngbase}_${height}_8b_POV_data.h
+	printf $'\nDate processesd: '$(date)$'\n' >> POV_conversions.log
+	printf $'POV image files created in /styles:\n'${pngbase}_${height}_FC_POV_data.h$'\n'${pngbase}_${height}_SC_POV_data.h$'\n'${pngbase}_${height}_8b_POV_data.h$'\n' >> POV_conversions.log
+	printf $'Settings used:\nheight = '$height$' pixels\nlength = '$length' '$units$'\noffset = '$offset' '$units$'\n' >> POV_conversions.log
+	if [[ $fill == "--fill" ]]; then
+		printf $'Scale to fit = NO'; printf $'Scale to fit = NO\n' >> POV_conversions.log;
+	else
+		printf $'Scale to fit = YES'; printf $'Scale to fit = YES\n' >> POV_conversions.log;
+	fi
+	echo ""
+	echo ""
+	echo "Conversion DONE! Find your files as shown below."
+	echo ""
+	echo "preview image:"
+	echo "	ProffieOS/pov_tools/"$pngbase"_"$height"_preview.png"
+	echo "Full color image data file:"
+	echo "	ProffieOS/styles/"$pngbase"_"$height"_FC_POV_data.h"
+	echo "Single color image data file:"
+	echo "	ProffieOS/styles/"$pngbase"_"$height"_SC_POV_data.h"
+	echo "256 color image data file:"
+	echo "	ProffieOS/styles/"$pngbase"_"$height"_8b_POV_data.h"
+	echo ""
+	echo ""
+done
+exit

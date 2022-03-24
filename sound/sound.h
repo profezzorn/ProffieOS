@@ -100,5 +100,6 @@ SmoothSwingV2 smooth_swing_v2;
 
 #define LOCK_SD(X) do { } while(0)
 #include "../common/sd_card.h"
+#include "effect.h"
 
 #endif  // ENABLE_AUDIO
