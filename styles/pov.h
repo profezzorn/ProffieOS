@@ -4,10 +4,10 @@
 // TODO(hubbe): Make it work with FastLED
 #if defined(ENABLE_WS2811)
 
-// Usage: &style_pov
+// Usage: &style_pov or StylePtr<StylePtr>
 // return value: suitable for preset array
 
-// This style draws "Star Wars" in the air if you swing the saber
+// This style draws images in the air if you swing the saber
 // carefully back and forth. Unfortunately you can't really see
 // the result without a slow exposure camera. It's possible that
 // dotstar APA102 pixels would be fast enough to do the effect
@@ -49,101 +49,85 @@ void rle_decode(const unsigned char *input,
   }
 }
 
-// POV writer.
-class StylePOV : public BladeStyle, public SaberBase {
+class POVStyleBase {
 public:
-  StylePOV() : SaberBase(NOLINK) {
+  void run(BladeBase* blade) {
+    num_leds_ = blade->num_leds();
   }
-  void activate() override {
-    SaberBase::Link(this);
-    STDOUT.println("POV Style");
+  void RenderColumn(int col) {
+    rle_decode(imagedata + imageoffsets[col],
+	       (unsigned char *)&buffer_, sizeof(buffer_));
   }
-  void deactivate() override {
-    SaberBase::Unlink(this);
-  }
-  Vec3 extrapolate_accel() {
-    uint32_t now = micros();
-    Vec3 sum(0.0, 0.0, 0.0);
-    float sum_t = 0.0;
-    for (size_t i = 0; i < NELEM(accel_entries_); i++) {
-      float t = now - accel_entries_[i].t;
-      sum_t += t;
-      sum += accel_entries_[i].accel;
-    }
-    Vec3 avg = sum * (1.0 / NELEM(accel_entries_));
-    float avg_t = sum_t / NELEM(accel_entries_);
-
-    Vec3 dot_sum(0.0,0.0,0.0);
-    float t_square_sum = 0.0;
-    for (size_t i = 0; i < NELEM(accel_entries_); i++) {
-      float t = (now - accel_entries_[i].t) - avg_t;
-      Vec3 v = accel_entries_[i].accel - avg;
-      t_square_sum += t * t;
-      dot_sum += v * t;
-    }
-    Vec3 slope = dot_sum * (1.0 / t_square_sum);
-#if 0
-    STDOUT.print("SLOPE: ");
-    STDOUT.print(slope.x * 100.0);
-    STDOUT.print(", ");
-    STDOUT.print(slope.y * 100.0);
-    STDOUT.print(", ");
-    STDOUT.println(slope.z * 100.0);
-#endif
-    return sum - slope * avg_t;
-  }
-
-  void SB_Accel(const Vec3& accel, bool clear) override {
-    entry_++;
-    if (entry_ >= NELEM(accel_entries_)) entry_ = 0;
-    accel_entries_[entry_].accel = accel;
-    accel_entries_[entry_].t = micros();
-  }
-
-  void run(BladeBase* blade) override {
-    Vec3 v = extrapolate_accel();
-    float fraction = 0.5 - atan2f(v.y, v.x) * 2.0 / M_PI;
-    if (fraction < 0 || fraction > 1.0) {
-      blade->clear();
-      return;
-    }
+  SimpleColor getColor(int led) {
+    Color16 c;
 #ifdef POV_RGB
-    Color8 buffer[POV_DATA_HEIGHT];
-    int col = fraction * NELEM(imageoffsets);
-    rle_decode(imagedata + imageoffsets[col],
-	       (unsigned char *)&buffer, POV_DATA_HEIGHT * 3);
-    // Rescale / transfer
-    size_t num_leds = blade->num_leds();
-    for (size_t i = 0; i < num_leds; i++)
-      blade->set(i, buffer[i * POV_DATA_HEIGHT / num_leds]);
+    c = buffer_[led * POV_DATA_HEIGHT / num_leds_];
+#elif defined(POV_8BIT)
+    c = pov_color_map[buffer_[led * POV_DATA_HEIGHT / num_leds_]];
 #else
-    uint8_t buffer[POV_DATA_HEIGHT];
-    int col = fraction * NELEM(imageoffsets);
-    rle_decode(imagedata + imageoffsets[col],
-	       (unsigned char *)&buffer, POV_DATA_HEIGHT);
-    // Rescale / transfer
-    size_t num_leds = blade->num_leds();
-    for (size_t i = 0; i < num_leds; i++) {
-#ifdef POV_8BIT
-      blade->set(i, pov_color_map[buffer[i * POV_DATA_HEIGHT / num_leds]]);
-#else
-      blade->set(i, image_color * buffer[i * POV_DATA_HEIGHT / num_leds]);
+    c = image_color * buffer_[led * POV_DATA_HEIGHT / num_leds_];
 #endif
-    } 
-#endif
-
-    blade->allow_disable();
+    return SimpleColor(c);
   }
-  bool IsHandled(HandledFeature effect) override { return false; }
 private:
-  struct { uint32_t t; Vec3 accel; } accel_entries_[10];
-  size_t entry_;
-  Color8* data_;
-  int width_;
-  int height_;
+  int num_leds_;
+
+#ifdef POV_RGB
+  Color8 buffer_[POV_DATA_HEIGHT];
+#else
+  uint8_t buffer_[POV_DATA_HEIGHT];
+#endif
 };
 
-StyleFactoryImpl<StylePOV> style_pov;
+// POV writer.
+template<int MIN_DEGREES=-45, int MAX_DEGREES=45, bool REPEAT=false, bool MIRROR=true>
+class StylePOV : public POVStyleBase {
+  public:
+  void run(BladeBase* blade) {
+    float degrees = fusor.pov_angle() * 180.0 / M_PI;
+    float fraction = (degrees - MIN_DEGREES) / (MAX_DEGREES - MIN_DEGREES);
+    if (REPEAT) {
+      if (MIRROR) {
+	fraction = fract(fraction / 2.0) * fraction;
+	if (fraction > 1.0) {
+	  fraction = 2.0 - fraction;
+	}
+      } else {
+	fraction = fract(fraction);
+      }
+    } else {
+      if (fraction < 0 || fraction > 1.0) {
+	blade->clear();
+	return;
+      }
+    }
+    POVStyleBase::run(blade);
+    RenderColumn(fraction * (NELEM(imageoffsets) - 1));
+  }
+};
+
+
+// ContinuousPOV
+template<int DEGREES=90>
+class ContinuousPOV : public POVStyleBase {
+  public:
+  void run(BladeBase* blade) {
+    POVStyleBase::run(blade);
+    uint32_t t = micros();
+    uint32_t delta = t - last_micros_;
+    if (delta > 1000000) delta = 1;
+    last_micros_ = t;
+    float swing_speed = fusor.swing_speed();
+    angle_ = fract(angle_ + swing_speed * delta / 1000000.0 / DEGREES);
+    RenderColumn(angle_ * (NELEM(imageoffsets) - 1));
+  }
+
+private:
+  uint32_t last_micros_ = 0;
+  float angle_ = 0.0; // 0..1.0, where 1.0 represents DEGREES degrees.
+};
+
+StyleFactoryImpl<Style<StylePOV<>>> style_pov;
 #endif
 
 #endif

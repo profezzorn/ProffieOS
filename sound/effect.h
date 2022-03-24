@@ -445,8 +445,10 @@ class Effect {
 	  warned = true;
 	  STDOUT.println("");
 	  STDOUT.println("WARNING: This font seems to be missing some files!!");
+#ifdef ENABLE_AUDIO
 	  talkie.Say(talkie_error_in_15, 15);
 	  talkie.Say(talkie_font_directory_15, 15);
+#endif	  
 	}
 	e->Show();
       }
