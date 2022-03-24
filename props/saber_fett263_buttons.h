@@ -34,6 +34,7 @@ Standard Controls While Blade is OFF
     Turn Left (Stepped) = Previous Preset
       Increment by 5 = Hold PWR + Turn Left
     Click PWR = Select Preset
+      * if FETT263_QUICK_SELECT defined, blade will ignite with preset selection
     Click AUX = go to First Preset
   Play Track = Long Click PWR pointing up
   NEW! Track Player* = Long Click PWR parallel
@@ -220,6 +221,7 @@ Standard Controls While Blade is OFF
     Turn Left (Stepped) = Previous Preset
       Increment by 5 = Hold PWR + Turn Left
     Click PWR = Select Preset
+      * if FETT263_QUICK_SELECT defined, blade will ignite with preset selection
     Long Click PWR = First Preset
   NEW Control! Volume Menu = Hold PWR + Clash
     Turn Right (Stepped) = Increase Volume (to max)
@@ -478,6 +480,9 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_MULTI_PHASE
   This will enable a preset change while ON to create a "Multi-Phase" saber effect
 
+  FETT263_QUICK_SELECT
+  This will enable automatic ignition of the selected Preset while using Scroll Preset menu
+  
   MOTION_TIMEOUT 60 * 15 * 1000
   This extends the motion timeout to 15 minutes to allow gesture ignition to remain active
   Increase/decrease the "15" value as needed
@@ -2214,6 +2219,9 @@ SaberFett263Buttons() : PropBase() {}
       sound_library_.SaySelect();
       menu_type_ = MENU_TOP;
       menu_ = false;
+#ifdef FETT263_QUICK_SELECT
+      FastOn();
+#endif
       break;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
     case MENU_REHEARSE:
