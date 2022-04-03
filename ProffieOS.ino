@@ -579,7 +579,13 @@ ArgParserInterface* CurrentArgParser;
 #include "props/saber.h"
 #endif
 
+#include "scripts/clash_recorder.h"
+
+#ifdef CLASH_RECORDER
+ClashRecorder<PROP_TYPE> prop;
+#else
 PROP_TYPE prop;
+#endif
 
 #if 0
 #include "scripts/test_motion_timeout.h"
@@ -1397,8 +1403,6 @@ SSD1306Template<128, uint32_t> display(&display_controller);
 
 // Define this to record clashes to sd card as CSV files
 // #define CLASH_RECORDER
-
-#include "scripts/clash_recorder.h"
 
 #ifdef GYRO_CLASS
 // Can also be gyro+accel.

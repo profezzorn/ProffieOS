@@ -1011,6 +1011,10 @@ public:
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
 
+  bool interrupt_clash_pending() const {
+    return clash_pending1_;
+  }
+
   void Loop() override {
     CallMotion();
     if (clash_pending1_) {
