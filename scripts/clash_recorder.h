@@ -48,6 +48,16 @@ public:
     Saber::On();
   }
 
+  virtual bool Event(enum BUTTON button, EVENT event) {
+    if (capture_button_) {
+      if (event == EVENT_PRESSED) {
+	last_button_ = button;
+      }
+      return true;
+    }
+    return BASE::Event(button, event);
+  }
+
   virtual void Loop() {
     BASE::Loop();
 
@@ -61,6 +71,23 @@ public:
       SaberBase::DoEffect(EFFECT_USER1, location_);
 
       while (!do_save_) YIELD();
+      talkie.Say(spTO);
+      talkie.Say(spUSE);
+      talkie.Say(spPRESS);
+      talkie.Say(spPOWER);
+
+      capture_button_ = true;
+      last_button_ = BUTTON_NONE;
+      while (!capture_button_) YIELD();
+      capture_button_ = false;
+
+      if (last_button_ != BUTTON_POWER) {
+	talkie.Say(spCANCEL);
+	continue;
+      }
+
+      talkie.Say(spFILED);
+
       {
 	LOCK_SD(true);
 	char file_name[16];
@@ -119,6 +146,8 @@ public:
     STATE_MACHINE_END();
   }
 private:
+  bool capture_button_ = false;
+  enum BUTTON last_button_ = BUTTON_NONE;
   size_t pos_ = 0;
   int save_countdown_ = 0;
   Vec3 accel_[256];
