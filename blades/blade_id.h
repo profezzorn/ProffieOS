@@ -74,6 +74,10 @@ struct EnablePowerBladeID {
   }
 };
 
+struct NoBladeID {
+  float id() { return 0.0; }
+};
+
 // Define the default blade ID class.
 
 #ifndef BLADE_ID_CLASS
@@ -82,8 +86,10 @@ struct EnablePowerBladeID {
 #define BLADE_ID_CLASS InternalPullupBladeID<bladeIdentifyPin>
 #elif PROFFIEBOARD_VERSION - 0 >= 3
 #define BLADE_ID_CLASS BridgedPullupBladeID<bladeIdentifyPin, bladePin>
-#else
+#elif defined(PROFFIEBOARD_VERSION)
 #define BLADE_ID_CLASS SnapshotBladeID<bladeIdentifyPin>
+#else
+#define BLADE_ID_CLASS NoBladeID
 #endif
 
 #endif  // BLADE_ID_CLASS
