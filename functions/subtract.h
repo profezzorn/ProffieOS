@@ -1,10 +1,10 @@
 #ifndef FUNCTIONS_SUBTRACT_H
 #define FUNCTIONS_SUBTRACT_H
 
-// Usage: SUBTRACT<A, B>
+// Usage: Subtract<A, B>
 // Subtracts B from A (A - B)
-// A, B: INTEGER
-// return value: INTEGER
+// A, B: FUNCTION
+// return value: FUNCTION
 
 template<class A, class B>
 class SubtractBase {
@@ -36,5 +36,11 @@ class SubtractSVF {
   PONUA SVFA svfa_;
   PONUA SVFB svfb_;
 };
+
+template<class F, class V> struct SubtractFinder { typedef SubtractBase<F, V> SubtractClass; };
+template<class F, class V> struct SubtractFinder<SingleValueAdapter<F>, SingleValueAdapter<V>> {
+  typedef SingleValueAdapter<SubtractSVF<F, V>> SubtractClass;
+};
+template<class F, class V> using Subtract = typename SubtractFinder<F, V>::SubtractClass;
 
 #endif
