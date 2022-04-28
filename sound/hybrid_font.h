@@ -437,7 +437,7 @@ public:
         if (delay_ms > 0 && delay_ms < 30000) {
           hum_start_ += delay_ms;
         }
-       STDOUT << "humstart: " << font_config.humStart << "\n";
+        STDOUT << "humstart: " << font_config.humStart << "\n";
       }
     }
   }
