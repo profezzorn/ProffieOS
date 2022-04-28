@@ -1,6 +1,10 @@
 #ifndef MOTION_LSM6DS3H_H
 #define MOTION_LSM6DS3H_H
 
+constexpr int ProffieOS_log2(int x) {
+  return (x <= 1) ? 0 : (ProffieOS_log2(x/2) + 1);
+}
+
 // Supports LSM6DS3, LSM6DSM and LSM6DSO
 class LSM6DS3H : public I2CDevice, Looper, StateMachine {
 public:
@@ -137,8 +141,31 @@ public:
         STDOUT.println(" not found.");
 	goto i2c_timeout;
       }
-      I2C_WRITE_BYTE_ASYNC(CTRL1_XL, 0x84);  // 1.66kHz accel, 16G range
-      I2C_WRITE_BYTE_ASYNC(CTRL2_G, 0x8C);   // 1.66kHz gyro, 2000 dps
+
+#ifndef PROFFIEOS_ACCELEROMETER_RANGE
+#define PROFFIEOS_ACCELEROMETER_RANGE 16
+#endif
+#if PROFFIEOS_ACCELEROMETER_RANGE == 4
+#define PROFFIEOS_ACCELEROMETER_RANGE_BITS 8
+#elif PROFFIEOS_ACCELEROMETER_RANGE == 16
+#define PROFFIEOS_ACCELEROMETER_RANGE_BITS 4
+#elif PROFFIEOS_ACCELEROMETER_RANGE == 8
+#define PROFFIEOS_ACCELEROMETER_RANGE_BITS 12
+#elif PROFFIEOS_ACCELEROMETER_RANGE == 2
+#define PROFFIEOS_ACCELEROMETER_RANGE_BITS 0
+#else
+#error unknown PROFFIEOS_ACCELEROMETER_RANGE
+#endif
+      
+#ifndef PROFFIEOS_MOTION_FREQUENCY
+#define PROFFIEOS_MOTION_FREQUENCY 1660
+#endif
+#define PROFFIEOS_MOTION_FREQUENCY_BITS (ProffieOS_log2(PROFFIEOS_MOTION_FREQUENCY/4) << 4)
+
+      // 1.66kHz accel, 16G range
+      STDOUT << "FOO:" << (PROFFIEOS_MOTION_FREQUENCY_BITS | PROFFIEOS_ACCELEROMETER_RANGE_BITS) << "\n";
+      I2C_WRITE_BYTE_ASYNC(CTRL1_XL, PROFFIEOS_MOTION_FREQUENCY_BITS | PROFFIEOS_ACCELEROMETER_RANGE_BITS);
+      I2C_WRITE_BYTE_ASYNC(CTRL2_G, PROFFIEOS_MOTION_FREQUENCY_BITS | 0xC);   // 1.66kHz gyro, 2000 dps
       I2C_WRITE_BYTE_ASYNC(CTRL3_C, 0x44);   // ?
       I2C_WRITE_BYTE_ASYNC(CTRL4_C, 0x00);
       I2C_WRITE_BYTE_ASYNC(CTRL5_C, 0x00);
@@ -198,7 +225,7 @@ public:
 	I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 12);
 	// accel data available
 	prop.DoAccel(
-	  MotionUtil::FromData(databuffer + 6, 16.0 / 32768.0,   // 16 g range
+	  MotionUtil::FromData(databuffer + 6, PROFFIEOS_ACCELEROMETER_RANGE / 32768.0,   // 16 g range
 			       Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
 	  first_accel_);
 	first_accel_ = false;
@@ -294,7 +321,7 @@ public:
     stm32l4_i2c_notify(Wire._i2c, nullptr, 0, 0);
     I2CUnlock();
     // accel data available
-    prop.DoAccel(MotionUtil::FromData(databuffer + 6, 16.0 / 32768.0,   // 16 g range
+    prop.DoAccel(MotionUtil::FromData(databuffer + 6, PROFFIEOS_ACCELEROMETER_RANGE / 32768.0,   // 16 g range
 				      Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
 		 first_accel_);
     

@@ -166,16 +166,17 @@
 #include <SD.h>
 #include <SPI.h>
 
-#define INPUT_ANALOG INPUT
-#else
+#else // TEENSYDUINO
+#define digitalWriteFast digitalWrite
+#endif // TEENSYDUINO
 
+#ifdef ARDUINO_ARCH_STM32L4
 // This is a hack to let me access the internal stuff..
 #define private public
 #include <Wire.h>
 #undef private
 
 #include <FS.h>
-#define digitalWriteFast digitalWrite
 #include <stm32l4_wiring_private.h>
 #include <stm32l4xx.h>
 #include <armv7m.h>
@@ -188,8 +189,9 @@
 #define DMAChannel stm32l4_dma_t
 #define DMAMEM
 #define NVIC_SET_PRIORITY(X,Y) NVIC_SetPriority((X), (IRQn_Type)(Y))
-
-#endif
+#else //  ARDUINO_ARCH_STM32L4
+#define INPUT_ANALOG INPUT
+#endif //  ARDUINO_ARCH_STM32L4
 
 #include <math.h>
 #include <malloc.h>
@@ -401,6 +403,7 @@ const char* next_current_directory(const char* dir) {
 #include "common/color.h"
 #include "common/range.h"
 #include "common/fuse.h"
+#include "common/config_file.h"
 #include "blades/blade_base.h"
 #include "blades/blade_wrapper.h"
 
@@ -576,7 +579,13 @@ ArgParserInterface* CurrentArgParser;
 #include "props/saber.h"
 #endif
 
+#include "scripts/clash_recorder.h"
+
+#ifdef CLASH_RECORDER
+ClashRecorder<PROP_TYPE> prop;
+#else
 PROP_TYPE prop;
+#endif
 
 #if 0
 #include "scripts/test_motion_timeout.h"
@@ -604,7 +613,8 @@ CapTest captest;
 #include "buttons/button.h"
 #ifdef TEENSYDUINO
 #include "buttons/touchbutton.h"
-#else
+#endif
+#ifdef ARDUINO_ARCH_STM32L4
 #include "buttons/stm32l4_touchbutton.h"
 #endif
 #include "buttons/rotary.h"
@@ -1011,7 +1021,8 @@ class Commands : public CommandParser {
         STDOUT.println("Cycle counting enabled, top will work next time.");
         return true;
       }
-#else
+#endif
+#ifdef ARDUINO_ARCH_STM32L4
       if (!(DWT->CTRL & DWT_CTRL_CYCCNTENA_Msk)) {
         CoreDebug->DEMCR |= 1<<24; // DEMCR_TRCENA_Msk;
         DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
@@ -1071,13 +1082,14 @@ class Commands : public CommandParser {
     if (!strcmp(cmd, "reset")) {
 #ifdef TEENSYDUINO
       SCB_AIRCR = 0x05FA0004;
-#else
+#endif
+#ifdef ARDUINO_ARCH_STM32L4
       STM32.reset();
 #endif 
       STDOUT.println("Reset failed.");
       return true;
     }
-#ifndef TEENSYDUINO
+#ifdef ARDUINO_ARCH_STM32L4
     if (!strcmp(cmd, "shutdown")) {
       STDOUT.println("Sleeping 10 seconds.\n");
       STM32.stop(100000);
@@ -1391,8 +1403,6 @@ SSD1306Template<128, uint32_t> display(&display_controller);
 
 // Define this to record clashes to sd card as CSV files
 // #define CLASH_RECORDER
-
-#include "scripts/clash_recorder.h"
 
 #ifdef GYRO_CLASS
 // Can also be gyro+accel.

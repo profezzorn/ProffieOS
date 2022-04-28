@@ -20,13 +20,22 @@ bool IsHeap(const void* mem) {
 #endif
 }
 
-#else
+#elif defined(ARDUINO_ARCH_STM32L4)
 
 bool IsHeap(const void* mem) {
   extern uint32_t __HeapBase[];
   extern uint32_t __StackLimit[];
   return (uint32_t)mem >= (uint32_t)__HeapBase && (uint32_t)mem <= (uint32_t)__StackLimit;
 }
+
+#else
+
+bool IsHeap(const void* mem) {
+  extern uint32_t end[];
+  extern uint32_t __StackLimit[];
+  return (uint32_t)mem >= (uint32_t)end && (uint32_t)mem <= (uint32_t)__StackLimit;
+}
+
 #endif
 
 template<class T>

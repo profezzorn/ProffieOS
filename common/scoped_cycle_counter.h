@@ -4,11 +4,13 @@
 class ScopedCycleCounter {
 public:
   static inline uint32_t getCycles() {
-#ifdef TEENSYDUINO
+#if defined(TEENSYDUINO)
     return ARM_DWT_CYCCNT - counted_cycles_;
-#else
+#elif defined(ARDUINO_ARCH_STM32L4)
     return DWT->CYCCNT - counted_cycles_;
-#endif
+#else
+    return 0;
+#endif    
   }
   ScopedCycleCounter(uint64_t& dest) :
     dest_(dest) {
@@ -24,7 +26,7 @@ public:
     counted_cycles_ += cycles;
     interrupts();
     dest_ += cycles;
-#endif    
+#endif
   }
 private:
   static uint32_t counted_cycles_;
