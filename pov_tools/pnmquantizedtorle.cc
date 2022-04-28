@@ -49,6 +49,7 @@ int main(int argc, char** argv) {
 	  fprintf(stderr, "Too many colors in image!\n");
 	  exit(1);
 	}
+	data.push_back(c);
 	colormap[num_colors] = image.get(x, y);
 	num_colors++;
       }

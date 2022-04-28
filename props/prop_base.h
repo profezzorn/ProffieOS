@@ -57,6 +57,7 @@ public:
 #endif
 };
 
+#ifdef ENABLE_AUDIO
 struct SoundToPlay {
   const char* filename_;
   Effect* effect_;
@@ -106,6 +107,7 @@ private:
   int sounds_;
   SoundToPlay queue_[QueueLength];
 };
+#endif
 
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase {
@@ -309,8 +311,8 @@ public:
     *(b++) = 0;
     *(b++) = 0;
 
-#ifdef ENABLE_AUDIO
     Effect::ScanCurrentDirectory();
+#ifdef ENABLE_AUDIO
     SaberBase* font = NULL;
     hybrid_font.Activate();
     font = &hybrid_font;
@@ -553,6 +555,8 @@ public:
   // Called from setup to identify the blade and select the right
   // Blade driver, style and sound font.
   void FindBlade() {
+    static_assert(NELEM(blades) > 0, "blades array cannot be empty");
+    
     size_t best_config = 0;
     if (NELEM(blades) > 1) {
       float resistor = id();
@@ -1006,6 +1010,10 @@ public:
 
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
+
+  bool interrupt_clash_pending() const {
+    return clash_pending1_;
+  }
 
   void Loop() override {
     CallMotion();

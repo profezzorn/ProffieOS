@@ -235,6 +235,11 @@ public:
         SB_Off(OFF_NORMAL);
         return true;
       }
+#ifdef ENABLE_DEVELOPER_COMMANDS      
+      if (!strcmp(arg, "state")) {
+	STDOUT << "SimpleBlade: on = "<< on_ << ". power = " << power_ << "\n";
+      }
+#endif      
     }
     return false;
   }

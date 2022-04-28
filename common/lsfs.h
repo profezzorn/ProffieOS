@@ -261,7 +261,7 @@ public:
     File f_;
   };
 };
-#else
+#elif defined(ARDUINO_ARCH_STM32L4)
 
 #include <FS.h>
 
@@ -395,6 +395,81 @@ private:
 };
 
 bool LSFS::mounted_ = false;
-#endif // TEENSYDUINO
+#else
+
+// Standard arduino
+#include <SD.h>
+
+class LSFS {
+public:
+  typedef File FILE;
+  static bool Begin() {
+    return SD.begin(sdCardSelectPin);
+  }
+  static bool End() {
+    return true;
+  }
+  static bool Exists(const char* path) {
+    return SD.exists(path);
+  }
+  static bool Remove(const char* path) {
+    return SD.remove(path);
+  }
+  static File Open(const char* path) {
+    if (!SD.exists(path)) return File();
+    return SD.open(path);
+  }
+  static File OpenFast(const char* path) {
+    // At some point, I put this check in here to make sure that the file
+    // exists before we try to open it, as opening directories and other
+    // weird files can cause open() to hang. However, this check takes
+    // too long, and causes audio underflows, so we're going to need a
+    // different approach to not opening directories and weird files. /Hubbe
+    // if (!SD.exists(path)) return File();
+    return SD.open(path);
+  }
+  static File OpenForWrite(const char* path) {
+    File f =  SD.open(path, FILE_WRITE);
+    if (!f) {
+      PathHelper tmp(path);
+      if (tmp.Dirname()) {
+	SD.mkdir(tmp);
+	f =  SD.open(path, FILE_WRITE);
+      }
+    }
+    return f;
+  }
+  class Iterator {
+  public:
+    explicit Iterator(const char* dirname) {
+      dir_ = SD.open(dirname);
+      if (dir_.isDirectory()) {
+	f_ = dir_.openNextFile();
+      }
+    }
+    explicit Iterator(Iterator& other) {
+      dir_ = other.f_;
+      other.f_ = File();
+      f_ = dir_.openNextFile();
+    }
+    ~Iterator() {
+      dir_.close();
+      f_.close();
+    }
+    void operator++() {
+      f_.close();
+      f_ = dir_.openNextFile();
+    }
+    operator bool() { return f_; }
+    bool isdir() { return f_.isDirectory(); }
+    const char* name() { return f_.name(); }
+    size_t size() { return f_.size(); }
+    
+  private:
+    File dir_;
+    File f_;
+  };
+};
+#endif
 
 #endif

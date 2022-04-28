@@ -4,10 +4,10 @@
 #ifdef TEENSYDUINO
 
 bool IsHeap(const void* mem) {
-  extern unsigned long _ebss;
-  extern unsigned long _estack;
+  extern int _ebss[];
+  extern int _estack[];
   if (mem) return false;
-  return (uint32_t)mem >= _ebss && (uint32_t)mem <= _estack;
+  return (uint32_t)mem >= (uint32_t)_ebss && (uint32_t)mem <= (uint32_t)_estack;
 }
 
 #elif defined(PROFFIE_TEST)
@@ -20,19 +20,26 @@ bool IsHeap(const void* mem) {
 #endif
 }
 
-#else
+#elif defined(ARDUINO_ARCH_STM32L4)
 
 bool IsHeap(const void* mem) {
   extern uint32_t __HeapBase[];
   extern uint32_t __StackLimit[];
   return (uint32_t)mem >= (uint32_t)__HeapBase && (uint32_t)mem <= (uint32_t)__StackLimit;
 }
+
+#else
+
+bool IsHeap(const void* mem) {
+  extern uint32_t end[];
+  extern uint32_t __StackLimit[];
+  return (uint32_t)mem >= (uint32_t)end && (uint32_t)mem <= (uint32_t)__StackLimit;
+}
+
 #endif
 
 template<class T>
 void LSFreeObject(T *memory) {
-//  STDOUT.print("FREE ");
-//  STDOUT.println((uint32_t)memory, HEX);
   free((void*)memory);
 }
 

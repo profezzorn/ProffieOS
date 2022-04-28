@@ -192,6 +192,16 @@ WS2811_Blade(WS2811PIN* pin,
          SB_Off(OFF_NORMAL);
          return true;
       }
+#ifdef ENABLE_DEVELOPER_COMMANDS      
+      if (!strcmp(arg, "state")) {
+	STDOUT << "WS2811 blade: on=" << on_
+	       << " power=" << powered_
+	       << " run=" << run_
+	       << " allow_disable=" << allow_disable_
+	       << " power_off_requested=" << power_off_requested_
+	       << "\n";
+      }
+#endif      
     }
     return false;
   }

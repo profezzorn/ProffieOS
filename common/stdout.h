@@ -11,6 +11,8 @@ struct Print {
   void write(char s) { putchar(s); }
   template<class T>
   void println(T s) { print(s); putchar('\n'); }
+  template<class T>
+  void println(T s, int base) { print(s); putchar('\n'); }
   virtual size_t write(uint8_t s) { putchar(s); return 1; }
   virtual size_t write(const uint8_t *buffer, size_t size) {
     for (size_t i = 0; i < size; i++) write(buffer[i]);

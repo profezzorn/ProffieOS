@@ -1,6 +1,11 @@
 #ifndef MOTION_LSM6DS3H_H
 #define MOTION_LSM6DS3H_H
 
+constexpr int ProffieOS_log2(int x) {
+  return (x <= 1) ? 0 : (ProffieOS_log2(x/2) + 1);
+}
+
+// Supports LSM6DS3, LSM6DSM and LSM6DSO
 class LSM6DS3H : public I2CDevice, Looper, StateMachine {
 public:
   const char* name() override { return "LSM6DS3H"; }
@@ -101,6 +106,14 @@ public:
 #endif    
   ) {}
 
+#define I2CLOCK() do {							\
+  state_machine_.sleep_until_ = millis();				\
+  while (!I2CLock()) {							\
+    if (millis() - state_machine_.sleep_until_ > I2C_TIMEOUT_MILLIS) goto i2c_timeout; \
+    YIELD();								\
+  }									\
+} while(0)
+    
   void Loop() override {
 #if 0
     // Uncomment this to debug motion timeouts.
@@ -116,11 +129,43 @@ public:
       first_motion_ = true;
       first_accel_ = true;
       
-      STDOUT.print("Motion setup ... ");
-      while (!I2CLock()) YIELD();
+      STDOUT.print("Motion chip ... ");
+      I2CLOCK();
 
-      I2C_WRITE_BYTE_ASYNC(CTRL1_XL, 0x84);  // 1.66kHz accel, 16G range
-      I2C_WRITE_BYTE_ASYNC(CTRL2_G, 0x8C);   // 1.66kHz gyro, 2000 dps
+      I2C_READ_BYTES_ASYNC(WHO_AM_I, databuffer, 1);
+      id_ = databuffer[0];
+      STDOUT.print(id_);
+      if (id_  == 105 || id_ == 106 || id_ == 108) {
+        STDOUT.println(" found.");
+      } else  {
+        STDOUT.println(" not found.");
+	goto i2c_timeout;
+      }
+
+#ifndef PROFFIEOS_ACCELEROMETER_RANGE
+#define PROFFIEOS_ACCELEROMETER_RANGE 16
+#endif
+#if PROFFIEOS_ACCELEROMETER_RANGE == 4
+#define PROFFIEOS_ACCELEROMETER_RANGE_BITS 8
+#elif PROFFIEOS_ACCELEROMETER_RANGE == 16
+#define PROFFIEOS_ACCELEROMETER_RANGE_BITS 4
+#elif PROFFIEOS_ACCELEROMETER_RANGE == 8
+#define PROFFIEOS_ACCELEROMETER_RANGE_BITS 12
+#elif PROFFIEOS_ACCELEROMETER_RANGE == 2
+#define PROFFIEOS_ACCELEROMETER_RANGE_BITS 0
+#else
+#error unknown PROFFIEOS_ACCELEROMETER_RANGE
+#endif
+      
+#ifndef PROFFIEOS_MOTION_FREQUENCY
+#define PROFFIEOS_MOTION_FREQUENCY 1660
+#endif
+#define PROFFIEOS_MOTION_FREQUENCY_BITS (ProffieOS_log2(PROFFIEOS_MOTION_FREQUENCY/4) << 4)
+
+      // 1.66kHz accel, 16G range
+      STDOUT << "FOO:" << (PROFFIEOS_MOTION_FREQUENCY_BITS | PROFFIEOS_ACCELEROMETER_RANGE_BITS) << "\n";
+      I2C_WRITE_BYTE_ASYNC(CTRL1_XL, PROFFIEOS_MOTION_FREQUENCY_BITS | PROFFIEOS_ACCELEROMETER_RANGE_BITS);
+      I2C_WRITE_BYTE_ASYNC(CTRL2_G, PROFFIEOS_MOTION_FREQUENCY_BITS | 0xC);   // 1.66kHz gyro, 2000 dps
       I2C_WRITE_BYTE_ASYNC(CTRL3_C, 0x44);   // ?
       I2C_WRITE_BYTE_ASYNC(CTRL4_C, 0x00);
       I2C_WRITE_BYTE_ASYNC(CTRL5_C, 0x00);
@@ -129,14 +174,9 @@ public:
       I2C_WRITE_BYTE_ASYNC(CTRL8_XL, 0x00);
       I2C_WRITE_BYTE_ASYNC(CTRL9_XL, 0x38);  // accel xyz enable
       I2C_WRITE_BYTE_ASYNC(CTRL10_C, 0x38);  // gyro xyz enable
-      I2C_WRITE_BYTE_ASYNC(INT1_CTRL, 0x3);  // Activate INT on data ready
-      pinMode(motionSensorInterruptPin, INPUT);
-      I2C_READ_BYTES_ASYNC(WHO_AM_I, databuffer, 1);
-      if (databuffer[0] == 105 || databuffer[0] == 106) {
-        STDOUT.println("done.");
-      } else {
-        STDOUT.println("failed.");
-	goto i2c_timeout;
+      if (motionSensorInterruptPin != -1) {
+	I2C_WRITE_BYTE_ASYNC(INT1_CTRL, 0x3);  // Activate INT on data ready
+	pinMode(motionSensorInterruptPin, INPUT);
       }
       I2CUnlock();
 
@@ -150,7 +190,9 @@ public:
 	if ((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31) {
 	  TRACE(MOTION, "timeout");
 	  STDOUT.println("Motion timeout.");
-	  break;
+	  stm32l4_exti_notify(&stm32l4_exti, g_APinDescription[motionSensorInterruptPin].pin,
+			      EXTI_CONTROL_DISABLE, &LSM6DS3H::do_nothing, nullptr);
+	  goto i2c_timeout;
 	}
 	YIELD();
       }
@@ -161,20 +203,29 @@ public:
       while (true) {
 	YIELD();
 	if (!SaberBase::MotionRequested()) break;
-	if (!digitalRead(motionSensorInterruptPin)) {
-	  if (millis() - last_event_ > I2C_TIMEOUT_MILLIS * 2) {
-	    goto i2c_timeout;
+	if (motionSensorInterruptPin == -1) {
+	  while (!I2CLock((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31)) YIELD();
+	  I2C_READ_BYTES_ASYNC(STATUS_REG, databuffer, 1);
+	  if ((databuffer[0] & 3) != 3) {
+	    I2CUnlock();
+	    continue;
 	  }
-	  continue;
 	} else {
-	  last_event_ = millis();
+	  if (!digitalRead(motionSensorInterruptPin)) {
+	    if (millis() - last_event_ > I2C_TIMEOUT_MILLIS * 2) {
+	      goto i2c_timeout;
+	    }
+	    continue;
+	  } else {
+	    last_event_ = millis();
+	  }
+	  while (!I2CLock((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31)) YIELD();
 	}
-        while (!I2CLock((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31)) YIELD();
 	
 	I2C_READ_BYTES_ASYNC(OUTX_L_G, databuffer, 12);
 	// accel data available
 	prop.DoAccel(
-	  MotionUtil::FromData(databuffer + 6, 16.0 / 32768.0,   // 16 g range
+	  MotionUtil::FromData(databuffer + 6, PROFFIEOS_ACCELEROMETER_RANGE / 32768.0,   // 16 g range
 			       Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
 	  first_accel_);
 	first_accel_ = false;
@@ -191,7 +242,7 @@ public:
 #endif      
       STDOUT.println("Motion disable.");
 
-      while (!I2CLock()) YIELD();
+      I2CLOCK();
       I2C_WRITE_BYTE_ASYNC(CTRL2_G, 0x0);  // accel disable
       I2C_WRITE_BYTE_ASYNC(CTRL1_XL, 0x0);  // gyro disable
       I2CUnlock();
@@ -201,6 +252,7 @@ public:
 
     i2c_timeout:
       STDOUT.println("Motion chip timeout, trying auto-reboot of motion chip!");
+      while (!I2CLock(true)) YIELD();
       Reset();
       SLEEP(20);
 #define i2c_timeout i2c_timeout2
@@ -269,7 +321,7 @@ public:
     stm32l4_i2c_notify(Wire._i2c, nullptr, 0, 0);
     I2CUnlock();
     // accel data available
-    prop.DoAccel(MotionUtil::FromData(databuffer + 6, 16.0 / 32768.0,   // 16 g range
+    prop.DoAccel(MotionUtil::FromData(databuffer + 6, PROFFIEOS_ACCELEROMETER_RANGE / 32768.0,   // 16 g range
 				      Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
 		 first_accel_);
     
@@ -288,6 +340,7 @@ public:
   volatile uint32_t last_event_;
   bool first_motion_;
   bool first_accel_;
+  uint8_t id_ = 105;
 };
 
 #endif

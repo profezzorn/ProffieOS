@@ -3,17 +3,7 @@
 
 #include "led_interface.h"
 
-// First some abstractions for controlling PWM pin
-#ifdef TEENSYDUINO
-void LSanalogWriteSetup(uint32_t pin) {
-  analogWriteResolution(16);
-  analogWriteFrequency(pin, 1000);
-}
-void LSanalogWriteTeardown(uint32_t pin) {}
-void LSanalogWrite(uint32_t pin, int value) {
-  analogWrite(pin, value);
-}
-#else
+#ifdef ARDUINO_ARCH_STM32L4
 #include <stm32l4_timer.h>
 
 namespace {
@@ -61,7 +51,9 @@ void TeardownTimer(uint32_t instance) {
   if (0 == --timer_use_counts[instance]) {
     stm32l4_timer_stop(&stm32l4_pwm[instance]);
     stm32l4_timer_disable(&stm32l4_pwm[instance]);
-    if (instance) TeardownTimer(0);
+    if (instance != PWM_SYNC_INSTANCE) {
+      TeardownTimer(PWM_SYNC_INSTANCE);
+    }
   }
 }
 
@@ -106,6 +98,25 @@ void LSanalogWrite(uint32_t pin, int value) {
 }
 
 };
+#elif defined(TEENSYDUINO)
+// First some abstractions for controlling PWM pin
+void LSanalogWriteSetup(uint32_t pin) {
+  analogWriteResolution(16);
+  analogWriteFrequency(pin, 1000);
+}
+void LSanalogWriteTeardown(uint32_t pin) {}
+void LSanalogWrite(uint32_t pin, int value) {
+  analogWrite(pin, value);
+}
+#else
+// First some abstractions for controlling PWM pin
+void LSanalogWriteSetup(uint32_t pin) {
+  analogWriteResolution(16);
+}
+void LSanalogWriteTeardown(uint32_t pin) {}
+void LSanalogWrite(uint32_t pin, int value) {
+  analogWrite(pin, value);
+}
 #endif
 
 class PWMPinInterface {

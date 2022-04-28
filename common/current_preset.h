@@ -67,7 +67,7 @@ public:
 
 #define VALIDATE_STYLE_STRING(N) ValidateStyleString(PRE.current_style##N.get());    
 
-#ifdef ENABLE_DEBUG
+#if defined(ENABLE_DEBUG) && NUM_BLADES > 0
 #define ValidateStyleString(X) CurrentPreset::ValidateStyleStringF((X), __FILE__, __LINE__)
 #define VSS(X) CurrentPreset::ValidateStyleStringF((X), __FILE__, __LINE__)
 #define DOVALIDATE(X) do { CurrentPreset&PRE=(X); ONCEPERBLADE(VALIDATE_STYLE_STRING); } while(0)
@@ -248,6 +248,9 @@ public:
   }
 
   bool UpdateINI() {
+#ifndef ENABLE_SD
+    return false;
+#else    
     FileReader f, f2;
     PathHelper ini_fn(GetSaveDir(), "presets.ini");
     if (OpenPresets(&f2, "presets.tmp")) {
@@ -271,9 +274,13 @@ public:
       return true;
     }
     return false;
+#endif    
   }
 
   bool CreateINI() {
+#ifndef ENABLE_SD
+    return false;
+#else    
     FileReader f;
     PathHelper ini_fn(GetSaveDir(), "presets.ini");
     LSFS::Remove(ini_fn);
@@ -291,10 +298,14 @@ public:
     f.Write("end\n");
     f.Close();
     return true;
+#endif    
   }
 
   // preset = -1 means to load the *last* pre
   bool Load(int preset) {
+#ifndef ENABLE_SD
+    return false;
+#else
     FileReader f;
     if (!OpenPresets(&f, "presets.ini")) {
       if (!UpdateINI()) return false;
@@ -317,9 +328,11 @@ public:
 	return false;
       }
     }
+#endif    
   }
 
   void SaveAtLocked(int position) {
+#ifdef ENABLE_SD
     DOVALIDATE(*this);
     FileReader f, out;
     if (!OpenPresets(&f, "presets.ini")) {
@@ -361,6 +374,7 @@ public:
     out.Close();
     UpdateINI();
     preset_num = position;
+#endif    
   }
 
   // position = 0 -> first spot
