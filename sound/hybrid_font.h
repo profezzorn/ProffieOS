@@ -8,6 +8,7 @@ public:
     CONFIG_VARIABLE2(humStart, 100);
     CONFIG_VARIABLE2(volHum, 15);
     CONFIG_VARIABLE2(volEff, 16);
+    CONFIG_VARIABLE2(ProffieOSHumDelay, 0.0f);
     CONFIG_VARIABLE2(ProffieOSSwingSpeedThreshold, 250.0f);
     CONFIG_VARIABLE2(ProffieOSSwingVolumeSharpness, 0.5f);
     CONFIG_VARIABLE2(ProffieOSMaxSwingVolume, 2.0f);
@@ -67,7 +68,9 @@ public:
   int volHum;
   // Effect volume (0-16) defaults to 16.
   int volEff;
-
+  // Milliseconds from beginning of out.wav to delay hum.]
+  // Defaults to 0
+  int ProffieOSHumDelay;
   // How fast (degrees per second) we have to swing before a swing
   // effect is triggered. Defaults to 250.
   float ProffieOSSwingSpeedThreshold;
