@@ -430,7 +430,7 @@ public:
         hum_fade_in_ = tmp->length();
         STDOUT << "HUM fade-in time: " << hum_fade_in_ << "\n";
       } else {
-        if (font_config.ProffieOSHumDelay && tmp && font_config.ProffieOSHumDelay > 0 && font_config.ProffieOSHumDelay < 30000) {
+        if (font_config.ProffieOSHumDelay && tmp && font_config.ProffieOSHumDelay > 0) {
           hum_start_ += font_config.ProffieOSHumDelay;
           STDOUT << "HumDelay: " << font_config.ProffieOSHumDelay << "\n";
         } else {
