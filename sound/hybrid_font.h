@@ -429,19 +429,15 @@ public:
       if (SFX_humm && tmp) {
         hum_fade_in_ = tmp->length();
         STDOUT << "HUM fade-in time: " << hum_fade_in_ << "\n";
-      } else {
-        if (font_config.ProffieOSHumDelay && tmp && font_config.ProffieOSHumDelay > 0) {
-          hum_start_ += font_config.ProffieOSHumDelay;
-          STDOUT << "HumDelay: " << font_config.ProffieOSHumDelay << "\n";
-        } else {
-          if (font_config.humStart && tmp) {
-            int delay_ms = 1000 * tmp->length() - font_config.humStart;
-            if (delay_ms > 0 && delay_ms < 30000) {
-              hum_start_ += delay_ms;
-            }
-           STDOUT << "humstart: " << font_config.humStart << "\n";
-          }
+      } else if (font_config.ProffieOSHumDelay > 0) {
+        hum_start_ += font_config.ProffieOSHumDelay;
+        STDOUT << "HumDelay: " << font_config.ProffieOSHumDelay << "\n";
+      } else if (font_config.humStart && tmp) {
+        int delay_ms = 1000 * tmp->length() - font_config.humStart;
+        if (delay_ms > 0 && delay_ms < 30000) {
+          hum_start_ += delay_ms;
         }
+       STDOUT << "humstart: " << font_config.humStart << "\n";
       }
     }
   }
