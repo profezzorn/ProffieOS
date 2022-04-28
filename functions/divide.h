@@ -4,8 +4,8 @@
 // Usage: Divide<F, V>
 // Divide F by V
 // If V = 0, returns 0
-// F, V: INTEGER, 
-// return value: INTEGER
+// F, V: FUNCTION, 
+// return value: FUNCTION
 
 class BladeBase;
 
