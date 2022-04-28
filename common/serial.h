@@ -14,6 +14,7 @@ public:
   static const char* response_footer() { return ""; }
 };
 
+#if defined(TEENSYDUINO) || SERIAL_INTERFACES_COUNT - 0 > 3
 class Serial3Adapter {
 public:
   static void begin() { Serial3.begin(115200); }
@@ -23,6 +24,7 @@ public:
   static const char* response_header() { return "-+=BEGIN_OUTPUT=+-\n"; }
   static const char* response_footer() { return "-+=END_OUTPUT=+-\n"; }
 };
+#endif
 
 #ifdef USB_CLASS_WEBUSB
 class WebUSBSerialAdapter {
