@@ -395,43 +395,49 @@ public:
     bool already_started = state_ == STATE_WAIT_FOR_ON && SFX_preon;
     if (monophonic_hum_) {
       if (!already_started) {
-	PlayMonophonic(&SFX_poweron, &SFX_hum);
+        PlayMonophonic(&SFX_poweron, &SFX_hum);
       }
       state_ = STATE_HUM_ON;
     } else {
       state_ = STATE_OUT;
       if (!hum_player_) {
-	hum_player_ = GetFreeWavPlayer();
-	if (hum_player_) {
-	  hum_player_->set_volume_now(0);
-	  hum_player_->PlayOnce(SFX_humm ? &SFX_humm : &SFX_hum);
-	  hum_player_->PlayLoop(SFX_humm ? &SFX_humm : &SFX_hum);
-	}
+      	hum_player_ = GetFreeWavPlayer();
+      	if (hum_player_) {
+      	  hum_player_->set_volume_now(0);
+      	  hum_player_->PlayOnce(SFX_humm ? &SFX_humm : &SFX_hum);
+      	  hum_player_->PlayLoop(SFX_humm ? &SFX_humm : &SFX_hum);
+      	}
         hum_start_ = millis();
       }
       RefPtr<BufferedWavPlayer> tmp;
       if (already_started) {
-	tmp = GetWavPlayerPlaying(getOut());
-	// Set the length for WavLen<>
-	if (tmp) {
-	  tmp->UpdateSaberBaseSoundInfo();
-	} else {
-	  SaberBase::ClearSoundInfo();
-	}
+        tmp = GetWavPlayerPlaying(getOut());
+      	// Set the length for WavLen<>
+      	if (tmp) {
+      	  tmp->UpdateSaberBaseSoundInfo();
+      	} else {
+      	  SaberBase::ClearSoundInfo();
+      	}
       } else {
-	tmp = PlayPolyphonic(getOut());
+        tmp = PlayPolyphonic(getOut());
       }
       hum_fade_in_ = 0.2;
       if (SFX_humm && tmp) {
-	hum_fade_in_ = tmp->length();
-	STDOUT << "HUM fade-in time: " << hum_fade_in_ << "\n";
-      }
-      else if (font_config.humStart && tmp) {
-        int delay_ms = 1000 * tmp->length() - font_config.humStart;
-        if (delay_ms > 0 && delay_ms < 30000) {
-          hum_start_ += delay_ms;
+        hum_fade_in_ = tmp->length();
+        STDOUT << "HUM fade-in time: " << hum_fade_in_ << "\n";
+      } else {
+        if (font_config.ProffieOSHumDelay && tmp && font_config.ProffieOSHumDelay > 0 && font_config.ProffieOSHumDelay < 30000) {
+          hum_start_ += font_config.ProffieOSHumDelay;
+          STDOUT << "HumDelay: " << font_config.ProffieOSHumDelay << "\n";
+        } else {
+          if (font_config.humStart && tmp) {
+            int delay_ms = 1000 * tmp->length() - font_config.humStart;
+            if (delay_ms > 0 && delay_ms < 30000) {
+              hum_start_ += delay_ms;
+            }
+           STDOUT << "humstart: " << font_config.humStart << "\n";
+          }
         }
-	STDOUT << "humstart: " << font_config.humStart << "\n";
       }
     }
   }
