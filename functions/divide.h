@@ -17,10 +17,11 @@ public:
     v_.run(blade);
   }
   int getInteger(int led) {
-    if (v_.getInteger(led) == 0) {
+    int v = v_.getInteger(led);
+    if (v == 0) {
       return 0;
     } else {
-      return (f_.getInteger(led) / v_.getInteger(led));
+      return f_.getInteger(led) / v;
     }
   }
 private:
@@ -36,10 +37,11 @@ public:
     v_.run(blade);
   }
   int calculate(BladeBase* blade) {
-    if (v_.calculate(blade) == 0) {
+    int v = v_.calculate(blade);
+    if (v == 0) {
       return 0;
     } else {
-      return (f_.calculate(blade) / v_.calculate(blade));
+      return f_.calculate(blade) / v;
     }
   }
 private:
