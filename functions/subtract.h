@@ -30,7 +30,7 @@ class SubtractSVF {
     svfb_.run(blade);
   }
   int calculate(BladeBase* blade) {
-    return (svfa_.calculate(blade) - svfb_.calculate(blade));
+    return svfa_.calculate(blade) - svfb_.calculate(blade);
   }
  private:
   PONUA SVFA svfa_;
