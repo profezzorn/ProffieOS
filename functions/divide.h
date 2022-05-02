@@ -6,6 +6,7 @@
 // If V = 0, returns 0
 // F, V: FUNCTION, 
 // return value: FUNCTION
+// Returns actual value, not fixed point
 
 class BladeBase;
 
