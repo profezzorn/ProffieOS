@@ -45,7 +45,7 @@ public:
     free(current_config->blade1->UnSetStyle());
     current_config->blade1->SetStyle(new Style<ClashRecorderStyle>());
 
-    Saber::On();
+    BASE::On();
   }
 
   virtual bool Event(enum BUTTON button, EVENT event) {
