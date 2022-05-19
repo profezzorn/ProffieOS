@@ -226,7 +226,8 @@ Standard Controls While Blade is OFF
     Turn Right (Stepped) = Increase Volume (to max)
     Turn Left (Stepped) = Decrease Volume (to min)
     Click PWR = Exit
-  NEW Control! Battery Level = Double Click + Long Click PWR
+  NEW Control! Battery Level* = Double Click + Long Click PWR
+    *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_PERCENT or FETT263_SAY_BATTERY_VOLTS define
   NEW! Change Font
     Next Font = Triple Click + Long Click PWR (parallel or up)
     Previous Font = Triple Click + Long Click PWR (down)
