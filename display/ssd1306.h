@@ -23,7 +23,6 @@ IMAGE_FILESET(clipin);
 IMAGE_FILESET(clipout);
 IMAGE_FILESET(destruct); // BC TODO
 
-
 enum Screen {
   SCREEN_UNSET,
   SCREEN_STARTUP,
@@ -287,11 +286,11 @@ public:
   int FillFrameBuffer(bool advance) override {
     if (advance) {
       if (next_screen_ != SCREEN_UNSET) {
-  screen_ = next_screen_;
-  next_screen_ = SCREEN_UNSET;
-  t_ = 0;
+	screen_ = next_screen_;
+	next_screen_ = SCREEN_UNSET;
+	t_ = 0;
       } else {
-  t_ += last_delay_;
+	t_ += last_delay_;
       }
     }
     return last_delay_ = FillFrameBuffer2(advance);
@@ -310,18 +309,18 @@ public:
     t_ = 0;
     if (SaberBase::IsOn()) {
       if (SaberBase::Lockup() && IMG_lock && !ignore_lockup) {
-        SetFile(&IMG_lock, 3600000.0);
+	SetFile(&IMG_lock, 3600000.0);
       } else if (looped_on_ == Tristate::True) {
-        SetFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+	SetFile(&IMG_on, font_config.ProffieOSOnImageDuration);
       }
     } else {
       // Off
       if (looped_idle_ != Tristate::False) {
-        if (EscapeIdleIfNeeded()) {
-          SetMessage("    usb\nconnected");
-        } else {
-          SetFile(&IMG_idle, 3600000.0);
-        }
+	if (EscapeIdleIfNeeded()) {
+	  SetMessage("usb");
+	} else {
+	  SetFile(&IMG_idle, 3600000.0);
+	}
       }
     }
   }
@@ -331,47 +330,47 @@ public:
       default:
       case SCREEN_UNSET:
       case SCREEN_OFF:
-        Clear();
+	Clear();
         return 3600000; // Long time!
 
       case SCREEN_STARTUP:
-        Clear();
+	Clear();
         // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
         // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
-        if (WIDTH < 128) {
-          display_->DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
-        } else {
-          display_->DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
-        }
-        display_->DrawText(version,0,31, Starjedi10pt7bGlyphs);
-        if (HEIGHT > 32) {
-          display_->DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
-          display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
-        }
-              next_screen_ = SCREEN_PLI;
-              return font_config.ProffieOSFontImageDuration;
+	if (WIDTH < 128) {
+	  display_->DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
+	} else {
+	  display_->DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
+	}
+	display_->DrawText(version,0,31, Starjedi10pt7bGlyphs);
+	if (HEIGHT > 32) {
+	  display_->DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
+	  display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
+	}
+        next_screen_ = SCREEN_PLI;
+        return font_config.ProffieOSFontImageDuration;
 
       case SCREEN_PLI:
-          if (!SaberBase::IsOn() && t_ > PLI_OFF_TIME) {
-            screen_ = SCREEN_OFF;
-            return FillFrameBuffer2(advance);
-          }
-        Clear();
-        display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
-        if (HEIGHT > 32) {
-          char tmp[32];
-          strcpy(tmp, "volts x.xx");
-          float v = battery_monitor.battery();
-          tmp[6] = '0' + (int)floorf(v);
-          tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
-          tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
-          display_->DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
+        if (!SaberBase::IsOn() && t_ > PLI_OFF_TIME) {
+          screen_ = SCREEN_OFF;
+          return FillFrameBuffer2(advance);
         }
+	Clear();
+	display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
+	if (HEIGHT > 32) {
+	  char tmp[32];
+	  strcpy(tmp, "volts x.xx");
+	  float v = battery_monitor.battery();
+	  tmp[6] = '0' + (int)floorf(v);
+	  tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
+	  tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
+	  display_->DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
+	}
         return 200;  // redraw once every 200 ms
 
       case SCREEN_MESSAGE: {
-        Clear();
-        // Aurebesh Font option.
+	Clear();
+	// Aurebesh Font option.
 #ifdef USE_AUREBESH_FONT
         const Glyph* font = Aurebesh10pt7bGlyphs;
 #else
@@ -380,61 +379,61 @@ public:
         if (strchr(message_, '\n')) {
           display_->DrawText(message_, 0, 15, font);
         } else {
-          // centered
+	  // centered
           display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
         next_screen_ = SCREEN_DEFAULT;
-        // STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
+	// STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
         return font_config.ProffieOSFontImageDuration;
       }
 
       case SCREEN_IMAGE:
-        if (EscapeIdleIfNeeded() && current_effect_ == &IMG_idle) {
-          // We are idle-looping, and usb is connected. Time to stop.
-          SetMessage("    usb\nconnected");
-          return FillFrameBuffer2(advance);
-        }
+	if (EscapeIdleIfNeeded() && current_effect_ == &IMG_idle) {
+	  // We are idle-looping, and usb is connected. Time to stop.
+	  SetMessage("usb");
+	  return FillFrameBuffer2(advance);
+	}
         MountSDCard();
-        {
-          int count = 0;
-          while (!frame_available_) {
-            if (count++ > 3) return 0;
-            if (eof_) advance = false;
-            advance_ = advance;
-            lock_fb_ = false;
-            scheduleFillBuffer();
-          }
-        }
-        lock_fb_ = true;
+	{
+	  int count = 0;
+	  while (!frame_available_) {
+	    if (count++ > 3) return 0;
+	    if (eof_) advance = false;
+	    advance_ = advance;
+	    lock_fb_ = false;
+	    scheduleFillBuffer();
+	  }
+	}
+	lock_fb_ = true;
         if (eof_) {
-          // STDERR << "FRAME COUNT @ EOF= " << frame_count_ << " left=" << (effect_display_duration_ - t_) <<  "\n";
-          if (frame_count_ == 1 && t_ < effect_display_duration_) {
-            ConvertToNative();
-            frame_available_ = false;
-            return effect_display_duration_ - t_;
-          }
-        } else {
-          if (frame_available_ && advance) frame_count_++;
-          if (looped_frames_ == 1 || t_ < effect_display_duration_) {
-            ConvertToNative();
-            frame_available_ = false;
-            if (font_config.ProffieOSAnimationFrameRate > 0.0) {
-              return 1000 / font_config.ProffieOSAnimationFrameRate;
-            }
-            if (looped_frames_ > 1) {
-              return 1000 / looped_frames_;
-            } else {
-              // STDERR << "-> 41\n";
-              return 41;   // ~24 fps
-            }
-          }
-        }
+	  // STDERR << "FRAME COUNT @ EOF= " << frame_count_ << " left=" << (effect_display_duration_ - t_) <<  "\n";
+	  if (frame_count_ == 1 && t_ < effect_display_duration_) {
+	    ConvertToNative();
+	    frame_available_ = false;
+	    return effect_display_duration_ - t_;
+	  }
+	} else {
+	  if (frame_available_ && advance) frame_count_++;
+	  if (looped_frames_ == 1 || t_ < effect_display_duration_) {
+	    ConvertToNative();
+	    frame_available_ = false;
+	    if (font_config.ProffieOSAnimationFrameRate > 0.0) {
+	      return 1000 / font_config.ProffieOSAnimationFrameRate;
+	    }
+	    if (looped_frames_ > 1) {
+	      return 1000 / looped_frames_;
+	    } else {
+	      // STDERR << "-> 41\n";
+	      return 41;   // ~24 fps
+	    }
+	  }
+	}
 
-        // This image/animation is done, time to choose the next thing to display.
+	// This image/animation is done, time to choose the next thing to display.
       case SCREEN_DEFAULT:
-        // STDERR << "MOVING ON...\n";
-        ShowDefault();
-        return FillFrameBuffer2(advance);
+	// STDERR << "MOVING ON...\n";
+	ShowDefault();
+	return FillFrameBuffer2(advance);
     }
   }
 
@@ -457,25 +456,25 @@ public:
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
       case EFFECT_BOOT:
-        if (IMG_boot) {
-          ShowFile(&IMG_boot, font_config.ProffieOSFontImageDuration);
-        } else if (IMG_idle) {
-          ShowFile(&IMG_idle, 3600000.0);
-        }
-        return;
+	if (IMG_boot) {
+	  ShowFile(&IMG_boot, font_config.ProffieOSFontImageDuration);
+	} else if (IMG_idle) {
+	  ShowFile(&IMG_idle, 3600000.0);
+	}
+	return;
       case EFFECT_NEWFONT:
-        looped_on_ = Tristate::Unknown;
-        looped_idle_ = Tristate::Unknown;
-        if (IMG_font) {
-          ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
-        } else if (prop.current_preset_name()) {
-          SetMessage(prop.current_preset_name());
-          SetScreenNow(SCREEN_MESSAGE);
-        } else if (IMG_idle) {
-          ShowFile(&IMG_idle, 3600000.0);
-        }
-        return;
-      case EFFECT_LOCKUP_BEGIN:
+	looped_on_ = Tristate::Unknown;
+	looped_idle_ = Tristate::Unknown;
+	if (IMG_font) {
+	  ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
+	} else if (prop.current_preset_name()) {
+	  SetMessage(prop.current_preset_name());
+	  SetScreenNow(SCREEN_MESSAGE);
+	} else if (IMG_idle) {
+	  ShowFile(&IMG_idle, 3600000.0);
+	}
+	return;
+       case EFFECT_LOCKUP_BEGIN:
         ShowDefault();
         return;
       case EFFECT_LOCKUP_END:
@@ -485,7 +484,6 @@ public:
         // Show battery meter for ProffieOSFontImageDuration??
         SetScreenNow(SCREEN_PLI);
         return;
-
 #ifndef OLED_SYNCED_EFFECTS // a better name is welcomed
       case EFFECT_FORCE:
         ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
@@ -552,7 +550,7 @@ public:
         break;
       default: break;
     }
-  } 
+  }
 
   void SetMessage(const char* text) {
     strncpy(message_, text, sizeof(message_));
@@ -748,7 +746,7 @@ public:
     if (file_.OpenFile()) {
       if (!file_.IsOpen()) {
         eof_ = true;
-  // STDERR << "not open\n";
+	// STDERR << "not open\n";
         return false;
       }
       ypos_ = looped_frames_;
@@ -760,19 +758,19 @@ public:
     if (!frame_available_) {
       // STDERR << "ADVANCE=" << advance_ << " last_file_pos_= " << last_state_.file_pos << " ypos=" << last_state_.ypos << "\n";
       if (!advance_) {
-  file_.Seek(last_state_.file_pos);
-  ypos_ = last_state_.ypos;
+	file_.Seek(last_state_.file_pos);
+	ypos_ = last_state_.ypos;
       } else {
-  advance_ = false;
+	advance_ = false;
       }
       ReadState state;
       state.ypos = ypos_;
       state.file_pos = file_.Tell();
       if (ReadImage(&file_)) {
-  frame_available_ = true;
-  last_state_ = state;
+	frame_available_ = true;
+	last_state_ = state;
       } else {
-  STDERR << "read image fail\n";
+	STDERR << "read image fail\n";
         eof_ = true;
       }
     }
@@ -950,7 +948,7 @@ public:
     Send(0x01);                          // vertical address mode
 
 #if defined (OLED_FLIP_180)
-#if defined (OLED_MIRRORED)
+#if defined(OLED_MIRRORED)
     // Flip 180 and mirrored OLED operation
     Send(SEGREMAP | 0x1);        // 0xa0 | 1
 #else
@@ -967,7 +965,6 @@ public:
     Send(SEGREMAP | 0x1);        // 0xa0 | 1
     Send(COMSCANDEC);
 #endif
-
 
     Send(SETCOMPINS);                    // 0xDA
     if (HEIGHT == 64 || WIDTH==64) {
@@ -997,9 +994,9 @@ public:
       millis_to_display_ = next_millis_to_display_;
       next_millis_to_display_ = 0;
       while (millis_to_display_ == 0) {
-  YIELD();
-  millis_to_display_ = FillFrameBuffer();
-  // STDERR << "millis_to_display_ = " << millis_to_display_ << "\n";
+	YIELD();
+	millis_to_display_ = FillFrameBuffer();
+	// STDERR << "millis_to_display_ = " << millis_to_display_ << "\n";
       }
       frame_start_time_ = millis();
       lock_fb_ = true;
@@ -1025,10 +1022,10 @@ public:
       for (i=0; i < WIDTH * HEIGHT / 8; ) {
         // send a bunch of data in one xmission
         Wire.beginTransmission(address_);
-  GetChunk();
-  for (size_t x=0; x <= chunk_size; x++) {
-    Wire.write(chunk[x]);
-  }
+	GetChunk();
+	for (size_t x=0; x <= chunk_size; x++) {
+	  Wire.write(chunk[x]);
+	}
         Wire.endTransmission();
         I2CUnlock(); do { YIELD(); } while (!I2CLock());
       }
@@ -1036,11 +1033,11 @@ public:
       I2CUnlock();
 #endif
       while (millis() - frame_start_time_ < millis_to_display_) {
-  if (next_millis_to_display_ == 0) {
-    next_millis_to_display_ = FillFrameBuffer();
-    // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
-  }
-  YIELD();
+	if (next_millis_to_display_ == 0) {
+	  next_millis_to_display_ = FillFrameBuffer();
+	  // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
+	}
+	YIELD();
       }
     }
 
@@ -1110,4 +1107,5 @@ constexpr uint8_t SSD1306Template<WIDTH, col_t>::transactions[];
 using SSD1306 = SSD1306Template<128, uint32_t>;
 
 #endif
+
 
