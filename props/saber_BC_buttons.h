@@ -208,9 +208,11 @@ PowerSave Dim Blade   - 4x click and hold POW medium. (while pointing up)
                         To use Power Save requires AlphaL based EffectSequence in style.
 Turn ON/OFF Alt blade - Double click and hold POW, release after a second.
                         (click then long click) Same action as previous preset.
+                        If held too long, Lightning Block will trigger.
+                        - or -
                         Also works using Aux button on 2 button sabers even if 
                         running 1 button controls with NUM_BUTTONS 1.
-                        If held too long, Lightning Block will trigger.
+                        Hold AUX long.
                         * Requires EFFECT_USER4 in blade style, see example above.
 Turn OFF ALL blades   - Hold POW and wait until blade is off,
 
@@ -293,7 +295,7 @@ Swap                  - If #define BC_SWAP is active, this replaces SPAM BLAST.
                         * Requires an EffectSequence<EFFECT_USER1...> in blade style.
 PowerSave Dim Blade   - Hold AUX + Twist. (while pointing up)
                         To use Power Save requires AlphaL based EffectSequence in style.
-Turn ON/OFF Alt blade - Press and hold AUX.
+Turn ON/OFF Alt blade - Press and hold AUX long.
 Turn off ALL blades   - Hold POW and wait until blade is off,
                         or Twist if using #define BC_TWIST_OFF.
 */
@@ -982,11 +984,7 @@ public:
       } else {
   #ifndef BC_SWAP
         sound_library_.SayZoomingIn();
-        if (!spam_blast_) {
-          spam_blast_ = true;
-        } else { 
-          spam_blast_ = false;
-        }
+        spam_blast_ = !spam_blast_;
         return true;
   #else
         hybrid_font.DoEffect(EFFECT_USER1, 0);
