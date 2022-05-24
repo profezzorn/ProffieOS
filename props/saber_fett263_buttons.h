@@ -10,6 +10,7 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
  Fett263 Button (prop) file, "Battle Mode 2.0", "Edit Mode", "Track Player", "Real Clash", "Choreography Mode", "Dual Mode Ignition",
  "Multi-Phase", "Multi-Blast"
  Copyright (c) 2020-2021 Fernando da Rosa
+ Visit https://www.fett263.com/proffieOS6-fett263-prop-file.html for required set up and additional information
  
  Voice Prompts and sounds required for certain features and should be included in /common folder or /font folder on SD card.
    Free prompts (courtesy of Brian Conner) available here: http://fredrik.hubbe.net/lightsaber/sound/
@@ -225,7 +226,8 @@ Standard Controls While Blade is OFF
     Turn Right (Stepped) = Increase Volume (to max)
     Turn Left (Stepped) = Decrease Volume (to min)
     Click PWR = Exit
-  NEW Control! Battery Level = Double Click + Long Click PWR
+  NEW Control! Battery Level* = Double Click + Long Click PWR
+    *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_PERCENT or FETT263_SAY_BATTERY_VOLTS define
   NEW! Change Font
     Next Font = Triple Click + Long Click PWR (parallel or up)
     Previous Font = Triple Click + Long Click PWR (down)
@@ -488,6 +490,15 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   
   FETT263_QUOTE_PLAYER_START_ON
   This will set Force / Quote Player to play Quote by default (if in font)
+  
+== Disable Features ==
+  FETT263_DISABLE_CHANGE_FONT - Disables the "on-the-fly" Change Font option
+  
+  FETT263_DISABLE_CHANGE_STYLE - Disables the "on-the-fly" Change Style option
+  
+  FETT263_DISABLE_COPY_PRESET - Disables the "on-the-fly" Copy Preset option
+  
+  FETT263_DISABLE_MULTI_BLAST - Disables "Multi-Blast" Mode
   
 == SA22C 2 Button Variations ==
   FETT263_HOLD_BUTTON_OFF - Changes to Hold PWR to turn Off / Retract
@@ -4575,26 +4586,34 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true;
 
+#ifndef FETT263_DISABLE_CHANGE_STYLE
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_ON):
         if (menu_ || CheckShowColorCC()) return true;
         ChangeStyleNumberAllBlades(fusor.angle1() < - M_PI / 3 ? -1 : 1);
         hybrid_font.PlayCommon(&SFX_ccchange);
         return true;
+#endif
 
+#ifndef FETT263_DISABLE_CHANGE_FONT
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_OFF):
         if (menu_) return true;
         ChangeFont(fusor.angle1() < - M_PI / 3 ? -1 : 1);
         return true;
+#endif
 
+#ifndef FETT263_DISABLE_COPY_PRESET
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         if (menu_) return true;
         CopyPreset(true);
         return true;
+#endif
 
+#ifndef FETT263_DISABLE_MULTI_BLAST
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
         if (menu_ || CheckShowColorCC()) return true;
           ToggleMultiBlast();
         return true;
+#endif
 
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
         if (menu_ || CheckShowColorCC()) return true;
@@ -4714,10 +4733,12 @@ SaberFett263Buttons() : PropBase() {}
         sound_library_.SaySelectPreset();
         return true;
 
+#ifndef FETT263_DISABLE_COPY_PRESET
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF | BUTTON_POWER):
         if (menu_) return true;
         CopyPreset(true);
         return true;
+#endif
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
         // Track Player - Play Random
@@ -4848,16 +4869,20 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 #endif
 
+#ifndef FETT263_DISABLE_CHANGE_STYLE
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_ON | BUTTON_AUX):
         if (menu_ || CheckShowColorCC()) return true;
         ChangeStyleNumberAllBlades(fusor.angle1() < - M_PI / 3 ? -1 : 1);
         hybrid_font.PlayCommon(&SFX_ccchange);
         return true;
+#endif
 
+#ifndef FETT263_DISABLE_CHANGE_FONT
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF | BUTTON_AUX):
         if (menu_) return true;
         ChangeFont(fusor.angle1() < - M_PI / 3 ? -1 : 1);
         return true;
+#endif
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON | BUTTON_POWER):
         if (menu_ || CheckShowColorCC()) return true;
@@ -5013,10 +5038,12 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true;
 
+#ifndef FETT263_DISABLE_MULTI_BLAST
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
         if (menu_ || CancelShowColor()) return true;
         ToggleMultiBlast();
         return true;
+#endif
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON | BUTTON_AUX):
         if (menu_ || CancelShowColor()) return true;
