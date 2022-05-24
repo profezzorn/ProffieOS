@@ -15,13 +15,12 @@ pnmquantizedtorle - Quantizes images to 8bit 256 colors to balance using color i
 ### Windows (Windows 10 at time of writing):  
 
 Install Windows Subsystem for Linux  
-- Get Ubuntu App in the Microsoft Store. (required for “bash” and other commands). Download but don't choose open once it finishes installing.  
-https://www.microsoft.com/en-us/p/ubuntu/9nblggh4msv6?activetab=pivot:overviewtab  
-- Type “Turn Windows features on or off” into the Windows search, open the top result, scroll down and enable "Windows Subsystem for Linux".  
-- Click "OK", then click "Reboot Now".  
-- Open the Ubuntu app and wait while it says "Installing, this may take a few minutes...".  
-- Choose a username and password. Once you get a green prompt (should be username+computername), close the window.  
-- Type “WSL” into the windows search and click that cheeky penguin image.  
+Linux subsystem for Windows is required before usage.
+This can be done without manually downloading anything.
+- Open Windows Powershell as administrator and then simply type in the following: wsl --install
+- Let Powershell run through its thing and wait till it mentions that it's finished and that in order for the changes to take effect you have to reboot/restart your computer.  
+- Restart your computer as told and Ubuntu should install itself after you log back in. 
+- For more info: https://docs.microsoft.com/en-us/windows/wsl/install
 
 Install g++ and netpbm  
 - It goes without saying that you hit the return key after each of the following entries.  
