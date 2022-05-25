@@ -202,6 +202,18 @@ public:                                                         \
   
   SABERBASEFUNCTIONS();
 
+  static void DoEffect(EffectType e, float location, int N) {
+    sound_length = 0.0;
+    sound_number = N;
+    CHECK_LL(SaberBase, saberbases, next_saber_);
+    for (SaberBase *p = saberbases; p; p = p->next_saber_) {
+      p->SB_Effect(e, location);
+    }
+    for (SaberBase *p = saberbases; p; p = p->next_saber_) {
+      p->SB_Effect2(e, location);
+    }
+    CHECK_LL(SaberBase, saberbases, next_saber_);
+  }
   static void DoEffectR(EffectType e) { DoEffect(e, (200 + random(700))/1000.0f); }
   static void DoBlast() { DoEffectR(EFFECT_BLAST); }
   static void DoForce() { DoEffectR(EFFECT_FORCE); }
