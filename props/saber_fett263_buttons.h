@@ -47,6 +47,10 @@ Standard Controls While Blade is OFF
     Hold PWR + Turn Right = Rotate (will play current track and then next sequential tracks)
     Hold PWR + Turn Left = Loop Current Track
     Long Click PWR = Stop Track Player
+  NEW! Force/Quote Player = Hold PWR 
+    If quotes exist in current font pointing straight down will toggle between Force/Quote and play
+    *Quotes play sequentially 1,2,3...
+    If parallel will do Force/Quote based on current mode
   NEW! Toggle Gesture Sleep* = Hold PWR + Twist
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
@@ -210,6 +214,10 @@ Standard Controls While Blade is OFF
     Hold PWR = Random (will play current track and then randomly select next tracks)
     Hold PWR + Turn Right = Rotate (will play current track and then next sequential tracks)
     Hold PWR + Turn Left = Loop Current Track
+  NEW! Force/Quote Player - Triple Click PWR
+    If quotes exist in current font pointing straight down will toggle between Force/Quote and play
+    *Quotes play sequentially 1,2,3...
+    If parallel will do Force/Quote based on current mode
   NEW! Toggle Gesture Sleep* = Hold PWR + Twist
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
@@ -490,6 +498,9 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   
   FETT263_QUOTE_PLAYER_START_ON
   This will set Force / Quote Player to play Quote by default (if in font)
+  
+  FETT263_RANDOMIZE_QUOTE_PLAYER
+  This will set Quote Player to randomly select quote.wav instead of playing sequentially
   
 == Disable Features ==
   FETT263_DISABLE_CHANGE_FONT - Disables the "on-the-fly" Change Font option
@@ -4228,7 +4239,9 @@ SaberFett263Buttons() : PropBase() {}
 
   void ForceQuote() {
     if (force_quote_) {
+#ifndef FETT263_RANDOMIZE_QUOTE_PLAYER
       SFX_quote.SelectNext();
+#endif
       hybrid_font.PlayCommon(&SFX_quote);
     } else {
       SaberBase::DoForce();
@@ -4601,6 +4614,17 @@ SaberFett263Buttons() : PropBase() {}
         ChangeFont(fusor.angle1() < - M_PI / 3 ? -1 : 1);
         return true;
 #endif
+
+      case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+        if (SFX_quote) {      
+          if (fusor.angle1() < - M_PI / 3)  {
+            force_quote_ = !force_quote_;
+          }
+          ForceQuote();
+        } else {
+          SaberBase::DoForce();
+        }
+        return true;
 
 #ifndef FETT263_DISABLE_COPY_PRESET
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
@@ -5133,6 +5157,17 @@ SaberFett263Buttons() : PropBase() {}
 #else
         STDOUT.println("Audio disabled.");
 #endif
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_OFF):
+        if (SFX_quote) {      
+          if (fusor.angle1() < - M_PI / 3)  {
+            force_quote_ = !force_quote_;
+          }
+          ForceQuote();
+        } else {
+          SaberBase::DoForce();
+        }
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
