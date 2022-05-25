@@ -1797,6 +1797,7 @@ SaberFett263Buttons() : PropBase() {}
       if (!track_player_) {
         if (track_num_ <= 0 && track_mode_ == PLAYBACK_LOOP) {
           StartOrStopTrack();
+          if (!track_player_ || !track_player_->isPlaying()) track_mode_ = PLAYBACK_OFF;
         } else {
           switch (track_mode_) {
             case PLAYBACK_ROTATE:
