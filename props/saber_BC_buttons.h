@@ -897,8 +897,13 @@ public:
         ResetColorChangeMode();
         return true;
       } else {
-        if (sequential_quote_) SFX_quote.SelectNext();
-        hybrid_font.PlayCommon(&SFX_quote);
+        if (SFX_quote){
+          // if (font_config.sequentialQuote > 0) {
+          if (sequential_quote_) SFX_quote.SelectNext();
+          hybrid_font.PlayCommon(&SFX_quote);
+        } else {
+          SaberBase::DoForce();
+        }
       }
       return true;
 
