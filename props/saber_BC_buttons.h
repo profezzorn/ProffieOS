@@ -897,12 +897,14 @@ public:
         ResetColorChangeMode();
         return true;
       } else {
+        if (sequential_quote_) SFX_quote.SelectNext();
         hybrid_font.PlayCommon(&SFX_quote);
       }
       return true;
 
 // Power Save blade dimming - pointing up
 // Swap effect - NOT pointing up
+// Toggle seqential quote play - pointing down
   #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_ON):
   #else
@@ -911,6 +913,14 @@ public:
       // pointing up
       if (fusor.angle1() >  M_PI / 3) {
         SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
+        return true;
+      } else if (fusor.angle1() < - M_PI / 4) {
+      // pointing down
+        sequential_quote_ = !sequential_quote_;
+        beeper.Beep(0.1, 1300);
+        beeper.Beep(0.1, 600);
+        beeper.Beep(0.1, 1300);
+        beeper.Beep(0.1, 600);
         return true;
       } else {
         hybrid_font.DoEffect(EFFECT_USER1, 0);
@@ -1027,6 +1037,7 @@ private:
   bool battle_mode_ = false;
   bool max_vol_reached_ = false;
   bool min_vol_reached_ = false;
+  bool sequential_quote_ = false;
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
