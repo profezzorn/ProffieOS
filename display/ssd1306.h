@@ -452,9 +452,7 @@ public:
       case EFFECT_BOOT:
 	if (IMG_boot) {
 	  ShowFile(&IMG_boot, font_config.ProffieOSFontImageDuration);
-	} else if (IMG_idle) {
-	  ShowFile(&IMG_idle, 3600000.0);
-	}
+  	} else SetScreenNow(SCREEN_STARTUP);
 	return;
       case EFFECT_NEWFONT:
 	looped_on_ = Tristate::Unknown;
