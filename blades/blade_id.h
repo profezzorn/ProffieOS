@@ -7,11 +7,13 @@ template<int PIN, int PULLUP>
 struct ExternalPullupBladeID {
   float id() {
     int blade_id = LSAnalogRead(PIN, INPUT);
-//    STDOUT << "BLADE ID: " << blade_id << "\n";
     float volts = blade_id * 3.3f / 1024.0f;  // Volts at bladeIdentifyPin
-//    STDOUT << "VOLTS: " << volts << "\n";
     float amps = (3.3f - volts) / PULLUP;
-//    STDOUT << "AMPS: " << amps << "\n";
+#ifdef INCLUDE_V2_TEST_SCRIPT
+   STDOUT << "BLADE ID: " << blade_id << "\n";
+   STDOUT << "VOLTS: " << volts << "\n";
+   STDOUT << "AMPS: " << amps << "\n";
+#endif
     float resistor = volts / amps;
     return resistor;
   }
