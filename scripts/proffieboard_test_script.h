@@ -365,28 +365,6 @@ public:
   uint32_t start_, last_eq_, first_ne_;
 };
 
-// Preparations:
-// 1) In one window, start openocd:
-//    cd .arduino15/packages/grumpyoldpizza/hardware/stm32l4/0.0.26
-//    ./tools/linux/openocd/bin/openocd -s tools/share/openocd/scripts/ -f  ./variants/STM32L433CC-Butterfly/openocd_scripts/stm32l433cc_butterfly.cfg
-// 2) In a second window:
-//    tail -f /var/log/kern.log
-// 3) Start up arduino
-// 4) Hook up multimeter to test board and set it to beep on short
-//
-// For each board:
-// A) Insert SD, put board on tester, plug in USB
-// B) Check that openocd connects and that kernel window says STM32 bootloader
-// C) press reset, make sure STM32 bootloader pops up again
-// D) It should say LOW BATTERY repeatedly, no beeps
-// E) Switch to battery power
-// F) Press BOOT
-// G) Press Power button
-// H) Press AUX button
-// I) Press AUX2 button
-// J) verify that all LEDs light up in order
-// H) verify that music is playing
-// I) Switch back to short checking and turn off USB
-
 #endif  // not TEENSYDUINO
 #endif
+
