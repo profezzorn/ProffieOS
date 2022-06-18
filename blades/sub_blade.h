@@ -7,7 +7,7 @@ This let's you split a single chain of pixel LEDs into multiple blades.
 Let's say you build saber with:
 A main blade of 144 pixels, on the data 1 pad and powered off LED pads 2 and 3.
 Also, 3 accent pixels, a single pixel for a crystal chamber,
-and a 5 pixel hilt PCB connector, all hooked up in that order in a single data
+and a 5 pixel hilt PCB connector, all hooked up in that order in a series data
 chain off of data 2 pad, powered by LED pad 6. (data in -> data out -> data in etc...)
 The blades[] entry could then look like this:
 { 0,
