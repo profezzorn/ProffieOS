@@ -12,7 +12,7 @@ chain off of data 2 pad, powered by LED pad 6. (data in -> data out -> data in e
 The blades[] entry could then look like this:
 { 0,
   WS281XBladePtr<144, bladePin, Color8::GRB, PowerPINS<bladePowerPin2, bladePowerPin3> >(),    // Main Blade
-  SubBlade(4, 8, WS281XBladePtr<9, blade2Pin, Color8::GRB, PowerPINS<bladePowerPin6> >() ),  // PLI
+  SubBlade(4, 8, WS281XBladePtr<9, blade2Pin, Color8::GRB, PowerPINS<bladePowerPin6> >() ),  // Hilt PCB connector
   SubBlade(3, 3, NULL),  // crystal chamber
   SubBlade(0, 2, NULL),  // accent leds
   CONFIGARRAY(presets) }
