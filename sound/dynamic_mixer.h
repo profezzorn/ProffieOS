@@ -188,7 +188,7 @@ public:
 #ifndef BOOT_VOLUME
   #define BOOT_VOLUME VOLUME
 #endif
- int32_t volume_ = BOOT_VOLUME;
+  int32_t volume_ = BOOT_VOLUME;
   volatile uint32_t underflow_count_ = 0;
   uint32_t last_underflow_count_ = 0;
   uint32_t last_printout_ = 0;
