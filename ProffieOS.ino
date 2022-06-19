@@ -56,6 +56,10 @@
 #include CONFIG_FILE
 #undef CONFIG_TOP
 
+#ifndef BOOT_VOLUME
+#define BOOT_VOLUME VOLUME
+#endif
+
 #ifdef SAVE_STATE
 #define SAVE_VOLUME
 #define SAVE_PRESET
