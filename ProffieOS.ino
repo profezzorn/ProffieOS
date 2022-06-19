@@ -36,6 +36,7 @@
 // #define CONFIG_FILE "config/test_bench_config.h"
 // #define CONFIG_FILE "config/toy_saber_config.h"
 // #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
+// #define CONFIG_FILE "config/proffieboard_v2_testing_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
 // #define CONFIG_FILE "config/proffieboard_v1_graflex.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
@@ -582,13 +583,7 @@ ArgParserInterface* CurrentArgParser;
 #include "props/saber.h"
 #endif
 
-#include "scripts/clash_recorder.h"
-
-#ifdef CLASH_RECORDER
-ClashRecorder<PROP_TYPE> prop;
-#else
 PROP_TYPE prop;
-#endif
 
 #if 0
 #include "scripts/test_motion_timeout.h"
@@ -600,15 +595,6 @@ MotionTimeoutScript script;
 #include "scripts/v3_test_script.h"
 #warning !!! V3 TEST SCRIPT ACTIVE !!!
 V3TestScript script;
-#endif
-
-#if 0
-#include "scripts/proffieboard_test_script.h"
-#warning !!! PROFFIEBOARD TEST SCRIPT ACTIVE !!!
-V4TestScript script;
-Blinker1 blinker1;
-Blinker2 blinker2;
-CapTest captest;
 #endif
 
 #include "buttons/floating_button.h"
@@ -909,7 +895,7 @@ class Commands : public CommandParser {
 #ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "dumpwavplayer")) {
       for (size_t i = 0; i < NELEM(wav_players); i++) {
-        if (e && atoi(e) != i) continue;
+        if (e && atoi(e) != (int)i) continue;
         wav_players[i].dump();
       }
       return true;
