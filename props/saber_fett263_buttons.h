@@ -4237,6 +4237,17 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
+  void CheckQuote() {
+    if (SFX_quote) {      
+      if (fusor.angle1() < - M_PI / 3)  {
+        force_quote_ = !force_quote_;
+      }
+      ForceQuote();
+    } else {
+      SaberBase::DoForce();  
+    }
+  }
+
   void ForceQuote() {
     if (force_quote_) {
 #ifndef FETT263_RANDOMIZE_QUOTE_PLAYER
@@ -4465,14 +4476,7 @@ SaberFett263Buttons() : PropBase() {}
           MenuUndo();
           return true;
         }
-        if (SFX_quote) {      
-          if (fusor.angle1() < - M_PI / 3)  {
-            force_quote_ = !force_quote_;
-          }
-          ForceQuote();
-        } else {
-          SaberBase::DoForce();  
-        }
+        CheckQuote();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_SECOND_PRESSED, MODE_ON):
@@ -4616,14 +4620,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
-        if (SFX_quote) {      
-          if (fusor.angle1() < - M_PI / 3)  {
-            force_quote_ = !force_quote_;
-          }
-          ForceQuote();
-        } else {
-          SaberBase::DoForce();
-        }
+        CheckQuote();
         return true;
 
 #ifndef FETT263_DISABLE_COPY_PRESET
@@ -5052,14 +5049,7 @@ SaberFett263Buttons() : PropBase() {}
           }
           return true;
         } else {
-          if (SFX_quote) {      
-            if (fusor.angle1() < - M_PI / 3)  {
-              force_quote_ = !force_quote_;
-            }
-            ForceQuote();
-          } else {
-            SaberBase::DoForce();
-          }
+          CheckQuote();
         }
         return true;
 
@@ -5160,14 +5150,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_OFF):
-        if (SFX_quote) {      
-          if (fusor.angle1() < - M_PI / 3)  {
-            force_quote_ = !force_quote_;
-          }
-          ForceQuote();
-        } else {
-          SaberBase::DoForce();
-        }
+        CheckQuote();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
