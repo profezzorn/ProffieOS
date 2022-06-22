@@ -185,7 +185,7 @@ public:
   int32_t peak_sum_ = 0;
   int32_t peak_ = 0;
   int32_t num_samples_ = 0;
-  int32_t volume_ = VOLUME;
+  int32_t volume_ = BOOT_VOLUME;
   volatile uint32_t underflow_count_ = 0;
   uint32_t last_underflow_count_ = 0;
   uint32_t last_printout_ = 0;
