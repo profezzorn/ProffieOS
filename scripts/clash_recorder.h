@@ -1,18 +1,7 @@
 #ifndef SCRIPTS_CLASH_RECORDER_H
 #define SCRIPTS_CLASH_RECORDER_H
 
-class ShowLocationF {
-public:
-  void run(BladeBase *blade) {}
-  int getInteger(int led) { return pos_; }
-  static void SetPos(int x) { pos_ = x; }
-private:
-  static int pos_;
-};
-
-int ShowLocationF::pos_ = 0;
-
-using ClashRecorderStyle = InOutHelper<EasyBlade< Layers<Blue, AlphaL<White, Bump<ShowLocationF, Int<4096>>>>, White>, 800, 300>;
+// Use clash_recorder_config.h to include in your config file.
 
 template<class BASE>
 class ClashRecorder : public PROP_INHERIT_PREFIX BASE, StateMachine {
@@ -39,7 +28,7 @@ public:
     }
   }
 
-  virtual void On() {
+  void On() override {
     ArgParser ap("");
     CurrentArgParser = &ap;
     free(current_config->blade1->UnSetStyle());
@@ -48,26 +37,36 @@ public:
     BASE::On();
   }
 
-  virtual bool Event(enum BUTTON button, EVENT event) {
+  bool Event(enum BUTTON button, EVENT event) override {
     if (capture_button_) {
-      if (event == EVENT_PRESSED) {
-	last_button_ = button;
+      STDOUT << "Capturing event:\n";
+      BASE::PrintEvent(button, event);
+      switch (event) {
+	default: break;
+	case EVENT_CLICK_SHORT:
+	case EVENT_FIRST_CLICK_SHORT:
+	case EVENT_SECOND_CLICK_SHORT:
+	case EVENT_THIRD_CLICK_SHORT:
+	case EVENT_FOURTH_CLICK_SHORT:
+	  last_button_ = button;
+	  capture_button_ = false;
       }
       return true;
     }
     return BASE::Event(button, event);
   }
 
-  virtual void Loop() {
+  void Loop() override {
     BASE::Loop();
 
     STATE_MACHINE_BEGIN();
     while (true) {
+      while (!BASE::IsOn()) YIELD();
       SLEEP(400);
       do_save_ = false;
       SLEEP(200);
-      location_ = (100 + random(990));
-      ShowLocationF::SetPos(location_ * 32767);
+      location_ = (50 + random(940));
+      ShowLocationF::SetPos(location_ * 32767 / 1000);
       SaberBase::DoEffect(EFFECT_USER1, location_);
 
       while (!do_save_) YIELD();
@@ -78,7 +77,9 @@ public:
 
       capture_button_ = true;
       last_button_ = BUTTON_NONE;
-      while (!capture_button_) YIELD();
+      while (capture_button_ && BASE::IsOn()) {
+	YIELD();
+      }
       capture_button_ = false;
 
       if (last_button_ != BUTTON_POWER) {
@@ -117,7 +118,7 @@ public:
 	File f = LSFS::OpenForWrite(file_name);
 	f.print("position,");
 	f.println(location_);
-	for (int j = 0; j < NELEM(accel_); j++) {
+	for (size_t j = 0; j < NELEM(accel_); j++) {
 	  int i = (pos_ + j) % NELEM(accel_);
 	  f.print(accel_[i].x);
 	  f.print(", ");

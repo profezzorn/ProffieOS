@@ -1,6 +1,39 @@
 #ifndef BLADES_SUB_BLADE_H
 #define BLADES_SUB_BLADE_H
 
+/*
+Usage: SubBlade(first_led, last_led, blade_definition)
+This let's you split a single chain of pixel LEDs into multiple blades.
+Let's say you build saber with:
+A main blade of 144 pixels, on the data 1 pad and powered off LED pads 2 and 3.
+Also, 3 accent pixels, a single pixel for a crystal chamber,
+and a 5 pixel hilt PCB connector, all hooked up in that order in a series data
+chain off of data 2 pad, powered by LED pad 6. (data in -> data out -> data in etc...)
+The blades[] entry could then look like this:
+{ 0,
+  WS281XBladePtr<144, bladePin, Color8::GRB, PowerPINS<bladePowerPin2, bladePowerPin3> >(),    // Main Blade
+  SubBlade(4, 8, WS281XBladePtr<9, blade2Pin, Color8::GRB, PowerPINS<bladePowerPin6> >() ),  // Hilt PCB connector
+  SubBlade(3, 3, NULL),  // crystal chamber
+  SubBlade(0, 2, NULL),  // accent leds
+  CONFIGARRAY(presets) }
+
+In the example above, NUM_BLADES must be 4, so you get to specify
+a style for each section of the string.
+Note that the first pixel address starts at zero.
+Also note the use of NULL for the blade definitions for the remaining SubBlades.
+
+Usage: SubBladeReverse(first_led, last_led, blade_definition)
+Exactly like SubBlade, but LEDs are indexed in reverse, so the last LED gets data first etc...
+
+Usage: SubBladeWithStride(first_led, last_led, stride_length, blade_definition)
+Like SubBlade, but LEDs are indexed with an additional 'stride' parameter,
+allowing you to "skip" over a regular number of pixels in the data chain. (Such as every other one)
+
+For more in-depth explanations, see the SubBlade Wiki pages here:
+https://github.com/profezzorn/ProffieOS/wiki/SubBlade
+https://github.com/profezzorn/ProffieOS/wiki/SubBladeReverse
+*/
+
 class SubBladeWrapper : public BladeWrapper, BladeStyle {
 public:
   int num_leds() const override { return num_leds_; }
@@ -120,19 +153,6 @@ protected:
 SubBladeWrapper* first_subblade_wrapper = NULL;
 SubBladeWrapper* last_subblade_wrapper = NULL;
 
-// This let's you split a single chain of neopixels into multiple blades.
-// Let's say you build saber with an 8-led PLI, a single led for a crystal chamber
-// crystal chamber and 3 accent LEDs all hooked up as a single neopixel chain.
-// The blades[] entry could then look like this:
-// { 2000,
-//   WS2811BladePtr<144, WS2811_ACTUALLY_800kHz | WS211_GRB>(),
-//   SubBlade(0,  7, WS2811BladePtr<15, WS2811_580kHz>()),  // PLI
-//   SubBlade(8,  8, NULL),  // crystal chamber
-//   SubBlade(9, 11, NULL),  // accent leds
-//   CONFIGARRAY(presets) }
-//
-// In the example above, NUM_BLADES must be 4, so you get to specify
-// a style for each section of the string.
 class BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
   if (blade)  {
     first_subblade_wrapper = last_subblade_wrapper = NULL;
@@ -170,7 +190,6 @@ class SubBladeWrapperReverse : public SubBladeWrapper {
   }
 };
 
-// Like SubBlade, but LEDs are indexed in reverse.
 class BladeBase* SubBladeReverse(int first_led, int last_led, BladeBase* blade) {
   if (blade)  {
     first_subblade_wrapper = last_subblade_wrapper = NULL;
@@ -212,7 +231,6 @@ protected:
   int stride_;
  };
 
-// Like SubBlade, but LEDs are indexed with an additional 'stride' parameter.
 class BladeBase* SubBladeWithStride(int first_led, int last_led, int stride, BladeBase* blade) {
   if (blade)  {
     first_subblade_wrapper = last_subblade_wrapper = NULL;
