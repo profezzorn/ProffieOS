@@ -5159,12 +5159,15 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_OFF):
-        if (menu_ && menu_type_ == MENU_PRESET) {
-          MenuChoice();
-          FastOn();
+        if (menu_) {
+          if (menu_type_ == MENU_PRESET) {
+            MenuChoice();
+            FastOn();
+          }
+          return true;
         } else {
           CheckQuote();
-	}
+        }
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
