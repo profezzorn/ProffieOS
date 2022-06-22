@@ -35,6 +35,7 @@ Standard Controls While Blade is OFF
     Turn Left (Stepped) = Previous Preset
       Increment by 5 = Hold PWR + Turn Left
     Click PWR = Select Preset
+    NEW! Hold PWR = Select and Ignite Preset
     Click AUX = go to First Preset
   Play Track = Long Click PWR pointing up
   NEW! Track Player* = Long Click PWR parallel
@@ -229,6 +230,7 @@ Standard Controls While Blade is OFF
     Turn Left (Stepped) = Previous Preset
       Increment by 5 = Hold PWR + Turn Left
     Click PWR = Select Preset
+    NEW! Hold PWR = Select and Ignite Preset
     Long Click PWR = First Preset
   NEW Control! Volume Menu = Hold PWR + Clash
     Turn Right (Stepped) = Increase Volume (to max)
@@ -4409,16 +4411,23 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
-        if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
-          track_mode_ = PLAYBACK_RANDOM;
-          sound_library_.SayRandom();
-          MenuExit();
-          return true;
-        }
-        if (!menu_) {
+        if (menu_) {
+          switch (menu_type_) {
+            case MENU_TRACK_PLAYER:
+              track_mode_ = PLAYBACK_RANDOM;
+              sound_library_.SayRandom();
+              MenuExit();
+              break;
+            case MENU_PRESET:
+              MenuChoice();
+              FastOn();
+              break;
+            default:
+              break;
+          }
+        } else {
           StartMenu(MENU_PRESET);
           sound_library_.SaySelectPreset();
-          return true;
         }
         return true;
 
@@ -5150,7 +5159,12 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_OFF):
-        CheckQuote();
+        if (menu_ && menu_type_ == MENU_PRESET) {
+          MenuChoice();
+          FastOn();
+        } else {
+          CheckQuote();
+	}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
