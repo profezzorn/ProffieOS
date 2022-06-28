@@ -615,7 +615,6 @@ public:
         battle_mode_ = false;
         if (alt_blade_on_) {
           hybrid_font.DoEffect(EFFECT_USER4, 0);
-          alt_blade_on_ = false;
         }
       }
       return true;
@@ -1006,7 +1005,6 @@ public:
         if (!battle_mode_) {
           if (alt_blade_on_) {
             hybrid_font.DoEffect(EFFECT_USER4, 0);
-            alt_blade_on_ = false;
           }
           Off();
         }
@@ -1099,11 +1097,10 @@ public:
       case EFFECT_USER4: // Alt blade
         if (!alt_blade_on_) {
           hybrid_font.PlayCommon(&SFX_out);
-          alt_blade_on_ = true;
         } else {
           hybrid_font.PlayCommon(&SFX_in);
-          alt_blade_on_ = false;
         }
+        alt_blade_on_ = !alt_blade_on_;
     }
   }
 
