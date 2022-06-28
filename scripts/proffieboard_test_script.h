@@ -1,6 +1,6 @@
 /*
 Preparations to use the test script:
-1. Edit ProffieOS.ino. Define the CONFIG_FILE to use proffieboard_v2_testing_config.h
+1. Edit ProffieOS.ino. Define the CONFIG_FILE to use proffieboard_v2_testing_config.h and upload.
 2. Use the default ProffieOS SD card.
   - https://fredrik.hubbe.net/lightsaber/sound.html
 3. Set up a multimeter to beep on short (continuity mode).
