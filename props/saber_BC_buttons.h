@@ -19,8 +19,9 @@ Features:
 - Battle Mode, gesture ignitions, and multi-blast based on fett263's work.
 - Auto enter/exit multi-blaster block mode 
 - Spoken Battery level, with percentage option.
-- Added quote sound so force.wavs can remain as force.
-             - Add quote.wav files to font to use.
+- Dedicated Quote sounds - Always available. force.wavs can remain as force.
+                           Add quote.wav files to font to use.
+                           Toggle between seqential or random quote play.
 - Play / Stop track control while blade is on.
 - Force Push is always available, not just in Battle Mode.
 - Melt is always available as no button, with pull-away or button to end.
@@ -173,6 +174,8 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
           next color and exit color change mode. If the style does not use
           ColorChange<>, it has no effect.
 Quote Player          - Triple click POW.
+Toggle seqential or 
+  random quote play   - 4x click and hold POW. (while pointing down)
 Force Push            - Push hilt perpendicularly from a stop.
 Swap (EffectSequence) - 4x click and hold POW medium. (while NOT pointing up)
 PowerSave Dim Blade   - 4x click and hold POW medium. (while pointing up)
@@ -249,6 +252,8 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
           next color and exit color change mode. If the style does not use
           ColorChange<>, it has no effect.
 Quote Player          - Triple click POW.
+Toggle seqential or 
+  random quote play   - Hold AUX + Twist. (while pointing down)
 Force Push            - Push hilt perpendicularly from a stop.
 Swap (EffectSequence) - Hold AUX + Twist. (while NOT pointing up)
 PowerSave Dim Blade   - Hold AUX + Twist. (while pointing up)
@@ -926,10 +931,14 @@ public:
       } else if (fusor.angle1() < - M_PI / 4) {
       // pointing down
         sequential_quote_ = !sequential_quote_;
-        beeper.Beep(0.1, 1300);
-        beeper.Beep(0.1, 600);
-        beeper.Beep(0.1, 1300);
-        beeper.Beep(0.1, 600);
+        if (sequential_quote_) {
+          beeper.Beep(0.1, 600);
+          beeper.Beep(0.1, 950);
+          beeper.Beep(0.1, 1300);
+          beeper.Beep(0.1, 600);
+        } else {
+          sound_library_.SayRandom();
+        }
         return true;
       } else {
         hybrid_font.DoEffect(EFFECT_USER1, 0);
