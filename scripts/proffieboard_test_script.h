@@ -1,6 +1,6 @@
 /*
 Preparations to use the test script:
-1. Edit ProffieOS.ino. Define the CONFIG_FILE to use proffieboard_v2_testing_config.h and upload.
+1. Edit ProffieOS.ino. Define the CONFIG_FILE to use proffieboard_v2_testing_config.h.
 2. Use the default ProffieOS SD card.
   - https://fredrik.hubbe.net/lightsaber/sound.html
 3. Set up a multimeter to beep on short (continuity mode).
@@ -16,7 +16,8 @@ Preparations to use the test script:
 For each board:
 1. Make sure power switch is on the Multimeter, and that the multimeter is still on and in beep mode.
 2. Insert SD card, put board on tester, and plug in USB.
-  - boot.wav should be heard.
+  - Upload to the board with the settings above. 
+  - boot.wav should be heard when programming is finished.
   - If you hear a beep from the multimeter, stop now and do NOT turn on battery power.
   - If you hear beeps from the board itself, check serial monitor for errors.
 3. Press reset button.
