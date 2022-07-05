@@ -359,9 +359,10 @@ public:
                       DMA_OPTION_CIRCULAR);
     SAIx->CR1 |= SAI_xCR1_DMAEN;
 
-#define SAIB_SCK g_SAIPins.sck
-#define SAIB_FS g_SAIPins.fs
-#define SAIB_SD g_SAIPins.sd
+    extern const stm32l4_sai_pins_t g_SAI1Pins;
+#define SAIB_SCK g_SAI1Pins.sck
+#define SAIB_FS g_SAI1Pins.fs
+#define SAIB_SD g_SAI1Pins.sd
     
 #if PROFFIEBOARD_VERSION < 3
 #undef SAIB_FS
