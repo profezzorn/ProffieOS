@@ -132,7 +132,8 @@ public:
     while (true) {
       while (!SA::Connected()) YIELD();
       if (!SA::AlwaysConnected()) {
-        STDOUT << "Welcome to ProffieOS " << version << ". Type 'help' for more info.\n";
+        STDOUT << "Welcome to ProffieOS " << version << "\n";
+        STDOUT << "You can disactivate #define DISABLE_DIAGNOSIC_COMMANDS and type 'help' for more info.\n";
       }
 
       while (SA::Connected()) {
