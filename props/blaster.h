@@ -108,7 +108,7 @@ public:
   }
 
   virtual bool CheckJam(int percent) {
-    int random = rand() % 100;
+    int random = rand() % 100 + 1;
     return random <= percent ? true : false;
   }
 
