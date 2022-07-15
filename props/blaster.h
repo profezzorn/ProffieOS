@@ -108,8 +108,8 @@ public:
   }
 
   virtual bool CheckJam(int percent) {
-    int random = rand() % 100 + 1;
-    return random <= percent ? true : false;
+    int random = rand() % 100;
+    return random < percent ? true : false;
   }
 
   virtual void Fire() {
