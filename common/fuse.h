@@ -298,7 +298,7 @@ public:
 
   // Acceleration into twist (one direction) in radians per second per second
   float twist_accel() {
-    return sqrtf(gyro_slope().x * gyro_slope().x);
+    return fabs(gyro_slope().x);
   }
 
   void dump() {
