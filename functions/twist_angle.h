@@ -34,13 +34,13 @@ class TwistAccelerationSVF {
  public:
   void run(BladeBase* blade) { max_.run(blade); }
   int calculate(BladeBase* blade) {
-   float v = fusor.twist_accel() * 100 / max_.calculate(blade);
+   float v = (fusor.twist_accel() * 32768 / 360) / max_.calculate(blade);
    return clampi32(v, 0, 32768);
   }
 private:
   PONUA SVFWrapper<MAX> max_;
 };
 
-template<int MAX = 100>
+template<int MAX = 90>
 using TwistAcceleration = SingleValueAdapter<TwistAccelerationSVF<Int<MAX>>>;
 #endif
