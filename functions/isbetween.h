@@ -17,7 +17,8 @@ public:
     top_.run(blade);
   }
   int getInteger(int led) {
-    if (f_.getInteger(led) > bottom_.getInteger(led) && f_.getInteger(led) < top_.getInteger(led)) {
+    int f = f_.getInteger(led);
+    if (f > bottom_.getInteger(led) && f < top_.getInteger(led)) {
       return 32768;
     } else {
       return 0;
@@ -30,25 +31,26 @@ private:
   PONUA TOP top_;
 };
 
-template<class SVFA, class SVFB, class SVFC>
+template<class SVF_F, class SVF_BOTTOM, class SVF_TOP>
 class IsBetweenSVF {
  public:
   void run(BladeBase* blade) {
-    svfa_.run(blade);
-    svfb_.run(blade);
-    svfb_.run(blade);
+    svf_f_.run(blade);
+    svf_bottom_.run(blade);
+    svf_top_.run(blade);
   }
   int calculate(BladeBase* blade) {
-    if (svfa_.calculate(blade) > svfb_.calculate(blade) && svfa_.calculate(blade) < svfc_.calculate(blade)) {
+    int f = svf_f_.calculate(blade);
+    if (f > svf_bottom_.calculate(blade) && f < svf_top_.calculate(blade)) {
       return 32768;
     } else {
       return 0;
     }
   }
  private:
-  PONUA SVFA svfa_;
-  PONUA SVFB svfb_;
-  PONUA SVFC svfc_;
+  PONUA SVF_F svf_f_;
+  PONUA SVF_BOTTOM svf_bottom_;
+  PONUA SVF_TOP svf_top_;
 };
 
 template<class F, class BOTTOM, class TOP> struct IsBetweenFinder { typedef IsBetweenBase<F, BOTTOM, TOP> IsBetweenClass; };
