@@ -4317,11 +4317,7 @@ SaberFett263Buttons() : PropBase() {}
 
   RefPtr<BufferedWavPlayer> wav_player;
 
-#ifndef FETT263_QUICK_SELECT_ON_BOOT
   float current_menu_angle_ = 0.0;
-#else
-  float current_menu_angle_ = fusor.angle2();
-#endif
   float current_twist_angle_ = 0.0;
   float clash_t_ = 2.00;
 #ifdef FETT263_EDIT_MODE_MENU
@@ -5679,11 +5675,11 @@ private:
   bool auto_lockup_on_ = false; // Battle Mode Lockup active
   bool auto_melt_on_ = false; // Battle Mode Melt/Drag active
   bool battle_mode_ = false; // Battle Mode active
-#ifndef FETT263_QUICK_SELECT_ON_BOOT  
-  bool menu_ = false; // Edit Mode / Menu System active
-#else
+#ifdef FETT263_QUICK_SELECT_ON_BOOT  
   bool menu_ = true; // enable MENU_PRESET on boot
-#endif 
+#else
+  bool menu_ = false; // Edit Mode / Menu System active
+#endif
 #ifdef FETT263_QUOTE_PLAYER_START_ON
   bool force_quote_ = true; // Quote Player active (in place of force effect)
 #else
@@ -5701,10 +5697,10 @@ private:
   uint32_t saber_off_time_millis_; // Off timer
   uint32_t restart_millis_; // Used to time restarts to show preon timing.
   ClashType clash_type_ = CLASH_NONE;
-#ifndef FETT263_QUICK_SELECT_ON_BOOT  
-  MenuType menu_type_ = MENU_TOP;
-#else
+#ifdef FETT263_QUICK_SELECT_ON_BOOT  
   MenuType menu_type_ = MENU_PRESET;
+#else
+  MenuType menu_type_ = MENU_TOP;
 #endif
   int menu_top_pos_ = 0; // Top menu dial position
   int menu_sub_pos_ = 0; // Sub menu dial position
