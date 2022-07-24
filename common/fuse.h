@@ -298,7 +298,7 @@ public:
 
   // Acceleration into twist (one direction) in degrees per second per second
   float twist_accel() {
-    return fabs(gyro_slope().x);
+    return gyro_slope().x;
   }
 
   void dump() {
