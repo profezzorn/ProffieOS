@@ -34,7 +34,7 @@ class TwistAccelerationSVF {
  public:
   void run(BladeBase* blade) { max_.run(blade); }
   int calculate(BladeBase* blade) {
-   float v = (fusor.twist_accel() * 32768 / 360) / max_.calculate(blade);
+   float v = (fabs(fusor.twist_accel()) * 32768 / 360) / max_.calculate(blade);
    return clampi32(v, 0, 32768);
   }
 private:
