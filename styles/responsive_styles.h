@@ -17,12 +17,14 @@ template<class COLOR,
          class TR2 = TrInstant,
          class TOP = Scale<BladeAngle<0,16000>,Int<4000>,Int<26000>>,
          class BOTTOM = Int<6000>,
-         class SIZE = Scale<SwingSpeed<100>,Int<9000>,Int<14000>>>
+         class SIZE = Scale<SwingSpeed<100>,Int<9000>,Int<14000>>,
+         class F = Int<1>>
 using ResponsiveLockupL =
   LockupTrL<AlphaL<COLOR, Bump<Scale<BladeAngle<>,TOP,BOTTOM>,SIZE>>,
             TR1,
             TR2,
-            SaberBase::LOCKUP_NORMAL>;
+            SaberBase::LOCKUP_NORMAL,
+            F>;
 
 // ResponsiveDragL<DRAG COLOR, TRANSTION1, TRANSITION2, SIZE1, SIZE2>
 // Implements Drag that will increase or decrease in size based on turning hilt
@@ -34,12 +36,14 @@ template<class COLOR,
          class TR2 = TrInstant,
          class SIZE1 = Int<2000>,
          class SIZE2 = Int<10000>,
-         class LOCATION = Int<32000>>
+         class LOCATION = Int<32000>,
+         class F = Int<1>>
 using ResponsiveDragL =
   LockupTrL<AlphaL<COLOR, SmoothStep<LOCATION,Scale<TwistAngle<>,SIZE1,SIZE2>>>,
             TR1,
             TR2,
-            SaberBase::LOCKUP_DRAG>;
+            SaberBase::LOCKUP_DRAG,
+            F>;
 
 // ResponsiveMeltL<MELT COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
 // Implements Melt effect for cutting through object, size will change to mimic metal
@@ -52,17 +56,19 @@ template<class COLOR = Mix<TwistAngle<>,OrangeRed,Red>,
          class TR2 = TrWipe<600>,
          class SIZE1 = Int<4000>,
          class SIZE2 = Int<10000>,
-         class LOCATION = Int<30000>>
+         class LOCATION = Int<30000>,
+         class F = Int<1>>
 using ResponsiveMeltL =
   LockupTrL<AlphaL<COLOR, SmoothStep<LOCATION,Scale<TwistAngle<>,SIZE1,SIZE2>>>,
             TR1,
             TR2,
-            SaberBase::LOCKUP_MELT>;
+            SaberBase::LOCKUP_MELT,
+            F>;
 
 // ResponsiveLightningBlockL<LIGHTNING BLOCK COLOR, TRANSITION1, TRANSITION2>
 // Implements hybrid Force Lightning Block with animation, intensity responds to turning the hilt and location/focus will respond to blade angle
 // TRANSITION1 & TRANSITION2 = transition Begin & End
-template<class COLOR, class TR1 = TrInstant, class TR2 = TrInstant>
+template<class COLOR, class TR1 = TrInstant, class TR2 = TrInstant, class F = Int<1>>
 using ResponsiveLightningBlockL =
   LockupTrL<
     AlphaL<COLOR,
@@ -75,7 +81,8 @@ using ResponsiveLightningBlockL =
                   Scale<IsLessThan<SlowNoise<Int<2000>>,Int<12000>>,Scale<NoisySoundLevel,Scale<TwistAngle<>,Int<9000>,Int<5000>>,Int<0>>,Int<0>>>>>,
     TR1,
     TR2,
-    SaberBase::LOCKUP_LIGHTNING_BLOCK>;
+    SaberBase::LOCKUP_LIGHTNING_BLOCK,
+    F>;
 
 // ResponsiveClashL<CLASH COLOR, TRANSITION1, TRANSITION2, TOP, BOTTOM, SIZE>
 // Implements LocalizedClash effect that mimics ResponsiveLockup location and size
