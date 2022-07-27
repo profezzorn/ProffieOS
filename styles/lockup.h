@@ -110,6 +110,12 @@ template<class BASE,
 // transparent again. If you wish to for your lockup to have a shape, you
 // can have COLOR be partially transparent to make the base layer show through.
 // If F equals 0, Lockup effect ignored
+enum class LockupTrState {
+  INACTIVE,
+  ACTIVE,
+  SKIPPED
+};
+
 template<class COLOR,
   class BeginTr,
   class EndTr,
