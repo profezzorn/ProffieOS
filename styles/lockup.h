@@ -98,8 +98,8 @@ template<class BASE,
   class LOCKUP_SHAPE = Int<32768>, class DRAG_SHAPE = SmoothStep<Int<28671>, Int<4096>> >
   using Lockup = Layers<BASE, LockupL<LOCKUP, DRAG_COLOR, LOCKUP_SHAPE, DRAG_SHAPE>>;
 
-// Usage: LockupTr<BASE, COLOR, BeginTr, EndTr, LOCKUP_TYPE>
-// Or: LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE>
+// Usage: LockupTr<BASE, COLOR, BeginTr, EndTr, LOCKUP_TYPE, F>
+// Or: LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE, F>
 // COLOR; COLOR or LAYER
 // BeginTr, EndTr: TRANSITION
 // LOCKUP_TYPE: a SaberBase::LockupType
@@ -109,52 +109,72 @@ template<class BASE,
 // to COLOR. When lockup ends, EndTr is used to transition from COLOR to
 // transparent again. If you wish to for your lockup to have a shape, you
 // can have COLOR be partially transparent to make the base layer show through.
+// If F equals 0, Lockup effect ignored
 template<class COLOR,
   class BeginTr,
   class EndTr,
-  SaberBase::LockupType LOCKUP_TYPE>
+  SaberBase::LockupType LOCKUP_TYPE,
+  class F = Int<1>>
 class LockupTrL {
 public:
   LockupTrL() {
     BladeBase::HandleFeature(FeatureForLockupType(LOCKUP_TYPE));
   }
   void run(BladeBase* blade) {
-    color_.run(blade);
-    if (active_ != (SaberBase::Lockup() == LOCKUP_TYPE)) {
-      if ((active_ = (SaberBase::Lockup() == LOCKUP_TYPE))) {
-	begin_tr_.begin();
-      } else {
-	end_tr_.begin();
-      }
+      color_.run(blade);
+      f_.run(blade);
+      switch (active_) {
+        case LockupTrState::INACTIVE:
+          if (SaberBase::Lockup() == LOCKUP_TYPE) {
+             if (f_.calculate(blade)) {
+               active_ = LockupTrState::ACTIVE;
+               begin_tr_.begin();
+             } else {
+               active_ = LockupTrState::SKIPPED;
+             }
+          }
+          break;
+        case LockupTrState::ACTIVE:
+          if (SaberBase::Lockup() != LOCKUP_TYPE) {
+            end_tr_.begin();
+            active_ = LockupTrState::INACTIVE;
+          }
+          break;
+       case LockupTrState::SKIPPED:
+          if (SaberBase::Lockup() != LOCKUP_TYPE) {
+            active_ = LockupTrState::INACTIVE;
+          }
+         break;
+       }
+       begin_tr_.run(blade);
+       end_tr_.run(blade);
     }
 
-    begin_tr_.run(blade);
-    end_tr_.run(blade);
-  }
-
 private:
-  bool active_;
+  LockupTrState active_ = LockupTrState::INACTIVE;
+  PONUA SVFWrapper<F> f_;
   PONUA COLOR color_;
   TransitionHelper<BeginTr> begin_tr_;
   TransitionHelper<EndTr> end_tr_;
+
 public:
   auto getColor(int led) -> decltype(
     MixColors(end_tr_.getColor(begin_tr_.getColor(RGBA_um_nod::Transparent(), color_.getColor(led), led), RGBA_um_nod::Transparent(), led),
-	      begin_tr_.getColor(end_tr_.getColor(color_.getColor(0), RGBA_um_nod::Transparent(), led), color_.getColor(0), led), 1, 1)) {
+        begin_tr_.getColor(end_tr_.getColor(color_.getColor(0), RGBA_um_nod::Transparent(), led), color_.getColor(0), led), 1, 1)) {
     SCOPED_PROFILER();
     RGBA_um_nod off_color = RGBA_um_nod::Transparent();
     if (!begin_tr_ && !end_tr_) {
-      if (active_) {
-	return color_.getColor(led);
+      if (active_ == LockupTrState::ACTIVE) {
+        return color_.getColor(led);
       } else {
-	return off_color;
+        return off_color;
       }
     } else {
       auto on_color = color_.getColor(led);
-      if (active_) {
-	return begin_tr_.getColor(end_tr_.getColor(on_color, off_color, led), on_color, led);
+      if (active_ == LockupTrState::ACTIVE) {
+        return begin_tr_.getColor(end_tr_.getColor(on_color, off_color, led), on_color, led);
       } else {
-	return end_tr_.getColor(begin_tr_.getColor(off_color, on_color, led), off_color, led);
+        return end_tr_.getColor(begin_tr_.getColor(off_color, on_color, led), off_color, led);
       }
     }
   }
@@ -165,8 +185,9 @@ template<
   class COLOR,
   class BeginTr,
   class EndTr,
-  SaberBase::LockupType LOCKUP_TYPE>
-  using LockupTr = Layers<BASE, LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE>>;
+  SaberBase::LockupType LOCKUP_TYPE,
+  class F = Int<1>>
+  using LockupTr = Layers<BASE, LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE, F>>;
   
 
 #endif
