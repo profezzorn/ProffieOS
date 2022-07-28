@@ -1777,7 +1777,15 @@ SaberFett263Buttons() : PropBase() {}
         thrust_begin_millis_ = millis();
       }
     }
+#ifdef FETT263_QUICK_SELECT_ON_BOOT
+    if (menu_type_ == MENU_PRESET && millis() < 2000) {
+      current_menu_angle_ = fusor.angle2();
+    } else {
+      DetectMenuTurn();      
+    }
+#else
     DetectMenuTurn();
+#endif
 #ifdef ENABLE_AUDIO    
     TrackPlayer();
 #else
