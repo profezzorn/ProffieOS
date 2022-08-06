@@ -644,9 +644,9 @@ int main() {
   test_current_preset();
 
   config_file_tests();
-  //  fuse_tests();
-  // test_rotate();
-  //byteorder_tests();
-  //extrapolator_test();
-  //color_tests();
+  fuse_tests();
+  test_rotate();
+  byteorder_tests();
+  extrapolator_test();
+  color_tests();
 }
