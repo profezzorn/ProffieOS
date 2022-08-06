@@ -9,6 +9,8 @@ class CurrentPreset {
 public:
   enum { PRESET_DISK, PRESET_ROM } preset_type;
   int preset_num;
+  ConfigFileExt read_from_ext_ = ConfigFileExt::CONFIG_UNKNOWN;
+  uint32_t iteration_ = 0;
   LSPtr<char> font;
   LSPtr<char> track;
 #define DEFINE_CURRENT_STYLE_STRING(N) LSPtr<char> current_style##N;
@@ -116,7 +118,10 @@ public:
       int line_begin = f->Tell();
       f->readVariable(variable);
 
+      //      fprintf(stderr, "VAR: %s\n", variable);
+
       if (!variable[0]) continue;
+
       if (!strcmp(variable, "new_preset")) {
 	preset_count++;
 	if (preset_count == 2) {
@@ -127,13 +132,10 @@ public:
 	}
 	continue;
       }
-      if (!preset_count) continue;
-      if (f->Peek() != '=') continue;
-      f->Read();
-      f->skipspace();
 
       if (!strcmp(variable, "end")) {
 	f->Seek(line_begin);
+	if (preset_count == 0) break;
 	if (preset_count == 1) {
 	  preset_num++;
 	  return true;
@@ -141,6 +143,11 @@ public:
 	return false;
       }
       
+      if (!preset_count) continue;
+      if (f->Peek() != '=') continue;
+      f->Read();
+      f->skipspace();
+
       if (!strcmp(variable, "name")) {
 	name = f->readString();
 	continue;
@@ -178,7 +185,7 @@ public:
     return false;
   }
 
-  bool Write(FileReader* f) {
+  bool Write(BufferedFileWriter* f) {
     DOVALIDATE(*this);
     f->Write("new_preset\n");
     DOVALIDATE(*this);
@@ -233,61 +240,54 @@ public:
     return true;
   }
 
-  bool OpenPresets(FileReader* f, const char* filename) {
-    PathHelper fn(GetSaveDir(), filename);
-    if (!f->Open(fn)) {
-      STDOUT << "Failed to open: " << filename << "\n";
-      return false;
-    }
-    if (ValidatePresets(f)) {
-      return true;
-    } else {
-      f->Close();
-      return false;
-    }
+  bool TryValidator(FileValidator* a) {
+    if (!a->validHeader()) return false;
+    if (!a->validateChecksum()) return false;
+    read_from_ext_ = a->ext;
+    iteration_ = a->iteration();
+    return true;
   }
 
-  bool UpdateINI() {
-#ifndef ENABLE_SD
-    return false;
-#else    
-    FileReader f, f2;
-    PathHelper ini_fn(GetSaveDir(), "presets.ini");
-    if (OpenPresets(&f2, "presets.tmp")) {
-      uint8_t buf[512];
-      // Found valid tmp file
-      f2.Seek(0);
-      LSFS::Remove(ini_fn);
-      f.Create(ini_fn);
-      while (f2.Available()) {
-	int to_copy = std::min<int>(f2.Available(), sizeof(buf));
-	if (f2.Read(buf, to_copy) != to_copy ||
-	    f.Write(buf, to_copy) != to_copy) {
-	  f2.Close();
-	  f.Close();
-	  LSFS::Remove(ini_fn);
-	  return false;
-	}
+  bool TryPlain(FileValidator* a) {
+    a->f.Seek(0);
+    if (!ValidatePresets(& a->f)) return false;
+    read_from_ext_ = a->ext;
+    iteration_ = 0;
+    return true;
+  }
+
+  FileReader *OpenPresets2(FileSelector* fs) {
+    if (iteration_) {
+      if (read_from_ext_ == ConfigFileExt::CONFIG_INI) {
+	return & fs->ini.f;
+      } else if(read_from_ext_ == ConfigFileExt::CONFIG_TMP) {
+	return & fs->tmp.f;
       }
-      f2.Close();
-      f.Close();
-      return true;
     }
-    return false;
-#endif    
+    if (TryValidator(fs->a)) return & fs->a->f;
+    if (TryValidator(fs->b)) return & fs->b->f;
+    if (TryPlain(&fs->ini)) return & fs->ini.f;
+    if (TryPlain(&fs->tmp)) return & fs->tmp.f;
+    return nullptr;
+  }
+
+  FileReader *OpenPresets(FileSelector* fs) {
+    FileReader* ret = OpenPresets2(fs);
+    if (read_from_ext_ == ConfigFileExt::CONFIG_INI) {
+      fs->tmp.f.Close();
+    }
+    if (read_from_ext_ == ConfigFileExt::CONFIG_TMP) {
+      fs->ini.f.Close();
+    }
+    return ret;
   }
 
   bool CreateINI() {
 #ifndef ENABLE_SD
     return false;
-#else    
-    FileReader f;
+#else
     PathHelper ini_fn(GetSaveDir(), "presets.ini");
-    LSFS::Remove(ini_fn);
-    if (!f.Create(ini_fn)) {
-      STDOUT << "Failed to open " << ini_fn << " for write\n";
-      return false;
-    }
+    BufferedFileWriter f(ini_fn);
     f.write_key_value("installed", install_time);
     CurrentPreset tmp;
     for (size_t i = 0; i < current_config->num_presets; i++) {
@@ -296,7 +296,7 @@ public:
       tmp.Write(&f);
     }
     f.Write("end\n");
-    f.Close();
+    f.Close(++iteration_);
     return true;
 #endif    
   }
@@ -306,23 +306,23 @@ public:
 #ifndef ENABLE_SD
     return false;
 #else
-    FileReader f;
-    if (!OpenPresets(&f, "presets.ini")) {
-      if (!UpdateINI()) return false;
-      if (!OpenPresets(&f, "presets.ini")) return false;
-    }
-    
+    FileSelector fs(GetSaveDir(), "presets");
+    FileReader* f = OpenPresets(&fs);
+    if (!f) return false;
+    int start = f->Tell();
     int n = 0;
+    preset_num = -1;
     while (true) {
-      if (Read(&f)) {
+      if (Read(f)) {
 	if (n == preset) return true;
 	n++;
       } else {
 	if (n && preset == -1) return true;
 	if (n == preset) {
-	  f.Seek(0);
+	  f->Seek(start);
 	  n=0;
-	  Read(&f);
+	  preset_num = -1;
+	  Read(f);
 	  return true;
 	}
 	return false;
@@ -333,21 +333,29 @@ public:
 
   void SaveAtLocked(int position) {
 #ifdef ENABLE_SD
+
     DOVALIDATE(*this);
-    FileReader f, out;
-    if (!OpenPresets(&f, "presets.ini")) {
-      if (!UpdateINI()) CreateINI();
-      if (!OpenPresets(&f, "presets.ini")) {
-	STDOUT << "SAVING FAILED!!!!\n";
-	return;
-      }
+    FileSelector fs(GetSaveDir(), "presets");
+    FileReader *f = OpenPresets(&fs);
+    if (!f) {
+      fs.Close();
+      CreateINI();
+      SaveAtLocked(position);
+      return;
     }
     DOVALIDATE(*this);
-    PathHelper tmp_fn(GetSaveDir(), "presets.tmp");
-    DOVALIDATE(*this);
-    LSFS::Remove(tmp_fn);
-    DOVALIDATE(*this);
-    out.Create(tmp_fn);
+
+    if (read_from_ext_ == ConfigFileExt::CONFIG_INI) {
+      read_from_ext_ = ConfigFileExt::CONFIG_TMP;
+    } else {
+      read_from_ext_ = ConfigFileExt::CONFIG_INI;
+    }
+    iteration_++;
+
+    PathHelper tmp_fn(GetSaveDir(), "presets", read_from_ext_ == ConfigFileExt::CONFIG_INI ? "ini" : "tmp");
+    STDERR << "Creating file " << tmp_fn << " iteration = " << iteration_ << "\n";
+
+    BufferedFileWriter out(tmp_fn);
     DOVALIDATE(*this);
     out.write_key_value("installed", install_time);
     CurrentPreset tmp;
@@ -357,7 +365,8 @@ public:
       Write(&out);
       opos++;
     }
-    while (tmp.Read(&f)) {
+    tmp.preset_num = -1;
+    while (tmp.Read(f)) {
       if (tmp.preset_num != preset_num) {
 	DOVALIDATE(tmp);
 	tmp.Write(&out);
@@ -369,10 +378,9 @@ public:
 	}
       }
     }
-    f.Close();
+    fs.Close();
     out.Write("end\n");
-    out.Close();
-    UpdateINI();
+    out.Close(iteration_);
     preset_num = position;
 #endif    
   }
@@ -405,7 +413,7 @@ void SetStyle(int blade, LSPtr<char> style) {
   }
   DOVALIDATE(*this);
 }
-  
+
 const char* GetStyle(int blade) {
 #define GET_STYLE_N(N) case N: return current_style##N.get();
   switch (blade) {

@@ -15,5 +15,7 @@
 #define PONUA
 #endif
 
+#define NELEM(X) (sizeof(X)/sizeof((X)[0]))
+
 #endif
 

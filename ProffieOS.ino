@@ -308,8 +308,6 @@ uint64_t loop_cycles = 0;
 
 #include "common/loop_counter.h"
 
-#define NELEM(X) (sizeof(X)/sizeof((X)[0]))
-
 #ifdef DOSFS_CONFIG_STARTUP_DELAY
 #define PROFFIEOS_SD_STARTUP_DELAY DOSFS_CONFIG_STARTUP_DELAY
 #else

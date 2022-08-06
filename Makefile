@@ -89,7 +89,9 @@ testV3V:
 	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/proffieboard_v3_verification_config.h\\\" BOARD_TAG=ProffieboardV3-L452RE OBJDIR=test-proffieboard-v3-verification
 
 
-test: style-test common-test blades-test sound-test buttons-test display-test test1 test2 test3 test4 test5 test6 test7 test8 test9 testA testB testC test1V test2V test3V testV3V
+posixtests: style-test common-test blades-test sound-test buttons-test display-test
+
+test: posixtests test1 test2 test3 test4 test5 test6 test7 test8 test9 testA testB testC test1V test2V test3V testV3V
 	@echo Tests pass
 
 # Check that there are no uncommitted changes

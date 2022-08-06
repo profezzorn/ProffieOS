@@ -141,6 +141,11 @@ public:
   static File Open(const char* path) {
     return fopen(path, "r");
   }
+  static File OpenRW(const char* path) {
+    File ret = fopen(path, "r+");
+    if (ret) return ret;
+    return OpenForWrite(path);
+  }
   static File OpenFast(const char* path) {
     return fopen(path, "r");
   }
@@ -209,6 +214,9 @@ public:
   static File Open(const char* path) {
     if (!SD.exists(path)) return File();
     return SD.open(path);
+  }
+  static File OpenRW(const char* path) {
+    return SD.open(path, FILE_WRITE);
   }
   static File OpenFast(const char* path) {
     // At some point, I put this check in here to make sure that the file
@@ -325,6 +333,12 @@ public:
     if (!mounted_) return File();
     return DOSFS.open(path, "r");
   }
+  static File OpenRW(const char* path) {
+    if (!mounted_) return File();
+    File f = DOSFS.open(path, "r+");
+    if (!f) f = OpenForWrite(path);
+    return f;
+  }
   static File OpenFast(const char* path) {
     if (!mounted_) return File();
     return DOSFS.open(path, "r");
@@ -418,6 +432,9 @@ public:
   static File Open(const char* path) {
     if (!SD.exists(path)) return File();
     return SD.open(path);
+  }
+  static File OpenRW(const char* path) {
+    return SD.open(path, FILE_WRITE);
   }
   static File OpenFast(const char* path) {
     // At some point, I put this check in here to make sure that the file

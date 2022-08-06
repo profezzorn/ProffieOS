@@ -3,7 +3,9 @@
 
 #include <new>
 
+#include "common.h"
 #include "lsfs.h"
+#include "strfun.h"
 
 // inline void* operator new(size_t, void* p) { return p; }
 
@@ -147,6 +149,18 @@ public:
 #endif
     return false;
   }
+  bool OpenRW(const char* filename) {
+    Close();
+#ifdef ENABLE_SD
+    new (&sd_file_) File;
+    sd_file_ = LSFS::OpenRW(filename);
+    if (sd_file_) {
+      type_ = TYPE_SD;
+      return true;
+    }
+#endif
+    return false;
+  }
   bool OpenMem(const uint8_t* data, uint32_t length) {
     Close();
     type_ = TYPE_MEM;
@@ -164,9 +178,9 @@ public:
   };
   void Close() {
     switch (type_) {
-      IF_SD(case TYPE_SD: return sd_file_.close(); sd_file_.~File();)
-      IF_SF(case TYPE_SF: return sf_file_.close(); sf_file_.~SerialFlashFile();)
-      IF_MEM(case TYPE_MEM: return mem_file_.close(); mem_file_.~MemFile();)
+      IF_SD(case TYPE_SD: sd_file_.close(); sd_file_.~File(); break;)
+      IF_SF(case TYPE_SF: sf_file_.close(); sf_file_.~SerialFlashFile(); break;)
+      IF_MEM(case TYPE_MEM: mem_file_.close(); mem_file_.~MemFile(); break;)
     }
     type_ = TYPE_MEM;
     mem_file_ = MemFile();
@@ -433,6 +447,220 @@ private:
     IF_SF(SerialFlashFile sf_file_;)
     MemFile mem_file_;
   };
+};
+
+class CheckSummer {
+public:
+  uint32_t checksum_ = 0;
+  void Write(const uint8_t* data, int bytes) {
+    uint32_t tmp = checksum_;
+    for (int i = 0; i < bytes; i++) {
+      tmp = tmp * 997 + data[i];
+    }
+    checksum_ = tmp;
+  }
+};
+
+struct SafeFileHeader {
+  uint32_t magic;
+  uint32_t checksum;
+  uint32_t iteration;
+  uint32_t length;
+};
+
+struct SafeFileHeader2 {
+  SafeFileHeader a;
+  SafeFileHeader b;
+  char installed[sizeof(install_time) - sizeof("")];
+};
+
+enum class ConfigFileExt {
+  CONFIG_UNKNOWN,
+  CONFIG_INI,
+  CONFIG_TMP,
+};
+
+class FileValidator {
+public:
+  FileReader f;
+  SafeFileHeader header;
+  ConfigFileExt ext;
+
+  FileValidator(const char* dir, const char* basename, ConfigFileExt x) : ext(x) {
+    PathHelper full_name(dir, basename, ext == ConfigFileExt::CONFIG_INI ? "ini" : "tmp");
+    f.Open(full_name);
+    header.magic = 0;
+    header.length = 0;
+    SafeFileHeader2 tmp;
+    memset(&tmp, 0, sizeof(tmp));
+    f.Read((uint8_t*)&tmp, sizeof(tmp));
+    if (memcmp(&tmp.a, &tmp.b, sizeof(tmp.a))) {
+      return;
+    }
+#ifndef KEEP_SAVEFILES_WHEN_PROGRAMMING
+    if (memcmp(&tmp.installed, install_time, sizeof(tmp.installed))) {
+      return;
+    }
+#endif
+    header = tmp.a;
+    f.Seek(512);
+  }
+
+  bool validHeader() const {
+    return header.magic == 0xFF1E5AFE;
+  }
+
+  int32_t iteration() const {
+    return validHeader() ? header.iteration : 0;
+  }
+
+  bool validateChecksum() {
+    if (!validHeader()) return false;
+    uint8_t buffer[512];
+    int l = header.length;
+    CheckSummer checksum;
+    while (l > 0) {
+      int n = std::min<int>(l, NELEM(buffer));
+      f.Read(buffer, n);
+      checksum.Write(buffer, n);
+      l -= n;
+    }
+    f.Seek(512);
+    return header.checksum == checksum.checksum_;
+  }
+};
+
+
+class FileSelector {
+public:
+  FileValidator ini;
+  FileValidator tmp;
+  FileValidator *a, *b;
+  FileSelector(const char* dir, const char* basename) :
+    ini(dir, basename, ConfigFileExt::CONFIG_INI),
+    tmp(dir, basename, ConfigFileExt::CONFIG_TMP) {
+    a = &ini;
+    b = &tmp;
+    
+    if (ini.iteration() < tmp.iteration()) {
+      a = &tmp;
+      b = &ini;
+    }
+  }
+  
+  void Close() {
+    ini.f.Close();
+    tmp.f.Close();
+  }
+  ~FileSelector() {
+    ini.f.Close();
+    tmp.f.Close();
+  }
+};
+
+#ifndef MAX_CONFIG_FILE_SIZE
+#define MAX_CONFIG_FILE_SIZE (256  * 1024)
+#endif
+
+class BufferedFileWriter {
+private:
+  FileReader f;
+  CheckSummer checksum;
+  uint32_t position = 0;
+  uint8_t buffer[512];
+
+public:
+
+  BufferedFileWriter(const char* path) {
+    f.OpenRW(path);
+    if (!f.IsOpen()) {
+      STDOUT << "OpenRW fail: " << path << "\n";
+      return;
+    }
+    // Allocate file size.
+    if (f.FileSize() < MAX_CONFIG_FILE_SIZE) {
+      memset(buffer, 0, sizeof(buffer));
+      for (int i = (MAX_CONFIG_FILE_SIZE - f.FileSize() + 511) / 512; i > 0; i--) {
+	f.Write(buffer, NELEM(buffer));
+      }
+    }
+    f.Seek(512);
+  }
+
+  void Flush() {
+    uint32_t pos_in_buffer = position & (NELEM(buffer)-1);
+    if (pos_in_buffer) {
+      memset(buffer + pos_in_buffer, 0, NELEM(buffer) - pos_in_buffer);
+      int ret = f.Write(buffer, NELEM(buffer));
+      if (ret != NELEM(buffer)) {
+	STDERR << "FILE WRITE FAILED: " << ret << "\n";
+      }
+    }
+  }
+
+  void Close(uint32_t iteration) {
+    uint32_t length = position;
+    uint32_t cksum = checksum.checksum_;
+    Flush();
+    f.Seek(0);
+    position = 0;
+    Write32(0xFF1E5AFE); Write32(cksum); Write32(iteration); Write32(length);
+    Write32(0xFF1E5AFE); Write32(cksum); Write32(iteration); Write32(length);
+    Write(install_time);
+    Flush();
+    f.Close();
+  }
+  
+  int Write(const uint8_t* dest, int bytes) {
+    checksum.Write(dest, bytes);
+    while (bytes) {
+      uint32_t pos_in_buffer = position & (NELEM(buffer)-1);
+      uint32_t to_copy = std::min<uint32_t>(bytes, NELEM(buffer) - pos_in_buffer);
+      memcpy(buffer + pos_in_buffer, dest, bytes);
+
+      position += to_copy;
+      bytes -= to_copy;
+      dest -= to_copy;
+
+      if ((pos_in_buffer + to_copy) == NELEM(buffer)) {
+	f.Write(buffer, NELEM(buffer));
+      }
+    }
+    return 0;
+  }
+  int Write(uint8_t c) { return Write(&c, 1); }
+  int Write32(uint32_t c) { return Write((uint8_t*)&c, 4); }
+  int Write(const char *str) { return Write((uint8_t*)str, strlen(str)); }
+  
+  void write_key_value(const char* key,
+		       const char* value) {
+    Write(key);
+    Write('=');
+    for (;*value; value++) {
+      switch (*value) {
+	case '\n': Write("\\n"); break;
+	case '\t': Write("\\t"); break;
+	case '\\': Write("\\\\"); break;
+	default: Write(*value);
+      }
+    }
+    Write('\n');
+  }
+
+  void write_key_value(const char* key, int v) {
+    char value[30];
+    itoa(v, value, 10);
+    write_key_value(key, value);
+  }
+// to save float with two decimal places
+  void write_key_value_float(const char* key, float f) {
+    char new_value[16];
+    itoa((int)floorf(f), new_value, 10);
+    strcat(new_value, ".");
+    itoa(((int)floorf(f * 10)) % 10, new_value + strlen(new_value), 10);
+    itoa(((int)floorf(f * 100)) % 10, new_value + strlen(new_value), 10);
+    write_key_value(key, new_value);
+  }
 };
 
 #endif

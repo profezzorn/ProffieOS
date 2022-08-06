@@ -636,16 +636,10 @@ public:
 #endif
   }
 
-  void WriteState(const char* filename) {
-    PathHelper fn(GetSaveDir(), filename);
-    savestate_.Write(fn);
-  }
-
   void SaveState(int preset) {
     STDOUT.println("Saving Current Preset");
     savestate_.preset = preset;
-    WriteState("curstate.tmp");
-    WriteState("curstate.ini");
+    savestate_.WriteToSaveDir("curstate");
   }
 
   SaveGlobalStateFile saved_global_state;
@@ -682,8 +676,7 @@ public:
 #ifdef SAVE_BLADE_DIMMING
     saved_global_state.dimming = SaberBase::GetCurrentDimming();
 #endif
-    saved_global_state.Write("global.tmp");
-    saved_global_state.Write("global.ini");
+    saved_global_state.WriteToRootDir("global");
 #endif
   }
 
