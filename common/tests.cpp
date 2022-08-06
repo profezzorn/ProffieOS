@@ -27,8 +27,6 @@
 
 int random(int x) { return rand() % x; }
 
-const char install_time[] = __DATE__ " " __TIME__;
-
 const char* GetSaveDir() { return NULL; }
 
 float fract(float x) { return x - floor(x); }

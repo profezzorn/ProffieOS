@@ -6,6 +6,7 @@
 #include "common.h"
 #include "lsfs.h"
 #include "strfun.h"
+#include "stdout.h"
 
 // inline void* operator new(size_t, void* p) { return p; }
 
