@@ -567,8 +567,10 @@ class BufferedFileWriter {
 private:
   FileReader f;
   CheckSummer checksum;
+#ifdef PROFFIEOS_BUFFER_WRITES
   uint32_t position = 0;
   uint8_t buffer[512];
+#endif  
 
 public:
 
@@ -580,6 +582,9 @@ public:
     }
     // Allocate file size.
     if (f.FileSize() < MAX_CONFIG_FILE_SIZE) {
+#ifndef PROFFIEOS_BUFFER_WRITES
+      uint8_t buffer[512];
+#endif
       memset(buffer, 0, sizeof(buffer));
       for (int i = (MAX_CONFIG_FILE_SIZE - f.FileSize() + 511) / 512; i > 0; i--) {
 	f.Write(buffer, NELEM(buffer));
@@ -589,6 +594,7 @@ public:
   }
 
   void Flush() {
+#ifdef PROFFIEOS_BUFFER_WRITES    
     uint32_t pos_in_buffer = position & (NELEM(buffer)-1);
     if (pos_in_buffer) {
       memset(buffer + pos_in_buffer, 0, NELEM(buffer) - pos_in_buffer);
@@ -597,14 +603,19 @@ public:
 	STDERR << "FILE WRITE FAILED: " << ret << "\n";
       }
     }
+#endif
   }
 
   void Close(uint32_t iteration) {
+#ifdef PROFFIEOS_BUFFER_WRITES
     uint32_t length = position;
+#else    
+    uint32_t length = f.Tell() - 512;
+#endif    
     uint32_t cksum = checksum.checksum_;
     Flush();
     f.Seek(0);
-    position = 0;
+    // position = 0;
     Write32(0xFF1E5AFE); Write32(cksum); Write32(iteration); Write32(length);
     Write32(0xFF1E5AFE); Write32(cksum); Write32(iteration); Write32(length);
     Write(install_time);
@@ -614,6 +625,7 @@ public:
   
   int Write(const uint8_t* dest, int bytes) {
     checksum.Write(dest, bytes);
+#ifdef PROFFIEOS_BUFFER_WRITES    
     while (bytes) {
       uint32_t pos_in_buffer = position & (NELEM(buffer)-1);
       uint32_t to_copy = std::min<uint32_t>(bytes, NELEM(buffer) - pos_in_buffer);
@@ -627,6 +639,9 @@ public:
 	f.Write(buffer, NELEM(buffer));
       }
     }
+#else
+    f.Write(dest, bytes);
+#endif    
     return 0;
   }
   int Write(uint8_t c) { return Write(&c, 1); }

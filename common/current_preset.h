@@ -218,7 +218,7 @@ public:
   bool ValidatePresets(FileReader* f) {
     if (f->FileSize() < 4) return false;
     int pos = 0;
-#ifndef KEEP_SAVEFILES_WHEN_PROGRAMMING    
+#ifndef KEEP_SAVEFILES_WHEN_PROGRAMMING
     char variable[33];
     f->readVariable(variable);
     if (strcmp(variable, "installed")) return false;

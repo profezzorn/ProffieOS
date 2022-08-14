@@ -67,6 +67,8 @@ char* itoa( int value, char *ret, int radix )
 #define interrupts() do{}while(0)
 #define SCOPED_PROFILER() do { } while(0)
 
+#define KEEP_SAVEFILES_WHEN_PROGRAMMING
+
 #include "stdout.h"
 Print* default_output;
 Print* stdout_output;
@@ -193,6 +195,9 @@ int PresetOrder() {
 }
 
 void test_current_preset() {
+  CurrentPreset p;
+  p.Load(0);
+
   CurrentPreset preset;
   // Cleanup
   RemovePresetINI();
