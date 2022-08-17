@@ -40,7 +40,7 @@ struct AddBend<class BendTimePowX<MILLIS, POW>> {
   PONUA SVFWrapper<POW> bend_value_;
   float exponent_;
   template<class T>
-  uint32_t bend(uint32_t t, uint32_t len, T scale) {
+  T bend(uint32_t t, uint32_t len, T scale) {
     if (t > len) return t;
     float frac = t / (float)len;
     frac = powf(frac, exponent_);
@@ -64,7 +64,7 @@ struct AddBend<class BendTimePowInvX<MILLIS, POW>> {
   PONUA SVFWrapper<POW> bend_value_;
   float exponent_;
   template<class T>
-  uint32_t bend(uint32_t t, uint32_t len, T scale) {
+  T bend(uint32_t t, uint32_t len, T scale) {
     if (t > len) return t;
     float frac = 1.0 - t / (float)len;
     frac = 1.0 - powf(frac, exponent_);
