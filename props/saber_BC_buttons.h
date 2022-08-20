@@ -75,8 +75,12 @@ Gesture Controls:
   Force Push. Recommended range 1 ~ 10,
   1 = shortest, easiest to trigger, 10 = longest. Default value is 5.
 
+#define BC_NO_BM
+- Disable battle mode features.
+
 #define BC_GESTURE_AUTO_BATTLE_MODE
 - Makes gesture ignition ALSO enter battle mode automatically on ignition.
+- *Note* - Cannot be used if #define BC_NO_BM is active. 
 
 "Battle Mode 1.0" by fett263, BC modified version:
 - Once you enter battle mode, buttons are not used for lockup.
@@ -320,6 +324,10 @@ Turn off blade        - Hold POW and wait until blade is off,
 
 #if defined(NO_BLADE_NO_GEST_ONOFF) && !defined(BLADE_DETECT_PIN)
 #error Using NO_BLADE_NO_GEST_ONOFF requires a BLADE_DETECT_PIN to be defined 
+#endif
+
+#if defined(BC_NO_BM) && defined(BC_GESTURE_AUTO_BATTLE_MODE)
+#error You cannot define both BC_NO_BM and BC_GESTURE_AUTO_BATTLE_MODE
 #endif
 
 EFFECT(dim);        // for EFFECT_POWERSAVE
@@ -833,6 +841,7 @@ public:
       return true;
 
 // Battle Mode
+#ifndef BC_NO_BM
   #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_ON):
   #else
@@ -860,6 +869,7 @@ public:
         }
       }
       return true;
+#endif
 
   // Auto Lockup Mode
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
