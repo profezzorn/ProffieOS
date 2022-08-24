@@ -359,9 +359,9 @@ public:
                       DMA_OPTION_CIRCULAR);
     SAIx->CR1 |= SAI_xCR1_DMAEN;
 
-#define SAIB_SCK g_SAIPins.sck
-#define SAIB_FS g_SAIPins.fs
-#define SAIB_SD g_SAIPins.sd
+#define SAIB_SCK g_SAI1Pins.sck
+#define SAIB_FS g_SAI1Pins.fs
+#define SAIB_SD g_SAI1Pins.sd
     
 #if PROFFIEBOARD_VERSION < 3
 #undef SAIB_FS
@@ -369,6 +369,7 @@ public:
 #endif    
 
 #ifdef ENABLE_I2S_OUT
+    extern const stm32l4_sai_pins_t g_SAI1Pins;
     // Neopixel data 3 pin is SCK
     stm32l4_gpio_pin_configure(SAIB_SCK, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
 
@@ -390,6 +391,7 @@ public:
 #endif
 
 #ifdef ENABLE_SPDIF_OUT
+    extern const stm32l4_sai_pins_t g_SAI1Pins;
     // aux button pin becomes S/PDIF out
     stm32l4_gpio_pin_configure(SAIB_SD, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
     stm32l4_dma_start(&dma2, (uint32_t)&SAI2->DR, (uint32_t)dac_dma_buffer2, AUDIO_BUFFER_SIZE * 2 * 2,
@@ -545,8 +547,11 @@ private:
       // DMA is transmitting the first half of the buffer
       // so we must fill the second half
       dest = (int16_t *)&dac_dma_buffer[AUDIO_BUFFER_SIZE*CHANNELS];
-#if defined(ENABLE_SPDIF_OUT) || defined(ENABLE_I2S_OUT)
+#ifdef ENABLE_SPDIF_OUT
       secondary = dac_dma_buffer2 + AUDIO_BUFFER_SIZE * 2;
+#endif
+#ifdef ENABLE_I2S_OUT
+      secondary = dac_dma_buffer2 + AUDIO_BUFFER_SIZE * CHANNELS;
 #endif
     } else {
       // DMA is transmitting the second half of the buffer

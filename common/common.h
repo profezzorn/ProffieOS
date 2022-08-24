@@ -15,5 +15,8 @@
 #define PONUA
 #endif
 
+#define NELEM(X) (sizeof(X)/sizeof((X)[0]))
+const char install_time[] = __DATE__ " " __TIME__;
+
 #endif
 

@@ -39,6 +39,7 @@ float fract(float x) { return x - floor(x); }
 
 uint32_t micros_ = 0;
 uint32_t micros() { return micros_; }
+uint32_t millis() { return micros_ / 1000; }
 int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x < a) return a;
   if (x > b) return b;
@@ -70,32 +71,6 @@ char* itoa( int value, char *string, int radix )
 #include "../common/strfun.h"
 #include "../common/lsfs.h"
 
-struct  Print {
-  void print(const char* s) { puts(s); }
-  void print(float v) { fprintf(stdout, "%f", v); }
-  void write(char s) { putchar(s); }
-  template<class T>
-  void println(T s) { print(s); putchar('\n'); }
-};
-
-template<typename T, typename X = void> struct PrintHelper {
-  static void out(Print& p, T& x) { p.print(x); }
-};
-
-template<typename T> struct PrintHelper<T, decltype(((T*)0)->printTo(*(Print*)0))> {
-  static void out(Print& p, T& x) { x.printTo(p); }
-};
-
-struct ConsoleHelper : public Print {
-  template<typename T, typename Enable = void>
-  ConsoleHelper& operator<<(T v) {
-    PrintHelper<T>::out(*this, v);
-    return *this;
-  }
-};
-
-ConsoleHelper STDOUT;
-#define default_output (&STDOUT)
 char current_directory[128] = "testfont\0\0";
 const char *next_current_directory(const char *dir) {
   return NULL;
