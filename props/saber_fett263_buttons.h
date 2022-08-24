@@ -1671,6 +1671,12 @@ SaberFett263Buttons() : PropBase() {}
   }
   #endif
 
+  void Clash2(bool stab, float strength) override {
+    Event(BUTTON_NONE, stab ? EVENT_STAB : EVENT_CLASH);
+    SaberBase::SetClashStrength(strength);
+    IgnoreClash(100);
+  }
+
   void Loop() override {
     PropBase::Loop();
     DetectTwist();
