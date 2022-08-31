@@ -1020,8 +1020,7 @@ SaberFett263Buttons() : PropBase() {}
 
   void SaveGestureState() {
     STDOUT.println("Saving Gesture State");
-    saved_gesture_control.Write("gesture.tmp");
-    saved_gesture_control.Write("gesture.ini");
+    saved_gesture_control.WriteToRootDir("gesture");
   }
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY

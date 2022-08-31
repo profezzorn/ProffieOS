@@ -253,7 +253,8 @@ protected:
       colors_ = pin_->BeginFrame();
       
       allow_disable_ = false;
-      current_style_->run(this);
+      if (current_style_)
+	current_style_->run(this);
 
       if (!powered_) {
 	if (allow_disable_) continue;

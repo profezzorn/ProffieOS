@@ -6,11 +6,13 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <memory.h>
 
 #include <iostream>
+
 
 // cruft
 #define NUM_BLADES 3
@@ -20,9 +22,10 @@
 #define ACCEL_MEASUREMENTS_PER_SECOND 1600
 #define HEX 16
 
-int random(int x) { return rand() % x; }
+#define current_directory "."
+#define next_current_directory(dir) nullptr
 
-const char install_time[] = __DATE__ " " __TIME__;
+int random(int x) { return rand() % x; }
 
 const char* GetSaveDir() { return NULL; }
 
@@ -35,9 +38,6 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x < a) return a;
   if (x > b) return b;
   return x;
-}
-int constexpr toLower(char x) {
-  return (x >= 'A' && x <= 'Z') ? x - 'A' + 'a' : x;
 }
 
 class Looper {
@@ -66,6 +66,8 @@ char* itoa( int value, char *ret, int radix )
 #define noInterrupts() do{}while(0)
 #define interrupts() do{}while(0)
 #define SCOPED_PROFILER() do { } while(0)
+
+#define KEEP_SAVEFILES_WHEN_PROGRAMMING
 
 #include "stdout.h"
 Print* default_output;
@@ -193,6 +195,9 @@ int PresetOrder() {
 }
 
 void test_current_preset() {
+  CurrentPreset p;
+  p.Load(0);
+
   CurrentPreset preset;
   // Cleanup
   RemovePresetINI();
@@ -600,15 +605,51 @@ void color_tests() {
   STDOUT << tests << " tests.\n";
 }
 
+#include "config_file.h"
+
+class TestConfigFile : public ConfigFile {
+public:
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(clash_threshold, 1.0);
+    CONFIG_VARIABLE2(volume, -1);
+    CONFIG_VARIABLE2(dimming, 16384);
+  }
+  float clash_threshold;
+  int volume;
+  int dimming;
+};
+
+void config_file_tests() {
+  LSFS::Remove("testconfig.ini");
+  LSFS::Remove("testconfig.tmp");
+  TestConfigFile f;
+  f.ReadINIFromRootDir("testconfig");
+
+  for (int v = 5; v < 10; v++) {
+    f.volume = v;
+    f.WriteToRootDir("testconfig");
+  
+    TestConfigFile f2;
+    f2.ReadINIFromRootDir("testconfig");
+    CHECK_EQ(f2.volume, v);
+  }
+  
+  f.WriteToRootDir("testconfig");
+  f.WriteToRootDir("testconfig");
+  f.WriteToRootDir("testconfig");
+}
+
 int main() {
-  color_tests();
-  fuse_tests();
-  test_rotate();
   extras = false;
   test_current_preset();
   fprintf(stderr, "Extra variables enabled....\n");
   extras = true;
   test_current_preset();
+
+  config_file_tests();
+  fuse_tests();
+  test_rotate();
   byteorder_tests();
   extrapolator_test();
+  color_tests();
 }
