@@ -2,6 +2,7 @@
 #define COMMON_CONFIG_FILE_H
 
 #include "file_reader.h"
+#include "strfun.h"
 
 // Reads an config file, looking for variable assignments.
 // TODO(hubbe): Read config files from serialflash.
@@ -64,6 +65,15 @@ struct ConfigFile {
     FileReader& f_;
   };
 
+  struct BufferedSaveVariableOP : public VariableOP {
+    BufferedSaveVariableOP(BufferedFileWriter& f) : f_(f) {}
+    void run(const char* name, VariableBase* var) override {
+      f_.write_key_value_float(name, var->get());
+    }
+  private:
+    BufferedFileWriter& f_;
+  };
+
   template<class T>
   void DoVariableOp(VariableOP *op, const char* name, T& ref, T def) {
     Variable<T> var(ref, def);
@@ -121,18 +131,32 @@ struct ConfigFile {
 
   virtual void iterateVariables(VariableOP *op) {}
 
-  void Write(const char* filename) {
+  void WriteToDir(const char* dir, const char* basename, ConfigFileExt ext) {
+    PathHelper full_name(dir, basename, ext == ConfigFileExt::CONFIG_INI ? "ini" : "tmp");
     LOCK_SD(true);
-    FileReader out;
-    LSFS::Remove(filename);
-    out.Create(filename);
+    BufferedFileWriter out(full_name);
     out.write_key_value("installed", install_time);
-    SaveVariableOP op(out);
+    BufferedSaveVariableOP op(out);
     iterateVariables(&op);
     out.write_key_value("end", "1");
-    out.Close();
+    out.Close(++iteration_);
     LOCK_SD(false);
   }
+
+  ConfigFileExt read_from_ext_ = ConfigFileExt::CONFIG_UNKNOWN;
+  uint32_t iteration_ = 0;
+  
+  void WriteToDir(const char* dir, const char* basename) {
+    if (read_from_ext_ == ConfigFileExt::CONFIG_INI) {
+      read_from_ext_ = ConfigFileExt::CONFIG_TMP;
+    } else {
+      read_from_ext_ = ConfigFileExt::CONFIG_INI;
+    }
+    WriteToDir(dir, basename, read_from_ext_);
+  }
+
+  void WriteToRootDir(const char* basename) { WriteToDir(NULL, basename); }
+  void WriteToSaveDir(const char* basename) { WriteToDir(GetSaveDir(), basename); }
 
   void Print(const char* variable) {
     ConfigFile::PrintVariableOP op(variable);
@@ -169,21 +193,40 @@ struct ConfigFile {
     }
   }
 
-  ReadStatus ReadINIFromDir(const char *dir, const char* basename) {
-    PathHelper full_name(dir, basename, "ini");
-    if (Read(full_name) == ReadStatus::READ_END) {
-      return ReadStatus::READ_END;
+  bool TryValidator(FileValidator* a) {
+    if (!a->validateChecksum()) return false;
+    ReadStatus status = Read(&a->f);
+    if (status != ReadStatus::READ_FAIL) {
+      read_from_ext_ = a->ext;
+      iteration_ = a->iteration();
     }
-    full_name.Set(dir, basename, "tmp");
-    return Read(full_name);
+    return true;
+  }
+
+  bool TryPlain(FileValidator* a) {
+    a->f.Seek(0);
+    if (Read(&a->f) == ReadStatus::READ_END) {
+      read_from_ext_ = a->ext;
+      iteration_ = 1;
+    }
+    return true;
+  }
+  ReadStatus ReadINIFromDir(const char *dir, const char* basename) {
+    LOCK_SD(true);
+    FileSelector fs(dir, basename);
+    ReadStatus status = ReadStatus::READ_FAIL;
+    bool success = TryValidator(fs.a) || TryValidator(fs.b);
+    if (!success) success = TryPlain(&fs.ini);
+    if (!success) success = TryPlain(&fs.tmp);
+    fs.Close();
+    LOCK_SD(false);
+    return success ? ReadStatus::READ_END : ReadStatus::READ_FAIL;
   }
   ReadStatus ReadINIFromSaveDir(const char* basename) {
-    PathHelper full_name(GetSaveDir(), basename, "ini");
-    if (Read(full_name) == ReadStatus::READ_END) {
-      return ReadStatus::READ_END;
-    }
-    full_name.Set(GetSaveDir(), basename, "tmp");
-    return Read(full_name);
+    return ReadINIFromDir(GetSaveDir(), basename);
+  }
+  ReadStatus ReadINIFromRootDir(const char* basename) {
+    return ReadINIFromDir("", basename);
   }
 };
 
