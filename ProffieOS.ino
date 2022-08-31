@@ -225,7 +225,6 @@ SnoozeBlock snooze_config(snooze_touch, snooze_digital, snooze_timer);
 #endif
 
 const char version[] = "$Id: ce12a06a1e236b5101ec60c950530a9a4719a74d $";
-const char install_time[] = __DATE__ " " __TIME__;
 
 #include "common/common.h"
 #include "common/state_machine.h"
@@ -307,8 +306,6 @@ uint64_t wav_interrupt_cycles = 0;
 uint64_t loop_cycles = 0;
 
 #include "common/loop_counter.h"
-
-#define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 
 #ifdef DOSFS_CONFIG_STARTUP_DELAY
 #define PROFFIEOS_SD_STARTUP_DELAY DOSFS_CONFIG_STARTUP_DELAY
