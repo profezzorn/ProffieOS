@@ -116,8 +116,8 @@ Gesture Controls:
 Turn blade ON         - Short click POW (or gestures if defined, uses FastOn)
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
-Next Preset           - Long click and release POW.
-Prev Preset           - Double click and hold POW, release after a second.
+Next Preset           - Long click and release POW, or TWIST while pointing down.
+Prev Preset           - Double click and hold POW, release after a second, or TWIST while pointing up.
                         (click then long click)
 Play/Stop Track       - 4x click POW.
 Volume Menu:
@@ -192,8 +192,8 @@ Turn off blade        - Hold POW and wait until blade is off,
 Turn blade ON         - Short click POW (or gestures if defined, uses FastOn)
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
-Next Preset           - Long click and release POW.
-Prev Preset           - Double click and hold POW, release after a second.
+Next Preset           - Long click and release POW, or TWIST while pointing down.
+Prev Preset           - Double click and hold POW, release after a second, or TWIST while pointing up.
                         (click then long click)
 Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
@@ -549,24 +549,35 @@ public:
       return true;
   #endif  // BC_SWING_ON
 
-  #ifdef BC_TWIST_ON
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-      if (mode_volume_) return false;
-  #ifdef NO_BLADE_NO_GEST_ONOFF
-      if (!blade_detected_) return false;
-  #endif
-      // Delay twist events to prevent false trigger from over twisting
-      if (millis() - last_twist_ > 2000 &&
-        millis() - saber_off_time_ > 1000) {
-        FastOn();
-  #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-        STDOUT.println("Entering Battle Mode");
-        battle_mode_ = true;
-  #endif
-        last_twist_ = millis();
+      // pointing down
+      if (fusor.angle1() < - M_PI / 4) {
+        previous_preset();
+        return true;
+      }
+      // pointing up
+      if (fusor.angle1() >  M_PI / 3) {
+        next_preset();
+      } else {
+       // NOT pointing up OR down      
+  #ifdef BC_TWIST_ON
+        if (mode_volume_) return false;    
+    #ifdef NO_BLADE_NO_GEST_ONOFF
+        if (!blade_detected_) return false;
+    #endif
+        // Delay twist events to prevent false trigger from over twisting
+        if (millis() - last_twist_ > 2000 &&
+          millis() - saber_off_time_ > 1000) {
+          FastOn();
+    #ifdef BC_GESTURE_AUTO_BATTLE_MODE
+          STDOUT.println("Entering Battle Mode");
+          battle_mode_ = true;
+    #endif
+          last_twist_ = millis();
+        }
+  #endif  // BC_TWIST_ON
       }
       return true;
-  #endif  // BC_TWIST_ON
 
   #ifdef BC_TWIST_OFF
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
