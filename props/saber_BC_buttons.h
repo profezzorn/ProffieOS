@@ -134,9 +134,10 @@ On-Demand Batt Level  - Double click POW.
 
 *************   WHILE SABER BLADE IS ON   ****************
 Play/Stop Track       - 4x click POW.
-Next Preset           - Long click and release POW while pointing up.
-Prev Preset           - Double click and release POW after a second
+Next Preset Fast      - Long click and release POW while pointing up.
+Prev Preset Fast      - Double click and release POW after a second
                         while pointing up. (click then long click)
+        * NOTE * Fast switching bypasses preon and font.wav.
 Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold POW and Clash to temporarily
                         override the auto-lockup and do regular Clash.
@@ -210,9 +211,10 @@ On-Demand Batt Level  - Double click POW.
 
 *************   WHILE SABER BLADE IS ON   ****************
 Play/Stop Track       - Hold AUX + Double click POW.
-Next Preset           - Hold AUX + Long click and release POW while pointing up.
-Prev Preset           - Hold AUX + Double click and hold POW for a second
+Next Preset Fast      - Hold AUX + Long click and release POW while pointing up.
+Prev Preset Fast      - Hold AUX + Double click and hold POW for a second
                         (click then long click) while pointing up.
+        * NOTE * Fast switching bypasses preon and font.wav.
 Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold any button and Clash to
                         temporarily override the auto-lockup and do regular Clash.
