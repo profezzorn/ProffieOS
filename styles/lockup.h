@@ -98,8 +98,8 @@ template<class BASE,
   class LOCKUP_SHAPE = Int<32768>, class DRAG_SHAPE = SmoothStep<Int<28671>, Int<4096>> >
   using Lockup = Layers<BASE, LockupL<LOCKUP, DRAG_COLOR, LOCKUP_SHAPE, DRAG_SHAPE>>;
 
-// Usage: LockupTr<BASE, COLOR, BeginTr, EndTr, LOCKUP_TYPE, F>
-// Or: LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE, F>
+// Usage: LockupTr<BASE, COLOR, BeginTr, EndTr, LOCKUP_TYPE, CONDITION>
+// Or: LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE, CONDITION>
 // COLOR; COLOR or LAYER
 // BeginTr, EndTr: TRANSITION
 // LOCKUP_TYPE: a SaberBase::LockupType
@@ -109,7 +109,7 @@ template<class BASE,
 // to COLOR. When lockup ends, EndTr is used to transition from COLOR to
 // transparent again. If you wish to for your lockup to have a shape, you
 // can have COLOR be partially transparent to make the base layer show through.
-// If F equals 0, Lockup effect ignored
+// If CONDITION equals 0, Lockup effect ignored
 enum class LockupTrState {
   INACTIVE,
   ACTIVE,
@@ -120,7 +120,7 @@ template<class COLOR,
   class BeginTr,
   class EndTr,
   SaberBase::LockupType LOCKUP_TYPE,
-  class F = Int<1>>
+  class CONDITION = Int<1>>
 class LockupTrL {
 public:
   LockupTrL() {
@@ -128,11 +128,11 @@ public:
   }
   void run(BladeBase* blade) {
       color_.run(blade);
-      f_.run(blade);
+      condition_.run(blade);
       switch (active_) {
         case LockupTrState::INACTIVE:
           if (SaberBase::Lockup() == LOCKUP_TYPE) {
-             if (f_.calculate(blade)) {
+             if (condition_.calculate(blade)) {
                active_ = LockupTrState::ACTIVE;
                begin_tr_.begin();
              } else {
@@ -158,7 +158,7 @@ public:
 
 private:
   LockupTrState active_ = LockupTrState::INACTIVE;
-  PONUA SVFWrapper<F> f_;
+  PONUA SVFWrapper<CONDITION> condition_;
   PONUA COLOR color_;
   TransitionHelper<BeginTr> begin_tr_;
   TransitionHelper<EndTr> end_tr_;
@@ -192,8 +192,8 @@ template<
   class BeginTr,
   class EndTr,
   SaberBase::LockupType LOCKUP_TYPE,
-  class F = Int<1>>
-  using LockupTr = Layers<BASE, LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE, F>>;
+  class CONDITION = Int<1>>
+  using LockupTr = Layers<BASE, LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE, CONDITION>>;
   
 
 #endif
