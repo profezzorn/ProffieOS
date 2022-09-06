@@ -1679,11 +1679,6 @@ SaberFett263Buttons() : PropBase() {}
 
   void Clash2(bool stab, float strength) override {
     Event(BUTTON_NONE, stab ? EVENT_STAB : EVENT_CLASH);
-    if (stab) {
-      STDOUT.println("Clash2() = Stab Detected");
-    } else {
-      STDOUT.println("Clash2() = Clash Detected");    
-    }
     SaberBase::SetClashStrength(strength);
     IgnoreClash(100);
   }
@@ -5373,7 +5368,6 @@ SaberFett263Buttons() : PropBase() {}
 		    
       // Auto Lockup Mode
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
-        STDOUT.println("EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON)");
         if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
