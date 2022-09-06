@@ -1065,9 +1065,9 @@ class Commands : public CommandParser {
 #endif
 
     if (!strcmp(cmd, "version")) {
-      STDOUT << version
-      << "\nprop: "  TOSTRING(PROP_TYPE)  "\nbuttons: " TOSTRING(NUM_BUTTONS) "\ninstalled: " 
-      << install_time << "\n";
+      STDOUT.println(version);
+      STDOUT.print("Installed: ");
+      STDOUT.println(install_time);
       return true;
     }
     if (!strcmp(cmd, "reset")) {
