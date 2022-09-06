@@ -75,8 +75,12 @@ Gesture Controls:
   Force Push. Recommended range 1 ~ 10,
   1 = shortest, easiest to trigger, 10 = longest. Default value is 5.
 
+#define BC_NO_BM
+- Disable battle mode features.
+
 #define BC_GESTURE_AUTO_BATTLE_MODE
 - Makes gesture ignition ALSO enter battle mode automatically on ignition.
+- *Note* - Cannot be used if #define BC_NO_BM is active. 
 
 "Battle Mode 1.0" by fett263, BC modified version:
 - Once you enter battle mode, buttons are not used for lockup.
@@ -112,8 +116,8 @@ Gesture Controls:
 Turn blade ON         - Short click POW (or gestures if defined, uses FastOn)
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
-Next Preset           - Long click and release POW.
-Prev Preset           - Double click and hold POW, release after a second.
+Next Preset           - Long click and release POW, or TWIST while pointing down.
+Prev Preset           - Double click and hold POW, release after a second, or TWIST while pointing up.
                         (click then long click)
 Play/Stop Track       - 4x click POW.
 Volume Menu:
@@ -130,9 +134,10 @@ On-Demand Batt Level  - Double click POW.
 
 *************   WHILE SABER BLADE IS ON   ****************
 Play/Stop Track       - 4x click POW.
-Next Preset           - Long click and release POW while pointing up.
-Prev Preset           - Double click and release POW after a second
+Next Preset Fast      - Long click and release POW while pointing up.
+Prev Preset Fast      - Double click and release POW after a second
                         while pointing up. (click then long click)
+        * NOTE * Fast switching bypasses preon and font.wav.
 Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold POW and Clash to temporarily
                         override the auto-lockup and do regular Clash.
@@ -188,8 +193,8 @@ Turn off blade        - Hold POW and wait until blade is off,
 Turn blade ON         - Short click POW (or gestures if defined, uses FastOn)
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
-Next Preset           - Long click and release POW.
-Prev Preset           - Double click and hold POW, release after a second.
+Next Preset           - Long click and release POW, or TWIST while pointing down.
+Prev Preset           - Double click and hold POW, release after a second, or TWIST while pointing up.
                         (click then long click)
 Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
@@ -206,9 +211,10 @@ On-Demand Batt Level  - Double click POW.
 
 *************   WHILE SABER BLADE IS ON   ****************
 Play/Stop Track       - Hold AUX + Double click POW.
-Next Preset           - Hold AUX + Long click and release POW while pointing up.
-Prev Preset           - Hold AUX + Double click and hold POW for a second
+Next Preset Fast      - Hold AUX + Long click and release POW while pointing up.
+Prev Preset Fast      - Hold AUX + Double click and hold POW for a second
                         (click then long click) while pointing up.
+        * NOTE * Fast switching bypasses preon and font.wav.
 Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold any button and Clash to
                         temporarily override the auto-lockup and do regular Clash.
@@ -320,6 +326,10 @@ Turn off blade        - Hold POW and wait until blade is off,
 
 #if defined(NO_BLADE_NO_GEST_ONOFF) && !defined(BLADE_DETECT_PIN)
 #error Using NO_BLADE_NO_GEST_ONOFF requires a BLADE_DETECT_PIN to be defined 
+#endif
+
+#if defined(BC_NO_BM) && defined(BC_GESTURE_AUTO_BATTLE_MODE)
+#error You cannot define both BC_NO_BM and BC_GESTURE_AUTO_BATTLE_MODE
 #endif
 
 EFFECT(dim);        // for EFFECT_POWERSAVE
@@ -541,24 +551,35 @@ public:
       return true;
   #endif  // BC_SWING_ON
 
-  #ifdef BC_TWIST_ON
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-      if (mode_volume_) return false;
-  #ifdef NO_BLADE_NO_GEST_ONOFF
-      if (!blade_detected_) return false;
-  #endif
-      // Delay twist events to prevent false trigger from over twisting
-      if (millis() - last_twist_ > 2000 &&
-        millis() - saber_off_time_ > 1000) {
-        FastOn();
-  #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-        STDOUT.println("Entering Battle Mode");
-        battle_mode_ = true;
-  #endif
-        last_twist_ = millis();
+      // pointing down
+      if (fusor.angle1() < - M_PI / 4) {
+        previous_preset();
+        return true;
+      }
+      // pointing up
+      if (fusor.angle1() >  M_PI / 3) {
+        next_preset();
+      } else {
+       // NOT pointing up OR down      
+  #ifdef BC_TWIST_ON
+        if (mode_volume_) return false;    
+    #ifdef NO_BLADE_NO_GEST_ONOFF
+        if (!blade_detected_) return false;
+    #endif
+        // Delay twist events to prevent false trigger from over twisting
+        if (millis() - last_twist_ > 2000 &&
+          millis() - saber_off_time_ > 1000) {
+          FastOn();
+    #ifdef BC_GESTURE_AUTO_BATTLE_MODE
+          STDOUT.println("Entering Battle Mode");
+          battle_mode_ = true;
+    #endif
+          last_twist_ = millis();
+        }
+  #endif  // BC_TWIST_ON
       }
       return true;
-  #endif  // BC_TWIST_ON
 
   #ifdef BC_TWIST_OFF
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
@@ -833,6 +854,7 @@ public:
       return true;
 
 // Battle Mode
+#ifndef BC_NO_BM
   #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_ON):
   #else
@@ -860,6 +882,7 @@ public:
         }
       }
       return true;
+#endif
 
   // Auto Lockup Mode
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
