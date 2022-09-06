@@ -4192,7 +4192,6 @@ SaberFett263Buttons() : PropBase() {}
       if (millis() - last_blast_millis_ < 2000) {
         swing_blast_ = true;
         SaberBase::DoBlast();
-        STDOUT << "DoAutoMultiBlast() = SaberBase::DoBlast() " << last_blast_millis_ << "\n";
       }
       check_blast_ = false;
     }	  
@@ -4607,7 +4606,6 @@ SaberFett263Buttons() : PropBase() {}
         }
         ToggleBattleModeMultiBlast();
         SaberBase::DoBlast();
-        STDOUT << "EVENTID = SaberBase::DoBlast() " << last_blast_millis_ << "\n";
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
@@ -4618,14 +4616,12 @@ SaberFett263Buttons() : PropBase() {}
         }
         ToggleBattleModeMultiBlast();
         SaberBase::DoBlast();
-        STDOUT << "EVENTID = SaberBase::DoBlast() " << last_blast_millis_ << "\n";
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
         if (menu_ || CheckShowColorCC()) return true;
         ToggleBattleModeMultiBlast();
         SaberBase::DoBlast();
-        STDOUT << "EVENTID = SaberBase::DoBlast() " << last_blast_millis_ << "\n";
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_SHORT, MODE_ON):
@@ -5064,7 +5060,6 @@ SaberFett263Buttons() : PropBase() {}
               hybrid_font.PlayCommon(&SFX_blstend);
             } else {
               SaberBase::DoBlast();
-              STDOUT << "EVENTID = SaberBase::DoBlast() " << last_blast_millis_ << "\n";
             }
             return true;
           } else {
@@ -5073,7 +5068,6 @@ SaberFett263Buttons() : PropBase() {}
               check_blast_ = true;
               last_blast_millis_ = millis();
 	    }
-            STDOUT << "EVENTID = SaberBase::DoBlast() " << last_blast_millis_ << "\n";
           }
           return true;
         }
@@ -5323,11 +5317,9 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_ || CheckShowColorCC()) return true;
         if (swing_blast_) {
           SaberBase::DoBlast();
-          STDOUT << "EVENTID Swing Blast = SaberBase::DoBlast() " << last_blast_millis_ << "\n";
           return true;
         } else {
           DoAutoMultiBlast();
-          STDOUT << "EVENTID Swing Blast = DoAutoMultiBlast() " << last_blast_millis_ << "\n";
         }
         return true;
 
@@ -5396,10 +5388,8 @@ SaberFett263Buttons() : PropBase() {}
           clash_impact_millis_ = millis();
 #ifdef FETT263_CLASH_STRENGTH_SOUND
           clash_type_ = CLASH_NORMAL;
-          STDOUT << "HandleClash(CLASH_NORMAL) " << clash_impact_millis_ << "\n";
 #else
           SaberBase::DoClash();
-          STDOUT << "SaberBase::DoClash() " << clash_impact_millis_ << "\n";
 #endif
           return true;
         }
@@ -5434,10 +5424,8 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_CLASH_STRENGTH_SOUND
           clash_impact_millis_ = millis();
           clash_type_ = CLASH_STAB;
-          STDOUT << "HandleClash(CLASH_STAB) " << clash_impact_millis_ << "\n";
 #else
           SaberBase::DoStab();
-          STDOUT << "SaberBase::DoStab() " << clash_impact_millis_ << "\n";
 #endif
           return true;
         }
