@@ -1643,7 +1643,6 @@ SaberFett263Buttons() : PropBase() {}
           SFX_clsh.SelectFloat(clash_value);
         }
         SaberBase::DoClash();
-        STDOUT << "HandleClash() = SaberBase::DoClash() " << clash_impact_millis_ << "\n";
         break;
       case CLASH_STAB:
         if (SFX_stab) {
@@ -1656,7 +1655,6 @@ SaberFett263Buttons() : PropBase() {}
           }
         }
         SaberBase::DoStab();
-        STDOUT << "HandleClash() = SaberBase::DoStab() " << clash_impact_millis_ << "\n";
         break;
       case CLASH_LOCKUP:
         if (battle_mode_) clash_value = (SaberBase::GetClashStrength() - saved_gesture_control.clashdetect) / saved_gesture_control.maxclash;
