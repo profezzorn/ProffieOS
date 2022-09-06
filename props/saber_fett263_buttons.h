@@ -35,6 +35,7 @@ Standard Controls While Blade is OFF
     Turn Left (Stepped) = Previous Preset
       Increment by 5 = Hold PWR + Turn Left
     Click PWR = Select Preset
+    NEW! Hold PWR = Select and Ignite Preset
     Click AUX = go to First Preset
   Play Track = Long Click PWR pointing up
   NEW! Track Player* = Long Click PWR parallel
@@ -229,6 +230,7 @@ Standard Controls While Blade is OFF
     Turn Left (Stepped) = Previous Preset
       Increment by 5 = Hold PWR + Turn Left
     Click PWR = Select Preset
+    NEW! Hold PWR = Select and Ignite Preset
     Long Click PWR = First Preset
   NEW Control! Volume Menu = Hold PWR + Clash
     Turn Right (Stepped) = Increase Volume (to max)
@@ -376,6 +378,10 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_MAX_CLASH 16
   The value for hardest clash level to select clash sound
   Range 8 ~ 16
+  
+  FETT263_QUICK_SELECT_ON_BOOT
+  Enables Preset Selection Menu on Boot (when power is first applied)
+  Use Dial Menu to turn to desired preset, click PWR to select or hold PWR to select and ignite
 
   FETT263_SAY_COLOR_LIST
   Spoken Color Names replace default sounds during Color List Mode (requires .wav files)
@@ -1783,7 +1789,15 @@ SaberFett263Buttons() : PropBase() {}
         thrust_begin_millis_ = millis();
       }
     }
+#ifdef FETT263_QUICK_SELECT_ON_BOOT
+    if (menu_type_ == MENU_PRESET && millis() < 2000) {
+      current_menu_angle_ = fusor.angle2();
+    } else {
+      DetectMenuTurn();      
+    }
+#else
     DetectMenuTurn();
+#endif
 #ifdef ENABLE_AUDIO    
     TrackPlayer();
 #else
@@ -4423,16 +4437,23 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
-        if (menu_ && menu_type_ == MENU_TRACK_PLAYER) {
-          track_mode_ = PLAYBACK_RANDOM;
-          sound_library_.SayRandom();
-          MenuExit();
-          return true;
-        }
-        if (!menu_) {
+        if (menu_) {
+          switch (menu_type_) {
+            case MENU_TRACK_PLAYER:
+              track_mode_ = PLAYBACK_RANDOM;
+              sound_library_.SayRandom();
+              MenuExit();
+              break;
+            case MENU_PRESET:
+              MenuChoice();
+              FastOn();
+              break;
+            default:
+              break;
+          }
+        } else {
           StartMenu(MENU_PRESET);
           sound_library_.SaySelectPreset();
-          return true;
         }
         return true;
 
@@ -5169,7 +5190,15 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_OFF):
-        CheckQuote();
+        if (menu_) {
+          if (menu_type_ == MENU_PRESET) {
+            MenuChoice();
+            FastOn();
+          }
+          return true;
+        } else {
+          CheckQuote();
+        }
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
@@ -5688,7 +5717,11 @@ private:
   bool auto_lockup_on_ = false; // Battle Mode Lockup active
   bool auto_melt_on_ = false; // Battle Mode Melt/Drag active
   bool battle_mode_ = false; // Battle Mode active
+#ifdef FETT263_QUICK_SELECT_ON_BOOT  
+  bool menu_ = true; // enable MENU_PRESET on boot
+#else
   bool menu_ = false; // Edit Mode / Menu System active
+#endif
 #ifdef FETT263_QUOTE_PLAYER_START_ON
   bool force_quote_ = true; // Quote Player active (in place of force effect)
 #else
@@ -5706,7 +5739,11 @@ private:
   uint32_t saber_off_time_millis_; // Off timer
   uint32_t restart_millis_; // Used to time restarts to show preon timing.
   ClashType clash_type_ = CLASH_NONE;
+#ifdef FETT263_QUICK_SELECT_ON_BOOT  
+  MenuType menu_type_ = MENU_PRESET;
+#else
   MenuType menu_type_ = MENU_TOP;
+#endif
   int menu_top_pos_ = 0; // Top menu dial position
   int menu_sub_pos_ = 0; // Sub menu dial position
   TrackMode track_mode_ = PLAYBACK_OFF;
