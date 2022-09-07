@@ -318,11 +318,8 @@ class SerialCommands : public CommandParser {
     return false;
   }
   void Help() override {
-    // STDOUT.println(" hm13pin PIN - configure HM13 PIN");
-    // STDOUT.println(" hm13name NAME - configure HM13 NAME");
-    STDOUT.println(" get_ble_config - show BLE PIN");
-    if (default_output != stdout_output)
-      STDOUT.println(" make_default_console - make this connection the default connection");
+    STDOUT << "Serial Commands Wiki Page:\n";
+    STDOUT << "https://github.com/profezzorn/ProffieOS/wiki/Serial-Monitor-Commands\n";
   }
 };
 
