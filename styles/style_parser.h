@@ -395,11 +395,6 @@ public:
 
     return false;
   }
-
-  void Help() override {
-    STDOUT.println(" list_named_styles - List all available named styles");
-    STDOUT.println(" describe_named_style <style> - show what arguments a style requires");
-  }
 };
 
 StyleParser style_parser;
