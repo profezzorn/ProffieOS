@@ -319,10 +319,6 @@ class SerialCommands : public CommandParser {
 #endif
     return false;
   }
-  void Help() override {
-    STDOUT << "Serial Commands Wiki Page:\n";
-    STDOUT << "https://github.com/profezzorn/ProffieOS/wiki/Serial-Monitor-Commands\n";
-  }
 };
 
 StaticWrapper<SerialCommands> serial_commands;
