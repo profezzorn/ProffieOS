@@ -244,10 +244,6 @@ public:
     return false;
   }
 
-  void Help() override {
-    STDOUT.println(" blade on/off - turn simple blade on off");
-  }
-
 protected:
   void Loop() override {
     if (!power_) return;
