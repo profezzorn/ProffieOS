@@ -206,9 +206,6 @@ WS2811_Blade(WS2811PIN* pin,
     return false;
   }
 
-  void Help() override {
-    STDOUT.println(" blade on/off - turn ws2811 blade on off");
-  }
   void PowerOff() {
     if (!poweroff_delay_start_) {
       poweroff_delay_start_ = millis();
