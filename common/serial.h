@@ -132,7 +132,9 @@ public:
     while (true) {
       while (!SA::Connected()) YIELD();
       if (!SA::AlwaysConnected()) {
-        STDOUT << "Welcome to ProffieOS " << version << ". Type 'help' for more info.\n";
+        STDOUT << "Welcome to ProffieOS " << version << "\n;
+	STDOUT << "For available serial commands, see:\n";
+	STDOUT << "https://github.com/profezzorn/ProffieOS/wiki/Serial-Monitor-Commands\n";	
       }
 
       while (SA::Connected()) {
@@ -316,13 +318,6 @@ class SerialCommands : public CommandParser {
     }
 #endif
     return false;
-  }
-  void Help() override {
-    // STDOUT.println(" hm13pin PIN - configure HM13 PIN");
-    // STDOUT.println(" hm13name NAME - configure HM13 NAME");
-    STDOUT.println(" get_ble_config - show BLE PIN");
-    if (default_output != stdout_output)
-      STDOUT.println(" make_default_console - make this connection the default connection");
   }
 };
 

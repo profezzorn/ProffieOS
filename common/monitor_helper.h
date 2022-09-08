@@ -75,9 +75,6 @@ protected:
 #endif
     return false;
   }
-  void Help() {
-    STDOUT.println(" mon[itor] swings/samples/touch/battery/pwm/clash/temp/serial/fusion - toggle monitoring");
-  }
 };
 
 #endif

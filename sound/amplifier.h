@@ -130,10 +130,6 @@ protected:
     return false;
   }
 
-  void Help() {
-    STDOUT.println(" amp on/off - turn amplifier on or off");
-  }
-
 private:
   bool on_ = false;
   uint32_t last_enabled_;
