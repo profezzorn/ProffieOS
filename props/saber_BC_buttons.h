@@ -174,7 +174,7 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
           next color and exit color change mode. If the style does not use
           ColorChange<>, it has no effect.
 Quote Player          - Triple click POW.
-Toggle seqential or 
+Toggle sequential or 
   random quote play   - 4x click and hold POW. (while pointing down)
 Force Push            - Push hilt perpendicularly from a stop.
 Swap (EffectSequence) - 4x click and hold POW medium. (while NOT pointing up)
@@ -252,7 +252,7 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
           next color and exit color change mode. If the style does not use
           ColorChange<>, it has no effect.
 Quote Player          - Triple click POW.
-Toggle seqential or 
+Toggle sequential or 
   random quote play   - Hold AUX + Twist. (while pointing down)
 Force Push            - Push hilt perpendicularly from a stop.
 Swap (EffectSequence) - Hold AUX + Twist. (while NOT pointing up)
