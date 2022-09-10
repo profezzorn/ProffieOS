@@ -932,12 +932,11 @@ public:
       // pointing down
         sequential_quote_ = !sequential_quote_;
         if (sequential_quote_) {
-          beeper.Beep(0.1, 600);
-          beeper.Beep(0.1, 950);
-          beeper.Beep(0.1, 1300);
-          beeper.Beep(0.1, 600);
+          sound_library_.SayRandom();
+          sound_library_.SayDisabled();
         } else {
           sound_library_.SayRandom();
+          sound_library_.SayEnabled();          
         }
         return true;
       } else {
