@@ -20,8 +20,8 @@ Features:
 - Auto enter/exit multi-blaster block mode 
 - Spoken Battery level, with percentage option.
 - Dedicated Quote sounds - Always available. force.wavs can remain as force.
-                           Add quote.wav files to font to use.
-                           Toggle between seqential or random quote play.
+                         - Add quote.wav files to font to use.
+                         - Toggle between sequential or random quote play.
 - Play / Stop track control while blade is on.
 - Force Push is always available, not just in Battle Mode.
 - Melt is always available as no button, with pull-away or button to end.
