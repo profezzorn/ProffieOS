@@ -931,11 +931,10 @@ public:
       } else if (fusor.angle1() < - M_PI / 4) {
       // pointing down
         sequential_quote_ = !sequential_quote_;
+        sound_library_.SayRandom();
         if (sequential_quote_) {
-          sound_library_.SayRandom();
           sound_library_.SayDisabled();
         } else {
-          sound_library_.SayRandom();
           sound_library_.SayEnabled();          
         }
         return true;
