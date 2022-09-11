@@ -130,6 +130,9 @@ class Effect {
     directory_ = nullptr;
     volume_ = 100;
     paired_ = false;
+#ifdef KILL_OLD_PLAYERS
+    killable_ = false;
+#endif
   }
 
   bool Scan(const char *filename) {
@@ -354,8 +357,15 @@ class Effect {
 
   void SetPaired(bool i) { paired_ = i; }
   bool GetPaired() const { return paired_; }
+
   void SetVolume(uint8_t v) { volume_ = v; }
   uint8_t GetVolume() const { return volume_; }
+
+#ifdef KILL_OLD_PLAYERS
+  void SetKillable(bool i) { killable_ = i; }
+  bool GetKillable() const { return killable_; }
+#endif
+
   const char* GetName() const { return name_; }
 
   // Returns true if file was identified.
@@ -482,6 +492,11 @@ private:
   // we play the |folowing_| sound, unless one was specifically
   // selected.
   bool paired_ : 1;
+
+#ifdef KILL_OLD_PLAYERS
+  // If true, this effect can be cut short.
+  bool killable_ : 1;
+#endif
 
   FilePattern file_pattern_ = FilePattern::UNKNOWN;
 

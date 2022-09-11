@@ -49,6 +49,44 @@ RefPtr<BufferedWavPlayer> GetWavPlayerPlaying(Effect* effect) {
   return RefPtr<BufferedWavPlayer>();
 }
 
+#ifdef KILL_OLD_PLAYERS
+RefPtr<BufferedWavPlayer> GetOrFreeWavPlayer(Effect* e)  {
+  if (!e->next_ && GetWavPlayerPlaying(e)) e->SetKillable(true);
+  RefPtr<BufferedWavPlayer> ret = GetFreeWavPlayer();
+  if (ret) return ret;
+
+  BufferedWavPlayer* p = nullptr;
+  float best_remaining = 1000.0;
+  for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+    if (wav_players[unit].isPlaying() &&
+	wav_players[unit].refs() == 0 &&
+	wav_players[unit].current_file_id().GetEffect() &&
+	wav_players[unit].current_file_id().GetEffect()->GetKillable()) {
+      float remaining = wav_players[unit].length() - wav_players[unit].pos();
+      if (remaining < best_remaining) {
+	best_remaining = remaining;
+	p = wav_players + unit;
+      }
+    }
+  }
+  if (p) {
+    p->set_fade_time(0.001);
+    p->FadeAndStop();
+    while (p->isPlaying()) {
+#ifdef VERSION_MAJOR >= 4
+      armv7m_core_yield();
+#endif
+    }
+    return RefPtr<BufferedWavPlayer>(p);
+  }
+  return RefPtr<BufferedWavPlayer>();
+}
+#else
+RefPtr<BufferedWavPlayer> GetOrFreeWavPlayer(Effect* e)  {
+  return GetFreeWavPlayer();
+}
+#endif
+
 RefPtr<BufferedWavPlayer> RequireFreeWavPlayer()  {
   while (true) {
     RefPtr<BufferedWavPlayer> ret = GetFreeWavPlayer();
