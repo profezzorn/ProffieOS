@@ -73,7 +73,7 @@ RefPtr<BufferedWavPlayer> GetOrFreeWavPlayer(Effect* e)  {
     p->set_fade_time(0.001);
     p->FadeAndStop();
     while (p->isPlaying()) {
-#ifdef VERSION_MAJOR >= 4
+#if VERSION_MAJOR >= 4
       armv7m_core_yield();
 #endif
     }
