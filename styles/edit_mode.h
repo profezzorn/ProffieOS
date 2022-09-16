@@ -44,8 +44,8 @@ enum ArgumentName {
   ALT_COLOR3_ARG = 34, // Generic 3rd Alt Color
   STYLE_OPTION2_ARG = 35, // Generic 2nd Style Option
   STYLE_OPTION3_ARG = 36, // Generic 3rd Style Option
-  IGNITION_OPTION2_ARG = 37, // Secondary Ignition Option
-  RETRACTION_OPTION2_ARG = 38, // Secondary Retraction Option
+  IGNITION_OPTION2_ARG = 37, // Ignition BEND Option
+  RETRACTION_OPTION2_ARG = 38, // Retraction BEND Option
   LAST_ARG = RETRACTION_OPTION2_ARG, // End of Argument List
 };
 
