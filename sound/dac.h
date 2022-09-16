@@ -505,10 +505,6 @@ public:
      return true;
   }
 
-  void Help() override {
-    STDOUT.println(" dacbuf - print the current contents of the dac buffer");
-  }
-
   // TODO: Replace with enable/disable
   void SetStream(class ProffieOSAudioStream* stream) {
     stream_ = stream;

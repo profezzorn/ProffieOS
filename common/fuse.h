@@ -296,6 +296,11 @@ public:
     return sqrtf(gyro_slope_.z * gyro_slope_.z + gyro_slope_.y * gyro_slope_.y) * (M_PI / 180);
   }
 
+  // Acceleration into twist (one direction) in degrees per second per second
+  float twist_accel() {
+    return gyro_slope().x;
+  }
+
   void dump() {
     STDOUT << " Accel=" << accel_ << " ("<<  accel_.len() << ")"
 	   << " Gyro=" << gyro_ << " (" << gyro_.len() << ")"

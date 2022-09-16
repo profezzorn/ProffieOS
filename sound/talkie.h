@@ -1031,11 +1031,6 @@ public:
 
     return false;
   }
-
-  void Help() override {
-    STDOUT.println("say bof/sd/abort - test error messages");
-    STDOUT.println("talkie HEXDATA - play talkie");
-  }
 #endif
 
 private:

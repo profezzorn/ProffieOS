@@ -1610,24 +1610,6 @@ public:
 #endif
     return false;
   }
-  void Help() override {
-    STDOUT.println(" clash - trigger a clash");
-    STDOUT.println(" on/off - turn saber on/off");
-    STDOUT.println(" force - trigger a force push");
-    STDOUT.println(" blast - trigger a blast");
-    STDOUT.println(" stab - trigger a stab");
-    STDOUT.println(" lock - begin/end lockup");
-    STDOUT.println(" lblock/lb - begin/end lightning block");
-    STDOUT.println(" melt - begin/end melt");
-#ifdef ENABLE_AUDIO
-    STDOUT.println(" pwd - print current directory");
-    STDOUT.println(" cd directory - change directory, and sound font");
-    STDOUT.println(" play filename - play file");
-    STDOUT.println(" next/prev font - walk through directories in alphabetical order");
-    STDOUT.println(" next/prev pre[set] - walk through presets.");
-    STDOUT.println(" beep - play a beep");
-#endif
-  }
 
   virtual bool Event(enum BUTTON button, EVENT event) {
     PrintEvent(button, event);

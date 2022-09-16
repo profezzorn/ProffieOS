@@ -38,15 +38,8 @@ public:
     }
     return false;
   }
-  static void DoHelp() {
-    CHECK_LL(CommandParser, parsers, next_parser_);
-    for (CommandParser *p = parsers; p; p = p->next_parser_) {
-      p->Help();
-    }
-  }
 protected:
   virtual bool Parse(const char* cmd, const char* arg) = 0;
-  virtual void Help() = 0;
 private:
   CommandParser* next_parser_;
 };

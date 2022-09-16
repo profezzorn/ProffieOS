@@ -237,11 +237,13 @@ public:
   RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
     EnableAmplifier();
     if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
-    RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
+    RefPtr<BufferedWavPlayer> player = GetOrFreeWavPlayer(f);
     if (player) {
       player->set_volume_now(font_config.volEff / 16.0f);
       player->PlayOnce(f);
       current_effect_length_ = player->length();
+    } else {
+	STDOUT.println("Out of WAV players!");
     }
     return player;
   }
