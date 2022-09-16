@@ -1677,6 +1677,12 @@ SaberFett263Buttons() : PropBase() {}
   }
   #endif
 
+  void Clash2(bool stab, float strength) override {
+    Event(BUTTON_NONE, stab ? EVENT_STAB : EVENT_CLASH);
+    SaberBase::SetClashStrength(strength);
+    IgnoreClash(100);
+  }
+
   void Loop() override {
     PropBase::Loop();
     DetectTwist();
@@ -4185,6 +4191,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 	
   void DoIgnition() {
+    wav_player.Free();
 #ifdef FETT263_DUAL_MODE_SOUND
     SelectIgnitionSound();
 #endif
@@ -5438,6 +5445,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
+	  wav_player.Free();
           if (SFX_preon) {
 #ifdef FETT263_DUAL_MODE_SOUND
             SelectPreonSound();
@@ -5460,7 +5468,8 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
-          FastOn();
+          wav_player.Free();
+	  FastOn();
 #ifndef FETT263_SWING_ON_NO_BM
           battle_mode_ = true;
 #endif
@@ -5511,6 +5520,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
+	  wav_player.Free();
           if (SFX_preon) {
 #ifdef FETT263_DUAL_MODE_SOUND
             SelectPreonSound();
@@ -5534,6 +5544,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
+	  wav_player.Free();
           FastOn();
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
@@ -5550,6 +5561,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
+          wav_player.Free();
           if (SFX_preon) {
 #ifdef FETT263_DUAL_MODE_SOUND
             SelectPreonSound();
@@ -5571,6 +5583,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
+	  wav_player.Free();
           FastOn();
 #ifndef FETT263_STAB_ON_NO_BM
           battle_mode_ = true;
@@ -5587,6 +5600,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
+	  wav_player.Free();
           if (SFX_preon) {
 #ifdef FETT263_DUAL_MODE_SOUND
             SelectPreonSound();
@@ -5608,6 +5622,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
+	  wav_player.Free();
           FastOn();
 #ifndef FETT263_THRUST_ON_NO_BM
           battle_mode_ = true;

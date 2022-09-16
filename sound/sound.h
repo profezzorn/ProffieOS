@@ -51,7 +51,10 @@ RefPtr<BufferedWavPlayer> GetWavPlayerPlaying(Effect* effect) {
 
 #ifdef KILL_OLD_PLAYERS
 RefPtr<BufferedWavPlayer> GetOrFreeWavPlayer(Effect* e)  {
-  if (!e->next_ && GetWavPlayerPlaying(e)) e->SetKillable(true);
+  if (!e->GetFollowing() && !e->GetKillable() && GetWavPlayerPlaying(e)) {
+    STDERR << "MAKING " << e->GetName() << " killable.\n";
+    e->SetKillable(true);
+  }
   RefPtr<BufferedWavPlayer> ret = GetFreeWavPlayer();
   if (ret) return ret;
 
@@ -70,10 +73,11 @@ RefPtr<BufferedWavPlayer> GetOrFreeWavPlayer(Effect* e)  {
     }
   }
   if (p) {
+    STDERR << "KILING PLAYER " << WhatUnit(p) << "\n";
     p->set_fade_time(0.001);
     p->FadeAndStop();
     while (p->isPlaying()) {
-#ifdef VERSION_MAJOR >= 4
+#if VERSION_MAJOR >= 4
       armv7m_core_yield();
 #endif
     }
