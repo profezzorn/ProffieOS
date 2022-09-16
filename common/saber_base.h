@@ -41,9 +41,9 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(SECONDARY_IGNITION)		\
     DEFINE_EFFECT(SECONDARY_RETRACTION)		\
     DEFINE_EFFECT(QUOTE)			\
-    /* Change Alt font sounds */                \
+    /* Triggers the change for sets of sounds within the font from one alternative to another */                \
     DEFINE_EFFECT(ALT_SOUND)			\
-    /* Transition Effect/Pulse Sound */         \
+    /* Optional sound used during Transition Effect or TransitionPulse */         \
     DEFINE_EFFECT(TRANSITION_SOUND)		\
     /* Blaster effects */                       \
     DEFINE_EFFECT(STUN)				\
