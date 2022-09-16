@@ -74,10 +74,6 @@ protected:
     return false;
   }
 
-  void Help() {
-    STDOUT.println(" booster on/off - turn booster on or off");
-  }
-
 private:
   bool on_;
   int i_;

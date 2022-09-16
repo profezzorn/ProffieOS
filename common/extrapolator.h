@@ -16,6 +16,9 @@ class IncrementalLine {
   float t_square_sum_;
   T sum_;
   T dot_sum_;
+#ifdef FUSOR_VARIANCE
+  T square_sum_;
+#endif
   volatile bool needs_update_ = true;
  public:
   void Start(uint32_t t) {
@@ -25,6 +28,9 @@ class IncrementalLine {
     t_square_sum_ = 0.0;
     sum_ = T(0.0f);
     dot_sum_ = T(0.0f);
+#ifdef FUSOR_VARIANCE
+    square_sum_ = T(0.0f);
+#endif
   }
   void Add(const ExtrapolatorData<T>& data) {
     needs_update_ = true;
@@ -34,6 +40,9 @@ class IncrementalLine {
     t_square_sum_ += t * t;
     sum_ += data.v;
     dot_sum_ += data.v * t;
+#ifdef FUSOR_VARIANCE
+    square_sum_ += data.v * data.v;
+#endif
   }
   void Sub(const ExtrapolatorData<T>& data) {
     needs_update_ = true;
@@ -43,6 +52,9 @@ class IncrementalLine {
     t_square_sum_ -= t * t;
     sum_ -= data.v;
     dot_sum_ -= data.v * t;
+#ifdef FUSOR_VARIANCE
+    square_sum_ -= data.v * data.v;
+#endif
   }
 
  private:
@@ -96,6 +108,24 @@ class IncrementalLine {
       << " slope=" << slope_
       << " avg_t=" << avg_t_
       << "\n";
+#ifdef FUSOR_VARIANCE
+    if (samples_ > 1) {
+      T variance = (square_sum_ - sum_ * sum_ / samples_) / (samples_ -1);
+      STDOUT << " VARIANCE=";
+      STDOUT.print(variance.x, 8);
+      STDOUT << ", ";
+      STDOUT.print(variance.y, 8);
+      STDOUT << ", ";
+      STDOUT.print(variance.z, 8);
+      STDOUT << " STDDEV=";
+      STDOUT.print(sqrtf(variance.x), 8);
+      STDOUT << ", ";
+      STDOUT.print(sqrtf(variance.y), 8);
+      STDOUT << ", ";
+      STDOUT.print(sqrtf(variance.z), 8);
+      STDOUT << "\n";
+    }
+#endif
   }
 };
 

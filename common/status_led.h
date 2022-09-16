@@ -120,10 +120,6 @@ public:
     }
     return false;
   }
-  virtual void Help() {
-    STDOUT << " blink N - blink status LED N times\n";
-  }
-  
 
 private:
   uint32_t blink_start_;

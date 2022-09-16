@@ -685,13 +685,7 @@ class Commands : public CommandParser {
 
     return ret;
   }
-  bool Parse(const char* cmd, const char* e) override {
-#ifndef DISABLE_DIAGNOSTIC_COMMANDS
-    if (!strcmp(cmd, "help")) {
-      CommandParser::DoHelp();
-      return true;
-    }
-#endif    
+  bool Parse(const char* cmd, const char* e) override {   
 
 #ifdef ENABLE_SERIALFLASH
     if (!strcmp(cmd, "ls")) {
@@ -1065,9 +1059,9 @@ class Commands : public CommandParser {
 #endif
 
     if (!strcmp(cmd, "version")) {
-      STDOUT.println(version);
-      STDOUT.print("Installed: ");
-      STDOUT.println(install_time);
+      STDOUT << version
+      << "\nprop: "  TOSTRING(PROP_TYPE)  "\nbuttons: " TOSTRING(NUM_BUTTONS) "\ninstalled: " 
+      << install_time << "\n";
       return true;
     }
     if (!strcmp(cmd, "reset")) {
@@ -1342,23 +1336,6 @@ class Commands : public CommandParser {
 #endif  // TEENSYDUINO
 
     return false;
-  }
-
-  void Help() override {
-    STDOUT.println(" version - show software version");
-    STDOUT.println(" reset - restart software");
-#ifndef DISABLE_DIAGNOSTIC_COMMANDS    
-    STDOUT.println(" effects - list current effects");
-#endif    
-#ifdef ENABLE_SERIALFLASH
-    STDOUT.println("Serial Flash memory management:");
-    STDOUT.println("   ls, rm <file>, format, play <file>, effects");
-    STDOUT.println("To upload files: tar cf - files | uuencode x >/dev/ttyACM0");
-#endif
-#if defined(ENABLE_SD) && !defined(DISABLE_DIAGNOSTIC_COMMANDS)
-    STDOUT.println(" dir [directory] - list files on SD card.");
-    STDOUT.println(" sdtest - benchmark SD card");
-#endif
   }
 };
 
