@@ -41,9 +41,9 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(SECONDARY_IGNITION)		\
     DEFINE_EFFECT(SECONDARY_RETRACTION)		\
     DEFINE_EFFECT(QUOTE)			\
-    /* Triggers the change for sets of sounds within the font from one alternative to another. Called from within a style, mini game or via a prop */                \
+    /* Triggers the change for sets of sounds within the font from one alternative to another. */                \
     DEFINE_EFFECT(ALT_SOUND)			\
-    /* Optional sound used during Transition Effect or TransitionPulse. Called from within a style, mini game or via a prop */         \
+    /* Optional sound used during TransitionEffect or TransitionPulse via TrDoEffect */         \
     DEFINE_EFFECT(TRANSITION_SOUND)		\
     /* Blaster effects */                       \
     DEFINE_EFFECT(STUN)				\
