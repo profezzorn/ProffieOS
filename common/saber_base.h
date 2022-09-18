@@ -43,7 +43,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(QUOTE)			\
     /* Triggers the change for sets of sounds within the font from one alternative to another. */                \
     DEFINE_EFFECT(ALT_SOUND)			\
-    /* Optional sound used during TransitionEffect or TransitionPulse via TrDoEffect */         \
+    /* Triggers an optional sound effect during transitions from within a style via TrDoEffect. */         \
     DEFINE_EFFECT(TRANSITION_SOUND)		\
     /* Blaster effects */                       \
     DEFINE_EFFECT(STUN)				\
