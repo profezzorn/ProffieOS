@@ -3822,8 +3822,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_RETRACTION_OPTION2:
         if (SaberBase::IsOn()) {
           calc_ += (direction * 1000);
-          if (calc_ > 32768) calc_ = 0;
-          if (calc_ < 0) calc_ = 32768;
+          calc_ &= 0x7fff;
           SetInOut();
           sound_library_.SayNumber(calc_, SAY_WHOLE);
         }
