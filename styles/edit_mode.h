@@ -40,7 +40,13 @@ enum ArgumentName {
   POSTOFF_COLOR_ARG = 30, // PostOff Color  
   OFF_COLOR_ARG = 31, // Off Color (Color when blade is Off for crystals and accents)
   OFF_OPTION_ARG = 32, // Off Options (when blade is Off, for crystals and accents)
-  LAST_ARG = OFF_OPTION_ARG, // End of Argument List
+  ALT_COLOR2_ARG = 33, // Generic 2nd Alt Color
+  ALT_COLOR3_ARG = 34, // Generic 3rd Alt Color
+  STYLE_OPTION2_ARG = 35, // Generic 2nd Style Option
+  STYLE_OPTION3_ARG = 36, // Generic 3rd Style Option
+  IGNITION_OPTION2_ARG = 37, // Ignition BEND Option
+  RETRACTION_OPTION2_ARG = 38, // Retraction BEND Option
+  LAST_ARG = RETRACTION_OPTION2_ARG, // End of Argument List
 };
 
 // IgnitionTime = IGNITION_TIME_ARG - uses "Auto" feature with WavLen when = 0
