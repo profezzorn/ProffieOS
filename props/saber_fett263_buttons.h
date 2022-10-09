@@ -4399,7 +4399,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef FETT263_RANDOMIZE_QUOTE_PLAYER
       SFX_quote.SelectNext();
 #endif
-      hybrid_font.PlayCommon(&SFX_quote);
+      SaberBase::DoEffect(EFFECT_QUOTE, 0);
     } else {
       SaberBase::DoForce();
     }
@@ -5799,6 +5799,7 @@ SaberFett263Buttons() : PropBase() {}
 
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
+      case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
       case EFFECT_POWERSAVE:
         if (SFX_dim) {
           hybrid_font.PlayCommon(&SFX_dim);
