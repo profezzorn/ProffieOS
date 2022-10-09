@@ -38,6 +38,13 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(POWERSAVE)                    \
     DEFINE_EFFECT(BATTERY_LEVEL)                \
     DEFINE_EFFECT(FAST_ON)                      \
+    DEFINE_EFFECT(SECONDARY_IGNITION)		\
+    DEFINE_EFFECT(SECONDARY_RETRACTION)		\
+    DEFINE_EFFECT(QUOTE)			\
+    /* Triggers the change for sets of sounds within the font from one alternative to another. */                \
+    DEFINE_EFFECT(ALT_SOUND)			\
+    /* Triggers an optional sound effect during transitions from within a style via TrDoEffect. */         \
+    DEFINE_EFFECT(TRANSITION_SOUND)		\
     /* Blaster effects */                       \
     DEFINE_EFFECT(STUN)				\
     DEFINE_EFFECT(FIRE)				\
@@ -52,6 +59,17 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(UNJAM)			\
     DEFINE_EFFECT(PLI_ON)			\
     DEFINE_EFFECT(PLI_OFF)                      \
+    /* Mini game effects */                     \
+    DEFINE_EFFECT(GAME_START)                   \
+    DEFINE_EFFECT(GAME_ACTION1)                 \
+    DEFINE_EFFECT(GAME_ACTION2)                 \
+    DEFINE_EFFECT(GAME_CHOICE)                  \
+    DEFINE_EFFECT(GAME_RESPONSE1)               \
+    DEFINE_EFFECT(GAME_RESPONSE2)               \
+    DEFINE_EFFECT(GAME_RESULT1)                 \
+    DEFINE_EFFECT(GAME_RESULT2)                 \
+    DEFINE_EFFECT(GAME_WIN)                     \
+    DEFINE_EFFECT(GAME_LOSE)                    \
     /* user-definable effects */                \
     DEFINE_EFFECT(USER1)			\
     DEFINE_EFFECT(USER2)			\
