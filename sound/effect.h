@@ -269,7 +269,7 @@ class Effect {
 	STDOUT.print(" sub files ");
 	expected_files *= sub_files_;
       }
-      if (expected_files != (size_t)num_files_) {
+      if (expected_files != (int)num_files_) {
 	STDOUT << " SOME FILES ARE MISSING! " << expected_files << " != " << num_files_;
       }
       STDOUT.print(" in ");
@@ -298,13 +298,21 @@ class Effect {
     return ret;
   }
 
-  size_t expected_files() const {
-    size_t ret = files_found();
-    if (found_in_alt_dir_) ret *= num_alternatives;
-    if (sub_files_) ret *= sub_files_;
-    return ret;
+
+  size_t number_of_alternatives() const {
+    if (!found_in_alt_dir_) return 1;
+    return num_alternatives;
   }
 
+  size_t number_of_subfiles() const {
+    if (!sub_files_) return 1;
+    return sub_files_;
+  }
+
+  size_t expected_files() const {
+    return files_found() * number_of_alternatives() * number_of_subfiles();
+  }
+  
   size_t get_min_file() const { return min_file_; }
 	
   const char* get_directory() const { return directory_; }
@@ -397,13 +405,12 @@ class Effect {
   }
 
   // Get the name of a specific file in the set.
-  void GetName(char *filename, FileID* fileid) const {
-    char buf[12];
+  void GetName(char *filename, FileID* fileid, int alternative) const {
     strcpy(filename, directory_);
     if (*directory_) strcat(filename, "/");
     if (found_in_alt_dir_) {
       strcat(filename, "alt");
-      addNumber(filename, current_alternative + 1, 3);
+      addNumber(filename, alternative + 1, 3);
     }
     strcat(filename, name_);
     switch (file_pattern_) {
@@ -442,6 +449,10 @@ class Effect {
     default_output->print("Playing ");
     default_output->println(filename);
   }
+  void GetName(char *filename, FileID* fileid) const {
+    GetName(filename, fileid, current_alternative);
+  }
+
 
   void SetPaired(bool i) { paired_ = i; }
   bool GetPaired() const { return paired_; }
