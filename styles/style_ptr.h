@@ -88,6 +88,13 @@ private:
   HandledTypeSaver handled_type_saver_;
 };
 
+template<class T>
+class ChargingStyle : public Style<T> {
+public:
+  bool NoOnOff() override { return true; }
+  bool Charging() override { return true; }
+};
+
 // Get a pointer to class.
 template<class STYLE>
 StyleAllocator StylePtr() {
@@ -95,5 +102,9 @@ StyleAllocator StylePtr() {
   return &factory;
 };
 
-
+template<class STYLE>
+StyleAllocator ChargingStylePtr() {
+  static StyleFactoryImpl<ChargingStyle<STYLE> > factory;
+  return &factory;
+}
 #endif

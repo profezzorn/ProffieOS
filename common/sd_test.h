@@ -95,10 +95,14 @@ public:
 
   void TestFont() {
     for (Effect* effect = all_effects; effect; effect = effect->next_) {
-      for (uint32_t i = 0; i < effect->files_found(); i++) {
-	Effect::FileID file_id(effect, i);
-	file_id.GetName(filename_);
-	TestFile(filename_);
+      for (uint32_t alt = 0; alt < effect->number_of_alternatives(); alt++) {
+	for (uint32_t i = 0; i < effect->files_found(); i++) {
+	  for (uint32_t subid = 0; subid < effect->number_of_subfiles(); subid++) {
+	    Effect::FileID file_id(effect, i, subid);
+	    effect->GetName(filename_, &file_id, alt);
+	    TestFile(filename_);
+	  }
+	}
       }
     }
     Print();
