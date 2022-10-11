@@ -411,6 +411,7 @@ class Effect {
     if (found_in_alt_dir_) {
       strcat(filename, "alt");
       addNumber(filename, alternative + 1, 3);
+      strcat(filename, "/");
     }
     strcat(filename, name_);
     switch (file_pattern_) {
