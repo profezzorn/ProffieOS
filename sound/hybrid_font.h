@@ -208,7 +208,7 @@ public:
   RefPtr<BufferedWavPlayer> swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
 
-  void PlayMonophonic(Effect* f, Effect* loop)  {
+  void PlayMonophonic(Effect* f, Effect* loop, float xfade = 0.003f)  {
     EnableAmplifier();
     if (!next_hum_player_) {
       next_hum_player_ = GetFreeWavPlayer();
@@ -218,11 +218,11 @@ public:
       }
     }
     if (hum_player_) {
-      hum_player_->set_fade_time(0.003);
+      hum_player_->set_fade_time(xfade);
       hum_player_->FadeAndStop();
       hum_player_.Free();
       next_hum_player_->set_volume_now(0);
-      next_hum_player_->set_fade_time(0.003);
+      next_hum_player_->set_fade_time(xfade);
       next_hum_player_->set_volume(font_config.volEff / 16.0f);
     } else {
       next_hum_player_->set_volume_now(font_config.volEff / 16.0f);
@@ -234,6 +234,11 @@ public:
     if (loop) hum_player_->PlayLoop(loop);
   }
 
+  // Use after changing alternative.
+  void RestartHum() {
+    PlayMonophonic(getHum(), NULL, 0.2f);
+  }
+
   RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
     EnableAmplifier();
     if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
@@ -243,7 +248,7 @@ public:
       player->PlayOnce(f);
       current_effect_length_ = player->length();
     } else {
-	STDOUT.println("Out of WAV players!");
+      STDOUT.println("Out of WAV players!");
     }
     return player;
   }
