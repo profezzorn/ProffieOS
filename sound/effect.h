@@ -369,6 +369,8 @@ class Effect {
     int n;
     if (selected_ != -1) {
       n = selected_;
+    } if (SaberBase::sound_number != -1) {
+      n = std::min<int>(SaberBase::sound_number, num_files);
     } else {
       n = rand() % num_files;
 #ifdef NO_REPEAT_RANDOM
@@ -745,6 +747,8 @@ EFFECT(color);
 EFFECT(ccbegin);
 EFFECT(ccend);
 EFFECT(ccchange);
+
+EFFECT(altchng);
 
 // Blaster effects
 // hum, boot and font are reused from sabers and already defined.

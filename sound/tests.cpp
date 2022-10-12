@@ -83,6 +83,13 @@ struct TALKIEFAKE {
 TALKIEFAKE talkie;
 #define Say(X,Y) IGNORE;
 
+class SaberBase {
+public:
+  static int sound_number;
+};
+
+int SaberBase::sound_number = -1;
+
 #include "effect.h"
 
 void cleanup() {

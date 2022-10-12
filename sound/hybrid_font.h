@@ -232,7 +232,7 @@ public:
     hum_player_->PlayOnce(f);
     current_effect_length_ = hum_player_->length();
     if (loop) hum_player_->PlayLoop(loop);
-  }
+   }
 
   // Use after changing alternative.
   void RestartHum() {
@@ -521,6 +521,21 @@ public:
       case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;
       case EFFECT_LOCKUP_END: SB_EndLockup(); return;
       case EFFECT_LOW_BATTERY: SB_LowBatt(); return;
+      case EFFECT_ALT_SOUND:
+	if (num_alternatives) {
+	  if (SaberBase::sound_number == -1) {
+	    // Next alternative
+	    if (++current_alternative >= num_alternatives)  current_alternative = 0;
+	  } else {
+	    // Select a specific alternative.
+	    current_alternative = std::min<int>(SaberBase::sound_number, num_alternatives);
+	    // Set the sound num to -1 so that the altchng sound is random.
+	    SaberBase::sound_number = -1;
+	  }
+	  RestartHum();
+	}
+	PlayCommon(&SFX_altchng);
+	break;
     }
   }
 
