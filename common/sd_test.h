@@ -98,8 +98,8 @@ public:
       for (uint32_t alt = 0; alt < effect->number_of_alternatives(); alt++) {
 	for (uint32_t i = 0; i < effect->files_found(); i++) {
 	  for (uint32_t subid = 0; subid < effect->number_of_subfiles(); subid++) {
-	    Effect::FileID file_id(effect, i, subid);
-	    effect->GetName(filename_, &file_id, alt);
+	    Effect::FileID file_id(effect, i, subid, alt);
+	    effect->GetName(filename_, &file_id);
 	    TestFile(filename_);
 	  }
 	}

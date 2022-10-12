@@ -34,13 +34,15 @@ class Effect {
   // is to be smaller than using the filename to identify the file.
   class FileID {
    public:
-    FileID(const Effect* effect, int file, int sub) : effect_(effect), file_(file), sub_id_(sub) {}
+    FileID(const Effect* effect, int file, int sub, int alt) : effect_(effect), file_(file), sub_id_(sub), alt_(alt) {}
+    FileID(const Effect* effect, int file, int sub) : effect_(effect), file_(file), sub_id_(sub), alt_(current_alternative) {}
     FileID() : effect_(nullptr), file_(0), sub_id_(0) {}
 
     bool operator==(const FileID& other) const {
       return other.effect_ == effect_ &&
 	file_ == other.file_ &&
-	sub_id_ == other.sub_id_;
+	sub_id_ == other.sub_id_ &&
+	alt_ == other.alt_;
     }
 
     operator bool() const { return effect_ != nullptr; }
@@ -50,6 +52,7 @@ class Effect {
     const Effect* GetEffect() const { return effect_; }
     int GetFileNum() const { return file_; }
     int GetSubId() const { return sub_id_; }
+    int GetAlt() const { return alt_; }
 
     // Maybe this should always use effect_->following_ ??
     FileID GetFollowing(Effect* effect) {
@@ -67,6 +70,7 @@ class Effect {
     const Effect* effect_;
     uint16_t file_;
     uint8_t sub_id_;
+    uint8_t alt_;
   };
 
   enum Extension {
@@ -365,6 +369,8 @@ class Effect {
     int n;
     if (selected_ != -1) {
       n = selected_;
+    } if (SaberBase::sound_number != -1) {
+      n = std::min<int>(SaberBase::sound_number, num_files);
     } else {
       n = rand() % num_files;
 #ifdef NO_REPEAT_RANDOM
@@ -405,12 +411,13 @@ class Effect {
   }
 
   // Get the name of a specific file in the set.
-  void GetName(char *filename, FileID* fileid, int alternative) const {
+  void GetName(char *filename, FileID* fileid) const {
     strcpy(filename, directory_);
     if (*directory_) strcat(filename, "/");
     if (found_in_alt_dir_) {
       strcat(filename, "alt");
-      addNumber(filename, alternative + 1, 3);
+      addNumber(filename, fileid->GetAlt() + 1, 3);
+      strcat(filename, "/");
     }
     strcat(filename, name_);
     switch (file_pattern_) {
@@ -449,10 +456,6 @@ class Effect {
     default_output->print("Playing ");
     default_output->println(filename);
   }
-  void GetName(char *filename, FileID* fileid) const {
-    GetName(filename, fileid, current_alternative);
-  }
-
 
   void SetPaired(bool i) { paired_ = i; }
   bool GetPaired() const { return paired_; }
@@ -744,6 +747,8 @@ EFFECT(color);
 EFFECT(ccbegin);
 EFFECT(ccend);
 EFFECT(ccchange);
+
+EFFECT(altchng);
 
 // Blaster effects
 // hum, boot and font are reused from sabers and already defined.
