@@ -524,7 +524,9 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_DISABLE_COPY_PRESET - Disables the "on-the-fly" Copy Preset option
   
   FETT263_DISABLE_MULTI_BLAST - Disables "Multi-Blast" Mode
-  
+
+  FETT263_TRACK_PLAYER_NO_PROMPTS - Disables spoken voice prompts in Track Player
+
 == SA22C 2 Button Variations ==
   FETT263_HOLD_BUTTON_OFF - Changes to Hold PWR to turn Off / Retract
   
@@ -1833,7 +1835,9 @@ SaberFett263Buttons() : PropBase() {}
       PlayTrack();
     } else {
       // Loop default track if tracks not found
+#ifndef FETT263_TRACK_PLAYER_NO_PROMPTS
       sound_library_.SayLoop();
+#endif
       track_num_ = 0;
       track_mode_ = PLAYBACK_LOOP;
       StartOrStopTrack();
@@ -4395,7 +4399,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef FETT263_RANDOMIZE_QUOTE_PLAYER
       SFX_quote.SelectNext();
 #endif
-      hybrid_font.PlayCommon(&SFX_quote);
+      SaberBase::DoEffect(EFFECT_QUOTE, 0);
     } else {
       SaberBase::DoForce();
     }
@@ -4555,7 +4559,9 @@ SaberFett263Buttons() : PropBase() {}
           switch (menu_type_) {
             case MENU_TRACK_PLAYER:
               track_mode_ = PLAYBACK_RANDOM;
+#ifndef FETT263_TRACK_PLAYER_NO_PROMPTS
               sound_library_.SayRandom();
+#endif
               MenuExit();
               break;
             case MENU_PRESET:
@@ -4916,7 +4922,9 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) {
           if (menu_type_ == MENU_TRACK_PLAYER) {
             track_mode_ = PLAYBACK_RANDOM;
+#ifndef FETT263_TRACK_PLAYER_NO_PROMPTS
             sound_library_.SayRandom();
+#endif
           }
           MenuExit();
           return true;
@@ -5462,7 +5470,9 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) {
           if (menu_type_ == MENU_TRACK_PLAYER) {
             track_mode_ = PLAYBACK_ROTATE;
+#ifndef FETT263_TRACK_PLAYER_NO_PROMPTS
             sound_library_.SayRotate();
+#endif
             return true;
           } else {
             MenuDialIncrement(1);
@@ -5479,7 +5489,9 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) {
           if (menu_type_ == MENU_TRACK_PLAYER) {
             track_mode_ = PLAYBACK_LOOP;
+#ifndef FETT263_TRACK_PLAYER_NO_PROMPTS
             sound_library_.SayLoop();
+#endif
             return true;
           } else {
             MenuDialIncrement(-1);
@@ -5787,6 +5799,7 @@ SaberFett263Buttons() : PropBase() {}
 
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
+      case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
       case EFFECT_POWERSAVE:
         if (SFX_dim) {
           hybrid_font.PlayCommon(&SFX_dim);
