@@ -83,6 +83,13 @@ struct TALKIEFAKE {
 TALKIEFAKE talkie;
 #define Say(X,Y) IGNORE;
 
+class SaberBase {
+public:
+  static int sound_number;
+};
+
+int SaberBase::sound_number = -1;
+
 #include "effect.h"
 
 void cleanup() {
@@ -96,7 +103,10 @@ void mktestdir() {
 
 void touch(const char* filename) {
   FILE* f = fopen(filename, "w");
-  CHECK(f);
+  if (!f) {
+    fprintf(stderr, "Failed to create file: %s\n", filename);
+    exit(1);
+  }
   fclose(f);
 }
 
@@ -171,6 +181,37 @@ void test_effects() {
   touch("testfont/hum/._.DS_Store");
   Effect::ScanCurrentDirectory();
   CHECK_EQ(0, SFX_hum.files_found());
+
+  mktestdir();
+  mkdir("testfont", -1);
+  mkdir("testfont/alt001", -1);
+  mkdir("testfont/alt002", -1);
+  mkdir("testfont/alt003", -1);
+  touch("testfont/alt001/hum.wav");
+  touch("testfont/alt002/hum.wav");
+  touch("testfont/alt003/hum.wav");
+  Effect::ScanCurrentDirectory();
+  CHECK_EQ(1, SFX_hum.files_found());
+  CHECK_EQ(3, num_alternatives);
+
+  mktestdir();
+  mkdir("testfont/hum", -1);
+  mkdir("testfont/hum/001", -1);
+  mkdir("testfont/hum/002", -1);
+  mkdir("testfont/hum/003", -1);
+  touch("testfont/hum/001/001.wav");
+  touch("testfont/hum/001/002.wav");
+  touch("testfont/hum/001/003.wav");
+  touch("testfont/hum/002/001.wav");
+  touch("testfont/hum/002/002.wav");
+  touch("testfont/hum/002/003.wav");
+  touch("testfont/hum/003/001.wav");
+  touch("testfont/hum/003/002.wav");
+  touch("testfont/hum/003/003.wav");
+  Effect::ScanCurrentDirectory();
+  CHECK_EQ(9, SFX_hum.expected_files());
+  CHECK_EQ(3, SFX_hum.files_found());
+  CHECK_EQ(0, num_alternatives);
 }
 
 int main() {
