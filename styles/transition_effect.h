@@ -2,6 +2,8 @@
 #define STYLES_TRANSITION_EFFECT_H
 
 #include "../transitions/concat.h"
+#include "../functions/effect_increment.h"
+#include "transition_pulse.h"
 
 // Usage: TransitionEffect<COLOR, EFFECT_COLOR, TRANSITION1, TRANSITION2, EFFECT>
 // Or: TransitionEffectL<EFFECT_COLOR, TRANSITION1, TRANSITION2, EFFECT>
@@ -14,41 +16,7 @@
 // EFFECT_COLOR using TRANSITION1. Then transition back using TRANSITION2.
 
 template<class TRANSITION, BladeEffectType EFFECT>
-class TransitionEffectL {
-public:
-  LayerRunResult run(BladeBase* blade) {
-    if (effect_.DetectScoped(blade)) {
-      transition_.begin();
-      run_ = true;
-    }
-    if (run_) {
-      transition_.run(blade);
-      if (transition_.done()) run_ = false;
-    }
-    last_detected_blade_effect = nullptr;
-    if (!run_) {
-      // All effects now wake the blade up again if needed, so it's safe to
-      // always return TRANSPARENT_UNTIL_IGNITION
-      return LayerRunResult::TRANSPARENT_UNTIL_IGNITION;
-    }
-    return LayerRunResult::UNKNOWN;
-  }
-  
-private:
-  bool run_ = false;
-  TRANSITION transition_;
-  OneshotEffectDetector<EFFECT> effect_;
-public:
-  auto getColor(int led) -> decltype(transition_.getColor(RGBA_um_nod::Transparent(),
-							  RGBA_um_nod::Transparent(), 1)) {
-    if (run_) {
-      return transition_.getColor(RGBA_um_nod::Transparent(),
-				  RGBA_um_nod::Transparent(), led);
-    } else {
-      return RGBA_um_nod::Transparent();
-    }
-  }
-};
+  using TransitionEffectL = TransitionPulseL<TRANSITION, EffectPulseF<EFFECT>>;
 
 template<class T, class EFFECT_COLOR, class TRANSITION1, class TRANSITION2, BladeEffectType EFFECT>
   using TransitionEffect = Layers<T, TransitionEffectL<TrConcat<TRANSITION1, EFFECT_COLOR, TRANSITION2>, EFFECT>>;
