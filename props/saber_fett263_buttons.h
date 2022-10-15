@@ -1574,6 +1574,18 @@ SaberFett263Buttons() : PropBase() {}
     }	  
   }
 
+  bool CheckInteractiveBlast() {
+    bool interactive_blast;
+    #define USES_INTERACTIVE_BLAST(N) \
+    interactive_blast |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_FIRE);
+    ONCEPERBLADE(USES_INTERACTIVE_BLAST)
+    if (SFX_blast && interactive_blast) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   void Setup() override {
     RestoreGestureState();
   }
@@ -4726,7 +4738,7 @@ SaberFett263Buttons() : PropBase() {}
           MenuChoice();
           return true;
         }
-        if (SFX_blast) {
+        if (CheckInteractiveBlast()) {
           SaberBase::DoEffectR(EFFECT_FIRE);
         } else {
           ToggleBattleModeMultiBlast();
@@ -4740,7 +4752,7 @@ SaberFett263Buttons() : PropBase() {}
           StopTrackPlayer();
           return true;
         }
-        if (SFX_blast) {
+        if (CheckInteractiveBlast()) {
           SaberBase::DoEffectR(EFFECT_FIRE);
         } else {
           ToggleBattleModeMultiBlast();
@@ -4750,7 +4762,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
         if (menu_ || CheckShowColorCC()) return true;
-        if (SFX_blast) {
+        if (CheckInteractiveBlast()) {
           SaberBase::DoEffectR(EFFECT_FIRE);
         } else {
           ToggleBattleModeMultiBlast();
@@ -4801,7 +4813,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef FETT263_DISABLE_MULTI_BLAST
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
         if (menu_ || CheckShowColorCC()) return true;
-        if (SFX_blast) {
+        if (CheckInteractiveBlast()) {
           SaberBase::DoEffectR(EFFECT_FIRE);
         } else {
           ToggleMultiBlast();
@@ -5193,7 +5205,7 @@ SaberFett263Buttons() : PropBase() {}
             wav_player.Free();
             return true;
           }
-          if (SFX_blast) {
+          if (CheckInteractiveBlast()) {
             SaberBase::DoEffectR(EFFECT_FIRE);
           } else {
             if (swing_blast_) {
@@ -5234,7 +5246,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef FETT263_DISABLE_MULTI_BLAST
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
         if (menu_ || CancelShowColor()) return true;
-        if (SFX_blast) {
+        if (CheckInteractiveBlast()) {
           SaberBase::DoEffectR(EFFECT_FIRE);
         } else {
           ToggleMultiBlast();
@@ -5463,15 +5475,11 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
         if (menu_ || CheckShowColorCC()) return true;
-        if (SFX_blast) {
-            SaberBase::DoEffectR(EFFECT_FIRE);
-          } else {
-            if (swing_blast_) {
-              SaberBase::DoBlast();
-              return true;
-            } else {
-              DoAutoMultiBlast();
-            }
+        if (swing_blast_) {
+           SaberBase::DoBlast();
+           return true;
+        } else {
+          DoAutoMultiBlast();
         }
         return true;
 
