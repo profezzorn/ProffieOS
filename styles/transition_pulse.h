@@ -25,6 +25,11 @@ public:
       if (transition_.done()) run_ = false;
     }
     last_detected_blade_effect = nullptr;
+    if (!run_) {
+      // All effects now wake the blade up again if needed, so it's safe to
+      // always return TRANSPARENT_UNTIL_IGNITION
+      return LayerRunResult::TRANSPARENT_UNTIL_IGNITION;
+    }
     return LayerRunResult::UNKNOWN;
   }
   
