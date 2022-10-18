@@ -14,10 +14,7 @@ using BladeEffectType = EffectType;
     HANDLED_FEATURE_MELT = 1 << 4,
     HANDLED_FEATURE_LIGHTNING_BLOCK = 1 << 5,
     HANDLED_FEATURE_INTERACTIVE_PREON = 1 << 6,
-    HANDLED_FEATURE_SECONDARY_IGNITION = 1 << 7,
-    HANDLED_FEATURE_SECONDARY_RETRACTION = 1 << 8,
-    HANDLED_FEATURE_FIRE = 1 << 9,
-    HANDLED_FEATURE_GAME_START = 1 << 10,
+    HANDLED_FEATURE_FIRE = 1 << 7,
   };
 
 #include "../styles/blade_style.h"
@@ -103,17 +100,8 @@ public:
       case EFFECT_INTERACTIVE_PREON:
         BladeBase::HandleFeature(HANDLED_FEATURE_INTERACTIVE_PREON);
         break;
-      case EFFECT_SECONDARY_IGNITION:
-        BladeBase::HandleFeature(HANDLED_FEATURE_SECONDARY_IGNITION);
-        break;
-      case EFFECT_SECONDARY_RETRACTION:
-        BladeBase::HandleFeature(HANDLED_FEATURE_SECONDARY_RETRACTION);
-        break;
       case EFFECT_FIRE:
         BladeBase::HandleFeature(HANDLED_FEATURE_FIRE);
-        break;
-      case EFFECT_GAME_START:
-        BladeBase::HandleFeature(HANDLED_FEATURE_GAME_START);
         break;
       default:
 	break;
