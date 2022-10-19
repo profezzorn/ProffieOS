@@ -10,6 +10,7 @@
 class AltSVF {
  public:
     void run(BladeBase* blade) {}
+    int calculate(BladeBase* blade) { return current_alternative; }
     int getInteger(int led) { return current_alternative; }
 };
 
