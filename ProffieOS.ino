@@ -513,6 +513,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/divide.h"
 #include "functions/isbetween.h"
 #include "functions/clamp.h"
+#include "functions/alt.h"
 
 // transitions
 #include "transitions/fade.h"
