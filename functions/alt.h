@@ -14,6 +14,10 @@ class AltSVF {
     int getInteger(int led) { return current_alternative; }
 };
 
+// Optimized specialization
+template<> class SingleValueAdapter<AltSVF> : public AltSVF {};
+template<> class SVFWrapper<AltSVF> : public AltSVF {};
+
 using AltF = SingleValueAdapter<AltSVF>;
 
 #endif
