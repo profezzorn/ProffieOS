@@ -163,16 +163,6 @@ protected:
     return false;
   }
 
-  void Help() override {
-#ifndef DISABLE_DIAGNOSTIC_COMMANDS    
-    STDOUT.print(" ");
-    STDOUT.print(name_);
-    STDOUT.print(" - clicks the ");
-    STDOUT.print(name_);
-    STDOUT.println(" button");
-#endif
-  }
-
   const char* name_;
   enum BUTTON button_;
   uint32_t push_millis_;

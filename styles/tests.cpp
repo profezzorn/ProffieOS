@@ -29,6 +29,11 @@ CONFIG* current_config = &preset;
 
 #define COMMON_FUSE_H
 
+struct V3 {
+  V3(float v) { x=y=z=v; }
+  float x, y, z;
+};
+
 struct MockFuse {
   float angle1_ = 0.0;
   float angle1() { return angle1_; }
@@ -37,6 +42,8 @@ struct MockFuse {
   float swing_speed_ = 0.0;
   float swing_speed() { return swing_speed_; }
   float swing_accel() { return 0.0; }
+  float twist_accel() { return 0.0; }
+  V3 gyro() { return V3(0.0); }
 };
 
 MockFuse fusor;

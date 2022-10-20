@@ -118,9 +118,6 @@ protected:
 #endif
     return false;
   }
-  void Help() override {
-    STDOUT.println(" batt[ery[_voltage]] - show battery voltage");
-  }
 private:
   float battery_now() {
     // This is the volts on the battery monitor pin.
