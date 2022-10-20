@@ -42,6 +42,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(SECONDARY_RETRACTION)		\
     DEFINE_EFFECT(QUOTE)			\
     DEFINE_EFFECT(INTERACTIVE_PREON)            \
+    DEFINE_EFFECT(TRACK)			\
     /* Triggers the change for sets of sounds within the font from one alternative to another. */                \
     DEFINE_EFFECT(ALT_SOUND)			\
     /* Triggers an optional sound effect during transitions from within a style via TrDoEffect. */         \
