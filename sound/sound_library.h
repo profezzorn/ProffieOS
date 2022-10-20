@@ -204,6 +204,7 @@ public:
   void SayMininumVolume() { Play("volmin.wav"); }
   void SayNoChoreographyAvailable() { Play("nochreo.wav"); }
   void SayOffColor() { Play("moff.wav"); }
+  void SayOffOption() {Play("moffopt.wav"); }
   void SayOption() { Play("moptnum.wav"); }
   void SayPercent() { Play("mpercent.wav"); }
   void SayPostOffColor() { Play("mpstoff.wav"); }

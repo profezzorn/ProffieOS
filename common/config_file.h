@@ -214,7 +214,6 @@ struct ConfigFile {
   ReadStatus ReadINIFromDir(const char *dir, const char* basename) {
     LOCK_SD(true);
     FileSelector fs(dir, basename);
-    ReadStatus status = ReadStatus::READ_FAIL;
     bool success = TryValidator(fs.a) || TryValidator(fs.b);
     if (!success) success = TryPlain(&fs.ini);
     if (!success) success = TryPlain(&fs.tmp);

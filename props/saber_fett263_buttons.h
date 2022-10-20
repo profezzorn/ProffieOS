@@ -184,8 +184,12 @@ Edit Mode*
   While in Edit Mode controls are as follows:
     Rotate Forward, Increase Value, Confirm "Yes" = Turn Right (Stepped)
       Increment by 5 (Fonts, Tracks, Blade Length) = Hold PWR + Turn Right
+      Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay) = Hold PWR + Turn Right
+      Increment by 5000 (Ignition Option2, Retraction Option2) = Hold PWR + Turn Right
     Rotate Back, Decrease Value, Confirm "No" = Turn Left (Stepped)
-      Increment by 5 (Fonts, Tracks, Blade Length) = Hold PWR + Turn Right
+      Increment by 5 (Fonts, Tracks, Blade Length) = Hold PWR + Turn Left
+      Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay) = Hold PWR + Turn Left
+      Increment by 5000 (Ignition Option2, Retraction Option2) = Hold PWR + Turn Left
     Select, Save, Enter = Click PWR
     Cancel, Revert, Go Back = Click AUX
     Go to Main Menu (from sub-menu) - Hold AUX
@@ -346,8 +350,12 @@ Edit Mode*
   While in Edit Mode controls are as follows:
     Rotate Forward, Increase Value, Confirm "Yes" = Turn Right (Stepped)
       Increment by 5 (Fonts, Tracks, Blade Length) = Hold PWR + Turn Right
+      Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay) = Hold PWR + Turn Right
+      Increment by 5000 (Ignition Option2, Retraction Option2) = Hold PWR + Turn Right
     Rotate Back, Decrease Value, Confirm "No" = Turn Left (Stepped)
-      Increment by 5 (Fonts, Tracks, Blade Length) = Hold PWR + Turn Right
+      Increment by 5 (Fonts, Tracks, Blade Length) = Hold PWR + Turn Left
+      Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay) = Hold PWR + Turn Left
+      Increment by 5000 (Ignition Option2, Retraction Option2) = Hold PWR + Turn Left   
     Select, Save, Enter = Click PWR
     Cancel, Revert, Go Back = Long Click PWR
     Go to Main Menu (from sub-menu) - Hold PWR
@@ -516,7 +524,9 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_DISABLE_COPY_PRESET - Disables the "on-the-fly" Copy Preset option
   
   FETT263_DISABLE_MULTI_BLAST - Disables "Multi-Blast" Mode
-  
+
+  FETT263_TRACK_PLAYER_NO_PROMPTS - Disables spoken voice prompts in Track Player
+
 == SA22C 2 Button Variations ==
   FETT263_HOLD_BUTTON_OFF - Changes to Hold PWR to turn Off / Retract
   
@@ -965,6 +975,8 @@ static constexpr ColorListEntry color_list_[] = {
 const int rgb_arg_menu_[] {
   BASE_COLOR_ARG,
   ALT_COLOR_ARG,
+  ALT_COLOR2_ARG,
+  ALT_COLOR3_ARG,
   BLAST_COLOR_ARG,
   CLASH_COLOR_ARG,
   LOCKUP_COLOR_ARG,
@@ -983,11 +995,15 @@ const int rgb_arg_menu_[] {
 // Edit Style Setting Submenu
 const int int_arg_menu_[] {
   STYLE_OPTION_ARG,
+  STYLE_OPTION2_ARG,
+  STYLE_OPTION3_ARG,
   IGNITION_OPTION_ARG,
+  IGNITION_OPTION2_ARG,
   IGNITION_TIME_ARG,
   IGNITION_DELAY_ARG,
   IGNITION_POWER_UP_ARG,
   RETRACTION_OPTION_ARG,
+  RETRACTION_OPTION2_ARG,
   RETRACTION_TIME_ARG,
   RETRACTION_DELAY_ARG,
   RETRACTION_COOL_DOWN_ARG,
@@ -1308,8 +1324,11 @@ SaberFett263Buttons() : PropBase() {}
     current_preset_.Save();
     switch (menu_type_) {
       case MENU_STYLE_OPTION:
+      case MENU_STYLE_OPTION2:
+      case MENU_STYLE_OPTION3:
       case MENU_IGNITION_TIME:
       case MENU_IGNITION_OPTION:
+      case MENU_IGNITION_OPTION2:
       case MENU_IGNITION_POWER_UP_OPTION:
       case MENU_IGNITION_DELAY:
         SetPresetFast(current_preset_.preset_num);
@@ -1320,6 +1339,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_RETRACTION_TIME:
       case MENU_RETRACTION_OPTION:
+      case MENU_RETRACTION_OPTION2:
       case MENU_RETRACTION_COOL_DOWN_OPTION:
       case MENU_RETRACTION_DELAY:
         UpdateStyle();
@@ -1815,7 +1835,9 @@ SaberFett263Buttons() : PropBase() {}
       PlayTrack();
     } else {
       // Loop default track if tracks not found
+#ifndef FETT263_TRACK_PLAYER_NO_PROMPTS
       sound_library_.SayLoop();
+#endif
       track_num_ = 0;
       track_mode_ = PLAYBACK_LOOP;
       StartOrStopTrack();
@@ -1948,11 +1970,15 @@ SaberFett263Buttons() : PropBase() {}
     MENU_SETTING_SUB,
     MENU_STYLE_SETTING_SUB,
     MENU_STYLE_OPTION,
+    MENU_STYLE_OPTION2,
+    MENU_STYLE_OPTION3,
     MENU_IGNITION_OPTION,
+    MENU_IGNITION_OPTION2,
     MENU_IGNITION_TIME,
     MENU_IGNITION_POWER_UP_OPTION,
     MENU_IGNITION_DELAY,
     MENU_RETRACTION_OPTION,
+    MENU_RETRACTION_OPTION2,
     MENU_RETRACTION_TIME,
     MENU_RETRACTION_COOL_DOWN_OPTION,
     MENU_RETRACTION_DELAY,
@@ -1961,6 +1987,7 @@ SaberFett263Buttons() : PropBase() {}
     MENU_MELT_SIZE,
     MENU_SWING_OPTION,
     MENU_EMITTER_SIZE,
+    MENU_OFF_OPTION,
     MENU_PREON_OPTION,
     MENU_PREON_SIZE,
     MENU_DIM_BLADE,
@@ -1972,6 +1999,8 @@ SaberFett263Buttons() : PropBase() {}
     MENU_MAX_CLASH,
     MENU_COLOR_BASE,
     MENU_COLOR_ALT,
+    MENU_COLOR2_ALT,
+    MENU_COLOR3_ALT,
     MENU_COLOR_BLAST,
     MENU_COLOR_CLASH,
     MENU_COLOR_LOCKUP,
@@ -2526,6 +2555,14 @@ SaberFett263Buttons() : PropBase() {}
           menu_type_ = MENU_COLOR_ALT;
           ShowFull();
           break;
+        case ALT_COLOR2_ARG:
+          menu_type_ = MENU_COLOR2_ALT;
+          ShowFull();
+          break;
+        case ALT_COLOR3_ARG:
+          menu_type_ = MENU_COLOR3_ALT;
+          ShowFull();
+          break;
         case BLAST_COLOR_ARG:
           menu_type_ = MENU_COLOR_BLAST;
           bump_color_.Start(blade_num_, SkipWord(SkipWord(current_preset_.GetStyle(blade_num_))));
@@ -2599,6 +2636,8 @@ SaberFett263Buttons() : PropBase() {}
       break;
     case MENU_COLOR_BASE:
     case MENU_COLOR_ALT:
+    case MENU_COLOR2_ALT:
+    case MENU_COLOR3_ALT:
     case MENU_COLOR_IGNITE:
     case MENU_COLOR_RETRACT:
     case MENU_COLOR_SWING:
@@ -2921,10 +2960,27 @@ SaberFett263Buttons() : PropBase() {}
           sound_library_.SayOption();
           sound_library_.SayNumber(calc_, SAY_WHOLE);
           break;
-        case IGNITION_OPTION_ARG:
-          menu_type_ = MENU_IGNITION_OPTION;
+        case STYLE_OPTION2_ARG:
+          menu_type_ = MENU_STYLE_OPTION2;
           arg_revert_ = strtol (argspace, NULL, 0);
           sound_library_.SayOption();
+          sound_library_.SayNumber(calc_, SAY_WHOLE);
+          break;
+        case STYLE_OPTION3_ARG:
+          menu_type_ = MENU_STYLE_OPTION3;
+          arg_revert_ = strtol (argspace, NULL, 0);
+          sound_library_.SayOption();
+          sound_library_.SayNumber(calc_, SAY_WHOLE);
+          break;
+        case IGNITION_OPTION_ARG:
+        case IGNITION_OPTION2_ARG:
+          arg_revert_ = strtol (argspace, NULL, 0);
+          if (set_num_ == IGNITION_OPTION2_ARG) {
+            menu_type_ = MENU_IGNITION_OPTION2;
+          } else {
+            menu_type_ = MENU_IGNITION_OPTION;
+            sound_library_.SayOption();
+          }
           sound_library_.SayNumber(calc_, SAY_WHOLE);
           break;
         case IGNITION_TIME_ARG:
@@ -2942,13 +2998,18 @@ SaberFett263Buttons() : PropBase() {}
           arg_revert_ = strtol (argspace, NULL, 0);         
           break;
         case RETRACTION_OPTION_ARG:
-          menu_type_ = MENU_RETRACTION_OPTION;
+        case RETRACTION_OPTION2_ARG:
           char ig[32];
           style_parser.GetArgument(current_preset_.GetStyle(blade_num_), RETRACTION_TIME_ARG, ig);
           ignite_time_ = strtol(ig, NULL, 0);
           current_preset_.SetStyle(blade_num_,style_parser.SetArgument(current_preset_.GetStyle(blade_num_), RETRACTION_TIME_ARG, "1"));
           arg_revert_ = strtol(argspace, NULL, 0);
-          sound_library_.SayOption();
+          if (set_num_ == RETRACTION_OPTION2_ARG) {
+            menu_type_ = MENU_RETRACTION_OPTION2;
+          } else {
+            menu_type_ = MENU_RETRACTION_OPTION;
+            sound_library_.SayOption();
+          }
           sound_library_.SayNumber(calc_, SAY_WHOLE);
           break;
         case RETRACTION_TIME_ARG:
@@ -3003,6 +3064,12 @@ SaberFett263Buttons() : PropBase() {}
           ShowColorStyle::SetColor(GetColorArg(blade_num_, EMITTER_COLOR_ARG));
           show_emitter_size_.Start(blade_num_);
           break;
+        case OFF_OPTION_ARG:
+          menu_type_ = MENU_OFF_OPTION;
+          arg_revert_ = strtol (argspace, NULL, 0);
+          sound_library_.SayOption();
+          sound_library_.SayNumber(calc_, SAY_WHOLE);
+          break;
         case PREON_OPTION_ARG:
           if (!SFX_preon) {
             sound_library_.SaySelectOption();
@@ -3030,17 +3097,22 @@ SaberFett263Buttons() : PropBase() {}
       }
       break;
     case MENU_STYLE_OPTION:
+    case MENU_STYLE_OPTION2:
+    case MENU_STYLE_OPTION3:
     case MENU_IGNITION_OPTION:
+    case MENU_IGNITION_OPTION2:
     case MENU_IGNITION_TIME:
     case MENU_IGNITION_POWER_UP_OPTION:
     case MENU_IGNITION_DELAY:
     case MENU_SWING_OPTION:
+    case MENU_OFF_OPTION:
     case MENU_PREON_OPTION:
       menu_type_ = MENU_STYLE_SETTING_SUB;
       current_preset_.Save();
       MenuSave();
       break;
     case MENU_RETRACTION_OPTION:
+    case MENU_RETRACTION_OPTION2:
     case MENU_RETRACTION_TIME:
     case MENU_RETRACTION_COOL_DOWN_OPTION:
     case MENU_RETRACTION_DELAY:
@@ -3085,6 +3157,12 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_FONT:
       case MENU_TRACK:
       case MENU_LENGTH:
+      case MENU_IGNITION_TIME:
+      case MENU_IGNITION_DELAY:
+      case MENU_RETRACTION_TIME:
+      case MENU_RETRACTION_DELAY:
+      case MENU_IGNITION_OPTION2:
+      case MENU_RETRACTION_OPTION2:
 #endif
         direction *= 5;
         break;
@@ -3256,6 +3334,14 @@ SaberFett263Buttons() : PropBase() {}
           case ALT_COLOR_ARG:
             sound_library_.SayAltColor();
             break;
+          case ALT_COLOR2_ARG:
+            sound_library_.SayAltColor();
+            sound_library_.SayNumber(2, SAY_WHOLE);
+            break;
+          case ALT_COLOR3_ARG:
+            sound_library_.SayAltColor();
+            sound_library_.SayNumber(3, SAY_WHOLE);
+            break;
           case BLAST_COLOR_ARG:
             sound_library_.SayBlastColor();
             break;
@@ -3321,6 +3407,8 @@ SaberFett263Buttons() : PropBase() {}
           break;
       case MENU_COLOR_BASE:
       case MENU_COLOR_ALT:
+      case MENU_COLOR2_ALT:
+      case MENU_COLOR3_ALT:
       case MENU_COLOR_BLAST:
       case MENU_COLOR_CLASH:
       case MENU_COLOR_LOCKUP:
@@ -3614,8 +3702,20 @@ SaberFett263Buttons() : PropBase() {}
           case STYLE_OPTION_ARG:
 	    sound_library_.SayStyleOptions();
             break;
+          case STYLE_OPTION2_ARG:
+            sound_library_.SayStyleOptions();
+            sound_library_.SayNumber(2, SAY_WHOLE);
+            break;
+          case STYLE_OPTION3_ARG:
+            sound_library_.SayStyleOptions();
+            sound_library_.SayNumber(3, SAY_WHOLE);
+            break;
           case IGNITION_OPTION_ARG:
 	    sound_library_.SayIgnitionOptions();
+            break;
+          case IGNITION_OPTION2_ARG:
+            sound_library_.SayIgnitionOptions();
+            sound_library_.SayNumber(2, SAY_WHOLE);
             break;
           case IGNITION_TIME_ARG:
 	    sound_library_.SayIgnitionTime();
@@ -3628,6 +3728,10 @@ SaberFett263Buttons() : PropBase() {}
             break;
           case RETRACTION_OPTION_ARG:
 	    sound_library_.SayRetractionOptions();
+            break;
+          case RETRACTION_OPTION2_ARG:
+            sound_library_.SayRetractionOptions();
+            sound_library_.SayNumber(2, SAY_WHOLE);
             break;
           case RETRACTION_TIME_ARG:
 	    sound_library_.SayRetractionTime();
@@ -3652,6 +3756,9 @@ SaberFett263Buttons() : PropBase() {}
             break;
           case EMITTER_SIZE_ARG:
 	    sound_library_.SayEmitterSize();
+            break;
+          case OFF_OPTION_ARG:
+            sound_library_.SayOffOption();
             break;
           case PREON_OPTION_ARG:
 	    sound_library_.SayPreonOptions();
@@ -3693,11 +3800,14 @@ SaberFett263Buttons() : PropBase() {}
 	}
         break;
       case MENU_STYLE_OPTION:
+      case MENU_STYLE_OPTION2:
+      case MENU_STYLE_OPTION3:
       case MENU_IGNITION_OPTION:
       case MENU_IGNITION_POWER_UP_OPTION:
       case MENU_RETRACTION_OPTION:
       case MENU_RETRACTION_COOL_DOWN_OPTION:
       case MENU_SWING_OPTION:
+      case MENU_OFF_OPTION:
       case MENU_PREON_OPTION:
         if (SaberBase::IsOn()) {
           calc_ += direction;
@@ -3711,6 +3821,15 @@ SaberFett263Buttons() : PropBase() {}
           sound_library_.SayOption();
           sound_library_.SayNumber(calc_, SAY_WHOLE);
 	}
+        break;
+      case MENU_IGNITION_OPTION2:
+      case MENU_RETRACTION_OPTION2:
+        if (SaberBase::IsOn()) {
+          calc_ += (direction * 1000);
+          calc_ &= 0x7fff;
+          SetInOut();
+          sound_library_.SayNumber(calc_, SAY_WHOLE);
+        }
         break;
       case MENU_LOCKUP_POSITION:
       case MENU_EMITTER_SIZE:
@@ -3863,6 +3982,8 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_COLOR_BASE:
       case MENU_COLOR_ALT:
+      case MENU_COLOR2_ALT:
+      case MENU_COLOR3_ALT:
       case MENU_COLOR_IGNITE:
       case MENU_COLOR_RETRACT:
       case MENU_COLOR_SWING:
@@ -3968,15 +4089,20 @@ SaberFett263Buttons() : PropBase() {}
         MenuCancel();
         break;
       case MENU_STYLE_OPTION:
+      case MENU_STYLE_OPTION2:
+      case MENU_STYLE_OPTION3:
       case MENU_IGNITION_OPTION:
+      case MENU_IGNITION_OPTION2:
       case MENU_IGNITION_TIME:
       case MENU_IGNITION_POWER_UP_OPTION:
       case MENU_IGNITION_DELAY:
       case MENU_RETRACTION_OPTION:
+      case MENU_RETRACTION_OPTION2:
       case MENU_RETRACTION_TIME:
       case MENU_RETRACTION_COOL_DOWN_OPTION:
       case MENU_RETRACTION_DELAY:
       case MENU_SWING_OPTION:
+      case MENU_OFF_OPTION:
       case MENU_PREON_OPTION:
       case MENU_PREON_SIZE:
         menu_type_ = MENU_STYLE_SETTING_SUB;
@@ -4273,7 +4399,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef FETT263_RANDOMIZE_QUOTE_PLAYER
       SFX_quote.SelectNext();
 #endif
-      hybrid_font.PlayCommon(&SFX_quote);
+      SaberBase::DoEffect(EFFECT_QUOTE, 0);
     } else {
       SaberBase::DoForce();
     }
@@ -4433,7 +4559,9 @@ SaberFett263Buttons() : PropBase() {}
           switch (menu_type_) {
             case MENU_TRACK_PLAYER:
               track_mode_ = PLAYBACK_RANDOM;
+#ifndef FETT263_TRACK_PLAYER_NO_PROMPTS
               sound_library_.SayRandom();
+#endif
               MenuExit();
               break;
             case MENU_PRESET:
@@ -4794,7 +4922,9 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) {
           if (menu_type_ == MENU_TRACK_PLAYER) {
             track_mode_ = PLAYBACK_RANDOM;
+#ifndef FETT263_TRACK_PLAYER_NO_PROMPTS
             sound_library_.SayRandom();
+#endif
           }
           MenuExit();
           return true;
@@ -5340,7 +5470,9 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) {
           if (menu_type_ == MENU_TRACK_PLAYER) {
             track_mode_ = PLAYBACK_ROTATE;
+#ifndef FETT263_TRACK_PLAYER_NO_PROMPTS
             sound_library_.SayRotate();
+#endif
             return true;
           } else {
             MenuDialIncrement(1);
@@ -5357,7 +5489,9 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) {
           if (menu_type_ == MENU_TRACK_PLAYER) {
             track_mode_ = PLAYBACK_LOOP;
+#ifndef FETT263_TRACK_PLAYER_NO_PROMPTS
             sound_library_.SayLoop();
+#endif
             return true;
           } else {
             MenuDialIncrement(-1);
@@ -5665,6 +5799,7 @@ SaberFett263Buttons() : PropBase() {}
 
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
+      case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
       case EFFECT_POWERSAVE:
         if (SFX_dim) {
           hybrid_font.PlayCommon(&SFX_dim);
