@@ -934,7 +934,7 @@ public:
           } else {
             SFX_quote.Select(-1);
           }
-          hybrid_font.PlayCommon(&SFX_quote);
+          hybrid_font.DoEffect(EFFECT_QUOTE, 0);
         } else {
           SaberBase::DoForce();
         }
@@ -1026,6 +1026,7 @@ public:
 
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
+      case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
       case EFFECT_POWERSAVE: // Dim
         if (SFX_dim) {
           hybrid_font.PlayCommon(&SFX_dim);
