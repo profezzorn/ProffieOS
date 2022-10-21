@@ -44,6 +44,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(NEXT_QUOTE)                   \
     DEFINE_EFFECT(INTERACTIVE_PREON)            \
     DEFINE_EFFECT(TRACK)			\
+    DEFINE_EFFECT(BATTLE_MODE)                  \
     DEFINE_EFFECT(BEGIN_AUTO_BLAST)             \
     DEFINE_EFFECT(END_AUTO_BLAST)               \
     /* Triggers the change for sets of sounds within the font from one alternative to another. */                \
