@@ -19,7 +19,7 @@
 
 #ifndef AUDIO_CLASH_SUPPRESSION_LEVEL
 // Account for Audio Volume in Clash Detection (range 1 ~ 50)
-#define AUDIO_CLASH_SUPPRESSION_LEVEL 10
+#define AUDIO_CLASH_SUPPRESSION_LEVEL 1
 #endif
 
 class SaveGlobalStateFile : public ConfigFile {
