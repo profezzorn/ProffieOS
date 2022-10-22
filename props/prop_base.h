@@ -710,14 +710,18 @@ public:
   virtual void DoAccel(const Vec3& accel, bool clear) {
     fusor.DoAccel(accel, clear);
     accel_loop_counter_.Update();
-    Vec3 diff = (accel - fusor.down());
+    Vec3 diff = fusor.clash_mss();
     float v;
     if (clear) {
       accel_ = accel;
       diff = Vec3(0,0,0);
       v = 0.0;
     } else {
+#ifndef PROFFIEOS_DONT_USE_GYRO_FOR_CLASH
+      v = (diff.len() + fusor.gyro_clash_value()) / 2.0;
+#else      
       v = diff.len();
+#endif      
     }
     // If we're spinning the saber or if loud sounds are playing, 
     // require a stronger acceleration to activate the clash.
