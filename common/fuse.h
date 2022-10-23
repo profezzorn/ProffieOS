@@ -298,10 +298,19 @@ public:
 
   // Meters per second per second
   float gyro_clash_value() {
+#if 0    
+    static uint32_t last_printout=0;
+    if (millis() - last_printout > 1000) {
+      last_printout = millis();
+      STDOUT << "GYRO CLASH FILTER: "<< gyro_clash_filter_.get()
+	     << " XTRAPOLATOR: "<< gyro_extrapolator_.get(micros())
+	     << "\n";
+    }
+#endif    
     // degrees per microsecond
     float v = (gyro_clash_filter_.get() - gyro_extrapolator_.get(micros())).len();
     // Translate into meters per second per second, assuming blade is one meter.
-    return v * 1000000.0 / 9.81;
+    return v / 9.81;
   }
   
 #ifdef FUSE_SPEED
@@ -341,7 +350,7 @@ public:
 
 private:
   static const int filter_hz = 80;
-  static const int clash_filter_hz = 800;
+  static const int clash_filter_hz = 1600;
   Extrapolator<Vec3, ACCEL_MEASUREMENTS_PER_SECOND/filter_hz> accel_extrapolator_;
   Extrapolator<Vec3, GYRO_MEASUREMENTS_PER_SECOND/filter_hz> gyro_extrapolator_;
   BoxFilter<Vec3, ACCEL_MEASUREMENTS_PER_SECOND/clash_filter_hz> accel_clash_filter_;
