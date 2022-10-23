@@ -39,7 +39,6 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(BATTERY_LEVEL)                \
     DEFINE_EFFECT(FAST_ON)                      \
     DEFINE_EFFECT(QUOTE)			\
-    /* Fett263 Prop Effects */                  \
     DEFINE_EFFECT(SECONDARY_IGNITION)		\
     DEFINE_EFFECT(SECONDARY_RETRACTION)		\
     DEFINE_EFFECT(FAST_OFF)                     \    
