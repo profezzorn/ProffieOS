@@ -236,7 +236,7 @@ public:
 
   // Use after changing alternative.
   void RestartHum() {
-    if (hum_player_ && hum_player_->IsPlaying()) {
+    if (hum_player_ && hum_player_->isPlaying()) {
       PlayMonophonic(getHum(), NULL, 0.2f);
     }
   }
