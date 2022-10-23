@@ -5,6 +5,7 @@
 #include "quat.h"
 #include "saber_base.h"
 #include "extrapolator.h"
+#include "box_filter.h"
 
 // #define FUSE_SPEED
 
@@ -73,17 +74,21 @@ public:
     CHECK_NAN(gyro);
     if (clear) {
       gyro_extrapolator_.clear(gyro);
+      gyro_clash_filter_.clear(gyro);
     } else {
       gyro_extrapolator_.push(gyro);
+      gyro_clash_filter_.push(gyro);
     }
   }
   void DoAccel(const Vec3& accel, bool clear) {
     CHECK_NAN(accel);
     if (clear) {
       accel_extrapolator_.clear(accel);
+      accel_clash_filter_.clear(accel);
       down_ = accel;
     } else {
       accel_extrapolator_.push(accel);
+      accel_clash_filter_.push(accel);
     }
   }
 
@@ -218,6 +223,7 @@ public:
   float pov_angle() {
     return atan2f(down_.y, down_.x);
   }
+
 #if 1
   float swing_speed() {
     if (swing_speed_ < 0) {
@@ -286,6 +292,28 @@ public:
   Vec3 mss() { return mss_; }      // m/s/s (acceleration - down vector)
   Vec3 down() { return down_; }    // G/s/s (length should be close to 1.0)
 
+  // Meters per second per second
+  Vec3 clash_mss() {
+    return accel_clash_filter_.get() - down_;
+  }
+
+  // Meters per second per second
+  float gyro_clash_value() {
+#if 0    
+    static uint32_t last_printout=0;
+    if (millis() - last_printout > 1000) {
+      last_printout = millis();
+      STDOUT << "GYRO CLASH FILTER: "<< gyro_clash_filter_.get()
+	     << " XTRAPOLATOR: "<< gyro_extrapolator_.get(micros())
+	     << "\n";
+    }
+#endif    
+    // degrees per microsecond
+    float v = (gyro_clash_filter_.get() - gyro_extrapolator_.get(micros())).len();
+    // Translate into meters per second per second, assuming blade is one meter.
+    return v / 9.81;
+  }
+  
 #ifdef FUSE_SPEED
   Vec3 speed() { return speed_; }  // m/s
 #endif
@@ -323,8 +351,11 @@ public:
 
 private:
   static const int filter_hz = 80;
+  static const int clash_filter_hz = 1600;
   Extrapolator<Vec3, ACCEL_MEASUREMENTS_PER_SECOND/filter_hz> accel_extrapolator_;
   Extrapolator<Vec3, GYRO_MEASUREMENTS_PER_SECOND/filter_hz> gyro_extrapolator_;
+  BoxFilter<Vec3, ACCEL_MEASUREMENTS_PER_SECOND/clash_filter_hz> accel_clash_filter_;
+  BoxFilter<Vec3, ACCEL_MEASUREMENTS_PER_SECOND/clash_filter_hz> gyro_clash_filter_;
 
 #ifdef FUSE_SPEED
   Vec3 speed_;

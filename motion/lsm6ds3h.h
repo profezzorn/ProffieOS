@@ -320,17 +320,17 @@ public:
     TRACE(MOTION, "Transfer done");
     stm32l4_i2c_notify(Wire._i2c, nullptr, 0, 0);
     I2CUnlock();
+    // gyroscope data available
+    prop.DoMotion(MotionUtil::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
+				       Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
+		  first_motion_);
+    first_motion_ = false;
     // accel data available
     prop.DoAccel(MotionUtil::FromData(databuffer + 6, PROFFIEOS_ACCELEROMETER_RANGE / 32768.0,   // 16 g range
 				      Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
 		 first_accel_);
     
     first_accel_ = false;
-    // gyroscope data available
-    prop.DoMotion(MotionUtil::FromData(databuffer, 2000.0 / 32768.0,  // 2000 dps
-				       Vec3::BYTEORDER_LSB, Vec3::ORIENTATION),
-		  first_motion_);
-    first_motion_ = false;
     last_event_ = millis();
     Poll();
   }
