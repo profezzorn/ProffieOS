@@ -41,6 +41,9 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(SECONDARY_IGNITION)		\
     DEFINE_EFFECT(SECONDARY_RETRACTION)		\
     DEFINE_EFFECT(QUOTE)			\
+    /* Fett263 Prop Effects */                  \
+    DEFINE_EFFECT(FAST_OFF)                     \    
+    DEFINE_EFFECT(OFF_CLASH)                    \
     DEFINE_EFFECT(NEXT_QUOTE)                   \
     DEFINE_EFFECT(INTERACTIVE_PREON)            \
     DEFINE_EFFECT(TRACK)			\
@@ -82,7 +85,10 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(USER2)			\
     DEFINE_EFFECT(USER3)			\
     DEFINE_EFFECT(USER4)			\
-    DEFINE_EFFECT(USER5)
+    DEFINE_EFFECT(USER5)			\
+    DEFINE_EFFECT(USER6)			\
+    DEFINE_EFFECT(USER7)			\
+    DEFINE_EFFECT(USER8)
 
 
 #define DEFINE_EFFECT(X) EFFECT_##X,
