@@ -5,6 +5,7 @@
 #include "quat.h"
 #include "saber_base.h"
 #include "extrapolator.h"
+#include "box_filter.h"
 
 // #define FUSE_SPEED
 
