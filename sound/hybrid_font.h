@@ -236,7 +236,9 @@ public:
 
   // Use after changing alternative.
   void RestartHum() {
-    PlayMonophonic(getHum(), NULL, 0.2f);
+    if (hum_player_ && hum_player_->IsPlaying()) {
+      PlayMonophonic(getHum(), NULL, 0.2f);
+    }
   }
 
   RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
