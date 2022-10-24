@@ -5840,7 +5840,7 @@ private:
   bool auto_lockup_on_ = false; // Battle Mode Lockup active
   bool auto_melt_on_ = false; // Battle Mode Melt/Drag active
   bool battle_mode_ = false; // Battle Mode active
-  bool preon_effect_ = false; // used for interactive preon
+  bool preon_effect_ = false; // used for interactive preon, must be reset with EFFECT_FAST_ON
 #ifdef FETT263_QUICK_SELECT_ON_BOOT  
   bool menu_ = true; // enable MENU_PRESET on boot
 #else
