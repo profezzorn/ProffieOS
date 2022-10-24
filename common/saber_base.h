@@ -45,6 +45,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(OFF_CLASH)                    \
     DEFINE_EFFECT(NEXT_QUOTE)                   \
     DEFINE_EFFECT(INTERACTIVE_PREON)            \
+    DEFINE_EFFECT(INTERACTIVE_BLAST)            \
     DEFINE_EFFECT(TRACK)			\
     DEFINE_EFFECT(BEGIN_BATTLE_MODE)            \
     DEFINE_EFFECT(END_BATTLE_MODE)              \
