@@ -1573,30 +1573,6 @@ SaberFett263Buttons() : PropBase() {}
     }	  
   }
 
-  bool CheckInteractivePreon() {
-    bool includes_interactive_preon;
-    #define USES_INTERACTIVE_PREON(N) \
-    includes_interactive_preon |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_INTERACTIVE_PREON);
-    ONCEPERBLADE(USES_INTERACTIVE_PREON)
-    if (includes_interactive_preon) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  bool CheckInteractiveBlast() {
-    bool interactive_blast;
-    #define USES_INTERACTIVE_BLAST(N) \
-    interactive_blast |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_FIRE);
-    ONCEPERBLADE(USES_INTERACTIVE_BLAST)
-    if (SFX_blast && interactive_blast) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   void Setup() override {
     RestoreGestureState();
   }
@@ -5855,7 +5831,7 @@ SaberFett263Buttons() : PropBase() {}
 
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
-      case EFFECT_FIRE: hybrid_font.PlayCommon(&SFX_blast); return;
+      case EFFECT_INTERACTIVE_BLAST: hybrid_font.PlayCommon(&SFX_blast); return;
       case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
       case EFFECT_POWERSAVE:
         if (SFX_dim) {
