@@ -37,6 +37,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(LOW_BATTERY)			\
     DEFINE_EFFECT(POWERSAVE)                    \
     DEFINE_EFFECT(BATTERY_LEVEL)                \
+    DEFINE_EFFECT(VOLUME_LEVEL)                 \
     DEFINE_EFFECT(FAST_ON)                      \
     DEFINE_EFFECT(QUOTE)			\
     DEFINE_EFFECT(SECONDARY_IGNITION)		\
