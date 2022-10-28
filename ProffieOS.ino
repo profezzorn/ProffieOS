@@ -515,6 +515,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/clamp.h"
 #include "functions/alt.h"
 #include "functions/mod.h"
+#include "functions/volume_level.h"
 
 // transitions
 #include "transitions/fade.h"
