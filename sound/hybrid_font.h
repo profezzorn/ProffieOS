@@ -527,13 +527,14 @@ public:
 	if (num_alternatives) {
 	  if (SaberBase::sound_number == -1) {
 	    // Next alternative
-	    if (++current_alternative >= num_alternatives)  current_alternative = 0;
+	    ++current_alternative;
 	  } else {
 	    // Select a specific alternative.
 	    current_alternative = std::min<int>(SaberBase::sound_number, num_alternatives);
 	    // Set the sound num to -1 so that the altchng sound is random.
 	    SaberBase::sound_number = -1;
 	  }
+          if (current_alternative >= num_alternatives) current_alternative = 0;
 	  RestartHum();
 	}
 	PlayCommon(&SFX_altchng);
