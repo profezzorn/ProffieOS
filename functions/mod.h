@@ -13,10 +13,11 @@ public:
     max_.run(blade);
   }
   int getInteger(int led) {
-    if (max_.getInteger(led) == 0) {
+    int max = max_.getInteger(led);
+    if (max == 0) {
       return 0;
     } else {
-      return MOD(f_.getInteger(led), max_.getInteger(led));
+      return MOD(f_.getInteger(led), max);
     }
   }
 private:
@@ -39,10 +40,11 @@ public:
     max_.run(blade);
   }
   int calculate(BladeBase* blade) { 
-    if (max_.calculate(blade) == 0) {
+    int max = max_.calculate(blade);
+    if (max == 0) {
       return 0;
     } else {
-      return MOD(f_.calculate(blade), max_.calculate(blade));
+      return MOD(f_.calculate(blade), max_);
     }
   }
 private:
