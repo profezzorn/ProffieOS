@@ -693,6 +693,7 @@ public:
         next_preset();
       } else {
         VolumeUp();
+        hybrid_font.DoEffect(EFFECT_VOLUME_LEVEL, 0);
       }
       return true;
 
@@ -714,6 +715,7 @@ public:
       if (!mode_volume_) {
         previous_preset();
       } else {
+        hybrid_font.DoEffect(EFFECT_VOLUME_LEVEL, 0);
         VolumeDown();
       }
       return true;
@@ -750,6 +752,7 @@ public:
             beeper.Beep(0.1, 3000);
           }
           STDOUT.println("Enter Volume Menu");
+          hybrid_font.DoEffect(EFFECT_VOLUME_LEVEL, 0);
         } else {
           mode_volume_ = false;
           if (SFX_vmend) {
