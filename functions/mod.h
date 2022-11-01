@@ -13,7 +13,7 @@ public:
     max_.run(blade);
   }
   int getInteger(int led) {
-    int32_t max = max_.getInteger(led);
+    int max = max_.getInteger(led);
     if (max == 0) {
       return 0;
     } else {
@@ -40,7 +40,7 @@ public:
     max_.run(blade);
   }
   int calculate(BladeBase* blade) { 
-    int32_t max = max_.calculate(blade);
+    int max = max_.calculate(blade);
     if (max == 0) {
       return 0;
     } else {
