@@ -37,11 +37,20 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(LOW_BATTERY)			\
     DEFINE_EFFECT(POWERSAVE)                    \
     DEFINE_EFFECT(BATTERY_LEVEL)                \
+    DEFINE_EFFECT(VOLUME_LEVEL)                 \
     DEFINE_EFFECT(FAST_ON)                      \
+    DEFINE_EFFECT(QUOTE)			\
     DEFINE_EFFECT(SECONDARY_IGNITION)		\
     DEFINE_EFFECT(SECONDARY_RETRACTION)		\
-    DEFINE_EFFECT(QUOTE)			\
+    DEFINE_EFFECT(FAST_OFF)                     \    
+    DEFINE_EFFECT(OFF_CLASH)                    \
+    DEFINE_EFFECT(NEXT_QUOTE)                   \
     DEFINE_EFFECT(INTERACTIVE_PREON)            \
+    DEFINE_EFFECT(TRACK)			\
+    DEFINE_EFFECT(BEGIN_BATTLE_MODE)            \
+    DEFINE_EFFECT(END_BATTLE_MODE)              \
+    DEFINE_EFFECT(BEGIN_AUTO_BLAST)             \
+    DEFINE_EFFECT(END_AUTO_BLAST)               \
     /* Triggers the change for sets of sounds within the font from one alternative to another. */                \
     DEFINE_EFFECT(ALT_SOUND)			\
     /* Triggers an optional sound effect during transitions from within a style via TrDoEffect. */         \
@@ -76,7 +85,10 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(USER2)			\
     DEFINE_EFFECT(USER3)			\
     DEFINE_EFFECT(USER4)			\
-    DEFINE_EFFECT(USER5)
+    DEFINE_EFFECT(USER5)			\
+    DEFINE_EFFECT(USER6)			\
+    DEFINE_EFFECT(USER7)			\
+    DEFINE_EFFECT(USER8)
 
 
 #define DEFINE_EFFECT(X) EFFECT_##X,
