@@ -3,12 +3,12 @@
 
 #include "../common/analog_read.h"
 
-template<int PIN, int PULLUP>
+template<int PIN, int PULLUP_OHMS>
 struct ExternalPullupBladeID {
   float id() {
     int blade_id = LSAnalogRead(PIN, INPUT);
     float volts = blade_id * 3.3f / 1024.0f;  // Volts at bladeIdentifyPin
-    float amps = (3.3f - volts) / PULLUP;
+    float amps = (3.3f - volts) / PULLUP_OHMS;
 #if 0
    STDOUT << "BLADE ID: " << blade_id << "\n";
    STDOUT << "VOLTS: " << volts << "\n";
