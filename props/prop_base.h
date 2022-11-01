@@ -749,8 +749,11 @@ public:
 #endif
     // If we're spinning the saber or if loud sounds are playing, 
     // require a stronger acceleration to activate the clash.
-    if (v > (CLASH_THRESHOLD_G + fusor.gyro().len() / 200.0) + 
-      (dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 0.000001))) {    
+    if (v > (CLASH_THRESHOLD_G + fusor.gyro().len() / 200.0)
+#if defined(ENABLE_AUDIO) && defined(AUDIO_CLASH_SUPPRESSION_LEVEL)
+	+ (dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 0.000001))
+#endif	
+      ) {    
       if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
         diff = -diff;
       }

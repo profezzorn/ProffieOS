@@ -27,7 +27,7 @@
 
 // #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h"
 
-#define CONFIG_FILE "config/default_proffieboard_config.h"
+// #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
 // #define CONFIG_FILE "config/graflex_v1_config.h"
@@ -42,6 +42,7 @@
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
 // #define CONFIG_FILE "config/testconfig.h"
+// #define CONFIG_FILE "config/test_bench_config.h"
 
 #ifdef CONFIG_FILE_TEST
 #undef CONFIG_FILE
@@ -1410,7 +1411,7 @@ void setup() {
   digitalWrite(boosterPin, HIGH);
 #endif
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 #if VERSION_MAJOR >= 4
   // TODO: Figure out if we need this.
   // Serial.blockOnOverrun(false);

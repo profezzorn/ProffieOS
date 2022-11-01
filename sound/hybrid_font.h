@@ -29,7 +29,17 @@ public:
 #endif
     for (Effect* e = all_effects; e; e = e->next_) {
       char name[32];
-      strcpy(name, "ProffieOS.SFX.");
+      strcpy(name, "ProffieOS.");
+      switch (e->GetFileType()) {
+	case Effect::FileType::SOUND:
+	  strcat(name, "SFX.");
+	  break;
+	case Effect::FileType::IMAGE:
+	  strcat(name, "IMG.");
+	  break;
+	default:
+	  continue;
+      }
       strcat(name, e->GetName());
       strcat(name, ".");
       char* x = name + strlen(name);
@@ -530,7 +540,7 @@ public:
 	    if (++current_alternative >= num_alternatives)  current_alternative = 0;
 	  } else {
 	    // Select a specific alternative.
-	    current_alternative = std::min<int>(SaberBase::sound_number, num_alternatives);
+	    current_alternative = std::min<int>(SaberBase::sound_number, num_alternatives - 1);
 	    // Set the sound num to -1 so that the altchng sound is random.
 	    SaberBase::sound_number = -1;
 	  }
