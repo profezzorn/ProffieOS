@@ -28,6 +28,13 @@ bool IsHeap(const void* mem) {
   return (uint32_t)mem >= (uint32_t)__HeapBase && (uint32_t)mem <= (uint32_t)__StackLimit;
 }
 
+#elif defined(ESP32)
+
+bool IsHeap(const void* mem) {
+  extern uint32_t _static_data_end[];
+  extern uint32_t _heap_end[];
+  return (uint32_t)mem >= (uint32_t)_static_data_end && (uint32_t)mem <= (uint32_t)_heap_end;
+}
 #else
 
 bool IsHeap(const void* mem) {

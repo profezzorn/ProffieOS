@@ -7,7 +7,9 @@
 class Effect;
 Effect* all_effects = NULL;
 
+// Zero-indexed
 int current_alternative = 0;
+// num_alternatives == 3 means alt000/, alt001/, alt002/
 int num_alternatives = 0;
 
 constexpr bool isDigit(char s) { return s >= 0 && s <= '9'; }
@@ -15,8 +17,6 @@ bool isAllDigits(const char* s) {
   for (;*s;s++) if(!isDigit(*s)) return false;
   return true;
 }
-
-
 
 // Effect represents a set of sound files.
 // We keep track of the minimum number found, the maximum number found, weather
@@ -213,7 +213,7 @@ class Effect {
 	isDigit(rest[2]) &&
 	isDigit(rest[3])) {
       int sub = strtol(rest+1, nullptr, 10);
-      sub_files_ = std::max<int>(sub_files_, sub);
+      sub_files_ = std::max<int>(sub_files_, sub + 1);
       rest += 4;
     }
 
@@ -224,7 +224,7 @@ class Effect {
     // STDOUT << "Counting " << filename << " as " << name_ << "\n";
     num_files_++;
     if (alt != -1) {
-      num_alternatives = std::max<int>(num_alternatives, alt);
+      num_alternatives = std::max<int>(num_alternatives, alt + 1);
       found_in_alt_dir_ = true;
     }
     
@@ -369,8 +369,9 @@ class Effect {
     int n;
     if (selected_ != -1) {
       n = selected_;
-    } else if (SaberBase::sound_number != -1) {
-      n = std::min<int>(SaberBase::sound_number, num_files);
+    } else if (SaberBase::sound_number != -1 &&
+	       (file_type_ == FileType::SOUND || paired_)) {
+      n = std::min<int>(SaberBase::sound_number, num_files - 1);
     } else {
       n = rand() % num_files;
 #ifdef NO_REPEAT_RANDOM
@@ -416,7 +417,7 @@ class Effect {
     if (*directory_) strcat(filename, "/");
     if (found_in_alt_dir_) {
       strcat(filename, "alt");
-      addNumber(filename, fileid->GetAlt() + 1, 3);
+      addNumber(filename, fileid->GetAlt(), 3);
       strcat(filename, "/");
     }
     strcat(filename, name_);
@@ -440,7 +441,7 @@ class Effect {
 
     if (sub_files_) {
       strcat(filename, "/");
-      addNumber(filename, fileid->GetSubId() + 1, 3);
+      addNumber(filename, fileid->GetSubId(), 3);
     }
 
     switch (ext_) {
@@ -469,6 +470,7 @@ class Effect {
 #endif
 
   const char* GetName() const { return name_; }
+  FileType GetFileType() const { return file_type_; }
 
   // Returns true if file was identified.
   static void ScanAll(const char *dir, const char* filename) {
