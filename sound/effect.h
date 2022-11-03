@@ -213,7 +213,7 @@ class Effect {
 	isDigit(rest[2]) &&
 	isDigit(rest[3])) {
       int sub = strtol(rest+1, nullptr, 10);
-      sub_files_ = std::max<int>(sub_files_, sub + 1);
+      sub_files_ = std::max<int>(sub_files_, sub);
       rest += 4;
     }
 
@@ -352,11 +352,21 @@ class Effect {
 
 #ifdef NO_REPEAT_RANDOM
   int last_;
+  int last_sub_;
 #endif
 
   int random_subid() {
     if (!sub_files_) return 0;
+#ifdef NO_REPEAT_RANDOM
+    int sel = rand() % sub_files_;
+    for (int i = 0; i < 3 && sel == last_sub_; i++) {
+      sel = clamp(sel + 1 - (rand() & 2), 0, sub_files_ - 1);
+    }
+    last_sub_ = sel;
+    return sel;
+#else
     return rand() % sub_files_;
+#endif
   }
 
   FileID RandomFile() {
