@@ -213,7 +213,7 @@ class Effect {
 	isDigit(rest[2]) &&
 	isDigit(rest[3])) {
       int sub = strtol(rest+1, nullptr, 10);
-      sub_files_ = std::max<int>(sub_files_, sub);
+      sub_files_ = std::max<int>(sub_files_, sub + 1);
       rest += 4;
     }
 
