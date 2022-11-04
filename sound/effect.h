@@ -351,8 +351,8 @@ class Effect {
   }
 
 #ifdef NO_REPEAT_RANDOM
-  int last_;
-  int last_sub_;
+  int16_t last_;
+  int16_t last_sub_;
 #endif
 
   int random_subid() {
