@@ -359,8 +359,10 @@ class Effect {
     if (!sub_files_) return 0;
 #ifdef NO_REPEAT_RANDOM
     int sel = rand() % sub_files_;
-    for (int i = 0; i < 3 && sel == last_sub_; i++) {
-      sel = clamp(sel + 1 - (rand() & 2), 0, sub_files_ - 1);
+    if (sub_files_ > 2 && selected_ == last_) {
+      for (int i = 0; i < 3 && sel == last_sub_; i++) {
+        sel = rand() % sub_files_;
+      }
     }
     last_sub_ = sel;
     return sel;
@@ -377,6 +379,7 @@ class Effect {
       return FileID();
     }
     int n;
+    int sub = random_subid();
     if (selected_ != -1) {
       n = selected_;
     } else if (SaberBase::sound_number != -1 &&
@@ -398,7 +401,7 @@ class Effect {
 #endif
     }
 
-    return FileID(this, n, random_subid());
+    return FileID(this, n, sub);
   }
 
   bool Play(char *filename) {
