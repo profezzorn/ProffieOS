@@ -198,7 +198,7 @@ class Effect {
     } else {
       char *end;
       n = strtol(rest, &end, 10);
-      if (n <= 0) return false;
+      if (n < 0 || end == rest) return false;
       max_file_ = std::max<int>(max_file_, n);
       min_file_ = std::min<int>(min_file_, n);
       if (*rest == '0') {

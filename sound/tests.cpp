@@ -212,6 +212,25 @@ void test_effects() {
   CHECK_EQ(9, SFX_hum.expected_files());
   CHECK_EQ(3, SFX_hum.files_found());
   CHECK_EQ(0, num_alternatives);
+
+  mktestdir();
+  mkdir("testfont/hum", -1);
+  mkdir("testfont/hum/000", -1);
+  mkdir("testfont/hum/001", -1);
+  mkdir("testfont/hum/002", -1);
+  touch("testfont/hum/000/000.wav");
+  touch("testfont/hum/000/001.wav");
+  touch("testfont/hum/000/002.wav");
+  touch("testfont/hum/001/000.wav");
+  touch("testfont/hum/001/001.wav");
+  touch("testfont/hum/001/002.wav");
+  touch("testfont/hum/002/000.wav");
+  touch("testfont/hum/002/001.wav");
+  touch("testfont/hum/002/002.wav");
+  Effect::ScanCurrentDirectory();
+  CHECK_EQ(9, SFX_hum.expected_files());
+  CHECK_EQ(3, SFX_hum.files_found());
+  CHECK_EQ(0, num_alternatives);
 }
 
 int main() {
