@@ -368,7 +368,7 @@ class Effect {
     }
     int n;
     if (selected_ != -1) {
-      n = selected_;
+      n = std::min<int>(selected_, num_files - 1);
     } else if (SaberBase::sound_number != -1 &&
 	       (file_type_ == FileType::SOUND || paired_)) {
       n = std::min<int>(SaberBase::sound_number, num_files - 1);
