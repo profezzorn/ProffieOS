@@ -17,6 +17,7 @@
 #define NUM_BLADES 3
 #define PROFFIE_TEST
 #define ENABLE_SD
+#define NO_REPEAT_RANDOM
 
 #define CHECK(X) do {						\
     if (!(X)) { fprintf(stderr, "%s failed, line %d\n", #X, __LINE__); exit(1); } \
@@ -32,6 +33,29 @@
   auto x = (X);								\
   auto y = (Y);								\
   if (strcmp(x, y)) { std::cerr << #X << " (" << x << ") != " << #Y << " (" << y << ") line " << __LINE__;  exit(1); } \
+} while(0)
+
+
+bool myglob(const char* pattern, const char* s) {
+  for (;*pattern;pattern++,s++) {
+    switch (*pattern) {
+    case '*':
+      if (myglob(pattern + 1, s)) return true;
+      pattern--;
+      break;
+    case '#': if (*s < '0' || *s > '9') return false;
+    case '?': break;
+    default: if (*s != *pattern) return false;
+    }
+    if (!*s) return false;
+  }
+  return *s == 0;
+}
+
+#define CHECK_GLOB(PAT, Y) do {						\
+  auto p = (PAT);								\
+  auto y = (Y);								\
+  if (!myglob(p, y)) { std::cerr << #Y << " (" << y << ") does not match '"  << p << "' line " << __LINE__;  exit(1); } \
 } while(0)
 
 
@@ -59,9 +83,8 @@ public:
 
 char* itoa( int value, char *string, int radix )
 {
-  static char ret[33];
-  sprintf(ret, "%d", value);
-  return ret;
+  sprintf(string, "%d", value);
+  return string;
 }
 
 // This really ought to be a typedef, but it causes problems I don't understand.
@@ -212,6 +235,38 @@ void test_effects() {
   CHECK_EQ(9, SFX_hum.expected_files());
   CHECK_EQ(3, SFX_hum.files_found());
   CHECK_EQ(0, num_alternatives);
+
+  mktestdir();
+  mkdir("testfont/hum", -1);
+  mkdir("testfont/hum/000", -1);
+  mkdir("testfont/hum/001", -1);
+  mkdir("testfont/hum/002", -1);
+  touch("testfont/hum/000/000.wav");
+  touch("testfont/hum/000/001.wav");
+  touch("testfont/hum/000/002.wav");
+  touch("testfont/hum/001/000.wav");
+  touch("testfont/hum/001/001.wav");
+  touch("testfont/hum/001/002.wav");
+  touch("testfont/hum/002/000.wav");
+  touch("testfont/hum/002/001.wav");
+  touch("testfont/hum/002/002.wav");
+  Effect::ScanCurrentDirectory();
+  CHECK_EQ(9, SFX_hum.expected_files());
+  CHECK_EQ(3, SFX_hum.files_found());
+  CHECK_EQ(0, num_alternatives);
+
+  SFX_hum.Select(0);
+  char name[256];
+  SFX_hum.RandomFile().GetName(name);
+  CHECK_GLOB("testfont/hum/000/###.wav", name);
+
+  SFX_hum.Select(1);
+  SFX_hum.RandomFile().GetName(name);
+  CHECK_GLOB("testfont/hum/001/###.wav", name);
+
+  SFX_hum.Select(2);
+  SFX_hum.RandomFile().GetName(name);
+  CHECK_GLOB("testfont/hum/002/###.wav", name);
 }
 
 int main() {
