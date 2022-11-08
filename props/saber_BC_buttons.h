@@ -693,7 +693,7 @@ public:
         next_preset();
       } else {
         VolumeUp();
-        hybrid_font.DoEffect(EFFECT_VOLUME_LEVEL, 0);
+        SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
       }
       return true;
 
@@ -715,8 +715,8 @@ public:
       if (!mode_volume_) {
         previous_preset();
       } else {
-        hybrid_font.DoEffect(EFFECT_VOLUME_LEVEL, 0);
         VolumeDown();
+        SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
       }
       return true;
 
@@ -752,7 +752,7 @@ public:
             beeper.Beep(0.1, 3000);
           }
           STDOUT.println("Enter Volume Menu");
-          hybrid_font.DoEffect(EFFECT_VOLUME_LEVEL, 0);
+          SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
         } else {
           mode_volume_ = false;
           if (SFX_vmend) {
@@ -916,7 +916,7 @@ public:
   #endif
       // pointing up
       if (fusor.angle1() >  M_PI / 3) {
-        hybrid_font.DoEffect(EFFECT_USER2, 0);
+        SaberBase::DoEffect(EFFECT_USER2, 0);
       } else {
        // NOT pointing up OR down
         SaberBase::DoForce();
@@ -937,7 +937,7 @@ public:
           } else {
             SFX_quote.Select(-1);
           }
-          hybrid_font.DoEffect(EFFECT_QUOTE, 0);
+          SaberBase::DoEffect(EFFECT_QUOTE, 0);
         } else {
           SaberBase::DoForce();
         }
@@ -967,7 +967,7 @@ public:
         }
         return true;
       } else {
-        hybrid_font.DoEffect(EFFECT_USER1, 0);
+        SaberBase::DoEffect(EFFECT_USER1, 0);
       }
       return true;
 
@@ -1069,7 +1069,7 @@ public:
         if (SFX_monosfx) {
           hybrid_font.PlayMonophonic(&SFX_monosfx , &SFX_hum);
         } else {
-          hybrid_font.DoEffect(EFFECT_FORCE, 0);
+          SaberBase::DoEffect(EFFECT_FORCE, 0);
         }
         return;
     }
