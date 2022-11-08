@@ -60,7 +60,7 @@ class Effect {
 	  effect_->paired_ &&
 	  effect_->files_found() == effect->files_found() &&
 	  effect->selected_ == -1) {
-	return FileID(effect, file_, effect->random_subid());
+	return FileID(effect, file_, effect->random_subid(file_));
       } else {
 	return effect->RandomFile();
       }
@@ -351,12 +351,38 @@ class Effect {
   }
 
 #ifdef NO_REPEAT_RANDOM
-  int last_;
+  int16_t last_ = -1;
+  int16_t last_subid_ = -1;
+
+  static int randomize(int N, int last) {
+    int n = rand() % N;
+    if (n == last) {
+      switch (N) {
+      default:
+	n = rand() % (N - 1);
+	if (n >= last) n++;
+	break;
+      case 2:
+	if (n == last) n = rand() % N;
+      case 1:
+	break;
+      }
+    }
+    return n;
+  }
+#define RANDOMIZE(N, LAST) randomize((N), (LAST))
+#else
+#define RANDOMIZE(N, LAST) (rand() % (N))  
 #endif
 
-  int random_subid() {
+
+  int random_subid(int filenum) {
     if (!sub_files_) return 0;
-    return rand() % sub_files_;
+    int ret = RANDOMIZE(sub_files_, last_ == filenum ? last_subid_ : -1);
+#ifdef NO_REPEAT_RANDOM
+    last_subid_ = ret;
+#endif    
+    return ret;
   }
 
   FileID RandomFile() {
@@ -373,22 +399,15 @@ class Effect {
 	       (file_type_ == FileType::SOUND || paired_)) {
       n = std::min<int>(SaberBase::sound_number, num_files - 1);
     } else {
-      n = rand() % num_files;
-#ifdef NO_REPEAT_RANDOM
-      switch (num_files) {
-      default:
-	while (n == last_) n = rand() % num_files;
-	break;
-      case 2:
-	if (n == last_) n = rand() % num_files;
-      case 1:
-	break;
-      }
-      last_ = n;
-#endif
+      n = RANDOMIZE(num_files, last_);
     }
+    int subid = random_subid(n);
 
-    return FileID(this, n, random_subid());
+#ifdef NO_REPEAT_RANDOM
+    last_ = n;
+#endif    
+
+    return FileID(this, n, subid);
   }
 
   bool Play(char *filename) {

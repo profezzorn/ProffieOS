@@ -17,6 +17,7 @@
 #define NUM_BLADES 3
 #define PROFFIE_TEST
 #define ENABLE_SD
+#define NO_REPEAT_RANDOM
 
 #define CHECK(X) do {						\
     if (!(X)) { fprintf(stderr, "%s failed, line %d\n", #X, __LINE__); exit(1); } \
