@@ -46,6 +46,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(OFF_CLASH)                    \
     DEFINE_EFFECT(NEXT_QUOTE)                   \
     DEFINE_EFFECT(INTERACTIVE_PREON)            \
+    /* Triggers a Blaster sound to interact with and creates an EFFECT_BLAST if prop/style support. */          \
     DEFINE_EFFECT(INTERACTIVE_BLAST)            \
     DEFINE_EFFECT(TRACK)			\
     DEFINE_EFFECT(BEGIN_BATTLE_MODE)            \
