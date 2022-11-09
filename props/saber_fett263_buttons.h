@@ -1573,6 +1573,14 @@ SaberFett263Buttons() : PropBase() {}
     }	  
   }
 
+  void DoInteractivePreon() {
+    if (CheckInteractivePreon()) {
+      SaberBase::DoEffect(EFFECT_INTERACTIVE_PREON, 0);
+    } else {
+      DoIgnition();
+    }
+  }
+
   void DoInteractiveBlast() {
     if (CheckInteractiveBlast()) {
       SaberBase::DoEffectR(EFFECT_INTERACTIVE_BLAST);
@@ -4542,11 +4550,7 @@ SaberFett263Buttons() : PropBase() {}
             return true;
 #endif
           } else {
-            if (!CheckInteractivePreon()) {
-              DoIgnition();
-            } else {
-              SaberBase::DoEffect(EFFECT_INTERACTIVE_PREON, 0);
-            }
+            DoInteractivePreon();
           }
           return true;
 
@@ -4899,11 +4903,7 @@ SaberFett263Buttons() : PropBase() {}
           return true;
 #endif
         } else {
-          if (!CheckInteractivePreon()) {
-            DoIgnition();
-          } else {
-            SaberBase::DoEffect(EFFECT_INTERACTIVE_PREON, 0);
-          }
+          DoInteractivePreon();
         }
         return true;
 
