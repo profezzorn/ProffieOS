@@ -1573,6 +1573,23 @@ SaberFett263Buttons() : PropBase() {}
     }	  
   }
 
+  void DoInteractivePreon() {
+    if (CheckInteractivePreon()) {
+      SaberBase::DoEffect(EFFECT_INTERACTIVE_PREON, 0);
+    } else {
+      DoIgnition();
+    }
+  }
+
+  void DoInteractiveBlast() {
+    if (CheckInteractiveBlast()) {
+      SaberBase::DoEffectR(EFFECT_INTERACTIVE_BLAST);
+    } else {
+      ToggleBattleModeMultiBlast();
+      SaberBase::DoBlast();
+    }
+  }
+
   void Setup() override {
     RestoreGestureState();
   }
@@ -4533,7 +4550,7 @@ SaberFett263Buttons() : PropBase() {}
             return true;
 #endif
           } else {
-            DoIgnition();
+            DoInteractivePreon();
           }
           return true;
 
@@ -4725,8 +4742,7 @@ SaberFett263Buttons() : PropBase() {}
           MenuChoice();
           return true;
         }
-        ToggleBattleModeMultiBlast();
-        SaberBase::DoBlast();
+        DoInteractiveBlast();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
@@ -4735,14 +4751,12 @@ SaberFett263Buttons() : PropBase() {}
           StopTrackPlayer();
           return true;
         }
-        ToggleBattleModeMultiBlast();
-        SaberBase::DoBlast();
+        DoInteractiveBlast();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
         if (menu_ || CheckShowColorCC()) return true;
-        ToggleBattleModeMultiBlast();
-        SaberBase::DoBlast();
+        DoInteractiveBlast();
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_SHORT, MODE_ON):
@@ -4788,7 +4802,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef FETT263_DISABLE_MULTI_BLAST
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
         if (menu_ || CheckShowColorCC()) return true;
-          ToggleMultiBlast();
+        DoInteractiveBlast();
         return true;
 #endif
 
@@ -4889,7 +4903,7 @@ SaberFett263Buttons() : PropBase() {}
           return true;
 #endif
         } else {
-          DoIgnition();
+          DoInteractivePreon();
         }
         return true;
 
@@ -5175,23 +5189,8 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SayRevert();
             wav_player.Free();
             return true;
-          }		
-          if (swing_blast_) {
-            check_blast_ = false;
-            swing_blast_ = false;
-            if (SFX_blstend) {
-              hybrid_font.PlayCommon(&SFX_blstend);
-            } else {
-              SaberBase::DoBlast();
-            }
-            return true;
-          } else {
-            SaberBase::DoBlast();
-	    if (battle_mode_) {
-              check_blast_ = true;
-              last_blast_millis_ = millis();
-	    }
           }
+          DoInteractiveBlast();
           return true;
         }
         return true;
@@ -5213,7 +5212,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef FETT263_DISABLE_MULTI_BLAST
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
         if (menu_ || CancelShowColor()) return true;
-        ToggleMultiBlast();
+        DoInteractiveBlast();
         return true;
 #endif
 
@@ -5799,6 +5798,7 @@ SaberFett263Buttons() : PropBase() {}
 
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
+      case EFFECT_INTERACTIVE_BLAST: hybrid_font.PlayCommon(&SFX_blast); return;
       case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
       case EFFECT_POWERSAVE:
         if (SFX_dim) {
@@ -5816,9 +5816,17 @@ SaberFett263Buttons() : PropBase() {}
         }
         return;
 #endif
+      case EFFECT_INTERACTIVE_PREON:
+        preon_effect_ = true;
+        return;
       case EFFECT_FAST_ON:
-        if (SFX_faston) {
-          hybrid_font.PlayCommon(&SFX_faston);
+        if (SaberBase::IsOn()) {
+          if (!preon_effect_ && SFX_faston) {
+            hybrid_font.PlayCommon(&SFX_faston);
+          }
+        } else {
+          FastOn();
+          preon_effect_ = false;
         }
         return;
       default:
@@ -5832,6 +5840,7 @@ private:
   bool auto_lockup_on_ = false; // Battle Mode Lockup active
   bool auto_melt_on_ = false; // Battle Mode Melt/Drag active
   bool battle_mode_ = false; // Battle Mode active
+  bool preon_effect_ = false; // used for interactive preon, must be reset with EFFECT_FAST_ON
 #ifdef FETT263_QUICK_SELECT_ON_BOOT  
   bool menu_ = true; // enable MENU_PRESET on boot
 #else
