@@ -526,6 +526,10 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_DISABLE_MULTI_BLAST - Disables "Multi-Blast" Mode
 
   FETT263_TRACK_PLAYER_NO_PROMPTS - Disables spoken voice prompts in Track Player
+  
+  FETT263_DISABLE_QUOTE_PLAYER - Disables Force/Quote player, only uses Force. This will allow Quotes to be controlled by style.
+    Use FETT263_SPECIAL_ABILITIES to set EFFECT_QUOTE or EFFECT_NEXT_QUOTE in style
+    Cannot be used with FETT263_RANDOMIZE_QUOTE_PLAYER and FETT263_QUOTE_PLAYER_START_ON
 
 == SA22C 2 Button Variations ==
   FETT263_HOLD_BUTTON_OFF - Changes to Hold PWR to turn Off / Retract
@@ -587,6 +591,10 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #if defined(FETT263_EDIT_MODE_MENU) && !defined(ENABLE_ALL_EDIT_OPTIONS)
 #error ENABLE_ALL_EDIT_OPTIONS must be defined to enable FETT263_EDIT_MODE_MENU
+#endif
+
+#if defined(FETT263_DISABLE_QUOTE_PLAYER) && defined(FETT263_QUOTE_PLAYER_START_ON)
+#error FETT263_QUOTE_PLAYER_START_ON cannot be used with FETT263_DISABLE_QUOTE_PLAYER
 #endif
 
 #if defined(FETT263_BATTLE_MODE_ALWAYS_ON) && defined(FETT263_BATTLE_MODE_START_ON)
@@ -4400,6 +4408,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
+#ifndef FETT263_DISABLE_QUOTE_PLAYER
   void CheckQuote() {
     if (SFX_quote) {      
       if (fusor.angle1() < - M_PI / 3)  {
@@ -4421,6 +4430,7 @@ SaberFett263Buttons() : PropBase() {}
       SaberBase::DoForce();
     }
   }
+#endif
 
   // Battery Level
   void DoBattery() {
@@ -4648,7 +4658,11 @@ SaberFett263Buttons() : PropBase() {}
           MenuUndo();
           return true;
         }
+#ifndef FETT263_DISABLE_QUOTE_PLAYER
         CheckQuote();
+#else
+        SaberBase::DoEffect(EFFECT_FORCE, 0);
+#endif
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_SECOND_PRESSED, MODE_ON):
@@ -4789,7 +4803,11 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+#ifndef FETT263_DISABLE_QUOTE_PLAYER
         CheckQuote();
+#else
+        SaberBase::DoEffect(EFFECT_FORCE, 0);
+#endif
         return true;
 
 #ifndef FETT263_DISABLE_COPY_PRESET
@@ -5205,7 +5223,11 @@ SaberFett263Buttons() : PropBase() {}
           }
           return true;
         } else {
-          CheckQuote();
+#ifndef FETT263_DISABLE_QUOTE_PLAYER
+        CheckQuote();
+#else
+        SaberBase::DoEffect(EFFECT_FORCE, 0);
+#endif
         }
         return true;
 
@@ -5313,7 +5335,11 @@ SaberFett263Buttons() : PropBase() {}
           }
           return true;
         } else {
-          CheckQuote();
+#ifndef FETT263_DISABLE_QUOTE_PLAYER
+        CheckQuote();
+#else
+        SaberBase::DoEffect(EFFECT_FORCE, 0);
+#endif
         }
         return true;
 
