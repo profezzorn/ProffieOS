@@ -701,6 +701,20 @@ public:
     FindBlade();
   }
 
+  bool CheckInteractivePreon() {
+    #define USES_INTERACTIVE_PREON(N) \
+    if (current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_INTERACTIVE_PREON)) return true;
+    ONCEPERBLADE(USES_INTERACTIVE_PREON)
+    return false;
+  }
+
+  bool CheckInteractiveBlast() {
+    #define USES_INTERACTIVE_BLAST(N) \
+    if (current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_INTERACTIVE_BLAST)) return true;
+    ONCEPERBLADE(USES_INTERACTIVE_BLAST)
+    return false;
+  }
+
   // Potentially called from interrupt!
   virtual void DoMotion(const Vec3& motion, bool clear) {
     fusor.DoMotion(motion, clear);
