@@ -3696,7 +3696,7 @@ SaberFett263Buttons() : PropBase() {}
         if (direction > 0) {
           dim = std::min<float>(dim + 0.1, 1.0);
 #ifdef FETT263_CIRCULAR_DIM_MENU
-          if (dim > 1.0) dim = 0.2;
+          if (dim >= 1.0) dim = 0.2;
           sound_library_.SayUp();
 #else
           if (dim >= 1.0) {
@@ -3709,7 +3709,7 @@ SaberFett263Buttons() : PropBase() {}
         } else {
           dim = std::max<float>(dim - 0.1, 0.2);
 #ifdef FETT263_CIRCULAR_DIM_MENU
-          if (dim < 0.2) dim = 1.0;
+          if (dim <= 0.2) dim = 1.0;
           sound_library_.SayDown();
 #else
           if (dim <= 0.2) {
