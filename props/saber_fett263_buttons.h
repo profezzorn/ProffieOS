@@ -5835,6 +5835,16 @@ SaberFett263Buttons() : PropBase() {}
     switch (effect) {
       case EFFECT_INTERACTIVE_BLAST: hybrid_font.PlayCommon(&SFX_blast); return;
       case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
+      case EFFECT_NEXT_QUOTE:
+        SFX_quote.SelectNext();
+        hybrid_font.PlayCommon(&SFX_quote);
+        return;
+      case EFFECT_FAST_OFF:
+        if (SaberBase::IsOn()) {
+          Off();
+          saber_off_time_millis_ = millis();
+        }
+        return;
       case EFFECT_POWERSAVE:
         if (SFX_dim) {
           hybrid_font.PlayCommon(&SFX_dim);
