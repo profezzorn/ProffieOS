@@ -516,6 +516,12 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_RANDOMIZE_QUOTE_PLAYER
   This will set Quote Player to randomly select quote.wav instead of playing sequentially
   
+  FETT263_CIRCULAR_VOLUME_MENU
+  Changes Volume Menu to Circular Control
+
+  FETT263_CIRCULAR_DIM_MENU
+  Changes Brightness Menu to Circular Control
+  
 == Disable Features ==
   FETT263_DISABLE_CHANGE_FONT - Disables the "on-the-fly" Change Font option
   
@@ -3216,11 +3222,15 @@ SaberFett263Buttons() : PropBase() {}
         }
         break;
       case MENU_VOLUME:
+#ifdef FETT263_CIRCULAR_VOLUME_MENU
+        ChangeVolume(direction);
+#else
         if (direction > 0) {
           VolumeUp();
         } else {
           VolumeDown();
         }
+#endif
         break;
       case MENU_TRACK_PLAYER:
         if (track_player_) {
@@ -3691,6 +3701,7 @@ SaberFett263Buttons() : PropBase() {}
         sound_library_.SayNumber(clash_t_, SAY_DECIMAL);
         break;
       case MENU_DIM_BLADE:
+#ifndef FETT263_CIRCULAR_DIM_MENU
         if (direction > 0) {
           dim = std::min<float>(dim + 0.1, 1.0);
           if (dim == 1.0) {
@@ -3706,6 +3717,17 @@ SaberFett263Buttons() : PropBase() {}
 	    sound_library_.SayDown();
           }
         }
+#else
+        if (direction > 0) {
+          dim = std::min<float>(dim + 0.1, 1.0);
+          sound_library_.SayUp();
+          if (dim > 1.0) dim = 0.2;
+        } else {
+          dim = std::max<float>(dim - 0.1, 0.2);
+          sound_library_.SayDown();
+          if (dim < 0.2) dim = 1.0;
+        }
+#endif
         SaberBase::SetDimming(pow(dim, 2.2) * 16384);
         break;
       case MENU_STYLE_SETTING_SUB:
@@ -4456,7 +4478,26 @@ SaberFett263Buttons() : PropBase() {}
 #endif
     SetPreset(0, true);
 }
-	
+
+#ifdef FETT263_CIRCULAR_VOLUME_MENU
+  void ChangeVolume(int v) {
+    float current_volume = dynamic_mixer.get_volume();
+    float volume = current_volume + (VOLUME * (v * 0.1));
+    if (volume > VOLUME) volume = VOLUME * 0.1;
+    if (volume < (VOLUME * 0.1)) volume = VOLUME;
+    if (volume > current_volume) {
+      STDOUT.println("Volume up");
+      sound_library_.SayVolumeUp();      
+    } else {
+      STDOUT.println("Volume Down");
+      sound_library_.SayVolumeDown();
+    }
+    STDOUT.print("Current Volume: ");
+    STDOUT.println(dynamic_mixer.get_volume());
+    dynamic_mixer.set_volume(volume);
+    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+  }  
+#else
   // SA22C Volume Menu
   void VolumeUp() {
     STDOUT.println("Volume up");
@@ -4484,6 +4525,7 @@ SaberFett263Buttons() : PropBase() {}
       sound_library_.SayMininumVolume();
     }
   }
+#endif
 
   RefPtr<BufferedWavPlayer> wav_player;
 
