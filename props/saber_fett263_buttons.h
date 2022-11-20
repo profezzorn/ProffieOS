@@ -3222,15 +3222,7 @@ SaberFett263Buttons() : PropBase() {}
         }
         break;
       case MENU_VOLUME:
-#ifdef FETT263_CIRCULAR_VOLUME_MENU
         ChangeVolume(direction);
-#else
-        if (direction > 0) {
-          VolumeUp();
-        } else {
-          VolumeDown();
-        }
-#endif
         break;
       case MENU_TRACK_PLAYER:
         if (track_player_) {
@@ -3701,33 +3693,33 @@ SaberFett263Buttons() : PropBase() {}
         sound_library_.SayNumber(clash_t_, SAY_DECIMAL);
         break;
       case MENU_DIM_BLADE:
+        if (direction > 0) {
+          dim = std::min<float>(dim + 0.1, 1.0);
 #ifdef FETT263_CIRCULAR_DIM_MENU
-        if (direction > 0) {
-          dim = std::min<float>(dim + 0.1, 1.0);
-          sound_library_.SayUp();
           if (dim > 1.0) dim = 0.2;
-        } else {
-          dim = std::max<float>(dim - 0.1, 0.2);
-          sound_library_.SayDown();
-          if (dim < 0.2) dim = 1.0;
-        }
+          sound_library_.SayUp();
 #else
-        if (direction > 0) {
-          dim = std::min<float>(dim + 0.1, 1.0);
-          if (dim == 1.0) {
+          if (dim >= 1.0) {
+            dim = 1.0;
             sound_library_.SayMaximum();
           } else {
             sound_library_.SayUp();
           }
+#endif
         } else {
           dim = std::max<float>(dim - 0.1, 0.2);
-          if (dim == 0.2) {
+#ifdef FETT263_CIRCULAR_DIM_MENU
+          if (dim < 0.2) dim = 1.0;
+          sound_library_.SayDown();
+#else
+          if (dim <= 0.2) {
+            dim = 0.2;
             sound_library_.SayMinimum();
           } else {
-	    sound_library_.SayDown();
+            sound_library_.SayDown();
           }
-        }
 #endif
+        }
         SaberBase::SetDimming(pow(dim, 2.2) * 16384);
         break;
       case MENU_STYLE_SETTING_SUB:
@@ -4477,12 +4469,12 @@ SaberFett263Buttons() : PropBase() {}
     SaveState(0);
 #endif
     SetPreset(0, true);
-}
+  }
 
-#ifdef FETT263_CIRCULAR_VOLUME_MENU
   void ChangeVolume(int v) {
     float current_volume = dynamic_mixer.get_volume();
     float volume = current_volume + (VOLUME * (v * 0.1));
+#ifdef FETT263_CIRCULAR_VOLUME_MENU
     if (volume > VOLUME) volume = VOLUME * 0.1;
     if (volume < (VOLUME * 0.1)) volume = VOLUME;
     if (volume > current_volume) {
@@ -4492,40 +4484,28 @@ SaberFett263Buttons() : PropBase() {}
       STDOUT.println("Volume Down");
       sound_library_.SayVolumeDown();
     }
+#else
+    if (volume > VOLUME) {
+      volume = VOLUME;
+      sound_library_.SayMaximumVolume();
+    } else if (volume < (VOLUME * 0.1)) {
+      volume = VOLUME * 0.1;
+      sound_library_.SayMininumVolume();
+    } else {
+      if (v > 0) {
+        STDOUT.println("Volume up");
+        sound_library_.SayVolumeUp();      
+      } else {
+        STDOUT.println("Volume Down");
+        sound_library_.SayVolumeDown();
+      }
+    }
+#endif
     STDOUT.print("Current Volume: ");
     STDOUT.println(dynamic_mixer.get_volume());
     dynamic_mixer.set_volume(volume);
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
-  }  
-#else
-  // SA22C Volume Menu
-  void VolumeUp() {
-    STDOUT.println("Volume up");
-    if (dynamic_mixer.get_volume() < VOLUME) {
-      dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
-                                             dynamic_mixer.get_volume() + VOLUME * 0.10));
-      sound_library_.SayVolumeUp();
-      STDOUT.print("Current Volume: ");
-      STDOUT.println(dynamic_mixer.get_volume());
-    } else {
-      sound_library_.SayMaximumVolume();
-    }
   }
-
-  void VolumeDown() {
-    STDOUT.println("Volume Down");
-    if (dynamic_mixer.get_volume() > (0.10 * VOLUME)) {
-      dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
-                                             dynamic_mixer.get_volume() - VOLUME * 0.10));
-
-      sound_library_.SayVolumeDown();
-      STDOUT.print("Current Volume: ");
-      STDOUT.println(dynamic_mixer.get_volume());
-    } else {
-      sound_library_.SayMininumVolume();
-    }
-  }
-#endif
 
   RefPtr<BufferedWavPlayer> wav_player;
 
