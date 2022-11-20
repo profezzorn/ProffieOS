@@ -4408,8 +4408,8 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
-#ifndef FETT263_DISABLE_QUOTE_PLAYER
   void CheckQuote() {
+#ifndef FETT263_DISABLE_QUOTE_PLAYER
     if (SFX_quote) {      
       if (fusor.angle1() < - M_PI / 3)  {
         force_quote_ = !force_quote_;
@@ -4418,6 +4418,10 @@ SaberFett263Buttons() : PropBase() {}
     } else {
       SaberBase::DoForce();  
     }
+#else
+    SaberBase::DoEffect(EFFECT_FORCE, 0);
+#endif
+}
   }
 
   void ForceQuote() {
@@ -4430,7 +4434,6 @@ SaberFett263Buttons() : PropBase() {}
       SaberBase::DoForce();
     }
   }
-#endif
 
   // Battery Level
   void DoBattery() {
@@ -4658,11 +4661,7 @@ SaberFett263Buttons() : PropBase() {}
           MenuUndo();
           return true;
         }
-#ifndef FETT263_DISABLE_QUOTE_PLAYER
         CheckQuote();
-#else
-        SaberBase::DoEffect(EFFECT_FORCE, 0);
-#endif
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_SECOND_PRESSED, MODE_ON):
@@ -4803,11 +4802,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
-#ifndef FETT263_DISABLE_QUOTE_PLAYER
         CheckQuote();
-#else
-        SaberBase::DoEffect(EFFECT_FORCE, 0);
-#endif
         return true;
 
 #ifndef FETT263_DISABLE_COPY_PRESET
@@ -5223,11 +5218,7 @@ SaberFett263Buttons() : PropBase() {}
           }
           return true;
         } else {
-#ifndef FETT263_DISABLE_QUOTE_PLAYER
         CheckQuote();
-#else
-        SaberBase::DoEffect(EFFECT_FORCE, 0);
-#endif
         }
         return true;
 
@@ -5335,11 +5326,7 @@ SaberFett263Buttons() : PropBase() {}
           }
           return true;
         } else {
-#ifndef FETT263_DISABLE_QUOTE_PLAYER
         CheckQuote();
-#else
-        SaberBase::DoEffect(EFFECT_FORCE, 0);
-#endif
         }
         return true;
 
