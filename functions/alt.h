@@ -2,6 +2,7 @@
 #define FUNCTIONS_ALTF_H
 
 #include "svf.h"
+#include "../common/looper.h"
 
 // Usage: AltF
 // return value: INTEGER
@@ -19,5 +20,47 @@ template<> class SingleValueAdapter<AltSVF> : public AltSVF {};
 template<> class SVFWrapper<AltSVF> : public AltSVF {};
 
 using AltF = SingleValueAdapter<AltSVF>;
+
+
+// Usage: SyncAltToVarianceF
+// return value: INTEGER (always zero)
+// Enables Bidirectional synchronization between ALT and VARIANCE.
+// If variance changes, so does alt, if alt changes, so does variance.
+class SyncAltToVarianceSVF : private Looper {
+public:
+  FunctionRunResult run(BladeBase* blade) {
+    return FunctionRunResult::ZERO_UNTIL_IGNITION;
+  }
+
+  void Loop() override {
+    if (num_alternatives == 0) return;
+    int var = MOD(SaberBase::GetCurrentVariation(), num_alternatives);
+    if (var == last_ && current_alternative == last_) return;
+    if (last_ == 0x7fffffff) {
+      // Change quietly.
+      current_alternative = var;
+    } else if (var != last_) {
+      SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, var);
+    } else {
+      SaberBase::SetVariation(var = current_alternative);
+    }
+    last_ = var;
+  }
+  int calcualte() { return 0; }
+  int getInteger() { return 0; }
+private:
+  int last_ = 0x7fffffff;
+};
+
+// Optimized specialization
+template<> class SingleValueAdapter<SyncAltToVarianceSVF> : public SyncAltToVarianceSVF {};
+template<> class SVFWrapper<SyncAltToVarianceSVF> : public SyncAltToVarianceSVF {};
+
+using SyncAltToVarianceF = SingleValueAdapter<SyncAltToVarianceSVF>;
+
+// Usage: SyncAltToVarianceL
+// return value: LAYER (transparent)
+// Synchronizes alt to variance, just put it somewhere in the layer stack. (but not first)
+using SyncAltToVarianceL = AlphaL<Black, SyncAltToVarianceF>;
 
 #endif
