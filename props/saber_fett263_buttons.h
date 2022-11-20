@@ -5218,7 +5218,7 @@ SaberFett263Buttons() : PropBase() {}
           }
           return true;
         } else {
-        CheckQuote();
+          CheckQuote();
         }
         return true;
 
@@ -5326,7 +5326,7 @@ SaberFett263Buttons() : PropBase() {}
           }
           return true;
         } else {
-        CheckQuote();
+          CheckQuote();
         }
         return true;
 
