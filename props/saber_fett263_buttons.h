@@ -767,6 +767,8 @@ EFFECT(blstbgn); // for Begin Multi-Blast
 EFFECT(blstend); // for End Multi-Blast
 EFFECT(push); // for Force Push gesture in Battle Mode
 EFFECT(quote); // quote on force effect
+EFFECT(tr);
+EFFECT2(trloop, trloop);
 #ifdef FETT263_EDIT_MODE_MENU
 EFFECT(medit); // Edit Mode
 #endif
