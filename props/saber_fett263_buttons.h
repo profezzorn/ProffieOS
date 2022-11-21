@@ -5893,11 +5893,6 @@ void SoundLoop() {
         return;
       case EFFECT_TRANSITION_SOUND: hybrid_font.PlayCommon(&SFX_tr); return;
       case EFFECT_SOUND_LOOP: SoundLoop(); return;
-      case EFFECT_TRACK: 
-        if (!track_player_) {
-          StartOrStopTrack();
-        }
-	return;
       default:
         break; // avoid compiler warnings
     }
