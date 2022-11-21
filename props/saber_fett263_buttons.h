@@ -1927,6 +1927,21 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
+void SoundLoop() {
+    if (wav_player->isPlaying()) {
+      wav_player->Stop();
+      wav_player.Free();
+      STDOUT.println("End Wav Player");    
+    } else {
+      wav_player = GetFreeWavPlayer();
+      if (wav_player) {
+           wav_player->PlayOnce(&SFX_trloop);
+      } else {
+        STDOUT.println("Out of WAV players!");
+      }
+    }
+  }
+
   void SelectPreset(int preset) {
 #ifdef SAVE_PRESET
     SaveState(preset);
@@ -5874,6 +5889,13 @@ SaberFett263Buttons() : PropBase() {}
           preon_effect_ = false;
         }
         return;
+      case EFFECT_TRANSITION_SOUND: hybrid_font.PlayCommon(&SFX_tr); return;
+      case EFFECT_SOUND_LOOP: SoundLoop(); return;
+      case EFFECT_TRACK: 
+        if (!track_player_) {
+          StartOrStopTrack();
+        }
+	return;
       default:
         break; // avoid compiler warnings
     }
