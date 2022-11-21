@@ -46,7 +46,7 @@ public:
     }
     last_ = var;
   }
-  int calcualte() { return 0; }
+  int calculate() { return 0; }
   int getInteger() { return 0; }
 private:
   int last_ = 0x7fffffff;
