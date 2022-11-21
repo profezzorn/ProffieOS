@@ -179,7 +179,7 @@ class BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
 }
 
 class SubBladeWrapperReverse : public SubBladeWrapper {
-  virtual bool primary() const override {
+ virtual bool primary() const override {
     return offset_ + 1 == num_leds_;
   }
   void set(int led, Color16 c) override {
@@ -253,6 +253,54 @@ class BladeBase* SubBladeWithStride(int first_led, int last_led, int stride, Bla
     first_subblade_wrapper = last_subblade_wrapper = ret;
   }
   ret->SetupStride(stride);
+  ret->SetupSubBlade(blade, first_led, (last_led - first_led)/stride + 1);
+  return ret;
+}
+
+class SubBladeWrapperZZ : public SubBladeWrapperWithStride {
+public:
+  void SetCol(int col) {
+    col_ = col;
+  }
+  int translate(int led) const {
+    return offset_ + led * stride_ + ((led & 1) ? col_ : (stride_ - 1 - col_));
+  }
+ virtual bool primary() const override {
+   return translate(0) == 0;
+ }
+  void set(int led, Color16 c) override {
+    return blade_->set(translate(led), c);
+  }
+  void set_overdrive(int led, Color16 c) override {
+    return blade_->set_overdrive(translate(led), c);
+  }
+private:
+  int col_;
+};
+
+class BladeBase* SubBladeZZ(int first_led, int last_led, int stride, int column, BladeBase* blade) {
+  if (blade)  {
+    first_subblade_wrapper = last_subblade_wrapper = NULL;
+  } else {
+    if (!first_subblade_wrapper) return NULL;
+    blade = first_subblade_wrapper->blade_;
+  }
+
+  if (last_led >= blade->num_leds()) {
+    return NULL;
+  }
+
+  SubBladeWrapperZZ* ret = new SubBladeWrapperZZ();
+  if (first_subblade_wrapper) {
+    ret->SetNext(last_subblade_wrapper);
+    first_subblade_wrapper->SetNext(ret);
+    last_subblade_wrapper = ret;
+  } else {
+    ret->SetNext(ret);
+    first_subblade_wrapper = last_subblade_wrapper = ret;
+  }
+  ret->SetupStride(stride);
+  ret->SetCol(column);
   ret->SetupSubBlade(blade, first_led, (last_led - first_led)/stride + 1);
   return ret;
 }

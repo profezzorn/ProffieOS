@@ -516,6 +516,12 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_RANDOMIZE_QUOTE_PLAYER
   This will set Quote Player to randomly select quote.wav instead of playing sequentially
   
+  FETT263_CIRCULAR_VOLUME_MENU
+  Changes Volume Menu to Circular Control
+
+  FETT263_CIRCULAR_DIM_MENU
+  Changes Brightness Menu to Circular Control
+  
 == Disable Features ==
   FETT263_DISABLE_CHANGE_FONT - Disables the "on-the-fly" Change Font option
   
@@ -526,6 +532,10 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_DISABLE_MULTI_BLAST - Disables "Multi-Blast" Mode
 
   FETT263_TRACK_PLAYER_NO_PROMPTS - Disables spoken voice prompts in Track Player
+  
+  FETT263_DISABLE_QUOTE_PLAYER - Disables Force/Quote player, only uses Force. This will allow Quotes to be controlled by style.
+    Use FETT263_SPECIAL_ABILITIES to set EFFECT_QUOTE or EFFECT_NEXT_QUOTE in style
+    Cannot be used with FETT263_RANDOMIZE_QUOTE_PLAYER and FETT263_QUOTE_PLAYER_START_ON
 
 == SA22C 2 Button Variations ==
   FETT263_HOLD_BUTTON_OFF - Changes to Hold PWR to turn Off / Retract
@@ -587,6 +597,10 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #if defined(FETT263_EDIT_MODE_MENU) && !defined(ENABLE_ALL_EDIT_OPTIONS)
 #error ENABLE_ALL_EDIT_OPTIONS must be defined to enable FETT263_EDIT_MODE_MENU
+#endif
+
+#if defined(FETT263_DISABLE_QUOTE_PLAYER) && defined(FETT263_QUOTE_PLAYER_START_ON)
+#error FETT263_QUOTE_PLAYER_START_ON cannot be used with FETT263_DISABLE_QUOTE_PLAYER
 #endif
 
 #if defined(FETT263_BATTLE_MODE_ALWAYS_ON) && defined(FETT263_BATTLE_MODE_START_ON)
@@ -3208,11 +3222,7 @@ SaberFett263Buttons() : PropBase() {}
         }
         break;
       case MENU_VOLUME:
-        if (direction > 0) {
-          VolumeUp();
-        } else {
-          VolumeDown();
-        }
+        ChangeVolume(direction);
         break;
       case MENU_TRACK_PLAYER:
         if (track_player_) {
@@ -3685,18 +3695,30 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_DIM_BLADE:
         if (direction > 0) {
           dim = std::min<float>(dim + 0.1, 1.0);
-          if (dim == 1.0) {
+#ifdef FETT263_CIRCULAR_DIM_MENU
+          if (dim >= 1.0) dim = 0.2;
+          sound_library_.SayUp();
+#else
+          if (dim >= 1.0) {
+            dim = 1.0;
             sound_library_.SayMaximum();
           } else {
             sound_library_.SayUp();
           }
+#endif
         } else {
           dim = std::max<float>(dim - 0.1, 0.2);
-          if (dim == 0.2) {
+#ifdef FETT263_CIRCULAR_DIM_MENU
+          if (dim <= 0.2) dim = 1.0;
+          sound_library_.SayDown();
+#else
+          if (dim <= 0.2) {
+            dim = 0.2;
             sound_library_.SayMinimum();
           } else {
-	    sound_library_.SayDown();
+            sound_library_.SayDown();
           }
+#endif
         }
         SaberBase::SetDimming(pow(dim, 2.2) * 16384);
         break;
@@ -4401,6 +4423,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 
   void CheckQuote() {
+#ifndef FETT263_DISABLE_QUOTE_PLAYER
     if (SFX_quote) {      
       if (fusor.angle1() < - M_PI / 3)  {
         force_quote_ = !force_quote_;
@@ -4409,6 +4432,10 @@ SaberFett263Buttons() : PropBase() {}
     } else {
       SaberBase::DoForce();  
     }
+#else
+    SaberBase::DoEffect(EFFECT_FORCE, 0);
+#endif
+}
   }
 
   void ForceQuote() {
@@ -4442,34 +4469,42 @@ SaberFett263Buttons() : PropBase() {}
     SaveState(0);
 #endif
     SetPreset(0, true);
-}
-	
-  // SA22C Volume Menu
-  void VolumeUp() {
-    STDOUT.println("Volume up");
-    if (dynamic_mixer.get_volume() < VOLUME) {
-      dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
-                                             dynamic_mixer.get_volume() + VOLUME * 0.10));
-      sound_library_.SayVolumeUp();
-      STDOUT.print("Current Volume: ");
-      STDOUT.println(dynamic_mixer.get_volume());
-    } else {
-      sound_library_.SayMaximumVolume();
-    }
   }
 
-  void VolumeDown() {
-    STDOUT.println("Volume Down");
-    if (dynamic_mixer.get_volume() > (0.10 * VOLUME)) {
-      dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
-                                             dynamic_mixer.get_volume() - VOLUME * 0.10));
-
-      sound_library_.SayVolumeDown();
-      STDOUT.print("Current Volume: ");
-      STDOUT.println(dynamic_mixer.get_volume());
+  void ChangeVolume(int v) {
+    float current_volume = dynamic_mixer.get_volume();
+    float volume = current_volume + (VOLUME * (v * 0.1));
+#ifdef FETT263_CIRCULAR_VOLUME_MENU
+    if (volume > VOLUME) volume = VOLUME * 0.1;
+    if (volume < (VOLUME * 0.1)) volume = VOLUME;
+    if (volume > current_volume) {
+      STDOUT.println("Volume up");
+      sound_library_.SayVolumeUp();      
     } else {
-      sound_library_.SayMininumVolume();
+      STDOUT.println("Volume Down");
+      sound_library_.SayVolumeDown();
     }
+#else
+    if (volume > VOLUME) {
+      volume = VOLUME;
+      sound_library_.SayMaximumVolume();
+    } else if (volume < (VOLUME * 0.1)) {
+      volume = VOLUME * 0.1;
+      sound_library_.SayMininumVolume();
+    } else {
+      if (v > 0) {
+        STDOUT.println("Volume up");
+        sound_library_.SayVolumeUp();      
+      } else {
+        STDOUT.println("Volume Down");
+        sound_library_.SayVolumeDown();
+      }
+    }
+#endif
+    STDOUT.print("Current Volume: ");
+    STDOUT.println(dynamic_mixer.get_volume());
+    dynamic_mixer.set_volume(volume);
+    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
   }
 
   RefPtr<BufferedWavPlayer> wav_player;
