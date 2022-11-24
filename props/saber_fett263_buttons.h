@@ -4435,7 +4435,6 @@ SaberFett263Buttons() : PropBase() {}
 #else
     SaberBase::DoEffect(EFFECT_FORCE, 0);
 #endif
-}
   }
 
   void ForceQuote() {
