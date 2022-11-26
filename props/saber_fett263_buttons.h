@@ -1929,15 +1929,16 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
-void SoundLoop() {
+  void SoundLoop() {
     if (wav_player->isPlaying()) {
-      wav_player->Stop();
+      wav_player->set_fade_time(0.2);
+      wav_player->FadeAndStop();
       wav_player.Free();
       STDOUT.println("End Wav Player");    
     } else {
       wav_player = GetFreeWavPlayer();
       if (wav_player) {
-           wav_player->PlayOnce(&SFX_trloop);
+        wav_player->PlayOnce(&SFX_trloop);
       } else {
         STDOUT.println("Out of WAV players!");
       }
