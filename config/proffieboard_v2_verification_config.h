@@ -66,7 +66,10 @@ Preset presets[] = {
     StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>(),
     StyleStrobePtr<WHITE, Rainbow, 15, 300, 800>(), "strobe"},
   { "TeensySF", "tracks/venus.wav",
-    &style_pov,
+    StylePtr<Layers<
+      Red,
+      SyncAltToVarianceL,
+      InOutTrL<TrWipe<300>,TrWipeInX<WavLen<EFFECT_RETRACTION> >>>>(),
     StyleNormalPtr<Mix<ChangeSlowly<Int<1>, Int<1>>, White, Black>, BLACK, 300, 800>(), "POV"},
   { "SmthJedi", "tracks/mars.wav",
     &style_charging,
