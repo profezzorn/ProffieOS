@@ -32,6 +32,7 @@ public:
     return FunctionRunResult::ZERO_UNTIL_IGNITION;
   }
 
+  const char* name() override { return "SyncAltToVariance"; }
   void Loop() override {
     if (num_alternatives == 0) return;
     int var = MOD(SaberBase::GetCurrentVariation(), num_alternatives);
