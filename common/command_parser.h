@@ -57,6 +57,22 @@ int RunCommandAndGetSingleLine(const char* cmd, const char* arg,
   return output_helper.num_lines();
 }
 
+// Returns true if a line was found.
+// To get the first line, call with previous == nullptr.
+template<size_t MAXLINE>
+bool RunCommandAndFindNextSortedLine(const char* cmd, const char* arg,
+				     const char* previous,
+				     char* output,
+				     bool reverse) {
+  GetNextLineCommandOutput<MAXLINE> output_helper(previous, output, reverse);
+  Print* saved_output = stdout_output;
+  stdout_output = &output_helper;
+  CommandParser::DoParse(cmd, arg);
+  stdout_output = saved_output;
+  return output_helper.found();
+}
+
+
 #endif
 
 #endif

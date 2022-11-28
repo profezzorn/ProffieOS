@@ -102,6 +102,46 @@ private:
  size_t bufsize_;
 };
 
+template<size_t MAXLINE>
+class GetNextLineCommandOutput : public Print {
+ public:
+  GetNextLineCommandOutput(const char* previous, char* target_buf, bool reverse) :
+    previous_(previous),
+    buf_(target_buf),
+    reverse_(reverse) {
+  }
+
+  bool compare(const char* a, const char *b) const {
+    return (strcmp(a, b) < 0) != reverse_;
+  }
+  size_t write(uint8_t b) override {
+    if (b == '\n') {
+      if (pos_) {
+	line_[pos_+1] = 0;
+	if (previous_ == nullptr || compare(previous_, line_)) {
+	  if (!found_ || compare(line_, buf_)) {
+	    strcpy(buf_, line_);
+	    found_ = true;
+	  }
+	  pos_ = 0;
+	}
+      }
+      return 1;
+    }
+    if (b == '\r') return 1;
+    if (pos_ <  MAXLINE - 1) line_[pos_++] = b;
+    return 1;
+  }
+  bool found() const { return found_; }
+private:
+  bool reverse_;
+  bool found_ = false;
+  size_t pos_ = 0;
+  char* buf_;
+  const char* previous_;
+  char line_[MAXLINE];
+};
+
 extern ConsoleHelper STDOUT;
 
 #define DEFINE_COMMON_STDOUT_GLOBALS            \
