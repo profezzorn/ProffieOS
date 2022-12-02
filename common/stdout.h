@@ -5,14 +5,22 @@
 
 #ifdef PROFFIE_TEST
 struct Print {
-  void print(const char* s) { fprintf(stdout, "%s", s); }
-  void print(float v) { fprintf(stdout, "%f", v); }
-  void print(int v, int base) { fprintf(stdout, "%d", v); }
-  void write(char s) { putchar(s); }
+  void print(const char* s) { write((const uint8_t*)s, strlen(s)); }
+  void print(float v) {
+    char tmp[64];
+    sprintf(tmp, "%f", v);
+    print(tmp);
+  }
+  void print(int v, int base) {
+    char tmp[64];
+    sprintf(tmp, "%d", v);
+    print(tmp);
+  }
+  void write(char s) { write( (uint8_t) s); }
   template<class T>
-  void println(T s) { print(s); putchar('\n'); }
+  void println(T s) { print(s); write('\n'); }
   template<class T>
-  void println(T s, int base) { print(s); putchar('\n'); }
+  void println(T s, int base) { print(s); write('\n'); }
   virtual size_t write(uint8_t s) { putchar(s); return 1; }
   virtual size_t write(const uint8_t *buffer, size_t size) {
     for (size_t i = 0; i < size; i++) write(buffer[i]);
@@ -112,19 +120,19 @@ class GetNextLineCommandOutput : public Print {
   }
 
   bool compare(const char* a, const char *b) const {
-    return (strcmp(a, b) < 0) != reverse_;
+    return reverse_ ? (strcmp(a, b) > 0) : (strcmp(a, b) < 0);
   }
   size_t write(uint8_t b) override {
     if (b == '\n') {
       if (pos_) {
-	line_[pos_+1] = 0;
+	line_[pos_] = 0;
 	if (previous_ == nullptr || compare(previous_, line_)) {
 	  if (!found_ || compare(line_, buf_)) {
 	    strcpy(buf_, line_);
 	    found_ = true;
 	  }
-	  pos_ = 0;
 	}
+	pos_ = 0;
       }
       return 1;
     }
