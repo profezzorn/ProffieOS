@@ -265,23 +265,8 @@ public:
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
 
-      case EVENTID(BUTTON_AUX, EVENT_FIRST_PRESSED, MODE_OFF):
-#if NUM_BUTTONS > 2
-      case EVENTID(BUTTON_AUX2, EVENT_FIRST_PRESSED, MODE_OFF):
-#endif
-        on_when_pressed_ = false;
-        return true;
-
-      case EVENTID(BUTTON_AUX, EVENT_FIRST_PRESSED, MODE_ON):
-#if NUM_BUTTONS > 2
-      case EVENTID(BUTTON_AUX2, EVENT_FIRST_PRESSED, MODE_ON):
-#endif
-        on_when_pressed_ = true;
-        return true;
-
 // Activate Saber
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
-        on_when_pressed_ = false;
         On();
         return true;
 
@@ -291,14 +276,11 @@ public:
 #else
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF | BUTTON_AUX):
 #endif
-        if (!on_when_pressed_) {
-          On();
-          if (!track_player_) {
-            StartTrackPlayer();
-          }
-          return true;
+        On();
+        if (!track_player_) {
+          StartTrackPlayer();
         }
-        break;
+        return true;
 
 // Deactivate Saber
 #if NUM_BUTTONS > 2
@@ -306,7 +288,7 @@ public:
 #else
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON | BUTTON_AUX):
 #endif
-        if (on_when_pressed_ && !mode_volume_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
+        if (!mode_volume_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
           Off();
           return true;
         }
@@ -314,36 +296,30 @@ public:
 
 // Start or Stop Track
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-        if (!on_when_pressed_) {
-          if (track_player_) {
-            StopTrackPlayer();
-          } else {
-            StartTrackPlayer();
-          }
-          return true;
+        if (track_player_) {
+          StopTrackPlayer();
+        } else {
+          StartTrackPlayer();
         }
-        break;
+        return true;
 
 // Next Preset/Track
       case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
-        if (!on_when_pressed_) {
 #ifndef DISABLE_BEEPS
-          beeper.Beep(0.1, 2000);
+        beeper.Beep(0.1, 2000);
 #endif
-          if (track_player_) {
-            NextTrack();
-          } else {
-            next_preset();
-            strcpy(current_track_,current_preset_.track.get());
-            track_mode_ = PLAYBACK_ONCE;
-          }
-          return true;
+        if (track_player_) {
+          NextTrack();
+        } else {
+          next_preset();
+          strcpy(current_track_,current_preset_.track.get());
+          track_mode_ = PLAYBACK_ONCE;
         }
-        break;
+        return true;
 
 // Battery Level
       case EVENTID(BUTTON_AUX, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
-        if (!on_when_pressed_ && !wav_player->isPlaying()) {
+        if (!track_player_on_ && !wav_player->isPlaying()) {
 #ifdef CUSTOM_BATTERY_LEVEL
           sound_library_.SayBatteryLevel();
           sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
@@ -360,69 +336,65 @@ public:
 
 // Track Playback Mode
       case EVENTID(BUTTON_AUX, EVENT_SECOND_CLICK_SHORT, MODE_OFF):
-        if (!on_when_pressed_) {
-          switch (track_mode_) {
-            case PLAYBACK_ONCE:
-              track_mode_ = PLAYBACK_LOOP;
-              if (SFX_mloop) {
+        switch (track_mode_) {
+          case PLAYBACK_ONCE:
+            track_mode_ = PLAYBACK_LOOP;
+            if (SFX_mloop) {
 #ifndef DISABLE_BEEPS
-                beeper.Beep(0.1, 2000);
+              beeper.Beep(0.1, 2000);
 #endif
-                hybrid_font.PlayPolyphonic(&SFX_mloop);
-              } else {
-                beeper.Beep(0.20,1000);
-                beeper.Beep(0.20,2000);
-                beeper.Beep(0.20,1000);
-              }
-              break;
-            case PLAYBACK_LOOP:
-              track_mode_ = PLAYBACK_ROTATE;
-              if (SFX_mrotate) {
+              hybrid_font.PlayPolyphonic(&SFX_mloop);
+            } else {
+              beeper.Beep(0.20,1000);
+              beeper.Beep(0.20,2000);
+              beeper.Beep(0.20,1000);
+            }
+            break;
+          case PLAYBACK_LOOP:
+            track_mode_ = PLAYBACK_ROTATE;
+            if (SFX_mrotate) {
 #ifndef DISABLE_BEEPS
-                beeper.Beep(0.1, 2000);
+              beeper.Beep(0.1, 2000);
 #endif
-                hybrid_font.PlayPolyphonic(&SFX_mrotate);
-              } else {
-                beeper.Beep(0.20,1000);
-                beeper.Beep(0.20,2000);
-                beeper.Beep(0.20,1000);
-              }
-              break;
+              hybrid_font.PlayPolyphonic(&SFX_mrotate);
+            } else {
+              beeper.Beep(0.20,1000);
+              beeper.Beep(0.20,2000);
+              beeper.Beep(0.20,1000);
+            }
+            break;
 #ifdef ENABLE_SHUFFLE
-            case PLAYBACK_ROTATE:
-              track_mode_ = PLAYBACK_SHUFFLE;
-              if (SFX_mshuffle) {
+          case PLAYBACK_ROTATE:
+            track_mode_ = PLAYBACK_SHUFFLE;
+            if (SFX_mshuffle) {
 #ifndef DISABLE_BEEPS
-                beeper.Beep(0.1, 2000);
+              beeper.Beep(0.1, 2000);
 #endif
-                hybrid_font.PlayPolyphonic(&SFX_mshuffle);
-              } else {
-                beeper.Beep(0.20,1000);
-                beeper.Beep(0.20,2000);
-                beeper.Beep(0.20,1000);
-              }
-              break;
+              hybrid_font.PlayPolyphonic(&SFX_mshuffle);
+            } else {
+              beeper.Beep(0.20,1000);
+              beeper.Beep(0.20,2000);
+              beeper.Beep(0.20,1000);
+            }
+            break;
 #endif
-            default:
-              track_mode_ = PLAYBACK_ONCE;
-              if (SFX_monce) {
+          default:
+            track_mode_ = PLAYBACK_ONCE;
+            if (SFX_monce) {
 #ifndef DISABLE_BEEPS
-                beeper.Beep(0.1, 2000);
+              beeper.Beep(0.1, 2000);
 #endif
-                hybrid_font.PlayPolyphonic(&SFX_monce);
-              } else {
-                beeper.Beep(0.20,1000);
-                beeper.Beep(0.20,2000);
-                beeper.Beep(0.20,1000);
-              }
-          }
-        return true;
+              hybrid_font.PlayPolyphonic(&SFX_monce);
+            } else {
+              beeper.Beep(0.20,1000);
+              beeper.Beep(0.20,2000);
+              beeper.Beep(0.20,1000);
+            }
         }
-        break;
+        return true;
 
 // Non-Impact Clash and Lockup / Zoom Color
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
-        on_when_pressed_ = true;
         if (!SaberBase::Lockup() && !mode_volume_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
           SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
           SaberBase::DoBeginLockup();
@@ -505,7 +477,6 @@ public:
           STDOUT.println("Volume Change Cancelled");
           STDOUT.print("Current Volume: ");
           STDOUT.println(dynamic_mixer.get_volume());
-          return true;
 #ifndef DISABLE_COLOR_CHANGE
         } else if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           if (SFX_ccend) {
@@ -515,13 +486,11 @@ public:
             SFX_ccend.Select(1);
           }
           ResetColorChangeMode();
-          return true;
 #endif
-        } else if (on_when_pressed_) {
+        } else {
           SaberBase::DoBlast();
-          return true;
         }
-        break;
+        return true;
 
 // Lockup/Drag
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
@@ -538,7 +507,7 @@ public:
 
 // Lightning Block
       case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD, MODE_ON):
-        if (!SaberBase::Lockup() && !mode_volume_ && on_when_pressed_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
+        if (!SaberBase::Lockup() && !mode_volume_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
           SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
           SaberBase::DoBeginLockup();
           return true;
@@ -556,7 +525,7 @@ public:
 
 // Enter Volume Menu
       case EVENTID(BUTTON_AUX, EVENT_SECOND_HELD_MEDIUM, MODE_ON):
-        if (!mode_volume_ && on_when_pressed_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
+        if (!mode_volume_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
           reset_volume_ = dynamic_mixer.get_volume();
           current_menu_angle_ = fusor.angle2();
           mode_volume_ = true;
@@ -578,7 +547,7 @@ public:
 // Color Change
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_AUX, EVENT_THIRD_HELD_MEDIUM, MODE_ON):
-        if (!mode_volume_ && on_when_pressed_) {
+        if (!mode_volume_) {
 #ifndef DISABLE_BEEPS
           if (SFX_ccbegin) {
             beeper.Beep(0.1, 2000);
@@ -622,7 +591,6 @@ public:
     }
 
 private:
-  bool on_when_pressed_ = false;
   bool mode_volume_ = false;
   int32_t reset_volume_ = VOLUME;
   float current_menu_angle_ = 0.0;
