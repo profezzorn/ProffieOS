@@ -53,15 +53,20 @@
 //                  Turn Off: Hold Aux or Aux2 and press Power
 //
 // You will need the following sound files in order for menus to work properly:
-// vmbegin.wav - Enter Volume Change Menu
-// vmend01.wav - Save Volume Change
-// vmend02.wav - Cancel Volume Change
-// monce.wav   - Set Track Player to play a single track one time
-// mloop.wav   - Set Track Player to repeat a single track
-// mrotate.wav - Set Track Player to repeat all tracks
-// ccbegin.wav - Enter Color Change Mode
-// ccend01.wav - Save Color and Exit Color Change Mode
-// ccend02.wav - Reset Color and Exit Color Change Mode
+// vmbegin.wav              - Enter Volume Change Menu
+// vmend01.wav              - Save Volume Change
+// vmend02.wav              - Cancel Volume Change
+// monce.wav                - Set Track Player to play a single track one time
+// mloop.wav                - Set Track Player to repeat a single track
+// mrotate.wav              - Set Track Player to repeat all tracks
+// ccbegin.wav              - Enter Color Change Mode
+// ccend01.wav              - Save Color and Exit Color Change Mode
+// ccend02.wav              - Reset Color and Exit Color Change Mode
+// mbatt.wav                - Announce Current Battery Level
+// mnum1.wav to mnum20.wav  - Individually Spoken Numbers
+// thirty.wav to ninety.wav
+// hundred.wav              - "Hundred"
+// mpercent.wav             - "Percent"
 //
 // Options you can add to your config file:
 // #define DISABLE_COLOR_CHANGE   - Disables the color change menu.
@@ -70,13 +75,6 @@
 //                                  exiting the volume and color change menus.
 //                                  Note that beeps will still play if any
 //                                  sound file listed above is missing.
-// #define CAIWYN_BATTERY_PROMPTS - To use your own sound files when checking
-//                                  battery level instead of Proffie's built-in
-//                                  voice.
-//                                  This will require additional sound files:
-//                                  mbatt.wav, mpercent.wav, mzero.wav,
-//                                  mnum1.wav - mnum20.wav,
-//                                  thirty.wav - ninety.wav, hundred.wav
 // #define CAIWYN_NOCLASH_LOCKUP  - When you click the power button, both a
 //                                  clash sound and a lockup are simultaneously
 //                                  triggered.  This is because I have found
@@ -128,6 +126,8 @@ EFFECT(vmend);
 EFFECT(monce);
 EFFECT(mloop);
 EFFECT(mrotate);
+EFFECT(mbatt);
+EFFECT(mpercent);
 
 // The Saber class implements the basic states and actions for the saber.
 class CaiwynButtons : public PropBase {
@@ -448,16 +448,16 @@ public:
 // Battery Level
       case EVENTID(BUTTON_AUX, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
         if (!track_player_on_ && !wav_player_->isPlaying()) {
-#ifdef CAIWYN_BATTERY_PROMPTS
-          sound_library_.SayBatteryLevel();
-          sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
-          sound_library_.SayPercent();
-#else
-          talkie.Say(spBATTERYLEVEL);
-          talkie.SayNumber((int)floorf(battery_monitor.battery_percent()));
-          talkie.Say(spPERCENT);
-#endif
           SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+          if (SFX_mbatt && SFX_mnum && SFX_mpercent) {
+            sound_library_.SayBatteryLevel();
+            sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
+            sound_library_.SayPercent();
+          } else {
+            talkie.Say(spBATTERYLEVEL);
+            talkie.SayNumber((int)floorf(battery_monitor.battery_percent()));
+            talkie.Say(spPERCENT);
+          }
           return true;
         }
         break;
