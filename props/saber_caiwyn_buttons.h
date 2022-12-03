@@ -162,6 +162,23 @@ public:
     return false;
   }
 
+  void VolumeMenu() {
+    reset_volume_ = dynamic_mixer.get_volume();
+    current_menu_angle_ = fusor.angle2();
+    mode_volume_ = true;
+    if (SFX_vmbegin) {
+#ifndef CAIWYN_DISABLE_BEEPS
+      beeper.Beep(0.1, 2000);
+#endif
+      hybrid_font.PlayPolyphonic(&SFX_vmbegin);
+    } else {
+      beeper.Beep(0.20,1000.0);
+      beeper.Beep(0.20,1414.2);
+      beeper.Beep(0.20,2000.0);
+    }
+    STDOUT.println("Enter Volume Menu");
+  }
+
   void VolumeUp() {
     STDOUT.println("Volume up");
     if (dynamic_mixer.get_volume() < VOLUME) {
@@ -178,6 +195,41 @@ public:
       STDOUT.print("Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
     }
+  }
+
+  void VolumeSave() {
+    mode_volume_ = false;
+    if (SFX_vmend) {
+#ifndef CAIWYN_DISABLE_BEEPS
+      beeper.Beep(0.1, 2000);
+#endif
+      SFX_vmend.Select(0);
+      hybrid_font.PlayPolyphonic(&SFX_vmend);
+    } else {
+      beeper.Beep(0.20,2000.0);
+      beeper.Beep(0.20,1414.2);
+      beeper.Beep(0.20,1000.0);
+    }
+    STDOUT.println("Exit Volume Menu");
+  }
+
+  void VolumeCancel() {
+    dynamic_mixer.set_volume(reset_volume_);
+    mode_volume_ = false;
+    if (SFX_vmend) {
+#ifndef CAIWYN_DISABLE_BEEPS
+      beeper.Beep(0.1, 2000);
+#endif
+      SFX_vmend.Select(1);
+      hybrid_font.PlayPolyphonic(&SFX_vmend);
+    } else {
+      beeper.Beep(0.20,2000.0);
+      beeper.Beep(0.20,1414.2);
+      beeper.Beep(0.20,1000.0);
+    }
+    STDOUT.println("Volume Change Cancelled");
+    STDOUT.print("Current Volume: ");
+    STDOUT.println(dynamic_mixer.get_volume());
   }
 
   void DetectMenuTurn() {
@@ -322,9 +374,15 @@ public:
   }
 
 #ifndef DISABLE_COLOR_CHANGE
-// Revert color change without saving (reset to Variation == 0)
+// Revert color change (reset to Variation == 0)
   void ResetColorChangeMode() {
     if (!current_style()) return;
+    if (SFX_ccend) {
+#ifndef CAIWYN_DISABLE_BEEPS
+      beeper.Beep(0.1, 2000);
+#endif
+      SFX_ccend.Select(1);
+    }
     STDOUT << "Reset Color Variation" << "\n";
     SetVariation(0);
     STDOUT << "Color change mode done, variation = 0" << "\n";
@@ -434,19 +492,7 @@ public:
 // Save Volume / Save Color
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_ON):
         if (mode_volume_) {
-          mode_volume_ = false;
-          if (SFX_vmend) {
-#ifndef CAIWYN_DISABLE_BEEPS
-            beeper.Beep(0.1, 2000);
-#endif
-            SFX_vmend.Select(0);
-            hybrid_font.PlayPolyphonic(&SFX_vmend);
-          } else {
-            beeper.Beep(0.20,2000.0);
-            beeper.Beep(0.20,1414.2);
-            beeper.Beep(0.20,1000.0);
-          }
-          STDOUT.println("Exit Volume Menu");
+          VolumeSave();
           return true;
 #ifndef DISABLE_COLOR_CHANGE
         } else if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_STEPPED) {
@@ -477,30 +523,9 @@ public:
 // Cancel Volume / Reset Color / Blaster Block
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
         if (mode_volume_) {
-          dynamic_mixer.set_volume(reset_volume_);
-          mode_volume_ = false;
-          if (SFX_vmend) {
-#ifndef CAIWYN_DISABLE_BEEPS
-            beeper.Beep(0.1, 2000);
-#endif
-            SFX_vmend.Select(1);
-            hybrid_font.PlayPolyphonic(&SFX_vmend);
-          } else {
-            beeper.Beep(0.20,2000.0);
-            beeper.Beep(0.20,1414.2);
-            beeper.Beep(0.20,1000.0);
-          }
-          STDOUT.println("Volume Change Cancelled");
-          STDOUT.print("Current Volume: ");
-          STDOUT.println(dynamic_mixer.get_volume());
+          VolumeCancel();
 #ifndef DISABLE_COLOR_CHANGE
         } else if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-          if (SFX_ccend) {
-#ifndef CAIWYN_DISABLE_BEEPS
-            beeper.Beep(0.1, 2000);
-#endif
-            SFX_ccend.Select(1);
-          }
           ResetColorChangeMode();
 #endif
         } else {
@@ -542,20 +567,7 @@ public:
 // Enter Volume Menu
       case EVENTID(BUTTON_AUX, EVENT_SECOND_HELD_MEDIUM, MODE_ON):
         if (!mode_volume_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
-          reset_volume_ = dynamic_mixer.get_volume();
-          current_menu_angle_ = fusor.angle2();
-          mode_volume_ = true;
-          if (SFX_vmbegin) {
-#ifndef CAIWYN_DISABLE_BEEPS
-            beeper.Beep(0.1, 2000);
-#endif
-            hybrid_font.PlayPolyphonic(&SFX_vmbegin);
-          } else {
-            beeper.Beep(0.20,1000.0);
-            beeper.Beep(0.20,1414.2);
-            beeper.Beep(0.20,2000.0);
-          }
-          STDOUT.println("Enter Volume Menu");
+          VolumeMenu();
           return true;
         }
         break;
