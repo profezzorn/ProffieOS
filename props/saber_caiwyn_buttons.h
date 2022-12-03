@@ -1,60 +1,93 @@
 // Caiwyn's Lightsaber Controls
-// This config is designed to provide fast, low-latency response to button presses for the most basic functions (blaster blocks, lockups, and clashes) by omitting, or limiting non-critical features.
-// At least 2 buttons are required.  A third button can be added, but is not necessary.
+// This config is designed to provide fast, low-latency response to button
+// presses for the most basic functions (blaster blocks, lockups, and clashes)
+// by omitting, or limiting non-critical features.
 //
-// While saber is DEACTIVATED:
-// Start/Stop Track: Click Aux
-// Track Player Mode: Double-click Aux
-//   This cycles through three playback modes:
-//   1. Play a single track and stop
-//   2. Repeat a single track in a loop
-//   3. Repeat all tracks in a loop
-//   Tracks must be in <font>/tracks/*.wav, and will be selected in alphabetical order.
-// Next Track: Hold Aux while track is playing
-// Next Preset: Hold Aux when track is not playing
-// Check Battery: Double-click and hold Aux
-// Activate Saber: Press Power
-// Activate Saber and Start Track: Hold Aux or Aux2 and press Power
+// At least 2 buttons are required.  A third button can be added, but is not
+// necessary.
 //
-// While saber is ACTIVATED:
-// Non-impact Clash/Lockup: Click Power (This generates a clash/lockup effect with no impact to the blade; quick press for a short clash, hold for a lockup)
-// Blaster Block: Click Aux
-// Lightning Block: Hold Aux
-// Lockup: Hold Aux during impact
-// Drag: Hold Aux during impact with saber pointed down.
-// Melt: Hold Aux and stab
-// Enter Volume Menu: Double-click and hold Aux (Be aware that the first click will trigger a blaster block)
-//   Increase Volume: Rotate hilt right while in Volume Menu
-//   Decrease Volume: Rotate hilt left while in Volume Menu
-//   Save Changes and Exit Volume Menu: Click Power
-//   Discard Changes and Exit Volume Menu: Click Aux
-// Enter Color Change Mode (Color Wheel): Triple-click and hold Aux (Be aware that the first two clicks will trigger blaster blocks)
-//   Change Color: Rotate hilt while in Color Change Mode
-//   Color Zoom: Press & Hold Power and Rotate hilt while in Color Change Mode
-//   Save Changes and Exit Color Change Mode: Release Power
-//   Reset Color and Exit Color Change mode: Click Aux
-// Deactivate Saber: Hold Aux or Aux2 and press Power
+// While saber is OFF:
+//          Start/Stop Track: Click Aux
+//         Track Player Mode: Double-click Aux
+//                            * This cycles through three playback modes:
+//                            * 1. Play a single track and stop
+//                            * 2. Repeat a single track in a loop
+//                            * 3. Repeat all tracks in a loop
+//                            * Tracks must be in <font>/tracks/*.wav, and will
+//                            * be selected in alphabetical order.
+//                Next Track: Hold Aux for 1 second while track is playing
+//               Next Preset: Hold Aux for 1 second when track is not playing
+//             Check Battery: Double-click and hold Aux for 1 second
+//                   Turn On: Press Power
+//     Turn On & Start Track: Hold Aux or Aux2 and press Power
+//
+// While saber is ON:
+//   Non-impact Clash/Lockup: Click/Hold Power
+//                            * This generates a clash/lockup effect with no
+//                            * impact to the blade; quick press for a short
+//                            * clash, hold for a lockup
+//             Blaster Block: Click Aux
+//           Lightning Block: Hold Aux
+//                    Lockup: Hold Aux during impact
+//                      Drag: Hold Aux during impact with saber pointed down.
+//                      Melt: Hold Aux and stab
+//
+//         Enter Volume Menu: Double-click and hold Aux for 1 second
+//                            * Be aware that the first click will trigger a
+//                            * blaster block
+//           Increase Volume: Rotate hilt right while in Volume Menu
+//           Decrease Volume: Rotate hilt left while in Volume Menu
+//   Save & Exit Volume Menu: Click Power
+// Cancel & Exit Volume Menu: Click Aux
+//
+//   Enter Color Change Mode: Triple-click and hold Aux for 1 second
+//                            * Be aware that the first two clicks will
+//                            * trigger blaster blocks
+//              Change Color: Rotate hilt while in Color Change Mode
+//                Color Zoom: Press & Hold Power and Rotate hilt
+//                            * This will fine-tune the selected color before
+//                            * saving your change
+//  Save & Exit Color Change: Release Power while in Color Zoom
+// Reset & Exit Color Change: Click Aux
+//
+//                  Turn Off: Hold Aux or Aux2 and press Power
 //
 // You will need the following sound files in order for menus to work properly:
 // vmbegin.wav - Enter Volume Change Menu
 // vmend01.wav - Save Volume Change
 // vmend02.wav - Cancel Volume Change
-// monce.wav - Set Track Player to play a single track one time
-// mloop.wav - Set Track Player to repeat a single track
+// monce.wav   - Set Track Player to play a single track one time
+// mloop.wav   - Set Track Player to repeat a single track
 // mrotate.wav - Set Track Player to repeat all tracks
 // ccbegin.wav - Enter Color Change Mode
 // ccend01.wav - Save Color and Exit Color Change Mode
 // ccend02.wav - Reset Color and Exit Color Change Mode
 //
 // Options you can add to your config file:
-// #define DISABLE_BEEPS        - Disables the single beep that occurs when selecting fonts, tracks, or entering or exiting the volume and color change menus.
-//                                Note that beeps will still play if any sound file listed above is missing.
-// #define DISABLE_COLOR_CHANGE - Disables the color change menu.
-// #define CUSTOM_BATTERY_LEVEL - To use your own sound files when checking battery level instead of Proffie's built-in voice.
-//                                This will require additional sound files: mbatt.wav, mpercent.wav, mzero.wav, mnum1.wav - mnum20.wav, thirty.wav - ninety.wav, hundred.wav
-// #define DISABLE_BUTTON_CLASH - When you click the power button, both a clash sound and a lockup are simultaneously triggered.
-//                                This is because I have found that quickly starting and ending a lockup often sounds like multiple clashes rather than a single clash.
-//                                To smooth everything out, a clash sound is mixed in as well.  This works for most fonts, but if it sounds weird you can disable the clash sound and just use the lockup by itself.
+// #define DISABLE_COLOR_CHANGE   - Disables the color change menu.
+// #define CAIWYN_DISABLE_BEEPS   - Disables the single beep that occurs when
+//                                  selecting fonts, tracks, or entering or
+//                                  exiting the volume and color change menus.
+//                                  Note that beeps will still play if any
+//                                  sound file listed above is missing.
+// #define CAIWYN_BATTERY_PROMPTS - To use your own sound files when checking
+//                                  battery level instead of Proffie's built-in
+//                                  voice.
+//                                  This will require additional sound files:
+//                                  mbatt.wav, mpercent.wav, mzero.wav,
+//                                  mnum1.wav - mnum20.wav,
+//                                  thirty.wav - ninety.wav, hundred.wav
+// #define CAIWYN_NOCLASH_LOCKUP  - When you click the power button, both a
+//                                  clash sound and a lockup are simultaneously
+//                                  triggered.  This is because I have found
+//                                  that quickly starting and ending a lockup
+//                                  often sounds like multiple clashes rather
+//                                  than a single clash.
+//                                  To smooth everything out, a clash sound is
+//                                  mixed in as well.  This works for most
+//                                  fonts, but if it sounds weird you can
+//                                  disable the clash sound and just use the
+//                                  lockup by itself.
 
 #ifndef PROPS_CAIWYN_BUTTONS_H
 #define PROPS_CAIWYN_BUTTONS_H
@@ -65,10 +98,6 @@
 
 #undef PROP_TYPE
 #define PROP_TYPE CaiwynButtons
-
-#ifndef NUM_BUTTONS
-#define NUM_BUTTONS 2
-#endif
 
 #if NUM_BUTTONS < 2
 #error /props/saber_caiwyn_buttons.h requires 2 or 3 Buttons for operation
@@ -99,7 +128,6 @@ EFFECT(vmend);
 EFFECT(monce);
 EFFECT(mloop);
 EFFECT(mrotate);
-EFFECT(mshuffle);
 
 // The Saber class implements the basic states and actions for the saber.
 class CaiwynButtons : public PropBase {
@@ -111,7 +139,7 @@ public:
     PropBase::Loop();
     DetectMenuTurn();
     TrackPlayer();
-    sound_library_.Poll(wav_player);
+    sound_library_.Poll(wav_player_);
   }
 
   virtual void SetPreset(int preset_num, bool announce) override {
@@ -173,7 +201,6 @@ public:
     PLAYBACK_ONCE,
     PLAYBACK_LOOP,
     PLAYBACK_ROTATE,
-    PLAYBACK_SHUFFLE,
   };
 
   void TrackPlayer() {
@@ -251,6 +278,49 @@ public:
     }
   }
 
+  void ChangeTrackMode() {
+    switch (track_mode_) {
+      case PLAYBACK_ONCE:
+        track_mode_ = PLAYBACK_LOOP;
+        if (SFX_mloop) {
+#ifndef CAIWYN_DISABLE_BEEPS
+          beeper.Beep(0.1, 2000);
+#endif
+          hybrid_font.PlayPolyphonic(&SFX_mloop);
+        } else {
+          beeper.Beep(0.20,1000);
+          beeper.Beep(0.20,2000);
+          beeper.Beep(0.20,1000);
+        }
+        break;
+      case PLAYBACK_LOOP:
+        track_mode_ = PLAYBACK_ROTATE;
+        if (SFX_mrotate) {
+#ifndef CAIWYN_DISABLE_BEEPS
+          beeper.Beep(0.1, 2000);
+#endif
+          hybrid_font.PlayPolyphonic(&SFX_mrotate);
+        } else {
+          beeper.Beep(0.20,1000);
+          beeper.Beep(0.20,2000);
+          beeper.Beep(0.20,1000);
+        }
+        break;
+      default:
+        track_mode_ = PLAYBACK_ONCE;
+        if (SFX_monce) {
+#ifndef CAIWYN_DISABLE_BEEPS
+          beeper.Beep(0.1, 2000);
+#endif
+          hybrid_font.PlayPolyphonic(&SFX_monce);
+        } else {
+          beeper.Beep(0.20,1000);
+          beeper.Beep(0.20,2000);
+          beeper.Beep(0.20,1000);
+        }
+    }
+  }
+
 #ifndef DISABLE_COLOR_CHANGE
 // Revert color change without saving (reset to Variation == 0)
   void ResetColorChangeMode() {
@@ -305,7 +375,7 @@ public:
 
 // Next Preset/Track
       case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
-#ifndef DISABLE_BEEPS
+#ifndef CAIWYN_DISABLE_BEEPS
         beeper.Beep(0.1, 2000);
 #endif
         if (track_player_) {
@@ -319,8 +389,8 @@ public:
 
 // Battery Level
       case EVENTID(BUTTON_AUX, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
-        if (!track_player_on_ && !wav_player->isPlaying()) {
-#ifdef CUSTOM_BATTERY_LEVEL
+        if (!track_player_on_ && !wav_player_->isPlaying()) {
+#ifdef CAIWYN_BATTERY_PROMPTS
           sound_library_.SayBatteryLevel();
           sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
           sound_library_.SayPercent();
@@ -336,61 +406,7 @@ public:
 
 // Track Playback Mode
       case EVENTID(BUTTON_AUX, EVENT_SECOND_CLICK_SHORT, MODE_OFF):
-        switch (track_mode_) {
-          case PLAYBACK_ONCE:
-            track_mode_ = PLAYBACK_LOOP;
-            if (SFX_mloop) {
-#ifndef DISABLE_BEEPS
-              beeper.Beep(0.1, 2000);
-#endif
-              hybrid_font.PlayPolyphonic(&SFX_mloop);
-            } else {
-              beeper.Beep(0.20,1000);
-              beeper.Beep(0.20,2000);
-              beeper.Beep(0.20,1000);
-            }
-            break;
-          case PLAYBACK_LOOP:
-            track_mode_ = PLAYBACK_ROTATE;
-            if (SFX_mrotate) {
-#ifndef DISABLE_BEEPS
-              beeper.Beep(0.1, 2000);
-#endif
-              hybrid_font.PlayPolyphonic(&SFX_mrotate);
-            } else {
-              beeper.Beep(0.20,1000);
-              beeper.Beep(0.20,2000);
-              beeper.Beep(0.20,1000);
-            }
-            break;
-#ifdef ENABLE_SHUFFLE
-          case PLAYBACK_ROTATE:
-            track_mode_ = PLAYBACK_SHUFFLE;
-            if (SFX_mshuffle) {
-#ifndef DISABLE_BEEPS
-              beeper.Beep(0.1, 2000);
-#endif
-              hybrid_font.PlayPolyphonic(&SFX_mshuffle);
-            } else {
-              beeper.Beep(0.20,1000);
-              beeper.Beep(0.20,2000);
-              beeper.Beep(0.20,1000);
-            }
-            break;
-#endif
-          default:
-            track_mode_ = PLAYBACK_ONCE;
-            if (SFX_monce) {
-#ifndef DISABLE_BEEPS
-              beeper.Beep(0.1, 2000);
-#endif
-              hybrid_font.PlayPolyphonic(&SFX_monce);
-            } else {
-              beeper.Beep(0.20,1000);
-              beeper.Beep(0.20,2000);
-              beeper.Beep(0.20,1000);
-            }
-        }
+        ChangeTrackMode();
         return true;
 
 // Non-Impact Clash and Lockup / Zoom Color
@@ -398,13 +414,13 @@ public:
         if (!SaberBase::Lockup() && !mode_volume_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
           SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
           SaberBase::DoBeginLockup();
-#ifndef DISABLE_BUTTON_CLASH
+#ifndef CAIWYN_NOCLASH_LOCKUP
           hybrid_font.PlayPolyphonic(&SFX_clsh);
 #endif
           return true;
 #ifndef DISABLE_COLOR_CHANGE
         } else if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
-#ifndef DISABLE_BEEPS
+#ifndef CAIWYN_DISABLE_BEEPS
           if (SFX_ccend) {
             beeper.Beep(0.1, 2000);
           }
@@ -420,7 +436,7 @@ public:
         if (mode_volume_) {
           mode_volume_ = false;
           if (SFX_vmend) {
-#ifndef DISABLE_BEEPS
+#ifndef CAIWYN_DISABLE_BEEPS
             beeper.Beep(0.1, 2000);
 #endif
             SFX_vmend.Select(0);
@@ -435,7 +451,7 @@ public:
 #ifndef DISABLE_COLOR_CHANGE
         } else if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_STEPPED) {
           if (SFX_ccend) {
-#ifndef DISABLE_BEEPS
+#ifndef CAIWYN_DISABLE_BEEPS
             beeper.Beep(0.1, 2000);
 #endif
             SFX_ccend.Select(0);
@@ -464,7 +480,7 @@ public:
           dynamic_mixer.set_volume(reset_volume_);
           mode_volume_ = false;
           if (SFX_vmend) {
-#ifndef DISABLE_BEEPS
+#ifndef CAIWYN_DISABLE_BEEPS
             beeper.Beep(0.1, 2000);
 #endif
             SFX_vmend.Select(1);
@@ -480,7 +496,7 @@ public:
 #ifndef DISABLE_COLOR_CHANGE
         } else if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           if (SFX_ccend) {
-#ifndef DISABLE_BEEPS
+#ifndef CAIWYN_DISABLE_BEEPS
             beeper.Beep(0.1, 2000);
 #endif
             SFX_ccend.Select(1);
@@ -530,7 +546,7 @@ public:
           current_menu_angle_ = fusor.angle2();
           mode_volume_ = true;
           if (SFX_vmbegin) {
-#ifndef DISABLE_BEEPS
+#ifndef CAIWYN_DISABLE_BEEPS
             beeper.Beep(0.1, 2000);
 #endif
             hybrid_font.PlayPolyphonic(&SFX_vmbegin);
@@ -548,7 +564,7 @@ public:
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_AUX, EVENT_THIRD_HELD_MEDIUM, MODE_ON):
         if (!mode_volume_) {
-#ifndef DISABLE_BEEPS
+#ifndef CAIWYN_DISABLE_BEEPS
           if (SFX_ccbegin) {
             beeper.Beep(0.1, 2000);
           }
@@ -598,7 +614,7 @@ private:
   bool track_player_on_ = false;
   char current_track_[128];
   int num_tracks_;
-  RefPtr<BufferedWavPlayer> wav_player;
+  RefPtr<BufferedWavPlayer> wav_player_;
 };
 
 #endif
