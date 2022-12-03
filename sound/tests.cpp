@@ -93,6 +93,15 @@ char* itoa( int value, char *string, int radix )
 #include "../common/linked_ptr.h"
 #include "../common/strfun.h"
 #include "../common/lsfs.h"
+#include "../common/monitoring.h"
+Monitoring monitor;
+#include "../common/stdout.h"
+
+
+Print standard_print;
+Print* default_output = &standard_print;
+Print* stdout_output = &standard_print;
+ConsoleHelper STDOUT;
 
 char current_directory[128] = "testfont\0\0";
 const char *next_current_directory(const char *dir) {

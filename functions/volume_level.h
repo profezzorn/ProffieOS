@@ -13,6 +13,7 @@ class VolumeLevelSVF {
  public:
   void run(BladeBase* blade) {}
   int calculate(BladeBase* blade) {
+    return dynamic_mixer.get_volume() * 32768 / VOLUME;
   }
 };
 
