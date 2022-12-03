@@ -27,6 +27,9 @@ using EffectPulseF = SingleValueAdapter<EffectPulseSVF<EFFECT>>;
 template<SaberBase::LockupType LOCKUP_TYPE>
 class LockupPulseSVF {
 public:
+  LockupPulseSVF() {
+    BladeBase::HandleFeature(FeatureForLockupType(LOCKUP_TYPE));
+  }
   void run(BladeBase* blade) {}
   int calculate(BladeBase* blade) {
     if (SaberBase::Lockup() == LOCKUP_TYPE) {
