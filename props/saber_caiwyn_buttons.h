@@ -27,7 +27,6 @@
 //                            * impact to the blade; quick press for a short
 //                            * clash, hold for a lockup
 //             Blaster Block: Click Aux
-//           Lightning Block: Hold Aux
 //                    Lockup: Hold Aux during impact
 //                      Drag: Hold Aux during impact with saber pointed down.
 //                      Melt: Hold Aux and stab
@@ -546,15 +545,6 @@ public:
         }
         break;
 
-// Lightning Block
-      case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD, MODE_ON):
-        if (!SaberBase::Lockup() && !mode_volume_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
-          SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
-          SaberBase::DoBeginLockup();
-          return true;
-        }
-        break;
-
 // Melt
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_AUX):
         if (!SaberBase::Lockup() && !mode_volume_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
@@ -608,7 +598,9 @@ public:
       // Events that need to be handled regardless of what other buttons are pressed.
       case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
+#if NUM_BUTTONS > 2
       case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
+#endif
         if (SaberBase::Lockup()) {
           SaberBase::DoEndLockup();
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
