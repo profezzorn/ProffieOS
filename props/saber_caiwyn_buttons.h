@@ -18,7 +18,7 @@
 //                Next Track: Hold Aux for 1 second while track is playing
 //               Next Preset: Hold Aux for 1 second when track is not playing
 //             Check Battery: Double-click and hold Aux for 1 second
-//                   Turn On: Press Power
+//             Turn Saber On: Press Power
 //     Turn On & Start Track: Hold Aux or Aux2 and press Power
 //
 // While saber is ON:
@@ -49,7 +49,7 @@
 //  Save & Exit Color Change: Release Power while in Color Zoom
 // Reset & Exit Color Change: Click Aux
 //
-//                  Turn Off: Hold Aux or Aux2 and press Power
+//            Turn Saber Off: Hold Aux or Aux2 and press Power
 //
 // You will need the following sound files in order for menus to work properly:
 // vmbegin.wav              - Enter Volume Change Menu
