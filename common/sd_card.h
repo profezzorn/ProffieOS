@@ -3,7 +3,7 @@
 
 #include "lsfs.h"
 
-#if defined(ENABLE_SD) && VERSION_MAJOR >= 4
+#if defined(ENABLE_SD) && defined(ARDUINO_ARCH_STM32L4)
 
 // Unmount sdcard when we don't need it anymore.
 class SDCard : Looper {
