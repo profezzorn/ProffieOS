@@ -174,10 +174,15 @@ public:
   }
 
   virtual void On() {
+#ifdef ENABLE_AUDIO
     if (!CommonIgnition()) return;
     SaberBase::DoPreOn();
     on_pending_ = true;
     // Hybrid font will call SaberBase::TurnOn() for us.
+#else
+    // No sound means no preon.
+    FastOn();
+#endif    
   }
 
   void FastOn() {
