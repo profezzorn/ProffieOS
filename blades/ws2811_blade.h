@@ -24,7 +24,7 @@ public:
   virtual void Enable(bool enable) = 0;
 };
 
-#if VERSION_MAJOR >= 4
+#ifdef ARDUINO_ARCH_STM32L4
 
 // Common, size adjusted to ~2000 interrupts per second.
 DMAMEM uint32_t displayMemory[200];
@@ -32,23 +32,35 @@ DMAMEM uint32_t displayMemory[200];
 #define DefaultPinClass WS2811Pin
 #define ProffieOS_yield() armv7m_core_yield()
 
-#else
+#endif // STM32
 
+#ifdef TEENSYDUINO
 // Common
 DMAMEM int displayMemory[maxLedsPerStrip * 24 / 4 + 1];
-#ifndef USE_TEENSY4
+#ifdef USE_TEENSY4
+#include "teensy4_ws2811.h"
+#define DefaultPinClass OctopodWSPin
+#elif defined(TEENSYDUINO)
 #include "monopodws.h"
 #include "ws2811_serial.h"
 #define DefaultPinClass MonopodWSPin
-#else
-#include "teensy4_ws2811.h"
-#define DefaultPinClass OctopodWSPin
 #endif
 #define ProffieOS_yield() do { } while(0)
 
-#endif
-#include "spiled_pin.h"
+#endif  // TEENSYDUINO
 
+#ifdef ESP32
+#include "esp32_ws2811.h"
+#define DefaultPinClass RMTWSPin
+#define ProffieOS_yield() yield()
+#endif
+
+
+#ifndef DefaultPinClass
+#error WS2811 not supported on this board
+#endif
+
+#include "spiled_pin.h"
 
 void WS2811PIN::WaitUntilReadyForEndFrame() {
   while (!IsReadyForEndFrame()) ProffieOS_yield();
