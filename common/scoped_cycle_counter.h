@@ -8,7 +8,9 @@ public:
     return ARM_DWT_CYCCNT - counted_cycles_;
 #elif defined(ARDUINO_ARCH_STM32L4)
     return DWT->CYCCNT - counted_cycles_;
-#else
+#elif defined(ESP32)
+    return cpu_hal_get_cycle_count();
+#else    
     return 0;
 #endif    
   }
