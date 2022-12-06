@@ -32,6 +32,7 @@
 //                    Lockup: Hold Aux during impact
 //                      Drag: Hold Aux during impact with saber pointed down.
 //                      Melt: Hold Aux and stab
+//           Lightning Block: Hold Aux2 and Press Aux (3 buttons required)
 //
 //         Enter Volume Menu: Double-click and hold Aux for 1 second
 //                            | Be aware that the first click will trigger a
@@ -577,6 +578,14 @@ public:
         break;
 #endif
 
+// Lightning Block
+#if NUM_BUTTONS > 2
+      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON | BUTTON_AUX2):
+        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+        SaberBase::DoBeginLockup();
+        return true;
+#endif
+
 #ifdef BLADE_DETECT_PIN
       case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
@@ -598,9 +607,6 @@ public:
       // Events that need to be handled regardless of what other buttons are pressed.
       case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
-#if NUM_BUTTONS > 2
-      case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
-#endif
         if (SaberBase::Lockup()) {
           SaberBase::DoEndLockup();
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
