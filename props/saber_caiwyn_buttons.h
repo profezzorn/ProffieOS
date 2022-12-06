@@ -7,45 +7,47 @@
 // necessary.
 //
 // While saber is OFF:
-//          Start/Stop Track: Click Aux
-//         Track Player Mode: Double-click Aux
-//                            * This cycles through three playback modes:
-//                            * 1. Play a single track and stop
-//                            * 2. Repeat a single track in a loop
-//                            * 3. Repeat all tracks in a loop
-//                            * Tracks must be in <font>/tracks/*.wav, and will
-//                            * be selected in alphabetical order.
-//                Next Track: Hold Aux for 1 second while track is playing
 //               Next Preset: Hold Aux for 1 second when track is not playing
-//             Check Battery: Double-click and hold Aux for 1 second
+//             Check Battery: Double-click and hold Aux for 1 second when
+//                            track is not playing
+//          Start/Stop Track: Click Aux
+//                Next Track: Hold Aux for 1 second while track is playing
+//         Track Player Mode: Double-click and hold Aux for 1 second while
+//                            track is playing
+//                            | This cycles through three playback modes:
+//                            | 1. Play a single track and stop (default)
+//                            | 2. Repeat a single track in a loop
+//                            | 3. Repeat all tracks in a loop
+//                            | Tracks must be in <font>/tracks/*.wav, and will
+//                            | be selected in alphabetical order.
 //             Turn Saber On: Press Power
 //     Turn On & Start Track: Hold Aux or Aux2 and press Power
 //
 // While saber is ON:
 //   Non-impact Clash/Lockup: Click/Hold Power
-//                            * This generates a clash/lockup effect with no
-//                            * impact to the blade; quick press for a short
-//                            * clash, hold for a lockup
+//                            | This generates a clash/lockup effect with no
+//                            | impact to the blade; quick press for a short
+//                            | clash, hold for a lockup.
 //             Blaster Block: Click Aux
 //                    Lockup: Hold Aux during impact
 //                      Drag: Hold Aux during impact with saber pointed down.
 //                      Melt: Hold Aux and stab
 //
 //         Enter Volume Menu: Double-click and hold Aux for 1 second
-//                            * Be aware that the first click will trigger a
-//                            * blaster block
+//                            | Be aware that the first click will trigger a
+//                            | blaster block.
 //           Increase Volume: Rotate hilt right while in Volume Menu
 //           Decrease Volume: Rotate hilt left while in Volume Menu
 //   Save & Exit Volume Menu: Click Power
 // Cancel & Exit Volume Menu: Click Aux
 //
 //   Enter Color Change Mode: Triple-click and hold Aux for 1 second
-//                            * Be aware that the first two clicks will
-//                            * trigger blaster blocks
+//                            | Be aware that the first two clicks will
+//                            | trigger blaster blocks.
 //              Change Color: Rotate hilt while in Color Change Mode
 //                Color Zoom: Press & Hold Power and Rotate hilt
-//                            * This will fine-tune the selected color before
-//                            * saving your change
+//                            | This will fine-tune the selected color before
+//                            | saving your change.
 //  Save & Exit Color Change: Release Power while in Color Zoom
 // Reset & Exit Color Change: Click Aux
 //
@@ -446,7 +448,10 @@ public:
 
 // Battery Level
       case EVENTID(BUTTON_AUX, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
-        if (!track_player_on_ && !wav_player_->isPlaying()) {
+        if (track_player_on_) {
+          ChangeTrackMode();
+          return true;
+        } else if (!wav_player_->isPlaying()) {
           SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
           if (SFX_mbatt && SFX_mnum && SFX_mpercent) {
             sound_library_.SayBatteryLevel();
@@ -460,11 +465,6 @@ public:
           return true;
         }
         break;
-
-// Track Playback Mode
-      case EVENTID(BUTTON_AUX, EVENT_SECOND_CLICK_SHORT, MODE_OFF):
-        ChangeTrackMode();
-        return true;
 
 // Non-Impact Clash and Lockup / Zoom Color
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
