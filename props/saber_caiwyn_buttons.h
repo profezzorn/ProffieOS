@@ -56,9 +56,10 @@
 //            Turn Saber Off: Hold Aux or Aux2 and press Power
 //
 // You will need the following sound files in order for menus to work properly:
+// (missing sound files will be replaced with simple beeps)
 // vmbegin.wav              - Enter Volume Change Menu
-// vmend01.wav              - Save Volume Change
-// vmend02.wav              - Cancel Volume Change
+// vmend.wav                - Save Volume Change
+// vmcancel.wav             - Cancel Volume Change
 // monce.wav                - Set Track Player to play a single track one time
 // mloop.wav                - Set Track Player to repeat a single track
 // mrotate.wav              - Set Track Player to repeat all tracks
@@ -70,6 +71,8 @@
 // thirty.wav to ninety.wav
 // hundred.wav              - "Hundred"
 // mpercent.wav             - "Percent"
+// You can download a package containing all of these files here:
+// https://drive.google.com/file/d/1cSBirX5STOVPanOkOlIeb0eofjx-qFmj/view
 //
 // Options you can add to your config file:
 // #define DISABLE_COLOR_CHANGE   - Disables the color change menu.
@@ -126,11 +129,10 @@
 
 EFFECT(vmbegin);
 EFFECT(vmend);
+EFFECT(vmcancel);
 EFFECT(monce);
 EFFECT(mloop);
 EFFECT(mrotate);
-EFFECT(mbatt);
-EFFECT(mpercent);
 
 // The Saber class implements the basic states and actions for the saber.
 class CaiwynButtons : public PropBase {
@@ -206,7 +208,6 @@ public:
 #ifndef CAIWYN_DISABLE_BEEPS
       beeper.Beep(0.1, 2000);
 #endif
-      SFX_vmend.Select(0);
       hybrid_font.PlayPolyphonic(&SFX_vmend);
     } else {
       beeper.Beep(0.20,2000.0);
@@ -219,11 +220,15 @@ public:
   void VolumeCancel() {
     dynamic_mixer.set_volume(reset_volume_);
     mode_volume_ = false;
-    if (SFX_vmend) {
+    if (SFX_vmcancel) {
 #ifndef CAIWYN_DISABLE_BEEPS
       beeper.Beep(0.1, 2000);
 #endif
-      SFX_vmend.Select(1);
+      hybrid_font.PlayPolyphonic(&SFX_vmcancel);
+    } else if (SFX_vmend) {
+#ifndef CAIWYN_DISABLE_BEEPS
+      beeper.Beep(0.1, 2000);
+#endif
       hybrid_font.PlayPolyphonic(&SFX_vmend);
     } else {
       beeper.Beep(0.20,2000.0);
@@ -262,6 +267,9 @@ public:
     if (track_player_on_ && !track_player_->isPlaying()) {
       if (track_player_) track_player_.Free();
       switch (track_mode_) {
+        case PLAYBACK_ONCE:
+          track_player_on_ = false;
+          break;
         case PLAYBACK_LOOP:
           if (num_tracks_ <= 0) {
             StartOrStopTrack();
@@ -272,8 +280,6 @@ public:
         case PLAYBACK_ROTATE:
           NextTrack();
           break;
-        default:
-          track_player_on_ = false;
       }
     }
   }
@@ -361,7 +367,7 @@ public:
           beeper.Beep(0.20,1000);
         }
         break;
-      default:
+      case PLAYBACK_ROTATE:
         track_mode_ = PLAYBACK_ONCE;
         if (SFX_monce) {
 #ifndef CAIWYN_DISABLE_BEEPS
@@ -373,6 +379,19 @@ public:
           beeper.Beep(0.20,2000);
           beeper.Beep(0.20,1000);
         }
+    }
+  }
+
+  void CheckBattery() {
+    SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+    if (SFX_mnum) {
+      sound_library_.SayBatteryLevel();
+      sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
+      sound_library_.SayPercent();
+    } else {
+      talkie.Say(spBATTERYLEVEL);
+      talkie.SayNumber((int)floorf(battery_monitor.battery_percent()));
+      talkie.Say(spPERCENT);
     }
   }
 
@@ -396,12 +415,12 @@ public:
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
 
-// Activate Saber
+// Turn On Saber
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
         On();
         return true;
 
-// Activate Saber and Play Track
+// Turn On Saber and Play Track
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF | BUTTON_AUX):
 #if NUM_BUTTONS > 2
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF | BUTTON_AUX2):
@@ -412,7 +431,7 @@ public:
         }
         return true;
 
-// Deactivate Saber
+// Turn Off Saber
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON | BUTTON_AUX):
 #if NUM_BUTTONS > 2
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON | BUTTON_AUX2):
@@ -446,22 +465,13 @@ public:
         }
         return true;
 
-// Battery Level
+// Change Track Player Mode/Check Battery Level
       case EVENTID(BUTTON_AUX, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
         if (track_player_on_) {
           ChangeTrackMode();
           return true;
         } else if (!wav_player_->isPlaying()) {
-          SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-          if (SFX_mbatt && SFX_mnum && SFX_mpercent) {
-            sound_library_.SayBatteryLevel();
-            sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
-            sound_library_.SayPercent();
-          } else {
-            talkie.Say(spBATTERYLEVEL);
-            talkie.SayNumber((int)floorf(battery_monitor.battery_percent()));
-            talkie.Say(spPERCENT);
-          }
+          CheckBattery();
           return true;
         }
         break;
@@ -519,7 +529,7 @@ public:
         break;
 #endif
 
-// Cancel Volume / Reset Color / Blaster Block
+// Blaster Block / Cancel Volume / Reset Color
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
         if (mode_volume_) {
           VolumeCancel();
@@ -532,7 +542,7 @@ public:
         }
         return true;
 
-// Lockup/Drag
+// Lockup / Drag
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
 #if NUM_BUTTONS > 2
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX2):
