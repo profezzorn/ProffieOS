@@ -383,6 +383,9 @@ public:
   }
 
   void CheckBattery() {
+#ifndef CAIWYN_DISABLE_BEEPS
+    beeper.Beep(0.1, 2000);
+#endif
     SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
     if (SFX_mnum) {
       sound_library_.SayBatteryLevel();
