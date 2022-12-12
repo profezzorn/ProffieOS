@@ -49,7 +49,7 @@ private:
 #else
 
 template<class T> class POAtomic {
-private:
+public:
   POAtomic() : value_() {}
   POAtomic(T value) : value_(value) {}
   T get() { return value_; }
