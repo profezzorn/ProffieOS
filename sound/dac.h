@@ -3,6 +3,11 @@
 
 #include "filter.h"
 
+#ifdef ESP32
+#include "dac_esp32.h"
+#else
+
+
 #if defined(__IMXRT1062__)
 #define IMXRT_CACHE_ENABLED 2 // 0=disabled, 1=WT, 2= WB
 
@@ -91,7 +96,7 @@ void my_set_audioClock(int nfact, int32_t nmult, uint32_t ndiv, bool force) // s
 
 #define CHANNELS 2
 
-#else // TEENSYDUINO
+#elif defined(ARDUINO_ARCH_STM32L4)
 
 #define CHANNELS 1
 
@@ -111,6 +116,14 @@ void my_stm32l4_system_saiclk_configure_22579200()
   while (!(RCC->CR & RCC_CR_PLLSAI1RDY)){}
 }
 
+#elif defined(ESP32)
+
+#define CHANNELS 1
+
+#else
+
+#error Unknown I2S arch
+
 #endif
 
 #else   // USE_I2S
@@ -119,10 +132,8 @@ void my_stm32l4_system_saiclk_configure_22579200()
 
 #define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_CONT | PDB_SC_PDBIE | PDB_SC_DMAEN)
 
-class LS_DAC : CommandParser, Looper {
+class LS_DAC : CommandParser {
 public:
-  virtual void Loop() override {}
-  virtual const char* name() { return "DAC"; }
   void Setup() override {
     if (!needs_setup_) return;
     needs_setup_ = false;
@@ -130,6 +141,51 @@ public:
     dma.begin(true); // Allocate the DMA channel first
 
 #ifdef USE_I2S
+
+#if defined(ESP32)
+    //#include "driver/i2s_std.h"
+    //#include "driver/gpio.h"
+
+    i2s_chan_handle_t tx_handle;
+    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
+    i2s_new_channel(&chan_cfg, &tx_handle, NULL);
+
+    i2s_std_config_t std_cfg = {
+      .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(44100),
+      .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO),
+      .gpio_cfg = {
+	.mclk = I2S_GPIO_UNUSED,
+	.bclk = bclkPin,
+	.ws = lrclkPin,
+	.dout = txd0Pin,
+	.din = I2S_GPIO_UNUSED,
+	.invert_flags = {
+	  .mclk_inv = false,
+	  .bclk_inv = false,
+	  .ws_inv = false,
+	},
+      },
+    };
+    i2s_channel_init_std_mode(tx_handle, &std_cfg);
+
+    /* Before write data, start the tx channel first */
+    //i2s_channel_enable(tx_handle);
+    //i2s_channel_write(tx_handle, src_buf, bytes_to_write, bytes_written, ticks_to_wait);
+
+    /* If the configurations of slot or clock need to be updated,
+     * stop the channel first and then update it */
+    // i2s_channel_disable(tx_handle);
+    // std_cfg.slot_cfg.slot_mode = I2S_SLOT_MODE_MONO; // Default is stereo
+    // i2s_channel_reconfig_std_slot(tx_handle, &std_cfg.slot_cfg);
+    // std_cfg.clk_cfg.sample_rate_hz = 96000;
+    // i2s_channel_reconfig_std_clock(tx_handle, &std_cfg.clk_cfg);
+
+    /* Have to stop the channel before deleting it */
+    //i2s_channel_disable(tx_handle);
+    /* If the handle is not needed any more, delete it to release the channel resources */
+    // i2s_del_channel(tx_handle);
+#endif
+
 
 #if defined(KINETISK) || defined(KINETISL)
     SIM_SCGC6 |= SIM_SCGC6_I2S;
@@ -626,6 +682,9 @@ private:
   }
 
   static void isr2(void* arg, unsigned long int event) {}
+#ifndef DMAMEM
+#define DMAMEM
+#endif
 
   bool on_ = false;
   bool needs_setup_ = true;
@@ -677,4 +736,5 @@ Filter::Biquad<
 
 LS_DAC dac;
 
-#endif
+#endif  // ESP32
+#endif  // SOUND_DAC
