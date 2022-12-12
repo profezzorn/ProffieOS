@@ -413,34 +413,52 @@ bool LSFS::mounted_ = false;
 
 #include "FS.h"
 #include "SD_MMC.h"
+#include "SD.h"
 
 class LSFS {
 public:
   typedef File FILE;
   static bool Begin() {
+
+#if 1
+#define SDCLASS SD_MMC
     SD_MMC.setPins(sdClkPin, sdCmdPin, sdD0Pin, sdD1Pin, sdD2Pin, sdD3Pin);
     if (!SD_MMC.begin("/sdcard", false, false, SDMMC_FREQ_DEFAULT, /*maxOpenFiles=*/ 32)) return false;
-//    if (!SD_MMC.begin()) return false;
-    uint8_t cardType = SD_MMC.cardType();
+
+#endif
+
+#if 0
+#define SDCLASS SD
+    SPI.begin(sdClkPin, sdD0Pin, sdCmdPin);
+    if (!SD.begin(sdD3Pin, SPI, /* frequency= */ 20000000, "/sd" , /* max_file=*/ 32)) return false;
+#endif    
+    
+//    if (!SDCLASS.begin()) return false;
+    uint8_t cardType = SDCLASS.cardType();
     if (cardType == CARD_NONE) return false;
     return true;
   }
   static bool End() {
-    SD_MMC.end();
+    SDCLASS.end();
     return true;
   }
   static bool Exists(const char* path) {
-    return SD_MMC.exists(path);
+    return SDCLASS.exists(path);
   }
   static bool Remove(const char* path) {
-    return SD_MMC.remove(path);
+    return SDCLASS.remove(path);
   }
   static File Open(const char* path) {
-    if (!SD_MMC.exists(path)) return File();
-    return SD_MMC.open(path);
+    if (!SDCLASS.exists(path)) return File();
+    File f = SDCLASS.open(path);
+    f.setBufferSize(512);
+    return f;
   }
   static File OpenRW(const char* path) {
-    return SD_MMC.open(path, FILE_WRITE);
+    File f = SDCLASS.open(path, FILE_WRITE);
+    f.setBufferSize(512);
+    return f;
+    
   }
   static File OpenFast(const char* path) {
     // At some point, I put this check in here to make sure that the file
@@ -448,24 +466,27 @@ public:
     // weird files can cause open() to hang. However, this check takes
     // too long, and causes audio underflows, so we're going to need a
     // different approach to not opening directories and weird files. /Hubbe
-    // if (!SD_MMC.exists(path)) return File();
-    return SD_MMC.open(path);
+    // if (!SDCLASS.exists(path)) return File();
+    File f = SDCLASS.open(path);
+    f.setBufferSize(512);
+    return f;
   }
   static File OpenForWrite(const char* path) {
-    File f =  SD_MMC.open(path, FILE_WRITE);
+    File f =  SDCLASS.open(path, FILE_WRITE);
     if (!f) {
       PathHelper tmp(path);
       if (tmp.Dirname()) {
-	SD_MMC.mkdir(tmp);
-	f =  SD_MMC.open(path, FILE_WRITE);
+	SDCLASS.mkdir(tmp);
+	f =  SDCLASS.open(path, FILE_WRITE);
       }
     }
+    f.setBufferSize(512);
     return f;
   }
   class Iterator {
   public:
     explicit Iterator(const char* dirname) {
-      dir_ = SD_MMC.open(dirname);
+      dir_ = SDCLASS.open(dirname);
       if (dir_.isDirectory()) {
 	f_ = dir_.openNextFile();
       }
