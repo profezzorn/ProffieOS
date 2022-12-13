@@ -544,6 +544,10 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
     Cannot be used with FETT263_SAVE_CHOREOGRAPHY
     *Clash Strength / Clash Impact effects and sounds for Lockup negated
     *Battle Mode control changes to hold AUX + Swing
+    
+== BC Variations ==
+  FETT263_USE_BC_MELT_STAB
+  Allows MELT to be gesture controlled full-time, uses Thrust for Stab effect
 
 CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
@@ -1744,6 +1748,7 @@ SaberFett263Buttons() : PropBase() {}
       // CHECK PUSH
       if (clash_type_ == CLASH_CHECK) {
         Event(BUTTON_NONE, EVENT_PUSH);
+        STDOUT.println("EVENT PUSH");
         clash_type_ = CLASH_NONE;
       }
       if (clash_type_ != CLASH_LOCKUP_END) {
@@ -1823,17 +1828,17 @@ SaberFett263Buttons() : PropBase() {}
           Event(BUTTON_NONE, EVENT_SWING);
         }
       }
-      // EVENT_THRUST
-      if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
-          mss.x > 14  &&
-          fusor.swing_speed() < 150) {
-        if (millis() - thrust_begin_millis_ > 15) {
-          Event(BUTTON_NONE, EVENT_THRUST);
-          thrust_begin_millis_ = millis();
-        }
-      } else {
+    }
+    // EVENT_THRUST
+    if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
+        mss.x > 14  &&
+        fusor.swing_speed() < 150) {
+      if (millis() - thrust_begin_millis_ > 15) {
+        Event(BUTTON_NONE, EVENT_THRUST);
         thrust_begin_millis_ = millis();
       }
+    } else {
+      thrust_begin_millis_ = millis();
     }
 #ifdef FETT263_QUICK_SELECT_ON_BOOT
     if (menu_type_ == MENU_PRESET && millis() < 2000) {
@@ -5593,7 +5598,37 @@ SaberFett263Buttons() : PropBase() {}
         clash_type_ = CLASH_BATTLE_MODE;
         return true;
 
+#ifdef FETT263_USE_BC_MELT_STAB
+      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
+        if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
+        clash_impact_millis_ = millis();
+        if (!swinging_) {
+          if (battle_mode_ && fusor.angle1() < - M_PI / 4) {
+            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+          } else {
+            SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+          }
+          auto_melt_on_ = true;
+          SaberBase::DoBeginLockup();
+        }
+        check_blast_ = false;
+        swing_blast_ = false;
+        return true;
 
+      case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
+        if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
+        clash_impact_millis_ = millis();
+#ifdef FETT263_CLASH_STRENGTH_SOUND
+        clash_impact_millis_ = millis();
+        clash_type_ = CLASH_STAB;
+#else
+        SaberBase::DoStab();
+#endif
+        check_blast_ = false;
+        swing_blast_ = false;
+        return true;
+
+#else
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
         if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
         clash_impact_millis_ = millis();
@@ -5618,6 +5653,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::DoBeginLockup();
         }
         return true;
+#endif
 
       // Optional Gesture Controls (defines listed at top)
 
