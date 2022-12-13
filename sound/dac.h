@@ -134,7 +134,7 @@ void my_stm32l4_system_saiclk_configure_22579200()
 
 class LS_DAC : CommandParser {
 public:
-  void Setup() override {
+  void Setup() {
     if (!needs_setup_) return;
     needs_setup_ = false;
 #ifdef TEENSYDUINO
