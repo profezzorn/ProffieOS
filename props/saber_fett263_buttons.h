@@ -767,6 +767,8 @@ EFFECT(blstbgn); // for Begin Multi-Blast
 EFFECT(blstend); // for End Multi-Blast
 EFFECT(push); // for Force Push gesture in Battle Mode
 EFFECT(quote); // quote on force effect
+EFFECT(tr);
+EFFECT2(trloop, trloop);
 #ifdef FETT263_EDIT_MODE_MENU
 EFFECT(medit); // Edit Mode
 #endif
@@ -1924,6 +1926,22 @@ SaberFett263Buttons() : PropBase() {}
       track_player_.Free();
     } else {
       StartOrStopTrack();
+    }
+  }
+
+  void SoundLoop() {
+    if (wav_player->isPlaying()) {
+      wav_player->set_fade_time(0.2);
+      wav_player->FadeAndStop();
+      wav_player.Free();
+      STDOUT.println("End Wav Player");    
+    } else {
+      wav_player = GetFreeWavPlayer();
+      if (wav_player) {
+        wav_player->PlayOnce(&SFX_trloop);
+      } else {
+        STDOUT.println("Out of WAV players!");
+      }
     }
   }
 
@@ -5873,6 +5891,8 @@ SaberFett263Buttons() : PropBase() {}
           preon_effect_ = false;
         }
         return;
+      case EFFECT_TRANSITION_SOUND: hybrid_font.PlayCommon(&SFX_tr); return;
+      case EFFECT_SOUND_LOOP: SoundLoop(); return;
       default:
         break; // avoid compiler warnings
     }
