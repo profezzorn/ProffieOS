@@ -62,7 +62,7 @@ public:
   
 private:
   volatile T value_;
-  static_assert(sizeof(T) < 4, "Atomic must be 32 bits or less.");
+  static_assert(sizeof(T) <= 4, "Atomic must be 32 bits or less.");
 };
 
 #endif // PROFFIEOS_USE_ATOMICS
