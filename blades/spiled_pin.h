@@ -25,9 +25,12 @@ public:
   static inline void delay_nanos(uint32_t nanos) {
 #ifdef TEENSYDUINO
     uint32_t scale = F_CPU / 1000000;
-#else    
+#elif defined(ARDUINO_ARCH_STM32L4)
     uint32_t scale = SystemCoreClock / 1000000;
-#endif    
+#elif defined(ESP32)
+    uint32_t scale = 240000000;  // FIXME
+#endif
+    
     uint32_t n = (nanos * scale + 2) / 3000;
   
     __asm__ __volatile__(

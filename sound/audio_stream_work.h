@@ -1,6 +1,8 @@
 #ifndef SOUND_AUDIO_STREAM_WORK_H
 #define SOUND_AUDIO_STREAM_WORK_H
 
+#include "../common/atomic.h"
+
 
 // AudioStreamWork is a linked list of classes that would like to
 // do some work in a software-triggered interrupt. This is used to
@@ -29,34 +31,55 @@ public:
     }
   }
 
+#ifdef ESP32
+
+  static void FillBufferTask(void* unused) {
+    while (true) {
+      ProcessAudioStreams();
+    }
+  }
+
+  static POAtomic<bool> task_created_;
+  static void scheduleFillBuffer() {
+    if (!task_created_.exchange(true)) {
+      TaskHandle_t xHandle = NULL;
+      xTaskCreatePinnedToCore(FillBufferTask, "SDReadTask", 20000, nullptr, tskIDLE_PRIORITY, &xHandle, 0);
+    }
+    fill_buffers_pending_.set(true);
+  }
+
+#else
   static void scheduleFillBuffer() {
     bool enqueue = false;
     noInterrupts();
-    if (!fill_buffers_pending_) {
-      fill_buffers_pending_ = true;
+    if (!fill_buffers_pending_.get()) {
+      fill_buffers_pending_.set(true);
       enqueue = true;
     }
     interrupts();
     if (enqueue) {
 #ifdef TEENSYDUINO
       NVIC_TRIGGER_IRQ(IRQ_WAV);
-#else
+#elif defined(ARDUINO_ARCH_STM32L4)
       armv7m_pendsv_enqueue((armv7m_pendsv_routine_t)ProcessAudioStreams, NULL, 0);
+#else
+      // TODO
 #endif    
     }
   }
+#endif  // ESP32
 
   static void LockSD(bool locked) {
 //    scheduleFillBuffer();
-    sd_locked = locked;
+    sd_locked.set(locked);
     if (locked) MountSDCard();
   }
 
   static void LockSD_nomount(bool locked) {
-    sd_locked = locked;
+    sd_locked.set(locked);
   }
   
-  static bool sd_is_locked() { return sd_locked; }
+  static bool sd_is_locked() { return sd_locked.get(); }
 
   static void CloseAllOpenFiles() {
     for (AudioStreamWork *d = data_streams; d; d=d->next_)
@@ -77,11 +100,11 @@ protected:
 private:
   static void ProcessAudioStreams() {
     ScopedCycleCounter cc(wav_interrupt_cycles);
-    Looper::CheckFrozen();
-    if (sd_locked) {
-      fill_buffers_pending_ = false;
+    if (sd_locked.get()) {
+      fill_buffers_pending_.set(false);
       return;
     }
+    Looper::CheckFrozen();
 #if 1
     // Yes, it's a selection sort, luckily there's not a lot of
     // AudioStreamWork instances.
@@ -102,16 +125,20 @@ private:
       }
     }
 #endif
-    fill_buffers_pending_ = false;
+    fill_buffers_pending_.set(false);
   }
 
-  static volatile bool sd_locked;
-  static volatile bool fill_buffers_pending_;
+  static POAtomic<bool> sd_locked;
+  static POAtomic<bool> fill_buffers_pending_;
   AudioStreamWork* next_;
 };
 
-volatile bool AudioStreamWork::sd_locked = false;
-volatile bool AudioStreamWork::fill_buffers_pending_ = false;
+POAtomic<bool> AudioStreamWork::sd_locked (false);
+POAtomic<bool> AudioStreamWork::fill_buffers_pending_(false);
 #define LOCK_SD(X) AudioStreamWork::LockSD(X)
+
+#ifdef ESP32
+POAtomic<bool> AudioStreamWork::task_created_ (false);
+#endif
 
 #endif

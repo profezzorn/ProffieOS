@@ -163,7 +163,7 @@ public:
 #define PROFFIEOS_MOTION_FREQUENCY_BITS (ProffieOS_log2(PROFFIEOS_MOTION_FREQUENCY/4) << 4)
 
       // 1.66kHz accel, 16G range
-      STDOUT << "FOO:" << (PROFFIEOS_MOTION_FREQUENCY_BITS | PROFFIEOS_ACCELEROMETER_RANGE_BITS) << "\n";
+//      STDOUT << "FOO:" << (PROFFIEOS_MOTION_FREQUENCY_BITS | PROFFIEOS_ACCELEROMETER_RANGE_BITS) << "\n";
       I2C_WRITE_BYTE_ASYNC(CTRL1_XL, PROFFIEOS_MOTION_FREQUENCY_BITS | PROFFIEOS_ACCELEROMETER_RANGE_BITS);
       I2C_WRITE_BYTE_ASYNC(CTRL2_G, PROFFIEOS_MOTION_FREQUENCY_BITS | 0xC);   // 1.66kHz gyro, 2000 dps
       I2C_WRITE_BYTE_ASYNC(CTRL3_C, 0x44);   // ?
@@ -257,8 +257,10 @@ public:
       SLEEP(20);
 #define i2c_timeout i2c_timeout2
       I2C_WRITE_BYTE_ASYNC(CTRL3_C, 1);
-#undef i2c_timeout      
+#undef i2c_timeout
+#ifdef ARDUINO_ARCH_STM32L4
     i2c_timeout2:
+#endif      
       I2CUnlock();
       SLEEP(20);
     }

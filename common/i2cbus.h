@@ -1,11 +1,16 @@
 #ifndef COMMON_I2CBUS_H
 #define COMMON_I2CBUS_H
 
+#ifdef ESP32
+#include "Wire.h"
+#endif
+
 #define I2C_TIMEOUT_MILLIS 300
 
 class I2CBus : Looper, StateMachine {
 public:
   const char* name() override { return "I2CBus"; }
+
   void Loop() {
     STATE_MACHINE_BEGIN();
     SLEEP(1000);
@@ -52,6 +57,9 @@ public:
     i2c_detected_ = true;
     Looper::Unlink();
 #else
+#ifdef ESP32
+    Wire.setPins(i2cDataPin, i2cClockPin);
+#endif    
     while (true) {
       STDOUT.println("I2C init..");
       Wire.begin();
