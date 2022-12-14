@@ -5598,12 +5598,24 @@ SaberFett263Buttons() : PropBase() {}
         clash_type_ = CLASH_BATTLE_MODE;
         return true;
 
-#ifdef FETT263_USE_BC_MELT_STAB
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
         if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
         clash_impact_millis_ = millis();
+        check_blast_ = false;
+        swing_blast_ = false;
         if (!swinging_) {
-          if (battle_mode_ && fusor.angle1() < - M_PI / 4) {
+#ifndef FETT263_USE_BC_MELT_STAB
+        if (!battle_mode_) {
+#ifdef FETT263_CLASH_STRENGTH_SOUND
+          clash_impact_millis_ = millis();
+          clash_type_ = CLASH_STAB;
+#else
+          SaberBase::DoStab();
+          return true;
+#endif
+        }
+#endif
+          if (fusor.angle1() < - M_PI / 4) {
             SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
           } else {
             SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
@@ -5611,10 +5623,9 @@ SaberFett263Buttons() : PropBase() {}
           auto_melt_on_ = true;
           SaberBase::DoBeginLockup();
         }
-        check_blast_ = false;
-        swing_blast_ = false;
         return true;
 
+#ifdef FETT263_USE_BC_MELT_STAB
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
         if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
         clash_impact_millis_ = millis();
@@ -5626,32 +5637,6 @@ SaberFett263Buttons() : PropBase() {}
 #endif
         check_blast_ = false;
         swing_blast_ = false;
-        return true;
-
-#else
-      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
-        if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
-        clash_impact_millis_ = millis();
-        if (!battle_mode_) {
-#ifdef FETT263_CLASH_STRENGTH_SOUND
-          clash_impact_millis_ = millis();
-          clash_type_ = CLASH_STAB;
-#else
-          SaberBase::DoStab();
-#endif
-          return true;
-        }
-        check_blast_ = false;
-        swing_blast_ = false;
-        if (!swinging_) {
-          if (fusor.angle1() < - M_PI / 4) {
-            SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-          } else {
-            SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
-          }
-          auto_melt_on_ = true;
-          SaberBase::DoBeginLockup();
-        }
         return true;
 #endif
 
