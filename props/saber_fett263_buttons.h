@@ -5605,15 +5605,15 @@ SaberFett263Buttons() : PropBase() {}
         swing_blast_ = false;
         if (!swinging_) {
 #ifndef FETT263_USE_BC_MELT_STAB
-        if (!battle_mode_) {
+          if (!battle_mode_) {
 #ifdef FETT263_CLASH_STRENGTH_SOUND
-          clash_impact_millis_ = millis();
-          clash_type_ = CLASH_STAB;
+            clash_impact_millis_ = millis();
+            clash_type_ = CLASH_STAB;
 #else
-          SaberBase::DoStab();
-          return true;
+            SaberBase::DoStab();
 #endif
-        }
+            return true;
+          }
 #endif
           if (fusor.angle1() < - M_PI / 4) {
             SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
