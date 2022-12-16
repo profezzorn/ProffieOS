@@ -19,8 +19,7 @@ public:
 			  stream_(0),
 			  buf_start_(0),
 			  buf_end_(0),
-			  eof_(false),
-			  stop_requested_(false) {
+			  eof_(false) {
   }
   int read(int16_t* buf, int bufsize) override {
 #if 0
@@ -47,14 +46,14 @@ public:
   bool eof() const override {
     return !buffered() && eof_.get();
   }
-  void Stop() override {
-    stop_requested_.set(true);
+  void StopFromReader() override {
+    if (stream_.get())
+      stream_.get()->StopFromReader();
   }
   void clear() {
     eof_.set(false);
     buf_start_.set(buf_end_.get());
     stream_.set(NULL);
-    stop_requested_.set(false);
   }
   int buffered() const {
     return buf_end_.get() - buf_start_.get();
@@ -64,7 +63,6 @@ public:
     return real_space_available();
   }
   void SetStream(ProffieOSAudioStream* stream) {
-    stop_requested_.set(false);
     eof_.set(false);
     stream_.set(stream);
   }
@@ -75,10 +73,6 @@ private:
   }
   bool FillBuffer() override {
     if (stream_.get()) {
-      if (stop_requested_.get()) {
-	stop_requested_.set(false);
-	stream_.get()->Stop();
-      }
       size_t space = real_space_available();
       if (space) {
         size_t end_pos = buf_end_.get() & (N-1);
@@ -101,7 +95,6 @@ private:
   POAtomic<size_t> buf_start_;
   POAtomic<size_t> buf_end_;
   POAtomic<bool> eof_;
-  POAtomic<bool> stop_requested_;
   int16_t buffer_[N];
 };
 

@@ -25,7 +25,7 @@ public:
       } else if (mult == 0) {
         if (stop_when_zero_.get()) {
 	  volume_.set_speed(kDefaultSpeed);
-	  T::Stop();
+	  T::StopFromReader();
         }
         for (int i = 0; i < elements; i++) data[i] = 0;
       } else {
