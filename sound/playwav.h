@@ -101,7 +101,16 @@ public:
     written_ = num_samples_ = 0;
     interrupts();
   }
-#endif  
+#endif
+
+  // No need to stop interrupts since this is
+  // already called from the reader (interrupt) thread.
+  void StopFromReader() override {
+    run_.set(false);
+    state_machine_.reset_state_machine();
+    effect_.set(nullptr);
+    written_ = num_samples_ = 0;
+  }
 
   bool isPlaying() const {
     return run_.get();

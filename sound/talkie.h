@@ -953,7 +953,6 @@ public:
   bool isPlaying() const {
     return !eof();
   }
-  void Stop() override {}
 
 #ifdef ENABLE_DEVELOPER_COMMANDS
   bool Parse(const char *cmd, const char* arg) override {
