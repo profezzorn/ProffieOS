@@ -61,6 +61,8 @@ Standard Controls While Blade is OFF
     Click PWR or AUX = Exit
   Check Battery Level*  = Hold AUX, Click PWR
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_VOLTS or FETT263_SAY_BATTERY_PERCENT define
+    *if using FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
+    Point down for volts, parallel or up for percent
   NEW! Change Font
     Next Font = Hold AUX + Long Click PWR (parallel or up)
     Previous Font= Hold AUX + Long Click PWR (down)
@@ -242,6 +244,8 @@ Standard Controls While Blade is OFF
     Click PWR = Exit
   NEW Control! Battery Level* = Double Click + Long Click PWR
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_PERCENT or FETT263_SAY_BATTERY_VOLTS define
+    *if using FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
+    Point down for volts, parallel or up for percent
   NEW! Change Font
     Next Font = Triple Click + Long Click PWR (parallel or up)
     Previous Font = Triple Click + Long Click PWR (down)
@@ -549,6 +553,9 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_USE_BC_MELT_STAB
   Allows MELT to be gesture controlled full-time, uses Thrust for Stab effect
 
+  FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
+  Spoken Battery Level in volts and percent (point down for volts, parallel or up for percent)
+
 CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
   On Demand Power Save - dim.wav
@@ -585,6 +592,11 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #ifndef FETT263_FORCE_PUSH_LENGTH
 #define FETT263_FORCE_PUSH_LENGTH 5
+#endif
+
+#ifdef FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
+#define FETT263_SAY_BATTERY_VOLTS
+#define FETT263_SAY_BATTERY_PERCENT
 #endif
 
 #if NUM_BUTTONS < 1
@@ -4473,14 +4485,16 @@ SaberFett263Buttons() : PropBase() {}
 
   // Battery Level
   void DoBattery() {
-#if defined (FETT263_SAY_BATTERY_PERCENT)
-    sound_library_.SayBatteryLevel();
-    sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
-    sound_library_.SayPercent();
-#elif defined(FETT263_SAY_BATTERY_VOLTS)
-    sound_library_.SayBatteryLevel();
-    sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
-    sound_library_.SayVolts();
+#if defined (FETT263_SAY_BATTERY_PERCENT) && defined (FETT263_SAY_BATTERY_VOLTS)
+    if (fusor.angle1() < - M_PI / 3) {
+      sound_library_.SayBatteryVolts();
+    } else {
+      sound_library_.SayBatteryPercent();
+    }
+#elif defined(FETT263_SAY_BATTERY_PERCENT)
+    sound_library_.SayBatteryPercent();
+#elif defined(FETT263_SAY_BATTERY_VOLTAGE)
+    sound_library_.SayBatteryVolts();
 #endif
     SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
   }
