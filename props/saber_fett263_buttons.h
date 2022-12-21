@@ -2273,11 +2273,20 @@ SaberFett263Buttons() : PropBase() {}
       talkie.Say(talkie_font_directory_15, 15);
       STDOUT.println("Edit Mode prompts missing");
     } else {
+#ifdef FETT263_EDIT_SETTINGS_MENU
+      STDOUT.println("Enter Edit Settings Menu");
+#else
       STDOUT.println("Enter Edit Mode");
+#endif
       GenerateIniFiles();
+      menu_top_pos_ = 0;
+#ifdef FETT263_EDIT_SETTINGS_MENU
+      sound_library_.SaySettingsMenu();
+      StartMenu(MENU_SETTING_SUB);
+#else
       sound_library_.SayEditMode();
       StartMenu(MENU_TOP);
-      menu_top_pos_ = 0;
+#endif
       FastOn();
     }
   }
