@@ -4487,14 +4487,14 @@ SaberFett263Buttons() : PropBase() {}
   void DoBattery() {
 #if defined (FETT263_SAY_BATTERY_PERCENT) && defined (FETT263_SAY_BATTERY_VOLTS)
     if (fusor.angle1() < - M_PI / 3) {
-      sound_library_.SayBatteryVoltage();
+      sound_library_.SayBatteryVolts();
     } else {
       sound_library_.SayBatteryPercent();
     }
 #elif defined(FETT263_SAY_BATTERY_PERCENT)
     sound_library_.SayBatteryPercent();
 #elif defined(FETT263_SAY_BATTERY_VOLTAGE)
-    sound_library_.SayBatteryVoltage();
+    sound_library_.SayBatteryVolts();
 #endif
     SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
   }
