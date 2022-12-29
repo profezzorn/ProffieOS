@@ -635,6 +635,10 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #define FETT263_SAY_BATTERY_PERCENT
 #endif
 
+#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#define FETT263_USE_SETTINGS_MENU
+#endif
+
 #if NUM_BUTTONS < 1
 #error /props/saber_fett263_buttons.h requires 1, 2 or 3 Buttons for operation
 #endif
@@ -829,7 +833,7 @@ EFFECT(push); // for Force Push gesture in Battle Mode
 EFFECT(quote); // quote on force effect
 EFFECT(tr);
 EFFECT2(trloop, trloop);
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
 EFFECT(medit); // Edit Mode
 #endif
 
@@ -974,7 +978,7 @@ public:
 };
 #endif
 
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
 
 // Edit Length
 int length_edit_length = 0;
@@ -1331,7 +1335,7 @@ SaberFett263Buttons() : PropBase() {}
   // Color / Style Editing
   HSL hsl_;
   ShowColorAllBladesTemplate<ShowColorStyle> show_color_all_;
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
   ShowColorSingleBladeTemplate<LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>,LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>> show_length_;
 #if NUM_BLADES > 1
   ShowColorSingleBladeTemplate<Pulsing<ShowColorStyle,Black,800>,Pulsing<ShowColorStyle,Black,800>> show_preview_;
@@ -2034,7 +2038,7 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
 #define GESTURE_OPTIONS 12
 #define SET_SUBMENUS 5
 #endif
@@ -2049,7 +2053,7 @@ SaberFett263Buttons() : PropBase() {}
     MENU_PRESET,
     MENU_VOLUME,
     MENU_TRACK_PLAYER,
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
     MENU_BLADE_LENGTH,
     MENU_LENGTH,
     MENU_GESTURE_SUB,
@@ -2256,7 +2260,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 #endif
 
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
 // Gesture Control Boolean Menu
   void EnterBooleanMenu(MenuType t, bool current_value) {
     menu_type_ = t;
@@ -2432,7 +2436,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
     case MENU_VOLUME:
       if (SaberBase::IsOn()) {
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
         menu_type_ = MENU_SETTING_SUB;
 #endif
         MenuSave();
@@ -2440,7 +2444,7 @@ SaberFett263Buttons() : PropBase() {}
         MenuExit();
       }
       break;
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
 #if NUM_BLADES > 1
     case MENU_BLADE_LENGTH:
       sound_library_.SaySelect();
@@ -3291,7 +3295,7 @@ SaberFett263Buttons() : PropBase() {}
   void MenuDialIncrement(int direction) {
     switch (menu_type_) {
       case MENU_PRESET:
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
       case MENU_LENGTH:
 #endif
 #ifdef FETT263_EDIT_MODE_MENU
@@ -3343,7 +3347,7 @@ SaberFett263Buttons() : PropBase() {}
         if (track_num_ <= 0) track_num_ = num_tracks_;
         PlayTrack();
         break;
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
 #if NUM_BLADES > 1
       case MENU_BLADE_LENGTH:
         blade_num_ += direction;
@@ -4044,7 +4048,7 @@ SaberFett263Buttons() : PropBase() {}
 	sound_library_.SayExit();
         MenuExit();
         break;
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
 #if NUM_BLADES > 1
       case MENU_BLADE_LENGTH:
         menu_type_ = MENU_SETTING_SUB;
@@ -4658,7 +4662,7 @@ SaberFett263Buttons() : PropBase() {}
   float current_menu_angle_ = 0.0;
   float current_twist_angle_ = 0.0;
   float clash_t_ = 2.00;
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
   int blade_length_;
   int max_length_;
   float dim;
@@ -5159,7 +5163,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF | BUTTON_POWER):
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
         // Enter Edit Mode
         if (!menu_) {
           StartEditMode();
@@ -6111,7 +6115,7 @@ private:
   bool edit_color_ = false; // Color Editing Mode active
   float hsl_angle_ = 0.0; // HSL angle for Color Editing
   int font_num_; // Font number from list_fonts array for use in Edit Mode dial
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#ifdef FETT263_USE_SETTINGS_MENU
   int blade_preview_ = 0; // Blade number for "preview" style
   int blade_num_; // Active Blade Number for editing
   int length_revert_; // Original Blade Length for Revert
