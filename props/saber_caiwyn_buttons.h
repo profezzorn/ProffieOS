@@ -168,6 +168,7 @@ public:
   }
 
   void VolumeMenu() {
+    reset_volume_ = dynamic_mixer.get_volume();
     current_menu_angle_ = fusor.angle2();
     mode_volume_ = true;
     if (SFX_vmbegin) {
@@ -639,6 +640,7 @@ public:
 
 private:
   bool mode_volume_ = false;
+  int32_t reset_volume_ = VOLUME;
   float current_menu_angle_ = 0.0;
   TrackMode track_mode_ = PLAYBACK_ONCE;
   bool track_player_on_ = false;

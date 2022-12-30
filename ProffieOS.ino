@@ -26,7 +26,7 @@
 \*-----------------------------------------------------------------*/
 
 // #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h"
-#define CONFIG_FILE "config/caiwyn.h"
+
 // #define CONFIG_FILE "config/default_proffieboard_config.h"
 // #define CONFIG_FILE "config/default_v3_config.h"
 // #define CONFIG_FILE "config/crossguard_config.h"
@@ -588,7 +588,7 @@ ArgParserInterface* CurrentArgParser;
 #undef CONFIG_PROP
 
 #ifndef PROP_TYPE
-#include "props/saber_caiwyn_buttons.h"
+#include "props/saber.h"
 #endif
 
 PROP_TYPE prop;
