@@ -41,7 +41,7 @@
 //           Increase Volume: Rotate hilt right while in Volume Menu
 //           Decrease Volume: Rotate hilt left while in Volume Menu
 //   Save & Exit Volume Menu: Click Power
-//  Reset & Exit Volume Menu: Click Aux
+// Cancel & Exit Volume Menu: Click Aux
 //
 //   Enter Color Change Mode: Triple-click and hold Aux for 1 second
 //                            | Be aware that the first two clicks will
@@ -59,7 +59,7 @@
 // (missing sound files will be replaced with simple beeps)
 // vmbegin.wav              - Enter Volume Change Menu
 // vmend.wav                - Save Volume Change
-// vmreset.wav              - Reset Volume
+// vmcancel.wav             - Cancel Volume Change
 // monce.wav                - Set Track Player to play a single track one time
 // mloop.wav                - Set Track Player to repeat a single track
 // mrotate.wav              - Set Track Player to repeat all tracks
@@ -129,7 +129,7 @@
 
 EFFECT(vmbegin);
 EFFECT(vmend);
-EFFECT(vmreset);
+EFFECT(vmcancel);
 EFFECT(monce);
 EFFECT(mloop);
 EFFECT(mrotate);
@@ -216,14 +216,14 @@ public:
     STDOUT.println("Exit Volume Menu");
   }
 
-  void VolumeReset() {
-    dynamic_mixer.set_volume(VOLUME);
+  void VolumeCancel() {
+    dynamic_mixer.set_volume(reset_volume_);
     mode_volume_ = false;
-    if (SFX_vmreset) {
+    if (SFX_vmcancel) {
 #ifndef CAIWYN_DISABLE_BEEPS
       beeper.Beep(0.1, 2000);
 #endif
-      hybrid_font.PlayPolyphonic(&SFX_vmreset);
+      hybrid_font.PlayPolyphonic(&SFX_vmcancel);
     } else if (SFX_vmend) {
 #ifndef CAIWYN_DISABLE_BEEPS
       beeper.Beep(0.1, 2000);
@@ -234,7 +234,7 @@ public:
       beeper.Beep(0.20,1414.2);
       beeper.Beep(0.20,1000.0);
     }
-    STDOUT.println("Volume Reset");
+    STDOUT.println("Volume Change Cancelled");
     STDOUT.print("Current Volume: ");
     STDOUT.println(dynamic_mixer.get_volume());
   }
@@ -531,10 +531,10 @@ public:
         break;
 #endif
 
-// Blaster Block / Reset Volume / Reset Color
+// Blaster Block / Cancel Volume / Reset Color
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
         if (mode_volume_) {
-          VolumeReset();
+          VolumeCancel();
 #ifndef DISABLE_COLOR_CHANGE
         } else if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           ResetColorChangeMode();
