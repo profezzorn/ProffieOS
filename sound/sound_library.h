@@ -135,6 +135,18 @@ public:
     }
   }
 
+  void SayBatteryVolts() {
+    SayBatteryLevel();
+    SayNumber(battery_monitor.battery(), SAY_DECIMAL);
+    SayVolts();
+  }
+	
+  void SayBatteryPercent() {
+    SayBatteryLevel();
+    SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
+    SayPercent();
+  }
+
   void SayAccept () { Play("maccept.wav"); }
   void SayAdjustBlackLevel() { Play("mblack.wav"); }
   void SayAdjustColorHue() { Play("mhue.wav"); }

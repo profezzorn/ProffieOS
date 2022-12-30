@@ -61,6 +61,8 @@ Standard Controls While Blade is OFF
     Click PWR or AUX = Exit
   Check Battery Level*  = Hold AUX, Click PWR
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_VOLTS or FETT263_SAY_BATTERY_PERCENT define
+    *if using FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
+    Point down for volts, parallel or up for percent
   NEW! Change Font
     Next Font = Hold AUX + Long Click PWR (parallel or up)
     Previous Font= Hold AUX + Long Click PWR (down)
@@ -242,6 +244,8 @@ Standard Controls While Blade is OFF
     Click PWR = Exit
   NEW Control! Battery Level* = Double Click + Long Click PWR
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_PERCENT or FETT263_SAY_BATTERY_VOLTS define
+    *if using FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
+    Point down for volts, parallel or up for percent
   NEW! Change Font
     Next Font = Triple Click + Long Click PWR (parallel or up)
     Previous Font = Triple Click + Long Click PWR (down)
@@ -544,6 +548,13 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
     Cannot be used with FETT263_SAVE_CHOREOGRAPHY
     *Clash Strength / Clash Impact effects and sounds for Lockup negated
     *Battle Mode control changes to hold AUX + Swing
+    
+== BC Variations ==
+  FETT263_USE_BC_MELT_STAB
+  Allows MELT to be gesture controlled full-time, uses Thrust for Stab effect
+
+  FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
+  Spoken Battery Level in volts and percent (point down for volts, parallel or up for percent)
 
 CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
@@ -581,6 +592,11 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #ifndef FETT263_FORCE_PUSH_LENGTH
 #define FETT263_FORCE_PUSH_LENGTH 5
+#endif
+
+#ifdef FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
+#define FETT263_SAY_BATTERY_VOLTS
+#define FETT263_SAY_BATTERY_PERCENT
 #endif
 
 #if NUM_BUTTONS < 1
@@ -767,6 +783,8 @@ EFFECT(blstbgn); // for Begin Multi-Blast
 EFFECT(blstend); // for End Multi-Blast
 EFFECT(push); // for Force Push gesture in Battle Mode
 EFFECT(quote); // quote on force effect
+EFFECT(tr);
+EFFECT2(trloop, trloop);
 #ifdef FETT263_EDIT_MODE_MENU
 EFFECT(medit); // Edit Mode
 #endif
@@ -1742,6 +1760,7 @@ SaberFett263Buttons() : PropBase() {}
       // CHECK PUSH
       if (clash_type_ == CLASH_CHECK) {
         Event(BUTTON_NONE, EVENT_PUSH);
+        STDOUT.println("EVENT PUSH");
         clash_type_ = CLASH_NONE;
       }
       if (clash_type_ != CLASH_LOCKUP_END) {
@@ -1821,17 +1840,17 @@ SaberFett263Buttons() : PropBase() {}
           Event(BUTTON_NONE, EVENT_SWING);
         }
       }
-      // EVENT_THRUST
-      if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
-          mss.x > 14  &&
-          fusor.swing_speed() < 150) {
-        if (millis() - thrust_begin_millis_ > 15) {
-          Event(BUTTON_NONE, EVENT_THRUST);
-          thrust_begin_millis_ = millis();
-        }
-      } else {
+    }
+    // EVENT_THRUST
+    if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
+        mss.x > 14  &&
+        fusor.swing_speed() < 150) {
+      if (millis() - thrust_begin_millis_ > 15) {
+        Event(BUTTON_NONE, EVENT_THRUST);
         thrust_begin_millis_ = millis();
       }
+    } else {
+      thrust_begin_millis_ = millis();
     }
 #ifdef FETT263_QUICK_SELECT_ON_BOOT
     if (menu_type_ == MENU_PRESET && millis() < 2000) {
@@ -1924,6 +1943,22 @@ SaberFett263Buttons() : PropBase() {}
       track_player_.Free();
     } else {
       StartOrStopTrack();
+    }
+  }
+
+  void SoundLoop() {
+    if (wav_player->isPlaying()) {
+      wav_player->set_fade_time(0.2);
+      wav_player->FadeAndStop();
+      wav_player.Free();
+      STDOUT.println("End Wav Player");    
+    } else {
+      wav_player = GetFreeWavPlayer();
+      if (wav_player) {
+        wav_player->PlayOnce(&SFX_trloop);
+      } else {
+        STDOUT.println("Out of WAV players!");
+      }
     }
   }
 
@@ -4450,14 +4485,16 @@ SaberFett263Buttons() : PropBase() {}
 
   // Battery Level
   void DoBattery() {
-#if defined (FETT263_SAY_BATTERY_PERCENT)
-    sound_library_.SayBatteryLevel();
-    sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
-    sound_library_.SayPercent();
-#elif defined(FETT263_SAY_BATTERY_VOLTS)
-    sound_library_.SayBatteryLevel();
-    sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
-    sound_library_.SayVolts();
+#if defined (FETT263_SAY_BATTERY_PERCENT) && defined (FETT263_SAY_BATTERY_VOLTS)
+    if (fusor.angle1() < - M_PI / 3) {
+      sound_library_.SayBatteryVolts();
+    } else {
+      sound_library_.SayBatteryPercent();
+    }
+#elif defined(FETT263_SAY_BATTERY_PERCENT)
+    sound_library_.SayBatteryPercent();
+#elif defined(FETT263_SAY_BATTERY_VOLTAGE)
+    sound_library_.SayBatteryVolts();
 #endif
     SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
   }
@@ -5575,22 +5612,23 @@ SaberFett263Buttons() : PropBase() {}
         clash_type_ = CLASH_BATTLE_MODE;
         return true;
 
-
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
         if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
         clash_impact_millis_ = millis();
-        if (!battle_mode_) {
-#ifdef FETT263_CLASH_STRENGTH_SOUND
-          clash_impact_millis_ = millis();
-          clash_type_ = CLASH_STAB;
-#else
-          SaberBase::DoStab();
-#endif
-          return true;
-        }
         check_blast_ = false;
         swing_blast_ = false;
         if (!swinging_) {
+#ifndef FETT263_USE_BC_MELT_STAB
+          if (!battle_mode_) {
+#ifdef FETT263_CLASH_STRENGTH_SOUND
+            clash_impact_millis_ = millis();
+            clash_type_ = CLASH_STAB;
+#else
+            SaberBase::DoStab();
+#endif
+            return true;
+          }
+#endif
           if (fusor.angle1() < - M_PI / 4) {
             SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
           } else {
@@ -5600,6 +5638,21 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::DoBeginLockup();
         }
         return true;
+
+#ifdef FETT263_USE_BC_MELT_STAB
+      case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
+        if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
+        clash_impact_millis_ = millis();
+#ifdef FETT263_CLASH_STRENGTH_SOUND
+        clash_impact_millis_ = millis();
+        clash_type_ = CLASH_STAB;
+#else
+        SaberBase::DoStab();
+#endif
+        check_blast_ = false;
+        swing_blast_ = false;
+        return true;
+#endif
 
       // Optional Gesture Controls (defines listed at top)
 
@@ -5873,6 +5926,8 @@ SaberFett263Buttons() : PropBase() {}
           preon_effect_ = false;
         }
         return;
+      case EFFECT_TRANSITION_SOUND: hybrid_font.PlayCommon(&SFX_tr); return;
+      case EFFECT_SOUND_LOOP: SoundLoop(); return;
       default:
         break; // avoid compiler warnings
     }

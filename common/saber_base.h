@@ -57,6 +57,8 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(ALT_SOUND)			\
     /* Triggers an optional sound effect during transitions from within a style via TrDoEffect. */         \
     DEFINE_EFFECT(TRANSITION_SOUND)		\
+    /* Toggles an optonal sound effect loop ON/OFF from within a style via TrDoEffect. */          \
+    DEFINE_EFFECT(SOUND_LOOP)                   \
     /* Blaster effects */                       \
     DEFINE_EFFECT(STUN)				\
     DEFINE_EFFECT(FIRE)				\

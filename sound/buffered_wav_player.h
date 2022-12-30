@@ -73,17 +73,18 @@ public:
   }
   void PlayLoop(Effect* effect) { wav.PlayLoop(effect); }
 
-  void Stop() override {
+  // Do not call from interrupts!
+  void Stop() {
 #if 0
     // Immediate stop is impossible for multithreaded implementations.
     pause_.set(true);
     wav.Stop();
-    wav.Close()
 #else
     set_fade_time(0.005);
     FadeAndStop();
     while (isPlaying()) delay(1);
 #endif    
+    wav.Close();
     clear();
   }
 
