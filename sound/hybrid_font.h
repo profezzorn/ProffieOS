@@ -402,17 +402,6 @@ public:
     state_ = STATE_WAIT_FOR_ON;
   }
 
-  void SB_Postoff() {
-    // Postoff was alredy started by linked wav players, we just need to find
-    // the length so that WavLen<> can use it.
-    RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(&SFX_pstoff);
-    if (tmp) {
-      tmp->UpdateSaberBaseSoundInfo();
-    } else {
-      SaberBase::ClearSoundInfo();
-    }
-  }
-
   void SB_On() override {
     // If preon exists, we've already queed up playing the poweron and hum.
     bool already_started = state_ == STATE_WAIT_FOR_ON && SFX_preon;
@@ -471,6 +460,7 @@ public:
       case OFF_IDLE:
         break;
       case OFF_NORMAL:
+      case OFF_NO_POSTOFF:
         if (!SFX_in) {
           size_t total = SFX_poweroff.files_found() + SFX_pwroff.files_found();
 	  Effect* effect;
@@ -503,7 +493,7 @@ public:
           PlayPolyphonic(&SFX_in);
 	  hum_fade_out_ = 0.2;
         }
-	check_postoff_ = !!SFX_pstoff;
+        if (off_type != OFF_NO_POSTOFF) check_postoff_ = !!SFX_pstoff;
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
@@ -520,8 +510,8 @@ public:
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
       default: return;
-    case EFFECT_PREON: SB_Preon(); return;
-    case EFFECT_POSTOFF: SB_Postoff(); return;
+      case EFFECT_PREON: SB_Preon(); return;
+      case EFFECT_POSTOFF: PlayCommon(&SFX_pstoff); return;
       case EFFECT_STAB:
 	if (SFX_stab) { PlayCommon(&SFX_stab); return; }
 	// If no stab sounds are found, fall through to clash
