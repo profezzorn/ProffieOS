@@ -42,6 +42,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(QUOTE)			\
     DEFINE_EFFECT(SECONDARY_IGNITION)		\
     DEFINE_EFFECT(SECONDARY_RETRACTION)		\
+    DEFINE_EFFECT(OFF)                          \
     DEFINE_EFFECT(FAST_OFF)                     \
     DEFINE_EFFECT(OFF_CLASH)                    \
     DEFINE_EFFECT(NEXT_QUOTE)                   \
@@ -141,6 +142,7 @@ protected:
 public:
   enum OffType {
     OFF_NORMAL,
+    OFF_NO_POSTOFF,
     OFF_BLAST,
     OFF_IDLE,
     OFF_CANCEL_PREON,
