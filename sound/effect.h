@@ -712,8 +712,8 @@ EFFECT2(hum, hum);
 EFFECT2(humm, humm);
 EFFECT(swing);
 EFFECT(poweron);
-EFFECT2(poweroff, pstoff);
-EFFECT2(pwroff, pstoff);
+EFFECT(poweroff);
+EFFECT(pwroff);
 EFFECT(clash);
 EFFECT(force);    // also polyphonic
 EFFECT(stab);     // also polyphonic
@@ -730,7 +730,7 @@ EFFECT(endlock);  // Plecter endlock support, used for polyphonic name too
 // Polyphonic fonts
 EFFECT(blst);
 EFFECT(clsh);
-EFFECT2(in, pstoff);
+EFFECT(in);
 EFFECT(out);
 EFFECT2(lock, lock);
 EFFECT(swng);
