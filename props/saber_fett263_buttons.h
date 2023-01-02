@@ -52,9 +52,14 @@ Standard Controls While Blade is OFF
     If quotes exist in current font pointing straight down will toggle between Force/Quote and play
     *Quotes play sequentially 1,2,3...
     If parallel will do Force/Quote based on current mode
-  NEW! Toggle Gesture Sleep* = Hold PWR + Twist
+  NEW! Toggle Gesture Sleep* = Hold PWR + Clash
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
+  Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
+    Hold PWR + Turn Right = Special Ability 5 (USER5)
+    Hold PWR + Turn Left = Special Ability 6 (USER6)
+    Hold AUX + Turn Right = Special Ability 7 (USER7)
+    Hold Aux + Turn Left = Special Ability 8 (USER8)
   NEW Control! Volume Menu = Hold PWR, Click AUX
     Turn Right (Stepped) = Increase Volume (to max)
     Turn Left (Stepped) = Decrease Volume (to min)
@@ -115,9 +120,14 @@ Standard Controls While Blade is ON
     Next Style = Hold AUX + Long Click PWR (parallel or up)
     Previous Style = Hold AUX + Long Click PWR (down)
   Multi-Phase Preset Change*
-    *requires FETT263_MULTI_PHASE define
+    *requires FETT263_MULTI_PHASE define, cannot be used with FETT263_SPECIAL_ABILITIES
     Hold AUX + Twist =  Next Preset
     Hold PWR + Twist = Previous Preset
+  Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
+    Hold PWR + Turn Right = Special Ability 1 (USER1)
+    Hold PWR + Turn Left = Special Ability 2 (USER2)
+    Hold AUX + Turn Right = Special Ability 3 (USER3)
+    Hold Aux + Turn Left = Special Ability 4 (USER4)
 Optional Gesture Controls (if enabled)
   Retract Blade
     Twist Off
@@ -157,7 +167,7 @@ Optional Gesture Controls (if enabled)
     *default track only (use Track Player while OFF to select tracks or playback modes)
 
 Rehearsal / Choreography Modes*
-  *requires FETT263_SAVE_CHOREOGRAPHY define
+  *requires FETT263_SAVE_CHOREOGRAPHY define, cannot be used with FETT263_SPECIAL_ABILITIES
   Begin Rehearsal** = While Off, Hold AUX + Twist
       **If a Saved Rehearsal Exists it will prompt you to "Replace?"
         To confirm Turn the hilt Right (Clockwise) to "Accept" and Click PWR to begin a new Rehearsal
@@ -240,6 +250,11 @@ Standard Controls While Blade is OFF
     If quotes exist in current font pointing straight down will toggle between Force/Quote and play
     *Quotes play sequentially 1,2,3...
     If parallel will do Force/Quote based on current mode
+  Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
+    Hold PWR + Turn Right (parallel or up) = Special Ability 5 (USER5)
+    Hold PWR + Turn Left (parallel or up) = Special Ability 6 (USER6)
+    Hold PWR + Turn Right (pointing down) = Special Ability 7 (USER7)
+    Hold PWR + Turn Left (pointing down) = Special Ability 8 (USER8)
   NEW! Toggle Gesture Sleep* = Hold PWR + Twist
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
@@ -253,7 +268,7 @@ Standard Controls While Blade is OFF
     Click PWR = Select Preset
     NEW! Hold PWR = Select and Ignite Preset
     Long Click PWR = First Preset
-  NEW Control! Volume Menu = Hold PWR + Clash
+  NEW Control! Volume Menu = Hold PWR + Clash (parallel or up)
     Turn Right (Stepped) = Increase Volume (to max)
     Turn Left (Stepped) = Decrease Volume (to min)
     Click PWR = Exit
@@ -305,9 +320,14 @@ Standard Controls While Blade is ON
   NEW! Power Save* = 4 Clicks PWR (pointing straight up)
     *requires EFFECT_POWERSAVE in style
   Multi-Phase Preset Change*
-    *requires FETT263_MULTI_PHASE define
+    *requires FETT263_MULTI_PHASE define, cannot be used with FETT263_SPECIAL_ABILITIES
     Hold PWR + Twist (parallel or up) =  Next Preset 
     Hold PWR + Twist (pointing down) = Previous Preset
+  Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
+    Hold PWR + Turn Right (parallel or up) = Special Ability 1 (USER1)
+    Hold PWR + Turn Left (parallel or up) = Special Ability 2 (USER2)
+    Hold PWR + Turn Right (pointing down) = Special Ability 3 (USER3)
+    Hold PWR + Turn Left (pointing down) = Special Ability 4 (USER4)
   NEW! Change Style (All Blades)
     Next Style = Triple Click + Long Click PWR (parallel or up)
     Previous Style = Triple Click + Long Click PWR (down)
@@ -413,7 +433,7 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   Requires ENABLE_ALL_EDIT_OPTIONS
 
   FETT263_SAVE_CHOREOGRAPHY
-  Enables Enhanced Battle Mode with Saved Choreography
+  Enables Enhanced Battle Mode with Saved Choreography, cannot be used with FETT263_SPECIAL_ABILITIES
 
   FETT263_DUAL_MODE_SOUND
   Enables odd/even out.wav ignition sound selection based on blade angle
@@ -538,6 +558,12 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
 
     FETT263_FORCE_PUSH_LENGTH 5 - Allows for adjustment to Push gesture length in millis needed to trigger Force Push
       Recommended range 1 ~ 10, 1 = shortest, easiest to trigger, 10 = longest
+
+  FETT263_SPECIAL_ABILITIES
+  This enables 8 "Special Ability" controls (style controlled), 4 while ON, 4 while OFF.
+  Special Abilities are controlled by the style and can vary in every preset, they are "user" defined effects/capabilities.
+  Allows "Multi-Phase" to be style based, replaces FETT263_MULTI_PHASE.
+  Cannot be used with FETT263_MULTI_PHASE or FETT263_SAVE_CHOREOGRAPHY
 
   FETT263_MULTI_PHASE
   This will enable a preset change while ON to create a "Multi-Phase" saber effect
@@ -669,6 +695,14 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #if defined(FETT263_DISABLE_QUOTE_PLAYER) && defined(FETT263_QUOTE_PLAYER_START_ON)
 #error FETT263_QUOTE_PLAYER_START_ON cannot be used with FETT263_DISABLE_QUOTE_PLAYER
+#endif
+
+#if defined(FETT263_SPECIAL_ABILITIES) && defined(FETT263_MULTI_PHASE)
+#error FETT263_SPECIAL_ABILITIES cannot be used with FETT263_MULTI_PHASE
+#endif
+
+#if defined(FETT263_SPECIAL_ABILITIES) && defined(FETT263_SAVE_CHOREOGRAPHY)
+#error FETT263_SPECIAL_ABILITIES cannot be used with FETT263_SAVE_CHOREOGRAPHY
 #endif
 
 #if defined(FETT263_BATTLE_MODE_ALWAYS_ON) && defined(FETT263_BATTLE_MODE_START_ON)
@@ -2027,20 +2061,18 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void DetectMenuTurn() {
-    if (menu_ || color_mode_ == CC_COLOR_LIST) {
-      float a = fusor.angle2() - current_menu_angle_;
-      if (a > M_PI) a-=M_PI*2;
-      if (a < -M_PI) a+=M_PI*2;
-      if (a > twist_menu_ * 2/3) {
-        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-        STDOUT.println("EVENT MENU TURN RIGHT");
-        current_menu_angle_ = fusor.angle2();
-      }
-      if (a < -twist_menu_ * 2/3) {
-        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-        STDOUT.println("EVENT MENU TURN LEFT");
-        current_menu_angle_ = fusor.angle2();
-      }
+    float a = fusor.angle2() - current_menu_angle_;
+    if (a > M_PI) a-=M_PI*2;
+    if (a < -M_PI) a+=M_PI*2;
+    if (a > twist_menu_ * 2/3) {
+      Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+      STDOUT.println("EVENT MENU TURN RIGHT");
+      current_menu_angle_ = fusor.angle2();
+    }
+    if (a < -twist_menu_ * 2/3) {
+      Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+      STDOUT.println("EVENT MENU TURN LEFT");
+      current_menu_angle_ = fusor.angle2();
     }
   }
 
@@ -5067,11 +5099,21 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
         if (!menu_) {
-          StartMenu(MENU_VOLUME);
-          if (SFX_vmbegin) {
-            sound_library_.SayEnterVolumeMenu();
+          if (fusor.angle1() < - M_PI / 4) {
+            if (!saved_gesture_control.gestureon) {
+              saved_gesture_control.gestureon = true;
+              sound_library_.SayGesturesOn();
+            } else {
+              saved_gesture_control.gestureon = false;
+              sound_library_.SayGesturesOff();
+            }
           } else {
-            sound_library_.SayEditVolume();
+            StartMenu(MENU_VOLUME);
+            if (SFX_vmbegin) {
+              sound_library_.SayEnterVolumeMenu();
+            } else {
+              sound_library_.SayEditVolume();
+            }
           }
         }
         return true;
@@ -5103,6 +5145,18 @@ SaberFett263Buttons() : PropBase() {}
 #endif
         } else {
           DoInteractivePreon();
+        }
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
+        if (!menu_) {
+          if (!saved_gesture_control.gestureon) {
+            saved_gesture_control.gestureon = true;
+            sound_library_.SayGesturesOn();
+          } else {
+            saved_gesture_control.gestureon = false;
+            sound_library_.SayGesturesOff();
+          }
         }
         return true;
 
@@ -5487,6 +5541,36 @@ SaberFett263Buttons() : PropBase() {}
         return true;
         break;
 
+#ifdef FETT263_SPECIAL_ABILITIES
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
+        if (!menu_) {
+          SaberBase::DoEffect(EFFECT_USER3, 0);
+        }
+        current_menu_angle_ = fusor.angle2();
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
+        if (!menu_) {
+          SaberBase::DoEffect(EFFECT_USER4, 0);
+        }
+        current_menu_angle_ = fusor.angle2();
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_AUX):
+        if (!menu_) {
+          SaberBase::DoEffect(EFFECT_USER7, 0);
+        }
+        current_menu_angle_ = fusor.angle2();
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_AUX):
+        if (!menu_) {
+          SaberBase::DoEffect(EFFECT_USER8, 0);
+        }
+        current_menu_angle_ = fusor.angle2();
+        return true;
+#endif
+
         // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
         if (menu_) return true;
@@ -5625,19 +5709,6 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) MenuDial(-1);
         return true;
 
-      // Gesture Sleep Toggle
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_POWER):
-        if (!menu_) {
-          if (!saved_gesture_control.gestureon) {
-            saved_gesture_control.gestureon = true;
-            sound_library_.SayGesturesOn();
-          } else {
-            saved_gesture_control.gestureon = false;
-            sound_library_.SayGesturesOff();
-          }
-	}
-        return true;
-
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
         if (menu_ || CheckShowColorCC()) return true;
         if (swing_blast_) {
@@ -5653,7 +5724,22 @@ SaberFett263Buttons() : PropBase() {}
           current_menu_angle_ = fusor.angle2();
           return true;
         }
-        if (menu_) MenuDialIncrement(1);
+        if (menu_) {
+	  MenuDialIncrement(1);
+	}
+#ifdef FETT263_SPECIAL_ABILITIES
+        else {
+#if NUM_BUTTONS == 1
+          if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+            SaberBase::DoEffect(EFFECT_USER3, 0);
+          } else {
+            SaberBase::DoEffect(EFFECT_USER1, 0);
+          }
+#else
+          SaberBase::DoEffect(EFFECT_USER1, 0);
+#endif
+        }
+#endif
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
@@ -5661,7 +5747,22 @@ SaberFett263Buttons() : PropBase() {}
           current_menu_angle_ = fusor.angle2();
           return true;
         }        
-        if (menu_) MenuDialIncrement(-1);
+        if (menu_) {
+	  MenuDialIncrement(-1);
+	}
+#ifdef FETT263_SPECIAL_ABILITIES
+        else {
+#if NUM_BUTTONS == 1
+          if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+            SaberBase::DoEffect(EFFECT_USER4, 0);
+          } else {
+            SaberBase::DoEffect(EFFECT_USER2, 0);
+          }
+#else
+          SaberBase::DoEffect(EFFECT_USER2, 0);
+#endif
+        }
+#endif
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
@@ -5680,7 +5781,21 @@ SaberFett263Buttons() : PropBase() {}
             MenuDialIncrement(1);
             return true;
           }
+	}
+#ifdef FETT263_SPECIAL_ABILITIES
+        else {
+#if NUM_BUTTONS == 1
+          if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+            SaberBase::DoEffect(EFFECT_USER7, 0);
+          } else {
+            SaberBase::DoEffect(EFFECT_USER5, 0);
+          }
+#else
+          SaberBase::DoEffect(EFFECT_USER5, 0);
+#endif
+	  return true;
         }
+#endif
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
@@ -5699,7 +5814,21 @@ SaberFett263Buttons() : PropBase() {}
             MenuDialIncrement(-1);
             return true;
           }
-        }
+	}
+#ifdef FETT263_SPECIAL_ABILITIES
+        else {
+#if NUM_BUTTONS == 1
+          if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+            SaberBase::DoEffect(EFFECT_USER8, 0);
+          } else {
+            SaberBase::DoEffect(EFFECT_USER6, 0);
+          }
+#else
+          SaberBase::DoEffect(EFFECT_USER6, 0);
+#endif
+          return true;
+	}
+#endif
         return false;
 		    
       // Auto Lockup Mode
