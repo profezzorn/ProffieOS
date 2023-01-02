@@ -1931,6 +1931,9 @@ SaberFett263Buttons() : PropBase() {}
           Event(BUTTON_NONE, EVENT_SWING);
         }
       }
+      if (!swinging_ && millis() - saber_off_time_millis_ > 2000) {
+        motion_startup_ = fusor.ready();
+      }
     }
     // EVENT_THRUST
     if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
@@ -4766,6 +4769,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_MOTION_WAKE_POWER_BUTTON
           } else if (!SaberBase::MotionRequested()) {
             SaberBase::RequestMotion();
+            motion_startup_ = false;
             saber_off_time_millis_ = millis();
             if (SFX_boot) {
               hybrid_font.PlayPolyphonic(&SFX_boot);
@@ -5135,6 +5139,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_MOTION_WAKE_POWER_BUTTON
         } else if (!SaberBase::MotionRequested()) {
           SaberBase::RequestMotion();
+          motion_startup_ = false;
           saber_off_time_millis_ = millis();
           if (SFX_boot) {
             hybrid_font.PlayPolyphonic(&SFX_boot);
@@ -5922,7 +5927,7 @@ SaberFett263Buttons() : PropBase() {}
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot or motion restart for 2000ms
-        if (!menu_ && millis() - saber_off_time_millis_ > 2000) {
+        if (!menu_ && motion_startup_) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5945,7 +5950,7 @@ SaberFett263Buttons() : PropBase() {}
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
         // Due to motion chip startup on boot creating false ignition we delay Swing On at boot or motion restart for 2000ms
-        if (!menu_ && millis() - saber_off_time_millis_ > 2000) {
+        if (!menu_ && motion_startup_) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -6227,6 +6232,7 @@ private:
   bool rehearse_ = false; // Rehearsal Mode active
   bool choreo_ = false; // Choreography Mode active
 #endif
+  bool motion_startup_ = false; // Check motion chip initialized to prevent false swing ignition
   uint32_t thrust_begin_millis_; // Thrust timer
   uint32_t push_begin_millis_; // Push timer
   uint32_t clash_impact_millis_; // Clash timer
