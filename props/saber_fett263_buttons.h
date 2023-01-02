@@ -5727,15 +5727,14 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) {
 	  MenuDialIncrement(1);
 #ifdef FETT263_SPECIAL_ABILITIES
-#if NUM_BUTTONS == 1
         } else {
+#if NUM_BUTTONS == 1
           if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
             SaberBase::DoEffect(EFFECT_USER3, 0);
           } else {
             SaberBase::DoEffect(EFFECT_USER1, 0);
           }
 #else
-        } else {
           SaberBase::DoEffect(EFFECT_USER1, 0);
 #endif
 #endif
