@@ -141,6 +141,7 @@ protected:
 public:
   enum OffType {
     OFF_NORMAL,
+    OFF_FAST,
     OFF_BLAST,
     OFF_IDLE,
     OFF_CANCEL_PREON,
