@@ -569,6 +569,10 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   
   FETT263_DISABLE_COPY_PRESET - Disables the "on-the-fly" Copy Preset option
   
+  FETT263_DISABLE_BM_TOGGLE - Disable button control for Battle Mode, use gesture ignition or Special Abilities and/or style to toggle.
+  
+  FETT263_DISABLE_MULTI_BLAST_TOGGLE - Disable button control for Multi-Blast Mode, use Special Abilities and/or style to toggle.
+  
   FETT263_DISABLE_MULTI_BLAST - Disables "Multi-Blast" Mode
 
   FETT263_TRACK_PLAYER_NO_PROMPTS - Disables spoken voice prompts in Track Player
@@ -1667,9 +1671,11 @@ SaberFett263Buttons() : PropBase() {}
   void DoInteractiveBlast() {
     if (CheckInteractiveBlast()) {
       SaberBase::DoEffectR(EFFECT_INTERACTIVE_BLAST);
+#ifndef FETT263_DISABLE_MULTI_BLAST_TOGGLE
     } else {
-      ToggleBattleModeMultiBlast();
+      ToggleMultiBlast();
       SaberBase::DoBlast();
+#endif
     }
   }
 
@@ -4904,7 +4910,9 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         }
 #endif
+#ifndef FETT263_DISABLE_BM_TOGGLE
         ToggleBattleMode();
+#endif
         return true;
 
 #ifdef FETT263_MULTI_PHASE
@@ -5245,12 +5253,12 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         }
 #endif
-#ifndef FETT263_HOLD_BUTTON_LOCKUP
+#if !defined(FETT263_HOLD_BUTTON_LOCKUP) && !defined(FETT263_DISABLE_BM_TOGGLE)
         ToggleBattleMode();
 #endif
         return true;
 
-#ifdef FETT263_HOLD_BUTTON_LOCKUP
+#if defined(FETT263_HOLD_BUTTON_LOCKUP) && !defined(FETT263_DISABLE_BM_TOGGLE)
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
         if (menu_ || CheckShowColorCC()) return true;
         ToggleBattleMode();
@@ -6052,6 +6060,18 @@ SaberFett263Buttons() : PropBase() {}
         return;
       case EFFECT_TRANSITION_SOUND: hybrid_font.PlayCommon(&SFX_tr); return;
       case EFFECT_SOUND_LOOP: SoundLoop(); return;
+      case EFFECT_BEGIN_BATTLE_MODE:
+        if (!battle_mode_) ToggleBattleMode();
+        return;
+      case EFFECT_END_BATTLE_MODE:
+        if (battle_mode_) ToggleBattleMode();
+        return;
+      case EFFECT_BEGIN_AUTO_BLAST:
+        if (!swing_blast_) ToggleMultiBlast();
+        return;
+      case EFFECT_END_AUTO_BLAST:
+        if (swing_blast_) ToggleMultiBlast();
+        return;
       default:
         break; // avoid compiler warnings
     }
