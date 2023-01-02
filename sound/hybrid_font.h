@@ -402,6 +402,17 @@ public:
     state_ = STATE_WAIT_FOR_ON;
   }
 
+  void SB_Postoff() {
+    // Postoff was alredy started by linked wav players, we just need to find
+    // the length so that WavLen<> can use it.
+    RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(&SFX_pstoff);
+    if (tmp) {
+      tmp->UpdateSaberBaseSoundInfo();
+    } else {
+      SaberBase::ClearSoundInfo();
+    }
+  }
+
   void SB_On() override {
     // If preon exists, we've already queed up playing the poweron and hum.
     bool already_started = state_ == STATE_WAIT_FOR_ON && SFX_preon;
@@ -451,6 +462,7 @@ public:
   }
 
   void SB_Off(OffType off_type) override {
+    SFX_in.SetFollowing(&SFX_pstoff);
     switch (off_type) {
       case OFF_CANCEL_PREON:
 	if (state_ == STATE_WAIT_FOR_ON) {
@@ -459,8 +471,9 @@ public:
 	break;
       case OFF_IDLE:
         break;
+      case OFF_FAST:
+        SFX_in.SetFollowing(nullptr);
       case OFF_NORMAL:
-      case OFF_NO_POSTOFF:
         if (!SFX_in) {
           size_t total = SFX_poweroff.files_found() + SFX_pwroff.files_found();
 	  Effect* effect;
@@ -493,7 +506,7 @@ public:
           PlayPolyphonic(&SFX_in);
 	  hum_fade_out_ = 0.2;
         }
-        if (off_type != OFF_NO_POSTOFF) check_postoff_ = !!SFX_pstoff;
+        if (off_type != OFF_FAST) check_postoff_ = !!SFX_pstoff;
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
