@@ -42,7 +42,6 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(QUOTE)			\
     DEFINE_EFFECT(SECONDARY_IGNITION)		\
     DEFINE_EFFECT(SECONDARY_RETRACTION)		\
-    DEFINE_EFFECT(OFF)                          \
     DEFINE_EFFECT(FAST_OFF)                     \
     DEFINE_EFFECT(OFF_CLASH)                    \
     DEFINE_EFFECT(NEXT_QUOTE)                   \
