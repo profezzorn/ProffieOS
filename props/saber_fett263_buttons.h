@@ -5726,8 +5726,9 @@ SaberFett263Buttons() : PropBase() {}
         }
         if (menu_) {
 	  MenuDialIncrement(1);
+	}
 #ifdef FETT263_SPECIAL_ABILITIES
-        } else {
+        else {
 #if NUM_BUTTONS == 1
           if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
             SaberBase::DoEffect(EFFECT_USER3, 0);
@@ -5737,8 +5738,8 @@ SaberFett263Buttons() : PropBase() {}
 #else
           SaberBase::DoEffect(EFFECT_USER1, 0);
 #endif
+        }
 #endif
-	}
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
@@ -5748,20 +5749,20 @@ SaberFett263Buttons() : PropBase() {}
         }        
         if (menu_) {
 	  MenuDialIncrement(-1);
+	}
 #ifdef FETT263_SPECIAL_ABILITIES
+        else {
 #if NUM_BUTTONS == 1
-        } else {
           if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
             SaberBase::DoEffect(EFFECT_USER4, 0);
           } else {
             SaberBase::DoEffect(EFFECT_USER2, 0);
           }
 #else
-        } else {
           SaberBase::DoEffect(EFFECT_USER2, 0);
 #endif
-#endif
         }
+#endif
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
@@ -5780,21 +5781,21 @@ SaberFett263Buttons() : PropBase() {}
             MenuDialIncrement(1);
             return true;
           }
+	}
 #ifdef FETT263_SPECIAL_ABILITIES
+        else {
 #if NUM_BUTTONS == 1
-        } else {
           if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
             SaberBase::DoEffect(EFFECT_USER7, 0);
           } else {
             SaberBase::DoEffect(EFFECT_USER5, 0);
           }
 #else
-        } else {
           SaberBase::DoEffect(EFFECT_USER5, 0);
-#endif
 #endif
 	  return true;
         }
+#endif
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
@@ -5813,21 +5814,21 @@ SaberFett263Buttons() : PropBase() {}
             MenuDialIncrement(-1);
             return true;
           }
+	}
 #ifdef FETT263_SPECIAL_ABILITIES
+        else {
 #if NUM_BUTTONS == 1
-        } else {
           if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
             SaberBase::DoEffect(EFFECT_USER8, 0);
           } else {
             SaberBase::DoEffect(EFFECT_USER6, 0);
           }
 #else
-        } else {
           SaberBase::DoEffect(EFFECT_USER6, 0);
-#endif
 #endif
           return true;
 	}
+#endif
         return false;
 		    
       // Auto Lockup Mode
