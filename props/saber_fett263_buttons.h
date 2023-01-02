@@ -120,7 +120,7 @@ Standard Controls While Blade is ON
     Next Style = Hold AUX + Long Click PWR (parallel or up)
     Previous Style = Hold AUX + Long Click PWR (down)
   Multi-Phase Preset Change*
-    *requires FETT263_MULTI_PHASE define, cannot be used with requires FETT263_SPECIAL_ABILITIES
+    *requires FETT263_MULTI_PHASE define, cannot be used with FETT263_SPECIAL_ABILITIES
     Hold AUX + Twist =  Next Preset
     Hold PWR + Twist = Previous Preset
   Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
