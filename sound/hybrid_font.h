@@ -506,7 +506,7 @@ public:
           PlayPolyphonic(&SFX_in);
 	  hum_fade_out_ = 0.2;
         }
-        if (off_type != OFF_FAST) check_postoff_ = !!SFX_pstoff;
+        check_postoff_ = !!SFX_pstoff && off_type != OFF_FAST;
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
