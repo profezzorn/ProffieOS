@@ -26,16 +26,14 @@ public:
     TRANSITION::run(blade);
     wavnum_.run(blade);
     float location = LOCATION;
-    if (location == -1) location = random(32768) / 32768;
+    if (location == -1) location = random(32768) / 32768.0;
     if (begin_) {
       int wavnum = wavnum_.calculate(blade);
       SaberBase::DoEffect(EFFECT, location, wavnum);
       begin_ = false;
     }
   }
-  bool done() { 
-    return TRANSITION::done();
-  }
+
  private:
   PONUA SVFWrapper<WAVNUM> wavnum_;
   bool begin_;
