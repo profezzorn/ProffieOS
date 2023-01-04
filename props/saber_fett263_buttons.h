@@ -1929,11 +1929,9 @@ SaberFett263Buttons() : PropBase() {}
           swinging_ = false;
         }
         // Prevent false swing during motion startup
-        if (millis() - fusor_ready_millis_ > 2000) {
-          if (!swinging_ && fusor.swing_speed() > saved_gesture_control.swingonspeed) {
-            swinging_ = true;
-            Event(BUTTON_NONE, EVENT_SWING);
-          }
+        if (millis() - fusor_ready_millis_ > 2000 && !swinging_ && fusor.swing_speed() > saved_gesture_control.swingonspeed) {
+          swinging_ = true;
+          Event(BUTTON_NONE, EVENT_SWING);
 	}
       }
     }
@@ -6230,7 +6228,7 @@ private:
   bool rehearse_ = false; // Rehearsal Mode active
   bool choreo_ = false; // Choreography Mode active
 #endif
-  uint32_t fusor_ready_millis_; // Fusor "Ready" timer
+  uint32_t fusor_ready_millis_ = 0; // Fusor "Ready" timer
   uint32_t thrust_begin_millis_; // Thrust timer
   uint32_t push_begin_millis_; // Push timer
   uint32_t clash_impact_millis_; // Clash timer
