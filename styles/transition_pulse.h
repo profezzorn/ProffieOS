@@ -66,14 +66,13 @@ public:
     transition_.run(blade);
     if (active_ != pulse_.calculate(blade)) {
       if ((active_ = pulse_.calculate(blade))) {
-				begin_tr_.begin();
-				transition_.begin();
+        begin_tr_.begin();
+        transition_.begin();
       } else {
-				end_tr_.begin();
+        end_tr_.begin();
       }
     }
-  	if (active_ && transition_.done()) transition_.begin();
-
+    if (active_ && transition_.done()) transition_.begin();
     begin_tr_.run(blade);
     end_tr_.run(blade);
   }
@@ -92,16 +91,16 @@ public:
     RGBA_um_nod off_color = RGBA_um_nod::Transparent();
     if (!begin_tr_ && !end_tr_) {
       if (active_) {
-				return transition_.getColor(RGBA_um_nod::Transparent(),RGBA_um_nod::Transparent(),led);
+        return transition_.getColor(RGBA_um_nod::Transparent(),RGBA_um_nod::Transparent(),led);
       } else {
-				return off_color;
+        return off_color;
       }
     } else {
       auto on_color = transition_.getColor(RGBA_um_nod::Transparent(),RGBA_um_nod::Transparent(),led);
       if (active_) {
-				return begin_tr_.getColor(end_tr_.getColor(on_color, off_color, led), on_color, led);
+        return begin_tr_.getColor(end_tr_.getColor(on_color, off_color, led), on_color, led);
       } else {
-				return end_tr_.getColor(begin_tr_.getColor(off_color, on_color, led), off_color, led);
+        return end_tr_.getColor(begin_tr_.getColor(off_color, on_color, led), off_color, led);
       }
     }
   }
