@@ -88,18 +88,18 @@
 //                                  the lightning block can be triggered by
 //                                  holding AUX2 and pressing AUX.
 //
-// #define CAIWYN_BUTTON_NOCLASH  - If CAIWYN_BUTTON_LOCKUP is defined, when
-//                                  you click the power button, both a clash
-//                                  sound and a lockup are simultaneously
-//                                  played.  This is because I have found that
-//                                  quickly starting and ending a lockup often
-//                                  sounds like multiple clashes rather than a
-//                                  single clash.
-//                                  To smooth everything out, a clash sound is
-//                                  mixed in as well.  This works for most
-//                                  fonts, but if it sounds weird you can
-//                                  define CAIWYN_BUTTON_NOCLASH and only the
-//                                  lockup sounds will be played.
+// #define CAIWYN_BUTTON_CLASH    - If CAIWYN_BUTTON_LOCKUP is defined, holding
+//                                  the power button triggers a lockup.  In
+//                                  practice, you can quickly press and release
+//                                  the power button to simulate a clash.
+//                                  However, this plays the bgnlock and endlock
+//                                  sounds in quick succession, which I have
+//                                  found usually sounds like multiple clashes
+//                                  rather than a single clash.
+//                                  If CAIWYN_BUTTON_CLASH is also defined, a
+//                                  a clash sound will be overlayed on top of
+//                                  the lockup sounds, which smooths out the
+//                                  result.
 //
 // #define CAIWYN_DISABLE_BEEPS   - Disables the single beep that occurs when
 //                                  selecting fonts, tracks, or entering or
@@ -563,7 +563,7 @@ public:
 #ifdef CAIWYN_BUTTON_LOCKUP
           SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
           SaberBase::DoBeginLockup();
-#ifndef CAIWYN_BUTTON_NOCLASH
+#ifdef CAIWYN_BUTTON_CLASH
           hybrid_font.PlayPolyphonic(&SFX_clsh);
 #endif
 #else
