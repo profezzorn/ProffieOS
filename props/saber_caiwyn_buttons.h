@@ -87,6 +87,7 @@
 //                                  sabers, but if a saber has three buttons,
 //                                  the lightning block can be triggered by
 //                                  holding AUX2 and pressing AUX.
+//
 // #define CAIWYN_BUTTON_NOCLASH  - If CAIWYN_BUTTON_LOCKUP is defined, when
 //                                  you click the power button, both a clash
 //                                  sound and a lockup are simultaneously
@@ -99,11 +100,13 @@
 //                                  fonts, but if it sounds weird you can
 //                                  define CAIWYN_BUTTON_NOCLASH and only the
 //                                  lockup sounds will be played.
+//
 // #define CAIWYN_DISABLE_BEEPS   - Disables the single beep that occurs when
 //                                  selecting fonts, tracks, or entering or
 //                                  exiting the volume and color change menus.
 //                                  Note that beeps will still play if any
 //                                  sound file listed above is missing.
+//
 // #define CAIWYN_SAVE_TRACKS     - Automatically saves the selected track for
 //                                  each preset. Any time the user holds the
 //                                  Aux button for one second to change the
@@ -114,6 +117,14 @@
 //                                  all tracks, the saved track is not updated
 //                                  when the next track is automatically
 //                                  played.
+//
+// #define CAIWYN_SAVE_TRACK_MODE - Saves the selected track mode to a config
+//                                  file so that the setting is restored when
+//                                  Proffieboad boots up after the battery is
+//                                  recharged or replaced.
+//                                  If SAVE_STATE is defined, then this will
+//                                  automatically be defined as well.
+//
 // #define DISABLE_COLOR_CHANGE   - Disables the color change menu.
 
 #ifndef PROPS_CAIWYN_BUTTONS_H
@@ -150,12 +161,26 @@
 #define BUTTON_HELD_LONG_TIMEOUT 2000
 #endif
 
+#ifdef SAVE_STATE
+#define CAIWYN_SAVE_TRACK_MODE
+#endif
+
 EFFECT(vmbegin);
 EFFECT(vmend);
 EFFECT(vmreset);
 EFFECT(monce);
 EFFECT(mloop);
 EFFECT(mrotate);
+
+#ifdef CAIWYN_SAVE_TRACK_MODE
+class SaveCaiwynStateFile : public ConfigFile {
+public:
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(track_mode, 0);
+  }
+  int track_mode;
+};
+#endif
 
 // The Saber class implements the basic states and actions for the saber.
 class CaiwynButtons : public PropBase {
@@ -285,6 +310,23 @@ public:
     PLAYBACK_ROTATE,
   };
 
+#ifdef CAIWYN_SAVE_TRACK_MODE
+  SaveCaiwynStateFile saved_caiwyn_state;
+  void RestoreCaiwynState() {
+    saved_caiwyn_state.ReadINIFromDir(NULL, "caiwyn");
+    track_mode_ = (TrackMode) saved_caiwyn_state.track_mode;
+  }
+
+  void SaveCaiwynState() {
+    saved_caiwyn_state.track_mode = (int) track_mode_;
+    saved_caiwyn_state.WriteToRootDir("caiwyn");
+  }
+
+  void Setup() override {
+    RestoreCaiwynState();
+  }
+#endif
+
   void TrackPlayer() {
     if (track_player_on_ && !track_player_->isPlaying()) {
       if (track_player_) track_player_.Free();
@@ -410,6 +452,9 @@ public:
         STDOUT.println("Track player set to play single track.");
         break;
     }
+#ifdef CAIWYN_SAVE_TRACK_MODE
+    SaveCaiwynState();
+#endif
   }
 
   void CheckBattery() {
@@ -498,7 +543,6 @@ public:
         } else {
           next_preset();
           strcpy(current_track_,current_preset_.track.get());
-          track_mode_ = PLAYBACK_ONCE;
         }
         return true;
 
