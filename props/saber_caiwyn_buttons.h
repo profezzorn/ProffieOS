@@ -24,16 +24,12 @@
 //     Turn On & Start Track: Hold Aux or Aux2 and press Power
 //
 // While saber is ON:
-//   Non-impact Clash/Lockup: Click/Hold Power
-//                            | This generates a clash/lockup effect with no
-//                            | impact to the blade; quick press for a short
-//                            | clash, hold for a lockup.
 //             Blaster Block: Click Aux
 //                    Lockup: Hold Aux or Aux2 during impact
 //                      Drag: Hold Aux or Aux2 during impact with blade pointed
 //                            down.
 //                      Melt: Hold Aux or Aux2 and stab
-//           Lightning Block: Hold Aux2 and Press Aux (3 buttons required)
+//           Lightning Block: Click/Hold Power
 //
 //         Enter Volume Menu: Double-click and hold Aux for 1 second
 //                            | Be aware that the first click will trigger a
@@ -55,6 +51,15 @@
 //
 //            Turn Saber Off: Hold Aux or Aux2 and press Power
 //
+// If CAIWYN_BUTTON_LOCKUP is defined:
+//   Non-impact Clash/Lockup: Click/Hold Power
+//                            | This generates a clash/lockup effect with no
+//                            | impact to the blade; quick press for a short
+//                            | clash, hold for a lockup.  This effect
+//                            | replaces the Lightning Block for sabers with
+//                            | only 2 buttons.
+//           Lightning Block: Hold Aux2 and press Aux (requires 3 buttons)
+//
 // You will need the following sound files in order for menus to work properly:
 // (missing sound files will be replaced with simple beeps)
 // vmbegin.wav              - Enter Volume Change Menu
@@ -75,23 +80,30 @@
 // https://drive.google.com/file/d/1cSBirX5STOVPanOkOlIeb0eofjx-qFmj/view
 //
 // Options you can add to your config file:
-// #define DISABLE_COLOR_CHANGE   - Disables the color change menu.
+// #define CAIWYN_BUTTON_LOCKUP   - Enables clashes and lockups to be triggered
+//                                  without impact to the blade by pressing and
+//                                  holding the power button.  This effect
+//                                  replaces lightning blocks for two-button
+//                                  sabers, but if a saber has three buttons,
+//                                  the lightning block can be triggered by
+//                                  holding AUX2 and pressing AUX.
+// #define CAIWYN_BUTTON_NOCLASH  - If CAIWYN_BUTTON_LOCKUP is defined, when
+//                                  you click the power button, both a clash
+//                                  sound and a lockup are simultaneously
+//                                  played.  This is because I have found that
+//                                  quickly starting and ending a lockup often
+//                                  sounds like multiple clashes rather than a
+//                                  single clash.
+//                                  To smooth everything out, a clash sound is
+//                                  mixed in as well.  This works for most
+//                                  fonts, but if it sounds weird you can
+//                                  define CAIWYN_BUTTON_NOCLASH and only the
+//                                  lockup sounds will be played.
 // #define CAIWYN_DISABLE_BEEPS   - Disables the single beep that occurs when
 //                                  selecting fonts, tracks, or entering or
 //                                  exiting the volume and color change menus.
 //                                  Note that beeps will still play if any
 //                                  sound file listed above is missing.
-// #define CAIWYN_NOCLASH_LOCKUP  - When you click the power button, both a
-//                                  clash sound and a lockup are simultaneously
-//                                  triggered.  This is because I have found
-//                                  that quickly starting and ending a lockup
-//                                  often sounds like multiple clashes rather
-//                                  than a single clash.
-//                                  To smooth everything out, a clash sound is
-//                                  mixed in as well.  This works for most
-//                                  fonts, but if it sounds weird you can
-//                                  disable the clash sound and just use the
-//                                  lockup by itself.
 // #define CAIWYN_SAVE_TRACKS     - Automatically saves the selected track for
 //                                  each preset. Any time the user holds the
 //                                  Aux button for one second to change the
@@ -102,6 +114,7 @@
 //                                  all tracks, the saved track is not updated
 //                                  when the next track is automatically
 //                                  played.
+// #define DISABLE_COLOR_CHANGE   - Disables the color change menu.
 
 #ifndef PROPS_CAIWYN_BUTTONS_H
 #define PROPS_CAIWYN_BUTTONS_H
@@ -488,13 +501,18 @@ public:
         }
         break;
 
-// Non-Impact Clash and Lockup / Zoom Color
+// Lightning Block / Non-Impact Clash and Lockup / Zoom Color
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
         if (!SaberBase::Lockup() && !mode_volume_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
+#ifdef CAIWYN_BUTTON_LOCKUP
           SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
           SaberBase::DoBeginLockup();
-#ifndef CAIWYN_NOCLASH_LOCKUP
+#ifndef CAIWYN_BUTTON_NOCLASH
           hybrid_font.PlayPolyphonic(&SFX_clsh);
+#endif
+#else
+          SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+          SaberBase::DoBeginLockup();
 #endif
           return true;
 #ifndef DISABLE_COLOR_CHANGE
@@ -606,10 +624,10 @@ public:
 #endif
 
 // Lightning Block
-#if NUM_BUTTONS > 2
+#if NUM_BUTTONS > 2 && defined CAIWYN_BUTTON_LOCKUP
       case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON | BUTTON_AUX2):
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON | BUTTON_AUX):
-        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+        SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
         SaberBase::DoBeginLockup();
         return true;
 #endif
