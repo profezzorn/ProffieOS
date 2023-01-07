@@ -16,14 +16,6 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
- To compile this sketch, first open Arduino Preferences and add
- https://profezzorn.github.io/arduino-proffieboard/package_proffieboard_index.json
- as an "Additional Board Manager URL"
- Then open menu Tools > Board > Boards Manager and install the latest plug-in
- for "Proffieboard".
- Lastly, set Tools > Board > Proffieboard to the appropriate Proffieboard version.
-
 */
 
 /*-----------------------------------------------------------------*\
