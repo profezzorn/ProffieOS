@@ -23,6 +23,7 @@
  Then open menu Tools > Board > Boards Manager and install the latest plug-in
  for "Proffieboard".
  Lastly, set Tools > Board > Proffieboard to the appropriate Proffieboard version.
+
 */
 
 /*-----------------------------------------------------------------*\
