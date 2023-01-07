@@ -92,6 +92,16 @@
 //                                  fonts, but if it sounds weird you can
 //                                  disable the clash sound and just use the
 //                                  lockup by itself.
+// #define CAIWYN_SAVE_TRACKS     - Automatically saves the selected track for
+//                                  each preset. Any time the user holds the
+//                                  Aux button for one second to change the
+//                                  active track, the preset is updated to
+//                                  default to that track. This ONLY happens
+//                                  when the user selects the track directly;
+//                                  if the Track Player Mode is set to repeat
+//                                  all tracks, the saved track is not updated
+//                                  when the next track is automatically
+//                                  played.
 
 #ifndef PROPS_CAIWYN_BUTTONS_H
 #define PROPS_CAIWYN_BUTTONS_H
@@ -327,10 +337,6 @@ public:
         RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, nullptr, next_track, false);
       }
       strcpy(current_track_, next_track);
-#ifdef SAVE_TRACK
-      current_preset_.track = mkstr(current_track_);
-      current_preset_.Save();
-#endif
       PlayTrack();
     } else {
       StartOrStopTrack();
@@ -460,6 +466,10 @@ public:
 #endif
         if (track_player_) {
           NextTrack();
+#ifdef CAIWYN_SAVE_TRACKS
+          current_preset_.track = mkstr(current_track_);
+          current_preset_.Save();
+#endif
         } else {
           next_preset();
           strcpy(current_track_,current_preset_.track.get());
