@@ -541,6 +541,8 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/extend.h"
 #include "transitions/center_wipe.h"
 #include "transitions/sequence.h"
+#include "transitions/blink.h"
+#include "transitions/doeffect.h"
 
 #include "styles/legacy_styles.h"
 //responsive styles

@@ -15,7 +15,11 @@
 template<int N>
 class BufferedAudioStream : public ProffieOSAudioStream, public AudioStreamWork {
 public:
-  BufferedAudioStream() : AudioStreamWork() {
+  BufferedAudioStream() : AudioStreamWork(),
+			  stream_(0),
+			  buf_start_(0),
+			  buf_end_(0),
+			  eof_(false) {
   }
   int read(int16_t* buf, int bufsize) override {
 #if 0
@@ -27,7 +31,7 @@ public:
       int to_copy = buffered();
       if (!to_copy) break;
       to_copy = std::min(to_copy, bufsize);
-      int start_pos = buf_start_ & (N-1);
+      int start_pos = buf_start_.get() & (N-1);
       to_copy = std::min(to_copy, N - start_pos);
       memcpy(buf, buffer_ + start_pos, sizeof(buf[0]) * to_copy);
       copied += to_copy;
@@ -40,63 +44,57 @@ public:
 #endif
   }
   bool eof() const override {
-    return !buffered() && eof_;
+    return !buffered() && eof_.get();
   }
-  void Stop() override {
-    stop_requested_ = true;
+  void StopFromReader() override {
+    if (stream_.get())
+      stream_.get()->StopFromReader();
   }
   void clear() {
-    eof_ = false;
-    buf_start_ = buf_end_;
-    stream_ = NULL;
-    stop_requested_ = false;
+    eof_.set(false);
+    buf_start_.set(buf_end_.get());
+    stream_.set(NULL);
   }
   int buffered() const {
-    return buf_end_ - buf_start_;
+    return buf_end_.get() - buf_start_.get();
   }
   // Overridable
   size_t space_available() const override {
     return real_space_available();
   }
   void SetStream(ProffieOSAudioStream* stream) {
-    stop_requested_ = false;
-    eof_ = false;
-    stream_ = stream;
+    eof_.set(false);
+    stream_.set(stream);
   }
 private:
   size_t real_space_available() const {
-    if (eof_ || !stream_) return 0;
+    if (eof_.get() || !stream_.get()) return 0;
     return N - buffered();
   }
   bool FillBuffer() override {
-    if (stream_) {
-      if (stop_requested_) {
-	stop_requested_ = false;
-	stream_->Stop();
-      }
+    if (stream_.get()) {
       size_t space = real_space_available();
       if (space) {
-        size_t end_pos = buf_end_ & (N-1);
+        size_t end_pos = buf_end_.get() & (N-1);
         size_t to_read = std::min(space, N - end_pos);
-        int got = stream_->read(buffer_ + end_pos, to_read);
+        int got = stream_.get()->read(buffer_ + end_pos, to_read);
         if (got) {
-          eof_ = false;
-        } else if (stream_) {
-          eof_ = stream_->eof();
+          eof_.set(false);
+        } else if (stream_.get()) {
+          eof_.set(stream_.get()->eof());
 	} else {
-	  eof_ = true;
+	  eof_.set(true);
         }
         buf_end_ += got;
       }
     }
-    return stream_ && space_available() > 0 && !eof_;
+    return stream_.get() && space_available() > 0 && !eof_.get();
   }
-  ProffieOSAudioStream* volatile stream_ = 0;
+  POAtomic<ProffieOSAudioStream*> stream_;
   // Note, these are assumed to be atomic, 8-bit processors won't work.
-  volatile size_t buf_start_ = 0;
-  volatile size_t buf_end_ = 0;
-  volatile bool eof_ = false;
-  volatile bool stop_requested_ = false;
+  POAtomic<size_t> buf_start_;
+  POAtomic<size_t> buf_end_;
+  POAtomic<bool> eof_;
   int16_t buffer_[N];
 };
 

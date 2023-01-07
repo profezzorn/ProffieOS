@@ -2,6 +2,7 @@
 #define SOUND_EFFECT_H
 
 #include <algorithm>
+#include "../common/atomic.h"
 #include "../common/file_reader.h"
 
 class Effect;
@@ -786,37 +787,39 @@ EFFECT(lowbatt);	// battery low
 // have the WAV reader use this.
 class EffectFileReader : public FileReader {
 public:
+  EffectFileReader() : FileReader(), do_open_(0) {}
+
   bool Play(Effect* f) {
-    do_open_ = false;
+    do_open_.set(false);
     Effect::FileID id = f->RandomFile();
     if (!id) {
       return false;
     }
     id.GetName(filename_);
-    do_open_ = true;
+    do_open_.set(true);
     return true;
   }
 
   void Play(const char* filename) {
-    do_open_ = false;
+    do_open_.set(false);
     strncpy(filename_, filename, sizeof(filename_));
-    do_open_ = true;
+    do_open_.set(true);
   }
 
   // Returns true if we had been asked to open a file.
   // Check if open succeded or not by calling IsOpen()
   bool OpenFile() {
-    if (!do_open_) return false;
+    if (!do_open_.get()) return false;
     if (!OpenFast(filename_)) {
       default_output->print("File ");
       default_output->print(filename_);
       default_output->println(" not found.");
     }
-    do_open_ = false;
+    do_open_.set(false);
     return true;
   }
 private:
-  volatile bool do_open_ = false;
+  POAtomic<bool> do_open_;
   char filename_[128];
 };
 

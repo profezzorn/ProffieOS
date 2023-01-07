@@ -65,11 +65,12 @@
 // reader must have enough buffers to provide smooth playback.
 class PlayWav : StateMachine, public ProffieOSAudioStream {
 public:
+  PlayWav() : run_(false), effect_(nullptr), sample_bytes_(0) {}
   void Play(const char* filename) {
     if (!*filename) return;
     strcpy(filename_, filename);
     new_file_id_ = Effect::FileID();
-    run_ = true;
+    run_.set(true);
   }
 
   const char* Filename() const {
@@ -77,31 +78,42 @@ public:
   }
 
   void PlayOnce(Effect* effect, float start = 0.0) {
-    sample_bytes_ = 0;
+    sample_bytes_.set(0);
     new_file_id_ = effect->RandomFile();
     if (new_file_id_) {
       new_file_id_.GetName(filename_);
       start_ = start;
-      effect_ = nullptr;
-      run_ = true;
+      effect_.set(nullptr);
+      run_.set(true);
     }
     PlayLoop(effect->GetFollowing());
   }
   void PlayLoop(Effect* effect) {
-    effect_ = effect;
+    effect_.set(effect);
   }
 
+#if 0
   void Stop() override {
     noInterrupts();
-    run_ = false;
+    run_.set(false);
     state_machine_.reset_state_machine();
-    effect_ = nullptr;
+    effect_.set(nullptr);
     written_ = num_samples_ = 0;
     interrupts();
   }
+#endif
+
+  // No need to stop interrupts since this is
+  // already called from the reader (interrupt) thread.
+  void StopFromReader() override {
+    run_.set(false);
+    state_machine_.reset_state_machine();
+    effect_.set(nullptr);
+    written_ = num_samples_ = 0;
+  }
 
   bool isPlaying() const {
-    return run_;
+    return run_.get();
   }
 
 private:
@@ -129,8 +141,8 @@ private:
     len_ = 0;
     to_read_ = 0;
     ptr_ = end_;
-    run_ = false;
-    effect_ = nullptr;
+    run_.set(false);
+    effect_.set(nullptr);
   }
 
   template<int bits, int channels, int rate>
@@ -194,13 +206,13 @@ private:
   void loop() {
     STATE_MACHINE_BEGIN();
     while (true) {
-      while (!run_ && !effect_) YIELD();
-      if (!run_) {
-	new_file_id_ = old_file_id_.GetFollowing(effect_);
+      while (!run_.get() && !effect_.get()) YIELD();
+      if (!run_.get()) {
+	new_file_id_ = old_file_id_.GetFollowing(effect_.get());
         if (!new_file_id_) goto fail;
         new_file_id_.GetName(filename_);
-        run_ = true;
-	effect_ = effect_->GetFollowing();
+        run_.set(true);
+	effect_.set(effect_.get()->GetFollowing());
       }
       if (new_file_id_ && new_file_id_ == old_file_id_) {
         // Minor optimization: If we're reading the same file
@@ -286,7 +298,7 @@ private:
           if (file_.Tell() >= file_.FileSize()) break;
           len_ = file_.FileSize() - file_.Tell();
         }
-        sample_bytes_ = len_;
+        sample_bytes_.set(len_);
 
         if (start_ != 0.0) {
           int samples = Fmod(start_, length()) * rate_;
@@ -330,11 +342,11 @@ private:
       }
 
       // EOF;
-      run_ = false;
+      run_.set(false);
       continue;
 
   fail:
-      run_ = false;
+      run_.set(false);
       YIELD();
     }
 
@@ -352,18 +364,18 @@ public:
   }
 
   bool eof() const override {
-    return !run_;
+    return !run_.get();
   }
 
   // Length, seconds.
   float length() const {
-    return (float)(sample_bytes_) * 8 / (bits_ * rate_ * channels_);
+    return (float)(sample_bytes_.get()) * 8 / (bits_ * rate_ * channels_);
   }
 
   // Current position, seconds.
   float pos() const {
     if (!isPlaying()) return 0.0;
-    return (float)(sample_bytes_ - len_ + end_ - ptr_) * 8 / (bits_ * rate_);
+    return (float)(sample_bytes_.get() - len_ + end_ - ptr_) * 8 / (bits_ * rate_ * channels_);
   }
 
   void Close() {
@@ -380,7 +392,7 @@ public:
   }
 
   void dump() {
-    STDOUT << " run=" << run_
+    STDOUT << " run=" << run_.get()
 	   << " filename=" << filename()
 	   << " pos=" << pos()
 	   << " len=" << length()
@@ -388,8 +400,8 @@ public:
   }
 
 private:
-  volatile bool run_ = false;
-  Effect* volatile effect_ = nullptr;
+  POAtomic<bool> run_;
+  POAtomic<Effect*> effect_;
   // If we're playing from an Effect, this file ID is the file we're actually playing.
   Effect::FileID new_file_id_;
   Effect::FileID old_file_id_;
@@ -408,7 +420,7 @@ private:
   FileReader file_;
 
   size_t len_ = 0;
-  volatile size_t sample_bytes_ = 0;
+  POAtomic<size_t> sample_bytes_;
   unsigned char* ptr_;
   unsigned char* end_;
   unsigned char buffer[512 + 8]  __attribute__((aligned(4)));

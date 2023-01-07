@@ -52,15 +52,22 @@ Standard Controls While Blade is OFF
     If quotes exist in current font pointing straight down will toggle between Force/Quote and play
     *Quotes play sequentially 1,2,3...
     If parallel will do Force/Quote based on current mode
-  NEW! Toggle Gesture Sleep* = Hold PWR + Twist
+  NEW! Toggle Gesture Sleep* = Hold PWR + Clash
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
+  Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
+    Hold PWR + Turn Right = Special Ability 5 (USER5)
+    Hold PWR + Turn Left = Special Ability 6 (USER6)
+    Hold AUX + Turn Right = Special Ability 7 (USER7)
+    Hold Aux + Turn Left = Special Ability 8 (USER8)
   NEW Control! Volume Menu = Hold PWR, Click AUX
     Turn Right (Stepped) = Increase Volume (to max)
     Turn Left (Stepped) = Decrease Volume (to min)
     Click PWR or AUX = Exit
   Check Battery Level*  = Hold AUX, Click PWR
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_VOLTS or FETT263_SAY_BATTERY_PERCENT define
+    *if using FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
+    Point down for volts, parallel or up for percent
   NEW! Change Font
     Next Font = Hold AUX + Long Click PWR (parallel or up)
     Previous Font= Hold AUX + Long Click PWR (down)
@@ -113,9 +120,14 @@ Standard Controls While Blade is ON
     Next Style = Hold AUX + Long Click PWR (parallel or up)
     Previous Style = Hold AUX + Long Click PWR (down)
   Multi-Phase Preset Change*
-    *requires FETT263_MULTI_PHASE define
+    *requires FETT263_MULTI_PHASE define, cannot be used with FETT263_SPECIAL_ABILITIES
     Hold AUX + Twist =  Next Preset
     Hold PWR + Twist = Previous Preset
+  Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
+    Hold PWR + Turn Right = Special Ability 1 (USER1)
+    Hold PWR + Turn Left = Special Ability 2 (USER2)
+    Hold AUX + Turn Right = Special Ability 3 (USER3)
+    Hold Aux + Turn Left = Special Ability 4 (USER4)
 Optional Gesture Controls (if enabled)
   Retract Blade
     Twist Off
@@ -155,7 +167,7 @@ Optional Gesture Controls (if enabled)
     *default track only (use Track Player while OFF to select tracks or playback modes)
 
 Rehearsal / Choreography Modes*
-  *requires FETT263_SAVE_CHOREOGRAPHY define
+  *requires FETT263_SAVE_CHOREOGRAPHY define, cannot be used with FETT263_SPECIAL_ABILITIES
   Begin Rehearsal** = While Off, Hold AUX + Twist
       **If a Saved Rehearsal Exists it will prompt you to "Replace?"
         To confirm Turn the hilt Right (Clockwise) to "Accept" and Click PWR to begin a new Rehearsal
@@ -198,6 +210,21 @@ Edit Mode*
   "Edit Color" Additional Control
     "Color List" and "Adjust Color Hue" Zoom Mode = Hold PWR while turning to Zoom color in, release to save
 
+Edit Settings* (Settings Only version of Edit Mode)
+    *requires FETT263_EDIT_SETTINGS_MENU & ENABLE_ALL_EDIT_OPTIONS defines
+    *requires /common folder with all menu prompt sounds
+  Enter Edit Settings = While Off, Hold AUX + Hold PWR
+    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
+
+  While in Edit Mode controls are as follows:
+    Rotate Forward, Increase Value, Confirm "Yes" = Turn Right (Stepped)
+      Increment by 5 (Blade Length) = Hold PWR + Turn Right
+    Rotate Back, Decrease Value, Confirm "No" = Turn Left (Stepped)
+      Increment by 5 (Blade Length) = Hold PWR + Turn Left
+    Select, Save, Enter = Click PWR
+    Cancel, Revert, Go Back = Click AUX
+    Exit Edit Settings - Hold AUX
+
 ---------- 1 Button Controls (based on SA22C prop) ----------
 NOTE: 
   Click = do short click (so Double Click is two short clicks in quick succession)
@@ -223,6 +250,11 @@ Standard Controls While Blade is OFF
     If quotes exist in current font pointing straight down will toggle between Force/Quote and play
     *Quotes play sequentially 1,2,3...
     If parallel will do Force/Quote based on current mode
+  Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
+    Hold PWR + Turn Right (parallel or up) = Special Ability 5 (USER5)
+    Hold PWR + Turn Left (parallel or up) = Special Ability 6 (USER6)
+    Hold PWR + Turn Right (pointing down) = Special Ability 7 (USER7)
+    Hold PWR + Turn Left (pointing down) = Special Ability 8 (USER8)
   NEW! Toggle Gesture Sleep* = Hold PWR + Twist
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
@@ -236,12 +268,14 @@ Standard Controls While Blade is OFF
     Click PWR = Select Preset
     NEW! Hold PWR = Select and Ignite Preset
     Long Click PWR = First Preset
-  NEW Control! Volume Menu = Hold PWR + Clash
+  NEW Control! Volume Menu = Hold PWR + Clash (parallel or up)
     Turn Right (Stepped) = Increase Volume (to max)
     Turn Left (Stepped) = Decrease Volume (to min)
     Click PWR = Exit
   NEW Control! Battery Level* = Double Click + Long Click PWR
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_PERCENT or FETT263_SAY_BATTERY_VOLTS define
+    *if using FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
+    Point down for volts, parallel or up for percent
   NEW! Change Font
     Next Font = Triple Click + Long Click PWR (parallel or up)
     Previous Font = Triple Click + Long Click PWR (down)
@@ -286,9 +320,14 @@ Standard Controls While Blade is ON
   NEW! Power Save* = 4 Clicks PWR (pointing straight up)
     *requires EFFECT_POWERSAVE in style
   Multi-Phase Preset Change*
-    *requires FETT263_MULTI_PHASE define
+    *requires FETT263_MULTI_PHASE define, cannot be used with FETT263_SPECIAL_ABILITIES
     Hold PWR + Twist (parallel or up) =  Next Preset 
     Hold PWR + Twist (pointing down) = Previous Preset
+  Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
+    Hold PWR + Turn Right (parallel or up) = Special Ability 1 (USER1)
+    Hold PWR + Turn Left (parallel or up) = Special Ability 2 (USER2)
+    Hold PWR + Turn Right (pointing down) = Special Ability 3 (USER3)
+    Hold PWR + Turn Left (pointing down) = Special Ability 4 (USER4)
   NEW! Change Style (All Blades)
     Next Style = Triple Click + Long Click PWR (parallel or up)
     Previous Style = Triple Click + Long Click PWR (down)
@@ -364,6 +403,21 @@ Edit Mode*
   "Edit Color" Additional Control
     "Color List" and "Adjust Color Hue" Zoom Mode = Double Click and Hold PWR while turning to Zoom color in, release to save
 
+Edit Settings* (Settings Only version of Edit Mode)
+    *requires FETT263_EDIT_SETTINGS_MENU & ENABLE_ALL_EDIT_OPTIONS defines
+    *requires /common folder with all menu prompt sounds
+  Enter Edit Mode = While Off, Double Click and Hold PWR
+    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
+
+  While in Edit Mode controls are as follows:
+    Rotate Forward, Increase Value, Confirm "Yes" = Turn Right (Stepped)
+      Increment by 5 (Blade Length) = Hold PWR + Turn Right
+    Rotate Back, Decrease Value, Confirm "No" = Turn Left (Stepped)
+      Increment by 5 (Blade Length) = Hold PWR + Turn Left    
+    Select, Save, Enter = Click PWR
+    Cancel, Revert, Go Back = Long Click PWR
+    Exit Edit Settings - Hold PWR
+
 ---------- || ----------
 
 OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
@@ -372,8 +426,14 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   Enable Edit Mode Menu System
   Requires ENABLE_ALL_EDIT_OPTIONS
 
+  FETT263_EDIT_SETTINGS_MENU
+  Enable Edit Settings Menu (Volume, Clash Threshold, Blade Length, Gestures/Controls, Brightness)
+  I recommend setting USB Type = "Serial + WebUSB" under Arduino > Tools to allow for style, font, track, color editing via ProffieOS Workbench
+  Cannot be combined with FETT263_EDIT_MODE_MENU
+  Requires ENABLE_ALL_EDIT_OPTIONS
+
   FETT263_SAVE_CHOREOGRAPHY
-  Enables Enhanced Battle Mode with Saved Choreography
+  Enables Enhanced Battle Mode with Saved Choreography, cannot be used with FETT263_SPECIAL_ABILITIES
 
   FETT263_DUAL_MODE_SOUND
   Enables odd/even out.wav ignition sound selection based on blade angle
@@ -499,6 +559,12 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
     FETT263_FORCE_PUSH_LENGTH 5 - Allows for adjustment to Push gesture length in millis needed to trigger Force Push
       Recommended range 1 ~ 10, 1 = shortest, easiest to trigger, 10 = longest
 
+  FETT263_SPECIAL_ABILITIES
+  This enables 8 "Special Ability" controls (style controlled), 4 while ON, 4 while OFF.
+  Special Abilities are controlled by the style and can vary in every preset, they are "user" defined effects/capabilities.
+  Allows "Multi-Phase" to be style based, replaces FETT263_MULTI_PHASE.
+  Cannot be used with FETT263_MULTI_PHASE or FETT263_SAVE_CHOREOGRAPHY
+
   FETT263_MULTI_PHASE
   This will enable a preset change while ON to create a "Multi-Phase" saber effect
 
@@ -529,6 +595,10 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   
   FETT263_DISABLE_COPY_PRESET - Disables the "on-the-fly" Copy Preset option
   
+  FETT263_DISABLE_BM_TOGGLE - Disable button control for Battle Mode, use gesture ignition or Special Abilities and/or style to toggle.
+  
+  FETT263_DISABLE_MULTI_BLAST_TOGGLE - Disable button control for Multi-Blast Mode, use Special Abilities and/or style to toggle.
+  
   FETT263_DISABLE_MULTI_BLAST - Disables "Multi-Blast" Mode
 
   FETT263_TRACK_PLAYER_NO_PROMPTS - Disables spoken voice prompts in Track Player
@@ -544,6 +614,13 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
     Cannot be used with FETT263_SAVE_CHOREOGRAPHY
     *Clash Strength / Clash Impact effects and sounds for Lockup negated
     *Battle Mode control changes to hold AUX + Swing
+    
+== BC Variations ==
+  FETT263_USE_BC_MELT_STAB
+  Allows MELT to be gesture controlled full-time, uses Thrust for Stab effect
+
+  FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
+  Spoken Battery Level in volts and percent (point down for volts, parallel or up for percent)
 
 CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
@@ -583,6 +660,15 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #define FETT263_FORCE_PUSH_LENGTH 5
 #endif
 
+#ifdef FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
+#define FETT263_SAY_BATTERY_VOLTS
+#define FETT263_SAY_BATTERY_PERCENT
+#endif
+
+#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
+#define FETT263_USE_SETTINGS_MENU
+#endif
+
 #if NUM_BUTTONS < 1
 #error /props/saber_fett263_buttons.h requires 1, 2 or 3 Buttons for operation
 #endif
@@ -599,8 +685,24 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #error ENABLE_ALL_EDIT_OPTIONS must be defined to enable FETT263_EDIT_MODE_MENU
 #endif
 
+#if defined(FETT263_EDIT_SETTINGS_MENU) && !defined(ENABLE_ALL_EDIT_OPTIONS)
+#error ENABLE_ALL_EDIT_OPTIONS must be defined to enable FETT263_EDIT_SETTINGS_MENU
+#endif
+
+#if defined(FETT263_EDIT_MODE_MENU) && defined(FETT263_EDIT_SETTINGS_MENU)
+#error FETT263_EDIT_SETTINGS_MENU cannot be combined with FETT263_EDIT_MODE_MENU
+#endif
+
 #if defined(FETT263_DISABLE_QUOTE_PLAYER) && defined(FETT263_QUOTE_PLAYER_START_ON)
 #error FETT263_QUOTE_PLAYER_START_ON cannot be used with FETT263_DISABLE_QUOTE_PLAYER
+#endif
+
+#if defined(FETT263_SPECIAL_ABILITIES) && defined(FETT263_MULTI_PHASE)
+#error FETT263_SPECIAL_ABILITIES cannot be used with FETT263_MULTI_PHASE
+#endif
+
+#if defined(FETT263_SPECIAL_ABILITIES) && defined(FETT263_SAVE_CHOREOGRAPHY)
+#error FETT263_SPECIAL_ABILITIES cannot be used with FETT263_SAVE_CHOREOGRAPHY
 #endif
 
 #if defined(FETT263_BATTLE_MODE_ALWAYS_ON) && defined(FETT263_BATTLE_MODE_START_ON)
@@ -767,7 +869,9 @@ EFFECT(blstbgn); // for Begin Multi-Blast
 EFFECT(blstend); // for End Multi-Blast
 EFFECT(push); // for Force Push gesture in Battle Mode
 EFFECT(quote); // quote on force effect
-#ifdef FETT263_EDIT_MODE_MENU
+EFFECT(tr);
+EFFECT2(trloop, trloop);
+#ifdef FETT263_USE_SETTINGS_MENU
 EFFECT(medit); // Edit Mode
 #endif
 
@@ -912,7 +1016,8 @@ public:
 };
 #endif
 
-#ifdef FETT263_EDIT_MODE_MENU
+#ifdef FETT263_USE_SETTINGS_MENU
+
 // Edit Length
 int length_edit_length = 0;
 
@@ -937,7 +1042,8 @@ private:
   LIGHTUP lightup_;
   BLACK black_;
 };
-
+#endif
+#ifdef FETT263_EDIT_MODE_MENU
 // Edit Style Settings
 
 class IntEdit {
@@ -1267,19 +1373,37 @@ SaberFett263Buttons() : PropBase() {}
   // Color / Style Editing
   HSL hsl_;
   ShowColorAllBladesTemplate<ShowColorStyle> show_color_all_;
+#ifdef FETT263_USE_SETTINGS_MENU
+  ShowColorSingleBladeTemplate<LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>,LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>> show_length_;
+#if NUM_BLADES > 1
+  ShowColorSingleBladeTemplate<Pulsing<ShowColorStyle,Black,800>,Pulsing<ShowColorStyle,Black,800>> show_preview_;
+
+    void BladePreview(int blade) {
+    if (blade_preview_ > 0) {
+      show_preview_.Stop(blade_preview_);
+    }
+    blade_preview_ = blade;
+    show_preview_.Start(blade);
+    ShowColorStyle::SetColor(GetColorArg(blade_num_, 1));
+  }
+#endif
+
+  void LengthPreview(int blade) {
+    show_length_.Start(blade);
+    length_edit_length = blade_length_ - 1;
+    ShowColorStyle::SetColor(GetColorArg(blade_num_, 1));
+  }
+#endif	
+
 #ifdef FETT263_EDIT_MODE_MENU
   ShowColorSingleBladeTemplate<ShowColorStyle> show_color_;
   ShowColorSingleBladeTemplate<Mix<Bump<Int<16384>,Int<14000>>,RgbArg<1,Rgb<255,0,0>>,ShowColorStyle>> bump_color_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<26000>,Int<8000>>,RgbArg<1,Rgb<255,0,0>>,ShowColorStyle>> tip_color_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<7000>,Int<-6000>>,RgbArg<1,Rgb<255,0,0>>,ShowColorStyle>> hilt_color_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<Int<7000>,Int<-6000>>,Black,ShowColorStyle>> pre_color_;
-  ShowColorSingleBladeTemplate<LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>,LengthEdit<ShowColorStyle,Pulsing<White,Rgb<100,100,100>,800>>> show_length_;
   ShowColorSingleBladeTemplate<Mix<Bump<IntEdit,Int<10000>>,Black,ShowColorStyle>> show_lockup_position_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<6000>>,Black,ShowColorStyle>> show_drag_size_;
   ShowColorSingleBladeTemplate<Mix<SmoothStep<IntEdit,Int<-6000>>,Black,ShowColorStyle>> show_emitter_size_;
-#if NUM_BLADES > 1
-  ShowColorSingleBladeTemplate<Pulsing<ShowColorStyle,Black,800>,Pulsing<ShowColorStyle,Black,800>> show_preview_;
-#endif
 
   // Show Full Blade Preview for Color Editing
   void ShowFull() {
@@ -1296,23 +1420,6 @@ SaberFett263Buttons() : PropBase() {}
     saved_color_ = GetColorArg(blade_num_, effect_num_);
     hsl_ = saved_color_.toHSL();
     hsl_angle_ = fusor.angle2();
-  }
-
-#if NUM_BLADES > 1
-  void BladePreview(int blade) {
-    if (blade_preview_ > 0) {
-      show_preview_.Stop(blade_preview_);
-    }
-    blade_preview_ = blade;
-    show_preview_.Start(blade);
-    ShowColorStyle::SetColor(GetColorArg(blade_num_, 1));
-  }
-#endif
-
-  void LengthPreview(int blade) {
-    show_length_.Start(blade);
-    length_edit_length = blade_length_ - 1;
-    ShowColorStyle::SetColor(GetColorArg(blade_num_, 1));
   }
 
   // Copy Color Arguments from one blade to another
@@ -1598,9 +1705,11 @@ SaberFett263Buttons() : PropBase() {}
   void DoInteractiveBlast() {
     if (CheckInteractiveBlast()) {
       SaberBase::DoEffectR(EFFECT_INTERACTIVE_BLAST);
+#ifndef FETT263_DISABLE_MULTI_BLAST_TOGGLE
     } else {
-      ToggleBattleModeMultiBlast();
+      ToggleMultiBlast();
       SaberBase::DoBlast();
+#endif
     }
   }
 
@@ -1742,6 +1851,7 @@ SaberFett263Buttons() : PropBase() {}
       // CHECK PUSH
       if (clash_type_ == CLASH_CHECK) {
         Event(BUTTON_NONE, EVENT_PUSH);
+        STDOUT.println("EVENT PUSH");
         clash_type_ = CLASH_NONE;
       }
       if (clash_type_ != CLASH_LOCKUP_END) {
@@ -1821,17 +1931,17 @@ SaberFett263Buttons() : PropBase() {}
           Event(BUTTON_NONE, EVENT_SWING);
         }
       }
-      // EVENT_THRUST
-      if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
-          mss.x > 14  &&
-          fusor.swing_speed() < 150) {
-        if (millis() - thrust_begin_millis_ > 15) {
-          Event(BUTTON_NONE, EVENT_THRUST);
-          thrust_begin_millis_ = millis();
-        }
-      } else {
+    }
+    // EVENT_THRUST
+    if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
+        mss.x > 14  &&
+        fusor.swing_speed() < 150) {
+      if (millis() - thrust_begin_millis_ > 15) {
+        Event(BUTTON_NONE, EVENT_THRUST);
         thrust_begin_millis_ = millis();
       }
+    } else {
+      thrust_begin_millis_ = millis();
     }
 #ifdef FETT263_QUICK_SELECT_ON_BOOT
     if (menu_type_ == MENU_PRESET && millis() < 2000) {
@@ -1927,6 +2037,22 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
+  void SoundLoop() {
+    if (wav_player->isPlaying()) {
+      wav_player->set_fade_time(0.2);
+      wav_player->FadeAndStop();
+      wav_player.Free();
+      STDOUT.println("End Wav Player");    
+    } else {
+      wav_player = GetFreeWavPlayer();
+      if (wav_player) {
+        wav_player->PlayOnce(&SFX_trloop);
+      } else {
+        STDOUT.println("Out of WAV players!");
+      }
+    }
+  }
+
   void SelectPreset(int preset) {
 #ifdef SAVE_PRESET
     SaveState(preset);
@@ -1935,28 +2061,29 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void DetectMenuTurn() {
-    if (menu_ || color_mode_ == CC_COLOR_LIST) {
-      float a = fusor.angle2() - current_menu_angle_;
-      if (a > M_PI) a-=M_PI*2;
-      if (a < -M_PI) a+=M_PI*2;
-      if (a > twist_menu_ * 2/3) {
-        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-        STDOUT.println("EVENT MENU TURN RIGHT");
-        current_menu_angle_ = fusor.angle2();
-      }
-      if (a < -twist_menu_ * 2/3) {
-        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-        STDOUT.println("EVENT MENU TURN LEFT");
-        current_menu_angle_ = fusor.angle2();
-      }
+    float a = fusor.angle2() - current_menu_angle_;
+    if (a > M_PI) a-=M_PI*2;
+    if (a < -M_PI) a+=M_PI*2;
+    if (a > twist_menu_ * 2/3) {
+      Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+      STDOUT.println("EVENT MENU TURN RIGHT");
+      current_menu_angle_ = fusor.angle2();
+    }
+    if (a < -twist_menu_ * 2/3) {
+      Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+      STDOUT.println("EVENT MENU TURN LEFT");
+      current_menu_angle_ = fusor.angle2();
     }
   }
+
+#ifdef FETT263_USE_SETTINGS_MENU
+#define GESTURE_OPTIONS 12
+#define SET_SUBMENUS 5
+#endif
 
 #ifdef FETT263_EDIT_MODE_MENU
 #define SUBMENUS 8
 #define COLOR_OPTIONS 3
-#define GESTURE_OPTIONS 12
-#define SET_SUBMENUS 5
 #endif
 
   enum MenuType {
@@ -1964,6 +2091,26 @@ SaberFett263Buttons() : PropBase() {}
     MENU_PRESET,
     MENU_VOLUME,
     MENU_TRACK_PLAYER,
+#ifdef FETT263_USE_SETTINGS_MENU
+    MENU_BLADE_LENGTH,
+    MENU_LENGTH,
+    MENU_GESTURE_SUB,
+    MENU_SWINGON,
+    MENU_TWISTON,
+    MENU_THRUSTON,
+    MENU_STABON,
+    MENU_FORCEPUSH,
+    MENU_TWISTOFF,
+    MENU_POWERLOCK,
+    MENU_SETTING_SUB,
+    MENU_DIM_BLADE,
+    MENU_CLASH_THRESHOLD,
+    MENU_SWINGON_SPEED,
+    MENU_FORCEPUSH_LENGTH,
+    MENU_LOCKUP_DELAY,
+    MENU_CLASH_DETECT,
+    MENU_MAX_CLASH,
+#endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
     MENU_REHEARSE,
 #endif
@@ -1973,7 +2120,6 @@ SaberFett263Buttons() : PropBase() {}
     MENU_COLOR_CHANGE,
     MENU_FONT,
     MENU_TRACK,
-    MENU_LENGTH,
     MENU_COPY,
     MENU_DELETE,
     MENU_RESET,
@@ -1988,17 +2134,7 @@ SaberFett263Buttons() : PropBase() {}
     MENU_BLADE_STYLE,
     MENU_BLADE_COLOR,
     MENU_BLADE_COPY,
-    MENU_BLADE_LENGTH,
 #endif
-    MENU_GESTURE_SUB,
-    MENU_SWINGON,
-    MENU_TWISTON,
-    MENU_THRUSTON,
-    MENU_STABON,
-    MENU_FORCEPUSH,
-    MENU_TWISTOFF,
-    MENU_POWERLOCK,
-    MENU_SETTING_SUB,
     MENU_STYLE_SETTING_SUB,
     MENU_STYLE_OPTION,
     MENU_STYLE_OPTION2,
@@ -2021,13 +2157,6 @@ SaberFett263Buttons() : PropBase() {}
     MENU_OFF_OPTION,
     MENU_PREON_OPTION,
     MENU_PREON_SIZE,
-    MENU_DIM_BLADE,
-    MENU_CLASH_THRESHOLD,
-    MENU_SWINGON_SPEED,
-    MENU_FORCEPUSH_LENGTH,
-    MENU_LOCKUP_DELAY,
-    MENU_CLASH_DETECT,
-    MENU_MAX_CLASH,
     MENU_COLOR_BASE,
     MENU_COLOR_ALT,
     MENU_COLOR2_ALT,
@@ -2103,13 +2232,6 @@ SaberFett263Buttons() : PropBase() {}
     GESTURE_MAX_CLASH = 12,
   };
 
-// Gesture Control Boolean Menu
-  void EnterBooleanMenu(MenuType t, bool current_value) {
-    menu_type_ = t;
-    choice_ = current_value;
-    sound_library_.SayBool(current_value);
-  }
-
   int GetStyleNumber(int blade_num) {
     const char* tmp;
     tmp = current_preset_.GetStyle(blade_num);
@@ -2174,6 +2296,15 @@ SaberFett263Buttons() : PropBase() {}
     twist_menu_ = M_PI / 4;
     color_mode_ = NONE;
   }
+#endif
+
+#ifdef FETT263_USE_SETTINGS_MENU
+// Gesture Control Boolean Menu
+  void EnterBooleanMenu(MenuType t, bool current_value) {
+    menu_type_ = t;
+    choice_ = current_value;
+    sound_library_.SayBool(current_value);
+  }
 
   void StartEditMode() {
     if (track_player_) {
@@ -2184,11 +2315,20 @@ SaberFett263Buttons() : PropBase() {}
       talkie.Say(talkie_font_directory_15, 15);
       STDOUT.println("Edit Mode prompts missing");
     } else {
+#ifdef FETT263_EDIT_SETTINGS_MENU
+      STDOUT.println("Enter Edit Settings Menu");
+#else
       STDOUT.println("Enter Edit Mode");
+#endif
       GenerateIniFiles();
+      menu_top_pos_ = 0;
+#ifdef FETT263_EDIT_SETTINGS_MENU
+      sound_library_.SaySettingsMenu();
+      StartMenu(MENU_SETTING_SUB);
+#else
       sound_library_.SayEditMode();
       StartMenu(MENU_TOP);
-      menu_top_pos_ = 0;
+#endif
       FastOn();
     }
   }
@@ -2232,6 +2372,11 @@ SaberFett263Buttons() : PropBase() {}
         case MENU_BLADE_LENGTH:
         case MENU_COPY_COLOR:
 #endif
+#elif defined(FETT263_EDIT_SETTINGS_MENU)
+        case MENU_LENGTH:
+#if NUM_BLADES > 1
+        case MENU_BLADE_LENGTH:
+#endif   
           MenuUndo();
           return true;
           break;
@@ -2329,14 +2474,256 @@ SaberFett263Buttons() : PropBase() {}
 #endif
     case MENU_VOLUME:
       if (SaberBase::IsOn()) {
-#ifdef FETT263_EDIT_MODE_MENU
-  menu_type_ = MENU_SETTING_SUB;
+#ifdef FETT263_USE_SETTINGS_MENU
+        menu_type_ = MENU_SETTING_SUB;
 #endif
-  MenuSave();
+        MenuSave();
       } else {
-  MenuExit();
+        MenuExit();
       }
       break;
+#ifdef FETT263_USE_SETTINGS_MENU
+#if NUM_BLADES > 1
+    case MENU_BLADE_LENGTH:
+      sound_library_.SaySelect();
+      show_preview_.Stop(blade_preview_);
+      SaveState(current_preset_.preset_num);
+      blade_preview_ = 0;
+      max_length_ = GetMaxBladeLength(blade_num_);
+      blade_length_ = GetBladeLength(blade_num_);
+      if (blade_length_ < 1) blade_length_ = max_length_;
+      length_revert_ = blade_length_;
+      sound_library_.SayNumber(blade_length_, SAY_WHOLE);
+      LengthPreview(blade_num_);
+      menu_type_ = MENU_LENGTH;
+      break;
+#endif
+    case MENU_LENGTH:
+      menu_type_ = MENU_SETTING_SUB;
+      current_preset_.Save();
+      show_length_.Stop(blade_num_);
+      UpdateStyle();
+      MenuSave();
+      break;
+    case MENU_GESTURE_SUB:
+      switch (gesture_num_) {
+        case GESTURE_SWINGON_IGNITION:
+          EnterBooleanMenu(MENU_SWINGON, saved_gesture_control.swingon);
+          break;
+        case GESTURE_SWINGON_SPEED:
+          menu_type_ = MENU_SWINGON_SPEED;
+          sound_library_.SaySelect();
+          calc_ = saved_gesture_control.swingonspeed;
+          sound_library_.SayNumber(calc_, SAY_WHOLE);
+          break;
+        case GESTURE_TWIST_IGNITION:
+          EnterBooleanMenu(MENU_TWISTON, saved_gesture_control.twiston);
+          break;
+        case GESTURE_THRUST_IGNITION:
+          EnterBooleanMenu(MENU_THRUSTON, saved_gesture_control.thruston);
+          break;
+        case GESTURE_STAB_IGNITION:
+          EnterBooleanMenu(MENU_STABON, saved_gesture_control.stabon);
+          break;
+        case GESTURE_FORCE_PUSH:
+          EnterBooleanMenu(MENU_FORCEPUSH, saved_gesture_control.forcepush);
+          break;
+        case GESTURE_FORCE_PUSH_LENGTH:
+          menu_type_ = MENU_FORCEPUSH_LENGTH;
+          sound_library_.SaySelect();
+          calc_ = saved_gesture_control.forcepushlen;
+          sound_library_.SayNumber(calc_, SAY_WHOLE);
+          break;
+        case GESTURE_TWIST_RETRACTION:
+          EnterBooleanMenu(MENU_TWISTOFF, saved_gesture_control.twistoff);
+          break;
+        case GESTURE_LOCKUP_DELAY:
+          menu_type_ = MENU_LOCKUP_DELAY;
+          sound_library_.SaySelect();
+          calc_ = saved_gesture_control.lockupdelay;
+          sound_library_.SayNumber(calc_, SAY_WHOLE);
+          sound_library_.SayMillis();
+          break;
+        case GESTURE_CLASH_DETECTION:
+          menu_type_ = MENU_CLASH_DETECT;
+          sound_library_.SaySelect();
+          calc_ = saved_gesture_control.clashdetect;
+          sound_library_.SayNumber(calc_, SAY_WHOLE);
+          break;
+        case GESTURE_POWER_LOCK:
+          EnterBooleanMenu(MENU_POWERLOCK, saved_gesture_control.powerlock);
+          break;
+        case GESTURE_MAX_CLASH:
+          menu_type_ = MENU_MAX_CLASH;
+          sound_library_.SaySelect();
+          calc_ = saved_gesture_control.maxclash;
+          sound_library_.SayNumber(calc_, SAY_WHOLE);
+          break;
+        default:
+          break;
+      }
+      break;
+    case MENU_SWINGON:
+      if (choice_) {
+        saved_gesture_control.swingon = true;
+        SaveGestureState();
+      } else {
+        saved_gesture_control.swingon = false;
+        SaveGestureState();
+      }
+      menu_type_ = MENU_GESTURE_SUB;
+      MenuSave();
+      break;
+    case MENU_SWINGON_SPEED:
+      saved_gesture_control.swingonspeed = calc_;
+      SaveGestureState();
+      menu_type_ = MENU_GESTURE_SUB;
+      MenuSave();
+      break;
+    case MENU_TWISTON:
+      if (choice_) {
+        saved_gesture_control.twiston = true;
+        SaveGestureState();
+      } else {
+        saved_gesture_control.twiston = false;
+        SaveGestureState();
+      }
+      menu_type_ = MENU_GESTURE_SUB;
+      MenuSave();
+      break;
+    case MENU_THRUSTON:
+      if (choice_) {
+        saved_gesture_control.thruston = true;
+        SaveGestureState();
+      } else {
+        saved_gesture_control.thruston = false;
+        SaveGestureState();
+      }
+      menu_type_ = MENU_GESTURE_SUB;
+      MenuSave();
+      break;
+    case MENU_STABON:
+      if (choice_) {
+        saved_gesture_control.stabon = true;
+        SaveGestureState();
+      } else {
+        saved_gesture_control.stabon = false;
+        SaveGestureState();
+      }
+      menu_type_ = MENU_GESTURE_SUB;
+      MenuSave();
+      break;
+    case MENU_FORCEPUSH:
+      if (choice_) {
+        saved_gesture_control.forcepush = true;
+        SaveGestureState();
+      } else {
+        saved_gesture_control.forcepush = false;
+        SaveGestureState();
+      }
+      menu_type_ = MENU_GESTURE_SUB;
+      MenuSave();
+      break;
+    case MENU_FORCEPUSH_LENGTH:
+      saved_gesture_control.forcepushlen = calc_;
+      SaveGestureState();
+      menu_type_ = MENU_GESTURE_SUB;
+      MenuSave();
+      break;
+    case MENU_TWISTOFF:
+      if (choice_) {
+        saved_gesture_control.twistoff = true;
+        SaveGestureState();
+      } else {
+        saved_gesture_control.twistoff = false;
+        SaveGestureState();
+      }
+      menu_type_ = MENU_GESTURE_SUB;
+      MenuSave();
+      break;
+    case MENU_LOCKUP_DELAY:
+      saved_gesture_control.lockupdelay = calc_;
+      SaveGestureState();
+      menu_type_ = MENU_GESTURE_SUB;
+      MenuSave();
+      break;
+    case MENU_CLASH_DETECT:
+      saved_gesture_control.clashdetect = calc_;
+      SaveGestureState();
+      menu_type_ = MENU_GESTURE_SUB;
+      MenuSave();
+      break;
+    case MENU_POWERLOCK:
+      if (choice_) {
+        saved_gesture_control.powerlock = true;
+        SaveGestureState();
+      } else {
+        saved_gesture_control.powerlock = false;
+        SaveGestureState();
+      }
+      menu_type_ = MENU_GESTURE_SUB;
+      MenuSave();
+      break;
+    case MENU_MAX_CLASH:
+      saved_gesture_control.maxclash = calc_;
+      SaveGestureState();
+      menu_type_ = MENU_GESTURE_SUB;
+      MenuSave();
+      break;
+    case MENU_SETTING_SUB:
+      switch (menu_sub_pos_) {
+      case EDIT_VOLUME:
+        menu_type_ = MENU_VOLUME;
+        sound_library_.SaySelect();
+        break;
+      case EDIT_CONTROL_SETTINGS:
+        menu_type_ = MENU_GESTURE_SUB;
+        sound_library_.SaySelectOption();
+        gesture_num_ = 0;
+        break;
+      case EDIT_CLASH_THRESHOLD:
+        menu_type_ = MENU_CLASH_THRESHOLD;
+        sound_library_.SaySelect();
+        clash_t_ = GetCurrentClashThreshold();
+        sound_library_.SayNumber(clash_t_, SAY_DECIMAL);
+        break;
+      case EDIT_BLADE_LENGTH:
+#if NUM_BLADES == 1
+        menu_type_ = MENU_LENGTH;
+        SaveState(current_preset_.preset_num);
+        blade_num_ = 1;
+        max_length_ = GetMaxBladeLength(blade_num_);
+        blade_length_ = GetBladeLength(blade_num_);
+        sound_library_.SaySelect();
+        if (blade_length_ < 1) blade_length_ = max_length_;
+        length_revert_ = blade_length_;
+        LengthPreview(blade_num_);
+        sound_library_.SayNumber(blade_length_, SAY_WHOLE);
+#else
+        menu_type_ = MENU_BLADE_LENGTH;
+        blade_num_ = 0;
+        sound_library_.SaySelectBlade();
+#endif
+        break;
+      case EDIT_BRIGHTNESS:
+        menu_type_ = MENU_DIM_BLADE;
+        dim_revert_ = dim = pow(SaberBase::GetCurrentDimming() / 16384.0, 1/2.5);
+        sound_library_.SaySelect();
+        break;
+      }
+      break;
+    case MENU_CLASH_THRESHOLD:
+      SetClashThreshold(clash_t_);
+      SaveGlobalState();
+      menu_type_ = MENU_SETTING_SUB;
+      MenuSave();
+      break;
+    case MENU_DIM_BLADE:
+      SaveGlobalState();
+      menu_type_ = MENU_SETTING_SUB;
+      MenuSave();
+      break;
+#endif
 #ifdef FETT263_EDIT_MODE_MENU
     case MENU_TOP:
       switch (menu_top_pos_) {
@@ -2439,19 +2826,6 @@ SaberFett263Buttons() : PropBase() {}
       menu_type_ = MENU_COPY_COLOR;
       CopyColors();
       MenuConfirm();
-      break;
-    case MENU_BLADE_LENGTH:
-      sound_library_.SaySelect();
-      show_preview_.Stop(blade_preview_);
-      SaveState(current_preset_.preset_num);
-      blade_preview_ = 0;
-      max_length_ = GetMaxBladeLength(blade_num_);
-      blade_length_ = GetBladeLength(blade_num_);
-      if (blade_length_ < 1) blade_length_ = max_length_;
-      length_revert_ = blade_length_;
-      sound_library_.SayNumber(blade_length_, SAY_WHOLE);
-      LengthPreview(blade_num_);
-      menu_type_ = MENU_LENGTH;
       break;
     case MENU_COPY_COLOR:
       if (choice_) {
@@ -2721,13 +3095,6 @@ SaberFett263Buttons() : PropBase() {}
       menu_type_ = MENU_TOP;
       MenuSave();
       break;
-    case MENU_LENGTH:
-      menu_type_ = MENU_SETTING_SUB;
-      current_preset_.Save();
-      show_length_.Stop(blade_num_);
-      UpdateStyle();
-      MenuSave();
-      break;
     case MENU_COPY:
       if (choice_) {
         CopyPreset(false);
@@ -2750,224 +3117,6 @@ SaberFett263Buttons() : PropBase() {}
         break;
       }
       sound_library_.SayConfirm();
-      break;
-    case MENU_GESTURE_SUB:
-      switch (gesture_num_) {
-        case GESTURE_SWINGON_IGNITION:
-          EnterBooleanMenu(MENU_SWINGON, saved_gesture_control.swingon);
-          break;
-        case GESTURE_SWINGON_SPEED:
-          menu_type_ = MENU_SWINGON_SPEED;
-          sound_library_.SaySelect();
-          calc_ = saved_gesture_control.swingonspeed;
-          sound_library_.SayNumber(calc_, SAY_WHOLE);
-          break;
-        case GESTURE_TWIST_IGNITION:
-          EnterBooleanMenu(MENU_TWISTON, saved_gesture_control.twiston);
-          break;
-        case GESTURE_THRUST_IGNITION:
-          EnterBooleanMenu(MENU_THRUSTON, saved_gesture_control.thruston);
-          break;
-        case GESTURE_STAB_IGNITION:
-          EnterBooleanMenu(MENU_STABON, saved_gesture_control.stabon);
-          break;
-        case GESTURE_FORCE_PUSH:
-          EnterBooleanMenu(MENU_FORCEPUSH, saved_gesture_control.forcepush);
-          break;
-        case GESTURE_FORCE_PUSH_LENGTH:
-          menu_type_ = MENU_FORCEPUSH_LENGTH;
-          sound_library_.SaySelect();
-          calc_ = saved_gesture_control.forcepushlen;
-          sound_library_.SayNumber(calc_, SAY_WHOLE);
-          break;
-        case GESTURE_TWIST_RETRACTION:
-          EnterBooleanMenu(MENU_TWISTOFF, saved_gesture_control.twistoff);
-          break;
-        case GESTURE_LOCKUP_DELAY:
-          menu_type_ = MENU_LOCKUP_DELAY;
-          sound_library_.SaySelect();
-          calc_ = saved_gesture_control.lockupdelay;
-          sound_library_.SayNumber(calc_, SAY_WHOLE);
-          sound_library_.SayMillis();
-          break;
-        case GESTURE_CLASH_DETECTION:
-          menu_type_ = MENU_CLASH_DETECT;
-          sound_library_.SaySelect();
-          calc_ = saved_gesture_control.clashdetect;
-          sound_library_.SayNumber(calc_, SAY_WHOLE);
-          break;
-        case GESTURE_POWER_LOCK:
-          EnterBooleanMenu(MENU_POWERLOCK, saved_gesture_control.powerlock);
-          break;
-        case GESTURE_MAX_CLASH:
-          menu_type_ = MENU_MAX_CLASH;
-          sound_library_.SaySelect();
-          calc_ = saved_gesture_control.maxclash;
-          sound_library_.SayNumber(calc_, SAY_WHOLE);
-          break;
-        default:
-          break;
-      }
-      break;
-    case MENU_SWINGON:
-      if (choice_) {
-        saved_gesture_control.swingon = true;
-        SaveGestureState();
-      } else {
-        saved_gesture_control.swingon = false;
-        SaveGestureState();
-      }
-      menu_type_ = MENU_GESTURE_SUB;
-      MenuSave();
-      break;
-    case MENU_SWINGON_SPEED:
-      saved_gesture_control.swingonspeed = calc_;
-      SaveGestureState();
-      menu_type_ = MENU_GESTURE_SUB;
-      MenuSave();
-      break;
-    case MENU_TWISTON:
-      if (choice_) {
-        saved_gesture_control.twiston = true;
-        SaveGestureState();
-      } else {
-        saved_gesture_control.twiston = false;
-        SaveGestureState();
-      }
-      menu_type_ = MENU_GESTURE_SUB;
-      MenuSave();
-      break;
-    case MENU_THRUSTON:
-      if (choice_) {
-        saved_gesture_control.thruston = true;
-        SaveGestureState();
-      } else {
-        saved_gesture_control.thruston = false;
-        SaveGestureState();
-      }
-      menu_type_ = MENU_GESTURE_SUB;
-      MenuSave();
-      break;
-    case MENU_STABON:
-      if (choice_) {
-        saved_gesture_control.stabon = true;
-        SaveGestureState();
-      } else {
-        saved_gesture_control.stabon = false;
-        SaveGestureState();
-      }
-      menu_type_ = MENU_GESTURE_SUB;
-      MenuSave();
-      break;
-    case MENU_FORCEPUSH:
-      if (choice_) {
-        saved_gesture_control.forcepush = true;
-        SaveGestureState();
-      } else {
-        saved_gesture_control.forcepush = false;
-        SaveGestureState();
-      }
-      menu_type_ = MENU_GESTURE_SUB;
-      MenuSave();
-      break;
-    case MENU_FORCEPUSH_LENGTH:
-      saved_gesture_control.forcepushlen = calc_;
-      SaveGestureState();
-      menu_type_ = MENU_GESTURE_SUB;
-      MenuSave();
-      break;
-    case MENU_TWISTOFF:
-      if (choice_) {
-        saved_gesture_control.twistoff = true;
-        SaveGestureState();
-      } else {
-        saved_gesture_control.twistoff = false;
-        SaveGestureState();
-      }
-      menu_type_ = MENU_GESTURE_SUB;
-      MenuSave();
-      break;
-    case MENU_LOCKUP_DELAY:
-      saved_gesture_control.lockupdelay = calc_;
-      SaveGestureState();
-      menu_type_ = MENU_GESTURE_SUB;
-      MenuSave();
-      break;
-    case MENU_CLASH_DETECT:
-      saved_gesture_control.clashdetect = calc_;
-      SaveGestureState();
-      menu_type_ = MENU_GESTURE_SUB;
-      MenuSave();
-      break;
-    case MENU_POWERLOCK:
-      if (choice_) {
-        saved_gesture_control.powerlock = true;
-        SaveGestureState();
-      } else {
-        saved_gesture_control.powerlock = false;
-        SaveGestureState();
-      }
-      menu_type_ = MENU_GESTURE_SUB;
-      MenuSave();
-      break;
-    case MENU_MAX_CLASH:
-      saved_gesture_control.maxclash = calc_;
-      SaveGestureState();
-      menu_type_ = MENU_GESTURE_SUB;
-      MenuSave();
-      break;
-    case MENU_SETTING_SUB:
-      switch (menu_sub_pos_) {
-      case EDIT_VOLUME:
-        menu_type_ = MENU_VOLUME;
-        sound_library_.SaySelect();
-        break;
-      case EDIT_CONTROL_SETTINGS:
-        menu_type_ = MENU_GESTURE_SUB;
-        sound_library_.SaySelectOption();
-        gesture_num_ = 0;
-        break;
-      case EDIT_CLASH_THRESHOLD:
-        menu_type_ = MENU_CLASH_THRESHOLD;
-        sound_library_.SaySelect();
-        clash_t_ = GetCurrentClashThreshold();
-        sound_library_.SayNumber(clash_t_, SAY_DECIMAL);
-        break;
-      case EDIT_BLADE_LENGTH:
-#if NUM_BLADES == 1
-        menu_type_ = MENU_LENGTH;
-        SaveState(current_preset_.preset_num);
-        blade_num_ = 1;
-        max_length_ = GetMaxBladeLength(blade_num_);
-        blade_length_ = GetBladeLength(blade_num_);
-        sound_library_.SaySelect();
-        if (blade_length_ < 1) blade_length_ = max_length_;
-        length_revert_ = blade_length_;
-        LengthPreview(blade_num_);
-        sound_library_.SayNumber(blade_length_, SAY_WHOLE);
-#else
-        menu_type_ = MENU_BLADE_LENGTH;
-        blade_num_ = 0;
-        sound_library_.SaySelectBlade();
-#endif
-        break;
-      case EDIT_BRIGHTNESS:
-        menu_type_ = MENU_DIM_BLADE;
-        dim_revert_ = dim = pow(SaberBase::GetCurrentDimming() / 16384.0, 1/2.5);
-        sound_library_.SaySelect();
-        break;
-      }
-      break;
-    case MENU_CLASH_THRESHOLD:
-      SetClashThreshold(clash_t_);
-      SaveGlobalState();
-      menu_type_ = MENU_SETTING_SUB;
-      MenuSave();
-      break;
-    case MENU_DIM_BLADE:
-      SaveGlobalState();
-      menu_type_ = MENU_SETTING_SUB;
-      MenuSave();
       break;
     case MENU_STYLE_SETTING_SUB:
       char argspace[32];
@@ -3184,10 +3333,12 @@ SaberFett263Buttons() : PropBase() {}
   void MenuDialIncrement(int direction) {
     switch (menu_type_) {
       case MENU_PRESET:
+#ifdef FETT263_USE_SETTINGS_MENU
+      case MENU_LENGTH:
+#endif
 #ifdef FETT263_EDIT_MODE_MENU
       case MENU_FONT:
       case MENU_TRACK:
-      case MENU_LENGTH:
       case MENU_IGNITION_TIME:
       case MENU_IGNITION_DELAY:
       case MENU_RETRACTION_TIME:
@@ -3234,7 +3385,254 @@ SaberFett263Buttons() : PropBase() {}
         if (track_num_ <= 0) track_num_ = num_tracks_;
         PlayTrack();
         break;
-  #ifdef FETT263_EDIT_MODE_MENU
+#ifdef FETT263_USE_SETTINGS_MENU
+#if NUM_BLADES > 1
+      case MENU_BLADE_LENGTH:
+        blade_num_ += direction;
+        if (blade_num_ > NUM_BLADES) blade_num_ = 1;
+        if (blade_num_ <= 0) blade_num_ = NUM_BLADES;
+        BladePreview(blade_num_);
+        sound_library_.SayNumber(blade_num_, SAY_WHOLE);
+        break;
+#endif
+      case MENU_LENGTH:
+        blade_length_ += direction;
+        if (blade_length_ >= max_length_) {
+          sound_library_.SayMaximum();
+          blade_length_ = max_length_;
+        }
+        if (blade_length_ <= 1) {
+          sound_library_.SayMinimum();
+          blade_length_ = 1;
+        }
+        length_edit_length = blade_length_ - 1;
+        sound_library_.SayNumber(blade_length_, SAY_WHOLE);
+        SetBladeLength(blade_num_, blade_length_);
+        SaveState(current_preset_.preset_num);
+        break;
+      case MENU_GESTURE_SUB:
+        gesture_num_ += direction;
+        if (gesture_num_ <= 0) gesture_num_ = GESTURE_OPTIONS;
+        if (gesture_num_ > GESTURE_OPTIONS) gesture_num_ = 1;
+        switch (gesture_num_) {
+          default:
+            sound_library_.SaySelectOption();
+            break;
+          case GESTURE_SWINGON_IGNITION:
+            sound_library_.SaySwingIgnition();
+            break;
+          case GESTURE_SWINGON_SPEED:
+            sound_library_.SaySwingOnSpeed();
+            break;
+          case GESTURE_TWIST_IGNITION:
+            sound_library_.SayTwistIgnition();
+            break;
+          case GESTURE_THRUST_IGNITION:
+            sound_library_.SayThrustIgnition();
+            break;
+          case GESTURE_STAB_IGNITION:
+            sound_library_.SayStabIgnition();
+            break;
+          case GESTURE_FORCE_PUSH:
+            sound_library_.SayForcePush();
+            break;
+          case GESTURE_FORCE_PUSH_LENGTH:
+            sound_library_.SayForcePushLength();
+            break;
+          case GESTURE_TWIST_RETRACTION:
+            sound_library_.SayTwistRetraction();
+            break;
+          case GESTURE_LOCKUP_DELAY:
+            sound_library_.SayLockupDelay();
+            break;
+          case GESTURE_CLASH_DETECTION:
+            sound_library_.SayClashDetectionLevel();
+            break;
+          case GESTURE_POWER_LOCK:
+            sound_library_.SayPowerLock();
+            break;
+          case GESTURE_MAX_CLASH:
+            sound_library_.SayMaximumClashStrength();
+            break;
+        }
+        break;
+      case MENU_SWINGON:
+      case MENU_TWISTON:
+      case MENU_THRUSTON:
+      case MENU_STABON:
+      case MENU_FORCEPUSH:
+      case MENU_TWISTOFF:
+      case MENU_POWERLOCK:
+        choice_ = direction > 0;
+        sound_library_.SayBool(choice_);
+        break;
+      case MENU_SWINGON_SPEED:
+        if (direction > 0) {
+          if (calc_ < 600) {
+            sound_library_.SayUp();
+            calc_ += 50;
+          }
+          if (calc_ >= 600) {
+            calc_ = 600;
+            sound_library_.SayMaximum();
+          }
+        } else {
+          if (calc_ > 200) {
+            sound_library_.SayDown();
+            calc_ -= 50;
+          }
+          if (calc_ <= 200) {
+            calc_ = 200;
+            sound_library_.SayMinimum();
+          }
+        }
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
+        break;
+      case MENU_FORCEPUSH_LENGTH:
+      case MENU_CLASH_DETECT:
+        if (direction > 0) {
+          if (calc_ < 10) {
+            sound_library_.SayUp();
+            calc_ += 1;
+          }
+          if (calc_ >= 10) {
+            calc_ = 10;
+            sound_library_.SayMaximum();
+          }
+        } else {
+          if (calc_ > 1) {
+            sound_library_.SayDown();
+            calc_ -= 1;
+          }
+          if (calc_ <= 1) {
+            calc_ = 1;
+            sound_library_.SayMinimum();
+          }
+        }
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
+        break;
+      case MENU_MAX_CLASH:
+        if (direction > 0) {
+          if (calc_ < 16) {
+            sound_library_.SayUp();
+            calc_ += 1;
+          }
+          if (calc_ >= 16) {
+            calc_ = 16;
+            sound_library_.SayMaximum();
+          }
+        } else {
+          if (calc_ > GetCurrentClashThreshold()) {
+            sound_library_.SayDown();
+            calc_ -= 1;
+          }
+          if (calc_ <= GetCurrentClashThreshold()) {
+            calc_ = GetCurrentClashThreshold();
+            sound_library_.SayMinimum();
+          }
+        }
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
+        break;
+      case MENU_LOCKUP_DELAY:
+        if (direction > 0) {
+          if (calc_ < 1200) {
+            sound_library_.SayUp();
+            calc_ += 100;
+          }
+          if (calc_ >= 1200) {
+            calc_ = 1200;
+            sound_library_.SayMaximum();
+          }
+        } else {
+          if (calc_ > 200) {
+            sound_library_.SayDown();
+            calc_ -= 100;
+          }
+          if (calc_ <= 200) {
+            calc_ = 200;
+            sound_library_.SayMinimum();
+          }
+        }
+        sound_library_.SayNumber(calc_, SAY_WHOLE);
+        sound_library_.SayMillis();
+        break;
+      case MENU_SETTING_SUB:
+        menu_sub_pos_ += direction;
+        if (menu_sub_pos_ <= 0) menu_sub_pos_ = SET_SUBMENUS;
+        if (menu_sub_pos_ > SET_SUBMENUS) menu_sub_pos_ = 1;
+        switch (menu_sub_pos_) {
+          case EDIT_VOLUME:
+            sound_library_.SayEditVolume();
+            break;
+          case EDIT_CONTROL_SETTINGS:
+            sound_library_.SayEditControlSettings();
+            break;
+          case EDIT_CLASH_THRESHOLD:
+            sound_library_.SayEditClashThreshold();
+            break;
+          case EDIT_BLADE_LENGTH:
+            sound_library_.SayEditBladeLength();
+            break;
+          case EDIT_BRIGHTNESS:
+            sound_library_.SayEditBrightness();
+          default:
+            break;
+        }
+        break;
+      case MENU_CLASH_THRESHOLD:
+        if (direction > 0) {
+          if (clash_t_ >= saved_gesture_control.maxclash) {
+            sound_library_.SayMaximum();
+            clash_t_ = saved_gesture_control.maxclash;
+          } else {
+            sound_library_.SayUp();
+            clash_t_ += 0.25;
+            if (clash_t_ > saved_gesture_control.maxclash) clash_t_ = saved_gesture_control.maxclash;
+          }
+        } else {
+          if (clash_t_ <= 1.0) {
+            sound_library_.SayMinimum();
+            clash_t_ = 1.0;
+          } else {
+            sound_library_.SayDown();
+            clash_t_ -= 0.25;
+            if (clash_t_ < 1.0) clash_t_ = 1.0;
+          }
+        }
+        sound_library_.SayNumber(clash_t_, SAY_DECIMAL);
+        break;
+      case MENU_DIM_BLADE:
+        if (direction > 0) {
+          dim = std::min<float>(dim + 0.1, 1.0);
+#ifdef FETT263_CIRCULAR_DIM_MENU
+          if (dim >= 1.0) dim = 0.2;
+          sound_library_.SayUp();
+#else
+          if (dim >= 1.0) {
+            dim = 1.0;
+            sound_library_.SayMaximum();
+          } else {
+            sound_library_.SayUp();
+          }
+#endif
+        } else {
+          dim = std::max<float>(dim - 0.1, 0.2);
+#ifdef FETT263_CIRCULAR_DIM_MENU
+          if (dim <= 0.2) dim = 1.0;
+          sound_library_.SayDown();
+#else
+          if (dim <= 0.2) {
+            dim = 0.2;
+            sound_library_.SayMinimum();
+          } else {
+            sound_library_.SayDown();
+          }
+#endif
+        }
+        SaberBase::SetDimming(pow(dim, 2.2) * 16384);
+        break;
+#endif
+#ifdef FETT263_EDIT_MODE_MENU
       case MENU_TOP:
         menu_top_pos_ += direction;
         if (menu_top_pos_ <= 0) menu_top_pos_ = SUBMENUS;
@@ -3270,7 +3668,6 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_BLADE_STYLE:
       case MENU_BLADE_COLOR:
       case MENU_BLADE_COPY:
-      case MENU_BLADE_LENGTH:
         blade_num_ += direction;
         if (blade_num_ > NUM_BLADES) blade_num_ = 1;
         if (blade_num_ <= 0) blade_num_ = NUM_BLADES;
@@ -3486,242 +3883,6 @@ SaberFett263Buttons() : PropBase() {}
         current_preset_.Save();
         StartOrStopTrack();
         break;
-      case MENU_LENGTH:
-        blade_length_ += direction;
-        if (blade_length_ >= max_length_) {
-          sound_library_.SayMaximum();
-          blade_length_ = max_length_;
-        }
-        if (blade_length_ <= 1) {
-          sound_library_.SayMinimum();
-          blade_length_ = 1;
-        }
-        length_edit_length = blade_length_ - 1;
-        sound_library_.SayNumber(blade_length_, SAY_WHOLE);
-        SetBladeLength(blade_num_, blade_length_);
-        SaveState(current_preset_.preset_num);
-        break;
-      case MENU_GESTURE_SUB:
-        gesture_num_ += direction;
-        if (gesture_num_ <= 0) gesture_num_ = GESTURE_OPTIONS;
-        if (gesture_num_ > GESTURE_OPTIONS) gesture_num_ = 1;
-        switch (gesture_num_) {
-          default:
-            sound_library_.SaySelectOption();
-            break;
-          case GESTURE_SWINGON_IGNITION:
-            sound_library_.SaySwingIgnition();
-            break;
-          case GESTURE_SWINGON_SPEED:
-            sound_library_.SaySwingOnSpeed();
-            break;
-          case GESTURE_TWIST_IGNITION:
-            sound_library_.SayTwistIgnition();
-            break;
-          case GESTURE_THRUST_IGNITION:
-            sound_library_.SayThrustIgnition();
-            break;
-          case GESTURE_STAB_IGNITION:
-            sound_library_.SayStabIgnition();
-            break;
-          case GESTURE_FORCE_PUSH:
-            sound_library_.SayForcePush();
-            break;
-          case GESTURE_FORCE_PUSH_LENGTH:
-            sound_library_.SayForcePushLength();
-            break;
-          case GESTURE_TWIST_RETRACTION:
-            sound_library_.SayTwistRetraction();
-            break;
-          case GESTURE_LOCKUP_DELAY:
-            sound_library_.SayLockupDelay();
-            break;
-          case GESTURE_CLASH_DETECTION:
-            sound_library_.SayClashDetectionLevel();
-            break;
-          case GESTURE_POWER_LOCK:
-            sound_library_.SayPowerLock();
-            break;
-          case GESTURE_MAX_CLASH:
-            sound_library_.SayMaximumClashStrength();
-            break;
-        }
-        break;
-      case MENU_SWINGON:
-      case MENU_TWISTON:
-      case MENU_THRUSTON:
-      case MENU_STABON:
-      case MENU_FORCEPUSH:
-      case MENU_TWISTOFF:
-      case MENU_POWERLOCK:
-        choice_ = direction > 0;
-        sound_library_.SayBool(choice_);
-        break;
-      case MENU_SWINGON_SPEED:
-        if (direction > 0) {
-          if (calc_ < 600) {
-            sound_library_.SayUp();
-            calc_ += 50;
-          }
-          if (calc_ >= 600) {
-            calc_ = 600;
-            sound_library_.SayMaximum();
-          }
-        } else {
-          if (calc_ > 200) {
-            sound_library_.SayDown();
-            calc_ -= 50;
-          }
-          if (calc_ <= 200) {
-            calc_ = 200;
-            sound_library_.SayMinimum();
-          }
-        }
-        sound_library_.SayNumber(calc_, SAY_WHOLE);
-        break;
-      case MENU_FORCEPUSH_LENGTH:
-      case MENU_CLASH_DETECT:
-        if (direction > 0) {
-          if (calc_ < 10) {
-            sound_library_.SayUp();
-            calc_ += 1;
-          }
-          if (calc_ >= 10) {
-            calc_ = 10;
-            sound_library_.SayMaximum();
-          }
-        } else {
-          if (calc_ > 1) {
-	    sound_library_.SayDown();
-            calc_ -= 1;
-          }
-          if (calc_ <= 1) {
-            calc_ = 1;
-            sound_library_.SayMinimum();
-          }
-        }
-        sound_library_.SayNumber(calc_, SAY_WHOLE);
-        break;
-      case MENU_MAX_CLASH:
-        if (direction > 0) {
-          if (calc_ < 16) {
-            sound_library_.SayUp();
-            calc_ += 1;
-          }
-          if (calc_ >= 16) {
-            calc_ = 16;
-            sound_library_.SayMaximum();
-          }
-        } else {
-          if (calc_ > GetCurrentClashThreshold()) {
-            sound_library_.SayDown();
-            calc_ -= 1;
-          }
-          if (calc_ <= GetCurrentClashThreshold()) {
-            calc_ = GetCurrentClashThreshold();
-            sound_library_.SayMinimum();
-          }
-        }
-        sound_library_.SayNumber(calc_, SAY_WHOLE);
-        break;
-      case MENU_LOCKUP_DELAY:
-        if (direction > 0) {
-          if (calc_ < 1200) {
-            sound_library_.SayUp();
-            calc_ += 100;
-          }
-          if (calc_ >= 1200) {
-            calc_ = 1200;
-            sound_library_.SayMaximum();
-          }
-        } else {
-          if (calc_ > 200) {
-            sound_library_.SayDown();
-            calc_ -= 100;
-          }
-          if (calc_ <= 200) {
-            calc_ = 200;
-            sound_library_.SayMinimum();
-          }
-        }
-        sound_library_.SayNumber(calc_, SAY_WHOLE);
-        sound_library_.SayMillis();
-        break;
-      case MENU_SETTING_SUB:
-        menu_sub_pos_ += direction;
-        if (menu_sub_pos_ <= 0) menu_sub_pos_ = SET_SUBMENUS;
-        if (menu_sub_pos_ > SET_SUBMENUS) menu_sub_pos_ = 1;
-        switch (menu_sub_pos_) {
-          case EDIT_VOLUME:
-	    sound_library_.SayEditVolume();
-            break;
-          case EDIT_CONTROL_SETTINGS:
-	    sound_library_.SayEditControlSettings();
-            break;
-          case EDIT_CLASH_THRESHOLD:
-	    sound_library_.SayEditClashThreshold();
-            break;
-          case EDIT_BLADE_LENGTH:
-	    sound_library_.SayEditBladeLength();
-            break;
-          case EDIT_BRIGHTNESS:
-	    sound_library_.SayEditBrightness();
-          default:
-            break;
-        }
-        break;
-      case MENU_CLASH_THRESHOLD:
-        if (direction > 0) {
-          if (clash_t_ >= saved_gesture_control.maxclash) {
-            sound_library_.SayMaximum();
-            clash_t_ = saved_gesture_control.maxclash;
-          } else {
-            sound_library_.SayUp();
-            clash_t_ += 0.25;
-            if (clash_t_ > saved_gesture_control.maxclash) clash_t_ = saved_gesture_control.maxclash;
-          }
-        } else {
-          if (clash_t_ <= 1.0) {
-            sound_library_.SayMinimum();
-            clash_t_ = 1.0;
-          } else {
-	    sound_library_.SayDown();
-            clash_t_ -= 0.25;
-            if (clash_t_ < 1.0) clash_t_ = 1.0;
-          }
-        }
-        sound_library_.SayNumber(clash_t_, SAY_DECIMAL);
-        break;
-      case MENU_DIM_BLADE:
-        if (direction > 0) {
-          dim = std::min<float>(dim + 0.1, 1.0);
-#ifdef FETT263_CIRCULAR_DIM_MENU
-          if (dim >= 1.0) dim = 0.2;
-          sound_library_.SayUp();
-#else
-          if (dim >= 1.0) {
-            dim = 1.0;
-            sound_library_.SayMaximum();
-          } else {
-            sound_library_.SayUp();
-          }
-#endif
-        } else {
-          dim = std::max<float>(dim - 0.1, 0.2);
-#ifdef FETT263_CIRCULAR_DIM_MENU
-          if (dim <= 0.2) dim = 1.0;
-          sound_library_.SayDown();
-#else
-          if (dim <= 0.2) {
-            dim = 0.2;
-            sound_library_.SayMinimum();
-          } else {
-            sound_library_.SayDown();
-          }
-#endif
-        }
-        SaberBase::SetDimming(pow(dim, 2.2) * 16384);
-        break;
       case MENU_STYLE_SETTING_SUB:
         for (int i = 0; i < (int)NELEM(int_arg_menu_); i++) {
           arg_dial_ += direction;
@@ -3925,12 +4086,68 @@ SaberFett263Buttons() : PropBase() {}
 	sound_library_.SayExit();
         MenuExit();
         break;
-#ifdef FETT263_EDIT_MODE_MENU
+#ifdef FETT263_USE_SETTINGS_MENU
+#if NUM_BLADES > 1
+      case MENU_BLADE_LENGTH:
+        menu_type_ = MENU_SETTING_SUB;
+        show_preview_.Stop(blade_preview_);
+        blade_preview_ = 0;
+        MenuCancel();
+        break;
+#endif
+      case MENU_LENGTH:
+        menu_type_ = MENU_SETTING_SUB;
+        SetBladeLength(blade_num_, length_revert_);
+        SaveState(current_preset_.preset_num);
+        MenuRevert();
+        show_length_.Stop(blade_num_);
+        UpdateStyle();
+        break;
+      case MENU_GESTURE_SUB:
+        menu_type_ = MENU_SETTING_SUB;
+        MenuCancel();
+        break;
+      case MENU_SWINGON:
+      case MENU_SWINGON_SPEED:
+      case MENU_TWISTON:
+      case MENU_THRUSTON:
+      case MENU_STABON:
+      case MENU_FORCEPUSH:
+      case MENU_FORCEPUSH_LENGTH:
+      case MENU_TWISTOFF:
+      case MENU_LOCKUP_DELAY:
+      case MENU_CLASH_DETECT:
+      case MENU_POWERLOCK:
+      case MENU_MAX_CLASH:
+        menu_type_ = MENU_GESTURE_SUB;
+        MenuCancel();
+        break;
+      case MENU_CLASH_THRESHOLD:
+        menu_type_ = MENU_SETTING_SUB;
+        MenuCancel();
+        break;
+      case MENU_DIM_BLADE:
+        SaberBase::SetDimming(pow(dim_revert_, 2.5) * 16384);
+        UpdateStyle();
+        menu_type_ = MENU_SETTING_SUB;
+        SaveGlobalState();
+        MenuRevert();
+        break;
       case MENU_VOLUME:
         menu_type_ = MENU_SETTING_SUB;
         dynamic_mixer.set_volume(VOLUME);
         MenuRevert();
         break;
+#endif
+      case MENU_SETTING_SUB:
+#ifdef FETT263_EDIT_SETTINGS_MENU
+        MenuExit();
+#else
+        menu_type_ = MENU_TOP;
+        MenuCancel();
+#endif
+        break;
+#ifdef FETT263_EDIT_MODE_MENU
 #if NUM_BLADES > 1
       case MENU_BLADE_STYLE:
         menu_type_ = MENU_TOP;
@@ -3946,12 +4163,6 @@ SaberFett263Buttons() : PropBase() {}
         break;
       case MENU_BLADE_COPY:
         menu_type_ = MENU_COLOR_SUB;
-        show_preview_.Stop(blade_preview_);
-        blade_preview_ = 0;
-        MenuCancel();
-        break;
-      case MENU_BLADE_LENGTH:
-        menu_type_ = MENU_SETTING_SUB;
         show_preview_.Stop(blade_preview_);
         blade_preview_ = 0;
         MenuCancel();
@@ -4072,14 +4283,6 @@ SaberFett263Buttons() : PropBase() {}
         menu_type_ = MENU_TOP;
         MenuRevert();
         break;
-      case MENU_LENGTH:
-        menu_type_ = MENU_SETTING_SUB;
-        SetBladeLength(blade_num_, length_revert_);
-        SaveState(current_preset_.preset_num);
-        MenuRevert();
-        show_length_.Stop(blade_num_);
-        UpdateStyle();
-        break;
       case MENU_COPY:
         choice_ = false;
         menu_type_ = MENU_TOP;
@@ -4088,40 +4291,6 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_RESET_COLOR:
         menu_type_ = MENU_COLOR_SUB;
         MenuCancel();
-        break;
-      case MENU_GESTURE_SUB:
-        menu_type_ = MENU_SETTING_SUB;
-        MenuCancel();
-        break;
-      case MENU_SWINGON:
-      case MENU_SWINGON_SPEED:
-      case MENU_TWISTON:
-      case MENU_THRUSTON:
-      case MENU_STABON:
-      case MENU_FORCEPUSH:
-      case MENU_FORCEPUSH_LENGTH:
-      case MENU_TWISTOFF:
-      case MENU_LOCKUP_DELAY:
-      case MENU_CLASH_DETECT:
-      case MENU_POWERLOCK:
-      case MENU_MAX_CLASH:
-        menu_type_ = MENU_GESTURE_SUB;
-        MenuCancel();
-        break;
-      case MENU_SETTING_SUB:
-        menu_type_ = MENU_TOP;
-        MenuCancel();
-        break;
-      case MENU_CLASH_THRESHOLD:
-        menu_type_ = MENU_SETTING_SUB;
-        MenuCancel();
-        break;
-      case MENU_DIM_BLADE:
-        SaberBase::SetDimming(pow(dim_revert_, 2.5) * 16384);
-        UpdateStyle();
-        menu_type_ = MENU_SETTING_SUB;
-        SaveGlobalState();
-        MenuRevert();
         break;
       case MENU_STYLE_SETTING_SUB:
         menu_type_ = MENU_STYLE_SUB;
@@ -4184,6 +4353,11 @@ SaberFett263Buttons() : PropBase() {}
 	  sound_library_.SayExit();
         }
         break;
+#ifdef FETT263_EDIT_SETTINGS_MENU
+      case MENU_SETTING_SUB:
+        sound_library_.SayExit();
+        break;
+#endif
       default:
         break;
     }
@@ -4222,6 +4396,19 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_TOP:
 	sound_library_.SayMainMenu();
         break;
+#ifdef FETT263_EDIT_SETTINGS_MENU
+#if NUM_BLADES > 1
+      case MENU_BLADE_LENGTH:
+        sound_library_.SaySelectBlade();
+        break;
+#endif
+      case MENU_GESTURE_SUB:
+        sound_library_.SayGestureMenu();
+        break;
+      case MENU_SETTING_SUB:
+        sound_library_.SaySettingsMenu();
+        break;
+#endif
 #ifdef FETT263_EDIT_MODE_MENU
       case MENU_STYLE_SUB:
         sound_library_.SayStyleMenu();
@@ -4450,14 +4637,16 @@ SaberFett263Buttons() : PropBase() {}
 
   // Battery Level
   void DoBattery() {
-#if defined (FETT263_SAY_BATTERY_PERCENT)
-    sound_library_.SayBatteryLevel();
-    sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
-    sound_library_.SayPercent();
-#elif defined(FETT263_SAY_BATTERY_VOLTS)
-    sound_library_.SayBatteryLevel();
-    sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
-    sound_library_.SayVolts();
+#if defined (FETT263_SAY_BATTERY_PERCENT) && defined (FETT263_SAY_BATTERY_VOLTS)
+    if (fusor.angle1() < - M_PI / 3) {
+      sound_library_.SayBatteryVolts();
+    } else {
+      sound_library_.SayBatteryPercent();
+    }
+#elif defined(FETT263_SAY_BATTERY_PERCENT)
+    sound_library_.SayBatteryPercent();
+#elif defined(FETT263_SAY_BATTERY_VOLTAGE)
+    sound_library_.SayBatteryVolts();
 #endif
     SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
   }
@@ -4511,12 +4700,14 @@ SaberFett263Buttons() : PropBase() {}
   float current_menu_angle_ = 0.0;
   float current_twist_angle_ = 0.0;
   float clash_t_ = 2.00;
-#ifdef FETT263_EDIT_MODE_MENU
-  LSPtr<char> restore_point;
+#ifdef FETT263_USE_SETTINGS_MENU
   int blade_length_;
   int max_length_;
   float dim;
   float dim_revert_;
+#endif
+#ifdef FETT263_EDIT_MODE_MENU
+  LSPtr<char> restore_point;
 #endif
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
@@ -4629,7 +4820,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_LONG, MODE_OFF):
-#ifdef FETT263_EDIT_MODE_MENU
+#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU
         // Enter Edit Mode
         if (!menu_) {
           StartEditMode();
@@ -4701,7 +4892,11 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_ON):
         if (CancelShowColor()) return true;
         if (menu_) {
+#ifdef FETT263_EDIT_SETTINGS_MENU
+          if (menu_type_ == MENU_SETTING_SUB) {
+#else
           if (menu_type_ == MENU_TOP) {
+#endif
             sound_library_.SayExit();
             menu_ = false;
           } else {
@@ -4747,7 +4942,9 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         }
 #endif
+#ifndef FETT263_DISABLE_BM_TOGGLE
         ToggleBattleMode();
+#endif
         return true;
 
 #ifdef FETT263_MULTI_PHASE
@@ -4902,11 +5099,21 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
         if (!menu_) {
-          StartMenu(MENU_VOLUME);
-          if (SFX_vmbegin) {
-            sound_library_.SayEnterVolumeMenu();
+          if (fusor.angle1() < - M_PI / 4) {
+            if (!saved_gesture_control.gestureon) {
+              saved_gesture_control.gestureon = true;
+              sound_library_.SayGesturesOn();
+            } else {
+              saved_gesture_control.gestureon = false;
+              sound_library_.SayGesturesOff();
+            }
           } else {
-            sound_library_.SayEditVolume();
+            StartMenu(MENU_VOLUME);
+            if (SFX_vmbegin) {
+              sound_library_.SayEnterVolumeMenu();
+            } else {
+              sound_library_.SayEditVolume();
+            }
           }
         }
         return true;
@@ -4938,6 +5145,18 @@ SaberFett263Buttons() : PropBase() {}
 #endif
         } else {
           DoInteractivePreon();
+        }
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
+        if (!menu_) {
+          if (!saved_gesture_control.gestureon) {
+            saved_gesture_control.gestureon = true;
+            sound_library_.SayGesturesOn();
+          } else {
+            saved_gesture_control.gestureon = false;
+            sound_library_.SayGesturesOff();
+          }
         }
         return true;
 
@@ -5006,7 +5225,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_OFF | BUTTON_POWER):
-#ifdef FETT263_EDIT_MODE_MENU
+#ifdef FETT263_USE_SETTINGS_MENU
         // Enter Edit Mode
         if (!menu_) {
           StartEditMode();
@@ -5068,7 +5287,11 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON):
 	if (CancelShowColor()) return false;
         if (menu_) {
+#ifdef FETT263_EDIT_SETTINGS_MENU
+          if (menu_type_ == MENU_SETTING_SUB) {
+#else
           if (menu_type_ == MENU_TOP) {
+#endif
             sound_library_.SayExit();
             menu_ = false;
           } else {
@@ -5084,12 +5307,12 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         }
 #endif
-#ifndef FETT263_HOLD_BUTTON_LOCKUP
+#if !defined(FETT263_HOLD_BUTTON_LOCKUP) && !defined(FETT263_DISABLE_BM_TOGGLE)
         ToggleBattleMode();
 #endif
         return true;
 
-#ifdef FETT263_HOLD_BUTTON_LOCKUP
+#if defined(FETT263_HOLD_BUTTON_LOCKUP) && !defined(FETT263_DISABLE_BM_TOGGLE)
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
         if (menu_ || CheckShowColorCC()) return true;
         ToggleBattleMode();
@@ -5318,6 +5541,36 @@ SaberFett263Buttons() : PropBase() {}
         return true;
         break;
 
+#ifdef FETT263_SPECIAL_ABILITIES
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
+        if (!menu_) {
+          SaberBase::DoEffect(EFFECT_USER3, 0);
+        }
+        current_menu_angle_ = fusor.angle2();
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
+        if (!menu_) {
+          SaberBase::DoEffect(EFFECT_USER4, 0);
+        }
+        current_menu_angle_ = fusor.angle2();
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_AUX):
+        if (!menu_) {
+          SaberBase::DoEffect(EFFECT_USER7, 0);
+        }
+        current_menu_angle_ = fusor.angle2();
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_AUX):
+        if (!menu_) {
+          SaberBase::DoEffect(EFFECT_USER8, 0);
+        }
+        current_menu_angle_ = fusor.angle2();
+        return true;
+#endif
+
         // Off functions
       case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF):
         if (menu_) return true;
@@ -5456,19 +5709,6 @@ SaberFett263Buttons() : PropBase() {}
         if (menu_) MenuDial(-1);
         return true;
 
-      // Gesture Sleep Toggle
-      case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_POWER):
-        if (!menu_) {
-          if (!saved_gesture_control.gestureon) {
-            saved_gesture_control.gestureon = true;
-            sound_library_.SayGesturesOn();
-          } else {
-            saved_gesture_control.gestureon = false;
-            sound_library_.SayGesturesOff();
-          }
-	}
-        return true;
-
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
         if (menu_ || CheckShowColorCC()) return true;
         if (swing_blast_) {
@@ -5484,7 +5724,22 @@ SaberFett263Buttons() : PropBase() {}
           current_menu_angle_ = fusor.angle2();
           return true;
         }
-        if (menu_) MenuDialIncrement(1);
+        if (menu_) {
+	  MenuDialIncrement(1);
+	}
+#ifdef FETT263_SPECIAL_ABILITIES
+        else {
+#if NUM_BUTTONS == 1
+          if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+            SaberBase::DoEffect(EFFECT_USER3, 0);
+          } else {
+            SaberBase::DoEffect(EFFECT_USER1, 0);
+          }
+#else
+          SaberBase::DoEffect(EFFECT_USER1, 0);
+#endif
+        }
+#endif
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
@@ -5492,7 +5747,22 @@ SaberFett263Buttons() : PropBase() {}
           current_menu_angle_ = fusor.angle2();
           return true;
         }        
-        if (menu_) MenuDialIncrement(-1);
+        if (menu_) {
+	  MenuDialIncrement(-1);
+	}
+#ifdef FETT263_SPECIAL_ABILITIES
+        else {
+#if NUM_BUTTONS == 1
+          if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+            SaberBase::DoEffect(EFFECT_USER4, 0);
+          } else {
+            SaberBase::DoEffect(EFFECT_USER2, 0);
+          }
+#else
+          SaberBase::DoEffect(EFFECT_USER2, 0);
+#endif
+        }
+#endif
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
@@ -5511,7 +5781,21 @@ SaberFett263Buttons() : PropBase() {}
             MenuDialIncrement(1);
             return true;
           }
+	}
+#ifdef FETT263_SPECIAL_ABILITIES
+        else {
+#if NUM_BUTTONS == 1
+          if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+            SaberBase::DoEffect(EFFECT_USER7, 0);
+          } else {
+            SaberBase::DoEffect(EFFECT_USER5, 0);
+          }
+#else
+          SaberBase::DoEffect(EFFECT_USER5, 0);
+#endif
+	  return true;
         }
+#endif
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
@@ -5530,7 +5814,21 @@ SaberFett263Buttons() : PropBase() {}
             MenuDialIncrement(-1);
             return true;
           }
-        }
+	}
+#ifdef FETT263_SPECIAL_ABILITIES
+        else {
+#if NUM_BUTTONS == 1
+          if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+            SaberBase::DoEffect(EFFECT_USER8, 0);
+          } else {
+            SaberBase::DoEffect(EFFECT_USER6, 0);
+          }
+#else
+          SaberBase::DoEffect(EFFECT_USER6, 0);
+#endif
+          return true;
+	}
+#endif
         return false;
 		    
       // Auto Lockup Mode
@@ -5575,22 +5873,23 @@ SaberFett263Buttons() : PropBase() {}
         clash_type_ = CLASH_BATTLE_MODE;
         return true;
 
-
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
         if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
         clash_impact_millis_ = millis();
-        if (!battle_mode_) {
-#ifdef FETT263_CLASH_STRENGTH_SOUND
-          clash_impact_millis_ = millis();
-          clash_type_ = CLASH_STAB;
-#else
-          SaberBase::DoStab();
-#endif
-          return true;
-        }
         check_blast_ = false;
         swing_blast_ = false;
         if (!swinging_) {
+#ifndef FETT263_USE_BC_MELT_STAB
+          if (!battle_mode_) {
+#ifdef FETT263_CLASH_STRENGTH_SOUND
+            clash_impact_millis_ = millis();
+            clash_type_ = CLASH_STAB;
+#else
+            SaberBase::DoStab();
+#endif
+            return true;
+          }
+#endif
           if (fusor.angle1() < - M_PI / 4) {
             SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
           } else {
@@ -5600,6 +5899,21 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::DoBeginLockup();
         }
         return true;
+
+#ifdef FETT263_USE_BC_MELT_STAB
+      case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
+        if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
+        clash_impact_millis_ = millis();
+#ifdef FETT263_CLASH_STRENGTH_SOUND
+        clash_impact_millis_ = millis();
+        clash_type_ = CLASH_STAB;
+#else
+        SaberBase::DoStab();
+#endif
+        check_blast_ = false;
+        swing_blast_ = false;
+        return true;
+#endif
 
       // Optional Gesture Controls (defines listed at top)
 
@@ -5873,6 +6187,20 @@ SaberFett263Buttons() : PropBase() {}
           preon_effect_ = false;
         }
         return;
+      case EFFECT_TRANSITION_SOUND: hybrid_font.PlayCommon(&SFX_tr); return;
+      case EFFECT_SOUND_LOOP: SoundLoop(); return;
+      case EFFECT_BEGIN_BATTLE_MODE:
+        if (!battle_mode_) ToggleBattleMode();
+        return;
+      case EFFECT_END_BATTLE_MODE:
+        if (battle_mode_) ToggleBattleMode();
+        return;
+      case EFFECT_BEGIN_AUTO_BLAST:
+        if (!swing_blast_) ToggleMultiBlast();
+        return;
+      case EFFECT_END_AUTO_BLAST:
+        if (swing_blast_) ToggleMultiBlast();
+        return;
       default:
         break; // avoid compiler warnings
     }
@@ -5936,20 +6264,22 @@ private:
   bool edit_color_ = false; // Color Editing Mode active
   float hsl_angle_ = 0.0; // HSL angle for Color Editing
   int font_num_; // Font number from list_fonts array for use in Edit Mode dial
+#ifdef FETT263_USE_SETTINGS_MENU
+  int blade_preview_ = 0; // Blade number for "preview" style
+  int blade_num_; // Active Blade Number for editing
+  int length_revert_; // Original Blade Length for Revert
+  // Calculated value for IntArg (Settings Arguments)
+  // used to add or subtract from original saved value by dial
+  int calc_;
+#endif
 #ifdef FETT263_EDIT_MODE_MENU
   uint32_t variation_revert_; // Variation revert value
   Color16 saved_color_;
-  int blade_preview_ = 0; // Blade number for "preview" style
-  int blade_num_; // Active Blade Number for editing
   int effect_num_; // Effect Arg Number
   int copy_blade_; // Blade to Copy from
   int set_num_; // Settings Arg Number
   int style_revert_; // Original Style Number for Revert
-  int length_revert_; // Original Blade Length for Revert
   int arg_revert_; // Original Arg vale for Revert
-  // Calculated value for IntArg (Settings Arguments)
-  // used to add or subtract from original saved value by dial
-  int calc_;
 #endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
   int clash_count_ = -1; // Choreography Mode Clash counter

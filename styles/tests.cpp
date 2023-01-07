@@ -106,8 +106,9 @@ MockDynamicMixer dynamic_mixer;
 
 #include "../common/common.h"
 #include "../common/stdout.h"
-Print* default_output;
-Print* stdout_output;
+Print default_printer;
+Print* default_output = &default_printer;
+Print* stdout_output = &default_printer;
 ConsoleHelper STDOUT;
 
 Monitoring monitor;

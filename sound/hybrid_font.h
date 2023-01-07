@@ -462,6 +462,7 @@ public:
   }
 
   void SB_Off(OffType off_type) override {
+    SFX_in.SetFollowing(&SFX_pstoff);
     switch (off_type) {
       case OFF_CANCEL_PREON:
 	if (state_ == STATE_WAIT_FOR_ON) {
@@ -470,6 +471,8 @@ public:
 	break;
       case OFF_IDLE:
         break;
+      case OFF_FAST:
+        SFX_in.SetFollowing(nullptr);
       case OFF_NORMAL:
         if (!SFX_in) {
           size_t total = SFX_poweroff.files_found() + SFX_pwroff.files_found();
@@ -503,7 +506,7 @@ public:
           PlayPolyphonic(&SFX_in);
 	  hum_fade_out_ = 0.2;
         }
-	check_postoff_ = !!SFX_pstoff;
+        check_postoff_ = !!SFX_pstoff && off_type != OFF_FAST;
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
@@ -520,8 +523,8 @@ public:
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
       default: return;
-    case EFFECT_PREON: SB_Preon(); return;
-    case EFFECT_POSTOFF: SB_Postoff(); return;
+      case EFFECT_PREON: SB_Preon(); return;
+      case EFFECT_POSTOFF: SB_Postoff(); return;
       case EFFECT_STAB:
 	if (SFX_stab) { PlayCommon(&SFX_stab); return; }
 	// If no stab sounds are found, fall through to clash
