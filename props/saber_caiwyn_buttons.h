@@ -291,12 +291,13 @@ public:
       switch (track_mode_) {
         case PLAYBACK_ONCE:
           track_player_on_ = false;
+          if (num_tracks_ > 0) STDOUT.println("Track player stopped.");
           break;
         case PLAYBACK_LOOP:
-          if (num_tracks_ <= 0) {
-            StartOrStopTrack();
-          } else {
+          if (num_tracks_ > 0) {
             PlayTrack();
+          } else {
+            StartOrStopTrack();
           }
           break;
         case PLAYBACK_ROTATE:
@@ -307,13 +308,18 @@ public:
   }
 
   void PlayTrack() {
-    if (!current_track_) {
-      strcpy(current_track_,current_preset_.track.get());
+    if (!current_track_) strcpy(current_track_,current_preset_.track.get());
+    if (!LSFS::Exists(current_track_)) {
+      STDOUT.print(current_track_);
+      STDOUT.println(" not found.");
+      RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, nullptr, current_track_, false);
     }
     MountSDCard();
     EnableAmplifier();
     track_player_ = GetFreeWavPlayer();
     if (track_player_) {
+      STDOUT.print("Now playing ");
+      STDOUT.println(current_track_);
       track_player_->Play(current_track_);
     } else {
       STDOUT.println("No available WAV players.");
@@ -323,6 +329,7 @@ public:
   void StartTrackPlayer() {
     num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
     if (num_tracks_ > 0) {
+      STDOUT.println("Track player started.");
       PlayTrack();
     } else {
       StartOrStopTrack();
@@ -335,6 +342,7 @@ public:
     if (track_player_) {
       track_player_->Stop();
       track_player_.Free();
+      STDOUT.println("Track player stopped.");
     } else {
       StartOrStopTrack();
     }
@@ -371,6 +379,7 @@ public:
           beeper.Beep(0.20,2000);
           beeper.Beep(0.20,1000);
         }
+        STDOUT.println("Track player set to repeat single track.");
         break;
       case PLAYBACK_LOOP:
         track_mode_ = PLAYBACK_ROTATE;
@@ -384,6 +393,7 @@ public:
           beeper.Beep(0.20,2000);
           beeper.Beep(0.20,1000);
         }
+        STDOUT.println("Track player set to repeat all tracks.");
         break;
       case PLAYBACK_ROTATE:
         track_mode_ = PLAYBACK_ONCE;
@@ -397,6 +407,8 @@ public:
           beeper.Beep(0.20,2000);
           beeper.Beep(0.20,1000);
         }
+        STDOUT.println("Track player set to play single track.");
+        break;
     }
   }
 
