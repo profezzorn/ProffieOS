@@ -64,7 +64,7 @@
 // (missing sound files will be replaced with simple beeps)
 // vmbegin.wav              - Enter Volume Change Menu
 // vmend.wav                - Save Volume Change
-// vmreset.wav              - Reset Volume
+// volmax.wav               - Reset to Maximum Volume
 // monce.wav                - Set Track Player to play a single track one time
 // mloop.wav                - Set Track Player to repeat a single track
 // mrotate.wav              - Set Track Player to repeat all tracks
@@ -100,12 +100,6 @@
 //                                  a clash sound will be overlayed on top of
 //                                  the lockup sounds, which smooths out the
 //                                  result.
-//
-// #define CAIWYN_DISABLE_BEEPS   - Disables the single beep that occurs when
-//                                  selecting fonts, tracks, or entering or
-//                                  exiting the volume and color change menus.
-//                                  Note that beeps will still play if any
-//                                  sound file listed above is missing.
 //
 // #define CAIWYN_SAVE_TRACKS     - Automatically saves the selected track for
 //                                  each preset. Any time the user holds the
@@ -167,10 +161,11 @@
 
 EFFECT(vmbegin);
 EFFECT(vmend);
-EFFECT(vmreset);
+EFFECT(volmax);
 EFFECT(monce);
 EFFECT(mloop);
 EFFECT(mrotate);
+EFFECT(mselect);
 
 #ifdef CAIWYN_SAVE_TRACK_MODE
 class SaveCaiwynStateFile : public ConfigFile {
@@ -219,9 +214,6 @@ public:
     current_menu_angle_ = fusor.angle2();
     mode_volume_ = true;
     if (SFX_vmbegin) {
-#ifndef CAIWYN_DISABLE_BEEPS
-      beeper.Beep(0.1, 2000);
-#endif
       hybrid_font.PlayPolyphonic(&SFX_vmbegin);
     } else {
       beeper.Beep(0.20,1000.0);
@@ -252,9 +244,6 @@ public:
   void VolumeSave() {
     mode_volume_ = false;
     if (SFX_vmend) {
-#ifndef CAIWYN_DISABLE_BEEPS
-      beeper.Beep(0.1, 2000);
-#endif
       hybrid_font.PlayPolyphonic(&SFX_vmend);
     } else {
       beeper.Beep(0.20,2000.0);
@@ -267,15 +256,9 @@ public:
   void VolumeReset() {
     dynamic_mixer.set_volume(VOLUME);
     mode_volume_ = false;
-    if (SFX_vmreset) {
-#ifndef CAIWYN_DISABLE_BEEPS
-      beeper.Beep(0.1, 2000);
-#endif
-      hybrid_font.PlayPolyphonic(&SFX_vmreset);
+    if (SFX_volmax) {
+      hybrid_font.PlayPolyphonic(&SFX_volmax);
     } else if (SFX_vmend) {
-#ifndef CAIWYN_DISABLE_BEEPS
-      beeper.Beep(0.1, 2000);
-#endif
       hybrid_font.PlayPolyphonic(&SFX_vmend);
     } else {
       beeper.Beep(0.20,2000.0);
@@ -412,9 +395,6 @@ public:
       case PLAYBACK_ONCE:
         track_mode_ = PLAYBACK_LOOP;
         if (SFX_mloop) {
-#ifndef CAIWYN_DISABLE_BEEPS
-          beeper.Beep(0.1, 2000);
-#endif
           hybrid_font.PlayPolyphonic(&SFX_mloop);
         } else {
           beeper.Beep(0.20,1000);
@@ -426,9 +406,6 @@ public:
       case PLAYBACK_LOOP:
         track_mode_ = PLAYBACK_ROTATE;
         if (SFX_mrotate) {
-#ifndef CAIWYN_DISABLE_BEEPS
-          beeper.Beep(0.1, 2000);
-#endif
           hybrid_font.PlayPolyphonic(&SFX_mrotate);
         } else {
           beeper.Beep(0.20,1000);
@@ -440,9 +417,6 @@ public:
       case PLAYBACK_ROTATE:
         track_mode_ = PLAYBACK_ONCE;
         if (SFX_monce) {
-#ifndef CAIWYN_DISABLE_BEEPS
-          beeper.Beep(0.1, 2000);
-#endif
           hybrid_font.PlayPolyphonic(&SFX_monce);
         } else {
           beeper.Beep(0.20,1000);
@@ -458,9 +432,6 @@ public:
   }
 
   void CheckBattery() {
-#ifndef CAIWYN_DISABLE_BEEPS
-    beeper.Beep(0.1, 2000);
-#endif
     SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
     if (SFX_mnum) {
       sound_library_.SayBatteryLevel();
@@ -478,9 +449,6 @@ public:
   void ResetColorChangeMode() {
     if (!current_style()) return;
     if (SFX_ccend) {
-#ifndef CAIWYN_DISABLE_BEEPS
-      beeper.Beep(0.1, 2000);
-#endif
       SFX_ccend.Select(1);
     }
     STDOUT << "Reset Color Variation" << "\n";
@@ -504,7 +472,7 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF | BUTTON_AUX2):
 #endif
         On();
-        if (!track_player_) {
+        if (!track_player_on_) {
           StartTrackPlayer();
         }
         return true;
@@ -522,7 +490,7 @@ public:
 
 // Start or Stop Track
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-        if (track_player_) {
+        if (track_player_on_) {
           StopTrackPlayer();
         } else {
           StartTrackPlayer();
@@ -531,10 +499,12 @@ public:
 
 // Next Preset/Track
       case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
-#ifndef CAIWYN_DISABLE_BEEPS
-        beeper.Beep(0.1, 2000);
-#endif
-        if (track_player_) {
+        if (track_player_on_) {
+          if (SFX_mselect) {
+            hybrid_font.PlayPolyphonic(&SFX_mselect);
+          } else {
+            beeper.Beep(0.1,2000);
+          }
           NextTrack();
 #ifdef CAIWYN_SAVE_TRACKS
           current_preset_.track = mkstr(current_track_);
@@ -573,11 +543,6 @@ public:
           return true;
 #ifndef DISABLE_COLOR_CHANGE
         } else if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
-#ifndef CAIWYN_DISABLE_BEEPS
-          if (SFX_ccend) {
-            beeper.Beep(0.1, 2000);
-          }
-#endif
           SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
           return true;
 #endif;
@@ -592,9 +557,6 @@ public:
 #ifndef DISABLE_COLOR_CHANGE
         } else if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_STEPPED) {
           if (SFX_ccend) {
-#ifndef CAIWYN_DISABLE_BEEPS
-            beeper.Beep(0.1, 2000);
-#endif
             SFX_ccend.Select(0);
           }
           ToggleColorChangeMode();
@@ -668,11 +630,6 @@ public:
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_AUX, EVENT_THIRD_HELD_MEDIUM, MODE_ON):
         if (!mode_volume_) {
-#ifndef CAIWYN_DISABLE_BEEPS
-          if (SFX_ccbegin) {
-            beeper.Beep(0.1, 2000);
-          }
-#endif
           ToggleColorChangeMode();
           return true;
         }
