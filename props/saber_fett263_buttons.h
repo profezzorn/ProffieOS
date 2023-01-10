@@ -1919,17 +1919,13 @@ SaberFett263Buttons() : PropBase() {}
         push_begin_millis_ = millis();
       }
     } else {
-      if (!fusor.ready()) {
-          fusor_ready_millis_ = millis();
-      }
       // EVENT_SWING - Swing On gesture control to allow fine tuning of speed needed to ignite
       if (menu_ || millis() - saber_off_time_millis_ < MOTION_TIMEOUT) {
         SaberBase::RequestMotion();
         if (swinging_ && fusor.swing_speed() < 90) {
           swinging_ = false;
         }
-        // Prevent false swing during motion startup
-        if (millis() - fusor_ready_millis_ > 2000 && !swinging_ && fusor.swing_speed() > saved_gesture_control.swingonspeed) {
+        if (!swinging_ && fusor.swing_speed() > saved_gesture_control.swingonspeed) {
           swinging_ = true;
           Event(BUTTON_NONE, EVENT_SWING);
 	}
@@ -6228,7 +6224,6 @@ private:
   bool rehearse_ = false; // Rehearsal Mode active
   bool choreo_ = false; // Choreography Mode active
 #endif
-  uint32_t fusor_ready_millis_ = 0; // Fusor "Ready" timer
   uint32_t thrust_begin_millis_; // Thrust timer
   uint32_t push_begin_millis_; // Push timer
   uint32_t clash_impact_millis_; // Clash timer
