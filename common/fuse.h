@@ -94,7 +94,7 @@ public:
   }
 
 #ifndef GYRO_STABILIZATION_TIME_MS
-#define GYRO_STABILIZATION_TIME_MS 10
+#define GYRO_STABILIZATION_TIME_MS 64
 #endif
 
   void Loop() override {
