@@ -86,21 +86,34 @@ public:
       accel_extrapolator_.clear(accel);
       accel_clash_filter_.clear(accel);
       down_ = accel;
+      last_clear_ = micros();
     } else {
       accel_extrapolator_.push(accel);
       accel_clash_filter_.push(accel);
     }
   }
 
+#ifndef GYRO_STABILIZATION_TIME_MS
+#define GYRO_STABILIZATION_TIME_MS 10
+#endif
+
   void Loop() override {
     uint32_t now = micros();
-    if (!accel_extrapolator_.ready()) return;
-    if (!gyro_extrapolator_.ready()) return;
-    if (now - accel_extrapolator_.last_time() > 200000) return;
-    if (now - gyro_extrapolator_.last_time() > 200000) return;
+    if (!accel_extrapolator_.ready() ||
+	!gyro_extrapolator_.ready() ||
+	now - accel_extrapolator_.last_time() > 200000 ||
+	now - gyro_extrapolator_.last_time() > 200000 ||
+	now - last_clear_ < GYRO_STABILIZATION_TIME_MS * 1000) {
+      gyro_ = Vec3(0.0f);
+      accel_ = Vec3(0.0f);
+      swing_speed_ = 0.0f;
+      return;
+    }
 
     float delta_t = (now - last_micros_) / 1000000.0;
     last_micros_ = now;
+    // Update last_clear_ so we won't have wrap-around issues.
+    last_clear_ = now - GYRO_STABILIZATION_TIME_MS * 1000;
     CHECK_NAN(delta_t);
 
     accel_ = accel_extrapolator_.get(now);
@@ -350,6 +363,7 @@ public:
   bool ready() { return micros() - last_micros_ < 50000; }
 
 private:
+  uint32_t last_clear_ = 0;
   static const int filter_hz = 80;
   static const int clash_filter_hz = 1600;
   Extrapolator<Vec3, ACCEL_MEASUREMENTS_PER_SECOND/filter_hz> accel_extrapolator_;
