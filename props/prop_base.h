@@ -1250,11 +1250,11 @@ public:
       return true;
     }
     if (!strcmp(cmd, "clash")) {
-      Clash(false, 10.0);
+      Clash2(false, 10.0);
       return true;
     }
     if (!strcmp(cmd, "stab")) {
-      Clash(true, 10.0);
+      Clash2(true, 10.0);
       return true;
     }
     if (!strcmp(cmd, "force")) {
