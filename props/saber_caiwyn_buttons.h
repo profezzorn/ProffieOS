@@ -68,6 +68,8 @@
 // monce.wav                - Set Track Player to play a single track one time
 // mloop.wav                - Set Track Player to repeat a single track
 // mrotate.wav              - Set Track Player to repeat all tracks
+// mselect.wav              - Next Track (omit if you don't want a confirmation
+//                                        sound when the track is changed)
 // ccbegin.wav              - Enter Color Change Mode
 // ccend01.wav              - Save Color and Exit Color Change Mode
 // ccend02.wav              - Reset Color and Exit Color Change Mode
