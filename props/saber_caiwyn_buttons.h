@@ -500,16 +500,14 @@ public:
 // Next Preset/Track
       case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
         if (track_player_on_) {
-          if (SFX_mselect) {
-            hybrid_font.PlayPolyphonic(&SFX_mselect);
-          } else {
-            beeper.Beep(0.1,2000);
-          }
           NextTrack();
 #ifdef CAIWYN_SAVE_TRACKS
           current_preset_.track = mkstr(current_track_);
           current_preset_.Save();
 #endif
+          if (SFX_mselect) {
+            hybrid_font.PlayPolyphonic(&SFX_mselect);
+          }
         } else {
           next_preset();
           strcpy(current_track_,current_preset_.track.get());
