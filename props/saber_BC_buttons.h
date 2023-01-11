@@ -497,7 +497,9 @@ public:
       }
       STDOUT.print("Volume Up - Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
-    } else QuickMaxVolume();
+    } else {
+      QuickMaxVolume();
+    }
   }
 
   void VolumeDown() {
@@ -514,7 +516,9 @@ public:
       }
       STDOUT.print("Volume Down - Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
-    } else QuickMinVolume();
+    } else {
+      QuickMinVolume();
+    }
   }
 
   void QuickMaxVolume() {
@@ -707,7 +711,9 @@ public:
         } else {
           On();
         }
-      } else QuickMaxVolume();
+      } else {
+        QuickMaxVolume();
+      }
       return true;
 
 // Turn Saber ON Muted
@@ -818,7 +824,9 @@ public:
         STDOUT<< "Battery Voltage: " << battery_monitor.battery() << "\n";
         STDOUT<< "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-      } else QuickMinVolume();
+      } else {
+        QuickMinVolume();
+      }
       return true;
 
 // Stab
