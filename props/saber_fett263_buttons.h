@@ -1918,7 +1918,6 @@ SaberFett263Buttons() : PropBase() {}
       } else {
         push_begin_millis_ = millis();
       }
-
     } else {
       // EVENT_SWING - Swing On gesture control to allow fine tuning of speed needed to ignite
       if (menu_ || millis() - saber_off_time_millis_ < MOTION_TIMEOUT) {
@@ -1929,7 +1928,7 @@ SaberFett263Buttons() : PropBase() {}
         if (!swinging_ && fusor.swing_speed() > saved_gesture_control.swingonspeed) {
           swinging_ = true;
           Event(BUTTON_NONE, EVENT_SWING);
-        }
+	}
       }
     }
     // EVENT_THRUST
@@ -5921,8 +5920,7 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
-        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot or motion restart for 2000ms
-        if (!menu_ && millis() - saber_off_time_millis_ > 2000) {
+        if (!menu_) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
@@ -5944,8 +5942,7 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
         if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.swingon) return true;
-        // Due to motion chip startup on boot creating false ignition we delay Swing On at boot or motion restart for 2000ms
-        if (!menu_ && millis() - saber_off_time_millis_ > 2000) {
+        if (!menu_) {
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
