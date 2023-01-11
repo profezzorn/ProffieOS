@@ -113,6 +113,8 @@
 //                                  all tracks, the saved track is not updated
 //                                  when the next track is automatically
 //                                  played.
+//                                  If SAVE_STATE is defined, then this will
+//                                  automatically be defined as well.
 //
 // #define CAIWYN_SAVE_TRACK_MODE - Saves the selected track mode to a config
 //                                  file so that the setting is restored when
@@ -158,6 +160,7 @@
 #endif
 
 #ifdef SAVE_STATE
+#define CAIWYN_SAVE_TRACKS
 #define CAIWYN_SAVE_TRACK_MODE
 #endif
 
