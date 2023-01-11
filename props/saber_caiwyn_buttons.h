@@ -12,14 +12,14 @@
 //                            track is not playing
 //          Start/Stop Track: Click Aux
 //                Next Track: Hold Aux for 1 second while track is playing
+//                            | Tracks must be stored in <font>/tracks/*.wav
+//                            | and will be selected in alphabetical order.
 //         Track Player Mode: Double-click and hold Aux for 1 second while
 //                            track is playing
 //                            | This cycles through three playback modes:
 //                            | 1. Play a single track and stop (default)
 //                            | 2. Repeat a single track in a loop
 //                            | 3. Repeat all tracks in a loop
-//                            | Tracks must be in <font>/tracks/*.wav, and will
-//                            | be selected in alphabetical order.
 //             Turn Saber On: Press Power
 //     Turn On & Start Track: Hold Aux or Aux2 and press Power
 //
@@ -115,7 +115,7 @@
 //
 // #define CAIWYN_SAVE_TRACK_MODE - Saves the selected track mode to a config
 //                                  file so that the setting is restored when
-//                                  Proffieboad boots up after the battery is
+//                                  Proffieboard boots up after the battery is
 //                                  recharged or replaced.
 //                                  If SAVE_STATE is defined, then this will
 //                                  automatically be defined as well.
