@@ -82,26 +82,24 @@
 // https://drive.google.com/file/d/1cSBirX5STOVPanOkOlIeb0eofjx-qFmj/view
 //
 // Options you can add to your config file:
-// #define CAIWYN_BUTTON_LOCKUP   - Enables clashes and lockups to be triggered
-//                                  without impact to the blade by pressing and
-//                                  holding the power button.  This effect
-//                                  replaces lightning blocks for two-button
-//                                  sabers, but if a saber has three buttons,
-//                                  the lightning block can be triggered by
-//                                  holding AUX2 and pressing AUX.
+// #define CAIWYN_BUTTON_LOCKUP   - Enables a lockup to be triggered without
+//                                  impact to the blade by pressing and holding
+//                                  the power button.  This effect replaces
+//                                  lightning blocks for two-button sabers, but
+//                                  if a saber has three buttons, the lightning
+//                                  block can be triggered by holding AUX2 and
+//                                  pressing AUX.
 //
-// #define CAIWYN_BUTTON_CLASH    - If CAIWYN_BUTTON_LOCKUP is defined, holding
-//                                  the power button triggers a lockup.  In
-//                                  practice, you can quickly press and release
-//                                  the power button to simulate a clash.
-//                                  However, this plays the bgnlock and endlock
-//                                  sounds in quick succession, which I have
-//                                  found usually sounds like multiple clashes
-//                                  rather than a single clash.
-//                                  If CAIWYN_BUTTON_CLASH is also defined, a
-//                                  a clash sound will be overlayed on top of
-//                                  the lockup sounds, which smooths out the
-//                                  result.
+// #define CAIWYN_BUTTON_CLASH    - Enables a clash to be triggered without
+//                                  impact to the blade by pressing the power
+//                                  button.
+//                                  If both CAIWYN_BUTTON_LOCKUP and
+//                                  CAIWYN_BUTTON_CLASH are defined, pressing
+//                                  the power button triggers a lockup, but a
+//                                  clash sound is overlayed on top of the
+//                                  lockup sounds to smooth out the transition
+//                                  from bgnlock and endlock sounds for quick
+//                                  clashes.  I recommend this configuration.
 //
 // #define CAIWYN_SAVE_TRACKS     - Automatically saves the selected track for
 //                                  each preset. Any time the user holds the
@@ -539,6 +537,8 @@ public:
 #ifdef CAIWYN_BUTTON_CLASH
           hybrid_font.PlayPolyphonic(&SFX_clsh);
 #endif
+#elif defined(CAIWYN_BUTTON_CLASH)
+          SaberBase::DoClash();
 #else
           SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
           SaberBase::DoBeginLockup();
@@ -640,7 +640,7 @@ public:
 #endif
 
 // Lightning Block
-#if NUM_BUTTONS > 2 && defined CAIWYN_BUTTON_LOCKUP
+#if NUM_BUTTONS > 2 && defined(CAIWYN_BUTTON_LOCKUP)
       case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON | BUTTON_AUX2):
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON | BUTTON_AUX):
         SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
