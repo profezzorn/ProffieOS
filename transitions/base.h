@@ -7,21 +7,16 @@
 
 // These are just placeholders, all the logic is in AddBend
 template<class MILLIS, class BEND_FUNCTION> struct BendTimePowX {};
-template<class MILLIS, class BEND_FUNCTION> struct BendTimePowInvX {};
+template<class MILLIS> struct ReverseTimeX {};
+template<class MILLIS, class BEND_FUNCTION> using BendTimePowInvX = ReverseTimeX<BendTimePowX<ReverseTimeX<MILLIS>, BEND_FUNCTION>>;
 template<int MILLIS, int BEND_VALUE> using BendTimePow = BendTimePowX<Int<MILLIS>, Int<BEND_VALUE>>;
 template<int MILLIS, int BEND_VALUE> using BendTimePowInv = BendTimePowInvX<Int<MILLIS>, Int<BEND_VALUE>>;
+template<int MILLIS> using ReverseTime = ReverseTimeX<Int<MILLIS>>;
 
 template<class MILLIS>
-struct AddBend {
-  void run(BladeBase* blade) {
-    millis_.run(blade);
-  }
-  int calculate(BladeBase* blade) {
-    return millis_.calculate(blade);
-  }
-  PONUA SVFWrapper<MILLIS> millis_;
+struct AddBend : public SVFWrapper<MILLIS> {
   template<class T>
-  uint32_t bend(uint32_t t, uint32_t len, T scale) { return scale * t / len; }
+  T bend(uint32_t t, uint32_t len, T scale) { return scale * t / len; }
 };
 
 template<class MILLIS, class POW>
@@ -36,42 +31,30 @@ struct AddBend<class BendTimePowX<MILLIS, POW>> {
     return millis_.calculate(blade);
   }
 
-  PONUA SVFWrapper<MILLIS> millis_;
+  PONUA AddBend<MILLIS> millis_;
   PONUA SVFWrapper<POW> bend_value_;
   float exponent_;
   template<class T>
   T bend(uint32_t t, uint32_t len, T scale) {
-    if (t > len) return t;
-    float frac = t / (float)len;
-    frac = powf(frac, exponent_);
-    return scale * frac;
+    return scale * powf(millis_.bend(t, len, 1.0f), exponent_);
   }
 };
 
-template<class MILLIS, class POW>
-struct AddBend<class BendTimePowInvX<MILLIS, POW>> {
-  void run(BladeBase* blade) {
-    millis_.run(blade);
-    bend_value_.run(blade);
-  }
-
-  int calculate(BladeBase* blade) {
-    exponent_ = bend_value_.calculate(blade) / 32768.0;
-    return millis_.calculate(blade);
-  }
-
-  PONUA SVFWrapper<MILLIS> millis_;
-  PONUA SVFWrapper<POW> bend_value_;
-  float exponent_;
+template<class MILLIS, int POW>
+struct AddBend<class BendTimePowX<MILLIS, Int<POW>>> : public AddBend<MILLIS> {
   template<class T>
   T bend(uint32_t t, uint32_t len, T scale) {
-    if (t > len) return t;
-    float frac = 1.0 - t / (float)len;
-    frac = 1.0 - powf(frac, exponent_);
-    return scale * frac;
+    return scale * powf(AddBend<MILLIS>::bend(t, len, 1.0f), POW / 32768.0);
   }
 };
 
+template<class MILLIS>
+struct AddBend<class ReverseTimeX<MILLIS>> : public AddBend<MILLIS> {
+  template<class T>
+  T bend(uint32_t t, uint32_t len, T scale) {
+    return scale - AddBend<MILLIS>::bend(t, len, scale);
+  }
+};
 
 template<class MILLIS>
 class TransitionBaseX {
