@@ -4137,7 +4137,6 @@ SaberFett263Buttons() : PropBase() {}
         dynamic_mixer.set_volume(VOLUME);
         MenuRevert();
         break;
-#endif
       case MENU_SETTING_SUB:
 #ifdef FETT263_EDIT_SETTINGS_MENU
         MenuExit();
@@ -4146,6 +4145,7 @@ SaberFett263Buttons() : PropBase() {}
         MenuCancel();
 #endif
         break;
+#endif
 #ifdef FETT263_EDIT_MODE_MENU
 #if NUM_BLADES > 1
       case MENU_BLADE_STYLE:
