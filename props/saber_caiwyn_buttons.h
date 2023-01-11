@@ -51,7 +51,7 @@
 //
 //            Turn Saber Off: Hold Aux or Aux2 and press Power
 //
-// If CAIWYN_BUTTON_LOCKUP is defined:
+// If CAIWYN_BUTTON_LOCKUP and/or CAIWYN_BUTTON_CLASH is defined:
 //   Non-impact Clash/Lockup: Click/Hold Power
 //                            | This generates a clash/lockup effect with no
 //                            | impact to the blade; quick press for a short
