@@ -600,6 +600,27 @@ void TestCompileStyle() {
                 Scale<EffectRandomF<EFFECT_BLAST>, Int<28000>, Int<8000>>>>,
       EFFECT_BLAST>,
     InOutTrL<TrWipe<300>, TrWipeIn<500>>>> t1;
+
+
+  TestStyle<Layers<
+    Black,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>, White, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>,
+
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>, White, TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>, White, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>, TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, White, TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, White, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>
+    >> t2;
+    
 }
 
 
