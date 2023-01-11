@@ -68,8 +68,7 @@
 // monce.wav                - Set Track Player to play a single track one time
 // mloop.wav                - Set Track Player to repeat a single track
 // mrotate.wav              - Set Track Player to repeat all tracks
-// mselect.wav              - Next Track (omit if you don't want a confirmation
-//                                        sound when the track is changed)
+// mselect.wav              - Next Track (can be omitted if you prefer)
 // ccbegin.wav              - Enter Color Change Mode
 // ccend01.wav              - Save Color and Exit Color Change Mode
 // ccend02.wav              - Reset Color and Exit Color Change Mode
@@ -82,17 +81,17 @@
 // https://drive.google.com/file/d/1cSBirX5STOVPanOkOlIeb0eofjx-qFmj/view
 //
 // Options you can add to your config file:
-// #define CAIWYN_BUTTON_LOCKUP   - Enables a lockup to be triggered without
-//                                  impact to the blade by pressing and holding
-//                                  the power button.  This effect replaces
-//                                  lightning blocks for two-button sabers, but
-//                                  if a saber has three buttons, the lightning
+// #define CAIWYN_BUTTON_CLASH    - Enables a clash to be triggered without
+//                                  impact to the blade by pressing the power
+//                                  button.  This effect replaces lightning
+//                                  blocks for two-button sabers, but if a
+//                                  saber has three buttons, the lightning
 //                                  block can be triggered by holding AUX2 and
 //                                  pressing AUX.
 //
-// #define CAIWYN_BUTTON_CLASH    - Enables a clash to be triggered without
-//                                  impact to the blade by pressing the power
-//                                  button.
+// #define CAIWYN_BUTTON_LOCKUP   - Enables a lockup to be triggered without
+//                                  impact to the blade by pressing and holding
+//                                  the power button.
 //                                  If both CAIWYN_BUTTON_LOCKUP and
 //                                  CAIWYN_BUTTON_CLASH are defined, pressing
 //                                  the power button triggers a lockup, but a
