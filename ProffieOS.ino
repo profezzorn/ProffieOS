@@ -1067,7 +1067,7 @@ class Commands : public CommandParser {
 
     if (!strcmp(cmd, "version")) {
       STDOUT << version
-      << "/n" TOSTRING(CONFIG_FILE) "\nprop: "  TOSTRING(PROP_TYPE)  "\nbuttons: " TOSTRING(NUM_BUTTONS) "\ninstalled: " 
+      << "\n" CONFIG_FILE "\nprop: "  TOSTRING(PROP_TYPE)  "\nbuttons: " TOSTRING(NUM_BUTTONS) "\ninstalled: " 
       << install_time << "\n";
       return true;
     }
