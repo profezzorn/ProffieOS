@@ -4646,8 +4646,9 @@ SaberFett263Buttons() : PropBase() {}
     sound_library_.SayBatteryPercent();
 #elif defined(FETT263_SAY_BATTERY_VOLTAGE)
     sound_library_.SayBatteryVolts();
+#else
+    hybrid_font.PlayCommon(&SFX_battery);
 #endif
-    SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
   }
 
   // Go to first Preset.
@@ -4842,7 +4843,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_CLICK_LONG, MODE_OFF):
         if (menu_) return true;      
-        DoBattery();
+        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -5605,7 +5606,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
         if (menu_) return true;
-        DoBattery();
+        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -6162,15 +6163,9 @@ SaberFett263Buttons() : PropBase() {}
           beeper.Beep(0.5, 3000);
         }
         return;
-#if !defined(FETT263_SAY_BATTERY_VOLTS) && !defined(FETT263_SAY_BATTERY_PERCENT)
       case EFFECT_BATTERY_LEVEL:
-        if (SFX_battery) {
-          hybrid_font.PlayCommon(&SFX_battery);
-        } else {
-          beeper.Beep(0.5, 3000);
-        }
+        DoBattery();
         return;
-#endif
       case EFFECT_INTERACTIVE_PREON:
         preon_effect_ = true;
         return;
