@@ -1,10 +1,6 @@
 #ifndef STYLES_LENGTH_FINDER_H
 #define STYLES_LENGTH_FINDER_H
 
-#ifdef DISABLE_TALKIE
-#include "../sound/sound_library.h"
-#endif
-
 // Usage: LengthFinder<BASE, LIGHTUP>
 // or: LengthFinder<>
 // BASE, LIGHTUP: COLOR
@@ -39,11 +35,7 @@ public:
       last_speak_ = millis();
       say_it_ = false;
 #ifdef ENABLE_AUDIO
-#ifdef DISABLE_TALKIE
-      SayNumber(led_ + 1, SAY_WHOLE);
-#else
       talkie.SayNumber(led_ + 1);
-#endif
 #endif
       STDOUT << "LEN=" << (led_ + 1) << "\n";
     }
