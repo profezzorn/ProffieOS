@@ -61,7 +61,6 @@
 //           Lightning Block: Hold Aux2 and press Aux (requires 3 buttons)
 //
 // You will need the following sound files in order for menus to work properly:
-// (missing sound files will be replaced with simple beeps)
 // vmbegin.wav              - Enter Volume Change Menu
 // vmend.wav                - Save Volume Change
 // volmax.wav               - Reset to Maximum Volume
@@ -188,7 +187,7 @@ public:
   void Loop() override {
     PropBase::Loop();
     DetectMenuTurn();
-    TrackPlayer();
+    PollTrackPlayer();
     sound_library_.Poll(wav_player_);
   }
 
@@ -200,7 +199,6 @@ public:
   bool Parse(const char *cmd, const char* arg) override {
     if (PropBase::Parse(cmd, arg)) return true;
     if (!strcmp(cmd, "list_current_tracks")) {
-// Tracks must be in: <font>/tracks/*.wav
       LOCK_SD(true);
       for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
         PathHelper path(dir, "tracks");
@@ -288,7 +286,6 @@ public:
     }
   }
 
-// Fett263 Track Player, modified by Caiwyn
   enum TrackMode {
     PLAYBACK_ONCE,
     PLAYBACK_LOOP,
@@ -312,42 +309,35 @@ public:
   }
 #endif
 
-  void TrackPlayer() {
-    if (track_player_on_ && !track_player_->isPlaying()) {
-      if (track_player_) track_player_.Free();
+  void PollTrackPlayer() {
+    if (track_player_on_ && !track_player_) {
       switch (track_mode_) {
         case PLAYBACK_ONCE:
-          track_player_on_ = false;
-          if (num_tracks_ > 0) STDOUT.println("Track player stopped.");
+          StopTrackPlayer();
           break;
         case PLAYBACK_LOOP:
-          if (num_tracks_ > 0) {
-            PlayTrack();
-          } else {
-            StartOrStopTrack();
-          }
+          PlayTrack(current_track_);
           break;
         case PLAYBACK_ROTATE:
-          NextTrack();
+          NextTrack(false);
           break;
       }
+    } else if (track_player_ && !track_player_->isPlaying()) {
+        track_player_.Free();
     }
   }
 
-  void PlayTrack() {
-    if (!current_track_) strcpy(current_track_,current_preset_.track.get());
-    if (!LSFS::Exists(current_track_)) {
-      STDOUT.print(current_track_);
-      STDOUT.println(" not found.");
-      RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, nullptr, current_track_, false);
-    }
-    MountSDCard();
-    EnableAmplifier();
+  bool TrackExists(const char* track) {
+    LOCK_SD(true);
+    bool exists = LSFS::Exists(track);
+    LOCK_SD(false);
+    return exists;
+  }
+
+  void PlayTrack(const char* track) {
     track_player_ = GetFreeWavPlayer();
     if (track_player_) {
-      STDOUT.print("Now playing ");
-      STDOUT.println(current_track_);
-      track_player_->Play(current_track_);
+      track_player_->Play(track);
     } else {
       STDOUT.println("No available WAV players.");
     }
@@ -355,12 +345,14 @@ public:
 
   void StartTrackPlayer() {
     num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
-    if (num_tracks_ > 0) {
-      STDOUT.println("Track player started.");
-      PlayTrack();
-    } else {
-      StartOrStopTrack();
+    STDOUT.println("Track player started.");
+    if (!current_track_) strcpy(current_track_,current_preset_.track.get());
+    if (!TrackExists(current_track_)) {
+      STDOUT.print(current_track_);
+      STDOUT.println(" not found.");
+      RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, nullptr, current_track_, false);
     }
+    PlayTrack(current_track_);
     track_player_on_ = true;
   }
 
@@ -369,27 +361,34 @@ public:
     if (track_player_) {
       track_player_->Stop();
       track_player_.Free();
-      STDOUT.println("Track player stopped.");
-    } else {
-      StartOrStopTrack();
     }
+    STDOUT.println("Track player stopped.");
+#ifdef CAIWYN_SAVE_TRACK_MODE
+    SaveCaiwynState();
+#endif
   }
 
-  void NextTrack() {
+  void NextTrack(bool manually_selected) {
+    if (manually_selected) {
+      track_player_->Stop();
+      track_player_.Free();
+#ifdef CAIWYN_SAVE_TRACKS
+      current_preset_.track = mkstr(current_track_);
+      current_preset_.Save();
+#endif
+      if (SFX_mselect) {
+        hybrid_font.PlayPolyphonic(&SFX_mselect);
+      }
+    }
     if (num_tracks_ > 0) {
-      if (track_player_->isPlaying()) track_player_->Stop();
-      if (track_player_) track_player_.Free();
       char next_track[128];
       next_track[0] = 0;
       if (!RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, current_track_, next_track, false)) {
         RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, nullptr, next_track, false);
       }
       strcpy(current_track_, next_track);
-      PlayTrack();
-    } else {
-      StartOrStopTrack();
-      StartOrStopTrack();
     }
+    PlayTrack(current_track_);
   }
 
   void ChangeTrackMode() {
@@ -428,9 +427,6 @@ public:
         STDOUT.println("Track player set to play single track.");
         break;
     }
-#ifdef CAIWYN_SAVE_TRACK_MODE
-    SaveCaiwynState();
-#endif
   }
 
   void CheckBattery() {
@@ -502,17 +498,9 @@ public:
 // Next Preset/Track
       case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
         if (track_player_on_) {
-          NextTrack();
-#ifdef CAIWYN_SAVE_TRACKS
-          current_preset_.track = mkstr(current_track_);
-          current_preset_.Save();
-#endif
-          if (SFX_mselect) {
-            hybrid_font.PlayPolyphonic(&SFX_mselect);
-          }
+          NextTrack(true);
         } else {
           next_preset();
-          strcpy(current_track_,current_preset_.track.get());
         }
         return true;
 
