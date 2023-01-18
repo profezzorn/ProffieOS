@@ -143,6 +143,7 @@ Monitoring monitor;
 #include "../transitions/fade.h"
 #include "../transitions/instant.h"
 #include "../transitions/random.h"
+#include "../transitions/loop.h"
 #include "../functions/blade_angle.h"
 #include "../functions/twist_angle.h"
 #include "../functions/swing_speed.h"
@@ -307,6 +308,20 @@ void test_cylon() {
   style->run(&mock_blade);			\
 } while(0)
 
+#define CHECK_NEAR(X, Y, D) do {                                                \
+  auto x_ = (X);                                                                \
+  auto y_ = (Y);                                                                \
+  if (fabs(x_ - y_) > D) { std::cerr << #X << " (" << x_ << ") ~!= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+} while(0)
+
+#define CHECK_COLOR(X, R, G, B, maxdelta) do {	\
+  auto x = (X);					\
+  CHECK_NEAR(x.r, R, maxdelta);			\
+  CHECK_NEAR(x.g, G, maxdelta);			\
+  CHECK_NEAR(x.b, B, maxdelta);			\
+} while(0)
+
+
 void test_inouthelper(BladeStyle* style) {
   MockBlade mock_blade;
   mock_blade.SetStyle(style);
@@ -415,6 +430,20 @@ Color16 get_color_when_on(BladeStyle* style) {
   int last = 0;
 
   for (int i = 0; i < 10000; i++) STEP();
+  return mock_blade.colors[0];
+}
+
+Color16 get_color_after_ignition(BladeStyle* style, int millis) {
+  MockBlade mock_blade;
+  mock_blade.SetStyle(style);
+  mock_blade.colors.resize(1);
+  on_ = false;
+  micros_ = 0;
+  for (int i = 0; i < 10000; i++) STEP();
+  on_ = true;
+  int last = 0;
+
+  for (int i = 0; i < millis; i++) STEP();
   return mock_blade.colors[0];
 }
 
@@ -572,6 +601,32 @@ void TestCompileStyle() {
                 Scale<EffectRandomF<EFFECT_BLAST>, Int<28000>, Int<8000>>>>,
       EFFECT_BLAST>,
     InOutTrL<TrWipe<300>, TrWipeIn<500>>>> t1;
+
+
+  TestStyle<Layers<
+    Black,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>, White, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>,
+
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>, White, TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>, White, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>, TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, White, TrFade<1>, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, White, TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, White, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, TrFade<1>, TrFade<1>>, EFFECT_BLAST>,
+    TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>
+    >> t2;
+    
+  TestStyle<Layers<
+    Black,
+    TransitionEffectL< TrLoop< TrFade<1> >, EFFECT_BLAST>,
+    TransitionEffectL< TrLoopUntil< Int<1>, TrFade<1>, TrFade<1>>, EFFECT_BLAST>
+	      >> t3;
 }
 
 
@@ -592,6 +647,29 @@ void test_style5() {
 	      >> t1;
   Color16 c = get_color_when_on(&t1);
 }
+
+void test_style6() {
+  TestStyle<Layers<WHITE, InOutTrL<TrFade<1000>, TrFade<500>>>> t1;
+  CHECK_COLOR(get_color_after_ignition(&t1, 250), 16384, 16384, 16384, 200);
+  CHECK_COLOR(get_color_after_ignition(&t1, 500), 32768, 32768, 32768, 200);
+  CHECK_COLOR(get_color_after_ignition(&t1, 750), 49152, 49152, 49152, 200);
+
+  TestStyle<Layers<WHITE, InOutTrL<TrFadeX<BendTimePow<1000, 65536>>, TrFade<500>>>> t2;
+  CHECK_COLOR(get_color_after_ignition(&t2, 250), 4096, 4096, 4096, 200);
+  CHECK_COLOR(get_color_after_ignition(&t2, 500), 16384, 16384, 16384, 200);
+  CHECK_COLOR(get_color_after_ignition(&t2, 750), 36864, 36864, 36864, 200);
+
+  TestStyle<Layers<WHITE, InOutTrL<TrFadeX<BendTimePow<1000, 16384>>, TrFade<500>>>> t3;
+  CHECK_COLOR(get_color_after_ignition(&t3, 250), 32768, 32768, 32768, 200);
+  CHECK_COLOR(get_color_after_ignition(&t3, 500), 46341, 46341, 46341, 200);
+  CHECK_COLOR(get_color_after_ignition(&t3, 750), 56755, 56755, 56755, 200);
+
+  TestStyle<Layers<WHITE, InOutTrL<TrFadeX<BendTimePowInv<1000, 65536>>, TrFade<500>>>> t4;
+  CHECK_COLOR(get_color_after_ignition(&t4, 250), 28672, 28672, 28672, 200);
+  CHECK_COLOR(get_color_after_ignition(&t4, 500), 49152, 49152, 49152, 200);
+  CHECK_COLOR(get_color_after_ignition(&t4, 750), 61440, 61440, 61440, 200);
+}
+
 
 void testGetArg(const char* str, int arg, const char* expected) {
   char tmp[1024];
@@ -724,6 +802,7 @@ void test_argument_parsing() {
 }
 
 int main() {
+  test_style6();
   test_style5();
   test_style4();
   test_cylon();
