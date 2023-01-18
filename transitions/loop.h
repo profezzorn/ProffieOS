@@ -13,6 +13,7 @@ public:
     if (TR::done()) TR::begin();
     TR::run(blade);
   }
+  bool done() { return false; }
 };
 
 // Usage: TrLoop<PULSE, TRANSITION, OUT>
