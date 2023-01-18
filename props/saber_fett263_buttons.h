@@ -513,6 +513,9 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
     FETT263_TWIST_OFF
     To enable Twist Off Retraction control
 
+    FETT263_TWIST_OFF_NO_POSTOFF
+    To enable Twist Off Retraction control, skips Postoff
+
   == Twist On ==
     Gesture Ignition via Twist (back and forth)
     You can use one of the following defines to enable twist on:
