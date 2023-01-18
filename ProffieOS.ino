@@ -536,6 +536,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/sequence.h"
 #include "transitions/blink.h"
 #include "transitions/doeffect.h"
+#include "transitions/loop.h"
 
 #include "styles/legacy_styles.h"
 //responsive styles
@@ -1067,7 +1068,7 @@ class Commands : public CommandParser {
 
     if (!strcmp(cmd, "version")) {
       STDOUT << version
-      << "\nprop: "  TOSTRING(PROP_TYPE)  "\nbuttons: " TOSTRING(NUM_BUTTONS) "\ninstalled: " 
+      << "\n" CONFIG_FILE "\nprop: "  TOSTRING(PROP_TYPE)  "\nbuttons: " TOSTRING(NUM_BUTTONS) "\ninstalled: " 
       << install_time << "\n";
       return true;
     }
