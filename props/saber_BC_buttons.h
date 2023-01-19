@@ -3,7 +3,7 @@ saber_BC_buttons.h
   http://fredrik.hubbe.net/lightsaber/proffieos.html
   Copyright (c) 2016-2019 Fredrik Hubinette
   Copyright (c) 2023 Brian Conner with contributions by:
-  Fredrik Hubinette, Fernando da Rosa, and Matthew McGeary and caiwyn.
+  Fredrik Hubinette, Fernando da Rosa, Matthew McGeary and Scott Weber.
   Distributed under the terms of the GNU General Public License v3.
   http://www.gnu.org/licenses/
 
