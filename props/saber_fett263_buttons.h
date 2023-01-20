@@ -513,6 +513,9 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
     FETT263_TWIST_OFF
     To enable Twist Off Retraction control
 
+    FETT263_TWIST_OFF_NO_POSTOFF
+    To enable Twist Off Retraction control, skips Postoff
+
   == Twist On ==
     Gesture Ignition via Twist (back and forth)
     You can use one of the following defines to enable twist on:
@@ -770,12 +773,24 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #error You cannot define both FETT263_STAB_ON and FETT263_STAB_ON_PREON
 #endif
 
+#if defined(FETT263_TWIST_OFF) && defined(FETT263_TWIST_OFF_NO_POSTOFF)
+#error You cannot define both FETT263_TWIST_OFF and FETT263_TWIST_OFF_NO_POSTOFF
+#endif
+
 #if defined(FETT263_FORCE_PUSH_ALWAYS_ON) && defined(FETT263_FORCE_PUSH)
 #error You cannot define both FETT263_FORCE_PUSH_ALWAYS_ON and FETT263_FORCE_PUSH
 #endif
 
 #if defined(FETT263_CLASH_STRENGTH_SOUND) && !defined(FETT263_MAX_CLASH)
 #define FETT263_MAX_CLASH 16
+#endif
+
+#ifdef FETT263_TWIST_OFF
+#define TWIST_OFF_GESTURE
+#endif
+
+#ifdef FETT263_TWIST_OFF_NO_POSTOFF
+#define TWIST_OFF_GESTURE
 #endif
 
 #ifdef FETT263_SWING_ON
@@ -923,7 +938,7 @@ public:
 #else
     CONFIG_VARIABLE2(stabon, 0);
 #endif
-#ifdef FETT263_TWIST_OFF
+#ifdef TWIST_OFF_GESTURE
     CONFIG_VARIABLE2(twistoff, 1);
 #else
     CONFIG_VARIABLE2(twistoff, 0);
@@ -6043,7 +6058,11 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND          
         SelectRetractionSound();
 #endif  
+#ifdef FETT263_TWIST_OFF_NO_POSTOFF  
+        Off(OFF_FAST);
+#else
         Off();
+#endif
         saber_off_time_millis_ = millis();
 #ifndef FETT263_BATTLE_MODE_ALWAYS_ON
         battle_mode_ = false;
@@ -6211,10 +6230,26 @@ SaberFett263Buttons() : PropBase() {}
         hybrid_font.PlayCommon(&SFX_quote);
         return;
       case EFFECT_FAST_OFF:
+      case EFFECT_OFF:
         if (SaberBase::IsOn()) {
-          Off();
+#ifdef FETT263_DUAL_MODE_SOUND          
+          SelectRetractionSound();
+#endif
+          if (effect == EFFECT_FAST_OFF) {
+            Off(OFF_FAST);
+          } else {
+            Off();
+          }
           saber_off_time_millis_ = millis();
         }
+        return;
+      case EFFECT_SECONDARY_RETRACTION:
+        if (SaberBase::IsOn()) {
+#ifdef FETT263_DUAL_MODE_SOUND
+          SelectRetractionSound();
+#endif
+          hybrid_font.PlayCommon(&SFX_in);
+	}
         return;
       case EFFECT_POWERSAVE:
         if (SFX_dim) {
@@ -6235,9 +6270,28 @@ SaberFett263Buttons() : PropBase() {}
             hybrid_font.PlayCommon(&SFX_faston);
           }
         } else {
+#ifdef FETT263_DUAL_MODE_SOUND          
+          SelectIgnitionSound();
+#endif
           FastOn();
           preon_effect_ = false;
         }
+        return;
+      case EFFECT_ON:
+        if (!SaberBase::IsOn()) {
+#ifdef FETT263_DUAL_MODE_SOUND          
+          SelectIgnitionSound();
+#endif
+          On();
+        }
+        return;
+      case EFFECT_SECONDARY_IGNITION:
+        if (SaberBase::IsOn()) {
+#ifdef FETT263_DUAL_MODE_SOUND          
+          SelectIgnitionSound();
+#endif 
+          hybrid_font.PlayCommon(&SFX_out);
+	}
         return;
       case EFFECT_TRANSITION_SOUND: hybrid_font.PlayCommon(&SFX_tr); return;
       case EFFECT_SOUND_LOOP: SoundLoop(); return;
