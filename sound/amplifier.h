@@ -23,7 +23,9 @@ public:
 //    if (saber_synth.on_) return true;
 //    if (audio_splicer.isPlaying()) return true;
     if (beeper.isPlaying()) return true;
+#ifndef DISABLE_TALKIE
     if (talkie.isPlaying()) return true;
+#endif
     for (size_t i = 0; i < NELEM(wav_players); i++)
       if (wav_players[i].isPlaying())
         return true;
@@ -113,8 +115,10 @@ protected:
 //      STDOUT.println(audio_splicer.isPlaying() ? "On" : "Off");
       STDOUT.print("Beeper: ");
       STDOUT.println(beeper.isPlaying() ? "On" : "Off");
+#ifndef DISABLE_TALKIE
       STDOUT.print("Talker: ");
       STDOUT.println(talkie.isPlaying() ? "On" : "Off");
+#endif
       for (size_t i = 0; i < NELEM(wav_players); i++) {
 	STDOUT << "Wav player " << i << ": "
 	       << (wav_players[i].isPlaying() ? "On" : "Off")
