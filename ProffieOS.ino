@@ -78,6 +78,14 @@
 #define SAVE_COLOR_CHANGE
 #endif
 
+#if defined(SPEAK_BLADE_ID) && defined(DISABLE_TALKIE)
+#error You cannot use SPEAK_BLADE_ID with DISABLE_TALKIE
+#endif
+
+#if defined(SPEAK_TOUCH_VALUES) && defined(DISABLE_TALKIE)
+#error You cannot use SPEAK_TOUCH_VALUES with DISABLE_TALKIE
+#endif
+
 // #define ENABLE_DEBUG
 
 
