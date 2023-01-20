@@ -4,9 +4,6 @@
 #ifndef NO_BATTERY_MONITOR
 
 #include "analog_read.h"
-#ifdef DISABLE_TALKIE
-#include "../sound/sound_library.h"
-#endif
 
 class BatteryMonitor : Looper, CommandParser, StateMachine {
 public:
