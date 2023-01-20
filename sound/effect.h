@@ -596,13 +596,25 @@ class Effect {
 #ifdef ENABLE_AUDIO
 #if VERSION_MAJOR <= 3	
       if (strlen(dir) > 8) { // TODO: Check individual path segments
-	talkie.Say(talkie_font_directory_15, 15);
+#ifdef DISABLE_TALKIE
+        beeper.Beep(0.5, 2000);
+        beeper.Beep(0.25, 500);
+        beeper.Beep(0.5, 2000);
+#else
+        talkie.Say(talkie_font_directory_15, 15);
 	talkie.Say(talkie_too_long_15, 15);
+#endif
       } else
 #endif
         if (strlen(dir)) {
+#ifdef DISABLE_TALKIE
+          beeper.Beep(0.5, 2000);
+          beeper.Beep(0.25, 500);
+          beeper.Beep(0.5, 2000);
+#else
 	  talkie.Say(talkie_font_directory_15, 15);
 	  talkie.Say(talkie_not_found_15, 15);
+#endif
 	}
 #endif   // ENABLE_AUDIO
     }
