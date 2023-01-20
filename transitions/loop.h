@@ -16,7 +16,7 @@ public:
   bool done() { return false; }
 };
 
-// Usage: TrLoop<PULSE, TRANSITION, OUT>
+// Usage: TrLoopUntil<PULSE, TRANSITION, OUT>
 // TRANSITION, OUT: TRANSITION
 // PULSE: FUNCTION (pulse)
 // Return Value: TRANSITION
