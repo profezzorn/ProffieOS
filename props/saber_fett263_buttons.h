@@ -685,10 +685,6 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #define FETT263_USE_SETTINGS_MENU
 #endif
 
-#if defined(FETT263_SAY_COLOR_LIST) || defined(FETT263_SAY_COLOR_LIST_CC)
-#define SAY_COLOR_LIST
-#endif
-
 #if NUM_BUTTONS < 1
 #error /props/saber_fett263_buttons.h requires 1, 2 or 3 Buttons for operation
 #endif
