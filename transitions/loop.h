@@ -26,25 +26,21 @@ template<class N, class TRANSITION>
 class TrLoopN : public TRANSITION {
 public:
   void run(BladeBase* blade) {
-    n_.run(blade);
-    num_loops_ = n_.calculate(blade);
-    if (loops_ < num_loops_ && TRANSITION::done()) {
-      TRANSITION::begin();
-      loops_ += 1;
+    if (loops_ < 0) loops_ = n_.calculate(blade);
+    if (loops_ > 0 && TRANSITION::done()) {
+      if (loops_ > 1) TRANSITION::begin();
+      loops_--;
     }
     TRANSITION::run(blade);
   }
   void begin() {
     TRANSITION::begin();
-    loops_ = 1;
+    loops_ = -1;
   }
-  bool done() {
-    return loops_ == num_loops_ && TRANSITION::done(); 
-  }
+  bool done() { return loops_ == 0; }
 
 private:
   int loops_;
-  int num_loops_;
   PONUA SVFWrapper<N> n_;
 };
 
