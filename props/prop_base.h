@@ -114,10 +114,6 @@ private:
 };
 #endif
 
-#ifdef DISABLE_TALKIE
-#include "../sound/sound_library.h"
-#endif
-
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase {
 public:
