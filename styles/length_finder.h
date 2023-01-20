@@ -35,7 +35,11 @@ public:
       last_speak_ = millis();
       say_it_ = false;
 #ifdef ENABLE_AUDIO
+#ifdef DISABLE_TALKIE
+      sound_library_.SayNumber(led_ + 1, SAY_WHOLE);
+#else
       talkie.SayNumber(led_ + 1);
+#endif
 #endif
       STDOUT << "LEN=" << (led_ + 1) << "\n";
     }
