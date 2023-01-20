@@ -12,28 +12,24 @@
 //                            track is not playing
 //          Start/Stop Track: Click Aux
 //                Next Track: Hold Aux for 1 second while track is playing
+//                            | Tracks must be stored in <font>/tracks/*.wav
+//                            | and will be selected in alphabetical order.
 //         Track Player Mode: Double-click and hold Aux for 1 second while
 //                            track is playing
 //                            | This cycles through three playback modes:
 //                            | 1. Play a single track and stop (default)
 //                            | 2. Repeat a single track in a loop
 //                            | 3. Repeat all tracks in a loop
-//                            | Tracks must be in <font>/tracks/*.wav, and will
-//                            | be selected in alphabetical order.
 //             Turn Saber On: Press Power
 //     Turn On & Start Track: Hold Aux or Aux2 and press Power
 //
 // While saber is ON:
-//   Non-impact Clash/Lockup: Click/Hold Power
-//                            | This generates a clash/lockup effect with no
-//                            | impact to the blade; quick press for a short
-//                            | clash, hold for a lockup.
 //             Blaster Block: Click Aux
 //                    Lockup: Hold Aux or Aux2 during impact
 //                      Drag: Hold Aux or Aux2 during impact with blade pointed
 //                            down.
 //                      Melt: Hold Aux or Aux2 and stab
-//           Lightning Block: Hold Aux2 and Press Aux (3 buttons required)
+//           Lightning Block: Click/Hold Power
 //
 //         Enter Volume Menu: Double-click and hold Aux for 1 second
 //                            | Be aware that the first click will trigger a
@@ -55,14 +51,23 @@
 //
 //            Turn Saber Off: Hold Aux or Aux2 and press Power
 //
+// If CAIWYN_BUTTON_LOCKUP and/or CAIWYN_BUTTON_CLASH is defined:
+//   Non-impact Clash/Lockup: Click/Hold Power
+//                            | This generates a clash/lockup effect with no
+//                            | impact to the blade; quick press for a short
+//                            | clash, hold for a lockup.  This effect
+//                            | replaces the Lightning Block for sabers with
+//                            | only 2 buttons.
+//           Lightning Block: Hold Aux2 and press Aux (requires 3 buttons)
+//
 // You will need the following sound files in order for menus to work properly:
-// (missing sound files will be replaced with simple beeps)
 // vmbegin.wav              - Enter Volume Change Menu
 // vmend.wav                - Save Volume Change
-// vmreset.wav              - Reset Volume
+// volmax.wav               - Reset to Maximum Volume
 // monce.wav                - Set Track Player to play a single track one time
 // mloop.wav                - Set Track Player to repeat a single track
 // mrotate.wav              - Set Track Player to repeat all tracks
+// mselect.wav              - Next Track (can be omitted if you prefer)
 // ccbegin.wav              - Enter Color Change Mode
 // ccend01.wav              - Save Color and Exit Color Change Mode
 // ccend02.wav              - Reset Color and Exit Color Change Mode
@@ -75,23 +80,46 @@
 // https://drive.google.com/file/d/1cSBirX5STOVPanOkOlIeb0eofjx-qFmj/view
 //
 // Options you can add to your config file:
+// #define CAIWYN_BUTTON_CLASH    - Enables a clash to be triggered without
+//                                  impact to the blade by pressing the power
+//                                  button.  This effect replaces lightning
+//                                  blocks for two-button sabers, but if a
+//                                  saber has three buttons, the lightning
+//                                  block can be triggered by holding AUX2 and
+//                                  pressing AUX.
+//
+// #define CAIWYN_BUTTON_LOCKUP   - Enables a lockup to be triggered without
+//                                  impact to the blade by pressing and holding
+//                                  the power button.
+//                                  If both CAIWYN_BUTTON_LOCKUP and
+//                                  CAIWYN_BUTTON_CLASH are defined, pressing
+//                                  the power button triggers a lockup, but a
+//                                  clash sound is overlayed on top of the
+//                                  lockup sounds to smooth out the transition
+//                                  from bgnlock and endlock sounds for quick
+//                                  clashes.  I recommend this configuration.
+//
+// #define CAIWYN_SAVE_TRACKS     - Automatically saves the selected track for
+//                                  each preset. Any time the user holds the
+//                                  Aux button for one second to change the
+//                                  active track, the preset is updated to
+//                                  default to that track. This ONLY happens
+//                                  when the user selects the track directly;
+//                                  if the Track Player Mode is set to repeat
+//                                  all tracks, the saved track is not updated
+//                                  when the next track is automatically
+//                                  played.
+//                                  If SAVE_STATE is defined, then this will
+//                                  automatically be defined as well.
+//
+// #define CAIWYN_SAVE_TRACK_MODE - Saves the selected track mode to a config
+//                                  file so that the setting is restored when
+//                                  Proffieboard boots up after the battery is
+//                                  recharged or replaced.
+//                                  If SAVE_STATE is defined, then this will
+//                                  automatically be defined as well.
+//
 // #define DISABLE_COLOR_CHANGE   - Disables the color change menu.
-// #define CAIWYN_DISABLE_BEEPS   - Disables the single beep that occurs when
-//                                  selecting fonts, tracks, or entering or
-//                                  exiting the volume and color change menus.
-//                                  Note that beeps will still play if any
-//                                  sound file listed above is missing.
-// #define CAIWYN_NOCLASH_LOCKUP  - When you click the power button, both a
-//                                  clash sound and a lockup are simultaneously
-//                                  triggered.  This is because I have found
-//                                  that quickly starting and ending a lockup
-//                                  often sounds like multiple clashes rather
-//                                  than a single clash.
-//                                  To smooth everything out, a clash sound is
-//                                  mixed in as well.  This works for most
-//                                  fonts, but if it sounds weird you can
-//                                  disable the clash sound and just use the
-//                                  lockup by itself.
 
 #ifndef PROPS_CAIWYN_BUTTONS_H
 #define PROPS_CAIWYN_BUTTONS_H
@@ -127,12 +155,28 @@
 #define BUTTON_HELD_LONG_TIMEOUT 2000
 #endif
 
+#ifdef SAVE_STATE
+#define CAIWYN_SAVE_TRACKS
+#define CAIWYN_SAVE_TRACK_MODE
+#endif
+
 EFFECT(vmbegin);
 EFFECT(vmend);
-EFFECT(vmreset);
+EFFECT(volmax);
 EFFECT(monce);
 EFFECT(mloop);
 EFFECT(mrotate);
+EFFECT(mselect);
+
+#ifdef CAIWYN_SAVE_TRACK_MODE
+class SaveCaiwynStateFile : public ConfigFile {
+public:
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(track_mode, 0);
+  }
+  int track_mode;
+};
+#endif
 
 // The Saber class implements the basic states and actions for the saber.
 class CaiwynButtons : public PropBase {
@@ -143,7 +187,7 @@ public:
   void Loop() override {
     PropBase::Loop();
     DetectMenuTurn();
-    TrackPlayer();
+    PollTrackPlayer();
     sound_library_.Poll(wav_player_);
   }
 
@@ -155,7 +199,6 @@ public:
   bool Parse(const char *cmd, const char* arg) override {
     if (PropBase::Parse(cmd, arg)) return true;
     if (!strcmp(cmd, "list_current_tracks")) {
-// Tracks must be in: <font>/tracks/*.wav
       LOCK_SD(true);
       for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
         PathHelper path(dir, "tracks");
@@ -171,9 +214,6 @@ public:
     current_menu_angle_ = fusor.angle2();
     mode_volume_ = true;
     if (SFX_vmbegin) {
-#ifndef CAIWYN_DISABLE_BEEPS
-      beeper.Beep(0.1, 2000);
-#endif
       hybrid_font.PlayPolyphonic(&SFX_vmbegin);
     } else {
       beeper.Beep(0.20,1000.0);
@@ -204,9 +244,6 @@ public:
   void VolumeSave() {
     mode_volume_ = false;
     if (SFX_vmend) {
-#ifndef CAIWYN_DISABLE_BEEPS
-      beeper.Beep(0.1, 2000);
-#endif
       hybrid_font.PlayPolyphonic(&SFX_vmend);
     } else {
       beeper.Beep(0.20,2000.0);
@@ -219,15 +256,9 @@ public:
   void VolumeReset() {
     dynamic_mixer.set_volume(VOLUME);
     mode_volume_ = false;
-    if (SFX_vmreset) {
-#ifndef CAIWYN_DISABLE_BEEPS
-      beeper.Beep(0.1, 2000);
-#endif
-      hybrid_font.PlayPolyphonic(&SFX_vmreset);
+    if (SFX_volmax) {
+      hybrid_font.PlayPolyphonic(&SFX_volmax);
     } else if (SFX_vmend) {
-#ifndef CAIWYN_DISABLE_BEEPS
-      beeper.Beep(0.1, 2000);
-#endif
       hybrid_font.PlayPolyphonic(&SFX_vmend);
     } else {
       beeper.Beep(0.20,2000.0);
@@ -255,43 +286,58 @@ public:
     }
   }
 
-// Fett263 Track Player, modified by Caiwyn
   enum TrackMode {
     PLAYBACK_ONCE,
     PLAYBACK_LOOP,
     PLAYBACK_ROTATE,
   };
 
-  void TrackPlayer() {
-    if (track_player_on_ && !track_player_->isPlaying()) {
-      if (track_player_) track_player_.Free();
+#ifdef CAIWYN_SAVE_TRACK_MODE
+  SaveCaiwynStateFile saved_caiwyn_state;
+  void RestoreCaiwynState() {
+    saved_caiwyn_state.ReadINIFromDir(NULL, "caiwyn");
+    track_mode_ = (TrackMode) saved_caiwyn_state.track_mode;
+  }
+
+  void SaveCaiwynState() {
+    saved_caiwyn_state.track_mode = (int) track_mode_;
+    saved_caiwyn_state.WriteToRootDir("caiwyn");
+  }
+
+  void Setup() override {
+    RestoreCaiwynState();
+  }
+#endif
+
+  void PollTrackPlayer() {
+    if (track_player_on_ && !track_player_) {
       switch (track_mode_) {
         case PLAYBACK_ONCE:
-          track_player_on_ = false;
+          StopTrackPlayer();
           break;
         case PLAYBACK_LOOP:
-          if (num_tracks_ <= 0) {
-            StartOrStopTrack();
-          } else {
-            PlayTrack();
-          }
+          PlayTrack(current_track_);
           break;
         case PLAYBACK_ROTATE:
-          NextTrack();
+          NextTrack(false);
           break;
       }
+    } else if (track_player_ && !track_player_->isPlaying()) {
+        track_player_.Free();
     }
   }
 
-  void PlayTrack() {
-    if (!current_track_) {
-      strcpy(current_track_,current_preset_.track.get());
-    }
-    MountSDCard();
-    EnableAmplifier();
+  bool TrackExists(const char* track) {
+    LOCK_SD(true);
+    bool exists = LSFS::Exists(track);
+    LOCK_SD(false);
+    return exists;
+  }
+
+  void PlayTrack(const char* track) {
     track_player_ = GetFreeWavPlayer();
     if (track_player_) {
-      track_player_->Play(current_track_);
+      track_player_->Play(track);
     } else {
       STDOUT.println("No available WAV players.");
     }
@@ -299,11 +345,14 @@ public:
 
   void StartTrackPlayer() {
     num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
-    if (num_tracks_ > 0) {
-      PlayTrack();
-    } else {
-      StartOrStopTrack();
+    STDOUT.println("Track player started.");
+    if (!current_track_) strcpy(current_track_,current_preset_.track.get());
+    if (!TrackExists(current_track_)) {
+      STDOUT.print(current_track_);
+      STDOUT.println(" not found.");
+      RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, nullptr, current_track_, false);
     }
+    PlayTrack(current_track_);
     track_player_on_ = true;
   }
 
@@ -312,30 +361,34 @@ public:
     if (track_player_) {
       track_player_->Stop();
       track_player_.Free();
-    } else {
-      StartOrStopTrack();
     }
+    STDOUT.println("Track player stopped.");
+#ifdef CAIWYN_SAVE_TRACK_MODE
+    SaveCaiwynState();
+#endif
   }
 
-  void NextTrack() {
+  void NextTrack(bool manually_selected) {
+    if (manually_selected) {
+      track_player_->Stop();
+      track_player_.Free();
+#ifdef CAIWYN_SAVE_TRACKS
+      current_preset_.track = mkstr(current_track_);
+      current_preset_.Save();
+#endif
+      if (SFX_mselect) {
+        hybrid_font.PlayPolyphonic(&SFX_mselect);
+      }
+    }
     if (num_tracks_ > 0) {
-      if (track_player_->isPlaying()) track_player_->Stop();
-      if (track_player_) track_player_.Free();
       char next_track[128];
       next_track[0] = 0;
       if (!RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, current_track_, next_track, false)) {
         RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, nullptr, next_track, false);
       }
       strcpy(current_track_, next_track);
-#ifdef SAVE_TRACK
-      current_preset_.track = mkstr(current_track_);
-      current_preset_.Save();
-#endif
-      PlayTrack();
-    } else {
-      StartOrStopTrack();
-      StartOrStopTrack();
     }
+    PlayTrack(current_track_);
   }
 
   void ChangeTrackMode() {
@@ -343,48 +396,40 @@ public:
       case PLAYBACK_ONCE:
         track_mode_ = PLAYBACK_LOOP;
         if (SFX_mloop) {
-#ifndef CAIWYN_DISABLE_BEEPS
-          beeper.Beep(0.1, 2000);
-#endif
           hybrid_font.PlayPolyphonic(&SFX_mloop);
         } else {
           beeper.Beep(0.20,1000);
           beeper.Beep(0.20,2000);
           beeper.Beep(0.20,1000);
         }
+        STDOUT.println("Track player set to repeat single track.");
         break;
       case PLAYBACK_LOOP:
         track_mode_ = PLAYBACK_ROTATE;
         if (SFX_mrotate) {
-#ifndef CAIWYN_DISABLE_BEEPS
-          beeper.Beep(0.1, 2000);
-#endif
           hybrid_font.PlayPolyphonic(&SFX_mrotate);
         } else {
           beeper.Beep(0.20,1000);
           beeper.Beep(0.20,2000);
           beeper.Beep(0.20,1000);
         }
+        STDOUT.println("Track player set to repeat all tracks.");
         break;
       case PLAYBACK_ROTATE:
         track_mode_ = PLAYBACK_ONCE;
         if (SFX_monce) {
-#ifndef CAIWYN_DISABLE_BEEPS
-          beeper.Beep(0.1, 2000);
-#endif
           hybrid_font.PlayPolyphonic(&SFX_monce);
         } else {
           beeper.Beep(0.20,1000);
           beeper.Beep(0.20,2000);
           beeper.Beep(0.20,1000);
         }
+        STDOUT.println("Track player set to play single track.");
+        break;
     }
   }
 
   void CheckBattery() {
-#ifndef CAIWYN_DISABLE_BEEPS
-    beeper.Beep(0.1, 2000);
-#endif
     SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
     if (SFX_mnum) {
       sound_library_.SayBatteryLevel();
@@ -402,9 +447,6 @@ public:
   void ResetColorChangeMode() {
     if (!current_style()) return;
     if (SFX_ccend) {
-#ifndef CAIWYN_DISABLE_BEEPS
-      beeper.Beep(0.1, 2000);
-#endif
       SFX_ccend.Select(1);
     }
     STDOUT << "Reset Color Variation" << "\n";
@@ -428,7 +470,7 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF | BUTTON_AUX2):
 #endif
         On();
-        if (!track_player_) {
+        if (!track_player_on_) {
           StartTrackPlayer();
         }
         return true;
@@ -446,7 +488,7 @@ public:
 
 // Start or Stop Track
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-        if (track_player_) {
+        if (track_player_on_) {
           StopTrackPlayer();
         } else {
           StartTrackPlayer();
@@ -455,15 +497,10 @@ public:
 
 // Next Preset/Track
       case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
-#ifndef CAIWYN_DISABLE_BEEPS
-        beeper.Beep(0.1, 2000);
-#endif
-        if (track_player_) {
-          NextTrack();
+        if (track_player_on_) {
+          NextTrack(true);
         } else {
           next_preset();
-          strcpy(current_track_,current_preset_.track.get());
-          track_mode_ = PLAYBACK_ONCE;
         }
         return true;
 
@@ -478,22 +515,24 @@ public:
         }
         break;
 
-// Non-Impact Clash and Lockup / Zoom Color
+// Lightning Block / Non-Impact Clash and Lockup / Zoom Color
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
         if (!SaberBase::Lockup() && !mode_volume_ && (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE)) {
+#ifdef CAIWYN_BUTTON_LOCKUP
           SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
           SaberBase::DoBeginLockup();
-#ifndef CAIWYN_NOCLASH_LOCKUP
+#ifdef CAIWYN_BUTTON_CLASH
           hybrid_font.PlayPolyphonic(&SFX_clsh);
+#endif
+#elif defined(CAIWYN_BUTTON_CLASH)
+          SaberBase::DoClash();
+#else
+          SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+          SaberBase::DoBeginLockup();
 #endif
           return true;
 #ifndef DISABLE_COLOR_CHANGE
         } else if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
-#ifndef CAIWYN_DISABLE_BEEPS
-          if (SFX_ccend) {
-            beeper.Beep(0.1, 2000);
-          }
-#endif
           SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
           return true;
 #endif;
@@ -508,9 +547,6 @@ public:
 #ifndef DISABLE_COLOR_CHANGE
         } else if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_STEPPED) {
           if (SFX_ccend) {
-#ifndef CAIWYN_DISABLE_BEEPS
-            beeper.Beep(0.1, 2000);
-#endif
             SFX_ccend.Select(0);
           }
           ToggleColorChangeMode();
@@ -584,11 +620,6 @@ public:
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_AUX, EVENT_THIRD_HELD_MEDIUM, MODE_ON):
         if (!mode_volume_) {
-#ifndef CAIWYN_DISABLE_BEEPS
-          if (SFX_ccbegin) {
-            beeper.Beep(0.1, 2000);
-          }
-#endif
           ToggleColorChangeMode();
           return true;
         }
@@ -596,10 +627,10 @@ public:
 #endif
 
 // Lightning Block
-#if NUM_BUTTONS > 2
+#if NUM_BUTTONS > 2 && defined(CAIWYN_BUTTON_LOCKUP)
       case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON | BUTTON_AUX2):
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON | BUTTON_AUX):
-        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+        SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
         SaberBase::DoBeginLockup();
         return true;
 #endif

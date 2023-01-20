@@ -143,6 +143,7 @@ Monitoring monitor;
 #include "../transitions/fade.h"
 #include "../transitions/instant.h"
 #include "../transitions/random.h"
+#include "../transitions/loop.h"
 #include "../functions/blade_angle.h"
 #include "../functions/twist_angle.h"
 #include "../functions/swing_speed.h"
@@ -621,6 +622,11 @@ void TestCompileStyle() {
     TransitionEffectL< TrConcat<TrFade<1>, TrFade<1>, TrFade<1>, White, TrFade<1>>, EFFECT_BLAST>
     >> t2;
     
+  TestStyle<Layers<
+    Black,
+    TransitionEffectL< TrLoop< TrFade<1> >, EFFECT_BLAST>,
+    TransitionEffectL< TrLoopUntil< Int<1>, TrFade<1>, TrFade<1>>, EFFECT_BLAST>
+	      >> t3;
 }
 
 

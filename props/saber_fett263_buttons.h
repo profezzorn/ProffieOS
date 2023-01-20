@@ -55,6 +55,10 @@ Standard Controls While Blade is OFF
   NEW! Toggle Gesture Sleep* = Hold PWR + Clash
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
+  NEW! Toggle Spin Mode* = Hold PWR + Swing
+    Disables Clash, Stab and Lockup effects to allow for spinning and flourishes
+    Will play bmbegin.wav or force.wav when toggled ON/OFF
+    *requires FETT263_SPIN_MODE define
   Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
     Hold PWR + Turn Right = Special Ability 5 (USER5)
     Hold PWR + Turn Left = Special Ability 6 (USER6)
@@ -255,6 +259,10 @@ Standard Controls While Blade is OFF
     Hold PWR + Turn Left (parallel or up) = Special Ability 6 (USER6)
     Hold PWR + Turn Right (pointing down) = Special Ability 7 (USER7)
     Hold PWR + Turn Left (pointing down) = Special Ability 8 (USER8)
+  NEW! Toggle Spin Mode* = Hold PWR + Swing
+    Disables Clash, Stab and Lockup effects to allow for spinning and flourishes
+    Will play bmbegin.wav or force.wav when toggled ON/OFF
+    *requires FETT263_SPIN_MODE define
   NEW! Toggle Gesture Sleep* = Hold PWR + Twist
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
@@ -505,6 +513,9 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
     FETT263_TWIST_OFF
     To enable Twist Off Retraction control
 
+    FETT263_TWIST_OFF_NO_POSTOFF
+    To enable Twist Off Retraction control, skips Postoff
+
   == Twist On ==
     Gesture Ignition via Twist (back and forth)
     You can use one of the following defines to enable twist on:
@@ -564,6 +575,11 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   Special Abilities are controlled by the style and can vary in every preset, they are "user" defined effects/capabilities.
   Allows "Multi-Phase" to be style based, replaces FETT263_MULTI_PHASE.
   Cannot be used with FETT263_MULTI_PHASE or FETT263_SAVE_CHOREOGRAPHY
+
+  FETT263_ENABLE_SPIN_MODE
+  Enables toggle for "Spin" Mode* which disables all clash/stab/lockup effects to allow for spinning and flourishes.
+  Cannot be used with FETT263_SAVE_CHOREOGRAPHY or FETT263_HOLD_BUTTON_LOCKUP
+  *Not the same as ENABLE_SPINS
 
   FETT263_MULTI_PHASE
   This will enable a preset change while ON to create a "Multi-Phase" saber effect
@@ -737,6 +753,14 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #error You cannot define both FETT263_BATTLE_MODE_START_ON and FETT263_STAB_ON_NO_BM
 #endif
 
+#if defined(FETT263_SPIN_MODE) && defined(FETT263_SAVE_CHOREOGRAPHY)
+#error FETT263_SPIN_MODE cannot be used with FETT263_SAVE_CHOREOGRAPHY
+#endif
+
+#if defined(FETT263_SPIN_MODE) && defined(FETT263_HOLD_BUTTON_LOCKUP)
+#error FETT263_SPIN_MODE cannot be used with FETT263_HOLD_BUTTON_LOCKUP
+#endif
+
 #if defined(FETT263_SWING_ON) && defined(FETT263_SWING_ON_PREON)
 #error You cannot define both FETT263_SWING_ON and FETT263_SWING_ON_PREON
 #endif
@@ -749,12 +773,24 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #error You cannot define both FETT263_STAB_ON and FETT263_STAB_ON_PREON
 #endif
 
+#if defined(FETT263_TWIST_OFF) && defined(FETT263_TWIST_OFF_NO_POSTOFF)
+#error You cannot define both FETT263_TWIST_OFF and FETT263_TWIST_OFF_NO_POSTOFF
+#endif
+
 #if defined(FETT263_FORCE_PUSH_ALWAYS_ON) && defined(FETT263_FORCE_PUSH)
 #error You cannot define both FETT263_FORCE_PUSH_ALWAYS_ON and FETT263_FORCE_PUSH
 #endif
 
 #if defined(FETT263_CLASH_STRENGTH_SOUND) && !defined(FETT263_MAX_CLASH)
 #define FETT263_MAX_CLASH 16
+#endif
+
+#ifdef FETT263_TWIST_OFF
+#define TWIST_OFF_GESTURE
+#endif
+
+#ifdef FETT263_TWIST_OFF_NO_POSTOFF
+#define TWIST_OFF_GESTURE
 #endif
 
 #ifdef FETT263_SWING_ON
@@ -902,7 +938,7 @@ public:
 #else
     CONFIG_VARIABLE2(stabon, 0);
 #endif
-#ifdef FETT263_TWIST_OFF
+#ifdef TWIST_OFF_GESTURE
     CONFIG_VARIABLE2(twistoff, 1);
 #else
     CONFIG_VARIABLE2(twistoff, 0);
@@ -4646,8 +4682,9 @@ SaberFett263Buttons() : PropBase() {}
     sound_library_.SayBatteryPercent();
 #elif defined(FETT263_SAY_BATTERY_VOLTAGE)
     sound_library_.SayBatteryVolts();
+#else
+    hybrid_font.PlayCommon(&SFX_battery);
 #endif
-    SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
   }
 
   // Go to first Preset.
@@ -4842,7 +4879,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_CLICK_LONG, MODE_OFF):
         if (menu_) return true;      
-        DoBattery();
+        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -5038,6 +5075,9 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
         if (menu_ || CheckShowColorCC()) return true;
+#ifdef FETT263_SPIN_MODE
+        if (spin_mode_) return true;
+#endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
           RehearseLockup();
@@ -5061,6 +5101,9 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
         if (menu_ || CheckShowColorCC()) return true;
+#ifdef FETT263_SPIN_MODE
+        if (spin_mode_) return true;
+#endif
         if (!SaberBase::Lockup()) {
           if (fusor.angle1() < - M_PI / 4) {
             SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
@@ -5490,6 +5533,9 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
         if (menu_ || CheckShowColorCC()) return true;
+#ifdef FETT263_SPIN_MODE
+        if (spin_mode_) return true;
+#endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
           RehearseLockup();
@@ -5526,6 +5572,9 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_AUX):
         if (menu_ || CheckShowColorCC()) return true;
+#ifdef FETT263_SPIN_MODE
+        if (spin_mode_) return true;
+#endif
         if (!SaberBase::Lockup()) {
           if (fusor.angle1() < - M_PI / 4) {
             SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
@@ -5605,7 +5654,7 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
         if (menu_) return true;
-        DoBattery();
+        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -5833,6 +5882,9 @@ SaberFett263Buttons() : PropBase() {}
       // Auto Lockup Mode
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
         if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
+#ifdef FETT263_SPIN_MODE
+        if (spin_mode_) return true;
+#endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
           RehearseClash();
@@ -5874,6 +5926,9 @@ SaberFett263Buttons() : PropBase() {}
 
       case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
         if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
+#ifdef FETT263_SPIN_MODE
+        if (spin_mode_) return true;
+#endif
         clash_impact_millis_ = millis();
         check_blast_ = false;
         swing_blast_ = false;
@@ -5915,6 +5970,27 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 
       // Optional Gesture Controls (defines listed at top)
+
+#ifdef FETT263_SPIN_MODE
+    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
+      if (!menu_) {
+        spin_mode_ = !spin_mode_;
+	if (spin_mode_) {
+          if (SFX_bmbegin) {
+            hybrid_font.PlayCommon(&SFX_bmbegin);
+          } else {
+            hybrid_font.DoEffect(EFFECT_FORCE, 0);
+          }
+	} else {
+          if (SFX_bmend) {
+            hybrid_font.PlayCommon(&SFX_bmend);
+          } else {
+            hybrid_font.DoEffect(EFFECT_FORCE, 0);
+          }
+	}
+      }
+      return true;
+#endif
 
 #ifdef FETT263_SWING_ON_PREON
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
@@ -5982,7 +6058,11 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND          
         SelectRetractionSound();
 #endif  
+#ifdef FETT263_TWIST_OFF_NO_POSTOFF  
+        Off(OFF_FAST);
+#else
         Off();
+#endif
         saber_off_time_millis_ = millis();
 #ifndef FETT263_BATTLE_MODE_ALWAYS_ON
         battle_mode_ = false;
@@ -6150,10 +6230,26 @@ SaberFett263Buttons() : PropBase() {}
         hybrid_font.PlayCommon(&SFX_quote);
         return;
       case EFFECT_FAST_OFF:
+      case EFFECT_OFF:
         if (SaberBase::IsOn()) {
-          Off();
+#ifdef FETT263_DUAL_MODE_SOUND          
+          SelectRetractionSound();
+#endif
+          if (effect == EFFECT_FAST_OFF) {
+            Off(OFF_FAST);
+          } else {
+            Off();
+          }
           saber_off_time_millis_ = millis();
         }
+        return;
+      case EFFECT_SECONDARY_RETRACTION:
+        if (SaberBase::IsOn()) {
+#ifdef FETT263_DUAL_MODE_SOUND
+          SelectRetractionSound();
+#endif
+          hybrid_font.PlayCommon(&SFX_in);
+	}
         return;
       case EFFECT_POWERSAVE:
         if (SFX_dim) {
@@ -6162,15 +6258,9 @@ SaberFett263Buttons() : PropBase() {}
           beeper.Beep(0.5, 3000);
         }
         return;
-#if !defined(FETT263_SAY_BATTERY_VOLTS) && !defined(FETT263_SAY_BATTERY_PERCENT)
       case EFFECT_BATTERY_LEVEL:
-        if (SFX_battery) {
-          hybrid_font.PlayCommon(&SFX_battery);
-        } else {
-          beeper.Beep(0.5, 3000);
-        }
+        DoBattery();
         return;
-#endif
       case EFFECT_INTERACTIVE_PREON:
         preon_effect_ = true;
         return;
@@ -6180,9 +6270,28 @@ SaberFett263Buttons() : PropBase() {}
             hybrid_font.PlayCommon(&SFX_faston);
           }
         } else {
+#ifdef FETT263_DUAL_MODE_SOUND          
+          SelectIgnitionSound();
+#endif
           FastOn();
           preon_effect_ = false;
         }
+        return;
+      case EFFECT_ON:
+        if (!SaberBase::IsOn()) {
+#ifdef FETT263_DUAL_MODE_SOUND          
+          SelectIgnitionSound();
+#endif
+          On();
+        }
+        return;
+      case EFFECT_SECONDARY_IGNITION:
+        if (SaberBase::IsOn()) {
+#ifdef FETT263_DUAL_MODE_SOUND          
+          SelectIgnitionSound();
+#endif 
+          hybrid_font.PlayCommon(&SFX_out);
+	}
         return;
       case EFFECT_TRANSITION_SOUND: hybrid_font.PlayCommon(&SFX_tr); return;
       case EFFECT_SOUND_LOOP: SoundLoop(); return;
@@ -6209,6 +6318,9 @@ private:
   bool auto_lockup_on_ = false; // Battle Mode Lockup active
   bool auto_melt_on_ = false; // Battle Mode Melt/Drag active
   bool battle_mode_ = false; // Battle Mode active
+#ifdef FETT263_SPIN_MODE
+  bool spin_mode_ = false;
+#endif
   bool preon_effect_ = false; // used for interactive preon, must be reset with EFFECT_FAST_ON
 #ifdef FETT263_QUICK_SELECT_ON_BOOT  
   bool menu_ = true; // enable MENU_PRESET on boot
