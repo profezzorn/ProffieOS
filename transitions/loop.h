@@ -16,7 +16,39 @@ public:
   bool done() { return false; }
 };
 
-// Usage: TrLoop<PULSE, TRANSITION, OUT>
+// Usage: TrLoopN<N, TRANSITION>
+// N: FUNCTION (number of Loops)
+// TRANSITION: TRANSITION
+// Return Value: TRANSITION
+// Runs the specified transition N times.
+
+template<class N, class TRANSITION>
+class TrLoopN : public TRANSITION {
+public:
+  void run(BladeBase* blade) {
+    n_.run(blade);
+    num_loops_ = n_.calculate(blade);
+    if (loops_ < num_loops_ && TRANSITION::done()) {
+      TRANSITION::begin();
+      loops_ += 1;
+    }
+    TRANSITION::run(blade);
+  }
+  void begin() {
+    TRANSITION::begin();
+    loops_ = 1;
+  }
+  bool done() {
+    return loops_ == num_loops_ && TRANSITION::done(); 
+  }
+
+private:
+  int loops_;
+  int num_loops_;
+  PONUA SVFWrapper<N> n_;
+};
+
+// Usage: TrLoopUntil<PULSE, TRANSITION, OUT>
 // TRANSITION, OUT: TRANSITION
 // PULSE: FUNCTION (pulse)
 // Return Value: TRANSITION
