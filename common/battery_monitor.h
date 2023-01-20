@@ -4,6 +4,9 @@
 #ifndef NO_BATTERY_MONITOR
 
 #include "analog_read.h"
+#ifdef DISABLE_TALKIE
+#include "../sound/sound_library.h"
+#endif
 
 class BatteryMonitor : Looper, CommandParser, StateMachine {
 public:
@@ -97,11 +100,16 @@ protected:
       float v = battery();
       STDOUT.println(v);
 #ifdef ENABLE_AUDIO
+#ifdef DISABLE_TALKIE
+// use common folder for spoken battery
+      sound_library_.SayBatteryVolts();
+#else
       talkie.SayDigit((int)floorf(v));
       talkie.Say(spPOINT);
       talkie.SayDigit(((int)floorf(v * 10)) % 10);
       talkie.SayDigit(((int)floorf(v * 100)) % 10);
       talkie.Say(spVOLTS);
+#endif
 #endif
       return true;
     }
