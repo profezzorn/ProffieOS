@@ -784,7 +784,9 @@ public:
     if (SFX_lowbatt) {
       PlayCommon(&SFX_lowbatt);
     } else {
-#ifdef ENABLE_AUDIO
+#if defined(ENABLE_AUDIO) && defined(DISABLE_TALKIE)
+      beeper.Beep(1.0, 300);
+#else
       talkie.Say(talkie_low_battery_15, 15);
 #endif
     }
