@@ -11,11 +11,15 @@
 #include "dynamic_mixer.h"
 #include "dac.h"
 #include "beeper.h"
+#ifndef DISABLE_TALKIE
 #include "talkie.h"
+#endif
 #include "lightsaber_synth.h"
 
 Beeper beeper;
+#ifndef DISABLE_TALKIE
 Talkie talkie;
+#endif
 
 // LightSaberSynth saber_synth;
 #include "buffered_audio_stream.h"
@@ -115,7 +119,9 @@ void SetupStandardAudioLow() {
     wav_players[i].reset_volume();
   }
   dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
+#ifndef DISABLE_TALKIE
   dynamic_mixer.streams_[NELEM(wav_players)+1] = &talkie;
+#endif
 }
 
 void SetupStandardAudio() {
