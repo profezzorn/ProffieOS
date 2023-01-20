@@ -16,14 +16,16 @@ public:
   bool done() { return false; }
 };
 
-// Usage: TrLoopN<N, TRANSITION>
-// N: FUNCTION (number of Loops)
+// Usage: TrLoopNX<N_FUNCTION, TRANSITION>
+// or: TrLoopN<N, TRANSITION>
+// N_FUNCTION: FUNCTION (number of Loops)
+// N: a number (Loops)
 // TRANSITION: TRANSITION
 // Return Value: TRANSITION
 // Runs the specified transition N times.
 
 template<class N, class TRANSITION>
-class TrLoopN : public TRANSITION {
+class TrLoopNX : public TRANSITION {
 public:
   void run(BladeBase* blade) {
     if (loops_ < 0) loops_ = n_.calculate(blade);
@@ -43,6 +45,8 @@ private:
   int loops_;
   PONUA SVFWrapper<N> n_;
 };
+
+template<int N, class TRANSITION> using TrLoopN = TrLoopNX<Int<N>, TRANSITION>;
 
 // Usage: TrLoopUntil<PULSE, TRANSITION, OUT>
 // TRANSITION, OUT: TRANSITION
