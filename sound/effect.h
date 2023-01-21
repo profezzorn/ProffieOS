@@ -608,9 +608,8 @@ class Effect {
 #endif
         if (strlen(dir)) {
 #ifdef DISABLE_TALKIE
-          beeper.Beep(0.5, 2000);
-          beeper.Beep(0.25, 500);
-          beeper.Beep(0.5, 2000);
+          beeper.Beep(0.5, 500);
+          beeper.Beep(0.5, 3000);
 #else
 	  talkie.Say(talkie_font_directory_15, 15);
 	  talkie.Say(talkie_not_found_15, 15);
@@ -642,9 +641,8 @@ class Effect {
 	  STDOUT.println("WARNING: This font seems to be missing some files!!");
 #ifdef ENABLE_AUDIO
 #ifdef DISABLE_TALKIE
-          beeper.Beep(0.5, 2000);
-          beeper.Beep(0.25, 500);
-          beeper.Beep(0.5, 2000);
+          beeper.Beep(0.5, 500);
+          beeper.Beep(0.5, 3000);
 #else
 	  talkie.Say(talkie_font_directory_15, 15);
 	  talkie.Say(talkie_not_found_15, 15);
