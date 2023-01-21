@@ -606,7 +606,6 @@ public:
 #ifdef DISABLE_TALKIE
     beeper.Beep(0.25, 500);
     beeper.Beep(0.5, 3000);
-    beeper.Beep(0.5, 1500);
     beeper.Beep(0.25, 500);
 #else
     talkie.Say(talkie_error_in_15, 15);
