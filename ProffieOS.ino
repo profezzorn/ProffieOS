@@ -1486,11 +1486,11 @@ void setup() {
   SaberBase::DoBoot();
 #if defined(ENABLE_SD) && defined(ENABLE_AUDIO)
   if (!sd_card_found) {
-#if !defined(DISABLE_TALKIE)
+#ifdef DISABLE_TALKIE
+    beeper.Beep(1.0, 1000);
+#else
     talkie.Say(talkie_sd_card_15, 15);
     talkie.Say(talkie_not_found_15, 15);
-#else
-    beeper.Beep(1.0, 1000);
 #endif
   }
 #endif // ENABLE_AUDIO && ENABLE_SD
