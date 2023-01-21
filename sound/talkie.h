@@ -3,7 +3,8 @@
 
 /* DISABLE_TALKIE define will save memory by replacing the default
    spoken error messages with the following beep sequences:
-   - Single Long Beep on Boot = "SD Card Not Found"
+   - Single Low Beep on Boot = "SD Card Not Found"
+   - Single High Pitched Beep = "Low Battery" (if lowbatt.wav not present)
    - Low Beep to High Beep on Boot or Change Preset = "Font Directory Not Found"
    - High Beep to Low Beep to High Beep on Boot or Change Preset = "Error in Font Directory"
    - Low Beep to High Beep to Low Beep on Boot = "Error in Blade Array" */
