@@ -231,6 +231,7 @@ const char version[] = "$Id: ce12a06a1e236b5101ec60c950530a9a4719a74d $";
 #include "common/state_machine.h"
 #include "common/monitoring.h"
 #include "common/stdout.h"
+#include "common/errors.h"
 
 Monitoring monitor;
 DEFINE_COMMON_STDOUT_GLOBALS;
@@ -1476,12 +1477,9 @@ void setup() {
   // Time to identify the blade.
   prop.FindBlade();
   SaberBase::DoBoot();
-#if defined(ENABLE_SD) && defined(ENABLE_AUDIO)
-  if (!sd_card_found) {
-    talkie.Say(talkie_sd_card_15, 15);
-    talkie.Say(talkie_not_found_15, 15);
-  }
-#endif // ENABLE_AUDIO && ENABLE_SD
+#if defined(ENABLE_SD)
+  if (!sd_card_found) ProffieOSErrors::sd_card_not_found();
+#endif // ENABLE_SD
 }
 
 #ifdef MTP_RX_ENDPOINT
@@ -1515,7 +1513,11 @@ void loop() {
   Looper::DoLoop();
 }
 
+
 #define CONFIG_BOTTOM
 #include CONFIG_FILE
 #undef CONFIG_BOTTOM
+
+#define PROFFIEOS_DEFINE_FUNCTION_STAGE
+#include "common/errors.h"
 
