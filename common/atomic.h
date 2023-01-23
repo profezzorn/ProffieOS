@@ -57,8 +57,20 @@ public:
   void set(T value) {
     value_ = value;
   }
-  void operator+=(T value) { value_ += value; }
-  void operator-=(T value) { value_ -= value; }
+  void operator+=(T value) {
+#ifdef ARDUINO_ARCH_STM32L4
+    __atomic_fetch_add(&value_, value, __ATOMIC_RELAXED);
+#else
+    value_ += value;
+#endif    
+  }
+  void operator-=(T value) {
+#ifdef ARDUINO_ARCH_STM32L4
+    __atomic_fetch_sub(&value_, value, __ATOMIC_RELAXED);
+#else
+    value_ -= value;
+#endif    
+  }
   
 private:
   volatile T value_;
