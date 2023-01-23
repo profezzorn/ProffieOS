@@ -42,7 +42,7 @@ public:
   bool done() { return loops_ == 0; }
 
 private:
-  int loops_;
+  int loops_ = 0;
   PONUA SVFWrapper<N> n_;
 };
 
