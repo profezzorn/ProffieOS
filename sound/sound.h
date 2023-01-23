@@ -115,7 +115,9 @@ void SetupStandardAudioLow() {
     wav_players[i].reset_volume();
   }
   dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
+#ifndef DISABLE_TALKIE  
   dynamic_mixer.streams_[NELEM(wav_players)+1] = &talkie;
+#endif
 }
 
 void SetupStandardAudio() {
