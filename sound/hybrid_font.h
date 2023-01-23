@@ -780,14 +780,7 @@ public:
   }
 
   void SB_LowBatt() {
-    // play the fonts low battery sound if it exists
-    if (SFX_lowbatt) {
-      PlayCommon(&SFX_lowbatt);
-    } else {
-#ifdef ENABLE_AUDIO
-      talkie.Say(talkie_low_battery_15, 15);
-#endif
-    }
+    ProffieOSErrors::low_battery();
   }
 
  private:
