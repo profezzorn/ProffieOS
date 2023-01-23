@@ -96,6 +96,8 @@ char* itoa( int value, char *string, int radix )
 #include "../common/monitoring.h"
 Monitoring monitor;
 #include "../common/stdout.h"
+#include "../common/errors.h"
+
 
 
 Print standard_print;
@@ -281,3 +283,6 @@ void test_effects() {
 int main() {
   test_effects();
 }
+
+#define PROFFIEOS_DEFINE_FUNCTION_STAGE
+#include "../common/errors.h"

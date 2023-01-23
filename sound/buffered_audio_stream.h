@@ -19,7 +19,7 @@ public:
 			  stream_(0),
 			  buf_start_(0),
 			  buf_end_(0),
-			  eof_(false) {
+			  eof_(true) {
   }
   int read(int16_t* buf, int bufsize) override {
 #if 0
@@ -51,7 +51,7 @@ public:
       stream_.get()->StopFromReader();
   }
   void clear() {
-    eof_.set(false);
+    eof_.set(true);
     buf_start_.set(buf_end_.get());
     stream_.set(NULL);
   }

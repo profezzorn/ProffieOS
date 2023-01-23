@@ -599,14 +599,8 @@ public:
     return;
 
 #if NUM_BLADES != 0
-
   bad_blade:
-    STDOUT.println("BAD BLADE");
-#ifdef ENABLE_AUDIO
-    talkie.Say(talkie_error_in_15, 15);
-    talkie.Say(talkie_blade_array_15, 15);
-#endif
-
+    ProffieOSErrors::error_in_blade_array();
 #endif
   }
 
