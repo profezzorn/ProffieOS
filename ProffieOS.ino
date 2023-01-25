@@ -401,6 +401,23 @@ const char* next_current_directory(const char* dir) {
   if (!*dir) return NULL;
   return dir;
 }
+const char* last_current_directory() {
+  const char* ret = current_directory;
+  while (true) {
+    const char* tmp = next_current_directory(ret);
+    if (!tmp) return ret;
+    ret = tmp;
+  }
+}
+const char* previous_current_directory(const char* dir) {
+  if (dir == current_directory) return nullptr;
+  dir -= 2;
+  while (true) {
+    if (dir == current_directory) return current_directory;
+    if (!*dir) return dir + 1;
+    dir--;
+  }
+}
 
 #include "sound/sound.h"
 #include "common/battery_monitor.h"
