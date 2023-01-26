@@ -415,7 +415,7 @@ Edit Settings* (Settings Only version of Edit Mode)
     *requires FETT263_EDIT_SETTINGS_MENU & ENABLE_ALL_EDIT_OPTIONS defines
     *requires /common folder with all menu prompt sounds
   Enter Edit Mode = While Off, Double Click and Hold PWR
-    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning  or single long beep, refer to Edit Mode setup and requirements
+    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning or single long beep, refer to Edit Mode setup and requirements
 
   While in Edit Mode controls are as follows:
     Rotate Forward, Increase Value, Confirm "Yes" = Turn Right (Stepped)
