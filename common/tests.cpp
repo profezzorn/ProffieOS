@@ -24,6 +24,8 @@
 
 #define current_directory "."
 #define next_current_directory(dir) nullptr
+#define previous_current_directory(dir) nullptr
+#define last_current_directory() "."
 
 int random(int x) { return rand() % x; }
 
