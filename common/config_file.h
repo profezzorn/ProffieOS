@@ -85,8 +85,8 @@ struct ConfigFile {
     READ_OK,
     READ_END,
   };
-  virtual ReadStatus Read(FileReader* f) {
-    SetVariable("=", 0.0);  // This resets all variables.
+  virtual ReadStatus Read(FileReader* f, bool reset = true) {
+    if (reset) SetVariable("=", 0.0);  // This resets all variables.
     if (!f || !f->IsOpen()) return ReadStatus::READ_FAIL;
     for (; f->Available(); f->skipline()) {
       char variable[33];
@@ -172,11 +172,11 @@ struct ConfigFile {
     iterateVariables(&op);
   }
 
-  ReadStatus Read(const char *filename) {
+  ReadStatus Read(const char *filename, bool reset = true) {
     LOCK_SD(true);
     FileReader f;
     f.Open(filename);
-    ReadStatus ret = Read(&f);
+    ReadStatus ret = Read(&f, reset);
     f.Close();
     LOCK_SD(false);
     return ret;
@@ -186,10 +186,12 @@ struct ConfigFile {
 
   void ReadInCurrentDir(const char* name) {
     // Search through all the directories.
-    for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
+    bool reset = true;
+    for (const char* dir = last_current_directory(); dir; dir = previous_current_directory(dir)) {
       PathHelper full_name(dir, name);
-      if (Read(full_name) != ReadStatus::READ_FAIL)
-	return;
+      if (Read(full_name, reset) != ReadStatus::READ_FAIL) {
+	reset = false;
+      }
     }
   }
 
