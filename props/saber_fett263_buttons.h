@@ -195,7 +195,7 @@ Edit Mode*
     *requires FETT263_EDIT_MODE_MENU & ENABLE_ALL_EDIT_OPTIONS defines
     *requires /common folder with all menu prompt sounds
   Enter Edit Mode = While Off, Hold AUX + Hold PWR
-    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning or single long beep, refer to Edit Mode setup and requirements
+    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
 
   While in Edit Mode controls are as follows:
     Rotate Forward, Increase Value, Confirm "Yes" = Turn Right (Stepped)
@@ -415,7 +415,7 @@ Edit Settings* (Settings Only version of Edit Mode)
     *requires FETT263_EDIT_SETTINGS_MENU & ENABLE_ALL_EDIT_OPTIONS defines
     *requires /common folder with all menu prompt sounds
   Enter Edit Mode = While Off, Double Click and Hold PWR
-    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning or single long beep, refer to Edit Mode setup and requirements
+    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
 
   While in Edit Mode controls are as follows:
     Rotate Forward, Increase Value, Confirm "Yes" = Turn Right (Stepped)
@@ -2350,12 +2350,7 @@ SaberFett263Buttons() : PropBase() {}
       StopTrackPlayer();
     }
     if (!SFX_medit) {
-#ifdef DISABLE_TALKIE
-      beeper.Beep(1.0, 1000);
-#else
-      talkie.Say(talkie_error_in_15, 15);
-      talkie.Say(talkie_font_directory_15, 15);
-#endif
+      ProffieOSErrors::error_in_font_directory();
       STDOUT.println("Edit Mode prompts missing");
     } else {
 #ifdef FETT263_EDIT_SETTINGS_MENU
