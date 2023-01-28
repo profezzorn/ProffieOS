@@ -2053,6 +2053,16 @@ SaberFett263Buttons() : PropBase() {}
     }
   }
 
+  void PlayEffectTrack() {
+    num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
+    if (num_tracks_ > 0) {
+      if (track_num_ <= 0) track_num_ = 1;
+      PlayTrack();
+    } else {
+      if (!track_player_->isPlaying()) StartOrStopTrack();
+    }
+  }
+
   void PlayTrack() {
     char playtrack[128];
     RunCommandAndGetSingleLine("list_current_tracks", nullptr, track_num_, playtrack, sizeof(playtrack));
@@ -2498,6 +2508,7 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_PRESET:
       sound_library_.SaySelect();
       menu_type_ = MENU_TOP;
+      track_num_ = 0;
       menu_ = false;
       break;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -4831,7 +4842,8 @@ SaberFett263Buttons() : PropBase() {}
             previous_preset();
           } else {
             next_preset();
-          }        
+          }
+          track_num_ = 0;
         }
         return true;
 
@@ -4997,6 +5009,7 @@ SaberFett263Buttons() : PropBase() {}
         } else {
           next_preset_fast();
         }
+        track_num_ = 0;
         return true;
 #endif
 
@@ -5246,6 +5259,7 @@ SaberFett263Buttons() : PropBase() {}
           } else {
             next_preset();
           }
+          track_num_ = 0;
         }
         return true;
 
@@ -5694,6 +5708,7 @@ SaberFett263Buttons() : PropBase() {}
         SelectIgnitionSound();
 #endif
         next_preset_fast();
+        track_num_ = 0;
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
@@ -5702,6 +5717,7 @@ SaberFett263Buttons() : PropBase() {}
         SelectIgnitionSound();
 #endif
         previous_preset_fast();
+        track_num_ = 0;
         return true;
 #endif
 
@@ -6227,6 +6243,7 @@ SaberFett263Buttons() : PropBase() {}
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
       case EFFECT_INTERACTIVE_BLAST: hybrid_font.PlayCommon(&SFX_blast); return;
+      case EFFECT_TRACK: PlayEffectTrack(); return;
       case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
       case EFFECT_NEXT_QUOTE:
         SFX_quote.SelectNext();
