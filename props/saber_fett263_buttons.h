@@ -2054,12 +2054,14 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void PlayEffectTrack() {
-    num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
-    if (num_tracks_ > 0) {
-      if (track_num_ <= 0) track_num_ = 1;
-      PlayTrack();
-    } else {
-      if (!track_player_->isPlaying()) StartOrStopTrack();
+    if (!track_player_->isPlaying()) {
+      num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
+      if (num_tracks_ > 0) {
+        if (track_num_ <= 0) track_num_ = 1;
+        PlayTrack();
+      } else {
+        StartOrStopTrack();
+      }
     }
   }
 
