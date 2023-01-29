@@ -1454,7 +1454,12 @@ public:
       rotate_presets();
       return true;
     }
-
+#ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "message") && arg) {
+      SaberBase::DoMessage(arg);
+      return true;
+    }
+#endif
     if (!strcmp(cmd, "list_presets")) {
       CurrentPreset tmp;
       for (int i = 0; ; i++) {
