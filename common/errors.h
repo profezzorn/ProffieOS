@@ -17,30 +17,69 @@ public:
 
 void ProffieOSErrors::sd_card_not_found() {
 #ifdef ENABLE_AUDIO
+#ifndef DISABLE_TALKIE  
   talkie.Say(talkie_sd_card_15, 15);
   talkie.Say(talkie_not_found_15, 15);
+#else
+  beeper.Beep(0.5, 261.63 * 2); // C4
+  beeper.Beep(0.5, 293.66 * 2); // D4
+  beeper.Beep(0.5, 261.63 * 2); // C4
+  beeper.Beep(0.5, 196.00 * 2); // G3
+  beeper.Beep(1.0, 130.81 * 2); // C3
+#endif  
 #endif
 }
 
 void ProffieOSErrors::font_directory_not_found() {
 #ifdef ENABLE_AUDIO
+#ifndef DISABLE_TALKIE  
   talkie.Say(talkie_font_directory_15, 15);
   talkie.Say(talkie_not_found_15, 15);
+#else
+  beeper.Beep(0.5, 261.63 * 2); // C4
+  beeper.Beep(0.5/3, 246.94 * 2); // B3
+  beeper.Beep(0.5/3, 220.00 * 2); // A3
+  beeper.Beep(0.5/3, 196.00 * 2); // G3
+  beeper.Beep(0.5, 174.61 * 2); // F3
+  beeper.Beep(0.5, 146.83 * 2); // D3
+  beeper.Beep(0.5, 130.81 * 2); // C3
+#endif
 #endif
 }
 
 void ProffieOSErrors::error_in_blade_array() {
   STDOUT.println("BAD BLADE");
 #ifdef ENABLE_AUDIO
+#ifndef DISABLE_TALKIE  
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_blade_array_15, 15);
+#else
+  beeper.Beep(0.25, 174.61 * 2); // F3
+  beeper.Beep(0.25, 196.00 * 2); // G3
+  beeper.Beep(0.25, 174.61 * 2); // F3
+  beeper.Beep(0.25, 164.81 * 2); // E3
+  beeper.Beep(1.0, 146.83 * 2); // D3
+  beeper.Beep(1.0, 130.81 * 2); // C3
+#endif
 #endif
 }
 
 void ProffieOSErrors::error_in_font_directory() {
 #ifdef ENABLE_AUDIO
+#ifndef DISABLE_TALKIE  
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_font_directory_15, 15);
+#else
+  beeper.Beep(0.25, 174.61 * 2); // F3
+  beeper.Beep(0.25, 196.0 * 2); // G3
+  beeper.Beep(0.25, 174.61 * 2); // F3
+  beeper.Beep(0.25, 164.81 * 2); // E3
+  beeper.Beep(0.5, 146.83 * 2); // D3
+  beeper.Beep(0.5, 164.81 * 2); // E3
+  beeper.Beep(0.5, 196.0 * 2); // G3
+  beeper.Beep(0.5, 220.00 * 2); // A3
+  beeper.Beep(0.5, 261.63 * 2); // C4
+#endif
 #endif
 }
 
@@ -52,7 +91,12 @@ void ProffieOSErrors::low_battery() {
       return;
     }
 
+#ifndef DISABLE_TALKIE  
     talkie.Say(talkie_low_battery_15, 15);
+#else
+  beeper.Beep(1.0, 261.63 * 2); // C4
+  beeper.Beep(1.0, 130.81 * 2); // C3
+#endif
 #endif
 }
 
