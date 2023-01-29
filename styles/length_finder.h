@@ -34,7 +34,7 @@ public:
     if (say_it_ && millis() - last_speak_ > 3000) {
       last_speak_ = millis();
       say_it_ = false;
-#ifdef ENABLE_AUDIO      
+#ifdef ENABLE_AUDIO
       talkie.SayNumber(led_ + 1);
 #endif
       STDOUT << "LEN=" << (led_ + 1) << "\n";

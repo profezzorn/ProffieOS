@@ -514,7 +514,7 @@ public:
   // TODO: Don't update the display when we don't need to
   // and return false here so that we can go into lower power modes.
   void SB_IsOn(bool* on) override {
-    *on = true;
+    *on = on_;
   }
 
   void SetScreenNow(Screen screen) {
@@ -757,7 +757,7 @@ struct BaseLayerOp {
   template<int Width, class col_t> struct Controller : public T<Width, col_t> {};
 };
 
-template<int WIDTH, class col_t>
+template<int WIDTH, class col_t, class POWER_PIN = PowerPINS<> >
 class SSD1306Template : public Display<WIDTH, col_t>, I2CDevice, Looper, StateMachine {
 public:
   static const int HEIGHT = sizeof(col_t) * 8;
@@ -860,123 +860,140 @@ public:
     last_connected = connected;
 #endif
 
-  STATE_MACHINE_BEGIN();
-    while (!i2cbus.inited()) YIELD();
-    while (!I2CLock()) YIELD();
+    STATE_MACHINE_BEGIN();
+    while(true) {
+      on_ = true;
+      power_.Init();
+      power_.Power(true);
+    
+      while (!i2cbus.inited()) YIELD();
+      while (!I2CLock()) YIELD();
 
-    // Init sequence
-    Send(DISPLAYOFF);                    // 0xAE
-    Send(SETDISPLAYCLOCKDIV);            // 0xD5
-    Send(0x80);                          // the suggested ratio 0x80
+      // Init sequence
+      Send(DISPLAYOFF);                    // 0xAE
+      Send(SETDISPLAYCLOCKDIV);            // 0xD5
+      Send(0x80);                          // the suggested ratio 0x80
 
-    Send(SETMULTIPLEX);                  // 0xA8
-    Send(HEIGHT - 1);
+      Send(SETMULTIPLEX);                  // 0xA8
+      Send(HEIGHT - 1);
 
-    Send(SETDISPLAYOFFSET);              // 0xD3
-    Send(0x0);                                   // no offset
+      Send(SETDISPLAYOFFSET);              // 0xD3
+      Send(0x0);                                   // no offset
 
-    Send(SETSTARTLINE | 0x0);            // 0x40 line #0
+      Send(SETSTARTLINE | 0x0);            // 0x40 line #0
 
-    Send(CHARGEPUMP);                    // 0x8D
-    Send(0x14);
+      Send(CHARGEPUMP);                    // 0x8D
+      Send(0x14);
 
-    Send(MEMORYMODE);                    // 0x20
-    Send(0x01);                          // vertical address mode
+      Send(MEMORYMODE);                    // 0x20
+      Send(0x01);                          // vertical address mode
 
 #if defined (OLED_FLIP_180)
 #if defined(OLED_MIRRORED)
-    // Flip 180 and mirrored OLED operation
-    Send(SEGREMAP | 0x1);        // 0xa0 | 1
+      // Flip 180 and mirrored OLED operation
+      Send(SEGREMAP | 0x1);        // 0xa0 | 1
 #else
-    // Flip 180
-    Send(SEGREMAP);        // 0xa0 | 1
+      // Flip 180
+      Send(SEGREMAP);        // 0xa0 | 1
 #endif
-    Send(COMSCANINC);
+      Send(COMSCANINC);
 #elif defined (OLED_MIRRORED)
-    // mirrored OLED operation
-    Send(SEGREMAP);        // 0xa0 | 1
-    Send(COMSCANDEC);
+      // mirrored OLED operation
+      Send(SEGREMAP);        // 0xa0 | 1
+      Send(COMSCANDEC);
 #else
-    // normal OLED operation
-    Send(SEGREMAP | 0x1);        // 0xa0 | 1
-    Send(COMSCANDEC);
+      // normal OLED operation
+      Send(SEGREMAP | 0x1);        // 0xa0 | 1
+      Send(COMSCANDEC);
 #endif
 
-    Send(SETCOMPINS);                    // 0xDA
-    if (HEIGHT == 64 || WIDTH==64) {
-      Send(0x12);
-    } else {
-      Send(0x02);  // may need to be 0x12 for some displays
-    }
-    Send(SETCONTRAST);                   // 0x81
-    Send(0x8F);
-
-    Send(SETPRECHARGE);                  // 0xd9
-    Send(0xF1);
-    Send(SETVCOMDETECT);                 // 0xDB
-    Send(0x40);
-    Send(DISPLAYALLON_RESUME);           // 0xA4
-    Send(NORMALDISPLAY);                 // 0xA6
-
-    Send(DEACTIVATE_SCROLL);
-
-    Send(DISPLAYON);                     //--turn on oled panel
-
-    I2CUnlock();
-
-    STDOUT.println("Display initialized.");
-
-    while (true) {
-      millis_to_display_ = next_millis_to_display_;
-      next_millis_to_display_ = 0;
-      while (millis_to_display_ == 0) {
-	YIELD();
-	millis_to_display_ = FillFrameBuffer();
-	// STDERR << "millis_to_display_ = " << millis_to_display_ << "\n";
+      Send(SETCOMPINS);                    // 0xDA
+      if (HEIGHT == 64 || WIDTH==64) {
+	Send(0x12);
+      } else {
+	Send(0x02);  // may need to be 0x12 for some displays
       }
-      frame_start_time_ = millis();
-      lock_fb_ = true;
+      Send(SETCONTRAST);                   // 0x81
+      Send(0x8F);
 
-      // I2C
-      loop_counter_.Update();
-#ifdef PROFFIEBOARD
-      i = -(int)NELEM(transactions);
-      while (!I2CLockAndRun()) YIELD();
-      while (lock_fb_) YIELD();
-#else
-      do { YIELD(); } while (!I2CLock());
-      Send(COLUMNADDR);
-      Send((128 - WIDTH)/2);   // Column start address (0 = reset)
-      Send(WIDTH-1 + (128 - WIDTH)/2); // Column end address (127 = reset)
+      Send(SETPRECHARGE);                  // 0xd9
+      Send(0xF1);
+      Send(SETVCOMDETECT);                 // 0xDB
+      Send(0x40);
+      Send(DISPLAYALLON_RESUME);           // 0xA4
+      Send(NORMALDISPLAY);                 // 0xA6
 
-      Send(PAGEADDR);
-      Send(0); // Page start address (0 = reset)
-      Send(sizeof(col_t) - 1);
+      Send(DEACTIVATE_SCROLL);
 
-      //STDOUT.println(TWSR & 0x3, DEC);
+      Send(DISPLAYON);                     //--turn on oled panel
 
-      for (i=0; i < WIDTH * HEIGHT / 8; ) {
-        // send a bunch of data in one xmission
-        Wire.beginTransmission(address_);
-	GetChunk();
-	for (size_t x=0; x <= chunk_size; x++) {
-	  Wire.write(chunk[x]);
-	}
-        Wire.endTransmission();
-        I2CUnlock(); do { YIELD(); } while (!I2CLock());
-      }
-      lock_fb_ = false;
       I2CUnlock();
-#endif
-      while (millis() - frame_start_time_ < millis_to_display_) {
-	if (next_millis_to_display_ == 0) {
-	  next_millis_to_display_ = FillFrameBuffer();
-	  // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
-	}
-	YIELD();
-      }
-    }
 
+      STDOUT.println("Display initialized.");
+
+      while (true) {
+	millis_to_display_ = next_millis_to_display_;
+	next_millis_to_display_ = 0;
+	while (millis_to_display_ == 0) {
+	  YIELD();
+	  millis_to_display_ = FillFrameBuffer();
+	  // STDERR << "millis_to_display_ = " << millis_to_display_ << "\n";
+	}
+	frame_start_time_ = millis();
+	lock_fb_ = true;
+
+	// I2C
+	loop_counter_.Update();
+#ifdef PROFFIEBOARD
+	i = -(int)NELEM(transactions);
+	while (!I2CLockAndRun()) YIELD();
+	while (lock_fb_) YIELD();
+#else
+	do { YIELD(); } while (!I2CLock());
+	Send(COLUMNADDR);
+	Send((128 - WIDTH)/2);   // Column start address (0 = reset)
+	Send(WIDTH-1 + (128 - WIDTH)/2); // Column end address (127 = reset)
+
+	Send(PAGEADDR);
+	Send(0); // Page start address (0 = reset)
+	Send(sizeof(col_t) - 1);
+
+	//STDOUT.println(TWSR & 0x3, DEC);
+
+	for (i=0; i < WIDTH * HEIGHT / 8; ) {
+	  // send a bunch of data in one xmission
+	  Wire.beginTransmission(address_);
+	  GetChunk();
+	  for (size_t x=0; x <= chunk_size; x++) {
+	    Wire.write(chunk[x]);
+	  }
+	  Wire.endTransmission();
+	  I2CUnlock(); do { YIELD(); } while (!I2CLock());
+	}
+	lock_fb_ = false;
+	I2CUnlock();
+#endif
+	if (controller_->GetScreen() == SCREEN_OFF) break;
+
+	while (millis() - frame_start_time_ < millis_to_display_) {
+	  if (next_millis_to_display_ == 0) {
+	    next_millis_to_display_ = FillFrameBuffer();
+	    // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
+	  }
+	  YIELD();
+	}
+      }
+
+      // Time to shut down... for now.
+      while (!I2CLock()) YIELD();
+      Send(DISPLAYOFF);                    // 0xAE
+      I2CUnlock();
+    
+      power_.Power(false);
+      power_.DeInit();
+      on_ = false;
+      while (controller_->GetScreen() == SCREEN_OFF) YIELD();
+    }
     STATE_MACHINE_END();
   }
 
@@ -1033,11 +1050,13 @@ private:
   volatile bool lock_fb_ = false;
   DisplayControllerBase<WIDTH, col_t>* controller_;
   LoopCounter loop_counter_;
+  POWER_PIN power_;
+  bool on_ = false;
 };
 
 #ifdef PROFFIEBOARD
-template<int WIDTH, class col_t>
-constexpr uint8_t SSD1306Template<WIDTH, col_t>::transactions[];
+template<int WIDTH, class col_t, class POWER_PIN>
+constexpr uint8_t SSD1306Template<WIDTH, col_t, POWER_PIN>::transactions[];
 #endif
 
 using SSD1306 = SSD1306Template<128, uint32_t>;

@@ -599,14 +599,8 @@ public:
     return;
 
 #if NUM_BLADES != 0
-
   bad_blade:
-    STDOUT.println("BAD BLADE");
-#ifdef ENABLE_AUDIO
-    talkie.Say(talkie_error_in_15, 15);
-    talkie.Say(talkie_blade_array_15, 15);
-#endif
-
+    ProffieOSErrors::error_in_blade_array();
 #endif
   }
 
@@ -1332,6 +1326,28 @@ public:
       return true;
     }
 #endif
+#ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "sd_card_not_found")) {
+      ProffieOSErrors::sd_card_not_found();
+      return true;
+    }
+    if (!strcmp(cmd, "font_directory_not_found")) {
+      ProffieOSErrors::font_directory_not_found();
+      return true;
+    }
+    if (!strcmp(cmd, "error_in_blade_array")) {
+      ProffieOSErrors::error_in_blade_array();
+      return true;
+    }
+    if (!strcmp(cmd, "error_in_font_directory")) {
+      ProffieOSErrors::error_in_font_directory();
+      return true;
+    }
+    if (!strcmp(cmd, "low_battery")) {
+      ProffieOSErrors::low_battery();
+      return true;
+    }
+#endif    
     if (!strcmp(cmd, "play")) {
       if (!arg) {
         StartOrStopTrack();
