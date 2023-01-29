@@ -4873,7 +4873,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_LONG, MODE_OFF):
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU
+#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
         // Enter Edit Mode
         if (!menu_) {
           StartEditMode();
