@@ -16,6 +16,9 @@ public:
 #ifdef PROFFIEOS_DEFINE_FUNCTION_STAGE
 
 void ProffieOSErrors::sd_card_not_found() {
+#ifdef ENABLE_SSD1306
+  SaberBase::DoMessage("sd card\nnot found");
+#endif
 #ifdef ENABLE_AUDIO
 #ifndef DISABLE_TALKIE  
   talkie.Say(talkie_sd_card_15, 15);
@@ -31,6 +34,9 @@ void ProffieOSErrors::sd_card_not_found() {
 }
 
 void ProffieOSErrors::font_directory_not_found() {
+#ifdef ENABLE_SSD1306
+  SaberBase::DoMessage("font dir\nnot found");
+#endif
 #ifdef ENABLE_AUDIO
 #ifndef DISABLE_TALKIE  
   talkie.Say(talkie_font_directory_15, 15);
@@ -49,6 +55,9 @@ void ProffieOSErrors::font_directory_not_found() {
 
 void ProffieOSErrors::error_in_blade_array() {
   STDOUT.println("BAD BLADE");
+#ifdef ENABLE_SSD1306
+  SaberBase::DoMessage("err blade\narray");
+#endif
 #ifdef ENABLE_AUDIO
 #ifndef DISABLE_TALKIE  
   talkie.Say(talkie_error_in_15, 15);
@@ -65,6 +74,9 @@ void ProffieOSErrors::error_in_blade_array() {
 }
 
 void ProffieOSErrors::error_in_font_directory() {
+#ifdef ENABLE_SSD1306
+  SaberBase::DoMessage("err font\ndirectory");
+#endif
 #ifdef ENABLE_AUDIO
 #ifndef DISABLE_TALKIE  
   talkie.Say(talkie_error_in_15, 15);
@@ -84,6 +96,9 @@ void ProffieOSErrors::error_in_font_directory() {
 }
 
 void ProffieOSErrors::low_battery() {
+#ifdef ENABLE_SSD1306
+  SaberBase::DoMessage("low\nbattery");
+#endif
 #ifdef ENABLE_AUDIO
     // play the fonts low battery sound if it exists
     if (SFX_lowbatt) {
