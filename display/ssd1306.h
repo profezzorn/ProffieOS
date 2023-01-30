@@ -311,7 +311,7 @@ public:
       // Off
       if (looped_idle_ != Tristate::False) {
 	if (EscapeIdleIfNeeded()) {
-	  SetMessage("usb");
+	  SB_Message("usb");
 	} else {
 	  SetFile(&IMG_idle, 3600000.0);
 	}
@@ -377,14 +377,19 @@ public:
           display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
         next_screen_ = SCREEN_DEFAULT;
-	// STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
-        return font_config.ProffieOSFontImageDuration;
+        if (!from_sbmessage_) {
+	  // STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
+          return font_config.ProffieOSFontImageDuration;
+	} else {
+          from_sbmessage_ = !from_sbmessage_;
+          return 4000;
+        } 
       }
 
       case SCREEN_IMAGE:
 	if (EscapeIdleIfNeeded() && current_effect_ == &IMG_idle) {
 	  // We are idle-looping, and usb is connected. Time to stop.
-	  SetMessage("usb");
+	  SB_Message("usb");
 	  return FillFrameBuffer2(advance);
 	}
         MountSDCard();
@@ -442,7 +447,7 @@ public:
   void usb_connected() override {
     if (EscapeIdleIfNeeded() && current_effect_ == &IMG_idle) {
       // We are idle-looping, and usb is connected. Time to stop.
-      SetMessage("usb");
+      SB_Message("usb");
       SetScreenNow(SCREEN_MESSAGE);
     }
   }
@@ -462,7 +467,7 @@ public:
 	if (IMG_font) {
 	  ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
 	} else if (prop.current_preset_name()) {
-	  SetMessage(prop.current_preset_name());
+	  SB_Message(prop.current_preset_name());
 	  SetScreenNow(SCREEN_MESSAGE);
 	} else if (IMG_idle) {
 	  ShowFile(&IMG_idle, 3600000.0);
@@ -488,7 +493,7 @@ public:
     }
   }
 
-  void SetMessage(const char* text) {
+  void SB_Message(const char* text) {
     strncpy(message_, text, sizeof(message_));
     message_[sizeof(message_)-1] = 0;
     screen_ = SCREEN_MESSAGE;
@@ -889,7 +894,7 @@ public:
       Send(0x01);                          // vertical address mode
 
 #if defined (OLED_FLIP_180)
-#if defined(OLED_MIRRORED)
+#if defined (OLED_MIRRORED)
       // Flip 180 and mirrored OLED operation
       Send(SEGREMAP | 0x1);        // 0xa0 | 1
 #else
@@ -907,15 +912,15 @@ public:
       Send(COMSCANDEC);
 #endif
 
+
       Send(SETCOMPINS);                    // 0xDA
       if (HEIGHT == 64 || WIDTH==64) {
-	Send(0x12);
+  Send(0x12);
       } else {
-	Send(0x02);  // may need to be 0x12 for some displays
+  Send(0x02);  // may need to be 0x12 for some displays
       }
       Send(SETCONTRAST);                   // 0x81
       Send(0x8F);
-
       Send(SETPRECHARGE);                  // 0xd9
       Send(0xF1);
       Send(SETVCOMDETECT);                 // 0xDB
@@ -932,58 +937,57 @@ public:
       STDOUT.println("Display initialized.");
 
       while (true) {
-	millis_to_display_ = next_millis_to_display_;
-	next_millis_to_display_ = 0;
-	while (millis_to_display_ == 0) {
-	  YIELD();
-	  millis_to_display_ = FillFrameBuffer();
-	  // STDERR << "millis_to_display_ = " << millis_to_display_ << "\n";
-	}
-	frame_start_time_ = millis();
-	lock_fb_ = true;
+  millis_to_display_ = next_millis_to_display_;
+  next_millis_to_display_ = 0;
+  while (millis_to_display_ == 0) {
+    YIELD();
+    millis_to_display_ = FillFrameBuffer();
+    // STDERR << "millis_to_display_ = " << millis_to_display_ << "\n";
+  }
+  frame_start_time_ = millis();
+  lock_fb_ = true;
 
-	// I2C
-	loop_counter_.Update();
+  // I2C
+  loop_counter_.Update();
 #ifdef PROFFIEBOARD
-	i = -(int)NELEM(transactions);
-	while (!I2CLockAndRun()) YIELD();
-	while (lock_fb_) YIELD();
+  i = -(int)NELEM(transactions);
+  while (!I2CLockAndRun()) YIELD();
+  while (lock_fb_) YIELD();
 #else
-	do { YIELD(); } while (!I2CLock());
-	Send(COLUMNADDR);
-	Send((128 - WIDTH)/2);   // Column start address (0 = reset)
-	Send(WIDTH-1 + (128 - WIDTH)/2); // Column end address (127 = reset)
+  do { YIELD(); } while (!I2CLock());
+  Send(COLUMNADDR);
+  Send((128 - WIDTH)/2);   // Column start address (0 = reset)
+  Send(WIDTH-1 + (128 - WIDTH)/2); // Column end address (127 = reset)
 
-	Send(PAGEADDR);
-	Send(0); // Page start address (0 = reset)
-	Send(sizeof(col_t) - 1);
+  Send(PAGEADDR);
+  Send(0); // Page start address (0 = reset)
+  Send(sizeof(col_t) - 1);
 
-	//STDOUT.println(TWSR & 0x3, DEC);
+  //STDOUT.println(TWSR & 0x3, DEC);
 
-	for (i=0; i < WIDTH * HEIGHT / 8; ) {
-	  // send a bunch of data in one xmission
-	  Wire.beginTransmission(address_);
-	  GetChunk();
-	  for (size_t x=0; x <= chunk_size; x++) {
-	    Wire.write(chunk[x]);
-	  }
-	  Wire.endTransmission();
-	  I2CUnlock(); do { YIELD(); } while (!I2CLock());
-	}
-	lock_fb_ = false;
-	I2CUnlock();
+  for (i=0; i < WIDTH * HEIGHT / 8; ) {
+    // send a bunch of data in one xmission
+    Wire.beginTransmission(address_);
+    GetChunk();
+    for (size_t x=0; x <= chunk_size; x++) {
+      Wire.write(chunk[x]);
+    }
+    Wire.endTransmission();
+    I2CUnlock(); do { YIELD(); } while (!I2CLock());
+  }
+  lock_fb_ = false;
+  I2CUnlock();
 #endif
-	if (controller_->GetScreen() == SCREEN_OFF) break;
+  if (controller_->GetScreen() == SCREEN_OFF) break;
 
-	while (millis() - frame_start_time_ < millis_to_display_) {
-	  if (next_millis_to_display_ == 0) {
-	    next_millis_to_display_ = FillFrameBuffer();
-	    // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
-	  }
-	  YIELD();
-	}
+  while (millis() - frame_start_time_ < millis_to_display_) {
+    if (next_millis_to_display_ == 0) {
+      next_millis_to_display_ = FillFrameBuffer();
+      // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
+    }
+    YIELD();
+  }
       }
-
       // Time to shut down... for now.
       while (!I2CLock()) YIELD();
       Send(DISPLAYOFF);                    // 0xAE
