@@ -737,6 +737,7 @@ private:
   Screen screen_ = SCREEN_STARTUP;
   Screen next_screen_ = SCREEN_UNSET;
   char message_[32];
+  bool from_sbmessage_ = false;
 
   // File reading
   EffectFileReader file_;
