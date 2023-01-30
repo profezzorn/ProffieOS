@@ -1378,8 +1378,12 @@ I2CBus i2cbus;
 #ifdef ENABLE_SSD1306
 #include "display/ssd1306.h"
 
+#ifndef DISPLAY_POWER_PINS
+#define DISPLAY_POWER_PINS PowerPINS<>
+#endif
+
 StandardDisplayController<128, uint32_t> display_controller;
-SSD1306Template<128, uint32_t> display(&display_controller);
+SSD1306Template<128, uint32_t, DISPLAY_POWER_PINS> display(&display_controller);
 #endif
 
 #ifdef INCLUDE_SSD1306
