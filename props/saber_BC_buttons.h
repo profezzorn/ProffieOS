@@ -1100,6 +1100,7 @@ public:
           Off(OFF_FAST);
           saber_off_time_ = millis();
         }
+        return;
       case EFFECT_USER1: // Swap
         if (SFX_swap) {
           hybrid_font.PlayCommon(&SFX_swap);
