@@ -489,7 +489,22 @@ public:
       case EFFECT_LOCKUP_END:
 	ShowDefault(true);
 	break;
-
+      case EFFECT_SD_CARD_NOT_FOUND:
+	SetMessage("sd card\nnot found");
+	break;
+      case EFFECT_ERROR_IN_FONT_DIRECTORY:
+	SetMessage("error in\nfont dir");
+	break;
+      case EFFECT_ERROR_IN_BLADE_ARRAY:
+	SetMessage("error in\nblade arr");
+	break;
+      case EFFECT_FONT_DIRECTORY_NOT_FOUND:
+	SetMessage("font dir\nnot found");
+	break;
+      case EFFECT_LOW_BATTERY:
+	// Maybe we should make this blink or something?
+	SetMessage("low\nbattery");
+	break;
       default: break;
     }
   }
