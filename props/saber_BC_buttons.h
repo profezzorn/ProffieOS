@@ -118,8 +118,8 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
 Next Preset           - Long click and release POW, or TWIST while pointing down.
-Prev Preset           - Double click and hold POW, release after a second, or TWIST while pointing up.
-                        (click then long click)
+Prev Preset           - Double click and hold POW, release after a second (click then long click),
+                        or TWIST while pointing up.
 Play/Stop Track       - 4x click POW.
 Volume Menu:
                       * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
@@ -205,8 +205,8 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
 Next Preset           - Long click and release POW, or TWIST while pointing down.
-Prev Preset           - Double click and hold POW, release after a second, or TWIST while pointing up.
-                        (click then long click)
+Prev Preset           - Double click and hold POW, release after a second (click then long click),
+                        or TWIST while pointing up.
 Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
                       * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
@@ -596,15 +596,11 @@ public:
   #ifdef NO_BLADE_NO_GEST_ONOFF
       if (!blade_detected_) return false;
   #endif
-      // Due to motion chip startup on boot creating false ignition
-      // we delay Swing On at boot for 3000ms
-      if (millis() > (PROFFIEOS_STARTUP_DELAY + 3000)) {
         FastOn();
   #ifdef BC_GESTURE_AUTO_BATTLE_MODE
         STDOUT.println("Entering Battle Mode");
         battle_mode_ = true;
   #endif
-      }
       return true;
   #endif  // BC_SWING_ON
 
@@ -645,10 +641,15 @@ public:
   #endif
       // Delay twist events to prevent false trigger from over twisting
       if (millis() - last_twist_ > 3000) {
-        Off();
         last_twist_ = millis();
         saber_off_time_ = millis();
         battle_mode_ = false;
+        // Bypass postoff if pointing up         
+        if (fusor.angle1() >  M_PI / 3) {
+          Off(OFF_FAST);
+        } else {
+          Off();
+        }
       }
       return true;
   #endif  // BC_TWIST_OFF
@@ -1014,7 +1015,12 @@ public:
         }
   #endif
         if (!battle_mode_) {
-          Off();
+          // Bypass postoff if pointing up         
+          if (fusor.angle1() >  M_PI / 3) {
+            Off(OFF_FAST);
+          } else {
+            Off();
+          }
         }
       }
       saber_off_time_ = millis();
@@ -1089,6 +1095,11 @@ public:
           hybrid_font.PlayCommon(&SFX_faston);
         }
         return;
+      case EFFECT_FAST_OFF:
+        if (SaberBase::IsOn()) {
+          Off(OFF_FAST);
+          saber_off_time_ = millis();
+        }
       case EFFECT_USER1: // Swap
         if (SFX_swap) {
           hybrid_font.PlayCommon(&SFX_swap);
