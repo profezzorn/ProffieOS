@@ -88,7 +88,6 @@ void ProffieOSErrors::error_in_font_directory() {
 }
 
 void ProffieOSErrors::low_battery() {
-  STDOUT << "Low battery: " << battery_monitor.battery() << " volts\n";
 #ifdef ENABLE_AUDIO
   // play the fonts low battery sound if it exists
   if (SFX_lowbatt) {
