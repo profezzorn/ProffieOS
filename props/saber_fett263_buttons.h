@@ -1757,14 +1757,16 @@ SaberFett263Buttons() : PropBase() {}
     RestoreGestureState();
   }
 
-#ifdef FETT263_SAVE_CHOREOGRAPHY
   bool chdir(const char* dir) override {
     bool ret = PropBase::chdir(dir);
+    num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
+    track_num_ = 0;
+#ifdef FETT263_SAVE_CHOREOGRAPHY
     RestoreChoreo();
     clash_count_ = 0;
+#endif
     return ret;
   }
-#endif
 
   // Check Event "Delays" for Edit Mode for Ignition/Retraction/Preon Settings Previews and Choreography Save
   void CheckEvent() {
@@ -2007,7 +2009,6 @@ SaberFett263Buttons() : PropBase() {}
   };
 
   void StartTrackPlayer() {
-    num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
     if (num_tracks_ > 0) {
       sound_library_.SaySelect();
       StartMenu(MENU_TRACK_PLAYER);
@@ -2055,7 +2056,6 @@ SaberFett263Buttons() : PropBase() {}
 
   void PlayEffectTrack() {
     if (!track_player_->isPlaying()) {
-      num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
       if (num_tracks_ > 0) {
         if (track_num_ <= 0) track_num_ = 1;
         PlayTrack();
@@ -2510,7 +2510,6 @@ SaberFett263Buttons() : PropBase() {}
     case MENU_PRESET:
       sound_library_.SaySelect();
       menu_type_ = MENU_TOP;
-      track_num_ = 0;
       menu_ = false;
       break;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -2819,7 +2818,6 @@ SaberFett263Buttons() : PropBase() {}
           sound_library_.SaySelect();
           break;
         case EDIT_TRACK:
-          num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
           StartOrStopTrack();
           menu_type_ = MENU_TRACK;
           track_num_ = 0;
@@ -4845,7 +4843,6 @@ SaberFett263Buttons() : PropBase() {}
           } else {
             next_preset();
           }
-          track_num_ = 0;
         }
         return true;
 
@@ -5011,7 +5008,6 @@ SaberFett263Buttons() : PropBase() {}
         } else {
           next_preset_fast();
         }
-        track_num_ = 0;
         return true;
 #endif
 
@@ -5261,7 +5257,6 @@ SaberFett263Buttons() : PropBase() {}
           } else {
             next_preset();
           }
-          track_num_ = 0;
         }
         return true;
 
@@ -5710,7 +5705,6 @@ SaberFett263Buttons() : PropBase() {}
         SelectIgnitionSound();
 #endif
         next_preset_fast();
-        track_num_ = 0;
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
@@ -5719,7 +5713,6 @@ SaberFett263Buttons() : PropBase() {}
         SelectIgnitionSound();
 #endif
         previous_preset_fast();
-        track_num_ = 0;
         return true;
 #endif
 
