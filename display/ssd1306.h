@@ -222,7 +222,11 @@ class Combine {
 #endif
 
 template<int Width, class col_t>
-class StandardDisplayController : public DisplayControllerBase<Width, col_t>, SaberBase, private AudioStreamWork {
+class StandardDisplayController : public DisplayControllerBase<Width, col_t>, SaberBase, private AudioStreamWork
+#ifdef ENABLE_DEVELOPER_COMMANDS
+  , CommandParser
+#endif  
+{
 public:
   static const int WIDTH = Width;
   static const int HEIGHT = sizeof(col_t) * 8;
@@ -272,6 +276,8 @@ public:
       display_->Invert();
     }
   }
+
+  virtual Screen GetScreen() { return screen_; }
 
   uint32_t last_delay_ = 0;
   uint32_t t_ = 0;  // time since we switched screen
@@ -499,9 +505,6 @@ public:
   }
 
   void SB_Off(OffType offtype) override {
-    // TODO: Make it so that screen can be
-    // powered down and up again properly.
-    // This only makes it black, which prevents burn-in.
     if (offtype == OFF_IDLE) {
       SetScreenNow(SCREEN_OFF);
     } else if (IMG_idle) {
@@ -542,8 +545,9 @@ public:
   bool ShowFile(Effect* effect, float duration) {
     if (SetFile(effect, duration)) {
       SetScreenNow(SCREEN_IMAGE);
+      return true;
     }
-    return true;
+    return false;
   }
 
   void ShowFile(const char* file) {
@@ -721,6 +725,18 @@ public:
     file_.Close();
   }
 
+
+#ifdef ENABLE_DEVELOPER_COMMANDS
+  bool Parse(const char* cmd, const char* e) override {
+    if (!strcmp(cmd, "setmessage") && e) {
+      STDOUT << "Setting message: " << e << "\n";
+      SetMessage(e);
+      SetScreenNow(SCREEN_MESSAGE);
+      return true;
+    }
+    return false;
+  }
+#endif
 
 private:
   // Variables related to frame buffer layout.
@@ -942,6 +958,9 @@ public:
 	frame_start_time_ = millis();
 	lock_fb_ = true;
 
+	// STDOUT << "SCREEN = " << (int)GetScreen() << " m= " << millis_to_display_ << "  clear=" << Display<WIDTH, col_t>::isClear() << "\n";
+	if (GetScreen() == SCREEN_OFF && Display<WIDTH, col_t>::isClear()) break;
+
 	// I2C
 	loop_counter_.Update();
 #ifdef PROFFIEBOARD
@@ -973,16 +992,17 @@ public:
 	lock_fb_ = false;
 	I2CUnlock();
 #endif
-	if (controller_->GetScreen() == SCREEN_OFF) break;
-
 	while (millis() - frame_start_time_ < millis_to_display_) {
 	  if (next_millis_to_display_ == 0) {
 	    next_millis_to_display_ = FillFrameBuffer();
 	    // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
+
 	  }
 	  YIELD();
 	}
       }
+
+      STDERR << "DISPLAY SLEEP\n";
 
       // Time to shut down... for now.
       while (!I2CLock()) YIELD();
@@ -992,7 +1012,8 @@ public:
       power_.Power(false);
       power_.DeInit();
       on_ = false;
-      while (controller_->GetScreen() == SCREEN_OFF) YIELD();
+      while (GetScreen() == SCREEN_OFF) YIELD();
+      STDERR << "DISPLAY WAKEUP\n";
     }
     STATE_MACHINE_END();
   }

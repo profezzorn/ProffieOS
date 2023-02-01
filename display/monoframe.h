@@ -49,6 +49,13 @@ public:
     memset(frame_buffer_, 0, WIDTH * HEIGHT / 8);
   }
 
+  bool isClear() {
+    for (int i = 0; i < WIDTH; i++) {
+      if (frame_buffer_[i]) return false;
+    }
+    return true;
+  }
+
   void Invert() {
     for (int i = 0; i < WIDTH; i++) {
       frame_buffer_[i] ^= (col_t)-1;
