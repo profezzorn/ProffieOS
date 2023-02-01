@@ -554,10 +554,12 @@ public:
           beeper.Beep(0.05, 595);
           beeper.Beep(0.05, 525);
           beeper.Beep(0.05, 475);
-          STDOUT.print("**** Blade Too High - Tilt Down \n");
+          STDOUT << "**** Blade Too High - Tilt Down \n";
           beep_delay_ = millis();
           return;
-        } else return;
+        } else {
+          return;
+        }
       }
       if (fusor.angle1() < - M_PI / 4) {
         if (millis() - beep_delay_ > 1000) {
@@ -567,10 +569,12 @@ public:
           beeper.Beep(0.05, 625);
           beeper.Beep(0.05, 693);
           beeper.Beep(0.05, 950);
-          STDOUT.print("**** Blade Too Low - Tilt Up \n");
+          STDOUT << "**** Blade Too Low - Tilt Up \n";
           beep_delay_ = millis();
           return;
-        } else return;
+        } else {
+          return;
+        }
       }
       float a = fusor.angle2() - current_menu_angle_;
       if (a > M_PI) a-=M_PI*2;
