@@ -16,8 +16,9 @@ public:
 #ifdef PROFFIEOS_DEFINE_FUNCTION_STAGE
 
 void ProffieOSErrors::sd_card_not_found() {
+  SaberBase::DoEffect(EFFECT_SD_CARD_NOT_FOUND, 0);
 #ifdef ENABLE_AUDIO
-#ifndef DISABLE_TALKIE  
+#ifndef DISABLE_TALKIE
   talkie.Say(talkie_sd_card_15, 15);
   talkie.Say(talkie_not_found_15, 15);
 #else
@@ -26,13 +27,14 @@ void ProffieOSErrors::sd_card_not_found() {
   beeper.Beep(0.5, 261.63 * 2); // C4
   beeper.Beep(0.5, 196.00 * 2); // G3
   beeper.Beep(1.0, 130.81 * 2); // C3
-#endif  
+#endif
 #endif
 }
 
 void ProffieOSErrors::font_directory_not_found() {
+  SaberBase::DoEffect(EFFECT_FONT_DIRECTORY_NOT_FOUND, 0);
 #ifdef ENABLE_AUDIO
-#ifndef DISABLE_TALKIE  
+#ifndef DISABLE_TALKIE
   talkie.Say(talkie_font_directory_15, 15);
   talkie.Say(talkie_not_found_15, 15);
 #else
@@ -48,9 +50,10 @@ void ProffieOSErrors::font_directory_not_found() {
 }
 
 void ProffieOSErrors::error_in_blade_array() {
+  SaberBase::DoEffect(EFFECT_ERROR_IN_BLADE_ARRAY, 0);
   STDOUT.println("BAD BLADE");
 #ifdef ENABLE_AUDIO
-#ifndef DISABLE_TALKIE  
+#ifndef DISABLE_TALKIE
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_blade_array_15, 15);
 #else
@@ -65,8 +68,9 @@ void ProffieOSErrors::error_in_blade_array() {
 }
 
 void ProffieOSErrors::error_in_font_directory() {
+  SaberBase::DoEffect(EFFECT_ERROR_IN_FONT_DIRECTORY, 0);
 #ifdef ENABLE_AUDIO
-#ifndef DISABLE_TALKIE  
+#ifndef DISABLE_TALKIE
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_font_directory_15, 15);
 #else
@@ -85,14 +89,14 @@ void ProffieOSErrors::error_in_font_directory() {
 
 void ProffieOSErrors::low_battery() {
 #ifdef ENABLE_AUDIO
-    // play the fonts low battery sound if it exists
-    if (SFX_lowbatt) {
-      hybrid_font.PlayCommon(&SFX_lowbatt);
-      return;
-    }
+  // play the fonts low battery sound if it exists
+  if (SFX_lowbatt) {
+    hybrid_font.PlayCommon(&SFX_lowbatt);
+    return;
+  }
 
-#ifndef DISABLE_TALKIE  
-    talkie.Say(talkie_low_battery_15, 15);
+#ifndef DISABLE_TALKIE
+  talkie.Say(talkie_low_battery_15, 15);
 #else
   beeper.Beep(1.0, 261.63 * 2); // C4
   beeper.Beep(1.0, 130.81 * 2); // C3

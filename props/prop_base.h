@@ -1011,7 +1011,7 @@ public:
       if (current_style() && !current_style()->Charging()) {
         LowBatteryOff();
         if (millis() - last_beep_ > 15000) {  // (was 5000)
-          STDOUT << "Low battery: " << battery_monitor.battery() << " volts\n";
+	  STDOUT << "Low battery: " << battery_monitor.battery() << " volts\n";
           SaberBase::DoLowBatt();
           last_beep_ = millis();
         }
@@ -1344,10 +1344,10 @@ public:
       return true;
     }
     if (!strcmp(cmd, "low_battery")) {
-      ProffieOSErrors::low_battery();
+      SaberBase::DoLowBatt();
       return true;
     }
-#endif    
+#endif
     if (!strcmp(cmd, "play")) {
       if (!arg) {
         StartOrStopTrack();

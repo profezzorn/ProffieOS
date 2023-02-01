@@ -2,8 +2,8 @@
 saber_BC_buttons.h
   http://fredrik.hubbe.net/lightsaber/proffieos.html
   Copyright (c) 2016-2019 Fredrik Hubinette
-  Copyright (c) 2021 Brian Conner with contributions by:
-  Fredrik Hubinette, Fernando da Rosa, and Matthew McGeary.
+  Copyright (c) 2023 Brian Conner with contributions by:
+  Fredrik Hubinette, Fernando da Rosa, Matthew McGeary and Scott Weber.
   Distributed under the terms of the GNU General Public License v3.
   http://www.gnu.org/licenses/
 
@@ -21,13 +21,13 @@ Features:
 - Spoken Battery level in volts OR percentage. Both always available.
 - Dedicated Quote sounds - Always available. force.wavs can remain as force.
                            Add quote.wav files to font to use.
-                           Toggle between sequential or random quote play.
+                           Live toggle between sequential or random quote play.
 - Play / Stop track control while blade is on.
 - Force Push is always available, not just in Battle Mode.
 - Melt is always available as no button, with pull-away or button to end.
 - Drag is always clash with button pressed while pointing down.
 - No blade inserted = no gestures option if Blade Detect is used.
-- Optional On-the-fly volume controls with cycle through min and max levels.
+- Optional On-the-fly volume controls with Quick MIN and MAX levels.
 
 ---------------------------------------------------------------------------
 Optional Blade style elements:
@@ -50,8 +50,6 @@ Optional #defines:
 #define ENABLE_AUTO_SWING_BLAST - Multi-blast initiated by simply swinging
                                   within 1 second of last blast.
                                   Exit by not swinging for 1 second.
-#define VOLUME_MENU_CYCLE       - This allows the Volume menu to loop through from
-                                  maximum back to minimum and vice versa.
 #define FEMALE_TALKIE_VOICE     - To use a female voice version of onboard Talkie.
 #define NO_VOLUME_MENU          - Option to omit On-the-fly Volume menu control with buttons.
 
@@ -120,14 +118,22 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
 Next Preset           - Long click and release POW, or TWIST while pointing down.
-Prev Preset           - Double click and hold POW, release after a second, or TWIST while pointing up.
-                        (click then long click)
+Prev Preset           - Double click and hold POW, release after a second (click then long click),
+                        or TWIST while pointing up.
 Play/Stop Track       - 4x click POW.
 Volume Menu:
+                      * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
+                        tilt up or down to avoid erratic rotational volume changes at extreme blade angles.
         Enter/Exit    - Hold POW + Clash.
-        Volume UP     - Long click and release POW while in Volume Menu. (just like next preset)
-        Volume DOWN   - Double click and hold POW, release after a second while in Volume Menu.
+        Volume UP     - Rotate Right 
+                      - or - 
+                      - Long click and release POW while in Volume Menu. (just like next preset)
+        Volume DOWN   - Rotate Left 
+                      - or -
+                      - Double click and hold POW, release after a second while in Volume Menu.
                         (click then long click, just like next preset)
+        Quick MAX Vol - Short click POW while in Volume Menu.
+        Quick MIN Vol - Double click POW while in Volume Menu.
 Spoken Battery Level
         in volts      - Triple click POW.
         in percentage - Triple click and hold POW.
@@ -199,14 +205,22 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
 Next Preset           - Long click and release POW, or TWIST while pointing down.
-Prev Preset           - Double click and hold POW, release after a second, or TWIST while pointing up.
-                        (click then long click)
+Prev Preset           - Double click and hold POW, release after a second (click then long click),
+                        or TWIST while pointing up.
 Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
-        Enter/Exit    - Long click and release AUX.
-        Volume UP     - Long click and release POW while in Volume Menu. (just like next preset)
-        Volume DOWN   - Double click and hold POW, release after a second while in Volume Menu.
+                      * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
+                        tilt up or down to avoid erratic rotational volume changes at extreme blade angles.
+        Enter/Exit    - Hold POW + Clash.
+        Volume UP     - Rotate Right 
+                      - or - 
+                      - Long click and release POW while in Volume Menu. (just like next preset)
+        Volume DOWN   - Rotate Left 
+                      - or -
+                      - Double click and hold POW, release after a second while in Volume Menu.
                         (click then long click, just like next preset)
+        Quick MAX Vol - Short click POW while in Volume Menu.
+        Quick MIN Vol - Double click POW while in Volume Menu.
 Spoken Battery Level
         in volts      - Triple click POW.
         in percentage - Triple click and hold POW.
@@ -370,6 +384,7 @@ public:
 
   void Loop() override {
     PropBase::Loop();
+    DetectMenuTurn();
     DetectTwist();
     Vec3 mss = fusor.mss();
     sound_library_.Poll(wav_player);
@@ -442,12 +457,40 @@ public:
   }
 
 // Volume Menu
+    void VolumeMenu() {
+    if (!mode_volume_) {
+      current_menu_angle_ = fusor.angle2();
+      mode_volume_ = true;
+      if (SFX_vmbegin) {
+        sound_library_.SayEnterVolumeMenu();
+      } else {
+        beeper.Beep(0.1, 1000);
+        beeper.Beep(0.1, 2000);
+        beeper.Beep(0.1, 3000);
+      }
+      STDOUT.println("Enter Volume Menu");
+      SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+    } else {
+      mode_volume_ = false;
+      if (SFX_vmend) {
+        sound_library_.SayVolumeMenuEnd();
+      } else {
+        beeper.Beep(0.1, 3000);
+        beeper.Beep(0.1, 2000);
+        beeper.Beep(0.1, 1000);
+      }
+      STDOUT.println("Exit Volume Menu");
+    }
+  }
+
   void VolumeUp() {
+    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+    current_menu_angle_ = fusor.angle2();
     if (dynamic_mixer.get_volume() < VOLUME) {
       dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
         dynamic_mixer.get_volume() + VOLUME * 0.10));
       if (SFX_volup) {
-        sound_library_.SayVolumeUp();
+        hybrid_font.PlayPolyphonic(&SFX_volup);
       } else {
         beeper.Beep(0.10, 2000);
         beeper.Beep(0.20, 2500);
@@ -455,44 +498,18 @@ public:
       STDOUT.print("Volume Up - Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
     } else {
-      // Cycle through Volume Menu option
-      #ifdef VOLUME_MENU_CYCLE
-        if (!max_vol_reached_) {
-          if (SFX_volmax) {
-            sound_library_.SayMaximumVolume();
-          } else {
-            beeper.Beep(0.5, 3000);
-          }
-          STDOUT.print("Maximum Volume \n");
-          max_vol_reached_ = true;
-        } else {
-          dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
-          dynamic_mixer.get_volume() - VOLUME * 0.90));
-          if (SFX_volmin) {
-            sound_library_.SayMininumVolume();
-          } else {
-            beeper.Beep(0.5, 1000);
-          }
-          STDOUT.print("Minimum Volume \n");
-          max_vol_reached_ = false;
-        }
-      #else
-        if (SFX_volmax) {
-          sound_library_.SayMaximumVolume();
-        } else {
-          beeper.Beep(0.5, 3000);
-        }
-        STDOUT.print("Maximum Volume \n");
-      #endif
+      QuickMaxVolume();
     }
   }
 
   void VolumeDown() {
+    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+    current_menu_angle_ = fusor.angle2();
     if (dynamic_mixer.get_volume() > (0.10 * VOLUME)) {
       dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
         dynamic_mixer.get_volume() - VOLUME * 0.10));
       if (SFX_voldown) {
-        sound_library_.SayVolumeDown();
+        hybrid_font.PlayPolyphonic(&SFX_voldown);
       } else {
         beeper.Beep(0.10, 2000);
         beeper.Beep(0.20, 1500);
@@ -500,33 +517,70 @@ public:
       STDOUT.print("Volume Down - Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
     } else {
-      #ifdef VOLUME_MENU_CYCLE
-        if (!min_vol_reached_) {
-          if (SFX_volmin) {
-            sound_library_.SayMininumVolume();
-          } else {
-            beeper.Beep(0.5, 1000);
-          }
-          STDOUT.print("Minimum Volume \n");
-          min_vol_reached_ = true;
+      QuickMinVolume();
+    }
+  }
+
+  void QuickMaxVolume() {
+    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+    dynamic_mixer.set_volume(VOLUME);
+    if (SFX_volmax) {
+      hybrid_font.PlayPolyphonic(&SFX_volmax);
+    } else {
+      beeper.Beep(0.5, 3000);
+    }
+    STDOUT.print("Maximum Volume \n");
+  }
+
+  void QuickMinVolume() {
+    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+    dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
+    dynamic_mixer.get_volume() - VOLUME * 0.90));
+    if (SFX_volmin) {
+      hybrid_font.PlayPolyphonic(&SFX_volmin);
+      } else {
+        beeper.Beep(0.5, 1000);
+      }
+      STDOUT.print("Minimum Volume \n");
+  }
+
+  void DetectMenuTurn() {
+    if (mode_volume_) {
+      if (fusor.angle1() >  M_PI / 3) {
+        if (millis() - beep_delay_ > 1000) {
+          beeper.Beep(0.05, 950);
+          beeper.Beep(0.05, 693);
+          beeper.Beep(0.05, 625);
+          beeper.Beep(0.05, 595);
+          beeper.Beep(0.05, 525);
+          beeper.Beep(0.05, 475);
+          STDOUT << "**** Blade Too High - Tilt Down \n";
+          beep_delay_ = millis();
+          return;
         } else {
-          dynamic_mixer.set_volume(VOLUME);
-          if (SFX_volmax) {
-            sound_library_.SayMaximumVolume();
-          } else {
-            beeper.Beep(0.5, 3000);
-          }
-          STDOUT.print("Maximum Volume \n");
-          min_vol_reached_ = false;
+          return;
         }
-      #else
-        if (SFX_volmin) {
-          sound_library_.SayMininumVolume();
+      }
+      if (fusor.angle1() < - M_PI / 4) {
+        if (millis() - beep_delay_ > 1000) {
+          beeper.Beep(0.05, 475);
+          beeper.Beep(0.05, 525);
+          beeper.Beep(0.05, 595);
+          beeper.Beep(0.05, 625);
+          beeper.Beep(0.05, 693);
+          beeper.Beep(0.05, 950);
+          STDOUT << "**** Blade Too Low - Tilt Up \n";
+          beep_delay_ = millis();
+          return;
         } else {
-          beeper.Beep(0.5, 1000);
+          return;
         }
-        STDOUT.print("Minimum Volume \n");
-      #endif
+      }
+      float a = fusor.angle2() - current_menu_angle_;
+      if (a > M_PI) a-=M_PI*2;
+      if (a < -M_PI) a+=M_PI*2;
+      if (a > M_PI / 6) VolumeUp();
+      if (a < -M_PI / 6) VolumeDown();
     }
   }
 
@@ -546,15 +600,11 @@ public:
   #ifdef NO_BLADE_NO_GEST_ONOFF
       if (!blade_detected_) return false;
   #endif
-      // Due to motion chip startup on boot creating false ignition
-      // we delay Swing On at boot for 3000ms
-      if (millis() > (PROFFIEOS_STARTUP_DELAY + 3000)) {
         FastOn();
   #ifdef BC_GESTURE_AUTO_BATTLE_MODE
         STDOUT.println("Entering Battle Mode");
         battle_mode_ = true;
   #endif
-      }
       return true;
   #endif  // BC_SWING_ON
 
@@ -595,10 +645,15 @@ public:
   #endif
       // Delay twist events to prevent false trigger from over twisting
       if (millis() - last_twist_ > 3000) {
-        Off();
         last_twist_ = millis();
         saber_off_time_ = millis();
         battle_mode_ = false;
+        // Bypass postoff if pointing up         
+        if (fusor.angle1() >  M_PI / 3) {
+          Off(OFF_FAST);
+        } else {
+          Off();
+        }
       }
       return true;
   #endif  // BC_TWIST_OFF
@@ -661,6 +716,8 @@ public:
         } else {
           On();
         }
+      } else {
+        QuickMaxVolume();
       }
       return true;
 
@@ -693,7 +750,6 @@ public:
         next_preset();
       } else {
         VolumeUp();
-        SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
       }
       return true;
 
@@ -716,7 +772,6 @@ public:
         previous_preset();
       } else {
         VolumeDown();
-        SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
       }
       return true;
 
@@ -742,28 +797,7 @@ public:
       // 2 button
       case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
     #endif
-        if (!mode_volume_) {
-          mode_volume_ = true;
-          if (SFX_vmbegin) {
-            sound_library_.SayEnterVolumeMenu();
-          } else {
-            beeper.Beep(0.1, 1000);
-            beeper.Beep(0.1, 2000);
-            beeper.Beep(0.1, 3000);
-          }
-          STDOUT.println("Enter Volume Menu");
-          SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
-        } else {
-          mode_volume_ = false;
-          if (SFX_vmend) {
-            sound_library_.SayVolumeMenuEnd();
-          } else {
-            beeper.Beep(0.1, 3000);
-            beeper.Beep(0.1, 2000);
-            beeper.Beep(0.1, 1000);
-          }
-          STDOUT.println("Exit Volume Menu");
-        }
+        VolumeMenu();
         return true;
   #endif
 
@@ -795,6 +829,8 @@ public:
         STDOUT<< "Battery Voltage: " << battery_monitor.battery() << "\n";
         STDOUT<< "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+      } else {
+        QuickMinVolume();
       }
       return true;
 
@@ -983,7 +1019,12 @@ public:
         }
   #endif
         if (!battle_mode_) {
-          Off();
+          // Bypass postoff if pointing up         
+          if (fusor.angle1() >  M_PI / 3) {
+            Off(OFF_FAST);
+          } else {
+            Off();
+          }
         }
       }
       saber_off_time_ = millis();
@@ -1058,6 +1099,12 @@ public:
           hybrid_font.PlayCommon(&SFX_faston);
         }
         return;
+      case EFFECT_FAST_OFF:
+        if (SaberBase::IsOn()) {
+          Off(OFF_FAST);
+          saber_off_time_ = millis();
+        }
+        return;
       case EFFECT_USER1: // Swap
         if (SFX_swap) {
           hybrid_font.PlayCommon(&SFX_swap);
@@ -1090,7 +1137,7 @@ private:
   uint32_t last_push_ = millis();
   uint32_t last_blast_ = millis();
   uint32_t saber_off_time_ = millis();
+  uint32_t beep_delay_ = millis();  
 };
 
 #endif
-
