@@ -133,8 +133,8 @@ public:
       while (!SA::Connected()) YIELD();
       if (!SA::AlwaysConnected()) {
         STDOUT << "Welcome to ProffieOS " << version << "\n";
-	STDOUT << "For available serial commands, see:\n";
-	STDOUT << "https://github.com/profezzorn/ProffieOS/wiki/Serial-Monitor-Commands\n";	
+        STDOUT << "For available serial commands, see:\n";
+        STDOUT << "https://pod.hubbe.net/tools/serial-monitor-commands.html\n";	
       }
 
       while (SA::Connected()) {
