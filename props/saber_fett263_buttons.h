@@ -17,6 +17,28 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
 
  Track Player requires track files to be located in /font/tracks for font specific tracks or /common/tracks for universal (all presets) or a combination of the two.
  
+  ***** This prop enables the following EFFECTs for use in "Special Abilities" and/or chained effects controlled at the style level in each preset *****
+
+   EFFECT_BATTERY_LEVEL (to display/say* battery level) *requires FETT263_SAY_BATTERY_VOLTS or FETT263_SAY_BATTERY_PERCENT
+   EFFECT_QUOTE (random quote)
+   EFFECT_NEXT_QUOTE (sequential quote)
+   EFFECT_TRACK (plays previously selected Track (via Track Player) -or- preset's default track if "tracks" folder is not found)
+   EFFECT_ALT_SOUND (enables Alt font selection from style)
+   EFFECT_TRANSITION_SOUND (enable custom transition sounds)
+   EFFECT_SOUND_LOOP (enable custom looped sound toggled on/off with each call)
+   EFFECT_BEGIN_BATTLE_MODE (begin Battle Mode)
+   EFFECT_END_BATTLE_MODE (end Battle Mode)
+   EFFECT_BEGIN_AUTO_BLAST (begin Multi-Blast Mode)
+   EFFECT_END_AUTO_BLAST (end Multi-Blast Mode)
+   EFFECT_INTERACTIVE_PREON (allows prop to recognize Interactive Preon effects for primary control)
+   EFFECT_INTERACTIVE_BLAST (allows prop to recognize Interactive Blast effects for primary control)
+   EFFECT_ON (enable normal ignition from chained effect while OFF)
+   EFFECT_FAST_ON (enable ignition without preon from chained effect while OFF)
+   EFFECT_OFF (enable normal retraction from chained effect while ON)
+   EFFECT_FAST_OFF (enable retraction without pstoff from chained effect while ON)
+   EFFECT_SECONDARY_IGNITION (to enable separate "secondary" blade ignition control)
+   EFFECT_SECONDARY_RETRACTION (to enable separate "secondary" blade retraction control)
+ 
 ---------- 2 / 3 Button Controls ----------
 NOTE: 
   Click = do short click
@@ -651,6 +673,8 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
   Multi-Blast Mode On - blstbgn.wav
   Multi-Blast Mode Off - blstend.wav
   Quotes - quote01.wav
+  Transition Sound - tr.wav
+  Transition Sound Loop trloop.wav
 */
 
 #ifndef PROPS_SABER_FETT263_BUTTONS_H
@@ -887,10 +911,10 @@ individual tastes.
 #include "../sound/hybrid_font.h"
 #include "../sound/effect.h"
 #include "../common/current_preset.h"
-
-#ifdef FETT263_EDIT_MODE_MENU
 #include "../common/file_reader.h"
 #include "../common/malloc_helper.h"
+
+#ifdef FETT263_EDIT_MODE_MENU
 #include "../common/color.h"
 #include "../styles/edit_mode.h"
 #endif
