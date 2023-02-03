@@ -117,9 +117,17 @@ struct TALKIEFAKE {
 TALKIEFAKE talkie;
 #define Say(X,Y) IGNORE;
 
+enum EFFECTS {
+  EFFECT_SD_CARD_NOT_FOUND,
+  EFFECT_FONT_DIRECTORY_NOT_FOUND,
+  EFFECT_ERROR_IN_BLADE_ARRAY,
+  EFFECT_ERROR_IN_FONT_DIRECTORY,
+};
+
 class SaberBase {
 public:
   static int sound_number;
+  static void DoEffect(int x, float y) {}
 };
 
 int SaberBase::sound_number = -1;

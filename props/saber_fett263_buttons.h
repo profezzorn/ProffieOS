@@ -1757,14 +1757,16 @@ SaberFett263Buttons() : PropBase() {}
     RestoreGestureState();
   }
 
-#ifdef FETT263_SAVE_CHOREOGRAPHY
   bool chdir(const char* dir) override {
     bool ret = PropBase::chdir(dir);
+    num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
+    track_num_ = 0;
+#ifdef FETT263_SAVE_CHOREOGRAPHY
     RestoreChoreo();
     clash_count_ = 0;
+#endif
     return ret;
   }
-#endif
 
   // Check Event "Delays" for Edit Mode for Ignition/Retraction/Preon Settings Previews and Choreography Save
   void CheckEvent() {
@@ -2007,7 +2009,6 @@ SaberFett263Buttons() : PropBase() {}
   };
 
   void StartTrackPlayer() {
-    num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
     if (num_tracks_ > 0) {
       sound_library_.SaySelect();
       StartMenu(MENU_TRACK_PLAYER);
@@ -2049,6 +2050,17 @@ SaberFett263Buttons() : PropBase() {}
     } else {
       if (track_player_ && !track_player_->isPlaying()) {
         track_player_.Free();
+      }
+    }
+  }
+
+  void PlayEffectTrack() {
+    if (!track_player_->isPlaying()) {
+      if (num_tracks_ > 0) {
+        if (track_num_ <= 0) track_num_ = 1;
+        PlayTrack();
+      } else {
+        StartOrStopTrack();
       }
     }
   }
@@ -2806,7 +2818,6 @@ SaberFett263Buttons() : PropBase() {}
           sound_library_.SaySelect();
           break;
         case EDIT_TRACK:
-          num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
           StartOrStopTrack();
           menu_type_ = MENU_TRACK;
           track_num_ = 0;
@@ -4831,7 +4842,7 @@ SaberFett263Buttons() : PropBase() {}
             previous_preset();
           } else {
             next_preset();
-          }        
+          }
         }
         return true;
 
@@ -4859,7 +4870,7 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_LONG, MODE_OFF):
-#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU
+#if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
         // Enter Edit Mode
         if (!menu_) {
           StartEditMode();
@@ -6227,6 +6238,7 @@ SaberFett263Buttons() : PropBase() {}
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
       case EFFECT_INTERACTIVE_BLAST: hybrid_font.PlayCommon(&SFX_blast); return;
+      case EFFECT_TRACK: PlayEffectTrack(); return;
       case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
       case EFFECT_NEXT_QUOTE:
         SFX_quote.SelectNext();
