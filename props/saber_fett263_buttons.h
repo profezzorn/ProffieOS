@@ -22,6 +22,7 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
 
    EFFECT_BATTERY_LEVEL (to display/say* battery level) *requires FETT263_SAY_BATTERY_VOLTS or FETT263_SAY_BATTERY_PERCENT
    EFFECT_VOLUME_LEVEL (to display current volume level)
+   EFFECT_POWERSAVE (blade dimming / powersave option)
    EFFECT_QUOTE (random quote* cannot be mixed with EFFECT_NEXT_QUOTE)
    EFFECT_NEXT_QUOTE (sequential quote)
    EFFECT_TRACK (plays previously selected Track (via Track Player) -or- preset's default track if "tracks" folder is not found)
@@ -40,7 +41,20 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
    EFFECT_FAST_OFF (enable retraction without pstoff from chained effect while ON)
    EFFECT_SECONDARY_IGNITION (to enable separate "secondary" blade ignition control)
    EFFECT_SECONDARY_RETRACTION (to enable separate "secondary" blade retraction control)
- 
+
+----- Available Mini Game EFFECTs -----
+
+    EFFECT_GAME_START (begin game effects)
+    EFFECT_GAME_ACTION1 (game action 1)
+    EFFECT_GAME_ACTION2 (game action 2)
+    EFFECT_GAME_CHOICE (interactive choice based on action)
+    EFFECT_GAME_RESPONSE1 (available response for action 1)
+    EFFECT_GAME_RESPONSE2 (available response for action 2)
+    EFFECT_GAME_RESULT1 (result of choice for action 1)
+    EFFECT_GAME_RESULT2 (result of choice for action 2)
+    EFFECT_GAME_WIN (end game with win)
+    EFFECT_GAME_LOSE (end game with loss)
+
 ---------- 2 / 3 Button Controls ----------
 NOTE: 
   Click = do short click
