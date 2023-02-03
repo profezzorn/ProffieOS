@@ -173,11 +173,13 @@ WS2811_Blade(WS2811PIN* pin,
     run_ = true;
     on_ = true;
     power_off_requested_ = false;
+    poweroff_delay_start_ = 0;
   }
   void SB_Effect2(BladeEffectType type, float location) override {
     AbstractBlade::SB_Effect2(type, location);
     run_ = true;
     power_off_requested_ = false;
+    poweroff_delay_start_ = 0;
   }
   void SB_Off(OffType off_type) override {
     TRACE(BLADE, "SB_Off");
@@ -228,6 +230,7 @@ WS2811_Blade(WS2811PIN* pin,
     Power(false);
     run_ = false;
     power_off_requested_ = false;
+    poweroff_delay_start_ = 0;
   }
 
 #define BLADE_YIELD() do {			\
@@ -275,8 +278,8 @@ protected:
       loop_counter_.Update();
 
       if (powered_ && allow_disable_) {
+	power_off_requested_ = true;
 	PowerOff();
-	run_ = false;
       }
     }
     STATE_MACHINE_END();
