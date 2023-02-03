@@ -9,18 +9,20 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
 
  Fett263 Button (prop) file, "Battle Mode 2.0", "Edit Mode", "Track Player", "Real Clash", "Choreography Mode", "Dual Mode Ignition",
  "Multi-Phase", "Multi-Blast"
- Copyright (c) 2020-2021 Fernando da Rosa
- Visit https://www.fett263.com/proffieOS6-fett263-prop-file.html for required set up and additional information
+ Copyright (c) 2022-2023 Fernando da Rosa
+ Visit https://www.fett263.com/proffieOS7-fett263-prop-file.html for required set up and additional information
  
  Voice Prompts and sounds required for certain features and should be included in /common folder or /font folder on SD card.
    Free prompts (courtesy of Brian Conner) available here: http://fredrik.hubbe.net/lightsaber/sound/
 
  Track Player requires track files to be located in /font/tracks for font specific tracks or /common/tracks for universal (all presets) or a combination of the two.
  
-  ***** This prop enables the following EFFECTs for use in "Special Abilities" and/or chained effects controlled at the style level in each preset *****
+  ----- This prop enables the following EFFECTs for use in menus, Special Abilities* and/or chained effects controlled at the style level in each preset -----
+  *requires FETT263_SPECIAL_ABILITIES define
 
    EFFECT_BATTERY_LEVEL (to display/say* battery level) *requires FETT263_SAY_BATTERY_VOLTS or FETT263_SAY_BATTERY_PERCENT
-   EFFECT_QUOTE (random quote)
+   EFFECT_VOLUME_LEVEL (to display current volume level)
+   EFFECT_QUOTE (random quote* cannot be mixed with EFFECT_NEXT_QUOTE)
    EFFECT_NEXT_QUOTE (sequential quote)
    EFFECT_TRACK (plays previously selected Track (via Track Player) -or- preset's default track if "tracks" folder is not found)
    EFFECT_ALT_SOUND (enables Alt font selection from style)
@@ -627,6 +629,8 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   Changes Brightness Menu to Circular Control
   
 == Disable Features ==
+  DISABLE_TALKIE - saves memory by replacing spoken error messages with beep sequences - 
+
   FETT263_DISABLE_CHANGE_FONT - Disables the "on-the-fly" Change Font option
   
   FETT263_DISABLE_CHANGE_STYLE - Disables the "on-the-fly" Change Style option
