@@ -403,6 +403,7 @@ MonopodWSPinBase(int num_leds, int pin, uint32_t frequency,
     start_micros_ = micros();
   }
 
+  int pin() const override { return pin_; }
   int num_leds() const override { return num_leds_; }
   Color8::Byteorder get_byteorder() const override { return BYTEORDER; }
   void Enable(bool on) override {

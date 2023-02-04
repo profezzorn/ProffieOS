@@ -22,6 +22,7 @@ public:
   virtual int num_leds() const = 0;
   virtual Color8::Byteorder get_byteorder() const = 0;
   virtual void Enable(bool enable) = 0;
+  virtual int pin() const = 0;
 };
 
 #ifdef ARDUINO_ARCH_STM32L4
@@ -249,13 +250,10 @@ protected:
       if (!current_style_ || !run_) {
 	loop_counter_.Reset();
 #ifdef BLADE_ID_SCAN_MILLIS
-      if (CheckScanIdTimer()) {
-	// May need to ask the pin it's ok
-	scan_id_now = true;
-	YIELD();
-	pin_->Enable(powered_);
-	SLEEP(1);
-      }
+	if (pin_->pin() == bladeIdentifyPin && ScanBladeIdNow()) {
+	  pin_->Enable(powered_);
+	  SLEEP(1);
+	}
 #endif      
 	continue;
       }
@@ -284,10 +282,7 @@ protected:
 
       while (!pin_->IsReadyForEndFrame()) BLADE_YIELD();
 #ifdef BLADE_ID_SCAN_MILLIS
-      if (CheckScanIdTimer()) {
-	// May need to ask the pin it's ok
-	scan_id_now = true;
-	BLADE_YIELD();
+      if (pin_->pin() == bladeIdentifyPin && ScanBladeIdNow()) {
 	pin_->Enable(powered_);
 	SLEEP(1);
 	if (current_blade != this) goto retry;

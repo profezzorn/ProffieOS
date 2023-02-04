@@ -112,23 +112,8 @@ private:
   BladeEffect effects_[5];
 };
 
-
 #ifdef BLADE_ID_SCAN_MILLIS
-bool scan_id_now = false;
-uint32_t last_scan_id = 0;
-bool CheckScanIdTimer() {
-  return millis() - last_scan_id > BLADE_ID_SCAN_MILLIS;
-}
-bool ShouldScanBladeIdThisLoop() {
-  if (scan_id_now) {
-    scan_id_now = false;
-    last_scan_id = millis();
-    return true;
-  } else {
-    return false;
-  }
-}
+bool ScanBladeIdNow();
 #endif  
-  
 
 #endif
