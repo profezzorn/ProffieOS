@@ -207,6 +207,7 @@ public:
     STATE_MACHINE_END();
   }
 
+  int pin() const override { return pin_; }
   int num_leds() const override { return num_leds_; }
   Color8::Byteorder get_byteorder() const override { return BYTEORDER; }
   void Enable(bool on) override {
