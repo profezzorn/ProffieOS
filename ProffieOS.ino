@@ -599,6 +599,10 @@ const char* GetSaveDir() {
 
 ArgParserInterface* CurrentArgParser;
 
+#define CONFIG_STYLES
+#include CONFIG_FILE
+#undef CONFIG_STYLES
+
 #define CONFIG_PRESETS
 #include CONFIG_FILE
 #undef CONFIG_PRESETS
