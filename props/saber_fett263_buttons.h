@@ -9,14 +9,52 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
 
  Fett263 Button (prop) file, "Battle Mode 2.0", "Edit Mode", "Track Player", "Real Clash", "Choreography Mode", "Dual Mode Ignition",
  "Multi-Phase", "Multi-Blast"
- Copyright (c) 2020-2021 Fernando da Rosa
- Visit https://www.fett263.com/proffieOS6-fett263-prop-file.html for required set up and additional information
+ Copyright (c) 2022-2023 Fernando da Rosa
+ Visit https://www.fett263.com/proffieOS7-fett263-prop-file.html for required set up and additional information
  
  Voice Prompts and sounds required for certain features and should be included in /common folder or /font folder on SD card.
    Free prompts (courtesy of Brian Conner) available here: http://fredrik.hubbe.net/lightsaber/sound/
 
  Track Player requires track files to be located in /font/tracks for font specific tracks or /common/tracks for universal (all presets) or a combination of the two.
  
+  ----- This prop enables the following EFFECTs for use in menus, Special Abilities* and/or chained effects controlled at the style level in each preset -----
+  *requires FETT263_SPECIAL_ABILITIES define
+
+   EFFECT_BATTERY_LEVEL (to display/say* battery level) *requires FETT263_SAY_BATTERY_VOLTS or FETT263_SAY_BATTERY_PERCENT
+   EFFECT_VOLUME_LEVEL (to display current volume level)
+   EFFECT_POWERSAVE (blade dimming / powersave option)
+   EFFECT_QUOTE (random quote* cannot be mixed with EFFECT_NEXT_QUOTE)
+   EFFECT_NEXT_QUOTE (sequential quote)
+   EFFECT_TRACK (plays previously selected Track (via Track Player) -or- preset's default track if "tracks" folder is not found)
+   EFFECT_ALT_SOUND (enables Alt font selection from style)
+   EFFECT_TRANSITION_SOUND (enable custom transition sounds)
+   EFFECT_SOUND_LOOP (enable custom looped sound toggled on/off with each call)
+   EFFECT_BEGIN_BATTLE_MODE (begin Battle Mode)
+   EFFECT_END_BATTLE_MODE (end Battle Mode)
+   EFFECT_BEGIN_AUTO_BLAST (begin Multi-Blast Mode)
+   EFFECT_END_AUTO_BLAST (end Multi-Blast Mode)
+   EFFECT_INTERACTIVE_PREON (allows prop to recognize Interactive Preon effects for primary control)
+   EFFECT_INTERACTIVE_BLAST (allows prop to recognize Interactive Blast effects for primary control)
+   EFFECT_ON (enable normal ignition from chained effect while OFF)
+   EFFECT_FAST_ON (enable ignition without preon from chained effect while OFF)
+   EFFECT_OFF (enable normal retraction from chained effect while ON)
+   EFFECT_FAST_OFF (enable retraction without pstoff from chained effect while ON)
+   EFFECT_SECONDARY_IGNITION (to enable separate "secondary" blade ignition control)
+   EFFECT_SECONDARY_RETRACTION (to enable separate "secondary" blade retraction control)
+
+----- Available Mini Game EFFECTs -----
+
+    EFFECT_GAME_START (begin game effects)
+    EFFECT_GAME_ACTION1 (game action 1)
+    EFFECT_GAME_ACTION2 (game action 2)
+    EFFECT_GAME_CHOICE (interactive choice based on action)
+    EFFECT_GAME_RESPONSE1 (available response for action 1)
+    EFFECT_GAME_RESPONSE2 (available response for action 2)
+    EFFECT_GAME_RESULT1 (result of choice for action 1)
+    EFFECT_GAME_RESULT2 (result of choice for action 2)
+    EFFECT_GAME_WIN (end game with win)
+    EFFECT_GAME_LOSE (end game with loss)
+
 ---------- 2 / 3 Button Controls ----------
 NOTE: 
   Click = do short click
@@ -605,6 +643,8 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   Changes Brightness Menu to Circular Control
   
 == Disable Features ==
+  DISABLE_TALKIE - saves memory by replacing spoken error messages with beep sequences - 
+
   FETT263_DISABLE_CHANGE_FONT - Disables the "on-the-fly" Change Font option
   
   FETT263_DISABLE_CHANGE_STYLE - Disables the "on-the-fly" Change Style option
@@ -651,6 +691,8 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
   Multi-Blast Mode On - blstbgn.wav
   Multi-Blast Mode Off - blstend.wav
   Quotes - quote01.wav
+  Transition Sound - tr.wav
+  Transition Sound Loop trloop.wav
 */
 
 #ifndef PROPS_SABER_FETT263_BUTTONS_H
@@ -887,10 +929,10 @@ individual tastes.
 #include "../sound/hybrid_font.h"
 #include "../sound/effect.h"
 #include "../common/current_preset.h"
-
-#ifdef FETT263_EDIT_MODE_MENU
 #include "../common/file_reader.h"
 #include "../common/malloc_helper.h"
+
+#ifdef FETT263_EDIT_MODE_MENU
 #include "../common/color.h"
 #include "../styles/edit_mode.h"
 #endif
