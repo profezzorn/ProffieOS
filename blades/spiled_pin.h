@@ -74,6 +74,7 @@ public:
     for (int i = Color8::num_bytes(byteorder_); i >= 0; i--) OutByte(0xff);
   }
 
+  int pin() const override { return pin_; }
   int num_leds() const override { return num_leds_; }
   Color8::Byteorder get_byteorder() const override { return byteorder_; }
   void Enable(bool on) override {

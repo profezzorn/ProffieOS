@@ -617,6 +617,10 @@ ArgParserInterface* CurrentArgParser;
 
 PROP_TYPE prop;
 
+#ifdef BLADE_ID_SCAN_MILLIS
+bool ScanBladeIdNow() { return prop.ScanBladeIdNow(); }
+#endif
+
 #if 0
 #include "scripts/test_motion_timeout.h"
 #warning MOTION TEST SCRIPT ACTIVE

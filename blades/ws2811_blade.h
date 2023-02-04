@@ -22,6 +22,7 @@ public:
   virtual int num_leds() const = 0;
   virtual Color8::Byteorder get_byteorder() const = 0;
   virtual void Enable(bool enable) = 0;
+  virtual int pin() const = 0;
 };
 
 #ifdef ARDUINO_ARCH_STM32L4
@@ -248,6 +249,12 @@ protected:
       YIELD();
       if (!current_style_ || !run_) {
 	loop_counter_.Reset();
+#ifdef BLADE_ID_SCAN_MILLIS
+	if (pin_->pin() == bladeIdentifyPin && ScanBladeIdNow()) {
+	  pin_->Enable(powered_);
+	  SLEEP(1);
+	}
+#endif      
 	continue;
       }
       // Wait until it's our turn.
@@ -274,6 +281,13 @@ protected:
       }
 
       while (!pin_->IsReadyForEndFrame()) BLADE_YIELD();
+#ifdef BLADE_ID_SCAN_MILLIS
+      if (pin_->pin() == bladeIdentifyPin && ScanBladeIdNow()) {
+	pin_->Enable(powered_);
+	SLEEP(1);
+	if (current_blade != this) goto retry;
+      }
+#endif      
       pin_->EndFrame();
       loop_counter_.Update();
 
@@ -290,7 +304,7 @@ protected:
     STDERR << "stuck somewhere after: " << state_machine_.next_state_ << "\n";
   }
 #endif
-  
+
 private:
   // Loop should run.
   bool run_ = false;
@@ -309,7 +323,10 @@ private:
   PowerPinInterface* power_;
   WS2811PIN* pin_;
   Color16* colors_;
+
 };
+
+
 
 
 #ifndef WS2811_GBR
