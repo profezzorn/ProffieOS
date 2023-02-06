@@ -791,19 +791,19 @@ public:
     if (!frame_available_) {
       // STDERR << "ADVANCE=" << advance_ << " last_file_pos_= " << last_state_.file_pos << " ypos=" << last_state_.ypos << "\n";
       if (!advance_) {
-  file_.Seek(last_state_.file_pos);
-  ypos_ = last_state_.ypos;
+        file_.Seek(last_state_.file_pos);
+        ypos_ = last_state_.ypos;
       } else {
-  advance_ = false;
+        advance_ = false;
       }
       ReadState state;
       state.ypos = ypos_;
       state.file_pos = file_.Tell();
       if (ReadImage(&file_)) {
-  frame_available_ = true;
-  last_state_ = state;
+        frame_available_ = true;
+        last_state_ = state;
       } else {
-  STDERR << "read image fail\n";
+        STDERR << "read image fail\n";
         eof_ = true;
       }
     }
