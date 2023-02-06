@@ -301,7 +301,7 @@ Standard Controls While Blade is OFF
     Disables Clash, Stab and Lockup effects to allow for spinning and flourishes
     Will play bmbegin.wav or force.wav when toggled ON/OFF
     *requires FETT263_SPIN_MODE define
-  NEW! Toggle Gesture Sleep* = Hold PWR + Twist
+  NEW! Toggle Gesture Sleep* = Hold PWR + Clash (pointing down)
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
   Next Preset = Long Click PWR (parallel or up)
@@ -1787,11 +1787,8 @@ SaberFett263Buttons() : PropBase() {}
   void DoInteractiveBlast() {
     if (CheckInteractiveBlast()) {
       SaberBase::DoEffectR(EFFECT_INTERACTIVE_BLAST);
-#ifndef FETT263_DISABLE_MULTI_BLAST_TOGGLE
     } else {
-      ToggleMultiBlast();
       SaberBase::DoBlast();
-#endif
     }
   }
 
@@ -5122,10 +5119,10 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 #endif
 
-#ifndef FETT263_DISABLE_MULTI_BLAST
+#if !defined(FETT263_DISABLE_MULTI_BLAST) && !defined(FETT263_DISABLE_MULTI_BLAST_TOGGLE)
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
         if (menu_ || CheckShowColorCC()) return true;
-        DoInteractiveBlast();
+        ToggleMultiBlast();
         return true;
 #endif
 
@@ -5564,10 +5561,10 @@ SaberFett263Buttons() : PropBase() {}
         }
         return true;
 
-#ifndef FETT263_DISABLE_MULTI_BLAST
+#if !defined(FETT263_DISABLE_MULTI_BLAST) && !defined(FETT263_DISABLE_MULTI_BLAST_TOGGLE)
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
         if (menu_ || CancelShowColor()) return true;
-        DoInteractiveBlast();
+      	ToggleMultiBlast();
         return true;
 #endif
 
