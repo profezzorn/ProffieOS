@@ -28,6 +28,7 @@ Features:
 - Drag is always clash with button pressed while pointing down.
 - No blade inserted = no gestures option if Blade Detect is used.
 - Optional On-the-fly volume controls with Quick MIN and MAX levels.
+- Bypass preon and/or postoff based on blade angle.
 
 ---------------------------------------------------------------------------
 Optional Blade style elements:
@@ -115,6 +116,7 @@ Gesture Controls:
 
 *************   WHILE SABER BLADE IS OFF   ***************
 Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
+                        * NOTE * Gesture ignitions using FastOn bypass preon.
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
 Next Preset           - Long click and release POW, or TWIST while pointing down.
@@ -195,6 +197,7 @@ PowerSave Dim Blade   - 4x click and hold POW medium. (while pointing up)
                         To use Power Save requires AlphaL based EffectSequence in style.
 Turn off blade        - Hold POW and wait until blade is off,
                         or Twist if using #define BC_TWIST_OFF.
+Turn OFF without postoff - Turn OFF while pointing up.
 
 ====================== 2 BUTTON CONTROLS ========================
 | Sorted by ON or OFF state: (what it's like while using saber) |
@@ -202,6 +205,7 @@ Turn off blade        - Hold POW and wait until blade is off,
 
 *************   WHILE SABER BLADE IS OFF   ***************
 Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
+                        * NOTE * Gesture ignitions using FastOn bypass preon.
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
 Next Preset           - Long click and release POW, or TWIST while pointing down.
@@ -282,6 +286,8 @@ PowerSave Dim Blade   - Hold AUX + Twist. (while pointing up)
           (To use Power Save requires AlphaL based EffectSequence in style)
 Turn off blade        - Hold POW and wait until blade is off,
                         or Twist if using #define BC_TWIST_OFF.
+Turn OFF without postoff - Turn OFF while pointing up.
+
 */
 
 #ifndef PROPS_SABER_BC_BUTTONS_H
