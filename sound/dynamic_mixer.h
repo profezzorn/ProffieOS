@@ -78,7 +78,9 @@ public:
 
       for (int i = 0; i < to_do; i++) {
         v = sum[i];
-        vol_ = ((vol_ + abs(v)) * 255) >> 8;
+//        vol_ = ((vol_ + abs(v)) * 255) >> 8;
+	vol_ += v;
+	vol_ -= (vol_ + 255) >> 8;
         v2 = v * volume_ / (my_sqrt(vol_) + 100);
 //	v2 = (int)((v * (float)volume_)/(sqrtf(vol_)+100.0f));
         data[i] = clamptoi16(v2);
@@ -119,7 +121,9 @@ public:
 
       for (int i = 0; i < to_do; i++) {
         v = sum[i];
-        vol_ = ((vol_ + abs(v)) * 255) >> 8;
+        // vol_ = ((vol_ + abs(v)) * 255) >> 8;
+	vol_ += v;
+	vol_ -= (vol_ + 255) >> 8;
 	data[i] = v / (sqrtf(vol_) + 100.0f);
       }
       data += to_do;
@@ -180,7 +184,7 @@ public:
   int32_t get_volume() const { return volume_; }
 
   ProffieOSAudioStream* streams_[N];
-  int32_t vol_ = 0;
+  uint32_t vol_ = 0;
   int32_t last_sample_ = 0;
   int32_t last_sum_ = 0;
   int32_t peak_sum_ = 0;
