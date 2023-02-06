@@ -22,6 +22,7 @@ Since MIN_DEGREES, MAX_DEGREES, REPEAT and MIRROR all have defaults, those argum
 StylePOV<> draws one instance of the image in the top portion of the swing "window".
 MIN and MAX degrees set the start and end points for the edges of the image.
 REPEAT draws multple instances of the image through the 360 arc, butting each next image adjacent to the previous.
+When MIRROR is used with REPEAT, every other image is flipped.  
 In older files, you may see &style_pov used, which is a shorhand template, and essentially the same as StylePtr<StylePOV<>>().
 
 Usage:ContinuousPOV<>
