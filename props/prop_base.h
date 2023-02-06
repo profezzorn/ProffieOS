@@ -592,7 +592,7 @@ public:
     if (now - last_scan_id_ > BLADE_ID_SCAN_MILLIS) {
       last_scan_id_ = now;
       size_t best_config = FindBestConfig();
-      if (current_config != current_config + best_config) {
+      if (current_config != blades + best_config) {
 	// We can't call FindBladeAgain right away because
 	// we're called from the blade. Wait until next loop() call.
 	find_blade_again_pending_ = true;
