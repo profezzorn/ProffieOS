@@ -79,7 +79,7 @@ public:
       for (int i = 0; i < to_do; i++) {
         v = sum[i];
 //        vol_ = ((vol_ + abs(v)) * 255) >> 8;
-	vol_ += v;
+	vol_ += abs(v);
 	vol_ -= (vol_ + 255) >> 8;
         v2 = v * volume_ / (my_sqrt(vol_) + 100);
 //	v2 = (int)((v * (float)volume_)/(sqrtf(vol_)+100.0f));
@@ -122,7 +122,7 @@ public:
       for (int i = 0; i < to_do; i++) {
         v = sum[i];
         // vol_ = ((vol_ + abs(v)) * 255) >> 8;
-	vol_ += v;
+	vol_ += abs(v);
 	vol_ -= (vol_ + 255) >> 8;
 	data[i] = v / (sqrtf(vol_) + 100.0f);
       }
