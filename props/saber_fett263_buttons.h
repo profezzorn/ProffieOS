@@ -301,7 +301,7 @@ Standard Controls While Blade is OFF
     Disables Clash, Stab and Lockup effects to allow for spinning and flourishes
     Will play bmbegin.wav or force.wav when toggled ON/OFF
     *requires FETT263_SPIN_MODE define
-  NEW! Toggle Gesture Sleep* = Hold PWR + Twist
+  NEW! Toggle Gesture Sleep* = Hold PWR + Clash (pointing down)
     *toggles gesture controls on/off
     *gestures sleep automatically if Blade Detect is enabled and blade is missing
   Next Preset = Long Click PWR (parallel or up)
