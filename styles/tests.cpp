@@ -117,6 +117,7 @@ Monitoring monitor;
 #include "../common/color.h"
 #include "../blades/blade_base.h"
 #include "cylon.h"
+#include "../common/arg_parser.h"
 #include "style_ptr.h"
 #include "colors.h"
 #include "inout_helper.h"
@@ -165,7 +166,6 @@ Monitoring monitor;
 #include "fire.h"
 #include "sparkle.h"
 #include "../common/command_parser.h"
-#include "../common/arg_parser.h"
 CommandParser* parsers = NULL;
 ArgParserInterface* CurrentArgParser;
 
