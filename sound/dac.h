@@ -524,6 +524,16 @@ public:
 
   bool Parse(const char* cmd, const char* arg) override {
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
+
+#ifdef FILTER_CUTOFF_FREQUENCY
+    if (!strcmp(cmd, "filterdata")) {
+      for (int i = 0; i < NELEM(filter_.data_); i++) {
+	STDOUT << "filter[" << i << "] = " << filter_.data_[i][0] << ", " << filter_.data_[i][1] << "\n";
+      }
+      return true;
+    }
+#endif
+    
     if (!strcmp(cmd, "dacbuf")) {
 #ifndef TEENSYDUINO
       SAI_Block_TypeDef *SAIx = SAI1_Block_A;
