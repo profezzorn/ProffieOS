@@ -527,7 +527,7 @@ public:
 
 #ifdef FILTER_CUTOFF_FREQUENCY
     if (!strcmp(cmd, "filterdata")) {
-      for (int i = 0; i < NELEM(filter_.data_); i++) {
+      for (size_t i = 0; i < NELEM(filter_.data_); i++) {
 	STDOUT << "filter[" << i << "] = " << filter_.data_[i][0] << ", " << filter_.data_[i][1] << "\n";
       }
       return true;
