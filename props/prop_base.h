@@ -1080,6 +1080,12 @@ public:
     return clash_pending1_;
   }
 
+  virtual void PollTrackPlayer() {
+    if (track_player_ && !track_player_->isPlaying()) {
+      track_player_.Free();
+    }
+  }
+
   void Loop() override {
     CallMotion();
     if (clash_pending1_) {
@@ -1093,11 +1099,8 @@ public:
     PollScanId();
     CheckLowBattery();
 #ifdef ENABLE_AUDIO
-    if (track_player_ && !track_player_->isPlaying()) {
-      track_player_.Free();
-    }
+    PollTrackPlayer();
 #endif
-
 #ifndef DISABLE_COLOR_CHANGE
 #define TICK_ANGLE (M_PI * 2 / 12)
     switch (SaberBase::GetColorChangeMode()) {
