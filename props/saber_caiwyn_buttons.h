@@ -166,7 +166,6 @@ EFFECT(volmax);
 EFFECT(monce);
 EFFECT(mloop);
 EFFECT(mrotate);
-EFFECT(mselect);
 
 #ifdef CAIWYN_SAVE_TRACK_MODE
 class SaveCaiwynStateFile : public ConfigFile {
@@ -369,17 +368,8 @@ public:
   }
 
   void NextTrack(bool manually_selected) {
-    if (manually_selected) {
-      track_player_->Stop();
-      track_player_.Free();
-#ifdef CAIWYN_SAVE_TRACKS
-      current_preset_.track = mkstr(current_track_);
-      current_preset_.Save();
-#endif
-      if (SFX_mselect) {
-        hybrid_font.PlayPolyphonic(&SFX_mselect);
-      }
-    }
+    if (track_player_->isPlaying()) track_player_->Stop();
+    if (track_player_) track_player_.Free();
     if (num_tracks_ > 0) {
       char next_track[128];
       next_track[0] = 0;
@@ -387,6 +377,13 @@ public:
         RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, nullptr, next_track, false);
       }
       strcpy(current_track_, next_track);
+      if (manually_selected) {
+#ifdef CAIWYN_SAVE_TRACKS
+        current_preset_.track = mkstr(current_track_);
+        current_preset_.Save();
+#endif
+        sound_library_.SaySelect();
+      }
     }
     PlayTrack(current_track_);
   }
