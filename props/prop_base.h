@@ -1080,11 +1080,13 @@ public:
     return clash_pending1_;
   }
 
+#ifdef ENABLE_AUDIO
   virtual void PollTrackPlayer() {
     if (track_player_ && !track_player_->isPlaying()) {
       track_player_.Free();
     }
   }
+#endif
 
   void Loop() override {
     CallMotion();
