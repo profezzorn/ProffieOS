@@ -231,6 +231,7 @@ const char version[] = "$Id: ce12a06a1e236b5101ec60c950530a9a4719a74d $";
 #include "common/state_machine.h"
 #include "common/monitoring.h"
 #include "common/stdout.h"
+#include "common/errors.h"
 
 Monitoring monitor;
 DEFINE_COMMON_STDOUT_GLOBALS;
@@ -400,6 +401,23 @@ const char* next_current_directory(const char* dir) {
   if (!*dir) return NULL;
   return dir;
 }
+const char* last_current_directory() {
+  const char* ret = current_directory;
+  while (true) {
+    const char* tmp = next_current_directory(ret);
+    if (!tmp) return ret;
+    ret = tmp;
+  }
+}
+const char* previous_current_directory(const char* dir) {
+  if (dir == current_directory) return nullptr;
+  dir -= 2;
+  while (true) {
+    if (dir == current_directory) return current_directory;
+    if (!*dir) return dir + 1;
+    dir--;
+  }
+}
 
 #include "sound/sound.h"
 #include "common/battery_monitor.h"
@@ -536,6 +554,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "transitions/sequence.h"
 #include "transitions/blink.h"
 #include "transitions/doeffect.h"
+#include "transitions/loop.h"
 
 #include "styles/legacy_styles.h"
 //responsive styles
@@ -580,6 +599,10 @@ const char* GetSaveDir() {
 
 ArgParserInterface* CurrentArgParser;
 
+#define CONFIG_STYLES
+#include CONFIG_FILE
+#undef CONFIG_STYLES
+
 #define CONFIG_PRESETS
 #include CONFIG_FILE
 #undef CONFIG_PRESETS
@@ -593,6 +616,10 @@ ArgParserInterface* CurrentArgParser;
 #endif
 
 PROP_TYPE prop;
+
+#ifdef BLADE_ID_SCAN_MILLIS
+bool ScanBladeIdNow() { return prop.ScanBladeIdNow(); }
+#endif
 
 #if 0
 #include "scripts/test_motion_timeout.h"
@@ -1067,7 +1094,7 @@ class Commands : public CommandParser {
 
     if (!strcmp(cmd, "version")) {
       STDOUT << version
-      << "\nprop: "  TOSTRING(PROP_TYPE)  "\nbuttons: " TOSTRING(NUM_BUTTONS) "\ninstalled: " 
+      << "\n" CONFIG_FILE "\nprop: "  TOSTRING(PROP_TYPE)  "\nbuttons: " TOSTRING(NUM_BUTTONS) "\ninstalled: " 
       << install_time << "\n";
       return true;
     }
@@ -1359,8 +1386,12 @@ I2CBus i2cbus;
 #ifdef ENABLE_SSD1306
 #include "display/ssd1306.h"
 
+#ifndef DISPLAY_POWER_PINS
+#define DISPLAY_POWER_PINS PowerPINS<>
+#endif
+
 StandardDisplayController<128, uint32_t> display_controller;
-SSD1306Template<128, uint32_t> display(&display_controller);
+SSD1306Template<128, uint32_t, DISPLAY_POWER_PINS> display(&display_controller);
 #endif
 
 #ifdef INCLUDE_SSD1306
@@ -1475,12 +1506,9 @@ void setup() {
   // Time to identify the blade.
   prop.FindBlade();
   SaberBase::DoBoot();
-#if defined(ENABLE_SD) && defined(ENABLE_AUDIO)
-  if (!sd_card_found) {
-    talkie.Say(talkie_sd_card_15, 15);
-    talkie.Say(talkie_not_found_15, 15);
-  }
-#endif // ENABLE_AUDIO && ENABLE_SD
+#if defined(ENABLE_SD)
+  if (!sd_card_found) ProffieOSErrors::sd_card_not_found();
+#endif // ENABLE_SD
 }
 
 #ifdef MTP_RX_ENDPOINT
@@ -1514,7 +1542,11 @@ void loop() {
   Looper::DoLoop();
 }
 
+
 #define CONFIG_BOTTOM
 #include CONFIG_FILE
 #undef CONFIG_BOTTOM
+
+#define PROFFIEOS_DEFINE_FUNCTION_STAGE
+#include "common/errors.h"
 

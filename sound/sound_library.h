@@ -8,7 +8,9 @@ enum SayType {
   SAY_WHOLE,
 };
 
+#ifdef SAY_COLOR_LIST
 EFFECT(clrlst); // spoken color names for SAY_COLOR_LIST
+#endif
 // New colors should be added at end of enum and assigned numbers for each COLOR_ should not be changed.
 enum ColorNumber {
   COLOR_RED = 1,
@@ -265,9 +267,11 @@ public:
   void SaySettingsMenu() { Play("msetsub.wav"); }
   void SayStyleSettings() { Play("stylstm.wav"); }
 
+#ifdef SAY_COLOR_LIST
   void SayColor(ColorNumber n) {
     Play(SoundToPlay(&SFX_clrlst, n - 1));
   }
+#endif
 
   void SayBool(bool v) {
     if (v) {

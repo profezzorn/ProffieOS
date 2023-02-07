@@ -38,10 +38,14 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(POWERSAVE)                    \
     DEFINE_EFFECT(BATTERY_LEVEL)                \
     DEFINE_EFFECT(VOLUME_LEVEL)                 \
+    /* Allows style to turn blade ON for interactive effects if prop/style support, FAST_ON skips PREON. */          \
+    DEFINE_EFFECT(ON)                           \
     DEFINE_EFFECT(FAST_ON)                      \
     DEFINE_EFFECT(QUOTE)			\
     DEFINE_EFFECT(SECONDARY_IGNITION)		\
     DEFINE_EFFECT(SECONDARY_RETRACTION)		\
+    /* Allows style to turn blade OFF for interactive effects if prop/style support, FAST_OFF skips POSTOFF. */          \
+    DEFINE_EFFECT(OFF)                          \
     DEFINE_EFFECT(FAST_OFF)                     \
     DEFINE_EFFECT(OFF_CLASH)                    \
     DEFINE_EFFECT(NEXT_QUOTE)                   \
@@ -92,7 +96,12 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(USER5)			\
     DEFINE_EFFECT(USER6)			\
     DEFINE_EFFECT(USER7)			\
-    DEFINE_EFFECT(USER8)
+    DEFINE_EFFECT(USER8)                        \
+    /* ERRORS */                                \
+    DEFINE_EFFECT(SD_CARD_NOT_FOUND)            \
+    DEFINE_EFFECT(ERROR_IN_FONT_DIRECTORY)      \
+    DEFINE_EFFECT(ERROR_IN_BLADE_ARRAY)         \
+    DEFINE_EFFECT(FONT_DIRECTORY_NOT_FOUND)     \
 
 
 #define DEFINE_EFFECT(X) EFFECT_##X,

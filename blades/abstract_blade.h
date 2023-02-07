@@ -95,6 +95,7 @@ public:
 	SB_Effect2(EFFECT_BLAST, (200 + random(700)) / 1000.0f);
 	break;
       case OFF_NORMAL:
+      case OFF_FAST:
 	SB_Effect2(EFFECT_RETRACTION, 0);
         break;
       case OFF_IDLE:
@@ -110,5 +111,9 @@ private:
   size_t num_effects_ = 0;
   BladeEffect effects_[5];
 };
+
+#ifdef BLADE_ID_SCAN_MILLIS
+bool ScanBladeIdNow();
+#endif  
 
 #endif

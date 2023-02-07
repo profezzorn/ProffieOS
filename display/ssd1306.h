@@ -222,7 +222,11 @@ class Combine {
 #endif
 
 template<int Width, class col_t>
-class StandardDisplayController : public DisplayControllerBase<Width, col_t>, SaberBase, private AudioStreamWork {
+class StandardDisplayController : public DisplayControllerBase<Width, col_t>, SaberBase, private AudioStreamWork
+#ifdef ENABLE_DEVELOPER_COMMANDS
+  , CommandParser
+#endif  
+{
 public:
   static const int WIDTH = Width;
   static const int HEIGHT = sizeof(col_t) * 8;
@@ -272,6 +276,8 @@ public:
       display_->Invert();
     }
   }
+
+  virtual Screen GetScreen() { return screen_; }
 
   uint32_t last_delay_ = 0;
   uint32_t t_ = 0;  // time since we switched screen
@@ -483,7 +489,22 @@ public:
       case EFFECT_LOCKUP_END:
 	ShowDefault(true);
 	break;
-
+      case EFFECT_SD_CARD_NOT_FOUND:
+	SetMessage("sd card\nnot found");
+	break;
+      case EFFECT_ERROR_IN_FONT_DIRECTORY:
+	SetMessage("error in\nfont dir");
+	break;
+      case EFFECT_ERROR_IN_BLADE_ARRAY:
+	SetMessage("error in\nblade arr");
+	break;
+      case EFFECT_FONT_DIRECTORY_NOT_FOUND:
+	SetMessage("font dir\nnot found");
+	break;
+      case EFFECT_LOW_BATTERY:
+	// Maybe we should make this blink or something?
+	SetMessage("low\nbattery");
+	break;
       default: break;
     }
   }
@@ -499,9 +520,6 @@ public:
   }
 
   void SB_Off(OffType offtype) override {
-    // TODO: Make it so that screen can be
-    // powered down and up again properly.
-    // This only makes it black, which prevents burn-in.
     if (offtype == OFF_IDLE) {
       SetScreenNow(SCREEN_OFF);
     } else if (IMG_idle) {
@@ -514,7 +532,7 @@ public:
   // TODO: Don't update the display when we don't need to
   // and return false here so that we can go into lower power modes.
   void SB_IsOn(bool* on) override {
-    *on = true;
+    *on = on_;
   }
 
   void SetScreenNow(Screen screen) {
@@ -542,8 +560,9 @@ public:
   bool ShowFile(Effect* effect, float duration) {
     if (SetFile(effect, duration)) {
       SetScreenNow(SCREEN_IMAGE);
+      return true;
     }
-    return true;
+    return false;
   }
 
   void ShowFile(const char* file) {
@@ -722,6 +741,18 @@ public:
   }
 
 
+#ifdef ENABLE_DEVELOPER_COMMANDS
+  bool Parse(const char* cmd, const char* e) override {
+    if (!strcmp(cmd, "setmessage") && e) {
+      STDOUT << "Setting message: " << e << "\n";
+      SetMessage(e);
+      SetScreenNow(SCREEN_MESSAGE);
+      return true;
+    }
+    return false;
+  }
+#endif
+
 private:
   // Variables related to frame buffer layout.
   uint8_t xor_ = 0;
@@ -757,7 +788,7 @@ struct BaseLayerOp {
   template<int Width, class col_t> struct Controller : public T<Width, col_t> {};
 };
 
-template<int WIDTH, class col_t>
+template<int WIDTH, class col_t, class POWER_PIN = PowerPINS<> >
 class SSD1306Template : public Display<WIDTH, col_t>, I2CDevice, Looper, StateMachine {
 public:
   static const int HEIGHT = sizeof(col_t) * 8;
@@ -860,123 +891,145 @@ public:
     last_connected = connected;
 #endif
 
-  STATE_MACHINE_BEGIN();
-    while (!i2cbus.inited()) YIELD();
-    while (!I2CLock()) YIELD();
+    STATE_MACHINE_BEGIN();
+    while(true) {
+      on_ = true;
+      power_.Init();
+      power_.Power(true);
+    
+      while (!i2cbus.inited()) YIELD();
+      while (!I2CLock()) YIELD();
 
-    // Init sequence
-    Send(DISPLAYOFF);                    // 0xAE
-    Send(SETDISPLAYCLOCKDIV);            // 0xD5
-    Send(0x80);                          // the suggested ratio 0x80
+      // Init sequence
+      Send(DISPLAYOFF);                    // 0xAE
+      Send(SETDISPLAYCLOCKDIV);            // 0xD5
+      Send(0x80);                          // the suggested ratio 0x80
 
-    Send(SETMULTIPLEX);                  // 0xA8
-    Send(HEIGHT - 1);
+      Send(SETMULTIPLEX);                  // 0xA8
+      Send(HEIGHT - 1);
 
-    Send(SETDISPLAYOFFSET);              // 0xD3
-    Send(0x0);                                   // no offset
+      Send(SETDISPLAYOFFSET);              // 0xD3
+      Send(0x0);                                   // no offset
 
-    Send(SETSTARTLINE | 0x0);            // 0x40 line #0
+      Send(SETSTARTLINE | 0x0);            // 0x40 line #0
 
-    Send(CHARGEPUMP);                    // 0x8D
-    Send(0x14);
+      Send(CHARGEPUMP);                    // 0x8D
+      Send(0x14);
 
-    Send(MEMORYMODE);                    // 0x20
-    Send(0x01);                          // vertical address mode
+      Send(MEMORYMODE);                    // 0x20
+      Send(0x01);                          // vertical address mode
 
 #if defined (OLED_FLIP_180)
 #if defined(OLED_MIRRORED)
-    // Flip 180 and mirrored OLED operation
-    Send(SEGREMAP | 0x1);        // 0xa0 | 1
+      // Flip 180 and mirrored OLED operation
+      Send(SEGREMAP | 0x1);        // 0xa0 | 1
 #else
-    // Flip 180
-    Send(SEGREMAP);        // 0xa0 | 1
+      // Flip 180
+      Send(SEGREMAP);        // 0xa0 | 1
 #endif
-    Send(COMSCANINC);
+      Send(COMSCANINC);
 #elif defined (OLED_MIRRORED)
-    // mirrored OLED operation
-    Send(SEGREMAP);        // 0xa0 | 1
-    Send(COMSCANDEC);
+      // mirrored OLED operation
+      Send(SEGREMAP);        // 0xa0 | 1
+      Send(COMSCANDEC);
 #else
-    // normal OLED operation
-    Send(SEGREMAP | 0x1);        // 0xa0 | 1
-    Send(COMSCANDEC);
+      // normal OLED operation
+      Send(SEGREMAP | 0x1);        // 0xa0 | 1
+      Send(COMSCANDEC);
 #endif
 
-    Send(SETCOMPINS);                    // 0xDA
-    if (HEIGHT == 64 || WIDTH==64) {
-      Send(0x12);
-    } else {
-      Send(0x02);  // may need to be 0x12 for some displays
-    }
-    Send(SETCONTRAST);                   // 0x81
-    Send(0x8F);
-
-    Send(SETPRECHARGE);                  // 0xd9
-    Send(0xF1);
-    Send(SETVCOMDETECT);                 // 0xDB
-    Send(0x40);
-    Send(DISPLAYALLON_RESUME);           // 0xA4
-    Send(NORMALDISPLAY);                 // 0xA6
-
-    Send(DEACTIVATE_SCROLL);
-
-    Send(DISPLAYON);                     //--turn on oled panel
-
-    I2CUnlock();
-
-    STDOUT.println("Display initialized.");
-
-    while (true) {
-      millis_to_display_ = next_millis_to_display_;
-      next_millis_to_display_ = 0;
-      while (millis_to_display_ == 0) {
-	YIELD();
-	millis_to_display_ = FillFrameBuffer();
-	// STDERR << "millis_to_display_ = " << millis_to_display_ << "\n";
+      Send(SETCOMPINS);                    // 0xDA
+      if (HEIGHT == 64 || WIDTH==64) {
+	Send(0x12);
+      } else {
+	Send(0x02);  // may need to be 0x12 for some displays
       }
-      frame_start_time_ = millis();
-      lock_fb_ = true;
+      Send(SETCONTRAST);                   // 0x81
+      Send(0x8F);
 
-      // I2C
-      loop_counter_.Update();
-#ifdef PROFFIEBOARD
-      i = -(int)NELEM(transactions);
-      while (!I2CLockAndRun()) YIELD();
-      while (lock_fb_) YIELD();
-#else
-      do { YIELD(); } while (!I2CLock());
-      Send(COLUMNADDR);
-      Send((128 - WIDTH)/2);   // Column start address (0 = reset)
-      Send(WIDTH-1 + (128 - WIDTH)/2); // Column end address (127 = reset)
+      Send(SETPRECHARGE);                  // 0xd9
+      Send(0xF1);
+      Send(SETVCOMDETECT);                 // 0xDB
+      Send(0x40);
+      Send(DISPLAYALLON_RESUME);           // 0xA4
+      Send(NORMALDISPLAY);                 // 0xA6
 
-      Send(PAGEADDR);
-      Send(0); // Page start address (0 = reset)
-      Send(sizeof(col_t) - 1);
+      Send(DEACTIVATE_SCROLL);
 
-      //STDOUT.println(TWSR & 0x3, DEC);
+      Send(DISPLAYON);                     //--turn on oled panel
 
-      for (i=0; i < WIDTH * HEIGHT / 8; ) {
-        // send a bunch of data in one xmission
-        Wire.beginTransmission(address_);
-	GetChunk();
-	for (size_t x=0; x <= chunk_size; x++) {
-	  Wire.write(chunk[x]);
-	}
-        Wire.endTransmission();
-        I2CUnlock(); do { YIELD(); } while (!I2CLock());
-      }
-      lock_fb_ = false;
       I2CUnlock();
-#endif
-      while (millis() - frame_start_time_ < millis_to_display_) {
-	if (next_millis_to_display_ == 0) {
-	  next_millis_to_display_ = FillFrameBuffer();
-	  // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
-	}
-	YIELD();
-      }
-    }
 
+      STDOUT.println("Display initialized.");
+
+      while (true) {
+	millis_to_display_ = next_millis_to_display_;
+	next_millis_to_display_ = 0;
+	while (millis_to_display_ == 0) {
+	  YIELD();
+	  millis_to_display_ = FillFrameBuffer();
+	  // STDERR << "millis_to_display_ = " << millis_to_display_ << "\n";
+	}
+	frame_start_time_ = millis();
+	lock_fb_ = true;
+
+	// STDOUT << "SCREEN = " << (int)GetScreen() << " m= " << millis_to_display_ << "  clear=" << Display<WIDTH, col_t>::isClear() << "\n";
+	if (GetScreen() == SCREEN_OFF && Display<WIDTH, col_t>::isClear()) break;
+
+	// I2C
+	loop_counter_.Update();
+#ifdef PROFFIEBOARD
+	i = -(int)NELEM(transactions);
+	while (!I2CLockAndRun()) YIELD();
+	while (lock_fb_) YIELD();
+#else
+	do { YIELD(); } while (!I2CLock());
+	Send(COLUMNADDR);
+	Send((128 - WIDTH)/2);   // Column start address (0 = reset)
+	Send(WIDTH-1 + (128 - WIDTH)/2); // Column end address (127 = reset)
+
+	Send(PAGEADDR);
+	Send(0); // Page start address (0 = reset)
+	Send(sizeof(col_t) - 1);
+
+	//STDOUT.println(TWSR & 0x3, DEC);
+
+	for (i=0; i < WIDTH * HEIGHT / 8; ) {
+	  // send a bunch of data in one xmission
+	  Wire.beginTransmission(address_);
+	  GetChunk();
+	  for (size_t x=0; x <= chunk_size; x++) {
+	    Wire.write(chunk[x]);
+	  }
+	  Wire.endTransmission();
+	  I2CUnlock(); do { YIELD(); } while (!I2CLock());
+	}
+	lock_fb_ = false;
+	I2CUnlock();
+#endif
+	while (millis() - frame_start_time_ < millis_to_display_) {
+	  if (next_millis_to_display_ == 0) {
+	    next_millis_to_display_ = FillFrameBuffer();
+	    // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
+
+	  }
+	  YIELD();
+	}
+      }
+
+      STDERR << "DISPLAY SLEEP\n";
+
+      // Time to shut down... for now.
+      while (!I2CLock()) YIELD();
+      Send(DISPLAYOFF);                    // 0xAE
+      I2CUnlock();
+    
+      power_.Power(false);
+      power_.DeInit();
+      on_ = false;
+      while (GetScreen() == SCREEN_OFF) YIELD();
+      STDERR << "DISPLAY WAKEUP\n";
+    }
     STATE_MACHINE_END();
   }
 
@@ -1033,11 +1086,13 @@ private:
   volatile bool lock_fb_ = false;
   DisplayControllerBase<WIDTH, col_t>* controller_;
   LoopCounter loop_counter_;
+  POWER_PIN power_;
+  bool on_ = false;
 };
 
 #ifdef PROFFIEBOARD
-template<int WIDTH, class col_t>
-constexpr uint8_t SSD1306Template<WIDTH, col_t>::transactions[];
+template<int WIDTH, class col_t, class POWER_PIN>
+constexpr uint8_t SSD1306Template<WIDTH, col_t, POWER_PIN>::transactions[];
 #endif
 
 using SSD1306 = SSD1306Template<128, uint32_t>;

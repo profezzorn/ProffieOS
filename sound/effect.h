@@ -593,18 +593,7 @@ class Effect {
       STDOUT.println(" done");
     } else {
       STDOUT.println(" NOT FOUND!");
-#ifdef ENABLE_AUDIO
-#if VERSION_MAJOR <= 3	
-      if (strlen(dir) > 8) { // TODO: Check individual path segments
-	talkie.Say(talkie_font_directory_15, 15);
-	talkie.Say(talkie_too_long_15, 15);
-      } else
-#endif
-        if (strlen(dir)) {
-	  talkie.Say(talkie_font_directory_15, 15);
-	  talkie.Say(talkie_not_found_15, 15);
-	}
-#endif   // ENABLE_AUDIO
+      if (strlen(dir)) ProffieOSErrors::font_directory_not_found();
     }
 #endif   // ENABLE_SD
   }
@@ -628,10 +617,7 @@ class Effect {
 	  warned = true;
 	  STDOUT.println("");
 	  STDOUT.println("WARNING: This font seems to be missing some files!!");
-#ifdef ENABLE_AUDIO
-	  talkie.Say(talkie_error_in_15, 15);
-	  talkie.Say(talkie_font_directory_15, 15);
-#endif	  
+	  ProffieOSErrors::error_in_font_directory();
 	}
 	e->Show();
       }
