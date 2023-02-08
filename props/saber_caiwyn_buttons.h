@@ -308,7 +308,7 @@ public:
   }
 
   void PlayTrack(const char* track) {
-    track_player_ = GetFreeWavPlayer();
+    if (!track_player_) track_player_ = GetFreeWavPlayer();
     if (track_player_) {
       track_player_->Play(track);
       track_player_on_ = true;
