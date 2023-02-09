@@ -8,18 +8,19 @@
 #include "monoframe.h"
 
 // Images/animations
-IMAGE_FILESET(font);
 IMAGE_FILESET(boot);
-IMAGE_FILESET(on);
-IMAGE_FILESET(clsh);
+IMAGE_FILESET(font);
 IMAGE_FILESET(blst);
-IMAGE_FILESET(lock);
+IMAGE_FILESET(clsh);
 IMAGE_FILESET(force);
-IMAGE_FILESET(idle);
 IMAGE_FILESET(preon);
 IMAGE_FILESET(out);
 IMAGE_FILESET(in);
 IMAGE_FILESET(pstoff);
+IMAGE_FILESET(on);
+IMAGE_FILESET(lock);
+IMAGE_FILESET(idle);
+/* To-Do, possibly differently
 #ifdef OLED_USE_BLASTER_IMAGES
 IMAGE_FILESET(reload);
 IMAGE_FILESET(empty);
@@ -28,6 +29,7 @@ IMAGE_FILESET(clipin);
 IMAGE_FILESET(clipout);
 IMAGE_FILESET(destruct);
 #endif
+*/
 IMAGE_FILESET(lowbatt);
 
 enum Screen {
@@ -361,7 +363,7 @@ public:
           display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
         }
         next_screen_ = SCREEN_PLI;
-        return font_config.ProffieOSBootImageDuration;
+        return 4000;
 
       case SCREEN_PLI:
         if (!SaberBase::IsOn() && t_ >= PLI_OFF_TIME) {
@@ -398,7 +400,7 @@ public:
         }
         next_screen_ = SCREEN_DEFAULT;
         // STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
-        return font_config.ProffieOSFontImageDuration; 
+        return 3000; 
       }
 
       case SCREEN_IMAGE:
@@ -461,8 +463,7 @@ public:
 
   void SB_On2() override {
     if (IMG_out) {
-      float dur = (font_config.ProffieOSOutImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSOutImageDuration;
-      SetFile(&IMG_out, round(dur));
+      SetFile(&IMG_out, round(Set_Duration(font_config.ProffieOSOutImageDuration)));
     }
   }
 
@@ -474,14 +475,15 @@ public:
     }
   }
 
-  void SB_Effect(EffectType effect, float location) override {
+  float Set_Duration(float image_duration) {
+  return (image_duration == 0) ? SaberBase::sound_length * 1000 : image_duration;
+}
+
+ void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
-      float dur;
       case EFFECT_BOOT:
         if (IMG_boot) {
-          dur = (font_config.ProffieOSBootImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSBootImageDuration;
-        // Show default boot screen if no boot.bmp
-          ShowFile(&IMG_boot, round(dur));
+          ShowFile(&IMG_boot, round(Set_Duration(font_config.ProffieOSBootImageDuration)));
         } else {
           SetScreenNow(SCREEN_STARTUP);
         }
@@ -490,8 +492,7 @@ public:
         looped_on_ = Tristate::Unknown;
         looped_idle_ = Tristate::Unknown;
         if (IMG_font) {
-          dur = (font_config.ProffieOSFontImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSFontImageDuration;
-          ShowFile(&IMG_font, round(dur));
+          ShowFile(&IMG_font, round(Set_Duration(font_config.ProffieOSFontImageDuration)));
         } else if (prop.current_preset_name()) {
           SetMessage(prop.current_preset_name());
           SetScreenNow(SCREEN_MESSAGE);
@@ -531,58 +532,47 @@ public:
   }
   void SB_Effect2(EffectType effect, float location) override {
     switch (effect) {
-      float dur;
       case EFFECT_BLAST:
-        // Set_Duration();
-        dur = (font_config.ProffieOSBlastImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSBlastImageDuration;
-        ShowFile(&IMG_blst, round(dur));
-        return;
-      case EFFECT_CLASH:
-        dur = (font_config.ProffieOSClashImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSClashImageDuration;
-        ShowFile(&IMG_clsh, round(dur));
-        return;
-      case EFFECT_FORCE:
-        dur = (font_config.ProffieOSForceImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSForceImageDuration;
-        ShowFile(&IMG_force, round(dur));
-        return;
-      case EFFECT_PREON:
-        // always syncs
-        ShowFile(&IMG_preon, round(SaberBase::sound_length * 1000));
-        return;
-      case EFFECT_POSTOFF:
-        dur = (font_config.ProffieOSPstoffImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSPstoffImageDuration;
-        ShowFile(&IMG_pstoff, round(dur));
-        return;
+      ShowFile(&IMG_blst, round(Set_Duration(font_config.ProffieOSBlastImageDuration)));
+      return;
+    case EFFECT_CLASH:
+      ShowFile(&IMG_clsh, round(Set_Duration(font_config.ProffieOSClashImageDuration)));
+      return;
+    case EFFECT_FORCE:
+      ShowFile(&IMG_force, round(Set_Duration(font_config.ProffieOSForceImageDuration)));
+      return;
+    case EFFECT_PREON:
+      ShowFile(&IMG_preon, round(SaberBase::sound_length * 1000));
+      return;
+    case EFFECT_POSTOFF:
+      ShowFile(&IMG_pstoff, round(Set_Duration(font_config.ProffieOSPstoffImageDuration)));
+      return;
+/* To-Do, possibly differently
 #ifdef OLED_USE_BLASTER_IMAGES
-      case EFFECT_RELOAD:
-        dur = (font_config.ProffieOSReloadImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSReloadImageDuration;
-        ShowFile(&IMG_reload, round(dur));
-        return;
-      case EFFECT_EMPTY:
-        dur = (font_config.ProffieOSEmptyImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSEmptyImageDuration;
-        ShowFile(&IMG_empty, round(dur));
-        return;
-      case EFFECT_JAM:
-        dur = (font_config.ProffieOSJamImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSJamImageDuration;
-        ShowFile(&IMG_jam, round(dur));
-        return;
-      case EFFECT_CLIP_IN:
-        dur = (font_config.ProffieOSClipinImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSClipinImageDuration;
-        ShowFile(&IMG_clipin, round(dur));
-        return;
-      case EFFECT_CLIP_OUT:
-        dur = (font_config.ProffieOSClipoutImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSClipoutImageDuration;
-        ShowFile(&IMG_clipout, round(dur));
-        return;
-      case EFFECT_DESTRUCT:
-        dur = (font_config.ProffieOSDestructImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSDestructImageDuration;
-        ShowFile(&IMG_destruct, round(dur));
-        return;
+    case EFFECT_RELOAD:
+      ShowFile(&IMG_reload, round(Set_Duration(font_config.ProffieOSReloadImageDuration)));
+      return;
+    case EFFECT_EMPTY:
+      ShowFile(&IMG_empty, round(Set_Duration(font_config.ProffieOSEmptyImageDuration)));
+      return;
+    case EFFECT_JAM:
+      ShowFile(&IMG_jam, round(Set_Duration(font_config.ProffieOSJamImageDuration)));
+      return;
+    case EFFECT_CLIP_IN:
+      ShowFile(&IMG_clipin, round(Set_Duration(font_config.ProffieOSClipinImageDuration)));
+      return;
+    case EFFECT_CLIP_OUT:
+      ShowFile(&IMG_clipout, round(Set_Duration(font_config.ProffieOSClipoutImageDuration)));
+      return;
+    case EFFECT_DESTRUCT:
+      ShowFile(&IMG_destruct, round(Set_Duration(font_config.ProffieOSDestructImageDuration)));
+      return;
 #endif
-      break;
-      default: break;
-    }
+*/
+    break;
+    default: break;
   }
+}
 
   void SetMessage(const char* text) {
     strncpy(message_, text, sizeof(message_));
@@ -598,8 +588,7 @@ public:
     if (offtype == OFF_IDLE) {
       SetScreenNow(SCREEN_OFF);
     } else if (IMG_in) {
-      float dur = (font_config.ProffieOSInImageDuration == 0) ? SaberBase::sound_length * 1000 : font_config.ProffieOSInImageDuration;
-      ShowFile(&IMG_in, round(dur));
+      ShowFile(&IMG_in, round(Set_Duration(font_config.ProffieOSDestructImageDuration)));
     } else if (IMG_idle) {
       ShowFile(&IMG_idle, 3600000.0);
     } else {
