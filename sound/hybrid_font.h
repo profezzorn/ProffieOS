@@ -17,15 +17,15 @@ public:
     CONFIG_VARIABLE2(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE2(ProffieOSSlashAccelerationThreshold, 130.0f);
     CONFIG_VARIABLE2(ProffieOSAnimationFrameRate, 0.0f);
-    CONFIG_VARIABLE2(ProffieOSFontImageDuration, 5000.0f);
-    CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
+    CONFIG_VARIABLE2(ProffieOSBootImageDuration, 4000.0f);
+    CONFIG_VARIABLE2(ProffieOSFontImageDuration, 3000.0f);
     CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSClashImageDuration, 500.0f);
-    CONFIG_VARIABLE2(ProffieOSForceImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSOutImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSInImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSForceImageDuration, 2000.0f);
+    CONFIG_VARIABLE2(ProffieOSOutImageDuration, 2000.0f);
+    CONFIG_VARIABLE2(ProffieOSInImageDuration, 2000.0f);
     CONFIG_VARIABLE2(ProffieOSPstoffImageDuration, 2000.0f);
-    CONFIG_VARIABLE2(ProffieOSBootImageDuration, 3000.0f);
+    CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
 /* To-Do, possibly differently
 #ifdef OLED_USE_BLASTER_IMAGES
     CONFIG_VARIABLE2(ProffieOSReloadImageDuration, 1000.0f);
