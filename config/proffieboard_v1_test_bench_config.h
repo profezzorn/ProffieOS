@@ -67,6 +67,7 @@ const unsigned int maxLedsPerStrip = 196;
 #define SHARED_POWER_PINS
 #define BLADE_ID_SCAN_MILLIS 100
 #define BLADE_ID_TIMES 10
+#define KILL_OLD_PLAYERS
 
 // #define BLADE_DETECT_PIN aux2Pin
 
