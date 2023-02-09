@@ -37,7 +37,7 @@ template<int PIN>
 struct SnapshotBladeID {
   float id() {
     pinMode(PIN, INPUT_PULLUP);
-    delay(100); // let everything settle
+    delay(1); // let everything settle
     return LSAnalogRead(PIN, INPUT_PULLUP); // 0-1024.0
   }
 };
