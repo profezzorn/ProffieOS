@@ -5931,7 +5931,12 @@ SaberFett263Buttons() : PropBase() {}
 	}
 #endif
         return false;
-		    
+
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF):
+        if (menu_) return true;
+        SaberBase::DoEffectR(EFFECT_OFF_CLASH);
+        return true;
+
       // Auto Lockup Mode
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
         if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
