@@ -35,8 +35,8 @@ class Effect {
   // is to be smaller than using the filename to identify the file.
   class FileID {
    public:
-    FileID(const Effect* effect, int file, int sub, int alt) : effect_(effect), file_(file), sub_id_(sub), alt_(alt) {}
-    FileID(const Effect* effect, int file, int sub) : effect_(effect), file_(file), sub_id_(sub), alt_(current_alternative) {}
+    FileID(Effect* effect, int file, int sub, int alt) : effect_(effect), file_(file), sub_id_(sub), alt_(alt) {}
+    FileID(Effect* effect, int file, int sub) : effect_(effect), file_(file), sub_id_(sub), alt_(current_alternative) {}
     FileID() : effect_(nullptr), file_(0), sub_id_(0) {}
 
     bool operator==(const FileID& other) const {
@@ -50,7 +50,7 @@ class Effect {
 
     void GetName(char *filename) { effect_->GetName(filename, this); }
 
-    const Effect* GetEffect() const { return effect_; }
+    Effect* GetEffect() const { return effect_; }
     int GetFileNum() const { return file_; }
     int GetSubId() const { return sub_id_; }
     int GetAlt() const { return alt_; }
@@ -68,7 +68,7 @@ class Effect {
     }
 
    private:
-    const Effect* effect_;
+    Effect* effect_;
     uint16_t file_;
     uint8_t sub_id_;
     uint8_t alt_;

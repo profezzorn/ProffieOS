@@ -39,7 +39,7 @@ RefPtr<BufferedWavPlayer> GetFreeWavPlayer()  {
   return RefPtr<BufferedWavPlayer>();
 }
 
-RefPtr<BufferedWavPlayer> GetWavPlayerPlaying(Effect* effect) {
+RefPtr<BufferedWavPlayer> GetWavPlayerPlaying(const Effect* effect) {
   for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
     if (wav_players[unit].isPlaying() &&
 	wav_players[unit].current_file_id().GetEffect() == effect) {

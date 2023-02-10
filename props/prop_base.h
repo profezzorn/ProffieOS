@@ -544,9 +544,10 @@ public:
 
   // Measure and return the blade identifier resistor.
   float id() {
+    EnableBooster();
     BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
-    STDOUT << "ID: " << ret << "\n";
+    STDERR << "ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
     talkie.Say(spI);
     talkie.Say(spD);

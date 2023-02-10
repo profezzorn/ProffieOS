@@ -251,10 +251,10 @@ public:
     }
   }
 
-  RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
+  RefPtr<BufferedWavPlayer> PlayPolyphonic(const Effect::FileID& f)  {
     EnableAmplifier();
-    if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
-    RefPtr<BufferedWavPlayer> player = GetOrFreeWavPlayer(f);
+    if (!f) return RefPtr<BufferedWavPlayer>(nullptr);
+    RefPtr<BufferedWavPlayer> player = GetOrFreeWavPlayer(f.GetEffect());
     if (player) {
       player->set_volume_now(font_config.volEff / 16.0f);
       player->PlayOnce(f);
@@ -263,6 +263,9 @@ public:
       STDOUT.println("Out of WAV players!");
     }
     return player;
+  }
+  RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
+    return PlayPolyphonic(f->RandomFile());
   }
 
   void Play(Effect* monophonic, Effect* polyphonic) {
@@ -677,7 +680,7 @@ public:
       // Polyphonic case
       lock_player_->set_fade_time(0.3);
       if (end) { // polyphonic end lock
-        if (PlayPolyphonic(end)) {
+        if (PlayPolyphonic(lock_player_->current_file_id().GetFollowing(end))) {
           // if playing an end lock fade the lockup faster
           lock_player_->set_fade_time(0.003);
         }

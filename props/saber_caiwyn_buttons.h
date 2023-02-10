@@ -67,15 +67,15 @@
 // monce.wav                - Set Track Player to play a single track one time
 // mloop.wav                - Set Track Player to repeat a single track
 // mrotate.wav              - Set Track Player to repeat all tracks
-// mselect.wav              - Next Track (can be omitted if you prefer)
 // ccbegin.wav              - Enter Color Change Mode
 // ccend01.wav              - Save Color and Exit Color Change Mode
 // ccend02.wav              - Reset Color and Exit Color Change Mode
-// mbatt.wav                - Announce Current Battery Level
+// battlevl.wav             - Announce Current Battery Level
 // mnum1.wav to mnum20.wav  - Individually Spoken Numbers
 // thirty.wav to ninety.wav
 // hundred.wav              - "Hundred"
 // mpercent.wav             - "Percent"
+// mselect.wav              - Beep to confirm menu selections (can be omitted)
 // You can download a package containing all of these files here:
 // https://drive.google.com/file/d/1cSBirX5STOVPanOkOlIeb0eofjx-qFmj/view
 //
@@ -160,14 +160,6 @@
 #define CAIWYN_SAVE_TRACK_MODE
 #endif
 
-EFFECT(vmbegin);
-EFFECT(vmend);
-EFFECT(volmax);
-EFFECT(monce);
-EFFECT(mloop);
-EFFECT(mrotate);
-EFFECT(mselect);
-
 #ifdef CAIWYN_SAVE_TRACK_MODE
 class SaveCaiwynStateFile : public ConfigFile {
 public:
@@ -191,7 +183,7 @@ public:
     sound_library_.Poll(wav_player_);
   }
 
-  virtual void SetPreset(int preset_num, bool announce) override {
+  void SetPreset(int preset_num, bool announce) override {
     PropBase::SetPreset(preset_num, announce);
     strcpy(current_track_,current_preset_.track.get());
   }
@@ -213,13 +205,8 @@ public:
   void VolumeMenu() {
     current_menu_angle_ = fusor.angle2();
     mode_volume_ = true;
-    if (SFX_vmbegin) {
-      hybrid_font.PlayPolyphonic(&SFX_vmbegin);
-    } else {
-      beeper.Beep(0.20,1000.0);
-      beeper.Beep(0.20,1414.2);
-      beeper.Beep(0.20,2000.0);
-    }
+    sound_library_.SaySelect();
+    sound_library_.SayEnterVolumeMenu();
     STDOUT.println("Enter Volume Menu");
   }
 
@@ -243,28 +230,16 @@ public:
 
   void VolumeSave() {
     mode_volume_ = false;
-    if (SFX_vmend) {
-      hybrid_font.PlayPolyphonic(&SFX_vmend);
-    } else {
-      beeper.Beep(0.20,2000.0);
-      beeper.Beep(0.20,1414.2);
-      beeper.Beep(0.20,1000.0);
-    }
+    sound_library_.SaySelect();
+    sound_library_.SayVolumeMenuEnd();
     STDOUT.println("Exit Volume Menu");
   }
 
   void VolumeReset() {
     dynamic_mixer.set_volume(VOLUME);
     mode_volume_ = false;
-    if (SFX_volmax) {
-      hybrid_font.PlayPolyphonic(&SFX_volmax);
-    } else if (SFX_vmend) {
-      hybrid_font.PlayPolyphonic(&SFX_vmend);
-    } else {
-      beeper.Beep(0.20,2000.0);
-      beeper.Beep(0.20,1414.2);
-      beeper.Beep(0.20,1000.0);
-    }
+    sound_library_.SaySelect();
+    sound_library_.SayMaximumVolume();
     STDOUT.println("Volume Reset");
     STDOUT.print("Current Volume: ");
     STDOUT.println(dynamic_mixer.get_volume());
@@ -322,8 +297,6 @@ public:
           NextTrack(false);
           break;
       }
-    } else if (track_player_ && !track_player_->isPlaying()) {
-        track_player_.Free();
     }
   }
 
@@ -335,33 +308,37 @@ public:
   }
 
   void PlayTrack(const char* track) {
-    track_player_ = GetFreeWavPlayer();
+    if (!track_player_) track_player_ = GetFreeWavPlayer();
     if (track_player_) {
       track_player_->Play(track);
+      track_player_on_ = true;
     } else {
       STDOUT.println("No available WAV players.");
+      track_player_on_ = false;
+      STDOUT.println("Track player stopped.");
     }
   }
 
   void StartTrackPlayer() {
     num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
-    STDOUT.println("Track player started.");
     if (!current_track_) strcpy(current_track_,current_preset_.track.get());
     if (!TrackExists(current_track_)) {
       STDOUT.print(current_track_);
       STDOUT.println(" not found.");
-      RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, nullptr, current_track_, false);
+      if (num_tracks_ > 0) {
+        RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, nullptr, current_track_, false);
+      } else {
+        STDOUT.println("No tracks found.");
+        return;
+      }
     }
+    STDOUT.println("Track player started.");
     PlayTrack(current_track_);
-    track_player_on_ = true;
   }
 
   void StopTrackPlayer() {
     track_player_on_ = false;
-    if (track_player_) {
-      track_player_->Stop();
-      track_player_.Free();
-    }
+    if (track_player_ && track_player_->isPlaying()) track_player_->Stop();
     STDOUT.println("Track player stopped.");
 #ifdef CAIWYN_SAVE_TRACK_MODE
     SaveCaiwynState();
@@ -369,17 +346,7 @@ public:
   }
 
   void NextTrack(bool manually_selected) {
-    if (manually_selected) {
-      track_player_->Stop();
-      track_player_.Free();
-#ifdef CAIWYN_SAVE_TRACKS
-      current_preset_.track = mkstr(current_track_);
-      current_preset_.Save();
-#endif
-      if (SFX_mselect) {
-        hybrid_font.PlayPolyphonic(&SFX_mselect);
-      }
-    }
+    if (track_player_ && track_player_->isPlaying()) track_player_->Stop();
     if (num_tracks_ > 0) {
       char next_track[128];
       next_track[0] = 0;
@@ -387,43 +354,33 @@ public:
         RunCommandAndFindNextSortedLine<128>("list_current_tracks", nullptr, nullptr, next_track, false);
       }
       strcpy(current_track_, next_track);
+      if (manually_selected) {
+#ifdef CAIWYN_SAVE_TRACKS
+        current_preset_.track = mkstr(current_track_);
+        current_preset_.Save();
+#endif
+        sound_library_.SaySelect();
+      }
     }
     PlayTrack(current_track_);
   }
 
   void ChangeTrackMode() {
+    sound_library_.SaySelect();
     switch (track_mode_) {
       case PLAYBACK_ONCE:
         track_mode_ = PLAYBACK_LOOP;
-        if (SFX_mloop) {
-          hybrid_font.PlayPolyphonic(&SFX_mloop);
-        } else {
-          beeper.Beep(0.20,1000);
-          beeper.Beep(0.20,2000);
-          beeper.Beep(0.20,1000);
-        }
+        sound_library_.SayLoop();
         STDOUT.println("Track player set to repeat single track.");
         break;
       case PLAYBACK_LOOP:
         track_mode_ = PLAYBACK_ROTATE;
-        if (SFX_mrotate) {
-          hybrid_font.PlayPolyphonic(&SFX_mrotate);
-        } else {
-          beeper.Beep(0.20,1000);
-          beeper.Beep(0.20,2000);
-          beeper.Beep(0.20,1000);
-        }
+        sound_library_.SayRotate();
         STDOUT.println("Track player set to repeat all tracks.");
         break;
       case PLAYBACK_ROTATE:
         track_mode_ = PLAYBACK_ONCE;
-        if (SFX_monce) {
-          hybrid_font.PlayPolyphonic(&SFX_monce);
-        } else {
-          beeper.Beep(0.20,1000);
-          beeper.Beep(0.20,2000);
-          beeper.Beep(0.20,1000);
-        }
+        sound_library_.Play("monce.wav");
         STDOUT.println("Track player set to play single track.");
         break;
     }
@@ -432,7 +389,8 @@ public:
   void CheckBattery() {
     SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
     if (SFX_mnum) {
-      sound_library_.SayBatteryLevel();
+      sound_library_.SaySelect();
+      sound_library_.SayTheBatteryLevelIs();
       sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
       sound_library_.SayPercent();
     } else {
@@ -448,6 +406,7 @@ public:
     if (!current_style()) return;
     if (SFX_ccend) {
       SFX_ccend.Select(1);
+      sound_library_.SaySelect();
     }
     STDOUT << "Reset Color Variation" << "\n";
     SetVariation(0);
@@ -548,6 +507,7 @@ public:
         } else if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_STEPPED) {
           if (SFX_ccend) {
             SFX_ccend.Select(0);
+            sound_library_.SaySelect();
           }
           ToggleColorChangeMode();
           return true;
@@ -560,6 +520,7 @@ public:
         if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_ZOOMED) {
           if (SFX_ccend) {
             SFX_ccend.Select(0);
+            sound_library_.SaySelect();
           }
           ToggleColorChangeMode();
           return true;
@@ -620,6 +581,7 @@ public:
 #ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_AUX, EVENT_THIRD_HELD_MEDIUM, MODE_ON):
         if (!mode_volume_) {
+          sound_library_.SaySelect();
           ToggleColorChangeMode();
           return true;
         }
