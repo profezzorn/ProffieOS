@@ -4,14 +4,55 @@
 // TODO(hubbe): Make it work with FastLED
 #if defined(ENABLE_WS2811)
 
-// Usage: &style_pov or StylePtr<StylePtr>
-// return value: suitable for preset array
+/* 
+This style draws images in the air if you swing the saber
+carefully back and forth. Unfortunately you can't really see
+the result without a slow exposure camera. It's possible that
+dotstar APA102 pixels would be fast enough to do the effect
+full justice, but I haven't tried that.
 
-// This style draws images in the air if you swing the saber
-// carefully back and forth. Unfortunately you can't really see
-// the result without a slow exposure camera. It's possible that
-// dotstar APA102 pixels would be fast enough to do the effect
-// full justice, but I haven't tried that.
+Usage: StylePOV<>
+or: StylePOV<MIN_DEGREES, MAX_DEGREES, REPEAT, MIRROR>
+MIN_DEGREES: integer (default -45)
+MAX_DEGREES: integer (default 45)
+REPEAT: bool (default false)
+MIRROR: bool (default true)
+return value: COLOR
+Since MIN_DEGREES, MAX_DEGREES, REPEAT and MIRROR all have defaults, those arguments can be omitted.
+StylePOV<> draws one instance of the image in the top portion of the swing "window".
+MIN and MAX degrees set the start and end points for the edges of the image.
+REPEAT draws multple instances of the image through the 360 arc, butting each next image adjacent to the previous.
+When MIRROR is used with REPEAT, every other image is flipped.  
+In older files, you may see &style_pov used, which is a shorhand template, and essentially the same as StylePtr<StylePOV<>>().
+
+Usage:ContinuousPOV<>
+or: ContinuousPOV<DEGREES>
+DEGREES: integer (default 90)
+return value: COLOR
+ContinuousPOV<> draws the image multiple times continuously through 360 degrees of the swing, similar to the REPEAT option of StylePOV<>.
+However, while StylePOV tries to always display the same line when the saber is at a particular angle,
+ContinuousPOV simply moves from line to line, and the speed is controlled by the swing speed.
+If you move the saber left and then right, StylePOV will go back and show the previously displayed part of the image,
+whereas ContinuousPOV will continue forward through the "scan" on the image data.
+
+
+Examples as a stand-alone style in a preset:
+   { "Font", "tracks/track.wav", &style_pov, "my_pov"}
+or { "Font", "tracks/track.wav", StylePtr<StylePOV<>>(), "my_pov"}
+or { "Font", "tracks/track.wav", StylePtr<ContinuousPOV<Int<45>>>(), "my_pov"}
+
+Example of use within a blade style:
+POV can be used in a layer as the main base blade "color", or as something that shows when swinging,  
+or when triggering an effect of your choice, etc... Basic SwingSpeed<> example is shown.  
+
+{ "Font", "tracks/track.wav",  
+  StylePtr<Layers<Red,
+  AlphaL<ContinuousPOV<>,SwingSpeed<400>>,
+  ResponsiveLockupL<White,TrInstant,TrInstant,Int<26000>>,
+  InOutTrL<TrWipe<300>,TrWipeIn<500>>>>(),
+  "my_continuous_pov"}  
+*/
+
 
 #ifdef POV_INCLUDE_FILE
 #include POV_INCLUDE_FILE
