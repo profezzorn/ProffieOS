@@ -84,9 +84,11 @@ public:
     pause_.set(true);
     wav.Stop();
 #else
+    int v = volume_target();
     set_fade_time(0.005);
     FadeAndStop();
     while (isPlaying()) delay(1);
+    set_volume_now(v);
 #endif    
     wav.Close();
     clear();
