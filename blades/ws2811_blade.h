@@ -276,7 +276,10 @@ protected:
 	current_style_->run(this);
 
       if (!powered_) {
-	if (allow_disable_) continue;
+	if (allow_disable_) {
+	  run_ = false;
+	  continue;
+	}
 	Power(true);
       }
 

@@ -37,7 +37,7 @@ template<int PIN>
 struct SnapshotBladeID {
   float id() {
     pinMode(PIN, INPUT_PULLUP);
-    delay(100); // let everything settle
+    delay(1); // let everything settle
     return LSAnalogRead(PIN, INPUT_PULLUP); // 0-1024.0
   }
 };
@@ -61,13 +61,27 @@ struct BridgedPullupBladeID {
   }
 };
 
+template<int N, class BLADE_ID>
+struct AverageBladeIDNTimes {
+  float id() {
+    float id = 0;
+    BLADE_ID blade_id;
+    for (int i = 0; i < N; i++) id += blade_id.id();
+    return id / N;
+  }
+};
+
 template<class POWER_PINS, class BLADE_ID>
 struct EnablePowerBladeID {
   float id() {
+    int delay_time = 10;
     POWER_PINS power_pins;
+#if defined(SHARED_POWER_PINS) && defined(BLADE_ID_SCAN_MILLIS)
+    if (power_pins.isOn()) delay_time = 0;
+#endif    
     power_pins.Init();
     power_pins.Power(true);
-    delay(10);
+    delay(delay_time);
     BLADE_ID blade_id;
     float ret = blade_id.id();
     power_pins.Power(false);
@@ -96,10 +110,16 @@ struct NoBladeID {
 
 #endif  // BLADE_ID_CLASS
 
-#ifdef ENABLE_POWER_FOR_ID
-#define BLADE_ID_CLASS_INTERNAL EnablePowerBladeID<ENABLE_POWER_FOR_ID, BLADE_ID_CLASS>
+#ifdef BLADE_ID_TIMES
+#define BLADE_ID_CLASS2 AverageBladeIDNTimes<BLADE_ID_TIMES, BLADE_ID_CLASS>
 #else
-#define BLADE_ID_CLASS_INTERNAL BLADE_ID_CLASS
+#define BLADE_ID_CLASS2 BLADE_ID_CLASS
+#endif
+
+#ifdef ENABLE_POWER_FOR_ID
+#define BLADE_ID_CLASS_INTERNAL EnablePowerBladeID<ENABLE_POWER_FOR_ID, BLADE_ID_CLASS2>
+#else
+#define BLADE_ID_CLASS_INTERNAL BLADE_ID_CLASS2
 #endif
 
 #endif  // BLADES_BLADE_ID_H
