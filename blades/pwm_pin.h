@@ -57,30 +57,6 @@ void TeardownTimer(uint32_t instance) {
   }
 }
 
-void LSanalogWriteSetup(uint32_t pin) {
-  // Handle the case the pin isn't usable as PIO
-  if (pin >= NUM_TOTAL_PINS || g_APinDescription[pin].GPIO == NULL) {
-    Serial.print("Analog Setup: NOT A PIN: ");
-    Serial.println(pin);
-    return;
-  }
-  
-  if (!(g_APinDescription[pin].attr & PIN_ATTR_PWM)) {
-    Serial.println("Analog Setup: Pin is not configured for PWM: ");
-    Serial.println(pin);
-    return;
-  }
-  uint32_t instance = g_APinDescription[pin].pwm_instance;
-  SetupTimer(instance);
-  stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, 0, TIMER_CONTROL_PWM);
-  stm32l4_gpio_pin_configure(g_APinDescription[pin].pin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
-}
-
-void LSanalogWriteTeardown(uint32_t pin) {
-  pinMode(pin, INPUT_ANALOG);
-  TeardownTimer(g_APinDescription[pin].pwm_instance);
-}
-
 void LSanalogWrite(uint32_t pin, int value) {
   TIM_TypeDef* TIM = stm32l4_pwm[g_APinDescription[pin].pwm_instance].TIM;
   value >>= 1;
@@ -96,6 +72,32 @@ void LSanalogWrite(uint32_t pin, int value) {
     case TIMER_CHANNEL_6: TIM->CCR6 = value; break;
   }
 }
+
+void LSanalogWriteSetup(uint32_t pin) {
+  // Handle the case the pin isn't usable as PIO
+  if (pin >= NUM_TOTAL_PINS || g_APinDescription[pin].GPIO == NULL) {
+    Serial.print("Analog Setup: NOT A PIN: ");
+    Serial.println(pin);
+    return;
+  }
+  
+  if (!(g_APinDescription[pin].attr & PIN_ATTR_PWM)) {
+    Serial.println("Analog Setup: Pin is not configured for PWM: ");
+    Serial.println(pin);
+    return;
+  }
+  uint32_t instance = g_APinDescription[pin].pwm_instance;
+  SetupTimer(instance);
+  // stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, 0, TIMER_CONTROL_PWM);
+  LSanalogWrite(pin, 0);
+  stm32l4_gpio_pin_configure(g_APinDescription[pin].pin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
+}
+
+void LSanalogWriteTeardown(uint32_t pin) {
+  pinMode(pin, INPUT_ANALOG);
+  TeardownTimer(g_APinDescription[pin].pwm_instance);
+}
+
 
 };
 #elif defined(ESP32)
