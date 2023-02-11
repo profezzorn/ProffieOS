@@ -614,7 +614,7 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   Allows "Multi-Phase" to be style based, replaces FETT263_MULTI_PHASE.
   Cannot be used with FETT263_MULTI_PHASE or FETT263_SAVE_CHOREOGRAPHY
 
-  FETT263_ENABLE_SPIN_MODE
+  FETT263_SPIN_MODE
   Enables toggle for "Spin" Mode* which disables all clash/stab/lockup effects to allow for spinning and flourishes.
   Cannot be used with FETT263_SAVE_CHOREOGRAPHY or FETT263_HOLD_BUTTON_LOCKUP
   *Not the same as ENABLE_SPINS
