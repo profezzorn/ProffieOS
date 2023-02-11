@@ -4733,7 +4733,7 @@ SaberFett263Buttons() : PropBase() {}
     }
 #elif defined(FETT263_SAY_BATTERY_PERCENT)
     sound_library_.SayBatteryPercent();
-#elif defined(FETT263_SAY_BATTERY_VOLTAGE)
+#elif defined(FETT263_SAY_BATTERY_VOLTS)
     sound_library_.SayBatteryVolts();
 #else
     hybrid_font.PlayCommon(&SFX_battery);
