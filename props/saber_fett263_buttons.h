@@ -4733,7 +4733,7 @@ SaberFett263Buttons() : PropBase() {}
     }
 #elif defined(FETT263_SAY_BATTERY_PERCENT)
     sound_library_.SayBatteryPercent();
-#elif defined(FETT263_SAY_BATTERY_VOLTAGE)
+#elif defined(FETT263_SAY_BATTERY_VOLTS)
     sound_library_.SayBatteryVolts();
 #else
     hybrid_font.PlayCommon(&SFX_battery);
@@ -5931,7 +5931,12 @@ SaberFett263Buttons() : PropBase() {}
 	}
 #endif
         return false;
-		    
+
+      case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF):
+        if (menu_) return true;
+        SaberBase::DoEffectR(EFFECT_OFF_CLASH);
+        return true;
+
       // Auto Lockup Mode
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
         if (menu_ || SaberBase::Lockup() || CheckShowColorCC()) return true;
