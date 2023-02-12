@@ -92,7 +92,6 @@ void LSanalogWriteSetup(uint32_t pin) {
   stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, 0, TIMER_CONTROL_PWM);
   // Wait for a complete cycle to make sure the internal state is clear before setting the output mode.
   delayMicroseconds(1300); // 1.3ms
-  ScopedPinTracer pt(blade3Pin);
   stm32l4_gpio_pin_configure(g_APinDescription[pin].pin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
 }
 
