@@ -29,6 +29,7 @@ void SetupTimer(uint32_t instance) {
     
     stm32l4_timer_enable(&stm32l4_pwm[instance], divider -1, modulus -1, 0, NULL, NULL, 0);
     stm32l4_timer_start(&stm32l4_pwm[instance], false);
+
     if (instance != PWM_SYNC_INSTANCE)  {
       SetupTimer(PWM_SYNC_INSTANCE);
       // TIM16 cannot be synchronized in hardware, so let's do the best we can.
@@ -88,8 +89,9 @@ void LSanalogWriteSetup(uint32_t pin) {
   }
   uint32_t instance = g_APinDescription[pin].pwm_instance;
   SetupTimer(instance);
-  // stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, 0, TIMER_CONTROL_PWM);
-  LSanalogWrite(pin, 0);
+  stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, 0, TIMER_CONTROL_PWM);
+  // Wait for a complete cycle to make sure the internal state is clear before setting the output mode.
+  delayMicroseconds(1300); // 1.3ms
   stm32l4_gpio_pin_configure(g_APinDescription[pin].pin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
 }
 
