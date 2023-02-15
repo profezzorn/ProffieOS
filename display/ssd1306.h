@@ -463,7 +463,7 @@ public:
 
   void SB_On2() override {
     if (IMG_out) {
-      SetFile(&IMG_out, round(SetDuration(font_config.ProffieOSOutImageDuration)));
+      ShowFileWithSoundLength(&IMG_out, font_config.ProffieOSOutImageDuration);
     }
   }
 
@@ -475,15 +475,16 @@ public:
     }
   }
 
-  float SetDuration(float image_duration) {
-  return (image_duration == 0) ? SaberBase::sound_length * 1000 : image_duration;
-}
+  void ShowFileWithSoundLength(Effect* e, float duration) {
+    float dur = (duration == 0) ? SaberBase::sound_length * 1000 : duration;
+    ShowFile(e, round(dur));
+  }
 
  void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
       case EFFECT_BOOT:
         if (IMG_boot) {
-          ShowFile(&IMG_boot, round(SetDuration(font_config.ProffieOSBootImageDuration)));
+          ShowFileWithSoundLength(&IMG_boot, font_config.ProffieOSBootImageDuration);
         } else {
           SetScreenNow(SCREEN_STARTUP);
         }
@@ -492,7 +493,7 @@ public:
         looped_on_ = Tristate::Unknown;
         looped_idle_ = Tristate::Unknown;
         if (IMG_font) {
-          ShowFile(&IMG_font, round(SetDuration(font_config.ProffieOSFontImageDuration)));
+          ShowFileWithSoundLength(&IMG_font, font_config.ProffieOSFontImageDuration);
         } else if (prop.current_preset_name()) {
           SetMessage(prop.current_preset_name());
           SetScreenNow(SCREEN_MESSAGE);
@@ -533,39 +534,39 @@ public:
   void SB_Effect2(EffectType effect, float location) override {
     switch (effect) {
       case EFFECT_BLAST:
-      ShowFile(&IMG_blst, round(SetDuration(font_config.ProffieOSBlastImageDuration)));
+      ShowFileWithSoundLength(&IMG_blst, font_config.ProffieOSBlastImageDuration);
       return;
     case EFFECT_CLASH:
-      ShowFile(&IMG_clsh, round(SetDuration(font_config.ProffieOSClashImageDuration)));
+      ShowFileWithSoundLength(&IMG_clsh, font_config.ProffieOSClashImageDuration);
       return;
     case EFFECT_FORCE:
-      ShowFile(&IMG_force, round(SetDuration(font_config.ProffieOSForceImageDuration)));
+      ShowFileWithSoundLength(&IMG_force, font_config.ProffieOSForceImageDuration);
       return;
     case EFFECT_PREON:
       ShowFile(&IMG_preon, round(SaberBase::sound_length * 1000));
       return;
     case EFFECT_POSTOFF:
-      ShowFile(&IMG_pstoff, round(SetDuration(font_config.ProffieOSPstoffImageDuration)));
+      ShowFileWithSoundLength(&IMG_pstoff, font_config.ProffieOSPstoffImageDuration);
       return;
 /* To-Do, possibly differently
 #ifdef OLED_USE_BLASTER_IMAGES
     case EFFECT_RELOAD:
-      ShowFile(&IMG_reload, round(SetDuration(font_config.ProffieOSReloadImageDuration)));
+      ShowFileWithSoundLength(&IMG_reload, font_config.ProffieOSReloadImageDuration);
       return;
     case EFFECT_EMPTY:
-      ShowFile(&IMG_empty, round(SetDuration(font_config.ProffieOSEmptyImageDuration)));
+      ShowFileWithSoundLength(&IMG_empty, font_config.ProffieOSEmptyImageDuration);
       return;
     case EFFECT_JAM:
-      ShowFile(&IMG_jam, round(SetDuration(font_config.ProffieOSJamImageDuration)));
+      ShowFileWithSoundLength(&IMG_jam, font_config.ProffieOSJamImageDuration);
       return;
     case EFFECT_CLIP_IN:
-      ShowFile(&IMG_clipin, round(SetDuration(font_config.ProffieOSClipinImageDuration)));
+      ShowFileWithSoundLength(&IMG_clipin, font_config.ProffieOSClipinImageDuration);
       return;
     case EFFECT_CLIP_OUT:
-      ShowFile(&IMG_clipout, round(SetDuration(font_config.ProffieOSClipoutImageDuration)));
+      ShowFileWithSoundLength(&IMG_clipout, font_config.ProffieOSClipoutImageDuration);
       return;
     case EFFECT_DESTRUCT:
-      ShowFile(&IMG_destruct, round(SetDuration(font_config.ProffieOSDestructImageDuration)));
+      ShowFileWithSoundLength(&IMG_destruct, font_config.ProffieOSDestructImageDuration);
       return;
 #endif
 */
@@ -588,7 +589,7 @@ public:
     if (offtype == OFF_IDLE) {
       SetScreenNow(SCREEN_OFF);
     } else if (IMG_in) {
-      ShowFile(&IMG_in, round(SetDuration(font_config.ProffieOSDestructImageDuration)));
+      ShowFileWithSoundLength(&IMG_in, font_config.ProffieOSDestructImageDuration);
     } else if (IMG_idle) {
       ShowFile(&IMG_idle, 3600000.0);
     } else {
