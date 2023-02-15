@@ -218,7 +218,7 @@ public:
   RefPtr<BufferedWavPlayer> swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
 
-  void PlayMonophonic(Effect* f, Effect* loop, float xfade = 0.003f)  {
+  void PlayMonophonic(const Effect::FileID& f, Effect* loop, float xfade = 0.003f)  {
     EnableAmplifier();
     if (!next_hum_player_) {
       next_hum_player_ = GetFreeWavPlayer();
@@ -244,6 +244,10 @@ public:
     if (loop) hum_player_->PlayLoop(loop);
    }
 
+  void PlayMonophonic(Effect* f, Effect* loop, float xfade = 0.003f)  {
+    PlayMonophonic(f->RandomFile(), loop, xfade);
+  }
+  
   // Use after changing alternative.
   void RestartHum() {
     if (hum_player_ && hum_player_->isPlaying()) {
@@ -405,6 +409,14 @@ public:
     state_ = STATE_WAIT_FOR_ON;
   }
 
+  Effect::FileID getNext(RefPtr<BufferedWavPlayer>& previous, Effect* next) {
+    if (previous) {
+      return previous->current_file_id().GetFollowing(next);
+    } else {
+      return next->RandomFile();
+    }
+  }
+
   void SB_Postoff() {
     // Postoff was alredy started by linked wav players, we just need to find
     // the length so that WavLen<> can use it.
@@ -506,18 +518,18 @@ public:
           }
         } else {
           state_ = STATE_HUM_FADE_OUT;
-          PlayPolyphonic(&SFX_in);
+          PlayPolyphonic(getNext(hum_player_, &SFX_in));
 	  hum_fade_out_ = 0.2;
         }
         check_postoff_ = !!SFX_pstoff && off_type != OFF_FAST;
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
-          if (SFX_boom) PlayMonophonic(&SFX_boom, NULL);
-          else PlayMonophonic(&SFX_clash, NULL);  // Thermal-D fallback
+          if (SFX_boom) PlayMonophonic(getNext(hum_player_, &SFX_boom), NULL);
+          else PlayMonophonic(getNext(hum_player_, &SFX_clash), NULL);  // Thermal-D fallback
         } else {
           state_ = STATE_HUM_FADE_OUT;
-          PlayPolyphonic(&SFX_boom);
+          PlayPolyphonic(getNext(lock_player_, &SFX_boom));
         }
         break;
     }
@@ -680,7 +692,7 @@ public:
       // Polyphonic case
       lock_player_->set_fade_time(0.3);
       if (end) { // polyphonic end lock
-        if (PlayPolyphonic(lock_player_->current_file_id().GetFollowing(end))) {
+        if (PlayPolyphonic(getNext(lock_player_, end))) {
           // if playing an end lock fade the lockup faster
           lock_player_->set_fade_time(0.003);
         }
