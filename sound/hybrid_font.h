@@ -529,7 +529,7 @@ public:
           else PlayMonophonic(getNext(hum_player_, &SFX_clash), NULL);  // Thermal-D fallback
         } else {
           state_ = STATE_HUM_FADE_OUT;
-          PlayPolyphonic(getNext(hum_player_, &SFX_boom));
+          PlayPolyphonic(getNext(lock_player_, &SFX_boom));
         }
         break;
     }
