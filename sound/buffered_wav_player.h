@@ -51,7 +51,7 @@ public:
     SaberBase::sound_number = current_file_id().GetFileNum();
   }
 
-  void PlayOnce(const Effect::FileID& fileid, float start = 0.0) {
+  void PlayOnce(Effect::FileID fileid, float start = 0.0) {
     const Effect* effect = fileid.GetEffect();
     MountSDCard();
     EnableAmplifier();
