@@ -1789,6 +1789,7 @@ SaberFett263Buttons() : PropBase() {}
       SaberBase::DoEffectR(EFFECT_INTERACTIVE_BLAST);
     } else {
       SaberBase::DoBlast();
+      if (battle_mode_) ToggleBattleModeMultiBlast();
     }
   }
 
