@@ -409,7 +409,7 @@ public:
     state_ = STATE_WAIT_FOR_ON;
   }
 
-  Effect::FileID getNext(RefPtr<BufferedWavPlayer>& previous, Effect* next) {
+  Effect::FileID getNext(RefPtr<BufferedWavPlayer> previous, Effect* next) {
     if (previous) {
       return previous->current_file_id().GetFollowing(next);
     } else {
@@ -442,7 +442,7 @@ public:
       	hum_player_ = GetFreeWavPlayer();
       	if (hum_player_) {
       	  hum_player_->set_volume_now(0);
-      	  hum_player_->PlayOnce(SFX_humm ? &SFX_humm : &SFX_hum);
+	  hum_player_->PlayOnce(getNext(GetWavPlayerPlaying(getOut()), SFX_humm ? &SFX_humm : &SFX_hum));
       	  hum_player_->PlayLoop(SFX_humm ? &SFX_humm : &SFX_hum);
       	}
         hum_start_ = millis();
