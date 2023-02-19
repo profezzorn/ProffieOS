@@ -17,6 +17,7 @@ public:
     CONFIG_VARIABLE2(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE2(ProffieOSSlashAccelerationThreshold, 130.0f);
     CONFIG_VARIABLE2(ProffieOSAnimationFrameRate, 0.0f);
+    CONFIG_VARIABLE2(ProffieOSTextMessageDuration, 3500.0f);
     CONFIG_VARIABLE2(ProffieOSBootImageDuration, 4000.0f);
     CONFIG_VARIABLE2(ProffieOSFontImageDuration, 3000.0f);
     CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
@@ -121,6 +122,8 @@ public:
   float ProffieOSSlashAccelerationThreshold;
   // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
+  // for OLED displays, the time a text message will display
+  float ProffieOSTextMessageDuration;
   // for OLED displays, the time a static BMP or loop will play when saber is off
   float ProffieOSFontImageDuration;
   // for OLED displays, the time an on.bmp will play
