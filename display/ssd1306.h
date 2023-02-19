@@ -367,7 +367,7 @@ public:
 
       case SCREEN_PLI:
         if (!SaberBase::IsOn() && t_ >= PLI_OFF_TIME) {
-          STDOUT << "**Time = " << t_ << ". PLI_OFF_TIME expired.\n"; // BC add
+          STDERR << "Time = " << t_ << ". PLI_OFF_TIME expired.\n";
           screen_ = SCREEN_OFF;
           return FillFrameBuffer2(advance);
         }
