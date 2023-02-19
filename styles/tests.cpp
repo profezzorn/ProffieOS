@@ -22,8 +22,7 @@ float clamp(float x, float a, float b) {
 }
 
 struct CONFIG { struct Preset* presets; size_t num_presets;};
-CONFIG preset = { 0,0 };
-CONFIG* current_config = &preset;
+extern CONFIG* current_config;
 
 #define PROFFIE_TEST
 
@@ -166,6 +165,17 @@ Monitoring monitor;
 #include "fire.h"
 #include "sparkle.h"
 #include "../common/command_parser.h"
+#include "../common/preset.h"
+
+Preset presets[] = {
+  { "one", "t1",
+    StylePtr<Gradient<RgbArg<1, Red>, RgbArg<2, Green>, RgbArg<3, Blue>>>("0,0,1 0,1,0 1,0,0"),
+    "uno" }
+};
+CONFIG preset = { presets, 1 };
+CONFIG* current_config = &preset;
+
+
 CommandParser* parsers = NULL;
 ArgParserInterface* CurrentArgParser;
 
@@ -799,6 +809,13 @@ void test_argument_parsing() {
   testMaxUsedArgument("charging", 0);
   testMaxUsedArgument("rainbow", 2);
   testMaxUsedArgument("fire", 2);
+
+  testGetArg("builtin 0 1", 0, "builtin");
+  testGetArg("builtin 0 1", 1, "0");
+  testGetArg("builtin 0 1", 2, "1");
+  testGetArg("builtin 0 1", 3, "0,0,1");
+  testGetArg("builtin 0 1", 4, "0,1,0");
+  testGetArg("builtin 0 1", 5, "1,0,0");
 }
 
 int main() {
