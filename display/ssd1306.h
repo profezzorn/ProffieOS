@@ -363,7 +363,7 @@ public:
           display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
         }
         next_screen_ = SCREEN_PLI;
-        return 4000;
+        return font_config.ProffieOSTextMessageDuration;
 
       case SCREEN_PLI:
         if (!SaberBase::IsOn() && t_ >= PLI_OFF_TIME) {
@@ -400,7 +400,7 @@ public:
         }
         next_screen_ = SCREEN_DEFAULT;
         // STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
-        return 3000; 
+        return font_config.ProffieOSTextMessageDuration;
       }
 
       case SCREEN_IMAGE:
@@ -525,8 +525,11 @@ public:
         break;
       case EFFECT_LOW_BATTERY:
         // Maybe we should make this blink or something?
-        SetMessage("low\nbattery");
-        ShowFile(&IMG_lowbatt, 5000);
+        if (IMG_lowbatt) {
+          ShowFile(&IMG_lowbatt, 5000);
+        } else {          
+          SetMessage("low\nbattery");
+        }
         break;
        default: break;
     }
