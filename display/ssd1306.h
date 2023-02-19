@@ -2,7 +2,7 @@
 #define DISPLAY_SSD1306_H
 
 #ifndef PLI_OFF_TIME
-#define PLI_OFF_TIME font_config.ProffieOSFontImageDuration
+#define PLI_OFF_TIME ((font_config.ProffieOSFontImageDuration == 0) ? 3500 : font_config.ProffieOSFontImageDuration)
 #endif
 
 #include "monoframe.h"
