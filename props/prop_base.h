@@ -1154,6 +1154,7 @@ public:
       last_on_time_ = millis();
     }
     if (millis() - last_on_time_ > IDLE_OFF_TIME) {
+      STDERR << "Time = " << millis() - last_on_time_ << ". IDLE_OFF_TIME expired.\n";
       SaberBase::DoOff(OFF_IDLE);
       last_on_time_ = millis();
     }
