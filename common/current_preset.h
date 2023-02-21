@@ -13,8 +13,9 @@ public:
   uint32_t iteration_ = 0;
   LSPtr<char> font;
   LSPtr<char> track;
-#define DEFINE_CURRENT_STYLE_STRING(N) LSPtr<char> current_style##N;
-  ONCEPERBLADE(DEFINE_CURRENT_STYLE_STRING);
+#if NUM_BLADES > 0
+  LSPtr<char> current_style_[NUM_BLADES];
+#endif  
   LSPtr<char> name;
   uint32_t variation;
 
@@ -67,7 +68,7 @@ public:
     return s;
   }
 
-#define VALIDATE_STYLE_STRING(N) ValidateStyleString(PRE.current_style##N.get());    
+#define VALIDATE_STYLE_STRING(N) ValidateStyleString(PRE.current_style_[N-1].get());    
 
 #if defined(ENABLE_DEBUG) && NUM_BLADES > 0
 #define ValidateStyleString(X) CurrentPreset::ValidateStyleStringF((X), __FILE__, __LINE__)
@@ -82,8 +83,9 @@ public:
   void Clear() {
     font = "";
     track = "";
-#define CLEAR_STYLE_STRING(N) current_style##N = "";
-    ONCEPERBLADE(CLEAR_STYLE_STRING);
+#if NUM_BLADES > 0    
+    for (size_t N = 0; N < NUM_BLADES; N++) current_style_[N] = "";
+#endif    
     name = "";
     variation = 0;
   }
@@ -95,8 +97,12 @@ public:
     preset_num = num;
     font = preset->font;
     track = preset->track;
-#define MAKE_STYLE_STRING(N) current_style##N = ValidateStyleString(mk_builtin_str(num, N));
+#define MAKE_STYLE_STRING(N) current_style_[N-1] = ValidateStyleString(mk_builtin_str(num, N));
     ONCEPERBLADE(MAKE_STYLE_STRING);
+// TODO Test with 3+ blades
+//#if NUM_BLADES > 0    
+//    for (size_t N = 0; N < NUM_BLADES; N++) current_style_[N] = ValidateStyleString(mk_builtin_str(num, N+1));
+//#endif    
     if (preset->name && strlen(preset->name)) {
       name = preset->name;
     } else {
@@ -169,12 +175,14 @@ public:
 	continue;
       }
       if (!strcmp(variable, "style")) {
-	current_style++;
 	char* tmp = f->readString();
 	(void)ValidateStyleString(tmp);
-#define SET_PRESET_STYLE(N) if (current_style == N) { current_style##N = tmp; tmp = 0; }
-	ONCEPERBLADE(SET_PRESET_STYLE);
-	if (tmp) free(tmp);
+#if NUM_BLADES > 0
+	current_style_[current_style] = tmp;
+#else
+	free(tmp);
+#endif
+	current_style++;
 	continue;
       }
     }
@@ -193,8 +201,13 @@ public:
     DOVALIDATE(*this);
     f->write_key_value("track", track.get());
     DOVALIDATE(*this);
-#define WRITE_PRESET_STYLE(N) f->write_key_value("style", ValidateStyleString(current_style##N.get()));
-    ONCEPERBLADE(WRITE_PRESET_STYLE);
+//#define WRITE_PRESET_STYLE(N) f->write_key_value("style", ValidateStyleString(current_style_[N-1].get()));
+//    ONCEPERBLADE(WRITE_PRESET_STYLE);
+#if NUM_BLADES > 0    
+    for (size_t N = 0; N < NUM_BLADES; N++) {
+      f->write_key_value("style", ValidateStyleString(current_style_[N].get()));
+    }
+#endif    
     f->write_key_value("name", name.get());
     char tmp[12];
     itoa(variation, tmp, 10);
@@ -205,7 +218,7 @@ public:
   void Print() {
     PrintQuotedValue("FONT", font.get());
     PrintQuotedValue("TRACK", track.get());
-#define PRINT_PRESET_STYLE(N) PrintQuotedValue("STYLE" #N, ValidateStyleString(current_style##N.get()));
+#define PRINT_PRESET_STYLE(N) PrintQuotedValue("STYLE" #N, ValidateStyleString(current_style_[N-1].get()));
     ONCEPERBLADE(PRINT_PRESET_STYLE);
     PrintQuotedValue("NAME", name.get());
     STDOUT << "VARIATION=" << variation << "\n";
@@ -407,19 +420,18 @@ public:
 void SetStyle(int blade, LSPtr<char> style) {
   DOVALIDATE(*this);
   ValidateStyleString(style.get());
-#define SET_STYLE_N(N) case N: current_style##N = std::move(style); break;
-  switch (blade) {
-    ONCEPERBLADE(SET_STYLE_N)
-  }
+#if NUM_BLADES > 0
+  current_style_[blade-1] = std::move(style);
+#endif  
   DOVALIDATE(*this);
 }
 
 const char* GetStyle(int blade) {
-#define GET_STYLE_N(N) case N: return current_style##N.get();
-  switch (blade) {
-    ONCEPERBLADE(GET_STYLE_N)
-  }
+#if NUM_BLADES > 0
+  return current_style_[blade-1].get();
+#else
   return "";
+#endif  
 }
 
 };

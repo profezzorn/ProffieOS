@@ -416,7 +416,7 @@ public:
 #define WRAP_BLADE_SHORTERNER(N)
 #endif
 #define SET_BLADE_STYLE(N) do {                                         \
-    BladeStyle* tmp = style_parser.Parse(current_preset_.current_style##N.get()); \
+      BladeStyle* tmp = style_parser.Parse(current_preset_.GetStyle(N));  \
     WRAP_BLADE_SHORTERNER(N)                                            \
     current_config->blade##N->SetStyle(tmp);                            \
   } while (0);
@@ -1523,12 +1523,11 @@ public:
 
 #define SET_STYLE_CMD(N)                             \
     if (!strcmp(cmd, "set_style" #N) && arg) {        \
-      current_preset_.current_style##N = mkstr(arg); \
+      current_preset_.current_style_[N-1] = mkstr(arg); \
       current_preset_.Save();                        \
       return true;                                   \
     }
     ONCEPERBLADE(SET_STYLE_CMD)
-
     if (!strcmp(cmd, "move_preset") && arg) {
       int32_t pos = strtol(arg, NULL, 0);
       current_preset_.SaveAt(pos);
