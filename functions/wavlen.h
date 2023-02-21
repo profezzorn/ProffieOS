@@ -14,7 +14,7 @@
 // Example: TransitionEffectL<TrConcat<TrWipex<WavLen<>>,White,TrWipeX<WavLen<>>>,EFFECT_BLAST>
 
 template<EffectType T = EFFECT_NONE>
-class WavLen {
+class WavLenSVF {
 public:
   void run(BladeBase* blade) {
     BladeEffect* effect;
@@ -28,8 +28,16 @@ public:
   }
   int getInteger() { return value_; }
   int getInteger(int led) { return value_; }
+  int calculate(BladeBase* blade) { return value_; }
 private:
   int value_ = 0;
 };
+
+template<EffectType T = EFFECT_NONE>
+using WavLen = SingleValueAdapter<WavLenSVF<T>>;
+
+// optimized specialization
+template<EffectType T>
+class SingleValueAdapter<WavLenSVF<T>> : public WavLenSVF<T> {};
 
 #endif
