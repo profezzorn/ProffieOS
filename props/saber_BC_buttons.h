@@ -184,7 +184,7 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
                         Rotate hilt to cycle through all available colors, or
                         Click POW to change if ColorChange<> used in blade style,
                         Click + hold POW to save color selection and exit.
-                        Triple click POW to exit without changing color.
+                        Triple click POW to cancel and restore original color.
     ColorChange explained:
           If the style uses ColorChange<>, when you activate color change mode,
           there will be up to 12 steps per rotation with a little sound at each step.
@@ -277,7 +277,7 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
                         Rotate hilt to cycle through all available colors, or
                         Click AUX to change if ColorChange<> used in blade style,
                         Click + hold POW to save color selection and exit.
-                        Triple click POW to exit without changing color.
+                        Triple click POW to cancel and restore original color.
     ColorChange explained:
           If the style uses ColorChange<>, when you activate color change mode,
           there will be up to 12 steps per rotation with a little sound at each step.
