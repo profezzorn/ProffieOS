@@ -159,7 +159,7 @@ Stab                  - Either no button and just Thrust forward,
                         or Hold any button and physically stab something.
                         Works in Battle Mode.
 Blaster Blocks        - Click or Double click POW.
-Spam Blaster Blocks   - 4x click and hold while pointing up. This toggles SPAM BLAST mode ON/OFF,
+Spam Blaster Blocks   - 3x click and hold while pointing up. This toggles SPAM BLAST mode ON/OFF,
                         and makes the button super sensitive for multiple blaster blocks.
                         * Note * This gets in the way of normal features,
                         so turn off when you're done spamming.  Plays mzoom.wav.
@@ -253,7 +253,7 @@ Stab                  - Either no button and just Thrust forward, or
                         Hold any button and physically stab something.
                         Works in Battle Mode.
 Blaster Blocks        - Click or Double click POW.
-Spam Blaster Blocks   - 4x click and hold while pointing up. This toggles SPAM BLAST mode ON/OFF,
+Spam Blaster Blocks   - 3x click and hold while pointing up. This toggles SPAM BLAST mode ON/OFF,
                         and makes the button super sensitive for multiple blaster blocks.
                         * Note * This gets in the way of normal features,
                         so turn off when you're done spamming.  Plays mzoom.wav.
