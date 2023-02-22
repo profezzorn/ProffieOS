@@ -119,9 +119,9 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
                         * NOTE * Gesture ignitions using FastOn bypass preon.
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
-Next Preset           - Long click and release POW, or TWIST while pointing down.
+Next Preset           - Long click and release POW, or TWIST while pointing up.
 Prev Preset           - Double click and hold POW, release after a second (click then long click),
-                        or TWIST while pointing up.
+                        or TWIST while pointing down.
 Play/Stop Track       - 4x click POW.
 Volume Menu:
                       * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
@@ -208,9 +208,9 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
                         * NOTE * Gesture ignitions using FastOn bypass preon.
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
-Next Preset           - Long click and release POW, or TWIST while pointing down.
+Next Preset           - Long click and release POW, or TWIST while pointing up.
 Prev Preset           - Double click and hold POW, release after a second (click then long click),
-                        or TWIST while pointing up.
+                        or TWIST while pointing down.
 Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
                       * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
