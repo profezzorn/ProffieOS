@@ -363,7 +363,13 @@ public:
           display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
         }
         next_screen_ = SCREEN_PLI;
-        return font_config.ProffieOSTextMessageDuration;
+        if (font_config.ProffieOSTextMessageDuration != -1) {
+          return font_config.ProffieOSTextMessageDuration;
+        } else if (font_config.ProffieOSFontImageDuration > 0) {
+          return font_config.ProffieOSFontImageDuration;
+        } else {
+        return 3500;
+        }
 
       case SCREEN_PLI:
         if (!SaberBase::IsOn() && t_ >= PLI_OFF_TIME) {
@@ -400,7 +406,13 @@ public:
         }
         next_screen_ = SCREEN_DEFAULT;
         // STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
-        return font_config.ProffieOSTextMessageDuration;
+        if (font_config.ProffieOSTextMessageDuration != -1) {
+          return font_config.ProffieOSTextMessageDuration;
+        } else if (font_config.ProffieOSFontImageDuration > 0) {
+          return font_config.ProffieOSFontImageDuration;
+        } else {
+        return 3500;
+        }
       }
 
       case SCREEN_IMAGE:
