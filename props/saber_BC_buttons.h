@@ -155,8 +155,7 @@ Prev Preset Fast      - Double click and release POW after a second
 Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold POW and Clash to temporarily
                         override the auto-lockup and do regular Clash.
-Stab                  - Either no button and just Thrust forward,
-                        or Hold any button and physically stab something.
+Stab                  - Just Thrust forward with a stabbing motion.
                         Works in Battle Mode.
 Blaster Blocks        - Click or Double click POW.
 Spam Blaster Blocks   - 3x click and hold while pointing up. This toggles SPAM BLAST mode ON/OFF,
@@ -249,8 +248,7 @@ Prev Preset Fast      - Hold AUX + Double click and hold POW for a second
 Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold any button and Clash to
                         temporarily override the auto-lockup and do regular Clash.
-Stab                  - Either no button and just Thrust forward, or
-                        Hold any button and physically stab something.
+Stab                  - Just Thrust forward with a stabbing motion.
                         Works in Battle Mode.
 Blaster Blocks        - Click or Double click POW.
 Spam Blaster Blocks   - 3x click and hold while pointing up. This toggles SPAM BLAST mode ON/OFF,
