@@ -494,13 +494,6 @@ public:
 
  void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
-      case EFFECT_BOOT:
-        if (IMG_boot) {
-          ShowFileWithSoundLength(&IMG_boot, font_config.ProffieOSBootImageDuration);
-        } else {
-          SetScreenNow(SCREEN_STARTUP);
-        }
-        return;
       case EFFECT_NEWFONT:
         looped_on_ = Tristate::Unknown;
         looped_idle_ = Tristate::Unknown;
@@ -546,43 +539,51 @@ public:
        default: break;
     }
   }
+
   void SB_Effect2(EffectType effect, float location) override {
     switch (effect) {
+      case EFFECT_BOOT:
+        if (IMG_boot) {
+          ShowFileWithSoundLength(&IMG_boot, font_config.ProffieOSBootImageDuration);
+        } else {
+          SetScreenNow(SCREEN_STARTUP);
+        }
+        return;
       case EFFECT_BLAST:
-      ShowFileWithSoundLength(&IMG_blst, font_config.ProffieOSBlastImageDuration);
-      return;
-    case EFFECT_CLASH:
-      ShowFileWithSoundLength(&IMG_clsh, font_config.ProffieOSClashImageDuration);
-      return;
-    case EFFECT_FORCE:
-      ShowFileWithSoundLength(&IMG_force, font_config.ProffieOSForceImageDuration);
-      return;
-    case EFFECT_PREON:
-      ShowFile(&IMG_preon, round(SaberBase::sound_length * 1000));
-      return;
-    case EFFECT_POSTOFF:
-      ShowFileWithSoundLength(&IMG_pstoff, font_config.ProffieOSPstoffImageDuration);
-      return;
+        ShowFileWithSoundLength(&IMG_blst, font_config.ProffieOSBlastImageDuration);
+        return;
+      case EFFECT_CLASH:
+        ShowFileWithSoundLength(&IMG_clsh, font_config.ProffieOSClashImageDuration);
+        return;
+      case EFFECT_FORCE:
+        ShowFileWithSoundLength(&IMG_force, font_config.ProffieOSForceImageDuration);
+        return;
+      case EFFECT_PREON:
+        ShowFile(&IMG_preon, round(SaberBase::sound_length * 1000));
+        return;
+      case EFFECT_POSTOFF:
+        ShowFileWithSoundLength(&IMG_pstoff, font_config.ProffieOSPstoffImageDuration);
+        return;
 /* To-Do, possibly differently
 #ifdef OLED_USE_BLASTER_IMAGES
-    case EFFECT_RELOAD:
-      ShowFileWithSoundLength(&IMG_reload, font_config.ProffieOSReloadImageDuration);
-      return;
-    case EFFECT_EMPTY:
-      ShowFileWithSoundLength(&IMG_empty, font_config.ProffieOSEmptyImageDuration);
-      return;
-    case EFFECT_JAM:
-      ShowFileWithSoundLength(&IMG_jam, font_config.ProffieOSJamImageDuration);
-      return;
-    case EFFECT_CLIP_IN:
-      ShowFileWithSoundLength(&IMG_clipin, font_config.ProffieOSClipinImageDuration);
-      return;
-    case EFFECT_CLIP_OUT:
-      ShowFileWithSoundLength(&IMG_clipout, font_config.ProffieOSClipoutImageDuration);
-      return;
-    case EFFECT_DESTRUCT:
-      ShowFileWithSoundLength(&IMG_destruct, font_config.ProffieOSDestructImageDuration);
-      return;
+      case EFFECT_RELOAD:
+        ShowFileWithSoundLength(&IMG_reload, font_config.ProffieOSReloadImageDuration);
+        return;
+      case EFFECT_EMPTY:
+        ShowFileWithSoundLength(&IMG_empty, font_config.ProffieOSEmptyImageDuration);
+        return;
+      case EFFECT_JAM:
+        ShowFileWithSoundLength(&IMG_jam, font_config.ProffieOSJamImageDuration);
+        return;
+      case EFFECT_CLIP_IN:
+        ShowFileWithSoundLength(&IMG_clipin, font_config.ProffieOSClipinImageDuration);
+        return;
+      case EFFECT_CLIP_OUT:
+        ShowFileWithSoundLength(&IMG_clipout, font_config.ProffieOSClipoutImageDuration);
+        return;
+      case EFFECT_DESTRUCT:
+        ShowFileWithSoundLength(&IMG_destruct, font_config.ProffieOSDestructImageDuration);
+        return;
 #endif
 */
     break;
