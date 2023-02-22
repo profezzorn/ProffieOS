@@ -29,7 +29,11 @@ Features:
 - No blade inserted = no gestures option if Blade Detect is used.
 - Optional On-the-fly volume controls with Quick MIN and MAX levels.
 - Bypass preon and/or postoff based on blade angle.
-
+- Spam Blast - Enter this mode to make the button super sensitive for                      
+                            multiple blaster blocks. Presses are prioritized over
+                            other features. No limits, no lag when "rapid firing".
+- Swap feature with sound - Just an additional EFFECT that can be used to trigger
+                            blade animations. See below.
 ---------------------------------------------------------------------------
 Optional Blade style elements:
 On-Demand battery level - A layer built into the blade styles that reacts 
@@ -107,8 +111,7 @@ Gesture Controls:
 - Melt will automatically trigger with no buttons when you physically
   stab something, and end when you pull away or push any button.
 
-- Stab will trigger either with no buttons and thrusting forward,
-  or with any button and physically stabbing something.
+- Stab will trigger with no buttons and thrusting forward.
   
 ====================== 1 BUTTON CONTROLS ========================
 | Sorted by ON or OFF state: (what it's like while using saber) |
@@ -156,6 +159,10 @@ Stab                  - Either no button and just Thrust forward,
                         or Hold any button and physically stab something.
                         Works in Battle Mode.
 Blaster Blocks        - Click or Double click POW.
+Spam Blaster Blocks   - 4x click and hold while pointing up. This toggles SPAM BLAST mode ON/OFF,
+                        and makes the button super sensitive for multiple blaster blocks.
+                        * Note * This gets in the way of normal features,
+                        so turn off when you're done spamming.  Plays mzoom.wav.
 Auto Swing Blast      - if #define ENABLE_AUTO_SWING_BLAST is active,
                         swinging within 1 second of doing button activated 
                         Blaster Block will start this timed mode.
@@ -192,8 +199,9 @@ Quote Player          - Triple click POW.
 Toggle sequential or 
   random quote play   - 4x click and hold POW. (while pointing down)
 Force Push            - Push hilt perpendicularly from a stop.
-Swap (EffectSequence) - 4x click and hold POW medium. (while NOT pointing up)
-PowerSave Dim Blade   - 4x click and hold POW medium. (while pointing up)
+Swap (EffectSequence) - 4x click and hold POW. (while NOT pointing up)
+                        * Requires EFFECT_USER1 in blade style.
+PowerSave Dim Blade   - 4x click and hold POW. (while pointing up)
                         To use Power Save requires AlphaL based EffectSequence in style.
 Turn off blade        - Hold POW and wait until blade is off,
                         or Twist if using #define BC_TWIST_OFF.
@@ -245,6 +253,10 @@ Stab                  - Either no button and just Thrust forward, or
                         Hold any button and physically stab something.
                         Works in Battle Mode.
 Blaster Blocks        - Click or Double click POW.
+Spam Blaster Blocks   - 4x click and hold while pointing up. This toggles SPAM BLAST mode ON/OFF,
+                        and makes the button super sensitive for multiple blaster blocks.
+                        * Note * This gets in the way of normal features,
+                        so turn off when you're done spamming.  Plays mzoom.wav.
 Auto Swing Blast      - if #define ENABLE_AUTO_SWING_BLAST is active,
                         swinging within 1 second of doing button activated 
                         Blaster Block will start this timed mode.
@@ -282,6 +294,7 @@ Toggle sequential or
   random quote play   - Hold AUX + Twist. (while pointing down)
 Force Push            - Push hilt perpendicularly from a stop.
 Swap (EffectSequence) - Hold AUX + Twist. (while NOT pointing up)
+                        * Requires EFFECT_USER1 in blade style.
 PowerSave Dim Blade   - Hold AUX + Twist. (while pointing up)
           (To use Power Save requires AlphaL based EffectSequence in style)
 Turn off blade        - Hold POW and wait until blade is off,
@@ -350,6 +363,8 @@ Turn OFF without postoff - Turn OFF while pointing up.
 #ifdef BC_THRUST_ON
 #define THRUST_GESTURE
 #endif
+
+#undef SPAM_BLAST
 
 #if defined(NO_BLADE_NO_GEST_ONOFF) && !defined(BLADE_DETECT_PIN)
 #error Using NO_BLADE_NO_GEST_ONOFF requires a BLADE_DETECT_PIN to be defined 
@@ -849,6 +864,9 @@ public:
 // Blaster Deflection
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
+#ifdef SPAM_BLAST
+    case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
+#endif
       // Don't blast if in colorchange mode
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
       SaberBase::DoBlast();
@@ -860,7 +878,7 @@ public:
       if (millis() - last_blast_ < 1000) {
         SaberBase::DoBlast();
         last_blast_ = millis();
-        STDOUT.println("Auto Swing Blast mode");
+        STDOUT << "Auto Swing Blast mode";
       }
       break;
   #endif
@@ -905,30 +923,37 @@ public:
       SaberBase::DoBeginLockup();
       return true;
 
-// Battle Mode
-#ifndef BC_NO_BM
+// Spam Blast toggle - pointing up
+// Battle Mode toggle - NOT pointing up
   #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_ON):
   #else
   // 2 button
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
   #endif
+      if (fusor.angle1() >  M_PI / 3) {
+        sound_library_.SayZoomingIn();
+#ifndef SPAM_BLAST
+#define SPAM_BLAST
+#else
+#undef SPAM_BLAST
+#endif
+        return true;
+      }
+#ifndef BC_NO_BM
       if (!battle_mode_) {
-        STDOUT.println("Entering Battle Mode");
+        STDOUT << "Entering Battle Mode";
         battle_mode_ = true;
         if (SFX_bmbegin) {
           hybrid_font.PlayCommon(&SFX_bmbegin);
-          STDOUT.println("-----------------playing bmbegin.wav");
         } else {
           hybrid_font.DoEffect(EFFECT_FORCE, 0);
-          STDOUT.println("-----------------playing forcexx.wav");
         }
       } else {
-        STDOUT.println("Exiting Battle Mode");
+        STDOUT << "Exiting Battle Mode";
         battle_mode_ = false;
         if (SFX_bmend) {
           hybrid_font.PlayCommon(&SFX_bmend);
-          STDOUT.println("-----------------playing bmend.wav");
         } else {
           beeper.Beep(0.5, 3000);
         }
@@ -987,7 +1012,7 @@ public:
       return true;
 
 // Power Save blade dimming - pointing up
-// Swap effect - NOT pointing up
+// Swap effect - NOT pointing up or down
 // Toggle seqential quote play - pointing down
   #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_ON):
@@ -1009,6 +1034,7 @@ public:
         }
         return true;
       } else {
+      // NOT pointing up or down
         SaberBase::DoEffect(EFFECT_USER1, 0);
       }
       return true;
