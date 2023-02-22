@@ -2,13 +2,18 @@
 #define TRANSITIONS_CONCAT_H
 
 // Usage: TrConcat<TRANSITION, INTERMEDIATE, TRANSITION, ...>
+// OR:  TrConcat<TRANSITION, TRANSITION, ...>
 // TRANSITION: TRANSITION
 // INTERMEDIATE: COLOR
 // return value: TRANSITION
 // Concatenates any number of transitions.
-// In between each transition, we need an intermediate color
-// to transition to.
-
+// If an intermediate color is provided, we first transition to that color, then
+// we transition away from it in the next transition.
+// If no intermediate color is provided, the first and second transition will both
+// transition from the same input colors. If for instance both the first and second
+// transitions are TrFades, then there will be a jump in the middle as the transition
+// will go back and start from the beginning. Using TimeReverseX on the second transition
+// will avoid this, as the second transition will then run backwards.
 
 #ifdef OPTIMIZE_TRCONCAT
 
