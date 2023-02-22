@@ -8,7 +8,7 @@ public:
     CONFIG_VARIABLE2(humStart, 100);
     CONFIG_VARIABLE2(volHum, 15);
     CONFIG_VARIABLE2(volEff, 16);
-    CONFIG_VARIABLE2(ProffieOSHumDelay, 0.0f);
+    CONFIG_VARIABLE2(ProffieOSHumDelay, -1.0f);
     CONFIG_VARIABLE2(ProffieOSSwingSpeedThreshold, 250.0f);
     CONFIG_VARIABLE2(ProffieOSSwingVolumeSharpness, 0.5f);
     CONFIG_VARIABLE2(ProffieOSMaxSwingVolume, 2.0f);
@@ -463,7 +463,7 @@ public:
       if (SFX_humm && tmp) {
         hum_fade_in_ = tmp->length();
         STDOUT << "HUM fade-in time: " << hum_fade_in_ << "\n";
-      } else if (font_config.ProffieOSHumDelay > 0) {
+      } else if (font_config.ProffieOSHumDelay >= 0) {
         hum_start_ += font_config.ProffieOSHumDelay;
         STDOUT << "HumDelay: " << font_config.ProffieOSHumDelay << "\n";
       } else if (font_config.humStart && tmp) {
