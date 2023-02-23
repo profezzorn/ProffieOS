@@ -8,7 +8,7 @@ public:
     CONFIG_VARIABLE2(humStart, 100);
     CONFIG_VARIABLE2(volHum, 15);
     CONFIG_VARIABLE2(volEff, 16);
-    CONFIG_VARIABLE2(ProffieOSHumDelay, 0.0f);
+    CONFIG_VARIABLE2(ProffieOSHumDelay, -1.0f);
     CONFIG_VARIABLE2(ProffieOSSwingSpeedThreshold, 250.0f);
     CONFIG_VARIABLE2(ProffieOSSwingVolumeSharpness, 0.5f);
     CONFIG_VARIABLE2(ProffieOSMaxSwingVolume, 2.0f);
