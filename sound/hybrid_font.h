@@ -17,11 +17,26 @@ public:
     CONFIG_VARIABLE2(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE2(ProffieOSSlashAccelerationThreshold, 130.0f);
     CONFIG_VARIABLE2(ProffieOSAnimationFrameRate, 0.0f);
-    CONFIG_VARIABLE2(ProffieOSFontImageDuration, 5000.0f);
-    CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
+    CONFIG_VARIABLE2(ProffieOSTextMessageDuration, -1.0f);
+    CONFIG_VARIABLE2(ProffieOSBootImageDuration, 4000.0f);
+    CONFIG_VARIABLE2(ProffieOSFontImageDuration, 3000.0f);
     CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSClashImageDuration, 500.0f);
-    CONFIG_VARIABLE2(ProffieOSForceImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSForceImageDuration, 2000.0f);
+    CONFIG_VARIABLE2(ProffieOSOutImageDuration, 2000.0f);
+    CONFIG_VARIABLE2(ProffieOSInImageDuration, 2000.0f);
+    CONFIG_VARIABLE2(ProffieOSPstoffImageDuration, 2000.0f);
+    CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
+/* To-Do, possibly differently
+#ifdef OLED_USE_BLASTER_IMAGES
+    CONFIG_VARIABLE2(ProffieOSReloadImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSEmptyImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSJamImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClipinImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClipoutImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSDestructImageDuration, 10000.0f);
+#endif 
+*/
     CONFIG_VARIABLE2(ProffieOSMinSwingAcceleration, 0.0f);
     CONFIG_VARIABLE2(ProffieOSMaxSwingAcceleration, 0.0f);
 #ifdef ENABLE_SPINS
@@ -107,6 +122,8 @@ public:
   float ProffieOSSlashAccelerationThreshold;
   // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
+  // for OLED displays, the time a text message will display
+  float ProffieOSTextMessageDuration;
   // for OLED displays, the time a static BMP or loop will play when saber is off
   float ProffieOSFontImageDuration;
   // for OLED displays, the time an on.bmp will play
@@ -117,6 +134,30 @@ public:
   float ProffieOSClashImageDuration;
   // for OLED displays, the time a force.bmp will play
   float ProffieOSForceImageDuration;
+  // for OLED displays, the time a out.bmp will play
+  float ProffieOSOutImageDuration;
+  // for OLED displays, the time a in.bmp will play
+  float ProffieOSInImageDuration;
+  // for OLED displays, the time a pstoff.bmp will play
+  float ProffieOSPstoffImageDuration;
+  // for OLED displays, the time a boot.bmp will play
+  float ProffieOSBootImageDuration;
+/* To-Do, possibly differently
+#ifdef OLED_USE_BLASTER_IMAGES
+  // for OLED displays, the time a reload.bmp will play
+  float ProffieOSReloadImageDuration;
+  // for OLED displays, the time a empty.bmp will play
+  float ProffieOSEmptyImageDuration;
+  // for OLED displays, the time a jam.bmp will play
+  float ProffieOSJamImageDuration;
+  // for OLED displays, the time a clipiin.bmp will play
+  float ProffieOSClipinImageDuration;
+  // for OLED displays, the time a clipout.bmp will play
+  float ProffieOSClipoutImageDuration;
+  // for OLED displays, the time a destruct.bmp will play
+  float ProffieOSDestructImageDuration;
+#endif
+*/  
   // Minimum acceleration for Accent Swing file Selection
   // recommended value is 20.0 ~ 30.0
   float ProffieOSMinSwingAcceleration;
