@@ -492,7 +492,7 @@ public:
     ShowFile(e, round(dur));
   }
 
- void SB_Effect(EffectType effect, float location) override {
+ void SB_Effect2(EffectType effect, float location) override {
     switch (effect) {
       case EFFECT_NEWFONT:
         looped_on_ = Tristate::Unknown;
@@ -535,13 +535,6 @@ public:
         } else {          
           SetMessage("low\nbattery");
         }
-        break;
-       default: break;
-    }
-  }
-
-  void SB_Effect2(EffectType effect, float location) override {
-    switch (effect) {
       case EFFECT_BOOT:
         if (IMG_boot) {
           ShowFileWithSoundLength(&IMG_boot, font_config.ProffieOSBootImageDuration);
@@ -601,7 +594,7 @@ public:
     display_->SB_Top();
   }
 
-  void SB_Off(OffType offtype) override {
+  void SB_Off2(OffType offtype) override {
     if (offtype == OFF_IDLE) {
       SetScreenNow(SCREEN_OFF);
     } else if (IMG_in) {
