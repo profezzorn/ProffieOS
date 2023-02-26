@@ -47,19 +47,27 @@ private:
   int mult_;
 };
 
-template<int HUMP_WIDTH>
-class HumpFlickerF {
+template<class HUMP_WIDTH>
+class HumpFlickerFX {
 public:
   void run(BladeBase* blade) {
+    hump_width_.run(blade);
     int num_leds_ = blade->num_leds();
     pos_ = random(num_leds_);
+    // width_  = hump_width_.calculate(blade);
   }
   int getInteger(int led) {
-    return clampi32(abs(led - pos_) * 32768 / HUMP_WIDTH, 0, 32768);
+    // return clampi32(abs(led - pos_) * 32768 / width_, 0, 32768);
+    return clampi32(abs(led - pos_) * 32768 / hump_width_.getInteger(led), 0, 32768);
   }
 private:
+  // int width_;
+  // PONUA SVFWrapper<HUMP_WIDTH> hump_width_;
+  PONUA HUMP_WIDTH hump_width_;
+
   int pos_;
 };
 
+template<int HUMP_WIDTH> using HumpFlickerF = HumpFlickerFX<Int<HUMP_WIDTH>>;
 
 #endif
