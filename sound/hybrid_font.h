@@ -16,6 +16,8 @@ public:
     CONFIG_VARIABLE2(ProffieOSSmoothSwingDucking, 0.2f);
     CONFIG_VARIABLE2(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE2(ProffieOSSlashAccelerationThreshold, 130.0f);
+
+#ifdef ENABLE_DISPLAY_CODE
     CONFIG_VARIABLE2(ProffieOSAnimationFrameRate, 0.0f);
     CONFIG_VARIABLE2(ProffieOSTextMessageDuration, -1.0f);
     CONFIG_VARIABLE2(ProffieOSBootImageDuration, 4000.0f);
@@ -37,6 +39,8 @@ public:
     CONFIG_VARIABLE2(ProffieOSDestructImageDuration, 10000.0f);
 #endif 
 */
+#endif  // ENABLE_DISPLAY_CODE
+    
     CONFIG_VARIABLE2(ProffieOSMinSwingAcceleration, 0.0f);
     CONFIG_VARIABLE2(ProffieOSMaxSwingAcceleration, 0.0f);
 #ifdef ENABLE_SPINS
@@ -120,6 +124,7 @@ public:
   // swing speed change is used to determine if it's a swing or a
   // slash. Defaults to 130 (degrees per second per second)
   float ProffieOSSlashAccelerationThreshold;
+#ifdef ENABLE_DISPLAY_CODE
   // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
   // for OLED displays, the time a text message will display
@@ -157,7 +162,8 @@ public:
   // for OLED displays, the time a destruct.bmp will play
   float ProffieOSDestructImageDuration;
 #endif
-*/  
+*/
+#endif  // ENABLE_DISPLAY_CODE
   // Minimum acceleration for Accent Swing file Selection
   // recommended value is 20.0 ~ 30.0
   float ProffieOSMinSwingAcceleration;
