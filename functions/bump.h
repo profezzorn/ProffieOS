@@ -47,6 +47,16 @@ private:
   int mult_;
 };
 
+// Usage: HumpFlickerFX<FUNCTION>
+// or: HumpFlickerF<N>
+// FUNCTION: FUNCTION
+// N: NUMBER
+// return value: INTEGER
+// Creates hump shapes that randomize over the blade.
+// The returned INTEGER is the size of the humps.
+// Large values can give the blade a shimmering look, 
+// while small values look more like speckles.
+
 template<class HUMP_WIDTH>
 class HumpFlickerFX {
 public:
