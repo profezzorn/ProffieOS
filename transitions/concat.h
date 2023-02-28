@@ -154,9 +154,9 @@ constexpr bool hasGetColorHelper(int) {
 template <typename R> constexpr bool hasGetColorHelper(...) { return false; }
 template <typename R> constexpr bool hasGetColor() { return hasGetColorHelper<R>(0); }
 
-static_assert(std::is_same<decltype(((Black*)nullptr)->getColor(0).c.r), uint16_t>::value);
-static_assert(hasGetColor<Black>());
-static_assert(!hasGetColor<Int<1>>());
+static_assert(std::is_same<decltype(((Black*)nullptr)->getColor(0).c.r), uint16_t>::value, "getcolor has changed...");
+static_assert(hasGetColor<Black>(), "hasGetColor is not working");
+static_assert(!hasGetColor<Int<1>>(), "hasGetColor is not working");
 
 template<class ... REST> struct TrConcatSelector {};
 template<class A, class B, typename Enable, class ... REST> struct TrConcat3Selector {

@@ -1029,7 +1029,7 @@ public:
 // Rehearsal / Choreography
 class SavedRehearsal : public ConfigFile {
 public:
-  virtual ReadStatus Read(FileReader* f) override {
+  virtual ReadStatus Read(FileReader* f, bool reset = false) override {
     int file;
     if (!f || !f->IsOpen()) return ReadStatus::READ_FAIL;
     memset(clash_rec, 0, sizeof(clash_rec));

@@ -69,8 +69,8 @@ private:
 
 extern Monitoring monitor;
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
+#define STRINGIFY(...) #__VA_ARGS__
+#define TOSTRING(...) STRINGIFY(__VA_ARGS__)
 
 #define TRACE_CATEGORY_BLADE 0x1
 #define TRACE_CATEGORY_MOTION 0x2

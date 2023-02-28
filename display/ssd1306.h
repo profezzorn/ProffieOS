@@ -598,7 +598,7 @@ public:
     if (offtype == OFF_IDLE) {
       SetScreenNow(SCREEN_OFF);
     } else if (IMG_in) {
-      ShowFileWithSoundLength(&IMG_in, font_config.ProffieOSDestructImageDuration);
+      ShowFileWithSoundLength(&IMG_in, font_config.ProffieOSInImageDuration);
     } else if (IMG_idle) {
       ShowFile(&IMG_idle, 3600000.0);
     } else {

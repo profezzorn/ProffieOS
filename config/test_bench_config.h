@@ -8,7 +8,7 @@
 #ifdef CONFIG_TOP
 
 // V3 electronics
-#include "v4_config.h"
+#include "v3_config.h"
 
 // Number of simultaneously connected blades.
 // (For interchangeable blades, see the blades[] array.)
