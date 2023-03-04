@@ -20,7 +20,7 @@ public:
 #ifdef ENABLE_DISPLAY_CODE
     CONFIG_VARIABLE2(ProffieOSAnimationFrameRate, 0.0f);
     CONFIG_VARIABLE2(ProffieOSTextMessageDuration, -1.0f);
-    CONFIG_VARIABLE2(ProffieOSBootImageDuration, 4000.0f);
+    CONFIG_VARIABLE2(ProffieOSBootImageDuration, -1.0f);
     CONFIG_VARIABLE2(ProffieOSFontImageDuration, 3000.0f);
     CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSClashImageDuration, 500.0f);
