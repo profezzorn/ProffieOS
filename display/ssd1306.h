@@ -240,7 +240,7 @@ template<int Width, class col_t>
 class StandardDisplayController : public DisplayControllerBase<Width, col_t>, SaberBase, private AudioStreamWork
 #ifdef ENABLE_DEVELOPER_COMMANDS
   , CommandParser
-#endif  
+#endif
 {
 public:
   static const int WIDTH = Width;
@@ -411,7 +411,7 @@ public:
         } else if (font_config.ProffieOSFontImageDuration > 0) {
           return font_config.ProffieOSFontImageDuration;
         } else {
-        return 3500;
+          return 3500;
         }
       }
 
@@ -488,8 +488,10 @@ public:
   }
 
   void ShowFileWithSoundLength(Effect* e, float duration) {
-    float dur = (duration == 0) ? SaberBase::sound_length * 1000 : duration;
-    ShowFile(e, round(dur));
+    if (duration == 0.0) {
+      duration = SaberBase::sound_length * 1000;
+    }
+    ShowFile(e, round(duration));
   }
 
  void SB_Effect2(EffectType effect, float location) override {
@@ -532,12 +534,15 @@ public:
         // Maybe we should make this blink or something?
         if (IMG_lowbatt) {
           ShowFile(&IMG_lowbatt, 5000);
-        } else {          
+        } else {
           SetMessage("low\nbattery");
         }
       case EFFECT_BOOT:
         if (IMG_boot) {
-          ShowFileWithSoundLength(&IMG_boot, font_config.ProffieOSBootImageDuration);
+          ShowFileWithSoundLength(&IMG_boot,
+				  font_config.ProffieOSBootImageDuration != -1.0 ?
+				  font_config.ProffieOSBootImageDuration :
+				  font_config.ProffieOSFontImageDuration);
         } else {
           SetScreenNow(SCREEN_STARTUP);
         }
@@ -972,7 +977,7 @@ public:
       on_ = true;
       power_.Init();
       power_.Power(true);
-    
+
       while (!i2cbus.inited()) YIELD();
       while (!I2CLock()) YIELD();
 
@@ -1099,7 +1104,7 @@ public:
       while (!I2CLock()) YIELD();
       Send(DISPLAYOFF);                    // 0xAE
       I2CUnlock();
-    
+
       power_.Power(false);
       power_.DeInit();
       on_ = false;
