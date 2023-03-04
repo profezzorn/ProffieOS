@@ -15,6 +15,7 @@ template<class TRANSITION, class PULSE>
 class TransitionPulseL {
 public:
   LayerRunResult run(BladeBase* blade) {
+    SaveLastDetectedBladeEffectScoped save;
     pulse_.run(blade);
     if (pulse_.calculate(blade)) {
       transition_.begin();
@@ -24,7 +25,6 @@ public:
       transition_.run(blade);
       if (transition_.done()) run_ = false;
     }
-    last_detected_blade_effect = nullptr;
     return LayerRunResult::UNKNOWN;
   }
   

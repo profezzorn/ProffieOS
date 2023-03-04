@@ -5,6 +5,17 @@
 
 #define AUTO_RETURN(X) -> typename std::remove_const<typename std::remove_reference<decltype(X)>::type>::type { return (X); }
 
+// When specifying the time for a transition, you can use these functions to make the transition speed change as it goes.
+// Note that none of these change the total time, they just make it fast in the beginning and slow at the end, or vice versa.
+// Here are a few examples:
+// TrFadeX<BendTimePowX<Int<1000>, Int<65536>>>  : x^2 function, will start slow (speed=0) and speed up, speed will be 2 at end
+// TrFadeX<BendTimePowX<Int<1000>, Int<16384>>   : x^0.5 function, starts at infinite speed and slows down to 0.5 at end.
+// TrFadeX<BendTimePowInvX<Int<1000>, Int<65536>>: 1-(1-x)^2 starts at speed 2 and ends at speed 0
+// TrFadeX<BendTimePowInvX<Int<1000>, Int<16384>>: 1-(1-x)^0.5 starts at speed 0.5 and ends at infinite speed
+// TrFadeX<ReverseTimeX<Int<1000>>: 1-x does the transition backwards
+//
+// Basically, BendTimePowX<X, Int<Y>> is equal to X^(Y/32768) and BendTimePowInvX<X, Int<Y>> is equal to 1-(1-X)^(Y/32768)
+
 // These are just placeholders, all the logic is in AddBend
 template<class MILLIS, class BEND_FUNCTION> struct BendTimePowX {};
 template<class MILLIS> struct ReverseTimeX {};

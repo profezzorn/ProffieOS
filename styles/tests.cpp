@@ -22,8 +22,7 @@ float clamp(float x, float a, float b) {
 }
 
 struct CONFIG { struct Preset* presets; size_t num_presets;};
-CONFIG preset = { 0,0 };
-CONFIG* current_config = &preset;
+extern CONFIG* current_config;
 
 #define PROFFIE_TEST
 
@@ -166,6 +165,33 @@ Monitoring monitor;
 #include "fire.h"
 #include "sparkle.h"
 #include "../common/command_parser.h"
+#include "../common/preset.h"
+
+Color16 TestRgbArgColors[256];
+
+void clear_test_colors() {
+  for (size_t i = 0; i < NELEM(TestRgbArgColors); i++) {
+    TestRgbArgColors[i] = Color16();
+  }
+}
+
+template<int arg, class COLOR>
+class TestRgbArg : public RgbArg<arg, COLOR> {
+public:
+  TestRgbArg() : RgbArg<arg, COLOR>() {
+    TestRgbArgColors[arg] = RgbArg<arg,COLOR>::color_;
+  }
+};
+
+Preset presets[] = {
+  { "one", "t1",
+    StylePtr<Gradient<TestRgbArg<1, Red>, TestRgbArg<2, Green>, TestRgbArg<3, Blue>>>("0,0,1 0,1,0 1,0,0"),
+    "uno" }
+};
+CONFIG preset = { presets, 1 };
+CONFIG* current_config = &preset;
+
+
 CommandParser* parsers = NULL;
 ArgParserInterface* CurrentArgParser;
 
@@ -799,6 +825,55 @@ void test_argument_parsing() {
   testMaxUsedArgument("charging", 0);
   testMaxUsedArgument("rainbow", 2);
   testMaxUsedArgument("fire", 2);
+
+  testGetArg("builtin 0 1", 0, "builtin");
+  testGetArg("builtin 0 1", 1, "0");
+  testGetArg("builtin 0 1", 2, "1");
+  testGetArg("builtin 0 1", 3, "0,0,1");
+  testGetArg("builtin 0 1", 4, "0,1,0");
+  testGetArg("builtin 0 1", 5, "1,0,0");
+
+  clear_test_colors();
+  testGetArg("builtin 0 1", 0, "builtin");
+  CHECK_COLOR(TestRgbArgColors[1], 0, 0, 1, 0);
+  CHECK_COLOR(TestRgbArgColors[2], 0, 1, 0, 0);
+  CHECK_COLOR(TestRgbArgColors[3], 1, 0, 0, 0);
+
+  clear_test_colors();
+  testGetArg("builtin 0 1 1,2,3", 0, "builtin");
+  CHECK_COLOR(TestRgbArgColors[1], 1, 2, 3, 0);
+  CHECK_COLOR(TestRgbArgColors[2], 0, 1, 0, 0);
+  CHECK_COLOR(TestRgbArgColors[3], 1, 0, 0, 0);
+
+  clear_test_colors();
+  testGetArg("builtin 0 1 1,2,3 4,5,6", 0, "builtin");
+  CHECK_COLOR(TestRgbArgColors[1], 1, 2, 3, 0);
+  CHECK_COLOR(TestRgbArgColors[2], 4, 5, 6, 0);
+  CHECK_COLOR(TestRgbArgColors[3], 1, 0, 0, 0);
+
+  clear_test_colors();
+  testGetArg("builtin 0 1 1,2,3 4,5,6 7,8,9", 0, "builtin");
+  CHECK_COLOR(TestRgbArgColors[1], 1, 2, 3, 0);
+  CHECK_COLOR(TestRgbArgColors[2], 4, 5, 6, 0);
+  CHECK_COLOR(TestRgbArgColors[3], 7, 8, 9, 0);
+
+  clear_test_colors();
+  testGetArg("builtin 0 1 ~ 4,5,6 7,8,9", 0, "builtin");
+  CHECK_COLOR(TestRgbArgColors[1], 0, 0, 1, 0);
+  CHECK_COLOR(TestRgbArgColors[2], 4, 5, 6, 0);
+  CHECK_COLOR(TestRgbArgColors[3], 7, 8, 9, 0);
+
+  clear_test_colors();
+  testGetArg("builtin 0 1 ~ ~ 7,8,9", 0, "builtin");
+  CHECK_COLOR(TestRgbArgColors[1], 0, 0, 1, 0);
+  CHECK_COLOR(TestRgbArgColors[2], 0, 1, 0, 0);
+  CHECK_COLOR(TestRgbArgColors[3], 7, 8, 9, 0);
+
+  clear_test_colors();
+  testGetArg("builtin 0 1 ~ ~ 7,8,9", 0, "builtin");
+  CHECK_COLOR(TestRgbArgColors[1], 0, 0, 1, 0);
+  CHECK_COLOR(TestRgbArgColors[2], 0, 1, 0, 0);
+  CHECK_COLOR(TestRgbArgColors[3], 7, 8, 9, 0);
 }
 
 int main() {
