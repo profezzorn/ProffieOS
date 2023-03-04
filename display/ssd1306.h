@@ -2,20 +2,35 @@
 #define DISPLAY_SSD1306_H
 
 #ifndef PLI_OFF_TIME
-#define PLI_OFF_TIME font_config.ProffieOSFontImageDuration
+#define PLI_OFF_TIME ((font_config.ProffieOSFontImageDuration == 0) ? 3500 : font_config.ProffieOSFontImageDuration)
 #endif
 
 #include "monoframe.h"
 
 // Images/animations
-IMAGE_FILESET(font);
 IMAGE_FILESET(boot);
-IMAGE_FILESET(on);
-IMAGE_FILESET(clsh);
+IMAGE_FILESET(font);
 IMAGE_FILESET(blst);
-IMAGE_FILESET(lock);
+IMAGE_FILESET(clsh);
 IMAGE_FILESET(force);
+IMAGE_FILESET(preon);
+IMAGE_FILESET(out);
+IMAGE_FILESET(in);
+IMAGE_FILESET(pstoff);
+IMAGE_FILESET(on);
+IMAGE_FILESET(lock);
 IMAGE_FILESET(idle);
+/* To-Do, possibly differently
+#ifdef OLED_USE_BLASTER_IMAGES
+IMAGE_FILESET(reload);
+IMAGE_FILESET(empty);
+IMAGE_FILESET(jam);
+IMAGE_FILESET(clipin);
+IMAGE_FILESET(clipout);
+IMAGE_FILESET(destruct);
+#endif
+*/
+IMAGE_FILESET(lowbatt);
 
 enum Screen {
   SCREEN_UNSET,
@@ -225,7 +240,7 @@ template<int Width, class col_t>
 class StandardDisplayController : public DisplayControllerBase<Width, col_t>, SaberBase, private AudioStreamWork
 #ifdef ENABLE_DEVELOPER_COMMANDS
   , CommandParser
-#endif  
+#endif
 {
 public:
   static const int WIDTH = Width;
@@ -286,11 +301,11 @@ public:
   int FillFrameBuffer(bool advance) override {
     if (advance) {
       if (next_screen_ != SCREEN_UNSET) {
-	screen_ = next_screen_;
-	next_screen_ = SCREEN_UNSET;
-	t_ = 0;
+        screen_ = next_screen_;
+        next_screen_ = SCREEN_UNSET;
+        t_ = 0;
       } else {
-	t_ += last_delay_;
+        t_ += last_delay_;
       }
     }
     return last_delay_ = FillFrameBuffer2(advance);
@@ -309,18 +324,18 @@ public:
     t_ = 0;
     if (SaberBase::IsOn()) {
       if (SaberBase::Lockup() && IMG_lock && !ignore_lockup) {
-	SetFile(&IMG_lock, 3600000.0);
-      } else if (looped_on_ == Tristate::True) {
-	SetFile(&IMG_on, font_config.ProffieOSOnImageDuration);
+        SetFile(&IMG_lock, 3600000.0);
+      } else if (looped_on_ != Tristate::False) {
+        SetFile(&IMG_on, font_config.ProffieOSOnImageDuration);
       }
     } else {
       // Off
       if (looped_idle_ != Tristate::False) {
-	if (EscapeIdleIfNeeded()) {
-	  SetMessage("usb");
-	} else {
-	  SetFile(&IMG_idle, 3600000.0);
-	}
+        if (EscapeIdleIfNeeded()) {
+          SetMessage("    usb\nconnected");
+        } else {
+          SetFile(&IMG_idle, 3600000.0);
+        }
       }
     }
   }
@@ -330,47 +345,54 @@ public:
       default:
       case SCREEN_UNSET:
       case SCREEN_OFF:
-	Clear();
+        Clear();
         return 3600000; // Long time!
 
       case SCREEN_STARTUP:
-	Clear();
+        Clear();
         // DrawText("==SabeR===", 0,15, Starjedi10pt7bGlyphs);
         // DrawText("++Teensy++",-4,31, Starjedi10pt7bGlyphs);
-	if (WIDTH < 128) {
-	  display_->DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
-	} else {
-	  display_->DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
-	}
-	display_->DrawText(version,0,31, Starjedi10pt7bGlyphs);
-	if (HEIGHT > 32) {
-	  display_->DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
-	  display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
-	}
+        if (WIDTH < 128) {
+          display_->DrawText("p-os", 0,15, Starjedi10pt7bGlyphs);
+        } else {
+          display_->DrawText("proffieos", 0,15, Starjedi10pt7bGlyphs);
+        }
+        display_->DrawText(version,0,31, Starjedi10pt7bGlyphs);
+        if (HEIGHT > 32) {
+          display_->DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
+          display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
+        }
         next_screen_ = SCREEN_PLI;
-        return font_config.ProffieOSFontImageDuration;
+        if (font_config.ProffieOSTextMessageDuration != -1) {
+          return font_config.ProffieOSTextMessageDuration;
+        } else if (font_config.ProffieOSFontImageDuration > 0) {
+          return font_config.ProffieOSFontImageDuration;
+        } else {
+        return 3500;
+        }
 
       case SCREEN_PLI:
-        if (!SaberBase::IsOn() && t_ > PLI_OFF_TIME) {
+        if (!SaberBase::IsOn() && t_ >= PLI_OFF_TIME) {
+          STDERR << "Time = " << t_ << ". PLI_OFF_TIME expired.\n";
           screen_ = SCREEN_OFF;
           return FillFrameBuffer2(advance);
         }
-	Clear();
-	display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
-	if (HEIGHT > 32) {
-	  char tmp[32];
-	  strcpy(tmp, "volts x.xx");
-	  float v = battery_monitor.battery();
-	  tmp[6] = '0' + (int)floorf(v);
-	  tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
-	  tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
-	  display_->DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
-	}
+        Clear();
+        display_->DrawBatteryBar(BatteryBar16, battery_monitor.battery_percent());
+        if (HEIGHT > 32) {
+          char tmp[32];
+          strcpy(tmp, "volts x.xx");
+          float v = battery_monitor.battery();
+          tmp[6] = '0' + (int)floorf(v);
+          tmp[8] = '0' + ((int)floorf(v * 10)) % 10;
+          tmp[9] = '0' + ((int)floorf(v * 100)) % 10;
+          display_->DrawText(tmp,0,55, Starjedi10pt7bGlyphs);
+        }
         return 200;  // redraw once every 200 ms
 
       case SCREEN_MESSAGE: {
-	Clear();
-	// Aurebesh Font option.
+        Clear();
+        // Aurebesh Font option.
 #ifdef USE_AUREBESH_FONT
         const Glyph* font = Aurebesh10pt7bGlyphs;
 #else
@@ -379,61 +401,67 @@ public:
         if (strchr(message_, '\n')) {
           display_->DrawText(message_, 0, 15, font);
         } else {
-	  // centered
+        // centered
           display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
         next_screen_ = SCREEN_DEFAULT;
-	// STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
-        return font_config.ProffieOSFontImageDuration;
+        // STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
+        if (font_config.ProffieOSTextMessageDuration != -1) {
+          return font_config.ProffieOSTextMessageDuration;
+        } else if (font_config.ProffieOSFontImageDuration > 0) {
+          return font_config.ProffieOSFontImageDuration;
+        } else {
+          return 3500;
+        }
       }
 
       case SCREEN_IMAGE:
-	if (EscapeIdleIfNeeded() && current_effect_ == &IMG_idle) {
-	  // We are idle-looping, and usb is connected. Time to stop.
-	  SetMessage("usb");
-	  return FillFrameBuffer2(advance);
-	}
+        if (EscapeIdleIfNeeded() && current_effect_ == &IMG_idle) {
+          // We are idle-looping, and usb is connected. Time to stop.
+          SetMessage("    usb\nconnected");
+          return FillFrameBuffer2(advance);
+        }
         MountSDCard();
-	{
-	  int count = 0;
-	  while (!frame_available_) {
-	    if (count++ > 3) return 0;
-	    if (eof_) advance = false;
-	    advance_ = advance;
-	    lock_fb_ = false;
-	    scheduleFillBuffer();
-	  }
-	}
-	lock_fb_ = true;
+        {
+          int count = 0;
+          while (!frame_available_) {
+            if (count++ > 3) return 0;
+            if (eof_) advance = false;
+            advance_ = advance;
+            lock_fb_ = false;
+            scheduleFillBuffer();
+          }
+        }
+        lock_fb_ = true;
         if (eof_) {
-	  // STDERR << "FRAME COUNT @ EOF= " << frame_count_ << " left=" << (effect_display_duration_ - t_) <<  "\n";
-	  if (frame_count_ == 1 && t_ < effect_display_duration_) {
-	    ConvertToNative();
-	    frame_available_ = false;
-	    return effect_display_duration_ - t_;
-	  }
-	} else {
-	  if (frame_available_ && advance) frame_count_++;
-	  if (looped_frames_ == 1 || t_ < effect_display_duration_) {
-	    ConvertToNative();
-	    frame_available_ = false;
-	    if (font_config.ProffieOSAnimationFrameRate > 0.0) {
-	      return 1000 / font_config.ProffieOSAnimationFrameRate;
-	    }
-	    if (looped_frames_ > 1) {
-	      return 1000 / looped_frames_;
-	    } else {
-	      // STDERR << "-> 41\n";
-	      return 41;   // ~24 fps
-	    }
-	  }
-	}
+          // STDERR << "FRAME COUNT @ EOF= " << frame_count_ << " left=" << (effect_display_duration_ - t_) <<  "\n";
+          if (frame_count_ == 1 && t_ < effect_display_duration_) {
+            ConvertToNative();
+            frame_available_ = false;
+            return effect_display_duration_ - t_;
+          }
+        } else {
+          if (frame_available_ && advance) frame_count_++;
+          if (looped_frames_ == 1 || t_ < effect_display_duration_) {
+            ConvertToNative();
+            frame_available_ = false;
+            if (font_config.ProffieOSAnimationFrameRate > 0.0) {
+              return 1000 / font_config.ProffieOSAnimationFrameRate;
+            }
+            if (looped_frames_ > 1) {
+              return 1000 / looped_frames_;
+            } else {
+              // STDERR << "-> 41\n";
+              return 41;   // ~24 fps
+            }
+          }
+        }
 
-	// This image/animation is done, time to choose the next thing to display.
+        // This image/animation is done, time to choose the next thing to display.
       case SCREEN_DEFAULT:
-	// STDERR << "MOVING ON...\n";
-	ShowDefault();
-	return FillFrameBuffer2(advance);
+        // STDERR << "MOVING ON...\n";
+        ShowDefault();
+        return FillFrameBuffer2(advance);
     }
   }
 
@@ -445,69 +473,121 @@ public:
     }
   }
 
+  void SB_On2() override {
+    if (IMG_out) {
+      ShowFileWithSoundLength(&IMG_out, font_config.ProffieOSOutImageDuration);
+    }
+  }
+
   void usb_connected() override {
     if (EscapeIdleIfNeeded() && current_effect_ == &IMG_idle) {
       // We are idle-looping, and usb is connected. Time to stop.
-      SetMessage("usb");
+      SetMessage("    usb\nconnected");
       SetScreenNow(SCREEN_MESSAGE);
     }
   }
 
-  void SB_Effect(EffectType effect, float location) override {
-    switch (effect) {
-      case EFFECT_BOOT:
-	if (IMG_boot) {
-	  ShowFile(&IMG_boot, font_config.ProffieOSFontImageDuration);
-	} else if (IMG_idle) {
-	  ShowFile(&IMG_idle, 3600000.0);
-	}
-	return;
-      case EFFECT_NEWFONT:
-	looped_on_ = Tristate::Unknown;
-	looped_idle_ = Tristate::Unknown;
-	if (IMG_font) {
-	  ShowFile(&IMG_font, font_config.ProffieOSFontImageDuration);
-	} else if (prop.current_preset_name()) {
-	  SetMessage(prop.current_preset_name());
-	  SetScreenNow(SCREEN_MESSAGE);
-	} else if (IMG_idle) {
-	  ShowFile(&IMG_idle, 3600000.0);
-	}
-	return;
-      case EFFECT_BLAST:
-	ShowFile(&IMG_blst, font_config.ProffieOSBlastImageDuration);
-	return;
-      case EFFECT_CLASH:
-	ShowFile(&IMG_clsh, font_config.ProffieOSClashImageDuration);
-	return;
-      case EFFECT_FORCE:
-	ShowFile(&IMG_force, font_config.ProffieOSForceImageDuration);
-	return;
-      case EFFECT_LOCKUP_BEGIN:
-	ShowDefault();
-	return;
-      case EFFECT_LOCKUP_END:
-	ShowDefault(true);
-	break;
-      case EFFECT_SD_CARD_NOT_FOUND:
-	SetMessage("sd card\nnot found");
-	break;
-      case EFFECT_ERROR_IN_FONT_DIRECTORY:
-	SetMessage("error in\nfont dir");
-	break;
-      case EFFECT_ERROR_IN_BLADE_ARRAY:
-	SetMessage("error in\nblade arr");
-	break;
-      case EFFECT_FONT_DIRECTORY_NOT_FOUND:
-	SetMessage("font dir\nnot found");
-	break;
-      case EFFECT_LOW_BATTERY:
-	// Maybe we should make this blink or something?
-	SetMessage("low\nbattery");
-	break;
-      default: break;
+  void ShowFileWithSoundLength(Effect* e, float duration) {
+    if (duration == 0.0) {
+      duration = SaberBase::sound_length * 1000;
     }
+    ShowFile(e, round(duration));
   }
+
+ void SB_Effect2(EffectType effect, float location) override {
+    switch (effect) {
+      case EFFECT_NEWFONT:
+        looped_on_ = Tristate::Unknown;
+        looped_idle_ = Tristate::Unknown;
+        if (IMG_font) {
+          ShowFileWithSoundLength(&IMG_font, font_config.ProffieOSFontImageDuration);
+        } else if (prop.current_preset_name()) {
+          SetMessage(prop.current_preset_name());
+          SetScreenNow(SCREEN_MESSAGE);
+        } else if (IMG_idle) {
+          ShowFile(&IMG_idle, 3600000.0);
+        }
+        return;
+      case EFFECT_LOCKUP_BEGIN:
+        ShowDefault();
+        return;
+      case EFFECT_LOCKUP_END:
+        ShowDefault(true);
+        break;
+      case EFFECT_BATTERY_LEVEL:
+        // Show On-Demand battery meter
+        SetScreenNow(SCREEN_PLI);
+        break;
+      case EFFECT_SD_CARD_NOT_FOUND:
+        SetMessage("sd card\nnot found");
+        break;
+      case EFFECT_ERROR_IN_FONT_DIRECTORY:
+        SetMessage("err font\ndirectory");
+        break;
+      case EFFECT_ERROR_IN_BLADE_ARRAY:
+        SetMessage("err blade\narray");
+        break;
+      case EFFECT_FONT_DIRECTORY_NOT_FOUND:
+        SetMessage("font dir\nnot found");
+        break;
+      case EFFECT_LOW_BATTERY:
+        // Maybe we should make this blink or something?
+        if (IMG_lowbatt) {
+          ShowFile(&IMG_lowbatt, 5000);
+        } else {
+          SetMessage("low\nbattery");
+        }
+      case EFFECT_BOOT:
+        if (IMG_boot) {
+          ShowFileWithSoundLength(&IMG_boot,
+				  font_config.ProffieOSBootImageDuration != -1.0 ?
+				  font_config.ProffieOSBootImageDuration :
+				  font_config.ProffieOSFontImageDuration);
+        } else {
+          SetScreenNow(SCREEN_STARTUP);
+        }
+        return;
+      case EFFECT_BLAST:
+        ShowFileWithSoundLength(&IMG_blst, font_config.ProffieOSBlastImageDuration);
+        return;
+      case EFFECT_CLASH:
+        ShowFileWithSoundLength(&IMG_clsh, font_config.ProffieOSClashImageDuration);
+        return;
+      case EFFECT_FORCE:
+        ShowFileWithSoundLength(&IMG_force, font_config.ProffieOSForceImageDuration);
+        return;
+      case EFFECT_PREON:
+        ShowFile(&IMG_preon, round(SaberBase::sound_length * 1000));
+        return;
+      case EFFECT_POSTOFF:
+        ShowFileWithSoundLength(&IMG_pstoff, font_config.ProffieOSPstoffImageDuration);
+        return;
+/* To-Do, possibly differently
+#ifdef OLED_USE_BLASTER_IMAGES
+      case EFFECT_RELOAD:
+        ShowFileWithSoundLength(&IMG_reload, font_config.ProffieOSReloadImageDuration);
+        return;
+      case EFFECT_EMPTY:
+        ShowFileWithSoundLength(&IMG_empty, font_config.ProffieOSEmptyImageDuration);
+        return;
+      case EFFECT_JAM:
+        ShowFileWithSoundLength(&IMG_jam, font_config.ProffieOSJamImageDuration);
+        return;
+      case EFFECT_CLIP_IN:
+        ShowFileWithSoundLength(&IMG_clipin, font_config.ProffieOSClipinImageDuration);
+        return;
+      case EFFECT_CLIP_OUT:
+        ShowFileWithSoundLength(&IMG_clipout, font_config.ProffieOSClipoutImageDuration);
+        return;
+      case EFFECT_DESTRUCT:
+        ShowFileWithSoundLength(&IMG_destruct, font_config.ProffieOSDestructImageDuration);
+        return;
+#endif
+*/
+    break;
+    default: break;
+  }
+}
 
   void SetMessage(const char* text) {
     strncpy(message_, text, sizeof(message_));
@@ -519,9 +599,11 @@ public:
     display_->SB_Top();
   }
 
-  void SB_Off(OffType offtype) override {
+  void SB_Off2(OffType offtype) override {
     if (offtype == OFF_IDLE) {
       SetScreenNow(SCREEN_OFF);
+    } else if (IMG_in) {
+      ShowFileWithSoundLength(&IMG_in, font_config.ProffieOSInImageDuration);
     } else if (IMG_idle) {
       ShowFile(&IMG_idle, 3600000.0);
     } else {
@@ -701,7 +783,7 @@ public:
     if (file_.OpenFile()) {
       if (!file_.IsOpen()) {
         eof_ = true;
-	// STDERR << "not open\n";
+  // STDERR << "not open\n";
         return false;
       }
       ypos_ = looped_frames_;
@@ -713,19 +795,19 @@ public:
     if (!frame_available_) {
       // STDERR << "ADVANCE=" << advance_ << " last_file_pos_= " << last_state_.file_pos << " ypos=" << last_state_.ypos << "\n";
       if (!advance_) {
-	file_.Seek(last_state_.file_pos);
-	ypos_ = last_state_.ypos;
+        file_.Seek(last_state_.file_pos);
+        ypos_ = last_state_.ypos;
       } else {
-	advance_ = false;
+        advance_ = false;
       }
       ReadState state;
       state.ypos = ypos_;
       state.file_pos = file_.Tell();
       if (ReadImage(&file_)) {
-	frame_available_ = true;
-	last_state_ = state;
+        frame_available_ = true;
+        last_state_ = state;
       } else {
-	STDERR << "read image fail\n";
+        STDERR << "read image fail\n";
         eof_ = true;
       }
     }
@@ -739,7 +821,6 @@ public:
   void CloseFiles() override {
     file_.Close();
   }
-
 
 #ifdef ENABLE_DEVELOPER_COMMANDS
   bool Parse(const char* cmd, const char* e) override {
@@ -896,7 +977,7 @@ public:
       on_ = true;
       power_.Init();
       power_.Power(true);
-    
+
       while (!i2cbus.inited()) YIELD();
       while (!I2CLock()) YIELD();
 
@@ -920,7 +1001,7 @@ public:
       Send(0x01);                          // vertical address mode
 
 #if defined (OLED_FLIP_180)
-#if defined(OLED_MIRRORED)
+#if defined (OLED_MIRRORED)
       // Flip 180 and mirrored OLED operation
       Send(SEGREMAP | 0x1);        // 0xa0 | 1
 #else
@@ -938,15 +1019,15 @@ public:
       Send(COMSCANDEC);
 #endif
 
+
       Send(SETCOMPINS);                    // 0xDA
       if (HEIGHT == 64 || WIDTH==64) {
-	Send(0x12);
+        Send(0x12);
       } else {
-	Send(0x02);  // may need to be 0x12 for some displays
+        Send(0x02);  // may need to be 0x12 for some displays
       }
       Send(SETCONTRAST);                   // 0x81
       Send(0x8F);
-
       Send(SETPRECHARGE);                  // 0xd9
       Send(0xF1);
       Send(SETVCOMDETECT);                 // 0xDB
@@ -963,58 +1044,58 @@ public:
       STDOUT.println("Display initialized.");
 
       while (true) {
-	millis_to_display_ = next_millis_to_display_;
-	next_millis_to_display_ = 0;
-	while (millis_to_display_ == 0) {
-	  YIELD();
-	  millis_to_display_ = FillFrameBuffer();
-	  // STDERR << "millis_to_display_ = " << millis_to_display_ << "\n";
-	}
-	frame_start_time_ = millis();
-	lock_fb_ = true;
+        millis_to_display_ = next_millis_to_display_;
+        next_millis_to_display_ = 0;
+        while (millis_to_display_ == 0) {
+          YIELD();
+          millis_to_display_ = FillFrameBuffer();
+          // STDERR << "millis_to_display_ = " << millis_to_display_ << "\n";
+        }
+        frame_start_time_ = millis();
+        lock_fb_ = true;
 
-	// STDOUT << "SCREEN = " << (int)GetScreen() << " m= " << millis_to_display_ << "  clear=" << Display<WIDTH, col_t>::isClear() << "\n";
-	if (GetScreen() == SCREEN_OFF && Display<WIDTH, col_t>::isClear()) break;
+        // STDOUT << "SCREEN = " << (int)GetScreen() << " m= " << millis_to_display_ << "  clear=" << Display<WIDTH, col_t>::isClear() << "\n";
+        if (GetScreen() == SCREEN_OFF && Display<WIDTH, col_t>::isClear()) break;
 
-	// I2C
-	loop_counter_.Update();
+        // I2C
+        loop_counter_.Update();
 #ifdef PROFFIEBOARD
-	i = -(int)NELEM(transactions);
-	while (!I2CLockAndRun()) YIELD();
-	while (lock_fb_) YIELD();
+        i = -(int)NELEM(transactions);
+        while (!I2CLockAndRun()) YIELD();
+        while (lock_fb_) YIELD();
 #else
-	do { YIELD(); } while (!I2CLock());
-	Send(COLUMNADDR);
-	Send((128 - WIDTH)/2);   // Column start address (0 = reset)
-	Send(WIDTH-1 + (128 - WIDTH)/2); // Column end address (127 = reset)
+        do { YIELD(); } while (!I2CLock());
+        Send(COLUMNADDR);
+        Send((128 - WIDTH)/2);   // Column start address (0 = reset)
+        Send(WIDTH-1 + (128 - WIDTH)/2); // Column end address (127 = reset)
 
-	Send(PAGEADDR);
-	Send(0); // Page start address (0 = reset)
-	Send(sizeof(col_t) - 1);
+        Send(PAGEADDR);
+        Send(0); // Page start address (0 = reset)
+        Send(sizeof(col_t) - 1);
 
-	//STDOUT.println(TWSR & 0x3, DEC);
+        //STDOUT.println(TWSR & 0x3, DEC);
 
-	for (i=0; i < WIDTH * HEIGHT / 8; ) {
-	  // send a bunch of data in one xmission
-	  Wire.beginTransmission(address_);
-	  GetChunk();
-	  for (size_t x=0; x <= chunk_size; x++) {
-	    Wire.write(chunk[x]);
-	  }
-	  Wire.endTransmission();
-	  I2CUnlock(); do { YIELD(); } while (!I2CLock());
-	}
-	lock_fb_ = false;
-	I2CUnlock();
+        for (i=0; i < WIDTH * HEIGHT / 8; ) {
+          // send a bunch of data in one xmission
+          Wire.beginTransmission(address_);
+          GetChunk();
+          for (size_t x=0; x <= chunk_size; x++) {
+            Wire.write(chunk[x]);
+          }
+          Wire.endTransmission();
+          I2CUnlock(); do { YIELD(); } while (!I2CLock());
+        }
+        lock_fb_ = false;
+        I2CUnlock();
 #endif
-	while (millis() - frame_start_time_ < millis_to_display_) {
-	  if (next_millis_to_display_ == 0) {
-	    next_millis_to_display_ = FillFrameBuffer();
-	    // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
+        while (millis() - frame_start_time_ < millis_to_display_) {
+          if (next_millis_to_display_ == 0) {
+            next_millis_to_display_ = FillFrameBuffer();
+            // STDERR << "next_millis_to_display_ = " << next_millis_to_display_ << "\n";
 
-	  }
-	  YIELD();
-	}
+          }
+          YIELD();
+        }
       }
 
       STDERR << "DISPLAY SLEEP\n";
@@ -1023,24 +1104,25 @@ public:
       while (!I2CLock()) YIELD();
       Send(DISPLAYOFF);                    // 0xAE
       I2CUnlock();
-    
+
       power_.Power(false);
       power_.DeInit();
       on_ = false;
       while (GetScreen() == SCREEN_OFF) YIELD();
       STDERR << "DISPLAY WAKEUP\n";
     }
+
     STATE_MACHINE_END();
   }
 
 #ifdef PROFFIEBOARD
   static constexpr uint8_t transactions[] = {
-      COLUMNADDR,
-      (128 - WIDTH)/2,   // Column start address (0 = reset)
-      WIDTH-1 + (128 - WIDTH)/2, // Column end address (127 = reset)
-      PAGEADDR,
-      0,  // Page start address (0 = reset)
-      sizeof(col_t) - 1
+    COLUMNADDR,
+    (128 - WIDTH)/2,   // Column start address (0 = reset)
+    WIDTH-1 + (128 - WIDTH)/2, // Column end address (127 = reset)
+    PAGEADDR,
+    0,  // Page start address (0 = reset)
+    sizeof(col_t) - 1
   };
   void RunLocked() override {
     size_t size;

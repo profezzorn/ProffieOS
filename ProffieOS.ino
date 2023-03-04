@@ -309,6 +309,10 @@ uint64_t loop_cycles = 0;
 
 #include "common/loop_counter.h"
 
+#if defined(ENABLE_SSD1306) || defined(INCLUDE_SSD1306)
+#define ENABLE_DISPLAY_CODE
+#endif
+
 #ifdef DOSFS_CONFIG_STARTUP_DELAY
 #define PROFFIEOS_SD_STARTUP_DELAY DOSFS_CONFIG_STARTUP_DELAY
 #else
@@ -1378,7 +1382,7 @@ StaticWrapper<Commands> commands;
 #include "common/serial.h"
 
 
-#if defined(ENABLE_MOTION) || defined(ENABLE_SSD1306) || defined(INCLUDE_SSD1306)
+#if defined(ENABLE_MOTION) || defined(ENABLE_DISPLAY_CODE)
 #include "common/i2cdevice.h"
 I2CBus i2cbus;
 #endif
