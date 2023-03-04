@@ -1,22 +1,24 @@
+
+ARDUINO_DIR:=/home/hubbe/lib/arduino-1.8.15
+ARDUINO15_DIR:=$(HOME)/.arduino15/
+OBJDIR=build
+
+PBV1_FQBN=proffieboard:stm32l4:Proffieboard-L433CC:usb=cdc,dosfs=sdspi,speed=80,opt=os
+PBV2_FQBN=proffieboard:stm32l4:ProffieboardV2-L433CC:usb=cdc,dosfs=sdspi,speed=80,opt=os
+PBV3_FQBN=proffieboard:stm32l4:ProffieboardV3-L452RE:usb=cdc,dosfs=sdmmc1,speed=80,opt=os
+TEENSY31_FQBN=teensy:avr:teensy31:usb=serial,speed=96,opt=oslto,keys=en-us
+TEENSY35_FQBN=teensy:avr:teensy35:usb=serial,speed=120,opt=o2std,keys=en-us
+TEENSY36_FQBN=teensy:avr:teensy36:usb=serial,speed=180,opt=o2std,keys=en-us
+TEENSY41_FQBN=teensy:avr:teensy41:usb=serial,speed=600,opt=o2std,keys=en-us
+
 # Select one
-BOARD_TAG=ProffieboardV3-L452RE
-#BOARD_TAG=ProffieboardV2-L433CC
-#BOARD_TAG=Proffieboard-L433CC
-#BOARD_TAG=teensy31
+FQBN=$(PBV1_FQBN)
 
-# This should only need to be set if arduino is installed in a nonstandard location.
-# ARDUINO_DIR:=/home/hubbe/lib/arduino-1.8.3
+TESTSUBDIR=NOTUSED
 
-ifeq ($(findstring Proffieboard, $(BOARD_TAG)),Proffieboard)
-  USB_TYPE=USB_TYPE_CDC_MSC_WEBUSB
-  ARDUINO_LIBS=SPI Wire
-  include Proffieboard.mk
-else
-  USB_TYPE=USB_SERIAL
-  ARDUINO_LIB_PATH=FOOBAR
-  ARDUINO_LIBS=FastLED SD SPI SerialFlash Snooze i2c_t3
-  include Teensy.mk
-endif
+all:
+	mkdir build
+	$(ARDUINO_DIR)/arduino-builder -compile -hardware $(ARDUINO_DIR)/hardware -hardware $(ARDUINO15_DIR)/packages -hardware /home/hubbe/Arduino/hardware -tools $(ARDUINO_DIR)/tools-builder -tools $(ARDUINO_DIR)/hardware/tools/avr -tools $(ARDUINO15_DIR)/packages -fqbn=$(FQBN) -vid-pid=1209_6668 -build-path build -warnings=more -verbose ProffieOS.ino
 
 CPPFLAGS += $(TESTFLAGS)
 DIAGNOSTICS_COLOR_WHEN = auto
@@ -39,59 +41,71 @@ buttons-test:
 display-test:
 	(cd display && $(MAKE) test)
 
+subtest:
+	rm -r test-$(TESTSUBDIR) || :
+	mkdir test-$(TESTSUBDIR)
+	mkdir test-$(TESTSUBDIR)/ProffieOS
+	tar cf - `git ls-files` | ( cd test-$(TESTSUBDIR)/ProffieOS && tar xf - )
+	echo '#define CONFIG_FILE "$(CONFIG_FILE)"' >test-$(TESTSUBDIR)/ProffieOS/ProffieOS.ino
+	sed <ProffieOS.ino 's@#define.*CONFIG_FILE.*@@g' >>test-$(TESTSUBDIR)/ProffieOS/ProffieOS.ino
+	( cd test-$(TESTSUBDIR)/ProffieOS && $(MAKE) )
+
 test1:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_proffieboard_config.h\\\" BOARD_TAG=Proffieboard-L433CC OBJDIR=test-proffieboard-default
+	$(MAKE) subtest CONFIG_FILE=config/default_proffieboard_config.h FQBN=$(PBV1_FQBN) TESTSUBDIR=proffieboard-default
 
 test1V:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/proffieboard_v1_verification_config.h\\\" BOARD_TAG=Proffieboard-L433CC OBJDIR=test-proffieboard-v1-verification
+	$(MAKE) subtest CONFIG_FILE=config/proffieboard_v1_verification_config.h FQBN=$(PBV1_FQBN) TESTSUBDIR=proffieboard-v1-verification
 
 test2V:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/proffieboard_v2_verification_config.h\\\" BOARD_TAG=ProffieboardV2-L433CC OBJDIR=test-proffieboard-v2-verification
+	$(MAKE) subtest CONFIG_FILE=config/proffieboard_v2_verification_config.h FQBN=$(PBV2_FQBN) TESTSUBDIR=proffieboard-v2-verification
 
 test3V:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/proffieboard_v2_verification_config2.h\\\" BOARD_TAG=ProffieboardV2-L433CC OBJDIR=test-proffieboard-v2-verification2
+	$(MAKE) subtest CONFIG_FILE=config/proffieboard_v2_verification_config2.h FQBN=$(PBV2_FQBN) TESTSUBDIR=proffieboard-v2-verification2
 
 test2:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_v3_config.h\\\" BOARD_TAG=teensy36 OBJDIR=test-teensy36-default-v3
+	$(MAKE) subtest CONFIG_FILE=config/default_v3_config.h FQBN=$(TEENSY36_FQBN) TESTSUBDIR=teensy36-default-v3
 
 test3:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_v3_config.h\\\" BOARD_TAG=teensy35 OBJDIR=test-teensy35-default-v3
+	$(MAKE) subtest CONFIG_FILE=config/default_v3_config.h FQBN=$(TEENSY35_FQBN) TESTSUBDIR=teensy35-default-v3
 
 test4:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/graflex_v1_config.h\\\" BOARD_TAG=teensy31 OBJDIR=test-teensy31-graflex-v1
+	$(MAKE) subtest CONFIG_FILE=config/graflex_v1_config.h FQBN=$(TEENSY31_FQBN) TESTSUBDIR=teensy31-graflex-v1
 
 test5:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/prop_shield_fastled_v1_config.h\\\" BOARD_TAG=teensy31 OBJDIR=test-teensy31-fastled-v1
+	$(MAKE) subtest CONFIG_FILE=config/prop_shield_fastled_v1_config.h FQBN=$(TEENSY31_FQBN) TESTSUBDIR=teensy31-fastled-v1
 
 test6:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/owk_v2_config.h\\\" BOARD_TAG=teensy31 OBJDIR=test-teensy31-owk-v2
+	$(MAKE) subtest CONFIG_FILE=config/owk_v2_config.h FQBN=$(TEENSY31_FQBN) TESTSUBDIR=teensy31-owk-v2
 
 test7:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/crossguard_config.h\\\" BOARD_TAG=teensy31 OBJDIR=test-teensy31-crossguard-v3
+	$(MAKE) subtest CONFIG_FILE=config/crossguard_config.h FQBN=$(TEENSY31_FQBN) TESTSUBDIR=teensy31-crossguard-v3
 
 test8:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/test_bench_config.h\\\" BOARD_TAG=teensy31 OBJDIR=test-teensy31-test-v3
+	$(MAKE) subtest CONFIG_FILE=config/test_bench_config.h FQBN=$(TEENSY31_FQBN) TESTSUBDIR=teensy31-test-v3
 
 test9:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/toy_saber_config.h\\\" BOARD_TAG=teensy31  OBJDIR=test-teensy31-toy-v3
+	$(MAKE) subtest CONFIG_FILE=config/toy_saber_config.h FQBN=$(TEENSY31_FQBN)  TESTSUBDIR=teensy31-toy-v3
 
 testA:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/default_v3_config.h\\\" BOARD_TAG=teensy31 OBJDIR=test-teensy31-default-v3
+	$(MAKE) subtest CONFIG_FILE=config/default_v3_config.h FQBN=$(TEENSY31_FQBN) TESTSUBDIR=teensy31-default-v3
 
 testB:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/td_proffieboard_config.h\\\" BOARD_TAG=Proffieboard-L433CC OBJDIR=test-proffieboard-td
+	$(MAKE) subtest CONFIG_FILE=config/td_proffieboard_config.h FQBN=$(PBV1_FQBN) TESTSUBDIR=proffieboard-td
 
 
 testC:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/blaster_v3_config.h\\\" BOARD_TAG=teensy31 OBJDIR=test-teensy31-blaster
+	$(MAKE) subtest CONFIG_FILE=config/blaster_v3_config.h FQBN=$(TEENSY31_FQBN) TESTSUBDIR=teensy31-blaster
 
 testV3V:
-	$(MAKE) all TESTFLAGS=-DCONFIG_FILE_TEST=\\\"config/proffieboard_v3_verification_config.h\\\" BOARD_TAG=ProffieboardV3-L452RE OBJDIR=test-proffieboard-v3-verification
+	$(MAKE) subtest CONFIG_FILE=config/proffieboard_v3_verification_config.h FQBN=$(PBV3_FQBN) TESTSUBDIR=proffieboard-v3-verification
+
+testD:
+	$(MAKE) subtest CONFIG_FILE=config/teensy_audio_shield_micom.h FQBN=$(TEENSY41_FQBN) TESTSUBDIR=teensy41-micom
 
 
 posixtests: style-test common-test blades-test sound-test buttons-test display-test
 
-test: posixtests test1 test2 test3 test4 test5 test6 test7 test8 test9 testA testB testC test1V test2V test3V testV3V
+test: posixtests test1 test2 test3 test4 test5 test6 test7 test8 test9 testA testB testC test1V test2V test3V testV3V testD
 	@echo Tests pass
 
 # Check that there are no uncommitted changes

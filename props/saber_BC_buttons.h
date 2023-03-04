@@ -29,7 +29,11 @@ Features:
 - No blade inserted = no gestures option if Blade Detect is used.
 - Optional On-the-fly volume controls with Quick MIN and MAX levels.
 - Bypass preon and/or postoff based on blade angle.
-
+- Spam Blast - Enter this mode to make the button super sensitive for                      
+                            multiple blaster blocks. Presses are prioritized over
+                            other features. No limits, no lag when "rapid firing".
+- Swap feature with sound - Just an additional EFFECT that can be used to trigger
+                            blade animations. See below.
 ---------------------------------------------------------------------------
 Optional Blade style elements:
 On-Demand battery level - A layer built into the blade styles that reacts 
@@ -107,8 +111,7 @@ Gesture Controls:
 - Melt will automatically trigger with no buttons when you physically
   stab something, and end when you pull away or push any button.
 
-- Stab will trigger either with no buttons and thrusting forward,
-  or with any button and physically stabbing something.
+- Stab will trigger with no buttons and thrusting forward.
   
 ====================== 1 BUTTON CONTROLS ========================
 | Sorted by ON or OFF state: (what it's like while using saber) |
@@ -119,9 +122,9 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
                         * NOTE * Gesture ignitions using FastOn bypass preon.
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
-Next Preset           - Long click and release POW, or TWIST while pointing down.
+Next Preset           - Long click and release POW, or TWIST while pointing up.
 Prev Preset           - Double click and hold POW, release after a second (click then long click),
-                        or TWIST while pointing up.
+                        or TWIST while pointing down.
 Play/Stop Track       - 4x click POW.
 Volume Menu:
                       * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
@@ -152,10 +155,13 @@ Prev Preset Fast      - Double click and release POW after a second
 Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold POW and Clash to temporarily
                         override the auto-lockup and do regular Clash.
-Stab                  - Either no button and just Thrust forward,
-                        or Hold any button and physically stab something.
+Stab                  - Just Thrust forward with a stabbing motion.
                         Works in Battle Mode.
 Blaster Blocks        - Click or Double click POW.
+Spam Blaster Blocks   - 3x click and hold while pointing up. This toggles SPAM BLAST mode ON/OFF,
+                        and makes the button super sensitive for multiple blaster blocks.
+                        * Note * This gets in the way of normal features,
+                        so turn off when you're done spamming.  Plays mzoom.wav.
 Auto Swing Blast      - if #define ENABLE_AUTO_SWING_BLAST is active,
                         swinging within 1 second of doing button activated 
                         Blaster Block will start this timed mode.
@@ -178,7 +184,7 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
                         Rotate hilt to cycle through all available colors, or
                         Click POW to change if ColorChange<> used in blade style,
                         Click + hold POW to save color selection and exit.
-                        Triple click POW to exit without changing color.
+                        Triple click POW to cancel and restore original color.
     ColorChange explained:
           If the style uses ColorChange<>, when you activate color change mode,
           there will be up to 12 steps per rotation with a little sound at each step.
@@ -192,8 +198,9 @@ Quote Player          - Triple click POW.
 Toggle sequential or 
   random quote play   - 4x click and hold POW. (while pointing down)
 Force Push            - Push hilt perpendicularly from a stop.
-Swap (EffectSequence) - 4x click and hold POW medium. (while NOT pointing up)
-PowerSave Dim Blade   - 4x click and hold POW medium. (while pointing up)
+Swap (EffectSequence) - 4x click and hold POW. (while NOT pointing up)
+                        * Requires EFFECT_USER1 in blade style.
+PowerSave Dim Blade   - 4x click and hold POW. (while pointing up)
                         To use Power Save requires AlphaL based EffectSequence in style.
 Turn off blade        - Hold POW and wait until blade is off,
                         or Twist if using #define BC_TWIST_OFF.
@@ -208,9 +215,9 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
                         * NOTE * Gesture ignitions using FastOn bypass preon.
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
-Next Preset           - Long click and release POW, or TWIST while pointing down.
+Next Preset           - Long click and release POW, or TWIST while pointing up.
 Prev Preset           - Double click and hold POW, release after a second (click then long click),
-                        or TWIST while pointing up.
+                        or TWIST while pointing down.
 Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
                       * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
@@ -241,10 +248,13 @@ Prev Preset Fast      - Hold AUX + Double click and hold POW for a second
 Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold any button and Clash to
                         temporarily override the auto-lockup and do regular Clash.
-Stab                  - Either no button and just Thrust forward, or
-                        Hold any button and physically stab something.
+Stab                  - Just Thrust forward with a stabbing motion.
                         Works in Battle Mode.
 Blaster Blocks        - Click or Double click POW.
+Spam Blaster Blocks   - 3x click and hold while pointing up. This toggles SPAM BLAST mode ON/OFF,
+                        and makes the button super sensitive for multiple blaster blocks.
+                        * Note * This gets in the way of normal features,
+                        so turn off when you're done spamming.  Plays mzoom.wav.
 Auto Swing Blast      - if #define ENABLE_AUTO_SWING_BLAST is active,
                         swinging within 1 second of doing button activated 
                         Blaster Block will start this timed mode.
@@ -267,7 +277,7 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
                         Rotate hilt to cycle through all available colors, or
                         Click AUX to change if ColorChange<> used in blade style,
                         Click + hold POW to save color selection and exit.
-                        Triple click POW to exit without changing color.
+                        Triple click POW to cancel and restore original color.
     ColorChange explained:
           If the style uses ColorChange<>, when you activate color change mode,
           there will be up to 12 steps per rotation with a little sound at each step.
@@ -282,6 +292,7 @@ Toggle sequential or
   random quote play   - Hold AUX + Twist. (while pointing down)
 Force Push            - Push hilt perpendicularly from a stop.
 Swap (EffectSequence) - Hold AUX + Twist. (while NOT pointing up)
+                        * Requires EFFECT_USER1 in blade style.
 PowerSave Dim Blade   - Hold AUX + Twist. (while pointing up)
           (To use Power Save requires AlphaL based EffectSequence in style)
 Turn off blade        - Hold POW and wait until blade is off,
@@ -474,7 +485,7 @@ public:
         beeper.Beep(0.1, 2000);
         beeper.Beep(0.1, 3000);
       }
-      STDOUT.println("Enter Volume Menu");
+      STDOUT << "Enter Volume Menu\n";
       SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
     } else {
       mode_volume_ = false;
@@ -485,7 +496,7 @@ public:
         beeper.Beep(0.1, 2000);
         beeper.Beep(0.1, 1000);
       }
-      STDOUT.println("Exit Volume Menu");
+      STDOUT << "Exit Volume Menu\n";
     }
   }
 
@@ -501,8 +512,8 @@ public:
         beeper.Beep(0.10, 2000);
         beeper.Beep(0.20, 2500);
       }
-      STDOUT.print("Volume Up - Current Volume: ");
-      STDOUT.println(dynamic_mixer.get_volume());
+      STDOUT << "Volume Up - Current Volume: ";
+      STDOUT << dynamic_mixer.get_volume() << "\n";
     } else {
       QuickMaxVolume();
     }
@@ -520,8 +531,8 @@ public:
         beeper.Beep(0.10, 2000);
         beeper.Beep(0.20, 1500);
       }
-      STDOUT.print("Volume Down - Current Volume: ");
-      STDOUT.println(dynamic_mixer.get_volume());
+      STDOUT << "Volume Down - Current Volume: ";
+      STDOUT << dynamic_mixer.get_volume() << "\n";
     } else {
       QuickMinVolume();
     }
@@ -535,7 +546,7 @@ public:
     } else {
       beeper.Beep(0.5, 3000);
     }
-    STDOUT.print("Maximum Volume \n");
+    STDOUT << "Maximum Volume\n";
   }
 
   void QuickMinVolume() {
@@ -547,7 +558,7 @@ public:
       } else {
         beeper.Beep(0.5, 1000);
       }
-      STDOUT.print("Minimum Volume \n");
+      STDOUT << "Minimum Volume\n";
   }
 
   void DetectMenuTurn() {
@@ -600,19 +611,19 @@ public:
       return true;
 
 // Gesture Ignition Controls
-  #ifdef BC_SWING_ON
+#ifdef BC_SWING_ON
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
       if (mode_volume_) return false;  
-  #ifdef NO_BLADE_NO_GEST_ONOFF
+#ifdef NO_BLADE_NO_GEST_ONOFF
       if (!blade_detected_) return false;
-  #endif
+#endif
         FastOn();
-  #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-        STDOUT.println("Entering Battle Mode");
+#ifdef BC_GESTURE_AUTO_BATTLE_MODE
+        STDOUT << "Entering Battle Mode\n";
         battle_mode_ = true;
-  #endif
+#endif
       return true;
-  #endif  // BC_SWING_ON
+#endif  // BC_SWING_ON
 
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
       // pointing down
@@ -624,37 +635,37 @@ public:
       if (fusor.angle1() >  M_PI / 3) {
         next_preset();
       } else {
-       // NOT pointing up OR down      
-  #ifdef BC_TWIST_ON
-        if (mode_volume_) return false;    
-    #ifdef NO_BLADE_NO_GEST_ONOFF
+       // NOT pointing up OR down
+#ifdef BC_TWIST_ON
+        if (mode_volume_) return false;
+#ifdef NO_BLADE_NO_GEST_ONOFF
         if (!blade_detected_) return false;
-    #endif
+#endif
         // Delay twist events to prevent false trigger from over twisting
         if (millis() - last_twist_ > 2000 &&
           millis() - saber_off_time_ > 1000) {
           FastOn();
-    #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-          STDOUT.println("Entering Battle Mode");
+#ifdef BC_GESTURE_AUTO_BATTLE_MODE
+          STDOUT << "Entering Battle Mode\n";
           battle_mode_ = true;
-    #endif
+#endif
           last_twist_ = millis();
         }
-  #endif  // BC_TWIST_ON
+#endif  // BC_TWIST_ON
       }
       return true;
 
-  #ifdef BC_TWIST_OFF
+#ifdef BC_TWIST_OFF
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-  #ifdef NO_BLADE_NO_GEST_ONOFF
+#ifdef NO_BLADE_NO_GEST_ONOFF
       if (!blade_detected_) return false;
-  #endif
+#endif
       // Delay twist events to prevent false trigger from over twisting
       if (millis() - last_twist_ > 3000) {
         last_twist_ = millis();
         saber_off_time_ = millis();
         battle_mode_ = false;
-        // Bypass postoff if pointing up         
+        // Bypass postoff if pointing up
         if (fusor.angle1() >  M_PI / 3) {
           Off(OFF_FAST);
         } else {
@@ -662,43 +673,43 @@ public:
         }
       }
       return true;
-  #endif  // BC_TWIST_OFF
+#endif  // BC_TWIST_OFF
 
-  #ifdef BC_STAB_ON
+#ifdef BC_STAB_ON
     case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
       if (mode_volume_) return false;
-  #ifdef NO_BLADE_NO_GEST_ONOFF
+#ifdef NO_BLADE_NO_GEST_ONOFF
       if (!blade_detected_) return false;
-  #endif
+#endif
       // Delay Stab On at boot
       if (millis() - saber_off_time_ > 1000) {
         FastOn();
-  #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-        STDOUT.println("Entering Battle Mode");
+#ifdef BC_GESTURE_AUTO_BATTLE_MODE
+        STDOUT << "Entering Battle Mode\n";
         battle_mode_ = true;
-  #endif
+#endif
       }
       return true;
-  #endif  // BC_STAB_ON
+#endif  // BC_STAB_ON
 
-  #ifdef BC_THRUST_ON
+#ifdef BC_THRUST_ON
     case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
       if (mode_volume_) return false;
-  #ifdef NO_BLADE_NO_GEST_ONOFF
+#ifdef NO_BLADE_NO_GEST_ONOFF
       if (!blade_detected_) return false;
-  #endif
+#endif
       // Delay Thrust On at boot
       if (millis() - saber_off_time_ > 1000) {
         FastOn();
-  #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-        STDOUT.println("Entering Battle Mode");
+#ifdef BC_GESTURE_AUTO_BATTLE_MODE
+        STDOUT << "Entering Battle Mode\n";
         battle_mode_ = true;
-  #endif
+#endif
       }
       return true;
-  #endif  // BC_THRUST_ON
+#endif  // BC_THRUST_ON
 
-  #ifdef BC_FORCE_PUSH
+#ifdef BC_FORCE_PUSH
     case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
       // Delay Force Push from previous Push
       if (millis() - last_push_ > 2000) {
@@ -710,7 +721,7 @@ public:
         last_push_ = millis();
       }
       return true;
-  #endif  // BC_FORCE_PUSH
+#endif  // BC_FORCE_PUSH
 
 // Turns Saber ON
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
@@ -738,12 +749,12 @@ public:
       return true;
 
 // Next Preset AND Volume Up
-  #if NUM_BUTTONS == 1
+#if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON):
-  #else
+#else
   // 2 button
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON | BUTTON_AUX):
-  #endif
+#endif
       // Bypass NewFont and preon if pointing up.
       if (fusor.angle1() >  M_PI / 3) {
         // Don't change preset if in colorchange mode
@@ -760,12 +771,12 @@ public:
       return true;
 
 // Previous Preset AND Volume Down
-  #if NUM_BUTTONS == 1
+#if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON):
-  #else
+#else
   // 2 button
     case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON | BUTTON_AUX):
-  #endif
+#endif
       // Bypass NewFont and preon if pointing up.
       if (fusor.angle1() >  M_PI / 3) {
         //Don't change preset if in colorchange mode
@@ -782,30 +793,30 @@ public:
       return true;
 
 // Start or Stop Track
-  #if NUM_BUTTONS == 1
+#if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_OFF):
     case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_ON):
-  #else
+#else
     // 2 or 3 button
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON | BUTTON_AUX):
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
-  #endif
+#endif
       if (!mode_volume_) {
         StartOrStopTrack();
       }
       return true;
 
 // Enter / Exit Volume MENU
-  #ifndef NO_VOLUME_MENU
-    #if NUM_BUTTONS == 1
+#ifndef NO_VOLUME_MENU
+#if NUM_BUTTONS == 1
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
-    #else
+#else
       // 2 button
       case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
-    #endif
+#endif
         VolumeMenu();
         return true;
-  #endif
+#endif
 
 // Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
@@ -813,7 +824,7 @@ public:
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
         sound_library_.SayVolts();
-        STDOUT<< "Battery Voltage: " << battery_monitor.battery() << "\n";
+        STDOUT << "Battery Voltage: " << battery_monitor.battery() << "\n";
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
@@ -824,7 +835,7 @@ public:
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
         sound_library_.SayPercent();
-        STDOUT<< "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
+        STDOUT << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
@@ -832,8 +843,8 @@ public:
 // On Demand Battery Level
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
       if (!mode_volume_) {
-        STDOUT<< "Battery Voltage: " << battery_monitor.battery() << "\n";
-        STDOUT<< "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
+        STDOUT << "Battery Voltage: " << battery_monitor.battery() << "\n";
+        STDOUT << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       } else {
         QuickMinVolume();
@@ -847,31 +858,42 @@ public:
     return true;
 
 // Blaster Deflection
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-    case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
-      // Don't blast if in colorchange mode
-      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
-      SaberBase::DoBlast();
-      last_blast_ = millis();
-      return true;
-  #ifdef ENABLE_AUTO_SWING_BLAST
-    // Auto enter/exit multi-blast block with swings if swing within 1 second  
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
+        if (!spam_blast_) {
+          //Don't blast if in colorchange mode
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
+            SaberBase::DoBlast();
+            last_blast_ = millis();
+          }
+          return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
+        if (spam_blast_) {
+          //Don't blast if in colorchange mode
+          if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
+            SaberBase::DoBlast();
+            last_blast_ = millis();
+          }
+          return true;
+#ifdef ENABLE_AUTO_SWING_BLAST
+    // Auto enter/exit multi-blast block with swings if swing within 1 second.
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
       if (millis() - last_blast_ < 1000) {
         SaberBase::DoBlast();
         last_blast_ = millis();
-        STDOUT.println("Auto Swing Blast mode");
+        STDOUT << "Auto Swing Blast mode\n";
       }
       break;
-  #endif
-        
+#endif
+
 // Lockup
-  #if NUM_BUTTONS == 1
+#if NUM_BUTTONS == 1
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
-  #else
+#else
   // 2 button
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
-  #endif
+#endif
       if (!SaberBase::Lockup()) {
         // pointing down
         if (fusor.angle1() < - M_PI / 4) {
@@ -905,30 +927,33 @@ public:
       SaberBase::DoBeginLockup();
       return true;
 
-// Battle Mode
-#ifndef BC_NO_BM
-  #if NUM_BUTTONS == 1
+// Spam Blast toggle - pointing up
+// Battle Mode toggle - NOT pointing up
+#if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_ON):
-  #else
+#else
   // 2 button
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
-  #endif
+#endif
+      if (fusor.angle1() >  M_PI / 3) {
+        sound_library_.SayZoomingIn();
+        spam_blast_ = !spam_blast_;
+        return true;
+      }
+#ifndef BC_NO_BM
       if (!battle_mode_) {
-        STDOUT.println("Entering Battle Mode");
+        STDOUT << "Entering Battle Mode\n";
         battle_mode_ = true;
         if (SFX_bmbegin) {
           hybrid_font.PlayCommon(&SFX_bmbegin);
-          STDOUT.println("-----------------playing bmbegin.wav");
         } else {
           hybrid_font.DoEffect(EFFECT_FORCE, 0);
-          STDOUT.println("-----------------playing forcexx.wav");
         }
       } else {
-        STDOUT.println("Exiting Battle Mode");
+        STDOUT << "Exiting Battle Mode\n";
         battle_mode_ = false;
         if (SFX_bmend) {
           hybrid_font.PlayCommon(&SFX_bmend);
-          STDOUT.println("-----------------playing bmend.wav");
         } else {
           beeper.Beep(0.5, 3000);
         }
@@ -950,12 +975,12 @@ public:
 // Force -        NOT pointing up or down
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
       // pointing down
-  #ifndef DISABLE_COLOR_CHANGE
+#ifndef DISABLE_COLOR_CHANGE
       if (fusor.angle1() < - M_PI / 4) {
         ToggleColorChangeMode();
         return true;
       }
-  #endif
+#endif
       // pointing up
       if (fusor.angle1() >  M_PI / 3) {
         SaberBase::DoEffect(EFFECT_USER2, 0);
@@ -987,13 +1012,13 @@ public:
       return true;
 
 // Power Save blade dimming - pointing up
-// Swap effect - NOT pointing up
+// Swap effect - NOT pointing up or down
 // Toggle seqential quote play - pointing down
-  #if NUM_BUTTONS == 1
+#if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_ON):
-  #else
+#else
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
-  #endif
+#endif
       // pointing up
       if (fusor.angle1() >  M_PI / 3) {
         SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
@@ -1005,10 +1030,11 @@ public:
         if (sequential_quote_) {
           sound_library_.SayDisabled();
         } else {
-          sound_library_.SayEnabled();          
+          sound_library_.SayEnabled();
         }
         return true;
       } else {
+      // NOT pointing up or down
         SaberBase::DoEffect(EFFECT_USER1, 0);
       }
       return true;
@@ -1016,16 +1042,16 @@ public:
 // Turn Blade OFF
     case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
       if (!SaberBase::Lockup()) {
-  #ifndef DISABLE_COLOR_CHANGE
+#ifndef DISABLE_COLOR_CHANGE
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           // Just exit color change mode.
           // Don't turn saber off.
           ToggleColorChangeMode();
           return true;
         }
-  #endif
+#endif
         if (!battle_mode_) {
-          // Bypass postoff if pointing up         
+          // Bypass postoff if pointing up
           if (fusor.angle1() >  M_PI / 3) {
             Off(OFF_FAST);
           } else {
@@ -1037,7 +1063,7 @@ public:
       return true;
 
 // Blade Detect
-  #ifdef BLADE_DETECT_PIN
+#ifdef BLADE_DETECT_PIN
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
       // Might need to do something cleaner, but let's try this for now.
@@ -1053,7 +1079,7 @@ public:
       FindBladeAgain();
       SaberBase::DoBladeDetect(false);
       return true;
-  #endif
+#endif
 
 // Events that need to be handled regardless of what other buttons are pressed.
     case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
@@ -1077,7 +1103,8 @@ public:
   void SB_Effect(EffectType effect, float location) override {
     switch (effect) {
       case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
-      case EFFECT_POWERSAVE: // Dim
+      // Dim
+      case EFFECT_POWERSAVE:
         if (SFX_dim) {
           hybrid_font.PlayCommon(&SFX_dim);
         } else {
@@ -1087,7 +1114,8 @@ public:
           beeper.Beep(0.1, 300);
         }
         return;
-      case EFFECT_BATTERY_LEVEL: // On-Demand Battery Level
+      // On-Demand Battery Level
+      case EFFECT_BATTERY_LEVEL:
         if (SFX_battery) {
           hybrid_font.PlayCommon(&SFX_battery);
         } else {
@@ -1100,7 +1128,8 @@ public:
           beeper.Beep(0.5, 693);
         }
         return;
-      case EFFECT_FAST_ON: // Gesture on, bybass preon
+      // Gesture on, bybass preon
+      case EFFECT_FAST_ON:
         if (SFX_faston) {
           hybrid_font.PlayCommon(&SFX_faston);
         }
@@ -1111,14 +1140,16 @@ public:
           saber_off_time_ = millis();
         }
         return;
-      case EFFECT_USER1: // Swap
+      // Swap
+      case EFFECT_USER1:
         if (SFX_swap) {
           hybrid_font.PlayCommon(&SFX_swap);
         } else {
           hybrid_font.PlayCommon(&SFX_ccchange);
         }
         return;
-      case EFFECT_USER2: // Monoforce
+      // Monoforce
+      case EFFECT_USER2:
         if (SFX_monosfx) {
           hybrid_font.PlayMonophonic(&SFX_monosfx , &SFX_hum);
         } else {
@@ -1136,6 +1167,7 @@ private:
   bool max_vol_reached_ = false;
   bool min_vol_reached_ = false;
   bool sequential_quote_ = false;
+  bool spam_blast_ = false;
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
@@ -1143,7 +1175,7 @@ private:
   uint32_t last_push_ = millis();
   uint32_t last_blast_ = millis();
   uint32_t saber_off_time_ = millis();
-  uint32_t beep_delay_ = millis();  
+  uint32_t beep_delay_ = millis();
 };
 
 #endif

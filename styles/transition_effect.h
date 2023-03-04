@@ -17,6 +17,7 @@ template<class TRANSITION, BladeEffectType EFFECT>
 class TransitionEffectL {
 public:
   LayerRunResult run(BladeBase* blade) {
+    SaveLastDetectedBladeEffectScoped save;
     if (effect_.DetectScoped(blade)) {
       transition_.begin();
       run_ = true;
@@ -25,7 +26,6 @@ public:
       transition_.run(blade);
       if (transition_.done()) run_ = false;
     }
-    last_detected_blade_effect = nullptr;
     if (!run_) {
       // All effects now wake the blade up again if needed, so it's safe to
       // always return TRANSPARENT_UNTIL_IGNITION
@@ -59,6 +59,7 @@ public:
   MultiTransitionEffectL() { for (size_t i = 0; i < N; i++) run_[i] = false; }
 
   void run(BladeBase* blade) {
+    SaveLastDetectedBladeEffectScoped save;
     for (size_t i = 0; i < N; i++) {
       if (effect_.DetectScoped(blade)) {
 	transitions_[pos_].begin();
@@ -75,7 +76,6 @@ public:
 	if (transitions_[i].done()) run_[i] = false;
       }
     }
-    last_detected_blade_effect = nullptr;
   }
   
 private:
