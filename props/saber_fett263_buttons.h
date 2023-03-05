@@ -5828,6 +5828,10 @@ SaberFett263Buttons() : PropBase() {}
         }
         if (menu_) {
 	  MenuDialIncrement(1);
+          return true;
+	}
+        if (swinging_) {
+          return false;
 	}
 #ifdef FETT263_SPECIAL_ABILITIES
         else {
@@ -5840,9 +5844,10 @@ SaberFett263Buttons() : PropBase() {}
 #else
           SaberBase::DoEffect(EFFECT_USER1, 0);
 #endif
-        }
-#endif
         return true;
+	}
+#endif
+        return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
         if (wav_player && wav_player->isPlaying()) {
@@ -5851,6 +5856,10 @@ SaberFett263Buttons() : PropBase() {}
         }        
         if (menu_) {
 	  MenuDialIncrement(-1);
+          return true;
+	}
+        if (swinging_) {
+          return false;
 	}
 #ifdef FETT263_SPECIAL_ABILITIES
         else {
@@ -5863,9 +5872,10 @@ SaberFett263Buttons() : PropBase() {}
 #else
           SaberBase::DoEffect(EFFECT_USER2, 0);
 #endif
-        }
+          return true;
+	}
 #endif
-        return true;
+        return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
         if (wav_player && wav_player->isPlaying()) {
