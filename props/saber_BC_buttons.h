@@ -1160,6 +1160,7 @@ public:
   }
 
 private:
+  float current_menu_angle_ = 0.0;
   bool mode_volume_ = false;
   bool auto_lockup_on_ = false;
   bool auto_melt_on_ = false;
