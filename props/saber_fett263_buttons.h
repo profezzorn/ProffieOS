@@ -2156,13 +2156,17 @@ SaberFett263Buttons() : PropBase() {}
     if (a > M_PI) a-=M_PI*2;
     if (a < -M_PI) a+=M_PI*2;
     if (a > twist_menu_ * 2/3) {
-      Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-      STDOUT.println("EVENT MENU TURN RIGHT");
+      if (!swinging_) {
+        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+        STDOUT.println("EVENT MENU TURN RIGHT");
+      }
       current_menu_angle_ = fusor.angle2();
     }
     if (a < -twist_menu_ * 2/3) {
-      Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-      STDOUT.println("EVENT MENU TURN LEFT");
+      if (!swinging_) {
+        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+        STDOUT.println("EVENT MENU TURN LEFT");
+      }
       current_menu_angle_ = fusor.angle2();
     }
   }
@@ -5645,7 +5649,7 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_SPECIAL_ABILITIES
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
-        if (!menu_ && !swinging_) {
+        if (!menu_) {
           SaberBase::DoEffect(EFFECT_USER3, 0);
           return true;
         }
@@ -5653,7 +5657,7 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
-        if (!menu_ && !swinging_) {
+        if (!menu_) {
           SaberBase::DoEffect(EFFECT_USER4, 0);
           return true;
         }
@@ -5661,7 +5665,7 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_AUX):
-        if (!menu_ && !swinging_) {
+        if (!menu_) {
           SaberBase::DoEffect(EFFECT_USER7, 0);
           return true;
         }
@@ -5669,7 +5673,7 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_AUX):
-        if (!menu_ && !swinging_) {
+        if (!menu_) {
           SaberBase::DoEffect(EFFECT_USER8, 0);
           return true;
         }
