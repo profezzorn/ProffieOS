@@ -36,6 +36,7 @@ enum Screen {
   SCREEN_UNSET,
   SCREEN_STARTUP,
   SCREEN_MESSAGE,
+  SCREEN_ERROR_MESSAGE,
   SCREEN_PLI,
   SCREEN_IMAGE,  // also for animations
   SCREEN_OFF,
@@ -368,7 +369,7 @@ public:
         } else if (font_config.ProffieOSFontImageDuration > 0) {
           return font_config.ProffieOSFontImageDuration;
         } else {
-        return 3500;
+          return 3500;
         }
 
       case SCREEN_PLI:
@@ -390,7 +391,21 @@ public:
         }
         return 200;  // redraw once every 200 ms
 
+      case SCREEN_ERROR_MESSAGE:
       case SCREEN_MESSAGE: {
+	int t;
+        if (font_config.ProffieOSTextMessageDuration != -1) {
+	  t = font_config.ProffieOSTextMessageDuration;
+        } else if (font_config.ProffieOSFontImageDuration > 0) {
+	  t = font_config.ProffieOSFontImageDuration;
+        } else {
+	  t = 3500;
+        }
+	if (t_ >= t) {
+	  screen_ = SCREEN_DEFAULT;
+	  ShowDefault();
+	  return FillFrameBuffer2(advance);
+	}
         Clear();
         // Aurebesh Font option.
 #ifdef USE_AUREBESH_FONT
@@ -404,15 +419,7 @@ public:
         // centered
           display_->DrawText(message_, 0, HEIGHT / 2 + 7, font);
         }
-        next_screen_ = SCREEN_DEFAULT;
-        // STDERR << "MESSAGE, millis = " << font_config.ProffieOSFontImageDuration << "\n";
-        if (font_config.ProffieOSTextMessageDuration != -1) {
-          return font_config.ProffieOSTextMessageDuration;
-        } else if (font_config.ProffieOSFontImageDuration > 0) {
-          return font_config.ProffieOSFontImageDuration;
-        } else {
-          return 3500;
-        }
+        return 200;  // redraw once every 200 ms
       }
 
       case SCREEN_IMAGE:
@@ -495,104 +502,114 @@ public:
   }
 
  void SB_Effect2(EffectType effect, float location) override {
-    switch (effect) {
-      case EFFECT_NEWFONT:
-        looped_on_ = Tristate::Unknown;
-        looped_idle_ = Tristate::Unknown;
-        if (IMG_font) {
-          ShowFileWithSoundLength(&IMG_font, font_config.ProffieOSFontImageDuration);
-        } else if (prop.current_preset_name()) {
-          SetMessage(prop.current_preset_name());
-          SetScreenNow(SCREEN_MESSAGE);
-        } else if (IMG_idle) {
-          ShowFile(&IMG_idle, 3600000.0);
-        }
-        return;
-      case EFFECT_LOCKUP_BEGIN:
-        ShowDefault();
-        return;
-      case EFFECT_LOCKUP_END:
-        ShowDefault(true);
-        break;
-      case EFFECT_BATTERY_LEVEL:
-        // Show On-Demand battery meter
-        SetScreenNow(SCREEN_PLI);
-        break;
-      case EFFECT_SD_CARD_NOT_FOUND:
-        SetMessage("sd card\nnot found");
-        break;
-      case EFFECT_ERROR_IN_FONT_DIRECTORY:
-        SetMessage("err font\ndirectory");
-        break;
-      case EFFECT_ERROR_IN_BLADE_ARRAY:
-        SetMessage("err blade\narray");
-        break;
-      case EFFECT_FONT_DIRECTORY_NOT_FOUND:
-        SetMessage("font dir\nnot found");
-        break;
-      case EFFECT_LOW_BATTERY:
-        // Maybe we should make this blink or something?
-        if (IMG_lowbatt) {
-          ShowFile(&IMG_lowbatt, 5000);
-        } else {
-          SetMessage("low\nbattery");
-        }
-      case EFFECT_BOOT:
-        if (IMG_boot) {
-          ShowFileWithSoundLength(&IMG_boot,
-				  font_config.ProffieOSBootImageDuration != -1.0 ?
-				  font_config.ProffieOSBootImageDuration :
-				  font_config.ProffieOSFontImageDuration);
-        } else {
-          SetScreenNow(SCREEN_STARTUP);
-        }
-        return;
-      case EFFECT_BLAST:
-        ShowFileWithSoundLength(&IMG_blst, font_config.ProffieOSBlastImageDuration);
-        return;
-      case EFFECT_CLASH:
-        ShowFileWithSoundLength(&IMG_clsh, font_config.ProffieOSClashImageDuration);
-        return;
-      case EFFECT_FORCE:
-        ShowFileWithSoundLength(&IMG_force, font_config.ProffieOSForceImageDuration);
-        return;
-      case EFFECT_PREON:
-        ShowFile(&IMG_preon, round(SaberBase::sound_length * 1000));
-        return;
-      case EFFECT_POSTOFF:
-        ShowFileWithSoundLength(&IMG_pstoff, font_config.ProffieOSPstoffImageDuration);
-        return;
+   switch (effect) {
+     case EFFECT_NEWFONT:
+       looped_on_ = Tristate::Unknown;
+       looped_idle_ = Tristate::Unknown;
+       if (IMG_font) {
+	 ShowFileWithSoundLength(&IMG_font, font_config.ProffieOSFontImageDuration);
+       } else if (prop.current_preset_name()) {
+	 SetMessage(prop.current_preset_name());
+	 SetScreenNow(SCREEN_MESSAGE);
+       } else if (IMG_idle) {
+	 ShowFile(&IMG_idle, 3600000.0);
+       }
+       break;
+     case EFFECT_LOCKUP_BEGIN:
+       ShowDefault();
+       break;
+     case EFFECT_LOCKUP_END:
+       ShowDefault(true);
+       break;
+     case EFFECT_BATTERY_LEVEL:
+       // Show On-Demand battery meter
+       SetScreenNow(SCREEN_PLI);
+       break;
+     case EFFECT_SD_CARD_NOT_FOUND:
+       SetErrorMessage("sd card\nnot found");
+       break;
+     case EFFECT_ERROR_IN_FONT_DIRECTORY:
+       SetErrorMessage("err font\ndirectory");
+       break;
+     case EFFECT_ERROR_IN_BLADE_ARRAY:
+       SetErrorMessage("err blade\narray");
+       break;
+     case EFFECT_FONT_DIRECTORY_NOT_FOUND:
+       SetErrorMessage("font dir\nnot found");
+       break;
+     case EFFECT_LOW_BATTERY:
+       // Maybe we should make this blink or something?
+       if (IMG_lowbatt) {
+	 ShowFile(&IMG_lowbatt, 5000);
+       } else {
+	 SetErrorMessage("low\nbattery");
+       }
+       break;
+     case EFFECT_BOOT:
+       if (IMG_boot) {
+	 ShowFileWithSoundLength(&IMG_boot,
+				 font_config.ProffieOSBootImageDuration != -1.0 ?
+				 font_config.ProffieOSBootImageDuration :
+				 font_config.ProffieOSFontImageDuration);
+       } else {
+	 SetScreenNow(SCREEN_STARTUP);
+       }
+       break;
+     case EFFECT_BLAST:
+       ShowFileWithSoundLength(&IMG_blst, font_config.ProffieOSBlastImageDuration);
+       break;
+     case EFFECT_CLASH:
+       ShowFileWithSoundLength(&IMG_clsh, font_config.ProffieOSClashImageDuration);
+       break;
+     case EFFECT_FORCE:
+       ShowFileWithSoundLength(&IMG_force, font_config.ProffieOSForceImageDuration);
+       break;
+     case EFFECT_PREON:
+       ShowFile(&IMG_preon, round(SaberBase::sound_length * 1000));
+       break;
+     case EFFECT_POSTOFF:
+       ShowFileWithSoundLength(&IMG_pstoff, font_config.ProffieOSPstoffImageDuration);
+       break;
 /* To-Do, possibly differently
-#ifdef OLED_USE_BLASTER_IMAGES
-      case EFFECT_RELOAD:
-        ShowFileWithSoundLength(&IMG_reload, font_config.ProffieOSReloadImageDuration);
-        return;
-      case EFFECT_EMPTY:
-        ShowFileWithSoundLength(&IMG_empty, font_config.ProffieOSEmptyImageDuration);
-        return;
-      case EFFECT_JAM:
-        ShowFileWithSoundLength(&IMG_jam, font_config.ProffieOSJamImageDuration);
-        return;
-      case EFFECT_CLIP_IN:
-        ShowFileWithSoundLength(&IMG_clipin, font_config.ProffieOSClipinImageDuration);
-        return;
-      case EFFECT_CLIP_OUT:
-        ShowFileWithSoundLength(&IMG_clipout, font_config.ProffieOSClipoutImageDuration);
-        return;
-      case EFFECT_DESTRUCT:
-        ShowFileWithSoundLength(&IMG_destruct, font_config.ProffieOSDestructImageDuration);
-        return;
-#endif
+   #ifdef OLED_USE_BLASTER_IMAGES
+   case EFFECT_RELOAD:
+   ShowFileWithSoundLength(&IMG_reload, font_config.ProffieOSReloadImageDuration);
+   break;
+   case EFFECT_EMPTY:
+   ShowFileWithSoundLength(&IMG_empty, font_config.ProffieOSEmptyImageDuration);
+   break;
+   case EFFECT_JAM:
+   ShowFileWithSoundLength(&IMG_jam, font_config.ProffieOSJamImageDuration);
+   break;
+   case EFFECT_CLIP_IN:
+   ShowFileWithSoundLength(&IMG_clipin, font_config.ProffieOSClipinImageDuration);
+   break;
+   case EFFECT_CLIP_OUT:
+   ShowFileWithSoundLength(&IMG_clipout, font_config.ProffieOSClipoutImageDuration);
+   break;
+   case EFFECT_DESTRUCT:
+   ShowFileWithSoundLength(&IMG_destruct, font_config.ProffieOSDestructImageDuration);
+   break;
+   #endif
 */
-    break;
-    default: break;
-  }
-}
+       break;
+     default: break;
+   }
+ }
 
+  // If called from SB_Effect2, you must call SetScreenNow after.
   void SetMessage(const char* text) {
+    if (screen_ == SCREEN_ERROR_MESSAGE) return;
     strncpy(message_, text, sizeof(message_));
     message_[sizeof(message_)-1] = 0;
     screen_ = SCREEN_MESSAGE;
+  }
+
+  // Calls SetScreenNow already.
+  void SetErrorMessage(const char* text) {
+    strncpy(message_, text, sizeof(message_));
+    message_[sizeof(message_)-1] = 0;
+    SetScreenNow(SCREEN_ERROR_MESSAGE);
   }
 
   void SB_Top(uint64_t total_cycles) override {
@@ -618,6 +635,7 @@ public:
   }
 
   void SetScreenNow(Screen screen) {
+    if (screen_ == SCREEN_ERROR_MESSAGE) return;
     // No need to wake the sleeping bear just to tell it to go to bed again.
     if (screen == SCREEN_OFF && screen_ == SCREEN_OFF) return;
     last_delay_ = t_ = 0;
@@ -626,6 +644,7 @@ public:
   }
 
   bool SetFile(Effect* effect, float duration) {
+    if (screen_ == SCREEN_ERROR_MESSAGE) return false;
     if (!*effect) return false;
     MountSDCard();
     eof_ = true;
@@ -648,6 +667,7 @@ public:
   }
 
   void ShowFile(const char* file) {
+    if (screen_ == SCREEN_ERROR_MESSAGE) return;
     MountSDCard();
     eof_ = true;
     file_.Play(file);
