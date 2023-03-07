@@ -2156,13 +2156,17 @@ SaberFett263Buttons() : PropBase() {}
     if (a > M_PI) a-=M_PI*2;
     if (a < -M_PI) a+=M_PI*2;
     if (a > twist_menu_ * 2/3) {
-      Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-      STDOUT.println("EVENT MENU TURN RIGHT");
+      if (!swinging_) {
+        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+        STDOUT.println("EVENT MENU TURN RIGHT");
+      }
       current_menu_angle_ = fusor.angle2();
     }
     if (a < -twist_menu_ * 2/3) {
-      Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-      STDOUT.println("EVENT MENU TURN LEFT");
+      if (!swinging_) {
+        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+        STDOUT.println("EVENT MENU TURN LEFT");
+      }
       current_menu_angle_ = fusor.angle2();
     }
   }
@@ -5647,30 +5651,34 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
         if (!menu_) {
           SaberBase::DoEffect(EFFECT_USER3, 0);
+          return true;
         }
         current_menu_angle_ = fusor.angle2();
-        return true;
+        return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
         if (!menu_) {
           SaberBase::DoEffect(EFFECT_USER4, 0);
+          return true;
         }
         current_menu_angle_ = fusor.angle2();
-        return true;
+        return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_AUX):
         if (!menu_) {
           SaberBase::DoEffect(EFFECT_USER7, 0);
+          return true;
         }
         current_menu_angle_ = fusor.angle2();
-        return true;
+        return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_AUX):
         if (!menu_) {
           SaberBase::DoEffect(EFFECT_USER8, 0);
+          return true;
         }
         current_menu_angle_ = fusor.angle2();
-        return true;
+        return false;
 #endif
 
         // Off functions
@@ -5773,8 +5781,11 @@ SaberFett263Buttons() : PropBase() {}
 #endif
           return true;
         }
-        if (menu_) MenuDial(1);
-        return true;
+        if (menu_) {
+          MenuDial(1);
+          return true;
+	}
+        return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON):
         if (wav_player && wav_player->isPlaying()) {
@@ -5792,24 +5803,33 @@ SaberFett263Buttons() : PropBase() {}
 #endif
           return true;
         }
-        if (menu_) MenuDial(-1);
-        return true;
+        if (menu_) {
+          MenuDial(-1);
+          return true;
+        }
+        return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF):
         if (wav_player && wav_player->isPlaying()) {
           current_menu_angle_ = fusor.angle2();
           return true;
         }
-        if (menu_) MenuDial(1);
-        return true;
+        if (menu_) {
+          MenuDial(1);
+          return true;
+        }
+        return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF):
         if (wav_player && wav_player->isPlaying()) {
           current_menu_angle_ = fusor.angle2();
           return true;
         }
-        if (menu_) MenuDial(-1);
-        return true;
+        if (menu_) {
+          MenuDial(-1);
+          return true;
+        }
+        return false;
 
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
         if (menu_ || CheckShowColorCC()) return true;
@@ -5828,7 +5848,11 @@ SaberFett263Buttons() : PropBase() {}
         }
         if (menu_) {
 	  MenuDialIncrement(1);
-	}
+          return true;
+        }
+        if (swinging_) {
+          return false;
+        }
 #ifdef FETT263_SPECIAL_ABILITIES
         else {
 #if NUM_BUTTONS == 1
@@ -5840,9 +5864,10 @@ SaberFett263Buttons() : PropBase() {}
 #else
           SaberBase::DoEffect(EFFECT_USER1, 0);
 #endif
-        }
-#endif
         return true;
+	}
+#endif
+        return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
         if (wav_player && wav_player->isPlaying()) {
@@ -5851,6 +5876,10 @@ SaberFett263Buttons() : PropBase() {}
         }        
         if (menu_) {
 	  MenuDialIncrement(-1);
+          return true;
+	}
+        if (swinging_) {
+          return false;
 	}
 #ifdef FETT263_SPECIAL_ABILITIES
         else {
@@ -5863,9 +5892,10 @@ SaberFett263Buttons() : PropBase() {}
 #else
           SaberBase::DoEffect(EFFECT_USER2, 0);
 #endif
-        }
+          return true;
+	}
 #endif
-        return true;
+        return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
         if (wav_player && wav_player->isPlaying()) {
