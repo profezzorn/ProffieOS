@@ -194,7 +194,7 @@ Optional Gesture Controls (if enabled)
       If parallel or up Melt will initiate
       To end Melt pull blade away from object at an angle
   Blast Effect = Click AUX
-    NEW! swing within 2 seconds to enter Multi-Blast Mode
+    After Blast, swing within 2 seconds to enter Multi-Blast Mode
   Multi-Blast Mode = Long Click AUX
     Each Swing in Multi-Blast Mode will deflect Blast effect
     To exit, click AUX or do Clash
@@ -401,7 +401,7 @@ Optional Gesture Controls (if enabled)
       If parallel or up Melt will initiate
       To end Melt pull blade away from object at an angle
   Blast Effect = Click PWR
-    NEW! swing within 2 seconds to enter Multi-Blast Mode
+    After Blast, swing within 2 seconds to enter Multi-Blast Mode
   Lightning Block = Double Click and Hold PWR
   Force Push* = Push Saber
     *requires FETT263_FORCE_PUSH
