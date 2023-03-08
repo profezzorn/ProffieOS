@@ -393,7 +393,7 @@ public:
 
       case SCREEN_ERROR_MESSAGE:
       case SCREEN_MESSAGE: {
-	int t;
+	uint32_t t;
         if (font_config.ProffieOSTextMessageDuration != -1) {
 	  t = font_config.ProffieOSTextMessageDuration;
         } else if (font_config.ProffieOSFontImageDuration > 0) {
