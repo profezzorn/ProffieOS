@@ -34,7 +34,7 @@ class Trigger {
 
     if (effect_.Detect(blade)) {
       start_time_ = micros();
-      trigger_state_ = TRIGGER_ATTACK;
+      trigger_state_ = TRIGGER_DELAY;
     }
     if (trigger_state_ == TRIGGER_OFF) {
       value_ = 0;
