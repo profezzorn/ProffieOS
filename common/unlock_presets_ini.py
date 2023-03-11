@@ -58,12 +58,17 @@ class ProffieSafe:
         self.f.close()
 
 def main():
-    dir = "."
+    base = "presets"
     if len(sys.argv) > 1:
-        dir = sys.argv[1]
+        file = sys.argv[1]
+        ext = file.split('.')[-1]
+        if ext in ["ini", "tmp"]:
+            base = file[:-4]
+        else:
+            base = file
 
-    ini_filename = os.path.join(dir, "presets.ini")
-    tmp_filename = os.path.join(dir, "presets.tmp")
+    ini_filename = "%s.ini" % base
+    tmp_filename = "%s.tmp" % base
     ini = ProffieSafe(ini_filename)
     tmp = ProffieSafe(tmp_filename)
     best = ini
@@ -73,9 +78,9 @@ def main():
     data = best.read()
     ini.close()
     tmp.close()
-    os.rename(ini_filename, os.path.join(dir, "presets.bak"));
-    os.rename(tmp_filename, os.path.join(dir, "presets.old"));
-    open(os.path.join(dir, "presets.ini"), "wb").write(data)
+    os.rename(ini_filename, "%s.bak" % base);
+    os.rename(tmp_filename, "%s.tmp" % base);
+    open(ini_filename, "wb").write(data)
 
 
 if __name__ == "__main__":
