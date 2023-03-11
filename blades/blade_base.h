@@ -40,6 +40,8 @@ public:
   // false while "turning off".
   virtual bool is_on() const = 0;
 
+  virtual bool is_powered() const = 0;
+
   // Return how many effects are in effect.
   virtual size_t GetEffects(BladeEffect** blade_effects) = 0;
 
