@@ -84,6 +84,9 @@ public:
   bool is_on() const override {
     return on_;
   }
+  bool is_powered() const override {
+    return powered_;
+  }
   void set(int led, Color16 c) override {
     ((Color8*)displayMemory)[led] = c.dither(0);
   }

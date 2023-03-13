@@ -605,7 +605,6 @@ public:
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
       return true;
