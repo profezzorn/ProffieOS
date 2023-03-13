@@ -65,6 +65,9 @@ public:
   bool is_on() const override {
     return on_;
   }
+  bool is_powered() const override {
+    return powered_;
+  }
   void set(int led, Color16 c) override {
     int color = 0;
     switch ((c.r > 32768 ? 0x100 : 0x0) +

@@ -10,6 +10,7 @@ public:
     return blade_->get_byteorder();
   }
   bool is_on() const override { return blade_->is_on(); }
+  bool is_powered() const override { return blade_->is_powered(); }
   void set(int led, Color16 c) override { return blade_->set(led, c); }
   void set_overdrive(int led, Color16 c) override {
     return blade_->set_overdrive(led, c);
