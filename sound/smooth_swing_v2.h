@@ -61,11 +61,13 @@ public:
   void PickRandomSwing() {
     if (!on_) return;
     uint32_t m = millis();
+    RefPtr<BufferedWavPlayer> humplayer = GetWavPlayerPlaying(hybrid_font.getHum());
+    if (!humplayer) return;
+    float start = (font_config.ProffieOSSmoothSwingHumstart == 0) ? m / 1000.0 : humplayer->pos();
     // No point in picking a new random so soon after picking one.
     if (A.player && m - last_random_ < 1000) return;
     last_random_ = m;
     int swing = random(L->files_found());
-    float start = m / 1000.0;
     A.Stop();
     B.Stop();
     L->Select(swing);

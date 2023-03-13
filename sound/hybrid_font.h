@@ -46,6 +46,8 @@ public:
 #ifdef ENABLE_SPINS
     CONFIG_VARIABLE2(ProffieOSSpinDegrees, 360.0f);
 #endif
+    CONFIG_VARIABLE2(ProffieOSSmoothSwingHumstart, 0);
+
     for (Effect* e = all_effects; e; e = e->next_) {
       char name[32];
       strcpy(name, "ProffieOS.");
@@ -177,6 +179,9 @@ public:
   // one full rotation.
   float ProffieOSSpinDegrees;
 #endif
+  // Make smoothswings start in sync with hum.
+  // Set to 1 to sync, or 0 to resume swings where last pair left off.
+  bool ProffieOSSmoothSwingHumstart;
 };
 
 FontConfigFile font_config;

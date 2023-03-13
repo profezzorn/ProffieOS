@@ -227,6 +227,7 @@ public:
 
   int num_leds() const override { return colors.size(); }
   bool is_on() const override { return on_; }
+  bool is_powered() const override { return true; }
   void set(int led, Color16 c) override {
 //    fprintf(stderr, "SETILISET %d = %d %d %d\n", led, c.r, c.g, c.b);
     colors[led] = c;
