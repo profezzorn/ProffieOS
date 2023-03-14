@@ -39,12 +39,20 @@ public:
       stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
     }
   }
+
+  void AvoidSleep() { last_activity_ = millis(); }
     
   private:
     uint32_t last_activity_;
 };
 
 ClockControl clock_control;
+
+void ClockControl_AvoidSleep() { clock_control.AvoidSleep(); }
+
+#else
+
+void ClockControl_AvoidSleep() { }
 
 #endif
 
