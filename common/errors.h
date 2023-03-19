@@ -83,7 +83,7 @@ void ProffieOSErrors::error_in_font_directory() {
   beeper.Beep(0.5, 146.83 * 2); // D3
   beeper.Beep(0.5, 164.81 * 2); // E3
   beeper.Beep(0.5, 196.0 * 2); // G3
-  beeper.Beep(0.5, 220.00 * 2); // A3
+  beeper.Beep(0.5, 246.94 * 2); // B3
   beeper.Beep(0.5, 261.63 * 2); // C4
 #endif
 #endif
