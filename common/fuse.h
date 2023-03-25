@@ -88,11 +88,13 @@ public:
   }
 
   void Loop() override {
+    uint32_t last_accel = accel_extrapolator_.last_time();
+    uint32_t last_gyro = gyro_extrapolator_.last_time();
     uint32_t now = micros();
     if (!accel_extrapolator_.ready()) return;
     if (!gyro_extrapolator_.ready()) return;
-    if (now - accel_extrapolator_.last_time() > 200000) return;
-    if (now - gyro_extrapolator_.last_time() > 200000) return;
+    if (now - last_accel > 200000) return;
+    if (now - last_gyro > 200000) return;
 
     float delta_t = (now - last_micros_) / 1000000.0;
     last_micros_ = now;
