@@ -2,8 +2,10 @@
 
 Default Startup Mode = STUN
 Add the following to your config file if so desired:
-	#define BLASTER_SHOTS_UNTIL_EMPTY 15 (whatever number)
+        #define ENABLE_BLASTER_AUTO is you desire to enable AUTO mode.
+	#define BLASTER_SHOTS_UNTIL_EMPTY 15 (whatever number), leave undefined for infinite rounds.
 	#define BLASTER_JAM_PERCENTAGE if this is not defined, random from 0-100%.
+	#define DEFAULT_BLASTER_MODE as either of MODE_STUN|MODE_KILL|MODE_AUTO.
 
 Blaster Buttons: FIRE and MODE
 (Blaster is always on with power, unless dedicated Power button is installed.)
@@ -13,7 +15,7 @@ Next Preset -           Long click and release MODE.
 Previous Preset -       Double click and hold MODE, release after a second.
 Reload -                Hold MODE until Reloaded. (Or Click Reload if dedicated button insatlled)
 Start/Stop Track -      Double click MODE.
-Fire -                  Click FIRE. (Hold to Auto Fire / Rapid Fire)
+Fire -                  Click FIRE.
 Clip In -               Clip Detect pad Latched On. ( or Hold Momentary button)
 Clip out -              Clip Detect pad Latched Off. ( or release Momentary button)
 Unjam -                 Bang the blaster.
