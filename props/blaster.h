@@ -66,8 +66,12 @@ public:
     MODE_AUTO
   };
 
-  BlasterMode blaster_mode = MODE_STUN;
-
+  #ifdef DEFAULT_BLASTER_MODE
+    BlasterMode blaster_mode = DEFAULT_BLASTER_MODE;
+  #else
+    BlasterMode blaster_mode = MODE_STUN;
+  #endif
+	
   virtual void SetBlasterMode(BlasterMode to_mode) {
     if (!auto_firing_) {
       blaster_mode = to_mode;
