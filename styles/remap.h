@@ -27,7 +27,8 @@ class Remap {
     return RunLayer(&color_, blade);
   }
   
-  auto getColor(int led) -> decltype(color_.getColor(led)) {
+  auto getColor(int led) -> decltype(MixColors(color_.getColor(led),
+					       color_.getColor(led), 1, 15)) {
     int pos = f_.getInteger(led);
     led = clamp(pos * num_leds_, 0, num_leds_ * 32768 - 1);
     int fraction = led & 0x7fff;

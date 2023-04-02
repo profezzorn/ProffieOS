@@ -151,6 +151,7 @@ Monitoring monitor;
 #include "../functions/center_dist.h"
 #include "../functions/effect_position.h"
 #include "../functions/random.h"
+#include "../functions/mult.h"
 #include "mix.h"
 #include "strobe.h"
 #include "hump_flicker.h"
@@ -654,6 +655,10 @@ void TestCompileStyle() {
     TransitionEffectL< TrLoop< TrFade<1> >, EFFECT_BLAST>,
     TransitionEffectL< TrLoopUntil< Int<1>, TrFade<1>, TrFade<1>>, EFFECT_BLAST>
 	      >> t3;
+
+  TestStyle<Layers<
+    Black,
+	      Remap<SmoothStep<Int<0>,SwingSpeed<250>>,AlphaL<RgbArg<BASE_COLOR_ARG,Red>,Mult<RandomPerLEDF,CenterDistF<Int<32768>>>>>>> t4;
 }
 
 
