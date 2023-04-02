@@ -142,6 +142,7 @@ Monitoring monitor;
 #include "../functions/center_dist.h"
 #include "../functions/effect_position.h"
 #include "../functions/random.h"
+#include "../functions/mult.h"
 #include "mix.h"
 #include "strobe.h"
 #include "hump_flicker.h"
