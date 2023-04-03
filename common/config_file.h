@@ -120,7 +120,6 @@ struct ConfigFile {
 
 
   virtual void SetVariable(const char* variable, float v) {
-    fprintf(stderr, "SetVariable %s = %f\n", variable, v);
     if (!strcmp(variable, "=")) {
       SetDefaultOP op;
       iterateVariables(&op);
