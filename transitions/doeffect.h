@@ -90,7 +90,7 @@ public:
  private:
   PONUA SVFWrapper<WAVNUM> wavnum_;
   PONUA SVFWrapper<LOCATION> location_;
-  bool begin_;
+  bool begin_ = false;
 };
 
 template<class TRANSITION, BladeEffectType EFFECT, int WAVNUM = -1, int LOCATION = -1> using TrDoEffectAlways = TrDoEffectAlwaysX<TRANSITION, EFFECT, Int<WAVNUM>, Int<LOCATION>>;
