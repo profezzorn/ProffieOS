@@ -16,7 +16,11 @@
 #endif
 
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
-const char install_time[] = __DATE__ " " __TIME__;
+const char install_time[] = __DATE__ " " __TIME__
+#ifdef INSTALL_TIME_EXTRA
+  INSTALL_TIME_EXTRA
+#endif  
+  ;
 
 #ifdef DEBUG
 #define PROFFIEOS_ASSERT(X) do {					\

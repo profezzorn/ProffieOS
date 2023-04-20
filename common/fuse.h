@@ -98,11 +98,13 @@ public:
 #endif
 
   void Loop() override {
+    uint32_t last_accel = accel_extrapolator_.last_time();
+    uint32_t last_gyro = gyro_extrapolator_.last_time();
     uint32_t now = micros();
     if (!accel_extrapolator_.ready() ||
 	!gyro_extrapolator_.ready() ||
-	now - accel_extrapolator_.last_time() > 200000 ||
-	now - gyro_extrapolator_.last_time() > 200000 ||
+	now - last_accel > 200000 ||
+	now - last_gyro > 200000 ||
 	now - last_clear_ < GYRO_STABILIZATION_TIME_MS * 1000) {
       gyro_ = Vec3(0.0f);
       accel_ = Vec3(0.0f);

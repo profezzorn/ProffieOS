@@ -99,7 +99,7 @@ struct ConfigFile {
       if (f->Peek() != '=') continue;
       f->Read();
       f->skipwhite();
-#ifndef KEEP_SAVEFILES_WHEN_PROGRAMMING    
+#ifndef KEEP_SAVEFILES_WHEN_PROGRAMMING
       if (!strcmp(variable, "installed")) {
 	if (!f->Expect(install_time)) {
 	  return ReadStatus::READ_FAIL;
@@ -185,13 +185,11 @@ struct ConfigFile {
 #define CONFIG_VARIABLE2(X, DEF) DoVariableOp<decltype(X)>(op, #X, X, DEF)
 
   void ReadInCurrentDir(const char* name) {
+    SetVariable("=", 0.0);
     // Search through all the directories.
-    bool reset = true;
     for (const char* dir = last_current_directory(); dir; dir = previous_current_directory(dir)) {
       PathHelper full_name(dir, name);
-      if (Read(full_name, reset) != ReadStatus::READ_FAIL) {
-	reset = false;
-      }
+      Read(full_name, false);
     }
   }
 
@@ -206,6 +204,7 @@ struct ConfigFile {
   }
 
   bool TryPlain(FileValidator* a) {
+    if (a->f.FileSize() >= MAX_CONFIG_FILE_SIZE) return false;
     a->f.Seek(0);
     if (Read(&a->f) == ReadStatus::READ_END) {
       read_from_ext_ = a->ext;
@@ -214,6 +213,7 @@ struct ConfigFile {
     return true;
   }
   ReadStatus ReadINIFromDir(const char *dir, const char* basename) {
+    SetVariable("=", 0.0);
     LOCK_SD(true);
     FileSelector fs(dir, basename);
     bool success = TryValidator(fs.a) || TryValidator(fs.b);

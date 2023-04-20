@@ -18,6 +18,54 @@
 #define ADC_SAMPLE_TIME_247_5  6
 #define ADC_SAMPLE_TIME_640_5  7
 
+bool PO_stm32l4_adc_calibrate(stm32l4_adc_t *adc)
+{
+    ADC_TypeDef *ADCx = adc->ADCx;
+
+    if (adc->state != ADC_STATE_READY)
+    {
+	return false;
+    }
+
+    ADCx->CR |= ADC_CR_ADDIS;
+
+    while (ADCx->CR & ADC_CR_ADEN)
+    {
+    }
+
+    armv7m_core_udelay(1);
+
+    /* Single-Ended Input Calibration */
+    ADCx->CR &= ~ADC_CR_ADCALDIF;
+    ADCx->CR |= ADC_CR_ADCAL;
+    
+    while (ADCx->CR & ADC_CR_ADCAL)
+    {
+    }
+
+#if 0    
+    /* Differential Input Calibration */
+    ADCx->CR |= (ADC_CR_ADCALDIF | ADC_CR_ADCAL);
+
+    while (ADCx->CR & ADC_CR_ADCAL)
+    {
+    }
+#endif
+
+    armv7m_core_udelay(100);
+
+    ADCx->ISR = ADC_ISR_ADRDY;
+
+    do
+    {
+	ADCx->CR |= ADC_CR_ADEN;
+    }
+    while (!(ADCx->ISR & ADC_ISR_ADRDY));
+
+    return true;
+}
+
+
 class AnalogReader {
 public:
   // Charge time specifies the minimum time to charge the builtin signal hold capacitor.
@@ -47,7 +95,7 @@ public:
     if (stm32l4_adc.state == ADC_STATE_NONE) {
       stm32l4_adc_create(&stm32l4_adc, ADC_INSTANCE_ADC1, STM32L4_ADC_IRQ_PRIORITY, 0);
       stm32l4_adc_enable(&stm32l4_adc, 0, NULL, NULL, 0);
-      stm32l4_adc_calibrate(&stm32l4_adc);
+      PO_stm32l4_adc_calibrate(&stm32l4_adc);
       stm32l4_adc_disable(&stm32l4_adc);
     }
     if (stm32l4_adc.state != ADC_STATE_INIT)
