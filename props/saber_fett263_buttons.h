@@ -1865,6 +1865,7 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_CLASH_STRENGTH_SOUND
   void HandleClash() {
+    if (menu_) clash_type_ = CLASH_NONE;
     if (clash_type_ == CLASH_BATTLE_MODE) {
       if (SaberBase::GetClashStrength() < saved_gesture_control.clashdetect) {
         clash_type_ = CLASH_NORMAL;
