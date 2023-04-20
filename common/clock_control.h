@@ -11,7 +11,6 @@ public:
   void Loop() override {
     bool on = false;
     SaberBase::DoIsOn(&on);
-    uint32_t now = millis();
     if (on
 	|| Serial
 	|| prop.NeedsPower()
@@ -21,9 +20,12 @@ public:
 	|| amplifier.Active()
 #endif
       ) {
-      last_activity_ = now;
+      last_activity_ = millis();
     }
-    if (now - last_activity_ > 30000) {
+    // These two variables must be read in order.
+    uint32_t last_activity = last_activity_;
+    uint32_t now = millis();
+    if (now - last_activity > 30000) {
 #ifdef PROFFIEOS_VERSION
       stm32l4_system_sysclk_configure(1000000, 500000, 500000);
 #else
@@ -39,12 +41,20 @@ public:
       stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
     }
   }
+
+  void AvoidSleep() { last_activity_ = millis(); }
     
   private:
-    uint32_t last_activity_;
+    volatile uint32_t last_activity_;
 };
 
 ClockControl clock_control;
+
+void ClockControl_AvoidSleep() { clock_control.AvoidSleep(); }
+
+#else
+
+void ClockControl_AvoidSleep() { }
 
 #endif
 

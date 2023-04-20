@@ -448,6 +448,9 @@ public:
       armv7m_atomic_or(&timer()->TIM->DIER, TIM_DIER_UDE);
     }
     TRACE(BLADE, "show exit");
+
+    extern void ClockControl_AvoidSleep();
+    ClockControl_AvoidSleep();
   }
   
   void DoRefill1() {

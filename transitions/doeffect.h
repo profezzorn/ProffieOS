@@ -4,22 +4,24 @@
 #include "base.h"
 #include "../sound/hybrid_font.h"
 
-// Usage: TrDoEffectX<TRANSITION, EFFECT, WAVNUM, LOCATION_CLASS, WHEN_OFF>
-// or: TrDoEffect<TRANSITION, EFFECT, WAVNUM, LOCATION, WHEN_OFF>
+// Usage: TrDoEffectX<TRANSITION, EFFECT, WAVNUM, LOCATION_CLASS>
+// or: TrDoEffects<TRANSITION, EFFECT, WAVNUM, LOCATION>
 // TRANSITION: TRANSITION
 // EFFECT: effect type
 // WAVNUM, LOCATION: a number
 // LOCATION_CLASS: INTEGER
-// WHEN_OFF: true or false
 // return value: TRANSITION
-// Runs the specified TRANSITION and triggers EFFECT
+// Runs the specified TRANSITION and triggers EFFECT (unless the blade is off)
 // Can specify WAV file to use for EFFECT with WAVNUM
 // NOTE: 0 is first wav file, -1 is random wav
 // LOCATION = -1 is random
-// If WHEN_OFF is false, TrDoEffect will do nothing if the blade is off
-// and will also force the transition to stop when off.
 
-template<class TRANSITION, BladeEffectType EFFECT, class WAVNUM = Int<-1>, class LOCATION = Int<-1>, bool WHEN_OFF=false>
+// Usage: TrDoEffectAlwaysX<TRANSITION, EFFECT, WAVNUM, LOCATION_CLASS>
+// or: TrDoEffectsAlways<TRANSITION, EFFECT, WAVNUM, LOCATION>
+// TrDoEffectAlways is the same as TrDoEffectX, but runs even if
+// the blade is off.
+
+template<class TRANSITION, BladeEffectType EFFECT, class WAVNUM = Int<-1>, class LOCATION = Int<-1>>
 class TrDoEffectX : public TRANSITION {
 public:
   void begin() {
@@ -62,8 +64,11 @@ public:
   bool done_;
 };
 
+template<class TRANSITION, BladeEffectType EFFECT, int WAVNUM = -1, int LOCATION = -1> using TrDoEffect = TrDoEffectX<TRANSITION, EFFECT, Int<WAVNUM>, Int<LOCATION>>;
+
+
 template<class TRANSITION, BladeEffectType EFFECT, class WAVNUM, class LOCATION>
-class TrDoEffectX<TRANSITION, EFFECT, WAVNUM, LOCATION, true>  : public TRANSITION {
+class TrDoEffectAlwaysX : public TRANSITION {
 public:
   void begin() {
     TRANSITION::begin();
@@ -85,9 +90,9 @@ public:
  private:
   PONUA SVFWrapper<WAVNUM> wavnum_;
   PONUA SVFWrapper<LOCATION> location_;
-  bool begin_;
+  bool begin_ = false;
 };
 
-template<class TRANSITION, BladeEffectType EFFECT, int WAVNUM = -1, int LOCATION = -1, bool WHEN_OFF = false> using TrDoEffect = TrDoEffectX<TRANSITION, EFFECT, Int<WAVNUM>, Int<LOCATION>, WHEN_OFF>;
+template<class TRANSITION, BladeEffectType EFFECT, int WAVNUM = -1, int LOCATION = -1> using TrDoEffectAlways = TrDoEffectAlwaysX<TRANSITION, EFFECT, Int<WAVNUM>, Int<LOCATION>>;
 
 #endif
