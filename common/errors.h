@@ -57,12 +57,14 @@ void ProffieOSErrors::error_in_blade_array() {
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_blade_array_15, 15);
 #else
-  beeper.Beep(0.25, 174.61 * 2); // F3
-  beeper.Beep(0.25, 196.00 * 2); // G3
-  beeper.Beep(0.25, 174.61 * 2); // F3
-  beeper.Beep(0.25, 164.81 * 2); // E3
-  beeper.Beep(1.0, 146.83 * 2); // D3
-  beeper.Beep(1.0, 130.81 * 2); // C3
+  beeper.Beep(0.25, 174.61 * 2); // F3 - Er
+  beeper.Beep(0.25, 196.00 * 2); // G3 - ror
+  beeper.Beep(0.25, 174.61 * 2); // F3 - in
+  beeper.Beep(0.25, 164.81 * 2); // E3 - the
+  beeper.Beep(0.3, 146.83 * 2); // D3 - blade
+  beeper.Beep(0.2, 0);
+  beeper.Beep(0.5, 146.83 * 2); // D3 - ar
+  beeper.Beep(1.0, 130.81 * 2); // C3 - ray
 #endif
 #endif
 }
@@ -81,7 +83,7 @@ void ProffieOSErrors::error_in_font_directory() {
   beeper.Beep(0.5, 146.83 * 2); // D3
   beeper.Beep(0.5, 164.81 * 2); // E3
   beeper.Beep(0.5, 196.0 * 2); // G3
-  beeper.Beep(0.5, 220.00 * 2); // A3
+  beeper.Beep(0.5, 246.94 * 2); // B3
   beeper.Beep(0.5, 261.63 * 2); // C4
 #endif
 #endif
