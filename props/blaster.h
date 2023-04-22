@@ -5,7 +5,7 @@ Add the following to your config file if so desired:
         #define ENABLE_BLASTER_AUTO is you desire to enable AUTO mode.
 	#define BLASTER_SHOTS_UNTIL_EMPTY 15 (whatever number), leave undefined for infinite rounds.
 	#define BLASTER_JAM_PERCENTAGE if this is not defined, random from 0-100%.
-	#define DEFAULT_BLASTER_MODE as either of MODE_STUN|MODE_KILL|MODE_AUTO.
+	#define BLASTER_DEFAULT_MODE as either of MODE_STUN|MODE_KILL|MODE_AUTO.
 
 Blaster Buttons: FIRE and MODE
 (Blaster is always on with power, unless dedicated Power button is installed.)
@@ -32,6 +32,10 @@ Wavs to use for switching Modes:
   
 #ifndef PROPS_BLASTER_H
 #define PROPS_BLASTER_H
+
+#ifndef BLASTER_DEFAULT_MODE
+#define BLASTER_DEFAULT_MODE MODE_STUN
+#endif
 
 #include "prop_base.h"
 
@@ -68,11 +72,7 @@ public:
     MODE_AUTO
   };
 
-  #ifdef DEFAULT_BLASTER_MODE
-    BlasterMode blaster_mode = DEFAULT_BLASTER_MODE;
-  #else
-    BlasterMode blaster_mode = MODE_STUN;
-  #endif
+  BlasterMode blaster_mode = BLASTER_DEFAULT_MODE;
 	
   virtual void SetBlasterMode(BlasterMode to_mode) {
     if (!auto_firing_) {
