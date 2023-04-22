@@ -180,6 +180,7 @@ public:
   }
 
   virtual void ClipIn() {
+    if (max_shots_ != -1) shots_fired_ = 0;
     SaberBase::DoEffect(EFFECT_CLIP_IN, 0);
   }
 
