@@ -200,7 +200,7 @@ public:
     }
   }
 
-  // Self-destruct pulled from Detonator. Any prop that inherits from blaster.h could just add PollNextAction() to their loop function, and call SelfDestruct() from Event2() to implement selfdestruct.
+  // Self-destruct pulled from Detonator. Inherit prop and add PollNextAction() to their loop function.
   // BEGINING of Detonator Code.
   bool armed_ = false;
 
