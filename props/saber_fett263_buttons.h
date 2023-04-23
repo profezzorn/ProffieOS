@@ -1785,6 +1785,8 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void DoInteractiveBlast() {
+    swing_blast_ = false;
+    check_blast_ = false;
     if (CheckInteractiveBlast()) {
       SaberBase::DoEffectR(EFFECT_INTERACTIVE_BLAST);
     } else {
@@ -1865,6 +1867,7 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_CLASH_STRENGTH_SOUND
   void HandleClash() {
+    if (menu_) clash_type_ = CLASH_NONE;
     if (clash_type_ == CLASH_BATTLE_MODE) {
       if (SaberBase::GetClashStrength() < saved_gesture_control.clashdetect) {
         clash_type_ = CLASH_NORMAL;
@@ -5974,6 +5977,9 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_SPIN_MODE
         if (spin_mode_) return true;
 #endif
+        clash_impact_millis_ = millis();
+        check_blast_ = false;
+        swing_blast_ = false;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
           RehearseClash();
@@ -6001,9 +6007,6 @@ SaberFett263Buttons() : PropBase() {}
           }
         }
 #endif
-        clash_impact_millis_ = millis();
-        check_blast_ = false;
-        swing_blast_ = false;
         if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
           SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
           SaberBase::DoBeginLockup();
