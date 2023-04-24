@@ -63,7 +63,8 @@ template<int MILLIS> using TrWipeIn = TrWipeInX<Int<MILLIS>>;
 // MILLIS = a number
 // SIZE = a number
 // return value: TRANSITION
-
+// Same as TrWipe, but adds a "spark" tip to the
+// leading edge of the wipe color.
 template<class SPARK_COLOR, class MILLIS, class SIZE = Int<400>> 
 	using TrWipeSparkTipX = TrJoin<TrWipeX<MILLIS>,TrSparkX<SPARK_COLOR,SIZE,MILLIS,Int<0>>>;
 
@@ -75,7 +76,7 @@ template<class SPARK_COLOR, int MILLIS, int SIZE = 400>
 // MILLIS = a number
 // SIZE = a number
 // return value: TRANSITION
-
+// Like TrWipeSparkTip, but from tip to base.
 template<class SPARK_COLOR, class MILLIS, class SIZE = Int<400>> 
 	using TrWipeInSparkTipX = TrJoin<TrWipeInX<MILLIS>,TrSparkX<SPARK_COLOR,SIZE,MILLIS,Int<32768>>>;
 
