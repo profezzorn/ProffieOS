@@ -1449,7 +1449,7 @@ SaberFett263Buttons() : PropBase() {}
       int b = strtol(tmp+1, NULL, 0);
       return Color16(r,g,b);
     }
-    return Color16();
+    return Color16(65535,0,0);
   }
 	
   // Color / Style Editing
