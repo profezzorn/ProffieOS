@@ -1449,7 +1449,7 @@ SaberFett263Buttons() : PropBase() {}
       int b = strtol(tmp+1, NULL, 0);
       return Color16(r,g,b);
     }
-    return Color16();
+    return Color16(65535,0,0);
   }
 	
   // Color / Style Editing
@@ -1785,6 +1785,8 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void DoInteractiveBlast() {
+    swing_blast_ = false;
+    check_blast_ = false;
     if (CheckInteractiveBlast()) {
       SaberBase::DoEffectR(EFFECT_INTERACTIVE_BLAST);
     } else {
@@ -1987,7 +1989,7 @@ SaberFett263Buttons() : PropBase() {}
         auto_melt_on_ = false;
       }
       // EVENT_PUSH
-      if (fabs(mss.x) < 3.0 &&
+      if (!menu_ && fabs(mss.x) < 3.0 &&
           mss.y * mss.y + mss.z * mss.z > 100 &&
           fusor.swing_speed() < 20 &&
           fabs(fusor.gyro().x) < 5) {
@@ -5974,6 +5976,9 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_SPIN_MODE
         if (spin_mode_) return true;
 #endif
+        clash_impact_millis_ = millis();
+        check_blast_ = false;
+        swing_blast_ = false;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
           RehearseClash();
@@ -6001,9 +6006,6 @@ SaberFett263Buttons() : PropBase() {}
           }
         }
 #endif
-        clash_impact_millis_ = millis();
-        check_blast_ = false;
-        swing_blast_ = false;
         if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
           SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
           SaberBase::DoBeginLockup();
