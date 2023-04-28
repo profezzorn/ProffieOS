@@ -80,6 +80,9 @@
 
 // #define ENABLE_DEBUG
 
+#ifdef KEEP_SAVEFILES_WHEN_PROGRAMMING
+#warning Your config file has KEEP_SAVEFILES_WHEN_PROGRAMMING in it. If you experience problems, please remove it and try again before asking for help. For more information, see: https://pod.hubbe.net/config/keeping-edits-when-uploading.html
+#endif
 
 //
 // OVERVIEW
