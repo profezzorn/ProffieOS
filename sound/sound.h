@@ -126,6 +126,23 @@ void SetupStandardAudio() {
   dac.SetStream(&dynamic_mixer);
 }
 
+void SaySDInitError(int error) {
+#ifndef DISABLE_TALKIE
+  talkie.Say(spS);
+  talkie.Say(spD);
+  talkie.Say(spSTART);
+  talkie.SayNumber(error);
+#endif  
+}
+
+void SaySDCheckError(int error) {
+#ifndef DISABLE_TALKIE
+  talkie.Say(spS);
+  talkie.Say(spD);
+  talkie.Say(spCHECK);
+  talkie.SayNumber(error);
+#endif
+}
 
 #include "../common/config_file.h"
 #include "hybrid_font.h"
