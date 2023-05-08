@@ -807,6 +807,7 @@ public:
         return false;
       }
       ypos_ = looped_frames_;
+      return true;  // return to ProcessAudioStream which will return here when no audiostreams are in need of data.
     }
     if (lock_fb_) {
       // STDERR << "locked\n";
