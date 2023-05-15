@@ -44,11 +44,6 @@
 // #define CONFIG_FILE "config/testconfig.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 
-#ifdef CONFIG_FILE_TEST
-#undef CONFIG_FILE
-#define CONFIG_FILE CONFIG_FILE_TEST
-#endif
-
 #ifndef CONFIG_FILE
 #error Please set CONFIG_FILE as shown above.
 #endif
