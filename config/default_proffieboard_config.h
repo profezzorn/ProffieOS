@@ -21,6 +21,8 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_SD
 #define SAVE_STATE
 #define ENABLE_ALL_EDIT_OPTIONS
+#define XPOWERMAN   // Leave uncommented to use xPowerManager to handle peripherals power and deep sleep
+                    // Only tested on ProffieBoard v2.2 !
 #endif
 
 #ifdef CONFIG_PRESETS

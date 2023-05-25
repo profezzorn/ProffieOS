@@ -1,7 +1,7 @@
 #ifndef COMMON_CLOCK_CONTROL_H
 #define COMMON_CLOCK_CONTROL_H
 
-#if VERSION_MAJOR >= 4
+#if VERSION_MAJOR >= 4 && !defined(XPOWERMAN)
 
 #include "looper.h"
 

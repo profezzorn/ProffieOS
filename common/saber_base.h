@@ -163,7 +163,9 @@ public:
   }
   static void TurnOff(OffType off_type) {
     on_ = false;
+	#ifndef XPOWERMAN
     last_motion_request_ = millis();
+	#endif
     SaberBase::DoOff(off_type);
   }
 
@@ -171,17 +173,25 @@ public:
 #if NUM_BUTTONS == 0
     return true;
 #else
+	#ifdef XPOWERMAN
+	return true;
+	#else
     return IsOn() || (millis() - last_motion_request_) < 20000;
+	#endif
 #endif
   }
   static void RequestMotion() {
+#ifndef XPOWERMAN
     last_motion_request_ = millis();
+#endif
   }
 
   static void DumpMotionRequest() {
+    #ifndef XPOWERMAN
     STDOUT << "Motion requested: " << MotionRequested()
 	   << " (millis() - last_motion_request=" << (millis() - last_motion_request_)
 	   << ")\n";
+    #endif
   }
 
   enum LockupType {
@@ -365,7 +375,9 @@ public:                                                         \
   }
 
   // Not private for debugging purposes only.
+#ifndef XPOWERMAN
   static uint32_t last_motion_request_;
+#endif
 private:
   static bool on_;
   static LockupType lockup_;

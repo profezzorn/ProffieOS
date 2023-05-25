@@ -132,9 +132,33 @@ void my_stm32l4_system_saiclk_configure_22579200()
 
 #define PDB_CONFIG (PDB_SC_TRGSEL(15) | PDB_SC_PDBEN | PDB_SC_CONT | PDB_SC_PDBIE | PDB_SC_DMAEN)
 
-class LS_DAC : CommandParser {
+#if defined(XPOWERMAN) 
+bool SoundActive();         // defined later in sound.h
+void SetupStandardAudio();  // defined later in sound.h
+class LS_DAC : CommandParser, Looper, public xPowerSubscriber {
 public:
-  void Setup() {
+  LS_DAC() : CommandParser(), Looper(), xPowerSubscriber(pwr4_Booster | pwr4_Amplif) {}
+  void PwrOn_Callback() override  { 
+    begin();      // setup and start peripheral
+    #ifdef DIAGNOSE_POWER
+      STDOUT.println(" dac+ ");  
+    #endif
+  }         
+  void PwrOff_Callback() override { 
+    end();      // de-init peripheral
+    #ifdef DIAGNOSE_POWER
+      STDOUT.println(" dac- "); 
+    #endif
+  }     
+  void Loop() override { if (SoundActive()) RequestPower(); }
+
+#else // nXPOWERMAN
+class LS_DAC : CommandParser, Looper {
+public:
+  void Loop() override {}
+#endif // XPOWERMAN
+  virtual const char* name() { return "DAC"; }
+  void Setup() override {
     if (!needs_setup_) return;
     needs_setup_ = false;
 #ifdef TEENSYDUINO
@@ -352,6 +376,10 @@ public:
 #if defined(ENABLE_I2S_OUT) || defined(ENABLE_SPDIF_OUT)
     stm32l4_dma_create(&dma2, DMA_CHANNEL_DMA2_CH2_SAI1_B, STM32L4_SAI_IRQ_PRIORITY);
     // stm32l4_dma_create(&dma2, DMA_CHANNEL_DMA2_CH7_SAI1_B, STM32L4_SAI_IRQ_PRIORITY);
+#endif
+
+#if defined(XPOWERMAN) 
+    SetupStandardAudio();   // was in amplifier.Setup()
 #endif
 
 #endif
