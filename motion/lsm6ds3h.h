@@ -6,8 +6,48 @@ constexpr int ProffieOS_log2(int x) {
 }
 
 // Supports LSM6DS3, LSM6DSM and LSM6DSO
-class LSM6DS3H : public I2CDevice, Looper, StateMachine {
-public:
+#if defined(XPOWERMAN)
+  // Subscribes to power domain CPU but does not request power, will stay alive as long as the CPU is alive
+  class LSM6DS3H : public I2CDevice, Looper, StateMachine, xPowerSubscriber {
+  public:
+    LSM6DS3H() : I2CDevice(106), Looper(
+  #ifndef PROFFIEBOARD
+      HFLINK
+  #endif    
+    ), xPowerSubscriber(pwr4_CPU) {enabled = true;}
+    
+    bool enabled;
+    void PwrOn_Callback() override { 
+      enabled = true; 
+      #ifdef DIAGNOSE_POWER
+        STDOUT.println(" sns+ ");  
+      #endif
+    }          
+    void PwrOff_Callback() override { 
+      enabled = false; 
+      #ifdef DIAGNOSE_POWER
+        STDOUT.println(" sns- ");  
+      #endif
+      uint32_t startTime = millis();
+      i2cbus.scheduledDeinitTime(0);   // set deinit timeout to 0 
+      while (millis() - startTime <= 50) {   // was 1     
+        // DoLoop();
+        i2cbus.Loop();
+        Loop();
+      }
+      i2cbus.scheduledDeinitTime(2000);  // restore timeout 
+    }         
+
+#else // nXPOWERMAN
+  class LSM6DS3H : public I2CDevice, Looper, StateMachine {
+  public:
+    LSM6DS3H() : I2CDevice(106), Looper(
+  #ifndef PROFFIEBOARD
+      HFLINK
+  #endif    
+    ) {}
+#endif // XPOWERMAN
+
   const char* name() override { return "LSM6DS3H"; }
   enum Registers {
     FUNC_CFG_ACCESS = 0x1,
@@ -100,12 +140,6 @@ public:
     CTRL_SPIAux = 0x70
   };
 
-  LSM6DS3H() : I2CDevice(106), Looper(
-#ifndef PROFFIEBOARD
-    HFLINK
-#endif    
-  ) {}
-
 #define I2CLOCK() do {							\
   state_machine_.sleep_until_ = millis();				\
   while (!I2CLock()) {							\
@@ -185,7 +219,11 @@ public:
       stm32l4_exti_notify(&stm32l4_exti, g_APinDescription[motionSensorInterruptPin].pin,
 			  EXTI_CONTROL_RISING_EDGE, &LSM6DS3H::irq, this);
 
+  #if defined(XPOWERMAN)
+      while (enabled) {
+  #else // nULTRA_PROFFIE
       while (SaberBase::MotionRequested()) {
+  #endif // ULTRA_PROFFIE     
 	Poll();
 	if ((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31) {
 	  TRACE(MOTION, "timeout");
@@ -247,7 +285,11 @@ public:
       I2C_WRITE_BYTE_ASYNC(CTRL1_XL, 0x0);  // gyro disable
       I2CUnlock();
       
+      #if defined(XPOWERMAN)
+      while (!enabled) YIELD();
+      #else // nXPOWERMAN
       while (!SaberBase::MotionRequested()) YIELD();
+      #endif // XPOWERMAN
       continue;
 
     i2c_timeout:

@@ -115,9 +115,28 @@ private:
 #endif
 
 // Base class for props.
-class PropBase : CommandParser, Looper, protected SaberBase {
+#if defined(XPOWERMAN) 
+class PropBase : CommandParser, Looper, public xPowerSubscriber, protected SaberBase {
 public:
-  PropBase() : CommandParser() {}
+void PwrOn_Callback() override { 
+    #ifdef DIAGNOSE_POWER
+      STDOUT.println(" cpu+ "); 
+    #endif
+  }
+  void PwrOff_Callback() override { 
+    #ifdef DIAGNOSE_POWER
+      STDOUT.println(" cpu- "); 
+    #endif
+  }
+#else  // nXPOWERMAN
+class PropBase : CommandParser, Looper, protected SaberBase {
+#endif // XPOWERMAN
+public:
+  PropBase() : CommandParser() 
+  #if defined(XPOWERMAN)
+  , xPowerSubscriber(pwr4_CPU)
+  #endif
+  {}
   BladeStyle* current_style() {
 #if NUM_BLADES == 0
     return nullptr;
@@ -131,12 +150,24 @@ public:
     return current_preset_.name.get();
   }
 
+#if defined(XPOWERMAN)
+  bool HoldPower() override {  // Return true to pause power subscriber timeout
+    #if NUM_BUTTONS == 0
+      return true;
+    #endif
+    if (IsOn()) return true;
+    if (current_style() && current_style()->NoOnOff()) return true;
+    return false;
+  }
+  inline bool NeedsPower() { return HoldPower(); }
+#else // nXPOWERMAN
   bool NeedsPower() {
     if (SaberBase::IsOn()) return true;
     if (current_style() && current_style()->NoOnOff())
       return true;
     return false;
   }
+#endif // XPOWERMAN
 
   int32_t muted_volume_ = 0;
   bool SetMute(bool muted) {
@@ -1731,6 +1762,12 @@ private:
     if (IsOn()) return false;
     if (current_style() && current_style()->NoOnOff())
       return false;
+
+    #ifdef XPOWERMAN
+      RequestPower();     // get power for CPU
+      EnableMotion();
+    #endif
+
     activated_ = millis();
     STDOUT.println("Ignition.");
     MountSDCard();

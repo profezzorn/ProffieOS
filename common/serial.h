@@ -118,9 +118,15 @@ StaticWrapper<RFIDParser> rfid_parser;
 // Command-line parser. Easiest way to use it is to start the arduino
 // serial monitor.
 template<class SA> /* SA = Serial Adapter */
+#if defined(XPOWERMAN) 
+class Parser : Looper, StateMachine, xPowerSubscriber {
+public:
+  Parser() : Looper(), xPowerSubscriber(pwr4_CPU) {}
+#else // nXPOWERMAN
 class Parser : Looper, StateMachine {
 public:
   Parser() : Looper() {}
+#endif
   const char* name() override { return "Parser"; }
 
   void Setup() override {
@@ -128,6 +134,11 @@ public:
   }
 
   void Loop() override {
+
+  #if defined(XPOWERMAN) 
+    uint32_t CPUtimeout = 300000;   // Exceptional power timeout for serial parser
+  #endif
+
     STATE_MACHINE_BEGIN();
     while (true) {
       while (!SA::Connected()) YIELD();
@@ -139,6 +150,10 @@ public:
 
       while (SA::Connected()) {
         while (!SA::stream().available()) YIELD();
+
+#if defined(XPOWERMAN) 
+      RequestPower(&CPUtimeout);   // Increase CPU timeout to 5 minutes if parser is active (defaults to 1 minute)
+#endif
         int c = SA::stream().read();
         if (c < 0) { break; }
 #if 0

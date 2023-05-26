@@ -352,7 +352,9 @@ SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
 SaberBase::ColorChangeMode SaberBase::color_change_mode_ =
   SaberBase::COLOR_CHANGE_MODE_NONE;
 bool SaberBase::on_ = false;
+#ifndef XPOWERMAN
 uint32_t SaberBase::last_motion_request_ = 0;
+#endif
 uint32_t SaberBase::current_variation_ = 0;
 float SaberBase::sound_length = 0.0;
 int SaberBase::sound_number = -1;
@@ -392,7 +394,9 @@ int32_t clamptoi24(int32_t x) {
 
 void EnableBooster();
 void EnableAmplifier();
+#ifndef XPOWERMAN
 bool AmplifierIsActive();
+#endif
 void MountSDCard();
 const char* GetSaveDir();
 
@@ -426,6 +430,9 @@ const char* previous_current_directory(const char* dir) {
   }
 }
 
+#if defined(XPOWERMAN)
+#include "common/xPowerManager.h"
+#endif
 #include "sound/sound.h"
 #include "common/battery_monitor.h"
 #include "common/color.h"
@@ -1420,6 +1427,10 @@ SSD1306Template<128, uint32_t, DISPLAY_POWER_PINS> display(&display_controller);
 #ifdef GYRO_CLASS
 // Can also be gyro+accel.
 StaticWrapper<GYRO_CLASS> gyroscope;
+#ifdef XPOWERMAN
+void EnableMotion() {gyroscope->enabled = true; }
+void DisableMotion() {gyroscope->enabled = false; }
+#endif
 #endif
 
 #ifdef ACCEL_CLASS
@@ -1428,9 +1439,13 @@ StaticWrapper<ACCEL_CLASS> accelerometer;
 
 #endif   // ENABLE_MOTION
 
-#include "sound/amplifier.h"
-#include "common/sd_card.h"
-#include "common/booster.h"
+#if defined(XPOWERMAN) 
+  #include "common/sd_card.h"   // amplifier and booster replaced by power manager
+#else // nXPOWERMAN
+  #include "sound/amplifier.h"
+  #include "common/sd_card.h"
+  #include "common/booster.h"
+#endif // XPOWERMAN
 
 void setup() {
 #if VERSION_MAJOR >= 4

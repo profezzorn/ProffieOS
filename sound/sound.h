@@ -143,6 +143,27 @@ void SaySDCheckError(int error) {
   talkie.SayNumber(error);
 #endif
 }
+#ifdef XPOWERMAN
+  inline void EnableAmplifier() { dac.RequestPower(); }
+
+  bool SoundActive() {
+    if (!dynamic_mixer.get_volume()) return false;    // muted
+    for (size_t i = 0; i < NELEM(wav_players); i++)
+      if (wav_players[i].isPlaying())
+        return true;
+    if (beeper.isPlaying()) return true;
+    if (talkie.isPlaying()) return true;
+    return false;
+  } 
+  const auto AmplifierIsActive = SoundActive;   
+
+  // Stubs (for backward compatibility only)
+  void EnableBooster() {}
+  // void SilentEnableBooster(bool on) {}
+  // void SilentEnableAmplifier(bool on) {}
+
+#endif // XPOWERMAN
+
 
 #include "../common/config_file.h"
 #include "hybrid_font.h"
@@ -162,5 +183,19 @@ SmoothSwingV2 smooth_swing_v2;
 #define LOCK_SD(X) do { } while(0)
 #include "../common/sd_card.h"
 #include "effect.h"
+
+#ifdef XPOWERMAN
+  inline void EnableAmplifier() { }
+
+  bool SoundActive() {
+    return false;
+  } 
+  const auto AmplifierIsActive = SoundActive;   
+
+  // Stubs (for backward compatibility only)
+  void EnableBooster() {}
+
+#endif // XPOWERMAN
+
 
 #endif  // ENABLE_AUDIO
