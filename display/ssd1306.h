@@ -824,7 +824,19 @@ public:
       ReadState state;
       state.ypos = ypos_;
       state.file_pos = file_.Tell();
-      if (ReadImage(&file_)) {
+
+#ifdef VERBOSE_READIMAGE_TIMING
+      uint32_t read_begin = micros();
+      bool tmp = ReadImage(&file_);
+      uint32_t read_us = micros() - read_begin;
+      if (read_us > 1500) {
+	STDERR << "ReadImage took " << read_us << " us\n";
+      }
+#else
+      bool tmp = ReadImage(&file_);
+#endif
+
+      if (tmp) {
         frame_available_ = true;
         last_state_ = state;
       } else {
