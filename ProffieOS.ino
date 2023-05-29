@@ -431,7 +431,7 @@ const char* previous_current_directory(const char* dir) {
 }
 
 #if defined(XPOWERMAN)
-#include "common/xPowerManager.h"
+#include "common/PowerManager.h"
 #endif
 #include "sound/sound.h"
 #include "common/battery_monitor.h"

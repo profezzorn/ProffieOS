@@ -8,9 +8,9 @@
 // Unmount sdcard when we don't need it anymore.
 #if defined(XPOWERMAN) 
 class SDCard : Looper , xPowerSubscriber {
-#else // nULTRA_PROFFIE
+#else // XPOWERMAN
 class SDCard : Looper {
-#endif // ULTRA_PROFFIE
+#endif // XPOWERMAN
 public:
   #if defined(XPOWERMAN)
     SDCard() : Looper(), xPowerSubscriber(pwr4_SD) {}

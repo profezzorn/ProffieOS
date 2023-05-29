@@ -77,7 +77,7 @@ public:
 
   bool used() {
 #ifdef XPOWERMAN
-    return !((last_request_millis_ + shtimeMS - millis()) >> 31);
+    return !((last_request_millis_ + timout_millis_ - millis()) >> 31);
 #else
     return !((last_request_millis_ + 2000 - millis()) >> 31);
 #endif
@@ -85,7 +85,7 @@ public:
 
 #ifdef XPOWERMAN
   void scheduledDeinitTime(uint32_t ms) {
-    shtimeMS = ms;
+    timout_millis_ = ms;
   }
 #endif
 
@@ -111,7 +111,7 @@ private:
   bool clock_detected, data_detected;
   bool i2c_detected_ = false;
 #ifdef XPOWERMAN
-  uint32_t shtimeMS = 2000;
+  uint32_t timout_millis_ = 2000;
 #endif
 };
 

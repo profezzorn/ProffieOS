@@ -221,9 +221,9 @@ constexpr int ProffieOS_log2(int x) {
 
   #if defined(XPOWERMAN)
       while (enabled) {
-  #else // nULTRA_PROFFIE
+  #else // XPOWERMAN
       while (SaberBase::MotionRequested()) {
-  #endif // ULTRA_PROFFIE     
+  #endif // XPOWERMAN     
 	Poll();
 	if ((last_event_ + I2C_TIMEOUT_MILLIS * 2 - millis()) >> 31) {
 	  TRACE(MOTION, "timeout");

@@ -298,10 +298,10 @@
         virtual void SetPower(bool newState) = 0;       // Switches power domain ON/OFF
 
         // Someone is requesting power, update timeout to specified millis (or domain-specific if unspecified)
-        void ResetTimeout(uint32_t timeout_=0) {                            
-            if (!timeout_) timeout_ = timeout();        // domain-specific timeout if not specified
-            if (timeout_ < PWRMAN_MINTIMEOUT) timeout_ = PWRMAN_MINTIMEOUT; // keep minimum
-            if (countdownTimer < timeout_) countdownTimer = timeout_;    // reset timeout
+        void ResetTimeout(uint32_t newTimeout = 0) {                            
+            if (!newTimeout) newTimeout = timeout();        // domain-specific timeout if not specified
+            if (newTimeout < PWRMAN_MINTIMEOUT) newTimeout = PWRMAN_MINTIMEOUT; // keep minimum
+            if (countdownTimer < newTimeout) countdownTimer = newTimeout;    // reset timeout
         } 
 
         // Check expire time and turn power off if needed, return true if timed-out. Optionally specify measured time between successive calls, in millis
@@ -317,28 +317,7 @@
 
     };
 
-    class PowerDomain_Pixel : public xPowerDomain {
-    public:            
-        PowerDomain_Pixel() : xPowerDomain() {}    // Link domain to powerDomains
-        PDType id() override { return pwr4_Pixel; } // define ID
-        const char* name() override { return "PIX"; }  // define name
-        void Setup() override {
-            //stm32l4_gpio_pin_configure(GPIO_PIN_PB2, GPIO_MODE_ANALOG | GPIO_OTYPE_PUSHPULL | GPIO_OSPEED_LOW | GPIO_PUPD_NONE);  // Power OFF
-        }
-        void SetPower(bool newState) {   // Switches power domain ON/OFF
-            // if (newState) 
-            //     stm32l4_gpio_pin_configure(GPIO_PIN_PB2, GPIO_MODE_OUTPUT | GPIO_OTYPE_PUSHPULL | GPIO_OSPEED_LOW | GPIO_PUPD_PULLDOWN);    // Power ON
-            // else
-            //     //stm32l4_gpio_pin_configure(GPIO_PIN_PB2, GPIO_MODE_ANALOG | GPIO_OTYPE_PUSHPULL | GPIO_OSPEED_LOW | GPIO_PUPD_PULLDOWN);  // Power OFF
-            //     stm32l4_gpio_pin_configure(GPIO_PIN_PB2, GPIO_MODE_ANALOG | GPIO_OTYPE_PUSHPULL | GPIO_OSPEED_LOW | GPIO_PUPD_NONE);  // Power OFF
-
-        #ifdef DIAGNOSE_POWER
-            PrintPowerState(newState);
-        #endif // DIAGNOSE_POWER
-            
-        }
-    }xpd_pixel;  // one object must exist
-
+   
     class PowerDomain_Amplif : public xPowerDomain {
     public:            
         PowerDomain_Amplif() : xPowerDomain() {}    // Link domain to powerDomains
@@ -457,17 +436,17 @@
 
         // Keep power ON until timeout on all subscribed domains. Turns domains ON if needed.
         // Returns true if subscriber went on just now
-        // If specified, timeout_ must point to a vector of uint32_t with the tineout value in millis for each subscribed domain, e.g. 'RequestPower(&(const uint32_t t=100));' or 'RequestPower(&(const uint32_t[] t={100,200}));'
+        // If specified, newTimeout must point to a vector of uint32_t with the tineout value in millis for each subscribed domain, e.g. 'RequestPower(&(const uint32_t t=100));' or 'RequestPower(&(const uint32_t[] t={100,200}));'
         // If not specified, domain-specific timeout will be applied to each subscribed domain
-        bool RequestPower(uint32_t* timeout_ = 0) {
+        bool RequestPower(uint32_t* newTimeout = 0) {
             bool retVal = false;
             if (!powerman.domains) return false;        // no subscribed domain
             
             // 1. Reset timeout & power ON if needed
             for (xPowerDomain *pd = powerman.domains; pd; pd = pd->next) {
                 if (pd->id() & subscribedDomains) { // domain is subscribed, will request power
-                    if (!timeout_) pd->ResetTimeout();    // use domain timeout
-                    else pd->ResetTimeout(*timeout_++);    // use specified timeout
+                    if (!newTimeout) pd->ResetTimeout();    // use domain timeout
+                    else pd->ResetTimeout(*newTimeout++);    // use specified timeout
                     if (!(powerman.powerState & pd->id())) {  // turn domain on if it's off
                         pd->SetPower(true);         
                         powerman.powerState |= pd->id();     // mark domain is on
