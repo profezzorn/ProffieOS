@@ -57,6 +57,22 @@
 #include CONFIG_FILE
 #undef CONFIG_TOP
 
+#if !defined(ENABLE_AUDIO) && !defined(DISABLE_AUDIO)
+#define ENABLE_AUDIO
+#endif
+
+#if !defined(ENABLE_MOTION) && !defined(DISABLE_MOTION)
+#define ENABLE_MOTION
+#endif
+
+#if !defined(ENABLE_WS2811) && !defined(DISABLE_WS2811)
+#define ENABLE_WS2811
+#endif
+
+#if !defined(ENABLE_SD) && !defined(DISABLE_SD)
+#define ENABLE_SD
+#endif
+
 #ifndef BOOT_VOLUME
 #define BOOT_VOLUME VOLUME
 #endif
