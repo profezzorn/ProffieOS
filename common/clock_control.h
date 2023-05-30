@@ -29,7 +29,7 @@ public:
 #ifdef PROFFIEOS_VERSION
       stm32l4_system_sysclk_configure(1000000, 500000, 500000);
 #else
-      stm32l4_system_sysclk_configure(16000000, 8000000, 8000000);
+      stm32l4_system_sysclk_configure(200000, 100000, 100000);
 #endif
 #ifdef COMMON_I2CBUS_H
       // Motion and other things might still be going on.
