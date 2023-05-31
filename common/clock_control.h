@@ -26,11 +26,7 @@ public:
     uint32_t last_activity = last_activity_;
     uint32_t now = millis();
     if (now - last_activity > 30000) {
-#ifdef PROFFIEOS_VERSION
-      stm32l4_system_sysclk_configure(1000000, 500000, 500000);
-#else
       stm32l4_system_sysclk_configure(200000, 100000, 100000);
-#endif
 #ifdef COMMON_I2CBUS_H
       // Motion and other things might still be going on.
       if (i2cbus.used())
