@@ -18,6 +18,7 @@ Optional defines:
   #define ENABLE_BLASTER_AUTO           - DEPRECATED. Enable Autofire/rapid fire mode. Please replace with BLASTER_ENABLE_AUTO.
   #define BLASTER_ENABLE_AUTO           - Enable Autofire/rapid fire mode.
   #define BLASTER_DEFAULT_MODE		- Sets the mode at startup MODE_STUN|MODE_KILL|MODE_AUTO. Defaulst to MODE_STUN.
+  #define BLASTER_DEFAULT_POWER_STATE	- Sets the state at startup as ON|OFF, regardless of poweron.wav presence.
   #define BLASTER_SHOTS_UNTIL_EMPTY 15  - Whatever number, not defined = unlimited shots.
   #define BLASTER_JAM_PERCENTAGE        - Range 0-100 percent. If this is not defined, random from 0-100%.
 
@@ -32,6 +33,7 @@ This prop manages up to six different buttons.
   -Weapon will always start on the default mode (define with BLASTER_DEFAULT_MODE,
   STUN is default).
   Default is to powered on if it finds poweron.wav file present or off otherwise.
+  Use BLASTER_DEFAULT_POWER_STATE to define a different behavior.
   
     Fire 			- Click FIRE.
     Cycle Modes			- Click MODE.
@@ -238,15 +240,23 @@ public:
     SaberBase::DoEffect(EFFECT_CLIP_IN, 0);
   }
 
-  // Pull in parent's SetPreset, but turn the blaster on.
+  // Pull in parent's SetPreset, but turn the blaster on according to defines.
   void SetPreset(int preset_num, bool announce) override {
     PropBase::SetPreset(preset_num, announce);
-
-    if (!SFX_poweron) {
-      if (!SaberBase::IsOn()) {
-        On();
-      }
-    }
+      #if (defined BLASTER_DEFAULT_POWER && BLASTER_DEFAULT_POWER_STATE == ON)
+	if (!SaberBase::IsOn()) {
+          On();
+        }
+      #elif (defined BLASTER_DEFAULT_POWER && BLASTER_DEFAULT_POWER_STATE == OFF)
+       if (SaberBase::IsOn()) {
+          Off();
+       }
+      #else
+        if (!SFX_poweron) {
+          if (!SaberBase::IsOn()) {
+            On();
+          }
+        }
   }
 
   void LowBatteryOff() override {
