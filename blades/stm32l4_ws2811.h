@@ -262,9 +262,8 @@ public:
     
     if (g_PWMInstances[instance] != WS2811_TIMER_INSTANCE) {
       TRACE(BLADE, "proxy");
-      // Proxy mode, make sure GPIO A/B doesn't fall asleep
-      RCC->AHB2SMENR |= (RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN);
-      
+      // Proxy mode, make sure GPIO A/B/C doesn't fall asleep
+      RCC->AHB2SMENR |= (RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN | RCC_AHB2SMENR_GPIOCSMEN);
       stm32l4_timer_enable(timer(),
 			   divider -1,
 			   pulse_len -1,
@@ -497,8 +496,8 @@ public:
     stm32l4_dma_disable(&dma2_);
     stm32l4_dma_disable(&dma3_);
     ws2811_dma_done = true;
-    // GPIO A/B may sleep on WFE now.
-    RCC->AHB2SMENR &= ~(RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN);
+    // GPIO A/B/C may sleep on WFE now.
+    RCC->AHB2SMENR &= ~(RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN | RCC_AHB2SMENR_GPIOCSMEN);
     client_->done_callback();
     noInterrupts();
     client_ = client_->next_ws2811_client_;
