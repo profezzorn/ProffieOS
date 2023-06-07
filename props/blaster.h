@@ -255,7 +255,8 @@ public:
     }
   }
 
-  // Self-destruct pulled from detonator 
+  // Self-destruct pulled from Detonator. Inherit prop and add PollNextAction() to their loop function.
+  // BEGINING of Detonator Code.
   bool armed_ = false;
 
   enum NextAction {
@@ -321,11 +322,7 @@ public:
     }
   }
 
-  void Loop() override {
-    PropBase::Loop();
-    PollNextAction();
-  }
-
+// END of Detonator Code.
   // Make clash do nothing except unjam if jammed.
   void Clash(bool stab, float strength) override {
     if (is_jammed_) {
