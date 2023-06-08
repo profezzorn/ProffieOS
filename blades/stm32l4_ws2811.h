@@ -260,7 +260,7 @@ public:
     ws2811_dma_done = false;
     pin_ = pin;
     
-    if (g_PWMInstances[instance] != WS2811_TIMER_INSTANCE) {
+    if (instance == PWM_INSTANCE_NONE || g_PWMInstances[instance] != WS2811_TIMER_INSTANCE) {
       TRACE(BLADE, "proxy");
       // Proxy mode, make sure GPIO A/B/C doesn't fall asleep
       RCC->AHB2SMENR |= (RCC_AHB2SMENR_GPIOASMEN | RCC_AHB2SMENR_GPIOBSMEN | RCC_AHB2SMENR_GPIOCSMEN);
