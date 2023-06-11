@@ -48,6 +48,13 @@ public:
 
 volatile bool ws2811_dma_done = true;
 
+class NoInterruptScope {
+public:
+  NoInterruptScope() { noInterrupts(); }
+  ~NoInterruptScope() { interrupts(); }
+};
+
+
 class WS2811EngineSTM32L4 : public WS2811Engine {
 public:
 #if PROFFIEBOARD_VERSION == 3
@@ -64,8 +71,12 @@ public:
 
   void kick() override {
     TRACE(BLADE, "kick");
-    if (!ws2811_dma_done) return;
-    if (!client_) return;
+    {
+      NoInterruptScope NI;
+      if (!ws2811_dma_done) return;
+      if (!client_) return;
+      ws2811_dma_done = false;
+    }
     PROFFIEOS_ASSERT(color_buffer_size);
     show();
   }
@@ -74,16 +85,17 @@ public:
     TRACE(BLADE, "queue");
     client->next_ws2811_client_ = nullptr;
     PROFFIEOS_ASSERT(color_buffer_size);
-    noInterrupts();
-    if (!client_) {
-      last_client_ = client_ = client;
-    } else {
-      PROFFIEOS_ASSERT(client_ != client);
-      PROFFIEOS_ASSERT(last_client_ != client);
-      last_client_->next_ws2811_client_ = client;
-      last_client_ = client;
+    {
+      NoInterruptScope NI; 
+      if (!client_) {
+	last_client_ = client_ = client;
+      } else {
+	PROFFIEOS_ASSERT(client_ != client);
+	PROFFIEOS_ASSERT(last_client_ != client);
+	last_client_->next_ws2811_client_ = client;
+	last_client_ = client;
+      }
     }
-    interrupts();
     kick();
   }
 
@@ -157,7 +169,8 @@ public:
     stm32l4_dma_destroy(&dma2_);
     stm32l4_dma_destroy(&dma3_);
   }
-  
+
+private:
   static void flush_dma(stm32l4_dma_t *dma) {
     stm32l4_dma_enable(dma, &dma_done_callback_ignore, (void*)NULL);
     uint32_t foo;
@@ -229,7 +242,6 @@ public:
     int leds = client->num_leds();
     int frequency = client->frequency();
     TRACE(BLADE, "show enter");
-    while (!ws2811_dma_done) armv7m_core_yield();
 
     chunk_size_ = client->chunk_size();
     int total_chunks = (sizeof(displayMemory) - 1) / chunk_size_ - 1;
@@ -257,7 +269,6 @@ public:
     int pulse_len = timer_frequency / frequency;
     int instance = g_APinDescription[pin].pwm_instance;
     int divider = stm32l4_timer_clock(timer()) / timer_frequency;
-    ws2811_dma_done = false;
     pin_ = pin;
     
     if (instance == PWM_INSTANCE_NONE || g_PWMInstances[instance] != WS2811_TIMER_INSTANCE) {
@@ -268,6 +279,10 @@ public:
 			   divider -1,
 			   pulse_len -1,
 			   0 /* TIMER_OPTION_COUNT_PRELOAD */, NULL, NULL, 0);
+      // Enabling dma sometimes triggers an interrupt, this helps us ignore it.
+      stm32l4_dma_enable(&dma2_, &dma_done_callback_ignore, (void*)NULL);
+      stm32l4_dma_enable(&dma3_, &dma_done_callback_ignore, (void*)NULL);
+      
       stm32l4_dma_enable(&dma_, &dma_done_callback_ignore, (void*)this);
       if (CIRCULAR) {
 	stm32l4_dma_enable(&dma2_, &dma_refill_callback2, (void*)this);
@@ -383,6 +398,8 @@ public:
       client->set01(client->get_t0h(), client->get_t1h());
       Fill(false);
       
+      // Enabling dma sometimes triggers an interrupt, this helps us ignore it.
+      stm32l4_dma_enable(&dma_, &dma_done_callback_ignore, (void*)NULL);
       if (CIRCULAR) {
 	stm32l4_dma_enable(&dma_, &dma_refill_callback1, (void*)this);
       } else {
@@ -485,6 +502,8 @@ public:
     // Set the pin to low, normal output mode. This will keep the pin low even if we
     // re-use the timer for another show() call.
     digitalWrite(pin_, LOW);
+
+    stm32l4_timer_stop(timer());
     stm32l4_gpio_pin_configure(g_APinDescription[pin_].pin,
 			       (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_OUTPUT));
     stm32l4_timer_stop(timer());
