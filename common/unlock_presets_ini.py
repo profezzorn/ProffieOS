@@ -6,10 +6,13 @@ import sys
 class ProffieSafe:
     def __init__(self, filename):
         self.valid = False
-        self.f = open(filename, "rb")
+        try:
+            self.f = open(filename, "rb")
+        except FileNotFoundError:
+            return
 
         if self.read_uint32() != 0xFF1E5AFE:
-            return;
+            return
         
         checksum = self.read_uint32()
         iteration = self.read_uint32()
@@ -75,6 +78,9 @@ def main():
     if tmp.valid:
         if not ini.valid or tmp.iteration > ini.iteration:
             best = tmp
+    if not best.valid:
+        print ("No valid ini/tmp files found.")
+        exit(1)
     data = best.read()
     ini.close()
     tmp.close()
