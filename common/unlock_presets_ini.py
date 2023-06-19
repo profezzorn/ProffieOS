@@ -9,9 +9,11 @@ class ProffieSafe:
         try:
             self.f = open(filename, "rb")
         except FileNotFoundError:
+            print ("%s: Not found" % filename)
             return
 
         if self.read_uint32() != 0xFF1E5AFE:
+            print ("%s: wrong magic number" % filename)
             return
         
         checksum = self.read_uint32()
@@ -19,13 +21,17 @@ class ProffieSafe:
         length = self.read_uint32()
 
         if self.read_uint32() != 0xFF1E5AFE:
+            print ("%s: wrong magic number in second header" % filename)
             return;
 
         if self.read_uint32() != checksum:
+            print ("%s: second header doesn't match (checksum)" % filename)
             return
         if self.read_uint32() != iteration:
+            print ("%s: second header doesn't match (iteration)" % filename)
             return
         if self.read_uint32() != length:
+            print ("%s: second header doesn't match (length)" % filename)
             return
 
         self.f.seek(512)
@@ -33,6 +39,7 @@ class ProffieSafe:
         for x in range(0, length):
             c = (c * 997 + self.read_uint8()) & 0xFFFFFFFF
         if c != checksum:
+            print ("%s: Checksum doesn't match content. %x != %x" % (filename, c, checksum))
             return
 
         self.valid = True
