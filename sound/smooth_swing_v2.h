@@ -86,9 +86,6 @@ public:
     // Starts hum, etc.
     delegate_->SB_On();
     PickRandomSwing();
-    if (!A.player || !B.player) {
-      STDOUT.println("SmoothSwing V2 cannot allocate wav player.");
-    }
   }
   void SB_Off(OffType off_type) override {
     on_ = false;
@@ -120,6 +117,9 @@ public:
 
     switch (state_) {
       case SwingState::OFF:
+	if (!A.player || !B.player) {
+	  PickRandomSwing();
+	}
         if (speed < smooth_swing_config.SwingStrengthThreshold) {
 #if 1
           if (monitor.ShouldPrint(Monitoring::MonitorSwings)) {

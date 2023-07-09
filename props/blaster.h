@@ -1,33 +1,87 @@
-/* Basic blaster prop use.
+/*
+  blaster.h prop file
+  http://fredrik.hubbe.net/lightsaber/proffieos.html
+  Copyright (c) 2016-2023 Fredrik Hubinette
+  Fredrik Hubinette, Fernando da Rosa, Brian Conner, Matthew McGeary,
+  Scott Weber and Alejandro Belluscio.
+  Distributed under the terms of the GNU General Public License v3.
+  http://www.gnu.org/licenses/
 
-Default Startup Mode = STUN
-Add the following to your config file if so desired:
-        #define ENABLE_BLASTER_AUTO is you desire to enable AUTO mode.
-	#define BLASTER_SHOTS_UNTIL_EMPTY 15 (whatever number), leave undefined for infinite rounds.
-	#define BLASTER_JAM_PERCENTAGE if this is not defined, random from 0-100%.
-	#define BLASTER_DEFAULT_MODE as either of MODE_STUN|MODE_KILL|MODE_AUTO.
+  This prop file makes full use soundfont and display specification, while keeping features to a minimum
 
-Blaster Buttons: FIRE and MODE
-(Blaster is always on with power, unless dedicated Power button is installed.)
+Functionality:
+-------------------------------------------------------------------------------
+* PROP DEFINES *
+Optional #defines on your config file that customize the blaster's behavior.
+-------------------------------------------------------------------------------
+Optional defines:
+  #define ENABLE_BLASTER_AUTO           - DEPRECATED. Enable Autofire/rapid fire mode. Please replace with BLASTER_ENABLE_AUTO.
+  #define BLASTER_ENABLE_AUTO           - Enable Autofire/rapid fire mode.
+  #define BLASTER_DEFAULT_MODE		- Sets the mode at startup MODE_STUN|MODE_KILL|MODE_AUTO. Defaulst to MODE_STUN.
+  #define BLASTER_SHOTS_UNTIL_EMPTY 15  - Whatever number, not defined = unlimited shots.
+  #define BLASTER_JAM_PERCENTAGE        - Range 0-100 percent. If this is not defined, random from 0-100%.
 
-Cycle Modes -           Click MODE.
-Next Preset -           Long click and release MODE.
-Previous Preset -       Double click and hold MODE, release after a second.
-Reload -                Hold MODE until Reloaded. (Or Click Reload if dedicated button insatlled)
-Start/Stop Track -      Double click MODE.
-Fire -                  Click FIRE.
-Clip In -               Clip Detect pad Latched On. ( or Hold Momentary button)
-Clip out -              Clip Detect pad Latched Off. ( or release Momentary button)
-Unjam -                 Bang the blaster.
-- If there's a 3rd button for Power,
-Power On / Off -        Click POWER.
+-------------------------------------------------------------------------------
+* PROP BUTTONS *
+This prop manages up to six different buttons.
+-------------------------------------------------------------------------------
 
-Wavs to use for switching Modes:
-	mdstun.wav
-	mdkill.wav
-	mdauto.wav
-- If these are not present, mode.wav will be used for all modes.
-- If no mode.wav either, then Talkie voice speaks selected mode.
+*Dual Buttons Mode*
+ -Buttons: FIRE and MODE
+  This is the "stock" configuration.
+  -Weapon will always start on the default mode (define with BLASTER_DEFAULT_MODE,
+  STUN is default).
+  Default is to powered on if it finds poweron.wav file present or off otherwise.
+  
+    Fire 			- Click FIRE.
+    Cycle Modes			- Click MODE.
+    Next Preset			- Long click and release MODE.
+    Previous Preset		- Double click and hold MODE, release after a second.
+    Reload			- Hold MODE until Reloaded.
+    Start/Stop Track		- Double click MODE.
+    Unjam			- Bang the blaster.
+
+*Extra Buttons*
+-Button: POWER
+    Power On / Off		- Click POWER.
+
+-Button: RELOAD
+    Reload			- Hold RELOAD until Reloaded.
+	
+-Button: CLIP
+	Clip In			- Latch CLIP
+	Clip Out		- Unlatch CLIP
+
+
+-------------------------------------------------------------------------------
+* PROP SOUNDS *
+This prop manages the following sounds.
+-------------------------------------------------------------------------------
+
+bgnauto 	Played when auto fire starts.
+auto 		Played while auto fire is going.
+endauto 	Played when auto fire ends.
+blast 		Is the semi-automatic fire sound. You can have as many as you want.
+boot 		Played when ProffieOS boots up.
+clipin 		Sound made when inserting a clip.
+clipout 	Sound made when dropping a clip.
+empty 		Sound when the weapon is out of rounds.
+font 		Name of the preset.
+full 		Sound made when the weapon is full of ammo.
+hum 		Constant sound looping while not firing.
+jam 		Sound made when the weapon jamed.
+unjam 		Sound made when unjamming the blaster.
+mode 		Sound made when switching mode (if mdkill, mdstun and/or mdauto not present). If none present, Talkie will be used instead.
+plioff 		Played while retracting the PLI bargraph.
+plion 		Played while extending the PLI bargraph.
+poweron 	If this file is present, the blaster will start once it is turned on. If not, you will need a Power button to power it on.
+range 		Sounds of increasing weapon range/power.
+stun 		Firing sound for stun mode.
+reload		Reloading sound.
+mdkill		Sound made when switching to KILL mode
+mdstun		Sound made when switching to STUN mode
+mdauto		Sound made when switching to AUTO mode
+
 */
   
 #ifndef PROPS_BLASTER_H
@@ -87,7 +141,7 @@ public:
         SetBlasterMode(MODE_KILL);
         return;
       case MODE_KILL:
-#ifdef ENABLE_BLASTER_AUTO
+#if defined (ENABLE_BLASTER_AUTO) || defined (BLASTER_ENABLE_AUTO)
         SetBlasterMode(MODE_AUTO);
 #else
         SetBlasterMode(MODE_STUN);
@@ -201,7 +255,8 @@ public:
     }
   }
 
-  // Self-destruct pulled from detonator 
+  // Self-destruct pulled from Detonator. Inherit prop and add PollNextAction() to their loop function.
+  // BEGINING of Detonator Code.
   bool armed_ = false;
 
   enum NextAction {
@@ -267,11 +322,7 @@ public:
     }
   }
 
-  void Loop() override {
-    PropBase::Loop();
-    PollNextAction();
-  }
-
+// END of Detonator Code.
   // Make clash do nothing except unjam if jammed.
   void Clash(bool stab, float strength) override {
     if (is_jammed_) {
