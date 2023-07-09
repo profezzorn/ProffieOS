@@ -6,23 +6,32 @@ import sys
 class ProffieSafe:
     def __init__(self, filename):
         self.valid = False
-        self.f = open(filename, "rb")
+        try:
+            self.f = open(filename, "rb")
+        except FileNotFoundError:
+            print ("%s: Not found" % filename)
+            return
 
         if self.read_uint32() != 0xFF1E5AFE:
-            return;
+            print ("%s: wrong magic number" % filename)
+            return
         
         checksum = self.read_uint32()
         iteration = self.read_uint32()
         length = self.read_uint32()
 
         if self.read_uint32() != 0xFF1E5AFE:
+            print ("%s: wrong magic number in second header" % filename)
             return;
 
         if self.read_uint32() != checksum:
+            print ("%s: second header doesn't match (checksum)" % filename)
             return
         if self.read_uint32() != iteration:
+            print ("%s: second header doesn't match (iteration)" % filename)
             return
         if self.read_uint32() != length:
+            print ("%s: second header doesn't match (length)" % filename)
             return
 
         self.f.seek(512)
@@ -30,6 +39,7 @@ class ProffieSafe:
         for x in range(0, length):
             c = (c * 997 + self.read_uint8()) & 0xFFFFFFFF
         if c != checksum:
+            print ("%s: Checksum doesn't match content. %x != %x" % (filename, c, checksum))
             return
 
         self.valid = True
@@ -75,6 +85,9 @@ def main():
     if tmp.valid:
         if not ini.valid or tmp.iteration > ini.iteration:
             best = tmp
+    if not best.valid:
+        print ("No valid ini/tmp files found.")
+        exit(1)
     data = best.read()
     ini.close()
     tmp.close()

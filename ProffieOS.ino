@@ -44,11 +44,6 @@
 // #define CONFIG_FILE "config/testconfig.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 
-#ifdef CONFIG_FILE_TEST
-#undef CONFIG_FILE
-#define CONFIG_FILE CONFIG_FILE_TEST
-#endif
-
 #ifndef CONFIG_FILE
 #error Please set CONFIG_FILE as shown above.
 #endif
@@ -56,6 +51,22 @@
 #define CONFIG_TOP
 #include CONFIG_FILE
 #undef CONFIG_TOP
+
+#if !defined(ENABLE_AUDIO) && !defined(DISABLE_AUDIO)
+#define ENABLE_AUDIO
+#endif
+
+#if !defined(ENABLE_MOTION) && !defined(DISABLE_MOTION)
+#define ENABLE_MOTION
+#endif
+
+#if !defined(ENABLE_WS2811) && !defined(DISABLE_WS2811)
+#define ENABLE_WS2811
+#endif
+
+#if !defined(ENABLE_SD) && !defined(DISABLE_SD)
+#define ENABLE_SD
+#endif
 
 #ifndef BOOT_VOLUME
 #define BOOT_VOLUME VOLUME
@@ -65,7 +76,7 @@
 #define SAVE_VOLUME
 #define SAVE_PRESET
 #define SAVE_COLOR_CHANGE
-#define SAVE_DYNAMIC_DIMMING
+#define SAVE_BLADE_DIMMING
 #endif
 
 #ifdef ENABLE_ALL_EDIT_OPTIONS
@@ -80,6 +91,9 @@
 
 // #define ENABLE_DEBUG
 
+#ifdef KEEP_SAVEFILES_WHEN_PROGRAMMING
+#warning Your config file has KEEP_SAVEFILES_WHEN_PROGRAMMING in it. If you experience problems, please remove it and try again before asking for help. For more information, see: https://pod.hubbe.net/config/keeping-edits-when-uploading.html
+#endif
 
 //
 // OVERVIEW

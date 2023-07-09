@@ -309,11 +309,29 @@ public:
   // This function waits until the volume is mounted.
   static bool Begin() {
     if (mounted_) return true;
+#ifdef VERBOSE_SD_ERRORS
+    int error = f_initvolume();
+    if (error != F_NO_ERROR) {
+      STDERR << "SD init error: " << error << "\n";
+      extern void SaySDInitError(int error);
+      SaySDInitError(error);
+      return false;
+    }
+    error = f_checkvolume();
+    if (error != F_NO_ERROR) {
+      STDERR << "SD check error: " << error << "\n";
+      extern void SaySDCheckError(int error);
+      SaySDCheckError(error);
+      DOSFS.end();
+      return false;
+    }
+#else    
     if (!DOSFS.begin()) return false;
     if (!DOSFS.check()) {
       DOSFS.end();
       return false;
     }
+#endif    
     return mounted_ = true;
   }
   static void End() {
