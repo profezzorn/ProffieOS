@@ -175,6 +175,13 @@
 #include <SD.h>
 #include <SPI.h>
 
+#ifdef abs
+#undef abs
+namespace {
+template<typename T> constexpr auto abs(T x) -> decltype(-x) { return x < 0 ? -x : x; }
+}
+#endif
+
 #else // TEENSYDUINO
 #define digitalWriteFast digitalWrite
 #endif // TEENSYDUINO
@@ -1404,7 +1411,6 @@ SSD1306Template<128, uint32_t, DISPLAY_POWER_PINS> display(&display_controller);
 #ifdef INCLUDE_SSD1306
 #include "display/ssd1306.h"
 #endif
-
 
 #ifdef ENABLE_MOTION
 
