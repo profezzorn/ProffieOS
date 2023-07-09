@@ -53,6 +53,8 @@ enum SaberPins {
   
   trigger9Pin = 9,
   trigger10Pin = 14,
+
+  motionSensorInterruptPin = -1,
 };
 
 #ifndef TEENSYDUINO
