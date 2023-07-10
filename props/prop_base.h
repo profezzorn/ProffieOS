@@ -547,7 +547,7 @@ public:
     EnableBooster();
     BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
-    STDERR << "ID: " << ret << "\n";
+    PVLOG_STATUS << "ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
     talkie.Say(spI);
     talkie.Say(spD);
@@ -618,7 +618,7 @@ public:
   // Blade driver, style and sound font.
   void FindBlade() {
     size_t best_config = FindBestConfig();
-    STDOUT << "blade = " << best_config << "\n";
+    PVLOG_STATUS << "blade = " << best_config << "\n";
     current_config = blades + best_config;
 
 #define ACTIVATE(N) do {     \
@@ -673,7 +673,7 @@ public:
   }
 
   void SaveState(int preset) {
-    STDOUT.println("Saving Current Preset");
+    PVLOG_NORMAL << "Saving Current Preset\n";
     savestate_.preset = preset;
     savestate_.WriteToSaveDir("curstate");
   }
@@ -702,7 +702,7 @@ public:
 
   void SaveGlobalState() {
 #if defined(SAVE_VOLUME) || defined(SAVE_BLADE_DIMMING) || defined(SAVE_CLASH_THRESHOLD)
-    STDOUT.println("Saving Global State");
+    PVLOG_STATUS << "Saving Global State\n";
 #ifdef SAVE_CLASH_THRESHOLD
     saved_global_state.clash_threshold = GetCurrentClashThreshold();
 #endif
@@ -1176,22 +1176,22 @@ public:
       handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
       ONCEPERBLADE(CHECK_SUPPORTS_COLOR_CHANGE)
       if (!handles_color_change) {
-        STDOUT << "Entering smooth color change mode.\n";
+	PVLOG_NORMAL << "Entering smooth color change mode.\n";
         current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
         current_tick_angle_ = fmodf(current_tick_angle_, M_PI * 2);
 
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
       } else {
 #ifdef COLOR_CHANGE_DIRECT
-        STDOUT << "Color change, TICK+\n";
+        PVLOG_NORMAL << "Color change, TICK+\n";
         SaberBase::UpdateVariation(1);
 #else
-        STDOUT << "Entering stepped color change mode.\n";
+	PVLOG_NORMAL << "Entering stepped color change mode.\n";
         SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
 #endif
       }
     } else {
-      STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
+      PVLOG_NORMAL << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
     }
   }
