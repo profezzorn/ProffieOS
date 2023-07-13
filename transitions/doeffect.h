@@ -67,7 +67,7 @@ public:
 template<class TRANSITION, BladeEffectType EFFECT, int WAVNUM = -1, int LOCATION = -1> using TrDoEffect = TrDoEffectX<TRANSITION, EFFECT, Int<WAVNUM>, Int<LOCATION>>;
 
 
-template<class TRANSITION, BladeEffectType EFFECT, class WAVNUM, class LOCATION>
+template<class TRANSITION, BladeEffectType EFFECT, class WAVNUM = Int<-1>, class LOCATION = Int<-1>>
 class TrDoEffectAlwaysX : public TRANSITION {
 public:
   void begin() {
