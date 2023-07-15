@@ -467,9 +467,9 @@ public:
 // Revert colorchange witout saving (reset to Variation == 0)
   void ResetColorChangeMode() {
     if (!current_style()) return;
-      STDOUT << "Reset Color Variation" << "\n";
+      PVLOG_NORMAL << "Reset Color Variation\n";
       SetVariation(0);
-      STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
+      PVLOG_NORMAL << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
   }
 
@@ -485,7 +485,7 @@ public:
         beeper.Beep(0.1, 2000);
         beeper.Beep(0.1, 3000);
       }
-      STDOUT << "Enter Volume Menu\n";
+      PVLOG_NORMAL << "Enter Volume Menu\n";
       SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
     } else {
       mode_volume_ = false;
@@ -496,7 +496,7 @@ public:
         beeper.Beep(0.1, 2000);
         beeper.Beep(0.1, 1000);
       }
-      STDOUT << "Exit Volume Menu\n";
+      PVLOG_NORMAL << "Exit Volume Menu\n";
     }
   }
 
@@ -512,8 +512,8 @@ public:
         beeper.Beep(0.10, 2000);
         beeper.Beep(0.20, 2500);
       }
-      STDOUT << "Volume Up - Current Volume: ";
-      STDOUT << dynamic_mixer.get_volume() << "\n";
+      PVLOG_NORMAL << "Volume Up - Current Volume: ";
+      PVLOG_NORMAL << dynamic_mixer.get_volume() << "\n";
     } else {
       QuickMaxVolume();
     }
@@ -531,8 +531,8 @@ public:
         beeper.Beep(0.10, 2000);
         beeper.Beep(0.20, 1500);
       }
-      STDOUT << "Volume Down - Current Volume: ";
-      STDOUT << dynamic_mixer.get_volume() << "\n";
+      PVLOG_NORMAL << "Volume Down - Current Volume: ";
+      PVLOG_NORMAL << dynamic_mixer.get_volume() << "\n";
     } else {
       QuickMinVolume();
     }
@@ -546,7 +546,7 @@ public:
     } else {
       beeper.Beep(0.5, 3000);
     }
-    STDOUT << "Maximum Volume\n";
+    PVLOG_NORMAL << "Maximum Volume\n";
   }
 
   void QuickMinVolume() {
@@ -558,7 +558,7 @@ public:
       } else {
         beeper.Beep(0.5, 1000);
       }
-      STDOUT << "Minimum Volume\n";
+      PVLOG_NORMAL << "Minimum Volume\n";
   }
 
   void DetectMenuTurn() {
@@ -571,7 +571,7 @@ public:
           beeper.Beep(0.05, 595);
           beeper.Beep(0.05, 525);
           beeper.Beep(0.05, 475);
-          STDOUT << "**** Blade Too High - Tilt Down \n";
+          PVLOG_NORMAL << "**** Blade Too High - Tilt Down \n";
           beep_delay_ = millis();
           return;
         } else {
@@ -586,7 +586,7 @@ public:
           beeper.Beep(0.05, 625);
           beeper.Beep(0.05, 693);
           beeper.Beep(0.05, 950);
-          STDOUT << "**** Blade Too Low - Tilt Up \n";
+          PVLOG_NORMAL << "**** Blade Too Low - Tilt Up \n";
           beep_delay_ = millis();
           return;
         } else {
@@ -618,7 +618,7 @@ public:
 #endif
         FastOn();
 #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-        STDOUT << "Entering Battle Mode\n";
+        PVLOG_NORMAL << "Entering Battle Mode\n";
         battle_mode_ = true;
 #endif
       return true;
@@ -645,7 +645,7 @@ public:
           millis() - saber_off_time_ > 1000) {
           FastOn();
 #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-          STDOUT << "Entering Battle Mode\n";
+          PVLOG_NORMAL << "Entering Battle Mode\n";
           battle_mode_ = true;
 #endif
           last_twist_ = millis();
@@ -684,7 +684,7 @@ public:
       if (millis() - saber_off_time_ > 1000) {
         FastOn();
 #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-        STDOUT << "Entering Battle Mode\n";
+        PVLOG_NORMAL << "Entering Battle Mode\n";
         battle_mode_ = true;
 #endif
       }
@@ -701,7 +701,7 @@ public:
       if (millis() - saber_off_time_ > 1000) {
         FastOn();
 #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-        STDOUT << "Entering Battle Mode\n";
+        PVLOG_NORMAL << "Entering Battle Mode\n";
         battle_mode_ = true;
 #endif
       }
@@ -823,7 +823,7 @@ public:
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
         sound_library_.SayVolts();
-        STDOUT << "Battery Voltage: " << battery_monitor.battery() << "\n";
+        PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
@@ -834,7 +834,7 @@ public:
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
         sound_library_.SayPercent();
-        STDOUT << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
+        PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
@@ -842,8 +842,8 @@ public:
 // On Demand Battery Level
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
       if (!mode_volume_) {
-        STDOUT << "Battery Voltage: " << battery_monitor.battery() << "\n";
-        STDOUT << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
+        PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
+        PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       } else {
         QuickMinVolume();
@@ -881,7 +881,7 @@ public:
       if (millis() - last_blast_ < 1000) {
         SaberBase::DoBlast();
         last_blast_ = millis();
-        STDOUT << "Auto Swing Blast mode\n";
+        PVLOG_NORMAL << "Auto Swing Blast mode\n";
       }
       break;
 #endif
@@ -941,7 +941,7 @@ public:
       }
 #ifndef BC_NO_BM
       if (!battle_mode_) {
-        STDOUT << "Entering Battle Mode\n";
+        PVLOG_NORMAL << "Entering Battle Mode\n";
         battle_mode_ = true;
         if (SFX_bmbegin) {
           hybrid_font.PlayCommon(&SFX_bmbegin);
@@ -949,7 +949,7 @@ public:
           hybrid_font.DoEffect(EFFECT_FORCE, 0);
         }
       } else {
-        STDOUT << "Exiting Battle Mode\n";
+        PVLOG_NORMAL << "Exiting Battle Mode\n";
         battle_mode_ = false;
         if (SFX_bmend) {
           hybrid_font.PlayCommon(&SFX_bmend);
@@ -1125,6 +1125,7 @@ public:
           beeper.Beep(0.16, 525);
           beeper.Beep(1.1, 950);
           beeper.Beep(0.5, 693);
+          PVLOG_VERBOSE << "The Force will be with you...always.\n";
         }
         return;
       // Gesture on, bybass preon
