@@ -209,10 +209,10 @@ class Effect {
     }
 
     if (type_if_found == FilePattern::NONREDUNDANT_SUBDIRS &&
-	*rest == '/' &&
-  PO_isDigit(rest[1]) &&
-  PO_isDigit(rest[2]) &&
-  PO_isDigit(rest[3])) {
+    *rest == '/' &&
+    PO_isDigit(rest[1]) &&
+    PO_isDigit(rest[2]) &&
+    PO_isDigit(rest[3])) {
       int sub = strtol(rest+1, nullptr, 10);
       sub_files_ = std::max<int>(sub_files_, sub + 1);
       rest += 4;
