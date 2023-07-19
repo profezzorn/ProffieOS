@@ -504,7 +504,10 @@ public:
 #ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num + 1);
 #endif
+
+#ifndef DISABLE_FAST_PRESET_CHANGE
     SetPresetFast(current_preset_.preset_num + 1);
+#endif
   }
 
   // Go to the previous Preset.
@@ -520,7 +523,10 @@ public:
 #ifdef SAVE_PRESET
     SaveState(current_preset_.preset_num - 1);
 #endif
+
+#ifndef DISABLE_FAST_PRESET_CHANGE
     SetPresetFast(current_preset_.preset_num - 1);
+#endif
   }
 
   // Rotates presets backwards and saves.
