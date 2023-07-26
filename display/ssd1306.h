@@ -49,6 +49,7 @@ public:
   virtual void Page() = 0;
   virtual void SB_Top() = 0;
   virtual Screen GetScreen() = 0;
+  virtual void SB_IsOn(bool* on) = 0;
 };
 
 template<int Width, class col_t>
@@ -628,10 +629,8 @@ public:
     }
   }
 
-  // TODO: Don't update the display when we don't need to
-  // and return false here so that we can go into lower power modes.
   void SB_IsOn(bool* on) override {
-    *on = on_;
+    display_->SB_IsOn(on);
   }
 
   void SetScreenNow(Screen screen) {
@@ -984,6 +983,11 @@ public:
     return controller_->GetScreen();
   }
 
+  // TODO: Don't update the display when we don't need to
+  // and return false here so that we can go into lower power modes.
+  void SB_IsOn(bool* on) override {
+    *on = on_;
+  }
 
   void Loop() override {
 #ifdef USB_CLASS_MSC
