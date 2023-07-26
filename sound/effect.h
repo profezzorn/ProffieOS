@@ -571,7 +571,7 @@ class Effect {
 
   static void ScanOneDirectory(const char* dir) {
     STDOUT.print("Scanning sound font: ");
-    STDOUT.print(dir);
+    STDOUT << dir << "\n";
 
 #ifdef ENABLE_SERIALFLASH
     // Scan serial flash.
