@@ -819,22 +819,32 @@ public:
 
 // Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+      if (battery_monitor.battery() < 0.5) {
+        sound_library_.SayTheBatteryLevelIs();
+        sound_library_.SayDisabled();
+      }
       if (!mode_volume_) {
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
         sound_library_.SayVolts();
         PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
+        speaking_ = true;
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
 
 // Spoken Battery Level in percentage
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
+      if (battery_monitor.battery() < 0.5) {
+        sound_library_.SayTheBatteryLevelIs();
+        sound_library_.SayDisabled();
+      }
       if (!mode_volume_) {
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
         sound_library_.SayPercent();
         PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
+        speaking_ = true;
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
@@ -1115,6 +1125,10 @@ public:
         return;
       // On-Demand Battery Level
       case EFFECT_BATTERY_LEVEL:
+        if (speaking_) {
+          speaking_ = false;
+          return;
+        }
         if (SFX_battery) {
           hybrid_font.PlayCommon(&SFX_battery);
         } else {
@@ -1169,6 +1183,8 @@ private:
   bool min_vol_reached_ = false;
   bool sequential_quote_ = false;
   bool spam_blast_ = false;
+  bool speaking_ = false;
+
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
