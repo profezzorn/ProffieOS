@@ -152,10 +152,46 @@ private:
 
 extern ConsoleHelper STDOUT;
 
+struct DevNullHelper {
+public:
+  template<typename T>
+  DevNullHelper& operator<<(T v) { return *this; }
+};
+
+DevNullHelper DEVNULL;
+
 #define DEFINE_COMMON_STDOUT_GLOBALS            \
 Print* default_output = &Serial;                \
 Print* stdout_output = &Serial;                 \
 ConsoleHelper STDOUT
 #define STDERR (*default_output)
+
+
+// Default log level.
+// Log level can be changed by undefining and re-defining PROFFIEOS_LOG_LEVEL.
+// This can be used to raise the log level in a particular code segment.
+// PVLOG() statements with log levels over PROFFIOS_LOG_LEVEL will generally
+// generate no code and take no memory.
+#ifndef PROFFIEOS_LOG_LEVEL
+#define PROFFIEOS_LOG_LEVEL 300
+#endif
+
+namespace {
+template<bool shouldlog> struct VlogClassSelector { static Print* get() { return default_output; } };
+template<> struct VlogClassSelector<false> { static DevNullHelper* get() { return &DEVNULL; } };
+};
+
+// 100 = errors
+// 200 = things you should probably know, like blade ID
+// 300 = normal information about what is happening (default level)
+// 400 = information helpful for debugging
+// 500 = repeated, spammy information you don't normally want
+#define PVLOG(V) (*VlogClassSelector<(V) <= PROFFIEOS_LOG_LEVEL>::get())
+
+#define PVLOG_ERROR   PVLOG(100)
+#define PVLOG_STATUS  PVLOG(200)
+#define PVLOG_NORMAL  PVLOG(300)
+#define PVLOG_DEBUG   PVLOG(400)
+#define PVLOG_VERBOSE PVLOG(500)
 
 #endif
