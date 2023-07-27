@@ -26,7 +26,9 @@ public:
     uint32_t last_activity = last_activity_;
     uint32_t now = millis();
     if (now - last_activity > 30000) {
-#ifdef PROFFIEBOARD_VERSION
+#if 0 // #ifdef PROFFIEBOARD_VERSION
+      // This saves power, but also casuses freezing.
+      // TODO: FIgure out why and re-enable.
       stm32l4_system_sysclk_configure(1000000, 500000, 500000);
 #else
       stm32l4_system_sysclk_configure(16000000, 8000000, 8000000);
