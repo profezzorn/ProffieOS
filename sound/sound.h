@@ -73,7 +73,7 @@ RefPtr<BufferedWavPlayer> GetOrFreeWavPlayer(Effect* e)  {
     }
   }
   if (p) {
-    STDERR << "KILING PLAYER " << WhatUnit(p) << "\n";
+    STDERR << "KILLING PLAYER " << WhatUnit(p) << "\n";
     p->set_fade_time(0.001);
     p->FadeAndStop();
     while (p->isPlaying()) {
