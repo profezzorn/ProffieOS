@@ -6129,6 +6129,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+        if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.twistoff) return true;
         if (menu_ || CheckShowColorCC()) return true;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
