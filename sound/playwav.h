@@ -141,7 +141,6 @@ private:
     len_ = 0;
     to_read_ = 0;
     ptr_ = end_;
-    run_.set(false);
     effect_.set(nullptr);
   }
 

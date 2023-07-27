@@ -18,6 +18,8 @@
 #define PROFFIE_TEST
 #define ENABLE_SD
 #define NO_REPEAT_RANDOM
+#define AUDIO_RATE 44100
+#define SCOPED_PROFILER() do {} while(0)
 
 #define CHECK(X) do {						\
     if (!(X)) { fprintf(stderr, "%s failed, line %d\n", #X, __LINE__); exit(1); } \
@@ -69,11 +71,20 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x > b) return b;
   return x;
 }
+int16_t clamptoi16(int32_t x) {
+  return clampi32(x, -32768, 32767);
+}
+int32_t clamptoi24(int32_t x) {
+  return clampi32(x, -8388608, 8388607);
+}
 // clamp(x, a, b) makes sure that x is between a and b.
 float clamp(float x, float a, float b) {
   if (x < a) return a;
   if (x > b) return b;
   return x;
+}
+float Fmod(float a, float b) {
+  return a - floorf(a / b) * b;
 }
 
 class Looper {
@@ -288,8 +299,82 @@ void test_effects() {
   CHECK_GLOB("testfont/hum/002/###.wav", name);
 }
 
+#include "playwav.h"
+
+#define STRIFY(X) std::string((char *)&(X), sizeof(X))
+
+std::string mkchunk(std::string chnk,
+		    std::string data) {
+  std::string ret = chnk;
+  uint32_t tmp = data.size();
+  ret += STRIFY(tmp);
+  ret += data;
+  return ret;
+}
+
+void mktestsample(int hz, const char* filename) {
+  std::string samples;
+  int16_t sample = 0;
+  for (int i = 0; i < 1024; i++) {
+    samples += STRIFY(sample);
+  }
+  struct Fmt {
+    uint16_t pcm = 1;
+    uint16_t channels = 1;
+    uint32_t rate = 0;
+    uint32_t byterate = 0;
+    uint16_t block_align = 2;
+    uint16_t bits_per_sample = 16;
+  };
+
+  Fmt fmt;
+  fmt.rate = hz;
+  fmt.byterate = hz * 2;
+  std::string wav = mkchunk("RIFF",
+			    "WAVE" +
+			    mkchunk("fmt ", STRIFY(fmt)) +
+			    mkchunk("data", samples));
+  FILE* f = fopen(filename, "wcb");
+  fwrite(wav.c_str(), 1, wav.size(), f);
+  fclose(f);
+}
+
+int readallsamples(PlayWav* wav) {
+  int ret = 0;
+  int16_t samples[44];
+
+  while (!wav->eof()) {
+    ret += wav->read(samples, 44);
+  }
+
+  return ret;
+}
+
+void test_playwav() {
+  mktestsample(44100,"test44k.wav");
+  mktestsample(22050,"test22k.wav");
+  mktestsample(48000,"test48k.wav");
+
+  PlayWav wav;
+  
+  wav.Play("test44k.wav");
+  CHECK_EQ(1023, readallsamples(&wav));
+
+  wav.Play("test22k.wav");
+  CHECK_EQ(2046, readallsamples(&wav));
+
+  // This should fail
+  wav.Play("test48k.wav");
+  CHECK_EQ(0, readallsamples(&wav));
+
+  // This should pass
+  wav.Play("test44k.wav");
+  CHECK_EQ(1023, readallsamples(&wav));
+}
+
 int main() {
   test_effects();
+  test_playwav();
 }
 
 #define PROFFIEOS_DEFINE_FUNCTION_STAGE
