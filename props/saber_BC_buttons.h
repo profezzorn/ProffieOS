@@ -1183,6 +1183,7 @@ private:
   bool min_vol_reached_ = false;
   bool sequential_quote_ = false;
   bool spam_blast_ = false;
+  // Avoid overlap of battery.wav when doing Spoken Battery Level
   bool speaking_ = false;
 
   uint32_t thrust_begin_millis_ = millis();
