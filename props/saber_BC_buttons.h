@@ -819,6 +819,7 @@ public:
 
 // Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+      // Avoid weird battery readings when using USB
       if (battery_monitor.battery() < 0.5) {
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayDisabled();
