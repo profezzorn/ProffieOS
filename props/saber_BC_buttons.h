@@ -70,8 +70,13 @@ Gesture Controls:
 #define BC_TWIST_OFF
 #define NO_BLADE_NO_GEST_ONOFF
 - If using blade detect, Gesture ignitions or retractions are disabled.
-  **NOTE** Only works when a BLADE_DETECT_PIN is defined. 
-
+  **NOTE** Only works when a BLADE_DETECT_PIN is defined.
+ 
+#define BC_NO_TWIST_PRESET_CHANGE
+ - Used to disable the ability to change presets while performing a twist gesture
+   when pointing the blade up or down. This is useful if you like to perform
+   twist gestures to turn the saber on or off at extreme angles.
+ 
 #define BC_FORCE_PUSH
 - This mode plays a force sound (or force push sound if the font contains it) with
   a controlled pushing gesture, and is always available, not just in Battle Mode.
@@ -625,15 +630,23 @@ public:
 #endif  // BC_SWING_ON
 
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
+
+#ifndef BC_NO_TWIST_PRESET_CHANGE
+
       // pointing down
       if (fusor.angle1() < - M_PI / 4) {
         previous_preset();
         return true;
       }
+
       // pointing up
       if (fusor.angle1() >  M_PI / 3) {
         next_preset();
-      } else {
+        return true;
+      }
+
+#endif  // BC_NO_TWIST_PRESET_CHANGE
+
        // NOT pointing up OR down
 #ifdef BC_TWIST_ON
         if (mode_volume_) return false;
