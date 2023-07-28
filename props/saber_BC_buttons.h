@@ -122,9 +122,8 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
                         * NOTE * Gesture ignitions using FastOn bypass preon.
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
-Next Preset           - Long click and release POW, or TWIST while pointing up.
-Prev Preset           - Double click and hold POW, release after a second (click then long click),
-                        or TWIST while pointing down.
+Next Preset           - Long click and release POW.
+Prev Preset           - Double click and hold POW, release after a second (click then long click).
 Play/Stop Track       - 4x click POW.
 Volume Menu:
                       * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
@@ -149,9 +148,8 @@ On-Demand Batt Level  - Double click POW.
 *************   WHILE SABER BLADE IS ON   ****************
 Play/Stop Track       - 4x click POW.
 Next Preset Fast      - Long click and release POW while pointing up.
-Prev Preset Fast      - Double click and release POW after a second
-                        while pointing up. (click then long click)
-                      * NOTE * Fast switching bypasses preon and font.wav.
+Prev Preset Fast      - Double click and hold POW, release after a second while pointing up. (click then long click)
+                        * NOTE * Fast switching bypasses preon and font.wav.
 Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold POW and Clash to temporarily
                         override the auto-lockup and do regular Clash.
@@ -215,9 +213,8 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
                         * NOTE * Gesture ignitions using FastOn bypass preon.
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
-Next Preset           - Long click and release POW, or TWIST while pointing up.
-Prev Preset           - Double click and hold POW, release after a second (click then long click),
-                        or TWIST while pointing down.
+Next Preset           - Long click and release POW.
+Prev Preset           - Double click and hold POW, release after a second (click then long click).
 Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
                       * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
@@ -244,7 +241,7 @@ Play/Stop Track       - Hold AUX + Double click POW.
 Next Preset Fast      - Hold AUX + Long click and release POW while pointing up.
 Prev Preset Fast      - Hold AUX + Double click and hold POW for a second
                         while pointing up. (click then long click)
-                      * NOTE * Fast switching bypasses preon and font.wav.
+                        * NOTE * Fast switching bypasses preon and font.wav.
 Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold any button and Clash to
                         temporarily override the auto-lockup and do regular Clash.
@@ -624,17 +621,6 @@ public:
       return true;
 #endif  // BC_SWING_ON
 
-    case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-      // pointing down
-      if (fusor.angle1() < - M_PI / 4) {
-        previous_preset();
-        return true;
-      }
-      // pointing up
-      if (fusor.angle1() >  M_PI / 3) {
-        next_preset();
-      } else {
-       // NOT pointing up OR down
 #ifdef BC_TWIST_ON
         if (mode_volume_) return false;
 #ifdef NO_BLADE_NO_GEST_ONOFF
@@ -651,7 +637,6 @@ public:
           last_twist_ = millis();
         }
 #endif  // BC_TWIST_ON
-      }
       return true;
 
 #ifdef BC_TWIST_OFF
