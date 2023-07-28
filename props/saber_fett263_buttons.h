@@ -5209,6 +5209,9 @@ SaberFett263Buttons() : PropBase() {}
               saved_gesture_control.gestureon = false;
               sound_library_.SayGesturesOff();
             }
+#ifdef FETT263_SAVE_GESTURE_OFF
+            SaveGestureState();
+#endif
           } else {
             StartMenu(MENU_VOLUME);
             if (SFX_vmbegin) {
@@ -5259,6 +5262,9 @@ SaberFett263Buttons() : PropBase() {}
             saved_gesture_control.gestureon = false;
             sound_library_.SayGesturesOff();
           }
+#ifdef FETT263_SAVE_GESTURE_OFF
+          SaveGestureState();
+#endif
         }
         return true;
 
@@ -6123,6 +6129,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
+        if (!saved_gesture_control.gestureon) return true;
         if (!saved_gesture_control.twistoff) return true;
         if (menu_ || CheckShowColorCC()) return true;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
