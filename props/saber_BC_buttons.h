@@ -1012,7 +1012,7 @@ public:
 
 // Power Save blade dimming - pointing up
 // Swap effect - NOT pointing up or down
-// Toggle seqential quote play - pointing down
+// Toggle sequential quote play - pointing down
 #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_ON):
 #else
