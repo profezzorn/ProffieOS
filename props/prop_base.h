@@ -773,14 +773,14 @@ public:
       v = diff.len();
 #endif
     }
-#if 0    
+#if 0
     static uint32_t last_printout=0;
     if (millis() - last_printout > 1000) {
       last_printout = millis();
       STDOUT << "ACCEL: " << accel
-       << " diff: " << diff
-       << " gyro: " << fusor.gyro_clash_value()
-       << " v = " << v << "\n";
+             << " diff: " << diff
+             << " gyro: " << fusor.gyro_clash_value()
+             << " v = " << v << "\n";
     }
 #endif
     // If we're spinning the saber or if loud sounds are playing, 
