@@ -773,23 +773,23 @@ public:
       v = diff.len();
 #endif
     }
-#if 0
+#if 0    
     static uint32_t last_printout=0;
     if (millis() - last_printout > 1000) {
       last_printout = millis();
       STDOUT << "ACCEL: " << accel
-	     << " diff: " << diff
-	     << " gyro: " << fusor.gyro_clash_value()
-	     << " v = " << v << "\n";
+       << " diff: " << diff
+       << " gyro: " << fusor.gyro_clash_value()
+       << " v = " << v << "\n";
     }
 #endif
-    // If we're spinning the saber or if loud sounds are playing,
+    // If we're spinning the saber or if loud sounds are playing, 
     // require a stronger acceleration to activate the clash.
     if (v > (CLASH_THRESHOLD_G + fusor.gyro().len() / 200.0)
 #if defined(ENABLE_AUDIO) && defined(AUDIO_CLASH_SUPPRESSION_LEVEL)
-			+ (dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 0.000001))
-#endif
-			) {    
+  + (dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 0.000001))
+#endif  
+      ) {    
       if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
         diff = -diff;
       }
