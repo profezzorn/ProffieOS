@@ -789,7 +789,7 @@ public:
 #if defined(ENABLE_AUDIO) && defined(AUDIO_CLASH_SUPPRESSION_LEVEL)
         + (dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 0.000001))
 #endif
-      ) {    
+      ) {
       if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
         diff = -diff;
       }
