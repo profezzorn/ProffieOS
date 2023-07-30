@@ -360,14 +360,14 @@ public:
   void SaveVolumeIfNeeded() {
     if (0
 #ifdef SAVE_VOLUME
-			|| dynamic_mixer.get_volume() != saved_global_state.volume
+      || dynamic_mixer.get_volume() != saved_global_state.volume
 #endif
 #ifdef SAVE_BLADE_DIMMING
-			|| SaberBase::GetCurrentDimming() != saved_global_state.dimming
+      || SaberBase::GetCurrentDimming() != saved_global_state.dimming
 #endif
 #ifdef SAVE_CLASH_THRESHOLD
-			|| GetCurrentClashThreshold() != saved_global_state.clash_threshold
-#endif
+      || GetCurrentClashThreshold() != saved_global_state.clash_threshold
+#endif  
       ) {
       SaveGlobalState();
     }
