@@ -74,7 +74,9 @@ public:
   
 private:
   volatile T value_;
+#ifndef PROFFIE_TEST  
   static_assert(sizeof(T) <= 4, "Atomic must be 32 bits or less.");
+#endif
 };
 
 #endif // PROFFIEOS_USE_ATOMICS

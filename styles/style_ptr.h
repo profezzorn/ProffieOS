@@ -125,6 +125,8 @@ StyleAllocator StylePtr(const char* default_arguments) {
   return new StyleFactoryWithDefault(StylePtr<STYLE>(), default_arguments);
 }
 
+// Same as StylePtr, but makes the style a "charging" style, which means
+// that you can't turn it on/off, and the battery low warning is disabled.
 template<class STYLE>
 StyleAllocator ChargingStylePtr() {
   static StyleFactoryImpl<ChargingStyle<STYLE> > factory;

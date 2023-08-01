@@ -58,10 +58,16 @@ const unsigned int maxLedsPerStrip = 196;
 // #define ENABLE_SERIALFLASH
 //#define ENABLE_SSD1306
 #define INCLUDE_SSD1306
-
 // #define ENABLE_DEBUG
 
 #define IDLE_OFF_TIME 100000
+
+#define ENABLE_POWER_FOR_ID PowerPINS<bladePowerPin1>
+#define BLADE_ID_CLASS ExternalPullupBladeID<bladeIdentifyPin, 33000>
+#define SHARED_POWER_PINS
+#define BLADE_ID_SCAN_MILLIS 100
+#define BLADE_ID_TIMES 10
+#define KILL_OLD_PLAYERS
 
 // #define BLADE_DETECT_PIN aux2Pin
 
@@ -268,6 +274,22 @@ BladeConfig blades[] = {
 //  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>>(), CONFIGARRAY(testing_presets) }
 //  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
 #endif
+#if 1 
+  // Testing configuration.
+//  { 130000, StringBladePtr<Blue3mmLED>(), CONFIGARRAY(testing_presets) }
+//  { 1, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>(), CONFIGARRAY(testing_presets) }
+  { 100000,
+//    DimBlade(10.0, SubBladeReverse(0, 143, WS2811BladePtr<144, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>())),
+    DimBlade(10.0, SubBladeReverse(0, 9, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>())),
+//    DimBlade(5.0, WS2811BladePtr<10, WS2811_800kHz | WS2811_GRB , bladePin, PowerPINS<bladePowerPin1>>()),
+//    SimpleBladePtr<CreeXPE2WhiteTemplate<550>, NoLED, NoLED, NoLED, bladePowerPin6, -1, -1, -1>(),
+    WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin2>>(),
+//    WS2811BladePtr<30, WS2811_800kHz | WS2811_GRB, blade2Pin, PowerPINS<bladePowerPin2>>(),
+//    SaviBladePtr<blade2Pin, PowerPINS<bladePowerPin2>>(),
+    CONFIGARRAY(testing_presets) },
+//  { 130000, WS2811BladePtr<97, WS2811_800kHz, blade2Pin, PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>>(), CONFIGARRAY(testing_presets) }
+//  { 130000, WS281XBladePtr<131, blade2Pin, Color8::RGBw>(), CONFIGARRAY(testing_presets) },
+#endif
 
 #if 0
   { NO_BLADE,
@@ -293,8 +315,8 @@ BladeConfig blades[] = {
 //LatchingButton PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
 
-Button FireButton(BUTTON_FIRE, auxPin, "fire");
-Button ModeButton(BUTTON_MODE_SELECT, powerButtonPin, "modeselect");
+//Button FireButton(BUTTON_FIRE, auxPin, "fire");
+//Button ModeButton(BUTTON_MODE_SELECT, powerButtonPin, "modeselect");
 
 // Button AuxButton(BUTTON_AUX, auxPin, "aux");
 // Button Aux2Button(BUTTON_AUX2, aux2Pin, "aux2");

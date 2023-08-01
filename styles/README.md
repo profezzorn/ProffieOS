@@ -1,7 +1,7 @@
 # Styles
 
 Style templates go in this directory. Styles are used to calculate the color for each pixel on the blade.
-Note that most styles takes other styles as arguments, and even basic colors like "RED" area really
+Note that most styles takes other styles as arguments, and even basic colors like "RED" are really
 style templates. This means that colors can easily be replaced with much more complicated and dynamic
 effects. Each style template needs at least two functions:
 

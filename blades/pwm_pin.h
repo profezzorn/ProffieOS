@@ -29,6 +29,7 @@ void SetupTimer(uint32_t instance) {
     
     stm32l4_timer_enable(&stm32l4_pwm[instance], divider -1, modulus -1, 0, NULL, NULL, 0);
     stm32l4_timer_start(&stm32l4_pwm[instance], false);
+
     if (instance != PWM_SYNC_INSTANCE)  {
       SetupTimer(PWM_SYNC_INSTANCE);
       // TIM16 cannot be synchronized in hardware, so let's do the best we can.
@@ -57,6 +58,22 @@ void TeardownTimer(uint32_t instance) {
   }
 }
 
+void LSanalogWrite(uint32_t pin, int value) {
+  TIM_TypeDef* TIM = stm32l4_pwm[g_APinDescription[pin].pwm_instance].TIM;
+  value >>= 1;
+  if (value < 0) value = 0;
+  if (value > 32768) value = 32768;
+  // stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, value, TIMER_CONTROL_PWM);
+  switch (g_APinDescription[pin].pwm_channel) {
+    case TIMER_CHANNEL_1: TIM->CCR1 = value; break;
+    case TIMER_CHANNEL_2: TIM->CCR2 = value; break;
+    case TIMER_CHANNEL_3: TIM->CCR3 = value; break;
+    case TIMER_CHANNEL_4: TIM->CCR4 = value; break;
+    case TIMER_CHANNEL_5: TIM->CCR5 = value; break;
+    case TIMER_CHANNEL_6: TIM->CCR6 = value; break;
+  }
+}
+
 void LSanalogWriteSetup(uint32_t pin) {
   // Handle the case the pin isn't usable as PIO
   if (pin >= NUM_TOTAL_PINS || g_APinDescription[pin].GPIO == NULL) {
@@ -73,6 +90,8 @@ void LSanalogWriteSetup(uint32_t pin) {
   uint32_t instance = g_APinDescription[pin].pwm_instance;
   SetupTimer(instance);
   stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, 0, TIMER_CONTROL_PWM);
+  // Wait for a complete cycle to make sure the internal state is clear before setting the output mode.
+  delayMicroseconds(1300); // 1.3ms
   stm32l4_gpio_pin_configure(g_APinDescription[pin].pin, (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
 }
 
@@ -81,21 +100,6 @@ void LSanalogWriteTeardown(uint32_t pin) {
   TeardownTimer(g_APinDescription[pin].pwm_instance);
 }
 
-void LSanalogWrite(uint32_t pin, int value) {
-  TIM_TypeDef* TIM = stm32l4_pwm[g_APinDescription[pin].pwm_instance].TIM;
-  value >>= 1;
-  if (value < 0) value = 0;
-  if (value > 32768) value = 32768;
-  // stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, value, TIMER_CONTROL_PWM);
-  switch (g_APinDescription[pin].pwm_channel) {
-    case TIMER_CHANNEL_1: TIM->CCR1 = value; break;
-    case TIMER_CHANNEL_2: TIM->CCR2 = value; break;
-    case TIMER_CHANNEL_3: TIM->CCR3 = value; break;
-    case TIMER_CHANNEL_4: TIM->CCR4 = value; break;
-    case TIMER_CHANNEL_5: TIM->CCR5 = value; break;
-    case TIMER_CHANNEL_6: TIM->CCR6 = value; break;
-  }
-}
 
 };
 #elif defined(ESP32)

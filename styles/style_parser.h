@@ -109,7 +109,10 @@ NamedStyle named_styles[] = {
     "stab color, melt size, swing color, swing option, emitter color, emitter size, "
     "preon color, preon option, preon size, "
     "retraction option, retraction time, retraction delay, retraction color, retract cooldown, "
-    "postoff color, off color, off option"
+    "postoff color, off color, off option, "
+    "2nd alt color, 3rd alt color, "
+    "2nd style option, 3rd alt option, "
+    "ignition bend option, retraction bend option"
   },
 };
 

@@ -8,7 +8,7 @@ public:
     CONFIG_VARIABLE2(humStart, 100);
     CONFIG_VARIABLE2(volHum, 15);
     CONFIG_VARIABLE2(volEff, 16);
-    CONFIG_VARIABLE2(ProffieOSHumDelay, 0.0f);
+    CONFIG_VARIABLE2(ProffieOSHumDelay, -1.0f);
     CONFIG_VARIABLE2(ProffieOSSwingSpeedThreshold, 250.0f);
     CONFIG_VARIABLE2(ProffieOSSwingVolumeSharpness, 0.5f);
     CONFIG_VARIABLE2(ProffieOSMaxSwingVolume, 2.0f);
@@ -16,17 +16,38 @@ public:
     CONFIG_VARIABLE2(ProffieOSSmoothSwingDucking, 0.2f);
     CONFIG_VARIABLE2(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE2(ProffieOSSlashAccelerationThreshold, 130.0f);
+
+#ifdef ENABLE_DISPLAY_CODE
     CONFIG_VARIABLE2(ProffieOSAnimationFrameRate, 0.0f);
-    CONFIG_VARIABLE2(ProffieOSFontImageDuration, 5000.0f);
-    CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
+    CONFIG_VARIABLE2(ProffieOSTextMessageDuration, -1.0f);
+    CONFIG_VARIABLE2(ProffieOSBootImageDuration, -1.0f);
+    CONFIG_VARIABLE2(ProffieOSFontImageDuration, 3000.0f);
     CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSClashImageDuration, 500.0f);
-    CONFIG_VARIABLE2(ProffieOSForceImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSForceImageDuration, 2000.0f);
+    CONFIG_VARIABLE2(ProffieOSOutImageDuration, 2000.0f);
+    CONFIG_VARIABLE2(ProffieOSInImageDuration, 2000.0f);
+    CONFIG_VARIABLE2(ProffieOSPstoffImageDuration, 2000.0f);
+    CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
+/* To-Do, possibly differently
+#ifdef OLED_USE_BLASTER_IMAGES
+    CONFIG_VARIABLE2(ProffieOSReloadImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSEmptyImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSJamImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClipinImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClipoutImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSDestructImageDuration, 10000.0f);
+#endif 
+*/
+#endif  // ENABLE_DISPLAY_CODE
+    
     CONFIG_VARIABLE2(ProffieOSMinSwingAcceleration, 0.0f);
     CONFIG_VARIABLE2(ProffieOSMaxSwingAcceleration, 0.0f);
 #ifdef ENABLE_SPINS
     CONFIG_VARIABLE2(ProffieOSSpinDegrees, 360.0f);
 #endif
+    CONFIG_VARIABLE2(ProffieOSSmoothSwingHumstart, 0);
+
     for (Effect* e = all_effects; e; e = e->next_) {
       char name[32];
       strcpy(name, "ProffieOS.");
@@ -105,8 +126,11 @@ public:
   // swing speed change is used to determine if it's a swing or a
   // slash. Defaults to 130 (degrees per second per second)
   float ProffieOSSlashAccelerationThreshold;
+#ifdef ENABLE_DISPLAY_CODE
   // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
+  // for OLED displays, the time a text message will display
+  float ProffieOSTextMessageDuration;
   // for OLED displays, the time a static BMP or loop will play when saber is off
   float ProffieOSFontImageDuration;
   // for OLED displays, the time an on.bmp will play
@@ -117,6 +141,31 @@ public:
   float ProffieOSClashImageDuration;
   // for OLED displays, the time a force.bmp will play
   float ProffieOSForceImageDuration;
+  // for OLED displays, the time a out.bmp will play
+  float ProffieOSOutImageDuration;
+  // for OLED displays, the time a in.bmp will play
+  float ProffieOSInImageDuration;
+  // for OLED displays, the time a pstoff.bmp will play
+  float ProffieOSPstoffImageDuration;
+  // for OLED displays, the time a boot.bmp will play
+  float ProffieOSBootImageDuration;
+/* To-Do, possibly differently
+#ifdef OLED_USE_BLASTER_IMAGES
+  // for OLED displays, the time a reload.bmp will play
+  float ProffieOSReloadImageDuration;
+  // for OLED displays, the time a empty.bmp will play
+  float ProffieOSEmptyImageDuration;
+  // for OLED displays, the time a jam.bmp will play
+  float ProffieOSJamImageDuration;
+  // for OLED displays, the time a clipiin.bmp will play
+  float ProffieOSClipinImageDuration;
+  // for OLED displays, the time a clipout.bmp will play
+  float ProffieOSClipoutImageDuration;
+  // for OLED displays, the time a destruct.bmp will play
+  float ProffieOSDestructImageDuration;
+#endif
+*/
+#endif  // ENABLE_DISPLAY_CODE
   // Minimum acceleration for Accent Swing file Selection
   // recommended value is 20.0 ~ 30.0
   float ProffieOSMinSwingAcceleration;
@@ -130,6 +179,9 @@ public:
   // one full rotation.
   float ProffieOSSpinDegrees;
 #endif
+  // Make smoothswings start in sync with hum.
+  // Set to 1 to sync, or 0 to resume swings where last pair left off.
+  bool ProffieOSSmoothSwingHumstart;
 };
 
 FontConfigFile font_config;
@@ -218,7 +270,7 @@ public:
   RefPtr<BufferedWavPlayer> swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
 
-  void PlayMonophonic(Effect* f, Effect* loop, float xfade = 0.003f)  {
+  void PlayMonophonic(const Effect::FileID& f, Effect* loop, float xfade = 0.003f)  {
     EnableAmplifier();
     if (!next_hum_player_) {
       next_hum_player_ = GetFreeWavPlayer();
@@ -244,6 +296,10 @@ public:
     if (loop) hum_player_->PlayLoop(loop);
    }
 
+  void PlayMonophonic(Effect* f, Effect* loop, float xfade = 0.003f)  {
+    PlayMonophonic(f->RandomFile(), loop, xfade);
+  }
+  
   // Use after changing alternative.
   void RestartHum() {
     if (hum_player_ && hum_player_->isPlaying()) {
@@ -251,10 +307,10 @@ public:
     }
   }
 
-  RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
+  RefPtr<BufferedWavPlayer> PlayPolyphonic(const Effect::FileID& f)  {
     EnableAmplifier();
-    if (!f->files_found()) return RefPtr<BufferedWavPlayer>(nullptr);
-    RefPtr<BufferedWavPlayer> player = GetOrFreeWavPlayer(f);
+    if (!f) return RefPtr<BufferedWavPlayer>(nullptr);
+    RefPtr<BufferedWavPlayer> player = GetOrFreeWavPlayer(f.GetEffect());
     if (player) {
       player->set_volume_now(font_config.volEff / 16.0f);
       player->PlayOnce(f);
@@ -263,6 +319,9 @@ public:
       STDOUT.println("Out of WAV players!");
     }
     return player;
+  }
+  RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
+    return PlayPolyphonic(f->RandomFile());
   }
 
   void Play(Effect* monophonic, Effect* polyphonic) {
@@ -402,6 +461,14 @@ public:
     state_ = STATE_WAIT_FOR_ON;
   }
 
+  Effect::FileID getNext(RefPtr<BufferedWavPlayer> previous, Effect* next) {
+    if (previous) {
+      return previous->current_file_id().GetFollowing(next);
+    } else {
+      return next->RandomFile();
+    }
+  }
+
   void SB_Postoff() {
     // Postoff was alredy started by linked wav players, we just need to find
     // the length so that WavLen<> can use it.
@@ -427,7 +494,7 @@ public:
       	hum_player_ = GetFreeWavPlayer();
       	if (hum_player_) {
       	  hum_player_->set_volume_now(0);
-      	  hum_player_->PlayOnce(SFX_humm ? &SFX_humm : &SFX_hum);
+	  hum_player_->PlayOnce(getNext(GetWavPlayerPlaying(getOut()), SFX_humm ? &SFX_humm : &SFX_hum));
       	  hum_player_->PlayLoop(SFX_humm ? &SFX_humm : &SFX_hum);
       	}
         hum_start_ = millis();
@@ -448,7 +515,7 @@ public:
       if (SFX_humm && tmp) {
         hum_fade_in_ = tmp->length();
         STDOUT << "HUM fade-in time: " << hum_fade_in_ << "\n";
-      } else if (font_config.ProffieOSHumDelay > 0) {
+      } else if (font_config.ProffieOSHumDelay >= 0) {
         hum_start_ += font_config.ProffieOSHumDelay;
         STDOUT << "HumDelay: " << font_config.ProffieOSHumDelay << "\n";
       } else if (font_config.humStart && tmp) {
@@ -503,18 +570,18 @@ public:
           }
         } else {
           state_ = STATE_HUM_FADE_OUT;
-          PlayPolyphonic(&SFX_in);
+          PlayPolyphonic(getNext(hum_player_, &SFX_in));
 	  hum_fade_out_ = 0.2;
         }
         check_postoff_ = !!SFX_pstoff && off_type != OFF_FAST;
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
-          if (SFX_boom) PlayMonophonic(&SFX_boom, NULL);
-          else PlayMonophonic(&SFX_clash, NULL);  // Thermal-D fallback
+          if (SFX_boom) PlayMonophonic(getNext(hum_player_, &SFX_boom), NULL);
+          else PlayMonophonic(getNext(hum_player_, &SFX_clash), NULL);  // Thermal-D fallback
         } else {
           state_ = STATE_HUM_FADE_OUT;
-          PlayPolyphonic(&SFX_boom);
+          PlayPolyphonic(getNext(lock_player_, &SFX_boom));
         }
         break;
     }
@@ -677,7 +744,7 @@ public:
       // Polyphonic case
       lock_player_->set_fade_time(0.3);
       if (end) { // polyphonic end lock
-        if (PlayPolyphonic(end)) {
+        if (PlayPolyphonic(getNext(lock_player_, end))) {
           // if playing an end lock fade the lockup faster
           lock_player_->set_fade_time(0.003);
         }

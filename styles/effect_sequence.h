@@ -8,11 +8,11 @@ template<BladeEffectType EFFECT, class... COLORS>
 class EffectSequence {
 public:
   void run(BladeBase* blade) {
+    SaveLastDetectedBladeEffectScoped save;
     colors_.run(blade);
     if (effect_.Detect(blade)) {
 	n_ = (n_ + 1) % sizeof...(COLORS);
     }
-    last_detected_blade_effect = nullptr;
   }
 private:
   OneshotEffectDetector<EFFECT> effect_;

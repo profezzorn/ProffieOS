@@ -40,6 +40,8 @@ public:
   // false while "turning off".
   virtual bool is_on() const = 0;
 
+  virtual bool is_powered() const = 0;
+
   // Return how many effects are in effect.
   virtual size_t GetEffects(BladeEffect** blade_effects) = 0;
 
@@ -88,6 +90,15 @@ public:
 HandledFeature BladeBase::handled_features_ = HANDLED_FEATURE_NONE;
 
 BladeEffect* last_detected_blade_effect = NULL;
+
+class SaveLastDetectedBladeEffectScoped {
+public:
+  SaveLastDetectedBladeEffectScoped() : last_detected_blade_effect_(last_detected_blade_effect) {}
+  ~SaveLastDetectedBladeEffectScoped() { last_detected_blade_effect = last_detected_blade_effect_; }
+private:
+  BladeEffect* last_detected_blade_effect_;
+};
+
 
 template<BladeEffectType effect>
 class OneshotEffectDetector {

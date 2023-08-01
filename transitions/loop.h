@@ -28,7 +28,8 @@ template<class N, class TRANSITION>
 class TrLoopNX : public TRANSITION {
 public:
   void run(BladeBase* blade) {
-    if (loops_ < 0) loops_ = n_.calculate(blade);
+    n_.run(blade);
+    if (loops_ < 0) loops_ = n_.calculate(blade) + 1;
     if (loops_ > 0 && TRANSITION::done()) {
       if (loops_ > 1) TRANSITION::begin();
       loops_--;

@@ -77,16 +77,16 @@ public:
     return filename_;
   }
 
-  void PlayOnce(Effect* effect, float start = 0.0) {
+  void PlayOnce(const Effect::FileID& file_id, float start = 0.0) {
     sample_bytes_.set(0);
-    new_file_id_ = effect->RandomFile();
+    new_file_id_ = file_id;
     if (new_file_id_) {
       new_file_id_.GetName(filename_);
       start_ = start;
       effect_.set(nullptr);
       run_.set(true);
     }
-    PlayLoop(effect->GetFollowing());
+    PlayLoop(file_id.GetEffect()->GetFollowing());
   }
   void PlayLoop(Effect* effect) {
     effect_.set(effect);
@@ -141,7 +141,6 @@ private:
     len_ = 0;
     to_read_ = 0;
     ptr_ = end_;
-    run_.set(false);
     effect_.set(nullptr);
   }
 

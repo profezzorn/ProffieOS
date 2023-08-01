@@ -185,6 +185,9 @@ public:
   bool is_on() const override {
     return on_;
   }
+  bool is_powered() const override {
+    return power_;
+  }
   void set(int led, Color16 c) override {
     leds_[led]->set(c);
   }
@@ -250,6 +253,11 @@ protected:
     // Make sure the booster is running so we don't get low voltage
     // and under-drive any FETs.
     EnableBooster();
+#ifdef ARDUINO_ARCH_STM32L4
+    // changing the clock speed messes with the PWM clock.
+    extern void ClockControl_AvoidSleep();
+    ClockControl_AvoidSleep();
+#endif    
     if (current_style_)
       current_style_->run(this);
   }

@@ -47,19 +47,32 @@ private:
   int mult_;
 };
 
-template<int HUMP_WIDTH>
-class HumpFlickerF {
+// Usage: HumpFlickerFX<FUNCTION>
+// or: HumpFlickerF<N>
+// FUNCTION: FUNCTION
+// N: NUMBER
+// return value: INTEGER
+// Creates hump shapes that randomize over the blade.
+// The returned INTEGER is the size of the humps.
+// Large values can give the blade a shimmering look, 
+// while small values look more like speckles.
+
+template<class HUMP_WIDTH>
+class HumpFlickerFX {
 public:
   void run(BladeBase* blade) {
-    int num_leds_ = blade->num_leds();
-    pos_ = random(num_leds_);
+    hump_width_.run(blade);
+    int num_leds = blade->num_leds();
+    pos_ = random(num_leds);
   }
   int getInteger(int led) {
-    return clampi32(abs(led - pos_) * 32768 / HUMP_WIDTH, 0, 32768);
+    return clampi32(abs(led - pos_) * 32768 / hump_width_.getInteger(led), 0, 32768);
   }
 private:
+  PONUA HUMP_WIDTH hump_width_;
   int pos_;
 };
 
+template<int HUMP_WIDTH> using HumpFlickerF = HumpFlickerFX<Int<HUMP_WIDTH>>;
 
 #endif

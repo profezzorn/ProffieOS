@@ -44,11 +44,6 @@
 // #define CONFIG_FILE "config/testconfig.h"
 // #define CONFIG_FILE "config/test_bench_config.h"
 
-#ifdef CONFIG_FILE_TEST
-#undef CONFIG_FILE
-#define CONFIG_FILE CONFIG_FILE_TEST
-#endif
-
 #ifndef CONFIG_FILE
 #error Please set CONFIG_FILE as shown above.
 #endif
@@ -56,6 +51,22 @@
 #define CONFIG_TOP
 #include CONFIG_FILE
 #undef CONFIG_TOP
+
+#if !defined(ENABLE_AUDIO) && !defined(DISABLE_AUDIO)
+#define ENABLE_AUDIO
+#endif
+
+#if !defined(ENABLE_MOTION) && !defined(DISABLE_MOTION)
+#define ENABLE_MOTION
+#endif
+
+#if !defined(ENABLE_WS2811) && !defined(DISABLE_WS2811)
+#define ENABLE_WS2811
+#endif
+
+#if !defined(ENABLE_SD) && !defined(DISABLE_SD)
+#define ENABLE_SD
+#endif
 
 #ifndef BOOT_VOLUME
 #define BOOT_VOLUME VOLUME
@@ -65,7 +76,7 @@
 #define SAVE_VOLUME
 #define SAVE_PRESET
 #define SAVE_COLOR_CHANGE
-#define SAVE_DYNAMIC_DIMMING
+#define SAVE_BLADE_DIMMING
 #endif
 
 #ifdef ENABLE_ALL_EDIT_OPTIONS
@@ -80,6 +91,9 @@
 
 // #define ENABLE_DEBUG
 
+#ifdef KEEP_SAVEFILES_WHEN_PROGRAMMING
+#warning Your config file has KEEP_SAVEFILES_WHEN_PROGRAMMING in it. If you experience problems, please remove it and try again before asking for help. For more information, see: https://pod.hubbe.net/config/keeping-edits-when-uploading.html
+#endif
 
 //
 // OVERVIEW
@@ -171,6 +185,13 @@
 
 #include <SD.h>
 #include <SPI.h>
+
+#ifdef abs
+#undef abs
+namespace {
+template<typename T> constexpr auto abs(T x) -> decltype(-x) { return x < 0 ? -x : x; }
+}
+#endif
 
 #else // TEENSYDUINO
 #define digitalWriteFast digitalWrite
@@ -308,6 +329,10 @@ uint64_t wav_interrupt_cycles = 0;
 uint64_t loop_cycles = 0;
 
 #include "common/loop_counter.h"
+
+#if defined(ENABLE_SSD1306) || defined(INCLUDE_SSD1306)
+#define ENABLE_DISPLAY_CODE
+#endif
 
 #ifdef DOSFS_CONFIG_STARTUP_DELAY
 #define PROFFIEOS_SD_STARTUP_DELAY DOSFS_CONFIG_STARTUP_DELAY
@@ -1378,7 +1403,7 @@ StaticWrapper<Commands> commands;
 #include "common/serial.h"
 
 
-#if defined(ENABLE_MOTION) || defined(ENABLE_SSD1306) || defined(INCLUDE_SSD1306)
+#if defined(ENABLE_MOTION) || defined(ENABLE_DISPLAY_CODE)
 #include "common/i2cdevice.h"
 I2CBus i2cbus;
 #endif
@@ -1397,7 +1422,6 @@ SSD1306Template<128, uint32_t, DISPLAY_POWER_PINS> display(&display_controller);
 #ifdef INCLUDE_SSD1306
 #include "display/ssd1306.h"
 #endif
-
 
 #ifdef ENABLE_MOTION
 
