@@ -209,7 +209,7 @@ public:
         SetBlasterMode(MODE_KILL);
         return;
       case MODE_KILL:
-#ifdef BLASTER_ENABLE_AUTO || ENABLE_BLASTER_AUTO
+#if defined (ENABLE_BLASTER_AUTO) || defined (BLASTER_ENABLE_AUTO)
         stun_mode_ = false;
         SetBlasterMode(MODE_AUTO);
 #else
