@@ -219,7 +219,7 @@ Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
                       * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
                         tilt up or down to avoid erratic rotational volume changes at extreme blade angles.
-        Enter/Exit    - Hold POW + Clash.
+        Enter/Exit    - Long click AUX.
         Volume UP     - Rotate Right 
                       - or - 
                       - Long click and release POW while in Volume Menu. (just like next preset)
