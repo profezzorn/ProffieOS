@@ -622,6 +622,7 @@ public:
 #endif  // BC_SWING_ON
 
 #ifdef BC_TWIST_ON
+    case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
         if (mode_volume_) return false;
 #ifdef NO_BLADE_NO_GEST_ONOFF
         if (!blade_detected_) return false;
