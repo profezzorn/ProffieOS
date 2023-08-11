@@ -538,24 +538,30 @@ public:
   void QuickMaxVolume() {
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
     dynamic_mixer.set_volume(VOLUME);
-    if (SFX_volmax) {
-      hybrid_font.PlayPolyphonic(&SFX_volmax);
-    } else {
-      beeper.Beep(0.5, 3000);
+    if (millis() - volume_range_delay_ > 2000) {
+      if (SFX_volmax) {
+        hybrid_font.PlayPolyphonic(&SFX_volmax);
+      } else {
+        beeper.Beep(0.5, 3000);
+      }
+      PVLOG_NORMAL << "Maximum Volume\n";
+      volume_range_delay_ = millis();
     }
-    PVLOG_NORMAL << "Maximum Volume\n";
   }
 
   void QuickMinVolume() {
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
     dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
     dynamic_mixer.get_volume() - VOLUME * 0.90));
-    if (SFX_volmin) {
-      hybrid_font.PlayPolyphonic(&SFX_volmin);
-      } else {
-        beeper.Beep(0.5, 1000);
-      }
+    if (millis() - volume_range_delay_ > 2000) {
+      if (SFX_volmin) {
+        hybrid_font.PlayPolyphonic(&SFX_volmin);
+        } else {
+          beeper.Beep(0.5, 1000);
+        }
       PVLOG_NORMAL << "Minimum Volume\n";
+      volume_range_delay_ = millis();
+    }
   }
 
   void DetectMenuTurn() {
@@ -1180,6 +1186,7 @@ private:
   uint32_t last_blast_ = millis();
   uint32_t saber_off_time_ = millis();
   uint32_t beep_delay_ = millis();
+  uint32_t volume_range_delay_ = millis();
 };
 
 #endif
