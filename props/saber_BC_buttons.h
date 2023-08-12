@@ -122,9 +122,8 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
                         * NOTE * Gesture ignitions using FastOn bypass preon.
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
-Next Preset           - Long click and release POW, or TWIST while pointing up.
-Prev Preset           - Double click and hold POW, release after a second (click then long click),
-                        or TWIST while pointing down.
+Next Preset           - Long click and release POW.
+Prev Preset           - Double click and hold POW, release after a second (click then long click).
 Play/Stop Track       - 4x click POW.
 Volume Menu:
                       * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
@@ -149,9 +148,8 @@ On-Demand Batt Level  - Double click POW.
 *************   WHILE SABER BLADE IS ON   ****************
 Play/Stop Track       - 4x click POW.
 Next Preset Fast      - Long click and release POW while pointing up.
-Prev Preset Fast      - Double click and release POW after a second
-                        while pointing up. (click then long click)
-                      * NOTE * Fast switching bypasses preon and font.wav.
+Prev Preset Fast      - Double click and hold POW, release after a second while pointing up. (click then long click)
+                        * NOTE * Fast switching bypasses preon and font.wav.
 Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold POW and Clash to temporarily
                         override the auto-lockup and do regular Clash.
@@ -215,14 +213,13 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
                         * NOTE * Gesture ignitions using FastOn bypass preon.
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
-Next Preset           - Long click and release POW, or TWIST while pointing up.
-Prev Preset           - Double click and hold POW, release after a second (click then long click),
-                        or TWIST while pointing down.
+Next Preset           - Long click and release POW.
+Prev Preset           - Double click and hold POW, release after a second (click then long click).
 Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
                       * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
                         tilt up or down to avoid erratic rotational volume changes at extreme blade angles.
-        Enter/Exit    - Hold POW + Clash.
+        Enter/Exit    - Long click AUX.
         Volume UP     - Rotate Right 
                       - or - 
                       - Long click and release POW while in Volume Menu. (just like next preset)
@@ -244,7 +241,7 @@ Play/Stop Track       - Hold AUX + Double click POW.
 Next Preset Fast      - Hold AUX + Long click and release POW while pointing up.
 Prev Preset Fast      - Hold AUX + Double click and hold POW for a second
                         while pointing up. (click then long click)
-                      * NOTE * Fast switching bypasses preon and font.wav.
+                        * NOTE * Fast switching bypasses preon and font.wav.
 Clash                 - No buttons, just hit the blade against something.
                         In Battle Mode, Hold any button and Clash to
                         temporarily override the auto-lockup and do regular Clash.
@@ -624,17 +621,6 @@ public:
       return true;
 #endif  // BC_SWING_ON
 
-    case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-      // pointing down
-      if (fusor.angle1() < - M_PI / 4) {
-        previous_preset();
-        return true;
-      }
-      // pointing up
-      if (fusor.angle1() >  M_PI / 3) {
-        next_preset();
-      } else {
-       // NOT pointing up OR down
 #ifdef BC_TWIST_ON
         if (mode_volume_) return false;
 #ifdef NO_BLADE_NO_GEST_ONOFF
@@ -651,7 +637,6 @@ public:
           last_twist_ = millis();
         }
 #endif  // BC_TWIST_ON
-      }
       return true;
 
 #ifdef BC_TWIST_OFF
@@ -819,22 +804,33 @@ public:
 
 // Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+      // Avoid weird battery readings when using USB
+      if (battery_monitor.battery() < 0.5) {
+        sound_library_.SayTheBatteryLevelIs();
+        sound_library_.SayDisabled();
+      }
       if (!mode_volume_) {
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
         sound_library_.SayVolts();
         PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
+        speaking_ = true;
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
 
 // Spoken Battery Level in percentage
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
+      if (battery_monitor.battery() < 0.5) {
+        sound_library_.SayTheBatteryLevelIs();
+        sound_library_.SayDisabled();
+      }
       if (!mode_volume_) {
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
         sound_library_.SayPercent();
         PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
+        speaking_ = true;
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
@@ -1012,7 +1008,7 @@ public:
 
 // Power Save blade dimming - pointing up
 // Swap effect - NOT pointing up or down
-// Toggle seqential quote play - pointing down
+// Toggle sequential quote play - pointing down
 #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_ON):
 #else
@@ -1115,6 +1111,10 @@ public:
         return;
       // On-Demand Battery Level
       case EFFECT_BATTERY_LEVEL:
+        if (speaking_) {
+          speaking_ = false;
+          return;
+        }
         if (SFX_battery) {
           hybrid_font.PlayCommon(&SFX_battery);
         } else {
@@ -1169,6 +1169,9 @@ private:
   bool min_vol_reached_ = false;
   bool sequential_quote_ = false;
   bool spam_blast_ = false;
+  // Avoid overlap of battery.wav when doing Spoken Battery Level
+  bool speaking_ = false;
+
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
