@@ -27,7 +27,10 @@ public:
     }
     fprintf(stderr, "Executing: %s\n", cmd.c_str());
     f = popen(cmd.c_str(), "r");
-    read_header();
+    if (!read_header()) {
+      fprintf(stderr, "Failed to read PAM header.\n");
+      exit(1);
+    }
   }
 
   bool isPNG(const std::string &filename) {
@@ -65,9 +68,10 @@ public:
     }
   }
 
-  void read_header() {
+  bool read_header() {
     int k;
     int c1 = c();
+    if (c1 == -1) return false;
     int c2 = c();
     int c3 = c();
     if(c1 != 'P' || c2 != '7' || c3 != '\n') {
@@ -95,7 +99,7 @@ public:
 	goto headerr;
       }
     }
-    return;
+    return true;
 
   headerr:
     perror("**while reading header");
@@ -107,11 +111,14 @@ public:
   }
 
   bool read_frame(std::vector<uint8_t>& data) {
+    if (!first) if (!read_header()) return false;
+    first = false;
     size_t bytes = xsize * ysize * depth * wordsize();
     data.resize(bytes);
     return fread(data.data(), 1, bytes, f) == bytes;
   }
 
+  bool first = true;
   int xsize = 0;
   int ysize = 0;
   int depth = 0;
