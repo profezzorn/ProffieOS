@@ -547,7 +547,7 @@ public:
     EnableBooster();
     BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
-    PVLOG_STATUS << "ID: " << ret << "\n";
+    PVLOG_STATUS << "BLADE ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
     talkie.Say(spI);
     talkie.Say(spD);

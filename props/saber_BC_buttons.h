@@ -219,7 +219,7 @@ Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
                       * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to
                         tilt up or down to avoid erratic rotational volume changes at extreme blade angles.
-        Enter/Exit    - Hold POW + Clash.
+        Enter/Exit    - Long click AUX.
         Volume UP     - Rotate Right
                       - or -
                       - Long click and release POW while in Volume Menu. (just like next preset)
@@ -622,6 +622,7 @@ public:
 #endif  // BC_SWING_ON
 
 #ifdef BC_TWIST_ON
+    case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
         if (mode_volume_) return false;
 #ifdef NO_BLADE_NO_GEST_ONOFF
         if (!blade_detected_) return false;
@@ -636,8 +637,8 @@ public:
 #endif
           last_twist_ = millis();
         }
-#endif  // BC_TWIST_ON
       return true;
+#endif  // BC_TWIST_ON
 
 #ifdef BC_TWIST_OFF
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
@@ -804,22 +805,33 @@ public:
 
 // Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+      // Avoid weird battery readings when using USB
+      if (battery_monitor.battery() < 0.5) {
+        sound_library_.SayTheBatteryLevelIs();
+        sound_library_.SayDisabled();
+      }
       if (!mode_volume_) {
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
         sound_library_.SayVolts();
         PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
+        speaking_ = true;
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
 
 // Spoken Battery Level in percentage
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
+      if (battery_monitor.battery() < 0.5) {
+        sound_library_.SayTheBatteryLevelIs();
+        sound_library_.SayDisabled();
+      }
       if (!mode_volume_) {
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
         sound_library_.SayPercent();
         PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
+        speaking_ = true;
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
       return true;
@@ -1100,6 +1112,10 @@ public:
         return;
       // On-Demand Battery Level
       case EFFECT_BATTERY_LEVEL:
+        if (speaking_) {
+          speaking_ = false;
+          return;
+        }
         if (SFX_battery) {
           hybrid_font.PlayCommon(&SFX_battery);
         } else {
@@ -1154,6 +1170,9 @@ private:
   bool min_vol_reached_ = false;
   bool sequential_quote_ = false;
   bool spam_blast_ = false;
+  // Avoid overlap of battery.wav when doing Spoken Battery Level
+  bool speaking_ = false;
+
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
   uint32_t clash_impact_millis_ = millis();
