@@ -542,7 +542,9 @@ public:
   bool blade_detected_ = false;
 #endif
 
+  // Prevent BLADE ID: from spamming console with every BLADE_SCAN_MILLIS
   bool blade_id_should_report_ = true;
+
   // Measure and return the blade identifier resistor.
   float id() {
     EnableBooster();
