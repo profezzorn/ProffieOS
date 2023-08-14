@@ -543,36 +543,43 @@ public:
 #endif
 
   // Measure and return the blade identifier resistor.
-  float id() {
+  float RetrieveBladeId() {
     EnableBooster();
     BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
 #ifdef BLADE_DETECT_PIN
     if (!blade_detected_) {
-      STDOUT << "NO ";
       ret += NO_BLADE;
     }
-    STDOUT << "Blade Detected\n";
 #endif
     return ret;
   }
 
-  void PrintAndSpeakId() {
-    float current_id = id();
+  float PrintAndSpeakId() {
+    float current_id = RetrieveBladeId();
     PVLOG_STATUS << "BLADE ID: " << current_id << "\n";
-#ifdef SPEAK_BLADE_ID
-      talkie.Say(spI);
-      talkie.Say(spD);
-      talkie.SayNumber((int)current_id);
+#ifdef BLADE_DETECT_PIN
+    if (!blade_detected_) {
+      STDOUT << "NO ";
+    } else {
+      STDOUT << "Blade Detected\n";
+    }
 #endif
+
+#ifdef SPEAK_BLADE_ID
+    talkie.Say(spI);
+    talkie.Say(spD);
+    talkie.SayNumber((int)current_id);
+#endif
+    return current_id; // not sure why we're returning the ID value here
   }
 
   size_t FindBestConfig() {
     static_assert(NELEM(blades) > 0, "blades array cannot be empty");
-    
+
     size_t best_config = 0;
     if (NELEM(blades) > 1) {
-      float resistor = id();
+      float resistor = RetrieveBladeId();
 
       float best_err = 100000000.0;
       for (size_t i = 0; i < NELEM(blades); i++) {
@@ -611,7 +618,6 @@ public:
   void PollScanId() {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
-      PrintAndSpeakId();
       FindBladeAgain();
     }
   }
@@ -739,6 +745,7 @@ public:
 
     ONCEPERBLADE(DEACTIVATE);
     SaveVolumeIfNeeded();
+    PrintAndSpeakId();
     FindBlade();
   }
 
@@ -1271,7 +1278,6 @@ public:
       return true;
     }
     if (!strcmp(cmd, "scanid")) {
-      PrintAndSpeakId();
       FindBladeAgain();
       return true;
     }
