@@ -1117,12 +1117,17 @@ class Commands : public CommandParser {
     }
 #endif
 
-    if (!strcmp(cmd, "version")) {
-      STDOUT << version
-      << "\n" CONFIG_FILE "\nprop: "  TOSTRING(PROP_TYPE)  "\nbuttons: " TOSTRING(NUM_BUTTONS) "\ninstalled: " 
-      << install_time << "\n";
-      return true;
-    }
+      if (!strcmp(cmd, "version")) {
+        PVLOG_NORMAL 
+          << "\n ProffieOS " << version 
+          << "\n BOOT Volume: " TOSTRING(BOOT_VOLUME) 
+          << "\n Current Volume: " << dynamic_mixer.get_volume()
+          << "\n MAX Volume: " TOSTRING(VOLUME)
+          << "\n " CONFIG_FILE "\n Prop: "  TOSTRING(PROP_TYPE) 
+          << ".h\n Num buttons: " TOSTRING(NUM_BUTTONS) 
+          << "\n Installed: " << install_time << "\n";
+        return true;
+      }
     if (!strcmp(cmd, "reset")) {
 #ifdef TEENSYDUINO
       SCB_AIRCR = 0x05FA0004;
