@@ -29,15 +29,15 @@ Features:
 - No blade inserted = no gestures option if Blade Detect is used.
 - Optional On-the-fly volume controls with Quick MIN and MAX levels.
 - Bypass preon and/or postoff based on blade angle.
-- Spam Blast - Enter this mode to make the button super sensitive for                      
+- Spam Blast - Enter this mode to make the button super sensitive for
                             multiple blaster blocks. Presses are prioritized over
                             other features. No limits, no lag when "rapid firing".
 - Swap feature with sound - Just an additional EFFECT that can be used to trigger
                             blade animations. See below.
 ---------------------------------------------------------------------------
 Optional Blade style elements:
-On-Demand battery level - A layer built into the blade styles that reacts 
-                          as the battery gets weaker, changing blade color 
+On-Demand battery level - A layer built into the blade styles that reacts
+                          as the battery gets weaker, changing blade color
                           from Green to Red, and the blade length shortens.
 EFFECT_USER1            - Swap feature: Use as a standalone trigger for EffectSequence<>,
                           for example as a way to have multiple blade styles in one preset.
@@ -70,7 +70,7 @@ Gesture Controls:
 #define BC_TWIST_OFF
 #define NO_BLADE_NO_GEST_ONOFF
 - If using blade detect, Gesture ignitions or retractions are disabled.
-  **NOTE** Only works when a BLADE_DETECT_PIN is defined. 
+  **NOTE** Only works when a BLADE_DETECT_PIN is defined.
 
 #define BC_FORCE_PUSH
 - This mode plays a force sound (or force push sound if the font contains it) with
@@ -86,7 +86,7 @@ Gesture Controls:
 
 #define BC_GESTURE_AUTO_BATTLE_MODE
 - Makes gesture ignition ALSO enter battle mode automatically on ignition.
-- *Note* - Cannot be used if #define BC_NO_BM is active. 
+- *Note* - Cannot be used if #define BC_NO_BM is active.
 
 "Battle Mode 1.0" by fett263, BC modified version:
 - Once you enter battle mode, buttons are not used for lockup.
@@ -112,7 +112,7 @@ Gesture Controls:
   stab something, and end when you pull away or push any button.
 
 - Stab will trigger with no buttons and thrusting forward.
-  
+
 ====================== 1 BUTTON CONTROLS ========================
 | Sorted by ON or OFF state: (what it's like while using saber) |
 =================================================================
@@ -126,13 +126,13 @@ Next Preset           - Long click and release POW.
 Prev Preset           - Double click and hold POW, release after a second (click then long click).
 Play/Stop Track       - 4x click POW.
 Volume Menu:
-                      * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
+                      * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to
                         tilt up or down to avoid erratic rotational volume changes at extreme blade angles.
         Enter/Exit    - Hold POW + Clash.
-        Volume UP     - Rotate Right 
-                      - or - 
+        Volume UP     - Rotate Right
+                      - or -
                       - Long click and release POW while in Volume Menu. (just like next preset)
-        Volume DOWN   - Rotate Left 
+        Volume DOWN   - Rotate Left
                       - or -
                       - Double click and hold POW, release after a second while in Volume Menu.
                         (click then long click, just like next preset)
@@ -161,7 +161,7 @@ Spam Blaster Blocks   - 3x click and hold while pointing up. This toggles SPAM B
                         * Note * This gets in the way of normal features,
                         so turn off when you're done spamming.  Plays mzoom.wav.
 Auto Swing Blast      - if #define ENABLE_AUTO_SWING_BLAST is active,
-                        swinging within 1 second of doing button activated 
+                        swinging within 1 second of doing button activated
                         Blaster Block will start this timed mode.
                         To trigger auto blaster blocks, swing saber
                         within 1 second of last Swing Blast block.
@@ -193,7 +193,7 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
           next color and exit color change mode. If the style does not use
           ColorChange<>, it has no effect.
 Quote Player          - Triple click POW.
-Toggle sequential or 
+Toggle sequential or
   random quote play   - 4x click and hold POW. (while pointing down)
 Force Push            - Push hilt perpendicularly from a stop.
 Swap (EffectSequence) - 4x click and hold POW. (while NOT pointing up)
@@ -217,13 +217,13 @@ Next Preset           - Long click and release POW.
 Prev Preset           - Double click and hold POW, release after a second (click then long click).
 Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
-                      * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to 
+                      * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to
                         tilt up or down to avoid erratic rotational volume changes at extreme blade angles.
         Enter/Exit    - Long click AUX.
-        Volume UP     - Rotate Right 
-                      - or - 
+        Volume UP     - Rotate Right
+                      - or -
                       - Long click and release POW while in Volume Menu. (just like next preset)
-        Volume DOWN   - Rotate Left 
+        Volume DOWN   - Rotate Left
                       - or -
                       - Double click and hold POW, release after a second while in Volume Menu.
                         (click then long click, just like next preset)
@@ -253,7 +253,7 @@ Spam Blaster Blocks   - 3x click and hold while pointing up. This toggles SPAM B
                         * Note * This gets in the way of normal features,
                         so turn off when you're done spamming.  Plays mzoom.wav.
 Auto Swing Blast      - if #define ENABLE_AUTO_SWING_BLAST is active,
-                        swinging within 1 second of doing button activated 
+                        swinging within 1 second of doing button activated
                         Blaster Block will start this timed mode.
                         To trigger auto blaster blocks, swing saber
                         within 1 second of last Swing Blast block.
@@ -285,7 +285,7 @@ Color Change Mode     - Hold POW + Twist. (while pointing down)
           next color and exit color change mode. If the style does not use
           ColorChange<>, it has no effect.
 Quote Player          - Triple click POW.
-Toggle sequential or 
+Toggle sequential or
   random quote play   - Hold AUX + Twist. (while pointing down)
 Force Push            - Push hilt perpendicularly from a stop.
 Swap (EffectSequence) - Hold AUX + Twist. (while NOT pointing up)
@@ -718,7 +718,7 @@ public:
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       // No power on without exiting Vol Menu first
       if (!mode_volume_) {
-      // Bypass preon if pointing up         
+      // Bypass preon if pointing up
         if (fusor.angle1() >  M_PI / 3) {
           FastOn();
         } else {
