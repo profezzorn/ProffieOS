@@ -624,9 +624,6 @@ public:
       find_blade_again_pending_ = false;
       blade_id_should_report_= true;
       FindBladeAgain();
-      // Indicate what happened when different Blade ID detected
-      SaberBase::DoNewFont();
-      STDOUT << "DISPLAY: " << current_preset_name() << "\n";
     }
   }
 #else
@@ -650,7 +647,7 @@ public:
 #ifdef SAVE_PRESET
     ResumePreset();
 #else
-    SetPreset(0, false);
+    SetPreset(0, true);
 #endif
     return;
 
