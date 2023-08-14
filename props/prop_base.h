@@ -542,16 +542,29 @@ public:
   bool blade_detected_ = false;
 #endif
 
+  bool blade_id_should_report_ = true;
   // Measure and return the blade identifier resistor.
   float id() {
     EnableBooster();
     BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
+#ifdef BLADE_ID_SCAN_MILLIS
+    if (blade_id_should_report_) {
+      blade_id_should_report_ = false; 
+      PVLOG_STATUS << "BLADE ID: " << ret << "\n";
+#ifdef SPEAK_BLADE_ID
+      talkie.Say(spI);
+      talkie.Say(spD);
+      talkie.SayNumber((int)ret);
+#endif
+    }
+#else
     PVLOG_STATUS << "BLADE ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
     talkie.Say(spI);
     talkie.Say(spD);
     talkie.SayNumber((int)ret);
+#endif
 #endif
 #ifdef BLADE_DETECT_PIN
     if (!blade_detected_) {
@@ -607,7 +620,10 @@ public:
   void PollScanId() {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
+      blade_id_should_report_= true;
       FindBladeAgain();
+      SaberBase::DoNewFont();
+      STDOUT << "DISPLAY: " << current_preset_name() << "\n";
     }
   }
 #else
@@ -1266,6 +1282,7 @@ public:
       return true;
     }
     if (!strcmp(cmd, "scanid")) {
+      blade_id_should_report_ = true;
       FindBladeAgain();
       return true;
     }
