@@ -542,32 +542,11 @@ public:
   bool blade_detected_ = false;
 #endif
 
-  // Prevent BLADE ID: from spamming console with every BLADE_SCAN_MILLIS
-  bool blade_id_should_report_ = true;
-
   // Measure and return the blade identifier resistor.
   float id() {
     EnableBooster();
     BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
-#ifdef BLADE_ID_SCAN_MILLIS
-    if (blade_id_should_report_) {
-      blade_id_should_report_ = false; 
-      PVLOG_STATUS << "BLADE ID: " << ret << "\n";
-#ifdef SPEAK_BLADE_ID
-      talkie.Say(spI);
-      talkie.Say(spD);
-      talkie.SayNumber((int)ret);
-#endif
-    }
-#else
-    PVLOG_STATUS << "BLADE ID: " << ret << "\n";
-#ifdef SPEAK_BLADE_ID
-    talkie.Say(spI);
-    talkie.Say(spD);
-    talkie.SayNumber((int)ret);
-#endif
-#endif
 #ifdef BLADE_DETECT_PIN
     if (!blade_detected_) {
       STDOUT << "NO ";
@@ -576,6 +555,16 @@ public:
     STDOUT << "Blade Detected\n";
 #endif
     return ret;
+  }
+
+  void PrintAndSpeakId() {
+    float current_id = id();
+    PVLOG_STATUS << "BLADE ID: " << current_id << "\n";
+#ifdef SPEAK_BLADE_ID
+      talkie.Say(spI);
+      talkie.Say(spD);
+      talkie.SayNumber((int)current_id);
+#endif
   }
 
   size_t FindBestConfig() {
@@ -622,13 +611,13 @@ public:
   void PollScanId() {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
-      blade_id_should_report_= true;
+      PrintAndSpeakId();
       FindBladeAgain();
     }
   }
 #else
   void PollScanId() {}
-#endif  
+#endif 
 
   // Called from setup to identify the blade and select the right
   // Blade driver, style and sound font.
@@ -1278,11 +1267,11 @@ public:
 
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "id")) {
-      id();
+      PrintAndSpeakId();
       return true;
     }
     if (!strcmp(cmd, "scanid")) {
-      blade_id_should_report_ = true;
+      PrintAndSpeakId();
       FindBladeAgain();
       return true;
     }
