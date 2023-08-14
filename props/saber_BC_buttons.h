@@ -556,9 +556,9 @@ public:
     if (millis() - volume_range_delay_ > 2000) {
       if (SFX_volmin) {
         hybrid_font.PlayPolyphonic(&SFX_volmin);
-        } else {
-          beeper.Beep(0.5, 1000);
-        }
+      } else {
+        beeper.Beep(0.5, 1000);
+      }
       PVLOG_NORMAL << "Minimum Volume\n";
       volume_range_delay_ = millis();
     }
