@@ -182,7 +182,7 @@ public:
 #else
     // No sound means no preon.
     FastOn();
-#endif    
+#endif
   }
 
   void FastOn() {
@@ -367,7 +367,7 @@ public:
 #endif
 #ifdef SAVE_CLASH_THRESHOLD
       || GetCurrentClashThreshold() != saved_global_state.clash_threshold
-#endif	
+#endif  
       ) {
       SaveGlobalState();
     }
@@ -490,7 +490,7 @@ public:
     if (on) On();
     TRACE(PROP, "end");
   }
-	
+
   // Go to the next Preset.
   virtual void next_preset() {
 #ifdef SAVE_PRESET
@@ -613,7 +613,7 @@ public:
     }
     return false;
   }
-    
+
   // Must be called from loop()
   void PollScanId() {
     if (find_blade_again_pending_) {
@@ -623,7 +623,8 @@ public:
   }
 #else
   void PollScanId() {}
-#endif 
+#endif
+
 
   // Called from setup to identify the blade and select the right
   // Blade driver, style and sound font.
@@ -781,27 +782,27 @@ public:
     } else {
 #ifndef PROFFIEOS_DONT_USE_GYRO_FOR_CLASH
       v = (diff.len() + fusor.gyro_clash_value()) / 2.0;
-#else      
+#else
       v = diff.len();
-#endif      
+#endif
     }
-#if 0    
+#if 0
     static uint32_t last_printout=0;
     if (millis() - last_printout > 1000) {
       last_printout = millis();
       STDOUT << "ACCEL: " << accel
-	     << " diff: " << diff
-	     << " gyro: " << fusor.gyro_clash_value()
-	     << " v = " << v << "\n";
+             << " diff: " << diff
+             << " gyro: " << fusor.gyro_clash_value()
+             << " v = " << v << "\n";
     }
 #endif
     // If we're spinning the saber or if loud sounds are playing, 
     // require a stronger acceleration to activate the clash.
     if (v > (CLASH_THRESHOLD_G + fusor.gyro().len() / 200.0)
 #if defined(ENABLE_AUDIO) && defined(AUDIO_CLASH_SUPPRESSION_LEVEL)
-	+ (dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 0.000001))
-#endif	
-      ) {    
+        + (dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 0.000001))
+#endif
+      ) {
       if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
         diff = -diff;
       }
@@ -1601,7 +1602,7 @@ public:
       SetClashThreshold(parsefloat(arg));
       return true;
     }
-#endif    
+#endif
 
     if (!strcmp(cmd, "get_preset")) {
       STDOUT.println(current_preset_.preset_num);
