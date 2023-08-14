@@ -132,9 +132,17 @@ public:
     while (true) {
       while (!SA::Connected()) YIELD();
       if (!SA::AlwaysConnected()) {
-        STDOUT << "Welcome to ProffieOS " << version << "\n";
-        STDOUT << "For available serial commands, see:\n";
-        STDOUT << "https://pod.hubbe.net/tools/serial-monitor-commands.html\n";	
+        PVLOG_NORMAL << "Welcome to ProffieOS " << version << "\n";
+        PVLOG_NORMAL << "For available serial commands, see:\n";
+        PVLOG_NORMAL << "https://pod.hubbe.net/tools/serial-monitor-commands.html\n";	
+        PVLOG_NORMAL << 
+        "\n BOOT Volume: " TOSTRING(BOOT_VOLUME)
+        "\n Current Volume: " << dynamic_mixer.get_volume() <<
+        "\n MAX Volume: " TOSTRING(VOLUME)
+        "\n " CONFIG_FILE
+        "\n Prop: "  TOSTRING(PROP_TYPE)
+        ".h\n Num buttons: " TOSTRING(NUM_BUTTONS)
+        "\n Installed: " << install_time << "\n";
       }
 
       while (SA::Connected()) {
