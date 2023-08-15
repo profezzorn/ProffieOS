@@ -544,27 +544,27 @@ public:
 
   // Measure and return the blade identifier resistor.
   float id(bool announce = false) {
-      EnableBooster();
-      BLADE_ID_CLASS_INTERNAL blade_id;
-      float ret = blade_id.id();
+    EnableBooster();
+    BLADE_ID_CLASS_INTERNAL blade_id;
+    float ret = blade_id.id();
 
-      if (announce) {
-        PVLOG_STATUS << "BLADE ID: " << ret << "\n";
+    if (announce) {
+      PVLOG_STATUS << "BLADE ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
-        talkie.Say(spI);
-        talkie.Say(spD);
-        talkie.SayNumber((int)ret);
+      talkie.Say(spI);
+      talkie.Say(spD);
+      talkie.SayNumber((int)ret);
 #endif
-      }
+    }
 #ifdef BLADE_DETECT_PIN
-      if (!blade_detected_) {
-        STDOUT << "NO ";
-        ret += NO_BLADE;
-      } else {
-        STDOUT << "Blade Detected\n";
-      }
+    if (!blade_detected_) {
+      STDOUT << "NO ";
+      ret += NO_BLADE;
+    } else {
+      STDOUT << "Blade Detected\n";
+    }
 #endif
-      return ret;
+    return ret;
   }
 
   size_t FindBestConfig(bool announce = false) {
