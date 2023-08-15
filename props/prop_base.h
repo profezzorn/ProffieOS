@@ -543,43 +543,36 @@ public:
 #endif
 
   // Measure and return the blade identifier resistor.
-  float RetrieveBladeId() {
-    EnableBooster();
-    BLADE_ID_CLASS_INTERNAL blade_id;
-    float ret = blade_id.id();
-#ifdef BLADE_DETECT_PIN
-    if (!blade_detected_) {
-      ret += NO_BLADE;
-    }
-#endif
-    return ret;
-  }
+  float id(bool announce = false) {
+      EnableBooster();
+      BLADE_ID_CLASS_INTERNAL blade_id;
+      float ret = blade_id.id();
 
-  float PrintAndSpeakId() {
-    float current_id = RetrieveBladeId();
-    PVLOG_STATUS << "BLADE ID: " << current_id << "\n";
-#ifdef BLADE_DETECT_PIN
-    if (!blade_detected_) {
-      STDOUT << "NO ";
-    } else {
-      STDOUT << "Blade Detected\n";
-    }
-#endif
-
+      if (announce) {
+        PVLOG_STATUS << "BLADE ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
-    talkie.Say(spI);
-    talkie.Say(spD);
-    talkie.SayNumber((int)current_id);
+        talkie.Say(spI);
+        talkie.Say(spD);
+        talkie.SayNumber((int)ret);
 #endif
-    return current_id; // not sure why we're returning the ID value here
+      }
+#ifdef BLADE_DETECT_PIN
+      if (!blade_detected_) {
+        STDOUT << "NO ";
+        ret += NO_BLADE;
+      } else {
+        STDOUT << "Blade Detected\n";
+      }
+#endif
+      return ret;
   }
 
-  size_t FindBestConfig() {
+  size_t FindBestConfig(bool announce = false) {
     static_assert(NELEM(blades) > 0, "blades array cannot be empty");
 
     size_t best_config = 0;
     if (NELEM(blades) > 1) {
-      float resistor = RetrieveBladeId();
+      float resistor = id(announce);
 
       float best_err = 100000000.0;
       for (size_t i = 0; i < NELEM(blades); i++) {
@@ -750,7 +743,7 @@ public:
 
     ONCEPERBLADE(DEACTIVATE);
     SaveVolumeIfNeeded();
-    PrintAndSpeakId();
+    FindBestConfig(true);
     FindBlade();
   }
 
@@ -1279,7 +1272,7 @@ public:
 
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "id")) {
-      PrintAndSpeakId();
+      id(true);
       return true;
     }
     if (!strcmp(cmd, "scanid")) {
