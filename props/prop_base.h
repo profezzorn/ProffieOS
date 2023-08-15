@@ -443,7 +443,7 @@ public:
     chdir(current_preset_.font.get());
     if (on) On();
     if (announce) {
-      PVLOG_STATUS << "DISPLAY: " << current_preset_name() << "\n";
+      PVLOG_STATUS << "Current Preset: " << current_preset_name() << "\n";
       SaberBase::DoNewFont();
     }
     TRACE(PROP, "end");
