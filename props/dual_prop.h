@@ -30,7 +30,7 @@ The no-blade (Blaster) preset bank must be first,
 followed by one or more blade-in preset banks.
 See the example at the bottom of this page to sees what that looks like:
 https://pod.hubbe.net/howto/blade-id.html
-Write the  BladeConfig so each blade (and no-blade) has a description entry, and
+Write the BladeConfig so each blade (and no-blade) has a description entry, and
 if need be, #define BLADE_DETECT_PIN properly.
 */
 
