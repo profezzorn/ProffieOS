@@ -560,9 +560,8 @@ public:
     if (!blade_detected_) {
       STDOUT << "NO ";
       ret += NO_BLADE;
-    } else {
-      STDOUT << "Blade Detected\n";
     }
+    STDOUT << "Blade Detected\n";
 #endif
     return ret;
   }
