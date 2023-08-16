@@ -558,10 +558,10 @@ public:
     }
 #ifdef BLADE_DETECT_PIN
     if (!blade_detected_) {
-      STDOUT << "NO ";
+      PVLOG_STATUS << "NO ";
       ret += NO_BLADE;
     }
-    STDOUT << "Blade Detected\n";
+    PVLOG_STATUS << "Blade Detected\n";
 #endif
     return ret;
   }
