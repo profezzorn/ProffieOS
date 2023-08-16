@@ -617,7 +617,6 @@ public:
   void PollScanId() {}
 #endif
 
-
   // Called from setup to identify the blade and select the right
   // Blade driver, style and sound font.
   void FindBlade() {
