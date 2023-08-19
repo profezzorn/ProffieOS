@@ -443,7 +443,7 @@ public:
     chdir(current_preset_.font.get());
     if (on) On();
     if (announce) {
-      STDOUT << "DISPLAY: " << current_preset_name() << "\n";
+      PVLOG_STATUS << "Current Preset: " << current_preset_name() << "\n";
       SaberBase::DoNewFont();
     }
     TRACE(PROP, "end");
@@ -543,32 +543,35 @@ public:
 #endif
 
   // Measure and return the blade identifier resistor.
-  float id() {
+  float id(bool announce = false) {
     EnableBooster();
     BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
-    PVLOG_STATUS << "BLADE ID: " << ret << "\n";
+
+    if (announce) {
+      PVLOG_STATUS << "BLADE ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
     talkie.Say(spI);
     talkie.Say(spD);
     talkie.SayNumber((int)ret);
 #endif
+    }
 #ifdef BLADE_DETECT_PIN
     if (!blade_detected_) {
-      STDOUT << "NO ";
+      PVLOG_STATUS << "NO ";
       ret += NO_BLADE;
     }
-    STDOUT << "Blade Detected\n";
+    PVLOG_STATUS << "Blade Detected\n";
 #endif
     return ret;
   }
 
-  size_t FindBestConfig() {
+  size_t FindBestConfig(bool announce = false) {
     static_assert(NELEM(blades) > 0, "blades array cannot be empty");
 
     size_t best_config = 0;
     if (NELEM(blades) > 1) {
-      float resistor = id();
+      float resistor = id(announce);
 
       float best_err = 100000000.0;
       for (size_t i = 0; i < NELEM(blades); i++) {
@@ -616,8 +619,8 @@ public:
 
   // Called from setup to identify the blade and select the right
   // Blade driver, style and sound font.
-  void FindBlade() {
-    size_t best_config = FindBestConfig();
+  void FindBlade(bool announce = false) {
+    size_t best_config = FindBestConfig(announce);
     PVLOG_STATUS << "blade = " << best_config << "\n";
     current_config = blades + best_config;
 
@@ -734,7 +737,7 @@ public:
 
     ONCEPERBLADE(DEACTIVATE);
     SaveVolumeIfNeeded();
-    FindBlade();
+    FindBlade(true);
   }
 
   bool CheckInteractivePreon() {
@@ -1262,7 +1265,7 @@ public:
 
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "id")) {
-      id();
+      id(true);
       return true;
     }
     if (!strcmp(cmd, "scanid")) {
