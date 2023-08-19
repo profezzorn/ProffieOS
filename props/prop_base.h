@@ -114,6 +114,9 @@ private:
 };
 #endif
 
+#include "../sound/sound_library.h"
+extern SoundLibrary sound_library_;
+
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase {
 public:
@@ -551,9 +554,7 @@ public:
     if (announce) {
       PVLOG_STATUS << "BLADE ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
-      talkie.Say(spI);
-      talkie.Say(spD);
-      talkie.SayNumber((int)ret);
+      sound_library_.SayNumber(ret, SAY_WHOLE);
 #endif
     }
 #ifdef BLADE_DETECT_PIN
@@ -623,7 +624,7 @@ public:
     size_t best_config = FindBestConfig();
     PVLOG_STATUS << "blade = " << best_config << "\n";
     current_config = blades + best_config;
-    bool bladestatus = (announce && best_config > 0 ? true : false);
+    bool bladestatus = (announce && best_config > 0);
 
 #define ACTIVATE(N) do {     \
     if (!current_config->blade##N) goto bad_blade;  \
@@ -635,10 +636,12 @@ public:
 #ifdef SAVE_PRESET
     ResumePreset();
 #else
-    SetPreset(0, announce);
     // have Blade ID play bladein and bladeout sounds.
     SaberBase::DoBladeDetect(bladestatus);
-    PVLOG_STATUS << "Blade status = " << (bladestatus ? "IN" : "OUT") << "\n";
+    // PVLOG_STATUS << "Blade status = " << (bladestatus ? "IN" : "OUT") << "\n";
+    // Wait for bladein or bladeout to finish playing
+    while (GetWavPlayerPlaying(bladestatus ? &SFX_bladein : &SFX_bladeout));
+    SetPreset(0, announce);
 #endif
     return;
 
@@ -741,8 +744,7 @@ public:
 
     ONCEPERBLADE(DEACTIVATE);
     SaveVolumeIfNeeded();
-    FindBestConfig(true);
-    FindBlade();
+    FindBlade(true);
   }
 
   bool CheckInteractivePreon() {
