@@ -623,6 +623,7 @@ public:
     size_t best_config = FindBestConfig();
     PVLOG_STATUS << "blade = " << best_config << "\n";
     current_config = blades + best_config;
+    bool bladestatus = (announce && best_config > 0 ? true : false);
 
 #define ACTIVATE(N) do {     \
     if (!current_config->blade##N) goto bad_blade;  \
@@ -635,6 +636,9 @@ public:
     ResumePreset();
 #else
     SetPreset(0, announce);
+    // have Blade ID play bladein and bladeout sounds.
+    SaberBase::DoBladeDetect(bladestatus);
+    PVLOG_STATUS << "Blade status = " << (bladestatus ? "IN" : "OUT") << "\n";
 #endif
     return;
 
