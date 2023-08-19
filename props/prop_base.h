@@ -634,11 +634,7 @@ public:
 #ifdef SAVE_PRESET
     ResumePreset();
 #else
-    if (millis() < 3000) {
-      SetPreset(0, false);
-    } else {
-      SetPreset(0, true);
-    }
+    SetPreset(0, announce);
 #endif
     return;
 
