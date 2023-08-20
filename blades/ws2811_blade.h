@@ -253,12 +253,7 @@ protected:
       if (!current_style_ || !run_) {
 	loop_counter_.Reset();
 #ifdef BLADE_ID_SCAN_MILLIS
-#if VERSION_MAJOR <= 5
-        if (pin_->pin() == bladeIdentifyPin && ScanBladeIdNow())
-#else
-        if (pin_->pin() == bladePin && ScanBladeIdNow())
-#endif
-        {
+        if (pin_->pin() == bladePin && ScanBladeIdNow()) {
           pin_->Enable(powered_);
           SLEEP(1);
         }
@@ -293,12 +288,7 @@ protected:
 
       while (!pin_->IsReadyForEndFrame()) BLADE_YIELD();
 #ifdef BLADE_ID_SCAN_MILLIS
-#if VERSION_MAJOR <= 5
-      if (pin_->pin() == bladeIdentifyPin && ScanBladeIdNow())
-#else
-      if (pin_->pin() == bladePin && ScanBladeIdNow())
-#endif
-      {
+      if (pin_->pin() == bladePin && ScanBladeIdNow()) {
         pin_->Enable(powered_);
         SLEEP(1);
         if (current_blade != this) goto retry;
