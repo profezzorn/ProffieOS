@@ -541,6 +541,7 @@ public:
 #ifdef BLADE_DETECT_PIN
   bool blade_detected_ = false;
 #endif
+  // If booting up, don't do bladein / bladeout sounds, just boot.wav
   bool system_booted = false;
 
   // Measure and return the blade identifier resistor.
@@ -637,13 +638,13 @@ public:
     ResumePreset();
 #else
     SetPreset(0, false); // DoNewFont or not? set to announce if yes desired.
-    // have Blade ID play bladein and bladeout sounds.
+    // Have Blade ID play bladein and bladeout sounds.
 #ifndef BLADE_DETECT_PIN
-    STDOUT << "************** Blade status = " << (bladestatus ? "IN" : "OUT") << "\n";
+    PVLOG_DEBUG << "************** Blade status = " << (bladestatus ? "IN" : "OUT") << "\n";
     if (system_booted) {
       SaberBase::DoBladeDetect(bladestatus);
     } else {
-      STDOUT << "************** Booting = Not playing bladein/out\n";
+      PVLOG_DEBUG << "************** Booting = Not playing bladein/out\n";
     }
 #endif // BLADE_DETECT_PIN
 #endif // SAVE_PRESET
