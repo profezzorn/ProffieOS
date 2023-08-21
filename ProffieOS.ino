@@ -95,6 +95,25 @@
 #warning Your config file has KEEP_SAVEFILES_WHEN_PROGRAMMING in it. If you experience problems, please remove it and try again before asking for help. For more information, see: https://pod.hubbe.net/config/keeping-edits-when-uploading.html
 #endif
 
+#define COUNT_ARGS(...)  COUNT_ARGS_(__VA_ARGS__, 6, 5, 4, 3, 2, 1, 0)
+#define COUNT_ARGS_(_1, _2, _3, _4, _5, _6, N, ...)  N
+#define POWER_PINS_1(a)                    PowerPINS<bladePowerPin##a>
+#define POWER_PINS_2(a, b)                 PowerPINS<bladePowerPin##a, bladePowerPin##b>
+#define POWER_PINS_3(a, b, c)              PowerPINS<bladePowerPin##a, bladePowerPin##b, bladePowerPin##c>
+#define POWER_PINS_4(a, b, c, d)           PowerPINS<bladePowerPin##a, bladePowerPin##b, bladePowerPin##c, bladePowerPin##d>
+#define POWER_PINS_5(a, b, c, d, e)        PowerPINS<bladePowerPin##a, bladePowerPin##b, bladePowerPin##c, bladePowerPin##d, bladePowerPin##e>
+#define POWER_PINS_6(a, b, c, d, e, f)     PowerPINS<bladePowerPin##a, bladePowerPin##b, bladePowerPin##c, bladePowerPin##d, bladePowerPin##e, bladePowerPin##f>
+#define CAT2(A, B) A##B
+#define POWER_PINS_CAT(N) CAT2(POWER_PINS_, N)
+#define SELECT_POWER_PINS(...) POWER_PINS_CAT(COUNT_ARGS(__VA_ARGS__))(__VA_ARGS__)
+
+#ifdef REAL_TIME_BLADE_ID_PINS
+  #define ENABLE_POWER_FOR_ID SELECT_POWER_PINS(REAL_TIME_BLADE_ID_PINS)
+  #define SHARED_POWER_PINS
+  #define BLADE_ID_SCAN_MILLIS 1000
+  #define BLADE_ID_TIMES 15
+#endif
+
 //
 // OVERVIEW
 //
