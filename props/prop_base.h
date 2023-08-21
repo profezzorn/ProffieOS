@@ -639,6 +639,7 @@ public:
 #else
     SetPreset(0, false); // DoNewFont or not? set to announce if yes desired.
     // Have Blade ID play bladein and bladeout sounds.
+#endif // SAVE_PRESET
 #ifndef BLADE_DETECT_PIN
     PVLOG_DEBUG << "************** Blade status = " << (bladestatus ? "IN" : "OUT") << "\n";
     if (system_booted) {
@@ -647,7 +648,6 @@ public:
       PVLOG_DEBUG << "************** Booting = Not playing bladein/out\n";
     }
 #endif // BLADE_DETECT_PIN
-#endif // SAVE_PRESET
     system_booted = true;
     return;
 
