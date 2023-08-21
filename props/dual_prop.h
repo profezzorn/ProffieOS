@@ -26,12 +26,26 @@ Then setup the prop section like this:
 as well as the class names would change based on the prop you choose.
 
 Now setup your CONFIG_PRESETS section to have multiple preset banks.
-The no-blade (Blaster) preset bank must be first,
+The no-blade (Blaster) preset bank should be first,
 followed by one or more blade-in preset banks.
-See the example at the bottom of this page to sees what that looks like:
+Also, the BladeConfig needs each blade (and no-blade) to have a description entry in
+the same order of the Presets arrays. The Blade ID values will depend on whether 
+you choose to use Blade Detect or Blade ID.
+
+- Blade Detect using a wired latching system:
+Add #define BLADE_DETECT_PIN with the pin number used.
+See here for setup info:
+https://pod.hubbe.net/howto/blade-detect.html
+
+- Blade ID using the measured resistance of the blade to switch:
+Add the following to the config file
+  #define ENABLE_POWER_FOR_ID PowerPINS<bladePowerPin2, bladePowerPin3> (based on the LED pads you use)
+  #define SHARED_POWER_PINS
+Optionally, for Real Time Blade ID
+  #define BLADE_ID_SCAN_MILLIS 1000
+  #define BLADE_ID_TIMES 15
+See here for setup info:
 https://pod.hubbe.net/howto/blade-id.html
-Write the  BladeConfig so each blade (and no-blade) has a description entry, and
-if need be, #define BLADE_DETECT_PIN properly.
 */
 
 #ifndef DUAL_PROP_CONDITION
