@@ -59,7 +59,7 @@ Optional Blade style elements:
 | 2 Buttons: FIRE and MODE (POW and AUX) |
 ==========================================
 Power On / Off            - Hold MODE, double click and hold FIRE until Power On / Off (Default is auto-power ON)
-Cycle Modes               - Click MODE when ON. Cycles through KILL, AUTOFIRE, and STUN modes.
+Cycle Modes               - Click and hold MODE. Cycles through KILL, AUTOFIRE, and STUN modes.
 Next Preset               - Long click and release MODE.
 Previous Preset           - Double click and hold MODE, release after a second.
 Start/Stop Track          - 4x click MODE.
@@ -83,7 +83,7 @@ Self-Destruct             - Press and hold MODE and FIRE until overload starts..
 Quote Player              - Double click MODE while NOT pointing down. (requires quote.wavs in font)
 Toggle quotes
   random or sequential    - Double click MODE while pointing down.
-Reload                    - Click MODE.
+Reload                    - Click MODE until reload..
 Fire                      - Click FIRE. (Hold to Auto / Rapid Fire when AUTO mode selected)
 Clip In                   - Clip Detect pad Latched On.
 Clip out                  - Clip Detect pad Latched Off.
@@ -91,7 +91,7 @@ Unjam                     - Bang the blaster or Reload.
 
 - If there's a dedicated POWER button,
 Power On / Off            - Click POW. - TODO: this with dual_prop is....weird
-- If there's a dedicated Relod button, 
+- If there's a dedicated Reload button, 
 Reload                    - Click RELOAD.
 
 -TODO: PLI_ON / OFF, CLIP IN etc....
@@ -552,10 +552,10 @@ RefPtr<BufferedWavPlayer> wav_player;
         return true;
 
 // Cycle Mode
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON | BUTTON_CLIP_DETECT):
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF | BUTTON_CLIP_DETECT):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_OFF):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON | BUTTON_CLIP_DETECT):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_OFF | BUTTON_CLIP_DETECT):
         if (mode_volume_) {
           QuickMaxVolume();
           return true;
@@ -655,8 +655,8 @@ RefPtr<BufferedWavPlayer> wav_player;
 
 // Reload
       case EVENTID(BUTTON_RELOAD, EVENT_PRESSED, MODE_ON):
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON):
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON | BUTTON_CLIP_DETECT):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON | BUTTON_CLIP_DETECT):
         if (no_clip_) {
           SaberBase::DoEffect(EFFECT_EMPTY, 0); 
           return true;
