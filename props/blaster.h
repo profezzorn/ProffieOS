@@ -279,7 +279,7 @@ public:
     SetNextAction(what, when * 1000);
   }
   
-  void PollNextAction() {
+  virtual void PollNextAction() {
     if (millis() - time_base_ > next_event_time_) {
       switch (next_action_) {
         case NEXT_ACTION_NOTHING:
@@ -307,7 +307,7 @@ public:
     SetNextActionF(NEXT_ACTION_ARM, len);
   }
 
-  void selfDestruct() {
+  virtual void selfDestruct() {
     SaberBase::DoEndLockup();
 #ifdef ENABLE_AUDIO    
     float len = hybrid_font.GetCurrentEffectLength();
