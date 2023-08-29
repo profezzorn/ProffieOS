@@ -499,11 +499,8 @@ class Effect {
       return;
     }
 
-#if 0
-    // TODO: "monitor scan" command?
-    STDOUT.print("SCAN ");
-    STDOUT.println(filename);
-#endif
+    PVLOG_DEBUG << "SCAN: " << filename << "\n";
+
     for (Effect* e = all_effects; e; e = e->next_) {
       // This effect has already been found in a previous
       // directory, and it cannot be found in another directory.
@@ -536,7 +533,7 @@ class Effect {
     }
     
     void ScanIterator(LSFS::Iterator& iter) {
-      // fprintf(stderr, "SCANITER: %s\n", fname);
+      PVLOG_DEBUG << "ScanIterator " << iter.name() << " fname=" << fname << "\n";
       char* fend = fname;
       int flen = strlen(fname);
       fend += flen;
@@ -545,7 +542,7 @@ class Effect {
 	fend++;
       }
       for (; iter; ++iter) {
-	// fprintf(stderr, "N: %s\n", iter.name());
+	PVLOG_VERBOSE << " Directory entry: '" << iter.name() << "'\n";
 	if (iter.name()[0] == '.') continue;
 	strcpy(fend, iter.name());
 	if (iter.isdir()) {
@@ -571,7 +568,7 @@ class Effect {
 
   static void ScanOneDirectory(const char* dir) {
     STDOUT.print("Scanning sound font: ");
-    STDOUT.print(dir);
+    STDOUT << dir << "\n";
 
 #ifdef ENABLE_SERIALFLASH
     // Scan serial flash.
