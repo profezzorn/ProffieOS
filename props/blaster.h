@@ -201,6 +201,7 @@ public:
       if (blaster_mode == MODE_STUN) {
         SaberBase::DoEffect(EFFECT_STUN, 0);
       } else {
+        SFX_blast.Select(-1);
         SaberBase::DoEffect(EFFECT_FIRE, 0);
       }
 
