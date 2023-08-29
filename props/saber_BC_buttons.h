@@ -855,6 +855,8 @@ public:
 
 // Stab
     case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
+      //Don't stab if in colorchange mode
+      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
       SaberBase::SetClashStrength(2.0);
       SaberBase::DoStab();
     return true;
@@ -896,6 +898,8 @@ public:
   // 2 button
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
 #endif
+      //Don't lockup if in colorchange mode
+      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
       if (!SaberBase::Lockup()) {
         // pointing down
         if (fusor.angle1() < - M_PI / 4) {
@@ -925,6 +929,8 @@ public:
 
 // Lightning Block
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_ON):
+      //Don't lightning block if in colorchange mode
+      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
       SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
       SaberBase::DoBeginLockup();
       return true;
