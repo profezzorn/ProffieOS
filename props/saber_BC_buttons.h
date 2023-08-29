@@ -919,6 +919,8 @@ public:
 
 // Melt
     case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
+      //Don't melt if in colorchange mode
+      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
       clash_impact_millis_ = millis();
       if (!SaberBase::Lockup() && !swinging_) {
         SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
