@@ -285,10 +285,17 @@ protected:
 #endif
       }
 
+#if PROFFIEBOARD_VERSION == 3
+      TSC->IOCCR.set(TSC_IO_TYPE::G1_IO1(0) |
+		     TSC_IO_TYPE::G1_IO2(0) |
+		     TSC_IO_TYPE::G1_IO3(0) |
+		     TSC_IO_TYPE::G1_IO4(0));
+#else
       TSC->IOCCR.set(TSC_IO_TYPE::G2_IO1(0) |
 		     TSC_IO_TYPE::G2_IO2(0) |
 		     TSC_IO_TYPE::G2_IO3(0) |
 		     TSC_IO_TYPE::G2_IO4(0));
+#endif
       
       // Let someone else have a turn.
       current_button = NULL;
