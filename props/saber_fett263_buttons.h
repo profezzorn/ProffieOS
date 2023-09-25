@@ -2545,6 +2545,7 @@ SaberFett263Buttons() : PropBase() {}
 
 // Start Menu Mode
   void StartMenu(MenuType menu) {
+    twist_menu_ = M_PI / 4;
     current_menu_angle_ = fusor.angle2();
     menu_type_ = menu;
     menu_ = true;
@@ -4458,6 +4459,7 @@ SaberFett263Buttons() : PropBase() {}
     }
     menu_type_ = MENU_TOP;
     menu_ = false;
+    twist_menu_ = M_PI / 2;
     wav_player.Free();
   }
 
@@ -6458,7 +6460,7 @@ private:
   int sub_dial_; // Sub menu dial "tick"
   int arg_dial_; // Argument Sub menu dial "tick"
   int gesture_num_;
-  float twist_menu_ = M_PI / 4; // Twist Menu sensitivity
+  float twist_menu_ = M_PI / 2; // default Twist Right / Left sensitivity
   bool choice_ = false;
   // Edit Mode selection confirmation
   // for True/False control when deleting, disabling/enabling or copying
