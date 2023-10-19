@@ -4459,7 +4459,7 @@ SaberFett263Buttons() : PropBase() {}
     }
     menu_type_ = MENU_TOP;
     menu_ = false;
-    twist_menu_ = M_PI / 2.3;
+    twist_menu_ = M_PI / 2.2;
     wav_player.Free();
   }
 
@@ -6462,7 +6462,7 @@ private:
   int sub_dial_; // Sub menu dial "tick"
   int arg_dial_; // Argument Sub menu dial "tick"
   int gesture_num_;
-  float twist_menu_ = M_PI / 2.3; // default Twist Right / Left sensitivity
+  float twist_menu_ = M_PI / 2.2; // default Twist Right / Left sensitivity
   bool choice_ = false;
   // Edit Mode selection confirmation
   // for True/False control when deleting, disabling/enabling or copying
