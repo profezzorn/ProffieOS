@@ -629,11 +629,11 @@ public:
     }
     // SFX_bladein/out doesn't exist, playing font.wav instead
     if (SFX_font) {
-    PVLOG_STATUS << "****************** SFX_bladein/out doesn't exist, playing font.wav instead. \n";
+    PVLOG_STATUS << "SFX_bladein/out doesn't exist, playing font.wav instead.\n";
       PlayPolyphonic(&SFX_font);
       return;
     }
-    PVLOG_STATUS << "****************** Didn't find font.wav...playing beep instead ????? \n";
+    PVLOG_STATUS << " Didn't find font.wav, playing beep instead.\n";
     // Otherwise, just beep to indicate blade status change.
     beeper.Beep(0.05, 2000.0);
   }
