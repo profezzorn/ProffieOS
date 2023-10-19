@@ -174,6 +174,7 @@ protected:
 
 
 #if PROFFIEBOARD_VERSION == 3
+
       TSC->IOGCSR.set(TSC_IOGCSR_TYPE::G7E(0) |
 		      TSC_IOGCSR_TYPE::G6E(0) |
 		      TSC_IOGCSR_TYPE::G5E(0) |
@@ -185,36 +186,37 @@ protected:
       // Cap pin is always the same for now. (PB12)
       stm32l4_gpio_pin_configure(GPIO_PIN_PB12_TSC_G1_IO1,
 				 (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_OPENDRAIN | GPIO_MODE_ALTERNATE));
-      TSC->IOHCR.set(TSC_IO_TYPE::G2_IO1(0));
-      TSC->IOSCR.set(TSC_IO_TYPE::G2_IO1(1));
-//      TSC->IOASCR.set(TSC_IO_TYPE::G2_IO4(1));
+      TSC->IOHCR.set(TSC_IO_TYPE::G1_IO1(0));
+      TSC->IOSCR.set(TSC_IO_TYPE::G1_IO1(1));
+//      TSC->IOASCR.set(TSC_IO_TYPE::G1_IO4(1));
 
       switch (pin_) {
 	case 11: // PB14
 	  stm32l4_gpio_pin_configure(GPIO_PIN_PB14_TSC_G1_IO3,
 				     (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
-	  TSC->IOHCR.set(TSC_IO_TYPE::G2_IO3(0));
-	  TSC->IOCCR.set(TSC_IO_TYPE::G2_IO3(1));
-//	  TSC->IOASCR.set(TSC_IO_TYPE::G2_IO3(1));
+	  TSC->IOHCR.set(TSC_IO_TYPE::G1_IO3(0));
+	  TSC->IOCCR.set(TSC_IO_TYPE::G1_IO3(1));
+//	  TSC->IOASCR.set(TSC_IO_TYPE::G1_IO3(1));
 	  break;
 
 	case 13: // PB13
 	  stm32l4_gpio_pin_configure(GPIO_PIN_PB13_TSC_G1_IO2,
 				     (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
-	  TSC->IOHCR.set(TSC_IO_TYPE::G2_IO2(0));
-	  TSC->IOCCR.set(TSC_IO_TYPE::G2_IO2(1));
-//	  TSC->IOASCR.set(TSC_IO_TYPE::G2_IO2(1));
+	  TSC->IOHCR.set(TSC_IO_TYPE::G1_IO2(0));
+	  TSC->IOCCR.set(TSC_IO_TYPE::G1_IO2(1));
+//	  TSC->IOASCR.set(TSC_IO_TYPE::G1_IO2(1));
 	  break;
 
 	case 15: // PB15
 	  stm32l4_gpio_pin_configure(GPIO_PIN_PB15_TSC_G1_IO4,
 				     (GPIO_PUPD_NONE | GPIO_OSPEED_HIGH | GPIO_OTYPE_PUSHPULL | GPIO_MODE_ALTERNATE));
-	  TSC->IOHCR.set(TSC_IO_TYPE::G2_IO4(0));
-	  TSC->IOCCR.set(TSC_IO_TYPE::G2_IO4(1));
-//	  TSC->IOASCR.set(TSC_IO_TYPE::G2_IO1(1));
+	  TSC->IOHCR.set(TSC_IO_TYPE::G1_IO4(0));
+	  TSC->IOCCR.set(TSC_IO_TYPE::G1_IO4(1));
+//	  TSC->IOASCR.set(TSC_IO_TYPE::G1_IO1(1));
 	  break;
       }
 #else      
+      
       TSC->IOGCSR.set(TSC_IOGCSR_TYPE::G7E(0) |
 		      TSC_IOGCSR_TYPE::G6E(0) |
 		      TSC_IOGCSR_TYPE::G5E(0) |
@@ -276,13 +278,24 @@ protected:
 	// Overflow
 	Update(TOUCH_MAX);
       } else {
+#if PROFFIEBOARD_VERSION == 3
+	Update(TSC->IOGCR[0]);
+#else
 	Update(TSC->IOGCR[1]);
+#endif
       }
 
+#if PROFFIEBOARD_VERSION == 3
+      TSC->IOCCR.set(TSC_IO_TYPE::G1_IO1(0) |
+		     TSC_IO_TYPE::G1_IO2(0) |
+		     TSC_IO_TYPE::G1_IO3(0) |
+		     TSC_IO_TYPE::G1_IO4(0));
+#else
       TSC->IOCCR.set(TSC_IO_TYPE::G2_IO1(0) |
 		     TSC_IO_TYPE::G2_IO2(0) |
 		     TSC_IO_TYPE::G2_IO3(0) |
 		     TSC_IO_TYPE::G2_IO4(0));
+#endif
       
       // Let someone else have a turn.
       current_button = NULL;
