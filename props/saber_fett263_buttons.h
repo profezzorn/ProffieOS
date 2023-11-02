@@ -1958,6 +1958,7 @@ SaberFett263Buttons() : PropBase() {}
     CheckEvent();
 #endif
     EditColor();
+    FreeWavplayerIfPossible();
     if (SaberBase::IsOn()) {
       DetectSwing();
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -2144,6 +2145,13 @@ SaberFett263Buttons() : PropBase() {}
         STDOUT.println("Out of WAV players!");
       }
     }
+  }
+
+  void FreeWavplayerIfPossible() {
+    if (!wav_player) return;
+    if (menu_) return;
+    if (wav_player->isPlaying()) return;
+    wav_player.Free();
   }
 
   void SelectPreset(int preset) {
@@ -2545,6 +2553,7 @@ SaberFett263Buttons() : PropBase() {}
 
 // Start Menu Mode
   void StartMenu(MenuType menu) {
+    twist_menu_ = M_PI / 4;
     current_menu_angle_ = fusor.angle2();
     menu_type_ = menu;
     menu_ = true;
@@ -4458,6 +4467,7 @@ SaberFett263Buttons() : PropBase() {}
     }
     menu_type_ = MENU_TOP;
     menu_ = false;
+    twist_menu_ = M_PI / 2.2;
     wav_player.Free();
   }
 
@@ -4638,7 +4648,6 @@ SaberFett263Buttons() : PropBase() {}
   }
 	
   void DoIgnition() {
-    wav_player.Free();
 #ifdef FETT263_DUAL_MODE_SOUND
     SelectIgnitionSound();
 #endif
@@ -5850,13 +5859,14 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
-        if (wav_player && wav_player->isPlaying()) {
-          current_menu_angle_ = fusor.angle2();
-          return false;
-        }
         if (menu_) {
-	  MenuDialIncrement(1);
-          return true;
+	  if (wav_player && wav_player->isPlaying()) {
+            current_menu_angle_ = fusor.angle2();
+            return false;
+          } else {
+	    MenuDialIncrement(1);
+            return true;
+	  }
         }
         if (swinging_) {
           return false;
@@ -5878,13 +5888,14 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
-        if (wav_player && wav_player->isPlaying()) {
-          current_menu_angle_ = fusor.angle2();
-          return false;
-        }        
         if (menu_) {
-	  MenuDialIncrement(-1);
-          return true;
+	  if (wav_player && wav_player->isPlaying()) {
+            current_menu_angle_ = fusor.angle2();
+            return false;
+          } else {
+	    MenuDialIncrement(-1);
+            return true;
+	  }
 	}
         if (swinging_) {
           return false;
@@ -6097,7 +6108,6 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
-	  wav_player.Free();
           if (SFX_preon) {
 #ifdef FETT263_DUAL_MODE_SOUND
             SelectPreonSound();
@@ -6119,7 +6129,6 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
-          wav_player.Free();
 	  FastOn();
 #ifndef FETT263_SWING_ON_NO_BM
           battle_mode_ = true;
@@ -6176,7 +6185,6 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
-	  wav_player.Free();
           if (SFX_preon) {
 #ifdef FETT263_DUAL_MODE_SOUND
             SelectPreonSound();
@@ -6200,7 +6208,6 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
-	  wav_player.Free();
           FastOn();
 #ifndef FETT263_TWIST_ON_NO_BM
           battle_mode_ = true;
@@ -6217,7 +6224,6 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
-          wav_player.Free();
           if (SFX_preon) {
 #ifdef FETT263_DUAL_MODE_SOUND
             SelectPreonSound();
@@ -6239,7 +6245,6 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
-	  wav_player.Free();
           FastOn();
 #ifndef FETT263_STAB_ON_NO_BM
           battle_mode_ = true;
@@ -6256,7 +6261,6 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
-	  wav_player.Free();
           if (SFX_preon) {
 #ifdef FETT263_DUAL_MODE_SOUND
             SelectPreonSound();
@@ -6278,7 +6282,6 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
-	  wav_player.Free();
           FastOn();
 #ifndef FETT263_THRUST_ON_NO_BM
           battle_mode_ = true;
@@ -6458,7 +6461,7 @@ private:
   int sub_dial_; // Sub menu dial "tick"
   int arg_dial_; // Argument Sub menu dial "tick"
   int gesture_num_;
-  float twist_menu_ = M_PI / 4; // Twist Menu sensitivity
+  float twist_menu_ = M_PI / 2.2; // default Twist Right / Left sensitivity
   bool choice_ = false;
   // Edit Mode selection confirmation
   // for True/False control when deleting, disabling/enabling or copying
