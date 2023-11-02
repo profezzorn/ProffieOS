@@ -4240,6 +4240,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_VOLUME:
         menu_type_ = MENU_SETTING_SUB;
         dynamic_mixer.set_volume(VOLUME);
+        SaveGlobalState();
         MenuRevert();
         break;
       case MENU_SETTING_SUB:
