@@ -811,13 +811,14 @@ public:
 
 // Spoken Battery Level in volts
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
-      // Avoid weird battery readings when using USB
-      if (battery_monitor.battery() < 0.5) {
-        sound_library_.SayTheBatteryLevelIs();
-        sound_library_.SayDisabled();
-      }
       if (!mode_volume_) {
-        sound_library_.SayTheBatteryLevelIs();
+        // Avoid weird battery readings when using USB
+        if (battery_monitor.battery() < 0.5) {
+          sound_library_.SayTheBatteryLevelIs();
+          sound_library_.SayDisabled();
+          return true;
+        }
+        sound_library_.SayTheBatteryLevelIs(); // Not just using SayBatteryVolts() because I want it to use the "is" version.
         sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
         sound_library_.SayVolts();
         PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
@@ -828,15 +829,16 @@ public:
 
 // Spoken Battery Level in percentage
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD, MODE_OFF):
-      if (battery_monitor.battery() < 0.5) {
-        sound_library_.SayTheBatteryLevelIs();
-        sound_library_.SayDisabled();
-      }
       if (!mode_volume_) {
+        if (battery_monitor.battery() < 0.5) {
+          sound_library_.SayTheBatteryLevelIs();
+          sound_library_.SayDisabled();
+          return true;
+        }
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
         sound_library_.SayPercent();
-        PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
+        PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "%\n";
         speaking_ = true;
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
       }
