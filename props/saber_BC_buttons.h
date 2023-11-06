@@ -818,7 +818,7 @@ public:
           sound_library_.SayDisabled();
           return true;
         }
-        sound_library_.SayTheBatteryLevelIs(); // Not just using SayBatteryVolts() because I want it to use the "is" version.
+        sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
         sound_library_.SayVolts();
         PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
