@@ -886,7 +886,7 @@ public:
       return true;
 
 #ifdef ENABLE_AUTO_SWING_BLAST
-    // Auto enter/exit multi-blast block with swings if swing within 1 second
+    // Auto enter/exit multi-blast block with swings if swing within 1 second.
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
       if (millis() - last_blast_ < 1000) {
         SaberBase::DoBlast();
