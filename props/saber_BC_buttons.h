@@ -126,8 +126,6 @@ Next Preset           - Long click and release POW.
 Prev Preset           - Double click and hold POW, release after a second (click then long click).
 Play/Stop Track       - 4x click POW.
 Volume Menu:
-                      * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to
-                        tilt up or down to avoid erratic rotational volume changes at extreme blade angles.
         Enter/Exit    - Hold POW + Clash.
         Volume UP     - Rotate Right
                       - or -
@@ -217,8 +215,6 @@ Next Preset           - Long click and release POW.
 Prev Preset           - Double click and hold POW, release after a second (click then long click).
 Play/Stop Track       - Hold AUX + Double click POW.
 Volume Menu:
-                      * NOTE * Tilting blade too high or low in Volume Menu will give a warning tone to
-                        tilt up or down to avoid erratic rotational volume changes at extreme blade angles.
         Enter/Exit    - Long click AUX.
         Volume UP     - Rotate Right
                       - or -
@@ -566,36 +562,6 @@ public:
 
   void DetectMenuTurn() {
     if (mode_volume_) {
-      if (fusor.angle1() >  M_PI / 3) {
-        if (millis() - beep_delay_ > 1000) {
-          beeper.Beep(0.05, 950);
-          beeper.Beep(0.05, 693);
-          beeper.Beep(0.05, 625);
-          beeper.Beep(0.05, 595);
-          beeper.Beep(0.05, 525);
-          beeper.Beep(0.05, 475);
-          PVLOG_NORMAL << "**** Blade Too High - Tilt Down \n";
-          beep_delay_ = millis();
-          return;
-        } else {
-          return;
-        }
-      }
-      if (fusor.angle1() < - M_PI / 4) {
-        if (millis() - beep_delay_ > 1000) {
-          beeper.Beep(0.05, 475);
-          beeper.Beep(0.05, 525);
-          beeper.Beep(0.05, 595);
-          beeper.Beep(0.05, 625);
-          beeper.Beep(0.05, 693);
-          beeper.Beep(0.05, 950);
-          PVLOG_NORMAL << "**** Blade Too Low - Tilt Up \n";
-          beep_delay_ = millis();
-          return;
-        } else {
-          return;
-        }
-      }
       float a = fusor.angle2() - current_menu_angle_;
       if (a > M_PI) a-=M_PI*2;
       if (a < -M_PI) a+=M_PI*2;
