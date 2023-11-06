@@ -1040,7 +1040,7 @@ public:
 // Swap effect - NOT pointing up or down
 // Toggle sequential quote play - pointing down
 #if NUM_BUTTONS == 1
-    case EVENTID(BUTTON_POWER,EVENT_FOURTH_HELD_MEDIUM, MODE_ON):
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_ON):
 #else
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
 #endif
