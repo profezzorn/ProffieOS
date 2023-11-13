@@ -1009,7 +1009,8 @@ public:
   void StartOrStopTrack() {
 #ifdef ENABLE_AUDIO
     if (track_player_) {
-      track_player_->Stop();
+      track_player_->set_fade_time(1.0);
+      track_player_->FadeAndStop();
       track_player_.Free();
     } else {
       MountSDCard();
