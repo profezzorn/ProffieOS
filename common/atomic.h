@@ -48,12 +48,20 @@ private:
 
 #else
 
+#include <atomic>
+
 template<class T> class POAtomic {
 public:
   POAtomic() : value_() {}
   POAtomic(T value) : value_(value) {}
-  T get() { return value_; }
-  T get() const { return value_; }
+  T get() {
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    return value_;
+  }
+  T get() const {
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    return value_;
+  }
   void set(T value) {
     value_ = value;
   }
