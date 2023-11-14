@@ -1670,28 +1670,26 @@ public:
     if (!strcmp(cmd, "list_fonts")) {
       LOCK_SD(true);
       for (LSFS::Iterator iter("/"); iter; ++iter) {
-        if (iter.isdir()) {
-          char fname[128];
-          strcpy(fname, iter.name());
-          strcat(fname, "/");
-          char* fend = fname + strlen(fname);
-          bool isfont = false;
-          if (!isfont) {
-            strcpy(fend, "hum.wav");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            strcpy(fend, "hum01.wav");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            strcpy(fend, "hum");
-            isfont = LSFS::Exists(fname);
-          }
-          if (isfont) {
-            STDOUT.println(iter.name());
-          }
-        }
+	if (iter.name()[0] == '.') continue;
+	if (!strcmp(iter.name(), "common")) continue;
+        if (!iter.isdir()) continue;
+	bool isfont = false;
+	for (LSFS::Iterator i2(iter); i2 && !isfont; ++i2) {
+	  if (i2.isdir()) {
+	    if (!strcasecmp("hum", i2.name())) isfont = true;
+	    if (!strcasecmp("alt000", i2.name())) isfont = true;
+	  } else {
+	    const char* tmp = i2.name();
+	    if (!startswith("hum", tmp)) continue;
+	    tmp += 3;
+	    if (startswith("m", tmp)) tmp++;
+	    while (*tmp >= '0' && *tmp <= '9') tmp++;
+	    if (!strcasecmp(".wav", tmp)) isfont = true;
+	  }
+	}
+	if (isfont) {
+	  STDOUT.println(iter.name());
+	}
       }
       LOCK_SD(false);
       return true;
