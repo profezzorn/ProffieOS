@@ -217,6 +217,8 @@ public:
 	int gd_bits = byte - 160;
 	PQOI_STREAMING_GETC(AT_LUMA);
 	pixel_ += lumaDiff(gd_bits, byte >> 4, byte & 0xf);
+	stash_[hashPixel(pixel_)] = pixel_;
+	*(out++) = pixel_;
 	break;
       }
 
@@ -237,34 +239,46 @@ struct PqoiOutputChunk {
   static const size_t PAD = 32;
   static const size_t HISTORY = 4;
   // First chunk
-  PqoiOutputChunk() : end_(begin()) {}
+  PqoiOutputChunk() {
+    init();
+  }
 
   explicit PqoiOutputChunk(PqoiOutputChunk* previous) {
     init_next_chunk(previous);
   }
 
+  void init() {
+    end_ = begin();
+  }
+
   void init_next_chunk(PqoiOutputChunk* previous) {
+    // Previous must be full()
     size_t pad = previous->end_ - previous->chunk_end();
     size_t history = 0;
     if (pad < 4) history = 4 - pad;
     size_t to_copy = history + pad;
     memcpy(begin() - history, previous->end_ - to_copy, to_copy * 2);
-    end_ = begin() + history;
+    end_ = begin() + pad;
   }
 
-  uint16_t* begin() const { return pixels + HISTORY; }
-  uint16_t* chunk_end() const { return  begin() + CHUNK_SIZE; }
-  uint16_t* end() const { return  std::min(end_, chunk_end()); }
-  size_t size() const { return end() - begin(); }
-  bool full() const { return size() >= CHUNK_SIZE; }
-  uint16_t* data_end() const { return end_; }
+  uint16_t* begin() { return pixels + HISTORY; }
+  uint16_t* chunk_end() { return  begin() + CHUNK_SIZE; }
+  uint16_t* end() { return  std::min(end_, chunk_end()); }
+  size_t size() { return end() - begin(); }
+  bool full() { return size() >= CHUNK_SIZE; }
+  uint16_t* data_end() { return end_; }
 
   template<class PQOI_DECODER>
   bool fill(PQOI_DECODER* decoder, size_t pixels = CHUNK_SIZE) {
     if (size() >= pixels) return true;
-    uint16_t read_end = std::min(chunk_end(), begin() + pixels);
+    uint16_t* read_end = std::min(chunk_end(), begin() + pixels);
     end_ = decoder->read(end_, read_end);
-    return full();
+    return size() >= pixels;
+  }
+
+  void zero() {
+    memset(begin(), 0, CHUNK_SIZE * 2);
+    end_ = chunk_end();
   }
   
   uint16_t* end_;
@@ -272,7 +286,7 @@ struct PqoiOutputChunk {
 };
 
 struct PqoiLookupTable {
-  constexpr PqoiLookupTable() : diff_index() {
+  PqoiLookupTable() {
     for (size_t i = 0; i < 0x10000; i++) {
       diff_index[i] = 0;
     }
@@ -448,7 +462,7 @@ class StreamingAlphaDecoder : public PqoiStreamingDecoder {
   int N, i;
   int state_ = 0;
 #define PQOI_ALPHA_YIELD() do { state_ = __LINE__; return out; case __LINE__: break; } while(0)
-
+public:
   // Decode alpha until out >= end, or input runs out.
   uint16_t* Apply(uint16_t* out, uint16_t* end) {
     switch (state_) {

@@ -77,6 +77,7 @@ extern Monitoring monitor;
 #define TRACE_CATEGORY_IR 0x4
 #define TRACE_CATEGORY_PROP 0x8
 #define TRACE_CATEGORY_I2C 0x10
+#define TRACE_CATEGORY_RGB565 0x20
 
 #define TRACE_EXPAND_AGAIN(CAT) (CAT)
 #define TRACE_CATEGORY(CAT) TRACE_EXPAND_AGAIN(TRACE_CATEGORY_##CAT)
@@ -88,13 +89,27 @@ extern Monitoring monitor;
 #define TRACING_CATEGORIES ENABLE_TRACING
 #endif
 
+struct TraceEntry {
+  const char* location;
+  int arg;
+};
+
+// Must be power of 2
+#ifndef PO_TRACE_LENGTH
+#define PO_TRACE_LENGTH 128
+#endif
+
 // TODO: Move this somewhere more global
-volatile const char* trace[128];
+volatile TraceEntry trace[PO_TRACE_LENGTH];
 volatile int trace_pos;
 
-void DoTrace(const char* str) {
+void DoTrace(const char* str, int arg = 0) {
   noInterrupts();
-  trace[trace_pos++ & 127] = str;
+  trace[trace_pos & (PO_TRACE_LENGTH - 1)].arg = arg;
+  trace[trace_pos & (PO_TRACE_LENGTH - 1)].location = str;
+  trace_pos++;
+  trace[trace_pos & (PO_TRACE_LENGTH - 1)].location = "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-";
+  trace[trace_pos & (PO_TRACE_LENGTH - 1)].arg = 0;
   interrupts();
 }
 
@@ -102,9 +117,17 @@ void DoTrace(const char* str) {
   if (TRACE_CATEGORY(CAT) & (TRACING_CATEGORIES))       \
     DoTrace(__FILE__ ":" TOSTRING(__LINE__) ": " X);	\
 } while(0)
+#define TRACE2(CAT, X, ARG) do {			\
+  if (TRACE_CATEGORY(CAT) & (TRACING_CATEGORIES))       \
+    DoTrace(__FILE__ ":" TOSTRING(__LINE__) ": " X, ARG);	\
+} while(0)
 #else
 #define TRACING_CATEGORIES 0
 #define TRACE(CAT, X) do {				\
+  if (TRACE_CATEGORY(CAT) & (TRACING_CATEGORIES))       \
+    do { } while(0);					\
+} while(0)
+#define TRACE2(CAT, X, ARG) do {				\
   if (TRACE_CATEGORY(CAT) & (TRACING_CATEGORIES))       \
     do { } while(0);					\
 } while(0)
