@@ -4,6 +4,9 @@
 #ifdef ESP32
 #define PROFFIEOS_USE_ATOMICS
 #endif
+#ifdef PROFFIE_TEST
+#define PROFFIEOS_USE_ATOMICS
+#endif
 
 #ifdef PROFFIEOS_USE_ATOMICS
 
