@@ -432,6 +432,7 @@ public:
 
   // Select preset (font/style)
   virtual void SetPreset(int preset_num, bool announce) {
+    PVLOG_DEBUG << "SetPreset(" << preset_num << ")\n";
     TRACE(PROP, "start");
     bool on = BladeOff();
     SaveColorChangeIfNeeded();
@@ -463,6 +464,7 @@ public:
 
     // Set/Update Font & Style, skips Preon effect using FastOn (for use in Edit Mode and "fast" preset changes)
   void SetPresetFast(int preset_num) {
+    PVLOG_DEBUG << "SetPresetFast(" << preset_num << ")\n";
     TRACE(PROP, "start");
     bool on = BladeOff();
     SaveColorChangeIfNeeded();
@@ -673,7 +675,7 @@ public:
   }
 
   void SaveState(int preset) {
-    PVLOG_NORMAL << "Saving Current Preset\n";
+    PVLOG_NORMAL << "Saving Current Preset preset = " << preset << " savedir = " << GetSaveDir() << "\n";
     savestate_.preset = preset;
     savestate_.WriteToSaveDir("curstate");
   }
