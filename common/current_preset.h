@@ -91,6 +91,7 @@ public:
   }
 
   void Set(int num) {
+    PVLOG_VERBOSE << "CurrentPreset::Set(" << num << "/" << current_config->num_presets << ")\n";
     num = (current_config->num_presets + num) % current_config->num_presets;
     Preset* preset = current_config->presets + num;
     preset_type = PRESET_ROM;
