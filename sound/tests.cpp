@@ -20,6 +20,7 @@
 #define NO_REPEAT_RANDOM
 #define AUDIO_RATE 44100
 #define SCOPED_PROFILER() do {} while(0)
+void MountSDCard() {}
 
 #define CHECK(X) do {						\
     if (!(X)) { fprintf(stderr, "%s failed, line %d\n", #X, __LINE__); exit(1); } \
