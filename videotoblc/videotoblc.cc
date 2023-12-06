@@ -216,6 +216,7 @@ private:
   int eof_reached;
 };
 
+
 int scalecolor(float n) {
   int x = float(n * 256);
   if (x > 255) x = 255;

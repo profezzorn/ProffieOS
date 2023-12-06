@@ -59,7 +59,7 @@ public:
     return buf_end_.get() - buf_start_.get();
   }
   // Overridable
-  size_t space_available() const override {
+  size_t space_available() override {
     return real_space_available();
   }
   void SetStream(ProffieOSAudioStream* stream) {
