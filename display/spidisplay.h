@@ -725,10 +725,9 @@ using SPIDisplay_DFRobot096 = SPIDisplay77XX<
   >;
 
 
-// Untested
 template<int LAYERS,
 	 class CONFIG = DisplayConfig<0, InsetT<0,0,20,20>>,
-	 class SA = StandardDisplayAdapter<>>
+	 class SA = CSDisplayAdapter<blade4Pin>>
 using SPIDisplay_AdaFruit5206 = SPIDisplay77XX<
   LAYERS,
   CONFIG,
