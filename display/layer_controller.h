@@ -1,6 +1,72 @@
 #ifndef DISPLAY_LAYER_CONTROLLER_H
 #define DISPLAY_LAYER_CONTROLLER_H
 
+/*
+
+Layer Controller: Tells displays what to do.
+
+The layer controller looks for the following files:
+
+   WxH_boot.scr
+   WxH_font.scr
+   WxH_blst.scr
+   WxH_clsh.scr
+   WxH_force.scr
+   WxH_preon.scr
+   WxH_out.scr
+   WxH_in.scr
+   WxH_pstoff.scr
+   WxH_on.scr
+   WxH_lock.scr
+   WxH_pli.scr
+   WxH_idle.scr
+   WxH_lowbatt.scr
+
+W and H stands for the Width and Height of the display respectively.
+Standard EFFECT rules are used to find these files, so here are
+some examples of actual scr file names:
+
+  128x80_boot.scr
+  128x80_boot04.scr
+  128x80_boot/004.scr
+  alt004/128x80_boot/004.scr
+  128x80_boot/004/001.scr
+
+When an event occurs, the SCR file is read. SCR files are text files
+which specifies what the display should do. Each line in the SCR file
+should contain one of:
+
+  layer                 # this advances to the next layer
+  file=boot128x80.pqf   # Tells the current layer to start playing boot128x80.pqf
+  restart               # start file from beginning
+  time=1000             # Play this file 1000ms, then stop
+  A=battery             # Variable assignment
+
+Note that if "restart" is not present, and you specify the same filename as what
+is already playing, it just continues to play.
+
+For variable assignments, possible variables are A, B, C, D, E, and currently
+possible variable values are "battery" and "volume".
+
+Here is an example SCR file which uses two layers:
+--------------------------
+file=sw.pqf
+layer
+file=batt128x80.pqf
+A=battery
+--------------------------
+
+Note that base layer files MUST NOT be transparent, but files on other layers
+can be transparent or not. Of course permanently displaying a non-transparent
+file on a layer other than the first one makes no sense, but it is possible.
+
+Note that if "time" is not present, the file will play to it's end, or forever
+if it is looped.
+
+*/
+
+
+
 #include "../common/bytearray.h"
 
 struct VariableSource {
