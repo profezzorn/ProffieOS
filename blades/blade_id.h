@@ -90,6 +90,16 @@ struct EnablePowerBladeID {
   }
 };
 
+template<int MIN, int MAX, class BLADE_ID>
+struct NO_BLADE_RangeID {
+  float id() {
+    BLADE_ID blade_id;
+    float ret = blad_id.id();
+    if (ret >= MIN && ret <= MAX) return NO_BLADE;
+    return ret;
+  }
+};
+
 struct NoBladeID {
   float id() { return 0.0; }
 };
@@ -116,10 +126,19 @@ struct NoBladeID {
 #define BLADE_ID_CLASS2 BLADE_ID_CLASS
 #endif
 
-#ifdef ENABLE_POWER_FOR_ID
-#define BLADE_ID_CLASS_INTERNAL EnablePowerBladeID<ENABLE_POWER_FOR_ID, BLADE_ID_CLASS2>
+// Used like this:
+// #define NO_BLADE_ID_RANGE 500,550
+// where 500 is the lowest value and 550 is the higest value that should return NO_BLADE
+#ifdef NO_BLADE_ID_RANGE
+#define BLADE_ID_CLASS3 NO_BLADE_RangeID<NO_BLADE_ID_RANGE, BLADE_ID_CLASS2>
 #else
-#define BLADE_ID_CLASS_INTERNAL BLADE_ID_CLASS2
+#define BLADE_ID_CLASS3 BLADE_ID_CLASS2
+#endif
+
+#ifdef ENABLE_POWER_FOR_ID
+#define BLADE_ID_CLASS_INTERNAL EnablePowerBladeID<ENABLE_POWER_FOR_ID, BLADE_ID_CLASS3>
+#else
+#define BLADE_ID_CLASS_INTERNAL BLADE_ID_CLASS3
 #endif
 
 #endif  // BLADES_BLADE_ID_H
