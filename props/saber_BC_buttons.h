@@ -122,6 +122,8 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
                         * NOTE * Gesture ignitions using FastOn bypass preon.
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
+Scroll Presets        - Hold POW to toggle this mode on/off. Rotate hilt to cycle next and previous presets.
+                        * NOTES * TWIST_ON not available in this mode. Resets to off after ignition.
 Next Preset           - Long click and release POW.
 Prev Preset           - Double click and hold POW, release after a second (click then long click).
 Play/Stop Track       - 4x click POW.
@@ -213,6 +215,8 @@ Turn blade ON         - Short click POW. (or gestures if defined, uses FastOn)
                         * NOTE * Gesture ignitions using FastOn bypass preon.
 Turn ON without preon - Short click POW while pointing up.
 Turn blade ON Muted   - 4x click and hold POW.
+Scroll Presets        - Hold POW to toggle this mode on/off. Rotate hilt to cycle next and previous presets.
+                        * NOTES * TWIST_ON not available in this mode. Resets to off after ignition.
 Next Preset           - Long click and release POW.
 Prev Preset           - Double click and hold POW, release after a second (click then long click).
 Play/Stop Track       - Hold AUX + Double click POW.
@@ -601,6 +605,20 @@ public:
       if (a < -M_PI) a+=M_PI*2;
       if (a > M_PI / 6) VolumeUp();
       if (a < -M_PI / 6) VolumeDown();
+    } else if (scroll_presets_) {
+      if ((fusor.angle1() >  M_PI / 3) || (fusor.angle1() < - M_PI / 4)) return;
+
+      if (a > M_PI / 6) {
+        beeper.Beep(0.05, 4000);
+        current_menu_angle_ = fusor.angle2();
+        next_preset();
+        }
+
+      if (a < -M_PI / 6) {
+        beeper.Beep(0.05, 3000);
+        current_menu_angle_ = fusor.angle2();
+        previous_preset();
+      }
     }
   }
 
@@ -629,20 +647,20 @@ public:
 
 #ifdef BC_TWIST_ON
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-        if (mode_volume_) return false;
+      if (mode_volume_ || scroll_presets_) return false;
 #ifdef NO_BLADE_NO_GEST_ONOFF
-        if (!blade_detected_) return false;
+      if (!blade_detected_) return false;
 #endif
-        // Delay twist events to prevent false trigger from over twisting
-        if (millis() - last_twist_ > 2000 &&
-          millis() - saber_off_time_ > 1000) {
-          FastOn();
+      // Delay twist events to prevent false trigger from over twisting
+      if (millis() - last_twist_ > 2000 &&
+        millis() - saber_off_time_ > 1000) {
+        FastOn();
 #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-          PVLOG_NORMAL << "Entering Battle Mode\n";
-          battle_mode_ = true;
+        PVLOG_NORMAL << "Entering Battle Mode\n";
+        battle_mode_ = true;
 #endif
-          last_twist_ = millis();
-        }
+        last_twist_ = millis();
+      }
       return true;
 #endif  // BC_TWIST_ON
 
@@ -723,6 +741,7 @@ public:
           FastOn();
         } else {
           On();
+          scroll_presets_ = false;
         }
       } else {
         QuickMaxVolume();
@@ -734,9 +753,16 @@ public:
       if (!mode_volume_) {
         if (SetMute(true)) {
           unmute_on_deactivation_ = true;
+          scroll_presets_ = false;
           On();
         }
       }
+      return true;
+
+// Toggle Scroll Presets
+    case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
+      scroll_presets_ = !scroll_presets_;
+      SaberBase::DoEffect(EFFECT_NEWFONT, 0);
       return true;
 
 // Next Preset AND Volume Up
@@ -1148,6 +1174,7 @@ public:
         if (SFX_faston) {
           hybrid_font.PlayCommon(&SFX_faston);
         }
+        scroll_presets_ = false;
         return;
       case EFFECT_FAST_OFF:
         if (SaberBase::IsOn()) {
@@ -1186,6 +1213,7 @@ private:
   bool spam_blast_ = false;
   // Avoid overlap of battery.wav when doing Spoken Battery Level
   bool speaking_ = false;
+  bool scroll_presets_ = false;
 
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
