@@ -544,6 +544,13 @@ public:
   bool blade_detected_ = false;
 #endif
 
+  // Use this helper function, not the bool above.
+  // This function changes when we're properly initialized
+  // the blade, the bool is an internal to blade detect.
+  bool blade_present() {
+    return current_config->ohm < NO_BLADE;
+  }
+
   // Measure and return the blade identifier resistor.
   float id() {
     EnableBooster();
@@ -609,7 +616,14 @@ public:
   void PollScanId() {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
+      bool blade_present_before = blade_present();
       FindBladeAgain();
+      bool blade_present_after = blade_present();
+      if (blade_present_before != blade_present_after) {
+        SaberBase::DoBladeDetect(blade_present_after);
+      } else {
+	SaberBase::DoNewFont();
+      }
     }
   }
 #else

@@ -26,9 +26,7 @@ Give the BladeConfig 2 sets of descriptions, and
 */
 
 
-#ifndef DUAL_PROP_CONDITION
-#define DUAL_PROP_CONDITION blade_detected_
-#endif
+#define DUAL_PROP_CONDITION blade_present()
 
 #ifdef PROP_INHERIT_PREFIX
 #error dual_prop.h must be included first
