@@ -543,8 +543,6 @@ public:
 #ifdef BLADE_DETECT_PIN
   bool blade_detected_ = false;
 #endif
-  // If booting up, don't do bladein / bladeout sounds, just boot.wav
-  bool system_booted = false;
 
   // Use this helper function, not the bool above.
   // This function changes when we're properly initialized
@@ -562,10 +560,14 @@ public:
     if (announce) {
       PVLOG_STATUS << "BLADE ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
-    talkie.Say(spI);
-    talkie.Say(spD);
-    talkie.SayNumber((int)ret);
-#endif
+#ifdef DISABLE_TALKIE
+      #error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
+#else
+      talkie.Say(spI);
+      talkie.Say(spD);
+      talkie.SayNumber((int)ret);
+#endif // DISABLE_TALKIE
+#endif // SPEAK_BLADE_ID
     }
 #ifdef BLADE_DETECT_PIN
     if (!blade_detected_) {
@@ -641,7 +643,6 @@ public:
     size_t best_config = FindBestConfig(announce);
     PVLOG_STATUS << "blade = " << best_config << "\n";
     current_config = blades + best_config;
-    bool bladestatus = id() < NO_BLADE; 
 
 #define ACTIVATE(N) do {     \
     if (!current_config->blade##N) goto bad_blade;  \
@@ -653,18 +654,8 @@ public:
 #ifdef SAVE_PRESET
     ResumePreset();
 #else
-    SetPreset(0, false); // DoNewFont or not? set to announce if yes desired.
-    // Have Blade ID play bladein and bladeout sounds.
+    SetPreset(0, false);
 #endif // SAVE_PRESET
-#ifndef BLADE_DETECT_PIN
-    PVLOG_DEBUG << "************** Blade status = " << (bladestatus ? "IN" : "OUT") << "\n";
-    if (system_booted) {
-      SaberBase::DoBladeDetect(bladestatus);
-    } else {
-      PVLOG_DEBUG << "************** Booting = Not playing bladein/out\n";
-    }
-#endif // BLADE_DETECT_PIN
-    system_booted = true;
     return;
 
 #if NUM_BLADES != 0
