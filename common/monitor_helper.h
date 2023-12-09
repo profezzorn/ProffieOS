@@ -68,7 +68,9 @@ protected:
 #ifdef ENABLE_TRACING
     if (!strcmp(cmd, "dumptrace")) {
       for (size_t i = 0; i < NELEM(trace); i++) {
-	STDOUT << (const char *)(trace[(trace_pos + i) & (NELEM(trace) - 1)]) << "\n";
+	STDOUT << trace[(trace_pos + i) & (NELEM(trace) - 1)].location
+	       << "(" << trace[(trace_pos + i) & (NELEM(trace) - 1)].arg
+	       << ")\n";
       }
       return true;
     }

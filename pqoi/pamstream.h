@@ -6,7 +6,8 @@
 #include <vector>
 
 bool endswith(const std::string &s, const std::string& ending) {
-  if (ending.size() > s.size()) return false;
+//  fprintf(stderr, "Endswith(%s, %s)\n", s.c_str(), ending.c_str());
+  if (ending.length() > s.length()) return false;
   return strcasecmp(s.c_str() + s.length() - ending.length(), ending.c_str()) == 0;
 }
 

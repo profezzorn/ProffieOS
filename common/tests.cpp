@@ -145,6 +145,12 @@ BladeConfig* current_config;
   if (!(x_ > y_)) { std::cerr << #X << " (" << x_ << ") > " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
 } while(0)
 
+#define CHECK_GE(X, Y) do {                                             \
+  auto x_ = (X);                                                                \
+  auto y_ = (Y);                                                                \
+  if (!(x_ >= y_)) { std::cerr << #X << " (" << x_ << ") > " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+} while(0)
+
 #define CHECK_STREQ(X, Y) do {                                          \
   auto x = (X);                                                         \
   auto y = (Y);                                                         \
@@ -721,7 +727,24 @@ void command_parser_test() {
   CHECK_EQ(x, false);
 }
 
+#include "cyclint.h"
+
+void test_cyclint() {
+  Cyclint<uint8_t> N(0);
+  Cyclint<uint8_t> N2(1);
+  for (int i = 0; i < 256; i++) {
+    N += 1;
+    CHECK_EQ(N,N2);
+    CHECK_LE(N,N2);
+    CHECK_GE(N,N2);
+    N2 += 1;
+    CHECK_LT(N, N2);
+    CHECK_GT(N2, N);
+  }
+}
+
 int main() {
+  test_cyclint();
   command_parser_test();
   
   extras = false;

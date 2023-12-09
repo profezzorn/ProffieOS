@@ -432,6 +432,7 @@ public:
 
   // Select preset (font/style)
   virtual void SetPreset(int preset_num, bool announce) {
+    PVLOG_DEBUG << "SetPreset(" << preset_num << ")\n";
     TRACE(PROP, "start");
     bool on = BladeOff();
     SaveColorChangeIfNeeded();
@@ -463,6 +464,7 @@ public:
 
     // Set/Update Font & Style, skips Preon effect using FastOn (for use in Edit Mode and "fast" preset changes)
   void SetPresetFast(int preset_num) {
+    PVLOG_DEBUG << "SetPresetFast(" << preset_num << ")\n";
     TRACE(PROP, "start");
     bool on = BladeOff();
     SaveColorChangeIfNeeded();
@@ -544,6 +546,13 @@ public:
   // If booting up, don't do bladein / bladeout sounds, just boot.wav
   bool system_booted = false;
 
+  // Use this helper function, not the bool above.
+  // This function changes when we're properly initialized
+  // the blade, the bool is an internal to blade detect.
+  bool blade_present() {
+    return current_config->ohm < NO_BLADE;
+  }
+
   // Measure and return the blade identifier resistor.
   float id(bool announce = false) {
     EnableBooster();
@@ -612,7 +621,14 @@ public:
   void PollScanId() {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
+      bool blade_present_before = blade_present();
       FindBladeAgain();
+      bool blade_present_after = blade_present();
+      if (blade_present_before != blade_present_after) {
+        SaberBase::DoBladeDetect(blade_present_after);
+      } else {
+	SaberBase::DoNewFont();
+      }
     }
   }
 #else
@@ -689,7 +705,7 @@ public:
   }
 
   void SaveState(int preset) {
-    PVLOG_NORMAL << "Saving Current Preset\n";
+    PVLOG_NORMAL << "Saving Current Preset preset = " << preset << " savedir = " << GetSaveDir() << "\n";
     savestate_.preset = preset;
     savestate_.WriteToSaveDir("curstate");
   }
@@ -1025,7 +1041,8 @@ public:
   void StartOrStopTrack() {
 #ifdef ENABLE_AUDIO
     if (track_player_) {
-      track_player_->Stop();
+      track_player_->set_fade_time(1.0);
+      track_player_->FadeAndStop();
       track_player_.Free();
     } else {
       MountSDCard();
@@ -1686,28 +1703,26 @@ public:
     if (!strcmp(cmd, "list_fonts")) {
       LOCK_SD(true);
       for (LSFS::Iterator iter("/"); iter; ++iter) {
-        if (iter.isdir()) {
-          char fname[128];
-          strcpy(fname, iter.name());
-          strcat(fname, "/");
-          char* fend = fname + strlen(fname);
-          bool isfont = false;
-          if (!isfont) {
-            strcpy(fend, "hum.wav");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            strcpy(fend, "hum01.wav");
-            isfont = LSFS::Exists(fname);
-          }
-          if (!isfont) {
-            strcpy(fend, "hum");
-            isfont = LSFS::Exists(fname);
-          }
-          if (isfont) {
-            STDOUT.println(iter.name());
-          }
-        }
+	if (iter.name()[0] == '.') continue;
+	if (!strcmp(iter.name(), "common")) continue;
+        if (!iter.isdir()) continue;
+	bool isfont = false;
+	for (LSFS::Iterator i2(iter); i2 && !isfont; ++i2) {
+	  if (i2.isdir()) {
+	    if (!strcasecmp("hum", i2.name())) isfont = true;
+	    if (!strcasecmp("alt000", i2.name())) isfont = true;
+	  } else {
+	    const char* tmp = i2.name();
+	    if (!startswith("hum", tmp)) continue;
+	    tmp += 3;
+	    if (startswith("m", tmp)) tmp++;
+	    while (*tmp >= '0' && *tmp <= '9') tmp++;
+	    if (!strcasecmp(".wav", tmp)) isfont = true;
+	  }
+	}
+	if (isfont) {
+	  STDOUT.println(iter.name());
+	}
       }
       LOCK_SD(false);
       return true;

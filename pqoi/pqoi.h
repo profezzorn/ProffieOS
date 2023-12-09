@@ -14,12 +14,11 @@
 
 // QOI-inspired format for 16-bit RGB565 images and animations.
 
-// 0b00000000 (0) = reserved
-// 0b0NNNNNNN (1-123) = delta
-// 0b01111100 (124) = copy 2
-// 0b01111101 (125) = copy 4
-// 0b01111110 (126) = copy 4x2
-// 0b01111111 (127) = color is next 2 bytes
+// 0b00000000 (0) = color is next 2 bytes
+// 0b0NNNNNNN (1-124) = delta
+// 0b01111100 (125) = copy 2
+// 0b01111101 (126) = copy 4
+// 0b01111110 (127) = copy 4x2
 // 0b100NNNNN (128 ... 159) = run
 // 0b101GGGGG 0bRRRRBBBB  (160 ... 191) = extended delta
 // 0b11NNNNNN = (192..255) from stash
@@ -64,23 +63,29 @@ uint16_t const PqoiBase::deltas[125] = { PQOI_DELTA3(0) };
 #define PQOI_DECODE_ONE(GETC)					\
       GETC(AT_START);						\
       switch (byte) {						\
-	case 0:							\
-	case 1 ... 123:						\
+	case 0: { /* raw bytes */				\
+	  GETC(AT_RAW1);					\
+	  b2 = byte;						\
+	  GETC(AT_RAW2);					\
+	  pixel_ = (byte << 8) + b2;				\
+	  break;						\
+	}                                                       \
+	case 1 ... 124:						\
 	  pixel_ += deltas[byte];				\
 	  break;						\
-        case 124: /* copy 2 */					\
+        case 125: /* copy 2 */					\
 	  out[0] = out[-2];					\
 	  out[1] = out[-1];					\
 	  out += 2;						\
 	  continue;						\
-        case 125: /* copy 4 */					\
+        case 126: /* copy 4 */					\
 	  out[0] = out[-4];					\
 	  out[1] = out[-3];					\
 	  out[2] = out[-2];					\
 	  out[3] = out[-1];					\
 	  out += 4;						\
 	  continue;						\
-        case 126: /* copy 4x2 */				\
+        case 127: /* copy 4x2 */				\
 	  out[0] = out[-4];					\
 	  out[1] = out[-3];					\
 	  out[2] = out[-2];					\
@@ -91,13 +96,6 @@ uint16_t const PqoiBase::deltas[125] = { PQOI_DELTA3(0) };
 	  out[7] = out[-1];					\
 	  out += 8;						\
 	  continue;						\
-	case 127: { /* raw bytes */				\
-	  GETC(AT_RAW1);					\
-	  b2 = byte;						\
-	  GETC(AT_RAW2);					\
-	  pixel_ = (byte << 8) + b2;				\
-	  break;						\
-	}                                                       \
 	case 159: *(out++) = pixel_;				\
 	case 158: *(out++) = pixel_;				\
 	case 157: *(out++) = pixel_;				\
@@ -217,6 +215,8 @@ public:
 	int gd_bits = byte - 160;
 	PQOI_STREAMING_GETC(AT_LUMA);
 	pixel_ += lumaDiff(gd_bits, byte >> 4, byte & 0xf);
+	stash_[hashPixel(pixel_)] = pixel_;
+	*(out++) = pixel_;
 	break;
       }
 
@@ -237,34 +237,80 @@ struct PqoiOutputChunk {
   static const size_t PAD = 32;
   static const size_t HISTORY = 4;
   // First chunk
-  PqoiOutputChunk() : end_(begin()) {}
+  PqoiOutputChunk() {
+    init();
+  }
 
   explicit PqoiOutputChunk(PqoiOutputChunk* previous) {
     init_next_chunk(previous);
   }
 
+  void init() {
+    end_ = begin();
+  }
+
+  void init(int left) {
+    end_ = begin() + left;
+  }
+
   void init_next_chunk(PqoiOutputChunk* previous) {
+    // Previous must be full()
     size_t pad = previous->end_ - previous->chunk_end();
     size_t history = 0;
     if (pad < 4) history = 4 - pad;
     size_t to_copy = history + pad;
     memcpy(begin() - history, previous->end_ - to_copy, to_copy * 2);
-    end_ = begin() + history;
+    end_ = begin() + pad;
   }
 
-  uint16_t* begin() const { return pixels + HISTORY; }
-  uint16_t* chunk_end() const { return  begin() + CHUNK_SIZE; }
-  uint16_t* end() const { return  std::min(end_, chunk_end()); }
-  size_t size() const { return end() - begin(); }
-  bool full() const { return size() >= CHUNK_SIZE; }
-  uint16_t* data_end() const { return end_; }
+  void init_next_chunk(PqoiOutputChunk* previous, int left, int pixels) {
+    // Previous must be full()
+    size_t pad = previous->end_ - (previous->begin() + left + pixels);
+    size_t history = 0;
+    if (pad < 4) history = 4 - pad;
+    size_t to_copy = history + pad;
+    memcpy(begin() + left - history, previous->end_ - to_copy, to_copy * 2);
+    end_ = begin() + left + pad;
+  }
+
+  uint16_t* begin() { return pixels + HISTORY; }
+  uint16_t* chunk_end() { return  begin() + CHUNK_SIZE; }
+  uint16_t* end() { return  std::min(end_, chunk_end()); }
+  size_t size() { return end() - begin(); }
+  bool full() { return size() >= CHUNK_SIZE; }
+  bool full(int left, int pixels) { return size() >= pixels + left; }
+  uint16_t* data_end() { return end_; }
 
   template<class PQOI_DECODER>
   bool fill(PQOI_DECODER* decoder, size_t pixels = CHUNK_SIZE) {
     if (size() >= pixels) return true;
-    uint16_t read_end = std::min(chunk_end(), begin() + pixels);
+    uint16_t* read_end = std::min(chunk_end(), begin() + pixels);
     end_ = decoder->read(end_, read_end);
-    return full();
+    return size() >= pixels;
+  }
+
+  template<class PQOI_DECODER>
+  bool fill(PQOI_DECODER* decoder, size_t left, size_t pixels) {
+    if (size() >= pixels + left) return true;
+    uint16_t* read_end = std::min(chunk_end(), begin() + pixels + left);
+    end_ = decoder->read(end_, read_end);
+    return size() >= pixels + left;
+  }
+
+  void zero() {
+    memset(begin(), 0, CHUNK_SIZE * 2);
+    end_ = chunk_end();
+  }
+  void zero(size_t left,size_t pixels) {
+    memset(begin() + left, 0, pixels * 2);
+    end_ = begin() + left + pixels;
+  }
+  void zero_margins(size_t left, size_t pixels) {
+    if (left) memset(begin(), 0, left * 2);
+    if (left + pixels < CHUNK_SIZE) {
+      memset(begin() + left + pixels, 0, (CHUNK_SIZE - left - pixels) * 2);
+    }
+    end_ = chunk_end();
   }
   
   uint16_t* end_;
@@ -272,7 +318,7 @@ struct PqoiOutputChunk {
 };
 
 struct PqoiLookupTable {
-  constexpr PqoiLookupTable() : diff_index() {
+  PqoiLookupTable() {
     for (size_t i = 0; i < 0x10000; i++) {
       diff_index[i] = 0;
     }
@@ -284,7 +330,7 @@ struct PqoiLookupTable {
 	}
       }
     }
-    for (size_t i = 1; i < 124; i++) {
+    for (size_t i = 1; i < 125; i++) {
       diff_index[PqoiBase::deltas[i]] = i;
     }
   }
@@ -308,7 +354,7 @@ public:
       if (stash_[h] == pixel) {
 	op = h + 192;
       } else if (op == 0) {
-	op = (127 << 16) | ((pixel & 0xff) << 8) | (pixel >> 8);
+	op = (0x100 << 16) | ((pixel & 0xff) << 8) | (pixel >> 8);
       }
       // Check run and copy operations
 #if 1
@@ -316,7 +362,7 @@ public:
 	  pixels[0] == pixels[-2] &&
 	  pixels[1] == pixels[-1]) {
 	l = 2;
-	op = 124;
+	op = 125;
       }
       if (pixels - begin >= 4 && end - pixels >= 4 &&
 	  pixels[0] == pixels[-4] &&
@@ -324,7 +370,7 @@ public:
 	  pixels[2] == pixels[-2] &&
 	  pixels[3] == pixels[-1]) {
 	l = 4;
-	op = 125;
+	op = 126;
       }
       if (pixels - begin >= 8 && end - pixels >= 8 &&
 	  pixels[0] == pixels[-4] &&
@@ -336,7 +382,7 @@ public:
 	  pixels[6] == pixels[-2] &&
 	  pixels[7] == pixels[-1]) {
 	l = 8;
-	op = 126;
+	op = 127;
       }
 #endif      
       if (pixel == pixel_) {
@@ -448,7 +494,7 @@ class StreamingAlphaDecoder : public PqoiStreamingDecoder {
   int N, i;
   int state_ = 0;
 #define PQOI_ALPHA_YIELD() do { state_ = __LINE__; return out; case __LINE__: break; } while(0)
-
+public:
   // Decode alpha until out >= end, or input runs out.
   uint16_t* Apply(uint16_t* out, uint16_t* end) {
     switch (state_) {
@@ -655,9 +701,9 @@ public:
 	    // premultiply
 	    A = (255 - A)  * 33 >> 8;
 	    int Ainv = 32 - A;
-	    R = (R * Ainv) >> 6;
-	    G = (G * Ainv) >> 6;
-	    B = (B * Ainv) >> 6;
+	    R = (R * Ainv) >> 5;
+	    G = (G * Ainv) >> 5;
+	    B = (B * Ainv) >> 5;
 	    ret.alphas.push_back(A);
 	    if (A) opaque = false;
 	  }
@@ -706,7 +752,13 @@ public:
 	// Add header....
 	AlphaEncoder encoder;
 	magic = "PQOA";
-	end = encoder.encodePixelsWithAlpha(data.pixels.data(), data.pixels.data() + pixels, data.alphas.data(), ret.data() + 16);
+	end = ret.data() + 16;
+	// Alpha data must be encoded one row at a time, or per-row decoding becomes too complicated
+	for (int row = 0; row < data.h; row++) {
+	  const uint16_t *pixel_row = data.pixels.data() + data.w * row;
+	  const uint8_t *alpha_row = data.alphas.data() + data.w * row;
+	  end = encoder.encodePixelsWithAlpha(pixel_row, pixel_row + data.w, alpha_row, end);
+	}
       }
       size_t size = end - ret.data();
       ret.resize(size);

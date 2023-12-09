@@ -48,9 +48,7 @@ See here for setup info:
 https://pod.hubbe.net/howto/blade-id.html
 */
 
-#ifndef DUAL_PROP_CONDITION
-#define DUAL_PROP_CONDITION Saber::blade_detected_
-#endif
+#define DUAL_PROP_CONDITION blade_present()
 
 #ifdef PROP_INHERIT_PREFIX
 #error dual_prop.h must be included first

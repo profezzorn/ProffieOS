@@ -678,7 +678,7 @@ public:
 
 
   // AudioStreamWork implementation
-  size_t space_available() const override {
+  size_t space_available() override {
     if (lock_fb_) return 0;
     if (eof_ && advance_) return 0;
     if (frame_available_) return 0;

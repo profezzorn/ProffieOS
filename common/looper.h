@@ -127,4 +127,30 @@ private:
   Looper* next_looper_;
 };
 
+
+template<size_t N = 4>
+class PolyHoleTemplate : public Looper {
+public:
+  const char* name() override { return "polyhole"; }
+  PolyHoleTemplate() {
+    for (size_t i = 0; i < N; i++) {
+      holes[i] = ((size_t)holes) ^ (i * 293729374u);
+    }
+  }
+  void Loop() override {
+    for (size_t i = 0; i < N; i++) {
+      PROFFIEOS_ASSERT(holes[i] == ((size_t)holes) ^ (i * 293729374u));
+    }
+  }
+  size_t holes[N];
+};
+
+#ifdef ENABLE_DEBUG
+#define POLYHOLECONCAT_(a, b) a##b
+#define POLYHOLECONCAT(a, b) POLYHOLECONCAT_(a, b)
+#define POLYHOLE PolyHoleTemplate<4> POLYHOLECONCAT(polyhole_, __LINE__)
+#else
+#define POLYHOLE static_assert(true)
+#endif
+
 #endif

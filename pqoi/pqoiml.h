@@ -101,6 +101,8 @@ public:
     std::string rest(const char* x) {
       const char *end = strchr(x, '#');
       if (end == nullptr) end = x + strlen(x);
+      // Skip trailing spaces.
+      while (end > x && isspace(end[-1])) end--;
       return std::string(x, end);
     }
 
@@ -134,13 +136,15 @@ public:
       const char* x = line.c_str();
 //      fprintf(stderr, "Parsing line: %s\n", x);
       skipspace(x);
+      if (!*x || *x == '#') return true;
       if (word(x, "if")) {
 	condition = parse_condition(x);
+	skipspace(x);
 	if (!word(x, "goto")) {
 	  fprintf(stderr, "Missing goto after 'if'");
 	  return false;
 	}
-	goto_label = std::string(x);
+	goto_label = rest(x);
 	return true;
       }
       if (word(x, "goto")) {
@@ -188,6 +192,8 @@ public:
     }
 
     void generate(Generator* out, Pqoiml* p) {
+      // fprintf(stderr, "Generating .. ");
+      // dump(stderr);
       if (!label.empty()) {
 	out->AddLabel(label);
 	return;
@@ -250,6 +256,14 @@ public:
       fprintf(f, "# Illegal LINE!\n");
       fprintf(stderr, "Illegal LINE!\n");
     }
+
+    bool unset() {
+      return label.empty() &&
+	file.empty() &&
+	goto_label.empty() &&
+	fps_den == 0 &&
+	fps_num == 0;
+    }
   };
 
   std::string scaling_commands;
@@ -262,7 +276,11 @@ public:
   bool parse(const std::string& line) {
     // fprintf(stderr, "PARSE: %s\n", line.c_str());
     lines.resize(lines.size() + 1);
-    return lines.back().parse(line, this);
+    bool success = lines.back().parse(line, this);
+    if (lines.back().unset()) {
+      lines.pop_back();
+    }
+    return success;
   }
 
   void parseFile(const std::string& filename) {
@@ -275,7 +293,7 @@ public:
     int line = 1;
     while (fgets(buffer, sizeof(buffer), f)) {
       if (!parse(std::string(buffer))) {
-	fprintf(stderr, "On line %d\n", line);
+	fprintf(stderr, " On line %d\n", line);
 	exit(1);
       }
       line++;

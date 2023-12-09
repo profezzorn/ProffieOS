@@ -4,6 +4,9 @@
 #ifdef ESP32
 #define PROFFIEOS_USE_ATOMICS
 #endif
+#ifdef PROFFIE_TEST
+#define PROFFIEOS_USE_ATOMICS
+#endif
 
 #ifdef PROFFIEOS_USE_ATOMICS
 
@@ -41,6 +44,10 @@ public:
   }
   void operator+=(T value) { value_ += value; }
   void operator-=(T value) { value_ -= value; }
+
+  bool cas(T current, T new_value) {
+    return value_.compare_exchange_strong(current, new_value);
+  }
   
 private:
   std::atomic<T> value_;
@@ -48,12 +55,20 @@ private:
 
 #else
 
+#include <atomic>
+
 template<class T> class POAtomic {
 public:
   POAtomic() : value_() {}
   POAtomic(T value) : value_(value) {}
-  T get() { return value_; }
-  T get() const { return value_; }
+  T get() {
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    return value_;
+  }
+  T get() const {
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    return value_;
+  }
   void set(T value) {
     value_ = value;
   }
@@ -69,6 +84,21 @@ public:
     __atomic_fetch_sub(&value_, value, __ATOMIC_RELAXED);
 #else
     value_ -= value;
+#endif    
+  }
+  
+  bool cas(T current, T new_value) {
+#ifdef ARDUINO_ARCH_STM32L4
+    return __atomic_compare_exchange_n(&value_, &current, new_value, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
+#else    
+    bool ret = false;
+    noInterrupts();
+    if (value_ == current) {
+      value_ = new_value;
+      ret = true;
+    }
+    interrupts();
+    return ret;
 #endif    
   }
   
