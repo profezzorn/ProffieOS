@@ -10,11 +10,7 @@ and you want the buttons to take on different behaviors.
 
 How to use:
 Edit your config file as follows.
-
-Add this to the CONFIG_TOP sction:
-#define DUAL_PROP_CONDITION (current_config != blades)
-
-Then setup the prop section like this:
+Setup the prop section like this:
 #ifdef CONFIG_PROP
 #include "../props/dual_prop.h"
 #include "../props/saber_sa22c_buttons.h"
@@ -25,9 +21,8 @@ Then setup the prop section like this:
 ** Note the prop file names (saber_sa22c_buttons.h and blaster.h)
 as well as the class names would change based on the prop you choose.
 
-Now setup your CONFIG_PRESETS section to have multiple preset banks.
-The no-blade (Blaster) preset bank should be first,
-followed by one or more blade-in preset banks.
+Now setup your CONFIG_PRESETS section to have multiple preset banks:
+A no-blade (Blaster) preset bank, followed by one or more blade-in preset banks.
 Also, the BladeConfig needs each blade (and no-blade) to have a description entry in
 the same order of the Presets arrays. The Blade ID values will depend on whether 
 you choose to use Blade Detect or Blade ID.
@@ -41,9 +36,12 @@ https://pod.hubbe.net/howto/blade-detect.html
 Add the following to the config file
   #define ENABLE_POWER_FOR_ID PowerPINS<bladePowerPin2, bladePowerPin3> (based on the LED pads you use)
   #define SHARED_POWER_PINS
-Optionally, for Real Time Blade ID
   #define BLADE_ID_SCAN_MILLIS 1000
   #define BLADE_ID_TIMES 15
+// This will make the blade ID class for that range return NO_BLADE
+// (use NO_BLADE as the blade definition value.)
+#define NO_BLADE_ID_RANGE 685000,1000000000
+
 See here for setup info:
 https://pod.hubbe.net/howto/blade-id.html
 */
