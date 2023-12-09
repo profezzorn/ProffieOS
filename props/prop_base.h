@@ -625,7 +625,7 @@ public:
     size_t best_config = FindBestConfig(announce);
     PVLOG_STATUS << "blade = " << best_config << "\n";
     current_config = blades + best_config;
-    bool bladestatus = (announce && best_config > 0);
+    bool bladestatus = id(announce) < NO_BLADE; 
 
 #define ACTIVATE(N) do {     \
     if (!current_config->blade##N) goto bad_blade;  \
