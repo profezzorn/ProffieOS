@@ -1089,7 +1089,6 @@ public:
   volatile bool clash_pending1_ = false;
   volatile bool pending_clash_is_stab1_ = false;
   volatile float pending_clash_strength1_ = 0.0;
-  bool idle_off_time_reported_ = false;                            // BC IDLE_OFF_TIME expired printout only once mod
 
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
