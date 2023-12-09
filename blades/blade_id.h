@@ -94,7 +94,7 @@ template<int MIN, int MAX, class BLADE_ID>
 struct NO_BLADE_RangeID {
   float id() {
     BLADE_ID blade_id;
-    float ret = blad_id.id();
+    float ret = blade_id.id();
     if (ret >= MIN && ret <= MAX) return NO_BLADE;
     return ret;
   }
