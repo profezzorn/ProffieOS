@@ -253,11 +253,11 @@ protected:
       if (!current_style_ || !run_) {
 	loop_counter_.Reset();
 #ifdef BLADE_ID_SCAN_MILLIS
-	if (pin_->pin() == bladeIdentifyPin && ScanBladeIdNow()) {
-	  pin_->Enable(powered_);
-	  SLEEP(1);
-	}
-#endif      
+        if (pin_->pin() == bladePin && ScanBladeIdNow()) {
+          pin_->Enable(powered_);
+          SLEEP(1);
+        }
+#endif // BLADE_ID_SCAN_MILLIS
 	continue;
       }
       // Wait until it's our turn.
@@ -288,12 +288,12 @@ protected:
 
       while (!pin_->IsReadyForEndFrame()) BLADE_YIELD();
 #ifdef BLADE_ID_SCAN_MILLIS
-      if (pin_->pin() == bladeIdentifyPin && ScanBladeIdNow()) {
-	pin_->Enable(powered_);
-	SLEEP(1);
-	if (current_blade != this) goto retry;
+      if (pin_->pin() == bladePin && ScanBladeIdNow()) {
+        pin_->Enable(powered_);
+        SLEEP(1);
+        if (current_blade != this) goto retry;
       }
-#endif      
+#endif // BLADE_ID_SCAN_MILLIS
       pin_->EndFrame();
       loop_counter_.Update();
 

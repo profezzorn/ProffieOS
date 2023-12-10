@@ -627,15 +627,19 @@ public:
       PlayPolyphonic(&X);
       return;
     }
-    if (detected && SFX_boot) {
-      PlayPolyphonic(&SFX_boot);
+    // SFX_bladein/out doesn't exist, playing font.wav instead
+    if (SFX_font) {
+    PVLOG_STATUS << "SFX_bladein/out doesn't exist, playing font.wav instead.\n";
+      PlayPolyphonic(&SFX_font);
       return;
     }
+    PVLOG_STATUS << " Didn't find font.wav, playing beep instead.\n";
+    // Otherwise, just beep to indicate blade status change.
     beeper.Beep(0.05, 2000.0);
   }
   void SB_NewFont() {
     if (!PlayPolyphonic(&SFX_font)) {
-      beeper.Beep(0.05, 2000.0);
+      beeper.Beep(0.05, 1046.5);
     }
   }
   void SB_Change(SaberBase::ChangeType change) override {
