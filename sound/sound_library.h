@@ -115,20 +115,44 @@ public:
         if (hundredths != 0) Play(SoundToPlay(&SFX_mnum, hundredths - 1));
         break;
       case SAY_WHOLE:
+        if (number == 0) {
+          Play("mzero.wav");
+          break;
+        }
+#ifdef BLADE_ID_SCAN_MILLIS
+        // Billions spoken as "thousand million"
+        if (billion > 0) {
+          TensValue(billion);
+          Play("thousand.wav");
+          Play("million.wav");
+        }
+        // Millions
+        if (million > 0) {
+          TensValue(million);
+          Play("million.wav");
+        }
+#endif
         // Thousands
+        if (thousand >= 100) {
+          /* Support hundreds thousands
+          ie: 627728.81 / 1000 = 627.72881
+              floorf(627.72881) = 627
+              627 % 100 = 27           */
+          Play(SoundToPlay(&SFX_mnum, (thousand / 100) - 1));
+          Play("hundred.wav");
+          thousand %= 100;
+        }
         if (thousand > 0) {
           TensValue(thousand);
-	  Play("thousand.wav");
+          Play("thousand.wav");
         }
         // Hundred
         if (hundred > 0) {
-	  Play(SoundToPlay(&SFX_mnum, hundred - 1));
-	  Play("hundred.wav");
+          Play(SoundToPlay(&SFX_mnum, hundred - 1));
+          Play("hundred.wav");
         }
         // Tens & Ones
-        if (ones == 0) {
-          if ((thousand + hundred) == 0) Play("mzero.wav");
-        } else {
+        if (ones > 0) {
           TensValue(ones);
         }
         break;
