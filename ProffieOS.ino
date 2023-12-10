@@ -1567,7 +1567,7 @@ void setup() {
 
   Looper::DoSetup();
   // Time to identify the blade.
-  prop.FindBlade();
+  prop.FindBlade(true);
   SaberBase::DoBoot();
 #if defined(ENABLE_SD)
   if (!sd_card_found) ProffieOSErrors::sd_card_not_found();
