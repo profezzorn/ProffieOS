@@ -48,6 +48,8 @@
 #error Please set CONFIG_FILE as shown above.
 #endif
 
+#include "common/resources.h"
+
 #define CONFIG_TOP
 #include CONFIG_FILE
 #undef CONFIG_TOP
@@ -710,6 +712,8 @@ uint32_t startup_MODER[4];
 #ifdef BLADE_DETECT_PIN
 LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN>>
   BladeDetect(BUTTON_BLADE_DETECT, BLADE_DETECT_PIN, "blade_detect");
+
+USE_PIN_OUTPUT(BLADE_DETECT_PIN, PO_SubSystems::PO_BLADE_DETECT);
 #endif
 
 #include "common/sd_test.h"

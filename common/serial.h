@@ -243,6 +243,8 @@ StaticWrapper<Parser<SerialAdapter>> parser;
 #ifdef ENABLE_SERIAL
 StaticWrapper<Parser<Serial3Adapter>> serial_parser;
 #define ENABLE_SERIAL_COMMANDS
+USE_PIN_OUTPUT(txPin, PO_SubSystems::PO_SERIAL);
+USE_PIN_INPUT(rxPin, PO_SubSystems::PO_SERIAL);
 #endif
 
 #ifdef USB_CLASS_WEBUSB

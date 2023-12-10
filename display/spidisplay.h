@@ -296,6 +296,11 @@ struct StandardDisplayAdapter {
     static void endTransaction() {
       // Do nothing, this is a dedicated SPI bus.
     }
+    USE_PIN_OUTPUT(DC, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(LIGHT, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(RESET, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(blade2Pin, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(blade3Pin, PO_SubSystems::PO_SPI);
   };
 };
 
@@ -324,6 +329,11 @@ struct StandardDisplayAdapterM3 {
     static void endTransaction() {
       // Do nothing, this is a dedicated SPI bus.
     }
+    USE_PIN_OUTPUT(DC, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(LIGHT, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(RESET, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(blade2Pin, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(blade3Pin, PO_SubSystems::PO_SPI);
   };
 };
 
@@ -358,6 +368,12 @@ struct CSDisplayAdapter {
       digitalWrite(CS, HIGH);
       spi().endTransaction();
     }
+    USE_PIN_OUTPUT(CS, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(DC, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(LIGHT, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(RESET, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(blade2Pin, PO_SubSystems::PO_SPI);
+    USE_PIN_OUTPUT(blade3Pin, PO_SubSystems::PO_SPI);
   };
 };
 #else
