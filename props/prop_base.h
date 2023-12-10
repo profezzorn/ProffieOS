@@ -114,6 +114,11 @@ private:
 };
 #endif
 
+#ifdef SPEAK_BLADE_ID
+#include "../sound/sound_library.h"
+extern SoundLibrary sound_library_;
+#endif
+
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase {
 public:
@@ -559,13 +564,18 @@ public:
 
     if (announce) {
       PVLOG_STATUS << "BLADE ID: " << ret << "\n";
+// Use sound_library for consistency of UI
 #ifdef SPEAK_BLADE_ID
-#ifdef DISABLE_TALKIE
-      #error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
-#else
+#ifndef DISABLE_TALKIE
       talkie.Say(spI);
       talkie.Say(spD);
       talkie.SayNumber((int)ret);
+#else
+      if (&SFX_mnum) {
+        sound_library_.SayNumber(ret, SAY_WHOLE);
+      } else {
+        beeper.Beep(0.05, 2000.0);
+      }
 #endif // DISABLE_TALKIE
 #endif // SPEAK_BLADE_ID
     }
