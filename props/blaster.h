@@ -443,7 +443,11 @@ public:
         } else if (SFX_mode) {
           hybrid_font.PlayCommon(&SFX_mode);
         } else {
+#ifndef DISABLE_TALKIE
           talkie.Say(spSTUN);
+#else
+          beeper.Beep(0.05, 2000.0);
+#endif
         }
       break;
       case MODE_KILL:
@@ -452,7 +456,11 @@ public:
         } else if (SFX_mode) {
           hybrid_font.PlayCommon(&SFX_mode);
         } else {
+#ifndef DISABLE_TALKIE
           talkie.Say(spKILL);      
+#else
+          beeper.Beep(0.05, 2000.0);
+#endif
         }
       break;
       case MODE_AUTO:
@@ -461,7 +469,11 @@ public:
         } else if (SFX_mode) {
           hybrid_font.PlayCommon(&SFX_mode);
         } else {
+#ifndef DISABLE_TALKIE
           talkie.Say(spAUTOFIRE);       
+#else
+          beeper.Beep(0.05, 2000.0);
+#endif
         }
       break;
     }
