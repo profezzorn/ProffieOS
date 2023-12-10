@@ -95,7 +95,7 @@ struct NO_BLADE_RangeID {
   float id() {
     BLADE_ID blade_id;
     float ret = blade_id.id();
-    if (ret >= MIN && ret <= MAX) return NO_BLADE;
+    if (ret >= MIN && ret <= MAX) ret += NO_BLADE;
     return ret;
   }
 };
