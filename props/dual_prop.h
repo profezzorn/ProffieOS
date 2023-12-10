@@ -46,7 +46,7 @@ See here for setup info:
 https://pod.hubbe.net/howto/blade-id.html
 */
 
-#define DUAL_PROP_CONDITION blade_present()
+#define DUAL_PROP_CONDITION this->blade_present()
 
 #ifdef PROP_INHERIT_PREFIX
 #error dual_prop.h must be included first
