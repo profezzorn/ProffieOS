@@ -684,6 +684,7 @@ V3TestScript script;
 #endif
 #include "buttons/rotary.h"
 #include "buttons/pots.h"
+#include "buttons/fast_button.h"
 
 #include "ir/ir.h"
 #include "ir/receiver.h"
