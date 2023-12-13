@@ -628,8 +628,6 @@ public:
       bool blade_present_after = blade_present();
       if (blade_present_before != blade_present_after) {
         SaberBase::DoBladeDetect(blade_present_after);
-      } else {
-	SaberBase::DoNewFont();
       }
     }
   }
