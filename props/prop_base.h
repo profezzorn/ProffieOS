@@ -654,7 +654,11 @@ public:
 #ifdef SAVE_PRESET
     ResumePreset();
 #else
-    SetPreset(0, false);
+    if (SaberBase::IsOn()) {
+      SetPresetFast(0, false);
+    } else {
+      SetPreset(0, false);
+    }
 #endif // SAVE_PRESET
     return;
 
