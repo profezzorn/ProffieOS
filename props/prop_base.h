@@ -655,7 +655,7 @@ public:
     ResumePreset();
 #else
     if (SaberBase::IsOn()) {
-      SetPresetFast(0, false);
+      SetPresetFast(0);
     } else {
       SetPreset(0, false);
     }
