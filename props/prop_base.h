@@ -672,7 +672,11 @@ public:
 
   void ResumePreset() {
     savestate_.ReadINIFromSaveDir("curstate");
-    SetPreset(savestate_.preset, false);
+    if (SaberBase::IsOn()) {
+      SetPresetFast(savestate_.preset);
+    } else {
+      SetPreset(savestate_.preset, false);
+    }
   }
 
   // Blade length from config file.
