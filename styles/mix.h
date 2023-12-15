@@ -72,8 +72,8 @@ public:
 private:
   PONUA MixHelper2<typename SplitTypeList<TypeList<A, B...>>::first_half> a_;
   PONUA MixHelper2<typename SplitTypeList<TypeList<A, B...>>::second_half> b_;
-  static int size() { return 1 + sizeof...(B); }
 public:  
+  static int size() { return 1 + sizeof...(B); }
   auto getColor(int x, int led) -> decltype(MixColors(a_.getColor(0, led), b_.getColor(0, led), 1, 1)) {
     if (x < a_.size()) return a_.getColor(x, led);
     return b_.getColor(x - a_.size(), led);
