@@ -63,4 +63,4 @@ template<int pin, int pin_mode = INPUT>
 using AnalogReadPinF = SingleValueAdapter<AnalogReadPinSVF<pin, pin_mode>>;
 
 
-#endif FUNCTIONS_READPIN_H
+#endif  // FUNCTIONS_READPIN_H
