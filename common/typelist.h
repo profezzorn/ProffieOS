@@ -41,28 +41,28 @@ template<typename TL> using RestTypeList = typename RestTypeListHelper<TL>::type
 
 
 
-// Head
-template<size_t n, typename TL> struct HeadTypeListHelper {
-  typedef typename HeadTypeListHelper<n-1, RestTypeList<TL>>::type type;
+// Tail
+template<size_t n, typename TL> struct TailTypeListHelper {
+  typedef typename TailTypeListHelper<n-1, RestTypeList<TL>>::type type;
 };
 template<typename TL>
-struct HeadTypeListHelper<0, TL> {
+struct TailTypeListHelper<0, TL> {
   typedef TL type;
 };
 
-template<size_t n, typename TL> using HeadTypeList = typename::HeadTypeListHelper<n, TL>::type;
+template<size_t n, typename TL> using TailTypeList = typename::TailTypeListHelper<n, TL>::type;
 
-// Tail
+// Head
 template<size_t n, typename TL, typename prefix>
-struct TailTypeListHelper {
-  typedef typename::TailTypeListHelper<n-1, RestTypeList<TL>, ConcatTypeLists<prefix, TypeList<FirstTypeList<TL>>>>::type type;
+struct HeadTypeListHelper {
+  typedef typename::HeadTypeListHelper<n-1, RestTypeList<TL>, ConcatTypeLists<prefix, TypeList<FirstTypeList<TL>>>>::type type;
 };
 template<typename TL, typename  prefix>
-struct TailTypeListHelper<0, TL, prefix> {
+struct HeadTypeListHelper<0, TL, prefix> {
   typedef prefix type;
 };
 
-template<size_t n, typename TL> using TailTypeList = typename::TailTypeListHelper<n, TL, TypeList<>>::type;
+template<size_t n, typename TL> using HeadTypeList = typename::HeadTypeListHelper<n, TL, TypeList<>>::type;
 
 
 template<typename TL>
