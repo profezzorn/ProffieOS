@@ -552,6 +552,7 @@ public:
   }
 
   virtual void SpeakBladeID(float id) {
+// Props should define this to use sound library.
 #ifndef USE_SOUND_LIBRARY_FOR_SPEAK_BLADE_ID
 #ifdef DISABLE_TALKIE
     #error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
