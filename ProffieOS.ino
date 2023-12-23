@@ -54,6 +54,9 @@
 #include CONFIG_FILE
 #undef CONFIG_TOP
 
+#include "common/capabilities.h"
+
+
 #if !defined(ENABLE_AUDIO) && !defined(DISABLE_AUDIO)
 #define ENABLE_AUDIO
 #endif

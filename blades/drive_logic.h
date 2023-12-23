@@ -3,8 +3,6 @@
 
 #include "led_interface.h"
 
-template<typename T> struct ToVoid { typedef void Type; };
-
 template<class LED, typename Enable=void>
 struct ColorSelector {
   static Color8 getColor8() {
