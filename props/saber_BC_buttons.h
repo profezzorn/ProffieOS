@@ -303,8 +303,10 @@ Turn OFF without postoff - Turn OFF while pointing up.
 #ifndef PROPS_SABER_BC_BUTTONS_H
 #define PROPS_SABER_BC_BUTTONS_H
 
+#define USE_SOUND_LIBRARY_FOR_SPEAK_BLADE_ID
 #include "prop_base.h"
 #include "../sound/hybrid_font.h"
+#include "../sound/sound_library.h"
 
 #undef PROP_TYPE
 #define PROP_TYPE SaberBCButtons
@@ -389,8 +391,6 @@ EFFECT(quote);      // for playing quotes
 EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 EFFECT(swap);       // for standalone triggering EffectSequence<>
 
-#include "../sound/sound_library.h"
-
 // The Saber class implements the basic states and actions
 // for the saber.
 class SaberBCButtons : public PROP_INHERIT_PREFIX PropBase {
@@ -462,6 +462,17 @@ public:
         thrust_begin_millis_ = millis();
       }
   }
+
+#ifdef SPEAK_BLADE_ID
+  void SpeakBladeID(float id) override {
+    if (&SFX_mnum) {
+      sound_library_.SayNumber(id, SAY_WHOLE);
+    } else {
+      PVLOG_NORMAL << "No mnum.wav number prompts found.\n";
+      beeper.Beep(0.25, 2000.0);
+    }
+  }
+#endif
 
 // Revert colorchange witout saving (reset to Variation == 0)
   void ResetColorChangeMode() {
