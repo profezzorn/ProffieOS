@@ -120,6 +120,10 @@ public:
     return value_ >> 2;
   }
 
+  int Value12() const {
+    return value_;
+  }
+
   void loop() {
     STATE_MACHINE_BEGIN();
 #define channel (g_APinDescription[pin_].adc_input)
@@ -261,6 +265,7 @@ public:
   void LoopUntilStart() {}
   bool Done() { return true; }
   int Value() { return analogRead(pin_); }
+  int Value12() { return analogRead(pin_)<<2; }
 
 private:
   int pin_;

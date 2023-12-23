@@ -89,6 +89,15 @@ enum SaberPins {
   trigger8Pin = 4,    // data3
 };
 
+namespace PO_ResourceTracking  {
+  PROFFIEOS_BOND_PINS(0, 1);
+  PROFFIEOS_BOND_PINS(2, 3);
+  PROFFIEOS_BOND_PINS(4, 5);
+  PROFFIEOS_BOND_PINS(9, 10);
+  PROFFIEOS_BOND_PINS(11, 12);
+  PROFFIEOS_BOND_PINS(13, 14);
+}
+
 #if PROFFIEBOARD_VERSION - 0 != 3
 #error Please select Proffieboard V3 in Tools->Board
 #endif

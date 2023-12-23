@@ -26,6 +26,8 @@ public:
     uint32_t last_activity = last_activity_;
     uint32_t now = millis();
     if (now - last_activity > 30000) {
+      uint32_t pclk1 = stm32l4_system_pclk1();
+      uint32_t pclk2 = stm32l4_system_pclk2();
 #if 0 // #ifdef PROFFIEBOARD_VERSION
       // This saves power, but also casuses freezing.
       // TODO: FIgure out why and re-enable.
@@ -40,7 +42,7 @@ public:
       else
 #endif
         delay(50);
-      stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, _SYSTEM_CORE_CLOCK_/2, _SYSTEM_CORE_CLOCK_/2);
+      stm32l4_system_sysclk_configure(_SYSTEM_CORE_CLOCK_, pclk1, pclk2);
     }
   }
 

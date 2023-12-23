@@ -42,7 +42,7 @@ public:
 	return true;
       }
     }
-    STDOUT << "(not found)\n";
+    STDOUT << " (not found)\n";
     return false;
   }
 
@@ -114,7 +114,7 @@ public:
 
   // This makes a paused player report very little available space, which
   // means that it will be low priority for reading.
-  size_t space_available() const override {
+  size_t space_available() override {
     size_t ret = VolumeOverlay<BufferedAudioStream<AUDIO_BUFFER_SIZE_BYTES>>::space_available();
     if (pause_.get() && ret) ret = 2; // still slightly higher than FromFileStyle<>
     return ret;

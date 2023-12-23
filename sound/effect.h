@@ -802,17 +802,23 @@ public:
     strncpy(filename_, filename, sizeof(filename_));
   }
 
-  void Play(const char* filename) {
-    PlayInternal(filename);
+  void do_open() {
+    MountSDCard();
     do_open_.set(true);
   }
 
-  void do_open() {
-    do_open_.set(true);
+  void Play(const char* filename) {
+    PlayInternal(filename);
+    do_open();
   }
 
   bool get_do_open() const {
     return do_open_.get();
+  }
+
+  void Close() {
+    do_open_.set(false);
+    FileReader::Close();
   }
 
   // Returns true if we had been asked to open a file.

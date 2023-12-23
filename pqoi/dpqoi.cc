@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
     switch (header.magic) {
       case fourcc("GOTO"):
 	if (header.data1) {
-	  pqoiml.parse("if " + format_condition(header.data1) + F(" goto L%d", header.data1));
+	  pqoiml.parse("if " + format_condition(header.data1) + F(" goto L%d", header.data2));
 	} else {
 	  pqoiml.parse(F("goto L%d", header.data2));
 	}
@@ -105,10 +105,14 @@ int main(int argc, char **argv) {
 	    if (alpha) {
 	      A = data.alphas[y * data.w + x];
 	      int Ainv = 32 - A;
-	      // Un-pre-multiply
-	      R = R * 32 / Ainv;
-	      G = G * 32 / Ainv;
-	      B = B * 32 / Ainv;
+	      if (Ainv == 0) {
+		R = G = B = 0;
+	      } else {
+		// Un-pre-multiply
+		R = R * 32 / Ainv;
+		G = G * 32 / Ainv;
+		B = B * 32 / Ainv;
+	      }
 	    }
 	    // Check if these are correct...
 	    *(out++) = (R * 0x21) >> 2;
@@ -138,4 +142,3 @@ int main(int argc, char **argv) {
   pqoiml.optimize();
   pqoiml.dump(stdout);
 }
-

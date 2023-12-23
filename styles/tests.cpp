@@ -882,7 +882,36 @@ void test_argument_parsing() {
   CHECK_COLOR(TestRgbArgColors[3], 7, 8, 9, 0);
 }
 
+void test_gradient() {
+  MockBlade mock_blade;
+  mock_blade.colors.resize(3);
+  Style<Gradient<Red, Green, Blue>> style;
+  style.run(&mock_blade);
+
+  CHECK_COLOR(mock_blade.colors[0], 65535, 0, 0, 1);
+  CHECK_COLOR(mock_blade.colors[1], 0, 65535, 0, 1);
+  CHECK_COLOR(mock_blade.colors[2], 0, 0, 65535, 1);
+}
+
+void test_mix() {
+  MockBlade mock_blade;
+  mock_blade.colors.resize(1);
+  Style<Mix<Int<0>, Red, Green, Blue, Yellow, White>> s1;
+  s1.run(&mock_blade);
+  CHECK_COLOR(mock_blade.colors[0], 65535, 0, 0, 1);
+  
+  Style<Mix<Int<4096>, Red, Green, Blue, Yellow, White>> s2;
+  s2.run(&mock_blade);
+  CHECK_COLOR(mock_blade.colors[0], 32767, 32767, 0, 1);
+
+  Style<Mix<Int<8192>, Red, Green, Blue, Yellow, White>> s3;
+  s3.run(&mock_blade);
+  CHECK_COLOR(mock_blade.colors[0], 0, 65535, 0, 1);
+}
+
 int main() {
+  test_mix();
+  test_gradient();
   test_style6();
   test_style5();
   test_style4();

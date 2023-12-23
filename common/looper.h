@@ -148,7 +148,7 @@ public:
 #ifdef ENABLE_DEBUG
 #define POLYHOLECONCAT_(a, b) a##b
 #define POLYHOLECONCAT(a, b) POLYHOLECONCAT_(a, b)
-#define POLYHOLE PolyHoleTemplate<4> POLYHOLE_CONCAT(polyhole_, __LINE__)
+#define POLYHOLE PolyHoleTemplate<4> POLYHOLECONCAT(polyhole_, __LINE__)
 #else
 #define POLYHOLE static_assert(true)
 #endif

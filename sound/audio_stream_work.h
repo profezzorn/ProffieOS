@@ -95,7 +95,7 @@ protected:
   virtual bool FillBuffer() = 0;
   virtual bool IsActive() { return false; }
   virtual void CloseFiles() = 0;
-  virtual size_t space_available() const = 0;
+  virtual size_t space_available() = 0;
 
 private:
   static void ProcessAudioStreams() {

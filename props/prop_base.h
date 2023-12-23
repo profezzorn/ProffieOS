@@ -432,6 +432,7 @@ public:
 
   // Select preset (font/style)
   virtual void SetPreset(int preset_num, bool announce) {
+    PVLOG_DEBUG << "SetPreset(" << preset_num << ")\n";
     TRACE(PROP, "start");
     bool on = BladeOff();
     SaveColorChangeIfNeeded();
@@ -443,7 +444,7 @@ public:
     chdir(current_preset_.font.get());
     if (on) On();
     if (announce) {
-      STDOUT << "DISPLAY: " << current_preset_name() << "\n";
+     PVLOG_STATUS << "Current Preset: " << current_preset_name() << "\n";
       SaberBase::DoNewFont();
     }
     TRACE(PROP, "end");
@@ -463,6 +464,7 @@ public:
 
     // Set/Update Font & Style, skips Preon effect using FastOn (for use in Edit Mode and "fast" preset changes)
   void SetPresetFast(int preset_num) {
+    PVLOG_DEBUG << "SetPresetFast(" << preset_num << ")\n";
     TRACE(PROP, "start");
     bool on = BladeOff();
     SaveColorChangeIfNeeded();
@@ -542,33 +544,47 @@ public:
   bool blade_detected_ = false;
 #endif
 
+  // Use this helper function, not the bool above.
+  // This function changes when we're properly initialized
+  // the blade, the bool is an internal to blade detect.
+  bool blade_present() {
+    return current_config->ohm < NO_BLADE;
+  }
+
   // Measure and return the blade identifier resistor.
-  float id() {
+  float id(bool announce = false) {
     EnableBooster();
     BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
-    PVLOG_STATUS << "BLADE ID: " << ret << "\n";
+
+    if (announce) {
+      PVLOG_STATUS << "BLADE ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
-    talkie.Say(spI);
-    talkie.Say(spD);
-    talkie.SayNumber((int)ret);
-#endif
+#ifdef DISABLE_TALKIE
+      #error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
+#else
+      talkie.Say(spI);
+      talkie.Say(spD);
+      talkie.SayNumber((int)ret);
+#endif // DISABLE_TALKIE
+#endif // SPEAK_BLADE_ID
+    }
 #ifdef BLADE_DETECT_PIN
     if (!blade_detected_) {
-      STDOUT << "NO ";
+      PVLOG_STATUS << "NO ";
       ret += NO_BLADE;
     }
-    STDOUT << "Blade Detected\n";
+    PVLOG_STATUS << "Blade Detected\n";
 #endif
-    return ret;
+      return ret;
   }
 
-  size_t FindBestConfig() {
+  size_t FindBestConfig(bool announce = false) {
     static_assert(NELEM(blades) > 0, "blades array cannot be empty");
 
     size_t best_config = 0;
     if (NELEM(blades) > 1) {
-      float resistor = id();
+      float resistor = id(announce);
 
       float best_err = 100000000.0;
       for (size_t i = 0; i < NELEM(blades); i++) {
@@ -594,9 +610,9 @@ public:
       last_scan_id_ = now;
       size_t best_config = FindBestConfig();
       if (current_config != blades + best_config) {
-	// We can't call FindBladeAgain right away because
-	// we're called from the blade. Wait until next loop() call.
-	find_blade_again_pending_ = true;
+  // We can't call FindBladeAgain right away because
+  // we're called from the blade. Wait until next loop() call.
+  find_blade_again_pending_ = true;
       }
       return true;
     }
@@ -607,17 +623,24 @@ public:
   void PollScanId() {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
+      bool blade_present_before = blade_present();
       FindBladeAgain();
+      bool blade_present_after = blade_present();
+      if (blade_present_before != blade_present_after) {
+        SaberBase::DoBladeDetect(blade_present_after);
+      } else {
+	SaberBase::DoNewFont();
+      }
     }
   }
 #else
   void PollScanId() {}
-#endif
+#endif // BLADE_ID_SCAN_MILLIS
 
   // Called from setup to identify the blade and select the right
   // Blade driver, style and sound font.
-  void FindBlade() {
-    size_t best_config = FindBestConfig();
+  void FindBlade(bool announce = false) {
+    size_t best_config = FindBestConfig(announce);
     PVLOG_STATUS << "blade = " << best_config << "\n";
     current_config = blades + best_config;
 
@@ -631,8 +654,12 @@ public:
 #ifdef SAVE_PRESET
     ResumePreset();
 #else
-    SetPreset(0, false);
-#endif
+    if (SaberBase::IsOn()) {
+      SetPresetFast(0);
+    } else {
+      SetPreset(0, false);
+    }
+#endif // SAVE_PRESET
     return;
 
 #if NUM_BLADES != 0
@@ -645,7 +672,11 @@ public:
 
   void ResumePreset() {
     savestate_.ReadINIFromSaveDir("curstate");
-    SetPreset(savestate_.preset, false);
+    if (SaberBase::IsOn()) {
+      SetPresetFast(savestate_.preset);
+    } else {
+      SetPreset(savestate_.preset, false);
+    }
   }
 
   // Blade length from config file.
@@ -673,7 +704,7 @@ public:
   }
 
   void SaveState(int preset) {
-    PVLOG_NORMAL << "Saving Current Preset\n";
+    PVLOG_NORMAL << "Saving Current Preset preset = " << preset << " savedir = " << GetSaveDir() << "\n";
     savestate_.preset = preset;
     savestate_.WriteToSaveDir("curstate");
   }
@@ -734,7 +765,7 @@ public:
 
     ONCEPERBLADE(DEACTIVATE);
     SaveVolumeIfNeeded();
-    FindBlade();
+    FindBlade(true);
   }
 
   bool CheckInteractivePreon() {
@@ -1263,7 +1294,7 @@ public:
 
   bool Parse(const char *cmd, const char* arg) override {
     if (!strcmp(cmd, "id")) {
-      id();
+      id(true);
       return true;
     }
     if (!strcmp(cmd, "scanid")) {
