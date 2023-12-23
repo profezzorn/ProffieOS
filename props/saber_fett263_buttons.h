@@ -1534,6 +1534,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_IGNITION_OPTION2:
       case MENU_IGNITION_POWER_UP_OPTION:
       case MENU_IGNITION_DELAY:
+      case MENU_SWING_OPTION:
         SetPresetFast(current_preset_.preset_num);
         break;
       case MENU_PREON_OPTION:
