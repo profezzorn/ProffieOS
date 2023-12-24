@@ -62,4 +62,45 @@ typedef Rgb<255, 31, 15> Tomato;
 typedef Rgb<255, 255, 255> White;
 typedef Rgb<255, 255, 0> Yellow;
 
+// New in ProffieOS 8.x:
+typedef Rgb<127, 0, 255> ElectricPurple;
+typedef Rgb<71, 0, 255> ElectricViolet;
+typedef Rgb<156, 255, 0> ElectricLime;
+typedef Rgb<255, 135, 0> Amber;
+typedef Rgb<255, 168, 0> CyberYellow;
+typedef Rgb<255, 221, 0> CanaryYellow;
+typedef Rgb<28, 255, 28> PaleGreen;
+typedef Rgb<255, 80, 254> Flamingo;
+typedef Rgb<90, 0, 255> VividViolet;
+typedef Rgb<186, 0, 255> PsychedelicPurple;
+typedef Rgb<255, 0, 156> HotMagenta;
+typedef Rgb<255, 0, 128> BrutalPink;
+typedef Rgb<255, 0, 55> NeonRose;
+typedef Rgb<255, 0, 38> VividRaspberry;
+typedef Rgb<255, 0, 19> HaltRed;
+typedef Rgb<255, 24, 0> MoltenCore;
+typedef Rgb<255, 33, 0> SafetyOrange;
+typedef Rgb<255, 55, 0> OrangeJuice;
+typedef Rgb<255, 97, 0> Orange;
+typedef Rgb<255, 115, 0> ImperialYellow;
+typedef Rgb<255, 176, 0> SchoolBus;
+typedef Rgb<255, 186, 0> SuperSaiyan;
+typedef Rgb<255, 201, 0> Star;
+typedef Rgb<255, 237, 0> Lemon;
+typedef Rgb<246, 255, 0> ElectricBanana;
+typedef Rgb<231, 255, 0> BusyBee;
+typedef Rgb<219, 255, 0> ZeusBolt;
+typedef Rgb<186, 255, 0> LimeZest;
+typedef Rgb<135, 255, 0> Limoncello;
+typedef Rgb<0, 255, 22> CathodeGreen;
+typedef Rgb<0, 255, 128> MintyParadise;
+typedef Rgb<0, 255, 156> PlungePool;
+typedef Rgb<0, 255, 201> VibrantMint;
+typedef Rgb<0, 255, 219> MasterSwordBlue;
+typedef Rgb<0, 219, 255> BrainFreeze;
+typedef Rgb<0, 33, 255> BlueRibbon;
+typedef Rgb<0, 13, 255> RareBlue;
+typedef Rgb<13, 0, 255> OverdueBlue;
+typedef Rgb<55, 0, 255> ViolentViolet;
+
 #endif
