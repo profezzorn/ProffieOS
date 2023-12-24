@@ -185,7 +185,7 @@ public:
 #endif
   }
 
-  void FastOn() {
+  virtual void FastOn() {
     if (!CommonIgnition()) return;
     SaberBase::TurnOn();
     SaberBase::DoEffect(EFFECT_FAST_ON, 0);
