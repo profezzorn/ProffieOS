@@ -590,6 +590,13 @@ public:
     }
   }
 
+  void FastOn() override {
+    if (SFX_faston) SFX_out.Select(-2);
+    SaberBase::TurnOn();
+    SaberBase::DoEffect(EFFECT_FAST_ON, 0);
+    SFX_out.Select(-1);
+  }
+
   RefPtr<BufferedWavPlayer> wav_player;
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
