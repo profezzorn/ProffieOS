@@ -559,7 +559,7 @@ public:
 #else
     talkie.Say(spI);
     talkie.Say(spD);
-    talkie.SayNumber((int)ret);
+    talkie.SayNumber((int)id);
 #endif  // DISABLE_TALKIE
 #endif  // USE_SOUND_LIBRARY_FOR_SPEAK_BLADE_ID
   }
