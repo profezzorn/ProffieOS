@@ -379,9 +379,6 @@ EFFECT(volup);      // for increse volume
 EFFECT(voldown);    // for decrease volume
 EFFECT(volmin);     // for minimum volume reached
 EFFECT(volmax);     // for maximum volume reached
-EFFECT(faston);     // for EFFECT_FAST_ON
-                    // *note* faston.wav does not replace out.wav.
-                    // they play layered and concurrently.
 EFFECT(blstbgn);    // for Begin Multi-Blast
 EFFECT(blstend);    // for End Multi-Blast
 EFFECT(push);       // for Force Push gesture
@@ -1156,9 +1153,6 @@ public:
         return;
       // Gesture on, bybass preon
       case EFFECT_FAST_ON:
-        if (SFX_faston) {
-          hybrid_font.PlayCommon(&SFX_faston);
-        }
         scroll_presets_ = false;
         return;
       case EFFECT_FAST_OFF:
