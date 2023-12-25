@@ -1,9 +1,7 @@
 #ifndef COMMON_CAPABILITIES_H
 #define COMMON_CAPABILITIES_H
 
-#include <type_traits>
-
-template<typename T> struct ToVoid { typedef void Type; };
+#include "common.h"
 
 #define CREATE_ENUM_CHECKER(ID)						\
 template <class ENUM>							\

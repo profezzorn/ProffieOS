@@ -34,5 +34,7 @@ const char install_time[] = __DATE__ " " __TIME__
 #define PROFFIEOS_ASSERT(X) do {} while(0)
 #endif
 
+template<typename T> struct ToVoid { typedef void Type; };
+
 #endif
 
