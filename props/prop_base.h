@@ -551,6 +551,16 @@ public:
     return current_config->ohm < NO_BLADE;
   }
 
+  virtual void SpeakBladeID(float id) {
+#ifdef DISABLE_TALKIE
+    #error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
+#else
+    talkie.Say(spI);
+    talkie.Say(spD);
+    talkie.SayNumber((int)id);
+#endif  // DISABLE_TALKIE
+  }
+
   // Measure and return the blade identifier resistor.
   float id(bool announce = false) {
     EnableBooster();
@@ -560,13 +570,7 @@ public:
     if (announce) {
       PVLOG_STATUS << "BLADE ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
-#ifdef DISABLE_TALKIE
-      #error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
-#else
-      talkie.Say(spI);
-      talkie.Say(spD);
-      talkie.SayNumber((int)ret);
-#endif // DISABLE_TALKIE
+    SpeakBladeID(ret);
 #endif // SPEAK_BLADE_ID
     }
 #ifdef BLADE_DETECT_PIN
