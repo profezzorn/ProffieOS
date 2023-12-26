@@ -303,7 +303,6 @@ Turn OFF without postoff - Turn OFF while pointing up.
 #ifndef PROPS_SABER_BC_BUTTONS_H
 #define PROPS_SABER_BC_BUTTONS_H
 
-#define USE_SOUND_LIBRARY_FOR_SPEAK_BLADE_ID
 #include "prop_base.h"
 #include "../sound/hybrid_font.h"
 #include "../sound/sound_library.h"
