@@ -1932,14 +1932,18 @@ SaberFett263Buttons() : PropBase() {}
     PropBase::Loop();
     DetectTwist();
     Vec3 mss = fusor.mss();
-    if (clash_type_ != CLASH_NONE && millis() - clash_impact_millis_ > 1) {
+    if (
+#ifdef FETT263_SPIN_MODE
+	!spin_mode_ && 
+#endif
+	clash_type_ != CLASH_NONE && millis() - clash_impact_millis_ > 1) {
       // CHECK PUSH
       if (clash_type_ == CLASH_CHECK) {
         Event(BUTTON_NONE, EVENT_PUSH);
         STDOUT.println("EVENT PUSH");
         clash_type_ = CLASH_NONE;
       }
-      if (clash_type_ != CLASH_LOCKUP_END) {
+      if (clash_type_ != CLASH_LOCKUP_END && clash_type_ != CLASH_NONE) {
 #ifdef FETT263_CLASH_STRENGTH_SOUND
         HandleClash();
 #else
@@ -1995,7 +1999,7 @@ SaberFett263Buttons() : PropBase() {}
           mss.y * mss.y + mss.z * mss.z > 100 &&
           fusor.swing_speed() < 20 &&
           fabs(fusor.gyro().x) < 5) {
-        if (millis() - push_begin_millis_ > saved_gesture_control.forcepushlen) {
+        if (saved_gesture_control.forcepush && millis() - push_begin_millis_ > saved_gesture_control.forcepushlen) {
           // Checking for Clash at end of movement
           clash_type_ = CLASH_CHECK;
           push_begin_millis_ = millis();
@@ -6084,6 +6088,7 @@ SaberFett263Buttons() : PropBase() {}
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
       if (!menu_) {
         spin_mode_ = !spin_mode_;
+	clash_type_ = CLASH_NONE;
 	if (spin_mode_) {
           if (SFX_bmbegin) {
             hybrid_font.PlayCommon(&SFX_bmbegin);
@@ -6294,6 +6299,9 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
         if (menu_ || CheckShowColorCC()) return true;
         if (!saved_gesture_control.forcepush) return true;
+#ifdef FETT263_SPIN_MODE
+	if (spin_mode_) return true;
+#endif
         if (FORCE_PUSH_CONDITION &&
            millis() - last_push_millis_ > 1000) {
           if (SFX_push) {
