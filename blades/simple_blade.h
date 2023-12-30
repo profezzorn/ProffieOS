@@ -8,6 +8,7 @@ class PWMPin : public PWMPinInterface {
 public:
   void Activate() override {
     static_assert(PIN >= 0, "PIN is negative?");
+    static_assert(IsPWMPin(PIN), "Not a PWM-capable pin.");
     LSanalogWriteSetup(PIN);
     LSanalogWrite(PIN, 0);  // make it black
   }

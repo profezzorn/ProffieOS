@@ -54,6 +54,9 @@
 #include CONFIG_FILE
 #undef CONFIG_TOP
 
+#include "common/capabilities.h"
+
+
 #if !defined(ENABLE_AUDIO) && !defined(DISABLE_AUDIO)
 #define ENABLE_AUDIO
 #endif
@@ -69,6 +72,15 @@
 #if !defined(ENABLE_SD) && !defined(DISABLE_SD)
 #define ENABLE_SD
 #endif
+
+#if !defined(KILL_OLD_PLAYERS) && !defined(DISABLE_KILL_OLD_PLAYERS)
+#define KILL_OLD_PLAYERS
+#endif
+
+#if !defined(NO_REPEAT_RANDOM) && !defined(DISABLE_NO_REPEAT_RANDOM)
+#define NO_REPEAT_RANDOM
+#endif
+
 
 #ifndef BOOT_VOLUME
 #define BOOT_VOLUME VOLUME

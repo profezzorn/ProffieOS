@@ -720,6 +720,7 @@ EFFECT(blst);
 EFFECT(clsh);
 EFFECT2(in, pstoff);
 EFFECT(out);
+EFFECT(fastout);
 EFFECT2(lock, lock);
 EFFECT(swng);
 EFFECT(slsh);

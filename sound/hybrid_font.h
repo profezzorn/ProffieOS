@@ -483,6 +483,7 @@ public:
   void SB_On() override {
     // If preon exists, we've already queed up playing the poweron and hum.
     bool already_started = state_ == STATE_WAIT_FOR_ON && SFX_preon;
+    bool faston = state_ != STATE_WAIT_FOR_ON;
     if (monophonic_hum_) {
       if (!already_started) {
         PlayMonophonic(&SFX_poweron, &SFX_hum);
@@ -509,7 +510,7 @@ public:
       	  SaberBase::ClearSoundInfo();
       	}
       } else {
-        tmp = PlayPolyphonic(getOut());
+        tmp = PlayPolyphonic(faston && SFX_fastout ? &SFX_fastout : getOut());
       }
       hum_fade_in_ = 0.2;
       if (SFX_humm && tmp) {

@@ -59,7 +59,9 @@ Optional #defines:
                                   Exit by not swinging for 1 second.
 #define FEMALE_TALKIE_VOICE     - To use a female voice version of onboard Talkie.
 #define NO_VOLUME_MENU          - Option to omit On-the-fly Volume menu control with buttons.
-
+#define ENABLE_FASTON           - Use faston.wav for FastOn() ignitions, such as gesture ignitions or fast preset change.
+                                  The faston.wav sound will be replaced with fastout.wav. 
+                                  If you have a good reason to keep faston.wav as is, please post at https://crucible.hubbe.net/
 ---------------------------------------------------------------------------
 Gesture Controls:
 - There are four gesture types: swing, stab, thrust and twist.
@@ -305,6 +307,7 @@ Turn OFF without postoff - Turn OFF while pointing up.
 
 #include "prop_base.h"
 #include "../sound/hybrid_font.h"
+#include "../sound/sound_library.h"
 
 #undef PROP_TYPE
 #define PROP_TYPE SaberBCButtons
@@ -379,17 +382,16 @@ EFFECT(volup);      // for increse volume
 EFFECT(voldown);    // for decrease volume
 EFFECT(volmin);     // for minimum volume reached
 EFFECT(volmax);     // for maximum volume reached
-EFFECT(faston);     // for EFFECT_FAST_ON
-                    // *note* faston.wav does not replace out.wav.
-                    // they play layered and concurrently.
+#ifdef ENABLE_FASTON
+#warning The faston.wav sound will be replaced with fastout.wav. If you have a good reason to keep faston.wav as is, please post at https://crucible.hubbe.net/
+EFFECT(faston);     // for EFFECT_FAST_ON. Being replaced by fastout.wav, which is already defined in the main OS.
+#endif
 EFFECT(blstbgn);    // for Begin Multi-Blast
 EFFECT(blstend);    // for End Multi-Blast
 EFFECT(push);       // for Force Push gesture
 EFFECT(quote);      // for playing quotes
 EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 EFFECT(swap);       // for standalone triggering EffectSequence<>
-
-#include "../sound/sound_library.h"
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -462,6 +464,17 @@ public:
         thrust_begin_millis_ = millis();
       }
   }
+
+#ifdef SPEAK_BLADE_ID
+  void SpeakBladeID(float id) override {
+    if (&SFX_mnum) {
+      sound_library_.SayNumber(id, SAY_WHOLE);
+    } else {
+      PVLOG_NORMAL << "No mnum.wav number prompts found.\n";
+      beeper.Beep(0.25, 2000.0);
+    }
+  }
+#endif
 
 // Revert colorchange witout saving (reset to Variation == 0)
   void ResetColorChangeMode() {
@@ -1156,9 +1169,9 @@ public:
         return;
       // Gesture on, bybass preon
       case EFFECT_FAST_ON:
-        if (SFX_faston) {
-          hybrid_font.PlayCommon(&SFX_faston);
-        }
+#ifdef ENABLE_FASTON
+        if (SFX_faston) hybrid_font.PlayCommon(&SFX_faston);
+#endif
         scroll_presets_ = false;
         return;
       case EFFECT_FAST_OFF:
