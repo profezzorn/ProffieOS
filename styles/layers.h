@@ -15,10 +15,8 @@
 // opaque. If the base color is transparent, the final result may also be transparent,
 // depending on what the layers paint on top of the base color.
 
-template<class BASE, class... LAYERS> class Layers : public BASE {};
-
 template<class BASE, class L1>
-class Layers<BASE, L1> {
+class Compose {
 public:
   LayerRunResult run(BladeBase* blade) {
     LayerRunResult base_run_result = RunLayer(&base_, blade);
@@ -44,7 +42,15 @@ public:
   }
 };
 
-template<class BASE, class L1, class L2, class... LAYERS>
-  class Layers<BASE, L1, L2, LAYERS...> : public Layers<Layers<BASE, L1>, L2, LAYERS...> {};
+
+template<class BASE, class ... LAYERS> struct LayerSelector {};
+template<class BASE> struct LayerSelector<BASE> { typedef BASE type; };
+template<class BASE, class L1> struct LayerSelector<AlphaL<BASE, Int<0>>, L1> { typedef L1 type; };
+template<class BASE, class L1> struct LayerSelector<BASE, L1> { typedef Compose<BASE, L1> type; };
+template<class BASE, class L1, class ... REST> struct LayerSelector<BASE, L1, REST...> {
+  typedef typename LayerSelector<Compose<BASE, L1>, REST...>::type type;
+};
+
+template<class BASE, class... LAYERS> using Layers = typename LayerSelector<BASE, LAYERS...>::type;
 
 #endif

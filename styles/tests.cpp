@@ -909,7 +909,17 @@ void test_mix() {
   CHECK_COLOR(mock_blade.colors[0], 0, 65535, 0, 1);
 }
 
+#define CHECK(X) do {                                           \
+    if (!(X)) { fprintf(stderr, "%s failed, line %d\n", #X, __LINE__); exit(1); } \
+} while(0)
+
+void test_layers() {
+  CHECK( (is_same_type<Layers<AlphaL<Red, Int<0>>, Blue>, Blue>::value) );
+  CHECK( (!is_same_type<Layers<AlphaL<Red, Int<1>>, Blue>, Blue>::value) );
+}
+
 int main() {
+  test_layers();
   test_mix();
   test_gradient();
   test_style6();
