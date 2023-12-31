@@ -918,7 +918,23 @@ void test_layers() {
   CHECK( (!is_same_type<Layers<AlphaL<Red, Int<1>>, Blue>, Blue>::value) );
 }
 
+void test_smoothstep() {
+  SmoothStep<Int<16384>, Int<16384>> ss;
+  MockBlade mock_blade;
+  mock_blade.colors.resize(100);
+  ss.run(&mock_blade);
+  for (int i = 0; i < 25; i++) {
+    CHECK_NEAR(ss.getInteger(i), 0, 0);
+    CHECK_NEAR(ss.getInteger(i + 75), 32768, 1);
+  }
+  for (int i = 25; i < 50; i++) {
+    float x = (i - 25) / 50.0;
+    CHECK_NEAR(ss.getInteger(i), (int)((3-2*x)*x*x  * 32768), 32);
+  }
+}
+
 int main() {
+  test_smoothstep();
   test_layers();
   test_mix();
   test_gradient();
