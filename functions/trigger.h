@@ -11,13 +11,10 @@
 // FADE_OUT_MILLIS: INTEGER
 // DELAY_MILLIS: INTEGER (defaults to Int<0>)
 // return value: INTEGER
-template<
-  BladeEffectType EFFECT,
-  class FADE_IN_MILLIS,
-  class SUSTAIN_MILLIS,
-  class FADE_OUT_MILLIS,
-  class DELAY_MILLIS = Int<0>>
-class Trigger {
+
+
+class TriggerBase {
+protected:
   enum TriggerState {
     TRIGGER_DELAY = 0,
     TRIGGER_ATTACK = 1,
@@ -25,17 +22,9 @@ class Trigger {
     TRIGGER_RELEASE = 3,
     TRIGGER_OFF = 4
   };
- public:
+public:
+  virtual uint32_t get_millis_for_state(BladeBase* base) = 0;
   void run(BladeBase* blade) {
-    delay_millis_.run(blade);
-    fade_in_millis_.run(blade);
-    sustain_millis_.run(blade);
-    fade_out_millis_.run(blade);
-
-    if (effect_.Detect(blade)) {
-      start_time_ = micros();
-      trigger_state_ = TRIGGER_DELAY;
-    }
     if (trigger_state_ == TRIGGER_OFF) {
       value_ = 0;
       return;
@@ -68,7 +57,35 @@ class Trigger {
       start_time_ += micros_for_state;
     }
   }
-  uint32_t get_millis_for_state(BladeBase* base) {
+  int getInteger(int led) const { return value_; }
+  int calculate(BladeBase* blade) { return value_; }
+protected:
+  int value_;
+  uint8_t trigger_state_ = TRIGGER_OFF;
+  uint32_t start_time_;
+};
+
+template<
+  BladeEffectType EFFECT,
+  class FADE_IN_MILLIS,
+  class SUSTAIN_MILLIS,
+  class FADE_OUT_MILLIS,
+  class DELAY_MILLIS = Int<0>>
+class TriggerSVF : public TriggerBase {
+ public:
+  void run(BladeBase* blade) {
+    delay_millis_.run(blade);
+    fade_in_millis_.run(blade);
+    sustain_millis_.run(blade);
+    fade_out_millis_.run(blade);
+
+    if (effect_.Detect(blade)) {
+      start_time_ = micros();
+      trigger_state_ = TRIGGER_DELAY;
+    }
+    TriggerBase::run(blade);
+  }
+  uint32_t get_millis_for_state(BladeBase* base) override {
     switch (trigger_state_) {
     case TRIGGER_DELAY: return delay_millis_.calculate(base);
     case TRIGGER_ATTACK: return fade_in_millis_.calculate(base);
@@ -79,16 +96,30 @@ class Trigger {
     }
     return 1000000;
   }
-  int getInteger(int led) const { return value_; }
  private:
   PONUA SVFWrapper<DELAY_MILLIS> delay_millis_;
   PONUA SVFWrapper<FADE_IN_MILLIS> fade_in_millis_;
   PONUA SVFWrapper<SUSTAIN_MILLIS> sustain_millis_;
   PONUA SVFWrapper<FADE_OUT_MILLIS> fade_out_millis_;
-  int value_;
-  uint8_t trigger_state_ = TRIGGER_OFF;
-  uint32_t start_time_;
   OneshotEffectDetector<EFFECT> effect_;
 };
+
+// Optimized specialization.
+template<
+  BladeEffectType EFFECT,
+  class FADE_IN_MILLIS,
+  class SUSTAIN_MILLIS,
+  class FADE_OUT_MILLIS,
+  class DELAY_MILLIS>
+class SingleValueAdapter<TriggerSVF<EFFECT, FADE_IN_MILLIS, SUSTAIN_MILLIS, FADE_OUT_MILLIS, DELAY_MILLIS>> : public TriggerSVF<EFFECT, FADE_IN_MILLIS, SUSTAIN_MILLIS, FADE_OUT_MILLIS, DELAY_MILLIS> {};
+
+template<
+  BladeEffectType EFFECT,
+  class FADE_IN_MILLIS,
+  class SUSTAIN_MILLIS,
+  class FADE_OUT_MILLIS,
+  class DELAY_MILLIS = Int<0>>
+using Trigger = SingleValueAdapter<TriggerSVF<EFFECT, FADE_IN_MILLIS, SUSTAIN_MILLIS, FADE_OUT_MILLIS, DELAY_MILLIS>>;
+
 
 #endif
