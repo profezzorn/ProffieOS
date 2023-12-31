@@ -9,7 +9,7 @@
 class BladeBase;
 
 template<class F, class SPEED>
-class ChangeSlowly {
+class ChangeSlowlySVF {
 public:
   void run(BladeBase* blade) {
     f_.run(blade);
@@ -31,11 +31,19 @@ public:
     }
   }
   int getInteger(int led) { return value_; }
+  int calculate(BladeBase* blade) { return value_; }
 private:
   PONUA SVFWrapper<F> f_;
   PONUA SVFWrapper<SPEED> speed_;
   uint32_t last_micros_ = 0;
   int value_;
 };
+
+// optimized specialization
+template<class F, class SPEED>
+class SingleValueAdapter<ChangeSlowlySVF<F, SPEED>> : public ChangeSlowlySVF<F, SPEED> {};
+
+template<class F, class SPEED>
+using ChangeSlowly = SingleValueAdapter<ChangeSlowlySVF<F, SPEED>>;
 
 #endif
