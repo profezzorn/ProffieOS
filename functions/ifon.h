@@ -92,7 +92,7 @@ using InOutFuncX = SingleValueAdapter<InOutFuncSVF<OUT_MILLIS, IN_MILLIS>>;
 class InOutHelperFBase {
 public:
   int getInteger(int led) {
-    return 32768 - clampi32(thres - led * 32768, 0, 32768);
+    return clampi32(led * 32768 - thres, 0, 32768);
   }
 protected:
   int thres = 0;
@@ -103,7 +103,7 @@ class InOutHelperF : public InOutHelperFBase {
 public:
   FunctionRunResult run(BladeBase* blade) __attribute__((warn_unused_result)) {
     FunctionRunResult ret = RunFunction(&extension_, blade);
-    thres = (extension_.calculate(blade) * blade->num_leds());
+    thres = (extension_.calculate(blade) * blade->num_leds()) - 32768;
     if (ALLOW_DISABLE) {
       switch (ret) {
 	case FunctionRunResult::ZERO_UNTIL_IGNITION: return FunctionRunResult::ONE_UNTIL_IGNITION;
