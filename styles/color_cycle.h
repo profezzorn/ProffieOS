@@ -14,19 +14,12 @@
 // and rotates at the specified speed. The size of the
 // lit up section is defined by "percentage".
 class BladeBase;
-template<class COLOR, int percentage, int rpm,
-         class ON_COLOR = COLOR,
-         int on_percentage = percentage,
-         int on_rpm = rpm,
-         int fade_time_millis = 1,
-         class OFF_COLOR = Rgb<0,0,0> >
-class ColorCycle {
+
+class ColorCycleBase {
 public:
-  bool run(BladeBase* base) {
+  bool run(BladeBase* base, int percentage, int rpm, int on_percentage, int on_rpm, int fade_time_millis,
+    bool off_color_is_black) {
     bool keep_running = true;
-    c_.run(base);
-    on_c_.run(base);
-    off_c_.run(base);
 
     uint32_t now = micros();
     uint32_t delta = now - last_micros_;
@@ -50,27 +43,14 @@ public:
     } else if (current_percentage == 0.0) {
       start_ = 0;
       end_ = 0;
-      keep_running = !is_same_type<OFF_COLOR, Rgb<0,0,0> >::value;
+      keep_running = !off_color_is_black;
     } else {
       end_ = fract(pos_ + current_percentage / 100.0) * num_leds_;
     }
     return keep_running;
   }
 
-private:
-  float fade_ = 0.0;
-  int fade_int_;
-  float pos_ = 0.0;
-  uint32_t start_;
-  uint32_t end_;
-  uint32_t num_leds_;
-  COLOR c_;
-  ON_COLOR on_c_;
-  OFF_COLOR off_c_;
-  uint32_t last_micros_;
-public:
-
-  auto getColor(int led) -> decltype(MixColors(off_c_.getColor(0), MixColors(c_.getColor(0), on_c_.getColor(0), 1, 15), 1, 15)) {
+  int getMix(int led) {
     Range led_range(led * 16384, led * 16384 + 16384);
     int black_mix = 0;
     if (start_ <= end_) {
@@ -79,10 +59,46 @@ public:
       black_mix = (Range(0, end_) & led_range).size() +
                   (Range(start_, num_leds_) & led_range).size();
     }
+    return black_mix;
+  }
+protected:
+  float fade_ = 0.0;
+  int fade_int_;
+  float pos_ = 0.0;
+  uint32_t start_;
+  uint32_t end_;
+  uint32_t num_leds_;
+  uint32_t last_micros_;
+};
+
+
+template<class COLOR, int percentage, int rpm,
+         class ON_COLOR = COLOR,
+         int on_percentage = percentage,
+         int on_rpm = rpm,
+         int fade_time_millis = 1,
+         class OFF_COLOR = Rgb<0,0,0> >
+class ColorCycle : public ColorCycleBase {
+public:
+  bool run(BladeBase* base) {
+    c_.run(base);
+    on_c_.run(base);
+    off_c_.run(base);
+    return ColorCycleBase::run(base, percentage, rpm, on_percentage, on_rpm, fade_time_millis,
+			       is_same_type<OFF_COLOR, Rgb<0,0,0> >::value);
+  }
+
+private:
+  COLOR c_;
+  ON_COLOR on_c_;
+  OFF_COLOR off_c_;
+public:
+
+  auto getColor(int led) -> decltype(MixColors(off_c_.getColor(0), MixColors(c_.getColor(0), on_c_.getColor(0), 1, 15), 1, 15)) {
+    int black_mix = getMix(led);
     auto c = c_.getColor(led);
     auto on_c = on_c_.getColor(led);
     auto off_c = off_c_.getColor(led);
-
     return MixColors(off_c, MixColors(c, on_c, fade_int_, 14), black_mix, 14);
   }
 };
