@@ -28,13 +28,6 @@
 // #define CONFIG_FILE "config/YOUR_CONFIG_FILE_NAME_HERE.h"
 
 // #define CONFIG_FILE "config/default_proffieboard_config.h"
-// #define CONFIG_FILE "config/default_v3_config.h"
-// #define CONFIG_FILE "config/crossguard_config.h"
-// #define CONFIG_FILE "config/graflex_v1_config.h"
-// #define CONFIG_FILE "config/prop_shield_fastled_v1_config.h"
-// #define CONFIG_FILE "config/owk_v2_config.h"
-// #define CONFIG_FILE "config/test_bench_config.h"
-// #define CONFIG_FILE "config/toy_saber_config.h"
 // #define CONFIG_FILE "config/proffieboard_v1_test_bench_config.h"
 // #define CONFIG_FILE "config/proffieboard_v2_testing_config.h"
 // #define CONFIG_FILE "config/td_proffieboard_config.h"
@@ -42,7 +35,6 @@
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
 // #define CONFIG_FILE "config/testconfig.h"
-// #define CONFIG_FILE "config/test_bench_config.h"
 
 #ifndef CONFIG_FILE
 #error Please set CONFIG_FILE as shown above.
