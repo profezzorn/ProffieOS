@@ -19,7 +19,7 @@ class PixelateX {
   PONUA COLOR color_;
   PONUA N n_;
   int last_led_;
-  typename decltype(color_.getColor(led)) last_color_;
+  decltype(color_.getColor(0)) last_color_;
 
  public:
   LayerRunResult run(BladeBase* blade) {
