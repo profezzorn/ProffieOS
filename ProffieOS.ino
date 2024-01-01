@@ -586,6 +586,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/volume_level.h"
 #include "functions/mod.h"
 #include "functions/readpin.h"
+#include "functions/bullet_count.h"
 
 // transitions
 #include "transitions/fade.h"
@@ -671,6 +672,12 @@ PROP_TYPE prop;
 #ifdef BLADE_ID_SCAN_MILLIS
 bool ScanBladeIdNow() {
   return prop.ScanBladeIdNow();
+}
+#endif
+
+#ifdef BLASTER_SHOTS_UNTIL_EMPTY
+int prop_GetBulletCount() {
+    return prop.GetBulletCount();
 }
 #endif
 
