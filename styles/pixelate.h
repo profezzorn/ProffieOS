@@ -9,7 +9,7 @@
 // PIXEL_SIZE: NUMBER size of pixelation (defaults to 2)
 // Returns: COLOR
 // If you have a blade that has too many LEDs to run fast, you
-// cause Pixelate<COLOR> to make it run faster, since it will
+// can use Pixelate<COLOR> to make it run faster, since it will
 // only calculate "COLOR" half as many times.
 // It can also be used as an effect of course.
 
