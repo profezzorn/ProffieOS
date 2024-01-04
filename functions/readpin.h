@@ -1,6 +1,8 @@
 #ifndef FUNCTIONS_READPIN_H
 #define FUNCTIONS_READPIN_H
 
+#include "../common/analog_read.h"
+
 // usage: ReadPinF<PIN>
 // or: ReadPinF<PIN, PIN_MODE>
 // returns INTEGER, 0 if pin is low and 32768 if pin is high
