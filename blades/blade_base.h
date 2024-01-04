@@ -23,7 +23,7 @@ struct BladeEffect {
   BladeEffectType type;
 
   uint32_t start_micros;
-  float location; // 0 = base, 1 = tip
+  EffectLocation location; // 0 = base, 1 = tip
   float sound_length;
   int wavnum;
 };

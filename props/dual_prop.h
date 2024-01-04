@@ -92,7 +92,7 @@ class DualProp : public virtual PropBase, public A, public B {
     }
   }
   
-  void SB_Effect(EffectType effect, float location) override {
+  void SB_Effect(EffectType effect, EffectLocation location) override {
     if (DUAL_PROP_CONDITION) {
       A::SB_Effect(effect, location);
     } else {
@@ -211,7 +211,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
     }
   }
   
-  void SB_Effect(EffectType effect, float location) override {
+  void SB_Effect(EffectType effect, EffectLocation location) override {
     if (DUAL_PROP_CONDITION) {
       Saber::SB_Effect(effect, location);
     } else {

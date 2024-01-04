@@ -25,9 +25,9 @@ public:
 
   RefPtr<BufferedWavPlayer> low_;
   RefPtr<BufferedWavPlayer> high_;
-  void SB_On() override {
+  void SB_On(EffectLocation location) override {
     // Starts hum, etc.
-    delegate_->SB_On();
+    delegate_->SB_On(location);
     low_ = GetFreeWavPlayer();
     if (low_) {
       low_->set_volume_now(0);
@@ -51,7 +51,7 @@ public:
     STDOUT.println(WhatUnit(high_));
 #endif
   }
-  void SB_Off(OffType off_type) override {
+  void SB_Off(OffType off_type, EffectLocation location) override {
     if (low_) {
       low_->set_fade_time(0.3);
       low_->FadeAndStop();
@@ -62,7 +62,7 @@ public:
       high_->FadeAndStop();
       high_.Free();
     }
-    delegate_->SB_Off(off_type);
+    delegate_->SB_Off(off_type, location);
   }
 
   void SB_Motion(const Vec3& gyro, bool clear) override {

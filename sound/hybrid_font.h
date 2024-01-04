@@ -480,7 +480,7 @@ public:
     }
   }
 
-  void SB_On() override {
+  void SB_On(EffectLocation location) override {
     // If preon exists, we've already queed up playing the poweron and hum.
     bool already_started = state_ == STATE_WAIT_FOR_ON && SFX_preon;
     bool faston = state_ != STATE_WAIT_FOR_ON;
@@ -529,7 +529,7 @@ public:
     }
   }
 
-  void SB_Off(OffType off_type) override {
+  void SB_Off(OffType off_type, EffectLocation location) override {
     SFX_in.SetFollowing(&SFX_pstoff);
     switch (off_type) {
       case OFF_CANCEL_PREON:
@@ -574,7 +574,11 @@ public:
           PlayPolyphonic(getNext(hum_player_, &SFX_in));
 	  hum_fade_out_ = 0.2;
         }
-        check_postoff_ = !!SFX_pstoff && off_type != OFF_FAST;
+	if (state_ == STATE_HUM_FADE_OUT && location.blades() != EffectLocation::ALL_BLADES) {
+	  state_  = STATE_OUT;
+	} else {
+	  check_postoff_ = !!SFX_pstoff && off_type != OFF_FAST;
+	}
         break;
       case OFF_BLAST:
         if (monophonic_hum_) {
@@ -588,7 +592,7 @@ public:
     }
   }
 
-  void SB_Effect(EffectType effect, float location) override {
+  void SB_Effect(EffectType effect, EffectLocation location) override {
     switch (effect) {
       default: return;
       case EFFECT_PREON: SB_Preon(); return;

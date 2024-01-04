@@ -635,6 +635,14 @@ class BladeBase* GetPrimaryBlade() {
   return current_config->blade1;
 #endif
 }
+
+#define BLADE_NUMBER_FINDER(N) if (current_config->blade##N == blade) return N;
+// Returns 1..NUM_BLADES (0 if not found)
+int GetBladeNumber(BladeBase *blade) {
+  ONCEPERBLADE(BLADE_NUMBER_FINDER);
+  return 0;
+}
+
 const char* GetSaveDir() {
   if (!current_config) return "";
   if (!current_config->save_dir) return "";

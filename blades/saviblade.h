@@ -105,8 +105,8 @@ public:
     if (on_ || powered_) *on = true;
   }
 
-  void SB_On() override {
-    AbstractBlade::SB_On();
+  void SB_On2(EffectLocation location) override {
+    AbstractBlade::SB_On2(location);
     battery_monitor.SetLoad(true);
     on_ = true;
     Power(true);
@@ -116,8 +116,8 @@ public:
     last_send_ = millis();
   }
 
-  void SB_Off(OffType off_type) override {
-    AbstractBlade::SB_Off(off_type);
+  void SB_Off2(OffType off_type, EffectLocation location) override {
+    AbstractBlade::SB_Off2(off_type, location);
     battery_monitor.SetLoad(false);
     on_ = false;
     SendCMD(0x40);
@@ -128,7 +128,7 @@ public:
     }
   }
 
-  void SB_Effect(BladeEffectType type, float location) {
+  void SB_Effect(BladeEffectType type, EffectLocation location) {
     AbstractBlade::SB_Effect(type, location);
     switch (type) {
       default: break;

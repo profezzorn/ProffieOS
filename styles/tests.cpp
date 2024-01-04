@@ -76,6 +76,9 @@ int32_t clampi32(int32_t x, int32_t a, int32_t b) {
 }
 
 int random(int x) { return (rand() & 0x7fffff) % x; }
+class BladeBase;
+int GetBladeNumber(BladeBase* blad) { return 0; }
+
 class Looper {
 public:
   static void DoHFLoop() {}

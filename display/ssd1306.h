@@ -473,7 +473,7 @@ public:
     }
   }
 
-  void SB_On() override {
+  void SB_On(EffectLocation location) override {
     if (!ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration)) {
       ShowDefault();
       last_delay_ = t_ = 0;
@@ -481,7 +481,7 @@ public:
     }
   }
 
-  void SB_On2() override {
+  void SB_On2(EffectLocation location) override {
     if (IMG_out) {
       ShowFileWithSoundLength(&IMG_out, font_config.ProffieOSOutImageDuration);
     }
@@ -502,7 +502,7 @@ public:
     ShowFile(e, round(duration));
   }
 
- void SB_Effect2(EffectType effect, float location) override {
+ void SB_Effect2(EffectType effect, EffectLocation location) override {
    switch (effect) {
      case EFFECT_NEWFONT:
        looped_on_ = Tristate::Unknown;
@@ -617,7 +617,7 @@ public:
     display_->SB_Top();
   }
 
-  void SB_Off2(OffType offtype) override {
+  void SB_Off2(OffType offtype, EffectLocation location) override {
     if (offtype == OFF_IDLE) {
       SetScreenNow(SCREEN_OFF);
     } else if (IMG_in) {

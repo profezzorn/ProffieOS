@@ -81,17 +81,17 @@ public:
       smooth_swing_config.Transition2Degrees);
   }
 
-  void SB_On() override {
+  void SB_On(EffectLocation location) override {
     on_ = true;
     // Starts hum, etc.
-    delegate_->SB_On();
+    delegate_->SB_On(location);
     PickRandomSwing();
   }
-  void SB_Off(OffType off_type) override {
+  void SB_Off(OffType off_type, EffectLocation location) override {
     on_ = false;
     A.Off();
     B.Off();
-    delegate_->SB_Off(off_type);
+    delegate_->SB_Off(off_type, location);
   }
 
   enum class SwingState {

@@ -6331,7 +6331,7 @@ SaberFett263Buttons() : PropBase() {}
     return false;
   }
 
-  void SB_Effect(EffectType effect, float location) override {
+  void SB_Effect(EffectType effect, EffectLocation location) override {
     switch (effect) {
       case EFFECT_INTERACTIVE_BLAST: hybrid_font.PlayCommon(&SFX_blast); return;
       case EFFECT_TRACK: PlayEffectTrack(); return;

@@ -191,7 +191,7 @@ public:
     SaberBase::DoEffect(EFFECT_FAST_ON, 0);
   }
 
-  void SB_On() override {
+  void SB_On(EffectLocation location) override {
     on_pending_ = false;
   }
 
@@ -1190,7 +1190,7 @@ public:
       last_on_time_ = millis();
     }
     if (millis() - last_on_time_ > IDLE_OFF_TIME) {
-      SaberBase::DoOff(OFF_IDLE);
+      SaberBase::DoOff(OFF_IDLE, 0);
       last_on_time_ = millis();
     }
 #endif

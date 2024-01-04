@@ -171,23 +171,23 @@ WS2811_Blade(WS2811PIN* pin,
   void SB_IsOn(bool* on) override {
     if (on_ || powered_) *on = true;
   }
-  void SB_On() override {
+  void SB_On2(EffectLocation location) override {
     TRACE(BLADE, "SB_On");
-    AbstractBlade::SB_On();
+    AbstractBlade::SB_On2(location);
     run_ = true;
     on_ = true;
     power_off_requested_ = false;
     poweroff_delay_start_ = 0;
   }
-  void SB_Effect2(BladeEffectType type, float location) override {
+  void SB_Effect2(BladeEffectType type, EffectLocation location) override {
     AbstractBlade::SB_Effect2(type, location);
     run_ = true;
     power_off_requested_ = false;
     poweroff_delay_start_ = 0;
   }
-  void SB_Off(OffType off_type) override {
-    TRACE(BLADE, "SB_Off");
-    AbstractBlade::SB_Off(off_type);
+  void SB_Off2(OffType off_type, EffectLocation location) override {
+    TRACE(BLADE, "SB_Off2");
+    AbstractBlade::SB_Off2(off_type, location);
     on_ = false;
     if (off_type == OFF_IDLE) {
       power_off_requested_ = true;
@@ -203,12 +203,12 @@ WS2811_Blade(WS2811PIN* pin,
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-         SB_On();
+         SB_On2(0.0f);
          return true;
       }
       if (!strcmp(arg, "off")) {
-         SB_Off(OFF_NORMAL);
-         return true;
+	SB_Off2(OFF_NORMAL, 0.0f);
+	return true;
       }
 #ifdef ENABLE_DEVELOPER_COMMANDS      
       if (!strcmp(arg, "state")) {

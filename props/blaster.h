@@ -415,7 +415,7 @@ public:
   }
 
    // Blaster effects, auto fire is handled by begin/end lockup
-  void SB_Effect(EffectType effect, float location) override {
+  void SB_Effect(EffectType effect, EffectLocation location) override {
     switch (effect) {
       default: return;
       case EFFECT_STUN: hybrid_font.PlayCommon(&SFX_stun); return;

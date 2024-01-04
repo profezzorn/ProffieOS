@@ -3,6 +3,7 @@
 #include "blade_base.h"
 
 BladeBase* GetPrimaryBlade();
+int GetBladeNumber(BladeBase *blade);
 
 class AbstractBlade : public BladeBase, public SaberBase {
 public:
@@ -44,8 +45,12 @@ public:
   BladeStyle* current_style() const override {
     return current_style_;
   }
+
+  bool CheckBlade(EffectLocation location) override {
+    return location.on_blade(GetBladeNumber(this));
+  }
   
-  void SB_Effect2(BladeEffectType type, float location) {
+  virtual void SB_Effect2(BladeEffectType type, EffectLocation location) override {
     switch (type) {
       default: break;
       case EFFECT_LOCKUP_BEGIN:
@@ -85,18 +90,18 @@ public:
     return GetPrimaryBlade() == this;
   }
 
-  void SB_On2() override {
-    SB_Effect2(EFFECT_IGNITION, 0);
+  void SB_On2(EffectLocation location) override {
+    SB_Effect2(EFFECT_IGNITION, location);
   }
 
-  void SB_Off2(OffType off_type) override {
+  void SB_Off2(OffType off_type, EffectLocation location) override {
     switch (off_type) {
       case OFF_BLAST:
-	SB_Effect2(EFFECT_BLAST, (200 + random(700)) / 1000.0f);
+	SB_Effect2(EFFECT_BLAST, location);
 	break;
       case OFF_NORMAL:
       case OFF_FAST:
-	SB_Effect2(EFFECT_RETRACTION, 0);
+	SB_Effect2(EFFECT_RETRACTION, location);
         break;
       case OFF_IDLE:
       case OFF_CANCEL_PREON:
@@ -109,7 +114,7 @@ protected:
   BladeStyle *current_style_ = nullptr;
 private:
   size_t num_effects_ = 0;
-  BladeEffect effects_[5];
+  BladeEffect effects_[6];
 };
 
 #ifdef BLADE_ID_SCAN_MILLIS
