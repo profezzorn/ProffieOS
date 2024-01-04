@@ -17,8 +17,8 @@ FQBN=$(PBV1_FQBN)
 TESTSUBDIR=NOTUSED
 
 all:
-	mkdir build
-	$(ARDUINO_DIR)/arduino-builder -compile -hardware $(ARDUINO_DIR)/hardware -hardware $(ARDUINO15_DIR)/packages -hardware /home/hubbe/Arduino/hardware -tools $(ARDUINO_DIR)/tools-builder -tools $(ARDUINO_DIR)/hardware/tools/avr -tools $(ARDUINO15_DIR)/packages -fqbn=$(FQBN) -vid-pid=1209_6668 -build-path build -warnings=more -verbose ProffieOS.ino
+	mkdir -p build
+	arduino-cli compile --fqbn=$(FQBN) ProffieOS.ino
 
 CPPFLAGS += $(TESTFLAGS)
 DIAGNOSTICS_COLOR_WHEN = auto
