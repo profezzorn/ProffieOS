@@ -11,6 +11,8 @@ public:
     CONFIG_VARIABLE2(SwingStrengthThreshold, 20.0f);
     CONFIG_VARIABLE2(Transition1Degrees, 45.0f);
     CONFIG_VARIABLE2(Transition2Degrees, 160.0f);
+    CONFIG_VARIABLE2(Low2HighSeparationDegrees, 180.0);
+    CONFIG_VARIABLE2(High2LowSeparationDegrees, 180.0);
     CONFIG_VARIABLE2(MaxSwingVolume, 3.0f);
     CONFIG_VARIABLE2(AccentSwingSpeedThreshold, 0.0f);
     CONFIG_VARIABLE2(AccentSlashAccelerationThreshold, 260.0f);
@@ -23,6 +25,8 @@ public:
   float SwingStrengthThreshold;
   float Transition1Degrees;
   float Transition2Degrees;
+  float Low2HighSeparationDegrees;
+  float High2LowSeparationDegrees;
   float MaxSwingVolume;
   float AccentSwingSpeedThreshold;
   float AccentSlashAccelerationThreshold;
