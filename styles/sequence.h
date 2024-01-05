@@ -1,7 +1,7 @@
 #ifndef STYLES_SEQUENCE_H
 #define STYLES_SEQUENCE_H
 
-// usage: Sequence<COLOR1, COLOR2, int millis_per_bits, int bits, 0b0000000000000000, ....>
+// Usage: Sequence<COLOR1, COLOR2, int millis_per_bits, int bits, 0b0000000000000000, ....>
 // COLOR1: COLOR
 // COLOR2: COLOR
 // millis_per_bit: millseconds spent on each bit
