@@ -3,7 +3,7 @@
 
 
 // Usage: PixelateX<COLOR, PIXEL_SIZE_FUNC>
-// Usage: Pixelate<COLOR, PIXEL_SIZE>
+// OR: Pixelate<COLOR, PIXEL_SIZE>
 // COLOR: COLOR - color values to pixelate
 // PIXEL_SIZE_FUNC: FUNCTION size of pixelation (defaults to 2)
 // PIXEL_SIZE: NUMBER size of pixelation (defaults to 2)
