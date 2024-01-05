@@ -12,9 +12,8 @@
 // be 100% opaque. Note that if COLOR is already transparent, it will be made more transparent. Example:
 // If COLOR is 50% opaque, and ALPHA returns 16384, the result will be 25% opaque.
 
-
-template<class COLOR, class ALPHA>
 // TODO: Make this take an arbitrary number of alpha functions and multiply them.
+template<class COLOR, class ALPHA>
 class AlphaL {
 public:
   LayerRunResult run(BladeBase* blade) {
