@@ -446,7 +446,8 @@ public:
   Effect* getOut() { return SFX_out ? &SFX_out : &SFX_poweron; }
   Effect* getHum() { return SFX_humm ? &SFX_humm : &SFX_hum; }
 
-  void SB_Preon() {
+  void SB_Preon(EffectLocation location) {
+    saved_location_ = location;
     if (SFX_preon) {
       SFX_preon.SetFollowing(getOut());
       // PlayCommon(&SFX_preon);
@@ -595,8 +596,8 @@ public:
   void SB_Effect(EffectType effect, EffectLocation location) override {
     switch (effect) {
       default: return;
-      case EFFECT_PREON: SB_Preon(); return;
-      case EFFECT_POSTOFF: SB_Postoff(); return;
+      case EFFECT_PREON: SB_Preon(location); return;
+      case EFFECT_POSTOFF: SB_Postoff(location); return;
       case EFFECT_STAB:
 	if (SFX_stab) { PlayCommon(&SFX_stab); return; }
 	// If no stab sounds are found, fall through to clash
@@ -829,7 +830,7 @@ public:
   void Loop() override {
     if (state_ == STATE_WAIT_FOR_ON) {
       if (!GetWavPlayerPlaying(&SFX_preon)) {
-	SaberBase::TurnOn();
+	SaberBase::TurnOn(saved_location_);
 	return;
       }
     }
@@ -873,7 +874,7 @@ public:
   State state_;
   float volume_;
   float current_effect_length_ = 0.0;
-
+  EffectLocation saved_location_;
 };
 
 #endif
