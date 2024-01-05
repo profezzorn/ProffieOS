@@ -3,8 +3,8 @@
 
 #include "base.h"
 
-// Usage: TrFadeX<MILLIS_FUNCTION, N>
-// or: TrFade<MILLIS, N>
+// Usage: TrBoingX<MILLIS_FUNCTION, N>
+// or: TrBoing<MILLIS, N>
 // MILLIS_FUNCTION: FUNCTION
 // MILLIS: a number
 // N: a number
