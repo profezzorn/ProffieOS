@@ -3,7 +3,7 @@
 
 // Usage: TrWaveX<COLOR, FADEOUT_MS, WAVE_SIZE, WAVE_MS, WAVE_CENTER>
 // COLOR: COLOR
-// FADEOUT_MS, WAVE_SIZE, WAVE_MS, WAVE_CENTER: FUNCTIONS
+// FADEOUT_MS, WAVE_SIZE, WAVE_MS, WAVE_CENTER: FUNCTION
 // TrWave is implements a wave traveling out from a specified point.
 // It's based on the Blast effect and is meant to look like a ripple starting
 // at a point on the blade. Unlike other transitions, this effect starts and ends
