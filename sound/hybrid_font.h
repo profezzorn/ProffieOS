@@ -470,7 +470,7 @@ public:
     }
   }
 
-  void SB_Postoff() {
+  void SB_Postoff(EffectLocation location) {
     // Postoff was alredy started by linked wav players, we just need to find
     // the length so that WavLen<> can use it.
     RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(&SFX_pstoff);
