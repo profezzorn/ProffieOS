@@ -597,7 +597,7 @@ public:
     switch (effect) {
       default: return;
       case EFFECT_PREON: SB_Preon(location); return;
-      case EFFECT_POSTOFF: SB_Postoff(location); return;
+      case EFFECT_POSTOFF: SB_Postoff(); return;
       case EFFECT_STAB:
 	if (SFX_stab) { PlayCommon(&SFX_stab); return; }
 	// If no stab sounds are found, fall through to clash
