@@ -125,6 +125,7 @@ class EffectLocation {
 public:
   enum BladeBit : uint16_t {
     ALL_BLADES = 0xffff,
+    MOST_BLADES = 1 << 0,
     BLADE1 = 1 << 1,
     BLADE2 = 1 << 2,
     BLADE3 = 1 << 3,
