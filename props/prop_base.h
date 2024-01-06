@@ -173,29 +173,29 @@ public:
     return SaberBase::IsOn() || on_pending_;
   }
 
-  virtual void On() {
+  virtual void On(EffectLocation location = EffectLocation()) {
 #ifdef ENABLE_AUDIO
     if (!CommonIgnition()) return;
-    SaberBase::DoPreOn();
+    SaberBase::DoPreOn(location);
     on_pending_ = true;
     // Hybrid font will call SaberBase::TurnOn() for us.
 #else
     // No sound means no preon.
-    FastOn();
+    FastOn(location);
 #endif
   }
 
-  void FastOn() {
+  void FastOn(EffectLocation location = EffectLocation) {
     if (!CommonIgnition()) return;
-    SaberBase::TurnOn();
-    SaberBase::DoEffect(EFFECT_FAST_ON, 0);
+    SaberBase::TurnOn(location);
+    SaberBase::DoEffect(EFFECT_FAST_ON, location);
   }
 
   void SB_On(EffectLocation location) override {
     on_pending_ = false;
   }
 
-  virtual void Off(OffType off_type = OFF_NORMAL) {
+  virtual void Off(OffType off_type = OFF_NORMAL, EffectLocation locaton = EffectLocation()) {
     if (on_pending_) {
       // Or is it better to wait until we turn on, and then turn off?
       on_pending_ = false;
@@ -212,7 +212,7 @@ public:
       ToggleColorChangeMode();
     }
 #endif
-    SaberBase::TurnOff(off_type);
+    SaberBase::TurnOff(off_type, location);
     if (unmute_on_deactivation_) {
       unmute_on_deactivation_ = false;
 #ifdef ENABLE_AUDIO
