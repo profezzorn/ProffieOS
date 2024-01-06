@@ -317,6 +317,7 @@ public:                                                         \
   static void DoForce() { DoEffectR(EFFECT_FORCE); }
   static void DoBoot() { DoEffect(EFFECT_BOOT, 0); }
   static void DoPreOn() { DoEffect(EFFECT_PREON, 0); }
+  static void DoPreOn(EffectLocation l) { DoEffect(EFFECT_PREON, l); }
   static void DoBeginLockup() { DoEffectR(EFFECT_LOCKUP_BEGIN); }
   static void DoEndLockup() { DoEffect(EFFECT_LOCKUP_END, 0); }
   static void DoChange() { DoEffect(EFFECT_CHANGE, 0); }

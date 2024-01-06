@@ -185,7 +185,7 @@ public:
 #endif
   }
 
-  void FastOn(EffectLocation location = EffectLocation) {
+  void FastOn(EffectLocation location = EffectLocation()) {
     if (!CommonIgnition()) return;
     SaberBase::TurnOn(location);
     SaberBase::DoEffect(EFFECT_FAST_ON, location);
