@@ -531,7 +531,7 @@ public:
   }
 
   void SB_Off(OffType off_type, EffectLocation location) override {
-    SFX_in.SetFollowing(&SFX_pstoff);
+    SFX_in.SetFollowing( (location.blades() & EffectLocation::MOST_BLADES) ? nullptr : &SFX_pstoff );
     switch (off_type) {
       case OFF_CANCEL_PREON:
 	if (state_ == STATE_WAIT_FOR_ON) {
