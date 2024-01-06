@@ -743,7 +743,30 @@ void test_cyclint() {
   }
 }
 
+void test_effect_location() {
+  EffectLocation l(0.5);
+  CHECK_EQ(true, l.on_blade(1));
+  CHECK_EQ(true, l.on_blade(2));
+  CHECK_EQ(true, l.on_blade(8));
+  CHECK_EQ(l.blades(), EffectLocation::ALL_BLADES);
+
+  EffectLocation l2(0, EffectLocation::BLADE3);
+  CHECK_EQ(l2.blades(), EffectLocation::BLADE3);
+  CHECK_EQ(false, l2.on_blade(1));
+  CHECK_EQ(false, l2.on_blade(2));
+  CHECK_EQ(true,  l2.on_blade(3));
+  CHECK_EQ(false, l2.on_blade(4));
+
+  EffectLocation l3(0, ~EffectLocation::BLADE3);
+  CHECK_EQ(l3.blades(), (uint16_t)~EffectLocation::BLADE3);
+  CHECK_EQ(true,  l3.on_blade(1));
+  CHECK_EQ(true,  l3.on_blade(2));
+  CHECK_EQ(false, l3.on_blade(3));
+  CHECK_EQ(true,  l3.on_blade(4));
+}
+
 int main() {
+  test_effect_location();
   test_cyclint();
   command_parser_test();
   
