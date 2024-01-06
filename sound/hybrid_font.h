@@ -576,7 +576,7 @@ public:
 	  hum_fade_out_ = 0.2;
         }
 	if (state_ == STATE_HUM_FADE_OUT && location.blades() != EffectLocation::ALL_BLADES) {
-	  state_  = STATE_OUT;
+	  state_ = STATE_OUT;
 	} else {
 	  check_postoff_ = !!SFX_pstoff && off_type != OFF_FAST;
 	}

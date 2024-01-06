@@ -150,7 +150,7 @@ public:
   static EffectLocation rnd(uint16_t blades) {
     return EffectLocation(65535 + random(22937), blades);
   }
-  uint16_t blades() const { return location_ >> 16; }
+  uint16_t blades() const { return ~(location_ >> 16); }
   bool on_blade(int blade) const { return !((blades() >> blade) & 1); }
   uint16_t fixed() const { return location_; }
   operator float() const { return fixed() / 32768.0; }
