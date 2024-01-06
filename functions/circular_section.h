@@ -13,6 +13,7 @@
 // Example: If POSITION = 0 and FRACTION = 16384, then this function
 // will return 32768 for the first 25% and the last 25% of the blade
 // and 0 for the rest of the LEDs.
+
 class BladeBase;
 template<class POSITION, class FRACTION>
 class CircularSectionF {

@@ -13,6 +13,7 @@
 // return value: TRANSITION
 // Blinks A-B N times in MILLIS, based on WIDTH (0 ~ 32768)
 // If WIDTH = 16384 A and B appear equally, lower decreases length of A, higher increases length of A
+
 template<class MILLIS, int N, class WIDTH = Int<16384>>
 class TrBlinkX : public TransitionBaseX<MILLIS> {
 public:

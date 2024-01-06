@@ -10,6 +10,7 @@
 // return value: TRANSITION
 // Waits for the specified number of milliseconds, then transitions
 // to second color. Menant to be used with TrConcat
+
 template<class MILLIS>
 class TrDelayX : public TransitionBaseX<MILLIS> {
 public:

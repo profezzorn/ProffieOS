@@ -26,6 +26,7 @@ using AltF = SingleValueAdapter<AltSVF>;
 // return value: INTEGER (always zero)
 // Enables Bidirectional synchronization between ALT and VARIANCE.
 // If variance changes, so does alt, if alt changes, so does variance.
+
 class SyncAltToVarianceSVF : private Looper {
 public:
   FunctionRunResult run(BladeBase* blade) {
@@ -62,6 +63,7 @@ using SyncAltToVarianceF = SingleValueAdapter<SyncAltToVarianceSVF>;
 // Usage: SyncAltToVarianceL
 // return value: LAYER (transparent)
 // Synchronizes alt to variance, just put it somewhere in the layer stack. (but not first)
+
 using SyncAltToVarianceL = AlphaL<Black, SyncAltToVarianceF>;
 
 #endif

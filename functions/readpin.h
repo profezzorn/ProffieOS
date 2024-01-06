@@ -3,7 +3,7 @@
 
 #include "../common/analog_read.h"
 
-// usage: ReadPinF<PIN>
+// Usage: ReadPinF<PIN>
 // or: ReadPinF<PIN, PIN_MODE>
 // returns INTEGER, 0 if pin is low and 32768 if pin is high
 // PIN: int, pin you want your style to respond to
@@ -25,7 +25,7 @@ template<int pin, int pin_mode = INPUT>
 using ReadPinF = SingleValueAdapter<ReadPinSVF<pin, pin_mode>>;
 
 
-// usage: AnalogReadPinF<PIN>
+// Usage: AnalogReadPinF<PIN>
 // or: AnalogReadPinF<PIN, PIN_MODE>
 // returns INTEGER, 0-32768 depending on input reading.
 // PIN: int, pin you want your style to respond to
@@ -35,6 +35,7 @@ using ReadPinF = SingleValueAdapter<ReadPinSVF<pin, pin_mode>>;
 //   * may not update every run() call
 //   * pin modes other than INPUT may not be supported,
 //   * Only analog-capable pins will work.
+
 template<int pin, int pin_mode = INPUT>
 class AnalogReadPinSVF {
 public:

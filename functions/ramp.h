@@ -1,9 +1,10 @@
 #ifndef FUNCTIONS_RAMP_H
 #define FUNCTIONS_RAMP_H
 
-// Returns led as value between 0 ~ 32768
-// Keeps existing mapping for pixels when used with Remap<>
-// Example: Remap<RampF,COLOR>
+// Usage: RampF  
+// Returns 0 at base and 32768 at tip.  
+// Example: Mix<RampF, COLOR1, COLOR2, COLOR3>  
+// This would do the same thing as Gradient<COLOR1, COLOR2, COLOR3>  
 
 class RampF {
 public:

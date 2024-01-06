@@ -6,6 +6,7 @@
 // return value: COLOR
 // Very fast Red, Green, Blue cycle, result should essentially be white
 // until you start swinging it around.
+
 class RGBCycle {
 public:
   void run(BladeBase* base) {

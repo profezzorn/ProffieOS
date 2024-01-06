@@ -4,6 +4,7 @@
 // TODO(hubbe): Make it work with FastLED
 #if defined(ENABLE_WS2811)
 
+
 /* 
 This style draws images in the air if you swing the saber
 carefully back and forth. Unfortunately you can't really see

@@ -4,11 +4,14 @@
 #include <algorithm>
 
 // Usage: TrColorCycle<MILLIS, START_RPM, END_RPM>
+// OR:  TrColorCycleX<MILLIS_FUNCTION, START_RPM, END_RPM>
 // MILLS:  number
+// MILLIS_FUNCTION: FUNCTION
 // START_RPM: a number (defaults to 0)
 // END_RPM: a number (defaults to 6000)
 // return value: COLOR
 // Tron-like transition.
+
 class BladeBase;
 template<class MILLIS, int start_rpm=0, int end_rpm = 6000>
 class TrColorCycleX : public TransitionBaseX<MILLIS> {
