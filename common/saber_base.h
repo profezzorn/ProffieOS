@@ -121,6 +121,16 @@ DEFINE_ALL_EFFECTS();
 constexpr size_t NUMBER_OF_EFFECTS = (size_t)EffectTypeHelper::NUMBER_OF_EFFECTS;
 #undef DEFINE_EFFECT
 
+#define DEFINE_EFFECT(X) case EFFECT_##X: return "EFFECT_" #X;
+const char* EffectTypeName(EffectType effect) {
+  switch (effect) {
+    DEFINE_ALL_EFFECTS();
+  }
+  return "unknown effeect";
+}
+#undef DEFINE_EFFECT
+
+
 class EffectLocation {
 public:
   enum BladeBit : uint16_t {
@@ -158,6 +168,16 @@ public:
 private:
   uint32_t location_;
 };
+
+struct BladeEffect {
+  EffectType type;
+
+  uint32_t start_micros;
+  EffectLocation location; // 0 = base, 1 = tip
+  float sound_length;
+  int wavnum;
+};
+
 
 class BladeBase;
 extern int GetBladeNumber(BladeBase *blade);
@@ -272,19 +292,19 @@ public:
   static EffectLocation location; // fallback
 
 #define SABERFUN(NAME, TYPED_ARGS, ARGS)			\
-public:                                                         \
-  static void Do##NAME TYPED_ARGS {                             \
-    ClearSoundInfo();				                \
+private:							\
+  static void Do##NAME##Internal TYPED_ARGS {                   \
     CHECK_LL(SaberBase, saberbases, next_saber_);               \
     for (SaberBase *p = saberbases; p; p = p->next_saber_) {    \
       p->SB_##NAME ARGS;                                        \
     }                                                           \
     for (SaberBase *p = saberbases; p; p = p->next_saber_) {    \
-      if (p->CheckBlade(location))  p->SB_##NAME##2 ARGS;        \
+      if (p->CheckBlade(location))  p->SB_##NAME##2 ARGS;       \
     }                                                           \
     CHECK_LL(SaberBase, saberbases, next_saber_);               \
   }                                                             \
                                                                 \
+public:                                                         \
   virtual void SB_##NAME TYPED_ARGS {}                          \
   virtual void SB_##NAME##2 TYPED_ARGS {}
 
@@ -299,18 +319,62 @@ public:                                                         \
   SABERFUN(IsOn, (bool* on), (on));
   
   SABERBASEFUNCTIONS();
+  
 
+private:
+  static void DoEffectInternal2(EffectType effect, EffectLocation location) {
+    DoEffectInternal(effect, location);
+    PushEffect(effect, location);
+  }
+public:
+  static void DoEffect(EffectType effect, EffectLocation location) {
+    ClearSoundInfo();
+    DoEffectInternal2(effect, location);
+  }
+  static void DoOn(EffectLocation location) {
+    ClearSoundInfo();
+    DoOnInternal(location);
+    DoEffectInternal2(EFFECT_IGNITION, location);
+  }
+  static void DoOff(OffType off_type, EffectLocation location) {
+    ClearSoundInfo();
+    DoOffInternal(off_type, location);
+    switch (off_type) {
+      case OFF_BLAST:
+	DoEffectInternal2(EFFECT_BLAST, location);
+	break;
+      case OFF_NORMAL:
+      case OFF_FAST:
+	DoEffectInternal2(EFFECT_RETRACTION, location);
+        break;
+      case OFF_IDLE:
+      case OFF_CANCEL_PREON:
+	// do nothing
+	break;
+    }
+    
+  }
+  static void DoBladeDetect(bool detected) {
+    ClearSoundInfo();
+    DoBladeDetectInternal(detected);
+  }
+  static void DoChange(ChangeType change_type) {
+    ClearSoundInfo();
+    DoChangeInternal(change_type);
+  }
+  static void DoTop(uint64_t total_cycles) {
+    ClearSoundInfo();
+    DoTopInternal(total_cycles);
+  }
+  static void DoIsOn(bool* on) {
+    ClearSoundInfo();
+    DoIsOnInternal(on);
+  }
+  
   static void DoEffect(EffectType e, EffectLocation location, int N) {
     sound_length = 0.0;
     sound_number = N;
-    CHECK_LL(SaberBase, saberbases, next_saber_);
-    for (SaberBase *p = saberbases; p; p = p->next_saber_) {
-      p->SB_Effect(e, location);
-    }
-    for (SaberBase *p = saberbases; p; p = p->next_saber_) {
-      p->SB_Effect2(e, location);
-    }
-    CHECK_LL(SaberBase, saberbases, next_saber_);
+    DoEffectInternal2(e, location);
   }
   static void DoEffectR(EffectType e) { DoEffect(e, EffectLocation::rnd()); }
   static void DoBlast() { DoEffectR(EFFECT_BLAST); }
@@ -418,9 +482,59 @@ public:                                                         \
     }
   }
 
+  static size_t GetEffects(BladeEffect** blade_effects) {
+    *blade_effects = effects_;
+    while (num_effects_ &&
+           micros() - effects_[num_effects_-1].start_micros > 7000000) {
+      num_effects_--;
+    }
+    return num_effects_;
+  }
+
+
   // Not private for debugging purposes only.
   static uint32_t last_motion_request_;
+
 private:
+  static void PushEffect(EffectType type, EffectLocation location) {
+    switch (type) {
+      default: break;
+      case EFFECT_LOCKUP_BEGIN:
+	switch (SaberBase::Lockup()) {
+	  case LOCKUP_DRAG:
+	    type = EFFECT_DRAG_BEGIN;
+	  case LOCKUP_NORMAL:
+	    break;
+	  default: return;
+	}
+	break;
+      case EFFECT_LOCKUP_END:
+	switch (SaberBase::Lockup()) {
+	  case LOCKUP_DRAG:
+	    type = EFFECT_DRAG_END;
+	  case LOCKUP_NORMAL:
+	    break;
+	  default: return;
+	}
+	break;
+      case EFFECT_CLASH_UPDATE:
+	// Not stored in queue
+        return;
+    }
+    for (size_t i = std::min(num_effects_, NELEM(effects_) - 1); i; i--) {
+      effects_[i] = effects_[i-1];
+    }
+    effects_[0].type = type;
+    effects_[0].start_micros = micros();
+    effects_[0].location = location;
+    effects_[0].sound_length = sound_length;
+    effects_[0].wavnum = sound_number;
+    num_effects_ = std::min(num_effects_ + 1, NELEM(effects_));
+  }
+
+  
+  static size_t num_effects_;
+  static BladeEffect effects_[10];
   static bool on_;
   static LockupType lockup_;
   static uint32_t current_variation_;
@@ -428,6 +542,8 @@ private:
   SaberBase* next_saber_;
 };
 
+size_t SaberBase::num_effects_ = 0;
+BladeEffect SaberBase::effects_[10];
 EffectLocation SaberBase::location;
 
 #endif

@@ -34,7 +34,8 @@ class BlastF {
 public:
   void run(BladeBase* blade) {
     num_leds_ = blade->num_leds();
-    num_blasts_ = blade->GetEffects(&effects_);
+    num_blasts_ = SaberBase::GetEffects(&effects_);
+    blade_number_ = blade->GetBladeNumber();
   }
 
   int getInteger(int led) {
@@ -42,6 +43,7 @@ public:
     for (size_t i = 0; i < num_blasts_; i++) {
       const BladeEffect& b = effects_[i];
       if (!(b.type == EFFECT)) continue;
+      if (!b.location.on_blade(blade_number_)) continue;
       uint32_t T = micros() - b.start_micros;
       int M = 1000 - T/FADEOUT_MS;
       if (M > 0) {
@@ -58,6 +60,7 @@ public:
 
 private:
   int num_leds_;
+  int blade_number_;
   size_t num_blasts_;
   BladeEffect* effects_;
 };
@@ -75,7 +78,8 @@ class BlastFadeoutF {
 public:
   void run(BladeBase* blade) {
     num_leds_ = blade->num_leds();
-    num_blasts_ = blade->GetEffects(&effects_);
+    num_blasts_ = SaberBase::GetEffects(&effects_);
+    blade_number_ = blade->GetBladeNumber();
   }
   int getInteger(int led) {
     if (num_blasts_ == 0) return 0;
@@ -83,6 +87,7 @@ public:
     for (size_t i = 0; i < num_blasts_; i++) {
       const BladeEffect& b = effects_[i];
       if (b.type != EFFECT) continue;
+      if (!b.location.on_blade(blade_number_)) continue;
       uint32_t T = micros() - b.start_micros;
       int M = 1000 - T/FADEOUT_MS;
       if (M > 0) {
@@ -94,6 +99,7 @@ public:
 
 private:
   int num_leds_;
+  int blade_number_;
   size_t num_blasts_;
   BladeEffect* effects_;
 };
@@ -108,7 +114,8 @@ class OriginalBlastF {
 public:
   void run(BladeBase* blade) {
     num_leds_ = blade->num_leds();
-    num_blasts_ = blade->GetEffects(&effects_);
+    num_blasts_ = SaberBase::GetEffects(&effects_);
+    blade_number_ = blade->GetBladeNumber();
   }
   int getInteger(int led) {
     if (num_blasts_ == 0) return 0;
@@ -117,6 +124,7 @@ public:
       // TODO(hubbe): Use sin_table and avoid floats
       const BladeEffect& b = effects_[i];
       if (b.type != EFFECT) continue;
+      if (!b.location.on_blade(blade_number_)) continue;
       float x = (b.location - led/(float)num_leds_) * 30.0;
       uint32_t T = micros() - b.start_micros;
       float t = 0.5 + T / 200000.0;
@@ -130,6 +138,7 @@ public:
   }
 private:
   int num_leds_;
+  int blade_number_;
   size_t num_blasts_;
   BladeEffect* effects_;
 };

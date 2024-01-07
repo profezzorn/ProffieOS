@@ -48,7 +48,7 @@ public:
 
   // No need for a "deactivate", the blade stays active until
   // you take it out, which also cuts the power.
-  void Activate() override {
+  void Activate(int blade_number) override {
     STDOUT.print("FASTLED Blade with ");
     STDOUT.print(num_leds_);
     STDOUT.println(" leds");
@@ -61,7 +61,7 @@ public:
     Show();
     CommandParser::Link();
     Looper::Link();
-    AbstractBlade::Activate();
+    AbstractBlade::Activate(blade_number);
   }
 
   void Deactivate() override {

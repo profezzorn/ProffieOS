@@ -650,7 +650,7 @@ public:
 
 #define ACTIVATE(N) do {     \
     if (!current_config->blade##N) goto bad_blade;  \
-    current_config->blade##N->Activate();           \
+    current_config->blade##N->Activate(N);          \
   } while(0);
 
     ONCEPERBLADE(ACTIVATE);

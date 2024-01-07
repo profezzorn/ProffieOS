@@ -55,9 +55,10 @@ public:
     } while (tmp != this);
     return some_subblade_is_active;
   }
-  void Activate() override {
+  void Activate(int blade_number) override {
+    blade_number_ = blade_number;
     if (!active_) {
-      if (!SomeSubBladeIsActive()) BladeWrapper::Activate();
+      if (!SomeSubBladeIsActive()) BladeWrapper::Activate(0);
       active_ = true;
     }
   }
@@ -142,12 +143,17 @@ public:
     return false;
   }
 
+  int GetBladeNumber() override {
+    return blade_number_;
+  }
+
 protected:
   BladeStyle *current_style_ = nullptr;
   int num_leds_;
   int offset_;
   bool allow_disable_;
   SubBladeWrapper* next_;
+  int blade_number_;
 };
 
 SubBladeWrapper* first_subblade_wrapper = NULL;

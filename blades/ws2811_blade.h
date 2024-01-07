@@ -118,7 +118,7 @@ WS2811_Blade(WS2811PIN* pin,
     allow_disable_ = false;
   }
 
-  void Activate() override {
+  void Activate(int blade_number) override {
     TRACE(BLADE, "Activate");
     STDOUT.print("WS2811 Blade with ");
     STDOUT.print(pin_->num_leds());
@@ -126,7 +126,7 @@ WS2811_Blade(WS2811PIN* pin,
     run_ = true;
     CommandParser::Link();
     Looper::Link();
-    AbstractBlade::Activate();
+    AbstractBlade::Activate(blade_number);
   }
 
   void Deactivate() override {

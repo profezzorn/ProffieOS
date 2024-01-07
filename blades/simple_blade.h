@@ -146,12 +146,12 @@ public:
   }
   const char* name() override { return "Simple_Blade"; }
 
-  void Activate() override {
+  void Activate(int blade_number) override {
     STDOUT.println("Simple Blade");
     Power(true);
     CommandParser::Link();
     Looper::Link();
-    AbstractBlade::Activate();
+    AbstractBlade::Activate(blade_number);
   }
 
   void Deactivate() override {

@@ -17,7 +17,7 @@ public:
 
   const char* name() override { return "Savi_Blade"; }
 
-  void Activate() override {
+  void Activate(int blade_number) override {
     STDOUT.println("Savi Blade");
 #ifdef TIM7_BASE
     stm32l4_timer_create(&timer_, TIMER_INSTANCE_TIM7, STM32L4_TONE_IRQ_PRIORITY, 0);
@@ -26,7 +26,7 @@ public:
 #endif
     Power(true);
     Looper::Link();
-    AbstractBlade::Activate();
+    AbstractBlade::Activate(blade_number);
     digitalWrite(pin_, HIGH);
     pinMode(pin_, OUTPUT);
   }

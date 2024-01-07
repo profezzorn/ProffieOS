@@ -8,20 +8,12 @@ int GetBladeNumber(BladeBase *blade);
 class AbstractBlade : public BladeBase, public SaberBase {
 public:
   AbstractBlade() : SaberBase(NOLINK) {}
-  void Activate() override {
+  void Activate(int blade_number) override {
+    blade_number_ = blade_number;
     SaberBase::Link(this);
   }
   void Deactivate() override {
     SaberBase::Unlink(this);
-  }
-
-  size_t GetEffects(BladeEffect** blade_effects) override {
-    *blade_effects = effects_;
-    while (num_effects_ &&
-           micros() - effects_[num_effects_-1].start_micros > 7000000) {
-      num_effects_--;
-    }
-    return num_effects_;
   }
 
   void SetStyle(BladeStyle* style) override {
@@ -36,7 +28,6 @@ public:
     BladeStyle *ret = current_style_;
     if (ret) {
       ret->deactivate();
-      num_effects_ = 0;
     }
     current_style_ = nullptr;
     return ret;
@@ -46,75 +37,18 @@ public:
     return current_style_;
   }
 
+  int GetBladeNumber() override {
+    return blade_number_;
+  }
+
   bool CheckBlade(EffectLocation location) override {
-    return location.on_blade(GetBladeNumber(this));
-  }
-  
-  virtual void SB_Effect2(BladeEffectType type, EffectLocation location) override {
-    switch (type) {
-      default: break;
-      case EFFECT_LOCKUP_BEGIN:
-	switch (SaberBase::Lockup()) {
-	  case LOCKUP_DRAG:
-	    type = EFFECT_DRAG_BEGIN;
-	  case LOCKUP_NORMAL:
-	    break;
-	  default: return;
-	}
-	break;
-      case EFFECT_LOCKUP_END:
-	switch (SaberBase::Lockup()) {
-	  case LOCKUP_DRAG:
-	    type = EFFECT_DRAG_END;
-	  case LOCKUP_NORMAL:
-	    break;
-	  default: return;
-	}
-	break;
-      case EFFECT_CLASH_UPDATE:
-        return;
-    }
-    for (size_t i = NELEM(effects_) - 1; i; i--) {
-      effects_[i] = effects_[i-1];
-    }
-    effects_[0].type = type;
-    effects_[0].start_micros = micros();
-    effects_[0].location = location;
-    effects_[0].sound_length = SaberBase::sound_length;
-    effects_[0].wavnum = SaberBase::sound_number;
-    num_effects_ = std::min(num_effects_ + 1, NELEM(effects_));
-  }
-  
-
-  bool IsPrimary() override {
-    return GetPrimaryBlade() == this;
-  }
-
-  void SB_On2(EffectLocation location) override {
-    SB_Effect2(EFFECT_IGNITION, location);
-  }
-
-  void SB_Off2(OffType off_type, EffectLocation location) override {
-    switch (off_type) {
-      case OFF_BLAST:
-	SB_Effect2(EFFECT_BLAST, location);
-	break;
-      case OFF_NORMAL:
-      case OFF_FAST:
-	SB_Effect2(EFFECT_RETRACTION, location);
-        break;
-      case OFF_IDLE:
-      case OFF_CANCEL_PREON:
-	// do nothing
-	break;
-    }
+    return location.on_blade(GetBladeNumber());
   }
   
 protected:
   BladeStyle *current_style_ = nullptr;
 private:
-  size_t num_effects_ = 0;
-  BladeEffect effects_[6];
+  int blade_number_;
 };
 
 #ifdef BLADE_ID_SCAN_MILLIS
