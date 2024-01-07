@@ -1,7 +1,7 @@
 #ifndef STYLES_RANDOM_BLINK_H
 #define STYLES_RANDOM_BLINK_H
 
-// usage: RandomBlink<MILLIHZ, COLOR1, COLOR2>
+// Usage: RandomBlink<MILLIHZ, COLOR1, COLOR2>
 // or: RandomBlinkX<MILLIHZ_CLASS, COLOR1, COLOR2>
 // or: RandomBlinkL<MILLIHZ_CLASS, COLOR1>
 // MILLIHZ: integer

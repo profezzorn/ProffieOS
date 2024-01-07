@@ -7,6 +7,7 @@
 // Usage: SwingSpeed<MAX>
 // Returns 0-32768 based on swing speed
 // returned value: INTEGER
+
 template<class MAX>
 class SwingSpeedSVF {
  public:
@@ -29,6 +30,7 @@ using SwingSpeed = SwingSpeedX<Int<MAX>>;
 // Returns 0-32768 based on swing acceleration
 // MAX defaults to 150
 // returned value: INTEGER
+
 template<class MAX = Int<130>>
 class SwingAccelerationSVF {
  public:

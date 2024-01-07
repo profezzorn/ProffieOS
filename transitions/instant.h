@@ -4,6 +4,7 @@
 // Usage: TrInstant
 // return value: TRANSITION
 // Instant transition.
+
 class TrInstant {
 public:
   bool done() { return true; }

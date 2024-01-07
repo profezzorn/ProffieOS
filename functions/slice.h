@@ -13,6 +13,7 @@
 // This is very similar to how the POV blade works, but instead of
 // using a large data blob as input, it just uses another function
 // as input.
+
 class SmokeDF {
 public:
   float iTime = 0.0;

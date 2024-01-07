@@ -30,6 +30,7 @@ private:
 // Returns a value between 0 and 32768 which changes randomly up and
 // down over time. All pixels gets the same value.
 // SPEED controls how quickly the value changes.
+
 template<class SPEED>
 class SlowNoise {
 public:

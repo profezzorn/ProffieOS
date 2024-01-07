@@ -5,10 +5,11 @@
 
 int prop_GetBulletCount();
 
-// usage: BulletCount
+// Usage: BulletCount
 // Return 0-N (number of bullets in the magazine.)
 // Will cause compilation error if your prop doesn't have bullets.
 // You must define BLASTER_SHOTS_UNTIL_EMPTY for this to be available.
+
 class BulletCountSVF {
  public:
   void run(BladeBase* blade) {}
@@ -23,7 +24,7 @@ class SingleValueAdapter<BulletCountSVF> : public BulletCountSVF {};
 using BulletCountF = SingleValueAdapter<BulletCountSVF>;
 
 
-// usage: BlasterCharge
+// Usage: BlasterCharge
 // Return 0-32768 based on the fullness of the clip / magazine.
 // Will cause compilation error if your prop doesn't have bullets.
 // You must define BLASTER_SHOTS_UNTIL_EMPTY for this to be available.

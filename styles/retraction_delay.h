@@ -7,6 +7,7 @@
 // return value: COLOR
 // This class renders BASE as normal, but delays retraction by
 // the specified number of milliseconds.
+
 class BladeBase;
 template<class MILLIS>
 class RetractionDelayBase : public BladeWrapper {

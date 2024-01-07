@@ -13,7 +13,7 @@
 // So if MIN=16484 and MAX=32768, BladeAngle will return zero when you
 // point the blade towards the horizon and 32768 when you point it
 // straight up. Any angle below the horizon will also return zero.
-// returned value: FUNCTION, same for all leds
+// returned value: FUNCTION, same for all LEDs.
 
 #include "svf.h"
 

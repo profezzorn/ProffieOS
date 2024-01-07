@@ -5,7 +5,7 @@
 #include "../sound/hybrid_font.h"
 
 // Usage: TrDoEffectX<TRANSITION, EFFECT, WAVNUM, LOCATION_CLASS>
-// or: TrDoEffects<TRANSITION, EFFECT, WAVNUM, LOCATION>
+// or: TrDoEffect<TRANSITION, EFFECT, WAVNUM, LOCATION>
 // TRANSITION: TRANSITION
 // EFFECT: effect type
 // WAVNUM, LOCATION: a number

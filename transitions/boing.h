@@ -3,8 +3,8 @@
 
 #include "base.h"
 
-// Usage: TrFadeX<MILLIS_FUNCTION, N>
-// or: TrFade<MILLIS, N>
+// Usage: TrBoingX<MILLIS_FUNCTION, N>
+// or: TrBoing<MILLIS, N>
 // MILLIS_FUNCTION: FUNCTION
 // MILLIS: a number
 // N: a number
@@ -13,6 +13,7 @@
 // colors several times. (As specified by N). If N is 0, it's equal to
 // TrFade. If N is 1 it transitions A-B-A-B, if N is 2, it is A-B-A-B-A-B,
 // and so on.
+
 template<class MILLIS, int N>
 class TrBoingX : public TransitionBaseX<MILLIS> {
 public:
