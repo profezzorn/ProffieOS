@@ -1309,6 +1309,24 @@ public:
       On();
       return true;
     }
+#ifdef ENABLE_DEVELOPER_COMMANDS    
+    if (!strcmp(cmd, "on1")) {
+      On(EffectLocation(0, ~EffectLocation::BLADE2));
+      return true;
+    }
+    if (!strcmp(cmd, "on2")) {
+      SaberBase::DoOn(EffectLocation(0, EffectLocation::BLADE2));
+      return true;
+    }
+    if (!strcmp(cmd, "off2")) {
+      SaberBase::DoOff(OffType::OFF_NORMAL, EffectLocation(0, EffectLocation::BLADE2));
+      return true;
+    }
+    if (!strcmp(cmd, "off1")) {
+      Off(OffType::OFF_NORMAL, EffectLocation(0, ~EffectLocation::BLADE2));
+      return true;
+    }
+#endif // ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "off")) {
       Off();
       return true;

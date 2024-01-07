@@ -22,7 +22,7 @@
 #define DUAL_POWER_BUTTONS
 
 // Volume, useful range is about 0-2000.
-#define VOLUME 100
+#define VOLUME 500
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
@@ -77,7 +77,7 @@ const unsigned int maxLedsPerStrip = 196;
 #define FILTER_CUTOFF_FREQUENCY 150
 #define FILTER_ORDER 8
 
-#define BLASTER_SHOTS_UNTIL_EMPTY 144
+// #define BLASTER_SHOTS_UNTIL_EMPTY 144
 
 #endif  // CONFIG_TOP
 

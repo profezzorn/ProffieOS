@@ -531,7 +531,8 @@ public:
   }
 
   void SB_Off(OffType off_type, EffectLocation location) override {
-    SFX_in.SetFollowing( (location.blades() & EffectLocation::MOST_BLADES) ? nullptr : &SFX_pstoff );
+    bool most_blades = !!(location.blades() & EffectLocation::MOST_BLADES);
+    SFX_in.SetFollowing( most_blades ?  &SFX_pstoff : nullptr );
     switch (off_type) {
       case OFF_CANCEL_PREON:
 	if (state_ == STATE_WAIT_FOR_ON) {
@@ -575,8 +576,8 @@ public:
           PlayPolyphonic(getNext(hum_player_, &SFX_in));
 	  hum_fade_out_ = 0.2;
         }
-	if (state_ == STATE_HUM_FADE_OUT && (location.blades() & EffectLocation::MOST_BLADES)) {
-	  state_ = STATE_OUT;
+	if (state_ == STATE_HUM_FADE_OUT && !most_blades) {
+	  state_ = STATE_HUM_ON;
 	} else {
 	  check_postoff_ = !!SFX_pstoff && off_type != OFF_FAST;
 	  saved_location_ = location;
