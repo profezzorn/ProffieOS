@@ -240,13 +240,10 @@ public:
     fprintf(stderr, "NOT IMPLEMENTED\n");
     exit(1);
   }
-  size_t GetEffects(BladeEffect** blade_effects) override {
-    return 0;
-  }
   void allow_disable() override {
     allow_disable_ = true;
   }
-  void Activate() override {
+  void Activate(int blade_number) override {
     fprintf(stderr, "NOT IMPLEMENTED\n");
     exit(1);
   }
@@ -257,9 +254,7 @@ public:
   Color8::Byteorder get_byteorder() const {
     return Color8::RGB;
   }
-  bool IsPrimary() override {
-    return true;
-  }
+  int GetBladeNumber() { return 1; }
   void SetStyle(BladeStyle* style) override {
     // current_style should be nullptr;
     current_style_ = style;
