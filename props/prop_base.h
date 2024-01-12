@@ -627,11 +627,14 @@ public:
   void PollScanId() {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
-      bool blade_present_before = blade_present();
+      int noblade_level_before = current_config->ohm / NO_BLADE;
       FindBladeAgain();
-      bool blade_present_after = blade_present();
-      if (blade_present_before != blade_present_after) {
-        SaberBase::DoBladeDetect(blade_present_after);
+      int noblade_level_after = current_config->ohm / NO_BLADE;
+
+      if (noblade_level_before < noblade_level_after) {
+        SaberBase::DoBladeDetect(true);
+      } else if(noblade_level_before > noblade_level_after) {
+        SaberBase::DoBladeDetect(false);
       } else {
 	SaberBase::DoNewFont();
       }
