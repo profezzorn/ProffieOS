@@ -1297,10 +1297,6 @@ public:
   }
 
   bool Parse(const char *cmd, const char* arg) override {
-    if (!strcmp(cmd, "id")) {
-      id(true);
-      return true;
-    }
     if (!strcmp(cmd, "scanid")) {
       FindBladeAgain();
       return true;
