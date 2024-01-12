@@ -60,7 +60,7 @@ public:
   virtual int FillFrameBuffer(bool advance) = 0;
   virtual void SetDisplay(Display<Width, col_t>* display) = 0;
   virtual Screen GetScreen() { return SCREEN_UNSET; }
-  virtual void usb_connected() = 0;
+  virtual void usb_connected() {}
 };
 
 template<int Width, class col_t>
@@ -89,8 +89,8 @@ public:
   void SetDisplay(Display<Width, col_t>* display)  {
     a->SetDisplay(display);
   }
-  Screen GetScreen() override { return a->GetScreen(); }
-  void usb_connected() override { a->usb_connected(); }
+  Screen GetScreen() { return a->GetScreen(); }
+  void usb_connected() { return a->usb_connected(); }
   void Advance(int t) { t_ -= t; }
 };
 
