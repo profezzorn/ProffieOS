@@ -93,6 +93,9 @@ struct EnablePowerBladeID {
 template<int MIN, int MAX, class BLADE_ID>
 struct NO_BLADE_RangeID {
   float id() {
+    static_assert(MIN >= 0, "NO_BLADE_ID_RANGE min value cannot be less than zero.");
+    static_assert(MIN < MAX, "NO_BLADE_ID_RANGE min value must be less than max value.");
+    static_assert(MAX < NO_BLADE, "NO_BLADE_ID_RANGE max value must be less than 1000000000.");
     BLADE_ID blade_id;
     float ret = blade_id.id();
     if (ret >= MIN && ret <= MAX) ret += NO_BLADE;
