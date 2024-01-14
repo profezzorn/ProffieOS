@@ -25,7 +25,7 @@ Features:
 - Spoken Battery level in volts OR percentage. Both always available.
 - Dedicated Quote sounds - Always available. force.wavs can remain as force.
                            Add quote.wav files to font to use.
-                           Live toggle between seqential or random quote play.
+                           Live toggle between sequential or random quote play.
 - Play / Stop track control while blade is off OR on.                         // MAKE update comments PR
 - Force Push is always available, not just in Battle Mode.
 - Melt is always available as no button, with pull-away or button to end.
