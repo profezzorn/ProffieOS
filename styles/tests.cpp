@@ -13,6 +13,7 @@
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 #define SCOPED_PROFILER() do { } while(0)
 #define NUM_BLADES 1
+const int maxLedsPerStrip = 144;
 
 // clamp(x, a, b) makes sure that x is between a and b.
 float clamp(float x, float a, float b) {
@@ -155,6 +156,7 @@ Monitoring monitor;
 #include "../functions/effect_position.h"
 #include "../functions/random.h"
 #include "../functions/mult.h"
+#include "../functions/hold_peak.h"
 #include "mix.h"
 #include "strobe.h"
 #include "hump_flicker.h"
@@ -170,6 +172,12 @@ Monitoring monitor;
 #include "sparkle.h"
 #include "../common/command_parser.h"
 #include "../common/preset.h"
+#include "random_per_led_flicker.h"
+#include "../functions/clash_impact.h"
+#include "../functions/sum.h"
+#include "../functions/ramp.h"
+#include "rotate_color.h"
+#include "random_blink.h"
 
 Color16 TestRgbArgColors[256];
 
@@ -931,7 +939,22 @@ void test_smoothstep() {
   }
 }
 
+#include "test_types.h"
+#include "get_arg_max.h"
+
+void test_get_max_arg() {
+
+  CHECK_NEAR((GetArgMax<TrSelect<IntArg<77, 0>, TrInstant, TrInstant, TrInstant>, 77>::value), 3, 0);
+  CHECK_NEAR((GetArgMax<InOutTrL<TrSelect<IntArg<77, 0>, TrInstant, TrInstant>, TrInstant, Black>, 77>::value), 2, 0);
+
+  CHECK_NEAR((GetArgMax<LARGE_TYPE_WITH_OPTIONS, STYLE_OPTION_ARG>::value), 2, 0);
+  CHECK_NEAR((GetArgMax<LARGE_TYPE_WITH_OPTIONS, IGNITION_OPTION_ARG>::value), 5, 0);
+  CHECK_NEAR((GetArgMax<LARGE_TYPE_WITH_OPTIONS, RETRACTION_OPTION_ARG>::value), 3, 0);
+  CHECK_NEAR((GetArgMax<LARGE_TYPE_WITH_OPTIONS, PREON_OPTION_ARG>::value), 5, 0);
+}
+
 int main() {
+  test_get_max_arg();
   test_smoothstep();
   test_layers();
   test_mix();

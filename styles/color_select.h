@@ -3,6 +3,7 @@
 
 #include "../functions/variation.h"
 #include "../functions/svf.h"
+#include "mix.h"
 
 // Usage: ColorSelect<SELECTION, TRANSITION, COLOR1, COLOR2, ...>
 // SELECTION: function

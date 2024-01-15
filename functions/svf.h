@@ -1,7 +1,7 @@
 #ifndef FUNCTIONS_SVF_H
 #define FUNCTIONS_SVF_H
 
-#include "int.h"
+// #include "int.h"
 
 // An SVF is a FUNCTION that always returns the same value for all LEDs.
 // By defining these functions as SVFs instead of plain FUNCTIONS, we

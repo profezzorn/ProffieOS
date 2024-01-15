@@ -1,6 +1,8 @@
 #ifndef FUNCTIONS_VARIATION_H
 #define FUNCTIONS_VARIATION_H
 
+#include "svf.h"
+
 // Usage: Variation
 // Returns 0-32768 based on current variation.
 // returned value: FUNCTION

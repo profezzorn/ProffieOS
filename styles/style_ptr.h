@@ -67,6 +67,8 @@ public:
   }
 };
 
+#include "get_arg_max.h"
+
 template<class T>
 class Style : public StyleHelper<decltype(T().getColor(0))> {
 public:
@@ -83,6 +85,35 @@ public:
       blade->allow_disable();
     this->runloop(blade);
   }
+
+  int get_max_arg(int argument) override {
+#define GET_ARG_MAX_HELPER(ARG) if (GetArgMax<T, ARG>::value != -1) if (argument == ARG) return GetArgMax<T, ARG>::value
+#define GET_ARG_MAX_HELPER2(ARG)		\
+    GET_ARG_MAX_HELPER(ARG);			\
+    GET_ARG_MAX_HELPER(ARG+1);			\
+    GET_ARG_MAX_HELPER(ARG+2);			\
+    GET_ARG_MAX_HELPER(ARG+3);			\
+    GET_ARG_MAX_HELPER(ARG+4);			\
+    GET_ARG_MAX_HELPER(ARG+5);			\
+    GET_ARG_MAX_HELPER(ARG+6);			\
+    GET_ARG_MAX_HELPER(ARG+7);			\
+    GET_ARG_MAX_HELPER(ARG+8);			\
+    GET_ARG_MAX_HELPER(ARG+9);
+
+    GET_ARG_MAX_HELPER(0);
+    GET_ARG_MAX_HELPER(10);
+    GET_ARG_MAX_HELPER(20);
+    GET_ARG_MAX_HELPER(30);
+    GET_ARG_MAX_HELPER(40);
+    GET_ARG_MAX_HELPER(50);
+    GET_ARG_MAX_HELPER(60);
+    GET_ARG_MAX_HELPER(70);
+    GET_ARG_MAX_HELPER(80);
+    GET_ARG_MAX_HELPER(90);
+
+    return -1;
+  }
+
 private:
   T base_;
   HandledTypeSaver handled_type_saver_;
