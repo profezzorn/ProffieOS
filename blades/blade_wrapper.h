@@ -9,7 +9,11 @@ public:
   Color8::Byteorder get_byteorder() const override {
     return blade_->get_byteorder();
   }
-  bool is_on() const override { return blade_->is_on(); }
+  bool is_on() const override {
+    int blade_number = GetBladeNumber();
+    if (blade_number) return SaberBase::BladeIsOn(blade_number);
+    return blade_->is_on();
+  }
   bool is_powered() const override { return blade_->is_powered(); }
   void set(int led, Color16 c) override { return blade_->set(led, c); }
   void set_overdrive(int led, Color16 c) override {
@@ -22,7 +26,7 @@ public:
   void SetStyle(BladeStyle* style) override { blade_->SetStyle(style); }
   BladeStyle* UnSetStyle() override { return blade_->UnSetStyle(); }
   BladeStyle* current_style() const  override { return blade_->current_style(); }
-  int GetBladeNumber() { return blade_->GetBladeNumber(); }
+  int GetBladeNumber() const override { return blade_->GetBladeNumber(); }
 
   BladeBase* blade_;
 };

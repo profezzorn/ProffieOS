@@ -62,9 +62,6 @@ public:
     // Not quite true...
     return Color8::RGB;
   }
-  bool is_on() const override {
-    return on_;
-  }
   bool is_powered() const override {
     return powered_;
   }

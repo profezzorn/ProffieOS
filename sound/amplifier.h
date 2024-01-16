@@ -111,6 +111,7 @@ protected:
       SaberBase::DoIsOn(&on);
       STDOUT.print("Saber bases: ");
       STDOUT.println(on ? "On" : "Off");
+      STDOUT << "Blades: " << SaberBase::OnBlades() << "\n";
 //      STDOUT.print("Audio splicer: ");
 //      STDOUT.println(audio_splicer.isPlaying() ? "On" : "Off");
       STDOUT.print("Beeper: ");

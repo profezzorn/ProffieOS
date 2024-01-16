@@ -37,14 +37,17 @@ public:
     return current_style_;
   }
 
-  int GetBladeNumber() override {
+  int GetBladeNumber() const override {
     return blade_number_;
   }
 
   bool CheckBlade(EffectLocation location) override {
+    extern bool PRINT_CHECK_BLADE;
+    if (PRINT_CHECK_BLADE) 
+      STDERR << "CheckBlade " << GetBladeNumber() << " @ " << location << " = " << location.on_blade(GetBladeNumber()) << "\n";
     return location.on_blade(GetBladeNumber());
   }
-  
+
 protected:
   BladeStyle *current_style_ = nullptr;
 private:

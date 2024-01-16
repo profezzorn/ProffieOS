@@ -223,7 +223,6 @@ SaberBase* saberbases = NULL;
 SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
 SaberBase::ColorChangeMode SaberBase::color_change_mode_ =
   SaberBase::COLOR_CHANGE_MODE_NONE;
-bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 uint32_t SaberBase::current_variation_ = 0;
 float SaberBase::sound_length = 0.0;
@@ -262,7 +261,7 @@ public:
   Color8::Byteorder get_byteorder() const {
     return Color8::RGB;
   }
-  int GetBladeNumber() { return 1; }
+  int GetBladeNumber() const override { return 1; }
   void SetStyle(BladeStyle* style) override {
     // current_style should be nullptr;
     current_style_ = style;

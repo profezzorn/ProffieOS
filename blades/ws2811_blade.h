@@ -143,9 +143,6 @@ WS2811_Blade(WS2811PIN* pin,
   Color8::Byteorder get_byteorder() const {
     return pin_->get_byteorder();
   }
-  bool is_on() const override {
-    return on_;
-  }
   bool is_powered() const override {
     return powered_;
   }

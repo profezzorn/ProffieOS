@@ -80,9 +80,6 @@ public:
   Color8::Byteorder get_byteorder() const override {
     return Color8::NONE;
   }
-  bool is_on() const override {
-    return on_;
-  }
   bool is_powered() const override {
     return powered_;
   }

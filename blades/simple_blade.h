@@ -183,9 +183,6 @@ public:
     }
     return Color8::NONE;
   }
-  bool is_on() const override {
-    return on_;
-  }
   bool is_powered() const override {
     return power_;
   }

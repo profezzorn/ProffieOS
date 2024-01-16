@@ -143,7 +143,7 @@ public:
     return false;
   }
 
-  int GetBladeNumber() override {
+  int GetBladeNumber() const override {
     return blade_number_;
   }
 

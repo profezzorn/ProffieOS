@@ -580,8 +580,8 @@ public:
   }
 
   void DetectMenuTurn() {
+    float a = fusor.angle2() - current_menu_angle_;
     if (mode_volume_) {
-      float a = fusor.angle2() - current_menu_angle_;
       if (a > M_PI) a-=M_PI*2;
       if (a < -M_PI) a+=M_PI*2;
       if (a > M_PI / 6) VolumeUp();

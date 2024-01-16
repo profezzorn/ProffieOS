@@ -15,7 +15,7 @@
 
 
 // cruft
-#define NUM_BLADES 3
+#define NUM_BLADES 13
 #define PROFFIE_TEST
 #define ENABLE_SD
 #define GYRO_MEASUREMENTS_PER_SECOND 1600
@@ -104,7 +104,6 @@ void PrintQuotedValue(const char *name, const char* str) {
 
 SaberBase* saberbases = NULL;
 SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
-bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 Monitoring monitor;
 
@@ -118,44 +117,44 @@ BladeConfig* current_config;
 #define CHECK_EQ(X, Y) do {                                             \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (x_ != y_) { std::cerr << #X << " (" << x_ << ") != " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (x_ != y_) { STDOUT << #X << " (" << x_ << ") != " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
 } while(0)
 
 #define CHECK_NEAR(X, Y, D) do {                                                \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (fabs(x_ - y_) > D) { std::cerr << #X << " (" << x_ << ") ~!= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (fabs(x_ - y_) > D) { STDOUT << #X << " (" << x_ << ") ~!= " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
 } while(0)
 
 #define CHECK_LT(X, Y) do {                                             \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (!(x_ < y_)) { std::cerr << #X << " (" << x_ << ") < " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (!(x_ < y_)) { STDOUT << #X << " (" << x_ << ") < " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
 } while(0)
 
 #define CHECK_LE(X, Y) do {                                             \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (!(x_ <= y_)) { std::cerr << #X << " (" << x_ << ") <= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (!(x_ <= y_)) { STDOUT << #X << " (" << x_ << ") <= " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
 } while(0)
 
 #define CHECK_GT(X, Y) do {                                             \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (!(x_ > y_)) { std::cerr << #X << " (" << x_ << ") > " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (!(x_ > y_)) { STDOUT << #X << " (" << x_ << ") > " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
 } while(0)
 
 #define CHECK_GE(X, Y) do {                                             \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (!(x_ >= y_)) { std::cerr << #X << " (" << x_ << ") > " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (!(x_ >= y_)) { STDOUT << #X << " (" << x_ << ") > " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
 } while(0)
 
 #define CHECK_STREQ(X, Y) do {                                          \
   auto x = (X);                                                         \
   auto y = (Y);                                                         \
   if (!x || !y || strcmp(x, y)) {                                       \
-    std::cerr << #X << " (" << (x?x:"null") << ") != " << #Y << " (" << (y?y:"null") << ") line " << __LINE__ << std::endl;  exit(1); \
+    STDOUT << #X << " (" << (x?x:"null") << ") != " << #Y << " (" << (y?y:"null") << ") line " << __LINE__ << "\n";  exit(1); \
   }						                        \
 } while(0)
 
@@ -267,7 +266,7 @@ void test_current_preset() {
 }
 
 void test_byteorder(int byteorder) {
-  std::cerr << "Testing " << byteorder <<  std::endl;
+  std::cerr << "Testing " << byteorder <<  "\n";
   CHECK_EQ(byteorder, Color8::combine_byteorder(Color8::RGB, byteorder));
   CHECK_EQ(Color8::RGB, Color8::combine_byteorder(Color8::invert_byteorder(byteorder), byteorder));
 }
@@ -758,7 +757,7 @@ void test_effect_location() {
   CHECK_EQ(false, l2.on_blade(4));
 
   EffectLocation l3(0, ~EffectLocation::BLADE3);
-  CHECK_EQ(l3.blades(), (uint16_t)~EffectLocation::BLADE3);
+  CHECK_EQ(l3.blades(), ~EffectLocation::BLADE3);
   CHECK_EQ(true,  l3.on_blade(1));
   CHECK_EQ(true,  l3.on_blade(2));
   CHECK_EQ(false, l3.on_blade(3));

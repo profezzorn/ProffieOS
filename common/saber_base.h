@@ -3,6 +3,7 @@
 
 #include "linked_list.h"
 #include "vec3.h"
+#include "onceperblade.h"
 
 // SaberBase is our main class for distributing saber-related events, such
 // as on/off/clash/etc. to where they need to go. Each SABERFUN below
@@ -130,43 +131,96 @@ const char* EffectTypeName(EffectType effect) {
 }
 #undef DEFINE_EFFECT
 
+// Blade 0 is reserved for "other", which is displays, sound and anything that isn't a blade.
+class BladeSet {
+private:
+#if NUM_BLADES < 8
+  typedef uint8_t BitSetType;
+#elif NUM_BLADES < 16
+  typedef uint16_t BitSetType;
+#elif NUM_BLADES < 32
+  typedef uint32_t BitSetType;
+#else
+  typedef uint64_t BitSetType;
+#endif
+  constexpr BladeSet(BitSetType bits) : blades_(bits) {}
+
+public:
+  constexpr BladeSet() : blades_(0) {}
+  static constexpr BladeSet fromBlade(int blade) { return BladeSet(1 << blade); }
+  static constexpr BladeSet all() { return ~BladeSet(); }
+  
+  constexpr BladeSet operator|(const BladeSet& other) const {
+    return BladeSet(blades_ | other.blades_);
+  }
+  constexpr BladeSet operator&(const BladeSet& other) const {
+    return BladeSet(blades_ & other.blades_);
+  }
+  constexpr BladeSet operator~() const {
+    return BladeSet(~blades_);
+  }
+  constexpr bool operator[](int blade) const {
+    return (blades_ & (1 << blade)) != 0;
+  }
+  constexpr bool off() const {
+    return blades_ == 0;
+  }
+
+  constexpr bool operator==(const BladeSet& other) { return blades_ == other.blades_; }
+  constexpr bool operator!=(const BladeSet& other) { return blades_ != other.blades_; }
+
+  void operator|=(const BladeSet& other) {
+    blades_ |= other.blades_;
+  }
+  void operator&=(const BladeSet& other) {
+    blades_ &= other.blades_;
+  }
+
+  void printTo(Print& p) const {
+    for (int i = 0; i < NUM_BLADES; i++) {
+      if ((*this)[i]) {
+	p.write((i < 10 ? '0' : ('A'-10)) + i);
+      }
+    }
+  }
+  
+private:
+  BitSetType blades_;
+};
+
+class BladeBase;
 
 class EffectLocation {
 public:
-  enum BladeBit : uint16_t {
-    ALL_BLADES = 0xffff,
-    MOST_BLADES = 1 << 0,
-    BLADE1 = 1 << 1,
-    BLADE2 = 1 << 2,
-    BLADE3 = 1 << 3,
-    BLADE4 = 1 << 4,
-    BLADE5 = 1 << 5,
-    BLADE6 = 1 << 6,
-    BLADE7 = 1 << 7,
-    BLADE8 = 1 << 8,
-    BLADE9 = 1 << 9,
-    BLADE10 = 1 << 10,
-    BLADE11 = 1 << 11,
-    BLADE12 = 1 << 12,
-    BLADE13 = 1 << 13,
-    BLADE14 = 1 << 14,
-    BLADE15 = 1 << 15,
-  };
-  constexpr EffectLocation() : location_(0) {}
-  constexpr EffectLocation(uint16_t location, uint16_t blades) : location_(location + ((~blades) << 16)) {}
-  constexpr EffectLocation(float f) :location_(f * 32768) {}
+#define DEFINE_BLADE_BITS(N) static constexpr BladeSet const BLADE##N = BladeSet::fromBlade(N);
+#define DECLARE_BLADE_BITS(N) constexpr BladeSet const EffectLocation::BLADE##N;
+
+  static constexpr BladeSet const ALL_BLADES = BladeSet::all();
+  static constexpr BladeSet const MOST_BLADES = BladeSet::fromBlade(0);
+  ONCEPERBLADE(DEFINE_BLADE_BITS);
+  
+  constexpr EffectLocation() : location_(0), blades_(BladeSet::all()) {}
+  constexpr EffectLocation(uint16_t location, BladeSet blades) : location_(location), blades_(blades) {}
+  constexpr EffectLocation(float f) :location_(f * 32768), blades_(BladeSet::all()) {}
   static EffectLocation rnd() {
-    return EffectLocation(65535 + random(22937), ALL_BLADES);
+    return EffectLocation(65535 + random(22937), BladeSet::all());
   }
-  static EffectLocation rnd(uint16_t blades) {
+  static EffectLocation rnd(BladeSet blades) {
     return EffectLocation(65535 + random(22937), blades);
   }
-  uint16_t blades() const { return ~(location_ >> 16); }
-  bool on_blade(int bladenum) const { return !(location_ & (0x10000 << bladenum)); }
+  BladeSet blades() const { return blades_; }
+  bool on_blade(int bladenum) const { return blades_[bladenum]; }
   uint16_t fixed() const { return location_; }
   operator float() const { return fixed() / 32768.0; }
+  void printTo(Print& p) const {
+    p.print(fixed() / 32768.0);
+    p.write('@');
+    blades_.printTo(p);
+  }
 private:
-  uint32_t location_;
+  friend class SaberBase;
+  uint16_t location_;
+  BladeSet blades_;
 };
 
 struct BladeEffect {
@@ -179,7 +233,6 @@ struct BladeEffect {
 };
 
 
-class BladeBase;
 extern int GetBladeNumber(BladeBase *blade);
 
 class SaberBase {
@@ -217,22 +270,39 @@ public:
     OFF_CANCEL_PREON,
   };
 
-  static bool IsOn() { return on_; }
+  static bool IsOn() {
+    // Should this be if "other" is on, or if anything is on?
+    // Right now it's if anything is on.
+    return !on_.off();
+  }
+  static bool BladeIsOn(int blade) { return on_[blade]; }
+  static BladeSet OnBlades() { return on_; }
   static void TurnOn() {
-    on_ = true;
+    on_ = EffectLocation::ALL_BLADES;
     SaberBase::DoOn(0);
   }
   static void TurnOn(EffectLocation location) {
-    on_ = true;
+    STDERR << "TurnOn " << location << "\n";
+    // You can't turn on a blade that's already on.
+    location.blades_ &=~ on_;
+    STDERR << "TurnOn2 " << location << "\n";
+    if (location.blades_.off()) return;
+    STDERR << "TurnOn3 " << location << "\n";
+    on_ |= location.blades();
     SaberBase::DoOn(location);
   }
   static void TurnOff(OffType off_type) {
-    on_ = false;
+    on_ = BladeSet();
     last_motion_request_ = millis();
     SaberBase::DoOff(off_type, 0);
   }
   static void TurnOff(OffType off_type, EffectLocation location) {
-    on_ = false;
+    STDERR << "TurnOff " << location << "\n";
+    location.blades_ &= on_; // can only turn off blades which are on
+    STDERR << "TurnOff " << location << "\n";
+    if (location.blades_.off()) return;
+    STDERR << "TurnOff " << location << "\n";
+    on_ &=~ location.blades();
     last_motion_request_ = millis();
     SaberBase::DoOff(off_type, location);
   }
@@ -535,7 +605,7 @@ private:
   
   static size_t num_effects_;
   static BladeEffect effects_[10];
-  static bool on_;
+  static BladeSet on_;
   static LockupType lockup_;
   static uint32_t current_variation_;
   static ColorChangeMode color_change_mode_;
@@ -545,5 +615,10 @@ private:
 size_t SaberBase::num_effects_ = 0;
 BladeEffect SaberBase::effects_[10];
 EffectLocation SaberBase::location;
+BladeSet SaberBase::on_ = BladeSet();
+
+constexpr BladeSet const EffectLocation::ALL_BLADES;
+constexpr BladeSet const EffectLocation::MOST_BLADES;
+ONCEPERBLADE(DECLARE_BLADE_BITS);
 
 #endif

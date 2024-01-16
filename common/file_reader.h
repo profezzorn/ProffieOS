@@ -652,12 +652,14 @@ public:
 		       const char* value) {
     Write(key);
     Write('=');
-    for (;*value; value++) {
-      switch (*value) {
-	case '\n': Write("\\n"); break;
-	case '\t': Write("\\t"); break;
-	case '\\': Write("\\\\"); break;
-	default: Write(*value);
+    if (value) {
+      for (;*value; value++) {
+	switch (*value) {
+	  case '\n': Write("\\n"); break;
+	  case '\t': Write("\\t"); break;
+	  case '\\': Write("\\\\"); break;
+	  default: Write(*value);
+	}
       }
     }
     Write('\n');

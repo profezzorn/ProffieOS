@@ -46,6 +46,8 @@ public:
 #endif
 };
 
+bool PRINT_CHECK_BLADE = false;
+
 class SavePresetStateFile : public ConfigFile {
 public:
   void iterateVariables(VariableOP *op) override {
@@ -195,23 +197,28 @@ public:
     on_pending_ = false;
   }
 
-  virtual void Off(OffType off_type = OFF_NORMAL, EffectLocation locaton = EffectLocation()) {
+  virtual void Off(OffType off_type = OFF_NORMAL, EffectLocation location = EffectLocation()) {
+    STDOUT << "Turning off " << location << "\n";
     if (on_pending_) {
       // Or is it better to wait until we turn on, and then turn off?
       on_pending_ = false;
       SaberBase::TurnOff(SaberBase::OFF_CANCEL_PREON);
       return;
     }
+    STDOUT << "Turning off " << location << "\n";
     if (!SaberBase::IsOn()) return;
+    STDOUT << "Turning off " << location << "\n";
     if (SaberBase::Lockup()) {
       SaberBase::DoEndLockup();
       SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
     }
+    STDOUT << "Turning off " << location << "\n";
 #ifndef DISABLE_COLOR_CHANGE
     if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
       ToggleColorChangeMode();
     }
 #endif
+    STDOUT << "Turning off " << location << "\n";
     SaberBase::TurnOff(off_type, location);
     if (unmute_on_deactivation_) {
       unmute_on_deactivation_ = false;
@@ -1308,21 +1315,52 @@ public:
       On();
       return true;
     }
-#ifdef ENABLE_DEVELOPER_COMMANDS    
+#if defined(ENABLE_DEVELOPER_COMMANDS) && NUM_BLADES > 1
     if (!strcmp(cmd, "on1")) {
-      On(EffectLocation(0, ~EffectLocation::BLADE2));
+      PRINT_CHECK_BLADE=true;
+      if (SaberBase::BladeIsOn(2)) {
+	STDOUT << "faston!\n";
+	SaberBase::TurnOn(EffectLocation(0, ~BladeSet::fromBlade(2)));
+      } else {
+	On(EffectLocation(0, ~BladeSet::fromBlade(2)));
+      }
+      PRINT_CHECK_BLADE=false;
       return true;
     }
     if (!strcmp(cmd, "on2")) {
-      SaberBase::DoOn(EffectLocation(0, EffectLocation::BLADE2));
+      PRINT_CHECK_BLADE=true;
+      if (SaberBase::BladeIsOn(1)) {
+	STDOUT << "faston!\n";
+	SaberBase::TurnOn(EffectLocation(0, ~BladeSet::fromBlade(1)));
+      } else {
+	On(EffectLocation(0, ~BladeSet::fromBlade(1)));
+      }
+      PRINT_CHECK_BLADE=false;
       return true;
     }
     if (!strcmp(cmd, "off2")) {
-      SaberBase::DoOff(OffType::OFF_NORMAL, EffectLocation(0, EffectLocation::BLADE2));
+      PRINT_CHECK_BLADE=true;
+      if (SaberBase::BladeIsOn(1)) {
+	STDOUT << "Turning off SINGLE blade.\n";
+	Off(OffType::OFF_NORMAL, EffectLocation(1000, ~~BladeSet::fromBlade(2)));
+      } else {
+	STDOUT << "Turning off all blades.\n";
+	Off(OffType::OFF_NORMAL);
+      }
+      PRINT_CHECK_BLADE=false;
       return true;
     }
     if (!strcmp(cmd, "off1")) {
-      Off(OffType::OFF_NORMAL, EffectLocation(0, ~EffectLocation::BLADE2));
+      PRINT_CHECK_BLADE=true;
+      if (SaberBase::BladeIsOn(2)) {
+	EffectLocation tmp = EffectLocation(1000, ~~BladeSet::fromBlade(1));
+	STDOUT << "Turning off SINGLE blade: " << tmp << "\n";
+	Off(OffType::OFF_NORMAL, tmp);
+      } else {
+	STDOUT << "Turning off all blades.\n";
+	Off(OffType::OFF_NORMAL);
+      }
+      PRINT_CHECK_BLADE=false;
       return true;
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
