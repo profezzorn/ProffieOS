@@ -179,7 +179,7 @@ public:
   void printTo(Print& p) const {
     for (int i = 0; i < NUM_BLADES; i++) {
       if ((*this)[i]) {
-	p.write((i < 10 ? '0' : ('A'-10)) + i);
+	p.write((char)((i < 10 ? '0' : ('A'-10)) + i));
       }
     }
   }
