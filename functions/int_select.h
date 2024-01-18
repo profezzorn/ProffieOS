@@ -64,6 +64,7 @@ private:
 };
 
 template<class T> class IntSelectHelper<TypeList<T>> {
+public:
   void run(BladeBase* blade) { f_.run(blade); }
   int get(int N, int led) { return f_.getInteger(led); }
 public:
@@ -71,12 +72,14 @@ public:
 };
 
 template<> class IntSelectHelper<TypeList<>> {
+public:
   void run(BladeBase* blade) { }
   int get(int N, int led) { return 0; }
 };
 
 template<class F, class ... N>
 class IntSelectX {
+public:
   void run(BladeBase* blade) {
     f_.run(blade);
     n_.run(blade);
