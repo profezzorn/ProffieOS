@@ -52,10 +52,10 @@ public:
     sh_.run(blade);
   }
   int get(int N, int led) {
-    if (N < FH::size()) {
+    if (N < FH::size) {
       return fh_.get(N, led); 
     } else {
-      return sh_.get(N - FH::size(), led); 
+      return sh_.get(N - FH::size, led); 
     }
   }
 private:
