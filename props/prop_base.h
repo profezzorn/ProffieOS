@@ -538,7 +538,9 @@ public:
     last_on_time_ = millis();
 #endif
 #ifdef ENABLE_AUDIO
-    beeper.Beep(0.05, 2000.0);
+    if (!SFX_font) {
+      beeper.Beep(0.05, 2000.0);
+    }
 #endif
     LOCK_SD(true);
     current_preset_.Load(-1);  // load last preset
