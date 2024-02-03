@@ -172,6 +172,14 @@ public:
   HSL rotate(float angle) {
     return HSL(fract(H + angle), S, L);
   }
+  void printTo(Print& p) {
+    p.print("HSL:");
+    p.print(H);
+    p.write(',');
+    p.print(S);
+    p.write(',');
+    p.print(L);
+  }
   float H; // 0 - 1.0
   float S; // 0 - 1.0
   float L; // 0 - 1.0
@@ -305,23 +313,23 @@ public:
     int MAX = std::max(r, std::max(g, b));
     int MIN = std::min(r, std::min(g, b));
     int C = MAX - MIN;
-    int H;
+    float H;
     // Note 16384 = 60 degrees.
     if (C == 0) {
       H = 0;
     } else if (r == MAX) {
       // r is biggest
-      H = 16384 * (g - b) / C;
+      H = (g - b) / (float)C;
     } else if (g == MAX) {
       // g is biggest
-      H = 16384 * (b - r) / C + 16384 * 2;
+      H = (b - r) / (float)C + 2.0f;
     } else {
       // b is biggest
-      H = 16384 * (r - g) / C + 16384 * 4;
+      H = (r - g) / (float)C + 4.0f;
     }
     int L = MIN + MAX;
     float S = (MAX*2 - L) / (float)std::min<int>(L, 131072 - L);
-    return HSL(H / 98304.0, S, L / 131070.0);
+    return HSL(fract(H / 6.0f), S, L / 131070.0);
   }
 
   explicit Color16(HSL hsl) {

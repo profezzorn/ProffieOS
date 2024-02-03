@@ -126,6 +126,12 @@ BladeConfig* current_config;
   if (fabs(x_ - y_) > D) { STDOUT << #X << " (" << x_ << ") ~!= " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
 } while(0)
 
+#define CHECK_NEAR_MSG(X, Y, D, MSG) do {					\
+  auto x_ = (X);                                                                \
+  auto y_ = (Y);                                                                \
+  if (fabs(x_ - y_) > D) { STDOUT << #X << " (" << x_ << ") ~!= " << #Y << " (" << y_ << ") " << MSG << " line " << __LINE__ << "\n";  exit(1); } \
+} while(0)
+
 #define CHECK_LT(X, Y) do {                                             \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
@@ -331,6 +337,17 @@ void test_rotate(Color16 c, int angle) {
 
   // Test HSL
   HSL hsl = c.toHSL();
+  CHECK_LE(0.0, hsl.H);
+  CHECK_LE(0.0, hsl.S);
+  CHECK_LE(0.0, hsl.L);
+  CHECK_LE(hsl.H, 1.0);
+  CHECK_LE(hsl.S, 1.0);
+  CHECK_LE(hsl.L, 1.0);
+  Color16 result3(hsl);
+  CHECK_NEAR_MSG(result3.r, c.r, 1, " in:" << c << " out:" << result3 << " hsl:" << hsl);
+  CHECK_NEAR_MSG(result3.g, c.g, 1, " in:" << c << " out:" << result3 << " hsl:" << hsl);
+  CHECK_NEAR_MSG(result3.b, c.b, 1, " in:" << c << " out:" << result3 << " hsl:" << hsl);
+
   hsl = hsl.rotate(angle / (float)(32768 * 3));
 //  fprintf(stderr, "Angle = %d HSL={%f,%f,%f} RGB=%d,%d,%d\n", angle, hsl.H, hsl.S, hsl.L, c.r, c.g, c.b);
   CHECK_LE(0.0, hsl.H);
