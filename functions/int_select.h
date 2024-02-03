@@ -46,16 +46,16 @@ private:
 template<class TL> class IntSelectHelper {
 public:
   typedef typename SplitTypeList<TL>::first_half FH;
-  typedef typename SplitTypeList<TL>::first_half SH;
+  typedef typename SplitTypeList<TL>::second_half SH;
   void run(BladeBase* blade) {
     fh_.run(blade);
     sh_.run(blade);
   }
   int get(int N, int led) {
-    if (N < FH::size()) {
+    if (N < FH::size) {
       return fh_.get(N, led); 
     } else {
-      return sh_.get(N - FH::size(), led); 
+      return sh_.get(N - FH::size, led); 
     }
   }
 private:
