@@ -61,10 +61,11 @@ public:
   void run(BladeBase* blade) {
     SaveLastDetectedBladeEffectScoped save;
     for (size_t i = 0; i < N; i++) {
+      // TODO: Detect oldest rather than newest.
       if (effect_.DetectScoped(blade)) {
 	transitions_[pos_].begin();
 	run_[pos_] = true;
-	effects_[pos_] = last_detected_blade_effect;
+	effects_[pos_] = *last_detected_blade_effect;
 	pos_++;
 	if (pos_ >= N) pos_ = 0;
       }
@@ -72,7 +73,7 @@ public:
     running_ = false;
     for (size_t i = 0; i < N; i++) {
       if (run_[i]) {
-	last_detected_blade_effect = effects_[i];
+	last_detected_blade_effect = effects_ + i;
 	transitions_[i].run(blade);
 	if (transitions_[i].done()) {
 	  run_[i] = false;
@@ -88,7 +89,7 @@ private:
   bool running_ = false;
   bool run_[N];
   TRANSITION transitions_[N];
-  BladeEffect* effects_[N];
+  BladeEffect effects_[N];
   OneshotEffectDetector<EFFECT> effect_;
 public:
   auto getColor(int led) -> decltype(RGBA_um_nod::Transparent() << transitions_[0].getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led)) {
