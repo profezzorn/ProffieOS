@@ -606,7 +606,7 @@ public:
   bool is_pointing_up() {
     if (fusor.angle1() > M_PI / 3) return true;
 #ifdef DUAL_BLADES
-    if (fusor.angle1() < -M_PI / 4) return true;
+    if (fusor.angle1() < -M_PI / 3) return true;
 #endif
     return false;
   }
