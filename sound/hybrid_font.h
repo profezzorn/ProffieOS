@@ -301,9 +301,14 @@ public:
   }
   
   // Use after changing alternative.
-  void RestartHum() {
+  void RestartHum(int previous_alternative) {
     if (hum_player_ && hum_player_->isPlaying()) {
-      PlayMonophonic(getHum(), NULL, 0.2f);
+      if (SFX_chhum) {
+	SFX_chhum.Select(previous_alternative);
+	PlayMonophonic(&SFX_chhum, getHum());
+      } else {
+	PlayMonophonic(getHum(), NULL, 0.2f);
+      }
     }
   }
 
@@ -613,6 +618,7 @@ public:
       case EFFECT_LOW_BATTERY: SB_LowBatt(); return;
       case EFFECT_ALT_SOUND:
 	if (num_alternatives) {
+	  int previous_alternative = current_alternative;
 	  if (SaberBase::sound_number == -1) {
 	    // Next alternative
 	    if (++current_alternative >= num_alternatives)  current_alternative = 0;
@@ -622,7 +628,7 @@ public:
 	    // Set the sound num to -1 so that the altchng sound is random.
 	    SaberBase::sound_number = -1;
 	  }
-	  RestartHum();
+	  RestartHum(previous_alternative);
 	}
 	PlayCommon(&SFX_altchng);
 	break;
