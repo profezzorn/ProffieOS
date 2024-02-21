@@ -581,13 +581,13 @@ public:
 
   void DetectMenuTurn() {
     float a = fusor.angle2() - current_menu_angle_;
+    if (is_pointing_up()) return;
     if (mode_volume_) {
       if (a > M_PI) a-=M_PI*2;
       if (a < -M_PI) a+=M_PI*2;
       if (a > M_PI / 6) VolumeUp();
       if (a < -M_PI / 6) VolumeDown();
     } else if (scroll_presets_) {
-      if ((fusor.angle1() >  M_PI / 3) || (fusor.angle1() < - M_PI / 4)) return;
 
       if (a > M_PI / 6) {
         beeper.Beep(0.05, 4000);
@@ -601,6 +601,14 @@ public:
         previous_preset();
       }
     }
+  }
+
+  bool is_pointing_up() {
+    if (fusor.angle1() > M_PI / 3) return true;
+#ifdef DUAL_BLADES
+    if (fusor.angle1() < -M_PI / 3) return true;
+#endif
+    return false;
   }
 
   RefPtr<BufferedWavPlayer> wav_player;
@@ -753,8 +761,8 @@ public:
   // 2 button
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON | BUTTON_AUX):
 #endif
-      // Bypass NewFont and preon if pointing up.
-      if (fusor.angle1() >  M_PI / 3) {
+      // Bypass NewFont and preon if a blade is pointing up.
+      if (is_pointing_up()) {
         // Don't change preset if in colorchange mode
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
           next_preset_fast();
@@ -776,7 +784,7 @@ public:
     case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON | BUTTON_AUX):
 #endif
       // Bypass NewFont and preon if pointing up.
-      if (fusor.angle1() >  M_PI / 3) {
+      if (is_pointing_up()) {
         //Don't change preset if in colorchange mode
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return false;
           previous_preset_fast();
@@ -962,7 +970,7 @@ public:
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
 #endif
       if (SaberBase::IsOn()) { // prevents triggering during preon
-        if (fusor.angle1() >  M_PI / 3) {
+        if (fusor.angle1() > M_PI / 3) {
           sound_library_.SayZoomingIn();
           spam_blast_ = !spam_blast_;
           return true;
