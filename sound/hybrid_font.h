@@ -598,6 +598,12 @@ public:
         }
         break;
     }
+
+    if (swing_player_) {  
+      swing_player_->set_fade_time(0.3);  
+      swing_player_->FadeAndStop();  
+      swing_player_.Free();  
+    }
   }
 
   void SB_Effect(EffectType effect, EffectLocation location) override {
