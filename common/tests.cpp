@@ -781,7 +781,26 @@ void test_effect_location() {
   CHECK_EQ(true,  l3.on_blade(4));
 }
 
+#define TEST_FORMAT_PATTERN(P, V, E) do {	\
+  const char* ret = format_pattern(P, V);	\
+  CHECK_STREQ(ret, E);				\
+  StringPiece sp = match_pattern(P, ret);       \
+  CHECK_EQ(sp, V);                           	\
+  sp = match_pattern(P, "fnord");               \
+  if (strlen(P) > 1) CHECK_EQ(sp.len, 0);	\
+  free((void *)ret);				\
+}while (0)
+
+void test_patterns() {
+  TEST_FORMAT_PATTERN("*;common", "font", "font;common");
+  TEST_FORMAT_PATTERN("*", "font", "font");
+  TEST_FORMAT_PATTERN("*;*/extras;common", "font", "font;font/extras;common");
+  TEST_FORMAT_PATTERN("pre;*;post", "middle", "pre;middle;post");
+  TEST_FORMAT_PATTERN("*;*;*", "font", "font;font;font");
+}
+
 int main() {
+  test_patterns();
   test_effect_location();
   test_cyclint();
   command_parser_test();
