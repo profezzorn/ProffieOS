@@ -13,7 +13,6 @@ public:
     CONFIG_VARIABLE2(ProffieOSSwingVolumeSharpness, 0.5f);
     CONFIG_VARIABLE2(ProffieOSMaxSwingVolume, 2.0f);
     CONFIG_VARIABLE2(ProffieOSSwingOverlap, 0.5f);
-    CONFIG_VARIABLE2(ProffieOSSwingOverlapTime, 0.5f);
     CONFIG_VARIABLE2(ProffieOSSmoothSwingDucking, 0.2f);
     CONFIG_VARIABLE2(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE2(ProffieOSSlashAccelerationThreshold, 130.0f);
@@ -46,7 +45,6 @@ public:
     CONFIG_VARIABLE2(ProffieOSMaxSwingAcceleration, 0.0f);
 #ifdef ENABLE_SPINS
     CONFIG_VARIABLE2(ProffieOSSpinDegrees, 360.0f);
-    CONFIG_VARIABLE2(ProffieOSInitSpinDegrees, 270.0f);
 #endif
     CONFIG_VARIABLE2(ProffieOSSmoothSwingHumstart, 0);
 
@@ -117,8 +115,6 @@ public:
   // Specify what fraction of swing that must be played before a
   // new swing can be started. Defaults to 0.5 (50%)
   float ProffieOSSwingOverlap;
-  // Maximum overlap fadeout time. Defaults to 0.5 second.
-  float ProffieOSSwingOverlapTime;
   // How much to duck the hum when the swing is playing.
   // Defauls to 0.2 (hum volume is decreased by 20% of swing volume)
   float ProffieOSSmoothSwingDucking;
@@ -179,20 +175,9 @@ public:
   float ProffieOSMaxSwingAcceleration;
 #ifdef ENABLE_SPINS
   // number of degrees the blade must travel while staying above the
-  // swing threshold in order to trigger the first spin sound.
-  // Default is 270 degrees or 3/4 of a rotation.
-  float ProffieOSInitSpinDegrees;
-  // number of degrees the blade must travel while staying above the
-  // swing threshold in order to trigger another sound.  Default is 360 or
+  // swing threshold in order to trigger a spin sound.  Default is 360 or
   // one full rotation.
   float ProffieOSSpinDegrees;
-
-  // Nominal length of the first spin file. (File should generally be longer than it's nominal length.)
-  // Defaults to zero, which means no spin length selection.
-  float ProffieOSSpinMaxLength;
-  // Each spin file should be shorter than the previous one.
-  // Defaults to 80, which means spin02 should be ~80% of the length of spin01, and spin03 should be ~80% of spin02, etc.
-  float ProffieOSSpinLengthPercent;
 #endif
   // Make smoothswings start in sync with hum.
   // Set to 1 to sync, or 0 to resume swings where last pair left off.
@@ -316,14 +301,9 @@ public:
   }
   
   // Use after changing alternative.
-  void RestartHum(int previous_alternative) {
+  void RestartHum() {
     if (hum_player_ && hum_player_->isPlaying()) {
-      if (SFX_chhum) {
-	SFX_chhum.Select(previous_alternative);
-	PlayMonophonic(&SFX_chhum, getHum());
-      } else {
-	PlayMonophonic(getHum(), NULL, 0.2f);
-      }
+      PlayMonophonic(getHum(), NULL, 0.2f);
     }
   }
 
@@ -380,7 +360,7 @@ public:
           // avoid overlapping swings, based on value set in ProffieOSSwingOverlap.  Value is
           // between 0 (full overlap) and 1.0 (no overlap)
           if (swing_player_->pos() / swing_player_->length() >= font_config.ProffieOSSwingOverlap) {
-            swing_player_->set_fade_time(std::min(0.0, std::max(font_config.ProffieOSSwingOverlapTime, swing_player_->length() - swing_player_->pos())));
+            swing_player_->set_fade_time(swing_player_->length() - swing_player_->pos());
             swing_player_->FadeAndStop();
             swing_player_.Free();
           }
@@ -403,15 +383,8 @@ public:
             swinging_ = true;
           } else {
 #ifdef ENABLE_SPINS
-            if (angle_ > 0) {
+            if (angle_ > font_config.ProffieOSSpinDegrees) {
               if (SFX_spin) {
-		if (font_config.ProffieOSSpinMaxLength > 0.0f) {
-		  float target_length = font_config.ProffieOSSpinDegrees / swing_speed;
-		  int file = floor(logf(target_length / font_config.ProffieOSSpinMaxLength) / logf(font_config.ProffieOSSpinLengthPercent  / 100.0));
-		  file = std::max(file, SFX_spin.num_files() - 1);
-		  SFX_spin.Select(file);
-		}
-		
                 swing_player_ = PlayPolyphonic(&SFX_spin);
               }
               angle_ -= font_config.ProffieOSSpinDegrees;
@@ -425,7 +398,7 @@ public:
           swinging_ = true;
         }
 #ifdef ENABLE_SPINS
-        if (angle_ > 0 && swinging_) {
+        if (angle_ > 360 && swinging_) {
           if (SFX_spin) {
             PlayMonophonic(&SFX_spin, &SFX_hum);
           }
@@ -439,7 +412,7 @@ public:
       swinging_ = false;
       swing_player_.Free();
 #ifdef ENABLE_SPINS
-      angle_ = -font_config.ProffieOSInitSpinDegrees;
+      angle_ = 0;
 #endif
     }
     float vol = 1.0f;
@@ -560,7 +533,6 @@ public:
   void SB_Off(OffType off_type, EffectLocation location) override {
     bool most_blades = location.on_blade(0);
     SFX_in.SetFollowing( most_blades ?  &SFX_pstoff : nullptr );
-
     switch (off_type) {
       case OFF_CANCEL_PREON:
 	if (state_ == STATE_WAIT_FOR_ON) {
@@ -621,11 +593,6 @@ public:
         }
         break;
     }
-    if (swing_player_) {
-      swing_player_->set_fade_time(0.3);
-      swing_player_->FadeAndStop();
-      swing_player_.Free();
-    }
   }
 
   void SB_Effect(EffectType effect, EffectLocation location) override {
@@ -646,7 +613,6 @@ public:
       case EFFECT_LOW_BATTERY: SB_LowBatt(); return;
       case EFFECT_ALT_SOUND:
 	if (num_alternatives) {
-	  int previous_alternative = current_alternative;
 	  if (SaberBase::sound_number == -1) {
 	    // Next alternative
 	    if (++current_alternative >= num_alternatives)  current_alternative = 0;
@@ -656,7 +622,7 @@ public:
 	    // Set the sound num to -1 so that the altchng sound is random.
 	    SaberBase::sound_number = -1;
 	  }
-	  RestartHum(previous_alternative);
+	  RestartHum();
 	}
 	PlayCommon(&SFX_altchng);
 	break;
