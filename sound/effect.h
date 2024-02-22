@@ -760,6 +760,7 @@ EFFECT(ccend);
 EFFECT(ccchange);
 
 EFFECT(altchng);
+EFFECT(chhum);
 
 // Blaster effects
 // hum, boot and font are reused from sabers and already defined.
