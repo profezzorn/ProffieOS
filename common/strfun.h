@@ -1,6 +1,8 @@
 #ifndef COMMON_STRFUN_H
 #define COMMON_STRFUN_H
 
+#include "stdout.h"
+
 int constexpr toLower(char x) {
   return (x >= 'A' && x <= 'Z') ? x - 'A' + 'a' : x;
 }
