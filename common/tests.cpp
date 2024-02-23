@@ -799,7 +799,63 @@ void test_patterns() {
   TEST_FORMAT_PATTERN("*;*;*", "font", "font;font;font");
 }
 
+class TestCommand : public CommandParser {
+  bool Parse(const char *cmd, const char* arg) override {
+    if (!strcmp(cmd, "testcommand")) {
+      STDOUT << "test9\n";
+      STDOUT << "test5\n";
+      STDOUT << "test2\n";
+      STDOUT << "test8\n";
+      STDOUT << "test6\n";
+      STDOUT << "test7\n";
+      STDOUT << "test0\n";
+      STDOUT << "test1\n";
+      STDOUT << "test3\n";
+      STDOUT << "test4\n";
+      return true;
+    }
+    return false;
+  }
+};
+
+TestCommand cmd;
+
+char current_value[128];
+class TestSortedLineHelper : public SortedLineHelper<128> {
+public:
+  TestSortedLineHelper() : SortedLineHelper<128>("testcommand") {}
+  virtual char *get_current_value() {
+    return current_value;
+  }
+};
+
+void test_command_line_capture() {
+  for (int i = 0; i < 200; i++) {
+    strcpy(current_value, "test0");
+    for (int s = 0; s < 10; s++) {
+      current_value[4] = s + '0';
+
+      TestSortedLineHelper helper;
+      helper.init();
+
+      std::vector<int> x;
+      for (int i = 0; i < 10; i++) x.push_back(i);
+      while (!x.empty()) {
+	int index = random(x.size());
+	int N = x[index];
+	x[index] = *x.rbegin();
+	x.pop_back();
+	const char* tmp = helper.get(N);
+	// fprintf(stderr, "TMP = %s\n", tmp);
+	CHECK_EQ(tmp[4] - '0', N);
+      }
+    }
+  }
+    
+};
+
 int main() {
+  test_command_line_capture();
   test_patterns();
   test_effect_location();
   test_cyclint();

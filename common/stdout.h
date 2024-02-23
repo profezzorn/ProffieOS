@@ -150,6 +150,81 @@ private:
   char line_[MAXLINE];
 };
 
+int constexpr toLower(char x) {
+  return (x >= 'A' && x <= 'Z') ? x - 'A' + 'a' : x;
+}
+
+
+template<size_t bufsize>
+struct Line {
+  int line_number;
+  char line[bufsize];
+  int cmp(const char* other) const {
+    const char* a = line;
+    const char* b = other;
+    while (true) {
+      if (!*a && !*b) return 0;
+      if (!*a) return -1;
+      if (!*b) return 1;
+      char A = toLower(*a);
+      char B = toLower(*b);
+      if (A != B) return A < B ? -1 : 1;
+      a++;
+      b++;
+    }
+  }
+  int cmp(const Line& other) const { return cmp(other.line); }
+  bool operator<(const Line& other) const { return cmp(other) < 0; }
+  bool operator<=(const Line& other) const { return cmp(other) <= 0; }
+  bool operator>(const Line& other) const { return cmp(other) > 0; }
+  bool operator>=(const Line& other) const { return cmp(other) >= 0; }
+  bool operator==(const Line& other) const { return cmp(other) == 0; }
+  bool operator!=(const Line& other) const { return cmp(other) != 0; }
+
+  bool operator<(const char* other) const { return cmp(other) < 0; }
+  bool operator<=(const char* other) const { return cmp(other) <= 0; }
+  bool operator>(const char* other) const { return cmp(other) > 0; }
+  bool operator>=(const char* other) const { return cmp(other) >= 0; }
+  bool operator==(const char* other) const { return cmp(other) == 0; }
+  bool operator!=(const char* other) const { return cmp(other) != 0; }
+
+  operator bool() const { return line[0] != 0; }
+  void clear() { line[0] = 0; line_number=-1; }
+};
+
+
+template<size_t MAXLINE>
+class CommandOutputCaptureHelper : public Print {
+ public:
+  CommandOutputCaptureHelper() {
+    saved_output_ = stdout_output;
+    stdout_output = this;
+  }
+  ~CommandOutputCaptureHelper() {
+    stdout_output = saved_output_;
+  }
+  
+  virtual void GotLine(const Line<MAXLINE>& line_) = 0;
+  size_t write(uint8_t b) override {
+    if (b == '\n') {
+      if (pos_) {
+	line_.line[pos_] = 0;
+	GotLine(line_);
+	pos_ = 0;
+      }
+      return 1;
+    }
+    if (b == '\r') return 1;
+    if (pos_ <  MAXLINE - 1) line_.line[pos_++] = b;
+    return 1;
+  }
+private:
+  size_t pos_ = 0;
+  Line<MAXLINE> line_;
+  Print* saved_output_;
+};
+
+
 extern ConsoleHelper STDOUT;
 
 struct DevNullHelper {
