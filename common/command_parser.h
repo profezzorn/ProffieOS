@@ -2,6 +2,7 @@
 #define COMMON_COMMAND_PARSER_H
 
 #include "linked_list.h"
+#include "stdout.h"
 
 // Command parsing linked list base class.
 class CommandParser;

@@ -13,6 +13,17 @@
 #define NELEM(X) (sizeof(X)/sizeof((X)[0]))
 #define EnableAmplifier()
 #define PROGMEM
+uint32_t millis() { return 1; }
+#define PROFFIE_TEST
+
+#include "../common/monitoring.h"
+#include "../common/stdout.h"
+Print standard_print;
+Print* default_output = &standard_print;
+Print* stdout_output = &standard_print;
+ConsoleHelper STDOUT;
+Monitoring monitor;
+
 
 int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x < a) return a;
@@ -23,20 +34,9 @@ int16_t clamptoi16(int32_t x) {
   return clampi32(x, -32768, 32767);
 }
 
-class STDOUTHELPER {
-public:
-  template<class F>
-  void println(F foo) {
-    std::cout << foo << std::endl;
-  }
-};
-STDOUTHELPER STDOUT;
-
 #include "talkie.h"
 
 CommandParser* parsers = NULL;
-
-#define STRINGIFY(X) std::string((char *)&(X), sizeof(X))
 
 std::string mkchunk(std::string chnk,
 		    std::string data) {
