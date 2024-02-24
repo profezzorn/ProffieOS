@@ -3,10 +3,6 @@
 
 #include "stdout.h"
 
-int constexpr toLower(char x) {
-  return (x >= 'A' && x <= 'Z') ? x - 'A' + 'a' : x;
-}
-
 const char *startswith(const char *prefix, const char* x) {
   while (*prefix) {
     if (toLower(*x) != toLower(*prefix)) return nullptr;
