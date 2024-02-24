@@ -166,8 +166,8 @@ public:
     return blades_ == 0;
   }
 
-  constexpr bool operator==(const BladeSet& other) { return blades_ == other.blades_; }
-  constexpr bool operator!=(const BladeSet& other) { return blades_ != other.blades_; }
+  constexpr bool operator==(const BladeSet& other) const { return blades_ == other.blades_; }
+  constexpr bool operator!=(const BladeSet& other) const { return blades_ != other.blades_; }
 
   void operator|=(const BladeSet& other) {
     blades_ |= other.blades_;
