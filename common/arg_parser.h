@@ -124,6 +124,56 @@ private:
   const char* str_;
 };
 
+class GetUsedArgsParser : public ArgParser {
+public:
+  GetUsedArgsParser(const char* data) : ArgParser(data) {
+    for (size_t i = 0; i < NELEM(used_args_); i++) {
+      used_args_[0] = 0;
+    }
+  }
+  const char* GetArg(int arg_num, const char* name, const char* default_value) override {
+    int arg = arg_num + offset_;
+    used_args_[arg >> 5] |= 1UL << (arg & 31);
+    return ArgParser::GetArg(arg_num, name, default_value);
+  }
+  void Shift(int words) override {
+    ArgParser::Shift(words);
+    offset_ += words;
+  }
+  int used() {
+    int ret = 0;
+    for (size_t i = 0; i < NELEM(used_args_); i++) {
+      ret += __builtin_popcount(used_args_[i]);
+    }
+    return ret;
+  }
+  int next(int ARG) {
+    for (size_t j = 0; j <= NELEM(used_args_); j++) {
+      int arg = (ARG + j) % NELEM(used_args_);
+      if (used_args_[arg >> 5] & (1UL << (arg & 31))) return arg;
+    }
+  }
+  int prev(int ARG) {
+    for (size_t j = 0; j <= NELEM(used_args_); j++) {
+      int arg = ((NELEM(used_args_) * 64) + ARG - j) % (NELEM(used_args_) * 32);
+      if (used_args_[arg >> 5] & (1UL << (arg & 31))) return arg;
+    }
+  }
+  int nth(int ARG) {
+    for (size_t arg = 0; arg <= NELEM(used_args_); arg++) {
+      if (used_args_[arg >> 5] & (1UL << (arg & 31))) {
+	if (ARG-- <= 0) {
+	  return arg;
+	}
+      }
+    }
+    return 0;
+  }
+private:
+  int offset_ = 0;
+  uint32_t used_args_[8];
+};
+
 class GetMaxArgParser : public ArgParser {
 public:
   GetMaxArgParser(const char* data) : ArgParser(data) {}

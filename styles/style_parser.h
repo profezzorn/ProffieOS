@@ -150,7 +150,7 @@ public:
     return ap.next();
   }
 
-  // Returns true if the listed style refereces the specified argument.
+  // Returns the maximum argument used.
   int MaxUsedArgument(const char* str) {
     NamedStyle* style = FindStyle(str);
     if (!style) return false;
@@ -160,6 +160,54 @@ public:
     // Ignore the two "builtin" arguments
     if (FirstWord(str, "builtin") && ap.max_arg() <= 2) return 0;
     return ap.max_arg();
+  }
+
+  // Returns the number of used arguments.
+  int UsedArguments(const char* str) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    GetUsedArgsParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    // Ignore the two "builtin" arguments
+    if (FirstWord(str, "builtin") && ap.used() <= 2) return 0;
+    return ap.used();
+  }
+
+  // Returns the next used argument.
+  int NextUsedArguments(const char* str, int arg) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    GetUsedArgsParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    // Ignore the two "builtin" arguments
+    if (FirstWord(str, "builtin") && ap.used() <= 2) return 0;
+    return ap.next(arg);
+  }
+
+  // Returns the previous used argument.
+  int PrevUsedArguments(const char* str, int arg) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    GetUsedArgsParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    // Ignore the two "builtin" arguments
+    if (FirstWord(str, "builtin") && ap.used() <= 2) return 0;
+    return ap.prev(arg);
+  }
+
+  // Returns Nth used argument.
+  int GetNthUsedArguments(const char* str, int arg) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    GetUsedArgsParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    // Ignore the two "builtin" arguments
+    if (FirstWord(str, "builtin") && ap.used() <= 2) return 0;
+    return ap.nth(arg);
   }
 
   // Get the Nth argument of a style string.
