@@ -582,9 +582,9 @@ public:
   void DetectMenuTurn() {
     float a = fusor.angle2() - current_menu_angle_;
     if (is_pointing_up()) return;
+    if (a > M_PI) a-=M_PI*2;
+    if (a < -M_PI) a+=M_PI*2;
     if (mode_volume_) {
-      if (a > M_PI) a-=M_PI*2;
-      if (a < -M_PI) a+=M_PI*2;
       if (a > M_PI / 6) VolumeUp();
       if (a < -M_PI / 6) VolumeDown();
     } else if (scroll_presets_) {
