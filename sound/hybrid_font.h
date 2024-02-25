@@ -609,6 +609,11 @@ public:
   void SB_Effect(EffectType effect, EffectLocation location) override {
     switch (effect) {
       default: return;
+      case EFFECT_MENU_CHANGE:
+        if (!PlayPolyphonic(&SFX_ccchange)) {
+          beeper.Beep(0.05, 2000.0);
+        }
+	return;
       case EFFECT_PREON: SB_Preon(location); return;
       case EFFECT_POSTOFF: SB_Postoff(); return;
       case EFFECT_STAB:
