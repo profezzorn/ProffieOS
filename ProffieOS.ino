@@ -34,7 +34,6 @@
 // #define CONFIG_FILE "config/proffieboard_v1_graflex.h"
 // #define CONFIG_FILE "config/teensy_audio_shield_micom.h"
 // #define CONFIG_FILE "config/proffieboard_v2_ob4.h"
-// #define CONFIG_FILE "config/testconfig.h"
 
 #ifndef CONFIG_FILE
 #error Please set CONFIG_FILE as shown above.
@@ -625,6 +624,10 @@ class NoLED;
 #include "styles/length_finder.h"
 #include "styles/show_color.h"
 #include "styles/blade_shortener.h"
+
+#include "modes/mode.h"
+#include "modes/stepped_mode.h"
+#include "modes/color_change_modes.h"
 
 BladeConfig* current_config = nullptr;
 class BladeBase* GetPrimaryBlade() {
