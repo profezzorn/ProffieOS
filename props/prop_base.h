@@ -1342,7 +1342,7 @@ public:
       PRINT_CHECK_BLADE=true;
       if (SaberBase::BladeIsOn(1)) {
 	STDOUT << "Turning off SINGLE blade.\n";
-	Off(OffType::OFF_NORMAL, EffectLocation(1000, ~~BladeSet::fromBlade(2)));
+	SaberBase::TurnOff(OffType::OFF_NORMAL, EffectLocation(1000, ~~BladeSet::fromBlade(2)));
       } else {
 	STDOUT << "Turning off all blades.\n";
 	Off(OffType::OFF_NORMAL);
@@ -1355,7 +1355,7 @@ public:
       if (SaberBase::BladeIsOn(2)) {
 	EffectLocation tmp = EffectLocation(1000, ~~BladeSet::fromBlade(1));
 	STDOUT << "Turning off SINGLE blade: " << tmp << "\n";
-	Off(OffType::OFF_NORMAL, tmp);
+	SaberBase::TurnOff(OffType::OFF_NORMAL, tmp);
       } else {
 	STDOUT << "Turning off all blades.\n";
 	Off(OffType::OFF_NORMAL);
