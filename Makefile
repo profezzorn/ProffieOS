@@ -20,6 +20,9 @@ all:
 	mkdir -p build
 	arduino-cli compile --fqbn=$(FQBN) ProffieOS.ino
 
+upload:
+	arduino-cli upload --fqbn=$(FQBN) ProffieOS.ino
+
 CPPFLAGS += $(TESTFLAGS)
 DIAGNOSTICS_COLOR_WHEN = auto
 
