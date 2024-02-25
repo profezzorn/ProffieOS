@@ -117,9 +117,9 @@ private:
 #endif
 
 // Base class for props.
-class PropBase : CommandParser, Looper, protected SaberBase {
+class PropBase : CommandParser, Looper, protected SaberBase, public ModeInterface {
 public:
-  PropBase() : CommandParser() {}
+  PropBase() : CommandParser() { current_mode = this; }
   BladeStyle* current_style() {
 #if NUM_BLADES == 0
     return nullptr;
@@ -830,11 +830,12 @@ public:
 #endif
     // If we're spinning the saber or if loud sounds are playing, 
     // require a stronger acceleration to activate the clash.
-    if (v > (CLASH_THRESHOLD_G + fusor.gyro().len() / 200.0)
+    if (v > (CLASH_THRESHOLD_G * (1
+				  + fusor.gyro().len() / 500.0
 #if defined(ENABLE_AUDIO) && defined(AUDIO_CLASH_SUPPRESSION_LEVEL)
-        + (dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 0.000001))
+				  + dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 1E-10) * dynamic_mixer.get_volume()
 #endif
-      ) {
+	       ))) {
       if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
         diff = -diff;
       }
@@ -1145,54 +1146,7 @@ public:
     }
 #endif
 
-#ifndef DISABLE_COLOR_CHANGE
-#define TICK_ANGLE (M_PI * 2 / 12)
-    switch (SaberBase::GetColorChangeMode()) {
-      case SaberBase::COLOR_CHANGE_MODE_NONE:
-        break;
-      case SaberBase::COLOR_CHANGE_MODE_STEPPED: {
-        float a = fusor.angle2() - current_tick_angle_;
-        if (a > M_PI) a-=M_PI*2;
-        if (a < -M_PI) a+=M_PI*2;
-        if (a > TICK_ANGLE * 2/3) {
-          current_tick_angle_ += TICK_ANGLE;
-          if (current_tick_angle_ > M_PI) current_tick_angle_ -= M_PI * 2;
-          STDOUT << "TICK+\n";
-          SaberBase::UpdateVariation(1);
-        }
-        if (a < -TICK_ANGLE * 2/3) {
-          current_tick_angle_ -= TICK_ANGLE;
-          if (current_tick_angle_ < M_PI) current_tick_angle_ += M_PI * 2;
-          STDOUT << "TICK-\n";
-          SaberBase::UpdateVariation(-1);
-        }
-        break;
-      }
-      case SaberBase::COLOR_CHANGE_MODE_ZOOMED: {
-#define ZOOM_ANGLE (M_PI * 2 / 2000)
-        float a = fusor.angle2() - current_tick_angle_;
-        if (a > M_PI) a-=M_PI*2;
-        if (a < -M_PI) a+=M_PI*2;
-        int steps = (int)floor(fabs(a) / ZOOM_ANGLE - 0.3);
-        if (steps < 0) steps = 0;
-        if (a < 0) steps = -steps;
-        current_tick_angle_ += ZOOM_ANGLE * steps;
-        SaberBase::SetVariation(0x7fff & (SaberBase::GetCurrentVariation() + steps));
-        break;
-      }
-      case SaberBase::COLOR_CHANGE_MODE_SMOOTH:
-        float a = fmodf(fusor.angle2() - current_tick_angle_, M_PI * 2);
-        SaberBase::SetVariation(0x7fff & (int32_t)(a * (32768 / (M_PI * 2))));
-        break;
-    }
-    if (monitor.ShouldPrint(Monitoring::MonitorVariation)) {
-      STDOUT << " variation = " << SaberBase::GetCurrentVariation()
-             << " ccmode = " << SaberBase::GetColorChangeMode()
-//           << " color = " << current_config->blade1->current_style()->getColor(0)
-             << "\n";
-    }
-#endif
-
+    current_mode->mode_Loop();
 
 #ifdef IDLE_OFF_TIME
     if (SaberBase::IsOn() ||
@@ -1208,41 +1162,33 @@ public:
     PollSaveColorChange();
   }
 
+  virtual void mode_activate(bool onreturn) {}
+
+
 #ifdef IDLE_OFF_TIME
   uint32_t last_on_time_;
 #endif
 
+#ifdef MENU_SPEC_TEMPLATE
+  void EnterMenu() {
+    pushMode<MENUSPEC<MENU_SPEC_TEMPLATE>::RootMenu>();
+  }
+#endif
+
 #ifndef DISABLE_COLOR_CHANGE
+
+#ifndef COLOR_CHANGE_MENU_SPEC_TEMPLATE
+#define COLOR_CHANGE_MENU_SPEC_TEMPLATE ColorChangeOnlyMenuSpec
+#endif  
+  
   void ToggleColorChangeMode() {
     if (!current_style()) return;
-    if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {
-      current_tick_angle_ = fusor.angle2();
-      bool handles_color_change = false;
-#define CHECK_SUPPORTS_COLOR_CHANGE(N) \
-      handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
-      ONCEPERBLADE(CHECK_SUPPORTS_COLOR_CHANGE)
-      if (!handles_color_change) {
-	PVLOG_NORMAL << "Entering smooth color change mode.\n";
-        current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
-        current_tick_angle_ = fmodf(current_tick_angle_, M_PI * 2);
-
-        SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
-      } else {
-#ifdef COLOR_CHANGE_DIRECT
-        PVLOG_NORMAL << "Color change, TICK+\n";
-        SaberBase::UpdateVariation(1);
-#else
-	PVLOG_NORMAL << "Entering stepped color change mode.\n";
-        SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
-#endif
-      }
-    } else {
-      PVLOG_NORMAL << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
-      SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
+    if (current_mode == this) {
+      pushMode<MENUSPEC<COLOR_CHANGE_MENU_SPEC_TEMPLATE>::RootMenu>();
     }
   }
-#endif // DISABLE_COLOR_CHANGE
-
+#endif  // DISABLE_COLOR_CHANGE
+  
   virtual void PrintButton(uint32_t b) {
     if (b & BUTTON_POWER) STDOUT.print("Power");
     if (b & BUTTON_AUX) STDOUT.print("Aux");
@@ -1307,6 +1253,8 @@ public:
   }
 
   bool Parse(const char *cmd, const char* arg) override {
+    if (current_mode->mode_Parse(cmd, arg)) return true;
+    
     if (!strcmp(cmd, "scanid")) {
       FindBladeAgain();
       return true;
@@ -1801,11 +1749,11 @@ public:
         break;
     }
 
-    if (Event2(button, event, current_modifiers | (IsOn() ? MODE_ON : MODE_OFF))) {
+    if (current_mode->mode_Event2(button, event, current_modifiers | (IsOn() ? MODE_ON : MODE_OFF))) {
       current_modifiers = 0;
       return true;
     }
-    if (Event2(button, event,  MODE_ANY_BUTTON | (IsOn() ? MODE_ON : MODE_OFF))) {
+    if (current_mode->mode_Event2(button, event,  MODE_ANY_BUTTON | (IsOn() ? MODE_ON : MODE_OFF))) {
       // Not matching modifiers, so no need to clear them.
       current_modifiers &= ~button;
       return true;
@@ -1813,6 +1761,9 @@ public:
     return false;
   }
 
+  virtual bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
+    return Event2(button, event, modifiers);
+  }
   virtual bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) = 0;
 
 private:
