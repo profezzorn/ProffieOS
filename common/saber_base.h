@@ -103,6 +103,8 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(ERROR_IN_FONT_DIRECTORY)      \
     DEFINE_EFFECT(ERROR_IN_BLADE_ARRAY)         \
     DEFINE_EFFECT(FONT_DIRECTORY_NOT_FOUND)     \
+    /* menu effects */                          \
+    DEFINE_EFFECT(MENU_CHANGE)                  \
 
 
 #define DEFINE_EFFECT(X) EFFECT_##X,
