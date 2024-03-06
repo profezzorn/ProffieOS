@@ -496,14 +496,6 @@ public:
     }
   }  // Loop()
 
-    bool DelayTimer(bool& trigger_flag, uint32_t& last_timer_time, float duration) {
-        if (trigger_flag && (millis() - last_timer_time > duration)) {
-            trigger_flag = false;
-            return true;  // Timer has elapsed
-        }
-        return false;  // Timer is still running
-    }
-
 #ifdef SPEAK_BLADE_ID
   void SpeakBladeID(float id) override {
     if (&SFX_mnum) {
