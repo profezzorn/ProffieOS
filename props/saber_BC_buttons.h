@@ -611,6 +611,23 @@ public:
     return false;
   }
 
+  void TurnOnHelper() {
+    if (is_pointing_up()) {
+      FastOn();
+    } else {
+      On();
+    }
+  }
+
+  void TurnOffHelper() {
+      if (is_pointing_up()) {
+      Off(OFF_FAST);
+    } else {
+      Off();
+    }
+    saber_off_time_ = millis();
+  }
+
   RefPtr<BufferedWavPlayer> wav_player;
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
@@ -663,12 +680,7 @@ public:
         last_twist_ = millis();
         saber_off_time_ = millis();
         battle_mode_ = false;
-        // Bypass postoff if pointing up
-        if (fusor.angle1() >  M_PI / 3) {
-          Off(OFF_FAST);
-        } else {
-          Off();
-        }
+        TurnOffHelper();
       }
       return true;
 #endif  // BC_TWIST_OFF
@@ -721,19 +733,13 @@ public:
       return true;
 #endif  // BC_FORCE_PUSH
 
-// Turns Saber ON
+// Turn Saber ON
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       // No power on without exiting Vol Menu first
-      if (!mode_volume_) {
-      // Bypass preon if pointing up
-        if (fusor.angle1() >  M_PI / 3) {
-          FastOn();
-        } else {
-          On();
-          scroll_presets_ = false;
-        }
-      } else {
+      if (mode_volume_) {
         QuickMaxVolume();
+      } else {
+        TurnOnHelper();
       }
       return true;
 
@@ -1093,15 +1099,9 @@ public:
         }
 #endif
         if (!battle_mode_) {
-          // Bypass postoff if pointing up
-          if (fusor.angle1() >  M_PI / 3) {
-            Off(OFF_FAST);
-          } else {
-            Off();
-          }
+          TurnOffHelper();
         }
       }
-      saber_off_time_ = millis();
       return true;
 
 // Blade Detect
