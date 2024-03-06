@@ -611,7 +611,7 @@ public:
     return false;
   }
 
-  void OnCheckBypassPreon() {
+  void TurnOnHelper() {
     if (is_pointing_up()) {
       FastOn();
     } else {
@@ -619,7 +619,7 @@ public:
     }
   }
 
-  void OffCheckBypassPostoff() {
+  void TurnOffHelper() {
       if (is_pointing_up()) {
       Off(OFF_FAST);
     } else {
@@ -680,7 +680,7 @@ public:
         last_twist_ = millis();
         saber_off_time_ = millis();
         battle_mode_ = false;
-        OffCheckBypassPostoff();
+        TurnOffHelper();
       }
       return true;
 #endif  // BC_TWIST_OFF
@@ -739,7 +739,7 @@ public:
       if (mode_volume_) {
         QuickMaxVolume();
       } else {
-        OnCheckBypassPreon();
+        TurnOnHelper();
       }
       return true;
 
@@ -1099,7 +1099,7 @@ public:
         }
 #endif
         if (!battle_mode_) {
-          OffCheckBypassPostoff();
+          TurnOffHelper();
         }
       }
       return true;
