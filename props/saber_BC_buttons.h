@@ -491,7 +491,7 @@ public:
       }
 
     // Scroll Presets timer check - avoid beep/wav overlap
-    if (scrollPresetsTimer.timerCheck() && scroll_presets_) {
+    if (scroll_presets_timer_.timerCheck() && scroll_presets_) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
     }
   }  // Loop()
@@ -798,7 +798,7 @@ public:
       beeper.Beep(0.05, 2000);
       beeper.Silence(0.05);
       beeper.Beep(0.10, 3000);
-      scrollPresetsTimer.trigger(350);
+      scroll_presets_timer_.trigger(350);
     } else {
       PVLOG_NORMAL << "** Exit Scroll Presets\n";
       // beep on exit
@@ -1265,7 +1265,7 @@ public:
   }
 
 private:
-  DelayTimer scrollPresetsTimer;
+  DelayTimer scroll_presets_timer_;
 
   float current_menu_angle_ = 0.0;
   bool mode_volume_ = false;
