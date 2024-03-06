@@ -6,7 +6,7 @@
 struct ModeInterface {
   virtual void mode_activate(bool onreturn) {}
   virtual bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
-    return true;
+    return false;
   }
   virtual void mode_Loop() {}
   virtual bool mode_Parse(const char *cmd, const char* arg) { return false; }
