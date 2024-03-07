@@ -54,7 +54,7 @@ EFFECT_USER2            - For blade effects with sounds that might work better w
 
 ---------------------------------------------------------------------------
 Optional #defines:
-#define ENABLE_AUTO_SWING_BLAST - Multi-blast initiated by simply swinging
+#define BC_ENABLE_AUTO_SWING_BLAST - Multi-blast initiated by simply swinging
                                   within 1 second of last blast.
                                   Exit by not swinging for 1 second.
 #define FEMALE_TALKIE_VOICE     - To use a female voice version of onboard Talkie.
@@ -164,7 +164,7 @@ Spam Blaster Blocks   - 3x click and hold while pointing up. This toggles SPAM B
                         and makes the button super sensitive for multiple blaster blocks.
                         * Note * This gets in the way of normal features,
                         so turn off when you're done spamming.  Plays mzoom.wav.
-Auto Swing Blast      - if #define ENABLE_AUTO_SWING_BLAST is active,
+Auto Swing Blast      - if #define BC_ENABLE_AUTO_SWING_BLAST is active,
                         swinging within 1 second of doing button activated
                         Blaster Block will start this timed mode.
                         To trigger auto blaster blocks, swing saber
@@ -256,7 +256,7 @@ Spam Blaster Blocks   - 3x click and hold while pointing up. This toggles SPAM B
                         and makes the button super sensitive for multiple blaster blocks.
                         * Note * This gets in the way of normal features,
                         so turn off when you're done spamming.  Plays mzoom.wav.
-Auto Swing Blast      - if #define ENABLE_AUTO_SWING_BLAST is active,
+Auto Swing Blast      - if #define BC_ENABLE_AUTO_SWING_BLAST is active,
                         swinging within 1 second of doing button activated
                         Blaster Block will start this timed mode.
                         To trigger auto blaster blocks, swing saber
@@ -906,7 +906,7 @@ public:
       }
       return true;
 
-#ifdef ENABLE_AUTO_SWING_BLAST
+#ifdef BC_ENABLE_AUTO_SWING_BLAST
     // Auto enter/exit multi-blast block with swings if swing within 1 second.
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
       if (millis() - last_blast_ < 1000) {
