@@ -54,7 +54,7 @@ EFFECT_USER2            - For blade effects with sounds that might work better w
 
 ---------------------------------------------------------------------------
 Optional #defines:
-#define ENABLE_AUTO_SWING_BLAST - Multi-blast initiated by simply swinging
+#define BC_ENABLE_AUTO_SWING_BLAST - Multi-blast initiated by simply swinging
                                   within 1 second of last blast.
                                   Exit by not swinging for 1 second.
 #define FEMALE_TALKIE_VOICE     - To use a female voice version of onboard Talkie.
@@ -164,7 +164,7 @@ Spam Blaster Blocks   - 3x click and hold while pointing up. This toggles SPAM B
                         and makes the button super sensitive for multiple blaster blocks.
                         * Note * This gets in the way of normal features,
                         so turn off when you're done spamming.  Plays mzoom.wav.
-Auto Swing Blast      - if #define ENABLE_AUTO_SWING_BLAST is active,
+Auto Swing Blast      - if #define BC_ENABLE_AUTO_SWING_BLAST is active,
                         swinging within 1 second of doing button activated
                         Blaster Block will start this timed mode.
                         To trigger auto blaster blocks, swing saber
@@ -256,7 +256,7 @@ Spam Blaster Blocks   - 3x click and hold while pointing up. This toggles SPAM B
                         and makes the button super sensitive for multiple blaster blocks.
                         * Note * This gets in the way of normal features,
                         so turn off when you're done spamming.  Plays mzoom.wav.
-Auto Swing Blast      - if #define ENABLE_AUTO_SWING_BLAST is active,
+Auto Swing Blast      - if #define BC_ENABLE_AUTO_SWING_BLAST is active,
                         swinging within 1 second of doing button activated
                         Blaster Block will start this timed mode.
                         To trigger auto blaster blocks, swing saber
@@ -392,6 +392,32 @@ EFFECT(push);       // for Force Push gesture
 EFFECT(quote);      // for playing quotes
 EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 EFFECT(swap);       // for standalone triggering EffectSequence<>
+EFFECT(mute);      // Plays before mute ignition to avoid confusion.
+
+class DelayTimer {
+public:
+    DelayTimer() : triggered_(false), trigger_time_(0), duration_(0) {}
+
+    void trigger(uint32_t duration) {
+        triggered_ = true;
+        trigger_time_ = millis();
+        duration_ = duration;
+    }
+
+    bool timerCheck() {
+        if (!triggered_) return false;
+        if (millis() - trigger_time_ > duration_) {
+            triggered_ = false;  // Reset the timer flag
+            return true;  // Timer has elapsed
+        }
+        return false;  // Timer is still running
+    }
+
+private:
+    bool triggered_;
+    uint32_t trigger_time_;
+    uint32_t duration_;
+};
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -463,7 +489,12 @@ public:
       } else {
         thrust_begin_millis_ = millis();
       }
-  }
+
+    // Scroll Presets timer check - avoid beep/wav overlap
+    if (scroll_presets_timer_.timerCheck() && scroll_presets_) {
+        SaberBase::DoEffect(EFFECT_NEWFONT, 0);
+    }
+  }  // Loop()
 
 #ifdef SPEAK_BLADE_ID
   void SpeakBladeID(float id) override {
@@ -611,6 +642,23 @@ public:
     return false;
   }
 
+  void TurnOnHelper() {
+    if (is_pointing_up()) {
+      FastOn();
+    } else {
+      On();
+    }
+  }
+
+  void TurnOffHelper() {
+      if (is_pointing_up()) {
+      Off(OFF_FAST);
+    } else {
+      Off();
+    }
+    saber_off_time_ = millis();
+  }
+
   RefPtr<BufferedWavPlayer> wav_player;
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
@@ -663,12 +711,7 @@ public:
         last_twist_ = millis();
         saber_off_time_ = millis();
         battle_mode_ = false;
-        // Bypass postoff if pointing up
-        if (fusor.angle1() >  M_PI / 3) {
-          Off(OFF_FAST);
-        } else {
-          Off();
-        }
+        TurnOffHelper();
       }
       return true;
 #endif  // BC_TWIST_OFF
@@ -721,19 +764,13 @@ public:
       return true;
 #endif  // BC_FORCE_PUSH
 
-// Turns Saber ON
+// Turn Saber ON
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       // No power on without exiting Vol Menu first
-      if (!mode_volume_) {
-      // Bypass preon if pointing up
-        if (fusor.angle1() >  M_PI / 3) {
-          FastOn();
-        } else {
-          On();
-          scroll_presets_ = false;
-        }
-      } else {
+      if (mode_volume_) {
         QuickMaxVolume();
+      } else {
+        TurnOnHelper();
       }
       return true;
 
@@ -749,10 +786,28 @@ public:
       return true;
 
 // Toggle Scroll Presets
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
-      scroll_presets_ = !scroll_presets_;
-      SaberBase::DoEffect(EFFECT_NEWFONT, 0);
-      return true;
+  case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
+    scroll_presets_ = !scroll_presets_;
+    if (scroll_presets_) {
+      PVLOG_NORMAL << "** Enter Scroll Presets\n";
+      // beep on enter, then play font.wav
+      beeper.Beep(0.05, 2000);
+      beeper.Silence(0.05);
+      beeper.Beep(0.05, 2000);
+      beeper.Silence(0.05);
+      beeper.Beep(0.10, 3000);
+      scroll_presets_timer_.trigger(350);
+    } else {
+      PVLOG_NORMAL << "** Exit Scroll Presets\n";
+      // beep on exit
+      beeper.Beep(0.05, 3000);
+      beeper.Silence(0.05);
+      beeper.Beep(0.05, 3000);
+      beeper.Silence(0.05);
+      beeper.Beep(0.10, 2000);
+      // No need to play font.wav again when exiting
+    }
+    return true;
 
 // Next Preset AND Volume Up
 #if NUM_BUTTONS == 1
@@ -900,7 +955,7 @@ public:
       }
       return true;
 
-#ifdef ENABLE_AUTO_SWING_BLAST
+#ifdef BC_ENABLE_AUTO_SWING_BLAST
     // Auto enter/exit multi-blast block with swings if swing within 1 second.
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
       if (millis() - last_blast_ < 1000) {
@@ -1093,15 +1148,9 @@ public:
         }
 #endif
         if (!battle_mode_) {
-          // Bypass postoff if pointing up
-          if (fusor.angle1() >  M_PI / 3) {
-            Off(OFF_FAST);
-          } else {
-            Off();
-          }
+          TurnOffHelper();
         }
       }
-      saber_off_time_ = millis();
       return true;
 
 // Blade Detect
@@ -1208,6 +1257,8 @@ public:
   }
 
 private:
+  DelayTimer scroll_presets_timer_;
+
   float current_menu_angle_ = 0.0;
   bool mode_volume_ = false;
   bool auto_lockup_on_ = false;
@@ -1230,6 +1281,7 @@ private:
   uint32_t saber_off_time_ = millis();
   uint32_t beep_delay_ = millis();
   uint32_t volume_range_delay_ = millis();
+
 };
 
 #endif
