@@ -14,15 +14,16 @@ struct ModeInterface {
 
 ModeInterface* current_mode;
 
+// Move to common.
 template<class MODE>
-ModeInterface* getModePtr() {
+MODE* getPtr() {
   static MODE mode;
   return &mode;
 }
 
 template<class MODE>
 void pushMode() {
-  ModeInterface* mode = getModePtr<MODE>();
+  ModeInterface* mode = getPtr<MODE>();
   mode->previous_ = current_mode;
   current_mode = mode;
   mode->mode_activate(false);
