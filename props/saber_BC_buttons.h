@@ -392,6 +392,32 @@ EFFECT(push);       // for Force Push gesture
 EFFECT(quote);      // for playing quotes
 EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 EFFECT(swap);       // for standalone triggering EffectSequence<>
+EFFECT(mute);      // Plays before mute ignition to avoid confusion.
+
+class DelayTimer {
+public:
+    DelayTimer() : triggered_(false), trigger_time_(0), duration_(0) {}
+
+    void trigger(uint32_t duration) {
+        triggered_ = true;
+        trigger_time_ = millis();
+        duration_ = duration;
+    }
+
+    bool timerCheck() {
+        if (!triggered_) return false;
+        if (millis() - trigger_time_ > duration_) {
+            triggered_ = false;  // Reset the timer flag
+            return true;  // Timer has elapsed
+        }
+        return false;  // Timer is still running
+    }
+
+private:
+    bool triggered_;
+    uint32_t trigger_time_;
+    uint32_t duration_;
+};
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -463,7 +489,12 @@ public:
       } else {
         thrust_begin_millis_ = millis();
       }
-  }
+
+    // Scroll Presets timer check - avoid beep/wav overlap
+    if (scroll_presets_timer_.timerCheck() && scroll_presets_) {
+        SaberBase::DoEffect(EFFECT_NEWFONT, 0);
+    }
+  }  // Loop()
 
 #ifdef SPEAK_BLADE_ID
   void SpeakBladeID(float id) override {
@@ -755,10 +786,28 @@ public:
       return true;
 
 // Toggle Scroll Presets
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
-      scroll_presets_ = !scroll_presets_;
-      SaberBase::DoEffect(EFFECT_NEWFONT, 0);
-      return true;
+  case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
+    scroll_presets_ = !scroll_presets_;
+    if (scroll_presets_) {
+      PVLOG_NORMAL << "** Enter Scroll Presets\n";
+      // beep on enter, then play font.wav
+      beeper.Beep(0.05, 2000);
+      beeper.Silence(0.05);
+      beeper.Beep(0.05, 2000);
+      beeper.Silence(0.05);
+      beeper.Beep(0.10, 3000);
+      scroll_presets_timer_.trigger(350);
+    } else {
+      PVLOG_NORMAL << "** Exit Scroll Presets\n";
+      // beep on exit
+      beeper.Beep(0.05, 3000);
+      beeper.Silence(0.05);
+      beeper.Beep(0.05, 3000);
+      beeper.Silence(0.05);
+      beeper.Beep(0.10, 2000);
+      // No need to play font.wav again when exiting
+    }
+    return true;
 
 // Next Preset AND Volume Up
 #if NUM_BUTTONS == 1
@@ -1208,6 +1257,8 @@ public:
   }
 
 private:
+  DelayTimer scroll_presets_timer_;
+
   float current_menu_angle_ = 0.0;
   bool mode_volume_ = false;
   bool auto_lockup_on_ = false;
@@ -1230,6 +1281,7 @@ private:
   uint32_t saber_off_time_ = millis();
   uint32_t beep_delay_ = millis();
   uint32_t volume_range_delay_ = millis();
+
 };
 
 #endif
