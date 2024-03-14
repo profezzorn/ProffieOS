@@ -13,8 +13,7 @@ template<class STROBE_FREQUENCY, class STROBE_MILLIS>
 class StrobeSVF {
 public:
   static_assert(!is_same_type<STROBE_MILLIS, Int<0>>::value, "Division by zero");
-  void run(BladeBase* blade) {}
-  int calculate(BladeBase* blade) {
+  void run(BladeBase* blade) {
     strobe_frequency_.run(blade);
     strobe_millis_.run(blade);
     uint32_t m = millis();
@@ -28,8 +27,8 @@ public:
 	strobe_start_ = m;
       strobe_ = !strobe_;
     }
-    return strobe_  * 32768;;
   }
+  int calculate(BladeBase* blade) { return strobe_  * 32768; }
   int getInteger(int led) { return strobe_  * 32768; }
 private:
   bool strobe_;
