@@ -16,13 +16,6 @@ struct ModeInterface {
 
 ModeInterface* current_mode;
 
-// Move to common.
-template<class MODE>
-MODE* getPtr() {
-  static MODE mode;
-  return &mode;
-}
-
 template<class MODE>
 void pushMode() {
   ModeInterface* mode = getPtr<MODE>();
