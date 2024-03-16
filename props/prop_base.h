@@ -64,58 +64,6 @@ public:
 #endif
 };
 
-#ifdef ENABLE_AUDIO
-struct SoundToPlay {
-  const char* filename_;
-  Effect* effect_;
-  int selection_;
-
-  SoundToPlay() :filename_(nullptr), effect_(nullptr) {}
-  explicit SoundToPlay(const char* file) : filename_(file){  }
-  SoundToPlay(Effect* effect, int selection = -1) : filename_(nullptr), effect_(effect), selection_(selection) {}
-  bool Play(BufferedWavPlayer* player) {
-     if (filename_) return player->PlayInCurrentDir(filename_);
-     effect_->Select(selection_);
-     player->PlayOnce(effect_);
-     return true;
-   }
-   bool isSet() {
-      return filename_ != nullptr || effect_ != nullptr;
-   }
-};
-
-template<int QueueLength>
-class SoundQueue {
-public:
-  bool Play(SoundToPlay p) {
-    if (sounds_ < QueueLength) {
-      queue_[sounds_++] = p;
-      return true;
-    }
-    return false;
-  }
-  bool Play(const char* p) {
-    return Play(SoundToPlay(p));
-  }
-  // Called from Loop()
-  void PollSoundQueue(RefPtr<BufferedWavPlayer>& player) {
-    if (sounds_ &&  (!player || !player->isPlaying())) {
-      if (!player) {
-        player = GetFreeWavPlayer();
-        if (!player) return;
-	player->set_volume_now(1.0f);
-      }
-      queue_[0].Play(player.get());
-      sounds_--;
-      for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
-    }
-  }
-private:
-  int sounds_;
-  SoundToPlay queue_[QueueLength];
-};
-#endif
-
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase, public ModeInterface {
 public:
@@ -1184,7 +1132,7 @@ public:
   void ToggleColorChangeMode() {
     if (!current_style()) return;
     if (current_mode == this) {
-      pushMode<MENUSPEC<COLOR_CHANGE_MENU_SPEC_TEMPLATE>::RootMenu>();
+      pushMode<MKSPEC<COLOR_CHANGE_MENU_SPEC_TEMPLATE>::RootMenu>();
     }
   }
 #endif  // DISABLE_COLOR_CHANGE
