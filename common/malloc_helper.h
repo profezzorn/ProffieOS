@@ -134,4 +134,9 @@ CLASS* getPtr() {
   return &mode;
 }
 
+// Converts a specification template into an actual class.
+// Uses "curiously recursive template pattern" to make replacing individual classes possible.
+template<template<class> typename SPEC_TEMPLATE>
+struct MKSPEC : public SPEC_TEMPLATE<MKSPEC<SPEC_TEMPLATE>> {};
+
 #endif
