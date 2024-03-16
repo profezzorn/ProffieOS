@@ -127,4 +127,11 @@ private:
   alignas(T) int8_t mData[sizeof(T)];
 };
 
+// Get a pointer to a static CLASS singleton.
+template<class CLASS>
+CLASS* getPtr() {
+  static CLASS mode;
+  return &mode;
+}
+
 #endif
