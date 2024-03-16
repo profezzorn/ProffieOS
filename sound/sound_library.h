@@ -1,16 +1,21 @@
 #ifndef SOUND_SOUND_LIBRARY_H
 #define SOUND_SOUND_LIBRARY_H
 
+#include "sound_queue.h"
+
 // Sound library
 EFFECT(mnum); // menu numbers
+
+#ifdef SAY_COLOR_LIST
+EFFECT(clrlst); // spoken color names for SAY_COLOR_LIST
+#endif
+
+// Sound library
 enum SayType {
   SAY_DECIMAL,
   SAY_WHOLE,
 };
 
-#ifdef SAY_COLOR_LIST
-EFFECT(clrlst); // spoken color names for SAY_COLOR_LIST
-#endif
 // New colors should be added at end of enum and assigned numbers for each COLOR_ should not be changed.
 enum ColorNumber {
   COLOR_RED = 1,
@@ -42,95 +47,61 @@ enum ColorNumber {
   COLOR_WHITE = 27,
 };
 
-class SoundLibrary {
+template<class SPEC>
+class SoundLibraryTemplate {
 public:
   SoundQueue<16> sound_queue_;
-  void Play(const char* file) { sound_queue_.Play(file); }
-  void Play(SoundToPlay stp) { sound_queue_.Play(stp); }
+  void Play(const char* file) override { sound_queue_.Play(file); }
+  // void Play(SoundToPlay stp) { sound_queue_.Play(stp); }
   void Poll(RefPtr<BufferedWavPlayer>& wav_player) {
     sound_queue_.PollSoundQueue(wav_player);
   }
 
-  void TensValue(int number) {
-    if (number <= 20) {
-      // Reminder - use search and replace "Play(SoundToPlay())" per PR comments
+  void SayWhole(int number) {
+    if (number == 0) {
+      Say0();
+      return;
+    }
+    int thousands = number / 1000;
+    if (thousands) {
+      SayWhole(thousands);
+      Say1000();
+      number %= 1000;
+    }
+    int hundreds = number / 1000;
+    if (hundreds) {
+      SayWhole(hundreds);
+      Say100();
+      number %= 100;
+    }
+    int tens = number / 10;
+    number %= 10;
+    switch (tens) {
+      default:
+	number += tens * 10;
+	  break;
+      case 2: Say20(); break;
+      case 3: Say30(); break;
+      case 4: Say40(); break;
+      case 5: Say50(); break;
+      case 6: Say60(); break;
+      case 7: Say70(); break;
+      case 8: Say80(); break;
+      case 9: Say90(); break;
+    }
+    if (number) {
       Play(SoundToPlay(&SFX_mnum, number - 1));
-    } else {
-      int tens = ((int)floorf(number / 10)) % 10;
-      number -= (tens * 10);
-      switch (tens) {
-        default:
-        case 2:
-	  Play(SoundToPlay(&SFX_mnum, (tens * 10) - 1));
-          break;
-        case 3:
-          Play("thirty.wav");
-          break;
-        case 4:
-          Play("forty.wav");
-          break;
-        case 5:
-	  Play("fifty.wav");
-          break;
-        case 6:
-          Play("sixty.wav");
-          break;
-        case 7:
-	  Play("seventy.wav");
-          break;
-        case 8:
-	  Play("eighty.wav");
-          break;
-        case 9:
-	  Play("ninety.wav");
-          break;
-      }
-      if (number != 0) Play(SoundToPlay(&SFX_mnum, number - 1));
     }
   }
 
   void SayNumber(float number, SayType say_type) {
-    int thousand = ((int)floorf(number / 1000)) % 100;
-    int hundred = ((int)floorf(number / 100)) % 10;
-    int ones = ((int)floorf(number)) % 100;
-    int tenths = ((int)floorf(number * 10)) % 10;
-    int hundredths = ((int)floorf(number * 100)) % 10;
+    SayWhole((int)floorf(number));
     switch (say_type) {
        case SAY_DECIMAL:
-        // Tens & Ones
-        if (number == 0) {
-	  Play(SoundToPlay("mzero.wav"));
-        } else {
-          TensValue(ones);
-        }
-        // Decimal / Point
-	Play(SoundToPlay("mpoint.wav"));
-        // Tenths
-        if (tenths == 0) {
-          Play("mzero.wav");
-        } else {
-          Play(SoundToPlay(&SFX_mnum, tenths - 1));
-        }
-        // Hundredths
-        if (hundredths != 0) Play(SoundToPlay(&SFX_mnum, hundredths - 1));
-        break;
-      case SAY_WHOLE:
-        // Thousands
-        if (thousand > 0) {
-          TensValue(thousand);
-	  Play("thousand.wav");
-        }
-        // Hundred
-        if (hundred > 0) {
-	  Play(SoundToPlay(&SFX_mnum, hundred - 1));
-	  Play("hundred.wav");
-        }
-        // Tens & Ones
-        if (ones == 0) {
-          if ((thousand + hundred) == 0) Play("mzero.wav");
-        } else {
-          TensValue(ones);
-        }
+	 int hundredths = ((int)floorf(number * 100)) % 10;
+	 SayPoint();
+	 SayWhole(hundredths / 10);
+	 SayWhole(hundredths % 10);
         break;
       default:
         break;
@@ -149,123 +120,188 @@ public:
     SayPercent();
   }
 
-  void SayAccept () { Play("maccept.wav"); }
-  void SayAdjustBlackLevel() { Play("mblack.wav"); }
-  void SayAdjustColorHue() { Play("mhue.wav"); }
-  void SayAdjustWhiteLevel() { Play("mwhite.wav"); }
-  void SayAltColor() { Play("malt.wav"); }
-  void SayAuto() { Play("mauto.wav"); }
-  void SayBaseColor() { Play("mbase.wav"); }
-  void SayBatteryLevel() { Play("mbatt.wav"); }
-  void SayTheBatteryLevelIs() { Play("battlevl.wav"); }
-  void SayBlastColor() { Play("mblast.wav"); }
-  void SayCancel() { Play("mcancel.wav"); }
-  void SayChoreographyBegin() { Play("chreobgn.wav"); }
-  void SayChoreographyEnd() { Play("chreoend.wav"); }
-  void SayClashColor() { Play("mclash.wav"); }
-  void SayClashDetectionLevel() { Play("mbmclash.wav"); }
-  void SayClashLockupPosition() { Play("mlockpos.wav"); }
-  void SayColorList() { Play("mcolorlt.wav"); }
-  void SayColorMenu() { Play("mcolorsb.wav"); }
-  void SayColorOptions() { Play("mcolorop.wav"); }
-  void SayConfirm() { Play("mconfirm.wav"); }
-  void SayConfirmSelection() { Play("maffirm.wav"); }
-  void SayCoolDownOptions() { Play("mcooldwn.wav"); }
-  void SayCopyColors() { Play("mcopyc.wav"); }
-  void SayCopyPreset() { Play("mcopy.wav"); }
-  void SayDeletePreset() { Play("mdelete.wav"); }
-  void SayDisabled() { Play("mfalse.wav"); }
-  void SayDown() { Play("mdown.wav"); } // Sound for decrease
-  void SayDragColor() { Play("mdrag.wav"); }
-  void SayDragSize() { Play("mdragsz.wav"); }
-  void SayEditBladeLength() { Play("mlength.wav"); }
-  void SayEditBrightness() { Play("mdim.wav"); }
-  void SayEditClashThreshold() { Play("mclashth.wav"); }
-  void SayEditColor() { Play("mcolor.wav"); }
-  void SayEditControlSettings() { Play("mcontrol.wav"); }
-  void SayEditFont() { Play("mfont.wav"); }
-  void SayEditMode() { Play("medit.wav"); }   // 1-sec leading silence delay
-  void SayEditSettings() { Play("msetting.wav"); }
-  void SayEditStyle() { Play("mstyle.wav"); }
-  void SayEditStyleSettings() { Play("mstylset.wav"); }
-  void SayEditTrack() { Play("mtrack.wav"); }
-  void SayEditVolume() { Play("mvolume.wav"); }
-  void SayEmitterColor() { Play("memitter.wav"); }
-  void SayEmitterSize() { Play("memitsz.wav"); }
-  void SayEnabled() { Play("mtrue.wav"); }
-  void SayEnterVolumeMenu() { Play("vmbegin.wav"); }
-  void SayExit() { Play("mexit.wav"); }
-  void SayForcePush() { Play("mpush.wav"); }
-  void SayForcePushLength() { Play("mpushlen.wav"); }
-  void SayGesturesOff() { Play("mgestoff.wav"); }
-  void SayGesturesOn() { Play("mgeston.wav"); }
-  void SayIgnitionColor() { Play("mignite.wav"); }
-  void SayIgnitionDelay() { Play("migdelay.wav"); }
-  void SayIgnitionOptions() { Play("migopt.wav"); }
-  void SayIgnitionTime() { Play("mouttime.wav"); }
-  void SayKeepRehearsal() { Play("rehrsold.wav"); }
-  void SayLightningBlockColor() { Play("mlb.wav"); }
-  void SayLockupColor() { Play("mlockup.wav"); }
-  void SayLockupDelay() { Play("mlockdly.wav"); }
-  void SayLoop() { Play("mloop.wav"); }
-  void SayMainMenu() { Play("mmain.wav"); }
-  void SayMaximum() { Play("mmax.wav"); }
-  void SayMaximumClashStrength() { Play("maxclash.wav"); }
-  void SayMaximumVolume() { Play("volmax.wav"); }
-  void SayMeltSize() { Play("mmeltsz.wav"); }
-  void SayMillis() { Play("mmillis.wav"); }
-  void SayMinimum() { Play("mmin.wav"); }
-  void SayMininumVolume() { Play("volmin.wav"); }
-  void SayNoChoreographyAvailable() { Play("nochreo.wav"); }
-  void SayOffColor() { Play("moff.wav"); }
-  void SayOffOption() {Play("moffopt.wav"); }
-  void SayOption() { Play("moptnum.wav"); }
-  void SayPercent() { Play("mpercent.wav"); }
-  void SayPostOffColor() { Play("mpstoff.wav"); }
-  void SayPowerLock() { Play("mpwrlock.wav"); }
-  void SayPowerUpOptions() { Play("mpwrup.wav"); }
-  void SayPreonColor() { Play("mpreon.wav"); }
-  void SayPreonOptions() { Play("mpreopt.wav"); }
-  void SayPreonSize() { Play("mpreonsz.wav"); }
-  void SayRandom() { Play("mrandom.wav"); }
-  void SayRehearseBegin() { Play("rehrsbgn.wav"); }
-  void SayRehearseEnd() { Play("rehrsend.wav"); }
-  void SayRehearseNew() { Play("rehrsnew.wav"); } // rename?
-  void SayResetColors() { Play("mresetc.wav"); }
-  void SayRetractionColor() { Play("mretract.wav"); }
-  void SayRetractionDelay() { Play("mrtdelay.wav"); }
-  void SayRetractionOptions() { Play("mrtopt.wav"); }
-  void SayRetractionTime() { Play("mintime.wav"); }
-  void SayRevert() { Play("mrevert.wav"); }
-  void SayRotate() { Play("mrotate.wav"); }
-  void SaySave() { Play("msave.wav"); }
-  void SaySelect() { Play("mselect.wav"); } // Sound for OK / Affirmative / Enter
-  void SaySelectBlade() { Play("mblade.wav"); }
-  void SaySelectEffect() { Play("meffect.wav"); }
-  void SaySelectOption() { Play("moption.wav"); }
-  void SaySelectPreset() { Play("mpreset.wav"); }
-  void SaySelectStyle() { Play("mstylsel.wav"); }
-  void SayStabIgnition() { Play("mstabon.wav"); }
-  void SayStabColor() { Play("mstab.wav"); }
-  void SayStyle() { Play("mstylnum.wav"); }
-  void SayStyleMenu() { Play("mstylesb.wav"); }
-  void SayStyleOptions() { Play("mstylopt.wav"); }
-  void SaySwingColor() { Play("mswing.wav"); }
-  void SaySwingIgnition() { Play("mswingon.wav"); }
-  void SaySwingOnSpeed() { Play("mswingsp.wav"); }
-  void SaySwingOption() { Play("mswngopt.wav"); }
-  void SayThrustIgnition() { Play("mthrston.wav"); }
-  void SayTwistIgnition() { Play("mtwiston.wav"); }
-  void SayTwistRetraction() { Play("mtwstoff.wav"); }
-  void SayUp() { Play("mup.wav"); } // Sound for increase
-  void SayVolts() { Play("mvolts.wav"); }
-  void SayVolumeMenuEnd() { Play("vmend.wav"); }
-  void SayVolumeUp() { Play("volup.wav"); } // Sound for increasing volume
-  void SayZoomingIn() { Play("mzoom.wav"); } // Sound for color menu "zooming in"
-  void SayVolumeDown() { Play("voldown.wav"); } // Sound for decreasing volume
-  void SayGestureMenu() { Play("mgestsub.wav"); }
-  void SaySettingsMenu() { Play("msetsub.wav"); }
-  void SayStyleSettings() { Play("stylstm.wav"); }
+#define ADD_SL_SOUND(NAME, BASE)					\
+  void Say##NAME() { Play(BASE ".wav"); }				\
+  /* t for "trampoline" */						\
+  struct t##NAME { static void say() { getPtr<SPEC::SoundLibrary>->Say##NAME(); } }
+  
+  ADD_SL_SOUND(Red, "clrlst/clrlst01");
+  ADD_SL_SOUND(OrangeRed, "clrlst/clrlst02");
+  ADD_SL_SOUND(DarkOrange, "clrlst/clrlst03");
+  ADD_SL_SOUND(Orange, "clrlst/clrlst04");
+  ADD_SL_SOUND(Gold, "clrlst/clrlst05");
+  ADD_SL_SOUND(Yellow, "clrlst/clrlst06");
+  ADD_SL_SOUND(GreenYellow, "clrlst/clrlst07");
+  ADD_SL_SOUND(Green, "clrlst/clrlst08");
+  ADD_SL_SOUND(AquaMarine, "clrlst/clrlst09");
+  ADD_SL_SOUND(Cyan, "clrlst/clrlst10");
+  ADD_SL_SOUND(DeepSkyBlue, "clrlst/clrlst11");
+  ADD_SL_SOUND(DodgerBlue, "clrlst/clrlst12");
+  ADD_SL_SOUND(Blue, "clrlst/clrlst13");
+  ADD_SL_SOUND(IceBlue, "clrlst/clrlst14");
+  ADD_SL_SOUND(Indigo, "clrlst/clrlst15");
+  ADD_SL_SOUND(Purple, "clrlst/clrlst16");
+  ADD_SL_SOUND(DeepPurple, "clrlst/clrlst17");
+  ADD_SL_SOUND(Magenta, "clrlst/clrlst18");
+  ADD_SL_SOUND(DeepPink, "clrlst/clrlst19");
+  ADD_SL_SOUND(Silver, "clrlst/clrlst20");
+  ADD_SL_SOUND(Glacier, "clrlst/clrlst21");
+  ADD_SL_SOUND(IceWhite, "clrlst/clrlst22");
+  ADD_SL_SOUND(LightCyan, "clrlst/clrlst23");
+  ADD_SL_SOUND(Moccasin, "clrlst/clrlst24");
+  ADD_SL_SOUND(LemonChiffon, "clrlst/clrlst25");
+  ADD_SL_SOUND(NavajoWhite, "clrlst/clrlst26");
+  ADD_SL_SOUND(White, "clrlst/clrlst27");
+
+  ADD_SL_SOUND(0, "mzero");
+  ADD_SL_SOUND(1, "mnum/mnum1");
+  ADD_SL_SOUND(2, "mnum/mnum2");
+  ADD_SL_SOUND(3, "mnum/mnum3");
+  ADD_SL_SOUND(4, "mnum/mnum4");
+  ADD_SL_SOUND(5, "mnum/mnum5");
+  ADD_SL_SOUND(6, "mnum/mnum6");
+  ADD_SL_SOUND(7, "mnum/mnum7");
+  ADD_SL_SOUND(8, "mnum/mnum8");
+  ADD_SL_SOUND(9, "mnum/mnum9");
+  ADD_SL_SOUND(10, "mnum/mnum10");
+  ADD_SL_SOUND(11, "mnum/mnum11");
+  ADD_SL_SOUND(12, "mnum/mnum12");
+  ADD_SL_SOUND(13, "mnum/mnum13");
+  ADD_SL_SOUND(14, "mnum/mnum14");
+  ADD_SL_SOUND(15, "mnum/mnum15");
+  ADD_SL_SOUND(16, "mnum/mnum16");
+  ADD_SL_SOUND(17, "mnum/mnum17");
+  ADD_SL_SOUND(18, "mnum/mnum18");
+  ADD_SL_SOUND(19, "mnum/mnum19");
+  ADD_SL_SOUND(20, "mnum/mnum20");
+  ADD_SL_SOUND(30, "thirty");
+  ADD_SL_SOUND(40, "fourty");
+  ADD_SL_SOUND(50, "fifty");
+  ADD_SL_SOUND(60, "sixty");
+  ADD_SL_SOUND(70, "seventy");
+  ADD_SL_SOUND(80, "eighty");
+  ADD_SL_SOUND(90, "ninety");
+  ADD_SL_SOUND(100, "hundred");
+  ADD_SL_SOUND(1000, "thousand");
+  
+  ADD_SL_SOUND(Point, "mpoint");
+  ADD_SL_SOUND(Accept, "maccept");
+  ADD_SL_SOUND(AdjustBlackLevel, "mblack");
+  ADD_SL_SOUND(AdjustColorHue, "mhue");
+  ADD_SL_SOUND(AdjustWhiteLevel, "mwhite");
+  ADD_SL_SOUND(AltColor, "malt");
+  ADD_SL_SOUND(Auto, "mauto");
+  ADD_SL_SOUND(BaseColor, "mbase");
+  ADD_SL_SOUND(BatteryLevel, "mbatt");
+  ADD_SL_SOUND(TheBatteryLevelIs, "battlevl");
+  ADD_SL_SOUND(BlastColor, "mblast");
+  ADD_SL_SOUND(Cancel, "mcancel");
+  ADD_SL_SOUND(ChoreographyBegin, "chreobgn");
+  ADD_SL_SOUND(ChoreographyEnd, "chreoend");
+  ADD_SL_SOUND(ClashColor, "mclash");
+  ADD_SL_SOUND(ClashDetectionLevel, "mbmclash");
+  ADD_SL_SOUND(ClashLockupPosition, "mlockpos");
+  ADD_SL_SOUND(ColorList, "mcolorlt");
+  ADD_SL_SOUND(ColorMenu, "mcolorsb");
+  ADD_SL_SOUND(ColorOptions, "mcolorop");
+  ADD_SL_SOUND(Confirm, "mconfirm");
+  ADD_SL_SOUND(ConfirmSelection, "maffirm");
+  ADD_SL_SOUND(CoolDownOptions, "mcooldwn");
+  ADD_SL_SOUND(CopyColors, "mcopyc");
+  ADD_SL_SOUND(CopyPreset, "mcopy");
+  ADD_SL_SOUND(DeletePreset, "mdelete");
+  ADD_SL_SOUND(Disabled, "mfalse");
+  ADD_SL_SOUND(Down, "mdown"); // Sound for decrease
+  ADD_SL_SOUND(DragColor, "mdrag");
+  ADD_SL_SOUND(DragSize, "mdragsz");
+  ADD_SL_SOUND(EditBladeLength, "mlength");
+  ADD_SL_SOUND(EditBrightness, "mdim");
+  ADD_SL_SOUND(EditClashThreshold, "mclashth");
+  ADD_SL_SOUND(EditColor, "mcolor");
+  ADD_SL_SOUND(EditControlSettings, "mcontrol");
+  ADD_SL_SOUND(EditFont, "mfont");
+  ADD_SL_SOUND(EditMode, "medit");   // 1-sec leading silence delay
+  ADD_SL_SOUND(EditSettings, "msetting");
+  ADD_SL_SOUND(EditStyle, "mstyle");
+  ADD_SL_SOUND(EditStyleSettings, "mstylset");
+  ADD_SL_SOUND(EditTrack, "mtrack");
+  ADD_SL_SOUND(EditVolume, "mvolume");
+  ADD_SL_SOUND(EmitterColor, "memitter");
+  ADD_SL_SOUND(EmitterSize, "memitsz");
+  ADD_SL_SOUND(Enabled, "mtrue");
+  ADD_SL_SOUND(EnterVolumeMenu, "vmbegin");
+  ADD_SL_SOUND(Exit, "mexit");
+  ADD_SL_SOUND(ForcePush, "mpush");
+  ADD_SL_SOUND(ForcePushLength, "mpushlen");
+  ADD_SL_SOUND(GesturesOff, "mgestoff");
+  ADD_SL_SOUND(GesturesOn, "mgeston");
+  ADD_SL_SOUND(IgnitionColor, "mignite");
+  ADD_SL_SOUND(IgnitionDelay, "migdelay");
+  ADD_SL_SOUND(IgnitionOptions, "migopt");
+  ADD_SL_SOUND(IgnitionTime, "mouttime");
+  ADD_SL_SOUND(KeepRehearsal, "rehrsold");
+  ADD_SL_SOUND(LightningBlockColor, "mlb");
+  ADD_SL_SOUND(LockupColor, "mlockup");
+  ADD_SL_SOUND(LockupDelay, "mlockdly");
+  ADD_SL_SOUND(Loop, "mloop");
+  ADD_SL_SOUND(MainMenu, "mmain");
+  ADD_SL_SOUND(Maximum, "mmax");
+  ADD_SL_SOUND(MaximumClashStrength, "maxclash");
+  ADD_SL_SOUND(MaximumVolume, "volmax");
+  ADD_SL_SOUND(MeltSize, "mmeltsz");
+  ADD_SL_SOUND(Millis, "mmillis");
+  ADD_SL_SOUND(Minimum, "mmin");
+  ADD_SL_SOUND(MininumVolume, "volmin");
+  ADD_SL_SOUND(NoChoreographyAvailable, "nochreo");
+  ADD_SL_SOUND(OffColor, "moff");
+  ADD_SL_SOUND(OffOption, "moffopt");
+  ADD_SL_SOUND(Option, "moptnum");
+  ADD_SL_SOUND(Percent, "mpercent");
+  ADD_SL_SOUND(PostOffColor, "mpstoff");
+  ADD_SL_SOUND(PowerLock, "mpwrlock");
+  ADD_SL_SOUND(PowerUpOptions, "mpwrup");
+  ADD_SL_SOUND(PreonColor, "mpreon");
+  ADD_SL_SOUND(PreonOptions, "mpreopt");
+  ADD_SL_SOUND(PreonSize, "mpreonsz");
+  ADD_SL_SOUND(Random, "mrandom");
+  ADD_SL_SOUND(RehearseBegin, "rehrsbgn");
+  ADD_SL_SOUND(RehearseEnd, "rehrsend");
+  ADD_SL_SOUND(RehearseNew, "rehrsnew"); // rename?
+  ADD_SL_SOUND(ResetColors, "mresetc");
+  ADD_SL_SOUND(RetractionColor, "mretract");
+  ADD_SL_SOUND(RetractionDelay, "mrtdelay");
+  ADD_SL_SOUND(RetractionOptions, "mrtopt");
+  ADD_SL_SOUND(RetractionTime, "mintime");
+  ADD_SL_SOUND(Revert, "mrevert");
+  ADD_SL_SOUND(Rotate, "mrotate");
+  ADD_SL_SOUND(Save, "msave");
+  ADD_SL_SOUND(Select, "mselect"); // Sound for OK / Affirmative / Enter
+  ADD_SL_SOUND(SelectBlade, "mblade");
+  ADD_SL_SOUND(SelectEffect, "meffect");
+  ADD_SL_SOUND(SelectOption, "moption");
+  ADD_SL_SOUND(SelectPreset, "mpreset");
+  ADD_SL_SOUND(SelectStyle, "mstylsel");
+  ADD_SL_SOUND(StabIgnition, "mstabon");
+  ADD_SL_SOUND(StabColor, "mstab");
+  ADD_SL_SOUND(Style, "mstylnum");
+  ADD_SL_SOUND(StyleMenu, "mstylesb");
+  ADD_SL_SOUND(StyleOptions, "mstylopt");
+  ADD_SL_SOUND(SwingColor, "mswing");
+  ADD_SL_SOUND(SwingIgnition, "mswingon");
+  ADD_SL_SOUND(SwingOnSpeed, "mswingsp");
+  ADD_SL_SOUND(SwingOption, "mswngopt");
+  ADD_SL_SOUND(ThrustIgnition, "mthrston");
+  ADD_SL_SOUND(TwistIgnition, "mtwiston");
+  ADD_SL_SOUND(TwistRetraction, "mtwstoff");
+  ADD_SL_SOUND(Up, "mup"); // Sound for increase
+  ADD_SL_SOUND(Volts, "mvolts");
+  ADD_SL_SOUND(VolumeMenuEnd, "vmend");
+  ADD_SL_SOUND(VolumeUp, "volup"); // Sound for increasing volume
+  ADD_SL_SOUND(ZoomingIn, "mzoom"); // Sound for color menu "zooming in"
+  ADD_SL_SOUND(VolumeDown, "voldown"); // Sound for decreasing volume
+  ADD_SL_SOUND(GestureMenu, "mgestsub");
+  ADD_SL_SOUND(SettingsMenu, "msetsub");
+  ADD_SL_SOUND(StyleSettings, "stylstm");
 
 #ifdef SAY_COLOR_LIST
   void SayColor(ColorNumber n) {
@@ -282,6 +318,13 @@ public:
   }
 };
 
-SoundLibrary sound_library_;
+template<class SPEC>
+class SLSPEC {
+  typedef SoundLibraryTemplate<SPEC> SoundLibrary;
+};
+
+using SoundLibrary = SoundLibraryTemplate<MKSPEC<SLSPEC>>;
+
+#define sound_library_ (*getPtr<SoundLibrary>)
 
 #endif  // SOUND_SOUND_LIBRARY_H
