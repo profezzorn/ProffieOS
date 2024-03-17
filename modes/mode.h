@@ -16,13 +16,6 @@ struct ModeInterface {
 
 ModeInterface* current_mode;
 
-// Move to common.
-template<class MODE>
-MODE* getPtr() {
-  static MODE mode;
-  return &mode;
-}
-
 template<class MODE>
 void pushMode() {
   ModeInterface* mode = getPtr<MODE>();
@@ -36,9 +29,8 @@ void popMode() {
   current_mode->mode_activate(true);
 }
 
-// Converts a menu specification template into an actual class.
-// Uses "curiously recursive template pattern" to make replacing individual classes possible.
-template<template<class> typename SPEC_TEMPLATE>
-struct MENUSPEC : public SPEC_TEMPLATE<MENUSPEC<SPEC_TEMPLATE>> {};
+namespace mode {
+template<class SPEC> typename SPEC::SoundLibrary* getSL() { return getPtr<SPEC::SoundLibrary>(); }
+}  
 
 #endif
