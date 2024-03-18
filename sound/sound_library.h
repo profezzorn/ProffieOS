@@ -51,7 +51,7 @@ template<class SPEC>
 class SoundLibraryTemplate {
 public:
   SoundQueue<16> sound_queue_;
-  void Play(const char* file) override { sound_queue_.Play(file); }
+  void Play(const char* file) { sound_queue_.Play(file); }
   // void Play(SoundToPlay stp) { sound_queue_.Play(stp); }
   void Poll(RefPtr<BufferedWavPlayer>& wav_player) {
     sound_queue_.PollSoundQueue(wav_player);
@@ -323,8 +323,8 @@ class SLSPEC {
   typedef SoundLibraryTemplate<SPEC> SoundLibrary;
 };
 
+// These two are for compatibility and should be deprecated.
 using SoundLibrary = SoundLibraryTemplate<MKSPEC<SLSPEC>>;
-
 #define sound_library_ (*getPtr<SoundLibrary>)
 
 #endif  // SOUND_SOUND_LIBRARY_H
