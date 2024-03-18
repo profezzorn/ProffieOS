@@ -8,6 +8,7 @@ public:
   void run(BladeBase *blade) {}
   SimpleColor getColor(int led) { return color_; }
   static void SetColor(Color16 color) { color_ = color; }
+  static Color16& getColor() { return color_; }
 private:
   static Color16 color_;
 };
