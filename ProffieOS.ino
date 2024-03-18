@@ -625,9 +625,13 @@ class NoLED;
 #include "styles/show_color.h"
 #include "styles/blade_shortener.h"
 
+#include "sound/sound_library.h"
+
 #include "modes/mode.h"
 #include "modes/stepped_mode.h"
 #include "modes/color_change_modes.h"
+#include "modes/menu_list.h"
+#include "modes/bool_setting.h"
 
 BladeConfig* current_config = nullptr;
 class BladeBase* GetPrimaryBlade() {
@@ -682,6 +686,11 @@ int prop_GetBulletCount() {
     return prop.GetBulletCount();
 }
 #endif
+
+class Color16 GetColorArg(int blade, int arg) { return prop.GetColorArg(blade, arg); }
+void SetArg(int blade, int arg, const char* argument) { prop.SetArg(blade, arg, argument); }
+void SetColorArg(int blade, int arg, Color16 color) { prop.SetColorArg(blade, arg, color); }
+
 
 #if 0
 #include "scripts/test_motion_timeout.h"
