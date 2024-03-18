@@ -435,23 +435,22 @@ public:
     LOCK_SD(false);
   }
 
-void SetStyle(int blade, LSPtr<char> style) {
-  DOVALIDATE(*this);
-  ValidateStyleString(style.get());
+  void SetStyle(int blade, LSPtr<char> style) {
+    DOVALIDATE(*this);
+    ValidateStyleString(style.get());
 #if NUM_BLADES > 0
-  current_style_[blade-1] = std::move(style);
+    current_style_[blade-1] = std::move(style);
 #endif
-  DOVALIDATE(*this);
-}
+    DOVALIDATE(*this);
+  }
 
-const char* GetStyle(int blade) {
+  const char* GetStyle(int blade) {
 #if NUM_BLADES > 0
-  return current_style_[blade-1].get();
+    return current_style_[blade-1].get();
 #else
-  return "";
+    return "";
 #endif
-}
-
+  }
 };
 
 #endif
