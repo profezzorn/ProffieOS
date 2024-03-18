@@ -7,7 +7,7 @@ namespace mode {
 
 struct SelectCancelMode : public ModeInterface {
   virtual void select() = 0;
-  virtual void exit() = 0;
+  virtual void exit() { popMode(); }
 
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, 0)) {
