@@ -33,10 +33,10 @@ private:
 };
 
 template<class SPEC>
-struct SmoothVariationMode : public SPEC::SmoothMode {
+struct SmoothVariationMode : public SPEC::SmoothWraparoundMode {
   void mode_activate(bool onreturn) override {
     saved_ = get();
-    SPEC::SmoothMode::mode_activate(onreturn);
+    SPEC::SmoothWraparoundMode::mode_activate(onreturn);
     SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
   }
   void exit() override {
@@ -82,7 +82,7 @@ template<class SPEC>
 struct ColorChangeOnlyMenuSpec {
   typedef mode::SelectCancelMode SelectCancelMode;
   typedef mode::SteppedMode<SPEC> SteppedMode;
-  typedef mode::SmoothMode<SPEC> SmoothMode;
+  typedef mode::SmoothWraparoundMode<SPEC> SmoothWraparoundMode;
   typedef mode::SmoothVariationMode<SPEC> SmoothVariationMode;
   typedef mode::SteppedVariationMode<SPEC> SteppedVariationMode;
   typedef mode::ColorChangeMode<SPEC> RootMenu;
