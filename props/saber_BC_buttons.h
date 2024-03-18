@@ -392,7 +392,7 @@ EFFECT(push);       // for Force Push gesture
 EFFECT(quote);      // for playing quotes
 EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 EFFECT(swap);       // for standalone triggering EffectSequence<>
-EFFECT(mute);      // Plays before mute ignition to avoid confusion.
+EFFECT(mute);       // Notification before muted ignition to avoid confusion.
 
 class DelayTimer {
 public:
