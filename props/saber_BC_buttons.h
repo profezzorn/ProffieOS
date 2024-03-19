@@ -490,6 +490,10 @@ public:
         thrust_begin_millis_ = millis();
       }
 
+    // Mute timer check - play optional mute.wav first.
+    if (mute_timer_.timerCheck()) {
+      DoMute();
+    }
     // Scroll Presets timer check - avoid beep/wav overlap
     if (scroll_presets_timer_.timerCheck() && scroll_presets_) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
@@ -659,6 +663,13 @@ public:
     saber_off_time_ = millis();
   }
 
+  void DoMute() {
+    if (SetMute(true)) {
+      unmute_on_deactivation_ = true;
+      TurnOnHelper();
+    }
+  }
+
   RefPtr<BufferedWavPlayer> wav_player;
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
@@ -775,15 +786,16 @@ public:
       return true;
 
 // Turn Saber ON Muted
-    case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD, MODE_OFF):
-      if (!mode_volume_) {
-        if (SetMute(true)) {
-          unmute_on_deactivation_ = true;
-          scroll_presets_ = false;
-          On();
-        }
+case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD, MODE_OFF):
+    if (!mode_volume_) {
+      if (SFX_mute) {
+        hybrid_font.PlayCommon(&SFX_mute);
+        mute_timer_.trigger(SaberBase::sound_length * 1000);
+      } else {
+        DoMute();
       }
-      return true;
+    }
+    return true;
 
 // Toggle Scroll Presets
   case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
@@ -1257,6 +1269,7 @@ public:
   }
 
 private:
+  DelayTimer mute_timer_;
   DelayTimer scroll_presets_timer_;
 
   float current_menu_angle_ = 0.0;
