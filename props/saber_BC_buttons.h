@@ -1292,7 +1292,6 @@ private:
   uint32_t last_push_ = millis();
   uint32_t last_blast_ = millis();
   uint32_t saber_off_time_ = millis();
-  uint32_t beep_delay_ = millis();
   uint32_t volume_range_delay_ = millis();
 
 };
