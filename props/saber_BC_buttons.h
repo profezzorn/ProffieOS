@@ -492,28 +492,13 @@ public:
 
     // Mute timer check - play optional mute.wav first.
     if (mute_timer_.timerCheck()) {
-      if (SetMute(true)) {
-        unmute_on_deactivation_ = true;
-        TurnOnHelper();
-      }
+      DoMute();
     }
     // Scroll Presets timer check - avoid beep/wav overlap
     if (scroll_presets_timer_.timerCheck() && scroll_presets_) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
     }
   }  // Loop()
-
-
-  float GetSoundLengthNow(Effect* effect) {
-    RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(effect);
-    if (tmp) {
-      tmp->UpdateSaberBaseSoundInfo();
-      return SaberBase::sound_length * 1000;
-    } else {
-      SaberBase::ClearSoundInfo();
-      return 0;
-    }
-  }
 
 #ifdef SPEAK_BLADE_ID
   void SpeakBladeID(float id) override {
@@ -678,6 +663,13 @@ public:
     saber_off_time_ = millis();
   }
 
+  void DoMute() {
+    if (SetMute(true)) {
+      unmute_on_deactivation_ = true;
+      TurnOnHelper();
+    }
+  }
+
   RefPtr<BufferedWavPlayer> wav_player;
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
@@ -798,7 +790,9 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD, MODE_OFF):
     if (!mode_volume_) {
       if (SFX_mute) {
         hybrid_font.PlayCommon(&SFX_mute);
-        mute_timer_.trigger(GetSoundLengthNow(&SFX_mute));
+        mute_timer_.trigger(SaberBase::sound_length * 1000);
+      } else {
+        DoMute();
       }
     }
     return true;
