@@ -52,7 +52,7 @@ class SoundLibraryTemplate {
 public:
   SoundQueue<16> sound_queue_;
   void Play(const char* file) { sound_queue_.Play(file); }
-  // void Play(SoundToPlay stp) { sound_queue_.Play(stp); }
+  void Play(SoundToPlay stp) { sound_queue_.Play(stp); }
   void Poll(RefPtr<BufferedWavPlayer>& wav_player) {
     sound_queue_.PollSoundQueue(wav_player);
   }
@@ -97,12 +97,13 @@ public:
   void SayNumber(float number, SayType say_type) {
     SayWhole((int)floorf(number));
     switch (say_type) {
-       case SAY_DECIMAL:
+      case SAY_DECIMAL: {
 	 int hundredths = ((int)floorf(number * 100)) % 10;
 	 SayPoint();
 	 SayWhole(hundredths / 10);
 	 SayWhole(hundredths % 10);
         break;
+      }
       default:
         break;
     }
@@ -325,6 +326,6 @@ class SLSPEC {
 
 // These two are for compatibility and should be deprecated.
 using SoundLibrary = SoundLibraryTemplate<MKSPEC<SLSPEC>>;
-#define sound_library_ (*getPtr<SoundLibrary>)
+#define sound_library_ (*getPtr<SoundLibrary>())
 
 #endif  // SOUND_SOUND_LIBRARY_H
