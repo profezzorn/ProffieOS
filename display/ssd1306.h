@@ -474,6 +474,10 @@ public:
   }
 
   void SB_On(EffectLocation location) override {
+    // Delay on.bmp until boot,font, or name message has been displayed for its full duration
+    if (current_effect_ == &IMG_font && t_ < font_config.ProffieOSFontImageDuration) return;
+    if (current_effect_ == &IMG_boot && t_ < font_config.ProffieOSBootImageDuration) return;
+    if (screen_ == SCREEN_MESSAGE && t_ < font_config.ProffieOSTexttImageDuration) return;
     if (!ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration)) {
       ShowDefault();
       last_delay_ = t_ = 0;
