@@ -100,7 +100,13 @@ RFID_Command RFID_Commands[] = {
 Preset testing_presets[] = {
 #if 1
   { "SmthFuzz", "tracks/cantina.wav",
-    StyleRainbowPtr<300, 800>(),
+//    StyleRainbowPtr<300, 800>(),
+    StylePtr<Layers<
+
+    Black,
+     TransitionLoop<AlphaL<Black,Int<0>>,TrDoEffect<TrDelay<1500>,EFFECT_USER1>>,
+     MultiTransitionEffectL<TrConcat<TrFade<3000>,AlphaL<Yellow,Bump<EffectPosition<>,Int<3000>>>,TrFade<3000>>,EFFECT_USER1,10>>>(),
+    
     StyleRainbowPtr<300, 800>(),
     //StylePtr<Layers<RandomBlink<3000,Red,Black>,InOutTrL<TrWipe<300>,TrWipeIn<500>,Black>>>(),
     // StylePtr<ColorCycle<Rgb<0,0,50>, 10, 35, Cyan, 90, 1000, 6000>>(),

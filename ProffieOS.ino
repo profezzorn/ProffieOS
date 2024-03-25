@@ -77,6 +77,10 @@
 #define BOOT_VOLUME VOLUME
 #endif
 
+#ifndef FONT_PATTERN
+#define FONT_PATTERN "*;common"
+#endif
+
 #ifdef SAVE_STATE
 #define SAVE_VOLUME
 #define SAVE_PRESET
@@ -632,6 +636,8 @@ class NoLED;
 #include "modes/color_change_modes.h"
 #include "modes/menu_list.h"
 #include "modes/bool_setting.h"
+#include "modes/color_menues.h"
+#include "modes/sorted_list_menues.h"
 
 BladeConfig* current_config = nullptr;
 class BladeBase* GetPrimaryBlade() {
@@ -690,7 +696,11 @@ int prop_GetBulletCount() {
 class Color16 GetColorArg(int blade, int arg) { return prop.GetColorArg(blade, arg); }
 void SetArg(int blade, int arg, const char* argument) { prop.SetArg(blade, arg, argument); }
 void SetColorArg(int blade, int arg, Color16 color) { prop.SetColorArg(blade, arg, color); }
-
+void SetFont(const char* font) { prop.SetFont(font); }
+void SetTrack(const char* track) { prop.SetTrack(track); }
+const char* GetFont() { return prop.GetFont(); }
+const char* GetTrack() { return prop.GetTrack(); }
+void chdir(const StringPiece font) { prop.chdir(font); }
 
 #if 0
 #include "scripts/test_motion_timeout.h"

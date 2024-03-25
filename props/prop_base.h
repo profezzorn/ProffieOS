@@ -243,8 +243,8 @@ public:
     Clash2(stab, strength);
   }
 
-  virtual bool chdir(const char* dir) {
-    if (strlen(dir) > 1 && dir[strlen(dir)-1] == '/') {
+  virtual bool chdir(const StringPiece dir) {
+    if (dir.len > 1 && dir[dir.len-1] == '/') {
       STDOUT.println("Directory must not end with slash.");
       return false;
     }
@@ -262,15 +262,15 @@ public:
 #endif
 
     char *b = current_directory;
-    for (const char *a = dir; *a; a++) {
+    for (size_t i = 0; i < dir.len; i++) {
       // Skip trailing slash
-      if (*a == '/' && (a[1] == 0 || a[1] == ';'))
+      if (dir[i] == '/' && (dir[i+1] == 0 || dir[i+1] == ';'))
         continue;
-      if (*a == ';') {
+      if (dir[i] == ';') {
         *(b++) = 0;
         continue;
       }
-      *(b++) = *a;
+      *(b++) = dir[i];
     }
     // Two zeroes at end!
     *(b++) = 0;
@@ -1742,6 +1742,24 @@ public:
     SetArg(blade, arg, tmp);
     
     current_preset_.Save();
+  }
+
+  void SetFont(const char* font) {
+    current_preset_.font = mkstr(font);
+    current_preset_.Save();
+    // Reload preset to make the change take effect.
+    SetPreset(current_preset_.preset_num, false);
+  }
+  void SetTrack(const char* font) {
+    current_preset_.track = mkstr(font);
+    current_preset_.Save();
+  }
+  
+  const char* GetFont() {
+    return current_preset_.font.get();
+  }
+  const char* GetTrack() {
+    return current_preset_.track.get();
   }
   
 private:
