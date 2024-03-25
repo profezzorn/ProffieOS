@@ -824,7 +824,7 @@ char current_value[128];
 class TestSortedLineHelper : public SortedLineHelper<128> {
 public:
   TestSortedLineHelper() : SortedLineHelper<128>("testcommand") {}
-  virtual char *get_current_value() {
+  virtual StringPiece get_current_value() {
     return current_value;
   }
 };
@@ -845,7 +845,7 @@ void test_command_line_capture() {
 	int N = x[index];
 	x[index] = *x.rbegin();
 	x.pop_back();
-	const char* tmp = helper.get(N);
+	StringPiece tmp = helper.get(N);
 	// fprintf(stderr, "TMP = %s\n", tmp);
 	CHECK_EQ(tmp[4] - '0', N);
       }

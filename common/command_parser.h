@@ -98,7 +98,7 @@ public:
   
   class InitialPositionFinder : public CommandOutputCaptureHelper<bufsize> {
   public:
-    InitialPositionFinder(SortedLineHelper& helper, const char* current_value) : helper_(helper), current_value_(current_value) {}
+    InitialPositionFinder(SortedLineHelper& helper, const StringPiece current_value) : helper_(helper), current_value_(current_value) {}
 
     void GotLine(const Line<bufsize>& l) override {
       //fprintf(stderr, "GOTLINE %s\n", l.line);
@@ -111,7 +111,7 @@ public:
     int total_ = 0;
     int num_higher_ = 0;
     int num_lower_ = 0;
-    const char* current_value_;
+    const StringPiece current_value_;
   };
   
   class SortedLineFinder : public CommandOutputCaptureHelper<bufsize> {
@@ -214,9 +214,9 @@ public:
     Line<bufsize>& ret_;
   };
 
-  virtual char *get_current_value() = 0;
+  virtual StringPiece get_current_value() = 0;
   
-  const char *get(int n) {
+  const StringPiece get(int n) {
     if (n >= current_value_pos_) {
       if (n == current_value_pos_) {
 	return get_current_value();

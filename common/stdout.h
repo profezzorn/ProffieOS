@@ -155,24 +155,49 @@ int constexpr toLower(char x) {
 }
 
 
-template<size_t bufsize>
-struct Line {
-  int line_number;
-  char line[bufsize];
-  int cmp(const char* other) const {
-    const char* a = line;
-    const char* b = other;
+struct StringPiece {
+  StringPiece(const char* s) : str(s), len(strlen(s)) {}
+  StringPiece(const char* s, size_t l) : str(s), len(l) {}
+  StringPiece(const char* begin, const char* end) : str(begin), len(end - begin) {}
+  StringPiece() : str(0), len(0) {}
+  int cmp(const StringPiece& other) const {
+    const char* a = str;
+    const char* b = other.str;
+    size_t l = 0;
     while (true) {
-      if (!*a && !*b) return 0;
-      if (!*a) return -1;
-      if (!*b) return 1;
+      if (l == len && l == other.len) return 0;
+      if (l == len) return -1;
+      if (l == other.len) return 1;
       char A = toLower(*a);
       char B = toLower(*b);
       if (A != B) return A < B ? -1 : 1;
       a++;
       b++;
+      l++;
     }
   }
+  bool operator<(const StringPiece& other) const { return cmp(other) < 0; }
+  bool operator>(const StringPiece& other) const { return cmp(other) > 0; }
+  bool operator<=(const StringPiece& other) const { return cmp(other) <= 0; }
+  bool operator>=(const StringPiece& other) const { return cmp(other) <= 0; }
+  bool operator==(const StringPiece& other) const { return cmp(other) == 0; }
+  bool operator!=(const StringPiece& other) const { return cmp(other) != 0; }
+  char operator[](size_t x) const { return str[x]; }
+  explicit operator bool() const { return len != 0; }
+
+  void printTo(Print& p) {
+    p.write((const uint8_t*)str, len);
+  }
+
+  const char* str;
+  size_t len;
+};
+
+template<size_t bufsize>
+struct Line {
+  int line_number;
+  char line[bufsize];
+  int cmp(const StringPiece other) const { return StringPiece(line).cmp(other); }
   int cmp(const Line& other) const { return cmp(other.line); }
   bool operator<(const Line& other) const { return cmp(other) < 0; }
   bool operator<=(const Line& other) const { return cmp(other) <= 0; }
@@ -181,12 +206,12 @@ struct Line {
   bool operator==(const Line& other) const { return cmp(other) == 0; }
   bool operator!=(const Line& other) const { return cmp(other) != 0; }
 
-  bool operator<(const char* other) const { return cmp(other) < 0; }
-  bool operator<=(const char* other) const { return cmp(other) <= 0; }
-  bool operator>(const char* other) const { return cmp(other) > 0; }
-  bool operator>=(const char* other) const { return cmp(other) >= 0; }
-  bool operator==(const char* other) const { return cmp(other) == 0; }
-  bool operator!=(const char* other) const { return cmp(other) != 0; }
+  bool operator<(const StringPiece other) const { return cmp(other) < 0; }
+  bool operator<=(const StringPiece other) const { return cmp(other) <= 0; }
+  bool operator>(const StringPiece other) const { return cmp(other) > 0; }
+  bool operator>=(const StringPiece other) const { return cmp(other) >= 0; }
+  bool operator==(const StringPiece other) const { return cmp(other) == 0; }
+  bool operator!=(const StringPiece other) const { return cmp(other) != 0; }
 
   operator bool() const { return line[0] != 0; }
   void clear() { line[0] = 0; line_number=-1; }
