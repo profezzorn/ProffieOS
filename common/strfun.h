@@ -125,19 +125,18 @@ bool Sscanf(const char* str, const char* pattern, const char** arg) {
 }
 
 
-const char* format_pattern(const char* pattern, const char* value) {
+const char* format_pattern(const StringPiece pattern, const StringPiece value) {
   size_t stars = 0;
-  for (const char *p = pattern;*p;p++) if (*p == '*') stars++;
-  size_t vlen = strlen(value);
-  size_t len = strlen(pattern) + stars * (vlen - 1) + 1;
+  for (size_t i = 0; i < pattern.len; i++) if (pattern[i] == '*') stars++;
+  size_t len = pattern.len + stars * (value.len - 1) + 1;
   char* ret = (char*) malloc(len);
   char* out = ret;
-  for (const char *p = pattern;*p;p++) {
-    if (*p == '*') {
-      strcpy(out, value);
-      out+=vlen;
+  for (size_t i = 0; i < pattern.len; i++) {
+    if (pattern[i] == '*') {
+      value.paste(out);
+      out += value.len;
     } else {
-      *out = *p;
+      *out = pattern[i];
       out++;
     }
   }

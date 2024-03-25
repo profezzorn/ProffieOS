@@ -189,6 +189,8 @@ struct StringPiece {
     p.write((const uint8_t*)str, len);
   }
 
+  void paste(char* to) const { memcpy(to, str, len); }
+
   const char* str;
   size_t len;
 };
