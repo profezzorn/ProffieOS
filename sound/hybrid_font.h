@@ -31,6 +31,7 @@ public:
     CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
 /* To-Do, possibly differently
 #ifdef OLED_USE_BLASTER_IMAGES
+    CONFIG_VARIABLE2(ProffieOSFireImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSReloadImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSEmptyImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSJamImageDuration, 1000.0f);
@@ -151,6 +152,8 @@ public:
   float ProffieOSBootImageDuration;
 /* To-Do, possibly differently
 #ifdef OLED_USE_BLASTER_IMAGES
+  // for OLED displays, the time a blast.bmp will play
+  float ProffieOSFireImageDuration;
   // for OLED displays, the time a reload.bmp will play
   float ProffieOSReloadImageDuration;
   // for OLED displays, the time a empty.bmp will play
