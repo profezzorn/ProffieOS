@@ -661,6 +661,7 @@ public:
       Off();
     }
     saber_off_time_ = millis();
+    battle_mode_ = false;
   }
 
   void DoMute() {
