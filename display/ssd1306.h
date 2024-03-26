@@ -22,6 +22,7 @@ IMAGE_FILESET(lock);
 IMAGE_FILESET(idle);
 /* To-Do, possibly differently
 #ifdef OLED_USE_BLASTER_IMAGES
+IMAGE_FILESET(blast);
 IMAGE_FILESET(reload);
 IMAGE_FILESET(empty);
 IMAGE_FILESET(jam);
@@ -576,26 +577,29 @@ public:
        ShowFileWithSoundLength(&IMG_pstoff, font_config.ProffieOSPstoffImageDuration);
        break;
 /* To-Do, possibly differently
-   #ifdef OLED_USE_BLASTER_IMAGES
-   case EFFECT_RELOAD:
-   ShowFileWithSoundLength(&IMG_reload, font_config.ProffieOSReloadImageDuration);
-   break;
-   case EFFECT_EMPTY:
-   ShowFileWithSoundLength(&IMG_empty, font_config.ProffieOSEmptyImageDuration);
-   break;
-   case EFFECT_JAM:
-   ShowFileWithSoundLength(&IMG_jam, font_config.ProffieOSJamImageDuration);
-   break;
-   case EFFECT_CLIP_IN:
-   ShowFileWithSoundLength(&IMG_clipin, font_config.ProffieOSClipinImageDuration);
-   break;
-   case EFFECT_CLIP_OUT:
-   ShowFileWithSoundLength(&IMG_clipout, font_config.ProffieOSClipoutImageDuration);
-   break;
-   case EFFECT_DESTRUCT:
-   ShowFileWithSoundLength(&IMG_destruct, font_config.ProffieOSDestructImageDuration);
-   break;
-   #endif
+#ifdef OLED_USE_BLASTER_IMAGES
+     case EFFECT_FIRE:
+       ShowFileWithSoundLength(&IMG_blast, font_config.ProffieOSFireImageDuration);
+       break;
+     case EFFECT_RELOAD:
+       ShowFileWithSoundLength(&IMG_reload, font_config.ProffieOSReloadImageDuration);
+       break;
+     case EFFECT_EMPTY:
+       ShowFileWithSoundLength(&IMG_empty, font_config.ProffieOSEmptyImageDuration);
+       break;
+     case EFFECT_JAM:
+       ShowFileWithSoundLength(&IMG_jam, font_config.ProffieOSJamImageDuration);
+       break;
+     case EFFECT_CLIP_IN:
+       ShowFileWithSoundLength(&IMG_clipin, font_config.ProffieOSClipinImageDuration);
+       break;
+     case EFFECT_CLIP_OUT:
+       ShowFileWithSoundLength(&IMG_clipout, font_config.ProffieOSClipoutImageDuration);
+       break;
+     case EFFECT_DESTRUCT:
+       ShowFileWithSoundLength(&IMG_destruct, font_config.ProffieOSDestructImageDuration);
+       break;
+#endif
 */
        break;
      default: break;
