@@ -40,6 +40,10 @@ class Color8 {
   enum Byteorder {
     NONE = 0,
 
+    R = 0x1,
+    G = 0x2,
+    B = 0x3,
+
     // RGB colors
     BGR=0x321,
     BRG=0x312,
@@ -80,11 +84,17 @@ class Color8 {
   };
 
   static int num_bytes(int byteorder) {
-    return byteorder <= 0xfff ? 3 : 4;
+    return
+      byteorder <= 0xf ? 1 :
+      byteorder <= 0xfff ? 3 :
+      4;
   }
 
   static constexpr int inline_num_bytes(int byteorder) __attribute__((always_inline)) {
-    return byteorder <= 0xfff ? 3 : 4;
+    return
+      byteorder <= 0xf ? 1 :
+      byteorder <= 0xfff ? 3 :
+      4;
   }
 
 

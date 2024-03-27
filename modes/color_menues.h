@@ -92,7 +92,7 @@ struct ColorBlueMode : public SPEC::GammaMode {
 template<class SPEC, class MENU>
 struct SaveColorMenuEntry : public MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>->SaySave();
+    getSL<SPEC>()->SaySave();
   }
   void select(int entry) override {
     getPtr<MENU>()->save();

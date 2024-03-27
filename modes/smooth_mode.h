@@ -63,8 +63,6 @@ struct SmoothMode : public SPEC::SelectCancelMode {
   float last_angle_;
 };
 
-// TODO: Smooth mode without wraparound.
-
 } // namespace mode
 
 #endif

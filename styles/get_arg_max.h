@@ -74,7 +74,6 @@ struct GetArgMaxT<ARG, TrSelect, IntArg<ARG, DEFAULT_VALUE>, REST...> {
   static const int value = combine_args(A, B);
 };
 
-
 template<int ARG, int DEFAULT_VALUE, int MAX>
 struct GetArgMax< SingleValueAdapter<ModSVF<IntArgSVF<ARG, DEFAULT_VALUE>, IntSVF<MAX> >>, ARG> { static const int value = MAX; };
 

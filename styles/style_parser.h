@@ -210,6 +210,18 @@ public:
     return ap.nth(arg);
   }
 
+  // Returns the ArgInfo for this style.
+  ArgInfo GetArgInfo(const char* str) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return ArgInfo();
+    GetUsedArgsParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    // Ignore the two "builtin" arguments
+    if (FirstWord(str, "builtin") && ap.used() <= 2) return ArgInfo();
+    return ap.getArgInfo();
+  }
+
   // Get the Nth argument of a style string.
   // The output will be copied to |output|.
   // If the string itself doesn't contain that argument, the style

@@ -638,6 +638,7 @@ class NoLED;
 #include "modes/bool_setting.h"
 #include "modes/color_menues.h"
 #include "modes/sorted_list_menues.h"
+#include "modes/style_option_modes.h"
 
 BladeConfig* current_config = nullptr;
 class BladeBase* GetPrimaryBlade() {
@@ -653,6 +654,17 @@ class BladeBase* GetPrimaryBlade() {
 int GetBladeNumber(BladeBase *blade) {
   ONCEPERBLADE(BLADE_NUMBER_FINDER);
   return 0;
+}
+
+#define RETURN_BLADE_BY_NUMBER(N) case N: return current_config->blade##N;
+
+// 1 is first blade
+BladeBase* GetBladeByNumber(int n) {
+  if (!current_config) return nullptr;
+  switch (n) {
+    ONCEPERBLADE(RETURN_BLADE_BY_NUMBER);
+  }
+  return nullptr;
 }
 
 const char* GetSaveDir() {
@@ -693,9 +705,9 @@ int prop_GetBulletCount() {
 }
 #endif
 
-class Color16 GetColorArg(int blade, int arg) { return prop.GetColorArg(blade, arg); }
-void SetArg(int blade, int arg, const char* argument) { prop.SetArg(blade, arg, argument); }
-void SetColorArg(int blade, int arg, Color16 color) { prop.SetColorArg(blade, arg, color); }
+const char* GetStyle(int blade) { return prop.GetStyle(blade); }
+void SetStyle(int blade, LSPtr<char> style);
+void SetStyle(int blade, LSPtr<char> style) { prop.SetStyle(blade, std::move(style)); }
 void SetFont(const char* font) { prop.SetFont(font); }
 void SetTrack(const char* track) { prop.SetTrack(track); }
 const char* GetFont() { return prop.GetFont(); }
