@@ -7,7 +7,7 @@ template<class SPEC>
 class SelectArgSmoothMode : public SPEC::SmoothMode {
 public:
   int get() override { return GetIntArg(menu_current_blade, menu_current_arg); }
-  int set(int x) {
+  void set(int x) {
     value_ = x;
     if (!getSL<SPEC>()->busy()) {
       getSL<SPEC>()->SayWhole(x * 100 / 32768);
@@ -30,7 +30,7 @@ class SelectArgTime : public SPEC::SmoothMode {
 public:
   int get() override { return GetIntArg(menu_current_blade, menu_current_arg); }
   float t(int x) { return powf(x / 32768.0f, 2.0) * 30.0; }
-  int set(int x) {
+  void set(int x) {
     value_ = x;
     if (!getSL<SPEC>()->busy()) {
       getSL<SPEC>()->SayNumber(t(x), SAY_DECIMAL);
