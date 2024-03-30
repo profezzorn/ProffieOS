@@ -7,7 +7,7 @@ saber_BC_buttons.h
   Distributed under the terms of the GNU General Public License v3.
   http://www.gnu.org/licenses/
 
-Includes 1, or 2 button controls.
+Includes 1 and 2 button controls.
 Incorporates an intuitive control scheme so button actions are consistant
 whether blade is on or off.
 Best if used with ProffieOS_Voicepack spoken menu prompts.
