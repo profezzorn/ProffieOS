@@ -802,14 +802,8 @@ public:
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
-      // storage of unused cases
       case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
-        // if (accel_.x < -0.15) { // maybe use for drag on ceiling???
-        //   pointing_down_ = true;
-        // } else {
-        //   pointing_down_ = false;
-        // }
       return true;
 
 // Gesture Ignition Controls
