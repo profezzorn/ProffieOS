@@ -581,6 +581,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/mod.h"
 #include "functions/readpin.h"
 #include "functions/bullet_count.h"
+#include "functions/blaster_mode.h"
 
 // transitions
 #include "transitions/fade.h"
@@ -704,6 +705,10 @@ int prop_GetBulletCount() {
     return prop.GetBulletCount();
 }
 #endif
+
+int prop_GetBlasterMode() {
+    return prop.GetBlasterMode();
+}
 
 const char* GetStyle(int blade) { return prop.GetStyle(blade); }
 void SetStyle(int blade, LSPtr<char> style);
