@@ -706,9 +706,11 @@ int prop_GetBulletCount() {
 }
 #endif
 
+#ifdef PROP_HAS_GETBLASTERMODE
 int prop_GetBlasterMode() {
     return prop.GetBlasterMode();
 }
+#endif
 
 const char* GetStyle(int blade) { return prop.GetStyle(blade); }
 void SetStyle(int blade, LSPtr<char> style);
