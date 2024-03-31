@@ -1,5 +1,3 @@
-// blaster_mode.h
-
 #ifndef FUNCTIONS_BLASTER_MODE_H
 #define FUNCTIONS_BLASTER_MODE_H
 
