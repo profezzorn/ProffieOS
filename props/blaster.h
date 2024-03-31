@@ -128,6 +128,10 @@ public:
 
   BlasterMode blaster_mode = BLASTER_DEFAULT_MODE;
 	
+  int GetBlasterMode() const {
+    return blaster_mode;
+  }
+
   virtual void SetBlasterMode(BlasterMode to_mode) {
     if (!auto_firing_) {
       blaster_mode = to_mode;
