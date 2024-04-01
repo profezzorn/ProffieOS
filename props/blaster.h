@@ -87,6 +87,8 @@ mdauto		Sound made when switching to AUTO mode
 #ifndef PROPS_BLASTER_H
 #define PROPS_BLASTER_H
 
+#define PROP_HAS_GETBLASTERMODE
+
 #ifndef BLASTER_DEFAULT_MODE
 #define BLASTER_DEFAULT_MODE MODE_STUN
 #endif
@@ -128,6 +130,10 @@ public:
 
   BlasterMode blaster_mode = BLASTER_DEFAULT_MODE;
 	
+  int GetBlasterMode() const {
+    return blaster_mode;
+  }
+
   virtual void SetBlasterMode(BlasterMode to_mode) {
     if (!auto_firing_) {
       blaster_mode = to_mode;
