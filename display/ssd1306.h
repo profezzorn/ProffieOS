@@ -366,7 +366,12 @@ public:
           display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
         }
         next_screen_ = SCREEN_PLI;
-        if (font_config.ProffieOSTextMessageDuration != -1) {
+        // Give user option to set longer than default startup screen duration.
+        // but ensure startup info has enough time to be read.
+        // Prefer TextMessageDuration. If set < 3500 default, override with default value.
+        // Fall back to FontImageDuration, same logic.
+        // Else if neither entries exist, default 3500ms.
+	if (font_config.ProffieOSTextMessageDuration != -1) {
           return font_config.ProffieOSTextMessageDuration >= 3500 ?
                  font_config.ProffieOSTextMessageDuration :
                  3500;
@@ -529,8 +534,10 @@ public:
        looped_on_ = Tristate::Unknown;
        looped_idle_ = Tristate::Unknown;
        if (IMG_font) {
-        ShowFileWithSoundLength(&IMG_font,
-          GetCorrectDuration(font_config.ProffieOSFontImageDuration, 0.0, 3000.0));
+         // If font_config.duration is greater than 0, use the value.
+         // If it's -1.0, use a default of 3000ms. Otherwise, send 0..
+	 ShowFileWithSoundLength(&IMG_font,
+           GetCorrectDuration(font_config.ProffieOSFontImageDuration, 0.0, 3000.0));
        } else if (prop.current_preset_name()) {
 	 SetMessage(prop.current_preset_name());
 	 SetScreenNow(SCREEN_MESSAGE);
