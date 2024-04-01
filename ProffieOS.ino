@@ -700,7 +700,7 @@ bool ScanBladeIdNow() {
 }
 #endif
 
-#ifdef BLASTER_SHOTS_UNTIL_EMPTY
+#ifdef PROP_HAS_BULLET_COUNT
 int prop_GetBulletCount() {
     return prop.GetBulletCount();
 }
