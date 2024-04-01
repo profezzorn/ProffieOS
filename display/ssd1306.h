@@ -488,12 +488,14 @@ public:
   }
 
   void SB_On(EffectLocation location) override {
-      float fontDuration = GetCorrectDuration(font_config.ProffieOSFontImageDuration, 0.0, 3000.0);
-      float bootDuration = GetCorrectDuration(font_config.ProffieOSBootImageDuration, font_config.ProffieOSFontImageDuration, 3500.0);
-      float textMessageDuration = GetCorrectDuration(font_config.ProffieOSTextMessageDuration, font_config.ProffieOSFontImageDuration, 3500.0);
-      if (current_effect_ == &IMG_font && t_ < fontDuration) return;
-      if (current_effect_ == &IMG_boot && t_ < bootDuration) return;
-      if (screen_ == SCREEN_MESSAGE && t_ < textMessageDuration) return;
+    // Delay on.bmp until boot,font, or name message has been displayed for its full duration 
+    float fontDuration = GetCorrectDuration(font_config.ProffieOSFontImageDuration, 0.0, 3000.0);
+    float bootDuration = GetCorrectDuration(font_config.ProffieOSBootImageDuration, font_config.ProffieOSFontImageDuration, 3500.0);
+    float textMessageDuration = GetCorrectDuration(font_config.ProffieOSTextMessageDuration, font_config.ProffieOSFontImageDuration, 3500.0);
+
+    if (current_effect_ == &IMG_font && t_ < fontDuration) return;
+    if (current_effect_ == &IMG_boot && t_ < bootDuration) return;
+    if (screen_ == SCREEN_MESSAGE && t_ < textMessageDuration) return;
     if (!ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration)) {
       ShowDefault();
       last_delay_ = t_ = 0;
