@@ -1,7 +1,7 @@
 #ifndef FUNCTIONS_BULLETCOUNT_H
 #define FUNCTIONS_BULLETCOUNT_H
 
-#ifdef BLASTER_SHOTS_UNTIL_EMPTY
+#ifdef PROP_HAS_BULLET_COUNT
 
 int prop_GetBulletCount();
 
