@@ -366,19 +366,10 @@ public:
           display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
         }
         next_screen_ = SCREEN_PLI;
-        // Give user option to set longer than default startup screen duration.
-        // but ensure startup info has enough time to be read.
-        // Prefer TextMessageDuration. If set < 3500 default, override with default value.
-        // Fall back to FontImageDuration, same logic.
-        // Else if neither entries exist, default 3500ms.
-	if (font_config.ProffieOSTextMessageDuration != -1) {
-          return font_config.ProffieOSTextMessageDuration >= 3500 ?
-                 font_config.ProffieOSTextMessageDuration :
-                 3500;
-        } else if (font_config.ProffieOSFontImageDuration != -1) {
-          return font_config.ProffieOSFontImageDuration >= 3500 ?
-                 font_config.ProffieOSFontImageDuration :
-                 3500;
+        if (font_config.ProffieOSTextMessageDuration != -1) {
+          return font_config.ProffieOSTextMessageDuration;
+        } else if (font_config.ProffieOSFontImageDuration > 0) {
+          return font_config.ProffieOSFontImageDuration;
         } else {
           return 3500;
         }
