@@ -21,7 +21,7 @@ public:
     CONFIG_VARIABLE2(ProffieOSAnimationFrameRate, 0.0f);
     CONFIG_VARIABLE2(ProffieOSTextMessageDuration, -1.0f);
     CONFIG_VARIABLE2(ProffieOSBootImageDuration, -1.0f);
-    CONFIG_VARIABLE2(ProffieOSFontImageDuration, 3000.0f);
+    CONFIG_VARIABLE2(ProffieOSFontImageDuration, -1.0f);
     CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSClashImageDuration, 500.0f);
     CONFIG_VARIABLE2(ProffieOSForceImageDuration, 2000.0f);
