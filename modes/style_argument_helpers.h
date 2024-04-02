@@ -16,6 +16,8 @@ bool isTimeArg(int arg) {
     case RETRACTION_TIME_ARG:
     case RETRACTION_DELAY_ARG:
       return true;
+    default:
+      return false;
   }
 }
 

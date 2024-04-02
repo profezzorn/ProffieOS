@@ -581,6 +581,7 @@ struct is_same_type<T, T> { static const bool value = true; };
 #include "functions/mod.h"
 #include "functions/readpin.h"
 #include "functions/bullet_count.h"
+#include "functions/blaster_mode.h"
 
 // transitions
 #include "transitions/fade.h"
@@ -703,6 +704,12 @@ bool ScanBladeIdNow() {
 #ifdef BLASTER_SHOTS_UNTIL_EMPTY
 int prop_GetBulletCount() {
     return prop.GetBulletCount();
+}
+#endif
+
+#ifdef PROP_HAS_GETBLASTERMODE
+int prop_GetBlasterMode() {
+    return prop.GetBlasterMode();
 }
 #endif
 
