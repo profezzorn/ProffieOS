@@ -122,7 +122,7 @@ public:
   }
 
 #define ADD_SL_SOUND(NAME, BASE)					\
-  void Say##NAME() { Play(BASE ".wav"); }				\
+  void Say##NAME() { this->Play(BASE ".wav"); }				\
   /* t for "trampoline" */						\
   struct t##NAME { static void say() { getPtr<SPEC::SoundLibrary>->Say##NAME(); } }
   
@@ -186,6 +186,7 @@ public:
   ADD_SL_SOUND(1000, "thousand");
   
   ADD_SL_SOUND(Point, "mpoint");
+  
   ADD_SL_SOUND(Accept, "maccept");
   ADD_SL_SOUND(AdjustBlackLevel, "mblack");
   ADD_SL_SOUND(AdjustColorHue, "mhue");
@@ -194,7 +195,6 @@ public:
   ADD_SL_SOUND(Auto, "mauto");
   ADD_SL_SOUND(BaseColor, "mbase");
   ADD_SL_SOUND(BatteryLevel, "mbatt");
-  ADD_SL_SOUND(TheBatteryLevelIs, "battlevl");
   ADD_SL_SOUND(BlastColor, "mblast");
   ADD_SL_SOUND(Cancel, "mcancel");
   ADD_SL_SOUND(ChoreographyBegin, "chreobgn");
@@ -234,6 +234,7 @@ public:
   ADD_SL_SOUND(Exit, "mexit");
   ADD_SL_SOUND(ForcePush, "mpush");
   ADD_SL_SOUND(ForcePushLength, "mpushlen");
+  ADD_SL_SOUND(GestureMenu, "mgestsub");
   ADD_SL_SOUND(GesturesOff, "mgestoff");
   ADD_SL_SOUND(GesturesOn, "mgeston");
   ADD_SL_SOUND(IgnitionColor, "mignite");
@@ -282,27 +283,27 @@ public:
   ADD_SL_SOUND(SelectOption, "moption");
   ADD_SL_SOUND(SelectPreset, "mpreset");
   ADD_SL_SOUND(SelectStyle, "mstylsel");
-  ADD_SL_SOUND(StabIgnition, "mstabon");
+  ADD_SL_SOUND(SettingsMenu, "msetsub");
   ADD_SL_SOUND(StabColor, "mstab");
+  ADD_SL_SOUND(StabIgnition, "mstabon");
   ADD_SL_SOUND(Style, "mstylnum");
   ADD_SL_SOUND(StyleMenu, "mstylesb");
   ADD_SL_SOUND(StyleOptions, "mstylopt");
+  ADD_SL_SOUND(StyleSettings, "stylstm");
   ADD_SL_SOUND(SwingColor, "mswing");
   ADD_SL_SOUND(SwingIgnition, "mswingon");
   ADD_SL_SOUND(SwingOnSpeed, "mswingsp");
   ADD_SL_SOUND(SwingOption, "mswngopt");
+  ADD_SL_SOUND(TheBatteryLevelIs, "battlevl");
   ADD_SL_SOUND(ThrustIgnition, "mthrston");
   ADD_SL_SOUND(TwistIgnition, "mtwiston");
   ADD_SL_SOUND(TwistRetraction, "mtwstoff");
   ADD_SL_SOUND(Up, "mup"); // Sound for increase
   ADD_SL_SOUND(Volts, "mvolts");
+  ADD_SL_SOUND(VolumeDown, "voldown"); // Sound for decreasing volume
   ADD_SL_SOUND(VolumeMenuEnd, "vmend");
   ADD_SL_SOUND(VolumeUp, "volup"); // Sound for increasing volume
   ADD_SL_SOUND(ZoomingIn, "mzoom"); // Sound for color menu "zooming in"
-  ADD_SL_SOUND(VolumeDown, "voldown"); // Sound for decreasing volume
-  ADD_SL_SOUND(GestureMenu, "mgestsub");
-  ADD_SL_SOUND(SettingsMenu, "msetsub");
-  ADD_SL_SOUND(StyleSettings, "stylstm");
 
 #ifdef SAY_COLOR_LIST
   void SayColor(ColorNumber n) {
@@ -318,6 +319,36 @@ public:
     }
   }
 };
+
+template<class SPEC>
+class SoundLibraryV2Template : public SoundLibraryTemplate<SPEC> {
+  static const int SoundLibraryVersion = 2;
+
+  ADD_SL_SOUND(AdjustRed, "madjred");
+  ADD_SL_SOUND(AdjustBlue, "madblue");
+  ADD_SL_SOUND(AdjustGreen, "madjgren");
+  ADD_SL_SOUND(AdjustSaturation, "madjsat");
+  ADD_SL_SOUND(SelectColor, "mselcol");
+  ADD_SL_SOUND(NoColorSelected, "mnoselcl");
+  ADD_SL_SOUND(UseSelectedColor, "muselcol");
+
+  ADD_SL_SOUND(MovePresetUp, "mmpsetup");
+  ADD_SL_SOUND(MovePresetDown, "mmpsetdn");
+  ADD_SL_SOUND(MovePresetToBeginning, "mmpsetdn");
+
+  ADD_SL_SOUND(InsertSelectedPreset, "minpset");
+  ADD_SL_SOUND(MoveSelectedPreset, "mmpset");
+  ADD_SL_SOUND(NoPresetSelected, "mnopsel");
+
+  ADD_SL_SOUND(NoStyleSelected, "mnostsel");
+  ADD_SL_SOUND(ApplyColorsFromSelectedStyle, "macolsty");
+  ADD_SL_SOUND(ApplyStyleArgumentsFromSelectedStyle, "maargsty");
+
+  // Sound used to indicate that there are no more options
+  // or list entries.
+  ADD_SL_SOUND(ListEndBuzz, "mbuzz");
+};
+
 
 template<class SPEC>
 class SLSPEC {

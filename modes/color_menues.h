@@ -106,6 +106,9 @@ using ColorSelectList = typename SPEC::template MenuEntryMenu<
   SubMenuEntry<typename SPEC::ColorRedMode, typename SPEC::SoundLibrary::tRed>,
   SubMenuEntry<typename SPEC::ColorGreenMode, typename SPEC::SoundLibrary::tGreen>,
   SubMenuEntry<typename SPEC::ColorBlueMode, typename SPEC::SoundLibrary::tBlue>,
+  SPEC::SelectColorEntry,
+  SPEC::UseSelectedColorEntry,
+  SPEC::ResetToDefaultEntry,
   SaveColorMenuEntry<SPEC, MENU>>;
 
 template<class SPEC>

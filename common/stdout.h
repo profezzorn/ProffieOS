@@ -158,7 +158,7 @@ int constexpr toLower(char x) {
 struct StringPiece {
   StringPiece(const char* s) : str(s), len(strlen(s)) {}
   StringPiece(const char* s, size_t l) : str(s), len(l) {}
-  StringPiece(const char* begin, const char* end) : str(begin), len(end - begin) {}
+  StringPiece(const char* begin, const char* end) : str(begin), len(end >= begin ? end - begin : 0) {}
   StringPiece() : str(0), len(0) {}
   int cmp(const StringPiece& other) const {
     const char* a = str;
@@ -190,6 +190,13 @@ struct StringPiece {
   }
 
   void paste(char* to) const { memcpy(to, str, len); }
+
+  bool contains(char c) const {
+    for (size_t i = 0; i < len; i++) {
+      if (str[i] == c) return true;
+    }
+    return false;
+  }
 
   const char* str;
   size_t len;

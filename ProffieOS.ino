@@ -638,6 +638,7 @@ class NoLED;
 #include "modes/bool_setting.h"
 #include "modes/color_menues.h"
 #include "modes/sorted_list_menues.h"
+#include "modes/preset_modes.h"
 #include "modes/style_option_modes.h"
 
 BladeConfig* current_config = nullptr;

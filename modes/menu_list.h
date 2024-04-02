@@ -20,9 +20,24 @@ struct MenuEntry {
 
 template<class SUBMENU, class SOUND>
 struct SubMenuEntry : public MenuEntry {
-  static const int size = 1;
   void say(int entry) override { SOUND::say(); }
   void select(int entry) override { pushMode<SUBMENU>(); }
+};
+
+// CMD and arg are expected to be ByteArray.
+template<class CMD, class ARG, class SOUND>
+struct CommandMenuEntry : public MenuEntry {
+  void say(int entry) override { SOUND::say(); }
+  void select(int entry) override {
+    CommandParser::DoParse(CMD::str, ARG::str);
+  }
+};
+
+
+template<class SOUND>
+struct PopMenuEntry : public MenuEntry {
+  void say(int entry) override { SOUND::say(); }
+  void select(int entry) override { popMode(); }
 };
 
 template<class A, class B>

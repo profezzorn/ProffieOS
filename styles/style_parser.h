@@ -149,7 +149,15 @@ public:
     delete style->style_allocator->make();
     return ap.next();
   }
-
+  bool GetBuiltinPos(const char* str, int* preset, int* blade) {
+    *preset = -1;
+    *blade = -1;
+    if (!FirstWord(str, "builtin")) return false;
+    ArgParser ap(SkipWord(str));
+    *preset = strtol(ap.GetArg(1, "", ""), nullptr, 10);
+    *blade = strtol(ap.GetArg(2, "", ""), nullptr, 10);
+    return *preset >= 0 && *blade >= 1;
+  }
   // Returns the maximum argument used.
   int MaxUsedArgument(const char* str) {
     NamedStyle* style = FindStyle(str);
@@ -370,6 +378,7 @@ public:
       end = SkipWord(end);
     }
     operator bool() const { return end > start; }
+    bool contains(char c) { return StringPiece(start, end).contains(c); }
     int len() const {
       if (end == start) return 2;
       return end - start;
@@ -423,6 +432,43 @@ public:
 #if defined(DEBUG)
     if (strlen(ret) != len) {
       STDOUT << "FATAL ERROR IN COPYARGUMENTS: len = " << len << " strlen = " << strlen(ret) << "\n";
+    }
+#endif    
+    return LSPtr<char>(ret);
+  }
+
+  // Takes the style identifier "builtin X Y" and all numeric arguments from |to|
+  // and all color arguments from |from| and puts them together into one string.
+  LSPtr<char> CopyColorArguments(const char* from, const char* to) {
+    int len = 0;
+    {
+      ArgumentIterator FROM(from);
+      ArgumentIterator TO(to);
+      for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
+	if (FROM.contains(',') || TO.contains(',')) {
+	  len += FROM.len();
+	} else {
+	  len += TO.len();
+	}
+      }
+    }
+    char* ret = (char*) malloc(len + 1);
+    if (ret) {
+      char* tmp = ret;
+      ArgumentIterator FROM(from);
+      ArgumentIterator TO(to);
+      for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
+	if (FROM.contains(',') || TO.contains(',')) {
+	  FROM.append(&tmp);
+	} else {
+	  TO.append(&tmp);
+	}
+      }
+    }
+    // STDOUT << "CopyArguments(from=" << from << " to=" << to << ") = " << ret << "\n";
+#if defined(DEBUG)
+    if (strlen(ret) != len) {
+      STDOUT << "FATAL ERROR IN COPYCOLORARGUMENTS: len = " << len << " strlen = " << strlen(ret) << "\n";
     }
 #endif    
     return LSPtr<char>(ret);
