@@ -365,7 +365,7 @@ public:
           display_->DrawText("installed: ",0,47, Starjedi10pt7bGlyphs);
           display_->DrawText(install_time,0,63, Starjedi10pt7bGlyphs);
         }
-        next_screen_ = SCREEN_PLI;
+        next_screen_ = SCREEN_DEFAULT;
         if (font_config.ProffieOSTextMessageDuration != -1) {
           return font_config.ProffieOSTextMessageDuration;
         } else if (font_config.ProffieOSFontImageDuration > 0) {
@@ -395,23 +395,19 @@ public:
 
       case SCREEN_ERROR_MESSAGE:
       case SCREEN_MESSAGE: {
-        uint32_t text_time;
+  uint32_t t;
         if (font_config.ProffieOSTextMessageDuration != -1) {
-          text_time = (font_config.ProffieOSTextMessageDuration == 0 ?
-                       SaberBase::sound_length * 1000 :
-                       font_config.ProffieOSTextMessageDuration);
-        } else if (font_config.ProffieOSFontImageDuration != -1) {
-          text_time = (font_config.ProffieOSFontImageDuration == 0 ?
-                       SaberBase::sound_length * 1000 :
-                       font_config.ProffieOSFontImageDuration);
+    t = font_config.ProffieOSTextMessageDuration;
+        } else if (font_config.ProffieOSFontImageDuration > 0) {
+    t = font_config.ProffieOSFontImageDuration;
         } else {
-          text_time = 3000;
+    t = 3500;
         }
-        if (t_ >= text_time) {
-	  screen_ = SCREEN_DEFAULT;
-	  ShowDefault();
-	  return FillFrameBuffer2(advance);
-	}
+  if (t_ >= t) {
+    screen_ = SCREEN_DEFAULT;
+    ShowDefault();
+    return FillFrameBuffer2(advance);
+  }
         Clear();
         // Aurebesh Font option.
 #ifdef USE_AUREBESH_FONT
@@ -479,14 +475,10 @@ public:
   }
 
   void SB_On(EffectLocation location) override {
-    // Delay on.bmp until boot,font, or name message has been displayed for its full duration 
-    float fontDuration = GetCorrectDuration(font_config.ProffieOSFontImageDuration, 0.0, 3000.0);
-    float bootDuration = GetCorrectDuration(font_config.ProffieOSBootImageDuration, font_config.ProffieOSFontImageDuration, 3500.0);
-    float textMessageDuration = GetCorrectDuration(font_config.ProffieOSTextMessageDuration, font_config.ProffieOSFontImageDuration, 3500.0);
-
-    if (current_effect_ == &IMG_font && t_ < fontDuration) return;
-    if (current_effect_ == &IMG_boot && t_ < bootDuration) return;
-    if (screen_ == SCREEN_MESSAGE && t_ < textMessageDuration) return;
+    // Delay on.bmp until boot,font, or name message has been displayed for its full duration
+    if (current_effect_ == &IMG_font) return;
+    if (current_effect_ == &IMG_boot) return;
+    if (screen_ == SCREEN_STARTUP || screen_ == SCREEN_MESSAGE || screen_ == SCREEN_ERROR_MESSAGE) return;
     if (!ShowFile(&IMG_on, font_config.ProffieOSOnImageDuration)) {
       ShowDefault();
       last_delay_ = t_ = 0;
@@ -515,27 +507,18 @@ public:
     ShowFile(e, round(duration));
   }
 
-  float GetCorrectDuration(float specificDuration, float fallbackDuration, float defaultDuration) {
-      if (specificDuration != -1.0) {
-          return specificDuration > 0.0 ? specificDuration : 0.0;
-      }
-      return fallbackDuration > 0.0 ? fallbackDuration : defaultDuration;
-  }
  void SB_Effect2(EffectType effect, EffectLocation location) override {
    switch (effect) {
      case EFFECT_NEWFONT:
        looped_on_ = Tristate::Unknown;
        looped_idle_ = Tristate::Unknown;
        if (IMG_font) {
-         // If font_config.duration is greater than 0, use the value.
-         // If it's -1.0, use a default of 3000ms. Otherwise, send 0..
-	 ShowFileWithSoundLength(&IMG_font,
-           GetCorrectDuration(font_config.ProffieOSFontImageDuration, 0.0, 3000.0));
+   ShowFileWithSoundLength(&IMG_font, font_config.ProffieOSFontImageDuration);
        } else if (prop.current_preset_name()) {
-	 SetMessage(prop.current_preset_name());
-	 SetScreenNow(SCREEN_MESSAGE);
+   SetMessage(prop.current_preset_name());
+   SetScreenNow(SCREEN_MESSAGE);
        } else if (IMG_idle) {
-	 ShowFile(&IMG_idle, 3600000.0);
+   ShowFile(&IMG_idle, 3600000.0);
        }
        break;
      case EFFECT_LOCKUP_BEGIN:
@@ -563,19 +546,19 @@ public:
      case EFFECT_LOW_BATTERY:
        // Maybe we should make this blink or something?
        if (IMG_lowbatt) {
-	 ShowFile(&IMG_lowbatt, 5000);
+   ShowFile(&IMG_lowbatt, 5000);
        } else {
-	 SetErrorMessage("low\nbattery");
+   SetErrorMessage("low\nbattery");
        }
        break;
      case EFFECT_BOOT:
        if (IMG_boot) {
-	 ShowFileWithSoundLength(&IMG_boot,
-          GetCorrectDuration(font_config.ProffieOSBootImageDuration,
-                             font_config.ProffieOSFontImageDuration,
-                             3500.0));
+   ShowFileWithSoundLength(&IMG_boot,
+         font_config.ProffieOSBootImageDuration != -1.0 ?
+         font_config.ProffieOSBootImageDuration :
+         font_config.ProffieOSFontImageDuration);
        } else {
-	 SetScreenNow(SCREEN_STARTUP);
+   SetScreenNow(SCREEN_STARTUP);
        }
        break;
      case EFFECT_BLAST:
@@ -854,7 +837,7 @@ public:
       bool tmp = ReadImage(&file_);
       uint32_t read_us = micros() - read_begin;
       if (read_us > 1500) {
-	STDERR << "ReadImage took " << read_us << " us\n";
+  STDERR << "ReadImage took " << read_us << " us\n";
       }
 #else
       bool tmp = ReadImage(&file_);
