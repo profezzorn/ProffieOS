@@ -18,6 +18,12 @@ struct MenuEntry {
   virtual void select(int entry) = 0;
 };
 
+struct NullEntry : public MenuEntry {
+  static const int size = 0;
+  virtual void say(int entry) {};
+  virtual void select(int entry) {};
+};
+
 template<class SUBMENU, class SOUND>
 struct SubMenuEntry : public MenuEntry {
   void say(int entry) override { SOUND::say(); }

@@ -641,6 +641,7 @@ class NoLED;
 #include "modes/sorted_list_menues.h"
 #include "modes/preset_modes.h"
 #include "modes/style_option_modes.h"
+#include "modes/settings_menues.h"
 
 BladeConfig* current_config = nullptr;
 class BladeBase* GetPrimaryBlade() {

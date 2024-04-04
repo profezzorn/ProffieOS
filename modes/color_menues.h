@@ -43,13 +43,17 @@ template<class SPEC>
 struct ColorBrightnessMode : public SPEC::HSLMode {
 public:
   int get() override {
-    return this->hsl_color.L;
+    float ret = this->hsl_color.L;
+    if (ret > 0.5) {
+      ret = powf((this->hsl_color.L - 0.5) * 2.0, COLOR_MENU_GAMMA) / 2.0 + 0.5;
+    }
+    return ret * 32768.0;
   }
 
   void set(int x) override {
     this->hsl_color.L = x / 32767.0;
     if (this->hsl_color.L > 0.5) {
-      this->hsl_color.L = pow( (this->hsl_color.L - 0.5) * 2.0, 1.0/COLOR_MENU_GAMMA) / 2.0 + 0.5;
+      this->hsl_color.L = powf( (this->hsl_color.L - 0.5) * 2.0, 1.0/COLOR_MENU_GAMMA) / 2.0 + 0.5;
       this->hsl_color.S = 1.0;
     } else {
       this->hsl_color.S = this->hsl_color.L * 2.0f;
