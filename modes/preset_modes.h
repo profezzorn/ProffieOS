@@ -118,7 +118,7 @@ struct EditBladeSubMenuEntry : public MenuEntry {
 #define EDIT_BLADE_SUBMENU(N) EditBladeSubMenuEntry<SPEC, N>,
   
 template<class SPEC>
-using EditPresentMenu = typename SPEC::template MenuListMode<
+using EditPresetMenu = typename SPEC::template MenuListMode<
   SubMenuEntry<typename SPEC::SelectFont, typename SPEC::SoundLibrary::tEditFont>,
   SubMenuEntry<typename SPEC::SelectTrack, typename SPEC::SoundLibrary::tEditTrack>,
   ONCEPERBLADE(EDIT_BLADE_SUBMENU)
