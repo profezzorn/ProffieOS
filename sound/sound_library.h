@@ -126,7 +126,7 @@ public:
 #define ADD_SL_SOUND(NAME, BASE)					\
   void Say##NAME() { this->Play(BASE ".wav"); }				\
   /* t for "trampoline" */						\
-  struct t##NAME { static void say() { getPtr<SPEC::SoundLibrary>->Say##NAME(); } }
+  struct t##NAME { static void say() { getPtr<typename SPEC::SoundLibrary>()->Say##NAME(); } }
   
   ADD_SL_SOUND(Red, "clrlst/clrlst01");
   ADD_SL_SOUND(OrangeRed, "clrlst/clrlst02");
