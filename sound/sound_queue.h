@@ -35,7 +35,7 @@ public:
   }
   // Called from Loop()
   void PollSoundQueue(RefPtr<BufferedWavPlayer>& player) {
-    busy_ = (!player || !player->isPlaying());
+    busy_ = player && player->isPlaying();
     if (sounds_ &&  !busy_) {
       busy_ = true;
       if (!player) {
