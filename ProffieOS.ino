@@ -1633,6 +1633,10 @@ void setup() {
 #endif
 
   Looper::DoSetup();
+#ifdef DIAGNOSTIC_STARTUP_DELAY_FOR_SERIAL_MONITOR
+  delay(3000);
+#endif
+  PVLOG_DEBUG << "***************** Booting up! *******************\n";
   // Time to identify the blade.
   prop.FindBlade(true);
   SaberBase::DoBoot();
