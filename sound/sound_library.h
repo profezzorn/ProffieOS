@@ -98,7 +98,7 @@ public:
     SayWhole((int)floorf(number));
     switch (say_type) {
       case SAY_DECIMAL: {
-	 int hundredths = ((int)floorf(number * 100)) % 10;
+  	 int hundredths = (int)floorf(number * 100);
 	 SayPoint();
 	 SayWhole(hundredths / 10);
 	 SayWhole(hundredths % 10);
