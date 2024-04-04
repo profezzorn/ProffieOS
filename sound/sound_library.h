@@ -57,6 +57,8 @@ public:
     sound_queue_.PollSoundQueue(wav_player);
   }
 
+  int busy() { return sound_queue_.busy(); }
+
   void SayWhole(int number) {
     if (number == 0) {
       Say0();
@@ -98,7 +100,7 @@ public:
     SayWhole((int)floorf(number));
     switch (say_type) {
       case SAY_DECIMAL: {
-  	 int hundredths = (int)floorf(number * 100);
+	int hundredths = (int)floorf(fract(number) * 100);
 	 SayPoint();
 	 SayWhole(hundredths / 10);
 	 SayWhole(hundredths % 10);

@@ -35,7 +35,9 @@ public:
   }
   // Called from Loop()
   void PollSoundQueue(RefPtr<BufferedWavPlayer>& player) {
-    if (sounds_ &&  (!player || !player->isPlaying())) {
+    busy_ = (!player || !player->isPlaying());
+    if (sounds_ &&  !busy_) {
+      busy_ = true;
       if (!player) {
         player = GetFreeWavPlayer();
         if (!player) return;
@@ -46,8 +48,10 @@ public:
       for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
     }
   }
+  bool busy() const { return busy_; }
 private:
   int sounds_;
+  bool busy_ = false;
   SoundToPlay queue_[QueueLength];
 };
 
