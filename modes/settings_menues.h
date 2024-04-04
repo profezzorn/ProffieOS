@@ -1,8 +1,13 @@
 #ifndef MODE_SETTINGS_MENUES_H
 #define MODE_SETTINGS_MENUES_H
 
+#include "../common/color.h"
+
 int prop_GetCurrentClashThreshold();
 void prop_SetClashThreshold(int clash_threshold);
+int prop_GetBladeLength(int blade);
+int prop_GetMaxBladeLength(int blade);
+void prop_SetBladeLength(int blade, int len);
 
 namespace mode {
 
@@ -21,26 +26,27 @@ struct SmoothVolumeMode : public SPEC::SmoothMode {
     
   virtual void set(int x) {
     float ret = x / 32768.0f;
-    if (!getSL<SPEC>->busy()) {
-      getSL<SPEC>->SayPercent(ret * 100);
+    if (!getSL<SPEC>()->busy()) {
+      getSL<SPEC>()->SayWhole(ret * 100);
+      getSL<SPEC>()->SayPercent();
     }
     ret = powf(ret, 1.0 / VOLUME_MENU_GAMMA);
     dynamic_mixer.set_volume(VOLUME * ret);
   }
 };
 
-#ifndef DYNAMIC_BLADE_LENGTH
+#ifdef DYNAMIC_BLADE_LENGTH
 
 template<class SPEC>
 class ShowLengthStyle {
   void run(BladeBase* blade) {
-    len_ = getMode<SPEC::ChangeBladeLength>->getLength();
+    len_ = getPtr<SPEC::ChangeBladeLength>()->getLength();
   }
   OverDriveColor getColor(int led) {
-    if (led == len_ - 1) return Color16(0xffff,0xffff,0xffff);
-    return Color16(0,0,0);
+    if (led == len_ - 1) return SimpleColor(Color16(65535,65535,65535));
+    return SimpleColor(Color16(0,0,0));
   }
-  int len_:
+  int len_;
 };
 
 template<class SPEC>
@@ -48,33 +54,33 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
   virtual int blade() { return 1; }
   void activate(bool onreturn) {
     SPEC::MenuBase::activate(onreturn);
-    pos_ = saved_len_ = GetBladeLength(1);
-    SetBladeLength(blade(), GetMaxBladeLength(1));
+    this->pos_ = saved_len_ = prop_GetBladeLength(1);
+    SetBladeLength(blade(), prop_GetMaxBladeLength(1));
     showlen_.Start(blade());
   }
   void say() override {
-    getSL<SPEC>->SayWhole(pos_);
+    getSL<SPEC>()->SayWhole(this->pos_);
   }
   uint16_t size() override {
-    return GetMaxBladeLength(blade());
+    return prop_GetMaxBladeLength(blade());
   }
   void select() override {
-    SPEC::MenuBase::select();
-    SetBladeLength(blade(), pos_);
-    getSL<SPEC>->SaySelect();
+    // SPEC::MenuBase::select(); = 0
+    prop_SetBladeLength(blade(), this->pos_);
+    getSL<SPEC>()->SaySelect();
     showlen_.Stop(blade());
   }
   void exit() override {
     SPEC::MenuBase::exit();
-    SetBladeLength(blade(), saved_len_);
-    getSL<SPEC>->SayCancel();
+    prop_SetBladeLength(blade(), saved_len_);
+    getSL<SPEC>()->SayCancel();
     showlen_.Stop(blade());
     // TODO: SAVE!
   }
 
-  int getLength() { return pos_; }
+  int getLength() { return this->pos_; }
 
-  ShowColorSingleBladeTemplate<SPEC::ShowLengthStyle> showlen_;
+  ShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle> showlen_;
   int saved_len_;
 };
 #endif
@@ -104,7 +110,7 @@ struct SmoothClashThresholdMode : public SPEC::SmoothMode {
   }
   void exit() override {
     SPEC::SmoothMode::exit();
-    getSL<SPEC>->SayCancel();
+    getSL<SPEC>()->SayCancel();
   }
   void select() override {
     SPEC::SmoothMode::select();
@@ -112,12 +118,12 @@ struct SmoothClashThresholdMode : public SPEC::SmoothMode {
     float ret = value_ / 32768.0f;
     ret = powf(ret, 1.0 / VOLUME_MENU_GAMMA);
     ret *= MAX_CLASH_THRESHOLD_G;
-    if (!getSL<SPEC>->busy()) {
-      getSL<SPEC>->SayClashThreshold(ret * 100);
-      getSL<SPEC>->SayNumber(ret, SayType::SAY_DECIMAL);
+    if (!getSL<SPEC>()->busy()) {
+//      getSL<SPEC>()->SayClashThreshold(ret * 100);
+      getSL<SPEC>()->SayNumber(ret, SayType::SAY_DECIMAL);
     }
     prop_SetClashThreshold(ret);
-    getSL<SPEC>->SaySelect();
+    getSL<SPEC>()->SaySelect();
     popMode();
     // TODO: SAVE!
   }
@@ -150,12 +156,12 @@ struct SmoothChangeBladeDimmingMode : public SPEC::SmoothMode {
   void exit() override {
     SPEC::SmoothMode::exit();
     SaberBase::SetDimming(saved_value_);
-    getSL<SPEC>->SayCancel();
+    getSL<SPEC>()->SayCancel();
   }
   void select() override {
     // TODO: SAVE!
     SPEC::SmoothMode::select();
-    getSL<SPEC>->SaySelect();
+    getSL<SPEC>()->SaySelect();
     popMode();
   }
 
