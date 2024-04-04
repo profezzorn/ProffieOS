@@ -1634,6 +1634,7 @@ void setup() {
 #endif
 
   Looper::DoSetup();
+  PVLOG_DEBUG << "***************** Booting up! *******************\n";
   // Time to identify the blade.
   prop.FindBlade(true);
   SaberBase::DoBoot();
