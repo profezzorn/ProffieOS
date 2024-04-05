@@ -52,7 +52,7 @@ public:
     int dist = std::abs(center_ - led * 32768 / num_leds_);
     int N = std::abs(dist - offset_) * size_ >> 15;
     int mix;
-    if (N <= 32) {
+    if (N < 32) {
       mix = blast_hump[N] * mix_ >> 8;
     } else {
       mix = 0;
@@ -106,7 +106,7 @@ public:
     int dist = std::abs(center_ - led * 32768 / num_leds_);
     int N = std::abs(dist - offset_) * size_ >> 15;
     int mix;
-    if (N <= 32) {
+    if (N < 32) {
       mix = blast_hump[N] << 7;
     } else {
       mix = 0;
