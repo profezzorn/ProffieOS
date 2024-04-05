@@ -1,5 +1,5 @@
 #ifndef FUNCTIONS_BLINKING_H
-#define FUNCTOINS_BLINKING_H
+#define FUNCTIONS_BLINKING_H
 
 #include "int.h"
 
