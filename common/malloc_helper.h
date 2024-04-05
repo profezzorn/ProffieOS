@@ -1,6 +1,8 @@
 #ifndef COMMON_MALLOC_HELPER_H
 #define COMMON_MALLOC_HELPER_H
 
+#include "string_piece.h"
+
 #ifdef TEENSYDUINO
 
 bool IsHeap(const void* mem) {
@@ -101,11 +103,10 @@ private:
   const T* ptr_;
 };
 
-const char* mkstr(const char* str) {
-  int len = strlen(str);
-  char* ret = (char*)malloc(len + 1);
+const char* mkstr(StringPiece str) {
+  char* ret = (char*)malloc(str.len);
   if (!ret) return "";
-  memcpy(ret, str, len + 1);
+  memcpy(ret, str.str, str.len + 1);
   return ret;
 }
 
