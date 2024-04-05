@@ -53,7 +53,7 @@ class Rgba16 {
 public:
   void run(BladeBase* base) {}
   RGBA_um_nod getColor(int led) {
-    return RGBA_um_nod(Color16(R, G, B), false, A >> 1);
+    return RGBA_um_nod(Color16(R, G, B), A >> 1);
   }
 };
 
