@@ -3,7 +3,7 @@
 
 // Menues made of menu entries.
 // Use like:
-// MenuListMode<SPEC,
+// MenuEntryMenu<SPEC,
 //    MenuEntry1,
 //    MenuEntry2,
 //    MenuEntry3>
@@ -65,7 +65,7 @@ private:
 template<class TL> struct MenuListHelper {
   typedef SplitTypeList<TL> split;
   typedef MenuEntryConcat<typename MenuListHelper<typename split::first_half>::type,
-                          typename MenuListHelper<typename split::secondHalf>::type > type;
+                          typename MenuListHelper<typename split::second_half>::type > type;
 };
 
 // Specialization for one Entry
