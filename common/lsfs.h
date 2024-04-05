@@ -55,6 +55,7 @@ struct PathHelper {
     path_[strlen(path_)] = '/';
   }
   operator const char*() const { return path_; }
+  operator StringPiece() const { return StringPiece(path_); }
 #ifdef F_MAXPATH  
   char path_[F_MAXPATH];
 #else
