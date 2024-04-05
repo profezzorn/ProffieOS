@@ -78,12 +78,12 @@ private:
 template<class SPEC>
 class SelectArgMode : public SPEC::MenuBase {
 public:
-  void activate(bool onreturn) override {
+  void mode_activate(bool onreturn) override {
     // TODO: Set pos_ to something reasonable?
     arginfo_ = style_parser.GetArgInfo(GetStyle(menu_current_blade));
-    SPEC::MenuBase::activate(onreturn);
+    SPEC::MenuBase::mode_activate(onreturn);
   }
-  int size() override { return arginfo_.used(); }
+  uint16_t size() override { return arginfo_.used(); }
   void say() override {
     getSL<SPEC>()->SayArgument(getCurrentArgument());
   }
@@ -91,15 +91,15 @@ public:
   void select() override {
     menu_current_arg = getCurrentArgument();
     if (arginfo_.iscolor(menu_current_arg)) {
-      pushMode<SPEC::SelectArgColor>();
+      pushMode<typename SPEC::SelectArgColor>();
     } else {
       int max_arg = GetMaxStyleArg();
       if (max_arg == 32768 || max_arg == 32767) {
-	pushMode<SPEC::SelectArgSmooth>();
+	pushMode<typename SPEC::SelectArgSmooth>();
       } else if (max_arg <= 0 && isTimeArg(menu_current_arg)) {
-	pushMode<SPEC::SelectArgTime>();
+	pushMode<typename SPEC::SelectArgTime>();
       } else {
-	pushMode<SPEC::SelectArgNumber>();
+	pushMode<typename SPEC::SelectArgNumber>();
       }
     }
   }
@@ -116,23 +116,23 @@ int menu_selected_blade;
 template<class SPEC>
 struct SelectStyleEntry : public  MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>->SaySelectStyle();
+    getSL<SPEC>()->SaySelectStyle();
   }
   void select(int entry) override {
     menu_selected_preset = GetPresetPosition();
     menu_selected_blade = menu_current_blade;
-    getSL<SPEC>->SaySelect();
+    getSL<SPEC>()->SaySelect();
   }
 };
 
 template<class SPEC>
 struct ApplyColorsFromSelectedStyleEntry : public  MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>->SayApplyColorsFromSelectedStyle();
+    getSL<SPEC>()->SayApplyColorsFromSelectedStyle();
   }
   void select(int entry) override {
     if (menu_selected_preset == -1) {
-      getSL<SPEC>->SayNoStyleSelected();
+      getSL<SPEC>()->SayNoStyleSelected();
       return;
     }
     CurrentPreset preset;
@@ -140,17 +140,17 @@ struct ApplyColorsFromSelectedStyleEntry : public  MenuEntry {
     const char* FROM = preset.GetStyle(menu_selected_blade);
     const char* TO = GetStyle(menu_selected_blade);
     SetStyle(menu_selected_blade, style_parser.CopyColorArguments(FROM, TO));
-    getSL<SPEC>->SaySelect();
+    getSL<SPEC>()->SaySelect();
   }
 };
 
 template<class SPEC>
 struct ApplyColorsToAllBladesEntry : public  MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>->SayApplyColorsToAllBlades();
+    getSL<SPEC>()->SayApplyColorsToAllBlades();
   }
   void select(int entry) override {
-    getSL<SPEC>->SaySelect();
+    getSL<SPEC>()->SaySelect();
     const char* FROM = GetStyle(menu_selected_blade);
     for (int b = 1; b <= NUM_BLADES; b++) {
       if (b == menu_selected_blade) continue;
@@ -162,11 +162,11 @@ struct ApplyColorsToAllBladesEntry : public  MenuEntry {
 template<class SPEC>
 struct ApplyStyleArumentsFromSelectedStyleEntry : public  MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>->SayApplyStyleOptionsFromSelectedStyle();
+    getSL<SPEC>()->SayApplyStyleOptionsFromSelectedStyle();
   }
   void select(int entry) override {
     if (menu_selected_preset == -1) {
-      getSL<SPEC>->SayNoStyleSelected();
+      getSL<SPEC>()->SayNoStyleSelected();
       return;
     }
     CurrentPreset preset;
@@ -174,7 +174,7 @@ struct ApplyStyleArumentsFromSelectedStyleEntry : public  MenuEntry {
     const char* FROM = preset.GetStyle(menu_selected_blade);
     const char* TO = GetStyle(menu_selected_blade);
     SetStyle(menu_selected_blade, style_parser.CopyArguments(FROM, TO));
-    getSL<SPEC>->SaySelect();
+    getSL<SPEC>()->SaySelect();
   }
 };
 
@@ -182,36 +182,36 @@ struct ApplyStyleArumentsFromSelectedStyleEntry : public  MenuEntry {
 template<class SPEC>
 struct ResetColorsEntry : public  MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>->SayResetColors();
+    getSL<SPEC>()->SayResetColors();
   }
   void select(int entry) override {
     if (menu_selected_preset == -1) {
-      getSL<SPEC>->SayNoStyleSelected();
+      getSL<SPEC>()->SayNoStyleSelected();
       return;
     }
     CurrentPreset preset;
     preset.Load(menu_selected_preset);
     const char* TO = GetStyle(menu_selected_blade);
     SetStyle(menu_selected_blade, style_parser.CopyColorArguments("builtin 0 0", TO));
-    getSL<SPEC>->SaySelect();
+    getSL<SPEC>()->SaySelect();
   }
 };
 
 template<class SPEC>
-struct ResetStyleArumentsEntry : public MenuEntry {
+struct ResetStyleArgumentsEntry : public MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>->SayApplyStyleOptionsFromSelectedStyle();
+    getSL<SPEC>()->SayApplyStyleOptionsFromSelectedStyle();
   }
   void select(int entry) override {
     if (menu_selected_preset == -1) {
-      getSL<SPEC>->SayNoStyleSelected();
+      getSL<SPEC>()->SayNoStyleSelected();
       return;
     }
     CurrentPreset preset;
     preset.Load(menu_selected_preset);
     const char* TO = GetStyle(menu_selected_blade);
     SetStyle(menu_selected_blade, style_parser.CopyArguments("builtin 0 0", TO));
-    getSL<SPEC>->SaySelect();
+    getSL<SPEC>()->SaySelect();
   }
 };
 
@@ -222,39 +222,40 @@ struct SelectStyleMenu : public SPEC::MenuBase {
   }
   int blade() { return this->pos_ / NUM_BLADES; }
   int preset() { return this->pos_ % NUM_BLADES; }
-  void activate(bool onreturn) override {
-    SPEC::MenuBase::Activate();
+  void mode_activate(bool onreturn) override {
+    SPEC::MenuBase::mode_activate(onreturn);
     int preset;
     int style;
     style_parser.GetBuiltinPos(GetStyle(menu_current_blade), &preset, &style);
     this->pos_ = preset * NUM_BLADES + style;
   }
   
-  void say(int entry) override {
-    getSL<SPEC>->SayBlade();
-    getSL<SPEC>->SayWhole(blade());
-    getSL<SPEC>->SayPreset();
-    getSL<SPEC>->SayWhole(preset());
+  void say() override {
+    getSL<SPEC>()->SayBlade();
+    getSL<SPEC>()->SayWhole(blade());
+    getSL<SPEC>()->SayPreset();
+    getSL<SPEC>()->SayWhole(preset());
   }
 
-  void select(int entry) override {
-    LSPtr<char> builtin = CurrentPreset::mk_builtin_str(preset(), blade());
+  void select() override {
+    LSPtr<char> builtin(CurrentPreset::mk_builtin_str(preset(), blade()));
     SetStyle(menu_selected_blade, style_parser.CopyArguments(builtin.get(), GetStyle(menu_selected_blade)));
-    getSL<SPEC>->SaySelect();
+    getSL<SPEC>()->SaySelect();
     popMode();
   }
 };
 
 template<class SPEC>
-using EditStyleMenu = typename SPEC::template MenuListMode<
+struct EditStyleMenu : public MenuEntryMenu<SPEC,
   SubMenuEntry<typename SPEC::EditStyleOptions, typename SPEC::SoundLibrary::tEditStyleOptions>,
   typename SPEC::SelectStyleEntry,
   typename SPEC::ApplyColorsFromSelectedStyleEntry,
-  typename SPEC::ApplyStyleArgumentsFromSelectionEntry,
+  typename SPEC::ApplyStyleArumentsFromSelectedStyleEntry,
   typename SPEC::ApplyColorsToAllBladesEntry,
   typename SPEC::ResetColorsEntry,
-  typename SPEC::ResetToDefaultEntry,
-  SubMenuEntry<typename SPEC::SelectStyleMenu, typename SPEC::SoundLibrary::tEditStyle>>;
+  typename SPEC::ResetStyleArgumensEntry,
+  SubMenuEntry<typename SPEC::SelectStyleMenu, typename SPEC::SoundLibrary::tEditStyle>
+> {};
 
 }   // namespace mode
 
