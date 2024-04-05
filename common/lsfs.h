@@ -3,6 +3,8 @@
 
 // Filesystem abstractions
 
+#include "string_piece.h"
+
 struct PathHelper {
   void Append(const char* name) {
     if (strlen(path_) && path_[strlen(path_)-1] != '/') {

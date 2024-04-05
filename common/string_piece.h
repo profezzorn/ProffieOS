@@ -1,6 +1,10 @@
 #ifndef COMMON_STRING_PIECE_H
 #define COMMON_STRING_PIECE_H
 
+int constexpr toLower(char x) {
+  return (x >= 'A' && x <= 'Z') ? x - 'A' + 'a' : x;
+}
+
 class Print;
 struct StringPiece {
   StringPiece(const char* s) : str(s), len(strlen(s)) {}

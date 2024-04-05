@@ -150,10 +150,6 @@ private:
   char line_[MAXLINE];
 };
 
-int constexpr toLower(char x) {
-  return (x >= 'A' && x <= 'Z') ? x - 'A' + 'a' : x;
-}
-
 #include "string_piece.h"
 
 void StringPiece::printTo(Print& p) {
