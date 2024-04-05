@@ -20,7 +20,7 @@ public:
   LSPtr<char> name;
   uint32_t variation;
 
-  const char *mk_builtin_str(int num, int N) {
+  static const char *mk_builtin_str(int num, int N) {
     char tmp[30];
     strcpy(tmp, "builtin ");
     itoa(num, tmp + strlen(tmp), 10);
