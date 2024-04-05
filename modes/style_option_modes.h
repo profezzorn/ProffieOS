@@ -51,8 +51,8 @@ private:
 template<class SPEC>
 class SelectArgNumber : public SPEC::MenuBase {
 public:
-  void activate(bool onreturn) override {
-    SPEC::MenuBase::activate(onreturn);
+  void mode_activate(bool onreturn) override {
+    SPEC::MenuBase::mode_activate(onreturn);
     if (!onreturn) {
       int max = GetMaxStyleArg();
       if (max < 0) max = 32768;
@@ -67,7 +67,7 @@ public:
   uint16_t size() override { return max_; }
 
   void select() override {
-    SPEC::SmoothMode::select();
+    SPEC::MenuBase::select();
     SetIntArg(menu_current_blade, menu_current_arg, this->pos_);
     popMode();
   }
