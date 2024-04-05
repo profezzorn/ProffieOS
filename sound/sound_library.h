@@ -317,13 +317,75 @@ public:
     if (v) {
       SayEnabled();
     } else {
-      SayDisabled();
+      SayDisabled(); 
+    }
+  }
+
+  void SayArgument(int argument) {
+    switch (argument) {
+      case BASE_COLOR_ARG:
+	SayBaseColor();
+	break;
+      case ALT_COLOR_ARG:
+	SayAltColor();
+	break;
+      case ALT_COLOR2_ARG:
+	SayAltColor();
+	SayNumber(2, SAY_WHOLE);
+	break;
+      case ALT_COLOR3_ARG:
+	SayAltColor();
+	SayNumber(3, SAY_WHOLE);
+	break;
+      case BLAST_COLOR_ARG:
+	SayBlastColor();
+	break;
+      case CLASH_COLOR_ARG:
+	SayClashColor();
+	break;
+      case LOCKUP_COLOR_ARG:
+	SayLockupColor();
+	break;
+      case DRAG_COLOR_ARG:
+	SayDragColor();
+	break;
+      case LB_COLOR_ARG:
+	SayLightningBlockColor();
+	break;
+      case STAB_COLOR_ARG:
+	SayStabColor();
+	break;
+      case PREON_COLOR_ARG:
+	SayPreonColor();
+	break;
+      case IGNITION_COLOR_ARG:
+	SayIgnitionColor();
+	break;
+      case RETRACTION_COLOR_ARG:
+	SayRetractionColor();
+	break;
+      case POSTOFF_COLOR_ARG:
+	SayPostOffColor();
+	break;
+      case SWING_COLOR_ARG:
+	SaySwingColor();
+	break;
+      case EMITTER_COLOR_ARG:
+	SayEmitterColor();
+	break;
+      case OFF_COLOR_ARG:
+	SayOffColor();
+	break;
+      default:
+	SayOption();
+	SayWhole(argument);
     }
   }
 };
 
 template<class SPEC>
 class SoundLibraryV2Template : public SoundLibraryTemplate<SPEC> {
+public:
   static const int SoundLibraryVersion = 2;
 
   ADD_SL_SOUND(AdjustRed, "madjred");
@@ -337,6 +399,11 @@ class SoundLibraryV2Template : public SoundLibraryTemplate<SPEC> {
   ADD_SL_SOUND(MovePresetUp, "mmpsetup");
   ADD_SL_SOUND(MovePresetDown, "mmpsetdn");
   ADD_SL_SOUND(MovePresetToBeginning, "mmpsetdn");
+  ADD_SL_SOUND(PresetInserted, "mpsetins");
+  ADD_SL_SOUND(SelectPreset, "mselpset");
+  ADD_SL_SOUND(Preset, "mpset");
+
+  ADD_SL_SOUND(EditStyleOptions, "mestyopt");
 
   ADD_SL_SOUND(InsertSelectedPreset, "minpset");
   ADD_SL_SOUND(MoveSelectedPreset, "mmpset");
@@ -344,7 +411,10 @@ class SoundLibraryV2Template : public SoundLibraryTemplate<SPEC> {
 
   ADD_SL_SOUND(NoStyleSelected, "mnostsel");
   ADD_SL_SOUND(ApplyColorsFromSelectedStyle, "macolsty");
-  ADD_SL_SOUND(ApplyStyleArgumentsFromSelectedStyle, "maargsty");
+  ADD_SL_SOUND(ApplyStyleOptionsFromSelectedStyle, "maargsty");
+  ADD_SL_SOUND(ApplyColorsToAllBlades, "macolall");
+
+  ADD_SL_SOUND(Blade, "mbld");
 
   // Sound used to indicate that there are no more options
   // or list entries.
