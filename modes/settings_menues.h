@@ -2,6 +2,7 @@
 #define MODE_SETTINGS_MENUES_H
 
 #include "../common/color.h"
+#include "menu_list.h"
 
 int prop_GetCurrentClashThreshold();
 void prop_SetClashThreshold(int clash_threshold);
@@ -170,25 +171,26 @@ struct SmoothChangeBladeDimmingMode : public SPEC::SmoothMode {
 
 #endif
 
+
 template<class SPEC>
-using SettingsMenuMode = typename SPEC::template MenuListMode<
+struct SettingsMenuMode : public MenuEntryMenu<SPEC,
   SubMenuEntry<typename SPEC::ChangeVolumeMode, typename SPEC::SoundLibrary::tEditVolume>
 #ifdef DYNAMIC_BLADE_LENGTH
   ,SubMenuEntry<typename SPEC::ChangeBladeLengthMode, typename SPEC::SoundLibrary::tEditBladeLength>
 #endif
 #ifdef DYNAMIC_CLASH_THRESHOLD
-  ,SubMenuEntry<typename SPEC::ChangeClashThresholdMode, typename SPEC::SoundLibrary::tEditBladeClashThreshold>
+  ,SubMenuEntry<typename SPEC::ChangeClashThresholdMode, typename SPEC::SoundLibrary::tEditClashThreshold>
 #endif  
 #ifdef DYNAMIC_BLADE_DIMMING
-  ,SubMenuEntry<typename SPEC::ChangeBladeDimmingMode, typename SPEC::SoundLibrary::tEditBladeDimming>
+  ,SubMenuEntry<typename SPEC::ChangeBladeDimmingMode, typename SPEC::SoundLibrary::tEditBrightness>
 #endif
-  >;
+> {};
 
 template<class SPEC>
-using BasicTopMenu = typename SPEC::template MenuListMode<
+class BasicTopMenu : public MenuEntryMenu<SPEC,
   SubMenuEntry<typename SPEC::EditPresetMenu, typename SPEC::SoundLibrary::tEditPresets>,
   SubMenuEntry<typename SPEC::SettingsMenu, typename SPEC::SoundLibrary::tSettings>
-  >;
+> {};
 
 }  // namespace mode
 
