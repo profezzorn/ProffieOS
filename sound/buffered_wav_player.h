@@ -17,12 +17,12 @@ size_t WhatUnit(class BufferedWavPlayer* player);
 // This minimizes latency while making sure to avoid any gaps.
 class BufferedWavPlayer : public VolumeOverlay<BufferedAudioStream<AUDIO_BUFFER_SIZE_BYTES> > {
 public:
-  void Play(const char* filename) {
+  void Play(StringPiece filename, float start = 0.0) {
     MountSDCard();
     EnableAmplifier();
     pause_.set(true);
     clear();
-    wav.Play(filename);
+    wav.Play(filename, start);
     SetStream(&wav);
     scheduleFillBuffer();
     pause_.set(false);

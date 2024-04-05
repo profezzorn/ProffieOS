@@ -66,10 +66,11 @@
 class PlayWav : StateMachine, public ProffieOSAudioStream {
 public:
   PlayWav() : run_(false), effect_(nullptr), sample_bytes_(0) {}
-  void Play(const char* filename) {
-    if (!*filename) return;
-    strcpy(filename_, filename);
+  void Play(StringPiece filename, float start = 0.0) {
+    if (!filename) return;
+    filename.paste(filename_);
     new_file_id_ = Effect::FileID();
+    start_ = start;
     run_.set(true);
   }
 
