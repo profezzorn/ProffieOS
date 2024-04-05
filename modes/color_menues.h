@@ -4,6 +4,7 @@
 #include "mode.h"
 #include "../common/color.h"
 #include "style_argument_helpers.h"
+#include "menu_list.h"
 
 namespace mode {
 
@@ -12,8 +13,8 @@ namespace mode {
 template<class SPEC>
 struct HSLMode : public SPEC::SmoothMode {
 public:
-  void activate(bool onreturn) override {
-    SPEC::SmoothMode::activate(onreturn);
+  void mode_activate(bool onreturn) override {
+    SPEC::SmoothMode::mode_activate(onreturn);
     getSL<SPEC>()->SayRotate();
     hsl_color = ShowColorStyle::getColor().toHSL();
   }
@@ -64,9 +65,9 @@ public:
 
 template<class SPEC>
 struct ColorGammaMode : public SPEC::SmoothMode {
-  uint16_t* value() = 0;
-  void activate(bool onreturn) override {
-    SPEC::SmoothMode::activate(onreturn);
+  virtual uint16_t* value() = 0;
+  void mode_activate(bool onreturn) override {
+    SPEC::SmoothMode::mode_activate(onreturn);
     getSL<SPEC>()->SayRotate();
   }
   int get() override {
@@ -93,6 +94,48 @@ struct ColorBlueMode : public SPEC::GammaMode {
   uint16_t* value() override { return &ShowColorStyle::getColor().b; }
 };
 
+Color16 menu_selected_color;
+
+template<class SPEC>
+struct SelectColorEntry : public MenuEntry {
+  void say(int entry) override {
+    getSL<SPEC>()->SaySelectColor();
+  }
+  void select(int entry) override {
+    getSL<SPEC>()->SaySelect();
+    menu_selected_color = ShowColorStyle::getColor();
+  }
+};
+  
+template<class SPEC>
+struct UseSelectedColorEntry : public MenuEntry {
+  void say(int entry) override {
+    getSL<SPEC>()->SayUseSelectedColor();
+  }
+  void select(int entry) override {
+    getSL<SPEC>()->SaySelect();
+    ShowColorStyle::SetColor(menu_selected_color);
+  }
+};
+
+template<class SPEC>
+struct ResetColorToDefaultEntry : public MenuEntry {
+  void say(int entry) override {
+    getSL<SPEC>()->SayResetToDefaultColor();
+  }
+  void select(int entry) override {
+    getSL<SPEC>()->SaySelect();
+    LSPtr<char> builtin = style_parser.ResetArguments(GetStyle(menu_current_blade));
+    char argspace[32];
+    style_parser.GetArgument(builtin.get(), menu_current_arg, argspace);
+    char* tmp;
+    int r = strtol(argspace, &tmp, 0);
+    int g = strtol(tmp+1, &tmp, 0);
+    int b = strtol(tmp+1, NULL, 0);
+    ShowColorStyle::SetColor(Color16(r,g,b));
+  }
+};
+
 template<class SPEC, class MENU>
 struct SaveColorMenuEntry : public MenuEntry {
   void say(int entry) override {
@@ -104,15 +147,15 @@ struct SaveColorMenuEntry : public MenuEntry {
 };
 
 template<class SPEC, class MENU>
-using ColorSelectList = typename SPEC::template MenuEntryMenu<
+using ColorSelectList = MenuEntryMenu<SPEC,
   SubMenuEntry<typename SPEC::ColorHueMode, typename SPEC::SoundLibrary::tAdjustColorHue>,
-  SubMenuEntry<typename SPEC::ColorBrightnessMode, typename SPEC::SoundLibrary::tEditBrightNess>,
-  SubMenuEntry<typename SPEC::ColorRedMode, typename SPEC::SoundLibrary::tRed>,
-  SubMenuEntry<typename SPEC::ColorGreenMode, typename SPEC::SoundLibrary::tGreen>,
-  SubMenuEntry<typename SPEC::ColorBlueMode, typename SPEC::SoundLibrary::tBlue>,
-  SPEC::SelectColorEntry,
-  SPEC::UseSelectedColorEntry,
-  SPEC::ResetToDefaultEntry,
+  SubMenuEntry<typename SPEC::ColorBrightnessMode, typename SPEC::SoundLibrary::tEditBrightness>,
+  SubMenuEntry<typename SPEC::ColorRedMode, typename SPEC::SoundLibrary::tAdjustRed>,
+  SubMenuEntry<typename SPEC::ColorGreenMode, typename SPEC::SoundLibrary::tAdjustGreen>,
+  SubMenuEntry<typename SPEC::ColorBlueMode, typename SPEC::SoundLibrary::tAdjustBlue>,
+  typename SPEC::SelectColorEntry,
+  typename SPEC::UseSelectedColorEntry,
+  typename SPEC::ResetColorToDefaultEntry,
   SaveColorMenuEntry<SPEC, MENU>>;
 
 template<class SPEC>
@@ -131,7 +174,7 @@ struct ColorSelectMode : public ColorSelectList<SPEC, ColorSelectMode<SPEC>> {
       load();
       show_color_all_.Start();
     }
-    ColorSelectList<SPEC, ColorSelectMode<SPEC>>::activate(onreturn);
+    ColorSelectList<SPEC, ColorSelectMode<SPEC>>::mode_activate(onreturn);
   }
 
   virtual void mode_exit() {
