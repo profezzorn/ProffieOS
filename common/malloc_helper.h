@@ -104,7 +104,7 @@ private:
 };
 
 const char* mkstr(StringPiece str) {
-  char* ret = (char*)malloc(str.len);
+  char* ret = (char*)malloc(str.len + 1);
   if (!ret) return "";
   memcpy(ret, str.str, str.len + 1);
   return ret;
