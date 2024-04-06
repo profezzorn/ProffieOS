@@ -103,6 +103,12 @@ public:
         }
         return false;
 
+#ifdef MENU_SPEC_TEMPLATE	
+      case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_OFF):
+	EnterMenu();
+	return true;
+#endif
+	
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
         if (millis() - activated_ < 500) {
           if (SetMute(true)) {

@@ -5,10 +5,9 @@
 #include "menu_list.h"
 
 // Returns the position of the current preset.
-int GetPresetPosition();
-int MovePreset(int position);
+int prop_GetPresetPosition();
+void prop_MovePreset(int position);
 int GetTotalPresets();
-int CopyPreset(int from_position);
 
 namespace mode {
 
@@ -34,9 +33,9 @@ struct MovePresetUpEntry : public MenuEntry {
   }
   void select(int entry) override {
     menu_selected_preset = -1;
-    int pos = GetPresetPosition();
+    int pos = prop_GetPresetPosition();
     if (pos > 0) {
-      MovePreset(pos - 1);
+      prop_MovePreset(pos - 1);
       getSL<SPEC>()->SaySelect();
     } else {
       getSL<SPEC>()->SayListEndBuzz();
@@ -51,10 +50,12 @@ struct MovePresetDownEntry : public MenuEntry {
   }
   void select(int entry) override {
     menu_selected_preset = -1;
-    int pos = GetPresetPosition();
-    int num_presets = GetTotalPresets();
-    if (pos + 1 < num_presets) {
-      MovePreset(pos + 1);
+    int pos = prop_GetPresetPosition();
+    // Check if this is the last preset.
+    CurrentPreset tmp;
+    tmp.SetPreset(pos + 1);
+    if (tmp.preset_num == pos + 1) {
+      prop_MovePreset(pos + 1);
       getSL<SPEC>()->SaySelect();
     } else {
       getSL<SPEC>()->SayListEndBuzz();
@@ -69,9 +70,9 @@ struct MovePresetToBeginningEntry : public MenuEntry {
   }
   void select(int entry) override {
     menu_selected_preset = -1;
-    int pos = GetPresetPosition();
+    int pos = prop_GetPresetPosition();
     if (pos != 0) {
-      MovePreset(0);
+      prop_MovePreset(0);
       getSL<SPEC>->SaySelect();
     } else {
       getSL<SPEC>->SayListEndBuzz();
@@ -85,7 +86,7 @@ struct SelectPresetEntry : public MenuEntry {
     getSL<SPEC>()->SaySelectPreset();
   }
   void select(int entry) override {
-    menu_selected_preset = GetPresetPosition();
+    menu_selected_preset = prop_GetPresetPosition();
     getSL<SPEC>()->SaySelect();
   }
 };
@@ -96,9 +97,20 @@ struct InsertSelectedPresetEntry : public MenuEntry {
     getSL<SPEC>()->SaySelectPreset();
   }
   void select(int entry) override {
-    int pos = GetPresetPosition();
-    CopyPreset(menu_selected_preset);
-    if (pos <= menu_selected_preset) {
+    int from_pos = menu_selected_preset;
+    if (from_pos == -1) {
+      getSL<SPEC>()->SayNoPresetSelected();
+      return;
+    }
+    int to_pos = prop_GetPresetPosition();
+    CurrentPreset preset;
+    preset.SetPreset(from_pos);
+    preset.preset_num = -1000;
+    preset.SaveAt(to_pos);
+    char p[20];
+    itoa(to_pos, p, 10);
+    CommandParser::DoParse("set_preset", p);
+    if (to_pos <= menu_selected_preset) {
       menu_selected_preset++;
     }
     getSL<SPEC>()->SayPresetInserted();

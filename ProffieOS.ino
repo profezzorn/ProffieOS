@@ -642,6 +642,7 @@ class NoLED;
 #include "modes/preset_modes.h"
 #include "modes/style_option_modes.h"
 #include "modes/settings_menues.h"
+#include "modes/default_spec.h"
 
 BladeConfig* current_config = nullptr;
 class BladeBase* GetPrimaryBlade() {
@@ -713,6 +714,35 @@ int prop_GetBlasterMode() {
     return prop.GetBlasterMode();
 }
 #endif
+
+
+#ifdef DYNAMIC_CLASH_THRESHOLD
+int prop_GetCurrentClashThreshold() {
+  return prop.GetCurrentClashThreshold();
+}
+void prop_SetClashThreshold(int clash_threshold) {
+  prop.SetClashThreshold(clash_threshold);
+}
+#endif
+
+#ifdef DYNAMIC_BLADE_LENGTH
+int prop_GetBladeLength(int blade) {
+  return prop.GetBladeLength(blade); 
+}
+int prop_GetMaxBladeLength(int blade) {
+  return prop.GetMaxBladeLength(blade);
+}
+void prop_SetBladeLength(int blade, int len) {
+  prop.SetBladeLength(blade, len);
+}
+#endif
+
+int prop_GetPresetPosition() {
+  return prop.GetPresetPosition();
+}
+void prop_MovePreset(int position) {
+  prop.MovePreset(position);
+}
 
 const char* GetStyle(int blade) { return prop.GetStyle(blade); }
 void SetStyle(int blade, LSPtr<char> style);

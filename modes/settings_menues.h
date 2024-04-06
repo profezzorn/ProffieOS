@@ -188,8 +188,8 @@ struct SettingsMenuMode : public MenuEntryMenu<SPEC,
 
 template<class SPEC>
 class BasicTopMenu : public MenuEntryMenu<SPEC,
-  SubMenuEntry<typename SPEC::EditPresetMenu, typename SPEC::SoundLibrary::tEditPresets>,
-  SubMenuEntry<typename SPEC::SettingsMenu, typename SPEC::SoundLibrary::tSettings>
+  SubMenuEntry<typename SPEC::EditPresetsMenu, typename SPEC::SoundLibrary::tEditPresets>,
+  SubMenuEntry<typename SPEC::SettingsMenu, typename SPEC::SoundLibrary::tEditSettings>
 > {};
 
 }  // namespace mode

@@ -386,7 +386,7 @@ void test_inouthelper(BladeStyle* style) {
       fprintf(stderr, "Should not be able to turn off when extending.\n");
       exit(1);
     }
-    if (mock_blade.colors[0].r <= last || mock_blade.colors[0].r == 65536) {
+    if (mock_blade.colors[0].r <= last || mock_blade.colors[0].r == 65535) {
       fprintf(stderr, "InOutHelper failed to brighten blade at t = %d red = %d last = %d\n", micros_, last, mock_blade.colors[0].r);
       exit(1);
     }

@@ -1119,7 +1119,7 @@ public:
 
 #ifdef MENU_SPEC_TEMPLATE
   void EnterMenu() {
-    pushMode<MENUSPEC<MENU_SPEC_TEMPLATE>::RootMenu>();
+    pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::TopMenu>();
   }
 #endif
 
@@ -1132,7 +1132,7 @@ public:
   void ToggleColorChangeMode() {
     if (!current_style()) return;
     if (current_mode == this) {
-      pushMode<MKSPEC<COLOR_CHANGE_MENU_SPEC_TEMPLATE>::RootMenu>();
+      pushMode<MKSPEC<COLOR_CHANGE_MENU_SPEC_TEMPLATE>::ColorChangeMenu>();
     }
   }
 #endif  // DISABLE_COLOR_CHANGE
@@ -1738,6 +1738,13 @@ public:
   }
   const char* GetTrack() {
     return current_preset_.track.get();
+  }
+
+  int GetPresetPosition() {
+    return current_preset_.preset_num;
+  }
+  void MovePreset(int position) {
+    current_preset_.SaveAt(position);
   }
   
 private:

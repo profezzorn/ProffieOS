@@ -402,6 +402,7 @@ public:
   ADD_SL_SOUND(PresetInserted, "mpsetins");
   ADD_SL_SOUND(SelectPreset, "mselpset");
   ADD_SL_SOUND(Preset, "mpset");
+  ADD_SL_SOUND(EditPresets, "medpsets");
 
   ADD_SL_SOUND(EditStyleOptions, "mestyopt");
 
@@ -413,8 +414,10 @@ public:
   ADD_SL_SOUND(ApplyColorsFromSelectedStyle, "macolsty");
   ADD_SL_SOUND(ApplyStyleOptionsFromSelectedStyle, "maargsty");
   ADD_SL_SOUND(ApplyColorsToAllBlades, "macolall");
+  ADD_SL_SOUND(ResetToDefaultColor, "mcolrst");
 
   ADD_SL_SOUND(Blade, "mbld");
+  ADD_SL_SOUND(Seconds, "mseconds");
 
   // Sound used to indicate that there are no more options
   // or list entries.

@@ -67,7 +67,7 @@ public:
   uint16_t size() override { return max_; }
 
   void select() override {
-    SPEC::MenuBase::select();
+    // SPEC::MenuBase::select();
     SetIntArg(menu_current_blade, menu_current_arg, this->pos_);
     popMode();
   }
@@ -119,7 +119,7 @@ struct SelectStyleEntry : public  MenuEntry {
     getSL<SPEC>()->SaySelectStyle();
   }
   void select(int entry) override {
-    menu_selected_preset = GetPresetPosition();
+    menu_selected_preset = prop_GetPresetPosition();
     menu_selected_blade = menu_current_blade;
     getSL<SPEC>()->SaySelect();
   }
