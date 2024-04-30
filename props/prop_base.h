@@ -1615,6 +1615,7 @@ public:
 
     if (!strcmp(cmd, "set_preset") && arg) {
       int preset = strtol(arg, NULL, 0);
+      SaveState(preset);
       SetPreset(preset, true);
       return true;
     }
@@ -1622,6 +1623,7 @@ public:
     if (!strcmp(cmd, "change_preset") && arg) {
       int preset = strtol(arg, NULL, 0);
       if (preset != current_preset_.preset_num) {
+	SaveState(preset);
         SetPreset(preset, true);
       }
       return true;
