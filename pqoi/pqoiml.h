@@ -120,14 +120,11 @@ public:
       if (!*x || *x == ' ') return 0;
       uint32_t ret = *(x++);
       if (!*x || *x == ' ') return ret;
-      ret <<= 8;
-      ret |= *(x++);
+      ret |= (*(x++)) << 8;
       if (!*x || *x == ' ') return ret;
-      ret <<= 8;
-      ret |= *(x++);
+      ret |= (*(x++)) << 16;
       if (!*x || *x == ' ') return ret;
-      ret <<= 8;
-      ret |= *(x++);
+      ret |= (*(x++)) << 24;
       return ret;
     }
 
