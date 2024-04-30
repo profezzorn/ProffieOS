@@ -5548,6 +5548,7 @@ SaberFett263Buttons() : PropBase() {}
         }
 
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_ON):
         if (menu_) {
           MenuUndo();
           return true;
