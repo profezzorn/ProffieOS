@@ -112,11 +112,16 @@ class BufferedFileReader : public AudioStreamWork {
 protected:
   void SEEK(uint32_t pos) {
     TRACE2(RGB565, "SEEK", pos);
-    stream_locked_.set(true);
-    do_seek_ = true;
-    seek_pos_ = pos;
-    input_buffer_.clear();
-    stream_locked_.set(false);
+    if (pos > TELL() && pos - TELL() < input_buffer_.size()) {
+      // Short forward seek within our buffer, just pop the data.
+      input_buffer_.pop(pos - TELL());
+    } else {
+      stream_locked_.set(true);
+      do_seek_ = true;
+      seek_pos_ = pos;
+      input_buffer_.clear();
+      stream_locked_.set(false);
+    }
   }
 
   uint32_t TELL() {
@@ -128,17 +133,18 @@ protected:
   bool ATEOF() {
     // TRACE2(RGB565, "ATEOF", file_.get_do_open());
     if (file_.get_do_open()) return false;
+    if (file_size_ == 0xFFFFFFFFU) return true;
     return TELL() == file_size_;
   }
 
   bool FillBuffer() override {
-    TRACE2(RGB565, "FillBuffer", file_.Tell());
+    TRACE2(RGB565_DATA, "FillBuffer", file_.Tell());
     if (stream_locked_.get()) {
-      TRACE(RGB565, "FillBuffer, locked");
+      TRACE(RGB565_DATA, "FillBuffer, locked");
       return false;
     }
     if (!input_buffer_.space_available()) {
-      TRACE(RGB565, "FillBuffer, no space available");
+      TRACE(RGB565_DATA, "FillBuffer, no space available");
       return false;
     }
     if (file_.OpenFile()) {
@@ -162,10 +168,32 @@ protected:
     }
     uint32_t toread = input_buffer_.continuous_space();
     uint32_t max_read = 512 - (file_.Tell() % 512);  // Read to end of block
+    TRACE2(RGB565_DATA, "FillBuffer9", std::min(toread, max_read));
     uint32_t bytes_read = file_.Read(input_buffer_.space(), std::min(toread, max_read));
+
+    uint32_t now = millis();
+    uint32_t m = now - bps_last_millis_;
+    if (m > 1000) {
+      bps_bytes_ = 0;
+      bps_millis_ = 0;
+    } else {
+      bps_bytes_ += bytes_read;
+      bps_millis_ += m;
+      if (bps_millis_ > 5000) {
+	bps_millis_ /= 2;
+	bps_bytes_ /= 2;
+      }
+    }
+    bps_last_millis_ = now;
+    
     input_buffer_.push(bytes_read);
-    TRACE2(RGB565, "FillBuffer7", input_buffer_.size());
+    TRACE2(RGB565_DATA, "FillBuffer7", input_buffer_.size());
     return true;
+  }
+
+  float kbps() {
+    if (bps_millis_ == 0) return 0.0f;
+    return bps_bytes_ / (float)bps_millis_;
   }
 
   void CloseFiles() override {
@@ -185,6 +213,10 @@ protected:
   }
 
   int getc() { return input_buffer_.pop(); }
+
+  uint32_t bps_bytes_ = 0;
+  uint32_t bps_millis_ = 0;
+  uint32_t bps_last_millis_ = 0;
   
   POLYHOLE;
   POAtomic<bool> stream_locked_;
@@ -386,7 +418,7 @@ public:
     static_assert(h == H, "Height is not matching.");
   }
   
-  void SB_On2() override { scr_.Play(&SCR_out); }
+  void SB_On2(EffectLocation location) override { scr_.Play(&SCR_out); }
   void SB_Top(uint64_t total_cycles) override { scr_.screen()->SB_Top(); }
 
   const char* name() override { return "ColorDisplayController"; }
@@ -430,7 +462,7 @@ public:
     // Need to call ShowDefault when the previous effect is over.
   }
 
- void SB_Effect2(EffectType effect, float location) override {
+ void SB_Effect2(EffectType effect, EffectLocation location) override {
    switch (effect) {
      case EFFECT_NEWFONT:
        looped_on_ = Tristate::Unknown;

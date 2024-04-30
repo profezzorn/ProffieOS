@@ -480,7 +480,7 @@ struct DisplayConfig {
 };
 
 template<int LAYERS, class CONFIG, class SIZE, class Adapter, class CHIP>
-struct DisplayHelper {
+struct DisplayConfigHelper {
   typedef typename CONFIG::template size<SIZE> size;
   typedef RGB565Frame<size::x, size::y, LAYERS> frame;
   typedef CHIP chip;
@@ -714,7 +714,7 @@ using SPIDisplay_AdaFruit358 = SPIDisplay77XX<
   LAYERS,
   CONFIG,
   // HELPER
-  DisplayHelper<LAYERS, CONFIG, SizeT<128, 160>, SA, ST7735>,
+  DisplayConfigHelper<LAYERS, CONFIG, SizeT<128, 160>, SA, ST7735>,
   // InitSequence
   ConcatByteArrays<ST7735::RCMD, typename CONFIG::template rotation_cmd<ST7735> >,
   // OnSequence
@@ -731,7 +731,7 @@ using SPIDisplay_DFRobot096 = SPIDisplay77XX<
   LAYERS,
   CONFIG,
   // HELPER
-  DisplayHelper<LAYERS, CONFIG, SizeT<128, 160>, SA, ST7735>,
+  DisplayConfigHelper<LAYERS, CONFIG, SizeT<128, 160>, SA, ST7735>,
   // InitSequence
   ConcatByteArrays<ST7735::RCMD, typename CONFIG::template rotation_cmd<ST77XXBGR> >,
   // OnSequence
@@ -748,7 +748,7 @@ using SPIDisplay_AdaFruit5206 = SPIDisplay77XX<
   LAYERS,
   CONFIG,
   // HELPER
-  DisplayHelper<LAYERS, CONFIG, SizeT<320, 240>, SA, ST7789>,
+  DisplayConfigHelper<LAYERS, CONFIG, SizeT<320, 240>, SA, ST7789>,
   // InitSequence
   ConcatByteArrays<ST7789::GENERIC_ST7789_STARTUP, typename CONFIG::template rotation_cmd<ST7789> > ,
   // OnSequence
@@ -765,7 +765,7 @@ using SPIDisplay_AdaFruit4311 = SPIDisplay77XX<
   LAYERS,
   CONFIG,
   // HELPER
-  DisplayHelper<LAYERS, CONFIG, SizeT<240, 320>, SA, ST7789>,
+  DisplayConfigHelper<LAYERS, CONFIG, SizeT<240, 320>, SA, ST7789>,
   // InitSequence
   ConcatByteArrays<ST7789::GENERIC_ST7789_STARTUP, typename CONFIG::template rotation_cmd<ST7789> > ,
   // OnSequence

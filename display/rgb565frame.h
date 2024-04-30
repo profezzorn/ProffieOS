@@ -17,10 +17,10 @@ public:
   
   template<size_t N>
   void fill(PQOI::PqoiStreamingDecoder* pqoi, CircularBuffer<uint8_t, N>* input_buffer, int left, int pixels) {
-    TRACE2(RGB565, "fill", chunk.size());
+    TRACE2(RGB565_DATA, "fill", chunk.size());
     pqoi->set_input(input_buffer->data(), input_buffer->data() + input_buffer->continuous_data());
     chunk.fill(pqoi, left, pixels);
-    TRACE2(RGB565, "fill pop=", pqoi->in - input_buffer->data());
+    TRACE2(RGB565_DATA, "fill pop=", pqoi->in - input_buffer->data());
     input_buffer->pop(pqoi->in - input_buffer->data());
   }
 };
@@ -103,7 +103,7 @@ public:
 	return;
       }
       next_header_ = 0;
-      TRACE(RGB565, "layer::run::read header");
+      TRACE2(RGB565, "layer::run::read header", TELL());
       read_pos_ = (char*)&header_;
       read_end_ = read_pos_ + sizeof(header_);
       while (read_pos_ < read_end_) {
@@ -251,15 +251,15 @@ public:
   }
 
   bool Fill(OutputBuffer<WIDTH>* output_buffer) {
-    TRACE2(RGB565, "Fill pos=", TELL());
-    TRACE2(RGB565, "Fill row=", output_buffer->rownum);
+    TRACE2(RGB565_DATA, "Fill pos=", TELL());
+    TRACE2(RGB565_DATA, "Fill row=", output_buffer->rownum);
     if (output_buffer->rownum < top_margin_ || output_buffer->rownum >= height_ + top_margin_) {
-      TRACE(RGB565, "Fill high row");
+      TRACE(RGB565_DATA, "Fill high row");
       output_buffer->chunk.zero(left_margin_, width_);
       return true;
     }
     if (!frame_selected_) {
-      TRACE(RGB565, "Fill@eof");
+      TRACE(RGB565_DATA, "Fill@eof");
       // TODO: fill chunk with zeroes?? or wait until data is available?
       ///memset(output_buffer->chunk.pixels.begin(), 0, WIDTH*2);
       return true;
@@ -272,7 +272,7 @@ public:
 
   // Returns true when done.
   bool Apply(OutputBuffer<WIDTH>* output_buffer, uint16_t* &out) {
-    TRACE2(RGB565, "Apply", TELL());
+    TRACE2(RGB565_DATA, "Apply", TELL());
     if (!play_) return true;
     if (!transparent_) {
       if (!out) output_buffer->chunk.init();
@@ -339,6 +339,7 @@ public:
 	   << "\nplay time: " << play_time() << "ms"
 	   << " POS: " << TELL()
 	   << " EOF: " << ATEOF()
+	   << " KBPS: " << kbps()
 	   << " Bufsize: " << input_buffer_.size()
 	   << " next state: " << state_machine_.next_state_ << "\n";
   }
@@ -382,9 +383,6 @@ private:
   POLYHOLE;
 };
 
-
-//#define YIELD_SLICE() do { if (micros() - slice_start > slice_micros) YIELD(); } while(0)
-#define YIELD_SLICE() YIELD()
 
 template<size_t WIDTH, size_t HEIGHT, size_t LAYERS>
 class RGB565Frame : public SizedLayeredScreenControl<WIDTH, HEIGHT> {
@@ -465,7 +463,7 @@ public:
 	frame_start_ = Cyclint<uint32_t>(micros());
 
 	for (layer = 0; layer < LAYERS; layer++) {
-	  while (!layers[layer].SelectFrame(frame_start_)) YIELD_SLICE();
+	  while (!layers[layer].SelectFrame(frame_start_)) YIELD();
 	}
 
 	if (!layers[0].is_playing()) break;
@@ -482,11 +480,13 @@ public:
 	current_output_buffer_->chunk.init(layers[0].left_margin_);
 
 	for (rownum_ = 0; rownum_ < HEIGHT; rownum_++) {
-	  TRACE2(RGB565, "inner loop row=", rownum_);
+	  if (micros() - slice_start > slice_micros) YIELD();
+	  
+	  TRACE2(RGB565_DATA, "inner loop row=", rownum_);
 	  current_output_buffer_->rownum = rownum_;
 
 	  // Base layer
-	  while (!layers[0].Fill(current_output_buffer_)) YIELD_SLICE();
+	  while (!layers[0].Fill(current_output_buffer_)) YIELD();
 
 	  // After this, it will be ok to make modifications to the current output buffer.
 	  while (!(next_output_buffer_ = getOutputBuffer())) YIELD();
@@ -501,7 +501,7 @@ public:
 	  for (layer = 1; layer <= top_layer_; layer++) {
 	    out = nullptr;
 	    while (!layers[layer].Apply(current_output_buffer_, out)) {
-	      YIELD_SLICE();
+	      YIELD();
 	    }
 	  }
 
@@ -579,7 +579,7 @@ protected:
   int top_layer_;
   uint32_t frame_num_ = 0;
   
-  CircularBuffer<OutputBuffer<WIDTH>, 4> output_buffers_;
+  CircularBuffer<OutputBuffer<WIDTH>, 32> output_buffers_;
   LoopCounter loop_counter_;
 private:
   POLYHOLE;
