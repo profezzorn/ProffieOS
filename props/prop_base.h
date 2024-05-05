@@ -1286,6 +1286,10 @@ public:
       SaberBase::DoBlast();
       return true;
     }
+    if (!strcmp(cmd, "quote")) {
+      SaberBase::DoEffect(EFFECT_QUOTE, 0);
+      return true;
+    }
     if (!strcmp(cmd, "lock") || !strcmp(cmd, "lockup")) {
       STDOUT.print("Lockup ");
       if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
