@@ -141,7 +141,16 @@ class Effect {
     reset();
   }
 
+  ~Effect() {
+#ifdef NO_REPEAT_RANDOM
+    clean();
+#endif
+  }
+
   void reset() {
+#ifdef NO_REPEAT_RANDOM
+    clean();
+#endif
     min_file_ = 127;
     max_file_ = -1;
     sub_files_ = 0;
@@ -340,10 +349,10 @@ class Effect {
     int f = files_found();
     int sel = clamp(floorf(f * value), 0, f - 1);
 #ifdef NO_REPEAT_RANDOM
-    for (int i = 0; i < 3 && (sel == selected_ || (sel == last_ && (rand() & 1))); i++) {
+    for (int i = 0; i < 3 && (sel == selected_ || (sel == last_dirid_ && (rand() & 1))); i++) {
       sel = clamp(sel + 1 - (rand() & 2), 0, f - 1);
     }
-    last_ = selected_;
+    last_dirid_ = selected_;
 #endif
     selected_ = sel;
   }
@@ -357,38 +366,122 @@ class Effect {
   }
 
 #ifdef NO_REPEAT_RANDOM
-  int16_t last_ = -1;
-  int16_t last_subid_ = -1;
+  int16_t* subdirs_avail_ = nullptr;
+  int16_t subdirs_num_ = 0;
 
-  static int randomize(int N, int last) {
-    int n = rand() % N;
-    if (n == last) {
-      switch (N) {
-      default:
-	n = rand() % (N - 1);
-	if (n >= last) n++;
-	break;
-      case 2:
-	if (n == last) n = rand() % N;
-      case 1:
-	break;
+  int16_t** subfiles_avail_ = nullptr;
+  int16_t* subfiles_num_ = nullptr;
+
+  int16_t last_dirid_ = -1;
+  int16_t* last_subid_ = nullptr;
+
+  void clean() {
+    delete[] subdirs_avail_;
+    if (subfiles_avail_) {
+      for (int i = 0; i < files_found(); ++i) {
+        delete[] subfiles_avail_[i];
       }
     }
-    return n;
+    delete[] subfiles_avail_;
+    delete[] subfiles_num_;
+    delete[] last_subid_;
+    
+    subdirs_avail_ = nullptr;
+    subdirs_num_ = 0;
+    subfiles_avail_ = nullptr;
+    subfiles_num_ = nullptr;
+    last_dirid_ = -1;
+    last_subid_ = nullptr;
   }
-#define RANDOMIZE(N, LAST) randomize((N), (LAST))
+
+  void setup() {
+    int files = files_found();
+    
+    if (!subdirs_avail_ && files) {
+      subdirs_avail_ = new int16_t[files];
+    }
+
+    if (!subfiles_avail_ && sub_files_ && files) {
+      subfiles_avail_ = new int16_t*[files];
+      for (int i = 0; i < files; ++i) {
+        subfiles_avail_[i] = new int16_t[sub_files_];
+      }
+    }
+
+    if (!subfiles_num_ && sub_files_ && files) {
+      subfiles_num_ = new int16_t[files];
+      for (int i = 0; i < files; ++i) {
+        subfiles_num_[i] = 0;
+      }
+    }
+
+    if (!last_subid_ && sub_files_ && files) {
+      last_subid_ = new int16_t[files];
+      for (int i = 0; i < files; ++i) {
+        last_subid_[i] = -1;
+      }
+    }
+
+    if (subdirs_num_ <= 0 && subdirs_avail_ && files) {
+      for (int i = 0; i < files; ++i) {
+        subdirs_avail_[i] = i;
+      }
+      subdirs_num_ = files;
+    }
+
+    if (subfiles_avail_ && subfiles_num_ && sub_files_ && files) {
+      for (int i = 0; i < files; ++i) {
+        if (subfiles_num_[i] <= 0) {
+          for (int j = 0; j < sub_files_; ++j) {
+            subfiles_avail_[i][j] = j;
+          }
+          subfiles_num_[i] = sub_files_;
+        }
+      }
+    }
+  }
+
+  int randomize(int subdir) {
+    setup();
+    int files = files_found();
+    const bool use_subfiles = subdir >= 0 && files && subdir < files && subfiles_avail_ && subfiles_num_ && last_subid_;
+    
+    int16_t* avail = use_subfiles ? subfiles_avail_[subdir] : subdirs_avail_;
+    int16_t* num_avail = use_subfiles ? subfiles_num_ + subdir : &subdirs_num_;
+    int16_t* last = use_subfiles ? last_subid_ + subdir : &last_dirid_;
+
+    int n = rand() % *num_avail;
+    if (avail[n] == *last) {
+      switch (*num_avail) {
+      default:
+        n = rand() % ((*num_avail) - 1);
+	      if (avail[n] >= *last) n++;
+	      break;
+      case 2:
+	      if (avail[n] == *last) n = rand() % *num_avail;
+      case 1:
+	      break;
+      }
+    }
+
+    int ret = avail[n];
+
+    (*num_avail)--;
+    *last = ret;
+    for (int i = n; i < *num_avail; ++i) {
+      avail[i] = avail[i + 1];
+    }
+
+    return ret;
+  }
+#define RANDOMIZE(S) randomize(S)
 #else
-#define RANDOMIZE(N, LAST) (rand() % (N))  
+#define RANDOMIZE(S) ( S >= 0 ? rand() % (number_of_subfiles()) : rand() % (files_found()))  
 #endif
 
 
   int random_subid(int filenum) {
-    if (!sub_files_) return 0;
-    int ret = RANDOMIZE(sub_files_, last_ == filenum ? last_subid_ : -1);
-#ifdef NO_REPEAT_RANDOM
-    last_subid_ = ret;
-#endif    
-    return ret;
+    return sub_files_ ? RANDOMIZE(filenum) : 0;
   }
 
   FileID RandomFile() {
@@ -405,13 +498,9 @@ class Effect {
 	       (file_type_ == FileType::SOUND || paired_)) {
       n = std::min<int>(SaberBase::sound_number, num_files - 1);
     } else {
-      n = RANDOMIZE(num_files, last_);
+      n = RANDOMIZE(-1);
     }
     int subid = random_subid(n);
-
-#ifdef NO_REPEAT_RANDOM
-    last_ = n;
-#endif    
 
     return FileID(this, n, subid);
   }
