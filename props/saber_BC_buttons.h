@@ -58,7 +58,7 @@ Optional #defines:
                                   within 1 second of last blast.
                                   Exit by not swinging for 1 second.
 #define FEMALE_TALKIE_VOICE     - To use a female voice version of onboard Talkie.
-#define NO_VOLUME_MENU          - Option to omit On-the-fly Volume menu control with buttons.
+#define BC_NO_VOLUME_MENU          - Option to omit On-the-fly Volume menu control with buttons.
 #define ENABLE_FASTON           - Use faston.wav for FastOn() ignitions, such as gesture ignitions or fast preset change.
                                   The faston.wav sound will be replaced with fastout.wav. 
                                   If you have a good reason to keep faston.wav as is, please post at https://crucible.hubbe.net/
@@ -879,7 +879,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD, MODE_OFF):
       return true;
 
 // Enter / Exit Volume MENU
-#ifndef NO_VOLUME_MENU
+#ifndef BC_NO_VOLUME_MENU
 #if NUM_BUTTONS == 1
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
 #else
