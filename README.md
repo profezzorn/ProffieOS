@@ -11,8 +11,10 @@ Proffie OS supports:
 - :fire: Quad/Tri LED stars.
 
 ### Getting started  
-* Github Wiki: https://github.com/profezzorn/ProffieOS/wiki
+* ProffieOS Documentation: https://pod.hubbe.net/
 * ProffieOS: https://fredrik.hubbe.net/lightsaber/proffieos.html
-* Proffieboard: https://fredrik.hubbe.net/lightsaber/v4/
+* Proffieboard v1.5: https://fredrik.hubbe.net/lightsaber/v4
+* Proffieboard v2.2: https://fredrik.hubbe.net/lightsaber/v5
+* Proffieboard v3.9: https://fredrik.hubbe.net/lightsaber/v6
 * TeensySaber: http://fredrik.hubbe.net/lightsaber/v3/
-* Support forum: http://therebelarmory.com/board/97/profezzorns-lab
+* Support forum: http://crucible.hubbe.net
