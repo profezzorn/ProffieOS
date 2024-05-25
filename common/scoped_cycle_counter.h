@@ -17,25 +17,27 @@ public:
   ScopedCycleCounter(uint64_t& dest) :
     dest_(dest) {
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
+    noInterrupts();
     cycles_ = getCycles();
+    interrupts();
 #endif    
   }
   ~ScopedCycleCounter() {
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
+    noInterrupts();
     uint32_t cycles;
     cycles = getCycles() - cycles_;
-    noInterrupts();
     counted_cycles_ += cycles;
     interrupts();
     dest_ += cycles;
 #endif
   }
 private:
-  static uint32_t counted_cycles_;
+  static volatile uint32_t counted_cycles_;
   uint32_t cycles_;
   uint64_t& dest_;
 };
 
-uint32_t ScopedCycleCounter::counted_cycles_ = 0;
+volatile uint32_t ScopedCycleCounter::counted_cycles_ = 0;
 
 #endif
