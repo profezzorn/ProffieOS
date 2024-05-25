@@ -25,13 +25,39 @@ public:
   }
 };
 
+class EffectDetector {
+public:
+  EffectDetector(BladeEffectType effect) : effect_(effect) {}
+  BladeEffect* Find() {
+    BladeEffect* effects;
+    size_t n = SaberBase::GetEffects(&effects);
+    for (size_t i = 0; i < n; i++) {
+      if (effect_ == effects[i].type) {
+	return effects + i;
+      }
+    }
+    return nullptr;
+  }
+  bool Detect() {
+    BladeEffect* e = Find();
+    if (!e) return false;
+    if (e->start_micros == last_detected_) return false;
+    last_detected_ = e->start_micros;
+    return true;
+  }
+
+private:
+  BladeEffectType effect_;
+  uint32_t last_detected_;
+};
+
 template<size_t WIDTH, size_t HEIGHT>
 class PQOILayer : public BufferedFileReader, public LayerControl {
 public:
   const uint32_t W = WIDTH;
   const uint32_t H = HEIGHT;
 
-  PQOILayer() {
+  PQOILayer() : clash_detector_(EFFECT_CLASH), stab_detector_(EFFECT_STAB) {
     state_machine_.stop();
   }
 
@@ -56,7 +82,8 @@ public:
       case fourcc("lock"): return SaberBase::Lockup() == SaberBase::LOCKUP_NORMAL;
       case fourcc("drag"): return SaberBase::Lockup() == SaberBase::LOCKUP_DRAG;
       case fourcc("melt"): return SaberBase::Lockup() == SaberBase::LOCKUP_MELT;
-      // TODO: battery level, audio level, random
+      case fourcc("clsh"): return clash_detector_.Detect();
+      case fourcc("stab"): return stab_detector_.Detect();
     }
     // Labels of the form: A<60
     // A can be A, B, C, D, E or R (R is random)
@@ -208,9 +235,11 @@ public:
     
     // Skip frame
     SEEK(TELL() + header_.length - 8);
+    dropped_frame_counter_.Update(1);
     goto read_header;
 
   frame_found:
+    dropped_frame_counter_.Update(0);
     TRACE(RGB565, "layer::run::frame found");
 
     frame_position_in_file_ = TELL();
@@ -220,6 +249,7 @@ public:
   }
 
   bool SelectFrame(Cyclint<uint32_t> micros) {
+    SCOPED_PROFILER();
     TRACE2(RGB565, "SelectFrame", TELL());
     if (micros_ != micros) {
       // New frame.
@@ -251,6 +281,7 @@ public:
   }
 
   bool Fill(OutputBuffer<WIDTH>* output_buffer) {
+    SCOPED_PROFILER();
     TRACE2(RGB565_DATA, "Fill pos=", TELL());
     TRACE2(RGB565_DATA, "Fill row=", output_buffer->rownum);
     if (output_buffer->rownum < top_margin_ || output_buffer->rownum >= height_ + top_margin_) {
@@ -264,9 +295,18 @@ public:
       ///memset(output_buffer->chunk.pixels.begin(), 0, WIDTH*2);
       return true;
     }
+#if 0
     if (!input_buffer_.size()) scheduleFillBuffer();
     output_buffer->fill(&pqoi, &input_buffer_, left_margin_, width_);
     return output_buffer->chunk.full(left_margin_, width_);
+#else
+    while (!output_buffer->chunk.full(left_margin_, width_)) {
+      if (!input_buffer_.size()) scheduleFillBuffer();
+      if (!input_buffer_.size()) return false;
+      output_buffer->fill(&pqoi, &input_buffer_, left_margin_, width_);
+    }
+    return true;
+#endif    
   }
 
 
@@ -284,6 +324,8 @@ public:
     }
     if (!out) out = output_buffer->chunk.begin() + left_margin_;
     uint16_t *end = output_buffer->chunk.begin() + left_margin_ + width_;
+#if 0
+    
     if (!input_buffer_.size()) scheduleFillBuffer();
     pqoi.set_input(input_buffer_.data(), input_buffer_.data() + input_buffer_.continuous_data());
     out = pqoi.Apply(out, end);
@@ -293,6 +335,20 @@ public:
       stop();
     }
     return out >= end;
+#else
+    while (out < end) {
+      if (!input_buffer_.size()) scheduleFillBuffer();
+      if (!input_buffer_.size()) return false;
+      pqoi.set_input(input_buffer_.data(), input_buffer_.data() + input_buffer_.continuous_data());
+      out = pqoi.Apply(out, end);
+      input_buffer_.pop(pqoi.in - input_buffer_.data());
+    }
+    if (out > end) {
+      STDERR << "Rows do not line up: " << (out-end) << " rownum="<< output_buffer->rownum  <<"!\n";
+      stop();
+    }
+    return true;
+#endif    
   }
 
   Cyclint<uint32_t> next_frame_time() {
@@ -342,6 +398,9 @@ public:
 	   << " KBPS: " << kbps()
 	   << " Bufsize: " << input_buffer_.size()
 	   << " next state: " << state_machine_.next_state_ << "\n";
+    STDOUT.print(" frame drop fps: ");
+    dropped_frame_counter_.Print();
+    STDOUT.println("");
   }
 
   // Video size
@@ -353,6 +412,7 @@ public:
   uint8_t layer_;
   bool transparent_;
 protected:
+  LoopCounter dropped_frame_counter_;
   uint32_t start_time_millis_;
   bool play_ = false;
   bool frame_selected_ = false;
@@ -377,6 +437,8 @@ protected:
   VariableSource *variables[5];
 
   PQOI::StreamingAlphaDecoder pqoi;
+  EffectDetector clash_detector_;
+  EffectDetector stab_detector_;
 private:
   POLYHOLE;
   StateMachineState state_machine_;
@@ -389,7 +451,7 @@ class RGB565Frame : public SizedLayeredScreenControl<WIDTH, HEIGHT> {
 public:
   static const size_t W = WIDTH;
   static const size_t H = HEIGHT;
-  static const uint32_t slice_micros = 1000; // 1ms
+  static const uint32_t slice_micros = 2000; // 2ms
 
   POLYHOLE;
   PQOILayer<WIDTH, HEIGHT> layers[LAYERS];
@@ -419,6 +481,7 @@ public:
   }
 
   void frame_loop() {
+    SCOPED_PROFILER();
     uint32_t slice_start = micros();
     STATE_MACHINE_BEGIN();
 
@@ -549,12 +612,26 @@ public:
   }
   
   void dumpstate() {
-    STDOUT << "frame = "<< frame_num_ <<" rownum_ = " << rownum_ << "\n";
-    STDOUT << "next state: " << state_machine_.next_state_ << "\n";
+    STDOUT << "frame = "<< frame_num_
+	   << " rownum_ = " << rownum_
+	   << " next state: " << state_machine_.next_state_
+	   << " buffered rows: " << output_buffers_.size()
+	   << "\n";
     for (size_t l = 0; l < LAYERS; l++) {
       STDOUT << "*** Layer " << l << " ***\n";
       layers[l].dumpstate();
     }
+#ifdef PQOI_HISTOGRAM    
+    uint64_t total = 0;
+    for (int b = 0; b < 256; b++) {
+      total += PQOI::PQHIST[b];
+    }
+    for (int b = 0; b < 256; b++) {
+      STDOUT << b << " : "
+	     << (PQOI::PQHIST[b] * 100.0d / total)
+	     <<"% n=" << (double)(PQOI::PQHIST[b]) << "\n";
+    }
+#endif
   }
 
 
