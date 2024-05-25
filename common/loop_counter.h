@@ -16,18 +16,19 @@ public:
     millis_sum_ = 0;
     last_millis_ = 0;
   }
-  void Update() {
+  void Update(uint32_t v) {
     uint32_t m = millis();
     if (last_millis_) {
       millis_sum_ += m - last_millis_;
-      updates_++;
-      if (updates_ > 1000) {
+      updates_+=v;
+      if (millis_sum_ > 10000) {
          updates_ /= 2;
          millis_sum_ /= 2;
       }
     }
     last_millis_ = m;
   }
+  void Update() { Update(1); }
 private:
   int updates_ = 0;
   int millis_sum_ = 0;
