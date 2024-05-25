@@ -724,6 +724,7 @@ EFFECT(fastout);
 EFFECT2(lock, lock);
 EFFECT(swng);
 EFFECT(slsh);
+EFFECT(quote);
 
 // Looped swing fonts. (SmoothSwing V1/V2)
 EFFECT2(swingl, swingl);  // Looped swing, LOW

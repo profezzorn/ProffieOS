@@ -88,7 +88,7 @@ private:
   bool pulsed_ = false;
   PONUA SVFWrapper<PULSE> pulse_;
   PONUA TR transition_;
-  PONUA TR out_;
+  PONUA OUT out_;
 public:
   template<class X, class Y>
   auto getColor(const X& a, const Y& b, int led) ->

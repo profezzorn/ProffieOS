@@ -625,6 +625,7 @@ public:
       case EFFECT_CLASH: Play(&SFX_clash, &SFX_clsh); return;
       case EFFECT_FORCE: PlayCommon(&SFX_force); return;
       case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); return;
+      case EFFECT_QUOTE: PlayCommon(&SFX_quote); return;
       case EFFECT_BOOT: PlayPolyphonic(&SFX_boot); return;
       case EFFECT_NEWFONT: SB_NewFont(); return;
       case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;

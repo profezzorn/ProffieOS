@@ -1800,7 +1800,7 @@ SaberFett263Buttons() : PropBase() {}
     RestoreGestureState();
   }
 
-  bool chdir(const char* dir) override {
+  bool chdir(const StringPiece dir) override {
     bool ret = PropBase::chdir(dir);
     num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
     track_num_ = 0;
