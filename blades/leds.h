@@ -221,4 +221,16 @@ struct CH3LED {
   static const int Blue = 255;
 };
 
+// Must be used with white colors.
+struct ServoSelector {
+  static constexpr float MaxAmps = 1.0;
+  static constexpr float MaxVolts = 1000.0;
+  static constexpr float P2Amps = 0.0;
+  static constexpr float P2Volts = 0.0;
+  static constexpr float R = 0.0;
+  static const int Red = 255;
+  static const int Green = 255;
+  static const int Blue = 255;
+};
+
 #endif

@@ -7,22 +7,45 @@
 #include <stm32l4_timer.h>
 
 namespace {
+
+enum class PWM_USECASE : uint8_t {
+  NONE,
+  PWM,
+  SERVO,
+  IR,
+  WS2811
+};
 static stm32l4_timer_t stm32l4_pwm[PWM_INSTANCE_COUNT];
 static uint8_t timer_use_counts[PWM_INSTANCE_COUNT];
+static PWM_USECASE timer_usecase[PWM_INSTANCE_COUNT];
 
 #define PWM_SYNC_INSTANCE 3  // TIM15
 
-
-void SetupTimer(uint32_t instance) {
+void SetupTimer(uint32_t instance, PWM_USECASE usecase) {
   timer_use_counts[instance]++;
   if (stm32l4_pwm[instance].state == TIMER_STATE_NONE) {
     stm32l4_timer_create(&stm32l4_pwm[instance], g_PWMInstances[instance], 15, 0);
   }
 
   if (stm32l4_pwm[instance].state == TIMER_STATE_INIT) {
-    // 813 Hz, 32768 steps
-    uint32_t carrier = 26666666;
+    timer_usecase[instance] = usecase;
+    uint32_t hz;
+    switch (usecase) {
+      case PWM_USECASE::NONE:
+      case PWM_USECASE::IR:
+      case PWM_USECASE::WS2811:
+        PVLOG_NORMAL << "Fatal error in SetupTimer()";
+      case PWM_USECASE::PWM:
+        // 813 Hz, 32768 steps
+        hz = 813;
+	break;
+      case PWM_USECASE::SERVO:
+        // 50 Hz, 32768 steps
+        hz = 50;
+	break;
+    }
     uint32_t modulus = 32768;
+    uint32_t carrier = modulus * hz;
     uint32_t divider = stm32l4_timer_clock(&stm32l4_pwm[instance]) / carrier;
     
     if (divider == 0) divider = 1;
@@ -31,7 +54,7 @@ void SetupTimer(uint32_t instance) {
     stm32l4_timer_start(&stm32l4_pwm[instance], false);
 
     if (instance != PWM_SYNC_INSTANCE)  {
-      SetupTimer(PWM_SYNC_INSTANCE);
+      SetupTimer(PWM_SYNC_INSTANCE, PWM_USECASE::PWM);
       // TIM16 cannot be synchronized in hardware, so let's do the best we can.
       // We use TIM15 to synchromize with, because it is used for PWM on all proffieboards.
       volatile uint32_t* from = &stm32l4_pwm[PWM_SYNC_INSTANCE].TIM->CNT;
@@ -45,6 +68,10 @@ void SetupTimer(uint32_t instance) {
     }
     // Buffer counters from now on.
     stm32l4_pwm[instance].TIM->CR1 |= TIM_CR1_ARPE;
+  } else {
+    if (timer_usecase[instance] != usecase) {
+      PVLOG_NORMAL << "Timer use case does not match!";
+    }
   }
 }
 
@@ -52,6 +79,7 @@ void TeardownTimer(uint32_t instance) {
   if (0 == --timer_use_counts[instance]) {
     stm32l4_timer_stop(&stm32l4_pwm[instance]);
     stm32l4_timer_disable(&stm32l4_pwm[instance]);
+    timer_usecase[instance] = PWM_USECASE::NONE;
     if (instance != PWM_SYNC_INSTANCE) {
       TeardownTimer(PWM_SYNC_INSTANCE);
     }
@@ -74,7 +102,7 @@ void LSanalogWrite(uint32_t pin, int value) {
   }
 }
 
-void LSanalogWriteSetup(uint32_t pin) {
+void LSanalogWriteSetup(uint32_t pin, PWM_USECASE usecase = PWM_USECASE::PWM) {
   // Handle the case the pin isn't usable as PIO
   if (pin >= NUM_TOTAL_PINS || g_APinDescription[pin].GPIO == NULL) {
     Serial.print("Analog Setup: NOT A PIN: ");
@@ -88,7 +116,7 @@ void LSanalogWriteSetup(uint32_t pin) {
     return;
   }
   uint32_t instance = g_APinDescription[pin].pwm_instance;
-  SetupTimer(instance);
+  SetupTimer(instance, usecase);
   stm32l4_timer_channel(&stm32l4_pwm[instance], g_APinDescription[pin].pwm_channel, 0, TIMER_CONTROL_PWM);
   // Wait for a complete cycle to make sure the internal state is clear before setting the output mode.
   delayMicroseconds(1300); // 1.3ms
@@ -114,7 +142,7 @@ void LSanalogWriteTeardown(uint32_t pin) {
 static int8_t po_pin_to_channel[SOC_GPIO_PIN_COUNT] = { 0 };
 static int po_cnt_channel = LEDC_CHANNELS;
 
-void LSanalogWriteSetup(uint32_t pin) {
+void LSanalogWriteSetup(uint32_t pin, PWM_USECASE usecase = PWM_USECASE::PWM) {
   if (po_pin_to_channel[pin] == 0) {
     if (!po_cnt_channel) {
       log_e("No more analogWrite channels available! You can have maximum %u", LEDC_CHANNELS);
@@ -122,7 +150,7 @@ void LSanalogWriteSetup(uint32_t pin) {
     }
     po_pin_to_channel[pin] = po_cnt_channel--;
     ledcAttachPin(pin, po_cnt_channel);
-    ledcSetup(po_cnt_channel, 1000, 16);
+    ledcSetup(po_cnt_channel, usecase == PWM_USECASE::SERVO : 50 ? 500, 16);
   }
 }
 void LSanalogWriteTeardown(uint32_t pin) {
@@ -133,9 +161,9 @@ void LSanalogWrite(uint32_t pin, int value) {
 }
 #elif defined(TEENSYDUINO)
 // First some abstractions for controlling PWM pin
-void LSanalogWriteSetup(uint32_t pin) {
+void LSanalogWriteSetup(uint32_t pin, PWM_USECASE usecase = PWM_USECASE::PWM) {
   analogWriteResolution(16);
-  analogWriteFrequency(pin, 1000);
+  analogWriteFrequency(pin, usecase == PWM_USECASE::SERVO : 50 ? 500);
 }
 void LSanalogWriteTeardown(uint32_t pin) {}
 void LSanalogWrite(uint32_t pin, int value) {
@@ -143,7 +171,7 @@ void LSanalogWrite(uint32_t pin, int value) {
 }
 #else
 // First some abstractions for controlling PWM pin
-void LSanalogWriteSetup(uint32_t pin) {
+void LSanalogWriteSetup(uint32_t pin, PWM_USECASE usecase = PWM_USECASE::PWM) {
   analogWriteResolution(16);
 }
 void LSanalogWriteTeardown(uint32_t pin) {}

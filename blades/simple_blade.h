@@ -24,7 +24,18 @@ public:
 
   Color8 getColor8() const { return led_.getColor8(); }
 
-  DriveLogic<LED> led_;
+  PONUA DriveLogic<LED> led_;
+};
+
+template<int PIN, class LED>
+class ServoPWMPin : public PWMPin<PIN, LED> {
+public:
+  void Activate() override {
+    static_assert(PIN >= 0, "PIN is negative?");
+    static_assert(IsPWMPin(PIN), "Not a PWM-capable pin.");
+    LSanalogWriteSetup(PIN, PWM_USECASE::SERVO);
+    LSanalogWrite(PIN, 0);  // make it black
+  }
 };
 
 template<class LED>
@@ -301,5 +312,11 @@ class BladeBase *StringBladePtr() {
   return &blade;
 }
 #endif
+
+template<int pin, class LED = ServoSelector>
+class BladeBase *ServoBladePtr() {
+  static Simple_Blade< ServoPWMPin<pin, LED>  > blade;
+  return &blade;
+}
 
 #endif
