@@ -618,6 +618,7 @@ class NoLED;
 #include "blades/simple_blade.h"
 #include "blades/saviblade.h"
 #include "blades/sub_blade.h"
+#include "blades/combo_blade.h"
 #include "blades/dim_blade.h"
 #include "blades/leds.h"
 #include "blades/blade_id.h"
