@@ -389,7 +389,6 @@ EFFECT(faston);     // for EFFECT_FAST_ON. Being replaced by fastout.wav, which 
 EFFECT(blstbgn);    // for Begin Multi-Blast
 EFFECT(blstend);    // for End Multi-Blast
 EFFECT(push);       // for Force Push gesture
-EFFECT(quote);      // for playing quotes
 EFFECT(monosfx);    // for Monophonically played sounds (iceblade, seismic charge etc...)
 EFFECT(swap);       // for standalone triggering EffectSequence<>
 EFFECT(mute);       // Notification before muted ignition to avoid confusion.
