@@ -68,7 +68,7 @@ public:
   PlayWav() : run_(false), effect_(nullptr), sample_bytes_(0) {}
   void Play(StringPiece filename, float start = 0.0) {
     if (!filename) return;
-    filename.paste(filename_);
+    filename.pasteZ(filename_);
     new_file_id_ = Effect::FileID();
     start_ = start;
     run_.set(true);

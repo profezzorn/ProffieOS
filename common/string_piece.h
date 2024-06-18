@@ -38,6 +38,7 @@ struct StringPiece {
 
   void printTo(Print& p);
   void paste(char* to) const { memcpy(to, str, len); }
+  void pasteZ(char* to) const { paste(to); to[len] = 0; }
 
   bool contains(char c) const {
     for (size_t i = 0; i < len; i++) {
