@@ -101,7 +101,7 @@ public:
   // Effect volume (0-16) defaults to 16.
   int volEff;
   // Milliseconds from beginning of out.wav to delay hum.
-  // If not specified or set to 0 (no delay), humStart will be used.
+  // If not specified or set to -1, humStart will be used.
   // Defaults to -1.
   int ProffieOSHumDelay;
   // How fast (degrees per second) we have to swing before a swing
