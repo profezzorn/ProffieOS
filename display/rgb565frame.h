@@ -98,7 +98,14 @@ public:
     } else if (variable  == 'R') {
       p = random(100);
     }
-    int N = (label >> 16) - '0' * 10 + (label >> 24) - '0';
+    int N = (label >> 16) - '0' * 0x101;
+    N = (N & 0xFF) * 10 + (N >> 8);
+    PVLOG_VERBOSE << " VAR=" << ((char)variable ) << " = " << p
+		  << " OP=" << ((char)((label >> 8) & 0xff))
+		  << " N=" << N
+		  << " N1=" << ((char)((label >> 16) & 0xff))
+		  << " N2=" << ((char)((label >> 24) & 0xff))
+		  << "\n";
     switch ((label >> 8) & 0xff) {
       case '<': return p < N;
       case '>': return p > N;
@@ -312,6 +319,7 @@ public:
 
   // Returns true when done.
   bool Apply(OutputBuffer<WIDTH>* output_buffer, uint16_t* &out) {
+    SCOPED_PROFILER();
     TRACE2(RGB565_DATA, "Apply", TELL());
     if (!play_) return true;
     if (!transparent_) {
