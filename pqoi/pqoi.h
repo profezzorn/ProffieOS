@@ -573,7 +573,7 @@ public:
     // This transform should already have been done on the alpha values.
     // alpha = ((255 - alpha) * 33) >> 8;
     uint32_t tmp = (out * 0x10001) & 0x7E0F81F;
-    tmp = ((tmp * alpha) >> 5) & 0x7EF81F;
+    tmp = ((tmp * alpha) >> 5) & 0x7E0F81F;
     out = tmp + (tmp >> 16) + in;
   }
   void Apply(const uint8_t* in, const uint8_t* input_end, uint16_t* out, uint16_t* end) {
