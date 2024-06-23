@@ -19,6 +19,11 @@ bool isAllDigits(const char* s) {
   return true;
 }
 
+// Return true if "dir" starts with "prefix" followed by zero or more digits.
+bool isNameDigits(const char* prefix, const char* dir) {
+  return startswith(prefix, dir) && isAllDigits(dir + strlen(prefix));
+}
+
 // Effect represents a set of sound files.
 // We keep track of the minimum number found, the maximum number found, weather
 // there is a file with no number, and if there are leading zeroes or not.
@@ -131,6 +136,19 @@ class Effect {
     return UNKNOWN;
   }
 
+  static const char* ExtensionName(Extension ext) {
+    switch (ext) {
+      case WAV: return ".wav";
+      case RAW: return ".raw";
+      case USL: return ".usl";
+      case BMP: return ".bmp";
+      case PBM: return ".pbm";
+      case Binary: return ".bin";
+      case SCR: return ".scr";
+      default: return ".?";
+    }
+  }
+
   Effect(const char* name,
 	 Effect* following = nullptr,
 	 FileType file_type = FileType::SOUND) : name_(name) {
@@ -241,6 +259,7 @@ class Effect {
     if (files_found()) {
       STDOUT.print("Found ");
       STDOUT.print(name_);
+      STDOUT.print(ExtensionName(ext_));
       STDOUT.print(" files: ");
       if (min_file_ <= max_file_) {
         STDOUT.print(min_file_);
@@ -469,16 +488,7 @@ class Effect {
       addNumber(filename, fileid->GetSubId(), 3);
     }
 
-    switch (ext_) {
-      case WAV: strcat(filename, ".wav"); break;
-      case RAW: strcat(filename, ".raw"); break;
-      case USL: strcat(filename, ".usl"); break;
-      case BMP: strcat(filename, ".bmp"); break;
-      case PBM: strcat(filename, ".pbm"); break;
-      case Binary: strcat(filename, ".bin"); break;
-      default: break;
-    }
-
+    strcat(filename, ExtensionName(ext_));
     default_output->print("Playing ");
     default_output->println(filename);
   }
@@ -518,21 +528,26 @@ class Effect {
   }
 
 #ifdef ENABLE_SD
+  // Returns true if we need to look for sub-files in "dir".
+  bool ShouldScanDir(const char* dir) {
+    // return true for directories like "boot" and "boot32"
+    if (isNameDigits(name_, dir)) return true;
+    // If the effect name has a slash in it, return true for
+    // directories that match the bit before the slash.
+    const char* rest = startswith(dir, name_);
+    if (rest && *rest == '/') return true;
+    return false;
+  }
+
   class Scanner {
     char fname[128];
     const char* font_path_ptr;
-
-    bool isNameDigits(const char* prefix, const char* dir) const {
-      return startswith(prefix, dir) && isAllDigits(dir + strlen(prefix));
-    }
 
     bool ShouldScan(const char* dir) const {
       if (isNameDigits("alt", dir) && strlen(dir) == 6) return true;
       if (isNameDigits("", dir)) return true;
       for (Effect* e = all_effects; e; e = e->next_) {
-	if (isNameDigits(e->GetName(), dir)) {
-	  return true;
-	}
+	if (e->ShouldScanDir(dir)) return true;
       }
       return false;
     }
