@@ -7,30 +7,30 @@ Layer Controller: Tells displays what to do.
 
 The layer controller looks for the following files:
 
-   WxH_boot.scr
-   WxH_font.scr
-   WxH_blst.scr
-   WxH_clsh.scr
-   WxH_force.scr
-   WxH_preon.scr
-   WxH_out.scr
-   WxH_in.scr
-   WxH_pstoff.scr
-   WxH_on.scr
-   WxH_lock.scr
-   WxH_pli.scr
-   WxH_idle.scr
-   WxH_lowbatt.scr
+   WxH/boot.scr
+   WxH/font.scr
+   WxH/blst.scr
+   WxH/clsh.scr
+   WxH/force.scr
+   WxH/preon.scr
+   WxH/out.scr
+   WxH/in.scr
+   WxH/pstoff.scr
+   WxH/on.scr
+   WxH/lock.scr
+   WxH/pli.scr
+   WxH/idle.scr
+   WxH/lowbatt.scr
 
 W and H stands for the Width and Height of the display respectively.
 Standard EFFECT rules are used to find these files, so here are
 some examples of actual scr file names:
 
-  128x80_boot.scr
-  128x80_boot04.scr
-  128x80_boot/004.scr
-  alt004/128x80_boot/004.scr
-  128x80_boot/004/001.scr
+  128x80/boot.scr
+  128x80/boot04.scr
+  128x80/boot/004.scr
+  alt004/128x80/boot/004.scr
+  128x80/boot/004/001.scr
 
 When an event occurs, the SCR file is read. SCR files are text files
 which specifies what the display should do. Each line in the SCR file
@@ -130,6 +130,7 @@ protected:
     return ret;
   }
 
+  // Returns true if all the data in the file has been consumed.
   bool ATEOF() {
     // TRACE2(RGB565, "ATEOF", file_.get_do_open());
     if (file_.get_do_open()) return false;
@@ -137,8 +138,18 @@ protected:
     return TELL() == file_size_;
   }
 
+  // Returns true if the buffered data reaches the end of the file.
+  bool BUFATEOF() {
+    // TRACE2(RGB565, "ATEOF", file_.get_do_open());
+    if (file_.get_do_open()) return false;
+    if (file_size_ == 0xFFFFFFFFU) return true;
+    return TELL() + input_buffer_.size() == file_size_;
+  }
+
   bool FillBuffer() override {
-    TRACE2(RGB565_DATA, "FillBuffer", file_.Tell());
+    SCOPED_PROFILER();
+    TRACE2(RGB565_DATA, "FillBuffer, fp=", file_.Tell());
+    TRACE2(RGB565_DATA, "FillBuffer, tell=", TELL());
     if (stream_locked_.get()) {
       TRACE(RGB565_DATA, "FillBuffer, locked");
       return false;
@@ -158,7 +169,7 @@ protected:
       return true;  // return to ProcessAudioStream which will return here when no audiostreams are in need of data.
     }
 //    TRACE(RGB565, "FillBuffer5.5");
-    if (ATEOF()) return false;
+    if (BUFATEOF()) return false;
     if (do_seek_) {
       TRACE2(RGB565, "FillBuffer, seek to ", seek_pos_);
       file_.Seek(seek_pos_);
@@ -168,8 +179,9 @@ protected:
     }
     uint32_t toread = input_buffer_.continuous_space();
     uint32_t max_read = 512 - (file_.Tell() % 512);  // Read to end of block
-    TRACE2(RGB565_DATA, "FillBuffer9", std::min(toread, max_read));
+    TRACE2(RGB565_DATA, "FillBuffer, toread=", std::min(toread, max_read));
     uint32_t bytes_read = file_.Read(input_buffer_.space(), std::min(toread, max_read));
+    TRACE2(RGB565_DATA, "FillBuffer, bytes_read=", bytes_read);
 
     uint32_t now = millis();
     uint32_t m = now - bps_last_millis_;
@@ -187,7 +199,7 @@ protected:
     bps_last_millis_ = now;
     
     input_buffer_.push(bytes_read);
-    TRACE2(RGB565_DATA, "FillBuffer7", input_buffer_.size());
+    TRACE2(RGB565_DATA, "FillBuffer, bufsize=", input_buffer_.size());
     return true;
   }
 
@@ -206,7 +218,7 @@ protected:
     if (input_buffer_.space_available() < 512) return 0;
 //    if (!input_buffer_.space_available()) return 0;
     if (stream_locked_.get()) return 0;
-    if (ATEOF()) return 0;
+    if (BUFATEOF()) return 0;
     
     // Always low priority
     return 1;
@@ -403,7 +415,7 @@ private:
   X(lowbatt)
 
 
-#define INIT_SCR(X, ARGS...) ,SCR_##X(ConcatByteArrays<STRTYPE(#X), PREFIX, ByteArray<'_'>>::str, nullptr, Effect::FileType::SCREEN)
+#define INIT_SCR(X, ARGS...) ,SCR_##X(ConcatByteArrays<PREFIX, ByteArray<'/'>, STRTYPE(#X)>::str, nullptr, Effect::FileType::SCREEN)
 #define DEF_SCR(X, ARGS...) Effect SCR_##X;
 
 template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>, typename NumberToByteArray<H>::type>>
