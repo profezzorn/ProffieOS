@@ -167,6 +167,11 @@ public:
   constexpr bool off() const {
     return blades_ == 0;
   }
+  // Should this be if "other" is on, or if anything is on?
+  // Right now it's if anything is on.
+  constexpr bool on() const {
+    return blades_ != 0;
+  }
 
   constexpr bool operator==(const BladeSet& other) const { return blades_ == other.blades_; }
   constexpr bool operator!=(const BladeSet& other) const { return blades_ != other.blades_; }
@@ -275,7 +280,7 @@ public:
   static bool IsOn() {
     // Should this be if "other" is on, or if anything is on?
     // Right now it's if anything is on.
-    return !on_.off();
+    return on_.on();
   }
   static bool BladeIsOn(int blade) { return on_[blade]; }
   static BladeSet OnBlades() { return on_; }

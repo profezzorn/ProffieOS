@@ -125,7 +125,7 @@ public:
 
   virtual void On(EffectLocation location = EffectLocation()) {
 #ifdef ENABLE_AUDIO
-    if (!CommonIgnition()) return;
+    if (!CommonIgnition(location)) return;
     SaberBase::DoPreOn(location);
     on_pending_ = true;
     // Hybrid font will call SaberBase::TurnOn() for us.
@@ -136,7 +136,7 @@ public:
   }
 
   void FastOn(EffectLocation location = EffectLocation()) {
-    if (!CommonIgnition()) return;
+    if (!CommonIgnition(location)) return;
     SaberBase::TurnOn(location);
     SaberBase::DoEffect(EFFECT_FAST_ON, location);
   }
@@ -345,13 +345,17 @@ public:
     SaveVolumeIfNeeded();
   }
 
-  bool BladeOff() {
+  BladeSet BladeOff() {
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
     bool on = IsOn();
-    if (on) Off();
-    return on;
+    BladeSet ret = SaberBase::OnBlades();
+    if (on) {
+      Off();
+      if (ret.off()) ret = BladeSet::all();
+    }
+    return ret;
   }
 
   void FreeBladeStyles() {
@@ -389,7 +393,7 @@ public:
   virtual void SetPreset(int preset_num, bool announce) {
     PVLOG_DEBUG << "SetPreset(" << preset_num << ")\n";
     TRACE(PROP, "start");
-    bool on = BladeOff();
+    BladeSet previously_on = BladeOff();
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
@@ -397,7 +401,7 @@ public:
     current_preset_.SetPreset(preset_num);
     AllocateBladeStyles();
     chdir(current_preset_.font.get());
-    if (on) On();
+    if (previously_on.on()) On(EffectLocation(0, previously_on));
     if (announce) {
      PVLOG_STATUS << "Current Preset: " << current_preset_name() << "\n";
       SaberBase::DoNewFont();
@@ -421,7 +425,7 @@ public:
   void SetPresetFast(int preset_num) {
     PVLOG_DEBUG << "SetPresetFast(" << preset_num << ")\n";
     TRACE(PROP, "start");
-    bool on = BladeOff();
+    BladeSet previously_on = BladeOff();
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
@@ -429,14 +433,14 @@ public:
     current_preset_.SetPreset(preset_num);
     AllocateBladeStyles();
     chdir(current_preset_.font.get());
-    if (on) FastOn();
+    if (previously_on.on()) FastOn(EffectLocation(0, previously_on));
     TRACE(PROP, "end");
   }
 
   // Update Preon IntArg in Edit Mode
   void UpdatePreon() {
     TRACE(PROP, "start");
-    bool on = BladeOff();
+    BladeSet previously_on = BladeOff();
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
@@ -444,7 +448,7 @@ public:
     current_preset_.SetPreset(current_preset_.preset_num);
     AllocateBladeStyles();
     chdir(current_preset_.font.get());
-    if (on) On();
+    if (previously_on.on()) On(EffectLocation(0, previously_on));
     TRACE(PROP, "end");
   }
 
@@ -1754,8 +1758,8 @@ public:
   }
   
 private:
-  bool CommonIgnition() {
-    if (IsOn()) return false;
+  bool CommonIgnition(EffectLocation location = EffectLocation()) {
+    if ((location.blades() &~ SaberBase::OnBlades()).off()) return false;
     if (current_style() && current_style()->NoOnOff())
       return false;
     activated_ = millis();
