@@ -72,6 +72,7 @@ private:
     return N - buffered();
   }
   bool FillBuffer() override {
+    SCOPED_PROFILER();
     if (stream_.get()) {
       size_t space = real_space_available();
       if (space) {
