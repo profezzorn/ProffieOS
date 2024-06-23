@@ -28,7 +28,6 @@ public:
   SaberBCButtons() : PropBase() {}
   const char* name() override { return "SaberBCButtons"; }
 
-BLADE_ID_CLASS_INTERNAL blade_id;  // still needed?
   void Loop() override {
     PropBase::Loop();
     DetectMenuTurn();
@@ -211,18 +210,19 @@ BLADE_ID_CLASS_INTERNAL blade_id;  // still needed?
   static const BladeSet controlled_blades_;
 
   
-  void TurnBladeOn(BladeSet target_blade) {  // receives opposite blade (MAIN or SECOND) so we can exclude it
-
+   void TurnBladeOn(BladeSet target_blade) {
+    // Add in all non-controlled blades, effectively excluding the "other" blade.
+    target_blade = target_blade | ~controlled_blades_;
     if (SaberBase::OnBlades().off()) {
-      PVLOG_NORMAL << "** No blades are currently ON, turn on the " 
+      PVLOG_NORMAL << "** No blades are currently ON, turning on the " 
                    << (target_blade[BC_MAIN_BLADE] ? "SECOND" : "MAIN")
-                   << " blade and all others, exclude the " 
+                   << " blade and all others, excluding the " 
                    << (target_blade[BC_MAIN_BLADE] ? "MAIN" : "SECOND")
                    << " blade\n";
       if (is_pointing_up()) {
-        FastOn(EffectLocation(0, ~target_blade));
+        FastOn(EffectLocation(0, target_blade));
       } else {
-        On(EffectLocation(0, ~target_blade));
+        On(EffectLocation(0, target_blade));
       }
     } else {
       PVLOG_NORMAL << "** The " 
@@ -230,7 +230,7 @@ BLADE_ID_CLASS_INTERNAL blade_id;  // still needed?
                    << " blade is already ON, turning on the " 
                    << (target_blade[BC_MAIN_BLADE] ? "SECOND" : "MAIN")
                    << " blade\n";
-      SaberBase::TurnOn(EffectLocation(0, ~target_blade));
+      SaberBase::TurnOn(EffectLocation(0, target_blade));
     }
   }
 
@@ -262,7 +262,7 @@ BLADE_ID_CLASS_INTERNAL blade_id;  // still needed?
       TurnBladeOff(BladeSet::fromBlade(BC_MAIN_BLADE));
       PVLOG_NORMAL << "** Main Blade Turned OFF\n";
     } else {
-      TurnBladeOn(BladeSet::fromBlade(BC_SECOND_BLADE));  // Send the "other" blade so we know what to exclude
+      TurnBladeOn(BladeSet::fromBlade(BC_MAIN_BLADE));
       PVLOG_NORMAL << "** Main Blade Turned ON\n";
     }
   }
@@ -275,7 +275,7 @@ BLADE_ID_CLASS_INTERNAL blade_id;  // still needed?
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
-        TurnBladeOn(BladeSet::fromBlade(BC_SECOND_BLADE));
+        TurnBladeOn(BladeSet::fromBlade(BC_MAIN_BLADE));
         PVLOG_NORMAL << "** Main Blade Turned ON Muted\n";
       }
     }
@@ -287,7 +287,7 @@ BLADE_ID_CLASS_INTERNAL blade_id;  // still needed?
       TurnBladeOff(BladeSet::fromBlade(BC_SECOND_BLADE));
       PVLOG_NORMAL << "** Second Blade Turned OFF\n";
     } else {
-      TurnBladeOn(BladeSet::fromBlade(BC_MAIN_BLADE));  // Send the "other" blade so we know what to exclude
+      TurnBladeOn(BladeSet::fromBlade(BC_SECOND_BLADE));
       PVLOG_NORMAL << "** Second Blade Turned ON\n";
     }
   }
@@ -300,7 +300,7 @@ BLADE_ID_CLASS_INTERNAL blade_id;  // still needed?
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
-        TurnBladeOn(BladeSet::fromBlade(BC_MAIN_BLADE));
+        TurnBladeOn(BladeSet::fromBlade(BC_SECOND_BLADE));
         PVLOG_NORMAL << "** Second Blade Turned ON Muted\n";
       }
     }
