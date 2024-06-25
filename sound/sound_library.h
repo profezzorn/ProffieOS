@@ -255,7 +255,7 @@ public:
   ADD_SL_SOUND(MeltSize, "mmeltsz");
   ADD_SL_SOUND(Millis, "mmillis");
   ADD_SL_SOUND(Minimum, "mmin");
-  ADD_SL_SOUND(MininumVolume, "volmin");
+  ADD_SL_SOUND(MinimumVolume, "volmin");
   ADD_SL_SOUND(NoChoreographyAvailable, "nochreo");
   ADD_SL_SOUND(OffColor, "moff");
   ADD_SL_SOUND(OffOption, "moffopt");
