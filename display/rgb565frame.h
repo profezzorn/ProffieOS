@@ -493,7 +493,7 @@ public:
     uint32_t slice_start = micros();
     STATE_MACHINE_BEGIN();
 
-    initDisplay();
+    initDisplay(); YIELD(); // required to make initdisplay finish
 
     current_output_buffer_ = getOutputBuffer();
 
