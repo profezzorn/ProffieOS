@@ -159,6 +159,8 @@ protected:
       return false;
     }
     if (file_.OpenFile()) {
+      input_buffer_.clear();
+      seek_pos_ = 0;
       if (!file_.IsOpen()) {
 	file_size_ = 0;
 	TRACE(RGB565, "FillBuffer::EOF");
@@ -479,6 +481,12 @@ public:
      case EFFECT_NEWFONT:
        looped_on_ = Tristate::Unknown;
        looped_idle_ = Tristate::Unknown;
+       for (int i = 0;; i++) {
+	 LayerControl *layer = scr_.screen()->getLayer(i);
+	 if (!layer) break;
+	 layer->LC_play("");
+       }
+       
        if (!scr_.Play(&SCR_font)) {
 	 ShowDefault();
        }
