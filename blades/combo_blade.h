@@ -37,37 +37,32 @@ is the only thing that counts as an entry in the blade array.
 
 */
 
-class ComboBladeWrapper;
-
-
-/*
- This class is used by ComboBladeWrapper to allow intercepting the style run()
- calls sent from the blades inside the ComboBladeWrapper.
-
- The style of the wrapped blades will be set to an instance of this class, which
- will then call the real style with our ComboBladeWrapper instance as the
- active blade.
-
- Since the same style is being executed for both blades we only actually run
- the style calls sent by the primary blade.
-
-*/
-class ComboBladeStyleWrapper : public BladeStyle {
+class ComboBladeWrapper : public BladeWrapper, BladeStyle {
 public:
-  // Bladestyle implementation
-  virtual void activate() override {
+  ComboBladeWrapper(BladeBase* blade1, BladeBase* blade2):
+    blade1_num_leds_(blade1->num_leds()),
+    blade2_(blade2),
+    real_style_(nullptr)
+  {
+    blade_ = blade1;
+  }
+
+  // BladeStyle implementation
+  void activate() override {
     real_style_->activate();
   }
-  virtual void deactivate() override {
+  void deactivate() override {
     real_style_->deactivate();
   }
-  virtual void run(BladeBase* blade) override;
-
-  bool NoOnOff() override {
-    return real_style_->NoOnOff();
+  void run(BladeBase* blade) override {
+    if (blade == blade_) {
+      real_style_->run(this);
+    }
   }
 
-  virtual bool Charging() { return real_style_->Charging();}
+  bool NoOnOff() override { return real_style_->NoOnOff(); }
+
+  bool Charging() override { return real_style_->Charging(); }
 
   bool IsHandled(HandledFeature effect) override {
     if (real_style_)
@@ -75,57 +70,13 @@ public:
     return false;
   }
 
-  OverDriveColor getColor(int i) override {return real_style_->getColor(i);}
+  OverDriveColor getColor(int i) override { return real_style_->getColor(i); }
 
-  int get_max_arg(int arg) override { return real_style_->get_max_arg(arg);}
+  int get_max_arg(int arg) override { return real_style_->get_max_arg(arg); }
 
-  void setRealStyle(BladeStyle* style){real_style_ = style;}
-
-  BladeStyle* GetRealStyle(){return real_style_;}
-
-  BladeStyle* UnSetRealStyle(){
-    BladeStyle* result = real_style_;
-    real_style_ = nullptr;
-    return result;
-  }
-
-  ComboBladeStyleWrapper(ComboBladeWrapper* comboBlade, BladeBase* primary_blade) :
-    comboBlade_(comboBlade),
-    primary_blade_(primary_blade),
-    real_style_(nullptr){
-  }
-protected:
-  ComboBladeWrapper* comboBlade_;
-  BladeBase* primary_blade_;
-  BladeStyle* real_style_;
-};
-
-/*
- This class is used by ComboBladeWrapper to allow intercepting the style run()
- calls sent from the blades inside the ComboBladeWrapper.
-
-This class acts as our entry in the blade array. When activated, it will
-activate the loops of the two assigned blades, pointing them at an instance of
-ComboBladeStyleWrapper. This will then be used to intercept the style run()
-calls of the indivdual blades and instead run the style against the
-ComboBladeWrapper. The ComboBladeWrapper will then send the led set calls
-to the appropriate blade based on the led number.
-
-*/
-class ComboBladeWrapper : public BladeWrapper {
-public:
-  ComboBladeWrapper(BladeBase* blade1, BladeBase* blade2):
-    blade1_num_leds_(blade1->num_leds()),
-    blade2_(blade2)
-  {
-    blade_ = blade1;
-    dummy_style_ = new ComboBladeStyleWrapper(this, blade1);
-  }
-
+  // BladeBase implementation
   int num_leds() const override {
-    int result = blade1_num_leds_;
-    result += blade2_->num_leds();
-    return result;
+    return blade1_num_leds_ + blade2_->num_leds();
   }
   void set(int led, Color16 c) override {
     if (led < blade1_num_leds_) {
@@ -163,38 +114,30 @@ public:
   }
 
   void SetStyle(BladeStyle* style) override {
-    dummy_style_->setRealStyle(style);
-    blade_->SetStyle(dummy_style_);
-    blade2_->SetStyle(dummy_style_);
+    real_style_ = style;
+    blade_->SetStyle(this);
+    blade2_->SetStyle(this);
   }
 
   BladeStyle* UnSetStyle() override {
-    if (dummy_style_)
-      return dummy_style_->UnSetRealStyle();
-    else
-      return nullptr;
+    BladeStyle* result = real_style_;
+    real_style_ = nullptr;
+    return result;
   }
 
   BladeStyle* current_style() const override {
-    if (dummy_style_)
-      return dummy_style_->GetRealStyle();
-    else
-      return nullptr;
+    return real_style_;
   }
 
 private:
   int blade1_num_leds_;
   BladeBase* blade2_;
-  ComboBladeStyleWrapper* dummy_style_;
+  BladeStyle* real_style_;
 };
 
-void ComboBladeStyleWrapper::run(BladeBase* blade) {
-  if (blade == primary_blade_) {
-    real_style_->run(comboBlade_);
-  }
-}
 BladeBase* ComboBlade(BladeBase* blade1, BladeBase* blade2)
 {
   return new ComboBladeWrapper(blade1, blade2);
 }
+
 #endif
