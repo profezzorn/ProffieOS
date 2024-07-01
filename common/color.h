@@ -343,9 +343,9 @@ public:
   }
 
   explicit Color16(HSL hsl) {
-    float C = (1.0 - fabs(2 * hsl.L - 1.0)) * hsl.S;
+    float C = (1.0 - fabsf(2 * hsl.L - 1.0)) * hsl.S;
     float h = hsl.H * 6;
-    float X = C * (1 - fabs(fmod(h, 2.0) - 1));
+    float X = C * (1 - fabsf(fmodf(h, 2.0) - 1));
     float R=0.0, G=0.0, B=0.0;
     switch ((int)floor(h)) {
       case 0: R=C; G=X; break;
