@@ -3,76 +3,66 @@
 
 #include "mode.h"
 #include "select_cancel_mode.h"
+#include "../common/angle.h"
 
 namespace mode {
 
-template<class SPEC>
-struct SmoothWraparoundMode : public SPEC::SelectCancelMode {
-  // 3 rotations to get back to the original color
-  virtual float revolutions() { return 3.0f; }
-  void mode_activate(bool onreturn) override {
+class DeltaAngle {
+public:
+  void init() {
     last_angle_ = fusor.angle2();
-    angle_ = (get() + 0.5) * M_PI * 2 * revolutions() / 32768;
   }
-
-  // x = 0-32767
-  virtual int get() = 0;
-  virtual void set(int x) = 0;
-
-  void mode_Loop() override {
-    float a = fusor.angle2();
-    float delta = a - last_angle_;
+  Angle get() {
+    Angle a = fusor.angle2();
+    Angle delta = a - last_angle_;
     last_angle_ = a;
-    angle_ = fmodf(angle_ + delta, M_PI * 2 * revolutions());
-    set(0x7fff & (int32_t)(a * (32768 / (M_PI * 2 * revolutions()))));
+    return delta;
   }
-  
-  float angle_;
-  float last_angle_;
+private:
+  Angle last_angle_;
 };
 
 template<class SPEC>
-struct SmoothMode : public SPEC::SelectCancelMode {
+struct SmoothBase : public SPEC::SelectCancelMode {
+  // 3 rotations to get back to the original color
   virtual float revolutions() { return 3.0f; }
   void mode_activate(bool onreturn) override {
-    last_angle_ = fusor.angle2();
-    val_ = get();
-    angle_ = (val_ + 0.5) * M_PI * 2 * revolutions() / 32768;
+    delta_.init();
+    angle_ = Angle::fromFixed(get());
   }
 
   // x = 0-32767
   virtual int get() = 0;
   virtual void set(int x) = 0;
-  virtual void save() {}
 
-  void select() override {
-    save();
-    popMode();
-  }
+  void mode_Loop() override { set(angle_.fixed()); }
 
-  void exit() override {
-    set(val_);
-  }
-
-  void mode_Loop() override {
-    float a = fusor.angle2();
-    float delta = a - last_angle_;
-    last_angle_ = a;
-    angle_ += delta;
-    if (angle_ < 0.0) {
-      angle_ = 0.0;
-      // play "min reached" sound?
-    }
-    if (angle_ > M_PI * 2 * revolutions()) {
-      angle_ = M_PI * 2 * revolutions();
-      // play "max reached" sound?
-    }
-    set((int32_t)(a * (32767 / (M_PI * 2 * revolutions()))));
-  }
+  DeltaAngle delta_;
+  Angle angle_;
+};
   
-  float angle_;
-  float last_angle_;
-  int val_;
+template<class SPEC>
+struct SmoothWraparoundMode : public SmoothBase<SPEC> {
+  void mode_Loop() override {
+    this->angle_ += this->delta_.get() / this->revolutions();
+    SmoothBase<SPEC>::mode_Loop();
+  }
+};
+
+template<class SPEC>
+struct SmoothMode : public SmoothBase<SPEC> {
+  // x = 0-32767
+  virtual void min_bump() {}
+  virtual void max_bump() {}
+
+  void mode_Loop() override {  float last_angle_;
+    switch (this->angle_.increment_with_guardrails(
+	      this->delta_.get() / this->revolutions())) {
+      case -1: min_bump(); break;
+      case  1: max_bump(); break;
+    }
+    SmoothBase<SPEC>::mode_Loop();
+  }
 };
 
 } // namespace mode
