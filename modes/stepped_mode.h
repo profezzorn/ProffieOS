@@ -4,6 +4,7 @@
 #include "mode.h"
 #include "select_cancel_mode.h"
 #include "../common/cyclint.h"
+#include "../common/angle.h"
 
 namespace mode {
 
@@ -46,17 +47,14 @@ struct SteppedMode : public SPEC::SelectCancelMode {
       say();
     }
     
-    float current_angle = fusor.angle2();
-    float diff = current_angle - angle_;
-    if (diff > M_PI) diff -= M_PI*2;
-    if (diff < -M_PI) diff += M_PI*2;
+    Angle current_angle = fusor.angle2();
+    Angle diff = current_angle - angle_;
     if (diff > twistsize()) {
       angle_ += stepsize();
       next();
       update();
-    }
-    if (diff < -twistsize()) {
-      angle_ += stepsize();
+    } else if (diff < -twistsize()) {
+      angle_ -= stepsize();
       prev();
       update();
     }
@@ -79,6 +77,7 @@ struct SteppedMode : public SPEC::SelectCancelMode {
 
   bool mode_Parse(const char *cmd, const char* arg) override {
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
+    // TODO: What if there are "left" and "right" buttons?
     if (!strcmp(cmd, "left") || !strcmp(cmd, "l")) {
       prev();
       update();
@@ -94,11 +93,11 @@ struct SteppedMode : public SPEC::SelectCancelMode {
   }
 
   static Cyclint<uint32_t> say_time_;
-  static float angle_;
+  static Angle angle_;
 };
 
 template<class SPEC>
-float SteppedMode<SPEC>::angle_ = 0;
+Angle SteppedMode<SPEC>::angle_ = 0.0f;
 
 template<class SPEC>
 Cyclint<uint32_t> SteppedMode<SPEC>::say_time_;
