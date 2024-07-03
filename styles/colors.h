@@ -70,7 +70,7 @@ typedef Rgb<255, 135, 0> Amber;
 typedef Rgb<255, 168, 0> CyberYellow;
 typedef Rgb<255, 221, 0> CanaryYellow;
 typedef Rgb<28, 255, 28> PaleGreen;
-typedef Rgb<255, 80, 254> Flamingo;
+typedef Rgb<255, 80, 154> Flamingo;
 typedef Rgb<90, 0, 255> VividViolet;
 typedef Rgb<186, 0, 255> PsychedelicPurple;
 typedef Rgb<255, 0, 156> HotMagenta;
