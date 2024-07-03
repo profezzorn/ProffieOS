@@ -66,4 +66,4 @@ private:
   float angle_; // [-PI .. PI)
 };
 
-#endif COMMON_ANGLE_H
+#endif  // COMMON_ANGLE_H
