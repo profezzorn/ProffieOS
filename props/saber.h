@@ -84,7 +84,11 @@ public:
         return true;
 #endif
 
+#ifdef MENU_SPEC_TEMPLATE	
+      case EVENTID(BUTTON_AUX, EVENT_SAVED_CLICK_SHORT, MODE_OFF):
+#else	
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
+#endif	
 #ifdef DUAL_POWER_BUTTONS
         aux_on_ = true;
         On();
