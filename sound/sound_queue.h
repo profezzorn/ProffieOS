@@ -36,16 +36,20 @@ public:
   // Called from Loop()
   void PollSoundQueue(RefPtr<BufferedWavPlayer>& player) {
     busy_ = player && player->isPlaying();
-    if (sounds_ &&  !busy_) {
-      busy_ = true;
-      if (!player) {
-        player = GetFreeWavPlayer();
-        if (!player) return;
-	player->set_volume_now(1.0f);
+    if (!busy_) {
+      if (sounds_) {
+	busy_ = true;
+	if (!player) {
+	  player = GetFreeWavPlayer();
+	  if (!player) return;
+	  player->set_volume_now(1.0f);
+	}
+	queue_[0].Play(player.get());
+	sounds_--;
+	for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
+      } else {
+	if (player) player.Free();
       }
-      queue_[0].Play(player.get());
-      sounds_--;
-      for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
     }
   }
   bool busy() const { return busy_; }
