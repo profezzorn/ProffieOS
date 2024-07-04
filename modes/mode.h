@@ -5,6 +5,7 @@
 // allows you to temporarily override buttons and other types of events.
 struct ModeInterface {
   virtual void mode_activate(bool onreturn) {}
+  virtual void mode_deactivate() {}
   virtual bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
     return false;
   }
@@ -25,6 +26,7 @@ void pushMode() {
 }
 
 void popMode() {
+  current_mode->mode_deactivate();
   current_mode = current_mode->previous_;
   current_mode->mode_activate(true);
 }

@@ -27,8 +27,17 @@ struct SmoothBase : public SPEC::SelectCancelMode {
   // 3 rotations to get back to the original color
   virtual float revolutions() { return 3.0f; }
   void mode_activate(bool onreturn) override {
+    saved_ = get();
     delta_.init();
     angle_ = Angle::fromFixed(get());
+  }
+
+  void exit() override {
+    set(saved_);
+    SPEC::SelectCancelMode::exit();
+  }
+  void select() override {
+    popMode();
   }
 
   // x = 0-32767
@@ -39,6 +48,7 @@ struct SmoothBase : public SPEC::SelectCancelMode {
 
   DeltaAngle delta_;
   Angle angle_;
+  int saved_;
 };
   
 template<class SPEC>

@@ -35,23 +35,14 @@ private:
 template<class SPEC>
 struct SmoothVariationMode : public SPEC::SmoothWraparoundMode {
   void mode_activate(bool onreturn) override {
-    saved_ = get();
     SPEC::SmoothWraparoundMode::mode_activate(onreturn);
     SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
   }
-  void exit() override {
-    set(saved_);
+  void mode_deactivate() override {
     SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
-    popMode();
-  }
-  void select() override {
-    SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
-    popMode();
   }
   int get() override { return SaberBase::GetCurrentVariation(); }
   void set(int x) override { SaberBase::SetVariation(x); }
-private:
-  int saved_;
 };
 
 template<class SPEC>
