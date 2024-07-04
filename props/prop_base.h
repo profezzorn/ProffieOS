@@ -1098,7 +1098,13 @@ public:
     if (track_player_ && !track_player_->isPlaying()) {
       track_player_.Free();
     }
+
+#ifdef MENU_SPEC_TEMPLATE
+    // Poll sound library.
+    mode::getSL<MKSPEC<MENU_SPEC_TEMPLATE>>()->Poll(wav_player_);
 #endif
+    
+#endif  // ENABLE_AUDIO
 
     current_mode->mode_Loop();
 
@@ -1124,6 +1130,7 @@ public:
 #endif
 
 #ifdef MENU_SPEC_TEMPLATE
+  RefPtr<BufferedWavPlayer> wav_player_;
   void EnterMenu() {
     pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::TopMenu>();
   }
