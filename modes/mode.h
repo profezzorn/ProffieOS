@@ -19,6 +19,7 @@ ModeInterface* current_mode;
 
 template<class MODE>
 void pushMode() {
+  PVLOG_DEBUG << __PRETTY_FUNCTION__ << "\n";
   ModeInterface* mode = getPtr<MODE>();
   mode->previous_ = current_mode;
   current_mode = mode;
@@ -26,6 +27,7 @@ void pushMode() {
 }
 
 void popMode() {
+  PVLOG_DEBUG << __PRETTY_FUNCTION__ << "\n";
   current_mode->mode_deactivate();
   current_mode = current_mode->previous_;
   current_mode->mode_activate(true);
