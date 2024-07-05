@@ -484,6 +484,22 @@ public:
     SetPresetFast(current_preset_.preset_num - 1);
   }
 
+  // Go to the first Preset
+  void first_preset() {
+#ifdef SAVE_PRESET
+    SaveState(0);
+#endif
+    SetPreset(0, true);
+  }
+
+  // Go to the first Preset skipping NewFont and Preon effects using FastOn.
+  void first_preset_fast() {
+#ifdef SAVE_PRESET
+    SaveState(0);
+#endif
+    SetPresetFast(0);
+  }
+
   // Rotates presets backwards and saves.
   virtual void rotate_presets() {
 #ifdef IDLE_OFF_TIME
