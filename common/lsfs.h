@@ -296,6 +296,18 @@ public:
 			DOSFS_DEVICE_LOCK_INIT)) return false;
     return true;
   }
+  static void SetAllowMount(bool allow) {
+    dosfs_device_t *device = DOSFS_VOLUME_DEVICE(volume);
+    if (allow) {
+      device->lock &=~ DOSFS_DEVICE_LOCK_EJECTED;
+    } else {
+      device->lock |= DOSFS_DEVICE_LOCK_EJECTED;
+    }
+  }
+  static bool GetAllowMount() {
+    dosfs_device_t *device = DOSFS_VOLUME_DEVICE(volume);
+    return (device->lock & DOSFS_DEVICE_LOCK_EJECTED) == 0;
+  }
   static void WhyBusy(char *tmp) {
     *tmp = 0;
     // dosfs_volume_t *volume = DOSFS_DEFAULT_VOLUME();

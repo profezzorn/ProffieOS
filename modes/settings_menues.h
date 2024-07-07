@@ -3,6 +3,7 @@
 
 #include "../common/color.h"
 #include "menu_list.h"
+#include "bool_setting.h"
 
 int prop_GetCurrentClashThreshold();
 void prop_SetClashThreshold(int clash_threshold);
@@ -16,6 +17,8 @@ namespace mode {
 #define VOLUME_MENU_GAMMA 2.2
 #endif
 
+#define SETTINGS_MENU_HAS_ONLY_ONE_ENTRY
+  
 template<class SPEC>
 struct SmoothVolumeMode : public SPEC::SmoothMode {
   // x = 0-32767
@@ -37,6 +40,7 @@ struct SmoothVolumeMode : public SPEC::SmoothMode {
 };
 
 #ifdef DYNAMIC_BLADE_LENGTH
+#undef SETTINGS_MENU_HAS_ONLY_ONE_ENTRY  
 
 template<class SPEC>
 class ShowLengthStyle {
@@ -87,6 +91,7 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
 #endif
 
 #ifdef DYNAMIC_CLASH_THRESHOLD
+#undef SETTINGS_MENU_HAS_ONLY_ONE_ENTRY  
 
 #ifndef CLASH_THRESHOLD_GAMMA
 #define CLASH_THRESHOLD_GAMMA 2.0f
@@ -135,6 +140,7 @@ struct SmoothClashThresholdMode : public SPEC::SmoothMode {
 
 
 #ifdef DYNAMIC_BLADE_DIMMING
+#undef SETTINGS_MENU_HAS_ONLY_ONE_ENTRY  
 
 template<class SPEC>
 struct SmoothChangeBladeDimmingMode : public SPEC::SmoothMode {
@@ -171,10 +177,24 @@ struct SmoothChangeBladeDimmingMode : public SPEC::SmoothMode {
 
 #endif
 
+#ifdef MOUNT_SD_SETTING
+#undef SETTINGS_MENU_HAS_ONLY_ONE_ENTRY  
+
+template<class SPEC>
+struct AllowMountBoolSetting : public BoolSetting {
+  bool get() override { return LSFS::GetAllowMount(); }
+  void set(bool value) override { return LSFS::SetAllowMount(value); }
+  void say() override { getSL<SPEC>()->SaySDAccess(); }
+};
+#endif
 
 template<class SPEC>
 struct SettingsMenuMode : public MenuEntryMenu<SPEC,
   SubMenuEntry<typename SPEC::ChangeVolumeMode, typename SPEC::SoundLibrary::tEditVolume>
+#ifdef MOUNT_SD_SETTING
+  // TODO: make this more configurable
+  ,DirectBoolEntry<SPEC, AllowMountBoolSetting<SPEC>>
+#endif
 #ifdef DYNAMIC_BLADE_LENGTH
   ,SubMenuEntry<typename SPEC::ChangeBladeLengthMode, typename SPEC::SoundLibrary::tEditBladeLength>
 #endif
@@ -184,12 +204,17 @@ struct SettingsMenuMode : public MenuEntryMenu<SPEC,
 #ifdef DYNAMIC_BLADE_DIMMING
   ,SubMenuEntry<typename SPEC::ChangeBladeDimmingMode, typename SPEC::SoundLibrary::tEditBrightness>
 #endif
+
 > {};
 
 template<class SPEC>
 class BasicTopMenu : public MenuEntryMenu<SPEC,
   SubMenuEntry<typename SPEC::EditPresetsMenu, typename SPEC::SoundLibrary::tEditPresets>,
+#ifdef SETTINGS_MENU_HAS_ONLY_ONE_ENTRY  
+  SubMenuEntry<typename SPEC::ChangeVolumeMode, typename SPEC::SoundLibrary::tEditVolume>
+#else
   SubMenuEntry<typename SPEC::SettingsMenu, typename SPEC::SoundLibrary::tEditSettings>
+#endif
 > {};
 
 }  // namespace mode

@@ -5,8 +5,8 @@ namespace mode {
 
 struct BoolSetting {
   virtual bool get() = 0;
-  virtual bool set() = 0;
-  virtual bool say() = 0;
+  virtual void set(bool value) = 0;
+  virtual void say() = 0;
 };
 
 template<class SPEC, class BoolSetting>
@@ -16,7 +16,7 @@ public:
     getPtr<BoolSetting>()->say();
     getSL<SPEC>()->SayBool(getPtr<BoolSetting>()->get());
   }
-  static void select(int entry) {
+  void select(int entry) {
     getPtr<BoolSetting>()->set(getPtr<BoolSetting>()->get());
     say(entry);
   }

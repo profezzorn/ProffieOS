@@ -419,6 +419,8 @@ public:
   ADD_SL_SOUND(Blade, "mbld");
   ADD_SL_SOUND(Seconds, "mseconds");
 
+  ADD_SL_SOUND(SDAccess, "msdacc");
+
   // Sound used to indicate that there are no more options
   // or list entries.
   ADD_SL_SOUND(ListEndBuzz, "mbuzz");

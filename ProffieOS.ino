@@ -47,7 +47,6 @@
 
 #include "common/capabilities.h"
 
-
 #if !defined(ENABLE_AUDIO) && !defined(DISABLE_AUDIO)
 #define ENABLE_AUDIO
 #endif
@@ -177,6 +176,16 @@
 // did not work with that define.
 
 #include <Arduino.h>
+
+#if !defined(ENABLE_SD)
+// No SD support, no mount_sd_setting
+#undef MOUNT_SD_SETTING
+#endif
+
+#if !defined(USB_CLASS_MSC)
+// No mass storage, no mount_sd_setting
+#undef MOUNT_SD_SETTING
+#endif
 
 #ifdef TEENSYDUINO
 #include <DMAChannel.h>
@@ -1605,7 +1614,9 @@ void setup() {
   pinMode(boosterPin, OUTPUT);
   digitalWrite(boosterPin, HIGH);
 #endif
-
+#ifdef MOUNT_SD_SETTING
+  LSFS::SetAllowMount(false);
+#endif
   Serial.begin(115200);
 #if VERSION_MAJOR >= 4
   // TODO: Figure out if we need this.

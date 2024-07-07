@@ -1554,6 +1554,16 @@ public:
       current_preset_.Print();
       return true;
     }
+#ifdef MOUNT_SD_SETTING
+    if (!strcmp(cmd, "get_allow_mount")) {
+      STDOUT.println(LSFS::GetAllowMount());
+      return true;
+    }
+    if (!strcmp(cmd, "set_allow_mount") && arg) {
+      LSFS::SetAllowMount(atoi(arg) > 0);
+       return true;
+    }
+#endif
 
 #ifdef DYNAMIC_BLADE_LENGTH
     if (!strcmp(cmd, "get_max_blade_length") && arg) {
