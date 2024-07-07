@@ -14,7 +14,7 @@ struct SteppedMode : public SPEC::SelectCancelMode {
   virtual void next() = 0;
   virtual void prev() = 0;
 
-  virtual void say() {};
+  virtual void say() {}
   virtual void fadeout(float len) {}
 
   virtual int steps_per_revolution() { return 6; }
@@ -37,8 +37,8 @@ struct SteppedMode : public SPEC::SelectCancelMode {
   void update() {
     SaberBase::DoEffect(EFFECT_MENU_CHANGE, 0); // should pay a quiet "tick" every time.
     say_time_ = Cyclint<uint32_t>(millis()) + (uint32_t)(SaberBase::sound_length * 1000);
+    if (!say_time_) say_time_+=1;
     fadeout(SaberBase::sound_length);
-    if (!say_time_) say_time_ += 1;
   }
   void mode_Loop() override {
     SaberBase::RequestMotion();

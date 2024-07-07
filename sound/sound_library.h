@@ -48,16 +48,12 @@ enum ColorNumber {
 };
 
 template<class SPEC>
-class SoundLibraryTemplate {
+class SoundLibraryTemplate : public SoundQueue<16> {
 public:
   SoundQueue<16> sound_queue_;
-  void Play(const char* file) { sound_queue_.Play(file); }
-  void Play(SoundToPlay stp) { sound_queue_.Play(stp); }
   void Poll(RefPtr<BufferedWavPlayer>& wav_player) {
-    sound_queue_.PollSoundQueue(wav_player);
+    PollSoundQueue(wav_player);
   }
-
-  int busy() { return sound_queue_.busy(); }
 
   void SayWhole(int number) {
     if (number == 0) {

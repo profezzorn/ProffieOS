@@ -33,17 +33,28 @@ public:
   bool Play(const char* p) {
     return Play(SoundToPlay(p));
   }
+ 
   // Called from Loop()
   void PollSoundQueue(RefPtr<BufferedWavPlayer>& player) {
     busy_ = player && player->isPlaying();
+    if (fadeout_) {
+      fadeout_ = false;
+      if (busy_) {
+	// We really should add the time since the fadeout was scheduled here.
+	// However, if polling is frequent, it would be a fraction of a milli
+	// which basically dones't matter.
+	player->set_fade_time(fadeout_len_);
+	player->FadeAndStop();
+      }
+    }
     if (!busy_) {
       if (sounds_) {
 	busy_ = true;
 	if (!player) {
 	  player = GetFreeWavPlayer();
 	  if (!player) return;
-	  player->set_volume_now(1.0f);
 	}
+	player->set_volume_now(1.0f);
 	queue_[0].Play(player.get());
 	sounds_--;
 	for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
@@ -53,9 +64,16 @@ public:
     }
   }
   bool busy() const { return busy_; }
+  void fadeout(float len) {
+    sounds_ = 0;
+    fadeout_ = true;
+    fadeout_len_ = len;
+  }
 private:
   int sounds_;
   bool busy_ = false;
+  bool fadeout_;
+  bool fadeout_len_;
   SoundToPlay queue_[QueueLength];
 };
 
