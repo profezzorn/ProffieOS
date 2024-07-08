@@ -734,6 +734,8 @@ void prop_SetClashThreshold(int clash_threshold) {
 }
 #endif
 
+void prop_SaveState() { prop.SaveState(); }
+
 #ifdef DYNAMIC_BLADE_LENGTH
 int prop_GetBladeLength(int blade) {
   return prop.GetBladeLength(blade); 

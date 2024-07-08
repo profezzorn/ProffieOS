@@ -74,13 +74,13 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
     prop_SetBladeLength(blade(), this->pos_);
     getSL<SPEC>()->SaySelect();
     showlen_.Stop(blade());
+    prop_SaveState();
   }
   void exit() override {
     SPEC::MenuBase::exit();
     prop_SetBladeLength(blade(), saved_len_);
     getSL<SPEC>()->SayCancel();
     showlen_.Stop(blade());
-    // TODO: SAVE!
   }
 
   int getLength() { return this->pos_; }

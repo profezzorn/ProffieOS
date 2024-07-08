@@ -671,10 +671,14 @@ public:
 #endif
   }
 
+  void SaveState() {
+    savestate_.WriteToSaveDir("curstate");
+  }
+
   void SaveState(int preset) {
     PVLOG_NORMAL << "Saving Current Preset preset = " << preset << " savedir = " << GetSaveDir() << "\n";
     savestate_.preset = preset;
-    savestate_.WriteToSaveDir("curstate");
+    SaveState();
   }
 
   SaveGlobalStateFile saved_global_state;
