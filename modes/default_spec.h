@@ -3,6 +3,7 @@
 
 #include "menu_base.h"
 #include "settings_menues.h"
+#include "top_menu_wrapper.h"
 
 template<class SPEC>
 struct DefaultMenuSpec {
@@ -64,7 +65,7 @@ struct DefaultMenuSpec {
   typedef mode::HSLMode<SPEC> HSLMode;
 
   typedef mode::EditPresetMenu<SPEC> EditPresetsMenu;
-  typedef mode::BasicTopMenu<SPEC> TopMenu;
+  typedef mode::TopMenuWrapper<SPEC, mode::BasicTopMenu<SPEC>> TopMenu;
 };
 
 #endif
