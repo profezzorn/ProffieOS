@@ -17,7 +17,7 @@ public:
     getSL<SPEC>()->SayBool(getPtr<BoolSetting>()->get());
   }
   void select(int entry) {
-    getPtr<BoolSetting>()->set(getPtr<BoolSetting>()->get());
+    getPtr<BoolSetting>()->set(!getPtr<BoolSetting>()->get());
     say(entry);
   }
 };
