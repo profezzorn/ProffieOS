@@ -14,18 +14,19 @@ void prop_SetBladeLength(int blade, int len);
 namespace mode {
 
 #ifndef VOLUME_MENU_GAMMA
-#define VOLUME_MENU_GAMMA 2.2
+#define VOLUME_MENU_GAMMA 2.0
 #endif
 
 #define SETTINGS_MENU_HAS_ONLY_ONE_ENTRY
   
 template<class SPEC>
 struct SmoothVolumeMode : public SPEC::SmoothMode {
+  virtual float revolutions() { return 1.0f; }
   // x = 0-32767
   virtual int get() override {
     float ret = dynamic_mixer.get_volume() / VOLUME;
-    ret = powf(ret, VOLUME_MENU_GAMMA);
-    return ret * 32768.0;
+    ret = powf(ret, 1.0 / VOLUME_MENU_GAMMA);
+    return ret * 32767.0;
   }
     
   virtual void set(int x) {
@@ -33,8 +34,16 @@ struct SmoothVolumeMode : public SPEC::SmoothMode {
     if (!getSL<SPEC>()->busy()) {
       getSL<SPEC>()->SayWhole(ret * 100);
       getSL<SPEC>()->SayPercent();
+
+      PVLOG_VERBOSE << " x = " << x
+		    << " angle_ = " << (float)this->angle_
+		    << " ret = " << ret
+		    << " bent = " << powf(ret, VOLUME_MENU_GAMMA)
+		    << " final= " << VOLUME * powf(ret, VOLUME_MENU_GAMMA)
+		    << "\n";
     }
-    ret = powf(ret, 1.0 / VOLUME_MENU_GAMMA);
+
+    ret = powf(ret, VOLUME_MENU_GAMMA);
     dynamic_mixer.set_volume(VOLUME * ret);
   }
 };

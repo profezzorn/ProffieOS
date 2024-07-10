@@ -13,6 +13,7 @@ public:
     last_angle_ = fusor.angle2();
   }
   Angle get() {
+    SaberBase::RequestMotion();
     Angle a = fusor.angle2();
     Angle delta = a - last_angle_;
     last_angle_ = a;

@@ -14,8 +14,11 @@ public:
   constexpr Angle() : angle_(0.0f) {}
   constexpr Angle(float f) : angle_(TRUNC(f)) {}
   operator float() const { return angle_; }
+  static constexpr Angle fromFixed0(int a) {
+    return Angle((a >= 16384 ?  a - 32768 : a)* (M_PI / 16384.0));
+  }
   static constexpr Angle fromFixed(int a) {
-    return Angle(a * (M_PI / 16384.0));
+    return Angle((a - 16384) * (M_PI / 16384.0));
   }
   constexpr Angle operator+(Angle other) const {
     return Angle(angle_ + other.angle_);
@@ -47,20 +50,26 @@ public:
   int increment_with_guardrails(Angle diff) {
     angle_ += diff.angle_;
     if (angle_ >= M_PI) {
-      angle_ -= M_PI * 2;
+      angle_ = M_PI;
       return 1;
     }
-    if (angle_ < M_PI) {
-      angle_ += M_PI * 2;
+    if (angle_ < -M_PI) {
+      angle_ = -M_PI;
       return -1;
     }
     return 0;
   }
-  // 0-32767
-  int fixed() const {
+  // 0-32767 returns 0 if angle_ is 0.0
+  int fixed0() const {
     int ret = angle_ * (16384.0 / M_PI);
     if (ret < 0) ret += 32768;
     return ret;
+  }
+  // 0-32767 returns 16384 if angle_ is 0.0
+  int fixed() const {
+    int ret = angle_ * (16384.0 / M_PI);
+    ret += 16384;
+    return clampi32(ret, 0, 32767);
   }
 private:
   float angle_; // [-PI .. PI)
