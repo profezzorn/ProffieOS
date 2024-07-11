@@ -46,6 +46,11 @@ struct SmoothVolumeMode : public SPEC::SmoothMode {
     ret = powf(ret, VOLUME_MENU_GAMMA);
     dynamic_mixer.set_volume(VOLUME * ret);
   }
+
+  void exit() override {
+    getSL<SPEC>()->SayCancel();
+    SPEC::SmoothMode::exit();
+  }
 };
 
 #ifdef DYNAMIC_BLADE_LENGTH
@@ -65,11 +70,16 @@ class ShowLengthStyle {
 
 template<class SPEC>
 struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
+  // TODO: get the blade from the spec??
   virtual int blade() { return 1; }
   void activate(bool onreturn) {
     SPEC::MenuBase::activate(onreturn);
-    this->pos_ = saved_len_ = prop_GetBladeLength(1);
-    SetBladeLength(blade(), prop_GetMaxBladeLength(1));
+    int len = prop_GetBladeLength(blade());
+    int maxlen = prop_GetMaxBladeLength(blade());
+    saved_len_ = len;
+    if (len == -1) len = maxlen;
+    this->pos_ = len;
+    SetBladeLength(blade(), maxlen);
     showlen_.Start(blade());
   }
   void say() override {
@@ -86,9 +96,9 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
     prop_SaveState();
   }
   void exit() override {
+    getSL<SPEC>()->SayCancel();
     SPEC::MenuBase::exit();
     prop_SetBladeLength(blade(), saved_len_);
-    getSL<SPEC>()->SayCancel();
     showlen_.Stop(blade());
   }
 
@@ -124,8 +134,8 @@ struct SmoothClashThresholdMode : public SPEC::SmoothMode {
     value_ = x;
   }
   void exit() override {
-    SPEC::SmoothMode::exit();
     getSL<SPEC>()->SayCancel();
+    SPEC::SmoothMode::exit();
   }
   void select() override {
     SPEC::SmoothMode::select();
@@ -170,9 +180,9 @@ struct SmoothChangeBladeDimmingMode : public SPEC::SmoothMode {
     SaberBase::SetDimming(ret * 32768.0f);
   }
   void exit() override {
+    getSL<SPEC>()->SayCancel();
     SPEC::SmoothMode::exit();
     SaberBase::SetDimming(saved_value_);
-    getSL<SPEC>()->SayCancel();
   }
   void select() override {
     // TODO: SAVE!
