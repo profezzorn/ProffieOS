@@ -119,9 +119,10 @@ struct InsertSelectedPresetEntry : public MenuEntry {
 
 
 template<class SPEC, int BLADE>
-struct EditBladeSubMenuEntry : public MenuEntry {
+struct SelectStyleMenuEntry : public MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>()->SaySelectPreset();
+    getSL<SPEC>()->SayEditStyle();
+    getSL<SPEC>()->SayWhole(BLADE);
   }
   void select(int entry) override {
     menu_current_blade = BLADE;
@@ -129,13 +130,17 @@ struct EditBladeSubMenuEntry : public MenuEntry {
   }
 };
 
-#define EDIT_BLADE_SUBMENU(N) EditBladeSubMenuEntry<SPEC, N>,
+#define EDIT_BLADE_SUBMENU(N) SelectStyleMenuEntry<SPEC, N>,
   
 template<class SPEC>
 class EditPresetMenu : public MenuEntryMenu<SPEC,
   SubMenuEntry<typename SPEC::SelectFont, typename SPEC::SoundLibrary::tEditFont>,
   SubMenuEntry<typename SPEC::SelectTrack, typename SPEC::SoundLibrary::tEditTrack>,
+#if NUM_BLADES == 1
+  SubMenuEntry<typename SPEC::EditStyleMenu, typename SPEC::SoundLibrary::tEditStyle>,
+#else
   ONCEPERBLADE(EDIT_BLADE_SUBMENU)
+#endif					    
   typename SPEC::MovePresetUpEntry,
   typename SPEC::MovePresetDownEntry,
   typename SPEC::SelectPresetEntry,
