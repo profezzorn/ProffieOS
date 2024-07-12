@@ -66,7 +66,7 @@ public:
       Say1000();
       number %= 1000;
     }
-    int hundreds = number / 1000;
+    int hundreds = number / 100;
     if (hundreds) {
       SayWhole(hundreds);
       Say100();
