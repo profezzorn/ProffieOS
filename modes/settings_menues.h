@@ -163,35 +163,40 @@ struct SmoothClashThresholdMode : public SPEC::SmoothMode {
 
 template<class SPEC>
 struct SmoothChangeBladeDimmingMode : public SPEC::SmoothMode {
-  void activate(bool onreturn) {
-    SPEC::SmoothMode::activate(onreturn);
-    saved_value_ = SaberBase::GetCurrentDimming();
+  virtual float revolutions() { return 1.0f; }
+  void mode_activate(bool onreturn) {
+    SPEC::SmoothMode::mode_activate(onreturn);
+    SaberBase::TurnOn();
+  }
+  void mode_deactivate() override {
+    SaberBase::TurnOff(SaberBase::OFF_FAST);
+    SPEC::SmoothMode::mode_deactivate();
   }
   // x = 0-32767
   virtual int get() override {
-    float ret =  SaberBase::GetCurrentDimming() / 32768.0;
+    float ret =  SaberBase::GetCurrentDimming() / 16384.0;
     ret = powf(ret, COLOR_MENU_GAMMA);
-    return ret * 32768.0;
+    return ret * 32767.0;
   }
     
   virtual void set(int x) {
-    float ret = x / 32768.;
+    float ret = x / 32767.f;
     ret = powf(ret, 1.0/COLOR_MENU_GAMMA);
-    SaberBase::SetDimming(ret * 32768.0f);
+    SaberBase::SetDimming(ret * 16384.0f);
+    if (!getSL<SPEC>()->busy()) {
+      getSL<SPEC>()->SayWhole(ret * 100);
+      getSL<SPEC>()->SayPercent();
+    }
   }
+
   void exit() override {
     getSL<SPEC>()->SayCancel();
     SPEC::SmoothMode::exit();
-    SaberBase::SetDimming(saved_value_);
   }
   void select() override {
-    // TODO: SAVE!
-    SPEC::SmoothMode::select();
     getSL<SPEC>()->SaySelect();
-    popMode();
+    SPEC::SmoothMode::select();
   }
-
-  int saved_value_;
 };
 
 #endif
