@@ -14,7 +14,7 @@ void prop_SetBladeLength(int blade, int len);
 namespace mode {
 
 #ifndef VOLUME_MENU_GAMMA
-#define VOLUME_MENU_GAMMA 2.0
+#define VOLUME_MENU_GAMMA 2.2
 #endif
 
 #define SETTINGS_MENU_HAS_ONLY_ONE_ENTRY
@@ -126,31 +126,30 @@ struct SmoothClashThresholdMode : public SPEC::SmoothMode {
   // x = 0-32767
   virtual int get() override {
     float ret = prop_GetCurrentClashThreshold() / MAX_CLASH_THRESHOLD_G;
-    ret = powf(ret, CLASH_THRESHOLD_GAMMA);
+    ret = powf(ret, 1.0/CLASH_THRESHOLD_GAMMA);
     return ret * 32768.0;
   }
     
   virtual void set(int x) {
     value_ = x;
+    if (!getSL<SPEC>()->busy()) {
+      float ret = value_ / 32768.0f;
+      ret = powf(ret, CLASH_THRESHOLD_GAMMA);
+      ret *= MAX_CLASH_THRESHOLD_G;
+      getSL<SPEC>()->SayNumber(ret, SayType::SAY_DECIMAL);
+    }
   }
   void exit() override {
     getSL<SPEC>()->SayCancel();
     SPEC::SmoothMode::exit();
   }
   void select() override {
-    SPEC::SmoothMode::select();
-    
     float ret = value_ / 32768.0f;
-    ret = powf(ret, 1.0 / VOLUME_MENU_GAMMA);
+    ret = powf(ret, CLASH_THRESHOLD_GAMMA);
     ret *= MAX_CLASH_THRESHOLD_G;
-    if (!getSL<SPEC>()->busy()) {
-//      getSL<SPEC>()->SayClashThreshold(ret * 100);
-      getSL<SPEC>()->SayNumber(ret, SayType::SAY_DECIMAL);
-    }
     prop_SetClashThreshold(ret);
     getSL<SPEC>()->SaySelect();
-    popMode();
-    // TODO: SAVE!
+    SPEC::SmoothMode::select();
   }
 
   int value_;
@@ -175,13 +174,13 @@ struct SmoothChangeBladeDimmingMode : public SPEC::SmoothMode {
   // x = 0-32767
   virtual int get() override {
     float ret =  SaberBase::GetCurrentDimming() / 16384.0;
-    ret = powf(ret, COLOR_MENU_GAMMA);
+    ret = powf(ret, 1.0/COLOR_MENU_GAMMA);
     return ret * 32767.0;
   }
     
   virtual void set(int x) {
     float ret = x / 32767.f;
-    ret = powf(ret, 1.0/COLOR_MENU_GAMMA);
+    ret = powf(ret, COLOR_MENU_GAMMA);
     SaberBase::SetDimming(ret * 16384.0f);
     if (!getSL<SPEC>()->busy()) {
       getSL<SPEC>()->SayWhole(ret * 100);

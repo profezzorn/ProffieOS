@@ -20,6 +20,12 @@ public:
   static constexpr Angle fromFixed(int a) {
     return Angle((a - 16384) * (M_PI / 16384.0));
   }
+  static constexpr Angle fromFixedWithMargin(int a, float margin_fraction) {
+    return
+      a >= 32767 ? Angle(M_PI * (1.0 - margin_fraction / 5.0)) :
+      a <= 0 ? Angle(-M_PI * (1.0 - margin_fraction / 5.0))  :
+      Angle((a - (16384.0 * (1.0 + margin_fraction))) * (M_PI / (16384.0 * (1.0 + margin_fraction))));
+  }
   constexpr Angle operator+(Angle other) const {
     return Angle(angle_ + other.angle_);
   }
@@ -69,6 +75,13 @@ public:
   int fixed() const {
     int ret = angle_ * (16384.0 / M_PI);
     ret += 16384;
+    return clampi32(ret, 0, 32767);
+  }
+  // 0-32767 returns 16384 if angle_ is 0.0
+  int fixed_with_margin(float margin_fraction) const {
+    float tmp = 16384.0 * (1.0 + margin_fraction);
+    float ret = angle_ * (tmp / M_PI);
+    ret += 16384.0;
     return clampi32(ret, 0, 32767);
   }
 private:

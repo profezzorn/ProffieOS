@@ -28,7 +28,7 @@ struct SmoothBase : public SPEC::SelectCancelMode {
   // 3 rotations to get back to the original color
   virtual float revolutions() { return 3.0f; }
   void mode_activate(bool onreturn) override {
-    saved_ = get();
+    if (!onreturn) saved_ = get();
     delta_.init();
     angle_ = Angle::fromFixed(get());
   }
@@ -45,7 +45,6 @@ struct SmoothBase : public SPEC::SelectCancelMode {
   virtual int get() = 0;
   virtual void set(int x) = 0;
 
-  void mode_Loop() override { set(angle_.fixed()); }
 
   DeltaAngle delta_;
   Angle angle_;
@@ -56,7 +55,7 @@ template<class SPEC>
 struct SmoothWraparoundMode : public SmoothBase<SPEC> {
   void mode_Loop() override {
     this->angle_ += this->delta_.get() / this->revolutions();
-    SmoothBase<SPEC>::mode_Loop();
+    this->set(this->angle_.fixed());
   }
 };
 
@@ -65,14 +64,19 @@ struct SmoothMode : public SmoothBase<SPEC> {
   // x = 0-32767
   virtual void min_bump() {}
   virtual void max_bump() {}
+  virtual float margin_fraction() { return 0.02; /* 2% */ }
 
+  void mode_activate(bool onreturn) override {
+    SmoothBase<SPEC>::mode_activate(onreturn);
+    this->angle_ = Angle::fromFixedWithMargin(this->get(), margin_fraction());
+  }
   void mode_Loop() override {  float last_angle_;
     switch (this->angle_.increment_with_guardrails(
 	      this->delta_.get() / this->revolutions())) {
       case -1: min_bump(); break;
       case  1: max_bump(); break;
     }
-    SmoothBase<SPEC>::mode_Loop();
+    this->set(this->angle_.fixed_with_margin(margin_fraction()));
   }
 };
 
