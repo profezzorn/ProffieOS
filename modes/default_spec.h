@@ -36,6 +36,8 @@ struct DefaultMenuSpec {
   typedef mode::MovePresetDownEntry<SPEC> MovePresetDownEntry;
   typedef mode::SelectPresetEntry<SPEC> SelectPresetEntry;
   typedef mode::InsertSelectedPresetEntry<SPEC> InsertSelectedPresetEntry;
+  typedef mode::DeletePresetSubMenuEntry<SPEC> DeletePresetSubMenuEntry;
+
   typedef mode::EditStyleMenu<SPEC> EditStyleMenu;
   typedef mode::SelectArgMode<SPEC> EditStyleOptions;
   

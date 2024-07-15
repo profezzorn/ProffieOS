@@ -420,6 +420,7 @@ public:
   // Sound used to indicate that there are no more options
   // or list entries.
   ADD_SL_SOUND(ListEndBuzz, "mbuzz");
+  ADD_SL_SOUND(CantDeleteLastPreset, "mcantdlp");
 };
 
 

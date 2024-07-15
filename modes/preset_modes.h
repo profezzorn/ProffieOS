@@ -7,7 +7,6 @@
 // Returns the position of the current preset.
 int prop_GetPresetPosition();
 void prop_MovePreset(int position);
-int GetTotalPresets();
 
 namespace mode {
 
@@ -20,10 +19,34 @@ class  ConfirmMenu : public MenuEntryMenu<SPEC,
   PopMenuEntry<typename SPEC::SoundLibrary::tCancel>
 > {};
 
+template<class SPEC, class ACTION_ENTRY>
+struct  ConfirmDeletePresetMenu : public ConfirmMenu<SPEC, ACTION_ENTRY> {
+  void mode_activate(bool onreturn) {
+    if (!onreturn) {
+      int pos = prop_GetPresetPosition();
+      if (pos == 1) {
+	// Check if this is the last preset.
+	CurrentPreset tmp;
+	tmp.SetPreset(2);
+	if (tmp.preset_num == 1) {
+	  getSL<SPEC>()->SayMovePresetUp();
+	  popMode();
+	  return;
+	}
+      }
+    }
+    ConfirmMenu<SPEC, ACTION_ENTRY> ::mode_activate(onreturn);
+  }
+};
+
 template<class SPEC, class CMD, class ARG, class SOUND>
 using ConfirmCommandMenuEntry =
   SubMenuEntry<ConfirmMenu<SPEC, CommandMenuEntry<CMD, ARG, SOUND>>, SOUND>;
 
+template<class SPEC>
+class DeletePresetSubMenuEntry : public SubMenuEntry<ConfirmDeletePresetMenu<SPEC, CommandMenuEntry<STRTYPE("delete_preset"), STRTYPE(""), typename SPEC::SoundLibrary::tDeletePreset>>, typename SPEC::SoundLibrary::tDeletePreset> {};
+  
+  
 int menu_selected_preset = -1;
 
 template<class SPEC>
@@ -145,7 +168,8 @@ class EditPresetMenu : public MenuEntryMenu<SPEC,
   typename SPEC::MovePresetDownEntry,
   typename SPEC::SelectPresetEntry,
   typename SPEC::InsertSelectedPresetEntry,
-  ConfirmCommandMenuEntry<SPEC, STRTYPE("delete_preset"), STRTYPE(""), typename SPEC::SoundLibrary::tDeletePreset>
+  typename SPEC::DeletePresetSubMenuEntry
+//  ConfirmCommandMenuEntry<SPEC, STRTYPE("delete_preset"), STRTYPE(""), typename SPEC::SoundLibrary::tDeletePreset>
 > {};
   
 }  // namespace mode
