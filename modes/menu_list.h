@@ -86,6 +86,10 @@ public:
   }
   uint16_t size() override { return MenuEntryTypeList::size; }
   void select() override { entries_.select(this->pos_); }
+  void exit() override {
+    getSL<SPEC>()->SayExit();
+    popMode();
+  }
 private:
   PONUA MenuEntryList<MenuEntryTypeList> entries_;
 };

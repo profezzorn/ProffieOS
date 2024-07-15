@@ -65,7 +65,8 @@ struct DefaultMenuSpec {
   typedef mode::HSLMode<SPEC> HSLMode;
 
   typedef mode::EditPresetMenu<SPEC> EditPresetsMenu;
-  typedef mode::TopMenuWrapper<SPEC, mode::BasicTopMenu<SPEC>> TopMenu;
+//  typedef mode::TopMenuWrapper<SPEC, mode::BasicTopMenu<SPEC>> TopMenu;
+  typedef mode::BasicTopMenu<SPEC> TopMenu;
 };
 
 #endif

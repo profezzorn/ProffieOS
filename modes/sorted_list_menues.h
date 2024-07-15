@@ -22,6 +22,9 @@ public:
 
   void mode_activate(bool onreturn) override {
     this->pos_ = SortedLineHelper<128>::init();
+    PVLOG_DEBUG << " Current value = " << get_current_value()
+		  << " pos = " << this->pos_
+		  << "\n";
     SPEC::MenuBase::mode_activate(onreturn);
     this->say();
   }
@@ -36,20 +39,21 @@ public:
     return current_value_;
   }
   void mode_activate(bool onreturn) override {
-    current_value_ = match_pattern(GetFont(), FONT_PATTERN);
+    current_value_ = match_pattern(FONT_PATTERN, GetFont());
     SPEC::SelectFromListModeBase::mode_activate(onreturn);
-  }
-  void exit() override {
-    SPEC::SelectFromListModeBase::exit();
-    chdir(GetFont());
   }
   void say() override {
     chdir(this->get());
     hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
   }
+  void exit() override {
+    chdir(GetFont());
+    SPEC::SelectFromListModeBase::exit();
+  }
   void select() override {
+    getSL<SPEC>()->SaySelect();
     SetFont(format_pattern(FONT_PATTERN, this->get()));
-    // Say "saved" or something?
+    popMode();
   }
 private:
   StringPiece current_value_;
@@ -78,7 +82,7 @@ public:
   }
   void select() override {
     SetTrack(mkstr(this->get()));
-    // Say "saved" or something?
+    SPEC::SelectFromListModeBase::select();
   }
 };
   

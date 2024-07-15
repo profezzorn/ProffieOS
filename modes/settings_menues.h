@@ -89,17 +89,15 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
     return prop_GetMaxBladeLength(blade());
   }
   void select() override {
-    // SPEC::MenuBase::select(); = 0
     prop_SetBladeLength(blade(), this->pos_);
-    getSL<SPEC>()->SaySelect();
     showlen_.Stop(blade());
     prop_SaveState();
+    SPEC::MenuBase::select();
   }
   void exit() override {
-    getSL<SPEC>()->SayCancel();
-    SPEC::MenuBase::exit();
     prop_SetBladeLength(blade(), saved_len_);
     showlen_.Stop(blade());
+    SPEC::MenuBase::exit();
   }
 
   int getLength() { return this->pos_; }

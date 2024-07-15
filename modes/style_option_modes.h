@@ -67,9 +67,8 @@ public:
   uint16_t size() override { return max_; }
 
   void select() override {
-    // SPEC::MenuBase::select();
     SetIntArg(menu_current_blade, menu_current_arg, this->pos_);
-    popMode();
+    SPEC::MenuBase::select();
   }
 private:
   uint16_t max_;
@@ -240,8 +239,7 @@ struct SelectStyleMenu : public SPEC::MenuBase {
   void select() override {
     LSPtr<char> builtin(CurrentPreset::mk_builtin_str(preset(), blade()));
     SetStyle(menu_selected_blade, style_parser.CopyArguments(builtin.get(), GetStyle(menu_selected_blade)));
-    getSL<SPEC>()->SaySelect();
-    popMode();
+    SPEC::MenuBase::select();
   }
 };
 

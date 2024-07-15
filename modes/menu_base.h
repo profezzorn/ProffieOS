@@ -9,6 +9,16 @@ struct MenuBase : public SPEC::SteppedMode {
   virtual void say() = 0;
   virtual uint16_t size() = 0;
 
+  void exit() override {
+    getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+  
+  void select() override {
+    getSL<SPEC>()->SaySelect();
+    popMode();
+  }
+  
   void mode_activate(bool onreturn) override {
     SPEC::SteppedMode::mode_activate(onreturn);
     say();
