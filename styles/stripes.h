@@ -20,7 +20,7 @@
 
 template<class... A>
 class StripesHelper {};
-
+  
 template<>
 class StripesHelper<> {
 public:
@@ -67,21 +67,19 @@ public:
     int32_t delta_micros = now_micros - last_micros_;
     last_micros_ = now_micros;
 
-    m = MOD(m + delta_micros * speed / 333, colors_.size * 341 * 1024);
-    mult_ = (50000 * 1024 / width);
+    m = MOD(m + delta_micros * speed / 333, colors_.size * 341*1024);
+    mult_ = (50000*1024 / width);
   }
-
   SimpleColor getColor(int led) {
     // p = 0..341*len(colors)
     int p = ((m + led * mult_) >> 10) % (colors_.size * 341);
-
+    
     SimpleColor ret;
-    ret.c = Color16(0, 0, 0);
+    ret.c = Color16(0,0,0);
     colors_.get(led, p, &ret);
-    colors_.get(led, p + 341 * colors_.size, &ret); // This line creates the gradient blending
+    colors_.get(led, p + 341 * colors_.size, &ret);  // gradient blending
     return ret;
   }
-  
 protected:
   StripesHelper<COLORS...> colors_;
   uint32_t mult_;
@@ -105,7 +103,7 @@ private:
 };
 
 template<int WIDTH, int SPEED, class... COLORS>
-using Stripes = StripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;
+  using Stripes = StripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;
 
 // Usage: HardStripes<WIDTH, SPEED, COLOR1, COLOR2, ... >
 // or: Usage: HardStripesX<WIDTH_CLASS, SPEED, COLOR1, COLOR2, ... >
