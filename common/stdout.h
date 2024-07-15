@@ -152,7 +152,7 @@ private:
 
 #include "string_piece.h"
 
-void StringPiece::printTo(Print& p) {
+void StringPiece::printTo(Print& p) const {
   p.write((const uint8_t*)str, len);
 }
 

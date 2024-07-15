@@ -36,7 +36,7 @@ struct StringPiece {
   char operator[](size_t x) const { return str[x]; }
   explicit operator bool() const { return str != nullptr && len != 0; }
 
-  void printTo(Print& p);
+  void printTo(Print& p) const ;
   void paste(char* to) const { memcpy(to, str, len); }
   void pasteZ(char* to) const { paste(to); to[len] = 0; }
 
