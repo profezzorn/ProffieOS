@@ -21,15 +21,17 @@ class  ConfirmMenu : public MenuEntryMenu<SPEC,
 
 template<class SPEC, class ACTION_ENTRY>
 struct  ConfirmDeletePresetMenu : public ConfirmMenu<SPEC, ACTION_ENTRY> {
-  void mode_activate(bool onreturn) {
+  void mode_activate(bool onreturn) override {
     if (!onreturn) {
       int pos = prop_GetPresetPosition();
-      if (pos == 1) {
+      PVLOG_DEBUG << " preset = " << pos << "\n";
+      if (pos == 0) {
 	// Check if this is the last preset.
 	CurrentPreset tmp;
-	tmp.SetPreset(2);
-	if (tmp.preset_num == 1) {
-	  getSL<SPEC>()->SayMovePresetUp();
+	tmp.SetPreset(1);
+	PVLOG_DEBUG << " preset2 = " << tmp.preset_num << "\n";
+	if (tmp.preset_num == 0) {
+	  getSL<SPEC>()->SayCantDeleteLastPreset();
 	  popMode();
 	  return;
 	}
@@ -117,7 +119,7 @@ struct SelectPresetEntry : public MenuEntry {
 template<class SPEC>
 struct InsertSelectedPresetEntry : public MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>()->SaySelectPreset();
+    getSL<SPEC>()->SayInsertSelectedPreset();
   }
   void select(int entry) override {
     int from_pos = menu_selected_preset;
