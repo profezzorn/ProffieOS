@@ -10,6 +10,14 @@ EFFECT(mnum); // menu numbers
 EFFECT(clrlst); // spoken color names for SAY_COLOR_LIST
 #endif
 
+class VoicePackVersionFile : public ConfigFile {
+public:
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(voice_pack_version, 1);
+  }
+  int voice_pack_version;  
+};
+
 // Sound library
 enum SayType {
   SAY_DECIMAL,
@@ -50,9 +58,27 @@ enum ColorNumber {
 template<class SPEC>
 class SoundLibraryTemplate : public SoundQueue<16> {
 public:
+  static const int SoundLibraryVersion = 1;
   SoundQueue<16> sound_queue_;
   void Poll(RefPtr<BufferedWavPlayer>& wav_player) {
     PollSoundQueue(wav_player);
+  }
+
+  bool CheckVersion() {
+    int required_version = SPEC::SoundLibrary::SoundLibraryVersion;
+    int found_version = 0;
+    if (SFX_mnum) {
+      VoicePackVersionFile f;
+      f.ReadInCurrentDir("voicepack.ini");
+      found_version = f.voice_pack_version;
+      PVLOG_STATUS << "Sound library version " << found_version << " found.\n";
+    }
+    if (found_version < required_version) {
+      PVLOG_ERROR << "Sound library version " << required_version << " required.\n";
+      ProffieOSErrors::error_in_font_directory(); // Make new error for voice pack?
+      return false;
+    }
+    return true;
   }
 
   void SayWhole(int number) {
@@ -394,7 +420,7 @@ public:
 
   ADD_SL_SOUND(MovePresetUp, "mmpsetup");
   ADD_SL_SOUND(MovePresetDown, "mmpsetdn");
-  ADD_SL_SOUND(MovePresetToBeginning, "mmpsetdn");
+  ADD_SL_SOUND(MovePresetToBeginning, "mmpsetbg");
   ADD_SL_SOUND(PresetInserted, "mpsetins");
   ADD_SL_SOUND(SelectPreset, "mselpset");
   ADD_SL_SOUND(Preset, "mpset");

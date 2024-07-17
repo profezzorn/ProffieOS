@@ -309,6 +309,9 @@ public:
     }
 //    EnableBooster();
 #endif
+#ifdef MENU_SPEC_TEMPLATE
+    mode::getSL<MKSPEC<MENU_SPEC_TEMPLATE>>()->CheckVersion();
+#endif
     return false;
   }
 
