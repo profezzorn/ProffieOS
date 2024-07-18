@@ -34,6 +34,7 @@ struct SteppedMode : public SPEC::SelectCancelMode {
   void mode_activate(bool onreturn) override {
     angle_ = fusor.angle2();
   }
+
   void update() {
     SaberBase::DoEffect(EFFECT_MENU_CHANGE, 0); // should pay a quiet "tick" every time.
     say_time_ = Cyclint<uint32_t>(millis()) + (uint32_t)(SaberBase::sound_length * 1000);

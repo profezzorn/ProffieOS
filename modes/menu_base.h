@@ -16,7 +16,7 @@ struct MenuBase : public SPEC::SteppedMode {
   
   void select() override {
     getSL<SPEC>()->SaySelect();
-    popMode();
+    SPEC::SteppedMode::select();
   }
   
   void mode_activate(bool onreturn) override {

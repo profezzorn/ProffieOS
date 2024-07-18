@@ -450,13 +450,21 @@ public:
 };
 
 
-template<class SPEC>
-class SLSPEC {
-  typedef SoundLibraryTemplate<SPEC> SoundLibrary;
+template<template<class> typename SL_TEMPLATE>
+struct MAKE_SOUND_LIBRARY {
+  template<class SPEC>
+  struct SL_SPEC {
+    typedef SL_TEMPLATE<SL_SPEC> SoundLibrary;
+  };
+  typedef SL_TEMPLATE<MKSPEC<SL_SPEC>> SoundLibrary;
+  static SoundLibrary* get() { return getPtr<SoundLibrary>(); }
 };
 
-// These two are for compatibility and should be deprecated.
-using SoundLibrary = SoundLibraryTemplate<MKSPEC<SLSPEC>>;
+// Old-fashioned way to access sound library, do not use in new code.
+using SoundLibrary = MAKE_SOUND_LIBRARY<SoundLibraryTemplate>::SoundLibrary;
 #define sound_library_ (*getPtr<SoundLibrary>())
+
+// Only use this one if your prop has no menues and no SPEC to get the SL from.
+#define SLV2 (*MAKE_SOUND_LIBRARY<SoundLibraryV2Template>::get())
 
 #endif  // SOUND_SOUND_LIBRARY_H

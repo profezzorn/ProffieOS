@@ -68,6 +68,8 @@ public:
     return GetTrack();
   }
   void fadeout(float len) override {
+    SPEC::SelectFromListModeBase::fadeout(len);
+    getSL<SPEC>()->fadeout(len);
     if (track_player_) {
       track_player_->set_fade_time(len);
       track_player_->FadeAndStop();
@@ -77,13 +79,19 @@ public:
   void say() override {
     MountSDCard();
     EnableAmplifier();
-    track_player_ = GetFreeWavPlayer();
-    track_player_->Play(this->get(), 20.0);  // start 20s from the beginning
+    if (!track_player_) track_player_ = GetFreeWavPlayer();
+    if (track_player_) track_player_->Play(this->get(), 20.0);  // start 20s from the beginning
   }
   void select() override {
+    fadeout(0.2);
     SetTrack(mkstr(this->get()));
     SPEC::SelectFromListModeBase::select();
   }
+  void exit() override {
+    fadeout(0.2);
+    SPEC::SelectFromListModeBase::exit();
+  }
+
 };
   
 }  // namespace mode
