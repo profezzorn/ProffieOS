@@ -1528,7 +1528,7 @@ public:
       return true;
     }
     if (!strcmp(cmd, "ff") || !strcmp(cmd, "first_preset_fast")) {
-      previous_preset_fast();
+      first_preset_fast();
       return true;
     }
     if (!strcmp(cmd, "rotate")) {
