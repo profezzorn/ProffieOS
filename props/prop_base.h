@@ -1511,8 +1511,24 @@ public:
       next_preset();
       return true;
     }
+    if (!strcmp(cmd, "nf") || !strcmp(cmd, "next_preset_fast")) {
+      next_preset_fast();
+      return true;
+    }
     if (!strcmp(cmd, "p") || (!strcmp(cmd, "prev") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
       previous_preset();
+      return true;
+    }
+    if (!strcmp(cmd, "pf") || !strcmp(cmd, "prev_preset_fast")) {
+      previous_preset_fast();
+      return true;
+    }
+    if (!strcmp(cmd, "f") || (!strcmp(cmd, "first") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
+      first_preset();
+      return true;
+    }
+    if (!strcmp(cmd, "ff") || !strcmp(cmd, "first_preset_fast")) {
+      previous_preset_fast();
       return true;
     }
     if (!strcmp(cmd, "rotate")) {
