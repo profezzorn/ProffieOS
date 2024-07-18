@@ -1582,7 +1582,7 @@ public:
       STDOUT.println(LSFS::GetAllowMount());
       return true;
     }
-    if (!strcmp(cmd, "set_allow_mount") && arg) {
+    if ((!strcmp(cmd, "set_allow_mount") || !strcmp(cmd, "sdcard")) && arg) {
       LSFS::SetAllowMount(atoi(arg) > 0);
        return true;
     }
