@@ -576,6 +576,12 @@ private:
   static void PushEffect(EffectType type, EffectLocation location) {
     switch (type) {
       default: break;
+
+      // Clear out all old effects when we go to a new preset.
+      case EFFECT_NEWFONT:
+	num_effects_ = 0;
+	break;
+	
       case EFFECT_LOCKUP_BEGIN:
 	switch (SaberBase::Lockup()) {
 	  case LOCKUP_DRAG:
