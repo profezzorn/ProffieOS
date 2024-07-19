@@ -1578,13 +1578,10 @@ public:
       return true;
     }
 #ifdef MOUNT_SD_SETTING
-    if (!strcmp(cmd, "get_allow_mount")) {
+    if (!strcmp(cmd, "sd")) {
+      if (arg) LSFS::SetAllowMount(atoi(arg) > 0);
       STDOUT.println(LSFS::GetAllowMount());
       return true;
-    }
-    if (!strcmp(cmd, "set_allow_mount") && arg) {
-      LSFS::SetAllowMount(atoi(arg) > 0);
-       return true;
     }
 #endif
 
