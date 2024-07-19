@@ -426,7 +426,7 @@ public:
   ADD_SL_SOUND(Preset, "mpset");
   ADD_SL_SOUND(EditPresets, "medpsets");
 
-  ADD_SL_SOUND(EditStyleOptions, "mestyopt");
+//  ADD_SL_SOUND(EditStyleOptions, "mestyopt");
 
   ADD_SL_SOUND(InsertSelectedPreset, "minpset");
   ADD_SL_SOUND(MoveSelectedPreset, "mmpset");
@@ -434,9 +434,11 @@ public:
 
   ADD_SL_SOUND(NoStyleSelected, "mnostsel");
   ADD_SL_SOUND(ApplyColorsFromSelectedStyle, "macolsty");
-  ADD_SL_SOUND(ApplyStyleOptionsFromSelectedStyle, "maargsty");
+  ADD_SL_SOUND(ApplyStyleSettingsFromSelectedStyle, "maargsty");
   ADD_SL_SOUND(ApplyColorsToAllBlades, "macolall");
   ADD_SL_SOUND(ResetToDefaultColor, "mcolrst");
+
+  ADD_SL_SOUND(ResetStyleSettings, "mrststys");
 
   ADD_SL_SOUND(Blade, "mbld");
   ADD_SL_SOUND(Seconds, "mseconds");
@@ -447,6 +449,7 @@ public:
   // or list entries.
   ADD_SL_SOUND(ListEndBuzz, "mbuzz");
   ADD_SL_SOUND(CantDeleteLastPreset, "mcantdlp");
+  ADD_SL_SOUND(ThisStyleHasNoSettings, "mstnoset");
 };
 
 

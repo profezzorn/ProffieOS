@@ -80,6 +80,11 @@ public:
   void mode_activate(bool onreturn) override {
     // TODO: Set pos_ to something reasonable?
     arginfo_ = style_parser.GetArgInfo(GetStyle(menu_current_blade));
+    if (arginfo_.used() == 0) {
+      getSL<SPEC>()->SayThisStyleHasNoSettings();
+      popMode();
+      return;
+    }
     SPEC::MenuBase::mode_activate(onreturn);
   }
   uint16_t size() override { return arginfo_.used(); }
@@ -161,7 +166,7 @@ struct ApplyColorsToAllBladesEntry : public  MenuEntry {
 template<class SPEC>
 struct ApplyStyleArumentsFromSelectedStyleEntry : public  MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>()->SayApplyStyleOptionsFromSelectedStyle();
+    getSL<SPEC>()->SayApplyStyleSettingsFromSelectedStyle();
   }
   void select(int entry) override {
     if (menu_selected_preset == -1) {
@@ -199,13 +204,9 @@ struct ResetColorsEntry : public  MenuEntry {
 template<class SPEC>
 struct ResetStyleArgumentsEntry : public MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>()->SayApplyStyleOptionsFromSelectedStyle();
+    getSL<SPEC>()->SayResetStyleSettings();
   }
   void select(int entry) override {
-    if (menu_selected_preset == -1) {
-      getSL<SPEC>()->SayNoStyleSelected();
-      return;
-    }
     CurrentPreset preset;
     preset.Load(menu_selected_preset);
     const char* TO = GetStyle(menu_selected_blade);
@@ -245,7 +246,7 @@ struct SelectStyleMenu : public SPEC::MenuBase {
 
 template<class SPEC>
 struct EditStyleMenu : public MenuEntryMenu<SPEC,
-  SubMenuEntry<typename SPEC::EditStyleOptions, typename SPEC::SoundLibrary::tEditStyleOptions>,
+  SubMenuEntry<typename SPEC::EditStyleOptions, typename SPEC::SoundLibrary::tEditStyleSettings>,
   typename SPEC::SelectStyleEntry,
   typename SPEC::ApplyColorsFromSelectedStyleEntry,
   typename SPEC::ApplyStyleArumentsFromSelectedStyleEntry,
