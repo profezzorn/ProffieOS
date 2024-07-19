@@ -422,7 +422,6 @@ public:
   ADD_SL_SOUND(MovePresetDown, "mmpsetdn");
   ADD_SL_SOUND(MovePresetToBeginning, "mmpsetbg");
   ADD_SL_SOUND(PresetInserted, "mpsetins");
-  ADD_SL_SOUND(SelectPreset, "mselpset");
   ADD_SL_SOUND(Preset, "mpset");
   ADD_SL_SOUND(EditPresets, "medpsets");
 
