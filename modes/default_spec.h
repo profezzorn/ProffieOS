@@ -70,4 +70,11 @@ struct DefaultMenuSpec {
   typedef mode::BasicTopMenu<SPEC> TopMenu;
 };
 
+// This spec goes directly to the settings menu with no edit mode options.
+template<class SPEC>
+struct SettingsOnlyMenuSpec : public DefaultMenuSpec<SPEC> {
+  typedef mode::SettingsMenuMode<SPEC> TopMenu;
+};
+
+
 #endif
