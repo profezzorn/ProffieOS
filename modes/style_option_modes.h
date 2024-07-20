@@ -80,14 +80,32 @@ public:
   void mode_activate(bool onreturn) override {
     // TODO: Set pos_ to something reasonable?
     arginfo_ = style_parser.GetArgInfo(GetStyle(menu_current_blade));
+
+    // Shift away "builtin X Y"
+    arginfo_ >>= arginfo_.offset_;
+    arginfo_.used_.clear(0);
+    
+    menu_current_style_offset  = arginfo_.offset_; // almost always 2
+
     if (arginfo_.used() == 0) {
       getSL<SPEC>()->SayThisStyleHasNoSettings();
       popMode();
       return;
     }
+
+    PVLOG_DEBUG << " offset = " << arginfo_.offset_ << "\n";
+    for (int i = 0; i < 128; i++) {
+      if (arginfo_.used(i)) {
+	PVLOG_DEBUG << "Used args = " << i << " color = " << arginfo_.iscolor(i) << "\n";
+      }
+    }
+    
     SPEC::MenuBase::mode_activate(onreturn);
   }
   uint16_t size() override { return arginfo_.used(); }
+  void fadeout(float len) {
+    getSL<SPEC>()->fadeout(len);
+  }
   void say() override {
     getSL<SPEC>()->SayArgument(getCurrentArgument());
   }

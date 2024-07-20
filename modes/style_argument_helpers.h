@@ -8,6 +8,7 @@ namespace mode {
 
 int menu_current_blade = 1;
 int menu_current_arg = 0;
+int menu_current_style_offset = 2;
 
 bool isTimeArg(int arg) {
   switch (arg) {
@@ -22,21 +23,24 @@ bool isTimeArg(int arg) {
 }
 
 bool GetArg(int blade, int arg, char* argspace) {
-  return style_parser.GetArgument(GetStyle(blade), arg + 2, argspace);
+  return style_parser.GetArgument(GetStyle(blade), arg + menu_current_style_offset, argspace);
 }
 void SetArg(int blade, int arg, const char* argument) {
-  SetStyle(blade, style_parser.SetArgument(GetStyle(blade), arg + 2, argument));
+  SetStyle(blade, style_parser.SetArgument(GetStyle(blade), arg + menu_current_style_offset, argument));
 }
 
 Color16 GetColorArg(int blade, int arg) {
+  PVLOG_DEBUG << "GetColorArg: blade=" << blade << " arg=" << arg << "\n";
   char argspace[32];
   if (GetArg(blade, arg, argspace)) {
     char* tmp;
     int r = strtol(argspace, &tmp, 0);
     int g = strtol(tmp+1, &tmp, 0);
     int b = strtol(tmp+1, NULL, 0);
+    PVLOG_DEBUG << "GetColorArg: argument=" << argspace << "  r=" << r << " g=" << g << " b=" << b << "\n";
     return Color16(r,g,b);
   }
+  PVLOG_DEBUG << "GetColorArg: not found!\n";
   return Color16(65535,0,0);
 }
 

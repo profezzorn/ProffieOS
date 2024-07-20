@@ -9,31 +9,38 @@
 namespace mode {
 
 // Note, the currently edited color is stored in ShowColorStyle.
-  
+
 template<class SPEC>
-struct HSLMode : public SPEC::SmoothMode {
+struct ColorHueMode : public SPEC::SmoothWraparoundMode {
 public:
   void mode_activate(bool onreturn) override {
-    SPEC::SmoothMode::mode_activate(onreturn);
     getSL<SPEC>()->SayRotate();
     hsl_color = ShowColorStyle::getColor().toHSL();
+    PVLOG_DEBUG << "H = " << hsl_color.H << "\n";
+    SPEC::SmoothWraparoundMode::mode_activate(onreturn);
   }
 
-  HSL hsl_color;
-};
-
-template<class SPEC>
-struct ColorHueMode : public SPEC::HSLMode {
-public:
+  void select() override {
+    getSL<SPEC>()->SaySelect();
+    SPEC::SmoothWraparoundMode::select();
+  }
+  
+  void exit() override {
+    getSL<SPEC>()->SayCancel();
+    SPEC::SmoothWraparoundMode::exit();
+  }
+  
   int get() override {
-    return this->hsl_color.H * 32767.0;
+    return this->hsl_color.H * 32767.0f;
   }
 
   void set(int x) override {
     // Say number??
-    this->hsl_color.H = x / 32767.0;
-    ShowColorStyle::SetColor(Color16(this->hsl_color));
+    this->hsl_color.H = x / 32767.0f;
+    ShowColorStyle::SetColor(Color16(hsl_color));
   }
+
+  HSL hsl_color;
 };
 
 #ifndef COLOR_MENU_GAMMA
@@ -41,8 +48,41 @@ public:
 #endif
 
 template<class SPEC>
-struct ColorBrightnessMode : public SPEC::HSLMode {
+struct ColorGammaMode : public SPEC::SmoothMode {
+  virtual uint16_t* value() = 0;
+  void mode_activate(bool onreturn) override {
+    SPEC::SmoothMode::mode_activate(onreturn);
+    getSL<SPEC>()->SayRotate();
+  }
+  int get() override {
+    return powf(*value() / 65535.0, COLOR_MENU_GAMMA) * 32767;
+  }
+
+  void set(int x) override {
+    *value()= powf(x / 32767.0, 1.0/COLOR_MENU_GAMMA) * 65535.0;
+  }
+};
+  
+template<class SPEC>
+struct ColorBrightnessMode : public SPEC::SmoothMode {
 public:
+  void mode_activate(bool onreturn) override {
+    SPEC::SmoothMode::mode_activate(onreturn);
+    getSL<SPEC>()->SayRotate();
+    hsl_color = ShowColorStyle::getColor().toHSL();
+  }
+
+  void select() override {
+    getSL<SPEC>()->SaySelect();
+    SPEC::SmoothMode::select();
+  }
+  
+  void exit() override {
+    getSL<SPEC>()->SayCancel();
+    SPEC::SmoothMode::exit();
+  }
+  
+
   int get() override {
     float ret = this->hsl_color.L;
     if (ret > 0.5) {
@@ -61,23 +101,10 @@ public:
     }
     ShowColorStyle::SetColor(Color16(this->hsl_color));
   }
+
+  HSL hsl_color;
 };
 
-template<class SPEC>
-struct ColorGammaMode : public SPEC::SmoothMode {
-  virtual uint16_t* value() = 0;
-  void mode_activate(bool onreturn) override {
-    SPEC::SmoothMode::mode_activate(onreturn);
-    getSL<SPEC>()->SayRotate();
-  }
-  int get() override {
-    return powf(*value() / 65535.0, COLOR_MENU_GAMMA) * 32767;
-  }
-
-  void set(int x) override {
-    *value()= powf(x / 32767.0, 1.0/COLOR_MENU_GAMMA) * 65535.0;
-  }
-};
 
 template<class SPEC>
 struct ColorRedMode : public SPEC::GammaMode {
@@ -142,6 +169,7 @@ struct SaveColorMenuEntry : public MenuEntry {
     getSL<SPEC>()->SaySave();
   }
   void select(int entry) override {
+    getSL<SPEC>()->SaySelect();
     getPtr<MENU>()->save();
   }
 };
@@ -177,9 +205,9 @@ struct ColorSelectMode : public ColorSelectList<SPEC, ColorSelectMode<SPEC>> {
     ColorSelectList<SPEC, ColorSelectMode<SPEC>>::mode_activate(onreturn);
   }
 
-  virtual void mode_exit() {
+  void mode_deactivate() override {
     show_color_all_.Stop();
-    ColorSelectList<SPEC, ColorSelectMode<SPEC>>::exit();
+    ColorSelectList<SPEC, ColorSelectMode<SPEC>>::mode_deactivate();
   }
 
   ShowColorAllBladesTemplate<ShowColorStyle> show_color_all_;

@@ -64,7 +64,6 @@ struct DefaultMenuSpec {
   typedef mode::UseSelectedColorEntry<SPEC> UseSelectedColorEntry;
   typedef mode::ResetColorToDefaultEntry<SPEC> ResetColorToDefaultEntry;
   typedef mode::ColorGammaMode<SPEC> GammaMode;
-  typedef mode::HSLMode<SPEC> HSLMode;
 
   typedef mode::EditPresetMenu<SPEC> EditPresetsMenu;
 //  typedef mode::TopMenuWrapper<SPEC, mode::BasicTopMenu<SPEC>> TopMenu;
