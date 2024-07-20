@@ -102,8 +102,8 @@ public:
     number %= 10;
     switch (tens) {
       default:
-	number += tens * 10;
-	  break;
+        number += tens * 10;
+          break;
       case 2: Say20(); break;
       case 3: Say30(); break;
       case 4: Say40(); break;
@@ -122,10 +122,10 @@ public:
     SayWhole((int)floorf(number));
     switch (say_type) {
       case SAY_DECIMAL: {
-	int hundredths = (int)floorf(fract(number) * 100);
-	 SayPoint();
-	 SayWhole(hundredths / 10);
-	 SayWhole(hundredths % 10);
+        int hundredths = (int)floorf(fract(number) * 100);
+         SayPoint();
+         SayWhole(hundredths / 10);
+         SayWhole(hundredths % 10);
         break;
       }
       default:
@@ -138,16 +138,16 @@ public:
     SayNumber(battery_monitor.battery(), SAY_DECIMAL);
     SayVolts();
   }
-	
+        
   void SayBatteryPercent() {
     SayBatteryLevel();
     SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
     SayPercent();
   }
 
-#define ADD_SL_SOUND(NAME, BASE)					\
-  void Say##NAME() { this->Play(BASE ".wav"); }				\
-  /* t for "trampoline" */						\
+#define ADD_SL_SOUND(NAME, BASE)                                        \
+  void Say##NAME() { this->Play(BASE ".wav"); }                         \
+  /* t for "trampoline" */                                              \
   struct t##NAME { static void say() { getPtr<typename SPEC::SoundLibrary>()->Say##NAME(); } }
   
   ADD_SL_SOUND(Red, "clrlst/clrlst01");
@@ -343,64 +343,131 @@ public:
     }
   }
 
-  void SayArgument(int argument) {
+ void SayArgument(int argument) {
     switch (argument) {
-      case BASE_COLOR_ARG:
-	SayBaseColor();
-	break;
-      case ALT_COLOR_ARG:
-	SayAltColor();
-	break;
-      case ALT_COLOR2_ARG:
-	SayAltColor();
-	SayNumber(2, SAY_WHOLE);
-	break;
-      case ALT_COLOR3_ARG:
-	SayAltColor();
-	SayNumber(3, SAY_WHOLE);
-	break;
-      case BLAST_COLOR_ARG:
-	SayBlastColor();
-	break;
-      case CLASH_COLOR_ARG:
-	SayClashColor();
-	break;
-      case LOCKUP_COLOR_ARG:
-	SayLockupColor();
-	break;
-      case DRAG_COLOR_ARG:
-	SayDragColor();
-	break;
-      case LB_COLOR_ARG:
-	SayLightningBlockColor();
-	break;
-      case STAB_COLOR_ARG:
-	SayStabColor();
-	break;
-      case PREON_COLOR_ARG:
-	SayPreonColor();
-	break;
-      case IGNITION_COLOR_ARG:
-	SayIgnitionColor();
-	break;
-      case RETRACTION_COLOR_ARG:
-	SayRetractionColor();
-	break;
-      case POSTOFF_COLOR_ARG:
-	SayPostOffColor();
-	break;
-      case SWING_COLOR_ARG:
-	SaySwingColor();
-	break;
-      case EMITTER_COLOR_ARG:
-	SayEmitterColor();
-	break;
-      case OFF_COLOR_ARG:
-	SayOffColor();
-	break;
+      case BASE_COLOR_ARG: // 1
+        SayBaseColor();
+        break;
+      case ALT_COLOR_ARG: // 2
+        SayAltColor();
+        break;
+      case STYLE_OPTION_ARG: // 3
+        SayStyleOptions();
+        break;
+      case IGNITION_OPTION_ARG: // 4
+        SayIgnitionOptions();
+        break;
+      case IGNITION_TIME_ARG: // 5
+        SayIgnitionTime();
+        break;
+      case IGNITION_DELAY_ARG:  // 6
+        SayIgnitionDelay();
+        break;
+      case IGNITION_COLOR_ARG:  // 7
+        SayIgnitionColor();
+        break;
+      case IGNITION_POWER_UP_ARG:  // 8
+        SayPowerUpOptions();
+        break;
+      case BLAST_COLOR_ARG:  // 9
+        SayBlastColor();
+        break;
+      case CLASH_COLOR_ARG: // 10
+        SayClashColor();
+        break;
+      case LOCKUP_COLOR_ARG: // 11
+        SayLockupColor();
+        break;
+      case LOCKUP_POSITION_ARG:  // 12
+        SayClashLockupPosition();
+        break;
+      case DRAG_COLOR_ARG:  // 13
+        SayDragColor();
+        break;
+      case DRAG_SIZE_ARG:  // 14
+        SayDragSize();
+        break;
+      case LB_COLOR_ARG:  // 15
+        SayLightningBlockColor();
+        break;
+      case STAB_COLOR_ARG:  // 16
+        SayStabColor();
+        break;
+      case MELT_SIZE_ARG:  // 17
+        SayMeltSize();
+        break;
+      case SWING_COLOR_ARG:  // 18
+        SaySwingColor();
+        break;
+      case SWING_OPTION_ARG:  // 19
+        SaySwingOption();
+        break;
+      case EMITTER_COLOR_ARG: // 20
+        SayEmitterColor();
+        break;
+      case EMITTER_SIZE_ARG:  // 21
+        SayEmitterSize();
+        break;
+      case PREON_COLOR_ARG:  // 22
+        SayPreonColor();
+        break;
+      case PREON_OPTION_ARG:  // 23
+        SayPreonOptions();
+        break;
+      case PREON_SIZE_ARG:  // 24
+        SayPreonSize();
+        break;
+      case RETRACTION_OPTION_ARG:  // 25
+        SayRetractionOptions();
+        break;
+      case RETRACTION_TIME_ARG:  // 26
+        SayRetractionTime();
+        break;
+      case RETRACTION_DELAY_ARG:  // 27
+        SayRetractionDelay();
+        break;
+      case RETRACTION_COLOR_ARG:  // 28
+        SayRetractionColor();
+        break;
+      case RETRACTION_COOL_DOWN_ARG:  // 29
+        SayCoolDownOptions();
+        break;
+      case POSTOFF_COLOR_ARG:  // 30
+        SayPostOffColor();
+        break;
+      case OFF_COLOR_ARG: // 31
+        SayOffColor();
+        break;
+      case OFF_OPTION_ARG:  // 32
+        SayOffOption();
+        break;
+      case ALT_COLOR2_ARG: // 33
+        SayAltColor();
+        SayNumber(2, SAY_WHOLE);
+        break;
+      case ALT_COLOR3_ARG:  // 34
+        SayAltColor();
+        SayNumber(3, SAY_WHOLE);
+        break;
+      case STYLE_OPTION2_ARG: // 35
+        SayStyleOptions();
+        SayNumber(2, SAY_WHOLE);
+        break;
+      case STYLE_OPTION3_ARG:  // 36
+        SayStyleOptions();
+        SayNumber(3, SAY_WHOLE);
+        break;
+      case IGNITION_OPTION2_ARG: // 37
+        SayIgnitionOptions();
+        SayNumber(2, SAY_WHOLE);
+        break;
+      case RETRACTION_OPTION2_ARG:  // 38
+        SayRetractionOptions();
+        SayNumber(2, SAY_WHOLE);
+        break;
       default:
-	SayOption();
-	SayWhole(argument);
+        SayOption();
+        SayWhole(argument);
     }
   }
 };
