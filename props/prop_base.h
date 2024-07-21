@@ -404,7 +404,7 @@ public:
     current_preset_.SetPreset(preset_num);
     AllocateBladeStyles();
     chdir(current_preset_.font.get());
-    if (previously_on.on()) On(EffectLocation(0, previously_on));
+    if (previously_on.on()) FastOn(EffectLocation(0, previously_on));
     if (announce) {
      PVLOG_STATUS << "Current Preset: " << current_preset_name() << "\n";
       SaberBase::DoNewFont();
@@ -427,17 +427,7 @@ public:
     // Set/Update Font & Style, skips Preon effect using FastOn (for use in Edit Mode and "fast" preset changes)
   void SetPresetFast(int preset_num) {
     PVLOG_DEBUG << "SetPresetFast(" << preset_num << ")\n";
-    TRACE(PROP, "start");
-    BladeSet previously_on = BladeOff();
-    SaveColorChangeIfNeeded();
-    // First free all styles, then allocate new ones to avoid memory
-    // fragmentation.
-    FreeBladeStyles();
-    current_preset_.SetPreset(preset_num);
-    AllocateBladeStyles();
-    chdir(current_preset_.font.get());
-    if (previously_on.on()) FastOn(EffectLocation(0, previously_on));
-    TRACE(PROP, "end");
+    SetPreset(preset_num, false);
   }
 
   // Update Preon IntArg in Edit Mode
