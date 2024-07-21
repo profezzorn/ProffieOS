@@ -24,6 +24,10 @@ struct MenuBase : public SPEC::SteppedMode {
     say();
   }
   
+  void fadeout(float len) {
+    getSL<SPEC>()->fadeout(len);
+  }
+  
   void next() override {
     pos_ = MOD(pos_ + 1, size());
   }
