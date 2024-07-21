@@ -24,10 +24,9 @@
 // If you have a ring of LEDs and you want the stripes to line up,
 // you'll need to set WIDTH using the following formula:
 // WIDTH = 50000 * NUM_LEDS_IN_RING / (NUM_COLORS * REPETITIONS * 341)
-
 template<class... A>
 class StripesHelper {};
-  
+
 template<>
 class StripesHelper<> {
 public:
@@ -88,7 +87,7 @@ class StripesBase {
 public:
   void run(BladeBase* base, int width, int speed) {
     colors_.run(base);
-    
+
     uint32_t now_micros = micros();
     int32_t delta_micros = now_micros - last_micros_;
     last_micros_ = now_micros;
@@ -99,14 +98,14 @@ public:
   SimpleColor getColor(int led) {
     // p = 0..341*len(colors)
     int p = ((m + led * mult_) >> 10) % (colors_.size * 341);
-    
+
     SimpleColor ret;
     ret.c = Color16(0,0,0);
     colors_.get(led, p, &ret);
     colors_.get(led, p + 341 * colors_.size, &ret);
     return ret;
   }
-private:
+protected:  // Change from private to protected
   StripesHelper<COLORS...> colors_;
   uint32_t mult_;
   uint32_t last_micros_;
@@ -120,11 +119,11 @@ public:
 
   SimpleColor getColor(int led) {
     // p = 0..341*len(colors)
-    int p = ((m + led * mult_) >> 10) % (colors_.size * 341);
+    int p = ((this->m + led * this->mult_) >> 10) % (this->colors_.size * 341);
 
     SimpleColor ret;
     ret.c = Color16(0, 0, 0);
-    colors_.hardGet(led, p, &ret);
+    this->colors_.hardGet(led, p, &ret);
     return ret;
   }
 };
@@ -152,9 +151,9 @@ public:
   void run(BladeBase* base) {
     // Width cannot be zero.
     static_assert(!is_same_type<WIDTH, Int<0>>::value, "HardStripes cannot have a zero WIDTH");
-    width_.run(base);
-    speed_.run(base);
-    HardStripesBase<COLORS...>::run(base, width_.calculate(base), speed_.calculate(base));
+    this->width_.run(base);
+    this->speed_.run(base);
+    HardStripesBase<COLORS...>::run(base, this->width_.calculate(base), this->speed_.calculate(base));
   }
 private:
   PONUA SVFWrapper<WIDTH> width_;
