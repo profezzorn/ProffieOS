@@ -1508,27 +1508,27 @@ public:
       return true;
     }
     if (!strcmp(cmd, "n") || (!strcmp(cmd, "next") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
+      If (!Saberbase::IsOn()) {
       next_preset();
-      return true;
-    }
-    if (!strcmp(cmd, "nf") || !strcmp(cmd, "next_preset_fast")) {
+      } else {
       next_preset_fast();
+      }
       return true;
     }
     if (!strcmp(cmd, "p") || (!strcmp(cmd, "prev") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
+      If (!Saberbase::IsOn()) {
       previous_preset();
-      return true;
-    }
-    if (!strcmp(cmd, "pf") || !strcmp(cmd, "prev_preset_fast")) {
+      } else {
       previous_preset_fast();
+      }
       return true;
     }
     if (!strcmp(cmd, "f") || (!strcmp(cmd, "first") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
+      If (!Saberbase::IsOn()) {
       first_preset();
-      return true;
-    }
-    if (!strcmp(cmd, "ff") || !strcmp(cmd, "first_preset_fast")) {
+      } else {
       first_preset_fast();
+      }
       return true;
     }
     if (!strcmp(cmd, "rotate")) {
