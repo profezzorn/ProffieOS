@@ -200,7 +200,7 @@ public:
   ADD_SL_SOUND(19, "mnum/mnum19");
   ADD_SL_SOUND(20, "mnum/mnum20");
   ADD_SL_SOUND(30, "thirty");
-  ADD_SL_SOUND(40, "fourty");
+  ADD_SL_SOUND(40, "forty");
   ADD_SL_SOUND(50, "fifty");
   ADD_SL_SOUND(60, "sixty");
   ADD_SL_SOUND(70, "seventy");
