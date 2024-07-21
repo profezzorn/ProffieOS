@@ -1,5 +1,5 @@
 #ifndef STYLES_STRIPES_H
-#define STYLES_STRIPES_H
+#define STYLES_HARDSTRIPES_H
 
 #include "../functions/int.h"
 
@@ -27,13 +27,14 @@
 
 template<class... A>
 class StripesHelper {};
-
+  
 template<>
 class StripesHelper<> {
 public:
   static const size_t size = 0;
   void run(BladeBase* blade) {}
   void get(int led, int p, SimpleColor* c) {}
+  void hardGet(int led, int p, SimpleColor* c) {} // Add hardGet method for base case
 };
 
 template<class A, class... B>
@@ -54,7 +55,7 @@ public:
     }
     b_.get(led, p - 341, ret);
   }
-  void hardGet(int led, int p, SimpleColor* ret) {
+  void hardGet(int led, int p, SimpleColor* ret) {  // Add hardGet method
     int segment_size = 341;
     if (p < segment_size) {
       OverDriveColor tmp = a_.getColor(led);
@@ -87,26 +88,24 @@ class StripesBase {
 public:
   void run(BladeBase* base, int width, int speed) {
     colors_.run(base);
-
+    
     uint32_t now_micros = micros();
     int32_t delta_micros = now_micros - last_micros_;
     last_micros_ = now_micros;
 
-    m = MOD(m + delta_micros * speed / 333, colors_.size * 341 * 1024);
-    mult_ = (50000 * 1024 / width);
+    m = MOD(m + delta_micros * speed / 333, colors_.size * 341*1024);
+    mult_ = (50000*1024 / width);
   }
-
   SimpleColor getColor(int led) {
     // p = 0..341*len(colors)
     int p = ((m + led * mult_) >> 10) % (colors_.size * 341);
-
+    
     SimpleColor ret;
-    ret.c = Color16(0, 0, 0);
+    ret.c = Color16(0,0,0);
     colors_.get(led, p, &ret);
     colors_.get(led, p + 341 * colors_.size, &ret);
     return ret;
   }
-
 private:
   StripesHelper<COLORS...> colors_;
   uint32_t mult_;
@@ -115,7 +114,7 @@ private:
 };
 
 template<class... COLORS>
-class HardStripesBase : public StripesBase<COLORS...> {
+class HardStripesBase : public StripesBase<COLORS...> {  // Add HardStripesBase class
 public:
   using StripesBase<COLORS...>::StripesBase;
 
@@ -140,14 +139,13 @@ public:
     speed_.run(base);
     StripesBase<COLORS...>::run(base, width_.calculate(base), speed_.calculate(base));
   }
-
 private:
   PONUA SVFWrapper<WIDTH> width_;
   PONUA SVFWrapper<SPEED> speed_;
 };
 
 template<class WIDTH, class SPEED, class... COLORS>
-class HardStripesX : public HardStripesBase<COLORS...> {
+class HardStripesX : public HardStripesBase<COLORS...> {  // Add HardStripesX class
 public:
   using HardStripesBase<COLORS...>::HardStripesBase;
 
@@ -158,7 +156,6 @@ public:
     speed_.run(base);
     HardStripesBase<COLORS...>::run(base, width_.calculate(base), speed_.calculate(base));
   }
-
 private:
   PONUA SVFWrapper<WIDTH> width_;
   PONUA SVFWrapper<SPEED> speed_;
@@ -168,6 +165,6 @@ template<int WIDTH, int SPEED, class... COLORS>
 using Stripes = StripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;
 
 template<int WIDTH, int SPEED, class... COLORS>
-using HardStripes = HardStripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;
+using HardStripes = HardStripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;  // Add HardStripes alias
 
 #endif
