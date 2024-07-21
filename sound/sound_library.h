@@ -510,6 +510,7 @@ public:
   ADD_SL_SOUND(Seconds, "mseconds");
 
   ADD_SL_SOUND(SDAccess, "msdacc");
+  ADD_SL_SOUND(Sequential, "msequent");
 
   // Sound used to indicate that there are no more options
   // or list entries.
