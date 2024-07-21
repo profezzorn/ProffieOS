@@ -41,6 +41,9 @@ struct SmoothVolumeMode : public SPEC::SmoothMode {
 		    << " bent = " << powf(ret, VOLUME_MENU_GAMMA)
 		    << " final= " << VOLUME * powf(ret, VOLUME_MENU_GAMMA)
 		    << "\n";
+
+      // Not sure if we need to do this more often?
+      SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, ret);
     }
 
     ret = powf(ret, VOLUME_MENU_GAMMA);
@@ -58,8 +61,9 @@ struct SmoothVolumeMode : public SPEC::SmoothMode {
 
 template<class SPEC>
 class ShowLengthStyle {
+public:
   void run(BladeBase* blade) {
-    len_ = getPtr<SPEC::ChangeBladeLength>()->getLength();
+    len_ = getPtr<typename SPEC::ChangeBladeLengthMode>()->getLength();
   }
   OverDriveColor getColor(int led) {
     if (led == len_ - 1) return SimpleColor(Color16(65535,65535,65535));
@@ -72,15 +76,18 @@ template<class SPEC>
 struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
   // TODO: get the blade from the spec??
   virtual int blade() { return 1; }
-  void activate(bool onreturn) {
-    SPEC::MenuBase::activate(onreturn);
+  void mode_activate(bool onreturn) override {
     int len = prop_GetBladeLength(blade());
     int maxlen = prop_GetMaxBladeLength(blade());
     saved_len_ = len;
     if (len == -1) len = maxlen;
     this->pos_ = len;
-    SetBladeLength(blade(), maxlen);
+    prop_SetBladeLength(blade(), maxlen);
     showlen_.Start(blade());
+    SPEC::MenuBase::mode_activate(onreturn);
+  }
+  void mode_deactivate() {
+    showlen_.Stop(blade());
   }
   void say() override {
     getSL<SPEC>()->SayWhole(this->pos_);
@@ -90,13 +97,11 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
   }
   void select() override {
     prop_SetBladeLength(blade(), this->pos_);
-    showlen_.Stop(blade());
     prop_SaveState();
     SPEC::MenuBase::select();
   }
   void exit() override {
     prop_SetBladeLength(blade(), saved_len_);
-    showlen_.Stop(blade());
     SPEC::MenuBase::exit();
   }
 
