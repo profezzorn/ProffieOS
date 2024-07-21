@@ -478,7 +478,7 @@ public:
   static const int SoundLibraryVersion = 2;
 
   ADD_SL_SOUND(AdjustRed, "madjred");
-  ADD_SL_SOUND(AdjustBlue, "madblue");
+  ADD_SL_SOUND(AdjustBlue, "madjblue");
   ADD_SL_SOUND(AdjustGreen, "madjgren");
   ADD_SL_SOUND(AdjustSaturation, "madjsat");
   ADD_SL_SOUND(SelectColor, "mselcol");
