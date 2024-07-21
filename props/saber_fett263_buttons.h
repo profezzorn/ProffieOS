@@ -950,7 +950,6 @@ EFFECT(faston); // for EFFECT_FAST_ON
 EFFECT(blstbgn); // for Begin Multi-Blast
 EFFECT(blstend); // for End Multi-Blast
 EFFECT(push); // for Force Push gesture in Battle Mode
-EFFECT(quote); // quote on force effect
 EFFECT(tr);
 EFFECT2(trloop, trloop);
 #ifdef FETT263_USE_SETTINGS_MENU
@@ -4788,7 +4787,7 @@ SaberFett263Buttons() : PropBase() {}
       sound_library_.SayMaximumVolume();
     } else if (volume < (VOLUME * 0.1)) {
       volume = VOLUME * 0.1;
-      sound_library_.SayMininumVolume();
+      sound_library_.SayMinimumVolume();
     } else {
       if (v > 0) {
         STDOUT.println("Volume up");
@@ -6335,7 +6334,6 @@ SaberFett263Buttons() : PropBase() {}
     switch (effect) {
       case EFFECT_INTERACTIVE_BLAST: hybrid_font.PlayCommon(&SFX_blast); return;
       case EFFECT_TRACK: PlayEffectTrack(); return;
-      case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
       case EFFECT_NEXT_QUOTE:
         SFX_quote.SelectNext();
         hybrid_font.PlayCommon(&SFX_quote);
