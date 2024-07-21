@@ -162,9 +162,9 @@ private:
 };
 
 template<int WIDTH, int SPEED, class... COLORS>
-using Stripes = StripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;
+  using Stripes = StripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;
 
 template<int WIDTH, int SPEED, class... COLORS>
-using HardStripes = HardStripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;  // Add HardStripes alias
+  using HardStripes = HardStripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;  // Add HardStripes alias
 
 #endif
