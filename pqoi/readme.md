@@ -178,14 +178,14 @@ file 20.png
 if A<10 goto blink
 if A<40 goto twenty
 
-label fourty
+label forty
 file 40.png
 if A<40 goto twenty
-if A<60 goto fourty
+if A<60 goto forty
 
 label sixty
 file 60.png
-if A<60 goto fourty
+if A<60 goto forty
 if A<80 goto sixty
 
 label eighty
