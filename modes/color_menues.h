@@ -171,6 +171,7 @@ struct SaveColorMenuEntry : public MenuEntry {
   void select(int entry) override {
     getSL<SPEC>()->SaySelect();
     getPtr<MENU>()->save();
+    popMode();
   }
 };
 
