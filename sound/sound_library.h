@@ -246,7 +246,7 @@ public:
   ADD_SL_SOUND(EditControlSettings, "mcontrol");
   ADD_SL_SOUND(EditFont, "mfont");
   ADD_SL_SOUND(EditMode, "medit");   // 1-sec leading silence delay
-  ADD_SL_SOUND(EditSettings, "msetting");
+  ADD_SL_SOUND(EditSettings, "msetting");    // 1-sec leading silence delay
   ADD_SL_SOUND(EditStyle, "mstyle");
   ADD_SL_SOUND(EditStyleSettings, "mstylset");
   ADD_SL_SOUND(EditTrack, "mtrack");
