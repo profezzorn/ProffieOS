@@ -239,7 +239,7 @@ class BasicTopMenu : public MenuEntryMenu<SPEC,
 #ifdef SETTINGS_MENU_HAS_ONLY_ONE_ENTRY  
   SubMenuEntry<typename SPEC::ChangeVolumeMode, typename SPEC::SoundLibrary::tEditVolume>
 #else
-  SubMenuEntry<typename SPEC::SettingsMenu, typename SPEC::SoundLibrary::tEditSettings>
+  SubMenuEntry<typename SPEC::SettingsMenu, typename SPEC::SoundLibrary::tEditSettingsV2>
 #endif
 > {};
 
