@@ -517,6 +517,7 @@ public:
   ADD_SL_SOUND(ListEndBuzz, "mbuzz");
   ADD_SL_SOUND(CantDeleteLastPreset, "mcantdlp");
   ADD_SL_SOUND(ThisStyleHasNoSettings, "mstnoset");
+  ADD_SL_SOUND(EditSettingsV2, "mseting2");    // NO pause!
 };
 
 
