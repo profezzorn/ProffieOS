@@ -24,7 +24,8 @@ struct SmoothVolumeMode : public SPEC::SmoothMode {
   virtual float revolutions() { return 1.0f; }
   // x = 0-32767
   virtual int get() override {
-    float ret = dynamic_mixer.get_volume() / VOLUME;
+    float volume = dynamic_mixer.get_volume();
+    float ret = volume / VOLUME;
     ret = powf(ret, 1.0 / VOLUME_MENU_GAMMA);
     return ret * 32767.0;
   }
