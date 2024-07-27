@@ -258,6 +258,10 @@ public:
     return true;
   }
 
+  bool isDoingPreon() {
+    return state_ == STATE_WAIT_FOR_ON;
+  }
+
   void Deactivate() {
     lock_player_.Free();
     hum_player_.Free();
