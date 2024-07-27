@@ -310,6 +310,7 @@ public:
   ADD_SL_SOUND(SettingsMenu, "msetsub");
   ADD_SL_SOUND(StabColor, "mstab");
   ADD_SL_SOUND(StabIgnition, "mstabon");
+  ADD_SL_SOUND(Sequential, "msequent");
   ADD_SL_SOUND(Style, "mstylnum");
   ADD_SL_SOUND(StyleMenu, "mstylesb");
   ADD_SL_SOUND(StyleOptions, "mstylopt");
@@ -510,7 +511,6 @@ public:
   ADD_SL_SOUND(Seconds, "mseconds");
 
   ADD_SL_SOUND(SDAccess, "msdacc");
-  ADD_SL_SOUND(Sequential, "msequent");
 
   // Sound used to indicate that there are no more options
   // or list entries.
