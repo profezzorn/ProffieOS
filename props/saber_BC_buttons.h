@@ -1682,7 +1682,7 @@ public:
   }
 
   void TurnMainBladeOnOff() {
-    if (mode_volume_) return;
+    if (mode_volume_ || hybrid_font.isDoingPreon()) return;
     if (SaberBase::OnBlades()[BC_MAIN_BLADE]) {
       TurnBladeOff(BladeSet::fromBlade(BC_MAIN_BLADE));
       PVLOG_NORMAL << "** Main Blade Turned OFF\n";
