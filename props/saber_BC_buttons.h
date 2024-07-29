@@ -82,7 +82,7 @@ Optional #defines:
 #define FEMALE_TALKIE_VOICE        - To use a female voice version of onboard Talkie.
 
 * NEW as of OS8:
-#define BC_ENABLE_OS_MENU          - BC Volume menu, Scroll Presets, and BC Blade Length adjust are always available.
+#define BC_ENABLE_OS_MENU          - BC Volume menu, Scroll Presets, and Blade Length adjust are always available.
                                      Use this define to additionally add access the the OS System Menu for editing presets, colors etc...
 #define ENABLE_FASTON              - Enable to use the (old name) faston.wav for FastOn() ignitions, such as gesture ignitions or fast preset change.
                                      The faston.wav sound will be deprecated soon and replaced with fastout.wav.
@@ -105,7 +105,7 @@ Optional #defines:
 Gesture Controls:
 - There are three gesture types: swing, thrust and twist.
   For simplicity, using gesture ignition will automatically skip the preon effect.
-  * NOTE * If using Dual Blades, gesture ignitionss will turn on all blades.
+  * NOTE * If using Dual Blades, gesture ignitions will turn on all blades.
   Below are the options to add to the config to enable the various gestures.
 #define BC_SWING_ON
 #define BC_THRUST_ON
@@ -573,10 +573,13 @@ push                    - force push
 |   I attempted to keep the controls for this Dual Blade version familiar from the previous version of this prop.
 |   Much of it was rewritten from ground up, but I have tested extensively and I think the layout makes sense intuitively.
 |   In the spitit of comradery, I adopted many of the 2 button controls from the saber_fett263_buttons prop file.
-|   I never had really thought out much for the 2 button portion of theis BC prop as I'm mostly a 1 button kind of guy.
-|   So, not being to concerned, and also knowing how much time and effort was put into crafting the fett263 prop,
+|   I never had really thought out much for the 2 button portion of this BC prop as I'm mostly a 1 button kind of guy.
+|   So, not being too concerned, and also knowing how much time and effort was put into crafting the fett263 prop,
 |   I'm pretty sure it's the right controls to provide for any 2 button users.
 |   Especially for Dual Blades controls! Makes so much sense.
+|
+|   Each section for controls have a descriptive version listed by feature and somwhat in the order
+|   of using the saber, and a second summary list that is sorted by button clicks.
 |
 |   **** Dual Blades requires defining BC_DUAL_BLADES and optionally
 |        BC_MAIN_BLADE and BC_SECOND_BLADE. See "Optional defines" above.
@@ -589,6 +592,9 @@ push                    - force push
 |     - No Double Click Blaster Blocks. Use Spam Blast if needed.
 |     - Lightning Block is now Double Click (was Double Click and Hold POW)
 |     - There are other differences, but it's easiest just to use the full instructions below for your button setup.
+|
+|   For an example pair of blade styles to use for main and second blades (distributed effects) see the following link:
+|   Dual_Blade_Example - https://pastebin.com/MFscr2Uf
 |
 |==================================================== 1 BUTTON DUAL BLADES ===============================================
 |
