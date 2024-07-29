@@ -2,6 +2,7 @@
 #define STYLES_STRIPES_H
 
 #include "../functions/int.h"
+#include "../common/range.h"
 
 // Usage: Stripes<WIDTH, SPEED, COLOR1, COLOR2, ... >
 // or: Usage: StripesX<WIDTH_CLASS, SPEED, COLOR1, COLOR2, ... >
@@ -18,8 +19,8 @@
 // or: Usage: HardStripesX<WIDTH_CLASS, SPEED, COLOR1, COLOR2, ... >
 // Works like Stripes, but with no gradient between color segments..
 // * Note * Regular Stripes is recommended for very slow speeds.
-// Without a gradient smoothing the changing pixel color,
-// the animation can seem "choppy". At faster speeds, this is not apparent.
+// Without a 1 pixel gradient smoothing the changing pixel color,
+// the animation can seem a little "choppy". At faster speeds, this is not apparent.
 
 // If you have a ring of LEDs and you want the stripes to line up,
 // you'll need to set WIDTH using the following formula:
@@ -34,7 +35,7 @@ public:
   static const size_t size = 0;
   void run(BladeBase* blade) {}
   void get(int led, int p, SimpleColor* c) {}
-  void hardGet(int led, int p, SimpleColor* c) {} // Add hardGet method for base case
+  void hardGet(const Range& pixel, int led, int p, uint32_t mod, SimpleColor* c) {}
 };
 
 template<class A, class... B>
@@ -55,24 +56,25 @@ public:
     }
     b_.get(led, p - 341, ret);
   }
-  void hardGet(int led, int p, SimpleColor* ret) {  // Add hardGet method
+
+  void hardGet(const Range& pixel, int led, int p, uint32_t mod, SimpleColor* ret) {
     int segment_size = 341;
-    if (p < segment_size) {
+    uint32_t weight = pixel.intersect_with_stripes(Range(p, p + segment_size), mod);
+    if (weight) {
       OverDriveColor tmp = a_.getColor(led);
-      if (p > 0 && p < 512) { // One-pixel transition logic
-        int mul = sin_table[p];
-        ret->c.r = clampi32(ret->c.r + ((tmp.c.r * mul) >> 14), 0, 65535);
-        ret->c.g = clampi32(ret->c.g + ((tmp.c.g * mul) >> 14), 0, 65535);
-        ret->c.b = clampi32(ret->c.b + ((tmp.c.b * mul) >> 14), 0, 65535);
+      if (weight == pixel.size()) {
+        ret->c = tmp.c;
+        return;
       } else {
-        ret->c.r = tmp.c.r;
-        ret->c.g = tmp.c.g;
-        ret->c.b = tmp.c.b;
+        weight = weight * 16384 / pixel.size();
+        ret->c.r = clampi32(ret->c.r + ((tmp.c.r * weight) >> 14), 0, 65535);
+        ret->c.g = clampi32(ret->c.g + ((tmp.c.g * weight) >> 14), 0, 65535);
+        ret->c.b = clampi32(ret->c.b + ((tmp.c.b * weight) >> 14), 0, 65535);
       }
-    } else {
-      b_.hardGet(led, p - segment_size, ret);
     }
+    b_.hardGet(pixel, led, p + segment_size, mod, ret);
   }
+
   A a_;
   StripesHelper<B...> b_;
 };
@@ -93,20 +95,20 @@ public:
     int32_t delta_micros = now_micros - last_micros_;
     last_micros_ = now_micros;
 
-    m = MOD(m + delta_micros * speed / 333, colors_.size * 341*1024);
-    mult_ = (50000*1024 / width);
+    m = MOD(m + delta_micros * speed / 333, colors_.size * 341 * 1024);
+    mult_ = (50000 * 1024 / width);
   }
   SimpleColor getColor(int led) {
     // p = 0..341*len(colors)
     int p = ((m + led * mult_) >> 10) % (colors_.size * 341);
 
     SimpleColor ret;
-    ret.c = Color16(0,0,0);
+    ret.c = Color16(0, 0, 0);
     colors_.get(led, p, &ret);
     colors_.get(led, p + 341 * colors_.size, &ret);
     return ret;
   }
-protected:  // Change from private to protected
+protected:
   StripesHelper<COLORS...> colors_;
   uint32_t mult_;
   uint32_t last_micros_;
@@ -114,7 +116,7 @@ protected:  // Change from private to protected
 };
 
 template<class... COLORS>
-class HardStripesBase : public StripesBase<COLORS...> {  // Add HardStripesBase class
+class HardStripesBase : public StripesBase<COLORS...> {
 public:
   using StripesBase<COLORS...>::StripesBase;
 
@@ -124,7 +126,7 @@ public:
 
     SimpleColor ret;
     ret.c = Color16(0, 0, 0);
-    this->colors_.hardGet(led, p, &ret);
+    this->colors_.hardGet(Range(0, this->mult_ >> 10), led, p, this->colors_.size * 341, &ret);
     return ret;
   }
 };
@@ -145,7 +147,7 @@ private:
 };
 
 template<class WIDTH, class SPEED, class... COLORS>
-class HardStripesX : public HardStripesBase<COLORS...> {  // Add HardStripesX class
+class HardStripesX : public HardStripesBase<COLORS...> {
 public:
   using HardStripesBase<COLORS...>::HardStripesBase;
 
@@ -165,6 +167,6 @@ template<int WIDTH, int SPEED, class... COLORS>
   using Stripes = StripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;
 
 template<int WIDTH, int SPEED, class... COLORS>
-  using HardStripes = HardStripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;  // Add HardStripes alias
+  using HardStripes = HardStripesX<Int<WIDTH>, Int<SPEED>, COLORS...>;
 
 #endif
