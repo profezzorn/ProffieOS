@@ -1625,7 +1625,7 @@ public:
 
 #ifndef BC_ENABLE_OS_MENU
   virtual void ToggleBladeLengthMode() {
-    if (mode_volume_ || scroll_presets_) return;
+    if (scroll_presets_) return;
 #ifdef DYNAMIC_BLADE_LENGTH
     if (!current_style()) return;
     if (current_mode == this) {
