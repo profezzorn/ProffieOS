@@ -82,7 +82,7 @@ Optional #defines:
 #define FEMALE_TALKIE_VOICE        - To use a female voice version of onboard Talkie.
 
 * NEW as of OS8:
-#define BC_ENABLE_OS_MENU          - BC Volume menu, Scroll Presets, and Blade Length adjust are always available.
+#define BC_ENABLE_OS_MENU          - BC Volume menu, Scroll Presets, and Blade Length adjust are used by default.
                                      Use this define to additionally add access the the OS System Menu for editing presets, colors etc...
 #define ENABLE_FASTON              - Enable to use the (old name) faston.wav for FastOn() ignitions, such as gesture ignitions or fast preset change.
                                      The faston.wav sound will be deprecated soon and replaced with fastout.wav.
@@ -1366,9 +1366,9 @@ public:
     if (a > M_PI) a-= M_PI * 2;
     if (a < -M_PI) a+= M_PI * 2;
 
-    if (a < -M_PI / 6) {
+    if (a < (mode_volume_ ? -M_PI / 9 : -M_PI / 6)) {
       CheckSavedTwist(EVENT_TWIST_LEFT);
-    } else if (a > M_PI / 6) {
+    } else if (a > (mode_volume_ ? M_PI / 9 : M_PI / 6)) {
       CheckSavedTwist(EVENT_TWIST_RIGHT);
     }
   }
@@ -1461,7 +1461,7 @@ public:
   }
 
   void DoChangePreset() {
-    if (mode_volume_) return;
+    if (mode_volume_) return;  // ok if scroll_presets_
       if (fusor.angle1() > M_PI / 3) {
       // Main Blade pointing UP
         first_preset();
@@ -1498,7 +1498,7 @@ public:
   }
 
   void DoSpokenBatteryLevel() {
-    if (mode_volume_) return;
+    if (mode_volume_ || scroll_presets_) return;
     // Avoid weird battery readings when using USB
     if (battery_monitor.battery() < 0.5) {
       sound_library_.SayTheBatteryLevelIs();
@@ -1525,15 +1525,15 @@ public:
   }
 
   void OnDemandBatteryLevel() {
-        if (mode_volume_) return;
-        PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
-        PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
-        SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-        return;
+    if (mode_volume_ || scroll_presets_) return;
+      PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
+      PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
+      SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+      return;
   }
 
   void DoTrackStartOrStop() {
-    if (mode_volume_ || spam_blast_) return;
+    if (mode_volume_ || scroll_presets_ || spam_blast_) return;
     PVLOG_NORMAL << "** Track playback Started or Stopped\n";
     StartOrStopTrack();
   }
@@ -1572,6 +1572,7 @@ public:
   }
 
   void DoQuote() {
+    if (mode_volume_ || scroll_presets_ || spam_blast_) return;
     if (quote_delay_timer_.isTimerRunning()) return;  // prevent overlapping.
     if (SFX_quote) {
       sequential_quote_ ? SFX_quote.SelectNext() : SFX_quote.Select(-1);
@@ -1588,7 +1589,7 @@ public:
   }
 
   void ToggleSequentialQuote() {
-    if (spam_blast_) return;
+    if (mode_volume_ || scroll_presets_ || spam_blast_) return;
     sequential_quote_ = !sequential_quote_;
     PVLOG_NORMAL << (sequential_quote_ ? "** Quotes play sequentially\n" : "** Quotes play randomly\n");
     if (SFX_mnum) {
@@ -1624,6 +1625,7 @@ public:
 
 #ifndef BC_ENABLE_OS_MENU
   virtual void ToggleBladeLengthMode() {
+    if (mode_volume_ || scroll_presets_) return;
 #ifdef DYNAMIC_BLADE_LENGTH
     if (!current_style()) return;
     if (current_mode == this) {
