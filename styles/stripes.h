@@ -118,8 +118,6 @@ protected:
 template<class... COLORS>
 class HardStripesBase : public StripesBase<COLORS...> {
 public:
-  using StripesBase<COLORS...>::StripesBase;
-
   SimpleColor getColor(int led) {
     // p = 0..341*len(colors)
     int p = ((this->m + led * this->mult_) >> 10) % (this->colors_.size * 341);
@@ -149,8 +147,6 @@ private:
 template<class WIDTH, class SPEED, class... COLORS>
 class HardStripesX : public HardStripesBase<COLORS...> {
 public:
-  using HardStripesBase<COLORS...>::HardStripesBase;
-
   void run(BladeBase* base) {
     // Width cannot be zero.
     static_assert(!is_same_type<WIDTH, Int<0>>::value, "HardStripes cannot have a zero WIDTH");
