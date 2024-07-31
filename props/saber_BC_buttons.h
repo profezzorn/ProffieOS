@@ -1624,7 +1624,7 @@ public:
   }
 
 #ifndef BC_ENABLE_OS_MENU
-  virtual void ToggleBladeLengthMode() {
+  virtual void EnterBladeLengthMode() {
     if (scroll_presets_) return;
 #ifdef DYNAMIC_BLADE_LENGTH
     if (!current_style()) return;
@@ -1878,7 +1878,7 @@ any # of buttons
 #ifdef BC_ENABLE_OS_MENU
           EnterMenu();
 # else
-         ToggleBladeLengthMode();
+         EnterBladeLengthMode();
 #endif
         }
         return true;
@@ -2030,7 +2030,7 @@ any # of buttons
 #ifdef BC_ENABLE_OS_MENU
         EnterMenu();
 # else
-         ToggleBladeLengthMode();
+         EnterBladeLengthMode();
 #endif
         return true;
 
