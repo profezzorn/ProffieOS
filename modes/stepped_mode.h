@@ -52,7 +52,7 @@ struct SteppedMode : public SPEC::SelectCancelMode {
     Angle diff = current_angle - angle_;
     if (fabs(diff) > twistsize()) {
 	// Acceleration
-	float twist_speed = fusor.gyro().x; // degrees / s
+	float twist_speed = fabs(fusor.gyro().x); // degrees / s
 	twist_speed /= 360.0;
 	float step_size = stepsize();
 	if (twist_speed > 1.0f) {
