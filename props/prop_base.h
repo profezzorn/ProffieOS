@@ -309,8 +309,8 @@ public:
     }
 //    EnableBooster();
 #endif
-#ifdef MENU_SPEC_TEMPLATE
-    mode::getSL<MKSPEC<MENU_SPEC_TEMPLATE>>()->CheckVersion();
+#ifdef SOUND_LIBRARY_REQUIRED
+    sound_library_.CheckVersion();
 #endif
     return false;
   }
@@ -1112,9 +1112,9 @@ public:
       track_player_.Free();
     }
 
-#ifdef MENU_SPEC_TEMPLATE
+#ifdef SOUND_LIBRARY_REQUIRED
     // Poll sound library.
-    mode::getSL<MKSPEC<MENU_SPEC_TEMPLATE>>()->Poll(wav_player_);
+    sound_library_.Poll(wav_player_);
 #endif
     
 #endif  // ENABLE_AUDIO
@@ -1142,10 +1142,19 @@ public:
   uint32_t last_on_time_;
 #endif
 
-#ifdef MENU_SPEC_TEMPLATE
+#ifdef SOUND_LIBRARY_REQUIRED
   RefPtr<BufferedWavPlayer> wav_player_;
+#endif
+
+#ifdef MENU_SPEC_TEMPLATE
+
+// Make it easy to select a different top menu
+#ifndef MENU_SPEC_MENU
+#define MENU_SPEC_MENU TopMenu
+#endif
+  
   void EnterMenu() {
-    pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::TopMenu>();
+    pushMode<MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::MENU_SPEC_MENU>();
   }
 #endif
 

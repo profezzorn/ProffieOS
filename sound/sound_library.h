@@ -59,7 +59,6 @@ template<class SPEC>
 class SoundLibraryTemplate : public SoundQueue<16> {
 public:
   static const int SoundLibraryVersion = 1;
-  SoundQueue<16> sound_queue_;
   void Poll(RefPtr<BufferedWavPlayer>& wav_player) {
     PollSoundQueue(wav_player);
   }
@@ -519,23 +518,93 @@ public:
   ADD_SL_SOUND(ThisStyleHasNoSettings, "mstnoset");
   ADD_SL_SOUND(EditSettingsV2, "mseting2");    // NO pause!
 };
+#endif
 
-
+#ifndef SOUND_SOUND_LIBRARY_H2
+#define SOUND_SOUND_LIBRARY_H2
 template<template<class> typename SL_TEMPLATE>
 struct MAKE_SOUND_LIBRARY {
   template<class SPEC>
   struct SL_SPEC {
-    typedef SL_TEMPLATE<SL_SPEC> SoundLibrary;
+    typedef SL_TEMPLATE<SPEC> SoundLibrary;
   };
-  typedef SL_TEMPLATE<MKSPEC<SL_SPEC>> SoundLibrary;
+  //  typedef SL_TEMPLATE<MKSPEC<SL_SPEC>> SoundLibrary;
+  typedef typename MKSPEC<SL_SPEC>::SoundLibrary SoundLibrary;
   static SoundLibrary* get() { return getPtr<SoundLibrary>(); }
 };
 
-// Old-fashioned way to access sound library, do not use in new code.
-using SoundLibrary = MAKE_SOUND_LIBRARY<SoundLibraryTemplate>::SoundLibrary;
-#define sound_library_ (*getPtr<SoundLibrary>())
 
-// Only use this one if your prop has no menues and no SPEC to get the SL from.
-#define SLV2 (*MAKE_SOUND_LIBRARY<SoundLibraryV2Template>::get())
+template<bool X, template<class> typename SPEC_TO_UPGRADE, template<class> typename SL_TEMPLATE>
+struct SL_CONDITION {
+  template<class SPEC>
+  struct UPGRADED_SPEC : public SPEC_TO_UPGRADE<SPEC> {
+    typedef SL_TEMPLATE<SPEC> SoundLibrary;
+  };
+};
 
-#endif  // SOUND_SOUND_LIBRARY_H
+template<template<class> typename SPEC_TO_UPGRADE, template<class> typename SL_TEMPLATE>
+struct SL_CONDITION<false, SPEC_TO_UPGRADE, SL_TEMPLATE> {
+  template<class SPEC>
+  struct UPGRADED_SPEC : public SPEC_TO_UPGRADE<SPEC> {};
+};
+
+
+template<template<class> typename SPEC_TO_UPGRADE, template<class> typename SL_TEMPLATE>
+struct UpgradeSoundLibraryIfNeeded {
+  static const int spec_version = MKSPEC<SPEC_TO_UPGRADE>::SoundLibrary::SoundLibraryVersion;
+  static const int sl_version = MAKE_SOUND_LIBRARY<SL_TEMPLATE>::SoundLibrary::SoundLibraryVersion;
+  template<class SPEC>
+  class UPGRADED_SPEC : public SL_CONDITION< (sl_version > spec_version), SPEC_TO_UPGRADE, SL_TEMPLATE >::UPGRADED_SPEC<SPEC> {};
+};
+
+#endif  // SOUND_SOUND_LIBRARY_H2
+
+// Note that the portion below is parsed every time this
+// file is included. In particular, that means that you can do this multiple times:
+//
+// #define MIN_SOUND_LIBRARY_VERSION 2  /* or whatever version you need */
+// #include "sound/sound_library.h"
+//
+// The result will be that `sound_library_` and `FINAL_MENUSPEC` defines are updated
+// use the sound library with the highest version specified.
+
+#ifdef MIN_SOUND_LIBRARY_VERSION
+#  undef SOUND_LIBRARY_REQUIRED
+#  define SOUND_LIBRARY_REQUIRED
+#  if MIN_SOUND_LIBRARY_VERSION > MAX_SOUND_LIBRARY_VERSION - 0
+#    undef MAX_SOUND_LIBRARY_VERSION
+#    if MIN_SOUND_LIBRARY_VERSION == 2
+#      define MAX_SOUND_LIBRARY_VERSION 2
+#    elif MIN_SOUND_LIBRARY_VERSION == 3
+#      define MAX_SOUND_LIBRARY_VERSION 3
+#    elif MIN_SOUND_LIBRARY_VERSION == 4
+#      define MAX_SOUND_LIBRARY_VERSION 4
+#    elif MIN_SOUND_LIBRARY_VERSION == 5
+#      define MAX_SOUND_LIBRARY_VERSION 5
+#    endif
+#  endif
+#  undef MIN_SOUND_LIBRARY_VERSION
+#else
+#  define MAX_SOUND_LIBRARY_VERSION 1
+#endif
+
+#undef SL_TEMPLATE_NAME
+#if MAX_SOUND_LIBRARY_VERSION - 0 >= 2
+#define SL_CONCAT32(A, B, C) A##B##C
+#define SL_CONCAT3(A, B, C) SL_CONCAT32(A,B,C)
+#define SL_TEMPLATE_NAME SL_CONCAT3(SoundLibraryV,MAX_SOUND_LIBRARY_VERSION,Template)
+#else
+#define SL_TEMPLATE_NAME SoundLibraryTemplate
+#endif
+
+#undef FINAL_MENUSPEC
+#ifdef MENU_SPEC_TEMPLATE
+#  undef SOUND_LIBRARY_REQUIRED
+#  define SOUND_LIBRARY_REQUIRED
+#  define FINAL_MENU_SPEC_TEMPLATE UpgradeSoundLibraryIfNeeded<MENU_SPEC_TEMPLATE, SL_TEMPLATE_NAME>::UPGRADED_SPEC
+#else
+#  define FINAL_MENU_SPEC_TEMPLATE MAKE_SOUND_LIBRARY<SL_TEMPLATE_NAME>::SL_SPEC
+#endif
+
+#undef sound_library_
+#define sound_library_ (*getPtr<MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::SoundLibrary>())
