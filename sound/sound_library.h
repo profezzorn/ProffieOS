@@ -554,7 +554,7 @@ struct UpgradeSoundLibraryIfNeeded {
   static const int spec_version = MKSPEC<SPEC_TO_UPGRADE>::SoundLibrary::SoundLibraryVersion;
   static const int sl_version = MAKE_SOUND_LIBRARY<SL_TEMPLATE>::SoundLibrary::SoundLibraryVersion;
   template<class SPEC>
-  class UPGRADED_SPEC : public SL_CONDITION< (sl_version > spec_version), SPEC_TO_UPGRADE, SL_TEMPLATE >::UPGRADED_SPEC<SPEC> {};
+  class UPGRADED_SPEC : public SL_CONDITION< (sl_version > spec_version), SPEC_TO_UPGRADE, SL_TEMPLATE >::template UPGRADED_SPEC<SPEC> {};
 };
 
 #endif  // SOUND_SOUND_LIBRARY_H2
