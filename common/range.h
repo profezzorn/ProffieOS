@@ -34,7 +34,7 @@ public:
 
   // Stripes are Range(N*mod + stripe.start, N*mod + stripe.end) (N can be negative)
   // Returns filled area from start ... end
-  uint32_t intersect_with_stripes(Range stripe, uint32_t mod) {
+  uint32_t intersect_with_stripes(Range stripe, uint32_t mod) const {
     // Convert into a stripe which starts at 0 and then call function above.
     uint32_t shift = mod - stripe.start;
     Range tmp(start + shift, end + shift);
