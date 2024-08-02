@@ -597,7 +597,7 @@ struct UpgradeSoundLibraryIfNeeded {
 #define SL_TEMPLATE_NAME SoundLibraryTemplate
 #endif
 
-#undef FINAL_MENUSPEC
+#undef FINAL_MENU_SPEC_TEMPLATE
 #ifdef MENU_SPEC_TEMPLATE
 #  undef SOUND_LIBRARY_REQUIRED
 #  define SOUND_LIBRARY_REQUIRED

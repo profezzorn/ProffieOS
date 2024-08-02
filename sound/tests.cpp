@@ -408,7 +408,7 @@ public:
 #define SOUND_SOUND_LIBRARY_H
 
 #include "sound_library.h"
-static_assert(MKSPEC<FINAL_MENUSPEC>::SoundLibrary::SoundLibraryVersion == 1);
+static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::SoundLibrary::SoundLibraryVersion == 1);
 
 template<class SPEC>
 struct FOOSPEC {
@@ -418,18 +418,18 @@ struct FOOSPEC {
 #define MENU_SPEC_TEMPLATE FOOSPEC
 #define MIN_SOUND_LIBRARY_VERSION 2
 #include "sound_library.h"
-static_assert(MKSPEC<FINAL_MENUSPEC>::SoundLibrary::SoundLibraryVersion == 2);
-static_assert(MKSPEC<FINAL_MENUSPEC>::fnord == 17);
+static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::SoundLibrary::SoundLibraryVersion == 2);
+static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::fnord == 17);
 
 #define MIN_SOUND_LIBRARY_VERSION 1
 #include "sound_library.h"
-static_assert(MKSPEC<FINAL_MENUSPEC>::SoundLibrary::SoundLibraryVersion == 2);
-static_assert(MKSPEC<FINAL_MENUSPEC>::fnord == 17);
+static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::SoundLibrary::SoundLibraryVersion == 2);
+static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::fnord == 17);
 
 #define MIN_SOUND_LIBRARY_VERSION 3
 #include "sound_library.h"
-static_assert(MKSPEC<FINAL_MENUSPEC>::SoundLibrary::SoundLibraryVersion == 3);
-static_assert(MKSPEC<FINAL_MENUSPEC>::fnord == 17);
+static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::SoundLibrary::SoundLibraryVersion == 3);
+static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::fnord == 17);
 
 int main() {
   test_effects();
