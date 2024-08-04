@@ -1157,7 +1157,7 @@ public:
 #endif
   
   void EnterMenu() {
-    pushMode<MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::MENU_SPEC_MENU>();
+    pushMode<FINAL_MENU_SPEC::MENU_SPEC_MENU>();
   }
 #endif
 
