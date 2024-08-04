@@ -1,6 +1,9 @@
 #ifndef PROPS_PROP_BASE_H
 #define PROPS_PROP_BASE_H
 
+// Update SPEC and sound_library_ defines before we use them.
+#include "sound/sound_library.h"
+
 #ifndef PROP_INHERIT_PREFIX
 #define PROP_INHERIT_PREFIX
 #endif
