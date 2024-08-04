@@ -608,7 +608,7 @@ struct UpgradeSoundLibraryIfNeeded {
 
 // These two defines are the ones props should use.
 #undef FINAL_MENU_SPEC
-#define FINAL_MENU_SPEC MKSPEC<FINAL_MENUSPEC_TEMPLATE>
+#define FINAL_MENU_SPEC MKSPEC<FINAL_MENU_SPEC_TEMPLATE>
 
 #undef sound_library_
 #define sound_library_ (*getPtr<MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::SoundLibrary>())
