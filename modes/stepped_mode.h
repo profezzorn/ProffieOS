@@ -43,7 +43,7 @@ struct SteppedMode : public SPEC::SelectCancelMode {
   }
   void mode_Loop() override {
     SaberBase::RequestMotion();
-    if (say_time_ && Cyclint<uint32_t>(millis()) > say_time_{
+    if (say_time_ && Cyclint<uint32_t>(millis()) > say_time_) {
       say_time_ = Cyclint<uint32_t>(0);
       say();
     }
