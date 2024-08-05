@@ -614,6 +614,7 @@ public:
       default: return;
       case EFFECT_MENU_CHANGE:
         if (!PlayPolyphonic(&SFX_ccchange)) {
+          SaberBase::sound_length = 0.2;
           beeper.Beep(0.05, 2000.0);
         }
 	return;
