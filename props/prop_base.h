@@ -70,7 +70,12 @@ public:
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase, public ModeInterface {
 public:
-  PropBase() : CommandParser() { current_mode = this; }
+  PropBase() : CommandParser() {
+    current_mode = this;
+#ifdef MENU_SPEC_TEMPLATE
+    MKSPEC<MENU_SPEC_TEMPLATE>::SoundLibrary::init();
+#endif    
+  }
   BladeStyle* current_style() {
 #if NUM_BLADES == 0
     return nullptr;
@@ -311,9 +316,6 @@ public:
       }
     }
 //    EnableBooster();
-#endif
-#ifdef SOUND_LIBRARY_REQUIRED
-    sound_library_.CheckVersion();
 #endif
     return false;
   }
@@ -1114,12 +1116,6 @@ public:
     if (track_player_ && !track_player_->isPlaying()) {
       track_player_.Free();
     }
-
-#ifdef SOUND_LIBRARY_REQUIRED
-    // Poll sound library.
-    sound_library_.Poll(wav_player_);
-#endif
-    
 #endif  // ENABLE_AUDIO
 
     current_mode->mode_Loop();
@@ -1157,7 +1153,7 @@ public:
 #endif
   
   void EnterMenu() {
-    pushMode<FINAL_MENU_SPEC::MENU_SPEC_MENU>();
+    pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::MENU_SPEC_MENU>();
   }
 #endif
 

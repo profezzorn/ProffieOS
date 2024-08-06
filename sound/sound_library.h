@@ -6,10 +6,6 @@
 // Sound library
 EFFECT(mnum); // menu numbers
 
-#ifdef SAY_COLOR_LIST
-EFFECT(clrlst); // spoken color names for SAY_COLOR_LIST
-#endif
-
 class VoicePackVersionFile : public ConfigFile {
 public:
   void iterateVariables(VariableOP *op) override {
@@ -55,16 +51,22 @@ enum ColorNumber {
   COLOR_WHITE = 27,
 };
 
-template<class SPEC>
-class SoundLibraryTemplate : public SoundQueue<16> {
+class SoundQueueSingleton : public SoundQueue<16>, Looper, SaberBase {
 public:
-  static const int SoundLibraryVersion = 1;
-  void Poll(RefPtr<BufferedWavPlayer>& wav_player) {
-    PollSoundQueue(wav_player);
+  const char* name() { return "SoundQueue"; }
+  void Loop() override {
+    PollSoundQueue(wav_player_);
   }
 
-  bool CheckVersion() {
-    int required_version = SPEC::SoundLibrary::SoundLibraryVersion;
+  void require_version(int version) {
+    required_version_ = std::max(version, required_version_);
+  }
+
+  void SB_Effect(EffectType effect, EffectLocation location) override {
+    if (effect == EFFECT_NEWFONT) CheckVersion();
+  }
+private:
+  void CheckVersion() {
     int found_version = 0;
     if (SFX_mnum) {
       VoicePackVersionFile f;
@@ -72,12 +74,27 @@ public:
       found_version = f.voice_pack_version;
       PVLOG_STATUS << "Sound library version " << found_version << " found.\n";
     }
-    if (found_version < required_version) {
-      PVLOG_ERROR << "Sound library version " << required_version << " required.\n";
+    if (found_version < required_version_) {
+      PVLOG_ERROR << "Sound library version " << required_version_ << " required.\n";
       ProffieOSErrors::error_in_font_directory(); // Make new error for voice pack?
-      return false;
     }
-    return true;
+  }
+
+  int required_version_ = 0;
+  RefPtr<BufferedWavPlayer> wav_player_;
+};
+
+#define SOUNDQ (getPtr<SoundQueueSingleton>())
+
+class SoundLibrary  {
+public:
+  static const int SoundLibraryVersion = 1;
+  bool Play(const char* f) { return SOUNDQ->Play(f); }
+  bool Play(SoundToPlay p) { return SOUNDQ->Play(p); }
+  void Poll(RefPtr<BufferedWavPlayer>& player) {}
+
+  void init() {
+    SOUNDQ->require_version(SoundLibraryVersion);
   }
 
   void SayWhole(int number) {
@@ -145,9 +162,9 @@ public:
   }
 
 #define ADD_SL_SOUND(NAME, BASE)                                        \
-  void Say##NAME() { this->Play(BASE ".wav"); }                         \
+  void Say##NAME() { SOUNDQ->Play(BASE ".wav"); }                       \
   /* t for "trampoline" */                                              \
-  struct t##NAME { static void say() { getPtr<typename SPEC::SoundLibrary>()->Say##NAME(); } }
+  struct t##NAME { static void say() { SOUNDQ->Play(BASE ".wav"); } }
   
   ADD_SL_SOUND(Red, "clrlst/clrlst01");
   ADD_SL_SOUND(OrangeRed, "clrlst/clrlst02");
@@ -328,11 +345,37 @@ public:
   ADD_SL_SOUND(VolumeUp, "volup"); // Sound for increasing volume
   ADD_SL_SOUND(ZoomingIn, "mzoom"); // Sound for color menu "zooming in"
 
-#ifdef SAY_COLOR_LIST
   void SayColor(ColorNumber n) {
-    Play(SoundToPlay(&SFX_clrlst, n - 1));
+    switch (n) {
+    case COLOR_RED: SayRed(); break;
+    case COLOR_ORANGERED: SayOrangeRed(); break;
+    case COLOR_DARKORANGE: SayDarkOrange(); break;
+    case COLOR_ORANGE: SayOrange(); break;
+    case COLOR_GOLD: SayGold(); break;
+    case COLOR_YELLOW: SayYellow(); break;
+    case COLOR_GREENYELLOW: SayGreenYellow(); break;
+    case COLOR_GREEN: SayGreen(); break;
+    case COLOR_AQUAMARINE: SayAquaMarine(); break;
+    case COLOR_CYAN: SayCyan(); break;
+    case COLOR_DEEPSKYBLUE: SayDeepSkyBlue(); break;
+    case COLOR_DODGERBLUE: SayDodgerBlue(); break;
+    case COLOR_BLUE: SayBlue(); break;
+    case COLOR_ICEBLUE: SayIceBlue(); break;
+    case COLOR_INDIGO: SayIndigo(); break;
+    case COLOR_PURPLE: SayPurple(); break;
+    case COLOR_DEEPPURPLE: SayDeepPurple(); break;
+    case COLOR_MAGENTA: SayMagenta(); break;
+    case COLOR_DEEPPINK: SayDeepPink(); break;
+    case COLOR_SILVER: SaySilver(); break;
+    case COLOR_GLACIER: SayGlacier(); break;
+    case COLOR_ICEWHITE: SayIceWhite(); break;
+    case COLOR_LIGHTCYAN: SayLightCyan(); break;
+    case COLOR_MOCCASIN: SayMoccasin(); break;
+    case COLOR_LEMONCHIFFON: SayLemonChiffon(); break;
+    case COLOR_NAVAJOWHITE: SayNavajoWhite(); break;
+    case COLOR_WHITE: SayWhite(); break;
+    }
   }
-#endif
 
   void SayBool(bool v) {
     if (v) {
@@ -471,10 +514,12 @@ public:
   }
 };
 
-template<class SPEC>
-class SoundLibraryV2Template : public SoundLibraryTemplate<SPEC> {
+class SoundLibraryV2 : public SoundLibrary {
 public:
   static const int SoundLibraryVersion = 2;
+  void init() {
+    SOUNDQ->require_version(SoundLibraryVersion);
+  }
 
   ADD_SL_SOUND(AdjustRed, "madjred");
   ADD_SL_SOUND(AdjustBlue, "madjblue");
@@ -518,97 +563,11 @@ public:
   ADD_SL_SOUND(ThisStyleHasNoSettings, "mstnoset");
   ADD_SL_SOUND(EditSettingsV2, "mseting2");    // NO pause!
 };
+
+// Please don't forget to call sound_library_->init();
+#define sound_library_ (*getPtr<SoundLibrary>())
+
+// Please don't forget to call sound_librar_v2->init();
+#define sound_library_v2 (*getPtr<SoundLibraryV2>())
+
 #endif
-
-#ifndef SOUND_SOUND_LIBRARY_H2
-#define SOUND_SOUND_LIBRARY_H2
-template<template<class> typename SL_TEMPLATE>
-struct MAKE_SOUND_LIBRARY {
-  template<class SPEC>
-  struct SL_SPEC {
-    typedef SL_TEMPLATE<SPEC> SoundLibrary;
-  };
-  //  typedef SL_TEMPLATE<MKSPEC<SL_SPEC>> SoundLibrary;
-  typedef typename MKSPEC<SL_SPEC>::SoundLibrary SoundLibrary;
-  static SoundLibrary* get() { return getPtr<SoundLibrary>(); }
-};
-
-
-template<bool X, template<class> typename SPEC_TO_UPGRADE, template<class> typename SL_TEMPLATE>
-struct SL_CONDITION {
-  template<class SPEC>
-  struct UPGRADED_SPEC : public SPEC_TO_UPGRADE<SPEC> {
-    typedef SL_TEMPLATE<SPEC> SoundLibrary;
-  };
-};
-
-template<template<class> typename SPEC_TO_UPGRADE, template<class> typename SL_TEMPLATE>
-struct SL_CONDITION<false, SPEC_TO_UPGRADE, SL_TEMPLATE> {
-  template<class SPEC>
-  struct UPGRADED_SPEC : public SPEC_TO_UPGRADE<SPEC> {};
-};
-
-
-template<template<class> typename SPEC_TO_UPGRADE, template<class> typename SL_TEMPLATE>
-struct UpgradeSoundLibraryIfNeeded {
-  static const int spec_version = MKSPEC<SPEC_TO_UPGRADE>::SoundLibrary::SoundLibraryVersion;
-  static const int sl_version = MAKE_SOUND_LIBRARY<SL_TEMPLATE>::SoundLibrary::SoundLibraryVersion;
-  template<class SPEC>
-  class UPGRADED_SPEC : public SL_CONDITION< (sl_version > spec_version), SPEC_TO_UPGRADE, SL_TEMPLATE >::template UPGRADED_SPEC<SPEC> {};
-};
-
-#endif  // SOUND_SOUND_LIBRARY_H2
-
-// Note that the portion below is parsed every time this
-// file is included. In particular, that means that you can do this multiple times:
-//
-// #define MIN_SOUND_LIBRARY_VERSION 2  /* or whatever version you need */
-// #include "sound/sound_library.h"
-//
-// The result will be that `sound_library_` and `FINAL_MENUSPEC` defines are updated
-// use the sound library with the highest version specified.
-
-#ifdef MIN_SOUND_LIBRARY_VERSION
-#  undef SOUND_LIBRARY_REQUIRED
-#  define SOUND_LIBRARY_REQUIRED
-#  if MIN_SOUND_LIBRARY_VERSION > MAX_SOUND_LIBRARY_VERSION - 0
-#    undef MAX_SOUND_LIBRARY_VERSION
-#    if MIN_SOUND_LIBRARY_VERSION == 2
-#      define MAX_SOUND_LIBRARY_VERSION 2
-#    elif MIN_SOUND_LIBRARY_VERSION == 3
-#      define MAX_SOUND_LIBRARY_VERSION 3
-#    elif MIN_SOUND_LIBRARY_VERSION == 4
-#      define MAX_SOUND_LIBRARY_VERSION 4
-#    elif MIN_SOUND_LIBRARY_VERSION == 5
-#      define MAX_SOUND_LIBRARY_VERSION 5
-#    endif
-#  endif
-#  undef MIN_SOUND_LIBRARY_VERSION
-#else
-#  define MAX_SOUND_LIBRARY_VERSION 1
-#endif
-
-#undef SL_TEMPLATE_NAME
-#if MAX_SOUND_LIBRARY_VERSION - 0 >= 2
-#define SL_CONCAT32(A, B, C) A##B##C
-#define SL_CONCAT3(A, B, C) SL_CONCAT32(A,B,C)
-#define SL_TEMPLATE_NAME SL_CONCAT3(SoundLibraryV,MAX_SOUND_LIBRARY_VERSION,Template)
-#else
-#define SL_TEMPLATE_NAME SoundLibraryTemplate
-#endif
-
-#undef FINAL_MENU_SPEC_TEMPLATE
-#ifdef MENU_SPEC_TEMPLATE
-#  undef SOUND_LIBRARY_REQUIRED
-#  define SOUND_LIBRARY_REQUIRED
-#  define FINAL_MENU_SPEC_TEMPLATE UpgradeSoundLibraryIfNeeded<MENU_SPEC_TEMPLATE, SL_TEMPLATE_NAME>::UPGRADED_SPEC
-#else
-#  define FINAL_MENU_SPEC_TEMPLATE MAKE_SOUND_LIBRARY<SL_TEMPLATE_NAME>::SL_SPEC
-#endif
-
-// These two defines are the ones props should use.
-#undef FINAL_MENU_SPEC
-#define FINAL_MENU_SPEC MKSPEC<FINAL_MENU_SPEC_TEMPLATE>
-
-#undef sound_library_
-#define sound_library_ (*getPtr<MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::SoundLibrary>())

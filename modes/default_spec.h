@@ -16,7 +16,7 @@ struct DefaultMenuSpec {
   typedef mode::SteppedVariationMode<SPEC> SteppedVariationMode;
   typedef mode::ColorChangeMode<SPEC> ColorChangeMenu;
 
-  typedef SoundLibraryV2Template<SPEC> SoundLibrary;
+  typedef SoundLibraryV2 SoundLibrary;
   typedef mode::SmoothVolumeMode<SPEC> ChangeVolumeMode;
 
 #ifdef DYNAMIC_BLADE_LENGTH  
