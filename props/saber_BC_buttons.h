@@ -1086,6 +1086,11 @@ push                    - force push
 #error You cannot define both BC_NO_BM and BC_GESTURE_AUTO_BATTLE_MODE
 #endif
 
+#ifdef BC_DUAL_BLADES
+  static constexpr BladeSet MAIN_BLADE = BladeSet::fromBlade(BC_MAIN_BLADE);
+  static constexpr BladeSet SECOND_BLADE = BladeSet::fromBlade(BC_SECOND_BLADE);
+#endif
+
 EFFECT(dim);        // for EFFECT_POWERSAVE
 EFFECT(battery);    // for EFFECT_BATTERY_LEVEL
 EFFECT(bmbegin);    // for Begin Battle Mode
@@ -1526,7 +1531,7 @@ public:
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
-        TurnBladeOn(BladeSet::fromBlade(BC_MAIN_BLADE));
+        TurnBladeOn(MAIN_BLADE);
         PVLOG_NORMAL << "** Main Blade Turned ON Muted\n";
       }
     }
@@ -1534,12 +1539,12 @@ public:
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
-        TurnBladeOn(BladeSet::fromBlade(BC_SECOND_BLADE));
+        TurnBladeOn(SECOND_BLADE);
         PVLOG_NORMAL << "** Second Blade Turned ON Muted\n";
       }
     }
 #endif
-    // Allow beepp to be heard.
+    // Allow beep to be heard.
     if (scroll_presets_timer_.timerCheck() && scroll_presets_) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
     }
@@ -1827,6 +1832,10 @@ public:
 
   static const BladeSet controlled_blades_;
 
+
+bool IsMainBladeOn() { return SaberBase::OnBlades()[BC_MAIN_BLADE]; }
+bool IsSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
+
   void TurnBladeOn(BladeSet target_blade) {
     // Add in all non-controlled blades, effectively excluding the "other" blade.
     target_blade = target_blade | ~controlled_blades_;
@@ -1843,7 +1852,7 @@ public:
       }
     } else {
       PVLOG_NORMAL << "** The " 
-                   << (SaberBase::OnBlades()[BC_MAIN_BLADE] ? "MAIN" : "SECOND") 
+                   << (IsMainBladeOn() ? "MAIN" : "SECOND") 
                    << " blade is already ON, turning on the " 
                    << (target_blade[BC_MAIN_BLADE] ? "MAIN" : "SECOND")
                    << " blade\n";
@@ -1864,7 +1873,7 @@ public:
     } else {
       // Only Turn OFF this blade, leave the other one ON.
       PVLOG_NORMAL << "** Turning OFF only the " 
-                   << (SaberBase::OnBlades()[BC_MAIN_BLADE] ? "MAIN" : "SECOND") 
+                   << (IsMainBladeOn() ? "MAIN" : "SECOND") 
                    << " blade\n";
       SaberBase::TurnOff(off_type, EffectLocation(0, target_blade));
     }
@@ -1875,11 +1884,11 @@ public:
 
   void TurnMainBladeOnOff() {
     if (on_pending_) return;
-    if (SaberBase::OnBlades()[BC_MAIN_BLADE]) {
-      TurnBladeOff(BladeSet::fromBlade(BC_MAIN_BLADE));
+    if (IsMainBladeOn()) {
+      TurnBladeOff(MAIN_BLADE);
       PVLOG_NORMAL << "** Main Blade Turned OFF\n";
     } else {
-      TurnBladeOn(BladeSet::fromBlade(BC_MAIN_BLADE));
+      TurnBladeOn(MAIN_BLADE);
       PVLOG_NORMAL << "** Main Blade Turned ON\n";
     }
   }
@@ -1891,7 +1900,7 @@ public:
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
-        TurnBladeOn(BladeSet::fromBlade(BC_MAIN_BLADE));
+        TurnBladeOn(MAIN_BLADE);
         PVLOG_NORMAL << "** Main Blade Turned ON Muted\n";
       }
     }
@@ -1899,11 +1908,11 @@ public:
 
   void TurnSecondBladeOnOff() {
     if (on_pending_) return;
-    if (SaberBase::OnBlades()[BC_SECOND_BLADE]) {
-      TurnBladeOff(BladeSet::fromBlade(BC_SECOND_BLADE));
+    if (IsSecondBladeOn()) {
+      TurnBladeOff(SECOND_BLADE);
       PVLOG_NORMAL << "** Second Blade Turned OFF\n";
     } else {
-      TurnBladeOn(BladeSet::fromBlade(BC_SECOND_BLADE));
+      TurnBladeOn(SECOND_BLADE);
       PVLOG_NORMAL << "** Second Blade Turned ON\n";
     }
   }
@@ -1915,7 +1924,7 @@ public:
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
-        TurnBladeOn(BladeSet::fromBlade(BC_SECOND_BLADE));
+        TurnBladeOn(SECOND_BLADE);
         PVLOG_NORMAL << "** Second Blade Turned ON Muted\n";
       }
     }
@@ -1934,7 +1943,11 @@ public:
   // Determine the active blade based on x-axis motion - for thrust effects
   void UpdateActiveBladeLocation() {
     mss = fusor.mss();
-    active_blade_ = (mss.x < 0) ? BladeSet::fromBlade(BC_MAIN_BLADE) : BladeSet::fromBlade(BC_SECOND_BLADE);
+    if (mss.x < 14) {
+        active_blade_ = MAIN_BLADE;
+    } else if (mss.x > -14) {
+        active_blade_ = SECOND_BLADE;
+    }
     location = EffectLocation(0, active_blade_);
   }
 
@@ -2321,17 +2334,17 @@ any # of buttons
         if (millis() - last_thrust_millis_ < 200) return false;
         
         // Check if both blades are already on
-        if (SaberBase::OnBlades()[BC_MAIN_BLADE] && SaberBase::OnBlades()[BC_SECOND_BLADE]) {
+        if (IsMainBladeOn() && IsSecondBladeOn()) {
           if (on_pending_) return false;
           SaberBase::SetClashStrength(2.0);
           PVLOG_NORMAL << "** EVENT_THRUST = Stab\n";
-          SaberBase::DoStab();
+          SaberBase::DoEffect(EFFECT_STAB, location);
         } else {
-          if (mss.x > 14 && SaberBase::OnBlades()[BC_SECOND_BLADE]) {
-            TurnBladeOn(BladeSet::fromBlade(BC_MAIN_BLADE));
+          if (active_blade_ == MAIN_BLADE && IsSecondBladeOn()) {
+            TurnBladeOn(MAIN_BLADE);
             PVLOG_NORMAL << "** Main Blade THRUST ON\n";
-          } else if (mss.x < -14 && SaberBase::OnBlades()[BC_MAIN_BLADE]) {
-            TurnBladeOn(BladeSet::fromBlade(BC_SECOND_BLADE));
+          } else if (active_blade_ == SECOND_BLADE && IsMainBladeOn()) {
+            TurnBladeOn(SECOND_BLADE);
             PVLOG_NORMAL << "** Second Blade THRUST ON\n";
           }
         }
