@@ -170,6 +170,9 @@ System menu will allow for editing of presets, colors and styles, similar to way
 There's also an Edit Settings mode that has a volume level menu, blade length editing and more.
 In this BC prop, the default mode is direct entry to BC Volume and BC Blade Length mode menus.
 If you want to use the OS System Menu instead, you need to use #define BC_ENABLE_OS_MENU
+While in any menu mode the following controls apply:
+Save                - Click POW
+Cancel / Exit       - Click AUX or Double Click POW
 
 Each section for controls have a descriptive version listed by feature and somwhat in the order
 of using the saber, and a second summary list that is sorted by button clicks.
@@ -201,11 +204,20 @@ Prev Preset               - Long Click then release POW (while pointing DOWN).
 Jump to First Preset      - Long Click then release POW (while pointing UP).
 Play/Stop Track           - 4x Click POW.
 BC Volume Menu:
-        Enter/Exit        - Hold POW and Clash.
-        Volume UP         - Rotate Right
-        Volume DOWN       - Rotate Left
+        Enter Menu        - Hold POW and Clash.
+        Volume UP         - Rotate Right.
+        Volume DOWN       - Rotate Left.
         Quick MAX Vol     - Hold POW while in Volume Menu.
         Quick MIN Vol     - Double Click and Hold POW while in Volume Menu.
+        Save and Exit     - Click POW.
+        Cancel and Exit   - Double Click POW.
+BC Blade Length Edit:
+        Enter Mode        - Double Click and Hold POW.
+        Adjust            - Rotate Right or Left
+        Save and Exit     - Click POW.
+        Cancel and Exit   - Double Click POW.
+** OS System Menu           * To use the OS menu system instead of the default BC Volume and BC Blade Length options,
+                              use #define BC_ENABLE_OS_MENU
 Spoken Battery Level
         in percentage     - 3x Click and Hold POW.
         in volts          - 3x Click and Hold POW (while pointing DOWN).
@@ -214,9 +226,7 @@ On-Demand Batt Level      - 3x Click and Hold POW, release after a second. (Doub
                             * Requires EFFECT_BATTERY_LEVEL to be in blade style.
                             * Plays battery.wav sound effect if it exists in font or common folder,
                               otherwise a familiar tune of beeps :)
-Blade Length Menu         - Double Click and Hold POW.
-      OS System Menu        * To use the OS menu system instead of the default Volume and Blade Length options,
-                              use #define BC_ENABLE_OS_MENU
+
 
 Quote Player              - 3x Click POW.
                             * Does Force effect if no quote(s) exist.
@@ -224,7 +234,7 @@ Toggle Sequential or
        Random quotes      - 3x Click POW (while pointing DOWN).
 User Effect 5             - Hold POW then Rotate Left
 User Effect 6             - Hold POW then Rotate Right
-                            * Requires EFFECT_USERN in blade style.
+                            * Requires EFFECT_USER in blade style.
                             * Note the same controls when blade is ON are USER 1 and 2.
 
 
@@ -288,7 +298,7 @@ PowerSave Dim Blade       - 4x Click and Hold POW (while pointing UP).
 
 User Effect 1             - Hold POW then Rotate Left
 User Effect 2             - Hold POW then Rotate Right
-                            * Require EFFECT_USERN in blade style.
+                            * Require EFFECT_USER in blade style.
                             * Note the same controls when blade is OFF are USER 5 and 6.
 
 Turn OFF blade            - Hold POW until off -or - Twist if using #define BC_TWIST_OFF.
@@ -308,10 +318,10 @@ swing
                           previous preset (pointing down)
 1 click held            - enter/exit scroll presets
     then twist          - turn blade ON muted (back and forth twist)
-    then clash          - enter/exit BC volume menu
+    then clash          - enter BC volume menu
     then rotate left    - user effect 5
     then rotate right   - user effect 6
-2 clicks held           - blade length menu, or
+2 clicks held           - blade length edit, or
                           OS system menu instead (requires #define BC_ENABLE_OS_MENU)
 3 clicks                - quote
                           toggle sequential or random quotes (pointing down)
@@ -326,7 +336,8 @@ twist                   - turn blade ON (requires #define BC_TWIST_ON)
     rotate left         - volume DOWN
     1 click held        - quick MAX volume
     2 clicks held       - quick MIN volume
-- OS system menu (including ColorChange)
+- OS system menu:
+    rotate right/left   - choose options / adjust
     1 click             - select / save
     2 clicks            - exit / cancel
 
@@ -387,19 +398,26 @@ Jump to First Preset      - Click AUX (while pointing UP).
 Play/Stop Track           - Long Click then release POW.
 BC Volume Menu:
         Enter/Exit        - Hold POW + Click AUX.
-        Volume UP         - Rotate Right
-        Volume DOWN       - Rotate Left
+        Enter Menu        - Hold POW and Clash.
+        Volume UP         - Rotate Right.
+        Volume DOWN       - Rotate Left.
         Quick MAX Vol     - Hold POW while in Volume Menu.
-        Quick MIN Vol     - Hold AUX while in Volume Menu.
+        Quick MIN Vol     - Double Click and Hold POW while in Volume Menu.
+        Save and Exit     - Click POW.
+        Cancel and Exit   - Double Click POW.
+BC Blade Length Edit:
+        Enter Mode        - Double Click and Hold POW.
+        Adjust            - Rotate Right or Left
+        Save and Exit     - Click POW.
+        Cancel and Exit   - Double Click POW.
+** OS System Menu           * To use the OS menu system instead of the default BC Volume and BC Blade Length options,
+                              use #define BC_ENABLE_OS_MENU
 Spoken Battery Level
         in percentage     - Hold AUX + Click POW.
         in volts          - Hold AUX + Click POW (while pointing DOWN).
                             * Will show On-blade display if EFFECT_BATTERY_LEVEL is used in blade style.
 On-Demand Batt Level      - Hold AUX + Long Click then release POW.
                             * Requires EFFECT_BATTERY_LEVEL to be in blade style. Uses battery.wav sound effect.
-Blade Length Menu         - Double Click and Hold POW.
-      OS System Menu        * To use the OS menu system instead of the default Volume and Blade Length options,
-                              use #define BC_ENABLE_OS_MENU
 
 Quote Player              - 3x Click POW.
                             * Does Force effect if no quote(s) exist.
@@ -410,7 +428,7 @@ User Effect 5             - Hold POW then Rotate Left
 User Effect 6             - Hold POW then Rotate Right
 User Effect 7             - Hold AUX then Rotate Left
 User Effect 8             - Hold AUX then Rotate Right
-                            * Requires EFFECT_USERN in blade style.
+                            * Requires EFFECT_USER in blade style.
                             * Note the same controls when blade is ON are USER 1,2,3,4.
 
 -------- When blade is ON -------
@@ -478,7 +496,7 @@ User Effect 1             - Hold POW then Rotate Left
 User Effect 2             - Hold POW then Rotate Right
 User Effect 3             - Hold AUX then Rotate Left
 User Effect 4             - Hold AUX then Rotate Right
-                            * Require EFFECT_USERN in blade style.
+                            * Require EFFECT_USER in blade style.
                             * Note the same controls when blade is OFF are USER 5,6,7,8.
 
 Turn OFF blade            - Hold POW until off -or - Twist if using #define BC_TWIST_OFF.
@@ -506,7 +524,7 @@ swing
     then rotate left    - user effect 7
     then rotate right   - user effect 8
 2 clicks POW            - turn blade ON muted
-2 clicks held           - blade length menu, or
+2 clicks held           - blade length edit, or
                           OS system menu instead (requires #define BC_ENABLE_OS_MENU)
 3 clicks POW            - quote
                           toggle sequential or random quotes (pointing down)
@@ -515,8 +533,8 @@ swing
     rotate left         - volume DOWN
     1 click POW held    - quick MAX volume
     1 click AUX held    - quick MIN volume
-- OS system menu (including ColorChange)
-    rotate right/left   - choose options
+- OS system menu:
+    rotate right/left   - choose options / adjust
     1 click             - select / save
     2 clicks            - exit / cancel
 
@@ -526,7 +544,7 @@ Hold AUX
                           spoken battery level in volts (pointing down)
     then click POW long - on-demand battery level
 Hold POW
-    then click AUX      - enter/exit BC volume menu
+    then click AUX      - enter BC volume menu
 
 --------- When blade is ON ---------
 1 click POW             - blaster deflection
@@ -628,21 +646,26 @@ push                    - force push
 | Prev Preset                          - Long Click and release POW (while pointing MAIN Blade DOWN).
 | Jump to First Preset                 - Long Click and release POW (while pointing MAIN Blade UP).
 | Play/Stop Track                      - 4x Click POW.
-| Volume Menu:
-|         Enter/Exit                   - Hold POW then Clash.
-|         Volume UP                    - Rotate Right
-|         Volume DOWN                  - Rotate Left
-|         Quick MAX Volume             - Click POW (while in Volume Menu).
-|         Quick MIN Volume             - Double Click POW (while in Volume Menu).
+| BC Volume Menu:
+|         Enter Menu                   - Hold POW and Clash.
+|         Volume UP                    - Rotate Right.
+|         Volume DOWN                  - Rotate Left.
+|         Quick MAX Vol                - Hold POW while in Volume Menu.
+|         Quick MIN Vol                - Double Click and Hold POW while in Volume Menu.
+|         Save and Exit                - Click POW.
+|         Cancel and Exit              - Double Click POW.
+| BC Blade Length Edit:
+|         Enter Mode                   - Double Click and Hold POW.
+|         Adjust                       - Rotate Right or Left
+|         Save and Exit                - Click POW.
+|         Cancel and Exit              - Double Click POW.
+| ** OS System Menu                      * To use the OS menu system instead of the default BC Volume and BC Blade Length options,
+|                                        use #define BC_ENABLE_OS_MENU
 | Spoken Battery Level:
 |        in percentage                 - 3x Click and Hold POW.
 |        in volts                      - 3x Click and Hold POW (while pointing DOWN).
 |                                        * Will show On-blade display if EFFECT_BATTERY_LEVEL is used in blade style.
 | On-Demand Battery Level              - 3x Click and Hold POW, release after a second. (Double Click then Long Click)
-|
-| Blade Length Menu                    - Double Click and Hold POW.
-|       OS System Menu instead           * To use the OS menu system instead of the default Volume and Blade Length options,
-|                                          use #define BC_ENABLE_OS_MENU
 |
 | Quote Player                         - 3x Click POW.
 |                                        * Does Force effect if no quote(s) exist.
@@ -650,7 +673,7 @@ push                    - force push
 |
 | User Effect 5                        - Hold POW then Rotate Left
 | User Effect 6                        - Hold POW then Rotate Right
-|                                        * Requires EFFECT_USERN in blade style.
+|                                        * Requires EFFECT_USER in blade style.
 |                                        * Note the same controls when blade is ON are USER 1 and 2.
 |
 |-------- When blades are ON --------
@@ -704,7 +727,7 @@ push                    - force push
 |
 | User Effect 1                        - Hold POW then Rotate Left
 | User Effect 2                        - Hold POW then Rotate Right
-|                                        * Require EFFECT_USERN in blade style.
+|                                        * Require EFFECT_USER in blade style.
 |                                        * Note the same controls when blade is OFF are USER 5 and 6.
 | 
 | --------------------------------------- 
@@ -724,13 +747,13 @@ push                    - force push
 |                           previous preset (main blade pointing down)
 | 1 click held            - enter/exit scroll presets
 |     then twist          - turn main blade ON first muted  (back and forth twist)
-|     then clash          - enter/exit BC volume menu
+|     then clash          - enter BC volume menu
 |     then rotate left    - user effect 5
 |     then rotate right   - user effect 6
 |     then swing          - turn both blades ON muted
 | 2 clicks                - turn second blade ON first
 | 2 clicks long           - turn both blades ON
-| 2 clicks held           - blade length menu, or
+| 2 clicks held           - blade length edit, or
 |                           OS system menu instead (requires #define BC_ENABLE_OS_MENU)
 | 3 clicks                - quote
 |                           toggle sequential or random quotes (pointing down)
@@ -742,9 +765,10 @@ push                    - force push
 | - BC Volume menu:
 |     rotate right        - volume UP
 |     rotate left         - volume DOWN
-|     1 click held        - quick MAX volume
-|     2 clicks held       - quick MIN volume
-| - OS system menu (including ColorChange)
+|     1 click POW held    - quick MAX volume
+|     1 click AUX held    - quick MIN volume
+| - OS system menu:
+|     rotate right/left   - choose options / adjust
 |     1 click             - select / save
 |     2 clicks            - exit / cancel
 |
@@ -811,22 +835,27 @@ push                    - force push
 | Next Preset                          - Click and Hold AUX, release after a second (NOT pointing UP or DOWN).
 | Prev Preset                          - Click and Hold AUX, release after a second (while pointing DOWN).
 | Jump to First Preset                 - Click and Hold AUX, release after a second (while pointing UP).
-| Volume Menu:
-|         Enter/Exit                   - Hold POW then Click AUX.
-|         Volume UP                    - Rotate Right
-|         Volume DOWN                  - Rotate Left
-|         Quick MAX Volume             - Click POW (while in Volume Menu).
-|         Quick MIN Volume             - Click AUX (while in Volume Menu).
+| BC Volume Menu:
+|         Enter Menu                   - Hold POW then Click AUX.
+|         Volume UP                    - Rotate Right.
+|         Volume DOWN                  - Rotate Left.
+|         Quick MAX Vol                - Hold POW while in Volume Menu.
+|         Quick MIN Vol                - Double Click and Hold POW while in Volume Menu.
+|         Save and Exit                - Click POW.
+|         Cancel and Exit              - Double Click POW.
+| BC Blade Length Edit:
+|         Enter Mode                   - Double Click and Hold POW.
+|         Adjust                       - Rotate Right or Left
+|         Save and Exit                - Click POW.
+|         Cancel and Exit              - Double Click POW.
+| ** OS System Menu                      * To use the OS menu system instead of the default BC Volume and BC Blade Length options,
+|                                        use #define BC_ENABLE_OS_MENU
 | Spoken Battery Level:
 |         in volts                     - Hold AUX then Click POW.
 |         in percentage                - Hold AUX then Click POW (while pointing Main Blade DOWN).
 |                                        * Will show On-blade display if EFFECT_BATTERY_LEVEL is used in blade style.
 | On-Demand Battery Level              - Hold AUX, then Long Click POW, release POW after a second.
 |                                        * Requires EFFECT_BATTERY_LEVEL to be in blade style. Uses battery.wav sound effect.
-|
-| Blade Length Menu                    - Double Click and Hold POW.
-|       OS System Menu instead           * To use the OS menu system instead of the default Volume and Blade Length options,
-|                                          use #define BC_ENABLE_OS_MENU
 |
 | Quote Player                         - 3x Click POW.
 |                                        * Does Force effect if no quote(s) exist.
@@ -836,7 +865,7 @@ push                    - force push
 | User Effect 6         - Hold POW then Rotate Right
 | User Effect 7         - Hold AUX then Rotate Left
 | User Effect 8         - Hold AUX then Rotate Right
-|                         * Requires EFFECT_USERN in blade style.
+|                         * Requires EFFECT_USER in blade style.
 |                         * Note the same controls when blade is ON are USER 1,2,3,4.
 |
 |-------- When blades are ON -------
@@ -895,7 +924,7 @@ push                    - force push
 | User Effect 2             - Hold POW then Rotate Right
 | User Effect 3             - Hold AUX then Rotate Left
 | User Effect 4             - Hold AUX then Rotate Right
-|                             * Require EFFECT_USERN in blade style.
+|                             * Require EFFECT_USER in blade style.
 |                             * Note the same controls when blade is OFF are USER 5,6,7,8.
 |
 | ---------------------------------------
@@ -924,7 +953,7 @@ push                    - force push
 |     then rotate left    - user effect 7
 |     then rotate right   - user effect 8
 | 2 clicks POW            - turn main blade ON first muted
-| 2 clicks held           - blade length menu, or
+| 2 clicks held           - blade length edit, or
 |                           OS system menu instead (requires #define BC_ENABLE_OS_MENU)
 | 2 clicks AUX            - turn second blade ON first muted
 | 2 clicks AUX long       - turn both blades ON
@@ -936,8 +965,8 @@ push                    - force push
 |     rotate left         - volume DOWN
 |     1 click POW held    - quick MAX volume
 |     1 click AUX held    - quick MIN volume
-| - OS system menu (including ColorChange)
-|     rotate right/left   - choose options
+| - OS system menu:
+|     rotate right/left   - choose options / adjust
 |     1 click             - select / save
 |     2 clicks            - exit / cancel
 |
@@ -947,7 +976,7 @@ push                    - force push
 |                           spoken battery level in volts (pointing down)
 |     then click POW long - on-demand battery level
 | Hold POW
-|     then click AUX      - enter/exit BC volume menu
+|     then click AUX      - enter BC volume menu
 |
 | --------- When blade is ON --------- 
 | 1 click POW             - blaster deflection
