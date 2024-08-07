@@ -8,6 +8,7 @@
 template<class SPEC>
 struct DefaultMenuSpec {
   typedef mode::SelectCancelMode SelectCancelMode;
+  typedef mode::SteppedModeBase<SPEC> SteppedModeBase;
   typedef mode::SteppedMode<SPEC> SteppedMode;
   typedef mode::MenuBase<SPEC> MenuBase;
   typedef mode::SmoothWraparoundMode<SPEC> SmoothWraparoundMode;

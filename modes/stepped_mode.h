@@ -9,13 +9,12 @@
 namespace mode {
 
 // Base class for stepped menues/modes.
+// This class makes no assumptions about how sound is played.
 template<class SPEC>
-struct SteppedMode : public SPEC::SelectCancelMode {
+struct SteppedModeBase : public SPEC::SelectCancelMode {
   virtual void next() = 0;
   virtual void prev() = 0;
-
-  virtual void say() {}
-  virtual void fadeout(float len) {}
+  virtual void update() {}
 
   virtual int steps_per_revolution() { return 6; }
   virtual int dead_zone_percent() { return 25; }
@@ -35,18 +34,9 @@ struct SteppedMode : public SPEC::SelectCancelMode {
     angle_ = fusor.angle2();
   }
 
-  void update() {
-    SaberBase::DoEffect(EFFECT_MENU_CHANGE, 0); // should pay a quiet "tick" every time.
-    say_time_ = Cyclint<uint32_t>(millis()) + (uint32_t)(SaberBase::sound_length * 1000);
-    if (!say_time_) say_time_+=1;
-    fadeout(SaberBase::sound_length);
-  }
+  
   void mode_Loop() override {
     SaberBase::RequestMotion();
-    if (say_time_ && Cyclint<uint32_t>(millis()) > say_time_) {
-      say_time_ = Cyclint<uint32_t>(0);
-      say();
-    }
     
     Angle current_angle = fusor.angle2();
     Angle diff = current_angle - angle_;
@@ -103,12 +93,37 @@ struct SteppedMode : public SPEC::SelectCancelMode {
     return SPEC::SelectCancelMode::mode_Parse(cmd, arg);
   }
 
-  static Cyclint<uint32_t> say_time_;
   static Angle angle_;
 };
 
 template<class SPEC>
-Angle SteppedMode<SPEC>::angle_ = 0.0f;
+Angle SteppedModeBase<SPEC>::angle_ = 0.0f;
+
+// Base class for stepped menues/modes.
+// This class assumes that say() and fadout() will be used to play the sound
+// when the steps change.
+template<class SPEC>
+struct SteppedMode : public SPEC::SteppedModeBase {
+  virtual void say() {}
+  virtual void fadeout(float len) {}
+
+  void update() override {
+    SaberBase::DoEffect(EFFECT_MENU_CHANGE, 0); // should play a quiet "tick" every time.
+    say_time_ = Cyclint<uint32_t>(millis()) + (uint32_t)(SaberBase::sound_length * 1000);
+    if (!say_time_) say_time_+=1;
+    fadeout(SaberBase::sound_length);
+  }
+
+  void mode_Loop() override {
+    SPEC::SteppedModeBase::mode_Loop();
+    if (say_time_ && Cyclint<uint32_t>(millis()) > say_time_) {
+      say_time_ = Cyclint<uint32_t>(0);
+      say();
+    }
+  }
+
+  static Cyclint<uint32_t> say_time_;
+};
 
 template<class SPEC>
 Cyclint<uint32_t> SteppedMode<SPEC>::say_time_;
