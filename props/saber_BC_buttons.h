@@ -2,12 +2,12 @@
 saber_BC_buttons.h
   http://fredrik.hubbe.net/lightsaber/proffieos.html
   Copyright (c) 2016-2019 Fredrik Hubinette
-  Copyright (c) 2024 Brian Conner with contributions by:
+  Copyright (c) 2023-2024 Brian Conner with contributions by:
   Fredrik Hubinette, Fernando da Rosa, Matthew McGeary, and Scott Weber.
   Distributed under the terms of the GNU General Public License v3.
   http://www.gnu.org/licenses/
 
-Includes 1, or 2 button controls. (3rd button for power control of Dual Blades supported as well).
+Includes 1 or 2 button controls. (3rd button for power control of Dual Blades supported as well).
 Incorporates an intuitive control scheme so button actions are consistant
 whether blade is on or off.
 Best if used with ProffieOS_Voicepack spoken menu prompts. 
