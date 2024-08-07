@@ -1397,14 +1397,18 @@ template<class SPEC>
 struct BCMenuSpec {
   typedef BCVolumeMode<SPEC> BCVolumeMenu;
 #ifdef DYNAMIC_BLADE_LENGTH
+#ifdef BC_DUAL_BLADES
   typedef BCSelectBladeMode<SPEC> SelectBladeMode;
+#endif  // BC_DUAL_BLADES
   typedef mode::ShowLengthStyle<SPEC> ShowLengthStyle;
   typedef BCChangeBladeLengthMode<SPEC> ChangeBladeLengthMode;
-#endif
+#endif  // DYNAMIC_BLADE_LENGTH
   typedef mode::SelectCancelMode SelectCancelMode;
   typedef mode::SteppedMode<SPEC> SteppedMode;
   typedef mode::MenuBase<SPEC> MenuBase;
-  typedef SoundLibraryV2Template<SPEC> SoundLibrary;
+   // typedef SoundLibraryV2Template<SPEC> SoundLibrary;
+  typedef SoundLibraryV2 SoundLibrary;
+
 };
 #endif  // BC_ENABLE_OS_MENU
 
@@ -1466,10 +1470,12 @@ public:
     if (!current_style()) return;
     if (current_mode == this) {
 #ifdef BC_DUAL_BLADES
-        pushMode<FINAL_MENU_SPEC::SelectBladeMode>();
+        // pushMode<FINAL_MENU_SPEC::SelectBladeMode>();
+        pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::SelectBladeMode>();
+
 #else
         selected_blade_ = 1;
-        pushMode<FINAL_MENU_SPEC::ChangeBladeLengthMode>();
+        pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::ChangeBladeLengthMode>();
 #endif  // BC_DUAL_BLADES
     }
 #endif  // DYNAMIC_BLADE_LENGTH
@@ -1478,7 +1484,8 @@ public:
   void EnterVolumeMenu() {
     if (!current_style()) return;
     if (current_mode == this) {
-      pushMode<FINAL_MENU_SPEC::BCVolumeMenu>();
+      // pushMode<FINAL_MENU_SPEC::BCVolumeMenu>();
+      pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::BCVolumeMenu>();
     }
   }
 #endif  // BC_ENABLE_OS_MENU
@@ -1827,7 +1834,7 @@ public:
     sequential_quote_ = !sequential_quote_;
     PVLOG_NORMAL << (sequential_quote_ ? "** Quotes play sequentially\n" : "** Quotes play randomly\n");
     if (SFX_mnum) {
-      sequential_quote_ ? sound_library_.SaySequential() : sound_library_.SayRandom();
+      sequential_quote_ ? sound_library_v2_.SaySequential() : sound_library_.SayRandom();
     } else {
       beeper.Beep(0.5, sequential_quote_ ? 3000 : 1000);
     }
