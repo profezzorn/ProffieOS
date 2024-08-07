@@ -1276,7 +1276,7 @@ int steps_per_revolution() override {
 int selected_blade_;
 
 #ifdef BC_DUAL_BLADES
-#if 0
+#if 0  // Trying to abide using pos_ since it's provided by MenuBase already
 template<class SPEC>
 struct BCSelectBladeMode : public SPEC::MenuBase {
   int current_blade_ = 1; // Start with the first blade
