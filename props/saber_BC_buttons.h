@@ -1103,8 +1103,10 @@ push                    - force push
 #define BC_SECOND_BLADE 2
 #endif
 
+#ifdef BC_DUAL_BLADES
 #if BC_MAIN_BLADE == BC_SECOND_BLADE
 #error BC_MAIN_BLADE and BC_SECOND_BLADE cannot be the same
+#endif
 #endif
 
 #if defined(NO_BLADE_NO_GEST_ONOFF) && !defined(BLADE_DETECT_PIN)
