@@ -1276,6 +1276,7 @@ int steps_per_revolution() override {
 int selected_blade_;
 
 #ifdef BC_DUAL_BLADES
+#if 0
 template<class SPEC>
 struct BCSelectBladeMode : public SPEC::MenuBase {
   int current_blade_ = 1; // Start with the first blade
@@ -1326,6 +1327,64 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
 
   void exit() override {
     highlighted_blade_.Stop(current_blade_);
+    SPEC::MenuBase::exit();
+  }
+};
+#endif  // if 0
+template<class SPEC>
+struct BCSelectBladeMode : public SPEC::MenuBase {
+  ShowColorSingleBladeTemplate<Pulsing<ShowColorStyle,Black,800>,Pulsing<ShowColorStyle,Black,800>> highlighted_blade_;
+
+  uint16_t size() override {
+    return NUM_BLADES;
+  }
+  void mode_activate(bool onreturn) override {
+    mode::getSL<SPEC>()->SayEditBladeLength();
+    mode::getSL<SPEC>()->SaySelectBlade();
+    ShowColorStyle::SetColor(Color16(65535, 65535, 65535));
+    SPEC::SteppedMode::mode_activate(onreturn);
+    highlighted_blade_.Start(this->pos_ + 1);
+    PVLOG_NORMAL << "** Highlighting blade: " << this->pos_ + 1 << "\n";
+    say();
+  }
+
+  void mode_deactivate() {
+    highlighted_blade_.Stop(this->pos_ + 1);
+  }
+
+  void next() override {
+    highlighted_blade_.Stop(this->pos_ + 1);
+    if (++this->pos_ >= size()) this->pos_ = 0;
+    highlighted_blade_.Start(this->pos_ + 1);
+    PVLOG_NORMAL << "** Highlighting blade: " << this->pos_ + 1 << "\n";
+    say();
+  }
+
+  void prev() override {
+    highlighted_blade_.Stop(this->pos_ + 1);
+    if (this->pos_ == 0) {
+      this->pos_ = size() - 1;  // Wrap around to the last item
+    } else {
+      --this->pos_;
+    }
+    highlighted_blade_.Start(this->pos_ + 1);
+    PVLOG_NORMAL << "** Highlighting blade: " << this->pos_ + 1 << "\n";
+    say();
+  }
+
+  void say() override {
+    mode::getSL<SPEC>()->SayBlade();
+    mode::getSL<SPEC>()->SayWhole(this->pos_ + 1);
+  }
+
+  void select() override {
+    // Set the current blade to send and push toChangeBladeLengthMode
+    selected_blade_ = this->pos_ + 1;
+    highlighted_blade_.Stop(this->pos_ + 1);
+    pushMode<typename SPEC::ChangeBladeLengthMode>();
+  }
+
+  void exit() override {
     SPEC::MenuBase::exit();
   }
 };
