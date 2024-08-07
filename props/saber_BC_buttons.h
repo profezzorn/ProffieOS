@@ -1141,6 +1141,7 @@ EFFECT(mute);       // Notification before muted ignition to avoid confusion.
 EFFECT(mzoom);      // for Spam Blast enter/exit
 
 #ifndef BC_ENABLE_OS_MENU
+#if 0  // changed inheritance and changed current_volume_ var to local use. New version beneath this `if 0` section.
 template<class SPEC>
 struct BCVolumeMode : public SPEC::MenuBase {
   const int max_volume_ = VOLUME;
@@ -1269,6 +1270,120 @@ struct BCVolumeMode : public SPEC::MenuBase {
     return SPEC::SelectCancelMode::mode_Event2(button, event, modifiers);
   }
   bool cancelling_ = false;
+};
+#endif  // #if 0
+
+template<class SPEC>
+struct BCVolumeMode : public SPEC::SteppedMode {
+  const int max_volume_ = VOLUME;
+  const int min_volume_ = VOLUME * 0.10;
+  float initial_volume_ = 0.0;
+  int initial_percentage_ = 0;
+  int percentage_ = 0;
+
+  int steps_per_revolution() override {
+    return 12;  // adjust for sensitivity
+  }
+
+  void mode_activate(bool onreturn) override {
+    PVLOG_NORMAL << "** Enter Volume Menu\n";
+    initial_volume_ = dynamic_mixer.get_volume();
+    initial_percentage_ = round((initial_volume_ / max_volume_) * 10) * 10;
+   SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+    mode::getSL<SPEC>()->SayEnterVolumeMenu();
+    SPEC::SteppedMode::mode_activate(onreturn);
+  }
+
+  void mode_deactivate() override {
+    if (percentage_ <= 10) {
+      mode::getSL<SPEC>()->SayMinimumVolume();
+    } else if (percentage_ >=100) {
+      mode::getSL<SPEC>()->SayMaximumVolume();
+    } else {
+      mode::getSL<SPEC>()->SayWhole(percentage_);
+      mode::getSL<SPEC>()->SayPercent();
+    }
+    mode::getSL<SPEC>()->SayVolumeMenuEnd();
+    SPEC::SteppedMode::mode_deactivate();
+  }
+
+  void say() override {
+    // Get the actual updated current volume just in case
+     float volume = dynamic_mixer.get_volume();
+    percentage_ = round((volume / max_volume_) * 10) * 10;
+    if (percentage_ <= 10) {
+      QuickMinVolume();
+    } else if (percentage_ >=100) {
+     QuickMaxVolume();
+    }
+  }
+
+  void next() override {
+    int current_volume_ = dynamic_mixer.get_volume();
+    if (current_volume_ < max_volume_) {
+      current_volume_ += max_volume_ * 0.10;
+    }
+    dynamic_mixer.set_volume(current_volume_);
+    mode::getSL<SPEC>()->SayVolumeUp();
+  }
+
+  void prev() override {
+    int current_volume_ = dynamic_mixer.get_volume();
+    if (current_volume_ > min_volume_) {
+      current_volume_ -= max_volume_ * 0.10;
+    }
+    dynamic_mixer.set_volume(current_volume_);
+    mode::getSL<SPEC>()->SayVolumeDown();
+  }
+
+  void QuickMaxVolume() {
+    dynamic_mixer.set_volume(max_volume_);
+    PVLOG_NORMAL << "** Maximum Volume\n";
+    mode::getSL<SPEC>()->SayMaximumVolume();
+  }
+
+  void QuickMinVolume() {
+    dynamic_mixer.set_volume(min_volume_);
+    PVLOG_NORMAL << "** Minimum Volume\n";
+    mode::getSL<SPEC>()->SayMinimumVolume();
+  }
+
+  void update() override {
+    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+    // Overridden to substitute the tick sound
+    this->say_time_ = Cyclint<uint32_t>(millis()) + 1;
+    if (!this->say_time_) this->say_time_ += 1;
+  }
+
+  void select() override {
+    PVLOG_NORMAL << "** Saved - Exit Volume Menu\n";
+    mode::getSL<SPEC>()->SaySave();
+    SPEC::SteppedMode::select();
+  }
+
+  void exit() override {
+    PVLOG_NORMAL << "** Cancelled - Exit Volume Menu\n";
+    percentage_ = initial_percentage_;
+    dynamic_mixer.set_volume(initial_volume_);
+    mode::getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+
+  bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+    switch (EVENTID(button, event, 0)) {
+      // Custom button controls for BCVolumeMode
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, 0):
+        QuickMaxVolume();
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, 0):
+      case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, 0):
+        QuickMinVolume();
+        return true;
+    }
+    // Use the select and exit controls from SelectCancelMode
+    return SPEC::SelectCancelMode::mode_Event2(button, event, modifiers);
+  }
 };
 
 #ifdef DYNAMIC_BLADE_LENGTH
