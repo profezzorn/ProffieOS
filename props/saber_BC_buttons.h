@@ -1151,9 +1151,9 @@ struct BCVolumeMode : public SPEC::MenuBase {
   int current_volume_ = 0;
   int percentage_ = 0;
 
-int steps_per_revolution() override {
-  return 12;  // adjust for sensitivity
-}
+  int steps_per_revolution() override {
+    return 12;  // adjust for sensitivity
+  }
   uint16_t size() override {
     return 10;
   }
