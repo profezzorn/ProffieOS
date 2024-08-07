@@ -89,9 +89,11 @@ private:
 class SoundLibrary  {
 public:
   static const int SoundLibraryVersion = 1;
-  bool Play(const char* f) { return SOUNDQ->Play(f); }
-  bool Play(SoundToPlay p) { return SOUNDQ->Play(p); }
-  void Poll(RefPtr<BufferedWavPlayer>& player) {}
+  static bool Play(const char* f) { return SOUNDQ->Play(f); }
+  static bool Play(SoundToPlay p) { return SOUNDQ->Play(p); }
+  static void fadeout(float len) { return SOUNDQ->fadeout(len); }
+  static bool busy() { return SOUNDQ->busy(); }
+  static void Poll(RefPtr<BufferedWavPlayer>& player) {}
 
   static void init() {
     SOUNDQ->require_version(SoundLibraryVersion);
