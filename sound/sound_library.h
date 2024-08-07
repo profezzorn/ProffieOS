@@ -93,7 +93,7 @@ public:
   bool Play(SoundToPlay p) { return SOUNDQ->Play(p); }
   void Poll(RefPtr<BufferedWavPlayer>& player) {}
 
-  void init() {
+  static void init() {
     SOUNDQ->require_version(SoundLibraryVersion);
   }
 
@@ -517,7 +517,7 @@ public:
 class SoundLibraryV2 : public SoundLibrary {
 public:
   static const int SoundLibraryVersion = 2;
-  void init() {
+  static void init() {
     SOUNDQ->require_version(SoundLibraryVersion);
   }
 

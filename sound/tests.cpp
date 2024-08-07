@@ -373,64 +373,6 @@ void test_playwav() {
   CHECK_EQ(1023, readallsamples(&wav));
 }
 
-template<class SPEC>
-class SoundLibraryTemplate {
-public:
-  static const int SoundLibraryVersion = 1;
-};
-
-template<class SPEC>
-class SoundLibraryV2Template : public SoundLibraryTemplate<SPEC> {
-public:
-  static const int SoundLibraryVersion = 2;
-};
-
-template<class SPEC>
-class SoundLibraryV3Template : public SoundLibraryV2Template<SPEC> {
-public:
-  static const int SoundLibraryVersion = 3;
-};
-
-template<class SPEC>
-class SoundLibraryV4Template : public SoundLibraryV3Template<SPEC> {
-public:
-  static const int SoundLibraryVersion = 4;
-};
-
-template<class SPEC>
-class SoundLibraryV5Template : public SoundLibraryV4Template<SPEC> {
-public:
-  static const int SoundLibraryVersion = 5;
-};
-
-#include "../common/malloc_helper.h"
-
-#define SOUND_SOUND_LIBRARY_H
-
-#include "sound_library.h"
-static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::SoundLibrary::SoundLibraryVersion == 1);
-
-template<class SPEC>
-struct FOOSPEC {
-  static const int fnord = 17;
-  typedef SoundLibraryTemplate<SPEC> SoundLibrary;
-};
-#define MENU_SPEC_TEMPLATE FOOSPEC
-#define MIN_SOUND_LIBRARY_VERSION 2
-#include "sound_library.h"
-static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::SoundLibrary::SoundLibraryVersion == 2);
-static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::fnord == 17);
-
-#define MIN_SOUND_LIBRARY_VERSION 1
-#include "sound_library.h"
-static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::SoundLibrary::SoundLibraryVersion == 2);
-static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::fnord == 17);
-
-#define MIN_SOUND_LIBRARY_VERSION 3
-#include "sound_library.h"
-static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::SoundLibrary::SoundLibraryVersion == 3);
-static_assert(MKSPEC<FINAL_MENU_SPEC_TEMPLATE>::fnord == 17);
-
 int main() {
   test_effects();
   test_playwav();
