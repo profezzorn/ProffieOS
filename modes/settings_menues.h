@@ -91,7 +91,7 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
     showlen_.Stop(blade());
   }
   void say() override {
-    getSL<SPEC>()->SayWhole(this->pos_);
+    getSL<SPEC>()->SayWhole(this->pos_ + 1);
   }
   uint16_t size() override {
     return prop_GetMaxBladeLength(blade());
@@ -106,7 +106,7 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
     SPEC::MenuBase::exit();
   }
 
-  int getLength() { return this->pos_; }
+  int getLength() { return this->pos_ + 1; }
 
   ShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle> showlen_;
   int saved_len_;
