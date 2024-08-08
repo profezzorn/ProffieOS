@@ -83,9 +83,10 @@ Optional #defines:
 #define FEMALE_TALKIE_VOICE        - To use a female voice version of onboard Talkie.
 
 * NEW as of OS8:
-#define BC_ENABLE_OS_MENU          - BC Volume Menu, Scroll Presets, ColorChange, and BC Blade Length adjust are used by default.
+#define MENU_SPEC_TEMPLATE         - BC Volume Menu, Scroll Presets, ColorChange, and BC Blade Length adjust are used by default.
                                      Use this define to override and add access the the OS System Menu for editing presets, colors etc...
-#define DYNAMIC_BLADE_LENGTH       - This is recommended for on-the-fly blade length adjustments.
+                                     Several template choices are available to set how the menus are used. See Documentation.
+#define DYNAMIC_BLADE_LENGTH       - This is required for onboard menu driven blade length adjustments.
                                      The blade length maximum should be set in the user config file's BladeConfig section.
 #define ENABLE_FASTON              - Enable to use the (old name) faston.wav for FastOn() ignitions, such as gesture ignitions or fast preset change.
                                      The faston.wav sound will be deprecated soon and replaced with fastout.wav.
@@ -169,7 +170,7 @@ OS8 System Menus:
 System menu will allow for editing of presets, colors and styles, similar to way the ProffieOS Workbench webpage and Edit mode work.
 There's also an Edit Settings mode that has a volume level menu, blade length editing and more.
 In this BC prop, the default mode is direct entry to BC Volume and BC Blade Length mode menus.
-If you want to use the OS System Menu instead, you need to use #define BC_ENABLE_OS_MENU
+If you want to use the OS System Menu instead, you need to define a Menu Spec Template such as `#define MENU_SPEC_TEMPLATE DefaultMenuSpec`
 While in any menu mode the following controls apply:
 Save                - Click POW
 Cancel / Exit       - Click AUX or Double Click POW
@@ -217,7 +218,7 @@ BC Blade Length Edit:
         Save and Exit     - Click POW.
         Cancel and Exit   - Double Click POW.
 ** OS System Menu           * To use the OS menu system instead of the default BC Volume and BC Blade Length options,
-                              use #define BC_ENABLE_OS_MENU
+                              use #define MENU_SPEC_TEMPLATE
 Spoken Battery Level
         in percentage     - 3x Click and Hold POW.
         in volts          - 3x Click and Hold POW (while pointing DOWN).
@@ -322,7 +323,7 @@ swing
     then rotate left    - user effect 5
     then rotate right   - user effect 6
 2 clicks held           - blade length edit, or
-                          OS system menu instead (requires #define BC_ENABLE_OS_MENU)
+                          OS system menu instead (requires #define MENU_SPEC_TEMPLATE)
 3 clicks                - quote
                           toggle sequential or random quotes (pointing down)
 3 clicks long           - on-demand battery level
@@ -411,7 +412,7 @@ BC Blade Length Edit:
         Save and Exit     - Click POW.
         Cancel and Exit   - Double Click POW.
 ** OS System Menu           * To use the OS menu system instead of the default BC Volume and BC Blade Length options,
-                              use #define BC_ENABLE_OS_MENU
+                              use #define MENU_SPEC_TEMPLATE
 Spoken Battery Level
         in percentage     - Hold AUX + Click POW.
         in volts          - Hold AUX + Click POW (while pointing DOWN).
@@ -525,7 +526,7 @@ swing
     then rotate right   - user effect 8
 2 clicks POW            - turn blade ON muted
 2 clicks held           - blade length edit, or
-                          OS system menu instead (requires #define BC_ENABLE_OS_MENU)
+                          OS system menu instead (requires #define MENU_SPEC_TEMPLATE)
 3 clicks POW            - quote
                           toggle sequential or random quotes (pointing down)
 - BC Volume Menu
@@ -660,7 +661,7 @@ push                    - force push
 |         Save and Exit                - Click POW.
 |         Cancel and Exit              - Double Click POW.
 | ** OS System Menu                      * To use the OS menu system instead of the default BC Volume and BC Blade Length options,
-|                                        use #define BC_ENABLE_OS_MENU
+|                                        use #define MENU_SPEC_TEMPLATE
 | Spoken Battery Level:
 |        in percentage                 - 3x Click and Hold POW.
 |        in volts                      - 3x Click and Hold POW (while pointing DOWN).
@@ -754,7 +755,7 @@ push                    - force push
 | 2 clicks                - turn second blade ON first
 | 2 clicks long           - turn both blades ON
 | 2 clicks held           - blade length edit, or
-|                           OS system menu instead (requires #define BC_ENABLE_OS_MENU)
+|                           OS system menu instead (requires #define MENU_SPEC_TEMPLATE)
 | 3 clicks                - quote
 |                           toggle sequential or random quotes (pointing down)
 | 3 clicks long           - on-demand battery level
@@ -849,7 +850,7 @@ push                    - force push
 |         Save and Exit                - Click POW.
 |         Cancel and Exit              - Double Click POW.
 | ** OS System Menu                      * To use the OS menu system instead of the default BC Volume and BC Blade Length options,
-|                                        use #define BC_ENABLE_OS_MENU
+|                                        use #define MENU_SPEC_TEMPLATE
 | Spoken Battery Level:
 |         in volts                     - Hold AUX then Click POW.
 |         in percentage                - Hold AUX then Click POW (while pointing Main Blade DOWN).
@@ -954,7 +955,7 @@ push                    - force push
 |     then rotate right   - user effect 8
 | 2 clicks POW            - turn main blade ON first muted
 | 2 clicks held           - blade length edit, or
-|                           OS system menu instead (requires #define BC_ENABLE_OS_MENU)
+|                           OS system menu instead (requires #define MENU_SPEC_TEMPLATE)
 | 2 clicks AUX            - turn second blade ON first muted
 | 2 clicks AUX long       - turn both blades ON
 |                         - turn both blades ON bypass preon (either blade pointing up)
@@ -1029,8 +1030,7 @@ push                    - force push
 #ifndef PROPS_SABER_BC_BUTTONS_H
 #define PROPS_SABER_BC_BUTTONS_H
 
-#define MENU_SPEC_TEMPLATE DefaultMenuSpec
-
+#include "prop_base.h"
 #include "../sound/hybrid_font.h"
 #include "../sound/sound_library.h"
 #include "../modes/select_cancel_mode.h"
@@ -1142,139 +1142,7 @@ EFFECT2(trloop, trloop);  // have YET to play with this
 EFFECT(mute);       // Notification before muted ignition to avoid confusion.
 EFFECT(mzoom);      // for Spam Blast enter/exit
 
-#ifndef BC_ENABLE_OS_MENU
-#if 0  // changed inheritance and changed current_volume_ var to local use. New version beneath this `if 0` section.
-template<class SPEC>
-struct BCVolumeMode : public SPEC::MenuBase {
-  const int max_volume_ = VOLUME;
-  const int min_volume_ = VOLUME * 0.10;
-  float initial_volume_ = 0.0;
-  int initial_percentage_ = 0;
-  int last_volume_ = 0;
-  int current_volume_ = 0;
-  int percentage_ = 0;
-
-  int steps_per_revolution() override {
-    return 12;  // adjust for sensitivity
-  }
-  uint16_t size() override {
-    return 10;
-  }
-
-  void mode_activate(bool onreturn) override {
-    PVLOG_NORMAL << "** Enter Volume Menu\n";
-    initial_volume_ = dynamic_mixer.get_volume();
-    initial_percentage_ = round((initial_volume_ / max_volume_) * 10) * 10;
-    last_volume_ = initial_volume_;
-    current_volume_ = initial_volume_;
-   SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
-    mode::getSL<SPEC>()->SayEnterVolumeMenu();
-    SPEC::SteppedMode::mode_activate(onreturn);
-  }
-
-  void mode_deactivate() override {
-    if (cancelling_) {
-      percentage_ = initial_percentage_;
-      dynamic_mixer.set_volume(initial_volume_);
-    }
-    if (percentage_ <= 10) {
-      mode::getSL<SPEC>()->SayMinimumVolume();
-    } else if (percentage_ >=100) {
-      mode::getSL<SPEC>()->SayMaximumVolume();
-    } else {
-      mode::getSL<SPEC>()->SayWhole(percentage_);
-      mode::getSL<SPEC>()->SayPercent();
-    }
-    mode::getSL<SPEC>()->SayVolumeMenuEnd();
-    SPEC::MenuBase::mode_deactivate();
-  }
-
-  void say() override {
-    if (last_volume_ < current_volume_) {
-      mode::getSL<SPEC>()->SayVolumeUp();
-    } else if (last_volume_ > current_volume_) {
-      mode::getSL<SPEC>()->SayVolumeDown();
-    }
-    // Get the actual updated current volume just in case
-     float volume = dynamic_mixer.get_volume();
-    percentage_ = round((volume / max_volume_) * 10) * 10;
-    if (percentage_ <= 10) {
-      QuickMinVolume();
-    } else if (percentage_ >=100) {
-     QuickMaxVolume();
-    }
-    last_volume_ = current_volume_;
-  }
-
-  void next() override {
-    if (current_volume_ < max_volume_) {
-      current_volume_ += max_volume_ * 0.10;
-    }
-    dynamic_mixer.set_volume(current_volume_);
-  }
-
-  void prev() override {
-    if (current_volume_ > min_volume_) {
-      current_volume_ -= max_volume_ * 0.10;
-    }
-    dynamic_mixer.set_volume(current_volume_);
-  }
-
-  void QuickMaxVolume() {
-    current_volume_ = max_volume_;
-    dynamic_mixer.set_volume(current_volume_);
-    PVLOG_NORMAL << "** Maximum Volume\n";
-    mode::getSL<SPEC>()->SayMaximumVolume();
-    last_volume_ = current_volume_;
-  }
-
-  void QuickMinVolume() {
-    current_volume_ = min_volume_;
-    dynamic_mixer.set_volume(current_volume_);
-    PVLOG_NORMAL << "** Minimum Volume\n";
-    mode::getSL<SPEC>()->SayMinimumVolume();
-    last_volume_ = current_volume_;
-  }
-
-  void update() override {
-    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
-    // Overridden to substitute the tick sound
-    this->say_time_ = Cyclint<uint32_t>(millis()) + 1;
-    if (!this->say_time_) this->say_time_ += 1;
-    this->fadeout(SaberBase::sound_length);
-  }
-
-  void select() override {
-    cancelling_ = false;
-    mode::getSL<SPEC>()->SaySave();
-    SPEC::SteppedMode::select();
-  }
-
-  void exit() override {
-    PVLOG_NORMAL << "** Exit Volume Menu\n";
-    cancelling_ = true;
-    SPEC::MenuBase::exit();
-  }
-
-  bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
-    switch (EVENTID(button, event, 0)) {
-      // Custom button controls for BCVolumeMode
-      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, 0):
-        QuickMaxVolume();
-        return true;
-
-      case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, 0):
-      case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, 0):
-        QuickMinVolume();
-        return true;
-    }
-    // Use the select and exit controls from SelectCancelMode
-    return SPEC::SelectCancelMode::mode_Event2(button, event, modifiers);
-  }
-  bool cancelling_ = false;
-};
-#endif  // #if 0
-
+#ifndef MENU_SPEC_TEMPLATE
 template<class SPEC>
 struct BCVolumeMode : public SPEC::SteppedMode {
   const int max_volume_ = VOLUME;
@@ -1389,7 +1257,6 @@ struct BCVolumeMode : public SPEC::SteppedMode {
 };
 
 #ifdef DYNAMIC_BLADE_LENGTH
-
 int selected_blade_;
 
 #ifdef BC_DUAL_BLADES
@@ -1524,22 +1391,15 @@ struct BCMenuSpec {
   typedef mode::SteppedMode<SPEC> SteppedMode;
   typedef mode::SteppedModeBase<SPEC> SteppedModeBase;
   typedef mode::MenuBase<SPEC> MenuBase;
-   // typedef SoundLibraryV2Template<SPEC> SoundLibrary;
   typedef SoundLibraryV2 SoundLibrary;
 
 };
-#endif  // BC_ENABLE_OS_MENU
+#endif  // MENU_SPEC_TEMPLATE
 
-#include "prop_base.h"
-
-#ifdef MENU_SPEC_TEMPLATE
-#undef MENU_SPEC_TEMPLATE
-#endif
-
-#ifdef BC_ENABLE_OS_MENU
-#define MENU_SPEC_TEMPLATE DefaultMenuSpec
-#else
-#define MENU_SPEC_TEMPLATE BCMenuSpec
+#ifndef MENU_SPEC_TEMPLATE
+  void Setup() {
+    MKSPEC<BCMenuSpec>::SoundLibrary::init();
+  }
 #endif
 
 class DelayTimer {
@@ -1581,19 +1441,17 @@ public:
   SaberBCButtons() : PropBase() {}
   const char* name() override { return "SaberBCButtons"; }
 
-#ifndef BC_ENABLE_OS_MENU
+#ifndef MENU_SPEC_TEMPLATE
   virtual void EnterBladeLengthMode() {
     if (scroll_presets_) return;
 #ifdef DYNAMIC_BLADE_LENGTH
     if (!current_style()) return;
     if (current_mode == this) {
 #ifdef BC_DUAL_BLADES
-        // pushMode<FINAL_MENU_SPEC::SelectBladeMode>();
-        pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::SelectBladeMode>();
-
+        pushMode<MKSPEC<BCMenuSpec>::SelectBladeMode>();
 #else
         selected_blade_ = 1;
-        pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::ChangeBladeLengthMode>();
+        pushMode<MKSPEC<BCMenuSpec>::ChangeBladeLengthMode>();
 #endif  // BC_DUAL_BLADES
     }
 #endif  // DYNAMIC_BLADE_LENGTH
@@ -1602,11 +1460,10 @@ public:
   void EnterVolumeMenu() {
     if (!current_style()) return;
     if (current_mode == this) {
-      // pushMode<FINAL_MENU_SPEC::BCVolumeMenu>();
-      pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::BCVolumeMenu>();
+      pushMode<MKSPEC<BCMenuSpec>::BCVolumeMenu>();
     }
   }
-#endif  // BC_ENABLE_OS_MENU
+#endif  // MENU_SPEC_TEMPLATE
 
   void Loop() override {
     PropBase::Loop();
@@ -2229,7 +2086,7 @@ any # of buttons
 // -------------------- 1 btn any blades
 
 // Enter / Exit Volume MENU
-#ifndef BC_ENABLE_OS_MENU
+#ifndef MENU_SPEC_TEMPLATE
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
         EnterVolumeMenu();
         return true;
@@ -2372,7 +2229,7 @@ any # of buttons
 // -------------------- 2 or 3 btn any blades
 
 // Enter / Exit Volume MENU
-#ifndef BC_ENABLE_OS_MENU
+#ifndef MENU_SPEC_TEMPLATE
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_POWER):
         EnterVolumeMenu();
         return true;
@@ -2594,7 +2451,7 @@ any # of buttons
 // Enter OS System Menu
 // Enter BC Blade Length Mode
       case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
-#ifdef BC_ENABLE_OS_MENU
+#ifdef MENU_SPEC_TEMPLATE
         PVLOG_NORMAL << "** Entering ProffieOS Menu System\n";
         EnterMenu();
 #else
