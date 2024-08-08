@@ -1522,6 +1522,7 @@ struct BCMenuSpec {
 #endif  // DYNAMIC_BLADE_LENGTH
   typedef mode::SelectCancelMode SelectCancelMode;
   typedef mode::SteppedMode<SPEC> SteppedMode;
+  typedef mode::SteppedModeBase<SPEC> SteppedModeBase;
   typedef mode::MenuBase<SPEC> MenuBase;
    // typedef SoundLibraryV2Template<SPEC> SoundLibrary;
   typedef SoundLibraryV2 SoundLibrary;
