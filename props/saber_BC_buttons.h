@@ -1257,7 +1257,7 @@ struct BCVolumeMode : public SPEC::SteppedMode {
 };
 
 #ifdef DYNAMIC_BLADE_LENGTH
-int selected_blade_;
+int menu_current_blade_;
 
 #ifdef BC_DUAL_BLADES
 template<class SPEC>
@@ -1269,7 +1269,6 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
     return NUM_BLADES;
   }
   void mode_activate(bool onreturn) override {
-    mode::getSL<SPEC>()->SayEditBladeLength();
     mode::getSL<SPEC>()->SaySelectBlade();
     ShowColorStyle::SetColor(Color16(65535, 65535, 65535));
     SPEC::SteppedMode::mode_activate(onreturn);
@@ -1287,7 +1286,7 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
     SPEC::MenuBase::next();
     highlighted_blade_.Start(current_blade());
     PVLOG_NORMAL << "** Highlighting blade: " << current_blade() << "\n";
-    say();
+    // say();
   }
 
   void prev() override {
@@ -1295,17 +1294,17 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
     SPEC::MenuBase::prev();
     highlighted_blade_.Start(current_blade());
     PVLOG_NORMAL << "** Highlighting blade: " << current_blade() << "\n";
-    say();
+    // say();
   }
 
   void say() override {
-    mode::getSL<SPEC>()->SayBlade();
+    // mode::getSL<SPEC>()->SayBlade();
     mode::getSL<SPEC>()->SayWhole(current_blade());
   }
 
   void select() override {
     // Set the current blade to send and push toChangeBladeLengthMode
-    selected_blade_ = current_blade();
+    menu_current_blade_ = current_blade();
     highlighted_blade_.Stop(current_blade());
     pushMode<typename SPEC::ChangeBladeLengthMode>();
   }
@@ -1318,7 +1317,7 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
 
 template<class SPEC>
 struct BCChangeBladeLengthMode : public SPEC::MenuBase {
-  virtual int blade() { return selected_blade_; }
+  virtual int blade() { return menu_current_blade_; }
 
   int steps_per_revolution() override {
     return 40;  // adjust for sensitivity
@@ -1329,11 +1328,9 @@ struct BCChangeBladeLengthMode : public SPEC::MenuBase {
     int maxlen = prop_GetMaxBladeLength(blade());
     saved_len_ = len;
     if (len == -1) len = maxlen;
-    this->pos_ = len;
     prop_SetBladeLength(blade(), maxlen);
     showlen_.Start(blade());
     SPEC::SteppedMode::mode_activate(onreturn);
-    // mode::getSL<SPEC>()->SayEditBladeLength();
     say();
   }
 
@@ -1342,7 +1339,7 @@ struct BCChangeBladeLengthMode : public SPEC::MenuBase {
   }
 
   void say() override {
-    mode::getSL<SPEC>()->SayWhole(this->pos_);
+    mode::getSL<SPEC>()->SayWhole(this->pos_ + 1);
   }
 
   uint16_t size() override {
@@ -1369,7 +1366,7 @@ struct BCChangeBladeLengthMode : public SPEC::MenuBase {
     this->fadeout(SaberBase::sound_length);
   }
 
-  int getLength() { return this->pos_; }
+  int getLength() { return this->pos_ + 1; }
 
   ShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle> showlen_;
   int saved_len_;
@@ -1447,10 +1444,11 @@ public:
 #ifdef DYNAMIC_BLADE_LENGTH
     if (!current_style()) return;
     if (current_mode == this) {
+      sound_library_.SayEditBladeLength();
 #ifdef BC_DUAL_BLADES
         pushMode<MKSPEC<BCMenuSpec>::SelectBladeMode>();
 #else
-        selected_blade_ = 1;
+        menu_current_blade_ = 1;
         pushMode<MKSPEC<BCMenuSpec>::ChangeBladeLengthMode>();
 #endif  // BC_DUAL_BLADES
     }
@@ -1809,7 +1807,7 @@ public:
     sequential_quote_ = !sequential_quote_;
     PVLOG_NORMAL << (sequential_quote_ ? "** Quotes play sequentially\n" : "** Quotes play randomly\n");
     if (SFX_mnum) {
-      sequential_quote_ ? sound_library_v2_.SaySequential() : sound_library_.SayRandom();
+      sequential_quote_ ? sound_library_v2.SaySequential() : sound_library_.SayRandom();
     } else {
       beeper.Beep(0.5, sequential_quote_ ? 3000 : 1000);
     }
