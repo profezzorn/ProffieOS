@@ -1286,7 +1286,6 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
     SPEC::MenuBase::next();
     highlighted_blade_.Start(current_blade());
     PVLOG_NORMAL << "** Highlighting blade: " << current_blade() << "\n";
-    // say();
   }
 
   void prev() override {
@@ -1294,7 +1293,6 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
     SPEC::MenuBase::prev();
     highlighted_blade_.Start(current_blade());
     PVLOG_NORMAL << "** Highlighting blade: " << current_blade() << "\n";
-    // say();
   }
 
   void say() override {
