@@ -30,6 +30,37 @@ struct SubMenuEntry : public MenuEntry {
   void select(int entry) override { pushMode<SUBMENU>(); }
 };
 
+//  All blades
+template<class SPEC, class SUBMENU, class SOUND>
+struct SubMenuAllBladeEntry : public MenuEntry {
+  static const int size = NUM_BLADES;
+  int blade(int entry) { return entry + 1; }
+  void say(int entry) override {
+    SOUND::say();
+    getSL<SPEC>()->SayWhole(blade(entry));
+  }
+  void select(int entry) override {
+    menu_current_blade = blade(entry);
+    pushMode<SUBMENU>();
+  }
+};
+
+// Blades listed in 'BLADEARRAY'  
+template<class SPEC, class SUBMENU, class SOUND, class BLADEARRAY>
+struct SubMenuBladeEntry : public MenuEntry {
+  static const int size = sizeof(BLADEARRAY::data);
+  int blade(int entry) { return BLADEARRAY::data[entry]; }
+  void say(int entry) override {
+    SOUND::say();
+    getSL<SPEC>()->SayBlade();
+    getSL<SPEC>()->SayWhole(blade(entry));
+  }
+  void select(int entry) override {
+    menu_current_blade = blade(entry);
+    pushMode<SUBMENU>();
+  }
+};
+
 // CMD and arg are expected to be ByteArray.
 template<class CMD, class ARG, class SOUND>
 struct CommandMenuEntry : public MenuEntry {

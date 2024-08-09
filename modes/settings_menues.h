@@ -75,8 +75,7 @@ public:
 
 template<class SPEC>
 struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
-  // TODO: get the blade from the spec??
-  virtual int blade() { return 1; }
+  virtual int blade() { return menu_current_blade; }
   void mode_activate(bool onreturn) override {
     int len = prop_GetBladeLength(blade());
     int maxlen = prop_GetMaxBladeLength(blade());
@@ -106,6 +105,7 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
     SPEC::MenuBase::exit();
   }
 
+  virtual int steps_per_revolution() { return 16; }
   int getLength() { return this->pos_; }
 
   ShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle> showlen_;
@@ -215,6 +215,10 @@ struct AllowMountBoolSetting : public BoolSetting {
 };
 #endif
 
+#ifndef REMOVABLE_BLADES
+#define REMOVABLE_BLADES 1
+#endif
+
 template<class SPEC>
 struct SettingsMenuMode : public MenuEntryMenu<SPEC,
   SubMenuEntry<typename SPEC::ChangeVolumeMode, typename SPEC::SoundLibrary::tEditVolume>
@@ -223,7 +227,8 @@ struct SettingsMenuMode : public MenuEntryMenu<SPEC,
   ,DirectBoolEntry<SPEC, AllowMountBoolSetting<SPEC>>
 #endif
 #ifdef DYNAMIC_BLADE_LENGTH
-  ,SubMenuEntry<typename SPEC::ChangeBladeLengthMode, typename SPEC::SoundLibrary::tEditBladeLength>
+ //  ,SubMenuEntry<typename SPEC::ChangeBladeLengthMode, typename SPEC::SoundLibrary::tEditBladeLength>
+  ,SubMenuBladeEntry<SPEC, typename SPEC::ChangeBladeLengthMode, typename SPEC::SoundLibrary::tEditBladeLength, ByteArray<REMOVABLE_BLADES>>
 #endif
 #ifdef DYNAMIC_CLASH_THRESHOLD
   ,SubMenuEntry<typename SPEC::ChangeClashThresholdMode, typename SPEC::SoundLibrary::tEditClashThreshold>

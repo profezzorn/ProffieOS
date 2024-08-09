@@ -6,10 +6,6 @@ void SetStyle(int blade, LSPtr<char> style);
 
 namespace mode {
 
-int menu_current_blade = 1;
-int menu_current_arg = 0;
-int menu_current_style_offset = 2;
-
 bool isTimeArg(int arg) {
   switch (arg) {
     case IGNITION_TIME_ARG:
