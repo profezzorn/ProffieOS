@@ -80,36 +80,49 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
   void mode_activate(bool onreturn) override {
     int len = prop_GetBladeLength(blade());
     int maxlen = prop_GetMaxBladeLength(blade());
-    saved_len_ = len;
     if (len == -1) len = maxlen;
-    this->pos_ = len;
+    saved_len_ = len;
+    pos_ = saved_len_;
     prop_SetBladeLength(blade(), maxlen);
     showlen_.Start(blade());
     SPEC::MenuBase::mode_activate(onreturn);
+    if (maxlen == 0) exit();
   }
   void mode_deactivate() {
     showlen_.Stop(blade());
   }
   void say() override {
-    getSL<SPEC>()->SayWhole(this->pos_ + 1);
+    getSL<SPEC>()->SayWhole(pos_);
   }
   uint16_t size() override {
     return prop_GetMaxBladeLength(blade());
   }
   void select() override {
-    prop_SetBladeLength(blade(), this->pos_);
+    prop_SetBladeLength(blade(), pos_);
     prop_SaveState();
     SPEC::MenuBase::select();
   }
   void exit() override {
+    pos_ = saved_len_;
     prop_SetBladeLength(blade(), saved_len_);
     SPEC::MenuBase::exit();
   }
 
-  int getLength() { return this->pos_ + 1; }
+  void next() override {
+    pos_ = (pos_ + 1 > size()) ? 0 : pos_ + 1;
+  }
+
+  void prev() override {
+    pos_ = (pos_ - 1 < 0) ? size() : pos_ - 1;
+  }
+
+  int getLength() { 
+    return pos_ == -1 ? size() : pos_; 
+  }
 
   ShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle> showlen_;
   int saved_len_;
+  uint16_t pos_;
 };
 #endif
 
