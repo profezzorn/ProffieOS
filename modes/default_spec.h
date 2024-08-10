@@ -22,7 +22,7 @@ struct DefaultMenuSpec {
 
 #ifdef DYNAMIC_BLADE_LENGTH  
   typedef mode::ShowLengthStyle<SPEC> ShowLengthStyle;
-  typedef mode::ChangeBladeLengthBlade1<SPEC> ChangeBladeLengthMode;
+  typedef mode::ChangeBladeLengthMode<SPEC> ChangeBladeLengthMode;
 #endif
 #ifdef DYNAMIC_CLASH_THRESHOLD
   typedef mode::SmoothClashThresholdMode<SPEC> ChangeClashThresholdMode;
