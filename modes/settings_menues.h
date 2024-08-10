@@ -74,7 +74,7 @@ public:
 };
 
 template<class SPEC>
-struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
+struct ChangeBladeLengthMode : public SPEC::MenuBase {
   virtual int blade() { return menu_current_blade; }
   void mode_activate(bool onreturn) override {
     int len = prop_GetBladeLength(blade());
