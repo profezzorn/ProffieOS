@@ -73,6 +73,13 @@ public:
   int len_;
 };
 
+template<class T>
+class CustomShowColorSingleBladeTemplate : public ShowColorSingleBladeTemplate<T, T> {
+public:
+  void SetStyle(BladeBase *blade, const char* str) {
+    blade->SetStyle(new Style<T>());
+  }
+
 template<class SPEC>
 struct ChangeBladeLengthMode : public SPEC::MenuBase {
   virtual int blade() { return menu_current_blade; }
@@ -121,8 +128,7 @@ struct ChangeBladeLengthMode : public SPEC::MenuBase {
     return pos_ == -1 ? size() : pos_; 
   }
 
-
-  ShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle> showlen_;
+  CustomShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle> showlen_;
   int saved_len_;
   uint16_t pos_;
 };
