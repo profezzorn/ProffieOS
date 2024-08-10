@@ -68,7 +68,7 @@ protected:
       if (clash_.Detect(blade)) {
 	config = CLASH::get();
       } else if (On(blade)) {
-        if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
+        if (SaberBase::LockupForBlade(blade->GetBladeNumber()) == SaberBase::LOCKUP_NONE) {
           config = NORM::get();
         } else {
           config = LOCK::get();

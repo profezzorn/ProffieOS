@@ -34,6 +34,11 @@ void popMode() {
 }
 
 namespace mode {
+
+int menu_current_blade = 1;
+int menu_current_arg = 0;
+int menu_current_style_offset = 2;
+
 template<class SPEC> typename SPEC::SoundLibrary* getSL() {
   return getPtr<typename SPEC::SoundLibrary>();
 }
