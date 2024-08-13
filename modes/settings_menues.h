@@ -81,7 +81,7 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
     int maxlen = prop_GetMaxBladeLength(blade());
     saved_len_ = len;
     if (len == -1) len = maxlen;
-    this->pos_ = len;
+    this->pos_ = len - 1;
     prop_SetBladeLength(blade(), maxlen);
     showlen_.Start(blade());
     SPEC::MenuBase::mode_activate(onreturn);
@@ -90,13 +90,13 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
     showlen_.Stop(blade());
   }
   void say() override {
-    getSL<SPEC>()->SayWhole(this->pos_);
+    getSL<SPEC>()->SayWhole(getLength());
   }
   uint16_t size() override {
     return prop_GetMaxBladeLength(blade());
   }
   void select() override {
-    prop_SetBladeLength(blade(), this->pos_);
+    prop_SetBladeLength(blade(), getLength());
     prop_SaveState();
     SPEC::MenuBase::select();
   }
@@ -106,7 +106,7 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
   }
 
   virtual int steps_per_revolution() { return 16; }
-  int getLength() { return this->pos_; }
+  int getLength() { return this->pos_ + 1; }
 
   ShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle> showlen_;
   int saved_len_;
