@@ -108,7 +108,7 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
   virtual int steps_per_revolution() { return 16; }
   int getLength() { return this->pos_ + 1; }
 
-  ShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle> showlen_;
+  ShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle, typename SPEC::ShowLengthStyle> showlen_;
   int saved_len_;
 };
 #endif
