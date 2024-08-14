@@ -2534,7 +2534,7 @@ any # of buttons
         PVLOG_NORMAL << "** Reverted Color Variation to uploaded config color. Variation = " << SaberBase::GetCurrentVariation() << "\n";
         SaberBase::SetVariation(0);
         if (SFX_mnum) {
-          sound_library_.SayRevert();
+          sound_library_v2.SayResetToDefaultColor();
         } else {
           beeper.Beep(0.20, 2000.0);
           beeper.Beep(0.20, 1414.2);
