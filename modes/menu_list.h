@@ -112,7 +112,7 @@ class MenuEntryMenuImpl : public SPEC::MenuBase {
 public:
   typedef MenuEntryTypeList MenuEntries;
   void say() override { entries_.say(this->pos_); }
-  uint16_t size() override { return MenuEntryTypeList::size; }
+  uint16_t size() override { return MenuEntryList<MenuEntryTypeList>::size; }
   void select() override { entries_.select(this->pos_); }
   void exit() override {
     getSL<SPEC>()->SayExit();
