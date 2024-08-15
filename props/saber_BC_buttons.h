@@ -1186,7 +1186,6 @@ struct BCVolumeMode : public SPEC::SteppedMode {
       mode::getSL<SPEC>()->SayVolumeUp();
       announced_ = false;
     } else if (!announced_) {
-      percentage_ = round((current_volume_ / max_volume_) * 10) * 10;
       QuickMaxVolume();
       announced_ = true;
     }
@@ -1200,7 +1199,6 @@ struct BCVolumeMode : public SPEC::SteppedMode {
       mode::getSL<SPEC>()->SayVolumeDown();
       announced_ = false;
     } else if (!announced_) {
-      percentage_ = round((current_volume_ / max_volume_) * 10) * 10;
       QuickMinVolume();
       announced_ = true;
     }
@@ -1219,12 +1217,13 @@ struct BCVolumeMode : public SPEC::SteppedMode {
   }
 
   void update() override {
+    float volume = dynamic_mixer.get_volume();
+    percentage_ = round((volume / max_volume_) * 10) * 10;
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
     // Overridden to substitute the tick sound
     this->say_time_ = Cyclint<uint32_t>(millis()) + 1;
     if (!this->say_time_) this->say_time_ += 1;
   }
-
   void select() override {
     PVLOG_NORMAL << "** Saved - Exit Volume Menu\n";
     mode::getSL<SPEC>()->SaySave();
