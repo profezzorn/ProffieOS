@@ -1150,6 +1150,7 @@ struct BCVolumeMode : public SPEC::SteppedMode {
   float initial_volume_ = 0.0;
   int initial_percentage_ = 0;
   int percentage_ = 0;
+  bool announced_ = false;
 
   int steps_per_revolution() override {
     return 12;  // adjust for sensitivity
@@ -1177,33 +1178,32 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     SPEC::SteppedMode::mode_deactivate();
   }
 
-  void say() override {
-    // Get the actual updated current volume just in case
-     float volume = dynamic_mixer.get_volume();
-    percentage_ = round((volume / max_volume_) * 10) * 10;
-    if (percentage_ <= 10) {
-      QuickMinVolume();
-    } else if (percentage_ >=100) {
-     QuickMaxVolume();
-    }
-  }
-
   void next() override {
     int current_volume_ = dynamic_mixer.get_volume();
     if (current_volume_ < max_volume_) {
       current_volume_ += max_volume_ * 0.10;
+      dynamic_mixer.set_volume(current_volume_);
+      mode::getSL<SPEC>()->SayVolumeUp();
+      announced_ = false;
+    } else if (!announced_) {
+      percentage_ = round((current_volume_ / max_volume_) * 10) * 10;
+      QuickMaxVolume();
+      announced_ = true;
     }
-    dynamic_mixer.set_volume(current_volume_);
-    mode::getSL<SPEC>()->SayVolumeUp();
   }
 
   void prev() override {
     int current_volume_ = dynamic_mixer.get_volume();
     if (current_volume_ > min_volume_) {
       current_volume_ -= max_volume_ * 0.10;
+      dynamic_mixer.set_volume(current_volume_);
+      mode::getSL<SPEC>()->SayVolumeDown();
+      announced_ = false;
+    } else if (!announced_) {
+      percentage_ = round((current_volume_ / max_volume_) * 10) * 10;
+      QuickMinVolume();
+      announced_ = true;
     }
-    dynamic_mixer.set_volume(current_volume_);
-    mode::getSL<SPEC>()->SayVolumeDown();
   }
 
   void QuickMaxVolume() {
