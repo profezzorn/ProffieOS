@@ -90,6 +90,7 @@ public:
     PickRandomSwing();
   }
   void SB_Off(OffType off_type, EffectLocation location) override {
+    if (!location.on_blade(0)) return;
     on_ = false;
     A.Off();
     B.Off();
