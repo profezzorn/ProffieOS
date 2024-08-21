@@ -350,7 +350,7 @@ public:
   static BladeSet lockup_blades_;
   static LockupType Lockup() { return lockup_; }
   static LockupType LockupForBlade(int blade) {
-    if (!lockup_blades_[blade]) return LOCKUP_NORMAL;
+    if (!lockup_blades_[blade]) return LOCKUP_NONE;
     return lockup_;
   }
   static void SetLockup(LockupType lockup, BladeSet blades = BladeSet::all()) {
