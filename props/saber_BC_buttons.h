@@ -258,9 +258,9 @@ Spam Blaster Blocks       - 4x Click and Hold POW (while pointing DOWN). Toggles
                               Plays mzoom.wav for activating/deactivating this mode.
                               Exits automatically when blade shuts OFF in case you leave it active.
 Auto Swing Blast          - Swinging within 1 second of doing a button activated Blaster Block will start this timed mode.
-                            * To trigger auto blaster blocks, swing saber within 1 second of last block.
+                              To trigger auto blaster blocks, swing saber within 1 second of last block.
                               To exit, stop swinging for 1 second.
-                            * Requires #define BC_ENABLE_AUTO_SWING_BLAST.
+                              * Requires #define BC_ENABLE_AUTO_SWING_BLAST.
 Force Effect              - Double Click and Hold POW, release after a second. (Double Click then Long Click)
 
 Lockup                    - Hold POW + Clash. Release button to end.
@@ -453,9 +453,9 @@ Spam Blaster Blocks       - 4x Click and Hold POW (while pointing DOWN). Toggles
                               Plays mzoom.wav for activating/deactivating this mode.
                               Exits automatically when blade shuts OFF in case you leave it active.
 Auto Swing Blast          - Swinging within 1 second of doing a button activated Blaster Block will start this timed mode.
-                            To trigger auto blaster blocks, swing saber within 1 second of last block.
-                            To exit, stop swinging for 1 second.
-                            * Requires #define BC_ENABLE_AUTO_SWING_BLAST.
+                              To trigger auto blaster blocks, swing saber within 1 second of last block.
+                              To exit, stop swinging for 1 second.
+                              * Requires #define BC_ENABLE_AUTO_SWING_BLAST.
 Force Effect              - Double Click and Hold POW, release after a second. (Double Click then Long Click)
                             * Works with monosfx.wav files, see EFFECT_USER2 in top comments.
 
@@ -615,13 +615,13 @@ push                    - force push
 |==================================================== 1 BUTTON DUAL BLADES ===============================================
 |
 |---------- ON/OFF control ----------
-| Turn Main Blade ON First             - Click POW or Thrust main blade forward.
+| Turn Main Blade ON                   - Click POW or Thrust main blade forward.
 | Turn Main Blade ON First Muted       - Hold POW then Twist.
-| Turn Main Blade OFF/ON additionally  - Hold POW when saber is ON.
+| Turn Main Blade OFF                  - Hold POW when saber is ON.
 |
-| Turn 2nd Blade ON First              - Double click POW or Thrust main blade forward.
+| Turn 2nd Blade ON                    - Double click POW or Thrust main blade forward.
 | Turn 2nd Blade ON First Muted        - 4x Click and Hold POW.
-| Turn 2nd Blade OFF/ON additionally   - Double click and Hold POW when saber is ON.
+| Turn 2nd Blade OFF                   - Double click and Hold POW when saber is ON.
 |
 | Thrust ON                            - Thrust either blade in its pointed direction to turn it ON.
 |
@@ -638,7 +638,8 @@ push                    - force push
 |                                        If no blade is pointing up, both blades will ignite normally with preon if one exists.
 | Turn any Blade OFF bypassing postoff - Point either blade up while turning blade(s) OFF.
 |
-|-------- When blades are OFF -------
+|-- Non-Ignition / Retraction related features:
+|-------- When both blades are OFF -------
 | Scroll Presets                       - Click and Hold POW.
 |                                        Rotate hilt to cycle through presets. Right = Next, Left = Previous.
 |                                        Click POW to ignite with chosen preset, or Click and Hold POW again to Exit.
@@ -677,7 +678,7 @@ push                    - force push
 |                                        * Requires EFFECT_USER in blade style.
 |                                        * Note the same controls when blade is ON are USER 1 and 2.
 |
-|-------- When blades are ON --------
+|-------- When a blade is ON --------
 | Play/Stop Track                      - 4x Click POW.
 | Next Preset Fast                     - Hold POW and Twist (NOT pointing UP or DOWN).
 |                                        * Fast switching presets bypasses preon and font.wav.
@@ -693,9 +694,9 @@ push                    - force push
 |                                          Plays mzoom.wav for activating/deactivating this mode.
 |                                          Exits if either blade shuts OFF in case you leave it active.
 | Auto Swing Blast                     - Swinging within 1 second of doing a button activated Blaster Block will start this timed mode.
-|                                        To trigger auto blaster blocks, swing saber within 1 second of last block.
-|                                        To exit, stop swinging for 1 second.
-|                                        * Requires #define BC_ENABLE_AUTO_SWING_BLAST.
+|                                          To trigger auto blaster blocks, swing saber within 1 second of last block.
+|                                          To exit, stop swinging for 1 second.
+|                                          * Requires #define BC_ENABLE_AUTO_SWING_BLAST.
 | Lockup                               - Hold POW then Clash. Release button to end.
 |                                        In Battle Mode:
 |                                          Just Clash and stay there to Lockup.
@@ -734,14 +735,14 @@ push                    - force push
 | --------------------------------------- 
 |  1 button dual blade summary by clicks 
 | --------------------------------------- 
-| --------- When blade is OFF --------- 
+| --------- When both blades are OFF --------- 
 |
 | gestures: (require gesture defines)
 | twist or swing          - turn both blades ON 
 | stab / thrust           - turn stabbed / thrusted blade ON
 |
 | buttons:
-| 1 click                 - turn main blade ON first
+| 1 click                 - turn main blade ON
 |                           turn main blade ON first bypass preon (either blade pointing up)
 | 1 click long            - first preset (main blade pointing up)
 |                           next preset
@@ -752,7 +753,7 @@ push                    - force push
 |     then rotate left    - user effect 5
 |     then rotate right   - user effect 6
 |     then swing          - turn both blades ON muted
-| 2 clicks                - turn second blade ON first
+| 2 clicks                - turn second blade ON
 | 2 clicks long           - turn both blades ON
 | 2 clicks held           - blade length edit, or
 |                           OS system menu instead (requires #define MENU_SPEC_TEMPLATE)
@@ -773,10 +774,10 @@ push                    - force push
 |     1 click             - select / save
 |     2 clicks            - exit / cancel
 |
-| --------- When blade is ON ---------
+| --------- When a blade is ON ---------
 | twist                   - turn both blades OFF (requires Gesture defines)
-| 1 click                 - blaster deflection
-| 1 click held            - turn main blade OFF/ON additionally
+| 1 click                 - turn main blade ON (if second blade is ON), otherwise blaster deflection
+| 1 click held            - turn main blade OFF
 |                           turn main blade OFF bypass postoff (pointing either blade UP)
 |     then twist          - first preset fast (main blade pointing up)
 |                           next preset fast
@@ -787,7 +788,7 @@ push                    - force push
 |     then swing          - toggle battle mode
 | 2 clicks                - lightning block (click to end)
 | 2 clicks long           - force
-| 2 clicks held           - turn second blade OFF/ON additionally
+| 2 clicks held           - turn second blade OFF
 |                           turn second blade OFF bypass postoff (pointing either blade UP)
 | 3 clicks                - quote
 |                           toggle sequential or random quotes (main blade pointing down)
@@ -807,13 +808,13 @@ push                    - force push
 |==================================================== 2 BUTTON DUAL BLADES============================================
 |
 |---------- ON/OFF control ----------
-| Turn Main Blade ON First             - Click POW.
+| Turn Main Blade ON                   - Click POW.
 | Turn Main Blade ON First Muted       - Double Click POW.
-| Turn Main Blade OFF/ON additionally  - Hold POW when saber is ON.
+| Turn Main Blade OFF                  - Hold POW when saber is ON.
 |
-| Turn 2nd Blade ON First              - Click AUX.
+| Turn 2nd Blade ON                    - Click AUX.
 | Turn 2nd Blade ON First Muted        - Double Click AUX.
-| Turn 2nd Blade OFF/ON additionally   - Click and Hold AUX when saber is ON.
+| Turn 2nd Blade OFF                   - Click and Hold AUX when saber is ON.
 |
 | Thrust ON                            - Thrust either blade in its pointed direction to turn it ON.
 |
@@ -830,7 +831,8 @@ push                    - force push
 |                                        If no blade is pointing up, both blades will ignite normally with preon if one exists.
 | Turn any Blade OFF bypassing postoff - Point either blade up while turning blade(s) OFF.
 |
-|-------- When blades are OFF -------
+|-- Non-Ignition / Retraction related features:
+|-------- When both blades are OFF -------
 | Scroll Presets                       - Click and Hold POW to toggle this mode ON/OFF. Rotate hilt to cycle next and previous presets.
 |                                        * TWIST_ON not available in this mode. Use any ON/OFF control above to ignite with chosen preset.
 | Next Preset                          - Click and Hold AUX, release after a second (NOT pointing UP or DOWN).
@@ -869,7 +871,7 @@ push                    - force push
 |                         * Requires EFFECT_USER in blade style.
 |                         * Note the same controls when blade is ON are USER 1,2,3,4.
 |
-|-------- When blades are ON -------
+|-------- When a blade is ON -------
 | Play/Stop Track                    - Long Click POW.
 | Next Preset Fast                     - Hold POW and Twist (NOT pointing UP or DOWN).
 |                                        * Fast switching presets bypasses preon and font.wav.
@@ -885,9 +887,9 @@ push                    - force push
 |                                          Plays mzoom.wav for activating/deactivating this mode.
 |                                          Exits if either blade shuts OFF in case you leave it active.
 | Auto Swing Blast                     - Swinging within 1 second of doing a button activated Blaster Block will start this timed mode.
-|                                        To trigger auto blaster blocks, swing saber within 1 second of last block.
-|                                        To exit, stop swinging for 1 second.
-|                                        * Requires #define BC_ENABLE_AUTO_SWING_BLAST.
+|                                         To trigger auto blaster blocks, swing saber within 1 second of last block.
+|                                         To exit, stop swinging for 1 second.
+|                                         * Requires #define BC_ENABLE_AUTO_SWING_BLAST.
 | Lockup                               - Hold AUX then Clash. Release button to end.
 |                                        In Battle Mode:
 |                                          Just Clash and stay there to Lockup.
@@ -931,21 +933,21 @@ push                    - force push
 | ---------------------------------------
 |  2 button dual blade summary by clicks
 | ---------------------------------------
-| --------- When blade is OFF ---------
+| --------- When both blades are OFF ---------
 |
 | gestures: (require gesture defines)
 | twist or swing          - turn both blades ON 
 | stab / thrust           - turn stabbed / thrusted blade ON
 |
 | buttons:
-| 1 click POW             - turn main blade ON first
+| 1 click POW             - turn main blade ON
 |                           turn main blade ON first bypass preon (either blade pointing up)
 | 1 click POW long        - play / stop track
 | 1 click POW held        - scroll presets
 |     then twist          - turn both blades blade ON muted (back and forth twist)
 |     then rotate left    - user effect 5
 |     then rotate right   - user effect 6
-| 1 click AUX             - turn second blade ON first
+| 1 click AUX             - turn second blade ON
 |                           turn second blade ON first bypass preon (either blade pointing up)
 | 1 click AUX long        - first preset (pointing up)
 |                           next preset
@@ -979,10 +981,10 @@ push                    - force push
 | Hold POW
 |     then click AUX      - enter BC volume menu
 |
-| --------- When blade is ON --------- 
-| 1 click POW             - blaster deflection
+| --------- When a blade is ON --------- 
+| 1 click POW             - turn main blade ON (if second blade is ON), otherwise blaster deflection
 | 1 click POW long        - play / stop track
-| 1 click POW held        - turn main blade OFF/ON additionally
+| 1 click POW held        - turn main blade OFF
 |                           turn main blade OFF bypass postoff (pointing either blade UP)
 |     then twist          - first preset fast (main blade pointing up)
 |                           next preset fast
@@ -991,8 +993,8 @@ push                    - force push
 |     then rotate left    - user effect 1
 |     then rotate right   - user effect 2
 |     then swing          - toggle battle mode
-| 1 click AUX             - blaster deflection
-| 1 click AUX held        - turn second blade OFF/ON additionally
+| 1 click AUX             - turn second blade ON (if main blade is ON), otherwise blaster deflection
+| 1 click AUX held        - turn second blade OFF
 |                           turn second blade OFF bypass postoff (pointing either blade UP)
 |     then clash          - lockup
 |                           drag (main blade pointing down)
@@ -1023,6 +1025,28 @@ push                    - force push
 | stab object             - melt
 | push                    - force push
 |
+|
+|==================================================== 3 BUTTON DUAL BLADES============================================
+| * Note * - The main difference for 3 button control is the independent control for a second blade. All else is the same as 2 button above.
+|
+|---------- ON/OFF control ----------
+| Turn 2nd Blade ON                    - Click AUX2 (button 3).
+| Turn 2nd Blade ON First Muted        - Double Click AUX2.
+| Turn 2nd Blade OFF                   - Click and Hold AUX2.
+| Blaster Blocks                       - Click or Double Click AUX2
+|      (Blaster Blocks are single or Double Clicks on all buttons)
+| ---------------------------------------
+|  3 button dual blade summary by clicks
+| ---------------------------------------
+| --------- When blade is OFF ---------
+|
+| 1 click AUX2            - turn second blade ON
+|                           turn second blade ON first bypass preon (either blade pointing up)
+| --------- When blade is ON --------- 
+|
+| 1 click AUX2 held       - turn second blade OFF
+|                           turn second blade OFF bypass postoff (pointing either blade UP)
+|
 | If you have any questions feel free to post them on The Crucible forum
 | https://crucible.hubbe.net. Tag me @NoSloppy.
 */
@@ -1033,6 +1057,7 @@ push                    - force push
 #include "prop_base.h"
 #include "../sound/hybrid_font.h"
 #include "../sound/sound_library.h"
+// #include "../modes/mode.h"
 #include "../modes/select_cancel_mode.h"
 #include "../modes/settings_menues.h"
 
@@ -1133,7 +1158,7 @@ EFFECT(voldown);    // for decrease volume
 EFFECT(volmin);     // for minimum volume reached
 EFFECT(volmax);     // for maximum volume reached
 #ifdef ENABLE_FASTON
-#warning The faston.wav sound will be replaced with fastout.wav. If you have a good reason to keep faston.wav as is, please post at https://crucible.hubbe.net/
+// #warning The faston.wav sound will be replaced with fastout.wav. If you have a good reason to keep faston.wav as is, please post at https://crucible.hubbe.net/
 EFFECT(faston);     // for EFFECT_FAST_ON. Being replaced by fastout.wav, which is already defined in the main OS.
 #endif
 EFFECT(push);       // for Force Push gesture
@@ -1224,6 +1249,7 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     this->say_time_ = Cyclint<uint32_t>(millis()) + 1;
     if (!this->say_time_) this->say_time_ += 1;
   }
+
   void select() override {
     PVLOG_NORMAL << "** Saved - Exit Volume Menu\n";
     mode::getSL<SPEC>()->SaySave();
@@ -1256,9 +1282,7 @@ struct BCVolumeMode : public SPEC::SteppedMode {
 };
 
 #ifdef DYNAMIC_BLADE_LENGTH
-int menu_current_blade_;
 
-#ifdef BC_DUAL_BLADES
 template<class SPEC>
 struct BCSelectBladeMode : public SPEC::MenuBase {
   int current_blade() { return this->pos_ + 1; }
@@ -1273,7 +1297,7 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
     SPEC::SteppedMode::mode_activate(onreturn);
     highlighted_blade_.Start(current_blade());
     PVLOG_NORMAL << "** Highlighting blade: " << current_blade() << "\n";
-    say();
+    // say();
   }
 
   void mode_deactivate() {
@@ -1295,13 +1319,13 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
   }
 
   void say() override {
-    // mode::getSL<SPEC>()->SayBlade();
+    mode::getSL<SPEC>()->SayBlade();
     mode::getSL<SPEC>()->SayWhole(current_blade());
   }
 
   void select() override {
-    // Set the current blade to send and push toChangeBladeLengthMode
-    menu_current_blade_ = current_blade();
+    // Set the current blade to send and push to ChangeBladeLengthMode
+    mode::menu_current_blade = current_blade();
     highlighted_blade_.Stop(current_blade());
     pushMode<typename SPEC::ChangeBladeLengthMode>();
   }
@@ -1310,83 +1334,43 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
     SPEC::MenuBase::exit();
   }
 };
-#endif  // BC_DUAL_BLADES
 
 template<class SPEC>
-struct BCChangeBladeLengthMode : public SPEC::MenuBase {
-  virtual int blade() { return menu_current_blade_; }
+// struct BCChangeBladeLengthBlade1 : public SPEC::ChangeBladeLengthMode {
+struct BCChangeBladeLengthBlade1 : public mode::ChangeBladeLengthBlade1<SPEC> {
+  // virtual int blade() { return mode::menu_current_blade; }
 
   int steps_per_revolution() override {
-    return 40;  // adjust for sensitivity
+    return 30;  // adjust for sensitivity
   }
-
-  void mode_activate(bool onreturn) override {
-    int len = prop_GetBladeLength(blade());
-    int maxlen = prop_GetMaxBladeLength(blade());
-    saved_len_ = len;
-    if (len == -1) len = maxlen;
-    prop_SetBladeLength(blade(), maxlen);
-    showlen_.Start(blade());
-    SPEC::SteppedMode::mode_activate(onreturn);
-    say();
-  }
-
-  void mode_deactivate() {
-    showlen_.Stop(blade());
-  }
-
-  void say() override {
-    mode::getSL<SPEC>()->SayWhole(this->pos_ + 1);
-  }
-
-  uint16_t size() override {
-    return prop_GetMaxBladeLength(blade());
-  }
-
   void select() override {
-    prop_SetBladeLength(blade(), this->pos_);
+    prop_SetBladeLength(this->blade(), this->getLength());
     prop_SaveState();
     mode::getSL<SPEC>()->SaySave();
     SPEC::SteppedMode::select();
   }
-
-  void exit() override {
-    prop_SetBladeLength(blade(), saved_len_);
-    SPEC::MenuBase::exit();
-  }
-
   void update() override {
     hybrid_font.PlayPolyphonic(&SFX_volup);
-    if (!SFX_volup) SaberBase::sound_length = 0.2;
-    this->say_time_ = Cyclint<uint32_t>(millis()) + (uint32_t)(SaberBase::sound_length * 1000) + 400;
+    this->say_time_ = Cyclint<uint32_t>(millis()) + (uint32_t)(SaberBase::sound_length * 1000) + 300;
     if (!this->say_time_) this->say_time_ += 1;
     this->fadeout(SaberBase::sound_length);
   }
-
-  int getLength() { return this->pos_ + 1; }
-
-  ShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle> showlen_;
-  int saved_len_;
 };
-
 #endif  // DYNAMIC_BLADE_LENGTH
 
 template<class SPEC>
 struct BCMenuSpec {
   typedef BCVolumeMode<SPEC> BCVolumeMenu;
 #ifdef DYNAMIC_BLADE_LENGTH
-#ifdef BC_DUAL_BLADES
-  typedef BCSelectBladeMode<SPEC> SelectBladeMode;
-#endif  // BC_DUAL_BLADES
+  typedef BCSelectBladeMode<SPEC> BCSelectBladeMenu;
   typedef mode::ShowLengthStyle<SPEC> ShowLengthStyle;
-  typedef BCChangeBladeLengthMode<SPEC> ChangeBladeLengthMode;
+  typedef BCChangeBladeLengthBlade1<SPEC> ChangeBladeLengthMode;
 #endif  // DYNAMIC_BLADE_LENGTH
   typedef mode::SelectCancelMode SelectCancelMode;
   typedef mode::SteppedMode<SPEC> SteppedMode;
   typedef mode::SteppedModeBase<SPEC> SteppedModeBase;
   typedef mode::MenuBase<SPEC> MenuBase;
   typedef SoundLibraryV2 SoundLibrary;
-
 };
 #endif  // MENU_SPEC_TEMPLATE
 
@@ -1442,12 +1426,7 @@ public:
     if (!current_style()) return;
     if (current_mode == this) {
       sound_library_.SayEditBladeLength();
-#ifdef BC_DUAL_BLADES
-        pushMode<MKSPEC<BCMenuSpec>::SelectBladeMode>();
-#else
-        menu_current_blade_ = 1;
-        pushMode<MKSPEC<BCMenuSpec>::ChangeBladeLengthMode>();
-#endif  // BC_DUAL_BLADES
+        pushMode<MKSPEC<BCMenuSpec>::BCSelectBladeMenu>();
     }
 #endif  // DYNAMIC_BLADE_LENGTH
   }
@@ -1839,8 +1818,8 @@ public:
   static const BladeSet controlled_blades_;
 
 
-bool IsMainBladeOn() { return SaberBase::OnBlades()[BC_MAIN_BLADE]; }
-bool IsSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
+bool isMainBladeOn() { return SaberBase::OnBlades()[BC_MAIN_BLADE]; }
+bool isSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
 
   void TurnBladeOn(BladeSet target_blade) {
     // Add in all non-controlled blades, effectively excluding the "other" blade.
@@ -1857,9 +1836,7 @@ bool IsSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
         On(EffectLocation(0, target_blade));
       }
     } else {
-      PVLOG_NORMAL << "** The " 
-                   << (IsMainBladeOn() ? "MAIN" : "SECOND") 
-                   << " blade is already ON, turning on the " 
+      PVLOG_NORMAL << "** Turning on the " 
                    << (target_blade[BC_MAIN_BLADE] ? "MAIN" : "SECOND")
                    << " blade\n";
       SaberBase::TurnOn(EffectLocation(0, target_blade));
@@ -1879,24 +1856,13 @@ bool IsSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
     } else {
       // Only Turn OFF this blade, leave the other one ON.
       PVLOG_NORMAL << "** Turning OFF only the " 
-                   << (IsMainBladeOn() ? "MAIN" : "SECOND") 
+                   << (target_blade[BC_MAIN_BLADE] ? "MAIN" : "SECOND") 
                    << " blade\n";
       SaberBase::TurnOff(off_type, EffectLocation(0, target_blade));
     }
     battle_mode_ = false;
     spam_blast_ = false;
     saber_off_time_ = millis();
-  }
-
-  void TurnMainBladeOnOff() {
-    if (on_pending_) return;
-    if (IsMainBladeOn()) {
-      TurnBladeOff(MAIN_BLADE);
-      PVLOG_NORMAL << "** Main Blade Turned OFF\n";
-    } else {
-      TurnBladeOn(MAIN_BLADE);
-      PVLOG_NORMAL << "** Main Blade Turned ON\n";
-    }
   }
 
   void TurnMainBladeOnMuted() {
@@ -1909,17 +1875,6 @@ bool IsSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
         TurnBladeOn(MAIN_BLADE);
         PVLOG_NORMAL << "** Main Blade Turned ON Muted\n";
       }
-    }
-  }
-
-  void TurnSecondBladeOnOff() {
-    if (on_pending_) return;
-    if (IsSecondBladeOn()) {
-      TurnBladeOff(SECOND_BLADE);
-      PVLOG_NORMAL << "** Second Blade Turned OFF\n";
-    } else {
-      TurnBladeOn(SECOND_BLADE);
-      PVLOG_NORMAL << "** Second Blade Turned ON\n";
     }
   }
 
@@ -2048,12 +2003,16 @@ any # of buttons
         TurnSecondBladeOnMuted();
         return true;
 
-// Turn Second Blade ON/OFF using POW button
-// (Double Click POW for first ON)
-// (Double Click and Hold POW for OFF, or also for ON when MAIN blade is already on.)
+// Turn Second Blade ON
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
+        TurnBladeOn(SECOND_BLADE);
+        return true;
+
+// Turn Second Blade OFF
       case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_ON):
-        TurnSecondBladeOnOff();
+        if (isSecondBladeOn()) {
+          TurnBladeOff(SECOND_BLADE);
+        }
         return true;
 
 // Turn Dual Blades ON
@@ -2066,14 +2025,14 @@ any # of buttons
         MuteAll();
         return true;
 
-// Blaster Deflection
-      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-        DoBlasterBlock();
-        return true;
-
 // Lightning Block (Double Click POW to start, Click POW to Stop)
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
-        DoLightningBlock();
+        if (!isSecondBladeOn() && !on_pending_) {
+          TurnBladeOn(SECOND_BLADE);
+          return true;
+        } else {
+          DoLightningBlock();
+        }
         return true;
 
 #endif  // BC_DUAL_BLADES
@@ -2158,6 +2117,16 @@ any # of buttons
         MuteAll();
         return true;
 
+// Blaster Deflection
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_AUX2, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_AUX2, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
+        DoBlasterBlock();
+        return true;
+
 #else
 
 // -------------------- 2 or 3 btn dual blades
@@ -2170,15 +2139,30 @@ any # of buttons
         DoChangePreset();
         return true;
 
-// Turn Second Blade ON/OFF using AUX button (Click AUX ON, Click AUX and Hold OFF)
+// Turn Second Blade ON
 #if NUM_BUTTONS == 3
       case EVENTID(BUTTON_AUX2, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-      case EVENTID(BUTTON_AUX2, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
 #else
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-      case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
 #endif
-          TurnSecondBladeOnOff();
+          TurnBladeOn(SECOND_BLADE);
+          return true;
+
+// Turn Second Blade ON additionally
+// Blaster Deflection
+#if NUM_BUTTONS == 3
+      case EVENTID(BUTTON_AUX2, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+#else
+      case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+#endif
+        if (!isSecondBladeOn() && !on_pending_) {
+          TurnBladeOn(SECOND_BLADE);
+          return true;
+        }  // fall through
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
+      case EVENTID(BUTTON_AUX2, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
+        DoBlasterBlock();
         return true;
 
 // Turn Main Blade ON First Muted
@@ -2210,6 +2194,17 @@ any # of buttons
         MuteAll();
         return true;
 
+// Turn Second Blade OFF
+#if NUM_BUTTONS == 3
+      case EVENTID(BUTTON_AUX2, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
+#else
+      case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
+#endif
+        if (isSecondBladeOn()) {
+          TurnBladeOff(SECOND_BLADE);
+        }
+        return true;
+
 // Turn Dual Blades OFF (will also turn OFF any single blade that's ON)
 #if NUM_BUTTONS == 3
       case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
@@ -2230,9 +2225,6 @@ any # of buttons
         return true;
 #endif
 
-// Available
-      // case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
-
 // Spoken Battery Level in percentage
 // Spoken Battery Level in volts - pointing DOWN
      case EVENTID(BUTTON_POWER, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_AUX):
@@ -2248,14 +2240,6 @@ any # of buttons
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON):
         DoTrackStartOrStop();
-        return true;
-
-// Blaster Deflection
-      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-      case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
-        DoBlasterBlock();
         return true;
 
 // Spam Blaster Blocks
@@ -2323,16 +2307,27 @@ any # of buttons
 
 // -------------------- Any btn dual blades
 
-// Turn Main Blade ON/OFF
-// (Click POW for first ON)
-// (Click and Hold POW for OFF, or also for ON when SECOND blade is already on.)
+// Turn Main Blade ON
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-        TurnMainBladeOnOff();
-        return true;
-      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
-        TurnMainBladeOnOff();
+        TurnBladeOn(MAIN_BLADE);
         return true;
 
+// Turn Main Blade ON additionally
+// Blaster Deflection
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+        if (!isMainBladeOn() && !on_pending_) {
+          TurnBladeOn(MAIN_BLADE);
+        } else {
+          DoBlasterBlock();
+        }
+        return true;
+
+// Turn Main Blade OFF
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
+        if (isMainBladeOn()) {
+          TurnBladeOff(MAIN_BLADE);
+        }
+        return true;
 
 // Thrust ON either non-ignited blade
 // Stab
@@ -2340,16 +2335,16 @@ any # of buttons
         if (millis() - last_thrust_millis_ < 200) return false;
         
         // Check if both blades are already on
-        if (IsMainBladeOn() && IsSecondBladeOn()) {
+        if (isMainBladeOn() && isSecondBladeOn()) {
           if (on_pending_) return false;
           SaberBase::SetClashStrength(2.0);
           PVLOG_NORMAL << "** EVENT_THRUST = Stab\n";
           SaberBase::DoEffect(EFFECT_STAB, location);
         } else {
-          if (active_blade_ == MAIN_BLADE && IsSecondBladeOn()) {
+          if (active_blade_ == MAIN_BLADE && isSecondBladeOn()) {
             TurnBladeOn(MAIN_BLADE);
             PVLOG_NORMAL << "** Main Blade THRUST ON\n";
-          } else if (active_blade_ == SECOND_BLADE && IsMainBladeOn()) {
+          } else if (active_blade_ == SECOND_BLADE && isMainBladeOn()) {
             TurnBladeOn(SECOND_BLADE);
             PVLOG_NORMAL << "** Second Blade THRUST ON\n";
           }
