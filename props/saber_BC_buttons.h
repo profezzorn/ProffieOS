@@ -2152,13 +2152,17 @@ any # of buttons
 // Blaster Deflection
 #if NUM_BUTTONS == 3
       case EVENTID(BUTTON_AUX2, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-#else
-      case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-#endif
         if (!isSecondBladeOn() && !on_pending_) {
           TurnBladeOn(SECOND_BLADE);
-          return true;
+        return true;
         }  // fall through
+#else
+      case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+        if (!isSecondBladeOn() && !on_pending_) {
+          TurnBladeOn(SECOND_BLADE);
+        return true;
+        }  // fall through
+#endif
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_AUX2, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
