@@ -1138,8 +1138,9 @@ push                    - force push
 #endif
 
 #ifdef BC_DUAL_BLADES
-  static constexpr BladeSet MAIN_BLADE = BladeSet::fromBlade(BC_MAIN_BLADE);
-  static constexpr BladeSet SECOND_BLADE = BladeSet::fromBlade(BC_SECOND_BLADE);
+  static constexpr BladeSet BC_MAIN_BLADE_SET = BladeSet::fromBlade(BC_MAIN_BLADE);
+  static constexpr BladeSet BC_SECOND_BLADE_SET = BladeSet::fromBlade(BC_SECOND_BLADE);
+  BladeSet thrusting_blade_;
 #endif
 
 EFFECT(dim);        // for EFFECT_POWERSAVE
@@ -1502,7 +1503,7 @@ public:
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
-        TurnBladeOn(MAIN_BLADE);
+        TurnBladeOn(BC_MAIN_BLADE_SET);
         PVLOG_NORMAL << "** Main Blade Turned ON Muted\n";
       }
     }
@@ -1510,7 +1511,7 @@ public:
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
-        TurnBladeOn(SECOND_BLADE);
+        TurnBladeOn(BC_SECOND_BLADE_SET);
         PVLOG_NORMAL << "** Second Blade Turned ON Muted\n";
       }
     }
@@ -1539,7 +1540,7 @@ public:
 
   void DetectMenuTurn() {
     float a = fusor.angle2() - current_menu_angle_;
-    if (is_pointing_up()) return;
+    if (isPointingUp()) return;
     // Keep the rotational angle within range of -180 to 180.
     if (a > M_PI) a-= M_PI * 2;
     if (a < -M_PI) a+= M_PI * 2;
@@ -1595,7 +1596,7 @@ public:
     beeper.Beep(0.10, 2000);
   }
 
-  bool is_pointing_up() {
+  bool isPointingUp() {
     if (fusor.angle1() > M_PI / 3) return true;
 #ifdef BC_DUAL_BLADES
     if (fusor.angle1() < -M_PI / 3) return true;
@@ -1604,7 +1605,7 @@ public:
   }
 
   void TurnOnHelper() {
-    if (is_pointing_up() || muted_) {
+    if (isPointingUp() || muted_) {
       FastOn();
     } else {
       On();
@@ -1613,7 +1614,7 @@ public:
 
   void TurnOffHelper() {
     if (SaberBase::Lockup() || battle_mode_) return;
-    if (is_pointing_up()) {
+    if (isPointingUp()) {
       Off(OFF_FAST);
     } else {
       Off();
@@ -1713,26 +1714,37 @@ public:
     StartOrStopTrack();
   }
 
-  void DoLockup() {
-    if (!SaberBase::Lockup() && SaberBase::IsOn()) {
-  #ifdef BC_DUAL_BLADES
-      if (is_pointing_up()) {
-  #else
-      // pointing DOWN
-      if (fusor.angle1() < -M_PI / 4) {
-  #endif
-        SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-      } else {
-        if (!battle_mode_) {
-          SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-        } else {
-          // Overrides Auto-lockup if holding Button during clash, NOT pointing DOWN
-          return;
-        }
-      }
-      SaberBase::DoBeginLockup();
+void DoLockup() {
+  if (!SaberBase::Lockup() && SaberBase::IsOn()) {
+
+#ifdef BC_DUAL_BLADES
+    if (fusor.angle1() < -M_PI / 4) {
+      // Main blade is pointing down and is the opposite of above horizon.
+      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG, GetEffectTargetBlade(true));
+    } else if (fusor.angle1() > M_PI / 4) {
+      // Main blade is pointing up and above horizon. Apply drag to the opposite blade
+      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG, GetEffectTargetBlade(true));
+    } else {
+      // Apply normal lockup to the blade above the horizon
+      SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL, GetEffectTargetBlade());
     }
+#else
+    // Single blade scenario
+    if (fusor.angle1() < -M_PI / 4) {
+      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+    } else {
+      if (!battle_mode_) {
+        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+      } else {
+        // Overrides Auto-lockup if holding Button during clash, NOT pointing DOWN
+        return;
+      }
+    }
+#endif
+
+    SaberBase::DoBeginLockup();
   }
+}
 
   void DoLightningBlock() {
     if (spam_blast_ || on_pending_) return;
@@ -1742,7 +1754,11 @@ public:
 
   void DoBlasterBlock() {
     if (spam_blast_ || on_pending_) return;
+#ifdef BC_DUAL_BLADES
+      SaberBase::DoEffect(EFFECT_BLAST, EffectLocation(0, GetEffectTargetBlade()));
+#else
       SaberBase::DoBlast();
+#endif
       last_blast_millis_ = millis();
   }
 
@@ -1803,9 +1819,17 @@ public:
 
   static const BladeSet controlled_blades_;
 
+  bool isMainBladeOn() { return SaberBase::OnBlades()[BC_MAIN_BLADE]; }
+  bool isSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
 
-bool isMainBladeOn() { return SaberBase::OnBlades()[BC_MAIN_BLADE]; }
-bool isSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
+  // Get blade above horizon line to apply effect to
+  BladeSet GetEffectTargetBlade(bool return_opposite = false) {
+      if (!return_opposite) {
+          return accel_.x > 0 ? BC_MAIN_BLADE_SET : BC_SECOND_BLADE_SET;
+      } else {
+          return accel_.x > 0 ? BC_SECOND_BLADE_SET : BC_MAIN_BLADE_SET;
+      }
+  }
 
   void TurnBladeOn(BladeSet target_blade) {
     // Add in all non-controlled blades, effectively excluding the "other" blade.
@@ -1816,7 +1840,7 @@ bool isSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
                    << " blade and all others, excluding the " 
                    << (target_blade[BC_MAIN_BLADE] ? "SECOND" : "MAIN")
                    << " blade\n";
-      if (is_pointing_up() || muted_) {
+      if (isPointingUp() || muted_) {
         FastOn(EffectLocation(0, target_blade));
      } else {
         On(EffectLocation(0, target_blade));
@@ -1830,7 +1854,7 @@ bool isSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
   }
 
   void TurnBladeOff(BladeSet target_blade) {
-    SaberBase::OffType off_type = is_pointing_up() ? SaberBase::OFF_FAST : SaberBase::OFF_NORMAL;
+    SaberBase::OffType off_type = isPointingUp() ? SaberBase::OFF_FAST : SaberBase::OFF_NORMAL;
     PVLOG_DEBUG << "***** Off type: " << (off_type == SaberBase::OFF_FAST ? "OFF_FAST" : "OFF_NORMAL") << "\n";
 
     // Check if this is the only blade ON (of MAIN or SECOND blades)
@@ -1858,7 +1882,7 @@ bool isSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
-        TurnBladeOn(MAIN_BLADE);
+        TurnBladeOn(BC_MAIN_BLADE_SET);
         PVLOG_NORMAL << "** Main Blade Turned ON Muted\n";
       }
     }
@@ -1871,7 +1895,7 @@ bool isSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
-        TurnBladeOn(SECOND_BLADE);
+        TurnBladeOn(BC_SECOND_BLADE_SET);
         PVLOG_NORMAL << "** Second Blade Turned ON Muted\n";
       }
     }
@@ -1888,14 +1912,25 @@ bool isSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
   }
 
   // Determine the active blade based on x-axis motion - for thrust effects
-  void UpdateActiveBladeLocation() {
+  void GetThrustBladeLocation() {
     mss = fusor.mss();
     if (mss.x < 14) {
-        thrusting_blade_ = MAIN_BLADE;
+        thrusting_blade_ = BC_MAIN_BLADE_SET;
     } else if (mss.x > -14) {
-        thrusting_blade_ = SECOND_BLADE;
+        thrusting_blade_ = BC_SECOND_BLADE_SET;
     }
-    location = EffectLocation(0, thrusting_blade_);
+    thrust_location = EffectLocation(0, thrusting_blade_);
+  }
+
+  bool IsStab(const Vec3& diff) override {
+      if (diff.x < -2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z)) {
+          forward_stab_ = true;
+          return fusor.swing_speed() < 150;
+      } else if (diff.x > 2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z)) {
+          forward_stab_ = false;
+          return fusor.swing_speed() < 150;
+      }
+      return false;
   }
 
 #endif  // BC_DUAL_BLADES
@@ -1904,7 +1939,7 @@ bool isSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #ifdef BC_DUAL_BLADES
-    UpdateActiveBladeLocation();
+    GetThrustBladeLocation();
 #endif
 
     if (event == EVENT_TWIST) {
@@ -1991,13 +2026,13 @@ any # of buttons
 
 // Turn Second Blade ON
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
-        TurnBladeOn(SECOND_BLADE);
+        TurnBladeOn(BC_SECOND_BLADE_SET);
         return true;
 
 // Turn Second Blade OFF
       case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_ON):
         if (isSecondBladeOn()) {
-          TurnBladeOff(SECOND_BLADE);
+          TurnBladeOff(BC_SECOND_BLADE_SET);
         }
         return true;
 
@@ -2014,7 +2049,7 @@ any # of buttons
 // Lightning Block (Double Click POW to start, Click POW to Stop)
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
         if (!isSecondBladeOn() && !on_pending_) {
-          TurnBladeOn(SECOND_BLADE);
+          TurnBladeOn(BC_SECOND_BLADE_SET);
           return true;
         } else {
           DoLightningBlock();
@@ -2076,7 +2111,7 @@ any # of buttons
           return true;
         }
         // pointing UP
-        if (is_pointing_up()) {
+        if (isPointingUp()) {
           SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
           return true;
         }
@@ -2113,7 +2148,7 @@ any # of buttons
         DoBlasterBlock();
         return true;
 
-#else
+#else  // else BC_DUAL_BLADES is defined
 
 // -------------------- 2 or 3 btn dual blades
 
@@ -2131,20 +2166,20 @@ any # of buttons
 #else
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
 #endif
-          TurnBladeOn(SECOND_BLADE);
+          TurnBladeOn(BC_SECOND_BLADE_SET);
           return true;
 
 // Turn Second Blade ON additionally
 // Blaster Deflection
       case EVENTID(BUTTON_AUX2, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
         if (!isSecondBladeOn() && !on_pending_) {
-          TurnBladeOn(SECOND_BLADE);
+          TurnBladeOn(BC_SECOND_BLADE_SET);
         return true;
         }  // fall through
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
 #if NUM_BUTTONS == 2
         if (!isSecondBladeOn() && !on_pending_) {
-          TurnBladeOn(SECOND_BLADE);
+          TurnBladeOn(BC_SECOND_BLADE_SET);
         return true;
         }  // fall through
 #endif
@@ -2190,7 +2225,7 @@ any # of buttons
       case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
 #endif
         if (isSecondBladeOn()) {
-          TurnBladeOff(SECOND_BLADE);
+          TurnBladeOff(BC_SECOND_BLADE_SET);
         }
         return true;
 
@@ -2250,7 +2285,7 @@ any # of buttons
 
 // Power Save blade dimming - pointing UP
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
-        if (is_pointing_up()) {
+        if (isPointingUp()) {
           SaberBase::DoEffect(EFFECT_POWERSAVE, 0);
         }
         return true;
@@ -2303,20 +2338,20 @@ any # of buttons
           }
         return true;
 
-#else
+#else  // else BC_DUAL_BLADES is defined
 
 // -------------------- Any btn dual blades
 
 // Turn Main Blade ON
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-        TurnBladeOn(MAIN_BLADE);
+        TurnBladeOn(BC_MAIN_BLADE_SET);
         return true;
 
 // Turn Main Blade ON additionally
 // Blaster Deflection
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
         if (!isMainBladeOn() && !on_pending_) {
-          TurnBladeOn(MAIN_BLADE);
+          TurnBladeOn(BC_MAIN_BLADE_SET);
         } else {
           DoBlasterBlock();
         }
@@ -2325,7 +2360,7 @@ any # of buttons
 // Turn Main Blade OFF
       case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
         if (isMainBladeOn()) {
-          TurnBladeOff(MAIN_BLADE);
+          TurnBladeOff(BC_MAIN_BLADE_SET);
         }
         return true;
 
@@ -2339,13 +2374,13 @@ any # of buttons
           if (on_pending_) return false;
           SaberBase::SetClashStrength(2.0);
           PVLOG_NORMAL << "** Doing STAB on " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN blade.\n" : "SECOND blade.\n");
-          SaberBase::DoEffect(EFFECT_STAB, location);
+          SaberBase::DoEffect(EFFECT_STAB, thrust_location);
         } else {
-          if (thrusting_blade_ == MAIN_BLADE && isSecondBladeOn()) {
-            TurnBladeOn(MAIN_BLADE);
+          if (thrusting_blade_ == BC_MAIN_BLADE_SET && isSecondBladeOn()) {
+            TurnBladeOn(BC_MAIN_BLADE_SET);
             PVLOG_NORMAL << "** Main Blade THRUST ON\n";
-          } else if (thrusting_blade_ == SECOND_BLADE && isMainBladeOn()) {
-            TurnBladeOn(SECOND_BLADE);
+          } else if (thrusting_blade_ == BC_SECOND_BLADE_SET && isMainBladeOn()) {
+            TurnBladeOn(BC_SECOND_BLADE_SET);
             PVLOG_NORMAL << "** Second Blade THRUST ON\n";
           }
         }
@@ -2357,8 +2392,9 @@ any # of buttons
         if (on_pending_) return false;
         clash_impact_millis_ = millis();
         if (!SaberBase::Lockup() && !swinging_) {
-          SaberBase::SetLockup(SaberBase::LOCKUP_MELT, thrusting_blade_);
-          PVLOG_NORMAL << "** Doing MELT on " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN blade.\n" : "SECOND blade.\n");
+            PVLOG_NORMAL << "************** MELT - forward_stab_ = " << forward_stab_ << "\n";
+          SaberBase::SetLockup(SaberBase::LOCKUP_MELT, forward_stab_ ? BC_MAIN_BLADE_SET : BC_SECOND_BLADE_SET);
+          PVLOG_NORMAL << "** Doing MELT on " << (forward_stab_ ? "MAIN blade.\n" : "SECOND blade.\n");
           auto_melt_on_ = true;
           SaberBase::DoBeginLockup();
           }
@@ -2732,7 +2768,11 @@ any # of buttons
         if (stab) {
           SaberBase::DoStab();
         } else {
-          SaberBase::DoClash();
+#ifdef BC_DUAL_BLADES
+      SaberBase::DoEffect(EFFECT_CLASH, EffectLocation(0, GetEffectTargetBlade()));
+#else
+      SaberBase::DoClash();
+#endif 
         }
       }
     }
@@ -2756,6 +2796,7 @@ private:
   bool speaking_ = false;  // Don't play battery.wav when doing Spoken Battery Level
   bool scroll_presets_ = false;
   bool muted_ = false;
+  bool forward_stab_ = false;
 
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
@@ -2767,12 +2808,12 @@ private:
   uint32_t saber_off_time_ = millis();
 
   Vec3 mss;
-  BladeSet thrusting_blade_;
   EffectLocation location;
-
+  EffectLocation thrust_location;
 };
+
 #ifdef BC_DUAL_BLADES
-const BladeSet SaberBCButtons::controlled_blades_ = BladeSet::fromBlade(BC_MAIN_BLADE) | BladeSet::fromBlade(BC_SECOND_BLADE);
+  const BladeSet SaberBCButtons::controlled_blades_ = BC_MAIN_BLADE_SET | BC_SECOND_BLADE_SET;
 #endif
 
 #endif
