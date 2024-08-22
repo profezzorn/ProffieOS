@@ -1057,13 +1057,8 @@ push                    - force push
 #include "prop_base.h"
 #include "../sound/hybrid_font.h"
 #include "../sound/sound_library.h"
-// #include "../modes/mode.h"
 #include "../modes/select_cancel_mode.h"
 #include "../modes/settings_menues.h"
-
-#ifndef MIN_SOUND_LIBRARY_VERSION
-#define MIN_SOUND_LIBRARY_VERSION 2
-#endif
 
 #undef PROP_TYPE
 #define PROP_TYPE SaberBCButtons
@@ -1158,16 +1153,14 @@ EFFECT(voldown);    // for decrease volume
 EFFECT(volmin);     // for minimum volume reached
 EFFECT(volmax);     // for maximum volume reached
 #ifdef ENABLE_FASTON
-// #warning The faston.wav sound will be replaced with fastout.wav. If you have a good reason to keep faston.wav as is, please post at https://crucible.hubbe.net/
+#warning The faston.wav sound will be replaced with fastout.wav. If you have a good reason to keep faston.wav as is, please post at https://crucible.hubbe.net/
 EFFECT(faston);     // for EFFECT_FAST_ON. Being replaced by fastout.wav, which is already defined in the main OS.
 #endif
 EFFECT(push);       // for Force Push gesture
 EFFECT(tr);         // for EFFECT_TRANSITION_SOUND, use with User Effects.
-EFFECT2(trloop, trloop);  // have YET to play with this
 EFFECT(mute);       // Notification before muted ignition to avoid confusion.
 EFFECT(mzoom);      // for Spam Blast enter/exit
 
-#ifndef MENU_SPEC_TEMPLATE
 template<class SPEC>
 struct BCVolumeMode : public SPEC::SteppedMode {
   const int max_volume_ = VOLUME;
@@ -1207,6 +1200,7 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     int current_volume_ = dynamic_mixer.get_volume();
     if (current_volume_ < max_volume_) {
       current_volume_ += max_volume_ * 0.10;
+      if (current_volume_ > max_volume_) current_volume_ = max_volume_;
       dynamic_mixer.set_volume(current_volume_);
       mode::getSL<SPEC>()->SayVolumeUp();
       announced_ = false;
@@ -1220,6 +1214,7 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     int current_volume_ = dynamic_mixer.get_volume();
     if (current_volume_ > min_volume_) {
       current_volume_ -= max_volume_ * 0.10;
+      if (current_volume_ < min_volume_) current_volume_ = min_volume_;
       dynamic_mixer.set_volume(current_volume_);
       mode::getSL<SPEC>()->SayVolumeDown();
       announced_ = false;
@@ -1241,13 +1236,10 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     mode::getSL<SPEC>()->SayMinimumVolume();
   }
 
-  void update() override {
+  void update() override {  // Overridden to substitute the tick sound
     float volume = dynamic_mixer.get_volume();
     percentage_ = round((volume / max_volume_) * 10) * 10;
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
-    // Overridden to substitute the tick sound
-    this->say_time_ = Cyclint<uint32_t>(millis()) + 1;
-    if (!this->say_time_) this->say_time_ += 1;
   }
 
   void select() override {
@@ -1286,15 +1278,14 @@ struct BCVolumeMode : public SPEC::SteppedMode {
 template<class SPEC>
 struct BCSelectBladeMode : public SPEC::MenuBase {
   int current_blade() { return this->pos_ + 1; }
-  ShowColorSingleBladeTemplate<Pulsing<ShowColorStyle,Black,800>,Pulsing<ShowColorStyle,Black,800>> highlighted_blade_;
+  ShowColorSingleBladeTemplate<Pulsing<White,Black,800>,Pulsing<White,Black,800>> highlighted_blade_;
 
   uint16_t size() override {
     return NUM_BLADES;
   }
   void mode_activate(bool onreturn) override {
     mode::getSL<SPEC>()->SaySelectBlade();
-    ShowColorStyle::SetColor(Color16(65535, 65535, 65535));
-    SPEC::SteppedMode::mode_activate(onreturn);
+      SPEC::SteppedMode::mode_activate(onreturn);
     highlighted_blade_.Start(current_blade());
     PVLOG_NORMAL << "** Highlighting blade: " << current_blade() << "\n";
     // say();
@@ -1328,10 +1319,6 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
     mode::menu_current_blade = current_blade();
     highlighted_blade_.Stop(current_blade());
     pushMode<typename SPEC::ChangeBladeLengthMode>();
-  }
-
-  void exit() override {
-    SPEC::MenuBase::exit();
   }
 };
 
@@ -1372,7 +1359,6 @@ struct BCMenuSpec {
   typedef mode::MenuBase<SPEC> MenuBase;
   typedef SoundLibraryV2 SoundLibrary;
 };
-#endif  // MENU_SPEC_TEMPLATE
 
 #ifndef MENU_SPEC_TEMPLATE
   void Setup() {
