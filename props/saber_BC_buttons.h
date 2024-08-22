@@ -1891,11 +1891,11 @@ bool isSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
   void UpdateActiveBladeLocation() {
     mss = fusor.mss();
     if (mss.x < 14) {
-        active_blade_ = MAIN_BLADE;
+        thrusting_blade_ = MAIN_BLADE;
     } else if (mss.x > -14) {
-        active_blade_ = SECOND_BLADE;
+        thrusting_blade_ = SECOND_BLADE;
     }
-    location = EffectLocation(0, active_blade_);
+    location = EffectLocation(0, thrusting_blade_);
   }
 
 #endif  // BC_DUAL_BLADES
@@ -2136,14 +2136,13 @@ any # of buttons
 
 // Turn Second Blade ON additionally
 // Blaster Deflection
-#if NUM_BUTTONS == 3
       case EVENTID(BUTTON_AUX2, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
         if (!isSecondBladeOn() && !on_pending_) {
           TurnBladeOn(SECOND_BLADE);
         return true;
         }  // fall through
-#else
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+#if NUM_BUTTONS == 2
         if (!isSecondBladeOn() && !on_pending_) {
           TurnBladeOn(SECOND_BLADE);
         return true;
@@ -2293,6 +2292,17 @@ any # of buttons
         SaberBase::DoStab();
         return true;
 
+// Melt
+      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
+        if (on_pending_) return false;
+        clash_impact_millis_ = millis();
+        if (!SaberBase::Lockup() && !swinging_) {
+          SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+          auto_melt_on_ = true;
+          SaberBase::DoBeginLockup();
+          }
+        return true;
+
 #else
 
 // -------------------- Any btn dual blades
@@ -2328,18 +2338,30 @@ any # of buttons
         if (isMainBladeOn() && isSecondBladeOn()) {
           if (on_pending_) return false;
           SaberBase::SetClashStrength(2.0);
-          PVLOG_NORMAL << "** EVENT_THRUST = Stab\n";
+          PVLOG_NORMAL << "** Doing STAB on " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN blade.\n" : "SECOND blade.\n");
           SaberBase::DoEffect(EFFECT_STAB, location);
         } else {
-          if (active_blade_ == MAIN_BLADE && isSecondBladeOn()) {
+          if (thrusting_blade_ == MAIN_BLADE && isSecondBladeOn()) {
             TurnBladeOn(MAIN_BLADE);
             PVLOG_NORMAL << "** Main Blade THRUST ON\n";
-          } else if (active_blade_ == SECOND_BLADE && isMainBladeOn()) {
+          } else if (thrusting_blade_ == SECOND_BLADE && isMainBladeOn()) {
             TurnBladeOn(SECOND_BLADE);
             PVLOG_NORMAL << "** Second Blade THRUST ON\n";
           }
         }
         last_thrust_millis_ = millis();
+        return true;
+
+// Melt
+      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
+        if (on_pending_) return false;
+        clash_impact_millis_ = millis();
+        if (!SaberBase::Lockup() && !swinging_) {
+          SaberBase::SetLockup(SaberBase::LOCKUP_MELT, thrusting_blade_);
+          PVLOG_NORMAL << "** Doing MELT on " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN blade.\n" : "SECOND blade.\n");
+          auto_melt_on_ = true;
+          SaberBase::DoBeginLockup();
+          }
         return true;
 
 #endif  // BC_DUAL_BLADES
@@ -2406,9 +2428,9 @@ any # of buttons
           battle_mode_ = true;
 #endif
 #ifdef BC_DUAL_BLADES
-          active_blade_ = active_blade_ | ~controlled_blades_;
-          PVLOG_NORMAL << "** " << (active_blade_[BC_MAIN_BLADE] ? "MAIN" : "SECOND") << " Blade Activated\n";
-          FastOn(EffectLocation(0, active_blade_));
+          thrusting_blade_ = thrusting_blade_ | ~controlled_blades_;
+          PVLOG_NORMAL << "** " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN" : "SECOND") << " Blade Activated\n";
+          FastOn(EffectLocation(0, thrusting_blade_));
 #else
         FastOn();
 #endif
@@ -2451,17 +2473,6 @@ any # of buttons
           BeepExitFeature();
           // No need to play font.wav again when exiting
         }
-        return true;
-
-// Melt
-      case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON):
-        if (on_pending_) return false;
-        clash_impact_millis_ = millis();
-        if (!SaberBase::Lockup() && !swinging_) {
-          SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
-          auto_melt_on_ = true;
-          SaberBase::DoBeginLockup();
-          }
         return true;
 
 // Auto Swing Blast
@@ -2756,7 +2767,7 @@ private:
   uint32_t saber_off_time_ = millis();
 
   Vec3 mss;
-  BladeSet active_blade_;
+  BladeSet thrusting_blade_;
   EffectLocation location;
 
 };
