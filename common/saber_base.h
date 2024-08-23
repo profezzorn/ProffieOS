@@ -295,12 +295,12 @@ public:
     SaberBase::DoOn(0);
   }
   static void TurnOn(EffectLocation location) {
-    STDERR << "TurnOn " << location << "\n";
+    PVLOG_STATUS << "TurnOn " << location << "\n";
     // You can't turn on a blade that's already on.
     location.blades_ &=~ on_;
-    STDERR << "TurnOn2 " << location << "\n";
+    PVLOG_STATUS << "TurnOn2 " << location << "\n";
     if (location.blades_.off()) return;
-    STDERR << "TurnOn3 " << location << "\n";
+    PVLOG_STATUS << "TurnOn3 " << location << "\n";
     on_ |= location.blades();
     SaberBase::DoOn(location);
   }
@@ -310,11 +310,11 @@ public:
     SaberBase::DoOff(off_type, 0);
   }
   static void TurnOff(OffType off_type, EffectLocation location) {
-    STDERR << "TurnOff " << location << "\n";
+    PVLOG_STATUS << "TurnOff " << location << "\n";
     location.blades_ &= on_; // can only turn off blades which are on
-    STDERR << "TurnOff " << location << "\n";
+    PVLOG_STATUS << "TurnOff " << location << "\n";
     if (location.blades_.off()) return;
-    STDERR << "TurnOff " << location << "\n";
+    PVLOG_STATUS << "TurnOff " << location << "\n";
     on_ &=~ location.blades();
     last_motion_request_ = millis();
     SaberBase::DoOff(off_type, location);
