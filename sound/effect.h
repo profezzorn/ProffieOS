@@ -625,21 +625,22 @@ class Effect {
 
     for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
       ScanOneDirectory(dir);
-    }
-
-    bool warned = false;
-    for (Effect* e = all_effects; e; e = e->next_) {
-      if (e->expected_files() != (size_t)(e->num_files_)) {
-	if (!warned) {
-	  warned = true;
-	  STDOUT.println("");
-	  STDOUT.println("WARNING: This font seems to be missing some files!!");
-	  ProffieOSErrors::error_in_font_directory();
-	}
-	e->Show();
+      bool warned = false;
+      for (Effect* e = all_effects; e; e = e->next_) {
+        if (e->expected_files() != (size_t)(e->num_files_)) {
+          if (!warned) {
+            warned = true;
+            PVLOG_NORMAL << "\nWARNING: The font " << dir << " seems to be missing some files!!\n";
+            ProffieOSErrors::error_in_font_directory();
+          }
+          e->Show();
+        }
+      }
+      // Reset the at end of loop to clear warnings, prep for next font.
+      for (Effect* e = all_effects; e; e = e->next_) {
+        e->reset();
       }
     }
-    
     LOCK_SD(false);
   }
 
