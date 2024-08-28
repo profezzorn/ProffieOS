@@ -3,11 +3,6 @@
 
 #include "led_interface.h"
 
-#ifdef ARDUINO_ARCH_STM32L4
-#include <stm32l4_timer.h>
-
-namespace {
-
 enum class PWM_USECASE : uint8_t {
   NONE,
   PWM,
@@ -15,6 +10,12 @@ enum class PWM_USECASE : uint8_t {
   IR,
   WS2811
 };
+
+#ifdef ARDUINO_ARCH_STM32L4
+#include <stm32l4_timer.h>
+
+namespace {
+
 static stm32l4_timer_t stm32l4_pwm[PWM_INSTANCE_COUNT];
 static uint8_t timer_use_counts[PWM_INSTANCE_COUNT];
 static PWM_USECASE timer_usecase[PWM_INSTANCE_COUNT];
@@ -163,7 +164,7 @@ void LSanalogWrite(uint32_t pin, int value) {
 // First some abstractions for controlling PWM pin
 void LSanalogWriteSetup(uint32_t pin, PWM_USECASE usecase = PWM_USECASE::PWM) {
   analogWriteResolution(16);
-  analogWriteFrequency(pin, usecase == PWM_USECASE::SERVO : 50 ? 500);
+  analogWriteFrequency(pin, usecase == PWM_USECASE::SERVO ? 50 : 500);
 }
 void LSanalogWriteTeardown(uint32_t pin) {}
 void LSanalogWrite(uint32_t pin, int value) {
