@@ -1523,7 +1523,7 @@ public:
     if (twist_timer_.timerCheck() && saved_twist_) {
       DoSavedTwist();
     }
-    quote_delay_timer_.timerCheck()
+    quote_delay_timer_.timerCheck();
   }  // Loop()
 
 #ifdef SPEAK_BLADE_ID
