@@ -1568,17 +1568,6 @@ public:
     saved_twist_ = 0;
   }
 
-  float GetSoundLengthNow(Effect* effect) {
-    RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(effect);
-    if (tmp) {
-      tmp->UpdateSaberBaseSoundInfo();
-      return SaberBase::sound_length * 1000;
-    } else {
-      SaberBase::ClearSoundInfo();
-      return 0;
-    }
-  }
-
   void BeepEnterFeature() {
     beeper.Beep(0.05, 2000);
     beeper.Silence(0.05);
