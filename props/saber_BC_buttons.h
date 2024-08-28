@@ -1520,11 +1520,10 @@ public:
     if (scroll_presets_timer_.timerCheck() && scroll_presets_) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
     }
-    if (quote_delay_timer_.timerCheck()) {
-    }
     if (twist_timer_.timerCheck() && saved_twist_) {
       DoSavedTwist();
     }
+    quote_delay_timer_.timerCheck()
   }  // Loop()
 
 #ifdef SPEAK_BLADE_ID
