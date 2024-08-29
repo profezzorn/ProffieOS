@@ -1943,10 +1943,7 @@ void DoLockup() {
                   fusor.swing_speed() < 150;
 
       if (!clash_pending1_) {
-        if (stab) {
-          forward_stab_ = (diff.x < 0);
-          PVLOG_NORMAL << "**** DoAccel >>>>>>>> - forward_stab_ = " << forward_stab_ << "\n";
-        }
+        forward_stab_ = (stab && (diff.x < 0));
         clash_pending1_ = true;
         pending_clash_is_stab1_ = stab;
         pending_clash_strength1_ = v;
