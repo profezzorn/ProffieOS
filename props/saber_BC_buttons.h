@@ -1910,15 +1910,50 @@ void DoLockup() {
     thrust_location = EffectLocation(0, thrusting_blade_);
   }
 
-  bool IsStab(const Vec3& diff) override {
-      if (diff.x < -2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z)) {
-          forward_stab_ = true;
-          return fusor.swing_speed() < 150;
-      } else if (diff.x > 2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z)) {
-          forward_stab_ = false;
-          return fusor.swing_speed() < 150;
+  void DoAccel(const Vec3& accel, bool clear) override {
+    fusor.DoAccel(accel, clear);
+    accel_loop_counter_.Update();
+    Vec3 diff = fusor.clash_mss();
+    float v;
+    if (clear) {
+      accel_ = accel;
+      diff = Vec3(0, 0, 0);
+      v = 0.0;
+    } else {
+  #ifndef PROFFIEOS_DONT_USE_GYRO_FOR_CLASH
+      v = (diff.len() + fusor.gyro_clash_value()) / 2.0;
+  #else
+      v = diff.len();
+  #endif
+    }
+
+    if (v > (CLASH_THRESHOLD_G + fusor.gyro().len() / 200.0)
+  #if defined(ENABLE_AUDIO) && defined(AUDIO_CLASH_SUPPRESSION_LEVEL)
+        + (dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 0.000001))
+  #endif
+      ) {
+      if ((accel_ - fusor.down()).len2() > (accel - fusor.down()).len2()) {
+        diff = -diff;
       }
-      return false;
+
+      bool stab = (diff.x < -2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z) ||
+                   diff.x > 2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z)) &&
+                  fusor.swing_speed() < 150;
+
+      if (stab && !clash_pending1_) {
+        forward_stab_ = (diff.x < 0);
+        PVLOG_NORMAL << "**** DoAccel >>>>>>>> - forward_stab_ = " << forward_stab_ << "\n";
+      }
+
+      if (!clash_pending1_) {
+        clash_pending1_ = true;
+        pending_clash_is_stab1_ = stab;
+        pending_clash_strength1_ = v;
+      } else {
+        pending_clash_strength1_ = std::max<float>(v, (float)pending_clash_strength1_);
+      }
+    }
+    accel_ = accel;
   }
 
 #endif  // BC_DUAL_BLADES
@@ -2784,6 +2819,7 @@ private:
   bool speaking_ = false;  // Don't play battery.wav when doing Spoken Battery Level
   bool scroll_presets_ = false;
   bool muted_ = false;
+  bool forward_stab_ = false;
   bool forward_stab_ = false;
 
   uint32_t thrust_begin_millis_ = millis();
