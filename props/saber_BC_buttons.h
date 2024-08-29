@@ -1926,13 +1926,15 @@ void DoLockup() {
       v = diff.len();
   #endif
     }
-
-    if (v > (CLASH_THRESHOLD_G + fusor.gyro().len() / 200.0)
-  #if defined(ENABLE_AUDIO) && defined(AUDIO_CLASH_SUPPRESSION_LEVEL)
-        + (dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 0.000001))
-  #endif
-      ) {
-      if ((accel_ - fusor.down()).len2() > (accel - fusor.down()).len2()) {
+    // If we're spinning the saber or if loud sounds are playing, 
+    // require a stronger acceleration to activate the clash.
+    if (v > (CLASH_THRESHOLD_G * (1
+          + fusor.gyro().len() / 500.0
+#if defined(ENABLE_AUDIO) && defined(AUDIO_CLASH_SUPPRESSION_LEVEL)
+          + dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 1E-10) * dynamic_mixer.get_volume()
+#endif
+         ))) {
+      if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
         diff = -diff;
       }
 
@@ -1940,12 +1942,11 @@ void DoLockup() {
                    diff.x > 2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z)) &&
                   fusor.swing_speed() < 150;
 
-      if (stab && !clash_pending1_) {
-        forward_stab_ = (diff.x < 0);
-        PVLOG_NORMAL << "**** DoAccel >>>>>>>> - forward_stab_ = " << forward_stab_ << "\n";
-      }
-
       if (!clash_pending1_) {
+        if (stab) {
+          forward_stab_ = (diff.x < 0);
+          PVLOG_NORMAL << "**** DoAccel >>>>>>>> - forward_stab_ = " << forward_stab_ << "\n";
+        }
         clash_pending1_ = true;
         pending_clash_is_stab1_ = stab;
         pending_clash_strength1_ = v;
