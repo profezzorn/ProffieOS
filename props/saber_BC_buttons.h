@@ -2431,14 +2431,16 @@ any # of buttons
 #ifdef NO_BLADE_NO_GEST_ONOFF
         if (!blade_detected_) return false;
 #endif
-        FastOn();
+        if (millis() - saber_off_time_ > 500) {
+          FastOn();
 #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-        PVLOG_NORMAL << "** Entering Battle Mode\n";
-        battle_mode_ = true;
+          PVLOG_NORMAL << "** Entering Battle Mode\n";
+          battle_mode_ = true;
 #endif
 #ifdef BC_DUAL_BLADES
-        PVLOG_NORMAL << "** Dual Blades Activated\n";
+          PVLOG_NORMAL << "** Dual Blades Activated\n";
 #endif
+      }
         return true;
 #endif  // BC_SWING_ON
 
@@ -2448,15 +2450,19 @@ any # of buttons
 #ifdef NO_BLADE_NO_GEST_ONOFF
         if (!blade_detected_) return false;
 #endif
-          FastOn();
+        // Delay twist events to prevent false trigger from over twisting
+        if (millis() - last_twist_millis_ > 300 &&
+          millis() - saber_off_time_ > 500) {
+            FastOn();
 #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-          PVLOG_NORMAL << "** Entering Battle Mode\n";
-          battle_mode_ = true;
+            PVLOG_NORMAL << "** Entering Battle Mode\n";
+            battle_mode_ = true;
 #endif
-          last_twist_millis_ = millis();
+            last_twist_millis_ = millis();
 #ifdef BC_DUAL_BLADES
-          PVLOG_NORMAL << "** Dual Blades Activated\n";
+            PVLOG_NORMAL << "** Dual Blades Activated\n";
 #endif
+        }
         return true;
 #endif  // BC_TWIST_ON
 
@@ -2465,11 +2471,14 @@ any # of buttons
 #ifdef NO_BLADE_NO_GEST_ONOFF
         if (!blade_detected_) return false;
 #endif
+        // Delay twist events to prevent false trigger from over twisting
+        if (millis() - last_twist_millis_ > 500) {
           last_twist_millis_ = millis();
           TurnOffHelper();
 #ifdef BC_DUAL_BLADES
           PVLOG_NORMAL << "** All Blades Deativated\n";
 #endif
+        }
         return true;
 #endif  // BC_TWIST_OFF
 
@@ -2489,7 +2498,7 @@ any # of buttons
           PVLOG_NORMAL << "** " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN" : "SECOND") << " Blade Activated\n";
           FastOn(EffectLocation(0, thrusting_blade_));
 #else
-        FastOn();
+          FastOn();
 #endif
         }
         return true;
