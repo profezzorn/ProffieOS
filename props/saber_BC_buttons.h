@@ -2343,7 +2343,7 @@ any # of buttons
 
 // Stab
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
-        if (on_pending_) return false;
+        if (on_pending_ || millis() - saber_off_time_ > 1000) return false;
         SaberBase::SetClashStrength(2.0);
         SaberBase::DoStab();
         return true;
@@ -2388,8 +2388,8 @@ any # of buttons
 // Thrust ON either non-ignited blade
 // Stab
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
-        if (millis() - last_thrust_millis_ < 200) return false;
-        
+        if (millis() - last_thrust_millis_ < 200 ||
+            millis() - saber_off_time_ > 1000) return false;        
         // Check if both blades are already on
         if (isMainBladeOn() && isSecondBladeOn()) {
           if (on_pending_) return false;
@@ -2413,7 +2413,6 @@ any # of buttons
         if (on_pending_) return false;
         clash_impact_millis_ = millis();
         if (!SaberBase::Lockup() && !swinging_) {
-            PVLOG_NORMAL << "************** MELT - forward_stab_ = " << forward_stab_ << "\n";
           SaberBase::SetLockup(SaberBase::LOCKUP_MELT, forward_stab_ ? BC_MAIN_BLADE_SET : BC_SECOND_BLADE_SET);
           PVLOG_NORMAL << "** Doing MELT on " << (forward_stab_ ? "MAIN blade.\n" : "SECOND blade.\n");
           auto_melt_on_ = true;
