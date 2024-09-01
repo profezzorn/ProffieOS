@@ -587,11 +587,15 @@ public:
     uint32_t now = millis();
     if (now - last_scan_id_ > BLADE_ID_SCAN_MILLIS) {
       last_scan_id_ = now;
+#ifdef SCAN_BLADE_ID_MONITORING
+      size_t best_config = FindBestConfig(true);
+#else
       size_t best_config = FindBestConfig();
+#endif
       if (current_config != blades + best_config) {
   // We can't call FindBladeAgain right away because
   // we're called from the blade. Wait until next loop() call.
-  find_blade_again_pending_ = true;
+        find_blade_again_pending_ = true;
       }
       return true;
     }
