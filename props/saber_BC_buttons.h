@@ -1626,19 +1626,20 @@ public:
   }
 
   void DoChangePreset() {
-      if (fusor.angle1() > M_PI / 3) {
-      // Main Blade pointing UP
-        first_preset();
-        PVLOG_NORMAL << "** Jumped to first preset\n";
-      } else if (fusor.angle1() < -M_PI / 3) {
-      // Main Blade pointing DOWN
-        previous_preset();
-        PVLOG_NORMAL << "** Previous preset\n";
-      } else {
-      // Main Blade NOT pointing UP or DOWN
-        next_preset();
-        PVLOG_NORMAL << "** Next preset\n";
-      }
+    if (scroll_presets_) return;
+    if (fusor.angle1() > M_PI / 3) {
+    // Main Blade pointing UP
+      first_preset();
+      PVLOG_NORMAL << "** Jumped to first preset\n";
+    } else if (fusor.angle1() < -M_PI / 3) {
+    // Main Blade pointing DOWN
+      previous_preset();
+      PVLOG_NORMAL << "** Previous preset\n";
+    } else {
+    // Main Blade NOT pointing UP or DOWN
+      next_preset();
+      PVLOG_NORMAL << "** Next preset\n";
+    }
   }
 
   void DoChangePresetFast() {
