@@ -1419,7 +1419,7 @@ public:
   }
 
   void EnterVolumeMenu() {
-    if (!current_style()) return;
+    if (!current_style() || scroll_presets_) return;
     if (current_mode == this) {
       pushMode<MKSPEC<BCMenuSpec>::BCVolumeMenu>();
     }
