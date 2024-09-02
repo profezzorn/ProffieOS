@@ -2342,7 +2342,7 @@ any # of buttons
 
 // Stab
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
-        if (on_pending_ || millis() - saber_off_time_ > 1000) return false;
+        if (on_pending_ || millis() - saber_off_time_ < 1000) return false;
         SaberBase::SetClashStrength(2.0);
         SaberBase::DoStab();
         return true;
