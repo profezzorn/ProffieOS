@@ -1280,20 +1280,19 @@ template<class SPEC>
 struct BCSelectBladeMode : public SPEC::MenuBase {
   int current_blade() { return this->pos_ + 1; }
   ShowColorSingleBladeTemplate<Pulsing<White,Black,800>,Pulsing<White,Black,800>> highlighted_blade_;
-
   uint16_t size() override {
     return NUM_BLADES;
   }
   void mode_activate(bool onreturn) override {
     mode::getSL<SPEC>()->SaySelectBlade();
-      SPEC::SteppedMode::mode_activate(onreturn);
+    SPEC::SteppedMode::mode_activate(onreturn);
     highlighted_blade_.Start(current_blade());
     PVLOG_NORMAL << "** Highlighting blade: " << current_blade() << "\n";
-    // say();
   }
 
   void mode_deactivate() {
     highlighted_blade_.Stop(current_blade());
+    prop_UpdateStyle();
   }
 
   void next() override {
