@@ -1630,11 +1630,7 @@ public:
     if (hybrid_font.PlayPolyphonic(&SFX_mute)) {
       mute_all_timer_.trigger(SaberBase::sound_length * 1000);
     } else {
-      if (SetMute(true)) {
-        unmute_on_deactivation_ = true;
-        muted_ = true;
-        TurnOnHelper();
-      }
+      mute_all_timer_.trigger(0);
     }
   }
 
@@ -1881,12 +1877,7 @@ void DoLockup() {
     if (hybrid_font.PlayPolyphonic(&SFX_mute)) {
       mute_mainBlade_timer_.trigger(SaberBase::sound_length * 1000);
     } else {
-      if (SetMute(true)) {
-        unmute_on_deactivation_ = true;
-        muted_ = true;
-        TurnBladeOn(BC_MAIN_BLADE_SET);
-        PVLOG_NORMAL << "** Main Blade Turned ON Muted\n";
-      }
+      mute_mainBlade_timer_.trigger(0);
     }
   }
 
@@ -1894,12 +1885,7 @@ void DoLockup() {
     if (hybrid_font.PlayPolyphonic(&SFX_mute)) {
       mute_secondBlade_timer_.trigger(SaberBase::sound_length * 1000);
     } else {
-      if (SetMute(true)) {
-        unmute_on_deactivation_ = true;
-        muted_ = true;
-        TurnBladeOn(BC_SECOND_BLADE_SET);
-        PVLOG_NORMAL << "** Second Blade Turned ON Muted\n";
-      }
+      mute_mainBlade_timer_.trigger(0);
     }
   }
 
