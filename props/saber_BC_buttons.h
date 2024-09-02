@@ -1938,9 +1938,8 @@ void DoLockup() {
         diff = -diff;
       }
 
-      bool stab = (diff.x < -2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z) ||
-                   diff.x > 2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z)) &&
-                  fusor.swing_speed() < 150;
+      bool stab = (fabs(diff.x) > 2.0 * sqrtf(diff.y * diff.y + diff.z * diff.z)) &&
+            fusor.swing_speed() < 150;
 
       if (!clash_pending1_) {
         forward_stab_ = (stab && (diff.x < 0));
