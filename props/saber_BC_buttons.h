@@ -1280,10 +1280,24 @@ template<class SPEC>
 struct BCSelectBladeMode : public SPEC::MenuBase {
   int current_blade() { return this->pos_ + 1; }
   ShowColorSingleBladeTemplate<Pulsing<White,Black,800>,Pulsing<White,Black,800>> highlighted_blade_;
-  uint16_t size() override {
-    return NUM_BLADES;
-  }
+  bool single_blade_adjusted_ = false;
+  uint16_t size() override { return NUM_BLADES; }
+
   void mode_activate(bool onreturn) override {
+    // If only one blade, jump right to ChangeBladeLengthMode
+    // If just adjusted and returning here via popMode, just exit.
+    if (size() == 1) {
+      if (!single_blade_adjusted_) {
+        single_blade_adjusted_ = true;
+        pushMode<typename SPEC::ChangeBladeLengthMode>();
+        return;
+      } else {
+        single_blade_adjusted_ = false;
+        mode_deactivate();
+        popMode();
+        return;
+      }
+    }
     mode::getSL<SPEC>()->SaySelectBlade();
     SPEC::SteppedMode::mode_activate(onreturn);
     highlighted_blade_.Start(current_blade());
