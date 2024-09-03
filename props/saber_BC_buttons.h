@@ -1944,6 +1944,7 @@ public:
 
       if (!clash_pending1_) {
         forward_stab_ = (stab && (diff.x < 0));
+        if (stab) PVLOG_DEBUG << "**** DoAccel >>>>>>>> - forward_stab_ = " << (forward_stab_ = (diff.x < 0)) << "\n";
         clash_pending1_ = true;
         pending_clash_is_stab1_ = stab;
         pending_clash_strength1_ = v;
