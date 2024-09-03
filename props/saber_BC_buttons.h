@@ -1145,7 +1145,6 @@ push                    - force push
 #ifdef BC_DUAL_BLADES
   static constexpr BladeSet BC_MAIN_BLADE_SET = BladeSet::fromBlade(BC_MAIN_BLADE);
   static constexpr BladeSet BC_SECOND_BLADE_SET = BladeSet::fromBlade(BC_SECOND_BLADE);
-  BladeSet thrusting_blade_;
 #endif
 
 EFFECT(dim);        // for EFFECT_POWERSAVE
@@ -2875,6 +2874,7 @@ private:
   Vec3 mss;
   EffectLocation location;
   EffectLocation thrust_location;
+  BladeSet thrusting_blade_;
 };
 
 #ifdef BC_DUAL_BLADES
