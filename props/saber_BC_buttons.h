@@ -44,7 +44,7 @@ Features:
 - * NEW for OS8 * 
   - Dual blade independent ignition and retraction control with a single Proffieboard. (Such as for a staff saber)
   - Scroll Presets mode.
-  - Quotes play  with blade ON or OFF, and will not overlap / interrupt one another.
+  - Quotes play with blade ON or OFF, and will not overlap / interrupt one another.
   - Mute sound plays before igniting muted.(optional mute.wav used)
   - Blade Length editing menu.
   - OS System Menu system available with a #define.
