@@ -2335,7 +2335,7 @@ any # of buttons
         TurnOffHelper();
         return true;
 
-// Turn Dual Blades ON Muted
+// Turn Blade ON Muted
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_POWER):
         MuteAll();
         return true;
