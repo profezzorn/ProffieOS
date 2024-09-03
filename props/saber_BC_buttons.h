@@ -1353,7 +1353,7 @@ struct BCChangeBladeLengthBlade1 : public mode::ChangeBladeLengthBlade1<SPEC> {
     prop_SetBladeLength(this->blade(), this->getLength());
     prop_SaveState();
     mode::getSL<SPEC>()->SaySave();
-    SPEC::SteppedMode::select();
+    popMode();
   }
   void update() override {
     hybrid_font.PlayPolyphonic(&SFX_volup);
