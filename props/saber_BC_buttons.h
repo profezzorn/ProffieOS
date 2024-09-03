@@ -58,16 +58,21 @@ Optional Blade style elements:
 On-Demand battery level - A layer built into the blade styles that reacts
                           as the battery gets weaker, changing blade color
                           from Green to Red, and the blade length shortens.
-User Effects: (a.k.a. Fett263 "Special Abilities")
+User Effects:
 - Can be built into blade style code to trigger anything that takes an EFFECT_XXXXX argument.
+- If using styles from the Fett263 Style Library, these equate to "Special Abilities 1-8".
 EFFECT_USER1
-EFFECT_USER2 - 1 and 2 use POW button, and work when blade is ON.
+EFFECT_USER2
+- 1 and 2 use POW button, and work when blade is ON.
 EFFECT_USER3
-EFFECT_USER4 - 3 and 4 use AUX button, and work when blade is ON.
+EFFECT_USER4
+- 3 and 4 use AUX button, and work when blade is ON.
 EFFECT_USER5
-EFFECT_USER6 - 5 and 6 use POW button, and work when blade is OFF.
+EFFECT_USER6
+- 5 and 6 use POW button, and work when blade is OFF.
 EFFECT_USER7
-EFFECT_USER8 - 7 and 8 use AUX button, and work when blade is OFF.
+EFFECT_USER8
+- 7 and 8 use AUX button, and work when blade is OFF.
 So if using a 1 button saber, USER effects 1,2,5,6 are available.
 
 EFFECT_POWERSAVE        - PowerSave Dim Blade. Blade style should use a Mix or an AlphaL that applies
