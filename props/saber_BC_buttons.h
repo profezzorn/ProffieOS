@@ -49,8 +49,8 @@ Features:
   - Blade Length editing menu.
   - OS System Menu system available with a #define.
 * Deprecated features:
-- No Volume UP/DOWN with buttons. Use rotary control instead (see above).
-                          QuickMinVolume and QuickMaxVolume are still available.
+- No Volume UP/DOWN with buttons. Use rotary control instead (see above),
+  but QuickMinVolume and QuickMaxVolume are still available.
 - swap and monoforce features of yore are now just assignable User Effects.
 - #define NO_VOLUME_MENU removed.
 ---------------------------------------------------------------------------
