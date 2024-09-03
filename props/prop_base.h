@@ -1566,7 +1566,7 @@ public:
       return true;
     }
 
-    if (!strcmp(cmd, "delete_preset") && arg) {
+    if (!strcmp(cmd, "delete_preset")) {
       current_preset_.SaveAt(-1);
       return true;
     }

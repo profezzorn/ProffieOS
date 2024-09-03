@@ -17,7 +17,12 @@ class  ConfirmMenu : public MenuEntryMenu<SPEC,
   ACTION_ENTRY,
   PopMenuEntry<typename SPEC::SoundLibrary::tCancel>,
   PopMenuEntry<typename SPEC::SoundLibrary::tCancel>
-> {};
+> {
+  // Don't remember position for this menu.
+  void mode_deactivate() override {
+    this->pos_ = 0;
+  }
+};
 
 template<class SPEC, class ACTION_ENTRY>
 struct  ConfirmDeletePresetMenu : public ConfirmMenu<SPEC, ACTION_ENTRY> {
@@ -46,8 +51,20 @@ using ConfirmCommandMenuEntry =
   SubMenuEntry<ConfirmMenu<SPEC, CommandMenuEntry<CMD, ARG, SOUND>>, SOUND>;
 
 template<class SPEC>
-class DeletePresetSubMenuEntry : public SubMenuEntry<ConfirmDeletePresetMenu<SPEC, CommandMenuEntry<STRTYPE("delete_preset"), STRTYPE(""), typename SPEC::SoundLibrary::tDeletePreset>>, typename SPEC::SoundLibrary::tDeletePreset> {};
-  
+struct DeletePresetMenuEntry : public MenuEntry {
+  void say(int entry) override {
+    getSL<SPEC>()->SayDeletePreset();
+  }
+  void select(int entry) override {
+    getSL<SPEC>()->SaySelect();
+    CommandParser::DoParse("delete_preset", nullptr);
+    popMode();
+    popMode();
+  }
+};
+
+template<class SPEC>
+class DeletePresetSubMenuEntry : public SubMenuEntry<ConfirmDeletePresetMenu<SPEC, DeletePresetMenuEntry<SPEC>>, typename SPEC::SoundLibrary::tDeletePreset> {};
   
 int menu_selected_preset = -1;
 

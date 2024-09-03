@@ -66,6 +66,7 @@ template<class CMD, class ARG, class SOUND>
 struct CommandMenuEntry : public MenuEntry {
   void say(int entry) override { SOUND::say(); }
   void select(int entry) override {
+    SoundLibrary::tSelect::say();
     CommandParser::DoParse(CMD::str, ARG::str);
   }
 };
