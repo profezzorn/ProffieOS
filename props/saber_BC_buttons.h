@@ -1717,37 +1717,34 @@ public:
     StartOrStopTrack();
   }
 
-void DoLockup() {
-  if (!SaberBase::Lockup() && SaberBase::IsOn()) {
+  void DoLockup() {
+    if (!SaberBase::Lockup() && SaberBase::IsOn()) {
 
-#ifdef BC_DUAL_BLADES
-    if (fusor.angle1() < -M_PI / 4) {
-      // Main blade is pointing down and is the opposite of above horizon.
-      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG, GetEffectTargetBlade(true));
-    } else if (fusor.angle1() > M_PI / 4) {
-      // Main blade is pointing up and above horizon. Apply drag to the opposite blade
-      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG, GetEffectTargetBlade(true));
-    } else {
-      // Apply normal lockup to the blade above the horizon
-      SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL, GetEffectTargetBlade());
-    }
-#else
-    // Single blade scenario
-    if (fusor.angle1() < -M_PI / 4) {
-      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-    } else {
-      if (!battle_mode_) {
-        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-      } else {
-        // Overrides Auto-lockup if holding Button during clash, NOT pointing DOWN
-        return;
+  #ifdef BC_DUAL_BLADES
+      if (isMainBladeOn() && !isSecondBladeOn()) {
+        MainBladeLockupOrDrag();
+      } else if (!isMainBladeOn() && isSecondBladeOn()) {
+        SecondBladeLockupOrDrag();
+      } else {  // Both blades must be ON
+        DualBladesLockupOrDrag();
       }
-    }
-#endif
+  #else
+      // Single blade scenario (non-dual blades)
+      if (fusor.angle1() < -M_PI / 4) {
+        SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+      } else {
+        if (!battle_mode_) {
+          SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+        } else {
+          // Overrides Auto-lockup if holding Button during clash, NOT pointing DOWN
+          return;
+        }
+      }
+  #endif
 
-    SaberBase::DoBeginLockup();
+      SaberBase::DoBeginLockup();
+    }
   }
-}
 
   void DoLightningBlock() {
     if (spam_blast_ || on_pending_) return;
@@ -1758,7 +1755,7 @@ void DoLockup() {
   void DoBlasterBlock() {
     if (spam_blast_ || on_pending_) return;
 #ifdef BC_DUAL_BLADES
-      SaberBase::DoEffect(EFFECT_BLAST, EffectLocation(0, GetEffectTargetBlade()));
+      SaberBase::DoEffect(EFFECT_BLAST, EffectLocation(0, GetBladeAboveHorizon()));
 #else
       SaberBase::DoBlast();
 #endif
@@ -1826,7 +1823,7 @@ void DoLockup() {
   bool isSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
 
   // Get blade above horizon line to apply effect to
-  BladeSet GetEffectTargetBlade(bool return_opposite = false) {
+  BladeSet GetBladeAboveHorizon(bool return_opposite = false) {
       if (!return_opposite) {
           return accel_.x > 0 ? BC_MAIN_BLADE_SET : BC_SECOND_BLADE_SET;
       } else {
@@ -1956,6 +1953,38 @@ void DoLockup() {
       }
     }
     accel_ = accel;
+  }
+
+  // Handle lockup or drag for the main blade when only the main blade is on
+  void MainBladeLockupOrDrag() {
+    if (fusor.angle1() < -M_PI / 4) {
+      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG, BC_MAIN_BLADE_SET);
+    } else if (!battle_mode_) {
+      SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL, BC_MAIN_BLADE_SET);
+    }
+  }
+
+  // Handle lockup or drag for the second blade when only the second blade is on
+  void SecondBladeLockupOrDrag() {
+    if (fusor.angle1() > M_PI / 4) {
+      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG, BC_SECOND_BLADE_SET);
+    } else if (!battle_mode_) {
+     SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL, BC_SECOND_BLADE_SET);
+    }
+  }
+
+  // Handle lockup or drag for dual blades when both blades are on
+  void DualBladesLockupOrDrag() {
+    if (fusor.angle1() < -M_PI / 4) {
+      // Main blade is pointing down, "return_opposite_" and apply drag.
+      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG, GetBladeAboveHorizon(true));
+    } else if (fusor.angle1() > M_PI / 4) {
+      // Main blade is pointing up, "return_opposite_" and apply drag.
+      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG, GetBladeAboveHorizon(true));
+    } else {
+      // Apply normal lockup to the blade above the horizon
+     SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL, GetBladeAboveHorizon());
+    }
   }
 
 #endif  // BC_DUAL_BLADES
@@ -2803,7 +2832,7 @@ any # of buttons
           SaberBase::DoStab();
         } else {
 #ifdef BC_DUAL_BLADES
-      SaberBase::DoEffect(EFFECT_CLASH, EffectLocation(0, GetEffectTargetBlade()));
+      SaberBase::DoEffect(EFFECT_CLASH, EffectLocation(0, GetBladeAboveHorizon()));
 #else
       SaberBase::DoClash();
 #endif 
