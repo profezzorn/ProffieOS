@@ -2859,7 +2859,6 @@ private:
   bool scroll_presets_ = false;
   bool muted_ = false;
   bool forward_stab_ = false;
-  bool forward_stab_ = false;
 
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
