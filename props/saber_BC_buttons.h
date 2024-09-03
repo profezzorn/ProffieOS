@@ -2347,7 +2347,7 @@ any # of buttons
 
 // Stab
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
-        if (on_pending_ || millis() - saber_off_time_ < 1000) return false;
+        if (on_pending_ || millis() - saber_on_time_ < 2000) return false; 
         SaberBase::SetClashStrength(2.0);
         SaberBase::DoStab();
         return true;
@@ -2757,6 +2757,7 @@ any # of buttons
         return;
       case EFFECT_IGNITION:
         scroll_presets_ = false;
+        saber_on_time_ = millis();
         return;
       // Gesture on, bypass preon
       case EFFECT_FAST_ON:
@@ -2840,6 +2841,7 @@ private:
   uint32_t last_push_millis_ = millis();
   uint32_t last_blast_millis_ = millis();
   uint32_t saber_off_time_ = millis();
+  uint32_t saber_on_time_ = millis();
 
   Vec3 mss;
   EffectLocation location;
