@@ -50,16 +50,17 @@ public:
 template<class SPEC>
 struct ColorGammaMode : public SPEC::SmoothMode {
   virtual uint16_t* value() = 0;
+  virtual float revolutions() { return 1.0f; }
   void mode_activate(bool onreturn) override {
     SPEC::SmoothMode::mode_activate(onreturn);
     getSL<SPEC>()->SayRotate();
   }
   int get() override {
-    return powf(*value() / 65535.0, COLOR_MENU_GAMMA) * 32767;
+    return powf(*value() / 65535.0, 1.0/COLOR_MENU_GAMMA) * 32767;
   }
 
   void set(int x) override {
-    *value()= powf(x / 32767.0, 1.0/COLOR_MENU_GAMMA) * 65535.0;
+    *value()= powf(x / 32767.0, COLOR_MENU_GAMMA) * 65535.0;
   }
 };
   
@@ -126,7 +127,7 @@ Color16 menu_selected_color;
 template<class SPEC>
 struct SelectColorEntry : public MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>()->SaySelectColor();
+    getSL<SPEC>()->SayCopyColor();
   }
   void select(int entry) override {
     getSL<SPEC>()->SaySelect();
@@ -137,7 +138,7 @@ struct SelectColorEntry : public MenuEntry {
 template<class SPEC>
 struct UseSelectedColorEntry : public MenuEntry {
   void say(int entry) override {
-    getSL<SPEC>()->SayUseSelectedColor();
+    getSL<SPEC>()->SayPasteColor();
   }
   void select(int entry) override {
     getSL<SPEC>()->SaySelect();

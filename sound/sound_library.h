@@ -527,9 +527,10 @@ public:
   ADD_SL_SOUND(AdjustBlue, "madjblue");
   ADD_SL_SOUND(AdjustGreen, "madjgren");
   ADD_SL_SOUND(AdjustSaturation, "madjsat");
-  ADD_SL_SOUND(SelectColor, "mselcol");
   ADD_SL_SOUND(NoColorSelected, "mnoselcl");
-  ADD_SL_SOUND(UseSelectedColor, "muselcol");
+
+  ADD_SL_SOUND(PasteColor, "mpastec");
+  ADD_SL_SOUND(CopyColor, "mcopyc2");
 
   ADD_SL_SOUND(MovePresetUp, "mmpsetup");
   ADD_SL_SOUND(MovePresetDown, "mmpsetdn");
