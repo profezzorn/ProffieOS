@@ -48,29 +48,15 @@ public:
 #endif
 
 template<class SPEC>
-struct ColorGammaMode : public SPEC::SmoothMode {
-  virtual uint16_t* value() = 0;
-  virtual float revolutions() { return 1.0f; }
-  void mode_activate(bool onreturn) override {
-    SPEC::SmoothMode::mode_activate(onreturn);
-    getSL<SPEC>()->SayRotate();
-  }
-  int get() override {
-    return powf(*value() / 65535.0, 1.0/COLOR_MENU_GAMMA) * 32767;
-  }
-
-  void set(int x) override {
-    *value()= powf(x / 32767.0, COLOR_MENU_GAMMA) * 65535.0;
-  }
-};
-  
-template<class SPEC>
 struct ColorBrightnessMode : public SPEC::SmoothMode {
 public:
+  virtual float revolutions() { return 2.0f; }
   void mode_activate(bool onreturn) override {
+    hsl_color = ShowColorStyle::getColor().toHSL();
     SPEC::SmoothMode::mode_activate(onreturn);
     getSL<SPEC>()->SayRotate();
-    hsl_color = ShowColorStyle::getColor().toHSL();
+    PVLOG_DEBUG << "init L = " << this->hsl_color.L << "\n";
+    PVLOG_DEBUG << "init B = " << ShowColorStyle::getColor().b << "\n";
   }
 
   void select() override {
@@ -87,26 +73,47 @@ public:
   int get() override {
     float ret = this->hsl_color.L;
     if (ret > 0.5) {
-      ret = powf((this->hsl_color.L - 0.5) * 2.0, COLOR_MENU_GAMMA) / 2.0 + 0.5;
+      ret = powf((this->hsl_color.L - 0.5) * 2.0, 1.0/COLOR_MENU_GAMMA) / 2.0 + 0.5;
+    } else {
+      ret = powf(this->hsl_color.L * 2.0, 1.0/COLOR_MENU_GAMMA) / 2.0;
     }
-    return ret * 32768.0;
+    PVLOG_DEBUG << "L = " << this->hsl_color.L << "\n";
+    return ret * 32767.0;
   }
 
   void set(int x) override {
-    this->hsl_color.L = x / 32767.0;
-    if (this->hsl_color.L > 0.5) {
-      this->hsl_color.L = powf( (this->hsl_color.L - 0.5) * 2.0, 1.0/COLOR_MENU_GAMMA) / 2.0 + 0.5;
-      this->hsl_color.S = 1.0;
+    HSL hsl = this->hsl_color;
+    hsl.L = x / 32767.0;
+    if (hsl.L > 0.5) {
+      hsl.L = powf( (hsl.L - 0.5) * 2.0, COLOR_MENU_GAMMA) / 2.0 + 0.5;
+      hsl.S = 1.0;
     } else {
-      this->hsl_color.S = this->hsl_color.L * 2.0f;
+      hsl.L = powf( hsl.L * 2.0, COLOR_MENU_GAMMA) / 2.0;
+      hsl.S = hsl.L * 2.0f;
     }
-    ShowColorStyle::SetColor(Color16(this->hsl_color));
+    ShowColorStyle::SetColor(Color16(hsl));
   }
-
   HSL hsl_color;
 };
 
 
+template<class SPEC>
+struct ColorGammaMode : public SPEC::SmoothMode {
+  virtual uint16_t* value() = 0;
+  virtual float revolutions() { return 1.0f; }
+  void mode_activate(bool onreturn) override {
+    SPEC::SmoothMode::mode_activate(onreturn);
+    getSL<SPEC>()->SayRotate();
+  }
+  int get() override {
+    return powf(*value() / 65535.0, 1.0/COLOR_MENU_GAMMA) * 32767;
+  }
+
+  void set(int x) override {
+    *value()= powf(x / 32767.0, COLOR_MENU_GAMMA) * 65535.0;
+  }
+};
+  
 template<class SPEC>
 struct ColorRedMode : public SPEC::GammaMode {
   uint16_t* value() override { return &ShowColorStyle::getColor().r; }
