@@ -14,6 +14,14 @@ public:
   }
 };
 
+class LeftRighttRotaryReceiver : public RotaryReceiver {
+public:
+  void Update(int delta) override {
+    if (delta == 1) prop.Event(BUTTON_RIGHT, EVENT_CLICK_SHORT);
+    if (delta == -1) prop.Event(BUTTON_LEFT, EVENT_CLICK_SHORT);
+  }
+};
+
 template<int howmuch=32768 / 20>
 class SmoothChangeVariationRotaryReceiver : public RotaryReceiver {
 public:
