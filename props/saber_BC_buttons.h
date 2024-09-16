@@ -1134,8 +1134,8 @@ push                    - force push
 #endif
 #endif
 
-#if defined(NO_BLADE_NO_GEST_ONOFF) && !defined(BLADE_DETECT_PIN)
-#error Using NO_BLADE_NO_GEST_ONOFF requires a BLADE_DETECT_PIN to be defined
+#if defined(NO_BLADE_NO_GEST_ONOFF) && !defined(BLADE_DETECT_PIN) && !defined(BLADE_ID_SCAN_MILLIS)
+#error Using NO_BLADE_NO_GEST_ONOFF requires either BLADE_DETECT_PIN or BLADE_ID_SCAN_MILLIS to be defined.
 #endif
 
 #if defined(BC_NO_BM) && defined(BC_GESTURE_AUTO_BATTLE_MODE)
