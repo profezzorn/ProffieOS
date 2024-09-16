@@ -1401,7 +1401,7 @@ public:
   }
 
   bool isTimerRunning() {
-    return !timerCheck();
+    return trigger_time_ != 0 && (millis() - trigger_time_ < duration_);
   }
 
 private:
@@ -1536,7 +1536,6 @@ public:
     if (twist_timer_.timerCheck()) {
       DoSavedTwist();
     }
-    quote_delay_timer_.timerCheck();
   }  // Loop()
 
 #ifdef SPEAK_BLADE_ID
