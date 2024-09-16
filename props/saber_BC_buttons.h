@@ -1553,7 +1553,8 @@ public:
   void DetectMenuTurn() {
     float a = fusor.angle2() - current_menu_angle_;
     if (isPointingUp()) return;
-    // Keep the rotational angle within range of -180 to 180.
+    // Keep the rotational angle within range of 
+    // -180 to 180 degrees in terms of radians.
     if (a > M_PI) a-= M_PI * 2;
     if (a < -M_PI) a+= M_PI * 2;
 
