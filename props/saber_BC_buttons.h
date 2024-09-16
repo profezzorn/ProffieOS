@@ -1104,8 +1104,8 @@ push                    - force push
 #define BUTTON_HELD_LONG_TIMEOUT 2000
 #endif
 
-#ifndef DOUBLE_TWIST_TIMEOUT
-#define DOUBLE_TWIST_TIMEOUT 350
+#ifndef REGULAR_TWIST_TIMEOUT
+#define REGULAR_TWIST_TIMEOUT 350
 #endif
 
 #ifdef BC_SWING_ON
@@ -1569,7 +1569,7 @@ public:
     if (!saved_twist_) {
       // Save the current twist and start the timer if no twist is saved
       saved_twist_ = event;
-      twist_timer_.trigger(DOUBLE_TWIST_TIMEOUT);
+      twist_timer_.trigger(REGULAR_TWIST_TIMEOUT);
     PVLOG_DEBUG << "**** Saving twist event: " << (event == EVENT_TWIST_LEFT ? "TWIST LEFT" : "TWIST RIGHT") << ". Starting timer.\n";
     }
   }
