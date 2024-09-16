@@ -1378,34 +1378,35 @@ struct BCMenuSpec {
 
 class DelayTimer {
 public:
-  DelayTimer() : triggered_(false), trigger_time_(0), duration_(0) {}
+  DelayTimer() : trigger_time_(0), duration_(0) {}
 
   void trigger(uint32_t duration) {
-      triggered_ = true;
-      trigger_time_ = millis();
-      duration_ = duration;
-  }
-  void stop() {
-      PVLOG_DEBUG << "** STOPPING timer.\n";
-      triggered_ = false;
-  }
-  bool timerCheck() {
-      if (!triggered_) return false;
-      if (millis() - trigger_time_ > duration_) {
-          triggered_ = false;  // Reset the timer flag
-          return true;  // Timer has elapsed
-      }
-      return false;  // Timer is still running
+    trigger_time_ = millis();
+    duration_ = duration;
   }
 
-  bool isTimerRunning() const {
-      return triggered_;
+  void stopTimer() {
+    PVLOG_DEBUG << "** STOPPING timer.\n";
+    trigger_time_ = 0;
+    duration_ = 0;
+  }
+
+  bool timerCheck() {
+    if (trigger_time_ == 0) return false;
+    if (millis() - trigger_time_ > duration_) {
+      stopTimer();
+      return true;  // Timer has elapsed
+    }
+    return false;  // Timer is still running
+  }
+
+  bool isTimerRunning() {
+    return !timerCheck();
   }
 
 private:
-    bool triggered_;
-    uint32_t trigger_time_;
-    uint32_t duration_;
+  uint32_t trigger_time_;
+  uint32_t duration_;
 };
 
 // The Saber class implements the basic states and actions
