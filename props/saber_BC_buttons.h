@@ -1288,19 +1288,11 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
   uint16_t size() override { return NUM_BLADES; }
 
   void mode_activate(bool onreturn) override {
-    // If only one blade, jump right to ChangeBladeLengthMode
-    // If just adjusted and returning here via popMode, just exit.
-    if (size() == 1) {
-      if (!single_blade_adjusted_) {
-        single_blade_adjusted_ = true;
-        pushMode<typename SPEC::ChangeBladeLengthMode>();
-        return;
-      } else {
-        single_blade_adjusted_ = false;
-        mode_deactivate();
-        popMode();
-        return;
-      }
+    // If only one blade, and returning here via popMode, just exit.
+    if (size() == 1 && onreturn) {
+      mode_deactivate();
+      popMode();
+      return;
     }
     mode::getSL<SPEC>()->SaySelectBlade();
     SPEC::SteppedMode::mode_activate(onreturn);
@@ -1423,14 +1415,18 @@ public:
   SaberBCButtons() : PropBase() {}
   const char* name() override { return "SaberBCButtons"; }
 
-#ifndef MENU_SPEC_TEMPLATE
+#if defined(DYNAMIC_BLADE_LENGTH) && !defined(MENU_SPEC_TEMPLATE)
   virtual void EnterBladeLengthMode() {
-    if (scroll_presets_) return;
-#ifdef DYNAMIC_BLADE_LENGTH
-    if (!current_style()) return;
+    if (scroll_presets_ || !current_style()) return;
     if (current_mode == this) {
       sound_library_.SayEditBladeLength();
+
+#if NUM_BUTTONS > 1
         pushMode<MKSPEC<BCMenuSpec>::BCSelectBladeMenu>();
+#else
+        pushMode<MKSPEC<BCMenuSpec>::ChangeBladeLengthMode>();
+#endif
+
     }
 #endif  // DYNAMIC_BLADE_LENGTH
   }
@@ -1441,7 +1437,6 @@ public:
       pushMode<MKSPEC<BCMenuSpec>::BCVolumeMenu>();
     }
   }
-#endif  // MENU_SPEC_TEMPLATE
 
   void Loop() override {
     PropBase::Loop();
@@ -2115,11 +2110,9 @@ any # of buttons
 // -------------------- 1 btn any blades
 
 // Enter / Exit Volume MENU
-#ifndef MENU_SPEC_TEMPLATE
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
         EnterVolumeMenu();
         return true;
-#endif
 
 // Spoken Battery Level in percentage
 // Spoken Battery Level in volts - pointing DOWN
@@ -2297,11 +2290,9 @@ any # of buttons
 // -------------------- 2 or 3 btn any blades
 
 // Enter / Exit Volume MENU
-#ifndef MENU_SPEC_TEMPLATE
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_POWER):
         EnterVolumeMenu();
         return true;
-#endif
 
 // Spoken Battery Level in percentage
 // Spoken Battery Level in volts - pointing DOWN
