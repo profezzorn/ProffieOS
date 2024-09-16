@@ -586,7 +586,7 @@ public:
       if (current_config != blades + best_config) {
   // We can't call FindBladeAgain right away because
   // we're called from the blade. Wait until next loop() call.
-        find_blade_again_pending_ = true;
+  find_blade_again_pending_ = true;
       }
       return true;
     }
