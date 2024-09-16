@@ -508,9 +508,7 @@ public:
     SetPreset(0, true);
   }
 
-#ifdef BLADE_DETECT_PIN
   bool blade_detected_ = false;
-#endif
 
   // Use this helper function, not the bool above.
   // This function changes when we're properly initialized
@@ -584,10 +582,11 @@ public:
       last_scan_id_ = now;
       size_t best_config = FindBestConfig();
       if (current_config != blades + best_config) {
-  // We can't call FindBladeAgain right away because
-  // we're called from the blade. Wait until next loop() call.
-  find_blade_again_pending_ = true;
+  	// We can't call FindBladeAgain right away because
+  	// we're called from the blade. Wait until next loop() call.
+  	find_blade_again_pending_ = true;
       }
+      blade_detected_ = (current_config->ohm < NO_BLADE);
       return true;
     }
     return false;
