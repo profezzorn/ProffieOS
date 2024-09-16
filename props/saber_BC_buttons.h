@@ -1635,6 +1635,7 @@ public:
     }
   }
 
+  // Previous, next, or first preset, depending on blade angle
   void DoChangePreset() {
     if (scroll_presets_) return;
     if (fusor.angle1() > M_PI / 3) {
