@@ -1437,7 +1437,12 @@ public:
   void EnterVolumeMenu() {
     if (!current_style() || scroll_presets_) return;
     if (current_mode == this) {
+#ifdef MENU_SPEC_TEMPLATE
+      sound_library_.SayEnterVolumeMenu();
+      pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::ChangeVolumeMode>();
+#else
       pushMode<MKSPEC<BCMenuSpec>::BCVolumeMenu>();
+#endif
     }
   }
 
