@@ -1424,7 +1424,7 @@ public:
     if (current_mode == this) {
       sound_library_.SayEditBladeLength();
 
-#if NUM_BUTTONS > 1
+#if NUM_BLADES > 1
         pushMode<MKSPEC<BCMenuSpec>::BCSelectBladeMenu>();
 #else
         pushMode<MKSPEC<BCMenuSpec>::ChangeBladeLengthMode>();
