@@ -1495,7 +1495,7 @@ public:
     }
 // EVENT_THRUST
     if (mss.y * mss.y + mss.z * mss.z < 20.0 &&  // slightly more forgiving than 16.0?
-       (mss.x > 14 || mss.x < -14) &&  // Check for both positive and negative x-motion
+       (fabs(mss.x) > 14) &&  // Check for both positive and negative x-motion
         fusor.swing_speed() < 150) {
       if (millis() - thrust_begin_millis_ > 15) {
         Event(BUTTON_NONE, EVENT_THRUST);
