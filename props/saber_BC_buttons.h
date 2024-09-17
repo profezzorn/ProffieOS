@@ -1288,12 +1288,6 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
   uint16_t size() override { return NUM_BLADES; }
 
   void mode_activate(bool onreturn) override {
-    // If only one blade, and returning here via popMode, just exit.
-    if (size() == 1 && onreturn) {
-      mode_deactivate();
-      popMode();
-      return;
-    }
     mode::getSL<SPEC>()->SaySelectBlade();
     SPEC::SteppedMode::mode_activate(onreturn);
     highlighted_blade_.Start(current_blade());
