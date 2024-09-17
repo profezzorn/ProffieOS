@@ -1826,13 +1826,9 @@ public:
   bool isMainBladeOn() { return SaberBase::OnBlades()[BC_MAIN_BLADE]; }
   bool isSecondBladeOn() { return SaberBase::OnBlades()[BC_SECOND_BLADE]; }
 
-  // Get blade above horizon line to apply effect to
-  BladeSet GetBladeAboveHorizon(bool return_opposite = false) {
-      if (!return_opposite) {
-          return accel_.x > 0 ? BC_MAIN_BLADE_SET : BC_SECOND_BLADE_SET;
-      } else {
-          return accel_.x > 0 ? BC_SECOND_BLADE_SET : BC_MAIN_BLADE_SET;
-      }
+  // Get blade location to apply effect to
+  BladeSet GetBladeAboveHorizon() {
+    return accel_.x > 0 ? BC_MAIN_BLADE_SET : BC_SECOND_BLADE_SET;
   }
 
   void TurnBladeOn(BladeSet target_blade) {
@@ -1981,14 +1977,14 @@ public:
   // Handle lockup or drag for dual blades when both blades are on
   void DualBladesLockupOrDrag() {
     if (fusor.angle1() < -M_PI / 4) {
-      // Main blade is pointing down, "return_opposite_" and apply drag.
-      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG, GetBladeAboveHorizon(true));
+      // Main blade is pointing down, and within drag range
+      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG, BC_MAIN_BLADE_SET);
     } else if (fusor.angle1() > M_PI / 4) {
-      // Main blade is pointing up, "return_opposite_" and apply drag.
-      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG, GetBladeAboveHorizon(true));
+      // Main blade is pointing up, and within drag range for the second blade
+      SaberBase::SetLockup(SaberBase::LOCKUP_DRAG, BC_SECOND_BLADE_SET);
     } else {
-      // Apply normal lockup to the blade above the horizon
-     SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL, GetBladeAboveHorizon());
+      // Otherwise, apply normal lockup based on which blade is above the horizon
+      SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL, GetBladeAboveHorizon());
     }
   }
 
