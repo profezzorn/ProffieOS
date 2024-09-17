@@ -1431,8 +1431,8 @@ public:
 #endif
 
     }
-#endif  // DYNAMIC_BLADE_LENGTH
   }
+#endif  // DYNAMIC_BLADE_LENGTH
 
   void EnterVolumeMenu() {
     if (!current_style() || scroll_presets_) return;
