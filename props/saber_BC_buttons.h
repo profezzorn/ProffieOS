@@ -1654,6 +1654,7 @@ public:
     }
   }
 
+  // When ON, use FastOn() for previous, next, or first preset, depending on blade angle
   void DoChangePresetFast() {
     if (fusor.angle1() > M_PI / 3) {
       // Main Blade pointing UP
