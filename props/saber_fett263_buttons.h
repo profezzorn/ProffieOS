@@ -5789,7 +5789,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 // Gesture Controls (not button specific)
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON):
-        if (wav_player && wav_player->isPlaying()) {
+        if (menu_ && wav_player && wav_player->isPlaying()) {
           current_menu_angle_ = fusor.angle2();
           return false;
         }
@@ -5810,7 +5810,7 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON):
-        if (wav_player && wav_player->isPlaying()) {
+        if (menu_ && wav_player && wav_player->isPlaying()) {
           current_menu_angle_ = fusor.angle2();
           return false;
         }
@@ -5832,7 +5832,7 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF):
-        if (wav_player && wav_player->isPlaying()) {
+        if (menu_ && wav_player && wav_player->isPlaying()) {
           current_menu_angle_ = fusor.angle2();
           return false;
         }
@@ -5843,7 +5843,7 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF):
-        if (wav_player && wav_player->isPlaying()) {
+        if (menu_ && wav_player && wav_player->isPlaying()) {
           current_menu_angle_ = fusor.angle2();
           return false;
         }
@@ -5922,7 +5922,7 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
-        if (wav_player && wav_player->isPlaying()) {
+        if (menu_ && wav_player && wav_player->isPlaying()) {
           current_menu_angle_ = fusor.angle2();
           return false;
         }
@@ -5955,7 +5955,7 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
-        if (wav_player && wav_player->isPlaying()) {
+        if (menu_ && wav_player && wav_player->isPlaying()) {
           current_menu_angle_ = fusor.angle2();
           return false;
         }
