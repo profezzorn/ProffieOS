@@ -1183,7 +1183,7 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     PVLOG_NORMAL << "** Enter Volume Menu\n";
     initial_volume_ = dynamic_mixer.get_volume();
     initial_percentage_ = round((initial_volume_ / max_volume_) * 10) * 10;
-   SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
     mode::getSL<SPEC>()->SayEnterVolumeMenu();
     SPEC::SteppedMode::mode_activate(onreturn);
   }
@@ -1690,7 +1690,6 @@ public:
       PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
       speaking_ = true;
       SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-      return;
     } else {
       sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
       sound_library_.SayPercent();
@@ -1703,10 +1702,10 @@ public:
 
   void OnDemandBatteryLevel() {
     if (scroll_presets_) return;
-      PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
-      PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
-      SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-      return;
+    PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
+    PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
+    SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+    return;
   }
 
   void DoTrackStartOrStop() {
