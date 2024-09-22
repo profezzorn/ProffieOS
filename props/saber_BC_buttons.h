@@ -1179,7 +1179,6 @@ struct BCVolumeMode : public SPEC::SteppedMode {
   float initial_volume_ = 0.0;
   int initial_percentage_ = 0;
   int percentage_ = 0;
-  bool announced_ = false;
 
   int steps_per_revolution() override {
     return 12;  // adjust for sensitivity
@@ -1191,10 +1190,11 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     initial_percentage_ = round((initial_volume_ / max_volume_) * 10) * 10;
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
     mode::getSL<SPEC>()->SayEnterVolumeMenu();
+    announce_volume();
     SPEC::SteppedMode::mode_activate(onreturn);
   }
 
-  void mode_deactivate() override {
+  void announce_volume() {
     if (percentage_ <= 10) {
       mode::getSL<SPEC>()->SayMinimumVolume();
     } else if (percentage_ >=100) {
@@ -1203,6 +1203,10 @@ struct BCVolumeMode : public SPEC::SteppedMode {
       mode::getSL<SPEC>()->SayWhole(percentage_);
       mode::getSL<SPEC>()->SayPercent();
     }
+  }
+
+  void mode_deactivate() override {
+    announce_volume();
     mode::getSL<SPEC>()->SayVolumeMenuEnd();
     SPEC::SteppedMode::mode_deactivate();
   }
@@ -1211,13 +1215,13 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     int current_volume_ = dynamic_mixer.get_volume();
     if (current_volume_ < max_volume_) {
       current_volume_ += max_volume_ * 0.10;
-      if (current_volume_ > max_volume_) current_volume_ = max_volume_;
+      if (current_volume_ >= max_volume_) {
+        current_volume_ = max_volume_;
+        QuickMaxVolume();
+      } else {
+        mode::getSL<SPEC>()->SayVolumeUp();
+      }
       dynamic_mixer.set_volume(current_volume_);
-      mode::getSL<SPEC>()->SayVolumeUp();
-      announced_ = false;
-    } else if (!announced_) {
-      QuickMaxVolume();
-      announced_ = true;
     }
   }
 
@@ -1225,13 +1229,13 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     int current_volume_ = dynamic_mixer.get_volume();
     if (current_volume_ > min_volume_) {
       current_volume_ -= max_volume_ * 0.10;
-      if (current_volume_ < min_volume_) current_volume_ = min_volume_;
+      if (current_volume_ <= min_volume_) {
+        current_volume_ = min_volume_;
+        QuickMinVolume();
+      } else {
+        mode::getSL<SPEC>()->SayVolumeDown();
+      }
       dynamic_mixer.set_volume(current_volume_);
-      mode::getSL<SPEC>()->SayVolumeDown();
-      announced_ = false;
-    } else if (!announced_) {
-      QuickMinVolume();
-      announced_ = true;
     }
   }
 
