@@ -1812,6 +1812,19 @@ public:
 #endif
   }
 
+  void GestureEnableBattleMode() {
+#ifdef BC_GESTURE_AUTO_BATTLE_MODE
+    PVLOG_NORMAL << "** Entering Battle Mode\n";
+    battle_mode_ = true;
+#endif
+  }
+
+  void NoBladeDisableGestures() {
+#ifdef NO_BLADE_NO_GEST_ONOFF
+    if (!blade_present()) return false;
+#endif
+  }
+
 #ifdef BC_DUAL_BLADES
 
   static const BladeSet controlled_blades_;
@@ -2450,71 +2463,45 @@ any # of buttons
 // Gesture Ignition Controls
 #ifdef BC_SWING_ON
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
-#ifdef NO_BLADE_NO_GEST_ONOFF
-        if (!blade_detected_) return false;
-#endif
+        NoBladeDisableGestures();
         if (millis() - saber_off_time_ > 500) {
           FastOn();
-#ifdef BC_GESTURE_AUTO_BATTLE_MODE
-          PVLOG_NORMAL << "** Entering Battle Mode\n";
-          battle_mode_ = true;
-#endif
-#ifdef BC_DUAL_BLADES
-          PVLOG_NORMAL << "** Dual Blades Activated\n";
-#endif
-      }
+          GestureEnableBattleMode()
+        }
         return true;
 #endif  // BC_SWING_ON
 
 #ifdef BC_TWIST_ON
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
         if (scroll_presets_) return false;
-#ifdef NO_BLADE_NO_GEST_ONOFF
-        if (!blade_detected_) return false;
-#endif
+        NoBladeDisableGestures();
         // Delay twist events to prevent false trigger from over twisting
         if (millis() - last_twist_millis_ > 300 &&
-          millis() - saber_off_time_ > 500) {
-            FastOn();
-#ifdef BC_GESTURE_AUTO_BATTLE_MODE
-            PVLOG_NORMAL << "** Entering Battle Mode\n";
-            battle_mode_ = true;
-#endif
-            last_twist_millis_ = millis();
-#ifdef BC_DUAL_BLADES
-            PVLOG_NORMAL << "** Dual Blades Activated\n";
-#endif
+            millis() - saber_off_time_ > 500) {
+          FastOn();
+          GestureEnableBattleMode();
+          last_twist_millis_ = millis();
         }
         return true;
 #endif  // BC_TWIST_ON
 
 #ifdef BC_TWIST_OFF
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON):
-#ifdef NO_BLADE_NO_GEST_ONOFF
-        if (!blade_detected_) return false;
-#endif
+        NoBladeDisableGestures();
         // Delay twist events to prevent false trigger from over twisting
         if (millis() - last_twist_millis_ > 500) {
           last_twist_millis_ = millis();
           TurnOffHelper();
-#ifdef BC_DUAL_BLADES
-          PVLOG_NORMAL << "** All Blades Deativated\n";
-#endif
         }
         return true;
 #endif  // BC_TWIST_OFF
 
 #ifdef BC_THRUST_ON
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
-#ifdef NO_BLADE_NO_GEST_ONOFF
-        if (!blade_detected_) return false;
-#endif
+        NoBladeDisableGestures();
         // Delay Thrust On at boot
         if (millis() - saber_off_time_ > 1000) {
-#ifdef BC_GESTURE_AUTO_BATTLE_MODE
-          PVLOG_NORMAL << "** Entering Battle Mode\n";
-          battle_mode_ = true;
-#endif
+          GestureEnableBattleMode();
 #ifdef BC_DUAL_BLADES
           thrusting_blade_ = thrusting_blade_ | ~controlled_blades_;
           PVLOG_NORMAL << "** " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN" : "SECOND") << " Blade Activated\n";
