@@ -1821,7 +1821,7 @@ public:
 
   void NoBladeDisableGestures() {
 #ifdef NO_BLADE_NO_GEST_ONOFF
-    if (!blade_present()) return false;
+    if (!blade_present()) return;
 #endif
   }
 
@@ -2466,7 +2466,7 @@ any # of buttons
         NoBladeDisableGestures();
         if (millis() - saber_off_time_ > 500) {
           FastOn();
-          GestureEnableBattleMode()
+          GestureEnableBattleMode();
         }
         return true;
 #endif  // BC_SWING_ON
