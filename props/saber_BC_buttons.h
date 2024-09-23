@@ -2222,13 +2222,13 @@ any # of buttons
       case EVENTID(BUTTON_AUX2, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
         if (!isSecondBladeOn() && !on_pending_) {
           TurnBladeOn(BC_SECOND_BLADE_SET);
-        return true;
+          return true;
         }  // fall through
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
 #if NUM_BUTTONS == 2
         if (!isSecondBladeOn() && !on_pending_) {
           TurnBladeOn(BC_SECOND_BLADE_SET);
-        return true;
+          return true;
         }  // fall through
 #endif
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
