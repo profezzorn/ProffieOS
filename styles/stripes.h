@@ -79,12 +79,6 @@ public:
   StripesHelper<B...> b_;
 };
 
-// TODO: Move this somewhere common.
-static inline int32_t MOD(int32_t x, int32_t m) {
-  if (x >= 0) return x % m;
-  return m + ~(~x % m);
-}
-
 template<class... COLORS>
 class StripesBase {
 public:
