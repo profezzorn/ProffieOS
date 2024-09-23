@@ -1720,7 +1720,7 @@ public:
   void DoLockup() {
     if (!SaberBase::Lockup() && SaberBase::IsOn()) {
 
-  #ifdef BC_DUAL_BLADES
+#ifdef BC_DUAL_BLADES
       if (isMainBladeOn() && !isSecondBladeOn()) {
         MainBladeLockupOrDrag();
       } else if (!isMainBladeOn() && isSecondBladeOn()) {
@@ -1728,7 +1728,7 @@ public:
       } else {  // Both blades must be ON
         DualBladesLockupOrDrag();
       }
-  #else
+#else
       // Single blade scenario (non-dual blades)
       if (fusor.angle1() < -M_PI / 4) {
         SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
@@ -1740,7 +1740,7 @@ public:
           return;
         }
       }
-  #endif
+#endif
 
       SaberBase::DoBeginLockup();
     }
