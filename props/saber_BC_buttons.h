@@ -1781,7 +1781,6 @@ public:
 
   void ToggleSequentialQuote() {
     if (scroll_presets_ || spam_blast_) return;
-    if (spam_blast_) return;
     sequential_quote_ = !sequential_quote_;
     PVLOG_NORMAL << (sequential_quote_ ? "** Quotes play sequentially\n" : "** Quotes play randomly\n");
     if (SFX_mnum) {
