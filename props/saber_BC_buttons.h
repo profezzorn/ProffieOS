@@ -2415,7 +2415,7 @@ any # of buttons
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
         if (millis() - last_thrust_millis_ < 200 ||
             millis() - saber_on_time_ < 2000)
-          return false;        
+          return false;
 
           GetThrustBladeLocation();
         // Check if both blades are already on
