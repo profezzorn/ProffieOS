@@ -93,9 +93,6 @@ Optional #defines:
                                      Several template choices are available to set how the menus are used. See Documentation.
 #define DYNAMIC_BLADE_LENGTH       - This is required for onboard menu driven blade length adjustments.
                                      The blade length maximum should be set in the user config file's BladeConfig section.
-#define ENABLE_FASTON              - Enable to use the (old name) faston.wav for FastOn() ignitions, such as gesture ignitions or fast preset change.
-                                     The faston.wav sound will be deprecated soon and replaced with fastout.wav.
-                                     If you have a good reason to keep faston.wav as is, please post at https://crucible.hubbe.net/
 
 // Adding the following define activates Dual Blade code in the prop.
 #define BC_DUAL_BLADES             - Use Dual Blades mode for a staff saber setup.
@@ -1163,10 +1160,6 @@ EFFECT(volup);      // for increse volume
 EFFECT(voldown);    // for decrease volume
 EFFECT(volmin);     // for minimum volume reached
 EFFECT(volmax);     // for maximum volume reached
-#ifdef ENABLE_FASTON
-#warning The faston.wav sound will be replaced with fastout.wav. If you have a good reason to keep faston.wav as is, please post at https://crucible.hubbe.net/
-EFFECT(faston);     // for EFFECT_FAST_ON. Being replaced by fastout.wav, which is already defined in the main OS.
-#endif
 EFFECT(push);       // for Force Push gesture
 EFFECT(tr);         // for EFFECT_TRANSITION_SOUND, use with User Effects.
 EFFECT(mute);       // Notification before muted ignition to avoid confusion.
@@ -2750,22 +2743,6 @@ any # of buttons
       case EFFECT_IGNITION:
         scroll_presets_ = false;
         saber_on_time_ = millis();
-        return;
-      // Gesture on, bypass preon
-      case EFFECT_FAST_ON:
-        if (!SaberBase::IsOn()) FastOn();
-#ifdef ENABLE_FASTON
-        if (SFX_faston) hybrid_font.PlayPolyphonic(&SFX_faston);
-#endif
-        scroll_presets_ = false;
-        return;
-      case EFFECT_FAST_OFF:
-        if (on_pending_) return;
-        Off(OFF_FAST);
-        saber_off_time_ = millis();
-        battle_mode_ = false;
-        spam_blast_ = false;
-        muted_ = false;
         return;
       case EFFECT_TRANSITION_SOUND: 
         if (SFX_tr) hybrid_font.PlayPolyphonic(&SFX_tr);
