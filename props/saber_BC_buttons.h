@@ -1991,9 +1991,6 @@ public:
   RefPtr<BufferedWavPlayer> wav_player;
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
-#ifdef BC_DUAL_BLADES
-    GetThrustBladeLocation();
-#endif
 
     if (event == EVENT_TWIST) {
       PVLOG_DEBUG << "**** Detected EVENT_TWIST in Event2, stopping timer and resetting saved twist.\n";
