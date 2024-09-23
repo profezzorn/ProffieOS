@@ -1995,7 +1995,7 @@ public:
     if (event == EVENT_TWIST) {
       PVLOG_DEBUG << "**** Detected EVENT_TWIST in Event2, stopping timer and resetting saved twist.\n";
       saved_twist_ = 0;
-      twist_timer_.stop();
+      twist_timer_.stopTimer();
     }
 
     switch (EVENTID(button, event, modifiers)) {
