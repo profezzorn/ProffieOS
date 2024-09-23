@@ -1899,16 +1899,6 @@ public:
     }
   }
 
-  void TurnDualBladesOn() {
-    TurnOnHelper();
-    PVLOG_NORMAL << "**** Dual Blades Turned ON\n";
-  }
-
-  void TurnDualBladesOff() {
-    TurnOffHelper();
-    PVLOG_NORMAL << "** Dual Blades Turned OFF\n";
-  }
-
   // Determine the active blade based on x-axis motion - for thrust effects
   void GetThrustBladeLocation() {
     mss = fusor.mss();
@@ -2101,7 +2091,7 @@ any # of buttons
 
 // Turn Dual Blades ON
       case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_OFF):
-        TurnDualBladesOn();
+        TurnOnHelper();
         return true;
 
 // Turn Dual Blades ON Muted
@@ -2271,7 +2261,7 @@ any # of buttons
 #else
       case EVENTID(BUTTON_AUX, EVENT_SECOND_CLICK_LONG, MODE_OFF):
 #endif
-        TurnDualBladesOn();
+        TurnOnHelper();
         return true;
 
 // Turn Dual Blades ON Muted
@@ -2296,7 +2286,7 @@ any # of buttons
 #else
       case EVENTID(BUTTON_AUX, EVENT_SECOND_CLICK_LONG, MODE_ON):
 #endif
-        TurnDualBladesOff();
+        TurnOffHelper();
         return true;
 
 #endif  // BC_DUAL_BLADES
