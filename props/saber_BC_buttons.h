@@ -1836,7 +1836,7 @@ public:
 
   // Get blade location to apply effect to
   BladeSet GetBladeAboveHorizon() {
-    return accel_.x > 0 ? BC_MAIN_BLADE_SET : BC_SECOND_BLADE_SET;
+    return fusor.angle1() > 0 ? BC_MAIN_BLADE_SET : BC_SECOND_BLADE_SET;
   }
 
   void TurnBladeOn(BladeSet target_blade) {
