@@ -2416,6 +2416,8 @@ any # of buttons
         if (millis() - last_thrust_millis_ < 200 ||
             millis() - saber_on_time_ < 2000)
           return false;        
+
+          GetThrustBladeLocation();
         // Check if both blades are already on
         if (isMainBladeOn() && isSecondBladeOn()) {
           if (on_pending_) return false;
@@ -2493,6 +2495,7 @@ any # of buttons
         if (millis() - saber_off_time_ > 1000) {
           GestureEnableBattleMode();
 #ifdef BC_DUAL_BLADES
+          GetThrustBladeLocation();
           thrusting_blade_ = thrusting_blade_ | ~controlled_blades_;
           PVLOG_NORMAL << "** " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN" : "SECOND") << " Blade Activated\n";
           FastOn(EffectLocation(0, thrusting_blade_));
