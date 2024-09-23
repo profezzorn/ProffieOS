@@ -1800,7 +1800,7 @@ public:
 
   void ToggleBattleMode() {
 #ifndef BC_NO_BM
-  battle_mode_ = !battle_mode_;
+    battle_mode_ = !battle_mode_;
     PVLOG_NORMAL << (battle_mode_ ? "** Entering" : "** Exiting") << " Battle Mode\n";
     if (battle_mode_) {
       if (!hybrid_font.PlayPolyphonic(&SFX_bmbegin)) {
