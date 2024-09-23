@@ -2427,10 +2427,8 @@ any # of buttons
         } else {
           if (thrusting_blade_ == BC_MAIN_BLADE_SET && isSecondBladeOn()) {
             TurnBladeOn(BC_MAIN_BLADE_SET);
-            PVLOG_NORMAL << "** Main Blade THRUST ON\n";
           } else if (thrusting_blade_ == BC_SECOND_BLADE_SET && isMainBladeOn()) {
             TurnBladeOn(BC_SECOND_BLADE_SET);
-            PVLOG_NORMAL << "** Second Blade THRUST ON\n";
           }
         }
         last_thrust_millis_ = millis();
@@ -2497,7 +2495,7 @@ any # of buttons
 #ifdef BC_DUAL_BLADES
           GetThrustBladeLocation();
           thrusting_blade_ = thrusting_blade_ | ~controlled_blades_;
-          PVLOG_NORMAL << "** " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN" : "SECOND") << " Blade Activated\n";
+          PVLOG_NORMAL << "** " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN" : "SECOND") << " Blade THRUST ON\n";
           FastOn(EffectLocation(0, thrusting_blade_));
 #else
           FastOn();
