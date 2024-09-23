@@ -2414,7 +2414,8 @@ any # of buttons
 // Stab
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
         if (millis() - last_thrust_millis_ < 200 ||
-            millis() - saber_on_time_ < 2000) return false;        
+            millis() - saber_on_time_ < 2000)
+          return false;        
         // Check if both blades are already on
         if (isMainBladeOn() && isSecondBladeOn()) {
           if (on_pending_) return false;
