@@ -1900,14 +1900,14 @@ public:
   }
 
   // Determine the active blade based on x-axis motion - for thrust effects
-  void GetThrustBladeLocation() {
+  EffectLocation GetThrustBladeLocation() {
     mss = fusor.mss();
     if (mss.x < 14) {
-        thrusting_blade_ = BC_MAIN_BLADE_SET;
+      thrusting_blade_ = BC_MAIN_BLADE_SET;
     } else if (mss.x > -14) {
-        thrusting_blade_ = BC_SECOND_BLADE_SET;
+      thrusting_blade_ = BC_SECOND_BLADE_SET;
     }
-    thrust_location = EffectLocation(0, thrusting_blade_);
+    return EffectLocation(0, thrusting_blade_);
   }
 
   void DoAccel(const Vec3& accel, bool clear) override {
@@ -2423,7 +2423,7 @@ any # of buttons
           if (on_pending_) return false;
           SaberBase::SetClashStrength(2.0);
           PVLOG_NORMAL << "** Doing STAB on " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN blade.\n" : "SECOND blade.\n");
-          SaberBase::DoEffect(EFFECT_STAB, thrust_location);
+          SaberBase::DoEffect(EFFECT_STAB, GetThrustBladeLocation());
         } else {
           if (thrusting_blade_ == BC_MAIN_BLADE_SET && isSecondBladeOn()) {
             TurnBladeOn(BC_MAIN_BLADE_SET);
@@ -2802,7 +2802,6 @@ private:
 
   Vec3 mss;
   EffectLocation location;
-  EffectLocation thrust_location;
   BladeSet thrusting_blade_;
 };
 
