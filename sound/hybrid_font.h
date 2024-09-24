@@ -807,8 +807,8 @@ public:
   void SB_Motion(const Vec3& gyro, bool clear) override {
     if (active_state() && !(SFX_lockup && SaberBase::Lockup())) {
       StartSwing(gyro,
-     font_config.ProffieOSSwingSpeedThreshold,
-     font_config.ProffieOSSlashAccelerationThreshold);
+                 font_config.ProffieOSSwingSpeedThreshold,
+                 font_config.ProffieOSSlashAccelerationThreshold);
     }
   }
 
