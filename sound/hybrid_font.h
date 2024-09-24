@@ -34,19 +34,19 @@ public:
         case Effect::FileType::IMAGE:
           strcat(name, "IMG.");
           break;
-      default:
-    continue;
+        default:
+          continue;
       }
       strcat(name, e->GetName());
       strcat(name, ".");
       char* x = name + strlen(name);
 
       struct PairedVariable : public VariableBase {
-  Effect* e_;
-  PairedVariable(Effect* e) : e_(e) {}
-  void set(float value) override { e_->SetPaired(value > 0.5); }
-  float get() override { return e_->GetPaired(); }
-  void setDefault() override { e_->SetPaired(false);  }
+        Effect* e_;
+        PairedVariable(Effect* e) : e_(e) {}
+        void set(float value) override { e_->SetPaired(value > 0.5); }
+        float get() override { return e_->GetPaired(); }
+        void setDefault() override { e_->SetPaired(false);  }
       };
       
       strcpy(x, "paired");
@@ -54,11 +54,11 @@ public:
       op->run(name, &var1);
 
       struct VolumeVariable : public VariableBase {
-  Effect* e_;
-  VolumeVariable(Effect* e) : e_(e) {}
-  void set(float value) override { e_->SetVolume(value); }
-  float get() override { return e_->GetVolume(); }
-  void setDefault() override { e_->SetVolume(100);  }
+        Effect* e_;
+        VolumeVariable(Effect* e) : e_(e) {}
+        void set(float value) override { e_->SetVolume(value); }
+        float get() override { return e_->GetVolume(); }
+        void setDefault() override { e_->SetVolume(100);  }
       };
       
       strcpy(x, "volume");
@@ -149,7 +149,7 @@ public:
     if (monophonic_hum_) {
       if (SFX_clash || SFX_blaster || SFX_swing) {
         if (SFX_humm) {
-      monophonic_hum_ = false;
+          monophonic_hum_ = false;
           guess_monophonic_ = false;
           STDOUT.print("plecter polyphonic");
         } else {
@@ -310,16 +310,16 @@ public:
         if (!swing_player_) {
           if (!swinging_) {
             Effect* effect;
-      if (rss > slashThreshold && SFX_slsh) {
+              if (rss > slashThreshold && SFX_slsh) {
               effect = &SFX_slsh;
             } else if (SFX_swng) {
               effect = &SFX_swng;
             } else {
               effect = &SFX_swing;
             }
-      if (font_config.ProffieOSMaxSwingAcceleration > font_config.ProffieOSMinSwingAcceleration) {
+            if (font_config.ProffieOSMaxSwingAcceleration > font_config.ProffieOSMinSwingAcceleration) {
               float s = (rss - font_config.ProffieOSMinSwingAcceleration) / font_config.ProffieOSMaxSwingAcceleration;
-        effect->SelectFloat(s);
+              effect->SelectFloat(s);
             }
             swing_player_ = PlayPolyphonic(effect);
             swinging_ = true;
@@ -586,7 +586,7 @@ public:
   }
 
   void SB_BladeDetect(bool detected) {
-   Effect &X(detected ? SFX_bladein : SFX_bladeout);
+    Effect &X(detected ? SFX_bladein : SFX_bladeout);
     if (X) {
       PlayPolyphonic(&X);
       return;
@@ -607,6 +607,7 @@ public:
       beeper.Beep(0.05, 1046.5);
     }
   }
+
   void SB_Change(SaberBase::ChangeType change) override {
     switch (change) {
       case SaberBase::ENTER_COLOR_CHANGE:
@@ -641,23 +642,23 @@ public:
         if (!SFX_armhum && SFX_swing) loop = &SFX_swing;  // Thermal-D fallback
         break;
       case SaberBase::LOCKUP_AUTOFIRE:
-    if (SFX_bgnauto) once = &SFX_bgnauto;
-    if (SFX_auto) loop = &SFX_auto;
-    break;
+        if (SFX_bgnauto) once = &SFX_bgnauto;
+        if (SFX_auto) loop = &SFX_auto;
+        break;
       case SaberBase::LOCKUP_LIGHTNING_BLOCK:
-    if (SFX_bgnlb) once = &SFX_bgnlb;
-    if (SFX_lb) loop = &SFX_lb;
-    goto normal_fallback;
+        if (SFX_bgnlb) once = &SFX_bgnlb;
+        if (SFX_lb) loop = &SFX_lb;
+        goto normal_fallback;
       case SaberBase::LOCKUP_MELT:
-    if (SFX_bgnmelt) once = &SFX_bgnmelt;
-    if (SFX_melt) loop = &SFX_melt;
+        if (SFX_bgnmelt) once = &SFX_bgnmelt;
+        if (SFX_melt) loop = &SFX_melt;
         // fall through
       case SaberBase::LOCKUP_DRAG:
         if (!once && SFX_bgndrag) once = &SFX_bgndrag;
         if (!loop && SFX_drag) loop = &SFX_drag;
         // fall through
       case SaberBase::LOCKUP_NORMAL:
-    normal_fallback:
+        normal_fallback:
         if (!once && SFX_bgnlock) once = &SFX_bgnlock;
         // fall through
       case SaberBase::LOCKUP_NONE:
@@ -691,16 +692,16 @@ public:
         if (!end) end = &SFX_blast; // if we don't, end with a blast
         break;
       case SaberBase::LOCKUP_LIGHTNING_BLOCK:
-    if (SFX_endlb) end = &SFX_endlb;
-    goto normal_fallback_end;
+        if (SFX_endlb) end = &SFX_endlb;
+        goto normal_fallback_end;
       case SaberBase::LOCKUP_MELT:
-    if (SFX_endmelt) end = &SFX_endmelt;
+        if (SFX_endmelt) end = &SFX_endmelt;
         // fall through
       case SaberBase::LOCKUP_DRAG:
         if (!end && SFX_enddrag) end = &SFX_enddrag;
         // fall through
       case SaberBase::LOCKUP_NORMAL:
-    normal_fallback_end:
+        normal_fallback_end:
         if (!end && SFX_endlock) end = &SFX_endlock;
         if (!end) end = &SFX_clash;
         // fall through
@@ -789,16 +790,16 @@ public:
   void Loop() override {
     if (state_ == STATE_WAIT_FOR_ON) {
       if (!GetWavPlayerPlaying(&SFX_preon)) {
-  SaberBase::TurnOn(saved_location_);
-  return;
+        SaberBase::TurnOn(saved_location_);
+        return;
       }
     }
     if (check_postoff_) {
       if (!GetWavPlayerPlaying(&SFX_in) &&
-    !GetWavPlayerPlaying(&SFX_poweroff) &&
-    !GetWavPlayerPlaying(&SFX_pwroff)) {
-  check_postoff_ = false;
-  SaberBase::DoEffect(EFFECT_POSTOFF, saved_location_);
+        !GetWavPlayerPlaying(&SFX_poweroff) &&
+        !GetWavPlayerPlaying(&SFX_pwroff)) {
+      check_postoff_ = false;
+      SaberBase::DoEffect(EFFECT_POSTOFF, saved_location_);
       }
     }
   }
@@ -834,7 +835,6 @@ public:
   float volume_;
   float current_effect_length_ = 0.0;
   EffectLocation saved_location_;
-
 };
 
 #endif
