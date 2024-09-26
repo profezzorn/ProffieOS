@@ -203,11 +203,11 @@ struct ST7735 : public ST77XXCommands {
     > RCMD3;
 
   typedef ConcatByteArrays<
-    SLEEP<30>,
+    SLEEP<150>,
     SWRESET,
     SLEEP<150>,
     SLPOUT,
-    SLEEP<500>,
+    SLEEP<150>,
     FRMCTR1<0x01, 0x2C, 0x2D>,
     FRMCTR2<0x01, 0x2C, 0x2D>,
     FRMCTR3<0x01, 0x2C, 0x2D, 0x01, 0x2C, 0x2D>,
