@@ -357,6 +357,9 @@ public:
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
+#ifdef BLADE_ID_SCAN_MILLIS
+    blade_id_scan_start_ = millis();
+#endif
     bool on = IsOn();
     BladeSet ret = SaberBase::OnBlades();
     if (on) {
@@ -581,22 +584,30 @@ public:
 #ifndef SHARED_POWER_PINS
 #warning SHARED_POWER_PINS is recommended when using BLADE_ID_SCAN_MILLIS
 #endif
+#ifndef BLADE_ID_SCAN_TIMEOUT
+#define BLADE_ID_SCAN_TIMEOUT 60 * 10 * 1000
+#endif
   bool find_blade_again_pending_ = false;
   uint32_t last_scan_id_ = 0;
-  bool ScanBladeIdNow() {
-    uint32_t now = millis();
-    if (now - last_scan_id_ > BLADE_ID_SCAN_MILLIS) {
-      last_scan_id_ = now;
-      size_t best_config = FindBestConfig();
-      if (current_config != blades + best_config) {
-  // We can't call FindBladeAgain right away because
-  // we're called from the blade. Wait until next loop() call.
-  find_blade_again_pending_ = true;
-      }
-      return true;
+    bool ScanBladeIdNow() {
+        uint32_t now = millis();
+        if (IsOn() == false && (now - blade_id_scan_start_) < BLADE_ID_SCAN_TIMEOUT) {
+            if (now - last_scan_id_ > BLADE_ID_SCAN_MILLIS) {
+                last_scan_id_ = now;
+                size_t best_config = FindBestConfig();
+                if (current_config != blades + best_config) {
+                    // We can't call FindBladeAgain right away because
+                    // we're called from the blade. Wait until next loop() call.
+                    find_blade_again_pending_ = true;
+                }
+                return true;
+            }
+            return false;
+        }
+        else{
+            return false;
+        }
     }
-    return false;
-  }
 
   // Must be called from loop()
   void PollScanId() {
@@ -1120,6 +1131,13 @@ public:
 
     current_mode->mode_Loop();
 
+#ifdef BLADE_ID_SCAN_MILLIS
+    if (SaberBase::IsOn() ||
+        (current_style() && current_style()->Charging())) {
+      blade_id_scan_start_ = millis();
+      }
+#endif
+      
 #ifdef IDLE_OFF_TIME
     if (SaberBase::IsOn() ||
         (current_style() && current_style()->Charging())) {
@@ -1139,6 +1157,10 @@ public:
 
 #ifdef IDLE_OFF_TIME
   uint32_t last_on_time_;
+#endif
+    
+#ifdef BLADE_ID_SCAN_MILLIS
+  uint32_t blade_id_scan_start_;
 #endif
 
 #ifdef SOUND_LIBRARY_REQUIRED
