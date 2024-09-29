@@ -587,7 +587,7 @@ public:
     uint32_t now = millis();
     if (now - last_scan_id_ > BLADE_ID_SCAN_MILLIS) {
       last_scan_id_ = now;
-#if PROFFIEOS_LOG_LEVEL == 500
+#if PROFFIEOS_LOG_LEVEL >= 500
       size_t best_config = FindBestConfig(true);
 #else
       size_t best_config = FindBestConfig();
