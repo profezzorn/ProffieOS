@@ -510,7 +510,7 @@ public:
 
   const char* name() override { return "SPIDisplay_AdaFruit358"; }
   
-  SPIDisplayBase() {
+  SPIDisplayBase() : Looper(HFLINK) {
     cb = spi_irq_helper.getCallback(this);
   }
 
