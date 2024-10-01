@@ -8,69 +8,74 @@
 // transition is picked from the specified list of
 // transitions.
 
-class TransitionInterface {
-public:
-  virtual bool done() = 0;
-  virtual void begin() = 0;
-  virtual void run(BladeBase* blade) = 0;
-  virtual RGBA getColor(const RGBA& a, const RGBA& b, int led) = 0;
-};
+template<class T> class TrHelper2 {};
 
 template<class TR>
-class TrWrapper : public TransitionInterface {
-public:
-  bool done() override { return tr_.done(); }
-  void begin() override { tr_.begin(); }
-  void run(BladeBase* blade) override { tr_.run(blade); }
-  RGBA getColor(const RGBA& a,
-		const RGBA& b,
-		int led) override {
-    return tr_.getColor(a, b, led);
-  }
-public:
+class TrHelper2<TypeList<TR>> : public TR {
+private:
   TR tr_;
-};
-
-// This could be made generic for any interface.
-template<class... TR> class TrHelper {};
-template<class TR>
-class TrHelper<TR> {
 public:
-  TransitionInterface* get(int n) { return &tr_; }
-private:
-  TrWrapper<TR> tr_;
-};
-
-template<class TR, class... REST>
-class TrHelper<TR, REST...> {
-public:
-  TransitionInterface* get(int n) {
-    if (!n) return &tr_;
-    return rest_.get(n-1);
+  size_t size() { return 1; }
+  bool done(int N) { return tr_.done(); }
+  void begin(int N) { tr_.begin(); }
+  void run(int N, BladeBase* blade) { tr_.run(blade); }
+  template<class A, class B>
+  auto getColor(int N, A a, B b, int led) -> decltype(tr_.getColor(a, b, led)) {
+    return TR::getColor(a, b, led);
   }
+};
+
+template<class T1, class T2, class... REST>
+class TrHelper2<TypeList<T1, T2, REST...>> {
 private:
-  TrWrapper<TR> tr_;
-  TrHelper<REST...> rest_;
+  PONUA TrHelper2<typename SplitTypeList<TypeList<T1, T2, REST...>>::first_half> a_;
+  PONUA TrHelper2<typename SplitTypeList<TypeList<T1, T2, REST...>>::second_half> b_;
+public:
+  size_t size() { return sizeof...(REST) + 2; }
+
+  bool done(int N) {
+    if (N < a_.size()) return a_.done(N);
+    return b_.done(N - a_.size());
+  }
+  void begin(int N) {
+    if (N < a_.size()) return a_.begin(N);
+    return b_.begin(N - a_.size());
+  }
+  void run(int N, BladeBase* blade) {
+    if (N < a_.size()) return a_.run(N, blade);
+    return b_.run(N - a_.size(), blade);
+  }
+  template<class A, class B>
+  auto getColor(int N, A a, B b, int led) -> decltype(MixColors(a_.getColor(0, a, b, led), b_.getColor(0, a, b, led), 1, 1)) {
+    if (N < a_.size()) return a_.getColor(N, a, b, led);
+    return b_.getColor(N - a_.size(), a, b, led);
+  }
+};
+
+template<class... TR>
+class TrHelper3 {
+protected:
+  TrHelper2<TypeList<TR...>> tr_;
+  uint16_t selected_;
+public:
+  bool done() { return tr_.done(selected_); }
+  void begin() { tr_.begin(selected_); }
+  void run(BladeBase* blade) { tr_.run(selected_, blade); }
+
+  template<class A, class B>
+  auto getColor(A a, B b, int led) -> decltype(tr_.getColor(0, a, b, led)) {
+    return tr_.getColor(selected_, a, b, led);
+  }
 };
 
 
 template<class... TRANSITION>
-class TrRandom {
+class TrRandom : public TrHelper3<TRANSITION...> {
 public:
   void begin() {
-    selected_ = transitions_.get(random(sizeof...(TRANSITION)));
-    selected_->begin();
+    this->selected_ = random(sizeof...(TRANSITION));
+    TrHelper3<TRANSITION...>::begin();
   }
-  bool done() { return selected_->done(); }
-  void run(BladeBase* blade) { selected_->run(blade); }
-  RGBA getColor(const RGBA& a,
-		const RGBA& b,
-		int led) {
-    return selected_->getColor(a, b, led);
-  }
-private:
-  TrHelper<TRANSITION...> transitions_;
-  TransitionInterface* selected_;
 };
 
 #endif

@@ -12,7 +12,7 @@
 // with Int<0> representing first transition
 
 template<class F, class... TRANSITION>
-class TrSelect {
+class TrSelect : public TrHelper3<TRANSITION...> {
 public:
   void begin() {
     begin_ = true;
@@ -21,29 +21,20 @@ public:
     f_.run(blade);
     if (begin_) {
       begin_ = false;
-      int f = f_.calculate(blade);
-      while(f < 0) f += sizeof...(TRANSITION) << 8;
-      uint8_t selection = f % sizeof...(TRANSITION);
-      selected_ = transitions_.get(selection % sizeof...(TRANSITION));
-      selected_->begin();
+      this->selected_ = MOD(f_.calculate(blade), sizeof...(TRANSITION));
+      TrHelper3<TRANSITION...>::begin();
     }
-    selected_->run(blade); 
+    TrHelper3<TRANSITION...>::run(blade);
   }
 
-  RGBA getColor(const RGBA& a, const RGBA& b, int led) {
-    return selected_->getColor(a, b, led);
-  }
   bool done() {
     if (begin_) return false;
-    if (!selected_) return true;
-    return selected_->done();
+    return TrHelper3<TRANSITION...>::done();
   }
 
 private:
   bool begin_ = false;
   PONUA SVFWrapper<F> f_;
-  PONUA TrHelper<TRANSITION...> transitions_;
-  TransitionInterface* selected_ = nullptr;
 };
 
 #endif
