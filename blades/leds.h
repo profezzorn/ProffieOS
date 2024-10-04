@@ -137,15 +137,71 @@ struct CreeXPLTemplate {
 
 using CreeXPL = CreeXPLTemplate<>;
 
-// This is a "superbright 3mm blue led" that I found on ebay.
-// I used this to build an LED string with ~150 LEDs.
-// Since I don't have a proper datasheet, I measured these values.
+// Useful for 3mm and 5mm accent leds:
+
 struct Blue3mmLED {
-  static constexpr float MaxAmps = 0.03 * 150;
+  static constexpr float MaxAmps = 0.02;
   static constexpr float MaxVolts = 3.4;
-  static constexpr float P2Amps = 0.016 * 150;
+  static constexpr float P2Amps = 0.01;
   static constexpr float P2Volts = 3.2;
   static constexpr float R = 0.05; // assumed wire resistance
+  static const int Red = 0;
+  static const int Green = 0;
+  static const int Blue = 255;
+};
+
+struct Red3mmLED {
+  static constexpr float MaxAmps = 0.02;
+  static constexpr float MaxVolts = 1.8;
+  static constexpr float P2Amps = 0.01;
+  static constexpr float P2Volts = 1.7;
+  static constexpr float R = 0.05; // assumed wire resistance
+  static const int Red = 255;
+  static const int Green = 0;
+  static const int Blue = 0;
+};
+
+struct Green3mmLED {
+  static constexpr float MaxAmps = 0.02;
+  static constexpr float MaxVolts = 3.2;
+  static constexpr float P2Amps = 0.01;
+  static constexpr float P2Volts = 3.0;
+  static constexpr float R = 0.05; // assumed wire resistance
+  static const int Red = 0;
+  static const int Green = 255;
+  static const int Blue = 0;
+};
+
+struct Yellow3mmLED {
+  static constexpr float MaxAmps = 0.02;
+  static constexpr float MaxVolts = 2.0;
+  static constexpr float P2Amps = 0.01;
+  static constexpr float P2Volts = 1.8;
+  static constexpr float R = 0.05; // assumed wire resistance
+  static const int Red = 255;
+  static const int Green = 255;
+  static const int Blue = 0;
+};
+
+struct White3mmLED {
+  static constexpr float MaxAmps = 0.02;
+  static constexpr float MaxVolts = 3.1;
+  static constexpr float P2Amps = 0.01;
+  static constexpr float P2Volts = 3.0;
+  static constexpr float R = 0.05; // assumed wire resistance
+  static const int Red = 255;
+  static const int Green = 255;
+  static const int Blue = 255;
+};
+
+// Useful for Bluetooth module:
+
+struct BTmodule {
+  static constexpr float MaxAmps = 0.1;
+  static constexpr float MaxVolts = 4.2;
+  static constexpr float P2Amps = 0.09;
+  static constexpr float P2Volts = 4.1;
+  static constexpr float R = 0; // assumed wire resistance
   static const int Red = 0;
   static const int Green = 0;
   static const int Blue = 255;
