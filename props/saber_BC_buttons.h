@@ -1386,8 +1386,8 @@ public:
   }
 
   bool isTimerRunning() {
-    isTimerExpired();  // Check if the timer has expired
-    return triggered_;  // Return whether the timer is still running
+    isTimerExpired();
+    return triggered_;
   }
 
 private:
