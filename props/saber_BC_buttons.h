@@ -1561,7 +1561,7 @@ public:
       // Save the current twist and start the timer if no twist is saved
       saved_twist_ = event;
       twist_timer_.trigger(NORMAL_TWIST_TIMEOUT);
-    PVLOG_NORMAL << "**** Saving twist event: " << (event == EVENT_TWIST_LEFT ? "TWIST LEFT" : "TWIST RIGHT") << ". Starting timer.\n";
+    PVLOG_DEBUG << "**** Saving twist event: " << (event == EVENT_TWIST_LEFT ? "TWIST LEFT" : "TWIST RIGHT") << ". Starting timer.\n";
     }
   }
 
