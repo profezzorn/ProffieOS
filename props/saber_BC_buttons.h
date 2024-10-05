@@ -1107,20 +1107,8 @@ push                    - force push
 #define BUTTON_HELD_LONG_TIMEOUT 2000
 #endif
 
-#ifndef REGULAR_TWIST_TIMEOUT
-#define REGULAR_TWIST_TIMEOUT 350
-#endif
-
-#ifdef BC_SWING_ON
-#define SWING_GESTURE
-#endif
-
-#ifdef BC_TWIST_ON
-#define TWIST_GESTURE
-#endif
-
-#ifdef BC_THRUST_ON
-#define THRUST_GESTURE
+#ifndef NORMAL_TWIST_TIMEOUT
+#define NORMAL_TWIST_TIMEOUT 400
 #endif
 
 #ifndef BC_MAIN_BLADE
@@ -1388,7 +1376,7 @@ public:
     triggered_ = false;
   }
 
-  bool timerCheck() {
+  bool isTimerExpired() {
     if (!triggered_) return false;
     if (millis() - trigger_time_ > duration_) {
       stopTimer();
@@ -1398,8 +1386,8 @@ public:
   }
 
   bool isTimerRunning() {
-    timerCheck();
-    return triggered_;
+    isTimerExpired();  // Check if the timer has expired
+    return triggered_;  // Return whether the timer is still running
   }
 
 private:
@@ -1508,7 +1496,7 @@ public:
     }
 // Timers
     // Play optional mute.wav first.
-    if (mute_all_timer_.timerCheck()) {
+    if (mute_all_timer_.isTimerExpired()) {
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
@@ -1516,7 +1504,7 @@ public:
       }
     }
 #ifdef BC_DUAL_BLADES
-    if (mute_mainBlade_timer_.timerCheck()) {
+    if (mute_mainBlade_timer_.isTimerExpired()) {
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
@@ -1524,7 +1512,7 @@ public:
         PVLOG_NORMAL << "** Main Blade Turned ON Muted\n";
       }
     }
-    if (mute_secondBlade_timer_.timerCheck()) {
+    if (mute_secondBlade_timer_.isTimerExpired()) {
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
@@ -1534,10 +1522,10 @@ public:
     }
 #endif
     // Allow beep to be heard.
-    if (scroll_presets_timer_.timerCheck() && scroll_presets_) {
+    if (scroll_presets_timer_.isTimerExpired() && scroll_presets_) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
     }
-    if (twist_timer_.timerCheck()) {
+    if (twist_timer_.isTimerExpired()) {
       DoSavedTwist();
     }
   }  // Loop()
@@ -1554,7 +1542,7 @@ public:
 #endif
 
   void DetectMenuTurn() {
-    float a = fusor.angle2() - current_menu_angle_;
+    float a = fusor.angle2() - current_twist_angle_;
     if (isPointingUp()) return;
     // Keep the rotational angle within range of 
     // -180 to 180 degrees in terms of radians.
@@ -1572,8 +1560,8 @@ public:
     if (!saved_twist_) {
       // Save the current twist and start the timer if no twist is saved
       saved_twist_ = event;
-      twist_timer_.trigger(REGULAR_TWIST_TIMEOUT);
-    PVLOG_DEBUG << "**** Saving twist event: " << (event == EVENT_TWIST_LEFT ? "TWIST LEFT" : "TWIST RIGHT") << ". Starting timer.\n";
+      twist_timer_.trigger(NORMAL_TWIST_TIMEOUT);
+    PVLOG_NORMAL << "**** Saving twist event: " << (event == EVENT_TWIST_LEFT ? "TWIST LEFT" : "TWIST RIGHT") << ". Starting timer.\n";
     }
   }
 
@@ -1581,7 +1569,9 @@ public:
     // Trigger the saved twist after timeout
     PVLOG_DEBUG << (saved_twist_ == EVENT_TWIST_LEFT ? "**** Doing SAVED TWIST LEFT\n" : "Doing SAVED TWIST RIGHT\n");
     Event(BUTTON_NONE, (EVENT)saved_twist_);
-    current_menu_angle_ = fusor.angle2();
+    current_twist_angle_ = fusor.angle2();
+    // Clear the twist state and reset strokes to prevent Normal Twist after USER twist
+    DoGesture(TWIST_CLOSE);
     saved_twist_ = 0;
   }
 
@@ -2777,7 +2767,7 @@ private:
   DelayTimer quote_delay_timer_;
   DelayTimer twist_timer_;
 
-  float current_menu_angle_ = 0.0;
+  float current_twist_angle_ = 0.0;
   uint32_t saved_twist_ = 0;
   bool battle_mode_ = false;
   bool auto_lockup_on_ = false;
