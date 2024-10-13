@@ -49,7 +49,7 @@ public:
       if (M > 0) {
 	// TODO: Get rid of float math.
 	float dist = fabsf(b.location - led/(float)num_leds_);
-	int N = fabsf(dist - T / (WAVE_MS * 1000.0)) * WAVE_SIZE;
+	int N = fabsf(dist - T / (WAVE_MS * 1000.0f)) * WAVE_SIZE;
 	if (N <= 32) {
 	  mix += blast_hump[N] * M / 1000;
 	}
