@@ -56,6 +56,7 @@ struct DefaultMenuSpec {
   typedef mode::SelectArgNumber<SPEC> SelectArgNumber;
   typedef mode::ColorSelectMode<SPEC> SelectArgColor;
 
+  typedef mode::FileColorMenu<SPEC> FileColorMenu;
   typedef mode::ColorHueMode<SPEC> ColorHueMode;
   typedef mode::ColorBrightnessMode<SPEC> ColorBrightnessMode;
   typedef mode::ColorRedMode<SPEC> ColorRedMode;

@@ -14,20 +14,21 @@ namespace mode {
 
 struct MenuEntry {
   static const int size = 1;
-  virtual void say(int entry) = 0;
-  virtual void select(int entry) = 0;
+  // Should have, but vtables take up space.
+  // void say(int entry)
+  // void select(int entry) = 0;
 };
 
 struct NullEntry : public MenuEntry {
   static const int size = 0;
-  virtual void say(int entry) {};
-  virtual void select(int entry) {};
+  void say(int entry) {};
+  void select(int entry) {};
 };
 
 template<class SUBMENU, class SOUND>
 struct SubMenuEntry : public MenuEntry {
-  void say(int entry) override { SOUND::say(); }
-  void select(int entry) override { pushMode<SUBMENU>(); }
+  void say(int entry) { SOUND::say(); }
+  void select(int entry) { pushMode<SUBMENU>(); }
 };
 
 //  All blades
@@ -35,11 +36,11 @@ template<class SPEC, class SUBMENU, class SOUND>
 struct SubMenuAllBladeEntry : public MenuEntry {
   static const int size = NUM_BLADES;
   int blade(int entry) { return entry + 1; }
-  void say(int entry) override {
+  void say(int entry) {
     SOUND::say();
     getSL<SPEC>()->SayWhole(blade(entry));
   }
-  void select(int entry) override {
+  void select(int entry) {
     menu_current_blade = blade(entry);
     pushMode<SUBMENU>();
   }
@@ -50,12 +51,12 @@ template<class SPEC, class SUBMENU, class SOUND, class BLADEARRAY>
 struct SubMenuBladeEntry : public MenuEntry {
   static const int size = sizeof(BLADEARRAY::data);
   int blade(int entry) { return BLADEARRAY::data[entry]; }
-  void say(int entry) override {
+  void say(int entry) {
     SOUND::say();
     getSL<SPEC>()->SayBlade();
     getSL<SPEC>()->SayWhole(blade(entry));
   }
-  void select(int entry) override {
+  void select(int entry) {
     menu_current_blade = blade(entry);
     pushMode<SUBMENU>();
   }
@@ -64,8 +65,8 @@ struct SubMenuBladeEntry : public MenuEntry {
 // CMD and arg are expected to be ByteArray.
 template<class CMD, class ARG, class SOUND>
 struct CommandMenuEntry : public MenuEntry {
-  void say(int entry) override { SOUND::say(); }
-  void select(int entry) override {
+  void say(int entry) { SOUND::say(); }
+  void select(int entry) {
     SoundLibrary::tSelect::say();
     CommandParser::DoParse(CMD::str, ARG::str);
   }
@@ -74,18 +75,18 @@ struct CommandMenuEntry : public MenuEntry {
 
 template<class SOUND>
 struct PopMenuEntry : public MenuEntry {
-  void say(int entry) override { SOUND::say(); }
-  void select(int entry) override { popMode(); }
+  void say(int entry) { SOUND::say(); }
+  void select(int entry) { popMode(); }
 };
 
 template<class A, class B>
 struct MenuEntryConcat : public MenuEntry {
   static const int size = A::size + B::size;
-  void say(int entry) override {
+  void say(int entry) {
     if (entry < A::size) a_.say(entry);
     else b_.say(entry - A::size);
   }
-  void select(int entry) override {
+  void select(int entry) {
     if (entry < A::size) a_.select(entry);
     else b_.select(entry - A::size);
   }

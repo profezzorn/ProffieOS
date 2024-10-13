@@ -7,9 +7,8 @@
 #include "menu_list.h"
 
 namespace mode {
-
+  
 // Note, the currently edited color is stored in ShowColorStyle.
-
 template<class SPEC>
 struct ColorHueMode : public SPEC::SmoothWraparoundMode {
 public:
@@ -133,10 +132,10 @@ Color16 menu_selected_color;
 
 template<class SPEC>
 struct SelectColorEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayCopyColor();
   }
-  void select(int entry) override {
+  void select(int entry) {
     getSL<SPEC>()->SaySelect();
     menu_selected_color = ShowColorStyle::getColor();
   }
@@ -144,21 +143,21 @@ struct SelectColorEntry : public MenuEntry {
   
 template<class SPEC>
 struct UseSelectedColorEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayPasteColor();
   }
-  void select(int entry) override {
+  void select(int entry) {
     getSL<SPEC>()->SaySelect();
     ShowColorStyle::SetColor(menu_selected_color);
   }
-};
+};  
 
 template<class SPEC>
 struct ResetColorToDefaultEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayResetToDefaultColor();
   }
-  void select(int entry) override {
+  void select(int entry) {
     getSL<SPEC>()->SaySelect();
     LSPtr<char> builtin = style_parser.ResetArguments(GetStyle(menu_current_blade));
     char argspace[32];
@@ -173,10 +172,10 @@ struct ResetColorToDefaultEntry : public MenuEntry {
 
 template<class SPEC, class MENU>
 struct SaveColorMenuEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SaySave();
   }
-  void select(int entry) override {
+  void select(int entry) {
     getSL<SPEC>()->SaySelect();
     getPtr<MENU>()->save();
     popMode();
@@ -194,6 +193,7 @@ using ColorSelectList = MenuEntryMenu<SPEC,
   typename SPEC::UseSelectedColorEntry,
   typename SPEC::ResetColorToDefaultEntry,
   SaveColorMenuEntry<SPEC, MENU>>;
+  
 
 template<class SPEC>
 struct ColorSelectMode : public ColorSelectList<SPEC, ColorSelectMode<SPEC>> {
