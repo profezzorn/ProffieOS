@@ -11,7 +11,7 @@
 template<class T> class TrHelper2 {};
 
 template<class TR>
-class TrHelper2<TypeList<TR>> : public TR {
+class TrHelper2<TypeList<TR>> {
 private:
   TR tr_;
 public:
@@ -21,7 +21,7 @@ public:
   void run(int N, BladeBase* blade) { tr_.run(blade); }
   template<class A, class B>
   auto getColor(int N, A a, B b, int led) -> decltype(tr_.getColor(a, b, led)) {
-    return TR::getColor(a, b, led);
+    return tr_.getColor(a, b, led);
   }
 };
 
@@ -56,10 +56,10 @@ template<class... TR>
 class TrHelper3 {
 protected:
   TrHelper2<TypeList<TR...>> tr_;
-  uint16_t selected_;
+  int selected_;
 public:
   bool done() { return tr_.done(selected_); }
-  void begin() { tr_.begin(selected_); }
+  void begin() { return tr_.begin(selected_); }
   void run(BladeBase* blade) { tr_.run(selected_, blade); }
 
   template<class A, class B>
@@ -68,14 +68,20 @@ public:
   }
 };
 
-
 template<class... TRANSITION>
 class TrRandom : public TrHelper3<TRANSITION...> {
 public:
-  void begin() {
-    this->selected_ = random(sizeof...(TRANSITION));
-    TrHelper3<TRANSITION...>::begin();
+  void begin() { select_ = true; }
+  void run(BladeBase* blade) {
+    if (select_) {
+      select_ = false;
+      this->selected_ = random(sizeof...(TRANSITION));
+      TrHelper3<TRANSITION...>::begin();
+    }
+    TrHelper3<TRANSITION...>::run(blade);
   }
+private:
+  bool select_ = true;
 };
 
 #endif
