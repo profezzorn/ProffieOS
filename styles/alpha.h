@@ -41,7 +41,32 @@ public:
 };
 
 // To enable Gradient/Mixes constricted within Bump<> and SmoothStep<> layers
-// Example: AlphaMixL<Bump<Int<16384>,Int<16384>>,Red,Green,Blue> will produce a gradient within the Bump 
-template<class MIX, class... COLORS> using AlphaMixL = AlphaL<Mix<MIX, COLORS...>, MIX>;
+// Example: AlphaMixL<Bump<Int<16384>,Int<16384>>,Red,Green,Blue> will produce a gradient within the Bump
+// template<class MIX, class... COLORS> using AlphaMixL = AlphaL<Mix<MIX, COLORS...>, MIX>;
+
+template<class MIX, class... COLORS>
+class AlphaMixL {
+private:
+  PONUA MixHelper<COLORS...> colors_;
+  PONUA MIX f_;
+public:
+  LayerRunResult run(BladeBase* blade) {
+    f_.run(blade);
+    colors_.run(blade);
+    FunctionRunResult ret = RunFunction(&f_, blade);
+    if (ret == FunctionRunResult::ZERO_UNTIL_IGNITION)
+      return LayerRunResult::TRANSPARENT_UNTIL_IGNITION;
+    return LayerRunResult::UNKNOWN;
+  }
+  auto getColor(int led) -> decltype(colors_.getColor(1,1) * 1) {
+    int alpha = f_.getInteger(led);
+    if (alpha == 0) return RGBA_um_nod::Transparent();
+    int x = alpha * (sizeof...(COLORS) + 1);
+    auto a = colors_.getColor(x >> 15, led);
+    auto b = colors_.getColor((x >> 15) + 1, led);
+    auto ret = MixColors(a, b, x & 0x7fff, 15);
+    return ret * alpha;
+  }
+};
 
 #endif
