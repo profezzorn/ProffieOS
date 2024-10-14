@@ -6,17 +6,33 @@ struct SoundToPlay {
   Effect* effect_;
   int selection_;
 
-  SoundToPlay() :filename_(nullptr), effect_(nullptr) {}
-  explicit SoundToPlay(const char* file) : filename_(file){  }
+  SoundToPlay() :filename_(nullptr), effect_(nullptr), selection_(-1) {}
+  explicit SoundToPlay(const char* file) : filename_(file) {  }
   SoundToPlay(Effect* effect, int selection = -1) : filename_(nullptr), effect_(effect), selection_(selection) {}
+  SoundToPlay(uint8_t R, uint8_t G, uint8_t B) :filename_(nullptr), effect_(nullptr), selection_((R << 16) + (G << 8) + B) {}
   bool Play(BufferedWavPlayer* player) {
-     if (filename_) return player->PlayInCurrentDir(filename_);
-     effect_->Select(selection_);
-     player->PlayOnce(effect_);
-     return true;
-   }
+    if (filename_) {
+      return player->PlayInCurrentDir(filename_);
+    }
+    if (effect_) {
+      effect_->Select(selection_);
+      player->PlayOnce(effect_);
+      return true;
+    }
+    // color
+    char filename[32];
+    strcpy(filename, "colors/");
+    char* tmp = filename + strlen(filename);
+    int N = selection_;
+    for (int j = 0; j < 6; j++) {
+      *(tmp++) = "0123456789abcdef"[(N >> 20) & 0xf];
+      N <<= 4;
+    }
+    strcpy(tmp, ".wav");
+    return player->PlayInCurrentDir(filename);
+  }
    bool isSet() {
-      return filename_ != nullptr || effect_ != nullptr;
+     return filename_ != nullptr || effect_ != nullptr || selection_ != -1;
    }
 };
 
