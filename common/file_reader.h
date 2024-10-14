@@ -207,7 +207,7 @@ public:
   }
   int ReadHex2() {
     int a = ReadHex1();
-    int b = ReadHex2();
+    int b = ReadHex1();
     if (a == -1 || b == -1) return -1;
     return (a << 4) | b;
   }
