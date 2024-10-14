@@ -211,9 +211,9 @@ struct SmoothChangeBladeDimmingMode : public SPEC::SmoothMode {
 
 template<class SPEC>
 struct AllowMountBoolSetting : public BoolSetting {
-  bool get() override { return LSFS::GetAllowMount(); }
-  void set(bool value) override { return LSFS::SetAllowMount(value); }
-  void say() override { getSL<SPEC>()->SaySDAccess(); }
+  bool get() { return LSFS::GetAllowMount(); }
+  void set(bool value) { return LSFS::SetAllowMount(value); }
+  void say() { getSL<SPEC>()->SaySDAccess(); }
 };
 #endif
 
