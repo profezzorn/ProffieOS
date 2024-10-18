@@ -1385,11 +1385,6 @@ public:
     return false;  // Timer is still running
   }
 
-  bool isTimerRunning() {
-    isTimerExpired();
-    return triggered_;
-  }
-
 private:
   bool triggered_;
   uint32_t trigger_time_;
@@ -1752,7 +1747,7 @@ public:
 
   void DoQuote() {
     if (scroll_presets_ || spam_blast_) return;
-    if (quote_delay_timer_.isTimerRunning()) return;  // prevent overlapping.
+    if (!quote_delay_timer_.isTimerExpired()) return;  // prevent overlapping.
     if (SFX_quote) {
       sequential_quote_ ? SFX_quote.SelectNext() : SFX_quote.Select(-1);
       SaberBase::DoEffect(EFFECT_QUOTE, 0);
