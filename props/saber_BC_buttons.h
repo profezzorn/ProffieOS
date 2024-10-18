@@ -1690,7 +1690,6 @@ public:
       speaking_ = true;
       SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
     }
-    return;
   }
 
   void OnDemandBatteryLevel() {
@@ -1698,7 +1697,6 @@ public:
     PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
     PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
     SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-    return;
   }
 
   void DoTrackStartOrStop() {
