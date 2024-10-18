@@ -1404,7 +1404,7 @@ public:
   const char* name() override { return "SaberBCButtons"; }
 
 #if defined(DYNAMIC_BLADE_LENGTH) && !defined(MENU_SPEC_TEMPLATE)
-  virtual void EnterBladeLengthMode() {
+  void EnterBladeLengthMode() {
     if (scroll_presets_ || !current_style()) return;
     if (current_mode == this) {
       sound_library_.SayEditBladeLength();
