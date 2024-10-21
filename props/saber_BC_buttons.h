@@ -1170,7 +1170,7 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     initial_volume_ = dynamic_mixer.get_volume();
     initial_percentage_ = round((initial_volume_ / max_volume_) * 10) * 10;
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
-    mode::getSL<SPEC>()->SayEnterVolumeMenu();
+    mode::getSL<SPEC>()->SayEditVolume();
     announce_volume();
     SPEC::SteppedMode::mode_activate(onreturn);
   }
