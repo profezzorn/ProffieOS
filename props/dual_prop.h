@@ -9,14 +9,14 @@ toggle to a blaster for example,
 and you want the buttons to take on different behaviors.
 
 How to use:
-Edit your config file as follows.
+Edit your config file as follows.(this example for a saber/blaster setup)
 Setup the prop section like this:
 #ifdef CONFIG_PROP
 #include "../props/dual_prop.h"
 #include "../props/saber_sa22c_buttons.h"
 #include "../props/blaster.h"
 #undef PROP_TYPE
-#define PROP_TYPE DualProp<SaberSA22CButtons, Blaster> // these are the classes found in the 2 props.
+#define PROP_TYPE SaberBlasterProp<SaberSA22CButtons, Blaster> // these are the classes found in the 2 props.
 #endif
 ** Note the prop file names (saber_sa22c_buttons.h and blaster.h)
 as well as the class names would change based on the prop you choose.

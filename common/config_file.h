@@ -8,6 +8,10 @@
 // TODO(hubbe): Read config files from serialflash.
 struct ConfigFile {
 
+  virtual ~ConfigFile() {
+    unlink();
+  }
+
   struct VariableBase {
     virtual void set(float v) = 0;
     virtual float get() = 0;
@@ -122,14 +126,40 @@ struct ConfigFile {
   virtual void SetVariable(const char* variable, float v) {
     if (!strcmp(variable, "=")) {
       SetDefaultOP op;
-      iterateVariables(&op);
+      iterateVariables_internal(&op);
     } else {
       SetVariableOP op(variable, v);
-      iterateVariables(&op);
+      iterateVariables_internal(&op);
     }
   }
 
   virtual void iterateVariables(VariableOP *op) {}
+
+  // Circular list
+  ConfigFile* next_ = this;
+
+  void link(ConfigFile* f) {
+    next_ = f->next_;
+    f->next_ = this;
+  }
+
+  void unlink() {
+    if (next_ == this) return;
+    for (ConfigFile **p = &next_;;p = & (*p)->next_) {
+      if (*p == this) {
+	*p = next_;
+	next_ = this;
+	return;
+      }
+    }
+  }
+
+  virtual void iterateVariables_internal(VariableOP *op) {
+    iterateVariables(op);
+    for (ConfigFile *f = next_; f != this; f = f->next_) {
+      f->iterateVariables(op);
+    }
+  }
 
   void WriteToDir(const char* dir, const char* basename, ConfigFileExt ext) {
     PathHelper full_name(dir, basename, ext == ConfigFileExt::CONFIG_INI ? "ini" : "tmp");
@@ -137,7 +167,7 @@ struct ConfigFile {
     BufferedFileWriter out(full_name);
     out.write_key_value("installed", install_time);
     BufferedSaveVariableOP op(out);
-    iterateVariables(&op);
+    iterateVariables_internal(&op);
     out.write_key_value("end", "1");
     out.Close(++iteration_);
     LOCK_SD(false);
@@ -160,7 +190,7 @@ struct ConfigFile {
 
   void Print(const char* variable) {
     ConfigFile::PrintVariableOP op(variable);
-    iterateVariables(&op);
+    iterateVariables_internal(&op);
   }
   
   void Set(const char* var_and_value) {
@@ -169,7 +199,7 @@ struct ConfigFile {
     memcpy(variable, var_and_value, nw - var_and_value);
     variable[nw - var_and_value] = 0;
     ConfigFile::SetVariableOP op(variable, parsefloat(nw));
-    iterateVariables(&op);
+    iterateVariables_internal(&op);
   }
 
   ReadStatus Read(const char *filename, bool reset = true) {

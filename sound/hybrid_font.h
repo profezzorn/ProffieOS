@@ -16,31 +16,6 @@ public:
     CONFIG_VARIABLE2(ProffieOSSmoothSwingDucking, 0.2f);
     CONFIG_VARIABLE2(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE2(ProffieOSSlashAccelerationThreshold, 130.0f);
-
-#ifdef ENABLE_DISPLAY_CODE
-    CONFIG_VARIABLE2(ProffieOSAnimationFrameRate, 0.0f);
-    CONFIG_VARIABLE2(ProffieOSTextMessageDuration, -1.0f);
-    CONFIG_VARIABLE2(ProffieOSBootImageDuration, -1.0f);
-    CONFIG_VARIABLE2(ProffieOSFontImageDuration, 3000.0f);
-    CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSClashImageDuration, 500.0f);
-    CONFIG_VARIABLE2(ProffieOSForceImageDuration, 2000.0f);
-    CONFIG_VARIABLE2(ProffieOSOutImageDuration, 2000.0f);
-    CONFIG_VARIABLE2(ProffieOSInImageDuration, 2000.0f);
-    CONFIG_VARIABLE2(ProffieOSPstoffImageDuration, 2000.0f);
-    CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
-/* To-Do, possibly differently
-#ifdef OLED_USE_BLASTER_IMAGES
-    CONFIG_VARIABLE2(ProffieOSFireImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSReloadImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSEmptyImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSJamImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSClipinImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSClipoutImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSDestructImageDuration, 10000.0f);
-#endif 
-*/
-#endif  // ENABLE_DISPLAY_CODE
     
     CONFIG_VARIABLE2(ProffieOSMinSwingAcceleration, 0.0f);
     CONFIG_VARIABLE2(ProffieOSMaxSwingAcceleration, 0.0f);
@@ -127,48 +102,6 @@ public:
   // swing speed change is used to determine if it's a swing or a
   // slash. Defaults to 130 (degrees per second per second)
   float ProffieOSSlashAccelerationThreshold;
-#ifdef ENABLE_DISPLAY_CODE
-  // For OLED displays, this specifies the frame rate of animations.
-  float ProffieOSAnimationFrameRate;
-  // for OLED displays, the time a text message will display
-  float ProffieOSTextMessageDuration;
-  // for OLED displays, the time a static BMP or loop will play when saber is off
-  float ProffieOSFontImageDuration;
-  // for OLED displays, the time an on.bmp will play
-  float ProffieOSOnImageDuration;
-  // for OLED displays, the time a blst.bmp will play
-  float ProffieOSBlastImageDuration;
-  // for OLED displays, the time a clsh.bmp will play
-  float ProffieOSClashImageDuration;
-  // for OLED displays, the time a force.bmp will play
-  float ProffieOSForceImageDuration;
-  // for OLED displays, the time a out.bmp will play
-  float ProffieOSOutImageDuration;
-  // for OLED displays, the time a in.bmp will play
-  float ProffieOSInImageDuration;
-  // for OLED displays, the time a pstoff.bmp will play
-  float ProffieOSPstoffImageDuration;
-  // for OLED displays, the time a boot.bmp will play
-  float ProffieOSBootImageDuration;
-/* To-Do, possibly differently
-#ifdef OLED_USE_BLASTER_IMAGES
-  // for OLED displays, the time a blast.bmp will play
-  float ProffieOSFireImageDuration;
-  // for OLED displays, the time a reload.bmp will play
-  float ProffieOSReloadImageDuration;
-  // for OLED displays, the time a empty.bmp will play
-  float ProffieOSEmptyImageDuration;
-  // for OLED displays, the time a jam.bmp will play
-  float ProffieOSJamImageDuration;
-  // for OLED displays, the time a clipiin.bmp will play
-  float ProffieOSClipinImageDuration;
-  // for OLED displays, the time a clipout.bmp will play
-  float ProffieOSClipoutImageDuration;
-  // for OLED displays, the time a destruct.bmp will play
-  float ProffieOSDestructImageDuration;
-#endif
-*/
-#endif  // ENABLE_DISPLAY_CODE
   // Minimum acceleration for Accent Swing file Selection
   // recommended value is 20.0 ~ 30.0
   float ProffieOSMinSwingAcceleration;
@@ -614,6 +547,7 @@ public:
       default: return;
       case EFFECT_MENU_CHANGE:
         if (!PlayPolyphonic(&SFX_ccchange)) {
+          SaberBase::sound_length = 0.2;
           beeper.Beep(0.05, 2000.0);
         }
 	return;

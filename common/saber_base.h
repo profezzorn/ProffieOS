@@ -150,6 +150,12 @@ private:
 public:
   constexpr BladeSet() : blades_(0) {}
   static constexpr BladeSet fromBlade(int blade) { return BladeSet(1 << blade); }
+
+  template<typename ... Args>
+  static constexpr BladeSet fromBlade(int blade, Args... args) {
+    return fromBlade(blade) | fromBlade(args...);
+  }
+
   static constexpr BladeSet all() { return ~BladeSet(); }
   
   constexpr BladeSet operator|(const BladeSet& other) const {
@@ -289,12 +295,12 @@ public:
     SaberBase::DoOn(0);
   }
   static void TurnOn(EffectLocation location) {
-    STDERR << "TurnOn " << location << "\n";
+    PVLOG_DEBUG << "TurnOn " << location << "\n";
     // You can't turn on a blade that's already on.
     location.blades_ &=~ on_;
-    STDERR << "TurnOn2 " << location << "\n";
+    PVLOG_DEBUG << "TurnOn2 " << location << "\n";
     if (location.blades_.off()) return;
-    STDERR << "TurnOn3 " << location << "\n";
+    PVLOG_DEBUG << "TurnOn3 " << location << "\n";
     on_ |= location.blades();
     SaberBase::DoOn(location);
   }
@@ -304,11 +310,11 @@ public:
     SaberBase::DoOff(off_type, 0);
   }
   static void TurnOff(OffType off_type, EffectLocation location) {
-    STDERR << "TurnOff " << location << "\n";
+    PVLOG_DEBUG << "TurnOff " << location << "\n";
     location.blades_ &= on_; // can only turn off blades which are on
-    STDERR << "TurnOff " << location << "\n";
+    PVLOG_DEBUG << "TurnOff " << location << "\n";
     if (location.blades_.off()) return;
-    STDERR << "TurnOff " << location << "\n";
+    PVLOG_DEBUG << "TurnOff " << location << "\n";
     on_ &=~ location.blades();
     last_motion_request_ = millis();
     SaberBase::DoOff(off_type, location);
@@ -340,8 +346,17 @@ public:
     LOCKUP_MELT,     // For cutting through doors...
     LOCKUP_LIGHTNING_BLOCK,  // Lightning block lockup
   };
+  static LockupType lockup_;
+  static BladeSet lockup_blades_;
   static LockupType Lockup() { return lockup_; }
-  static void SetLockup(LockupType lockup) { lockup_ = lockup; }
+  static LockupType LockupForBlade(int blade) {
+    if (!lockup_blades_[blade]) return LOCKUP_NONE;
+    return lockup_;
+  }
+  static void SetLockup(LockupType lockup, BladeSet blades = BladeSet::all()) {
+    lockup_ = lockup;
+    lockup_blades_ = blades;
+  }
 
   enum ChangeType {
     ENTER_COLOR_CHANGE,
@@ -619,7 +634,6 @@ private:
   static size_t num_effects_;
   static BladeEffect effects_[10];
   static BladeSet on_;
-  static LockupType lockup_;
   static uint32_t current_variation_;
   static ColorChangeMode color_change_mode_;
   SaberBase* next_saber_;
@@ -629,6 +643,7 @@ size_t SaberBase::num_effects_ = 0;
 BladeEffect SaberBase::effects_[10];
 EffectLocation SaberBase::location;
 BladeSet SaberBase::on_ = BladeSet();
+BladeSet SaberBase::lockup_blades_ = BladeSet();
 
 constexpr BladeSet const EffectLocation::ALL_BLADES;
 constexpr BladeSet const EffectLocation::MOST_BLADES;

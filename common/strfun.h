@@ -113,7 +113,6 @@ bool Sscanf(const char* str, const char* pattern, const char** arg) {
   int l = pct - pattern;
   if (strlen(str) < strlen(pattern) - 2) return false;
   if (memcmp(str, pattern, l)) return false;
-  const char *tail = pct + 2;
   if (!endswith(pct + 2, str)) return false;
   int len = strlen(str) - strlen(pattern) - 2;
   char* ret = (char *)malloc(len + 1);

@@ -10,6 +10,7 @@ void prop_SetClashThreshold(int clash_threshold);
 int prop_GetBladeLength(int blade);
 int prop_GetMaxBladeLength(int blade);
 void prop_SetBladeLength(int blade, int len);
+void prop_UpdateStyle();
 
 namespace mode {
 
@@ -75,29 +76,29 @@ public:
 
 template<class SPEC>
 struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
-  // TODO: get the blade from the spec??
-  virtual int blade() { return 1; }
+  virtual int blade() { return menu_current_blade; }
   void mode_activate(bool onreturn) override {
     int len = prop_GetBladeLength(blade());
     int maxlen = prop_GetMaxBladeLength(blade());
     saved_len_ = len;
     if (len == -1) len = maxlen;
-    this->pos_ = len;
+    this->pos_ = len - 1;
     prop_SetBladeLength(blade(), maxlen);
     showlen_.Start(blade());
     SPEC::MenuBase::mode_activate(onreturn);
   }
   void mode_deactivate() {
     showlen_.Stop(blade());
+    prop_UpdateStyle();
   }
   void say() override {
-    getSL<SPEC>()->SayWhole(this->pos_);
+    getSL<SPEC>()->SayWhole(getLength());
   }
   uint16_t size() override {
     return prop_GetMaxBladeLength(blade());
   }
   void select() override {
-    prop_SetBladeLength(blade(), this->pos_);
+    prop_SetBladeLength(blade(), getLength());
     prop_SaveState();
     SPEC::MenuBase::select();
   }
@@ -106,9 +107,10 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
     SPEC::MenuBase::exit();
   }
 
-  int getLength() { return this->pos_; }
+  virtual int steps_per_revolution() { return 16; }
+  int getLength() { return this->pos_ + 1; }
 
-  ShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle> showlen_;
+  ShowColorSingleBladeTemplate<typename SPEC::ShowLengthStyle, typename SPEC::ShowLengthStyle> showlen_;
   int saved_len_;
 };
 #endif
@@ -209,10 +211,14 @@ struct SmoothChangeBladeDimmingMode : public SPEC::SmoothMode {
 
 template<class SPEC>
 struct AllowMountBoolSetting : public BoolSetting {
-  bool get() override { return LSFS::GetAllowMount(); }
-  void set(bool value) override { return LSFS::SetAllowMount(value); }
-  void say() override { getSL<SPEC>()->SaySDAccess(); }
+  bool get() { return LSFS::GetAllowMount(); }
+  void set(bool value) { return LSFS::SetAllowMount(value); }
+  void say() { getSL<SPEC>()->SaySDAccess(); }
 };
+#endif
+
+#ifndef REMOVABLE_BLADES
+#define REMOVABLE_BLADES 1
 #endif
 
 template<class SPEC>
@@ -223,7 +229,8 @@ struct SettingsMenuMode : public MenuEntryMenu<SPEC,
   ,DirectBoolEntry<SPEC, AllowMountBoolSetting<SPEC>>
 #endif
 #ifdef DYNAMIC_BLADE_LENGTH
-  ,SubMenuEntry<typename SPEC::ChangeBladeLengthMode, typename SPEC::SoundLibrary::tEditBladeLength>
+ //  ,SubMenuEntry<typename SPEC::ChangeBladeLengthMode, typename SPEC::SoundLibrary::tEditBladeLength>
+  ,SubMenuBladeEntry<SPEC, typename SPEC::ChangeBladeLengthMode, typename SPEC::SoundLibrary::tEditBladeLength, ByteArray<REMOVABLE_BLADES>>
 #endif
 #ifdef DYNAMIC_CLASH_THRESHOLD
   ,SubMenuEntry<typename SPEC::ChangeClashThresholdMode, typename SPEC::SoundLibrary::tEditClashThreshold>

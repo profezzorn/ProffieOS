@@ -34,7 +34,7 @@ public:
   }
   void run(BladeBase* blade) {}
   int calculate(BladeBase* blade) {
-    if (SaberBase::Lockup() == LOCKUP_TYPE) {
+    if (SaberBase::LockupForBlade(blade->GetBladeNumber()) == LOCKUP_TYPE) {
       return 32768;
     } else {
       return 0;

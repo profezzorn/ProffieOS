@@ -6,10 +6,6 @@
 // Sound library
 EFFECT(mnum); // menu numbers
 
-#ifdef SAY_COLOR_LIST
-EFFECT(clrlst); // spoken color names for SAY_COLOR_LIST
-#endif
-
 class VoicePackVersionFile : public ConfigFile {
 public:
   void iterateVariables(VariableOP *op) override {
@@ -55,17 +51,22 @@ enum ColorNumber {
   COLOR_WHITE = 27,
 };
 
-template<class SPEC>
-class SoundLibraryTemplate : public SoundQueue<16> {
+class SoundQueueSingleton : public SoundQueue<16>, Looper, SaberBase {
 public:
-  static const int SoundLibraryVersion = 1;
-  SoundQueue<16> sound_queue_;
-  void Poll(RefPtr<BufferedWavPlayer>& wav_player) {
-    PollSoundQueue(wav_player);
+  const char* name() { return "SoundQueue"; }
+  void Loop() override {
+    PollSoundQueue(wav_player_);
   }
 
-  bool CheckVersion() {
-    int required_version = SPEC::SoundLibrary::SoundLibraryVersion;
+  void require_version(int version) {
+    required_version_ = std::max(version, required_version_);
+  }
+
+  void SB_Effect(EffectType effect, EffectLocation location) override {
+    if (effect == EFFECT_NEWFONT) CheckVersion();
+  }
+private:
+  void CheckVersion() {
     int found_version = 0;
     if (SFX_mnum) {
       VoicePackVersionFile f;
@@ -73,12 +74,29 @@ public:
       found_version = f.voice_pack_version;
       PVLOG_STATUS << "Sound library version " << found_version << " found.\n";
     }
-    if (found_version < required_version) {
-      PVLOG_ERROR << "Sound library version " << required_version << " required.\n";
+    if (found_version < required_version_) {
+      PVLOG_ERROR << "Sound library version " << required_version_ << " required.\n";
       ProffieOSErrors::error_in_font_directory(); // Make new error for voice pack?
-      return false;
     }
-    return true;
+  }
+
+  int required_version_ = 0;
+  RefPtr<BufferedWavPlayer> wav_player_;
+};
+
+#define SOUNDQ (getPtr<SoundQueueSingleton>())
+
+class SoundLibrary  {
+public:
+  static const int SoundLibraryVersion = 1;
+  static bool Play(const char* f) { return SOUNDQ->Play(f); }
+  static bool Play(SoundToPlay p) { return SOUNDQ->Play(p); }
+  static void fadeout(float len) { return SOUNDQ->fadeout(len); }
+  static bool busy() { return SOUNDQ->busy(); }
+  static void Poll(RefPtr<BufferedWavPlayer>& player) {}
+
+  static void init() {
+    SOUNDQ->require_version(SoundLibraryVersion);
   }
 
   void SayWhole(int number) {
@@ -146,9 +164,9 @@ public:
   }
 
 #define ADD_SL_SOUND(NAME, BASE)                                        \
-  void Say##NAME() { this->Play(BASE ".wav"); }                         \
+  void Say##NAME() { SOUNDQ->Play(BASE ".wav"); }                       \
   /* t for "trampoline" */                                              \
-  struct t##NAME { static void say() { getPtr<typename SPEC::SoundLibrary>()->Say##NAME(); } }
+  struct t##NAME { static void say() { SOUNDQ->Play(BASE ".wav"); } }
   
   ADD_SL_SOUND(Red, "clrlst/clrlst01");
   ADD_SL_SOUND(OrangeRed, "clrlst/clrlst02");
@@ -329,11 +347,37 @@ public:
   ADD_SL_SOUND(VolumeUp, "volup"); // Sound for increasing volume
   ADD_SL_SOUND(ZoomingIn, "mzoom"); // Sound for color menu "zooming in"
 
-#ifdef SAY_COLOR_LIST
   void SayColor(ColorNumber n) {
-    Play(SoundToPlay(&SFX_clrlst, n - 1));
+    switch (n) {
+    case COLOR_RED: SayRed(); break;
+    case COLOR_ORANGERED: SayOrangeRed(); break;
+    case COLOR_DARKORANGE: SayDarkOrange(); break;
+    case COLOR_ORANGE: SayOrange(); break;
+    case COLOR_GOLD: SayGold(); break;
+    case COLOR_YELLOW: SayYellow(); break;
+    case COLOR_GREENYELLOW: SayGreenYellow(); break;
+    case COLOR_GREEN: SayGreen(); break;
+    case COLOR_AQUAMARINE: SayAquaMarine(); break;
+    case COLOR_CYAN: SayCyan(); break;
+    case COLOR_DEEPSKYBLUE: SayDeepSkyBlue(); break;
+    case COLOR_DODGERBLUE: SayDodgerBlue(); break;
+    case COLOR_BLUE: SayBlue(); break;
+    case COLOR_ICEBLUE: SayIceBlue(); break;
+    case COLOR_INDIGO: SayIndigo(); break;
+    case COLOR_PURPLE: SayPurple(); break;
+    case COLOR_DEEPPURPLE: SayDeepPurple(); break;
+    case COLOR_MAGENTA: SayMagenta(); break;
+    case COLOR_DEEPPINK: SayDeepPink(); break;
+    case COLOR_SILVER: SaySilver(); break;
+    case COLOR_GLACIER: SayGlacier(); break;
+    case COLOR_ICEWHITE: SayIceWhite(); break;
+    case COLOR_LIGHTCYAN: SayLightCyan(); break;
+    case COLOR_MOCCASIN: SayMoccasin(); break;
+    case COLOR_LEMONCHIFFON: SayLemonChiffon(); break;
+    case COLOR_NAVAJOWHITE: SayNavajoWhite(); break;
+    case COLOR_WHITE: SayWhite(); break;
+    }
   }
-#endif
 
   void SayBool(bool v) {
     if (v) {
@@ -472,18 +516,21 @@ public:
   }
 };
 
-template<class SPEC>
-class SoundLibraryV2Template : public SoundLibraryTemplate<SPEC> {
+class SoundLibraryV2 : public SoundLibrary {
 public:
   static const int SoundLibraryVersion = 2;
+  static void init() {
+    SOUNDQ->require_version(SoundLibraryVersion);
+  }
 
   ADD_SL_SOUND(AdjustRed, "madjred");
   ADD_SL_SOUND(AdjustBlue, "madjblue");
   ADD_SL_SOUND(AdjustGreen, "madjgren");
   ADD_SL_SOUND(AdjustSaturation, "madjsat");
-  ADD_SL_SOUND(SelectColor, "mselcol");
   ADD_SL_SOUND(NoColorSelected, "mnoselcl");
-  ADD_SL_SOUND(UseSelectedColor, "muselcol");
+
+  ADD_SL_SOUND(PasteColor, "mpastec");
+  ADD_SL_SOUND(CopyColor, "mcopyc2");
 
   ADD_SL_SOUND(MovePresetUp, "mmpsetup");
   ADD_SL_SOUND(MovePresetDown, "mmpsetdn");
@@ -520,22 +567,10 @@ public:
   ADD_SL_SOUND(EditSettingsV2, "mseting2");    // NO pause!
 };
 
-
-template<template<class> typename SL_TEMPLATE>
-struct MAKE_SOUND_LIBRARY {
-  template<class SPEC>
-  struct SL_SPEC {
-    typedef SL_TEMPLATE<SL_SPEC> SoundLibrary;
-  };
-  typedef SL_TEMPLATE<MKSPEC<SL_SPEC>> SoundLibrary;
-  static SoundLibrary* get() { return getPtr<SoundLibrary>(); }
-};
-
-// Old-fashioned way to access sound library, do not use in new code.
-using SoundLibrary = MAKE_SOUND_LIBRARY<SoundLibraryTemplate>::SoundLibrary;
+// Please don't forget to call sound_library_->init();
 #define sound_library_ (*getPtr<SoundLibrary>())
 
-// Only use this one if your prop has no menues and no SPEC to get the SL from.
-#define SLV2 (*MAKE_SOUND_LIBRARY<SoundLibraryV2Template>::get())
+// Please don't forget to call sound_librar_v2->init();
+#define sound_library_v2 (*getPtr<SoundLibraryV2>())
 
-#endif  // SOUND_SOUND_LIBRARY_H
+#endif

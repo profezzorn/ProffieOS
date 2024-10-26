@@ -8,6 +8,7 @@
 template<class SPEC>
 struct DefaultMenuSpec {
   typedef mode::SelectCancelMode SelectCancelMode;
+  typedef mode::SteppedModeBase<SPEC> SteppedModeBase;
   typedef mode::SteppedMode<SPEC> SteppedMode;
   typedef mode::MenuBase<SPEC> MenuBase;
   typedef mode::SmoothWraparoundMode<SPEC> SmoothWraparoundMode;
@@ -16,7 +17,7 @@ struct DefaultMenuSpec {
   typedef mode::SteppedVariationMode<SPEC> SteppedVariationMode;
   typedef mode::ColorChangeMode<SPEC> ColorChangeMenu;
 
-  typedef SoundLibraryV2Template<SPEC> SoundLibrary;
+  typedef SoundLibraryV2 SoundLibrary;
   typedef mode::SmoothVolumeMode<SPEC> ChangeVolumeMode;
 
 #ifdef DYNAMIC_BLADE_LENGTH  
@@ -55,6 +56,7 @@ struct DefaultMenuSpec {
   typedef mode::SelectArgNumber<SPEC> SelectArgNumber;
   typedef mode::ColorSelectMode<SPEC> SelectArgColor;
 
+  typedef mode::FileColorMenu<SPEC> FileColorMenu;
   typedef mode::ColorHueMode<SPEC> ColorHueMode;
   typedef mode::ColorBrightnessMode<SPEC> ColorBrightnessMode;
   typedef mode::ColorRedMode<SPEC> ColorRedMode;

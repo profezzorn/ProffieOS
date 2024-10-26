@@ -15,13 +15,6 @@
 #define NUM_BLADES 1
 const int maxLedsPerStrip = 144;
 
-// clamp(x, a, b) makes sure that x is between a and b.
-float clamp(float x, float a, float b) {
-  if (x < a) return a;
-  if (x > b) return b;
-  return x;
-}
-
 struct CONFIG { struct Preset* presets; size_t num_presets;};
 extern CONFIG* current_config;
 
@@ -56,7 +49,6 @@ template<class A, class B>
 constexpr auto max(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::forward<B>(b)) {
   return a >= b ? std::forward<A>(a) : std::forward<B>(b);
 }
-float fract(float x) { return x - floor(x); }
 
 char* itoa(int value, char* str, int radix) {
   if (radix != 10) {
@@ -70,11 +62,6 @@ char* itoa(int value, char* str, int radix) {
 uint32_t micros_ = 0;
 uint32_t micros() { return micros_; }
 uint32_t millis() { return micros_ / 1000; }
-int32_t clampi32(int32_t x, int32_t a, int32_t b) {
-  if (x < a) return a;
-  if (x > b) return b;
-  return x;
-}
 
 int random(int x) { return (rand() & 0x7fffff) % x; }
 class BladeBase;
@@ -108,6 +95,7 @@ struct MockDynamicMixer {
 MockDynamicMixer dynamic_mixer;
 
 #include "../common/common.h"
+#include "../common/math.h"
 #include "../common/stdout.h"
 Print default_printer;
 Print* default_output = &default_printer;

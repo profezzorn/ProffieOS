@@ -17,7 +17,12 @@ class  ConfirmMenu : public MenuEntryMenu<SPEC,
   ACTION_ENTRY,
   PopMenuEntry<typename SPEC::SoundLibrary::tCancel>,
   PopMenuEntry<typename SPEC::SoundLibrary::tCancel>
-> {};
+> {
+  // Don't remember position for this menu.
+  void mode_deactivate() override {
+    this->pos_ = 0;
+  }
+};
 
 template<class SPEC, class ACTION_ENTRY>
 struct  ConfirmDeletePresetMenu : public ConfirmMenu<SPEC, ACTION_ENTRY> {
@@ -46,17 +51,29 @@ using ConfirmCommandMenuEntry =
   SubMenuEntry<ConfirmMenu<SPEC, CommandMenuEntry<CMD, ARG, SOUND>>, SOUND>;
 
 template<class SPEC>
-class DeletePresetSubMenuEntry : public SubMenuEntry<ConfirmDeletePresetMenu<SPEC, CommandMenuEntry<STRTYPE("delete_preset"), STRTYPE(""), typename SPEC::SoundLibrary::tDeletePreset>>, typename SPEC::SoundLibrary::tDeletePreset> {};
-  
+struct DeletePresetMenuEntry : public MenuEntry {
+  void say(int entry) {
+    getSL<SPEC>()->SayDeletePreset();
+  }
+  void select(int entry) {
+    getSL<SPEC>()->SaySelect();
+    CommandParser::DoParse("delete_preset", nullptr);
+    popMode();
+    popMode();
+  }
+};
+
+template<class SPEC>
+class DeletePresetSubMenuEntry : public SubMenuEntry<ConfirmDeletePresetMenu<SPEC, DeletePresetMenuEntry<SPEC>>, typename SPEC::SoundLibrary::tDeletePreset> {};
   
 int menu_selected_preset = -1;
 
 template<class SPEC>
 struct MovePresetUpEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayMovePresetUp();
   }
-  void select(int entry) override {
+  void select(int entry) {
     menu_selected_preset = -1;
     int pos = prop_GetPresetPosition();
     if (pos > 0) {
@@ -70,10 +87,10 @@ struct MovePresetUpEntry : public MenuEntry {
   
 template<class SPEC>
 struct MovePresetDownEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayMovePresetDown();
   }
-  void select(int entry) override {
+  void select(int entry) {
     menu_selected_preset = -1;
     int pos = prop_GetPresetPosition();
     // Check if this is the last preset.
@@ -107,10 +124,10 @@ struct MovePresetToBeginningEntry : public MenuEntry {
   
 template<class SPEC>
 struct SelectPresetEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SaySelectPreset();
   }
-  void select(int entry) override {
+  void select(int entry) {
     menu_selected_preset = prop_GetPresetPosition();
     getSL<SPEC>()->SaySelect();
   }
@@ -118,10 +135,10 @@ struct SelectPresetEntry : public MenuEntry {
   
 template<class SPEC>
 struct InsertSelectedPresetEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayInsertSelectedPreset();
   }
-  void select(int entry) override {
+  void select(int entry) {
     int from_pos = menu_selected_preset;
     if (from_pos == -1) {
       getSL<SPEC>()->SayNoPresetSelected();
@@ -145,11 +162,11 @@ struct InsertSelectedPresetEntry : public MenuEntry {
 
 template<class SPEC, int BLADE>
 struct SelectStyleMenuEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayEditStyle();
     getSL<SPEC>()->SayWhole(BLADE);
   }
-  void select(int entry) override {
+  void select(int entry) {
     menu_current_blade = BLADE;
     pushMode<typename SPEC::EditStyleMenu>();
   }

@@ -41,6 +41,19 @@ struct SmoothBase : public SPEC::SelectCancelMode {
     popMode();
   }
 
+  bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+    switch (EVENTID(button, event, 0)) {
+      case EVENTID(BUTTON_LEFT, EVENT_CLICK_SHORT, 0):
+	angle_ += M_PI * 2.0 / 36.0;
+	return true;
+
+      case EVENTID(BUTTON_RIGHT, EVENT_CLICK_SHORT, 0):
+	angle_ -= M_PI * 2.0 / 36.0;
+	return true;
+    }
+    return SPEC::SelectCancelMode::mode_Event2(button, event, modifiers);
+  }
+
   // x = 0-32767
   virtual int get() = 0;
   virtual void set(int x) = 0;

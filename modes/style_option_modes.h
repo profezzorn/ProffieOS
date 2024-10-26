@@ -137,10 +137,10 @@ int menu_selected_blade;
 // Select this style for copying.
 template<class SPEC>
 struct SelectStyleEntry : public  MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SaySelectStyle();
   }
-  void select(int entry) override {
+  void select(int entry) {
     menu_selected_preset = prop_GetPresetPosition();
     menu_selected_blade = menu_current_blade;
     getSL<SPEC>()->SaySelect();
@@ -149,10 +149,10 @@ struct SelectStyleEntry : public  MenuEntry {
 
 template<class SPEC>
 struct ApplyColorsFromSelectedStyleEntry : public  MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayApplyColorsFromSelectedStyle();
   }
-  void select(int entry) override {
+  void select(int entry) {
     if (menu_selected_preset == -1) {
       getSL<SPEC>()->SayNoStyleSelected();
       return;
@@ -167,11 +167,11 @@ struct ApplyColorsFromSelectedStyleEntry : public  MenuEntry {
 };
 
 template<class SPEC>
-struct ApplyColorsToAllBladesEntry : public  MenuEntry {
-  void say(int entry) override {
+struct ApplyColorsToAllBladesEntry : public MenuEntry {
+  void say(int entry) {
     getSL<SPEC>()->SayApplyColorsToAllBlades();
   }
-  void select(int entry) override {
+  void select(int entry) {
     getSL<SPEC>()->SaySelect();
     const char* FROM = GetStyle(menu_selected_blade);
     for (int b = 1; b <= NUM_BLADES; b++) {
@@ -183,10 +183,10 @@ struct ApplyColorsToAllBladesEntry : public  MenuEntry {
 
 template<class SPEC>
 struct ApplyStyleArumentsFromSelectedStyleEntry : public  MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayApplyStyleSettingsFromSelectedStyle();
   }
-  void select(int entry) override {
+  void select(int entry) {
     if (menu_selected_preset == -1) {
       getSL<SPEC>()->SayNoStyleSelected();
       return;
@@ -202,11 +202,11 @@ struct ApplyStyleArumentsFromSelectedStyleEntry : public  MenuEntry {
 
 
 template<class SPEC>
-struct ResetColorsEntry : public  MenuEntry {
-  void say(int entry) override {
+struct ResetColorsEntry : public MenuEntry {
+  void say(int entry) {
     getSL<SPEC>()->SayResetColors();
   }
-  void select(int entry) override {
+  void select(int entry) {
     if (menu_selected_preset == -1) {
       getSL<SPEC>()->SayNoStyleSelected();
       return;
@@ -221,10 +221,10 @@ struct ResetColorsEntry : public  MenuEntry {
 
 template<class SPEC>
 struct ResetStyleArgumentsEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayResetStyleSettings();
   }
-  void select(int entry) override {
+  void select(int entry) {
     CurrentPreset preset;
     preset.Load(menu_selected_preset);
     const char* TO = GetStyle(menu_selected_blade);

@@ -1,6 +1,9 @@
 #ifndef PROPS_PROP_BASE_H
 #define PROPS_PROP_BASE_H
 
+// Update SPEC and sound_library_ defines before we use them.
+#include "../sound/sound_library.h"
+
 #ifndef PROP_INHERIT_PREFIX
 #define PROP_INHERIT_PREFIX
 #endif
@@ -67,7 +70,12 @@ public:
 // Base class for props.
 class PropBase : CommandParser, Looper, protected SaberBase, public ModeInterface {
 public:
-  PropBase() : CommandParser() { current_mode = this; }
+  PropBase() : CommandParser() {
+    current_mode = this;
+#ifdef MENU_SPEC_TEMPLATE
+    MKSPEC<MENU_SPEC_TEMPLATE>::SoundLibrary::init();
+#endif    
+  }
   BladeStyle* current_style() {
 #if NUM_BLADES == 0
     return nullptr;
@@ -308,9 +316,6 @@ public:
       }
     }
 //    EnableBooster();
-#endif
-#ifdef MENU_SPEC_TEMPLATE
-    mode::getSL<MKSPEC<MENU_SPEC_TEMPLATE>>()->CheckVersion();
 #endif
     return false;
   }
@@ -582,11 +587,11 @@ public:
     uint32_t now = millis();
     if (now - last_scan_id_ > BLADE_ID_SCAN_MILLIS) {
       last_scan_id_ = now;
-      size_t best_config = FindBestConfig();
+      size_t best_config = FindBestConfig(PROFFIEOS_LOG_LEVEL >= 500);
       if (current_config != blades + best_config) {
-  // We can't call FindBladeAgain right away because
-  // we're called from the blade. Wait until next loop() call.
-  find_blade_again_pending_ = true;
+        // We can't call FindBladeAgain right away because
+        // we're called from the blade. Wait until next loop() call.
+        find_blade_again_pending_ = true;
       }
       return true;
     }
@@ -1111,12 +1116,6 @@ public:
     if (track_player_ && !track_player_->isPlaying()) {
       track_player_.Free();
     }
-
-#ifdef MENU_SPEC_TEMPLATE
-    // Poll sound library.
-    mode::getSL<MKSPEC<MENU_SPEC_TEMPLATE>>()->Poll(wav_player_);
-#endif
-    
 #endif  // ENABLE_AUDIO
 
     current_mode->mode_Loop();
@@ -1142,10 +1141,19 @@ public:
   uint32_t last_on_time_;
 #endif
 
-#ifdef MENU_SPEC_TEMPLATE
+#ifdef SOUND_LIBRARY_REQUIRED
   RefPtr<BufferedWavPlayer> wav_player_;
+#endif
+
+#ifdef MENU_SPEC_TEMPLATE
+
+// Make it easy to select a different top menu
+#ifndef MENU_SPEC_MENU
+#define MENU_SPEC_MENU TopMenu
+#endif
+  
   void EnterMenu() {
-    pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::TopMenu>();
+    pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::MENU_SPEC_MENU>();
   }
 #endif
 
@@ -1558,7 +1566,7 @@ public:
       return true;
     }
 
-    if (!strcmp(cmd, "delete_preset") && arg) {
+    if (!strcmp(cmd, "delete_preset")) {
       current_preset_.SaveAt(-1);
       return true;
     }

@@ -53,11 +53,13 @@ public:
     lockup_shape_.run(blade);
     drag_shape_.run(blade);
     lb_shape_.run(blade);
-    handled_ = blade->current_style()->IsHandled(FeatureForLockupType(SaberBase::Lockup()));
+    l_ = SaberBase::LockupForBlade(blade->GetBladeNumber());
+    handled_ = blade->current_style()->IsHandled(FeatureForLockupType(l_));
   }
 private:
   bool handled_;
   bool single_pixel_;
+  SaberBase::LockupType l_;
   PONUA LOCKUP lockup_;
   PONUA DRAG_COLOR drag_;
   PONUA LOCKUP_SHAPE lockup_shape_;
@@ -68,7 +70,7 @@ public:
     // transparent
     int blend = 0;
     if (handled_) return RGBA_um_nod::Transparent();
-    switch (SaberBase::Lockup()) {
+    switch (l_) {
       case SaberBase::LOCKUP_MELT:
 	// TODO: Better default for MELT?
       case SaberBase::LOCKUP_DRAG: {
@@ -129,9 +131,10 @@ public:
   void run(BladeBase* blade) {
       color_.run(blade);
       condition_.run(blade);
+      SaberBase::LockupType lockup = SaberBase::LockupForBlade(blade->GetBladeNumber());
       switch (active_) {
         case LockupTrState::INACTIVE:
-          if (SaberBase::Lockup() == LOCKUP_TYPE) {
+          if (lockup == LOCKUP_TYPE) {
              if (condition_.calculate(blade)) {
                active_ = LockupTrState::ACTIVE;
                begin_tr_.begin();
@@ -141,13 +144,13 @@ public:
           }
           break;
         case LockupTrState::ACTIVE:
-          if (SaberBase::Lockup() != LOCKUP_TYPE) {
+          if (lockup != LOCKUP_TYPE) {
             end_tr_.begin();
             active_ = LockupTrState::INACTIVE;
           }
           break;
        case LockupTrState::SKIPPED:
-          if (SaberBase::Lockup() != LOCKUP_TYPE) {
+          if (lockup != LOCKUP_TYPE) {
             active_ = LockupTrState::INACTIVE;
           }
          break;
