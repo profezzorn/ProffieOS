@@ -1015,9 +1015,9 @@ public:
   }
 };
 
-template<template<int, class> class T>
+template<template<int, class, class> class T, typename PREFIX = ByteArray<>>
 struct BaseLayerOp {
-  template<int Width, class col_t> struct Controller : public T<Width, col_t> {};
+  template<int Width, class col_t> struct Controller : public T<Width, col_t, PREFIX> {};
 };
 
 template<int WIDTH, class col_t, class POWER_PIN = PowerPINS<> >
