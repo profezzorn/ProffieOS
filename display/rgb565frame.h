@@ -3,6 +3,7 @@
 
 #include "../pqoi/pqoi.h"
 #include "../common/cyclint.h"
+#include "layer_controller.h"
 
 #define MAX_FRAME_TIME_US 200000
 
