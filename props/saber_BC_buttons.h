@@ -2505,7 +2505,7 @@ any # of buttons
 #ifdef MENU_SPEC_TEMPLATE
         PVLOG_NORMAL << "** Entering ProffieOS Menu System\n";
         EnterMenu();
-#elif DYNAMIC_BLADE_LENGTH
+#elif defined(DYNAMIC_BLADE_LENGTH)
         EnterBladeLengthMode();
 #endif
         return true;
