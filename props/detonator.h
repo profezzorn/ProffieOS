@@ -14,7 +14,7 @@ public:
   bool powered_ = false;
   void SetPower(bool on) { powered_ = on; }
 #else
-  constexpr bool powered_ = true;
+  bool powered_ = true;
   void SetPower(bool on) {}
 #endif
 
