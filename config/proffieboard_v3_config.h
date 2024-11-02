@@ -1,5 +1,5 @@
 // This config file contains all the things should be the same for all
-// V2 proffiboard configurations. In most cases there should be no need
+// V3 proffiboard configurations. In most cases there should be no need
 // to change anything in this file.
 
 #define VERSION_MAJOR 6
