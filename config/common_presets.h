@@ -16,7 +16,7 @@
 //   StyleRainBowPtr<out millis, in millis>()
 //   StyleStrobePtr<BaseColor, FlashColor, out millis, in millis>()
 //   &style_charging
-// All colors can be specied as three numbers or using one the handy macros above.
+// All colors can be specified as three numbers or using one the handy macros above.
 // If you wish to have different presets for different blades, copy this array and
 // name it something other than "preset", then use the new name inside the blade
 // configuration array below. See "simple_presets" and "charging_presets"
