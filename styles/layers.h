@@ -61,10 +61,14 @@ public:
   }
 private:
   PONUA L1 layer_;
+  SimpleColor dealpha(const SimpleColor& color) { return color; }
+  OverDriveColor dealpha(const OverDriveColor& color) { return color; }
+  SimpleColor dealpha(const RGBA_um_nod& color) { return SimpleColor(color.c * color.alpha >> 15; }
+  OverDriveColor dealpha(const RGBA_um& color) { return OverDriveColor(color.c * color.alpha >> 15, color.overdrive); }
+  SimpleColor dealpha(const RGBA_nod& color) { return SimpleColor(color.c); }
+  OverDriveColor dealpha(const RGBA& color) { return OverDriveColor(color.c, color.overdrive); }
 public:
-  SimpleColor getColor(int led) {
-    return SimpleColor(layer_.getColor(led).c);
-  }
+  auto getColor(int led) -> AUTO_RETURN(dealpha(layer_.getColor(led)));
 };
 
 
