@@ -1491,7 +1491,7 @@ public:
     }
 // Timers
     // Play optional mute.wav first.
-    if (mute_all_timer_.isTimerExpired()) {
+    if (mute_all_delay_timer_.isTimerExpired()) {
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
@@ -1499,7 +1499,7 @@ public:
       }
     }
 #ifdef BC_DUAL_BLADES
-    if (mute_mainBlade_timer_.isTimerExpired()) {
+    if (mute_mainBlade_delay_timer_.isTimerExpired()) {
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
@@ -1507,7 +1507,7 @@ public:
         PVLOG_NORMAL << "** Main Blade Turned ON Muted\n";
       }
     }
-    if (mute_secondBlade_timer_.isTimerExpired()) {
+    if (mute_secondBlade_delay_timer_.isTimerExpired()) {
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         muted_ = true;
@@ -1517,10 +1517,10 @@ public:
     }
 #endif
     // Allow beep to be heard.
-    if (scroll_presets_timer_.isTimerExpired() && scroll_presets_) {
+    if (scroll_presets_beep_delay_timer_.isTimerExpired() && scroll_presets_) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
     }
-    if (twist_timer_.isTimerExpired()) {
+    if (twist_delay_timer_.isTimerExpired()) {
       DoSavedTwist();
     }
   }  // Loop()
@@ -1555,7 +1555,7 @@ public:
     if (!saved_twist_) {
       // Save the current twist and start the timer if no twist is saved
       saved_twist_ = event;
-      twist_timer_.trigger(NORMAL_TWIST_TIMEOUT);
+      twist_delay_timer_.trigger(NORMAL_TWIST_TIMEOUT);
     PVLOG_DEBUG << "**** Saving twist event: " << (event == EVENT_TWIST_LEFT ? "TWIST LEFT" : "TWIST RIGHT") << ". Starting timer.\n";
     }
   }
@@ -1617,9 +1617,9 @@ public:
 
   void MuteAll() {
     if (hybrid_font.PlayPolyphonic(&SFX_mute)) {
-      mute_all_timer_.trigger(SaberBase::sound_length * 1000);
+      mute_all_delay_timer_.trigger(SaberBase::sound_length * 1000);
     } else {
-      mute_all_timer_.trigger(0);
+      mute_all_delay_timer_.trigger(0);
     }
   }
 
@@ -1869,17 +1869,17 @@ public:
 
   void TurnMainBladeOnMuted() {
     if (hybrid_font.PlayPolyphonic(&SFX_mute)) {
-      mute_mainBlade_timer_.trigger(SaberBase::sound_length * 1000);
+      mute_mainBlade_delay_timer_.trigger(SaberBase::sound_length * 1000);
     } else {
-      mute_mainBlade_timer_.trigger(0);
+      mute_mainBlade_delay_timer_.trigger(0);
     }
   }
 
   void TurnSecondBladeOnMuted() {
     if (hybrid_font.PlayPolyphonic(&SFX_mute)) {
-      mute_secondBlade_timer_.trigger(SaberBase::sound_length * 1000);
+      mute_secondBlade_delay_timer_.trigger(SaberBase::sound_length * 1000);
     } else {
-      mute_mainBlade_timer_.trigger(0);
+      mute_mainBlade_delay_timer_.trigger(0);
     }
   }
 
@@ -1979,7 +1979,7 @@ public:
     if (event == EVENT_TWIST) {
       PVLOG_DEBUG << "**** Detected EVENT_TWIST in Event2, stopping timer and resetting saved twist.\n";
       saved_twist_ = 0;
-      twist_timer_.stopTimer();
+      twist_delay_timer_.stopTimer();
     }
 
     switch (EVENTID(button, event, modifiers)) {
@@ -2517,7 +2517,7 @@ any # of buttons
         if (scroll_presets_) {
           PVLOG_NORMAL << "** Enter Scroll Presets\n";
           BeepEnterFeature();
-          scroll_presets_timer_.trigger(350);
+          scroll_presets_beep_delay_timer_.trigger(350);
         } else {
           PVLOG_NORMAL << "** Exit Scroll Presets\n";
           BeepExitFeature();
@@ -2756,12 +2756,12 @@ any # of buttons
   }
 
 private:
-  DelayTimer mute_all_timer_;
-  DelayTimer mute_mainBlade_timer_;
-  DelayTimer mute_secondBlade_timer_;
-  DelayTimer scroll_presets_timer_;
+  DelayTimer mute_all_delay_timer_;
+  DelayTimer mute_mainBlade_delay_timer_;
+  DelayTimer mute_secondBlade_delay_timer_;
+  DelayTimer scroll_presets_beep_delay_timer_;
   DelayTimer overlap_delay_timer_;
-  DelayTimer twist_timer_;
+  DelayTimer twist_delay_timer_;
 
   float current_twist_angle_ = 0.0;
   uint32_t saved_twist_ = 0;
