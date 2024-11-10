@@ -1747,7 +1747,8 @@ public:
 
   void DoQuote() {
     if (scroll_presets_ || spam_blast_) return;
-    if (!quote_delay_timer_.isTimerExpired()) return;  // prevent overlapping.
+    if (overlap_timer_initialized_ && !overlap_delay_timer_.isTimerExpired()) return;  // prevent overlapping.
+    overlap_timer_initialized_ = true;
     if (SFX_quote) {
       sequential_quote_ ? SFX_quote.SelectNext() : SFX_quote.Select(-1);
       SaberBase::DoEffect(EFFECT_QUOTE, 0);
@@ -2539,8 +2540,9 @@ any # of buttons
 
 // Force
       case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON):
-        if (spam_blast_ || on_pending_) return false;
+        if ((spam_blast_ || on_pending_) || (overlap_timer_initialized_ && !overlap_delay_timer_.isTimerExpired())) return false;
         SaberBase::DoForce();
+        overlap_timer_initialized_ = true;
         return true;
 
 // Toggle Battle Mode
@@ -2725,7 +2727,8 @@ any # of buttons
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
       case EFFECT_QUOTE:
-      quote_delay_timer_.trigger(SaberBase::sound_length * 1000);
+      case EFFECT_FORCE:
+        overlap_delay_timer_.trigger(SaberBase::sound_length * 1000);
         return;
      }
   }  // SB_Effect2
@@ -2757,7 +2760,7 @@ private:
   DelayTimer mute_mainBlade_timer_;
   DelayTimer mute_secondBlade_timer_;
   DelayTimer scroll_presets_timer_;
-  DelayTimer quote_delay_timer_;
+  DelayTimer overlap_delay_timer_;
   DelayTimer twist_timer_;
 
   float current_twist_angle_ = 0.0;
@@ -2771,6 +2774,7 @@ private:
   bool scroll_presets_ = false;
   bool muted_ = false;
   bool forward_stab_ = false;
+  bool overlap_timer_initialized_ = false;
 
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();
