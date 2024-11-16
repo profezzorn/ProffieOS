@@ -174,8 +174,8 @@ Replaces regular BladeID and allows toggling between two different
 blade/preset arrays regardless of actual BladeID status.
 
 #define SABERSENSE_NO_LOCKUP_HOLD	
-Applicable to two-button mode only, reverts to lockup being triggered
-by clash while holding aux.
+Applicable to two-button mode only, reverts to lockup being 
+triggered by clash while holding aux.
 
 GESTURE CONTROLS
 There are four gesture types: Twist, Stab, Swing and Thrust.
@@ -186,11 +186,6 @@ Below are the options to add to the config to enable the various gestures. MM.
 #define SABERSENSE_STAB_ON
 #define SABERSENSE_SWING_ON
 #define SABERSENSE_THRUST_ON
-#define SABERSENSE_FORCE_PUSH
-
-#define SABERSENSE_FORCE_PUSH_LENGTH 5
-Allows for adjustment to Push gesture length in millis needed to trigger Force Push
-Recommended range 1 ~ 10, 1 = shortest, easiest to trigger, 10 = longest. MM.
 
 Tightened click timings
 I've shortened the timeout for short and double click detection from 500ms
@@ -563,21 +558,6 @@ public:
     			FastOn();
 				//  On();
         	}
-        return true;
-	#endif
-
-
-	#ifdef SABERSENSE_FORCE_PUSH
-      	case EVENTID(BUTTON_NONE, EVENT_PUSH, MODE_ON):
-          if (FORCE_PUSH_CONDITION &&
-            millis() - last_push_ > 2000) {
-          if (SFX_push) {
-            hybrid_font.PlayCommon(&SFX_push);
-          } else {
-            hybrid_font.DoEffect(EFFECT_FORCE, 0);
-          }
-          	last_push_ = millis();
-          }
         return true;
 	#endif
 
@@ -1033,4 +1013,5 @@ private:
 	};
 
 #endif
+
 
