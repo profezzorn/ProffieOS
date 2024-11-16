@@ -120,7 +120,7 @@ FUNCTIONS WITH BLADE OFF
 Next preset				Short click AUX, hilt pointing upwards.
 Previous preset			Short click AUX, hilt pointing downwards.
 Previous preset			Hold AUX and short click MAIN.
-							(Duplicate command for backwards compatibility).
+							(Duplicate legacy command).
 Skip to first preset    Press and hold any button until it switches, hilt upwards.
 Skip to middle preset   Press and hold any button  until it switches, hilt horizontal.
 Skip to last preset     Press and hold any button  until it switches, hilt downwards.
@@ -131,7 +131,7 @@ Skip back 10 presets	Fast triple-click AUX, hilt pointing downwards.
 Play Character Quote	Fast double-click MAIN, pointing up. Quotes play sequentially.
 							To reset sequential quotes, change font or run BladeID.
 Play Music Track	    Fast double-click MAIN, pointing down.
-Speak battery voltage	Fast four clicks MAIN.
+Speak battery voltage	Fast four clicks MAIN or hold hold AUX for one second and let go.
 Run/Toggle BladeID		Fast triple-click MAIN. (Applicable installs only).
 Enter/Exit VOLUME MENU 	Hold MAIN then quickly click AUX
 						and release both buttons simultaneously.
@@ -149,7 +149,7 @@ Force Effect (Quote)	Fast double-click MAIN, hilt pointing down.
 Character Quote			Fast double-click MAIN, hilt pointing up.
 							Plays sequential character quote.
 Lightning block			Double-click MAIN and hold.
-Melt         			Hold MAIN and push blade tip against wall (clash).
+Melt         			Hold MAIN and push blade tip against wall (stab).
 Blaster blocks			Short click AUX.
 Enter multi-blast mode	Hold MAIN while swinging for one second and release. 
 							Saber will play two quick blasts confirming mode.
@@ -939,7 +939,9 @@ case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
 
 // Battery level
 	case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_OFF):
-	//  case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
+	#if NUM_BUTTONS == 2
+	case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
+	#endif
     	talkie.SayDigit((int)floorf(battery_monitor.battery()));
     	talkie.Say(spPOINT);
     	talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
@@ -1031,3 +1033,4 @@ private:
 	};
 
 #endif
+
