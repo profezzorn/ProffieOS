@@ -589,7 +589,7 @@ private:
 #ifdef TEENSYDUINO
   static void isr(void)
 #else
-  static void isr(void* arg, unsigned long int event)
+  static void isr(void* arg, uint32_t events)
 #endif
   {
     ScopedCycleCounter cc(audio_dma_interrupt_cycles);
