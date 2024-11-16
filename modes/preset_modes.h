@@ -107,10 +107,10 @@ struct MovePresetDownEntry : public MenuEntry {
   
 template<class SPEC>
 struct MovePresetToBeginningEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>->SayMovePresetToBeginning();
   }
-  void select(int entry) override {
+  void select(int entry) {
     menu_selected_preset = -1;
     int pos = prop_GetPresetPosition();
     if (pos != 0) {
