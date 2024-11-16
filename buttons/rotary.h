@@ -48,7 +48,7 @@ void do_nothing(void* context) {}
 // This is generally meant for an EC11-type twist knob which
 // has four steps between each detent.
 template<int pin1, int pin2, typename DELTA = int8_t>
-class RotaryBase {
+class RotaryBase : public Looper {
 public:
   void Setup() override {
     pinMode(pin1, INPUT_PULLUP);
