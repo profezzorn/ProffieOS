@@ -1516,7 +1516,7 @@ public:
       }
     }
 #endif
-    // Allow beep to be heard.
+    // Delaying playing font.wav so that beep can be heard first.
     if (scroll_presets_beep_delay_timer_.isTimerExpired() && scroll_presets_) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
     }
