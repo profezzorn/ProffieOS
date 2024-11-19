@@ -12,21 +12,20 @@ November 2024.
 ============================================================
 ============ BUTTON MODIFICATION AND LOGIC NOTES =========== 
 
-The Sabersense prop file has been engineered for harmonized 
-controls between one-button and two-button operation without 
-compromising the inevitable increase in user-friendliness 
+The Sabersense button prop file has been engineered for 
+harmonized controls between one-button and two-button 
+operation without compromising the greater usability
 of two-button operation.
 Where practicable, the same controls apply to both states, 
 with two-button operation benefitting from some extra 
-features and controls that are more user-friendly.
-Where possible without causing conflicts, some one-button 
-controls are duplicated in two-button mode, despite there 
-also being different two-button controls for the same function. 
+features. Where possible without causing conflicts, some 
+one-button controls also appear in two-button mode, 
+despite two-button having its own controls for the same feature.
 The overall intention is that users need only remember a 
 minimum set of control principles in order to access 
 all functions. As such, the logic is that the same button 
 presses do the same thing within the various states, 
-with obvious variants.
+subject to inevitable and obvious variants.
 
 Hence:
   ONE AND TWO BUTTON:
@@ -80,8 +79,8 @@ FUNCTIONS WITH BLADE OFF
   Speak battery voltage     Fast four clicks while OFF.
   Run BladeID Manually      Fast triple-click while OFF. (Applicable installs only, toggles arrays).
   Enter/Exit VOLUME MENU    Hold and clash while OFF.
-  Volume up                 Click MAIN while in VOLUME MENU, hilt pointing up.
-  Volume down               Click MAIN while in VOLUME MENU, hilt pointing down.
+    Volume up               Click MAIN while in VOLUME MENU, hilt pointing up.
+    Volume down             Click MAIN while in VOLUME MENU, hilt pointing down.
                               Volume adjusts in increments per click.
                               You must exit VOLUME MENU to resume using lightsaber normally.
 
@@ -102,8 +101,8 @@ FUNCTIONS WITH BLADE ON
 COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Enter COLOUR MENU         Fast triple-click while ON.
                               Announcement confirms you are in the COLOUR MENU. 
-  Cycle to next colour      Rotate hilt whilst in COLOUR MENU until desired colour is reached.
-  Exit COLOUR MENU          Fast triple-click OR hold and wait. 
+    Cycle to next colour    Rotate hilt whilst in COLOUR MENU until desired colour is reached.
+    Exit COLOUR MENU        Fast triple-click OR hold and wait. 
                               Announcement confirms you are exiting COLOUR MENU.
                               You must exit COLOUR MENU to resume using lightsaber normally.
 
@@ -134,8 +133,8 @@ FUNCTIONS WITH BLADE OFF
   Speak battery voltage     Fast four clicks MAIN or hold hold AUX for one second and let go.
   Run/Toggle BladeID        Fast triple-click MAIN. (Applicable installs only).
   Enter/Exit VOLUME MENU    Hold MAIN then quickly click AUX and release both simultaneously.
-  Volume up                 Click MAIN while in VOLUME MENU, hilt pointing up.
-  Volume down               Click MAIN while in VOLUME MENU, hilt pointing down, OR click 
+    Volume up               Click MAIN while in VOLUME MENU, hilt pointing up.
+    Volume down             Click MAIN while in VOLUME MENU, hilt pointing down, OR click 
                               AUX while in VOLUME MENU.
                               Volume adjusts in increments per click.
                               You must exit VOLUME MENU to resume using saber normally.
@@ -159,9 +158,9 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Enter/Exit COLOUR MENU    Hold MAIN then quickly click AUX and release both
                             buttons simultaneously. Or fast triple-click MAIN.
                               Announcement confirms you are in the COLOUR MENU.
-  Cycle to next colour      Rotate hilt whilst in COLOUR MENU until desired colour is reached.
+    Cycle to next colour    Rotate hilt whilst in COLOUR MENU until desired colour is reached.
                               Most Sabersense presets have 12 colour options.
-  Alt Exit COLOUR MENU      Hold MAIN and wait. 
+    Alt Exit COLOUR MENU    Hold MAIN and wait. 
                               Announcement confirms you are exiting COLOUR MENU.
                               You must exit COLOUR MENU to resume using lightsaber normally.
                               
@@ -700,7 +699,7 @@ public:
 
   //  Manual Blade ID Options
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
-#ifdef FAKE_BLADE_ID
+#ifdef SABERSENSE_FAKE_BLADE_ID
       //  Toggles between blade arrays regardless of BladeID status.
       //  Cannot use more than two blade/preset arrays.
       SabersenseFakeBladeID::toggle();
