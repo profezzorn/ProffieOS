@@ -754,54 +754,64 @@ public:
   // Hilt pointed UP for Character Quote, plays sequentially,
   // Hilt pointed DOWN for Force Effect, plays randomly.
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
-#ifndef SABERSENSE_FLIP_AUDIO_PLAYERS  // Reverses UP/DOWN options for respective QUOTE/FORCE audio playing.
+#ifndef SABERSENSE_FLIP_AUDIO_PLAYERS  
+      // Define reverses UP/DOWN options for QUOTE/FORCE/TRACK audio player.
       //  Quote player points upwards.
-      if (SFX_quote) {
-        if (fusor.angle1() > 0) {
-          SFX_quote.SelectNext();
-          SaberBase::DoEffect(EFFECT_QUOTE, 0);
-        } else {
-          SaberBase::DoForce();
-        }
-       }
+  if (SFX_quote) {
+    if (fusor.angle1() > 0) {
+      SFX_quote.SelectNext();
+        SaberBase::DoEffect(EFFECT_QUOTE, 0);
+    } else {
+        SaberBase::DoForce();  // Force effect for hilt pointed DOWN
+    }
+    } else {
+        SaberBase::DoForce();  // Fallback: always play force effect if no quotes are available
+    }
     return true;
 #else
       //  Quote player points downwards.
-      if (SFX_quote) {
-        if (fusor.angle1() < 0) {
-          SFX_quote.SelectNext();
-          SaberBase::DoEffect(EFFECT_QUOTE, 0);
-        } else {
-          SaberBase::DoForce();
-        }
-       }
+  if (SFX_quote) {
+    if (fusor.angle1() < 0) {
+      SFX_quote.SelectNext();
+        SaberBase::DoEffect(EFFECT_QUOTE, 0);
+    } else {
+        SaberBase::DoForce();  // Force effect for hilt pointed DOWN
+    }
+    } else {
+      SaberBase::DoForce();  // Fallback: always play force effect if no quotes are available
+    }
     return true;
 #endif
 
   //  Character Quote and Music Track, Blade OFF.
   //  Play sequential quote pointing up, play music track pointing down.
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):  
-#ifndef SABERSENSE_FLIP_AUDIO_PLAYERS  // Reverses UP/DOWN options for respective QUOTE/TRACK audio playing.
-      //  Quote player points upwards.
-      if (SFX_quote) {
-        if (fusor.angle1() > 0) {
-          SFX_quote.SelectNext();
-          SaberBase::DoEffect(EFFECT_QUOTE, 0);
-        } else {
-          StartOrStopTrack();
-        }
-       }
+#ifndef SABERSENSE_FLIP_AUDIO_PLAYERS
+  // Define reverses UP/DOWN options for QUOTE/FORCE/TRACK audio player.
+  //  Quote player points upwards.
+  if (SFX_quote) {
+    if (fusor.angle1() > 0) {
+      SFX_quote.SelectNext();
+        SaberBase::DoEffect(EFFECT_QUOTE, 0);
+    } else {
+        StartOrStopTrack();  // Play track for hilt pointed DOWN
+    }
+    } else {
+        StartOrStopTrack();  // Fallback: always play track if no quotes are available
+    }
     return true;
 #else
-      //  Quote player points downwards.
-      if (SFX_quote) {
-        if (fusor.angle1() < 0) {
-          SFX_quote.SelectNext();
-          SaberBase::DoEffect(EFFECT_QUOTE, 0);
-        } else {
-          StartOrStopTrack();
-        }
-       }
+   //  Quote player points downwards.
+  if (SFX_quote) {
+    if (fusor.angle1() < 0) {
+      SFX_quote.SelectNext();
+        SaberBase::DoEffect(EFFECT_QUOTE, 0);
+    } else {
+        StartOrStopTrack();  // Play track for hilt pointed DOWN
+    }
+    } else {
+        StartOrStopTrack();  // Fallback: always play track if no quotes are available
+    }
     return true;
 #endif
 
