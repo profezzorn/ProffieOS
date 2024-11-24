@@ -465,9 +465,9 @@ public:
     }
   }
 
-  //  Button Clicker to play press/release wav files when buttons are pressed.
-  //  Intended for Scavenger hilt where wheel makes tactile feel difficult.
-  //  Requires press.wav and release.wav files to work.
+    //  Button Clicker to play press/release wav files when buttons are pressed.
+    //  Intended for Scavenger hilt where wheel makes tactile feel difficult.
+    //  Requires press.wav and release.wav files to work.
     void PlaySound(const char* sound) {
       RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
        if (player) {
@@ -531,7 +531,7 @@ public:
       if (millis() - last_twist_ > 3000) {
         Off();
       last_twist_ = millis();
-        saber_off_time_ = millis();
+      saber_off_time_ = millis();
       }
       return true;
 #endif
@@ -562,16 +562,16 @@ public:
 #endif
 return true;
 
-  // Skips forward ten fonts if pointing up, skips back ten fonts if pointing down.
+    // Skips forward ten fonts if pointing up, skips back ten fonts if pointing down.
     case EVENTID(BUTTON_AUX, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       // backwards if pointing down
-        SetPreset(current_preset_.preset_num + (fusor.angle1() < -M_PI / 4 ? -10 : 10), true);
+      SetPreset(current_preset_.preset_num + (fusor.angle1() < -M_PI / 4 ? -10 : 10), true);
 #ifdef SAVE_PRESET
-        SaveState(current_preset_.preset_num);
+      SaveState(current_preset_.preset_num);
 #endif
 return true;
 
-// Saber ON AND Volume Adjust.
+    // Saber ON AND Volume Adjust.
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       IgnoreClash(50);  //  Hopefully prevents false clashes due to 'clicky' button.
                         //  Low threshold so as not to conflict with 1-button lockup or volume menu.
@@ -586,9 +586,9 @@ return true;
         }
         return true;
 
-  // Modified 2 button 'next/previous preset' AND volume down,
-  // to align with multiple skips above.
-  // Forward one font pointing up, back one font pointing down.
+    // Modified 2 button 'next/previous preset' AND volume down,
+    // to align with multiple skips above.
+    // Forward one font pointing up, back one font pointing down.
     case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       // backwards if pointing down
       if (!mode_volume_) {
@@ -674,7 +674,7 @@ return true;
 #endif
 return true;
 
-  //  Manual Blade ID Options
+    //  Manual Blade ID Options
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
 #ifdef SABERSENSE_FAKE_BLADE_ID
       //  Toggles between blade arrays regardless of BladeID status.
@@ -684,15 +684,15 @@ return true;
       SaberBase::DoBladeDetect(true);
       return true;
 #else
-    //  Runs BladeID Manually to actually check BladeID status.
-    //  Won't change arrays unless status tells it to (i.e. Data/Neg resistance changes).
-    //  Can use any number of blade/preset arrays.
+      //  Runs BladeID Manually to actually check BladeID status.
+      //  Won't change arrays unless status tells it to (i.e. Data/Neg resistance changes).
+      //  Can use any number of blade/preset arrays.
       FindBladeAgain();
       SaberBase::DoBladeDetect(true);
       return true;
 #endif
 
-  // Activate Muted
+    // Activate Muted
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
@@ -815,7 +815,7 @@ return true;
       SaberBase::DoBlast();
     return true;
 
-  // Multi-Blaster Deflection mode
+    // Multi-Blaster Deflection mode
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
       swing_blast_ = !swing_blast_;
       if (swing_blast_) {
@@ -861,8 +861,7 @@ return true;
         return true;
       break;
 
-  // Lightning Block
-    // 1 and 2 button
+    // Lightning Block, 1 and 2 button.
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD, MODE_ON):
       SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
       swing_blast_ = false;
@@ -870,7 +869,7 @@ return true;
       return true;
     break;
 
-  // Melt
+    // Melt
     case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
       SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
       swing_blast_ = false;
@@ -910,7 +909,7 @@ return true;
       }
       return true;
 
-// Battery level
+    // Battery level
     case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_OFF):
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
@@ -941,8 +940,7 @@ return true;
     return true;
 #endif
 
-  // Events that needs to be handled regardless of what other buttons
-  // are pressed.
+    // Events that needs to be handled regardless of what other buttons are pressed.
     case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
       if (SaberBase::Lockup()) {
         SaberBase::DoEndLockup();
