@@ -301,8 +301,6 @@ Tightened click timings
 #define SABERSENSE_OS7_LEGACY_SUPPORT
 #endif
 
-//  #define FORCE_PUSH_CONDITION battle_mode_
-
 EFFECT(dim);      // for EFFECT_POWERSAVE
 EFFECT(battery);  // for EFFECT_BATTERY_LEVEL
 EFFECT(bmbegin);  // for Begin Battle Mode
@@ -336,62 +334,61 @@ public:
     if (SaberBase::IsOn()) {
       DetectSwing();
       if (auto_lockup_on_ &&
-          !swinging_ &&
-          fusor.swing_speed() > 120 &&
-          millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
+        !swinging_ &&
+        fusor.swing_speed() > 120 &&
+        millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
           SaberBase::Lockup()) {
-        SaberBase::DoEndLockup();
-        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+          SaberBase::DoEndLockup();
+          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         auto_lockup_on_ = false;
       }
       if (auto_melt_on_ &&
-          !swinging_ &&
-          fusor.swing_speed() > 60 &&
-          millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
+        !swinging_ &&
+        fusor.swing_speed() > 60 &&
+        millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
           SaberBase::Lockup()) {
-        SaberBase::DoEndLockup();
-        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+          SaberBase::DoEndLockup();
+          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         auto_melt_on_ = false;
       }
 
       // EVENT_PUSH
       if (fabs(mss.x) < 3.0 &&
-          mss.y * mss.y + mss.z * mss.z > 70 &&
-          fusor.swing_speed() < 30 &&
-          fabs(fusor.gyro().x) < 10) {
-        if (millis() - push_begin_millis_ > SABERSENSE_FORCE_PUSH_LENGTH) {
-          Event(BUTTON_NONE, EVENT_PUSH);
-          push_begin_millis_ = millis();
-        }
+        mss.y * mss.y + mss.z * mss.z > 70 &&
+        fusor.swing_speed() < 30 &&
+        fabs(fusor.gyro().x) < 10) {
+          if (millis() - push_begin_millis_ > SABERSENSE_FORCE_PUSH_LENGTH) {
+            Event(BUTTON_NONE, EVENT_PUSH);
+            push_begin_millis_ = millis();
+            }
+          } else {
+            push_begin_millis_ = millis();
+          }
       } else {
-        push_begin_millis_ = millis();
-      }
-
-    } else {
-      // EVENT_SWING - Swing On gesture control to allow fine tuning of speed needed to ignite
-      if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
-        SaberBase::RequestMotion();
-        if (swinging_ && fusor.swing_speed() < 90) {
-          swinging_ = false;
+        // EVENT_SWING - Swing On gesture control to allow fine tuning of speed needed to ignite
+        if (millis() - saber_off_time_ < MOTION_TIMEOUT) {
+          SaberBase::RequestMotion();
+            if (swinging_ && fusor.swing_speed() < 90) {
+              swinging_ = false;
+            }
+            if (!swinging_ && fusor.swing_speed() > SABERSENSE_SWING_ON_SPEED) {
+              swinging_ = true;
+            Event(BUTTON_NONE, EVENT_SWING);
+            }
         }
-        if (!swinging_ && fusor.swing_speed() > SABERSENSE_SWING_ON_SPEED) {
-          swinging_ = true;
-          Event(BUTTON_NONE, EVENT_SWING);
-        }
-      }
       // EVENT_THRUST
-      if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
+        if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
           mss.x > 14  &&
           fusor.swing_speed() < 150) {
-        if (millis() - thrust_begin_millis_ > 15) {
-          Event(BUTTON_NONE, EVENT_THRUST);
+          if (millis() - thrust_begin_millis_ > 15) {
+            Event(BUTTON_NONE, EVENT_THRUST);
+            thrust_begin_millis_ = millis();
+          }
+          } else {
           thrust_begin_millis_ = millis();
         }
-      } else {
-        thrust_begin_millis_ = millis();
       }
     }
-  }
 
   // Volume Menu
   void VolumeUp() {
@@ -490,37 +487,37 @@ public:
       RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
        if (player) {
          if (!player->PlayInCurrentDir(sound)) player->Play(sound);
-        }
-      }            
+       }
+    }            
     bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {      
       switch (EVENTID(button, event, modifiers)) {
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_ON):
-      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_OFF):
-      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_OFF):
-        SaberBase::RequestMotion();
-        PlaySound("press.wav");
-          return false;
-      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
-      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
-      case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
-      case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
-        PlaySound("release.wav");
-        if (SaberBase::Lockup()) {
-          SaberBase::DoEndLockup();
-          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-            return true;
-        } else {
+        case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_ON):
+        case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_OFF):
+        case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_ON):
+        case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_OFF):
+          SaberBase::RequestMotion();
+          PlaySound("press.wav");
             return false;
-        }
-      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
-      case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
-        if (accel_.x < -0.15) {
-          pointing_down_ = true;
+        case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
+        case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
+        case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
+        case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
+          PlaySound("release.wav");
+          if (SaberBase::Lockup()) {
+            SaberBase::DoEndLockup();
+            SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+          return true;
         } else {
-          pointing_down_ = false;
-      }
-    return true;
+          return false;
+        }
+        case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
+        case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
+          if (accel_.x < -0.15) {
+            pointing_down_ = true;
+          } else {
+            pointing_down_ = false;
+          }
+          return true;
 
   //  Gesture Controls
 #ifdef SABERSENSE_SWING_ON
@@ -528,9 +525,8 @@ public:
       // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
       if (millis() > 3000) {
         FastOn();
-        //  On();
       }
-    return true;
+      return true;
 #endif
 
 #ifdef SABERSENSE_TWIST_ON
@@ -539,9 +535,8 @@ public:
       if (millis() - last_twist_ > 2000 &&
         millis() - saber_off_time_ > 1000) {
           FastOn();
-          //  On();
-         last_twist_ = millis();
-        }
+        last_twist_ = millis();
+      }
       return true;
 #endif
 
@@ -550,10 +545,10 @@ public:
       // Delay twist events to prevent false trigger from over twisting
       if (millis() - last_twist_ > 3000) {
         Off();
-          last_twist_ = millis();
-          saber_off_time_ = millis();
-          battle_mode_ = false;
-        }
+      last_twist_ = millis();
+        saber_off_time_ = millis();
+        battle_mode_ = false;
+      }
       return true;
 #endif
 
@@ -561,38 +556,36 @@ public:
     case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
       if (millis() - saber_off_time_ > 1000) {
         FastOn();
-        //  On();
       }
-    return true;
+      return true;
 #endif
 
 #ifdef SABERSENSE_THRUST_ON
     case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
       if (millis() - saber_off_time_ > 1000) {
         FastOn();
-        //  On();
       }
-    return true;
+      return true;
 #endif
 
-  //  Multiple Skips only available with 2 button installs.
-  //  Skips forward five fonts if pointing up, skips back five fonts if pointing down.
+    //  Multiple Skips only available with 2 button installs.
+    //  Skips forward five fonts if pointing up, skips back five fonts if pointing down.
     case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
       // backwards if pointing down
       SetPreset(current_preset_.preset_num + (fusor.angle1() < -M_PI / 4 ? -5 : 5), true);
-    #ifdef SAVE_PRESET
+#ifdef SAVE_PRESET
       SaveState(current_preset_.preset_num);
-    #endif
-    return true;
+#endif
+return true;
 
   // Skips forward ten fonts if pointing up, skips back ten fonts if pointing down.
     case EVENTID(BUTTON_AUX, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       // backwards if pointing down
         SetPreset(current_preset_.preset_num + (fusor.angle1() < -M_PI / 4 ? -10 : 10), true);
-      #ifdef SAVE_PRESET
+#ifdef SAVE_PRESET
         SaveState(current_preset_.preset_num);
-      #endif
-    return true;
+#endif
+return true;
 
 // Saber ON AND Volume Adjust.
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
@@ -605,9 +598,9 @@ public:
             VolumeUp();
           } else {
             VolumeDown();
+          }
         }
-      }
-    return true;
+        return true;
 
   // Modified 2 button 'next/previous preset' AND volume down,
   // to align with multiple skips above.
@@ -622,7 +615,7 @@ public:
 #ifdef SAVE_PRESET
       SaveState(current_preset_.preset_num);
 #endif
-    return true;
+return true;
 
   // 1 button 'next/previous preset' command.
   // Forward one font pointing up, back one font pointing down.
@@ -631,13 +624,13 @@ public:
       // backwards if pointing down
       if (!mode_volume_) {
         SetPreset(current_preset_.preset_num + (fusor.angle1() < -M_PI / 4 ? -1 : 1), true);
-     } else {
+      } else {
         VolumeDown();
-     }
+      }
 #ifdef SAVE_PRESET
-      SaveState(current_preset_.preset_num);
+       SaveState(current_preset_.preset_num);
 #endif
-  return true;
+return true;
 #endif
 
   //  1 Button skips to first preset (up) or last preset (down)
@@ -662,7 +655,7 @@ public:
 #ifdef SAVE_PRESET
         SaveState(current_preset_.preset_num);
 #endif
-  return true;
+return true;
 
   // 1 and 2 button: Previous Preset, retained legacy control.
 #if NUM_BUTTONS == 2
@@ -671,7 +664,7 @@ public:
       if (!mode_volume_) {
         previous_preset();
       }
-    return true;
+      return true;
 
   //  Skips to first preset (up) or last (battery or charge) preset (down)
   //  or middle preset if horizontal:
@@ -695,7 +688,7 @@ public:
 #ifdef SAVE_PRESET
         SaveState(current_preset_.preset_num);
 #endif
-    return true;
+return true;
 
   //  Manual Blade ID Options
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
@@ -705,24 +698,23 @@ public:
       SabersenseFakeBladeID::toggle();
       FindBladeAgain();
       SaberBase::DoBladeDetect(true);
-    return true;
+      return true;
 #else
     //  Runs BladeID Manually to actually check BladeID status.
     //  Won't change arrays unless status tells it to (i.e. Data/Neg resistance changes).
     //  Can use any number of blade/preset arrays.
       FindBladeAgain();
       SaberBase::DoBladeDetect(true);
-    return true;
+      return true;
 #endif
 
   // Activate Muted
-  //  case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD, MODE_OFF):
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
       if (SetMute(true)) {
         unmute_on_deactivation_ = true;
         On();
       }
-    return true;
+      return true;
 
   // Turn Blade OFF
 #if NUM_BUTTONS > 1
@@ -738,8 +730,8 @@ public:
           // Just exit color change mode.
           // Don't turn saber off.
           ToggleColorChangeMode();
-        return true;
-      }
+          return true;
+        }
 #endif
         if (!battle_mode_) {
           Off();
@@ -750,69 +742,69 @@ public:
         swing_blast_ = false;
       return true;
 
-  // Character Quote and Force Effect, Blade ON.
-  // Hilt pointed UP for Character Quote, plays sequentially,
-  // Hilt pointed DOWN for Force Effect, plays randomly.
+    // Character Quote and Force Effect, Blade ON.
+    // Hilt pointed UP for Character Quote, plays sequentially,
+    // Hilt pointed DOWN for Force Effect, plays randomly.
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
 #ifndef SABERSENSE_FLIP_AUDIO_PLAYERS  
       // Define reverses UP/DOWN options for QUOTE/FORCE/TRACK audio player.
       //  Quote player points upwards.
-  if (SFX_quote) {
-    if (fusor.angle1() > 0) {
-      SFX_quote.SelectNext();
-        SaberBase::DoEffect(EFFECT_QUOTE, 0);
-    } else {
-        SaberBase::DoForce();  // Force effect for hilt pointed DOWN
-    }
-    } else {
-        SaberBase::DoForce();  // Fallback: always play force effect if no quotes are available
-    }
-    return true;
+      if (SFX_quote) {
+        if (fusor.angle1() > 0) {
+        SFX_quote.SelectNext();
+          SaberBase::DoEffect(EFFECT_QUOTE, 0);
+        } else {
+          SaberBase::DoForce();  // Force effect for hilt pointed DOWN.
+        }
+      } else {
+        SaberBase::DoForce();  // Fallback: play force effect if no quotes are available.
+      }
+      return true;
 #else
       //  Quote player points downwards.
-  if (SFX_quote) {
-    if (fusor.angle1() < 0) {
-      SFX_quote.SelectNext();
-        SaberBase::DoEffect(EFFECT_QUOTE, 0);
-    } else {
-        SaberBase::DoForce();  // Force effect for hilt pointed DOWN
-    }
-    } else {
-      SaberBase::DoForce();  // Fallback: always play force effect if no quotes are available
-    }
-    return true;
+      if (SFX_quote) {
+        if (fusor.angle1() < 0) {
+        SFX_quote.SelectNext();
+          SaberBase::DoEffect(EFFECT_QUOTE, 0);
+        } else {
+          SaberBase::DoForce();  // Force effect for hilt pointed DOWN.
+        }
+      } else {
+        SaberBase::DoForce();  // Fallback: play force effect if no quotes are available.
+      }
+      return true;
 #endif
 
-  //  Character Quote and Music Track, Blade OFF.
-  //  Play sequential quote pointing up, play music track pointing down.
+    //  Character Quote and Music Track, Blade OFF.
+    //  Play sequential quote pointing up, play music track pointing down.
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):  
 #ifndef SABERSENSE_FLIP_AUDIO_PLAYERS
-  // Define reverses UP/DOWN options for QUOTE/FORCE/TRACK audio player.
-  //  Quote player points upwards.
-  if (SFX_quote) {
-    if (fusor.angle1() > 0) {
-      SFX_quote.SelectNext();
-        SaberBase::DoEffect(EFFECT_QUOTE, 0);
-    } else {
-        StartOrStopTrack();  // Play track for hilt pointed DOWN
-    }
-    } else {
-        StartOrStopTrack();  // Fallback: always play track if no quotes are available
-    }
-    return true;
+    // Define reverses UP/DOWN options for QUOTE/FORCE/TRACK audio players.
+      //  Quote player points upwards.
+      if (SFX_quote) {
+        if (fusor.angle1() > 0) {
+        SFX_quote.SelectNext();
+          SaberBase::DoEffect(EFFECT_QUOTE, 0);
+        } else {
+          StartOrStopTrack();  // Play track for hilt pointed DOWN.
+        }
+      } else {
+        StartOrStopTrack();  // Fallback: play track if no quotes are available.
+      }
+      return true;
 #else
-   //  Quote player points downwards.
-  if (SFX_quote) {
-    if (fusor.angle1() < 0) {
-      SFX_quote.SelectNext();
-        SaberBase::DoEffect(EFFECT_QUOTE, 0);
-    } else {
-        StartOrStopTrack();  // Play track for hilt pointed DOWN
-    }
-    } else {
-        StartOrStopTrack();  // Fallback: always play track if no quotes are available
-    }
-    return true;
+      //  Quote player points downwards.
+      if (SFX_quote) {
+        if (fusor.angle1() < 0) {
+        SFX_quote.SelectNext();
+          SaberBase::DoEffect(EFFECT_QUOTE, 0);
+        } else {
+          StartOrStopTrack();  // Play track for hilt pointed DOWN.
+        }
+      } else {
+        StartOrStopTrack();  // Fallback: play track if no quotes are available.
+      }
+      return true;
 #endif
 
   //  Colour Change.
@@ -820,12 +812,12 @@ public:
 #ifndef DISABLE_COLOR_CHANGE
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
       ToggleColorChangeMode();
-    return true;
+      return true;
   //  2 button mode only.
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
       ToggleColorChangeMode();
-    return true;
+      return true;
 #endif
 #endif
 
@@ -833,14 +825,10 @@ public:
 #if NUM_BUTTONS == 1
     // 1 button
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-    //  case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
-    //  case EVENTID(BUTTON_POWER, EVENT_THIRD_CLICK_SHORT, MODE_ON):
 #else
     // 2 button
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
     case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-    //  case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
-    //  case EVENTID(BUTTON_AUX, EVENT_THIRD_CLICK_SHORT, MODE_ON):
 #endif
       swing_blast_ = false;
       SaberBase::DoBlast();
@@ -862,13 +850,13 @@ public:
           hybrid_font.SB_Effect(EFFECT_BLAST, 0);
         }
       }
-    return true;
+      return true;
 
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON):
       if (swing_blast_) {
         SaberBase::DoBlast();
       }
-    return true;
+      return true;
 
   // Lockup
 #if NUM_BUTTONS == 1
@@ -890,7 +878,7 @@ public:
         }
           swing_blast_ = false;
           SaberBase::DoBeginLockup();
-        return true;
+          return true;
       }
     break;
 
@@ -901,9 +889,9 @@ public:
         SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
         swing_blast_ = false;
         SaberBase::DoBeginLockup();
-      return true;
-    }
-  break;
+        return true;
+      }
+    break;
 
   // Melt
     case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
@@ -915,8 +903,6 @@ public:
       }
     break;
 
-    //  case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
-    //  case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_OFF):
     case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_OFF):
       SaberBase::RequestMotion();
     return true;
@@ -928,7 +914,7 @@ public:
 #else
     // 2 button
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_POWER):
-    //  case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
+
 #endif
       if (!mode_volume_) {
         mode_volume_ = true;
@@ -947,7 +933,7 @@ public:
         }
         STDOUT.println("Exit Volume Menu");
       }
-    return true;
+      return true;
 
 // Battery level
     case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_OFF):
@@ -982,47 +968,44 @@ public:
 
   // Events that needs to be handled regardless of what other buttons
   // are pressed.
-    //  case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
-    //  case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
     case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
       if (SaberBase::Lockup()) {
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         return true;
+        }
       }
+      return false;
     }
-    return false;
-  }
 
 #ifdef SABERSENSE_OS7_LEGACY_SUPPORT
   void SB_Effect(EffectType effect, float location) override {  //  Required for ProffieOS 7.x.
 #else
   void SB_Effect(EffectType effect, EffectLocation location) override {  //  Required for ProffieOS 8.x.
 #endif
-      switch (effect) {
-        case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
-      
-        case EFFECT_POWERSAVE:
-          if (SFX_dim) {
-            hybrid_font.PlayCommon(&SFX_dim);
-          } else {
-            beeper.Beep(0.5, 3000);
-          }
-          return;
-        case EFFECT_BATTERY_LEVEL:
-          if (SFX_battery) {
-            hybrid_font.PlayCommon(&SFX_battery);
-          } else {
-            beeper.Beep(0.5, 3000);
-          }
-          return;
-        case EFFECT_FAST_ON:
-          if (SFX_faston) {
-            hybrid_font.PlayCommon(&SFX_faston);
-          }
-          return;
+    switch (effect) {
+      case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;  
+      case EFFECT_POWERSAVE:
+        if (SFX_dim) {
+          hybrid_font.PlayCommon(&SFX_dim);
+        } else {
+          beeper.Beep(0.5, 3000);
+        }
+        return;
+      case EFFECT_BATTERY_LEVEL:
+        if (SFX_battery) {
+          hybrid_font.PlayCommon(&SFX_battery);
+        } else {
+          beeper.Beep(0.5, 3000);
+        }
+        return;
+      case EFFECT_FAST_ON:
+        if (SFX_faston) {
+          hybrid_font.PlayCommon(&SFX_faston);
+        }
+        return;
 
-        default: break; // avoids compiler warning
+      default: break; // avoids compiler warning
       }
     }
 
