@@ -289,22 +289,8 @@ Tightened click timings
 #define SABERSENSE_THRUST_GESTURE
 #endif
 
-#ifdef SABERSENSE_FAKE_BLADE_ID
-#define SABERSENSE_FAKE_BLADE_ID
-#endif
-
-#ifdef SABERSENSE_FLIP_AUDIO_PLAYERS
-#define SABERSENSE_FLIP_AUDIO_PLAYERS
-#endif
-
-#ifdef SABERSENSE_OS7_LEGACY_SUPPORT
-#define SABERSENSE_OS7_LEGACY_SUPPORT
-#endif
-
 EFFECT(dim);      // for EFFECT_POWERSAVE
 EFFECT(battery);  // for EFFECT_BATTERY_LEVEL
-EFFECT(bmbegin);  // for Begin Battle Mode
-EFFECT(bmend);    // for End Battle Mode
 EFFECT(vmbegin);  // for Begin Volume Menu
 EFFECT(vmend);    // for End Volume Menu
 EFFECT(volup);    // for increse volume
@@ -314,9 +300,8 @@ EFFECT(volmax);   // for maximum volume reached
 EFFECT(faston);   // for EFFECT_FAST_ON
 EFFECT(blstbgn);  // for Begin Multi-Blast
 EFFECT(blstend);  // for End Multi-Blast
-EFFECT(push);     // for Force Push gesture in Battle Mode
 #ifdef SABERSENSE_OS7_LEGACY_SUPPORT
-EFFECT(quote);    // for playing quotes    //  Required for ProffieOS 7.x.
+EFFECT(quote);    // for playing quotes. Required for ProffieOS 7.x.
 #endif
 
 
@@ -547,7 +532,6 @@ public:
         Off();
       last_twist_ = millis();
         saber_off_time_ = millis();
-        battle_mode_ = false;
       }
       return true;
 #endif
@@ -730,17 +714,14 @@ return true;
           // Just exit color change mode.
           // Don't turn saber off.
           ToggleColorChangeMode();
-          return true;
-        }
-#endif
-        if (!battle_mode_) {
+        } else {
           Off();
-          }
         }
-        saber_off_time_ = millis();
-        battle_mode_ = false;
-        swing_blast_ = false;
+      }
+      saber_off_time_ = millis();
+      swing_blast_ = false;
       return true;
+#endif
 
     // Character Quote and Force Effect, Blade ON.
     // Hilt pointed UP for Character Quote, plays sequentially,
@@ -870,37 +851,31 @@ return true;
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
 #endif
 #endif
-      if (!SaberBase::Lockup() && !battle_mode_) {
-        if (accel_.x < -0.15) {
-          SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
-        } else {
-          SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-        }
-          swing_blast_ = false;
-          SaberBase::DoBeginLockup();
-          return true;
+      if (accel_.x < -0.15) {
+        SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
+      } else {
+        SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
       }
-    break;
+        swing_blast_ = false;
+        SaberBase::DoBeginLockup();
+        return true;
+      break;
 
   // Lightning Block
     // 1 and 2 button
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD, MODE_ON):
-      if (!battle_mode_) {
-        SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
-        swing_blast_ = false;
-        SaberBase::DoBeginLockup();
-        return true;
-      }
+      SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+      swing_blast_ = false;
+      SaberBase::DoBeginLockup();
+      return true;
     break;
 
   // Melt
     case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
-      if (!SaberBase::Lockup() && !battle_mode_) {
-        SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
-        swing_blast_ = false;
-        SaberBase::DoBeginLockup();
-        return true;
-      }
+      SaberBase::SetLockup(SaberBase::LOCKUP_MELT);
+      swing_blast_ = false;
+      SaberBase::DoBeginLockup();
+      return true;
     break;
 
     case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_OFF):
@@ -1015,7 +990,6 @@ return true;
     bool mode_volume_ = false;
     bool auto_lockup_on_ = false;
     bool auto_melt_on_ = false;
-    bool battle_mode_ = false;
     bool max_vol_reached_ = false;
     bool min_vol_reached_ = false;
     uint32_t thrust_begin_millis_ = millis();
