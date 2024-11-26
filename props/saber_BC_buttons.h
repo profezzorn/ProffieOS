@@ -1546,8 +1546,10 @@ public:
 
     if (a < -M_PI / 3) {
       CheckSavedTwist(EVENT_TWIST_LEFT);
+      current_twist_angle_ = fusor.angle2();
     } else if (a > M_PI / 3) {
       CheckSavedTwist(EVENT_TWIST_RIGHT);
+      current_twist_angle_ = fusor.angle2();
     }
   }
 
@@ -1564,7 +1566,6 @@ public:
     // Trigger the saved twist after timeout
     PVLOG_DEBUG << (saved_twist_ == EVENT_TWIST_LEFT ? "**** Doing SAVED TWIST LEFT\n" : "Doing SAVED TWIST RIGHT\n");
     Event(BUTTON_NONE, (EVENT)saved_twist_);
-    current_twist_angle_ = fusor.angle2();
     // Clear the twist state and reset strokes to prevent Normal Twist after USER twist
     DoGesture(TWIST_CLOSE);
     saved_twist_ = 0;
