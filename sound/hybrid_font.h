@@ -479,10 +479,10 @@ public:
     SFX_in.SetFollowing( most_blades ?  &SFX_pstoff : nullptr );
     switch (off_type) {
       case OFF_CANCEL_PREON:
-        if (state_ == STATE_WAIT_FOR_ON) {
-          state_ = STATE_OFF;
-        }
-        break;
+  if (state_ == STATE_WAIT_FOR_ON) {
+    state_ = STATE_OFF;
+  }
+  break;
       case OFF_IDLE:
         StopIdleSound();
         break;
@@ -820,9 +820,9 @@ public:
   #ifdef ENABLE_IDLE_SOUND
     idling_ = false;
     if (idle_player_ && idle_player_->isPlaying()) {
-      idle_player_->set_fade_time(0.2);   // Set fade-out time (optional)
-      idle_player_->FadeAndStop();        // Smoothly stop the idle sound
-      idle_player_.Free();                // Free the player for future use
+      idle_player_->set_fade_time(0.5);
+      idle_player_->FadeAndStop();
+      idle_player_.Free();
       STDOUT.println("End idle wav Player");
     }
   #endif
