@@ -835,6 +835,7 @@ public:
     TWIST_CLOSE,
     TWIST_LEFT,
     TWIST_RIGHT,
+    UNKNOWN_GESTURE,
 
     SHAKE_CLOSE,
     SHAKE_FWD,
