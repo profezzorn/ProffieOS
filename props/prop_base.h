@@ -835,6 +835,7 @@ public:
     TWIST_CLOSE,
     TWIST_LEFT,
     TWIST_RIGHT,
+    UNKNOWN_GESTURE,
 
     SHAKE_CLOSE,
     SHAKE_FWD,
@@ -936,7 +937,7 @@ public:
   }
 
   // The prop should call this from Loop() if it wants to detect twists.
-  void DetectTwist() {
+  virtual void DetectTwist() {
     Vec3 gyro = fusor.gyro();
     bool process = false;
     if (fabsf(gyro.x) > 200.0 &&
