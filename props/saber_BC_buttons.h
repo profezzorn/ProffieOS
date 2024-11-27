@@ -1107,10 +1107,6 @@ push                    - force push
 #define BUTTON_HELD_LONG_TIMEOUT 2000
 #endif
 
-#ifndef NORMAL_TWIST_TIMEOUT
-#define NORMAL_TWIST_TIMEOUT 400
-#endif
-
 #ifndef BC_MAIN_BLADE
 #define BC_MAIN_BLADE 1
 #endif
@@ -1428,7 +1424,6 @@ public:
 
   void Loop() override {
     PropBase::Loop();
-    DetectMenuTurn();
     DetectTwist();
     Vec3 mss = fusor.mss();
     sound_library_.Poll(wav_player);
@@ -1520,9 +1515,6 @@ public:
     if (scroll_presets_beep_delay_timer_.isTimerExpired() && scroll_presets_) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
     }
-    if (twist_delay_timer_.isTimerExpired()) {
-      DoSavedTwist();
-    }
   }  // Loop()
 
 #ifdef SPEAK_BLADE_ID
@@ -1536,39 +1528,69 @@ public:
   }
 #endif
 
-  void DetectMenuTurn() {
-    float a = fusor.angle2() - current_twist_angle_;
-    if (isPointingUp()) return;
-    // Keep the rotational angle within range of 
-    // -180 to 180 degrees in terms of radians.
-    if (a > M_PI) a-= M_PI * 2;
-    if (a < -M_PI) a+= M_PI * 2;
+  // Track the last twist type and time
+  StrokeType saved_twist = UNKNOWN_GESTURE;
+  uint32_t saved_twist_start_millis = 0;
 
-    if (a < -M_PI / 3) {
-      CheckSavedTwist(EVENT_TWIST_LEFT);
-      current_twist_angle_ = fusor.angle2();
-    } else if (a > M_PI / 3) {
-      CheckSavedTwist(EVENT_TWIST_RIGHT);
-      current_twist_angle_ = fusor.angle2();
+  // Call this from Loop() to detect twists.
+  void DetectTwist() override {
+    Vec3 gyro = fusor.gyro();
+    bool process = false;
+    if (fabsf(gyro.x) > 200.0 &&
+        fabsf(gyro.x) > 3.0f * abs(gyro.y) &&
+        fabsf(gyro.x) > 3.0f * abs(gyro.z)) {
+      process = DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
+    } else {
+      process = DoGesture(TWIST_CLOSE);
     }
-  }
+    if (process) {
+      // Start timer if no saved_twist
+      if (saved_twist == UNKNOWN_GESTURE && 
+          (strokes[NELEM(strokes)-1].type == TWIST_LEFT || 
+           strokes[NELEM(strokes)-1].type == TWIST_RIGHT)) {
+        saved_twist = strokes[NELEM(strokes)-1].type;
+        saved_twist_start_millis = millis();
+        return;
+      }
 
-  void CheckSavedTwist(uint32_t event) {
-    if (!saved_twist_) {
-      // Save the current twist and start the timer if no twist is saved
-      saved_twist_ = event;
-      twist_delay_timer_.trigger(NORMAL_TWIST_TIMEOUT);
-    PVLOG_DEBUG << "**** Saving twist event: " << (event == EVENT_TWIST_LEFT ? "TWIST LEFT" : "TWIST RIGHT") << ". Starting timer.\n";
+      // Normal Twist Logic
+      if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
+           strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
+          (strokes[NELEM(strokes)-1].type == TWIST_RIGHT &&
+           strokes[NELEM(strokes)-2].type == TWIST_LEFT)) {
+        if (strokes[NELEM(strokes)-1].length() > 90UL &&
+            strokes[NELEM(strokes)-1].length() < 300UL &&
+            strokes[NELEM(strokes)-2].length() > 90UL &&
+            strokes[NELEM(strokes)-2].length() < 300UL) {
+          uint32_t separation =
+              strokes[NELEM(strokes)-1].start_millis -
+              strokes[NELEM(strokes)-2].end_millis;
+          if (separation < 200UL) {
+            PVLOG_NORMAL << "EVENT_TWIST\n";
+            // Emit normal twist event
+            Event(BUTTON_NONE, EVENT_TWIST);
+
+            // Clear strokes and saved_twist state
+            strokes[NELEM(strokes)-1].type = UNKNOWN_GESTURE;
+            strokes[NELEM(strokes)-2].type = UNKNOWN_GESTURE;
+            saved_twist = UNKNOWN_GESTURE;
+            return;
+          }
+        }
+      }
     }
-  }
 
-  void DoSavedTwist() {
-    // Trigger the saved twist after timeout
-    PVLOG_DEBUG << (saved_twist_ == EVENT_TWIST_LEFT ? "**** Doing SAVED TWIST LEFT\n" : "Doing SAVED TWIST RIGHT\n");
-    Event(BUTTON_NONE, (EVENT)saved_twist_);
-    // Clear the twist state and reset strokes to prevent Normal Twist after USER twist
-    DoGesture(TWIST_CLOSE);
-    saved_twist_ = 0;
+    // Check single twist timer
+    // Tested 300 as a good wait time. Shorter interferes with normal twist.
+    if (saved_twist != UNKNOWN_GESTURE && millis() - saved_twist_start_millis >= 300) {
+      // Emit single twist event
+      Event(BUTTON_NONE, saved_twist == TWIST_LEFT ? EVENT_TWIST_LEFT : EVENT_TWIST_RIGHT);
+      PVLOG_NORMAL << (saved_twist == TWIST_LEFT ? "EVENT_TWIST_LEFT" : "EVENT_TWIST_RIGHT") << "\n";
+
+      // Clear strokes and saved_twist state
+      strokes[NELEM(strokes)-1].type = UNKNOWN_GESTURE;
+      saved_twist = UNKNOWN_GESTURE;
+    }
   }
 
   void BeepEnterFeature() {
@@ -1976,13 +1998,6 @@ public:
   RefPtr<BufferedWavPlayer> wav_player;
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
-
-    if (event == EVENT_TWIST) {
-      PVLOG_DEBUG << "**** Detected EVENT_TWIST in Event2, stopping timer and resetting saved twist.\n";
-      saved_twist_ = 0;
-      twist_delay_timer_.stopTimer();
-    }
-
     switch (EVENTID(button, event, modifiers)) {
       // storage of unused cases
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
@@ -2513,7 +2528,7 @@ any # of buttons
         return true;
 
 // Toggle Scroll Presets
-      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
         scroll_presets_ = !scroll_presets_;
         if (scroll_presets_) {
           PVLOG_NORMAL << "** Enter Scroll Presets\n";
@@ -2762,10 +2777,7 @@ private:
   DelayTimer mute_secondBlade_delay_timer_;
   DelayTimer scroll_presets_beep_delay_timer_;
   DelayTimer overlap_delay_timer_;
-  DelayTimer twist_delay_timer_;
 
-  float current_twist_angle_ = 0.0;
-  uint32_t saved_twist_ = 0;
   bool battle_mode_ = false;
   bool auto_lockup_on_ = false;
   bool auto_melt_on_ = false;
