@@ -205,6 +205,7 @@ public:
   RefPtr<BufferedWavPlayer> next_hum_player_;
   RefPtr<BufferedWavPlayer> swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
+  RefPtr<BufferedWavPlayer> idle_player_;
 
   void PlayMonophonic(const Effect::FileID& f, Effect* loop, float xfade = 0.003f)  {
     EnableAmplifier();
@@ -423,6 +424,7 @@ public:
   }
 
   void SB_On(EffectLocation location) override {
+    StopIdleSound();
     // If preon exists, we've already queed up playing the poweron and hum.
     bool already_started = state_ == STATE_WAIT_FOR_ON && SFX_preon;
     bool faston = state_ != STATE_WAIT_FOR_ON;
@@ -472,15 +474,17 @@ public:
   }
 
   void SB_Off(OffType off_type, EffectLocation location) override {
+    idling_ = true;
     bool most_blades = location.on_blade(0);
     SFX_in.SetFollowing( most_blades ?  &SFX_pstoff : nullptr );
     switch (off_type) {
       case OFF_CANCEL_PREON:
-	if (state_ == STATE_WAIT_FOR_ON) {
-	  state_ = STATE_OFF;
-	}
-	break;
+        if (state_ == STATE_WAIT_FOR_ON) {
+          state_ = STATE_OFF;
+        }
+        break;
       case OFF_IDLE:
+        StopIdleSound();
         break;
       case OFF_FAST:
         SFX_in.SetFollowing(nullptr);
@@ -799,8 +803,44 @@ public:
 	SaberBase::DoEffect(EFFECT_POSTOFF, saved_location_);
       }
     }
+    // Wait for retraction sounds to finish, then play idle.wav
+#ifdef ENABLE_IDLE_SOUND
+    if (idling_) {
+      if (GetWavPlayerPlaying(&SFX_in) || GetWavPlayerPlaying(&SFX_pstoff)) {
+        return;
+      } else {
+        idling_ = false;
+        StartIdleSound();
+      }
+    }
+#endif
   }
-  bool swinging_ = false;
+  
+  void StopIdleSound() {
+  #ifdef ENABLE_IDLE_SOUND
+    idling_ = false;
+    if (idle_player_ && idle_player_->isPlaying()) {
+      idle_player_->set_fade_time(0.2);   // Set fade-out time (optional)
+      idle_player_->FadeAndStop();        // Smoothly stop the idle sound
+      idle_player_.Free();                // Free the player for future use
+      STDOUT.println("End idle wav Player");
+    }
+  #endif
+  }
+
+  void StartIdleSound() {
+    if (SFX_idle && (!idle_player_ || !idle_player_->isPlaying())) {
+      idle_player_ = GetFreeWavPlayer();
+      if (idle_player_) {
+        PVLOG_DEBUG << "************ Playing idle.wav\n";
+        idle_player_->PlayOnce(&SFX_idle);
+      } else {
+        STDOUT.println("Out of WAV players!");
+      }
+    }
+  }
+
+bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
     if (active_state() && !(SFX_lockup && SaberBase::Lockup())) {
       StartSwing(gyro,
@@ -817,6 +857,7 @@ public:
     ProffieOSErrors::low_battery();
   }
 
+  bool idling_ = true;
  private:
   uint32_t last_micros_;
   uint32_t last_swing_micros_;
