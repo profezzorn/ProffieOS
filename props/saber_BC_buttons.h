@@ -1473,6 +1473,15 @@ public:
     }
   }
 
+  void EnterScrollPresets() {
+    if (current_mode == this) {
+      PVLOG_NORMAL << "** Enter Scroll Presets\n";
+      BeepEnterFeature();
+      scroll_presets_beep_delay_timer_.trigger(350);
+      pushMode<MKSPEC<BCMenuSpec>::BCScrollPresetsMenu>();
+    }
+  }
+
   void Loop() override {
     PropBase::Loop();
     DetectMenuTurn();
