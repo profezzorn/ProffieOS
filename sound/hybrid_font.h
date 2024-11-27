@@ -479,10 +479,10 @@ public:
     SFX_in.SetFollowing( most_blades ?  &SFX_pstoff : nullptr );
     switch (off_type) {
       case OFF_CANCEL_PREON:
-  if (state_ == STATE_WAIT_FOR_ON) {
-    state_ = STATE_OFF;
-  }
-  break;
+        if (state_ == STATE_WAIT_FOR_ON) {
+          state_ = STATE_OFF;
+        }
+        break;
       case OFF_IDLE:
         StopIdleSound();
         break;
