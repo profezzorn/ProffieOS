@@ -172,7 +172,6 @@ EFFECT(volup);      // for increse volume
 EFFECT(voldown);    // for decrease volume
 EFFECT(volmin);     // for minimum volume reached
 EFFECT(volmax);     // for maximum volume reached
-EFFECT(quote);      // for playing quotes
 #endif
 
 class BlasterBCButtons : public Blaster {
@@ -340,7 +339,7 @@ void Loop() override {
         beeper.Beep(0.1, 2000);
         beeper.Beep(0.1, 3000);
       }
-      PVLOG_NORMAL.println("Enter Volume Menu");
+      PVLOG_NORMAL << "Enter Volume Menu\n";
       SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
     } else {
       mode_volume_ = false;
@@ -351,7 +350,7 @@ void Loop() override {
         beeper.Beep(0.1, 2000);
         beeper.Beep(0.1, 1000);
       }
-      PVLOG_NORMAL.println("Exit Volume Menu");
+      PVLOG_NORMAL << "Exit Volume Menu\n";
     }
   }
 
@@ -366,8 +365,8 @@ void Loop() override {
         beeper.Beep(0.10, 2000);
         beeper.Beep(0.20, 2500);
       }
-      PVLOG_NORMAL.print("Volume Up - Current Volume: ");
-      PVLOG_NORMAL.println(dynamic_mixer.get_volume());
+      PVLOG_NORMAL << "Volume Up - Current Volume: ";
+      PVLOG_NORMAL << dynamic_mixer.get_volume() << "\n";
     } else {
       QuickMaxVolume();
     }
@@ -384,8 +383,8 @@ void Loop() override {
         beeper.Beep(0.10, 2000);
         beeper.Beep(0.20, 1500);
       }
-      PVLOG_NORMAL.print("Volume Down - Current Volume: ");
-      PVLOG_NORMAL.println(dynamic_mixer.get_volume());
+      PVLOG_NORMAL << "Volume Down - Current Volume: ";
+      PVLOG_NORMAL << dynamic_mixer.get_volume() << "\n";
     } else {
       QuickMinVolume();
     }
@@ -399,7 +398,7 @@ void Loop() override {
     } else {
       beeper.Beep(0.5, 3000);
     }
-    PVLOG_NORMAL.print("Maximum Volume \n");
+    PVLOG_NORMAL << "Maximum Volume \n";
   }
 
   void QuickMinVolume() {
@@ -411,11 +410,12 @@ void Loop() override {
       } else {
         beeper.Beep(0.5, 1000);
       }
-      PVLOG_NORMAL.print("Minimum Volume \n");
+      PVLOG_NORMAL << "Minimum Volume \n";
   }
 
   // Clash to unjam or Enter/Exit Volume Menu.
   void Clash(bool stab, float strength) override {
+      PVLOG_NORMAL << "************ CLASH ***********\n";
     PropBase::Clash(stab, strength);
     if (!mode_volume_) {
       if (is_jammed_) {
@@ -487,6 +487,7 @@ void Loop() override {
 // Enter / Exit Volume Menu
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_MODE_SELECT):
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_MODE_SELECT):
+      PVLOG_NORMAL << "************ CLASH holding MODE - should be entering volume menu!!\n";
         VolumeMenu();
         return true;
 
@@ -503,7 +504,7 @@ void Loop() override {
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
         sound_library_.SayVolts();
-        PVLOG_NORMAL.println(battery_monitor.battery());
+        PVLOG_NORMAL << battery_monitor.battery();
         is_speaking_ = true;
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
@@ -520,7 +521,7 @@ void Loop() override {
         sound_library_.SayTheBatteryLevelIs();
         sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
         sound_library_.SayPercent();
-        PVLOG_NORMAL.println(battery_monitor.battery_percent());
+        PVLOG_NORMAL << battery_monitor.battery_percent();
         is_speaking_ = true;
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
@@ -529,8 +530,8 @@ void Loop() override {
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_HELD_MEDIUM, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
         if (mode_volume_) return false;
-        PVLOG_NORMAL.println(battery_monitor.battery());
-        PVLOG_NORMAL.println(battery_monitor.battery_percent());
+        PVLOG_NORMAL << battery_monitor.battery();
+        PVLOG_NORMAL << battery_monitor.battery_percent();
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
 
