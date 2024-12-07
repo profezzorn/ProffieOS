@@ -194,7 +194,7 @@ Turn ON without Preon     - Short Click POW (while pointing UP), or use a Gestur
                             * Uses fastout.wav if available.
 Turn Blade ON Muted       - Hold POW then Twist.
                             or
-                            4x Click and Hold POW.
+                            Double Click POW.
                             * Muted ignitions will bypass preon.
                               Optional mute.wav will play before silent ignition and operation.
                               Saber unmutes when blade shuts off.
@@ -263,7 +263,7 @@ Auto Swing Blast          - Swinging within 1 second of doing a button activated
                               To trigger auto blaster blocks, swing saber within 1 second of last block.
                               To exit, stop swinging for 1 second.
                               * Requires #define BC_ENABLE_AUTO_SWING_BLAST.
-Force Effect              - Double Click and Hold POW, release after a second. (Double Click then Long Click)
+Force Effect              - Double Click and Hold POW, release after a second. (Click then Long Click)
 
 Lockup                    - Hold POW + Clash. Release button to end.
                             * In Battle Mode:
@@ -324,6 +324,7 @@ swing
     then clash          - enter BC volume menu
     then rotate left    - user effect 5 (keep holding POW until executed)
     then rotate right   - user effect 6 (keep holding POW until executed)
+2 clicks                - turn blade ON muted
 2 clicks held           - blade length edit, or
                           OS system menu instead (requires #define MENU_SPEC_TEMPLATE)
 3 clicks                - quote
@@ -332,7 +333,6 @@ swing
 3 clicks held           - spoken battery level in percentage
                           spoken battery level in volts (pointing down)
 4 clicks                - play / stop track
-4 clicks held           - turn ON main blade muted
 twist                   - turn blade ON (requires #define BC_TWIST_ON)
 - BC volume menu:
     rotate right        - volume UP
@@ -388,6 +388,8 @@ Turn Blade ON             - Short Click POW, or use a Gesture Ignition (see Gest
 Turn ON without Preon     - Short Click POW (while pointing UP), or use a Gesture Ignition.
                             * Uses fastout.wav if available.
 Turn Blade ON Muted       - Hold POW then Twist.
+                            or
+                            Double Click POW.
                             * Muted ignitions will bypass preon.
                               Optional mute.wav will play before silent ignition and operation.
                               Saber unmutes when blade shuts off.
@@ -458,8 +460,7 @@ Auto Swing Blast          - Swinging within 1 second of doing a button activated
                               To trigger auto blaster blocks, swing saber within 1 second of last block.
                               To exit, stop swinging for 1 second.
                               * Requires #define BC_ENABLE_AUTO_SWING_BLAST.
-Force Effect              - Double Click and Hold POW, release after a second. (Double Click then Long Click)
-                            * Works with monosfx.wav files, see EFFECT_USER2 in top comments.
+Force Effect              - Double Click and Hold POW, release after a second. (Click then Long Click)
 
 Lockup                    - Hold any button + Clash. Release button to end.
                             In Battle Mode:
@@ -624,7 +625,7 @@ push                    - force push
 | Turn Main Blade OFF                  - Hold POW when saber is ON.
 |
 | Turn 2nd Blade ON                    - Double click POW or Thrust main blade forward.
-| Turn 2nd Blade ON First Muted        - 4x Click and Hold POW.
+| Turn 2nd Blade ON First Muted        - 4x Click and Hold POW, release after a second. (Triple Click then Long Click)
 | Turn 2nd Blade OFF                   - Double click and Hold POW when saber is ON.
 |
 | Thrust ON                            - Thrust either blade in its pointed direction to turn it ON.
@@ -770,7 +771,7 @@ push                    - force push
 | 3 clicks held           - spoken battery level in percentage
 |                           spoken battery level in volts (pointing down)
 | 4 clicks                - play / stop track
-| 4 clicks held           - turn second blade ON first muted
+| 4 clicks long           - turn second blade ON first muted
 | - BC Volume menu:
 |     rotate right        - volume UP
 |     rotate left         - volume DOWN
@@ -2029,11 +2030,6 @@ any # of buttons
 #ifndef BC_DUAL_BLADES
 // -------------------- 1 btn single blade
 
-// Turn Blade ON Muted
-      case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_OFF):
-        MuteAll();
-        return true;
-
 // Blaster Deflection
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
@@ -2055,7 +2051,7 @@ any # of buttons
         return true;
 
 // Turn Second Blade ON First Muted
-      case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_OFF):
+      case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_OFF):
         TurnSecondBladeOnMuted();
         return true;
 
@@ -2164,11 +2160,6 @@ any # of buttons
 // NOT Pointing UP or DOWN = Next
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
         DoChangePreset();
-        return true;
-
-// Turn Blade ON Muted
-      case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
-        MuteAll();
         return true;
 
 // Blaster Deflection
@@ -2348,6 +2339,7 @@ any # of buttons
 
 // Turn Blade ON Muted
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF | BUTTON_POWER):
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
         MuteAll();
         return true;
 
