@@ -1578,7 +1578,7 @@ public:
 #ifdef MOUNT_SD_SETTING
     if (!strcmp(cmd, "sd")) {
       if (arg) LSFS::SetAllowMount(atoi(arg) > 0);
-      STDOUT.println(LSFS::GetAllowMount());
+      STDOUT << "SD card mounted to PC " << LSFS::GetAllowMount() << "\n";
       return true;
     }
 #endif
