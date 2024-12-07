@@ -740,6 +740,7 @@ EFFECT2(lock, lock);
 EFFECT(swng);
 EFFECT(slsh);
 EFFECT(quote);
+EFFECT2(idle, idle);  // Plays when blade is off
 
 // Looped swing fonts. (SmoothSwing V1/V2)
 EFFECT2(swingl, swingl);  // Looped swing, LOW
