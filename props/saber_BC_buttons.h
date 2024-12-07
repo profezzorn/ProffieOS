@@ -1142,12 +1142,7 @@ EFFECT(dim);        // for EFFECT_POWERSAVE
 EFFECT(battery);    // for EFFECT_BATTERY_LEVEL
 EFFECT(bmbegin);    // for Begin Battle Mode
 EFFECT(bmend);      // for End Battle Mode
-EFFECT(vmbegin);    // for Begin Volume Menu
-EFFECT(vmend);      // for End Volume Menu
 EFFECT(volup);      // for increse volume
-EFFECT(voldown);    // for decrease volume
-EFFECT(volmin);     // for minimum volume reached
-EFFECT(volmax);     // for maximum volume reached
 EFFECT(push);       // for Force Push gesture
 EFFECT(tr);         // for EFFECT_TRANSITION_SOUND, use with User Effects.
 EFFECT(mute);       // Notification before muted ignition to avoid confusion.
