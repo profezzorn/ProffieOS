@@ -1692,7 +1692,7 @@ public:
 
   void DoTrackStartOrStop() {
     if (scroll_presets_ || spam_blast_) return;
-    PVLOG_NORMAL << "** Track playback Started or Stopped\n";
+    PVLOG_NORMAL << "** Track playback Toggled\n";
     StartOrStopTrack();
   }
 
@@ -1796,7 +1796,7 @@ public:
 
   void GestureEnableBattleMode() {
 #ifdef BC_GESTURE_AUTO_BATTLE_MODE
-    PVLOG_NORMAL << "** Entering Battle Mode\n";
+    PVLOG_NORMAL << "** Auto Entering Battle Mode\n";
     battle_mode_ = true;
 #endif
   }
@@ -1823,7 +1823,7 @@ public:
     // Add in all non-controlled blades, effectively excluding the "other" blade.
     target_blade = target_blade | ~controlled_blades_;
     if (SaberBase::OnBlades().off()) {
-      PVLOG_NORMAL << "** No blades are currently ON, turning on the " 
+      PVLOG_DEBUG << "**** No blades are currently ON, turning on the " 
                    << (target_blade[BC_MAIN_BLADE] ? "MAIN" : "SECOND")
                    << " blade and all others, excluding the " 
                    << (target_blade[BC_MAIN_BLADE] ? "SECOND" : "MAIN")
@@ -1834,7 +1834,7 @@ public:
         On(EffectLocation(0, target_blade));
       }
     } else {
-      PVLOG_NORMAL << "** Turning on the " 
+      PVLOG_DEBUG << "**** Turning on the " 
                    << (target_blade[BC_MAIN_BLADE] ? "MAIN" : "SECOND")
                    << " blade\n";
       SaberBase::TurnOn(EffectLocation(0, target_blade));
@@ -1848,12 +1848,12 @@ public:
     // Check if this is the only blade ON (of MAIN or SECOND blades)
     if ((SaberBase::OnBlades() & ~target_blade & controlled_blades_).off()) {
       // Other blade is not on, so just do normal Off() with appropriate off_type
-      PVLOG_NORMAL << "** Turning OFF all blades\n";
+      PVLOG_DEBUG << "**** Turning OFF all blades\n";
       Off(off_type);
       muted_ = false;
     } else {
       // Only Turn OFF this blade, leave the other one ON.
-      PVLOG_NORMAL << "** Turning OFF only the " 
+      PVLOG_DEBUG << "**** Turning OFF only the " 
                    << (target_blade[BC_MAIN_BLADE] ? "MAIN" : "SECOND") 
                    << " blade\n";
       SaberBase::TurnOff(off_type, EffectLocation(0, target_blade));
@@ -2402,7 +2402,7 @@ any # of buttons
         if (isMainBladeOn() && isSecondBladeOn()) {
           if (on_pending_) return false;
           SaberBase::SetClashStrength(2.0);
-          PVLOG_NORMAL << "** Doing STAB on " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN blade.\n" : "SECOND blade.\n");
+          PVLOG_DEBUG << "**** Doing STAB on " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN blade.\n" : "SECOND blade.\n");
           SaberBase::DoEffect(EFFECT_STAB, GetThrustBladeLocation());
         } else {
           if (thrusting_blade_ == BC_MAIN_BLADE_SET && isSecondBladeOn()) {
@@ -2420,7 +2420,7 @@ any # of buttons
         clash_impact_millis_ = millis();
         if (!SaberBase::Lockup() && !swinging_) {
           SaberBase::SetLockup(SaberBase::LOCKUP_MELT, forward_stab_ ? BC_MAIN_BLADE_SET : BC_SECOND_BLADE_SET);
-          PVLOG_NORMAL << "** Doing MELT on " << (forward_stab_ ? "MAIN blade.\n" : "SECOND blade.\n");
+          PVLOG_DEBUG << "**** Doing MELT on " << (forward_stab_ ? "MAIN blade.\n" : "SECOND blade.\n");
           auto_melt_on_ = true;
           SaberBase::DoBeginLockup();
           }
@@ -2475,7 +2475,7 @@ any # of buttons
 #ifdef BC_DUAL_BLADES
           GetThrustBladeLocation();
           thrusting_blade_ = thrusting_blade_ | ~controlled_blades_;
-          PVLOG_NORMAL << "** " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN" : "SECOND") << " Blade THRUST ON\n";
+          PVLOG_DEBUG << "**** " << (thrusting_blade_[BC_MAIN_BLADE] ? "MAIN" : "SECOND") << " Blade THRUST ON\n";
           FastOn(EffectLocation(0, thrusting_blade_));
 #else
           FastOn();
@@ -2599,49 +2599,49 @@ any # of buttons
 // User Effects a.k.a. "Special Abilities" ©Fett263
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
         if (scroll_presets_) return false;
-        PVLOG_NORMAL << "** EFFECT_USER1 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER1 **\n";
         SaberBase::DoEffect(EFFECT_USER1, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
         if (scroll_presets_) return false;
-        PVLOG_NORMAL << "** EFFECT_USER2 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER2 **\n";
         SaberBase::DoEffect(EFFECT_USER2, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
         if (scroll_presets_) return false;
-        PVLOG_NORMAL << "** EFFECT_USER3 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER3 **\n";
         SaberBase::DoEffect(EFFECT_USER3, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
         if (scroll_presets_) return false;
-        PVLOG_NORMAL << "** EFFECT_USER4 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER4 **\n";
         SaberBase::DoEffect(EFFECT_USER4, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
         if (scroll_presets_) return false;
-        PVLOG_NORMAL << "** EFFECT_USER5 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER5 **\n";
         SaberBase::DoEffect(EFFECT_USER5, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
         if (scroll_presets_) return false;
-        PVLOG_NORMAL << "** EFFECT_USER6 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER6 **\n";
         SaberBase::DoEffect(EFFECT_USER6, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_AUX):
         if (scroll_presets_) return false;
-        PVLOG_NORMAL << "** EFFECT_USER7 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER7 **\n";
         SaberBase::DoEffect(EFFECT_USER7, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_AUX):
         if (scroll_presets_) return false;
-        PVLOG_NORMAL << "** EFFECT_USER8 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER8 **\n";
         SaberBase::DoEffect(EFFECT_USER8, 0);
         return true;
 
