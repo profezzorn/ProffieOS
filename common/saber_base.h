@@ -129,7 +129,7 @@ const char* EffectTypeName(EffectType effect) {
   switch (effect) {
     DEFINE_ALL_EFFECTS();
   }
-  return "unknown effeect";
+  return "unknown effect";
 }
 #undef DEFINE_EFFECT
 
