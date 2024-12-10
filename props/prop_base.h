@@ -1376,6 +1376,18 @@ public:
       }
       return true;
     }
+    if (!strcmp(cmd, "swing")) {
+      hybrid_font.PlayPolyphonic(&SFX_swng);
+      return true;
+    }
+    if (!strcmp(cmd, "slash")) {
+      hybrid_font.PlayPolyphonic(&SFX_slsh);
+      return true;
+    }
+    if (!strcmp(cmd, "spin")) {
+      hybrid_font.PlayPolyphonic(&SFX_spin);
+      return true;
+    }
 
 #ifdef ENABLE_AUDIO
 
