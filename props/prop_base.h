@@ -1376,6 +1376,20 @@ public:
       }
       return true;
     }
+    if (!strcmp(cmd, "swing")) {
+      SaberBase::DoEffect(EFFECT_ACCENT_SWING, 0);
+      return true;
+    }
+    if (!strcmp(cmd, "slash")) {
+      SaberBase::DoEffect(EFFECT_ACCENT_SLASH, 0);
+      return true;
+    }
+#ifdef ENABLE_SPINS
+    if (!strcmp(cmd, "spin")) {
+      hybrid_font.PlayPolyphonic(&SFX_spin);
+      return true;
+    }
+#endif
 
 #ifdef ENABLE_AUDIO
 
