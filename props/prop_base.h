@@ -1377,11 +1377,11 @@ public:
       return true;
     }
     if (!strcmp(cmd, "swing")) {
-      hybrid_font.PlayPolyphonic(&SFX_swng);
+      SaberBase::DoEffect(EFFECT_ACCENT_SWING, 0);
       return true;
     }
     if (!strcmp(cmd, "slash")) {
-      hybrid_font.PlayPolyphonic(&SFX_slsh);
+      SaberBase::DoEffect(EFFECT_ACCENT_SLASH, 0);
       return true;
     }
     if (!strcmp(cmd, "spin")) {
