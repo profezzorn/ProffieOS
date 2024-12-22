@@ -1,4 +1,5 @@
 /*
+
 ============================================================
 ================== SABERSENSE™ PROP FILE ===================
 ============================================================
@@ -10,7 +11,6 @@ contributions from Fredrik Hubinette and Brian Conner.
 This prop file references certain custom sound files 
 to aid in saber function navigation. These sound files 
 are optional and  are available as a free download from:
-https://sabersense.square.site/downloads
 https://sabersense.square.site/downloads
 
 
