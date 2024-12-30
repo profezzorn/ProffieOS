@@ -94,7 +94,7 @@ class LayerControl {
 public:
   virtual void LC_setVariable(int variable, VariableSource* variable_source) = 0;
   virtual const char* LC_get_filename() = 0;
-  virtual const void LC_restart() = 0;
+  virtual void LC_restart() = 0;
   virtual void LC_play(const char* filename) = 0;
   virtual void LC_set_time(uint32_t millis) = 0;
 };
@@ -576,6 +576,10 @@ private:
   // True if IMG_idle is looped.
   volatile Tristate looped_idle_ = Tristate::Unknown;
 };
+
+#undef ONCE_PER_EFFECT
+#undef INIT_SCR
+#undef DEF_SCR
 
 #endif
   

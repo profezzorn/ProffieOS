@@ -155,7 +155,7 @@ public:
 	  YIELD();
 	}
 	TRACE(RGB565, "layer::run::copy");
-	size_t to_copy = min(read_end_ - read_pos_, input_buffer_.continuous_data());
+	size_t to_copy = std::min<size_t>(read_end_ - read_pos_, input_buffer_.continuous_data());
 	PROFFIEOS_ASSERT(to_copy <= 16);
 	memcpy(read_pos_, input_buffer_.data(), to_copy);
 	input_buffer_.pop(to_copy);
@@ -369,7 +369,7 @@ public:
 
   void LC_setVariable(int variable, VariableSource* variable_source) override {
     TRACE(RGB565, "setVariable");
-    if (variable < 0 || variable >= NELEM(variables)) {
+    if (variable < 0 || variable >= (int)NELEM(variables)) {
       STDERR << "Illegal variable!\n";
       return;
     }
@@ -378,7 +378,7 @@ public:
   const char* LC_get_filename() override {
     return file_.GetFilename();
   }
-  const void LC_restart() override {
+  void LC_restart() override {
     TRACE(RGB565, "LC_restart");
     SEEK(0);
   }
@@ -534,7 +534,7 @@ public:
 	MountSDCard();
 	frame_start_ = Cyclint<uint32_t>(micros());
 
-	for (layer = 0; layer < LAYERS; layer++) {
+	for (layer = 0; layer < (int)LAYERS; layer++) {
 	  while (!layers[layer].SelectFrame(frame_start_)) YIELD();
 	}
 
@@ -590,7 +590,7 @@ public:
 	loop_counter_.Update();
 	
 	next_frame_time_ = frame_start_ + MAX_FRAME_TIME_US;
-	for (int l = 0; l < LAYERS; l++) {
+	for (size_t l = 0; l < LAYERS; l++) {
 	  if (layers[l].is_playing()) {
 	    next_frame_time_ = std::min(next_frame_time_, layers[l].next_frame_time());
 	  }
@@ -610,7 +610,7 @@ public:
   }
 
   LayerControl* getLayer(int layer) override {
-    if (layer < 0 || layer >= LAYERS) return nullptr;
+    if (layer < 0 || layer >= (int)LAYERS) return nullptr;
     return layers + layer;
   }
 
