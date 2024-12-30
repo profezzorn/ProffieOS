@@ -1,7 +1,7 @@
 #ifndef DISPLAY_SPIDISPLAY_H
 #define DISPLAY_SPIDISPLAY_H
 
-// Unfortunately, including SPI.h uses 3k even if if it's never actually used on Proffieboards.
+// Unfortunately, including SPI.h uses 3k even if it's never actually used on Proffieboards.
 #include <SPI.h>
 
 constexpr uint8_t encode_sleep_time(int millis) {
