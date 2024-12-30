@@ -13,7 +13,7 @@ int current_alternative = 0;
 // num_alternatives == 3 means alt000/, alt001/, alt002/
 int num_alternatives = 0;
 
-constexpr bool PO_isDigit(char s) { return s >= 0 && s <= '9'; }
+constexpr bool PO_isDigit(char s) { return s >= '0' && s <= '9'; }
 bool isAllDigits(const char* s) {
   for (;*s;s++) if(!PO_isDigit(*s)) return false;
   return true;
