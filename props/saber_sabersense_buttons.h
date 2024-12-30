@@ -682,7 +682,7 @@ public:
   //  GESTURE CONTROLS
 #ifdef SABERSENSE_SWING_ON
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
-      // Due to motion chip startup on boot creating false ignition we delay Swing On at boot for 3000ms
+      // Motion chip startup on boot can create false ignition, so delay SwingOn at boot for 3000ms
       if (millis() > 3000) {
         FastOn();
       }
@@ -1225,7 +1225,7 @@ return true;
     switch (effect) {
       case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return; 
 #else
-  void SB_Effect(EffectType effect, EffectLocation location) override {  //  Required for ProffieOS 8.x.
+  void SB_Effect(EffectType effect, EffectLocation location) override {  //  For ProffieOS 8.x.
     switch (effect) {
 #endif
       case EFFECT_POWERSAVE:
