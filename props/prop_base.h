@@ -1738,6 +1738,7 @@ public:
     switch (event) {
       case EVENT_RELEASED:
         clash_pending_ = false;
+	[[gnu::fallthrough]];
       case EVENT_PRESSED:
         IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
       default:
