@@ -93,7 +93,7 @@ FUNCTIONS WITH BLADE OFF
   Play Music Track          Fast double-click, hilt pointing down. **
   Speak battery voltage     Fast double-click-and-hold while OFF.
   Run BladeID/Array Select  Fast triple-click while OFF. (Applicable installs only).
-  Restore Factory Defaults	Fast four-clicks while OFF, hold on last click. (If enabled).
+  Restore Factory Defaults	Fast four-clicks while OFF, hold on last click. ***
                               Release once announcement starts.
   Enter/Exit VOLUME MENU    Hold and clash while OFF.
     Volume up               Click while in VOLUME MENU, hilt pointing up.
@@ -107,7 +107,7 @@ FUNCTIONS WITH BLADE ON
   Play Character Quote      Fast double-click, hilt pointing up, plays sequentially. **
   Force Effect              Fast double-click, hilt pointing down, plays randomly. **
   Lightning block           Double click and hold while ON.
-  Melt                      Hold and thrust forward clash while ON. (Selected fonts only).
+  Melt                      Hold and push blade tip against wall (stab). Rotate for heat colours.
   Blaster blocks            Short click/double click/triple click while ON.
   Enter multi-blast mode    Hold while swinging for one second and release.
                               To trigger blaster block, swing saber while in multi-blast mode.
@@ -124,6 +124,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
                               
   *   = Gesture ignitions also available via defines.
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
+  *** = Feature must be enabled in config file using SABERSENSE_ENABLE_RESET define.
 
 
 ============================================================
@@ -150,7 +151,7 @@ FUNCTIONS WITH BLADE OFF
   Play Music Track          Fast double-click MAIN, pointing down. **
   Speak battery voltage     Fast double-click-and-hold MAIN, or hold AUX for one second.
   Run BladeID/Array Select  Fast triple-click. (Applicable installs only).
-  Restore Factory Defaults	Fast four-clicks MAIN, hold on last click. (If enabled).
+  Restore Factory Defaults	Fast four-clicks MAIN, hold on last click. ***
                               Release once announcement starts.
   Enter/Exit VOLUME MENU    Hold MAIN then quickly click AUX and release both simultaneously.
     Volume up               Click MAIN while in VOLUME MENU, hilt pointing up.
@@ -165,7 +166,7 @@ FUNCTIONS WITH BLADE ON
   Play Character Quote      Fast double-click MAIN, hilt pointing up, plays sequentially. **
   Force Effect              Fast double-click MAIN, hilt pointing down, plays randomly. **
   Lightning block           Double-click MAIN and hold.
-  Melt                      Hold MAIN and push blade tip against wall (stab).
+  Melt                      Hold MAIN and stab blade tip against wall. Rotate for heat colours.
   Blaster blocks            Short click AUX. (Add Short click MAIN using define).
   Enter multi-blast mode    Hold MAIN while swinging for one second and release. 
                               Saber will play two quick blasts confirming mode.
@@ -183,13 +184,13 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
                               Announcement confirms you are exiting COLOUR MENU.
                               You must exit COLOUR MENU to resume using lightsaber normally.
                               
-  *  = Gesture ignitions also available via defines.
-  ** = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
+  *   = Gesture ignitions also available via defines.
+  **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
+  *** = Feature must be enabled in config file using SABERSENSE_ENABLE_RESET define.
 
 
 ===========================================================
 =================== SABERSENSE™ DEFINES ===================
-
 #define SABERSENSE_BLADE_ID
   Replaces regular BladeID with on-demand BladeID scanning. 
   Plays array-specific bladeidX.wav files when switching.
