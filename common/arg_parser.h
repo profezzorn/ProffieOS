@@ -174,8 +174,8 @@ public:
   }
   void operator>>=(int bits) {
     if (!bits) return;
-    for (int i = 0; i < SIZE; i++) {
-      if (i + bits < SIZE && get(i + bits)) {
+    for (int i = 0; i < (int)SIZE; i++) {
+      if (i + bits < (int)SIZE && get(i + bits)) {
 	set(i);
       } else {
 	clear(i);

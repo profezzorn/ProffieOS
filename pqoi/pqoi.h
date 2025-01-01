@@ -240,37 +240,37 @@ uint64_t PQHIST[256] = {};
           out[7] = out[-1];                                     \
           out += 8;                                             \
           continue;                                             \
-        case 159: *(out++) = pixel_;                            \
-        case 158: *(out++) = pixel_;                            \
-        case 157: *(out++) = pixel_;                            \
-        case 156: *(out++) = pixel_;                            \
-        case 155: *(out++) = pixel_;                            \
-        case 154: *(out++) = pixel_;                            \
-        case 153: *(out++) = pixel_;                            \
-        case 152: *(out++) = pixel_;                            \
-        case 151: *(out++) = pixel_;                            \
-        case 150: *(out++) = pixel_;                            \
-        case 149: *(out++) = pixel_;                            \
-        case 148: *(out++) = pixel_;                            \
-        case 147: *(out++) = pixel_;                            \
-        case 146: *(out++) = pixel_;                            \
-        case 145: *(out++) = pixel_;                            \
-        case 144: *(out++) = pixel_;                            \
-        case 143: *(out++) = pixel_;                            \
-        case 142: *(out++) = pixel_;                            \
-        case 141: *(out++) = pixel_;                            \
-        case 140: *(out++) = pixel_;                            \
-        case 139: *(out++) = pixel_;                            \
-        case 138: *(out++) = pixel_;                            \
-        case 137: *(out++) = pixel_;                            \
-        case 136: *(out++) = pixel_;                            \
-        case 135: *(out++) = pixel_;                            \
-        case 134: *(out++) = pixel_;                            \
-        case 133: *(out++) = pixel_;                            \
-        case 132: *(out++) = pixel_;                            \
-        case 131: *(out++) = pixel_;                            \
-        case 130: *(out++) = pixel_;                            \
-        case 129: *(out++) = pixel_;                            \
+        case 159: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 158: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 157: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 156: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 155: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 154: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 153: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 152: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 151: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 150: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 149: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 148: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 147: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 146: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 145: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 144: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 143: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 142: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 141: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 140: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 139: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 138: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 137: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 136: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 135: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 134: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 133: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 132: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 131: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 130: *(out++) = pixel_; [[gnu::fallthrough]];	\
+        case 129: *(out++) = pixel_; [[gnu::fallthrough]];	\
         case 128: *(out++) = pixel_;                            \
           *(out++) = pixel_;                                    \
           continue;                                             \
@@ -317,6 +317,36 @@ public:
       PQOI_DECODE_ONE( PQOI_GETC_GETC );
     }
     this->pixel_ = pixel_;
+    return out;
+  }
+};
+
+class PqoiBlockingDecoder : public PqoiBase {
+public:
+  const uint8_t* in;
+  const uint8_t* input_end;
+
+  bool input_done() const { return in >= input_end; }
+  void set_input(const uint8_t* input, const uint8_t* end) {
+    in = input;
+    input_end = end;
+  }
+  // Load more data.
+  virtual void load() = 0;
+
+  // Read data until out is >= end.
+  // At most 32 extra pixels will be returned.
+  __attribute__((optimize("Ofast"))) uint16_t* read(uint16_t* out, uint16_t* end) {
+    uint16_t pixel_ = this->pixel_;
+    const uint8_t* in = this->in;
+    const uint8_t* input_end = this->input_end;
+    while (out < end) {
+      uint8_t byte, b2;
+#define PQOI_BLOCKING_GETC(STATE) if (in >= input_end) { load(); in=this->in; input_end=this->input_end; } byte = *(in++)
+      PQOI_DECODE_ONE( PQOI_BLOCKING_GETC );
+    }
+    this->pixel_ = pixel_;
+    this->in = in;
     return out;
   }
 };
@@ -431,7 +461,7 @@ struct PqoiOutputChunk {
   uint16_t* end() { return  std::min(end_, chunk_end()); }
   size_t size() { return end() - begin(); }
   bool full() { return size() >= CHUNK_SIZE; }
-  bool full(int left, int pixels) { return size() >= pixels + left; }
+  bool full(int left, int pixels) { return ((int)size()) >= pixels + left; }
   uint16_t* data_end() { return end_; }
 
   template<class PQOI_DECODER>
