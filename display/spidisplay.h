@@ -745,13 +745,13 @@ using SPIDisplay_DFRobot096 = SPIDisplay77XX<
 
 
 template<int LAYERS,
-	 class CONFIG = DisplayConfig<0, InsetT<0,0,20,20>>,
+	 class CONFIG = DisplayConfig<1, InsetT<0,0,20,20>>,
 	 class SA = CSDisplayAdapter<blade4Pin>>
 using SPIDisplay_AdaFruit5206 = SPIDisplay77XX<
   LAYERS,
   CONFIG,
   // HELPER
-  DisplayConfigHelper<LAYERS, CONFIG, SizeT<320, 240>, SA, ST7789>,
+  DisplayConfigHelper<LAYERS, CONFIG, SizeT<240, 320>, SA, ST7789>,
   // InitSequence
   ConcatByteArrays<ST7789::GENERIC_ST7789_STARTUP, typename CONFIG::template rotation_cmd<ST7789> > ,
   // OnSequence
