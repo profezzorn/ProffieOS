@@ -539,6 +539,7 @@ public:
         } else {
         SaberBase::DoNewFont();  //  Play font ident if 'bladeid' sound file missing.
         }
+    }
 #endif
 #endif
 
