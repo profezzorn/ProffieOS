@@ -594,7 +594,7 @@ public:
         if (IsOn() == false && (now - blade_id_scan_start_) < BLADE_ID_SCAN_TIMEOUT) {
             if (now - last_scan_id_ > BLADE_ID_SCAN_MILLIS) {
                 last_scan_id_ = now;
-                size_t best_config = FindBestConfig();
+                size_t best_config = FindBestConfig(PROFFIEOS_LOG_LEVEL >= 500);
                 if (current_config != blades + best_config) {
                     // We can't call FindBladeAgain right away because
                     // we're called from the blade. Wait until next loop() call.
@@ -1600,7 +1600,9 @@ public:
 #ifdef MOUNT_SD_SETTING
     if (!strcmp(cmd, "sd")) {
       if (arg) LSFS::SetAllowMount(atoi(arg) > 0);
-      STDOUT.println(LSFS::GetAllowMount());
+      STDOUT << "SD Access " 
+             << (LSFS::GetAllowMount() ? "ON" : "OFF") 
+             << "\n";
       return true;
     }
 #endif
@@ -1760,6 +1762,7 @@ public:
     switch (event) {
       case EVENT_RELEASED:
         clash_pending_ = false;
+	[[gnu::fallthrough]];
       case EVENT_PRESSED:
         IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
       default:

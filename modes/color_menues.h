@@ -8,8 +8,84 @@
 
 namespace mode {
 
-// Note, the currently edited color is stored in ShowColorStyle.
+  
+template<class SPEC>
+class FileColorMenu : public SPEC::MenuBase {
+public:
+  void init() {
+    size_ = 0;
+    dir_ = nullptr;
+    for (const char* dir = last_current_directory(); dir; dir = previous_current_directory(dir)) {
+      PathHelper full_name(dir, "colors.txt");
+      FileReader f;
+      PVLOG_STATUS << " Trying " << full_name << "\n";
+      AudioStreamWork::scheduleFillBuffer();
+      LOCK_SD(true);
+      if (f.Open(full_name)) {
+	dir_ = dir;
+	mult_ = 7;
+	f.Seek(8);
+	if (f.Read() <= 13) mult_++;
+	size_ = f.FileSize() / mult_;
+      }
+      f.Close();
+      LOCK_SD(false);
+      PVLOG_STATUS << " DIR = " << dir_ << " size = " <<  size_  << " \n";
+      if (dir_) break;
+    }
+  }
+  Color8 get() {
+    Color8 ret;
+    if (dir_) {
+      PathHelper full_name(dir_, "colors.txt");
+      FileReader f;
+      AudioStreamWork::scheduleFillBuffer();
+      LOCK_SD(true);
+      if (f.Open(full_name)) {
+	f.Seek(this->pos_ * mult_);
+	ret.r = f.ReadHex2();
+	ret.g = f.ReadHex2();
+	ret.b = f.ReadHex2();
+      }
+      f.Close();
+      LOCK_SD(false);
+    }
+    return ret;
+  }
+    
+  void say() override {
+    Color8 c = get();
+    getSL<SPEC>()->Play(SoundToPlay(c.r, c.g, c.b));
+  }
+    
+  uint16_t size() override { return size_; }
+  void update() override {
+    ShowColorStyle::SetColor(get());
+    SPEC::MenuBase::update();
+  }
 
+  void exit() override {
+    ShowColorStyle::SetColor(saved_);
+    getSL<SPEC>()->SayCancel();
+    SPEC::MenuBase::exit();
+  }
+  
+  void mode_activate(bool onreturn) override {
+    if (!onreturn) {
+      saved_ = ShowColorStyle::getColor();
+      init();
+    }
+    SPEC::MenuBase::mode_activate(onreturn);
+  }
+private:
+  Color16 saved_;
+  const char* dir_;
+  uint16_t size_ = 0;
+  uint16_t mult_;
+};
+
+  
+// Note, the currently edited color is stored in ShowColorStyle.
 template<class SPEC>
 struct ColorHueMode : public SPEC::SmoothWraparoundMode {
 public:
@@ -133,10 +209,10 @@ Color16 menu_selected_color;
 
 template<class SPEC>
 struct SelectColorEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayCopyColor();
   }
-  void select(int entry) override {
+  void select(int entry) {
     getSL<SPEC>()->SaySelect();
     menu_selected_color = ShowColorStyle::getColor();
   }
@@ -144,21 +220,21 @@ struct SelectColorEntry : public MenuEntry {
   
 template<class SPEC>
 struct UseSelectedColorEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayPasteColor();
   }
-  void select(int entry) override {
+  void select(int entry) {
     getSL<SPEC>()->SaySelect();
     ShowColorStyle::SetColor(menu_selected_color);
   }
-};
+};  
 
 template<class SPEC>
 struct ResetColorToDefaultEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SayResetToDefaultColor();
   }
-  void select(int entry) override {
+  void select(int entry) {
     getSL<SPEC>()->SaySelect();
     LSPtr<char> builtin = style_parser.ResetArguments(GetStyle(menu_current_blade));
     char argspace[32];
@@ -173,10 +249,10 @@ struct ResetColorToDefaultEntry : public MenuEntry {
 
 template<class SPEC, class MENU>
 struct SaveColorMenuEntry : public MenuEntry {
-  void say(int entry) override {
+  void say(int entry) {
     getSL<SPEC>()->SaySave();
   }
-  void select(int entry) override {
+  void select(int entry) {
     getSL<SPEC>()->SaySelect();
     getPtr<MENU>()->save();
     popMode();
@@ -185,6 +261,7 @@ struct SaveColorMenuEntry : public MenuEntry {
 
 template<class SPEC, class MENU>
 using ColorSelectList = MenuEntryMenu<SPEC,
+  SubMenuEntry<typename SPEC::FileColorMenu, typename SPEC::SoundLibrary::tColorList>,
   SubMenuEntry<typename SPEC::ColorHueMode, typename SPEC::SoundLibrary::tAdjustColorHue>,
   SubMenuEntry<typename SPEC::ColorBrightnessMode, typename SPEC::SoundLibrary::tEditBrightness>,
   SubMenuEntry<typename SPEC::ColorRedMode, typename SPEC::SoundLibrary::tAdjustRed>,
@@ -194,6 +271,7 @@ using ColorSelectList = MenuEntryMenu<SPEC,
   typename SPEC::UseSelectedColorEntry,
   typename SPEC::ResetColorToDefaultEntry,
   SaveColorMenuEntry<SPEC, MENU>>;
+  
 
 template<class SPEC>
 struct ColorSelectMode : public ColorSelectList<SPEC, ColorSelectMode<SPEC>> {

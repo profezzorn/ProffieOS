@@ -10,6 +10,7 @@ void prop_SetClashThreshold(int clash_threshold);
 int prop_GetBladeLength(int blade);
 int prop_GetMaxBladeLength(int blade);
 void prop_SetBladeLength(int blade, int len);
+void prop_UpdateStyle();
 
 namespace mode {
 
@@ -88,6 +89,7 @@ struct ChangeBladeLengthBlade1 : public SPEC::MenuBase {
   }
   void mode_deactivate() {
     showlen_.Stop(blade());
+    prop_UpdateStyle();
   }
   void say() override {
     getSL<SPEC>()->SayWhole(getLength());
@@ -209,9 +211,9 @@ struct SmoothChangeBladeDimmingMode : public SPEC::SmoothMode {
 
 template<class SPEC>
 struct AllowMountBoolSetting : public BoolSetting {
-  bool get() override { return LSFS::GetAllowMount(); }
-  void set(bool value) override { return LSFS::SetAllowMount(value); }
-  void say() override { getSL<SPEC>()->SaySDAccess(); }
+  bool get() { return LSFS::GetAllowMount(); }
+  void set(bool value) { return LSFS::SetAllowMount(value); }
+  void say() { getSL<SPEC>()->SaySDAccess(); }
 };
 #endif
 

@@ -3,6 +3,7 @@
 
 #include "alpha.h"
 #include "../functions/int.h"
+#include "colors.h"
 
 // Usage: Layers<BASE, LAYER1, LAYER2, ...>
 // BASE: COLOR or LAYER
@@ -39,6 +40,36 @@ public:
   auto getColor(int led) -> decltype(base_.getColor(led) << layer_.getColor(led)) {
     return base_.getColor(led) << layer_.getColor(led);
 //    return PRINT(base_.getColor(led) << PRINT(layer_.getColor(led), "layer"), __PRETTY_FUNCTION__);
+  }
+};
+
+// Optimize Layer<Black, LAYER>
+// ALlows LAYER to be opaque.
+template<class L1>
+class Compose<BLACK, L1> {
+public:
+  LayerRunResult run(BladeBase* blade) {
+    LayerRunResult layer_run_result = RunLayer(&layer_, blade);
+    switch (layer_run_result) {
+      case LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION:
+      case LayerRunResult::TRANSPARENT_UNTIL_IGNITION:
+	return LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
+      case LayerRunResult::UNKNOWN:
+	break;
+    }
+    return LayerRunResult::UNKNOWN;
+  }
+private:
+  PONUA L1 layer_;
+  SimpleColor dealpha(const SimpleColor& color) { return color; }
+  OverDriveColor dealpha(const OverDriveColor& color) { return color; }
+  SimpleColor dealpha(const RGBA_um_nod& color) { return SimpleColor(color.c * color.alpha >> 15); }
+  OverDriveColor dealpha(const RGBA_um& color) { return OverDriveColor(color.c * color.alpha >> 15, color.overdrive); }
+  SimpleColor dealpha(const RGBA_nod& color) { return SimpleColor(color.c); }
+  OverDriveColor dealpha(const RGBA& color) { return OverDriveColor(color.c, color.overdrive); }
+public:
+  auto getColor(int led) -> decltype(dealpha(layer_.getColor(led))) {
+    return dealpha(layer_.getColor(led));
   }
 };
 

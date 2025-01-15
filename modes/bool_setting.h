@@ -3,16 +3,17 @@
 
 namespace mode {
 
+
 struct BoolSetting {
-  virtual bool get() = 0;
-  virtual void set(bool value) = 0;
-  virtual void say() = 0;
+//  virtual bool get() = 0;
+//  virtual void set(bool value) = 0;
+//  virtual void say() = 0;
 };
 
 template<class SPEC, class BoolSetting>
 class DirectBoolEntry : public MenuEntry {
 public:  
-  void say(int entry) override {
+  void say(int entry) {
     getPtr<BoolSetting>()->say();
     getSL<SPEC>()->SayBool(getPtr<BoolSetting>()->get());
   }
@@ -27,11 +28,11 @@ public:
 template<class SPEC, class BoolSetting>
 struct IndirectBoolEntries : public MenuEntry {
   static const int size = 2;
-  static void say(int entry) override {
+  void say(int entry) {
     getPtr<BoolSetting>()->say();
     getSL<SPEC>()->SayBool(entry == 1);
   }
-  static void select(int entry) override {
+  void select(int entry) {
     getPtr<BoolSetting>()->set(entry == 1);
     say(entry);
   }
@@ -41,7 +42,7 @@ template<class SPEC, class BoolSetting>
 class IndirectBoolEntry : public MenuEntry {
 public:  
   static const int size = 1;
-  void say(int entry) override {
+  void say(int entry) {
     getPtr<BoolSetting>()->say();
     getSL<SPEC>()->SayBool(getPtr<BoolSetting>()->get());
   }

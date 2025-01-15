@@ -67,7 +67,7 @@ struct BlasterDisplayConfigFile : public ConfigFile {
   float ProffieOSEmptyImageDuration;
   // for OLED displays, the time a jam.bmp will play
   float ProffieOSJamImageDuration;
-  // for OLED displays, the time a clipiin.bmp will play
+  // for OLED displays, the time a clipin.bmp will play
   float ProffieOSClipinImageDuration;
   // for OLED displays, the time a clipout.bmp will play
   float ProffieOSClipoutImageDuration;
@@ -1015,9 +1015,9 @@ public:
   }
 };
 
-template<template<int, class> class T>
+template<template<int, class, class> class T, typename PREFIX = ByteArray<>>
 struct BaseLayerOp {
-  template<int Width, class col_t> struct Controller : public T<Width, col_t> {};
+  template<int Width, class col_t> struct Controller : public T<Width, col_t, PREFIX> {};
 };
 
 template<int WIDTH, class col_t, class POWER_PIN = PowerPINS<> >

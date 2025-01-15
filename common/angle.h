@@ -47,6 +47,9 @@ public:
   constexpr bool operator>(float f) const {
     return angle_ > f;
   }
+  constexpr bool operator>(int f) const {
+    return angle_ > f;
+  }
   constexpr bool operator<(float f) const {
     return angle_ < f;
   }

@@ -56,9 +56,11 @@ template<uint8_t... symbols> struct StripZeroHelper<ByteArray<0, symbols...>> { 
 template<uint8_t a, uint8_t... symbols> struct StripZeroHelper<ByteArray<a, symbols...>> { using type = ConcatByteArrays<ByteArray<a>, typename StripZeroHelper<ByteArray<symbols...>>::type>; };
 template<class BA> using StripZeroes = typename StripZeroHelper<BA>::type;
 
-constexpr char index_string(char const str[], size_t index) {
-  return index >= strlen(str) ? 0 : str[index];
+constexpr char index_string_low(char const str[], size_t index, size_t len) {
+  return index >= len ? 0 : str[index];
 }
+
+#define index_string(X, index) index_string_low((X), (index), sizeof((X)) - sizeof(""))
 
 // Converts a string to a ByteArrayType.
 // STRTYPE("foo") = ByteArray<'f', 'o', 'o'>

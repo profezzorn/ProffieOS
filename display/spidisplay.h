@@ -1,7 +1,7 @@
 #ifndef DISPLAY_SPIDISPLAY_H
 #define DISPLAY_SPIDISPLAY_H
 
-// Unfortunately, including SPI.h uses 3k even if if it's never actually used on Proffieboards.
+// Unfortunately, including SPI.h uses 3k even if it's never actually used on Proffieboards.
 #include <SPI.h>
 
 constexpr uint8_t encode_sleep_time(int millis) {
@@ -401,6 +401,9 @@ struct SpiIrqHelper {
       case 1: return cb1;
       case 2: return cb2;
       case 3: return cb3;
+      default:
+	STDERR << "Too many SPI displays!";
+	[[gnu::fallthrough]];
       case 4: return cb4;
     }
   }
@@ -510,7 +513,7 @@ public:
 
   const char* name() override { return "SPIDisplay_AdaFruit358"; }
   
-  SPIDisplayBase() {
+  SPIDisplayBase() : Looper(HFLINK) {
     cb = spi_irq_helper.getCallback(this);
   }
 
@@ -742,13 +745,13 @@ using SPIDisplay_DFRobot096 = SPIDisplay77XX<
 
 
 template<int LAYERS,
-	 class CONFIG = DisplayConfig<0, InsetT<0,0,20,20>>,
+	 class CONFIG = DisplayConfig<1, InsetT<0,0,20,20>>,
 	 class SA = CSDisplayAdapter<blade4Pin>>
 using SPIDisplay_AdaFruit5206 = SPIDisplay77XX<
   LAYERS,
   CONFIG,
   // HELPER
-  DisplayConfigHelper<LAYERS, CONFIG, SizeT<320, 240>, SA, ST7789>,
+  DisplayConfigHelper<LAYERS, CONFIG, SizeT<240, 320>, SA, ST7789>,
   // InitSequence
   ConcatByteArrays<ST7789::GENERIC_ST7789_STARTUP, typename CONFIG::template rotation_cmd<ST7789> > ,
   // OnSequence

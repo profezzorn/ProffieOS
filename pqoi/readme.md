@@ -19,6 +19,7 @@ In addition to the code in this directory, you'll need:
 * a compiler (to compile these tools)
 * make
 * ffmpeg
+* mjpegtools
 * netpbm
 
 Just run "make" in this directory to compile cpqoi and dpqoi.

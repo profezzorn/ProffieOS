@@ -121,7 +121,7 @@ public:
   operator bool() const { return active_; }
 
   template<class A, class B>
-  auto getColor(A a, B b, int led) -> decltype(tr_.getColor(a, b, led)) {
+  auto getColor(A a, B b, int led) -> decltype(MixColors(tr_.getColor(a, b, led), b, 1,1)) {
     if (active_)
       return tr_.getColor(a, b, led);
     else
