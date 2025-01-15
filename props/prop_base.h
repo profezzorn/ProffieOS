@@ -1578,7 +1578,9 @@ public:
 #ifdef MOUNT_SD_SETTING
     if (!strcmp(cmd, "sd")) {
       if (arg) LSFS::SetAllowMount(atoi(arg) > 0);
-      STDOUT.println(LSFS::GetAllowMount());
+      STDOUT << "SD Access " 
+             << (LSFS::GetAllowMount() ? "ON" : "OFF") 
+             << "\n";
       return true;
     }
 #endif
