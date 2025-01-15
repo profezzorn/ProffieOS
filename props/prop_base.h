@@ -587,11 +587,21 @@ public:
 #ifndef BLADE_ID_SCAN_TIMEOUT
 #define BLADE_ID_SCAN_TIMEOUT 60 * 10 * 1000
 #endif
+#ifndef BLADE_ID_SCAN_WHILE_IGNITED
+#define BLADE_ID_SCAN_WHILE_IGNITED true
+#endif
   bool find_blade_again_pending_ = false;
   uint32_t last_scan_id_ = 0;
     bool ScanBladeIdNow() {
         uint32_t now = millis();
-        if (IsOn() == false && (now - blade_id_scan_start_) < BLADE_ID_SCAN_TIMEOUT) {
+        bool scan;
+        if (BLADE_ID_SCAN_WHILE_IGNITED == false && IsOn() == true){
+            scan = false;
+        }
+        else {
+            scan = true;
+        }
+        if (scan == true && (now - blade_id_scan_start_) < BLADE_ID_SCAN_TIMEOUT) {
             if (now - last_scan_id_ > BLADE_ID_SCAN_MILLIS) {
                 last_scan_id_ = now;
                 size_t best_config = FindBestConfig(PROFFIEOS_LOG_LEVEL >= 500);
