@@ -584,31 +584,27 @@ public:
 #ifndef SHARED_POWER_PINS
 #warning SHARED_POWER_PINS is recommended when using BLADE_ID_SCAN_MILLIS
 #endif
-    
 #ifdef BLADE_ID_SCAN_TIMEOUT
-    int scan_timeout = BLADE_ID_SCAN_TIMEOUT;
-#else
-    int scan_timeout = 60 * 10 * 1000;
+#define BLADE_ID_SCAN_TIMEOUT 60 * 10 * 1000
 #endif
-
-#ifdef BLADE_ID_STOP_SCAN_WHILE_IGNITED
-    bool scan_while_ignited = false;
-#else
-    bool scan_while_ignited = true;
-#endif
-
-  bool find_blade_again_pending_ = false;
-  uint32_t last_scan_id_ = 0;
+    
+    bool find_blade_again_pending_ = false;
+    uint32_t last_scan_id_ = 0;
     bool ScanBladeIdNow() {
         uint32_t now = millis();
-        bool scan;
-        if (scan_while_ignited == false && IsOn() == true){
+        
+        bool scan = true;
+        #ifdef BLADE_ID_STOP_SCAN_WHILE_IGNITED
+        if (IsOn()) {
             scan = false;
         }
-        else {
-            scan = true;
+        #endif
+        
+        if ((now - blade_id_scan_start_) < BLADE_ID_SCAN_TIMEOUT) {
+            scan = false;
         }
-        if (scan == true && (now - blade_id_scan_start_) < scan_timeout) {
+        
+        if (scan == true) {
             if (now - last_scan_id_ > BLADE_ID_SCAN_MILLIS) {
                 last_scan_id_ = now;
                 size_t best_config = FindBestConfig(PROFFIEOS_LOG_LEVEL >= 500);
