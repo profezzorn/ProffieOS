@@ -357,7 +357,7 @@ public:
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
-#ifdef BLADE_ID_SCAN_MILLIS
+#ifdef BLADE_ID_SCAN_TIMEOUT
     blade_id_scan_start_ = millis();
 #endif
     bool on = IsOn();
@@ -1140,7 +1140,7 @@ public:
 
     current_mode->mode_Loop();
 
-#ifdef BLADE_ID_SCAN_MILLIS
+#ifdef BLADE_ID_SCAN_TIMEOUT
     if (SaberBase::IsOn() ||
         (current_style() && current_style()->Charging())) {
       blade_id_scan_start_ = millis();
@@ -1168,7 +1168,7 @@ public:
   uint32_t last_on_time_;
 #endif
     
-#ifdef BLADE_ID_SCAN_MILLIS
+#ifdef BLADE_ID_SCAN_TIMEOUT
   uint32_t blade_id_scan_start_;
 #endif
 
