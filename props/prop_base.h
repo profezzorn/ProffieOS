@@ -599,8 +599,6 @@ public:
 #endif
         
 #ifdef BLADE_ID_SCAN_TIMEOUT
-#define BLADE_ID_SCAN_TIMEOUT 60 * 10 * 1000
-
         if ((now - blade_id_scan_start_) < BLADE_ID_SCAN_TIMEOUT) {
             scan = false;
         }
