@@ -1207,6 +1207,8 @@ public:
       case EVENT_SWING: STDOUT.print("Swing"); break;
       case EVENT_SHAKE: STDOUT.print("Shake"); break;
       case EVENT_TWIST: STDOUT.print("Twist"); break;
+      case EVENT_TWIST_LEFT: STDOUT.print("TwistLeft"); break;
+      case EVENT_TWIST_RIGHT: STDOUT.print("TwistRight"); break;
       case EVENT_CLASH: STDOUT.print("Clash"); break;
       case EVENT_THRUST: STDOUT.print("Thrust"); break;
       case EVENT_PUSH: STDOUT.print("Push"); break;
