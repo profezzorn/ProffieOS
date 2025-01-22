@@ -153,6 +153,9 @@ public:
     }
   }
 
+  bool IsEmpty() const {
+    return max_shots_ != -1 && shots_fired_ >= max_shots_;
+  }
   bool auto_firing_ = false;
   int shots_fired_ = 0;
   bool is_jammed_ = false;
