@@ -23,7 +23,9 @@ Includes:
     Empty repeats at same rate auto was firing for added realism. Cool, eh?
 
 Requires minimum 2 buttons for operation.
-  *Notes  - When using dual_prop, the config file can be set to use NUM_BUTTONS 1 for saber mode,
+If there's a 3rd button, it's set to be Reload by default. To use as POWER button instead,
+use #define BUTTON_THREE_IS_POWER 
+  *Notes  - When using dual_prop, the config file can optionally be set to use NUM_BUTTONS 1 for saber mode,
               and the blaster mode will still use 2 buttons as FIRE and MODE.
 
 ** This version is designed to work well together with saber_BC_buttons.h when
@@ -60,11 +62,13 @@ Optional Blade style elements:
                                             and uses battery.wav sound effect.
   EFFECT_VOLUME_LEVEL                   - Use EFFECT_VOLUME_LEVEL in blade style.
                                             Useful if the blaster has a segmented accent LED strip or similar.
-==========================================
-| 2 Buttons: FIRE and MODE (POW and AUX) |
-==========================================
-Power On / Off            - Hold MODE, double click and hold FIRE until Power On / Off 
+==================================================
+| 2 Buttons: FIRE and MODE (saber's POW and AUX) |
+==================================================
+Power On / Off            - Hold MODE then Press and hold FIRE until Power ON / OFF.
                               Default is auto-powered ON at boot.
+                              Power ON required after Self Destruct.
+                              Plays wavs named poweron and poweroff.
 Cycle Modes               - Click and hold MODE. Cycles through KILL, AUTOFIRE, and STUN modes.
 Next Preset               - Long click and release MODE.
 Previous Preset           - Double click and hold MODE, release after a second (click then long click).
@@ -97,10 +101,14 @@ Clip In                   - Clip Detect pad Latched On.
 Clip out                  - Clip Detect pad Latched Off.
 Unjam                     - Bang the blaster or Reload.
 
-- If there's a dedicated POWER button,
-Power On / Off            - Click POW. - TODO: this with dual_prop is....weird
-- If there's a dedicated Reload button, 
-Reload                    - Click RELOAD.
+=======================================
+| 3 Buttons: FIRE, MODE, POWER/RELOAD |
+=======================================
+- If defined BUTTON_THREE_IS_POWER,
+Power ON/OFF              - HOLD 3rd button until power ON/OFF
+- otherwise
+Reload                    - Click 3rd button.
+Mode                      - Click MODE.
 
 Wavs to use for talking Mode (else Talkie voice):
 - If these are not present, mode.wav will be used for all modes.
@@ -415,7 +423,6 @@ void Loop() override {
 
   // Clash to unjam or Enter/Exit Volume Menu.
   void Clash(bool stab, float strength) override {
-      PVLOG_NORMAL << "************ CLASH ***********\n";
     PropBase::Clash(stab, strength);
     if (!mode_volume_) {
       if (is_jammed_) {
@@ -427,10 +434,20 @@ void Loop() override {
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
+
+// Power button control
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
+        On();
+        return true;
+
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
+        Off();
+        return true;
+
 // Power On / Off manually
-      case EVENTID(BUTTON_FIRE, EVENT_SECOND_HELD_MEDIUM, MODE_ON | BUTTON_MODE_SELECT):
-      case EVENTID(BUTTON_FIRE, EVENT_SECOND_HELD_MEDIUM, MODE_OFF | BUTTON_MODE_SELECT):
-        if (mode_volume_) return false;
+      case EVENTID(BUTTON_FIRE, EVENT_FIRST_HELD_LONG, MODE_ON | BUTTON_MODE_SELECT):
+      case EVENTID(BUTTON_FIRE, EVENT_FIRST_HELD_LONG, MODE_ON | BUTTON_MODE_SELECT):
+       if (mode_volume_) return false;
         if (!SaberBase::IsOn()) {
           if (!SFX_out) {
             hybrid_font.PlayCommon(&SFX_reload);
@@ -452,8 +469,8 @@ void Loop() override {
       return true;
 
 // Cycle Mode
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON):
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_OFF):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
         if (mode_volume_) return false;
         NextBlasterMode();
         return true;
@@ -487,7 +504,6 @@ void Loop() override {
 // Enter / Exit Volume Menu
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_MODE_SELECT):
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_MODE_SELECT):
-      PVLOG_NORMAL << "************ CLASH holding MODE - should be entering volume menu!!\n";
         VolumeMenu();
         return true;
 
@@ -707,7 +723,7 @@ private:
   bool mode_volume_ = false;
   bool stun_mode_ = false;
   bool no_clip_ = false;
-  bool is_speaking_ = false;
+  bool is_speaking_ = false; // Prevent overlap
   bool sequential_quote_ = false;
   bool trigger_is_pressed_ = false;
   int auto_sound_length = 0;
