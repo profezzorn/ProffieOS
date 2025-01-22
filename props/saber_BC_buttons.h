@@ -963,7 +963,7 @@ push                    - force push
 |     then rotate left    - user effect 7 (keep holding AUX until executed)
 |     then rotate right   - user effect 8 (keep holding AUX until executed)
 | 2 clicks POW            - turn main blade ON first muted
-| 2 clicks held           - blade length edit, or
+| 2 clicks POW held       - blade length edit, or
 |                           OS system menu instead (requires #define MENU_SPEC_TEMPLATE)
 | 2 clicks AUX            - turn second blade ON first muted
 | 2 clicks AUX long       - turn both blades ON
