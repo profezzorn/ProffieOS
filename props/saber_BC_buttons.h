@@ -1585,7 +1585,7 @@ public:
     if (saved_twist != UNKNOWN_GESTURE && millis() - saved_twist_start_millis >= 300) {
       // Emit single twist event
       Event(BUTTON_NONE, saved_twist == TWIST_LEFT ? EVENT_TWIST_LEFT : EVENT_TWIST_RIGHT);
-      PVLOG_NORMAL << (saved_twist == TWIST_LEFT ? "EVENT_TWIST_LEFT" : "EVENT_TWIST_RIGHT") << "\n";
+      PVLOG_DEBUG << (saved_twist == TWIST_LEFT ? "EVENT_TWIST_LEFT" : "EVENT_TWIST_RIGHT") << "\n";
 
       // Clear strokes and saved_twist state
       strokes[NELEM(strokes)-1].type = UNKNOWN_GESTURE;
