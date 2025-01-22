@@ -2534,7 +2534,7 @@ any # of buttons
 // Toggle Battle Mode
 #if (NUM_BUTTONS != 1) || !defined(BC_DUAL_BLADES)  // 1 btn with dual blades has different control
       case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON):
-        if ((spam_blast_ || on_pending_)) return false;  // prevent overlapping.
+        if (spam_blast_ || on_pending_) return false;  // prevent overlapping.
         if (isPointingUp()) {
           ToggleBattleMode();
         } else {
