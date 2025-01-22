@@ -282,7 +282,7 @@ public:
     SetNextAction(what, when * 1000);
   }
   
-  virtual void PollNextAction() {
+  void PollNextAction() {
     if (millis() - time_base_ > next_event_time_) {
       switch (next_action_) {
         case NEXT_ACTION_NOTHING:
