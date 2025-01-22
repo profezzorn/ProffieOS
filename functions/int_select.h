@@ -2,11 +2,12 @@
 #define FUNCTIONS_INT_SELECT_H
 
 #include "svf.h"
+#include "../common/typelist.h"
 
 // Usage: IntSelect<SELECTION, Int1, Int2...>
 // SELECTION: FUNCTION
 // Returns SELECTION of N 
-// If SELECTION is 0, the first integer is returned, if SELECTIOn is 1, the second and so forth.
+// If SELECTION is 0, the first integer is returned, if SELECTION is 1, the second and so forth.
 // N: numbers
 // return value: INTEGER
 
@@ -34,6 +35,62 @@ public:
 private:
   PONUA SVFWrapper<F> f_;
   int value_;
+};
+
+// Usage: IntSelectX<SELECTION, F1, F2, ...>
+// SELECTION: FUNCTION
+// Returns SELECTION of N 
+// If SELECTION is 0, the first function is returned, if SELECTION is 1, the second and so forth.
+// F1, F2...: FUNCITON
+// return value: INTEGER
+template<class TL> class IntSelectHelper {
+public:
+  typedef typename SplitTypeList<TL>::first_half FH;
+  typedef typename SplitTypeList<TL>::second_half SH;
+  void run(BladeBase* blade) {
+    fh_.run(blade);
+    sh_.run(blade);
+  }
+  int get(int N, int led) {
+    if (N < FH::size) {
+      return fh_.get(N, led); 
+    } else {
+      return sh_.get(N - FH::size, led); 
+    }
+  }
+private:
+  PONUA IntSelectHelper<FH> fh_;
+  PONUA IntSelectHelper<SH> sh_;
+};
+
+template<class T> class IntSelectHelper<TypeList<T>> {
+public:
+  void run(BladeBase* blade) { f_.run(blade); }
+  int get(int N, int led) { return f_.getInteger(led); }
+public:
+  PONUA T f_;
+};
+
+template<> class IntSelectHelper<TypeList<>> {
+public:
+  void run(BladeBase* blade) { }
+  int get(int N, int led) { return 0; }
+};
+
+template<class F, class ... N>
+class IntSelectX {
+public:
+  void run(BladeBase* blade) {
+    f_.run(blade);
+    n_.run(blade);
+    f = f_.calculate(blade);
+    f = f % sizeof...(N);
+  }
+  int getInteger(int led) { return n_.get(f, led); }
+private:
+  int f;
+  PONUA SVFWrapper<F> f_;
+  PONUA IntSelectHelper<TypeList<N...>> n_;
 };
 
 #endif

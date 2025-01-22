@@ -21,6 +21,7 @@ const unsigned int maxLedsPerStrip = 144;
 #define ENABLE_SD
 #define SAVE_STATE
 #define ENABLE_ALL_EDIT_OPTIONS
+#define MENU_SPEC_TEMPLATE DefaultMenuSpec
 #endif
 
 #ifdef CONFIG_PRESETS

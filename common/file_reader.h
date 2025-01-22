@@ -198,6 +198,19 @@ public:
       return -1;
     }
   }
+  int ReadHex1() {
+    int c = Read();
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+  }
+  int ReadHex2() {
+    int a = ReadHex1();
+    int b = ReadHex1();
+    if (a == -1 || b == -1) return -1;
+    return (a << 4) | b;
+  }
   int Write(const uint8_t* dest, int bytes) {
     RUN_ALL(write(dest, bytes))
     return 0;
@@ -652,12 +665,14 @@ public:
 		       const char* value) {
     Write(key);
     Write('=');
-    for (;*value; value++) {
-      switch (*value) {
-	case '\n': Write("\\n"); break;
-	case '\t': Write("\\t"); break;
-	case '\\': Write("\\\\"); break;
-	default: Write(*value);
+    if (value) {
+      for (;*value; value++) {
+	switch (*value) {
+	  case '\n': Write("\\n"); break;
+	  case '\t': Write("\\t"); break;
+	  case '\\': Write("\\\\"); break;
+	  default: Write(*value);
+	}
       }
     }
     Write('\n');

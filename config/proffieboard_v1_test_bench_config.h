@@ -22,7 +22,7 @@
 #define DUAL_POWER_BUTTONS
 
 // Volume, useful range is about 0-2000.
-#define VOLUME 100
+#define VOLUME 500
 
 // If you have two 144 LED/m strips in your blade, connect
 // both of them to bladePin and drive them in parallel.
@@ -77,7 +77,7 @@ const unsigned int maxLedsPerStrip = 196;
 #define FILTER_CUTOFF_FREQUENCY 150
 #define FILTER_ORDER 8
 
-#define BLASTER_SHOTS_UNTIL_EMPTY 144
+// #define BLASTER_SHOTS_UNTIL_EMPTY 144
 
 #endif  // CONFIG_TOP
 
@@ -100,7 +100,13 @@ RFID_Command RFID_Commands[] = {
 Preset testing_presets[] = {
 #if 1
   { "SmthFuzz", "tracks/cantina.wav",
-    StyleRainbowPtr<300, 800>(),
+//    StyleRainbowPtr<300, 800>(),
+    StylePtr<Layers<
+
+    Black,
+     TransitionLoop<AlphaL<Black,Int<0>>,TrDoEffect<TrDelay<1500>,EFFECT_USER1>>,
+     MultiTransitionEffectL<TrConcat<TrFade<3000>,AlphaL<Yellow,Bump<EffectPosition<>,Int<3000>>>,TrFade<3000>>,EFFECT_USER1,10>>>(),
+    
     StyleRainbowPtr<300, 800>(),
     //StylePtr<Layers<RandomBlink<3000,Red,Black>,InOutTrL<TrWipe<300>,TrWipeIn<500>,Black>>>(),
     // StylePtr<ColorCycle<Rgb<0,0,50>, 10, 35, Cyan, 90, 1000, 6000>>(),

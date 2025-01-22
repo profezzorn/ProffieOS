@@ -17,8 +17,22 @@ static uint8_t bump_shape[33] = {
   26,22,18,14,11,9,7,5,0
 };
 
+class BumpBase {
+public:
+  int getInteger(int led) {
+    uint32_t dist = abs(led * mult_ - location_);
+    uint32_t p = dist >> 7;
+    if (p >= NELEM(bump_shape) - 1) return 0;
+    int m = dist & 0x3f;
+    return bump_shape[p] * (128 - m) + bump_shape[p+1] * m;
+  }
+protected:
+  int location_;
+  int mult_;
+};
+
 template<class BUMP_POSITION, class BUMP_WIDTH_FRACTION = Int<16385> >
-class Bump {
+class Bump : public BumpBase {
 public:
   void run(BladeBase* blade) {
     pos_.run(blade);
@@ -33,18 +47,9 @@ public:
     mult_ = mult;
     location_ = (pos_.calculate(blade) * blade->num_leds() * mult) / 32768;
   }
-  int getInteger(int led) {
-    uint32_t dist = abs(led * mult_ - location_);
-    uint32_t p = dist >> 7;
-    if (p >= NELEM(bump_shape) - 1) return 0;
-    int m = dist & 0x3f;
-    return bump_shape[p] * (128 - m) + bump_shape[p+1] * m;
-  }
 private:
   PONUA SVFWrapper<BUMP_POSITION> pos_;
   PONUA SVFWrapper<BUMP_WIDTH_FRACTION> fraction_;
-  int location_;
-  int mult_;
 };
 
 // Usage: HumpFlickerFX<FUNCTION>

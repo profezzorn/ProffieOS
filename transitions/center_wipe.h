@@ -14,6 +14,7 @@
 // In the beginning entire blade is color A, then color B 
 // starts at the POSTION and extends up and down the blade
 // in the specified number of milliseconds.
+
 template<class MILLIS, class POSITION = Int<16384>>
 class TrCenterWipeX : public TransitionBaseX<MILLIS> {
 public:
@@ -51,6 +52,7 @@ template<class COLOR, int MILLIS, int POSITION = 16384> using TrCenterWipeSpark 
 // In the beginning entire blade is color A, then color B 
 // starts at the ends and moves toward POSITION
 // in the specified number of milliseconds.
+
 template<class MILLIS, class POSITION = Int<16384>>
 class TrCenterWipeInX : public TransitionBaseX<MILLIS> {
 public:

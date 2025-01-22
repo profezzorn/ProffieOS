@@ -227,6 +227,7 @@ public:
 
   // Twist angle.
   // Note: Twist speed is simply gyro().z!
+  // Range: -PI to PI
   float angle2() {
     if (angle2_ == 1000.0f) {
       angle2_ = atan2f(down_.y, down_.z);

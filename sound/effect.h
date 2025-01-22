@@ -13,10 +13,15 @@ int current_alternative = 0;
 // num_alternatives == 3 means alt000/, alt001/, alt002/
 int num_alternatives = 0;
 
-constexpr bool PO_isDigit(char s) { return s >= 0 && s <= '9'; }
+constexpr bool PO_isDigit(char s) { return s >= '0' && s <= '9'; }
 bool isAllDigits(const char* s) {
   for (;*s;s++) if(!PO_isDigit(*s)) return false;
   return true;
+}
+
+// Return true if "dir" starts with "prefix" followed by zero or more digits.
+bool isNameDigits(const char* prefix, const char* dir) {
+  return startswith(prefix, dir) && isAllDigits(dir + strlen(prefix));
 }
 
 // Effect represents a set of sound files.
@@ -81,6 +86,7 @@ class Effect {
     BMP,
     PBM,
     Binary, // .BIN
+    SCR,
     UNKNOWN,
   };
 
@@ -98,6 +104,7 @@ class Effect {
   enum class FileType : uint8_t {
     SOUND,
     IMAGE,
+    SCREEN,
     UNKNOWN,
   };
 
@@ -111,6 +118,8 @@ class Effect {
       case PBM:
       case Binary:
 	return FileType::IMAGE;
+      case SCR:
+	return FileType::SCREEN;
       default:
 	return FileType::UNKNOWN;
     }
@@ -123,7 +132,21 @@ class Effect {
     if (endswith(".bmp", filename)) return BMP;
     if (endswith(".pbm", filename)) return PBM;
     if (endswith(".bin", filename)) return Binary;
+    if (endswith(".scr", filename)) return SCR;
     return UNKNOWN;
+  }
+
+  static const char* ExtensionName(Extension ext) {
+    switch (ext) {
+      case WAV: return ".wav";
+      case RAW: return ".raw";
+      case USL: return ".usl";
+      case BMP: return ".bmp";
+      case PBM: return ".pbm";
+      case Binary: return ".bin";
+      case SCR: return ".scr";
+      default: return ".?";
+    }
   }
 
   Effect(const char* name,
@@ -236,6 +259,7 @@ class Effect {
     if (files_found()) {
       STDOUT.print("Found ");
       STDOUT.print(name_);
+      STDOUT.print(ExtensionName(ext_));
       STDOUT.print(" files: ");
       if (min_file_ <= max_file_) {
         STDOUT.print(min_file_);
@@ -464,16 +488,7 @@ class Effect {
       addNumber(filename, fileid->GetSubId(), 3);
     }
 
-    switch (ext_) {
-      case WAV: strcat(filename, ".wav"); break;
-      case RAW: strcat(filename, ".raw"); break;
-      case USL: strcat(filename, ".usl"); break;
-      case BMP: strcat(filename, ".bmp"); break;
-      case PBM: strcat(filename, ".pbm"); break;
-      case Binary: strcat(filename, ".bin"); break;
-      default: break;
-    }
-
+    strcat(filename, ExtensionName(ext_));
     default_output->print("Playing ");
     default_output->println(filename);
   }
@@ -499,11 +514,8 @@ class Effect {
       return;
     }
 
-#if 0
-    // TODO: "monitor scan" command?
-    STDOUT.print("SCAN ");
-    STDOUT.println(filename);
-#endif
+    PVLOG_DEBUG << "SCAN: " << filename << "\n";
+
     for (Effect* e = all_effects; e; e = e->next_) {
       // This effect has already been found in a previous
       // directory, and it cannot be found in another directory.
@@ -516,27 +528,32 @@ class Effect {
   }
 
 #ifdef ENABLE_SD
+  // Returns true if we need to look for sub-files in "dir".
+  bool ShouldScanDir(const char* dir) {
+    // return true for directories like "boot" and "boot32"
+    if (isNameDigits(name_, dir)) return true;
+    // If the effect name has a slash in it, return true for
+    // directories that match the bit before the slash.
+    const char* rest = startswith(dir, name_);
+    if (rest && *rest == '/') return true;
+    return false;
+  }
+
   class Scanner {
     char fname[128];
     const char* font_path_ptr;
-
-    bool isNameDigits(const char* prefix, const char* dir) const {
-      return startswith(prefix, dir) && isAllDigits(dir + strlen(prefix));
-    }
 
     bool ShouldScan(const char* dir) const {
       if (isNameDigits("alt", dir) && strlen(dir) == 6) return true;
       if (isNameDigits("", dir)) return true;
       for (Effect* e = all_effects; e; e = e->next_) {
-	if (isNameDigits(e->GetName(), dir)) {
-	  return true;
-	}
+	if (e->ShouldScanDir(dir)) return true;
       }
       return false;
     }
     
     void ScanIterator(LSFS::Iterator& iter) {
-      // fprintf(stderr, "SCANITER: %s\n", fname);
+      PVLOG_DEBUG << "ScanIterator " << iter.name() << " fname=" << fname << "\n";
       char* fend = fname;
       int flen = strlen(fname);
       fend += flen;
@@ -545,7 +562,7 @@ class Effect {
 	fend++;
       }
       for (; iter; ++iter) {
-	// fprintf(stderr, "N: %s\n", iter.name());
+	PVLOG_VERBOSE << " Directory entry: '" << iter.name() << "'\n";
 	if (iter.name()[0] == '.') continue;
 	strcpy(fend, iter.name());
 	if (iter.isdir()) {
@@ -718,9 +735,11 @@ EFFECT(blst);
 EFFECT(clsh);
 EFFECT2(in, pstoff);
 EFFECT(out);
+EFFECT(fastout);
 EFFECT2(lock, lock);
 EFFECT(swng);
 EFFECT(slsh);
+EFFECT(quote);
 
 // Looped swing fonts. (SmoothSwing V1/V2)
 EFFECT2(swingl, swingl);  // Looped swing, LOW
@@ -757,6 +776,7 @@ EFFECT(ccend);
 EFFECT(ccchange);
 
 EFFECT(altchng);
+EFFECT(chhum);
 
 // Blaster effects
 // hum, boot and font are reused from sabers and already defined.
@@ -775,7 +795,7 @@ class EffectFileReader : public FileReader {
 public:
   EffectFileReader() : FileReader(), do_open_(0) {}
 
-  bool Play(Effect* f) {
+  bool PlayInternal(Effect* f) {
     do_open_.set(false);
     Effect::FileID id = f->RandomFile();
     if (!id) {
@@ -786,10 +806,37 @@ public:
     return true;
   }
 
-  void Play(const char* filename) {
+  bool Play(Effect* f) {
+    if (PlayInternal(f)) {
+      do_open_.set(true);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  void PlayInternal(const char* filename) {
     do_open_.set(false);
     strncpy(filename_, filename, sizeof(filename_));
+  }
+
+  void do_open() {
+    MountSDCard();
     do_open_.set(true);
+  }
+
+  void Play(const char* filename) {
+    PlayInternal(filename);
+    do_open();
+  }
+
+  bool get_do_open() const {
+    return do_open_.get();
+  }
+
+  void Close() {
+    do_open_.set(false);
+    FileReader::Close();
   }
 
   // Returns true if we had been asked to open a file.
@@ -804,7 +851,11 @@ public:
     do_open_.set(false);
     return true;
   }
-private:
+
+  const char* GetFilename() {
+    return filename_;
+  }
+protected:
   POAtomic<bool> do_open_;
   char filename_[128];
 };

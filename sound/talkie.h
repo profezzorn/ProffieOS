@@ -739,7 +739,7 @@ public:
       case 7: Say(spSEVENTY); break;
       case 6: Say(spSIXTY); break;
       case 5: Say(spFIFTY); break;
-      case 4: Say(spFOURTY); break;
+      case 4: Say(spFORTY); break;
       case 3: Say(spTHIRTY); break;
       case 2: Say(spTWENTY); break;
       case 1:

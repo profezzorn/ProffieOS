@@ -40,6 +40,10 @@ class Color8 {
   enum Byteorder {
     NONE = 0,
 
+    R = 0x1,
+    G = 0x2,
+    B = 0x3,
+
     // RGB colors
     BGR=0x321,
     BRG=0x312,
@@ -80,11 +84,17 @@ class Color8 {
   };
 
   static int num_bytes(int byteorder) {
-    return byteorder <= 0xfff ? 3 : 4;
+    return
+      byteorder <= 0xf ? 1 :
+      byteorder <= 0xfff ? 3 :
+      4;
   }
 
   static constexpr int inline_num_bytes(int byteorder) __attribute__((always_inline)) {
-    return byteorder <= 0xfff ? 3 : 4;
+    return
+      byteorder <= 0xf ? 1 :
+      byteorder <= 0xfff ? 3 :
+      4;
   }
 
 
@@ -171,6 +181,14 @@ public:
   HSL(float h, float s, float l) : H(h), S(s), L(l) {}
   HSL rotate(float angle) {
     return HSL(fract(H + angle), S, L);
+  }
+  void printTo(Print& p) {
+    p.print("HSL:");
+    p.print(H);
+    p.write(',');
+    p.print(S);
+    p.write(',');
+    p.print(L);
   }
   float H; // 0 - 1.0
   float S; // 0 - 1.0
@@ -305,29 +323,29 @@ public:
     int MAX = std::max(r, std::max(g, b));
     int MIN = std::min(r, std::min(g, b));
     int C = MAX - MIN;
-    int H;
+    float H;
     // Note 16384 = 60 degrees.
     if (C == 0) {
       H = 0;
     } else if (r == MAX) {
       // r is biggest
-      H = 16384 * (g - b) / C;
+      H = (g - b) / (float)C;
     } else if (g == MAX) {
       // g is biggest
-      H = 16384 * (b - r) / C + 16384 * 2;
+      H = (b - r) / (float)C + 2.0f;
     } else {
       // b is biggest
-      H = 16384 * (r - g) / C + 16384 * 4;
+      H = (r - g) / (float)C + 4.0f;
     }
     int L = MIN + MAX;
     float S = (MAX*2 - L) / (float)std::min<int>(L, 131072 - L);
-    return HSL(H / 98304.0, S, L / 131070.0);
+    return HSL(fract(H / 6.0f), S, L / 131070.0);
   }
 
   explicit Color16(HSL hsl) {
-    float C = (1.0 - fabs(2 * hsl.L - 1.0)) * hsl.S;
+    float C = (1.0 - fabsf(2 * hsl.L - 1.0f)) * hsl.S;
     float h = hsl.H * 6;
-    float X = C * (1 - fabs(fmod(h, 2.0) - 1));
+    float X = C * (1 - fabsf(fmodf(h, 2.0f) - 1));
     float R=0.0, G=0.0, B=0.0;
     switch ((int)floor(h)) {
       case 0: R=C; G=X; break;

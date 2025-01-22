@@ -104,7 +104,7 @@ public:
 
 class BlasterIRSender : public BlasterEncoder, public SaberBase {
 public:
-  void SB_Effect(EffectType effect, float location) {
+  void SB_Effect(EffectType effect, EffectLocation location) {
     IRSender* sender;
     switch (effect) {
       case EFFECT_FIRE:

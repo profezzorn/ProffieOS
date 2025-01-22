@@ -794,7 +794,7 @@ public:
     return false;
   }
 
-  void SB_Effect(EffectType effect, float location) override {
+  void SB_Effect(EffectType effect, EffectLocation location) override {
     switch (effect) {
       case EFFECT_POWERSAVE:
         if (SFX_dim) {

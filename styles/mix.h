@@ -1,6 +1,8 @@
 #ifndef STYLES_MIX_H
 #define STYLES_MIX_H
 
+#include "../common/typelist.h"
+
 template<class F, class... B> class Mix {};
 
 // Usage: Mix<F, A, B>
@@ -43,10 +45,10 @@ public:
   }
 };
 
-template<class... A> class MixHelper {};
+template<class A> class MixHelper2 {};
 
 template<class A>
-class MixHelper<A> {
+class MixHelper2<TypeList<A>> {
 public:
   void run(BladeBase* blade) {
     a_.run(blade);
@@ -54,28 +56,31 @@ public:
 private:
   PONUA A a_;
 public:
+  static int size() { return 1; }
   auto getColor(int x, int led) -> decltype(a_.getColor(led)) {
     return a_.getColor(led);
   }
 };
   
 template<class A, class... B>
-class MixHelper<A, B...> {
+class MixHelper2<TypeList<A, B...>> {
 public:
   void run(BladeBase* blade) {
     a_.run(blade);
     b_.run(blade);
   }
 private:
-  PONUA A a_;
-  PONUA MixHelper<B...> b_;
+  PONUA MixHelper2<typename SplitTypeList<TypeList<A, B...>>::first_half> a_;
+  PONUA MixHelper2<typename SplitTypeList<TypeList<A, B...>>::second_half> b_;
 public:  
-  auto getColor(int x, int led) -> decltype(MixColors(a_.getColor(led), b_.getColor(x - 1, led), 1, 1)) {
-    if (x == 0) return a_.getColor(led);
-    return b_.getColor(x - 1, led);
+  static int size() { return 1 + sizeof...(B); }
+  auto getColor(int x, int led) -> decltype(MixColors(a_.getColor(0, led), b_.getColor(0, led), 1, 1)) {
+    if (x < a_.size()) return a_.getColor(x, led);
+    return b_.getColor(x - a_.size(), led);
   }
 };
 
+template<class... COLORS> using MixHelper = MixHelper2<TypeList<COLORS...>>;
 
 template<class F, class A, class B, class... COLORS> 
 class Mix<F, A, B, COLORS...> {

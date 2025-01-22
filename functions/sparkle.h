@@ -1,5 +1,5 @@
 #ifndef FUNCTIONS_SPARKLE_H
-#define FUNCXTIONS_SPARKLE_H
+#define FUNCTIONS_SPARKLE_H
 
 // Usage: SparkleF<SPARK_CHANCE_PROMILLE, SPARK_INTENSITY>
 // SPARK_CHANCE_PROMILLE: a number
@@ -8,14 +8,13 @@
 // SPARK_CHANCE_PROMILLE decides how often a spark is generated, defaults to 300 (30%)
 // SPARK_INTENSITY specifies how intens the spark is, defaults to 1024
 
-template<int SPARK_CHANCE_PROMILLE = 300, int SPARK_INTENSITY = 1024>
-class SparkleF {
+class SparkleBase {
 public:
-  ~SparkleF() {
+  ~SparkleBase() {
     delete[] sparks_; 
   }
 
-  void run(BladeBase* blade) {
+  void run(BladeBase* blade, int spark_chance_promille, int spark_intensity) {
     uint32_t m = millis();
     if (!sparks_) {
       size_t N = blade->num_leds() + 4;
@@ -42,8 +41,8 @@ public:
       }
       sparks_[N] = fifo[0];
       sparks_[N+1] = fifo[1];
-      if (random(1000) < SPARK_CHANCE_PROMILLE) {
-	sparks_[random(blade->num_leds())+2] += SPARK_INTENSITY;
+      if (random(1000) < spark_chance_promille) {
+	sparks_[random(blade->num_leds())+2] += spark_intensity;
       }
     }
   }
@@ -53,6 +52,14 @@ public:
 private:  
   short* sparks_ = 0;
   uint32_t last_update_;
+};
+
+template<int SPARK_CHANCE_PROMILLE = 300, int SPARK_INTENSITY = 1024>
+class SparkleF : public SparkleBase {
+public:
+  void run(BladeBase* blade) {
+    SparkleBase::run(blade, SPARK_CHANCE_PROMILLE, SPARK_INTENSITY);
+  }
 };
 
 #endif

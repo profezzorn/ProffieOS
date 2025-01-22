@@ -9,6 +9,7 @@
 // INCREMENT: FUNCTION defaults to Int<1>
 // Increments by I each time PULSE occurs wraps around when
 // it reaches MAX.
+
 template<class PULSE, class MAX = Int<32768>, class INCREMENT = Int<1>>
 class IncrementModuloFSVF {
 public:
@@ -43,6 +44,7 @@ class SingleValueAdapter<IncrementModuloFSVF<PULSE, MAX, INCREMENT>> : public In
 // Returns 32768 once when F > THRESHOLD, then waits until
 // F < THRESHOLD * HYST_PERCENT / 100 before going back
 // to the initial state (waiting for F > THRESHOLD).
+
 template<class F, class THRESHOLD = Int<32768>, class HYST_PERCENT = Int<66> >
 class ThresholdPulseFSVF {
 public:
@@ -87,6 +89,7 @@ using ThresholdPulseF = SingleValueAdapter<ThresholdPulseFSVF<F, THRESHOLD, HYST
 
 // NOTE: this function is designed to separate "events" for use with *Select styles.  
 // This function may break up SwingSpeed effects or other continuous responsive functions.
+
 template<class F, class V = Int<32768>, class MAX = Int<32768>, class I = Int<1>, class HYST_PERCENT = Int<66>>
 using IncrementF = IncrementModuloF<ThresholdPulseF<F, V, HYST_PERCENT>, MAX, I>;
 

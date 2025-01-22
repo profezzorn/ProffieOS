@@ -9,54 +9,24 @@
 // Gradient, color A at base, B at tip.
 // Any number of colors can be put together into a gradient.
 
-class BlaseBase;
+#include "mix.h"
 
-template<class... A>
-class GradientHelper {};
-
-template<class A>
-class GradientHelper<A> {
-public:
-  static const size_t size = 0;
-  void run(BladeBase* blade) { a_.run(blade); }
-  PONUA A a_;
-  auto get(int led, int partition) -> decltype(a_.getColor(led)) {
-    return a_.getColor(led);
-  }
-};
-
-template<class A, class B, class... C>
-class GradientHelper<A, B, C...> {
-public:
-  static const size_t size = GradientHelper<B, C...>::size + 1;
-  void run(BladeBase* blade) {
-    a_.run(blade);
-    b_.run(blade);
-  }
-  PONUA A a_;
-  PONUA GradientHelper<B, C...> b_;
-  auto get(int led, int partition) -> decltype(MixColors(a_.getColor(0), b_.get(0,0), 1, 1)) {
-    if (partition <= 16384) {
-      return MixColors(a_.getColor(led), b_.a_.getColor(led), partition, 14);
-    } else {
-      return b_.get(led, partition - 16384);
-    }
-  }
-};
-
-template<class... COLOR>
+template<class... COLORS> 
 class Gradient {
 public:
   void run(BladeBase* blade) {
     colors_.run(blade);
-    mul_ =  (GradientHelper<COLOR...>::size << 14) / (blade->num_leds() - 1);
+    mul_ =  ((sizeof...(COLORS)-1) << 15) / (blade->num_leds() - 1);
   }
 private:
-  PONUA GradientHelper<COLOR...> colors_;
+  PONUA MixHelper<COLORS...> colors_;
   int mul_;
-public:
-  auto getColor(int led) -> decltype(colors_.get(led, led * mul_)) {
-    return colors_.get(led, led * mul_);
+public:  
+  auto getColor(int led) -> decltype(colors_.getColor(1,1)) {
+    int x = led * mul_;
+    auto a = colors_.getColor(x >> 15, led);
+    auto b = colors_.getColor((x >> 15) + 1, led);
+    return MixColors(a, b, x & 0x7fff, 15);
   }
 };
 

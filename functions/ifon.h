@@ -30,17 +30,15 @@ private:
   bool on_;
 };
 
-// InOutFunc<OUT_MILLIS, IN_MILLIS>
+// Usage: InOutFunc<OUT_MILLIS, IN_MILLIS>
 // IN_MILLIS, OUT_MILLIS: a number
 // RETURN VALUE: FUNCTION
 // 0 when off, 32768 when on, takes OUT_MILLIS to go from 0 to 32768
 // takes IN_MILLIS to go from 32768 to 0.
-template<class OUT_MILLIS, class IN_MILLIS>
-class InOutFuncX {
+
+class InOutFuncSVFBase {
 public:
-  FunctionRunResult run(BladeBase* blade) {
-    out_millis_.run(blade);
-    in_millis_.run(blade);
+  FunctionRunResult run(BladeBase* blade, int out_millis, int in_millis) {
     uint32_t now = micros();
     uint32_t delta = now - last_micros_;
     last_micros_ = now;
@@ -50,34 +48,62 @@ public:
          // be insanely high.
          extension = 0.00001;
       } else {
- 	extension += delta / (out_millis_.calculate(blade) * 1000.0);
+ 	extension += delta / (out_millis * 1000.0);
 	extension = std::min(extension, 1.0f);
       }
     } else {
-      extension -= delta / (in_millis_.calculate(blade) * 1000.0);
+      extension -= delta / (in_millis * 1000.0);
       extension = std::max(extension, 0.0f);
     }
     ret_ = extension * 32768.0;
     if (!blade->is_on() && ret_ == 0) return FunctionRunResult::ZERO_UNTIL_IGNITION;
     return FunctionRunResult::UNKNOWN;
   }
+  int calculate(BladeBase* blade) { return ret_; }
   int getInteger(int led) { return ret_; }
 
 private:
-  PONUA SVFWrapper<OUT_MILLIS> out_millis_;
-  PONUA SVFWrapper<IN_MILLIS> in_millis_;
   float extension = 0.0;
   uint32_t last_micros_;
   int ret_;
 };
 
+template<class OUT_MILLIS, class IN_MILLIS>
+class InOutFuncSVF : public InOutFuncSVFBase {
+public:
+  FunctionRunResult run(BladeBase* blade) {
+    out_millis_.run(blade);
+    in_millis_.run(blade);
+    return InOutFuncSVFBase::run(blade, out_millis_.calculate(blade), in_millis_.calculate(blade));
+  }
+  PONUA SVFWrapper<OUT_MILLIS> out_millis_;
+  PONUA SVFWrapper<IN_MILLIS> in_millis_;
+};
+
+
+// Optimized specialization
+template<class OUT_MILLIS, class IN_MILLIS>
+class SingleValueAdapter<InOutFuncSVF<OUT_MILLIS, IN_MILLIS>> : public InOutFuncSVF<OUT_MILLIS, IN_MILLIS> {};
+
+template<class OUT_MILLIS, class IN_MILLIS>
+using InOutFuncX = SingleValueAdapter<InOutFuncSVF<OUT_MILLIS, IN_MILLIS>>;
+
+
+class InOutHelperFBase {
+public:
+  int getInteger(int led) {
+    return clampi32(led * 32768 - thres, 0, 32768);
+  }
+protected:
+  int thres = 0;
+};
 
 template<class EXTENSION, bool ALLOW_DISABLE=1 >
-class InOutHelperF {
+class InOutHelperF : public InOutHelperFBase {
 public:
   FunctionRunResult run(BladeBase* blade) __attribute__((warn_unused_result)) {
     FunctionRunResult ret = RunFunction(&extension_, blade);
-    thres = (extension_.calculate(blade) * blade->num_leds());
+    thres = (extension_.calculate(blade) * blade->num_leds()) - 32768;
     if (ALLOW_DISABLE) {
       switch (ret) {
 	case FunctionRunResult::ZERO_UNTIL_IGNITION: return FunctionRunResult::ONE_UNTIL_IGNITION;
@@ -87,15 +113,9 @@ public:
     }
     return FunctionRunResult::UNKNOWN;
   }
-  int getInteger(int led) {
-    return 32768 - clampi32(thres - led * 32768, 0, 32768);
-  }
 private:
   PONUA SVFWrapper<EXTENSION> extension_;
-  int thres = 0;
 };
-
-
 
 #include "trigger.h"
 #include "scale.h"

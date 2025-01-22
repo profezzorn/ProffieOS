@@ -1,9 +1,7 @@
 #ifndef COMMON_STRFUN_H
 #define COMMON_STRFUN_H
 
-int constexpr toLower(char x) {
-  return (x >= 'A' && x <= 'Z') ? x - 'A' + 'a' : x;
-}
+#include "stdout.h"
 
 const char *startswith(const char *prefix, const char* x) {
   while (*prefix) {
@@ -97,5 +95,83 @@ float parsefloat(const char* s) {
   }
   return ret * sign;
 }
+
+// Exactly one %s
+const char* Sprintf(const char* pattern, const char* arg) {
+  char* ret = (char*) malloc(strlen(pattern) + strlen(arg) + 1);
+  if (!ret) return "";
+  char *pct = strchr((char *)pattern, '%');
+  memcpy(ret, pattern, pct - pattern);
+  strcat(ret, arg);
+  strcat(ret, pct + 2);
+  return ret;
+}
+
+// Exactly one %s
+bool Sscanf(const char* str, const char* pattern, const char** arg) {
+  const char *pct = strchr(pattern, '%');
+  int l = pct - pattern;
+  if (strlen(str) < strlen(pattern) - 2) return false;
+  if (memcmp(str, pattern, l)) return false;
+  if (!endswith(pct + 2, str)) return false;
+  int len = strlen(str) - strlen(pattern) - 2;
+  char* ret = (char *)malloc(len + 1);
+  if (!ret) return false;
+  memcpy(ret, str + l, l);
+  ret[len] = 0;
+  *arg = ret;
+  return true;
+}
+
+
+const char* format_pattern(const StringPiece pattern, const StringPiece value) {
+  size_t stars = 0;
+  for (size_t i = 0; i < pattern.len; i++) if (pattern[i] == '*') stars++;
+  size_t len = pattern.len + stars * (value.len - 1) + 1;
+  char* ret = (char*) malloc(len);
+  char* out = ret;
+  for (size_t i = 0; i < pattern.len; i++) {
+    if (pattern[i] == '*') {
+      value.paste(out);
+      out += value.len;
+    } else {
+      *out = pattern[i];
+      out++;
+    }
+  }
+  *out = 0;
+  return ret;
+}
+
+StringPiece match_pattern(const char* pattern, const char* value) {
+  size_t stars = 0;
+  for (const char *p = pattern;*p;p++) if (*p == '*') stars++;
+  size_t vlen = strlen(value);
+  size_t plen = strlen(pattern);
+  int ret_length = vlen - (plen - stars);
+					   
+  if (ret_length < 0) return StringPiece();
+  if (ret_length % stars) return StringPiece();
+  ret_length /= stars;
+  const char* v = value;
+  StringPiece ret;
+  for (const char *p = pattern;*p;p++) {
+    if (*p == '*') {
+      if (!ret) {
+	ret = StringPiece(v, ret_length);
+      } else {
+	if (ret != StringPiece(v, ret_length)) {
+	  return StringPiece();
+	}
+      }
+      v += ret_length;
+    } else {
+      if (*v != *p) return StringPiece();
+      v++;
+    }
+  }
+  return ret;
+}
+
 
 #endif

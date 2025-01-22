@@ -43,6 +43,8 @@ public:
       accent_swings_present = false;
       STDOUT.println("Accent Swings NOT Detected: ");
     }
+    A.separation = smooth_swing_config.Low2HighSeparationDegrees;
+    B.separation = smooth_swing_config.High2LowSeparationDegrees;
   }
 
   void Deactivate() {
@@ -77,21 +79,23 @@ public:
     if (random(2)) Swap();
     float t1_offset = random(1000) / 1000.0 * 50 + 10;
     A.SetTransition(t1_offset, smooth_swing_config.Transition1Degrees);
-    B.SetTransition(t1_offset + 180.0,
+    B.SetTransition(t1_offset + A.separation,
       smooth_swing_config.Transition2Degrees);
   }
 
-  void SB_On() override {
+  void SB_On(EffectLocation location) override {
     on_ = true;
     // Starts hum, etc.
-    delegate_->SB_On();
+    delegate_->SB_On(location);
     PickRandomSwing();
   }
-  void SB_Off(OffType off_type) override {
-    on_ = false;
-    A.Off();
-    B.Off();
-    delegate_->SB_Off(off_type);
+  void SB_Off(OffType off_type, EffectLocation location) override {
+    if (location.on_blade(0)) {
+      on_ = false;
+      A.Off();
+      B.Off();
+    }
+    delegate_->SB_Off(off_type, location);
   }
 
   enum class SwingState {
@@ -130,6 +134,7 @@ public:
           break;
         }
         state_ = SwingState::ON;
+	[[gnu::fallthrough]];
 
       case SwingState::ON:
         // trigger accent swing
@@ -142,10 +147,10 @@ public:
             std::min<float>(1.0, speed / smooth_swing_config.SwingSensitivity);
           A.rotate(-speed * delta / 1000000.0);
           // If the current transition is done, switch A & B,
-          // and set the next transition to be 180 degrees from the one
+          // and set the next transition to be 180 (or 'separation') degrees from the one
           // that is done.
           while (A.end() < 0.0) {
-            B.midpoint = A.midpoint + 180.0;
+            B.midpoint = A.midpoint + A.separation;
 	    Swap();
           }
           float mixab = 0.0;
@@ -189,6 +194,7 @@ public:
         A.set_volume(0);
         B.set_volume(0);
         state_ = SwingState::OUT;
+	[[gnu::fallthrough]];
 
       case SwingState::OUT:
         if (!A.isOff() || !B.isOff()) {
@@ -250,6 +256,7 @@ private:
     RefPtr<BufferedWavPlayer> player;
     float midpoint = 0.0;
     float width = 0.0;
+    float separation = 0.0;
   };
   Data A;
   Data B;

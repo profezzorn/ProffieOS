@@ -17,7 +17,7 @@ public:
 
   const char* name() override { return "Savi_Blade"; }
 
-  void Activate() override {
+  void Activate(int blade_number) override {
     STDOUT.println("Savi Blade");
 #ifdef TIM7_BASE
     stm32l4_timer_create(&timer_, TIMER_INSTANCE_TIM7, STM32L4_TONE_IRQ_PRIORITY, 0);
@@ -26,7 +26,7 @@ public:
 #endif
     Power(true);
     Looper::Link();
-    AbstractBlade::Activate();
+    AbstractBlade::Activate(blade_number);
     digitalWrite(pin_, HIGH);
     pinMode(pin_, OUTPUT);
   }
@@ -61,9 +61,6 @@ public:
   Color8::Byteorder get_byteorder() const override {
     // Not quite true...
     return Color8::RGB;
-  }
-  bool is_on() const override {
-    return on_;
   }
   bool is_powered() const override {
     return powered_;
@@ -105,8 +102,8 @@ public:
     if (on_ || powered_) *on = true;
   }
 
-  void SB_On() override {
-    AbstractBlade::SB_On();
+  void SB_On2(EffectLocation location) override {
+    AbstractBlade::SB_On2(location);
     battery_monitor.SetLoad(true);
     on_ = true;
     Power(true);
@@ -116,8 +113,8 @@ public:
     last_send_ = millis();
   }
 
-  void SB_Off(OffType off_type) override {
-    AbstractBlade::SB_Off(off_type);
+  void SB_Off2(OffType off_type, EffectLocation location) override {
+    AbstractBlade::SB_Off2(off_type, location);
     battery_monitor.SetLoad(false);
     on_ = false;
     SendCMD(0x40);
@@ -128,7 +125,7 @@ public:
     }
   }
 
-  void SB_Effect(BladeEffectType type, float location) {
+  void SB_Effect(BladeEffectType type, EffectLocation location) {
     AbstractBlade::SB_Effect(type, location);
     switch (type) {
       default: break;

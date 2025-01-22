@@ -205,6 +205,7 @@ public:
     shots_fired_++;
   }
 
+
   virtual void DoAutoFire() {
     SelectAutoFirePair(); // Set up the auto-fire pairing if the font suits it
     SaberBase::SetLockup(LOCKUP_AUTOFIRE);

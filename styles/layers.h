@@ -3,6 +3,7 @@
 
 #include "alpha.h"
 #include "../functions/int.h"
+#include "colors.h"
 
 // Usage: Layers<BASE, LAYER1, LAYER2, ...>
 // BASE: COLOR or LAYER
@@ -15,10 +16,8 @@
 // opaque. If the base color is transparent, the final result may also be transparent,
 // depending on what the layers paint on top of the base color.
 
-template<class BASE, class... LAYERS> class Layers : public BASE {};
-
 template<class BASE, class L1>
-class Layers<BASE, L1> {
+class Compose {
 public:
   LayerRunResult run(BladeBase* blade) {
     LayerRunResult base_run_result = RunLayer(&base_, blade);
@@ -44,7 +43,45 @@ public:
   }
 };
 
-template<class BASE, class L1, class L2, class... LAYERS>
-  class Layers<BASE, L1, L2, LAYERS...> : public Layers<Layers<BASE, L1>, L2, LAYERS...> {};
+// Optimize Layer<Black, LAYER>
+// ALlows LAYER to be opaque.
+template<class L1>
+class Compose<BLACK, L1> {
+public:
+  LayerRunResult run(BladeBase* blade) {
+    LayerRunResult layer_run_result = RunLayer(&layer_, blade);
+    switch (layer_run_result) {
+      case LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION:
+      case LayerRunResult::TRANSPARENT_UNTIL_IGNITION:
+	return LayerRunResult::OPAQUE_BLACK_UNTIL_IGNITION;
+      case LayerRunResult::UNKNOWN:
+	break;
+    }
+    return LayerRunResult::UNKNOWN;
+  }
+private:
+  PONUA L1 layer_;
+  SimpleColor dealpha(const SimpleColor& color) { return color; }
+  OverDriveColor dealpha(const OverDriveColor& color) { return color; }
+  SimpleColor dealpha(const RGBA_um_nod& color) { return SimpleColor(color.c * color.alpha >> 15); }
+  OverDriveColor dealpha(const RGBA_um& color) { return OverDriveColor(color.c * color.alpha >> 15, color.overdrive); }
+  SimpleColor dealpha(const RGBA_nod& color) { return SimpleColor(color.c); }
+  OverDriveColor dealpha(const RGBA& color) { return OverDriveColor(color.c, color.overdrive); }
+public:
+  auto getColor(int led) -> decltype(dealpha(layer_.getColor(led))) {
+    return dealpha(layer_.getColor(led));
+  }
+};
+
+
+template<class BASE, class ... LAYERS> struct LayerSelector {};
+template<class BASE> struct LayerSelector<BASE> { typedef BASE type; };
+template<class BASE, class L1> struct LayerSelector<AlphaL<BASE, Int<0>>, L1> { typedef L1 type; };
+template<class BASE, class L1> struct LayerSelector<BASE, L1> { typedef Compose<BASE, L1> type; };
+template<class BASE, class L1, class ... REST> struct LayerSelector<BASE, L1, REST...> {
+  typedef typename LayerSelector<Compose<BASE, L1>, REST...>::type type;
+};
+
+template<class BASE, class... LAYERS> using Layers = typename LayerSelector<BASE, LAYERS...>::type;
 
 #endif

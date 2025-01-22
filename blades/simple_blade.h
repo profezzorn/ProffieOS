@@ -8,6 +8,7 @@ class PWMPin : public PWMPinInterface {
 public:
   void Activate() override {
     static_assert(PIN >= 0, "PIN is negative?");
+    static_assert(IsPWMPin(PIN), "Not a PWM-capable pin.");
     LSanalogWriteSetup(PIN);
     LSanalogWrite(PIN, 0);  // make it black
   }
@@ -23,7 +24,18 @@ public:
 
   Color8 getColor8() const { return led_.getColor8(); }
 
-  DriveLogic<LED> led_;
+  PONUA DriveLogic<LED> led_;
+};
+
+template<int PIN, class LED>
+class ServoPWMPin : public PWMPin<PIN, LED> {
+public:
+  void Activate() override {
+    static_assert(PIN >= 0, "PIN is negative?");
+    static_assert(IsPWMPin(PIN), "Not a PWM-capable pin.");
+    LSanalogWriteSetup(PIN, PWM_USECASE::SERVO);
+    LSanalogWrite(PIN, 0);  // make it black
+  }
 };
 
 template<class LED>
@@ -145,12 +157,12 @@ public:
   }
   const char* name() override { return "Simple_Blade"; }
 
-  void Activate() override {
+  void Activate(int blade_number) override {
     STDOUT.println("Simple Blade");
     Power(true);
     CommandParser::Link();
     Looper::Link();
-    AbstractBlade::Activate();
+    AbstractBlade::Activate(blade_number);
   }
 
   void Deactivate() override {
@@ -182,9 +194,6 @@ public:
     }
     return Color8::NONE;
   }
-  bool is_on() const override {
-    return on_;
-  }
   bool is_powered() const override {
     return power_;
   }
@@ -208,19 +217,19 @@ public:
   void SB_IsOn(bool *on) override {
     if (on_ || power_) *on = true;
   }
-  void SB_On() override {
-    AbstractBlade::SB_On();
+  void SB_On2(EffectLocation location) override {
+    AbstractBlade::SB_On2(location);
     battery_monitor.SetLoad(true);
     on_ = true;
     Power(true);
   }
-  void SB_Effect2(BladeEffectType type, float location) override {
+  void SB_Effect2(BladeEffectType type, EffectLocation location) override {
     AbstractBlade::SB_Effect2(type, location);
     battery_monitor.SetLoad(true);
     Power(true);
   }
-  void SB_Off(OffType off_type) override {
-    AbstractBlade::SB_Off(off_type);
+  void SB_Off2(OffType off_type, EffectLocation location) override {
+    AbstractBlade::SB_Off2(off_type, location);
     battery_monitor.SetLoad(false);
     on_ = false;
     if (off_type == OFF_IDLE) {
@@ -231,11 +240,11 @@ public:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-        SB_On();
+        SB_On2(0.0f);
         return true;
       }
       if (!strcmp(arg, "off")) {
-        SB_Off(OFF_NORMAL);
+        SB_Off2(OFF_NORMAL, 0.0f);
         return true;
       }
 #ifdef ENABLE_DEVELOPER_COMMANDS      
@@ -303,5 +312,11 @@ class BladeBase *StringBladePtr() {
   return &blade;
 }
 #endif
+
+template<int pin, class LED = ServoSelector>
+class BladeBase *ServoBladePtr() {
+  static Simple_Blade< ServoPWMPin<pin, LED>  > blade;
+  return &blade;
+}
 
 #endif

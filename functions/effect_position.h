@@ -16,8 +16,7 @@
 template<EffectType T = EFFECT_NONE>
 class EffectPositionSVF {
 public:
-  void run(BladeBase* blade) {}
-  int calculate(BladeBase* blade) {
+  void run(BladeBase* blade) {
     BladeEffect* effect;
     if (T == EFFECT_NONE) {
       effect = last_detected_blade_effect;
@@ -25,12 +24,20 @@ public:
       OneshotEffectDetector<T> detector;
       effect = detector.Detect(blade);
     }
-    if (effect) return effect->location * 32768;
-    return 0;
+    if (effect) value_ = effect->location * 32768;
   }
+  int getInteger() { return value_; }
+  int getInteger(int led) { return value_; }
+  int calculate(BladeBase* blade) { return value_; }
+private:
+  int value_ = 0;
 };
 
 template<EffectType T = EFFECT_NONE>
 using EffectPosition = SingleValueAdapter<EffectPositionSVF<T>>;
+
+// optimized specialization
+template<EffectType T>
+class SingleValueAdapter<EffectPositionSVF<T>> : public EffectPositionSVF<T> {};
 
 #endif

@@ -3,6 +3,8 @@
 
 // Filesystem abstractions
 
+#include "string_piece.h"
+
 struct PathHelper {
   void Append(const char* name) {
     if (strlen(path_) && path_[strlen(path_)-1] != '/') {
@@ -55,6 +57,7 @@ struct PathHelper {
     path_[strlen(path_)] = '/';
   }
   operator const char*() const { return path_; }
+  operator StringPiece() const { return StringPiece(path_); }
 #ifdef F_MAXPATH  
   char path_[F_MAXPATH];
 #else
@@ -292,6 +295,18 @@ public:
 			DOSFS_DEVICE_LOCK_MEDIUM |
 			DOSFS_DEVICE_LOCK_INIT)) return false;
     return true;
+  }
+  static void SetAllowMount(bool allow) {
+    dosfs_device_t *device = DOSFS_VOLUME_DEVICE(volume);
+    if (allow) {
+      device->lock &=~ DOSFS_DEVICE_LOCK_EJECTED;
+    } else {
+      device->lock |= DOSFS_DEVICE_LOCK_EJECTED;
+    }
+  }
+  static bool GetAllowMount() {
+    dosfs_device_t *device = DOSFS_VOLUME_DEVICE(volume);
+    return (device->lock & DOSFS_DEVICE_LOCK_EJECTED) == 0;
   }
   static void WhyBusy(char *tmp) {
     *tmp = 0;

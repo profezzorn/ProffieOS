@@ -14,6 +14,7 @@
 // track and returns the position of that marble.
 // Meant to be used with CircularSectionF to turn the marble
 // position into a lighted up section.
+
 class BladeBase;
 template<class OFFSET,
          class FRICTION,

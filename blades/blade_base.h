@@ -19,31 +19,21 @@ using BladeEffectType = EffectType;
 
 #include "../styles/blade_style.h"
 
-struct BladeEffect {
-  BladeEffectType type;
-
-  uint32_t start_micros;
-  float location; // 0 = base, 1 = tip
-  float sound_length;
-  int wavnum;
-};
-
 class BladeBase {
 public:
   // Returns number of LEDs in this blade.
   virtual int num_leds() const = 0;
+
+  virtual int GetBladeNumber() const = 0;
 
   // Returns the byte order of this blade.
   virtual Color8::Byteorder get_byteorder() const = 0;
 
   // Returns true if the blade is supposed to be on.
   // false while "turning off".
-  virtual bool is_on() const = 0;
+  virtual bool is_on() const { return SaberBase::BladeIsOn(GetBladeNumber()); }
 
   virtual bool is_powered() const = 0;
-
-  // Return how many effects are in effect.
-  virtual size_t GetEffects(BladeEffect** blade_effects) = 0;
 
   // Set led 'led' to color 'c'.
   virtual void set(int led, Color16 c) = 0;
@@ -61,9 +51,8 @@ public:
   // disable power now. (Usually called after is_on()
   // has returned false for some period of time.)
   virtual void allow_disable() = 0;
-  virtual bool IsPrimary() = 0;
 
-  virtual void Activate() = 0;
+  virtual void Activate(int blade_number) = 0;
   virtual void Deactivate() = 0;
 
   virtual BladeStyle* UnSetStyle() = 0;
@@ -120,13 +109,15 @@ public:
   }
   BladeEffect* Find(BladeBase* blade) {
     BladeEffect* effects;
-    size_t n = blade->GetEffects(&effects);
+    size_t n = SaberBase::GetEffects(&effects);
+    int blade_number = blade->GetBladeNumber();
     // If no other thing is handling stab, treat it like a clash.
     // But only for the primary blade...
     bool match_stab = effect == EFFECT_CLASH &&
       !blade->current_style()->IsHandled(HANDLED_FEATURE_STAB) &&
-      blade->IsPrimary();
+      blade_number == 1;
     for (size_t i = 0; i < n; i++) {
+      if (!effects[i].location.on_blade(blade_number)) continue;
       if (effect == effects[i].type ||
 	  (match_stab && effects[i].type == EFFECT_STAB)) {
 	return effects + i;

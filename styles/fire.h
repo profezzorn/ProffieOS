@@ -45,9 +45,11 @@ protected:
       default:
          state_ = STATE_ACTIVATING;
          on_time_ = millis();
+	 [[gnu::fallthrough]];
       case STATE_ACTIVATING:
          if (millis() - on_time_ < DELAY) return false;
          state_ = STATE_ON;
+	 [[gnu::fallthrough]];
       case STATE_ON:
          return true;
     }
@@ -68,7 +70,7 @@ protected:
       if (clash_.Detect(blade)) {
 	config = CLASH::get();
       } else if (On(blade)) {
-        if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
+        if (SaberBase::LockupForBlade(blade->GetBladeNumber()) == SaberBase::LOCKUP_NONE) {
           config = NORM::get();
         } else {
           config = LOCK::get();

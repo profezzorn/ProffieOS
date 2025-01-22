@@ -48,7 +48,7 @@ public:
 
   // No need for a "deactivate", the blade stays active until
   // you take it out, which also cuts the power.
-  void Activate() override {
+  void Activate(int blade_number) override {
     STDOUT.print("FASTLED Blade with ");
     STDOUT.print(num_leds_);
     STDOUT.println(" leds");
@@ -61,7 +61,7 @@ public:
     Show();
     CommandParser::Link();
     Looper::Link();
-    AbstractBlade::Activate();
+    AbstractBlade::Activate(blade_number);
   }
 
   void Deactivate() override {
@@ -80,9 +80,6 @@ public:
   Color8::Byteorder get_byteorder() const override {
     return Color8::NONE;
   }
-  bool is_on() const override {
-    return on_;
-  }
   bool is_powered() const override {
     return powered_;
   }
@@ -97,13 +94,13 @@ public:
   void SB_IsOn(bool* on) override {
     if (on_) *on = true;
   }
-  void SB_On() override {
-    AbstractBlade::SB_On();
+  void SB_On2(EffectLocation location) override {
+    AbstractBlade::SB_On2(location);
     Power(true);
     delay(10);
     on_ = true;
   }
-  void SB_Effect2(BladeEffectType type, float location) override {
+  void SB_Effect2(BladeEffectType type, EffectLocation location) override {
     AbstractBlade::SB_Effect2(type, location);
     if (!powered_) {
       Power(true);
@@ -111,8 +108,8 @@ public:
     }
   }
   
-  void SB_Off(OffType off_type) override {
-    AbstractBlade::SB_Off(off_type);
+  void SB_Off2(OffType off_type, EffectLocation location) override {
+    AbstractBlade::SB_Off2(off_type, location);
     on_ = false;
   }
 
@@ -125,12 +122,12 @@ public:
   bool Parse(const char* cmd, const char* arg) override {
     if (!strcmp(cmd, "blade")) {
       if (!strcmp(arg, "on")) {
-         SB_On();
+         SB_On2(0.0f);
          return true;
       }
       if (!strcmp(arg, "off")) {
-         SB_Off(OFF_NORMAL);
-         return true;
+	SB_Off2(OFF_NORMAL, 0.0f);
+	return true;
       }
     }
     return false;

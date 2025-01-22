@@ -149,8 +149,16 @@ public:
     delete style->style_allocator->make();
     return ap.next();
   }
-
-  // Returns true if the listed style refereces the specified argument.
+  bool GetBuiltinPos(const char* str, int* preset, int* blade) {
+    *preset = -1;
+    *blade = -1;
+    if (!FirstWord(str, "builtin")) return false;
+    ArgParser ap(SkipWord(str));
+    *preset = strtol(ap.GetArg(1, "", ""), nullptr, 10);
+    *blade = strtol(ap.GetArg(2, "", ""), nullptr, 10);
+    return *preset >= 0 && *blade >= 1;
+  }
+  // Returns the maximum argument used.
   int MaxUsedArgument(const char* str) {
     NamedStyle* style = FindStyle(str);
     if (!style) return false;
@@ -160,6 +168,66 @@ public:
     // Ignore the two "builtin" arguments
     if (FirstWord(str, "builtin") && ap.max_arg() <= 2) return 0;
     return ap.max_arg();
+  }
+
+  // Returns the number of used arguments.
+  int UsedArguments(const char* str) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    GetUsedArgsParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    // Ignore the two "builtin" arguments
+    if (FirstWord(str, "builtin") && ap.used() <= 2) return 0;
+    return ap.used();
+  }
+
+  // Returns the next used argument.
+  int NextUsedArguments(const char* str, int arg) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    GetUsedArgsParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    // Ignore the two "builtin" arguments
+    if (FirstWord(str, "builtin") && ap.used() <= 2) return 0;
+    return ap.next(arg);
+  }
+
+  // Returns the previous used argument.
+  int PrevUsedArguments(const char* str, int arg) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    GetUsedArgsParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    // Ignore the two "builtin" arguments
+    if (FirstWord(str, "builtin") && ap.used() <= 2) return 0;
+    return ap.prev(arg);
+  }
+
+  // Returns Nth used argument.
+  int GetNthUsedArguments(const char* str, int arg) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return false;
+    GetUsedArgsParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    // Ignore the two "builtin" arguments
+    if (FirstWord(str, "builtin") && ap.used() <= 2) return 0;
+    return ap.nth(arg);
+  }
+
+  // Returns the ArgInfo for this style.
+  ArgInfo GetArgInfo(const char* str) {
+    NamedStyle* style = FindStyle(str);
+    if (!style) return ArgInfo();
+    GetUsedArgsParser ap(SkipWord(str));
+    CurrentArgParser = &ap;
+    delete style->style_allocator->make();
+    // Ignore the two "builtin" arguments
+    if (FirstWord(str, "builtin") && ap.used() <= 2) return ArgInfo();
+    return ap.getArgInfo();
   }
 
   // Get the Nth argument of a style string.
@@ -310,6 +378,7 @@ public:
       end = SkipWord(end);
     }
     operator bool() const { return end > start; }
+    bool contains(char c) { return StringPiece(start, end).contains(c); }
     int len() const {
       if (end == start) return 2;
       return end - start;
@@ -363,6 +432,43 @@ public:
 #if defined(DEBUG)
     if (strlen(ret) != len) {
       STDOUT << "FATAL ERROR IN COPYARGUMENTS: len = " << len << " strlen = " << strlen(ret) << "\n";
+    }
+#endif    
+    return LSPtr<char>(ret);
+  }
+
+  // Takes the style identifier "builtin X Y" and all numeric arguments from |to|
+  // and all color arguments from |from| and puts them together into one string.
+  LSPtr<char> CopyColorArguments(const char* from, const char* to) {
+    int len = 0;
+    {
+      ArgumentIterator FROM(from);
+      ArgumentIterator TO(to);
+      for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
+	if (FROM.contains(',') || TO.contains(',')) {
+	  len += FROM.len();
+	} else {
+	  len += TO.len();
+	}
+      }
+    }
+    char* ret = (char*) malloc(len + 1);
+    if (ret) {
+      char* tmp = ret;
+      ArgumentIterator FROM(from);
+      ArgumentIterator TO(to);
+      for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
+	if (FROM.contains(',') || TO.contains(',')) {
+	  FROM.append(&tmp);
+	} else {
+	  TO.append(&tmp);
+	}
+      }
+    }
+    // STDOUT << "CopyArguments(from=" << from << " to=" << to << ") = " << ret << "\n";
+#if defined(DEBUG)
+    if (strlen(ret) != len) {
+      STDOUT << "FATAL ERROR IN COPYCOLORARGUMENTS: len = " << len << " strlen = " << strlen(ret) << "\n";
     }
 #endif    
     return LSPtr<char>(ret);

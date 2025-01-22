@@ -2,8 +2,7 @@
 #define BLADES_DRIVE_LOGIC_H
 
 #include "led_interface.h"
-
-template<typename T> struct ToVoid { typedef void Type; };
+#include "../common/common.h"
 
 template<class LED, typename Enable=void>
 struct ColorSelector {

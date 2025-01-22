@@ -10,16 +10,17 @@ public:
   enum { PRESET_DISK, PRESET_ROM } preset_type;
   int preset_num;
   ConfigFileExt read_from_ext_ = ConfigFileExt::CONFIG_UNKNOWN;
+  const char* read_from_save_dir_ = "";
   uint32_t iteration_ = 0;
   LSPtr<char> font;
   LSPtr<char> track;
 #if NUM_BLADES > 0
   LSPtr<char> current_style_[NUM_BLADES];
-#endif  
+#endif
   LSPtr<char> name;
   uint32_t variation;
 
-  const char *mk_builtin_str(int num, int N) {
+  static const char *mk_builtin_str(int num, int N) {
     char tmp[30];
     strcpy(tmp, "builtin ");
     itoa(num, tmp + strlen(tmp), 10);
@@ -68,7 +69,7 @@ public:
     return s;
   }
 
-#define VALIDATE_STYLE_STRING(N) ValidateStyleString(PRE.current_style_[N-1].get());    
+#define VALIDATE_STYLE_STRING(N) ValidateStyleString(PRE.current_style_[N-1].get());
 
 #if defined(ENABLE_DEBUG) && NUM_BLADES > 0
 #define ValidateStyleString(X) CurrentPreset::ValidateStyleStringF((X), __FILE__, __LINE__)
@@ -83,14 +84,15 @@ public:
   void Clear() {
     font = "";
     track = "";
-#if NUM_BLADES > 0    
+#if NUM_BLADES > 0
     for (size_t N = 0; N < NUM_BLADES; N++) current_style_[N] = "";
-#endif    
+#endif
     name = "";
     variation = 0;
   }
 
   void Set(int num) {
+    PVLOG_VERBOSE << "CurrentPreset::Set(" << num << "/" << current_config->num_presets << ")\n";
     num = (current_config->num_presets + num) % current_config->num_presets;
     Preset* preset = current_config->presets + num;
     preset_type = PRESET_ROM;
@@ -100,9 +102,9 @@ public:
 #define MAKE_STYLE_STRING(N) current_style_[N-1] = ValidateStyleString(mk_builtin_str(num, N));
     ONCEPERBLADE(MAKE_STYLE_STRING);
 // TODO Test with 3+ blades
-//#if NUM_BLADES > 0    
+//#if NUM_BLADES > 0
 //    for (size_t N = 0; N < NUM_BLADES; N++) current_style_[N] = ValidateStyleString(mk_builtin_str(num, N+1));
-//#endif    
+//#endif
     if (preset->name && strlen(preset->name)) {
       name = preset->name;
     } else {
@@ -116,7 +118,7 @@ public:
     int current_style = 0;
     if (f->Tell() <= sizeof(install_time) + 11) preset_num = -1;
     preset_type = PRESET_DISK;
-    
+
     for (; f->Available(); f->skipline()) {
       char variable[33];
       f->skipspace();
@@ -148,7 +150,7 @@ public:
 	}
 	return false;
       }
-      
+
       if (!preset_count) continue;
       if (f->Peek() != '=') continue;
       f->Read();
@@ -203,11 +205,11 @@ public:
     DOVALIDATE(*this);
 //#define WRITE_PRESET_STYLE(N) f->write_key_value("style", ValidateStyleString(current_style_[N-1].get()));
 //    ONCEPERBLADE(WRITE_PRESET_STYLE);
-#if NUM_BLADES > 0    
+#if NUM_BLADES > 0
     for (size_t N = 0; N < NUM_BLADES; N++) {
       f->write_key_value("style", ValidateStyleString(current_style_[N].get()));
     }
-#endif    
+#endif
     f->write_key_value("name", name.get());
     char tmp[12];
     itoa(variation, tmp, 10);
@@ -270,6 +272,11 @@ public:
   }
 
   FileReader *OpenPresets2(FileSelector* fs) {
+    if (GetSaveDir() != read_from_save_dir_) {
+      read_from_ext_ = ConfigFileExt::CONFIG_UNKNOWN;
+      iteration_ = 0;
+      read_from_save_dir_ = GetSaveDir();
+    }
     if (iteration_) {
       if (read_from_ext_ == ConfigFileExt::CONFIG_INI) {
 	return & fs->ini.f;
@@ -311,7 +318,7 @@ public:
     f.Write("end\n");
     f.Close(++iteration_);
     return true;
-#endif    
+#endif
   }
 
   // preset = -1 means to load the *last* pre
@@ -322,6 +329,12 @@ public:
     FileSelector fs(GetSaveDir(), "presets");
     FileReader* f = OpenPresets(&fs);
     if (!f) return false;
+#ifdef ENABLE_DEBUG
+    if (!f->IsOpen()) {
+      STDERR << "File returned by OpenPresets is not open!\n";
+      return false;
+    }
+#endif
     int start = f->Tell();
     int n = 0;
     preset_num = -1;
@@ -341,10 +354,15 @@ public:
 	return false;
       }
     }
-#endif    
+#endif
   }
 
   void SaveAtLocked(int position) {
+#ifdef ENABLE_DEBUG
+    if (GetSaveDir() != read_from_save_dir_) {
+      STDERR << "WARNING! SAVE DIR DOES NOT MATCH\n";
+    }
+#endif
 #ifdef ENABLE_SD
 
     DOVALIDATE(*this);
@@ -395,7 +413,7 @@ public:
     out.Write("end\n");
     out.Close(iteration_);
     preset_num = position;
-#endif    
+#endif
   }
 
   // position = 0 -> first spot
@@ -417,23 +435,22 @@ public:
     LOCK_SD(false);
   }
 
-void SetStyle(int blade, LSPtr<char> style) {
-  DOVALIDATE(*this);
-  ValidateStyleString(style.get());
+  void SetStyle(int blade, LSPtr<char> style) {
+    DOVALIDATE(*this);
+    ValidateStyleString(style.get());
 #if NUM_BLADES > 0
-  current_style_[blade-1] = std::move(style);
-#endif  
-  DOVALIDATE(*this);
-}
+    current_style_[blade-1] = std::move(style);
+#endif
+    DOVALIDATE(*this);
+  }
 
-const char* GetStyle(int blade) {
+  const char* GetStyle(int blade) {
 #if NUM_BLADES > 0
-  return current_style_[blade-1].get();
+    return current_style_[blade-1].get();
 #else
-  return "";
-#endif  
-}
-
+    return "";
+#endif
+  }
 };
 
 #endif

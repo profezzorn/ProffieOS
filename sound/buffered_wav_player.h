@@ -17,12 +17,12 @@ size_t WhatUnit(class BufferedWavPlayer* player);
 // This minimizes latency while making sure to avoid any gaps.
 class BufferedWavPlayer : public VolumeOverlay<BufferedAudioStream<AUDIO_BUFFER_SIZE_BYTES> > {
 public:
-  void Play(const char* filename) {
+  void Play(StringPiece filename, float start = 0.0) {
     MountSDCard();
     EnableAmplifier();
     pause_.set(true);
     clear();
-    wav.Play(filename);
+    wav.Play(filename, start);
     SetStream(&wav);
     scheduleFillBuffer();
     pause_.set(false);
@@ -42,7 +42,7 @@ public:
 	return true;
       }
     }
-    STDOUT << "(not found)\n";
+    STDOUT << " (not found)\n";
     return false;
   }
 
@@ -114,7 +114,7 @@ public:
 
   // This makes a paused player report very little available space, which
   // means that it will be low priority for reading.
-  size_t space_available() const override {
+  size_t space_available() override {
     size_t ret = VolumeOverlay<BufferedAudioStream<AUDIO_BUFFER_SIZE_BYTES>>::space_available();
     if (pause_.get() && ret) ret = 2; // still slightly higher than FromFileStyle<>
     return ret;

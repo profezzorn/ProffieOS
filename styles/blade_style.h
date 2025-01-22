@@ -32,6 +32,7 @@ public:
   virtual bool IsHandled(HandledFeature feature) = 0;
   
   virtual OverDriveColor getColor(int i) { return OverDriveColor(); }
+  virtual int get_max_arg(int arg) { return -1; }
 };
 
 class StyleFactory {

@@ -95,7 +95,7 @@ protected:
   virtual bool FillBuffer() = 0;
   virtual bool IsActive() { return false; }
   virtual void CloseFiles() = 0;
-  virtual size_t space_available() const = 0;
+  virtual size_t space_available() = 0;
 
 private:
   static void ProcessAudioStreams() {
@@ -108,16 +108,24 @@ private:
 #if 1
     // Yes, it's a selection sort, luckily there's not a lot of
     // AudioStreamWork instances.
-    for (int i = 0; i < 50; i++) {
+    int i;
+    for (i = 0; i < 50; i++) {
       size_t max_space = 0;
-      for (AudioStreamWork *d = data_streams; d; d=d->next_)
-        max_space = std::max(max_space, d->space_available());
+      for (AudioStreamWork *d = data_streams; d; d=d->next_) {
+	size_t space = d->space_available();
+	if (i == 0) TRACE2(SWIRQ, "space=", space);
+        max_space = std::max(max_space, space);
+      }
+      TRACE2(SWIRQ, "max_space=", max_space);
       if (max_space == 0) break;
       for (AudioStreamWork *d = data_streams; d; d=d->next_) {
-        if (d->space_available() >= max_space)
+        if (d->space_available() >= max_space) {
           d->FillBuffer();
+	  TRACE2(SWIRQ, "after=", d->space_available());
+	}
       }
     }
+    TRACE2(SWIRQ, "i=", i);
 #else
     for (int i = 0; i < 10; i++) {
       for (AudioStreamWork *d = data_streams; d; d=d->next_) {

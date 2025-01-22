@@ -59,7 +59,7 @@ public:
     return buf_end_.get() - buf_start_.get();
   }
   // Overridable
-  size_t space_available() const override {
+  size_t space_available() override {
     return real_space_available();
   }
   void SetStream(ProffieOSAudioStream* stream) {
@@ -72,6 +72,7 @@ private:
     return N - buffered();
   }
   bool FillBuffer() override {
+    SCOPED_PROFILER();
     if (stream_.get()) {
       size_t space = real_space_available();
       if (space) {

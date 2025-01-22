@@ -12,13 +12,16 @@ TEENSY36_FQBN=teensy:avr:teensy36:usb=serial,speed=180,opt=o2std,keys=en-us
 TEENSY41_FQBN=teensy:avr:teensy41:usb=serial,speed=600,opt=o2std,keys=en-us
 
 # Select one
-FQBN=$(PBV1_FQBN)
+FQBN=$(PBV3_FQBN)
 
 TESTSUBDIR=NOTUSED
 
 all:
-	mkdir build
-	$(ARDUINO_DIR)/arduino-builder -compile -hardware $(ARDUINO_DIR)/hardware -hardware $(ARDUINO15_DIR)/packages -hardware /home/hubbe/Arduino/hardware -tools $(ARDUINO_DIR)/tools-builder -tools $(ARDUINO_DIR)/hardware/tools/avr -tools $(ARDUINO15_DIR)/packages -fqbn=$(FQBN) -vid-pid=1209_6668 -build-path build -warnings=more -verbose ProffieOS.ino
+	mkdir -p build
+	arduino-cli compile --fqbn=$(FQBN) ProffieOS.ino
+
+upload:
+	arduino-cli upload --fqbn=$(FQBN) ProffieOS.ino
 
 CPPFLAGS += $(TESTFLAGS)
 DIAGNOSTICS_COLOR_WHEN = auto

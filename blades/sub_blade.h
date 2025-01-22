@@ -55,9 +55,10 @@ public:
     } while (tmp != this);
     return some_subblade_is_active;
   }
-  void Activate() override {
+  void Activate(int blade_number) override {
+    blade_number_ = blade_number;
     if (!active_) {
-      if (!SomeSubBladeIsActive()) BladeWrapper::Activate();
+      if (!SomeSubBladeIsActive()) BladeWrapper::Activate(0);
       active_ = true;
     }
   }
@@ -142,12 +143,17 @@ public:
     return false;
   }
 
+  int GetBladeNumber() const override {
+    return blade_number_;
+  }
+
 protected:
   BladeStyle *current_style_ = nullptr;
   int num_leds_;
   int offset_;
   bool allow_disable_;
   SubBladeWrapper* next_;
+  int blade_number_;
 };
 
 SubBladeWrapper* first_subblade_wrapper = NULL;
@@ -302,6 +308,74 @@ class BladeBase* SubBladeZZ(int first_led, int last_led, int stride, int column,
   ret->SetupStride(stride);
   ret->SetCol(column);
   ret->SetupSubBlade(blade, first_led, (last_led - first_led)/stride + 1);
+  return ret;
+}
+
+class BarBackWrapper : public SubBladeWrapper {
+public:
+  void set(int led, Color16 c) override {
+    int unit = led / 10;
+    led %= 10;
+    int chip = led / 3;
+    int channel = led % 3;
+    if (cnt_ == 0) {
+      if (chip == 3) {
+	cnt_ = 1;
+      } else {
+	cnt_ = 3;
+      }
+    }
+    int w = std::max<uint16_t>(std::max<uint16_t>(c.r,c.g), c.b);
+    switch ((inverted_blade_byte_order_ >> (8 - channel * 4)) & 0xf) {
+      case 1: tmp.r = w; break;
+      case 2: tmp.g = w; break;
+      case 3: tmp.b = w; break;
+    }
+    if (--cnt_ == 0) {
+      blade_->set(unit * 4 + chip + offset_, tmp);
+      tmp = Color16(65535,65535,65535);
+    }
+  }
+  void set_overdrive(int led, Color16 c) override {
+    set(led, c);
+  }
+  void SetupBarBack(BladeBase* base, int first_led, int units) {
+    units_ = units;
+    SubBladeWrapper::SetupSubBlade(base, first_led, 4 * units);
+    inverted_blade_byte_order_ = Color8::invert_byteorder(base->get_byteorder());
+  }
+  int num_leds() const override { return units_ * 10; }
+private:
+  Color16 tmp;
+  uint16_t cnt_ = 0;
+  uint16_t units_ = 0;
+  int inverted_blade_byte_order_;
+};
+
+class BladeBase* BarBack(int first_led, int units, BladeBase* blade) {
+  if (blade)  {
+    first_subblade_wrapper = last_subblade_wrapper = NULL;
+  } else {
+    if (!first_subblade_wrapper) return NULL;
+    blade = first_subblade_wrapper->blade_;
+  }
+
+  int last_led = first_led + 4 * units - 1;
+
+  if (last_led >= blade->num_leds()) {
+    return NULL;
+  }
+
+  BarBackWrapper* ret = new BarBackWrapper();
+  if (first_subblade_wrapper) {
+    ret->SetNext(last_subblade_wrapper);
+    first_subblade_wrapper->SetNext(ret);
+    last_subblade_wrapper = ret;
+  } else {
+    ret->SetNext(ret);
+    first_subblade_wrapper = last_subblade_wrapper = ret;
+  }
+  ret->SetupBarBack(blade, first_led, units);
   return ret;
 }
 

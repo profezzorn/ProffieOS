@@ -37,7 +37,7 @@ template<typename T, typename X = void> struct PrintHelper {
   static void out(Print& p, T& x) { p.print(x); }
 };
 
-template<typename T> struct PrintHelper<T, decltype(((T*)0)->printTo(*(Print*)0))> {
+template<typename T> struct PrintHelper<T, decltype(std::declval<T*>()->printTo(*(Print*)0))> {
   static void out(Print& p, T& x) { x.printTo(p); }
 };
 
@@ -149,6 +149,69 @@ private:
   const char* previous_;
   char line_[MAXLINE];
 };
+
+#include "string_piece.h"
+
+void StringPiece::printTo(Print& p) const {
+  p.write((const uint8_t*)str, len);
+}
+
+template<size_t bufsize>
+struct Line {
+  int line_number;
+  char line[bufsize];
+  int cmp(const StringPiece other) const { return StringPiece(line).cmp(other); }
+  int cmp(const Line& other) const { return cmp(other.line); }
+  bool operator<(const Line& other) const { return cmp(other) < 0; }
+  bool operator<=(const Line& other) const { return cmp(other) <= 0; }
+  bool operator>(const Line& other) const { return cmp(other) > 0; }
+  bool operator>=(const Line& other) const { return cmp(other) >= 0; }
+  bool operator==(const Line& other) const { return cmp(other) == 0; }
+  bool operator!=(const Line& other) const { return cmp(other) != 0; }
+
+  bool operator<(const StringPiece other) const { return cmp(other) < 0; }
+  bool operator<=(const StringPiece other) const { return cmp(other) <= 0; }
+  bool operator>(const StringPiece other) const { return cmp(other) > 0; }
+  bool operator>=(const StringPiece other) const { return cmp(other) >= 0; }
+  bool operator==(const StringPiece other) const { return cmp(other) == 0; }
+  bool operator!=(const StringPiece other) const { return cmp(other) != 0; }
+
+  operator bool() const { return line[0] != 0; }
+  void clear() { line[0] = 0; line_number=-1; }
+};
+
+
+template<size_t MAXLINE>
+class CommandOutputCaptureHelper : public Print {
+ public:
+  CommandOutputCaptureHelper() {
+    saved_output_ = stdout_output;
+    stdout_output = this;
+  }
+  ~CommandOutputCaptureHelper() {
+    stdout_output = saved_output_;
+  }
+  
+  virtual void GotLine(const Line<MAXLINE>& line_) = 0;
+  size_t write(uint8_t b) override {
+    if (b == '\n') {
+      if (pos_) {
+	line_.line[pos_] = 0;
+	GotLine(line_);
+	pos_ = 0;
+      }
+      return 1;
+    }
+    if (b == '\r') return 1;
+    if (pos_ <  MAXLINE - 1) line_.line[pos_++] = b;
+    return 1;
+  }
+private:
+  size_t pos_ = 0;
+  Line<MAXLINE> line_;
+  Print* saved_output_;
+};
+
 
 extern ConsoleHelper STDOUT;
 

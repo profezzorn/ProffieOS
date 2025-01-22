@@ -8,6 +8,39 @@ namespace Filter {
 #define FILTER_ORDER 8
 #endif
 
+constexpr double PO_fac(long x) {
+  return x <= 1 ? 1.0 : PO_fac(x -1) * x;
+}
+
+// x * y^p
+constexpr double PO_pow(double x, double y, long p) {
+  return p == 0 ? x : (p & 1) ? PO_pow(x*y, y, p - 1) : PO_pow(x, y * y, p/2);
+}
+
+constexpr double PO_trig(double x, long iter) {
+  return iter > 30 ? 0.0 : PO_pow(1.0, x, iter) / PO_fac(iter) - PO_trig(x, iter + 2);
+}
+
+constexpr double PO_cos(double x) {
+  return 1.0 - PO_trig(x, 2);
+}
+
+constexpr double PO_sin(double x) {
+  return x - PO_trig(x, 3);
+}
+
+constexpr double PO_tan(double x) {
+  return PO_sin(x) / PO_cos(x);
+}
+
+constexpr double PO_sqrt_helper(double x, double lo, double hi, double mid, long iter) {
+  return iter <= 0 ? mid :
+    mid * mid > x ? PO_sqrt_helper(x, lo, mid, (lo+mid) / 2, iter-1) : PO_sqrt_helper(x, mid, hi, (mid+hi) / 2, iter - 1);
+}
+constexpr double PO_sqrt(double x) {
+  return PO_sqrt_helper(x, 0.0, x, x / 2, 64);
+}
+    
 struct C {
   constexpr C(double real = 0.0, double imag = 0.0) : real_(real), imag_(imag) {}
   constexpr C operator+(C other) { return C(real_ + other.real_, imag_ + other.imag_); }
@@ -22,7 +55,7 @@ struct C {
   }
   constexpr double real() const { return real_; }
   constexpr double imag() const { return imag_; }
-  constexpr double abs() const { return sqrt(len2()); }
+  constexpr double abs() const { return PO_sqrt(len2()); }
 private:
   constexpr double len2() const { return real_*real_ + imag_*imag_; }
   double real_;
@@ -39,8 +72,8 @@ struct ButterWorthProtoType {
     return (2 * k + 1) * M_PI / (2 * order);
   }
   
-  static constexpr double real(size_t k) { return -sin(theta(k)); }
-  static constexpr double imag(size_t k) { return cos(theta(k)); }
+  static constexpr double real(size_t k) { return -PO_sin(theta(k)); }
+  static constexpr double imag(size_t k) { return PO_cos(theta(k)); }
   
   static constexpr C pole(size_t k) {
     return (k & 1) ?
@@ -58,7 +91,7 @@ template<class T, int cutoff_frequency, int sampling_frequency>
 struct ConvertToHighPass {
   static const size_t poles = T::poles;
   static const size_t zeroes = T::poles;
-  static constexpr double f() { return 2 * tan(M_PI * cutoff_frequency / sampling_frequency); }
+  static constexpr double f() { return 2 * PO_tan(M_PI * cutoff_frequency / sampling_frequency); }
   static constexpr C pole(size_t k) { return C(f()) / T::pole(k); }
   static constexpr C zero(size_t k) { return C(0.0, 0.0); }
   static constexpr double gain() { return T::gain(); }

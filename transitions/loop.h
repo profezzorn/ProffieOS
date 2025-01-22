@@ -56,6 +56,7 @@ template<int N, class TRANSITION> using TrLoopN = TrLoopNX<Int<N>, TRANSITION>;
 // Runs the specified transition until the pulse occurs.
 // When the pulse occurs, the loop continues, but OUT is used to
 // transition away from it, and when OUT is done, the transition is done.
+
 template<class PULSE, class TR, class OUT>
 class TrLoopUntil {
 public:
@@ -87,7 +88,7 @@ private:
   bool pulsed_ = false;
   PONUA SVFWrapper<PULSE> pulse_;
   PONUA TR transition_;
-  PONUA TR out_;
+  PONUA OUT out_;
 public:
   template<class X, class Y>
   auto getColor(const X& a, const Y& b, int led) ->

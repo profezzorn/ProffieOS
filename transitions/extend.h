@@ -12,6 +12,7 @@
 // Runs the specified transition, then holds the
 // last value for some additional time specified by
 // MILLIS_FUNCTION.
+
 template<class MILLIS, class TRANSITION>
 class TrExtendX : public TRANSITION {
 public:

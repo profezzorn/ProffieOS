@@ -15,7 +15,7 @@
 
 
 // cruft
-#define NUM_BLADES 3
+#define NUM_BLADES 13
 #define PROFFIE_TEST
 #define ENABLE_SD
 #define GYRO_MEASUREMENTS_PER_SECOND 1600
@@ -104,7 +104,6 @@ void PrintQuotedValue(const char *name, const char* str) {
 
 SaberBase* saberbases = NULL;
 SaberBase::LockupType SaberBase::lockup_ = SaberBase::LOCKUP_NONE;
-bool SaberBase::on_ = false;
 uint32_t SaberBase::last_motion_request_ = 0;
 Monitoring monitor;
 
@@ -118,38 +117,50 @@ BladeConfig* current_config;
 #define CHECK_EQ(X, Y) do {                                             \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (x_ != y_) { std::cerr << #X << " (" << x_ << ") != " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (x_ != y_) { STDOUT << #X << " (" << x_ << ") != " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
 } while(0)
 
 #define CHECK_NEAR(X, Y, D) do {                                                \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (fabs(x_ - y_) > D) { std::cerr << #X << " (" << x_ << ") ~!= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (fabs(x_ - y_) > D) { STDOUT << #X << " (" << x_ << ") ~!= " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
+} while(0)
+
+#define CHECK_NEAR_MSG(X, Y, D, MSG) do {					\
+  auto x_ = (X);                                                                \
+  auto y_ = (Y);                                                                \
+  if (fabs(x_ - y_) > D) { STDOUT << #X << " (" << x_ << ") ~!= " << #Y << " (" << y_ << ") " << MSG << " line " << __LINE__ << "\n";  exit(1); } \
 } while(0)
 
 #define CHECK_LT(X, Y) do {                                             \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (!(x_ < y_)) { std::cerr << #X << " (" << x_ << ") < " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (!(x_ < y_)) { STDOUT << #X << " (" << x_ << ") < " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
 } while(0)
 
 #define CHECK_LE(X, Y) do {                                             \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (!(x_ <= y_)) { std::cerr << #X << " (" << x_ << ") <= " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (!(x_ <= y_)) { STDOUT << #X << " (" << x_ << ") <= " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
 } while(0)
 
 #define CHECK_GT(X, Y) do {                                             \
   auto x_ = (X);                                                                \
   auto y_ = (Y);                                                                \
-  if (!(x_ > y_)) { std::cerr << #X << " (" << x_ << ") > " << #Y << " (" << y_ << ") line " << __LINE__ << std::endl;  exit(1); } \
+  if (!(x_ > y_)) { STDOUT << #X << " (" << x_ << ") > " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
+} while(0)
+
+#define CHECK_GE(X, Y) do {                                             \
+  auto x_ = (X);                                                                \
+  auto y_ = (Y);                                                                \
+  if (!(x_ >= y_)) { STDOUT << #X << " (" << x_ << ") > " << #Y << " (" << y_ << ") line " << __LINE__ << "\n";  exit(1); } \
 } while(0)
 
 #define CHECK_STREQ(X, Y) do {                                          \
   auto x = (X);                                                         \
   auto y = (Y);                                                         \
   if (!x || !y || strcmp(x, y)) {                                       \
-    std::cerr << #X << " (" << (x?x:"null") << ") != " << #Y << " (" << (y?y:"null") << ") line " << __LINE__ << std::endl;  exit(1); \
+    STDOUT << #X << " (" << (x?x:"null") << ") != " << #Y << " (" << (y?y:"null") << ") line " << __LINE__ << "\n";  exit(1); \
   }						                        \
 } while(0)
 
@@ -261,7 +272,7 @@ void test_current_preset() {
 }
 
 void test_byteorder(int byteorder) {
-  std::cerr << "Testing " << byteorder <<  std::endl;
+  std::cerr << "Testing " << byteorder <<  "\n";
   CHECK_EQ(byteorder, Color8::combine_byteorder(Color8::RGB, byteorder));
   CHECK_EQ(Color8::RGB, Color8::combine_byteorder(Color8::invert_byteorder(byteorder), byteorder));
 }
@@ -326,6 +337,17 @@ void test_rotate(Color16 c, int angle) {
 
   // Test HSL
   HSL hsl = c.toHSL();
+  CHECK_LE(0.0, hsl.H);
+  CHECK_LE(0.0, hsl.S);
+  CHECK_LE(0.0, hsl.L);
+  CHECK_LE(hsl.H, 1.0);
+  CHECK_LE(hsl.S, 1.0);
+  CHECK_LE(hsl.L, 1.0);
+  Color16 result3(hsl);
+  CHECK_NEAR_MSG(result3.r, c.r, 1, " in:" << c << " out:" << result3 << " hsl:" << hsl);
+  CHECK_NEAR_MSG(result3.g, c.g, 1, " in:" << c << " out:" << result3 << " hsl:" << hsl);
+  CHECK_NEAR_MSG(result3.b, c.b, 1, " in:" << c << " out:" << result3 << " hsl:" << hsl);
+
   hsl = hsl.rotate(angle / (float)(32768 * 3));
 //  fprintf(stderr, "Angle = %d HSL={%f,%f,%f} RGB=%d,%d,%d\n", angle, hsl.H, hsl.S, hsl.L, c.r, c.g, c.b);
   CHECK_LE(0.0, hsl.H);
@@ -721,7 +743,122 @@ void command_parser_test() {
   CHECK_EQ(x, false);
 }
 
+#include "cyclint.h"
+
+void test_cyclint() {
+  Cyclint<uint8_t> N(0);
+  Cyclint<uint8_t> N2(1);
+  for (int i = 0; i < 256; i++) {
+    N += 1;
+    CHECK_EQ(N,N2);
+    CHECK_LE(N,N2);
+    CHECK_GE(N,N2);
+    N2 += 1;
+    CHECK_LT(N, N2);
+    CHECK_GT(N2, N);
+  }
+}
+
+void test_effect_location() {
+  EffectLocation l(0.5);
+  CHECK_EQ(true, l.on_blade(1));
+  CHECK_EQ(true, l.on_blade(2));
+  CHECK_EQ(true, l.on_blade(8));
+  CHECK_EQ(l.blades(), EffectLocation::ALL_BLADES);
+
+  EffectLocation l2(0, EffectLocation::BLADE3);
+  CHECK_EQ(l2.blades(), EffectLocation::BLADE3);
+  CHECK_EQ(false, l2.on_blade(1));
+  CHECK_EQ(false, l2.on_blade(2));
+  CHECK_EQ(true,  l2.on_blade(3));
+  CHECK_EQ(false, l2.on_blade(4));
+
+  EffectLocation l3(0, ~EffectLocation::BLADE3);
+  CHECK_EQ(l3.blades(), ~EffectLocation::BLADE3);
+  CHECK_EQ(true,  l3.on_blade(1));
+  CHECK_EQ(true,  l3.on_blade(2));
+  CHECK_EQ(false, l3.on_blade(3));
+  CHECK_EQ(true,  l3.on_blade(4));
+}
+
+#define TEST_FORMAT_PATTERN(P, V, E) do {	\
+  const char* ret = format_pattern(P, V);	\
+  CHECK_STREQ(ret, E);				\
+  StringPiece sp = match_pattern(P, ret);       \
+  CHECK_EQ(sp, V);                           	\
+  sp = match_pattern(P, "fnord");               \
+  if (strlen(P) > 1) CHECK_EQ(sp.len, 0);	\
+  free((void *)ret);				\
+}while (0)
+
+void test_patterns() {
+  TEST_FORMAT_PATTERN("*;common", "font", "font;common");
+  TEST_FORMAT_PATTERN("*", "font", "font");
+  TEST_FORMAT_PATTERN("*;*/extras;common", "font", "font;font/extras;common");
+  TEST_FORMAT_PATTERN("pre;*;post", "middle", "pre;middle;post");
+  TEST_FORMAT_PATTERN("*;*;*", "font", "font;font;font");
+}
+
+class TestCommand : public CommandParser {
+  bool Parse(const char *cmd, const char* arg) override {
+    if (!strcmp(cmd, "testcommand")) {
+      STDOUT << "test9\n";
+      STDOUT << "test5\n";
+      STDOUT << "test2\n";
+      STDOUT << "test8\n";
+      STDOUT << "test6\n";
+      STDOUT << "test7\n";
+      STDOUT << "test0\n";
+      STDOUT << "test1\n";
+      STDOUT << "test3\n";
+      STDOUT << "test4\n";
+      return true;
+    }
+    return false;
+  }
+};
+
+TestCommand cmd;
+
+char current_value[128];
+class TestSortedLineHelper : public SortedLineHelper<128> {
+public:
+  TestSortedLineHelper() : SortedLineHelper<128>("testcommand") {}
+  virtual StringPiece get_current_value() {
+    return current_value;
+  }
+};
+
+void test_command_line_capture() {
+  for (int i = 0; i < 200; i++) {
+    strcpy(current_value, "test0");
+    for (int s = 0; s < 10; s++) {
+      current_value[4] = s + '0';
+
+      TestSortedLineHelper helper;
+      helper.init();
+
+      std::vector<int> x;
+      for (int i = 0; i < 10; i++) x.push_back(i);
+      while (!x.empty()) {
+	int index = random(x.size());
+	int N = x[index];
+	x[index] = *x.rbegin();
+	x.pop_back();
+	StringPiece tmp = helper.get(N);
+	// fprintf(stderr, "TMP = %s\n", tmp);
+	CHECK_EQ(tmp[4] - '0', N);
+      }
+    }
+  }
+    
+};
+
 int main() {
+  test_command_line_capture();
+  test_patterns();
+  test_effect_location();
+  test_cyclint();
   command_parser_test();
   
   extras = false;

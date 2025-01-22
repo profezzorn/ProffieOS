@@ -38,7 +38,7 @@ public:
       }
     }
   }
-  size_t space_available() const override {
+  size_t space_available() override {
     if (millis() - last_open_ < 500) return 0;
     return next_available_ ? 0 : 1;
   }
