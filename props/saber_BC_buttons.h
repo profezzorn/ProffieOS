@@ -1539,7 +1539,7 @@ public:
     if (fabsf(gyro.x) > 200.0 &&
         fabsf(gyro.x) > 3.0f * abs(gyro.y) &&
         fabsf(gyro.x) > 3.0f * abs(gyro.z)) {
-      process = DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
+      process = DoGesture(gyro.x > 0 ? TWIST_RIGHT : TWIST_LEFT);
     } else {
       process = DoGesture(TWIST_CLOSE);
     }
