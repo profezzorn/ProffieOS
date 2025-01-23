@@ -308,17 +308,17 @@ struct BCBlasterVolumeMode : public SPEC::SteppedMode {
 // For Blasters
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, 0)) {
+
       case EVENTID(BUTTON_FIRE, EVENT_FIRST_HELD_MEDIUM, 0):  // fire m1
         QuickMaxVolume();
         return true;
-
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_MEDIUM, 0):  // mode m1
         QuickMinVolume();
         return true;
+
       case EVENTID(BUTTON_FIRE, EVENT_FIRST_SAVED_CLICK_SHORT, 0):  // fire s1
         select();
         return true;
-
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, 0):  // mode s1
         exit();
         return true;
