@@ -1523,7 +1523,7 @@ public:
 
 #ifdef SPEAK_BLADE_ID
   void SpeakBladeID(float id) override {
-    if (&SFX_mnum) {
+    if (SFX_mnum) {
       sound_library_v2.SayBlade();
       sound_library_.SayNumber(id, SAY_WHOLE);
     } else {
