@@ -1744,7 +1744,7 @@ public:
   }
 
   void DoQuote() {
-    if (spam_blast_) return;
+    if (spam_blast_ || scroll_presets_) return;
     if (SFX_quote) {
       if (GetWavPlayerPlaying(&SFX_quote)) return;  // Simple prevention of quote overlap
 
