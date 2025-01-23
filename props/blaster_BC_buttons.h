@@ -10,7 +10,7 @@ blaster_BC_buttons.h prop file.
 Includes:
 - Volume Menu with QuickMAX and QuickMIN.
 - Spoken battery level in both volts or percentage.
-- On-Demand battery level.
+- On-Demand battery level (Shows Green to Red if EFFECT_BATTERY_LEVEL is used in Blade Style).
 - Quote player with On-the-fly sequential option.
 - Next / previous preset.
 - Self-Destuct overload.
@@ -22,12 +22,18 @@ Includes:
     #define BLASTER_SHOTS_UNTIL_EMPTY is specified.
     Empty repeats at same rate auto was firing for added realism. Cool, eh?
 
-Requires minimum 2 buttons for operation.
+This prop version requires a ProffieOS Voicepack for menus to work right.
+
+Button assignment:
+This prop requires a minimum of 2 buttons for operation.
 If there's a 3rd button installed, it should be set in the config as:
-Button Aux2Button(BUTTON_RELOAD, aux2Pin, "aux2");
+Button ReloadButton(BUTTON_RELOAD, aux2Pin, "reload");
 It's coded to be Reload by default.
 However, to use it as a dedicated POWER ON/OFF button instead, use the following define:
 #define RELOAD_BUTTON_IS_POWER
+The blaster defaults to auto-powered ON at boot and on Change Preset.
+To use the RELOAD-as-POWER button to initially power ON instead,
+use a poweron.wav file in the font.
 
   *Notes  - When using dual_prop, the config file can optionally be set to use NUM_BUTTONS 1 for saber mode,
               and the blaster mode will still use 2 buttons as FIRE and MODE.
@@ -69,35 +75,36 @@ Optional Blade style elements:
 ==================================================
 | 2 Buttons: FIRE and MODE (saber's POW and AUX) |
 ==================================================
-Power On / Off            - Hold MODE then Press and Hold FIRE until Power ON / OFF.
-                              Default is auto-powered ON at boot.
+Power ON / OFF            - Hold FIRE then Double Click MODE.
+                              Default is auto-powered ON at Boot and on Change Preset.
                               Power ON required after Self Destruct.
-                              Plays wavs named poweron and poweroff.
-Cycle Modes               - Click and Hold MODE. Cycles through KILL, AUTOFIRE, and STUN modes.
-Next Preset               - Long Click and release MODE (while NOT pointing UP or DOWN).
-Previous Preset           - Long Click and release MODE (while pointing DOWN).
-Jump to First Preset      - Long Click and release MODE (while pointing UP).
+                              Plays out.wavs for power ON and in.wavs for power OFF.
+Cycle Modes               - Hold MODE. Cycles through KILL, AUTOFIRE, and STUN modes.
+Change Preset             - Long Click and release MODE.
+        Next                  (while NOT pointing UP or DOWN).
+        Previous              (while pointing DOWN).
+        Jump to First         (while pointing UP).
 Start/Stop Track          - 4x Click MODE.
 Volume Menu:
   * Note - must exit Volume Menu before any other functions will work.
-        Enter Menu        - Hold MODE + Click FIRE.
+        Enter Menu        - Hold MODE then Click FIRE.
         Volume UP         - Rotate Right.
         Volume DOWN       - Rotate Left.
-        Quick MAX Vol     - Hold FIRE while in Volume Menu.
-        Quick MIN Vol     - Double Click and Hold FIRE while in Volume Menu.
+        Quick MAX Vol     - Hold FIRE.
+        Quick MIN Vol     - Hold MODE.
         Save and Exit     - Click FIRE.
-        Cancel and Exit   - Double Click FIRE.
+        Cancel and Exit   - Click MODE.
 Spoken Battery Level
-        in percentage     - 3x Click and Hold POW.
-        in volts          - 3x Click and Hold POW (while pointing DOWN).
+        in percentage     - 3x Click and Hold MODE.
+        in volts          - 3x Click and Hold MODE (while pointing DOWN).
                             * Will show On-blade display if EFFECT_BATTERY_LEVEL is used in blade style.
-On-Demand Batt Level      - 3x Click and Hold POW, release after a second. (Double Click then Long Click)
+On-Demand Batt Level      - 3x Click and Hold MODE, release after a second. (Double Click then Long Click)
                             * Requires EFFECT_BATTERY_LEVEL to be in blade style.
                             * Plays battery.wav sound effect if it exists in font or common folder,
                               otherwise a familiar tune of beeps :)
 
-Self-Destruct             - Hold FIRE then Press and Hold MODE until overload starts....then run!
-                            Self-Destructed blaster needs to be powered on manually to use again.
+Self-Destruct             - Hold MODE then Hold FIRE until overload starts....then run!
+                            Self-Destructed blaster needs to be powered ON manually to use again.
 Quote Player              - Double Click MODE (while NOT pointing DOWN). (requires quote.wavs in font.)
 Toggle quotes playback,
   random or sequential    - Double Click MODE (while pointing DOWN).
@@ -105,19 +112,22 @@ Reload                    - Click MODE.
 Fire                      - Click FIRE. (Hold to Auto / Rapid Fire when AUTO mode selected.)
 Clip In                   - Clip Detect pad Latched On.
 Clip out                  - Clip Detect pad Latched Off.
-Unjam                     - Bang the blaster or Reload.
+Unjam                     - Bang the blaster or Reload, or Change Preset.
 
-=======================================
-| 3 Buttons: FIRE, MODE, RELOAD/POWER |
-=======================================
+=================================
+| 3 Buttons: FIRE, MODE, RELOAD |
+=================================
+*** Controls are the same as 2 button above, but with these changes ***
+
+Reload                    - Click RELOAD.
+Cycle Modes               - Click MODE.
+Change Preset             - Hold MODE
+        Next                  (while NOT pointing UP or DOWN).
+        Previous              (while pointing DOWN).
+        Jump to First         (while pointing UP).
+
 - If defined RELOAD_BUTTON_IS_POWER
-  Power ON/OFF              - HOLD RELOAD until power ON/OFF.
-  Reload                    - Click MODE.
-  Cycle Modes               - HOLD MODE. Cycles through KILL, AUTOFIRE, and STUN modes.
-
-- Otherwise (Reload Button is NOT Power)
-  Reload                    - Click RELOAD.
-  Cycle Modes               - Click MODE.
+  Power ON/OFF              - Hold RELOAD until power ON/OFF.
 
 
 Wavs to use for talking Mode (else Talkie voice):
@@ -177,6 +187,9 @@ Choose a Voice Pack containing all these sounds here: https://fredrik.hubbe.net/
 
 #define PROP_TYPE BlasterBCButtons
 
+#ifndef BUTTON_HELD_LONG_TIMEOUT
+#define BUTTON_HELD_LONG_TIMEOUT 1200
+#endif
 
 // Additional effects for BC buttons prop.
 EFFECT(clipins);    // s for stun mode
@@ -193,18 +206,153 @@ EFFECT(volmin);     // for minimum volume reached
 EFFECT(volmax);     // for maximum volume reached
 #endif
 
+template<class SPEC>
+struct BCBlasterVolumeMode : public SPEC::SteppedMode {
+  const int max_volume_ = VOLUME;
+  const int min_volume_ = VOLUME * 0.10;
+  float initial_volume_ = 0.0;
+  int initial_percentage_ = 0;
+  int percentage_ = 0;
+
+  int steps_per_revolution() override {
+    return 12;  // adjust for sensitivity
+  }
+
+  void mode_activate(bool onreturn) override {
+    PVLOG_NORMAL << "** Enter Volume Menu\n";
+    initial_volume_ = dynamic_mixer.get_volume();
+    initial_percentage_ = round((initial_volume_ / max_volume_) * 10) * 10;
+    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+    mode::getSL<SPEC>()->SayEditVolume();
+    announce_volume();
+    SPEC::SteppedMode::mode_activate(onreturn);
+  }
+
+  void announce_volume() {
+    if (percentage_ <= 10) {
+      mode::getSL<SPEC>()->SayMinimumVolume();
+    } else if (percentage_ >=100) {
+      mode::getSL<SPEC>()->SayMaximumVolume();
+    } else {
+      mode::getSL<SPEC>()->SayWhole(percentage_);
+      mode::getSL<SPEC>()->SayPercent();
+    }
+  }
+
+  void mode_deactivate() override {
+    announce_volume();
+    mode::getSL<SPEC>()->SayVolumeMenuEnd();
+    SPEC::SteppedMode::mode_deactivate();
+  }
+
+  void next() override {
+    int current_volume_ = dynamic_mixer.get_volume();
+    if (current_volume_ < max_volume_) {
+      current_volume_ += max_volume_ * 0.10;
+      if (current_volume_ >= max_volume_) {
+        current_volume_ = max_volume_;
+        QuickMaxVolume();
+      } else {
+        mode::getSL<SPEC>()->SayVolumeUp();
+      }
+      dynamic_mixer.set_volume(current_volume_);
+    }
+  }
+
+  void prev() override {
+    int current_volume_ = dynamic_mixer.get_volume();
+    if (current_volume_ > min_volume_) {
+      current_volume_ -= max_volume_ * 0.10;
+      if (current_volume_ <= min_volume_) {
+        current_volume_ = min_volume_;
+        QuickMinVolume();
+      } else {
+        mode::getSL<SPEC>()->SayVolumeDown();
+      }
+      dynamic_mixer.set_volume(current_volume_);
+    }
+  }
+
+  void QuickMaxVolume() {
+    dynamic_mixer.set_volume(max_volume_);
+    PVLOG_NORMAL << "** Maximum Volume\n";
+    mode::getSL<SPEC>()->SayMaximumVolume();
+  }
+
+  void QuickMinVolume() {
+    dynamic_mixer.set_volume(min_volume_);
+    PVLOG_NORMAL << "** Minimum Volume\n";
+    mode::getSL<SPEC>()->SayMinimumVolume();
+  }
+
+  void update() override {  // Overridden to substitute the tick sound
+    float volume = dynamic_mixer.get_volume();
+    percentage_ = round((volume / max_volume_) * 10) * 10;
+    SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
+  }
+
+  void select() override {
+    PVLOG_NORMAL << "** Saved - Exit Volume Menu\n";
+    mode::getSL<SPEC>()->SaySave();
+    SPEC::SteppedMode::select();
+  }
+
+  void exit() override {
+    PVLOG_NORMAL << "** Cancelled - Exit Volume Menu\n";
+    percentage_ = initial_percentage_;
+    dynamic_mixer.set_volume(initial_volume_);
+    mode::getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+
+// For Blasters
+  bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+    switch (EVENTID(button, event, 0)) {
+      case EVENTID(BUTTON_FIRE, EVENT_FIRST_HELD_MEDIUM, 0):  // fire m1
+        QuickMaxVolume();
+        return true;
+
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_MEDIUM, 0):  // mode m1
+        QuickMinVolume();
+        return true;
+      case EVENTID(BUTTON_FIRE, EVENT_FIRST_SAVED_CLICK_SHORT, 0):  // fire s1
+        select();
+        return true;
+
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, 0):  // mode s1
+        exit();
+        return true;
+    }
+    return SPEC::SelectCancelMode::mode_Event2(button, event, modifiers);
+  }
+};
+
+template<class SPEC>
+struct BCBlasterMenuSpec {
+  typedef BCBlasterVolumeMode<SPEC> BCBlasterVolumeMenu;
+  typedef mode::SelectCancelMode SelectCancelMode;
+  typedef mode::SteppedMode<SPEC> SteppedMode;
+  typedef mode::SteppedModeBase<SPEC> SteppedModeBase;
+  typedef mode::MenuBase<SPEC> MenuBase;
+  typedef SoundLibraryV2 SoundLibrary;
+};
+
+  void Setup() {
+    MKSPEC<BCBlasterMenuSpec>::SoundLibrary::init();
+  }
+
+
 class BlasterBCButtons : public Blaster {
 public:
   BlasterBCButtons() : Blaster() {}
   const char* name() override { return "BlasterBCButtons"; }
 
   void EnterVolumeMenu() {
-        sound_library_.SayEditVolume();
-        pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::ChangeVolumeMode>();
+    pushMode<MKSPEC<BCBlasterMenuSpec>::BCBlasterVolumeMenu>();
   }
 
   void Fire() override {
-    DoJam();
+    if (DoJam()) return;
     if (blaster_mode != MODE_AUTO && DoEmpty()) return;
 
     switch (blaster_mode) {
@@ -231,7 +379,8 @@ public:
   }
 
  void DoAutoFire() override {
-      // First time through, let bgnauto finish first if we have one
+    if (!SFX_auto) return;
+    // First time through, let bgnauto finish first if we have one
     if (SFX_bgnauto && GetWavPlayerPlaying(&SFX_bgnauto)) return;
 
     // No bgnauto or bgnauto has finished playing, so initialize and start auto-firing
@@ -295,8 +444,9 @@ public:
   // Pull in parent's SetPreset, but turn the blaster on.
   void SetPreset(int preset_num, bool announce) override {
     PropBase::SetPreset(preset_num, announce);
-      // Just always default to on.
-       if (!SaberBase::IsOn()) On();
+     if (!SFX_poweron && !SaberBase::IsOn()) {
+      On();
+    }
   }
 
   void selfDestruct() override {
@@ -355,78 +505,120 @@ public:
     }
   }
 
+  void DoQuote() {
+    if (SFX_quote) {
+      if (GetWavPlayerPlaying(&SFX_quote)) return;  // Simple prevention of quote overlap
+      sequential_quote_ ? SFX_quote.SelectNext() : SFX_quote.Select(-1);
+      hybrid_font.PlayCommon(&SFX_quote);
+    }
+  }
+
+  void ToggleSequentialQuote() {
+    sequential_quote_ = !sequential_quote_;
+    PVLOG_NORMAL << (sequential_quote_ ? "** Quotes play sequentially\n" : "** Quotes play randomly\n");
+
+    if (!SFX_mnum) {  // No voice pack available
+      beeper.Beep(0.5, sequential_quote_ ? 3000 : 1000);
+      return;
+    } else {
+      if (sequential_quote_) {
+        sound_library_v2.SaySequential();
+      } else {
+        sound_library_.SayRandom();
+      }
+    }
+  }
+
+  void TurnPowerOn() {
+    if (!hybrid_font.PlayPolyphonic(&SFX_poweron)) {
+      if (!hybrid_font.PlayPolyphonic(&SFX_out)) {
+        beeper.Beep(0.1, 300);
+        beeper.Beep(0.1, 600);
+        beeper.Beep(0.1, 900);
+        beeper.Beep(0.1, 1300);
+      }
+    }
+    On();
+  }
+
+  void TurnPowerOff() {
+    if (!hybrid_font.PlayPolyphonic(&SFX_in)) {  // Are we doing poweroff.wavs instead??
+      beeper.Beep(0.1, 1300);
+      beeper.Beep(0.1, 900);
+      beeper.Beep(0.1, 600);
+      beeper.Beep(0.1, 300);
+    }
+    Off();
+  }
+
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
 
 #ifdef RELOAD_BUTTON_IS_POWER
-// Power button control
+  // Power ON / OFF manually
       case EVENTID(BUTTON_RELOAD, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
-        On();
+        TurnPowerOn();
         return true;
 
       case EVENTID(BUTTON_RELOAD, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
-        Off();
+        TurnPowerOff();
         return true;
-#endif
-
-// Power On / Off manually
-      case EVENTID(BUTTON_FIRE, EVENT_FIRST_HELD_LONG, MODE_OFF | BUTTON_MODE_SELECT):
-        if (!hybrid_font.PlayPolyphonic(&SFX_out)) {  // Are we doing poweron.wavs instead??
-          beeper.Beep(0.1, 300);
-          beeper.Beep(0.1, 600);
-          beeper.Beep(0.1, 900);
-          beeper.Beep(0.1, 1300);
-        }
-        On();
-        return true;
-      case EVENTID(BUTTON_FIRE, EVENT_FIRST_HELD_LONG, MODE_ON | BUTTON_MODE_SELECT):
-        if (!hybrid_font.PlayPolyphonic(&SFX_in)) {  // Are we doing poweroff.wavs instead??
-          beeper.Beep(0.1, 1300);
-          beeper.Beep(0.1, 900);
-          beeper.Beep(0.1, 600);
-          beeper.Beep(0.1, 300);
-        }
-        Off();
-        return true;
-
-// Cycle Mode
-#if NUM_BUTTONS == 3 && !defined(RELOAD_BUTTON_IS_POWER)
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
 #else
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
+  // Power ON / OFF manually
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF | BUTTON_FIRE):
+        TurnPowerOn();
+        return true;
+
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON | BUTTON_FIRE):
+        TurnPowerOff();
+        return true;
 #endif
+
+#if NUM_BUTTONS == 3 && !defined(RELOAD_BUTTON_IS_POWER)
+  // Cycle Mode
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
         NextBlasterMode();
         return true;
 
-// Change Preset
+  // Change Preset
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
+        DoChangePreset();
+        return true;
+#else
+  // Cycle Mode
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_LONG, MODE_ON):
+        NextBlasterMode();
+        return true;
+
+  // Change Preset
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_CLICK_LONG, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_CLICK_LONG, MODE_OFF):
         DoChangePreset();
         return true;
+#endif
 
-// Start or Stop Track
+  // Start or Stop Track
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_OFF):
         StartOrStopTrack();
         return true;
 
-// Enter Menu
+  // Enter Menu (mode fire s1)
       case EVENTID(BUTTON_FIRE, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON | BUTTON_MODE_SELECT):
       case EVENTID(BUTTON_FIRE, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF | BUTTON_MODE_SELECT):
         EnterVolumeMenu();
         return true;
 
-// Spoken Battery Level in percentage
-// Spoken Battery Level in volts - pointing DOWN
-// Show Battery Meter on LEDs
+  // Spoken Battery Level in percentage
+  // Spoken Battery Level in volts - pointing DOWN
+  // Show Battery Meter on LEDs
       case EVENTID(BUTTON_MODE_SELECT, EVENT_THIRD_HELD_MEDIUM, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_THIRD_HELD_MEDIUM, MODE_OFF):
         DoSpokenBatteryLevel();
         return true;
 
-// On Demand Battery Level
+  // On Demand Battery Level
       case EVENTID(BUTTON_MODE_SELECT, EVENT_THIRD_CLICK_LONG, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_THIRD_CLICK_LONG, MODE_OFF):
         PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
@@ -434,7 +626,7 @@ public:
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
 
-// Reload
+  // Reload
 #if NUM_BUTTONS == 3 && !defined(RELOAD_BUTTON_IS_POWER)
       case EVENTID(BUTTON_RELOAD, EVENT_PRESSED, MODE_ON):
 #else
@@ -448,7 +640,7 @@ public:
         }
         return true;
 
-// Fire
+  // Fire
       case EVENTID(BUTTON_FIRE, EVENT_PRESSED, MODE_ON):
         if (no_clip_) {
           SaberBase::DoEffect(EFFECT_EMPTY, 0); 
@@ -471,37 +663,24 @@ public:
         trigger_is_pressed_ = false;
         return true;
 
-
-
-// Self-Destuct / overload
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_LONG, MODE_ON | BUTTON_FIRE):
+  // Self-Destuct / overload
+      case EVENTID(BUTTON_FIRE, EVENT_FIRST_HELD_LONG, MODE_ON | BUTTON_MODE_SELECT):
         selfDestruct();
         return true;
 
-// Quote
-// Toggle Sequential Quote - pointing down
-// QuickMin volume
+  // Quote
+  // Toggle Sequential Quote - pointing down
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
-        // pointing down
-        if (fusor.angle1() < - M_PI / 4) {
-          sequential_quote_ = !sequential_quote_;
-          sound_library_.SayRandom();
-          if (sequential_quote_) {
-            sound_library_.SayDisabled();
-          } else {
-            sound_library_.SayEnabled();
-          }
-          return true;
-        } else if (sequential_quote_) {
-            SFX_quote.SelectNext();
-          } else {
-            SFX_quote.Select(-1);
-          }
-        hybrid_font.PlayCommon(&SFX_quote);
+        if (fusor.angle1() < -M_PI / 4) {
+          // pointing DOWN
+          ToggleSequentialQuote();
+        } else {
+          DoQuote();
+        }
         return true;
 
-// Clip inserted
+  // Clip inserted
       case EVENTID(BUTTON_CLIP_DETECT, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_CLIP_DETECT, EVENT_LATCH_ON, MODE_ON):
       case EVENTID(BUTTON_CLIP_DETECT, EVENT_PRESSED, MODE_OFF):
@@ -509,7 +688,7 @@ public:
         ClipIn();
         return true;
 
-// Clip removed
+  // Clip removed
       case EVENTID(BUTTON_CLIP_DETECT, EVENT_RELEASED, MODE_ON):
       case EVENTID(BUTTON_CLIP_DETECT, EVENT_LATCH_OFF, MODE_ON):
       case EVENTID(BUTTON_CLIP_DETECT, EVENT_RELEASED, MODE_OFF):
@@ -517,7 +696,7 @@ public:
         ClipOut();
         return true;
 
-// Blade Detect
+  // Blade Detect
 #ifdef BLADE_DETECT_PIN
       case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
