@@ -29,9 +29,8 @@ This prop manages up to six different buttons.
 *Dual Buttons Mode*
  -Buttons: FIRE and MODE
   This is the "stock" configuration.
-  -Weapon will always start on the default mode (define with BLASTER_DEFAULT_MODE,
-  STUN is default).
-  Default is to powered on if it finds poweron.wav file present or off otherwise.
+  Weapon will always start on the default mode (define with BLASTER_DEFAULT_MODE, STUN is default).
+  Default is to start powered OFF if the font has a poweron.wav file, otherwise ON.
   
     Fire 			- Click FIRE.
     Cycle Modes			- Click MODE.
@@ -176,7 +175,7 @@ public:
     return random < percent;
   }
 
-  void DoJam() {
+  bool DoJam() {
 #ifdef ENABLE_MOTION
 #ifdef BLASTER_JAM_PERCENTAGE
     // If we're already jammed then we don't need to recheck. If we're not jammed then check if we just jammed.
@@ -184,7 +183,9 @@ public:
 
     if (is_jammed_) {
       SaberBase::DoEffect(EFFECT_JAM, 0);
-      return;
+      return true;
+    } else {
+      return false;
     }
 #endif
 #endif
@@ -205,7 +206,6 @@ public:
     shots_fired_++;
   }
 
-
   virtual void DoAutoFire() {
     SelectAutoFirePair(); // Set up the auto-fire pairing if the font suits it
     SaberBase::SetLockup(LOCKUP_AUTOFIRE);
@@ -214,7 +214,7 @@ public:
   }
 
   virtual void Fire() {
-    DoJam();
+    if (DoJam()) return;
     if (DoEmpty()) return;
 
     switch (blaster_mode) {
@@ -374,7 +374,6 @@ public:
         
       case EVENTID(BUTTON_RELOAD, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON):
-      // case EVENTID(BUTTON_RELOAD, EVENT_HELD_MEDIUM, MODE_ON):
         Reload();
         return true;
 
@@ -513,4 +512,3 @@ public:
 };
 
 #endif
-
