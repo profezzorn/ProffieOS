@@ -292,13 +292,13 @@ struct BCBlasterVolumeMode : public SPEC::SteppedMode {
   }
 
   void select() override {
-    PVLOG_NORMAL << "** Saved - Exit Volume Menu\n";
+    PVLOG_NORMAL << "** Saved - Exiting Volume Menu\n";
     mode::getSL<SPEC>()->SaySave();
     SPEC::SteppedMode::select();
   }
 
   void exit() override {
-    PVLOG_NORMAL << "** Cancelled - Exit Volume Menu\n";
+    PVLOG_NORMAL << "** Cancelled - Exiting Volume Menu\n";
     percentage_ = initial_percentage_;
     dynamic_mixer.set_volume(initial_volume_);
     mode::getSL<SPEC>()->SayCancel();
