@@ -740,8 +740,9 @@ EFFECT2(lock, lock);
 EFFECT(swng);
 EFFECT(slsh);
 EFFECT(quote);
+#ifdef ENABLE_IDLE_SOUND
 EFFECT2(idle, idle);  // Plays when blade is off
-
+#endif
 // Looped swing fonts. (SmoothSwing V1/V2)
 EFFECT2(swingl, swingl);  // Looped swing, LOW
 EFFECT2(swingh, swingh);  // Looped swing, HIGH
