@@ -402,8 +402,7 @@ Prev Preset               - Click AUX (while pointing DOWN).
 Jump to First Preset      - Click AUX (while pointing UP).
 Play/Stop Track           - Long Click then release POW.
 BC Volume Menu:
-        Enter/Exit        - Hold POW + Click AUX.
-        Enter Menu        - Hold POW and Clash.
+        Enter Menu        - Hold POW + Click AUX.
         Volume UP         - Rotate Right.
         Volume DOWN       - Rotate Left.
         Quick MAX Vol     - Hold POW while in Volume Menu.
