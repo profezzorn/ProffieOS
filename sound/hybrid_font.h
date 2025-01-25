@@ -833,7 +833,10 @@ public:
       hum_player_ = GetFreeWavPlayer();
       if (hum_player_) {
         PVLOG_DEBUG << "************ Playing idle.wav\n";
+        hum_player_->set_volume_now(0.0f);
         hum_player_->PlayOnce(&SFX_idle);
+        hum_player_->set_fade_time(0.2f);
+        hum_player_->set_volume(1.0f);
       } else {
         STDOUT.println("Out of WAV players!");
       }
