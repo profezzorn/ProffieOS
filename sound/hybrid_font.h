@@ -205,7 +205,7 @@ public:
   RefPtr<BufferedWavPlayer> next_hum_player_;
   RefPtr<BufferedWavPlayer> swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
-  RefPtr<BufferedWavPlayer> idle_player_;
+  RefPtr<BufferedWavPlayer> hum_player_;
 
   void PlayMonophonic(const Effect::FileID& f, Effect* loop, float xfade = 0.003f)  {
     EnableAmplifier();
@@ -819,21 +819,21 @@ public:
   void StopIdleSound() {
   #ifdef ENABLE_IDLE_SOUND
     idling_ = false;
-    if (idle_player_ && idle_player_->isPlaying()) {
-      idle_player_->set_fade_time(0.5);
-      idle_player_->FadeAndStop();
-      idle_player_.Free();
+    if (hum_player_ && hum_player_->isPlaying()) {
+      hum_player_->set_fade_time(0.5);
+      hum_player_->FadeAndStop();
+      hum_player_.Free();
       STDOUT.println("End idle wav Player");
     }
   #endif
   }
 
   void StartIdleSound() {
-    if (SFX_idle && (!idle_player_ || !idle_player_->isPlaying())) {
-      idle_player_ = GetFreeWavPlayer();
-      if (idle_player_) {
+    if (SFX_idle && (!hum_player_ || !hum_player_->isPlaying())) {
+      hum_player_ = GetFreeWavPlayer();
+      if (hum_player_) {
         PVLOG_DEBUG << "************ Playing idle.wav\n";
-        idle_player_->PlayOnce(&SFX_idle);
+        hum_player_->PlayOnce(&SFX_idle);
       } else {
         STDOUT.println("Out of WAV players!");
       }
