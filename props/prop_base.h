@@ -942,7 +942,7 @@ public:
     if (fabsf(gyro.x) > 200.0 &&
         fabsf(gyro.x) > 3.0f * abs(gyro.y) &&
         fabsf(gyro.x) > 3.0f * abs(gyro.z)) {
-      process = DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
+      process = DoGesture(gyro.x > 0 ? TWIST_RIGHT : TWIST_LEFT);
     } else {
       process = DoGesture(TWIST_CLOSE);
     }
@@ -1207,6 +1207,8 @@ public:
       case EVENT_SWING: STDOUT.print("Swing"); break;
       case EVENT_SHAKE: STDOUT.print("Shake"); break;
       case EVENT_TWIST: STDOUT.print("Twist"); break;
+      case EVENT_TWIST_LEFT: STDOUT.print("TwistLeft"); break;
+      case EVENT_TWIST_RIGHT: STDOUT.print("TwistRight"); break;
       case EVENT_CLASH: STDOUT.print("Clash"); break;
       case EVENT_THRUST: STDOUT.print("Thrust"); break;
       case EVENT_PUSH: STDOUT.print("Push"); break;

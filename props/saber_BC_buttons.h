@@ -401,8 +401,7 @@ Prev Preset               - Click AUX (while pointing DOWN).
 Jump to First Preset      - Click AUX (while pointing UP).
 Play/Stop Track           - Long Click then release POW.
 BC Volume Menu:
-        Enter/Exit        - Hold POW + Click AUX.
-        Enter Menu        - Hold POW and Clash.
+        Enter Menu        - Hold POW + Click AUX.
         Volume UP         - Rotate Right.
         Volume DOWN       - Rotate Left.
         Quick MAX Vol     - Hold POW while in Volume Menu.
@@ -1521,7 +1520,7 @@ public:
 
 #ifdef SPEAK_BLADE_ID
   void SpeakBladeID(float id) override {
-    if (&SFX_mnum) {
+    if (SFX_mnum) {
       sound_library_v2.SayBlade();
       sound_library_.SayNumber(id, SAY_WHOLE);
     } else {
@@ -1743,12 +1742,13 @@ public:
 
   void DoQuote() {
     if (scroll_presets_ || spam_blast_) return;
-    if (overlap_timer_initialized_ && !overlap_delay_timer_.isTimerExpired()) return;  // prevent overlapping.
-    overlap_timer_initialized_ = true;
     if (SFX_quote) {
+      if (GetWavPlayerPlaying(&SFX_quote)) return;  // Simple prevention of quote overlap
+
       sequential_quote_ ? SFX_quote.SelectNext() : SFX_quote.Select(-1);
       SaberBase::DoEffect(EFFECT_QUOTE, 0);
     } else {
+      if (GetWavPlayerPlaying(&SFX_force)) return;
       SaberBase::DoForce();
     }
   }
@@ -2531,6 +2531,12 @@ any # of buttons
 #endif
 
 // Force
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON):
+        if (spam_blast_ || on_pending_) return false;
+          if (GetWavPlayerPlaying(&SFX_force)) return false;  // Simple prevention of force overlap
+          SaberBase::DoForce();
+        return true;
+
 // Toggle Battle Mode
 #if (NUM_BUTTONS != 1) || !defined(BC_DUAL_BLADES)  // 1 btn with dual blades has different control
       case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON):
@@ -2719,15 +2725,6 @@ any # of buttons
     }
   }  // SB_Effect
 
-  void SB_Effect2(EffectType effect, EffectLocation location) override {
-    switch (effect) {
-      case EFFECT_QUOTE:
-      case EFFECT_FORCE:
-        overlap_delay_timer_.trigger(SaberBase::sound_length * 1000);
-        return;
-     }
-  }  // SB_Effect2
-
   void Clash2(bool stab, float strength) override {
     SaberBase::SetClashStrength(strength);
     if (Event(BUTTON_NONE, stab ? EVENT_STAB : EVENT_CLASH)) {
@@ -2755,7 +2752,6 @@ private:
   DelayTimer mute_mainBlade_delay_timer_;
   DelayTimer mute_secondBlade_delay_timer_;
   DelayTimer scroll_presets_beep_delay_timer_;
-  DelayTimer overlap_delay_timer_;
   DelayTimer twist_delay_timer_;
 
   float current_twist_angle_ = 0.0;
@@ -2769,7 +2765,6 @@ private:
   bool scroll_presets_ = false;
   bool muted_ = false;
   bool forward_stab_ = false;
-  bool overlap_timer_initialized_ = false;
 
   uint32_t thrust_begin_millis_ = millis();
   uint32_t push_begin_millis_ = millis();

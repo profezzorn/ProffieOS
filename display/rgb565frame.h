@@ -314,11 +314,15 @@ public:
 #else
     while (!output_buffer->chunk.full(left_margin_, width_)) {
       if (!input_buffer_.size()) {
+	TRACE2(RGB565_DATA, "Buffer to fill: ", (uint32_t)this);
 	TRACE2(RGB565_DATA, "Fill buffer=", input_buffer_.size());
 	scheduleFillBuffer();
 	TRACE2(RGB565_DATA, "Filled buffer=", input_buffer_.size());
       }
-      if (!input_buffer_.size()) return false;
+      if (!input_buffer_.size()) {
+	TRACE2(RGB565_DATA, "no input, left to fill=", output_buffer->chunk.size() - width_ - left_margin_);
+	return false;
+      }
       output_buffer->fill(&pqoi, &input_buffer_, left_margin_, width_);
     }
     return true;
@@ -406,6 +410,7 @@ public:
   }
 
   bool is_playing() const { return play_ || delayed_open_; }
+  virtual bool IsActive() override { return is_playing(); }
 
   uint32_t play_time() const {
     return millis() - start_time_millis_;
@@ -527,6 +532,7 @@ public:
 	
 	// After this, it will be ok to make modifications to the current output buffer.
 	while (!(next_output_buffer_ = getOutputBuffer())) YIELD();
+	PROFFIEOS_ASSERT(current_output_buffer_->chunk.full());
 	next_output_buffer_->chunk.init_next_chunk(&current_output_buffer_->chunk, 0, 0);
 	fixByteOrder();
 	current_output_buffer_->done.set(true);
@@ -585,6 +591,7 @@ public:
 
 	  // After this, it will be ok to make modifications to the current output buffer.
 	  while (!(next_output_buffer_ = getOutputBuffer())) YIELD();
+	  PROFFIEOS_ASSERT(current_output_buffer_->chunk.full());
 	  next_output_buffer_->chunk.init_next_chunk(&current_output_buffer_->chunk,
 						     layers[base_layer_].left_margin_,
 						     layers[base_layer_].width_);
@@ -606,6 +613,11 @@ public:
 
 	  current_output_buffer_ = next_output_buffer_;
 	  next_output_buffer_ = nullptr;
+	}
+	if (!current_output_buffer_->chunk.empty(layers[base_layer_].left_margin_,
+						 layers[base_layer_].width_)) {
+	  STDERR << "Frame data overflow layer=" <<  base_layer_ << "\n";
+	  layers[base_layer_].stop();
 	}
 	frame_num_ ++;
 	TRACE(RGB565, "loop3");
