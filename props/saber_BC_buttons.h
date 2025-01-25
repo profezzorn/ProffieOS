@@ -2531,22 +2531,15 @@ any # of buttons
 #endif
 
 // Force
-      case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON):
-        if (spam_blast_ || on_pending_) return false;
-          if (GetWavPlayerPlaying(&SFX_force)) return false;  // Simple prevention of force overlap
-          SaberBase::DoForce();
-        return true;
-
 // Toggle Battle Mode
 #if (NUM_BUTTONS != 1) || !defined(BC_DUAL_BLADES)  // 1 btn with dual blades has different control
       case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON):
-        if (spam_blast_ || on_pending_) return false;  // prevent overlapping.
+        if (spam_blast_ || on_pending_) return false;
         if (isPointingUp()) {
           ToggleBattleMode();
         } else {
-          if (overlap_timer_initialized_ && !overlap_delay_timer_.isTimerExpired()) return false;  // prevent overlapping.
+          if (GetWavPlayerPlaying(&SFX_force)) return false;  // Simple prevention of force overlap
           SaberBase::DoForce();
-          overlap_timer_initialized_ = true;
         }
         return true;
 #endif
