@@ -248,9 +248,6 @@ Next Preset Fast          - Hold POW and Twist (NOT pointing UP or DOWN).
 Previous Preset Fast      - Hold POW and Twist (while pointing DOWN).
 First Preset Fast         - Hold POW and Twist (while pointing UP).
 
-Battle Mode               - Hold POW + Swing to enter and exit Battle Mode.
-                            * Power OFF is disabled while in Battle Mode. YOU MUST EXIT THE MODE FIRST.
-
 Clash                     - No button, just hit the blade against something.
 Stab                      - Thrust forward with a stabbing motion. Works in Battle Mode.
 Blaster Deflection        - Click or Double click POW.
@@ -263,7 +260,9 @@ Auto Swing Blast          - Swinging within 1 second of doing a button activated
                               To trigger auto blaster blocks, swing saber within 1 second of last block.
                               To exit, stop swinging for 1 second.
                               * Requires #define BC_ENABLE_AUTO_SWING_BLAST.
-Force Effect              - Double Click and Hold POW, release after a second. (Click then Long Click)
+Toggle Battle Mode        - Double Click and Hold POW, release after a second (while pointing UP). (Click then Long Click)
+                            * Power OFF is disabled while in Battle Mode. YOU MUST EXIT THE MODE FIRST.
+Force Effect              - Double Click and Hold POW, release after a second (while NOT pointing UP). (Click then Long Click)
 
 Lockup                    - Hold POW + Clash. Release button to end.
                             * In Battle Mode:
@@ -356,9 +355,9 @@ twist                   - turn blade ON (requires #define BC_TWIST_ON)
                           drag (pointing down)
     then rotate left    - user effect 1 (keep holding POW until executed)
     then rotate right   - user effect 2 (keep holding POW until executed)
-    then swing          - toggle battle mode
 2 clicks                - blaster deflection
-2 clicks long           - force
+2 clicks long           - force (not pointing up)
+                        - toggle battle mode (pointing up)
 2 clicks held           - lightning block (release to end)
 3 clicks                - quote
                           toggle sequential or random quotes (pointing down)
@@ -442,9 +441,6 @@ Next Preset Fast          - Hold POW and Twist (NOT pointing UP or DOWN).
 Previous Preset Fast      - Hold POW and Twist (while pointing DOWN).
 First Preset Fast         - Hold POW and Twist (while pointing UP).
 
-Battle Mode               - Hold POW + Swing to enter and exit Battle Mode.
-                            * Power OFF is disabled while in Battle Mode. YOU MUST EXIT THE MODE WITH THIS COMBO FIRST.
-
 Clash                     - No buttons, just hit the blade against something.
                             In Battle Mode, Hold any button and Clash to
                             temporarily override the auto-lockup and do regular Clash.
@@ -459,7 +455,9 @@ Auto Swing Blast          - Swinging within 1 second of doing a button activated
                               To trigger auto blaster blocks, swing saber within 1 second of last block.
                               To exit, stop swinging for 1 second.
                               * Requires #define BC_ENABLE_AUTO_SWING_BLAST.
-Force Effect              - Double Click and Hold POW, release after a second. (Click then Long Click)
+Toggle Battle Mode        - Double Click and Hold POW, release after a second (while pointing UP). (Click then Long Click)
+                            * Power OFF is disabled while in Battle Mode. YOU MUST EXIT THE MODE FIRST.
+Force Effect              - Double Click and Hold POW, release after a second (while NOT pointing UP). (Click then Long Click)
 
 Lockup                    - Hold any button + Clash. Release button to end.
                             In Battle Mode:
@@ -560,14 +558,14 @@ Hold POW
                           previous preset fast (pointing down)
     then rotate left    - user effect 1 (keep holding POW until executed)
     then rotate right   - user effect 2 (keep holding POW until executed)
-    then swing          - toggle battle mode
 1 click AUX             - blaster deflection
 1 click AUX held
     then clash          - lockup
     then rotate left    - user effect 3 (keep holding AUX until executed)
     then rotate right   - user effect 4 (keep holding AUX until executed)
 2 clicks POW            - blaster deflection
-2 clicks POW long       - force
+2 clicks POW long       - force (not pointing up)
+                        - toggle battle mode (pointing up)
 2 clicks AUX            - blaster deflection
 3 clicks POW            - quote
                           toggle sequential or random quotes (pointing down)
@@ -708,9 +706,9 @@ push                    - force push
 |                                          Pull away or press POW to end Lockup.
 | Drag                                 - Hold POW then Clash (while pointing Main Blade DOWN). Release button to end.
 | Melt                                 - No button, just stab something with Main Blade. Pull away or press POW to end.
-| Lightning Block                      - Double Click POW. Click to end.
-| Battle Mode                          - Hold POW then Swing to enter and exit Battle Mode.
-|                                        Resets to inactive when either blade shuts OFF.
+| Toggle Battle Mode                   - Double Click POW (while pointing UP) to enter and exit Battle Mode.
+|                                        * Resets to inactive when either blade shuts OFF.
+| Lightning Block                      - Double Click POW (while NOT pointing UP). Click to end.
 | Force Effect                         - Double Click and Hold POW, release after a second (Click then Long Click).
 | Color Change Mode                    - 3x Click and Hold POW to enter ColorChange mode.
 |                                         Rotate hilt to cycle through all available colors, or
@@ -792,8 +790,8 @@ push                    - force push
 |     then clash          - lockup
 |     then rotate left    - user effect 1 (keep holding POW until executed)
 |     then rotate right   - user effect 2 (keep holding POW until executed)
-|     then swing          - toggle battle mode
-| 2 clicks                - lightning block (click to end)
+| 2 clicks                - lightning block (not pointing either blade up).click to end.
+|                         - toggle battle mode (pointing either blade up)
 | 2 clicks long           - force
 | 2 clicks held           - turn second blade OFF
 |                           turn second blade OFF bypass postoff (pointing either blade UP)
@@ -905,9 +903,9 @@ push                    - force push
 | Drag                                 - Hold AUX then Clash (while pointing Main Blade DOWN). Release button to end.
 | Melt                                 - No button, just stab something with Main Blade. Pull away or press a button to end.
 | Lightning Block                      - Hold POW, Click and release AUX (keep holding power to block, release POW to end.
-| Battle Mode                          - Hold POW then Swing to enter and exit Battle Mode.
+| Toggle Battle Mode                   - Double Click and Hold POW, release after a second (while pointing UP). (Click then Long Click)
 |                                        Resets to inactive when either blade shuts OFF.
-| Force Effect                         - Double Click and Hold POW, release after a second. (Click then Long Click)
+| Force Effect                         - Double Click and Hold POW, release after a second (while NOT pointing UP). (Click then Long Click)
 | Color Change Mode                    - 3x Click and Hold POW.
 |                                          Rotate hilt to cycle through all available colors.
 |                                          Click POW to save color selection and Exit.
@@ -964,7 +962,7 @@ push                    - force push
 |     then rotate left    - user effect 7 (keep holding AUX until executed)
 |     then rotate right   - user effect 8 (keep holding AUX until executed)
 | 2 clicks POW            - turn main blade ON first muted
-| 2 clicks held           - blade length edit, or
+| 2 clicks POW held       - blade length edit, or
 |                           OS system menu instead (requires #define MENU_SPEC_TEMPLATE)
 | 2 clicks AUX            - turn second blade ON first muted
 | 2 clicks AUX long       - turn both blades ON
@@ -1000,7 +998,6 @@ push                    - force push
 |     then clash          - lockup
 |     then rotate left    - user effect 1 (keep holding POW until executed)
 |     then rotate right   - user effect 2 (keep holding POW until executed)
-|     then swing          - toggle battle mode
 | 1 click AUX             - turn second blade ON (if main blade is ON), otherwise blaster deflection
 | 1 click AUX held        - turn second blade OFF
 |                           turn second blade OFF bypass postoff (pointing either blade UP)
@@ -1009,7 +1006,8 @@ push                    - force push
 |     then rotate left    - user effect 3 (keep holding AUX until executed)
 |     then rotate right   - user effect 4 (keep holding AUX until executed)
 | 2 clicks POW            - blaster deflection
-| 2 clicks POW long       - force
+| 2 clicks POW long       - force (not pointing up)
+|                         - toggle battle mode (pointing up)
 | 2 clicks AUX            - blaster deflection
 | 2 clicks AUX long       - turn all blades OFF (any remaining blade)
 | 3 clicks POW            - quote
@@ -2074,12 +2072,17 @@ any # of buttons
         return true;
 
 // Lightning Block (Double Click POW to start, Click POW to Stop)
+// Toggle Battle Mode
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
-        if (!isSecondBladeOn() && !on_pending_) {
-          TurnBladeOn(BC_SECOND_BLADE_SET);
-          return true;
+        if (isPointingUp()) {
+          ToggleBattleMode();
         } else {
-          DoLightningBlock();
+          if (!isSecondBladeOn() && !on_pending_) {
+            TurnBladeOn(BC_SECOND_BLADE_SET);
+            return true;
+          } else {
+            DoLightningBlock();
+          }
         }
         return true;
 
@@ -2535,9 +2538,18 @@ any # of buttons
         return true;
 
 // Toggle Battle Mode
-      case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
-        ToggleBattleMode();
+#if (NUM_BUTTONS != 1) || !defined(BC_DUAL_BLADES)  // 1 btn with dual blades has different control
+      case EVENTID(BUTTON_POWER, EVENT_SECOND_CLICK_LONG, MODE_ON):
+        if (spam_blast_ || on_pending_) return false;  // prevent overlapping.
+        if (isPointingUp()) {
+          ToggleBattleMode();
+        } else {
+          if (overlap_timer_initialized_ && !overlap_delay_timer_.isTimerExpired()) return false;  // prevent overlapping.
+          SaberBase::DoForce();
+          overlap_timer_initialized_ = true;
+        }
         return true;
+#endif
 
   // Auto Lockup Mode
       case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON):
