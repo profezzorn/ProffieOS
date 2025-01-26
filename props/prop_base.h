@@ -1409,6 +1409,19 @@ public:
       }
       return true;
     }
+    if (!strcmp(cmd, "twist")) {
+        Event(BUTTON_NONE, EVENT_TWIST);
+        return true;
+    }
+    if (!strcmp(cmd, "twistleft") || !strcmp(cmd, "tleft")) {
+        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+        return true;
+    }
+
+    if (!strcmp(cmd, "twistright") || !strcmp(cmd, "tright")) {
+        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+        return true;
+    }
 
 #ifdef ENABLE_AUDIO
 
