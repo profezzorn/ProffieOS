@@ -318,10 +318,9 @@ public:
             }
 	    if (font_config.ProffieOSMaxSwingAcceleration > font_config.ProffieOSMinSwingAcceleration) {
               float s = (rss - font_config.ProffieOSMinSwingAcceleration) / font_config.ProffieOSMaxSwingAcceleration;
-	      effect->SelectFloat(s);
+              effect->SelectFloat(s);
             }
-            current_swing_effect_ = effect;
-            if (current_swing_effect_ == &SFX_slsh) {
+            if (effect == &SFX_slsh) {
               SaberBase::DoEffect(EFFECT_ACCENT_SLASH, 0);
             } else {
               SaberBase::DoEffect(EFFECT_ACCENT_SWING, 0);
@@ -332,14 +331,15 @@ public:
 #ifdef ENABLE_SPINS
             if (angle_ > font_config.ProffieOSSpinDegrees) {
               if (SFX_spin) {
-                swing_player_ = PlayPolyphonic(&SFX_spin);
+                SaberBase::DoEffect(EFFECT_SPIN, 0);
               }
               angle_ -= font_config.ProffieOSSpinDegrees;
             }
 #endif
           }
         }
-      } else if (swing_speed > swingThreshold) {
+      } else {
+        // Monophonic guessed
         if (!swinging_) {
           PlayMonophonic(&SFX_swing, &SFX_hum);
           swinging_ = true;
@@ -347,7 +347,7 @@ public:
 #ifdef ENABLE_SPINS
         if (angle_ > 360 && swinging_) {
           if (SFX_spin) {
-            PlayMonophonic(&SFX_spin, &SFX_hum);
+           SaberBase::DoEffect(EFFECT_SPIN, 0);
           }
           angle_ -= font_config.ProffieOSSpinDegrees;
         }
@@ -559,24 +559,15 @@ public:
 	return;
       case EFFECT_PREON: SB_Preon(location); return;
       case EFFECT_POSTOFF: SB_Postoff(); return;
-      case EFFECT_ACCENT_SWING:
-        if (current_swing_effect_) {
-          swing_player_ = PlayPolyphonic(current_swing_effect_);
-          current_swing_effect_ = nullptr;
-          return;
-        } else {
-          Play(&SFX_swing, &SFX_swng);
-          return;
-        }
-      case EFFECT_ACCENT_SLASH:
-        if (current_swing_effect_) {
-          swing_player_ = PlayPolyphonic(current_swing_effect_);
-          current_swing_effect_ = nullptr;
-          return;
-        } else {
-          PlayPolyphonic(&SFX_slsh);
-          return;
-        }
+      case EFFECT_ACCENT_SWING: Play(&SFX_swing, &SFX_swng); return;
+      case EFFECT_ACCENT_SLASH: PlayPolyphonic(&SFX_slsh);  return;
+      case EFFECT_SPIN:
+        if (guess_monophonic_) {
+            PlayMonophonic(&SFX_spin, &SFX_spin);
+          } else {
+            swing_player_ = PlayPolyphonic(&SFX_spin);
+          }
+        return;
       case EFFECT_STAB:
 	if (SFX_stab) { PlayCommon(&SFX_stab); return; }
 	// If no stab sounds are found, fall through to clash
