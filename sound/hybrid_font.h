@@ -826,7 +826,7 @@ public:
     }
 
   void StopIdleSound() {
-  #ifdef ENABLE_IDLE_SOUND
+#ifdef ENABLE_IDLE_SOUND
     idling_ = false;
     if (hum_player_ && hum_player_->isPlaying()) {
       hum_player_->set_fade_time(0.5);
@@ -834,10 +834,11 @@ public:
       hum_player_.Free();
       STDOUT.println("End idle wav Player");
     }
-  #endif
+#endif
   }
 
   void StartIdleSound() {
+#ifdef ENABLE_IDLE_SOUND
     if (SFX_idle && (!hum_player_ || !hum_player_->isPlaying())) {
       hum_player_ = GetFreeWavPlayer();
       if (hum_player_) {
@@ -850,6 +851,7 @@ public:
         STDOUT.println("Out of WAV players!");
       }
     }
+#endif
   }
 
 bool swinging_ = false;
