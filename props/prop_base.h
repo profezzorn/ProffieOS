@@ -1379,26 +1379,18 @@ public:
     if (!strcmp(cmd, "swing")) {
       SaberBase::DoEffect(EFFECT_ACCENT_SWING, 0);
       Event(BUTTON_NONE, EVENT_SWING);
-      // Since idle sound re-uses hum_player,this will prevent
-      // a swing command from triggering monophonic hum while SaberBase is OFF.
-      if (!SaberBase::IsOn() && !GetWavPlayerPlaying(&SFX_idle)) {
-        hybrid_font.StopIdleSound();
-      }
+      hybrid_font.CheckStopIdle();
       return true;
     }
     if (!strcmp(cmd, "slash")) {
       SaberBase::DoEffect(EFFECT_ACCENT_SLASH, 0);
-      if (!SaberBase::IsOn() && !GetWavPlayerPlaying(&SFX_idle)) {
-        hybrid_font.StopIdleSound();
-      }
+      hybrid_font.CheckStopIdle();
       return true;
     }
 #ifdef ENABLE_SPINS
     if (!strcmp(cmd, "spin")) {
       SaberBase::DoEffect(EFFECT_SPIN, 0);
-      if (!SaberBase::IsOn() && !GetWavPlayerPlaying(&SFX_idle)) {
-        hybrid_font.StopIdleSound();
-      } 
+      hybrid_font.CheckStopIdle();
      return true;
     }
 #endif
