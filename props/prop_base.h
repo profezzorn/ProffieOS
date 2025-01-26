@@ -1378,6 +1378,7 @@ public:
     }
     if (!strcmp(cmd, "swing")) {
       SaberBase::DoEffect(EFFECT_ACCENT_SWING, 0);
+      Event(BUTTON_NONE, EVENT_SWING);
       // Since idle sound re-uses hum_player,this will prevent
       // a swing command from triggering monophonic hum while SaberBase is OFF.
       if (!SaberBase::IsOn() && !GetWavPlayerPlaying(&SFX_idle)) {
