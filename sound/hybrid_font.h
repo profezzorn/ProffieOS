@@ -815,7 +815,16 @@ public:
     }
 #endif
   }
-  
+      void CheckStopIdle() {
+#if defined(ENABLE_IDLE_SOUND) && !defined(DISABLE_DIAGNOSTIC_COMMANDS)
+       // Since idle sound re-uses hum_player,this will prevent
+      // a swing command from triggering monophonic hum while SaberBase is OFF.
+     if (!SaberBase::IsOn() && !GetWavPlayerPlaying(&SFX_idle)) {
+        StopIdleSound();
+      } 
+#endif
+    }
+
   void StopIdleSound() {
   #ifdef ENABLE_IDLE_SOUND
     idling_ = false;
