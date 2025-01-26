@@ -781,7 +781,6 @@ private:
   uint32_t auto_time_;
   RefPtr<BufferedWavPlayer> auto_player_;
   RefPtr<BufferedWavPlayer> wav_player;
-
 };
 
 
