@@ -1178,6 +1178,7 @@ struct BCScrollPresetsMode : public SPEC::SteppedMode {
     SPEC::SteppedMode::exit();
   }
 
+  // Custom button controls for Scroll Presets mode.
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, 0)) {
 
