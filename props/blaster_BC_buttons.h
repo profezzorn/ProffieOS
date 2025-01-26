@@ -337,15 +337,15 @@ struct BCBlasterMenuSpec {
   typedef SoundLibraryV2 SoundLibrary;
 };
 
-  void Setup() {
-    MKSPEC<BCBlasterMenuSpec>::SoundLibrary::init();
-  }
-
 
 class BlasterBCButtons : public Blaster {
 public:
   BlasterBCButtons() : Blaster() {}
   const char* name() override { return "BlasterBCButtons"; }
+
+  void Setup() override {
+    MKSPEC<BCBlasterMenuSpec>::SoundLibrary::init();
+  }
 
   void EnterVolumeMenu() {
     pushMode<MKSPEC<BCBlasterMenuSpec>::BCBlasterVolumeMenu>();
