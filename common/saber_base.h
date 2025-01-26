@@ -41,7 +41,8 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(VOLUME_LEVEL)                 \
     DEFINE_EFFECT(ACCENT_SWING)                 \
     DEFINE_EFFECT(ACCENT_SLASH)                 \
-    /* Allows style to turn blade ON for interactive effects if prop/style support, FAST_ON skips PREON. */          \
+    DEFINE_EFFECT(SPIN)                         \
+  /* Allows style to turn blade ON for interactive effects if prop/style support, FAST_ON skips PREON. */          \
     DEFINE_EFFECT(ON)                           \
     DEFINE_EFFECT(FAST_ON)                      \
     DEFINE_EFFECT(QUOTE)			\
