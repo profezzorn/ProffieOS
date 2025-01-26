@@ -6,6 +6,7 @@
 Built on SA22C programming by Matthew McGeary.
 Modified by Chris Carter with substantial support and 
 contributions from Fredrik Hubinette and Brian Conner.
+Version 121.
 
 This prop file references certain custom sound files 
 to aid in saber function navigation. These sound files 
@@ -140,15 +141,15 @@ FUNCTIONS WITH BLADE OFF
   Previous preset           Hold AUX and short click MAIN.
                               (Duplicate legacy command).
   Skip to first preset      Press and hold any button until it switches, hilt upwards.
-  Skip to middle preset     Press and hold any button  until it switches, hilt horizontal.
-  Skip to last preset       Press and hold any button  until it switches, hilt downwards.
+  Skip to middle preset     Press and hold any button until it switches, hilt horizontal.
+  Skip to last preset       Press and hold any button until it switches, hilt downwards.
   Skip forward 5 presets    Fast double-click AUX, hilt pointing upwards.
   Skip back 5 presets       Fast double-click AUX, hilt pointing downwards.
   Skip forward 10 presets   Fast triple-click AUX, hilt pointing upwards.
   Skip back 10 presets      Fast triple-click AUX, hilt pointing downwards.
   Play Character Quote      Fast double-click MAIN, hilt pointing up, plays sequentially. **
   Play Music Track          Fast double-click MAIN, pointing down. **
-  Speak battery voltage     Fast double-click-and-hold MAIN, or hold AUX for one second.
+  Speak battery voltage     Fast double-click-and-hold MAIN.
   Run BladeID/Array Select  Fast triple-click. (Applicable installs only).
   Restore Factory Defaults  Fast four-clicks MAIN, hold on last click. ***
                               Release once announcement starts.
@@ -298,22 +299,6 @@ GESTURE CONTROLS
 #define BUTTON_HELD_LONG_TIMEOUT 2000
 #endif
  
-#ifdef SABERSENSE_SWING_ON
-#define SABERSENSE_SWING_GESTURE
-#endif
- 
-#ifdef SABERSENSE_STAB_ON
-#define SABERSENSE_STAB_GESTURE
-#endif
- 
-#ifdef SABERSENSE_TWIST_ON
-#define SABERSENSE_TWIST_GESTURE
-#endif
- 
-#ifdef SABERSENSE_THRUST_ON
-#define SABERSENSE_THRUST_GESTURE
-#endif
- 
 EFFECT(dim);      // for EFFECT_POWERSAVE
 EFFECT(battery);  // for EFFECT_BATTERY_LEVEL
 EFFECT(vmbegin);  // for Begin Volume Menu
@@ -328,10 +313,9 @@ EFFECT(blstend);  // for End Multi-Blast
 EFFECT(array);    // for playing array idents
 EFFECT(bladeid);  // for playing bladeid idents
 EFFECT(reset);    // for playing factory default reset completed
-#ifdef SABERSENSE_OS7_LEGACY_SUPPORT
-EFFECT(quote);    // for playing quotes. Required for ProffieOS 7.x.
+#ifndef HAVE_EFFECT_QUOTE
+EFFECT(quote);    // for playing quotes with earlier OS sound/effect.h file.
 #endif
-
 
   //  The Saber class implements the basic states and actions
   //  for the saber.
@@ -340,8 +324,6 @@ public:
   SabersenseButtons() : PropBase() {}
   const char* name() override { return "SabersenseButtons"; }
 
-
-  // MAIN LOOP
   void Loop() override {
     PropBase::Loop();
     DetectTwist();
@@ -391,24 +373,24 @@ public:
             Event(BUTTON_NONE, EVENT_SWING);
             }
         }
-      //  EVENT_THRUST
+        //  EVENT_THRUST
         if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
           mss.x > 14  &&
           fusor.swing_speed() < 150) {
           if (millis() - thrust_begin_millis_ > 15) {
             Event(BUTTON_NONE, EVENT_THRUST);
             thrust_begin_millis_ = millis();
-          }
+            }
           } else {
-          thrust_begin_millis_ = millis();
+            thrust_begin_millis_ = millis();
+          }
         }
-      }
-      //  Enables sequential sounds and processes on array handling.
+    //  Enables sequential sounds and processes on array handling.
 #ifdef SABERSENSE_BLADE_ID
-        if (do_font_after_sound_ && !IsBladeidSoundPlaying()) {
-        SaberBase::DoNewFont();
-        do_font_after_sound_ = !do_font_after_sound_;
-        }
+    if (do_font_after_sound_ && !IsBladeidSoundPlaying()) {
+      SaberBase::DoNewFont();
+      do_font_after_sound_ = !do_font_after_sound_;
+    }
 #endif
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
@@ -418,7 +400,6 @@ public:
         }
 #endif
     }
-
 
   //  VOLUME MENU
   void VolumeUp() {
@@ -435,7 +416,7 @@ public:
       STDOUT.println(dynamic_mixer.get_volume());
     } else {
       // Cycle through ends of Volume Menu option
-      #ifdef VOLUME_MENU_CYCLE
+#ifdef VOLUME_MENU_CYCLE
         if (!max_vol_reached_) {
           if (SFX_volmax) {
             hybrid_font.PlayCommon(&SFX_volmax);
@@ -455,14 +436,14 @@ public:
           STDOUT.print("Minimum Volume: ");
           max_vol_reached_ = false;
         }
-      #else
+#else
         if (SFX_volmax) {
           hybrid_font.PlayCommon(&SFX_volmax);
         } else {
           beeper.Beep(0.5, 3000);
         }
         STDOUT.print("Maximum Volume: ");
-      #endif
+#endif
     }
   }
 
@@ -479,7 +460,7 @@ public:
       STDOUT.print("Volume Down - Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
     } else {
-      #ifdef VOLUME_MENU_CYCLE
+#ifdef VOLUME_MENU_CYCLE
         if (!min_vol_reached_) {
           if (SFX_volmin) {
             hybrid_font.PlayCommon(&SFX_volmin);
@@ -498,25 +479,23 @@ public:
           STDOUT.print("Maximum Volume: ");
           min_vol_reached_ = false;
         }
-      #else
+#else
         if (SFX_volmin) {
           hybrid_font.PlayCommon(&SFX_volmin);
         } else {
           beeper.Beep(0.5, 1000);
         }
         STDOUT.print("Minimum Volume: ");
-      #endif
- 
+#endif 
     }
   }
-
 
   //  BLADE ID OPTIONS AND ARRAY MANAGEMENT
   //  True BladeID, runs scan on-demand with unique 'bladeid' ident sound.
 #ifdef SABERSENSE_BLADE_ID
-  #ifndef ENABLE_POWER_FOR_ID    
-    #error "SABERSENSE_BLADE_ID requires ENABLE_POWER_FOR_ID to be defined."
-  #endif
+#ifndef ENABLE_POWER_FOR_ID    
+#error "SABERSENSE_BLADE_ID requires ENABLE_POWER_FOR_ID to be defined."
+#endif
 
     bool IsBladeidSoundPlaying() {
       return !!GetWavPlayerPlaying(&SFX_bladeid);
@@ -543,12 +522,11 @@ public:
 #endif
 #endif
 
-
     //  Manual Array Selector, switches on-demand to next array, plays 'array' ident sound. 
 #ifdef SABERSENSE_ARRAY_SELECTOR
-  #ifdef SABERSENSE_BLADE_ID    //  Only one Sabersense BladeID standard permitted.
-    #error "SABERSENSE_ARRAY_SELECTOR and SABERSENSE_BLADE_ID cannot be defined at the same time."
-  #endif
+#ifdef SABERSENSE_BLADE_ID    //  Only one Sabersense BladeID standard permitted.
+#error "SABERSENSE_ARRAY_SELECTOR and SABERSENSE_BLADE_ID cannot be defined at the same time."
+#endif
     bool IsArraySoundPlaying() {
      return !!GetWavPlayerPlaying(&SFX_array);
     } 
@@ -626,15 +604,16 @@ public:
   }
 #endif 
 
- 
   //  RESET FACTORY DEFAULTS (Delete Save Files).
-  //  Script to determine if sound effect has finished.
+  //  Script to determine if sound effects have finished.
 #ifdef SABERSENSE_ENABLE_RESET
     bool IsResetSoundPlaying() {
      return !!GetWavPlayerPlaying(&SFX_reset);
     }
+    bool IsBootSoundPlaying() {
+     return !!GetWavPlayerPlaying(&SFX_boot);
+    }
 #endif
-
 
     //  CLICK PLAYER FOR BUTTON PRESSES (optional).
     void PlaySound(const char* sound) {
@@ -650,19 +629,19 @@ public:
         case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_ON):
         case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_OFF):
           SaberBase::RequestMotion();
-    #ifdef SABERSENSE_BUTTON_CLICKER 
+#ifdef SABERSENSE_BUTTON_CLICKER 
           //  Intended for Scavenger hilt where wheel makes tactile feel difficult.
           PlaySound("press.wav");  //  Requires press.wav file to work.
-    #endif
+#endif
             return false;
         case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
         case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
         case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
         case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
-    #ifdef SABERSENSE_BUTTON_CLICKER
+#ifdef SABERSENSE_BUTTON_CLICKER
           //  Intended for Scavenger hilt where wheel makes tactile feel difficult.
           PlaySound("release.wav");  //  Requires release.wav file to work.
-    #endif
+#endif
           if (SaberBase::Lockup()) {
             SaberBase::DoEndLockup();
             SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
@@ -679,7 +658,6 @@ public:
             pointing_down_ = false;
           }
           return true;
-
 
   //  GESTURE CONTROLS
 #ifdef SABERSENSE_SWING_ON
@@ -729,7 +707,6 @@ public:
       return true;
 #endif
 
-
     //  MAIN ACTIVATION
     //  Saber ON AND Volume Adjust, 1 and 2 Button.
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
@@ -745,7 +722,6 @@ public:
           }
         }
         return true;
-
 
     //  1 Button Activate Muted and next/previous preset.
 #if NUM_BUTTONS == 1
@@ -772,7 +748,6 @@ public:
 return true;
 #endif
 
-
     //  2 Button Activate Muted 
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
@@ -782,7 +757,6 @@ return true;
       }
       return true;
 #endif
- 
  
     //  Turn Blade OFF
     case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
@@ -801,7 +775,6 @@ return true;
     swing_blast_ = false;
     return true;
 
-        
     //  PRESET NAVIGATION 
     //  Next/previous preset and volume down. Next preset (UP), previous preset (DOWN).
 #if NUM_BUTTONS == 2
@@ -833,18 +806,18 @@ return true;
     case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
       //  Backwards if pointing down
       SetPreset(current_preset_.preset_num + (fusor.angle1() < -M_PI / 4 ? -5 : 5), true);
-  #ifdef SAVE_PRESET
+#ifdef SAVE_PRESET
       SaveState(current_preset_.preset_num);
-  #endif
+#endif
 return true;
  
     //  Skips forward ten presets pointing up, back ten pointing down.
     case EVENTID(BUTTON_AUX, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       //  Backwards if pointing down
       SetPreset(current_preset_.preset_num + (fusor.angle1() < -M_PI / 4 ? -10 : 10), true);
-  #ifdef SAVE_PRESET
+#ifdef SAVE_PRESET
       SaveState(current_preset_.preset_num);
-  #endif
+#endif
 return true;
 #endif
 
@@ -872,7 +845,6 @@ return true;
 #endif
 return true;
 
-
     //  BLADE ID OPTIONS AND ARRAY NAVIGATION
     //  True Blade ID on-demand with BladeID audio idents.
 #ifdef SABERSENSE_BLADE_ID
@@ -880,7 +852,6 @@ return true;
       TriggerBladeID();
       return true;
 #endif
-
 
     //  Manual Array Selector with Array audio idents.
     //  Cycles through blade arrays regardless of BladeID status.
@@ -890,7 +861,6 @@ return true;
       NextBladeArray(); 
     return true;
 #endif
-
 
     //  SOUND EFFECT PLAYERS.
     //  With Blade ON - UP for Character Quote, plays sequentially.
@@ -925,7 +895,6 @@ return true;
       return true;
 #endif
 
-
     //  With Blade OFF - UP for Character Quote, plays sequentially.
     //  With Blade OFF - DOWN for Music Track.
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):  
@@ -958,7 +927,6 @@ return true;
       return true;
 #endif
 
-
     //  COLOUR CHANGE.
 #ifdef DISABLE_COLOR_CHANGE
   #error "DISABLE_COLOR_CHANGE is not supported. Use SABERSENSE_NO_COLOR_CHANGE instead."
@@ -976,7 +944,6 @@ return true;
     return true;
 #endif
 #endif
-
 
     //  BLASTER DEFLECTION
     //  1 Button
@@ -1013,7 +980,7 @@ return true;
         swing_blast_ = false;
         SaberBase::DoBlast();
       }
-    return true;
+      return true;
 #else
       //  For harmonized 'Exit Colour Menu' control in OS-7.x. Ignored in OS-8.
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
@@ -1022,7 +989,6 @@ return true;
     return true;
 #endif 
 #endif
-
 
     //  Multi-Blaster Deflection mode
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
@@ -1048,19 +1014,17 @@ return true;
       }
       return true;
 
-
     //  LOCKUP
 #if NUM_BUTTONS == 1
     //  1 button lockup
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_POWER):
-#else
-#ifndef SABERSENSE_NO_LOCKUP_HOLD
+#elif defined(SABERSENSE_NO_LOCKUP_HOLD)
     //  2 button lockup
-    case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD, MODE_ON):
-#else
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
+#else
+    case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD, MODE_ON):
 #endif
-#endif
+
       if (accel_.x < -0.15) {
         SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
       } else {
@@ -1069,7 +1033,6 @@ return true;
         swing_blast_ = false;
         SaberBase::DoBeginLockup();
         return true;
-      break;
 
     //  Lightning Block, 1 and 2 button.
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD, MODE_ON):
@@ -1077,7 +1040,6 @@ return true;
       swing_blast_ = false;
       SaberBase::DoBeginLockup();
       return true;
-    break;
 
     //  Melt
     case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_ON | BUTTON_POWER):
@@ -1085,12 +1047,10 @@ return true;
       swing_blast_ = false;
       SaberBase::DoBeginLockup();
       return true;
-    break;
 
     case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_OFF):
       SaberBase::RequestMotion();
     return true;
-
 
     //  ENTER VOLUME MENU
 #if NUM_BUTTONS == 1
@@ -1119,67 +1079,70 @@ return true;
       }
       return true;
 
-
-    //  RESTORE FACTORY DEFAULTS 
-    //  Deletes all save files in root and first level directories.      
+//  RESTORE FACTORY DEFAULTS 
+//  Deletes all save files in root and first-level directories.
 #ifdef SABERSENSE_ENABLE_RESET
     case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD, MODE_OFF): {
-      // Lock SD card to prevent other operations during deletion.
+      // Lock SD card to prevent other operations during deletion.        
       LOCK_SD(true);
         const char* filesToDelete[] = {   
-          "curstate.ini",
-          "curstate.tmp",
-          "preset.ini",
-          "preset.tmp",
-          "global.ini",
-          "global.tmp"
+        "curstate.ini",
+        "curstate.tmp",
+        "preset.ini",
+        "preset.tmp",
+        "global.ini",
+        "global.tmp",
+        "tester.rtf",
+        "andme.rtf",
+        "world.rtf"
         };
-        // Delete files from the root directory.
-        for (const char* targetFile : filesToDelete) {
-          if (LSFS::Exists(targetFile)) {
+      // Delete files from the root directory.
+          for (const char* targetFile : filesToDelete) {
+            if (LSFS::Exists(targetFile)) {
             LSFS::Remove(targetFile);
-              Serial.print("Deleted from root: ");
+            Serial.print("Deleted from root: ");
+            Serial.println(targetFile);
+            }
+          }
+        // Iterate over the save directories listed in blades[].
+        for (const BladeConfig& blade : blades) {
+          const char* saveDirName = blade.save_dir; // Replace with the correct field.
+
+        if (saveDirName && strlen(saveDirName) > 0) {
+          // Construct the path to the save directory.
+          PathHelper saveDirPath("/");
+          saveDirPath.Append(saveDirName);
+
+        // Iterate over the files to delete in this save directory.
+        for (const char* targetFile : filesToDelete) {
+          PathHelper filePath(saveDirPath);
+          filePath.Append(targetFile);
+
+            // If the file exists in this directory, delete it.
+            if (LSFS::Exists(filePath)) {
+              LSFS::Remove(filePath);
+              Serial.print("Deleted from ");
+              Serial.print(saveDirPath);
+              Serial.print(": ");
               Serial.println(targetFile);
               }
-           }
-        // Find all immediate subdirectories of the root and delete files.
-        LSFS::Iterator dirIterator("/");  // Iterator for the root directory.
-          while (dirIterator) {
-            const char* subdirName = dirIterator.name();
-            if (dirIterator.isdir()) {
-              // Construct the full path to the subdirectory.
-              PathHelper subdirPath("/");
-              subdirPath.Append(subdirName);
-                // Iterate over the files to delete in this subdirectory.
-                for (const char* targetFile : filesToDelete) {
-                  PathHelper filePath(subdirPath);
-                  filePath.Append(targetFile);
-                    // If the file exists in this subdirectory, delete it.
-                    if (LSFS::Exists(filePath)) {
-                      LSFS::Remove(filePath);
-                      Serial.print("Deleted from ");
-                      Serial.print(subdirPath);
-                      Serial.print(": ");
-                      Serial.println(targetFile);
-                    }
-                  }
-                }
-              ++dirIterator;  // Move to the next entry in the root directory.
             }
+          }
+        }
       // Unlock SD card after deletion is complete.
       LOCK_SD(false);
-
-      if (SFX_reset) {  //  Optional confirmation sound file 'reset'.
-        hybrid_font.PlayCommon(&SFX_reset);
-          while(IsResetSoundPlaying());  //  Lock system while sound finishes...
-        STM32.reset(); //  ...then reboot saber.
-      } else {
-        STM32.reset(); // Immediate reboot if 'reset' sound file is missing.
-      }
-    break;
+    
+    if (SFX_reset) {  // Optional confirmation sound file 'reset'.
+      hybrid_font.PlayCommon(&SFX_reset);
+      while(IsResetSoundPlaying());  // Lock system while sound finishes.
+    } else {
+      beeper.Beep(0.5, 2000); // Generate beep to prompt user to release button.
+      delay(1200); // Give time for slow users to release button, avoids boot conflicts.
+    }
+    STM32.reset(); // Reboot saber.
   }
+  break;
 #endif
-
 
     //  BATTERY LEVEL
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
@@ -1191,7 +1154,6 @@ return true;
       SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
     return true;
 
-
 #ifdef BLADE_DETECT_PIN
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
@@ -1199,7 +1161,7 @@ return true;
       blade_detected_ = true;
       FindBladeAgain();
       SaberBase::DoBladeDetect(true);
-    return true;
+      return true;
  
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
@@ -1207,30 +1169,32 @@ return true;
       blade_detected_ = false;
       FindBladeAgain();
       SaberBase::DoBladeDetect(false);
-    return true;
+      return true;
 #endif
- 
- 
-    // Events that needs to be handled regardless of what other buttons are pressed.
+
+  // Events that needs to be handled regardless of what other buttons
+  // are pressed.
     case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
       if (SaberBase::Lockup()) {
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         return true;
-        }
       }
-      return false;
     }
- 
+    return false;
+  }
+
 #ifdef SABERSENSE_OS7_LEGACY_SUPPORT
-  void SB_Effect(EffectType effect, float location) override {  //  Required for ProffieOS 7.x.
-    switch (effect) {
-      case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return; 
+  void SB_Effect(EffectType effect, float location) override  //  Required for ProffieOS 7.x.
 #else
-  void SB_Effect(EffectType effect, EffectLocation location) override {  //  For ProffieOS 8.x.
-    switch (effect) {
+  void SB_Effect(EffectType effect, EffectLocation location) override  //  For ProffieOS 8.x.
+#endif  
+  {
+  switch (effect) {
+#ifdef SABERSENSE_OS7_LEGACY_SUPPORT
+    case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return; 
 #endif
-      case EFFECT_POWERSAVE:
+      case EFFECT_POWERSAVE:  
         if (SFX_dim) {
           hybrid_font.PlayCommon(&SFX_dim);
         } else {
@@ -1253,7 +1217,6 @@ return true;
       default: break; // avoids compiler warning
       }
     }
-
 
   private:
     bool do_font_after_sound_ = false;
