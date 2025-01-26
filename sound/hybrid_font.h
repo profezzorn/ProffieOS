@@ -561,7 +561,9 @@ public:
       case EFFECT_POSTOFF: SB_Postoff(); return;
       case EFFECT_ACCENT_SWING: Play(&SFX_swing, &SFX_swng); return;
       case EFFECT_ACCENT_SLASH: PlayPolyphonic(&SFX_slsh);  return;
+#ifdef ENABLE_SPINS
       case EFFECT_SPIN: Play(&SFX_spin, &SFX_spin); return;
+#endif
       case EFFECT_STAB:
 	if (SFX_stab) { PlayCommon(&SFX_stab); return; }
 	// If no stab sounds are found, fall through to clash
