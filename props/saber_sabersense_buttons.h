@@ -1090,10 +1090,7 @@ return true;
         "preset.ini",
         "preset.tmp",
         "global.ini",
-        "global.tmp",
-        "tester.rtf",
-        "andme.rtf",
-        "world.rtf"
+        "global.tmp"
         };
       // Delete files from the root directory.
           for (const char* targetFile : filesToDelete) {
