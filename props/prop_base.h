@@ -357,6 +357,9 @@ public:
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
+#ifdef BLADE_ID_SCAN_TIMEOUT
+    blade_id_scan_start_ = millis();
+#endif
     bool on = IsOn();
     BladeSet ret = SaberBase::OnBlades();
     if (on) {
@@ -581,22 +584,39 @@ public:
 #ifndef SHARED_POWER_PINS
 #warning SHARED_POWER_PINS is recommended when using BLADE_ID_SCAN_MILLIS
 #endif
-  bool find_blade_again_pending_ = false;
-  uint32_t last_scan_id_ = 0;
-  bool ScanBladeIdNow() {
-    uint32_t now = millis();
-    if (now - last_scan_id_ > BLADE_ID_SCAN_MILLIS) {
-      last_scan_id_ = now;
-      size_t best_config = FindBestConfig(PROFFIEOS_LOG_LEVEL >= 500);
-      if (current_config != blades + best_config) {
-        // We can't call FindBladeAgain right away because
-        // we're called from the blade. Wait until next loop() call.
-        find_blade_again_pending_ = true;
-      }
-      return true;
+    
+    bool find_blade_again_pending_ = false;
+    uint32_t last_scan_id_ = 0;
+    bool ScanBladeIdNow() {
+        uint32_t now = millis();
+        
+        bool scan = (now - last_scan_id_) > BLADE_ID_SCAN_MILLIS;
+        
+#ifdef BLADE_ID_STOP_SCAN_WHILE_IGNITED
+        if (IsOn()) {
+            scan = false;
+        }
+#endif
+        
+#ifdef BLADE_ID_SCAN_TIMEOUT
+        if ((now - blade_id_scan_start_) < BLADE_ID_SCAN_TIMEOUT) {
+            scan = false;
+        }
+#endif
+        
+        if (scan) {
+            last_scan_id_ = now;
+            size_t best_config = FindBestConfig(PROFFIEOS_LOG_LEVEL >= 500);
+            if (current_config != blades + best_config) {
+                // We can't call FindBladeAgain right away because
+                // we're called from the blade. Wait until next loop() call.
+                find_blade_again_pending_ = true;
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
-    return false;
-  }
 
   // Must be called from loop()
   void PollScanId() {
@@ -942,7 +962,7 @@ public:
     if (fabsf(gyro.x) > 200.0 &&
         fabsf(gyro.x) > 3.0f * abs(gyro.y) &&
         fabsf(gyro.x) > 3.0f * abs(gyro.z)) {
-      process = DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
+      process = DoGesture(gyro.x > 0 ? TWIST_RIGHT : TWIST_LEFT);
     } else {
       process = DoGesture(TWIST_CLOSE);
     }
@@ -1120,6 +1140,13 @@ public:
 
     current_mode->mode_Loop();
 
+#ifdef BLADE_ID_SCAN_TIMEOUT
+    if (SaberBase::IsOn() ||
+        (current_style() && current_style()->Charging())) {
+      blade_id_scan_start_ = millis();
+      }
+#endif
+      
 #ifdef IDLE_OFF_TIME
     if (SaberBase::IsOn() ||
         (current_style() && current_style()->Charging())) {
@@ -1139,6 +1166,10 @@ public:
 
 #ifdef IDLE_OFF_TIME
   uint32_t last_on_time_;
+#endif
+    
+#ifdef BLADE_ID_SCAN_TIMEOUT
+  uint32_t blade_id_scan_start_;
 #endif
 
 #ifdef SOUND_LIBRARY_REQUIRED
@@ -1207,6 +1238,8 @@ public:
       case EVENT_SWING: STDOUT.print("Swing"); break;
       case EVENT_SHAKE: STDOUT.print("Shake"); break;
       case EVENT_TWIST: STDOUT.print("Twist"); break;
+      case EVENT_TWIST_LEFT: STDOUT.print("TwistLeft"); break;
+      case EVENT_TWIST_RIGHT: STDOUT.print("TwistRight"); break;
       case EVENT_CLASH: STDOUT.print("Clash"); break;
       case EVENT_THRUST: STDOUT.print("Thrust"); break;
       case EVENT_PUSH: STDOUT.print("Push"); break;
@@ -1578,7 +1611,9 @@ public:
 #ifdef MOUNT_SD_SETTING
     if (!strcmp(cmd, "sd")) {
       if (arg) LSFS::SetAllowMount(atoi(arg) > 0);
-      STDOUT.println(LSFS::GetAllowMount());
+      STDOUT << "SD Access " 
+             << (LSFS::GetAllowMount() ? "ON" : "OFF") 
+             << "\n";
       return true;
     }
 #endif

@@ -462,6 +462,8 @@ struct PqoiOutputChunk {
   size_t size() { return end() - begin(); }
   bool full() { return size() >= CHUNK_SIZE; }
   bool full(int left, int pixels) { return ((int)size()) >= pixels + left; }
+  bool empty() { return size() == 0; }
+  bool empty(int left, int pixels) { return size() == left; }
   uint16_t* data_end() { return end_; }
 
   template<class PQOI_DECODER>

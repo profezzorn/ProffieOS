@@ -288,6 +288,10 @@ public:
     return state_machine_.done();
   }
 
+  void SkipFrame() {
+    SEEK(next_header_);
+  }
+
   bool Fill(OutputBuffer<WIDTH>* output_buffer) {
     SCOPED_PROFILER();
     TRACE2(RGB565_DATA, "Fill pos=", TELL());
@@ -309,12 +313,20 @@ public:
     return output_buffer->chunk.full(left_margin_, width_);
 #else
     while (!output_buffer->chunk.full(left_margin_, width_)) {
-      if (!input_buffer_.size()) scheduleFillBuffer();
-      if (!input_buffer_.size()) return false;
+      if (!input_buffer_.size()) {
+	TRACE2(RGB565_DATA, "Buffer to fill: ", (uint32_t)this);
+	TRACE2(RGB565_DATA, "Fill buffer=", input_buffer_.size());
+	scheduleFillBuffer();
+	TRACE2(RGB565_DATA, "Filled buffer=", input_buffer_.size());
+      }
+      if (!input_buffer_.size()) {
+	TRACE2(RGB565_DATA, "no input, left to fill=", output_buffer->chunk.size() - width_ - left_margin_);
+	return false;
+      }
       output_buffer->fill(&pqoi, &input_buffer_, left_margin_, width_);
     }
     return true;
-#endif    
+#endif
   }
 
 
@@ -324,8 +336,13 @@ public:
     TRACE2(RGB565_DATA, "Apply", TELL());
     if (!play_) return true;
     if (!transparent_) {
-      if (!out) output_buffer->chunk.init();
-      return Fill(output_buffer);
+      STDERR << "Unexpected Apply on non-transparent layer.\n";
+//      if (!out) {
+//	output_buffer->chunk.init();
+//	out = output_buffer->chunk.begin() + left_margin_;
+//      }
+//      return Fill(output_buffer);
+      return false;
     }
     if (!frame_selected_) return true;
     if (output_buffer->rownum < top_margin_ || output_buffer->rownum >= height_ + top_margin_) {
@@ -393,6 +410,7 @@ public:
   }
 
   bool is_playing() const { return play_ || delayed_open_; }
+  virtual bool IsActive() override { return is_playing(); }
 
   uint32_t play_time() const {
     return millis() - start_time_millis_;
@@ -514,6 +532,7 @@ public:
 	
 	// After this, it will be ok to make modifications to the current output buffer.
 	while (!(next_output_buffer_ = getOutputBuffer())) YIELD();
+	PROFFIEOS_ASSERT(current_output_buffer_->chunk.full());
 	next_output_buffer_->chunk.init_next_chunk(&current_output_buffer_->chunk, 0, 0);
 	fixByteOrder();
 	current_output_buffer_->done.set(true);
@@ -534,8 +553,18 @@ public:
 	MountSDCard();
 	frame_start_ = Cyclint<uint32_t>(micros());
 
+	base_layer_ = 0;
+	
 	for (layer = 0; layer < (int)LAYERS; layer++) {
 	  while (!layers[layer].SelectFrame(frame_start_)) YIELD();
+
+	  // We skip all layers which are below a non-transparent layer.
+	  if (layers[layer].is_playing() && !layers[layer].transparent_) {
+	    while (base_layer_ < layer) {
+	      if (layers[base_layer_].is_playing()) layers[base_layer_].SkipFrame();
+	      base_layer_++;
+	    }
+	  }
 	}
 
 	if (!layers[0].is_playing()) break;
@@ -549,7 +578,7 @@ public:
 
 	TRACE(RGB565, "loop2");
 
-	current_output_buffer_->chunk.init(layers[0].left_margin_);
+	current_output_buffer_->chunk.init(layers[base_layer_].left_margin_);
 
 	for (rownum_ = 0; rownum_ < HEIGHT; rownum_++) {
 	  if (micros() - slice_start > slice_micros) YIELD();
@@ -558,19 +587,20 @@ public:
 	  current_output_buffer_->rownum = rownum_;
 
 	  // Base layer
-	  while (!layers[0].Fill(current_output_buffer_)) YIELD();
+	  while (!layers[base_layer_].Fill(current_output_buffer_)) YIELD();
 
 	  // After this, it will be ok to make modifications to the current output buffer.
 	  while (!(next_output_buffer_ = getOutputBuffer())) YIELD();
+	  PROFFIEOS_ASSERT(current_output_buffer_->chunk.full());
 	  next_output_buffer_->chunk.init_next_chunk(&current_output_buffer_->chunk,
-						     layers[0].left_margin_,
-						     layers[0].width_);
+						     layers[base_layer_].left_margin_,
+						     layers[base_layer_].width_);
 	  
-	  current_output_buffer_->chunk.zero_margins(layers[0].left_margin_,
-						     layers[0].width_);
+	  current_output_buffer_->chunk.zero_margins(layers[base_layer_].left_margin_,
+						     layers[base_layer_].width_);
 
 	  // Transparent layer(s)
-	  for (layer = 1; layer <= top_layer_; layer++) {
+	  for (layer = base_layer_ + 1; layer <= top_layer_; layer++) {
 	    out = nullptr;
 	    while (!layers[layer].Apply(current_output_buffer_, out)) {
 	      YIELD();
@@ -583,6 +613,11 @@ public:
 
 	  current_output_buffer_ = next_output_buffer_;
 	  next_output_buffer_ = nullptr;
+	}
+	if (!current_output_buffer_->chunk.empty(layers[base_layer_].left_margin_,
+						 layers[base_layer_].width_)) {
+	  STDERR << "Frame data overflow layer=" <<  base_layer_ << "\n";
+	  layers[base_layer_].stop();
 	}
 	frame_num_ ++;
 	TRACE(RGB565, "loop3");
@@ -623,6 +658,9 @@ public:
   void dumpstate() {
     STDOUT << "frame = "<< frame_num_
 	   << " rownum_ = " << rownum_
+	   << " layer = " << layer
+	   << " base = " << base_layer_
+	   << " top = " << top_layer_
 	   << " next state: " << state_machine_.next_state_
 	   << " buffered rows: " << output_buffers_.size()
 	   << "\n";
@@ -663,6 +701,7 @@ protected:
   uint32_t rownum_;
   int layer;
   int top_layer_;
+  int base_layer_;
   uint32_t frame_num_ = 0;
   
   CircularBuffer<OutputBuffer<WIDTH>, 32> output_buffers_;
