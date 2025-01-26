@@ -6,7 +6,6 @@
 Built on SA22C programming by Matthew McGeary.
 Modified by Chris Carter with substantial support and 
 contributions from Fredrik Hubinette and Brian Conner.
-Version 121.
 
 This prop file references certain custom sound files 
 to aid in saber function navigation. These sound files 
