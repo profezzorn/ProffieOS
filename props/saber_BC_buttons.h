@@ -1147,6 +1147,53 @@ EFFECT(mute);       // Notification before muted ignition to avoid confusion.
 EFFECT(mzoom);      // for Spam Blast enter/exit
 
 template<class SPEC>
+struct BCScrollPresetsMode : public SPEC::SteppedMode {
+  int steps_per_revolution() override {
+    return 12;  // adjust for sensitivity
+  }
+
+  void next() override {
+    beeper.Beep(0.05, 4000);
+    prop_next_preset();
+  }
+
+  void prev() override {
+    beeper.Beep(0.05, 3000);
+    prop_previous_preset();
+  }
+
+  void update() override {  // Overridden to substitute the tick sound
+  }
+
+  void exit() override {
+    PVLOG_NORMAL << "** Exit Scroll Presets\n";
+    beeper.Beep(0.05, 3000);
+    beeper.Silence(0.05);
+    beeper.Beep(0.05, 3000);
+    beeper.Silence(0.05);
+    beeper.Beep(0.10, 2000);
+    SPEC::SteppedMode::exit();
+  }
+
+  // Custom button controls for Scroll Presets mode.
+  bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+    switch (EVENTID(button, event, 0)) {
+
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, 0):
+        SaberBase::TurnOn();
+        exit();
+        return true;
+
+      // case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, 0):
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, 0):
+        exit();
+        return true;
+    }
+    return false;
+  }
+};
+
+template<class SPEC>
 struct BCVolumeMode : public SPEC::SteppedMode {
   const int max_volume_ = VOLUME;
   const int min_volume_ = VOLUME * 0.10;
@@ -1336,6 +1383,7 @@ struct BCChangeBladeLengthBlade1 : public mode::ChangeBladeLengthBlade1<SPEC> {
 template<class SPEC>
 struct BCMenuSpec {
   typedef BCVolumeMode<SPEC> BCVolumeMenu;
+  typedef BCScrollPresetsMode<SPEC> BCScrollPresetsMenu;
 #ifdef DYNAMIC_BLADE_LENGTH
   typedef BCSelectBladeMode<SPEC> BCSelectBladeMenu;
   typedef mode::ShowLengthStyle<SPEC> ShowLengthStyle;
@@ -1393,7 +1441,7 @@ public:
 
 #if defined(DYNAMIC_BLADE_LENGTH) && !defined(MENU_SPEC_TEMPLATE)
   void EnterBladeLengthMode() {
-    if (scroll_presets_ || !current_style()) return;
+    if (!current_style()) return;
     if (current_mode == this) {
       sound_library_.SayEditBladeLength();
 
@@ -1408,7 +1456,7 @@ public:
 #endif  // DYNAMIC_BLADE_LENGTH
 
   void EnterVolumeMenu() {
-    if (!current_style() || scroll_presets_) return;
+    if (!current_style()) return;
     if (current_mode == this) {
 #ifdef MENU_SPEC_TEMPLATE
       sound_library_.SayEditVolume();
@@ -1416,6 +1464,15 @@ public:
 #else
       pushMode<MKSPEC<BCMenuSpec>::BCVolumeMenu>();
 #endif
+    }
+  }
+
+  void EnterScrollPresets() {
+    if (current_mode == this) {
+      PVLOG_NORMAL << "** Enter Scroll Presets\n";
+      BeepEnterFeature();
+      scroll_presets_beep_delay_timer_.trigger(350);
+      pushMode<MKSPEC<BCMenuSpec>::BCScrollPresetsMenu>();
     }
   }
 
@@ -1510,7 +1567,7 @@ public:
     }
 #endif
     // Delaying playing font.wav so that beep can be heard first.
-    if (scroll_presets_beep_delay_timer_.isTimerExpired() && scroll_presets_) {
+    if (scroll_presets_beep_delay_timer_.isTimerExpired()) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
     }
     if (twist_delay_timer_.isTimerExpired()) {
@@ -1620,7 +1677,6 @@ public:
 
   // Previous, next, or first preset, depending on blade angle
   void DoChangePreset() {
-    if (scroll_presets_) return;
     if (fusor.angle1() > M_PI / 3) {
     // Main Blade pointing UP
       first_preset();
@@ -1658,7 +1714,6 @@ public:
   }
 
   void DoSpokenBatteryLevel() {
-    if (scroll_presets_) return;
     // Avoid weird battery readings when using USB
     if (battery_monitor.battery() < 0.5) {
       sound_library_.SayTheBatteryLevelIs();
@@ -1683,14 +1738,13 @@ public:
   }
 
   void OnDemandBatteryLevel() {
-    if (scroll_presets_) return;
     PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
     PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "\n";
     SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
   }
 
   void DoTrackStartOrStop() {
-    if (scroll_presets_ || spam_blast_) return;
+    if (spam_blast_) return;
     PVLOG_NORMAL << "** Track playback Toggled\n";
     StartOrStopTrack();
   }
@@ -1741,7 +1795,7 @@ public:
   }
 
   void DoQuote() {
-    if (scroll_presets_ || spam_blast_) return;
+    if (spam_blast_) return;
     if (SFX_quote) {
       if (GetWavPlayerPlaying(&SFX_quote)) return;  // Simple prevention of quote overlap
 
@@ -1760,7 +1814,7 @@ public:
   }
 
   void ToggleSequentialQuote() {
-    if (scroll_presets_ || spam_blast_) return;
+    if (spam_blast_) return;
     sequential_quote_ = !sequential_quote_;
     PVLOG_NORMAL << (sequential_quote_ ? "** Quotes play sequentially\n" : "** Quotes play randomly\n");
     if (SFX_mnum) {
@@ -1981,24 +2035,6 @@ public:
     switch (EVENTID(button, event, modifiers)) {
       // storage of unused cases
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
-        return true;
-
-// Volume Up
-// Scroll Presets Next
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF):
-        if (scroll_presets_) {
-          beeper.Beep(0.05, 4000);
-          next_preset();
-        }
-        return true;
-
-// Volume Down
-// Scroll Presets Previous
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF):
-        if (scroll_presets_) {
-          beeper.Beep(0.05, 3000);
-          previous_preset();
-        }
         return true;
 
 /*
@@ -2439,7 +2475,6 @@ any # of buttons
 
 #ifdef BC_TWIST_ON
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
-        if (scroll_presets_) return false;
         NoBladeDisableGestures();
         // Delay twist events to prevent false trigger from over twisting
         if (millis() - last_twist_millis_ > 300 &&
@@ -2503,18 +2538,9 @@ any # of buttons
 #endif
         return true;
 
-// Toggle Scroll Presets
-      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
-        scroll_presets_ = !scroll_presets_;
-        if (scroll_presets_) {
-          PVLOG_NORMAL << "** Enter Scroll Presets\n";
-          BeepEnterFeature();
-          scroll_presets_beep_delay_timer_.trigger(350);
-        } else {
-          PVLOG_NORMAL << "** Exit Scroll Presets\n";
-          BeepExitFeature();
-          // No need to play font.wav again when exiting
-        }
+// Enter Scroll Presets
+      case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
+        EnterScrollPresets();
         return true;
 
 // Auto Swing Blast
@@ -2596,49 +2622,41 @@ any # of buttons
 
 // User Effects a.k.a. "Special Abilities" ©Fett263
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
-        if (scroll_presets_) return false;
         PVLOG_DEBUG << "**** EFFECT_USER1 **\n";
         SaberBase::DoEffect(EFFECT_USER1, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
-        if (scroll_presets_) return false;
         PVLOG_DEBUG << "**** EFFECT_USER2 **\n";
         SaberBase::DoEffect(EFFECT_USER2, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
-        if (scroll_presets_) return false;
         PVLOG_DEBUG << "**** EFFECT_USER3 **\n";
         SaberBase::DoEffect(EFFECT_USER3, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
-        if (scroll_presets_) return false;
         PVLOG_DEBUG << "**** EFFECT_USER4 **\n";
         SaberBase::DoEffect(EFFECT_USER4, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
-        if (scroll_presets_) return false;
         PVLOG_DEBUG << "**** EFFECT_USER5 **\n";
         SaberBase::DoEffect(EFFECT_USER5, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
-        if (scroll_presets_) return false;
         PVLOG_DEBUG << "**** EFFECT_USER6 **\n";
         SaberBase::DoEffect(EFFECT_USER6, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_AUX):
-        if (scroll_presets_) return false;
         PVLOG_DEBUG << "**** EFFECT_USER7 **\n";
         SaberBase::DoEffect(EFFECT_USER7, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_AUX):
-        if (scroll_presets_) return false;
         PVLOG_DEBUG << "**** EFFECT_USER8 **\n";
         SaberBase::DoEffect(EFFECT_USER8, 0);
         return true;
@@ -2708,7 +2726,6 @@ any # of buttons
         }
         return;
       case EFFECT_IGNITION:
-        scroll_presets_ = false;
         saber_on_time_ = millis();
         return;
       case EFFECT_TRANSITION_SOUND: 
@@ -2755,7 +2772,6 @@ private:
   bool sequential_quote_ = false;
   bool spam_blast_ = false;
   bool speaking_ = false;  // Don't play battery.wav when doing Spoken Battery Level
-  bool scroll_presets_ = false;
   bool muted_ = false;
   bool forward_stab_ = false;
 
