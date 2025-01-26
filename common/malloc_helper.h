@@ -12,6 +12,12 @@ bool IsHeap(const void* mem) {
   return (uint32_t)mem >= (uint32_t)_ebss && (uint32_t)mem <= (uint32_t)_estack;
 }
 
+size_t RamSize() {
+  extern int _ebss[];
+  extern int _estack[];
+  return ((uint32_t)_estack) - ((uint32_t)_ebss) ;
+}
+
 #elif defined(PROFFIE_TEST)
 bool IsHeap(const void* mem) {
 #ifdef __APPLE__
@@ -22,12 +28,22 @@ bool IsHeap(const void* mem) {
 #endif
 }
 
+size_t RamSize() {
+  return (size_t)-1;
+}
+
 #elif defined(ARDUINO_ARCH_STM32L4)
 
 bool IsHeap(const void* mem) {
   extern uint32_t __HeapBase[];
   extern uint32_t __StackLimit[];
   return (uint32_t)mem >= (uint32_t)__HeapBase && (uint32_t)mem <= (uint32_t)__StackLimit;
+}
+
+size_t RamSize() {
+  extern uint32_t __HeapBase[];
+  extern uint32_t __StackLimit[];
+  return ((uint32_t)__StackLimit) - (uint32_t)__HeapBase;
 }
 
 #elif defined(ESP32)
@@ -37,6 +53,13 @@ bool IsHeap(const void* mem) {
   extern uint32_t _heap_end[];
   return (uint32_t)mem >= (uint32_t)_static_data_end && (uint32_t)mem <= (uint32_t)_heap_end;
 }
+
+size_t RamSize() {
+  extern uint32_t _static_data_end[];
+  extern uint32_t _heap_end[];
+  return ((uint32_t)_heap_end) - (uint32_t)_static_data_end;
+}
+
 #else
 
 bool IsHeap(const void* mem) {
@@ -45,6 +68,11 @@ bool IsHeap(const void* mem) {
   return (uint32_t)mem >= (uint32_t)end && (uint32_t)mem <= (uint32_t)__StackLimit;
 }
 
+size_t RamSize() {
+  extern uint32_t end[];
+  extern uint32_t __StackLimit[];
+  return ((uint32_t)__StackLimit) - (uint32_t)end;
+}
 #endif
 
 template<class T>

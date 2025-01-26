@@ -526,7 +526,7 @@ private:
     TRACE(BLADE, "dma done exit");
   }
 
-  static void static_kick(void *context) {
+  static void static_kick(void *context, long unsigned int v) {
     WS2811EngineSTM32L4* engine = ((WS2811EngineSTM32L4*)context);
     engine->kick();
   }

@@ -134,6 +134,7 @@ public:
           break;
         }
         state_ = SwingState::ON;
+	[[gnu::fallthrough]];
 
       case SwingState::ON:
         // trigger accent swing
@@ -193,6 +194,7 @@ public:
         A.set_volume(0);
         B.set_volume(0);
         state_ = SwingState::OUT;
+	[[gnu::fallthrough]];
 
       case SwingState::OUT:
         if (!A.isOff() || !B.isOff()) {
