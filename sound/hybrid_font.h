@@ -534,6 +534,7 @@ public:
           state_ = STATE_HUM_FADE_OUT;
           PlayPolyphonic(getNext(lock_player_, &SFX_boom));
         }
+        PVLOG_NORMAL << "+++++ BOOM!! +++++\n";
         break;
     }
 
