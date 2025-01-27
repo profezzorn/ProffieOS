@@ -537,11 +537,6 @@ public:
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
-#ifdef ENABLE_AUDIO
-    if (!SFX_font) {
-      beeper.Beep(0.05, 2000.0);
-    }
-#endif
     LOCK_SD(true);
     current_preset_.Load(-1);  // load last preset
     current_preset_.SaveAt(0); // save in first position, shifting all other presets down
