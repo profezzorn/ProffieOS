@@ -526,6 +526,7 @@ public:
 	}
         break;
       case OFF_BLAST:
+        SaberBase::DoEffect(EFFECT_BOOM, 0);
         if (monophonic_hum_) {
           if (SFX_boom) PlayMonophonic(getNext(hum_player_, &SFX_boom), NULL);
           else PlayMonophonic(getNext(hum_player_, &SFX_clash), NULL);  // Thermal-D fallback
