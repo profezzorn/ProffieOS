@@ -1246,24 +1246,20 @@ struct BCVolumeMode : public SPEC::SteppedMode {
   }
 
   bool Parse(const char *cmd, const char* arg) override {
+    if (PropBase::Parse(cmd, arg)) return true;
+
     if (!strcmp(cmd, "twist")) {
         Event(BUTTON_NONE, EVENT_TWIST);
         return true;
     }
     if (!strcmp(cmd, "left")) {
-        // Check if the mode wants to handle this first
-        if (PropBase::Parse(cmd, arg)) return true;
-        // Otherwise, handle it here
         Event(BUTTON_NONE, EVENT_TWIST_LEFT);
         return true;
     }
-
     if (!strcmp(cmd, "right")) {
-        if (PropBase::Parse(cmd, arg)) return true;
         Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
         return true;
     }
-    return PropBase::Parse(cmd, arg);
   }
 
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
