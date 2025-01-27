@@ -1250,12 +1250,16 @@ struct BCVolumeMode : public SPEC::SteppedMode {
         Event(BUTTON_NONE, EVENT_TWIST);
         return true;
     }
-    if (!strcmp(cmd, "twistleft") || !strcmp(cmd, "tleft")) {
+    if (!strcmp(cmd, "left")) {
+        // Check if the mode wants to handle this first
+        if (PropBase::Parse(cmd, arg)) return true;
+        // Otherwise, handle it here
         Event(BUTTON_NONE, EVENT_TWIST_LEFT);
         return true;
     }
 
-    if (!strcmp(cmd, "twistright") || !strcmp(cmd, "tright")) {
+    if (!strcmp(cmd, "right")) {
+        if (PropBase::Parse(cmd, arg)) return true;
         Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
         return true;
     }
