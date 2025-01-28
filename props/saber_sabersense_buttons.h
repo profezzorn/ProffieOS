@@ -312,8 +312,8 @@ EFFECT(blstend);  // for End Multi-Blast
 EFFECT(array);    // for playing array idents
 EFFECT(bladeid);  // for playing bladeid idents
 EFFECT(reset);    // for playing factory default reset completed
-#ifndef HAVE_EFFECT_QUOTE
-EFFECT(quote);    // for playing quotes with earlier OS sound/effect.h file.
+#ifdef SABERSENSE_OS7_LEGACY_SUPPORT
+EFFECT(quote);    // for playing quotes with ProfieOS 7.x.
 #endif
 
   //  The Saber class implements the basic states and actions
