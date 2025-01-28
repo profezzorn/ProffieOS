@@ -622,6 +622,7 @@ public:
        }
     } 
     bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+      if (GetWavPlayerPlaying(&SFX_boot)) return false;
       switch (EVENTID(button, event, modifiers)) {
         case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_ON):
         case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_OFF):
@@ -1132,8 +1133,8 @@ return true;
       hybrid_font.PlayCommon(&SFX_reset);
       while(IsResetSoundPlaying());  // Lock system while sound finishes.
     } else {
-      beeper.Beep(0.5, 2000); // Generate beep to prompt user to release button.
-      delay(1200); // Give time for slow users to release button, avoids boot conflicts.
+      beeper.Beep(0.5, 2000); // Generate beep to confirm reset.
+      delay(800); // Allow beep to play.
     }
     STM32.reset(); // Reboot saber.
   }
