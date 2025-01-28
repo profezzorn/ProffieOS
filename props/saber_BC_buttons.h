@@ -1319,14 +1319,18 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
   uint16_t size() override { return NUM_BLADES; }
 
   void mode_activate(bool onreturn) override {
-    mode::getSL<SPEC>()->SaySelectBlade();
-    SPEC::SteppedMode::mode_activate(onreturn);
-    highlighted_blade_.Start(current_blade());
-    PVLOG_NORMAL << "** Highlighting blade: " << current_blade() << "\n";
+    // Just exit after setting length
+    if (onreturn) {
+      popMode(); 
+    } else {
+      mode::getSL<SPEC>()->SaySelectBlade();
+      SPEC::SteppedMode::mode_activate(onreturn);
+      highlighted_blade_.Start(current_blade());
+      PVLOG_NORMAL << "** Highlighting blade to edit: " << current_blade() << "\n";
+    }
   }
 
   void mode_deactivate() {
-    highlighted_blade_.Stop(current_blade());
     prop_UpdateStyle();
   }
 
@@ -1334,14 +1338,14 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
     highlighted_blade_.Stop(current_blade());
     SPEC::MenuBase::next();
     highlighted_blade_.Start(current_blade());
-    PVLOG_NORMAL << "** Highlighting blade: " << current_blade() << "\n";
+    PVLOG_NORMAL << "** Highlighting blade to edit: " << current_blade() << "\n";
   }
 
   void prev() override {
     highlighted_blade_.Stop(current_blade());
     SPEC::MenuBase::prev();
     highlighted_blade_.Start(current_blade());
-    PVLOG_NORMAL << "** Highlighting blade: " << current_blade() << "\n";
+    PVLOG_NORMAL << "** Highlighting blade to edit: " << current_blade() << "\n";
   }
 
   void say() override {
@@ -1351,6 +1355,7 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
 
   void select() override {
     // Set the current blade to send and push to ChangeBladeLengthMode
+    PVLOG_NORMAL << "** Editing blade length.\n";
     mode::menu_current_blade = current_blade();
     highlighted_blade_.Stop(current_blade());
     pushMode<typename SPEC::ChangeBladeLengthMode>();
@@ -1366,6 +1371,7 @@ struct BCChangeBladeLengthBlade1 : public mode::ChangeBladeLengthBlade1<SPEC> {
     return 30;  // adjust for sensitivity
   }
   void select() override {
+    PVLOG_NORMAL << "** Saved blade length : " << this->getLength() << "\n";
     prop_SetBladeLength(this->blade(), this->getLength());
     prop_SaveState();
     mode::getSL<SPEC>()->SaySave();
