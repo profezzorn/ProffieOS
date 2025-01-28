@@ -587,7 +587,7 @@ public:
     bool ScanBladeIdNow() {
         uint32_t now = millis();
         
-        bool scan = (now - last_scan_id_) > BLADE_ID_SCAN_MILLIS;
+        bool scan = true;
         
 #ifdef BLADE_ID_STOP_SCAN_WHILE_IGNITED
         if (IsOn()) {
@@ -596,7 +596,7 @@ public:
 #endif
         
 #ifdef BLADE_ID_SCAN_TIMEOUT
-        if ((now - blade_id_scan_start_) < BLADE_ID_SCAN_TIMEOUT) {
+        if ((now - blade_id_scan_start_) > BLADE_ID_SCAN_TIMEOUT) {
             scan = false;
         }
 #endif
