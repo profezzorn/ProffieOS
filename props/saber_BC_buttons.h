@@ -1260,6 +1260,7 @@ struct BCVolumeMode : public SPEC::SteppedMode {
         Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
         return true;
     }
+    return false;
   }
 
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
