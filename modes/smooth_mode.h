@@ -5,6 +5,10 @@
 #include "select_cancel_mode.h"
 #include "../common/angle.h"
 
+#if defined(SMOOTH_COLORCHANGE_TICK_SOUND_SENS) && SMOOTH_COLORCHANGE_TICK_SOUND_SENS > 0
+#define SOUND_TICK_ANGLE ((M_PI * 2 / 12) / SMOOTH_COLORCHANGE_TICK_SOUND_SENS)
+#endif
+
 namespace mode {
 
 class DeltaAngle {
@@ -69,6 +73,31 @@ struct SmoothWraparoundMode : public SmoothBase<SPEC> {
   void mode_Loop() override {
     this->angle_ += this->delta_.get() / this->revolutions();
     this->set(this->angle_.fixed());
+
+#ifdef SMOOTH_COLORCHANGE_TICK_SOUND_SENS
+    if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
+      // Tick Sound in Smooth Mode ---
+      static float tick_sound_angle_smooth = 0.0f; 
+      float current_angle = fusor.angle2();
+      float diff = current_angle - tick_sound_angle_smooth;
+
+      // Normalize angle to (-PI, PI)
+      if (diff > M_PI)  diff -= (2.0f * M_PI);
+      if (diff < -M_PI) diff += (2.0f * M_PI);
+
+      if (fabsf(diff) >= SOUND_TICK_ANGLE) {
+        int steps = (int)floorf(fabsf(diff) / SOUND_TICK_ANGLE);
+        if (diff < 0) steps = -steps;
+
+        tick_sound_angle_smooth += steps * SOUND_TICK_ANGLE;
+        if (tick_sound_angle_smooth > M_PI)  tick_sound_angle_smooth -= 2.0f * M_PI;
+        if (tick_sound_angle_smooth < -M_PI) tick_sound_angle_smooth += 2.0f * M_PI;
+
+        hybrid_font.PlayPolyphonic(&SFX_ccchange);
+      }
+    }
+#endif
+
   }
 };
 
