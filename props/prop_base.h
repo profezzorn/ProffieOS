@@ -406,8 +406,9 @@ public:
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
     hybrid_font.hum_player_.Free();
+#ifdef ENABLE_IDLE_SOUND
     hybrid_font.idling_ = true;
-    FreeBladeStyles();
+#endif    FreeBladeStyles();
     current_preset_.SetPreset(preset_num);
     AllocateBladeStyles();
     chdir(current_preset_.font.get());
