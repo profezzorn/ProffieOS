@@ -2064,6 +2064,7 @@ public:
 
 #endif  // BC_DUAL_BLADES
 
+#if (NELEM(blades) > 1)
   // Manual blade array selection
   // even with Real TIme Blade ID active
   bool manual_blade_array_active = false;
@@ -2211,6 +2212,7 @@ public:
     ProffieOSErrors::error_in_blade_array();
 #endif
   }
+#endif  // (NELEM(blades) > 1)
 
   RefPtr<BufferedWavPlayer> wav_player;
 
@@ -2717,6 +2719,7 @@ any # of buttons
         return true;
 #endif  // BC_FORCE_PUSH
 
+#if (NELEM(blades) > 1)
 // Manually cycle to Next Blade Array
   case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_OFF):
     PVLOG_NORMAL << "**** BUTTON EVENT Manually Cycling Blade Array\n";
@@ -2730,6 +2733,7 @@ any # of buttons
     TriggerBladeID();
     return true;
 #endif
+#endif  // (NELEM(blades) > 1)
 
 // Enter OS System Menu
 // Enter BC Blade Length Mode
