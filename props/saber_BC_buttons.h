@@ -2109,8 +2109,6 @@ public:
     }
   }
 
-
-
   size_t FindBestConfig(bool announce = false) override {
     // Get the OS determined best_config
     real_best_config = PropBase::FindBestConfig(announce);
@@ -2719,13 +2717,13 @@ any # of buttons
         return true;
 #endif  // BC_FORCE_PUSH
 
-// Manually cycle to Next Blade Array                                                         // BC personal only ATM
+// Manually cycle to Next Blade Array
   case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_OFF):
     PVLOG_NORMAL << "**** BUTTON EVENT Manually Cycling Blade Array\n";
     NextBladeArray();
     return true;
 
-// Manually trigger Blade ID scan                                                             // BC personal only ATM
+// Manually trigger Blade ID scan
 #if (NUM_BUTTONS != 1) || !defined(BC_DUAL_BLADES)  // only not available for 1 btn dual blades.
   case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_OFF):
     PVLOG_NORMAL << "**** BUTTON EVENT Manually triggering native Blade ID\n";
