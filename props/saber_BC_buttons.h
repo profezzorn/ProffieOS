@@ -1396,12 +1396,6 @@ struct BCMenuSpec {
   typedef SoundLibraryV2 SoundLibrary;
 };
 
-#ifndef MENU_SPEC_TEMPLATE
-  void Setup() {
-    MKSPEC<BCMenuSpec>::SoundLibrary::init();
-  }
-#endif
-
 class DelayTimer {
 public:
   DelayTimer() : triggered_(false), trigger_time_(0), duration_(0) {}
@@ -1438,6 +1432,12 @@ class SaberBCButtons : public PROP_INHERIT_PREFIX PropBase {
 public:
   SaberBCButtons() : PropBase() {}
   const char* name() override { return "SaberBCButtons"; }
+
+#ifndef MENU_SPEC_TEMPLATE
+  void Setup() override{
+    MKSPEC<BCMenuSpec>::SoundLibrary::init();
+  }
+#endif
 
 #if defined(DYNAMIC_BLADE_LENGTH) && !defined(MENU_SPEC_TEMPLATE)
   void EnterBladeLengthMode() {
