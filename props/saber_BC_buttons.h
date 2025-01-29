@@ -1319,15 +1319,10 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
   uint16_t size() override { return NUM_BLADES; }
 
   void mode_activate(bool onreturn) override {
-    // Just exit after setting length
-    if (onreturn) {
-      popMode(); 
-    } else {
-      mode::getSL<SPEC>()->SaySelectBlade();
-      SPEC::SteppedMode::mode_activate(onreturn);
-      highlighted_blade_.Start(current_blade());
-      PVLOG_NORMAL << "** Highlighting blade to edit: " << current_blade() << "\n";
-    }
+    mode::getSL<SPEC>()->SaySelectBlade();
+    SPEC::SteppedMode::mode_activate(onreturn);
+    highlighted_blade_.Start(current_blade());
+    PVLOG_NORMAL << "** Highlighting blade to edit: " << current_blade() << "\n";
   }
 
   void mode_deactivate() {
@@ -1358,6 +1353,7 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
     PVLOG_NORMAL << "** Editing blade length.\n";
     mode::menu_current_blade = current_blade();
     highlighted_blade_.Stop(current_blade());
+    popMode();
     pushMode<typename SPEC::ChangeBladeLengthMode>();
   }
 };
