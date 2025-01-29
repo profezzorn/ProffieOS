@@ -205,7 +205,6 @@ public:
   RefPtr<BufferedWavPlayer> next_hum_player_;
   RefPtr<BufferedWavPlayer> swing_player_;
   RefPtr<BufferedWavPlayer> lock_player_;
-  RefPtr<BufferedWavPlayer> hum_player_;
 
   void PlayMonophonic(const Effect::FileID& f, Effect* loop, float xfade = 0.003f)  {
     EnableAmplifier();
