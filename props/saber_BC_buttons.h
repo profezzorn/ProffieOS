@@ -2064,7 +2064,6 @@ public:
 
 #endif  // BC_DUAL_BLADES
 
-#if (NELEM(blades) > 1)
   // Manual blade array selection
   // even with Real TIme Blade ID active
   bool manual_blade_array_active = false;
@@ -2212,7 +2211,6 @@ public:
     ProffieOSErrors::error_in_blade_array();
 #endif
   }
-#endif  // (NELEM(blades) > 1)
 
   RefPtr<BufferedWavPlayer> wav_player;
 
