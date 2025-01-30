@@ -2064,16 +2064,24 @@ public:
 
 #endif  // BC_DUAL_BLADES
 
-  // Manual blade array selection
-  // even with Real TIme Blade ID active
-  bool manual_blade_array_active = false;
-  size_t last_real_best_config = NELEM(blades);
-  size_t real_best_config = NELEM(blades);
-  size_t fake_best_config = NELEM(blades);
-  size_t prev_real_best_config = NELEM(blades);
-
 #ifdef BLADE_ID_SCAN_MILLIS
-  // Must be called from loop()
+
+  // These variables are used to track the actual scanned best_config,
+  // and to spoof a fake_best_config if the user manually overrides
+  // to a different blades[] element.
+  // This allows for a manual selection of best_config yet still
+  // let BLADE_ID_SCAN_MILLIS to work.
+  bool manual_blade_array_active = false;
+  size_t last_real_best_config = SIZE_MAX;
+  size_t real_best_config = SIZE_MAX;
+  size_t fake_best_config = SIZE_MAX;
+  size_t prev_real_best_config = SIZE_MAX;
+
+  // This provides a way to "spoof" a best_config so as to allow
+  // a "manual override" of what the base PollScanID decides is best.
+  // Once a physical blade state change happens, the default scanning reads are used.
+  // blades[] element is chosen "real" scans are read as.
+  // continued scans 
   void PollScanId() override {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
