@@ -1583,6 +1583,8 @@ public:
   StrokeType saved_twist = UNKNOWN_GESTURE;
   uint32_t saved_twist_start_millis = 0;
 
+  // Adds a timer to TWIST_LEFT/RIGHT to avoid interference
+  // with normal, 2 direction twists
   void DetectTwist() override {
     Vec3 gyro = fusor.gyro();
     bool process = false;
