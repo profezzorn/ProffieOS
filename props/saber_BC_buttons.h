@@ -8,7 +8,7 @@ saber_BC_buttons.h
   http://www.gnu.org/licenses/
 
 Includes 1 or 2 button controls. (3rd button for power control of Dual Blades supported as well).
-Incorporates an intuitive control scheme so button actions are consistant
+Incorporates an intuitive control scheme so button actions are consistent
 whether blade is on or off.
 Best if used with ProffieOS_Voicepack spoken menu prompts. 
 This prop version requires a V2 ProffieOS Voicepack for menus to work right.
