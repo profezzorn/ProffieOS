@@ -129,6 +129,11 @@ public:
 
   BlasterMode blaster_mode = BLASTER_DEFAULT_MODE;
 
+#ifdef BLASTER_SHOTS_UNTIL_EMPTY
+  const int max_shots_ = BLASTER_SHOTS_UNTIL_EMPTY;
+#else
+  const int max_shots_ = -1;
+#endif
   int GetBlasterMode() const {
     return blaster_mode;
   }
@@ -506,11 +511,6 @@ public:
     }
   }
 
-#ifdef BLASTER_SHOTS_UNTIL_EMPTY
-  const int max_shots_ = BLASTER_SHOTS_UNTIL_EMPTY;
-#else
-  const int max_shots_ = -1;
-#endif
   bool auto_firing_ = false;
   int shots_fired_ = 0;
   bool is_jammed_ = false;
