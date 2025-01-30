@@ -5,8 +5,8 @@
 #include "select_cancel_mode.h"
 #include "../common/angle.h"
 
-#if defined(SMOOTH_COLORCHANGE_TICK_SOUND_SENS) && SMOOTH_COLORCHANGE_TICK_SOUND_SENS > 0
-#define SOUND_TICK_ANGLE ((M_PI * 2 / 12) / SMOOTH_COLORCHANGE_TICK_SOUND_SENS)
+#if defined(SMOOTH_COLORCHANGE_TICKS_PER_REVOLUTION) && SMOOTH_COLORCHANGE_TICKS_PER_REVOLUTION > 0
+#define SOUND_TICK_ANGLE (M_PI * 2 / SMOOTH_COLORCHANGE_TICKS_PER_REVOLUTION)
 #endif
 
 namespace mode {
@@ -74,7 +74,7 @@ struct SmoothWraparoundMode : public SmoothBase<SPEC> {
     this->angle_ += this->delta_.get() / this->revolutions();
     this->set(this->angle_.fixed());
 
-#ifdef SMOOTH_COLORCHANGE_TICK_SOUND_SENS
+#ifdef SMOOTH_COLORCHANGE_TICKS_PER_REVOLUTION
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_SMOOTH) {
       // Tick Sound in Smooth Mode ---
       static float tick_sound_angle_smooth = 0.0f; 
