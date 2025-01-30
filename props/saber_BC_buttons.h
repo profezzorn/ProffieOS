@@ -1746,13 +1746,13 @@ public:
       sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
       sound_library_.SayVolts();
       PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
-      speaking_ = true;
+      is_speaking_ = true;
       SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
     } else {
       sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
       sound_library_.SayPercent();
       PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "%\n";
-      speaking_ = true;
+      is_speaking_ = true;
       SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
     }
   }
@@ -2730,8 +2730,8 @@ any # of buttons
         return;
       // On-Demand Battery Level
       case EFFECT_BATTERY_LEVEL:
-        if (speaking_) {
-          speaking_ = false;
+        if (is_speaking_) {
+          is_speaking_ = false;
           return;
         }
         if (!hybrid_font.PlayPolyphonic(&SFX_battery)) {
@@ -2791,7 +2791,7 @@ private:
   bool auto_melt_on_ = false;
   bool sequential_quote_ = false;
   bool spam_blast_ = false;
-  bool speaking_ = false;  // Don't play battery.wav when doing Spoken Battery Level
+  bool is_speaking_ = false;  // Don't play battery.wav when doing Spoken Battery Level
   bool muted_ = false;
   bool forward_stab_ = false;
 
