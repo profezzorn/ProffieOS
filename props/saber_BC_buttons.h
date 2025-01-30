@@ -1583,7 +1583,6 @@ public:
   StrokeType saved_twist = UNKNOWN_GESTURE;
   uint32_t saved_twist_start_millis = 0;
 
-  // Call this from Loop() to detect twists.
   void DetectTwist() override {
     Vec3 gyro = fusor.gyro();
     bool process = false;
