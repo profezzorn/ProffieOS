@@ -134,6 +134,7 @@ public:
 #else
   const int max_shots_ = -1;
 #endif
+
   int GetBlasterMode() const {
     return blaster_mode;
   }
@@ -162,12 +163,6 @@ public:
         return;
     }
   }
-
-#ifdef BLASTER_SHOTS_UNTIL_EMPTY
-  const int max_shots_ = BLASTER_SHOTS_UNTIL_EMPTY;
-#else
-  const int max_shots_ = -1;
-#endif
 
   bool CheckEmpty() const {
     return max_shots_ != -1 && shots_fired_ >= max_shots_;
