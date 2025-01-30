@@ -187,8 +187,7 @@ public:
   }
 
   bool DoJam() {
-#ifdef ENABLE_MOTION
-#ifdef BLASTER_JAM_PERCENTAGE
+#if defined(ENABLE_MOTION) && defined(BLASTER_JAM_PERCENTAGE)
     // If we're already jammed then we don't need to recheck. If we're not jammed then check if we just jammed.
     is_jammed_ = is_jammed_ ? true : CheckJam(BLASTER_JAM_PERCENTAGE);
 
@@ -198,7 +197,6 @@ public:
     } else {
       return false;
     }
-#endif
 #endif
   }
 
