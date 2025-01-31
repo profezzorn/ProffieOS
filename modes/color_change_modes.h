@@ -5,6 +5,10 @@
 #include "stepped_mode.h"
 #include "smooth_mode.h"
 
+#if defined(SMOOTH_COLORCHANGE_TICKS_PER_REVOLUTION) && SMOOTH_COLORCHANGE_TICKS_PER_REVOLUTION > 0
+  #define SOUND_TICK_ANGLE (M_PI * 2 / SMOOTH_COLORCHANGE_TICKS_PER_REVOLUTION)
+#endif
+
 namespace mode {
 
 template<class SPEC>
@@ -43,6 +47,30 @@ struct SmoothVariationMode : public SPEC::SmoothWraparoundMode {
   }
   int get() override { return SaberBase::GetCurrentVariation(); }
   void set(int x) override { SaberBase::SetVariation(x); }
+
+  void mode_Loop() override {
+    SPEC::SmoothWraparoundMode::mode_Loop();
+
+#ifdef SMOOTH_COLORCHANGE_TICKS_PER_REVOLUTION
+    static float tick_sound_angle_smooth = 0.0f; 
+    float current_angle = fusor.angle2();
+    float diff = current_angle - tick_sound_angle_smooth;
+
+    if (diff > M_PI)  diff -= (2.0f * M_PI);
+    if (diff < -M_PI) diff += (2.0f * M_PI);
+
+    if (fabsf(diff) >= SOUND_TICK_ANGLE) {
+      int steps = (int)floorf(fabsf(diff) / SOUND_TICK_ANGLE);
+      if (diff < 0) steps = -steps;
+
+      tick_sound_angle_smooth += steps * SOUND_TICK_ANGLE;
+      if (tick_sound_angle_smooth > M_PI)  tick_sound_angle_smooth -= 2.0f * M_PI;
+      if (tick_sound_angle_smooth < -M_PI) tick_sound_angle_smooth += 2.0f * M_PI;
+
+      hybrid_font.PlayPolyphonic(&SFX_ccchange);
+    }
+#endif
+  }
 };
 
 template<class SPEC>
