@@ -168,6 +168,10 @@ public:
     return max_shots_ != -1 && shots_fired_ >= max_shots_;
   }
 
+  int GetBulletCount() {
+    return max_shots_ - shots_fired_;
+  }
+
   virtual bool DoEmpty() {
     if (CheckEmpty()) {
       SaberBase::DoEffect(EFFECT_EMPTY, 0);  // Trigger the empty effect
@@ -193,10 +197,6 @@ public:
       return false;
     }
 #endif
-  }
-
-  virtual int GetBulletCount() {
-    return max_shots_ - shots_fired_;
   }
 
   virtual void DoStun() {
