@@ -12,10 +12,10 @@
 namespace mode {
 
 template<class SPEC>
-struct SteppedVariationMode : public SPEC::SteppedMode {
+struct SteppedVariationMode : public SPEC::SteppedModeBase {
   void mode_activate(bool onreturn) override {
     saved_ = get();
-    SPEC::SteppedMode::mode_activate(onreturn);
+    SPEC::SteppedModeBase::mode_activate(onreturn);
     SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
   }
   void exit() override {
@@ -67,7 +67,7 @@ struct SmoothVariationMode : public SPEC::SmoothWraparoundMode {
       if (tick_sound_angle_smooth > M_PI)  tick_sound_angle_smooth -= 2.0f * M_PI;
       if (tick_sound_angle_smooth < -M_PI) tick_sound_angle_smooth += 2.0f * M_PI;
 
-      hybrid_font.PlayPolyphonic(&SFX_ccchange);
+      hybrid_font.PlayPolyphonic(&SFX_mclick);
     }
 #endif
   }

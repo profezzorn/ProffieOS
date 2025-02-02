@@ -778,6 +778,9 @@ EFFECT(ccchange);
 EFFECT(altchng);
 EFFECT(chhum);
 
+// menu sounds
+EFFECT(mclick);
+
 // Blaster effects
 // hum, boot and font are reused from sabers and already defined.
 EFFECT(bgnauto); // Doesn't exist in fonts, but I expect there may be use for autofire transitions
