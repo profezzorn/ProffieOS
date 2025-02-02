@@ -12,10 +12,10 @@
 namespace mode {
 
 template<class SPEC>
-struct SteppedVariationMode : public SPEC::SteppedMode {
+struct SteppedVariationMode : public SPEC::SteppedModeBase {
   void mode_activate(bool onreturn) override {
     saved_ = get();
-    SPEC::SteppedMode::mode_activate(onreturn);
+    SPEC::SteppedModeBase::mode_activate(onreturn);
     SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
   }
   void exit() override {
@@ -29,10 +29,6 @@ struct SteppedVariationMode : public SPEC::SteppedMode {
   }
   void next() override { SaberBase::UpdateVariation(1); }
   void prev() override { SaberBase::UpdateVariation(-1); }
-
-  void update() override {
-    hybrid_font.PlayPolyphonic(&SFX_ccchange);
-   }
 
   int get() { return SaberBase::GetCurrentVariation(); }
   void set(int x) { SaberBase::SetVariation(x); }
