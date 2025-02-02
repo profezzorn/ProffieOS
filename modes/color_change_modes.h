@@ -67,7 +67,7 @@ struct SmoothVariationMode : public SPEC::SmoothWraparoundMode {
       if (tick_sound_angle_smooth > M_PI)  tick_sound_angle_smooth -= 2.0f * M_PI;
       if (tick_sound_angle_smooth < -M_PI) tick_sound_angle_smooth += 2.0f * M_PI;
 
-      if (!hybrid_font.PlayPolyphonic(&SFX_mclick)) beeper.Beep(0.03, 5000);;
+      hybrid_font.PlayPolyphonic(&SFX_mclick);
     }
 #endif
   }
