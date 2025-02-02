@@ -2157,7 +2157,9 @@ public:
   }
 
   void NextBladeArray() {
+#ifdef BLADE_ID_SCAN_MILLIS
     manual_blade_array_active = true; // Enable manual mode
+#endif
     PVLOG_NORMAL << "** Manually Switching to Blade Array: " << (current_config - blades + 1) << "\n";
     FakeFindBladeAgain();
   }
