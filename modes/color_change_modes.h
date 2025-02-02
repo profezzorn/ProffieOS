@@ -30,6 +30,10 @@ struct SteppedVariationMode : public SPEC::SteppedMode {
   void next() override { SaberBase::UpdateVariation(1); }
   void prev() override { SaberBase::UpdateVariation(-1); }
 
+  void update() override {
+    hybrid_font.PlayPolyphonic(&SFX_ccchange);
+   }
+
   int get() { return SaberBase::GetCurrentVariation(); }
   void set(int x) { SaberBase::SetVariation(x); }
 private:
