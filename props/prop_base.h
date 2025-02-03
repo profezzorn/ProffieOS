@@ -905,6 +905,8 @@ public:
       case TWIST_LEFT:
       case TWIST_RIGHT:
         return TWIST_CLOSE;
+      case UNKNOWN_GESTURE:
+        return UNKNOWN_GESTURE;
       case SHAKE_CLOSE:
       case SHAKE_FWD:
       case SHAKE_REW:
