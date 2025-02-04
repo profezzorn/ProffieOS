@@ -1585,16 +1585,8 @@ public:
 
   // Adds a timer to TWIST_LEFT/RIGHT to avoid interference
   // with normal, 2 direction twists
-  void DetectTwist() override {
-    Vec3 gyro = fusor.gyro();
-    bool process = false;
-    if (fabsf(gyro.x) > 200.0 &&
-        fabsf(gyro.x) > 3.0f * abs(gyro.y) &&
-        fabsf(gyro.x) > 3.0f * abs(gyro.z)) {
-      process = DoGesture(gyro.x > 0 ? TWIST_RIGHT : TWIST_LEFT);
-    } else {
-      process = DoGesture(TWIST_CLOSE);
-    }
+  void DetectTwist() {
+    bool process = DetectTwistStrokes();
     if (process) {
       // Start timer if no saved_twist
       if (saved_twist == UNKNOWN_GESTURE && 
@@ -1604,41 +1596,24 @@ public:
         saved_twist_start_millis = millis();
         return;
       }
-
-      // Normal Twist Logic
-      if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
-           strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
-          (strokes[NELEM(strokes)-1].type == TWIST_RIGHT &&
-           strokes[NELEM(strokes)-2].type == TWIST_LEFT)) {
-        if (strokes[NELEM(strokes)-1].length() > 90UL &&
-            strokes[NELEM(strokes)-1].length() < 300UL &&
-            strokes[NELEM(strokes)-2].length() > 90UL &&
-            strokes[NELEM(strokes)-2].length() < 300UL) {
-          uint32_t separation =
-              strokes[NELEM(strokes)-1].start_millis -
-              strokes[NELEM(strokes)-2].end_millis;
-          if (separation < 200UL) {
-            PVLOG_NORMAL << "EVENT_TWIST\n";
-            // Emit normal twist event
-            Event(BUTTON_NONE, EVENT_TWIST);
-
-            // Clear strokes and saved_twist state
-            strokes[NELEM(strokes)-1].type = UNKNOWN_GESTURE;
-            strokes[NELEM(strokes)-2].type = UNKNOWN_GESTURE;
-            saved_twist = UNKNOWN_GESTURE;
-            return;
-          }
-        }
+      if (ProcessTwistEvents()) {
+        // Normal twist event happened.
+        // Clear strokes and saved_twist state
+        strokes[NELEM(strokes)-1].type = UNKNOWN_GESTURE;
+        strokes[NELEM(strokes)-2].type = UNKNOWN_GESTURE;
+        saved_twist = UNKNOWN_GESTURE;
+        return;
       }
     }
+    DoSavedTwist();
+  }
 
+  void DoSavedTwist() {
     // Check single twist timer
-    // Tested 300 as a good wait time. Shorter interferes with normal twist.
     if (saved_twist != UNKNOWN_GESTURE && millis() - saved_twist_start_millis >= 300) {
       // Emit single twist event
       Event(BUTTON_NONE, saved_twist == TWIST_LEFT ? EVENT_TWIST_LEFT : EVENT_TWIST_RIGHT);
       PVLOG_DEBUG << (saved_twist == TWIST_LEFT ? "EVENT_TWIST_LEFT" : "EVENT_TWIST_RIGHT") << "\n";
-
       // Clear strokes and saved_twist state
       strokes[NELEM(strokes)-1].type = UNKNOWN_GESTURE;
       saved_twist = UNKNOWN_GESTURE;
