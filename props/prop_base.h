@@ -959,36 +959,46 @@ public:
   }
 
   // The prop should call this from Loop() if it wants to detect twists.
-  virtual void DetectTwist() {
+  void DetectTwist() {
+    bool process = DetectTwistStrokes();
+    if (process) {
+      ProcessTwistEvents();
+    }
+  }
+
+  bool DetectTwistStrokes() {
     Vec3 gyro = fusor.gyro();
-    bool process = false;
     if (fabsf(gyro.x) > 200.0 &&
         fabsf(gyro.x) > 3.0f * abs(gyro.y) &&
         fabsf(gyro.x) > 3.0f * abs(gyro.z)) {
-      process = DoGesture(gyro.x > 0 ? TWIST_RIGHT : TWIST_LEFT);
+      return DoGesture(gyro.x > 0 ? TWIST_RIGHT : TWIST_LEFT);
     } else {
-      process = DoGesture(TWIST_CLOSE);
+      return DoGesture(TWIST_CLOSE);
     }
-    if (process) {
-      if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
-           strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
-          (strokes[NELEM(strokes)-1].type == TWIST_RIGHT &&
-           strokes[NELEM(strokes)-2].type == TWIST_LEFT)) {
-        if (strokes[NELEM(strokes) -1].length() > 90UL &&
-            strokes[NELEM(strokes) -1].length() < 300UL &&
-            strokes[NELEM(strokes) -2].length() > 90UL &&
-            strokes[NELEM(strokes) -2].length() < 300UL) {
-          uint32_t separation =
+  }
+
+  // Process normal twists)
+  bool ProcessTwistEvents() {
+    if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
+         strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
+        (strokes[NELEM(strokes)-1].type == TWIST_RIGHT &&
+         strokes[NELEM(strokes)-2].type == TWIST_LEFT)) {
+      if (strokes[NELEM(strokes)-1].length() > 90UL &&
+          strokes[NELEM(strokes)-1].length() < 300UL &&
+          strokes[NELEM(strokes)-2].length() > 90UL &&
+          strokes[NELEM(strokes)-2].length() < 300UL) {
+        uint32_t separation =
             strokes[NELEM(strokes)-1].start_millis -
             strokes[NELEM(strokes)-2].end_millis;
-          if (separation < 200UL) {
-            STDOUT.println("TWIST");
-            // We have a twisting gesture.
-            Event(BUTTON_NONE, EVENT_TWIST);
-          }
+        if (separation < 200UL) {
+          STDOUT.println("TWIST");
+          // We have a twisting gesture.
+          Event(BUTTON_NONE, EVENT_TWIST);
+          return true;
         }
       }
     }
+    return false;
   }
 
   // The prop should call this from Loop() if it wants to detect shakes.
