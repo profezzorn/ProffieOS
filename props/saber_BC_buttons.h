@@ -1845,11 +1845,7 @@ public:
   void ToggleSpamBlast() {
     spam_blast_ = !spam_blast_;
     PVLOG_NORMAL << (spam_blast_ ? "** Entering" : "** Exiting") << " Spam Blast Mode\n";
-    if (SFX_mzoom) {
-      sound_library_.SayZoomingIn();
-    } else {
-      spam_blast_ ? BeepEnterFeature() : BeepExitFeature();
-    }
+    sound_library_.SayZoomingIn();
   }
 
   void ToggleBattleMode() {
