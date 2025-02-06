@@ -1140,11 +1140,9 @@ EFFECT(dim);        // for EFFECT_POWERSAVE
 EFFECT(battery);    // for EFFECT_BATTERY_LEVEL
 EFFECT(bmbegin);    // for Begin Battle Mode
 EFFECT(bmend);      // for End Battle Mode
-EFFECT(volup);      // for increse volume
 EFFECT(push);       // for Force Push gesture
 EFFECT(tr);         // for EFFECT_TRANSITION_SOUND, use with User Effects.
 EFFECT(mute);       // Notification before muted ignition to avoid confusion.
-EFFECT(mzoom);      // for Spam Blast enter/exit
 
 template<class SPEC>
 struct BCScrollPresetsMode : public SPEC::SteppedMode {
@@ -1392,7 +1390,7 @@ struct BCChangeBladeLengthBlade1 : public mode::ChangeBladeLengthBlade1<SPEC> {
     popMode();
   }
   void update() override {
-    hybrid_font.PlayPolyphonic(&SFX_volup);
+    hybrid_font.PlayPolyphonic(&SFX_mclick);
     this->say_time_ = Cyclint<uint32_t>(millis()) + (uint32_t)(SaberBase::sound_length * 1000) + 300;
     if (!this->say_time_) this->say_time_ += 1;
     this->fadeout(SaberBase::sound_length);
@@ -1847,7 +1845,9 @@ public:
   void ToggleSpamBlast() {
     spam_blast_ = !spam_blast_;
     PVLOG_NORMAL << (spam_blast_ ? "** Entering" : "** Exiting") << " Spam Blast Mode\n";
-    if (!hybrid_font.PlayPolyphonic(&SFX_mzoom)) {
+    if (SFX_mzoom) {
+      sound_library_.SayZoomingIn();
+    } else {
       spam_blast_ ? BeepEnterFeature() : BeepExitFeature();
     }
   }
