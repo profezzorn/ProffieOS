@@ -1579,46 +1579,38 @@ public:
   }
 #endif
 
-  // Track the last twist type and time
-  StrokeType saved_twist = UNKNOWN_GESTURE;
-  uint32_t saved_twist_start_millis = 0;
-
-  // Adds a timer to TWIST_LEFT/RIGHT to avoid interference
-  // with normal, 2 direction twists
-  void DetectTwist() {
-    bool process = DetectTwistStrokes();
-    if (process) {
-      // Start timer if no saved_twist
-      if (saved_twist == UNKNOWN_GESTURE && 
-          (strokes[NELEM(strokes)-1].type == TWIST_LEFT || 
-           strokes[NELEM(strokes)-1].type == TWIST_RIGHT)) {
-        saved_twist = strokes[NELEM(strokes)-1].type;
-        saved_twist_start_millis = millis();
-        return;
-      }
-      if (ProcessTwistEvents()) {
-        // Normal twist event happened.
-        // Clear strokes and saved_twist state
-        strokes[NELEM(strokes)-1].type = UNKNOWN_GESTURE;
-        strokes[NELEM(strokes)-2].type = UNKNOWN_GESTURE;
-        saved_twist = UNKNOWN_GESTURE;
-        return;
-      }
-    }
-    DoSavedTwist();
-  }
-
-  void DoSavedTwist() {
-    // Check single twist timer
-    if (saved_twist != UNKNOWN_GESTURE && millis() - saved_twist_start_millis >= 300) {
-      // Emit single twist event
-      Event(BUTTON_NONE, saved_twist == TWIST_LEFT ? EVENT_TWIST_LEFT : EVENT_TWIST_RIGHT);
-      PVLOG_DEBUG << (saved_twist == TWIST_LEFT ? "EVENT_TWIST_LEFT" : "EVENT_TWIST_RIGHT") << "\n";
-      // Clear strokes and saved_twist state
+void DetectTwist() {
+  bool process = DetectTwistStrokes();
+  if (process) {
+    if (ProcessTwistEvents()) {
+      // Normal twist event happened, clear strokes
       strokes[NELEM(strokes)-1].type = UNKNOWN_GESTURE;
-      saved_twist = UNKNOWN_GESTURE;
+      strokes[NELEM(strokes)-2].type = UNKNOWN_GESTURE;
+      return;
     }
   }
+  DoSavedTwist();
+}
+
+void DoSavedTwist() {
+  Stroke* stroke = &strokes[NELEM(strokes)-1];
+  switch (stroke->type) {
+    case TWIST_LEFT:
+    case TWIST_RIGHT:
+      if (stroke->end_millis == 0) return;
+      if (stroke->length() < 100) return;
+      if (millis() - stroke->end_millis < 300) return;
+      // Add another check for separation from previous stroke?
+      break;
+    default:
+      return;
+  }
+  // Emit single twist event
+  Event(BUTTON_NONE, stroke->type == TWIST_LEFT ? EVENT_TWIST_LEFT : EVENT_TWIST_RIGHT);
+  PVLOG_DEBUG << (stroke->type == TWIST_LEFT ? "EVENT_TWIST_LEFT" : "EVENT_TWIST_RIGHT") << "\n";
+  // Prevent re-triggering
+  stroke->type = UNKNOWN_GESTURE;
+}
 
   void BeepEnterFeature() {
     beeper.Beep(0.05, 2000);
