@@ -10,8 +10,10 @@ saber_BC_buttons.h
 Includes 1 or 2 button controls. (3rd button for power control of Dual Blades supported as well).
 Incorporates an intuitive control scheme so button actions are consistant
 whether blade is on or off.
-Best if used with ProffieOS_Voicepack spoken menu prompts. 
-This prop version requires a V2 ProffieOS Voicepack for menus to work right.
+
+** This prop version REQUIRES a V2 ProffieOS Voicepack for menus to work right.
+** Menus will have no sounds if the contents are not somewhere in the font search path.
+** Typically, that is a folder named "common" on the root level of the SD card.
 
 Download your choice of language and variation here:
 http://fredrik.hubbe.net/lightsaber/sound/
@@ -1595,13 +1597,8 @@ public:
 
 #ifdef SPEAK_BLADE_ID
   void SpeakBladeID(float id) override {
-    if (SFX_mnum) {
-      sound_library_v2.SayBlade();
-      sound_library_.SayNumber(id, SAY_WHOLE);
-    } else {
-      PVLOG_NORMAL << "** No mnum.wav number prompts found.\n";
-      beeper.Beep(0.25, 2000.0);
-    }
+    sound_library_v2.SayBlade();
+    sound_library_.SayNumber(id, SAY_WHOLE);
   }
 #endif
 
@@ -2615,13 +2612,7 @@ any # of buttons
         if (spam_blast_) return false;
         PVLOG_NORMAL << "** Reverted Color Variation to uploaded config color. Variation = " << SaberBase::GetCurrentVariation() << "\n";
         SaberBase::SetVariation(0);
-        if (SFX_mnum) {
-          sound_library_v2.SayResetToDefaultColor();
-        } else {
-          beeper.Beep(0.20, 2000.0);
-          beeper.Beep(0.20, 1414.2);
-          beeper.Beep(0.20, 1000.0);
-        }
+        sound_library_v2.SayResetToDefaultColor();
         return true;
 
 // Quote - NOT pointing DOWN
