@@ -10,8 +10,10 @@ saber_BC_buttons.h
 Includes 1 or 2 button controls. (3rd button for power control of Dual Blades supported as well).
 Incorporates an intuitive control scheme so button actions are consistant
 whether blade is on or off.
-Best if used with ProffieOS_Voicepack spoken menu prompts. 
-This prop version requires a V2 ProffieOS Voicepack for menus to work right.
+
+** This prop version REQUIRES a V2 ProffieOS Voicepack for menus to work right.
+** Menus will have no sounds if the contents are not somewhere in the font search path.
+** Typically, that is a folder named "common" on the root level of the SD card.
 
 Download your choice of language and variation here:
 http://fredrik.hubbe.net/lightsaber/sound/
@@ -1136,11 +1138,9 @@ EFFECT(dim);        // for EFFECT_POWERSAVE
 EFFECT(battery);    // for EFFECT_BATTERY_LEVEL
 EFFECT(bmbegin);    // for Begin Battle Mode
 EFFECT(bmend);      // for End Battle Mode
-EFFECT(volup);      // for increse volume
 EFFECT(push);       // for Force Push gesture
 EFFECT(tr);         // for EFFECT_TRANSITION_SOUND, use with User Effects.
 EFFECT(mute);       // Notification before muted ignition to avoid confusion.
-EFFECT(mzoom);      // for Spam Blast enter/exit
 
 template<class SPEC>
 struct BCScrollPresetsMode : public SPEC::SteppedMode {
@@ -1388,7 +1388,7 @@ struct BCChangeBladeLengthBlade1 : public mode::ChangeBladeLengthBlade1<SPEC> {
     popMode();
   }
   void update() override {
-    hybrid_font.PlayPolyphonic(&SFX_volup);
+    hybrid_font.PlayPolyphonic(&SFX_mclick);
     this->say_time_ = Cyclint<uint32_t>(millis()) + (uint32_t)(SaberBase::sound_length * 1000) + 300;
     if (!this->say_time_) this->say_time_ += 1;
     this->fadeout(SaberBase::sound_length);
@@ -1589,13 +1589,8 @@ public:
 
 #ifdef SPEAK_BLADE_ID
   void SpeakBladeID(float id) override {
-    if (SFX_mnum) {
-      sound_library_v2.SayBlade();
-      sound_library_.SayNumber(id, SAY_WHOLE);
-    } else {
-      PVLOG_NORMAL << "** No mnum.wav number prompts found.\n";
-      beeper.Beep(0.25, 2000.0);
-    }
+    sound_library_v2.SayBlade();
+    sound_library_.SayNumber(id, SAY_WHOLE);
   }
 #endif
 
@@ -1837,9 +1832,7 @@ void DoSavedTwist() {
   void ToggleSpamBlast() {
     spam_blast_ = !spam_blast_;
     PVLOG_NORMAL << (spam_blast_ ? "** Entering" : "** Exiting") << " Spam Blast Mode\n";
-    if (!hybrid_font.PlayPolyphonic(&SFX_mzoom)) {
-      spam_blast_ ? BeepEnterFeature() : BeepExitFeature();
-    }
+    sound_library_.SayZoomingIn();
   }
 
   void ToggleBattleMode() {
@@ -2602,13 +2595,7 @@ any # of buttons
         if (spam_blast_) return false;
         PVLOG_NORMAL << "** Reverted Color Variation to uploaded config color. Variation = " << SaberBase::GetCurrentVariation() << "\n";
         SaberBase::SetVariation(0);
-        if (SFX_mnum) {
-          sound_library_v2.SayResetToDefaultColor();
-        } else {
-          beeper.Beep(0.20, 2000.0);
-          beeper.Beep(0.20, 1414.2);
-          beeper.Beep(0.20, 1000.0);
-        }
+        sound_library_v2.SayResetToDefaultColor();
         return true;
 
 // Quote - NOT pointing DOWN
