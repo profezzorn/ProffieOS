@@ -12,6 +12,7 @@ to aid in saber function navigation. These sound files
 are optional and are available as a free download from:
 https://sabersense.square.site/downloads
 
+
 ============================================================
 ========= BUTTON SYSTEM PRINCIPLES AND LOGIC NOTES ========= 
 
@@ -69,6 +70,7 @@ Hence:
         Colour change with blade ON
         Volume menu with blade OFF
 
+
 ==========================================================
 =================== 1 BUTTON CONTROLS ==================== 
 
@@ -122,6 +124,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   *   = Gesture ignitions also available via defines.
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
   *** = Feature must be enabled in config file using SABERSENSE_ENABLE_RESET define.
+
 
 ============================================================
 ===================== 2 BUTTON CONTROLS ====================
@@ -184,6 +187,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
   *** = Feature must be enabled in config file using SABERSENSE_ENABLE_RESET define.
 
+
 ===========================================================
 =================== SABERSENSE DEFINES ====================
 
@@ -224,11 +228,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Enables system to be completely reset to 'factory defaults' 
   i.e. original config, using button press to delete 
   all save files.
-  
-#define SABERSENSE_OS7_LEGACY_SUPPORT
-  Required when using this prop file with ProffieOS 7.x. 
-  Not needed (will not work) with ProffieOS 8.x or later.
-  
+
 #define SABERSENSE_NO_COLOR_CHANGE
   Use instead of DISABLE_COLOR_CHANGE.
   
@@ -248,6 +248,7 @@ GESTURE CONTROLS
 ============================================================
 ============================================================
 */
+
 #ifndef PROPS_SABER_SABERSENSE_BUTTONS_H
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
@@ -307,9 +308,6 @@ EFFECT(blstend);  // for End Multi-Blast
 EFFECT(array);    // for playing array idents
 EFFECT(bladeid);  // for playing bladeid idents
 EFFECT(reset);    // for playing factory default reset completed
-#ifdef SABERSENSE_OS7_LEGACY_SUPPORT
-EFFECT(quote);    // for playing quotes with ProfileOS 7.x.
-#endif
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -546,15 +544,6 @@ public:
 #endif
 
 // Manual Blade Array Selection version of FindBladeAgain()
-#ifdef SABERSENSE_OS7_LEGACY_SUPPORT
-#undef ACTIVATE
-#define ACTIVATE(N) do {                        \
-  if (!current_config->blade##N) {            \
-    goto bad_blade;                           \
-  }                                           \
-  current_config->blade##N->Activate();       \
-} while(0);
-#else
 #undef ACTIVATE
 #define ACTIVATE(N) do {                        \
   if (!current_config->blade##N) {            \
@@ -562,7 +551,6 @@ public:
   }                                           \
   current_config->blade##N->Activate(N);      \
 } while(0);
-#endif
 
 void FakeFindBladeAgain() {
   // Reverse everything FindBladeAgain does, except for recalculating best_config.
@@ -1175,18 +1163,8 @@ case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
 return false;
 }
 
-#ifdef SABERSENSE_OS7_LEGACY_SUPPORT
-void SB_Effect(EffectType effect, float location) override  //  Required for ProffieOS 7.x.
-#else
-void SB_Effect(EffectType effect, EffectLocation location) override  //  For ProffieOS 8.x.
-#endif  
-{
-  switch (effect) {
-#ifdef SABERSENSE_OS7_LEGACY_SUPPORT
-    case EFFECT_QUOTE: 
-      hybrid_font.PlayCommon(&SFX_quote); 
-      return; 
-#endif
+  void SB_Effect(EffectType effect, EffectLocation location) override {
+    switch (effect) {
     case EFFECT_POWERSAVE:  
       if (SFX_dim) {
         hybrid_font.PlayCommon(&SFX_dim);
@@ -1227,4 +1205,5 @@ private:
   uint32_t last_push_ = millis();
   uint32_t saber_off_time_ = millis();
 };
+
 #endif
