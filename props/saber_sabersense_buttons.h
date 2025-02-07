@@ -12,7 +12,6 @@ to aid in saber function navigation. These sound files
 are optional and are available as a free download from:
 https://sabersense.square.site/downloads
 
-
 ============================================================
 ========= BUTTON SYSTEM PRINCIPLES AND LOGIC NOTES ========= 
 
@@ -70,7 +69,6 @@ Hence:
         Colour change with blade ON
         Volume menu with blade OFF
 
-
 ==========================================================
 =================== 1 BUTTON CONTROLS ==================== 
 
@@ -124,7 +122,6 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   *   = Gesture ignitions also available via defines.
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
   *** = Feature must be enabled in config file using SABERSENSE_ENABLE_RESET define.
-
 
 ============================================================
 ===================== 2 BUTTON CONTROLS ====================
@@ -187,7 +184,6 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
   *** = Feature must be enabled in config file using SABERSENSE_ENABLE_RESET define.
 
-
 ===========================================================
 =================== SABERSENSE DEFINES ====================
 
@@ -248,7 +244,6 @@ GESTURE CONTROLS
 ============================================================
 ============================================================
 */
-
 #ifndef PROPS_SABER_SABERSENSE_BUTTONS_H
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
@@ -933,14 +928,8 @@ case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
 #if NUM_BUTTONS == 1
 //  1 button
 case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-  //  For harmonized 'Exit Colour Menu' control in OS-7.x. Ignored in OS-8.
-  if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-    ToggleColorChangeMode();
-  } else {
-    //  Fires blast in all OSs.
     swing_blast_ = false;
     SaberBase::DoBlast();
-  }
   return true;
 #endif
 
@@ -1184,7 +1173,6 @@ return false;
         hybrid_font.PlayCommon(&SFX_faston);
       }
       return;
-
     default: break; // avoids compiler warning
   }
 }
@@ -1205,5 +1193,4 @@ private:
   uint32_t last_push_ = millis();
   uint32_t saber_off_time_ = millis();
 };
-
 #endif
