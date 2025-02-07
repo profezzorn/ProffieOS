@@ -1379,18 +1379,15 @@ public:
     if (!strcmp(cmd, "swing")) {
       SaberBase::DoEffect(EFFECT_ACCENT_SWING, 0);
       Event(BUTTON_NONE, EVENT_SWING);
-      hybrid_font.CheckStopIdle();
       return true;
     }
     if (!strcmp(cmd, "slash")) {
       SaberBase::DoEffect(EFFECT_ACCENT_SLASH, 0);
-      hybrid_font.CheckStopIdle();
       return true;
     }
 #ifdef ENABLE_SPINS
     if (!strcmp(cmd, "spin")) {
       SaberBase::DoEffect(EFFECT_SPIN, 0);
-      hybrid_font.CheckStopIdle();
      return true;
     }
 #endif
