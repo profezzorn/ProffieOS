@@ -291,6 +291,7 @@ void PrintQuotedValue(const char* name, const char* str) {
           break;
         case '\\':
           STDOUT.write('\\');
+          [[gnu::fallthrough]];
         default:
           STDOUT.write(*str);
       }
