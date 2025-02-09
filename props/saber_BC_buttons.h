@@ -41,9 +41,9 @@ Features:
 - Spam Blast - Enter this mode to make the button super sensitive for
                             multiple blaster blocks. Presses are prioritized over
                             other features. No limits, no lag when "rapid firing".
-- No inadvertant effects during preon.
-- Rotary control of Volume and Scroll Presets. (Rotate hilt like turning a dial)
 - * NEW for OS8 * 
+  - No inadvertant effects during preon.
+  - Rotary control of Volume and Scroll Presets. (Rotate hilt like turning a dial)
   - Dual blade independent ignition and retraction control with a single Proffieboard. (Such as for a staff saber)
   - Scroll Presets mode.
   - Quotes play with blade ON or OFF, and will not overlap / interrupt one another.
