@@ -6,6 +6,10 @@
 #include "../common/cyclint.h"
 #include "../common/angle.h"
 
+#ifndef STEPS_PER_REVOLUTION
+#define STEPS_PER_REVOLUTION 6
+#endif
+
 namespace mode {
 
 // Base class for stepped menues/modes.
@@ -16,8 +20,11 @@ struct SteppedModeBase : public SPEC::SelectCancelMode {
   virtual void prev() = 0;
   virtual void update() {}
 
-  virtual int steps_per_revolution() { return 6; }
   virtual int dead_zone_percent() { return 25; }
+
+  virtual int steps_per_revolution() {
+    return STEPS_PER_REVOLUTION;
+  }  
 
   // Size of one menu entry.
   virtual float stepsize() {

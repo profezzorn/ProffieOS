@@ -456,6 +456,13 @@ public:
   
   void SB_On2(EffectLocation location) override { scr_.Play(&SCR_out); }
   void SB_Top(uint64_t total_cycles) override { scr_.screen()->SB_Top(); }
+  void SB_Off2(OffType offtype, EffectLocation location) override {
+    if (offtype == OFF_IDLE) {
+      Stop();
+    } else if (!scr_.Play(&SCR_in)) {
+      ShowDefault();
+    }
+  }
 
   const char* name() override { return "ColorDisplayController"; }
 
@@ -474,6 +481,14 @@ public:
     True,
     False
   };
+
+  void Stop() {
+    for (int i = 0;; i++) {
+      LayerControl *layer = scr_.screen()->getLayer(i);
+      if (!layer) break;
+      layer->LC_play("");
+    }
+  }
 
   void ShowDefault(bool ignore_lockup = false) {
     if (SaberBase::IsOn()) {
@@ -503,12 +518,7 @@ public:
      case EFFECT_NEWFONT:
        looped_on_ = Tristate::Unknown;
        looped_idle_ = Tristate::Unknown;
-       for (int i = 0;; i++) {
-	 LayerControl *layer = scr_.screen()->getLayer(i);
-	 if (!layer) break;
-	 layer->LC_play("");
-       }
-       
+       Stop();
        if (!scr_.Play(&SCR_font)) {
 	 ShowDefault();
        }

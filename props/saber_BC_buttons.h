@@ -2,7 +2,7 @@
 saber_BC_buttons.h
   http://fredrik.hubbe.net/lightsaber/proffieos.html
   Copyright (c) 2016-2019 Fredrik Hubinette
-  Copyright (c) 2023-2024 Brian Conner with contributions by:
+  Copyright (c) 2023-2025 Brian Conner with contributions by:
   Fredrik Hubinette, Fernando da Rosa, Matthew McGeary, and Scott Weber.
   Distributed under the terms of the GNU General Public License v3.
   http://www.gnu.org/licenses/
@@ -10,8 +10,10 @@ saber_BC_buttons.h
 Includes 1 or 2 button controls. (3rd button for power control of Dual Blades supported as well).
 Incorporates an intuitive control scheme so button actions are consistent
 whether blade is on or off.
-Best if used with ProffieOS_Voicepack spoken menu prompts. 
-This prop version requires a V2 ProffieOS Voicepack for menus to work right.
+
+** This prop version REQUIRES a V2 ProffieOS Voicepack for menus to work right.
+** Menus will have no sounds if the contents are not somewhere in the font search path.
+** Typically, that is a folder named "common" on the root level of the SD card.
 
 Download your choice of language and variation here:
 http://fredrik.hubbe.net/lightsaber/sound/
@@ -1126,10 +1128,6 @@ push                    - force push
 #define BUTTON_HELD_LONG_TIMEOUT 2000
 #endif
 
-#ifndef NORMAL_TWIST_TIMEOUT
-#define NORMAL_TWIST_TIMEOUT 400
-#endif
-
 #ifndef BC_MAIN_BLADE
 #define BC_MAIN_BLADE 1
 #endif
@@ -1161,11 +1159,9 @@ EFFECT(dim);        // for EFFECT_POWERSAVE
 EFFECT(battery);    // for EFFECT_BATTERY_LEVEL
 EFFECT(bmbegin);    // for Begin Battle Mode
 EFFECT(bmend);      // for End Battle Mode
-EFFECT(volup);      // for increse volume
 EFFECT(push);       // for Force Push gesture
 EFFECT(tr);         // for EFFECT_TRANSITION_SOUND, use with User Effects.
 EFFECT(mute);       // Notification before muted ignition to avoid confusion.
-EFFECT(mzoom);      // for Spam Blast enter/exit
 EFFECT(array);      // for Manual Blade Array switching
 
 template<class SPEC>
@@ -1414,7 +1410,7 @@ struct BCChangeBladeLengthBlade1 : public mode::ChangeBladeLengthBlade1<SPEC> {
     popMode();
   }
   void update() override {
-    hybrid_font.PlayPolyphonic(&SFX_volup);
+    hybrid_font.PlayPolyphonic(&SFX_mclick);
     this->say_time_ = Cyclint<uint32_t>(millis()) + (uint32_t)(SaberBase::sound_length * 1000) + 300;
     if (!this->say_time_) this->say_time_ += 1;
     this->fadeout(SaberBase::sound_length);
@@ -1520,7 +1516,6 @@ public:
 
   void Loop() override {
     PropBase::Loop();
-    DetectMenuTurn();
     DetectTwist();
     Vec3 mss = fusor.mss();
     sound_library_.Poll(wav_player);
@@ -1612,57 +1607,47 @@ public:
     if (scroll_presets_beep_delay_timer_.isTimerExpired()) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
     }
-    if (twist_delay_timer_.isTimerExpired()) {
-      DoSavedTwist();
-    }
   }  // Loop()
 
 #ifdef SPEAK_BLADE_ID
   void SpeakBladeID(float id) override {
-    if (SFX_mnum) {
-      sound_library_v2.SayBlade();
-      sound_library_.SayNumber(id, SAY_WHOLE);
-    } else {
-      PVLOG_NORMAL << "** No mnum.wav number prompts found.\n";
-      beeper.Beep(0.25, 2000.0);
-    }
+    sound_library_v2.SayBlade();
+    sound_library_.SayNumber(id, SAY_WHOLE);
   }
 #endif
 
-  void DetectMenuTurn() {
-    float a = fusor.angle2() - current_twist_angle_;
-    if (isPointingUp()) return;
-    // Keep the rotational angle within range of 
-    // -180 to 180 degrees in terms of radians.
-    if (a > M_PI) a-= M_PI * 2;
-    if (a < -M_PI) a+= M_PI * 2;
-
-    if (a < -M_PI / 3) {
-      CheckSavedTwist(EVENT_TWIST_LEFT);
-      current_twist_angle_ = fusor.angle2();
-    } else if (a > M_PI / 3) {
-      CheckSavedTwist(EVENT_TWIST_RIGHT);
-      current_twist_angle_ = fusor.angle2();
+void DetectTwist() {
+  bool process = DetectTwistStrokes();
+  if (process) {
+    if (ProcessTwistEvents()) {
+      // Normal twist event happened, clear strokes
+      strokes[NELEM(strokes)-1].type = UNKNOWN_GESTURE;
+      strokes[NELEM(strokes)-2].type = UNKNOWN_GESTURE;
+      return;
     }
   }
+  DoSavedTwist();
+}
 
-  void CheckSavedTwist(uint32_t event) {
-    if (!saved_twist_) {
-      // Save the current twist and start the timer if no twist is saved
-      saved_twist_ = event;
-      twist_delay_timer_.trigger(NORMAL_TWIST_TIMEOUT);
-    PVLOG_DEBUG << "**** Saving twist event: " << (event == EVENT_TWIST_LEFT ? "TWIST LEFT" : "TWIST RIGHT") << ". Starting timer.\n";
-    }
+void DoSavedTwist() {
+  Stroke* stroke = &strokes[NELEM(strokes)-1];
+  switch (stroke->type) {
+    case TWIST_LEFT:
+    case TWIST_RIGHT:
+      if (stroke->end_millis == 0) return;
+      if (stroke->length() < 100) return;
+      if (millis() - stroke->end_millis < 300) return;
+      // Add another check for separation from previous stroke?
+      break;
+    default:
+      return;
   }
-
-  void DoSavedTwist() {
-    // Trigger the saved twist after timeout
-    PVLOG_DEBUG << (saved_twist_ == EVENT_TWIST_LEFT ? "**** Doing SAVED TWIST LEFT\n" : "Doing SAVED TWIST RIGHT\n");
-    Event(BUTTON_NONE, (EVENT)saved_twist_);
-    // Clear the twist state and reset strokes to prevent Normal Twist after USER twist
-    DoGesture(TWIST_CLOSE);
-    saved_twist_ = 0;
-  }
+  // Emit single twist event
+  Event(BUTTON_NONE, stroke->type == TWIST_LEFT ? EVENT_TWIST_LEFT : EVENT_TWIST_RIGHT);
+  PVLOG_DEBUG << (stroke->type == TWIST_LEFT ? "EVENT_TWIST_LEFT" : "EVENT_TWIST_RIGHT") << "\n";
+  // Prevent re-triggering
+  stroke->type = UNKNOWN_GESTURE;
+}
 
   void BeepEnterFeature() {
     beeper.Beep(0.05, 2000);
@@ -1768,13 +1753,13 @@ public:
       sound_library_.SayNumber(battery_monitor.battery(), SAY_DECIMAL);
       sound_library_.SayVolts();
       PVLOG_NORMAL << "Battery Voltage: " << battery_monitor.battery() << "\n";
-      speaking_ = true;
+      is_speaking_ = true;
       SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
     } else {
       sound_library_.SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
       sound_library_.SayPercent();
       PVLOG_NORMAL << "Battery Percentage: " <<battery_monitor.battery_percent() << "%\n";
-      speaking_ = true;
+      is_speaking_ = true;
       SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
     }
   }
@@ -1869,9 +1854,7 @@ public:
   void ToggleSpamBlast() {
     spam_blast_ = !spam_blast_;
     PVLOG_NORMAL << (spam_blast_ ? "** Entering" : "** Exiting") << " Spam Blast Mode\n";
-    if (!hybrid_font.PlayPolyphonic(&SFX_mzoom)) {
-      spam_blast_ ? BeepEnterFeature() : BeepExitFeature();
-    }
+    sound_library_.SayZoomingIn();
   }
 
   void ToggleBattleMode() {
@@ -2225,13 +2208,6 @@ public:
   RefPtr<BufferedWavPlayer> wav_player;
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
-
-    if (event == EVENT_TWIST) {
-      PVLOG_DEBUG << "**** Detected EVENT_TWIST in Event2, stopping timer and resetting saved twist.\n";
-      saved_twist_ = 0;
-      twist_delay_timer_.stopTimer();
-    }
-
     switch (EVENTID(button, event, modifiers)) {
       // storage of unused cases
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
@@ -2815,13 +2791,7 @@ any # of buttons
         if (spam_blast_) return false;
         PVLOG_NORMAL << "** Reverted Color Variation to uploaded config color. Variation = " << SaberBase::GetCurrentVariation() << "\n";
         SaberBase::SetVariation(0);
-        if (SFX_mnum) {
-          sound_library_v2.SayResetToDefaultColor();
-        } else {
-          beeper.Beep(0.20, 2000.0);
-          beeper.Beep(0.20, 1414.2);
-          beeper.Beep(0.20, 1000.0);
-        }
+        sound_library_v2.SayResetToDefaultColor();
         return true;
 
 // Quote - NOT pointing DOWN
@@ -2926,8 +2896,8 @@ any # of buttons
         return;
       // On-Demand Battery Level
       case EFFECT_BATTERY_LEVEL:
-        if (speaking_) {
-          speaking_ = false;
+        if (is_speaking_) {
+          is_speaking_ = false;
           return;
         }
         if (!hybrid_font.PlayPolyphonic(&SFX_battery)) {
@@ -2978,16 +2948,13 @@ private:
   DelayTimer mute_mainBlade_delay_timer_;
   DelayTimer mute_secondBlade_delay_timer_;
   DelayTimer scroll_presets_beep_delay_timer_;
-  DelayTimer twist_delay_timer_;
 
-  float current_twist_angle_ = 0.0;
-  uint32_t saved_twist_ = 0;
   bool battle_mode_ = false;
   bool auto_lockup_on_ = false;
   bool auto_melt_on_ = false;
   bool sequential_quote_ = false;
   bool spam_blast_ = false;
-  bool speaking_ = false;  // Don't play battery.wav when doing Spoken Battery Level
+  bool is_speaking_ = false;  // Don't play battery.wav when doing Spoken Battery Level
   bool muted_ = false;
   bool forward_stab_ = false;
 

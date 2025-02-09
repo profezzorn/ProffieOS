@@ -382,7 +382,7 @@ struct OverDriveColor {
   bool overdrive;
   
   void printTo(Print& p) {
-    if (overdrive) p.write('!');
+    p.write(overdrive ? '!' : '#');
     c.printTo(p);
   }
   bool getOverdrive() const { return overdrive; }
@@ -451,7 +451,7 @@ struct RGBA_um {
   bool overdrive;
 
   void printTo(Print& p) {
-    if (overdrive) p.write('!');
+    p.write(overdrive ? '!' : '#');
     c.printTo(p);
     p.write(',');
     p.print(alpha);
@@ -486,7 +486,7 @@ struct RGBA {
   uint16_t alpha;
   bool overdrive;
   void printTo(Print& p) {
-    if (overdrive) p.write('!');
+    p.write(overdrive ? '!' : '#');
     c.printTo(p);
     p.write('*');
     p.print(alpha);
