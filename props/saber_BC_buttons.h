@@ -179,7 +179,7 @@ While in any menu mode the following controls apply:
 Save                - Click POW
 Cancel / Exit       - Click AUX or Double Click POW
 
-Each section for controls have a descriptive version listed by feature and somwhat in the order
+Each section for controls have a descriptive version listed by feature and somewhat in the order
 of using the saber, and a second summary list that is sorted by button clicks.
 
 
