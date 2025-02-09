@@ -325,10 +325,10 @@ public:
     if (SaberBase::IsOn()) {
       DetectSwing();
       if (auto_lockup_on_ &&
-        !swinging_ &&
-        fusor.swing_speed() > 120 &&
-        millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
-        SaberBase::Lockup()) {
+          !swinging_ &&
+          fusor.swing_speed() > 120 &&
+          millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
+          SaberBase::Lockup()) {
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         auto_lockup_on_ = false;
@@ -400,7 +400,7 @@ public:
     STDOUT.println("Volume up");
     if (dynamic_mixer.get_volume() < VOLUME) {
       dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
-        dynamic_mixer.get_volume() + VOLUME * 0.10));
+          dynamic_mixer.get_volume() + VOLUME * 0.10));
       if (SFX_volup) {
         hybrid_font.PlayCommon(&SFX_volup);
       } else {
