@@ -6,11 +6,17 @@
 Built on SA22C programming by Matthew McGeary.
 Modified by Chris Carter with substantial support and
 contributions from Fredrik Hubinette and Brian Conner.
-Optimized for ProffieOS 8.x.
 
 This prop file references certain custom sound files
 to aid in saber function navigation. These sound files
-are optional and are available as a free download from:
+are optional and are available as a free download from
+the Sabersense website. (Link below).
+
+This prop file has been optimized for ProffieOS 8.x
+or later. A ProffieOS 7.x compatible version of this 
+prop file is available as a free download from the 
+Sabersense website.
+
 https://sabersense.square.site/downloads
 
 ============================================================
