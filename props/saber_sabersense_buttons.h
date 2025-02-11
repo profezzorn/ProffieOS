@@ -1,11 +1,14 @@
 /*
 ============================================================
-================== SABERSENSE PROP FILE ====================
+================   SABERSENSE PROP FILE   ==================
+================            by            ==================
+================       CHRIS CARTER       ==================
 ============================================================
 
-Built on SA22C programming by Matthew McGeary.
-Modified by Chris Carter with substantial support and
-contributions from Fredrik Hubinette and Brian Conner.
+Built on Matthew McGeary's SA22C button prop file for one
+and two button replica lightsabers. Modified by Chris
+Carter with substantial support and contributions from
+Fredrik Hubinette and Brian Conner.
 
 This prop file references certain custom sound files
 to aid in saber function navigation. These sound files
@@ -195,7 +198,12 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 =================== SABERSENSE DEFINES ====================
 
 #define SABERSENSE_BLADE_ID
-  Replaces regular BladeID with on-demand BladeID scanning.
+  Replaces regular BladeID (which relies on continuous ID
+  scanning) with on-demand ID scanning.
+  Triple-click MAIN will run the scan, identify the blade
+  and switch to its associated array. This system prevents
+  spurious ID readings switching blade when you don't want
+  it to, especially if using SnapshotID.
   Plays array-specific bladeidX.wav files when switching.
 
 #define SABERSENSE_ARRAY_SELECTOR
@@ -206,7 +214,10 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 
 #define SABERSENSE_ENABLE_ARRAY_FONT_IDENT
   Plays font ident after array ident when switching arrays.
-  Use with SABERSENSE_BLADE_ID and SABERSENSE_ARRAY_SELECTOR.
+  Can be used with SABERSENSE_BLADE_ID and
+  SABERSENSE_ARRAY_SELECTOR to tell user which font they
+  have landed on on multiple-array systems in which each 
+  array has its own save files.
 
 #define SABERSENSE_FLIP_AUDIO_PLAYERS
   Reverses UP/DOWN orientation for playing FORCE, QUOTE and
@@ -219,7 +230,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Adds blaster block button to MAIN as well as AUX in
   2-button mode. Improves 1 and 2-button harmonization,
   but makes accidental blasts more likely when double-clicking
-  for Quotes or Force Effect.
+  MAIN for Quotes or Force Effect.
 
 #define SABERSENSE_BUTTON_CLICKER
   Button Clicker to play press/release wav files when
@@ -325,10 +336,10 @@ public:
     if (SaberBase::IsOn()) {
       DetectSwing();
       if (auto_lockup_on_ &&
-          !swinging_ &&
-          fusor.swing_speed() > 120 &&
-          millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
-          SaberBase::Lockup()) {
+        !swinging_ &&
+        fusor.swing_speed() > 120 &&
+        millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
+        SaberBase::Lockup()) {
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         auto_lockup_on_ = false;
@@ -346,8 +357,8 @@ public:
       // EVENT_PUSH
       if (fabs(mss.x) < 3.0 &&
         mss.y * mss.y + mss.z * mss.z > 70 &&
-        fusor.swing_speed() < 30 &&
-        fabs(fusor.gyro().x) < 10) {
+            fusor.swing_speed() < 30 &&
+            fabs(fusor.gyro().x) < 10) {
         if (millis() - push_begin_millis_ > SABERSENSE_FORCE_PUSH_LENGTH) {
           Event(BUTTON_NONE, EVENT_PUSH);
           push_begin_millis_ = millis();
@@ -383,14 +394,14 @@ public:
 #ifdef SABERSENSE_BLADE_ID
     if (do_font_after_sound_ && !IsBladeidSoundPlaying()) {
       SaberBase::DoNewFont();
-      do_font_after_sound_ = !do_font_after_sound_;
+      do_font_after_sound_ = false;
     }
 #endif
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
     if (do_font_after_sound_ && !IsArraySoundPlaying()) {
       SaberBase::DoNewFont();
-      do_font_after_sound_ = !do_font_after_sound_;
+      do_font_after_sound_ = false;
     }
 #endif
   }
@@ -410,7 +421,7 @@ public:
       STDOUT.println(dynamic_mixer.get_volume());
     } else {
       // Cycle through ends of Volume Menu option
-#ifdef VOLUME_MENU_CYCLE
+#ifdef SABERSENSE_VOLUME_MENU
       if (!max_vol_reached_) {
         if (SFX_volmax) {
           hybrid_font.PlayCommon(&SFX_volmax);
@@ -421,7 +432,7 @@ public:
         max_vol_reached_ = true;
       } else {
         dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
-        dynamic_mixer.get_volume() - VOLUME * 0.90));
+            dynamic_mixer.get_volume() - VOLUME * 0.90));
         if (SFX_volmin) {
           hybrid_font.PlayCommon(&SFX_volmin);
         } else {
@@ -445,7 +456,7 @@ public:
     STDOUT.println("Volume Down");
     if (dynamic_mixer.get_volume() > (0.10 * VOLUME)) {
       dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
-        dynamic_mixer.get_volume() - VOLUME * 0.10));
+          dynamic_mixer.get_volume() - VOLUME * 0.10));
       if (SFX_voldown) {
         hybrid_font.PlayCommon(&SFX_voldown);
       } else {
@@ -454,7 +465,7 @@ public:
       STDOUT.print("Volume Down - Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
     } else {
-#ifdef VOLUME_MENU_CYCLE
+#ifdef SABERSENSE_VOLUME_MENU
       if (!min_vol_reached_) {
         if (SFX_volmin) {
           hybrid_font.PlayCommon(&SFX_volmin);
@@ -495,18 +506,16 @@ public:
     return !!GetWavPlayerPlaying(&SFX_bladeid);
   }
 
-#ifdef SABERSENSE_ENABLE_ARRAY_FONT_IDENT  // Plays 'bladeid' sound AND 'font' sound.
   void TriggerBladeID() {
     FindBladeAgain();
+#ifdef SABERSENSE_ENABLE_ARRAY_FONT_IDENT  // Plays 'bladeid' sound AND 'font' sound.
     SFX_bladeid.Select(current_config - blades);
     hybrid_font.PlayCommon(&SFX_bladeid);
     // Calls Loop function to handle waiting for effect before running DoNewFont.
-    do_font_after_sound_ = !do_font_after_sound_;
+    do_font_after_sound_ = true;
   }
 #else
   // Plays 'bladeid' sound only, or 'font' sound if no 'bladeid' sound available.
-  void TriggerBladeID() {
-    FindBladeAgain();
     if (SFX_bladeid) {
       SFX_bladeid.Select(current_config - blades);
       hybrid_font.PlayCommon(&SFX_bladeid);  // Play 'bladeid' sound file if available.
@@ -526,18 +535,17 @@ public:
     return !!GetWavPlayerPlaying(&SFX_array);
   }
 
-#ifdef SABERSENSE_ENABLE_ARRAY_FONT_IDENT  // Plays 'array' sound AND 'font' sound.
   void NextBladeArray() {
     FakeFindBladeAgain();
+#ifdef SABERSENSE_ENABLE_ARRAY_FONT_IDENT  // Plays 'array' sound AND 'font' sound.
     SFX_array.Select(current_config - blades);
     hybrid_font.PlayCommon(&SFX_array);
     // Calls Loop function to handle waiting for effect before running DoNewFont.
-    do_font_after_sound_ = !do_font_after_sound_;
+    do_font_after_sound_ = true;
+    do_font_after_sound_ = true;
   }
 #else
   // Plays 'array' sound only, or 'font' sound if no 'array' sound available.
-  void NextBladeArray() {
-    FakeFindBladeAgain();
     if (SFX_array) {
       SFX_array.Select(current_config - blades);
       hybrid_font.PlayCommon(&SFX_array);  // Play 'array' sound file if available.
@@ -557,7 +565,6 @@ public:
 } while(0);
 
 void FakeFindBladeAgain() {
-  // Reverse everything FindBladeAgain does, except for recalculating best_config.
   ONCEPERBLADE(UNSET_BLADE_STYLE)
 #undef DEACTIVATE
 #define DEACTIVATE(N) do {                    \
@@ -566,13 +573,7 @@ void FakeFindBladeAgain() {
 } while(0);
   ONCEPERBLADE(DEACTIVATE);
   SaveVolumeIfNeeded();
-  if (fusor.angle1() > 0) {
-    // Cycle forwards (next array) if hilt pointing up...
-    current_config = blades + (current_config - blades + 1) % NELEM(blades);
-  } else {
-    // Cycle backwards (previous array) if hilt pointing down.
-    current_config = blades + (current_config - blades - 1) % NELEM(blades);
-  }
+  current_config = blades + (current_config - blades + 1) % NELEM(blades);
 
   ONCEPERBLADE(ACTIVATE);
   RestoreGlobalState();
@@ -581,7 +582,6 @@ void FakeFindBladeAgain() {
 #else
   SetPreset(0, false);
 #endif // SAVE_PRESET
-  // PVLOG_NORMAL << "** FakeFindBladeAgain() Completed\n";
   return;
 #if NUM_BLADES != 0
 bad_blade:
@@ -593,16 +593,11 @@ bad_blade:
 // RESET FACTORY DEFAULTS (Delete Save Files).
 // Script to determine if sound effects have finished.
 #ifdef SABERSENSE_ENABLE_RESET
-bool IsResetSoundPlaying() {
-  return !!GetWavPlayerPlaying(&SFX_reset);
-}
-
-bool IsBootSoundPlaying() {
-  return !!GetWavPlayerPlaying(&SFX_boot);
+bool IsSoundPlaying(const Effect* sound) {
+  return !!GetWavPlayerPlaying(sound);
 }
 #endif
 
-// CLICK PLAYER FOR BUTTON PRESSES (optional).
 void PlaySound(const char* sound) {
   RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
   if (player) {
@@ -619,7 +614,8 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_OFF):
       SaberBase::RequestMotion();
 #ifdef SABERSENSE_BUTTON_CLICKER
-      // Intended for Scavenger hilt where wheel makes tactile feel difficult.
+      // Intended to play click sound on button presses, primarily for Scavenger 
+      // hilt where wheel makes tactile switch feel difficult.
       PlaySound("press.wav");  // Requires press.wav file to work.
 #endif
       return false;
@@ -628,7 +624,6 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
     case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
 #ifdef SABERSENSE_BUTTON_CLICKER
-      // Intended for Scavenger hilt where wheel makes tactile feel difficult.
       PlaySound("release.wav");  // Requires release.wav file to work.
 #endif
       if (SaberBase::Lockup()) {
@@ -934,33 +929,24 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #endif
 
     // BLASTER DEFLECTION
-    // 1 Button
 #if NUM_BUTTONS == 1
-    // 1 button
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
       swing_blast_ = false;
       SaberBase::DoBlast();
       return true;
 #endif
 
-    // 2 Button
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
+#ifdef SABERSENSE_BLAST_MAIN_AND_AUX
+    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+#endif
       swing_blast_ = false;
       SaberBase::DoBlast();
       return true;
-
-    // Add blast to MAIN on 2-button sabers.
-#ifdef SABERSENSE_BLAST_MAIN_AND_AUX
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-      swing_blast_ = false;
-      SaberBase::DoBlast();
-    }
-    return true;
-#endif
 #endif
 
-    //  Multi-Blaster Deflection mode
+    // Multi-Blaster Deflection mode
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
       swing_blast_ = !swing_blast_;
       if (swing_blast_) {
@@ -1101,7 +1087,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 
       if (SFX_reset) {  // Optional confirmation sound file 'reset'.
         hybrid_font.PlayCommon(&SFX_reset);
-        while(IsResetSoundPlaying());  // Lock system while sound finishes.
+        while(IsSoundPlaying(&SFX_reset)); // Lock system while sound finishes.
       } else {
         beeper.Beep(0.5, 2000); // Generate beep to confirm reset.
         delay(800); // Allow beep to play.
