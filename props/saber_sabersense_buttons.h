@@ -100,7 +100,7 @@ FUNCTIONS WITH BLADE OFF
   Play Music Track          Fast double-click, hilt pointing down. **
   Speak battery voltage     Fast double-click-and-hold while OFF.
   Run BladeID/Array Select  Fast triple-click while OFF. (Applicable installs only).
-  Restore Factory Defaults  Fast four-clicks while OFF, hold on last click. ***
+  Restore Factory Defaults  Fast four-clicks while OFF, hold on last click.
                               Release once announcement starts.
   Enter/Exit VOLUME MENU    Hold and clash while OFF.
     Volume up               Click while in VOLUME MENU, hilt pointing up.
@@ -131,7 +131,6 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 
   *   = Gesture ignitions also available via defines.
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
-  *** = Feature must be enabled in config file using SABERSENSE_ENABLE_RESET define.
 
 ============================================================
 ===================== 2 BUTTON CONTROLS ====================
@@ -157,7 +156,7 @@ FUNCTIONS WITH BLADE OFF
   Play Music Track          Fast double-click MAIN, pointing down. **
   Speak battery voltage     Fast double-click-and-hold MAIN.
   Run BladeID/Array Select  Fast triple-click. (Applicable installs only).
-  Restore Factory Defaults  Fast four-clicks MAIN, hold on last click. ***
+  Restore Factory Defaults  Fast four-clicks MAIN, hold on last click.
                               Release once announcement starts.
   Enter/Exit VOLUME MENU    Hold MAIN then quickly click AUX and release both simultaneously.
     Volume up               Click MAIN while in VOLUME MENU, hilt pointing up.
@@ -192,8 +191,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 
   *   = Gesture ignitions also available via defines.
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
-  *** = Feature must be enabled in config file using SABERSENSE_ENABLE_RESET define.
-
+  
 ===========================================================
 =================== SABERSENSE DEFINES ====================
 
@@ -238,10 +236,10 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   where wheel makes tactile feel difficult.
   Requires press.wav and release.wav files to work.
 
-#define SABERSENSE_ENABLE_RESET
-  Enables system to be completely reset to 'factory defaults'
-  i.e. original config, using button press to delete
-  all save files.
+#define SABERSENSE_DISABLE_RESET
+  By default, all save files can be deleted with
+  button press, effectively restoring 'factory' defaults.
+  This define disables that feature.
 
 #define SABERSENSE_NO_COLOR_CHANGE
   Use instead of DISABLE_COLOR_CHANGE.
@@ -592,7 +590,7 @@ bad_blade:
 
 // RESET FACTORY DEFAULTS (Delete Save Files).
 // Script to determine if sound effects have finished.
-#ifdef SABERSENSE_ENABLE_RESET
+#ifndef SABERSENSE_DISABLE_RESET
 bool IsSoundPlaying(const Effect* sound) {
   return !!GetWavPlayerPlaying(sound);
 }
@@ -698,12 +696,17 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       if (!mode_volume_) {
         On();
       } else {
+#if NUM_BUTTONS == 1
         if (fusor.angle1() > 0) {
           VolumeUp();
         } else {
           VolumeDown();
         }
       }
+#else
+        VolumeUp();
+      }
+#endif
       return true;
 
     // 1 Button Activate Muted and next/previous preset.
@@ -929,6 +932,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #endif
 
     // BLASTER DEFLECTION
+    // 1 Button
 #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
       swing_blast_ = false;
@@ -936,6 +940,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 #endif
 
+    // 2 Button
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
 #ifdef SABERSENSE_BLAST_MAIN_AND_AUX
@@ -1037,7 +1042,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 
     // RESTORE FACTORY DEFAULTS
     // Deletes all save files in root and first-level directories.
-#ifdef SABERSENSE_ENABLE_RESET
+#ifndef SABERSENSE_DISABLE_RESET
     case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD, MODE_OFF): {
       // Lock SD card to prevent other operations during deletion.
       LOCK_SD(true);
@@ -1087,7 +1092,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 
       if (SFX_reset) {  // Optional confirmation sound file 'reset'.
         hybrid_font.PlayCommon(&SFX_reset);
-        while(IsSoundPlaying(&SFX_reset)); // Lock system while sound finishes.
+        while(IsSoundPlaying(&SFX_reset));  // Lock system while sound finishes.
       } else {
         beeper.Beep(0.5, 2000); // Generate beep to confirm reset.
         delay(800); // Allow beep to play.
