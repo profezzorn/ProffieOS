@@ -921,14 +921,12 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // 1 and 2 button modes.
 #ifndef SABERSENSE_NO_COLOR_CHANGE
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
-      ToggleColorChangeMode();
-      return true;
     // 2 button mode only.
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
+#endif
       ToggleColorChangeMode();
       return true;
-#endif
 #endif
 
     // BLASTER DEFLECTION
