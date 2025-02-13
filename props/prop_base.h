@@ -1626,7 +1626,7 @@ public:
 	if (mountable) {
 	  // Trigger the IDLE_OFF_TIME behavior to turn off idle sounds and animations.
 	  // (Otherwise we can't mount the sd card).
-	  SaberBase::DoOff(OFF_IDLE, 0);
+	  if (!SaberBase::IsOn()) SaberBase::DoOff(OFF_IDLE, 0);
 	}
       }
       STDOUT << "SD Access " 
