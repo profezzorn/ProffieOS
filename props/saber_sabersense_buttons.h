@@ -334,18 +334,18 @@ public:
     if (SaberBase::IsOn()) {
       DetectSwing();
       if (auto_lockup_on_ &&
-        !swinging_ &&
-        fusor.swing_speed() > 120 &&
-        millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
-        SaberBase::Lockup()) {
+          !swinging_ &&
+          fusor.swing_speed() > 120 &&
+          millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
+          SaberBase::Lockup()) {
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         auto_lockup_on_ = false;
       }
       if (auto_melt_on_ &&
-        !swinging_ &&
-        fusor.swing_speed() > 60 &&
-        millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
+          !swinging_ &&
+          fusor.swing_speed() > 60 &&
+          millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
         SaberBase::Lockup()) {
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
@@ -378,8 +378,8 @@ public:
       }
       // EVENT_THRUST
       if (mss.y * mss.y + mss.z * mss.z < 16.0 &&
-        mss.x > 14 &&
-        fusor.swing_speed() < 150) {
+          mss.x > 14 &&
+          fusor.swing_speed() < 150) {
         if (millis() - thrust_begin_millis_ > 15) {
           Event(BUTTON_NONE, EVENT_THRUST);
           thrust_begin_millis_ = millis();
