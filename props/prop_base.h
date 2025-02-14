@@ -405,10 +405,6 @@ public:
     SaveColorChangeIfNeeded();
     // First free all styles, then allocate new ones to avoid memory
     // fragmentation.
-    hybrid_font.hum_player_.Free();
-#ifdef ENABLE_IDLE_SOUND
-    hybrid_font.idling_ = true;
-#endif
     FreeBladeStyles();
     current_preset_.SetPreset(preset_num);
     AllocateBladeStyles();
