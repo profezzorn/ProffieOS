@@ -4,6 +4,7 @@
 ================            by            ==================
 ================       CHRIS CARTER       ==================
 ============================================================
+V.8-142.
 
 Built on Matthew McGeary's SA22C button prop file for one
 and two button replica lightsabers. Modified by Chris
@@ -389,6 +390,7 @@ public:
       }
     }
     // Enables sequential sounds and processes on array handling.
+    // Prop only permits one of these defines at a time.
 #ifdef SABERSENSE_BLADE_ID
     if (do_font_after_sound_ && !IsBladeidSoundPlaying()) {
       SaberBase::DoNewFont();
