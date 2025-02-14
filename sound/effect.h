@@ -417,7 +417,7 @@ class Effect {
       default_output->println(name_);
 
       // If we have a following file, then just get that file and play it.
-      if (following_ && following_ != this) return following->RandomFile();
+      if (following_ && following_ != this) return following_->RandomFile();
       return FileID();
     }
     int n;
