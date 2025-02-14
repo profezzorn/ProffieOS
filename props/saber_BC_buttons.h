@@ -1144,18 +1144,21 @@ EFFECT(mute);       // Notification before muted ignition to avoid confusion.
 
 template<class SPEC>
 struct BCScrollPresetsMode : public SPEC::SteppedMode {
-  int steps_per_revolution() override {
-    return 12;  // adjust for sensitivity
-  }
 
   void next() override {
     beeper.Beep(0.05, 4000);
+#ifdef ENABLE_IDLE_SOUND
+    SFX_font.SetFollowing(nullptr);
+#endif 
     prop_next_preset();
   }
 
   void prev() override {
     beeper.Beep(0.05, 3000);
-    prop_previous_preset();
+#ifdef ENABLE_IDLE_SOUND
+    SFX_font.SetFollowing(nullptr);
+#endif 
+   prop_previous_preset();
   }
 
   void update() override {  // Overridden to substitute the tick sound
@@ -1180,7 +1183,6 @@ struct BCScrollPresetsMode : public SPEC::SteppedMode {
         exit();
         return true;
 
-      // case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, 0):
       case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, 0):
         exit();
         return true;
@@ -1196,10 +1198,6 @@ struct BCVolumeMode : public SPEC::SteppedMode {
   float initial_volume_ = 0.0;
   int initial_percentage_ = 0;
   int percentage_ = 0;
-
-  int steps_per_revolution() override {
-    return 12;  // adjust for sensitivity
-  }
 
   void mode_activate(bool onreturn) override {
     PVLOG_NORMAL << "** Enter Volume Menu\n";
@@ -1288,24 +1286,6 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     SPEC::SteppedMode::exit();
   }
 
-  bool Parse(const char *cmd, const char* arg) override {
-    if (PropBase::Parse(cmd, arg)) return true;
-
-    if (!strcmp(cmd, "twist")) {
-        Event(BUTTON_NONE, EVENT_TWIST);
-        return true;
-    }
-    if (!strcmp(cmd, "left")) {
-        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-        return true;
-    }
-    if (!strcmp(cmd, "right")) {
-        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-        return true;
-    }
-    return false;
-  }
-
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, 0)) {
       // Custom button controls for BCVolumeMode
@@ -1373,13 +1353,12 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
 };
 
 template<class SPEC>
-// struct BCChangeBladeLengthBlade1 : public SPEC::ChangeBladeLengthMode {
 struct BCChangeBladeLengthBlade1 : public mode::ChangeBladeLengthBlade1<SPEC> {
-  // virtual int blade() { return mode::menu_current_blade; }
 
   int steps_per_revolution() override {
     return 30;  // adjust for sensitivity
   }
+
   void select() override {
     PVLOG_NORMAL << "** Saved blade length : " << this->getLength() << "\n";
     prop_SetBladeLength(this->blade(), this->getLength());
@@ -1387,6 +1366,7 @@ struct BCChangeBladeLengthBlade1 : public mode::ChangeBladeLengthBlade1<SPEC> {
     mode::getSL<SPEC>()->SaySave();
     popMode();
   }
+
   void update() override {
     hybrid_font.PlayPolyphonic(&SFX_mclick);
     this->say_time_ = Cyclint<uint32_t>(millis()) + (uint32_t)(SaberBase::sound_length * 1000) + 300;
@@ -1411,6 +1391,8 @@ struct BCMenuSpec {
   typedef mode::MenuBase<SPEC> MenuBase;
   typedef SoundLibraryV2 SoundLibrary;
 };
+
+
 
 class DelayTimer {
 public:
@@ -1487,6 +1469,10 @@ public:
     if (current_mode == this) {
       PVLOG_NORMAL << "** Enter Scroll Presets\n";
       BeepEnterFeature();
+#ifdef ENABLE_IDLE_SOUND
+      hybrid_font.StopIdleSound();
+      SFX_font.SetFollowing(nullptr);
+#endif
       scroll_presets_beep_delay_timer_.trigger(350);
       pushMode<MKSPEC<BCMenuSpec>::BCScrollPresetsMenu>();
     }
