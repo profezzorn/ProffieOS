@@ -2512,6 +2512,9 @@ any # of buttons
 // Enter OS System Menu
 // Enter BC Blade Length Mode
       case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
+#ifdef ENABLE_IDLE_SOUND
+        hybrid_font.StopIdleSound();
+#endif
 #ifdef MENU_SPEC_TEMPLATE
         PVLOG_NORMAL << "** Entering ProffieOS Menu System\n";
         EnterMenu();
