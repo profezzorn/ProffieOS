@@ -1152,7 +1152,7 @@ struct BCScrollPresetsMode : public SPEC::SteppedMode {
 
   void prev() override {
     beeper.Beep(0.05, 3000);
-   prop_previous_preset();
+    prop_previous_preset();
   }
 
   void update() override {  // Overridden to substitute the tick sound
