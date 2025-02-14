@@ -828,7 +828,7 @@ public:
   void StopIdleSound() {
 #ifdef ENABLE_IDLE_SOUND
     RefPtr<BufferedWavPlayer> idlePlayer = GetWavPlayerPlaying(&SFX_idle);
-    if (idlePlayer && idlePlayer->isPlaying()) {
+    if (idlePlayer) {
       idlePlayer->set_fade_time(0.5);
       idlePlayer->FadeAndStop();
       idlePlayer.Free();
