@@ -13,7 +13,7 @@ int current_alternative = 0;
 // num_alternatives == 3 means alt000/, alt001/, alt002/
 int num_alternatives = 0;
 
-constexpr bool PO_isDigit(char s) { return s >= 0 && s <= '9'; }
+constexpr bool PO_isDigit(char s) { return s >= '0' && s <= '9'; }
 bool isAllDigits(const char* s) {
   for (;*s;s++) if(!PO_isDigit(*s)) return false;
   return true;
@@ -415,6 +415,9 @@ class Effect {
     if (num_files < 1) {
       default_output->print("No sounds found: ");
       default_output->println(name_);
+
+      // If we have a following file, then just get that file and play it.
+      if (following_ && following_ != this) return following->RandomFile();
       return FileID();
     }
     int n;
@@ -783,6 +786,9 @@ EFFECT(ccchange);
 
 EFFECT(altchng);
 EFFECT(chhum);
+
+// menu sounds
+EFFECT(mclick);
 
 // Blaster effects
 // hum, boot and font are reused from sabers and already defined.

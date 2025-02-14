@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include <cstdint>
 
 // junk needed to make this hack work.
 #define digitalWrite(X, Y) ((void)0)

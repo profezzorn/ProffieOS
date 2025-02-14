@@ -508,6 +508,7 @@ public:
         break;
       case OFF_FAST:
         SFX_in.SetFollowing(nullptr);
+	[[gnu::fallthrough]];
       case OFF_NORMAL:
         if (!SFX_in) {
           size_t total = SFX_poweroff.files_found() + SFX_pwroff.files_found();
@@ -570,7 +571,7 @@ public:
     switch (effect) {
       default: return;
       case EFFECT_MENU_CHANGE:
-        if (!PlayPolyphonic(&SFX_ccchange)) {
+        if (!PlayPolyphonic(&SFX_mclick)) {
           SaberBase::sound_length = 0.2;
           beeper.Beep(0.05, 2000.0);
         }
@@ -580,6 +581,7 @@ public:
       case EFFECT_STAB:
         if (SFX_stab) { PlayCommon(&SFX_stab); return; }
         // If no stab sounds are found, fall through to clash
+        [[gnu::fallthrough]];
       case EFFECT_CLASH: Play(&SFX_clash, &SFX_clsh); return;
       case EFFECT_FORCE: PlayCommon(&SFX_force); return;
       case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); return;

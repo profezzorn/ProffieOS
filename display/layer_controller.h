@@ -94,7 +94,7 @@ class LayerControl {
 public:
   virtual void LC_setVariable(int variable, VariableSource* variable_source) = 0;
   virtual const char* LC_get_filename() = 0;
-  virtual const void LC_restart() = 0;
+  virtual void LC_restart() = 0;
   virtual void LC_play(const char* filename) = 0;
   virtual void LC_set_time(uint32_t millis) = 0;
 };
@@ -210,6 +210,7 @@ protected:
     return bps_bytes_ / (float)bps_millis_;
   }
 
+  
   void CloseFiles() override {
     TRACE(RGB565, "CloseFiles");
     file_.Close();
@@ -217,10 +218,27 @@ protected:
   }
 
   size_t space_available() override {
-    if (input_buffer_.space_available() < 512) return 0;
+    TRACE2(RGB565_DATA, "space_available this=", (uint32_t)this);
+    if (input_buffer_.space_available() < 512) {
+      TRACE2(RGB565_DATA, "space_available ib=", input_buffer_.space_available());
+      return 0;
+    }
 //    if (!input_buffer_.space_available()) return 0;
-    if (stream_locked_.get()) return 0;
-    if (BUFATEOF()) return 0;
+    if (stream_locked_.get()) {
+      TRACE2(RGB565_DATA, "space_available locked=", stream_locked_.get());
+      return 0;
+    }
+
+    // TRACE2(RGB565_DATA, "file_.get_do_open()=", file_.get_do_open());
+    // TRACE2(RGB565_DATA, "file_size_=", file_size_);
+    // TRACE2(RGB565_DATA, "TELL()=", TELL());
+    // TRACE2(RGB565_DATA, "ib.size=", input_buffer_.size());
+    
+    if (BUFATEOF()) {
+      TRACE2(RGB565_DATA, " BUFATEOF=", BUFATEOF());
+      return 0;
+    }
+    // TRACE(RGB565_DATA, " return 1");
     
     // Always low priority
     return 1;
@@ -343,6 +361,7 @@ public:
       }
     }
   done:
+    active_ = false;
     TRACE(RGB565, "done");
     STATE_MACHINE_END();
     check_open();
@@ -376,6 +395,7 @@ public:
 protected:
   void check_open() {
     if (delayed_open_ && state_machine_.done()) {
+      active_ = true;
       file_.do_open();
       TRACE2(RGB565, "DOOPEN", ATEOF());
       delayed_open_ = false;
@@ -384,6 +404,7 @@ protected:
       state_machine_.reset_state_machine();
     }
   }
+  bool IsActive() override { return active_; }
 
   size_t i, c;
   bool do_restart_;
@@ -395,6 +416,7 @@ protected:
   int layer_number_;
   LayerControl* layer_ = nullptr;
   int sound_time_ms_;
+  bool active_ = false;
 private:
   StateMachineState state_machine_;
 };
@@ -434,6 +456,13 @@ public:
   
   void SB_On2(EffectLocation location) override { scr_.Play(&SCR_out); }
   void SB_Top(uint64_t total_cycles) override { scr_.screen()->SB_Top(); }
+  void SB_Off2(OffType offtype, EffectLocation location) override {
+    if (offtype == OFF_IDLE) {
+      Stop();
+    } else if (!scr_.Play(&SCR_in)) {
+      ShowDefault();
+    }
+  }
 
   const char* name() override { return "ColorDisplayController"; }
 
@@ -452,6 +481,14 @@ public:
     True,
     False
   };
+
+  void Stop() {
+    for (int i = 0;; i++) {
+      LayerControl *layer = scr_.screen()->getLayer(i);
+      if (!layer) break;
+      layer->LC_play("");
+    }
+  }
 
   void ShowDefault(bool ignore_lockup = false) {
     if (SaberBase::IsOn()) {
@@ -481,12 +518,7 @@ public:
      case EFFECT_NEWFONT:
        looped_on_ = Tristate::Unknown;
        looped_idle_ = Tristate::Unknown;
-       for (int i = 0;; i++) {
-	 LayerControl *layer = scr_.screen()->getLayer(i);
-	 if (!layer) break;
-	 layer->LC_play("");
-       }
-       
+       Stop();
        if (!scr_.Play(&SCR_font)) {
 	 ShowDefault();
        }
@@ -576,6 +608,10 @@ private:
   // True if IMG_idle is looped.
   volatile Tristate looped_idle_ = Tristate::Unknown;
 };
+
+#undef ONCE_PER_EFFECT
+#undef INIT_SCR
+#undef DEF_SCR
 
 #endif
   
