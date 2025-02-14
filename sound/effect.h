@@ -415,6 +415,9 @@ class Effect {
     if (num_files < 1) {
       default_output->print("No sounds found: ");
       default_output->println(name_);
+
+      // If we have a following file, then just get that file and play it.
+      if (following_ && following_ != this) return following->RandomFile();
       return FileID();
     }
     int n;
