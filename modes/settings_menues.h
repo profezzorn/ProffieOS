@@ -216,7 +216,7 @@ struct AllowMountBoolSetting : public BoolSetting {
     if (value) {
       // Trigger the IDLE_OFF_TIME behavior to turn off idle sounds and animations.
       // (Otherwise we can't mount the sd card).
-      if (!SaberBase::IsOn()) SaberBase::DoOff(OFF_IDLE, 0);
+      if (!SaberBase::IsOn()) SaberBase::DoOff(SaberBase::OFF_IDLE, 0);
     }
     return LSFS::SetAllowMount(value);
   }
