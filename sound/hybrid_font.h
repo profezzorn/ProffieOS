@@ -232,12 +232,8 @@ public:
     if (loop) hum_player_->PlayLoop(loop);
    }
 
-  void PlayMonophonic(Effect* f, Effect* loop, float xfade = 0.003f) {
-      Effect::FileID id = f->RandomFile();
-      if (!id && f->GetFollowing()) {
-          id = f->GetFollowing()->RandomFile();
-      }
-      PlayMonophonic(id, loop, xfade);
+  void PlayMonophonic(Effect* f, Effect* loop, float xfade = 0.003f)  {
+    PlayMonophonic(f->RandomFile(), loop, xfade);
   }
   
   // Use after changing alternative.
@@ -266,11 +262,8 @@ public:
     return player;
   }
 
-  RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f) {
-    RefPtr<BufferedWavPlayer> p = PlayPolyphonic(f->RandomFile());
-    if (!p && f->GetFollowing())
-        p = PlayPolyphonic(f->GetFollowing()->RandomFile());
-    return p;
+  RefPtr<BufferedWavPlayer> PlayPolyphonic(Effect* f)  {
+    return PlayPolyphonic(f->RandomFile());
   }
 
   void Play(Effect* monophonic, Effect* polyphonic) {
