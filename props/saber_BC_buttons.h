@@ -1390,7 +1390,6 @@ struct BCMenuSpec {
 };
 
 
-
 class DelayTimer {
 public:
   DelayTimer() : triggered_(false), trigger_time_(0), duration_(0) {}
