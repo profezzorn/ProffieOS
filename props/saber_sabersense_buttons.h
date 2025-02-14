@@ -540,7 +540,6 @@ public:
     hybrid_font.PlayCommon(&SFX_array);
     // Calls Loop function to handle waiting for effect before running DoNewFont.
     do_font_after_sound_ = true;
-    do_font_after_sound_ = true;
   }
 #else
   // Plays 'array' sound only, or 'font' sound if no 'array' sound available.
