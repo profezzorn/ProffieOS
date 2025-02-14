@@ -1968,6 +1968,24 @@ public:
 
 #endif  // BC_DUAL_BLADES
 
+  bool Parse(const char *cmd, const char* arg) override {
+    if (PropBase::Parse(cmd, arg)) return true;
+
+    if (!strcmp(cmd, "twist")) {
+        Event(BUTTON_NONE, EVENT_TWIST);
+        return true;
+    }
+    if (!strcmp(cmd, "left")) {
+        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
+        return true;
+    }
+    if (!strcmp(cmd, "right")) {
+        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
+        return true;
+    }
+    return false;
+  }
+
   RefPtr<BufferedWavPlayer> wav_player;
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
