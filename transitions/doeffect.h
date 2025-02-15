@@ -18,6 +18,11 @@
 
 // Usage: TrDoEffectAlwaysX<TRANSITION, EFFECT, WAVNUM, LOCATION_CLASS>
 // or: TrDoEffectsAlways<TRANSITION, EFFECT, WAVNUM, LOCATION>
+// TRANSITION: TRANSITION
+// EFFECT: effect type
+// WAVNUM, LOCATION: a number
+// LOCATION_CLASS: INTEGER
+// return value: TRANSITION
 // TrDoEffectAlways is the same as TrDoEffectX, but runs even if
 // the blade is off.
 

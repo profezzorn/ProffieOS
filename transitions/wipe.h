@@ -61,9 +61,9 @@ private:
 template<int MILLIS> using TrWipeIn = TrWipeInX<Int<MILLIS>>;
 
 // Usage: TrWipeSparkTip<SPARK_COLOR, MILLIS, SIZE>
-// SPARK_COLOR = COLOR
-// MILLIS = a number
-// SIZE = a number
+// SPARK_COLOR: COLOR
+// MILLIS: a number
+// SIZE: a number
 // return value: TRANSITION
 // Same as TrWipe, but adds a "spark" tip to the
 // leading edge of the wipe color.
