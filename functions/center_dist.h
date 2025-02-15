@@ -2,8 +2,8 @@
 #define FUNCTIONS_CENTER_DIST_H
 
 // Usage: Remap<CenterDistF<CENTER>,COLOR>
-// Distributes led COLOR from CENTER
 // CENTER : FUNCTION (defaults to Int<16384>)
+// Distributes led COLOR from CENTER
 
 template<class CENTER = Int<16384>>
 class CenterDistF {

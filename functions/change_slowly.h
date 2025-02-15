@@ -2,9 +2,9 @@
 #define FUNCTIONS_CHANGE_SLOWLY_H
 
 // Usage: ChangeSlowly<F, SPEED>
-// Changes F by no more than SPEED values per second.
 // F, SPEED: FUNCTION
 // return value: FUNCTION, same for all LEDs
+// Changes F by no more than SPEED values per second.
 
 class BladeBase;
 
