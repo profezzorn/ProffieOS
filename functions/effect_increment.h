@@ -86,11 +86,11 @@ template<class PULSE, class RESET_PULSE, class MAX, class I>
 class SingleValueAdapter<IncrementWithResetSVF<PULSE, RESET_PULSE, MAX, I>> : public IncrementWithResetSVF<PULSE, RESET_PULSE, MAX, I> {};
 
 // Usage: EffectIncrementF<EFFECT, MAX, I>
+// I, MAX: FUNCTION
+// return value: FUNCTION
 // Increases by value I (up to MAX) each time EFFECT is triggered
 // If current value + I = MAX, it returns 0.
 // If adding I exceeds MAX, the function returns 0 + any remainder in excesss of MAX 
-// I, MAX = numbers
-// return value: INTEGER
 
 template<BladeEffectType EFFECT, class MAX = Int<32768>, class I = Int<1>>
 using EffectIncrementF = IncrementModuloF<EffectPulseF<EFFECT>, MAX, I>;

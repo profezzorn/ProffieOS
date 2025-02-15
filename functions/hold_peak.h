@@ -2,10 +2,10 @@
 #define FUNCTIONS_HOLD_PEAK_H
 
 // Usage: HoldPeakF<F, HOLD_MILLIS, SPEED>
-// Holds Peak value of F for HOLD_MILLIS.
-// then transitions down over SPEED to current F
 // F, HOLD_MILLIS and SPEED: FUNCTION
 // return value: FUNCTION, same for all LEDs
+// Holds Peak value of F for HOLD_MILLIS.
+// then transitions down over SPEED to current F
 
 class BladeBase;
 
