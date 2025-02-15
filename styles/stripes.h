@@ -11,7 +11,7 @@
 // SPEED: integer  (start with 1000, then adjust up or down)
 // COLOR1, COLOR2: COLOR
 // return value: COLOR
-// Works like rainbow, but with any colors you like.
+// Works like Rainbow, but with any colors you like.
 // WIDTH determines width of stripes
 // SPEED determines movement speed
 //
