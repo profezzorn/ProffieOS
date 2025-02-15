@@ -5,7 +5,7 @@
 #include "../common/range.h"
 
 // Usage: Stripes<WIDTH, SPEED, COLOR1, COLOR2, ... >
-// or: Usage: StripesX<WIDTH_CLASS, SPEED, COLOR1, COLOR2, ... >
+// or: StripesX<WIDTH_CLASS, SPEED, COLOR1, COLOR2, ... >
 // WIDTH: integer (start with 1000, then adjust up or down)
 // WIDTH_CLASS: INTEGER
 // SPEED: integer  (start with 1000, then adjust up or down)
@@ -14,17 +14,23 @@
 // Works like rainbow, but with any colors you like.
 // WIDTH determines width of stripes
 // SPEED determines movement speed
+//
+// If you have a ring of LEDs and you want the stripes to line up,
+// you'll need to set WIDTH using the following formula:
+// WIDTH = 50000 * NUM_LEDS_IN_RING / (NUM_COLORS * REPETITIONS * 341)
 
 // Usage: HardStripes<WIDTH, SPEED, COLOR1, COLOR2, ... >
-// or: Usage: HardStripesX<WIDTH_CLASS, SPEED, COLOR1, COLOR2, ... >
+// or: HardStripesX<WIDTH_CLASS, SPEED, COLOR1, COLOR2, ... >
+// WIDTH: integer (start with 1000, then adjust up or down)
+// WIDTH_CLASS: INTEGER
+// SPEED: integer  (start with 1000, then adjust up or down)
+// COLOR1, COLOR2: COLOR
+// return value: COLOR
 // Works like Stripes, but with no gradient between color segments..
 // * Note * Regular Stripes is recommended for very slow speeds.
 // Without a 1 pixel gradient smoothing the changing pixel color,
 // the animation can seem a little "choppy". At faster speeds, this is not apparent.
 
-// If you have a ring of LEDs and you want the stripes to line up,
-// you'll need to set WIDTH using the following formula:
-// WIDTH = 50000 * NUM_LEDS_IN_RING / (NUM_COLORS * REPETITIONS * 341)
 
 template<class... A>
 class StripesHelper {};
