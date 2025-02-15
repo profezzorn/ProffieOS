@@ -4,10 +4,10 @@
 #include "../common/fuse.h"
 
 // Usage: TwistAngle<N, OFFSET>
-// Returns 0-32768 based on angle of twist
 // OFFSET: Adjustable offset (0-32768) to make the twistangle values line up with how you hold the hilt.
 // N : Number of times the values goes from 0 to 32768 and back per hilt revolution.
 // returned value: FUNCTION, same for all leds
+// Returns 0-32768 based on angle of twist
 
 template<int N = 2, int OFFSET = 0>
 class TwistAngleSVF {
@@ -25,9 +25,9 @@ template<int N = 2, int OFFSET = 0>
 using TwistAngle = SingleValueAdapter<TwistAngleSVF<N, OFFSET>>;
 
 // Usage: TwistAcceleration<MAX>
-// Returns 0-32768 based on acceleration of twist in one direction
 // MAX : Maximum acceleration needed to return 32768
 // returned value: FUNCTION, same for all leds
+// Returns 0-32768 based on acceleration of twist in one direction
 
 template<class MAX>
 class TwistAccelerationSVF {
