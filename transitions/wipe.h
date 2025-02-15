@@ -75,9 +75,9 @@ template<class SPARK_COLOR, int MILLIS, int SIZE = 400>
 	using TrWipeSparkTip = TrJoin<TrWipe<MILLIS>,TrSparkX<SPARK_COLOR,Int<SIZE>,Int<MILLIS>,Int<0>>>;
 
 // Usage: TrWipeInSparkTip<SPARK_COLOR, MILLIS, SIZE>
-// SPARK_COLOR = COLOR
-// MILLIS = a number
-// SIZE = a number
+// SPARK_COLOR: COLOR
+// MILLIS: a number
+// SIZE: a number
 // return value: TRANSITION
 // Like TrWipeSparkTip, but from tip to base.
   
