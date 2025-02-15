@@ -4,7 +4,6 @@
 ================            by            ==================
 ================       CHRIS CARTER       ==================
 ============================================================
-V.8-142.
 
 Built on Matthew McGeary's SA22C button prop file for one
 and two button replica lightsabers. Modified by Chris
@@ -50,22 +49,22 @@ states, subject to inevitable and obvious variants.
 
 Hence:
   ONE AND TWO BUTTON:
-      Single click MAIN always lights the blade...
+      Single click POWER always lights the blade...
         Short click lights blade with sound
         Long click lights blade mute
 
-      Double click MAIN always plays a sound file...
+      Double click POWER always plays a sound file...
         Character Quote or Music track with blade OFF
         Character Quote or Force Effect with blade ON
         Battery level announcement if held down on second click
 
-      Holding down MAIN (1-button) or AUX (2-button)
+      Holding down POWER (1-button) or AUX (2-button)
       and waiting with blade OFF always skips to specific preset...
         Hilt pointing up - first preset
         Hilt horizontal - middle preset
         Hilt pointing down - last preset
 
-      Triple-clicking MAIN is always a saber management feature...
+      Triple-clicking POWER is always a saber management feature...
         Colour change with blade ON
         BladeID/Array Switch with blade OFF
 
@@ -76,14 +75,14 @@ Hence:
         Double short click - five presets
         Triple short click - ten presets
 
-      Holding MAIN and short clicking AUX always enters a control menu...
+      Holding POWER and short clicking AUX always enters a control menu...
         Colour change with blade ON
         Volume menu with blade OFF
 
 ==========================================================
 =================== 1 BUTTON CONTROLS ====================
 
-MAIN FUNCTIONS
+POWER FUNCTIONS
   Activate blade            Short click while OFF. *
   Activate blade mute       Long click while OFF, hilt horizontal.
                               (Hold for one second then release).
@@ -136,15 +135,15 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 ============================================================
 ===================== 2 BUTTON CONTROLS ====================
 
-MAIN FUNCTIONS
-  Activate blade            Short click MAIN. *
-  Activate blade mute       Long click MAIN (hold for one second then release).
-  Deactivate blade          Press and hold MAIN and wait until blade is off.
+POWER FUNCTIONS
+  Activate blade            Short click POWER. *
+  Activate blade mute       Long click POWER (hold for one second then release).
+  Deactivate blade          Press and hold POWER and wait until blade is off.
 
 FUNCTIONS WITH BLADE OFF
   Next preset               Short click AUX, hilt pointing upwards.
   Previous preset           Short click AUX, hilt pointing downwards.
-  Previous preset           Hold AUX and short click MAIN.
+  Previous preset           Hold AUX and short click POWER.
                               (Duplicate legacy command).
   Skip to first preset      Press and hold any button until it switches, hilt upwards.
   Skip to middle preset     Press and hold any button until it switches, hilt horizontal.
@@ -153,15 +152,15 @@ FUNCTIONS WITH BLADE OFF
   Skip back 5 presets       Fast double-click AUX, hilt pointing downwards.
   Skip forward 10 presets   Fast triple-click AUX, hilt pointing upwards.
   Skip back 10 presets      Fast triple-click AUX, hilt pointing downwards.
-  Play Character Quote      Fast double-click MAIN, hilt pointing up, plays sequentially. **
-  Play Music Track          Fast double-click MAIN, pointing down. **
-  Speak battery voltage     Fast double-click-and-hold MAIN.
+  Play Character Quote      Fast double-click POWER, hilt pointing up, plays sequentially. **
+  Play Music Track          Fast double-click POWER, pointing down. **
+  Speak battery voltage     Fast double-click-and-hold POWER.
   Run BladeID/Array Select  Fast triple-click. (Applicable installs only).
-  Restore Factory Defaults  Fast four-clicks MAIN, hold on last click.
+  Restore Factory Defaults  Fast four-clicks POWER, hold on last click.
                               Release once announcement starts.
-  Enter/Exit VOLUME MENU    Hold MAIN then quickly click AUX and release both simultaneously.
-    Volume up               Click MAIN while in VOLUME MENU, hilt pointing up.
-    Volume down             Click MAIN while in VOLUME MENU, hilt pointing down, OR click
+  Enter/Exit VOLUME MENU    Hold POWER then quickly click AUX and release both simultaneously.
+    Volume up               Click POWER while in VOLUME MENU, hilt pointing up.
+    Volume down             Click POWER while in VOLUME MENU, hilt pointing down, OR click
                               AUX while in VOLUME MENU.
                               Volume adjusts in increments per click.
                               You must exit VOLUME MENU to resume using saber normally.
@@ -169,19 +168,19 @@ FUNCTIONS WITH BLADE OFF
 FUNCTIONS WITH BLADE ON
   Blade lockup              Press and hold AUX.
   Blade tip drag            Press and hold AUX while blade is pointing down.
-  Play Character Quote      Fast double-click MAIN, hilt pointing up, plays sequentially. **
-  Force Effect              Fast double-click MAIN, hilt pointing down, plays randomly. **
-  Lightning block           Double-click MAIN and hold.
-  Melt                      Hold MAIN and stab blade tip against wall. Rotate for heat colours.
-  Blaster blocks            Short click AUX. (Add Short click MAIN using define).
-  Enter multi-blast mode    Hold MAIN while swinging for one second and release.
+  Play Character Quote      Fast double-click POWER, hilt pointing up, plays sequentially. **
+  Force Effect              Fast double-click POWER, hilt pointing down, plays randomly. **
+  Lightning block           Double-click POWER and hold.
+  Melt                      Hold POWER and stab blade tip against wall. Rotate for heat colours.
+  Blaster blocks            Short click AUX. (Add Short click POWER using define).
+  Enter multi-blast mode    Hold POWER while swinging for one second and release.
                               Saber will play two quick blasts confirming mode.
                               Swing blade to trigger blaster block.
                               To exit multi-blast mode, fast single click AUX.
 
 COLOUR CHANGE FUNCTIONS WITH BLADE ON
-  Enter COLOUR MENU         Hold MAIN then quickly click AUX and release both
-                            buttons simultaneously. Or fast triple-click MAIN.
+  Enter COLOUR MENU         Hold POWER then quickly click AUX and release both
+                            buttons simultaneously. Or fast triple-click POWER.
                               Announcement confirms you are in the COLOUR MENU.
   Cycle to next colour      Rotate hilt whilst in COLOUR MENU until desired colour is reached.
                               Most Sabersense presets have 12 colour options.
@@ -197,9 +196,12 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 =================== SABERSENSE DEFINES ====================
 
 #define SABERSENSE_BLADE_ID
-  Replaces regular BladeID (which relies on continuous ID
-  scanning) with on-demand ID scanning.
-  Triple-click MAIN will run the scan, identify the blade
+  Replaces regular BladeID with on-demand ID scanning.
+  Normal BladeID relies either on continuous ID scanning,
+  or it only runs at specific times like bootup
+  or when changing fonts. Sabersense BladeID makes
+  BladeID scanning available as a button press.
+  Triple-click POWER will run the scan, identify the blade
   and switch to its associated array. This system prevents
   spurious ID readings switching blade when you don't want
   it to, especially if using SnapshotID.
@@ -225,11 +227,11 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   FORCE effect (ON) and music TRACK (OFF). Define acts on
   both ON and OFF states for consistency.
 
-#define SABERSENSE_BLAST_MAIN_AND_AUX
-  Adds blaster block button to MAIN as well as AUX in
-  2-button mode. Improves 1 and 2-button harmonization,
-  but makes accidental blasts more likely when double-clicking
-  MAIN for Quotes or Force Effect.
+#define SABERSENSE_BLAST_PWR_AND_AUX
+  Adds blaster block button to POWER button as well as AUX
+  in 2-button mode. Improves 1 and 2-button harmonization,
+  but makes accidental blasts more likely when double-
+  clicking POWER for Quotes or Force Effect.
 
 #define SABERSENSE_BUTTON_CLICKER
   Button Clicker to play press/release wav files when
@@ -238,16 +240,16 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Requires press.wav and release.wav files to work.
 
 #define SABERSENSE_DISABLE_RESET
-  By default, all save files can be deleted with
-  button press, effectively restoring 'factory' defaults.
+  By default, all save files can be deleted on demand with
+  a button press, effectively restoring 'factory' defaults.
   This define disables that feature.
 
 #define SABERSENSE_NO_COLOR_CHANGE
   Use instead of DISABLE_COLOR_CHANGE.
 
 #define SABERSENSE_NO_LOCKUP_HOLD
-  Applicable to two-button mode only, reverts to lockup being
-  triggered by clash while holding aux.
+  Applicable to two-button mode only, reverts to lockup
+  being triggered by clash while holding aux.
 
 GESTURE CONTROLS
   There are four gesture types: Twist, Stab, Swing and Thrust.
@@ -347,7 +349,7 @@ public:
           !swinging_ &&
           fusor.swing_speed() > 60 &&
           millis() - clash_impact_millis_ > SABERSENSE_LOCKUP_DELAY &&
-        SaberBase::Lockup()) {
+          SaberBase::Lockup()) {
         SaberBase::DoEndLockup();
         SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
         auto_melt_on_ = false;
@@ -355,9 +357,9 @@ public:
 
       // EVENT_PUSH
       if (fabs(mss.x) < 3.0 &&
-        mss.y * mss.y + mss.z * mss.z > 70 &&
-            fusor.swing_speed() < 30 &&
-            fabs(fusor.gyro().x) < 10) {
+          mss.y * mss.y + mss.z * mss.z > 70 &&
+          fusor.swing_speed() < 30 &&
+          fabs(fusor.gyro().x) < 10) {
         if (millis() - push_begin_millis_ > SABERSENSE_FORCE_PUSH_LENGTH) {
           Event(BUTTON_NONE, EVENT_PUSH);
           push_begin_millis_ = millis();
@@ -389,17 +391,18 @@ public:
         thrust_begin_millis_ = millis();
       }
     }
-    // Enables sequential sounds and processes on array handling.
-    // Prop only permits one of these defines at a time.
-#ifdef SABERSENSE_BLADE_ID
-    if (do_font_after_sound_ && !IsBladeidSoundPlaying()) {
-      SaberBase::DoNewFont();
-      do_font_after_sound_ = false;
-    }
-#endif
 
+  // Enables sequential sounds and processes on array handling.
+  // Prop only permits one of these defines at a time.
+#if defined(SABERSENSE_BLADE_ID) || defined(SABERSENSE_ARRAY_SELECTOR)
+  if (do_font_after_sound_
+#ifdef SABERSENSE_BLADE_ID
+      && !GetWavPlayerPlaying(&SFX_bladeid)
+#endif
 #ifdef SABERSENSE_ARRAY_SELECTOR
-    if (do_font_after_sound_ && !IsArraySoundPlaying()) {
+      && !GetWavPlayerPlaying(&SFX_array)
+#endif
+  ) {
       SaberBase::DoNewFont();
       do_font_after_sound_ = false;
     }
@@ -420,35 +423,12 @@ public:
       STDOUT.print("Volume Up - Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
     } else {
-      // Cycle through ends of Volume Menu option
-#ifdef SABERSENSE_VOLUME_MENU
-      if (!max_vol_reached_) {
-        if (SFX_volmax) {
-          hybrid_font.PlayCommon(&SFX_volmax);
-        } else {
-          beeper.Beep(0.5, 3000);
-        }
-        STDOUT.print("Maximum Volume: ");
-        max_vol_reached_ = true;
-      } else {
-        dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
-            dynamic_mixer.get_volume() - VOLUME * 0.90));
-        if (SFX_volmin) {
-          hybrid_font.PlayCommon(&SFX_volmin);
-        } else {
-          beeper.Beep(0.5, 1000);
-        }
-        STDOUT.print("Minimum Volume: ");
-        max_vol_reached_ = false;
-      }
-#else
       if (SFX_volmax) {
         hybrid_font.PlayCommon(&SFX_volmax);
       } else {
         beeper.Beep(0.5, 3000);
       }
       STDOUT.print("Maximum Volume: ");
-#endif
     }
   }
 
@@ -465,33 +445,12 @@ public:
       STDOUT.print("Volume Down - Current Volume: ");
       STDOUT.println(dynamic_mixer.get_volume());
     } else {
-#ifdef SABERSENSE_VOLUME_MENU
-      if (!min_vol_reached_) {
-        if (SFX_volmin) {
-          hybrid_font.PlayCommon(&SFX_volmin);
-        } else {
-          beeper.Beep(0.5, 1000);
-        }
-        STDOUT.print("Minimum Volume: ");
-        min_vol_reached_ = true;
-      } else {
-        dynamic_mixer.set_volume(VOLUME);
-        if (SFX_volmax) {
-          hybrid_font.PlayCommon(&SFX_volmax);
-        } else {
-          beeper.Beep(0.5, 3000);
-        }
-        STDOUT.print("Maximum Volume: ");
-        min_vol_reached_ = false;
-      }
-#else
       if (SFX_volmin) {
         hybrid_font.PlayCommon(&SFX_volmin);
       } else {
         beeper.Beep(0.5, 1000);
       }
       STDOUT.print("Minimum Volume: ");
-#endif
     }
   }
 
@@ -501,10 +460,6 @@ public:
 #ifndef ENABLE_POWER_FOR_ID
 #error "SABERSENSE_BLADE_ID requires ENABLE_POWER_FOR_ID to be defined."
 #endif
-
-  bool IsBladeidSoundPlaying() {
-    return !!GetWavPlayerPlaying(&SFX_bladeid);
-  }
 
   void TriggerBladeID() {
     FindBladeAgain();
@@ -519,6 +474,10 @@ public:
     if (SFX_bladeid) {
       SFX_bladeid.Select(current_config - blades);
       hybrid_font.PlayCommon(&SFX_bladeid);  // Play 'bladeid' sound file if available.
+      int saved_volume = SFX_font.GetVolume();
+      SFX_font.SetVolume(0);  // Mute volume for font ident so that system can...
+      SaberBase::DoNewFont();  // ...run DoNewFont to ensure various initializations.
+      SFX_font.SetVolume(saved_volume);
     } else {
       SaberBase::DoNewFont();  // Play font ident if 'bladeid' sound file missing.
     }
@@ -531,9 +490,6 @@ public:
 #ifdef SABERSENSE_BLADE_ID    // Only one Sabersense BladeID standard permitted.
 #error "SABERSENSE_ARRAY_SELECTOR and SABERSENSE_BLADE_ID cannot be defined at the same time."
 #endif
-  bool IsArraySoundPlaying() {
-    return !!GetWavPlayerPlaying(&SFX_array);
-  }
 
   void NextBladeArray() {
     FakeFindBladeAgain();
@@ -548,6 +504,10 @@ public:
     if (SFX_array) {
       SFX_array.Select(current_config - blades);
       hybrid_font.PlayCommon(&SFX_array);  // Play 'array' sound file if available.
+      int saved_volume = SFX_font.GetVolume();
+      SFX_font.SetVolume(0);  // Mute volume for font ident so that system can...
+      SaberBase::DoNewFont();  // ...run DoNewFont to ensure various initializations.
+      SFX_font.SetVolume(saved_volume);
     } else {
       SaberBase::DoNewFont();  // Play font ident if 'array' sound file missing.
     }
@@ -563,6 +523,8 @@ public:
   current_config->blade##N->Activate(N);      \
 } while(0);
 
+// Runs FindBladeAgain, but ignores BladeID scan value
+// and instead simply advances to next blade array.
 void FakeFindBladeAgain() {
   ONCEPERBLADE(UNSET_BLADE_STYLE)
 #undef DEACTIVATE
@@ -942,7 +904,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // 2 Button
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
-#ifdef SABERSENSE_BLAST_MAIN_AND_AUX
+#ifdef SABERSENSE_BLAST_PWR_AND_AUX
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
 #endif
       swing_blast_ = false;
@@ -1063,7 +1025,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       }
       // Iterate over the save directories listed in blades[].
       for (const BladeConfig& blade : blades) {
-        const char* saveDirName = blade.save_dir; // Replace with the correct field.
+        const char* saveDirName = blade.save_dir; // Replace with correct field.
 
         if (saveDirName && strlen(saveDirName) > 0) {
           // Construct the path to the save directory.
@@ -1078,10 +1040,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
             // If the file exists in this directory, delete it.
             if (LSFS::Exists(filePath)) {
               LSFS::Remove(filePath);
-              Serial.print("Deleted from ");
-              Serial.print(saveDirPath);
-              Serial.print(": ");
-              Serial.println(targetFile);
+              STDOUT << "Deleted from "   \
+                  << saveDirPath << ": "  \
+                  << targetFile <<"\n";   \
             }
           }
         }
