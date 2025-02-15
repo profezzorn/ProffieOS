@@ -2,9 +2,9 @@
 #define FUNCTIONS_ISBETWEEN_H
 
 // Usage: IsBetween<F, BOTTOM, TOP>
-// Returns 0 or 32768 based F > BOTTOM and < TOP 
 // F, BOTTOM, TOP: INTEGER
 // return value: INTEGER
+// Returns 0 or 32768 based F > BOTTOM and < TOP 
 
 class BladeBase;
 
