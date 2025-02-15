@@ -4,9 +4,9 @@
 #include "svf.h"
 
 // Usage: Int<N>
-// Returns N
 // N: a number
 // return value: INTEGER
+// Returns N
 
 template<int N>
 class IntSVF {

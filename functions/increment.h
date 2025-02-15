@@ -80,12 +80,12 @@ template<class F, class THRESHOLD = Int<32768>, class HYST_PERCENT = Int<66> >
 using ThresholdPulseF = SingleValueAdapter<ThresholdPulseFSVF<F, THRESHOLD, HYST_PERCENT>>;
 
 // Usage: IncrementF<F, V, MAX, I, HYST_PERCENT>
+// F, V, I, MAX: FUNCTION
+// HYST_PERCENT: FUNCTION percent (defaults to 66)
+// return value: FUNCTION
 // Increases by value I (up to MAX) each time F >= V
 // Detection resets once F drops below V * HYST_PERCENT
 // if greater than MAX returns 0
-// F, V, I, MAX = numbers
-// HYST_PERCENT = percent (defaults to 66)
-// return value: INTEGER
 
 // NOTE: this function is designed to separate "events" for use with *Select styles.  
 // This function may break up SwingSpeed effects or other continuous responsive functions.
