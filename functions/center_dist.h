@@ -1,9 +1,9 @@
 #ifndef FUNCTIONS_CENTER_DIST_H
 #define FUNCTIONS_CENTER_DIST_H
 
-// Usage: Remap<CenterDistF<CENTER>,COLOR>
+// Usage: CenterDistF<CENTER>
 // CENTER : FUNCTION (defaults to Int<16384>)
-// Distributes led COLOR from CENTER
+// Returns distance from center, a full blade length counts as 32768.
 
 template<class CENTER = Int<16384>>
 class CenterDistF {
