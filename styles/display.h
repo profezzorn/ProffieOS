@@ -4,6 +4,9 @@
 #include <type_traits>
 #include "../display/rgb565frame.h"
 
+// Usage: DisplayStyle<MYDISPLAY>
+// MYDISPLAY: named instance
+// Returns: COLOR
 // This style requires a little more work than regular styles.
 // First you would need to declare an in-memory display.
 // To do this, we would put this in the CONFIG_STYLES section:
