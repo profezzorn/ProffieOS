@@ -711,7 +711,14 @@ EFFECT(preon);
 EFFECT(pstoff);
 
 // Monophonic fonts
-EFFECT(boot);     // also polyphonic
+#ifdef ENABLE_IDLE_SOUND
+EFFECT2(idle, idle);
+EFFECT2(boot, idle);
+EFFECT2(font, idle);
+#else
+EFFECT(boot);
+EFFECT(font);     // also polyphonic
+#endif
 EFFECT(bladein);  // also polyphonic
 EFFECT(bladeout);  // also polyphonic
 EFFECT2(hum, hum);
@@ -729,7 +736,6 @@ EFFECT(spin);     // also polyphonic
 EFFECT(blaster);
 EFFECT2(lockup, lockup);
 EFFECT(poweronf); // force poweron
-EFFECT(font);     // also polyphonic
 EFFECT(bgnlock);  // monophonic and polyphonic begin lock
 EFFECT(endlock);  // Plecter endlock support, used for polyphonic name too
 
