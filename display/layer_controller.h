@@ -99,10 +99,16 @@ public:
   virtual void LC_set_time(uint32_t millis) = 0;
 };
 
+class LayerControllerInterface {
+public:
+  virtual void LC_onStop() = 0;
+};
+
 class LayeredScreenControl {
 public:
   virtual LayerControl* getLayer(int layer) = 0;
-  virtual void SB_Top() = 0;
+  virtual void LSC_SetController(LayerControllerInterface* lci) = 0;
+  virtual void LSC_Top() = 0;
 };
 
 template<int W, int H>
@@ -110,17 +116,21 @@ class SizedLayeredScreenControl : public LayeredScreenControl {};
 
 class BufferedFileReader : public AudioStreamWork {
 protected:
+  void SEEK_LOW(uint32_t pos) {
+    TRACE2(RGB565, "SEEK_LOW", pos);
+    stream_locked_.set(true);
+    do_seek_ = true;
+    seek_pos_ = pos;
+    input_buffer_.clear();
+    stream_locked_.set(false);
+  }
   void SEEK(uint32_t pos) {
     TRACE2(RGB565, "SEEK", pos);
     if (pos > TELL() && pos - TELL() < input_buffer_.size()) {
       // Short forward seek within our buffer, just pop the data.
       input_buffer_.pop(pos - TELL());
     } else {
-      stream_locked_.set(true);
-      do_seek_ = true;
-      seek_pos_ = pos;
-      input_buffer_.clear();
-      stream_locked_.set(false);
+      SEEK_LOW(pos);
     }
   }
 
@@ -372,6 +382,7 @@ public:
 
   bool Play(Effect* f) {
     if (!*f) return false; // no files, do nothing
+    PVLOG_VERBOSE << "SCR Playing " << f->GetName() << "\n";
     sound_time_ms_ = SaberBase::sound_length * 1000;
     file_.PlayInternal(f);
     delayed_open_ = true;
@@ -443,7 +454,7 @@ private:
 #define DEF_SCR(X, ARGS...) Effect SCR_##X;
 
 template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>, typename NumberToByteArray<H>::type>>
-class StandarColorDisplayController : public SaberBase, public Looper, public CommandParser {
+class StandarColorDisplayController : public SaberBase, public Looper, public CommandParser, public LayerControllerInterface {
 public:
 //  typedef SizedLayeredScreenControl<W, H> SLSC;
 //  explicit StandarColorDisplayController(SLSC* screen) : scr_(screen) ONCE_PER_EFFECT(INIT_SCR) {}
@@ -452,16 +463,21 @@ public:
   explicit StandarColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : scr_(screen) ONCE_PER_EFFECT(INIT_SCR) {
     static_assert(w == W, "Width is not matching.");
     static_assert(h == H, "Height is not matching.");
+    screen->LSC_SetController(this);
   }
   
   void SB_On2(EffectLocation location) override { scr_.Play(&SCR_out); }
-  void SB_Top(uint64_t total_cycles) override { scr_.screen()->SB_Top(); }
+  void SB_Top(uint64_t total_cycles) override { scr_.screen()->LSC_Top(); }
   void SB_Off2(OffType offtype, EffectLocation location) override {
     if (offtype == OFF_IDLE) {
       Stop();
     } else if (!scr_.Play(&SCR_in)) {
       ShowDefault();
     }
+  }
+
+  void LC_onStop() override {
+    ShowDefault();
   }
 
   const char* name() override { return "ColorDisplayController"; }
