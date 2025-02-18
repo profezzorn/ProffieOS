@@ -619,6 +619,7 @@ public:
   
   void Loop() override {
     while (to_send_ < to_send_end_) {
+      if (transferring_.get()) return;
       if (wait_time_) {
 	if (millis() - wait_start_ < wait_time_) {
 	  return;
