@@ -321,20 +321,26 @@ public:
               float s = (rss - font_config.ProffieOSMinSwingAcceleration) / font_config.ProffieOSMaxSwingAcceleration;
               effect->SelectFloat(s);
             }
-            swing_player_ = PlayPolyphonic(effect);
+            if (effect == &SFX_slsh) {
+              SaberBase::DoEffect(EFFECT_ACCENT_SLASH, 0);
+            } else {
+              SaberBase::DoEffect(EFFECT_ACCENT_SWING, 0);
+            }
             swinging_ = true;
           } else {
+            // Already swinging
 #ifdef ENABLE_SPINS
             if (angle_ > font_config.ProffieOSSpinDegrees) {
               if (SFX_spin) {
-                swing_player_ = PlayPolyphonic(&SFX_spin);
+                SaberBase::DoEffect(EFFECT_SPIN, 0);
               }
               angle_ -= font_config.ProffieOSSpinDegrees;
             }
 #endif
           }
         }
-      } else if (swing_speed > swingThreshold) {
+      } else {
+        // Monophonic guessed
         if (!swinging_) {
           PlayMonophonic(&SFX_swing, &SFX_hum);
           swinging_ = true;
@@ -342,7 +348,7 @@ public:
 #ifdef ENABLE_SPINS
         if (angle_ > 360 && swinging_) {
           if (SFX_spin) {
-            PlayMonophonic(&SFX_spin, &SFX_hum);
+           SaberBase::DoEffect(EFFECT_SPIN, 0);
           }
           angle_ -= font_config.ProffieOSSpinDegrees;
         }
@@ -571,6 +577,27 @@ public:
         return;
       case EFFECT_PREON: SB_Preon(location); return;
       case EFFECT_POSTOFF: SB_Postoff(); return;
+      case EFFECT_ACCENT_SWING:
+        if (SFX_swng) {
+          swing_player_ = PlayPolyphonic(&SFX_swng);
+        } else if (!guess_monophonic_) {
+          swing_player_ = PlayPolyphonic(&SFX_swing);
+        } else {
+          PlayMonophonic(&SFX_swing, &SFX_hum);
+        }
+        return;
+      case EFFECT_ACCENT_SLASH:
+        swing_player_ = PlayPolyphonic(&SFX_slsh);
+        return;
+#ifdef ENABLE_SPINS
+      case EFFECT_SPIN:
+        if (guess_monophonic_) {
+          PlayMonophonic(&SFX_spin, &SFX_hum);
+        } else {
+          swing_player_ = PlayPolyphonic(&SFX_spin);
+        }
+        return;
+#endif
       case EFFECT_STAB:
         if (SFX_stab) { PlayCommon(&SFX_stab); return; }
         // If no stab sounds are found, fall through to clash

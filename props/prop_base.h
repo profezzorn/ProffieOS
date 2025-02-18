@@ -1419,6 +1419,21 @@ public:
       }
       return true;
     }
+    if (!strcmp(cmd, "swing")) {
+      SaberBase::DoEffect(EFFECT_ACCENT_SWING, 0);
+      Event(BUTTON_NONE, EVENT_SWING);
+      return true;
+    }
+    if (!strcmp(cmd, "slash")) {
+      SaberBase::DoEffect(EFFECT_ACCENT_SLASH, 0);
+      return true;
+    }
+#ifdef ENABLE_SPINS
+    if (!strcmp(cmd, "spin")) {
+      SaberBase::DoEffect(EFFECT_SPIN, 0);
+     return true;
+    }
+#endif
 
 #ifdef ENABLE_AUDIO
 
