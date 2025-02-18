@@ -549,13 +549,8 @@ public:
         }
         break;
       case OFF_BLAST:
-        if (monophonic_hum_) {
-          if (SFX_boom) PlayMonophonic(getNext(hum_player_, &SFX_boom), NULL);
-          else PlayMonophonic(getNext(hum_player_, &SFX_clash), NULL);  // Thermal-D fallback
-        } else {
-          state_ = STATE_HUM_FADE_OUT;
-          PlayPolyphonic(getNext(lock_player_, &SFX_boom));
-        }
+        SaberBase::DoEffect(EFFECT_BOOM, 0);
+        PVLOG_VERBOSE << "+++++ BOOM!! +++++\n";
         break;
     }
 
@@ -612,23 +607,33 @@ public:
       case EFFECT_LOCKUP_END: SB_EndLockup(); return;
       case EFFECT_LOW_BATTERY: SB_LowBatt(); return;
       case EFFECT_ALT_SOUND:
-      if (num_alternatives) {
-        int previous_alternative = current_alternative;
-        if (SaberBase::sound_number == -1) {
-          // Next alternative
-          if (++current_alternative >= num_alternatives)  current_alternative = 0;
-        } else {
-          // Select a specific alternative.
-          current_alternative = std::min<int>(SaberBase::sound_number, num_alternatives - 1);
-          // Set the sound num to -1 so that the altchng sound is random.
-          SaberBase::sound_number = -1;
+        if (num_alternatives) {
+          int previous_alternative = current_alternative;
+          if (SaberBase::sound_number == -1) {
+            // Next alternative
+            if (++current_alternative >= num_alternatives)  current_alternative = 0;
+          } else {
+            // Select a specific alternative.
+            current_alternative = std::min<int>(SaberBase::sound_number, num_alternatives - 1);
+            // Set the sound num to -1 so that the altchng sound is random.
+            SaberBase::sound_number = -1;
+          }
+          RestartHum(previous_alternative);
         }
-        RestartHum(previous_alternative);
-      }
-      PlayCommon(&SFX_altchng);
-      break;
+        PlayCommon(&SFX_altchng);
+        break;
+      case EFFECT_BOOM:
+        if (monophonic_hum_) {
+          if (SFX_boom) PlayMonophonic(getNext(hum_player_, &SFX_boom), NULL);
+          else PlayMonophonic(getNext(hum_player_, &SFX_clash), NULL);  // Thermal-D fallback
+        } else {
+          state_ = STATE_HUM_FADE_OUT;
+          PlayPolyphonic(getNext(lock_player_, &SFX_boom));
+        }
+        break;
     }
   }
+
 
   void SB_BladeDetect(bool detected) {
     Effect &X(detected ? SFX_bladein : SFX_bladeout);

@@ -81,6 +81,8 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(UNJAM)			\
     DEFINE_EFFECT(PLI_ON)			\
     DEFINE_EFFECT(PLI_OFF)                      \
+    DEFINE_EFFECT(DESTRUCT)                     \
+    DEFINE_EFFECT(BOOM)                         \
     /* Mini game effects */                     \
     DEFINE_EFFECT(GAME_START)                   \
     DEFINE_EFFECT(GAME_ACTION1)                 \
