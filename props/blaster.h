@@ -269,11 +269,8 @@ public:
   // Pull in parent's SetPreset, but turn the blaster on.
   void SetPreset(int preset_num, bool announce) override {
     PropBase::SetPreset(preset_num, announce);
-
-    if (!SFX_poweron) {
-      if (!SaberBase::IsOn()) {
-        On();
-      }
+    if (!SFX_poweron && !SaberBase::IsOn()) {
+      On();
     }
   }
 
