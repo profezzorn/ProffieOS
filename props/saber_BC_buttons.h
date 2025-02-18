@@ -1288,24 +1288,6 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     SPEC::SteppedMode::exit();
   }
 
-  bool Parse(const char *cmd, const char* arg) override {
-    if (PropBase::Parse(cmd, arg)) return true;
-
-    if (!strcmp(cmd, "twist")) {
-        Event(BUTTON_NONE, EVENT_TWIST);
-        return true;
-    }
-    if (!strcmp(cmd, "left")) {
-        Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-        return true;
-    }
-    if (!strcmp(cmd, "right")) {
-        Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-        return true;
-    }
-    return false;
-  }
-
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, 0)) {
       // Custom button controls for BCVolumeMode
