@@ -444,15 +444,6 @@ public:
     SetNextActionF(NEXT_ACTION_BLOW, hybrid_font.GetCurrentEffectLength());
   }
 
-  // Clash to unjam or Enter/Exit Volume Menu.
-  void Clash(bool stab, float strength) override {
-    PropBase::Clash(stab, strength);
-    if (is_jammed_) {
-      is_jammed_ = false;
-      SaberBase::DoEffect(EFFECT_UNJAM, 0);
-    }
-  }
-
   // Previous, next, or first preset, depending on angle
   void DoChangePreset() {
     if (fusor.angle1() > M_PI / 3) {
