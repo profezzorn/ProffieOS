@@ -438,14 +438,6 @@ public:
     no_clip_ = false;
   }
 
-  // Pull in parent's SetPreset, but turn the blaster on.
-  void SetPreset(int preset_num, bool announce) override {
-    PropBase::SetPreset(preset_num, announce);
-    if (!SFX_poweron && !SaberBase::IsOn()) {
-      On();
-    }
-  }
-
   void selfDestruct() override {
     Blaster::selfDestruct();
     SaberBase::DoEffect(EFFECT_DESTRUCT, 0);
