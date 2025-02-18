@@ -154,7 +154,11 @@ public:
         return;
       case MODE_KILL:
 #if defined (ENABLE_BLASTER_AUTO) || defined (BLASTER_ENABLE_AUTO)
-        SetBlasterMode(MODE_AUTO);
+        if (SFX_auto) {
+          SetBlasterMode(MODE_AUTO);
+        } else {
+          SetBlasterMode(MODE_STUN);
+        }
 #else
         SetBlasterMode(MODE_STUN);
 #endif
