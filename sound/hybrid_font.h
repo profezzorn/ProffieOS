@@ -560,10 +560,12 @@ public:
       case EFFECT_PREON: SB_Preon(location); return;
       case EFFECT_POSTOFF: SB_Postoff(); return;
       case EFFECT_ACCENT_SWING:
-        if (guess_monophonic_) {
-          PlayMonophonic(&SFX_swing, &SFX_hum);
-        } else {
+        if (SFX_swng) {
           swing_player_ = PlayPolyphonic(&SFX_swng);
+        } else if (!guess_monophonic_) {
+          swing_player_ = PlayPolyphonic(&SFX_swing);
+        } else {
+          PlayMonophonic(&SFX_swing, &SFX_hum);
         }
         return;
       case EFFECT_ACCENT_SLASH:
