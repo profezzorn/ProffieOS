@@ -2,10 +2,10 @@
 #define FUNCTIONS_DIVIDE_H
 
 // Usage: Divide<F, V>
-// Divide F by V
-// If V = 0, returns 0
 // F, V: FUNCTION, 
 // return value: FUNCTION
+// Divide F by V
+// If V = 0, returns 0
 // Please note that Divide<> isn't an exact inverse of Mult<> because mult uses fixed-point mathematics
 // (it divides the result by 32768) while Divide<> doesn't, it just returns F / V
 

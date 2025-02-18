@@ -67,7 +67,7 @@ struct BlasterDisplayConfigFile : public ConfigFile {
   float ProffieOSEmptyImageDuration;
   // for OLED displays, the time a jam.bmp will play
   float ProffieOSJamImageDuration;
-  // for OLED displays, the time a clipiin.bmp will play
+  // for OLED displays, the time a clipin.bmp will play
   float ProffieOSClipinImageDuration;
   // for OLED displays, the time a clipout.bmp will play
   float ProffieOSClipoutImageDuration;

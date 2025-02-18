@@ -401,6 +401,9 @@ struct SpiIrqHelper {
       case 1: return cb1;
       case 2: return cb2;
       case 3: return cb3;
+      default:
+	STDERR << "Too many SPI displays!";
+	[[gnu::fallthrough]];
       case 4: return cb4;
     }
   }
@@ -651,7 +654,7 @@ public:
       return true;
     }
     if (!strcmp(cmd, "displaystate")) {
-      STDOUT << "to_send: " << (to_send_end_ - to_send_) << "\n";
+      STDOUT << "to_send: " << (to_send_end_ - to_send_) << " transferring: " << transferring_.get()  << "\n";
       STDOUT << "PCLK1: " << stm32l4_system_pclk1() << " PCLK2: " << stm32l4_system_pclk2() << "\n";;
       HELPER::frame::dumpstate();
       return true;
@@ -742,13 +745,13 @@ using SPIDisplay_DFRobot096 = SPIDisplay77XX<
 
 
 template<int LAYERS,
-	 class CONFIG = DisplayConfig<0, InsetT<0,0,20,20>>,
+	 class CONFIG = DisplayConfig<1, InsetT<0,0,20,20>>,
 	 class SA = CSDisplayAdapter<blade4Pin>>
 using SPIDisplay_AdaFruit5206 = SPIDisplay77XX<
   LAYERS,
   CONFIG,
   // HELPER
-  DisplayConfigHelper<LAYERS, CONFIG, SizeT<320, 240>, SA, ST7789>,
+  DisplayConfigHelper<LAYERS, CONFIG, SizeT<240, 320>, SA, ST7789>,
   // InitSequence
   ConcatByteArrays<ST7789::GENERIC_ST7789_STARTUP, typename CONFIG::template rotation_cmd<ST7789> > ,
   // OnSequence

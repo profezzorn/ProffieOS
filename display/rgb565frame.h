@@ -126,7 +126,7 @@ public:
     STATE_MACHINE_BEGIN();
     TRACE(RGB565, "layer::run::begin");
 
-    if (frame_position_in_file_ && micros_ < next_frame_micros_) {
+    if (frame_position_in_file_ && (micros_ < next_frame_micros_ || micros_per_frame_ == 0)) {
       SEEK(frame_position_in_file_);
       PVLOG_VERBOSE << "Repeat last frame.\n";
       goto frame_found;
@@ -147,6 +147,7 @@ public:
 	  // TRACE(RGB565, "layer::run::PREEOF");
 	  if (ATEOF()) {
 	    TRACE(RGB565, "layer::run::EOF");
+	    PVLOG_VERBOSE << "STOP (ATEOF)!!\n";
 	    stop();
 	    return;
 	  }
@@ -155,7 +156,7 @@ public:
 	  YIELD();
 	}
 	TRACE(RGB565, "layer::run::copy");
-	size_t to_copy = min(read_end_ - read_pos_, input_buffer_.continuous_data());
+	size_t to_copy = std::min<size_t>(read_end_ - read_pos_, input_buffer_.continuous_data());
 	PROFFIEOS_ASSERT(to_copy <= 16);
 	memcpy(read_pos_, input_buffer_.data(), to_copy);
 	input_buffer_.pop(to_copy);
@@ -248,7 +249,7 @@ public:
 
   frame_found:
     dropped_frame_counter_.Update(0);
-    TRACE(RGB565, "layer::run::frame found");
+    TRACE2(RGB565, "layer::run::frame found", frame_position_in_file_);
 
     frame_position_in_file_ = TELL();
     frame_selected_ = true;
@@ -259,16 +260,19 @@ public:
   bool SelectFrame(Cyclint<uint32_t> micros) {
     SCOPED_PROFILER();
     TRACE2(RGB565, "SelectFrame", TELL());
-    if (micros_ != micros) {
+    if (micros_ != micros || delayed_open_ ) {
       // New frame.
       micros_ = micros;
       if (delayed_open_) {
 	delayed_open_ = false;
 	file_.do_open();
-	SEEK(0);
+	SEEK_LOW(0);
 	play_ = true;
 	first_frame_ = true;
+	frame_position_in_file_ = 0;
 	next_header_ = 0;
+	micros_per_frame_ = 0;
+	fps_ = 0.0f;
 	start_time_millis_ = millis();
       }
       if (!play_) return true;
@@ -288,10 +292,17 @@ public:
     return state_machine_.done();
   }
 
+  void SkipFrame() {
+    SEEK(next_header_);
+  }
+
   bool Fill(OutputBuffer<WIDTH>* output_buffer) {
     SCOPED_PROFILER();
     TRACE2(RGB565_DATA, "Fill pos=", TELL());
     TRACE2(RGB565_DATA, "Fill row=", output_buffer->rownum);
+    TRACE2(RGB565_DATA, "frame_position_in_file_=", frame_position_in_file_);
+    TRACE2(RGB565_DATA, "top_margin_=", top_margin_);
+    TRACE2(RGB565_DATA, "height_:", height_);
     if (output_buffer->rownum < top_margin_ || output_buffer->rownum >= height_ + top_margin_) {
       TRACE(RGB565_DATA, "Fill high row");
       output_buffer->chunk.zero(left_margin_, width_);
@@ -309,12 +320,21 @@ public:
     return output_buffer->chunk.full(left_margin_, width_);
 #else
     while (!output_buffer->chunk.full(left_margin_, width_)) {
-      if (!input_buffer_.size()) scheduleFillBuffer();
-      if (!input_buffer_.size()) return false;
+      if (!input_buffer_.size()) {
+	TRACE2(RGB565_DATA, "Buffer to fill: ", (uint32_t)this);
+	TRACE2(RGB565_DATA, "Fill buffer=", input_buffer_.size());
+	scheduleFillBuffer();
+	TRACE2(RGB565_DATA, "Filled buffer=", input_buffer_.size());
+      }
+      if (!input_buffer_.size()) {
+	TRACE2(RGB565_DATA, "no input, left to fill=", output_buffer->chunk.size() - width_ - left_margin_);
+	return false;
+      }
       output_buffer->fill(&pqoi, &input_buffer_, left_margin_, width_);
     }
+    // VERIFY_PQOI(output_buffer->rownum);
     return true;
-#endif    
+#endif
   }
 
 
@@ -324,8 +344,13 @@ public:
     TRACE2(RGB565_DATA, "Apply", TELL());
     if (!play_) return true;
     if (!transparent_) {
-      if (!out) output_buffer->chunk.init();
-      return Fill(output_buffer);
+      STDERR << "Unexpected Apply on non-transparent layer.\n";
+//      if (!out) {
+//	output_buffer->chunk.init();
+//	out = output_buffer->chunk.begin() + left_margin_;
+//      }
+//      return Fill(output_buffer);
+      return false;
     }
     if (!frame_selected_) return true;
     if (output_buffer->rownum < top_margin_ || output_buffer->rownum >= height_ + top_margin_) {
@@ -366,10 +391,9 @@ public:
     return micros_ + MAX_FRAME_TIME_US;
   }
 
-
   void LC_setVariable(int variable, VariableSource* variable_source) override {
     TRACE(RGB565, "setVariable");
-    if (variable < 0 || variable >= NELEM(variables)) {
+    if (variable < 0 || variable >= (int)NELEM(variables)) {
       STDERR << "Illegal variable!\n";
       return;
     }
@@ -378,7 +402,7 @@ public:
   const char* LC_get_filename() override {
     return file_.GetFilename();
   }
-  const void LC_restart() override {
+  void LC_restart() override {
     TRACE(RGB565, "LC_restart");
     SEEK(0);
   }
@@ -393,6 +417,7 @@ public:
   }
 
   bool is_playing() const { return play_ || delayed_open_; }
+  virtual bool IsActive() override { return is_playing(); }
 
   uint32_t play_time() const {
     return millis() - start_time_millis_;
@@ -406,7 +431,9 @@ public:
 	   << " EOF: " << ATEOF()
 	   << " KBPS: " << kbps()
 	   << " Bufsize: " << input_buffer_.size()
-	   << " next state: " << state_machine_.next_state_ << "\n";
+	   << " next state: " << state_machine_.next_state_
+	   << " uPF: " << micros_per_frame_
+	   << "\n";
     STDOUT.print(" frame drop fps: ");
     dropped_frame_counter_.Print();
     STDOUT.println("");
@@ -514,6 +541,7 @@ public:
 	
 	// After this, it will be ok to make modifications to the current output buffer.
 	while (!(next_output_buffer_ = getOutputBuffer())) YIELD();
+	PROFFIEOS_ASSERT(current_output_buffer_->chunk.full());
 	next_output_buffer_->chunk.init_next_chunk(&current_output_buffer_->chunk, 0, 0);
 	fixByteOrder();
 	current_output_buffer_->done.set(true);
@@ -527,80 +555,100 @@ public:
       SLEEP_MICROS(1000000/60);
       enableBacklight();
     
-      // TODO: deal with screen on/off
       while (layers[0].is_playing()) {
-	YIELD();
-	TRACE(RGB565, "loop");
-	MountSDCard();
-	frame_start_ = Cyclint<uint32_t>(micros());
+	while (layers[0].is_playing()) {
+	  YIELD();
+	  TRACE(RGB565, "loop");
+	  MountSDCard();
+	  frame_start_ = Cyclint<uint32_t>(micros());
 
-	for (layer = 0; layer < LAYERS; layer++) {
-	  while (!layers[layer].SelectFrame(frame_start_)) YIELD();
-	}
+	  base_layer_ = 0;
+	
+	  for (layer = 0; layer < (int)LAYERS; layer++) {
+	    while (!layers[layer].SelectFrame(frame_start_)) YIELD();
 
-	if (!layers[0].is_playing()) break;
-
-	for (layer = LAYERS-1; layer >= 0; layer--) {
-	  if (layers[layer].is_playing()) {
-	    top_layer_ = layer;
-	    break;
-	  }
-	}
-
-	TRACE(RGB565, "loop2");
-
-	current_output_buffer_->chunk.init(layers[0].left_margin_);
-
-	for (rownum_ = 0; rownum_ < HEIGHT; rownum_++) {
-	  if (micros() - slice_start > slice_micros) YIELD();
-	  
-	  TRACE2(RGB565_DATA, "inner loop row=", rownum_);
-	  current_output_buffer_->rownum = rownum_;
-
-	  // Base layer
-	  while (!layers[0].Fill(current_output_buffer_)) YIELD();
-
-	  // After this, it will be ok to make modifications to the current output buffer.
-	  while (!(next_output_buffer_ = getOutputBuffer())) YIELD();
-	  next_output_buffer_->chunk.init_next_chunk(&current_output_buffer_->chunk,
-						     layers[0].left_margin_,
-						     layers[0].width_);
-	  
-	  current_output_buffer_->chunk.zero_margins(layers[0].left_margin_,
-						     layers[0].width_);
-
-	  // Transparent layer(s)
-	  for (layer = 1; layer <= top_layer_; layer++) {
-	    out = nullptr;
-	    while (!layers[layer].Apply(current_output_buffer_, out)) {
-	      YIELD();
+	    // We skip all layers which are below a non-transparent layer.
+	    if (layers[layer].is_playing() && !layers[layer].transparent_) {
+	      while (base_layer_ < layer) {
+		if (layers[base_layer_].is_playing()) layers[base_layer_].SkipFrame();
+		base_layer_++;
+	      }
 	    }
 	  }
 
-	  fixByteOrder();
-	  current_output_buffer_->done.set(true);
-	  startTransfer();
+	  if (!layers[0].is_playing()) break;
 
-	  current_output_buffer_ = next_output_buffer_;
-	  next_output_buffer_ = nullptr;
-	}
-	frame_num_ ++;
-	TRACE(RGB565, "loop3");
-	swapBuffers(); // may do nothing
-	loop_counter_.Update();
+	  for (layer = LAYERS-1; layer >= 0; layer--) {
+	    if (layers[layer].is_playing()) {
+	      top_layer_ = layer;
+	      break;
+	    }
+	  }
+
+	  TRACE(RGB565, "loop2");
+
+	  current_output_buffer_->chunk.init(layers[base_layer_].left_margin_);
+
+	  for (rownum_ = 0; rownum_ < HEIGHT; rownum_++) {
+	    if (micros() - slice_start > slice_micros) YIELD();
+	  
+	    TRACE2(RGB565_DATA, "inner loop row=", rownum_);
+	    current_output_buffer_->rownum = rownum_;
+
+	    // Base layer
+	    while (!layers[base_layer_].Fill(current_output_buffer_)) YIELD();
+
+	    // After this, it will be ok to make modifications to the current output buffer.
+	    while (!(next_output_buffer_ = getOutputBuffer())) YIELD();
+	    PROFFIEOS_ASSERT(current_output_buffer_->chunk.full());
+	    next_output_buffer_->chunk.init_next_chunk(&current_output_buffer_->chunk,
+						       layers[base_layer_].left_margin_,
+						       layers[base_layer_].width_);
+	  
+	    current_output_buffer_->chunk.zero_margins(layers[base_layer_].left_margin_,
+						       layers[base_layer_].width_);
+
+	    // Transparent layer(s)
+	    for (layer = base_layer_ + 1; layer <= top_layer_; layer++) {
+	      out = nullptr;
+	      while (!layers[layer].Apply(current_output_buffer_, out)) {
+		YIELD();
+	      }
+	    }
+
+	    fixByteOrder();
+	    current_output_buffer_->done.set(true);
+	    startTransfer();
+
+	    current_output_buffer_ = next_output_buffer_;
+	    next_output_buffer_ = nullptr;
+	  }
+	  if (!current_output_buffer_->chunk.empty(layers[base_layer_].left_margin_,
+						   layers[base_layer_].width_)) {
+	    TRACE2(RGB565, "Frame data overflow layer=", base_layer_);
+	    STDERR << "Frame data overflow layer=" <<  base_layer_ << "\n";
+	    layers[base_layer_].dumpstate();
+	    layers[base_layer_].stop();
+	  }
+	  frame_num_ ++;
+	  TRACE(RGB565, "loop3");
+	  swapBuffers(); // may do nothing
+	  loop_counter_.Update();
 	
-	next_frame_time_ = frame_start_ + MAX_FRAME_TIME_US;
-	for (int l = 0; l < LAYERS; l++) {
-	  if (layers[l].is_playing()) {
-	    next_frame_time_ = std::min(next_frame_time_, layers[l].next_frame_time());
+	  next_frame_time_ = frame_start_ + MAX_FRAME_TIME_US;
+	  for (size_t l = 0; l < LAYERS; l++) {
+	    if (layers[l].is_playing()) {
+	      next_frame_time_ = std::min(next_frame_time_, layers[l].next_frame_time());
+	    }
+	  }
+
+	  // Frame transferred. Wait for next frame.
+	  frame_end = Cyclint<uint32_t>(micros());
+	  if (frame_end < next_frame_time_) {
+	    SLEEP_MICROS(next_frame_time_ - frame_end);
 	  }
 	}
-
-	// Frame transferred. Wait for next frame.
-	frame_end = Cyclint<uint32_t>(micros());
-	if (frame_end < next_frame_time_) {
-	  SLEEP_MICROS(next_frame_time_ - frame_end);
-	}
+	lc_->LC_onStop();
       }
 
       disableDisplay();
@@ -610,19 +658,26 @@ public:
   }
 
   LayerControl* getLayer(int layer) override {
-    if (layer < 0 || layer >= LAYERS) return nullptr;
+    if (layer < 0 || layer >= (int)LAYERS) return nullptr;
     return layers + layer;
   }
 
-  void SB_Top() override {
+  void LSC_Top() override {
     STDOUT.print("display fps: ");
     loop_counter_.Print();
     STDOUT.println("");
   }
-  
+
+  void LSC_SetController(LayerControllerInterface* lc) override {
+    lc_ = lc;
+  }
+
   void dumpstate() {
     STDOUT << "frame = "<< frame_num_
 	   << " rownum_ = " << rownum_
+	   << " layer = " << layer
+	   << " base = " << base_layer_
+	   << " top = " << top_layer_
 	   << " next state: " << state_machine_.next_state_
 	   << " buffered rows: " << output_buffers_.size()
 	   << "\n";
@@ -646,6 +701,7 @@ public:
 
 protected:
   POLYHOLE;
+  LayerControllerInterface* lc_ = nullptr;
   uint16_t* out;
   Cyclint<uint32_t> frame_start_;
   uint32_t frame_time_;
@@ -663,6 +719,7 @@ protected:
   uint32_t rownum_;
   int layer;
   int top_layer_;
+  int base_layer_;
   uint32_t frame_num_ = 0;
   
   CircularBuffer<OutputBuffer<WIDTH>, 32> output_buffers_;

@@ -147,14 +147,14 @@ public:
   }
 };
 
-template <typename R, bool result = std::is_same<decltype(((R*)nullptr)->getColor(0).c.r), uint16_t>::value>
+template <typename R, bool result = std::is_same<decltype(std::declval<R*>()->getColor(0).c.r), uint16_t>::value>
 constexpr bool hasGetColorHelper(int) { 
     return result;
 }
 template <typename R> constexpr bool hasGetColorHelper(...) { return false; }
 template <typename R> constexpr bool hasGetColor() { return hasGetColorHelper<R>(0); }
 
-static_assert(std::is_same<decltype(((Black*)nullptr)->getColor(0).c.r), uint16_t>::value, "getcolor has changed...");
+static_assert(std::is_same<decltype(std::declval<Black*>()->getColor(0).c.r), uint16_t>::value, "getcolor has changed...");
 static_assert(hasGetColor<Black>(), "hasGetColor is not working");
 static_assert(!hasGetColor<Int<1>>(), "hasGetColor is not working");
 

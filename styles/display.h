@@ -4,6 +4,9 @@
 #include <type_traits>
 #include "../display/rgb565frame.h"
 
+// Usage: DisplayStyle<MYDISPLAY>
+// MYDISPLAY: named instance
+// Returns: COLOR
 // This style requires a little more work than regular styles.
 // First you would need to declare an in-memory display.
 // To do this, we would put this in the CONFIG_STYLES section:
@@ -114,7 +117,7 @@ typedef typename std::remove_reference<decltype( *getInstance((I*)0) )>::type Di
     frame_ = getInstance((I*)0)->StartFrame();
   }
   SimpleColor getColor(int x, int y) {
-    if (x > W || y > H) return Color16(0,0,0);
+    if (x > (int)W || y > (int)H || !frame_) return Color16(0,0,0);
     return frame_->getColor(x, y);
   }
   SimpleColor getColor(int led) {

@@ -357,6 +357,9 @@ public:
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
+#ifdef BLADE_ID_SCAN_TIMEOUT
+    blade_id_scan_start_ = millis();
+#endif
     bool on = IsOn();
     BladeSet ret = SaberBase::OnBlades();
     if (on) {
@@ -503,9 +506,6 @@ public:
 #ifdef IDLE_OFF_TIME
     last_on_time_ = millis();
 #endif
-#ifdef ENABLE_AUDIO
-    beeper.Beep(0.05, 2000.0);
-#endif
     LOCK_SD(true);
     current_preset_.Load(-1);  // load last preset
     current_preset_.SaveAt(0); // save in first position, shifting all other presets down
@@ -581,22 +581,39 @@ public:
 #ifndef SHARED_POWER_PINS
 #warning SHARED_POWER_PINS is recommended when using BLADE_ID_SCAN_MILLIS
 #endif
-  bool find_blade_again_pending_ = false;
-  uint32_t last_scan_id_ = 0;
-  bool ScanBladeIdNow() {
-    uint32_t now = millis();
-    if (now - last_scan_id_ > BLADE_ID_SCAN_MILLIS) {
-      last_scan_id_ = now;
-      size_t best_config = FindBestConfig(PROFFIEOS_LOG_LEVEL >= 500);
-      if (current_config != blades + best_config) {
-        // We can't call FindBladeAgain right away because
-        // we're called from the blade. Wait until next loop() call.
-        find_blade_again_pending_ = true;
-      }
-      return true;
+    
+    bool find_blade_again_pending_ = false;
+    uint32_t last_scan_id_ = 0;
+    bool ScanBladeIdNow() {
+        uint32_t now = millis();
+        
+        bool scan = true;
+        
+#ifdef BLADE_ID_STOP_SCAN_WHILE_IGNITED
+        if (IsOn()) {
+            scan = false;
+        }
+#endif
+        
+#ifdef BLADE_ID_SCAN_TIMEOUT
+        if ((now - blade_id_scan_start_) > BLADE_ID_SCAN_TIMEOUT) {
+            scan = false;
+        }
+#endif
+        
+        if (scan) {
+            last_scan_id_ = now;
+            size_t best_config = FindBestConfig(PROFFIEOS_LOG_LEVEL >= 500);
+            if (current_config != blades + best_config) {
+                // We can't call FindBladeAgain right away because
+                // we're called from the blade. Wait until next loop() call.
+                find_blade_again_pending_ = true;
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
-    return false;
-  }
 
   // Must be called from loop()
   void PollScanId() {
@@ -835,6 +852,7 @@ public:
     TWIST_CLOSE,
     TWIST_LEFT,
     TWIST_RIGHT,
+    UNKNOWN_GESTURE,
 
     SHAKE_CLOSE,
     SHAKE_FWD,
@@ -884,6 +902,8 @@ public:
       case TWIST_LEFT:
       case TWIST_RIGHT:
         return TWIST_CLOSE;
+      case UNKNOWN_GESTURE:
+        return UNKNOWN_GESTURE;
       case SHAKE_CLOSE:
       case SHAKE_FWD:
       case SHAKE_REW:
@@ -937,35 +957,45 @@ public:
 
   // The prop should call this from Loop() if it wants to detect twists.
   void DetectTwist() {
+    bool process = DetectTwistStrokes();
+    if (process) {
+      ProcessTwistEvents();
+    }
+  }
+
+  bool DetectTwistStrokes() {
     Vec3 gyro = fusor.gyro();
-    bool process = false;
     if (fabsf(gyro.x) > 200.0 &&
         fabsf(gyro.x) > 3.0f * abs(gyro.y) &&
         fabsf(gyro.x) > 3.0f * abs(gyro.z)) {
-      process = DoGesture(gyro.x > 0 ? TWIST_LEFT : TWIST_RIGHT);
+      return DoGesture(gyro.x > 0 ? TWIST_RIGHT : TWIST_LEFT);
     } else {
-      process = DoGesture(TWIST_CLOSE);
+      return DoGesture(TWIST_CLOSE);
     }
-    if (process) {
-      if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
-           strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
-          (strokes[NELEM(strokes)-1].type == TWIST_RIGHT &&
-           strokes[NELEM(strokes)-2].type == TWIST_LEFT)) {
-        if (strokes[NELEM(strokes) -1].length() > 90UL &&
-            strokes[NELEM(strokes) -1].length() < 300UL &&
-            strokes[NELEM(strokes) -2].length() > 90UL &&
-            strokes[NELEM(strokes) -2].length() < 300UL) {
-          uint32_t separation =
+  }
+
+  // Process normal twists)
+  bool ProcessTwistEvents() {
+    if ((strokes[NELEM(strokes)-1].type == TWIST_LEFT &&
+         strokes[NELEM(strokes)-2].type == TWIST_RIGHT) ||
+        (strokes[NELEM(strokes)-1].type == TWIST_RIGHT &&
+         strokes[NELEM(strokes)-2].type == TWIST_LEFT)) {
+      if (strokes[NELEM(strokes)-1].length() > 90UL &&
+          strokes[NELEM(strokes)-1].length() < 300UL &&
+          strokes[NELEM(strokes)-2].length() > 90UL &&
+          strokes[NELEM(strokes)-2].length() < 300UL) {
+        uint32_t separation =
             strokes[NELEM(strokes)-1].start_millis -
             strokes[NELEM(strokes)-2].end_millis;
-          if (separation < 200UL) {
-            STDOUT.println("TWIST");
-            // We have a twisting gesture.
-            Event(BUTTON_NONE, EVENT_TWIST);
-          }
+        if (separation < 200UL) {
+          STDOUT.println("TWIST");
+          // We have a twisting gesture.
+          Event(BUTTON_NONE, EVENT_TWIST);
+          return true;
         }
       }
     }
+    return false;
   }
 
   // The prop should call this from Loop() if it wants to detect shakes.
@@ -1120,6 +1150,13 @@ public:
 
     current_mode->mode_Loop();
 
+#ifdef BLADE_ID_SCAN_TIMEOUT
+    if (SaberBase::IsOn() ||
+        (current_style() && current_style()->Charging())) {
+      blade_id_scan_start_ = millis();
+      }
+#endif
+      
 #ifdef IDLE_OFF_TIME
     if (SaberBase::IsOn() ||
         (current_style() && current_style()->Charging())) {
@@ -1139,6 +1176,10 @@ public:
 
 #ifdef IDLE_OFF_TIME
   uint32_t last_on_time_;
+#endif
+    
+#ifdef BLADE_ID_SCAN_TIMEOUT
+  uint32_t blade_id_scan_start_;
 #endif
 
 #ifdef SOUND_LIBRARY_REQUIRED
@@ -1207,6 +1248,8 @@ public:
       case EVENT_SWING: STDOUT.print("Swing"); break;
       case EVENT_SHAKE: STDOUT.print("Shake"); break;
       case EVENT_TWIST: STDOUT.print("Twist"); break;
+      case EVENT_TWIST_LEFT: STDOUT.print("TwistLeft"); break;
+      case EVENT_TWIST_RIGHT: STDOUT.print("TwistRight"); break;
       case EVENT_CLASH: STDOUT.print("Clash"); break;
       case EVENT_THRUST: STDOUT.print("Thrust"); break;
       case EVENT_PUSH: STDOUT.print("Push"); break;
@@ -1592,8 +1635,18 @@ public:
     }
 #ifdef MOUNT_SD_SETTING
     if (!strcmp(cmd, "sd")) {
-      if (arg) LSFS::SetAllowMount(atoi(arg) > 0);
-      STDOUT.println(LSFS::GetAllowMount());
+      if (arg) {
+	bool mountable = atoi(arg) > 0;
+	LSFS::SetAllowMount(mountable);
+	if (mountable) {
+	  // Trigger the IDLE_OFF_TIME behavior to turn off idle sounds and animations.
+	  // (Otherwise we can't mount the sd card).
+	  if (!SaberBase::IsOn()) SaberBase::DoOff(OFF_IDLE, 0);
+	}
+      }
+      STDOUT << "SD Access " 
+             << (LSFS::GetAllowMount() ? "ON" : "OFF") 
+             << "\n";
       return true;
     }
 #endif
@@ -1753,6 +1806,7 @@ public:
     switch (event) {
       case EVENT_RELEASED:
         clash_pending_ = false;
+	[[gnu::fallthrough]];
       case EVENT_PRESSED:
         IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
       default:

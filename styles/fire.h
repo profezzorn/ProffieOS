@@ -45,9 +45,11 @@ protected:
       default:
          state_ = STATE_ACTIVATING;
          on_time_ = millis();
+	 [[gnu::fallthrough]];
       case STATE_ACTIVATING:
          if (millis() - on_time_ < DELAY) return false;
          state_ = STATE_ON;
+	 [[gnu::fallthrough]];
       case STATE_ON:
          return true;
     }

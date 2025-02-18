@@ -36,6 +36,7 @@ void SetupTimer(uint32_t instance, PWM_USECASE usecase) {
       case PWM_USECASE::IR:
       case PWM_USECASE::WS2811:
         PVLOG_NORMAL << "Fatal error in SetupTimer()";
+	[[gnu::fallthrough]];
       case PWM_USECASE::PWM:
         // 813 Hz, 32768 steps
         hz = 813;

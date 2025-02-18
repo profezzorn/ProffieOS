@@ -102,7 +102,7 @@ template<class BASE,
 
 // Usage: LockupTr<BASE, COLOR, BeginTr, EndTr, LOCKUP_TYPE, CONDITION>
 // Or: LockupTrL<COLOR, BeginTr, EndTr, LOCKUP_TYPE, CONDITION>
-// COLOR; COLOR or LAYER
+// COLOR: COLOR or LAYER
 // BeginTr, EndTr: TRANSITION
 // LOCKUP_TYPE: a SaberBase::LockupType
 // Return type: LAYER

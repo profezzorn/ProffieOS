@@ -37,7 +37,7 @@ template<typename T, typename X = void> struct PrintHelper {
   static void out(Print& p, T& x) { p.print(x); }
 };
 
-template<typename T> struct PrintHelper<T, decltype(((T*)0)->printTo(*(Print*)0))> {
+template<typename T> struct PrintHelper<T, decltype(std::declval<T*>()->printTo(*(Print*)0))> {
   static void out(Print& p, T& x) { x.printTo(p); }
 };
 

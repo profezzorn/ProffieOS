@@ -6,10 +6,10 @@
 
 // Usage: IntSelect<SELECTION, Int1, Int2...>
 // SELECTION: FUNCTION
-// Returns SELECTION of N 
-// If SELECTION is 0, the first integer is returned, if SELECTION is 1, the second and so forth.
 // N: numbers
 // return value: INTEGER
+// Returns SELECTION of N 
+// If SELECTION is 0, the first integer is returned, if SELECTION is 1, the second and so forth.
 
 template<class F, int... N>
 class IntSelect {
