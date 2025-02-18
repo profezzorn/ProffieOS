@@ -2,9 +2,9 @@
 #define FUNCTIONS_SUBTRACT_H
 
 // Usage: Subtract<A, B>
-// Subtracts B from A (A - B)
 // A, B: FUNCTION
 // return value: FUNCTION
+// Subtracts B from A (A - B)
 
 template<class A, class B>
 class SubtractBase {

@@ -5,8 +5,9 @@
 #include "svf.h"
 
 // Usage: SwingSpeed<MAX>
+// MAX: FUNCTION
+// returned value: FUNCTION
 // Returns 0-32768 based on swing speed
-// returned value: INTEGER
 
 template<class MAX>
 class SwingSpeedSVF {
@@ -27,9 +28,9 @@ template<int MAX>
 using SwingSpeed = SwingSpeedX<Int<MAX>>;
 
 // Usage: SwingAcceleration<MAX>
+// MAX: FUNCTION, defaults to 150
+// returned value: FUNCTION
 // Returns 0-32768 based on swing acceleration
-// MAX defaults to 150
-// returned value: INTEGER
 
 template<class MAX = Int<130>>
 class SwingAccelerationSVF {

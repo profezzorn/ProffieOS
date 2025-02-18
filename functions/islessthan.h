@@ -2,10 +2,10 @@
 #define FUNCTIONS_ISLESSTHAN_H
 
 // Usage: IsLessThan<F, V>
+// F, V: FUNCTION
+// return value: FUNCTION
 // Returns 0 or 32768 based on V
 // If F < V returns 32768, if F >= V returns 0 
-// F, V: INTEGER
-// return value: INTEGER
 
 class BladeBase;
 

@@ -5,9 +5,9 @@
 
 // Usage: ReadPinF<PIN>
 // or: ReadPinF<PIN, PIN_MODE>
-// returns INTEGER, 0 if pin is low and 32768 if pin is high
 // PIN: int, pin you want your style to respond to
 // PIN_MODE: int, one of INPUT, INPUT_PULLUP or INPUT_PULLDOWN, defaults to INPUT
+// returns INTEGER, 0 if pin is low and 32768 if pin is high
 
 template<int pin, int pin_mode = INPUT>
 class ReadPinSVF {
@@ -27,9 +27,9 @@ using ReadPinF = SingleValueAdapter<ReadPinSVF<pin, pin_mode>>;
 
 // Usage: AnalogReadPinF<PIN>
 // or: AnalogReadPinF<PIN, PIN_MODE>
-// returns INTEGER, 0-32768 depending on input reading.
 // PIN: int, pin you want your style to respond to
 // PIN_MODE: int, one of INPUT, INPUT_PULLUP or INPUT_PULLDOWN, defaults to INPUT
+// returns INTEGER, 0-32768 depending on input reading.
 // Notes:
 //   * May cause slowdowns
 //   * may not update every run() call

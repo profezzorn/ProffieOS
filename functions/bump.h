@@ -2,12 +2,12 @@
 #define FUNCTIONS_BUMP_H
 
 // Usage: Bump<BUMP_POSITION, BUMP_WIDTH_FRACTION>
+// BUMP_POSITION, BUMP_WIDTH_FRACTION: INTEGER
 // Returns different values for each LED, forming a bump shape.
 // If BUMP_POSITION is 0, bump will be at the hilt.
 // If BUMP_POSITION is 32768, the bump will be at the tip.
 // If BUMP_WIDTH_FRACTION is 1, bump will be extremely narrow.
 // If BUMP_WIDTH_FRACTION is 32768, it will fill up most/all of the blade.
-// BUMP_POSITION, BUMP_WIDTH_FRACTION: INTEGER
 
 // Based on exp(-x*x)
 static uint8_t bump_shape[33] = {

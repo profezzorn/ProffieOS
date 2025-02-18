@@ -4,11 +4,11 @@
 #include "svf.h"
 
 // Usage: Sin<RPM, LOW, HIGH>
+// LOW: FUNCTION (defaults to Int<0>)
+// HIGH: FUNCTION (defaults to Int<32768>)
+// RPM: FUNCTION
+// return value: FUNCTION
 // pulses between LOW - HIGH RPM times per minute
-// LOW: INTEGER (defaults to Int<0>)
-// HIGH: INTEGER (defaults to Int<32768>)
-// RPM: INTEGER
-// return value: INTEGER
 
 #include "int.h"
 #include "../common/sin_table.h"

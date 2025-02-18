@@ -75,7 +75,7 @@ private:
       PVLOG_STATUS << "Sound library version " << found_version << " found.\n";
     }
     if (found_version < required_version_) {
-      PVLOG_ERROR << "Sound library version " << required_version_ << " required.\n";
+      PVLOG_ERROR << "ERROR - Sound library version " << required_version_ << " required.\n";
       ProffieOSErrors::error_in_font_directory(); // Make new error for voice pack?
     }
   }

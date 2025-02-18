@@ -4,9 +4,9 @@
 #include "../common/fuse.h"
 
 // Usage: BladeAngleX<MIN, MAX>
-// Returns 0-32768 based on angle of blade
 // MIN : FUNCTION (defaults to Int<0>)
 // MAX : FUNCTION (defaults to Int<32768>)
+// Returns: 0-32768 based on angle of blade
 // MIN and MAX specifies the range of angles which are used.
 // For MIN and MAX 0 means down and 32768 means up and 16384 means
 // pointing towards the horizon.

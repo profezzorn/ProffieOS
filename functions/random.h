@@ -26,8 +26,9 @@ public:
 };
 
 // Usage: EffectRandomF<EFFECT>
-// Returns a random value between 0 and 32768 each time EVENT is triggered
+// EFFECT: BladeEffectType
 // return value: INTEGER
+// Returns a random value between 0 and 32768 each time EVENT is triggered
 
 template<BladeEffectType EFFECT>
 class EffectRandomF {

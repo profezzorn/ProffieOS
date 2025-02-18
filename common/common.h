@@ -22,7 +22,7 @@ const char install_time[] = __DATE__ " " __TIME__
 #endif  
   ;
 
-#ifdef DEBUG
+#ifdef ENABLE_DEBUG
 #define PROFFIEOS_ASSERT(X) do {					\
   if (!(X)) {								\
     interrupts();							\

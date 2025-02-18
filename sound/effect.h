@@ -415,6 +415,9 @@ class Effect {
     if (num_files < 1) {
       default_output->print("No sounds found: ");
       default_output->println(name_);
+
+      // If we have a following file, then just get that file and play it.
+      if (following_ && following_ != this) return following_->RandomFile();
       return FileID();
     }
     int n;
@@ -708,7 +711,14 @@ EFFECT(preon);
 EFFECT(pstoff);
 
 // Monophonic fonts
-EFFECT(boot);     // also polyphonic
+#ifdef ENABLE_IDLE_SOUND
+EFFECT2(idle, idle);
+EFFECT2(boot, idle);
+EFFECT2(font, idle);
+#else
+EFFECT(boot);
+EFFECT(font);     // also polyphonic
+#endif
 EFFECT(bladein);  // also polyphonic
 EFFECT(bladeout);  // also polyphonic
 EFFECT2(hum, hum);
@@ -726,7 +736,6 @@ EFFECT(spin);     // also polyphonic
 EFFECT(blaster);
 EFFECT2(lockup, lockup);
 EFFECT(poweronf); // force poweron
-EFFECT(font);     // also polyphonic
 EFFECT(bgnlock);  // monophonic and polyphonic begin lock
 EFFECT(endlock);  // Plecter endlock support, used for polyphonic name too
 
@@ -777,6 +786,9 @@ EFFECT(ccchange);
 
 EFFECT(altchng);
 EFFECT(chhum);
+
+// menu sounds
+EFFECT(mclick);
 
 // Blaster effects
 // hum, boot and font are reused from sabers and already defined.

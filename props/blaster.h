@@ -27,29 +27,29 @@ This prop manages up to six different buttons.
 -------------------------------------------------------------------------------
 
 *Dual Buttons Mode*
- -Buttons: FIRE and MODE
+- Buttons: FIRE and MODE
   This is the "stock" configuration.
   Weapon will always start on the default mode (define with BLASTER_DEFAULT_MODE, STUN is default).
   Default is to start powered OFF if the font has a poweron.wav file, otherwise ON.
-  
-    Fire 			- Click FIRE.
-    Cycle Modes			- Click MODE.
-    Next Preset			- Long click and release MODE.
-    Previous Preset		- Double click and hold MODE, release after a second.
-    Reload			- Hold MODE until Reloaded.
-    Start/Stop Track		- Double click MODE.
-    Unjam			- Bang the blaster.
+
+    Fire                      - Click FIRE.
+    Cycle Modes               - Click MODE.
+    Next Preset               - Long click and release MODE.
+    Previous Preset           - Double click and hold MODE, release after a second.
+    Reload                    - Hold MODE until Reloaded.
+    Start/Stop Track          - Double click MODE.
+    Unjam                     - Bang the blaster.
 
 *Extra Buttons*
--Button: POWER
-    Power On / Off		- Click POWER.
+- Button: POWER
+    Power On / Off            - Click POWER.
 
--Button: RELOAD
-    Reload			- Hold RELOAD until Reloaded.
-	
--Button: CLIP
-	Clip In			- Latch CLIP
-	Clip Out		- Unlatch CLIP
+- Button: RELOAD
+    Reload                    - Hold RELOAD until Reloaded.
+      
+- Button: CLIP
+      Clip In                 - Latch CLIP
+      Clip Out                - Unlatch CLIP
 
 
 -------------------------------------------------------------------------------
@@ -57,32 +57,33 @@ This prop manages up to six different buttons.
 This prop manages the following sounds.
 -------------------------------------------------------------------------------
 
-bgnauto 	Played when auto fire starts.
-auto 		Played while auto fire is going.
-endauto 	Played when auto fire ends.
-blast 		Is the semi-automatic fire sound. You can have as many as you want.
-boot 		Played when ProffieOS boots up.
-clipin 		Sound made when inserting a clip.
-clipout 	Sound made when dropping a clip.
-empty 		Sound when the weapon is out of rounds.
-font 		Name of the preset.
-full 		Sound made when the weapon is full of ammo.
-hum 		Constant sound looping while not firing.
-jam 		Sound made when the weapon jamed.
-unjam 		Sound made when unjamming the blaster.
-mode 		Sound made when switching mode (if mdkill, mdstun and/or mdauto not present). If none present, Talkie will be used instead.
-plioff 		Played while retracting the PLI bargraph.
-plion 		Played while extending the PLI bargraph.
-poweron 	If this file is present, the blaster will start once it is turned on. If not, you will need a Power button to power it on.
-range 		Sounds of increasing weapon range/power.
-stun 		Firing sound for stun mode.
-reload		Reloading sound.
-mdkill		Sound made when switching to KILL mode
-mdstun		Sound made when switching to STUN mode
-mdauto		Sound made when switching to AUTO mode
-
+bgnauto.wav     Played when auto fire starts.
+auto.wav        Played while auto fire is going.
+endauto.wav     Played when auto fire ends.
+blast.wav       Is the semi-automatic fire sound. You can have as many as you want.
+boot.wav        Played when ProffieOS boots up.
+clipin.wav      Sound made when inserting a clip.
+clipout.wav     Sound made when dropping a clip.
+empty.wav       Sound when the weapon is out of rounds.
+font.wav        Name of the preset.
+full.wav        Sound made when the weapon is full of ammo.
+hum.wav         Constant sound looping while not firing.
+jam.wav         Sound made when the weapon jamed.
+unjam.wav       Sound made when unjamming the blaster.
+plioff.wav      Played while retracting the PLI bargraph.
+plion.wav       Played while extending the PLI bargraph.
+poweron.wav     If this file is present, the blaster will start once it is turned on.
+                  Otherwise, you will need a Power button to power it on.
+range.wav       Sounds of increasing weapon range/power.
+stun.wav        Firing sound for stun mode.
+reload.wav      Reloading sound.
+mdkill.wav      Sound made when switching to KILL mode
+mdstun.wav      Sound made when switching to STUN mode
+mdauto.wav      Sound made when switching to AUTO mode
+mode.wav        Fallback sound used when switching mode if none of the 3 above exist.
+                  If no mode sounds are present at all, Talkie will speak the mode (if not disabled).
 */
-  
+
 #ifndef PROPS_BLASTER_H
 #define PROPS_BLASTER_H
 
