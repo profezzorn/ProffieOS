@@ -102,6 +102,7 @@ public:
 class LayerControllerInterface {
 public:
   virtual void LC_onStop() = 0;
+  virtual bool LC_done() = 0;
 };
 
 class LayeredScreenControl {
@@ -403,6 +404,7 @@ public:
     STDOUT << "next state: " << state_machine_.next_state_ << "\n";
   }
 
+  bool IsActive() override { return active_ || delayed_open_; }
 protected:
   void check_open() {
     if (delayed_open_ && state_machine_.done()) {
@@ -415,7 +417,6 @@ protected:
       state_machine_.reset_state_machine();
     }
   }
-  bool IsActive() override { return active_; }
 
   size_t i, c;
   bool do_restart_;
@@ -466,7 +467,11 @@ public:
     screen->LSC_SetController(this);
   }
   
-  void SB_On2(EffectLocation location) override { scr_.Play(&SCR_out); }
+  void SB_On2(EffectLocation location) override {
+    if (!scr_.Play(&SCR_out)) {
+      ShowDefault();
+    }
+  }
   void SB_Top(uint64_t total_cycles) override { scr_.screen()->LSC_Top(); }
   void SB_Off2(OffType offtype, EffectLocation location) override {
     if (offtype == OFF_IDLE) {
@@ -478,6 +483,10 @@ public:
 
   void LC_onStop() override {
     ShowDefault();
+  }
+
+  bool LC_done() override {
+    return !scr_.IsActive();
   }
 
   const char* name() override { return "ColorDisplayController"; }

@@ -649,6 +649,7 @@ public:
 	  }
 	}
 	lc_->LC_onStop();
+	while (!lc_->LC_done()) YIELD();
       }
 
       disableDisplay();
