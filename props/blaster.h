@@ -196,6 +196,8 @@ public:
     } else {
       return false;
     }
+#else
+    return false;
 #endif
   }
 
