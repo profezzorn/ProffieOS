@@ -75,7 +75,8 @@ Optional Blade style elements:
 ==================================================
 | 2 Buttons: FIRE and MODE (saber's POW and AUX) |
 ==================================================
-Power ON / OFF            - Hold FIRE then Double Click MODE.
+Power Blaster ON          - Hold MODE.
+Power Blaster OFF         - Hold FIRE then Double Click MODE.
                               Default is auto-powered ON at Boot and on Change Preset.
                               Power ON required after Self Destruct.
                               Plays out.wavs for power ON and in.wavs for power OFF.
@@ -565,7 +566,7 @@ public:
         return true;
 #else
   // Power ON / OFF manually
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF | BUTTON_FIRE):
+      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
         TurnPowerOn();
         return true;
 
