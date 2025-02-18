@@ -215,10 +215,6 @@ struct BCBlasterVolumeMode : public SPEC::SteppedMode {
   int initial_percentage_ = 0;
   int percentage_ = 0;
 
-  int steps_per_revolution() override {
-    return 12;  // adjust for sensitivity
-  }
-
   void mode_activate(bool onreturn) override {
     PVLOG_NORMAL << "** Enter Volume Menu\n";
     initial_volume_ = dynamic_mixer.get_volume();
