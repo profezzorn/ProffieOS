@@ -527,13 +527,6 @@ public:
         break;
       case OFF_BLAST:
         SaberBase::DoEffect(EFFECT_BOOM, 0);
-        if (monophonic_hum_) {
-          if (SFX_boom) PlayMonophonic(getNext(hum_player_, &SFX_boom), NULL);
-          else PlayMonophonic(getNext(hum_player_, &SFX_clash), NULL);  // Thermal-D fallback
-        } else {
-          state_ = STATE_HUM_FADE_OUT;
-          PlayPolyphonic(getNext(lock_player_, &SFX_boom));
-        }
         PVLOG_VERBOSE << "+++++ BOOM!! +++++\n";
         break;
     }
@@ -583,10 +576,20 @@ public:
 	  }
 	  RestartHum(previous_alternative);
 	}
-	PlayCommon(&SFX_altchng);
-	break;
+        PlayCommon(&SFX_altchng);
+        break;
+      case EFFECT_BOOM:
+        if (monophonic_hum_) {
+          if (SFX_boom) PlayMonophonic(getNext(hum_player_, &SFX_boom), NULL);
+          else PlayMonophonic(getNext(hum_player_, &SFX_clash), NULL);  // Thermal-D fallback
+        } else {
+          state_ = STATE_HUM_FADE_OUT;
+          PlayPolyphonic(getNext(lock_player_, &SFX_boom));
+        }
+        break;
     }
   }
+
 
   void SB_BladeDetect(bool detected) {
     Effect &X(detected ? SFX_bladein : SFX_bladeout);
