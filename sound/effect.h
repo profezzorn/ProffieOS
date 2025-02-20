@@ -620,7 +620,6 @@ class Effect {
 
   static void ScanCurrentDirectory() {
     LOCK_SD(true);
-    current_alternative = 0;
     num_alternatives = 0;
     for (Effect* e = all_effects; e; e = e->next_) {
       e->reset();
