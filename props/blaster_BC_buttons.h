@@ -544,7 +544,7 @@ public:
     SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, blaster_mode);
   }
 
-  virtual void SetBlasterMode(BlasterMode to_mode) override {
+  void SetBlasterMode(BlasterMode to_mode) override {
     Blaster::SetBlasterMode(to_mode);
     SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, to_mode);
   }
