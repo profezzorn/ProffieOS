@@ -538,32 +538,39 @@ public:
     Off();
   }
 
+  // Pull in parent's SetPreset, but set the correct alt sounds.
+  void SetPreset(int preset_num, bool announce) override {
+    Blaster::SetPreset(preset_num, announce);
+    SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, blaster_mode);
+  }
+
   virtual void NextBlasterMode() override {
     switch(blaster_mode) {
-      case MODE_STUN:
-        SetBlasterMode(MODE_KILL);
-        SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, 0);
-        return;
       case MODE_KILL:
+        SetBlasterMode(MODE_STUN);
+        return;
+      case MODE_STUN:
 #if defined (ENABLE_BLASTER_AUTO) || defined (BLASTER_ENABLE_AUTO)
         if (SFX_auto) {
           SetBlasterMode(MODE_AUTO);
-          SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, 2);
         } else {
-          SetBlasterMode(MODE_STUN);
-          SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, 1);
+          SetBlasterMode(MODE_KILL);
         }
 #else
-        SetBlasterMode(MODE_STUN);
-        SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, 1);
+        SetBlasterMode(MODE_KILL);
 #endif
         return;
       case MODE_AUTO:
-        SetBlasterMode(MODE_STUN);
-        SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, 1);
+        SetBlasterMode(MODE_KILL);
         return;
     }
   }
+
+  virtual void SetBlasterMode(BlasterMode to_mode) override {
+    Blaster::SetBlasterMode(to_mode);
+    SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, to_mode);
+  }
+
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
 
@@ -736,36 +743,6 @@ public:
     Blaster::SB_Effect(effect, location);
     switch (effect) {
       default: return;
-      case EFFECT_STUN: hybrid_font.PlayCommon(&SFX_stun); return;
-      case EFFECT_FIRE: hybrid_font.PlayCommon(&SFX_blast); return;
-      case EFFECT_CLIP_IN: 
-        if (blaster_mode == MODE_STUN && SFX_clipins) {
-          hybrid_font.PlayCommon(&SFX_clipins); return;
-        } else {
-          hybrid_font.PlayCommon(&SFX_clipin); return;
-        }
-      case EFFECT_CLIP_OUT: 
-        if (blaster_mode == MODE_STUN && SFX_clipouts) {
-          hybrid_font.PlayCommon(&SFX_clipouts); return;
-        } else { 
-          hybrid_font.PlayCommon(&SFX_clipout); return;
-        }
-      case EFFECT_RELOAD:
-        if (shots_fired_ == 0 && SFX_full) {
-          hybrid_font.PlayCommon(&SFX_full); return;
-        } else if (blaster_mode == MODE_STUN && SFX_reloads) {
-          hybrid_font.PlayCommon(&SFX_reloads); return;
-        } else {
-          hybrid_font.PlayCommon(&SFX_reload); return;
-        }
-      case EFFECT_MODE: SayMode(); return;
-      case EFFECT_RANGE: hybrid_font.PlayCommon(&SFX_range); return;
-      case EFFECT_EMPTY: hybrid_font.PlayCommon(&SFX_empty); return;
-      case EFFECT_FULL: hybrid_font.PlayCommon(&SFX_full); return;
-      case EFFECT_JAM: hybrid_font.PlayCommon(&SFX_jam); return;
-      case EFFECT_UNJAM: hybrid_font.PlayCommon(&SFX_unjam); return;
-      case EFFECT_PLI_ON: hybrid_font.PlayCommon(&SFX_plion); return;
-      case EFFECT_PLI_OFF: hybrid_font.PlayCommon(&SFX_plioff); return;
       case EFFECT_DESTRUCT: hybrid_font.PlayCommon(&SFX_destruct); return;
       case EFFECT_BATTERY_LEVEL:
         if (is_speaking_) {
