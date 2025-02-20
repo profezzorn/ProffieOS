@@ -538,6 +538,9 @@ public:
     Off();
   }
 
+  // Prevent alt setting to alt000 for blaster.
+  void ResetCurrentAlternative() override {};
+
   // Pull in parent's SetPreset, but set the correct alt sounds.
   void SetPreset(int preset_num, bool announce) override {
     Blaster::SetPreset(preset_num, announce);
