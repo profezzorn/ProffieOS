@@ -538,14 +538,19 @@ public:
     Off();
   }
 
-  // Prevent alt setting to alt000 for blaster.
-  void ResetCurrentAlternative() override {};
-
-  // Pull in parent's SetPreset, but set the correct alt sounds.
-  void SetPreset(int preset_num, bool announce) override {
-    Blaster::SetPreset(preset_num, announce);
-    SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, blaster_mode);
+void ResetCurrentAlternative() override {
+  switch (BLASTER_DEFAULT_MODE) {
+    case MODE_STUN:
+      current_alternative = 0;
+      break;
+    case MODE_KILL:
+      current_alternative = 1;
+      break;
+    case MODE_AUTO:
+      current_alternative = 2;
+      break;
   }
+}
 
   void SetBlasterMode(BlasterMode to_mode) override {
     Blaster::SetBlasterMode(to_mode);
