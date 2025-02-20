@@ -378,8 +378,11 @@ public:
   }
 
  void DoAutoFire() override {
+    if (!SFX_auto) return;
     // First time through, let bgnauto finish first if we have one
-    if (!GetWavPlayerPlaying(&SFX_auto)) return;
+    if (SFX_bgnauto && GetWavPlayerPlaying(&SFX_bgnauto)) return;
+
+    // No bgnauto or bgnauto has finished playing, so initialize and start auto-firing
     if (auto_firing_ && !auto_player_) {
       auto_player_ = GetWavPlayerPlaying(&SFX_auto);
       shots_fired_++;
