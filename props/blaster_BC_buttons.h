@@ -15,8 +15,13 @@ Includes:
 - Next / previous preset.
 - Self-Destuct overload.
 - Defaults to KILL on boot.
-- Separate clipin/clipout/reload sounds to match stun mode.
-    (requires clipins, clipouts, and reloads.wavs in font.)
+- Option to use separate effect sounds to match the current mode.
+    By using alt sound folders in the font, each mode can have better matched effects
+    (reload, full, clipin/clipout, etc...).
+    Sounds for the modes should go in the following alt folders:
+    - KILL mode       - alt000
+    - STUN mode       - alt001
+    - AUTO mode       - alt002
 - No jam if empty.
 - Autofire mode counts bullets and causes empty if
     #define BLASTER_SHOTS_UNTIL_EMPTY is specified.
