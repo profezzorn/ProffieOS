@@ -538,11 +538,9 @@ public:
     Off();
   }
 
-  // Pull in parent's SetPreset, but set the correct alt sounds.
-  void SetPreset(int preset_num, bool announce) override {
-    Blaster::SetPreset(preset_num, announce);
-    SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, blaster_mode);
-  }
+void ResetCurrentAlternative() override {
+  current_alternative = BLASTER_DEFAULT_MODE;
+}
 
   void SetBlasterMode(BlasterMode to_mode) override {
     Blaster::SetBlasterMode(to_mode);
