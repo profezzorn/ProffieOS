@@ -539,17 +539,7 @@ public:
   }
 
 void ResetCurrentAlternative() override {
-  switch (BLASTER_DEFAULT_MODE) {
-    case MODE_STUN:
-      current_alternative = 0;
-      break;
-    case MODE_KILL:
-      current_alternative = 1;
-      break;
-    case MODE_AUTO:
-      current_alternative = 2;
-      break;
-  }
+  current_alternative = BLASTER_DEFAULT_MODE;
 }
 
   void SetBlasterMode(BlasterMode to_mode) override {
