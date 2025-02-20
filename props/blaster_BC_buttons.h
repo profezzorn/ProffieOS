@@ -193,9 +193,6 @@ Choose a Voice Pack containing all these sounds here: https://fredrik.hubbe.net/
 #endif
 
 // Additional effects for BC buttons prop.
-EFFECT(clipins);    // s for stun mode
-EFFECT(clipouts);   // s for stun mode
-EFFECT(reloads);    // s for stun mode
 EFFECT(destruct);
 #ifndef PROPS_DUAL_PROP_H
 EFFECT(battery);    // for EFFECT_BATTERY_LEVEL
@@ -423,7 +420,11 @@ public:
   }
 
   void Reload() override {
-    Blaster::Reload();
+    if (max_shots_ != -1 && (GetBulletCount() == BLASTER_SHOTS_UNTIL_EMPTY)) {
+      SaberBase::DoEffect(EFFECT_FULL, 0);
+    } else {
+      Blaster::Reload();
+    }
     is_jammed_ = false;
   }
 
@@ -531,6 +532,32 @@ public:
     Off();
   }
 
+  virtual void NextBlasterMode() override {
+    switch(blaster_mode) {
+      case MODE_STUN:
+        SetBlasterMode(MODE_KILL);
+        SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, 0);
+        return;
+      case MODE_KILL:
+#if defined (ENABLE_BLASTER_AUTO) || defined (BLASTER_ENABLE_AUTO)
+        if (SFX_auto) {
+          SetBlasterMode(MODE_AUTO);
+          SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, 2);
+        } else {
+          SetBlasterMode(MODE_STUN);
+          SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, 1);
+        }
+#else
+        SetBlasterMode(MODE_STUN);
+        SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, 1);
+#endif
+        return;
+      case MODE_AUTO:
+        SetBlasterMode(MODE_STUN);
+        SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, 1);
+        return;
+    }
+  }
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
 
@@ -700,6 +727,7 @@ public:
 
   // Blaster effects, auto fire is handled by begin/end lockup
   void SB_Effect(EffectType effect, EffectLocation location) override {
+    Blaster::SB_Effect(effect, location);
     switch (effect) {
       default: return;
       case EFFECT_STUN: hybrid_font.PlayCommon(&SFX_stun); return;
