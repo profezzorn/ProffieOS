@@ -351,8 +351,9 @@ public:
   }
 
   void Fire() override {
+    // Can't use OR here otherwise empty will play even when jammed
+    if (DoEmpty()) return;
     if (DoJam()) return;
-    if (blaster_mode != MODE_AUTO && DoEmpty()) return;
 
     switch (blaster_mode) {
       case MODE_STUN:
