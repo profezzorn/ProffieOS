@@ -544,28 +544,6 @@ public:
     SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, blaster_mode);
   }
 
-  virtual void NextBlasterMode() override {
-    switch(blaster_mode) {
-      case MODE_KILL:
-        SetBlasterMode(MODE_STUN);
-        return;
-      case MODE_STUN:
-#if defined (ENABLE_BLASTER_AUTO) || defined (BLASTER_ENABLE_AUTO)
-        if (SFX_auto) {
-          SetBlasterMode(MODE_AUTO);
-        } else {
-          SetBlasterMode(MODE_KILL);
-        }
-#else
-        SetBlasterMode(MODE_KILL);
-#endif
-        return;
-      case MODE_AUTO:
-        SetBlasterMode(MODE_KILL);
-        return;
-    }
-  }
-
   virtual void SetBlasterMode(BlasterMode to_mode) override {
     Blaster::SetBlasterMode(to_mode);
     SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, to_mode);
