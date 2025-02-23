@@ -550,7 +550,6 @@ void ResetCurrentAlternative() override {
   }
 }
 
-
   void SetBlasterMode(BlasterMode to_mode) override {
     Blaster::SetBlasterMode(to_mode);
     SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, to_mode);
