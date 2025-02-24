@@ -342,10 +342,6 @@ public:
 
   void Setup() override {
     MKSPEC<BCBlasterMenuSpec>::SoundLibrary::init();
-    if (blaster_mode == MODE_AUTO && !SFX_auto) {
-      // BLASTER_DEFAULT_MODE is AUTO, but no auto.wav files found. Falling back to STUN.
-      blaster_mode = MODE_STUN;
-    }
   }
 
   void EnterVolumeMenu() {
@@ -541,6 +537,8 @@ public:
   }
 
   void ResetCurrentAlternative() override {
+    // If no auto.wav files found, fall back to STUN.
+    if (blaster_mode == MODE_AUTO && !SFX_auto) blaster_mode = MODE_STUN;
     current_alternative = blaster_mode;
   }
 
