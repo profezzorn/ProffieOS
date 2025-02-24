@@ -19,13 +19,16 @@ Includes:
     By using alt sound folders in the font, each mode can have better matched effects
     (reload, full, clipin/clipout, etc...).
     Sounds for the modes should go in the following alt folders:
-    - KILL mode       - alt000
-    - STUN mode       - alt001
+    - STUN mode       - alt000
+    - KILL mode       - alt001
     - AUTO mode       - alt002
+
 - No jam if empty.
-- Autofire mode counts bullets and causes empty if
-    #define BLASTER_SHOTS_UNTIL_EMPTY is specified.
-    Empty repeats at same rate auto was firing for added realism. Cool, eh?
+- AUTOFIRE mode is enabled simply by having auto.wav files available in the sound font.
+    This mode also counts bullets and causes an "empty clip" if you use
+    #define BLASTER_SHOTS_UNTIL_EMPTY.
+    Each shot is timed to the length of the wav file that's playing, and 
+    the empty sound repeats at same rate auto was firing for added realism. Cool, eh?
 
 This prop version requires a ProffieOS Voicepack for menus to work right.
 
@@ -37,7 +40,7 @@ It's coded to be Reload by default.
 However, to use it as a dedicated POWER ON/OFF button instead, use the following define:
 #define RELOAD_BUTTON_IS_POWER
 The blaster defaults to auto-powered ON at boot and on Change Preset.
-To use the RELOAD-as-POWER button to initially power ON instead,
+To use the RELOAD button as a POWER button to initially power ON instead,
 use a poweron.wav file in the font.
 
   *Notes  - When using dual_prop, the config file can optionally be set to use NUM_BUTTONS 1 for saber mode,
@@ -56,7 +59,6 @@ Button FireButton(BUTTON_FIRE, powerButtonPin, "fire");
 Button ModeButton(BUTTON_MODE_SELECT, auxPin, "modeselect");
 
 Optional defines:
-  #define BLASTER_ENABLE_AUTO           - Enable Autofire/rapid fire mode.
   #define BLASTER_SHOTS_UNTIL_EMPTY 15  - whatever number. Not defined = unlimited shots.
   #define BLASTER_JAM_PERCENTAGE        - If this is not defined, random from 0-100%.
   #define BLASTER_DEFAULT_MODE          - MODE_STUN|MODE_KILL|MODE_AUTO. Not defined defaults to MODE_KILL.
@@ -148,10 +150,6 @@ Additionally:
   out.wav        // for blaster power on
   destruct.wav   // for self destruct overload
   boom.wav       // for self destruct explosion
-These can be used to match a more "plasmatic" stun sound.
-  clipins.wav
-  clipouts.wav
-  reloads.wav
 
 The following are likely best kept in a 'common' folder in your Font Search Path, but of course
 can be specific versions within a font as well.
@@ -538,13 +536,33 @@ public:
     Off();
   }
 
-void ResetCurrentAlternative() override {
-  current_alternative = BLASTER_DEFAULT_MODE;
-}
+  void ResetCurrentAlternative() override {
+    // If no auto.wav files found, fall back to STUN.
+    if (blaster_mode == MODE_AUTO && !SFX_auto) blaster_mode = MODE_STUN;
+    current_alternative = blaster_mode;
+  }
 
   void SetBlasterMode(BlasterMode to_mode) override {
     Blaster::SetBlasterMode(to_mode);
     SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, to_mode);
+  }
+
+  void NextBlasterMode() override {
+    switch(blaster_mode) {
+      case MODE_STUN:
+        SetBlasterMode(MODE_KILL);
+        return;
+      case MODE_KILL:
+        if (SFX_auto) {
+          SetBlasterMode(MODE_AUTO);
+        } else {
+          SetBlasterMode(MODE_STUN);
+        }
+        return;
+      case MODE_AUTO:
+        SetBlasterMode(MODE_STUN);
+        return;
+    }
   }
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
@@ -714,7 +732,6 @@ void ResetCurrentAlternative() override {
     return false;
   }
 
-  // Blaster effects, auto fire is handled by begin/end lockup
   void SB_Effect(EffectType effect, EffectLocation location) override {
     Blaster::SB_Effect(effect, location);
     switch (effect) {
