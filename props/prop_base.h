@@ -284,8 +284,8 @@ public:
     *(b++) = 0;
     *(b++) = 0;
 
-    ResetCurrentAlternative();
     Effect::ScanCurrentDirectory();
+    ResetCurrentAlternative();
 #ifdef ENABLE_AUDIO
     SaberBase* font = NULL;
     hybrid_font.Activate();
