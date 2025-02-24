@@ -1,4 +1,4 @@
-/*
+/* V.8-145.
 ============================================================
 ================   SABERSENSE PROP FILE   ==================
 ================            by            ==================
@@ -468,7 +468,6 @@ public:
     hybrid_font.PlayCommon(&SFX_bladeid);
     // Calls Loop function to handle waiting for effect before running DoNewFont.
     do_font_after_sound_ = true;
-  }
 #else
   // Plays 'bladeid' sound only, or 'font' sound if no 'bladeid' sound available.
     if (SFX_bladeid) {
@@ -481,8 +480,8 @@ public:
     } else {
       SaberBase::DoNewFont();  // Play font ident if 'bladeid' sound file missing.
     }
-  }
 #endif
+  }
 #endif
 
   // Manual Array Selector, switches on-demand to next array, plays 'array' ident sound.
@@ -815,24 +814,15 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // With Blade ON - UP for Character Quote, plays sequentially.
     // With Blade ON - DOWN for Force Effect, plays randomly.
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ON):
+      if (SFX_quote) {
 #ifndef SABERSENSE_FLIP_AUDIO_PLAYERS
       //  Define reverses UP/DOWN options for all QUOTE/FORCE/TRACK audio player.
       //  Quote player points upwards.
-      if (SFX_quote) {
         if (fusor.angle1() > 0) {
-          SFX_quote.SelectNext();
-          SaberBase::DoEffect(EFFECT_QUOTE, 0);
-        } else {
-          SaberBase::DoForce();  // Force effect for hilt pointed DOWN.
-        }
-      } else {
-        SaberBase::DoForce();  // Fallback: play force effect if no quotes are available.
-      }
-      return true;
 #else
-      //  Quote player points downwards.
-      if (SFX_quote) {
+      // Quote player points downwards.
         if (fusor.angle1() < 0) {
+#endif
           SFX_quote.SelectNext();
           SaberBase::DoEffect(EFFECT_QUOTE, 0);
         } else {
@@ -842,29 +832,19 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         SaberBase::DoForce();  // Fallback: play force effect if no quotes are available.
       }
       return true;
-#endif
 
     //  With Blade OFF - UP for Character Quote, plays sequentially.
     //  With Blade OFF - DOWN for Music Track.
     case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
+      if (SFX_quote) {
 #ifndef SABERSENSE_FLIP_AUDIO_PLAYERS
       // Define reverses UP/DOWN options for all QUOTE/FORCE/TRACK audio players.
       //  Quote player points upwards.
-      if (SFX_quote) {
         if (fusor.angle1() > 0) {
-          SFX_quote.SelectNext();
-          SaberBase::DoEffect(EFFECT_QUOTE, 0);
-        } else {
-          StartOrStopTrack();  // Play track for hilt pointed DOWN.
-        }
-      } else {
-        StartOrStopTrack();  // Fallback: play track if no quotes are available.
-      }
-      return true;
 #else
       // Quote player points downwards.
-      if (SFX_quote) {
         if (fusor.angle1() < 0) {
+#endif
           SFX_quote.SelectNext();
           SaberBase::DoEffect(EFFECT_QUOTE, 0);
         } else {
@@ -874,7 +854,6 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         StartOrStopTrack();  // Fallback: play track if no quotes are available.
       }
       return true;
-#endif
 
     // COLOUR CHANGE.
 #ifdef DISABLE_COLOR_CHANGE
@@ -1040,9 +1019,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
             // If the file exists in this directory, delete it.
             if (LSFS::Exists(filePath)) {
               LSFS::Remove(filePath);
-              STDOUT << "Deleted from "   \
-                  << saveDirPath << ": "  \
-                  << targetFile <<"\n";   \
+              STDOUT << "Deleted from "
+                  << saveDirPath << ": "
+                  << targetFile <<"\n";
             }
           }
         }
