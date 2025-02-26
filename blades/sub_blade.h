@@ -29,6 +29,10 @@ Usage: SubBladeWithStride(first_led, last_led, stride_length, blade_definition)
 Like SubBlade, but LEDs are indexed with an additional 'stride' parameter,
 allowing you to "skip" over a regular number of pixels in the data chain. (Such as every other one)
 
+Usage: SubBladeWithList<int1, int2, ...>(blade_definition)
+Like SubBlade, but you provide a custom list of LED indices instead of a range.
+Useful for ring-based or irregular LED layouts.
+
 For more in-depth explanations, see the SubBlade Wiki pages here:
 https://github.com/profezzorn/ProffieOS/wiki/SubBlade
 https://github.com/profezzorn/ProffieOS/wiki/SubBladeReverse
