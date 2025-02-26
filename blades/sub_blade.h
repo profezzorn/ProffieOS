@@ -311,6 +311,58 @@ class BladeBase* SubBladeZZ(int first_led, int last_led, int stride, int column,
   return ret;
 }
 
+class SubBladeWrapperWithList : public SubBladeWrapper {
+public:
+  SubBladeWrapperWithList(const int* indices, int count)
+      : indices_(indices), count_(count) {}
+  void set(int led, Color16 c) override {
+    if (led >= 0 && led < count_) {
+      blade_->set(indices_[led], c);
+    }
+  }
+  void set_overdrive(int led, Color16 c) override {
+    if (led >= 0 && led < count_) {
+      blade_->set_overdrive(indices_[led], c);
+    }
+  }
+
+  int num_leds() const override { return count_; }
+
+protected:
+  const int* indices_;
+  int count_;
+};
+
+BladeBase* SubBladeWithList(const int* indices, int count, BladeBase* blade) {
+  if (blade) {
+    first_subblade_wrapper = last_subblade_wrapper = NULL;
+  } else {
+    if (!first_subblade_wrapper) return NULL;
+    blade = first_subblade_wrapper->blade_;
+  }
+
+  SubBladeWrapperWithList* ret = new SubBladeWrapperWithList(indices, count);
+
+  if (first_subblade_wrapper) {
+    ret->SetNext(last_subblade_wrapper);
+    first_subblade_wrapper->SetNext(ret);
+    last_subblade_wrapper = ret;
+  } else {
+    ret->SetNext(ret);
+    first_subblade_wrapper = last_subblade_wrapper = ret;
+  }
+
+  ret->SetupSubBlade(blade, 0, count);
+  return ret;
+}
+
+// Allow inline LED indices in the blade config
+template <int... Indices>
+BladeBase* SubBladeWithList(BladeBase* blade) {
+  static const int arr[sizeof...(Indices)] = { Indices... };
+  return SubBladeWithList(arr, sizeof...(Indices), blade);
+}
+
 class BarBackWrapper : public SubBladeWrapper {
 public:
   void set(int led, Color16 c) override {
