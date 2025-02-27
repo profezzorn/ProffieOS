@@ -1,4 +1,4 @@
-/* V.8-145.
+/* V.8-151.
 ============================================================
 ================   SABERSENSE PROP FILE   ==================
 ================            by            ==================
@@ -266,6 +266,23 @@ GESTURE CONTROLS
 #ifndef PROPS_SABER_SABERSENSE_BUTTONS_H
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
+#ifdef SABERSENSE_ARRAY_SELECTOR
+  struct SabersenseArraySelector {
+    static int return_value; // Tracks the current array index.
+    float id() { 
+      return return_value; 
+    }
+    static void cycle() {
+      return_value = (return_value + 1) % NELEM(blades);
+    }
+  };
+  int SabersenseArraySelector::return_value = 0; // Start with the first array (index 0). 
+#undef BLADE_ID_CLASS_INTERNAL
+#define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
+#undef BLADE_ID_CLASS
+#define BLADE_ID_CLASS SabersenseArraySelector
+#endif
+
 #include "prop_base.h"
 #include "../sound/hybrid_font.h"
 
@@ -491,7 +508,6 @@ public:
 #endif
 
   void NextBladeArray() {
-    FakeFindBladeAgain();
 #ifdef SABERSENSE_ENABLE_ARRAY_FONT_IDENT  // Plays 'array' sound AND 'font' sound.
     SFX_array.Select(current_config - blades);
     hybrid_font.PlayCommon(&SFX_array);
@@ -512,42 +528,6 @@ public:
     }
   }
 #endif
-
-// Manual Blade Array Selection version of FindBladeAgain()
-#undef ACTIVATE
-#define ACTIVATE(N) do {                      \
-  if (!current_config->blade##N) {            \
-    goto bad_blade;                           \
-  }                                           \
-  current_config->blade##N->Activate(N);      \
-} while(0);
-
-// Runs FindBladeAgain, but ignores BladeID scan value
-// and instead simply advances to next blade array.
-void FakeFindBladeAgain() {
-  ONCEPERBLADE(UNSET_BLADE_STYLE)
-#undef DEACTIVATE
-#define DEACTIVATE(N) do {                    \
-  if (current_config->blade##N)               \
-    current_config->blade##N->Deactivate();   \
-} while(0);
-  ONCEPERBLADE(DEACTIVATE);
-  SaveVolumeIfNeeded();
-  current_config = blades + (current_config - blades + 1) % NELEM(blades);
-
-  ONCEPERBLADE(ACTIVATE);
-  RestoreGlobalState();
-#ifdef SAVE_PRESET
-  ResumePreset();
-#else
-  SetPreset(0, false);
-#endif // SAVE_PRESET
-  return;
-#if NUM_BLADES != 0
-bad_blade:
-  ProffieOSErrors::error_in_blade_array();
-#endif
-}
 #endif
 
 // RESET FACTORY DEFAULTS (Delete Save Files).
@@ -794,18 +774,19 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 
     // BLADE ID OPTIONS AND ARRAY NAVIGATION
-    // True Blade ID on-demand with BladeID audio idents.
+    // Blade ID on-demand scanning with BladeID audio idents.
 #ifdef SABERSENSE_BLADE_ID
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       TriggerBladeID();
       return true;
 #endif
 
-    // Manual Array Selector with Array audio idents.
-    // Cycles through blade arrays regardless of BladeID status.
-    // UP cycles forward, DOWN cycles back (handled in main code).
+    // Manual blade array selector.
 #ifdef SABERSENSE_ARRAY_SELECTOR
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+      // Cycles through blade arrays regardless of BladeID status.
+      SabersenseArraySelector::cycle();
+      FindBladeAgain();
       NextBladeArray();
       return true;
 #endif
