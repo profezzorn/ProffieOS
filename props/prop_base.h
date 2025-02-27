@@ -285,6 +285,7 @@ public:
     *(b++) = 0;
 
     Effect::ScanCurrentDirectory();
+    ResetCurrentAlternative();
 #ifdef ENABLE_AUDIO
     SaberBase* font = NULL;
     hybrid_font.Activate();
@@ -1861,6 +1862,10 @@ public:
   }
   void MovePreset(int position) {
     current_preset_.SaveAt(position);
+  }
+
+  virtual void ResetCurrentAlternative() {
+    current_alternative = 0;
   }
   
 private:

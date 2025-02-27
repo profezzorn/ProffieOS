@@ -17,7 +17,7 @@ Optional #defines on your config file that customize the blaster's behavior.
 Optional defines:
   #define ENABLE_BLASTER_AUTO           - DEPRECATED. Enable Autofire/rapid fire mode. Please replace with BLASTER_ENABLE_AUTO.
   #define BLASTER_ENABLE_AUTO           - Enable Autofire/rapid fire mode.
-  #define BLASTER_DEFAULT_MODE		- Sets the mode at startup MODE_STUN|MODE_KILL|MODE_AUTO. Defaulst to MODE_STUN.
+  #define BLASTER_DEFAULT_MODE          - Sets the mode at startup MODE_STUN|MODE_KILL|MODE_AUTO. Defaulst to MODE_STUN.
   #define BLASTER_SHOTS_UNTIL_EMPTY 15  - Whatever number, not defined = unlimited shots.
   #define BLASTER_JAM_PERCENTAGE        - Range 0-100 percent. If this is not defined, random from 0-100%.
 
@@ -129,7 +129,13 @@ public:
   };
 
   BlasterMode blaster_mode = BLASTER_DEFAULT_MODE;
-	
+
+#ifdef BLASTER_SHOTS_UNTIL_EMPTY
+  const int max_shots_ = BLASTER_SHOTS_UNTIL_EMPTY;
+#else
+  const int max_shots_ = -1;
+#endif
+
   int GetBlasterMode() const {
     return blaster_mode;
   }
@@ -148,7 +154,11 @@ public:
         return;
       case MODE_KILL:
 #if defined (ENABLE_BLASTER_AUTO) || defined (BLASTER_ENABLE_AUTO)
-        SetBlasterMode(MODE_AUTO);
+        if (SFX_auto) {
+          SetBlasterMode(MODE_AUTO);
+        } else {
+          SetBlasterMode(MODE_STUN);
+        }
 #else
         SetBlasterMode(MODE_STUN);
 #endif
@@ -159,18 +169,20 @@ public:
     }
   }
 
-  bool auto_firing_ = false;
-  int shots_fired_ = 0;
-  bool is_jammed_ = false;
+  bool CheckEmpty() const {
+    return max_shots_ != -1 && shots_fired_ >= max_shots_;
+  }
 
-#ifdef BLASTER_SHOTS_UNTIL_EMPTY
-  const int max_shots_ = BLASTER_SHOTS_UNTIL_EMPTY;
-#else
-  const int max_shots_ = -1;
-#endif
-
-  virtual int GetBulletCount() {
+  int GetBulletCount() {
     return max_shots_ - shots_fired_;
+  }
+
+  virtual bool DoEmpty() {
+    if (CheckEmpty()) {
+      SaberBase::DoEffect(EFFECT_EMPTY, 0);  // Trigger the empty effect
+      return true;
+    }
+    return false;
   }
 
   virtual bool CheckJam(int percent) {
@@ -178,40 +190,54 @@ public:
     return random < percent;
   }
 
-  virtual void Fire() {
-#ifdef ENABLE_MOTION
-#ifdef BLASTER_JAM_PERCENTAGE
+  bool DoJam() {
+#if defined(ENABLE_MOTION) && defined(BLASTER_JAM_PERCENTAGE)
     // If we're already jammed then we don't need to recheck. If we're not jammed then check if we just jammed.
     is_jammed_ = is_jammed_ ? true : CheckJam(BLASTER_JAM_PERCENTAGE);
 
     if (is_jammed_) {
       SaberBase::DoEffect(EFFECT_JAM, 0);
-      return;
-    }
-#endif
-#endif
-
-    if (max_shots_ != -1) {
-      if (shots_fired_ >= max_shots_) {
-        SaberBase::DoEffect(EFFECT_EMPTY, 0);
-        return;
-      }
-    }
-
-    if (blaster_mode == MODE_AUTO) {
-      SelectAutoFirePair(); // Set up the autofire pairing if the font suits it.
-      SaberBase::SetLockup(LOCKUP_AUTOFIRE);
-      SaberBase::DoBeginLockup();
-      auto_firing_ = true;
+      return true;
     } else {
-      if (blaster_mode == MODE_STUN) {
-        SaberBase::DoEffect(EFFECT_STUN, 0);
-      } else {
-        SFX_blast.Select(-1);
-        SaberBase::DoEffect(EFFECT_FIRE, 0);
-      }
+      return false;
+    }
+#else
+    return false;
+#endif
+  }
 
-      shots_fired_++;
+  virtual void DoStun() {
+    SaberBase::DoEffect(EFFECT_STUN, 0);
+    shots_fired_++;
+  }
+
+  virtual void DoKill() {
+    SFX_blast.Select(-1);
+    SaberBase::DoEffect(EFFECT_FIRE, 0);
+    shots_fired_++;
+  }
+
+  virtual void DoAutoFire() {
+    SelectAutoFirePair(); // Set up the auto-fire pairing if the font suits it
+    SaberBase::SetLockup(LOCKUP_AUTOFIRE);
+    SaberBase::DoBeginLockup();
+    auto_firing_ = true;
+  }
+
+  virtual void Fire() {
+    if (DoJam()) return;
+    if (DoEmpty()) return;
+
+    switch (blaster_mode) {
+      case MODE_STUN:
+        DoStun();
+        break;
+      case MODE_KILL:
+        DoKill();
+        break;
+      case MODE_AUTO:
+        DoAutoFire();
+        break;
     }
   }
 
@@ -248,11 +274,8 @@ public:
   // Pull in parent's SetPreset, but turn the blaster on.
   void SetPreset(int preset_num, bool announce) override {
     PropBase::SetPreset(preset_num, announce);
-
-    if (!SFX_poweron) {
-      if (!SaberBase::IsOn()) {
-        On();
-      }
+    if (!SFX_poweron && !SaberBase::IsOn()) {
+      On();
     }
   }
 
@@ -286,7 +309,7 @@ public:
     SetNextAction(what, when * 1000);
   }
   
-  void PollNextAction() {
+  virtual void PollNextAction() {
     if (millis() - time_base_ > next_event_time_) {
       switch (next_action_) {
         case NEXT_ACTION_NOTHING:
@@ -314,7 +337,7 @@ public:
     SetNextActionF(NEXT_ACTION_ARM, len);
   }
 
-  void selfDestruct() {
+    virtual void selfDestruct() {
     SaberBase::DoEndLockup();
 #ifdef ENABLE_AUDIO    
     float len = hybrid_font.GetCurrentEffectLength();
@@ -484,7 +507,11 @@ public:
       break;
     }
   }
+
+  bool auto_firing_ = false;
+  int shots_fired_ = 0;
+  bool is_jammed_ = false;
+
 };
 
 #endif
-
