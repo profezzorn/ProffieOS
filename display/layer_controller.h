@@ -78,8 +78,14 @@ struct BatteryVariableSource : public VariableSource {
 };
 BatteryVariableSource battery_variable_source;
 
-struct VolumeVariableSource : public VariableSource {
+struct SoundLevelVariableSource : public VariableSource {
   int percent() override { return clampi32(sqrtf(dynamic_mixer.audio_volume()) / 1638, 0, 100); };
+};
+
+SoundLevelVariableSource sound_level_variable_source;
+
+struct VolumeVariableSource : public VariableSource {
+  int percent() override { return clampi32(dynamic_mixer.get_volume() * 100 / VOLUME, 0, 100); };
 };
 
 VolumeVariableSource volume_variable_source;
@@ -283,6 +289,7 @@ public:
   VariableSource* parse_variable_source(const char* variable_source) {
     if (!strcmp(variable_source, "battery")) return &battery_variable_source;
     if (!strcmp(variable_source, "volume")) return &volume_variable_source;
+    if (!strcmp(variable_source, "sound_level")) return &sound_level_variable_source;
     STDERR << "Unknown variable source: " << variable_source << "\n";
     return &null_variable_source;
   }
@@ -622,7 +629,7 @@ public:
   }
   
 
-private:
+protected:
   SCRReader scr_;
   ONCE_PER_EFFECT(DEF_SCR)
 
@@ -634,6 +641,40 @@ private:
   volatile Tristate looped_idle_ = Tristate::Unknown;
 };
 
+
+#define ONCE_PER_BLASTER_EFFECT(X)		\
+  X(blast)					\
+  X(reload)					\
+  X(empty)					\
+  X(jam)					\
+  X(clipin)					\
+  X(clipout)					\
+  X(destruct)
+
+template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>, typename NumberToByteArray<H>::type>>
+class BlasterColorDisplayController : public StandarColorDisplayController<W, H, PREFIX> {
+public:
+  template<int w, int h>
+  explicit BlasterColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_BLASTER_EFFECT(INIT_SCR) {
+  }
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      case EFFECT_FIRE:     this->scr_.Play(&SCR_blast);   break;
+      case EFFECT_RELOAD:   this->scr_.Play(&SCR_reload);  break;
+      case EFFECT_EMPTY:    this->scr_.Play(&SCR_empty);   break;
+      case EFFECT_JAM:      this->scr_.Play(&SCR_jam);     break;
+      case EFFECT_CLIP_IN:  this->scr_.Play(&SCR_clipin);  break;
+      case EFFECT_CLIP_OUT: this->scr_.Play(&SCR_clipout); break;
+      default:
+	StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
+    }
+  }
+
+protected:
+  ONCE_PER_BLASTER_EFFECT(DEF_SCR);
+};
+
+#undef ONCE_PER_BLASTER_EFFECT
 #undef ONCE_PER_EFFECT
 #undef INIT_SCR
 #undef DEF_SCR
