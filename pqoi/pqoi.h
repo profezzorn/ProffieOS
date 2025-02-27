@@ -364,6 +364,11 @@ public:
   const uint8_t* in;
   const uint8_t* input_end;
 
+  void reset() {
+    state_ = AT_START;
+    PqoiBase::reset();
+  }
+
   bool input_done() const { return in >= input_end; }
   void set_input(const uint8_t* input, const uint8_t* end) {
     in = input;
@@ -677,8 +682,12 @@ class StreamingAlphaDecoder : public PqoiStreamingDecoder {
   uint8_t byte;
   int N, i;
   int state_ = 0;
-#define PQOI_ALPHA_YIELD() do { state_ = __LINE__; return out; case __LINE__: break; } while(0)
 public:
+  void reset() {
+    state_ = 0;
+    PqoiStreamingDecoder::reset();
+  }
+#define PQOI_ALPHA_YIELD() do { state_ = __LINE__; return out; case __LINE__: break; } while(0)
   // Decode alpha until out >= end, or input runs out.
   uint16_t* Apply(uint16_t* out, uint16_t* end) {
     switch (state_) {
