@@ -1,4 +1,4 @@
-/* V.8-151.
+/* V.8-153.
 ============================================================
 ================   SABERSENSE PROP FILE   ==================
 ================            by            ==================
@@ -212,6 +212,10 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   different blade/preset arrays manually, regardless
   of actual BladeID status. Plays array-specific
   arrayX.wav files when switching.
+  Requires arrays to be numbered consecutively,
+  starting at zero, in the field that would otherwise 
+  contain BladeID values.
+  Not currently compatible with Blade Detect.
 
 #define SABERSENSE_ENABLE_ARRAY_FONT_IDENT
   Plays font ident after array ident when switching arrays.
@@ -267,16 +271,16 @@ GESTURE CONTROLS
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
-  struct SabersenseArraySelector {
-    static int return_value; // Tracks the current array index.
-    float id() { 
-      return return_value; 
-    }
-    static void cycle() {
-      return_value = (return_value + 1) % NELEM(blades);
-    }
-  };
-  int SabersenseArraySelector::return_value = 0; // Start with the first array (index 0). 
+    struct SabersenseArraySelector {
+      static int return_value; // Tracks the current array index.
+      float id() { 
+        return return_value; 
+      }
+      static void cycle() {
+        return_value = (return_value + 1) % NELEM(blades);
+      }
+    };
+    int SabersenseArraySelector::return_value = 0; // Start with the first array (index 0). 
 #undef BLADE_ID_CLASS_INTERNAL
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
@@ -284,7 +288,6 @@ GESTURE CONTROLS
 #endif
 
 #include "prop_base.h"
-#include "../sound/hybrid_font.h"
 
 #undef PROP_TYPE
 #define PROP_TYPE SabersenseButtons
@@ -430,7 +433,7 @@ public:
   void VolumeUp() {
     STDOUT.println("Volume up");
     if (dynamic_mixer.get_volume() < VOLUME) {
-      dynamic_mixer.set_volume(std::min<int>(VOLUME + VOLUME * 0.1,
+      dynamic_mixer.set_volume(std::min<int>(VOLUME * 1.1,
           dynamic_mixer.get_volume() + VOLUME * 0.10));
       if (SFX_volup) {
         hybrid_font.PlayCommon(&SFX_volup);
@@ -486,7 +489,7 @@ public:
     // Calls Loop function to handle waiting for effect before running DoNewFont.
     do_font_after_sound_ = true;
 #else
-  // Plays 'bladeid' sound only, or 'font' sound if no 'bladeid' sound available.
+    // Plays 'bladeid' sound only, or 'font' sound if no 'bladeid' sound available.
     if (SFX_bladeid) {
       SFX_bladeid.Select(current_config - blades);
       hybrid_font.PlayCommon(&SFX_bladeid);  // Play 'bladeid' sound file if available.
@@ -503,8 +506,11 @@ public:
 
   // Manual Array Selector, switches on-demand to next array, plays 'array' ident sound.
 #ifdef SABERSENSE_ARRAY_SELECTOR
-#ifdef SABERSENSE_BLADE_ID    // Only one Sabersense BladeID standard permitted.
+#ifdef SABERSENSE_BLADE_ID  // Only one Sabersense BladeID standard permitted.
 #error "SABERSENSE_ARRAY_SELECTOR and SABERSENSE_BLADE_ID cannot be defined at the same time."
+#endif
+#ifdef BLADE_DETECT_PIN  // Blade Detect not currently supported with Sabersense Array Selector.
+#error "SABERSENSE_ARRAY_SELECTOR and BLADE_DETECT_PIN cannot be defined at the same time."
 #endif
 
   void NextBladeArray() {
@@ -513,7 +519,6 @@ public:
     hybrid_font.PlayCommon(&SFX_array);
     // Calls Loop function to handle waiting for effect before running DoNewFont.
     do_font_after_sound_ = true;
-  }
 #else
   // Plays 'array' sound only, or 'font' sound if no 'array' sound available.
     if (SFX_array) {
@@ -526,8 +531,8 @@ public:
     } else {
       SaberBase::DoNewFont();  // Play font ident if 'array' sound file missing.
     }
-  }
 #endif
+  }
 #endif
 
 // RESET FACTORY DEFAULTS (Delete Save Files).
@@ -799,11 +804,12 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #ifndef SABERSENSE_FLIP_AUDIO_PLAYERS
       //  Define reverses UP/DOWN options for all QUOTE/FORCE/TRACK audio player.
       //  Quote player points upwards.
-        if (fusor.angle1() > 0) {
+        if (fusor.angle1() > 0)
 #else
       // Quote player points downwards.
-        if (fusor.angle1() < 0) {
+        if (fusor.angle1() < 0)
 #endif
+        {
           SFX_quote.SelectNext();
           SaberBase::DoEffect(EFFECT_QUOTE, 0);
         } else {
