@@ -72,9 +72,11 @@ public:
       if (!SomeSubBladeIsActive()) BladeWrapper::Deactivate();
     }
   }
+
   virtual bool primary() const {
-    return !offset_;
+    return primary_;
   }
+
   void clear() override {
     if (primary()) BladeWrapper::clear();
   }
@@ -109,6 +111,7 @@ public:
 
   void SetNext(SubBladeWrapper* next) {
     next_ = next;
+    primary_ = (next_ == this);
   }
 
   // Bladestyle implementation
@@ -158,6 +161,7 @@ protected:
   bool allow_disable_;
   SubBladeWrapper* next_;
   int blade_number_;
+  bool primary_ = false;
 };
 
 SubBladeWrapper* first_subblade_wrapper = NULL;
