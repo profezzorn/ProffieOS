@@ -409,7 +409,7 @@ public:
 
 #ifdef USB_CLASS_MSC
   bool EscapeIdleIfNeeded() {
-    return looped_idle_ == Tristate::True && USBD_Configured();
+    return looped_idle_ == Tristate::True && GetAllowMountSD();
   }
 #else
   bool EscapeIdleIfNeeded() { return false; }
