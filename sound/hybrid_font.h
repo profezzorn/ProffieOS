@@ -483,7 +483,7 @@ public:
     bool most_blades = location.on_blade(0);
     // SFX_in.SetFollowing( most_blades ?  &SFX_pstoff : nullptr );
 #ifdef ENABLE_IDLE_SOUND
-    if (LSFS::GetAllowMount()) {
+    if (GetAllowMountSD()) {
       SFX_in.SetFollowing(nullptr);
     } else if (most_blades) {
         if (SFX_pstoff) {
