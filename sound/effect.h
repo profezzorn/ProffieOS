@@ -303,6 +303,9 @@ class Effect {
       }
       STDOUT.print(" in ");
       STDOUT.print(directory_);
+      if (found_in_alt_dir_) {
+	STDOUT.print("/alt*");
+      }
       STDOUT.println("");
     }
   }
