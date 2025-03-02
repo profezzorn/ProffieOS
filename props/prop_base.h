@@ -1640,9 +1640,15 @@ public:
 	bool mountable = atoi(arg) > 0;
 	LSFS::SetAllowMount(mountable);
 	if (mountable) {
-	  // Trigger the IDLE_OFF_TIME behavior to turn off idle sounds and animations.
-	  // (Otherwise we can't mount the sd card).
-	  if (!SaberBase::IsOn()) SaberBase::DoOff(OFF_IDLE, 0);
+	  if (SaberBase::IsOn()) {
+	    // Turn off. Idle sounds/animations should not start since we already set
+	    // SetAllowMount to true.
+	    Off();
+	  } else {
+	    // Trigger the IDLE_OFF_TIME behavior to turn off idle sounds and animations.
+	    // (Otherwise we can't mount the sd card).
+	    SaberBase::DoOff(OFF_IDLE, 0);
+	  }
 	}
       }
       STDOUT << "SD Access " 

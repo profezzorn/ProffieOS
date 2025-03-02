@@ -531,12 +531,8 @@ public:
       }
     } else {
       // Off
-      if (looped_idle_ != Tristate::False) {
-//        if (EscapeIdleIfNeeded()) {
-//          SetMessage("    usb\nconnected");
-//        } else {
+      if (!AvoidIdleSDAccess()) {
 	scr_.Play(&SCR_idle);
-//        }
       }
     }
   }
@@ -549,7 +545,6 @@ public:
    switch (effect) {
      case EFFECT_NEWFONT:
        looped_on_ = Tristate::Unknown;
-       looped_idle_ = Tristate::Unknown;
        Stop();
        if (!scr_.Play(&SCR_font)) {
 	 ShowDefault();
@@ -637,8 +632,6 @@ protected:
   
   // True if IMG_on is looped.
   volatile Tristate looped_on_ = Tristate::Unknown;
-  // True if IMG_idle is looped.
-  volatile Tristate looped_idle_ = Tristate::Unknown;
 };
 
 

@@ -146,7 +146,6 @@ public:
   virtual int FillFrameBuffer(bool advance) = 0;
   virtual void SetDisplay(Display<Width, col_t>* display) = 0;
   virtual Screen GetScreen() { return SCREEN_UNSET; }
-  virtual void usb_connected() {}
 };
 
 template<int Width, class col_t>
@@ -176,7 +175,6 @@ public:
     a->SetDisplay(display);
   }
   Screen GetScreen() { return a->GetScreen(); }
-  void usb_connected() { return a->usb_connected(); }
   void Advance(int t) { t_ -= t; }
 };
 
@@ -221,11 +219,6 @@ public:
       if (ret != SCREEN_UNSET) return ret;
     }
     return SCREEN_UNSET;
-  }
-  void usb_connected() override {
-    for (size_t i = 0; i < sizeof...(OPERATIONS); i++) {
-      operations_[i].usb_connected();
-    }
   }
 
   int FillFrameBuffer(bool advance) override {
@@ -407,14 +400,6 @@ public:
     return last_delay_ = FillFrameBuffer2(advance);
   }
 
-#ifdef USB_CLASS_MSC
-  bool EscapeIdleIfNeeded() {
-    return looped_idle_ == Tristate::True && USBD_Configured();
-  }
-#else
-  bool EscapeIdleIfNeeded() { return false; }
-#endif
-
   void ShowDefault(bool ignore_lockup = false) {
     screen_ = SCREEN_PLI;
     t_ = 0;
@@ -427,7 +412,7 @@ public:
     } else {
       // Off
       if (looped_idle_ != Tristate::False) {
-        if (EscapeIdleIfNeeded()) {
+        if (AvoidIdleSDAccess()) {
           SetMessage("    usb\nconnected");
         } else {
           SetFile(&img_.IMG_idle, 3600000.0);
@@ -518,11 +503,6 @@ public:
       }
 
       case SCREEN_IMAGE:
-        if (EscapeIdleIfNeeded() && current_effect_ == &img_.IMG_idle) {
-          // We are idle-looping, and usb is connected. Time to stop.
-          SetMessage("    usb\nconnected");
-          return FillFrameBuffer2(advance);
-        }
         MountSDCard();
         {
           int count = 0;
@@ -582,14 +562,6 @@ public:
   void SB_On2(EffectLocation location) override {
     if (img_.IMG_out) {
       ShowFileWithSoundLength(&img_.IMG_out, font_config.ProffieOSOutImageDuration);
-    }
-  }
-
-  void usb_connected() override {
-    if (EscapeIdleIfNeeded() && current_effect_ == &img_.IMG_idle) {
-      // We are idle-looping, and usb is connected. Time to stop.
-      SetMessage("    usb\nconnected");
-      SetScreenNow(SCREEN_MESSAGE);
     }
   }
 
@@ -1121,13 +1093,6 @@ public:
   }
 
   void Loop() override {
-#ifdef USB_CLASS_MSC
-    static bool last_connected = false;
-    bool connected = USBD_Configured();
-    if (connected && !last_connected) controller_->usb_connected();
-    last_connected = connected;
-#endif
-
     STATE_MACHINE_BEGIN();
     while(true) {
       on_ = true;
