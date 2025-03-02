@@ -95,6 +95,7 @@
 #define SAVE_BLADE_DIMMING
 #define SAVE_CLASH_THRESHOLD
 #define SAVE_COLOR_CHANGE
+#define MOUNT_SD_SETTING
 #endif
 
 // #define ENABLE_DEBUG
