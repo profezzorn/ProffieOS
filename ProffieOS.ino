@@ -409,6 +409,7 @@ void EnableAmplifier();
 bool AmplifierIsActive();
 void MountSDCard();
 const char* GetSaveDir();
+bool GetAllowMountSD();
 
 #include "common/lsfs.h"
 #include "common/strfun.h"

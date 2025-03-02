@@ -86,4 +86,14 @@ inline void MountSDCard() { sdcard.Mount(); }
 inline void MountSDCard() {  }
 #endif // v4 && enable_sd
 
+#ifdef USB_CLASS_MSC
+inline bool GetAllowMountSD() {
+  return LSFS::GetAllowMount();
+}
+#else
+inline bool GetAllowMountSD() {
+  return false;
+}
+#endif  // USB_CLASS_MSC
+
 #endif
