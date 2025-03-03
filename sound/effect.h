@@ -637,7 +637,7 @@ class Effect {
       if (e->expected_files() != (size_t)(e->num_files_)) {
         if (!warned) {
           warned = true;
-          PVLOG_NORMAL <<"\nWARNING: A font seems to be missing some files!!\n";
+          PVLOG_ERROR <<"\nWARNING: A font seems to be missing some files!!\n";
           ProffieOSErrors::error_in_font_directory();
         }
         e->Show();
