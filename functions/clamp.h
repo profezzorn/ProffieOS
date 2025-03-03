@@ -6,10 +6,10 @@
 
 // Usage: ClampF<F, MIN, MAX>
 // Or:    ClampFX<F, MINCLASS, MAXCLASS>
-// Clamps value between MIN and MAX
 // F, MIN, MAX: INTEGER
 // MINCLASS, MAXCLASS: FUNCTION
 // return value: INTEGER
+// Clamps value between MIN and MAX
 
 template<class F, class MIN, class MAX>
 class ClampBase {

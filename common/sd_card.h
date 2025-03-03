@@ -82,8 +82,23 @@ private:
 
 SDCard sdcard;
 inline void MountSDCard() { sdcard.Mount(); }
+
+bool AvoidIdleSDAccess() {
+#ifdef MOUNT_SD_SETTING)
+  if (LSFS::GetAllowMount()) return true;
+#elif defined(USB_CLASS_MSC)
+  // This fallback won't work as well as the
+  // MOUNT_SD_SETTING, but it will allow users
+  // to access the SD card in some cases that
+  // might otherwise be impossible.
+  if (USBD_configured()) return true;
+#endif  
+  return false;
+}
+
 #else
 inline void MountSDCard() {  }
+bool AvoidIdleSDAccess() { return false; }
 #endif // v4 && enable_sd
 
 #endif

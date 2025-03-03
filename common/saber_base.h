@@ -39,7 +39,10 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(POWERSAVE)                    \
     DEFINE_EFFECT(BATTERY_LEVEL)                \
     DEFINE_EFFECT(VOLUME_LEVEL)                 \
-    /* Allows style to turn blade ON for interactive effects if prop/style support, FAST_ON skips PREON. */          \
+    DEFINE_EFFECT(ACCENT_SWING)                 \
+    DEFINE_EFFECT(ACCENT_SLASH)                 \
+    DEFINE_EFFECT(SPIN)                         \
+  /* Allows style to turn blade ON for interactive effects if prop/style support, FAST_ON skips PREON. */          \
     DEFINE_EFFECT(ON)                           \
     DEFINE_EFFECT(FAST_ON)                      \
     DEFINE_EFFECT(QUOTE)			\
@@ -78,6 +81,8 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(UNJAM)			\
     DEFINE_EFFECT(PLI_ON)			\
     DEFINE_EFFECT(PLI_OFF)                      \
+    DEFINE_EFFECT(DESTRUCT)                     \
+    DEFINE_EFFECT(BOOM)                         \
     /* Mini game effects */                     \
     DEFINE_EFFECT(GAME_START)                   \
     DEFINE_EFFECT(GAME_ACTION1)                 \
@@ -103,7 +108,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(ERROR_IN_FONT_DIRECTORY)      \
     DEFINE_EFFECT(ERROR_IN_BLADE_ARRAY)         \
     DEFINE_EFFECT(FONT_DIRECTORY_NOT_FOUND)     \
-    /* menu effects */                          \
+    /* menu effects, triggered when you go from one menu entry to the next/previous */                          \
     DEFINE_EFFECT(MENU_CHANGE)                  \
 
 

@@ -4,9 +4,9 @@
 #include "int.h"
 
 // Usage: Ifon<A, B>
-// Returns A if saber is on, B otherwise.
 // A, B: INTEGER
-// return value: INTEGER
+// return value: FUNCTION
+// Returns A if saber is on, B otherwise.
 
 // TODO: optimize when the A & B is the same for all LEDs.
 

@@ -619,6 +619,7 @@ public:
   
   void Loop() override {
     while (to_send_ < to_send_end_) {
+      if (transferring_.get()) return;
       if (wait_time_) {
 	if (millis() - wait_start_ < wait_time_) {
 	  return;
@@ -654,7 +655,7 @@ public:
       return true;
     }
     if (!strcmp(cmd, "displaystate")) {
-      STDOUT << "to_send: " << (to_send_end_ - to_send_) << "\n";
+      STDOUT << "to_send: " << (to_send_end_ - to_send_) << " transferring: " << transferring_.get()  << "\n";
       STDOUT << "PCLK1: " << stm32l4_system_pclk1() << " PCLK2: " << stm32l4_system_pclk2() << "\n";;
       HELPER::frame::dumpstate();
       return true;

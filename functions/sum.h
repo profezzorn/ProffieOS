@@ -1,10 +1,10 @@
 #ifndef FUNCTIONS_SUM_H
 #define FUNCTIONS_SUM_H
 
-// Usage: SUM<A, B, ...>
+// Usage: Sum<A, B, ...>
+// A, B: FUNCTION
+// return value: FUNCTION
 // Adds A + B...
-// A, B: INTEGER
-// return value: INTEGER
 
 template<class A, class B>
 class SumBase {

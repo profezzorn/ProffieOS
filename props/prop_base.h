@@ -285,6 +285,7 @@ public:
     *(b++) = 0;
 
     Effect::ScanCurrentDirectory();
+    ResetCurrentAlternative();
 #ifdef ENABLE_AUDIO
     SaberBase* font = NULL;
     hybrid_font.Activate();
@@ -1419,6 +1420,21 @@ public:
       }
       return true;
     }
+    if (!strcmp(cmd, "swing")) {
+      SaberBase::DoEffect(EFFECT_ACCENT_SWING, 0);
+      Event(BUTTON_NONE, EVENT_SWING);
+      return true;
+    }
+    if (!strcmp(cmd, "slash")) {
+      SaberBase::DoEffect(EFFECT_ACCENT_SLASH, 0);
+      return true;
+    }
+#ifdef ENABLE_SPINS
+    if (!strcmp(cmd, "spin")) {
+      SaberBase::DoEffect(EFFECT_SPIN, 0);
+     return true;
+    }
+#endif
 
 #ifdef ENABLE_AUDIO
 
@@ -1624,9 +1640,15 @@ public:
 	bool mountable = atoi(arg) > 0;
 	LSFS::SetAllowMount(mountable);
 	if (mountable) {
-	  // Trigger the IDLE_OFF_TIME behavior to turn off idle sounds and animations.
-	  // (Otherwise we can't mount the sd card).
-	  SaberBase::DoOff(OFF_IDLE, 0);
+	  if (SaberBase::IsOn()) {
+	    // Turn off. Idle sounds/animations should not start since we already set
+	    // SetAllowMount to true.
+	    Off();
+	  } else {
+	    // Trigger the IDLE_OFF_TIME behavior to turn off idle sounds and animations.
+	    // (Otherwise we can't mount the sd card).
+	    SaberBase::DoOff(OFF_IDLE, 0);
+	  }
 	}
       }
       STDOUT << "SD Access " 
@@ -1846,6 +1868,10 @@ public:
   }
   void MovePreset(int position) {
     current_preset_.SaveAt(position);
+  }
+
+  virtual void ResetCurrentAlternative() {
+    current_alternative = 0;
   }
   
 private:

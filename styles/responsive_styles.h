@@ -8,10 +8,10 @@
 // All of these styles are layers, use Layers<COLOR, ....> if you need an opaque color.
 
 // Usage: ResponsiveLockupL<LOCKUP COLOR, TRANSITION1, TRANSITION2, TOP, BOTTOM, SIZE>
+// TRANSITION1 & TRANSITION2: transition Begin & End
+// TOP: uppermost lockup position limit, BOTTOM = lowermost lockup position limit, 32768 = tip, 0 = hilt
+// SIZE: controls LOCKUP area size 0 ~ 32768
 // Implements LocalizedLockup that will move based on the angle of the blade
-// TRANSITION1 & TRANSITION2 = transition Begin & End
-// TOP = uppermost lockup position limit, BOTTOM = lowermost lockup position limit, 32768 = tip, 0 = hilt
-// SIZE controls LOCKUP area size 0 ~ 32768
 
 template<class COLOR,
          class TR1 = TrInstant,
@@ -28,10 +28,10 @@ using ResponsiveLockupL =
             CONDITION>;
 
 // Usage: ResponsiveDragL<DRAG COLOR, TRANSTION1, TRANSITION2, SIZE1, SIZE2>
+// TRANSITION1 & TRANSITION2: transition Begin & End
+// SIZE1 & SIZE2: control limits for DRAG size with TwistAngle
+// LOCATION: controls SmoothStep location
 // Implements Drag that will increase or decrease in size based on turning hilt
-// TRANSITION1 & TRANSITION2 = transition Begin & End
-// SIZE1 & SIZE2 control limits for DRAG size with TwistAngle
-// LOCATION controls SmoothStep location
 
 template<class COLOR,
          class TR1 = TrInstant,
@@ -48,11 +48,11 @@ using ResponsiveDragL =
             CONDITION>;
 
 // Usage: ResponsiveMeltL<MELT COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
+// TRANSITION1 & TRANSITION2: transition Begin & End
+// SIZE1 & SIZE2: control MELT area limits for TwistAngle
+// LOCATION: control SmoothStep location
 // Implements Melt effect for cutting through object, size will change to mimic metal
 // heating and intensity will increase or decrease based on turning hilt
-// TRANSITION1 & TRANSITION2 = transition Begin & End
-// SIZE1 & SIZE2 control MELT area limits for TwistAngle
-// LOCATION control SmoothStep location
 
 template<class COLOR = Mix<TwistAngle<>,OrangeRed,Red>,
          class TR1 = TrWipeIn<600>,
@@ -69,8 +69,8 @@ using ResponsiveMeltL =
             CONDITION>;
 
 // Usage: ResponsiveLightningBlockL<LIGHTNING BLOCK COLOR, TRANSITION1, TRANSITION2>
+// TRANSITION1 & TRANSITION2: transition Begin & End
 // Implements hybrid Force Lightning Block with animation, intensity responds to turning the hilt and location/focus will respond to blade angle
-// TRANSITION1 & TRANSITION2 = transition Begin & End
 
 template<class COLOR, class TR1 = TrInstant, class TR2 = TrInstant, class CONDITION = Int<1>>
 using ResponsiveLightningBlockL =
@@ -89,10 +89,10 @@ using ResponsiveLightningBlockL =
     CONDITION>;
 
 // Usage: ResponsiveClashL<CLASH COLOR, TRANSITION1, TRANSITION2, TOP, BOTTOM, SIZE>
+// TRANSITION1 & TRANSITION2: transition Begin & End
+// TOP: uppermost Clash position limit, BOTTOM = lowermost Clash position limit, 32768 = tip, 0 = hilt
+// SIZE: controls Clash area size 0 ~ 32768
 // Implements LocalizedClash effect that mimics ResponsiveLockup location and size
-// TRANSITION1 & TRANSITION2 = transition Begin & End
-// TOP = uppermost Clash position limit, BOTTOM = lowermost Clash position limit, 32768 = tip, 0 = hilt
-// SIZE controls Clash area size 0 ~ 32768
 
 template<class COLOR,
          class TR1 = TrInstant,
@@ -107,12 +107,12 @@ using ResponsiveClashL =
                     EFFECT_CLASH>;
 
 // Usage: ResponsiveBlastL<BLAST COLOR, FADEOUT_MS, WAVE_SIZE, WAVE_SPEED, TOP, BOTTOM, EFFECT>
+// FADE: fade time ms
+// WAVE_SIZE: size
+// WAVE MS: speed ms
+// TOP: uppermost Blast position limit, BOTTOM = lowermost Blast position limit, 32768 = tip, 0 = hilt
+// EFFECT: effect type, defaults to EFFECT_BLAST
 // Implements Blast effect that will move based on angle of the blade instead of random location Blast will impact and disperse along the blade from original position
-// FADE = fade time ms
-// WAVE_SIZE = size
-// WAVE MS = speed ms
-// TOP = uppermost Blast position limit, BOTTOM = lowermost Blast position limit, 32768 = tip, 0 = hilt
-// EFFECT = effect type, defaults to EFFECT_BLAST
 
 template<class COLOR,
          class FADE = Int<400>,
@@ -129,12 +129,12 @@ using ResponsiveBlastL =
          Bump<Scale<BladeAngle<>,TOP,BOTTOM>,Int<24000>>>;
 
 // Usage: ResponsiveBlastWaveL<BLAST COLOR, FADEOUT_MS, WAVE_SIZE, WAVE_SPEED, TOP, BOTTOM, EFFECT>
+// FADE: fade time ms
+// WAVE_SIZE: size
+// WAVE MS: speed ms
+// TOP: uppermost Blast position limit, BOTTOM = lowermost Blast position limit, 32768 = tip, 0 = hilt
+// EFFECT: effect type, defaults to EFFECT_BLAST
 // Implements Blast effect that will move based on angle of the blade instead of random location Blast will impact and split up and down the length of the blade from original position
-// FADE = fade time ms
-// WAVE_SIZE = size
-// WAVE MS = speed ms
-// TOP = uppermost Blast position limit, BOTTOM = lowermost Blast position limit, 32768 = tip, 0 = hilt
-// EFFECT = effect type, defaults to EFFECT_BLAST
 
 template<class COLOR,
          class FADE = Int<400>,
@@ -152,11 +152,11 @@ using ResponsiveBlastWaveL =
          EFFECT>;
 
 // Usage: ResponsiveBlastFadeL<BLAST COLOR, SIZE, FADE, TOP, BOTTOM, EFFECT>
+// SIZE: controls blast size bump 0 ~ 32768
+// FADE: fade time ms
+// TOP: uppermost Blast position limit, BOTTOM = lowermost Blast position limit, 32768 = tip, 0 = hilt
+// EFFECT: effect type, defaults to EFFECT_BLAST
 // Implements Blast effect that will move based on angle of the blade instead of random location Blast will impact and Fade in position
-// SIZE controls blast size bump 0 ~ 32768
-// FADE = fade time ms
-// TOP = uppermost Blast position limit, BOTTOM = lowermost Blast position limit, 32768 = tip, 0 = hilt
-// EFFECT = effect type, defaults to EFFECT_BLAST
 
 template<class COLOR,
          class SIZE = Int<8000>,
@@ -172,11 +172,11 @@ using ResponsiveBlastFadeL =
          EFFECT>;
 
 // Usage: ResponsiveStabL<STAB COLOR, TRANSITION1, TRANSITION2, SIZE1, SIZE2>
+// TRANSITION1 & TRANSITION2: transition Begin & End
+// SIZE1 & SIZE2: control Stab area limits for BladeAngle, 0 ~ 32768
+// LOCATION: control SmoothStep location
 // Stab effect
 // Implements Stab effect that will change in size based on angle of the blade
-// TRANSITION1 & TRANSITION2 = transition Begin & End
-// SIZE1 & SIZE2 control Stab area limits for BladeAngle, 0 ~ 32768
-// LOCATION control SmoothStep location
 
 template<class COLOR,
          class TR1 = TrWipeIn<600>,

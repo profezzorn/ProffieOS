@@ -4,9 +4,9 @@
 #include "int.h"
 
 // Usage: Scale<F, A, B>
+// F, A, B: FUNCTION
+// return value: FUNCTION
 // Changes values in range 0 - 32768 to A-B
-// F, A, B: INTEGER
-// return value: INTEGER
 
 class BladeBase;
 

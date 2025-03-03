@@ -78,8 +78,14 @@ struct BatteryVariableSource : public VariableSource {
 };
 BatteryVariableSource battery_variable_source;
 
-struct VolumeVariableSource : public VariableSource {
+struct SoundLevelVariableSource : public VariableSource {
   int percent() override { return clampi32(sqrtf(dynamic_mixer.audio_volume()) / 1638, 0, 100); };
+};
+
+SoundLevelVariableSource sound_level_variable_source;
+
+struct VolumeVariableSource : public VariableSource {
+  int percent() override { return clampi32(dynamic_mixer.get_volume() * 100 / VOLUME, 0, 100); };
 };
 
 VolumeVariableSource volume_variable_source;
@@ -99,10 +105,17 @@ public:
   virtual void LC_set_time(uint32_t millis) = 0;
 };
 
+class LayerControllerInterface {
+public:
+  virtual void LC_onStop() = 0;
+  virtual bool LC_done() = 0;
+};
+
 class LayeredScreenControl {
 public:
   virtual LayerControl* getLayer(int layer) = 0;
-  virtual void SB_Top() = 0;
+  virtual void LSC_SetController(LayerControllerInterface* lci) = 0;
+  virtual void LSC_Top() = 0;
 };
 
 template<int W, int H>
@@ -110,17 +123,21 @@ class SizedLayeredScreenControl : public LayeredScreenControl {};
 
 class BufferedFileReader : public AudioStreamWork {
 protected:
+  void SEEK_LOW(uint32_t pos) {
+    TRACE2(RGB565, "SEEK_LOW", pos);
+    stream_locked_.set(true);
+    do_seek_ = true;
+    seek_pos_ = pos;
+    input_buffer_.clear();
+    stream_locked_.set(false);
+  }
   void SEEK(uint32_t pos) {
     TRACE2(RGB565, "SEEK", pos);
     if (pos > TELL() && pos - TELL() < input_buffer_.size()) {
       // Short forward seek within our buffer, just pop the data.
       input_buffer_.pop(pos - TELL());
     } else {
-      stream_locked_.set(true);
-      do_seek_ = true;
-      seek_pos_ = pos;
-      input_buffer_.clear();
-      stream_locked_.set(false);
+      SEEK_LOW(pos);
     }
   }
 
@@ -272,6 +289,7 @@ public:
   VariableSource* parse_variable_source(const char* variable_source) {
     if (!strcmp(variable_source, "battery")) return &battery_variable_source;
     if (!strcmp(variable_source, "volume")) return &volume_variable_source;
+    if (!strcmp(variable_source, "sound_level")) return &sound_level_variable_source;
     STDERR << "Unknown variable source: " << variable_source << "\n";
     return &null_variable_source;
   }
@@ -372,6 +390,7 @@ public:
 
   bool Play(Effect* f) {
     if (!*f) return false; // no files, do nothing
+    PVLOG_VERBOSE << "SCR Playing " << f->GetName() << "\n";
     sound_time_ms_ = SaberBase::sound_length * 1000;
     file_.PlayInternal(f);
     delayed_open_ = true;
@@ -392,6 +411,7 @@ public:
     STDOUT << "next state: " << state_machine_.next_state_ << "\n";
   }
 
+  bool IsActive() override { return active_ || delayed_open_; }
 protected:
   void check_open() {
     if (delayed_open_ && state_machine_.done()) {
@@ -404,7 +424,6 @@ protected:
       state_machine_.reset_state_machine();
     }
   }
-  bool IsActive() override { return active_; }
 
   size_t i, c;
   bool do_restart_;
@@ -443,7 +462,7 @@ private:
 #define DEF_SCR(X, ARGS...) Effect SCR_##X;
 
 template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>, typename NumberToByteArray<H>::type>>
-class StandarColorDisplayController : public SaberBase, public Looper, public CommandParser {
+class StandarColorDisplayController : public SaberBase, public Looper, public CommandParser, public LayerControllerInterface {
 public:
 //  typedef SizedLayeredScreenControl<W, H> SLSC;
 //  explicit StandarColorDisplayController(SLSC* screen) : scr_(screen) ONCE_PER_EFFECT(INIT_SCR) {}
@@ -452,16 +471,29 @@ public:
   explicit StandarColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : scr_(screen) ONCE_PER_EFFECT(INIT_SCR) {
     static_assert(w == W, "Width is not matching.");
     static_assert(h == H, "Height is not matching.");
+    screen->LSC_SetController(this);
   }
   
-  void SB_On2(EffectLocation location) override { scr_.Play(&SCR_out); }
-  void SB_Top(uint64_t total_cycles) override { scr_.screen()->SB_Top(); }
+  void SB_On2(EffectLocation location) override {
+    if (!scr_.Play(&SCR_out)) {
+      ShowDefault();
+    }
+  }
+  void SB_Top(uint64_t total_cycles) override { scr_.screen()->LSC_Top(); }
   void SB_Off2(OffType offtype, EffectLocation location) override {
     if (offtype == OFF_IDLE) {
       Stop();
     } else if (!scr_.Play(&SCR_in)) {
       ShowDefault();
     }
+  }
+
+  void LC_onStop() override {
+    ShowDefault();
+  }
+
+  bool LC_done() override {
+    return !scr_.IsActive();
   }
 
   const char* name() override { return "ColorDisplayController"; }
@@ -499,12 +531,8 @@ public:
       }
     } else {
       // Off
-      if (looped_idle_ != Tristate::False) {
-//        if (EscapeIdleIfNeeded()) {
-//          SetMessage("    usb\nconnected");
-//        } else {
+      if (!AvoidIdleSDAccess()) {
 	scr_.Play(&SCR_idle);
-//        }
       }
     }
   }
@@ -517,7 +545,6 @@ public:
    switch (effect) {
      case EFFECT_NEWFONT:
        looped_on_ = Tristate::Unknown;
-       looped_idle_ = Tristate::Unknown;
        Stop();
        if (!scr_.Play(&SCR_font)) {
 	 ShowDefault();
@@ -597,7 +624,7 @@ public:
   }
   
 
-private:
+protected:
   SCRReader scr_;
   ONCE_PER_EFFECT(DEF_SCR)
 
@@ -605,10 +632,42 @@ private:
   
   // True if IMG_on is looped.
   volatile Tristate looped_on_ = Tristate::Unknown;
-  // True if IMG_idle is looped.
-  volatile Tristate looped_idle_ = Tristate::Unknown;
 };
 
+
+#define ONCE_PER_BLASTER_EFFECT(X)		\
+  X(blast)					\
+  X(reload)					\
+  X(empty)					\
+  X(jam)					\
+  X(clipin)					\
+  X(clipout)					\
+  X(destruct)
+
+template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>, typename NumberToByteArray<H>::type>>
+class BlasterColorDisplayController : public StandarColorDisplayController<W, H, PREFIX> {
+public:
+  template<int w, int h>
+  explicit BlasterColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_BLASTER_EFFECT(INIT_SCR) {
+  }
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      case EFFECT_FIRE:     this->scr_.Play(&SCR_blast);   break;
+      case EFFECT_RELOAD:   this->scr_.Play(&SCR_reload);  break;
+      case EFFECT_EMPTY:    this->scr_.Play(&SCR_empty);   break;
+      case EFFECT_JAM:      this->scr_.Play(&SCR_jam);     break;
+      case EFFECT_CLIP_IN:  this->scr_.Play(&SCR_clipin);  break;
+      case EFFECT_CLIP_OUT: this->scr_.Play(&SCR_clipout); break;
+      default:
+	StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
+    }
+  }
+
+protected:
+  ONCE_PER_BLASTER_EFFECT(DEF_SCR);
+};
+
+#undef ONCE_PER_BLASTER_EFFECT
 #undef ONCE_PER_EFFECT
 #undef INIT_SCR
 #undef DEF_SCR
