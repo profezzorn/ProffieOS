@@ -2783,11 +2783,7 @@ SaberFett263Buttons() : PropBase() {}
       MenuSave();
       break;
     case MENU_SD_ACCESS:
-      if (choice_) {
-        LSFS::SetAllowMount(true);
-      } else {
-        LSFS::SetAllowMount(false);
-      }
+      LSFS::SetAllowMount(choice_);
       menu_type_ = MENU_SETTING_SUB;
       MenuSave();
       break;
