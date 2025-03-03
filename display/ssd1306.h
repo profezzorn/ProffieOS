@@ -413,7 +413,7 @@ public:
       // Off
       if (looped_idle_ != Tristate::False) {
         if (AvoidIdleSDAccess()) {
-          SetMessage("    usb\nconnected");
+          SetMessage("    sd\n  access");
         } else {
           SetFile(&img_.IMG_idle, 3600000.0);
         }
@@ -670,7 +670,11 @@ public:
     } else if (img_.IMG_in) {
       ShowFileWithSoundLength(&img_.IMG_in, font_config.ProffieOSInImageDuration);
     } else if (img_.IMG_idle) {
-      ShowFile(&img_.IMG_idle, 3600000.0);
+      if (AvoidIdleSDAccess()) {
+	SetMessage("    sd\n  access");
+      } else {
+	SetFile(&img_.IMG_idle, 3600000.0);
+      }
     } else {
       SetScreenNow(SCREEN_PLI);
     }
