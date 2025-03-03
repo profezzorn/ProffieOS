@@ -2045,8 +2045,6 @@ void DoSavedTwist() {
   // This provides a way to "spoof" a best_config so as to allow
   // a "manual override" of what the base PollScanID decides is best.
   // Once a physical blade state change happens, the default scanning reads are used.
-  // blades[] element is chosen "real" scans are read as.
-  // continued scans 
   void PollScanId() override {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
