@@ -483,15 +483,16 @@ public:
     bool most_blades = location.on_blade(0);
     // SFX_in.SetFollowing( most_blades ?  &SFX_pstoff : nullptr );
 #ifdef ENABLE_IDLE_SOUND
-    if (most_blades && !AvoidIdleSDAccess()) {
-        if (SFX_pstoff) {
-            SFX_in.SetFollowing(&SFX_pstoff);
-            SFX_pstoff.SetFollowing(&SFX_idle);
-        } else {
-            SFX_in.SetFollowing(&SFX_idle);
-        }
+    if (most_blades) {
+      Effect* idle = AvoidIdleSDAccess() ? nullptr : &SFX_idle;
+      if (SFX_pstoff) {
+	SFX_in.SetFollowing(&SFX_pstoff);
+	SFX_pstoff.SetFollowing(idle);
+      } else {
+	SFX_in.SetFollowing(idle);
+      }
     } else {
-        SFX_in.SetFollowing(nullptr);
+      SFX_in.SetFollowing(nullptr);
     }
 #else
     SFX_in.SetFollowing(most_blades ? &SFX_pstoff : nullptr);
