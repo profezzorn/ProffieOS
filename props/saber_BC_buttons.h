@@ -2099,8 +2099,6 @@ void DoSavedTwist() {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
       int noblade_level_before = current_config->ohm / NO_BLADE;
-      PVLOG_NORMAL << "********* BC PollScanId() NAtive ------------------- -\n";
-      PVLOG_NORMAL << "******** BC noblade_level_before = " << noblade_level_before << "\n";
       FindBladeAgain();
       int noblade_level_after = current_config->ohm / NO_BLADE;
 
@@ -2109,7 +2107,6 @@ void DoSavedTwist() {
       } else if (prev_real_best_config != last_real_best_config) {
         // A real blade change has occurred, play bladein/out.
         // If bladein/out doesn't exist, hybrid_font handles playing font.wav instead.
-        PVLOG_NORMAL << "---BC PollScanId() - REAL BLADE CHANGE DETECTED--- Playing bladein/out\n";
         hybrid_font.SB_BladeDetect(!(id() >= NO_BLADE));
         prev_real_best_config = last_real_best_config;
         last_real_best_config = real_best_config;
@@ -2127,7 +2124,7 @@ void DoSavedTwist() {
     // Handle manual blade array switching mode
     if (manual_blade_array_active) {
       if (real_best_config != last_real_best_config) {
-        PVLOG_NORMAL << "--- BC FindBestConfig() - REAL BLADE CHANGE DETECTED--- EXITING manual mode\n";
+        PVLOG_NORMAL << "---REAL BLADE CHANGE DETECTED--- EXITING manual mode\n";
         manual_blade_array_active = false;
         prev_real_best_config = last_real_best_config;
         last_real_best_config = real_best_config;
@@ -2150,7 +2147,6 @@ void DoSavedTwist() {
   #endif  // BLADE_ID_SCAN_MILLIS
 
   void TriggerBladeID() {
-    PVLOG_NORMAL << "*****************************----------------- BC TriggerBladeID() CALLED \n";
     use_next_id_ = false;
     manual_blade_array_active = false;
     FindBladeAgain();
@@ -2163,7 +2159,6 @@ void DoSavedTwist() {
   }
 
   void NextBladeArray() {
-    PVLOG_NORMAL << "*************************+++++++++++++++++++ BC NextBladeArray() CALLED \n";
 #ifdef BLADE_ID_SCAN_MILLIS
     manual_blade_array_active = true;  // Enable manual mode
 #endif
@@ -2176,18 +2171,12 @@ void DoSavedTwist() {
 
   // Manual Blade Array Selection version of FindBladeAgain()
   void FakeFindBladeAgain() {
-      PVLOG_NORMAL << "*************** BC FakeFindBladeAgain() Called.\n";
     // Reverse everything FindBladeAgain does, except for recalculating best_config
-      PVLOG_NORMAL << "*************** BC FakeFindBladeAgain() About to call DeactivateBlades.\n";
     DeactivateBlades();
-      PVLOG_NORMAL << "*************** BC FakeFindBladeAgain() About to call SaveVolumeIfNeeded.\n";
     SaveVolumeIfNeeded();
     // Increment to the next blade array
-      PVLOG_NORMAL << "*************** BC FakeFindBladeAgain() About to call SelectBladeConfig and Increment array.\n";
     SelectBladeConfig((current_config - blades + 1) % NELEM(blades));
-      PVLOG_NORMAL << "*************** BC FakeFindBladeAgain() About to call ActivateBlades.\n";
     ActivateBlades();
-      PVLOG_NORMAL << "*************** BC FakeFindBladeAgain() About to call RestoreGlobalState.\n";
     RestoreGlobalState();
     HandlePresetSound();
     use_next_id_ = false;
