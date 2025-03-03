@@ -1823,7 +1823,7 @@ void DoSavedTwist() {
     PVLOG_NORMAL << (battle_mode_ ? "** Entering" : "** Exiting") << " Battle Mode\n";
     if (battle_mode_) {
       if (!hybrid_font.PlayPolyphonic(&SFX_bmbegin)) {
-        hybrid_font.DoEffect(EFFECT_FORCE, 0);
+        hybrid_font.PlayPolyphonic(&SFX_force);
       }
     } else {
       if (!hybrid_font.PlayPolyphonic(&SFX_bmend)) {
