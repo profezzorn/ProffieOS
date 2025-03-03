@@ -74,7 +74,7 @@ public:
     current_mode = this;
 #ifdef MENU_SPEC_TEMPLATE
     MKSPEC<MENU_SPEC_TEMPLATE>::SoundLibrary::init();
-#endif    
+#endif
   }
   BladeStyle* current_style() {
 #if NUM_BLADES == 0
@@ -514,9 +514,7 @@ public:
     SetPreset(0, true);
   }
 
-#ifdef BLADE_DETECT_PIN
   bool blade_detected_ = false;
-#endif
 
   // Use this helper function, not the bool above.
   // This function changes when we're properly initialized
@@ -538,7 +536,7 @@ public:
   }
 
   // Measure and return the blade identifier resistor.
-  float id(bool announce = false) {
+  virtual float id(bool announce = false) {
     EnableBooster();
     BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
@@ -559,7 +557,7 @@ public:
       return ret;
   }
 
-  size_t FindBestConfig(bool announce = false) {
+  virtual size_t FindBestConfig(bool announce = false) {
     static_assert(NELEM(blades) > 0, "blades array cannot be empty");
 
     size_t best_config = 0;
@@ -617,7 +615,7 @@ public:
     }
 
   // Must be called from loop()
-  void PollScanId() {
+  virtual void PollScanId() {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
       int noblade_level_before = current_config->ohm / NO_BLADE;
@@ -637,19 +635,43 @@ public:
   void PollScanId() {}
 #endif // BLADE_ID_SCAN_MILLIS
 
+  void SelectBladeConfig(size_t best_config) {
+    PVLOG_STATUS << "blade = " << best_config << "\n";
+    current_config = blades + best_config;
+  }
+
+  void ActivateBlades() {
+    bool activation_failed = false;
+#define ACTIVATE(N) do {                               \
+    if (!current_config->blade##N) {                  \
+      activation_failed = true;                       \
+    } else {                                          \
+      current_config->blade##N->Activate(N);          \
+    }                                                 \
+  } while(0);
+    ONCEPERBLADE(ACTIVATE);
+#if NUM_BLADES != 0
+    if (activation_failed) {
+      ProffieOSErrors::error_in_blade_array();
+    }
+#endif
+  }
+
+  void DeactivateBlades() {
+    ONCEPERBLADE(UNSET_BLADE_STYLE)
+#define DEACTIVATE(N) do {                      \
+    if (current_config->blade##N)               \
+      current_config->blade##N->Deactivate();   \
+  } while(0);
+    ONCEPERBLADE(DEACTIVATE);
+  }
+
   // Called from setup to identify the blade and select the right
   // Blade driver, style and sound font.
   void FindBlade(bool announce = false) {
     size_t best_config = FindBestConfig(announce);
-    PVLOG_STATUS << "blade = " << best_config << "\n";
-    current_config = blades + best_config;
-
-#define ACTIVATE(N) do {     \
-    if (!current_config->blade##N) goto bad_blade;  \
-    current_config->blade##N->Activate(N);          \
-  } while(0);
-
-    ONCEPERBLADE(ACTIVATE);
+    SelectBladeConfig(best_config);
+    ActivateBlades();
     RestoreGlobalState();
 #ifdef SAVE_PRESET
     ResumePreset();
@@ -666,6 +688,20 @@ public:
   bad_blade:
     ProffieOSErrors::error_in_blade_array();
 #endif
+  }
+
+  void FindBladeAgain() {
+    if (!current_config) {
+      // FindBlade() hasn't been called yet - ignore this.
+      return;
+    }
+    // Reverse everything that FindBlade does.
+
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+    DeactivateBlades();
+    SaveVolumeIfNeeded();
+    FindBlade(true);
   }
 
   SavePresetStateFile savestate_;
@@ -751,26 +787,7 @@ public:
 #endif
   }
 
-  void FindBladeAgain() {
-    if (!current_config) {
-      // FindBlade() hasn't been called yet - ignore this.
-      return;
-    }
-    // Reverse everything that FindBlade does.
 
-    // First free all styles, then allocate new ones to avoid memory
-    // fragmentation.
-    ONCEPERBLADE(UNSET_BLADE_STYLE)
-
-#define DEACTIVATE(N) do {                      \
-    if (current_config->blade##N)               \
-      current_config->blade##N->Deactivate();   \
-  } while(0);
-
-    ONCEPERBLADE(DEACTIVATE);
-    SaveVolumeIfNeeded();
-    FindBlade(true);
-  }
 
   bool CheckInteractivePreon() {
     #define USES_INTERACTIVE_PREON(N) \
