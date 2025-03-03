@@ -2075,7 +2075,7 @@ void DoSavedTwist() {
   // Override id() to use array spoofing when needed.
   float id(bool announce = false) override {
     if (use_next_id_) {
-      PVLOG_NORMAL << "***** Spoofing Blade ID to: " << next_id_ << "\n";
+      PVLOG_DEBUG << "***** Spoofing Blade ID to: " << next_id_ << "\n";
       return next_id_;
     }
 
@@ -2166,7 +2166,7 @@ void DoSavedTwist() {
     next_id_ = blades[n].ohm;
     use_next_id_ = true;
     FakeFindBladeAgain();
-    PVLOG_NORMAL << "**** Manually Switching to Blade Array: " << (current_config - blades) << "\n";
+    PVLOG_DEBUG << "**** Manually Switching to Blade Array: " << (current_config - blades) << "\n";
   }
 
   // Manual Blade Array Selection version of FindBladeAgain()
