@@ -150,8 +150,8 @@ class Effect {
   }
 
   Effect(const char* name,
-   Effect* following = nullptr,
-   FileType file_type = FileType::SOUND) : name_(name) {
+         Effect* following = nullptr,
+         FileType file_type = FileType::SOUND) : name_(name) {
     following_ = following;
     file_type_ = file_type;
     next_ = all_effects;
@@ -290,7 +290,7 @@ class Effect {
           break;
         case FilePattern::NONREDUNDANT_SUBDIRS:
           STDOUT.print(" in efficient subdirs");
-        break;
+          break;
       }
       if (sub_files_) {
         STDOUT.print(" with ");
@@ -388,8 +388,8 @@ class Effect {
       switch (N) {
         default:
           n = rand() % (N - 1);
-        if (n >= last) n++;
-        break;
+          if (n >= last) n++;
+          break;
         case 2:
           if (n == last) n = rand() % N;
         case 1:
