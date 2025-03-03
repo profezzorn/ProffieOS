@@ -8,7 +8,7 @@ saber_BC_buttons.h
   http://www.gnu.org/licenses/
 
 Includes 1 or 2 button controls. (3rd button for power control of Dual Blades supported as well).
-Incorporates an intuitive control scheme so button actions are consistent
+Incorporates an intuitive control scheme so button actions are consistant
 whether blade is on or off.
 
 ** This prop version REQUIRES a V2 ProffieOS Voicepack for menus to work right.
@@ -41,9 +41,9 @@ Features:
 - Spam Blast - Enter this mode to make the button super sensitive for
                             multiple blaster blocks. Presses are prioritized over
                             other features. No limits, no lag when "rapid firing".
+- No inadvertant effects during preon.
+- Rotary control of Volume and Scroll Presets. (Rotate hilt like turning a dial)
 - * NEW for OS8 * 
-  - No inadvertant effects during preon.
-  - Rotary control of Volume and Scroll Presets. (Rotate hilt like turning a dial)
   - Dual blade independent ignition and retraction control with a single Proffieboard. (Such as for a staff saber)
   - Scroll Presets mode.
   - Quotes play with blade ON or OFF, and will not overlap / interrupt one another.
@@ -179,7 +179,7 @@ While in any menu mode the following controls apply:
 Save                - Click POW
 Cancel / Exit       - Click AUX or Double Click POW
 
-Each section for controls have a descriptive version listed by feature and somewhat in the order
+Each section for controls have a descriptive version listed by feature and somwhat in the order
 of using the saber, and a second summary list that is sorted by button clicks.
 
 
@@ -209,7 +209,7 @@ Prev Preset               - Long Click then release POW (while pointing DOWN).
 Jump to First Preset      - Long Click then release POW (while pointing UP).
 Play/Stop Track           - 4x Click POW.
 BC Volume Menu:
-        Enter Menu        - Hold POW + Clash.
+        Enter Menu        - Hold POW and Clash.
         Volume UP         - Rotate Right.
         Volume DOWN       - Rotate Left.
         Quick MAX Vol     - Hold POW while in Volume Menu.
@@ -1845,7 +1845,7 @@ void DoSavedTwist() {
     PVLOG_NORMAL << (battle_mode_ ? "** Entering" : "** Exiting") << " Battle Mode\n";
     if (battle_mode_) {
       if (!hybrid_font.PlayPolyphonic(&SFX_bmbegin)) {
-        hybrid_font.DoEffect(EFFECT_FORCE, 0);
+        hybrid_font.PlayPolyphonic(&SFX_force);
       }
     } else {
       if (!hybrid_font.PlayPolyphonic(&SFX_bmend)) {
@@ -2029,6 +2029,34 @@ void DoSavedTwist() {
 
 #endif  // BC_DUAL_BLADES
 
+  // Just play font.wav if already ON. Not sure why this is better.
+  void HandleBladeDetectSound() {
+    if (!SaberBase::IsOn()) {
+      SaberBase::DoBladeDetect(blade_detected_);
+    } else {
+      SaberBase::DoNewFont();
+    }
+  }
+
+  // Play array.wavs if they exist and we manually switched.
+  // Fallback to playing font.wav.
+  void HandlePresetSound() {
+  #ifdef SAVE_PRESET
+    savestate_.ReadINIFromSaveDir("curstate");
+    int preset = savestate_.preset;
+  #else
+    int preset = 0;
+  #endif
+
+    if (SFX_array) {
+      SetPreset(preset, false);
+      SFX_array.Select(current_config - blades);
+      hybrid_font.PlayPolyphonic(&SFX_array);
+    } else {
+      SetPreset(preset, true);
+    }
+  }
+
 #ifdef BLADE_ID_SCAN_MILLIS
 
   // These variables are used to track the actual scanned best_config,
@@ -2041,6 +2069,28 @@ void DoSavedTwist() {
   size_t real_best_config = SIZE_MAX;
   size_t fake_best_config = SIZE_MAX;
   size_t prev_real_best_config = SIZE_MAX;
+  int next_id_ = -1;
+  bool use_next_id_ = false;
+
+  // Override id() to use array spoofing when needed.
+  float id(bool announce = false) override {
+    if (use_next_id_) {
+      PVLOG_NORMAL << "***** Spoofing Blade ID to: " << next_id_ << "\n";
+      return next_id_;
+    }
+
+    float ret = PropBase::id(announce);  // Read real ID
+
+#ifdef BLADE_DETECT_PIN
+    if (!blade_detected_) {
+      PVLOG_STATUS << "NO ";
+      ret += NO_BLADE;
+    }
+    PVLOG_STATUS << "Blade Detected\n";
+#endif
+
+    return ret;
+  }
 
   // This provides a way to "spoof" a best_config so as to allow
   // a "manual override" of what the base PollScanID decides is best.
@@ -2049,33 +2099,23 @@ void DoSavedTwist() {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
       int noblade_level_before = current_config->ohm / NO_BLADE;
+      PVLOG_NORMAL << "********* BC PollScanId() NAtive ------------------- -\n";
+      PVLOG_NORMAL << "******** BC noblade_level_before = " << noblade_level_before << "\n";
       FindBladeAgain();
       int noblade_level_after = current_config->ohm / NO_BLADE;
 
-      if (noblade_level_before < noblade_level_after) {
-        if (!SaberBase::IsOn()) {
-        SaberBase::DoBladeDetect(false);
-        } else {
-          SaberBase::DoNewFont();
-        }
-      } else if(noblade_level_before > noblade_level_after) {
-        if (!SaberBase::IsOn()) {
-          SaberBase::DoBladeDetect(true);
-        } else {
-          SaberBase::DoNewFont();
-        }
-      } else {
-        if (prev_real_best_config != last_real_best_config) {
+      if (noblade_level_before != noblade_level_after) {
+        HandleBladeDetectSound();
+      } else if (prev_real_best_config != last_real_best_config) {
         // A real blade change has occurred, play bladein/out.
         // If bladein/out doesn't exist, hybrid_font handles playing font.wav instead.
-          PVLOG_NORMAL << "---REAL BLADE CHANGE DETECTED--- Playing bladein/out\n";
-          hybrid_font.SB_BladeDetect(!(id() >= NO_BLADE));
-          prev_real_best_config = last_real_best_config;
-          last_real_best_config = real_best_config;
-        } else {
-          PVLOG_NORMAL << "**** No Blade Change Detected, something else changed Blade ID somehow. Playing font.wav\n";
-          SaberBase::DoNewFont();
-        }
+        PVLOG_NORMAL << "---BC PollScanId() - REAL BLADE CHANGE DETECTED--- Playing bladein/out\n";
+        hybrid_font.SB_BladeDetect(!(id() >= NO_BLADE));
+        prev_real_best_config = last_real_best_config;
+        last_real_best_config = real_best_config;
+      } else {
+        PVLOG_NORMAL << "**** No Blade Change Detected, something else changed Blade ID somehow. Playing font.wav\n";
+        SaberBase::DoNewFont();
       }
     }
   }
@@ -2087,7 +2127,7 @@ void DoSavedTwist() {
     // Handle manual blade array switching mode
     if (manual_blade_array_active) {
       if (real_best_config != last_real_best_config) {
-        PVLOG_NORMAL << "---REAL BLADE CHANGE DETECTED--- EXITING manual mode\n";
+        PVLOG_NORMAL << "--- BC FindBestConfig() - REAL BLADE CHANGE DETECTED--- EXITING manual mode\n";
         manual_blade_array_active = false;
         prev_real_best_config = last_real_best_config;
         last_real_best_config = real_best_config;
@@ -2097,19 +2137,22 @@ void DoSavedTwist() {
         return real_best_config;
       }
       // Spoof best_config during manual mode
-      fake_best_config = current_config - blades;  // the incremented array we manually set in FakeFindBladeAgain()
+      fake_best_config = current_config - blades;  // the incremented array we manually set
       return fake_best_config;
     }
 
     // Normal mode: Update stored real best_config
     if (real_best_config != last_real_best_config) {
-      last_real_best_config = real_best_config; // Keep track of the latest real config
+      last_real_best_config = real_best_config;  // Keep track of the latest real config
     }
-    return real_best_config; // Return the real config
+    return real_best_config;
   }
   #endif  // BLADE_ID_SCAN_MILLIS
 
   void TriggerBladeID() {
+    PVLOG_NORMAL << "*****************************----------------- BC TriggerBladeID() CALLED \n";
+    use_next_id_ = false;
+    manual_blade_array_active = false;
     FindBladeAgain();
     if (SFX_array) {
       SFX_array.Select(current_config - blades);
@@ -2120,69 +2163,34 @@ void DoSavedTwist() {
   }
 
   void NextBladeArray() {
+    PVLOG_NORMAL << "*************************+++++++++++++++++++ BC NextBladeArray() CALLED \n";
 #ifdef BLADE_ID_SCAN_MILLIS
-    manual_blade_array_active = true; // Enable manual mode
+    manual_blade_array_active = true;  // Enable manual mode
 #endif
-    PVLOG_NORMAL << "** Manually Switching to Blade Array: " << (current_config - blades + 1) << "\n";
+    int n = (current_config - blades + 1) % NELEM(blades);
+    next_id_ = blades[n].ohm;
+    use_next_id_ = true;
     FakeFindBladeAgain();
+    PVLOG_NORMAL << "**** Manually Switching to Blade Array: " << (current_config - blades) << "\n";
   }
 
   // Manual Blade Array Selection version of FindBladeAgain()
   void FakeFindBladeAgain() {
+      PVLOG_NORMAL << "*************** BC FakeFindBladeAgain() Called.\n";
     // Reverse everything FindBladeAgain does, except for recalculating best_config
-    ONCEPERBLADE(UNSET_BLADE_STYLE)
-
-#undef DEACTIVATE
-#define DEACTIVATE(N) do {                      \
-    if (current_config->blade##N)               \
-      current_config->blade##N->Deactivate();   \
-  } while(0);
-
-    ONCEPERBLADE(DEACTIVATE);
+      PVLOG_NORMAL << "*************** BC FakeFindBladeAgain() About to call DeactivateBlades.\n";
+    DeactivateBlades();
+      PVLOG_NORMAL << "*************** BC FakeFindBladeAgain() About to call SaveVolumeIfNeeded.\n";
     SaveVolumeIfNeeded();
-    current_config = blades + (current_config - blades + 1) % NELEM(blades); // Cycle to the next blade array
-    int chosen_array = current_config->ohm;
-
-#undef ACTIVATE
-#define ACTIVATE(N) do {                        \
-    if (!current_config->blade##N) {            \
-      goto bad_blade;                           \
-    }                                           \
-    current_config->blade##N->Activate(N);      \
-  } while(0);
-
-    ONCEPERBLADE(ACTIVATE);
+    // Increment to the next blade array
+      PVLOG_NORMAL << "*************** BC FakeFindBladeAgain() About to call SelectBladeConfig and Increment array.\n";
+    SelectBladeConfig((current_config - blades + 1) % NELEM(blades));
+      PVLOG_NORMAL << "*************** BC FakeFindBladeAgain() About to call ActivateBlades.\n";
+    ActivateBlades();
+      PVLOG_NORMAL << "*************** BC FakeFindBladeAgain() About to call RestoreGlobalState.\n";
     RestoreGlobalState();
-
-#ifdef SAVE_PRESET
-    savestate_.ReadINIFromSaveDir("curstate");
-    if (SFX_array) {
-      SetPreset(savestate_.preset, false);
-      SFX_array.Select(current_config - blades);
-      hybrid_font.PlayPolyphonic(&SFX_array);
-      // Played array.wav instead of font.wav because Have array.wavs and manually switched - SetPreset(savestate_.preset, false)
-    } else {
-      // No array.wavs exist when manually switched. Fallback playing font.wav - SetPreset(savestate_.preset, true)
-      SetPreset(savestate_.preset, true);
-    }
-#else
-
-    if (SFX_array) {
-      SetPreset(0, false);
-      SFX_array.Select(current_config - blades);
-      hybrid_font.PlayPolyphonic(&SFX_array);
-      // Played array.wav instead of font.wav because Have array.wavs and manually switched -  SetPreset(0, false)
-    } else {
-      // No array.wavs exist when manually switched. Fallback playing font.wav - SetPreset(0, true)
-      SetPreset(0, true);
-    }
-#endif // SAVE_PRESET
-    return;
-
-#if NUM_BLADES != 0
-  bad_blade:
-    ProffieOSErrors::error_in_blade_array();
-#endif
+    HandlePresetSound();
+    use_next_id_ = false;
   }
 
   bool Parse(const char *cmd, const char* arg) override {
@@ -2701,7 +2709,6 @@ any # of buttons
         return true;
 #endif  // BC_FORCE_PUSH
 
-#if (NELEM(blades) > 1)
 // Manually cycle to Next Blade Array
   case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_OFF):
     PVLOG_NORMAL << "**** BUTTON EVENT Manually Cycling Blade Array\n";
@@ -2715,7 +2722,6 @@ any # of buttons
     TriggerBladeID();
     return true;
 #endif
-#endif  // (NELEM(blades) > 1)
 
 // Enter OS System Menu
 // Enter BC Blade Length Mode
