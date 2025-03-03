@@ -725,6 +725,7 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #if defined(FETT263_EDIT_MODE_MENU) || defined(FETT263_EDIT_SETTINGS_MENU)
 #define FETT263_USE_SETTINGS_MENU
+#define MOUNT_SD_SETTING
 #endif
 
 #if defined(FETT263_SAY_COLOR_LIST) || defined(FETT263_SAY_COLOR_LIST_CC)
@@ -2219,6 +2220,7 @@ SaberFett263Buttons() : PropBase() {}
     MENU_LOCKUP_DELAY,
     MENU_CLASH_DETECT,
     MENU_MAX_CLASH,
+    MENU_SD_ACCESS,
 #endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
     MENU_REHEARSE,
@@ -2324,6 +2326,7 @@ SaberFett263Buttons() : PropBase() {}
     EDIT_CLASH_THRESHOLD = 3,
     EDIT_BLADE_LENGTH = 4,
     EDIT_BRIGHTNESS = 5,
+    EDIT_SD_ACCESS = 6,
   };
 
   enum GestureControls {
@@ -2779,6 +2782,15 @@ SaberFett263Buttons() : PropBase() {}
       menu_type_ = MENU_GESTURE_SUB;
       MenuSave();
       break;
+    case MENU_SD_ACCESS:
+      if (choice_) {
+        LSFS::SetAllowMount(true);
+      } else {
+        LSFS::SetAllowMount(false);
+      }
+      menu_type_ = MENU_SETTING_SUB;
+      MenuSave();
+      break;
     case MENU_SETTING_SUB:
       switch (menu_sub_pos_) {
       case EDIT_VOLUME:
@@ -2818,6 +2830,9 @@ SaberFett263Buttons() : PropBase() {}
         menu_type_ = MENU_DIM_BLADE;
         dim_revert_ = dim = pow(SaberBase::GetCurrentDimming() / 16384.0, 1/2.5);
         sound_library_.SaySelect();
+        break;
+      case EDIT_SD_ACCESS:
+        EnterBooleanMenu(MENU_SD_ACCESS,GetAllowMount());
         break;
       }
       break;
@@ -3571,6 +3586,7 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_FORCEPUSH:
       case MENU_TWISTOFF:
       case MENU_POWERLOCK:
+      case MENU_SD_ACCESS:
         choice_ = direction > 0;
         sound_library_.SayBool(choice_);
         break;
@@ -3683,6 +3699,10 @@ SaberFett263Buttons() : PropBase() {}
             break;
           case EDIT_BRIGHTNESS:
             sound_library_.SayEditBrightness();
+            break;
+          case EDIT_SD_ACCESS:
+            sound_library_.SaySDAccess();
+            break;
           default:
             break;
         }
@@ -4211,6 +4231,7 @@ SaberFett263Buttons() : PropBase() {}
         show_length_.Stop(blade_num_);
         UpdateStyle();
         break;
+      case MENU_SD_ACCESS:
       case MENU_GESTURE_SUB:
         menu_type_ = MENU_SETTING_SUB;
         MenuCancel();
