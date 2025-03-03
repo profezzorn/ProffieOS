@@ -46,9 +46,9 @@ class Effect {
 
     bool operator==(const FileID& other) const {
       return other.effect_ == effect_ &&
-	file_ == other.file_ &&
-	sub_id_ == other.sub_id_ &&
-	alt_ == other.alt_;
+       file_ == other.file_ &&
+       sub_id_ == other.sub_id_ &&
+       alt_ == other.alt_;
     }
 
     operator bool() const { return effect_ != nullptr; }
@@ -63,12 +63,12 @@ class Effect {
     // Maybe this should always use effect_->following_ ??
     FileID GetFollowing(Effect* effect) {
       if (effect_ &&
-	  effect_->paired_ &&
-	  effect_->files_found() == effect->files_found() &&
-	  effect->selected_ == -1) {
-	return FileID(effect, file_, effect->random_subid(file_));
+          effect_->paired_ &&
+          effect_->files_found() == effect->files_found() &&
+          effect->selected_ == -1) {
+        return FileID(effect, file_, effect->random_subid(file_));
       } else {
-	return effect->RandomFile();
+        return effect->RandomFile();
       }
     }
 
@@ -113,15 +113,15 @@ class Effect {
       case WAV:
       case RAW:
       case USL:
-	return FileType::SOUND;
+        return FileType::SOUND;
       case BMP:
       case PBM:
       case Binary:
-	return FileType::IMAGE;
+        return FileType::IMAGE;
       case SCR:
-	return FileType::SCREEN;
+        return FileType::SCREEN;
       default:
-	return FileType::UNKNOWN;
+        return FileType::UNKNOWN;
     }
   }
 
@@ -150,8 +150,8 @@ class Effect {
   }
 
   Effect(const char* name,
-	 Effect* following = nullptr,
-	 FileType file_type = FileType::SOUND) : name_(name) {
+         Effect* following = nullptr,
+         FileType file_type = FileType::SOUND) : name_(name) {
     following_ = following;
     file_type_ = file_type;
     next_ = all_effects;
@@ -232,10 +232,10 @@ class Effect {
     }
 
     if (type_if_found == FilePattern::NONREDUNDANT_SUBDIRS &&
-	*rest == '/' &&
-	PO_isDigit(rest[1]) &&
-	PO_isDigit(rest[2]) &&
-	PO_isDigit(rest[3])) {
+        *rest == '/' &&
+        PO_isDigit(rest[1]) &&
+        PO_isDigit(rest[2]) &&
+        PO_isDigit(rest[3])) {
       int sub = strtol(rest+1, nullptr, 10);
       sub_files_ = std::max<int>(sub_files_, sub + 1);
       rest += 4;
@@ -290,21 +290,21 @@ class Effect {
           break;
         case FilePattern::NONREDUNDANT_SUBDIRS:
           STDOUT.print(" in efficient subdirs");
-	  break;
+          break;
       }
       if (sub_files_) {
-	STDOUT.print(" with ");
-	STDOUT.print(sub_files_);
-	STDOUT.print(" sub files ");
-	expected_files *= sub_files_;
+        STDOUT.print(" with ");
+        STDOUT.print(sub_files_);
+        STDOUT.print(" sub files ");
+        expected_files *= sub_files_;
       }
       if (expected_files != (int)num_files_) {
-	STDOUT << " SOME FILES ARE MISSING! " << expected_files << " != " << num_files_;
+        STDOUT << " SOME FILES ARE MISSING! " << expected_files << " != " << num_files_;
       }
       STDOUT.print(" in ");
       STDOUT.print(directory_);
       if (found_in_alt_dir_) {
-	STDOUT.print("/alt*");
+        STDOUT.print("/alt*");
       }
       STDOUT.println("");
     }
@@ -346,9 +346,9 @@ class Effect {
   }
   
   size_t get_min_file() const { return min_file_; }
-	
+
   const char* get_directory() const { return directory_; }
-	
+
   operator bool() const { return files_found() > 0; }
 
   void Select(int n) {
@@ -369,7 +369,7 @@ class Effect {
 #endif
     selected_ = sel;
   }
-	
+
   Effect* GetFollowing() const {
     return following_;
   }
@@ -386,14 +386,14 @@ class Effect {
     int n = rand() % N;
     if (n == last) {
       switch (N) {
-      default:
-	n = rand() % (N - 1);
-	if (n >= last) n++;
-	break;
-      case 2:
-	if (n == last) n = rand() % N;
-      case 1:
-	break;
+        default:
+          n = rand() % (N - 1);
+          if (n >= last) n++;
+          break;
+        case 2:
+          if (n == last) n = rand() % N;
+        case 1:
+        break;
       }
     }
     return n;
@@ -564,21 +564,21 @@ class Effect {
       int flen = strlen(fname);
       fend += flen;
       if (flen && fend[-1] != '/') {
-	*fend = '/';
-	fend++;
+        *fend = '/';
+        fend++;
       }
       for (; iter; ++iter) {
-	PVLOG_VERBOSE << " Directory entry: '" << iter.name() << "'\n";
-	if (iter.name()[0] == '.') continue;
-	strcpy(fend, iter.name());
-	if (iter.isdir()) {
-	  if (ShouldScan(iter.name())) {
-	    LSFS::Iterator i2(iter);
-	    ScanIterator(i2);
-	  }
-	} else {
-	  ScanAll(font_path_ptr, fname);
-	}
+        PVLOG_VERBOSE << " Directory entry: '" << iter.name() << "'\n";
+        if (iter.name()[0] == '.') continue;
+        strcpy(fend, iter.name());
+        if (iter.isdir()) {
+          if (ShouldScan(iter.name())) {
+            LSFS::Iterator i2(iter);
+            ScanIterator(i2);
+          }
+        } else {
+          ScanAll(font_path_ptr, fname);
+        }
       }
     }
 
@@ -635,13 +635,12 @@ class Effect {
     bool warned = false;
     for (Effect* e = all_effects; e; e = e->next_) {
       if (e->expected_files() != (size_t)(e->num_files_)) {
-	if (!warned) {
-	  warned = true;
-	  STDOUT.println("");
-	  STDOUT.println("WARNING: This font seems to be missing some files!!");
-	  ProffieOSErrors::error_in_font_directory();
-	}
-	e->Show();
+        if (!warned) {
+          warned = true;
+          PVLOG_ERROR <<"\nWARNING: A font seems to be missing some files!!\n";
+          ProffieOSErrors::error_in_font_directory();
+        }
+        e->Show();
       }
     }
     
@@ -795,7 +794,7 @@ EFFECT(mclick);
 // Blaster effects
 // hum, boot and font are reused from sabers and already defined.
 EFFECT(bgnauto); // Doesn't exist in fonts, but I expect there may be use for autofire transitions
-EFFECT2(auto,auto);
+EFFECT2(auto, auto);
 EFFECT(endauto); // Doesn't exist in fonts, but I expect there may be use for autofire transitions
 
 EFFECT(blast); // Not to be confused with "blst" and "blaster" as blocking sounds in sabers
