@@ -1,4 +1,4 @@
-/* V.8-154.
+/* V.8-155.
 ============================================================
 ================   SABERSENSE PROP FILE   ==================
 ================            by            ==================
@@ -271,16 +271,25 @@ GESTURE CONTROLS
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
+class SaveArrayStateFile : public ConfigFile {
+public:
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(sabersense_array_index, 0);  // Default array if no save file.
+  }
+    int sabersense_array_index;  // Stores current array index.
+  };
+
     struct SabersenseArraySelector {
-      static int return_value; // Tracks the current array index.
-      float id() { 
-        return return_value; 
+      static int return_value;  // Tracks current array index.
+      float id() {
+        return return_value;
       }
       static void cycle() {
         return_value = (return_value + 1) % NELEM(blades);
       }
     };
-    int SabersenseArraySelector::return_value = 0; // Start with the first array (index 0). 
+    int SabersenseArraySelector::return_value;
+
 #undef BLADE_ID_CLASS_INTERNAL
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
@@ -513,6 +522,21 @@ public:
 #error "SABERSENSE_ARRAY_SELECTOR and BLADE_DETECT_PIN cannot be defined at the same time."
 #endif
 
+  void SaveArrayState() {
+    PVLOG_STATUS << "Saving Array State\n";
+    SaveArrayStateFile saved_state;
+    saved_state.sabersense_array_index = SabersenseArraySelector::return_value;  // Save current array.
+    saved_state.WriteToRootDir("arraysve");
+  }
+
+  void RestoreArrayState() {
+    PVLOG_STATUS << "Restoring Array State\n";
+    SaveArrayStateFile saved_state;
+    saved_state.ReadINIFromDir(NULL, "arraysve");
+    // Restore saved array index.
+    SabersenseArraySelector::return_value = saved_state.sabersense_array_index;
+  }
+
   void NextBladeArray() {
 #ifdef SABERSENSE_ENABLE_ARRAY_FONT_IDENT  // Plays 'array' sound AND 'font' sound.
     SFX_array.Select(current_config - blades);
@@ -520,7 +544,7 @@ public:
     // Calls Loop function to handle waiting for effect before running DoNewFont.
     do_font_after_sound_ = true;
 #else
-  // Plays 'array' sound only, or 'font' sound if no 'array' sound available.
+    // Plays 'array' sound only, or 'font' sound if no 'array' sound available.
     if (SFX_array) {
       SFX_array.Select(current_config - blades);
       hybrid_font.PlayCommon(&SFX_array);  // Play 'array' sound file if available.
@@ -532,6 +556,11 @@ public:
       SaberBase::DoNewFont();  // Play font ident if 'array' sound file missing.
     }
 #endif
+    SaveArrayState();  // After changing array, save new array index.
+  }
+
+  void Setup() {
+    RestoreArrayState();  // Load saved array on boot.
   }
 #endif
 
@@ -979,7 +1008,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         "presets.ini",
         "presets.tmp",
         "global.ini",
-        "global.tmp"
+        "global.tmp",
+        "arraysve.ini",
+        "arraysve.tmp"
       };
       // Delete files from the root directory.
       for (const char* targetFile : filesToDelete) {
