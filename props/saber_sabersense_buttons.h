@@ -1,4 +1,4 @@
-/* V.8-153.
+/* V.8-154.
 ============================================================
 ================   SABERSENSE PROP FILE   ==================
 ================            by            ==================
@@ -976,8 +976,8 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       const char* filesToDelete[] = {
         "curstate.ini",
         "curstate.tmp",
-        "preset.ini",
-        "preset.tmp",
+        "presets.ini",
+        "presets.tmp",
         "global.ini",
         "global.tmp"
       };
