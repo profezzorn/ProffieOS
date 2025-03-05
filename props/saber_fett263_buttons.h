@@ -957,6 +957,7 @@ EFFECT(medit); // Edit Mode
 #endif
 
 #include "../sound/sound_library.h"
+sound_library_.init();
 
 class GestureControlFile : public ConfigFile {
 public:
