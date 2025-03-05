@@ -1,4 +1,4 @@
-/* V.8-155.
+/* V.8-156.
 ============================================================
 ================   SABERSENSE PROP FILE   ==================
 ================            by            ==================
@@ -216,6 +216,11 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   starting at zero, in the field that would otherwise 
   contain BladeID values.
   Not currently compatible with Blade Detect.
+  
+#define SABERSENSE_DISABLE_SAVE_ARRAY
+  By default, SABERSENSE_ARRAY_SELECTOR saves the current
+  array so that the saber will always boot into the last
+  array used. This define disables that save functionality.
 
 #define SABERSENSE_ENABLE_ARRAY_FONT_IDENT
   Plays font ident after array ident when switching arrays.
@@ -271,14 +276,6 @@ GESTURE CONTROLS
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
-class SaveArrayStateFile : public ConfigFile {
-public:
-  void iterateVariables(VariableOP *op) override {
-    CONFIG_VARIABLE2(sabersense_array_index, 0);  // Default array if no save file.
-  }
-    int sabersense_array_index;  // Stores current array index.
-  };
-
     struct SabersenseArraySelector {
       static int return_value;  // Tracks current array index.
       float id() {
@@ -289,6 +286,16 @@ public:
       }
     };
     int SabersenseArraySelector::return_value;
+     
+#ifndef SABERSENSE_DISABLE_SAVE_ARRAY    
+class SaveArrayStateFile : public ConfigFile {
+public:
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(sabersense_array_index, 0);  // Default array if no save file.
+  }
+    int sabersense_array_index;  // Stores current array index.
+};
+#endif
 
 #undef BLADE_ID_CLASS_INTERNAL
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
@@ -522,13 +529,13 @@ public:
 #error "SABERSENSE_ARRAY_SELECTOR and BLADE_DETECT_PIN cannot be defined at the same time."
 #endif
 
+#ifndef SABERSENSE_DISABLE_SAVE_ARRAY
   void SaveArrayState() {
     PVLOG_STATUS << "Saving Array State\n";
     SaveArrayStateFile saved_state;
     saved_state.sabersense_array_index = SabersenseArraySelector::return_value;  // Save current array.
     saved_state.WriteToRootDir("arraysve");
   }
-
   void RestoreArrayState() {
     PVLOG_STATUS << "Restoring Array State\n";
     SaveArrayStateFile saved_state;
@@ -536,6 +543,7 @@ public:
     // Restore saved array index.
     SabersenseArraySelector::return_value = saved_state.sabersense_array_index;
   }
+#endif
 
   void NextBladeArray() {
 #ifdef SABERSENSE_ENABLE_ARRAY_FONT_IDENT  // Plays 'array' sound AND 'font' sound.
@@ -556,12 +564,15 @@ public:
       SaberBase::DoNewFont();  // Play font ident if 'array' sound file missing.
     }
 #endif
+#ifndef SABERSENSE_DISABLE_SAVE_ARRAY
     SaveArrayState();  // After changing array, save new array index.
   }
-
   void Setup() {
     RestoreArrayState();  // Load saved array on boot.
   }
+#else
+  }
+#endif
 #endif
 
 // RESET FACTORY DEFAULTS (Delete Save Files).
