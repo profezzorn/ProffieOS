@@ -74,7 +74,7 @@ public:
     current_mode = this;
 #ifdef MENU_SPEC_TEMPLATE
     MKSPEC<MENU_SPEC_TEMPLATE>::SoundLibrary::init();
-#endif    
+#endif
   }
   BladeStyle* current_style() {
 #if NUM_BLADES == 0
@@ -331,7 +331,7 @@ public:
 #endif
 #ifdef SAVE_CLASH_THRESHOLD
       || GetCurrentClashThreshold() != saved_global_state.clash_threshold
-#endif  
+#endif
       ) {
       SaveGlobalState();
     }
@@ -527,9 +527,9 @@ public:
 
   virtual void SpeakBladeID(float id) {
 #ifdef DISABLE_TALKIE
-#ifdef SPEAK_BLADE_ID    
+#ifdef SPEAK_BLADE_ID
     #error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
-#endif    
+#endif
 #else
     talkie.Say(spI);
     talkie.Say(spD);
@@ -818,7 +818,7 @@ public:
              << " v = " << v << "\n";
     }
 #endif
-    // If we're spinning the saber or if loud sounds are playing, 
+    // If we're spinning the saber or if loud sounds are playing,
     // require a stronger acceleration to activate the clash.
     if (v > (CLASH_THRESHOLD_G * (1
 				  + fusor.gyro().len() / 500.0
@@ -1193,7 +1193,7 @@ public:
 #ifndef MENU_SPEC_MENU
 #define MENU_SPEC_MENU TopMenu
 #endif
-  
+
   void EnterMenu() {
     pushMode<MKSPEC<MENU_SPEC_TEMPLATE>::MENU_SPEC_MENU>();
   }
@@ -1203,8 +1203,8 @@ public:
 
 #ifndef COLOR_CHANGE_MENU_SPEC_TEMPLATE
 #define COLOR_CHANGE_MENU_SPEC_TEMPLATE ColorChangeOnlyMenuSpec
-#endif  
-  
+#endif
+
   void ToggleColorChangeMode() {
     if (!current_style()) return;
     if (current_mode == this) {
@@ -1212,7 +1212,7 @@ public:
     }
   }
 #endif  // DISABLE_COLOR_CHANGE
-  
+
   virtual void PrintButton(uint32_t b) {
     if (b & BUTTON_POWER) STDOUT.print("Power");
     if (b & BUTTON_AUX) STDOUT.print("Aux");
@@ -1280,7 +1280,7 @@ public:
 
   bool Parse(const char *cmd, const char* arg) override {
     if (current_mode->mode_Parse(cmd, arg)) return true;
-    
+
     if (!strcmp(cmd, "scanid")) {
       FindBladeAgain();
       return true;
@@ -1605,11 +1605,11 @@ public:
       return true;
     }
 
-#define SET_STYLE_CMD(N)                             \
-    if (!strcmp(cmd, "set_style" #N) && arg) {        \
+#define SET_STYLE_CMD(N)                                \
+    if (!strcmp(cmd, "set_style" #N) && arg) {          \
       current_preset_.current_style_[N-1] = mkstr(arg); \
-      current_preset_.Save();                        \
-      return true;                                   \
+      current_preset_.Save();                           \
+      return true;                                      \
     }
     ONCEPERBLADE(SET_STYLE_CMD)
     if (!strcmp(cmd, "move_preset") && arg) {
@@ -1637,19 +1637,19 @@ public:
 #ifdef MOUNT_SD_SETTING
     if (!strcmp(cmd, "sd")) {
       if (arg) {
-	bool mountable = atoi(arg) > 0;
-	LSFS::SetAllowMount(mountable);
-	if (mountable) {
-	  if (SaberBase::IsOn()) {
-	    // Turn off. Idle sounds/animations should not start since we already set
-	    // SetAllowMount to true.
-	    Off();
-	  } else {
-	    // Trigger the IDLE_OFF_TIME behavior to turn off idle sounds and animations.
-	    // (Otherwise we can't mount the sd card).
-	    SaberBase::DoOff(OFF_IDLE, 0);
-	  }
-	}
+        bool mountable = atoi(arg) > 0;
+        LSFS::SetAllowMount(mountable);
+        if (mountable) {
+          if (SaberBase::IsOn()) {
+            // Turn off. Idle sounds/animations should not start since we already set
+            // SetAllowMount to true.
+            Off();
+          } else {
+            // Trigger the IDLE_OFF_TIME behavior to turn off idle sounds and animations.
+            // (Otherwise we can't mount the sd card).
+            SaberBase::DoOff(OFF_IDLE, 0);
+          }
+        }
       }
       STDOUT << "SD Access " 
              << (LSFS::GetAllowMount() ? "ON" : "OFF") 
@@ -1844,7 +1844,7 @@ public:
     current_preset_.SetStyle(blade, std::move(style));
     current_preset_.Save();
   }
-  
+
   void SetFont(const char* font) {
     current_preset_.font = mkstr(font);
     current_preset_.Save();
@@ -1855,7 +1855,7 @@ public:
     current_preset_.track = mkstr(font);
     current_preset_.Save();
   }
-  
+
   const char* GetFont() {
     return current_preset_.font.get();
   }
