@@ -2220,7 +2220,9 @@ SaberFett263Buttons() : PropBase() {}
     MENU_LOCKUP_DELAY,
     MENU_CLASH_DETECT,
     MENU_MAX_CLASH,
+#ifdef MOUNT_SD_SETTING
     MENU_SD_ACCESS,
+#endif
 #endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
     MENU_REHEARSE,
@@ -2326,7 +2328,9 @@ SaberFett263Buttons() : PropBase() {}
     EDIT_CLASH_THRESHOLD = 3,
     EDIT_BLADE_LENGTH = 4,
     EDIT_BRIGHTNESS = 5,
+#ifdef MOUNT_SD_SETTING
     EDIT_SD_ACCESS = 6,
+#endif
   };
 
   enum GestureControls {
@@ -2782,11 +2786,13 @@ SaberFett263Buttons() : PropBase() {}
       menu_type_ = MENU_GESTURE_SUB;
       MenuSave();
       break;
+#ifdef MOUNT_SD_SETTING
     case MENU_SD_ACCESS:
       LSFS::SetAllowMount(choice_);
       menu_type_ = MENU_SETTING_SUB;
       MenuSave();
       break;
+#endif
     case MENU_SETTING_SUB:
       switch (menu_sub_pos_) {
       case EDIT_VOLUME:
@@ -2827,9 +2833,11 @@ SaberFett263Buttons() : PropBase() {}
         dim_revert_ = dim = pow(SaberBase::GetCurrentDimming() / 16384.0, 1/2.5);
         sound_library_.SaySelect();
         break;
+#ifdef MOUNT_SD_SETTING
       case EDIT_SD_ACCESS:
         EnterBooleanMenu(MENU_SD_ACCESS,GetAllowMount());
         break;
+#endif
       }
       break;
     case MENU_CLASH_THRESHOLD:
@@ -3582,7 +3590,9 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_FORCEPUSH:
       case MENU_TWISTOFF:
       case MENU_POWERLOCK:
+#ifdef MOUNT_SD_SETTING
       case MENU_SD_ACCESS:
+#endif
         choice_ = direction > 0;
         sound_library_.SayBool(choice_);
         break;
@@ -3696,9 +3706,11 @@ SaberFett263Buttons() : PropBase() {}
           case EDIT_BRIGHTNESS:
             sound_library_.SayEditBrightness();
             break;
+#ifdef MOUNT_SD_SETTING
           case EDIT_SD_ACCESS:
             sound_library_.SaySDAccess();
             break;
+#endif
           default:
             break;
         }
@@ -4227,7 +4239,9 @@ SaberFett263Buttons() : PropBase() {}
         show_length_.Stop(blade_num_);
         UpdateStyle();
         break;
+#ifdef MOUNT_SD_SETTING
       case MENU_SD_ACCESS:
+#endif
       case MENU_GESTURE_SUB:
         menu_type_ = MENU_SETTING_SUB;
         MenuCancel();
