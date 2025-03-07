@@ -1,4 +1,4 @@
-// Jetpack Revision 50
+// Jetpack Revision 51
 
 /* Created by OlivierFlying747-8 with lots of help from Fredrik Hubinette aka profezzorn,
   http://fredrik.hubbe.net/lightsaber/proffieos.html
@@ -525,11 +525,17 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
         if (!mode_volume_) {
-          if       (idle_) StartFlightMode(); // Transition from idle to flight  (rev more up)
-          else if (flight_) StopFlightMode(); // Transition from flight to idle     (rev down)
-          else               StartIdleMode(); // Jetpack initial start from 0 to idle (rev up)
-          // if idle, it revs up / if up, it revs down to idle / if not idle or not up, it needs to rev "up" to idle.
-        } else VolumeUp();
+          if (idle_)
+            StartFlightMode();  // Transition from idle to flight  (rev more up)
+          else
+            if (flight_)
+              StopFlightMode(); // Transition from flight to idle     (rev down)
+            else
+              StartIdleMode();  // Jetpack initial start from 0 to idle (rev up)
+              // if idle, it revs up / if up, it revs down to idle / if not idle or not up, it needs to rev "up" to idle.
+        } else {
+            VolumeUp();
+        }
         return true;
       // Completely turn jetpack off from any state ******** only for 2 & 3 buttons (while on): ********
       case EVENTID(BUTTON_AUX2, EVENT_FIRST_HELD_LONG, MODE_ON):
@@ -559,13 +565,16 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
       // Next Preset (1 button):
 #if NUM_BUTTONS == 1
-        if (!mode_volume_) next_preset();
+        if (!mode_volume_)
+          next_preset();
         return true;
 #else
         // Start or Stop Track (2 and 3 buttons):
 #ifdef JETPACK_TRACK_PLAYER
-        if (!istrack_playing_) StartTrackPlayer();
-        else StopTrackPlayer();
+        if (!istrack_playing_)
+          StartTrackPlayer();
+        else
+          StopTrackPlayer();
 #else
         StartOrStopTrack();
 #endif
@@ -573,16 +582,20 @@ public:
 #endif // NUM_BUTTONS == 1
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON):
       // Volume Down (1 button):
-        if (mode_volume_) VolumeDown();
+        if (mode_volume_)
+          VolumeDown();
         return true;
 
       // Next Preset and Volume Down (2 and 3 buttons):
       case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_SHORT, MODE_OFF):
-        if (!mode_volume_) next_preset();
-        else VolumeDown();
+        if (!mode_volume_)
+          next_preset();
+        else
+          VolumeDown();
         return true;
       case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_SHORT, MODE_ON):
-        if (mode_volume_) VolumeDown();
+        if (mode_volume_)
+          VolumeDown();
         return true;
 
 #if NUM_BUTTONS >= 3
@@ -592,7 +605,8 @@ public:
       // Previous Preset (1 and 2 buttons):
       case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
 #endif // NUM_BUTTONS >= 3
-        if (!mode_volume_) previous_preset();
+        if (!mode_volume_)
+          previous_preset();
         return true;
 
       // Activate Muted (Turn's Saber ON Muted):
@@ -609,35 +623,29 @@ public:
         }
         return true;
 
+#ifndef DISABLE_COLOR_CHANGE
       // Color Change mode (1 button):
 #if NUM_BUTTONS == 1
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
-#ifndef DISABLE_COLOR_CHANGE
-        ToggleColorChangeMode();
-#endif
-        return true;
       // Color Change mode (2 buttons):
 #elif NUM_BUTTONS == 2
-#ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_SHORT, MODE_ON):
-        ToggleColorChangeMode();
-        return true;
-#endif
-#else
+#elif
       // Color Change mode (3 buttons):
-#ifndef DISABLE_COLOR_CHANGE
       case EVENTID(BUTTON_AUX2, EVENT_FIRST_CLICK_SHORT, MODE_ON):
+#endif
         ToggleColorChangeMode();
         return true;
-#endif
-#endif // NUM_BUTTONS == 1
+#endif // DISABLE_COLOR_CHANGE
 
 #if NUM_BUTTONS == 1
       // Start or Stop Track (1 button):
       case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_ON):
 #ifdef JETPACK_TRACK_PLAYER
-        if (!istrack_playing_) StartTrackPlayer();
-        else StopTrackPlayer();
+        if (!istrack_playing_)
+          StartTrackPlayer();
+        else
+          StopTrackPlayer();
 #else
         StartOrStopTrack();
 #endif
@@ -824,10 +832,12 @@ public:
     }
 
     // Start idle loop after transition sound finishes
-    if  (idle_)  IdlePlaying();
+    if  (idle_)
+      IdlePlaying();
 
     // Start flight loop after transition sound finishes
-    if (flight_) FlightPlaying();
+    if (flight_)
+      FlightPlaying();
   }
 
   void IdlePlaying() {
@@ -851,7 +861,6 @@ public:
   void EffectHelper (Effect* effect1,const char* msg1) {
     hybrid_font.PlayPolyphonic(effect1);
     PVLOG_STATUS << msg1 << "\n";
-    return;
   }
 
   void SB_Effect(EffectType effect, EffectLocation location) override {
