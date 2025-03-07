@@ -91,7 +91,7 @@ bool AvoidIdleSDAccess() {
   // MOUNT_SD_SETTING, but it will allow users
   // to access the SD card in some cases that
   // might otherwise be impossible.
-  if (USBD_configured()) return true;
+  if (USBD_Configured()) return true;
 #endif  
   return false;
 }
