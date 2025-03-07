@@ -1,8 +1,8 @@
-/* V.8-156.
+/* OS8-v160.
 ============================================================
-================   SABERSENSE PROP FILE   ==================
-================            by            ==================
-================       CHRIS CARTER       ==================
+=================   SABERSENSE PROP FILE   =================
+=================            by            =================
+=================       CHRIS CARTER       =================
 ============================================================
 
 Built on Matthew McGeary's SA22C button prop file for one
@@ -276,6 +276,16 @@ GESTURE CONTROLS
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
+#ifndef SABERSENSE_DISABLE_SAVE_ARRAY
+class SaveArrayStateFile : public ConfigFile {
+public:
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(sabersense_array_index, 0);  // Default array if no save file.
+  }
+    int sabersense_array_index;  // Stores current array index.
+  };
+#endif
+
     struct SabersenseArraySelector {
       static int return_value;  // Tracks current array index.
       float id() {
@@ -286,17 +296,7 @@ GESTURE CONTROLS
       }
     };
     int SabersenseArraySelector::return_value;
-     
-#ifndef SABERSENSE_DISABLE_SAVE_ARRAY    
-class SaveArrayStateFile : public ConfigFile {
-public:
-  void iterateVariables(VariableOP *op) override {
-    CONFIG_VARIABLE2(sabersense_array_index, 0);  // Default array if no save file.
-  }
-    int sabersense_array_index;  // Stores current array index.
-};
-#endif
-
+    
 #undef BLADE_ID_CLASS_INTERNAL
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
@@ -504,6 +504,7 @@ public:
     hybrid_font.PlayCommon(&SFX_bladeid);
     // Calls Loop function to handle waiting for effect before running DoNewFont.
     do_font_after_sound_ = true;
+  }
 #else
     // Plays 'bladeid' sound only, or 'font' sound if no 'bladeid' sound available.
     if (SFX_bladeid) {
@@ -516,8 +517,8 @@ public:
     } else {
       SaberBase::DoNewFont();  // Play font ident if 'bladeid' sound file missing.
     }
-#endif
   }
+#endif
 #endif
 
   // Manual Array Selector, switches on-demand to next array, plays 'array' ident sound.
@@ -536,12 +537,17 @@ public:
     saved_state.sabersense_array_index = SabersenseArraySelector::return_value;  // Save current array.
     saved_state.WriteToRootDir("arraysve");
   }
+
   void RestoreArrayState() {
     PVLOG_STATUS << "Restoring Array State\n";
     SaveArrayStateFile saved_state;
     saved_state.ReadINIFromDir(NULL, "arraysve");
     // Restore saved array index.
     SabersenseArraySelector::return_value = saved_state.sabersense_array_index;
+  }
+  
+  void Setup() {
+    RestoreArrayState();  // Load saved array on boot.
   }
 #endif
 
@@ -551,6 +557,7 @@ public:
     hybrid_font.PlayCommon(&SFX_array);
     // Calls Loop function to handle waiting for effect before running DoNewFont.
     do_font_after_sound_ = true;
+  }
 #else
     // Plays 'array' sound only, or 'font' sound if no 'array' sound available.
     if (SFX_array) {
@@ -563,14 +570,6 @@ public:
     } else {
       SaberBase::DoNewFont();  // Play font ident if 'array' sound file missing.
     }
-#endif
-#ifndef SABERSENSE_DISABLE_SAVE_ARRAY
-    SaveArrayState();  // After changing array, save new array index.
-  }
-  void Setup() {
-    RestoreArrayState();  // Load saved array on boot.
-  }
-#else
   }
 #endif
 #endif
@@ -833,6 +832,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       SabersenseArraySelector::cycle();
       FindBladeAgain();
       NextBladeArray();
+#ifndef SABERSENSE_DISABLE_SAVE_ARRAY
+      SaveArrayState();
+#endif
       return true;
 #endif
 
