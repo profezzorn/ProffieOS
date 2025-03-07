@@ -1,6 +1,6 @@
-// version 064 (compiling version for saber-blaster(with bullet count)-detonator-jetpack-morsecode, all with sound-effects on
-//             (but-untested as my saber is not yet working)                                        transition between props.
-//             (switching presets sets)                                                             (provided by NoSloppy)
+// version 064 (compiling version for saber-blaster(with bullet count)-detonator-jetpack, all with sound-effects on
+//             (but-untested as my saber is not yet working)                                       transition between props.
+//             (switching presets sets)                                                            (provided by NoSloppy)
 // multipropdisplaycontroller.h included and commented out because it is not yet possible to make it work from
 // here (within the prop).
 
