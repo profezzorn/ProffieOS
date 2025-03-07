@@ -567,7 +567,6 @@ public:
 #if NUM_BUTTONS == 1
         if (!mode_volume_)
           next_preset();
-        return true;
 #else
         // Start or Stop Track (2 and 3 buttons):
 #ifdef JETPACK_TRACK_PLAYER
@@ -578,10 +577,11 @@ public:
 #else
         StartOrStopTrack();
 #endif
-        return true;
 #endif // NUM_BUTTONS == 1
+        return true;
+
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON):
-      // Volume Down (1 button):
+        // Volume Down (1 button):
         if (mode_volume_)
           VolumeDown();
         return true;
@@ -630,8 +630,7 @@ public:
       // Color Change mode (2 buttons):
 #elif NUM_BUTTONS == 2
       case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_SHORT, MODE_ON):
-#elif
-      // Color Change mode (3 buttons):
+#elif // Color Change mode (3 buttons):
       case EVENTID(BUTTON_AUX2, EVENT_FIRST_CLICK_SHORT, MODE_ON):
 #endif
         ToggleColorChangeMode();
@@ -832,7 +831,7 @@ public:
     }
 
     // Start idle loop after transition sound finishes
-    if  (idle_)
+    if (idle_)
       IdlePlaying();
 
     // Start flight loop after transition sound finishes
