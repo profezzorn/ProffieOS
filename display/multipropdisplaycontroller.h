@@ -1,4 +1,5 @@
 // version 05 jetpack animations simplified & morsecodedisplaycontroller added (but commented out)
+// this code should go in their respective prop files, but it is not yet posiible to do so.
 
 #ifndef MULTIPROPDISPLAYCONTROLLER_H
 #define MULTIPROPDISPLAYCONTROLLER_H
