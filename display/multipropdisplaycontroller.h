@@ -1,12 +1,12 @@
-// version 05 jetpack animations simplified & morsecodedisplaycontroller added
+// version 05 jetpack animations simplified & morsecodedisplaycontroller added (but commented out)
 
 #ifndef MULTIPROPDISPLAYCONTROLLER_H
 #define MULTIPROPDISPLAYCONTROLLER_H
 
 /* add to ssd1306.h
-#ifdef PROPS_MULTI_PROP_H               // added by Oli
-#include "multipropdisplaycontroller.h" // added by Oli
-#endif                                  // added by Oli
+#ifdef PROPS_MULTI_PROP_H
+#include "multipropdisplaycontroller.h"
+#endif
 */
 
 struct MultiPropDisplayConfigFile : public ConfigFile {
@@ -36,7 +36,7 @@ struct MultiPropDisplayConfigFile : public ConfigFile {
   X(blastermode)                      \
   X(detonatormode)                    \
   X(jetpackmode)                      \
-  X(morsecodemode)
+  //X(morsecodemode)
 
 template<typename PREFIX = ByteArray<>>
 struct MultiPropDisplayEffects  {
@@ -84,6 +84,7 @@ public:
   this->SetMessage("jetpack\nmode");
   this->SetScreenNow(SCREEN_MESSAGE);
        } break;
+/*
       case EFFECT_MORSECODEMODE:
         if (img_.IMG_morsecodemode)
   ShowFileWithSoundLength(&img_.IMG_morsecodemode, multiprop_font_config.ProffieOSMorsecodeModeImageDuration);
@@ -91,6 +92,7 @@ public:
   this->SetMessage("morse code\n  mode");
   this->SetScreenNow(SCREEN_MESSAGE);
        } break;
+  */
       default:
   StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
     }
