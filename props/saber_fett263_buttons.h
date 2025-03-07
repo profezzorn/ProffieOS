@@ -2835,7 +2835,7 @@ SaberFett263Buttons() : PropBase() {}
         break;
 #ifdef MOUNT_SD_SETTING
       case EDIT_SD_ACCESS:
-        EnterBooleanMenu(MENU_SD_ACCESS,GetAllowMount());
+        EnterBooleanMenu(MENU_SD_ACCESS,LSFS::GetAllowMount());
         break;
 #endif
       }
