@@ -121,7 +121,7 @@ AUX2 Button:
 
 #include "prop_base.h"
 
-#define PROP_TYPE Jetpack
+#define PROP_TYPE JetpackOliButtons
 
 #ifndef JETPACK_IDLE_TIME
 #define JETPACK_IDLE_TIME 1000 * 60 * 1 // Jetpack max idle mode time in millisec (default 1 min) before auto-shutdown
