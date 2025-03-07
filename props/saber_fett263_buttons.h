@@ -1439,8 +1439,6 @@ SaberFett263Buttons() : PropBase() {}
     SaveGestureState();
   }
 
-  sound_library_.init();
-
   Color16 GetColorArg(int blade, int arg) {
     char argspace[32];
     if (style_parser.GetArgument(current_preset_.GetStyle(blade), arg + 2, argspace)) {
@@ -1799,6 +1797,7 @@ SaberFett263Buttons() : PropBase() {}
 
   void Setup() override {
     RestoreGestureState();
+    sound_library_.init();
   }
 
   bool chdir(const StringPiece dir) override {
