@@ -957,7 +957,6 @@ EFFECT(medit); // Edit Mode
 #endif
 
 #include "../sound/sound_library.h"
-sound_library_.init();
 
 class GestureControlFile : public ConfigFile {
 public:
@@ -1439,6 +1438,8 @@ SaberFett263Buttons() : PropBase() {}
     SaveState(current_preset_.preset_num);
     SaveGestureState();
   }
+
+  sound_library_.init();
 
   Color16 GetColorArg(int blade, int arg) {
     char argspace[32];
