@@ -291,7 +291,7 @@ public:
 |*   MORSECODE DISPLAY CONTROLLER   *|
 |*                                  *|
 \************************************/
-
+/*
 struct MorseCodeDisplayConfigFile : public ConfigFile {
   MorseCodeDisplayConfigFile() { link(&font_config); }
   void iterateVariables(VariableOP *op) override {
@@ -340,6 +340,7 @@ public:
     }
   }
 };
+*/
 
 #endif  //MULTIPROPDISPLAYCONTROLLER_H
 
