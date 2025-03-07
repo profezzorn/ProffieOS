@@ -4,9 +4,9 @@
 #define MULTIPROPDISPLAYCONTROLLER_H
 
 /* add to ssd1306.h
-#ifdef PROPS_MULTI_PROP_H               // added by Oli
-#include "multipropdisplaycontroller.h" // added by Oli
-#endif                                  // added by Oli
+#ifdef PROPS_MULTI_PROP_H
+#include "multipropdisplaycontroller.h"
+#endif
 */
 
 struct MultiPropDisplayConfigFile : public ConfigFile {
@@ -291,7 +291,7 @@ public:
 |*   MORSECODE DISPLAY CONTROLLER   *|
 |*                                  *|
 \************************************/
-
+/* commented out until morsecode_prop.h is ready
 struct MorseCodeDisplayConfigFile : public ConfigFile {
   MorseCodeDisplayConfigFile() { link(&font_config); }
   void iterateVariables(VariableOP *op) override {
@@ -340,6 +340,7 @@ public:
     }
   }
 };
+*/
 
 #endif  //MULTIPROPDISPLAYCONTROLLER_H
 
