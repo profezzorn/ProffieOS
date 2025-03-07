@@ -3,36 +3,37 @@
 
 struct SoundToPlay {
   const char* filename_;
-  Effect* effect_;
-  int selection_;
+  Effect::FileID file_id_;
 
-  SoundToPlay() :filename_(nullptr), effect_(nullptr), selection_(-1) {}
+  SoundToPlay() :filename_(nullptr), file_id_(nullptr, 0xffff, 0, 0)  {}
   explicit SoundToPlay(const char* file) : filename_(file) {  }
-  SoundToPlay(Effect* effect, int selection = -1) : filename_(nullptr), effect_(effect), selection_(selection) {}
-  SoundToPlay(uint8_t R, uint8_t G, uint8_t B) :filename_(nullptr), effect_(nullptr), selection_((R << 16) + (G << 8) + B) {}
+  SoundToPlay(Effect* effect) : filename_(nullptr), file_id_(effect->RandomFile()) {}
+  SoundToPlay(Effect* effect, int selection) : filename_(nullptr), file_id_((effect->Select(selection),effect->RandomFile())) {}
+  SoundToPlay(uint8_t R, uint8_t G, uint8_t B) :filename_(nullptr), file_id_(nullptr, R, G, B) {}
   bool Play(BufferedWavPlayer* player) {
     if (filename_) {
       return player->PlayInCurrentDir(filename_);
     }
-    if (effect_) {
-      effect_->Select(selection_);
-      player->PlayOnce(effect_);
+    if (file_id_) {
+      player->PlayOnce(file_id_);
       return true;
     }
+    if (file_id_.GetFileNum() > 0xff) return false;
     // color
     char filename[32];
     strcpy(filename, "colors/");
     char* tmp = filename + strlen(filename);
-    int N = selection_;
-    for (int j = 0; j < 6; j++) {
-      *(tmp++) = "0123456789abcdef"[(N >> 20) & 0xf];
-      N <<= 4;
-    }
+    *(tmp++) = "0123456789abcdef"[file_id_.GetFileNum() >> 4];
+    *(tmp++) = "0123456789abcdef"[file_id_.GetFileNum() & 15];
+    *(tmp++) = "0123456789abcdef"[file_id_.GetSubId()  >> 4];
+    *(tmp++) = "0123456789abcdef"[file_id_.GetSubId() & 15];
+    *(tmp++) = "0123456789abcdef"[file_id_.GetAlt() >> 4];
+    *(tmp++) = "0123456789abcdef"[file_id_.GetAlt() & 15];
     strcpy(tmp, ".wav");
     return player->PlayInCurrentDir(filename);
   }
    bool isSet() {
-     return filename_ != nullptr || effect_ != nullptr || selection_ != -1;
+     return filename_ != nullptr || file_id_ || file_id_.GetFileNum() != 0xffff;
    }
 };
 
@@ -49,33 +50,33 @@ public:
   bool Play(const char* p) {
     return Play(SoundToPlay(p));
   }
- 
+
   // Called from Loop()
   void PollSoundQueue(RefPtr<BufferedWavPlayer>& player) {
     busy_ = player && player->isPlaying();
     if (fadeout_) {
       fadeout_ = false;
       if (busy_) {
-	// We really should add the time since the fadeout was scheduled here.
-	// However, if polling is frequent, it would be a fraction of a milli
-	// which basically dones't matter.
-	player->set_fade_time(fadeout_len_);
-	player->FadeAndStop();
+        // We really should add the time since the fadeout was scheduled here.
+        // However, if polling is frequent, it would be a fraction of a milli
+        // which basically dones't matter.
+        player->set_fade_time(fadeout_len_);
+        player->FadeAndStop();
       }
     }
     if (!busy_) {
       if (sounds_) {
-	busy_ = true;
-	if (!player) {
-	  player = GetFreeWavPlayer();
-	  if (!player) return;
-	}
-	player->set_volume_now(1.0f);
-	queue_[0].Play(player.get());
-	sounds_--;
-	for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
+        busy_ = true;
+        if (!player) {
+          player = GetFreeWavPlayer();
+          if (!player) return;
+        }
+        player->set_volume_now(1.0f);
+        queue_[0].Play(player.get());
+        sounds_--;
+        for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
       } else {
-	if (player) player.Free();
+        if (player) player.Free();
       }
     }
   }
