@@ -36,8 +36,8 @@ struct MultiPropDisplayConfigFile : public ConfigFile {
   X(sabermode)                        \
   X(blastermode)                      \
   X(detonatormode)                    \
-  X(jetpackmode)                      \
-  //X(morsecodemode)
+  X(jetpackmode)              /*        \
+  X(morsecodemode)            */
 
 template<typename PREFIX = ByteArray<>>
 struct MultiPropDisplayEffects  {
@@ -295,6 +295,9 @@ public:
 |*                                  *|
 \************************************/
 /*
+
+// my morsecode_prop.h is not ready and will most likely miss the POS8.x launch
+
 struct MorseCodeDisplayConfigFile : public ConfigFile {
   MorseCodeDisplayConfigFile() { link(&font_config); }
   void iterateVariables(VariableOP *op) override {
