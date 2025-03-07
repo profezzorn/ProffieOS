@@ -2029,157 +2029,51 @@ void DoSavedTwist() {
 
 #endif  // BC_DUAL_BLADES
 
-  // Just play font.wav if already ON. Not sure why this is better.
-  void HandleBladeDetectSound() {
-    if (!SaberBase::IsOn()) {
-      SaberBase::DoBladeDetect(blade_detected_);
-    } else {
-      SaberBase::DoNewFont();
-    }
-  }
+  bool use_fake_id_ = false;
+  float fake_id_ = 0;
+  size_t best_config_before_faking_ = SIZE_MAX;
 
-  // Play array.wavs if they exist and we manually switched.
-  // Fallback to playing font.wav.
-  void HandlePresetSound() {
-  #ifdef SAVE_PRESET
-    savestate_.ReadINIFromSaveDir("curstate");
-    int preset = savestate_.preset;
-  #else
-    int preset = 0;
-  #endif
-
-    if (SFX_array) {
-      SetPreset(preset, false);
-      SFX_array.Select(current_config - blades);
-      hybrid_font.PlayPolyphonic(&SFX_array);
-    } else {
-      SetPreset(preset, true);
-    }
-  }
-
-#ifdef BLADE_ID_SCAN_MILLIS
-
-  // These variables are used to track the actual scanned best_config,
-  // and to spoof a fake_best_config if the user manually overrides
-  // to a different blades[] element.
-  // This allows for a manual selection of best_config yet still
-  // let BLADE_ID_SCAN_MILLIS to work.
-  bool manual_blade_array_active = false;
-  size_t last_real_best_config = SIZE_MAX;
-  size_t real_best_config = SIZE_MAX;
-  size_t fake_best_config = SIZE_MAX;
-  size_t prev_real_best_config = SIZE_MAX;
-  int next_id_ = -1;
-  bool use_next_id_ = false;
-
-  // Override id() to use array spoofing when needed.
   float id(bool announce = false) override {
-    if (use_next_id_) {
-      PVLOG_DEBUG << "***** Spoofing Blade ID to: " << next_id_ << "\n";
-      return next_id_;
-    }
+    if (use_fake_id_) {
+      float real_id = PropBase::id(announce);
+      size_t real_best_config = FindBestConfigForId(real_id);
 
-    float ret = PropBase::id(announce);  // Read real ID
-
-#ifdef BLADE_DETECT_PIN
-    if (!blade_detected_) {
-      PVLOG_STATUS << "NO ";
-      ret += NO_BLADE;
-    }
-    PVLOG_STATUS << "Blade Detected\n";
-#endif
-
-    return ret;
-  }
-
-  // This provides a way to "spoof" a best_config so as to allow
-  // a "manual override" of what the base PollScanID decides is best.
-  // Once a physical blade state change happens, the default scanning reads are used.
-  void PollScanId() override {
-    if (find_blade_again_pending_) {
-      find_blade_again_pending_ = false;
-      int noblade_level_before = current_config->ohm / NO_BLADE;
-      FindBladeAgain();
-      int noblade_level_after = current_config->ohm / NO_BLADE;
-
-      if (noblade_level_before != noblade_level_after) {
-        HandleBladeDetectSound();
-      } else if (prev_real_best_config != last_real_best_config) {
-        // A real blade change has occurred, play bladein/out.
-        // If bladein/out doesn't exist, hybrid_font handles playing font.wav instead.
-        hybrid_font.SB_BladeDetect(!(id() >= NO_BLADE));
-        prev_real_best_config = last_real_best_config;
-        last_real_best_config = real_best_config;
-      } else {
-        PVLOG_NORMAL << "**** No Blade Change Detected, something else changed Blade ID somehow. Playing font.wav\n";
-        SaberBase::DoNewFont();
+      if (real_best_config != best_config_before_faking_) {
+        // Real blade has changed, exit manual mode automatically
+        use_fake_id_ = false;
+        return real_id;  // Use real blade id
       }
+
+      // No change, keep spoofing
+      return fake_id_;
     }
+
+    return PropBase::id(announce);
   }
-
-  size_t FindBestConfig(bool announce = false) override {
-    // Get the OS determined best_config
-    real_best_config = PropBase::FindBestConfig(announce);
-
-    // Handle manual blade array switching mode
-    if (manual_blade_array_active) {
-      if (real_best_config != last_real_best_config) {
-        PVLOG_NORMAL << "---REAL BLADE CHANGE DETECTED--- EXITING manual mode\n";
-        manual_blade_array_active = false;
-        prev_real_best_config = last_real_best_config;
-        last_real_best_config = real_best_config;
-
-        find_blade_again_pending_ = true;
-        PollScanId();
-        return real_best_config;
-      }
-      // Spoof best_config during manual mode
-      fake_best_config = current_config - blades;  // the incremented array we manually set
-      return fake_best_config;
-    }
-
-    // Normal mode: Update stored real best_config
-    if (real_best_config != last_real_best_config) {
-      last_real_best_config = real_best_config;  // Keep track of the latest real config
-    }
-    return real_best_config;
-  }
-  #endif  // BLADE_ID_SCAN_MILLIS
 
   void TriggerBladeID() {
-    use_next_id_ = false;
-    manual_blade_array_active = false;
+    use_fake_id_ = false;
     FindBladeAgain();
-    if (SFX_array) {
-      SFX_array.Select(current_config - blades);
-      hybrid_font.PlayPolyphonic(&SFX_array);
-    } else {
-      SaberBase::DoNewFont();
-    }
+    PlayArraySound();
   }
 
   void NextBladeArray() {
-#ifdef BLADE_ID_SCAN_MILLIS
-    manual_blade_array_active = true;  // Enable manual mode
-#endif
-    int n = (current_config - blades + 1) % NELEM(blades);
-    next_id_ = blades[n].ohm;
-    use_next_id_ = true;
-    FakeFindBladeAgain();
-    PVLOG_DEBUG << "**** Manually Switching to Blade Array: " << (current_config - blades) << "\n";
+    best_config_before_faking_ = FindBestConfigForId(PropBase::id(false));
+    size_t next_array = (current_config - blades + 1) % NELEM(blades);
+    fake_id_ = blades[next_array].ohm;
+    use_fake_id_ = true;
+
+    FindBladeAgain();
+    PlayArraySound();
   }
 
-  // Manual Blade Array Selection version of FindBladeAgain()
-  void FakeFindBladeAgain() {
-    // Reverse everything FindBladeAgain does, except for recalculating best_config
-    DeactivateBlades();
-    SaveVolumeIfNeeded();
-    // Increment to the next blade array
-    SelectBladeConfig((current_config - blades + 1) % NELEM(blades));
-    ActivateBlades();
-    RestoreGlobalState();
-    HandlePresetSound();
-    use_next_id_ = false;
+  void PlayArraySound() {
+    if (SFX_array) {
+      SFX_array.Select(current_config - blades);
+      hybrid_font.PlayPolyphonic(&SFX_array);
+    } else if (!hybrid_font.PlayPolyphonic(&SFX_bladein)) {
+      hybrid_font.PlayCommon(&SFX_font);
+    }
   }
 
   bool Parse(const char *cmd, const char* arg) override {
