@@ -110,6 +110,26 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(FONT_DIRECTORY_NOT_FOUND)     \
     /* menu effects, triggered when you go from one menu entry to the next/previous */                             \
     DEFINE_EFFECT(MENU_CHANGE)                  \
+    /* Jetpack missile effects                  \
+    DEFINE_EFFECT(AIMING)                       \
+    DEFINE_EFFECT(TARGETTING)                   \
+    DEFINE_EFFECT(MISSILELAUNCH)                \
+    DEFINE_EFFECT(MISSILEGOESBOOM)              \
+    DEFINE_EFFECT(MANDOTALK)                    \
+    DEFINE_EFFECT(DISARM)                       \
+    /* Jetpack prop effects                     \
+    DEFINE_EFFECT(STARTIDLEMODE)                \
+    DEFINE_EFFECT(IDLEMODE)                     \
+    DEFINE_EFFECT(STARTFLIGHTMODE)              \
+    DEFINE_EFFECT(FLIGHTMODE)                   \
+    DEFINE_EFFECT(STOPFLIGHTMODE)               \
+    DEFINE_EFFECT(STOPIDLEMODE)                 \
+    /* Jetpack mishap effects                   \
+    DEFINE_EFFECT(FALSESTART)                   \
+    DEFINE_EFFECT(STUTTERING)                   \
+    DEFINE_EFFECT(SELFDESTRUCT)                 \
+    DEFINE_EFFECT(MELTDOWN)                     \
+    DEFINE_EFFECT(DUD)                          \
 
 
 #define DEFINE_EFFECT(X) EFFECT_##X,
