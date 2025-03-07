@@ -27,7 +27,7 @@ Props MUST be declared in the right order & one and only one of each type MUST b
 This prop is for fun and is not Star Wars cannon. It only exists to add extra functionality to your saber, if you so choose.
 Thank you for reading.
 
-You can find all 5 sound files (created by NoSloppy) used in multi_prop.h on my dropbox here:
+You can find all 4 (5) sound files (created by NoSloppy) used in multi_prop.h on my dropbox here:
 https://www.dropbox.com/scl/fi/p2pj9os5v4seel0wmzwcz/Multi_prop_sounds_by_NoSloppy.zip?rlkey=hi6589mexymnx4jmxhtwqjfu0&st=3klofs5m&dl=0
 
 How to use: add this to your config
@@ -35,14 +35,17 @@ How to use: add this to your config
   #include "../props/multi_prop.h"              //use MultiProp <...> (choose only 1 saber & 1 blaster)
 //#include "../props/saber.h"                   //use Saber                | Compiling with multi_prop.h
 //#include "../props/saber_BC_buttons.h"        //use SaberBCButtons       | Compiling with multi_prop.h
+//#include "../props/saber_caiwyn_buttons.h"    //do not use CaiwynButtons <-- works alone | NOT compiling with multi_prop.h (I don't know why?)
   #include "../props/saber_fett263_buttons.h"   //use SaberFett263Buttons  | Compiling with multi_prop.h
 //#include "../props/saber_sa22c_buttons.h"     //use SaberSA22CButtons    | Compiling with multi_prop.h
+//#include "../props/saber_sabersense_buttons.h //use SabersenseButtons    | Compiling with multi_prop.h
 //#include "../props/saber_shtok_buttons.h"     //use SaberShtokButtons    | Compiling with multi_prop.h
   #include "../props/blaster.h"                 //use Blaster              | compiling with multi_prop.h (works with or without "bullet count" in CONFIG_BOTTOM)
+//#include "../props/blaster_BC_buttons.h"      //use BlasterBCButtons     | compiling with multi_prop.h but only with SaberBCButtons
   #include "../props/detonator.h"               //use Detonator            | Compiling with multi_prop.h
-  #include "../props/jetpack_Oli_buttons.h"     //use Jetpack              | Compiling with multi_prop.h
+  #include "../props/jetpack_Oli_buttons.h"     //use JetpackOliButtons    | Compiling with multi_prop.h
 #undef PROP_TYPE
-#define PROP_TYPE MultiProp <SaberFett263Buttons, Blaster, Detonator, Jetpack>
+#define PROP_TYPE MultiProp <SaberFett263Buttons, Blaster, Detonator, JetpackOliButtons>
 #endif
 // also you will need to set your sets of preset(s) & sets of blade(s) arrays (0, 1, 2, 3) (4, 5 & 6 maybe later)
 // accordingly (same-ish as if using blade id - but this is not compatible with using the "real" blade id).
@@ -95,7 +98,7 @@ enum class Prop_Mode {
       SABER = 0,
     BLASTER = 1,
   DETONATOR = 2,
-    JETPACK = 3,  // Ready (I think)
+    JETPACK = 3,  // Ready (I think), pending review
 //MORSECODE = 4,  // Not fully ready
     //DROID = 6,  // Uncomment when ready to implement Droid functionality
   //VEHICLE = 7,  // Uncomment if implementing Vehicle (I don't know what this prop should do,
