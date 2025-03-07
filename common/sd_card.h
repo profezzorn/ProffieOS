@@ -84,7 +84,7 @@ SDCard sdcard;
 inline void MountSDCard() { sdcard.Mount(); }
 
 bool AvoidIdleSDAccess() {
-#ifdef MOUNT_SD_SETTING)
+#ifdef MOUNT_SD_SETTING
   if (LSFS::GetAllowMount()) return true;
 #elif defined(USB_CLASS_MSC)
   // This fallback won't work as well as the
