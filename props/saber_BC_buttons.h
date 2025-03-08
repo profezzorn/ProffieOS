@@ -2076,7 +2076,7 @@ void DoSavedTwist() {
   }
 
   void NextBladeArray() {
-    best_config_before_faking_ = FindBestConfigForId(PropBase::id(false));
+    if (!use_fake_id_) best_config_before_faking_ = current_config - blades;
     size_t next_array = (current_config - blades + 1) % NELEM(blades);
     fake_id_ = blades[next_array].ohm;
     use_fake_id_ = true;
