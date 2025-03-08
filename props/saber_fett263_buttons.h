@@ -3708,7 +3708,7 @@ SaberFett263Buttons() : PropBase() {}
             break;
 #ifdef MOUNT_SD_SETTING
           case EDIT_SD_ACCESS:
-            sound_library_.SaySDAccess();
+            sound_library_v2.SaySDAccess();
             break;
 #endif
           default:
