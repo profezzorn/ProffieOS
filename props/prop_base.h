@@ -514,9 +514,9 @@ public:
     SetPreset(0, true);
   }
 
-#ifdef BLADE_DETECT_PIN
+// #ifdef BLADE_DETECT_PIN
   bool blade_detected_ = false;
-#endif
+// #endif
 
   // Use this helper function, not the bool above.
   // This function changes when we're properly initialized
@@ -563,16 +563,12 @@ public:
     static_assert(NELEM(blades) > 0, "blades array cannot be empty");
 
     size_t best_config = 0;
-    if (NELEM(blades) > 1) {
-      float resistor = id(announce);
-
-      float best_err = 100000000.0;
-      for (size_t i = 0; i < NELEM(blades); i++) {
-        float err = fabsf(resistor - blades[i].ohm);
-        if (err < best_err) {
-          best_config = i;
-          best_err = err;
-        }
+    float best_err = 100000000.0;
+    for (size_t i = 0; i < NELEM(blades); i++) {
+      float err = fabsf(resistor - blades[i].ohm);
+      if (err < best_err) {
+        best_config = i;
+        best_err = err;
       }
     }
     return best_config;
@@ -672,27 +668,6 @@ public:
 #endif
   }
 
-  void FindBladeAgain() {
-    if (!current_config) {
-      // FindBlade() hasn't been called yet - ignore this.
-      return;
-    }
-    // Reverse everything that FindBlade does.
-
-    // First free all styles, then allocate new ones to avoid memory
-    // fragmentation.
-    ONCEPERBLADE(UNSET_BLADE_STYLE)
-
-#define DEACTIVATE(N) do {                      \
-    if (current_config->blade##N)               \
-      current_config->blade##N->Deactivate();   \
-  } while(0);
-
-    ONCEPERBLADE(DEACTIVATE);
-    SaveVolumeIfNeeded();
-    FindBlade(false);
-  }
-
   SavePresetStateFile savestate_;
 
   void ResumePreset() {
@@ -776,6 +751,27 @@ public:
 #endif
   }
 
+  void FindBladeAgain() {
+    if (!current_config) {
+      // FindBlade() hasn't been called yet - ignore this.
+      return;
+    }
+    // Reverse everything that FindBlade does.
+
+    // First free all styles, then allocate new ones to avoid memory
+    // fragmentation.
+    ONCEPERBLADE(UNSET_BLADE_STYLE)
+
+#define DEACTIVATE(N) do {                      \
+    if (current_config->blade##N)               \
+      current_config->blade##N->Deactivate();   \
+  } while(0);
+
+    ONCEPERBLADE(DEACTIVATE);
+    SaveVolumeIfNeeded();
+    FindBlade(false);
+  }
+
   bool CheckInteractivePreon() {
     #define USES_INTERACTIVE_PREON(N) \
     if (current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_INTERACTIVE_PREON)) return true;
@@ -825,11 +821,11 @@ public:
     // If we're spinning the saber or if loud sounds are playing,
     // require a stronger acceleration to activate the clash.
     if (v > (CLASH_THRESHOLD_G * (1
-          + fusor.gyro().len() / 500.0
+				  + fusor.gyro().len() / 500.0
 #if defined(ENABLE_AUDIO) && defined(AUDIO_CLASH_SUPPRESSION_LEVEL)
-          + dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 1E-10) * dynamic_mixer.get_volume()
+				  + dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 1E-10) * dynamic_mixer.get_volume()
 #endif
-         ))) {
+	       ))) {
       if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
         diff = -diff;
       }
@@ -1102,7 +1098,7 @@ public:
       if (current_style() && !current_style()->Charging()) {
         LowBatteryOff();
         if (millis() - last_beep_ > 15000) {  // (was 5000)
-    STDOUT << "Low battery: " << battery_monitor.battery() << " volts\n";
+	  STDOUT << "Low battery: " << battery_monitor.battery() << " volts\n";
           SaberBase::DoLowBatt();
           last_beep_ = millis();
         }
@@ -1297,10 +1293,10 @@ public:
     if (!strcmp(cmd, "on1")) {
       PRINT_CHECK_BLADE=true;
       if (SaberBase::BladeIsOn(2)) {
-  STDOUT << "faston!\n";
-  SaberBase::TurnOn(EffectLocation(0, ~BladeSet::fromBlade(2)));
+	STDOUT << "faston!\n";
+	SaberBase::TurnOn(EffectLocation(0, ~BladeSet::fromBlade(2)));
       } else {
-  On(EffectLocation(0, ~BladeSet::fromBlade(2)));
+	On(EffectLocation(0, ~BladeSet::fromBlade(2)));
       }
       PRINT_CHECK_BLADE=false;
       return true;
@@ -1308,10 +1304,10 @@ public:
     if (!strcmp(cmd, "on2")) {
       PRINT_CHECK_BLADE=true;
       if (SaberBase::BladeIsOn(1)) {
-  STDOUT << "faston!\n";
-  SaberBase::TurnOn(EffectLocation(0, ~BladeSet::fromBlade(1)));
+	STDOUT << "faston!\n";
+	SaberBase::TurnOn(EffectLocation(0, ~BladeSet::fromBlade(1)));
       } else {
-  On(EffectLocation(0, ~BladeSet::fromBlade(1)));
+	On(EffectLocation(0, ~BladeSet::fromBlade(1)));
       }
       PRINT_CHECK_BLADE=false;
       return true;
@@ -1319,11 +1315,11 @@ public:
     if (!strcmp(cmd, "off2")) {
       PRINT_CHECK_BLADE=true;
       if (SaberBase::BladeIsOn(1)) {
-  STDOUT << "Turning off SINGLE blade.\n";
-  SaberBase::TurnOff(OffType::OFF_NORMAL, EffectLocation(1000, ~~BladeSet::fromBlade(2)));
+	STDOUT << "Turning off SINGLE blade.\n";
+	SaberBase::TurnOff(OffType::OFF_NORMAL, EffectLocation(1000, ~~BladeSet::fromBlade(2)));
       } else {
-  STDOUT << "Turning off all blades.\n";
-  Off(OffType::OFF_NORMAL);
+	STDOUT << "Turning off all blades.\n";
+	Off(OffType::OFF_NORMAL);
       }
       PRINT_CHECK_BLADE=false;
       return true;
@@ -1331,12 +1327,12 @@ public:
     if (!strcmp(cmd, "off1")) {
       PRINT_CHECK_BLADE=true;
       if (SaberBase::BladeIsOn(2)) {
-  EffectLocation tmp = EffectLocation(1000, ~~BladeSet::fromBlade(1));
-  STDOUT << "Turning off SINGLE blade: " << tmp << "\n";
-  SaberBase::TurnOff(OffType::OFF_NORMAL, tmp);
+	EffectLocation tmp = EffectLocation(1000, ~~BladeSet::fromBlade(1));
+	STDOUT << "Turning off SINGLE blade: " << tmp << "\n";
+	SaberBase::TurnOff(OffType::OFF_NORMAL, tmp);
       } else {
-  STDOUT << "Turning off all blades.\n";
-  Off(OffType::OFF_NORMAL);
+	STDOUT << "Turning off all blades.\n";
+	Off(OffType::OFF_NORMAL);
       }
       PRINT_CHECK_BLADE=false;
       return true;
@@ -1747,7 +1743,7 @@ public:
     if (!strcmp(cmd, "change_preset") && arg) {
       int preset = strtol(arg, NULL, 0);
       if (preset != current_preset_.preset_num) {
-  SaveState(preset);
+	SaveState(preset);
         SetPreset(preset, true);
       }
       return true;
@@ -1783,26 +1779,26 @@ public:
     if (!strcmp(cmd, "list_fonts")) {
       LOCK_SD(true);
       for (LSFS::Iterator iter("/"); iter; ++iter) {
-  if (iter.name()[0] == '.') continue;
-  if (!strcmp(iter.name(), "common")) continue;
+	if (iter.name()[0] == '.') continue;
+	if (!strcmp(iter.name(), "common")) continue;
         if (!iter.isdir()) continue;
-  bool isfont = false;
-  for (LSFS::Iterator i2(iter); i2 && !isfont; ++i2) {
-    if (i2.isdir()) {
-      if (!strcasecmp("hum", i2.name())) isfont = true;
-      if (!strcasecmp("alt000", i2.name())) isfont = true;
-    } else {
-      const char* tmp = i2.name();
-      if (!startswith("hum", tmp)) continue;
-      tmp += 3;
-      if (startswith("m", tmp)) tmp++;
-      while (*tmp >= '0' && *tmp <= '9') tmp++;
-      if (!strcasecmp(".wav", tmp)) isfont = true;
-    }
-  }
-  if (isfont) {
-    STDOUT.println(iter.name());
-  }
+	bool isfont = false;
+	for (LSFS::Iterator i2(iter); i2 && !isfont; ++i2) {
+	  if (i2.isdir()) {
+	    if (!strcasecmp("hum", i2.name())) isfont = true;
+	    if (!strcasecmp("alt000", i2.name())) isfont = true;
+	  } else {
+	    const char* tmp = i2.name();
+	    if (!startswith("hum", tmp)) continue;
+	    tmp += 3;
+	    if (startswith("m", tmp)) tmp++;
+	    while (*tmp >= '0' && *tmp <= '9') tmp++;
+	    if (!strcasecmp(".wav", tmp)) isfont = true;
+	  }
+	}
+	if (isfont) {
+	  STDOUT.println(iter.name());
+	}
       }
       LOCK_SD(false);
       return true;
@@ -1817,7 +1813,7 @@ public:
     switch (event) {
       case EVENT_RELEASED:
         clash_pending_ = false;
-  [[gnu::fallthrough]];
+	[[gnu::fallthrough]];
       case EVENT_PRESSED:
         IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
       default:
