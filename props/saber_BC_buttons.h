@@ -1596,7 +1596,7 @@ public:
       float real_id = PropBase::id(false);
       size_t real_best_config = FindBestConfigForId(real_id);
 
-      if (real_best_config == 0) {
+      if (current_config->ohm >= NO_BLADE) {
         // Real blade event resulted in no blade array, so blade removal
         if (!hybrid_font.PlayPolyphonic(&SFX_bladeout)) {
           hybrid_font.PlayCommon(&SFX_font);
