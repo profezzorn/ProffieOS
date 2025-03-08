@@ -2188,7 +2188,11 @@ SaberFett263Buttons() : PropBase() {}
 
 #ifdef FETT263_USE_SETTINGS_MENU
 #define GESTURE_OPTIONS 12
+#ifdef MOUNT_SD_SETTING
+#define SET_SUBMENUS 6
+#else
 #define SET_SUBMENUS 5
+#endif
 #endif
 
 #ifdef FETT263_EDIT_MODE_MENU
