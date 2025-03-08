@@ -1797,7 +1797,11 @@ SaberFett263Buttons() : PropBase() {}
 
   void Setup() override {
     RestoreGestureState();
-    sound_library_.init();
+#ifdef MOUNT_SD_SETTING
+   sound_library_v2.init();
+#else
+   sound_library_.init();
+#endif
   }
 
   bool chdir(const StringPiece dir) override {
