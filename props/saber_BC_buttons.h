@@ -1593,9 +1593,6 @@ public:
     if (play_no_change_sound_) {
       play_no_change_sound_ = false;
 
-      float real_id = PropBase::id(false);
-      size_t real_best_config = FindBestConfigForId(real_id);
-
       if (current_config->ohm >= NO_BLADE) {
         // Real blade event resulted in no blade array, so blade removal
         if (!hybrid_font.PlayPolyphonic(&SFX_bladeout)) {
