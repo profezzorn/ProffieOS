@@ -276,10 +276,10 @@ EFFECT(volmin);         // for minimum volume reached
 #endif
 
 // == sounds for jetpack ==
-EFFECT2(startidlemode,idlemode);     // jetpack starting to idle  (0 to idle)
 EFFECT2(idlemode,idlemode);          // jetpack idle sound        (looping idle sound)
-EFFECT2(startflightmode,flightmode); // jetpack starting sound    (idle to flight)
+EFFECT2(startidlemode,idlemode);     // jetpack starting to idle  (0 to idle)
 EFFECT2(flightmode,flightmode);      // jetpack flying sound      (looping flight sound)
+EFFECT2(startflightmode,flightmode); // jetpack starting sound    (idle to flight)
 EFFECT2(stopflightmode,idlemode);    // jetpack shutdown sound    (flight to idle)
 EFFECT(stopidlemode);                // jetpack stopping sound    (idle to 0)
 // == sounds for mishaps ==
