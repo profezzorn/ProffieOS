@@ -538,7 +538,7 @@ public:
   }
 
   // Measure and return the blade identifier resistor.
-  float id(bool announce = false) {
+  virtual float id(bool announce = false) {
     EnableBooster();
     BLADE_ID_CLASS_INTERNAL blade_id;
     float ret = blade_id.id();
@@ -559,23 +559,23 @@ public:
       return ret;
   }
 
-  size_t FindBestConfig(bool announce = false) {
+  size_t FindBestConfigForId(float resistor) {
     static_assert(NELEM(blades) > 0, "blades array cannot be empty");
 
     size_t best_config = 0;
-    if (NELEM(blades) > 1) {
-      float resistor = id(announce);
-
-      float best_err = 100000000.0;
-      for (size_t i = 0; i < NELEM(blades); i++) {
-        float err = fabsf(resistor - blades[i].ohm);
-        if (err < best_err) {
-          best_config = i;
-          best_err = err;
-        }
+    float best_err = 100000000.0;
+    for (size_t i = 0; i < NELEM(blades); i++) {
+      float err = fabsf(resistor - blades[i].ohm);
+      if (err < best_err) {
+        best_config = i;
+        best_err = err;
       }
     }
     return best_config;
+  }
+
+  size_t FindBestConfig(bool announce = false) {
+    return FindBestConfigForId(id(announce));
   }
 
 #ifdef BLADE_ID_SCAN_MILLIS
@@ -769,7 +769,7 @@ public:
 
     ONCEPERBLADE(DEACTIVATE);
     SaveVolumeIfNeeded();
-    FindBlade(true);
+    FindBlade(false);
   }
 
   bool CheckInteractivePreon() {
