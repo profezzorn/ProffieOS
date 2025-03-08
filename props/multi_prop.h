@@ -35,7 +35,7 @@ How to use: add this to your config
   #include "../props/multi_prop.h"              //use MultiProp <...> (choose only 1 saber & 1 blaster)
 //#include "../props/saber.h"                   //use Saber                | Compiling with multi_prop.h
 //#include "../props/saber_BC_buttons.h"        //use SaberBCButtons       | Compiling with multi_prop.h
-//#include "../props/saber_caiwyn_buttons.h"    //do not use CaiwynButtons <-- works alone | NOT compiling with multi_prop.h (I don't know why?)
+//#include "../props/saber_caiwyn_buttons.h"    //do not use CaiwynButtons <-- works alone | NOT compiling with multi_prop.h (I don't know why? Well, I didn't understand the error codes, back then! Might need a re-visit? Also Caiwyn's saber didn't compile with dual_prop.h back at the time of testing)
   #include "../props/saber_fett263_buttons.h"   //use SaberFett263Buttons  | Compiling with multi_prop.h
 //#include "../props/saber_sa22c_buttons.h"     //use SaberSA22CButtons    | Compiling with multi_prop.h
 //#include "../props/saber_sabersense_buttons.h //use SabersenseButtons    | Compiling with multi_prop.h
