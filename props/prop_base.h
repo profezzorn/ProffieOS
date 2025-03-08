@@ -514,9 +514,9 @@ public:
     SetPreset(0, true);
   }
 
-// #ifdef BLADE_DETECT_PIN
+#ifdef BLADE_DETECT_PIN
   bool blade_detected_ = false;
-// #endif
+#endif
 
   // Use this helper function, not the bool above.
   // This function changes when we're properly initialized
