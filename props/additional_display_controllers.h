@@ -26,6 +26,7 @@
 |*   MULTI_PROP DISPLAY CONTROLLER   *|
 |*                                   *|
 \*************************************/
+
 #ifdef PROPS_MULTI_PROP_H
 struct MultiPropDisplayConfigFile : public ConfigFile {
   MultiPropDisplayConfigFile() { link(&font_config); }
@@ -78,28 +79,28 @@ public:
         if (img_.IMG_sabermode)
   ShowFileWithSoundLength(&img_.IMG_sabermode,     multiprop_font_config.ProffieOSSaberModeImageDuration);
         else {
-  this->SetMessage("saber/nmode");
+  this->SetMessage("saber\nmode");
   this->SetScreenNow(SCREEN_MESSAGE);
        } break;
       case EFFECT_BLASTERMODE:
         if (img_.IMG_blastermode)
   ShowFileWithSoundLength(&img_.IMG_blastermode,   multiprop_font_config.ProffieOSBlasterModeImageDuration);
         else {
-  this->SetMessage("blaster/n mode");
+  this->SetMessage("blaster\n mode");
   this->SetScreenNow(SCREEN_MESSAGE);
        } break;
       case EFFECT_DETONATORMODE:
         if (img_.IMG_detonatormode)
   ShowFileWithSoundLength(&img_.IMG_detonatormode, multiprop_font_config.ProffieOSDetonatorModeImageDuration);
        else {
-  this->SetMessage("detonator/n  mode");
+  this->SetMessage("detonator\n  mode");
   this->SetScreenNow(SCREEN_MESSAGE);
        } break;
       case EFFECT_JETPACKMODE:
         if (img_.IMG_jetpackmode)
   ShowFileWithSoundLength(&img_.IMG_jetpackmode,   multiprop_font_config.ProffieOSJetpackModeImageDuration);
         else {
-  this->SetMessage("jetpack/nmode");
+  this->SetMessage("jetpack\nmode");
   this->SetScreenNow(SCREEN_MESSAGE);
        } break;
 /*
@@ -107,7 +108,7 @@ public:
          if (img_.IMG_morsecodemode)
   ShowFileWithSoundLength(&img_.IMG_morsecodemode, multiprop_font_config.ProffieOSMorsecodeModeImageDuration);
          else {
-  this->SetMessage("morse code/n  mode");
+  this->SetMessage("morse code\n  mode");
   this->SetScreenNow(SCREEN_MESSAGE);
        } break;
 */
@@ -131,6 +132,7 @@ public:
 |*   JETPACK OLI BUTTONS DISPLAY CONTROLLER   *|
 |*                                            *|
 \**********************************************/
+
 #ifdef PROPS_JETPACK_OLI_BUTTONS_H
 struct JetpackDisplayConfigFile : public ConfigFile {
   JetpackDisplayConfigFile() { link(&font_config); }
