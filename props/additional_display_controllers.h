@@ -4,14 +4,14 @@
 #define ADDITIONAL_DISPLAY_CONTROLLERS_H
 
 /* (previous method) add to ssd1306.h
-#ifdef PROPS_MULTI_PROP_H               // added by Oli
-#include "multipropdisplaycontroller.h" // added by Oli renamed additional_display_controllers.h and moved from \display to \props
-#endif                                  // added by Oli
+#ifdef PROPS_MULTI_PROP_H
+#include "multipropdisplaycontroller.h" // renamed additional_display_controllers.h and moved from \display to \props
+#endif
 
-   (current method) add to ProffieOs.ino
-#ifdef EXTRA_DISPLAY_CONTROLLER_INCLUDE                   // added by Oli for multiprop_display_controller.h
-#include EXTRA_DISPLAY_CONTROLLER_INCLUDE                 // added by Oli for multiprop_display_controller.h
-#endif                                                    // added by Oli for multiprop_display_controller.h
+   (current method) add to ProffieOs.ino, after including display/ssd1306.h
+#ifdef EXTRA_DISPLAY_CONTROLLER_INCLUDE
+#include EXTRA_DISPLAY_CONTROLLER_INCLUDE
+#endif
 
                   & add to each prop files that has it's own custom display controller
 #ifdef INCLUDE_SSD1306
@@ -21,6 +21,11 @@
 #endif
 */
 
+/*************************************\
+|*                                   *|
+|*   MULTI_PROP DISPLAY CONTROLLER   *|
+|*                                   *|
+\*************************************/
 #ifdef PROPS_MULTI_PROP_H
 struct MultiPropDisplayConfigFile : public ConfigFile {
   MultiPropDisplayConfigFile() { link(&font_config); }
@@ -29,7 +34,7 @@ struct MultiPropDisplayConfigFile : public ConfigFile {
     CONFIG_VARIABLE2(ProffieOSBlasterModeImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSDetonatorModeImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSJetpackModeImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSMorsecodeModeImageDuration, 1000.0f);
+    //CONFIG_VARIABLE2(ProffieOSMorsecodeModeImageDuration, 1000.0f);
   }
 
   // for OLED displays, the time a sabermode.bmp will play
@@ -41,15 +46,15 @@ struct MultiPropDisplayConfigFile : public ConfigFile {
   // for OLED displays, the time a jetpackmode.bmp will play
   float ProffieOSJetpackModeImageDuration;
   // for OLED displays, the time a morsecodemode.bmp will play
-  float ProffieOSMorsecodeModeImageDuration;
+  //float ProffieOSMorsecodeModeImageDuration;
 };
 
 #define ONCE_PER_MULTIPROP_EFFECT(X)  \
   X(sabermode)                        \
   X(blastermode)                      \
   X(detonatormode)                    \
-  X(jetpackmode)                      \
-  X(morsecodemode)
+  X(jetpackmode)
+  //X(morsecodemode)
 
 template<typename PREFIX = ByteArray<>>
 struct MultiPropDisplayEffects  {
@@ -97,13 +102,15 @@ public:
   this->SetMessage("jetpack/nmode");
   this->SetScreenNow(SCREEN_MESSAGE);
        } break;
-      case EFFECT_MORSECODEMODE:
+/*
+       case EFFECT_MORSECODEMODE:
         if (img_.IMG_morsecodemode)
   ShowFileWithSoundLength(&img_.IMG_morsecodemode, multiprop_font_config.ProffieOSMorsecodeModeImageDuration);
         else {
   this->SetMessage("morse code/n  mode");
   this->SetScreenNow(SCREEN_MESSAGE);
        } break;
+*/
       default:
   StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
     }
@@ -119,11 +126,11 @@ public:
 };
 #endif // PROPS_MULTI_PROP_H
 
-/**********************************\
-|*                                *|
-|*   JETPACK DISPLAY CONTROLLER   *|
-|*                                *|
-\**********************************/
+/**********************************************\
+|*                                            *|
+|*   JETPACK OLI BUTTONS DISPLAY CONTROLLER   *|
+|*                                            *|
+\**********************************************/
 #ifdef PROPS_JETPACK_OLI_BUTTONS_H
 struct JetpackDisplayConfigFile : public ConfigFile {
   JetpackDisplayConfigFile() { link(&font_config); }
@@ -306,6 +313,7 @@ public:
 |*                                  *|
 \************************************/
 
+/* morsecode_prop.h is not ready and will most likely miss the OS8.x release.
 #ifdef PROPS_MORSECODE_PROP_H
 struct MorseCodeDisplayConfigFile : public ConfigFile {
   MorseCodeDisplayConfigFile() { link(&font_config); }
@@ -356,5 +364,5 @@ public:
   }
 };
 #endif // PROPS_MORSECODE_PROP_H
-
+*/
 #endif // ADDITIONAL_DISPLAY_CONTROLLERS_H
