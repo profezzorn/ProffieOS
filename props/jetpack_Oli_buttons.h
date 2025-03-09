@@ -121,6 +121,12 @@ AUX2 Button:
 
 #include "prop_base.h"
 
+#ifdef INCLUDE_SSD1306
+#ifndef EXTRA_DISPLAY_CONTROLLER_INCLUDE
+#define EXTRA_DISPLAY_CONTROLLER_INCLUDE "props/additional_display_controllers.h"
+#endif
+#endif
+
 #define PROP_TYPE JetpackOliButtons
 
 #ifndef JETPACK_IDLE_TIME
