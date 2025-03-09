@@ -112,8 +112,8 @@ AUX2 Button:
 
 \* ============= CHECK THE ABOVE LIST TO ACTUAL BUTTON(S) COMMANDS! ============= NOT YET FINAL !!! ============= */
 
-#ifndef PROPS_JETPACK_PROP_H
-#define PROPS_JETPACK_PROP_H
+#ifndef PROPS_JETPACK_OLI_BUTTONS_H
+#define PROPS_JETPACK_OLI_BUTTONS_H
 
 #if NUM_BUTTONS < 1
 #error Your prop NEEDS 1 or more buttons to use jetpack_prop (2 is recomended)
