@@ -66,6 +66,12 @@ How to use: add this to your config
 
 #include "prop_base.h"
 
+#ifdef INCLUDE_SSD1306
+#ifndef EXTRA_DISPLAY_CONTROLLER_INCLUDE
+#define EXTRA_DISPLAY_CONTROLLER_INCLUDE "props/additional_display_controllers.h"
+#endif
+#endif
+
 // Define FakeBladeID structure
 struct FakeBladeID {                                              //
   static int return_value;  // Holds the current mode ID          //
