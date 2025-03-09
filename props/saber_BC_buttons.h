@@ -2,7 +2,7 @@
 saber_BC_buttons.h
   http://fredrik.hubbe.net/lightsaber/proffieos.html
   Copyright (c) 2016-2019 Fredrik Hubinette
-  Copyright (c) 2023-2024 Brian Conner with contributions by:
+  Copyright (c) 2023-2025 Brian Conner with contributions by:
   Fredrik Hubinette, Fernando da Rosa, Matthew McGeary, and Scott Weber.
   Distributed under the terms of the GNU General Public License v3.
   http://www.gnu.org/licenses/
@@ -241,7 +241,9 @@ User Effect 5             - Hold POW then Rotate Left 60 degrees. (keep holding 
 User Effect 6             - Hold POW then Rotate Right 60 degrees. (keep holding POW until executed)
                             * Requires EFFECT_USER in blade style.
                             * Note the same controls when blade is ON are USER 1 and 2.
-
+Trigger Blade ID Scan     - 4x Click POW and Hold, release after one second (3x Click then Long Click)
+Next Blade Array          - 4x Click POW and Hold.
+                            * Cycles to the next blade array in BladeConfig
 
 -------- When blade is ON -------
 Play/Stop Track           - 4x Click POW.
@@ -334,6 +336,9 @@ swing
 3 clicks held           - spoken battery level in percentage
                           spoken battery level in volts (pointing down)
 4 clicks                - play / stop track
+4 clicks long           - manually trigger blade ID scan
+4 clicks held           - manually switch to next blade array
+
 twist                   - turn blade ON (requires #define BC_TWIST_ON)
 - BC volume menu:
     rotate right        - volume UP
@@ -435,6 +440,9 @@ User Effect 7             - Hold AUX then Rotate Left 60 degrees. (keep holding 
 User Effect 8             - Hold AUX then Rotate Right 60 degrees. (keep holding AUX until executed)
                             * Requires EFFECT_USER in blade style.
                             * Note the same controls when blade is ON are USER 1,2,3,4.
+Trigger Blade ID Scan     - 4x Click POW and Hold, release after one second (3x Click then Long Click)
+Next Blade Array          - 4x Click POW and Hold.
+                            * Cycles to the next blade array in BladeConfig
 
 -------- When blade is ON -------
 Play/Stop Track           - Long Click then release POW.
@@ -531,6 +539,9 @@ swing
                           OS system menu instead (requires #define MENU_SPEC_TEMPLATE)
 3 clicks POW            - quote
                           toggle sequential or random quotes (pointing down)
+4 clicks long           - manually trigger blade ID scan
+4 clicks held           - manually switch to next blade array
+
 - BC Volume Menu
     rotate right        - volume UP
     rotate left         - volume DOWN
@@ -681,6 +692,9 @@ push                    - force push
 | User Effect 6                        - Hold POW then Rotate Right 60 degrees. (keep holding POW until executed)
 |                                        * Requires EFFECT_USER in blade style.
 |                                        * Note the same controls when blade is ON are USER 1 and 2.
+||||||| NOT AVAILABLE Trigger Blade ID Scan     - 4x click POW and Hold, release after one second (3x Click then Long Click)
+| Next Blade Array          - 4x click POW and Hold.
+|                             * Cycles to the next blade array in BladeConfig
 |
 |-------- When a blade is ON --------
 | Play/Stop Track                      - 4x Click POW.
@@ -771,6 +785,8 @@ push                    - force push
 |                           spoken battery level in volts (pointing down)
 | 4 clicks                - play / stop track
 | 4 clicks long           - turn second blade ON first muted
+||||||||| NOT AVAILABLE     4 clicks long           - manually trigger blade ID scan
+| 4 clicks held           - manually switch to next blade array
 | - BC Volume menu:
 |     rotate right        - volume UP
 |     rotate left         - volume DOWN
@@ -877,6 +893,9 @@ push                    - force push
 | User Effect 8                        - Hold AUX then Rotate Right 60 degrees. (keep holding AUX until executed)
 |                                        * Requires EFFECT_USER in blade style.
 |                                        * Note the same controls when blade is ON are USER 1,2,3,4.
+| Trigger Blade ID Scan     - 4x click POW and Hold, release after one second (3x Click then Long Click)
+| Next Blade Array          - 4x click POW and Hold.
+|                             * Cycles to the next blade array in BladeConfig
 |
 |-------- When a blade is ON -------
 | Play/Stop Track                    - Long Click POW.
@@ -971,6 +990,8 @@ push                    - force push
 |                         - turn both blades ON bypass preon (either blade pointing up)
 | 3 clicks POW            - quote
 |                           toggle sequential or random quotes (pointing down)
+| 4 clicks long           - manually trigger blade ID scan
+| 4 clicks held           - manually switch to next blade array
 | - BC Volume menu:
 |     rotate right        - volume UP
 |     rotate left         - volume DOWN
@@ -1141,6 +1162,7 @@ EFFECT(bmend);      // for End Battle Mode
 EFFECT(push);       // for Force Push gesture
 EFFECT(tr);         // for EFFECT_TRANSITION_SOUND, use with User Effects.
 EFFECT(mute);       // Notification before muted ignition to avoid confusion.
+EFFECT(array);      // for Manual Blade Array switching
 
 template<class SPEC>
 struct BCScrollPresetsMode : public SPEC::SteppedMode {
@@ -1566,6 +1588,22 @@ public:
     // Delaying playing font.wav so that beep can be heard first.
     if (scroll_presets_beep_delay_timer_.isTimerExpired()) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
+    }
+    // Blade array changing helper. See id() for usage.
+    if (play_no_change_sound_) {
+      play_no_change_sound_ = false;
+
+      if (current_config->ohm >= NO_BLADE) {
+        // Real blade event resulted in no blade array, so blade removal
+        if (!hybrid_font.PlayPolyphonic(&SFX_bladeout)) {
+          hybrid_font.PlayCommon(&SFX_font);
+        }
+      } else {
+        // Blade inserted into any real array (1 or higher)
+        if (!hybrid_font.PlayPolyphonic(&SFX_bladein)) {
+          hybrid_font.PlayCommon(&SFX_font);
+        }
+      }
     }
   }  // Loop()
 
@@ -2006,6 +2044,55 @@ void DoSavedTwist() {
   }
 
 #endif  // BC_DUAL_BLADES
+
+  bool use_fake_id_ = false;
+  float fake_id_ = 0;
+  size_t best_config_before_faking_ = SIZE_MAX;
+  bool play_no_change_sound_ = false;
+
+  float id(bool announce = false) override {
+    if (use_fake_id_) {
+      float real_id = PropBase::id(announce);
+      size_t real_best_config = FindBestConfigForId(real_id);
+
+      if (real_best_config != best_config_before_faking_) {
+        // Real blade has changed, exit manual mode
+        use_fake_id_ = false;
+        if (current_config - blades == real_best_config) {
+          play_no_change_sound_ = true;
+        }
+        return real_id;
+      }
+      return fake_id_;
+    }
+
+    return PropBase::id(announce);
+  }
+
+  void TriggerBladeID() {
+    use_fake_id_ = false;
+    FindBladeAgain();
+    PlayArraySound();
+  }
+
+  void NextBladeArray() {
+    if (!use_fake_id_) best_config_before_faking_ = current_config - blades;
+    size_t next_array = (current_config - blades + 1) % NELEM(blades);
+    fake_id_ = blades[next_array].ohm;
+    use_fake_id_ = true;
+
+    FindBladeAgain();
+    PlayArraySound();
+  }
+
+  void PlayArraySound() {
+    if (SFX_array) {
+      SFX_array.Select(current_config - blades);
+      hybrid_font.PlayPolyphonic(&SFX_array);
+    } else if (!hybrid_font.PlayPolyphonic(&SFX_bladein)) {
+      hybrid_font.PlayCommon(&SFX_font);
+    }
+  }
 
   bool Parse(const char *cmd, const char* arg) override {
     if (PropBase::Parse(cmd, arg)) return true;
@@ -2522,6 +2609,20 @@ any # of buttons
         }
         return true;
 #endif  // BC_FORCE_PUSH
+
+// Manually cycle to Next Blade Array
+  case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_MEDIUM, MODE_OFF):
+    PVLOG_NORMAL << "**** BUTTON EVENT Manually Cycling Blade Array\n";
+    NextBladeArray();
+    return true;
+
+// Manually trigger Blade ID scan
+#if (NUM_BUTTONS != 1) || !defined(BC_DUAL_BLADES)  // only not available for 1 btn dual blades.
+  case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_OFF):
+    PVLOG_NORMAL << "**** BUTTON EVENT Manually triggering native Blade ID\n";
+    TriggerBladeID();
+    return true;
+#endif
 
 // Enter OS System Menu
 // Enter BC Blade Length Mode
