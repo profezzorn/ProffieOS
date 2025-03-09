@@ -755,6 +755,14 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #error FETT263_EDIT_SETTINGS_MENU cannot be combined with FETT263_EDIT_MODE_MENU
 #endif
 
+#if defined(MENU_SPEC_TEMPLATE) && defined(FETT263_EDIT_MODE_MENU)
+#error MENU_SPEC_TEMPLATE cannot be combined with FETT263_EDIT_MODE_MENU
+#endif
+
+#if defined(MENU_SPEC_TEMPLATE) && defined(FETT263_EDIT_SETTINGS_MENU)
+#error MENU_SPEC_TEMPLATE cannot be combined with FETT263_EDIT_SETTINGS_MENU
+#endif
+
 #if defined(FETT263_DISABLE_QUOTE_PLAYER) && defined(FETT263_QUOTE_PLAYER_START_ON)
 #error FETT263_QUOTE_PLAYER_START_ON cannot be used with FETT263_DISABLE_QUOTE_PLAYER
 #endif
@@ -1797,10 +1805,12 @@ SaberFett263Buttons() : PropBase() {}
 
   void Setup() override {
     RestoreGestureState();
+#ifndef MENU_SPEC_TEMPLATE
 #ifdef MOUNT_SD_SETTING
    sound_library_v2.init();
 #else
    sound_library_.init();
+#endif
 #endif
   }
 
@@ -4973,6 +4983,9 @@ SaberFett263Buttons() : PropBase() {}
         if (!menu_) {
           StartEditMode();
         }
+#elif defined(MENU_SPEC_TEMPLATE)
+        // Enter Spec Menu
+        EnterMenu();
 #else
         // If Edit Mode Menu Disabled Save .ini files for SD card editing
         if (menu_) return true;
@@ -5390,6 +5403,9 @@ SaberFett263Buttons() : PropBase() {}
         if (!menu_) {
           StartEditMode();
         }
+#elif defined(MENU_SPEC_TEMPLATE)
+        // Enter Spec Menu
+        EnterMenu();
 #else
         // If Edit Mode Menu Disabled Save .ini files for SD card editing
         if (menu_) return true;
