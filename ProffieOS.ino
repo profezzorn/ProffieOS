@@ -1550,6 +1550,9 @@ SSD1306Template<128, uint32_t, DISPLAY_POWER_PINS> display(&display_controller);
 #include "display/spidisplay.h"
 #endif
 
+#ifdef EXTRA_DISPLAY_CONTROLLER_INCLUDE
+#include EXTRA_DISPLAY_CONTROLLER_INCLUDE
+#endif
 
 #ifdef ENABLE_MOTION
 
