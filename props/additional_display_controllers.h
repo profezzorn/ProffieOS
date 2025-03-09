@@ -1,4 +1,14 @@
-// version 06
+// version 07
+
+/* Created by OlivierFlying747-8, inspired from the blaster display controller from ssd1306.
+  http://fredrik.hubbe.net/lightsaber/proffieos.html
+  Copyright (c) 2016-2019 Fredrik Hubinette
+  Copyright (c) 2025 OlivierFlying747-8 with contributions by:
+  Fredrik Hubinette aka profezzorn,
+  In case of problem, you can find us at: https://crucible.hubbe.net somebody will be there to help.
+  Distributed under the terms of the GNU General Public License v3.
+  http://www.gnu.org/licenses/
+*/
 
 #ifndef ADDITIONAL_DISPLAY_CONTROLLERS_H
 #define ADDITIONAL_DISPLAY_CONTROLLERS_H
@@ -76,7 +86,7 @@ public:
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
       case EFFECT_SABERMODE:
-        if (img_.IMG_sabermode) {
+        if (img_.IMG_sabermode) {                          // image of a saber
           ShowFileWithSoundLength(&img_.IMG_sabermode,     multiprop_font_config.ProffieOSSaberModeImageDuration);
         } else {
           this->SetMessage("saber\nmode");
@@ -85,7 +95,7 @@ public:
         break;
 
       case EFFECT_BLASTERMODE:
-        if (img_.IMG_blastermode) {
+        if (img_.IMG_blastermode) {                        // image of Han's blaster
           ShowFileWithSoundLength(&img_.IMG_blastermode,   multiprop_font_config.ProffieOSBlasterModeImageDuration);
         } else {
           this->SetMessage("blaster\n mode");
@@ -94,7 +104,7 @@ public:
         break;
 
       case EFFECT_DETONATORMODE:
-        if (img_.IMG_detonatormode) {
+        if (img_.IMG_detonatormode) {                      // image of a detonator
           ShowFileWithSoundLength(&img_.IMG_detonatormode, multiprop_font_config.ProffieOSDetonatorModeImageDuration);
         } else {
           this->SetMessage("detonator\n  mode");
@@ -103,7 +113,7 @@ public:
         break;
 
       case EFFECT_JETPACKMODE:
-        if (img_.IMG_jetpackmode) {
+        if (img_.IMG_jetpackmode) {                        // image of Mando's jetpack
           ShowFileWithSoundLength(&img_.IMG_jetpackmode,   multiprop_font_config.ProffieOSJetpackModeImageDuration);
         } else {
           this->SetMessage("jetpack\nmode");
@@ -113,7 +123,7 @@ public:
 
 /*
       case EFFECT_MORSECODEMODE:
-        if (img_.IMG_morsecodemode) {
+        if (img_.IMG_morsecodemode) {                      // Image of S.O.S. in morse code
           ShowFileWithSoundLength(&img_.IMG_morsecodemode, multiprop_font_config.ProffieOSMorsecodeModeImageDuration);
         } else {
           this->SetMessage("morse code\n  mode");
@@ -123,7 +133,7 @@ public:
 
 */
       default:
-      StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
+        StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
     }
   }
 
@@ -247,19 +257,10 @@ public:
 
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
-      // jetpack normal operation display effects: (I do not have any idea of animations for these!)
+      // jetpack normal operation display effects:
       // =========================================
-      case EFFECT_IDLEMODE:
-        if (img_.idlemode) {
-          ShowFileWithSoundLength(&img_.idlemode,            jetpack_font_config.ProffieOSIdlemodeImageDuration);
-        } else {
-          this->SetMessage("jetpack\nidling");
-          this->SetScreenNow(SCREEN_MESSAGE);
-        }
-        break;
-
       case EFFECT_STARTIDLEMODE:
-        if (img_.startidlemode) {
+        if (img_.startidlemode) {                            // animation of flame going from zero to small
           ShowFileWithSoundLength(&img_.startidlemode,       jetpack_font_config.ProffieOSStartIdleModeImageDuration);
         } else {
           this->SetMessage("jetpack\nigniting");
@@ -267,8 +268,17 @@ public:
         }
         break;
 
+      case EFFECT_IDLEMODE:
+        if (img_.idlemode) {                                 // animation of small oscillating flame
+          ShowFileWithSoundLength(&img_.idlemode,            jetpack_font_config.ProffieOSIdlemodeImageDuration);
+        } else {
+          this->SetMessage("jetpack\nidling");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
       case EFFECT_STARTFLIGHTMODE:
-        if (img_.startflightmode) {
+        if (img_.startflightmode) {                          // animation of flame going from small to large
           ShowFileWithSoundLength(&img_.startflightmode,     jetpack_font_config.ProffieOSStartFlightModeImageDuration);
         } else {
           this->SetMessage("jetpack\nstarting");
@@ -277,16 +287,16 @@ public:
         break;
 
       case EFFECT_FLIGHTMODE:
-        if (img_.flightmode) {
+        if (img_.flightmode) {                               // animation of large oscillating flame
           ShowFileWithSoundLength(&img_.flightmode,          jetpack_font_config.ProffieOSFlightModeImageDuration);
         } else {
-          this->SetMessage("jetpack\running");
+          this->SetMessage("jetpack\nflying");
           this->SetScreenNow(SCREEN_MESSAGE);
         }
         break;
 
       case EFFECT_STOPFLIGHTMODE:
-        if (img_.stopflightmode) {
+        if (img_.stopflightmode) {                           // animation of flame going from large to small
           ShowFileWithSoundLength(&img_.stopflightmode,      jetpack_font_config.ProffieOSStopFlightModeImageDuration);
         } else {
           this->SetMessage("jetpack\nshutdown");
@@ -295,7 +305,7 @@ public:
         break;
 
       case EFFECT_STOPIDLEMODE:
-        if (img_.stopidlemode) {
+        if (img_.stopidlemode) {                             // animation of flame going small to zero
           ShowFileWithSoundLength(&img_.stopidlemode,        jetpack_font_config.ProffieOSStopIdleModeImageDuration);
         } else {
           this->SetMessage("  jetpack\ncompletely off");
@@ -306,7 +316,7 @@ public:
       // jetpack misshaps display effects:
       // =================================
       case EFFECT_FALSESTART:
-        if (img_.IMG_falsestart) { // Jetpack with "smoke fart" animation
+        if (img_.IMG_falsestart) {                           // Jetpack with "smoke fart" animation
           ShowFileWithSoundLength(&img_.IMG_falsestart,      jetpack_font_config.ProffieOSFalseStartImageDuration);
         } else {
           this->SetMessage("jetpack\nfalse start");
@@ -315,7 +325,7 @@ public:
         break;
 
       case EFFECT_STUTTERING:
-        if (img_.IMG_stuttering) { // Jetpack with trail of "smoke farts" animation
+        if (img_.IMG_stuttering) {                           // Jetpack with trail of "smoke farts" animation
           ShowFileWithSoundLength(&img_.IMG_stuttering,      jetpack_font_config.ProffieOSStutteringImageDuration);
         } else {
           this->SetMessage("jetpack\nstuttering");
@@ -324,7 +334,7 @@ public:
         break;
 
       case EFFECT_SELFDESTRUCT:
-        if (img_.selfdestruct) { // Jetpack exploding animation
+        if (img_.selfdestruct) {                             // Jetpack exploding animation
           ShowFileWithSoundLength(&img_.selfdestruct,        jetpack_font_config.ProffieOSSelfDestructImageDuration);
         } else {
           this->SetMessage("jetpack\nself destruct");
@@ -333,7 +343,7 @@ public:
         break;
 
       case EFFECT_MELTDOWN:
-        if (img_.meltdown) { // Jetpack melting animation
+        if (img_.meltdown) {                                 // Jetpack melting animation
           ShowFileWithSoundLength(&img_.meltdown,            jetpack_font_config.ProffieOSMeltdownImageDuration);
         } else {
           this->SetMessage("jetpack\nmelting");
@@ -353,7 +363,7 @@ public:
       // jetpack missile display effects: Make animations for OLED from the episode from Mando S02E06
       // ================================
       case EFFECT_AIMING:
-        if (img_.IMG_aiming) {         // animation of viewfinder coming down
+        if (img_.IMG_aiming) {                               // animation of viewfinder coming down
           ShowFileWithSoundLength(&img_.IMG_aiming,          jetpack_font_config.ProffieOSAimingImageDuration);
         } else {
           this->SetMessage("aiming");
@@ -362,7 +372,7 @@ public:
         break;
 
       case EFFECT_TARGETTING:
-        if (img_.IMG_targetting) {     // animation of targetting
+        if (img_.IMG_targetting) {                           // animation of targetting
           ShowFileWithSoundLength(&img_.IMG_targetting,      jetpack_font_config.ProffieOSTargettingImageDuration);
         } else {
           this->SetMessage("targetting");
@@ -371,7 +381,7 @@ public:
         break;
 
       case EFFECT_MISSILELAUNCH:
-        if (img_.IMG_missilelaunch) {  // animation of jetpack launching missile
+        if (img_.IMG_missilelaunch) {                        // animation of jetpack launching missile
           ShowFileWithSoundLength(&img_.IMG_missilelaunch,   jetpack_font_config.ProffieOSMissileLaunchImageDuration);
         } else {
           this->SetMessage("launching\nmissile");
@@ -380,7 +390,7 @@ public:
         break;
 
       case EFFECT_MISSILEGOESBOOM:
-        if (img_.IMG_missilegoesboom) { // animation of explosion
+        if (img_.IMG_missilegoesboom) {                      // animation of explosion
           ShowFileWithSoundLength(&img_.IMG_missilegoesboom, jetpack_font_config.ProffieOSMissileGoesBoomImageDuration);
         } else {
           this->SetMessage("missile\nexplodes");
@@ -389,7 +399,7 @@ public:
         break;
 
       case EFFECT_MANDOTALK:
-        if (img_.IMG_mandotalk) {       // animation of mando & boba talking: "Nice shot! I was aiming for the other one!"
+        if (img_.IMG_mandotalk) {                            // animation of mando & boba talking
           ShowFileWithSoundLength(&img_.IMG_mandotalk,       jetpack_font_config.ProffieOSMandoTalkImageDuration);
         } else {
           this->SetMessage("nice shot");
@@ -398,7 +408,7 @@ public:
         break;
 
       case EFFECT_DISARM:
-        if (img_.IMG_disarm) {         // animation of viewfinder going back up
+        if (img_.IMG_disarm) {                               // animation of viewfinder going back up
           ShowFileWithSoundLength(&img_.IMG_disarm,          jetpack_font_config.ProffieOSDisarmImageDuration);
         } else {
           this->SetMessage("disarming");
@@ -407,7 +417,7 @@ public:
         break;
 
       default:
-      StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
+        StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
     }
   }
 
@@ -461,12 +471,12 @@ public:
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
       case EFFECT_SHOWMORSECODE:
-  this->SetMessage("add morsecode\ndisplay variable here"); // To do: create a function in morsecode_prop.h that will set the
-  this->SetScreenNow(SCREEN_MESSAGE);                       // value of "variable" that can be used here.
+        this->SetMessage("add morsecode\ndisplay variable here"); // To do: create a function in morsecode_prop.h that will set the
+        this->SetScreenNow(SCREEN_MESSAGE);                       // value of "variable" that can be used here.
         break;
 
       default:
-  StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
+        StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
     }
   }
 
