@@ -490,4 +490,88 @@ public:
 };
 #endif // PROPS_MORSECODE_PROP_H
 */
+
+/*************************************************\       Replace/name below, everything between double * and
+|*                                               *|       delete the **xxxx**
+|*   Create your own custom display controller   *|
+|*                                               *|
+\*************************************************/
+/*
+#ifdef **YOUR_PROP_NAME**_H
+struct **NameHereYour**DisplayConfigFile : public ConfigFile {
+  **NameHereYour**DisplayConfigFile() { link(&font_config); }
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(ProffieOS**YourImageOrAnimationName1Here**ImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOS**YourImageOrAnimationName2Here**ImageDuration, 1000.0f);
+    //... for as many images or animations that you need;
+  }
+
+  // for OLED displays, the time a **yourimageoranimation1namehere**.bmp will play
+  float ProffieOS**YourImageOrAnimation2NameHere**ImageDuration;
+  // for OLED displays, the time a **yourimageoranimation2namehere**.bmp will play
+  float ProffieOS**YourImageOrAnimation2NameHere**ImageDuration;
+  //... for as many images or animations that you need;
+};
+
+#define ONCE_PER_**YOURPROPNAMEHERE**_EFFECT(X)  \
+  X(**yourimageoranimation1namehere**)           \
+  X(**yourimageoranimation2namehere**)
+  //... for as many images or animations that you need, no backslash '\' on the last line of the list.
+
+template<typename PREFIX = ByteArray<>>
+struct **YourPropName**DisplayEffects  {
+  **YourPropName**DisplayEffects() : dummy_(0) ONCE_PER_**YOURPROPNAMEHERE**_EFFECT(INIT_IMG) {}
+  int dummy_;
+  ONCE_PER_**YOURPROPNAMEHERE**_EFFECT(DEF_IMG)
+};
+
+template<int Width, class col_t, typename PREFIX = ByteArray<>>
+class **YourProp**DisplayController : public StandardDisplayController<Width, col_t, PREFIX> {
+public:
+  **YourProp**DisplayEffects<PREFIX> img_;
+  **YourProp**DisplayConfigFile &morsecode_font_config;
+  **YourProp**DisplayController() :
+    img_(*getPtr<**YourProp**DisplayEffects<PREFIX>>()),
+    **yourprop**_font_config(*getPtr<**YourProp**DisplayConfigFile>()) {}
+
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      case EFFECT_**YOURIMAGEORANIMATION1NAMEHERE**:
+        if (img_.IMG_**yourimageoranimation1namehere**) { // optional description of animation or image 1
+          ShowFileWithSoundLength(&img_.IMG_**yourimageoranimation1namehere**, **yourprop**_font_config.ProffieOS**YourImageOrAnimation1NameHere**ImageDuration);
+        } else {
+          this->SetMessage("**your text1**");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_**YOURIMAGEORANIMATION2NAMEHERE**:
+        if (img_.IMG_**yourimageoranimation2namehere**) { // optional description of animation or image 2
+          ShowFileWithSoundLength(&img_.IMG_**yourimageoranimation2namehere**, **yourprop**_font_config.ProffieOS**YourImageOrAnimation2NameHere**ImageDuration);
+        } else {
+          this->SetMessage("**your text1**");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case   //... for as many images ,animations or texts that you need:
+        ...
+        break;
+
+      default:
+        StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
+    }
+  }
+
+  void SB_Off2(typename StandardDisplayController<Width, col_t, PREFIX>::OffType offtype, EffectLocation location) override {
+    if (offtype == StandardDisplayController<Width, col_t, PREFIX>::OFF_**YOURIMAGEORANIMATION1NAMEHERE**) {
+      ShowFileWithSoundLength(img_.IMG_**yourimageoranimation1namehere**, **yourprop**_font_config.ProffieOS**YourImageOrAnimation1NameHere**ImageDuration);
+    } else {
+      StandardDisplayController<Width, col_t, PREFIX>::SB_Off2(offtype, location);
+    }
+  }
+};
+#endif // **YOUR_PROP_NAME**_H
+*/
+
 #endif // ADDITIONAL_DISPLAY_CONTROLLERS_H
