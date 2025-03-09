@@ -947,12 +947,6 @@ private:
   volatile Effect* current_effect_;
 };
 
-// The content of multipropdisplaycontroller.h should go in the respective prop files
-// but it is not yet possible at the moment!
-#ifdef PROPS_MULTI_PROP_H
-#include "multipropdisplaycontroller.h"
-#endif
-
 template<int Width, class col_t, typename PREFIX = ByteArray<>>
 class BlasterDisplayController : public StandardDisplayController<Width, col_t, PREFIX> {
 public:
