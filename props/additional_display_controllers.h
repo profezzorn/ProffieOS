@@ -135,9 +135,13 @@ public:
 struct JetpackDisplayConfigFile : public ConfigFile {
   JetpackDisplayConfigFile() { link(&font_config); }
   void iterateVariables(VariableOP *op) override {
+    // ==  misshaps ==
     CONFIG_VARIABLE2(ProffieOSFalseStartImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSStutteringImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSSelfDestructImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSMeltdownImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSDudImageDuration, 1000.0f);
+    // == missile ==
     CONFIG_VARIABLE2(ProffieOSAimingImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSTargettingImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSMissileLaunchImageDuration, 1000.0f);
@@ -145,12 +149,18 @@ struct JetpackDisplayConfigFile : public ConfigFile {
     CONFIG_VARIABLE2(ProffieOSMandoTalkImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSDisarmImageDuration, 1000.0f);
   }
+  // ==  misshaps ==
   // for OLED displays, the time a falsestart.bmp will play
   float ProffieOSFalseStartImageDuration;
   // for OLED displays, the time a stuttering.bmp will play
   float ProffieOSStutteringImageDuration;
-  // for OLED displays, the time a shutdown.bmp will play
+  // for OLED displays, the time a selfdestruct.bmp will play
   float ProffieOSSelfDestructImageDuration;
+  // for OLED displays, the time a meltdown.bmp will play
+  float ProffieOSMeltdownImageDuration;
+  // for OLED displays, the time a dud.bmp will play
+  float ProffieOSDudImageDuration;
+  // == missile ==
   // for OLED displays, the time a aiming.bmp will play
   float ProffieOSAimingImageDuration;
   // for OLED displays, the time a targetting.bmp will play
@@ -166,14 +176,20 @@ struct JetpackDisplayConfigFile : public ConfigFile {
 };
 
 #define ONCE_PER_JETPACK_EFFECT(X)  \
+/* == jetpack == */                 \
   X(startidlemode)                  \
-  X(idle)                           \
+  X(idlemode)                       \
+  X(startflightmode)                \
+  X(flightmode)                     \
+  X(stopflightmode)                 \
+  X(stopidlemode)                   \
+/* ==  misshaps == */               \
   X(falsestart)                     \
-  X(startjetpack)                   \
-  X(running)                        \
   X(stuttering)                     \
-  X(shutdown)                       \
   X(selfdestruct)                   \
+  X(meltdown)                       \
+  X(dud)                            \
+/* == missile == */                 \
   X(aiming)                         \
   X(targetting)                     \
   X(missilelaunch)                  \
@@ -266,29 +282,43 @@ public:
   this->SetMessage("jetpack\nself destruct");
   this->SetScreenNow(SCREEN_MESSAGE);
        } break;
+      case EFFECT_MELTDOWN:
+        if (img_.meltdown) // Jetpack melting animation
+  ShowFileWithSoundLength(&img_.meltdown,            jetpack_font_config.ProffieOSMeltdownImageDuration);
+        else {
+  this->SetMessage("jetpack\nmelting");
+  this->SetScreenNow(SCREEN_MESSAGE);
+       } break;
+      case EFFECT_DUD:
+        if (img_.dud)
+  ShowFileWithSoundLength(&img_.dud,                 jetpack_font_config.ProffieOSDudImageDuration);
+        else {
+  this->SetMessage("it's a\ndud");
+  this->SetScreenNow(SCREEN_MESSAGE);
+       } break;
       // jetpack normal operation display effects: (I do not have any idea of animations for these!)
       // ========================================= (So I think the text only will do, at least for now?)
+      case EFFECT_IDLEMODE:
+  this->SetMessage("jetpack\nidling");
+  this->SetScreenNow(SCREEN_MESSAGE);
+        break;
       case EFFECT_STARTIDLEMODE:
   this->SetMessage("jetpack\nigniting");
   this->SetScreenNow(SCREEN_MESSAGE);
         break;
-      case EFFECT_IDLE:
-  this->SetMessage("jetpack\nidling");
-  this->SetScreenNow(SCREEN_MESSAGE);
-        break;
-      case EFFECT_STARTJETPACK:
+      case EFFECT_STARTFLIGHTMODE:
   this->SetMessage("jetpack\nstarting");
   this->SetScreenNow(SCREEN_MESSAGE);
         break;
-      case EFFECT_RUNNING:
+      case EFFECT_FLIGHTMODE:
   this->SetMessage("jetpack\running");
   this->SetScreenNow(SCREEN_MESSAGE);
         break;
-      case EFFECT_SHUTDOWN:
+      case EFFECT_STOPFLIGHTMODE:
   this->SetMessage("jetpack\nshutdown");
   this->SetScreenNow(SCREEN_MESSAGE);
         break;
-     case EFFECT_STOP:
+     case EFFECT_STOPIDLEMODE:
   this->SetMessage("  jetpack\ncompletely off");
   this->SetScreenNow(SCREEN_MESSAGE);
         break;
