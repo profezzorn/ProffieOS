@@ -1,8 +1,8 @@
-/* V.8-154.
+/* OS8-v160.
 ============================================================
-================   SABERSENSE PROP FILE   ==================
-================            by            ==================
-================       CHRIS CARTER       ==================
+=================   SABERSENSE PROP FILE   =================
+=================            by            =================
+=================       CHRIS CARTER       =================
 ============================================================
 
 Built on Matthew McGeary's SA22C button prop file for one
@@ -216,6 +216,11 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   starting at zero, in the field that would otherwise 
   contain BladeID values.
   Not currently compatible with Blade Detect.
+  
+#define SABERSENSE_DISABLE_SAVE_ARRAY
+  By default, SABERSENSE_ARRAY_SELECTOR saves the current
+  array so that the saber will always boot into the last
+  array used. This define disables that save functionality.
 
 #define SABERSENSE_ENABLE_ARRAY_FONT_IDENT
   Plays font ident after array ident when switching arrays.
@@ -271,16 +276,27 @@ GESTURE CONTROLS
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
+#ifndef SABERSENSE_DISABLE_SAVE_ARRAY
+class SaveArrayStateFile : public ConfigFile {
+public:
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(sabersense_array_index, 0);  // Default array if no save file.
+  }
+    int sabersense_array_index;  // Stores current array index.
+  };
+#endif
+
     struct SabersenseArraySelector {
-      static int return_value; // Tracks the current array index.
-      float id() { 
-        return return_value; 
+      static int return_value;  // Tracks current array index.
+      float id() {
+        return return_value;
       }
       static void cycle() {
         return_value = (return_value + 1) % NELEM(blades);
       }
     };
-    int SabersenseArraySelector::return_value = 0; // Start with the first array (index 0). 
+    int SabersenseArraySelector::return_value;
+    
 #undef BLADE_ID_CLASS_INTERNAL
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
@@ -488,6 +504,7 @@ public:
     hybrid_font.PlayCommon(&SFX_bladeid);
     // Calls Loop function to handle waiting for effect before running DoNewFont.
     do_font_after_sound_ = true;
+  }
 #else
     // Plays 'bladeid' sound only, or 'font' sound if no 'bladeid' sound available.
     if (SFX_bladeid) {
@@ -500,8 +517,8 @@ public:
     } else {
       SaberBase::DoNewFont();  // Play font ident if 'bladeid' sound file missing.
     }
-#endif
   }
+#endif
 #endif
 
   // Manual Array Selector, switches on-demand to next array, plays 'array' ident sound.
@@ -513,14 +530,36 @@ public:
 #error "SABERSENSE_ARRAY_SELECTOR and BLADE_DETECT_PIN cannot be defined at the same time."
 #endif
 
+#ifndef SABERSENSE_DISABLE_SAVE_ARRAY
+  void SaveArrayState() {
+    PVLOG_STATUS << "Saving Array State\n";
+    SaveArrayStateFile saved_state;
+    saved_state.sabersense_array_index = SabersenseArraySelector::return_value;  // Save current array.
+    saved_state.WriteToRootDir("arraysve");
+  }
+
+  void RestoreArrayState() {
+    PVLOG_STATUS << "Restoring Array State\n";
+    SaveArrayStateFile saved_state;
+    saved_state.ReadINIFromDir(NULL, "arraysve");
+    // Restore saved array index.
+    SabersenseArraySelector::return_value = saved_state.sabersense_array_index;
+  }
+  
+  void Setup() {
+    RestoreArrayState();  // Load saved array on boot.
+  }
+#endif
+
   void NextBladeArray() {
 #ifdef SABERSENSE_ENABLE_ARRAY_FONT_IDENT  // Plays 'array' sound AND 'font' sound.
     SFX_array.Select(current_config - blades);
     hybrid_font.PlayCommon(&SFX_array);
     // Calls Loop function to handle waiting for effect before running DoNewFont.
     do_font_after_sound_ = true;
+  }
 #else
-  // Plays 'array' sound only, or 'font' sound if no 'array' sound available.
+    // Plays 'array' sound only, or 'font' sound if no 'array' sound available.
     if (SFX_array) {
       SFX_array.Select(current_config - blades);
       hybrid_font.PlayCommon(&SFX_array);  // Play 'array' sound file if available.
@@ -531,8 +570,8 @@ public:
     } else {
       SaberBase::DoNewFont();  // Play font ident if 'array' sound file missing.
     }
-#endif
   }
+#endif
 #endif
 
 // RESET FACTORY DEFAULTS (Delete Save Files).
@@ -793,6 +832,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       SabersenseArraySelector::cycle();
       FindBladeAgain();
       NextBladeArray();
+#ifndef SABERSENSE_DISABLE_SAVE_ARRAY
+      SaveArrayState();
+#endif
       return true;
 #endif
 
@@ -979,7 +1021,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         "presets.ini",
         "presets.tmp",
         "global.ini",
-        "global.tmp"
+        "global.tmp",
+        "arraysve.ini",
+        "arraysve.tmp"
       };
       // Delete files from the root directory.
       for (const char* targetFile : filesToDelete) {
