@@ -10,26 +10,34 @@
   http://www.gnu.org/licenses/
 */
 
-#ifndef ADDITIONAL_DISPLAY_CONTROLLERS_H
-#define ADDITIONAL_DISPLAY_CONTROLLERS_H
+/*
+== How does this work? ==
+=========================
 
-/* (previous method) add to ssd1306.h
-#ifdef PROPS_MULTI_PROP_H
-#include "multipropdisplaycontroller.h" // renamed additional_display_controllers.h and moved from \display to \props
-#endif
+You need to have in your config:
+#define INCLUDE_SSD1306
 
-   (current method) add to ProffieOs.ino, after including display/ssd1306.h
-#ifdef EXTRA_DISPLAY_CONTROLLER_INCLUDE
-#include EXTRA_DISPLAY_CONTROLLER_INCLUDE
-#endif
+If you have in your config:
+#define ENABLE_SSD1306
+only the standard display controller will be used and any custom display controller
+below, will be ignored!
 
-                  & add to each prop files that has it's own custom display controller
+Add to each prop files that has it's own custom display controller
 #ifdef INCLUDE_SSD1306
 #ifndef EXTRA_DISPLAY_CONTROLLER_INCLUDE
 #define EXTRA_DISPLAY_CONTROLLER_INCLUDE "props/additional_display_controllers.h"
 #endif
 #endif
 */
+
+/*
+If you want to create your own custom display controller for your prop(s), go to the bottom of this file, copy paste
+everything below the "Create your own custom display controller" box. Replace any **yourstuff** with yourfiles.
+Be mindful of the "ALL CAPS/no caps/Some Caps", just follow the examples. Hope you find this usefull. MTFBWY
+*/
+
+#ifndef ADDITIONAL_DISPLAY_CONTROLLERS_H
+#define ADDITIONAL_DISPLAY_CONTROLLERS_H
 
 /*************************************\
 |*                                   *|
@@ -270,7 +278,7 @@ public:
 
       case EFFECT_IDLEMODE:
         if (img_.idlemode) {                                 // animation of small oscillating flame
-          ShowFileWithSoundLength(&img_.idlemode,            jetpack_font_config.ProffieOSIdlemodeImageDuration);
+          ShowFileWithSoundLength(&img_.idlemode,            jetpack_font_config.ProffieOSIdleModeImageDuration);
         } else {
           this->SetMessage("jetpack\nidling");
           this->SetScreenNow(SCREEN_MESSAGE);
@@ -437,7 +445,8 @@ public:
 |*                                  *|
 \************************************/
 
-/* morsecode_prop.h is not ready and will most likely miss the OS8.x release.
+/*
+// morsecode_prop.h is not ready and will most likely miss the OS8.x release.
 #ifdef PROPS_MORSECODE_PROP_H
 struct MorseCodeDisplayConfigFile : public ConfigFile {
   MorseCodeDisplayConfigFile() { link(&font_config); }
@@ -491,11 +500,13 @@ public:
 #endif // PROPS_MORSECODE_PROP_H
 */
 
-/*************************************************\       Replace/name below, everything between double * and
-|*                                               *|       delete the **xxxx**
-|*   Create your own custom display controller   *|
-|*                                               *|
-\*************************************************/
+#endif // ADDITIONAL_DISPLAY_CONTROLLERS_H
+
+/*************************************************\       Insert your files names below,
+|*                                               *|       replace everything between
+|*   Create your own custom display controller   *|       double asterix '**' and
+|*                                               *|       delete the **xxxx** parts.
+\*************************************************/    // Be mindful of the "ALL CAPS/no caps/Some Caps"!
 /*
 #ifdef **YOUR_PROP_NAME**_H
 struct **NameHereYour**DisplayConfigFile : public ConfigFile {
@@ -573,5 +584,3 @@ public:
 };
 #endif // **YOUR_PROP_NAME**_H
 */
-
-#endif // ADDITIONAL_DISPLAY_CONTROLLERS_H
