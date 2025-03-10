@@ -1,6 +1,6 @@
 // version 064 (compiling version for saber-blaster(with bullet count)-detonator-jetpack, all with sound-effects on
-//             (but-untested as my saber is not yet working)                                       transition between props.
-//             (switching presets sets)                                                            (provided by NoSloppy)
+//             (but-untested as my saber is not yet working)                              transition between props.
+//             (switching presets sets)                                                   (provided by NoSloppy)
 // multipropdisplaycontroller.h included and commented out because it is not yet possible to make it work from
 // here (within the prop).
 
@@ -79,7 +79,7 @@ struct FakeBladeID {                                              //
   float id() { return return_value; }                             //
   // Method to set the blade ID based on the mode                 //
   static void SetFakeBlade(int id) {                              //
-      return_value = id;                                          //
+    return_value = id;                                            //
   }                                                               // Sabersense code part1
 };                                                                // adapted to multi_prop.h
 // Initialize return_value to a default of 0 - SABER mode         //
@@ -123,20 +123,20 @@ Prop_Mode currentMode = Prop_Mode::SABER;  // Initial state is Saber
 
 // Helper function to set FakeBladeID and re-detect the blade
 template <class PropBase>
-void updateBladeIDAndDetect(PropBase* prop_instance,int blade_id) {
+void updateBladeIDAndDetect(PropBase* prop_instance, int blade_id) {
   FakeBladeID::SetFakeBlade(blade_id);                                //
-  PVLOG_DEBUG << "Fake blade id'ed\n";                                //  Sabersense code part2
+  PVLOG_DEBUG << "Fake blade id'ed\n";                                // Sabersense code part2
   prop_instance->FindBladeAgain(); // Call FindBladeAgain             // adapted to multi_prop.h
   SaberBase::DoBladeDetect(true);  // Re-detect blades                //
 }
 
 // Switch modes helper
 template <class PropBase>
-void swapProp(PropBase* prop_instance,Prop_Mode modenext,const char* message,int blade_id,EffectType effect) {
+void swapProp(PropBase* prop_instance, Prop_Mode modenext, const char* message, int blade_id, EffectType effect) {
   PVLOG_STATUS << message << "\n";
   currentMode = modenext;
-  updateBladeIDAndDetect(prop_instance,blade_id);
-  SaberBase::DoEffect(effect,0);
+  updateBladeIDAndDetect(prop_instance, blade_id);
+  SaberBase::DoEffect(effect, 0);
   PVLOG_VERBOSE << "One prop to rule them all, and in your config bind them!\n";
 }
 
@@ -147,31 +147,39 @@ template <class PropBase>
 void switchModes(PropBase* prop_instance) {
   switch (currentMode) {
     case Prop_Mode::SABER:
-      swapProp(prop_instance,Prop_Mode::BLASTER,  "Blaster Mode",   1,EFFECT_BLASTERMODE);
+      swapProp(prop_instance, Prop_Mode::BLASTER,   "Blaster Mode",   1, EFFECT_BLASTERMODE);
       break;
+
     case Prop_Mode::BLASTER:
-      swapProp(prop_instance,Prop_Mode::DETONATOR,"Detonator Mode", 2,EFFECT_DETONATORMODE);
+      swapProp(prop_instance, Prop_Mode::DETONATOR, "Detonator Mode", 2, EFFECT_DETONATORMODE);
       break;
+
     case Prop_Mode::DETONATOR:
-      swapProp(prop_instance,Prop_Mode::JETPACK,  "Jetpack Mode",   3,EFFECT_JETPACKMODE);
+      swapProp(prop_instance, Prop_Mode::JETPACK,   "Jetpack Mode",   3, EFFECT_JETPACKMODE);
       break;
+
     case Prop_Mode::JETPACK:
-      swapProp(prop_instance,Prop_Mode::SABER,    "Saber Mode",     0,EFFECT_SABERMODE);
+      swapProp(prop_instance, Prop_Mode::SABER,     "Saber Mode",     0, EFFECT_SABERMODE);
       break;
+
     /*
-      swapProp(prop_instance,Prop_Mode::MORSECODE,"Morse Code Mode",4,EFFECT_MORSECODEMODE);
+      swapProp(prop_instance, Prop_Mode::MORSECODE, "Morse Code Mode",4, EFFECT_MORSECODEMODE);
       break;
+
     case Prop_Mode::MORSECODE:
-      swapProp(prop_instance,Prop_Mode::DROID,    "Droid Mode",     5,EFFECT_DROIDMODE);
+      swapProp(prop_instance, Prop_Mode::DROID,     "Droid Mode",     5, EFFECT_DROIDMODE);
       break;
+
     case Prop_Mode::DROID:
-      swapProp(prop_instance,Prop_Mode::VEHICLE,  "Vehicle Mode",   6,EFFECT_*********);
+      swapProp(prop_instance, Prop_Mode::VEHICLE,   "Vehicle Mode",   6, EFFECT_*********);
       break;                                                 // sound effect to be created !!!
+
     case Prop_Mode::VEHICLE:
-      swapProp(prop_instance,Prop_Mode::SABER,    "Saber Mode",     0,EFFECT_SABERMODE);
+      swapProp(prop_instance, Prop_Mode::SABER,     "Saber Mode",     0, EFFECT_SABERMODE);
       break;
+
     */
-    }
+  }
 }
 
 /*
@@ -184,10 +192,8 @@ void switchModes(PropBase* prop_instance) {
 
 // Template to support multi-prop modes, this is the "prop class" or prop section.
 // MultiProp class with an Event function that calls switchModes(this)
-template<class Saber, class Blaster, class Detonator, class Jetpack/*,
-         class MorseCode , class Droid, class Vehicle*/>
-class MultiProp : public virtual Saber, public virtual Blaster, public virtual Detonator, public virtual Jetpack/*,
-                  public virtual MorseCode , public virtual Droid, public virtual Vehicle*/ {
+template<class Saber, class Blaster, class Detonator, class Jetpack/*, class MorseCode , class Droid, class Vehicle*/>
+class MultiProp : public virtual Saber, public virtual Blaster, public virtual Detonator, public virtual Jetpack/*, public virtual MorseCode, public virtual Droid, public virtual Vehicle*/ {
 // One prop to rule them all, and in your config bind them!
 public:
   const char* name() override { return "MultiProp"; }
@@ -206,6 +212,7 @@ public:
       default: return b;
     }
   }
+
     // The "return to normal mapping"
   uint32_t reverse_map_button(uint32_t b) {
     switch (b) {
@@ -216,30 +223,36 @@ public:
       case BUTTON_FIRE:        return BUTTON_POWER;
       case BUTTON_MODE_SELECT: return BUTTON_AUX;
 #endif
-    default: return b;
+      default: return b;
     }
   }
 
   // Event handling for button presses, including combos for switching modes
   bool Event(enum BUTTON button, EVENT event) override {
     static bool powerPressed_ = false;    // Tracks BUTTON_POWER press state
-    static bool auxPressed_   = false;    // Tracks BUTTON_AUX   press state
+    static bool auxPressed_ = false;      // Tracks BUTTON_AUX   press state
     if (event == EVENT_PRESSED) {
       if (button == BUTTON_POWER) {
-        powerPressed_ = true;         // BUTTON_POWER is pressed
-      } else if (button == BUTTON_AUX) {
-        auxPressed_   = true;         // BUTTON_AUX   is pressed
+        powerPressed_ = true;             // BUTTON_POWER is pressed
+      } else {
+        if (button == BUTTON_AUX) {
+        auxPressed_ = true;               // BUTTON_AUX   is pressed
+        }
       }
       // Check if both buttons are pressed simultaneously or near-simultaneously
       if (powerPressed_ && auxPressed_ && holdStartTime == 0) {
-        holdStartTime = millis();    // Start the hold timer when both buttons are pressed
+        holdStartTime = millis();         // Start the hold timer when both buttons are pressed
         PVLOG_NORMAL << "Dual Long Push Initiated.\n";
       }
-    } else if (event == EVENT_RELEASED) {
-      if (button == BUTTON_POWER) {
-        powerPressed_ = false;         // BUTTON_POWER is released
-      } else if (button == BUTTON_AUX) {
-        auxPressed_   = false;         // BUTTON_AUX   is released
+    } else {
+      if (event == EVENT_RELEASED) {
+        if (button == BUTTON_POWER) {
+          powerPressed_ = false;          // BUTTON_POWER is released
+        } else {
+          if (button == BUTTON_AUX) {
+            auxPressed_ = false;          // BUTTON_AUX   is released
+          }
+        }
       }
       //  Reset  the  hold  state  if  either  button  is released
       if (!powerPressed_ || !auxPressed_) {
@@ -361,9 +374,9 @@ public:
 /* "void morsecodemode()" will be uncommented out once morsecode_prop.h will be ready
   //(600Hz is the typical "aviation" morse code audio frequency - 800Hz is the frequency usualy used in movies)
   void morsecodemode() { // It says -.- = "K" = General invitation to transmit
-    const float morsePattern[] = {0.6,0.2,0.6};
+    const float morsePattern[] = {0.6, 0.2, 0.6};
     for (float duration : morsePattern) {
-      beeper.Beep(duration,800); // Movies morse code frequency used.
+      beeper.Beep(duration, 800); // Movies morse code frequency used.
       beeper.Silence(0.2);
     }
   }
@@ -476,7 +489,7 @@ public:
   }
 
   // SB_Effect does not want to "play nice" with "lamdbas bread" (LOTR) handlers !!!
-  // SB_Effect must be like Gollum, he doesn't like elven lemdbas bread either!!! (Yes I think this is funny!)
+  // SB_Effect must be like Gollum, he doesn't like Elven Lemdbas bread either!!! (Yes I think this is funny!)
   //void SB_Effect(EffectType effect, EffectLocation location) override {
   //  if (handlers[currentMode].SB_Effect) {               // Centralized calls
   //    (this->*handlers[currentMode].SB_Effect)(effect, location);
@@ -496,6 +509,3 @@ public:
   }
 };
 */
-
-// ¯\_(ツ)_/¯
-
