@@ -1,8 +1,6 @@
 // version 064 (compiling version for saber-blaster(with bullet count)-detonator-jetpack, all with sound-effects on
 //             (but-untested as my saber is not yet working)                              transition between props.
 //             (switching presets sets)                                                   (provided by NoSloppy)
-// multipropdisplaycontroller.h included and commented out because it is not yet possible to make it work from
-// here (within the prop).
 
 /* Created by OlivierFlying747-8 with lots of help from Fredrik Hubinette aka profezzorn,
   http://fredrik.hubbe.net/lightsaber/proffieos.html
@@ -181,14 +179,6 @@ void switchModes(PropBase* prop_instance) {
     */
   }
 }
-
-/*
-// multipropdisplaycontroller.h included and commented out because it is not yet possible to make it work from here.
-// gives identical error message before or after the prop declaration (do not put it within):
-#if defined(INCLUDE_SSD1306)
-#include "multipropdisplaycontroller.h"
-#endif
-*/
 
 // Template to support multi-prop modes, this is the "prop class" or prop section.
 // MultiProp class with an Event function that calls switchModes(this)
