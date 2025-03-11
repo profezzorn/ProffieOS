@@ -1032,6 +1032,8 @@ public:
   int maxclash; // maximum Clash Strength for Clash Sound and Detection works with CLASH_THRESHOLD_G to create range of Clash Strength (8 ~ 16 range)
 };
 
+GestureControlFile saved_gesture_control;
+
 #ifdef FETT263_SAVE_CHOREOGRAPHY
 // Rehearsal / Choreography
 class SavedRehearsal : public ConfigFile {
@@ -1227,6 +1229,29 @@ const int int_arg_menu_[] {
   PREON_SIZE_ARG
 };
 
+#ifdef MENU_SPEC_TEMPLATE
+  template<class SPEC>
+  struct SwingGesture : public mode::BoolSetting {
+    bool get() { return saved_gesture_control.swingon;  }
+    void set(bool value) { 
+      saved_gesture_control.swingon = value;
+      saved_gesture_control.WriteToRootDir("gesture");
+    }
+    void say() { sound_library_.SaySwingIgnition(); }
+  };
+
+  template<class SPEC>
+  class NewSettingsMenu : public AddToMenuEntryMenu<SPEC, SPEC::OldSettingsMenu, 
+    DirectBoolEntry<SPEC, SwingGesture<SPEC>>
+  > ();
+
+  template<class SPEC>
+  struct FETT263_MENU_SPEC : public DefaultMenuSpec<SPEC> {
+     typedef DefaultMenuSpec<SPEC>::SettingsMenu OldSettingsMenu;
+     typedef NewSettingsMenu<SPEC> SettingsMenu;
+  };
+#endif
+
 // The Saber class implements the basic states and actions
 // for the saber.
 class SaberFett263Buttons : public PROP_INHERIT_PREFIX PropBase {
@@ -1234,7 +1259,6 @@ public:
 SaberFett263Buttons() : PropBase() {}
   const char* name() override { return "SaberFett263Buttons"; }
 
-  GestureControlFile saved_gesture_control;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
   SavedRehearsal saved_choreography;
 #endif
