@@ -1022,7 +1022,7 @@ GestureControlFile saved_gesture_control;
   template<class SPEC>
   struct FETT263_MENU_SPEC : public DefaultMenuSpec<SPEC> {
      typename DefaultMenuSpec<SPEC>::SettingsMenu OldSettingsMenu;
-     typename NewSettingsMenu<SPEC> SettingsMenu;
+     NewSettingsMenu<SPEC> SettingsMenu;
   };
 #endif
 
