@@ -1017,10 +1017,10 @@ GestureControlFile saved_gesture_control;
   template<class SPEC>
   class NewSettingsMenu : public mode::AddToMenuEntryMenu<SPEC, typename SPEC::OldSettingsMenu, 
     mode::DirectBoolEntry<SPEC, SwingGesture<SPEC>>
-  > ();
+  > {};
 
   template<class SPEC>
-  struct FETT263_MENU_SPEC : public DefaultMenuSpec<SPEC> {
+  struct FETT263_MENU_SPEC : public mode::DefaultMenuSpec<SPEC> {
      typename DefaultMenuSpec<SPEC>::SettingsMenu OldSettingsMenu;
      typename NewSettingsMenu<SPEC> SettingsMenu;
   };
