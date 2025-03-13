@@ -933,37 +933,6 @@ individual tastes.
 
 #endif
 
-#include "prop_base.h"
-#include "../sound/hybrid_font.h"
-#include "../sound/effect.h"
-#include "../common/current_preset.h"
-#include "../common/file_reader.h"
-#include "../common/malloc_helper.h"
-
-#ifdef FETT263_EDIT_MODE_MENU
-#include "../common/color.h"
-#include "../styles/edit_mode.h"
-#endif
-
-#undef PROP_TYPE
-#define PROP_TYPE SaberFett263Buttons
-
-EFFECT(dim); // for EFFECT_POWERSAVE
-EFFECT(battery); // for EFFECT_BATTERY_LEVEL
-EFFECT(bmbegin); // for Begin Battle Mode
-EFFECT(bmend); // for End Battle Mode
-EFFECT(vmbegin); // for Begin Volume Menu
-EFFECT(vmend); // for End Volume Menu
-EFFECT(faston); // for EFFECT_FAST_ON
-EFFECT(blstbgn); // for Begin Multi-Blast
-EFFECT(blstend); // for End Multi-Blast
-EFFECT(push); // for Force Push gesture in Battle Mode
-EFFECT(tr);
-EFFECT2(trloop, trloop);
-#ifdef FETT263_USE_SETTINGS_MENU
-EFFECT(medit); // Edit Mode
-#endif
-
 #include "../sound/sound_library.h"
 
 class GestureControlFile : public ConfigFile {
@@ -1033,6 +1002,60 @@ public:
 };
 
 GestureControlFile saved_gesture_control;
+
+#ifdef MENU_SPEC_TEMPLATE
+  template<class SPEC>
+  struct SwingGesture : public mode::BoolSetting {
+    bool get() { return saved_gesture_control.swingon;  }
+    void set(bool value) { 
+      saved_gesture_control.swingon = value;
+      saved_gesture_control.WriteToRootDir("gesture");
+    }
+    void say() { sound_library_.SaySwingIgnition(); }
+  };
+
+  template<class SPEC>
+  class NewSettingsMenu : public AddToMenuEntryMenu<SPEC, SPEC::OldSettingsMenu, 
+    DirectBoolEntry<SPEC, SwingGesture<SPEC>>
+  > ();
+
+  template<class SPEC>
+  struct FETT263_MENU_SPEC : public DefaultMenuSpec<SPEC> {
+     typedef DefaultMenuSpec<SPEC>::SettingsMenu OldSettingsMenu;
+     typedef NewSettingsMenu<SPEC> SettingsMenu;
+  };
+#endif
+
+#include "prop_base.h"
+#include "../sound/hybrid_font.h"
+#include "../sound/effect.h"
+#include "../common/current_preset.h"
+#include "../common/file_reader.h"
+#include "../common/malloc_helper.h"
+
+#ifdef FETT263_EDIT_MODE_MENU
+#include "../common/color.h"
+#include "../styles/edit_mode.h"
+#endif
+
+#undef PROP_TYPE
+#define PROP_TYPE SaberFett263Buttons
+
+EFFECT(dim); // for EFFECT_POWERSAVE
+EFFECT(battery); // for EFFECT_BATTERY_LEVEL
+EFFECT(bmbegin); // for Begin Battle Mode
+EFFECT(bmend); // for End Battle Mode
+EFFECT(vmbegin); // for Begin Volume Menu
+EFFECT(vmend); // for End Volume Menu
+EFFECT(faston); // for EFFECT_FAST_ON
+EFFECT(blstbgn); // for Begin Multi-Blast
+EFFECT(blstend); // for End Multi-Blast
+EFFECT(push); // for Force Push gesture in Battle Mode
+EFFECT(tr);
+EFFECT2(trloop, trloop);
+#ifdef FETT263_USE_SETTINGS_MENU
+EFFECT(medit); // Edit Mode
+#endif
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
 // Rehearsal / Choreography
@@ -1228,29 +1251,6 @@ const int int_arg_menu_[] {
   PREON_OPTION_ARG,
   PREON_SIZE_ARG
 };
-
-#ifdef MENU_SPEC_TEMPLATE
-  template<class SPEC>
-  struct SwingGesture : public mode::BoolSetting {
-    bool get() { return saved_gesture_control.swingon;  }
-    void set(bool value) { 
-      saved_gesture_control.swingon = value;
-      saved_gesture_control.WriteToRootDir("gesture");
-    }
-    void say() { sound_library_.SaySwingIgnition(); }
-  };
-
-  template<class SPEC>
-  class NewSettingsMenu : public AddToMenuEntryMenu<SPEC, SPEC::OldSettingsMenu, 
-    DirectBoolEntry<SPEC, SwingGesture<SPEC>>
-  > ();
-
-  template<class SPEC>
-  struct FETT263_MENU_SPEC : public DefaultMenuSpec<SPEC> {
-     typedef DefaultMenuSpec<SPEC>::SettingsMenu OldSettingsMenu;
-     typedef NewSettingsMenu<SPEC> SettingsMenu;
-  };
-#endif
 
 // The Saber class implements the basic states and actions
 // for the saber.
