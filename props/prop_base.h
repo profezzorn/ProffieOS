@@ -616,20 +616,25 @@ public:
         }
     }
 
+  virtual int GetNoBladeLevelBefore() {
+    int level = current_config->ohm / NO_BLADE;
+    return level;
+  }
+
   // Must be called from loop()
   void PollScanId() {
     if (find_blade_again_pending_) {
       find_blade_again_pending_ = false;
-      int noblade_level_before = current_config->ohm / NO_BLADE;
+      int noblade_level_before = GetNoBladeLevelBefore();
       FindBladeAgain();
       int noblade_level_after = current_config->ohm / NO_BLADE;
-
+      
       if (noblade_level_before < noblade_level_after) {
         SaberBase::DoBladeDetect(false);
-      } else if(noblade_level_before > noblade_level_after) {
+      } else if (noblade_level_before > noblade_level_after) {
         SaberBase::DoBladeDetect(true);
       } else {
-	SaberBase::DoNewFont();
+        SaberBase::DoNewFont();
       }
     }
   }
