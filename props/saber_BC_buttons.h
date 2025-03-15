@@ -1589,22 +1589,6 @@ public:
     if (scroll_presets_beep_delay_timer_.isTimerExpired()) {
         SaberBase::DoEffect(EFFECT_NEWFONT, 0);
     }
-    // Blade array changing helper. See id() for usage.
-    if (play_no_change_sound_) {
-      play_no_change_sound_ = false;
-
-      if (current_config->ohm >= NO_BLADE) {
-        // Real blade event resulted in no blade array, so blade removal
-        if (!hybrid_font.PlayPolyphonic(&SFX_bladeout)) {
-          hybrid_font.PlayCommon(&SFX_font);
-        }
-      } else {
-        // Blade inserted into any real array (1 or higher)
-        if (!hybrid_font.PlayPolyphonic(&SFX_bladein)) {
-          hybrid_font.PlayCommon(&SFX_font);
-        }
-      }
-    }
   }  // Loop()
 
 #ifdef SPEAK_BLADE_ID
@@ -2048,7 +2032,6 @@ void DoSavedTwist() {
   bool use_fake_id_ = false;
   float fake_id_ = 0;
   size_t best_config_before_faking_ = SIZE_MAX;
-  bool play_no_change_sound_ = false;
 
   float id(bool announce = false) override {
     if (use_fake_id_) {
@@ -2058,9 +2041,7 @@ void DoSavedTwist() {
       if (real_best_config != best_config_before_faking_) {
         // Real blade has changed, exit manual mode
         use_fake_id_ = false;
-        if (current_config - blades == real_best_config) {
-          play_no_change_sound_ = true;
-        }
+        find_blade_again_pending_ = true;
         return real_id;
       }
       return fake_id_;
@@ -2071,6 +2052,7 @@ void DoSavedTwist() {
 
   void TriggerBladeID() {
     use_fake_id_ = false;
+    best_config_before_faking_ = SIZE_MAX;
     FindBladeAgain();
     PlayArraySound();
   }
@@ -2092,6 +2074,17 @@ void DoSavedTwist() {
     } else if (!hybrid_font.PlayPolyphonic(&SFX_bladein)) {
       hybrid_font.PlayCommon(&SFX_font);
     }
+  }
+
+  int GetNoBladeLevelBefore() override {
+    int ohm;
+    if (best_config_before_faking_ != SIZE_MAX) {
+      ohm = blades[best_config_before_faking_].ohm;
+      best_config_before_faking_ = SIZE_MAX;
+    } else {
+      ohm = current_config->ohm;
+    }
+    return ohm / NO_BLADE;
   }
 
   bool Parse(const char *cmd, const char* arg) override {
