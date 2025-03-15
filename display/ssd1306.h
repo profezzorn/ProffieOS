@@ -47,36 +47,6 @@ struct DisplayConfigFile : public ConfigFile {
   float ProffieOSBootImageDuration;
 };
 
-struct BlasterDisplayConfigFile : public ConfigFile {
-  BlasterDisplayConfigFile() { link(&font_config); }
-  void iterateVariables(VariableOP *op) override {
-    CONFIG_VARIABLE2(ProffieOSFireImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSReloadImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSEmptyImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSJamImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSClipinImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSClipoutImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSDestructImageDuration, 10000.0f);
-  }
-  
-  // for OLED displays, the time a blast.bmp will play
-  float ProffieOSFireImageDuration;
-  // for OLED displays, the time a reload.bmp will play
-  float ProffieOSReloadImageDuration;
-  // for OLED displays, the time a empty.bmp will play
-  float ProffieOSEmptyImageDuration;
-  // for OLED displays, the time a jam.bmp will play
-  float ProffieOSJamImageDuration;
-  // for OLED displays, the time a clipin.bmp will play
-  float ProffieOSClipinImageDuration;
-  // for OLED displays, the time a clipout.bmp will play
-  float ProffieOSClipoutImageDuration;
-  // for OLED displays, the time a destruct.bmp will play
-  float ProffieOSDestructImageDuration;
-};
-
-
-
 #define INIT_IMG(X, ARGS...) ,IMG_##X(ConcatByteArrays<PREFIX, STRTYPE(#X)>::str, nullptr, Effect::FileType::IMAGE)
 #define DEF_IMG(X, ARGS...) Effect IMG_##X;
 
@@ -100,22 +70,6 @@ struct DisplayEffects {
   DisplayEffects() :  dummy_(0) ONCE_PER_EFFECT(INIT_IMG) {}
   int dummy_;
   ONCE_PER_EFFECT(DEF_IMG)
-};
-
-#define ONCE_PER_BLASTER_EFFECT(X)		\
-  X(blast)					\
-  X(reload)					\
-  X(empty)					\
-  X(jam)					\
-  X(clipin)					\
-  X(clipout)					\
-  X(destruct)
-
-template<typename PREFIX = ByteArray<>>
-struct BlasterDisplayEffects  {
-  BlasterDisplayEffects() : dummy_(0) ONCE_PER_BLASTER_EFFECT(INIT_IMG) {}
-  int dummy_;
-  ONCE_PER_BLASTER_EFFECT(DEF_IMG)
 };
 
 enum Screen {
@@ -947,49 +901,6 @@ private:
   volatile Effect* current_effect_;
 };
 
-template<int Width, class col_t, typename PREFIX = ByteArray<>>
-class BlasterDisplayController : public StandardDisplayController<Width, col_t, PREFIX> {
-public:
-  BlasterDisplayEffects<PREFIX> img_;
-  BlasterDisplayConfigFile &blaster_font_config;
-  BlasterDisplayController() :
-    img_(*getPtr<BlasterDisplayEffects<PREFIX>>()),
-    blaster_font_config(*getPtr<BlasterDisplayConfigFile>()) {
-  }
-
-  void SB_Effect2(EffectType effect, EffectLocation location) override {
-    switch (effect) {
-      case EFFECT_FIRE:
-	ShowFileWithSoundLength(img_.IMG_blast, blaster_font_config.ProffieOSFireImageDuration);
-	break;
-      case EFFECT_RELOAD:
-	ShowFileWithSoundLength(img_.IMG_reload, blaster_font_config.ProffieOSReloadImageDuration);
-	break;
-      case EFFECT_EMPTY:
-	ShowFileWithSoundLength(img_.IMG_empty, blaster_font_config.ProffieOSEmptyImageDuration);
-	break;
-      case EFFECT_JAM:
-	ShowFileWithSoundLength(img_.IMG_jam, blaster_font_config.ProffieOSJamImageDuration);
-	break;
-      case EFFECT_CLIP_IN:
-	ShowFileWithSoundLength(img_.IMG_clipin, blaster_font_config.ProffieOSClipinImageDuration);
-	break;
-      case EFFECT_CLIP_OUT:
-	ShowFileWithSoundLength(img_.IMG_clipout, blaster_font_config.ProffieOSClipoutImageDuration);
-	break;
-      default:
-	StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
-    }
-  }
-  
-  void SB_Off2(typename StandardDisplayController<Width, col_t, PREFIX>::OffType offtype, EffectLocation location) override {
-    if (offtype == StandardDisplayController<Width, col_t, PREFIX>::OFF_BLAST) {
-      ShowFileWithSoundLength(img_.IMG_destruct, blaster_font_config.ProffieOSDestructImageDuration);
-    } else {
-      StandardDisplayController<Width, col_t, PREFIX>::SB_Off2(offtype, location);
-    }
-  }
-};
 
 template<template<int, class, class> class T, typename PREFIX = ByteArray<>>
 struct BaseLayerOp {
