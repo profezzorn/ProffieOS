@@ -46,6 +46,6 @@ template<class F, class V> struct IsLessThanFinder<SingleValueAdapter<F>, Single
 };
 template<class F, class V> using IsLessThan = typename IsLessThanFinder<F, V>::IsLessThanClass;
 
-template<class F, class V> using IsGreaterThan = IsLessThan<V, F>;
+template<class F, class V> using IsGreaterThan = InvertF<IsLessThan<V, F>>;
 
 #endif
