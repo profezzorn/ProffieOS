@@ -1014,9 +1014,59 @@ GestureControlFile saved_gesture_control;
     void say() { sound_library_.SaySwingIgnition(); }
   };
 
+template<class SPEC>
+  struct SwingOnSpeed : public SPEC::SteppedMode {
+    void mode_activate(bool onreturn) override {
+      speed_ = saved_gesture_control.swingonspeed;
+    }
+    void next() override {
+      last_down_ = true;
+    }
+    void prev() override {
+      last_down_ = false;
+    }
+    void fadeout(float len) override {
+      mode::getSL<SPEC>()->fadeout(len);
+    }
+    void say() { 
+      sound_library_.SaySwingOnSpeed();
+      sound_library_.SayNumber(speed_, SAY_WHOLE);
+    }
+    void select() {
+      if (last_down_) {
+        if (speed_ < 600) {
+          speed_ += 50;
+        }
+        if (speed_ >= 600) {
+          speed_ = 600;
+          sound_library_.SayMaximum();
+        }
+      } else {
+        if (speed_ > 200) {
+          speed_ -= 50;
+        }
+        if (speed_ <= 200) {
+          speed_ = 200;
+          sound_library_.SayMinimum();
+        }
+      }
+      sound_library_.SayNumber(speed_, SAY_WHOLE);
+      saved_gesture_control.swingonspeed = speed_;
+      saved_gesture_control.WriteToRootDir("gesture");
+    }
+    void exit() {
+      saved_gesture_control.swingonspeed = speed_;
+    }
+
+  int speed_;
+  bool last_down_;
+
+  };
+
   template<class SPEC>
   class NewSettingsMenu : public mode::AddToMenuEntryMenu<SPEC, typename SPEC::OldSettingsMenu, 
-    mode::DirectBoolEntry<SPEC, SwingGesture<SPEC>>
+    mode::DirectBoolEntry<SPEC, SwingGesture<SPEC>>,
+    mode::SubMenuEntry<SwingOnSpeed<SPEC>, typename SPEC::SoundLibrary::tSwingOnSpeed>
   > {};
 
   template<class SPEC>
