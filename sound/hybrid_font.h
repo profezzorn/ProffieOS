@@ -623,6 +623,12 @@ public:
         }
         PlayCommon(&SFX_altchng);
         break;
+      case EFFECT_BLADEIN:
+	SB_BladeDetect(SFX_bladein);
+	break;
+      case EFFECT_BLADEOUT:
+	SB_BladeDetect(SFX_bladeout);
+	break;
       case EFFECT_BOOM:
         if (monophonic_hum_) {
           if (SFX_boom) PlayMonophonic(getNext(hum_player_, &SFX_boom), NULL);
@@ -636,15 +642,14 @@ public:
   }
 
 
-  void SB_BladeDetect(bool detected) {
-    Effect &X(detected ? SFX_bladein : SFX_bladeout);
+  void SB_BladeDetect(Effect& X) {
     if (X) {
       PlayPolyphonic(&X);
       return;
     }
     // SFX_bladein/out doesn't exist, playing font.wav instead
     if (SFX_font) {
-    PVLOG_STATUS << "SFX_bladein/out doesn't exist, playing font.wav instead.\n";
+      PVLOG_STATUS << "SFX_bladein/out doesn't exist, playing font.wav instead.\n";
       PlayPolyphonic(&SFX_font);
       return;
     }

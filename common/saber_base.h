@@ -34,7 +34,11 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(IGNITION)                     \
     DEFINE_EFFECT(RETRACTION)                   \
     DEFINE_EFFECT(CHANGE)                       \
+    /* just for resetting things, not meant for triggering effects, use NEWFONT/BLADEIN/BLADEOUT instead */ \
+    DEFINE_EFFECT(CHDIR)                        \
     DEFINE_EFFECT(NEWFONT)                      \
+    DEFINE_EFFECT(BLADEIN) 	                \
+    DEFINE_EFFECT(BLADEOUT) 	                \
     DEFINE_EFFECT(LOW_BATTERY)                  \
     DEFINE_EFFECT(POWERSAVE)                    \
     DEFINE_EFFECT(BATTERY_LEVEL)                \
@@ -409,7 +413,6 @@ public:                                                         \
   SABERFUN(Effect, (EffectType effect, EffectLocation location), (effect, location));   \
   SABERFUN(On, (EffectLocation location), (location));                                  \
   SABERFUN(Off, (OffType off_type, EffectLocation location), (off_type, location));     \
-  SABERFUN(BladeDetect, (bool detected), (detected));                                   \
   SABERFUN(Change, (ChangeType change_type), (change_type));                            \
                                                                                         \
   SABERFUN(Top, (uint64_t total_cycles), (total_cycles));                               \
@@ -453,7 +456,11 @@ public:
   }
   static void DoBladeDetect(bool detected) {
     ClearSoundInfo();
-    DoBladeDetectInternal(detected);
+    if (detected) {
+      DoEffect(EFFECT_BLADEIN, 0);
+    } else {
+      DoEffect(EFFECT_BLADEOUT, 0);
+    }
   }
   static void DoChange(ChangeType change_type) {
     ClearSoundInfo();
@@ -598,7 +605,7 @@ private:
       default: break;
 
       // Clear out all old effects when we go to a new preset.
-      case EFFECT_NEWFONT:
+      case EFFECT_CHDIR:
 	num_effects_ = 0;
 	break;
 

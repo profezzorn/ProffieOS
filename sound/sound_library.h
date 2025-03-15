@@ -63,7 +63,7 @@ public:
   }
 
   void SB_Effect(EffectType effect, EffectLocation location) override {
-    if (effect == EFFECT_NEWFONT) CheckVersion();
+    if (effect == EFFECT_CHDIR) CheckVersion();
   }
 private:
   void CheckVersion() {
