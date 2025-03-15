@@ -444,6 +444,8 @@ private:
 #define ONCE_PER_EFFECT(X)			\
   X(boot)					\
   X(font)					\
+  X(bladein)					\
+  X(bladeout)					\
   X(blst)					\
   X(clsh)					\
   X(force)					\
@@ -541,51 +543,61 @@ public:
     // Need to call ShowDefault when the previous effect is over.
   }
 
- void SB_Effect2(EffectType effect, EffectLocation location) override {
-   switch (effect) {
-     case EFFECT_NEWFONT:
-       looped_on_ = Tristate::Unknown;
-       Stop();
-       if (!scr_.Play(&SCR_font)) {
-	 ShowDefault();
-       }
-       break;
-     case EFFECT_LOCKUP_BEGIN:
-       ShowDefault();
-       break;
-     case EFFECT_LOCKUP_END:
-       ShowDefault(true);
-       break;
-     case EFFECT_BATTERY_LEVEL:
-       // Show On-Demand battery meter
-       scr_.Play(&SCR_pli);
-       break;
-     case EFFECT_LOW_BATTERY:
-       scr_.Play(&SCR_lowbatt);
-       break;
-     case EFFECT_BOOT:
-       if (!scr_.Play(&SCR_boot)) {
-	 ShowDefault();
-       }
-       break;
-     case EFFECT_BLAST:
-       scr_.Play(&SCR_blst);
-       break;
-     case EFFECT_CLASH:
-       scr_.Play(&SCR_clsh);
-       break;
-     case EFFECT_FORCE:
-       scr_.Play(&SCR_force);
-       break;
-     case EFFECT_PREON:
-       scr_.Play(&SCR_preon);
-       break;
-     case EFFECT_POSTOFF:
-       scr_.Play(&SCR_pstoff);
-       break;
-     default: break;
-   }
- }
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      case EFFECT_CHDIR:
+	looped_on_ = Tristate::Unknown;
+	Stop();
+	break;
+	
+      case EFFECT_BLADEIN:
+	if (scr_.Play(&SCR_bladeout)) break;
+	if (scr_.Play(&SCR_font)) break;
+	ShowDefault();
+	break;
+      case EFFECT_BLADEOUT:
+	if (scr_.Play(&SCR_bladein)) break;
+	/* fall through */
+      case EFFECT_NEWFONT:
+	if (scr_.Play(&SCR_font)) break;
+	ShowDefault();
+	break;
+      case EFFECT_LOCKUP_BEGIN:
+	ShowDefault();
+	break;
+      case EFFECT_LOCKUP_END:
+	ShowDefault(true);
+	break;
+      case EFFECT_BATTERY_LEVEL:
+	// Show On-Demand battery meter
+	scr_.Play(&SCR_pli);
+	break;
+      case EFFECT_LOW_BATTERY:
+	scr_.Play(&SCR_lowbatt);
+	break;
+      case EFFECT_BOOT:
+	if (!scr_.Play(&SCR_boot)) {
+	  ShowDefault();
+	}
+	break;
+      case EFFECT_BLAST:
+	scr_.Play(&SCR_blst);
+	break;
+      case EFFECT_CLASH:
+	scr_.Play(&SCR_clsh);
+	break;
+      case EFFECT_FORCE:
+	scr_.Play(&SCR_force);
+	break;
+      case EFFECT_PREON:
+	scr_.Play(&SCR_preon);
+	break;
+      case EFFECT_POSTOFF:
+	scr_.Play(&SCR_pstoff);
+	break;
+      default: break;
+    }
+  }
   bool iscmd(const char* command, LayerControl **layer, const char* cmd) {
     int layer_number = 0;
     size_t l = sizeof(PREFIX::str);

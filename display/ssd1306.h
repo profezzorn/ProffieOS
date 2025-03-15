@@ -53,6 +53,8 @@ struct DisplayConfigFile : public ConfigFile {
 #define ONCE_PER_EFFECT(X)			\
   X(boot)					\
   X(font)					\
+  X(bladein)					\
+  X(bladeout)					\
   X(blst)					\
   X(clsh)					\
   X(force)					\
@@ -528,12 +530,29 @@ public:
 
  void SB_Effect2(EffectType effect, EffectLocation location) override {
    switch (effect) {
-     case EFFECT_NEWFONT:
+     case EFFECT_CHDIR:
        looped_on_ = Tristate::Unknown;
        looped_idle_ = Tristate::Unknown;
+       break;
+       
+     case EFFECT_BLADEOUT:
+       if (img_.IMG_bladeout) {
+	 ShowFileWithSoundLength(&img_.IMG_bladeout, font_config.ProffieOSFontImageDuration);
+	 break;
+       }
+       goto show_font;
+     case EFFECT_BLADEIN:
+       if (img_.IMG_bladein) {
+	 ShowFileWithSoundLength(&img_.IMG_bladein, font_config.ProffieOSFontImageDuration);
+	 break;
+       }
+     case EFFECT_NEWFONT:
+     show_font:
        if (img_.IMG_font) {
 	 ShowFileWithSoundLength(&img_.IMG_font, font_config.ProffieOSFontImageDuration);
-       } else if (prop.current_preset_name()) {
+	 break;
+       }
+       if (prop.current_preset_name()) {
 	 SetMessage(prop.current_preset_name());
 	 SetScreenNow(SCREEN_MESSAGE);
        } else if (img_.IMG_idle) {
