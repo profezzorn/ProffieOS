@@ -110,6 +110,11 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(FONT_DIRECTORY_NOT_FOUND)     \
     /* menu effects, triggered when you go from one menu entry to the next/previous */                             \
     DEFINE_EFFECT(MENU_CHANGE)                  \
+    /* Multi prop effects */                    \
+    DEFINE_EFFECT(SABERMODE)                    \
+    DEFINE_EFFECT(BLASTERMODE)                  \
+    DEFINE_EFFECT(DETONATORMODE)                \
+    DEFINE_EFFECT(JETPACKMODE)                  \
 
 
 #define DEFINE_EFFECT(X) EFFECT_##X,
