@@ -518,13 +518,13 @@ public:
 
 #ifdef PROP_BOTTOM
 
-#define ONCE_PER_BLASTER_EFFECT(X)		\
-  X(blast)					\
-  X(reload)					\
-  X(empty)					\
-  X(jam)					\
-  X(clipin)					\
-  X(clipout)					\
+#define ONCE_PER_BLASTER_EFFECT(X)    \
+  X(blast)                            \
+  X(reload)                           \
+  X(empty)                            \
+  X(jam)                              \
+  X(clipin)                           \
+  X(clipout)                          \
   X(destruct)
 
 #ifdef INCLUDE_SSD1306
