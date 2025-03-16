@@ -117,7 +117,7 @@ extern SaberBase* saberbases;
 
 
 #define DEFINE_EFFECT(X) EFFECT_##X,
-enum class EffectType {1
+enum class EffectType {
   DEFINE_ALL_EFFECTS()
 };
 enum class EffectTypeHelper {
