@@ -606,29 +606,29 @@ private:
 
       // Clear out all old effects when we go to a new preset.
       case EFFECT_CHDIR:
-	num_effects_ = 0;
-	break;
+        num_effects_ = 0;
+        break;
 
       case EFFECT_LOCKUP_BEGIN:
-	switch (SaberBase::Lockup()) {
-	  case LOCKUP_DRAG:
-	    type = EFFECT_DRAG_BEGIN;
-	  case LOCKUP_NORMAL:
-	    break;
-	  default: return;
-	}
-	break;
+        switch (SaberBase::Lockup()) {
+          case LOCKUP_DRAG:
+            type = EFFECT_DRAG_BEGIN;
+          case LOCKUP_NORMAL:
+            break;
+          default: return;
+        }
+        break;
       case EFFECT_LOCKUP_END:
-	switch (SaberBase::Lockup()) {
-	  case LOCKUP_DRAG:
-	    type = EFFECT_DRAG_END;
-	  case LOCKUP_NORMAL:
-	    break;
-	  default: return;
-	}
-	break;
+        switch (SaberBase::Lockup()) {
+          case LOCKUP_DRAG:
+            type = EFFECT_DRAG_END;
+          case LOCKUP_NORMAL:
+            break;
+          default: return;
+        }
+        break;
       case EFFECT_CLASH_UPDATE:
-	// Not stored in queue
+        // Not stored in queue
         return;
     }
     for (size_t i = std::min(num_effects_, NELEM(effects_) - 1); i; i--) {
