@@ -1035,6 +1035,10 @@ template<class SPEC>
         speed_ = 200;
        }
     }
+    void mode_activate(bool onreturn) override {
+      SPEC::SteppedMode::mode_activate(onreturn);
+      say();
+    }
     void fadeout(float len) override {
       mode::getSL<SPEC>()->fadeout(len);
     }
@@ -1048,9 +1052,11 @@ template<class SPEC>
       sound_library_.SayNumber(speed_, SAY_WHOLE);
       saved_gesture_control.swingonspeed = speed_;
       saved_gesture_control.WriteToRootDir("gesture");
+      mode::SteppedMode::select();
     }
-    void exit() {
-      saved_gesture_control.swingonspeed = speed_;
+    void exit() override {
+      mode::getSL<SPEC>()->SayCancel();
+      SPEC::SteppedMode::exit();
     }
 
   int speed_;
