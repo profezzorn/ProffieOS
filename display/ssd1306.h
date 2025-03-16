@@ -22,7 +22,7 @@ struct DisplayConfigFile : public ConfigFile {
     CONFIG_VARIABLE2(ProffieOSPstoffImageDuration, 2000.0f);
     CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
   }
-  
+
   // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
   // for OLED displays, the time a text message will display
@@ -188,7 +188,6 @@ public:
     return last_t_;
   }
 };
-
 
 // Operations
 
@@ -550,7 +549,7 @@ public:
      show_font:
        if (img_.IMG_font) {
 	 ShowFileWithSoundLength(&img_.IMG_font, font_config.ProffieOSFontImageDuration);
-	 break;
+         break;
        }
        if (prop.current_preset_name()) {
 	 SetMessage(prop.current_preset_name());
@@ -644,9 +643,9 @@ public:
       ShowFileWithSoundLength(&img_.IMG_in, font_config.ProffieOSInImageDuration);
     } else if (img_.IMG_idle) {
       if (AvoidIdleSDAccess()) {
-	SetMessage("    sd\n  access");
+        SetMessage("    sd\n  access");
       } else {
-	SetFile(&img_.IMG_idle, 3600000.0);
+        SetFile(&img_.IMG_idle, 3600000.0);
       }
     } else {
       SetScreenNow(SCREEN_PLI);
