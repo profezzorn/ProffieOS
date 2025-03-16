@@ -1699,6 +1699,11 @@ void loop() {
   Looper::DoLoop();
 }
 
+#define CONFIG_PROP
+#define PROP_BOTTOM
+#include CONFIG_FILE
+#undef CONFIG_PROP
+#undef PROP_BOTTOM
 
 #define CONFIG_BOTTOM
 #include CONFIG_FILE

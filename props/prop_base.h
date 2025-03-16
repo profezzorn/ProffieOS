@@ -318,6 +318,7 @@ public:
     }
 //    EnableBooster();
 #endif
+    SaberBase::DoEffect(EFFECT_CHDIR, 0);
     return false;
   }
 
@@ -415,7 +416,7 @@ public:
     chdir(current_preset_.font.get());
     if (previously_on.on()) FastOn(EffectLocation(0, previously_on));
     if (announce) {
-     PVLOG_STATUS << "Current Preset: " << current_preset_name() << "\n";
+      PVLOG_STATUS << "Current Preset: " << current_preset_name() << "\n";
       SaberBase::DoNewFont();
     }
     TRACE(PROP, "end");
@@ -630,9 +631,9 @@ public:
       int noblade_level_after = current_config->ohm / NO_BLADE;
       
       if (noblade_level_before < noblade_level_after) {
-        SaberBase::DoBladeDetect(false);
-      } else if (noblade_level_before > noblade_level_after) {
-        SaberBase::DoBladeDetect(true);
+	SaberBase::DoEffect(EFFECT_BLADEOUT, 0);
+      } else if(noblade_level_before > noblade_level_after) {
+	SaberBase::DoEffect(EFFECT_BLADEIN, 0);
       } else {
         SaberBase::DoNewFont();
       }
