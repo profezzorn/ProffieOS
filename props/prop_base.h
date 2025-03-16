@@ -631,9 +631,9 @@ public:
       int noblade_level_after = current_config->ohm / NO_BLADE;
       
       if (noblade_level_before < noblade_level_after) {
-	SaberBase::DoEffect(EFFECT_BLADEIN, 0);
-      } else if(noblade_level_before > noblade_level_after) {
 	SaberBase::DoEffect(EFFECT_BLADEOUT, 0);
+      } else if(noblade_level_before > noblade_level_after) {
+	SaberBase::DoEffect(EFFECT_BLADEIN, 0);
       } else {
         SaberBase::DoNewFont();
       }
