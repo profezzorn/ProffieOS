@@ -626,7 +626,7 @@ public:
       case EFFECT_CLIP_IN:  this->scr_.Play(&SCR_clipin);  break;
       case EFFECT_CLIP_OUT: this->scr_.Play(&SCR_clipout); break;
       default:
-	StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
+        StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
     }
   }
 
