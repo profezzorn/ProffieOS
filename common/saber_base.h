@@ -37,8 +37,8 @@ extern SaberBase* saberbases;
     /* just for resetting things, not meant for triggering effects, use NEWFONT/BLADEIN/BLADEOUT instead */ \
     DEFINE_EFFECT(CHDIR)                        \
     DEFINE_EFFECT(NEWFONT)                      \
-    DEFINE_EFFECT(BLADEIN) 	                \
-    DEFINE_EFFECT(BLADEOUT) 	                \
+    DEFINE_EFFECT(BLADEIN)                      \
+    DEFINE_EFFECT(BLADEOUT)                     \
     DEFINE_EFFECT(LOW_BATTERY)                  \
     DEFINE_EFFECT(POWERSAVE)                    \
     DEFINE_EFFECT(BATTERY_LEVEL)                \
@@ -221,7 +221,7 @@ public:
   void printTo(Print& p) const {
     for (int i = 0; i < NUM_BLADES; i++) {
       if ((*this)[i]) {
-	p.write((char)((i < 10 ? '0' : ('A'-10)) + i));
+        p.write((char)((i < 10 ? '0' : ('A'-10)) + i));
       }
     }
   }
@@ -362,8 +362,8 @@ public:
 
   static void DumpMotionRequest() {
     STDOUT << "Motion requested: " << MotionRequested()
-	   << " (millis() - last_motion_request=" << (millis() - last_motion_request_)
-	   << ")\n";
+           << " (millis() - last_motion_request=" << (millis() - last_motion_request_)
+           << ")\n";
   }
 
   enum LockupType {
@@ -461,16 +461,16 @@ public:
     DoOffInternal(off_type, location);
     switch (off_type) {
       case OFF_BLAST:
-	DoEffectInternal2(EFFECT_BLAST, location);
-	break;
+        DoEffectInternal2(EFFECT_BLAST, location);
+        break;
       case OFF_NORMAL:
       case OFF_FAST:
-	DoEffectInternal2(EFFECT_RETRACTION, location);
+        DoEffectInternal2(EFFECT_RETRACTION, location);
         break;
       case OFF_IDLE:
       case OFF_CANCEL_PREON:
-	// do nothing
-	break;
+        // do nothing
+        break;
     }
 
   }
