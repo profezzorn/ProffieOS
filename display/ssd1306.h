@@ -50,21 +50,21 @@ struct DisplayConfigFile : public ConfigFile {
 #define INIT_IMG(X, ARGS...) ,IMG_##X(ConcatByteArrays<PREFIX, STRTYPE(#X)>::str, nullptr, Effect::FileType::IMAGE)
 #define DEF_IMG(X, ARGS...) Effect IMG_##X;
 
-#define ONCE_PER_EFFECT(X)			\
-  X(boot)					\
-  X(font)					\
-  X(bladein)					\
-  X(bladeout)					\
-  X(blst)					\
-  X(clsh)					\
-  X(force)					\
-  X(preon)					\
-  X(out)					\
-  X(in)						\
-  X(pstoff)					\
-  X(on)						\
-  X(lock)					\
-  X(idle)                                       \
+#define ONCE_PER_EFFECT(X)       \
+  X(boot)                        \
+  X(font)                        \
+  X(bladein)                     \
+  X(bladeout)                    \
+  X(blst)                        \
+  X(clsh)                        \
+  X(force)                       \
+  X(preon)                       \
+  X(out)                         \
+  X(in)                          \
+  X(pstoff)                      \
+  X(on)                          \
+  X(lock)                        \
+  X(idle)                        \
   X(lowbatt)
 
 template<typename PREFIX = ByteArray<>>
