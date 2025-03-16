@@ -298,7 +298,7 @@ public:
   NextAction next_action_ = NEXT_ACTION_NOTHING;
   uint32_t time_base_;
   uint32_t next_event_time_;
-  
+
   void SetNextAction(NextAction what, uint32_t when) {
     time_base_ = millis();
     next_event_time_ = when;
@@ -308,7 +308,7 @@ public:
   void SetNextActionF(NextAction what, float when) {
     SetNextAction(what, when * 1000);
   }
-  
+
   virtual void PollNextAction() {
     if (millis() - time_base_ > next_event_time_) {
       switch (next_action_) {
@@ -325,13 +325,13 @@ public:
       next_action_ = NEXT_ACTION_NOTHING;
     }
   }
-  
+
   void beginArm() {
     SaberBase::SetLockup(SaberBase::LOCKUP_ARMED);
     SaberBase::DoBeginLockup();
-#ifdef ENABLE_AUDIO    
+#ifdef ENABLE_AUDIO
     float len = hybrid_font.GetCurrentEffectLength();
-#else    
+#else
     float len = 1.6;
 #endif
     SetNextActionF(NEXT_ACTION_ARM, len);
@@ -339,9 +339,9 @@ public:
 
     virtual void selfDestruct() {
     SaberBase::DoEndLockup();
-#ifdef ENABLE_AUDIO    
+#ifdef ENABLE_AUDIO
     float len = hybrid_font.GetCurrentEffectLength();
-#else    
+#else
     float len = 0.0;
 #endif
     SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
@@ -379,7 +379,7 @@ public:
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_CLICK_LONG, MODE_ON):
         previous_preset();
         return true;
-        
+
       case EVENTID(BUTTON_RELOAD, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON):
         Reload();
@@ -421,7 +421,7 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
         Off();
         return true;
-		    
+
   #ifdef BLADE_DETECT_PIN
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
@@ -460,7 +460,7 @@ public:
       case EFFECT_UNJAM: hybrid_font.PlayCommon(&SFX_unjam); return;
       case EFFECT_PLI_ON: hybrid_font.PlayCommon(&SFX_plion); return;
       case EFFECT_PLI_OFF: hybrid_font.PlayCommon(&SFX_plioff); return;
-  
+
     }
   }
 
@@ -486,7 +486,7 @@ public:
           hybrid_font.PlayCommon(&SFX_mode);
         } else {
 #ifndef DISABLE_TALKIE
-          talkie.Say(spKILL);      
+          talkie.Say(spKILL);
 #else
           beeper.Beep(0.05, 2000.0);
 #endif
@@ -499,7 +499,7 @@ public:
           hybrid_font.PlayCommon(&SFX_mode);
         } else {
 #ifndef DISABLE_TALKIE
-          talkie.Say(spAUTOFIRE);       
+          talkie.Say(spAUTOFIRE);
 #else
           beeper.Beep(0.05, 2000.0);
 #endif
