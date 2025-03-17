@@ -22,7 +22,7 @@ struct DisplayConfigFile : public ConfigFile {
     CONFIG_VARIABLE2(ProffieOSPstoffImageDuration, 2000.0f);
     CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
   }
-  
+
   // For OLED displays, this specifies the frame rate of animations.
   float ProffieOSAnimationFrameRate;
   // for OLED displays, the time a text message will display
@@ -188,7 +188,6 @@ public:
     return last_t_;
   }
 };
-
 
 // Operations
 
@@ -429,19 +428,19 @@ public:
 
       case SCREEN_ERROR_MESSAGE:
       case SCREEN_MESSAGE: {
-	uint32_t t;
+        uint32_t t;
         if (font_config.ProffieOSTextMessageDuration != -1) {
-	  t = font_config.ProffieOSTextMessageDuration;
+          t = font_config.ProffieOSTextMessageDuration;
         } else if (font_config.ProffieOSFontImageDuration > 0) {
-	  t = font_config.ProffieOSFontImageDuration;
+          t = font_config.ProffieOSFontImageDuration;
         } else {
-	  t = 3500;
+          t = 3500;
         }
-	if (t_ >= t) {
-	  screen_ = SCREEN_DEFAULT;
-	  ShowDefault();
-	  return FillFrameBuffer2(advance);
-	}
+        if (t_ >= t) {
+          screen_ = SCREEN_DEFAULT;
+          ShowDefault();
+          return FillFrameBuffer2(advance);
+        }
         Clear();
         // Aurebesh Font option.
 #ifdef USE_AUREBESH_FONT
@@ -537,26 +536,26 @@ public:
        
      case EFFECT_BLADEOUT:
        if (img_.IMG_bladeout) {
-	 ShowFileWithSoundLength(&img_.IMG_bladeout, font_config.ProffieOSFontImageDuration);
-	 break;
+         ShowFileWithSoundLength(&img_.IMG_bladeout, font_config.ProffieOSFontImageDuration);
+         break;
        }
        goto show_font;
      case EFFECT_BLADEIN:
        if (img_.IMG_bladein) {
-	 ShowFileWithSoundLength(&img_.IMG_bladein, font_config.ProffieOSFontImageDuration);
-	 break;
+         ShowFileWithSoundLength(&img_.IMG_bladein, font_config.ProffieOSFontImageDuration);
+         break;
        }
      case EFFECT_NEWFONT:
      show_font:
        if (img_.IMG_font) {
-	 ShowFileWithSoundLength(&img_.IMG_font, font_config.ProffieOSFontImageDuration);
-	 break;
+         ShowFileWithSoundLength(&img_.IMG_font, font_config.ProffieOSFontImageDuration);
+         break;
        }
        if (prop.current_preset_name()) {
-	 SetMessage(prop.current_preset_name());
-	 SetScreenNow(SCREEN_MESSAGE);
+         SetMessage(prop.current_preset_name());
+         SetScreenNow(SCREEN_MESSAGE);
        } else if (img_.IMG_idle) {
-	 ShowFile(&img_.IMG_idle, 3600000.0);
+         ShowFile(&img_.IMG_idle, 3600000.0);
        }
        break;
      case EFFECT_LOCKUP_BEGIN:
@@ -584,19 +583,19 @@ public:
      case EFFECT_LOW_BATTERY:
        // Maybe we should make this blink or something?
        if (img_.IMG_lowbatt) {
-	 ShowFile(&img_.IMG_lowbatt, 5000);
+         ShowFile(&img_.IMG_lowbatt, 5000);
        } else {
-	 SetErrorMessage("low\nbattery");
+         SetErrorMessage("low\nbattery");
        }
        break;
      case EFFECT_BOOT:
        if (img_.IMG_boot) {
-	 ShowFileWithSoundLength(&img_.IMG_boot,
-				 font_config.ProffieOSBootImageDuration != -1.0 ?
-				 font_config.ProffieOSBootImageDuration :
-				 font_config.ProffieOSFontImageDuration);
+         ShowFileWithSoundLength(&img_.IMG_boot,
+                                 font_config.ProffieOSBootImageDuration != -1.0 ?
+                                 font_config.ProffieOSBootImageDuration :
+                                 font_config.ProffieOSFontImageDuration);
        } else {
-	 SetScreenNow(SCREEN_STARTUP);
+         SetScreenNow(SCREEN_STARTUP);
        }
        break;
      case EFFECT_BLAST:
@@ -644,9 +643,9 @@ public:
       ShowFileWithSoundLength(&img_.IMG_in, font_config.ProffieOSInImageDuration);
     } else if (img_.IMG_idle) {
       if (AvoidIdleSDAccess()) {
-	SetMessage("    sd\n  access");
+        SetMessage("    sd\n  access");
       } else {
-	SetFile(&img_.IMG_idle, 3600000.0);
+        SetFile(&img_.IMG_idle, 3600000.0);
       }
     } else {
       SetScreenNow(SCREEN_PLI);
@@ -853,7 +852,7 @@ public:
       bool tmp = ReadImage(&file_);
       uint32_t read_us = micros() - read_begin;
       if (read_us > 1500) {
-	STDERR << "ReadImage took " << read_us << " us\n";
+        STDERR << "ReadImage took " << read_us << " us\n";
       }
 #else
       bool tmp = ReadImage(&file_);
