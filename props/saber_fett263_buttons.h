@@ -1018,6 +1018,8 @@ template<class SPEC>
   struct SwingOnSpeed : public SPEC::SteppedMode {
     void mode_activate(bool onreturn) override {
       speed_ = saved_gesture_control.swingonspeed;
+      SPEC::SteppedMode::mode_activate(onreturn);
+      say();
     }
     void next() override {
       if (speed_ < 600) {
@@ -1034,10 +1036,6 @@ template<class SPEC>
       if (speed_ <= 200) {
         speed_ = 200;
        }
-    }
-    void mode_activate(bool onreturn) override {
-      SPEC::SteppedMode::mode_activate(onreturn);
-      say();
     }
     void fadeout(float len) override {
       mode::getSL<SPEC>()->fadeout(len);
