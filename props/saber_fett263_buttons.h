@@ -1050,7 +1050,7 @@ template<class SPEC>
       sound_library_.SayNumber(speed_, SAY_WHOLE);
       saved_gesture_control.swingonspeed = speed_;
       saved_gesture_control.WriteToRootDir("gesture");
-      mode::SteppedMode::select();
+      SPEC::SteppedMode::select();
     }
     void exit() override {
       mode::getSL<SPEC>()->SayCancel();
