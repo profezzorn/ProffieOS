@@ -40,7 +40,8 @@ Explanation:
     have included 3 modes of operation (off, idle/low power and full power) instead of 7ish (idle 20 to 25%, take-off 100%,
     climb/cruise 80 to 90%, descent - we call it flight idle - 40%, landing +/-60%, idle reverse, full reverse,
     plus everything in between) because I wanted to, at least, have an idle power and in Star Wars, jetpacks only seem to
-    have off or full power. And by having 3 modes of opperation, I could intruduce more fun "failures".
+    have off or full power (one exception to that: in one episode of The Mandalorian season 3 when Mando uses his jetpack
+    to gently descends with a "slow burn"). And by having 3 modes of opperation, I could intruduce more fun "failures".
 
     The ultimate goal would be to code for a rotary encoder that could modulate "power" (aka sound) like a thrust lever
     does. I don't even know if ProffieBoard/ProffieOS can modulate sounds like a thrust lever modulates power on a jet
