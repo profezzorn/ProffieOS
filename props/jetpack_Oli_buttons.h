@@ -1,8 +1,8 @@
-// Jetpack Revision 51
+// Jetpack Revision 52
 
 /* Created by OlivierFlying747-8 with lots of help from Fredrik Hubinette aka profezzorn,
   http://fredrik.hubbe.net/lightsaber/proffieos.html
-  Copyright (c) 2016-2019 Fredrik Hubinette
+  Copyright (c) 2016-2025 Fredrik Hubinette                // <------ Was 2016-2019 but shouldn't this be updated ???
   Copyright (c) 2025 OlivierFlying747-8 with contributions by:
   Fredrik Hubinette aka profezzorn,
   Ryan Ogurek aka ryryog25,
@@ -16,24 +16,57 @@ buttons setup because I think a 1 button setup is "cumbersome" to use!
 
 Buttons handeling was initially based on saber_sa22c_buttons.h
 
+Also, worth mentionning:
+    This jetpack doesn't have "movement effects". You do not want to have to do
+    front/back/side flips at your next cosplay to activate someting! Or just imagine, for an instant, someone
+    trying to replicate stab, aka running face first into the nearest wall with their backpack/jetpack prop.
+    Call me evil, if you want, but this makes me laugh everytime I picture it.
+
 Explanation:
 
+    Let me start to explain a bit of:
+    "How does a jet engine works": (feel free to skip to "How does my jetpack prop works" if you are not interested!)
+    ==============================
+    On the Boeing747 (yes, I am a pilot on the B747), a minimum of 5 minutes are necessary between the last engine
+    has been started (the power is kept below 25%) and take-off power (100% power) can be applied. This allows for
+    thermal stabilization in the engines (and avoids premature and very costly wear and tear).
+
+    Additionally between landing power (usually around 60%) and after the engine thrust reversers (yes they "push"
+    air forward - but only on ground - to help slowing down the plane) have been returned to their stowed position
+    and the thrust has stabilized to their idle power, another 3 minutes most pass before it is safe/allowed to
+    shut down the engines.
+
+    I tried to somewhat mimick the functioning of the jetpack prop based on a "real" world jet engine. Albeit, I only
+    have included 3 modes of operation (off, idle/low power and full power) instead of 7ish (idle 20 to 25%, take-off 100%,
+    climb/cruise 80 to 90%, descent - we call it flight idle - 40%, landing +/-60%, idle reverse, full reverse,
+    plus everything in between) because I wanted to, at least, have an idle power and in Star Wars, jetpacks only seem to
+    have off or full power. And by having 3 modes of opperation, I could intruduce more fun "failures".
+
+    The ultimate goal would be to code for a rotary encoder that could modulate "power" (aka sound) like a thrust lever
+    does. I don't even know if ProffieBoard/ProffieOS can modulate sounds like a thrust lever modulates power on a jet
+    engine. And besides, I don't know (yet) how to do that.
+
+    "How does my jetpack prop works":
+    =================================
+
     First Power Button Press:
-        Plays the jetpack idle starting sound.
+        Plays the jetpack idle starting sound. (low volume & low light intensity on the blade(s),
+        like a jet engine initial start)
         Loops the idle sound until 1 minute passes, the jetpack is started, or
         the aux button is pressed (plays a false start sound and restarts the 1-minute idle loop).
         If no "Second Power Button Press" within 1 minute, the jetpack will switch off.
 
     Second Power Button Press:
-        Plays the jetpack starting sound.
+        Plays the jetpack starting sound. (hight volume & high light intensity on the blade(s),
+        like a jet engine applying take-off power)
         Loops the jetpack flying sound until the power button is pressed again.
 
     Third Power Button Press:
-        Plays the jetpack shutting down to idle sound.
+        Plays the jetpack slowing down to idle sound. (low volume & low light intensity on the blade(s) again)
         Loops the idle sound until 1 minute passes, the jetpack is restarted, or the Aux button is pressed
         (restarts the 1-minute idle loop).
 
-    Aux Button Presses: (for a 2 or 3 buttons setup)
+    Aux Button Presses: (for a 2 or 3 buttons setup) (effects also available for 1 button setup - see buttons table below)
         When flying: Plays a stuttering sound.
         When idle: Plays a false start sound and restarts the 1-minute idle loop.
         When off: Plays a self-destruct, melt-down or dud sound randomly! (surprise!)
@@ -55,14 +88,16 @@ Explanation:
     & make a fun jetpack sound font.
     Create DIM "mode" for "blades" in idle mode.
 
-*/
-/* ============= List of optional jetpack defines that you can add to your config. =============
+============= List of optional jetpack defines that you can add to your config. =============
 #define JETPACK_IDLE_TIME 1000 * 60 * 1 // Jetpack max idle mode time in millisec (default 1 min) before auto-shutdown.
-#define JETPACK_TRACK_PLAYER            // To add jetpack prop track player funtionality - almost identical to Fett263's saber
+#define JETPACK_TRACK_PLAYER            // To add jetpack prop track player funtionality - almost identical to
                                         // Fett263's saber track player, but without the menu option.
 // TBA JETPACK_ALLOW_CRASHING           // if "shot at" // I could create it, if there is an interest!
-*/
-/* ============= CHECK THE BELLOW LIST TO ACTUAL BUTTON(S) COMMANDS! ============= NOT YET FINAL !!! ============= *\
+
+Please feel free to submit more fun ideas on The Crucible or to this Github page:
+https://github.com/olivierflying747-8/Olis-ProffieOS/tree/Jetpack-suggestions
+
+============= CHECK THE BELLOW LIST TO ACTUAL BUTTON(S) COMMANDS! ============= NOT YET FINAL !!! =============
 1 Button:
 POWER Button:
 
@@ -110,7 +145,7 @@ AUX2 Button:
       Color Change Mode: Short-click while ON.
           == Additional: Hold and release while OFF.
 
-\* ============= CHECK THE ABOVE LIST TO ACTUAL BUTTON(S) COMMANDS! ============= NOT YET FINAL !!! ============= */
+============= CHECK THE ABOVE LIST TO ACTUAL BUTTON(S) COMMANDS! ============= NOT YET FINAL !!! ============= */
 
 #ifndef PROPS_JETPACK_OLI_BUTTONS_H
 #define PROPS_JETPACK_OLI_BUTTONS_H
@@ -121,28 +156,23 @@ AUX2 Button:
 
 #include "prop_base.h"
 
-#ifdef INCLUDE_SSD1306
-#ifndef EXTRA_DISPLAY_CONTROLLER_INCLUDE
-#define EXTRA_DISPLAY_CONTROLLER_INCLUDE "props/additional_display_controllers.h"
-#endif
-#endif
-
 #define PROP_TYPE JetpackOliButtons
 
 #ifndef JETPACK_IDLE_TIME
-#define JETPACK_IDLE_TIME 1000 * 60 * 1 // Jetpack max idle mode time in millisec (default 1 min) before auto-shutdown
+// Jetpack max idle mode time in millisec (default 1 min) before auto-shutdown
+#define JETPACK_IDLE_TIME 1000 * 60 * 1
 #endif
 
-// == sounds for system ==
+/* == sounds for system ==
 
-// The long below list will not use additional memory. It is necessary in case you want to use jetpack_prop.h with
-// dual_prop.h or my multi_prop.h to avoid double define errors of identical effects from other props.
+The long below list will not use additional memory. It is necessary in case you want to use jetpack_prop.h with
+dual_prop.h or my multi_prop.h to avoid double define errors of identical effects from other props.
 
-// Props in alphabetical order, Sabers First, Blaster(s) Second, everything else, like the thermal detonator, Third!
-// I placed the jetpack prop low on the multi_prop.h "food chain" (in Fourth)!
+Props in alphabetical order, Sabers First, Blaster(s) Second, everything else, like the thermal detonator, Third!
+I placed the jetpack prop low on the multi_prop.h "food chain" (in Fourth)!
 
-// Looking at all this code below, I am wondering which one was the first chicken and which one was
-// the first egg!
+Looking at all this code below, I am wondering which one was the first chicken and which one was the first egg!
+*/
 
 #ifdef PROPS_SABER_BC_BUTTONS_H
 #define HAVE_BATTERY    // for EFFECT_BATTERY_LEVEL
@@ -472,7 +502,25 @@ public:
     PlayTrack();
   }
 
-// only one prop can have chdir & Parse, so in a dual_prop.h/multi_prop.h "environment" SaberFett263Button already has them.
+/*
+// Only one chdir & Parse function can be used, so in a dual_prop.h/multi_prop.h "environment" SaberFett263Button
+// already has them.
+// I initially had in multi_prop.h:
+#if defined(PROPS_SABER_FETT263_BUTTONS_H) || defined(PROPS_JETPACK_PROP_H)
+  // Resolve 'chdir' ambiguity
+  bool chdir(StringPiece dir) override {
+    return Saber::chdir(dir);
+  }
+  // Resolve 'Parse' ambiguity
+  bool Parse(const char* key, const char* value) override {
+    return Saber::Parse(key, value);
+  }
+#endif
+// This was resolving the ambiguity but was also increasing the size of the compile by a few 100 bytes
+// because the code for chdir and Parse was added twice and extra code had to be added to multi_prop.h
+// Doing it "my" way reduced the size of the compile by a little bit.
+// Every byte saved counts, right ?
+*/
 #ifndef PROPS_SABER_FETT263_BUTTONS_H
   bool chdir(const StringPiece dir) override {
     bool ret = PropBase::chdir(dir);
@@ -716,7 +764,8 @@ public:
     return false;  // No action
   }  // Event2
 
-  // I want the effects to play one after the other without overlapping or interrupting one another.
+  // The different sound effects should be made to play one after
+  // the other without overlapping or interrupting one another.
   void PerformMissileLaunchSequence() {
     STATE_MACHINE_BEGIN();
     while (true) {
@@ -754,7 +803,7 @@ public:
   // Handles Jetpack mishaps events
   void JetpackMishaps() {
     if (jetpack_wav_player_.isPlaying()) {
-      return; // Wait for the current sound to finish
+      return;
     }
     if (flight_) {
       // Jetpack flying, play stuttering sound
@@ -857,10 +906,7 @@ public:
     }
   }
 
-  void DoMotion(const Vec3&, bool) override { }  // jetpack doesn't have "movement effects", you
-    // do not want to have to do front/back/side flips at your next cosplay to activate someting!
-    // Or just imagine, for an instant, someone trying to replicate stab, aka running face first
-    // into the nearest wall with their backpack/jetpack prop.
+  void DoMotion(const Vec3&, bool) override { }
 
   // Helper (to avoid repetition)
   void EffectHelper (Effect* effect1,const char* msg1) {
@@ -872,25 +918,25 @@ public:
     switch (effect) {
       default: return;
       // Missile effects:
-      case EFFECT_AIMING:          EffectHelper(&SFX_aiming,                   "Aiming"); // Must not be
-      case EFFECT_TARGETTING:      EffectHelper(&SFX_targetting,           "Targetting"); // interrupted
-      case EFFECT_MISSILELAUNCH:   EffectHelper(&SFX_missilelaunch,    "Missile Launch"); // and must
-      case EFFECT_MISSILEGOESBOOM: EffectHelper(&SFX_missilegoesboom,"Missile Explodes"); // play in
-      case EFFECT_MANDOTALK:       EffectHelper(&SFX_mandotalk,  "Mando & Boba Talking"); // sequence with
-      case EFFECT_DISARM:          EffectHelper(&SFX_disarm,        "Disarm Targetting"); // one another!
+      case EFFECT_AIMING:          EffectHelper(&SFX_aiming,                   "Aiming"); return; // Must not be
+      case EFFECT_TARGETTING:      EffectHelper(&SFX_targetting,           "Targetting"); return; // interrupted
+      case EFFECT_MISSILELAUNCH:   EffectHelper(&SFX_missilelaunch,    "Missile Launch"); return; // and must
+      case EFFECT_MISSILEGOESBOOM: EffectHelper(&SFX_missilegoesboom,"Missile Explodes"); return; // play in
+      case EFFECT_MANDOTALK:       EffectHelper(&SFX_mandotalk,  "Mando & Boba Talking"); return; // sequence with
+      case EFFECT_DISARM:          EffectHelper(&SFX_disarm,        "Disarm Targetting"); return; // one another!
       // Engine mishap effects:
-      case EFFECT_FALSESTART:      EffectHelper(&SFX_falsestart,          "False Start");
-      case EFFECT_STUTTERING:      EffectHelper(&SFX_stuttering,           "Stuttering");
-      case EFFECT_SELFDESTRUCT:    EffectHelper(&SFX_selfdestruct,      "Self Destruct");
-      case EFFECT_MELTDOWN:        EffectHelper(&SFX_meltdown,               "Meltdown");
-      case EFFECT_DUD:             EffectHelper(&SFX_dud,   "Dank Farrik!\nIt's a Dud!");
+      case EFFECT_FALSESTART:      EffectHelper(&SFX_falsestart,          "False Start"); return;
+      case EFFECT_STUTTERING:      EffectHelper(&SFX_stuttering,           "Stuttering"); return;
+      case EFFECT_SELFDESTRUCT:    EffectHelper(&SFX_selfdestruct,      "Self Destruct"); return;
+      case EFFECT_MELTDOWN:        EffectHelper(&SFX_meltdown,               "Meltdown"); return;
+      case EFFECT_DUD:             EffectHelper(&SFX_dud,   "Dank Farrik!\nIt's a Dud!"); return;
       // Engine normal effects:
-      case EFFECT_STARTIDLEMODE:   EffectHelper(&SFX_startidlemode,     "Jetpack Starting to Idle."); //after startidlemode, play idle mode on loop
-      case EFFECT_IDLEMODE:        EffectHelper(&SFX_idlemode,         "Jetpack in Idle Loop Mode."); //plays on loop
-      case EFFECT_STARTFLIGHTMODE: EffectHelper(&SFX_startflightmode, "Jetpack Starting to Flight."); //after startflightmode, play flight mode on loop
-      case EFFECT_FLIGHTMODE:      EffectHelper(&SFX_flightmode,     "Jetpack in Flight Loop Mode."); //plays on loop
-      case EFFECT_STOPFLIGHTMODE:  EffectHelper(&SFX_stopflightmode,"Jetpack Slowing Down to Idle."); //after stopflightmode, play idle on loop
-      case EFFECT_STOPIDLEMODE:    EffectHelper(&SFX_stopidlemode,        "Jetpack Completely Off.");
+      case EFFECT_STARTIDLEMODE:   EffectHelper(&SFX_startidlemode,     "Jetpack Starting to Idle."); return; //after startidlemode, play idle mode on loop
+      case EFFECT_IDLEMODE:        EffectHelper(&SFX_idlemode,         "Jetpack in Idle Loop Mode."); return; //plays on loop
+      case EFFECT_STARTFLIGHTMODE: EffectHelper(&SFX_startflightmode, "Jetpack Starting to Flight."); return; //after startflightmode, play flight mode on loop
+      case EFFECT_FLIGHTMODE:      EffectHelper(&SFX_flightmode,     "Jetpack in Flight Loop Mode."); return; //plays on loop
+      case EFFECT_STOPFLIGHTMODE:  EffectHelper(&SFX_stopflightmode,"Jetpack Slowing Down to Idle."); return; //after stopflightmode, play idle on loop
+      case EFFECT_STOPIDLEMODE:    EffectHelper(&SFX_stopidlemode,        "Jetpack Completely Off."); return;
       // System effects: (info found in config/styles/blade-effects.md, https://pod.hubbe.net/config/styles/blade-effects.html)
     //case EFFECT_VOLUME_LEVEL: return; // Shows volume level visually on blade, great for using with volume menu feature.
       case EFFECT_POWERSAVE:        if (!hybrid_font.PlayPolyphonic(&SFX_dim)) {
@@ -943,3 +989,335 @@ private:
 }; // class Jetpack
 
 #endif // PROPS_JETPACK_PROP_H
+
+/**********************************************\
+|*                                            *|
+|*   JETPACK OLI BUTTONS DISPLAY CONTROLLER   *|
+|*                                            *|
+\**********************************************/
+
+#ifdef PROP_BOTTOM
+
+#define ONCE_PER_JETPACK_EFFECT(X)  \
+/* == jetpack == */                 \
+  X(startidlemode)                  \
+  X(idlemode)                       \
+  X(startflightmode)                \
+  X(flightmode)                     \
+  X(stopflightmode)                 \
+  X(stopidlemode)                   \
+/* ==  misshaps == */               \
+  X(falsestart)                     \
+  X(stuttering)                     \
+  X(selfdestruct)                   \
+  X(meltdown)                       \
+  X(dud)                            \
+/* == missile == */                 \
+  X(aiming)                         \
+  X(targetting)                     \
+  X(missilelaunch)                  \
+  X(missilegoesboom)                \
+  X(mandotalk)                      \
+  X(disarm)
+
+#ifdef INCLUDE_SSD1306
+
+struct JetpackDisplayConfigFile : public ConfigFile {
+  JetpackDisplayConfigFile() { link(&font_config); }
+  void iterateVariables(VariableOP *op) override {
+    // == jetpack ==
+    CONFIG_VARIABLE2(ProffieOSStartIdleModeImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSIdleModeImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSStartFlightModeImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSFlightModeImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSStopFlightModeImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSStopIdleModeImageDuration, 1000.0f);
+    // ==  misshaps ==
+    CONFIG_VARIABLE2(ProffieOSFalseStartImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSStutteringImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSSelfDestructImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSMeltdownImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSDudImageDuration, 1000.0f);
+    // == missile ==
+    CONFIG_VARIABLE2(ProffieOSAimingImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSTargettingImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSMissileLaunchImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSMissileGoesBoomImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSMandoTalkImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSDisarmImageDuration, 1000.0f);
+  }
+  // == jetpack ==
+  // for OLED displays, the time a idlemode.bmp will play
+  float ProffieOSIdleModeImageDuration;
+  // for OLED displays, the time a startidlemode.bmp will play
+  float ProffieOSStartIdleModeImageDuration;
+  // for OLED displays, the time a startflightmode.bmp will play
+  float ProffieOSStartFlightModeImageDuration;
+  // for OLED displays, the time a flightmode.bmp will play
+  float ProffieOSFlightModeImageDuration;
+  // for OLED displays, the time a stopflightmode.bmp will play
+  float ProffieOSStopFlightModeImageDuration;
+  // for OLED displays, the time a stopidlemode.bmp will play
+  float ProffieOSStopIdleModeImageDuration;
+  // ==  misshaps ==
+  // for OLED displays, the time a falsestart.bmp will play
+  float ProffieOSFalseStartImageDuration;
+  // for OLED displays, the time a stuttering.bmp will play
+  float ProffieOSStutteringImageDuration;
+  // for OLED displays, the time a selfdestruct.bmp will play
+  float ProffieOSSelfDestructImageDuration;
+  // for OLED displays, the time a meltdown.bmp will play
+  float ProffieOSMeltdownImageDuration;
+  // for OLED displays, the time a dud.bmp will play
+  float ProffieOSDudImageDuration;
+  // == missile ==
+  // for OLED displays, the time a aiming.bmp will play
+  float ProffieOSAimingImageDuration;
+  // for OLED displays, the time a targetting.bmp will play
+  float ProffieOSTargettingImageDuration;
+  // for OLED displays, the time a missilelaunch.bmp will play
+  float ProffieOSMissileLaunchImageDuration;
+  // for OLED displays, the time a missilegoesboom.bmp will play
+  float ProffieOSMissileGoesBoomImageDuration;
+  // for OLED displays, the time a mandotalk.bmp will play
+  float ProffieOSMandoTalkImageDuration;
+  // for OLED displays, the time a disarm.bmp will play
+  float ProffieOSDisarmImageDuration;
+};
+
+template<typename PREFIX = ByteArray<>>
+struct JetpackDisplayEffects  {
+  JetpackDisplayEffects() : dummy_(0) ONCE_PER_JETPACK_EFFECT(INIT_IMG) {}
+  int dummy_;
+  ONCE_PER_JETPACK_EFFECT(DEF_IMG)
+};
+
+template<int Width, class col_t, typename PREFIX = ByteArray<>>
+class JetpackDisplayController : public StandardDisplayController<Width, col_t, PREFIX> {
+public:
+  JetpackDisplayEffects<PREFIX> img_;
+  JetpackDisplayConfigFile &jetpack_font_config;
+  JetpackDisplayController() :
+    img_(*getPtr<JetpackDisplayEffects<PREFIX>>()),
+    jetpack_font_config(*getPtr<JetpackDisplayConfigFile>()) {}
+
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      // jetpack normal operations display effects:
+      // ==========================================
+      case EFFECT_STARTIDLEMODE:
+        if (img_.startidlemode) {                            // animation of flame going from zero to small
+          ShowFileWithSoundLength(&img_.startidlemode,       jetpack_font_config.ProffieOSStartIdleModeImageDuration);
+        } else {
+          this->SetMessage("jetpack\nigniting");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_IDLEMODE:
+        if (img_.idlemode) {                                 // animation of small oscillating flame
+          ShowFileWithSoundLength(&img_.idlemode,            jetpack_font_config.ProffieOSIdleModeImageDuration);
+        } else {
+          this->SetMessage("jetpack\nidling");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_STARTFLIGHTMODE:
+        if (img_.startflightmode) {                          // animation of flame going from small to large
+          ShowFileWithSoundLength(&img_.startflightmode,     jetpack_font_config.ProffieOSStartFlightModeImageDuration);
+        } else {
+          this->SetMessage("jetpack\nstarting");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_FLIGHTMODE:
+        if (img_.flightmode) {                               // animation of large oscillating flame
+          ShowFileWithSoundLength(&img_.flightmode,          jetpack_font_config.ProffieOSFlightModeImageDuration);
+        } else {
+          this->SetMessage("jetpack\nflying");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_STOPFLIGHTMODE:
+        if (img_.stopflightmode) {                           // animation of flame going from large to small
+          ShowFileWithSoundLength(&img_.stopflightmode,      jetpack_font_config.ProffieOSStopFlightModeImageDuration);
+        } else {
+          this->SetMessage("jetpack\nshutdown");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_STOPIDLEMODE:
+        if (img_.stopidlemode) {                             // animation of flame going small to zero
+          ShowFileWithSoundLength(&img_.stopidlemode,        jetpack_font_config.ProffieOSStopIdleModeImageDuration);
+        } else {
+          this->SetMessage("  jetpack\ncompletely off");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      // jetpack misshaps display effects:
+      // =================================
+      case EFFECT_FALSESTART:
+        if (img_.IMG_falsestart) {                           // Jetpack with "smoke fart" animation
+          ShowFileWithSoundLength(&img_.IMG_falsestart,      jetpack_font_config.ProffieOSFalseStartImageDuration);
+        } else {
+          this->SetMessage("jetpack\nfalse start");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_STUTTERING:
+        if (img_.IMG_stuttering) {                           // Jetpack with trail of "smoke farts" animation
+          ShowFileWithSoundLength(&img_.IMG_stuttering,      jetpack_font_config.ProffieOSStutteringImageDuration);
+        } else {
+          this->SetMessage("jetpack\nstuttering");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_SELFDESTRUCT:
+        if (img_.selfdestruct) {                             // Jetpack exploding animation
+          ShowFileWithSoundLength(&img_.selfdestruct,        jetpack_font_config.ProffieOSSelfDestructImageDuration);
+        } else {
+          this->SetMessage("jetpack\nself destruct");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_MELTDOWN:
+        if (img_.meltdown) {                                 // Jetpack melting animation
+          ShowFileWithSoundLength(&img_.meltdown,            jetpack_font_config.ProffieOSMeltdownImageDuration);
+        } else {
+          this->SetMessage("jetpack\nmelting");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_DUD:
+        if (img_.dud) {
+          ShowFileWithSoundLength(&img_.dud,                 jetpack_font_config.ProffieOSDudImageDuration);
+        } else {
+          this->SetMessage("it's a\ndud");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      // jetpack missile display effects: Make animations for OLED from the episode from Mando S02E06
+      // ================================
+      case EFFECT_AIMING:
+        if (img_.IMG_aiming) {                               // animation of viewfinder coming down
+          ShowFileWithSoundLength(&img_.IMG_aiming,          jetpack_font_config.ProffieOSAimingImageDuration);
+        } else {
+          this->SetMessage("aiming");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_TARGETTING:
+        if (img_.IMG_targetting) {                           // animation of targetting
+          ShowFileWithSoundLength(&img_.IMG_targetting,      jetpack_font_config.ProffieOSTargettingImageDuration);
+        } else {
+          this->SetMessage("targetting");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_MISSILELAUNCH:
+        if (img_.IMG_missilelaunch) {                        // animation of jetpack launching missile
+          ShowFileWithSoundLength(&img_.IMG_missilelaunch,   jetpack_font_config.ProffieOSMissileLaunchImageDuration);
+        } else {
+          this->SetMessage("launching\nmissile");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_MISSILEGOESBOOM:
+        if (img_.IMG_missilegoesboom) {                      // animation of explosion
+          ShowFileWithSoundLength(&img_.IMG_missilegoesboom, jetpack_font_config.ProffieOSMissileGoesBoomImageDuration);
+        } else {
+          this->SetMessage("missile\nexplodes");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_MANDOTALK:
+        if (img_.IMG_mandotalk) {                            // animation of mando & boba talking
+          ShowFileWithSoundLength(&img_.IMG_mandotalk,       jetpack_font_config.ProffieOSMandoTalkImageDuration);
+        } else {
+          this->SetMessage("nice shot");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_DISARM:
+        if (img_.IMG_disarm) {                               // animation of viewfinder going back up
+          ShowFileWithSoundLength(&img_.IMG_disarm,          jetpack_font_config.ProffieOSDisarmImageDuration);
+        } else {
+          this->SetMessage("disarming");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      default:
+        StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
+    }
+  }
+
+  void SB_Off2(typename StandardDisplayController<Width, col_t, PREFIX>::OffType offtype, EffectLocation location) override {
+    if (offtype == StandardDisplayController<Width, col_t, PREFIX>::OFF_BLAST) {
+      ShowFileWithSoundLength(img_.IMG_disarm, jetpack_font_config.ProffieOSDisarmImageDuration);
+    } else {
+      StandardDisplayController<Width, col_t, PREFIX>::SB_Off2(offtype, location);
+    }
+  }
+};
+
+#endif  // INCLUDE_SSD1306
+
+template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>, typename NumberToByteArray<H>::type>>
+class JetpackColorDisplayController : public StandarColorDisplayController<W, H, PREFIX> {
+public:
+  template<int w, int h>
+  explicit JetpackColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_BLASTER_EFFECT(INIT_SCR) {
+  }
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      // jetpack normal operations color display effects:
+      // ================================================
+      case EFFECT_STARTIDLEMODE:   this->scr_.Play(&SCR_startidlemode);   break;
+      case EFFECT_IDLEMODE:        this->scr_.Play(&SCR_idlemode);        break;
+      case EFFECT_STARTFLIGHTMODE: this->scr_.Play(&SCR_startflightmode); break;
+      case EFFECT_FLIGHTMODE:      this->scr_.Play(&SCR_flightmode);      break;
+      case EFFECT_STOPFLIGHTMODE:  this->scr_.Play(&SCR_stopflightmode);  break;
+      case EFFECT_STOPIDLEMODE:    this->scr_.Play(&SCR_stopidlemode);    break;
+      // jetpack misshaps display effects:
+      // =================================
+      case EFFECT_FALSESTART:      this->scr_.Play(&SCR_falsestart);      break;
+      case EFFECT_SELFDESTRUCT:    this->scr_.Play(&SCR_selfdestruct);    break;
+      case EFFECT_STUTTERING:      this->scr_.Play(&SCR_stuttering);      break;
+      case EFFECT_MELTDOWN:        this->scr_.Play(&SCR_meltdown);        break;
+      case EFFECT_DUD:             this->scr_.Play(&SCR_dud);             break;
+      // jetpack missile display effects: Make animations for OLED from the episode from Mando S02E06
+      // ================================
+      case EFFECT_AIMING:          this->scr_.Play(&SCR_aiming);          break;
+      case EFFECT_TARGETTING:      this->scr_.Play(&SCR_targetting);      break;
+      case EFFECT_MISSILELAUNCH:   this->scr_.Play(&SCR_missilelaunch);   break;
+      case EFFECT_MISSILEGOESBOOM: this->scr_.Play(&SCR_missilegoesboom); break;
+      case EFFECT_MANDOTALK:       this->scr_.Play(&SCR_mandotalk);       break;
+      case EFFECT_DISARM:          this->scr_.Play(&SCR_disarm);          break;
+      default:
+        StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
+    }
+  }
+
+protected:
+  ONCE_PER_JETPACK_EFFECT(DEF_SCR);
+};
+
+#undef ONCE_PER_JETPACK_EFFECT
+
+#endif  // PROP_BOTTOM
