@@ -265,24 +265,6 @@ Looking at all this code below, I am wondering which one was the first chicken a
 #ifndef HAVE_BATTERY
 #define HAVE_BATTERY    // for EFFECT_BATTERY_LEVEL
 #endif
-#ifndef HAVE_VMBEGIN
-#define HAVE_VMBEGIN    // for Begin Volume Menu
-#endif
-#ifndef HAVE_VMEND
-#define HAVE_VMEND      // for End Volume Menu
-#endif
-#ifndef HAVE_VOLDOWN
-#define HAVE_VOLDOWN    // for decrease volume
-#endif
-#ifndef HAVE_VOLUP
-#define HAVE_VOLUP      // for increase volume
-#endif
-#ifndef HAVE_VOLMAX
-#define HAVE_VOLMAX     // for maximum volume reached
-#endif
-#ifndef HAVE_VOLMIN
-#define HAVE_VOLMIN     // for minimum volume reached
-#endif
 #endif
 
 #ifndef HAVE_BATTERY
@@ -1317,7 +1299,7 @@ template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteA
 class JetpackColorDisplayController : public StandarColorDisplayController<W, H, PREFIX> {
 public:
   template<int w, int h>
-  explicit JetpackColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_BLASTER_EFFECT(INIT_SCR) {
+  explicit JetpackColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_JETPACK_EFFECT(INIT_SCR) {
   }
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
