@@ -578,25 +578,25 @@ public:
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
       case EFFECT_FIRE:
-	this->ShowFileWithSoundLength(&img_.IMG_blast, blaster_font_config.ProffieOSFireImageDuration);
-	break;
+        this->ShowFileWithSoundLength(&img_.IMG_blast, blaster_font_config.ProffieOSFireImageDuration);
+        break;
       case EFFECT_RELOAD:
-	this->ShowFileWithSoundLength(&img_.IMG_reload, blaster_font_config.ProffieOSReloadImageDuration);
-	break;
+        this->ShowFileWithSoundLength(&img_.IMG_reload, blaster_font_config.ProffieOSReloadImageDuration);
+        break;
       case EFFECT_EMPTY:
-	this->ShowFileWithSoundLength(&img_.IMG_empty, blaster_font_config.ProffieOSEmptyImageDuration);
-	break;
+        this->ShowFileWithSoundLength(&img_.IMG_empty, blaster_font_config.ProffieOSEmptyImageDuration);
+        break;
       case EFFECT_JAM:
-	this->ShowFileWithSoundLength(&img_.IMG_jam, blaster_font_config.ProffieOSJamImageDuration);
-	break;
+        this->ShowFileWithSoundLength(&img_.IMG_jam, blaster_font_config.ProffieOSJamImageDuration);
+        break;
       case EFFECT_CLIP_IN:
-	this->ShowFileWithSoundLength(&img_.IMG_clipin, blaster_font_config.ProffieOSClipinImageDuration);
-	break;
+        this->ShowFileWithSoundLength(&img_.IMG_clipin, blaster_font_config.ProffieOSClipinImageDuration);
+        break;
       case EFFECT_CLIP_OUT:
-	this->ShowFileWithSoundLength(&img_.IMG_clipout, blaster_font_config.ProffieOSClipoutImageDuration);
-	break;
+        this->ShowFileWithSoundLength(&img_.IMG_clipout, blaster_font_config.ProffieOSClipoutImageDuration);
+        break;
       default:
-	StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
+        StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
     }
   }
   
