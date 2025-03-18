@@ -116,7 +116,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(MENU_CHANGE)                  \
     /* Jetpack missile effects                  \
     DEFINE_EFFECT(AIMING)                       \
-    DEFINE_EFFECT(TARGETTING)                   \
+    DEFINE_EFFECT(TARGETING)                    \
     DEFINE_EFFECT(MISSILELAUNCH)                \
     DEFINE_EFFECT(MISSILEGOESBOOM)              \
     DEFINE_EFFECT(MANDOTALK)                    \
