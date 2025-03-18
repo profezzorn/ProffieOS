@@ -1,7 +1,7 @@
 // Jetpack Revision 52
 
 /* Created by OlivierFlying747-8 with lots of help from Fredrik Hubinette aka profezzorn,
-  http://fredrik.hubbe.net/lightsaber/proffieos.html
+  https://fredrik.hubbe.net/lightsaber/proffieos.html
   Copyright (c) 2016-2025 Fredrik Hubinette                // <------ Was 2016-2019 but shouldn't this be updated ???
   Copyright (c) 2025 OlivierFlying747-8 with contributions by:
   Fredrik Hubinette aka profezzorn,
@@ -9,46 +9,72 @@
   Bryan Connor aka NoSloppy,
   In case of problem, you can find us at: https://crucible.hubbe.net somebody will be there to help.
   Distributed under the terms of the GNU General Public License v3.
-  http://www.gnu.org/licenses/
+  https://www.gnu.org/licenses/
 
 Includes 1, 2 and 3 button controls. However, I would recommend a 2 or 3
 buttons setup because I think a 1 button setup is "cumbersome" to use!
 
-Buttons handeling was initially based on saber_sa22c_buttons.h
+Buttons handling was initially based on saber_sa22c_buttons.h
 
-Also, worth mentionning:
+Also, worth mentioning:
     This jetpack doesn't have "movement effects". You do not want to have to do
-    front/back/side flips at your next cosplay to activate someting! Or just imagine, for an instant, someone
+    front/back/side flips at your next cos-play to activate something! Or just imagine, for an instant, someone
     trying to replicate stab, aka running face first into the nearest wall with their backpack/jetpack prop.
-    Call me evil, if you want, but this makes me laugh everytime I picture it.
+    Call me evil, if you want, but this makes me laugh every time I picture it.
 
 Explanation:
 
     Let me start to explain a bit of:
     "How does a jet engine works": (feel free to skip to "How does my jetpack prop works" if you are not interested!)
     ==============================
-    On the Boeing747 (yes, I am a pilot on the B747), a minimum of 5 minutes are necessary between the last engine
+    On the Boeing 747 (yes, I am a pilot on the B-747!), a minimum of 5 minutes are necessary between the last engine
     has been started (the power is kept below 25%) and take-off power (100% power) can be applied. This allows for
-    thermal stabilization in the engines (and avoids premature and very costly wear and tear).
+    thermal stabilization in the engines (and avoids premature and very costly wear and tear - and reduces the chances
+    of going "boom" down the line).
 
     Additionally between landing power (usually around 60%) and after the engine thrust reversers (yes they "push"
     air forward - but only on ground - to help slowing down the plane) have been returned to their stowed position
     and the thrust has stabilized to their idle power, another 3 minutes most pass before it is safe/allowed to
     shut down the engines.
 
-    I tried to somewhat mimick the functioning of the jetpack prop based on a "real" world jet engine. Albeit, I only
-    have included 3 modes of operation (off, idle/low power and full power) instead of 7ish (idle 20 to 25%, take-off 100%,
-    climb/cruise 80 to 90%, descent - we call it flight idle - 40%, landing +/-60%, idle reverse, full reverse,
-    plus everything in between) because I wanted to, at least, have an idle power and in Star Wars, jetpacks only seem to
-    have off or full power (one exception to that: in one episode of The Mandalorian season 3 when Mando uses his jetpack
-    to gently descends with a "slow burn"). And by having 3 modes of opperation, I could intruduce more fun "failures".
+    I tried to somewhat mimic the functioning of the jetpack prop based on a "real" world jet engine. Albeit, I only
+    have included 3 modes of operation:
+    - off,
+    - idle/low power,
+    - flight/full power.
+    instead of the 7-ish needed: (listed in order of operation)
+    - idle 20 to 25%,
+    - take-off 100%,
+    - climb/cruise 80 to 90%,
+    - descent - we call it flight idle - 40%,
+    - landing +/-60%,
+    - idle reverse, (optional and not need on a jetpack),
+    - full reverse, (also optional and definitely not needed on a jetpack),
+    - plus everything in between 80 and 40%, for a different rate of descent,
+    - plus everything in between 60 and 90%, for a different rate of climb and/or maintain different speeds
+      at lower than cruise altitudes.
 
-    The ultimate goal would be to code for a rotary encoder that could modulate "power" (aka sound) like a thrust lever
-    does. I don't even know if ProffieBoard/ProffieOS can modulate sounds like a thrust lever modulates power on a jet
-    engine. And besides, I don't know (yet) how to do that.
+    "Why did I choose 'only' 3 modes":
+    ==================================
+    Because I wanted to have an idle/low power and in Star Wars, jetpacks seem to only have off or full power.
+    One exception to that: in one episode of The Mandalorian season 3 when Mando uses his jetpack to gently descends
+    with a "slow burn" - I don't want to add spoilers, so if you've seen the episode, you know!).
+    And by having 3 modes of operation, I could introduce more "fun" failures for each phase of "flight/non flight".
 
-    "How does my jetpack prop works":
-    =================================
+    The ultimate goal would be to code for a rotary encoder (I suppose this can work like a potentiometer) or a
+    touch-button that could modulate "power" (aka sound) like a thrust lever modulates fuel flow. I don't even know if
+    ProffieBoard/ProffieOS can modulate sounds like a thrust lever modulates power on a jet engine? And besides,
+    I don't know (yet) how to code for that!
+
+    But for now my only (and not yet complete) prop has a two buttons setup and I can't see any sensible way to have
+    more than 3 modes. I have considered "Alt mode" for more modes but I do not believe that Alt mode is the tool for
+    this job. There would be too may combinations to attempt to go from one mode to another (that is not next up or
+    next down). Going from off to flight mode would need 6 (or more!) clicks and I doubt it would make for an enjoyable
+    user experience to constantly having to count and keep track of your clicks. It would be barely achievable on a two
+    buttons setup (POW for up and AUX for down) but forget the "fun" malfunctions or a one button prop.
+
+    "How does this jetpack prop works":
+    ===================================
 
     First Power Button Press:
         Plays the jetpack idle starting sound. (low volume & low light intensity on the blade(s),
@@ -58,9 +84,10 @@ Explanation:
         If no "Second Power Button Press" within 1 minute, the jetpack will switch off.
 
     Second Power Button Press:
-        Plays the jetpack starting sound. (hight volume & high light intensity on the blade(s),
+        Plays the jetpack starting sound. (high volume & high light intensity on the blade(s),
         like a jet engine applying take-off power)
-        Loops the jetpack flying sound until the power button is pressed again.
+        Loops the jetpack flying sound until the power button is pressed again. (you can "fly" for as long as you like!)
+        To do: add a limit to this, you can't fly for ever without "refueling"!
 
     Third Power Button Press:
         Plays the jetpack slowing down to idle sound. (low volume & low light intensity on the blade(s) again)
@@ -77,7 +104,7 @@ Explanation:
     change the time to what you want (but don't make it zero or you will not be able to make the
     jetpack go into "flight mode". I have it by default to 1 min for testing/debugging purposes.
     I guess a good number, once I know everything is working as it should be, would be around 15
-    to 20sec. Enough for various sound effects to complete, enough to give you time to restart or
+    to 20 sec. Enough for various sound effects to complete, enough to give you time to restart or
     enough to play with "false start" function.
 
     Loop Function:
@@ -91,11 +118,12 @@ Explanation:
 
 ============= List of optional jetpack defines that you can add to your config. =============
 #define JETPACK_IDLE_TIME 1000 * 60 * 1 // Jetpack max idle mode time in millisec (default 1 min) before auto-shutdown.
-#define JETPACK_TRACK_PLAYER            // To add jetpack prop track player funtionality - almost identical to
+#define JETPACK_TRACK_PLAYER            // To add jetpack prop track player functionality - almost identical to
                                         // Fett263's saber track player, but without the menu option.
 // TBA JETPACK_ALLOW_CRASHING           // if "shot at" // I could create it, if there is an interest!
+// TBA MAX_JETPACK_FLIGHT_TIME
 
-Please feel free to submit more fun ideas on The Crucible or to this Github page:
+Please feel free to submit more fun ideas on The Crucible or to this GitHub page:
 https://github.com/olivierflying747-8/Olis-ProffieOS/tree/Jetpack-suggestions
 
 ============= CHECK THE BELLOW LIST TO ACTUAL BUTTON(S) COMMANDS! ============= NOT YET FINAL !!! =============
@@ -115,6 +143,7 @@ Missile Launch Sequence: Double-click while ON or OFF.
               Volume Up: Short-click while in Volume Menu.
             Volume Down: Long-click while in Volume Menu.
           Battery Level: Triple-click while OFF.
+ Abort missile sequence: not available on a 1 button setup (But why do you want to stop it anyways?)
 
 =================================================================================================================
 2 Buttons:
@@ -136,7 +165,7 @@ AUX Button:
             Volume Down: Short-click while in Volume Menu.
           Battery Level: Hold and release while OFF.
       Color Change Mode: Short-click while ON.
-          == Additional: Hold and release while OFF.
+ Abort missile sequence: Hold and release while OFF.
 
 =================================================================================================================
 3 Buttons: Same as 2 buttons except for the following:
@@ -144,7 +173,7 @@ AUX2 Button:
 
         Previous Preset: Short-click while OFF.
       Color Change Mode: Short-click while ON.
-          == Additional: Hold and release while OFF.
+ Abort missile sequence: Hold and release while OFF.
 
 ============= CHECK THE ABOVE LIST TO ACTUAL BUTTON(S) COMMANDS! ============= NOT YET FINAL !!! ============= */
 
@@ -198,7 +227,7 @@ Looking at all this code below, I am wondering which one was the first chicken a
 #define HAVE_VMBEGIN    // for Begin Volume Menu
 #define HAVE_VMEND      // for End Volume Menu
 #define HAVE_VOLDOWN    // for decrease volume
-#define HAVE_VOLUP      // for increse volume
+#define HAVE_VOLUP      // for increase volume
 #define HAVE_VOLMAX     // for maximum volume reached
 #define HAVE_VOLMIN     // for minimum volume reached
 #endif
@@ -209,7 +238,7 @@ Looking at all this code below, I am wondering which one was the first chicken a
 #define HAVE_VMBEGIN    // for Begin Volume Menu
 #define HAVE_VMEND      // for End Volume Menu
 #define HAVE_VOLDOWN    // for decrease volume
-#define HAVE_VOLUP      // for increse volume
+#define HAVE_VOLUP      // for increase volume
 #define HAVE_VOLMAX     // for maximum volume reached
 #define HAVE_VOLMIN     // for minimum volume reached
 #endif
@@ -246,7 +275,7 @@ Looking at all this code below, I am wondering which one was the first chicken a
 #define HAVE_VOLDOWN    // for decrease volume
 #endif
 #ifndef HAVE_VOLUP
-#define HAVE_VOLUP      // for increse volume
+#define HAVE_VOLUP      // for increase volume
 #endif
 #ifndef HAVE_VOLMAX
 #define HAVE_VOLMAX     // for maximum volume reached
@@ -303,7 +332,7 @@ EFFECT(volmin);         // for minimum volume reached
 #undef HAVE_VOLDOWN     // for decrease volume
 #endif
 #ifdef HAVE_VOLUP
-#undef HAVE_VOLUP       // for increse volume
+#undef HAVE_VOLUP       // for increase volume
 #endif
 #ifdef HAVE_VOLMAX
 #undef HAVE_VOLMAX      // for maximum volume reached
@@ -327,7 +356,7 @@ EFFECT(meltdown);                    // jetpack melt-down sound   (pre-idle)
 EFFECT(dud);                         // jetpack not exploding or melting down sound "Dank farrik, it's a dud!"
 // == sounds for missile ==
 EFFECT(aiming);                      // viewfinder coming down "click" sound
-EFFECT(targetting);                  // viewfinder search/finds target sound
+EFFECT(targeting);                   // viewfinder search/finds target sound
 EFFECT(missilelaunch);               // missile launch sound
 EFFECT(missilegoesboom);             // double explosion in the distance sound
 EFFECT(mandotalk);                   // "Nice shot! I was aiming for the other one!
@@ -558,7 +587,7 @@ public:
 #endif // JETPACK_TRACK_PLAYER
 
   // I used SA22C Event2 as a base, and I added my "twist" on it, since a jetpack prop/backpack with a
-  // Proffie board in it can't realisticly have twist or stab motion events.
+  // Proffie board in it can't realistically have twist or stab motion events.
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
 #ifdef BLADE_DETECT_PIN
@@ -668,7 +697,7 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD, MODE_OFF):
         if (SetMute(true)) {
           unmute_on_deactivation_ = true;
-          if (!hybrid_font.PlayPolyphonic(&SFX_mute)) { // was announcemode(&SFX_mute);
+          if (!hybrid_font.PlayPolyphonic(&SFX_mute)) {
             // Use beeper for fallback sounds
             beeper.Beep(0.05, 2000);
             beeper.Silence(0.05);
@@ -755,11 +784,16 @@ public:
       // 2 and 3 buttons
       case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
 #endif // NUM_BUTTONS == 1
-        talkie.SayDigit((int)floorf(battery_monitor.battery()));
-        talkie.Say(spPOINT);
-        talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
-        talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
-        talkie.Say(spVOLTS);
+    talkie.SayNumber((int)roundf(battery_monitor.battery_percent() * 10) % 100);
+    talkie.Say(spPERCENT);
+  // Time permitting, I will add the code for support for "#define FETT263_BC_SAY_BATTERY_VOLTS_PERCENT and/or
+  // #define FETT263_SAY_BATTERY_PERCENT" but I personally prefer %, that is why it is "active" here.
+  // If you want Volts instead of percents, comment the two lines above and un-comment the 5 lines below.
+  //talkie.SayDigit((int)floorf(battery_monitor.battery()));
+  //talkie.Say(spPOINT);
+  //talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
+  //talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
+  //talkie.Say(spVOLTS);
         return true;
     }  // switch (EVENTID)
     return false;  // No action
@@ -775,8 +809,8 @@ public:
         // create animation for OLED of viewfinder coming down
         SaberBase::DoEffect(EFFECT_AIMING,0);
         SLEEP(SaberBase::sound_length * 1000 + 10);
-        // create animation for OLED of targetting
-        SaberBase::DoEffect(EFFECT_TARGETTING,0);
+        // create animation for OLED of targeting
+        SaberBase::DoEffect(EFFECT_TARGETING,0);
         SLEEP(SaberBase::sound_length * 1000);
         // create animation for OLED of jetpack launching missile
         SaberBase::DoEffect(EFFECT_MISSILELAUNCH,0);
@@ -785,7 +819,7 @@ public:
         SaberBase::DoEffect(EFFECT_MISSILEGOESBOOM,0);
         SLEEP(SaberBase::sound_length * 1000 + 10);
         if (!flight_) { // Perform "Mando Talk" if not in flight mode!
-          // create animation for OLED of mando & boba talking
+          // create animation for OLED of Mando & Boba talking
           SaberBase::DoEffect(EFFECT_MANDOTALK,0);
           SLEEP(SaberBase::sound_length * 1000 + 10);
           PVLOG_NORMAL << "Mando: Nice shot!\nBoba: I was aiming for the other one!\n";
@@ -920,11 +954,11 @@ public:
       default: return;
       // Missile effects:
       case EFFECT_AIMING:          EffectHelper(&SFX_aiming,                   "Aiming"); return; // Must not be
-      case EFFECT_TARGETTING:      EffectHelper(&SFX_targetting,           "Targetting"); return; // interrupted
+      case EFFECT_TARGETING:       EffectHelper(&SFX_targeting,             "Targeting"); return; // interrupted
       case EFFECT_MISSILELAUNCH:   EffectHelper(&SFX_missilelaunch,    "Missile Launch"); return; // and must
       case EFFECT_MISSILEGOESBOOM: EffectHelper(&SFX_missilegoesboom,"Missile Explodes"); return; // play in
       case EFFECT_MANDOTALK:       EffectHelper(&SFX_mandotalk,  "Mando & Boba Talking"); return; // sequence with
-      case EFFECT_DISARM:          EffectHelper(&SFX_disarm,        "Disarm Targetting"); return; // one another!
+      case EFFECT_DISARM:          EffectHelper(&SFX_disarm,         "Disarm Targeting"); return; // one another!
       // Engine mishap effects:
       case EFFECT_FALSESTART:      EffectHelper(&SFX_falsestart,          "False Start"); return;
       case EFFECT_STUTTERING:      EffectHelper(&SFX_stuttering,           "Stuttering"); return;
@@ -1007,7 +1041,7 @@ private:
   X(flightmode)                     \
   X(stopflightmode)                 \
   X(stopidlemode)                   \
-/* ==  misshaps == */               \
+/* ==  mishaps == */                \
   X(falsestart)                     \
   X(stuttering)                     \
   X(selfdestruct)                   \
@@ -1015,7 +1049,7 @@ private:
   X(dud)                            \
 /* == missile == */                 \
   X(aiming)                         \
-  X(targetting)                     \
+  X(targeting)                      \
   X(missilelaunch)                  \
   X(missilegoesboom)                \
   X(mandotalk)                      \
@@ -1033,7 +1067,7 @@ struct JetpackDisplayConfigFile : public ConfigFile {
     CONFIG_VARIABLE2(ProffieOSFlightModeImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSStopFlightModeImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSStopIdleModeImageDuration, 1000.0f);
-    // ==  misshaps ==
+    // ==  mishaps ==
     CONFIG_VARIABLE2(ProffieOSFalseStartImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSStutteringImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSSelfDestructImageDuration, 1000.0f);
@@ -1041,7 +1075,7 @@ struct JetpackDisplayConfigFile : public ConfigFile {
     CONFIG_VARIABLE2(ProffieOSDudImageDuration, 1000.0f);
     // == missile ==
     CONFIG_VARIABLE2(ProffieOSAimingImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSTargettingImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSTargetingImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSMissileLaunchImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSMissileGoesBoomImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSMandoTalkImageDuration, 1000.0f);
@@ -1060,7 +1094,7 @@ struct JetpackDisplayConfigFile : public ConfigFile {
   float ProffieOSStopFlightModeImageDuration;
   // for OLED displays, the time a stopidlemode.bmp will play
   float ProffieOSStopIdleModeImageDuration;
-  // ==  misshaps ==
+  // ==  mishaps ==
   // for OLED displays, the time a falsestart.bmp will play
   float ProffieOSFalseStartImageDuration;
   // for OLED displays, the time a stuttering.bmp will play
@@ -1074,8 +1108,8 @@ struct JetpackDisplayConfigFile : public ConfigFile {
   // == missile ==
   // for OLED displays, the time a aiming.bmp will play
   float ProffieOSAimingImageDuration;
-  // for OLED displays, the time a targetting.bmp will play
-  float ProffieOSTargettingImageDuration;
+  // for OLED displays, the time a targeting.bmp will play
+  float ProffieOSTargetingImageDuration;
   // for OLED displays, the time a missilelaunch.bmp will play
   float ProffieOSMissileLaunchImageDuration;
   // for OLED displays, the time a missilegoesboom.bmp will play
@@ -1160,7 +1194,7 @@ public:
         }
         break;
 
-      // jetpack misshaps display effects:
+      // jetpack mishaps display effects:
       // =================================
       case EFFECT_FALSESTART:
         if (img_.IMG_falsestart) {                           // Jetpack with "smoke fart" animation
@@ -1218,11 +1252,11 @@ public:
         }
         break;
 
-      case EFFECT_TARGETTING:
-        if (img_.IMG_targetting) {                           // animation of targetting
-          ShowFileWithSoundLength(&img_.IMG_targetting,      jetpack_font_config.ProffieOSTargettingImageDuration);
+      case EFFECT_TARGETING:
+        if (img_.IMG_targeting) {                            // animation of targeting
+          ShowFileWithSoundLength(&img_.IMG_targeting,       jetpack_font_config.ProffieOSTargetingImageDuration);
         } else {
-          this->SetMessage("targetting");
+          this->SetMessage("targeting");
           this->SetScreenNow(SCREEN_MESSAGE);
         }
         break;
@@ -1246,7 +1280,7 @@ public:
         break;
 
       case EFFECT_MANDOTALK:
-        if (img_.IMG_mandotalk) {                            // animation of mando & boba talking
+        if (img_.IMG_mandotalk) {                            // animation of Mando & Boba talking
           ShowFileWithSoundLength(&img_.IMG_mandotalk,       jetpack_font_config.ProffieOSMandoTalkImageDuration);
         } else {
           this->SetMessage("nice shot");
@@ -1295,7 +1329,7 @@ public:
       case EFFECT_FLIGHTMODE:      this->scr_.Play(&SCR_flightmode);      break;
       case EFFECT_STOPFLIGHTMODE:  this->scr_.Play(&SCR_stopflightmode);  break;
       case EFFECT_STOPIDLEMODE:    this->scr_.Play(&SCR_stopidlemode);    break;
-      // jetpack misshaps display effects:
+      // jetpack mishaps display effects:
       // =================================
       case EFFECT_FALSESTART:      this->scr_.Play(&SCR_falsestart);      break;
       case EFFECT_SELFDESTRUCT:    this->scr_.Play(&SCR_selfdestruct);    break;
@@ -1305,7 +1339,7 @@ public:
       // jetpack missile display effects: Make animations for OLED from the episode from Mando S02E06
       // ================================
       case EFFECT_AIMING:          this->scr_.Play(&SCR_aiming);          break;
-      case EFFECT_TARGETTING:      this->scr_.Play(&SCR_targetting);      break;
+      case EFFECT_TARGETING:       this->scr_.Play(&SCR_targeting);       break;
       case EFFECT_MISSILELAUNCH:   this->scr_.Play(&SCR_missilelaunch);   break;
       case EFFECT_MISSILEGOESBOOM: this->scr_.Play(&SCR_missilegoesboom); break;
       case EFFECT_MANDOTALK:       this->scr_.Play(&SCR_mandotalk);       break;
