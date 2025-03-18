@@ -1,22 +1,22 @@
-// version 064 (compiling version for saber-blaster(with bullet count)-detonator-jetpack, all with sound-effects on
+// version 066 (compiling version for saber-blaster(with bullet count)-detonator-jetpack, all with sound-effects on
 //             (but-untested as my saber is not yet working)                              transition between props.
 //             (switching presets sets)                                                   (provided by NoSloppy)
 
 /* Created by OlivierFlying747-8 with lots of help from Fredrik Hubinette aka profezzorn,
-  http://fredrik.hubbe.net/lightsaber/proffieos.html
-  Copyright (c) 2016-2019 Fredrik Hubinette
+  https://fredrik.hubbe.net/lightsaber/proffieos.html
+  Copyright (c) 2016-2025 Fredrik Hubinette
   Copyright (c) 2025 OlivierFlying747-8 with contributions by:
   Fredrik Hubinette aka profezzorn,
   Ryan Ogurek aka ryryog25,
   Bryan Connor aka NoSloppy,
   In case of problem, you can find us at: https://crucible.hubbe.net somebody will be there to help.
   Distributed under the terms of the GNU General Public License v3.
-  http://www.gnu.org/licenses/
+  https://www.gnu.org/licenses/
 
 /*
 multi_prop.h allows for 4 (maybe more coming) discrete prop files to be used,
 alternating on a 2 buttons extra long push (4 seconds - customisable with #define TWO_BUTTONS_X_LONG_PUSH 1000 * 4)
-with or without a blade attached.
+with or without a main blade attached.
 Blade detect function has no effect on multi_prop.h (other than playing blade in/out wav)
 Your prop NEEDS to have two or more buttons.
 Multi_prop.h MUST be declared before the other props.
@@ -63,12 +63,6 @@ How to use: add this to your config
 #endif
 
 #include "prop_base.h"
-
-#ifdef INCLUDE_SSD1306
-#ifndef EXTRA_DISPLAY_CONTROLLER_INCLUDE
-#define EXTRA_DISPLAY_CONTROLLER_INCLUDE "props/additional_display_controllers.h"
-#endif
-#endif
 
 // Define FakeBladeID structure
 struct FakeBladeID {                                              //
@@ -188,6 +182,26 @@ class MultiProp : public virtual Saber, public virtual Blaster, public virtual D
 public:
   const char* name() override { return "MultiProp"; }
 
+/*
+// Only one chdir & Parse function can be used at a time, so in a dual_prop.h/multi_prop.h "environment" SaberFett263Button
+// already has them.
+// I initially had in multi_prop.h:
+#if defined(PROPS_SABER_FETT263_BUTTONS_H) || defined(PROPS_JETPACK_PROP_H)
+  // Resolve 'chdir' ambiguity
+  bool chdir(StringPiece dir) override {
+    return Saber::chdir(dir);
+  }
+  // Resolve 'Parse' ambiguity
+  bool Parse(const char* key, const char* value) override {
+    return Saber::Parse(key, value);
+  }
+#endif
+// This was resolving the ambiguity but was also increasing the size of the compile by a few 100 bytes
+// because the code for chdir and Parse was added twice and extra code had to be added to multi_prop.h
+// Doing it "my" way reduced the size of the compile by a little bit.
+// Every byte saved counts, right ?
+*/
+
   // Button mapping for 2 and 3-button setups
     // The "Blaster mapping"
   uint32_t map_button(uint32_t b) {
@@ -285,10 +299,12 @@ public:
     return false;  // Event was not handled
   }
 
-/******************************************************************************************\
-| I tried with lamdbas functions to reduce repetition but it was taking a lot more memmory.|
-| If you are interested, look at the bottom of this file for my abandoned code.            |
-\******************************************************************************************/
+/*******************************************************************************************\
+| I tried with lamdbas functions to reduce repetition further, but it was taking a lot      |
+| more memory, and adding a lot more complexity. I guess, I must be like Gollum, he doesn't |
+| like Elven Lemdbas bread either!!! Yes I think this is funny! ¯\_(ツ)_/¯                   |
+| But at least, I lined up everything to make the code look "prettier" and easier to read!  |
+\*******************************************************************************************/
 
   // Overriding Event2 to resolve ambiguity
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
@@ -396,106 +412,150 @@ public:
 
 #endif // PROPS_MULTI_PROP_H
 
-/* At some point in time, I had the following code to reduce repetition,
-// but it was taking a lot more memory, so I abandoned it.
-// However this was tested with plug-in 4.1.0, so I might "re-visit" it!
-//
-// *************************************************************
-// * add this to the top, below "#define PROPS_MULTI_PROP_H":  *
-// * ========================================================  *
-// * #include <unordered_map>  // Added for std::unordered_map *
-// * #include <functional>     // Added for std::function      *
-// *************************************************************
+/*************************************\
+|*                                   *|
+|*   MULTI_PROP DISPLAY CONTROLLER   *|
+|*                                   *|
+\*************************************/
 
-  // Updated repetitive methods to a centralized handler structure
-  struct Handler {
-    std::function<bool(enum BUTTON, EVENT, uint32_t)> Event2;  // Pointer to Event2 member function
-    std::function<void(int, bool)> SetPreset;                  // Pointer to SetPreset member function
-    std::function<void()> Loop;                                // Pointer to Loop member function
-    std::function<void(const Vec3&, bool)> DoMotion;           // Pointer to DoMotion member function
-    std::function<void(bool, float)> Clash;                    // Pointer to Clash member function
-  // SB_Effect does not "play nice" with "lamdbas bread" (LOTR) handlers (see errors from rev 049 to 053) !!!
-  // SB_Effect must be like Gollum, he doesn't like elven lembas bread either!!! (Yes, I think it is funny!)
-  //std::function<void(EffectType, EffectLocation)> SB_Effect; // Pointer to SB_Effect member function
-  };
+#ifdef PROP_BOTTOM
 
-  std::unordered_map<Prop_Mode, Handler> handlers;
+#define ONCE_PER_MULTIPROP_EFFECT(X)  \
+  X(sabermode)                        \
+  X(blastermode)                      \
+  X(detonatormode)                    \
+  X(jetpackmode)  // add backslash when uncommenting next line
+  //X(morsecodemode)
 
-  // Helper to create handlers, to use lambdas for invoking the member functions
-  // Use Wrappers for Function Calls, use lambda functions to wrap the calls. Lambdas capture the `this`
-  // pointer and explicitly resolve the ambiguity. This avoids the problem with virtual inheritance.
-  template <typename TransitMode>
-  Handler CreateHandler() {
-    return {
-      [this](enum BUTTON b, EVENT e, uint32_t m) { return static_cast<TransitMode*>(this)->Event2(b, e, m); },
-      [this](int p, bool a) { static_cast<TransitMode*>(this)->SetPreset(p, a); },
-      [this]() { static_cast<TransitMode*>(this)->Loop(); },
-      [this](const Vec3& v, bool c) { static_cast<TransitMode*>(this)->DoMotion(v, c); },
-      [this](bool s, float str) { static_cast<TransitMode*>(this)->Clash(s, str); },
-    //[this](EffectType e, EffectLocation l) { static_cast<TransitMode*>(this)->SB_Effect(e, l); }
-    };
+#ifdef INCLUDE_SSD1306
+
+struct MultiPropDisplayConfigFile : public ConfigFile {
+  MultiPropDisplayConfigFile() { link(&font_config); }
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(ProffieOSSaberModeImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSBlasterModeImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSDetonatorModeImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSJetpackModeImageDuration, 1000.0f);
+    //CONFIG_VARIABLE2(ProffieOSMorsecodeModeImageDuration, 1000.0f);
   }
 
-  MultiProp() {
-    handlers[Prop_Mode::SABER]     = CreateHandler<Saber>();
-    handlers[Prop_Mode::BLASTER]   = CreateHandler<Blaster>();
-    handlers[Prop_Mode::DETONATOR] = CreateHandler<Detonator>();
-    handlers[Prop_Mode::JETPACK]   = CreateHandler<Jetpack>();
-  //handlers[Prop_Mode::MORSECODE] = CreateHandler<MorseCode>();
-  //handlers[Prop_Mode::DROID]     = CreateHandler<Droid>();
-  //handlers[Prop_Mode::VEHICLE]   = CreateHandler<Vehicle>();
-  }
+  // for OLED displays, the time a sabermode.bmp will play
+  float ProffieOSSaberModeImageDuration;
+  // for OLED displays, the time a blastermode.bmp will play
+  float ProffieOSBlasterModeImageDuration;
+  // for OLED displays, the time a detonatormode.bmp will play
+  float ProffieOSDetonatorModeImageDuration;
+  // for OLED displays, the time a jetpackmode.bmp will play
+  float ProffieOSJetpackModeImageDuration;
+  // for OLED displays, the time a morsecodemode.bmp will play
+  //float ProffieOSMorsecodeModeImageDuration;
+};
 
-  // Overriding Event2 to resolve ambiguity                // Centralized calls
-  bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
-    if (handlers[currentMode].Event2) {
-      return (this->*handlers[currentMode].Event2)(button, event, modifiers);
+template<typename PREFIX = ByteArray<>>
+struct MultiPropDisplayEffects  {
+  MultiPropDisplayEffects() : dummy_(0) ONCE_PER_MULTIPROP_EFFECT(INIT_IMG) {}
+  int dummy_;
+  ONCE_PER_MULTIPROP_EFFECT(DEF_IMG)
+};
+
+template<int Width, class col_t, typename PREFIX = ByteArray<>>
+class MultiPropDisplayController : public StandardDisplayController<Width, col_t, PREFIX> {
+public:
+  MultiPropDisplayEffects<PREFIX> img_;
+  MultiPropDisplayConfigFile &multiprop_font_config;
+  MultiPropDisplayController() :
+    img_(*getPtr<MultiPropDisplayEffects<PREFIX>>()),
+    multiprop_font_config(*getPtr<MultiPropDisplayConfigFile>()) {}
+
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      case EFFECT_SABERMODE:
+        if (img_.IMG_sabermode) {                          // image of a saber
+          ShowFileWithSoundLength(&img_.IMG_sabermode,     multiprop_font_config.ProffieOSSaberModeImageDuration);
+        } else {
+          this->SetMessage("saber\nmode");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_BLASTERMODE:
+        if (img_.IMG_blastermode) {                        // image of Han's blaster
+          ShowFileWithSoundLength(&img_.IMG_blastermode,   multiprop_font_config.ProffieOSBlasterModeImageDuration);
+        } else {
+          this->SetMessage("blaster\n mode");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_DETONATORMODE:
+        if (img_.IMG_detonatormode) {                      // image of a detonator
+          ShowFileWithSoundLength(&img_.IMG_detonatormode, multiprop_font_config.ProffieOSDetonatorModeImageDuration);
+        } else {
+          this->SetMessage("detonator\n  mode");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_JETPACKMODE:
+        if (img_.IMG_jetpackmode) {                        // image of Mando's jetpack
+          ShowFileWithSoundLength(&img_.IMG_jetpackmode,   multiprop_font_config.ProffieOSJetpackModeImageDuration);
+        } else {
+          this->SetMessage("jetpack\nmode");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+/*
+      case EFFECT_MORSECODEMODE:
+        if (img_.IMG_morsecodemode) {                      // Image of S.O.S. in morse code
+          ShowFileWithSoundLength(&img_.IMG_morsecodemode, multiprop_font_config.ProffieOSMorsecodeModeImageDuration);
+        } else {
+          this->SetMessage("morse code\n  mode");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+*/
+      default:
+        StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
     }
-    return false;  // Event was not handled
   }
 
-  void SetPreset(int preset_num, bool announce) override { // Centralized calls
-    if (handlers[currentMode].SetPreset) {
-      (this->*handlers[currentMode].SetPreset)(preset_num, announce);
+  void SB_Off2(typename StandardDisplayController<Width, col_t, PREFIX>::OffType offtype, EffectLocation location) override {
+    if (offtype == StandardDisplayController<Width, col_t, PREFIX>::OFF_BLAST) {
+      ShowFileWithSoundLength(img_.IMG_sabermode, multiprop_font_config.ProffieOSSaberModeImageDuration);
+    } else {
+      StandardDisplayController<Width, col_t, PREFIX>::SB_Off2(offtype, location);
     }
-  }
-
-  void Loop() override {                                   // Centralized calls
-    if (handlers[currentMode].Loop) {
-      (this->*handlers[currentMode].Loop)();
-    }
-  }
-
-  void DoMotion(const Vec3& motion, bool clear) override { // Centralized calls
-    if (handlers[currentMode].DoMotion) {
-      (this->*handlers[currentMode].DoMotion)(motion, clear);
-    }
-  }
-
-  void Clash(bool stab, float strength) override {         // Centralized calls
-    if (handlers[currentMode].Clash) {
-      (this->*handlers[currentMode].Clash)(stab, strength);
-    }
-  }
-
-  // SB_Effect does not want to "play nice" with "lamdbas bread" (LOTR) handlers !!!
-  // SB_Effect must be like Gollum, he doesn't like Elven Lemdbas bread either!!! (Yes I think this is funny!)
-  //void SB_Effect(EffectType effect, EffectLocation location) override {
-  //  if (handlers[currentMode].SB_Effect) {               // Centralized calls
-  //    (this->*handlers[currentMode].SB_Effect)(effect, location);
-  //  }
-  //}
-  // so the code still has to be with the full switch with "repetition" (But at least, I tried to make it look prety):
-  void SB_Effect(EffectType effect, EffectLocation location) override {
-    switch (currentMode) {                               // *** No centralized calls ***
-      case Prop_Mode::SABER:         Saber::SB_Effect(effect, location); break;
-      case Prop_Mode::BLASTER:     Blaster::SB_Effect(effect, location); break;
-      case Prop_Mode::DETONATOR: Detonator::SB_Effect(effect, location); break;
-      case Prop_Mode::JETPACK:     Jetpack::SB_Effect(effect, location); break;
-    //case Prop_Mode::MORSECODE: MorseCode::SB_Effect(effect, location); break;
-    //case Prop_Mode::DROID:         Droid::SB_Effect(effect, location); break;
-    //case Prop_Mode::VEHICLE:     Vehicle::SB_Effect(effect, location); break;
-   }
   }
 };
-*/
+
+#endif  // INCLUDE_SSD1306
+
+template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>,
+         typename NumberToByteArray<H>::type>>
+class MultiPropColorDisplayController : public StandarColorDisplayController<W, H, PREFIX> {
+public:
+  template<int w, int h>
+  explicit MultiPropColorDisplayController(SizedLayeredScreenControl<w, h>* screen) :
+  StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_MULTIPROP_EFFECT(INIT_SCR) {
+  }
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      case EFFECT_SABERMODE:     this->scr_.Play(&SCR_sabermode);       break;
+      case EFFECT_BLASTERMODE:   this->scr_.Play(&SCR_blastermode);     break;
+      case EFFECT_DETONATORMODE: this->scr_.Play(&SCR_detonatormode);   break;
+      case EFFECT_JETPACKMODE:   this->scr_.Play(&SCR_jetpackmode);     break;
+    //case EFFECT_MORSECODEMODE: this->scr_.Play(&SCR_morsecodemode);   break;
+      default:
+        StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
+    }
+  }
+
+protected:
+  ONCE_PER_MULTIPROP_EFFECT(DEF_SCR);
+};
+
+#undef ONCE_PER_MULTIPROP_EFFECT
+
+#endif  // PROP_BOTTOM
