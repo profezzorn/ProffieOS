@@ -1,8 +1,8 @@
 /*
 blaster_BC_buttons.h prop file.
   http://fredrik.hubbe.net/lightsaber/proffieos.html
-  Copyright (c) 2016-2023 Fredrik Hubinette
-  Copyright (c) 2023 Brian Conner with contributions by:
+  Copyright (c) 2016-2025 Fredrik Hubinette
+  Copyright (c) 2025 Brian Conner with contributions by:
   Fredrik Hubinette, Fernando da Rosa, Matthew McGeary, and Scott Weber.
   Distributed under the terms of the GNU General Public License v3.
   http://www.gnu.org/licenses/
