@@ -2,7 +2,7 @@
 
 /* Created by OlivierFlying747-8 with lots of help from Fredrik Hubinette aka profezzorn,
   https://fredrik.hubbe.net/lightsaber/proffieos.html
-  Copyright (c) 2016-2025 Fredrik Hubinette                // <------ Was 2016-2019 but shouldn't this be updated ???
+  Copyright (c) 2016-2025 Fredrik Hubinette
   Copyright (c) 2025 OlivierFlying747-8 with contributions by:
   Fredrik Hubinette aka profezzorn,
   Ryan Ogurek aka ryryog25,
@@ -17,15 +17,15 @@ buttons setup because I think a 1 button setup is "cumbersome" to use!
 Buttons handling was initially based on saber_sa22c_buttons.h
 
 Also, worth mentioning:
-    This jetpack doesn't have "movement effects". You do not want to have to do
-    front/back/side flips at your next cos-play to activate something! Or just imagine, for an instant, someone
-    trying to replicate stab, aka running face first into the nearest wall with their backpack/jetpack prop.
+    This jetpack doesn't have any "movement effects". You do not want to have to do front/back/side
+    flips at your next cos-play to activate something! Or just imagine, for an instant, someone trying
+    to replicate stab, aka running face first into the nearest wall with their backpack/jetpack prop.
     Call me evil, if you want, but this makes me laugh every time I picture it.
 
 Explanation:
 
     Let me start to explain a bit of:
-    "How does a jet engine works": (feel free to skip to "How does my jetpack prop works" if you are not interested!)
+    "How does a jet engine works": (feel free to skip to "How does this jetpack prop works" if you are not interested!)
     ==============================
     On the Boeing 747 (yes, I am a pilot on the B-747!), a minimum of 5 minutes are necessary between the last engine
     has been started (the power is kept below 25%) and take-off power (100% power) can be applied. This allows for
@@ -34,8 +34,8 @@ Explanation:
 
     Additionally between landing power (usually around 60%) and after the engine thrust reversers (yes they "push"
     air forward - but only on ground - to help slowing down the plane) have been returned to their stowed position
-    and the thrust has stabilized to their idle power, another 3 minutes most pass before it is safe/allowed to
-    shut down the engines.
+    and the engines have stabilized to their idle power, another 3 minutes must pass before it is safe/allowed to
+    shut them down.
 
     I tried to somewhat mimic the functioning of the jetpack prop based on a "real" world jet engine. Albeit, I only
     have included 3 modes of operation:
@@ -52,23 +52,24 @@ Explanation:
     - full reverse, (also optional and definitely not needed on a jetpack),
     - plus everything in between 80 and 40%, for a different rate of descent,
     - plus everything in between 60 and 90%, for a different rate of climb and/or maintain different speeds
-      at lower than cruise altitudes.
+      at lower than cruise altitude.
 
     "Why did I choose 'only' 3 modes":
     ==================================
     Because I wanted to have an idle/low power and in Star Wars, jetpacks seem to only have off or full power.
     One exception to that: in one episode of The Mandalorian season 3 when Mando uses his jetpack to gently descends
-    with a "slow burn" - I don't want to add spoilers, so if you've seen the episode, you know!).
+    with a "slow burn" - I don't want to add spoilers. If you've seen the episode, you know!).
     And by having 3 modes of operation, I could introduce more "fun" failures for each phase of "flight/non flight".
 
-    The ultimate goal would be to code for a rotary encoder (I suppose this can work like a potentiometer) or a
+    The ultimate goal would be to code for a rotary encoder (I suppose this can work like a potentiometer?) or a
     touch-button that could modulate "power" (aka sound) like a thrust lever modulates fuel flow. I don't even know if
     ProffieBoard/ProffieOS can modulate sounds like a thrust lever modulates power on a jet engine? And besides,
     I don't know (yet) how to code for that!
 
-    But for now my only (and not yet complete) prop has a two buttons setup and I can't see any sensible way to have
-    more than 3 modes. I have considered "Alt mode" for more modes but I do not believe that Alt mode is the tool for
-    this job. There would be too may combinations to attempt to go from one mode to another (that is not next up or
+    But for now my only (and not yet complete) Proffie prop has a two buttons setup and I can't see any sensible way
+    to have more than 3 modes.
+    I have considered "Alt mode" for more modes but I do not believe that Alt mode is the tool for this job.
+    There would be too may combinations to attempt to go from one "random" mode to another (that is not next up or
     next down). Going from off to flight mode would need 6 (or more!) clicks and I doubt it would make for an enjoyable
     user experience to constantly having to count and keep track of your clicks. It would be barely achievable on a two
     buttons setup (POW for up and AUX for down) but forget the "fun" malfunctions or a one button prop.
@@ -86,7 +87,7 @@ Explanation:
     Second Power Button Press:
         Plays the jetpack starting sound. (high volume & high light intensity on the blade(s),
         like a jet engine applying take-off power)
-        Loops the jetpack flying sound until the power button is pressed again. (you can "fly" for as long as you like!)
+        Loops the jetpack flying sound until the power button is pressed again.
         To do: add a limit to this, you can't fly for ever without "refueling"!
 
     Third Power Button Press:
@@ -120,8 +121,9 @@ Explanation:
 #define JETPACK_IDLE_TIME 1000 * 60 * 1 // Jetpack max idle mode time in millisec (default 1 min) before auto-shutdown.
 #define JETPACK_TRACK_PLAYER            // To add jetpack prop track player functionality - almost identical to
                                         // Fett263's saber track player, but without the menu option.
-// TBA JETPACK_ALLOW_CRASHING           // if "shot at" // I could create it, if there is an interest!
-// TBA MAX_JETPACK_FLIGHT_TIME
+// TBA JETPACK_ALLOW_CRASHING           // If "shot at" // I could create it, if there is an interest!
+// TBA MAX_JETPACK_FLIGHT_TIME          // You can't "fly" forever, eventually you will run out of fuel,
+                                        // or battery in the case of your prop!
 
 Please feel free to submit more fun ideas on The Crucible or to this GitHub page:
 https://github.com/olivierflying747-8/Olis-ProffieOS/tree/Jetpack-suggestions
@@ -515,24 +517,24 @@ public:
   }
 
 /*
-// Only one chdir & Parse function can be used, so in a dual_prop.h/multi_prop.h "environment" SaberFett263Button
-// already has them.
-// I initially had in multi_prop.h:
+// Only one chdir & Parse function can be used at a time, so in a dual_prop.h/multi_prop.h "environment"
+// SaberFett263Button already has them.
+// I initially had this in multi_prop.h:
 #if defined(PROPS_SABER_FETT263_BUTTONS_H) || defined(PROPS_JETPACK_PROP_H)
-  // Resolve 'chdir' ambiguity
   bool chdir(StringPiece dir) override {
     return Saber::chdir(dir);
   }
-  // Resolve 'Parse' ambiguity
   bool Parse(const char* key, const char* value) override {
     return Saber::Parse(key, value);
   }
 #endif
-// This was resolving the ambiguity but was also increasing the size of the compile by a few 100 bytes
-// because the code for chdir and Parse was added twice and extra code had to be added to multi_prop.h
-// Doing it "my" way reduced the size of the compile by a little bit.
+// This was resolving the ambiguity but was also increasing the size of the compile by a few 100 bytes,
+// because the code for chdir and Parse was added twice (once in JetpackOli and once in Fett263) and
+// extra code had to be added to multi_prop.h to resolve the ambiguity. Solving the ambiguity directly
+// in JetpackOli reduces the size of the compile by a little bit.
 // Every byte saved counts, right ?
 */
+
 #ifndef PROPS_SABER_FETT263_BUTTONS_H
   bool chdir(const StringPiece dir) override {
     bool ret = PropBase::chdir(dir);
@@ -768,8 +770,8 @@ public:
 #endif // NUM_BUTTONS == 1
     talkie.SayNumber((int)roundf(battery_monitor.battery_percent() * 10) % 100);
     talkie.Say(spPERCENT);
-  // Time permitting, I will add the code for support for "#define FETT263_BC_SAY_BATTERY_VOLTS_PERCENT and/or
-  // #define FETT263_SAY_BATTERY_PERCENT" but I personally prefer %, that is why it is "active" here.
+  // Time permitting, I plan to add the code for support for "#define FETT263_BC_SAY_BATTERY_VOLTS_PERCENT"
+  // and/or "#define FETT263_SAY_BATTERY_PERCENT" but I personally prefer %, that is why it is "active" here.
   // If you want Volts instead of percents, comment the two lines above and un-comment the 5 lines below.
   //talkie.SayDigit((int)floorf(battery_monitor.battery()));
   //talkie.Say(spPOINT);
@@ -823,20 +825,20 @@ public:
       return;
     }
     if (flight_) {
-      // Jetpack flying, play stuttering sound
-      jetpack_wav_player_.StopFromReader();     // Stop flight sound
-      SaberBase::DoEffect(EFFECT_STUTTERING,0); // Play stuttering sound
+      // Jetpack flying, play stuttering sound.
+      jetpack_wav_player_.StopFromReader();      // Stop flight sound.
+      SaberBase::DoEffect(EFFECT_STUTTERING, 0); // Play stuttering sound.
     } else if (idle_) {
-      // Jetpack idle, play false start and reset idle timer
-      jetpack_wav_player_.StopFromReader();     // Stop idle sound
-      SaberBase::DoEffect(EFFECT_FALSESTART,0); // Play false start sound
+      // Jetpack idle, play false start and reset idle timer.
+      jetpack_wav_player_.StopFromReader();      // Stop idle sound.
+      SaberBase::DoEffect(EFFECT_FALSESTART, 0); // Play false start sound.
       timer_ = millis(); // Reset idle timer
-    } else ChooseRandomEffect(); // Play random mishap effect
+    } else ChooseRandomEffect(); // Play random mishap effect.
   }
 
-  // Jetpack off, play self destruct, meltdown or dud (randomly between the three)
+  // Jetpack off, play self destruct, meltdown or dud (randomly between the three).
   void ChooseRandomEffect() {
-    int choice = random(3); // Generate a random number: 0, 1, or 2
+    int choice = random(3); // Generate a random number: 0, 1, or 2.
     switch (choice) {
       case 0:  SaberBase::DoEffect(EFFECT_SELFDESTRUCT,0); break;
       case 1:  SaberBase::DoEffect(EFFECT_MELTDOWN,0);     break;
@@ -850,7 +852,7 @@ public:
     if (jetpack_wav_player_.isPlaying()) {
       return; // Wait for the current sound to finish
     }
-    SaberBase::DoEffect(EFFECT_STARTIDLEMODE, 0); // start transition to idle mode
+    SaberBase::DoEffect(EFFECT_STARTIDLEMODE, 0); // start transition to idle mode.
     flight_ = false;
     idle_   = true;
     timer_  = millis(); // Reset idle timer
@@ -863,7 +865,7 @@ public:
     if (jetpack_wav_player_.isPlaying()) {
       return; // Wait for the current sound to finish
     }
-    SaberBase::DoEffect(EFFECT_STARTFLIGHTMODE, 0); // start transition to flight mode
+    SaberBase::DoEffect(EFFECT_STARTFLIGHTMODE, 0); // start transition to flight mode.
     flight_ = true;
     idle_   = false;
     PVLOG_STATUS << "Jetpack Flying\n";
@@ -874,7 +876,7 @@ public:
     if (jetpack_wav_player_.isPlaying()) {
       return; // Wait for the current sound to finish
     }
-    SaberBase::DoEffect(EFFECT_STOPFLIGHTMODE, 0); // start transition from flight mode
+    SaberBase::DoEffect(EFFECT_STOPFLIGHTMODE, 0); // start transition from flight mode.
     flight_ = false;
     idle_   = true;
   }
@@ -884,42 +886,42 @@ public:
     if (jetpack_wav_player_.isPlaying()) {
       return; // Wait for the current sound to finish
     }
-    SaberBase::DoEffect(EFFECT_STOPIDLEMODE, 0); // start transition from idle mode
+    SaberBase::DoEffect(EFFECT_STOPIDLEMODE, 0); // start transition from idle mode.
     flight_ = false; // Should already be false but StopIdleMode can be used to turn the jetpack completely off from any state.
     idle_   = false;
-    Off(OFF_FAST); // Fully stop the jetpack
+    Off(OFF_FAST); // Fully stop the jetpack.
   }
 
   void Loop() override {
     unsigned long now = millis();
 
-    // Perform the missile launch sequence
+    // Perform the missile launch sequence.
     PerformMissileLaunchSequence();
 
     // Stop idle mode after timeout
     if (idle_ && (now - timer_ > JETPACK_IDLE_TIME)) {
-      StopIdleMode(); // Stop jetpack if idle for more than defined time
-      return; // Exit early to avoid further processing
+      StopIdleMode(); // Stop jetpack if idle for more than defined time.
+      return;
     }
 
-    // Start idle loop after transition sound finishes
+    // Start idle loop after transition sound finishes.
     if (idle_)
       IdlePlaying();
 
-    // Start flight loop after transition sound finishes
+    // Start flight loop after transition sound finishes.
     if (flight_)
       FlightPlaying();
   }
 
   void IdlePlaying() {
     if (idle_ && !jetpack_wav_player_.isPlaying()) {
-      SaberBase::DoEffect(EFFECT_IDLEMODE,0); // Start idle loop
+      SaberBase::DoEffect(EFFECT_IDLEMODE, 0); // Start idle loop.
     }
   }
 
   void FlightPlaying() {
     if (flight_ && !jetpack_wav_player_.isPlaying()) {
-      SaberBase::DoEffect(EFFECT_FLIGHTMODE,0); // Start flight loop
+      SaberBase::DoEffect(EFFECT_FLIGHTMODE, 0); // Start flight loop.
     }
   }
 
@@ -1043,62 +1045,62 @@ struct JetpackDisplayConfigFile : public ConfigFile {
   JetpackDisplayConfigFile() { link(&font_config); }
   void iterateVariables(VariableOP *op) override {
     // == jetpack ==
-    CONFIG_VARIABLE2(ProffieOSStartIdleModeImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSIdleModeImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSStartIdleModeImageDuration,   1000.0f);
+    CONFIG_VARIABLE2(ProffieOSIdleModeImageDuration,        1000.0f);
     CONFIG_VARIABLE2(ProffieOSStartFlightModeImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSFlightModeImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSStopFlightModeImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSStopIdleModeImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSFlightModeImageDuration,      1000.0f);
+    CONFIG_VARIABLE2(ProffieOSStopFlightModeImageDuration,  1000.0f);
+    CONFIG_VARIABLE2(ProffieOSStopIdleModeImageDuration,    1000.0f);
     // ==  mishaps ==
-    CONFIG_VARIABLE2(ProffieOSFalseStartImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSStutteringImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSSelfDestructImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSMeltdownImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSDudImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSFalseStartImageDuration,      1000.0f);
+    CONFIG_VARIABLE2(ProffieOSStutteringImageDuration,      1000.0f);
+    CONFIG_VARIABLE2(ProffieOSSelfDestructImageDuration,    1000.0f);
+    CONFIG_VARIABLE2(ProffieOSMeltdownImageDuration,        1000.0f);
+    CONFIG_VARIABLE2(ProffieOSDudImageDuration,             1000.0f);
     // == missile ==
-    CONFIG_VARIABLE2(ProffieOSAimingImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSTargetingImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSMissileLaunchImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSAimingImageDuration,          1000.0f);
+    CONFIG_VARIABLE2(ProffieOSTargetingImageDuration,       1000.0f);
+    CONFIG_VARIABLE2(ProffieOSMissileLaunchImageDuration,   1000.0f);
     CONFIG_VARIABLE2(ProffieOSMissileGoesBoomImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSMandoTalkImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSDisarmImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSMandoTalkImageDuration,       1000.0f);
+    CONFIG_VARIABLE2(ProffieOSDisarmImageDuration,          1000.0f);
   }
   // == jetpack ==
-  // for OLED displays, the time a idlemode.bmp will play
+  // for OLED displays, the time a idlemode.bmp        will play.
   float ProffieOSIdleModeImageDuration;
-  // for OLED displays, the time a startidlemode.bmp will play
+  // for OLED displays, the time a startidlemode.bmp   will play.
   float ProffieOSStartIdleModeImageDuration;
-  // for OLED displays, the time a startflightmode.bmp will play
+  // for OLED displays, the time a startflightmode.bmp will play.
   float ProffieOSStartFlightModeImageDuration;
-  // for OLED displays, the time a flightmode.bmp will play
+  // for OLED displays, the time a flightmode.bmp      will play.
   float ProffieOSFlightModeImageDuration;
-  // for OLED displays, the time a stopflightmode.bmp will play
+  // for OLED displays, the time a stopflightmode.bmp  will play.
   float ProffieOSStopFlightModeImageDuration;
-  // for OLED displays, the time a stopidlemode.bmp will play
+  // for OLED displays, the time a stopidlemode.bmp    will play.
   float ProffieOSStopIdleModeImageDuration;
   // ==  mishaps ==
-  // for OLED displays, the time a falsestart.bmp will play
+  // for OLED displays, the time a falsestart.bmp      will play.
   float ProffieOSFalseStartImageDuration;
-  // for OLED displays, the time a stuttering.bmp will play
+  // for OLED displays, the time a stuttering.bmp      will play.
   float ProffieOSStutteringImageDuration;
-  // for OLED displays, the time a selfdestruct.bmp will play
+  // for OLED displays, the time a selfdestruct.bmp    will play.
   float ProffieOSSelfDestructImageDuration;
-  // for OLED displays, the time a meltdown.bmp will play
+  // for OLED displays, the time a meltdown.bmp        will play.
   float ProffieOSMeltdownImageDuration;
-  // for OLED displays, the time a dud.bmp will play
+  // for OLED displays, the time a dud.bmp             will play.
   float ProffieOSDudImageDuration;
   // == missile ==
-  // for OLED displays, the time a aiming.bmp will play
+  // for OLED displays, the time a aiming.bmp          will play.
   float ProffieOSAimingImageDuration;
-  // for OLED displays, the time a targeting.bmp will play
+  // for OLED displays, the time a targeting.bmp       will play.
   float ProffieOSTargetingImageDuration;
-  // for OLED displays, the time a missilelaunch.bmp will play
+  // for OLED displays, the time a missilelaunch.bmp   will play.
   float ProffieOSMissileLaunchImageDuration;
-  // for OLED displays, the time a missilegoesboom.bmp will play
+  // for OLED displays, the time a missilegoesboom.bmp will play.
   float ProffieOSMissileGoesBoomImageDuration;
-  // for OLED displays, the time a mandotalk.bmp will play
+  // for OLED displays, the time a mandotalk.bmp       will play.
   float ProffieOSMandoTalkImageDuration;
-  // for OLED displays, the time a disarm.bmp will play
+  // for OLED displays, the time a disarm.bmp          will play.
   float ProffieOSDisarmImageDuration;
 };
 
@@ -1215,7 +1217,7 @@ public:
         break;
 
       case EFFECT_DUD:
-        if (img_.dud) {
+        if (img_.dud) {                                      // annimation TBD
           ShowFileWithSoundLength(&img_.dud,                 jetpack_font_config.ProffieOSDudImageDuration);
         } else {
           this->SetMessage("it's a\ndud");
@@ -1295,11 +1297,13 @@ public:
 
 #endif  // INCLUDE_SSD1306
 
-template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>, typename NumberToByteArray<H>::type>>
+template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>,
+         typename NumberToByteArray<H>::type>>
 class JetpackColorDisplayController : public StandarColorDisplayController<W, H, PREFIX> {
 public:
   template<int w, int h>
-  explicit JetpackColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_JETPACK_EFFECT(INIT_SCR) {
+  explicit JetpackColorDisplayController(SizedLayeredScreenControl<w, h>* screen) :
+  StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_JETPACK_EFFECT(INIT_SCR) {
   }
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
