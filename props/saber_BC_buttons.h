@@ -43,7 +43,7 @@ Features:
                             other features. No limits, no lag when "rapid firing".
 - No inadvertant effects during preon.
 - Rotary control of Volume and Scroll Presets. (Rotate hilt like turning a dial)
-- * NEW for OS8 * 
+- * NEW for OS8 *
   - Dual blade independent ignition and retraction control with a single Proffieboard. (Such as for a staff saber)
   - Scroll Presets mode.
   - Quotes play with blade ON or OFF, and will not overlap / interrupt one another.
@@ -99,7 +99,7 @@ Optional #defines:
 // Adding the following define activates Dual Blade code in the prop.
 #define BC_DUAL_BLADES             - Use Dual Blades mode for a staff saber setup.
                                      Defaults are BLADE 1 and BLADE 2 as MAIN and SECOND blades respectively.
-                                     BLADE # corresponds to the blades list in the BladeConfig section of the config file, 
+                                     BLADE # corresponds to the blades list in the BladeConfig section of the config file,
                                      and therefore the position of the blade styles in a preset.
                                      If your MAIN and SECOND blades are not in position 1 and 2, you can use the following
                                      optional defines to manually set BLADE # to the appropriate blade from the BladeConfig list.
@@ -287,7 +287,7 @@ Revert ColorChange        - 3x Click and Hold POW, release after a second. (Doub
                               * This is done outside ColorChange Mode
         ColorChange explained:
           If RotateColorsX<Variation,COLOR> is used in the blade style:
-              Rotate hilt to cycle through all available colors, 
+              Rotate hilt to cycle through all available colors,
               Hold POW to save color selection and exit.
           If ColorChange<> is used in the blade style:
               There are up to 12 colors per rotation with a ccchange.wav sound at each step.
@@ -315,8 +315,8 @@ Turn OFF bypass postoff   - Turn OFF (while pointing UP).
 ---------------------------------------
 --------- When blade is OFF ---------
 twist                   - turn both blades ON (requires Gesture defines)
-stab 
-swing 
+stab
+swing
 1 click                 - turn blade ON
                           turn blade ON bypass preon (pointing up)
 1 click long            - first preset (pointing up)
@@ -488,7 +488,7 @@ Revert ColorChange        - 3x Click and Hold POW, release after a second. (Doub
                               * This is done outside ColorChange Mode
         ColorChange explained:
           If RotateColorsX<Variation,COLOR> is used in the blade style:
-              Rotate hilt to cycle through all available colors, 
+              Rotate hilt to cycle through all available colors,
               Hold POW to save color selection and exit.
           If ColorChange<> is used in the blade style:
               There are up to 12 colors per rotation with a ccchange.wav sound at each step.
@@ -518,8 +518,8 @@ Turn OFF bypass postoff   - Turn OFF (while pointing UP).
 ---------------------------------------
 --------- When blade is OFF ---------
 twist                   - turn both blades ON (requires Gesture defines)
-stab 
-swing 
+stab
+swing
 1 click POW             - turn blade ON
                           turn blade ON bypass preon (pointing up)
 1 click POW long        - play / stop track
@@ -647,7 +647,7 @@ push                    - force push
 | Turn Both Blades ON Muted            - Hold POW then Swing.
 |                                        * Optional mute.wav will play before silent ignition and operation. Saber unmutes on retraction.
 | Turn Both Blades OFF                 - Twist. Twist is a back-and-forth pair of motions, like revving a motorcycle.
-|                                        * Tries to turns off both blades. Therefore even if only one is ON, this will turn it off. 
+|                                        * Tries to turns off both blades. Therefore even if only one is ON, this will turn it off.
 | Turn any Blade ON bypassing preon    - Point either blade up while turning blade(s) ON.
 |                                        * Uses fastout.wav if available, bypassing font.wav and preon.wav.
 |                                        If no blade is pointing up, both blades will ignite normally with preon if one exists.
@@ -735,7 +735,7 @@ push                    - force push
 |                                        * This is done outside ColorChange Mode
 |     ColorChange explained:
 |       If RotateColorsX<Variation,COLOR> is used in the blade style:
-|           Rotate hilt to cycle through all available colors, 
+|           Rotate hilt to cycle through all available colors,
 |           Hold POW to save color selection and exit.
 |       If ColorChange<> is used in the blade style:
 |           There are up to 12 colors per rotation with a ccchange.wav sound at each step.
@@ -753,13 +753,13 @@ push                    - force push
 |                                        * Require EFFECT_USER in blade style.
 |                                        * Note the same controls when blade is OFF are USER 5 and 6.
 | 
-| --------------------------------------- 
-|  1 button dual blade summary by clicks 
-| --------------------------------------- 
-| --------- When both blades are OFF --------- 
+| ---------------------------------------
+|  1 button dual blade summary by clicks
+| ---------------------------------------
+| --------- When both blades are OFF ---------
 |
 | gestures: (require gesture defines)
-| twist or swing          - turn both blades ON 
+| twist or swing          - turn both blades ON
 | stab / thrust           - turn stabbed / thrusted blade ON
 |
 | buttons:
@@ -848,7 +848,7 @@ push                    - force push
 | Turn Both Blades ON Muted            - Hold POW then Twist.
 |                                        * Optional mute.wav will play before silent ignition and operation. Saber unmutes on retraction.
 | Turn Both Blades OFF                 - Twist. Twist is a back-and-forth pair of motions, like revving a motorcycle.
-|                                        * Tries to turns off both blades. Therefore even if only one is ON, this will turn it off. 
+|                                        * Tries to turns off both blades. Therefore even if only one is ON, this will turn it off.
 | Turn any Blade ON bypassing preon    - Point either blade up while turning blade(s) ON.
 |                                        * Uses fastout.wav if available, bypassing font.wav and preon.wav.
 |                                        If no blade is pointing up, both blades will ignite normally with preon if one exists.
@@ -936,7 +936,7 @@ push                    - force push
 |                                        * This is done outside ColorChange Mode
 |     ColorChange explained:
 |       If RotateColorsX<Variation,COLOR> is used in the blade style:
-|           Rotate hilt to cycle through all available colors, 
+|           Rotate hilt to cycle through all available colors,
 |           Hold POW to save color selection and exit.
 |       If ColorChange<> is used in the blade style:
 |           There are up to 12 colors per rotation with a ccchange.wav sound at each step.
@@ -963,7 +963,7 @@ push                    - force push
 | --------- When both blades are OFF ---------
 |
 | gestures: (require gesture defines)
-| twist or swing          - turn both blades ON 
+| twist or swing          - turn both blades ON
 | stab / thrust           - turn stabbed / thrusted blade ON
 |
 | buttons:
@@ -1010,7 +1010,7 @@ push                    - force push
 | Hold POW
 |     then click AUX      - enter BC volume menu
 |
-| --------- When a blade is ON --------- 
+| --------- When a blade is ON ---------
 | 1 click POW             - turn main blade ON (if second blade is ON), otherwise blaster deflection
 | 1 click POW long        - play / stop track
 | 1 click POW held        - turn main blade OFF
@@ -1071,7 +1071,7 @@ push                    - force push
 |
 | 1 click AUX2            - turn second blade ON
 |                           turn second blade ON first bypass preon (either blade pointing up)
-| --------- When blade is ON --------- 
+| --------- When blade is ON ---------
 |
 | 1 click AUX2 held       - turn second blade OFF
 |                           turn second blade OFF bypass postoff (pointing either blade UP)
@@ -1180,7 +1180,7 @@ struct BCScrollPresetsMode : public SPEC::SteppedMode {
   void update() override {  // Overridden to substitute the tick sound
 #ifdef ENABLE_IDLE_SOUND
     SFX_font.SetFollowing(nullptr);
-#endif 
+#endif
   }
 
   void exit() override {
@@ -1410,7 +1410,6 @@ struct BCMenuSpec {
   typedef mode::MenuBase<SPEC> MenuBase;
   typedef SoundLibraryV2 SoundLibrary;
 };
-
 
 class DelayTimer {
 public:
@@ -1884,9 +1883,9 @@ void DoSavedTwist() {
     // Add in all non-controlled blades, effectively excluding the "other" blade.
     target_blade = target_blade | ~controlled_blades_;
     if (SaberBase::OnBlades().off()) {
-      PVLOG_DEBUG << "**** No blades are currently ON, turning on the " 
+      PVLOG_DEBUG << "**** No blades are currently ON, turning on the "
                    << (target_blade[BC_MAIN_BLADE] ? "MAIN" : "SECOND")
-                   << " blade and all others, excluding the " 
+                   << " blade and all others, excluding the "
                    << (target_blade[BC_MAIN_BLADE] ? "SECOND" : "MAIN")
                    << " blade\n";
       if (isPointingUp() || muted_) {
@@ -1895,7 +1894,7 @@ void DoSavedTwist() {
         On(EffectLocation(0, target_blade));
       }
     } else {
-      PVLOG_DEBUG << "**** Turning on the " 
+      PVLOG_DEBUG << "**** Turning on the "
                    << (target_blade[BC_MAIN_BLADE] ? "MAIN" : "SECOND")
                    << " blade\n";
       SaberBase::TurnOn(EffectLocation(0, target_blade));
@@ -1914,8 +1913,8 @@ void DoSavedTwist() {
       muted_ = false;
     } else {
       // Only Turn OFF this blade, leave the other one ON.
-      PVLOG_DEBUG << "**** Turning OFF only the " 
-                   << (target_blade[BC_MAIN_BLADE] ? "MAIN" : "SECOND") 
+      PVLOG_DEBUG << "**** Turning OFF only the "
+                   << (target_blade[BC_MAIN_BLADE] ? "MAIN" : "SECOND")
                    << " blade\n";
       SaberBase::TurnOff(off_type, EffectLocation(0, target_blade));
     }
@@ -1967,7 +1966,7 @@ void DoSavedTwist() {
       v = diff.len();
   #endif
     }
-    // If we're spinning the saber or if loud sounds are playing, 
+    // If we're spinning the saber or if loud sounds are playing,
     // require a stronger acceleration to activate the clash.
     if (v > (CLASH_THRESHOLD_G * (1
           + fusor.gyro().len() / 500.0
@@ -2332,7 +2331,7 @@ any # of buttons
 // Turn Second Blade ON First Muted
 #if NUM_BUTTONS == 3
       case EVENTID(BUTTON_AUX2, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
-#else 
+#else
       case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
 #endif
         TurnSecondBladeOnMuted();
@@ -2456,7 +2455,7 @@ any # of buttons
 
 // Stab
       case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_ON):
-        if (on_pending_ || millis() - saber_on_time_ < 2000) return false; 
+        if (on_pending_ || millis() - saber_on_time_ < 2000) return false;
         SaberBase::SetClashStrength(2.0);
         SaberBase::DoStab();
         return true;
@@ -2815,7 +2814,7 @@ any # of buttons
       case EFFECT_IGNITION:
         saber_on_time_ = millis();
         return;
-      case EFFECT_TRANSITION_SOUND: 
+      case EFFECT_TRANSITION_SOUND:
         if (SFX_tr) hybrid_font.PlayPolyphonic(&SFX_tr);
         return;
 
@@ -2838,7 +2837,7 @@ any # of buttons
       SaberBase::DoEffect(EFFECT_CLASH, EffectLocation(0, GetBladeAboveHorizon()));
 #else
       SaberBase::DoClash();
-#endif 
+#endif
         }
       }
     }
