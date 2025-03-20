@@ -142,7 +142,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
         Saber::blade_detected_ = true;
         Saber::FindBladeAgain();
         SaberBase::DoBladeDetect(true);
-      } else if (event == EVENT_LATCH_OFF) {  // <-- should this be changed to } else { 'next line' if (... ???
+      } else if (event == EVENT_LATCH_OFF) {
         Saber::Off();
         Saber::blade_detected_ = false;
         Saber::FindBladeAgain();
@@ -185,7 +185,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
     if (DUAL_PROP_CONDITION) {
       Saber::SetPreset(preset_num, announce);
       // Blaster is always on, so turn Off before going to Saber mode
-      if (Saber::IsOn()) Saber::Off();  // <-- should 'Saber::Off();' be moved to the next line and indented 2 spaces ???
+      if (Saber::IsOn()) Saber::Off();
     } else {
       Blaster::SetPreset(preset_num, announce);
     }
