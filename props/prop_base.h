@@ -1656,7 +1656,7 @@ public:
           }
         }
       }
-      STDOUT << "SD Access " 
+      STDOUT << "SD Access "
              << (LSFS::GetAllowMount() ? "ON" : "OFF")
              << "\n";
       return true;
