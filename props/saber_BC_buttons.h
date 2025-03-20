@@ -2047,7 +2047,6 @@ void DoSavedTwist() {
       }
       return fake_id_;
     }
-
     return PropBase::id(announce);
   }
 
@@ -2061,6 +2060,11 @@ void DoSavedTwist() {
     }
     return ohm / NO_BLADE;
   }
+
+#else
+  float id(bool announce = false) override {
+    return use_fake_id_ ? fake_id_ : PropBase::id(announce);
+  }
 #endif  // BLADE_ID_SCAN_MILLIS
 
   void TriggerBladeID() {
@@ -2071,16 +2075,13 @@ void DoSavedTwist() {
   }
 
   void NextBladeArray() {
-  #ifdef BLADE_ID_SCAN_MILLIS
     if (!use_fake_id_) best_config_before_faking_ = current_config - blades;
-    fake_id_ = blades[((current_config - blades) + 1) % NELEM(blades)].ohm;
+    size_t next_array = (current_config - blades + 1) % NELEM(blades);
+    fake_id_ = blades[next_array].ohm;
     use_fake_id_ = true;
+
     FindBladeAgain();
     PlayArraySound();
-  #else
-    current_config = blades + (((current_config - blades) + 1) % NELEM(blades));
-    PlayArraySound();
-  #endif
   }
 
   void PlayArraySound() {
