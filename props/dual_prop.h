@@ -2,10 +2,10 @@
 #define PROPS_DUAL_PROP_H
 
 /*
-dual_prop.h allows for 2 discrete prop files to be used, 
+dual_prop.h allows for 2 discrete prop files to be used,
 alternating on a latched switch (Blade Detect) or with Blade ID..
-This is useful when you want a saber to 
-toggle to a blaster for example, 
+This is useful when you want a saber to
+toggle to a blaster for example,
 and you want the buttons to take on different behaviors.
 
 How to use:
@@ -24,7 +24,7 @@ as well as the class names would change based on the prop you choose.
 Now setup your CONFIG_PRESETS section to have multiple preset banks:
 A no-blade (Blaster) preset bank, followed by one or more blade-in preset banks.
 Also, the BladeConfig needs each blade (and no-blade) to have a description entry in
-the same order of the Presets arrays. The Blade ID values will depend on whether 
+the same order of the Presets arrays. The Blade ID values will depend on whether
 you choose to use Blade Detect or Blade ID.
 
 - Blade Detect using a wired latching system:
@@ -91,7 +91,7 @@ class DualProp : public virtual PropBase, public A, public B {
       B::Clash(stab, strength);
     }
   }
-  
+
   void SB_Effect(EffectType effect, EffectLocation location) override {
     if (DUAL_PROP_CONDITION) {
       A::SB_Effect(effect, location);
@@ -210,7 +210,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
       Blaster::Clash(stab, strength);
     }
   }
-  
+
   void SB_Effect(EffectType effect, EffectLocation location) override {
     if (DUAL_PROP_CONDITION) {
       Saber::SB_Effect(effect, location);
@@ -219,5 +219,5 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
     }
   }
 };
- 
+
 #endif
