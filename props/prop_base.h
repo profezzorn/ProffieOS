@@ -1162,7 +1162,7 @@ public:
       blade_id_scan_start_ = millis();
       }
 #endif
-      
+
 #ifdef IDLE_OFF_TIME
     if (SaberBase::IsOn() ||
         (current_style() && current_style()->Charging())) {
@@ -1183,7 +1183,7 @@ public:
 #ifdef IDLE_OFF_TIME
   uint32_t last_on_time_;
 #endif
-    
+
 #ifdef BLADE_ID_SCAN_TIMEOUT
   uint32_t blade_id_scan_start_;
 #endif
@@ -1657,7 +1657,7 @@ public:
         }
       }
       STDOUT << "SD Access " 
-             << (LSFS::GetAllowMount() ? "ON" : "OFF") 
+             << (LSFS::GetAllowMount() ? "ON" : "OFF")
              << "\n";
       return true;
     }
@@ -1878,7 +1878,7 @@ public:
   virtual void ResetCurrentAlternative() {
     current_alternative = 0;
   }
-  
+
 private:
   bool CommonIgnition(EffectLocation location = EffectLocation()) {
     if ((location.blades() &~ SaberBase::OnBlades()).off()) return false;
