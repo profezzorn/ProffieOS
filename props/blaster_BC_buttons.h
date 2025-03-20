@@ -306,7 +306,6 @@ struct BCBlasterMenuSpec {
   typedef SoundLibraryV2 SoundLibrary;
 };
 
-
 class BlasterBCButtons : public Blaster {
 public:
   BlasterBCButtons() : Blaster() {}
@@ -619,7 +618,7 @@ public:
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
 #endif
         if (no_clip_) {
-          SaberBase::DoEffect(EFFECT_EMPTY, 0); 
+          SaberBase::DoEffect(EFFECT_EMPTY, 0);
           return true;
         } else {
           Reload();
@@ -629,7 +628,7 @@ public:
   // Fire
       case EVENTID(BUTTON_FIRE, EVENT_PRESSED, MODE_ON):
         if (no_clip_) {
-          SaberBase::DoEffect(EFFECT_EMPTY, 0); 
+          SaberBase::DoEffect(EFFECT_EMPTY, 0);
           return true;
         } else {
           Fire();
