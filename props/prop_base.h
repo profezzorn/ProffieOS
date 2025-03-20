@@ -68,7 +68,7 @@ public:
 };
 
 // Base class for props.
-class PropBase : CommandParser, Looper, protected SaberBase, public ModeInterface {
+class PropBase : CommandParser, protected Looper, protected SaberBase, public ModeInterface {
 public:
   PropBase() : CommandParser() {
     current_mode = this;
