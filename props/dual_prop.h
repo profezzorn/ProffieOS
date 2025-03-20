@@ -56,6 +56,8 @@ https://pod.hubbe.net/howto/blade-id.html
 
 #include "prop_base.h"
 
+// Use DualProp if you want to combine two different prop types other than a blaster.
+// If a blaster is involved in your prop "mix", check further down to "class SaberBlasterProp"
 template<class A, class B>
 class DualProp : public virtual PropBase, public A, public B {
  public:
@@ -101,17 +103,19 @@ class DualProp : public virtual PropBase, public A, public B {
   }
 };
 
+// Use SaberBlasterProp if you want to combine a saber and a blaster (like an Ezra "staple-gun/light saber" type prop,
+// so that the blaster buttons "mapping" makes sense!
 template<class Saber, class Blaster>
 class SaberBlasterProp : public virtual Saber, public virtual Blaster {
  public:
   uint32_t map_button(uint32_t b) {
     switch (b) {
 #if NUM_BUTTONS == 3
-        case BUTTON_AUX: return BUTTON_FIRE;
-        case BUTTON_AUX2: return BUTTON_MODE_SELECT;
+      case BUTTON_AUX: return BUTTON_FIRE;
+      case BUTTON_AUX2: return BUTTON_MODE_SELECT;
 #else
-        case BUTTON_POWER: return  BUTTON_FIRE;
-        case BUTTON_AUX: return BUTTON_MODE_SELECT;
+      case BUTTON_POWER: return BUTTON_FIRE;
+      case BUTTON_AUX: return BUTTON_MODE_SELECT;
 #endif
       default: return b;
     }
@@ -119,11 +123,11 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
   uint32_t reverse_map_button(uint32_t b) {
     switch (b) {
 #if NUM_BUTTONS == 3
-        case BUTTON_FIRE: return BUTTON_AUX;
-        case BUTTON_MODE_SELECT: return BUTTON_AUX2;
+      case BUTTON_FIRE: return BUTTON_AUX;
+      case BUTTON_MODE_SELECT: return BUTTON_AUX2;
 #else
-        case BUTTON_FIRE: return  BUTTON_POWER;
-        case BUTTON_MODE_SELECT: return BUTTON_AUX;
+      case BUTTON_FIRE: return BUTTON_POWER;
+      case BUTTON_MODE_SELECT: return BUTTON_AUX;
 #endif
       default: return b;
     }
@@ -138,7 +142,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
         Saber::blade_detected_ = true;
         Saber::FindBladeAgain();
         SaberBase::DoBladeDetect(true);
-      } else  if (event == EVENT_LATCH_OFF) {
+      } else if (event == EVENT_LATCH_OFF) {  // <-- should this be changed to } else { 'next line' if (... ???
         Saber::Off();
         Saber::blade_detected_ = false;
         Saber::FindBladeAgain();
@@ -181,7 +185,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
     if (DUAL_PROP_CONDITION) {
       Saber::SetPreset(preset_num, announce);
       // Blaster is always on, so turn Off before going to Saber mode
-      if (Saber::IsOn()) Saber::Off();
+      if (Saber::IsOn()) Saber::Off();  // <-- should 'Saber::Off();' be moved to the next line and indented 2 spaces ???
     } else {
       Blaster::SetPreset(preset_num, announce);
     }
