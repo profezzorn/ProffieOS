@@ -86,6 +86,11 @@ class DualProp : public virtual PropBase, public A, public B {
     }
   }
 
+  void Setup() override {
+    A::Setup();
+    B::Setup();
+  }
+
   void Clash(bool stab, float strength) override {
     if (DUAL_PROP_CONDITION) {
       A::Clash(stab, strength);
@@ -197,6 +202,11 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
     } else {
       Blaster::Loop();
     }
+  }
+
+  void Setup() override {
+    Saber::Setup();
+    Blaster::Setup();
   }
 
   void DoMotion(const Vec3& motion, bool clear) override {
