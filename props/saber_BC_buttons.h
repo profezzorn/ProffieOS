@@ -92,7 +92,7 @@ Optional #defines:
 * NEW as of OS8:
 #define MENU_SPEC_TEMPLATE         - BC Volume Menu, Scroll Presets, ColorChange, and BC Blade Length adjust are used by default.
                                      Use this define to override and add access the the OS System Menu for editing presets, colors etc...
-                                     Several template choices are available to set how the menus are used. See Documentation.
+                                     Several template choices are available to set how the menus are used. See https://pod.hubbe.net/howto/menus.html.
 #define DYNAMIC_BLADE_LENGTH       - This is required for onboard menu driven blade length adjustments.
                                      The blade length maximum should be set in the user config file's BladeConfig section.
 
@@ -178,6 +178,7 @@ If you want to use the OS System Menu instead, you need to define a Menu Spec Te
 While in any menu mode the following controls apply:
 Save                - Click POW
 Cancel / Exit       - Click AUX or Double Click POW
+For more info, see https://pod.hubbe.net/howto/menus.html
 
 Each section for controls have a descriptive version listed by feature and somwhat in the order
 of using the saber, and a second summary list that is sorted by button clicks.
@@ -752,7 +753,7 @@ push                    - force push
 | User Effect 2                        - Hold POW then Rotate Right 60 degrees. (keep holding POW until executed)
 |                                        * Require EFFECT_USER in blade style.
 |                                        * Note the same controls when blade is OFF are USER 5 and 6.
-| 
+|
 | ---------------------------------------
 |  1 button dual blade summary by clicks
 | ---------------------------------------
@@ -2032,6 +2033,7 @@ void DoSavedTwist() {
   float fake_id_ = 0;
   size_t best_config_before_faking_ = SIZE_MAX;
 
+#ifdef BLADE_ID_SCAN_MILLIS
   float id(bool announce = false) override {
     if (use_fake_id_) {
       float real_id = PropBase::id(announce);
@@ -2045,9 +2047,25 @@ void DoSavedTwist() {
       }
       return fake_id_;
     }
-
     return PropBase::id(announce);
   }
+
+  int GetNoBladeLevelBefore() override {
+    int ohm;
+    if (best_config_before_faking_ != SIZE_MAX) {
+      ohm = blades[best_config_before_faking_].ohm;
+      best_config_before_faking_ = SIZE_MAX;
+    } else {
+      ohm = current_config->ohm;
+    }
+    return ohm / NO_BLADE;
+  }
+
+#else
+  float id(bool announce = false) override {
+    return use_fake_id_ ? fake_id_ : PropBase::id(announce);
+  }
+#endif  // BLADE_ID_SCAN_MILLIS
 
   void TriggerBladeID() {
     use_fake_id_ = false;
@@ -2073,17 +2091,6 @@ void DoSavedTwist() {
     } else if (!hybrid_font.PlayPolyphonic(&SFX_bladein)) {
       hybrid_font.PlayCommon(&SFX_font);
     }
-  }
-
-  int GetNoBladeLevelBefore() override {
-    int ohm;
-    if (best_config_before_faking_ != SIZE_MAX) {
-      ohm = blades[best_config_before_faking_].ohm;
-      best_config_before_faking_ = SIZE_MAX;
-    } else {
-      ohm = current_config->ohm;
-    }
-    return ohm / NO_BLADE;
   }
 
   bool Parse(const char *cmd, const char* arg) override {
