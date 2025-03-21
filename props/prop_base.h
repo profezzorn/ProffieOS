@@ -527,9 +527,13 @@ public:
   }
 
   virtual void SpeakBladeID(float id) {
+    if (&SFX_mnum) {
+     sound_library_v2.SayBlade();  // V2 sound lib required
+     sound_library_.SayNumber(id, SAY_WHOLE);
+    } else {
 #ifdef DISABLE_TALKIE
 #ifdef SPEAK_BLADE_ID
-#error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
+    #error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
 #endif
 #else
     talkie.Say(spI);
