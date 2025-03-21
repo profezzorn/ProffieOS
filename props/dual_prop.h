@@ -2,10 +2,10 @@
 #define PROPS_DUAL_PROP_H
 
 /*
-dual_prop.h allows for 2 discrete prop files to be used, 
+dual_prop.h allows for 2 discrete prop files to be used,
 alternating on a latched switch (Blade Detect) or with Blade ID..
-This is useful when you want a saber to 
-toggle to a blaster for example, 
+This is useful when you want a saber to
+toggle to a blaster for example,
 and you want the buttons to take on different behaviors.
 
 How to use:
@@ -24,7 +24,7 @@ as well as the class names would change based on the prop you choose.
 Now setup your CONFIG_PRESETS section to have multiple preset banks:
 A no-blade (Blaster) preset bank, followed by one or more blade-in preset banks.
 Also, the BladeConfig needs each blade (and no-blade) to have a description entry in
-the same order of the Presets arrays. The Blade ID values will depend on whether 
+the same order of the Presets arrays. The Blade ID values will depend on whether
 you choose to use Blade Detect or Blade ID.
 
 - Blade Detect using a wired latching system:
@@ -56,6 +56,8 @@ https://pod.hubbe.net/howto/blade-id.html
 
 #include "prop_base.h"
 
+// Use DualProp if you want to combine two different prop types other than a blaster.
+// If a blaster is involved in your prop "mix", check further down to "class SaberBlasterProp"
 template<class A, class B>
 class DualProp : public virtual PropBase, public A, public B {
  public:
@@ -84,6 +86,11 @@ class DualProp : public virtual PropBase, public A, public B {
     }
   }
 
+  void Setup() override {
+    A::Setup();
+    B::Setup();
+  }
+
   void Clash(bool stab, float strength) override {
     if (DUAL_PROP_CONDITION) {
       A::Clash(stab, strength);
@@ -91,7 +98,7 @@ class DualProp : public virtual PropBase, public A, public B {
       B::Clash(stab, strength);
     }
   }
-  
+
   void SB_Effect(EffectType effect, EffectLocation location) override {
     if (DUAL_PROP_CONDITION) {
       A::SB_Effect(effect, location);
@@ -101,17 +108,19 @@ class DualProp : public virtual PropBase, public A, public B {
   }
 };
 
+// Use SaberBlasterProp if you want to combine a saber and a blaster (like an Ezra "staple-gun/light saber" type prop,
+// so that the blaster buttons "mapping" makes sense!
 template<class Saber, class Blaster>
 class SaberBlasterProp : public virtual Saber, public virtual Blaster {
  public:
   uint32_t map_button(uint32_t b) {
     switch (b) {
 #if NUM_BUTTONS == 3
-        case BUTTON_AUX: return BUTTON_FIRE;
-        case BUTTON_AUX2: return BUTTON_MODE_SELECT;
+      case BUTTON_AUX: return BUTTON_FIRE;
+      case BUTTON_AUX2: return BUTTON_MODE_SELECT;
 #else
-        case BUTTON_POWER: return  BUTTON_FIRE;
-        case BUTTON_AUX: return BUTTON_MODE_SELECT;
+      case BUTTON_POWER: return BUTTON_FIRE;
+      case BUTTON_AUX: return BUTTON_MODE_SELECT;
 #endif
       default: return b;
     }
@@ -119,11 +128,11 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
   uint32_t reverse_map_button(uint32_t b) {
     switch (b) {
 #if NUM_BUTTONS == 3
-        case BUTTON_FIRE: return BUTTON_AUX;
-        case BUTTON_MODE_SELECT: return BUTTON_AUX2;
+      case BUTTON_FIRE: return BUTTON_AUX;
+      case BUTTON_MODE_SELECT: return BUTTON_AUX2;
 #else
-        case BUTTON_FIRE: return  BUTTON_POWER;
-        case BUTTON_MODE_SELECT: return BUTTON_AUX;
+      case BUTTON_FIRE: return BUTTON_POWER;
+      case BUTTON_MODE_SELECT: return BUTTON_AUX;
 #endif
       default: return b;
     }
@@ -138,7 +147,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
         Saber::blade_detected_ = true;
         Saber::FindBladeAgain();
         SaberBase::DoBladeDetect(true);
-      } else  if (event == EVENT_LATCH_OFF) {
+      } else if (event == EVENT_LATCH_OFF) {
         Saber::Off();
         Saber::blade_detected_ = false;
         Saber::FindBladeAgain();
@@ -195,6 +204,11 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
     }
   }
 
+  void Setup() override {
+    Saber::Setup();
+    Blaster::Setup();
+  }
+
   void DoMotion(const Vec3& motion, bool clear) override {
     if (DUAL_PROP_CONDITION) {
       Saber::DoMotion(motion, clear);
@@ -210,7 +224,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
       Blaster::Clash(stab, strength);
     }
   }
-  
+
   void SB_Effect(EffectType effect, EffectLocation location) override {
     if (DUAL_PROP_CONDITION) {
       Saber::SB_Effect(effect, location);
@@ -219,5 +233,5 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
     }
   }
 };
- 
+
 #endif
