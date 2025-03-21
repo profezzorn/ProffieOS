@@ -533,7 +533,7 @@ public:
     } else {
 #ifdef DISABLE_TALKIE
 #ifdef SPEAK_BLADE_ID
-    #error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
+#error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
 #endif
 #else
     talkie.Say(spI);
