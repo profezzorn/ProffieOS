@@ -775,7 +775,7 @@ public:
 
     ONCEPERBLADE(DEACTIVATE);
     SaveVolumeIfNeeded();
-    FindBlade(false);
+    FindBlade(true);
   }
 
   bool CheckInteractivePreon() {
