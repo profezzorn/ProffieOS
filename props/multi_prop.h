@@ -91,7 +91,7 @@ enum class Prop_Mode {
     BLASTER = 1,
   DETONATOR = 2,
     JETPACK = 3,  // Ready (I think), pending review.
-  MORSECODE = 4,  // Not fully ready, but in progress!
+//MORSECODE = 4,  // Not fully ready, but in progress!
     //DROID = 6,  // Un-comment when ready to implement Droid functionality.
   //VEHICLE = 7,  // Un-comment if implementing Vehicle. I don't know what this prop should do, but it would be
                   // cool to play with STARWARS "vehicles" sounds: speeders, pod-racers, TIE's, A/B/X/U-Wings,
@@ -155,10 +155,10 @@ void switchModes(PropBase* prop_instance) {
   }
 }
 
-template<class Saber, class Blaster, class Detonator, class Jetpack/*,
-         class MorseCode , class Droid, class Vehicle*/>
-class MultiProp : public virtual Saber, public virtual Blaster, public virtual Detonator, public virtual Jetpack/*,
-                  public virtual MorseCode, public virtual Droid, public virtual Vehicle*/ {
+template<class Saber, class Blaster, class Detonator, class Jetpack>
+         /*, class MorseCode , class Droid, class Vehicle*/
+class MultiProp : public virtual Saber, public virtual Blaster, public virtual Detonator, public virtual Jetpack {
+                  /*, public virtual MorseCode, public virtual Droid, public virtual Vehicle*/
 // One prop to rule them all, and in your config bind them!
 public:
   const char* name() override { return "MultiProp"; }
@@ -216,13 +216,10 @@ public:
     static bool powerPressed_ = false;   // Tracks BUTTON_POWER press state.
     static bool auxPressed_ = false;     // Tracks BUTTON_AUX   press state.
 
-    // Detect when a button is pressed and update the tracking variables accordingly
+    // Detects when a button is pressed and update the tracking variables accordingly.
     if (event == EVENT_PRESSED) {
-      if (button == BUTTON_POWER)
-        powerPressed_ = true;
-      else
-        if (button == BUTTON_AUX)
-        auxPressed_ = true;
+      if (button == BUTTON_POWER) powerPressed_ = true;
+      else if (button == BUTTON_AUX) auxPressed_ = true;
       // Prevents unintentional mode switching due to rapid sequential presses.
       if (powerPressed_ && auxPressed_ && holdStartTime == 0) {
         holdStartTime = millis();
@@ -231,11 +228,8 @@ public:
     } else {
       if (event == EVENT_RELEASED) {
         // Update button tracking when either button is released.
-        if (button == BUTTON_POWER)
-          powerPressed_ = false;
-        else
-          if (button == BUTTON_AUX)
-            auxPressed_ = false;
+        if (button == BUTTON_POWER) powerPressed_ = false;
+        else if (button == BUTTON_AUX) auxPressed_ = false;
 
         // Avoids accidental activation by ensuring both buttons remain pressed.
         if (!powerPressed_ || !auxPressed_) {
@@ -244,14 +238,12 @@ public:
         }
       }
     }
-
     // Ensures mode switching only happens when both buttons are held long enough.
     if (powerPressed_ && auxPressed_ && (millis() - holdStartTime) >= TWO_BUTTONS_X_LONG_PUSH) {
       switchModes(this);
       PVLOG_NORMAL << "Both buttons were held long enough for MultiProp to switch to the next Prop_Mode.\n";
       return true;
     }
-
     // Call the appropriate Event function based on the current mode (Blaster or "not Blaster").
     switch (currentMode) {
       case Prop_Mode::SABER:     return     Saber::Event(button, event);
@@ -326,6 +318,16 @@ public:
     //case Prop_Mode::DROID:         Droid::Loop(); break;
     //case Prop_Mode::VEHICLE:     Vehicle::Loop(); break;
     }
+  }
+
+  void Setup() override {
+        Saber::Setup();
+      Blaster::Setup();
+    Detonator::Setup();
+      Jetpack::Setup();
+  //MorseCode::Setup();
+      //Droid::Setup();
+    //Vehicle::Setup();
   }
 
   void DoMotion(const Vec3& motion, bool clear) override {
@@ -408,7 +410,7 @@ public:
   X(sabermode)                        \
   X(blastermode)                      \
   X(detonatormode)                    \
-  X(jetpackmode)  // add a backslash when uncommenting the next line.
+  X(jetpackmode)    // Add a backslash when un-commenting the next line.
 //X(morsecodemode)
 //X(droid)
 //X(vehicle)
@@ -436,11 +438,11 @@ struct MultiPropDisplayConfigFile : public ConfigFile {
   // for OLED displays, the time a jetpackmode.bmp   will play.
   float ProffieOSJetpackModeImageDuration;
   // for OLED displays, the time a morsecodemode.bmp will play.
-  //float ProffieOSMorsecodeModeImageDuration;
+//float ProffieOSMorsecodeModeImageDuration;
   // for OLED displays, the time a droidmode.bmp     will play.
-  //float ProffieOSDroidModeImageDuration;
+//float ProffieOSDroidModeImageDuration;
   // for OLED displays, the time a vehiclemode.bmp   will play.
-  //float ProffieOSVehicleModeImageDuration;
+//float ProffieOSVehicleModeImageDuration;
 };
 
 template<typename PREFIX = ByteArray<>>
@@ -571,4 +573,3 @@ protected:
 #undef ONCE_PER_MULTIPROP_EFFECT
 
 #endif  // PROP_BOTTOM
-
