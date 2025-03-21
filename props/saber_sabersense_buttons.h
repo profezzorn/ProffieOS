@@ -1,4 +1,4 @@
-/* OS8-v160.
+/* V7/8-167.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -10,15 +10,14 @@ and two button replica lightsabers. Modified by Chris
 Carter with substantial support and contributions from
 Fredrik Hubinette and Brian Conner.
 
+This prop file has been optimized for, and is included
+with, ProffieOS 8.x or later, but is also fully
+backwards compatible with ProffieOS 7.x.
+
 This prop file references certain custom sound files
 to aid in saber function navigation. These sound files
 are optional and are available as a free download from
 the Sabersense website. (Link below).
-
-This prop file has been optimized for ProffieOS 8.x
-or later. A ProffieOS 7.x compatible version of this 
-prop file is available as a free download from the 
-Sabersense website.
 
 https://sabersense.square.site/downloads
 
@@ -358,6 +357,9 @@ EFFECT(blstend);  // for End Multi-Blast
 EFFECT(array);    // for playing array idents
 EFFECT(bladeid);  // for playing bladeid idents
 EFFECT(reset);    // for playing factory default reset completed
+#ifndef MODES_MODE_H  // Modes not part of OS7.x, so define used to differentiate systems.
+EFFECT(quote);    // for playing quotes with ProffieOS 7.x.
+#endif
 
 // The Saber class implements the basic states and actions
 // for the saber.
@@ -532,14 +534,14 @@ public:
 
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
   void SaveArrayState() {
-    PVLOG_STATUS << "Saving Array State\n";
+    STDOUT.print("Saving Array State\n");
     SaveArrayStateFile saved_state;
     saved_state.sabersense_array_index = SabersenseArraySelector::return_value;  // Save current array.
     saved_state.WriteToRootDir("arraysve");
   }
 
   void RestoreArrayState() {
-    PVLOG_STATUS << "Restoring Array State\n";
+    STDOUT.print("Restoring Array State\n");
     SaveArrayStateFile saved_state;
     saved_state.ReadINIFromDir(NULL, "arraysve");
     // Restore saved array index.
@@ -885,6 +887,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 
     // COLOUR CHANGE.
+    // Colour Change and Blast OS-7 Compatibility Section.
+    // Designed for identical user operation under both
+    // OS-7 (without Modes) and OS-8 (with Modes).
 #ifdef DISABLE_COLOR_CHANGE
 #error "DISABLE_COLOR_CHANGE is not supported. Use SABERSENSE_NO_COLOR_CHANGE instead."
 #endif
@@ -892,33 +897,39 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // 1 and 2 button modes.
 #ifndef SABERSENSE_NO_COLOR_CHANGE
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
+      ToggleColorChangeMode();
+      return true;
     // 2 button mode only.
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
-#endif
       ToggleColorChangeMode();
       return true;
+#endif
 #endif
 
     // BLASTER DEFLECTION
     // 1 Button
-#if NUM_BUTTONS == 1
+    // or 2 button with extra define.
+#if NUM_BUTTONS == 1 || defined(SABERSENSE_BLAST_MAIN_AND_AUX)
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-      swing_blast_ = false;
-      SaberBase::DoBlast();
+      // For harmonized 'Exit Colour Menu' control in OS-7.x. Ignored in OS-8.
+      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+        ToggleColorChangeMode();
+      } else {
+        // Fires blast in all OSs.
+        swing_blast_ = false;
+        SaberBase::DoBlast();
+      }
       return true;
 #endif
 
     // 2 Button
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
-#ifdef SABERSENSE_BLAST_PWR_AND_AUX
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-#endif
       swing_blast_ = false;
       SaberBase::DoBlast();
       return true;
-#endif
+#endif  
 
     // Multi-Blaster Deflection mode
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
@@ -1111,8 +1122,16 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     return false;
   }
 
-  void SB_Effect(EffectType effect, EffectLocation location) override {
-    switch (effect) {
+#ifndef MODES_MODE_H  // Modes not part of OS7.x, so define used to differentiate systems.
+  void SB_Effect(EffectType effect, float location) override  //  Required for ProffieOS 7.x.
+#else
+  void SB_Effect(EffectType effect, EffectLocation location) override  //  For ProffieOS 8.x.
+#endif  
+  {
+  switch (effect) {
+#ifndef MODES_MODE_H
+    case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return; 
+#endif
       case EFFECT_POWERSAVE:
         if (SFX_dim) {
           hybrid_font.PlayCommon(&SFX_dim);
