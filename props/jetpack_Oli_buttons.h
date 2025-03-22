@@ -1,81 +1,98 @@
-// Jetpack Revision 52
+// JetpackOliButtons Revision 55
 
 /* Created by OlivierFlying747-8 with lots of help from Fredrik Hubinette aka profezzorn,
   https://fredrik.hubbe.net/lightsaber/proffieos.html
   Copyright (c) 2016-2025 Fredrik Hubinette
-  Copyright (c) 2025 OlivierFlying747-8 with contributions by:
+  Copyright (c) 2025 OlivierFlying747-8 (Apologies for only adding my username, I would like to remain "anonymous" for the time being)
+  With contributions by:
   Fredrik Hubinette aka profezzorn,
   Ryan Ogurek aka ryryog25,
   Bryan Connor aka NoSloppy,
-  In case of problem, you can find us at: https://crucible.hubbe.net somebody will be there to help.
+  In case of problems, you can find us at: https://crucible.hubbe.net where somebody will be there to help.
   Distributed under the terms of the GNU General Public License v3.
   https://www.gnu.org/licenses/
 
 Includes 1, 2 and 3 button controls. However, I would recommend a 2 or 3
-buttons setup because I think a 1 button setup is "cumbersome" to use!
+buttons setup because I think a 1 button setup is cumbersome to use!
 
 Buttons handling was initially based on saber_sa22c_buttons.h
 
-Also, worth mentioning:
-    This jetpack doesn't have any "movement effects". You do not want to have to do front/back/side
-    flips at your next cos-play to activate something! Or just imagine, for an instant, someone trying
-    to replicate stab, aka running face first into the nearest wall with their backpack/jetpack prop.
-    Call me evil, if you want, but this makes me laugh every time I picture it.
+Worth mentioning:
+=================
+    Unlike a saber, this jetpack doesn't have any "movement effects". The only one I could foresee being useful
+    is clash ("tap or smash" your backpack/jetpack prop - but it is not in use for now). You do not want
+    to have to do front/back/side flips at your next cosplay to activate something! Or just imagine,
+    for an instant, someone trying to replicate a stab, aka running face-first into the nearest wall with
+    their backpack/jetpack prop. Call me evil if you want, but this makes me laugh every time I picture it.
 
-Explanation:
+Disclaimer:
+===========
+    The explanations below are not fully 100 percent accurate, I just want to give you, the reader, an idea
+    of what it's like. If you want to learn to fly, please go to flight school. I am not a flight instructor!
 
-    Let me start to explain a bit of:
-    "How does a jet engine works": (feel free to skip to "How does this jetpack prop works" if you are not interested!)
-    ==============================
-    On the Boeing 747 (yes, I am a pilot on the B-747!), a minimum of 5 minutes are necessary between the last engine
-    has been started (the power is kept below 25%) and take-off power (100% power) can be applied. This allows for
-    thermal stabilization in the engines (and avoids premature and very costly wear and tear - and reduces the chances
-    of going "boom" down the line).
+    Please do not use this as your first flying lesson! And if you do, you will probably crash and most
+    likely die! Don't say: "I didn't warn you!"
 
-    Additionally between landing power (usually around 60%) and after the engine thrust reversers (yes they "push"
-    air forward - but only on ground - to help slowing down the plane) have been returned to their stowed position
-    and the engines have stabilized to their idle power, another 3 minutes must pass before it is safe/allowed to
-    shut them down.
+    This jetpack prop is for fun "pretend-flying" only. Thank you.
 
-    I tried to somewhat mimic the functioning of the jetpack prop based on a "real" world jet engine. Albeit, I only
-    have included 3 modes of operation:
-    - off,
-    - idle/low power,
-    - flight/full power.
-    instead of the 7-ish needed: (listed in order of operation)
-    - idle 20 to 25%,
-    - take-off 100%,
-    - climb/cruise 80 to 90%,
-    - descent - we call it flight idle - 40%,
-    - landing +/-60%,
-    - idle reverse, (optional and not need on a jetpack),
-    - full reverse, (also optional and definitely not needed on a jetpack),
-    - plus everything in between 80 and 40%, for a different rate of descent,
-    - plus everything in between 60 and 90%, for a different rate of climb and/or maintain different speeds
-      at lower than cruise altitude.
+Explanations:
+=============
 
-    "Why did I choose 'only' 3 modes":
+    Let me start with a bit of:
+    "How does a jet engine work?": (This section will give you an insight into why this jetpack was designed as it is.)
+    ============================== (Feel free to skip to "How does this jetpack prop work" if you are not interested!)
+
+    On the Boeing 747 (Yes, I am a captain on the B-747), a minimum of five minutes is necessary between the last
+    engine being started and takeoff power being applied. This allows for thermal stabilization in the
+    engines, avoids premature and very costly wear and tear and reduces the chances of one of them going
+    "boom" down the line.
+
+    Additionally, between landing power and after the engine thrust reversers have been returned to their stowed
+    position and the engines have stabilized back to their idle power, another three minutes must pass before it is
+    safe and allowed to shut them down. Just in case you have ever wondered, "We have arrived, why has(have) the
+    pilot(s) not shut down the engines already?" after a short taxi, that is why!
+
+    I tried to somewhat mimic the functioning of the jetpack prop based on our real-world jetliner jet engines.
+    However, I have only included three modes of operation:
+    - Off (yes, off is a mode)
+    - Idle/low power
+    - Flight/high/full power
+
+    Instead of the seven-ish needed (listed in order of operation):
+    - Idle (20 to 25%) - between "after engine(s) has(have) been started" and takeoff (it is called ground idle).
+    - Takeoff (100%) - can only be applied for five to ten minutes.
+    - Climb/cruise (80 to 90%)
+    - Descent (+/-40%) - it is called flight idle.
+    - Landing (+/-60%)
+    - Idle reverse - optional and not needed on a jetpack, but most passenger jetliners use this.
+    - Full reverse - also optional and definitely not needed on a jetpack, but big and heavy jets need to use this.
+    - Plus everything in between 80 and 40% - for different rates of descent.
+    - Plus everything in between 60 and 90% - for different rates of climb or maintaining different speeds at
+      or below cruise altitude.
+
+    "Why did I choose 'only' 3 modes?"
     ==================================
-    Because I wanted to have an idle/low power and in Star Wars, jetpacks seem to only have off or full power.
+    Because I wanted to have at least 2 "power" levels, and in Star Wars, jetpacks seem to only have off or full power.
     One exception to that: in one episode of The Mandalorian season 3 when Mando uses his jetpack to gently descends
-    with a "slow burn" - I don't want to add spoilers. If you've seen the episode, you know!).
-    And by having 3 modes of operation, I could introduce more "fun" failures for each phase of "flight/non flight".
+    with a "slow-ish burn" - I don't want to add spoilers and I don't know of any other example. If you've seen the
+    episode, you know what I am talking about!
+    And by having 3 modes of operation, I could introduce more "fun" (if you are "pretend flying only") failures for
+    each phases of "flight/non flight".
 
-    The ultimate goal would be to code for a rotary encoder (I suppose this can work like a potentiometer?) or a
+    The ultimate goal would be to code for a rotary encoder (I suppose this could work like a thrust lever?) or a
     touch-button that could modulate "power" (aka sound) like a thrust lever modulates fuel flow. I don't even know if
     ProffieBoard/ProffieOS can modulate sounds like a thrust lever modulates power on a jet engine? And besides,
     I don't know (yet) how to code for that!
 
-    But for now my only (and not yet complete) Proffie prop has a two buttons setup and I can't see any sensible way
-    to have more than 3 modes.
+    But for now my only Proffie prop has a two buttons setup and I can't see any sensible way to have more than 3 modes.
     I have considered "Alt mode" for more modes but I do not believe that Alt mode is the tool for this job.
-    There would be too may combinations to attempt to go from one "random" mode to another (that is not next up or
-    next down). Going from off to flight mode would need 6 (or more!) clicks and I doubt it would make for an enjoyable
+    There would be too may button combinations to attempt to go from one "random" mode to another (that is not next up
+    or next down). Going from off to flight mode would need 6 (or more!) clicks and I doubt it would make for an enjoyable
     user experience to constantly having to count and keep track of your clicks. It would be barely achievable on a two
     buttons setup (POW for up and AUX for down) but forget the "fun" malfunctions or a one button prop.
 
-    "How does this jetpack prop works":
-    ===================================
+    "How does this jetpack prop work?"
+    ==================================
 
     First Power Button Press:
         Plays the jetpack idle starting sound. (low volume & low light intensity on the blade(s),
@@ -85,10 +102,10 @@ Explanation:
         If no "Second Power Button Press" within 1 minute, the jetpack will switch off.
 
     Second Power Button Press:
-        Plays the jetpack starting sound. (high volume & high light intensity on the blade(s),
+        Plays the jetpack "going to in flight" starting sound. (high volume & high light intensity on the blade(s),
         like a jet engine applying take-off power)
         Loops the jetpack flying sound until the power button is pressed again.
-        To do: add a limit to this, you can't fly for ever without "refueling"!
+        To do (if there is a demand): add a limit to this. You can't fly for ever without "refueling"!
 
     Third Power Button Press:
         Plays the jetpack slowing down to idle sound. (low volume & low light intensity on the blade(s) again)
@@ -117,18 +134,22 @@ Explanation:
     & make a fun jetpack sound font.
     Create DIM "mode" for "blades" in idle mode.
 
+Thank you for reading!
+======================
+I hope you will have fun with my vision of a jetpack.
+
 ============= List of optional jetpack defines that you can add to your config. =============
 #define JETPACK_IDLE_TIME 1000 * 60 * 1 // Jetpack max idle mode time in millisec (default 1 min) before auto-shutdown.
-#define JETPACK_TRACK_PLAYER            // To add jetpack prop track player functionality - almost identical to
+#define JETPACK_TRACK_PLAYER            // Adds jetpack prop track player functionality - almost identical to
                                         // Fett263's saber track player, but without the menu option.
-// TBA JETPACK_ALLOW_CRASHING           // If "shot at" // I could create it, if there is an interest!
-// TBA MAX_JETPACK_FLIGHT_TIME          // You can't "fly" forever, eventually you will run out of fuel,
-                                        // or battery in the case of your prop!
+// TBA JETPACK_ALLOW_CRASHING           // If "shot at" - I could create it if there is interest!
+// TBA MAX_JETPACK_FLIGHT_TIME          // You can't "fly" forever. Eventually, you will run out of fuel
+                                        // (or battery, in the case of your prop).
 
 Please feel free to submit more fun ideas on The Crucible or to this GitHub page:
 https://github.com/olivierflying747-8/Olis-ProffieOS/tree/Jetpack-suggestions
 
-============= CHECK THE BELLOW LIST TO ACTUAL BUTTON(S) COMMANDS! ============= NOT YET FINAL !!! =============
+============= CHECK THE LIST BELOW FOR ACTUAL BUTTON COMMANDS! ============= NOT YET FINAL !!! =============
 1 Button:
 POWER Button:
 
@@ -177,7 +198,8 @@ AUX2 Button:
       Color Change Mode: Short-click while ON.
  Abort missile sequence: Hold and release while OFF.
 
-============= CHECK THE ABOVE LIST TO ACTUAL BUTTON(S) COMMANDS! ============= NOT YET FINAL !!! ============= */
+============= CHECK THE LIST ABOVE FOR ACTUAL BUTTON COMMANDS! ============= NOT YET FINAL !!! =============
+*/
 
 #ifndef PROPS_JETPACK_OLI_BUTTONS_H
 #define PROPS_JETPACK_OLI_BUTTONS_H
