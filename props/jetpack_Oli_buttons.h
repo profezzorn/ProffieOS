@@ -205,7 +205,7 @@ AUX2 Button:
 #define PROPS_JETPACK_OLI_BUTTONS_H
 
 #if NUM_BUTTONS < 1
-#error Your prop NEEDS 1 or more buttons to use jetpack_prop (2 is recomended)
+#error Your prop NEEDS 1 button to use jetpack_Oli_buttons, but 2 are recommended for simplicity of handling!
 #endif
 
 #include "prop_base.h"
@@ -213,12 +213,11 @@ AUX2 Button:
 #define PROP_TYPE JetpackOliButtons
 
 #ifndef JETPACK_IDLE_TIME
-// Jetpack max idle mode time in millisec (default 1 min) before auto-shutdown
+// Jetpack max idle mode time in millisec (for now, default 1 min) before auto-shutdown
 #define JETPACK_IDLE_TIME 1000 * 60 * 1
 #endif
 
 /* == sounds for system ==
-
 The long below list will not use additional memory. It is necessary in case you want to use jetpack_prop.h with
 dual_prop.h or my multi_prop.h to avoid double define errors of identical effects from other props.
 
@@ -319,34 +318,6 @@ EFFECT(volmax);         // for maximum volume reached
 EFFECT(volmin);         // for minimum volume reached
 #endif
 
-#ifdef HAVE_BATTERY
-#undef HAVE_BATTERY     // for EFFECT_BATTERY_LEVEL
-#endif
-#ifdef HAVE_DIM
-#undef HAVE_DIM         // for EFFECT_POWERSAVE
-#endif
-#ifdef HAVE_MUTE
-#undef HAVE_MUTE        // Notification before muted ignition to avoid confusion.
-#endif
-#ifdef HAVE_VMBEGIN
-#undef HAVE_VMBEGIN     // for Begin Volume Menu
-#endif
-#ifdef HAVE_VMEND
-#undef HAVE_VMEND       // for End Volume Menu
-#endif
-#ifdef HAVE_VOLDOWN
-#undef HAVE_VOLDOWN     // for decrease volume
-#endif
-#ifdef HAVE_VOLUP
-#undef HAVE_VOLUP       // for increase volume
-#endif
-#ifdef HAVE_VOLMAX
-#undef HAVE_VOLMAX      // for maximum volume reached
-#endif
-#ifdef HAVE_VOLMIN
-#undef HAVE_VOLMIN      // for minimum volume reached
-#endif
-
 // == sounds for jetpack ==
 EFFECT2(idlemode,idlemode);          // jetpack idle sound        (looping idle sound)
 EFFECT2(startidlemode,idlemode);     // jetpack starting to idle  (0 to idle)
@@ -366,12 +337,12 @@ EFFECT(targeting);                   // viewfinder search/finds target sound
 EFFECT(missilelaunch);               // missile launch sound
 EFFECT(missilegoesboom);             // double explosion in the distance sound
 EFFECT(mandotalk);                   // "Nice shot! I was aiming for the other one!
-EFFECT(disarm);                      // viewfinder going back up (reverse "click") sound "shlack"
+EFFECT(disarm);                      // viewfinder going back up sound "shlack" (reverse "click")
 
-class Jetpack : public PROP_INHERIT_PREFIX PropBase {
+class JetpackOliButtons : public PROP_INHERIT_PREFIX PropBase {
 public:
-  Jetpack() : PropBase() {}
-  const char* name() override { return "Jetpack"; }
+  JetpackOliButtons() : PropBase() {}
+  const char* name() override { return "JetpackOliButtons"; }
 
   // Based on SA22C Volume Menu
   void VolumeUp() {
@@ -550,7 +521,7 @@ public:
     return Saber::Parse(key, value);
   }
 #endif
-// This was resolving the ambiguity but was also increasing the size of the compile by a few 100 bytes,
+// This was resolving the ambiguity but was also increasing the size of the compile by around 100 bytes,
 // because the code for chdir and Parse was added twice (once in JetpackOli and once in Fett263) and
 // extra code had to be added to multi_prop.h to resolve the ambiguity. Solving the ambiguity directly
 // in JetpackOli reduces the size of the compile by a little bit.
