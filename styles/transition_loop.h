@@ -86,15 +86,13 @@ public:
 auto getColor(int led) -> decltype(
     MixColors(end_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led),
         loop_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led), 1, 1)) {
+    decltype(MixColors(end_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led),
+        loop_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led), 1, 1)) ret = RGBA_um_nod::Transparent();
     if (run_) {
-      return loop_tr_.getColor(RGBA_um_nod::Transparent(),
-          RGBA_um_nod::Transparent(), led);
-    } else if (end_) {
-      return end_tr_.getColor(RGBA_um_nod::Transparent(),
-          RGBA_um_nod::Transparent(), led);
-    } else {
-      return RGBA_um_nod::Transparent();
+      ret = loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led);
+      if (end_) ret = end_tr_.getColor(ret, RGBA_um_nod::Transparent(), led);
     }
+    return ret;
   }
 };
 
