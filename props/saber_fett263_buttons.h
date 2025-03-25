@@ -1029,8 +1029,8 @@ template<class SPEC>
 struct SwingGesture : public mode::BoolSetting {
   bool get() { return saved_gesture_control.swingon;  }
   void set(bool value) { 
-  saved_gesture_control.swingon = value;
-  saved_gesture_control.WriteToRootDir("gesture");
+    saved_gesture_control.swingon = value;
+    saved_gesture_control.WriteToRootDir("gesture");
   }
   void say() { sound_library_.SaySwingIgnition(); }
 };
@@ -1070,7 +1070,7 @@ struct SwingOnSpeed : public SPEC::SteppedMode {
     SPEC::SteppedMode::exit();
   }
 
-int speed_;
+  int speed_;
 };
 
 template<class SPEC>
@@ -1148,7 +1148,7 @@ struct ForcePushLength : public SPEC::SteppedMode {
     SPEC::SteppedMode::exit();
   }
 
-int push_;
+  int push_;
 };
 
 template<class SPEC>
@@ -1208,7 +1208,7 @@ struct LockupDelay : public SPEC::SteppedMode {
     SPEC::SteppedMode::exit();
   }
     
-int delay_;
+  int delay_;
 };
 
 template<class SPEC>
@@ -1246,7 +1246,7 @@ struct ClashDetect : public SPEC::SteppedMode {
     SPEC::SteppedMode::exit();
   }
 
-int clash_;
+  int clash_;
 };
 
 template<class SPEC>
@@ -1284,7 +1284,7 @@ struct MaxClash : public SPEC::SteppedMode {
     SPEC::SteppedMode::exit();
   }
 
-int maxclash_;
+  int maxclash_;
 };
 
 template<class SPEC>
