@@ -267,6 +267,13 @@ Edit Settings* (Settings Only version of Edit Mode)
     Cancel, Revert, Go Back = Click AUX
     Exit Edit Settings - Hold AUX
 
+OS8 Menu System* (#define MENU_SPEC_TEMPLATE)
+  Enter Menu = While Off, Hold AUX + Hold PWR
+    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
+    *Controls and selections vary by define, more information here: https://pod.hubbe.net/howto/menus.html
+    For full Fett263 Menu use:
+      #define MENU_SPEC_TEMPLATE FETT263_MENU_SPEC
+
 ---------- 1 Button Controls (based on SA22C prop) ----------
 NOTE: 
   Click = do short click (so Double Click is two short clicks in quick succession)
@@ -464,19 +471,33 @@ Edit Settings* (Settings Only version of Edit Mode)
     Cancel, Revert, Go Back = Long Click PWR
     Exit Edit Settings - Hold PWR
 
+OS8 Menu System* (#define MENU_SPEC_TEMPLATE)
+  Enter Menu = While Off, Double Click and Hold PWR
+    If menu prompt wav files are missing from preset you will get "Error in Font Directory" warning, refer to Edit Mode setup and requirements
+    *Controls and selections vary by define, more information here: https://pod.hubbe.net/howto/menus.html
+    For full Fett263 Menu use:
+      #define MENU_SPEC_TEMPLATE FETT263_MENU_SPEC
+    
 ---------- || ----------
 
 OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
 
   FETT263_EDIT_MODE_MENU
   Enable Edit Mode Menu System
+  Cannot be combined with FETT263_EDIT_SETTINGS_MENU or MENU_SPEC_TEMPLATE
   Requires ENABLE_ALL_EDIT_OPTIONS
 
   FETT263_EDIT_SETTINGS_MENU
   Enable Edit Settings Menu (Volume, Clash Threshold, Blade Length, Gestures/Controls, Brightness)
   I recommend setting USB Type = "Serial + WebUSB" under Arduino > Tools to allow for style, font, track, color editing via ProffieOS Workbench
-  Cannot be combined with FETT263_EDIT_MODE_MENU
+  Cannot be combined with FETT263_EDIT_MODE_MENU or MENU_SPEC_TEMPLATE
   Requires ENABLE_ALL_EDIT_OPTIONS
+
+  MENU_SPEC_TEMPLATE FETT263_MENU_SPEC
+  Enable OS8 Menu System (full Fett263 Menu)
+  Cannot be combined with FETT263_EDIT_MODE_MENU or FETT263_EDIT_SETTINGS_MENU
+  Requires ENABLE_ALL_EDIT_OPTIONS
+  More information here: https://pod.hubbe.net/howto/menus.html
 
   FETT263_SAVE_CHOREOGRAPHY
   Enables Enhanced Battle Mode with Saved Choreography, cannot be used with FETT263_SPECIAL_ABILITIES
@@ -933,37 +954,6 @@ individual tastes.
 
 #endif
 
-#include "prop_base.h"
-#include "../sound/hybrid_font.h"
-#include "../sound/effect.h"
-#include "../common/current_preset.h"
-#include "../common/file_reader.h"
-#include "../common/malloc_helper.h"
-
-#ifdef FETT263_EDIT_MODE_MENU
-#include "../common/color.h"
-#include "../styles/edit_mode.h"
-#endif
-
-#undef PROP_TYPE
-#define PROP_TYPE SaberFett263Buttons
-
-EFFECT(dim); // for EFFECT_POWERSAVE
-EFFECT(battery); // for EFFECT_BATTERY_LEVEL
-EFFECT(bmbegin); // for Begin Battle Mode
-EFFECT(bmend); // for End Battle Mode
-EFFECT(vmbegin); // for Begin Volume Menu
-EFFECT(vmend); // for End Volume Menu
-EFFECT(faston); // for EFFECT_FAST_ON
-EFFECT(blstbgn); // for Begin Multi-Blast
-EFFECT(blstend); // for End Multi-Blast
-EFFECT(push); // for Force Push gesture in Battle Mode
-EFFECT(tr);
-EFFECT2(trloop, trloop);
-#ifdef FETT263_USE_SETTINGS_MENU
-EFFECT(medit); // Edit Mode
-#endif
-
 #include "../sound/sound_library.h"
 
 class GestureControlFile : public ConfigFile {
@@ -1031,6 +1021,325 @@ public:
   int clashdetect; // maximum Clash Strength to detect Clash during Battle Mode (0 ~ 10 range)
   int maxclash; // maximum Clash Strength for Clash Sound and Detection works with CLASH_THRESHOLD_G to create range of Clash Strength (8 ~ 16 range)
 };
+
+GestureControlFile saved_gesture_control;
+
+#ifdef MENU_SPEC_TEMPLATE
+template<class SPEC>
+struct SwingGesture : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.swingon;  }
+  void set(bool value) { 
+    saved_gesture_control.swingon = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SaySwingIgnition(); }
+};
+
+template<class SPEC>
+struct SwingOnSpeed : public SPEC::SteppedMode {
+  void mode_activate(bool onreturn) override {
+    speed_ = saved_gesture_control.swingonspeed;
+    SPEC::SteppedMode::mode_activate(onreturn);
+    say();
+  }
+  void next() override {
+    speed_ += 50;
+    if (speed_ >= 600) speed_ = 600;
+  }
+  void prev() override {
+    speed_ -= 50;
+    if (speed_ <= 200) speed_ = 200;
+  }
+  void fadeout(float len) override {
+    mode::getSL<SPEC>()->fadeout(len);
+  }
+  void say() {
+    if (speed_ == 200) sound_library_.SayMinimum();
+    if (speed_ == 600) sound_library_.SayMaximum();
+    sound_library_.SayNumber(speed_, SAY_WHOLE);
+  }
+  void select() { 
+    sound_library_.SaySwingOnSpeed();
+    sound_library_.SayNumber(speed_, SAY_WHOLE);
+    saved_gesture_control.swingonspeed = speed_;
+    saved_gesture_control.WriteToRootDir("gesture");
+    SPEC::SteppedMode::select();
+  }
+  void exit() override {
+    mode::getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+
+  int speed_;
+};
+
+template<class SPEC>
+struct TwistOnGesture : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.twiston;  }
+  void set(bool value) { 
+    saved_gesture_control.twiston = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SayTwistIgnition(); }
+};
+
+template<class SPEC>
+struct ThrustOnGesture : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.thruston;  }
+  void set(bool value) { 
+    saved_gesture_control.thruston = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SayThrustIgnition(); }
+};
+
+template<class SPEC>
+struct StabOnGesture : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.stabon;  }
+  void set(bool value) { 
+    saved_gesture_control.stabon = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SayStabIgnition(); }
+};
+
+template<class SPEC>
+struct ForcePushGesture : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.forcepush;  }
+  void set(bool value) { 
+    saved_gesture_control.forcepush = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SayForcePush(); }
+};
+
+template<class SPEC>
+struct ForcePushLength : public SPEC::SteppedMode {
+  void mode_activate(bool onreturn) override {
+    push_ = saved_gesture_control.forcepushlen;
+    SPEC::SteppedMode::mode_activate(onreturn);
+    say();
+  }
+  void next() override {
+    push_ += 1;
+    if (push_ >= 10) push_ = 10;
+  }
+  void prev() override {
+    push_ -= 1;
+    if (push_ <= 1) push_ = 1;
+  }
+  void fadeout(float len) override {
+    mode::getSL<SPEC>()->fadeout(len);
+  }
+  void say() {
+    if (push_ == 1) sound_library_.SayMinimum();
+    if (push_ == 10) sound_library_.SayMaximum();
+    sound_library_.SayNumber(push_, SAY_WHOLE);
+  }
+  void select() { 
+    sound_library_.SayForcePushLength();
+    sound_library_.SayNumber(push_, SAY_WHOLE);
+    saved_gesture_control.forcepushlen = push_;
+    saved_gesture_control.WriteToRootDir("gesture");
+    SPEC::SteppedMode::select();
+  }
+  void exit() override {
+    mode::getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+
+  int push_;
+};
+
+template<class SPEC>
+struct TwistOffGesture : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.twistoff;  }
+  void set(bool value) { 
+    saved_gesture_control.twistoff = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SayTwistRetraction(); }
+};
+
+template<class SPEC>
+struct PowerLock : public mode::BoolSetting {
+  bool get() { return saved_gesture_control.powerlock;  }
+  void set(bool value) { 
+    saved_gesture_control.powerlock = value;
+    saved_gesture_control.WriteToRootDir("gesture");
+  }
+  void say() { sound_library_.SayPowerLock(); }
+};
+
+template<class SPEC>
+struct LockupDelay : public SPEC::SteppedMode {
+  void mode_activate(bool onreturn) override {
+    delay_ = saved_gesture_control.lockupdelay;
+    SPEC::SteppedMode::mode_activate(onreturn);
+    say();
+  }
+  void next() override {
+    delay_ += 100;
+    if (delay_ >= 1200) delay_ = 1200;
+  }
+  void prev() override {
+    delay_ -= 100;
+    if (delay_ <= 200) delay_ = 200;
+  }
+  void fadeout(float len) override {
+    mode::getSL<SPEC>()->fadeout(len);
+  }
+  void say() {
+    if (delay_ == 1) sound_library_.SayMinimum();
+    if (delay_ == 10) sound_library_.SayMaximum();
+    sound_library_.SayNumber(delay_, SAY_WHOLE);
+    sound_library_.SayMillis();
+  }
+  void select() { 
+    sound_library_.SayLockupDelay();
+    sound_library_.SayNumber(delay_, SAY_WHOLE);
+    sound_library_.SayMillis();
+    saved_gesture_control.lockupdelay = delay_;
+    saved_gesture_control.WriteToRootDir("gesture");
+    SPEC::SteppedMode::select();
+  }
+  void exit() override {
+    mode::getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+    
+  int delay_;
+};
+
+template<class SPEC>
+struct ClashDetect : public SPEC::SteppedMode {
+  void mode_activate(bool onreturn) override {
+    clash_ = saved_gesture_control.clashdetect;
+    SPEC::SteppedMode::mode_activate(onreturn);
+    say();
+  }
+  void next() override {
+    clash_ += 1;
+    if (clash_ >= 10) clash_ = 10;
+  }
+  void prev() override {
+    clash_ -= 1;
+    if (clash_ <= 1) clash_ = 1;
+  }
+  void fadeout(float len) override {
+    mode::getSL<SPEC>()->fadeout(len);
+  }
+  void say() {
+    if (clash_ == 1) sound_library_.SayMinimum();
+    if (clash_ == 10) sound_library_.SayMaximum();
+    sound_library_.SayNumber(clash_, SAY_WHOLE);
+  }
+  void select() { 
+    sound_library_.SayClashDetectionLevel();
+    sound_library_.SayNumber(clash_, SAY_WHOLE);
+    saved_gesture_control.clashdetect = clash_;
+    saved_gesture_control.WriteToRootDir("gesture");
+    SPEC::SteppedMode::select();
+  }
+  void exit() override {
+    mode::getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+
+  int clash_;
+};
+
+template<class SPEC>
+struct MaxClash : public SPEC::SteppedMode {
+  void mode_activate(bool onreturn) override {
+    maxclash_ = saved_gesture_control.maxclash;
+    SPEC::SteppedMode::mode_activate(onreturn);
+    say();
+  }
+  void next() override {
+    maxclash_ += 1;
+    if (maxclash_ >= 16) maxclash_ = 16;
+  }
+  void prev() override {
+    maxclash_ -= 1;
+    if (maxclash_ <= prop_GetCurrentClashThreshold()) maxclash_ = prop_GetCurrentClashThreshold();
+  }
+  void fadeout(float len) override {
+    mode::getSL<SPEC>()->fadeout(len);
+  }
+  void say() {
+    if (maxclash_ == prop_GetCurrentClashThreshold()) sound_library_.SayMinimum();
+    if (maxclash_ == 16) sound_library_.SayMaximum();
+    sound_library_.SayNumber(maxclash_, SAY_WHOLE);
+  }
+  void select() { 
+    sound_library_.SayMaximumClashStrength();
+    sound_library_.SayNumber(maxclash_, SAY_WHOLE);
+    saved_gesture_control.maxclash = maxclash_;
+    saved_gesture_control.WriteToRootDir("gesture");
+    SPEC::SteppedMode::select();
+  }
+  void exit() override {
+    mode::getSL<SPEC>()->SayCancel();
+    SPEC::SteppedMode::exit();
+  }
+
+  int maxclash_;
+};
+
+template<class SPEC>
+class NewSettingsMenu : public mode::AddToMenuEntryMenu<SPEC, typename SPEC::OldSettingsMenu, 
+  mode::DirectBoolEntry<SPEC, SwingGesture<SPEC>>,
+  mode::SubMenuEntry<SwingOnSpeed<SPEC>, typename SPEC::SoundLibrary::tSwingOnSpeed>,
+  mode::DirectBoolEntry<SPEC, TwistOnGesture<SPEC>>,
+  mode::DirectBoolEntry<SPEC, ThrustOnGesture<SPEC>>,
+  mode::DirectBoolEntry<SPEC, StabOnGesture<SPEC>>,
+  mode::DirectBoolEntry<SPEC, ForcePushGesture<SPEC>>,
+  mode::SubMenuEntry<ForcePushLength<SPEC>, typename SPEC::SoundLibrary::tForcePushLength>,
+  mode::DirectBoolEntry<SPEC, TwistOffGesture<SPEC>>,
+  mode::DirectBoolEntry<SPEC, PowerLock<SPEC>>,
+  mode::SubMenuEntry<LockupDelay<SPEC>, typename SPEC::SoundLibrary::tLockupDelay>,
+  mode::SubMenuEntry<ClashDetect<SPEC>, typename SPEC::SoundLibrary::tClashDetectionLevel>,
+  mode::SubMenuEntry<MaxClash<SPEC>, typename SPEC::SoundLibrary::tMaximumClashStrength>
+> {};
+
+template<class SPEC>
+struct FETT263_MENU_SPEC : public DefaultMenuSpec<SPEC> {
+  typedef typename DefaultMenuSpec<SPEC>::SettingsMenu OldSettingsMenu;
+  typedef NewSettingsMenu<SPEC> SettingsMenu;
+};
+#endif
+
+#include "prop_base.h"
+#include "../sound/hybrid_font.h"
+#include "../sound/effect.h"
+#include "../common/current_preset.h"
+#include "../common/file_reader.h"
+#include "../common/malloc_helper.h"
+
+#ifdef FETT263_EDIT_MODE_MENU
+#include "../common/color.h"
+#include "../styles/edit_mode.h"
+#endif
+
+#undef PROP_TYPE
+#define PROP_TYPE SaberFett263Buttons
+
+EFFECT(dim); // for EFFECT_POWERSAVE
+EFFECT(battery); // for EFFECT_BATTERY_LEVEL
+EFFECT(bmbegin); // for Begin Battle Mode
+EFFECT(bmend); // for End Battle Mode
+EFFECT(vmbegin); // for Begin Volume Menu
+EFFECT(vmend); // for End Volume Menu
+EFFECT(faston); // for EFFECT_FAST_ON
+EFFECT(blstbgn); // for Begin Multi-Blast
+EFFECT(blstend); // for End Multi-Blast
+EFFECT(push); // for Force Push gesture in Battle Mode
+EFFECT(tr);
+EFFECT2(trloop, trloop);
+#ifdef FETT263_USE_SETTINGS_MENU
+EFFECT(medit); // Edit Mode
+#endif
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
 // Rehearsal / Choreography
@@ -1234,7 +1543,6 @@ public:
 SaberFett263Buttons() : PropBase() {}
   const char* name() override { return "SaberFett263Buttons"; }
 
-  GestureControlFile saved_gesture_control;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
   SavedRehearsal saved_choreography;
 #endif
