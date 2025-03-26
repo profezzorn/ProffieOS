@@ -58,20 +58,19 @@ public:
       }
     }
     if (run_) {
+      loop_tr_.run(blade);
       if (!condition_.calculate(blade)) {
         run_ = false;
         end_ = true;
         end_tr_.begin();
-      } else {
-        loop_tr_.run(blade);
       }
     }
     if (end_) {
+      loop_tr_.run(blade);
+      end_tr_.run(blade);
       if (end_tr_.done()) {
         end_ = false;
       }
-      end_tr_.run(blade);
-      loop_tr_.run(blade);
     }
   }
   
@@ -88,10 +87,8 @@ auto getColor(int led) -> decltype(
         loop_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led), 1, 1)) {
     decltype(MixColors(end_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led),
         loop_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led), 1, 1)) ret = RGBA_um_nod::Transparent();
-    if (run_) {
-      ret = loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led);
-      if (end_) ret = end_tr_.getColor(ret, RGBA_um_nod::Transparent(), led);
-    }
+    if (end_) ret = end_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led);
+    if (run_) ret = loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led);
     return ret;
   }
 };
