@@ -116,7 +116,7 @@
 // is instantiated as "prop", and is responsible for handling
 // button clicks, clashes, swings and other events. These events
 // are then send to all registered SaberBase classes.
-///
+//
 // Generally speaking, there are usually two registered SaberBase
 // classes listening for events. One for sound and one for
 // the blade. Sound and blade effects are generally executed
@@ -718,7 +718,7 @@ void prop_previous_preset() { prop.previous_preset(); }
 
 #ifdef DYNAMIC_BLADE_LENGTH
 int prop_GetBladeLength(int blade) {
-  return prop.GetBladeLength(blade); 
+  return prop.GetBladeLength(blade);
 }
 int prop_GetMaxBladeLength(int blade) {
   return prop.GetMaxBladeLength(blade);
@@ -815,7 +815,7 @@ public:
 
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
   File current_file;
-#endif  
+#endif
 
   bool TestPin(int pin, PinType t) {
     int ret = 0;
@@ -875,8 +875,7 @@ public:
     if (!strcmp(cmd, "format")) {
       STDOUT.print("Erasing ... ");
       SerialFlashChip::eraseAll();
-      while (!SerialFlashChip::ready())
-        ;
+      while (!SerialFlashChip::ready());
       STDOUT.println("Done");
       return true;
     }
@@ -1367,12 +1366,12 @@ public:
 #ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "whatispowered")) {
       STDOUT.print("ON: ");
-#define PRINTIFON(REG, BIT) \
-  do { \
-    if (RCC->REG & RCC_##REG##_##BIT##EN) { \
-      STDOUT.print(" " #BIT); \
+#define PRINTIFON(REG, BIT)                                            \
+  do {                                                                 \
+    if (RCC->REG & RCC_##REG##_##BIT##EN) {                            \
+      STDOUT.print(" " #BIT);                                          \
       if (!(startup_##REG & RCC_##REG##_##BIT##EN)) STDOUT.print("+"); \
-    } \
+    }                                                                  \
   } while (0)
 
       PRINTIFON(AHB1ENR, FLASH);
@@ -1699,6 +1698,11 @@ void loop() {
   Looper::DoLoop();
 }
 
+#define CONFIG_PROP
+#define PROP_BOTTOM
+#include CONFIG_FILE
+#undef CONFIG_PROP
+#undef PROP_BOTTOM
 
 #define CONFIG_BOTTOM
 #include CONFIG_FILE

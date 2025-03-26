@@ -16,7 +16,7 @@ public:
     CONFIG_VARIABLE2(ProffieOSSmoothSwingDucking, 0.2f);
     CONFIG_VARIABLE2(ProffieOSSwingLowerThreshold, 200.0f);
     CONFIG_VARIABLE2(ProffieOSSlashAccelerationThreshold, 130.0f);
-    
+
     CONFIG_VARIABLE2(ProffieOSMinSwingAcceleration, 0.0f);
     CONFIG_VARIABLE2(ProffieOSMaxSwingAcceleration, 0.0f);
 #ifdef ENABLE_SPINS
@@ -122,7 +122,7 @@ public:
 
 FontConfigFile font_config;
 
-// Monophonic sound fonts are the most common.
+// Monophonic sound fonts were once the most common.
 // These fonts are fairly simple, as generally only one sound is
 // played at a time. It starts with the "poweron" sound and when
 // that runs out, we gaplessly transition to the "hum" sound.
@@ -230,12 +230,12 @@ public:
     hum_player_->PlayOnce(f);
     current_effect_length_ = hum_player_->length();
     if (loop) hum_player_->PlayLoop(loop);
-   }
+  }
 
   void PlayMonophonic(Effect* f, Effect* loop, float xfade = 0.003f)  {
     PlayMonophonic(f->RandomFile(), loop, xfade);
   }
-  
+
   // Use after changing alternative.
   void RestartHum(int previous_alternative) {
     if (hum_player_ && hum_player_->isPlaying()) {
@@ -400,7 +400,7 @@ public:
       SFX_preon.SetFollowing(getOut());
       // PlayCommon(&SFX_preon);
       RefPtr<BufferedWavPlayer> tmp = PlayPolyphonic(&SFX_preon);
-      
+
       if (monophonic_hum_) {
         getOut()->SetFollowing(getHum());
         hum_player_ = tmp;
@@ -431,7 +431,7 @@ public:
 
   void SB_On(EffectLocation location) override {
     StopIdleSound();
-    // If preon exists, we've already queed up playing the poweron and hum.
+    // If preon exists, we've already queued up playing the poweron and hum.
     bool already_started = state_ == STATE_WAIT_FOR_ON && SFX_preon;
     bool faston = state_ != STATE_WAIT_FOR_ON;
     if (monophonic_hum_) {
@@ -481,15 +481,14 @@ public:
 
   void SB_Off(OffType off_type, EffectLocation location) override {
     bool most_blades = location.on_blade(0);
-    // SFX_in.SetFollowing( most_blades ?  &SFX_pstoff : nullptr );
 #ifdef ENABLE_IDLE_SOUND
     if (most_blades) {
       Effect* idle = AvoidIdleSDAccess() ? nullptr : &SFX_idle;
       if (SFX_pstoff) {
-	SFX_in.SetFollowing(&SFX_pstoff);
-	SFX_pstoff.SetFollowing(idle);
+        SFX_in.SetFollowing(&SFX_pstoff);
+        SFX_pstoff.SetFollowing(idle);
       } else {
-	SFX_in.SetFollowing(idle);
+        SFX_in.SetFollowing(idle);
       }
     } else {
       SFX_in.SetFollowing(nullptr);
@@ -508,7 +507,7 @@ public:
         break;
       case OFF_FAST:
         SFX_in.SetFollowing(nullptr);
-	[[gnu::fallthrough]];
+        [[gnu::fallthrough]];
       case OFF_NORMAL:
         if (!SFX_in) {
           size_t total = SFX_poweroff.files_found() + SFX_pwroff.files_found();
@@ -623,6 +622,12 @@ public:
         }
         PlayCommon(&SFX_altchng);
         break;
+      case EFFECT_BLADEIN:
+        SB_BladeDetect(SFX_bladein);
+        break;
+      case EFFECT_BLADEOUT:
+        SB_BladeDetect(SFX_bladeout);
+        break;
       case EFFECT_BOOM:
         if (monophonic_hum_) {
           if (SFX_boom) PlayMonophonic(getNext(hum_player_, &SFX_boom), NULL);
@@ -635,16 +640,14 @@ public:
     }
   }
 
-
-  void SB_BladeDetect(bool detected) {
-    Effect &X(detected ? SFX_bladein : SFX_bladeout);
+  void SB_BladeDetect(Effect& X) {
     if (X) {
       PlayPolyphonic(&X);
       return;
     }
     // SFX_bladein/out doesn't exist, playing font.wav instead
     if (SFX_font) {
-    PVLOG_STATUS << "SFX_bladein/out doesn't exist, playing font.wav instead.\n";
+      PVLOG_STATUS << "SFX_bladein/out doesn't exist, playing font.wav instead.\n";
       PlayPolyphonic(&SFX_font);
       return;
     }
@@ -652,11 +655,13 @@ public:
     // Otherwise, just beep to indicate blade status change.
     beeper.Beep(0.05, 2000.0);
   }
+
   void SB_NewFont() {
     if (!PlayPolyphonic(&SFX_font)) {
       beeper.Beep(0.05, 1046.5);
     }
   }
+
   void SB_Change(SaberBase::ChangeType change) override {
     switch (change) {
       case SaberBase::ENTER_COLOR_CHANGE:
@@ -865,7 +870,7 @@ public:
 #endif
   }
 
-bool swinging_ = false;
+  bool swinging_ = false;
   void SB_Motion(const Vec3& gyro, bool clear) override {
     if (active_state() && !(SFX_lockup && SaberBase::Lockup())) {
       StartSwing(gyro,

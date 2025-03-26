@@ -298,7 +298,7 @@ public:
   NextAction next_action_ = NEXT_ACTION_NOTHING;
   uint32_t time_base_;
   uint32_t next_event_time_;
-  
+
   void SetNextAction(NextAction what, uint32_t when) {
     time_base_ = millis();
     next_event_time_ = when;
@@ -308,7 +308,7 @@ public:
   void SetNextActionF(NextAction what, float when) {
     SetNextAction(what, when * 1000);
   }
-  
+
   virtual void PollNextAction() {
     if (millis() - time_base_ > next_event_time_) {
       switch (next_action_) {
@@ -325,13 +325,13 @@ public:
       next_action_ = NEXT_ACTION_NOTHING;
     }
   }
-  
+
   void beginArm() {
     SaberBase::SetLockup(SaberBase::LOCKUP_ARMED);
     SaberBase::DoBeginLockup();
-#ifdef ENABLE_AUDIO    
+#ifdef ENABLE_AUDIO
     float len = hybrid_font.GetCurrentEffectLength();
-#else    
+#else
     float len = 1.6;
 #endif
     SetNextActionF(NEXT_ACTION_ARM, len);
@@ -339,9 +339,9 @@ public:
 
     virtual void selfDestruct() {
     SaberBase::DoEndLockup();
-#ifdef ENABLE_AUDIO    
+#ifdef ENABLE_AUDIO
     float len = hybrid_font.GetCurrentEffectLength();
-#else    
+#else
     float len = 0.0;
 #endif
     SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
@@ -379,7 +379,7 @@ public:
       case EVENTID(BUTTON_MODE_SELECT, EVENT_SECOND_CLICK_LONG, MODE_ON):
         previous_preset();
         return true;
-        
+
       case EVENTID(BUTTON_RELOAD, EVENT_PRESSED, MODE_ON):
       case EVENTID(BUTTON_MODE_SELECT, EVENT_HELD_MEDIUM, MODE_ON):
         Reload();
@@ -421,7 +421,7 @@ public:
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_ON):
         Off();
         return true;
-		    
+
   #ifdef BLADE_DETECT_PIN
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
@@ -460,7 +460,7 @@ public:
       case EFFECT_UNJAM: hybrid_font.PlayCommon(&SFX_unjam); return;
       case EFFECT_PLI_ON: hybrid_font.PlayCommon(&SFX_plion); return;
       case EFFECT_PLI_OFF: hybrid_font.PlayCommon(&SFX_plioff); return;
-  
+
     }
   }
 
@@ -486,7 +486,7 @@ public:
           hybrid_font.PlayCommon(&SFX_mode);
         } else {
 #ifndef DISABLE_TALKIE
-          talkie.Say(spKILL);      
+          talkie.Say(spKILL);
 #else
           beeper.Beep(0.05, 2000.0);
 #endif
@@ -499,7 +499,7 @@ public:
           hybrid_font.PlayCommon(&SFX_mode);
         } else {
 #ifndef DISABLE_TALKIE
-          talkie.Say(spAUTOFIRE);       
+          talkie.Say(spAUTOFIRE);
 #else
           beeper.Beep(0.05, 2000.0);
 #endif
@@ -515,3 +515,125 @@ public:
 };
 
 #endif
+
+#ifdef PROP_BOTTOM
+
+#define ONCE_PER_BLASTER_EFFECT(X)    \
+  X(blast)                            \
+  X(reload)                           \
+  X(empty)                            \
+  X(jam)                              \
+  X(clipin)                           \
+  X(clipout)                          \
+  X(destruct)
+
+#ifdef INCLUDE_SSD1306
+
+struct BlasterDisplayConfigFile : public ConfigFile {
+  BlasterDisplayConfigFile() { link(&font_config); }
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(ProffieOSFireImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSReloadImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSEmptyImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSJamImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClipinImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClipoutImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSDestructImageDuration, 10000.0f);
+  }
+  
+  // for OLED displays, the time a blast.bmp will play
+  float ProffieOSFireImageDuration;
+  // for OLED displays, the time a reload.bmp will play
+  float ProffieOSReloadImageDuration;
+  // for OLED displays, the time a empty.bmp will play
+  float ProffieOSEmptyImageDuration;
+  // for OLED displays, the time a jam.bmp will play
+  float ProffieOSJamImageDuration;
+  // for OLED displays, the time a clipin.bmp will play
+  float ProffieOSClipinImageDuration;
+  // for OLED displays, the time a clipout.bmp will play
+  float ProffieOSClipoutImageDuration;
+  // for OLED displays, the time a destruct.bmp will play
+  float ProffieOSDestructImageDuration;
+};
+
+
+template<typename PREFIX = ByteArray<>>
+struct BlasterDisplayEffects  {
+  BlasterDisplayEffects() : dummy_(0) ONCE_PER_BLASTER_EFFECT(INIT_IMG) {}
+  int dummy_;
+  ONCE_PER_BLASTER_EFFECT(DEF_IMG)
+};
+
+template<int Width, class col_t, typename PREFIX = ByteArray<>>
+class BlasterDisplayController : public StandardDisplayController<Width, col_t, PREFIX> {
+public:
+  BlasterDisplayEffects<PREFIX> img_;
+  BlasterDisplayConfigFile &blaster_font_config;
+  BlasterDisplayController() :
+    img_(*getPtr<BlasterDisplayEffects<PREFIX>>()),
+    blaster_font_config(*getPtr<BlasterDisplayConfigFile>()) {
+  }
+
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      case EFFECT_FIRE:
+        this->ShowFileWithSoundLength(&img_.IMG_blast, blaster_font_config.ProffieOSFireImageDuration);
+        break;
+      case EFFECT_RELOAD:
+        this->ShowFileWithSoundLength(&img_.IMG_reload, blaster_font_config.ProffieOSReloadImageDuration);
+        break;
+      case EFFECT_EMPTY:
+        this->ShowFileWithSoundLength(&img_.IMG_empty, blaster_font_config.ProffieOSEmptyImageDuration);
+        break;
+      case EFFECT_JAM:
+        this->ShowFileWithSoundLength(&img_.IMG_jam, blaster_font_config.ProffieOSJamImageDuration);
+        break;
+      case EFFECT_CLIP_IN:
+        this->ShowFileWithSoundLength(&img_.IMG_clipin, blaster_font_config.ProffieOSClipinImageDuration);
+        break;
+      case EFFECT_CLIP_OUT:
+        this->ShowFileWithSoundLength(&img_.IMG_clipout, blaster_font_config.ProffieOSClipoutImageDuration);
+        break;
+      default:
+        StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
+    }
+  }
+  
+  void SB_Off2(typename StandardDisplayController<Width, col_t, PREFIX>::OffType offtype, EffectLocation location) override {
+    if (offtype == StandardDisplayController<Width, col_t, PREFIX>::OFF_BLAST) {
+      this->ShowFileWithSoundLength(&img_.IMG_destruct, blaster_font_config.ProffieOSDestructImageDuration);
+    } else {
+      StandardDisplayController<Width, col_t, PREFIX>::SB_Off2(offtype, location);
+    }
+  }
+};
+
+#endif  // INCLUDE_SSD1306
+
+template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>, typename NumberToByteArray<H>::type>>
+class BlasterColorDisplayController : public StandarColorDisplayController<W, H, PREFIX> {
+public:
+  template<int w, int h>
+  explicit BlasterColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_BLASTER_EFFECT(INIT_SCR) {
+  }
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      case EFFECT_FIRE:     this->scr_.Play(&SCR_blast);   break;
+      case EFFECT_RELOAD:   this->scr_.Play(&SCR_reload);  break;
+      case EFFECT_EMPTY:    this->scr_.Play(&SCR_empty);   break;
+      case EFFECT_JAM:      this->scr_.Play(&SCR_jam);     break;
+      case EFFECT_CLIP_IN:  this->scr_.Play(&SCR_clipin);  break;
+      case EFFECT_CLIP_OUT: this->scr_.Play(&SCR_clipout); break;
+      default:
+        StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
+    }
+  }
+
+protected:
+  ONCE_PER_BLASTER_EFFECT(DEF_SCR);
+};
+
+#undef ONCE_PER_BLASTER_EFFECT
+
+#endif  // PROP_BOTTOM

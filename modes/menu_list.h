@@ -128,7 +128,7 @@ template<class SPEC, class ... MenuEntries>
 using MenuEntryMenu = MenuEntryMenuImpl<SPEC, TypeList<MenuEntries...>>;
 
 template<class SPEC, class MENU, class ... AdditionalEntries>
-using AddToMenuEntryMenu = MenuEntryMenuImpl<SPEC, ConcatTypeLists<typename MENU::MenuEntries, AdditionalEntries...>>;
+using AddToMenuEntryMenu = MenuEntryMenuImpl<SPEC, ConcatTypeLists<typename MENU::MenuEntries, TypeList<AdditionalEntries...>>>;
 
 }  // namespace mode
 

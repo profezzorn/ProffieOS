@@ -1,8 +1,8 @@
 /*
 blaster_BC_buttons.h prop file.
   http://fredrik.hubbe.net/lightsaber/proffieos.html
-  Copyright (c) 2016-2023 Fredrik Hubinette
-  Copyright (c) 2023 Brian Conner with contributions by:
+  Copyright (c) 2016-2025 Fredrik Hubinette
+  Copyright (c) 2025 Brian Conner with contributions by:
   Fredrik Hubinette, Fernando da Rosa, Matthew McGeary, and Scott Weber.
   Distributed under the terms of the GNU General Public License v3.
   http://www.gnu.org/licenses/
@@ -150,28 +150,6 @@ Additionally:
   out.wav        // for blaster power on
   destruct.wav   // for self destruct overload
   boom.wav       // for self destruct explosion
-
-The following are likely best kept in a 'common' folder in your Font Search Path, but of course
-can be specific versions within a font as well.
-Choose a Voice Pack containing all these sounds here: https://fredrik.hubbe.net/lightsaber/sound/
-
-  Battery level wavs:
-    mzero.wav
-    mnum 1-20 wavs, as well as the "tens" thirty.wav - ninety.wav
-    battery.wav    // for accompanying EFFECT_BATTERY_LEVEL
-    battlevl.wav   // for Spoken Battery Level
-    mpercent.wav
-    mpoint.wav
-    mvolts.wav
-  vmbegin.wav    // for Begin Volume Menu
-  vmend.wav      // for End Volume Menu
-  volup.wav      // for increse volume
-  voldown.wav    // for decrease volume
-  volmin.wav     // for minimum volume reached
-  volmax.wav     // for maximum volume reached
-  mfalse.wav     // "disabled" used for sequential quote mode
-  mtrue.wav      // "enabled" used for sequential quote mode
-  mrandom.wav    // "ramdom" used for sequential quote mode
 */
 
 #ifndef PROPS_BLASTER_BC_BUTTONS_H
@@ -199,12 +177,6 @@ Choose a Voice Pack containing all these sounds here: https://fredrik.hubbe.net/
 EFFECT(destruct);
 #ifndef PROPS_DUAL_PROP_H
 EFFECT(battery);    // for EFFECT_BATTERY_LEVEL
-EFFECT(vmbegin);    // for Begin Volume Menu
-EFFECT(vmend);      // for End Volume Menu
-EFFECT(volup);      // for increse volume
-EFFECT(voldown);    // for decrease volume
-EFFECT(volmin);     // for minimum volume reached
-EFFECT(volmax);     // for maximum volume reached
 #endif
 
 template<class SPEC>
@@ -333,7 +305,6 @@ struct BCBlasterMenuSpec {
   typedef mode::MenuBase<SPEC> MenuBase;
   typedef SoundLibraryV2 SoundLibrary;
 };
-
 
 class BlasterBCButtons : public Blaster {
 public:
@@ -647,7 +618,7 @@ public:
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
 #endif
         if (no_clip_) {
-          SaberBase::DoEffect(EFFECT_EMPTY, 0); 
+          SaberBase::DoEffect(EFFECT_EMPTY, 0);
           return true;
         } else {
           Reload();
@@ -657,7 +628,7 @@ public:
   // Fire
       case EVENTID(BUTTON_FIRE, EVENT_PRESSED, MODE_ON):
         if (no_clip_) {
-          SaberBase::DoEffect(EFFECT_EMPTY, 0); 
+          SaberBase::DoEffect(EFFECT_EMPTY, 0);
           return true;
         } else {
           Fire();

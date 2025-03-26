@@ -34,7 +34,11 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(IGNITION)                     \
     DEFINE_EFFECT(RETRACTION)                   \
     DEFINE_EFFECT(CHANGE)                       \
+    /* just for resetting things, not meant for triggering effects, use NEWFONT/BLADEIN/BLADEOUT instead */ \
+    DEFINE_EFFECT(CHDIR)                        \
     DEFINE_EFFECT(NEWFONT)                      \
+    DEFINE_EFFECT(BLADEIN)                      \
+    DEFINE_EFFECT(BLADEOUT)                     \
     DEFINE_EFFECT(LOW_BATTERY)                  \
     DEFINE_EFFECT(POWERSAVE)                    \
     DEFINE_EFFECT(BATTERY_LEVEL)                \
@@ -197,7 +201,7 @@ public:
   void printTo(Print& p) const {
     for (int i = 0; i < NUM_BLADES; i++) {
       if ((*this)[i]) {
-	p.write((char)((i < 10 ? '0' : ('A'-10)) + i));
+        p.write((char)((i < 10 ? '0' : ('A'-10)) + i));
       }
     }
   }
@@ -338,8 +342,8 @@ public:
 
   static void DumpMotionRequest() {
     STDOUT << "Motion requested: " << MotionRequested()
-	   << " (millis() - last_motion_request=" << (millis() - last_motion_request_)
-	   << ")\n";
+           << " (millis() - last_motion_request=" << (millis() - last_motion_request_)
+           << ")\n";
   }
 
   enum LockupType {
@@ -409,7 +413,6 @@ public:                                                         \
   SABERFUN(Effect, (EffectType effect, EffectLocation location), (effect, location));   \
   SABERFUN(On, (EffectLocation location), (location));                                  \
   SABERFUN(Off, (OffType off_type, EffectLocation location), (off_type, location));     \
-  SABERFUN(BladeDetect, (bool detected), (detected));                                   \
   SABERFUN(Change, (ChangeType change_type), (change_type));                            \
                                                                                         \
   SABERFUN(Top, (uint64_t total_cycles), (total_cycles));                               \
@@ -438,22 +441,26 @@ public:
     DoOffInternal(off_type, location);
     switch (off_type) {
       case OFF_BLAST:
-	DoEffectInternal2(EFFECT_BLAST, location);
-	break;
+        DoEffectInternal2(EFFECT_BLAST, location);
+        break;
       case OFF_NORMAL:
       case OFF_FAST:
-	DoEffectInternal2(EFFECT_RETRACTION, location);
+        DoEffectInternal2(EFFECT_RETRACTION, location);
         break;
       case OFF_IDLE:
       case OFF_CANCEL_PREON:
-	// do nothing
-	break;
+        // do nothing
+        break;
     }
 
   }
   static void DoBladeDetect(bool detected) {
     ClearSoundInfo();
-    DoBladeDetectInternal(detected);
+    if (detected) {
+      DoEffect(EFFECT_BLADEIN, 0);
+    } else {
+      DoEffect(EFFECT_BLADEOUT, 0);
+    }
   }
   static void DoChange(ChangeType change_type) {
     ClearSoundInfo();
@@ -598,30 +605,30 @@ private:
       default: break;
 
       // Clear out all old effects when we go to a new preset.
-      case EFFECT_NEWFONT:
-	num_effects_ = 0;
-	break;
+      case EFFECT_CHDIR:
+        num_effects_ = 0;
+        break;
 
       case EFFECT_LOCKUP_BEGIN:
-	switch (SaberBase::Lockup()) {
-	  case LOCKUP_DRAG:
-	    type = EFFECT_DRAG_BEGIN;
-	  case LOCKUP_NORMAL:
-	    break;
-	  default: return;
-	}
-	break;
+        switch (SaberBase::Lockup()) {
+          case LOCKUP_DRAG:
+            type = EFFECT_DRAG_BEGIN;
+          case LOCKUP_NORMAL:
+            break;
+          default: return;
+        }
+        break;
       case EFFECT_LOCKUP_END:
-	switch (SaberBase::Lockup()) {
-	  case LOCKUP_DRAG:
-	    type = EFFECT_DRAG_END;
-	  case LOCKUP_NORMAL:
-	    break;
-	  default: return;
-	}
-	break;
+        switch (SaberBase::Lockup()) {
+          case LOCKUP_DRAG:
+            type = EFFECT_DRAG_END;
+          case LOCKUP_NORMAL:
+            break;
+          default: return;
+        }
+        break;
       case EFFECT_CLASH_UPDATE:
-	// Not stored in queue
+        // Not stored in queue
         return;
     }
     for (size_t i = std::min(num_effects_, NELEM(effects_) - 1); i; i--) {

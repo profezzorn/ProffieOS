@@ -68,7 +68,7 @@ public:
 };
 
 // Base class for props.
-class PropBase : CommandParser, Looper, protected SaberBase, public ModeInterface {
+class PropBase : CommandParser, protected Looper, protected SaberBase, public ModeInterface {
 public:
   PropBase() : CommandParser() {
     current_mode = this;
@@ -318,6 +318,7 @@ public:
     }
 //    EnableBooster();
 #endif
+    SaberBase::DoEffect(EFFECT_CHDIR, 0);
     return false;
   }
 
@@ -415,7 +416,7 @@ public:
     chdir(current_preset_.font.get());
     if (previously_on.on()) FastOn(EffectLocation(0, previously_on));
     if (announce) {
-     PVLOG_STATUS << "Current Preset: " << current_preset_name() << "\n";
+      PVLOG_STATUS << "Current Preset: " << current_preset_name() << "\n";
       SaberBase::DoNewFont();
     }
     TRACE(PROP, "end");
@@ -528,7 +529,7 @@ public:
   virtual void SpeakBladeID(float id) {
 #ifdef DISABLE_TALKIE
 #ifdef SPEAK_BLADE_ID
-    #error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
+#error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
 #endif
 #else
     talkie.Say(spI);
@@ -582,39 +583,38 @@ public:
 #ifndef SHARED_POWER_PINS
 #warning SHARED_POWER_PINS is recommended when using BLADE_ID_SCAN_MILLIS
 #endif
-    
-    bool find_blade_again_pending_ = false;
-    uint32_t last_scan_id_ = 0;
-    bool ScanBladeIdNow() {
-        uint32_t now = millis();
-        
-        bool scan = true;
-        
+
+  bool find_blade_again_pending_ = false;
+  uint32_t last_scan_id_ = 0;
+  bool ScanBladeIdNow() {
+    uint32_t now = millis();
+    bool scan = true;
+
 #ifdef BLADE_ID_STOP_SCAN_WHILE_IGNITED
-        if (IsOn()) {
-            scan = false;
-        }
-#endif
-        
-#ifdef BLADE_ID_SCAN_TIMEOUT
-        if ((now - blade_id_scan_start_) > BLADE_ID_SCAN_TIMEOUT) {
-            scan = false;
-        }
-#endif
-        
-        if (scan) {
-            last_scan_id_ = now;
-            size_t best_config = FindBestConfig(PROFFIEOS_LOG_LEVEL >= 500);
-            if (current_config != blades + best_config) {
-                // We can't call FindBladeAgain right away because
-                // we're called from the blade. Wait until next loop() call.
-                find_blade_again_pending_ = true;
-            }
-            return true;
-        } else {
-            return false;
-        }
+    if (IsOn()) {
+      scan = false;
     }
+#endif
+
+#ifdef BLADE_ID_SCAN_TIMEOUT
+    if ((now - blade_id_scan_start_) > BLADE_ID_SCAN_TIMEOUT) {
+      scan = false;
+    }
+#endif
+
+    if (scan) {
+      last_scan_id_ = now;
+      size_t best_config = FindBestConfig(PROFFIEOS_LOG_LEVEL >= 500);
+      if (current_config != blades + best_config) {
+        // We can't call FindBladeAgain right away because
+        // we're called from the blade. Wait until next loop() call.
+        find_blade_again_pending_ = true;
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   virtual int GetNoBladeLevelBefore() {
     int level = current_config->ohm / NO_BLADE;
@@ -630,9 +630,9 @@ public:
       int noblade_level_after = current_config->ohm / NO_BLADE;
       
       if (noblade_level_before < noblade_level_after) {
-        SaberBase::DoBladeDetect(false);
-      } else if (noblade_level_before > noblade_level_after) {
-        SaberBase::DoBladeDetect(true);
+        SaberBase::DoEffect(EFFECT_BLADEOUT, 0);
+      } else if(noblade_level_before > noblade_level_after) {
+        SaberBase::DoEffect(EFFECT_BLADEIN, 0);
       } else {
         SaberBase::DoNewFont();
       }
@@ -668,8 +668,8 @@ public:
     return;
 
 #if NUM_BLADES != 0
-  bad_blade:
-    ProffieOSErrors::error_in_blade_array();
+    bad_blade:
+      ProffieOSErrors::error_in_blade_array();
 #endif
   }
 
@@ -774,7 +774,7 @@ public:
 
     ONCEPERBLADE(DEACTIVATE);
     SaveVolumeIfNeeded();
-    FindBlade(false);
+    FindBlade(true);
   }
 
   bool CheckInteractivePreon() {
@@ -826,11 +826,11 @@ public:
     // If we're spinning the saber or if loud sounds are playing,
     // require a stronger acceleration to activate the clash.
     if (v > (CLASH_THRESHOLD_G * (1
-				  + fusor.gyro().len() / 500.0
+                                  + fusor.gyro().len() / 500.0
 #if defined(ENABLE_AUDIO) && defined(AUDIO_CLASH_SUPPRESSION_LEVEL)
-				  + dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 1E-10) * dynamic_mixer.get_volume()
+                                  + dynamic_mixer.audio_volume() * (AUDIO_CLASH_SUPPRESSION_LEVEL * 1E-10) * dynamic_mixer.get_volume()
 #endif
-	       ))) {
+                                  ))) {
       if ( (accel_ - fusor.down()).len2() > (accel - fusor.down()).len2() ) {
         diff = -diff;
       }
@@ -1162,7 +1162,7 @@ public:
       blade_id_scan_start_ = millis();
       }
 #endif
-      
+
 #ifdef IDLE_OFF_TIME
     if (SaberBase::IsOn() ||
         (current_style() && current_style()->Charging())) {
@@ -1183,7 +1183,7 @@ public:
 #ifdef IDLE_OFF_TIME
   uint32_t last_on_time_;
 #endif
-    
+
 #ifdef BLADE_ID_SCAN_TIMEOUT
   uint32_t blade_id_scan_start_;
 #endif
@@ -1298,10 +1298,10 @@ public:
     if (!strcmp(cmd, "on1")) {
       PRINT_CHECK_BLADE=true;
       if (SaberBase::BladeIsOn(2)) {
-	STDOUT << "faston!\n";
-	SaberBase::TurnOn(EffectLocation(0, ~BladeSet::fromBlade(2)));
+        STDOUT << "faston!\n";
+        SaberBase::TurnOn(EffectLocation(0, ~BladeSet::fromBlade(2)));
       } else {
-	On(EffectLocation(0, ~BladeSet::fromBlade(2)));
+        On(EffectLocation(0, ~BladeSet::fromBlade(2)));
       }
       PRINT_CHECK_BLADE=false;
       return true;
@@ -1309,10 +1309,10 @@ public:
     if (!strcmp(cmd, "on2")) {
       PRINT_CHECK_BLADE=true;
       if (SaberBase::BladeIsOn(1)) {
-	STDOUT << "faston!\n";
-	SaberBase::TurnOn(EffectLocation(0, ~BladeSet::fromBlade(1)));
+        STDOUT << "faston!\n";
+        SaberBase::TurnOn(EffectLocation(0, ~BladeSet::fromBlade(1)));
       } else {
-	On(EffectLocation(0, ~BladeSet::fromBlade(1)));
+        On(EffectLocation(0, ~BladeSet::fromBlade(1)));
       }
       PRINT_CHECK_BLADE=false;
       return true;
@@ -1320,11 +1320,11 @@ public:
     if (!strcmp(cmd, "off2")) {
       PRINT_CHECK_BLADE=true;
       if (SaberBase::BladeIsOn(1)) {
-	STDOUT << "Turning off SINGLE blade.\n";
-	SaberBase::TurnOff(OffType::OFF_NORMAL, EffectLocation(1000, ~~BladeSet::fromBlade(2)));
+        STDOUT << "Turning off SINGLE blade.\n";
+        SaberBase::TurnOff(OffType::OFF_NORMAL, EffectLocation(1000, ~~BladeSet::fromBlade(2)));
       } else {
-	STDOUT << "Turning off all blades.\n";
-	Off(OffType::OFF_NORMAL);
+        STDOUT << "Turning off all blades.\n";
+        Off(OffType::OFF_NORMAL);
       }
       PRINT_CHECK_BLADE=false;
       return true;
@@ -1332,12 +1332,12 @@ public:
     if (!strcmp(cmd, "off1")) {
       PRINT_CHECK_BLADE=true;
       if (SaberBase::BladeIsOn(2)) {
-	EffectLocation tmp = EffectLocation(1000, ~~BladeSet::fromBlade(1));
-	STDOUT << "Turning off SINGLE blade: " << tmp << "\n";
-	SaberBase::TurnOff(OffType::OFF_NORMAL, tmp);
+        EffectLocation tmp = EffectLocation(1000, ~~BladeSet::fromBlade(1));
+        STDOUT << "Turning off SINGLE blade: " << tmp << "\n";
+        SaberBase::TurnOff(OffType::OFF_NORMAL, tmp);
       } else {
-	STDOUT << "Turning off all blades.\n";
-	Off(OffType::OFF_NORMAL);
+        STDOUT << "Turning off all blades.\n";
+        Off(OffType::OFF_NORMAL);
       }
       PRINT_CHECK_BLADE=false;
       return true;
@@ -1656,8 +1656,8 @@ public:
           }
         }
       }
-      STDOUT << "SD Access " 
-             << (LSFS::GetAllowMount() ? "ON" : "OFF") 
+      STDOUT << "SD Access "
+             << (LSFS::GetAllowMount() ? "ON" : "OFF")
              << "\n";
       return true;
     }
@@ -1784,26 +1784,26 @@ public:
     if (!strcmp(cmd, "list_fonts")) {
       LOCK_SD(true);
       for (LSFS::Iterator iter("/"); iter; ++iter) {
-	if (iter.name()[0] == '.') continue;
-	if (!strcmp(iter.name(), "common")) continue;
+        if (iter.name()[0] == '.') continue;
+        if (!strcmp(iter.name(), "common")) continue;
         if (!iter.isdir()) continue;
-	bool isfont = false;
-	for (LSFS::Iterator i2(iter); i2 && !isfont; ++i2) {
-	  if (i2.isdir()) {
-	    if (!strcasecmp("hum", i2.name())) isfont = true;
-	    if (!strcasecmp("alt000", i2.name())) isfont = true;
-	  } else {
-	    const char* tmp = i2.name();
-	    if (!startswith("hum", tmp)) continue;
-	    tmp += 3;
-	    if (startswith("m", tmp)) tmp++;
-	    while (*tmp >= '0' && *tmp <= '9') tmp++;
-	    if (!strcasecmp(".wav", tmp)) isfont = true;
-	  }
-	}
-	if (isfont) {
-	  STDOUT.println(iter.name());
-	}
+        bool isfont = false;
+        for (LSFS::Iterator i2(iter); i2 && !isfont; ++i2) {
+          if (i2.isdir()) {
+            if (!strcasecmp("hum", i2.name())) isfont = true;
+            if (!strcasecmp("alt000", i2.name())) isfont = true;
+          } else {
+            const char* tmp = i2.name();
+            if (!startswith("hum", tmp)) continue;
+            tmp += 3;
+            if (startswith("m", tmp)) tmp++;
+            while (*tmp >= '0' && *tmp <= '9') tmp++;
+            if (!strcasecmp(".wav", tmp)) isfont = true;
+          }
+        }
+        if (isfont) {
+          STDOUT.println(iter.name());
+        }
       }
       LOCK_SD(false);
       return true;
@@ -1818,7 +1818,7 @@ public:
     switch (event) {
       case EVENT_RELEASED:
         clash_pending_ = false;
-	[[gnu::fallthrough]];
+        [[gnu::fallthrough]];
       case EVENT_PRESSED:
         IgnoreClash(50); // ignore clashes to prevent buttons from causing clashes
       default:
@@ -1878,7 +1878,7 @@ public:
   virtual void ResetCurrentAlternative() {
     current_alternative = 0;
   }
-  
+
 private:
   bool CommonIgnition(EffectLocation location = EffectLocation()) {
     if ((location.blades() &~ SaberBase::OnBlades()).off()) return false;
