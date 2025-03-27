@@ -26,7 +26,7 @@ EFFECT(armor);
 EFFECT(stun);
 EFFECT(death);
 EFFECT(armor_alarm);
-EFFECT(armor_depleted);
+EFFECT(armor_compromised);
 EFFECT(major);
 EFFECT(minor);
 EFFECT(morphine);
@@ -38,10 +38,6 @@ public:
 
   int health_ = 100;
   int armor_ = 100;
-
-  bool dead_ = false;
-  bool armor_depleted_ = false;
-  bool morphine_triggered_ = false;
 
   enum Hazard {
     HAZARD_NONE = 0,
@@ -66,12 +62,17 @@ public:
   void DoDamage(int damage, bool quiet = false) {
     int tens = health_ / 10;
     if (armor_ >= damage) {
-        armor_ -= ceilf(damage * 0.80 / 2);  // Applies 80% divided by 2 of damage to armor, if armor is enough.
-        health_ -= ceilf(damage * 0.20);  // Applies 20% of damage to health, if armor is enough.
+      armor_ -= ceilf(damage * 0.80 / 2);
+      health_ -= ceilf(damage * 0.20);
+    } else if (armor_ > 0) {
+      int excess_physical = damage - armor_;
+      health_ -= excess_physical;
+      // Make armor compromised sound play before setting armor to 0
+      SaberBase::DoEffect(EFFECT_USER2, 0.0, 0);
+      PVLOG_NORMAL << "Armor Compromised!\n";
+      armor_ = 0;
     } else {
-        int excess_physical = damage - armor_;
-        health_ -= excess_physical;  // Only the excess of physical damage impacts health.
-        armor_ = 0;  // Armor is depleted.
+      health_ -= damage;
     }
 
     // Enforce minimum values
@@ -82,17 +83,11 @@ public:
     if (!quiet) SaberBase::DoEffect(EFFECT_STUN, 0.0, damage);
     
     // Death Sound
-    if (health_ == 0 && !dead_) { // Check flag to avoid death sound spam
+    if (health_ == 0) {
       SaberBase::DoEffect(EFFECT_EMPTY, 0.0, 100);
-      dead_ = true;
       return;
     }
-
-    // Reset flag if health is above 0
-    if (health_ > 0) {
-      dead_ = false;
-    }
-
+    
     // Health Alert - only plays when health enters a new multiple of 10
     int new_tens = health_ / 10;
     if (tens != new_tens) {
@@ -144,14 +139,6 @@ public:
       damage = 50;
     }
 
-    // Play Major or Minor Detected Voice Lines
-    // if (damage >= 25) {
-    //   morphine_triggered_ = true;
-    //   SaberBase::DoEffect(EFFECT_MAJOR, 0.0, damage);
-    // } else {
-    //   SaberBase::DoEffect(EFFECT_MINOR, 0.0, damage);
-    // }
-
     // Play Armor Alarm if damage is 30 or more
     if (damage >= 30) {
       hybrid_font.PlayPolyphonic(&SFX_armor_alarm);
@@ -174,16 +161,27 @@ public:
 
   // Random Hazards ////////////////////////////////////////////////////////////
   uint32_t last_random_draw_ = millis();
+  uint32_t post_death_cooldown_ = 0;
 
-  // Activate a Random Hazard, only if health is above 0 and no Hazard is currently active.
+  // Check and activation
   void CheckRandomEvent() {
-    if (millis() - last_random_draw_ > HEV_RANDOM_EVENT_INTERVAL_MS && health_ > 0 && current_hazard_ == HAZARD_NONE) {
+    // Don't allow Hazards if dead or during post-death cooldown.
+    // This prevents Hazards immediately after healing.
+    if (health_ == 0 || (post_death_cooldown_ &&
+      (millis() - post_death_cooldown_ < HEV_POST_DEATH_COOLDOWN_MS))) {
+      return;
+    }
+
+    // Activate a Hazard, only if health is above 0 and no Hazard is currently active.
+    if (millis() - last_random_draw_ > HEV_RANDOM_EVENT_INTERVAL_MS &&
+      health_ > 0 &&
+      current_hazard_ == HAZARD_NONE) {
       last_random_draw_ = millis();
       if (random(100) < HEV_RANDOM_HAZARD_CHANCE) {
-	PVLOG_NORMAL << "Activating hazard.\n";
-	current_hazard_ = (Hazard)(1 + random(6));
-  hazard_decrease_millis_ = millis();
-	SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
+        PVLOG_NORMAL << "Activating hazard.\n";
+        current_hazard_ = (Hazard)(1 + random(6));
+        hazard_decrease_millis_ = millis();
+        SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
       }
     }
   }
@@ -199,6 +197,11 @@ public:
         if (armor_ > 0) {
           armor_--;
           SaberBase::DoEffect(EFFECT_STUN, 0.0, 1);
+          // Check if armor is 0 then play armor compromised sound.
+          if (armor_ == 0) {
+            SaberBase::DoEffect(EFFECT_USER2, 0.0, 0);
+            PVLOG_NORMAL << "Armor Compromised!\n";
+          }
         } else {
           DoDamage(1);
         }
@@ -207,10 +210,6 @@ public:
         if (health_ == 0) {
           current_hazard_ = HAZARD_NONE;
           SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
-        
-        // Print health and armor
-        PVLOG_NORMAL << "Health: " << health_ << " / ";
-        PVLOG_NORMAL << "Armor: " << armor_ << "\n";
         }
       }
     }
@@ -224,6 +223,13 @@ public:
     if (SaberBase::Lockup()) {
       if (millis() - health_increase_millis_ > HEV_HEALTH_INCREASE_MS) {
 	health_increase_millis_ = millis();
+
+  // Start cooldown timer when health increases above 0.
+  // This starts the check to prevent immediate Hazards after healing.
+  if (health_ == 0) {
+    post_death_cooldown_ = millis(); // Start cooldown timer
+  }
+
 	health_++;
 	PVLOG_NORMAL << "Health: " << health_ << "\n";
 	if (health_ >= 100) {
@@ -242,14 +248,16 @@ public:
   void IncreaseArmor() {
     if (SaberBase::Lockup()) {
       if (millis() - armor_increase_millis_ > HEV_ARMOR_INCREASE_MS) {
-        armor_increase_millis_ = millis();
-        armor_++;
-        PVLOG_NORMAL << "Armor: " << armor_ << "\n";
-        if (armor_ >= 100) {
-          armor_ = 100;
-          SaberBase::DoEndLockup();
-          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-        }
+  armor_increase_millis_ = millis();
+
+  armor_++;
+  PVLOG_NORMAL << "Armor: " << armor_ << "\n";
+
+  if (armor_ >= 100) {
+    armor_ = 100;
+    SaberBase::DoEndLockup();
+    SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+  }
       }
     }
   }
@@ -303,7 +311,7 @@ public:
         armor_readout();
         return true;
 	
-      // Next/Previous preset. Triple-click on either button.
+  // Next/Previous preset. Triple-click on either button.
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_OFF):
         next_preset();
@@ -376,39 +384,36 @@ public:
 
    // Hev effects, auto fire is handled by begin/end lockup
   void SB_Effect(EffectType effect, EffectLocation location) override {
+    // Don't queue new sounds if dead (except death sound).
+    // Once dead, if a queued sound is currently playing, allow it to finish
+    // alongside death sound. However all pending sounds should be cleared.
     switch (effect) {
       default: return;
-
-  // Damage Detection Voice Lines
-      // case EFFECT_MAJOR:
-      // hybrid_font.PlayCommon(&SFX_major);
-      // if (morphine_triggered_) {
-      //   hybrid_font.PlayCommon(&SFX_morphine);
-      //   morphine_triggered_ = false;
-      // }
-      // return;
-
-      // case EFFECT_MINOR:
-      // hybrid_font.PlayCommon(&SFX_minor);
-      // return;
   
-	// Random Hazard Sounds
+    // Random Hazard Sounds
       case EFFECT_STUN:
-	hybrid_font.PlayCommon(&SFX_stun);
-	return;
-	
-	// Health Alert
+        hybrid_font.PlayCommon(&SFX_stun);
+        return;
+
+    // Armor Compromised Sound
+      case EFFECT_USER2:
+        SOUNDQ->Play(&SFX_armor_compromised);
+        return;
+    
+    // Health Alert
       case EFFECT_USER1:
-  if (dead_) return; // Don't queue health sounds if dead
-  SFX_health.SelectFloat(health_ / 100.0);
-  SOUNDQ->Play(&SFX_health);
-  return;
-	
-	// Death Sound
+        if (health_ == 0) return; // Don't queue health sounds if dead
+        SFX_health.SelectFloat(health_ / 100.0);
+        SOUNDQ->Play(&SFX_health);
+        return;
+    
+    // Death Sound
       case EFFECT_EMPTY:
-	hybrid_font.PlayCommon(&SFX_death);
-	return;
-  
+        if (health_ == 0) {
+          SOUNDQ->clear_pending();
+        }
+        hybrid_font.PlayCommon(&SFX_death);
+        return;
     }
   }
 };
