@@ -34,4 +34,63 @@ public:
 template<class T, class TRANSITION>
   using TransitionLoop = Layers<T, TransitionLoopL<TRANSITION>>;
 
+// Usage: TransitionLoopWhileL<LOOP_TRANSITION, END_TRANSITION, CONDITION>
+// LOOP_TRANSITION : TRANSITION
+// END_TRANSITION : TRANSITION
+// return value: COLOR
+//
+// Continuously runs LOOP_TRANSITION while CONDITION > 0
+// Makes more sense if TRANSITION is a TrConcat, as this will
+// transition to/from the intermediate steps in a loop.
+// If CONDITION <= 0, runs END_TRANSITION and stops.
+
+template<class LoopTr, class EndTr, class CONDITION>
+class TransitionLoopWhileL {
+public:
+  void run(BladeBase* blade) {
+    condition_.run(blade);
+    if (!run_ || loop_tr_.done()) {
+      run_ = false;
+      if (condition_.calculate(blade)) {
+       run_ = true;
+       end_ = false;
+       loop_tr_.begin();
+      }
+    }
+    if (run_) {
+      loop_tr_.run(blade);
+      if (!condition_.calculate(blade)) {
+        run_ = false;
+        end_ = true;
+        end_tr_.begin();
+      }
+    }
+    if (end_) {
+      loop_tr_.run(blade);
+      end_tr_.run(blade);
+      if (end_tr_.done()) {
+        end_ = false;
+      }
+    }
+  }
+  
+private:
+  bool run_ = false;
+  bool end_ = false;
+  LoopTr loop_tr_;
+  EndTr end_tr_;
+  PONUA SVFWrapper<CONDITION> condition_;
+
+public:
+auto getColor(int led) -> decltype(
+    MixColors(end_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led),
+        loop_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led), 1, 1)) {
+    decltype(MixColors(end_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led),
+        loop_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led), 1, 1)) ret = RGBA_um_nod::Transparent();
+    if (end_) ret = end_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led);
+    if (run_) ret = loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led);
+    return ret;
+  }
+};
+
 #endif
