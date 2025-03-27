@@ -73,7 +73,7 @@ public:
     }
   }
 
-  virtual bool primary() const {
+  bool primary() const {
     return primary_;
   }
 
@@ -193,9 +193,6 @@ class BladeBase* SubBlade(int first_led, int last_led, BladeBase* blade) {
 }
 
 class SubBladeWrapperReverse : public SubBladeWrapper {
- virtual bool primary() const override {
-    return offset_ + 1 == num_leds_;
-  }
   void set(int led, Color16 c) override {
     return blade_->set(offset_ - led, c);
   }
@@ -279,9 +276,6 @@ public:
   int translate(int led) const {
     return offset_ + led * stride_ + ((led & 1) ? col_ : (stride_ - 1 - col_));
   }
- virtual bool primary() const override {
-   return translate(0) == 0;
- }
   void set(int led, Color16 c) override {
     return blade_->set(translate(led), c);
   }
