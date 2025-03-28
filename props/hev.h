@@ -181,15 +181,29 @@ public:
         PVLOG_NORMAL << "Activating hazard.\n";
         current_hazard_ = (Hazard)(1 + random(6));
         hazard_decrease_millis_ = millis();
+        hazard_start_delay_ = 0;
         SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
       }
     }
   }
 
   // Decrease armor (if any) or health over time.
+  uint32_t hazard_start_delay_ = 0;
   uint32_t hazard_decrease_millis_ = millis();
   void HazardDecrease() {
     if (current_hazard_ != HAZARD_NONE) {
+      // Check if this is a new hazard that needs initial delay
+      if (hazard_start_delay_ == 0) {
+        hazard_start_delay_ = millis();
+        return;
+      }
+
+      // Wait for initial delay before starting damage
+      if (millis() - hazard_start_delay_ < HEV_HAZARD_DELAY_MS) {
+        return;
+      }
+
+      // Normal damage interval after initial delay
       if (millis() - hazard_decrease_millis_ > HEV_HAZARD_DECREASE_MS) {
         hazard_decrease_millis_ = millis();
 
@@ -209,9 +223,13 @@ public:
         // Stop the current Hazard if health drops to 0
         if (health_ == 0) {
           current_hazard_ = HAZARD_NONE;
+          hazard_start_delay_ = 0; // Reset delay for next hazard
           SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
         }
       }
+    } else {
+      // Reset delay when no hazard is active
+      hazard_start_delay_ = 0;
     }
   }
 
