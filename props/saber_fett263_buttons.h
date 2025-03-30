@@ -794,6 +794,12 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #error FETT263_SAY_COLOR_LIST_CC does not work with FETT263_REPLACE_CC_COLOR_LIST
 #endif
 
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+#define ACTIVE_CC_MODE CC_EDIT_COLOR
+#else
+#define ACTIVE_CC_MODE CC_COLOR_LIST
+#endif
+
 #if defined(FETT263_DISABLE_QUOTE_PLAYER) && defined(FETT263_QUOTE_PLAYER_START_ON)
 #error FETT263_QUOTE_PLAYER_START_ON cannot be used with FETT263_DISABLE_QUOTE_PLAYER
 #endif
@@ -2065,13 +2071,7 @@ SaberFett263Buttons() : PropBase() {}
     strcat(new_color, ",");
     itoa(Color16(color_source).b, new_color + strlen(new_color), 10);
 #if NUM_BLADES > 1
-    if (
-#ifdef FETT263_REPLACE_CC_COLOR_LIST
-      color_mode_ == CC_EDIT_COLOR
-#else
-      color_mode_ == CC_COLOR_LIST
-#endif
-      || color_mode_ == CC_ZOOM_COLOR) {
+    if (color_mode_ == ACTIVE_CC_MODE || color_mode_ == CC_ZOOM_COLOR) {
       for (int i = 1; i <= NUM_BLADES; i++) {
         current_preset_.SetStyle(i,style_parser.SetArgument(current_preset_.GetStyle(i), effect + 2, new_color));
       }
@@ -2828,13 +2828,7 @@ SaberFett263Buttons() : PropBase() {}
 
   // Check if ShowColor for ColorChange / Color Editing is active to prevent other events
   bool CheckShowColorCC() {
-    if (
-#ifdef FETT263_REPLACE_CC_COLOR_LIST
-      color_mode_ == CC_EDIT_COLOR
-#else
-      color_mode_ == CC_COLOR_LIST 
-#endif
-      || color_mode_ == CC_ZOOM_COLOR) return true;
+    if (color_mode_ == ACTIVE_CC_MODE || color_mode_ == CC_ZOOM_COLOR) return true;
     if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return true;
     return false;
   }
@@ -2895,11 +2889,7 @@ SaberFett263Buttons() : PropBase() {}
         hsl_angle_ = fusor.angle2();
         return true;
         break;
-#ifdef FETT263_REPLACE_CC_COLOR_LIST
-      case CC_EDIT_COLOR:
-#else
-      case CC_COLOR_LIST:
-#endif
+      case ACTIVE_CC_MODE:
         color_mode_ = CC_ZOOM_COLOR;
         edit_color_ = true;
         hsl_angle_ = fusor.angle2();
@@ -2926,11 +2916,7 @@ SaberFett263Buttons() : PropBase() {}
         MenuChoice();
         return true;
         break;
-#ifdef FETT263_REPLACE_CC_COLOR_LIST
-      case CC_EDIT_COLOR:
-#else
-      case CC_COLOR_LIST:
-#endif
+      case ACTIVE_CC_MODE:
       case CC_ZOOM_COLOR:
         edit_color_ = false;
         hybrid_font.PlayCommon(&SFX_ccend);
@@ -5987,13 +5973,7 @@ SaberFett263Buttons() : PropBase() {}
             return true;
           }
 #endif
-          if (
-#ifdef FETT263_REPLACE_CC_COLOR_LIST
-            color_mode_ == CC_EDIT_COLOR
-#else
-            color_mode_ == CC_COLOR_LIST
-#endif
-            ) {
+          if (color_mode_ == ACTIVE_CC_MODE) {
             color_mode_ = NONE;
             show_color_all_.Stop();
             sound_library_.SayRevert();
