@@ -100,7 +100,6 @@ public:
     hybrid_font.PlayCommon(&SFX_armor);
   }
 
-
   // Clashes ///////////////////////////////////////////////////////////////////
   uint32_t last_clash_time_ = 0;
   const uint32_t CLASH_DEBOUNCE_MS = 100; // Adjust debounce time as needed
