@@ -50,13 +50,6 @@ public:
   };
 
   Hazard current_hazard_ = HAZARD_NONE;
-  
-  void LowBatteryOff() override {
-    if (SFX_poweron) {
-      PropBase::LowBatteryOff();
-    }
-  }
-
 
   // Calculate Physical Damage //////////////////////////////////////////////////
   void DoDamage(int damage, bool quiet = false) {
