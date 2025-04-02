@@ -111,7 +111,7 @@ public:
 
   void SetNext(SubBladeWrapper* next) {
     next_ = next;
-    primary_ = (next_ == this);
+    if (next_ == this) primary_ = true;
   }
 
   // Bladestyle implementation
