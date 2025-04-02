@@ -213,20 +213,20 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Plays array-specific arrayX.wav files when switching.
   Arrays should be numbered consecutively, starting at
   zero (0) in the field that would otherwise contain
-  BladeID. If used with Blade Detect, NO_BLADE array
-  replaces zero. NO_BLADE array also gets ignored
-  by Array Selector and will only be accessed by the
-  Blade Detect process.
+  BladeID values. If used with Blade Detect, the
+  NO_BLADE array replaces the array numbered zero.
+  NO_BLADE array also gets ignored by Array Selector
+  and will only be accessed by the Blade Detect process.
   
 #define SABERSENSE_DEFAULT_ARRAY 3
-  If using SABERSENSE_ARRAY_SELECTOR, this define selects
-  the default array on first boot or if no save file
+  If using SABERSENSE_ARRAY_SELECTOR, this optional define
+  selects the default array on first boot or if no save file
   is present.
   Arrays should be numbered sequentially starting at 0 (or 
   NO_BLADE if using Blade Detect), and system defaults
   to first "bladed" array if define is not used.
   Note that the number specified refers to the array
-  location in the array list, NOT th array index number.
+  location in the array list, NOT the array index number.
   It also ignores NO_BLADE but does not ignore zero.
   
 #define SABERSENSE_DISABLE_SAVE_ARRAY
