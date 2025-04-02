@@ -297,7 +297,7 @@ GESTURE CONTROLS
   constexpr size_t NUM_ARRAYS = sizeof(blades) / sizeof(blades[0]);
   static_assert(SABERSENSE_DEFAULT_ARRAY >= 1 && SABERSENSE_DEFAULT_ARRAY <= NUM_ARRAYS,
 
-    // Show error below if array number is invalid. (Returns and indents for readability).
+    // Show error below if array number is invalid. (Returns and indents for IDE readability).
     "\n  ERROR:\n    SABERSENSE_DEFAULT_ARRAY number invalid. Ensure array number specified "
     "does not exceed number of blade arrays in config.\n "
     "   Arrays should be numbered sequentially. First array should be zero (or NO_BLADE if "
