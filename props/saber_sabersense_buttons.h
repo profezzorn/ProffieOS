@@ -1,4 +1,4 @@
-/* V7/8-167.
+/* V7/8-177.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -209,12 +209,25 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 #define SABERSENSE_ARRAY_SELECTOR
   Replaces regular BladeID and allows cycling between
   different blade/preset arrays manually, regardless
-  of actual BladeID status. Plays array-specific
-  arrayX.wav files when switching.
-  Requires arrays to be numbered consecutively,
-  starting at zero, in the field that would otherwise 
-  contain BladeID values.
-  Not currently compatible with Blade Detect.
+  of actual BladeID status.
+  Plays array-specific arrayX.wav files when switching.
+  Arrays should be numbered consecutively, starting at
+  zero (0) in the field that would otherwise contain
+  BladeID. If used with Blade Detect, NO_BLADE array
+  replaces zero. NO_BLADE array also gets ignored
+  by Array Selector and will only be accessed by the
+  Blade Detect process.
+  
+#define SABERSENSE_DEFAULT_ARRAY 3
+  If using SABERSENSE_ARRAY_SELECTOR, this define selects
+  the default array on first boot or if no save file
+  is present.
+  Arrays should be numbered sequentially starting at 0 (or 
+  NO_BLADE if using Blade Detect), and system defaults
+  to first "bladed" array if define is not used.
+  Note that the number specified refers to the array
+  location in the array list, NOT th array index number.
+  It also ignores NO_BLADE but does not ignore zero.
   
 #define SABERSENSE_DISABLE_SAVE_ARRAY
   By default, SABERSENSE_ARRAY_SELECTOR saves the current
@@ -275,27 +288,53 @@ GESTURE CONTROLS
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
+
+#ifndef SABERSENSE_DEFAULT_ARRAY
+#define SABERSENSE_DEFAULT_ARRAY 1
+#endif
+
+  // Check that user-specified SABERSENSE_DEFAULT_ARRAY is within valid range.
+  constexpr size_t NUM_ARRAYS = sizeof(blades) / sizeof(blades[0]);
+  static_assert(SABERSENSE_DEFAULT_ARRAY >= 1 && SABERSENSE_DEFAULT_ARRAY <= NUM_ARRAYS,
+
+    // Show error below if array number is invalid. (Returns and indents for readability).
+    "\n  ERROR:\n    SABERSENSE_DEFAULT_ARRAY number invalid. Ensure array number specified "
+    "does not exceed number of blade arrays in config.\n "
+    "   Arrays should be numbered sequentially. First array should be zero (or NO_BLADE if "
+    "using Blade Detect) then 1, 2, 3, etc.\n");
+
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
 class SaveArrayStateFile : public ConfigFile {
 public:
   void iterateVariables(VariableOP *op) override {
-    CONFIG_VARIABLE2(sabersense_array_index, 0);  // Default array if no save file.
+
+#ifndef BLADE_DETECT_PIN
+    // Minus 1 allows for extra NO_BLADE array for consistent numbering for end user.
+    CONFIG_VARIABLE2(sabersense_array_index, (SABERSENSE_DEFAULT_ARRAY - 1));
+#else   
+    CONFIG_VARIABLE2(sabersense_array_index, SABERSENSE_DEFAULT_ARRAY);
+#endif
   }
-    int sabersense_array_index;  // Stores current array index.
+    int sabersense_array_index;
   };
 #endif
 
     struct SabersenseArraySelector {
-      static int return_value;  // Tracks current array index.
+      static int return_value;
       float id() {
         return return_value;
       }
-      static void cycle() {
-        return_value = (return_value + 1) % NELEM(blades);
-      }
-    };
-    int SabersenseArraySelector::return_value;
-    
+
+    static void cycle() {
+      int i = return_value;
+      do {
+        i = (i + 1) % NELEM(blades);  // Cycle to next valid index.
+      } while (blades[i].ohm >= NO_BLADE);  // Skip if ohm is NO_BLADE (1bn) or greater.
+      return_value = blades[i].ohm;
+    }
+  };
+  int SabersenseArraySelector::return_value;
+
 #undef BLADE_ID_CLASS_INTERNAL
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
@@ -527,9 +566,6 @@ public:
 #ifdef SABERSENSE_ARRAY_SELECTOR
 #ifdef SABERSENSE_BLADE_ID  // Only one Sabersense BladeID standard permitted.
 #error "SABERSENSE_ARRAY_SELECTOR and SABERSENSE_BLADE_ID cannot be defined at the same time."
-#endif
-#ifdef BLADE_DETECT_PIN  // Blade Detect not currently supported with Sabersense Array Selector.
-#error "SABERSENSE_ARRAY_SELECTOR and BLADE_DETECT_PIN cannot be defined at the same time."
 #endif
 
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
@@ -1172,3 +1208,4 @@ private:
   uint32_t saber_off_time_ = millis();
 };
 #endif
+
