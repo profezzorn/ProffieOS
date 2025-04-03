@@ -2123,9 +2123,9 @@ SaberFett263Buttons() : PropBase() {}
     if (!uses_rgb_arg) {
 #ifndef DISABLE_COLOR_CHANGE
 #ifdef MENU_SPEC_TEMPLATE
-        ToggleColorChangeMode();
+      ToggleColorChangeMode();
 #else
-        OriginalColorChangeMode();
+      OriginalColorChangeMode();
 #endif
 #endif
     } else {
@@ -2163,9 +2163,9 @@ SaberFett263Buttons() : PropBase() {}
       } else {
 #ifndef DISABLE_COLOR_CHANGE
 #ifdef MENU_SPEC_TEMPLATE
-      ToggleColorChangeMode();
+        ToggleColorChangeMode();
 #else
-      OriginalColorChangeMode();
+        OriginalColorChangeMode();
 #endif
 #endif
       }
