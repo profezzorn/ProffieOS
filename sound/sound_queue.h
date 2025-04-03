@@ -87,9 +87,7 @@ public:
     fadeout_len_ = len;
   }
   void clear_pending() {
-    if (busy_) {
-      sounds_ = 0;
-    }
+    sounds_ = 0;
   }
 private:
   int sounds_;
