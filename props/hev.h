@@ -92,14 +92,12 @@ public:
     PVLOG_NORMAL << "Armor: " << armor_ << "\n";
   }
 
-
   // Armor Readout /////////////////////////////////////////////////////////////
   void armor_readout() {
     PVLOG_NORMAL << "Current Armor: " << armor_ << "\n"; // Debug logging
     SFX_armor.SelectFloat(armor_ / 100.0);
     hybrid_font.PlayCommon(&SFX_armor);
   }
-
   // Clashes ///////////////////////////////////////////////////////////////////
   uint32_t last_clash_time_ = 0;
   const uint32_t CLASH_DEBOUNCE_MS = 100; // Adjust debounce time as needed
@@ -144,12 +142,10 @@ public:
     PropBase::Clash(false, strength);
   }
 
-
   // Swings do nothing! ////////////////////////////////////////////////////
   void DoMotion(const Vec3& motion, bool clear) override {
     PropBase::DoMotion(Vec3(0), clear);
   }
-
 
   // Random Hazards ////////////////////////////////////////////////////////////
   uint32_t last_random_draw_ = millis();
@@ -225,7 +221,6 @@ public:
     }
   }
 
-
   // Healing ///////////////////////////////////////////////////////////////////
   // Increase health (if healing).
   uint32_t health_increase_millis_ = millis();
@@ -251,7 +246,6 @@ public:
     }
   }
 
-
   // Recharging ////////////////////////////////////////////////////////////////
   // Increase armor (if recharging).
   uint32_t armor_increase_millis_ = millis();
@@ -271,7 +265,6 @@ public:
       }
     }
   }
-  
 
   // Main Loop //////////////////////////////////////////////////////////////////
   void Loop() override {
@@ -284,7 +277,6 @@ public:
     }
     PropBase::Loop();
   }
-
 
   // Button Events /////////////////////////////////////////////////////////////
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
@@ -331,7 +323,6 @@ public:
         previous_preset();
         return true;
 
-
 	// Hold AUX to start healing
       case EVENTID(BUTTON_AUX, EVENT_HELD_MEDIUM, MODE_ON):
 	if (!SaberBase::Lockup()) {
@@ -367,9 +358,7 @@ public:
       return true;
     }
     break;
-	
-	
-		    
+
 #ifdef BLADE_DETECT_PIN
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
@@ -390,7 +379,6 @@ public:
     }
     return false;
   }
-
 
    // Hev effects, auto fire is handled by begin/end lockup
   void SB_Effect(EffectType effect, EffectLocation location) override {
@@ -429,4 +417,3 @@ public:
 };
 
 #endif
-
