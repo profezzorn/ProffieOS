@@ -147,7 +147,8 @@ Standard Controls While Blade is ON
     *default track only (use Track Player while OFF to select tracks or playback modes)
   Color Change = Hold AUX + Click PWR (parallel or down)
     Rotate Hilt to select color (unless ColorChange<> style is used with COLOR_CHANGE_DIRECT*)
-      If styles use Edit Mode Color Editing styles, Color List is used
+      If styles use Edit Mode Color Editing styles, Color List** is used
+        **FETT263_REPLACE_CC_COLOR_LIST will use Edit Hue in place of Color List
       If styles use ColorChange<> then colors within the style are used
         *if COLOR_CHANGE_DIRECT is defined then each click will change color instead of turn
       Otherwise ColorWheel is used per style set up.
@@ -362,7 +363,8 @@ Standard Controls While Blade is ON
     To start/select track saber must be OFF
   NEW Control! Color Change = 4 Clicks PWR (parallel or down)
     Rotate Hilt to select color (unless ColorChange<> style is used with COLOR_CHANGE_DIRECT*)
-      If styles use Edit Mode Color Editing styles, Color List is used
+      If styles use Edit Mode Color Editing styles, Color List** is used
+        **FETT263_REPLACE_CC_COLOR_LIST will use Edit Hue in place of Color List
       If styles use ColorChange<> then colors within the style are used
         *if COLOR_CHANGE_DIRECT is defined then each click will change color instead of turn
       Otherwise ColorWheel is used per style set up.
@@ -498,6 +500,10 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   Cannot be combined with FETT263_EDIT_MODE_MENU or FETT263_EDIT_SETTINGS_MENU
   Requires ENABLE_ALL_EDIT_OPTIONS
   More information here: https://pod.hubbe.net/howto/menus.html
+
+  FETT263_REPLACE_CC_COLOR_LIST
+  Change ColorChange Mode for COLOR_ARG (Color Editing) styles to Hue Selection.
+  NOTE: Hue Selection will reduce available colors to changes in Hue only, cannot get to Whites, Silvers, etc. from a standard color
 
   FETT263_SAVE_CHOREOGRAPHY
   Enables Enhanced Battle Mode with Saved Choreography, cannot be used with FETT263_SPECIAL_ABILITIES
@@ -782,6 +788,16 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #if defined(MENU_SPEC_TEMPLATE) && defined(FETT263_EDIT_SETTINGS_MENU)
 #error MENU_SPEC_TEMPLATE cannot be combined with FETT263_EDIT_SETTINGS_MENU
+#endif
+
+#if defined(FETT263_REPLACE_CC_COLOR_LIST) && defined(FETT263_SAY_COLOR_LIST_CC)
+#error FETT263_SAY_COLOR_LIST_CC does not work with FETT263_REPLACE_CC_COLOR_LIST
+#endif
+
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+#define ACTIVE_CC_MODE CC_EDIT_COLOR
+#else
+#define ACTIVE_CC_MODE CC_COLOR_LIST
 #endif
 
 #if defined(FETT263_DISABLE_QUOTE_PLAYER) && defined(FETT263_QUOTE_PLAYER_START_ON)
@@ -1952,7 +1968,12 @@ SaberFett263Buttons() : PropBase() {}
       if (a < -M_PI) a+=M_PI*2;
       float angle = 100;
       switch (color_mode_) {
-        case EDIT_COLOR: angle = H_ANGLE; break;
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+        case CC_EDIT_COLOR:
+#endif
+	case EDIT_COLOR: 
+          angle = H_ANGLE; 
+          break;
         case ZOOM_COLOR:
         case CC_ZOOM_COLOR:
           angle = EDIT_MODE_ZOOM;
@@ -1974,6 +1995,9 @@ SaberFett263Buttons() : PropBase() {}
       }
       switch (color_mode_) {
         default: break;
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+        case CC_EDIT_COLOR:
+#endif
         case EDIT_COLOR:
         case ZOOM_COLOR:
         case CC_ZOOM_COLOR:
@@ -2032,7 +2056,9 @@ SaberFett263Buttons() : PropBase() {}
     Color16 color_source;
      switch (color_mode_) {
       case COLOR_LIST:
+#ifndef FETT263_REPLACE_CC_COLOR_LIST
       case CC_COLOR_LIST:
+#endif
         color_source = Color16(color_list_[dial_].color);
         break;
       default:
@@ -2045,7 +2071,7 @@ SaberFett263Buttons() : PropBase() {}
     strcat(new_color, ",");
     itoa(Color16(color_source).b, new_color + strlen(new_color), 10);
 #if NUM_BLADES > 1
-    if (color_mode_ == CC_COLOR_LIST  || color_mode_ == CC_ZOOM_COLOR) {
+    if (color_mode_ == ACTIVE_CC_MODE || color_mode_ == CC_ZOOM_COLOR) {
       for (int i = 1; i <= NUM_BLADES; i++) {
         current_preset_.SetStyle(i,style_parser.SetArgument(current_preset_.GetStyle(i), effect + 2, new_color));
       }
@@ -2058,7 +2084,7 @@ SaberFett263Buttons() : PropBase() {}
     color_mode_ = NONE;
   }
 
-  // Toggles ColorChange Mode if current style uses RgbArg to CC_COLOR_LIST
+  // Toggles ColorChange Mode if current style uses RgbArg to CC_COLOR_LIST or CC_EDIT_COLOR
   void ToggleCCMode() {
     bool uses_rgb_arg = false;
     for (int i = 1; i <= NUM_BLADES; i++)
@@ -2073,6 +2099,20 @@ SaberFett263Buttons() : PropBase() {}
       handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
       ONCEPERBLADE(USES_COLOR_CHANGE)
       if (!handles_color_change) {
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+        color_mode_ = CC_EDIT_COLOR;
+        show_color_all_.Start();
+        for (int i = 1; i <= NUM_BLADES; i++) {
+          if (style_parser.UsesArgument(current_preset_.GetStyle(i), BASE_COLOR_ARG + 2)) {
+            ShowColorStyle::SetColor(GetColorArg(i, BASE_COLOR_ARG));
+            saved_color_ = GetColorArg(i, BASE_COLOR_ARG);
+            break;
+          }
+        }
+        hsl_ = saved_color_.toHSL();
+        hsl_angle_ = fusor.angle2();
+        edit_color_ = true;
+#else
         color_mode_ = CC_COLOR_LIST;
         show_color_all_.Start();
         for (int i = 1; i <= NUM_BLADES; i++) {
@@ -2083,6 +2123,7 @@ SaberFett263Buttons() : PropBase() {}
         }
         current_menu_angle_ = fusor.angle2();
         dial_ = -1;
+#endif
         hybrid_font.PlayCommon(&SFX_ccbegin);
       } else {
 #ifndef DISABLE_COLOR_CHANGE
@@ -2787,7 +2828,7 @@ SaberFett263Buttons() : PropBase() {}
 
   // Check if ShowColor for ColorChange / Color Editing is active to prevent other events
   bool CheckShowColorCC() {
-    if (color_mode_ == CC_COLOR_LIST || color_mode_ == CC_ZOOM_COLOR) return true;
+    if (color_mode_ == ACTIVE_CC_MODE || color_mode_ == CC_ZOOM_COLOR) return true;
     if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) return true;
     return false;
   }
@@ -2834,7 +2875,11 @@ SaberFett263Buttons() : PropBase() {}
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_ZOOMED);
       return true;
     }
-    if (color_mode_ == COLOR_LIST || color_mode_ == CC_COLOR_LIST) {
+    if (color_mode_ == COLOR_LIST
+#ifndef FETT263_REPLACE_CC_COLOR_LIST
+     || color_mode_ == CC_COLOR_LIST
+#endif
+     ) {
       hsl_ = Color16(color_list_[dial_].color).toHSL();
     }
     switch (color_mode_) {
@@ -2844,7 +2889,7 @@ SaberFett263Buttons() : PropBase() {}
         hsl_angle_ = fusor.angle2();
         return true;
         break;
-      case CC_COLOR_LIST:
+      case ACTIVE_CC_MODE:
         color_mode_ = CC_ZOOM_COLOR;
         edit_color_ = true;
         hsl_angle_ = fusor.angle2();
@@ -2871,7 +2916,7 @@ SaberFett263Buttons() : PropBase() {}
         MenuChoice();
         return true;
         break;
-      case CC_COLOR_LIST:
+      case ACTIVE_CC_MODE:
       case CC_ZOOM_COLOR:
         edit_color_ = false;
         hybrid_font.PlayCommon(&SFX_ccend);
@@ -4912,7 +4957,11 @@ SaberFett263Buttons() : PropBase() {}
 
   enum EditColorMode {
     NONE,
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+    CC_EDIT_COLOR,
+#else
     CC_COLOR_LIST,
+#endif
     CC_ZOOM_COLOR,
     COLOR_LIST,
     EDIT_COLOR,
@@ -5924,7 +5973,7 @@ SaberFett263Buttons() : PropBase() {}
             return true;
           }
 #endif
-          if (color_mode_ == CC_COLOR_LIST) {
+          if (color_mode_ == ACTIVE_CC_MODE) {
             color_mode_ = NONE;
             show_color_all_.Stop();
             sound_library_.SayRevert();
@@ -6155,6 +6204,9 @@ SaberFett263Buttons() : PropBase() {}
           current_menu_angle_ = fusor.angle2();
           return false;
         }
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+        if (color_mode_ == CC_EDIT_COLOR) return true;
+#else
         if (color_mode_ == CC_COLOR_LIST) {
           dial_ = (dial_ + 1) % NELEM(color_list_);
           ShowColorStyle::SetColor(Color16(color_list_[dial_].color));
@@ -6165,6 +6217,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
           return true;
         }
+#endif
         if (menu_) {
           MenuDial(1);
           return true;
@@ -6176,6 +6229,9 @@ SaberFett263Buttons() : PropBase() {}
           current_menu_angle_ = fusor.angle2();
           return false;
         }
+#ifdef FETT263_REPLACE_CC_COLOR_LIST
+        if (color_mode_ == CC_EDIT_COLOR) return true;
+#else
         if (color_mode_ == CC_COLOR_LIST) {
           if (dial_ <= 0) dial_ = NELEM(color_list_);
           dial_ = dial_ - 1;
@@ -6187,6 +6243,7 @@ SaberFett263Buttons() : PropBase() {}
 #endif
           return true;
         }
+#endif
         if (menu_) {
           MenuDial(-1);
           return true;
@@ -6842,6 +6899,7 @@ private:
   // "next event" begins, for use with choreography and ignition/retraction previews where menu sound
   // would otherwise be truncated by change in state
   EditColorMode color_mode_;
+  Color16 saved_color_;
   bool edit_color_ = false; // Color Editing Mode active
   float hsl_angle_ = 0.0; // HSL angle for Color Editing
   int font_num_; // Font number from list_fonts array for use in Edit Mode dial
@@ -6855,7 +6913,6 @@ private:
 #endif
 #ifdef FETT263_EDIT_MODE_MENU
   uint32_t variation_revert_; // Variation revert value
-  Color16 saved_color_;
   int effect_num_; // Effect Arg Number
   int copy_blade_; // Blade to Copy from
   int set_num_; // Settings Arg Number
