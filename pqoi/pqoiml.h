@@ -22,7 +22,7 @@ std::pair<int, int> getfpsInternal(const std::string& filename) {
   int l = fread(buffer, 1, 128 - 1, f);
   if (l < 0) return std::make_pair(0, 0);
   buffer[l] = 0;
-  fclose(f);
+  pclose(f);
   float fps  = strtod(buffer, nullptr);
   if (fps <= 0.0) return std::make_pair(0, 0);
   int i = (int)floor(fps + 0.5);
