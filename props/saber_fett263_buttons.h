@@ -2113,6 +2113,15 @@ SaberFett263Buttons() : PropBase() {}
       SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
     }
   }
+
+  void SelectColorChangeMode() {
+#ifndef MENU_SPEC_TEMPLATE
+    OriginalColorChangeMode();
+#else
+    ToggleColorChangeMode();
+#endif
+}
+
 #endif // DISABLE_COLOR_CHANGE
 
   // Toggles ColorChange Mode if current style uses RgbArg to CC_COLOR_LIST or CC_EDIT_COLOR
@@ -2122,11 +2131,7 @@ SaberFett263Buttons() : PropBase() {}
       uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(i), 3);
     if (!uses_rgb_arg) {
 #ifndef DISABLE_COLOR_CHANGE
-#ifdef MENU_SPEC_TEMPLATE
-      ToggleColorChangeMode();
-#else
-      OriginalColorChangeMode();
-#endif
+      SelectColorChangeMode();
 #endif
     } else {
       bool handles_color_change;
@@ -2162,11 +2167,7 @@ SaberFett263Buttons() : PropBase() {}
         hybrid_font.PlayCommon(&SFX_ccbegin);
       } else {
 #ifndef DISABLE_COLOR_CHANGE
-#ifdef MENU_SPEC_TEMPLATE
-        ToggleColorChangeMode();
-#else
-        OriginalColorChangeMode();
-#endif
+        SelectColorChangeMode();
 #endif
       }
     }	  
@@ -2991,11 +2992,7 @@ SaberFett263Buttons() : PropBase() {}
   bool EndColorZoom() {
 #ifndef DISABLE_COLOR_CHANGE
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_ZOOMED) {
-#ifdef MENU_SPEC_TEMPLATE
-      ToggleColorChangeMode();
-#else
-      OriginalColorChangeMode();
-#endif
+      SelectColorChangeMode();
       return true;
     }
 #endif
@@ -3334,11 +3331,7 @@ SaberFett263Buttons() : PropBase() {}
             menu_type_ = MENU_COLOR;
             sound_library_.SaySelect();
             variation_revert_ = SaberBase::GetCurrentVariation();
-#ifdef MENU_SPEC_TEMPLATE
-            ToggleColorChangeMode();
-#else
-            OriginalColorChangeMode();
-#endif
+            SelectColorChangeMode();
 #endif
             break;
           } else {
@@ -4807,11 +4800,7 @@ SaberFett263Buttons() : PropBase() {}
         menu_type_ = MENU_TOP;
 #ifndef DISABLE_COLOR_CHANGE
         SaberBase::SetVariation(variation_revert_);
-#ifdef MENU_SPEC_TEMPLATE
-        ToggleColorChangeMode();
-#else
-        OriginalColorChangeMode();
-#endif
+        SelectColorChangeMode();
 #endif
         MenuCancel();
         break;
@@ -5527,11 +5516,7 @@ SaberFett263Buttons() : PropBase() {}
             // Just exit color change mode.
             // Don't turn saber off.
             if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_ZOOMED) {
-#ifdef MENU_SPEC_TEMPLATE
-              ToggleColorChangeMode();
-#else
-              OriginalColorChangeMode();
-#endif
+              SelectColorChangeMode();
             }
             return true;
           }
@@ -5585,11 +5570,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef DISABLE_COLOR_CHANGE
         if (EndColorZoom()) return true;
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-#ifdef MENU_SPEC_TEMPLATE
-          ToggleColorChangeMode();
-#else
-          OriginalColorChangeMode();
-#endif
+          SelectColorChangeMode();
           return true;
         }
 #endif      
@@ -5890,11 +5871,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef DISABLE_COLOR_CHANGE
         if (EndColorZoom()) return true;
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-#ifdef MENU_SPEC_TEMPLATE
-          ToggleColorChangeMode();
-#else
-          OriginalColorChangeMode();
-#endif
+          SelectColorChangeMode();
 #ifdef FETT263_EDIT_MODE_MENU
           if (menu_type_ == MENU_COLOR) {
             menu_type_ = MENU_TOP;
@@ -6079,11 +6056,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef DISABLE_COLOR_CHANGE
           if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
             SaberBase::SetVariation(0);
-#ifdef MENU_SPEC_TEMPLATE
-            ToggleColorChangeMode();
-#else
-            OriginalColorChangeMode();
-#endif
+            SelectColorChangeMode();
             return true;
           }
 #endif
