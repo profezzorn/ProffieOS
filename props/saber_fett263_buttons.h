@@ -2084,6 +2084,46 @@ SaberFett263Buttons() : PropBase() {}
     color_mode_ = NONE;
   }
 
+#ifndef DISABLE_COLOR_CHANGE
+  void OriginalColorChangeMode() {
+    if (!current_style()) return;
+    if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_NONE) {
+      current_tick_angle_ = fusor.angle2();
+      bool handles_color_change = false;
+#define CHECK_SUPPORTS_COLOR_CHANGE(N) \
+      handles_color_change |= current_config->blade##N->current_style() && current_config->blade##N->current_style()->IsHandled(HANDLED_FEATURE_CHANGE_TICKED);
+      ONCEPERBLADE(CHECK_SUPPORTS_COLOR_CHANGE)
+      if (!handles_color_change) {
+        STDOUT << "Entering smooth color change mode.\n";
+        current_tick_angle_ -= SaberBase::GetCurrentVariation() * M_PI * 2 / 32768;
+        current_tick_angle_ = fmodf(current_tick_angle_, M_PI * 2);
+
+        SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_SMOOTH);
+      } else {
+#ifdef COLOR_CHANGE_DIRECT
+        STDOUT << "Color change, TICK+\n";
+        SaberBase::UpdateVariation(1);
+#else
+        STDOUT << "Entering stepped color change mode.\n";
+        SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_STEPPED);
+#endif
+      }
+    } else {
+      STDOUT << "Color change mode done, variation = " << SaberBase::GetCurrentVariation() << "\n";
+      SaberBase::SetColorChangeMode(SaberBase::COLOR_CHANGE_MODE_NONE);
+    }
+  }
+
+  void SelectColorChangeMode() {
+#ifndef MENU_SPEC_TEMPLATE
+    OriginalColorChangeMode();
+#else
+    ToggleColorChangeMode();
+#endif
+}
+
+#endif // DISABLE_COLOR_CHANGE
+
   // Toggles ColorChange Mode if current style uses RgbArg to CC_COLOR_LIST or CC_EDIT_COLOR
   void ToggleCCMode() {
     bool uses_rgb_arg = false;
@@ -2091,7 +2131,7 @@ SaberFett263Buttons() : PropBase() {}
       uses_rgb_arg |= style_parser.UsesArgument(current_preset_.GetStyle(i), 3);
     if (!uses_rgb_arg) {
 #ifndef DISABLE_COLOR_CHANGE
-      ToggleColorChangeMode();
+      SelectColorChangeMode();
 #endif
     } else {
       bool handles_color_change;
@@ -2127,7 +2167,7 @@ SaberFett263Buttons() : PropBase() {}
         hybrid_font.PlayCommon(&SFX_ccbegin);
       } else {
 #ifndef DISABLE_COLOR_CHANGE
-        ToggleColorChangeMode();
+        SelectColorChangeMode();
 #endif
       }
     }	  
@@ -2295,6 +2335,53 @@ SaberFett263Buttons() : PropBase() {}
     PropBase::Loop();
     DetectTwist();
     Vec3 mss = fusor.mss();
+#ifndef DISABLE_COLOR_CHANGE
+#define TICK_ANGLE (M_PI * 2 / 12)
+    switch (SaberBase::GetColorChangeMode()) {
+      case SaberBase::COLOR_CHANGE_MODE_NONE:
+        break;
+      case SaberBase::COLOR_CHANGE_MODE_STEPPED: {
+        float a = fusor.angle2() - current_tick_angle_;
+        if (a > M_PI) a-=M_PI*2;
+        if (a < -M_PI) a+=M_PI*2;
+        if (a > TICK_ANGLE * 2/3) {
+          current_tick_angle_ += TICK_ANGLE;
+          if (current_tick_angle_ > M_PI) current_tick_angle_ -= M_PI * 2;
+          STDOUT << "TICK+\n";
+          SaberBase::UpdateVariation(1);
+        }
+        if (a < -TICK_ANGLE * 2/3) {
+          current_tick_angle_ -= TICK_ANGLE;
+          if (current_tick_angle_ < M_PI) current_tick_angle_ += M_PI * 2;
+          STDOUT << "TICK-\n";
+          SaberBase::UpdateVariation(-1);
+        }
+        break;
+      }
+      case SaberBase::COLOR_CHANGE_MODE_ZOOMED: {
+#define ZOOM_ANGLE (M_PI * 2 / 2000)
+        float a = fusor.angle2() - current_tick_angle_;
+        if (a > M_PI) a-=M_PI*2;
+        if (a < -M_PI) a+=M_PI*2;
+        int steps = (int)floor(fabs(a) / ZOOM_ANGLE - 0.3);
+        if (steps < 0) steps = 0;
+        if (a < 0) steps = -steps;
+        current_tick_angle_ += ZOOM_ANGLE * steps;
+        SaberBase::SetVariation(0x7fff & (SaberBase::GetCurrentVariation() + steps));
+        break;
+      }
+      case SaberBase::COLOR_CHANGE_MODE_SMOOTH:
+        float a = fmodf(fusor.angle2() - current_tick_angle_, M_PI * 2);
+        SaberBase::SetVariation(0x7fff & (int32_t)(a * (32768 / (M_PI * 2))));
+        break;
+    }
+    if (monitor.ShouldPrint(Monitoring::MonitorVariation)) {
+      STDOUT << " variation = " << SaberBase::GetCurrentVariation()
+             << " ccmode = " << SaberBase::GetColorChangeMode()
+//           << " color = " << current_config->blade1->current_style()->getColor(0)
+             << "\n";
+    }
+#endif
     if (
 #ifdef FETT263_SPIN_MODE
 	!spin_mode_ && 
@@ -2905,7 +2992,7 @@ SaberFett263Buttons() : PropBase() {}
   bool EndColorZoom() {
 #ifndef DISABLE_COLOR_CHANGE
     if (SaberBase::GetColorChangeMode() == SaberBase::COLOR_CHANGE_MODE_ZOOMED) {
-      ToggleColorChangeMode();
+      SelectColorChangeMode();
       return true;
     }
 #endif
@@ -3244,7 +3331,7 @@ SaberFett263Buttons() : PropBase() {}
             menu_type_ = MENU_COLOR;
             sound_library_.SaySelect();
             variation_revert_ = SaberBase::GetCurrentVariation();
-            ToggleColorChangeMode();
+            SelectColorChangeMode();
 #endif
             break;
           } else {
@@ -4713,7 +4800,7 @@ SaberFett263Buttons() : PropBase() {}
         menu_type_ = MENU_TOP;
 #ifndef DISABLE_COLOR_CHANGE
         SaberBase::SetVariation(variation_revert_);
-        ToggleColorChangeMode();
+        SelectColorChangeMode();
 #endif
         MenuCancel();
         break;
@@ -5429,7 +5516,7 @@ SaberFett263Buttons() : PropBase() {}
             // Just exit color change mode.
             // Don't turn saber off.
             if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_ZOOMED) {
-              ToggleColorChangeMode();
+              SelectColorChangeMode();
             }
             return true;
           }
@@ -5483,7 +5570,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef DISABLE_COLOR_CHANGE
         if (EndColorZoom()) return true;
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-          ToggleColorChangeMode();
+          SelectColorChangeMode();
           return true;
         }
 #endif      
@@ -5784,7 +5871,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef DISABLE_COLOR_CHANGE
         if (EndColorZoom()) return true;
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-          ToggleColorChangeMode();
+          SelectColorChangeMode();
 #ifdef FETT263_EDIT_MODE_MENU
           if (menu_type_ == MENU_COLOR) {
             menu_type_ = MENU_TOP;
@@ -5969,7 +6056,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifndef DISABLE_COLOR_CHANGE
           if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
             SaberBase::SetVariation(0);
-            ToggleColorChangeMode();
+            SelectColorChangeMode();
             return true;
           }
 #endif
