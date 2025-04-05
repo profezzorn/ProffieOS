@@ -2,6 +2,7 @@
 *1 Button Controls based on SA22C prop
 Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force Player, Real Clash, Choreography Mode
    Dual Mode Ignition Sounds, Multi-Phase Control, Multi-Blast
+   Additional features adapted from BC and other prop files via defines (see below)
 
  ProffieOS: Control software for lightsabers and other props.
  http://fredrik.hubbe.net/lightsaber/teensy_saber.html
@@ -110,10 +111,16 @@ Standard Controls While Blade is OFF
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_VOLTS or FETT263_SAY_BATTERY_PERCENT define
     *if using FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
     Point down for volts, parallel or up for percent
-  NEW! Change Font
+  NEW! Manual Blade ID* = Hold AUX + Long Click PWR
+    *requires FETT263_MANUAL_BLADE_ID define
+    *replaces Change Font control
+  NEW! Change Font*
     Next Font = Hold AUX + Long Click PWR (parallel or up)
     Previous Font= Hold AUX + Long Click PWR (down)
-  NEW! Copy Preset = Hold PWR + Long Click AUX
+  NEW! Manual Blade Array* = Hold PWR + Long Click AUX
+    *requires FETT263_MANUAL_BLADE_ARRAY
+    *replaces Copy Preset control 
+  NEW! Copy Preset* = Hold PWR + Long Click AUX
 
 Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
   Ignite Saber
@@ -330,10 +337,16 @@ Standard Controls While Blade is OFF
     *requires EFFECT_BATTERY_LEVEL style and/or FETT263_SAY_BATTERY_PERCENT or FETT263_SAY_BATTERY_VOLTS define
     *if using FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
     Point down for volts, parallel or up for percent
-  NEW! Change Font
+  NEW! Manual Blade ID* = Triple Click + Long Click PWR
+    *requires FETT263_MANUAL_BLADE_ID and BLADE_ID_SCAN_MILLIS defines
+    *replaces Change Font control
+  NEW! Change Font*
     Next Font = Triple Click + Long Click PWR (parallel or up)
     Previous Font = Triple Click + Long Click PWR (down)
-  NEW! Copy Preset = Quadruple (Four) Click + Hold PWR
+  NEW! Manual Blade Array* = Quadruple (Four) Click + Hold PWR
+    *requires FETT263_MANUAL_BLADE_ARRAY
+    *replaces Copy Preset control
+  NEW! Copy Preset* = Quadruple (Four) Click + Hold PWR
 
 Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
   Ignite Saber
@@ -535,6 +548,14 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   
   FETT263_SAY_BATTERY_PERCENT
   Spoken Battery Level as percent during On Demand Battery Level effect (requires .wav files)
+
+  FETT263_MANUAL_BLADE_ID
+  Enables Manual Blade ID Scan via button control (see here: https://pod.hubbe.net/howto/blade-id.html)
+  *requires BLADE_ID_SCAN_MILLIS define, replaces "Change Font" control
+
+  FETT263_MANUAL_BLADE_ARRAY
+  Enables Manual Blade Array switching via button control (you need more than one Blade Array)
+  *replaces "Copy Preset" control
 
   == BATTLE MODE OPTIONS ==
     Battle Mode is enabled via controls by default in this prop, you can customize further with these defines
@@ -756,6 +777,14 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #if defined(FETT263_SAY_COLOR_LIST) || defined(FETT263_SAY_COLOR_LIST_CC)
 #define SAY_COLOR_LIST
+#endif
+
+#if defined(FETT263_MANUAL_BLADE_ID) && !defined(FETT263_DISABLE_CHANGE_FONT)
+#define FETT263_DISABLE_CHANGE_FONT
+#endif
+
+#if defined(FETT263_MANUAL_BLADE_ARRAY) && !defined(FETT263_DISABLE_COPY_PRESET)
+#define FETT263_DISABLE_COPY_PRESET
 #endif
 
 #if NUM_BUTTONS < 1
@@ -1355,6 +1384,9 @@ EFFECT(tr);
 EFFECT2(trloop, trloop);
 #ifdef FETT263_USE_SETTINGS_MENU
 EFFECT(medit); // Edit Mode
+#endif
+#ifdef FETT263_MANUAL_BLADE_ARRAY
+EFFECT(array);      // for Manual Blade Array switching
 #endif
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
@@ -2172,6 +2204,79 @@ SaberFett263Buttons() : PropBase() {}
       }
     }	  
   }
+
+#if defined(FETT263_MANUAL_BLADE_ARRAY) || defined(FETT263_MANUAL_BLADE_ID)
+
+  bool use_fake_id_ = false;
+  float fake_id_ = 0;
+  size_t best_config_before_faking_ = SIZE_MAX;
+  bool play_no_change_sound_ = false;
+
+#ifdef BLADE_ID_SCAN_MILLIS
+  float id(bool announce = false) override {
+    if (use_fake_id_) {
+      float real_id = PropBase::id(announce);
+      size_t real_best_config = FindBestConfigForId(real_id);
+
+      if (real_best_config != best_config_before_faking_) {
+        // Real blade has changed, exit manual mode
+        use_fake_id_ = false;
+        find_blade_again_pending_ = true;
+        if (current_config - blades == real_best_config) {
+          play_no_change_sound_ = true;
+        }
+        return real_id;
+      }
+      return fake_id_;
+    }
+
+    return PropBase::id(announce);
+  }
+
+  int GetNoBladeLevelBefore() override {
+    int ohm;
+    if (best_config_before_faking_ != SIZE_MAX) {
+      ohm = blades[best_config_before_faking_].ohm;
+      best_config_before_faking_ = SIZE_MAX;
+    } else {
+      ohm = current_config->ohm;
+    }
+    return ohm / NO_BLADE;
+  }
+
+#else
+  float id(bool announce = false) override {
+    return use_fake_id_ ? fake_id_ : PropBase::id(announce);
+  }
+#endif  // BLADE_ID_SCAN_MILLIS
+
+  void TriggerBladeID() {
+    use_fake_id_ = false;
+    best_config_before_faking_ = SIZE_MAX;
+    FindBladeAgain();
+    PlayArraySound();
+  }
+#ifdef FETT263_MANUAL_BLADE_ARRAY
+  void NextBladeArray() {
+    if (!use_fake_id_) best_config_before_faking_ = current_config - blades;
+    size_t next_array = (current_config - blades + 1) % NELEM(blades);
+    fake_id_ = blades[next_array].ohm;
+    use_fake_id_ = true;
+
+    FindBladeAgain();
+    PlayArraySound();
+  }
+
+  void PlayArraySound() {
+    if (SFX_array) {
+      SFX_array.Select(current_config - blades);
+      hybrid_font.PlayPolyphonic(&SFX_array);
+    } else if (!hybrid_font.PlayPolyphonic(&SFX_bladein)) {
+      hybrid_font.PlayCommon(&SFX_font);
+    }
+  }
+#endif
+#endif
 
   void DoInteractivePreon() {
     if (CheckInteractivePreon()) {
@@ -5617,6 +5722,13 @@ SaberFett263Buttons() : PropBase() {}
         return true;
 #endif
 
+#ifdef FETT263_MANUAL_BLADE_ID
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_OFF):
+      if (menu_) return true;
+      TriggerBladeID();
+      return true;
+#endif
+
 #ifndef FETT263_DISABLE_CHANGE_FONT
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_CLICK_LONG, MODE_OFF):
         if (menu_) return true;
@@ -5627,6 +5739,13 @@ SaberFett263Buttons() : PropBase() {}
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
         CheckQuote();
         return true;
+
+#ifdef FETT263_MANUAL_BLADE_ARRAY
+case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
+        if (menu_) return true;
+        NextBladeArray();
+        return true;
+#endif
 
 #ifndef FETT263_DISABLE_COPY_PRESET
       case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
@@ -5794,6 +5913,13 @@ SaberFett263Buttons() : PropBase() {}
         sound_library_.SaySelectPreset();
         return true;
 
+#ifdef FETT263_MANUAL_BLADE_ARRAY
+      case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF | BUTTON_POWER):
+        if (menu_) return true;
+        NextBladeArray();
+        return true;
+#endif
+
 #ifndef FETT263_DISABLE_COPY_PRESET
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_OFF | BUTTON_POWER):
         if (menu_) return true;
@@ -5945,6 +6071,13 @@ SaberFett263Buttons() : PropBase() {}
         ChangeStyleNumberAllBlades(fusor.angle1() < - M_PI / 3 ? -1 : 1);
         hybrid_font.PlayCommon(&SFX_ccchange);
         return true;
+#endif
+
+#ifdef FETT263_MANUAL_BLADE_ID
+      case EVENTID(BUTTON_POWER, EVENT_CLICK_LONG, MODE_OFF | BUTTON_AUX):
+      if (menu_) return true;
+      TriggerBladeID();
+      return true;
 #endif
 
 #ifndef FETT263_DISABLE_CHANGE_FONT
