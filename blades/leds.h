@@ -231,6 +231,19 @@ struct ServoSelector {
   static const int Red = 255;
   static const int Green = 255;
   static const int Blue = 255;
+
+  struct CustomDriveLogic {
+    int PWM(Color16 c) {
+      int ret = ColorSelector<ServoSelector>::Select(c);
+      if (monitor.ShouldPrintMultiple(Monitoring::MonitorPWM)) {
+	STDOUT << "W = " << ret << " final: " << (3277 + ret / 20) << "\n";
+      }
+      // 65536 = 20ms
+      // 3277 = 1ms
+      return 3277 + ret / 20; // 1 - 2 ms
+    }
+    int PWM_overdrive(Color16 c) { return PWM(c); }
+  };
 };
 
 #endif
