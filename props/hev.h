@@ -226,21 +226,21 @@ public:
   void IncreaseHealth() {
     if (SaberBase::Lockup()) {
       if (millis() - health_increase_millis_ > HEV_HEALTH_INCREASE_MS) {
-	health_increase_millis_ = millis();
+        health_increase_millis_ = millis();
 
-  // Start cooldown timer when health increases above 0.
-  // This starts the check to prevent immediate Hazards after healing.
-  if (health_ == 0) {
-    post_death_cooldown_ = millis(); // Start cooldown timer
-  }
+        // Start cooldown timer when health increases above 0.
+        // This starts the check to prevent immediate Hazards after healing.
+        if (health_ == 0) {
+          post_death_cooldown_ = millis(); // Start cooldown timer
+        }
 
-	health_++;
-	PVLOG_NORMAL << "Health: " << health_ << "\n";
-	if (health_ >= 100) {
-	  health_ = 100;
-	  SaberBase::DoEndLockup();
-	  SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-	}
+        health_++;
+        PVLOG_NORMAL << "Health: " << health_ << "\n";
+        if (health_ >= 100) {
+          health_ = 100;
+          SaberBase::DoEndLockup();
+          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        }
       }
     }
   }
@@ -250,16 +250,16 @@ public:
   void IncreaseArmor() {
     if (SaberBase::Lockup()) {
       if (millis() - armor_increase_millis_ > HEV_ARMOR_INCREASE_MS) {
-  armor_increase_millis_ = millis();
+        armor_increase_millis_ = millis();
 
-  armor_++;
-  PVLOG_NORMAL << "Armor: " << armor_ << "\n";
+        armor_++;
+        PVLOG_NORMAL << "Armor: " << armor_ << "\n";
 
-  if (armor_ >= 100) {
-    armor_ = 100;
-    SaberBase::DoEndLockup();
-    SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-  }
+        if (armor_ >= 100) {
+          armor_ = 100;
+          SaberBase::DoEndLockup();
+          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+        }
       }
     }
   }
@@ -279,39 +279,38 @@ public:
   // Button Events
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
-
       // On/Off long-click
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
-	On();
-	return true;
+        On();
+        return true;
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_ON):
-	Off();
-	return true;
+        Off();
+        return true;
 
-	// short-click AUX to clear hazard
+      // short-click AUX to clear hazard
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_OFF):
-	if (current_hazard_) {
-	  current_hazard_ = HAZARD_NONE;
-	  SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
-	  return true;
-	}
-	// Play a no-hazard sound ?
-	return true;
+        if (current_hazard_) {
+          current_hazard_ = HAZARD_NONE;
+          SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
+          return true;
+        }
+        // Play a no-hazard sound ?
+        return true;
 
-	// Double-click power to start/stop track.
+      // Double-click power to start/stop track.
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_OFF):
         StartOrStopTrack();
         return true;
-	
-	// Double-click AUX for Armor Readout.
+    
+      // Double-click AUX for Armor Readout.
       case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_OFF):
         armor_readout();
         return true;
-	
-  // Next/Previous preset. Triple-click on either button.
+
+      // Next/Previous preset. Triple-click on either button.
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ANY_BUTTON | MODE_OFF):
         next_preset();
@@ -321,58 +320,60 @@ public:
         previous_preset();
         return true;
 
-	// Hold AUX to start healing
+      // Hold AUX to start healing
       case EVENTID(BUTTON_AUX, EVENT_HELD_MEDIUM, MODE_ON):
-	if (!SaberBase::Lockup()) {
-	  SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
-	  SaberBase::DoBeginLockup();
-	  return true;
-	}
-	break;
-	// Release AUX to stop healing (or wait until full).
+        if (!SaberBase::Lockup()) {
+          SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+          SaberBase::DoBeginLockup();
+          return true;
+        }
+        break;
+
+      // Release AUX to stop healing (or wait until full).
       case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
-	if (SaberBase::Lockup()) {
-	  SaberBase::DoEndLockup();
-	  SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-	  return true;
-	}
-	break;
+        if (SaberBase::Lockup()) {
+          SaberBase::DoEndLockup();
+          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+          return true;
+        }
+        break;
 
-  // Hold POWER to start recharging armor
+      // Hold POWER to start recharging armor
       case EVENTID(BUTTON_POWER, EVENT_HELD_MEDIUM, MODE_ON):
-    if (!SaberBase::Lockup()) {
-      SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
-      SaberBase::DoBeginLockup();
-      return true;
-    }
-    break;
-    // Release POWER to stop recharging armor (or wait until full).
-        case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
-        case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
-    if (SaberBase::Lockup()) {
-      SaberBase::DoEndLockup();
-      SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-      return true;
-    }
-    break;
+        if (!SaberBase::Lockup()) {
+          SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+          SaberBase::DoBeginLockup();
+          return true;
+        }
+        break;
+
+      // Release POWER to stop recharging armor (or wait until full).
+      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
+        if (SaberBase::Lockup()) {
+          SaberBase::DoEndLockup();
+          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+          return true;
+        }
+        break;
 
 #ifdef BLADE_DETECT_PIN
-    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
-    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
-      // Might need to do something cleaner, but let's try this for now.
-      blade_detected_ = true;
-      FindBladeAgain();
-      SaberBase::DoBladeDetect(true);
-      return true;
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
+        // Might need to do something cleaner, but let's try this for now.
+        blade_detected_ = true;
+        FindBladeAgain();
+        SaberBase::DoBladeDetect(true);
+        return true;
 
-    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
-    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
-      // Might need to do something cleaner, but let's try this for now.
-      blade_detected_ = false;
-      FindBladeAgain();
-      SaberBase::DoBladeDetect(false);
-      return true;
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
+        // Might need to do something cleaner, but let's try this for now.
+        blade_detected_ = false;
+        FindBladeAgain();
+        SaberBase::DoBladeDetect(false);
+        return true;
 #endif
     }
     return false;
