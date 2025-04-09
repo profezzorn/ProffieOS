@@ -51,7 +51,7 @@ public:
 
   Hazard current_hazard_ = HAZARD_NONE;
 
-  // Calculate Physical Damage //////////////////////////////////////////////////
+  // Calculate Physical Damage
   void DoDamage(int damage, bool quiet = false) {
     int tens = health_ / 10;
     if (armor_ >= damage) {
@@ -92,13 +92,13 @@ public:
     PVLOG_NORMAL << "Armor: " << armor_ << "\n";
   }
 
-  // Armor Readout /////////////////////////////////////////////////////////////
+  // Armor Readout
   void armor_readout() {
     PVLOG_NORMAL << "Current Armor: " << armor_ << "\n"; // Debug logging
     SFX_armor.SelectFloat(armor_ / 100.0);
     hybrid_font.PlayCommon(&SFX_armor);
   }
-  // Clashes ///////////////////////////////////////////////////////////////////
+  // Clashes
   uint32_t last_clash_time_ = 0;
   const uint32_t CLASH_DEBOUNCE_MS = 100; // Adjust debounce time as needed
 
@@ -142,12 +142,12 @@ public:
     PropBase::Clash(false, strength);
   }
 
-  // Swings do nothing! ////////////////////////////////////////////////////
+  // Swings do nothing!
   void DoMotion(const Vec3& motion, bool clear) override {
     PropBase::DoMotion(Vec3(0), clear);
   }
 
-  // Random Hazards ////////////////////////////////////////////////////////////
+  // Random Hazards
   uint32_t last_random_draw_ = millis();
   uint32_t post_death_cooldown_ = 0;
 
@@ -221,8 +221,7 @@ public:
     }
   }
 
-  // Healing ///////////////////////////////////////////////////////////////////
-  // Increase health (if healing).
+  // Increase health (Hold AUX).
   uint32_t health_increase_millis_ = millis();
   void IncreaseHealth() {
     if (SaberBase::Lockup()) {
@@ -246,8 +245,7 @@ public:
     }
   }
 
-  // Recharging ////////////////////////////////////////////////////////////////
-  // Increase armor (if recharging).
+  // Increase armor (Hold POWER).
   uint32_t armor_increase_millis_ = millis();
   void IncreaseArmor() {
     if (SaberBase::Lockup()) {
@@ -266,7 +264,7 @@ public:
     }
   }
 
-  // Main Loop //////////////////////////////////////////////////////////////////
+  // Main Loop
   void Loop() override {
     CheckRandomEvent();
     HazardDecrease();
@@ -278,7 +276,7 @@ public:
     PropBase::Loop();
   }
 
-  // Button Events /////////////////////////////////////////////////////////////
+  // Button Events
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
 
