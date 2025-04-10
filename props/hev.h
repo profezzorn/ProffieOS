@@ -179,45 +179,45 @@ public:
   uint32_t hazard_start_delay_ = 0;
   uint32_t hazard_decrease_millis_ = millis();
   void HazardDecrease() {
-    if (current_hazard_ != HAZARD_NONE) {
-      // Check if this is a new hazard that needs initial delay
-      if (hazard_start_delay_ == 0) {
-        hazard_start_delay_ = millis();
-        return;
-      }
-
-      // Wait for initial delay before starting damage
-      if (millis() - hazard_start_delay_ < HEV_HAZARD_DELAY_MS) {
-        return;
-      }
-
-      // Normal damage interval after initial delay
-      if (millis() - hazard_decrease_millis_ > HEV_HAZARD_DECREASE_MS) {
-        hazard_decrease_millis_ = millis();
-
-        // Play stun sounds if there is armor
-        if (armor_ > 0) {
-          armor_--;
-          SaberBase::DoEffect(EFFECT_STUN, 0.0, 1);
-          // Check if armor is 0 then play armor compromised sound.
-          if (armor_ == 0) {
-            SaberBase::DoEffect(EFFECT_USER2, 0.0, 0);
-            PVLOG_NORMAL << "Armor Compromised!\n";
-          }
-        } else {
-          DoDamage(1);
-        }
-
-        // Stop the current Hazard if health drops to 0
-        if (health_ == 0) {
-          current_hazard_ = HAZARD_NONE;
-          hazard_start_delay_ = 0; // Reset delay for next hazard
-          SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
-        }
-      }
-    } else {
-      // Reset delay when no hazard is active
+    if (current_hazard_ == HAZARD_NONE) {
       hazard_start_delay_ = 0;
+      return;
+    }
+
+    // Check if this is a new hazard that needs initial delay
+    if (hazard_start_delay_ == 0) {
+      hazard_start_delay_ = millis();
+      return;
+    }
+
+    // Wait for initial delay before starting damage
+    if (millis() - hazard_start_delay_ < HEV_HAZARD_DELAY_MS) {
+      return;
+    }
+
+    // Normal damage interval after initial delay
+    if (millis() - hazard_decrease_millis_ > HEV_HAZARD_DECREASE_MS) {
+      hazard_decrease_millis_ = millis();
+
+      // Play stun sounds if there is armor
+      if (armor_ > 0) {
+        armor_--;
+        SaberBase::DoEffect(EFFECT_STUN, 0.0, 1);
+        // Check if armor is 0 then play armor compromised sound.
+        if (armor_ == 0) {
+          SaberBase::DoEffect(EFFECT_USER2, 0.0, 0);
+          PVLOG_NORMAL << "Armor Compromised!\n";
+        }
+      } else {
+        DoDamage(1);
+      }
+
+      // Stop the current Hazard if health drops to 0
+      if (health_ == 0) {
+        current_hazard_ = HAZARD_NONE;
+        hazard_start_delay_ = 0; // Reset delay for next hazard
+        SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
+      }
     }
   }
 
