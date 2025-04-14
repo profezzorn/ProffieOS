@@ -730,6 +730,11 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
   Spoken Battery Level in volts and percent (point down for volts, parallel or up for percent)
 
+== SaberSense Variation ==
+  FETT263_SS_BUTTON_CLICKER
+  Button Clicker to play press/release wav files* when buttons are pressed.
+  *Requires press.wav and release.wav files to work.
+
 CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
   On Demand Power Save - dim.wav
@@ -745,6 +750,9 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
   Quotes - quote01.wav
   Transition Sound - tr.wav
   Transition Sound Loop trloop.wav
+  Button Sounds (requires FETT263_SS_BUTTON_CLICKER define)
+    Button Press - press.wav
+    Button Release - release.wav
 */
 
 #ifndef PROPS_SABER_FETT263_BUTTONS_H
@@ -2725,6 +2733,13 @@ SaberFett263Buttons() : PropBase() {}
     if (menu_) return;
     if (wav_player->isPlaying()) return;
     wav_player.Free();
+  }
+
+  void PlaySound(const char* sound) {
+    RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
+    if (player) {
+      if (!player->PlayInCurrentDir(sound)) player->Play(sound);
+    }
   }
 
   void SelectPreset(int preset) {
@@ -5467,14 +5482,21 @@ SaberFett263Buttons() : PropBase() {}
           sound_library_.SayUp();
           return true;
         }
+#ifdef FETT263_SS_BUTTON_CLICKER
+        PlaySound("release.wav");  // Requires release.wav file to work.
+#endif
         return false;
 
 #ifndef FETT263_MOTION_WAKE_POWER_BUTTON
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
         SaberBase::RequestMotion();
         saber_off_time_millis_ = millis();
-        return true;
 #endif
+#ifdef FETT263_SS_BUTTON_CLICKER
+        // Intended to play click sound on button presses
+        PlaySound("press.wav");  // Requires press.wav file to work.
+#endif
+        return true;
 
 #if NUM_BUTTONS == 1
 // 1 Button Specific (based on SA22C's prop)
@@ -5869,6 +5891,10 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_OFF):
         SaberBase::RequestMotion();
         saber_off_time_millis_ = millis();
+#ifdef FETT263_SS_BUTTON_CLICKER
+        // Intended to play click sound on button presses
+        PlaySound("press.wav");  // Requires press.wav file to work.
+#endif
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
@@ -6004,6 +6030,10 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           return true;
         }
 #endif
+#ifdef FETT263_SS_BUTTON_CLICKER
+        // Intended to play click sound on button presses
+        PlaySound("press.wav");  // Requires press.wav file to work.
+#endif
         return false;
 
       case EVENTID(BUTTON_POWER, EVENT_RELEASED, MODE_ON):
@@ -6020,6 +6050,9 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 #endif
           return true;
         }
+#endif
+#ifdef FETT263_SS_BUTTON_CLICKER
+        PlaySound("release.wav");  // Requires release.wav file to work.
 #endif
         return false;
 
@@ -6979,6 +7012,14 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 #endif
           return true;
         }
+#ifdef FETT263_SS_BUTTON_CLICKER
+        PlaySound("release.wav");  // Requires release.wav file to work.
+        return true;
+
+      case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
+        PlaySound("release.wav");  // Requires release.wav file to work.
+        return true;
+#endif
     }
     return false;
   }
