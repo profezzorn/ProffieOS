@@ -1,22 +1,48 @@
-#ifndef PROPS_HEV_H
-#define PROPS_HEV_H
-#define PROP_TYPE Hev
-
 // Half-Life Hazardous Environment Suit Prop
 //
 // How to use:
-// Power button:
-//   Long-click: on/off
-//   double-click: sound track on/off
+// POWER button:
+//   Long-click: ON/OFF
+//   hold button to recharge armor
+//   double-click: toggle track
 //   triple-click: next preset
 // AUX button:
 //   hold button to heal.
 //   single click: deactivate hazard
 //   double-click: armor readout
 //   triple-click: previous preset
-// Clash will cause varying damage based on strength
 //
-// Damage and Hazards are only active when prop is on.
+// Sound files needed:
+// in.wav, out.wav - for power on/off. Use flashlight sound
+// bgnlb.wav, lb.wav, endlb.wave - recharge armor sound sequence
+// bgnlock.wav, lock.wav, endlock.wav - heal sound sequence
+// font.wav - next/previous preset
+// armor_alarm.wav - for when Clash damage is greater than or equal to 30
+// armor_compromised.wav - for when armor falls to 0
+// boot.wav - Bootup welcome message
+// death.wav - for when health is 0
+// clash**.wav - physical clash sounds
+// health00.wav to health100.wav - for health alert sounds
+// armor00.wav to armor100.wav - for armor readout sounds
+//
+// Random Hazard sounds:
+// These are played using the altchng method. So create 7 directories:
+// alt00, alt01, alt02, alt03, alt04, alt05, alt06.
+// Each directory should contain two folders, altchng and stun.
+// In alt01 to alt06, place the hazard detection voice lines (bio, blood toxins, chemical, radiation, shock, fire) in altchng.
+// In alt01 to alt06, place appropriate sound effects (spark, burn, geiger counter) in stun.
+// In each stun folder, use the same amount of files as the other stun folders. So if you use 4 stun sounds, use 4 in all of them.
+// In each altchng folder, use the same amount of files as the other altchng folders. I use 2 in all of them.
+// One for the main voice line, the other is the same, but with a follow up health notification for variety.
+// For alt00, have the same amount of files as the other alt** folders but leave the files blank.
+//
+// Notes:
+// Clash will cause varying damage based on strength
+// Damage and Hazards are only active when prop is ON.
+
+#ifndef PROPS_HEV_H
+#define PROPS_HEV_H
+#define PROP_TYPE Hev
 
 #include "prop_base.h"
 #include <cmath>
