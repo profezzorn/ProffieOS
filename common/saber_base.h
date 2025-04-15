@@ -115,12 +115,12 @@ extern SaberBase* saberbases;
     /* menu effects, triggered when you go from one menu entry to the next/previous */                             \
     DEFINE_EFFECT(MENU_CHANGE)                  \
     /* Jetpack missile effects                  \
-    DEFINE_EFFECT(AIMING)                       \
+    DEFINE_EFFECT(ARMING)                       \
     DEFINE_EFFECT(TARGETING)                    \
     DEFINE_EFFECT(MISSILELAUNCH)                \
     DEFINE_EFFECT(MISSILEGOESBOOM)              \
     DEFINE_EFFECT(MANDOTALK)                    \
-    DEFINE_EFFECT(DISARM)                       \
+    DEFINE_EFFECT(DISARMING)                    \
     /* Jetpack prop effects                     \
     DEFINE_EFFECT(STARTIDLEMODE)                \
     DEFINE_EFFECT(IDLEMODE)                     \
