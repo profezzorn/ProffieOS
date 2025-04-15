@@ -1,4 +1,4 @@
-// JetpackOliButtons Revision 55
+// JetpackOliButtons Revision 57
 
 /* Created by OlivierFlying747-8 with lots of help from Fredrik Hubinette aka profezzorn,
   https://fredrik.hubbe.net/lightsaber/proffieos.html
@@ -16,6 +16,9 @@ Includes 1, 2 and 3 button controls. However, I would recommend a 2 or 3
 buttons setup because I think a 1 button setup is cumbersome to use!
 
 Buttons handling was initially based on saber_sa22c_buttons.h
+
+You can find my free/royalty free test font here:
+https://www.dropbox.com/scl/fi/jcu9pzaaeqo745y48bi4g/jetpack_Oli_buttons_testfont.zip?rlkey=r7xp96vrt8bhbeksux5rvcsnt&st=e6isx2vz&dl=0
 
 Worth mentioning:
 =================
@@ -115,7 +118,9 @@ Explanations:
     Aux Button Presses: (for a 2 or 3 buttons setup) (effects also available for 1 button setup - see buttons table below)
         When flying: Plays a stuttering sound.
         When idle: Plays a false start sound and restarts the 1-minute idle loop.
-        When off: Plays a self-destruct, melt-down or dud sound randomly! (surprise!)
+        When off: Plays a self-destruct, melt-down or dud sound randomly! (surprise!) The idea behind those 3
+            effects: you might want to use the jetpack as a detonator and rig it to explode but it may or
+            may not go as planned (it might explode, melt or it's a dud)!
 
     The jetpack turns off automatically if idle for more than 1 minute. This can be changed with
     "#define JETPACK_IDLE_TIME 1000 * 60 * 1" (millisec * sec * minutes) in your config, you can
@@ -161,7 +166,6 @@ Missile Launch Sequence: Double-click while ON or OFF.
          Turn Off Blade: Hold and wait until the blade turns off while ON.
             Next Preset: Hold and release while OFF.
         Previous Preset: Hold and wait while OFF.
-      Color Change Mode: Triple-click while ON.
  Enter/Exit Volume Menu: Double-click and hold while OFF.
               Volume Up: Short-click while in Volume Menu.
             Volume Down: Long-click while in Volume Menu.
@@ -172,31 +176,30 @@ Missile Launch Sequence: Double-click while ON or OFF.
 2 Buttons:
 POWER Button:
 
-               Activate: Short-click while OFF.
-Missile Launch Sequence: Double-click while ON or OFF.
-        Jetpack Mishaps: Hold medium-duration click while ON or OFF.
-         Activate Muted: Double-click and hold while OFF.
-        Play/Stop Music: Hold and release while OFF.
-         Turn Off Blade: Hold and wait until the blade turns off while ON.
-              Volume Up: Short-click while in Volume Menu.
-        Previous Preset: Hold and wait while OFF.
+               Activate: Short-click while OFF, in idlemode or flightmode.  | tested (works)
+Missile Launch Sequence: Double-click while ON or OFF.                      | tested (works)
+        Jetpack Mishaps: Hold medium-duration click while ON or OFF.        | tested (works)
+         Activate Muted: Double-click and hold while OFF.                   | tested (works but doesn't say "mute" from common) & How do I un-mute ??
+        Play/Stop Music: Hold long and release while OFF.                   | tested (works)
+       Turn Off Jetpack: Hold and wait until the blade turns off while ON.  | tested (works in flight but sound keeps playing until done)
+                                                                            |        (doesn't work in idle)
+              Volume Up: Short-click while in Volume Menu.                  | untested (can't enter volume menu)
+        Previous Preset: Hold and wait while OFF.                           | tested (doesn't work - does play track)
 
 AUX Button:
 
-            Next Preset: Short-click while OFF.
-      Enter Volume Menu: Long-click while OFF.
-            Volume Down: Short-click while in Volume Menu.
-          Battery Level: Hold and release while OFF.
-      Color Change Mode: Short-click while ON.
- Abort missile sequence: Hold and release while OFF.
+            Next Preset: Short-click while OFF.                             | tested (works)
+      Enter Volume Menu: Long-click while OFF.                              | tested (doesn't work - does battery level)
+            Volume Down: Short-click while in Volume Menu.                  | untested (can't enter volume menu)
+          Battery Level: Hold and release while OFF.                        |
+ Abort missile sequence: Hold and release while OFF.                        | tested (works but you have to be quick because if boom has already started, it will finish!)
 
 =================================================================================================================
 3 Buttons: Same as 2 buttons except for the following:
 AUX2 Button:
 
-        Previous Preset: Short-click while OFF.
-      Color Change Mode: Short-click while ON.
- Abort missile sequence: Hold and release while OFF.
+        Previous Preset: Short-click while OFF.                            | tested (works)
+ Abort missile sequence: Hold and release while OFF.                       | tested (works but you have to be quick because if boom has already started, it will finish!)
 
 ============= CHECK THE LIST ABOVE FOR ACTUAL BUTTON COMMANDS! ============= NOT YET FINAL !!! =============
 */
@@ -223,18 +226,14 @@ dual_prop.h or my multi_prop.h to avoid double define errors of identical effect
 
 Props in alphabetical order, Sabers First, Blaster(s) Second, everything else, like the thermal detonator, Third!
 I placed the jetpack prop low on the multi_prop.h "food chain" (in Fourth)!
-
-Looking at all this code below, I am wondering which one was the first chicken and which one was the first egg!
 */
+
+// =====================================================================================================================
 
 #ifdef PROPS_SABER_BC_BUTTONS_H
 #define HAVE_BATTERY    // for EFFECT_BATTERY_LEVEL
 #define HAVE_DIM        // for EFFECT_POWERSAVE
 #define HAVE_MUTE       // Notification before muted ignition to avoid confusion.
-#endif
-
-#ifdef PROPS_CAIWYN_BUTTONS_H
-// NO EFFECTs in saber_caiwyn_buttons.h, pfew. That's one off the list (until/if it gets updated)!
 #endif
 
 #ifdef PROPS_SABER_FETT263_BUTTONS_H
@@ -271,19 +270,6 @@ Looking at all this code below, I am wondering which one was the first chicken a
 #define HAVE_DIM        // for EFFECT_POWERSAVE
 #endif
 
-#ifdef PROPS_SABER_SABERTRIO_BUTTONS_H // I know, even them!
-// I have been collecting props from every horizon for testing purposes.
-#define HAVE_BATTERY    // for EFFECT_BATTERY_LEVEL
-#define HAVE_DIM        // for EFFECT_POWERSAVE
-#define HAVE_MUTE       // for Mute Mode
-#define HAVE_VMBEGIN    // for Begin Volume Menu
-#define HAVE_VMEND      // for End Volume Menu
-#define HAVE_VOLDOWN    // for decrease volume
-#define HAVE_VOLUP      // for increase volume
-#define HAVE_VOLMAX     // for maximum volume reached
-#define HAVE_VOLMIN     // for minimum volume reached
-#endif
-
 #ifdef PROPS_BLASTER_BC_BUTTONS_H
 #ifndef HAVE_BATTERY
 #define HAVE_BATTERY    // for EFFECT_BATTERY_LEVEL
@@ -318,6 +304,8 @@ EFFECT(volmax);         // for maximum volume reached
 EFFECT(volmin);         // for minimum volume reached
 #endif
 
+// =====================================================================================================================
+
 // == sounds for jetpack ==
 EFFECT2(idlemode,idlemode);          // jetpack idle sound        (looping idle sound)
 EFFECT2(startidlemode,idlemode);     // jetpack starting to idle  (0 to idle)
@@ -332,12 +320,12 @@ EFFECT(selfdestruct);                // jetpack exploding sound   (pre-idle)
 EFFECT(meltdown);                    // jetpack melt-down sound   (pre-idle)
 EFFECT(dud);                         // jetpack not exploding or melting down sound "Dank farrik, it's a dud!"
 // == sounds for missile ==
-EFFECT(aiming);                      // viewfinder coming down "click" sound
+EFFECT(arming);                      // viewfinder coming down "click" sound
 EFFECT(targeting);                   // viewfinder search/finds target sound
 EFFECT(missilelaunch);               // missile launch sound
 EFFECT(missilegoesboom);             // double explosion in the distance sound
 EFFECT(mandotalk);                   // "Nice shot! I was aiming for the other one!
-EFFECT(disarm);                      // viewfinder going back up sound "shlack" (reverse "click")
+EFFECT(disarming);                   // viewfinder going back up sound "shlack" (reverse "click")
 
 class JetpackOliButtons : public PROP_INHERIT_PREFIX PropBase {
 public:
@@ -614,13 +602,14 @@ public:
         missilelaunch_ = true;
         return true;
 
-      // Abort missile sequence, maybe? ******** only for (2 & 3 buttons while off): ********
+      // Abort missile sequence, if you are quick enough and the long click has been released before
+      // missilegoesboom has started! ******** only for (2 & 3 buttons while off): ********
       case EVENTID(BUTTON_AUX2, EVENT_FIRST_CLICK_LONG, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_LONG, MODE_OFF):
         missilelaunch_ = false;
         state_machine_.reset_state_machine();
         PVLOG_NORMAL << "Missile Sequence Aborted.\n";
-        SaberBase::DoEffect(EFFECT_DISARM,0);
+        SaberBase::DoEffect(EFFECT_DISARMING,0);
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
@@ -675,7 +664,6 @@ public:
         if (SetMute(true)) {
           unmute_on_deactivation_ = true;
           if (!hybrid_font.PlayPolyphonic(&SFX_mute)) {
-            // Use beeper for fallback sounds
             beeper.Beep(0.05, 2000);
             beeper.Silence(0.05);
             beeper.Beep(0.05, 2000);
@@ -683,20 +671,6 @@ public:
           FastOn();
         }
         return true;
-
-#ifndef DISABLE_COLOR_CHANGE
-      // Color Change mode (1 button):
-#if NUM_BUTTONS == 1
-      case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_ON):
-      // Color Change mode (2 buttons):
-#elif NUM_BUTTONS == 2
-      case EVENTID(BUTTON_AUX, EVENT_FIRST_CLICK_SHORT, MODE_ON):
-#elif // Color Change mode (3 buttons):
-      case EVENTID(BUTTON_AUX2, EVENT_FIRST_CLICK_SHORT, MODE_ON):
-#endif
-        ToggleColorChangeMode();
-        return true;
-#endif // DISABLE_COLOR_CHANGE
 
 #if NUM_BUTTONS == 1
       // Start or Stop Track (1 button):
@@ -763,8 +737,7 @@ public:
 #endif // NUM_BUTTONS == 1
     talkie.SayNumber((int)roundf(battery_monitor.battery_percent() * 10) % 100);
     talkie.Say(spPERCENT);
-  // Time permitting, I plan to add the code for support for "#define FETT263_BC_SAY_BATTERY_VOLTS_PERCENT"
-  // and/or "#define FETT263_SAY_BATTERY_PERCENT" but I personally prefer %, that is why it is "active" here.
+  // I personally prefer %, that is why it is "active" here.
   // If you want Volts instead of percents, comment the two lines above and un-comment the 5 lines below.
   //talkie.SayDigit((int)floorf(battery_monitor.battery()));
   //talkie.Say(spPOINT);
@@ -776,16 +749,14 @@ public:
     return false;  // No action
   }  // Event2
 
-  // The different sound effects should be made to play one after
-  // the other without overlapping or interrupting one another.
   void PerformMissileLaunchSequence() {
     STATE_MACHINE_BEGIN();
     while (true) {
       if (missilelaunch_) {
         PVLOG_NORMAL << "Starting Missile Launch Sequence\n";
         // create animation for OLED of viewfinder coming down
-        SaberBase::DoEffect(EFFECT_AIMING,0);
-        SLEEP(SaberBase::sound_length * 1000 + 10);
+        SaberBase::DoEffect(EFFECT_ARMING,0);
+        SLEEP(SaberBase::sound_length * 1000);
         // create animation for OLED of targeting
         SaberBase::DoEffect(EFFECT_TARGETING,0);
         SLEEP(SaberBase::sound_length * 1000);
@@ -794,7 +765,7 @@ public:
         SLEEP(SaberBase::sound_length * 1000);
         // create animation for OLED of explosion
         SaberBase::DoEffect(EFFECT_MISSILEGOESBOOM,0);
-        SLEEP(SaberBase::sound_length * 1000 + 10);
+        SLEEP(SaberBase::sound_length * 1000);
         if (!flight_) { // Perform "Mando Talk" if not in flight mode!
           // create animation for OLED of Mando & Boba talking
           SaberBase::DoEffect(EFFECT_MANDOTALK,0);
@@ -802,7 +773,7 @@ public:
           PVLOG_NORMAL << "Mando: Nice shot!\nBoba: I was aiming for the other one!\n";
         }
         // create animation for OLED of viewfinder going back up
-        SaberBase::DoEffect(EFFECT_DISARM,0);
+        SaberBase::DoEffect(EFFECT_DISARMING,0);
         SLEEP(SaberBase::sound_length * 1000);
         PVLOG_NORMAL << "Missile Launch Sequence Completed!\n";
         missilelaunch_ = false;
@@ -825,7 +796,7 @@ public:
       // Jetpack idle, play false start and reset idle timer.
       jetpack_wav_player_.StopFromReader();      // Stop idle sound.
       SaberBase::DoEffect(EFFECT_FALSESTART, 0); // Play false start sound.
-      timer_ = millis(); // Reset idle timer
+      idle_timer_ = millis(); // Reset idle timer
     } else ChooseRandomEffect(); // Play random mishap effect.
   }
 
@@ -836,19 +807,19 @@ public:
       case 0:  SaberBase::DoEffect(EFFECT_SELFDESTRUCT,0); break;
       case 1:  SaberBase::DoEffect(EFFECT_MELTDOWN,0);     break;
       case 2:  SaberBase::DoEffect(EFFECT_DUD,0);          break;
-      default: SaberBase::DoEffect(EFFECT_SELFDESTRUCT,0); break; // <-- Is a "default" even needed ???
+      default: SaberBase::DoEffect(EFFECT_DUD,0); break; // <-- Is a "default" even needed ???
     }
   }
 
   // Initial start, transition to Idle Mode (from 0 to idle)
   void StartIdleMode() {
     if (jetpack_wav_player_.isPlaying()) {
-      return; // Wait for the current sound to finish
+      return;
     }
     SaberBase::DoEffect(EFFECT_STARTIDLEMODE, 0); // start transition to idle mode.
     flight_ = false;
     idle_   = true;
-    timer_  = millis(); // Reset idle timer
+    idle_timer_  = millis(); // Reset idle timer
     FastOn();
     PVLOG_STATUS << "Jetpack Idling\n";
   }
@@ -856,7 +827,7 @@ public:
   // Transition to Flying Mode (from idle to flying)
   void StartFlightMode() {
     if (jetpack_wav_player_.isPlaying()) {
-      return; // Wait for the current sound to finish
+      return;
     }
     SaberBase::DoEffect(EFFECT_STARTFLIGHTMODE, 0); // start transition to flight mode.
     flight_ = true;
@@ -867,20 +838,21 @@ public:
   // Transition from Flying Mode (from flying to idle)
   void StopFlightMode() {
     if (jetpack_wav_player_.isPlaying()) {
-      return; // Wait for the current sound to finish
+      return;
     }
     SaberBase::DoEffect(EFFECT_STOPFLIGHTMODE, 0); // start transition from flight mode.
     flight_ = false;
     idle_   = true;
   }
 
-  // Stop Idle Mode (Jetpack completely off - idle to off)
+  // Stop Idle Mode (Jetpack completely off - from flight or idle to off)
   void StopIdleMode() {
     if (jetpack_wav_player_.isPlaying()) {
-      return; // Wait for the current sound to finish
+      return;
     }
     SaberBase::DoEffect(EFFECT_STOPIDLEMODE, 0); // start transition from idle mode.
-    flight_ = false; // Should already be false but StopIdleMode can be used to turn the jetpack completely off from any state.
+    flight_ = false; // Should already be false but StopIdleMode can also be used to turn the
+                     // jetpack completely off from any state (with a 2 or 3 buttons setup).
     idle_   = false;
     Off(OFF_FAST); // Fully stop the jetpack.
   }
@@ -892,29 +864,9 @@ public:
     PerformMissileLaunchSequence();
 
     // Stop idle mode after timeout
-    if (idle_ && (now - timer_ > JETPACK_IDLE_TIME)) {
+    if (idle_ && (now - idle_timer_ > JETPACK_IDLE_TIME)) {
       StopIdleMode(); // Stop jetpack if idle for more than defined time.
       return;
-    }
-
-    // Start idle loop after transition sound finishes.
-    if (idle_)
-      IdlePlaying();
-
-    // Start flight loop after transition sound finishes.
-    if (flight_)
-      FlightPlaying();
-  }
-
-  void IdlePlaying() {
-    if (idle_ && !jetpack_wav_player_.isPlaying()) {
-      SaberBase::DoEffect(EFFECT_IDLEMODE, 0); // Start idle loop.
-    }
-  }
-
-  void FlightPlaying() {
-    if (flight_ && !jetpack_wav_player_.isPlaying()) {
-      SaberBase::DoEffect(EFFECT_FLIGHTMODE, 0); // Start flight loop.
     }
   }
 
@@ -930,12 +882,12 @@ public:
     switch (effect) {
       default: return;
       // Missile effects:
-      case EFFECT_AIMING:          EffectHelper(&SFX_aiming,                   "Aiming"); return; // Must not be
+      case EFFECT_ARMING:          EffectHelper(&SFX_arming,                   "Arming"); return; // Must not be
       case EFFECT_TARGETING:       EffectHelper(&SFX_targeting,             "Targeting"); return; // interrupted
       case EFFECT_MISSILELAUNCH:   EffectHelper(&SFX_missilelaunch,    "Missile Launch"); return; // and must
       case EFFECT_MISSILEGOESBOOM: EffectHelper(&SFX_missilegoesboom,"Missile Explodes"); return; // play in
       case EFFECT_MANDOTALK:       EffectHelper(&SFX_mandotalk,  "Mando & Boba Talking"); return; // sequence with
-      case EFFECT_DISARM:          EffectHelper(&SFX_disarm,         "Disarm Targeting"); return; // one another!
+      case EFFECT_DISARMING:       EffectHelper(&SFX_disarming,      "Disarm Targeting"); return; // one another!
       // Engine mishap effects:
       case EFFECT_FALSESTART:      EffectHelper(&SFX_falsestart,          "False Start"); return;
       case EFFECT_STUTTERING:      EffectHelper(&SFX_stuttering,           "Stuttering"); return;
@@ -944,9 +896,9 @@ public:
       case EFFECT_DUD:             EffectHelper(&SFX_dud,   "Dank Farrik!\nIt's a Dud!"); return;
       // Engine normal effects:
       case EFFECT_STARTIDLEMODE:   EffectHelper(&SFX_startidlemode,     "Jetpack Starting to Idle."); return; //after startidlemode, play idle mode on loop
-      case EFFECT_IDLEMODE:        EffectHelper(&SFX_idlemode,         "Jetpack in Idle Loop Mode."); return; //plays on loop
+    //case EFFECT_IDLEMODE:        EffectHelper(&SFX_idlemode,         "Jetpack in Idle Loop Mode."); return; //plays on loop
       case EFFECT_STARTFLIGHTMODE: EffectHelper(&SFX_startflightmode, "Jetpack Starting to Flight."); return; //after startflightmode, play flight mode on loop
-      case EFFECT_FLIGHTMODE:      EffectHelper(&SFX_flightmode,     "Jetpack in Flight Loop Mode."); return; //plays on loop
+    //case EFFECT_FLIGHTMODE:      EffectHelper(&SFX_flightmode,     "Jetpack in Flight Loop Mode."); return; //plays on loop
       case EFFECT_STOPFLIGHTMODE:  EffectHelper(&SFX_stopflightmode,"Jetpack Slowing Down to Idle."); return; //after stopflightmode, play idle on loop
       case EFFECT_STOPIDLEMODE:    EffectHelper(&SFX_stopidlemode,        "Jetpack Completely Off."); return;
       // System effects: (info found in config/styles/blade-effects.md, https://pod.hubbe.net/config/styles/blade-effects.html)
@@ -982,18 +934,20 @@ public:
 
 private:
   // State variables
-  unsigned long timer_  = 0;            // Timer for idle mode timeout
+  unsigned long idle_timer_ = 0;        // Timer for idle mode timeout
   bool idle_            = false;        // Whether the jetpack is in  idle  mode
   bool flight_          = false;        // Whether the jetpack is in flight mode
   bool missilelaunch_   = false;        // Whether the missile is launching
   StateMachineState state_machine_;     // Required for the SLEEP macro
   // Sound effects handling
   PlayWav jetpack_wav_player_;          // Handles idle, flight, and mishap sounds
+#ifdef JETPACK_TRACK_PLAYER
   // Track player handling
   bool istrack_playing_ = false;        // Tracks if track is currently playing (for Event2 switch)
   int  track_num_       = 0;            // Current track number
   int  num_tracks_      = 0;            // Total number of tracks available
   TrackMode track_mode_ = PLAYBACK_OFF; // Current playback mode
+#endif
   // Volume handling
   bool mode_volume_     = false;        // from sa22c for volume menu
   bool max_vol_reached_ = false;        // from sa22c for volume menu
@@ -1025,12 +979,12 @@ private:
   X(meltdown)                       \
   X(dud)                            \
 /* == missile == */                 \
-  X(aiming)                         \
+  X(arming)                         \
   X(targeting)                      \
   X(missilelaunch)                  \
   X(missilegoesboom)                \
   X(mandotalk)                      \
-  X(disarm)
+  X(disarming)
 
 #ifdef INCLUDE_SSD1306
 
@@ -1051,12 +1005,12 @@ struct JetpackDisplayConfigFile : public ConfigFile {
     CONFIG_VARIABLE2(ProffieOSMeltdownImageDuration,        1000.0f);
     CONFIG_VARIABLE2(ProffieOSDudImageDuration,             1000.0f);
     // == missile ==
-    CONFIG_VARIABLE2(ProffieOSAimingImageDuration,          1000.0f);
+    CONFIG_VARIABLE2(ProffieOSArmingImageDuration,          1000.0f);
     CONFIG_VARIABLE2(ProffieOSTargetingImageDuration,       1000.0f);
     CONFIG_VARIABLE2(ProffieOSMissileLaunchImageDuration,   1000.0f);
     CONFIG_VARIABLE2(ProffieOSMissileGoesBoomImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSMandoTalkImageDuration,       1000.0f);
-    CONFIG_VARIABLE2(ProffieOSDisarmImageDuration,          1000.0f);
+    CONFIG_VARIABLE2(ProffieOSDisarmingImageDuration,       1000.0f);
   }
   // == jetpack ==
   // for OLED displays, the time a idlemode.bmp        will play.
@@ -1083,8 +1037,8 @@ struct JetpackDisplayConfigFile : public ConfigFile {
   // for OLED displays, the time a dud.bmp             will play.
   float ProffieOSDudImageDuration;
   // == missile ==
-  // for OLED displays, the time a aiming.bmp          will play.
-  float ProffieOSAimingImageDuration;
+  // for OLED displays, the time a arming.bmp          will play.
+  float ProffieOSArmingImageDuration;
   // for OLED displays, the time a targeting.bmp       will play.
   float ProffieOSTargetingImageDuration;
   // for OLED displays, the time a missilelaunch.bmp   will play.
@@ -1093,8 +1047,8 @@ struct JetpackDisplayConfigFile : public ConfigFile {
   float ProffieOSMissileGoesBoomImageDuration;
   // for OLED displays, the time a mandotalk.bmp       will play.
   float ProffieOSMandoTalkImageDuration;
-  // for OLED displays, the time a disarm.bmp          will play.
-  float ProffieOSDisarmImageDuration;
+  // for OLED displays, the time a disarming.bmp          will play.
+  float ProffieOSDisarmingImageDuration;
 };
 
 template<typename PREFIX = ByteArray<>>
@@ -1163,7 +1117,7 @@ public:
         break;
 
       case EFFECT_STOPIDLEMODE:
-        if (img_.stopidlemode) {                             // animation of flame going small to zero
+        if (img_.stopidlemode) {                             // animation of flame going from small to zero
           ShowFileWithSoundLength(&img_.stopidlemode,        jetpack_font_config.ProffieOSStopIdleModeImageDuration);
         } else {
           this->SetMessage("  jetpack\ncompletely off");
@@ -1220,11 +1174,11 @@ public:
 
       // jetpack missile display effects: Make animations for OLED from the episode from Mando S02E06
       // ================================
-      case EFFECT_AIMING:
-        if (img_.IMG_aiming) {                               // animation of viewfinder coming down
-          ShowFileWithSoundLength(&img_.IMG_aiming,          jetpack_font_config.ProffieOSAimingImageDuration);
+      case EFFECT_ARMING:
+        if (img_.IMG_arming) {                               // animation of viewfinder coming down
+          ShowFileWithSoundLength(&img_.IMG_arming,          jetpack_font_config.ProffieOSAimingImageDuration);
         } else {
-          this->SetMessage("aiming");
+          this->SetMessage("arming");
           this->SetScreenNow(SCREEN_MESSAGE);
         }
         break;
@@ -1265,9 +1219,9 @@ public:
         }
         break;
 
-      case EFFECT_DISARM:
-        if (img_.IMG_disarm) {                               // animation of viewfinder going back up
-          ShowFileWithSoundLength(&img_.IMG_disarm,          jetpack_font_config.ProffieOSDisarmImageDuration);
+      case EFFECT_DISARMING:
+        if (img_.IMG_disarming) {                            // animation of viewfinder going back up
+          ShowFileWithSoundLength(&img_.IMG_disarming,       jetpack_font_config.ProffieOSDisarmingImageDuration);
         } else {
           this->SetMessage("disarming");
           this->SetScreenNow(SCREEN_MESSAGE);
@@ -1281,7 +1235,7 @@ public:
 
   void SB_Off2(typename StandardDisplayController<Width, col_t, PREFIX>::OffType offtype, EffectLocation location) override {
     if (offtype == StandardDisplayController<Width, col_t, PREFIX>::OFF_BLAST) {
-      ShowFileWithSoundLength(img_.IMG_disarm, jetpack_font_config.ProffieOSDisarmImageDuration);
+      ShowFileWithSoundLength(img_.IMG_disarming, jetpack_font_config.ProffieOSDisarmingImageDuration);
     } else {
       StandardDisplayController<Width, col_t, PREFIX>::SB_Off2(offtype, location);
     }
@@ -1317,12 +1271,12 @@ public:
       case EFFECT_DUD:             this->scr_.Play(&SCR_dud);             break;
       // jetpack missile display effects: Make animations for OLED from the episode from Mando S02E06
       // ================================
-      case EFFECT_AIMING:          this->scr_.Play(&SCR_aiming);          break;
+      case EFFECT_ARMING:          this->scr_.Play(&SCR_arming);          break;
       case EFFECT_TARGETING:       this->scr_.Play(&SCR_targeting);       break;
       case EFFECT_MISSILELAUNCH:   this->scr_.Play(&SCR_missilelaunch);   break;
       case EFFECT_MISSILEGOESBOOM: this->scr_.Play(&SCR_missilegoesboom); break;
       case EFFECT_MANDOTALK:       this->scr_.Play(&SCR_mandotalk);       break;
-      case EFFECT_DISARM:          this->scr_.Play(&SCR_disarm);          break;
+      case EFFECT_DISARMING:       this->scr_.Play(&SCR_disarming);       break;
       default:
         StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
     }
