@@ -134,3 +134,133 @@ public:
 };
 
 #endif
+
+/************************************\
+|*                                  *|
+|*   DETONATOR DISPLAY CONTROLLER   *|  (blank and commented out)
+|*                                  *|
+\************************************/
+
+// added by OlivierFlying747-8
+
+// This is just a blank canvas for a custom display controller for the detonator.
+// As far as I know, there are no displayable detonator effects (yet)?
+// Maybe a countdown till boom?
+// Replace all the "***xxxn***, ***XXXn***, ***Xxxn***" with appropriate effects name(s),
+// and respect the CAPS, no caps & Some Caps. Or else it will not compile!
+/*
+#ifdef PROP_BOTTOM
+
+#define ONCE_PER_DETONATOR_EFFECT(X)  \
+  X(***xxx1***)                       \
+  X(***xxx2***)                       \
+  X(***xxx3***) // Add a backslash to this line when adding the next line.
+                // The last line in the list needs no backslash at the end!
+
+#ifdef INCLUDE_SSD1306
+
+struct DetonatorDisplayConfigFile : public ConfigFile {
+  DetonatorDisplayConfigFile() { link(&font_config); }
+  void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(ProffieOS***Xxx1***ImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOS***Xxx2***ImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOS***Xxx3***ImageDuration, 1000.0f);
+  }
+
+  // for OLED displays, the time a ***xxx1***.bmp will play.
+  float ProffieOS***Xxx1***ImageDuration;
+  // for OLED displays, the time a ***xxx2***.bmp will play.
+  float ProffieOS***Xxx2***ImageDuration;
+  // for OLED displays, the time a ***xxx3***.bmp will play.
+  float ProffieOS***Xxx3***ImageDuration;
+};
+
+template<typename PREFIX = ByteArray<>>
+struct DetonatorDisplayEffects  {
+  DetonatorDisplayEffects() : dummy_(0) ONCE_PER_DETONATOR_EFFECT(INIT_IMG) {}
+  int dummy_;
+  ONCE_PER_DETONATOR_EFFECT(DEF_IMG)
+};
+
+template<int Width, class col_t, typename PREFIX = ByteArray<>>
+class DetonatorDisplayController : public StandardDisplayController<Width, col_t, PREFIX> {
+public:
+  DetonatorDisplayEffects<PREFIX> img_;
+  DetonatorDisplayConfigFile &detonator_font_config;
+  DetonatorDisplayController() :
+    img_(*getPtr<DetonatorDisplayEffects<PREFIX>>()),
+    detonator_font_config(*getPtr<DetonatorDisplayConfigFile>()) {}
+
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      case EFFECT_***XXX1***:
+        if (img_.IMG_***xxx1***) {
+          ShowFileWithSoundLength(&img_.IMG_***xxx1***, detonator_font_config.ProffieOS***Xxx1***ImageDuration);
+        } else {
+          this->SetMessage("***xxx1***");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_***XXX2***:
+        if (img_.IMG_***xxx2***) {
+          ShowFileWithSoundLength(&img_.IMG_***xxx2***, detonator_font_config.ProffieOS***Xxx2***ImageDuration);
+        } else {
+          this->SetMessage("***xxx2***");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      case EFFECT_***XXX3***:
+        if (img_.IMG_***xxx3***) {
+          ShowFileWithSoundLength(&img_.IMG_***xxx3***, detonator_font_config.ProffieOS***Xxx3***ImageDuration);
+        } else {
+          this->SetMessage("***xxx3***");
+          this->SetScreenNow(SCREEN_MESSAGE);
+        }
+        break;
+
+      default:
+        StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
+    }
+  }
+
+  void SB_Off2(typename StandardDisplayController<Width, col_t, PREFIX>::OffType offtype, EffectLocation location) override {
+    if (offtype == StandardDisplayController<Width, col_t, PREFIX>::OFF_BLAST) {
+      ShowFileWithSoundLength(img_.IMG_***xxx1***, detonator_font_config.ProffieOS***Xxx1***ImageDuration);
+      ShowFileWithSoundLength(img_.IMG_***xxx2***, detonator_font_config.ProffieOS***Xxx2***ImageDuration);
+      ShowFileWithSoundLength(img_.IMG_***xxx3***, detonator_font_config.ProffieOS***Xxx3***ImageDuration);
+    } else {
+      StandardDisplayController<Width, col_t, PREFIX>::SB_Off2(offtype, location);
+    }
+  }
+};
+
+#endif  // INCLUDE_SSD1306
+
+template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>,
+         typename NumberToByteArray<H>::type>>
+class DetonatorColorDisplayController : public StandarColorDisplayController<W, H, PREFIX> {
+public:
+  template<int w, int h>
+  explicit DetonatorColorDisplayController(SizedLayeredScreenControl<w, h>* screen) :
+  StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_DETONATOR_EFFECT(INIT_SCR) {
+  }
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      case EFFECT_***XXX1***: this->scr_.Play(&SCR_***xxx1***); break;
+      case EFFECT_***XXX2***: this->scr_.Play(&SCR_***xxx2***); break;
+      case EFFECT_***XXX3***: this->scr_.Play(&SCR_***xxx3***); break;
+      default:
+        StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
+    }
+  }
+
+protected:
+  ONCE_PER_DETONATOR_EFFECT(DEF_SCR);
+};
+
+#undef ONCE_PER_DETONATOR_EFFECT
+
+#endif  // PROP_BOTTOM
+*/
