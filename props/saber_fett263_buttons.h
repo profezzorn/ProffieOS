@@ -691,6 +691,10 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   Changes Brightness Menu to Circular Control
   
 == Disable Features ==
+  FETT263_SIMPLIFIED_PROP - Disables the following default features* with one define
+    ("Change Font", "Change Style", "Copy Preset", "Battle Mode Toggle", "Multi-Blast Toggle", "Quote Player")
+    *Only applies to defaulted features, additional features are controlled by including defines to enable, remove those defines accordingly
+
   DISABLE_TALKIE - saves memory by replacing spoken error messages with beep sequences - 
 
   FETT263_DISABLE_CHANGE_FONT - Disables the "on-the-fly" Change Font option
@@ -785,6 +789,15 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #if defined(FETT263_MANUAL_BLADE_ARRAY) && !defined(FETT263_DISABLE_COPY_PRESET)
 #define FETT263_DISABLE_COPY_PRESET
+#endif
+
+#ifdef FETT263_SIMPLIFIED_PROP
+#define FETT263_DISABLE_CHANGE_FONT
+#define FETT263_DISABLE_CHANGE_STYLE
+#define FETT263_DISABLE_COPY_PRESET
+#define FETT263_DISABLE_BM_TOGGLE
+#define FETT263_DISABLE_MULTI_BLAST_TOGGLE
+#define FETT263_DISABLE_QUOTE_PLAYER
 #endif
 
 #if NUM_BUTTONS < 1
