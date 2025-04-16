@@ -95,6 +95,9 @@ class DriveLogic<LED, typename ToVoid<typename LED::CustomDriveLogic>::Type> : p
 public:
   int PWM_overdrive(Color16 c) override { return drive_.PWM_overdrive(c); }
   int PWM(Color16 c) override { return drive_.PWM(c); }
+  Color8 getColor8() const {
+    return ColorSelector<LED>::getColor8();
+  }
 private:
   typename LED::CustomDriveLogic drive_;
 };
