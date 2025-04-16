@@ -1176,7 +1176,7 @@ public:
       // ================================
       case EFFECT_ARMING:
         if (img_.IMG_arming) {                               // animation of viewfinder coming down
-          ShowFileWithSoundLength(&img_.IMG_arming,          jetpack_font_config.ProffieOSAimingImageDuration);
+          ShowFileWithSoundLength(&img_.IMG_arming,          jetpack_font_config.ProffieOSArmingImageDuration);
         } else {
           this->SetMessage("arming");
           this->SetScreenNow(SCREEN_MESSAGE);
