@@ -115,10 +115,10 @@ extern SaberBase* saberbases;
     /* menu effects, triggered when you go from one menu entry to the next/previous */                             \
     DEFINE_EFFECT(MENU_CHANGE)                  \
     /* Detonator  effects */                    \
-    DEFINE_EFFECT(bgnarm)                       \
-    DEFINE_EFFECT(armhum)                       \
-    DEFINE_EFFECT(endarm)                       \
-    DEFINE_EFFECT(boom)                         \
+    DEFINE_EFFECT(BGNARM)                       \
+    DEFINE_EFFECT(ARMHUM)                       \
+    DEFINE_EFFECT(ENDARM)                       \
+    DEFINE_EFFECT(BOOM)                         \
     
 #define DEFINE_EFFECT(X) EFFECT_##X,
 enum class EffectType {
