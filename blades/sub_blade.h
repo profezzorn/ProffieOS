@@ -111,7 +111,7 @@ public:
 
   void SetNext(SubBladeWrapper* next) {
     next_ = next;
-    primary_ = (next_ == this);
+    if (next_ == this) primary_ = true;
   }
 
   // Bladestyle implementation
@@ -318,12 +318,12 @@ public:
   SubBladeWrapperWithList(const int* indices, int count)
       : indices_(indices), count_(count) {}
   void set(int led, Color16 c) override {
-    if (led >= 0 && led < count_) {
+    if (led >= 0 && led < count_ && indices_[led] >= 0) {
       blade_->set(indices_[led], c);
     }
   }
   void set_overdrive(int led, Color16 c) override {
-    if (led >= 0 && led < count_) {
+    if (led >= 0 && led < count_ && indices_[led] >= 0) {
       blade_->set_overdrive(indices_[led], c);
     }
   }

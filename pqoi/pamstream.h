@@ -34,6 +34,10 @@ public:
     }
   }
 
+  ~PamStream() {
+    if (f) pclose(f);
+  }
+
   bool isPNG(const std::string &filename) {
     return endswith(filename, ".png");
   }
@@ -133,7 +137,7 @@ private:
     exit(1);
   }
 
-  FILE *f;
+  FILE *f = nullptr;
 };
 
 #endif
