@@ -33,7 +33,7 @@ public:
   NextAction next_action_ = NEXT_ACTION_NOTHING;
   uint32_t time_base_;
   uint32_t next_event_time_;
-  
+
   void SetNextAction(NextAction what, uint32_t when) {
     time_base_ = millis();
     next_event_time_ = when;
@@ -43,7 +43,7 @@ public:
   void SetNextActionF(NextAction what, float when) {
     SetNextAction(what, when * 1000);
   }
-  
+
   void PollNextAction() {
     if (millis() - time_base_ > next_event_time_) {
       switch (next_action_) {
@@ -60,13 +60,13 @@ public:
       next_action_ = NEXT_ACTION_NOTHING;
     }
   }
-  
+
   void beginArm() {
     SaberBase::SetLockup(SaberBase::LOCKUP_ARMED);
     SaberBase::DoBeginLockup();
 #ifdef ENABLE_AUDIO    
     float len = hybrid_font.GetCurrentEffectLength();
-#else    
+#else
     float len = 1.6;
 #endif
     SetNextActionF(NEXT_ACTION_ARM, len);
@@ -74,9 +74,9 @@ public:
 
   void blast() {
     SaberBase::DoEndLockup();
-#ifdef ENABLE_AUDIO    
+#ifdef ENABLE_AUDIO
     float len = hybrid_font.GetCurrentEffectLength();
-#else    
+#else
     float len = 0.0;
 #endif
     SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
