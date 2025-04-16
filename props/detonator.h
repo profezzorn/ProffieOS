@@ -1,6 +1,10 @@
 #ifndef PROPS_DETONATOR_H
 #define PROPS_DETONATOR_H
 
+#if NUM_BUTTONS < 2
+#error Your prop NEEDS 2 buttons to use the detonator
+#endif
+
 #include "prop_base.h"
 
 #define PROP_TYPE Detonator
