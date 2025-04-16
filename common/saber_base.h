@@ -118,7 +118,6 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(BGNARM)                       \
     DEFINE_EFFECT(ARMHUM)                       \
     DEFINE_EFFECT(ENDARM)                       \
-    DEFINE_EFFECT(BOOM)                         \
     
 #define DEFINE_EFFECT(X) EFFECT_##X,
 enum class EffectType {
