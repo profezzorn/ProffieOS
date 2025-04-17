@@ -116,7 +116,7 @@ public:
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_OFF):
-	if (powered_) rotate_presets();
+        if (powered_) rotate_presets();
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_ON):
@@ -124,12 +124,12 @@ public:
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
-	beginArm();
-	break;
+        beginArm();
+        break;
 
       case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ON):
         blast();
-	return armed_;
+        return armed_;
 
         // TODO: Long click when off?
     }
