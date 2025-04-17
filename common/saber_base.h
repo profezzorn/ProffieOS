@@ -114,8 +114,11 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(FONT_DIRECTORY_NOT_FOUND)     \
     /* menu effects, triggered when you go from one menu entry to the next/previous */                             \
     DEFINE_EFFECT(MENU_CHANGE)                  \
-
-
+    /* Detonator  effects */                    \
+    DEFINE_EFFECT(BGNARM)                       \
+    DEFINE_EFFECT(ARMHUM)                       \
+    DEFINE_EFFECT(ENDARM)                       \
+    
 #define DEFINE_EFFECT(X) EFFECT_##X,
 enum class EffectType {
   DEFINE_ALL_EFFECTS()
