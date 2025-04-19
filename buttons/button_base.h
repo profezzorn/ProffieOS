@@ -63,7 +63,7 @@ protected:
       saved_event_ = event + (EVENT_SAVED_CLICK_SHORT - EVENT_CLICK_SHORT);
     }
   }
-  
+
   void Loop() override {
     STATE_MACHINE_BEGIN();
     while (true) {
@@ -109,7 +109,7 @@ protected:
         current_modifiers &=~ button_;
         if (millis() - push_millis_ < BUTTON_SHORT_CLICK_TIMEOUT) {
           SendClick(EVENT_CLICK_SHORT);
-        } else if (millis() - push_millis_ < 2500) {
+        } else if ((millis() - push_millis_) < (BUTTON_HELD_LONG_TIMEOUT + 500)) {
 	  // Long clicks cannot be "saved", so just emit immediately.
           Send(EVENT_CLICK_LONG);
         }
@@ -122,7 +122,7 @@ protected:
   }
 
   bool Parse(const char* cmd, const char* arg) override {
-#ifndef DISABLE_DIAGNOSTIC_COMMANDS    
+#ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, name_)) {
       EVENT e = EVENT_CLICK_SHORT;
       int cnt = 0;
@@ -159,7 +159,7 @@ protected:
       prop.Event(button_, (EVENT)(e + (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED) * cnt));
       return true;
     }
-#endif    
+#endif
     return false;
   }
 
