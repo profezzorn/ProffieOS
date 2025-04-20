@@ -47,9 +47,9 @@ using LockupPulseF = SingleValueAdapter<LockupPulseSVF<LOCKUP_TYPE>>;
 
 // Usage: IncrementWithReset<PULSE, RESET_PULSE, MAX, I>
 // PULSE: FUNCTION (pulse type) 
-// RESET_PULSEE: FUNCTION (pulse type) defaults to Int<0> (no reset)
+// RESET_PULSE: FUNCTION (pulse type) defaults to Int<0> (no reset)
 // MAX, I: FUNCTION
-// Starts at zero, increments by I each time the PULSE occurse.
+// Starts at zero, increments by I each time the PULSE occurs.
 // If it reaches MAX it stays there.
 // Resets back to zero when RESET_PULSE occurs.
 
