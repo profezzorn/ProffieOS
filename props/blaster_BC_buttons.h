@@ -394,6 +394,7 @@ public:
     }
   }
 
+#ifdef BLASTER_SHOTS_UNTIL_EMPTY
   void Reload() override {
     if (max_shots_ != -1 && (GetBulletCount() == BLASTER_SHOTS_UNTIL_EMPTY)) {
       SaberBase::DoEffect(EFFECT_FULL, 0);
@@ -402,6 +403,7 @@ public:
     }
     is_jammed_ = false;
   }
+#endif
 
   void ClipOut() override {
     Blaster::ClipOut();
