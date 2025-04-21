@@ -1,4 +1,4 @@
-/* V7/8-167.
+/* V7/8-201.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -213,8 +213,27 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   arrayX.wav files when switching.
   Requires arrays to be numbered consecutively,
   starting at zero, in the field that would otherwise 
-  contain BladeID values.
-  Not currently compatible with Blade Detect.
+  contain BladeID values. Like this:
+      { 0, ... }
+      { 1, ... }
+      { 2, ... }
+      { 3, ... }
+      etc.
+
+#define SABERSENSE_NO_BLADE
+  If using SABERSENSE_ARRAY_SELECTOR in combination with
+  BLADE_DETECT_PIN, you must use this define in order to
+  prevent a compile error.
+  Note that you can have any number of Blade-In arrays
+  in your config, but only one NO_BLADE array is permitted.
+  Note also that NO_BLADE replaces the zero array,
+  meaning that Blade-In array numbering must be consecutive
+  starting at 1. Like this:
+      { NO_BLADE, ... }
+      { 1, ... }
+      { 2, ... }
+      { 3, ... }
+      etc.
   
 #define SABERSENSE_DISABLE_SAVE_ARRAY
   By default, SABERSENSE_ARRAY_SELECTOR saves the current
@@ -525,11 +544,16 @@ public:
 
   // Manual Array Selector, switches on-demand to next array, plays 'array' ident sound.
 #ifdef SABERSENSE_ARRAY_SELECTOR
+
 #ifdef SABERSENSE_BLADE_ID  // Only one Sabersense BladeID standard permitted.
 #error "SABERSENSE_ARRAY_SELECTOR and SABERSENSE_BLADE_ID cannot be defined at the same time."
 #endif
-#ifdef BLADE_DETECT_PIN  // Blade Detect not currently supported with Sabersense Array Selector.
-#error "SABERSENSE_ARRAY_SELECTOR and BLADE_DETECT_PIN cannot be defined at the same time."
+
+#ifdef BLADE_DETECT_PIN  
+#ifndef SABERSENSE_NO_BLADE  // Means of informing users they can only use one NO_BLADE array.
+#error "BLADE_DETECT_PIN requires SABERSENSE_NO_BLADE to be defined and is limited to one NO_BLADE array."
+#error "SABERSENSE_NO_BLADE allows only one NO_BLADE array but any number of Blade-In arrays."
+#endif
 #endif
 
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
