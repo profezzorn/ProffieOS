@@ -109,7 +109,7 @@ protected:
         current_modifiers &=~ button_;
         if (millis() - push_millis_ < BUTTON_SHORT_CLICK_TIMEOUT) {
           SendClick(EVENT_CLICK_SHORT);
-        } else if ((millis() - push_millis_) < (BUTTON_HELD_LONG_TIMEOUT + 500)) {
+        } else if ((millis() - push_millis_) < (2500)) {
 	  // Long clicks cannot be "saved", so just emit immediately.
           Send(EVENT_CLICK_LONG);
         }
