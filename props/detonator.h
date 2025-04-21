@@ -141,7 +141,7 @@ public:
 
 /************************************\
 |*                                  *|
-|*   DETONATOR DISPLAY CONTROLLER   *|    // added by OlivierFlying747-8
+|*   DETONATOR DISPLAY CONTROLLER   *|
 |*                                  *|
 \************************************/
 
