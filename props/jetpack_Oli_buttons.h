@@ -1,13 +1,13 @@
-// JetpackOliButtons Revision 57
+// JetpackOliButtons Revision 58
 
 /* Created by OlivierFlying747-8 with lots of help from Fredrik Hubinette aka profezzorn,
   https://fredrik.hubbe.net/lightsaber/proffieos.html
   Copyright (c) 2016-2025 Fredrik Hubinette
   Copyright (c) 2025 OlivierFlying747-8 (Apologies for only adding my username, I would like to remain "anonymous" for the time being)
   With contributions by:
-  Fredrik Hubinette aka profezzorn,
-  Ryan Ogurek aka ryryog25,
-  Bryan Connor aka NoSloppy,
+  Fredrik Hubinette aka profezzorn who helped me understand some coding for ProffieOS & C++,
+  Bryan Connor aka NoSloppy who helped with his sound knowledge and experimentation on Alt-sound,
+  Ryan Ogurek aka ryryog25 who helped me get this project "off the ground" (no pun intended),
   In case of problems, you can find us at: https://crucible.hubbe.net where somebody will be there to help.
   Distributed under the terms of the GNU General Public License v3.
   https://www.gnu.org/licenses/
@@ -86,10 +86,12 @@ Explanations:
     touch-button that could modulate "power" (aka sound) like a thrust lever modulates fuel flow. I don't even know if
     ProffieBoard/ProffieOS can modulate sounds like a thrust lever modulates power on a jet engine? And besides,
     I don't know (yet) how to code for that!
+    Experimentation on Alt-sounds by Bryan Connor aka NoSloppy can be found here:
+    https://crucible.hubbe.net/t/jetpack-prop-update-and-questions/6648/29
 
     But for now my only Proffie prop has a two buttons setup and I can't see any sensible way to have more than 3 modes.
     I have considered "Alt mode" for more modes but I do not believe that Alt mode is the tool for this job.
-    There would be too may button combinations to attempt to go from one "random" mode to another (that is not next up
+    There would be too many button combinations to attempt to go from one "random" mode to another (that is not next up
     or next down). Going from off to flight mode would need 6 (or more!) clicks and I doubt it would make for an enjoyable
     user experience to constantly having to count and keep track of your clicks. It would be barely achievable on a two
     buttons setup (POW for up and AUX for down) but forget the "fun" malfunctions or a one button prop.
@@ -97,68 +99,82 @@ Explanations:
     "How does this jetpack prop work?"
     ==================================
 
-    First Power Button Press:
+    First Power Short Click Button Press:
         Plays the jetpack idle starting sound. (low volume & low light intensity on the blade(s),
         like a jet engine initial start)
         Loops the idle sound until 1 minute passes, the jetpack is started, or
         the aux button is pressed (plays a false start sound and restarts the 1-minute idle loop).
         If no "Second Power Button Press" within 1 minute, the jetpack will switch off.
 
-    Second Power Button Press:
+    Second Power Short Click Button Press:
         Plays the jetpack "going to in flight" starting sound. (high volume & high light intensity on the blade(s),
         like a jet engine applying take-off power)
         Loops the jetpack flying sound until the power button is pressed again.
         To do (if there is a demand): add a limit to this. You can't fly for ever without "refueling"!
 
-    Third Power Button Press:
+    Third Power Short Click Button Press:
         Plays the jetpack slowing down to idle sound. (low volume & low light intensity on the blade(s) again)
         Loops the idle sound until 1 minute passes, the jetpack is restarted, or the Aux button is pressed
         (restarts the 1-minute idle loop).
 
-    Aux Button Presses: (for a 2 or 3 buttons setup) (effects also available for 1 button setup - see buttons table below)
+    Medium Power Button Press:
         When flying: Plays a stuttering sound.
         When idle: Plays a false start sound and restarts the 1-minute idle loop.
         When off: Plays a self-destruct, melt-down or dud sound randomly! (surprise!) The idea behind those 3
             effects: you might want to use the jetpack as a detonator and rig it to explode but it may or
             may not go as planned (it might explode, melt or it's a dud)!
 
-    The jetpack turns off automatically if idle for more than 1 minute. This can be changed with
-    "#define JETPACK_IDLE_TIME 1000 * 60 * 1" (millisec * sec * minutes) in your config, you can
-    change the time to what you want (but don't make it zero or you will not be able to make the
-    jetpack go into "flight mode". I have it by default to 1 min for testing/debugging purposes.
-    I guess a good number, once I know everything is working as it should be, would be around 15
-    to 20 sec. Enough for various sound effects to complete, enough to give you time to restart or
-    enough to play with "false start" function.
+    Double Click Power Button Press:
+        Will do the "jetpack missile launch sequence".
+        While OFF or in IDLEMODE, if present, mandotalk.wav will play.
+        While in FLIGHTMODE, mandotalk.wav will not play.
+
+    The jetpack will turn off automatically if in "idle mode" for more than 1 minute. This can be changed with
+    "#define JETPACK_IDLE_TIME 1000 * 60 * 1" (millisec * sec * minutes) in your config.
+    You can change the time to what you want, but don't make it less than your startidlemode.wav + a few seconds,
+    or you will not be able to make the jetpack go into "flight mode". I have it by default set to 1 min
+    for testing/debugging purposes.
+    I guess a good number, once I know everything is working as it should be, would be around 30 to
+    35 seconds. Enough for various sound effects to complete (if your "engine start sound is short enough),
+    enough to give you time to restart (when coming from "flight mode") or enough to "play" with "false start" function.
 
     Loop Function:
         Monitors the 1-minute timer (or user defined) during idle mode to turn off the jetpack
         completely if the time expires.
-        Plays idle or flight mode on loop for the required time.
 
     To do: create animations for OLED for Missile Launch (based on Mando S02E06 - if you know, you know!)
     & make a fun jetpack sound font.
-    Create DIM "mode" for "blades" in idle mode.
+    Create DIM "mode" for "blades/presets" in idle mode.
 
 Thank you for reading!
 ======================
 I hope you will have fun with my vision of a jetpack.
 
-============= List of optional jetpack defines that you can add to your config. =============
+============= List of optional jetpack defines that you can add to your config. ============================================================
 #define JETPACK_IDLE_TIME 1000 * 60 * 1 // Jetpack max idle mode time in millisec (default 1 min) before auto-shutdown.
 #define JETPACK_TRACK_PLAYER            // Adds jetpack prop track player functionality - almost identical to
-                                        // Fett263's saber track player, but without the menu option.
+                                        // Fett263's saber track player.
 // TBA JETPACK_ALLOW_CRASHING           // If "shot at" - I could create it if there is interest!
 // TBA MAX_JETPACK_FLIGHT_TIME          // You can't "fly" forever. Eventually, you will run out of fuel
                                         // (or battery, in the case of your prop).
 
-Please feel free to submit more fun ideas on The Crucible or to this GitHub page:
-https://github.com/olivierflying747-8/Olis-ProffieOS/tree/Jetpack-suggestions
+============= Future development ideas =====================================================================================================
+Add functionality for a rotary encoder and add intermediate flight modes with adequately smooth up/down sound transitions.
+    (That is my n°1 priority for the future of this prop!)
+Add support for a "zero-ish" button setup for the most basic functions, but your ProffieBoard would have to be located
+    in your gauntlet for the ability to do swing left/right (mode up/down), spin (malfunction), stab (missile launch)?
+Add support for a touch screen to supplement a "zero-ish" button setup for the other functions. ProffieOS has no support for that yet! (idea for POS9.x?)
+Add support for a smoke generator?
+Add support for motor function(s) to make something turn on your jetpack?
 
-============= CHECK THE LIST BELOW FOR ACTUAL BUTTON COMMANDS! ============= NOT YET FINAL !!! =============
-1 Button:
+Please feel free to submit more fun ideas on The Crucible or to this GitHub page:
+https://github.com/olivierflying747-8/Olis-ProffieOS/tree/06_jetpack_Oli_buttons_SUGGESTIONS_WELCOME
+
+============= CHECK THE LIST BELOW FOR ACTUAL BUTTON COMMANDS! ============= NOT YET FINAL !!! =============================================
+1 Button:                                                                   | untested (none of the one button setup combo have been tested)
 POWER Button:
 
-               Activate: Short-click while OFF.
+               Activate: Short-click while OFF, in idlemode or flightmode.
 Missile Launch Sequence: Double-click while ON or OFF.
         Jetpack Mishaps: Hold medium-duration click while ON or OFF.
          Activate Muted: Double-click and hold while OFF.
@@ -172,36 +188,40 @@ Missile Launch Sequence: Double-click while ON or OFF.
           Battery Level: Triple-click while OFF.
  Abort missile sequence: not available on a 1 button setup (But why do you want to stop it anyways?)
 
-=================================================================================================================
-2 Buttons:
+=============================================================================================================================================
+2 Buttons:                                                                  | tested (works)
 POWER Button:
 
                Activate: Short-click while OFF, in idlemode or flightmode.  | tested (works)
 Missile Launch Sequence: Double-click while ON or OFF.                      | tested (works)
         Jetpack Mishaps: Hold medium-duration click while ON or OFF.        | tested (works)
-         Activate Muted: Double-click and hold while OFF.                   | tested (works but doesn't say "mute" from common) & How do I un-mute ??
-        Play/Stop Music: Hold long and release while OFF.                   | tested (works)
-       Turn Off Jetpack: Hold and wait until the blade turns off while ON.  | tested (works in flight but sound keeps playing until done)
-                                                                            |        (doesn't work in idle)
-              Volume Up: Short-click while in Volume Menu.                  | untested (can't enter volume menu)
-        Previous Preset: Hold and wait while OFF.                           | tested (doesn't work - does play track)
+         Activate Muted: Double-click and hold while OFF.                   | tested (works, but how can I un-mute ??)
+        Play/Stop Track: Hold long and release while OFF.                   | tested (works)
+       Turn Off Jetpack: Hold and wait until the blade turns off while ON.  | tested (works but current sound keeps playing until done!
+                                                                            |         I am not yet sure if I want to change that or not?)
+              Volume Up: Short-click while in Volume Menu.                  | tested (works)
+        Previous Preset: Hold and wait while OFF.                           | tested (works)
 
 AUX Button:
 
             Next Preset: Short-click while OFF.                             | tested (works)
-      Enter Volume Menu: Long-click while OFF.                              | tested (doesn't work - does battery level)
-            Volume Down: Short-click while in Volume Menu.                  | untested (can't enter volume menu)
+      Enter Volume Menu: Long-click while OFF.                              | tested (works)
+            Volume Down: Short-click while in Volume Menu.                  | tested (works)
           Battery Level: Hold and release while OFF.                        |
- Abort missile sequence: Hold and release while OFF.                        | tested (works but you have to be quick because if boom has already started, it will finish!)
+ Abort missile sequence: Hold and release while OFF.                        | tested (works but you have to be quick because if boom has
+                                                                            |         already started, it will finish! I do not want to
+                                                                            |         change that because I like it that way!)
 
-=================================================================================================================
-3 Buttons: Same as 2 buttons except for the following:
+==============================================================================================================================================
+3 Buttons: Same as 2 buttons except for the following:                      | tested (works)
 AUX2 Button:
 
-        Previous Preset: Short-click while OFF.                            | tested (works)
- Abort missile sequence: Hold and release while OFF.                       | tested (works but you have to be quick because if boom has already started, it will finish!)
+        Previous Preset: Short-click while OFF.                             | tested (works)
+ Abort missile sequence: Hold and release while OFF.                        | tested (works but you have to be quick because if boom has
+                                                                            |         already started, it will finish! I do not want to
+                                                                            |         change that because I like it that way!)
 
-============= CHECK THE LIST ABOVE FOR ACTUAL BUTTON COMMANDS! ============= NOT YET FINAL !!! =============
+============= CHECK THE LIST ABOVE FOR ACTUAL BUTTON COMMANDS! ============= NOT YET FINAL !!! ===============================================
 */
 
 #ifndef PROPS_JETPACK_OLI_BUTTONS_H
@@ -305,6 +325,7 @@ EFFECT(volmin);         // for minimum volume reached
 #endif
 
 // =====================================================================================================================
+// This is the list of .wav files that you will need to use jetpack_Oli_buttons.h to it's full potential.
 
 // == sounds for jetpack ==
 EFFECT2(idlemode,idlemode);          // jetpack idle sound        (looping idle sound)
@@ -497,26 +518,6 @@ public:
     PlayTrack();
   }
 
-/*
-// Only one chdir & Parse function can be used at a time, so in a dual_prop.h/multi_prop.h "environment"
-// SaberFett263Button already has them.
-// I initially had this in multi_prop.h:
-#if defined(PROPS_SABER_FETT263_BUTTONS_H) || defined(PROPS_JETPACK_PROP_H)
-  bool chdir(StringPiece dir) override {
-    return Saber::chdir(dir);
-  }
-  bool Parse(const char* key, const char* value) override {
-    return Saber::Parse(key, value);
-  }
-#endif
-// This was resolving the ambiguity but was also increasing the size of the compile by around 100 bytes,
-// because the code for chdir and Parse was added twice (once in JetpackOli and once in Fett263) and
-// extra code had to be added to multi_prop.h to resolve the ambiguity. Solving the ambiguity directly
-// in JetpackOli reduces the size of the compile by a little bit.
-// Every byte saved counts, right ?
-*/
-
-#ifndef PROPS_SABER_FETT263_BUTTONS_H
   bool chdir(const StringPiece dir) override {
     bool ret = PropBase::chdir(dir);
     num_tracks_ = RunCommandAndGetSingleLine("list_current_tracks", nullptr, 0, 0, 0);
@@ -548,7 +549,6 @@ public:
     }
     return false;
   }
-#endif // PROPS_SABER_FETT263_BUTTONS_H
 #endif // JETPACK_TRACK_PLAYER
 
   // I used SA22C Event2 as a base, and I added my "twist" on it, since a jetpack prop/backpack with a
@@ -811,46 +811,48 @@ public:
     }
   }
 
-  // Initial start, transition to Idle Mode (from 0 to idle)
-  void StartIdleMode() {
+  void StopPlayNextLoopingSound(Effect* sound_name,const char* message1,EffectType effect,const char* message2) {
+    RefPtr<BufferedWavPlayer> idlePlayer = GetWavPlayerPlaying(sound_name);
+    if (idlePlayer) {
+      idlePlayer->set_fade_time(0.5);
+      idlePlayer->FadeAndStop();
+      idlePlayer.Free();
+      PVLOG_NORMAL << message1 << "\n";
+      }
     if (jetpack_wav_player_.isPlaying()) {
       return;
     }
-    SaberBase::DoEffect(EFFECT_STARTIDLEMODE, 0); // start transition to idle mode.
+    SaberBase::DoEffect(effect, 0);
+    PVLOG_STATUS << message2 << "\n";
+  }
+
+  // Initial start, transition to Idle Mode (from 0 to idle)
+  void StartIdleMode() {
+    StopPlayNextLoopingSound(&SFX_hum,"**** Stopped hum wav",EFFECT_STARTIDLEMODE,"**** Jetpack Idling");
     flight_ = false;
     idle_   = true;
     idle_timer_  = millis(); // Reset idle timer
     FastOn();
-    PVLOG_STATUS << "Jetpack Idling\n";
   }
 
   // Transition to Flying Mode (from idle to flying)
   void StartFlightMode() {
-    if (jetpack_wav_player_.isPlaying()) {
-      return;
-    }
-    SaberBase::DoEffect(EFFECT_STARTFLIGHTMODE, 0); // start transition to flight mode.
+    StopPlayNextLoopingSound(&SFX_idlemode,"**** Stopped idlemode wav",EFFECT_STARTFLIGHTMODE,"**** Jetpack Flying");
     flight_ = true;
     idle_   = false;
-    PVLOG_STATUS << "Jetpack Flying\n";
   }
 
   // Transition from Flying Mode (from flying to idle)
   void StopFlightMode() {
-    if (jetpack_wav_player_.isPlaying()) {
-      return;
-    }
-    SaberBase::DoEffect(EFFECT_STOPFLIGHTMODE, 0); // start transition from flight mode.
+    StopPlayNextLoopingSound(&SFX_flightmode,"**** Stopped flightmode wav",EFFECT_STOPFLIGHTMODE,"**** Jetpack Idling");
     flight_ = false;
     idle_   = true;
+    idle_timer_  = millis(); // Reset idle timer
   }
 
   // Stop Idle Mode (Jetpack completely off - from flight or idle to off)
   void StopIdleMode() {
-    if (jetpack_wav_player_.isPlaying()) {
-      return;
-    }
-    SaberBase::DoEffect(EFFECT_STOPIDLEMODE, 0); // start transition from idle mode.
+    StopPlayNextLoopingSound(&SFX_idlemode,"**** Stopped idlemode wav",EFFECT_STOPIDLEMODE,"**** Jetpack Stopped");
     flight_ = false; // Should already be false but StopIdleMode can also be used to turn the
                      // jetpack completely off from any state (with a 2 or 3 buttons setup).
     idle_   = false;
@@ -1047,7 +1049,7 @@ struct JetpackDisplayConfigFile : public ConfigFile {
   float ProffieOSMissileGoesBoomImageDuration;
   // for OLED displays, the time a mandotalk.bmp       will play.
   float ProffieOSMandoTalkImageDuration;
-  // for OLED displays, the time a disarming.bmp          will play.
+  // for OLED displays, the time a disarming.bmp       will play.
   float ProffieOSDisarmingImageDuration;
 };
 
