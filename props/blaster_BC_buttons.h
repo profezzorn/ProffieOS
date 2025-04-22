@@ -569,7 +569,6 @@ public:
 
   // Change Preset
       case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
-      case EVENTID(BUTTON_MODE_SELECT, EVENT_FIRST_HELD_MEDIUM, MODE_OFF):
         DoChangePreset();
         return true;
 #else
