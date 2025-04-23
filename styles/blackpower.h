@@ -6,8 +6,9 @@
 // Usage:
 // Provides blade style that keeps pogo
 // pins live for Blade Plug Charging.
-// Use with ChargingStylePtr tp prevent
-// IDLE_OFF_TIME shutting down LED power.
+// Use with ChargingStylePtr to prevent
+// IDLE_OFF_TIME globally shutting down
+// LED power pads.
 
 class BlackPower : public BladeStyle {
 public:
