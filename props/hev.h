@@ -63,17 +63,11 @@ struct HEVTimer {
 
   void reset() { active_ = false; }
   void start() { active_ = true; start_ = millis(); }
-  bool expired(uint32_t timeout) const {
-    if (!active_) return false;
-    return (millis() - start_ > timeout);
-  }
   bool check(uint32_t timeout) {
-    if (!active_) return false;
-    if (millis() - start_ > timeout) {
+    if (active_ && (millis() - start_ > timeout)) {
       reset();
-      return true;
     }
-    return false;
+    return !active_;
   }
 };
 
@@ -156,13 +150,8 @@ public:
 
   // Clashes
   void Clash(bool stab, float strength) override {
-    // Check and reset expired timer first
-    if (clash_timer_.active_ && clash_timer_.expired(HEV_CLASH_DEBOUNCE_MS)) {
-      clash_timer_.reset();
-    }
-
-    // Skip if dead or within debounce period
-    if (health_ == 0 || clash_timer_.active_) {
+    // Don't allow Clashes if dead or during debounce period.
+    if (health_ == 0 || !clash_timer_.check(HEV_CLASH_DEBOUNCE_MS)) {
       return;
     }
 
@@ -171,9 +160,9 @@ public:
 
     // Damage is based on strength, capped at 50
     int damage = std::min((int)(strength * 4), 50);
+    float v = (strength - GetCurrentClashThreshold()) / 3;
 
     // Play Clash sounds based on strength
-    float v = (strength - GetCurrentClashThreshold()) / 3;
     SFX_clash.SelectFloat(v);
     SFX_clsh.SelectFloat(v);
     SFX_stab.SelectFloat(v);
