@@ -91,6 +91,22 @@ class DualProp : public virtual PropBase, public A, public B {
     B::Setup();
   }
 
+  // I cannot test this because I do not have a blade detect pin but it is needed in multi_prop
+  // and I thought it might apply here too? If it does apply, I will remove the comments and if
+  // it doesn't, I will deleted it.
+  bool chdir(StringPiece font) override {
+    return A::chdir(font) &&
+           B::chdir(font)
+  }
+
+  // I cannot test this because I do not have a blade detect pin but it is needed in multi_prop
+  // and I thought it might apply here too? If it does apply, I will remove the comments and if
+  // it doesn't, I will deleted it.
+  bool Parse(const char* key, const char* val) override {
+    return A::Parse(key, val) ||
+           B::Parse(key, val)
+  }
+
   void Clash(bool stab, float strength) override {
     if (DUAL_PROP_CONDITION) {
       A::Clash(stab, strength);
@@ -116,6 +132,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
   uint32_t map_button(uint32_t b) {
     switch (b) {
 #if NUM_BUTTONS == 3
+      case BUTTON_POWER: return BETTON_RELOAD;
       case BUTTON_AUX: return BUTTON_FIRE;
       case BUTTON_AUX2: return BUTTON_MODE_SELECT;
 #else
@@ -128,6 +145,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
   uint32_t reverse_map_button(uint32_t b) {
     switch (b) {
 #if NUM_BUTTONS == 3
+      case BETTON_RELOAD: return BUTTON_POWER;
       case BUTTON_FIRE: return BUTTON_AUX;
       case BUTTON_MODE_SELECT: return BUTTON_AUX2;
 #else
@@ -178,7 +196,20 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
     }
   }
 
-  bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+/*
+// I am not sure if this part is needed (that is why it is commented out) because I didn't have a compile error
+// with mode_Event2 yet, for 2 or more props (in my quest to solve my multi_prop) using it. But I thought it would
+// be a good idea to ask? Is this needed here or in multi_prop?
+bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
+    if (DUAL_PROP_CONDITION) {
+      return Saber::Event2(button, event, modifiers);
+    } else {
+      return Blaster::Event2(button, event, modifiers);
+    }
+  }
+*/
+
+bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     if (DUAL_PROP_CONDITION) {
       return Saber::Event2(button, event, modifiers);
     } else {
@@ -207,6 +238,22 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
   void Setup() override {
     Saber::Setup();
     Blaster::Setup();
+  }
+
+  // I cannot test this because I do not have a blade detect pin but it is needed in multi_prop
+  // and I thought it would apply here too? If it does apply, I will remove the comments and if
+  // it doesn't, I will deleted it.
+  bool chdir(StringPiece font) override {
+    return   Saber::chdir(font) &&
+           Blaster::chdir(font)
+  }
+
+  // I cannot test this because I do not have a blade detect pin but it is needed in multi_prop
+  // and I thought it would apply here too? If it does apply, I will remove the comments and if
+  // it doesn't, I will deleted it.
+  bool Parse(const char* key, const char* val) override {
+    return   Saber::Parse(key, val) ||
+           Blaster::Parse(key, val)
   }
 
   void DoMotion(const Vec3& motion, bool clear) override {
