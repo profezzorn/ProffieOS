@@ -1,4 +1,4 @@
-// Half-Life Hazardous Environment Suit Prop
+// HALF-LIFE - Hazardous Environment Suit Prop
 //
 // How to use:
 // POWER button:
@@ -57,6 +57,26 @@ EFFECT(major);
 EFFECT(minor);
 EFFECT(morphine);
 
+struct HEVTimer {
+  uint32_t start_;
+  bool active_ = false;
+
+  void reset() { active_ = false; }
+  void start() { active_ = true; start_ = millis(); }
+  bool expired(uint32_t timeout) const {
+    if (!active_) return false;
+    return (millis() - start_ > timeout);
+  }
+  bool check(uint32_t timeout) {
+    if (!active_) return false;
+    if (millis() - start_ > timeout) {
+      reset();
+      return true;
+    }
+    return false;
+  }
+};
+
 class Hev : public PROP_INHERIT_PREFIX PropBase {
 public:
   Hev() : PropBase() {}
@@ -64,6 +84,14 @@ public:
 
   int health_ = 100;
   int armor_ = 100;
+
+  HEVTimer clash_timer_;
+  HEVTimer random_event_timer_;
+  HEVTimer post_death_cooldown_timer_;
+  HEVTimer hazard_delay_timer_;
+  HEVTimer hazard_damage_timer_;
+  HEVTimer health_increase_timer_;
+  HEVTimer armor_increase_timer_;
 
   enum Hazard {
     HAZARD_NONE = 0,
@@ -113,9 +141,10 @@ public:
       SaberBase::DoEffect(EFFECT_USER1, 0.0, 0);
     }
 
-    // Print health and armor
-    PVLOG_NORMAL << "Health: " << health_ << " / ";
-    PVLOG_NORMAL << "Armor: " << armor_ << "\n";
+    // Print Damage, Health and Armor
+    PVLOG_NORMAL << "DAMAGE: -" << damage << "\n";
+    PVLOG_NORMAL << "HEALTH: " << health_ << " / ";
+    PVLOG_NORMAL << "ARMOR: " << armor_ << "\n";
   }
 
   // Armor Readout
@@ -124,25 +153,24 @@ public:
     SFX_armor.SelectFloat(armor_ / 100.0);
     hybrid_font.PlayCommon(&SFX_armor);
   }
+
   // Clashes
-  uint32_t last_clash_time_ = 0;
-  const uint32_t CLASH_DEBOUNCE_MS = 100; // Adjust debounce time as needed
-
   void Clash(bool stab, float strength) override {
-    // Ignore Clash if within debounce period
-    uint32_t current_time = millis();
-    if (current_time - last_clash_time_ < CLASH_DEBOUNCE_MS) {
-      return;
+    // Check and reset expired timer first
+    if (clash_timer_.active_ && clash_timer_.expired(HEV_CLASH_DEBOUNCE_MS)) {
+      clash_timer_.reset();
     }
-    last_clash_time_ = current_time;
 
-    // Stop Clashes if health is 0
-    if (health_ == 0) {
+    // Skip if dead or within debounce period
+    if (health_ == 0 || clash_timer_.active_) {
       return;
     }
 
-     // Strength multiplier
-    int damage = (int)(strength * 4);
+    // Start new debounce period
+    clash_timer_.start();
+
+    // Damage is based on strength, capped at 50
+    int damage = std::min((int)(strength * 4), 50);
 
     // Play Clash sounds based on strength
     float v = (strength - GetCurrentClashThreshold()) / 3;
@@ -150,21 +178,13 @@ public:
     SFX_clsh.SelectFloat(v);
     SFX_stab.SelectFloat(v);
 
-    // Cap damage at 50
-    if (damage > 50) {
-      damage = 50;
-    }
-
-    // Play Armor Alarm if damage is 30 or more
+    // Play Armor Alarm if Damage is 30 or more
     if (damage >= 30) {
       hybrid_font.PlayPolyphonic(&SFX_armor_alarm);
     }
 
-    // Apply Physical Damage and print to log
+    // Apply Damage and forward Clash event. No Stabs!
     DoDamage(damage, true);
-    PVLOG_NORMAL << "Physical Damage: -" << damage << "\n";
-
-    // No stabs!
     PropBase::Clash(false, strength);
   }
 
@@ -201,7 +221,7 @@ public:
     }
   }
 
-  // Decrease armor (if any) or health over time.
+  // Hazard Damage. Decrease armor (if any) or health over time.
   uint32_t hazard_start_delay_ = 0;
   uint32_t hazard_decrease_millis_ = millis();
   void HazardDecrease() {
