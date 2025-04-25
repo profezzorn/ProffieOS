@@ -95,16 +95,22 @@ class DualProp : public virtual PropBase, public A, public B {
   // and I thought it might apply here too? If it does apply, I will remove the comments and if
   // it doesn't, I will deleted it.
   bool chdir(StringPiece font) override {
-    return A::chdir(font) &&
-           B::chdir(font);
+    if (DUAL_PROP_CONDITION) {
+      return A::chdir(font);
+    } else {
+      return B::chdir(font);
+    }
   }
 
   // I cannot test this because I do not have a blade detect pin but it is needed in multi_prop
   // and I thought it might apply here too? If it does apply, I will remove the comments and if
   // it doesn't, I will deleted it.
   bool Parse(const char* key, const char* val) override {
-    return A::Parse(key, val) ||
-           B::Parse(key, val);
+    if (DUAL_PROP_CONDITION) {
+      return A::Parse(key, val);
+    } else {
+      return B::Parse(key, val);
+    }
   }
 
   void Clash(bool stab, float strength) override {
@@ -209,7 +215,7 @@ bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
   }
 */
 
-bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+  bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     if (DUAL_PROP_CONDITION) {
       return Saber::Event2(button, event, modifiers);
     } else {
@@ -244,16 +250,22 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
   // and I thought it would apply here too? If it does apply, I will remove the comments and if
   // it doesn't, I will deleted it.
   bool chdir(StringPiece font) override {
-    return   Saber::chdir(font) &&
-           Blaster::chdir(font);
+    if (DUAL_PROP_CONDITION) {
+      return Saber::chdir(font);
+    } else {
+      return Blaster::chdir(font);
+    }
   }
 
   // I cannot test this because I do not have a blade detect pin but it is needed in multi_prop
   // and I thought it would apply here too? If it does apply, I will remove the comments and if
   // it doesn't, I will deleted it.
   bool Parse(const char* key, const char* val) override {
-    return   Saber::Parse(key, val) ||
-           Blaster::Parse(key, val);
+    if (DUAL_PROP_CONDITION) {
+      return Saber::Parse(key, val);
+    } else {
+      return Blaster::Parse(key, val);
+    }
   }
 
   void DoMotion(const Vec3& motion, bool clear) override {
