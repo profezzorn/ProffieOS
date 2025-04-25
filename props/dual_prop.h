@@ -96,7 +96,7 @@ class DualProp : public virtual PropBase, public A, public B {
   // it doesn't, I will deleted it.
   bool chdir(StringPiece font) override {
     return A::chdir(font) &&
-           B::chdir(font)
+           B::chdir(font);
   }
 
   // I cannot test this because I do not have a blade detect pin but it is needed in multi_prop
@@ -104,7 +104,7 @@ class DualProp : public virtual PropBase, public A, public B {
   // it doesn't, I will deleted it.
   bool Parse(const char* key, const char* val) override {
     return A::Parse(key, val) ||
-           B::Parse(key, val)
+           B::Parse(key, val);
   }
 
   void Clash(bool stab, float strength) override {
@@ -132,7 +132,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
   uint32_t map_button(uint32_t b) {
     switch (b) {
 #if NUM_BUTTONS == 3
-      case BUTTON_POWER: return BETTON_RELOAD;
+      case BUTTON_POWER: return BUTTON_RELOAD;
       case BUTTON_AUX: return BUTTON_FIRE;
       case BUTTON_AUX2: return BUTTON_MODE_SELECT;
 #else
@@ -145,7 +145,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
   uint32_t reverse_map_button(uint32_t b) {
     switch (b) {
 #if NUM_BUTTONS == 3
-      case BETTON_RELOAD: return BUTTON_POWER;
+      case BUTTON_RELOAD: return BUTTON_POWER;
       case BUTTON_FIRE: return BUTTON_AUX;
       case BUTTON_MODE_SELECT: return BUTTON_AUX2;
 #else
@@ -245,7 +245,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
   // it doesn't, I will deleted it.
   bool chdir(StringPiece font) override {
     return   Saber::chdir(font) &&
-           Blaster::chdir(font)
+           Blaster::chdir(font);
   }
 
   // I cannot test this because I do not have a blade detect pin but it is needed in multi_prop
@@ -253,7 +253,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
   // it doesn't, I will deleted it.
   bool Parse(const char* key, const char* val) override {
     return   Saber::Parse(key, val) ||
-           Blaster::Parse(key, val)
+           Blaster::Parse(key, val);
   }
 
   void DoMotion(const Vec3& motion, bool clear) override {
