@@ -62,6 +62,18 @@ template<class A, class B>
 class DualProp : public virtual PropBase, public A, public B {
  public:
   const char* name() override { return "DualProp"; }
+/*
+  // I am not sure if this part is needed (that is why it is commented out) because I didn't have a compile error
+  // with mode_Event2 yet, for 2 or more props (in my quest to solve my multi_prop) using it. But I thought it would
+  // be a good idea to ask? Is this needed here or in multi_prop?
+  bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
+    if (DUAL_PROP_CONDITION) {
+      return A::Event2(button, event, modifiers);
+    } else {
+      return B::Event2(button, event, modifiers);
+    }
+  }
+*/
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     if (DUAL_PROP_CONDITION) {
       return A::Event2(button, event, modifiers);
@@ -203,10 +215,10 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
   }
 
 /*
-// I am not sure if this part is needed (that is why it is commented out) because I didn't have a compile error
-// with mode_Event2 yet, for 2 or more props (in my quest to solve my multi_prop) using it. But I thought it would
-// be a good idea to ask? Is this needed here or in multi_prop?
-bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
+  // I am not sure if this part is needed (that is why it is commented out) because I didn't have a compile error
+  // with mode_Event2 yet, for 2 or more props (in my quest to solve my multi_prop) using it. But I thought it would
+  // be a good idea to ask? Is this needed here or in multi_prop?
+  bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
     if (DUAL_PROP_CONDITION) {
       return Saber::Event2(button, event, modifiers);
     } else {
