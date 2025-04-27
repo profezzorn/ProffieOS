@@ -186,7 +186,7 @@ public:
                        speeders, pod-racers, TIE's, A/B/X/U-Wings, tanks, Star Destroyers and any other ships/vehicles
                        that we can think of!
                        On further thoughts, vehicle prop ideas will be merged into jetpack prop because I believe
-                       they will do the same things (play with vehicles engines & weapons)*/
+                       they will do the same things (play with vehicles engines & weapons sounds). */
       // TRON = 8,  // I also had the idea for a Tron Disk Controller, but that has apparently been done already.
                     /* I just need to put my hands on one of those "tron_prop.h" (wink) to see if I can make multi_prop
                        compatible with it!
