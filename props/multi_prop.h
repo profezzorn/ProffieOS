@@ -188,9 +188,9 @@ public:
                        On further thoughts, vehicle prop ideas will be merged into jetpack prop because I believe
                        they will do the same things (play with vehicles engines & weapons)*/
       // TRON = 8,  // I also had the idea for a Tron Disk Controller, but that has apparently been done already.
-                    /* I just need to put my hands on one of those "tron_prop.h" (wink) to see if if can make multi_prop
+                    /* I just need to put my hands on one of those "tron_prop.h" (wink) to see if I can make multi_prop
                        compatible with it!
-      Please feel free to submit more fun ideas on The Crucible or to this GitHub page:
+      Please feel free to submit more "multi_prop fun ideas" on The Crucible or to my GitHub page:
       https://github.com/olivierflying747-8/Olis-ProffieOS/tree/07_multi_prop_SUGGESTIONS_WELCOME */
   };
 
@@ -565,12 +565,12 @@ public:
   }
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
-      case EFFECT_SABERMODE:     this->scr_.Play(&SCR_sabermode);       break;
-      case EFFECT_BLASTERMODE:   this->scr_.Play(&SCR_blastermode);     break;
-      case EFFECT_DETONATORMODE: this->scr_.Play(&SCR_detonatormode);   break;
-      case EFFECT_JETPACKMODE:   this->scr_.Play(&SCR_jetpackmode);     break;
-    //case EFFECT_MORSECODEMODE: this->scr_.Play(&SCR_morsecodemode);   break;
-    //case EFFECT_DROIDMODE:     this->scr_.Play(&SCR_droidmode);       break;
+      case EFFECT_SABERMODE:     this->scr_.Play(&SCR_sabermode);     break;
+      case EFFECT_BLASTERMODE:   this->scr_.Play(&SCR_blastermode);   break;
+      case EFFECT_DETONATORMODE: this->scr_.Play(&SCR_detonatormode); break;
+      case EFFECT_JETPACKMODE:   this->scr_.Play(&SCR_jetpackmode);   break;
+    //case EFFECT_MORSECODEMODE: this->scr_.Play(&SCR_morsecodemode); break;
+    //case EFFECT_DROIDMODE:     this->scr_.Play(&SCR_droidmode);     break;
       default:
         StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
     }
