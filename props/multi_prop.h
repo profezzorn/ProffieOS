@@ -8,17 +8,26 @@
   Fredrik Hubinette aka profezzorn,
   Ryan Ogurek aka ryryog25,
   Bryan Connor aka NoSloppy,
+  Chris Carter aka Sabersense,
   In case of problem, you can find us at: https://crucible.hubbe.net somebody will be there to help.
   Distributed under the terms of the GNU General Public License v3.
   https://www.gnu.org/licenses/
 
-multi_prop.h allows for 4 (maybe more coming) discrete prop files to be used,
-alternating on a 2 buttons extra long push (4 seconds - customizable with #define TWO_BUTTONS_X_LONG_PUSH 1000 * 4)
-with or without a main blade attached.
-Blade detect function has no effect on multi_prop.h (other than playing blade in/out wav)
 Your prop NEEDS to have two or more buttons.
 Multi_prop.h MUST be declared before the other props.
 Props MUST be declared in the right order & one and only one of each type MUST be included.
+
+multi_prop.h allows for 4 (maybe more coming) discrete prop files to be used, alternating on a button combo
+depending on how many buttons you have or witch prop you want to use with or without a main blade attached.
+Blade detect function has no effect on multi_prop.h (other than playing blade in/out wav).
+
+For now it is set as a "triple clic" on AUX2, but "triple click" on AUX will also work (if you are
+not using saber_sa22c_buttons.h as your saber of choice). An "EVENT_FOURTH_CLICK_LONG" on AUX should work
+for all props but I am unable to perform the move. You can uncomment one of the two in "bool Event(enum BUTTON button, EVENT event) override {"
+if you want to use multi_prop with a two buttons setup.
+
+Idealy, I would like to create a "MULTI_PROP_BUTTON_HELD_XTRA_LONG_TIMEOUT 1000 * 4" so multi_prop could be used
+with only one button.
 
 This prop is for fun and is not Star Wars cannon. It only exists to add extra functionality to your saber, if you so choose.
 Thank you for reading.
@@ -26,7 +35,9 @@ Thank you for reading.
 You can find all sound files (created by NoSloppy) used in multi_prop.h on my Dropbox here:
 https://www.dropbox.com/scl/fi/p2pj9os5v4seel0wmzwcz/Multi_prop_sounds_by_NoSloppy.zip?rlkey=hi6589mexymnx4jmxhtwqjfu0&st=3klofs5m&dl=0
 
-How to use: add this to your config
+Thank you for reading.
+
+How to use: add this to your config in the CONFIG_PROP section:
 #ifdef CONFIG_PROP
 #include "../props/multi_prop.h"              //use MultiProp <...> (choose only 1 saber & 1 blaster)
 
@@ -103,13 +114,13 @@ BladeConfig blades[] = {
 #define PROP_INHERIT_PREFIX virtual
 #endif
 
-#if NUM_BUTTONS < 3
-#error Your prop NEEDS 3 or more buttons to use multi_prop
+#if NUM_BUTTONS < 2
+#error Your prop NEEDS 2 or more buttons to use multi_prop (for now)!
 #endif
 
 /* Commented out because I am still working on this!
-#ifndef BUTTON_HELD_XTRA_LONG_TIMEOUT
-#define BUTTON_HELD_XTRA_LONG_TIMEOUT 5000
+#ifndef MULTI_PROP_BUTTON_HELD_XTRA_LONG_TIMEOUT
+#define MULTI_PROP_BUTTON_HELD_XTRA_LONG_TIMEOUT 1000 * 4
 #endif
 */
 
@@ -230,15 +241,15 @@ public:
   }
 
   bool Event(enum BUTTON button, EVENT event) override {
-    switch (EVENTID(button, event, 0)) { //To do: replace with EVENT_HELD_XTRA_LONG (once I get it working)
+    switch (EVENTID(button, event, 0)) { //To do: replace with MULTI_PROP_EVENT_HELD_XTRA_LONG (once I get it working)
     //case EVENTID(BUTTON_AUX,  EVENT_FOURTH_CLICK_LONG, 0): // This should work but I can't seem to do a 4th click long!
     //case EVENTID(BUTTON_AUX,  EVENT_THIRD_CLICK_SHORT, 0): // This should work too except with saber_sa22c_buttons.h who also uses it!
-      case EVENTID(BUTTON_AUX2, EVENT_THIRD_CLICK_SHORT, 0):
+      case EVENTID(BUTTON_AUX2, EVENT_THIRD_CLICK_SHORT, 0): // Obviously, you need 3 buttons for this to work.
         switchModes();
         return true;
     }
     switch (currentMode_MP) {
-      case Prop_Mode::SABER:     return     Saber::Event(button, event);
+      case Prop_Mode::SABER: return Saber::Event(button, event);
       case Prop_Mode::BLASTER: {
         button = static_cast<enum BUTTON>(map_button(button));
 
@@ -276,7 +287,7 @@ public:
 
 /*
   // I am not sure if this part is needed (that is why it is commented out) because I didn't have a compile
-  // error with mode_Event2 yet. But I thought it would be a good idea to ask? Is this needed here?
+  // error with mode_Event2 yet! But I thought it would be a good idea to ask? Is this needed here?
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
     switch (currentMode_MP) {
       case Prop_Mode::SABER:     return     Saber::mode_Event2(button, event, modifiers);
@@ -433,7 +444,7 @@ public:
   X(sabermode)                        \
   X(blastermode)                      \
   X(detonatormode)                    \
-  X(jetpackmode)    // Add a backslash when un-commenting the next line.
+  X(jetpackmode)    // Add a backslash here when un-commenting the next line.
 //X(morsecodemode)
 //X(droid)
 
