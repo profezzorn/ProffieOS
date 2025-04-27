@@ -43,7 +43,7 @@ How to use: add this to your config
 // *** List of blasters (choose one and only one) ***
 // ==================================================
   #include "../props/blaster.h"                 //use Blaster              | working with multi_prop.h
-//#include "../props/blaster_BC_buttons.h"      //use BlasterBCButtons     | working with multi_prop.h after a one line modification
+//#include "../props/blaster_BC_buttons.h"      //use BlasterBCButtons     | working with multi_prop.h after a two lines modification
 //#include "../props/blaster_Teas_buttons"      //use BlasterTEA           |  untested with multi_prop.h
 //#include "../props/laser_musket_buttons"      //use LaserMusketButtons   |  untested with multi_prop.h
 
@@ -114,8 +114,6 @@ BladeConfig blades[] = {
 #endif
 */
 
-#include "prop_base.h"
-
 struct FakeBladeID {                             //
   static int return_value;                       //
   float id() { return return_value; }            //
@@ -128,6 +126,8 @@ int FakeBladeID::return_value = 0; // SABER mode //
 #define BLADE_ID_CLASS_INTERNAL FakeBladeID      //
 #undef  BLADE_ID_CLASS                           //
 #define BLADE_ID_CLASS FakeBladeID               //
+
+#include "prop_base.h"
 
 EFFECT(sabermode);
 EFFECT(blastermode);
@@ -219,13 +219,13 @@ public:
   void switchModes() {
     switch (currentMode_MP) {
       // Arranged in "columns" to make it much easier to see if something is missing when adding a new "prop-mode".
-      case Prop_Mode::SABER:     swapProp(Prop_Mode::BLASTER,   "Blaster Mode",    1, EFFECT_BLASTERMODE);    break;
-      case Prop_Mode::BLASTER:   swapProp(Prop_Mode::DETONATOR, "Detonator Mode",  2, EFFECT_DETONATORMODE);  break;
-      case Prop_Mode::DETONATOR: swapProp(Prop_Mode::JETPACK,   "Jetpack Mode",    3, EFFECT_JETPACKMODE);    break;
-      case Prop_Mode::JETPACK:   swapProp(Prop_Mode::SABER,     "Saber Mode",      0, EFFECT_SABERMODE);      break;
-      /*                         swapProp(Prop_Mode::MORSECODE, "Morse Code Mode", 4, EFFECT_MORSECODEMODE);  break;
-      case Prop_Mode::MORSECODE: swapProp(Prop_Mode::DROID,     "Droid Mode",      5, EFFECT_DROIDMODE);      break;
-      case Prop_Mode::DROID:     swapProp(Prop_Mode::SABER,     "Saber Mode",      0, EFFECT_SABERMODE);      break;
+      case Prop_Mode::SABER:     swapProp(Prop_Mode::BLASTER,   "Blaster Mode",    1, EFFECT_BLASTERMODE);   break;
+      case Prop_Mode::BLASTER:   swapProp(Prop_Mode::DETONATOR, "Detonator Mode",  2, EFFECT_DETONATORMODE); break;
+      case Prop_Mode::DETONATOR: swapProp(Prop_Mode::JETPACK,   "Jetpack Mode",    3, EFFECT_JETPACKMODE);   break;
+      case Prop_Mode::JETPACK:   swapProp(Prop_Mode::SABER,     "Saber Mode",      0, EFFECT_SABERMODE);     break;
+      /*                         swapProp(Prop_Mode::MORSECODE, "Morse Code Mode", 4, EFFECT_MORSECODEMODE); break;
+      case Prop_Mode::MORSECODE: swapProp(Prop_Mode::DROID,     "Droid Mode",      5, EFFECT_DROIDMODE);     break;
+      case Prop_Mode::DROID:     swapProp(Prop_Mode::SABER,     "Saber Mode",      0, EFFECT_SABERMODE);     break;
       */
     }
   }
@@ -402,12 +402,12 @@ public:
 
   void SB_Effect(EffectType effect, EffectLocation location) override {
     switch (effect) {
-      case EFFECT_SABERMODE:     announcemode(&SFX_sabermode);       return;
-      case EFFECT_BLASTERMODE:   announcemode(&SFX_blastermode);     return;
-      case EFFECT_DETONATORMODE: announcemode(&SFX_detonatormode);   return;
-      case EFFECT_JETPACKMODE:   announcemode(&SFX_jetpackmode);     return;
-    //case EFFECT_MORSECODEMODE: morsecodemode();                    return;
-    //case EFFECT_DROIDMODE:     announcemode(&SFX_droidmode);       return;
+      case EFFECT_SABERMODE:     announcemode(&SFX_sabermode);     return;
+      case EFFECT_BLASTERMODE:   announcemode(&SFX_blastermode);   return;
+      case EFFECT_DETONATORMODE: announcemode(&SFX_detonatormode); return;
+      case EFFECT_JETPACKMODE:   announcemode(&SFX_jetpackmode);   return;
+    //case EFFECT_MORSECODEMODE: morsecodemode();                  return;
+    //case EFFECT_DROIDMODE:     announcemode(&SFX_droidmode);     return;
     }
     switch (currentMode_MP) {
       case Prop_Mode::SABER:         Saber::SB_Effect(effect, location); break;
