@@ -28,24 +28,23 @@ https://www.dropbox.com/scl/fi/p2pj9os5v4seel0wmzwcz/Multi_prop_sounds_by_NoSlop
 
 How to use: add this to your config
 #ifdef CONFIG_PROP
+#include "../props/multi_prop.h"              //use MultiProp <...> (choose only 1 saber & 1 blaster)
 
 // *** List of sabers (choose one and only one) ***
 // ================================================
-                                                //What to use in PROP_TYPE MultiProp <...>
-//#include "../props/saber.h"                   //use Saber                | working with multi_prop.h
-//#include "../props/saber_BC_buttons.h"        //use SaberBCButtons       | working with multi_prop.h
-//#include "../props/saber_caiwyn_buttons.h"    //do not use CaiwynButtons <-- works alone | NOT compiling with multi_prop.h (I don't know why? Well, I didn't understand the error codes, back then! Might need a re-visit? Also Caiwyn's saber didn't compile with dual_prop.h back at the time of testing)
-#include "../props/saber_fett263_buttons.h"     //use SaberFett263Buttons  | working with multi_prop.h
-//#include "../props/saber_sa22c_buttons.h"     //use SaberSA22CButtons    | working with multi_prop.h
-//#include "../props/saber_sabersense_buttons"  //use SabersenseButtons    |  untested with multi_prop.h
-//#include "../props/saber_shtok_buttons.h"     //use SaberShtokButtons    | working with multi_prop.h
+                                                 //What to use in PROP_TYPE MultiProp <...>
+//#include "../props/saber.h"                    //use Saber                | working with multi_prop.h
+//#include "../props/saber_BC_buttons.h"         //use SaberBCButtons       | working with multi_prop.h
+//#include "../props/saber_caiwyn_buttons.h"     //do not use CaiwynButtons <-- works alone | NOT compiling with multi_prop.h (I don't know why? Well, I didn't understand the error codes, back then! Might need a re-visit? Also Caiwyn's saber didn't compile with dual_prop.h back at the time of testing)
+#include "../props/saber_fett263_buttons.h"      //use SaberFett263Buttons  | working with multi_prop.h
+//#include "../props/saber_sa22c_buttons.h"      //use SaberSA22CButtons    | working with multi_prop.h
+//#include "../props/saber_sabersense_buttons.h" //use SabersenseButtons    |  untested with multi_prop.h
+//#include "../props/saber_shtok_buttons.h"      //use SaberShtokButtons    | working with multi_prop.h
 
 // *** List of blasters (choose one and only one) ***
 // ==================================================
   #include "../props/blaster.h"                 //use Blaster              | working with multi_prop.h
 //#include "../props/blaster_BC_buttons.h"      //use BlasterBCButtons     | working with multi_prop.h after a two lines modification
-//#include "../props/blaster_Teas_buttons"      //use BlasterTEA           |  untested with multi_prop.h
-//#include "../props/laser_musket_buttons"      //use LaserMusketButtons   |  untested with multi_prop.h
 
 // IMPORTANT NOTE: blaster_BC_buttons.h (at the time of writing) is not "stock" compatible with multi_prop.h
 // A small modification needs to be added to it's code. I will let NoSloppy decide for the best course of action
