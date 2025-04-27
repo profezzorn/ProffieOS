@@ -43,8 +43,8 @@ How to use: add this to your config
 
 // *** List of blasters (choose one and only one) ***
 // ==================================================
-  #include "../props/blaster.h"                 //use Blaster              | working with multi_prop.h
-//#include "../props/blaster_BC_buttons.h"      //use BlasterBCButtons     | working with multi_prop.h after a two lines modification
+#include "../props/blaster.h"                    //use Blaster              | working with multi_prop.h
+//#include "../props/blaster_BC_buttons.h"       //use BlasterBCButtons     | working with multi_prop.h after a two lines modification
 
 // IMPORTANT NOTE: blaster_BC_buttons.h (at the time of writing) is not "stock" compatible with multi_prop.h
 // A small modification needs to be added to it's code. I will let NoSloppy decide for the best course of action
