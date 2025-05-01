@@ -145,19 +145,12 @@ public:
 |*                                  *|
 \************************************/
 
-// If you want to add more, replace all the "***xxxn***, ***XXXn***, ***Xxxn***" with appropriate
-// effects name(s), and respect the CAPS, no caps & Some Caps. Or else it may not compile or work!
-
 #ifdef PROP_BOTTOM
 
 #define ONCE_PER_DETONATOR_EFFECT(X)  \
   X(bgnarm)                           \
   X(endarm)                           \
-  X(boom) // Add a backslash to this line when adding the next line.
-          // The last line in the list needs no backslash at the end!
-//X(***xxx1***)
-//X(***xxx2***)
-//X(***xxx3***)
+  X(boom)
 
 #ifdef INCLUDE_SSD1306
 
@@ -167,9 +160,6 @@ struct DetonatorDisplayConfigFile : public ConfigFile {
     CONFIG_VARIABLE2(ProffieOSBgnarmImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSEndarmImageDuration, 1000.0f);
     CONFIG_VARIABLE2(ProffieOSBoomImageDuration, 1000.0f);
-  //CONFIG_VARIABLE2(ProffieOS***Xxx1***ImageDuration, 1000.0f);
-  //CONFIG_VARIABLE2(ProffieOS***Xxx2***ImageDuration, 1000.0f);
-  //CONFIG_VARIABLE2(ProffieOS***Xxx3***ImageDuration, 1000.0f);
   }
 
   // for OLED displays, the time a bgnarm.bmp will play.
@@ -179,11 +169,6 @@ struct DetonatorDisplayConfigFile : public ConfigFile {
   // for OLED displays, the time a boom.bmp will play.
   float ProffieOSBoomImageDuration;
   // for OLED displays, the time a ***xxx1***.bmp will play.
-//float ProffieOS***Xxx1***ImageDuration;
-  // for OLED displays, the time a ***xxx2***.bmp will play.
-//float ProffieOS***Xxx2***ImageDuration;
-  // for OLED displays, the time a ***xxx3***.bmp will play.
-//float ProffieOS***Xxx3***ImageDuration;
 };
 
 template<typename PREFIX = ByteArray<>>
@@ -231,35 +216,6 @@ public:
         }
         break;
 
-/*
-      case EFFECT_***XXX1***:
-        if (img_.IMG_***xxx1***) {
-          ShowFileWithSoundLength(&img_.IMG_***xxx1***, detonator_font_config.ProffieOS***Xxx1***ImageDuration);
-        } else {
-          this->SetMessage("***xxx1***");
-          this->SetScreenNow(SCREEN_MESSAGE);
-        }
-        break;
-
-      case EFFECT_***XXX2***:
-        if (img_.IMG_***xxx2***) {
-          ShowFileWithSoundLength(&img_.IMG_***xxx2***, detonator_font_config.ProffieOS***Xxx2***ImageDuration);
-        } else {
-          this->SetMessage("***xxx2***");
-          this->SetScreenNow(SCREEN_MESSAGE);
-        }
-        break;
-
-      case EFFECT_***XXX3***:
-        if (img_.IMG_***xxx3***) {
-          ShowFileWithSoundLength(&img_.IMG_***xxx3***, detonator_font_config.ProffieOS***Xxx3***ImageDuration);
-        } else {
-          this->SetMessage("***xxx3***");
-          this->SetScreenNow(SCREEN_MESSAGE);
-        }
-        break;
-*/
-
       default:
         StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
     }
@@ -270,9 +226,6 @@ public:
       ShowFileWithSoundLength(img_.IMG_bgnarm, detonator_font_config.ProffieOSBgnarmImageDuration);
       ShowFileWithSoundLength(img_.IMG_endarm, detonator_font_config.ProffieOSEndarmImageDuration);
       ShowFileWithSoundLength(img_.IMG_boom,   detonator_font_config.ProffieOSBoomImageDuration);
-    //ShowFileWithSoundLength(img_.IMG_***xxx1***, detonator_font_config.ProffieOS***Xxx1***ImageDuration);
-    //ShowFileWithSoundLength(img_.IMG_***xxx2***, detonator_font_config.ProffieOS***Xxx2***ImageDuration);
-    //ShowFileWithSoundLength(img_.IMG_***xxx3***, detonator_font_config.ProffieOS***Xxx3***ImageDuration);
     } else {
       StandardDisplayController<Width, col_t, PREFIX>::SB_Off2(offtype, location);
     }
@@ -294,9 +247,6 @@ public:
       case EFFECT_BGNARM:     this->scr_.Play(&SCR_bgnarm);     break;
       case EFFECT_ENDARM:     this->scr_.Play(&SCR_endarm);     break;
       case EFFECT_BOOM:       this->scr_.Play(&SCR_boom);       break;
-    //case EFFECT_***XXX1***: this->scr_.Play(&SCR_***xxx1***); break;
-    //case EFFECT_***XXX2***: this->scr_.Play(&SCR_***xxx2***); break;
-    //case EFFECT_***XXX3***: this->scr_.Play(&SCR_***xxx3***); break;
       default:
         StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
     }
