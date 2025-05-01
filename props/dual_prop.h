@@ -64,8 +64,8 @@ class DualProp : public virtual PropBase, public A, public B {
   const char* name() override { return "DualProp"; }
 /*
   // I am not sure if this part is needed (that is why it is commented out) because I didn't have a compile error
-  // with mode_Event2 yet, for 2 or more props (in my quest to solve my multi_prop) using it. But I thought it would
-  // be a good idea to ask? Is this needed here or in multi_prop?
+  // with mode_Event2 YET, for 2 or more props (in my quest to solve my multi_prop) using it. But I thought it would
+  // be a good idea to have it ready here for WHEN a comflict happens, then it can be uncommented to solve the conflict.
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
     if (DUAL_PROP_CONDITION) {
       return A::mode_Event2(button, event, modifiers);
