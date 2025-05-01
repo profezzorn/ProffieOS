@@ -532,7 +532,12 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   FETT263_MAX_CLASH 16
   The value for hardest clash level to select clash sound
   Range 8 ~ 16
-  
+
+  FETT263_SWING_CLASH_DELAY
+  Set delay timing in MILLIS for Button/Swing Events if a Clash is detected.  Prevent trigger for Multi-Blast/Battle Mode
+  where a button hold and swing are used but a Clash was detected, i.e. Lockup trigger.
+  Default is 150.
+
   FETT263_QUICK_SELECT_ON_BOOT
   Enables Preset Selection Menu on Boot (when power is first applied)
   Use Dial Menu to turn to desired preset, click PWR to select or hold PWR to select and ignite
@@ -776,6 +781,10 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #ifndef FETT263_FORCE_PUSH_LENGTH
 #define FETT263_FORCE_PUSH_LENGTH 5
+#endif
+
+#ifndef FETT263_SWING_CLASH_DELAY
+#define FETT263_SWING_CLASH_DELAY 150
 #endif
 
 #ifdef FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
@@ -5791,7 +5800,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 
 #if !defined(FETT263_DISABLE_MULTI_BLAST) && !defined(FETT263_DISABLE_MULTI_BLAST_TOGGLE)
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
-        if (menu_ || CheckShowColorCC()) return true;
+        if (menu_ || CheckShowColorCC() || millis() - last_clash_ > FETT263_SWING_CLASH_DELAY) return true;
         ToggleMultiBlast();
         return true;
 #endif
@@ -6106,7 +6115,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 
 #if defined(FETT263_HOLD_BUTTON_LOCKUP) && !defined(FETT263_DISABLE_BM_TOGGLE)
       case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
-        if (menu_ || CheckShowColorCC()) return true;
+        if (menu_ || CheckShowColorCC() || millis() - last_clash_ > FETT263_SWING_CLASH_DELAY) return true;
         ToggleBattleMode();
         return true;
 #endif
