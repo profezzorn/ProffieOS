@@ -37,6 +37,7 @@ template<class T, class TRANSITION>
 // Usage: TransitionLoopWhileL<LOOP_TRANSITION, END_TRANSITION, CONDITION>
 // LOOP_TRANSITION : TRANSITION
 // END_TRANSITION : TRANSITION
+// CONDITION: FUNCTION
 // return value: COLOR
 //
 // Continuously runs LOOP_TRANSITION while CONDITION > 0
