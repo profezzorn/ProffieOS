@@ -1427,7 +1427,7 @@ public:
     int file;
     if (!f || !f->IsOpen()) return ReadStatus::READ_FAIL;
     memset(clash_rec, 0, sizeof(clash_rec));
-    STDOUT.println("Reading choreo.ini");
+    PVLOG_DEBUG << "Reading choreo.ini\n";
     for (size_t i = 0; i < NELEM(clash_rec); i++) {
       char action[33];
       f->skipwhite();
@@ -1630,7 +1630,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void SaveGestureState() {
-    STDOUT.println("Saving Gesture State");
+    PVLOG_DEBUG << "Saving Gesture State\n";
     saved_gesture_control.WriteToRootDir("gesture");
   }
 
@@ -1694,7 +1694,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void SaveChoreo() {
-    STDOUT.println("Saving Choreography");
+    PVLOG_DEBUG << "Saving Choreography\n";
     WriteChoreo("choreo.tmp");
     WriteChoreo("choreo.ini");
   }
@@ -2525,7 +2525,7 @@ SaberFett263Buttons() : PropBase() {}
       // CHECK PUSH
       if (clash_type_ == CLASH_CHECK) {
         Event(BUTTON_NONE, EVENT_PUSH);
-        STDOUT.println("EVENT PUSH");
+        PVLOG_DEBUG << "EVENT PUSH\n";
         clash_type_ = CLASH_NONE;
       }
       if (clash_type_ != CLASH_LOCKUP_END && clash_type_ != CLASH_NONE) {
@@ -2629,7 +2629,7 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef ENABLE_AUDIO    
     TrackPlayer();
 #else
-    STDOUT.println("Audio disabled.");
+    PVLOG_DEBUG << "Audio disabled.\n";
 #endif
   }
 
@@ -2707,7 +2707,7 @@ SaberFett263Buttons() : PropBase() {}
     if (track_player_) {
       track_player_->Play(playtrack);
     } else {
-      STDOUT.println("No available WAV players.");
+      PVLOG_DEBUG << "No available WAV players.\n";
     }
   }
 
@@ -2726,13 +2726,13 @@ SaberFett263Buttons() : PropBase() {}
       wav_player->set_fade_time(0.2);
       wav_player->FadeAndStop();
       wav_player.Free();
-      STDOUT.println("End Wav Player");    
+      PVLOG_DEBUG << "End Wav Player\n";    
     } else {
       wav_player = GetFreeWavPlayer();
       if (wav_player) {
         wav_player->PlayOnce(&SFX_trloop);
       } else {
-        STDOUT.println("Out of WAV players!");
+        PVLOG_DEBUG << "Out of WAV players!\n";
       }
     }
   }
@@ -2765,14 +2765,14 @@ SaberFett263Buttons() : PropBase() {}
     if (a > twist_menu_ * 2/3) {
       if (!swinging_) {
         Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-        STDOUT.println("EVENT MENU TURN RIGHT");
+        PVLOG_DEBUG << "EVENT MENU TURN RIGHT\n";
       }
       current_menu_angle_ = fusor.angle2();
     }
     if (a < -twist_menu_ * 2/3) {
       if (!swinging_) {
         Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-        STDOUT.println("EVENT MENU TURN LEFT");
+        PVLOG_DEBUG << "EVENT MENU TURN LEFT\n";
       }
       current_menu_angle_ = fusor.angle2();
     }
@@ -3024,12 +3024,12 @@ SaberFett263Buttons() : PropBase() {}
     }
     if (!SFX_medit) {
       ProffieOSErrors::error_in_font_directory();
-      STDOUT.println("Edit Mode prompts missing");
+      PVLOG_DEBUG << "Edit Mode prompts missing\n";
     } else {
 #ifdef FETT263_EDIT_SETTINGS_MENU
-      STDOUT.println("Enter Edit Settings Menu");
+      PVLOG_DEBUG << "Enter Edit Settings Menu\n";
 #else
-      STDOUT.println("Enter Edit Mode");
+      PVLOG_DEBUG << "Enter Edit Mode\n";
 #endif
       GenerateIniFiles();
       menu_top_pos_ = 0;
@@ -5410,10 +5410,10 @@ SaberFett263Buttons() : PropBase() {}
     if (volume > VOLUME) volume = VOLUME * 0.1;
     if (volume < (VOLUME * 0.1)) volume = VOLUME;
     if (volume > current_volume) {
-      STDOUT.println("Volume up");
+      PVLOG_DEBUG << "Volume up\n";
       sound_library_.SayVolumeUp();      
     } else {
-      STDOUT.println("Volume Down");
+      PVLOG_DEBUG << "Volume Down\n";
       sound_library_.SayVolumeDown();
     }
 #else
@@ -5425,16 +5425,17 @@ SaberFett263Buttons() : PropBase() {}
       sound_library_.SayMinimumVolume();
     } else {
       if (v > 0) {
-        STDOUT.println("Volume up");
+        PVLOG_DEBUG << "Volume up\n";
         sound_library_.SayVolumeUp();      
       } else {
-        STDOUT.println("Volume Down");
+        PVLOG_DEBUG << "Volume Down\n";
         sound_library_.SayVolumeDown();
       }
     }
 #endif
-    STDOUT.print("Current Volume: ");
-    STDOUT.println(dynamic_mixer.get_volume());
+    PVLOG_DEBUG << "Current Volume: ";
+    PVLOG_DEBUG << dynamic_mixer.get_volume();
+    PVLOG_DEBUG << "\n";
     dynamic_mixer.set_volume(volume);
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
   }
@@ -5867,7 +5868,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           }
         }
 #else
-        STDOUT.println("Audio disabled.");
+        PVLOG_DEBUG << "Audio disabled.\n";
 #endif
         return true;
 
@@ -6406,7 +6407,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           }
         }
 #else
-        STDOUT.println("Audio disabled.");
+        PVLOG_DEBUG << "Audio disabled.\n";
 #endif
         return true;
 
