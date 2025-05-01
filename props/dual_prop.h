@@ -68,9 +68,9 @@ class DualProp : public virtual PropBase, public A, public B {
   // be a good idea to ask? Is this needed here or in multi_prop?
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
     if (DUAL_PROP_CONDITION) {
-      return A::Event2(button, event, modifiers);
+      return A::mode_Event2(button, event, modifiers);
     } else {
-      return B::Event2(button, event, modifiers);
+      return B::mode_Event2(button, event, modifiers);
     }
   }
 */
@@ -103,7 +103,7 @@ class DualProp : public virtual PropBase, public A, public B {
     B::Setup();
   }
 
-  // I cannot test this because I do not have a blade detect pin but it is needed in multi_prop
+  // I cannot test the DUAL_PROP_CONDITION because I do not have a blade detect pin but it is needed in multi_prop
   // and I thought it might apply here too? If it does apply, I will remove the comments and if
   // it doesn't, I will deleted it.
   bool chdir(StringPiece font) override {
@@ -114,7 +114,7 @@ class DualProp : public virtual PropBase, public A, public B {
     }
   }
 
-  // I cannot test this because I do not have a blade detect pin but it is needed in multi_prop
+  // I cannot test the DUAL_PROP_CONDITION because I do not have a blade detect pin but it is needed in multi_prop
   // and I thought it might apply here too? If it does apply, I will remove the comments and if
   // it doesn't, I will deleted it.
   bool Parse(const char* key, const char* val) override {
@@ -216,13 +216,13 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
 
 /*
   // I am not sure if this part is needed (that is why it is commented out) because I didn't have a compile error
-  // with mode_Event2 yet, for 2 or more props (in my quest to solve my multi_prop) using it. But I thought it would
-  // be a good idea to ask? Is this needed here or in multi_prop?
+  // with mode_Event2 YET, for 2 or more props (in my quest to solve my multi_prop) using it. But I thought it would
+  // be a good idea to have it ready here for WHEN a comflict happens, then it can be uncommented to solve the conflict.
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
     if (DUAL_PROP_CONDITION) {
-      return Saber::Event2(button, event, modifiers);
+      return Saber::mode_Event2(button, event, modifiers);
     } else {
-      return Blaster::Event2(button, event, modifiers);
+      return Blaster::mode_Event2(button, event, modifiers);
     }
   }
 */
@@ -258,7 +258,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
     Blaster::Setup();
   }
 
-  // I cannot test this because I do not have a blade detect pin but it is needed in multi_prop
+  // I cannot test the DUAL_PROP_CONDITION because I do not have a blade detect pin but it is needed in multi_prop
   // and I thought it would apply here too? If it does apply, I will remove the comments and if
   // it doesn't, I will deleted it.
   bool chdir(StringPiece font) override {
@@ -269,7 +269,7 @@ class SaberBlasterProp : public virtual Saber, public virtual Blaster {
     }
   }
 
-  // I cannot test this because I do not have a blade detect pin but it is needed in multi_prop
+  // I cannot test the DUAL_PROP_CONDITION because I do not have a blade detect pin but it is needed in multi_prop
   // and I thought it would apply here too? If it does apply, I will remove the comments and if
   // it doesn't, I will deleted it.
   bool Parse(const char* key, const char* val) override {
