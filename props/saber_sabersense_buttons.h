@@ -1,4 +1,4 @@
-/* V7/8-214.
+/* V7/8-215.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -314,16 +314,18 @@ public:
       static void cycle() {
 #ifndef BLADE_DETECT_PIN
         return_value = (return_value + 1) % NELEM(blades);
-      }
-    };
-    int SabersenseArraySelector::return_value;
 #else   // Improved logic fixes early Array1 repetition when using Blade Detect.
         return_value++;
         if (return_value == 0 || return_value >= NELEM(blades)) {
           return_value = 1;
         }
+#endif
       }
     };
+
+#ifndef BLADE_DETECT_PIN
+    int SabersenseArraySelector::return_value;
+#else    
     int SabersenseArraySelector::return_value = 1;
 #endif
 
