@@ -1519,6 +1519,7 @@ private:
   BLACK black_;
 };
 #endif
+
 #ifdef FETT263_EDIT_MODE_MENU
 // Edit Style Settings
 
@@ -2524,7 +2525,7 @@ SaberFett263Buttons() : PropBase() {}
       // CHECK PUSH
       if (clash_type_ == CLASH_CHECK) {
         Event(BUTTON_NONE, EVENT_PUSH);
-        PVLOG_DEBUG << "EVENT PUSH\n";
+        PVLOG_NORMAL << "EVENT PUSH\n";
         clash_type_ = CLASH_NONE;
       }
       if (clash_type_ != CLASH_LOCKUP_END && clash_type_ != CLASH_NONE) {
@@ -2764,14 +2765,14 @@ SaberFett263Buttons() : PropBase() {}
     if (a > twist_menu_ * 2/3) {
       if (!swinging_) {
         Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-        PVLOG_DEBUG << "EVENT MENU TURN RIGHT\n";
+        PVLOG_NORMAL << "EVENT MENU TURN RIGHT\n";
       }
       current_menu_angle_ = fusor.angle2();
     }
     if (a < -twist_menu_ * 2/3) {
       if (!swinging_) {
         Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-        PVLOG_DEBUG << "EVENT MENU TURN LEFT\n";
+        PVLOG_NORMAL << "EVENT MENU TURN LEFT\n";
       }
       current_menu_angle_ = fusor.angle2();
     }
@@ -3023,12 +3024,12 @@ SaberFett263Buttons() : PropBase() {}
     }
     if (!SFX_medit) {
       ProffieOSErrors::error_in_font_directory();
-      PVLOG_DEBUG << "Edit Mode prompts missing\n";
+      PVLOG_NORMAL << "Edit Mode prompts missing\n";
     } else {
 #ifdef FETT263_EDIT_SETTINGS_MENU
-      PVLOG_DEBUG << "Enter Edit Settings Menu\n";
+      PVLOG_NORMAL << "Enter Edit Settings Menu\n";
 #else
-      PVLOG_DEBUG << "Enter Edit Mode\n";
+      PVLOG_NORMAL << "Enter Edit Mode\n";
 #endif
       GenerateIniFiles();
       menu_top_pos_ = 0;
@@ -5409,10 +5410,10 @@ SaberFett263Buttons() : PropBase() {}
     if (volume > VOLUME) volume = VOLUME * 0.1;
     if (volume < (VOLUME * 0.1)) volume = VOLUME;
     if (volume > current_volume) {
-      PVLOG_DEBUG << "Volume up\n";
+      PVLOG_NORMAL << "Volume up\n";
       sound_library_.SayVolumeUp();
     } else {
-      PVLOG_DEBUG << "Volume Down\n";
+      PVLOG_NORMAL << "Volume Down\n";
       sound_library_.SayVolumeDown();
     }
 #else
@@ -5424,17 +5425,15 @@ SaberFett263Buttons() : PropBase() {}
       sound_library_.SayMinimumVolume();
     } else {
       if (v > 0) {
-        PVLOG_DEBUG << "Volume up\n";
+        PVLOG_NORMAL << "Volume up\n";
         sound_library_.SayVolumeUp();
       } else {
-        PVLOG_DEBUG << "Volume Down\n";
+        PVLOG_NORMAL << "Volume Down\n";
         sound_library_.SayVolumeDown();
       }
     }
 #endif
-    PVLOG_DEBUG << "Current Volume: ";
-    PVLOG_DEBUG << dynamic_mixer.get_volume();
-    PVLOG_DEBUG << "\n";
+    PVLOG_NORMAL << "Current Volume: " << dynamic_mixer.get_volume() << "\n";
     dynamic_mixer.set_volume(volume);
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
   }
