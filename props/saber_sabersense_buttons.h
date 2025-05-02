@@ -1,4 +1,4 @@
-/* V7/8-215.
+/* V7/8-216.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -310,7 +310,6 @@ public:
       float id() {
         return return_value;
       }
-
       static void cycle() {
 #ifndef BLADE_DETECT_PIN
         return_value = (return_value + 1) % NELEM(blades);
