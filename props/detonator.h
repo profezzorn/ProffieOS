@@ -47,15 +47,15 @@ public:
   void PollNextAction() {
     if (millis() - time_base_ > next_event_time_) {
       switch (next_action_) {
-	case NEXT_ACTION_NOTHING:
-	  break;
-	case NEXT_ACTION_ARM:
-	  armed_ = true;
-	  // TODO: Should we have separate ARMING and ARMED states?
-	  break;
-	case NEXT_ACTION_BLOW:
-	  Off(OFF_BLAST);
-	  break;
+        case NEXT_ACTION_NOTHING:
+          break;
+        case NEXT_ACTION_ARM:
+          armed_ = true;
+          // TODO: Should we have separate ARMING and ARMED states?
+          break;
+        case NEXT_ACTION_BLOW:
+          Off(OFF_BLAST);
+          break;
       }
       next_action_ = NEXT_ACTION_NOTHING;
     }
@@ -100,7 +100,6 @@ public:
   // Make swings do nothing
   void DoMotion(const Vec3& motion, bool clear) override { }
 
-
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
@@ -138,124 +137,3 @@ public:
 };
 
 #endif
-
-/************************************\
-|*                                  *|
-|*   DETONATOR DISPLAY CONTROLLER   *|
-|*                                  *|
-\************************************/
-
-#ifdef PROP_BOTTOM
-
-#define ONCE_PER_DETONATOR_EFFECT(X)  \
-  X(bgnarm)                           \
-  X(endarm)                           \
-  X(boom)
-
-#ifdef INCLUDE_SSD1306
-
-struct DetonatorDisplayConfigFile : public ConfigFile {
-  DetonatorDisplayConfigFile() { link(&font_config); }
-  void iterateVariables(VariableOP *op) override {
-    CONFIG_VARIABLE2(ProffieOSBgnarmImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSEndarmImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSBoomImageDuration, 1000.0f);
-  }
-
-  // for OLED displays, the time a bgnarm.bmp will play.
-  float ProffieOSBgnarmImageDuration;
-  // for OLED displays, the time a endarm.bmp will play.
-  float ProffieOSEndarmImageDuration;
-  // for OLED displays, the time a boom.bmp will play.
-  float ProffieOSBoomImageDuration;
-  // for OLED displays, the time a ***xxx1***.bmp will play.
-};
-
-template<typename PREFIX = ByteArray<>>
-struct DetonatorDisplayEffects  {
-  DetonatorDisplayEffects() : dummy_(0) ONCE_PER_DETONATOR_EFFECT(INIT_IMG) {}
-  int dummy_;
-  ONCE_PER_DETONATOR_EFFECT(DEF_IMG)
-};
-
-template<int Width, class col_t, typename PREFIX = ByteArray<>>
-class DetonatorDisplayController : public StandardDisplayController<Width, col_t, PREFIX> {
-public:
-  DetonatorDisplayEffects<PREFIX> img_;
-  DetonatorDisplayConfigFile &detonator_font_config;
-  DetonatorDisplayController() :
-    img_(*getPtr<DetonatorDisplayEffects<PREFIX>>()),
-    detonator_font_config(*getPtr<DetonatorDisplayConfigFile>()) {}
-
-  void SB_Effect2(EffectType effect, EffectLocation location) override {
-    switch (effect) {
-      case EFFECT_BGNARM:
-        if (img_.IMG_bgnarm) {
-          ShowFileWithSoundLength(&img_.IMG_bgnarm, detonator_font_config.ProffieOSBgnarmImageDuration);
-        } else {
-          this->SetMessage(" td\narmed");
-          this->SetScreenNow(SCREEN_MESSAGE);
-        }
-        break;
-
-      case EFFECT_ENDARM:
-        if (img_.IMG_endarm) {
-          ShowFileWithSoundLength(&img_.IMG_endarm, detonator_font_config.ProffieOSEndarmImageDuration);
-        } else {
-          this->SetMessage("    td\ndisarmed");
-          this->SetScreenNow(SCREEN_MESSAGE);
-        }
-        break;
-
-      case EFFECT_BOOM:
-        if (img_.IMG_boom) {
-          ShowFileWithSoundLength(&img_.IMG_boom,   detonator_font_config.ProffieOSBoomImageDuration);
-        } else {
-          this->SetMessage(" td\nboom");
-          this->SetScreenNow(SCREEN_MESSAGE);
-        }
-        break;
-
-      default:
-        StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
-    }
-  }
-
-  void SB_Off2(typename StandardDisplayController<Width, col_t, PREFIX>::OffType offtype, EffectLocation location) override {
-    if (offtype == StandardDisplayController<Width, col_t, PREFIX>::OFF_BLAST) {
-      ShowFileWithSoundLength(img_.IMG_bgnarm, detonator_font_config.ProffieOSBgnarmImageDuration);
-      ShowFileWithSoundLength(img_.IMG_endarm, detonator_font_config.ProffieOSEndarmImageDuration);
-      ShowFileWithSoundLength(img_.IMG_boom,   detonator_font_config.ProffieOSBoomImageDuration);
-    } else {
-      StandardDisplayController<Width, col_t, PREFIX>::SB_Off2(offtype, location);
-    }
-  }
-};
-
-#endif  // INCLUDE_SSD1306
-
-template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>,
-         typename NumberToByteArray<H>::type>>
-class DetonatorColorDisplayController : public StandarColorDisplayController<W, H, PREFIX> {
-public:
-  template<int w, int h>
-  explicit DetonatorColorDisplayController(SizedLayeredScreenControl<w, h>* screen) :
-  StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_DETONATOR_EFFECT(INIT_SCR) {
-  }
-  void SB_Effect2(EffectType effect, EffectLocation location) override {
-    switch (effect) {
-      case EFFECT_BGNARM:     this->scr_.Play(&SCR_bgnarm);     break;
-      case EFFECT_ENDARM:     this->scr_.Play(&SCR_endarm);     break;
-      case EFFECT_BOOM:       this->scr_.Play(&SCR_boom);       break;
-      default:
-        StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
-    }
-  }
-
-protected:
-  ONCE_PER_DETONATOR_EFFECT(DEF_SCR);
-};
-
-#undef ONCE_PER_DETONATOR_EFFECT
-
-#endif  // PROP_BOTTOM
