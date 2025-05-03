@@ -1,3 +1,33 @@
+/*
+Button Power: (BUTTON_POWER can either be latching or it needs to be held)
+=============
+Latch ON (or press and hold) : ON & ARMED
+Latch OFF (or release) : OFF & DISARMED (will stop the "countdown")
+
+Button Aux2:
+============
+Double click while off : Next preset
+Double click while on : Start/Stop track
+'Press and Release' while Armed : Plays beginarm.wav & armhum.wav "countdown" on repeat.
+Long click while "counting-down" : stops the "countdown" and plays boom.wav.
+
+.wav files you'd want to have in your sound font:
+=================================================
+bgnarm.wav
+armhum.wav
+boom.wav
+hum.wav (if you don't want to hear it, make it a silent hum or you will get error in font directory!)
+
+Optional .wav files:
+====================
+boot.wav
+font.wav
+
+.wav files you do not want: (if present, it will play before boom!)
+===========================
+endarm.wav
+*/
+
 #ifndef PROPS_DETONATOR_H
 #define PROPS_DETONATOR_H
 
@@ -64,7 +94,7 @@ public:
   void beginArm() {
     SaberBase::SetLockup(SaberBase::LOCKUP_ARMED);
     SaberBase::DoBeginLockup();
-#ifdef ENABLE_AUDIO    
+#ifdef ENABLE_AUDIO
     float len = hybrid_font.GetCurrentEffectLength();
 #else
     float len = 1.6;
