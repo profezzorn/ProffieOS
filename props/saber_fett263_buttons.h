@@ -3024,7 +3024,7 @@ SaberFett263Buttons() : PropBase() {}
     }
     if (!SFX_medit) {
       ProffieOSErrors::error_in_font_directory();
-      PVLOG_NORMAL << "Edit Mode prompts missing\n";
+      PVLOG_ERROR << "Edit Mode prompts missing\n";
     } else {
 #ifdef FETT263_EDIT_SETTINGS_MENU
       PVLOG_NORMAL << "Enter Edit Settings Menu\n";
@@ -5410,10 +5410,10 @@ SaberFett263Buttons() : PropBase() {}
     if (volume > VOLUME) volume = VOLUME * 0.1;
     if (volume < (VOLUME * 0.1)) volume = VOLUME;
     if (volume > current_volume) {
-      PVLOG_NORMAL << "Volume up\n";
+      PVLOG_DEBUG << "Volume up\n";
       sound_library_.SayVolumeUp();
     } else {
-      PVLOG_NORMAL << "Volume Down\n";
+      PVLOG_DEBUG << "Volume Down\n";
       sound_library_.SayVolumeDown();
     }
 #else
@@ -5425,10 +5425,10 @@ SaberFett263Buttons() : PropBase() {}
       sound_library_.SayMinimumVolume();
     } else {
       if (v > 0) {
-        PVLOG_NORMAL << "Volume up\n";
+        PVLOG_DEBUG << "Volume up\n";
         sound_library_.SayVolumeUp();
       } else {
-        PVLOG_NORMAL << "Volume Down\n";
+        PVLOG_DEBUG << "Volume Down\n";
         sound_library_.SayVolumeDown();
       }
     }
