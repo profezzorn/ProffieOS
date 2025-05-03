@@ -193,7 +193,7 @@ class Effect {
     if (alt != -1) {
       filename += 7;
     }
-    
+
     const char *rest = startswith(name_, filename);
     if (!rest) return false;
     if (*rest == '/') {
@@ -251,7 +251,7 @@ class Effect {
       num_alternatives = std::max<int>(num_alternatives, alt + 1);
       found_in_alt_dir_ = true;
     }
-    
+
     return true;
   }
 
@@ -344,7 +344,7 @@ class Effect {
   size_t expected_files() const {
     return files_found() * number_of_alternatives() * number_of_subfiles();
   }
-  
+
   size_t get_min_file() const { return min_file_; }
 
   const char* get_directory() const { return directory_; }
@@ -400,7 +400,7 @@ class Effect {
   }
 #define RANDOMIZE(N, LAST) randomize((N), (LAST))
 #else
-#define RANDOMIZE(N, LAST) (rand() % (N))  
+#define RANDOMIZE(N, LAST) (rand() % (N))
 #endif
 
 
@@ -409,7 +409,7 @@ class Effect {
     int ret = RANDOMIZE(sub_files_, last_ == filenum ? last_subid_ : -1);
 #ifdef NO_REPEAT_RANDOM
     last_subid_ = ret;
-#endif    
+#endif
     return ret;
   }
 
@@ -436,7 +436,7 @@ class Effect {
 
 #ifdef NO_REPEAT_RANDOM
     last_ = n;
-#endif    
+#endif
 
     return FileID(this, n, subid);
   }
@@ -557,7 +557,7 @@ class Effect {
       }
       return false;
     }
-    
+
     void ScanIterator(LSFS::Iterator& iter) {
       PVLOG_DEBUG << "ScanIterator " << iter.name() << " fname=" << fname << "\n";
       char* fend = fname;
@@ -643,7 +643,7 @@ class Effect {
         e->Show();
       }
     }
-    
+
     LOCK_SD(false);
   }
 
@@ -718,9 +718,9 @@ EFFECT2(boot, idle);
 EFFECT2(font, idle);
 #else
 EFFECT(boot);
-EFFECT(font);     // also polyphonic
+EFFECT(font);      // also polyphonic
 #endif
-EFFECT(bladein);  // also polyphonic
+EFFECT(bladein);   // also polyphonic
 EFFECT(bladeout);  // also polyphonic
 EFFECT2(hum, hum);
 EFFECT2(humm, humm);
