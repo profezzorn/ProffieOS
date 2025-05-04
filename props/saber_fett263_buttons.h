@@ -1080,21 +1080,21 @@ public:
     CONFIG_VARIABLE2(maxclash, 16);
 #endif
 }
-  bool gestureon; // gesture controls on/off for use with "Gesture Sleep"
-  bool swingon; // Swing On ignition
-  int swingonspeed; // Swing On speed (200 ~ 500 range)
-  bool twiston; // Twist On ignition
-  bool thruston; // Thrust On ignition
-  bool stabon; // Stab On ignition
-  bool forcepush; // Force Push
-  uint32_t forcepushlen; // Force Push Length
-  uint32_t lockupdelay; // Lockup Delay (for Battle Mode)
-  bool twistoff; // Twist Off retraction
-  // disable PWR button for retraction, for use with "Power Lock" mode
-  // to prevent button turning saber off
+  bool gestureon;         // gesture controls on/off for use with "Gesture Sleep"
+  bool swingon;           // Swing On ignition
+  int swingonspeed;       // Swing On speed (200 ~ 500 range)
+  bool twiston;           // Twist On ignition
+  bool thruston;          // Thrust On ignition
+  bool stabon;            // Stab On ignition
+  bool forcepush;         // Force Push
+  uint32_t forcepushlen;  // Force Push Length
+  uint32_t lockupdelay;   // Lockup Delay (for Battle Mode)
+  bool twistoff;          // Twist Off retraction
+                          // disable PWR button for retraction, for use with "Power Lock" mode
+                          // to prevent button turning saber off
   bool powerlock;
-  int clashdetect; // maximum Clash Strength to detect Clash during Battle Mode (0 ~ 10 range)
-  int maxclash; // maximum Clash Strength for Clash Sound and Detection works with CLASH_THRESHOLD_G to create range of Clash Strength (8 ~ 16 range)
+  int clashdetect;        // maximum Clash Strength to detect Clash during Battle Mode (0 ~ 10 range)
+  int maxclash;           // maximum Clash Strength for Clash Sound and Detection works with CLASH_THRESHOLD_G to create range of Clash Strength (8 ~ 16 range)
 };
 
 GestureControlFile saved_gesture_control;
@@ -2536,7 +2536,7 @@ SaberFett263Buttons() : PropBase() {}
           SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
           SaberBase::DoBeginLockup();
           auto_lockup_on_ = true;
-	} else {
+        } else {
           SaberBase::DoClash();
         }
         clash_type_ = CLASH_NONE;
@@ -2603,7 +2603,7 @@ SaberFett263Buttons() : PropBase() {}
         if (!swinging_ && fusor.swing_speed() > saved_gesture_control.swingonspeed) {
           swinging_ = true;
           Event(BUTTON_NONE, EVENT_SWING);
-	}
+        }
       }
     }
     // EVENT_THRUST
@@ -4430,18 +4430,18 @@ SaberFett263Buttons() : PropBase() {}
         menu_sub_pos_ += direction;
         if (menu_sub_pos_ <= 0) menu_sub_pos_ = 2;
         if (menu_sub_pos_ > 2) menu_sub_pos_ = 1;
-	switch (menu_sub_pos_) {
-	  case EDIT_STYLE_SELECT:
+        switch (menu_sub_pos_) {
+          case EDIT_STYLE_SELECT:
             sound_library_.SaySelectStyle();
-	    break;
+            break;
           case EDIT_STYLE_SETTINGS:
             sound_library_.SayEditStyleSettings();
             break;
-	  default:
+          default:
             sound_library_.SaySelectOption();
-	    break;
-	}
-	break;
+            break;
+        }
+        break;
       case MENU_STYLE:
         ChangeStyleNumber(blade_num_, direction);
         current_preset_.Save();
@@ -4594,7 +4594,7 @@ SaberFett263Buttons() : PropBase() {}
           if (direction > 0) {
             sound_library_.SayUp();
           } else {
-	    sound_library_.SayDown();
+            sound_library_.SayDown();
           }
 #endif
           break;
@@ -4636,7 +4636,7 @@ SaberFett263Buttons() : PropBase() {}
         }
         switch (set_num_) {
           case STYLE_OPTION_ARG:
-	    sound_library_.SayStyleOptions();
+            sound_library_.SayStyleOptions();
             break;
           case STYLE_OPTION2_ARG:
             sound_library_.SayStyleOptions();
@@ -4647,14 +4647,14 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SayNumber(3, SAY_WHOLE);
             break;
           case IGNITION_OPTION_ARG:
-	    sound_library_.SayIgnitionOptions();
+            sound_library_.SayIgnitionOptions();
             break;
           case IGNITION_OPTION2_ARG:
             sound_library_.SayIgnitionOptions();
             sound_library_.SayNumber(2, SAY_WHOLE);
             break;
           case IGNITION_TIME_ARG:
-	    sound_library_.SayIgnitionTime();
+            sound_library_.SayIgnitionTime();
             break;
           case IGNITION_POWER_UP_ARG:
             sound_library_.SayPowerUpOptions();
@@ -4663,14 +4663,14 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SayIgnitionDelay();
             break;
           case RETRACTION_OPTION_ARG:
-	    sound_library_.SayRetractionOptions();
+            sound_library_.SayRetractionOptions();
             break;
           case RETRACTION_OPTION2_ARG:
             sound_library_.SayRetractionOptions();
             sound_library_.SayNumber(2, SAY_WHOLE);
             break;
           case RETRACTION_TIME_ARG:
-	    sound_library_.SayRetractionTime();
+            sound_library_.SayRetractionTime();
             break;
           case RETRACTION_COOL_DOWN_ARG:
             sound_library_.SayCoolDownOptions();
@@ -4679,10 +4679,10 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SayRetractionDelay();
             break;
           case LOCKUP_POSITION_ARG:
-	    sound_library_.SayClashLockupPosition();
+            sound_library_.SayClashLockupPosition();
             break;
           case DRAG_SIZE_ARG:
-	    sound_library_.SayDragSize();
+            sound_library_.SayDragSize();
             break;
           case MELT_SIZE_ARG:
             sound_library_.SayMeltSize();
@@ -4691,16 +4691,16 @@ SaberFett263Buttons() : PropBase() {}
             sound_library_.SaySwingOption();
             break;
           case EMITTER_SIZE_ARG:
-	    sound_library_.SayEmitterSize();
+            sound_library_.SayEmitterSize();
             break;
           case OFF_OPTION_ARG:
             sound_library_.SayOffOption();
             break;
           case PREON_OPTION_ARG:
-	    sound_library_.SayPreonOptions();
+            sound_library_.SayPreonOptions();
             break;
           case PREON_SIZE_ARG:
-	    sound_library_.SayPreonSize();
+            sound_library_.SayPreonSize();
             break;
           default:
             sound_library_.SaySelectOption();
@@ -4720,8 +4720,8 @@ SaberFett263Buttons() : PropBase() {}
               calc_ -= 100;
               if (calc_ >= 100) {
                 SetInOut();
-	        next_event_ = true;
-	        break;
+                next_event_ = true;
+                break;
               }
             } else {
               calc_ = 0;
@@ -4733,7 +4733,7 @@ SaberFett263Buttons() : PropBase() {}
               next_event_ = true;
             }
           }
-	}
+        }
         break;
       case MENU_STYLE_OPTION:
       case MENU_STYLE_OPTION2:
@@ -4756,7 +4756,7 @@ SaberFett263Buttons() : PropBase() {}
           SetInOut();
           sound_library_.SayOption();
           sound_library_.SayNumber(calc_, SAY_WHOLE);
-	}
+        }
         break;
       case MENU_IGNITION_OPTION2:
       case MENU_RETRACTION_OPTION2:
@@ -4819,7 +4819,7 @@ SaberFett263Buttons() : PropBase() {}
   void MenuUndo() {
     switch (menu_type_) {
       case MENU_TOP:
-	sound_library_.SayExit();
+        sound_library_.SayExit();
         MenuExit();
         break;
 #ifdef FETT263_USE_SETTINGS_MENU
@@ -4918,10 +4918,10 @@ SaberFett263Buttons() : PropBase() {}
         menu_type_ = MENU_TOP;
 #else
         menu_type_ = MENU_BLADE_STYLE;
-	blade_num_ = 0;
+        blade_num_ = 0;
 #endif
-	MenuCancel();
-	break;
+        MenuCancel();
+        break;
       case MENU_STYLE: {
         char style_arg[10];
         itoa(style_revert_, style_arg, 10);
@@ -4934,7 +4934,7 @@ SaberFett263Buttons() : PropBase() {}
 #else
         menu_type_ = MENU_BLADE_STYLE;
         MenuRevert();
-	blade_num_ = 0;
+        blade_num_ = 0;
 #endif
         break;
       }
@@ -5006,7 +5006,7 @@ SaberFett263Buttons() : PropBase() {}
         if (restore_point.get()) current_preset_.font = std::move(restore_point);
         restore_point = nullptr;
         current_preset_.Save();
-	// Reload Font Fast
+        // Reload Font Fast
         SetPresetFast(current_preset_.preset_num);
         menu_type_ = MENU_TOP;
         MenuRevert();
@@ -5078,18 +5078,18 @@ SaberFett263Buttons() : PropBase() {}
     switch (menu_type_) {
 #ifdef FETT263_SAVE_CHOREOGRAPHY
       case MENU_REHEARSE:
-	sound_library_.SayKeepRehearsal();
+        sound_library_.SayKeepRehearsal();
         break;
 #endif
       case MENU_PRESET:
         first_preset();
-	sound_library_.SaySelect();
+        sound_library_.SaySelect();
         break;
       case MENU_VOLUME:
         if (SFX_vmend) {
-	  sound_library_.SayVolumeMenuEnd();
+          sound_library_.SayVolumeMenuEnd();
         } else {
-	  sound_library_.SayExit();
+          sound_library_.SayExit();
         }
         break;
 #ifdef FETT263_EDIT_SETTINGS_MENU
@@ -5134,7 +5134,7 @@ SaberFett263Buttons() : PropBase() {}
   void MenuPrompt() {
     switch (menu_type_) {
       case MENU_TOP:
-	sound_library_.SayMainMenu();
+        sound_library_.SayMainMenu();
         break;
 #ifdef FETT263_EDIT_SETTINGS_MENU
 #if NUM_BLADES > 1
@@ -5154,8 +5154,8 @@ SaberFett263Buttons() : PropBase() {}
         sound_library_.SayStyleMenu();
         break;
       case MENU_COLOR_SUB:
-	sound_library_.SayColorMenu();
-	break;
+        sound_library_.SayColorMenu();
+        break;
       case MENU_COLOR_MODE:
         sound_library_.SayColorOptions();
         break;
@@ -5163,20 +5163,20 @@ SaberFett263Buttons() : PropBase() {}
       case MENU_BLADE_COLOR:
       case MENU_BLADE_STYLE:
       case MENU_BLADE_LENGTH:
-	sound_library_.SaySelectBlade();
+        sound_library_.SaySelectBlade();
         break;
 #endif
       case MENU_GESTURE_SUB:
-	sound_library_.SayGestureMenu();
+        sound_library_.SayGestureMenu();
         break;
       case MENU_SETTING_SUB:
-	sound_library_.SaySettingsMenu();
+        sound_library_.SaySettingsMenu();
         break;
       case MENU_EFFECT:
-	sound_library_.SaySelectEffect();
+        sound_library_.SaySelectEffect();
         break;
       case MENU_STYLE_SETTING_SUB:
-	sound_library_.SaySelectOption();
+        sound_library_.SaySelectOption();
         break;
 #endif
       default:
@@ -6085,7 +6085,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 #endif
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON):
-	if (CancelShowColor()) return false;
+        if (CancelShowColor()) return false;
         if (menu_) {
 #ifdef FETT263_EDIT_SETTINGS_MENU
           if (menu_type_ == MENU_SETTING_SUB) {
@@ -6102,7 +6102,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         }
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
-	  sound_library_.SayCancel();
+          sound_library_.SayCancel();
           rehearse_ = false;
           return true;
         }
@@ -6145,13 +6145,13 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         if (menu_ || CheckShowColorCC()) return true;
         if (saved_gesture_control.powerlock
 #ifdef FETT263_SAVE_CHOREOGRAPHY
-	|| choreo_
+        || choreo_
 #endif
         ) {
 #ifdef FETT263_SAVE_CHOREOGRAPHY
           choreo_ = false;
 #endif
-	  wav_player.Free();
+          wav_player.Free();
           battle_mode_ = false;
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectRetractionSound();
@@ -6161,7 +6161,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         return true;
 
       case EVENTID(BUTTON_POWER, EVENT_HELD_LONG, MODE_ON):
-	if (menu_ || CheckShowColorCC()) return true;
+        if (menu_ || CheckShowColorCC()) return true;
 #ifdef FETT263_SAVE_CHOREOGRAPHY
         if (rehearse_) {
           EndRehearsal();
@@ -6178,10 +6178,10 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           Off();
           saber_off_time_millis_ = millis();
           battle_mode_ = false;
-    return true;
+          return true;
         }
 #endif
-	return false;
+        return false;
 
       case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_SHORT, MODE_ON):
       case EVENTID(BUTTON_POWER, EVENT_LATCH_OFF, MODE_ON):
@@ -6438,7 +6438,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           } else {
             BeginRehearsal();
           }
-	}
+        }
         return true;
 
       // Choreographed Battle Mode
@@ -6455,7 +6455,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
-	if (menu_ || CheckShowColorCC()) return true;
+        if (menu_ || CheckShowColorCC()) return true;
 #ifdef FETT263_DUAL_MODE_SOUND
         SelectIgnitionSound();
 #endif
@@ -6463,7 +6463,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_POWER):
-	if (menu_ || CheckShowColorCC()) return true;
+        if (menu_ || CheckShowColorCC()) return true;
 #ifdef FETT263_DUAL_MODE_SOUND
         SelectIgnitionSound();
 #endif
@@ -6495,7 +6495,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         if (menu_) {
           MenuDial(1);
           return true;
-	}
+        }
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON):
@@ -6558,13 +6558,13 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
         if (menu_) {
-	  if (wav_player && wav_player->isPlaying()) {
+          if (wav_player && wav_player->isPlaying()) {
             current_menu_angle_ = fusor.angle2();
             return false;
           } else {
-	    MenuDialIncrement(1);
+            MenuDialIncrement(1);
             return true;
-	  }
+          }
         }
         if (swinging_) {
           return false;
@@ -6581,23 +6581,23 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           SaberBase::DoEffect(EFFECT_USER1, 0);
 #endif
         return true;
-	}
+        }
 #endif
         return false;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
         if (menu_) {
-	  if (wav_player && wav_player->isPlaying()) {
+          if (wav_player && wav_player->isPlaying()) {
             current_menu_angle_ = fusor.angle2();
             return false;
           } else {
-	    MenuDialIncrement(-1);
+            MenuDialIncrement(-1);
             return true;
-	  }
-	}
+          }
+        }
         if (swinging_) {
           return false;
-	}
+        }
 #ifdef FETT263_SPECIAL_ABILITIES
         else {
 #if NUM_BUTTONS == 1
@@ -6610,7 +6610,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           SaberBase::DoEffect(EFFECT_USER2, 0);
 #endif
           return true;
-	}
+        }
 #endif
         return false;
 
@@ -6630,7 +6630,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
             MenuDialIncrement(1);
             return true;
           }
-	}
+        }
 #ifdef FETT263_SPECIAL_ABILITIES
         else {
 #if NUM_BUTTONS == 1
@@ -6642,7 +6642,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 #else
           SaberBase::DoEffect(EFFECT_USER5, 0);
 #endif
-	  return true;
+          return true;
         }
 #endif
         return false;
@@ -6676,7 +6676,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           SaberBase::DoEffect(EFFECT_USER6, 0);
 #endif
           return true;
-	}
+        }
 #endif
         return false;
 
@@ -6781,20 +6781,20 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
       if (!menu_) {
         spin_mode_ = !spin_mode_;
-	clash_type_ = CLASH_NONE;
-	if (spin_mode_) {
+        clash_type_ = CLASH_NONE;
+        if (spin_mode_) {
           if (SFX_bmbegin) {
             hybrid_font.PlayCommon(&SFX_bmbegin);
           } else {
             hybrid_font.DoEffect(EFFECT_FORCE, 0);
           }
-	} else {
+        } else {
           if (SFX_bmend) {
             hybrid_font.PlayCommon(&SFX_bmend);
           } else {
             hybrid_font.DoEffect(EFFECT_FORCE, 0);
           }
-	}
+        }
       }
       return true;
 #endif
@@ -6828,7 +6828,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 #ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
-	  FastOn();
+          FastOn();
 #ifndef FETT263_SWING_ON_NO_BM
           battle_mode_ = true;
 #endif
@@ -6993,7 +6993,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         if (menu_ || CheckShowColorCC()) return true;
         if (!saved_gesture_control.forcepush) return true;
 #ifdef FETT263_SPIN_MODE
-	if (spin_mode_) return true;
+        if (spin_mode_) return true;
 #endif
         if (FORCE_PUSH_CONDITION &&
            millis() - last_push_millis_ > 1000) {
@@ -7060,7 +7060,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           SelectRetractionSound();
 #endif
           hybrid_font.PlayCommon(&SFX_in);
-	}
+        }
         return;
       case EFFECT_POWERSAVE:
         if (SFX_dim) {
@@ -7102,7 +7102,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           SelectIgnitionSound();
 #endif
           hybrid_font.PlayCommon(&SFX_out);
-	}
+        }
         return;
       case EFFECT_TRANSITION_SOUND: hybrid_font.PlayCommon(&SFX_tr); return;
       case EFFECT_SOUND_LOOP: SoundLoop(); return;
@@ -7124,85 +7124,83 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
   }
 
 private:
-  bool swing_blast_ = false; // Multi-Blast Mode (Swing = Blast Deflect)
-  bool check_blast_ = false; // Check if Multi-Blast mode should be enabled (Battle Mode)
-  bool auto_lockup_on_ = false; // Battle Mode Lockup active
-  bool auto_melt_on_ = false; // Battle Mode Melt/Drag active
-  bool battle_mode_ = false; // Battle Mode active
+  bool swing_blast_ = false;       // Multi-Blast Mode (Swing = Blast Deflect)
+  bool check_blast_ = false;       // Check if Multi-Blast mode should be enabled (Battle Mode)
+  bool auto_lockup_on_ = false;    // Battle Mode Lockup active
+  bool auto_melt_on_ = false;      // Battle Mode Melt/Drag active
+  bool battle_mode_ = false;       // Battle Mode active
 #ifdef FETT263_SPIN_MODE
   bool spin_mode_ = false;
 #endif
-  bool preon_effect_ = false; // used for interactive preon, must be reset with EFFECT_FAST_ON
+  bool preon_effect_ = false;      // used for interactive preon, must be reset with EFFECT_FAST_ON
 #ifdef FETT263_QUICK_SELECT_ON_BOOT
-  bool menu_ = true; // enable MENU_PRESET on boot
+  bool menu_ = true;               // enable MENU_PRESET on boot
 #else
-  bool menu_ = false; // Edit Mode / Menu System active
+  bool menu_ = false;              // Edit Mode / Menu System active
 #endif
 #ifdef FETT263_QUOTE_PLAYER_START_ON
-  bool force_quote_ = true; // Quote Player active (in place of force effect)
+  bool force_quote_ = true;        // Quote Player active (in place of force effect)
 #else
-  bool force_quote_ = false; // Quote Player active (in place of force effect)
+  bool force_quote_ = false;       // Quote Player active (in place of force effect)
 #endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
-  bool rehearse_ = false; // Rehearsal Mode active
-  bool choreo_ = false; // Choreography Mode active
+  bool rehearse_ = false;          // Rehearsal Mode active
+  bool choreo_ = false;            // Choreography Mode active
 #endif
-  uint32_t thrust_begin_millis_; // Thrust timer
-  uint32_t push_begin_millis_; // Push timer
-  uint32_t clash_impact_millis_; // Clash timer
-  uint32_t last_push_millis_; // Last Push (to prevent gesture spamming)
-  uint32_t last_blast_millis_; // Last Blast (for Battle Mode Multi-Blast detection)
+  uint32_t thrust_begin_millis_;   // Thrust timer
+  uint32_t push_begin_millis_;     // Push timer
+  uint32_t clash_impact_millis_;   // Clash timer
+  uint32_t last_push_millis_;      // Last Push (to prevent gesture spamming)
+  uint32_t last_blast_millis_;     // Last Blast (for Battle Mode Multi-Blast detection)
   uint32_t saber_off_time_millis_; // Off timer
-  uint32_t restart_millis_; // Used to time restarts to show preon timing.
+  uint32_t restart_millis_;        // Used to time restarts to show preon timing.
   ClashType clash_type_ = CLASH_NONE;
 #ifdef FETT263_QUICK_SELECT_ON_BOOT
   MenuType menu_type_ = MENU_PRESET;
 #else
   MenuType menu_type_ = MENU_TOP;
 #endif
-  int menu_top_pos_ = 0; // Top menu dial position
-  int menu_sub_pos_ = 0; // Sub menu dial position
+  int menu_top_pos_ = 0;           // Top menu dial position
+  int menu_sub_pos_ = 0;           // Sub menu dial position
   TrackMode track_mode_ = PLAYBACK_OFF;
-  int track_num_; // Track Number for Track Player
-  int num_tracks_; // Number of Tracks Found
-  int ignite_time_; // Ignition timer for Edit Mode retraction preview
-  int dial_ = -1; // Menu dial "tick"
-  int sub_dial_; // Sub menu dial "tick"
-  int arg_dial_; // Argument Sub menu dial "tick"
+  int track_num_;                  // Track Number for Track Player
+  int num_tracks_;                 // Number of Tracks Found
+  int ignite_time_;                // Ignition timer for Edit Mode retraction preview
+  int dial_ = -1;                  // Menu dial "tick"
+  int sub_dial_;                   // Sub menu dial "tick"
+  int arg_dial_;                   // Argument Sub menu dial "tick"
   int gesture_num_;
-  float twist_menu_ = M_PI / 2.2; // default Twist Right / Left sensitivity
-  bool choice_ = false;
-  // Edit Mode selection confirmation
-  // for True/False control when deleting, disabling/enabling or copying
-  bool off_event_ = false; // Do off event in Edit Mode
-  bool restart_ = false; // Ignite blade after off event in Edit Mode
-  bool next_event_ = false;
-  // Do next event in Edit Mode, allows an action/wav to complete before
-  // "next event" begins, for use with choreography and ignition/retraction previews where menu sound
-  // would otherwise be truncated by change in state
+  float twist_menu_ = M_PI / 2.2;  // default Twist Right / Left sensitivity
+  bool choice_ = false;            // Edit Mode selection confirmation
+                                   // for True/False control when deleting, disabling/enabling or copying
+  bool off_event_ = false;         // Do off event in Edit Mode
+  bool restart_ = false;           // Ignite blade after off event in Edit Mode
+  bool next_event_ = false;        // Do next event in Edit Mode, allows an action/wav to complete before
+                                   // "next event" begins, for use with choreography and ignition/retraction previews where menu sound
+                                   // would otherwise be truncated by change in state
   EditColorMode color_mode_;
   Color16 saved_color_;
-  bool edit_color_ = false; // Color Editing Mode active
-  float hsl_angle_ = 0.0; // HSL angle for Color Editing
-  int font_num_; // Font number from list_fonts array for use in Edit Mode dial
+  bool edit_color_ = false;        // Color Editing Mode active
+  float hsl_angle_ = 0.0;          // HSL angle for Color Editing
+  int font_num_;                   // Font number from list_fonts array for use in Edit Mode dial
 #ifdef FETT263_USE_SETTINGS_MENU
-  int blade_preview_ = 0; // Blade number for "preview" style
-  int blade_num_; // Active Blade Number for editing
-  int length_revert_; // Original Blade Length for Revert
-  // Calculated value for IntArg (Settings Arguments)
-  // used to add or subtract from original saved value by dial
+  int blade_preview_ = 0;          // Blade number for "preview" style
+  int blade_num_;                  // Active Blade Number for editing
+  int length_revert_;              // Original Blade Length for Revert
+                                   // Calculated value for IntArg (Settings Arguments)
+                                   // used to add or subtract from original saved value by dial
   int calc_;
 #endif
 #ifdef FETT263_EDIT_MODE_MENU
-  uint32_t variation_revert_; // Variation revert value
-  int effect_num_; // Effect Arg Number
-  int copy_blade_; // Blade to Copy from
-  int set_num_; // Settings Arg Number
-  int style_revert_; // Original Style Number for Revert
-  int arg_revert_; // Original Arg vale for Revert
+  uint32_t variation_revert_;      // Variation revert value
+  int effect_num_;                 // Effect Arg Number
+  int copy_blade_;                 // Blade to Copy from
+  int set_num_;                    // Settings Arg Number
+  int style_revert_;               // Original Style Number for Revert
+  int arg_revert_;                 // Original Arg vale for Revert
 #endif
 #ifdef FETT263_SAVE_CHOREOGRAPHY
-  int clash_count_ = -1; // Choreography Mode Clash counter
+  int clash_count_ = -1;           // Choreography Mode Clash counter
 #endif
 };
 
