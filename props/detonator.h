@@ -1,5 +1,39 @@
+/*
+Button Power: (BUTTON_POWER can either be latching or it needs to be held)
+=============
+Latch ON (or press and hold) : ON & ARMED
+Latch OFF (or release) : OFF & DISARMED (will stop the "countdown")
+
+Button Aux2:
+============
+Double click while off : Next preset
+Double click while on : Start/Stop track
+'Press and Release' while Armed : Plays beginarm.wav & armhum.wav "countdown" on repeat.
+Long click while "counting-down" : stops the "countdown" and plays boom.wav.
+
+.wav files you'd want to have in your sound font:
+=================================================
+bgnarm.wav
+armhum.wav
+boom.wav
+hum.wav (if you don't want to hear it, make it a silent hum or you will get error in font directory!)
+
+Optional .wav files:
+====================
+boot.wav
+font.wav
+
+.wav files you do not want: (if present, it will play before boom!)
+===========================
+endarm.wav
+*/
+
 #ifndef PROPS_DETONATOR_H
 #define PROPS_DETONATOR_H
+
+#if NUM_BUTTONS < 2
+#error Your prop NEEDS 2 buttons to use this detonator
+#endif
 
 #include "prop_base.h"
 
@@ -29,7 +63,7 @@ public:
   NextAction next_action_ = NEXT_ACTION_NOTHING;
   uint32_t time_base_;
   uint32_t next_event_time_;
-  
+
   void SetNextAction(NextAction what, uint32_t when) {
     time_base_ = millis();
     next_event_time_ = when;
@@ -39,30 +73,30 @@ public:
   void SetNextActionF(NextAction what, float when) {
     SetNextAction(what, when * 1000);
   }
-  
+
   void PollNextAction() {
     if (millis() - time_base_ > next_event_time_) {
       switch (next_action_) {
-	case NEXT_ACTION_NOTHING:
-	  break;
-	case NEXT_ACTION_ARM:
-	  armed_ = true;
-	  // TODO: Should we have separate ARMING and ARMED states?
-	  break;
-	case NEXT_ACTION_BLOW:
-	  Off(OFF_BLAST);
-	  break;
+        case NEXT_ACTION_NOTHING:
+          break;
+        case NEXT_ACTION_ARM:
+          armed_ = true;
+          // TODO: Should we have separate ARMING and ARMED states?
+          break;
+        case NEXT_ACTION_BLOW:
+          Off(OFF_BLAST);
+          break;
       }
       next_action_ = NEXT_ACTION_NOTHING;
     }
   }
-  
+
   void beginArm() {
     SaberBase::SetLockup(SaberBase::LOCKUP_ARMED);
     SaberBase::DoBeginLockup();
-#ifdef ENABLE_AUDIO    
+#ifdef ENABLE_AUDIO
     float len = hybrid_font.GetCurrentEffectLength();
-#else    
+#else
     float len = 1.6;
 #endif
     SetNextActionF(NEXT_ACTION_ARM, len);
@@ -70,9 +104,9 @@ public:
 
   void blast() {
     SaberBase::DoEndLockup();
-#ifdef ENABLE_AUDIO    
+#ifdef ENABLE_AUDIO
     float len = hybrid_font.GetCurrentEffectLength();
-#else    
+#else
     float len = 0.0;
 #endif
     SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
@@ -96,7 +130,6 @@ public:
   // Make swings do nothing
   void DoMotion(const Vec3& motion, bool clear) override { }
 
-
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
@@ -112,7 +145,7 @@ public:
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_OFF):
-	if (powered_) rotate_presets();
+        if (powered_) rotate_presets();
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_ON):
@@ -120,12 +153,12 @@ public:
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
-	beginArm();
-	break;
+        beginArm();
+        break;
 
       case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ON):
         blast();
-	return armed_;
+        return armed_;
 
         // TODO: Long click when off?
     }
@@ -133,4 +166,4 @@ public:
   }
 };
 
-#endif
+#endif // PROPS_DETONATOR_H
