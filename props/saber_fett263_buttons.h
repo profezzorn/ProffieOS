@@ -5355,7 +5355,7 @@ SaberFett263Buttons() : PropBase() {}
   void CheckQuote() {
 #ifndef FETT263_DISABLE_QUOTE_PLAYER
     if (SFX_quote) {
-      if (fusor.angle1() < - M_PI / 3)  {
+      if (fusor.angle1() < - M_PI / 3) {
         force_quote_ = !force_quote_;
       }
       ForceQuote();
@@ -6276,7 +6276,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 #if !defined(FETT263_DISABLE_MULTI_BLAST) && !defined(FETT263_DISABLE_MULTI_BLAST_TOGGLE)
       case EVENTID(BUTTON_AUX, EVENT_CLICK_LONG, MODE_ON):
         if (menu_ || CancelShowColor()) return true;
-      	ToggleMultiBlast();
+        ToggleMultiBlast();
         return true;
 #endif
 
@@ -6663,7 +6663,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
             MenuDialIncrement(-1);
             return true;
           }
-	}
+        }
 #ifdef FETT263_SPECIAL_ABILITIES
         else {
 #if NUM_BUTTONS == 1
