@@ -1,4 +1,4 @@
-/* V7/8-201.
+/* V7/8-216.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -294,6 +294,7 @@ GESTURE CONTROLS
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
+
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
 class SaveArrayStateFile : public ConfigFile {
 public:
@@ -310,11 +311,23 @@ public:
         return return_value;
       }
       static void cycle() {
+#ifndef BLADE_DETECT_PIN
         return_value = (return_value + 1) % NELEM(blades);
+#else   // Improved logic fixes early Array1 repetition when using Blade Detect.
+        return_value++;
+        if (return_value == 0 || return_value >= NELEM(blades)) {
+          return_value = 1;
+        }
+#endif
       }
     };
+
+#ifndef BLADE_DETECT_PIN
     int SabersenseArraySelector::return_value;
-    
+#else    
+    int SabersenseArraySelector::return_value = 1;
+#endif
+
 #undef BLADE_ID_CLASS_INTERNAL
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
