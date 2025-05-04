@@ -12,12 +12,12 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
  "Multi-Phase", "Multi-Blast"
  Copyright (c) 2022-2023 Fernando da Rosa
  Visit https://www.fett263.com/proffieOS7-fett263-prop-file.html for required set up and additional information
- 
+
  Voice Prompts and sounds required for certain features and should be included in /common folder or /font folder on SD card.
    Free prompts (courtesy of Brian Conner) available here: http://fredrik.hubbe.net/lightsaber/sound/
 
  Track Player requires track files to be located in /font/tracks for font specific tracks or /common/tracks for universal (all presets) or a combination of the two.
- 
+
   ----- This prop enables the following EFFECTs for use in menus, Special Abilities* and/or chained effects controlled at the style level in each preset -----
   *requires FETT263_SPECIAL_ABILITIES define
 
@@ -57,11 +57,11 @@ Includes Gesture Controls, Battle Mode 2.0, Edit Mode, Track Player, Quote/Force
     EFFECT_GAME_LOSE (end game with loss)
 
 ---------- 2 / 3 Button Controls ----------
-NOTE: 
+NOTE:
   Click = do short click
   Long Click = hold button for 1 second and release
   Hold = hold button down
-  
+
 Standard Controls While Blade is OFF
   Turn On / Ignite Saber* = Click PWR
     *If FETT263_MOTION_WAKE_POWER_BUTTON defined first Click will Wake up motion detection and boot sound will play
@@ -87,7 +87,7 @@ Standard Controls While Blade is OFF
     Hold PWR + Turn Right = Rotate (will play current track and then next sequential tracks)
     Hold PWR + Turn Left = Loop Current Track
     Long Click PWR = Stop Track Player
-  NEW! Force/Quote Player = Hold PWR 
+  NEW! Force/Quote Player = Hold PWR
     If quotes exist in current font pointing straight down will toggle between Force/Quote and play
     *Quotes play sequentially 1,2,3...
     If parallel will do Force/Quote based on current mode
@@ -119,7 +119,7 @@ Standard Controls While Blade is OFF
     Previous Font= Hold AUX + Long Click PWR (down)
   NEW! Manual Blade Array* = Hold PWR + Long Click AUX
     *requires FETT263_MANUAL_BLADE_ARRAY
-    *replaces Copy Preset control 
+    *replaces Copy Preset control
   NEW! Copy Preset* = Hold PWR + Long Click AUX
 
 Optional Gesture Controls (if enabled and Gesture Sleep is deactivated)
@@ -283,7 +283,7 @@ OS8 Menu System* (#define MENU_SPEC_TEMPLATE)
       #define MENU_SPEC_TEMPLATE FETT263_MENU_SPEC
 
 ---------- 1 Button Controls (based on SA22C prop) ----------
-NOTE: 
+NOTE:
   Click = do short click (so Double Click is two short clicks in quick succession)
   Long Click = hold button for 1 second and release
   Hold = hold button down
@@ -292,7 +292,7 @@ NOTE:
 
 Standard Controls While Blade is OFF
   Turn On / Ignite Saber* = Click PWR
-    *If FETT263_MOTION_WAKE_POWER_BUTTON defined first Click will Wake up motion detection and boot sound will play  
+    *If FETT263_MOTION_WAKE_POWER_BUTTON defined first Click will Wake up motion detection and boot sound will play
   NEW Control! Turn On / Ignite Saber (Muted) = Click + Long Click PWR
   NEW Control! Start / Stop Tracks = Double Click PWR (pointing straight up)
   NEW! Track Player* = Double Click PWR (parallel or down)
@@ -389,7 +389,7 @@ Standard Controls While Blade is ON
     *requires EFFECT_POWERSAVE in style
   Multi-Phase Preset Change*
     *requires FETT263_MULTI_PHASE define, cannot be used with FETT263_SPECIAL_ABILITIES
-    Hold PWR + Twist (parallel or up) =  Next Preset 
+    Hold PWR + Twist (parallel or up) =  Next Preset
     Hold PWR + Twist (pointing down) = Previous Preset
   Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
     Hold PWR + Turn Right (parallel or up) = Special Ability 1 (USER1)
@@ -462,7 +462,7 @@ Edit Mode*
     Rotate Back, Decrease Value, Confirm "No" = Turn Left (Stepped)
       Increment by 5 (Fonts, Tracks, Blade Length) = Hold PWR + Turn Left
       Increment by 500 (Ignition Time, Ignition Delay, Retraction Time, Retraction Delay) = Hold PWR + Turn Left
-      Increment by 5000 (Ignition Option2, Retraction Option2) = Hold PWR + Turn Left   
+      Increment by 5000 (Ignition Option2, Retraction Option2) = Hold PWR + Turn Left
     Select, Save, Enter = Click PWR
     Cancel, Revert, Go Back = Long Click PWR
     Go to Main Menu (from sub-menu) - Hold PWR
@@ -481,7 +481,7 @@ Edit Settings* (Settings Only version of Edit Mode)
     Rotate Forward, Increase Value, Confirm "Yes" = Turn Right (Stepped)
       Increment by 5 (Blade Length) = Hold PWR + Turn Right
     Rotate Back, Decrease Value, Confirm "No" = Turn Left (Stepped)
-      Increment by 5 (Blade Length) = Hold PWR + Turn Left    
+      Increment by 5 (Blade Length) = Hold PWR + Turn Left
     Select, Save, Enter = Click PWR
     Cancel, Revert, Go Back = Long Click PWR
     Exit Edit Settings - Hold PWR
@@ -492,7 +492,7 @@ OS8 Menu System* (#define MENU_SPEC_TEMPLATE)
     *Controls and selections vary by define, more information here: https://pod.hubbe.net/howto/menus.html
     For full Fett263 Menu use:
       #define MENU_SPEC_TEMPLATE FETT263_MENU_SPEC
-    
+
 ---------- || ----------
 
 OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
@@ -544,13 +544,13 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
 
   FETT263_SAY_COLOR_LIST
   Spoken Color Names replace default sounds during Color List Mode (requires .wav files)
-  
+
   FETT263_SAY_COLOR_LIST_CC
   Spoken Color Names replace default sounds during Color Change "CC" Color List Mode (requires .wav files)
 
   FETT263_SAY_BATTERY_VOLTS
   Spoken Battery Level as volts during On Demand Battery Level effect (requires .wav files)
-  
+
   FETT263_SAY_BATTERY_PERCENT
   Spoken Battery Level as percent during On Demand Battery Level effect (requires .wav files)
 
@@ -678,56 +678,56 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   MOTION_TIMEOUT 60 * 15 * 1000
   This extends the motion timeout to 15 minutes to allow gesture ignition to remain active
   Increase/decrease the "15" value as needed
-  
+
   FETT263_MOTION_WAKE_POWER_BUTTON
-  Enables a click on POWER Button to Wake Up Gestures after MOTION_TIMEOUT without igniting blade.  
+  Enables a click on POWER Button to Wake Up Gestures after MOTION_TIMEOUT without igniting blade.
   Saber will play boot sound and gestures will be active.
-  
+
   FETT263_QUOTE_PLAYER_START_ON
   This will set Force / Quote Player to play Quote by default (if in font)
-  
+
   FETT263_RANDOMIZE_QUOTE_PLAYER
   This will set Quote Player to randomly select quote.wav instead of playing sequentially
-  
+
   FETT263_CIRCULAR_VOLUME_MENU
   Changes Volume Menu to Circular Control
 
   FETT263_CIRCULAR_DIM_MENU
   Changes Brightness Menu to Circular Control
-  
+
 == Disable Features ==
   FETT263_SIMPLIFIED_PROP - Disables the following default features* with one define
     ("Change Font", "Change Style", "Copy Preset", "Battle Mode Toggle", "Multi-Blast Toggle", "Quote Player")
     *Only applies to defaulted features, additional features are controlled by including defines to enable, remove those defines accordingly
 
-  DISABLE_TALKIE - saves memory by replacing spoken error messages with beep sequences - 
+  DISABLE_TALKIE - saves memory by replacing spoken error messages with beep sequences -
 
   FETT263_DISABLE_CHANGE_FONT - Disables the "on-the-fly" Change Font option
-  
+
   FETT263_DISABLE_CHANGE_STYLE - Disables the "on-the-fly" Change Style option
-  
+
   FETT263_DISABLE_COPY_PRESET - Disables the "on-the-fly" Copy Preset option
-  
+
   FETT263_DISABLE_BM_TOGGLE - Disable button control for Battle Mode, use gesture ignition or Special Abilities and/or style to toggle.
-  
+
   FETT263_DISABLE_MULTI_BLAST_TOGGLE - Disable button control for Multi-Blast Mode, use Special Abilities and/or style to toggle.
-  
+
   FETT263_DISABLE_MULTI_BLAST - Disables "Multi-Blast" Mode
 
   FETT263_TRACK_PLAYER_NO_PROMPTS - Disables spoken voice prompts in Track Player
-  
+
   FETT263_DISABLE_QUOTE_PLAYER - Disables Force/Quote player, only uses Force. This will allow Quotes to be controlled by style.
     Use FETT263_SPECIAL_ABILITIES to set EFFECT_QUOTE or EFFECT_NEXT_QUOTE in style
     Cannot be used with FETT263_RANDOMIZE_QUOTE_PLAYER and FETT263_QUOTE_PLAYER_START_ON
 
 == SA22C 2 Button Variations ==
   FETT263_HOLD_BUTTON_OFF - Changes to Hold PWR to turn Off / Retract
-  
+
   FETT263_HOLD_BUTTON_LOCKUP - Enables Hold AUX for Lockup*
     Cannot be used with FETT263_SAVE_CHOREOGRAPHY
     *Clash Strength / Clash Impact effects and sounds for Lockup negated
     *Battle Mode control changes to hold AUX + Swing
-    
+
 == BC Variations ==
   FETT263_USE_BC_MELT_STAB
   Allows MELT to be gesture controlled full-time, uses Thrust for Stab effect
@@ -1103,7 +1103,7 @@ GestureControlFile saved_gesture_control;
 template<class SPEC>
 struct SwingGesture : public mode::BoolSetting {
   bool get() { return saved_gesture_control.swingon;  }
-  void set(bool value) { 
+  void set(bool value) {
     saved_gesture_control.swingon = value;
     saved_gesture_control.WriteToRootDir("gesture");
   }
@@ -1133,7 +1133,7 @@ struct SwingOnSpeed : public SPEC::SteppedMode {
     if (speed_ == 600) sound_library_.SayMaximum();
     sound_library_.SayNumber(speed_, SAY_WHOLE);
   }
-  void select() { 
+  void select() {
     sound_library_.SaySwingOnSpeed();
     sound_library_.SayNumber(speed_, SAY_WHOLE);
     saved_gesture_control.swingonspeed = speed_;
@@ -1151,7 +1151,7 @@ struct SwingOnSpeed : public SPEC::SteppedMode {
 template<class SPEC>
 struct TwistOnGesture : public mode::BoolSetting {
   bool get() { return saved_gesture_control.twiston;  }
-  void set(bool value) { 
+  void set(bool value) {
     saved_gesture_control.twiston = value;
     saved_gesture_control.WriteToRootDir("gesture");
   }
@@ -1161,7 +1161,7 @@ struct TwistOnGesture : public mode::BoolSetting {
 template<class SPEC>
 struct ThrustOnGesture : public mode::BoolSetting {
   bool get() { return saved_gesture_control.thruston;  }
-  void set(bool value) { 
+  void set(bool value) {
     saved_gesture_control.thruston = value;
     saved_gesture_control.WriteToRootDir("gesture");
   }
@@ -1171,7 +1171,7 @@ struct ThrustOnGesture : public mode::BoolSetting {
 template<class SPEC>
 struct StabOnGesture : public mode::BoolSetting {
   bool get() { return saved_gesture_control.stabon;  }
-  void set(bool value) { 
+  void set(bool value) {
     saved_gesture_control.stabon = value;
     saved_gesture_control.WriteToRootDir("gesture");
   }
@@ -1181,7 +1181,7 @@ struct StabOnGesture : public mode::BoolSetting {
 template<class SPEC>
 struct ForcePushGesture : public mode::BoolSetting {
   bool get() { return saved_gesture_control.forcepush;  }
-  void set(bool value) { 
+  void set(bool value) {
     saved_gesture_control.forcepush = value;
     saved_gesture_control.WriteToRootDir("gesture");
   }
@@ -1211,7 +1211,7 @@ struct ForcePushLength : public SPEC::SteppedMode {
     if (push_ == 10) sound_library_.SayMaximum();
     sound_library_.SayNumber(push_, SAY_WHOLE);
   }
-  void select() { 
+  void select() {
     sound_library_.SayForcePushLength();
     sound_library_.SayNumber(push_, SAY_WHOLE);
     saved_gesture_control.forcepushlen = push_;
@@ -1229,7 +1229,7 @@ struct ForcePushLength : public SPEC::SteppedMode {
 template<class SPEC>
 struct TwistOffGesture : public mode::BoolSetting {
   bool get() { return saved_gesture_control.twistoff;  }
-  void set(bool value) { 
+  void set(bool value) {
     saved_gesture_control.twistoff = value;
     saved_gesture_control.WriteToRootDir("gesture");
   }
@@ -1239,7 +1239,7 @@ struct TwistOffGesture : public mode::BoolSetting {
 template<class SPEC>
 struct PowerLock : public mode::BoolSetting {
   bool get() { return saved_gesture_control.powerlock;  }
-  void set(bool value) { 
+  void set(bool value) {
     saved_gesture_control.powerlock = value;
     saved_gesture_control.WriteToRootDir("gesture");
   }
@@ -1270,7 +1270,7 @@ struct LockupDelay : public SPEC::SteppedMode {
     sound_library_.SayNumber(delay_, SAY_WHOLE);
     sound_library_.SayMillis();
   }
-  void select() { 
+  void select() {
     sound_library_.SayLockupDelay();
     sound_library_.SayNumber(delay_, SAY_WHOLE);
     sound_library_.SayMillis();
@@ -1282,7 +1282,7 @@ struct LockupDelay : public SPEC::SteppedMode {
     mode::getSL<SPEC>()->SayCancel();
     SPEC::SteppedMode::exit();
   }
-    
+
   int delay_;
 };
 
@@ -1309,7 +1309,7 @@ struct ClashDetect : public SPEC::SteppedMode {
     if (clash_ == 10) sound_library_.SayMaximum();
     sound_library_.SayNumber(clash_, SAY_WHOLE);
   }
-  void select() { 
+  void select() {
     sound_library_.SayClashDetectionLevel();
     sound_library_.SayNumber(clash_, SAY_WHOLE);
     saved_gesture_control.clashdetect = clash_;
@@ -1347,7 +1347,7 @@ struct MaxClash : public SPEC::SteppedMode {
     if (maxclash_ == 16) sound_library_.SayMaximum();
     sound_library_.SayNumber(maxclash_, SAY_WHOLE);
   }
-  void select() { 
+  void select() {
     sound_library_.SayMaximumClashStrength();
     sound_library_.SayNumber(maxclash_, SAY_WHOLE);
     saved_gesture_control.maxclash = maxclash_;
@@ -1363,7 +1363,7 @@ struct MaxClash : public SPEC::SteppedMode {
 };
 
 template<class SPEC>
-class NewSettingsMenu : public mode::AddToMenuEntryMenu<SPEC, typename SPEC::OldSettingsMenu, 
+class NewSettingsMenu : public mode::AddToMenuEntryMenu<SPEC, typename SPEC::OldSettingsMenu,
   mode::DirectBoolEntry<SPEC, SwingGesture<SPEC>>,
   mode::SubMenuEntry<SwingOnSpeed<SPEC>, typename SPEC::SoundLibrary::tSwingOnSpeed>,
   mode::DirectBoolEntry<SPEC, TwistOnGesture<SPEC>>,
@@ -1427,7 +1427,7 @@ public:
     int file;
     if (!f || !f->IsOpen()) return ReadStatus::READ_FAIL;
     memset(clash_rec, 0, sizeof(clash_rec));
-    STDOUT.println("Reading choreo.ini");
+    PVLOG_DEBUG << "Reading choreo.ini\n";
     for (size_t i = 0; i < NELEM(clash_rec); i++) {
       char action[33];
       f->skipwhite();
@@ -1519,6 +1519,7 @@ private:
   BLACK black_;
 };
 #endif
+
 #ifdef FETT263_EDIT_MODE_MENU
 // Edit Style Settings
 
@@ -1630,7 +1631,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void SaveGestureState() {
-    STDOUT.println("Saving Gesture State");
+    PVLOG_DEBUG << "Saving Gesture State\n";
     saved_gesture_control.WriteToRootDir("gesture");
   }
 
@@ -1694,7 +1695,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   void SaveChoreo() {
-    STDOUT.println("Saving Choreography");
+    PVLOG_DEBUG << "Saving Choreography\n";
     WriteChoreo("choreo.tmp");
     WriteChoreo("choreo.ini");
   }
@@ -1844,7 +1845,7 @@ SaberFett263Buttons() : PropBase() {}
     }
     return Color16(65535,0,0);
   }
-	
+
   // Color / Style Editing
   HSL hsl_;
   ShowColorAllBladesTemplate<ShowColorStyle> show_color_all_;
@@ -1868,7 +1869,7 @@ SaberFett263Buttons() : PropBase() {}
     length_edit_length = blade_length_ - 1;
     ShowColorStyle::SetColor(GetColorArg(blade_num_, 1));
   }
-#endif	
+#endif
 
 #ifdef FETT263_EDIT_MODE_MENU
   ShowColorSingleBladeTemplate<ShowColorStyle> show_color_;
@@ -1968,7 +1969,6 @@ SaberFett263Buttons() : PropBase() {}
     SetPresetFast(current_preset_.preset_num);
   }
 
-    
   void SayStyleNumber(int style_num) {
     sound_library_.SayStyle();
     sound_library_.SayNumber(style_num, SAY_WHOLE);
@@ -1980,7 +1980,7 @@ SaberFett263Buttons() : PropBase() {}
       sound_library_.SayNumber(opt, SAY_WHOLE);
     }
   }
-	
+
   // Stop location/size previews in Style Settings Mode
   void StopSettingPreview() {
     switch (set_num_) {
@@ -2033,8 +2033,8 @@ SaberFett263Buttons() : PropBase() {}
 #ifdef FETT263_REPLACE_CC_COLOR_LIST
         case CC_EDIT_COLOR:
 #endif
-	case EDIT_COLOR: 
-          angle = H_ANGLE; 
+	case EDIT_COLOR:
+          angle = H_ANGLE;
           break;
         case ZOOM_COLOR:
         case CC_ZOOM_COLOR:
@@ -2111,7 +2111,7 @@ SaberFett263Buttons() : PropBase() {}
   }
 
   // Saves New Color from Edit Mode Preview Styles to Preset
-	
+
   void NewColor(int blade, int effect) {
     STDOUT << "NewColor(" << blade << "," << effect << ")\n";
     char new_color[32];
@@ -2232,7 +2232,7 @@ SaberFett263Buttons() : PropBase() {}
         SelectColorChangeMode();
 #endif
       }
-    }	  
+    }
   }
 
 #if defined(FETT263_MANUAL_BLADE_ARRAY) || defined(FETT263_MANUAL_BLADE_ID)
@@ -2361,7 +2361,7 @@ SaberFett263Buttons() : PropBase() {}
           SaveChoreo();
         }
         next_event_ = false;
-      } else 
+      } else
 #endif
       {
 #ifdef FETT263_EDIT_MODE_MENU
@@ -2519,13 +2519,13 @@ SaberFett263Buttons() : PropBase() {}
 #endif
     if (
 #ifdef FETT263_SPIN_MODE
-	!spin_mode_ && 
+	!spin_mode_ &&
 #endif
 	clash_type_ != CLASH_NONE && millis() - clash_impact_millis_ > 1) {
       // CHECK PUSH
       if (clash_type_ == CLASH_CHECK) {
         Event(BUTTON_NONE, EVENT_PUSH);
-        STDOUT.println("EVENT PUSH");
+        PVLOG_NORMAL << "EVENT PUSH\n";
         clash_type_ = CLASH_NONE;
       }
       if (clash_type_ != CLASH_LOCKUP_END && clash_type_ != CLASH_NONE) {
@@ -2621,15 +2621,15 @@ SaberFett263Buttons() : PropBase() {}
     if (menu_type_ == MENU_PRESET && millis() < 2000) {
       current_menu_angle_ = fusor.angle2();
     } else {
-      DetectMenuTurn();      
+      DetectMenuTurn();
     }
 #else
     DetectMenuTurn();
 #endif
-#ifdef ENABLE_AUDIO    
+#ifdef ENABLE_AUDIO
     TrackPlayer();
 #else
-    STDOUT.println("Audio disabled.");
+    PVLOG_DEBUG << "Audio disabled.\n";
 #endif
   }
 
@@ -2707,7 +2707,7 @@ SaberFett263Buttons() : PropBase() {}
     if (track_player_) {
       track_player_->Play(playtrack);
     } else {
-      STDOUT.println("No available WAV players.");
+      PVLOG_DEBUG << "No available WAV players.\n";
     }
   }
 
@@ -2726,13 +2726,13 @@ SaberFett263Buttons() : PropBase() {}
       wav_player->set_fade_time(0.2);
       wav_player->FadeAndStop();
       wav_player.Free();
-      STDOUT.println("End Wav Player");    
+      PVLOG_DEBUG << "End Wav Player\n";
     } else {
       wav_player = GetFreeWavPlayer();
       if (wav_player) {
         wav_player->PlayOnce(&SFX_trloop);
       } else {
-        STDOUT.println("Out of WAV players!");
+        PVLOG_DEBUG << "Out of WAV players!\n";
       }
     }
   }
@@ -2765,14 +2765,14 @@ SaberFett263Buttons() : PropBase() {}
     if (a > twist_menu_ * 2/3) {
       if (!swinging_) {
         Event(BUTTON_NONE, EVENT_TWIST_RIGHT);
-        STDOUT.println("EVENT MENU TURN RIGHT");
+        PVLOG_NORMAL << "EVENT MENU TURN RIGHT\n";
       }
       current_menu_angle_ = fusor.angle2();
     }
     if (a < -twist_menu_ * 2/3) {
       if (!swinging_) {
         Event(BUTTON_NONE, EVENT_TWIST_LEFT);
-        STDOUT.println("EVENT MENU TURN LEFT");
+        PVLOG_NORMAL << "EVENT MENU TURN LEFT\n";
       }
       current_menu_angle_ = fusor.angle2();
     }
@@ -2901,7 +2901,7 @@ SaberFett263Buttons() : PropBase() {}
     EDIT_STYLE_SELECT = 1,
     EDIT_STYLE_SETTINGS = 2,
   };
-	
+
   enum ColorSubMenu {
     EDIT_EFFECT_COLOR = 1,
 #if NUM_BLADES == 1
@@ -3024,12 +3024,12 @@ SaberFett263Buttons() : PropBase() {}
     }
     if (!SFX_medit) {
       ProffieOSErrors::error_in_font_directory();
-      STDOUT.println("Edit Mode prompts missing");
+      PVLOG_ERROR << "Edit Mode prompts missing\n";
     } else {
 #ifdef FETT263_EDIT_SETTINGS_MENU
-      STDOUT.println("Enter Edit Settings Menu");
+      PVLOG_NORMAL << "Enter Edit Settings Menu\n";
 #else
-      STDOUT.println("Enter Edit Mode");
+      PVLOG_NORMAL << "Enter Edit Mode\n";
 #endif
       GenerateIniFiles();
       menu_top_pos_ = 0;
@@ -3087,7 +3087,7 @@ SaberFett263Buttons() : PropBase() {}
         case MENU_LENGTH:
 #if NUM_BLADES > 1
         case MENU_BLADE_LENGTH:
-#endif   
+#endif
           MenuUndo();
           return true;
           break;
@@ -3460,7 +3460,7 @@ SaberFett263Buttons() : PropBase() {}
           menu_type_ = MENU_STYLE_SUB;
           menu_sub_pos_ = 0;
           blade_num_ = 1;
-          sound_library_.SaySelectOption();         
+          sound_library_.SaySelectOption();
 #else
           menu_type_ = MENU_BLADE_STYLE;
           blade_num_ = 0;
@@ -3896,13 +3896,13 @@ SaberFett263Buttons() : PropBase() {}
           break;
         case IGNITION_POWER_UP_ARG:
           menu_type_ = MENU_IGNITION_POWER_UP_OPTION;
-          arg_revert_ = strtol (argspace, NULL, 0); 
+          arg_revert_ = strtol (argspace, NULL, 0);
           sound_library_.SayOption();
           sound_library_.SayNumber(calc_, SAY_WHOLE);
           break;
         case IGNITION_DELAY_ARG:
           menu_type_ = MENU_IGNITION_DELAY;
-          arg_revert_ = strtol (argspace, NULL, 0);         
+          arg_revert_ = strtol (argspace, NULL, 0);
           break;
         case RETRACTION_OPTION_ARG:
         case RETRACTION_OPTION2_ARG:
@@ -4627,7 +4627,7 @@ SaberFett263Buttons() : PropBase() {}
             if (!SFX_preon && (int_arg_menu_[arg_dial_] == PREON_OPTION_ARG || int_arg_menu_[arg_dial_] == PREON_SIZE_ARG)) arg_dial_ = 0;
             if (arg_dial_ > (int)NELEM(int_arg_menu_) - 1) arg_dial_ = 0;
           } else {
-            // Detect preon.wav for setting preview (cannot be shown without so skip over)            
+            // Detect preon.wav for setting preview (cannot be shown without so skip over)
             if (!SFX_preon && (int_arg_menu_[arg_dial_] == PREON_OPTION_ARG || int_arg_menu_[arg_dial_] == PREON_SIZE_ARG)) arg_dial_ = NELEM(int_arg_menu_) - 3;
             if (arg_dial_ < 0) arg_dial_ = NELEM(int_arg_menu_) - 1;
           }
@@ -4722,7 +4722,7 @@ SaberFett263Buttons() : PropBase() {}
                 SetInOut();
 	        next_event_ = true;
 	        break;
-              } 
+              }
             } else {
               calc_ = 0;
               if (menu_type_ == MENU_IGNITION_DELAY || menu_type_ == MENU_RETRACTION_DELAY) {
@@ -5229,7 +5229,7 @@ SaberFett263Buttons() : PropBase() {}
       MenuDial(1);
       return true;
     }
-#endif    
+#endif
     return false;
   }
 
@@ -5248,7 +5248,7 @@ SaberFett263Buttons() : PropBase() {}
       } else {
         beeper.Beep(0.5, 3000);
       }
-    }	  
+    }
   }
 
   void ToggleMultiBlast() {
@@ -5283,9 +5283,9 @@ SaberFett263Buttons() : PropBase() {}
         SaberBase::DoBlast();
       }
       check_blast_ = false;
-    }	  
+    }
   }
-	
+
   void DoIgnition() {
 #ifdef FETT263_DUAL_MODE_SOUND
     SelectIgnitionSound();
@@ -5305,7 +5305,7 @@ SaberFett263Buttons() : PropBase() {}
     battle_mode_ = true;
 #endif
   }
-	
+
 #ifdef FETT263_DUAL_MODE_SOUND
   // Select preon wav based on blade orientation if more than 1 file, up = odd, down = even
   void SelectPreonSound() {
@@ -5354,13 +5354,13 @@ SaberFett263Buttons() : PropBase() {}
 
   void CheckQuote() {
 #ifndef FETT263_DISABLE_QUOTE_PLAYER
-    if (SFX_quote) {      
+    if (SFX_quote) {
       if (fusor.angle1() < - M_PI / 3)  {
         force_quote_ = !force_quote_;
       }
       ForceQuote();
     } else {
-      SaberBase::DoForce();  
+      SaberBase::DoForce();
     }
 #else
     SaberBase::DoEffect(EFFECT_FORCE, 0);
@@ -5410,10 +5410,10 @@ SaberFett263Buttons() : PropBase() {}
     if (volume > VOLUME) volume = VOLUME * 0.1;
     if (volume < (VOLUME * 0.1)) volume = VOLUME;
     if (volume > current_volume) {
-      STDOUT.println("Volume up");
-      sound_library_.SayVolumeUp();      
+      PVLOG_DEBUG << "Volume up\n";
+      sound_library_.SayVolumeUp();
     } else {
-      STDOUT.println("Volume Down");
+      PVLOG_DEBUG << "Volume Down\n";
       sound_library_.SayVolumeDown();
     }
 #else
@@ -5425,16 +5425,15 @@ SaberFett263Buttons() : PropBase() {}
       sound_library_.SayMinimumVolume();
     } else {
       if (v > 0) {
-        STDOUT.println("Volume up");
-        sound_library_.SayVolumeUp();      
+        PVLOG_DEBUG << "Volume up\n";
+        sound_library_.SayVolumeUp();
       } else {
-        STDOUT.println("Volume Down");
+        PVLOG_DEBUG << "Volume Down\n";
         sound_library_.SayVolumeDown();
       }
     }
 #endif
-    STDOUT.print("Current Volume: ");
-    STDOUT.println(dynamic_mixer.get_volume());
+    PVLOG_NORMAL << "Current Volume: " << dynamic_mixer.get_volume() << "\n";
     dynamic_mixer.set_volume(volume);
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
   }
@@ -5596,7 +5595,7 @@ SaberFett263Buttons() : PropBase() {}
         return false;
 
       case EVENTID(BUTTON_POWER, EVENT_THIRD_CLICK_LONG, MODE_OFF):
-        if (menu_) return true;      
+        if (menu_) return true;
         SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
         return true;
 
@@ -5611,7 +5610,7 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         } else {
           BeginRehearsal();
-        }        
+        }
         return true;
 
       // Choreographed Battle Mode
@@ -5722,7 +5721,7 @@ SaberFett263Buttons() : PropBase() {}
           SelectColorChangeMode();
           return true;
         }
-#endif      
+#endif
         if (menu_) {
           MenuChoice();
           return true;
@@ -5867,7 +5866,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           }
         }
 #else
-        STDOUT.println("Audio disabled.");
+        PVLOG_DEBUG << "Audio disabled.\n";
 #endif
         return true;
 
@@ -6082,7 +6081,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           SaberBase::SetClashStrength(8);
           SaberBase::DoBeginLockup();
           return true;
-        } 
+        }
 #endif
 
       case EVENTID(BUTTON_AUX, EVENT_HELD_LONG, MODE_ON):
@@ -6406,7 +6405,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           }
         }
 #else
-        STDOUT.println("Audio disabled.");
+        PVLOG_DEBUG << "Audio disabled.\n";
 #endif
         return true;
 
@@ -6453,7 +6452,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         BeginChoreo();
         return true;
 #endif
-		    
+
 #ifdef FETT263_MULTI_PHASE
       case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_ON | BUTTON_AUX):
 	if (menu_ || CheckShowColorCC()) return true;
@@ -6811,7 +6810,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           if (SFX_preon) {
 #ifdef FETT263_DUAL_MODE_SOUND
             SelectPreonSound();
-#endif  
+#endif
             On();
           } else {
             FastOn();
@@ -6862,10 +6861,10 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           }
         }
 #endif
-#ifdef FETT263_DUAL_MODE_SOUND          
+#ifdef FETT263_DUAL_MODE_SOUND
         SelectRetractionSound();
-#endif  
-#ifdef FETT263_TWIST_OFF_NO_POSTOFF  
+#endif
+#ifdef FETT263_TWIST_OFF_NO_POSTOFF
         Off(OFF_FAST);
 #else
         Off();
@@ -7044,7 +7043,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
       case EFFECT_FAST_OFF:
       case EFFECT_OFF:
         if (SaberBase::IsOn()) {
-#ifdef FETT263_DUAL_MODE_SOUND          
+#ifdef FETT263_DUAL_MODE_SOUND
           SelectRetractionSound();
 #endif
           if (effect == EFFECT_FAST_OFF) {
@@ -7082,7 +7081,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
             hybrid_font.PlayCommon(&SFX_faston);
           }
         } else {
-#ifdef FETT263_DUAL_MODE_SOUND          
+#ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
           FastOn();
@@ -7091,7 +7090,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         return;
       case EFFECT_ON:
         if (!SaberBase::IsOn()) {
-#ifdef FETT263_DUAL_MODE_SOUND          
+#ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
 #endif
           On();
@@ -7099,9 +7098,9 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         return;
       case EFFECT_SECONDARY_IGNITION:
         if (SaberBase::IsOn()) {
-#ifdef FETT263_DUAL_MODE_SOUND          
+#ifdef FETT263_DUAL_MODE_SOUND
           SelectIgnitionSound();
-#endif 
+#endif
           hybrid_font.PlayCommon(&SFX_out);
 	}
         return;
@@ -7134,7 +7133,7 @@ private:
   bool spin_mode_ = false;
 #endif
   bool preon_effect_ = false; // used for interactive preon, must be reset with EFFECT_FAST_ON
-#ifdef FETT263_QUICK_SELECT_ON_BOOT  
+#ifdef FETT263_QUICK_SELECT_ON_BOOT
   bool menu_ = true; // enable MENU_PRESET on boot
 #else
   bool menu_ = false; // Edit Mode / Menu System active
@@ -7156,7 +7155,7 @@ private:
   uint32_t saber_off_time_millis_; // Off timer
   uint32_t restart_millis_; // Used to time restarts to show preon timing.
   ClashType clash_type_ = CLASH_NONE;
-#ifdef FETT263_QUICK_SELECT_ON_BOOT  
+#ifdef FETT263_QUICK_SELECT_ON_BOOT
   MenuType menu_type_ = MENU_PRESET;
 #else
   MenuType menu_type_ = MENU_TOP;
