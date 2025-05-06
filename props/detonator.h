@@ -23,9 +23,7 @@ Optional .wav files:
 boot.wav
 font.wav
 
-.wav files you do not want: (if present, it will play before boom!)
-===========================
-endarm.wav
+Please note that if you have an endarm.wav in your font, it will play before boom.
 */
 
 #ifndef PROPS_DETONATOR_H
