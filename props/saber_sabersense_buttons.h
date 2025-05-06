@@ -1,4 +1,4 @@
-/* V7/8-222.
+/* V7/8-224.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -268,9 +268,8 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 #define SABERSENSE_SKIP_B 10
   As standard, presets can be skipped in batches to aid
   font navigation. Two skip levels are provided, A and B, 
-  which can be defined by the user.
-  If left undefined, the default is 5 preset skips for
-  Skip A and 10 for Skip B.
+  which default to 5 and 10 respectively. Values may be
+  overriden by the user in the config if desired.
 
 #define SABERSENSE_DISABLE_SKIPPING
   Completely disables all preset skipping, meaning
@@ -312,7 +311,6 @@ GESTURE CONTROLS
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
-
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
 class SaveArrayStateFile : public ConfigFile {
 public:
@@ -329,23 +327,11 @@ public:
         return return_value;
       }
       static void cycle() {
-#ifndef BLADE_DETECT_PIN
         return_value = (return_value + 1) % NELEM(blades);
-#else   // Improved logic fixes early Array1 repetition when using Blade Detect.
-        return_value++;
-        if (return_value == 0 || return_value >= NELEM(blades)) {
-          return_value = 1;
-        }
-#endif
       }
     };
-
-#ifndef BLADE_DETECT_PIN
     int SabersenseArraySelector::return_value;
-#else    
-    int SabersenseArraySelector::return_value = 1;
-#endif
-
+    
 #undef BLADE_ID_CLASS_INTERNAL
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
@@ -393,6 +379,10 @@ public:
 #define BUTTON_HELD_LONG_TIMEOUT 2000
 #endif
 
+#ifndef BUTTON_HELD_LONG_TIMEOUT
+#define BUTTON_HELD_LONG_TIMEOUT 2000
+#endif
+
 #ifndef SABERSENSE_SKIP_A
 #define SABERSENSE_SKIP_A 5
 #endif
@@ -400,17 +390,6 @@ public:
 #ifndef SABERSENSE_SKIP_B
 #define SABERSENSE_SKIP_B 10
 #endif
-
-#ifndef SABERSENSE_BATTERY_CHECK
-#define SABERSENSE_BATTERY_CHECK()                                         \
-      talkie.SayDigit((int)floorf(battery_monitor.battery()));              \
-      talkie.Say(spPOINT);                                                  \
-      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);  \
-      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10); \
-      talkie.Say(spVOLTS);                                                  \
-      SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
-#endif
-
 
 EFFECT(dim);      // for EFFECT_POWERSAVE
 EFFECT(battery);  // for EFFECT_BATTERY_LEVEL
@@ -516,6 +495,28 @@ public:
 #endif
   }
 
+    // Used for 1 button Preset Skipping.
+    // Uses SABERSENSE_SKIP_A/B for skip values.
+#ifndef SABERSENSE_DISABLE_SKIPPING
+  bool HandleSkipEvent(int skip_value) {
+    if (fusor.angle1() > M_PI / 6) {
+      // Pointing up, skip forward
+      SetPreset(current_preset_.preset_num + skip_value, true);
+    } else if (fusor.angle1() < -M_PI / 6) {
+      // Pointing down, skip backward
+      SetPreset(current_preset_.preset_num - skip_value, true);
+    } else {
+      // Horizontal, perform battery check
+      BatteryChecker();
+      return true;
+    }
+#ifdef SAVE_PRESET
+    SaveState(current_preset_.preset_num);
+#endif
+    return true;
+  }
+#endif
+
   // VOLUME MENU
   void VolumeUp() {
     STDOUT.println("Volume up");
@@ -559,6 +560,16 @@ public:
       }
       STDOUT.print("Minimum Volume: ");
     }
+  }
+
+  // BATTERY LEVEL INDICATOR
+  void BatteryChecker() {
+      talkie.SayDigit((int)floorf(battery_monitor.battery()));
+      talkie.Say(spPOINT);
+      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
+      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
+      talkie.Say(spVOLTS);
+      SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
   }
 
   // BLADE ID OPTIONS AND ARRAY MANAGEMENT
@@ -849,51 +860,21 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 
     // MULTIPLE PRESET SKIPPING
     // Skips forward when pointing up, backward when pointing down.
-    // Uses SABERSENSE_SKIP_A/B for skip numbers.
+    // Uses SABERSENSE_SKIP_A/B for skip values.
 #ifndef SABERSENSE_DISABLE_SKIPPING
 
-#if NUM_BUTTONS == 1
-    // First skip number (define A - default 5)
+#if NUM_BUTTONS == 1  // Up, Mid, Down.
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF): {
-      if (fusor.angle1() > M_PI / 6) {
-        // Pointing up, skip forward
-        SetPreset(current_preset_.preset_num + SABERSENSE_SKIP_A, true);
-      } else if (fusor.angle1() < -M_PI / 6) {
-        // Pointing down, skip backward
-        SetPreset(current_preset_.preset_num - SABERSENSE_SKIP_A, true);
-      } else {
-        // Horizontal, perform battery check
-        SABERSENSE_BATTERY_CHECK();
-        return true;
-      }
-#ifdef SAVE_PRESET
-      SaveState(current_preset_.preset_num);
-#endif
-      return true;
+      return HandleSkipEvent(SABERSENSE_SKIP_A);
     }
 
-    // Second skip number (define B - default 10)
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_OFF): {
-      if (fusor.angle1() > M_PI / 6) {
-        // Pointing up, skip forward
-        SetPreset(current_preset_.preset_num + SABERSENSE_SKIP_B, true);
-      } else if (fusor.angle1() < -M_PI / 6) {
-        // Pointing down, skip backward
-        SetPreset(current_preset_.preset_num - SABERSENSE_SKIP_B, true);
-      } else {
-        // Horizontal, perform battery check
-        SABERSENSE_BATTERY_CHECK();
-        return true;
-      }
-#ifdef SAVE_PRESET
-      SaveState(current_preset_.preset_num);
-#endif
-      return true;
+      return HandleSkipEvent(SABERSENSE_SKIP_B);
     }
 #endif
 
-#if NUM_BUTTONS == 2
-    // First skip number (define A - default 5)
+#if NUM_BUTTONS == 2  // Up, Down.
+    // First skip value (define A - default 5)
     case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF): {
       SetPreset(
           current_preset_.preset_num + 
@@ -906,7 +887,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
     }
 
-    // Second skip number (define B - default 10)
+    // Second skip value (define B - default 10)
     case EVENTID(BUTTON_AUX, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF): {
       SetPreset(
           current_preset_.preset_num + 
@@ -1208,11 +1189,10 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     break;
 #endif
 
-    // BATTERY LEVEL
     // 1 Button feature handled in Preset Skipping unless skipping disabled.
 #if (NUM_BUTTONS == 2) || (NUM_BUTTONS == 1 && defined(SABERSENSE_DISABLE_SKIPPING))
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
-      SABERSENSE_BATTERY_CHECK();
+      BatteryChecker();
       return true;
 #endif
 
