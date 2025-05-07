@@ -118,7 +118,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(SABERMODE)                    \
     DEFINE_EFFECT(BLASTERMODE)                  \
     DEFINE_EFFECT(DETONATORMODE)                \
-    DEFINE_EFFECT(JETPACKMODE)                  \
+    /* DEFINE_EFFECT(JETPACKMODE) */            \
 
 
 #define DEFINE_EFFECT(X) EFFECT_##X,
