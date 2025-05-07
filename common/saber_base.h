@@ -115,7 +115,6 @@ extern SaberBase* saberbases;
     /* menu effects, triggered when you go from one menu entry to the next/previous */                             \
     DEFINE_EFFECT(MENU_CHANGE)                  \
 
-
 #define DEFINE_EFFECT(X) EFFECT_##X,
 enum class EffectType {
   DEFINE_ALL_EFFECTS()
