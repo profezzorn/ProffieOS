@@ -1,4 +1,4 @@
-// version 065.08 working version for saber-blaster(with or without bullet count)-detonator-jetpack,
+// version 065.08 working version for saber-blaster(with or without bullet count)-detonator(-jetpack),
 // with switching presets sets, all with sound-effects on transition between props, provided by NoSloppy.
 
 /* Created by OlivierFlying747-8 with lots of help from Fredrik Hubinette aka profezzorn,
@@ -25,11 +25,10 @@ Blade detect function has no effect on multi_prop.h (other than playing blade in
 
 For now it is set as a "triple clic" on AUX2, but "triple click" on AUX will also work (if you are
 not using saber_sa22c_buttons.h as your saber of choice). An "EVENT_FOURTH_CLICK_LONG" on AUX should work
-for all props but I am unable to perform the move. You can uncomment one of the two in "bool Event(enum BUTTON button, EVENT event) override {"
-if you want to use multi_prop with a two buttons setup.
+for all props but I am unable to perform the move.
 
 Idealy, I would like to create a "MULTI_PROP_BUTTON_HELD_XTRA_LONG_TIMEOUT 1000 * 4" so multi_prop could be used
-with only one button.
+with only one button. The more I look into this, the less sure I become that it will be possible.
 
 This prop is for fun and is not Star Wars cannon. It only exists to add extra functionality to your saber, if you so choose.
 Thank you for reading.
@@ -147,7 +146,6 @@ struct FakeBladeID {                                       //
     return_value = id;                                     //
   }                                                        // Sabersense code part 1 of 2
 };                                                         // adapted to multi_prop.h
-// Initialize return_value to a default of 0 - SABER mode  //
 int FakeBladeID::return_value = 0;                         //
 #undef  BLADE_ID_CLASS_INTERNAL                            //
 #define BLADE_ID_CLASS_INTERNAL FakeBladeID                //
@@ -216,8 +214,8 @@ public:
                        On further thoughts, vehicle prop ideas will be merged into jetpack prop because I believe
                        they will do the same things (play with vehicles engines & weapons sounds). */
       // TRON = 8,  // I also had the idea for a Tron Disk Controller, but that has apparently been done already.
-                    /* I just need to put my hands on one of those "tron_prop.h" (wink) to see if I can make multi_prop
-                       compatible with it!
+                    /* I just need to put my hands on one of those "tron_prop.h" (wink), if one exists, to see if I
+                       can make multi_prop compatible with it!
       Please feel free to submit more "multi_prop fun ideas" on The Crucible or to my GitHub page:
       https://github.com/olivierflying747-8/Olis-ProffieOS/tree/06_props_Oli_buttons_SUGGESTIONS_WELCOME */
   };
