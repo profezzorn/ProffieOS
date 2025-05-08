@@ -69,6 +69,17 @@ struct HEVTimer {
     }
     return !active_;
   }
+  bool hazard_sequence(uint32_t warning_period, uint32_t damage_interval) {
+    if (!active_) return false;
+    uint32_t elapsed_time = millis() - start_;
+    // Still in warning period, no damage yet
+    if (elapsed_time < warning_period) {
+      return false;
+    }
+    // Past warning period, check if it's time for damage tick
+    uint32_t time_after_warning = elapsed_time - warning_period;
+    return (time_after_warning % damage_interval) == 0;
+  }
 };
 
 class Hev : public PROP_INHERIT_PREFIX PropBase {
@@ -183,62 +194,50 @@ public:
   }
 
   // Random Hazards
-  uint32_t last_random_draw_ = millis();
-  uint32_t post_death_cooldown_ = 0;
-
-  // Check and activation
   void CheckRandomEvent() {
-    // Don't allow Hazards if dead or during post-death cooldown.
-    // This prevents Hazards immediately after healing.
-    if (health_ == 0 || (post_death_cooldown_ &&
-      (millis() - post_death_cooldown_ < HEV_POST_DEATH_COOLDOWN_MS))) {
+    // Skip Hazard check if dead or during post-death cooldown
+    if (health_ == 0 || !post_death_cooldown_timer_.check(HEV_POST_DEATH_COOLDOWN_MS)) {
       return;
     }
 
-    // Activate a Hazard, only if health is above 0 and no Hazard is currently active.
-    if (millis() - last_random_draw_ > HEV_RANDOM_EVENT_INTERVAL_MS &&
-      health_ > 0 &&
+    // Initialize timer. Stops immediate Hazard at boot
+    if (!random_event_timer_.active_) {
+      random_event_timer_.start();
+      return;
+    }
+
+    // Check for new Hazard if timer expired and no current Hazard
+    if (random_event_timer_.check(HEV_RANDOM_EVENT_INTERVAL_MS) && 
       current_hazard_ == HAZARD_NONE) {
-      last_random_draw_ = millis();
+            
+      // Roll for Random Hazard
       if (random(100) < HEV_RANDOM_HAZARD_CHANCE) {
         PVLOG_NORMAL << "Activating hazard.\n";
         current_hazard_ = (Hazard)(1 + random(6));
-        hazard_decrease_millis_ = millis();
-        hazard_start_delay_ = 0;
         SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
       }
     }
   }
 
   // Hazard Damage. Decrease armor (if any) or health over time.
-  uint32_t hazard_start_delay_ = 0;
-  uint32_t hazard_decrease_millis_ = millis();
   void HazardDecrease() {
+    // Reset timer when hazard is cleared
     if (current_hazard_ == HAZARD_NONE) {
-      hazard_start_delay_ = 0;
+      hazard_delay_timer_.reset();
       return;
     }
 
-    // Check if this is a new hazard that needs initial delay
-    if (hazard_start_delay_ == 0) {
-      hazard_start_delay_ = millis();
+    // Start sequence if not running
+    if (!hazard_delay_timer_.active_) {
+      hazard_delay_timer_.start();
       return;
     }
 
-    // Wait for initial delay before starting damage
-    if (millis() - hazard_start_delay_ < HEV_HAZARD_DELAY_MS) {
-      return;
-    }
-
-    // Normal damage interval after initial delay
-    if (millis() - hazard_decrease_millis_ > HEV_HAZARD_DECREASE_MS) {
-      hazard_decrease_millis_ = millis();
-
-      // Play stun sounds if there is armor
+    // Check sequence and apply damage
+    if (hazard_delay_timer_.hazard_sequence(HEV_HAZARD_DELAY_MS, HEV_HAZARD_DECREASE_MS)) {
       if (armor_ > 0) {
         armor_--;
         SaberBase::DoEffect(EFFECT_STUN, 0.0, 1);
-        // Check if armor is 0 then play armor compromised sound.
         if (armor_ == 0) {
           SaberBase::DoEffect(EFFECT_USER2, 0.0, 0);
           PVLOG_NORMAL << "Armor Compromised!\n";
@@ -247,10 +246,10 @@ public:
         DoDamage(1);
       }
 
-      // Stop the current Hazard if health drops to 0
+      // Clear hazard on death
       if (health_ == 0) {
         current_hazard_ = HAZARD_NONE;
-        hazard_start_delay_ = 0; // Reset delay for next hazard
+        hazard_delay_timer_.reset();
         SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
       }
     }
@@ -266,7 +265,7 @@ public:
         // Start cooldown timer when health increases above 0.
         // This starts the check to prevent immediate Hazards after healing.
         if (health_ == 0) {
-          post_death_cooldown_ = millis(); // Start cooldown timer
+          post_death_cooldown_timer_.start();
         }
 
         health_++;
@@ -328,6 +327,8 @@ public:
         if (current_hazard_) {
           current_hazard_ = HAZARD_NONE;
           SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
+          random_event_timer_.reset();
+          random_event_timer_.start();
           return true;
         }
         // Play a no-hazard sound ?
