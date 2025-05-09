@@ -80,6 +80,9 @@ struct HEVTimer {
     uint32_t time_after_warning = elapsed_time - warning_period;
     return (time_after_warning % damage_interval) == 0;
   }
+  bool ready(uint32_t interval) {
+    return active_ && ((millis() - start_) >= interval);
+  }
 };
 
 class Hev : public PROP_INHERIT_PREFIX PropBase {
@@ -256,45 +259,38 @@ public:
   }
 
   // Increase health (Hold AUX).
-  uint32_t health_increase_millis_ = millis();
   void IncreaseHealth() {
-    if (SaberBase::Lockup()) {
-      if (millis() - health_increase_millis_ > HEV_HEALTH_INCREASE_MS) {
-        health_increase_millis_ = millis();
-
-        // Start cooldown timer when health increases above 0.
-        // This starts the check to prevent immediate Hazards after healing.
-        if (health_ == 0) {
-          post_death_cooldown_timer_.start();
-        }
-
-        health_++;
-        PVLOG_NORMAL << "Health: " << health_ << "\n";
-        if (health_ >= 100) {
-          health_ = 100;
-          SaberBase::DoEndLockup();
-          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-        }
+    if (SaberBase::Lockup() && health_increase_timer_.ready(HEV_HEALTH_INCREASE_MS)) {
+      if (health_ == 0) {
+        post_death_cooldown_timer_.start();
       }
+
+      health_++;
+      PVLOG_NORMAL << "Health: " << health_ << "\n";
+      
+      if (health_ >= 100) {
+        health_ = 100;
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+      }
+      
+      health_increase_timer_.start();  // Restart timer for next health increase
     }
   }
 
   // Increase armor (Hold POWER).
-  uint32_t armor_increase_millis_ = millis();
   void IncreaseArmor() {
-    if (SaberBase::Lockup()) {
-      if (millis() - armor_increase_millis_ > HEV_ARMOR_INCREASE_MS) {
-        armor_increase_millis_ = millis();
-
-        armor_++;
-        PVLOG_NORMAL << "Armor: " << armor_ << "\n";
-
-        if (armor_ >= 100) {
-          armor_ = 100;
-          SaberBase::DoEndLockup();
-          SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-        }
+    if (SaberBase::Lockup() && armor_increase_timer_.ready(HEV_ARMOR_INCREASE_MS)) {
+      armor_++;
+      PVLOG_NORMAL << "Armor: " << armor_ << "\n";
+      
+      if (armor_ >= 100) {
+        armor_ = 100;
+        SaberBase::DoEndLockup();
+        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
       }
+      
+      armor_increase_timer_.start();
     }
   }
 
@@ -361,6 +357,7 @@ public:
         if (!SaberBase::Lockup()) {
           SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
           SaberBase::DoBeginLockup();
+          health_increase_timer_.start();
           return true;
         }
         break;
@@ -371,6 +368,7 @@ public:
         if (SaberBase::Lockup()) {
           SaberBase::DoEndLockup();
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+          health_increase_timer_.reset();
           return true;
         }
         break;
@@ -380,6 +378,7 @@ public:
         if (!SaberBase::Lockup()) {
           SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
           SaberBase::DoBeginLockup();
+          armor_increase_timer_.start();
           return true;
         }
         break;
@@ -390,6 +389,7 @@ public:
         if (SaberBase::Lockup()) {
           SaberBase::DoEndLockup();
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+          armor_increase_timer_.reset();
           return true;
         }
         break;
