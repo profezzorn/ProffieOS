@@ -128,44 +128,6 @@ BladeConfig blades[] = {
     // with your blade(s) definition(s) here.
     CONFIGARRAY(presets_droid), "__droid_save" },
 
-// === multi_prop.h history (working versions - mostly) ===
-    //Attempt 025 is Saber + Blaster with bullets count
-    //Attempt 028 is Saber + Blaster + bullets count + Detonator & sound effects on transition between props
-    //Attempt 029 is Saber + Blaster + bullets count + Detonator + Jetpack & sound effects
-    //Attempt 030 is trying to fix/solve button mapping (for Blaster)
-    //Version 035 is Saber + Blaster with buttons mapping + Detonator + Jetpack + MorseCode & sound effects
-    //Version 044 is Saber + Blaster (with btts mapp & bullets cnt) + TD + JP + MC + sounds eff. + multi-presets
-    //Version 045 is same as 044 with trying helper function to reduce repetitions (not yet working)
-    //Version 048 is helper functions working except "extern void SetMessageOLED(const char* message);"
-    //Version 049 is stop repetition 1
-    //Version 050 is stop repetition 2
-    //Version 051 is 050 without "#include <functional>" // Added for std::function
-    //Version 059 is display_SetMessage working but modifs to ProffieOS.ino & /display/ssd1306.h
-// added for messages from multi_prop.h at the bottom of ProffieOS.ino            // *** added by Oli ***
-#if defined(INCLUDE_SSD1306) || defined(ENABLE_SSD1306)                           // *** added by Oli ***
-void display_SetMessage(const char* message) {                                    // *** added by Oli ***
-   display_controller.SetMessage(message); // with ssd1306working02               // *** added by Oli ***
-   //display_controller.ops_.op_.SetMessage(message); // with ssd1306working01    // *** added by Oli ***
-}                                                                                 // *** added by Oli ***
-#endif                                                                            // *** added by Oli ***
-// in display\ssd13606.h in class DisplayHelper2<Width, col_t, OP, OPS...> { // line 197:
-// === added by Oli (part 1 of 2) for SetMessage ===                                      // added by Oli
-  // Pass-through method for SetMessage                                                   // added by Oli
-  void SetMessage(const char* message) {                                                  // added by Oli
-    op_.SetMessage(message); // Accessing `op_` internally                                // added by Oli
-  }                                                                                       // added by Oli
-// in display\ssd13606.h in class DisplayHelper : public DisplayControllerBase<Width, col_t> { // line 246:
-// === added by Oli (part 2 of 2) for SetMessage ===                                      // added by Oli
-  void SetMessage(const char* message) {                                                  // added by Oli
-    ops_.SetMessage(message);  // Delegates to the `SetMessage` in DisplayHelper2         // added by Oli
-  }                                                                                       // added by Oli
-    //Version 060 is added SaberBase::DoEffect(EFFECT_...)
-    //Version 062 is added SaberBase::DoEffect(EFFECT_...) fully coded.
-    //Version 064 is multipropdisplaycontroller.h included and commented out because it is not yet possible to make it work from here.
-    //Version 068.08 is fully working, however it doesn't use an Extra Long push to change props.
-*/
-// https://pod.hubbe.net/howto/making-your-own-prop-file.html
-
 #ifndef PROPS_MULTI_PROP_H
 #define PROPS_MULTI_PROP_H
 
@@ -185,19 +147,14 @@ void display_SetMessage(const char* message) {                                  
 #endif
 */
 
-// Define FakeBladeID structure
 struct FakeBladeID {                                       //
   static int return_value;  // Holds the current mode ID   //
-  // Method to return the current blade ID                 //
   float id() { return return_value; }                      //
-  // Method to set the blade ID based on the mode          //
   static void SetFakeBlade(int id) {                       //
     return_value = id;                                     //
   }                                                        // Sabersense code part 1 of 2
 };                                                         // adapted to multi_prop.h
-// Initialize return_value to a default of 0 - SABER mode  //
 int FakeBladeID::return_value = 0;                         //
-// Redefine the blade ID class to use FakeBladeID          //
 #undef  BLADE_ID_CLASS_INTERNAL                            //
 #define BLADE_ID_CLASS_INTERNAL FakeBladeID                //
 #undef  BLADE_ID_CLASS                                     //
@@ -213,8 +170,6 @@ EFFECT(jetpackmode);
 //NO-EFFECT(morsecodemode); No need for a "morsecode.wav" file. This is done using "Beepers" in Morse code.
 //EFFECT(droidmode);          // Un-comment if implementing droid   (wav available - but no prop yet)
 
-// Template to support multi-prop modes, this is the "prop class" or prop section.
-// MultiProp class
 template<class Saber, class Blaster, class Detonator,
          class Jetpack> /*, class MorseCode , class Droid*/
 class MultiProp : public virtual Saber, public virtual Blaster, public virtual Detonator,
@@ -265,7 +220,6 @@ public:
   }
   const char* name() override { return "MultiProp"; }
 
-  // Enumeration for modes
   enum class Prop_Mode {
         SABER = 0,
       BLASTER = 1,
@@ -288,15 +242,13 @@ public:
 
   Prop_Mode currentMode_MP = Prop_Mode::SABER;  // Initial state is Saber
 
-  // Helper function to set FakeBladeID and re-detect the blade
-  void updateBladeIDAndDetect(int blade_id) {
+   void updateBladeIDAndDetect(int blade_id) {
     FakeBladeID::SetFakeBlade(blade_id);             //
     PVLOG_DEBUG << "*** Fake blade id'ed\n";         // Sabersense code part 2 of 2
     PropBase::FindBladeAgain();                      // adapted to multi_prop.h
     SaberBase::DoBladeDetect(true);                  //
   }
 
-  // Switch modes helper to reduce repetition.
   void swapProp(Prop_Mode modenext, const char* message, int blade_id, EffectType effect) {
     PropBase::Off(PropBase::OFF_FAST);
     PVLOG_STATUS << message << "\n";
@@ -481,7 +433,6 @@ public:
 
   void announcemode(Effect* sound_name) {
     if (!hybrid_font.PlayPolyphonic(sound_name)) {
-      // Use beeper for fallback sounds
       beeper.Beep(0.05, 2000);
       beeper.Silence(0.05);
       beeper.Beep(0.05, 2000);
