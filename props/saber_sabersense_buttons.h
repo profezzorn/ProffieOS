@@ -79,57 +79,54 @@ Hence:
         Volume menu with blade OFF
 
 ============================================================
-===================== 2 BUTTON CONTROLS ====================
+===================== 1 BUTTON CONTROLS ====================
 
 POWER FUNCTIONS
-  Activate blade            Short click POWER. *
-  Activate blade mute       Long click POWER (hold for one second then release).
-  Deactivate blade          Press and hold POWER and wait until blade is off.
+  Activate blade            Short click while OFF. *
+  Activate blade mute       Long click while OFF, hilt horizontal.
+                              (Hold for one second then release).
+  Deactivate blade          Hold and wait until blade is off while ON.
 
 FUNCTIONS WITH BLADE OFF
-  Next preset               Short click AUX, hilt pointing upwards.
-  Previous preset           Short click AUX, hilt pointing downwards.
-  Previous preset           Hold AUX and short click POWER.
-                              (Duplicate legacy command).
-  Skip to first preset      Press and hold any button until it switches, hilt upwards.
-  Skip to middle preset     Press and hold any button until it switches, hilt horizontal.
-  Skip to last preset       Press and hold any button until it switches, hilt downwards.
-  Skip forward 5 presets    Fast double-click AUX, hilt pointing upwards.
-  Skip back 5 presets       Fast double-click AUX, hilt pointing downwards.
-  Skip forward 10 presets   Fast triple-click AUX, hilt pointing upwards.
-  Skip back 10 presets      Fast triple-click AUX, hilt pointing downwards.
-  Play Character Quote      Fast double-click POWER, hilt pointing up, plays sequentially. **
-  Play Music Track          Fast double-click POWER, pointing down. **
-  Speak battery voltage     Fast double-click-and-hold POWER.
-  Run BladeID/Array Select  Fast triple-click. (Applicable installs only).
-  Restore Factory Defaults  Fast four-clicks POWER, hold on last click.
+  Next preset               Long click while OFF, hilt pointing up.
+                              (Hold for one second then release).
+  Previous preset           Long click while OFF, hilt pointing down.
+                              (Hold for one second then release).
+  Skip to first preset      Press and hold until it switches, hilt pointing upwards.
+  Skip to middle preset     Press and hold until it switches, hilt horizontal.
+  Skip to last preset       Press and hold until it switches, hilt pointing downwards.
+  Skip forward 5 presets    Fast double-click-and-hold, hilt pointing upwards.
+  Skip back 5 presets       Fast double-click-and-hold, hilt pointing downwards.
+  Skip forward 10 presets   Fast triple-click-and-hold, hilt pointing upwards.
+  Skip back 10 presets      Fast triple-click-and-hold, hilt pointing downwards.
+  Play Character Quote      Fast double-click, hilt pointing up, plays sequentially. **
+  Play Music Track          Fast double-click, hilt pointing down. **
+  Speak battery voltage     Fast double-click-and-hold, hilt horizontal.
+  Run BladeID/Array Select  Fast triple-click while OFF. (Applicable installs only).
+  Restore Factory Defaults  Fast four-clicks while OFF, hold on last click.
                               Release once announcement starts.
-  Enter/Exit VOLUME MENU    Hold POWER then quickly click AUX and release both simultaneously.
-    Volume up               Click POWER while in VOLUME MENU, hilt pointing up.
-    Volume down             Click POWER while in VOLUME MENU, hilt pointing down, OR click
-                              AUX while in VOLUME MENU.
+  Enter/Exit VOLUME MENU    Hold and clash while OFF.
+    Volume up               Click while in VOLUME MENU, hilt pointing up.
+    Volume down             Click while in VOLUME MENU, hilt pointing down.
                               Volume adjusts in increments per click.
-                              You must exit VOLUME MENU to resume using saber normally.
+                              You must exit VOLUME MENU to resume using lightsaber normally.
 
 FUNCTIONS WITH BLADE ON
-  Blade lockup              Press and hold AUX.
-  Blade tip drag            Press and hold AUX while blade is pointing down.
-  Play Character Quote      Fast double-click POWER, hilt pointing up, plays sequentially. **
-  Force Effect              Fast double-click POWER, hilt pointing down, plays randomly. **
-  Lightning block           Double-click POWER and hold.
-  Melt                      Hold POWER and stab blade tip against wall. Rotate for heat colours.
-  Blaster blocks            Short click AUX. (Add Short click POWER using define).
-  Enter multi-blast mode    Hold POWER while swinging for one second and release.
-                              Saber will play two quick blasts confirming mode.
-                              Swing blade to trigger blaster block.
-                              To exit multi-blast mode, fast single click AUX.
+  Blade lockup              Hold and hit clash while ON.
+  Blade tip drag            Hold and hit clash while ON pointing the blade tip down.
+  Play Character Quote      Fast double-click, hilt pointing up, plays sequentially. **
+  Force Effect              Fast double-click, hilt pointing down, plays randomly. **
+  Lightning block           Double click and hold while ON.
+  Melt                      Hold and push blade tip against wall (stab). Rotate for heat colours.
+  Blaster blocks            Short click/double click/triple click while ON.
+  Enter multi-blast mode    Hold while swinging for one second and release.
+                              To trigger blaster block, swing saber while in multi-blast mode.
+                              To exit, hold while swinging for one second and release.
 
 COLOUR CHANGE FUNCTIONS WITH BLADE ON
-  Enter COLOUR MENU         Hold POWER then quickly click AUX and release both
-                            buttons simultaneously. Or fast triple-click POWER.
+  Enter COLOUR MENU         Fast triple-click while ON.
                               Announcement confirms you are in the COLOUR MENU.
   Cycle to next colour      Rotate hilt whilst in COLOUR MENU until desired colour is reached.
-                              Most Sabersense presets have 12 colour options.
   Exit COLOUR MENU          Short click saves new colour and exits.
                             Fast-double-click exits and reverts to original colour.
                               Announcement confirms you are exiting COLOUR MENU.
