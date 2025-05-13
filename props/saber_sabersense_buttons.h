@@ -1,4 +1,4 @@
-/* V7/8-241.
+/* V7/8-242.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -891,7 +891,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // PRESET SKIPPING
     // Skips forward when pointing up, backward when pointing down.
     // Uses SABERSENSE_FONT_SKIP_A/B for skip values.
-#ifndef SABERSENSE_DISABLE_SKIPPING
+#ifndef SABERSENSE_DISABLE_FONT_SKIPPING
 #if NUM_BUTTONS == 1
     // First skip value (define A - default 5)
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF): {
@@ -1201,7 +1201,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #endif
 
     // 1 Button feature handled in Preset Skipping unless skipping disabled.
-#if (NUM_BUTTONS == 2) || (NUM_BUTTONS == 1 && defined(SABERSENSE_DISABLE_SKIPPING))
+#if (NUM_BUTTONS == 2) || (NUM_BUTTONS == 1 && defined(SABERSENSE_DISABLE_FONT_SKIPPING))
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
       SpeakBatteryLevel();
       return true;
