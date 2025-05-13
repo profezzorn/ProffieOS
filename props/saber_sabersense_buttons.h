@@ -1,4 +1,4 @@
-/* V7/8-224.
+/* V7/8-241.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -78,55 +78,58 @@ Hence:
         Colour change with blade ON
         Volume menu with blade OFF
 
-==========================================================
-=================== 1 BUTTON CONTROLS ====================
+============================================================
+===================== 2 BUTTON CONTROLS ====================
 
 POWER FUNCTIONS
-  Activate blade            Short click while OFF. *
-  Activate blade mute       Long click while OFF, hilt horizontal.
-                              (Hold for one second then release).
-  Deactivate blade          Hold and wait until blade is off while ON.
+  Activate blade            Short click POWER. *
+  Activate blade mute       Long click POWER (hold for one second then release).
+  Deactivate blade          Press and hold POWER and wait until blade is off.
 
 FUNCTIONS WITH BLADE OFF
-  Next preset               Long click while OFF, hilt pointing up.
-                              (Hold for one second then release).
-  Previous preset           Long click while OFF, hilt pointing down.
-                              (Hold for one second then release).
-  Skip to first preset      Press and hold until it switches, hilt pointing upwards.
-  Skip to middle preset     Press and hold until it switches, hilt horizontal.
-  Skip to last preset       Press and hold until it switches, hilt pointing downwards.
-  Skip forward 5 presets    Fast double-click-and-hold while OFF, hilt pointing upwards.
-  Skip back 5 presets       Fast double-click-and-hold while OFF, hilt pointing downwards.
-  Skip forward 10 presets   Fast triple-click-and-hold while OFF, hilt pointing upwards.
-  Skip back 10 presets      Fast triple-click-and-hold while OFF, hilt pointing downwards.
-  Play Character Quote      Fast double-click, hilt pointing up, plays sequentially. **
-  Play Music Track          Fast double-click, hilt pointing down. **
-  Speak battery voltage     Fast double-click-and-hold while OFF, hilt horizontal.
-  Run BladeID/Array Select  Fast triple-click while OFF. (Applicable installs only).
-  Restore Factory Defaults  Fast four-clicks while OFF, hold on last click.
+  Next preset               Short click AUX, hilt pointing upwards.
+  Previous preset           Short click AUX, hilt pointing downwards.
+  Previous preset           Hold AUX and short click POWER.
+                              (Duplicate legacy command).
+  Skip to first preset      Press and hold any button until it switches, hilt upwards.
+  Skip to middle preset     Press and hold any button until it switches, hilt horizontal.
+  Skip to last preset       Press and hold any button until it switches, hilt downwards.
+  Skip forward 5 presets    Fast double-click AUX, hilt pointing upwards.
+  Skip back 5 presets       Fast double-click AUX, hilt pointing downwards.
+  Skip forward 10 presets   Fast triple-click AUX, hilt pointing upwards.
+  Skip back 10 presets      Fast triple-click AUX, hilt pointing downwards.
+  Play Character Quote      Fast double-click POWER, hilt pointing up, plays sequentially. **
+  Play Music Track          Fast double-click POWER, pointing down. **
+  Speak battery voltage     Fast double-click-and-hold POWER.
+  Run BladeID/Array Select  Fast triple-click. (Applicable installs only).
+  Restore Factory Defaults  Fast four-clicks POWER, hold on last click.
                               Release once announcement starts.
-  Enter/Exit VOLUME MENU    Hold and clash while OFF.
-    Volume up               Click while in VOLUME MENU, hilt pointing up.
-    Volume down             Click while in VOLUME MENU, hilt pointing down.
+  Enter/Exit VOLUME MENU    Hold POWER then quickly click AUX and release both simultaneously.
+    Volume up               Click POWER while in VOLUME MENU, hilt pointing up.
+    Volume down             Click POWER while in VOLUME MENU, hilt pointing down, OR click
+                              AUX while in VOLUME MENU.
                               Volume adjusts in increments per click.
-                              You must exit VOLUME MENU to resume using lightsaber normally.
+                              You must exit VOLUME MENU to resume using saber normally.
 
 FUNCTIONS WITH BLADE ON
-  Blade lockup              Hold and hit clash while ON.
-  Blade tip drag            Hold and hit clash while ON pointing the blade tip down.
-  Play Character Quote      Fast double-click, hilt pointing up, plays sequentially. **
-  Force Effect              Fast double-click, hilt pointing down, plays randomly. **
-  Lightning block           Double click and hold while ON.
-  Melt                      Hold and push blade tip against wall (stab). Rotate for heat colours.
-  Blaster blocks            Short click/double click/triple click while ON.
-  Enter multi-blast mode    Hold while swinging for one second and release.
-                              To trigger blaster block, swing saber while in multi-blast mode.
-                              To exit, hold while swinging for one second and release.
+  Blade lockup              Press and hold AUX.
+  Blade tip drag            Press and hold AUX while blade is pointing down.
+  Play Character Quote      Fast double-click POWER, hilt pointing up, plays sequentially. **
+  Force Effect              Fast double-click POWER, hilt pointing down, plays randomly. **
+  Lightning block           Double-click POWER and hold.
+  Melt                      Hold POWER and stab blade tip against wall. Rotate for heat colours.
+  Blaster blocks            Short click AUX. (Add Short click POWER using define).
+  Enter multi-blast mode    Hold POWER while swinging for one second and release.
+                              Saber will play two quick blasts confirming mode.
+                              Swing blade to trigger blaster block.
+                              To exit multi-blast mode, fast single click AUX.
 
 COLOUR CHANGE FUNCTIONS WITH BLADE ON
-  Enter COLOUR MENU         Fast triple-click while ON.
+  Enter COLOUR MENU         Hold POWER then quickly click AUX and release both
+                            buttons simultaneously. Or fast triple-click POWER.
                               Announcement confirms you are in the COLOUR MENU.
   Cycle to next colour      Rotate hilt whilst in COLOUR MENU until desired colour is reached.
+                              Most Sabersense presets have 12 colour options.
   Exit COLOUR MENU          Short click saves new colour and exits.
                             Fast-double-click exits and reverts to original colour.
                               Announcement confirms you are exiting COLOUR MENU.
@@ -263,15 +266,15 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   in 2-button mode. Improves 1 and 2-button harmonization,
   but makes accidental blasts more likely when double-
   clicking POWER for Quotes or Force Effect.
-  
-#define SABERSENSE_SKIP_A 5
-#define SABERSENSE_SKIP_B 10
+
+#define SABERSENSE_FONT_SKIP_A 5
+#define SABERSENSE_FONT_SKIP_B 10
   As standard, presets can be skipped in batches to aid
   font navigation. Two skip levels are provided, A and B, 
   which default to 5 and 10 respectively. Values may be
   overriden by the user in the config if desired.
 
-#define SABERSENSE_DISABLE_SKIPPING
+#define SABERSENSE_DISABLE_FONT_SKIPPING
   Completely disables all preset skipping, meaning
   presets may only be cycled through one at a time.
   Suitable for installs with small numbers of fonts
@@ -379,16 +382,12 @@ public:
 #define BUTTON_HELD_LONG_TIMEOUT 2000
 #endif
 
-#ifndef BUTTON_HELD_LONG_TIMEOUT
-#define BUTTON_HELD_LONG_TIMEOUT 2000
+#ifndef SABERSENSE_FONT_SKIP_A
+#define SABERSENSE_FONT_SKIP_A 5
 #endif
 
-#ifndef SABERSENSE_SKIP_A
-#define SABERSENSE_SKIP_A 5
-#endif
-
-#ifndef SABERSENSE_SKIP_B
-#define SABERSENSE_SKIP_B 10
+#ifndef SABERSENSE_FONT_SKIP_B
+#define SABERSENSE_FONT_SKIP_B 10
 #endif
 
 EFFECT(dim);      // for EFFECT_POWERSAVE
@@ -494,28 +493,61 @@ public:
     }
 #endif
   }
+  
+  // PRESET SKIPPING
+  // Skip Value definable.
+  // One Button System - Up, Horizontal, Down.
+  bool OneBtnMultiFontSkip(int skip_value) {
+      int count = 0;
+      CurrentPreset tmp;
+      for (int i = 0; ; i++) {
+          tmp.SetPreset(i);
+          if (tmp.preset_num != i) break;
+          count++;
+      }
+      float angle = fusor.angle1();
+      int new_index = current_preset_.preset_num;
 
-    // Used for 1 button Preset Skipping.
-    // Uses SABERSENSE_SKIP_A/B for skip values.
-#ifndef SABERSENSE_DISABLE_SKIPPING
-  bool HandleSkipEvent(int skip_value) {
-    if (fusor.angle1() > M_PI / 6) {
-      // Pointing up, skip forward
-      SetPreset(current_preset_.preset_num + skip_value, true);
-    } else if (fusor.angle1() < -M_PI / 6) {
-      // Pointing down, skip backward
-      SetPreset(current_preset_.preset_num - skip_value, true);
-    } else {
-      // Horizontal, perform battery check
-      BatteryChecker();
-      return true;
-    }
+      if (angle < -M_PI / 6) { // Pointing down
+          new_index -= skip_value;
+      } else if (angle > M_PI / 6) { // Pointing up
+          new_index += skip_value;
+      } else { // Horizontal
+          SpeakBatteryLevel();
+          return true;
+      }
+      // Capping, not wrapping - less disorientating for user.
+      if (new_index < 0) new_index = 0;
+      if (new_index >= count) new_index = count - 1;
+      // Save state before setting the preset
+      SetPreset(new_index, true);
 #ifdef SAVE_PRESET
-    SaveState(current_preset_.preset_num);
+      SaveState(new_index);
 #endif
-    return true;
+      return true;
   }
+
+  // Two Button System - Up, Down.
+  bool TwoBtnMultiFontSkip(int skip_value) {
+      int count = 0;
+      CurrentPreset tmp;
+      for (int i = 0; ; i++) {
+          tmp.SetPreset(i);
+          if (tmp.preset_num != i) break;
+          count++;
+      }
+      int delta = (fusor.angle1() < -M_PI / 4) ? -skip_value : skip_value;
+      int new_index = current_preset_.preset_num + delta;      
+      // Capping, not wrapping - less disorientating for user.
+      if (new_index < 0) new_index = 0;
+      if (new_index >= count) new_index = count - 1;
+      // Save state before setting the preset
+      SetPreset(new_index, true);
+#ifdef SAVE_PRESET
+      SaveState(new_index);
 #endif
+      return true;
+  }
 
   // VOLUME MENU
   void VolumeUp() {
@@ -561,9 +593,9 @@ public:
       STDOUT.print("Minimum Volume: ");
     }
   }
-
+  
   // BATTERY LEVEL INDICATOR
-  void BatteryChecker() {
+  void SpeakBatteryLevel() {
       talkie.SayDigit((int)floorf(battery_monitor.battery()));
       talkie.Say(spPOINT);
       talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
@@ -786,7 +818,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
       IgnoreClash(100);  // Hopefully prevents false clashes due to 'clicky' button.
-                         // Low threshold so as not to conflict with 1-button volume menu access.
+                         // Low threshold so as not to conflict with 1-button volume menu access.             
       if (fusor.angle1() > M_PI / 6) {
         // Pointing up
         next_preset();
@@ -800,6 +832,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
           On();
         }
       }
+
 #ifdef SAVE_PRESET
       SaveState(current_preset_.preset_num);
 #endif
@@ -839,7 +872,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       // backwards if pointing down
       if (!mode_volume_) {
-        SetPreset(current_preset_.preset_num + (fusor.angle1() > 0 ? 1 : -1), true);
+        SetPreset(current_preset_.preset_num + (fusor.angle1() < -M_PI / 4 ? -1 : 1), true);
       } else {
         VolumeDown();
       }
@@ -858,46 +891,27 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 #endif
 
-    // MULTIPLE PRESET SKIPPING
+    // PRESET SKIPPING
     // Skips forward when pointing up, backward when pointing down.
-    // Uses SABERSENSE_SKIP_A/B for skip values.
+    // Uses SABERSENSE_FONT_SKIP_A/B for skip values.
 #ifndef SABERSENSE_DISABLE_SKIPPING
-
-#if NUM_BUTTONS == 1  // Up, Mid, Down.
+#if NUM_BUTTONS == 1
+    // First skip value (define A - default 5)
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF): {
-      return HandleSkipEvent(SABERSENSE_SKIP_A);
+      return OneBtnMultiFontSkip(SABERSENSE_FONT_SKIP_A);
     }
-
+    // Second skip value (define B - default 10)
     case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_OFF): {
-      return HandleSkipEvent(SABERSENSE_SKIP_B);
+      return OneBtnMultiFontSkip(SABERSENSE_FONT_SKIP_B);
     }
-#endif
-
-#if NUM_BUTTONS == 2  // Up, Down.
+#else
     // First skip value (define A - default 5)
     case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF): {
-      SetPreset(
-          current_preset_.preset_num + 
-              (fusor.angle1() > 0 ? SABERSENSE_SKIP_A : -SABERSENSE_SKIP_A), 
-          true
-      );
-#ifdef SAVE_PRESET
-      SaveState(current_preset_.preset_num);
-#endif
-      return true;
+      return TwoBtnMultiFontSkip(SABERSENSE_FONT_SKIP_A);
     }
-
-    // Second skip value (define B - default 10)
+    // First skip value (define B - default 10)
     case EVENTID(BUTTON_AUX, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF): {
-      SetPreset(
-          current_preset_.preset_num + 
-              (fusor.angle1() > 0 ? SABERSENSE_SKIP_B : -SABERSENSE_SKIP_B), 
-          true
-      );
-#ifdef SAVE_PRESET
-      SaveState(current_preset_.preset_num);
-#endif
-      return true;
+      return TwoBtnMultiFontSkip(SABERSENSE_FONT_SKIP_B);
     }
 #endif
 
@@ -908,13 +922,13 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #endif
     case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
       if (fusor.angle1() > M_PI / 6) {
-        // Pointing up, next preset
+        // If pointing up
         SetPreset(0, true);
       } else if (fusor.angle1() < -M_PI / 6) {
-        // Pointing down, previous preset
+        // If pointing down
         SetPreset(-1, true);
       } else {
-        // Horizontal, middle preset
+        // If horizontal
         CurrentPreset tmp;
         tmp.SetPreset(-1);
         SetPreset(tmp.preset_num / 2, true);
@@ -1192,7 +1206,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // 1 Button feature handled in Preset Skipping unless skipping disabled.
 #if (NUM_BUTTONS == 2) || (NUM_BUTTONS == 1 && defined(SABERSENSE_DISABLE_SKIPPING))
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
-      BatteryChecker();
+      SpeakBatteryLevel();
       return true;
 #endif
 
