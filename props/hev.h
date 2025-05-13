@@ -58,28 +58,29 @@ EFFECT(minor);
 EFFECT(morphine);
 
 struct HEVTimer {
-  uint32_t start_;
+  uint32_t start_ = 0;
+  uint32_t next_tick_ = 0;
   bool active_ = false;
 
-  void reset() { active_ = false; }
-  void start() { active_ = true; start_ = millis(); }
+  void reset() { active_ = false; next_tick_ = 0; }
+  
+  void start() { active_ = true; start_ = next_tick_ = millis(); }
+
+  // Returns true if timer is inactive or timeout exceeded
   bool check(uint32_t timeout) {
-    if (active_ && (millis() - start_ > timeout)) {
-      reset();
-    }
-    return !active_;
+    return !active_ || (millis() - start_ > timeout);
   }
-  bool hazard_sequence(uint32_t warning_period, uint32_t damage_interval) {
+
+  // Manages hazard warning and damage sequence timing
+  bool hazard_sequence(uint32_t warning_period, uint32_t tick_interval) {
     if (!active_) return false;
-    uint32_t elapsed_time = millis() - start_;
-    // Still in warning period, no damage yet
-    if (elapsed_time < warning_period) {
-      return false;
-    }
-    // Past warning period, check if it's time for damage tick
-    uint32_t time_after_warning = elapsed_time - warning_period;
-    return (time_after_warning % damage_interval) == 0;
+    uint32_t now = millis();
+    
+    return (now - start_ >= warning_period) && 
+           ((now >= next_tick_) ? (next_tick_ = now + tick_interval, true) : false);
   }
+
+  // Returns true if timer is active and interval has elapsed
   bool ready(uint32_t interval) {
     return active_ && ((millis() - start_) >= interval);
   }
@@ -260,38 +261,40 @@ public:
 
   // Increase health (Hold AUX).
   void IncreaseHealth() {
-    if (SaberBase::Lockup() && health_increase_timer_.ready(HEV_HEALTH_INCREASE_MS)) {
-      if (health_ == 0) {
-        post_death_cooldown_timer_.start();
-      }
-
-      health_++;
-      PVLOG_NORMAL << "Health: " << health_ << "\n";
-      
-      if (health_ >= 100) {
-        health_ = 100;
-        SaberBase::DoEndLockup();
-        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-      }
-      
-      health_increase_timer_.start();  // Restart timer for next health increase
+    if (health_ >= 100) {
+      SaberBase::DoEndLockup();
+      SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+      return;
     }
+
+    if (!SaberBase::Lockup() || !health_increase_timer_.ready(HEV_HEALTH_INCREASE_MS)) {
+      return;
+    }
+
+    if (health_ == 0) {
+      post_death_cooldown_timer_.start();
+    }
+
+    health_++;
+    health_increase_timer_.start();
+    PVLOG_NORMAL << "Health: " << health_ << "\n";
   }
 
   // Increase armor (Hold POWER).
   void IncreaseArmor() {
-    if (SaberBase::Lockup() && armor_increase_timer_.ready(HEV_ARMOR_INCREASE_MS)) {
-      armor_++;
-      PVLOG_NORMAL << "Armor: " << armor_ << "\n";
-      
-      if (armor_ >= 100) {
-        armor_ = 100;
-        SaberBase::DoEndLockup();
-        SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-      }
-      
-      armor_increase_timer_.start();
+    if (armor_ >= 100) {
+      SaberBase::DoEndLockup();
+      SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
+      return;
     }
+
+    if (!SaberBase::Lockup() || !armor_increase_timer_.ready(HEV_ARMOR_INCREASE_MS)) {
+      return;
+    }
+
+    armor_++;
+    armor_increase_timer_.start();
+    PVLOG_NORMAL << "Armor: " << armor_ << "\n";
   }
 
   // Main Loop
