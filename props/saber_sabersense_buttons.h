@@ -906,7 +906,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF): {
       return TwoBtnMultiFontSkip(SABERSENSE_FONT_SKIP_A);
     }
-    // First skip value (define B - default 10)
+    // Second skip value (define B - default 10)
     case EVENTID(BUTTON_AUX, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF): {
       return TwoBtnMultiFontSkip(SABERSENSE_FONT_SKIP_B);
     }
