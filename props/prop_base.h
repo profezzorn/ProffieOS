@@ -1764,6 +1764,10 @@ public:
       ToggleColorChangeMode();
       return true;
     }
+    if (!strcmp(cmd, "get_variation")) {
+      STDOUT.println(current_preset_.variation);
+      return true;
+    }
 #endif
 
 #ifdef ENABLE_SD
