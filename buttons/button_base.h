@@ -27,6 +27,9 @@
 #define BUTTON_HELD_LONG_TIMEOUT 2000
 #endif
 
+#ifndef BUTTON_LONG_CLICK_TIMEOUT
+#define BUTTON_LONG_CLICK_TIMEOUT 2500
+#endif
 
 // Simple button handler. Keeps track of clicks and lengths of pushes.
 class ButtonBase : public Looper,
@@ -109,7 +112,7 @@ protected:
         current_modifiers &=~ button_;
         if (millis() - push_millis_ < BUTTON_SHORT_CLICK_TIMEOUT) {
           SendClick(EVENT_CLICK_SHORT);
-        } else if (millis() - push_millis_ < 2500) {
+        } else if (millis() - push_millis_ < BUTTON_LONG_CLICK_TIMEOUT) {
 	  // Long clicks cannot be "saved", so just emit immediately.
           Send(EVENT_CLICK_LONG);
         }
