@@ -1,4 +1,4 @@
-/* V7/8-201.
+/* V7/8-201d.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -360,6 +360,10 @@ public:
 
 #ifndef BUTTON_HELD_LONG_TIMEOUT
 #define BUTTON_HELD_LONG_TIMEOUT 2000
+#endif
+
+#ifndef SABERSENSE_USER_HOME_FONT
+#define SABERSENSE_USER_HOME_FONT 0
 #endif
 
 EFFECT(dim);      // for EFFECT_POWERSAVE
@@ -819,29 +823,37 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 #endif
 
-    // Skips to first preset (up) or last preset (down)
-    // or middle preset if horizontal:
+    // Skips to first preset (up), last or user-defined preset (down),
+    // or middle preset (horizontal):
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
 #endif
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
-#define DEGREES_TO_RADIANS (M_PI / 180)
-      if (fusor.angle1() > 45 * DEGREES_TO_RADIANS) {
-        // If pointing up
+    case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF): {
+      // Calculate user font, defaulting to -1 for last preset if not set by user.
+      int user_font = (SABERSENSE_USER_HOME_FONT > 0) ? (SABERSENSE_USER_HOME_FONT - 1) : -1;
+      CurrentPreset tmp;
+      tmp.SetPreset(-1);
+      int num_presets = tmp.preset_num + 1;
+      // Check user_font is valid (0 to num_presets-1). Clamp to last if not.
+      if (user_font >= num_presets || user_font < 0) {
+        user_font = num_presets - 1;
+      }
+      if (fusor.angle1() > M_PI / 6) {
+        // Pointing up, skip to first (home) preset
         SetPreset(0, true);
-      } else if (fusor.angle1() < -45 * DEGREES_TO_RADIANS) {
-        // If pointing down
-        SetPreset(-1, true);
+      } else if (fusor.angle1() < -M_PI / 6) {
+        // Pointing down, skip to last (or user-defined) preset
+        SetPreset(user_font, true);
       } else {
-        // If horizontal
-        CurrentPreset tmp;
-        tmp.SetPreset(-1);
-        SetPreset(tmp.preset_num / 2, true);
+        // Horizontal, skip to middle preset
+        SetPreset(num_presets / 2, true);
       }
 #ifdef SAVE_PRESET
-      SaveState(current_preset_.preset_num);
+        SaveState(current_preset_.preset_num);
 #endif
-      return true;
+        break;
+    }
+#endif
 
     // BLADE ID OPTIONS AND ARRAY NAVIGATION
     // Blade ID on-demand scanning with BladeID audio idents.
