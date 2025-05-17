@@ -146,14 +146,14 @@ protected:
           return ret;
         }
         switch (arg[0]) {
-        case 'p': e = EVENT_PRESSED; break;
-        case 'r': e = EVENT_RELEASED; break;
-        case 'h': e = EVENT_HELD; break;
-        case 'm': e = EVENT_HELD_MEDIUM; break;
-        case 'l': e = EVENT_HELD_LONG; break;
-        case 'S': e = EVENT_CLICK_SHORT; break;
+        case 'p': e = EVENT_PRESSED;           break;
+        case 'r': e = EVENT_RELEASED;          break;
+        case 'h': e = EVENT_HELD;              break;
+        case 'm': e = EVENT_HELD_MEDIUM;       break;
+        case 'l': e = EVENT_HELD_LONG;         break;
+        case 'S': e = EVENT_CLICK_SHORT;       break;
         case 's': e = EVENT_SAVED_CLICK_SHORT; break;
-        case 'L': e = EVENT_CLICK_LONG; break;
+        case 'L': e = EVENT_CLICK_LONG;        break;
         }
         if (strlen(arg) > 1) {
           cnt = atoi(arg + 1);
