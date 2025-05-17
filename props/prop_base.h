@@ -1765,7 +1765,7 @@ public:
       return true;
     }
     if (!strcmp(cmd, "get_variation")) {
-      STDOUT.println(current_preset_.variation);
+      PVLOG_NORMAL << "Variation = " << SaberBase::GetCurrentVariation();
       return true;
     }
 #endif
