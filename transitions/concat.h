@@ -52,8 +52,6 @@ public:
   }
 };
 
-#endif
-
 template<class A, class B>
 class TrConcat2 {
 public:
