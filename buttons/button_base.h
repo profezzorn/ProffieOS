@@ -71,8 +71,7 @@ protected:
     STATE_MACHINE_BEGIN();
     while (true) {
       while (!DebouncedRead()) {
-        if (saved_event_ &&
-          millis() - push_millis_ > BUTTON_DOUBLE_CLICK_TIMEOUT) {
+        if (saved_event_ && millis() - push_millis_ > BUTTON_DOUBLE_CLICK_TIMEOUT) {
           Send(saved_event_);
           saved_event_ = 0;;
         }
