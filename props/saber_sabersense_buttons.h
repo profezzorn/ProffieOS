@@ -260,6 +260,30 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   but makes accidental blasts more likely when double-
   clicking POWER for Quotes or Force Effect.
 
+#define SABERSENSE_FONT_SKIP_A 5
+#define SABERSENSE_FONT_SKIP_B 10
+  As standard, presets can be skipped in batches to aid
+  font navigation. Two skip levels are provided, A and B, 
+  which default to 5 and 10 fonts respectively. These
+  defines allow the user to override the default
+  values if required.
+  
+#define SABERSENSE_HOT_SKIP_DOWN 0
+#define SABERSENSE_HOT_SKIP_LEVEL 0
+  Hot Skipping is distinct from Font Skipping in that
+  it skips directly to a given preset, rather than
+  skipping forwards or backwards x number of presets.
+  These defines override the Skip-to-Last/Middle
+  Preset feature, so system skips to user-defined
+  preset. Note that Skip-to-First preset is fixed
+  and not user-definable.
+
+#define SABERSENSE_DISABLE_FONT_SKIPPING
+  Completely disables all preset skipping, meaning
+  presets may only be cycled through one at a time.
+  Suitable for installs with small numbers of fonts
+  and presets.
+
 #define SABERSENSE_BUTTON_CLICKER
   Button Clicker to play press/release wav files when
   buttons are pressed. Intended for Scavenger hilt
@@ -358,12 +382,13 @@ public:
 #define BUTTON_HELD_MEDIUM_TIMEOUT 1000
 #endif
 
-#ifndef BUTTON_HELD_LONG_TIMEOUT
-#define BUTTON_HELD_LONG_TIMEOUT 2000
+// Hot Skip values are placeholders only.
+#ifndef SABERSENSE_HOT_SKIP_DOWN
+#define SABERSENSE_HOT_SKIP_DOWN 0
 #endif
 
-#ifndef SABERSENSE_USER_HOME_FONT
-#define SABERSENSE_USER_HOME_FONT 0
+#ifndef SABERSENSE_HOT_SKIP_LEVEL
+#define SABERSENSE_HOT_SKIP_LEVEL 0
 #endif
 
 EFFECT(dim);      // for EFFECT_POWERSAVE
@@ -824,34 +849,40 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #endif
 
     // Skips to first preset (up), last or user-defined preset (down),
-    // or middle preset (horizontal):
+    // or middle or user-defined preset (horizontal [level]):
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
 #endif
     case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF): {
-      // Calculate user font, defaulting to -1 for last preset if not set by user.
-      int user_font = (SABERSENSE_USER_HOME_FONT > 0) ? (SABERSENSE_USER_HOME_FONT - 1) : -1;
       CurrentPreset tmp;
       tmp.SetPreset(-1);
       int num_presets = tmp.preset_num + 1;
-      // Check user_font is valid (0 to num_presets-1). Clamp to last if not.
-      if (user_font >= num_presets || user_font < 0) {
-        user_font = num_presets - 1;
+
+      // Get and check user values. Clamp to last preset if invalid.
+      int hot_skip_down = (SABERSENSE_HOT_SKIP_DOWN > 0) ? (SABERSENSE_HOT_SKIP_DOWN - 1) : -1;
+      if (hot_skip_down >= num_presets || hot_skip_down < 0) {
+        hot_skip_down = num_presets - 1;
       }
+      int hot_skip_level = (SABERSENSE_HOT_SKIP_LEVEL > 0) ? (SABERSENSE_HOT_SKIP_LEVEL - 1) : -1;
+      if (hot_skip_level >= num_presets || hot_skip_level < 0) {
+        hot_skip_level = num_presets / 2;
+      }
+
+      // Pointing up, skip to first preset
       if (fusor.angle1() > M_PI / 6) {
-        // Pointing up, skip to first (home) preset
         SetPreset(0, true);
+      // Pointing down, skip to user-defined or last preset
       } else if (fusor.angle1() < -M_PI / 6) {
-        // Pointing down, skip to last (or user-defined) preset
-        SetPreset(user_font, true);
+        SetPreset(hot_skip_down, true);
+      // Horizontal, skip to user-defined or middle preset
       } else {
-        // Horizontal, skip to middle preset
-        SetPreset(num_presets / 2, true);
+        SetPreset(hot_skip_level, true);
       }
+
 #ifdef SAVE_PRESET
-        SaveState(current_preset_.preset_num);
+      SaveState(current_preset_.preset_num);
 #endif
-        break;
+      break;
     }
 #endif
 
