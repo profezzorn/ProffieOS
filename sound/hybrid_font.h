@@ -601,7 +601,10 @@ public:
       case EFFECT_FORCE: PlayCommon(&SFX_force); return;
       case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); return;
       case EFFECT_QUOTE: PlayCommon(&SFX_quote); return;
-      case EFFECT_BOOT: PlayPolyphonic(&SFX_boot); return;
+      case EFFECT_BOOT: 
+        if (SFX_boot) { PlayCommon(&SFX_boot); return; }
+        // If no boot sounds are found, fall through to font
+        [[gnu::fallthrough]];
       case EFFECT_NEWFONT: SB_NewFont(); return;
       case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;
       case EFFECT_LOCKUP_END: SB_EndLockup(); return;
