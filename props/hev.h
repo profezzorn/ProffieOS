@@ -165,13 +165,19 @@ public:
 
   // Clashes
   void Clash(bool stab, float strength) override {
-    // Don't allow Clashes if dead or during debounce period.
-    if (health_ == 0 || !clash_timer_.check(HEV_CLASH_DEBOUNCE_MS)) {
+    // Don't allow Clashes if dead.
+    if (health_ == 0) {
       return;
     }
 
-    // Start new debounce period
-    clash_timer_.start();
+    // If HEVTimer and PropBase's clash_timeout_ are true to activate Clash.
+    // Otherwise return early.
+    if (clash_timer_.active_ && !clash_timer_.check(this->clash_timeout_)) {
+      return;
+    }
+    
+    // Forward Clash event. No Stabs!
+    PropBase::Clash(false, strength);
 
     // Damage is based on strength, capped at 50
     int damage = std::min((int)(strength * 4), 50);
@@ -187,9 +193,9 @@ public:
       hybrid_font.PlayPolyphonic(&SFX_armor_alarm);
     }
 
-    // Apply Damage and forward Clash event. No Stabs!
+    // Apply Damage and restart clash timer.
     DoDamage(damage, true);
-    PropBase::Clash(false, strength);
+    clash_timer_.start();
   }
 
   // Swings do nothing!
