@@ -570,7 +570,7 @@ public:
 // Please don't forget to call sound_library_->init();
 #define sound_library_ (*getPtr<SoundLibrary>())
 
-// Please don't forget to call sound_librar_v2->init();
+// Please don't forget to call sound_library_v2->init();
 #define sound_library_v2 (*getPtr<SoundLibraryV2>())
 
 #endif
