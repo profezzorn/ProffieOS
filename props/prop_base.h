@@ -628,7 +628,7 @@ public:
       int noblade_level_before = GetNoBladeLevelBefore();
       FindBladeAgain();
       int noblade_level_after = current_config->ohm / NO_BLADE;
-      
+
       if (noblade_level_before < noblade_level_after) {
         SaberBase::DoEffect(EFFECT_BLADEOUT, 0);
       } else if(noblade_level_before > noblade_level_after) {
@@ -1227,7 +1227,7 @@ public:
     if (b & BUTTON_LEFT) STDOUT.print("Left");
     if (b & BUTTON_RIGHT) STDOUT.print("Right");
     if (b & BUTTON_SELECT) STDOUT.print("Select");
-    if (b & BUTTON_BLADE_DETECT) STDOUT.print("Select");
+    if (b & BUTTON_BLADE_DETECT) STDOUT.print("BladeDetect");
     if (b & MODE_ON) STDOUT.print("On");
   }
 

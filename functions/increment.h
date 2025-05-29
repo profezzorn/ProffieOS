@@ -7,8 +7,8 @@
 // PULSE: FUNCTION (pulse type)
 // MAX: FUNCTION (not zero) defaults to Int<32768>
 // INCREMENT: FUNCTION defaults to Int<1>
-// Increments by I each time PULSE occurs wraps around when
-// it reaches MAX.
+// Increments by INCREMENT each time PULSE occurs,
+// wraps around when it reaches MAX.
 
 template<class PULSE, class MAX = Int<32768>, class INCREMENT = Int<1>>
 class IncrementModuloFSVF {
