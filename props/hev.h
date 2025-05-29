@@ -24,6 +24,7 @@
 // clash**.wav - physical clash sounds
 // health00.wav to health100.wav - for health alert sounds
 // armor00.wav to armor100.wav - for armor readout sounds
+// fuzz_high.wav, fuzz_low.wav - for pre-armor readout notification sound
 //
 // Random Hazard sounds:
 // These are played using the altchng method. So create 7 directories:
@@ -56,6 +57,8 @@ EFFECT(armor_compromised);
 EFFECT(major);
 EFFECT(minor);
 EFFECT(morphine);
+EFFECT(fuzz_high);
+EFFECT(fuzz_low);
 
 struct HEVTimer {
   uint32_t start_ = 0;
@@ -158,7 +161,21 @@ public:
 
   // Armor Readout
   void armor_readout() {
-    PVLOG_NORMAL << "Current Armor: " << armor_ << "\n"; // Debug logging
+    PVLOG_NORMAL << "Current Armor: " << armor_ << "\n";
+    
+    // Play random "fuzz" sound only if armor is above 0
+    if (armor_ > 0) {
+      if (random(2) == 0) {
+          hybrid_font.PlayCommon(&SFX_fuzz_high);
+      } else {
+          hybrid_font.PlayCommon(&SFX_fuzz_low);
+      }
+
+      // Small delay to ensure fuzz finishes before armor readout plays.
+      delay(475);
+    }
+
+    // Play armor value
     SFX_armor.SelectFloat(armor_ / 100.0);
     hybrid_font.PlayCommon(&SFX_armor);
   }
