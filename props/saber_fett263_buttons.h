@@ -176,7 +176,7 @@ Standard Controls While Blade is ON
   Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
     Hold PWR + Turn Right = Special Ability 1 (USER1)
     Hold PWR + Turn Left = Special Ability 2 (USER2)
-    Hold AUX + Turn Right = Special Ability 3 ()
+    Hold AUX + Turn Right = Special Ability 3 (USER3)
     Hold Aux + Turn Left = Special Ability 4 (USER4)
 Optional Gesture Controls (if enabled)
   Retract Blade
@@ -394,7 +394,7 @@ Standard Controls While Blade is ON
   Special Abilities (Style Controlled) (requires FETT263_SPECIAL_ABILITIES)
     Hold PWR + Turn Right (parallel or up) = Special Ability 1 (USER1)
     Hold PWR + Turn Left (parallel or up) = Special Ability 2 (USER2)
-    Hold PWR + Turn Right (pointing down) = Special Ability 3 ()
+    Hold PWR + Turn Right (pointing down) = Special Ability 3 (USER3)
     Hold PWR + Turn Left (pointing down) = Special Ability 4 (USER4)
   NEW! Change Style (All Blades)
     Next Style = Triple Click + Long Click PWR (parallel or up)
