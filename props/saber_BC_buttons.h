@@ -2708,40 +2708,40 @@ any # of buttons
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
         if (isPointingUp()) {
-          PVLOG_NORMAL << "**** EFFECT_USER3 **\n";
+          PVLOG_DEBUG << "**** EFFECT_USER3 **\n";
           SaberBase::DoEffect(EFFECT_USER3, 0);
         } else {
-          PVLOG_NORMAL << "**** EFFECT_USER1 **\n";
+          PVLOG_DEBUG << "**** EFFECT_USER1 **\n";
           SaberBase::DoEffect(EFFECT_USER1, 0);
         }
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
         if (isPointingUp()) {
-          PVLOG_NORMAL << "**** EFFECT_USER4 **\n";
+          PVLOG_DEBUG << "**** EFFECT_USER4 **\n";
           SaberBase::DoEffect(EFFECT_USER4, 0);
         } else {
-          PVLOG_NORMAL << "**** EFFECT_USER2 **\n";
+          PVLOG_DEBUG << "**** EFFECT_USER2 **\n";
           SaberBase::DoEffect(EFFECT_USER2, 0);
         }
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
         if (isPointingUp()) {
-          PVLOG_NORMAL << "**** EFFECT_USER7 **\n";
+          PVLOG_DEBUG << "**** EFFECT_USER7 **\n";
           SaberBase::DoEffect(EFFECT_USER7, 0);
         } else {
-          PVLOG_NORMAL << "**** EFFECT_USER5 **\n";
+          PVLOG_DEBUG << "**** EFFECT_USER5 **\n";
           SaberBase::DoEffect(EFFECT_USER5, 0);
         }
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
         if (isPointingUp()) {
-          PVLOG_NORMAL << "**** EFFECT_USER8 **\n";
+          PVLOG_DEBUG << "**** EFFECT_USER8 **\n";
           SaberBase::DoEffect(EFFECT_USER8, 0);
         } else {
-          PVLOG_NORMAL << "**** EFFECT_USER6 **\n";
+          PVLOG_DEBUG << "**** EFFECT_USER6 **\n";
           SaberBase::DoEffect(EFFECT_USER6, 0);
         }
         return true;
@@ -2749,42 +2749,42 @@ any # of buttons
 # else  // more than 1-button
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
-        PVLOG_NORMAL << "**** EFFECT_USER1 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER1 **\n";
         SaberBase::DoEffect(EFFECT_USER1, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
-        PVLOG_NORMAL << "**** EFFECT_USER2 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER2 **\n";
         SaberBase::DoEffect(EFFECT_USER2, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
-        PVLOG_NORMAL << "**** EFFECT_USER3 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER3 **\n";
         SaberBase::DoEffect(EFFECT_USER3, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
-        PVLOG_NORMAL << "**** EFFECT_USER4 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER4 **\n";
         SaberBase::DoEffect(EFFECT_USER4, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
-        PVLOG_NORMAL << "**** EFFECT_USER5 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER5 **\n";
         SaberBase::DoEffect(EFFECT_USER5, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
-        PVLOG_NORMAL << "**** EFFECT_USER6 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER6 **\n";
         SaberBase::DoEffect(EFFECT_USER6, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_AUX):
-        PVLOG_NORMAL << "**** EFFECT_USER7 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER7 **\n";
         SaberBase::DoEffect(EFFECT_USER7, 0);
         return true;
 
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_AUX):
-        PVLOG_NORMAL << "**** EFFECT_USER8 **\n";
+        PVLOG_DEBUG << "**** EFFECT_USER8 **\n";
         SaberBase::DoEffect(EFFECT_USER8, 0);
         return true;
 #endif  // NUM_BUTTONS == 1
