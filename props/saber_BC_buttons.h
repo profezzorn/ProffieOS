@@ -1226,12 +1226,18 @@ struct BCVolumeMode : public SPEC::SteppedMode {
   RangeState rangeState_ = RangeState::None;
 
   void mode_activate(bool onreturn) override {
-    PVLOG_NORMAL << "** Enter Volume Menu\n";
     initial_volume_ = dynamic_mixer.get_volume();
     initial_percentage_ = round((initial_volume_ / max_volume_) * 10) * 10;
+    percentage_ = initial_percentage_;
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
     mode::getSL<SPEC>()->SayEditVolume();
     announce_volume();
+
+    PVLOG_NORMAL << "** Enter Volume Menu\n";
+    if (percentage_ <= 10) PVLOG_NORMAL << "** Minimum Volume\n";
+    else if (percentage_ >= 100) PVLOG_NORMAL << "** Maximum Volume\n";
+    else PVLOG_NORMAL << "** Volume " << percentage_ << "%\n";
+
     SPEC::SteppedMode::mode_activate(onreturn);
   }
 
@@ -1250,6 +1256,11 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     announce_volume();
     mode::getSL<SPEC>()->SayVolumeMenuEnd();
     SPEC::SteppedMode::mode_deactivate();
+
+    // Exit printout already handled in select() / exit()
+    if (percentage_ <= 10) PVLOG_NORMAL << "** Minimum Volume\n";
+    else if (percentage_ >= 100) PVLOG_NORMAL << "** Maximum Volume\n";
+    else PVLOG_NORMAL << "** Volume " << percentage_ << "%\n";
   }
 
   void next() override {
@@ -1259,16 +1270,13 @@ struct BCVolumeMode : public SPEC::SteppedMode {
       if (current_volume_ >= max_volume_) {
         current_volume_ = max_volume_;
         QuickMaxVolume();
-      } else if (millis() - trigger_time_ > 100) {
-        // If a range prompt is playing, wait
-        if (sound_library_.busy() && (rangeState_ == RangeState::SayingMax)) return;
-        // Otherwise, play one vol-up if nothing is busy
-        if (!sound_library_.busy()) {
-          mode::getSL<SPEC>()->SayVolumeUp();
-          rangeState_ = RangeState::None;
-          trigger_time_ = millis();
-        }
+      } else if (millis() - trigger_time_ > 100 && !sound_library_.busy()) {
+        // If anything is playing or 100ms hasn't passed, wait to queue SayVolumeUp
+        mode::getSL<SPEC>()->SayVolumeUp();
+        rangeState_ = RangeState::None;
+        trigger_time_ = millis();
       }
+      // Always update the volume even if we skipped SayVolumeUp
       dynamic_mixer.set_volume(current_volume_);
     }
   }
@@ -1280,13 +1288,10 @@ struct BCVolumeMode : public SPEC::SteppedMode {
       if (current_volume_ <= min_volume_) {
         current_volume_ = min_volume_;
         QuickMinVolume();
-      } else if (millis() - trigger_time_ > 100) {
-        if (sound_library_.busy() && (rangeState_ == RangeState::SayingMin)) return;
-        if (!sound_library_.busy()) {
-          mode::getSL<SPEC>()->SayVolumeDown();
-          rangeState_ = RangeState::None;
-          trigger_time_ = millis();
-        }
+      } else if (millis() - trigger_time_ > 100 && !sound_library_.busy()) {
+        mode::getSL<SPEC>()->SayVolumeDown();
+        rangeState_ = RangeState::None;
+        trigger_time_ = millis();
       }
       dynamic_mixer.set_volume(current_volume_);
     }
@@ -1294,8 +1299,9 @@ struct BCVolumeMode : public SPEC::SteppedMode {
 
   void QuickMaxVolume() {
     dynamic_mixer.set_volume(max_volume_);
-    // Fade out “Min” if it’s mid-play
-    if (rangeState_ == RangeState::SayingMin && sound_library_.busy()) {
+    // Always play immediately when Max reached
+    if (rangeState_ == RangeState::SayingMin || rangeState_ == RangeState::SayingMax && 
+        sound_library_.busy()) {
       sound_library_.fadeout(SaberBase::sound_length);
     }
     PVLOG_NORMAL << "** Maximum Volume\n";
@@ -1305,8 +1311,8 @@ struct BCVolumeMode : public SPEC::SteppedMode {
 
   void QuickMinVolume() {
     dynamic_mixer.set_volume(min_volume_);
-    // Fade out “Max” if it’s mid-play
-    if (rangeState_ == RangeState::SayingMax && sound_library_.busy()) {
+    if (rangeState_ == RangeState::SayingMin || rangeState_ == RangeState::SayingMax && 
+        sound_library_.busy()) {
       sound_library_.fadeout(SaberBase::sound_length);
     }
     PVLOG_NORMAL << "** Minimum Volume\n";
