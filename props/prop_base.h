@@ -1709,7 +1709,8 @@ public:
     }
     if (!strcmp(cmd, "get_volume")) {
 #ifdef ENABLE_AUDIO
-      PVLOG_NORMAL << "volume " << dynamic_mixer.get_volume();
+      STDOUT.print("volume ");
+      STDOUT.println(dynamic_mixer.get_volume());
 #else
       STDOUT.println(0);
 #endif
@@ -1765,7 +1766,8 @@ public:
       return true;
     }
     if (!strcmp(cmd, "get_variation")) {
-      PVLOG_NORMAL << "variation " << SaberBase::GetCurrentVariation();
+      STDOUT.print("variation ");
+      STDOUT.println(SaberBase::GetCurrentVariation());
       return true;
     }
 #endif
