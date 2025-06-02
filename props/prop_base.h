@@ -545,17 +545,17 @@ public:
     float ret = blade_id.id();
 
     if (announce) {
-      PVLOG_STATUS << "BLADE ID: " << ret << "\n";
+      STDOUT << "BLADE ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
     SpeakBladeID(ret);
 #endif // SPEAK_BLADE_ID
     }
 #ifdef BLADE_DETECT_PIN
     if (!blade_detected_) {
-      PVLOG_STATUS << "NO ";
+      STDOUT << "NO ";
       ret += NO_BLADE;
     }
-    PVLOG_STATUS << "Blade Detected\n";
+    STDOUT << "Blade Detected\n";
 #endif
       return ret;
   }
