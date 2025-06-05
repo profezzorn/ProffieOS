@@ -545,6 +545,7 @@ public:
     float ret = blade_id.id();
 
     if (announce) {
+      // This needs to use STDOUT so so it shows on Serial3 (bluetooth)
       STDOUT << "BLADE ID: " << ret << "\n";
 #ifdef SPEAK_BLADE_ID
     SpeakBladeID(ret);
@@ -552,10 +553,10 @@ public:
     }
 #ifdef BLADE_DETECT_PIN
     if (!blade_detected_) {
-      STDOUT << "NO ";
+      PVLOG_STATUS << "NO ";
       ret += NO_BLADE;
     }
-    STDOUT << "Blade Detected\n";
+    PVLOG_STATUS << "Blade Detected\n";
 #endif
       return ret;
   }
