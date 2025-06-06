@@ -21,7 +21,7 @@
 // armor_compromised.wav - for when armor falls to 0
 // boot.wav - Bootup welcome message
 // death.wav - for when health is 0
-// clash**.wav - physical clash sounds
+// clsh**.wav - physical clash sounds
 // health00.wav to health100.wav - for health alert sounds
 // armor00.wav to armor100.wav - for armor readout sounds
 // fuzz_high.wav, fuzz_low.wav - for pre-armor readout notification sound
@@ -37,8 +37,30 @@
 // One for the main voice line, the other is the same, but with a follow up health notification for variety.
 // For alt00, have the same amount of files as the other alt** folders but leave the files blank.
 //
+// Custom Clash Functionality:
+// Upon a hit (clash), the user will take damage ranging from 1 - 50.
+// If hit >= 25, a major hit is registered. Otherwise a minor hit is registered.
+// Beyond the two major and minor types, there are Fracture and Laceration hit sfx categories.
+// The hit sfx are in the clsh folder, they are named clshXX.wav from 01 - 08.
+// The hit sfx system handles the following:
+// Minor Laceration:
+// Low intensity (index 0): clsh01.wav
+// Medium intensity (index 1): clsh02.wav
+// High intensity (index 2): clsh03.wav
+// Minor Fracture (index 3): clsh04.wav
+// Major Laceration:
+// Low intensity (index 4): clsh05.wav
+// Medium intensity (index 5): clsh06.wav
+// High intensity (index 6): clsh07.wav
+// Major Fracture (index 7): clsh08.wav
+// It accounts for the amount of force applied to the board which determines the intensity of the hit sfx.
+// Previous testing has produced two clash events and sounds, one being from the original prop_base and
+// the 2nd from the new custom logic.
+// Completely removing the prop_base functionality also removes the clash visual effects, so this has been kept in to some degree through saber_base.
+// Testing styles will come later, but the current implementation is to create an interactive clash system that follows the damage system from HL
+// while utilising the Proffieboard's existing clash functionality.
+//
 // Notes:
-// Clash will cause varying damage based on strength
 // Damage and Hazards are only active when prop is ON.
 
 #ifndef PROPS_HEV_H
@@ -182,30 +204,71 @@ public:
 
   // Clashes
   void Clash(bool stab, float strength) override {
-    // Don't allow Clashes if dead.
-    if (health_ == 0) {
-      return;
-    }
-
-    // If HEVTimer and PropBase's clash_timeout_ are true to activate Clash.
-    // Otherwise return early.
-    if (clash_timer_.active_ && !clash_timer_.check(this->clash_timeout_)) {
+    // Don't process clashes if dead or during cooldown
+    if (health_ == 0 || (clash_timer_.active_ && !clash_timer_.check(this->clash_timeout_))) {
       return;
     }
     
-    // Forward Clash event. No Stabs!
-    PropBase::Clash(false, strength);
-
+    // Calculate normalized strength and damage
+    float v = (strength - GetCurrentClashThreshold()) / 3;
+    clash_normalized_strength_ = v;
+    
     // Damage is based on strength, capped at 50
     int damage = std::min((int)(strength * 4), 50);
-    float v = (strength - GetCurrentClashThreshold()) / 3;
-
-    // Play Clash sounds based on strength
-    SFX_clash.SelectFloat(v);
-    SFX_clsh.SelectFloat(v);
-    SFX_stab.SelectFloat(v);
-
-    // Play Armor Alarm if Damage is 30 or more
+    last_clash_damage_ = damage;
+    
+    // Categorize hit type: Major vs Minor, Fracture vs Laceration  
+    is_major_hit_ = (damage >= 25);
+    is_fracture_hit_ = (random(100) < 25);
+    
+    // ***** KEY CHANGE: Don't use DoClash at all - handle everything directly ****
+    // Play our clash sound based on hit type
+    int sound_index = 0;
+    
+    if (is_fracture_hit_) {
+      // Fractures: index 3 for minor, 7 for major
+      sound_index = is_major_hit_ ? 7 : 3;
+    } else {
+      // Lacerations: scale intensity within category
+      float intensity = constrain(v, 0.0f, 1.5f) / 1.5f;
+      if (is_major_hit_) {
+        // Major laceration: indices 4-6
+        sound_index = 4 + min(2, (int)(intensity * 3));
+      } else {
+        // Minor laceration: indices 0-2
+        sound_index = min(2, (int)(intensity * 3));
+      }
+    }
+    
+    // Play selected sound and trigger visual effects
+    PVLOG_NORMAL << "DEBUG: Selected clash sound index: " << sound_index << "\n";
+    SFX_clsh.Select(sound_index);
+    hybrid_font.PlayCommon(&SFX_clsh);
+    
+    // Trigger the clash effect for visuals only, without the sound
+    SaberBase::SetClashStrength(strength);
+    clash_pending_ = false; // Prevents duplicate sounds
+    
+    // Log hit type information
+    const char* intensity_level = "";
+    if (!is_fracture_hit_) {
+      if (sound_index == 0 || sound_index == 4) intensity_level = " (low intensity)";
+      else if (sound_index == 1 || sound_index == 5) intensity_level = " (medium intensity)";
+      else intensity_level = " (high intensity)";
+    }
+    
+    PVLOG_NORMAL << "HIT: " << (is_major_hit_ ? "Major " : "Minor ") 
+                 << (is_fracture_hit_ ? "Fracture" : "Laceration") 
+                 << intensity_level
+                 << " (damage: " << damage << ", strength: " << v << ")\n";
+    
+    // Play additional sounds
+    if (random(100) < 40 && is_major_hit_) {
+      // 40% chance of voice line for major hits
+      hybrid_font.PlayCommon(is_fracture_hit_ ? &SFX_major : &SFX_minor);
+    }
+    
+    // Alarm for serious hits
     if (damage >= 30) {
       hybrid_font.PlayPolyphonic(&SFX_armor_alarm);
     }
@@ -443,38 +506,49 @@ public:
 
    // Hev effects, auto fire is handled by begin/end lockup
   void SB_Effect(EffectType effect, EffectLocation location) override {
-    // Don't queue new sounds if dead (except death sound).
-    // Once dead, if a queued sound is currently playing, allow it to finish
-    // alongside death sound. However all pending sounds should be cleared.
+    // Skip clash processing - we handle it directly in Clash method
+    if (effect == EFFECT_CLASH) {
+      return;
+    }
+    
+    // Process other effects
     switch (effect) {
-      default: return;
-  
-    // Random Hazard Sounds
+      // Random Hazard Sounds
       case EFFECT_STUN:
         hybrid_font.PlayCommon(&SFX_stun);
         return;
 
-    // Armor Compromised Sound
+      // Armor Compromised Sound
       case EFFECT_USER2:
         SOUNDQ->Play(&SFX_armor_compromised);
         return;
     
-    // Health Alert
+      // Health Alert
       case EFFECT_USER1:
         if (health_ == 0) return; // Don't queue health sounds if dead
         SFX_health.SelectFloat(health_ / 100.0);
         SOUNDQ->Play(&SFX_health);
         return;
     
-    // Death Sound
+      // Death Sound
       case EFFECT_EMPTY:
         if (health_ == 0) {
           SOUNDQ->clear_pending();
         }
         hybrid_font.PlayCommon(&SFX_death);
         return;
+        
+      default:
+        PropBase::SB_Effect(effect, location);
+        return;
     }
   }
+
+private:
+  bool is_major_hit_ = false;
+  bool is_fracture_hit_ = false;
+  float clash_normalized_strength_ = 0.0;
+  int last_clash_damage_ = 0;  // Store damage value for use in SB_Effect
 };
 
 #endif
