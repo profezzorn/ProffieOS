@@ -1,4 +1,4 @@
-/* V7/8-201c.
+/* V7/8-201d.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -933,8 +933,8 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 
     // BLASTER DEFLECTION
     // 1 Button (and 2 button with extra define).
-#if NUM_BUTTONS == 1
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+#if NUM_BUTTONS == 1
       // For harmonized 'Exit Colour Menu' control in OS-7.x. Ignored in OS-8.
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
         ToggleColorChangeMode();
@@ -943,9 +943,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         SaberBase::DoBlast();
       }
       return true;
+#endif
 
-#elif NUM_BUTTONS == 2
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
+#if NUM_BUTTONS == 2
       // For harmonized 'Exit Colour Menu' control in OS-7.x. Ignored in OS-8.
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
         ToggleColorChangeMode();
@@ -957,13 +957,11 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       }
 #endif
       return true;
-#endif
 
-#if NUM_BUTTONS == 2
-case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
-    swing_blast_ = false;
-    SaberBase::DoBlast();
-    return true;
+    case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
+      swing_blast_ = false;
+      SaberBase::DoBlast();
+      return true;
 #endif
 
     // Multi-Blaster Deflection mode
