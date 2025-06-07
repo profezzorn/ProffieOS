@@ -1,4 +1,4 @@
-/* V7/8-242.
+/* V7/8-243.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -490,61 +490,62 @@ public:
     }
 #endif
   }
-  
+
   // PRESET SKIPPING
   // Skip Value definable.
-  // One Button System - Up, Horizontal, Down.
-  bool OneBtnMultiFontSkip(int skip_value) {
-      int count = 0;
-      CurrentPreset tmp;
-      for (int i = 0; ; i++) {
-          tmp.SetPreset(i);
-          if (tmp.preset_num != i) break;
-          count++;
-      }
+  int GetNumberOfPresets() {
+    CurrentPreset tmp;
+    tmp.SetPreset(-1);
+    return tmp.preset_num + 1;
+  }
+
+  // Two Button system: Up/Down only - loose angle settings for ease of use.
+#if NUM_BUTTONS == 2
+  bool MultiFontSkip(int skip_value) {
       float angle = fusor.angle1();
-      int new_index = current_preset_.preset_num;
+      int delta = (angle < -M_PI / 4) ? -skip_value : skip_value;
+      int count = GetNumberOfPresets();
+      int new_index = current_preset_.preset_num + delta;
 
-      if (angle < -M_PI / 6) { // Pointing down
-          new_index -= skip_value;
-      } else if (angle > M_PI / 6) { // Pointing up
-          new_index += skip_value;
-      } else { // Horizontal
-          SpeakBatteryLevel();
-          return true;
-      }
-      // Capping, not wrapping - less disorientating for user.
+      // Capping/Clamping, not wrapping - less disorientating for user.
       if (new_index < 0) new_index = 0;
       if (new_index >= count) new_index = count - 1;
-      // Save state before setting the preset
-      SetPreset(new_index, true);
+
 #ifdef SAVE_PRESET
-      SaveState(new_index);
+    SaveState(new_index);
 #endif
-      return true;
+    SetPreset(new_index, true);
+    return true;
   }
 
-  // Two Button System - Up, Down.
-  bool TwoBtnMultiFontSkip(int skip_value) {
-      int count = 0;
-      CurrentPreset tmp;
-      for (int i = 0; ; i++) {
-          tmp.SetPreset(i);
-          if (tmp.preset_num != i) break;
-          count++;
+  // One Button system: Up, Horizontal, Down - tighter angles to fit more functions in.
+#elif NUM_BUTTONS == 1
+  bool MultiFontSkip(int skip_value) {
+      float angle = fusor.angle1();
+      int delta = 0;
+      if (angle < -M_PI / 6) {  // Pointing down
+        delta = -skip_value;
+      } else if (angle > M_PI / 6) {  // Pointing up
+        delta = skip_value;
+      } else {
+        SpeakBatteryLevel();
+      return true;
       }
-      int delta = (fusor.angle1() < -M_PI / 4) ? -skip_value : skip_value;
-      int new_index = current_preset_.preset_num + delta;      
-      // Capping, not wrapping - less disorientating for user.
+
+      int count = GetNumberOfPresets();
+      int new_index = current_preset_.preset_num + delta;
+
+      // Capping/Clamping, not wrapping - less disorientating for user.
       if (new_index < 0) new_index = 0;
       if (new_index >= count) new_index = count - 1;
-      // Save state before setting the preset
-      SetPreset(new_index, true);
+
 #ifdef SAVE_PRESET
-      SaveState(new_index);
+    SaveState(new_index);
 #endif
-      return true;
-  }
+    SetPreset(new_index, true);
+    return true;
+}
+#endif
 
   // VOLUME MENU
   void VolumeUp() {
@@ -893,47 +894,62 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // Uses SABERSENSE_FONT_SKIP_A/B for skip values.
 #ifndef SABERSENSE_DISABLE_FONT_SKIPPING
 #if NUM_BUTTONS == 1
-    // First skip value (define A - default 5)
-    case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF): {
-      return OneBtnMultiFontSkip(SABERSENSE_FONT_SKIP_A);
-    }
-    // Second skip value (define B - default 10)
-    case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_OFF): {
-      return OneBtnMultiFontSkip(SABERSENSE_FONT_SKIP_B);
-    }
+  // First skip value (define A - default 5)
+  case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF): {
+    return MultiFontSkip(SABERSENSE_FONT_SKIP_A);
+  }
+  // Second skip value (define B - default 10)
+  case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_OFF): {
+    return MultiFontSkip(SABERSENSE_FONT_SKIP_B);
+  }
 #else
-    // First skip value (define A - default 5)
-    case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF): {
-      return TwoBtnMultiFontSkip(SABERSENSE_FONT_SKIP_A);
-    }
-    // Second skip value (define B - default 10)
-    case EVENTID(BUTTON_AUX, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF): {
-      return TwoBtnMultiFontSkip(SABERSENSE_FONT_SKIP_B);
-    }
+  // First skip value (define A - default 5)
+  case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF): {
+    return MultiFontSkip(SABERSENSE_FONT_SKIP_A);
+  }
+  // Second skip value (define B - default 10)
+  case EVENTID(BUTTON_AUX, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF): {
+    return MultiFontSkip(SABERSENSE_FONT_SKIP_B);
+  }
 #endif
 
-    // Skips to first preset (up) or last preset (down)
-    // or middle preset if horizontal:
+  // Skips to first preset (up), last or user-defined preset (down),
+  // or middle or user-defined preset (horizontal [level]):
 #if NUM_BUTTONS == 2
-    case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
+  case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
 #endif
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
-      if (fusor.angle1() > M_PI / 6) {
-        // If pointing up
-        SetPreset(0, true);
-      } else if (fusor.angle1() < -M_PI / 6) {
-        // If pointing down
-        SetPreset(-1, true);
-      } else {
-        // If horizontal
-        CurrentPreset tmp;
-        tmp.SetPreset(-1);
-        SetPreset(tmp.preset_num / 2, true);
-      }
+  case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF): {
+    CurrentPreset tmp;
+    tmp.SetPreset(-1);
+    int num_presets = tmp.preset_num + 1;
+
+    // Get and check user values. Clamp to last preset if invalid.
+    int hot_skip_down = (SABERSENSE_HOT_SKIP_DOWN > 0) ? (SABERSENSE_HOT_SKIP_DOWN - 1) : -1;
+    if (hot_skip_down >= num_presets || hot_skip_down < 0) {
+      hot_skip_down = num_presets - 1;
+    }
+    int hot_skip_level = (SABERSENSE_HOT_SKIP_LEVEL > 0) ? (SABERSENSE_HOT_SKIP_LEVEL - 1) : -1;
+    if (hot_skip_level >= num_presets || hot_skip_level < 0) {
+      hot_skip_level = num_presets / 2;
+    }
+
+    int target_preset;
+    float angle = fusor.angle1();
+
+    if (angle > M_PI / 6) {
+      target_preset = 0;
+    } else if (angle < -M_PI / 6) {
+      target_preset = hot_skip_down;
+    } else {
+      target_preset = hot_skip_level;
+    }
+
 #ifdef SAVE_PRESET
-      SaveState(current_preset_.preset_num);
+    SaveState(target_preset);
 #endif
-      return true;
+    SetPreset(target_preset, true);
+    break;
+  }
 #endif
 
     // BLADE ID OPTIONS AND ARRAY NAVIGATION
