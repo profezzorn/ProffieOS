@@ -1209,13 +1209,25 @@ struct BCVolumeMode : public SPEC::SteppedMode {
   int initial_percentage_ = 0;
   int percentage_ = 0;
 
+  // Debounce timer for sounds during rotation steps
+  uint32_t trigger_time_ = millis();
+  // Track whether a range‐end prompt is currently playing
+  enum class RangeState { None, SayingMin, SayingMax };
+  RangeState rangeState_ = RangeState::None;
+
   void mode_activate(bool onreturn) override {
-    PVLOG_NORMAL << "** Enter Volume Menu\n";
     initial_volume_ = dynamic_mixer.get_volume();
     initial_percentage_ = round((initial_volume_ / max_volume_) * 10) * 10;
+    percentage_ = initial_percentage_;
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
     mode::getSL<SPEC>()->SayEditVolume();
     announce_volume();
+
+    PVLOG_NORMAL << "** Enter Volume Menu\n";
+    if (percentage_ <= 10) PVLOG_NORMAL << "** Minimum Volume\n";
+    else if (percentage_ >= 100) PVLOG_NORMAL << "** Maximum Volume\n";
+    else PVLOG_NORMAL << "** Volume " << percentage_ << "%\n";
+
     SPEC::SteppedMode::mode_activate(onreturn);
   }
 
@@ -1234,6 +1246,11 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     announce_volume();
     mode::getSL<SPEC>()->SayVolumeMenuEnd();
     SPEC::SteppedMode::mode_deactivate();
+
+    // Exit printout already handled in select() / exit()
+    if (percentage_ <= 10) PVLOG_NORMAL << "** Minimum Volume\n";
+    else if (percentage_ >= 100) PVLOG_NORMAL << "** Maximum Volume\n";
+    else PVLOG_NORMAL << "** Volume " << percentage_ << "%\n";
   }
 
   void next() override {
@@ -1243,9 +1260,13 @@ struct BCVolumeMode : public SPEC::SteppedMode {
       if (current_volume_ >= max_volume_) {
         current_volume_ = max_volume_;
         QuickMaxVolume();
-      } else {
+      } else if (millis() - trigger_time_ > 100 && !sound_library_.busy()) {
+        // If anything is playing or 100ms hasn't passed, wait to queue SayVolumeUp
         mode::getSL<SPEC>()->SayVolumeUp();
+        rangeState_ = RangeState::None;
+        trigger_time_ = millis();
       }
+      // Always update the volume even if we skipped SayVolumeUp
       dynamic_mixer.set_volume(current_volume_);
     }
   }
@@ -1257,8 +1278,10 @@ struct BCVolumeMode : public SPEC::SteppedMode {
       if (current_volume_ <= min_volume_) {
         current_volume_ = min_volume_;
         QuickMinVolume();
-      } else {
+      } else if (millis() - trigger_time_ > 100 && !sound_library_.busy()) {
         mode::getSL<SPEC>()->SayVolumeDown();
+        rangeState_ = RangeState::None;
+        trigger_time_ = millis();
       }
       dynamic_mixer.set_volume(current_volume_);
     }
@@ -1266,19 +1289,32 @@ struct BCVolumeMode : public SPEC::SteppedMode {
 
   void QuickMaxVolume() {
     dynamic_mixer.set_volume(max_volume_);
+    // Always play immediately when Max reached
+    if (rangeState_ == RangeState::SayingMin || rangeState_ == RangeState::SayingMax && 
+        sound_library_.busy()) {
+      sound_library_.fadeout(SaberBase::sound_length);
+    }
     PVLOG_NORMAL << "** Maximum Volume\n";
     mode::getSL<SPEC>()->SayMaximumVolume();
+    rangeState_ = RangeState::SayingMax;
   }
 
   void QuickMinVolume() {
     dynamic_mixer.set_volume(min_volume_);
+    if (rangeState_ == RangeState::SayingMin || rangeState_ == RangeState::SayingMax && 
+        sound_library_.busy()) {
+      sound_library_.fadeout(SaberBase::sound_length);
+    }
     PVLOG_NORMAL << "** Minimum Volume\n";
     mode::getSL<SPEC>()->SayMinimumVolume();
+    rangeState_ = RangeState::SayingMin;
   }
 
-  void update() override {  // Overridden to substitute the tick sound
+  void update() override {
     float volume = dynamic_mixer.get_volume();
     percentage_ = round((volume / max_volume_) * 10) * 10;
+    // Should show regarless of sound being skipped, indicating actual changes are happening.
+    PVLOG_DEBUG << "** percentage_" << percentage_ << "\n";
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
   }
 
