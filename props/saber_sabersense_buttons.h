@@ -894,55 +894,55 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // Uses SABERSENSE_FONT_SKIP_A/B for skip values.
 #ifndef SABERSENSE_DISABLE_FONT_SKIPPING
 #if NUM_BUTTONS == 1
-  // First skip value (define A - default 5)
-  case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF): {
-    return MultiFontSkip(SABERSENSE_FONT_SKIP_A);
-  }
-  // Second skip value (define B - default 10)
-  case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_OFF): {
-    return MultiFontSkip(SABERSENSE_FONT_SKIP_B);
-  }
+    // First skip value (define A - default 5)
+    case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF): {
+      return MultiFontSkip(SABERSENSE_FONT_SKIP_A);
+    }
+    // Second skip value (define B - default 10)
+    case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_OFF): {
+      return MultiFontSkip(SABERSENSE_FONT_SKIP_B);
+    }
 #else
-  // First skip value (define A - default 5)
-  case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF): {
-    return MultiFontSkip(SABERSENSE_FONT_SKIP_A);
-  }
-  // Second skip value (define B - default 10)
-  case EVENTID(BUTTON_AUX, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF): {
-    return MultiFontSkip(SABERSENSE_FONT_SKIP_B);
-  }
+    // First skip value (define A - default 5)
+    case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF): {
+      return MultiFontSkip(SABERSENSE_FONT_SKIP_A);
+    }
+    // Second skip value (define B - default 10)
+    case EVENTID(BUTTON_AUX, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF): {
+      return MultiFontSkip(SABERSENSE_FONT_SKIP_B);
+    }
 #endif
 
   // Skips to first preset (up), last or user-defined preset (down),
   // or middle or user-defined preset (horizontal [level]):
 #if NUM_BUTTONS == 2
-  case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
+    case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
 #endif
-  case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF): {
-    CurrentPreset tmp;
-    tmp.SetPreset(-1);
-    int num_presets = tmp.preset_num + 1;
+    case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF): {
+      CurrentPreset tmp;
+      tmp.SetPreset(-1);
+      int num_presets = tmp.preset_num + 1;
 
-    // Get and check user values. Clamp to last preset if invalid.
-    int hot_skip_down = (SABERSENSE_HOT_SKIP_DOWN > 0) ? (SABERSENSE_HOT_SKIP_DOWN - 1) : -1;
-    if (hot_skip_down >= num_presets || hot_skip_down < 0) {
-      hot_skip_down = num_presets - 1;
-    }
-    int hot_skip_level = (SABERSENSE_HOT_SKIP_LEVEL > 0) ? (SABERSENSE_HOT_SKIP_LEVEL - 1) : -1;
-    if (hot_skip_level >= num_presets || hot_skip_level < 0) {
-      hot_skip_level = num_presets / 2;
-    }
+      // Get and check user values. Clamp to last preset if invalid.
+      int hot_skip_down = (SABERSENSE_HOT_SKIP_DOWN > 0) ? (SABERSENSE_HOT_SKIP_DOWN - 1) : -1;
+      if (hot_skip_down >= num_presets || hot_skip_down < 0) {
+        hot_skip_down = num_presets - 1;
+      }
+      int hot_skip_level = (SABERSENSE_HOT_SKIP_LEVEL > 0) ? (SABERSENSE_HOT_SKIP_LEVEL - 1) : -1;
+      if (hot_skip_level >= num_presets || hot_skip_level < 0) {
+        hot_skip_level = num_presets / 2;
+      }
 
-    int target_preset;
-    float angle = fusor.angle1();
+      int target_preset;
+      float angle = fusor.angle1();
 
-    if (angle > M_PI / 6) {
-      target_preset = 0;
-    } else if (angle < -M_PI / 6) {
-      target_preset = hot_skip_down;
-    } else {
-      target_preset = hot_skip_level;
-    }
+      if (angle > M_PI / 6) {
+        target_preset = 0;
+      } else if (angle < -M_PI / 6) {
+        target_preset = hot_skip_down;
+      } else {
+        target_preset = hot_skip_level;
+      }
 
 #ifdef SAVE_PRESET
     SaveState(target_preset);
