@@ -931,29 +931,21 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #endif
 #endif
 
-   // BLASTER DEFLECTION
+    // BLASTER DEFLECTION
     // 1 Button (and 2 button with extra define).
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-        // For harmonized 'Exit Colour Menu' control in OS-7.x. Ignored in OS-8 due to Modes.
-        ToggleColorChangeMode();
-        return true;
-      }
-      
-#if NUM_BUTTONS == 1
-      // If NOT in color change mode and 1 button system, do blast.
-      swing_blast_ = false;
-      SaberBase::DoBlast();
+      // For harmonized 'Exit Colour Menu' control in OS-7.x. Ignored in OS-8 due to Modes.
+      ToggleColorChangeMode();
       return true;
-      
-#elif NUM_BUTTONS == 2
-      // If NOT in color change mode and 2 button system, do Blast only if defined.
-#ifdef SABERSENSE_BLAST_MAIN_AND_AUX
+    }
+
+#if NUM_BUTTONS == 1 || defined(SABERSENSE_BLAST_MAIN_AND_AUX)
+      // If NOT in color change mode and 1 button system (or 2 button with define) do blast.
       swing_blast_ = false;
       SaberBase::DoBlast();
 #endif
       return true;
-#endif
 
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
