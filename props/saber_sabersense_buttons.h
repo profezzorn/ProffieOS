@@ -931,7 +931,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #endif
 #endif
 
-    // BLASTER DEFLECTION
+   // BLASTER DEFLECTION
     // 1 Button (and 2 button with extra define).
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
@@ -951,10 +951,8 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #ifdef SABERSENSE_BLAST_MAIN_AND_AUX
       swing_blast_ = false;
       SaberBase::DoBlast();
-      return true;
-#else
-      return true;
 #endif
+      return true;
 #endif
 
 #if NUM_BUTTONS == 2
