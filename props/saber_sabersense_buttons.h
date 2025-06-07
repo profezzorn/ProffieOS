@@ -1,4 +1,4 @@
-/* V7/8-201d.
+/* V7/8-201e.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -934,30 +934,30 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // BLASTER DEFLECTION
     // 1 Button (and 2 button with extra define).
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-#if NUM_BUTTONS == 1
-      // For harmonized 'Exit Colour Menu' control in OS-7.x. Ignored in OS-8.
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
+        // For harmonized 'Exit Colour Menu' control in OS-7.x. Ignored in OS-8 due to Modes.
         ToggleColorChangeMode();
-      } else {
-        swing_blast_ = false;
-        SaberBase::DoBlast();
+        return true;
       }
+      
+#if NUM_BUTTONS == 1
+      // If NOT in color change mode and 1 button system, do blast.
+      swing_blast_ = false;
+      SaberBase::DoBlast();
       return true;
+      
+#elif NUM_BUTTONS == 2
+      // If NOT in color change mode and 2 button system, do Blast only if defined.
+#ifdef SABERSENSE_BLAST_MAIN_AND_AUX
+      swing_blast_ = false;
+      SaberBase::DoBlast();
+      return true;
+#else
+      return true;
+#endif
 #endif
 
 #if NUM_BUTTONS == 2
-      // For harmonized 'Exit Colour Menu' control in OS-7.x. Ignored in OS-8.
-      if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-        ToggleColorChangeMode();
-      }
-#ifdef SABERSENSE_BLAST_MAIN_AND_AUX  // Add Blaster Block to POWER as well as AUX.
-      else {
-        swing_blast_ = false;
-        SaberBase::DoBlast();
-      }
-#endif
-      return true;
-
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
       swing_blast_ = false;
       SaberBase::DoBlast();
