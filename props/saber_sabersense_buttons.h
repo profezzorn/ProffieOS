@@ -500,52 +500,35 @@ public:
   }
 
   // Two Button system: Up/Down only - loose angle settings for ease of use.
-#if NUM_BUTTONS == 2
-  bool MultiFontSkip(int skip_value) {
-      float angle = fusor.angle1();
-      int delta = (angle < -M_PI / 4) ? -skip_value : skip_value;
-      int count = GetNumberOfPresets();
-      int new_index = current_preset_.preset_num + delta;
-
-      // Capping/Clamping, not wrapping - less disorientating for user.
-      if (new_index < 0) new_index = 0;
-      if (new_index >= count) new_index = count - 1;
-
-#ifdef SAVE_PRESET
-    SaveState(new_index);
-#endif
-    SetPreset(new_index, true);
-    return true;
-  }
-
-  // One Button system: Up, Horizontal, Down - tighter angles to fit more functions in.
-#elif NUM_BUTTONS == 1
   bool MultiFontSkip(int skip_value) {
       float angle = fusor.angle1();
       int delta = 0;
+
+#if NUM_BUTTONS == 2
+      delta = (angle < -M_PI / 4) ? -skip_value : skip_value;
+#elif NUM_BUTTONS == 1
       if (angle < -M_PI / 6) {  // Pointing down
         delta = -skip_value;
       } else if (angle > M_PI / 6) {  // Pointing up
         delta = skip_value;
       } else {
         SpeakBatteryLevel();
-      return true;
+        return true;
       }
-
+#endif
       int count = GetNumberOfPresets();
       int new_index = current_preset_.preset_num + delta;
-
-      // Capping/Clamping, not wrapping - less disorientating for user.
+      // Capping/Clamping, not wrapping - less disorienting for user.
       if (new_index < 0) new_index = 0;
       if (new_index >= count) new_index = count - 1;
 
 #ifdef SAVE_PRESET
-    SaveState(new_index);
+      SaveState(new_index);
 #endif
-    SetPreset(new_index, true);
-    return true;
+
+      SetPreset(new_index, true);
+      return true;
 }
-#endif
 
   // VOLUME MENU
   void VolumeUp() {
