@@ -1,4 +1,4 @@
-/* V7/8-201d.
+/* V7/8-201g.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -260,16 +260,8 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   but makes accidental blasts more likely when double-
   clicking POWER for Quotes or Force Effect.
 
-#define SABERSENSE_FONT_SKIP_A 5
-#define SABERSENSE_FONT_SKIP_B 10
-  As standard, presets can be skipped in batches to aid
-  font navigation. Two skip levels are provided, A and B, 
-  which default to 5 and 10 fonts respectively. These
-  defines allow the user to override the default
-  values if required.
-  
-#define SABERSENSE_HOT_SKIP_DOWN 0
-#define SABERSENSE_HOT_SKIP_LEVEL 0
+#define SABERSENSE_HOT_SKIP_DOWN 23
+#define SABERSENSE_HOT_SKIP_LEVEL 9
   Hot Skipping is distinct from Font Skipping in that
   it skips directly to a given preset, rather than
   skipping forwards or backwards x number of presets.
@@ -848,8 +840,8 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 #endif
 
-    // Skips to first preset (up), last or user-defined preset (down),
-    // or middle or user-defined preset (horizontal [level]):
+  // Skips to first preset (up), last or user-defined preset (down),
+  // or middle or user-defined preset (horizontal [level]):
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
 #endif
@@ -868,23 +860,23 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         hot_skip_level = num_presets / 2;
       }
 
-      // Pointing up, skip to first preset
-      if (fusor.angle1() > M_PI / 6) {
-        SetPreset(0, true);
-      // Pointing down, skip to user-defined or last preset
-      } else if (fusor.angle1() < -M_PI / 6) {
-        SetPreset(hot_skip_down, true);
-      // Horizontal, skip to user-defined or middle preset
+      int target_preset;
+      float angle = fusor.angle1();
+
+      if (angle > M_PI / 6) {
+        target_preset = 0;
+      } else if (angle < -M_PI / 6) {
+        target_preset = hot_skip_down;
       } else {
-        SetPreset(hot_skip_level, true);
+        target_preset = hot_skip_level;
       }
 
 #ifdef SAVE_PRESET
-      SaveState(current_preset_.preset_num);
+    SaveState(target_preset);
 #endif
-      break;
-    }
-#endif
+    SetPreset(target_preset, true);
+    break;
+  }
 
     // BLADE ID OPTIONS AND ARRAY NAVIGATION
     // Blade ID on-demand scanning with BladeID audio idents.
