@@ -122,6 +122,10 @@ private:
 template<class T>
 class ChargingStyle : public Style<T> {
 public:
+  void run(BladeBase* blade) override {
+    RunStyle(&base_, blade);
+    this->runloop(blade);
+  }
   bool NoOnOff() override { return true; }
   bool Charging() override { return true; }
 };
