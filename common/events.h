@@ -103,7 +103,7 @@ enum EVENT : uint32_t {
   EVENT_THRUST,
   EVENT_PUSH,
 
-    // For backwards compatibilty.
+  // For backwards compatibilty.
   EVENT_DOUBLE_CLICK = EVENT_SECOND_PRESSED,
 };
 
