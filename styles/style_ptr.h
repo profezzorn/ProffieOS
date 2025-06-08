@@ -123,7 +123,7 @@ template<class T>
 class ChargingStyle : public Style<T> {
 public:
   void run(BladeBase* blade) override {
-    RunStyle(&base_, blade);
+    RunStyle(&Style<T>::base_, blade);
     this->runloop(blade);
   }
   bool NoOnOff() override { return true; }
