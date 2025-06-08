@@ -11,7 +11,7 @@ public:
   void iterateVariables(VariableOP *op) override {
     CONFIG_VARIABLE2(voice_pack_version, 1);
   }
-  int voice_pack_version;  
+  int voice_pack_version;
 };
 
 // Sound library
@@ -44,7 +44,7 @@ enum ColorNumber {
   COLOR_SILVER = 20,
   COLOR_GLACIER = 21,
   COLOR_ICEWHITE = 22,
-  COLOR_LIGHTCYAN = 23,   
+  COLOR_LIGHTCYAN = 23,
   COLOR_MOCCASIN = 24,
   COLOR_LEMONCHIFFON = 25,
   COLOR_NAVAJOWHITE = 26,
@@ -156,7 +156,7 @@ public:
     SayNumber(battery_monitor.battery(), SAY_DECIMAL);
     SayVolts();
   }
-        
+
   void SayBatteryPercent() {
     SayBatteryLevel();
     SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
@@ -167,7 +167,7 @@ public:
   void Say##NAME() { SOUNDQ->Play(BASE ".wav"); }                       \
   /* t for "trampoline" */                                              \
   struct t##NAME { static void say() { SOUNDQ->Play(BASE ".wav"); } }
-  
+
   ADD_SL_SOUND(Red, "clrlst/clrlst01");
   ADD_SL_SOUND(OrangeRed, "clrlst/clrlst02");
   ADD_SL_SOUND(DarkOrange, "clrlst/clrlst03");
@@ -226,9 +226,9 @@ public:
   ADD_SL_SOUND(90, "ninety");
   ADD_SL_SOUND(100, "hundred");
   ADD_SL_SOUND(1000, "thousand");
-  
+
   ADD_SL_SOUND(Point, "mpoint");
-  
+
   ADD_SL_SOUND(Accept, "maccept");
   ADD_SL_SOUND(AdjustBlackLevel, "mblack");
   ADD_SL_SOUND(AdjustColorHue, "mhue");
@@ -383,7 +383,7 @@ public:
     if (v) {
       SayEnabled();
     } else {
-      SayDisabled(); 
+      SayDisabled();
     }
   }
 
@@ -570,7 +570,7 @@ public:
 // Please don't forget to call sound_library_->init();
 #define sound_library_ (*getPtr<SoundLibrary>())
 
-// Please don't forget to call sound_librar_v2->init();
+// Please don't forget to call sound_library_v2->init();
 #define sound_library_v2 (*getPtr<SoundLibraryV2>())
 
 #endif
