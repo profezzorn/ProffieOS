@@ -1,4 +1,4 @@
-/* V7/8-201g.
+/* V7/8-201h.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -310,6 +310,7 @@ GESTURE CONTROLS
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
+
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
 class SaveArrayStateFile : public ConfigFile {
 public:
@@ -326,11 +327,20 @@ public:
         return return_value;
       }
       static void cycle() {
+#ifndef BLADE_DETECT_PIN
         return_value = (return_value + 1) % NELEM(blades);
+#else   // Improved logic fixes early Array1 repetition when using Blade Detect.
+        return_value = 1 + return_value % (NELEM(blades) - 1);
+#endif
       }
     };
-    int SabersenseArraySelector::return_value;
-    
+
+#ifndef BLADE_DETECT_PIN
+    int SabersenseArraySelector::return_value = 0;
+#else    
+    int SabersenseArraySelector::return_value = 1;
+#endif
+
 #undef BLADE_ID_CLASS_INTERNAL
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
@@ -886,9 +896,13 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 #endif
 
-    // Manual blade array selector.
+  // Manual blade array selector.
 #ifdef SABERSENSE_ARRAY_SELECTOR
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+      // Check for blade present if using Blade Detect.
+#ifdef BLADE_DETECT_PIN
+        if (!blade_detected_) return true; // Do nothing if no blade detected.
+#endif
       // Cycles through blade arrays regardless of BladeID status.
       SabersenseArraySelector::cycle();
       FindBladeAgain();
@@ -896,7 +910,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
       SaveArrayState();
 #endif
-      return true;
+    return true;
 #endif
 
     // SOUND EFFECT PLAYERS.

@@ -6572,7 +6572,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 #ifdef FETT263_SPECIAL_ABILITIES
         else {
 #if NUM_BUTTONS == 1
-          if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+          if (fusor.angle1() < 0) {
             SaberBase::DoEffect(EFFECT_USER3, 0);
           } else {
             SaberBase::DoEffect(EFFECT_USER1, 0);
@@ -6601,7 +6601,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 #ifdef FETT263_SPECIAL_ABILITIES
         else {
 #if NUM_BUTTONS == 1
-          if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+          if (fusor.angle1() < 0) {
             SaberBase::DoEffect(EFFECT_USER4, 0);
           } else {
             SaberBase::DoEffect(EFFECT_USER2, 0);
@@ -6634,7 +6634,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 #ifdef FETT263_SPECIAL_ABILITIES
         else {
 #if NUM_BUTTONS == 1
-          if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+          if (fusor.angle1() < 0) {
             SaberBase::DoEffect(EFFECT_USER7, 0);
           } else {
             SaberBase::DoEffect(EFFECT_USER5, 0);
@@ -6667,7 +6667,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 #ifdef FETT263_SPECIAL_ABILITIES
         else {
 #if NUM_BUTTONS == 1
-          if (fusor.angle1() < - ((M_PI / 2) - 0.25)) {
+          if (fusor.angle1() < 0) {
             SaberBase::DoEffect(EFFECT_USER8, 0);
           } else {
             SaberBase::DoEffect(EFFECT_USER6, 0);
