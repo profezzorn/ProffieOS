@@ -114,7 +114,7 @@ public:
     return -1;
   }
 
-private:
+protected:
   T base_;
   HandledTypeSaver handled_type_saver_;
 };
