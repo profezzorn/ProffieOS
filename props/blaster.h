@@ -46,7 +46,7 @@ This prop manages up to six different buttons.
 
 - Button: RELOAD
     Reload                    - Hold RELOAD until Reloaded.
-      
+
 - Button: CLIP
       Clip In                 - Latch CLIP
       Clip Out                - Unlatch CLIP
@@ -447,19 +447,19 @@ public:
   void SB_Effect(EffectType effect, EffectLocation location) override {
     switch (effect) {
       default: return;
-      case EFFECT_STUN: hybrid_font.PlayCommon(&SFX_stun); return;
-      case EFFECT_FIRE: hybrid_font.PlayCommon(&SFX_blast); return;
-      case EFFECT_CLIP_IN: hybrid_font.PlayCommon(&SFX_clipin); return;
+      case EFFECT_STUN:     hybrid_font.PlayCommon(&SFX_stun);    return;
+      case EFFECT_FIRE:     hybrid_font.PlayCommon(&SFX_blast);   return;
+      case EFFECT_CLIP_IN:  hybrid_font.PlayCommon(&SFX_clipin);  return;
       case EFFECT_CLIP_OUT: hybrid_font.PlayCommon(&SFX_clipout); return;
-      case EFFECT_RELOAD: hybrid_font.PlayCommon(&SFX_reload); return;
-      case EFFECT_MODE: SayMode(); return;
-      case EFFECT_RANGE: hybrid_font.PlayCommon(&SFX_range); return;
-      case EFFECT_EMPTY: hybrid_font.PlayCommon(&SFX_empty); return;
-      case EFFECT_FULL: hybrid_font.PlayCommon(&SFX_full); return;
-      case EFFECT_JAM: hybrid_font.PlayCommon(&SFX_jam); return;
-      case EFFECT_UNJAM: hybrid_font.PlayCommon(&SFX_unjam); return;
-      case EFFECT_PLI_ON: hybrid_font.PlayCommon(&SFX_plion); return;
-      case EFFECT_PLI_OFF: hybrid_font.PlayCommon(&SFX_plioff); return;
+      case EFFECT_RELOAD:   hybrid_font.PlayCommon(&SFX_reload);  return;
+      case EFFECT_MODE:     SayMode();                            return;
+      case EFFECT_RANGE:    hybrid_font.PlayCommon(&SFX_range);   return;
+      case EFFECT_EMPTY:    hybrid_font.PlayCommon(&SFX_empty);   return;
+      case EFFECT_FULL:     hybrid_font.PlayCommon(&SFX_full);    return;
+      case EFFECT_JAM:      hybrid_font.PlayCommon(&SFX_jam);     return;
+      case EFFECT_UNJAM:    hybrid_font.PlayCommon(&SFX_unjam);   return;
+      case EFFECT_PLI_ON:   hybrid_font.PlayCommon(&SFX_plion);   return;
+      case EFFECT_PLI_OFF:  hybrid_font.PlayCommon(&SFX_plioff);  return;
 
     }
   }
@@ -532,26 +532,26 @@ public:
 struct BlasterDisplayConfigFile : public ConfigFile {
   BlasterDisplayConfigFile() { link(&font_config); }
   void iterateVariables(VariableOP *op) override {
-    CONFIG_VARIABLE2(ProffieOSFireImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSReloadImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSEmptyImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSJamImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSClipinImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSClipoutImageDuration, 1000.0f);
+    CONFIG_VARIABLE2(ProffieOSFireImageDuration,     1000.0f);
+    CONFIG_VARIABLE2(ProffieOSReloadImageDuration,   1000.0f);
+    CONFIG_VARIABLE2(ProffieOSEmptyImageDuration,    1000.0f);
+    CONFIG_VARIABLE2(ProffieOSJamImageDuration,      1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClipinImageDuration,   1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClipoutImageDuration,  1000.0f);
     CONFIG_VARIABLE2(ProffieOSDestructImageDuration, 10000.0f);
   }
-  
-  // for OLED displays, the time a blast.bmp will play
+
+  // for OLED displays, the time a blast.bmp    will play
   float ProffieOSFireImageDuration;
-  // for OLED displays, the time a reload.bmp will play
+  // for OLED displays, the time a reload.bmp   will play
   float ProffieOSReloadImageDuration;
-  // for OLED displays, the time a empty.bmp will play
+  // for OLED displays, the time a empty.bmp    will play
   float ProffieOSEmptyImageDuration;
-  // for OLED displays, the time a jam.bmp will play
+  // for OLED displays, the time a jam.bmp      will play
   float ProffieOSJamImageDuration;
-  // for OLED displays, the time a clipin.bmp will play
+  // for OLED displays, the time a clipin.bmp   will play
   float ProffieOSClipinImageDuration;
-  // for OLED displays, the time a clipout.bmp will play
+  // for OLED displays, the time a clipout.bmp  will play
   float ProffieOSClipoutImageDuration;
   // for OLED displays, the time a destruct.bmp will play
   float ProffieOSDestructImageDuration;
@@ -578,19 +578,19 @@ public:
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
       case EFFECT_FIRE:
-        this->ShowFileWithSoundLength(&img_.IMG_blast, blaster_font_config.ProffieOSFireImageDuration);
+        this->ShowFileWithSoundLength(&img_.IMG_blast,   blaster_font_config.ProffieOSFireImageDuration);
         break;
       case EFFECT_RELOAD:
-        this->ShowFileWithSoundLength(&img_.IMG_reload, blaster_font_config.ProffieOSReloadImageDuration);
+        this->ShowFileWithSoundLength(&img_.IMG_reload,  blaster_font_config.ProffieOSReloadImageDuration);
         break;
       case EFFECT_EMPTY:
-        this->ShowFileWithSoundLength(&img_.IMG_empty, blaster_font_config.ProffieOSEmptyImageDuration);
+        this->ShowFileWithSoundLength(&img_.IMG_empty,   blaster_font_config.ProffieOSEmptyImageDuration);
         break;
       case EFFECT_JAM:
-        this->ShowFileWithSoundLength(&img_.IMG_jam, blaster_font_config.ProffieOSJamImageDuration);
+        this->ShowFileWithSoundLength(&img_.IMG_jam,     blaster_font_config.ProffieOSJamImageDuration);
         break;
       case EFFECT_CLIP_IN:
-        this->ShowFileWithSoundLength(&img_.IMG_clipin, blaster_font_config.ProffieOSClipinImageDuration);
+        this->ShowFileWithSoundLength(&img_.IMG_clipin,  blaster_font_config.ProffieOSClipinImageDuration);
         break;
       case EFFECT_CLIP_OUT:
         this->ShowFileWithSoundLength(&img_.IMG_clipout, blaster_font_config.ProffieOSClipoutImageDuration);
@@ -599,7 +599,7 @@ public:
         StandardDisplayController<Width, col_t, PREFIX>::SB_Effect2(effect, location);
     }
   }
-  
+
   void SB_Off2(typename StandardDisplayController<Width, col_t, PREFIX>::OffType offtype, EffectLocation location) override {
     if (offtype == StandardDisplayController<Width, col_t, PREFIX>::OFF_BLAST) {
       this->ShowFileWithSoundLength(&img_.IMG_destruct, blaster_font_config.ProffieOSDestructImageDuration);
