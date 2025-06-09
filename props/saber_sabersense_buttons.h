@@ -859,27 +859,31 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       CurrentPreset tmp;
       tmp.SetPreset(-1);
       int num_presets = tmp.preset_num + 1;
-
       // Get and check user values. Clamp to last preset if invalid.
       int hot_skip_down = (SABERSENSE_HOT_SKIP_DOWN > 0) ? (SABERSENSE_HOT_SKIP_DOWN - 1) : -1;
       if (hot_skip_down >= num_presets || hot_skip_down < 0) {
         hot_skip_down = num_presets - 1;
       }
-      int hot_skip_level = (SABERSENSE_HOT_SKIP_LEVEL > 0) ? (SABERSENSE_HOT_SKIP_LEVEL - 1) : -1;
-      if (hot_skip_level >= num_presets || hot_skip_level < 0) {
-        hot_skip_level = num_presets / 2;
-      }
-
       int target_preset;
       float angle = fusor.angle1();
-
       if (angle > M_PI / 6) {
         target_preset = 0;
       } else if (angle < -M_PI / 6) {
         target_preset = hot_skip_down;
       } else {
+        int hot_skip_level = (SABERSENSE_HOT_SKIP_LEVEL > 0) ? (SABERSENSE_HOT_SKIP_LEVEL - 1) : -1;
+        if (hot_skip_level >= num_presets || hot_skip_level < 0) {
+          hot_skip_level = num_presets / 2;
+        }
         target_preset = hot_skip_level;
       }
+
+#ifdef SAVE_PRESET
+      SaveState(target_preset);
+#endif
+      SetPreset(target_preset, true);
+      break;
+    }
 
 #ifdef SAVE_PRESET
     SaveState(target_preset);
