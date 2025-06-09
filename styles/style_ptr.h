@@ -114,7 +114,7 @@ public:
     return -1;
   }
 
-private:
+protected:
   T base_;
   HandledTypeSaver handled_type_saver_;
 };
@@ -122,6 +122,10 @@ private:
 template<class T>
 class ChargingStyle : public Style<T> {
 public:
+  void run(BladeBase* blade) override {
+    RunStyle(&Style<T>::base_, blade);
+    this->runloop(blade);
+  }
   bool NoOnOff() override { return true; }
   bool Charging() override { return true; }
 };
