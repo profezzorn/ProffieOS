@@ -885,13 +885,6 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       break;
     }
 
-#ifdef SAVE_PRESET
-    SaveState(target_preset);
-#endif
-    SetPreset(target_preset, true);
-    break;
-  }
-
     // BLADE ID OPTIONS AND ARRAY NAVIGATION
     // Blade ID on-demand scanning with BladeID audio idents.
 #ifdef SABERSENSE_BLADE_ID
