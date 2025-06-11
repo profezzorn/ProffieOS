@@ -39,24 +39,24 @@ public:
   void SetNextActionF(NextAction what, float when) {
     SetNextAction(what, when * 1000);
   }
-  
+
   void PollNextAction() {
     if (millis() - time_base_ > next_event_time_) {
       switch (next_action_) {
-	case NEXT_ACTION_NOTHING:
-	  break;
-	case NEXT_ACTION_ARM:
-	  armed_ = true;
-	  // TODO: Should we have separate ARMING and ARMED states?
-	  break;
-	case NEXT_ACTION_BLOW:
-	  Off(OFF_BLAST);
-	  break;
+        case NEXT_ACTION_NOTHING:
+          break;
+        case NEXT_ACTION_ARM:
+          armed_ = true;
+          // TODO: Should we have separate ARMING and ARMED states?
+          break;
+        case NEXT_ACTION_BLOW:
+          Off(OFF_BLAST);
+          break;
       }
       next_action_ = NEXT_ACTION_NOTHING;
     }
   }
-  
+
   void beginArm() {
     SaberBase::SetLockup(SaberBase::LOCKUP_ARMED);
     SaberBase::DoBeginLockup();
@@ -96,7 +96,6 @@ public:
   // Make swings do nothing
   void DoMotion(const Vec3& motion, bool clear) override { }
 
-
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
@@ -112,7 +111,7 @@ public:
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_OFF):
-	if (powered_) rotate_presets();
+        if (powered_) rotate_presets();
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_DOUBLE_CLICK, MODE_ON):
@@ -120,12 +119,12 @@ public:
         return true;
 
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_ON):
-	beginArm();
-	break;
+        beginArm();
+        break;
 
       case EVENTID(BUTTON_AUX2, EVENT_RELEASED, MODE_ON):
         blast();
-	return armed_;
+        return armed_;
 
         // TODO: Long click when off?
     }
