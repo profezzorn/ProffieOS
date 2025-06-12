@@ -57,12 +57,16 @@ EFFECT(armor_compromised);
 EFFECT(major);
 EFFECT(minor);
 EFFECT(morphine);
-EFFECT(fuzz_high);
-EFFECT(fuzz_low);
+EFFECT(fuzz);
 
 struct HEVTimer {
   uint32_t start_ = 0;
+
+  // next_tick_ ensures precise timing for damage events by storing the exact
+  // timestamp when the next damage should occur, preventing timing drift.
+  // Mainly used for hazard damage, controlled by HEV_HAZARD_DECREASE_MS.
   uint32_t next_tick_ = 0;
+
   bool active_ = false;
 
   void reset() { active_ = false; next_tick_ = 0; }
@@ -86,6 +90,14 @@ struct HEVTimer {
   // Returns true if timer is active and interval has elapsed
   bool ready(uint32_t interval) {
     return active_ && ((millis() - start_) >= interval);
+  }
+
+  // Adds a non-blocking delay, can be used to wait for a specific duration
+  void delay(uint32_t ms) {
+  uint32_t end_time = millis() + ms;
+  while (millis() < end_time) {
+    SaberBase::DoEffect(EFFECT_NONE, 0);
+    }
   }
 };
 
@@ -165,14 +177,10 @@ public:
     
     // Play random "fuzz" sound only if armor is above 0
     if (armor_ > 0) {
-      if (random(2) == 0) {
-          hybrid_font.PlayCommon(&SFX_fuzz_high);
-      } else {
-          hybrid_font.PlayCommon(&SFX_fuzz_low);
-      }
+      hybrid_font.PlayCommon(&SFX_fuzz);
 
-      // Small delay to ensure fuzz finishes before armor readout plays.
-      delay(475);
+      // Non-blocking delay to ensure fuzz finishes before armor readout plays
+      HEVTimer().delay(475);
     }
 
     // Play armor value
@@ -187,8 +195,12 @@ public:
       return;
     }
 
-    // If HEVTimer and PropBase's clash_timeout_ are true to activate Clash.
-    // Otherwise return early.
+    // This code implements a cooldown period between clash events.
+    // If the clash timer is currently active AND we haven't reached 
+    // the timeout period specified by PropBase's clash_timeout_, then
+    // we return early, preventing the processing of another clash event.
+    // This prevents multiple clash detections from a single impact by
+    // ensuring sufficient time passes between registered clashes.
     if (clash_timer_.active_ && !clash_timer_.check(this->clash_timeout_)) {
       return;
     }
