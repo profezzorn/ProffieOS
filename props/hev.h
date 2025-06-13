@@ -204,71 +204,83 @@ public:
 
   // Clashes
   void Clash(bool stab, float strength) override {
-    // Don't process clashes if dead or during cooldown
+    // Don't process clashes if dead or during cooldown.
+    // HEV Suit clash detection uses a fundamentally different approach than PropBase.
+    // The two work together: timer tracks state, timeout defines duration.
+    //
+    //  1. PropBase uses direct timestamp comparison:
+    //     - Stores last_clash_ timestamp and clash_timeout_ value.
+    //     - Compares (millis() - last_clash_ < clash_timeout_) on each check.
+    //     - Simple but limited to basic cooldown functionality.
+    // 
+    //  2. HEV uses object-oriented HEVTimer system:
+    //     - clash_timer_ encapsulates timer state (active flag, start time).
+    //     - clash_timeout_ provides the duration value.
+    //     - Enables more complex patterns like sequences and ready-state checking.
+    // 
+    // This is advantageous because:
+    // - HEV's sophisticated hit categorization needs finer state control.
+    // - Consistent with other HEV timers (health_timer_, armor_timer_, etc.)
+    // - Provides clear separation between "is a timer running?" and "how long should it run?".
+    // - Allows more complex timing patterns needed for authentic HEV behavior.
+    // - Supports future extensions like variable cooldowns based on hit type.
     if (health_ == 0 || (clash_timer_.active_ && !clash_timer_.check(this->clash_timeout_))) {
       return;
     }
-    
-    // Calculate normalized strength and damage
+
+    // Calculate physical strength.
     float v = (strength - GetCurrentClashThreshold()) / 3;
-    clash_normalized_strength_ = v;
-    
-    // Damage is based on strength, capped at 50
+
+    // Damage is based on strength, capped at 50.
     int damage = std::min((int)(strength * 4), 50);
-    last_clash_damage_ = damage;
-    
-    // Categorize hit type: Major vs Minor, Fracture vs Laceration  
+
+    // Categorize hit type: Major vs Minor, Fracture vs Laceration.
     is_major_hit_ = (damage >= 25);
     is_fracture_hit_ = (random(100) < 25);
-    
-    // ***** KEY CHANGE: Don't use DoClash at all - handle everything directly ****
-    // Play our clash sound based on hit type
+
+    // Instead of using DoClash(), we handle clash audio logic here directly.
+    // We need to catergorize the hit type for sound selection.
+    // Play our clash sound based on hit type.
     int sound_index = 0;
-    
+
+    // This determines which wav to play in the clsh folder.
     if (is_fracture_hit_) {
-      // Fractures: index 3 for minor, 7 for major
+      // Fractures: index 3 for minor, 7 for major.
       sound_index = is_major_hit_ ? 7 : 3;
     } else {
-      // Lacerations: scale intensity within category
+      // Lacerations: scale intensity based on strength.
       float intensity = constrain(v, 0.0f, 1.5f) / 1.5f;
       if (is_major_hit_) {
-        // Major laceration: indices 4-6
+        // Major laceration: indices 4-6.
         sound_index = 4 + min(2, (int)(intensity * 3));
       } else {
-        // Minor laceration: indices 0-2
+        // Minor laceration: indices 0-2.
         sound_index = min(2, (int)(intensity * 3));
       }
     }
-    
-    // Play selected sound and trigger visual effects
+
+    // Log and play selected sound.
     PVLOG_NORMAL << "DEBUG: Selected clash sound index: " << sound_index << "\n";
     SFX_clsh.Select(sound_index);
     hybrid_font.PlayCommon(&SFX_clsh);
-    
-    // Trigger the clash effect for visuals only, without the sound
+
+    // Trigger the clash effect for visuals only, without the sound.
     SaberBase::SetClashStrength(strength);
-    clash_pending_ = false; // Prevents duplicate sounds
-    
-    // Log hit type information
+    clash_pending_ = false; // Prevents duplicate clash sounds.
+
+    // Log hit information for debugging.
     const char* intensity_level = "";
     if (!is_fracture_hit_) {
       if (sound_index == 0 || sound_index == 4) intensity_level = " (low intensity)";
       else if (sound_index == 1 || sound_index == 5) intensity_level = " (medium intensity)";
       else intensity_level = " (high intensity)";
     }
-    
-    PVLOG_NORMAL << "HIT: " << (is_major_hit_ ? "Major " : "Minor ") 
-                 << (is_fracture_hit_ ? "Fracture" : "Laceration") 
+    PVLOG_NORMAL << "HIT: " << (is_major_hit_ ? "Major " : "Minor ")
+                 << (is_fracture_hit_ ? "Fracture" : "Laceration")
                  << intensity_level
                  << " (damage: " << damage << ", strength: " << v << ")\n";
-    
-    // Play additional sounds
-    if (random(100) < 40 && is_major_hit_) {
-      // 40% chance of voice line for major hits
-      hybrid_font.PlayCommon(is_fracture_hit_ ? &SFX_major : &SFX_minor);
-    }
-    
-    // Alarm for serious hits
+
+    // Alarm for serious hits. Might move this to HEVQueue later.
     if (damage >= 30) {
       hybrid_font.PlayPolyphonic(&SFX_armor_alarm);
     }
@@ -547,8 +559,6 @@ public:
 private:
   bool is_major_hit_ = false;
   bool is_fracture_hit_ = false;
-  float clash_normalized_strength_ = 0.0;
-  int last_clash_damage_ = 0;  // Store damage value for use in SB_Effect
 };
 
 #endif
