@@ -1761,6 +1761,10 @@ public:
       SaberBase::SetVariation(variation);
       return true;
     }
+    if (!strcmp(cmd, "get_variation")) {
+      STDOUT.println(SaberBase::GetCurrentVariation());
+      return true;
+    }
     if (!strcmp(cmd, "ccmode")) {
       ToggleColorChangeMode();
       return true;

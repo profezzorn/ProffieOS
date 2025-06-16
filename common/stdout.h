@@ -188,7 +188,7 @@ class CommandOutputCaptureHelper : public Print {
     saved_output_ = stdout_output;
     stdout_output = this;
   }
-  ~CommandOutputCaptureHelper() {
+  virtual ~CommandOutputCaptureHelper() {
     stdout_output = saved_output_;
   }
   
@@ -206,10 +206,23 @@ class CommandOutputCaptureHelper : public Print {
     if (pos_ <  MAXLINE - 1) line_.line[pos_++] = b;
     return 1;
   }
-private:
+protected:
   size_t pos_ = 0;
   Line<MAXLINE> line_;
   Print* saved_output_;
+};
+
+
+template<int bufsize>
+class LineTagger : public CommandOutputCaptureHelper<bufsize> {
+public:
+  LineTagger(const StringPiece& tag) : tag_(tag), line_(0) {}
+  void GotLine(const Line<bufsize>& l) override {
+    *(this->saved_output_) << ++line_ << "," << strlen(l.line) << "," << tag_ << "|" << l.line << "\n";
+  }
+protected:
+  int line_;
+  const StringPiece tag_;
 };
 
 
