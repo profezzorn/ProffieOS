@@ -574,7 +574,7 @@ public:
         return true;
 
 /*
-// BLADE_DETECT_PIN ORI
+// BLADE_DETECT_PIN (original code)
 #ifdef BLADE_DETECT_PIN
       case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
@@ -593,7 +593,7 @@ public:
 */
 
 /* For multiple blade detect part 3/4
-// (Need to add part 1/4 to events.h 2/4 to config, part 3/4 to props, part 4/4 to to ProffieOS.ino)
+// (Need to add part 1/4 to events.h 2/4 to config, part 3/4 to props, part 4/4 to ProffieOS.ino)
 */
 
 #ifdef BLADE_DETECT_PIN
@@ -668,11 +668,9 @@ public:
         // Typically used to apply a dimming effect on blade to conserve battery.
         // Here it will be used for "stealth mode".
       case EFFECT_POWERSAVE:       sound_library_.SayDim();
-                                   //hybrid_font.PlayPolyphonic(&SFX_dim);
                                    PVLOG_DEBUG << "*** Effect Powersave/Dim\n";                return;
         // On-Demand Battery Level. Shows battery level visually on blade.
       case EFFECT_BATTERY_LEVEL:   sound_library_.SayBatteryLevel();
-                                   //hybrid_font.PlayPolyphonic(&SFX_battery);
                                    PVLOG_DEBUG << "*** Blade Effect Battery Level\n";
                                    PVLOG_NORMAL << "***** May the Force be with you. *****\n"; return;
         // Triggers the change for sets of sounds within the font from one alternative to another.
