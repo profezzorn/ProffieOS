@@ -17,6 +17,8 @@ Changes includes, but not limited to:
   - props/saber_caiwin_buttons.h (for multi_prop compatibility)
   - sound/sound_library.h        (for detonator_Oli_buttons & jetpack_Oli_buttons compatibility)
 
+... changes to more props comming (for multi_prop and multiple blade detect compatibility)
+
 # ProffieOS
 
 The open source operating system. Proffie OS is supported on various platforms ranging from Teensy 3.2 development boards to its own dedicated ProffieBoard reference hardware.
