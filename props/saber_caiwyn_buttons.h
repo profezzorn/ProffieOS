@@ -1,4 +1,4 @@
-// This version of saber_caiwyn_buttons.h, has been modified by me (Oli) to be compatible with multi_prop.h & dualprop.h
+// This version of saber_caiwyn_buttons.h, has been modified by me (Oli) to be compatible with multi_prop.h & dual_prop.h
 
 // Caiwyn's Lightsaber Controls
 // This config is designed to provide fast, low-latency response to button
