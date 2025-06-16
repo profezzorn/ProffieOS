@@ -36,7 +36,7 @@ enum BUTTON : uint32_t {
   BUTTON_TRIGGER_SIX = 32,
   BUTTON_TRIGGER_SEVEN = 64,
   BUTTON_TRIGGER_EIGHT = 128,
-    
+
   MODE_ON = 1024,
   MODE_OFF = 0,
 };
@@ -109,6 +109,11 @@ enum EVENT : uint32_t {
 
   // For backwards compatibilty.
   EVENT_DOUBLE_CLICK = EVENT_SECOND_PRESSED,
+
+  // added by Oli
+  // Reseved for multi_prop or any other prop that would be used to
+  // switch between multiple props with an extra-long button push.
+  MULTI_PROP_EVENT_HELD_XTRA_LONG,
 };
 
 #define NO_BLADE 1000000000 /* 1 billion */
