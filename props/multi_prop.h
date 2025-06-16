@@ -21,7 +21,6 @@ multi_prop was created to be compatible with ProffieOS v8.x
 
 multi_prop.h allows for 4 (maybe more coming) discrete prop files to be used, alternating on a button combo
 depending on how many buttons you have or witch prop you want to use with or without a main blade attached.
-Blade detect function has no effect on multi_prop.h (other than playing blade in/out wav).
 
 A "triple clic" on AUX2 will swap between props, but "triple click" on AUX on a 2 buttons prop will also work (if you are
 not using saber_sa22c_buttons.h as your saber of choice). An "EVENT_FOURTH_CLICK_LONG" on AUX should work
