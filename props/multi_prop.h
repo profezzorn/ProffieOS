@@ -1,7 +1,7 @@
 // version 065.08 working version for saber-blaster(with or without bullet count)-detonator-jetpack,
 // with switching presets sets, all with sound-effects on transition between props, provided by NoSloppy.
 
-/* Created by OlivierFlying747-8 with lots of help from Fredrik Hubinette aka profezzorn,
+/* Created by OlivierFlying747-8,
   https://fredrik.hubbe.net/lightsaber/proffieos.html
   Copyright (c) 2016-2025 Fredrik Hubinette
   Copyright (c) 2025 OlivierFlying747-8 with contributions by:
@@ -23,11 +23,11 @@ multi_prop.h allows for 4 (maybe more coming) discrete prop files to be used, al
 depending on how many buttons you have or witch prop you want to use with or without a main blade attached.
 Blade detect function has no effect on multi_prop.h (other than playing blade in/out wav).
 
-For now it is set as a "triple clic" on AUX2, but "triple click" on AUX will also work (if you are
+A "triple clic" on AUX2 will swap between props, but "triple click" on AUX on a 2 buttons prop will also work (if you are
 not using saber_sa22c_buttons.h as your saber of choice). An "EVENT_FOURTH_CLICK_LONG" on AUX should work
 for all props but I am unable to perform the move.
 
-Idealy, I would like to create a "MULTI_PROP_BUTTON_HELD_XTRA_LONG_TIMEOUT 1000 * 4" so multi_prop could be used
+Idealy, I would like to create a "MULTI_PROP_BUTTON_HELD_XTRA_LONG_TIMEOUT event" so multi_prop could be used
 with only one button. The more I look into this, the less sure I become that it will be possible.
 
 This prop is for fun and is not Star Wars cannon. It only exists to add extra functionality to your saber, if you so choose.
@@ -44,24 +44,24 @@ How to use: add this to your config in the CONFIG_PROP section:
 
 // *** List of sabers (choose one and only one) ***
 // ================================================
-                                                 //What to use in PROP_TYPE MultiProp <...>
-//#include "../props/saber.h"                    //use Saber                | working with multi_prop.h
-//#include "../props/saber_BC_buttons.h"         //use SaberBCButtons       | working with multi_prop.h
-//#include "../props/saber_caiwyn_buttons.h"     //do not use CaiwynButtons <-- works alone | NOT compiling with multi_prop.h (I don't know why? Well, I didn't understand the error codes, back then! Might need a re-visit? Also Caiwyn's saber didn't compile with dual_prop.h back at the time of testing)
-  #include "../props/saber_fett263_buttons.h"    //use SaberFett263Buttons  | working with multi_prop.h
-//#include "../props/saber_sa22c_buttons.h"      //use SaberSA22CButtons    | working with multi_prop.h
-//#include "../props/saber_sabersense_buttons.h" //use SabersenseButtons    |  untested with multi_prop.h
-//#include "../props/saber_shtok_buttons.h"      //use SaberShtokButtons    | working with multi_prop.h
+                                                //What to use in PROP_TYPE MultiProp <...>
+//#include "../props/saber.h"                   //use Saber                | working with multi_prop.h
+//#include "../props/saber_BC_buttons.h"        //use SaberBCButtons       | working with multi_prop.h
+//#include "../props/saber_caiwyn_buttons.h"    //use CaiwynButtons        | <-- works alone but NOT compiling with multi_prop.h or dual_prop.h because it is missing "virtual" in "class CaiwynButtons : public PropBase" - easy fix!)
+  #include "../props/saber_fett263_buttons.h"   //use SaberFett263Buttons  | working with multi_prop.h
+//#include "../props/saber_sa22c_buttons.h"     //use SaberSA22CButtons    | working with multi_prop.h
+//#include "../props/saber_sabersense_buttons.h"//use SabersenseButtons    |  untested with multi_prop.h
+//#include "../props/saber_shtok_buttons.h"     //use SaberShtokButtons    | working with multi_prop.h
 
 // *** List of blasters (choose one and only one) ***
 // ==================================================
-  #include "../props/blaster.h"                  //use Blaster              | working with multi_prop.h
-//#include "../props/blaster_BC_buttons.h"       //use BlasterBCButtons     | working with multi_prop.h after a two lines modification
-                                                 //(for new version)        |
-                                                 //use BlasterBC            | Compiling with multi_prop.h (after modifications to BlasterBC
-                                                 //(for old version)        |
-//#include "../props/blaster_Teas_buttons"       //use BlasterTEA           |  untested with multi_prop.h
-//#include "../props/laser_musket_buttons"       //use LaserMusketButtons   |  untested with multi_prop.h but it is not compatible because it uses pow & aux buttons.
+  #include "../props/blaster.h"                 //use Blaster              | working with multi_prop.h
+//#include "../props/blaster_BC_buttons.h"      //use BlasterBCButtons     | working with multi_prop.h after a two lines modification
+                                                //(for new version)        |
+                                                //use BlasterBC            | Compiling with multi_prop.h (after modifications to BlasterBC
+                                                //(for old version)        |
+//#include "../props/laser_musket_buttons"      //use LaserMusketButtons   |  untested with multi_prop.h but it is not stock compatible because it uses pow & aux buttons instead of fire & mode select.
+//#include "../props/blaster_Teas_buttons"      //use BlasterTEA           |  untested with multi_prop.h
 
 // IMPORTANT NOTE: blaster_BC_buttons.h (at the time of writing) is not "stock" compatible with multi_prop.h
 // A small modification needs to be added to it's code. I will let NoSloppy decide for the best course of action
@@ -69,7 +69,7 @@ How to use: add this to your config in the CONFIG_PROP section:
 
 // *** List of other prop types (choose one of each) ***
 // =====================================================
-  #include "../props/detonator.h"               //use Detonator            | Working with multi_prop.h
+  #include "../props/detonator.h"               //use Detonator            | Compiling with multi_prop.h but it will NOT work due to it's code used for the latching button.
 //#include "../props/detonator_Oli_buttons.h"   //use DetonatorOliButtons  | Working with multi_prop.h
 //#include "../props/jetpack_Oli_buttons.h"     //use JetpackOliButtons    | Working with multi_prop.h
 //#include "../props/morsecode_prop.h"          //use MorseCode            | Compiling with multi_prop.h but far from ready!
@@ -81,6 +81,7 @@ How to use: add this to your config in the CONFIG_PROP section:
 
 // Now setup your CONFIG_PRESETS section to have multiple preset banks like this:
 // (same-ish as if using blade id - but multi_prop is not compatible with using the "real" blade id!)
+// multi_prop is also not compatible with BLADE_DETECT but I can hopefully change that.
 
 Preset presets_saber[] = {
   // with your saber presets list here.
@@ -127,6 +128,8 @@ BladeConfig blades[] = {
  { 5, //DROID
     // with your blade(s) definition(s) here.
     CONFIGARRAY(presets_droid), "__droid_save" },
+*/
+// https://pod.hubbe.net/howto/making-your-own-prop-file.html
 
 #ifndef PROPS_MULTI_PROP_H
 #define PROPS_MULTI_PROP_H
@@ -138,23 +141,27 @@ BladeConfig blades[] = {
 #endif
 
 #if NUM_BUTTONS < 2
-#error Your prop NEEDS 2 or more buttons to use multi_prop (for now)!
+#error multi_prop requires 2 Buttons for operation (for now)!
 #endif
 
-/* Commented out because I am still working on this!
+// I am still working on this!
 #ifndef MULTI_PROP_BUTTON_HELD_XTRA_LONG_TIMEOUT
 #define MULTI_PROP_BUTTON_HELD_XTRA_LONG_TIMEOUT 1000 * 4
 #endif
-*/
 
+// Define FakeBladeID structure
 struct FakeBladeID {                                       //
   static int return_value;  // Holds the current mode ID   //
+  // Method to return the current blade ID                 //
   float id() { return return_value; }                      //
+  // Method to set the blade ID based on the mode          //
   static void SetFakeBlade(int id) {                       //
     return_value = id;                                     //
   }                                                        // Sabersense code part 1 of 2
 };                                                         // adapted to multi_prop.h
+// Initialize return_value to a default of 0 - SABER mode  //
 int FakeBladeID::return_value = 0;                         //
+// Redefine the blade ID class to use FakeBladeID          //
 #undef  BLADE_ID_CLASS_INTERNAL                            //
 #define BLADE_ID_CLASS_INTERNAL FakeBladeID                //
 #undef  BLADE_ID_CLASS                                     //
@@ -171,7 +178,7 @@ EFFECT(jetpackmode);
 //EFFECT(droidmode);          // Un-comment if implementing droid   (wav available - but no prop yet)
 
 template<class Saber, class Blaster, class Detonator,
-         class Jetpack> /*, class MorseCode , class Droid*/
+         class Jetpack> /*, class MorseCode, class Droid*/
 class MultiProp : public virtual Saber, public virtual Blaster, public virtual Detonator,
                   public virtual Jetpack { /*, public virtual MorseCode, public virtual Droid*/
                   // One prop to rule them all, and in your config bind them!
@@ -182,7 +189,7 @@ public:
     switch (b) {
 /*
 #ifdef BLADE_DETECT_PIN
-    case BUTTON_BLADE_DETECT:  return BUTTON_CLIP_DETECT;
+    case BUTTON_BLADE_DETECT:  return BUTTON_CLIP_DETECT; // Could this work ???
 #endif
 */
 
@@ -203,7 +210,7 @@ public:
     switch (b) {
 /*
 #ifdef BLADE_DETECT_PIN
-    case BUTTON_CLIP_DETECT:   return BUTTON_BLADE_DETECT;
+    case BUTTON_CLIP_DETECT:   return BUTTON_BLADE_DETECT; // Could this work ???
 #endif
 */
 
@@ -220,11 +227,12 @@ public:
   }
   const char* name() override { return "MultiProp"; }
 
+  // Enumeration for modes
   enum class Prop_Mode {
         SABER = 0,
       BLASTER = 1,
     DETONATOR = 2,
-      JETPACK = 3,  // Ready (I think), pending review. I need to do a few tweeks!
+      JETPACK = 3,  // Ready (I think). I need to do a few tweeks!
   //MORSECODE = 4,  // Not fully ready, but in progress!
       //DROID = 6,  // Un-comment when ready to implement Droid functionality.
     //VEHICLE = 7,  // Un-comment if implementing Vehicle.
@@ -240,19 +248,21 @@ public:
       https://github.com/olivierflying747-8/Olis-ProffieOS/tree/06_props_Oli_buttons_SUGGESTIONS_WELCOME */
   };
 
-  Prop_Mode currentMode_MP = Prop_Mode::SABER;  // Initial state is Saber
+  Prop_Mode currentMode_ = Prop_Mode::SABER;  // Initial state is Saber
 
-   void updateBladeIDAndDetect(int blade_id) {
+  // Helper function to set FakeBladeID and re-detect the blade
+  void updateBladeIDAndDetect(int blade_id) {
     FakeBladeID::SetFakeBlade(blade_id);             //
     PVLOG_DEBUG << "*** Fake blade id'ed\n";         // Sabersense code part 2 of 2
     PropBase::FindBladeAgain();                      // adapted to multi_prop.h
     SaberBase::DoBladeDetect(true);                  //
   }
 
+  // Switch modes helper to reduce repetition.
   void swapProp(Prop_Mode modenext, const char* message, int blade_id, EffectType effect) {
     PropBase::Off(PropBase::OFF_FAST);
     PVLOG_STATUS << message << "\n";
-    currentMode_MP = modenext;
+    currentMode_ = modenext;
     updateBladeIDAndDetect(blade_id);
     SaberBase::DoEffect(effect, 0);
     PVLOG_VERBOSE << "*** One prop to rule them all, and in your config bind them!\n";
@@ -262,21 +272,23 @@ public:
   // Set ID 0 for SABER mode, 1 for BLASTER mode, 2 for DETONATOR mode,
   //        3 for JETPACK mode, 4 for MORSECODE mode & 5 for DROID mode.
   void switchModes() {
-    switch (currentMode_MP) {
+    switch (currentMode_) {
       // Arranged in "columns" to make it much easier to see if something is missing when adding a new "prop-mode".
       case Prop_Mode::SABER:     swapProp(Prop_Mode::BLASTER,   "*** Blaster Mode",    1, EFFECT_BLASTERMODE);   break;
       case Prop_Mode::BLASTER:   swapProp(Prop_Mode::DETONATOR, "*** Detonator Mode",  2, EFFECT_DETONATORMODE); break;
       case Prop_Mode::DETONATOR: swapProp(Prop_Mode::JETPACK,   "*** Jetpack Mode",    3, EFFECT_JETPACKMODE);   break;
       case Prop_Mode::JETPACK:   swapProp(Prop_Mode::SABER,     "*** Saber Mode",      0, EFFECT_SABERMODE);     break;
-      /*                         swapProp(Prop_Mode::MORSECODE, "*** Morse Code Mode", 4, EFFECT_MORSECODEMODE); break;
-      case Prop_Mode::MORSECODE: swapProp(Prop_Mode::DROID,     "*** Droid Mode",      5, EFFECT_DROIDMODE);     break;
+      /*
+                                 swapProp(Prop_Mode::MORSECODE, "*** Morse Code Mode", 4, EFFECT_MORSECODEMODE); break;
+      case Prop_Mode::MORSECODE:
+                                 swapProp(Prop_Mode::DROID,     "*** Droid Mode",      5, EFFECT_DROIDMODE);     break;
       case Prop_Mode::DROID:     swapProp(Prop_Mode::SABER,     "*** Saber Mode",      0, EFFECT_SABERMODE);     break;
       */
     }
   }
 
   bool Event(enum BUTTON button, EVENT event) override {
-    switch (EVENTID(button, event, 0)) { //To do: replace with MULTI_PROP_EVENT_HELD_XTRA_LONG (once I get it working)
+    switch (EVENTID(button, event, 0)) { // To do: replace with MULTI_PROP_EVENT_HELD_XTRA_LONG (once I get it working)
 
 #if NUM_BUTTONS > 2
       case EVENTID(BUTTON_AUX2, EVENT_THIRD_SAVED_CLICK_SHORT, 0): // Obviously, you need 3 buttons for this to work.
@@ -288,7 +300,7 @@ public:
         switchModes();
         return true;
     }
-    switch (currentMode_MP) {
+    switch (currentMode_) {
       case Prop_Mode::SABER:     return     Saber::Event(button, event);
       case Prop_Mode::BLASTER: {
         button = static_cast<enum BUTTON>(map_button(button));
@@ -325,12 +337,11 @@ public:
 | I lined up everything in "columns"to make the code much easier to read. IMHO! ¯\_(")_/¯ |
 \*****************************************************************************************/
 
-/*
-  // I am not sure if this part is needed (that is why it is commented out) because I didn't have a compile
-  // error with mode_Event2 YET! But I thought it would be a good idea to have it ready here for WHEN a comflict
-  // happens, then it can be uncommented to solve the conflict.
+  // I am not sure if this part is needed because I didn't have a compile error with mode_Event2 YET!
+  // But I thought it would be a good idea to have it ready here for WHEN a comflict
+  // happens.
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
-    switch (currentMode_MP) {
+    switch (currentMode_) {
       case Prop_Mode::SABER:     return     Saber::mode_Event2(button, event, modifiers);
       case Prop_Mode::BLASTER:   return   Blaster::mode_Event2(button, event, modifiers);
       case Prop_Mode::DETONATOR: return Detonator::mode_Event2(button, event, modifiers);
@@ -340,10 +351,9 @@ public:
     }
     return false;
   }
-*/
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
-    switch (currentMode_MP) {
+    switch (currentMode_) {
       case Prop_Mode::SABER:     return     Saber::Event2(button, event, modifiers);
       case Prop_Mode::BLASTER:   return   Blaster::Event2(button, event, modifiers);
       case Prop_Mode::DETONATOR: return Detonator::Event2(button, event, modifiers);
@@ -355,7 +365,7 @@ public:
   }
 
   void SetPreset(int preset_num, bool announce) override {
-    switch (currentMode_MP) {
+    switch (currentMode_) {
       case Prop_Mode::SABER:         Saber::SetPreset(preset_num, announce); break;
       case Prop_Mode::BLASTER:     Blaster::SetPreset(preset_num, announce); break;
       case Prop_Mode::DETONATOR: Detonator::SetPreset(preset_num, announce); break;
@@ -366,7 +376,7 @@ public:
   }
 
   void Loop() override {
-    switch (currentMode_MP) {
+    switch (currentMode_) {
       case Prop_Mode::SABER:         Saber::Loop(); break;
       case Prop_Mode::BLASTER:     Blaster::Loop(); break;
       case Prop_Mode::DETONATOR: Detonator::Loop(); break;
@@ -386,7 +396,7 @@ public:
   }
 
   bool chdir(StringPiece font) override {
-    switch (currentMode_MP) {
+    switch (currentMode_) {
       case Prop_Mode::SABER:     return     Saber::chdir(font);
       case Prop_Mode::BLASTER:   return   Blaster::chdir(font);
       case Prop_Mode::DETONATOR: return Detonator::chdir(font);
@@ -398,7 +408,7 @@ public:
   }
 
   bool Parse(const char* key, const char* val) override {
-    switch (currentMode_MP) {
+    switch (currentMode_) {
       case Prop_Mode::SABER:     return     Saber::Parse(key, val);
       case Prop_Mode::BLASTER:   return   Blaster::Parse(key, val);
       case Prop_Mode::DETONATOR: return Detonator::Parse(key, val);
@@ -410,7 +420,7 @@ public:
   }
 
   void DoMotion(const Vec3& motion, bool clear) override {
-    switch (currentMode_MP) {
+    switch (currentMode_) {
       case Prop_Mode::SABER:         Saber::DoMotion(motion, clear); break;
       case Prop_Mode::BLASTER:     Blaster::DoMotion(motion, clear); break;
       case Prop_Mode::DETONATOR: Detonator::DoMotion(motion, clear); break;
@@ -421,7 +431,7 @@ public:
   }
 
   void Clash(bool stab, float strength) override {
-    switch (currentMode_MP) {
+    switch (currentMode_) {
       case Prop_Mode::SABER:         Saber::Clash(stab, strength); break;
       case Prop_Mode::BLASTER:     Blaster::Clash(stab, strength); break;
       case Prop_Mode::DETONATOR: Detonator::Clash(stab, strength); break;
@@ -433,6 +443,7 @@ public:
 
   void announcemode(Effect* sound_name) {
     if (!hybrid_font.PlayPolyphonic(sound_name)) {
+      // Use beeper for fallback sounds
       beeper.Beep(0.05, 2000);
       beeper.Silence(0.05);
       beeper.Beep(0.05, 2000);
@@ -459,7 +470,7 @@ public:
     //case EFFECT_MORSECODEMODE: morsecodemode();                  return;
     //case EFFECT_DROIDMODE:     announcemode(&SFX_droidmode);     return;
     }
-    switch (currentMode_MP) {
+    switch (currentMode_) {
       case Prop_Mode::SABER:         Saber::SB_Effect(effect, location); break;
       case Prop_Mode::BLASTER:     Blaster::SB_Effect(effect, location); break;
       case Prop_Mode::DETONATOR: Detonator::SB_Effect(effect, location); break;
