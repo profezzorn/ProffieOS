@@ -1,3 +1,5 @@
+// This version of dual_prop.h, has been modified by me (Oli) to cover some issues, I hve identified while creating multi_prop.h
+
 #ifndef PROPS_DUAL_PROP_H
 #define PROPS_DUAL_PROP_H
 
