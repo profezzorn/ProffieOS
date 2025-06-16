@@ -56,9 +56,6 @@ How to use: add this to your config in the CONFIG_PROP section:
 // ==================================================
   #include "../props/blaster.h"                 //use Blaster              | working with multi_prop.h
 //#include "../props/blaster_BC_buttons.h"      //use BlasterBCButtons     | working with multi_prop.h after a two lines modification
-                                                //(for new version)        |
-                                                //use BlasterBC            | Compiling with multi_prop.h (after modifications to BlasterBC
-                                                //(for old version)        |
 //#include "../props/laser_musket_buttons"      //use LaserMusketButtons   |  untested with multi_prop.h but it is not stock compatible because it uses pow & aux buttons instead of fire & mode select.
 //#include "../props/blaster_Teas_buttons"      //use BlasterTEA           |  untested with multi_prop.h
 
@@ -68,11 +65,10 @@ How to use: add this to your config in the CONFIG_PROP section:
 
 // *** List of other prop types (choose one of each) ***
 // =====================================================
-  #include "../props/detonator.h"               //use Detonator            | Compiling with multi_prop.h but it will NOT work due to it's code used for the latching button.
-//#include "../props/detonator_Oli_buttons.h"   //use DetonatorOliButtons  | Working with multi_prop.h
-//#include "../props/jetpack_Oli_buttons.h"     //use JetpackOliButtons    | Working with multi_prop.h
+//#include "../props/detonator.h"               //use Detonator            | Compiling with multi_prop.h but it will NOT work due to it's code used for the latching button.
+  #include "../props/detonator_Oli_buttons.h"   //use DetonatorOliButtons  | Working with multi_prop.h
+  #include "../props/jetpack_Oli_buttons.h"     //use JetpackOliButtons    | Working with multi_prop.h
 //#include "../props/morsecode_prop.h"          //use MorseCode            | Compiling with multi_prop.h but far from ready!
-//#include "../props/droid_prop.h"              //In progress but also very far from ready!
 
 #undef PROP_TYPE
 #define PROP_TYPE MultiProp <SaberFett263Buttons, Blaster, DetonatorOliButtons, JetpackOliButtons>
@@ -238,7 +234,7 @@ public:
                     /* I have not decided what this prop should do, but it would be cool to play with STARWARS "vehicles" sounds:
                        speeders, pod-racers, TIE's, A/B/X/U-Wings, tanks, Star Destroyers and any other ships/vehicles
                        that we can think of!
-                       On further thoughts, vehicle prop ideas will be merged into jetpack prop because I believe
+                       On further thoughts, "vehicle prop ideas" will be merged into jetpack prop because I believe
                        they will do the same things (play with vehicles engines & weapons sounds). */
       // TRON = 8,  // I also had the idea for a Tron Disk Controller, but that has apparently been done already.
                     /* I just need to put my hands on one of those "tron_prop.h" (wink) to see if I can make multi_prop
@@ -337,8 +333,7 @@ public:
 \*****************************************************************************************/
 
   // I am not sure if this part is needed because I didn't have a compile error with mode_Event2 YET!
-  // But I thought it would be a good idea to have it ready here for WHEN a comflict
-  // happens.
+  // But I thought it would be a good idea to have it ready here for WHEN a conflict happens.
   bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
     switch (currentMode_) {
       case Prop_Mode::SABER:     return     Saber::mode_Event2(button, event, modifiers);
