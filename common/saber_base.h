@@ -34,7 +34,7 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(IGNITION)                     \
     DEFINE_EFFECT(RETRACTION)                   \
     DEFINE_EFFECT(CHANGE)                       \
-    /* just for resetting things, not meant for triggering effects, use NEWFONT/BLADEIN/BLADEOUT instead */ \
+    /* just for resetting things, not meant for triggering effects, use NEWFONT/BLADEIN/BLADEOUT instead */        \
     DEFINE_EFFECT(CHDIR)                        \
     DEFINE_EFFECT(NEWFONT)                      \
     DEFINE_EFFECT(BLADEIN)                      \
@@ -46,13 +46,13 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(ACCENT_SWING)                 \
     DEFINE_EFFECT(ACCENT_SLASH)                 \
     DEFINE_EFFECT(SPIN)                         \
-    /* Allows style to turn blade ON for interactive effects if prop/style support, FAST_ON skips PREON. */         \
+    /* Allows style to turn blade ON for interactive effects if prop/style support, FAST_ON skips PREON. */        \
     DEFINE_EFFECT(ON)                           \
     DEFINE_EFFECT(FAST_ON)                      \
     DEFINE_EFFECT(QUOTE)                        \
     DEFINE_EFFECT(SECONDARY_IGNITION)           \
     DEFINE_EFFECT(SECONDARY_RETRACTION)         \
-    /* Allows style to turn blade OFF for interactive effects if prop/style support, FAST_OFF skips POSTOFF. */     \
+    /* Allows style to turn blade OFF for interactive effects if prop/style support, FAST_OFF skips POSTOFF. */    \
     DEFINE_EFFECT(OFF)                          \
     DEFINE_EFFECT(FAST_OFF)                     \
     DEFINE_EFFECT(OFF_CLASH)                    \
@@ -86,7 +86,6 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(PLI_ON)                       \
     DEFINE_EFFECT(PLI_OFF)                      \
     DEFINE_EFFECT(DESTRUCT)                     \
-    DEFINE_EFFECT(BOOM)                         \
     /* Mini game effects */                     \
     DEFINE_EFFECT(GAME_START)                   \
     DEFINE_EFFECT(GAME_ACTION1)                 \
@@ -114,7 +113,45 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(FONT_DIRECTORY_NOT_FOUND)     \
     /* menu effects, triggered when you go from one menu entry to the next/previous */                             \
     DEFINE_EFFECT(MENU_CHANGE)                  \
-
+    /* Detonator  effects      added by Oli */  \
+    DEFINE_EFFECT(BGNARM)                       \
+    DEFINE_EFFECT(ARMHUM)                       \
+    DEFINE_EFFECT(ENDARM)                       \
+    DEFINE_EFFECT(BOOM)                         \
+    DEFINE_EFFECT(TIMER)                        \
+    /* Multi prop effects      added by Oli */  \
+    DEFINE_EFFECT(SABERMODE)                    \
+    DEFINE_EFFECT(BLASTERMODE)                  \
+    DEFINE_EFFECT(DETONATORMODE)                \
+    DEFINE_EFFECT(JETPACKMODE)                  \
+    DEFINE_EFFECT(MORSECODEMODE)                \
+  /*DEFINE_EFFECT(DROIDMODE)*/                  \
+  /*DEFINE_EFFECT(VEHICLEMODE)*/                \
+    /* Jetpack missile effects added by Oli */  \
+    DEFINE_EFFECT(ARMING)                       \
+    DEFINE_EFFECT(TARGETING)                    \
+    DEFINE_EFFECT(MISSILELAUNCH)                \
+    DEFINE_EFFECT(MISSILEGOESBOOM)              \
+    DEFINE_EFFECT(MANDOTALK)                    \
+    DEFINE_EFFECT(DISARMING)                    \
+    /* Jetpack other weapons effects */         \
+    DEFINE_EFFECT(WHISTLINGBIRDS)               \
+    DEFINE_EFFECT(MANDOSRIFLE)                  \
+    /* Jetpack engine effects  added by Oli */  \
+    DEFINE_EFFECT(STARTIDLEMODE)                \
+    DEFINE_EFFECT(IDLEMODE)                     \
+    DEFINE_EFFECT(STARTFLIGHTMODE)              \
+    DEFINE_EFFECT(FLIGHTMODE)                   \
+    DEFINE_EFFECT(STOPFLIGHTMODE)               \
+    DEFINE_EFFECT(STOPIDLEMODE)                 \
+    /* Jetpack mishap effects  added by Oli */  \
+    DEFINE_EFFECT(FALSESTART)                   \
+    DEFINE_EFFECT(STUTTERING)                   \
+    DEFINE_EFFECT(SELFDESTRUCT)                 \
+    DEFINE_EFFECT(MELTDOWN)                     \
+    DEFINE_EFFECT(DUD)                          \
+    /* Morsecode prop effect   added by Oli */  \
+    DEFINE_EFFECT(SHOWMORSECODE)
 
 #define DEFINE_EFFECT(X) EFFECT_##X,
 enum class EffectType {
