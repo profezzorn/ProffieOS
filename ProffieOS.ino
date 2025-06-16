@@ -802,23 +802,23 @@ LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN>>
 USE_PIN_OUTPUT(BLADE_DETECT_PIN, PO_SubSystems::PO_BLADE_DETECT);
 #endif
 
-/* For multiple blade detect part 4/4                                                                // added by Oli
-// (Need to add part 1/4 to events.h 2/4 to config, part 3/4 to props, part 4/4 to to ProffieOS.ino) // added by Oli
-*/                                                                                                   // added by Oli
-                                                                                                     // added by Oli
-#ifdef BLADE_DETECT_PIN2                                                                             // added by Oli
-LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN2>>                                        // added by Oli
-  BladeDetect2(BUTTON_BLADE_DETECT2, BLADE_DETECT_PIN2, "blade_detect_2");                           // added by Oli
-                                                                                                     // added by Oli
-USE_PIN_OUTPUT(BLADE_DETECT_PIN2, PO_SubSystems::PO_BLADE_DETECT);                                   // added by Oli
-#endif                                                                                               // added by Oli
-                                                                                                     // added by Oli
-#ifdef BLADE_DETECT_PIN3                                                                             // added by Oli
-LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN3>>                                        // added by Oli
-  BladeDetect3(BUTTON_BLADE_DETECT3, BLADE_DETECT_PIN3, "blade_detect_3");                           // added by Oli
-                                                                                                     // added by Oli
-USE_PIN_OUTPUT(BLADE_DETECT_PIN3, PO_SubSystems::PO_BLADE_DETECT);                                   // added by Oli
-#endif                                                                                               // added by Oli
+/* For multiple blade detect part 4/4                                                             // added by Oli
+// (Need to add part 1/4 to events.h 2/4 to config, part 3/4 to props, part 4/4 to ProffieOS.ino) // added by Oli
+*/                                                                                                // added by Oli
+                                                                                                  // added by Oli
+#ifdef BLADE_DETECT_PIN2                                                                          // added by Oli
+LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN2>>                                     // added by Oli
+  BladeDetect2(BUTTON_BLADE_DETECT2, BLADE_DETECT_PIN2, "blade_detect_2");                        // added by Oli
+                                                                                                  // added by Oli
+USE_PIN_OUTPUT(BLADE_DETECT_PIN2, PO_SubSystems::PO_BLADE_DETECT);                                // added by Oli
+#endif                                                                                            // added by Oli
+                                                                                                  // added by Oli
+#ifdef BLADE_DETECT_PIN3                                                                          // added by Oli
+LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN3>>                                     // added by Oli
+  BladeDetect3(BUTTON_BLADE_DETECT3, BLADE_DETECT_PIN3, "blade_detect_3");                        // added by Oli
+                                                                                                  // added by Oli
+USE_PIN_OUTPUT(BLADE_DETECT_PIN3, PO_SubSystems::PO_BLADE_DETECT);                                // added by Oli
+#endif                                                                                            // added by Oli
 
 #include "common/sd_test.h"
 
