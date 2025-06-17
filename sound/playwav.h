@@ -89,6 +89,7 @@ public:
     }
     PlayLoop(file_id.GetEffect()->GetFollowing());
   }
+
   void PlayLoop(Effect* effect) {
     effect_.set(effect);
   }
@@ -258,7 +259,7 @@ private:
           }
           break;
         }
-        
+
         if (16 != ReadFile(16)) {
           default_output->println("Read failed.");
           goto fail;
@@ -285,7 +286,7 @@ private:
 
       ptr_ = buffer + 8;
       end_ = buffer + 8;
-      
+
       while (true) {
         if (wav_) {
           if (ReadFile(8) != 8) break;
@@ -428,7 +429,7 @@ private:
   // Number of samples_ in samples that has been
   // sent out already.
   int written_ = 0;
-  
+
   // Number of samples in samples_
   int num_samples_ = 0;
   int16_t samples_[32];
