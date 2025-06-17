@@ -158,7 +158,7 @@ public:
         if (powered_) rotate_presets();
         return true;
 
-      case EVENTID(BUTTON_POWER, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
+      case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
         StartOrStopTrack();
         return true;
 
