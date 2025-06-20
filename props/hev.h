@@ -29,12 +29,18 @@
 // These are played using the altchng method. So create 7 directories:
 // alt00, alt01, alt02, alt03, alt04, alt05, alt06.
 // Each directory should contain two folders, altchng and stun.
-// In alt01 to alt06, place the hazard detection voice lines (bio, blood toxins, chemical, radiation, shock, fire) in altchng.
-// In alt01 to alt06, place appropriate sound effects (spark, burn, geiger counter) in stun.
-// In each stun folder, use the same amount of files as the other stun folders. So if you use 4 stun sounds, use 4 in all of them.
-// In each altchng folder, use the same amount of files as the other altchng folders. I use 2 in all of them.
-// One for the main voice line, the other is the same, but with a follow up health notification for variety.
-// For alt00, have the same amount of files as the other alt** folders but leave the files blank.
+// In alt01 to alt06, place the hazard detection voice lines in the altchng dir
+// (bio, blood toxins, chemical, radiation, shock, fire).
+// In alt01 to alt06, place appropriate sound effects in the stun dir
+// (spark, burn, geiger counter).
+// In each stun folder, use the same amount of files as the other stun folders.
+// So if you use 4 stun sounds, use 4 in all of them.
+// In each altchng folder, use the same amount of files as the other altchng folders.
+// I use 2 in all of them.
+// One for the main voice line, the other is the same,
+// but with a follow up health notification for variety.
+// For alt00, have the same amount of files as the other alt** folders
+// but leave the files blank.
 //
 // Notes:
 // Clash will cause varying damage based on strength
@@ -59,48 +65,86 @@ EFFECT(morphine);
 
 struct HEVTimer {
   uint32_t start_ = 0;
+
+  // next_tick_ ensures precise timing for damage events by storing the exact
+  // timestamp when the next damage should occur, preventing timing drift.
+  // Mainly used for hazard damage, controlled by HEV_HAZARD_DECREASE_MS.
   uint32_t next_tick_ = 0;
+
+  // Delay before applying damage. HEV_HAZARD_DELAY_MS
+  uint32_t delay_ = 0;
+
+  // Time between applying damage. HEV_HAZARD_DECREASE_MS
+  uint32_t interval_ = 0;
+
   bool active_ = false;
 
   void reset() { active_ = false; next_tick_ = 0; }
   
   void start() { active_ = true; start_ = next_tick_ = millis(); }
 
-  // Returns true if timer is inactive or timeout exceeded
-  bool check(uint32_t timeout) {
-    return !active_ || (millis() - start_ > timeout);
+  void configure(uint32_t interval, uint32_t delay_time = 0) {
+    interval_ = interval;
+    delay_ = delay_time;
   }
 
-  // Manages hazard warning and damage sequence timing
-  bool hazard_sequence(uint32_t warning_period, uint32_t tick_interval) {
+  // Returns true if timer is inactive or timeout exceeded
+  bool check() {
+    return !active_ || (millis() - start_ > interval_);
+  }
+
+  // warning_period is a grace period. It's argument is HEV_HAZARD_DELAY_MS.
+  // tick_interval uses HEV_HAZARD_DECREASE_MS as an argument. Currently 1000ms.
+  //
+  // The hazard sequence method returns true when:
+  // - The timer is active (active_ is true)
+  // - The warning period has elapsed (now - start_ >= warning_period)
+  // - It's time for the next damage tick (now >= next_tick_)
+  //
+  // It returns false when:
+  // - The timer is not active (active_ is false)
+  // - The warning period hasn't elapsed yet
+  // - It's not time for the next damage tick
+  bool hazard_sequence() {
     if (!active_) return false;
     uint32_t now = millis();
     
-    return (now - start_ >= warning_period) && 
-           ((now >= next_tick_) ? (next_tick_ = now + tick_interval, true) : false);
+    return (now - start_ >= delay_) &&
+           ((now >= next_tick_) ? (next_tick_ = now + interval_, true) : false);
   }
 
   // Returns true if timer is active and interval has elapsed
-  bool ready(uint32_t interval) {
-    return active_ && ((millis() - start_) >= interval);
+  bool ready() {
+    return active_ && ((millis() - start_) >= interval_);
   }
 };
 
 class Hev : public PROP_INHERIT_PREFIX PropBase {
 public:
-  Hev() : PropBase() {}
-  const char* name() override { return "Hev"; }
-
-  int health_ = 100;
-  int armor_ = 100;
 
   HEVTimer clash_timer_;
-  HEVTimer random_event_timer_;
   HEVTimer post_death_cooldown_timer_;
+  HEVTimer random_event_timer_;
   HEVTimer hazard_delay_timer_;
   HEVTimer hazard_damage_timer_;
   HEVTimer health_increase_timer_;
   HEVTimer armor_increase_timer_;
+
+  Hev() : PropBase() {
+    // Configure all timers with their respective timings from hev_config.h
+    // Clash timer uses clash_timeout_ from PropBase for debounce
+    clash_timer_.configure(this->clash_timeout_);
+    post_death_cooldown_timer_.configure(HEV_POST_DEATH_COOLDOWN_MS);
+    random_event_timer_.configure(HEV_RANDOM_EVENT_INTERVAL_MS);
+    hazard_delay_timer_.configure(HEV_HAZARD_DECREASE_MS, HEV_HAZARD_DELAY_MS);
+    health_increase_timer_.configure(HEV_HEALTH_INCREASE_MS);
+    armor_increase_timer_.configure(HEV_ARMOR_INCREASE_MS);
+  }
+
+  const char* name() override { return "Hev"; }
+
+  int health_ = 100;
+  int armor_ = 100;
 
   enum Hazard {
     HAZARD_NONE = 0,
@@ -165,14 +209,27 @@ public:
 
   // Clashes
   void Clash(bool stab, float strength) override {
-    // Don't allow Clashes if dead.
-    if (health_ == 0) {
-      return;
-    }
-
-    // If HEVTimer and PropBase's clash_timeout_ are true to activate Clash.
-    // Otherwise return early.
-    if (clash_timer_.active_ && !clash_timer_.check(this->clash_timeout_)) {
+    // Don't process clashes if dead or during cooldown.
+    // HEV Suit clash detection uses a fundamentally different approach than PropBase.
+    // The two work together: timer tracks state, timeout defines duration.
+    //
+    //  1. PropBase uses direct timestamp comparison:
+    //     - Stores last_clash_ timestamp and clash_timeout_ value.
+    //     - Compares (millis() - last_clash_ < clash_timeout_) on each check.
+    //     - Simple but limited to basic cooldown functionality.
+    // 
+    //  2. HEV uses object-oriented HEVTimer system:
+    //     - clash_timer_ encapsulates timer state (active flag, start time).
+    //     - clash_timeout_ provides the duration value.
+    //     - Enables more complex patterns like sequences and ready-state checking.
+    // 
+    // This is advantageous because:
+    // - HEV's sophisticated hit categorization needs finer state control.
+    // - Consistent with other HEV timers (health_timer_, armor_timer_, etc.)
+    // - Provides clear separation between "is a timer running?" and "how long should it run?".
+    // - Allows more complex timing patterns needed for authentic HEV behavior.
+    // - Supports future extensions like variable cooldowns based on hit type.
+    if (health_ == 0 || (clash_timer_.active_ && !clash_timer_.check())) {
       return;
     }
     
@@ -206,7 +263,7 @@ public:
   // Random Hazards
   void CheckRandomEvent() {
     // Skip Hazard check if dead or during post-death cooldown
-    if (health_ == 0 || !post_death_cooldown_timer_.check(HEV_POST_DEATH_COOLDOWN_MS)) {
+    if (health_ == 0 || !post_death_cooldown_timer_.check()) {
       return;
     }
 
@@ -217,8 +274,7 @@ public:
     }
 
     // Check for new Hazard if timer expired and no current Hazard
-    if (random_event_timer_.check(HEV_RANDOM_EVENT_INTERVAL_MS) && 
-      current_hazard_ == HAZARD_NONE) {
+    if (random_event_timer_.check() && current_hazard_ == HAZARD_NONE) {
             
       // Roll for Random Hazard
       if (random(100) < HEV_RANDOM_HAZARD_CHANCE) {
@@ -244,7 +300,7 @@ public:
     }
 
     // Check sequence and apply damage
-    if (hazard_delay_timer_.hazard_sequence(HEV_HAZARD_DELAY_MS, HEV_HAZARD_DECREASE_MS)) {
+    if (hazard_delay_timer_.hazard_sequence()) {
       if (armor_ > 0) {
         armor_--;
         SaberBase::DoEffect(EFFECT_STUN, 0.0, 1);
@@ -273,7 +329,7 @@ public:
       return;
     }
 
-    if (!SaberBase::Lockup() || !health_increase_timer_.ready(HEV_HEALTH_INCREASE_MS)) {
+    if (!SaberBase::Lockup() || !health_increase_timer_.ready()) {
       return;
     }
 
@@ -294,7 +350,7 @@ public:
       return;
     }
 
-    if (!SaberBase::Lockup() || !armor_increase_timer_.ready(HEV_ARMOR_INCREASE_MS)) {
+    if (!SaberBase::Lockup() || !armor_increase_timer_.ready()) {
       return;
     }
 
