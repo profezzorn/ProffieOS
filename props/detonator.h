@@ -10,8 +10,8 @@ Button Power: (BUTTON_POWER can either be latching or it needs to be held)
 Latch ON (or press and hold) : ON & ARMED
 Latch OFF (or release) : OFF & DISARMED (will stop the "countdown")
 
-Button Aux2:
-============
+Button Aux:
+===========
 Double click while off : Next preset
 Double click while on : Start/Stop track
 'Press and Release' while Armed : Plays beginarm.wav & armhum.wav "countdown" on repeat.
