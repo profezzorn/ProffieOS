@@ -11,7 +11,7 @@ Changes includes, but not limited to:
   - common/events.h              (for multiple blade detect & multi_prop compatibility)
   - common/saber_base.h          (for multi_prop, detonator_Oli_buttons & jetpack_Oli_buttons compatibility)
   - common/serial.h              (because I like it better this way)
-  - props/saber_BC_buttons.h     (for multi_prop compatibility)
+  - props/blaster_BC_buttons.h   (for multi_prop compatibility)
   - props/detonator.h            (for multi_prop compatibility)
   - props/dual_prop.h            (based on potential issues I identified with multi_prop)
   - props/saber_caiwin_buttons.h (for multi_prop compatibility)
