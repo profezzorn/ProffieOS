@@ -1268,7 +1268,6 @@ struct BCVolumeMode : public SPEC::SteppedMode {
         sound_library_.fadeout(0.2);
         mode::getSL<SPEC>()->SayVolumeUp();
       }
-      // Always update the volume even if we skipped SayVolumeUp
       dynamic_mixer.set_volume(current_volume_);
     }
   }
