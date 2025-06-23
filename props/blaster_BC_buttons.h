@@ -742,5 +742,4 @@ private:
   RefPtr<BufferedWavPlayer> wav_player;
 };
 
-
 #endif  // PROPS_BLASTER_BC_H
