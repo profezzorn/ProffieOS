@@ -260,6 +260,22 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   but makes accidental blasts more likely when double-
   clicking POWER for Quotes or Force Effect.
 
+#define SABERSENSE_HOT_SKIP_DOWN 23
+#define SABERSENSE_HOT_SKIP_LEVEL 9
+  Hot Skipping is distinct from Font Skipping in that
+  it skips directly to a given preset, rather than
+  skipping forwards or backwards x number of presets.
+  These defines override the Skip-to-Last/Middle
+  Preset feature, so system skips to user-defined
+  preset. Note that Skip-to-First preset is fixed
+  and not user-definable.
+
+#define SABERSENSE_DISABLE_FONT_SKIPPING
+  Completely disables all preset skipping, meaning
+  presets may only be cycled through one at a time.
+  Suitable for installs with small numbers of fonts
+  and presets.
+
 #define SABERSENSE_BUTTON_CLICKER
   Button Clicker to play press/release wav files when
   buttons are pressed. Intended for Scavenger hilt
@@ -368,8 +384,13 @@ public:
 #define BUTTON_HELD_MEDIUM_TIMEOUT 1000
 #endif
 
-#ifndef BUTTON_HELD_LONG_TIMEOUT
-#define BUTTON_HELD_LONG_TIMEOUT 2000
+// Hot Skip values are placeholders only.
+#ifndef SABERSENSE_HOT_SKIP_DOWN
+#define SABERSENSE_HOT_SKIP_DOWN 0
+#endif
+
+#ifndef SABERSENSE_HOT_SKIP_LEVEL
+#define SABERSENSE_HOT_SKIP_LEVEL 0
 #endif
 
 EFFECT(dim);      // for EFFECT_POWERSAVE
@@ -829,29 +850,44 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 #endif
 
-    // Skips to first preset (up) or last preset (down)
-    // or middle preset if horizontal:
+// Skips to first preset (up), last or user-defined preset (down),
+// or middle or user-defined preset (horizontal [level]):
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
 #endif
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
-#define DEGREES_TO_RADIANS (M_PI / 180)
-      if (fusor.angle1() > 45 * DEGREES_TO_RADIANS) {
-        // If pointing up
-        SetPreset(0, true);
-      } else if (fusor.angle1() < -45 * DEGREES_TO_RADIANS) {
-        // If pointing down
-        SetPreset(-1, true);
+    case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF): {
+      CurrentPreset tmp;
+      tmp.SetPreset(-1);
+      int num_presets = tmp.preset_num + 1;
+
+      int target_preset;
+      float angle = fusor.angle1();
+
+      if (angle > M_PI / 6) {
+        target_preset = 0;
+      } else if (angle < -M_PI / 6) {
+        // Get and check user values. Clamp to last preset if invalid.
+        int hot_skip_down = (SABERSENSE_HOT_SKIP_DOWN > 0) ? (SABERSENSE_HOT_SKIP_DOWN - 1) : -1;
+        if (hot_skip_down >= num_presets || hot_skip_down < 0) {
+          hot_skip_down = num_presets - 1;
+        }
+
+        target_preset = hot_skip_down;
       } else {
-        // If horizontal
-        CurrentPreset tmp;
-        tmp.SetPreset(-1);
-        SetPreset(tmp.preset_num / 2, true);
+        int hot_skip_level = (SABERSENSE_HOT_SKIP_LEVEL > 0) ? (SABERSENSE_HOT_SKIP_LEVEL - 1) : -1;
+        if (hot_skip_level >= num_presets || hot_skip_level < 0) {
+          hot_skip_level = num_presets / 2;
+        }
+
+        target_preset = hot_skip_level;
       }
+
 #ifdef SAVE_PRESET
-      SaveState(current_preset_.preset_num);
+    SaveState(target_preset);
 #endif
-      return true;
+    SetPreset(target_preset, true);
+    break;
+  }
 
     // BLADE ID OPTIONS AND ARRAY NAVIGATION
     // Blade ID on-demand scanning with BladeID audio idents.
