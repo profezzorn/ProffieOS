@@ -32,11 +32,6 @@ const unsigned int maxLedsPerStrip = 144;
 // This defines how sensitive the clash detection is.
 #define CLASH_THRESHOLD_G 2.0
 
-// Define this if your power button is a touch button.
-#define POWER_TOUCHBUTTON_SENSITIVITY 1700
-// #define AUX_TOUCHBUTTON_SENSITIVITY 1700
-// #define AUX2_TOUCHBUTTON_SENSITIVITY 1700
-
 #define BLADE_ID_CLASS EnablePowerBladeID<PowerPINS<bladePowerPin1, bladePowerPin2, bladePowerPin3>, BridgedPullupBladeID<bladeIdentifyPin, blade2Pin>>
 
 // Feature defines, these let you turn off large blocks of code
