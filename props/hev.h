@@ -63,42 +63,62 @@ EFFECT(major);
 EFFECT(minor);
 EFFECT(morphine);
 
-struct HEVTimer {
+struct HEVTimerBase {
   uint32_t start_ = 0;
-
-  // next_tick_ ensures precise timing for damage events by storing the exact
-  // timestamp when the next damage should occur, preventing timing drift.
-  // Mainly used for hazard damage, controlled by HEV_HAZARD_DECREASE_MS.
-  uint32_t next_tick_ = 0;
-
-  // Delay before applying damage. HEV_HAZARD_DELAY_MS
-  uint32_t delay_ = 0;
 
   // Time between applying damage. HEV_HAZARD_DECREASE_MS
   uint32_t interval_ = 0;
 
   bool active_ = false;
 
-  void reset() { active_ = false; next_tick_ = 0; }
+  void reset() { active_ = false; }
   
-  void start() { active_ = true; start_ = next_tick_ = millis(); }
+  void start() { active_ = true; start_ = millis(); }
 
-  void configure(uint32_t interval, uint32_t delay_time = 0) {
+  void configure(uint32_t interval) {
     interval_ = interval;
-    delay_ = delay_time;
   }
 
-  // Returns true if timer is inactive or timeout exceeded
+  // Returns true if timer is inactive or timeout exceeded.
   bool check() {
     return !active_ || (millis() - start_ > interval_);
   }
 
-  // warning_period is a grace period. It's argument is HEV_HAZARD_DELAY_MS.
-  // tick_interval uses HEV_HAZARD_DECREASE_MS as an argument. Currently 1000ms.
+  // Returns true if timer is active and interval has elapsed.
+  bool ready() {
+    return active_ && ((millis() - start_) >= interval_);
+  }
+};
+
+struct HEVTimerHazard : public HEVTimerBase {
+  // next_tick_ ensures precise timing for damage events by storing the exact
+  // timestamp when the next damage should occur, preventing timing drift.
+  // Mainly used for hazard damage, controlled by HEV_HAZARD_DECREASE_MS.
+  uint32_t next_tick_ = 0;
+  // Delay before applying damage. HEV_HAZARD_DELAY_MS
+  uint32_t delay_ = 0;
+
+  void reset() {
+    HEVTimerBase::reset();
+    next_tick_ = 0; 
+  }
+
+  void start() {
+    HEVTimerBase::start();
+    next_tick_ = start_; 
+  }
+
+  void configure(uint32_t interval, uint32_t delay_time = 0) {
+    HEVTimerBase::configure(interval);
+    delay_ = delay_time;
+  }
+
+  // delay_ is a grace period. It's argument is HEV_HAZARD_DELAY_MS.
+  // interval_ uses HEV_HAZARD_DECREASE_MS as an argument. Currently 1000ms.
   //
   // The hazard sequence method returns true when:
   // - The timer is active (active_ is true)
-  // - The warning period has elapsed (now - start_ >= warning_period)
+  // - The grace period has elapsed (now - start_ >= delay_)
   // - It's time for the next damage tick (now >= next_tick_)
   //
   // It returns false when:
@@ -112,33 +132,28 @@ struct HEVTimer {
     return (now - start_ >= delay_) &&
            ((now >= next_tick_) ? (next_tick_ = now + interval_, true) : false);
   }
-
-  // Returns true if timer is active and interval has elapsed
-  bool ready() {
-    return active_ && ((millis() - start_) >= interval_);
-  }
 };
 
 class Hev : public PROP_INHERIT_PREFIX PropBase {
 public:
 
-  HEVTimer clash_timer_;
-  HEVTimer post_death_cooldown_timer_;
-  HEVTimer random_event_timer_;
-  HEVTimer hazard_delay_timer_;
-  HEVTimer hazard_damage_timer_;
-  HEVTimer health_increase_timer_;
-  HEVTimer armor_increase_timer_;
+  HEVTimerBase timer_clash_;
+  HEVTimerBase timer_post_death_cooldown_;
+  HEVTimerBase timer_random_event_;
+  HEVTimerBase timer_hazard_damage_;
+  HEVTimerBase timer_health_increase_;
+  HEVTimerBase timer_armor_increase_;
+  HEVTimerHazard timer_hazard_delay_;
 
   Hev() : PropBase() {
     // Configure all timers with their respective timings from hev_config.h
     // Clash timer uses clash_timeout_ from PropBase for debounce
-    clash_timer_.configure(this->clash_timeout_);
-    post_death_cooldown_timer_.configure(HEV_POST_DEATH_COOLDOWN_MS);
-    random_event_timer_.configure(HEV_RANDOM_EVENT_INTERVAL_MS);
-    hazard_delay_timer_.configure(HEV_HAZARD_DECREASE_MS, HEV_HAZARD_DELAY_MS);
-    health_increase_timer_.configure(HEV_HEALTH_INCREASE_MS);
-    armor_increase_timer_.configure(HEV_ARMOR_INCREASE_MS);
+    timer_clash_.configure(this->clash_timeout_);
+    timer_post_death_cooldown_.configure(HEV_POST_DEATH_COOLDOWN_MS);
+    timer_random_event_.configure(HEV_RANDOM_EVENT_INTERVAL_MS);
+    timer_hazard_delay_.configure(HEV_HAZARD_DECREASE_MS, HEV_HAZARD_DELAY_MS);
+    timer_health_increase_.configure(HEV_HEALTH_INCREASE_MS);
+    timer_armor_increase_.configure(HEV_ARMOR_INCREASE_MS);
   }
 
   const char* name() override { return "Hev"; }
@@ -219,7 +234,7 @@ public:
     //     - Simple but limited to basic cooldown functionality.
     // 
     //  2. HEV uses object-oriented HEVTimer system:
-    //     - clash_timer_ encapsulates timer state (active flag, start time).
+    //     - timer_clash_ encapsulates timer state (active flag, start time).
     //     - clash_timeout_ provides the duration value.
     //     - Enables more complex patterns like sequences and ready-state checking.
     // 
@@ -229,7 +244,7 @@ public:
     // - Provides clear separation between "is a timer running?" and "how long should it run?".
     // - Allows more complex timing patterns needed for authentic HEV behavior.
     // - Supports future extensions like variable cooldowns based on hit type.
-    if (health_ == 0 || (clash_timer_.active_ && !clash_timer_.check())) {
+    if (health_ == 0 || (timer_clash_.active_ && !timer_clash_.check())) {
       return;
     }
     
@@ -252,7 +267,7 @@ public:
 
     // Apply Damage and restart clash timer.
     DoDamage(damage, true);
-    clash_timer_.start();
+    timer_clash_.start();
   }
 
   // Swings do nothing!
@@ -263,18 +278,18 @@ public:
   // Random Hazards
   void CheckRandomEvent() {
     // Skip Hazard check if dead or during post-death cooldown
-    if (health_ == 0 || !post_death_cooldown_timer_.check()) {
+    if (health_ == 0 || !timer_post_death_cooldown_.check()) {
       return;
     }
 
     // Initialize timer. Stops immediate Hazard at boot
-    if (!random_event_timer_.active_) {
-      random_event_timer_.start();
+    if (!timer_random_event_.active_) {
+      timer_random_event_.start();
       return;
     }
 
     // Check for new Hazard if timer expired and no current Hazard
-    if (random_event_timer_.check() && current_hazard_ == HAZARD_NONE) {
+    if (timer_random_event_.check() && current_hazard_ == HAZARD_NONE) {
             
       // Roll for Random Hazard
       if (random(100) < HEV_RANDOM_HAZARD_CHANCE) {
@@ -289,18 +304,18 @@ public:
   void HazardDecrease() {
     // Reset timer when hazard is cleared
     if (current_hazard_ == HAZARD_NONE) {
-      hazard_delay_timer_.reset();
+      timer_hazard_delay_.reset();
       return;
     }
 
     // Start sequence if not running
-    if (!hazard_delay_timer_.active_) {
-      hazard_delay_timer_.start();
+    if (!timer_hazard_delay_.active_) {
+      timer_hazard_delay_.start();
       return;
     }
 
     // Check sequence and apply damage
-    if (hazard_delay_timer_.hazard_sequence()) {
+    if (timer_hazard_delay_.hazard_sequence()) {
       if (armor_ > 0) {
         armor_--;
         SaberBase::DoEffect(EFFECT_STUN, 0.0, 1);
@@ -315,7 +330,7 @@ public:
       // Clear hazard on death
       if (health_ == 0) {
         current_hazard_ = HAZARD_NONE;
-        hazard_delay_timer_.reset();
+        timer_hazard_delay_.reset();
         SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
       }
     }
@@ -329,16 +344,16 @@ public:
       return;
     }
 
-    if (!SaberBase::Lockup() || !health_increase_timer_.ready()) {
+    if (!SaberBase::Lockup() || !timer_health_increase_.ready()) {
       return;
     }
 
     if (health_ == 0) {
-      post_death_cooldown_timer_.start();
+      timer_post_death_cooldown_.start();
     }
 
     health_++;
-    health_increase_timer_.start();
+    timer_health_increase_.start();
     PVLOG_NORMAL << "Health: " << health_ << "\n";
   }
 
@@ -350,12 +365,12 @@ public:
       return;
     }
 
-    if (!SaberBase::Lockup() || !armor_increase_timer_.ready()) {
+    if (!SaberBase::Lockup() || !timer_armor_increase_.ready()) {
       return;
     }
 
     armor_++;
-    armor_increase_timer_.start();
+    timer_armor_increase_.start();
     PVLOG_NORMAL << "Armor: " << armor_ << "\n";
   }
 
@@ -388,8 +403,8 @@ public:
         if (current_hazard_) {
           current_hazard_ = HAZARD_NONE;
           SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
-          random_event_timer_.reset();
-          random_event_timer_.start();
+          timer_random_event_.reset();
+          timer_random_event_.start();
           return true;
         }
         // Play a no-hazard sound ?
@@ -422,7 +437,7 @@ public:
         if (!SaberBase::Lockup()) {
           SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
           SaberBase::DoBeginLockup();
-          health_increase_timer_.start();
+          timer_health_increase_.start();
           return true;
         }
         break;
@@ -433,7 +448,7 @@ public:
         if (SaberBase::Lockup()) {
           SaberBase::DoEndLockup();
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-          health_increase_timer_.reset();
+          timer_health_increase_.reset();
           return true;
         }
         break;
@@ -443,7 +458,7 @@ public:
         if (!SaberBase::Lockup()) {
           SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
           SaberBase::DoBeginLockup();
-          armor_increase_timer_.start();
+          timer_armor_increase_.start();
           return true;
         }
         break;
@@ -454,7 +469,7 @@ public:
         if (SaberBase::Lockup()) {
           SaberBase::DoEndLockup();
           SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
-          armor_increase_timer_.reset();
+          timer_armor_increase_.reset();
           return true;
         }
         break;
