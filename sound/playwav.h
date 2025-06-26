@@ -11,52 +11,52 @@
 #define UPSCALE_C2 -8191
 
 #if 1
-#define UPSAMPLE_FUNC(NAME, EMIT)                               \
-  void NAME(int16_t sample) {                                   \
-    upsample_buf_##NAME##_a_ = upsample_buf_##NAME##_b_;        \
-    upsample_buf_##NAME##_b_ = upsample_buf_##NAME##_c_;        \
-    upsample_buf_##NAME##_c_ = upsample_buf_##NAME##_d_;        \
-    upsample_buf_##NAME##_d_ = sample;                          \
-    EMIT(clamptoi16((upsample_buf_##NAME##_a_ * UPSCALE_C2 +            \
-          upsample_buf_##NAME##_b_ * UPSCALE_C1 +                       \
-          upsample_buf_##NAME##_c_ * UPSCALE_C1 +                       \
-                   upsample_buf_##NAME##_d_ * UPSCALE_C2) >> 15));      \
-    EMIT(upsample_buf_##NAME##_c_);                             \
-  }                                                             \
-  void clear_##NAME() {                                         \
-    upsample_buf_##NAME##_a_ = 0;                               \
-    upsample_buf_##NAME##_b_ = 0;                               \
-    upsample_buf_##NAME##_c_ = 0;                               \
-    upsample_buf_##NAME##_d_ = 0;                               \
-  }                                                             \
-  int16_t upsample_buf_##NAME##_a_ = 0;                         \
-  int16_t upsample_buf_##NAME##_b_ = 0;                         \
-  int16_t upsample_buf_##NAME##_c_ = 0;                         \
+#define UPSAMPLE_FUNC(NAME, EMIT)                                  \
+  void NAME(int16_t sample) {                                      \
+    upsample_buf_##NAME##_a_ = upsample_buf_##NAME##_b_;           \
+    upsample_buf_##NAME##_b_ = upsample_buf_##NAME##_c_;           \
+    upsample_buf_##NAME##_c_ = upsample_buf_##NAME##_d_;           \
+    upsample_buf_##NAME##_d_ = sample;                             \
+    EMIT(clamptoi16((upsample_buf_##NAME##_a_ * UPSCALE_C2 +       \
+          upsample_buf_##NAME##_b_ * UPSCALE_C1 +                  \
+          upsample_buf_##NAME##_c_ * UPSCALE_C1 +                  \
+                   upsample_buf_##NAME##_d_ * UPSCALE_C2) >> 15)); \
+    EMIT(upsample_buf_##NAME##_c_);                                \
+  }                                                                \
+  void clear_##NAME() {                                            \
+    upsample_buf_##NAME##_a_ = 0;                                  \
+    upsample_buf_##NAME##_b_ = 0;                                  \
+    upsample_buf_##NAME##_c_ = 0;                                  \
+    upsample_buf_##NAME##_d_ = 0;                                  \
+  }                                                                \
+  int16_t upsample_buf_##NAME##_a_ = 0;                            \
+  int16_t upsample_buf_##NAME##_b_ = 0;                            \
+  int16_t upsample_buf_##NAME##_c_ = 0;                            \
   int16_t upsample_buf_##NAME##_d_ = 0
 #else
-#define UPSAMPLE_FUNC(NAME, EMIT)               \
-  void NAME(int16_t sample) {                   \
-      EMIT(sample);      EMIT(sample);          \
-  }                                             \
-  void clear_##NAME() {                         \
+#define UPSAMPLE_FUNC(NAME, EMIT)                                  \
+  void NAME(int16_t sample) {                                      \
+      EMIT(sample);      EMIT(sample);                             \
+  }                                                                \
+  void clear_##NAME() {                                            \
   }
 #endif
 
-#define DOWNSAMPLE_FUNC(NAME, EMIT)                     \
-  void NAME(int16_t sample) {                           \
-    if (downsample_flag_##NAME##_) {                    \
-      EMIT((downsample_buf_##NAME##_ + sample) >> 1);   \
-      downsample_flag_##NAME##_ = false;                \
-    } else {                                            \
-      downsample_buf_##NAME##_ = sample;                \
-      downsample_flag_##NAME##_ = true;                 \
-    }                                                   \
-  }                                                     \
-  void clear_##NAME() {                                 \
-    downsample_buf_##NAME##_ = 0;                       \
-    downsample_flag_##NAME##_ = false;                  \
-  }                                                     \
-  int16_t downsample_buf_##NAME##_ = 0;                 \
+#define DOWNSAMPLE_FUNC(NAME, EMIT)                                \
+  void NAME(int16_t sample) {                                      \
+    if (downsample_flag_##NAME##_) {                               \
+      EMIT((downsample_buf_##NAME##_ + sample) >> 1);              \
+      downsample_flag_##NAME##_ = false;                           \
+    } else {                                                       \
+      downsample_buf_##NAME##_ = sample;                           \
+      downsample_flag_##NAME##_ = true;                            \
+    }                                                              \
+  }                                                                \
+  void clear_##NAME() {                                            \
+    downsample_buf_##NAME##_ = 0;                                  \
+    downsample_flag_##NAME##_ = false;                             \
+  }                                                                \
+  int16_t downsample_buf_##NAME##_ = 0;                            \
   bool downsample_flag_##NAME##_ = false
 
 // PlayWav reads a file from serialflash or SD and converts
@@ -89,6 +89,7 @@ public:
     }
     PlayLoop(file_id.GetEffect()->GetFollowing());
   }
+
   void PlayLoop(Effect* effect) {
     effect_.set(effect);
   }
@@ -258,7 +259,7 @@ private:
           }
           break;
         }
-        
+
         if (16 != ReadFile(16)) {
           default_output->println("Read failed.");
           goto fail;
@@ -285,7 +286,7 @@ private:
 
       ptr_ = buffer + 8;
       end_ = buffer + 8;
-      
+
       while (true) {
         if (wav_) {
           if (ReadFile(8) != 8) break;
@@ -428,7 +429,7 @@ private:
   // Number of samples_ in samples that has been
   // sent out already.
   int written_ = 0;
-  
+
   // Number of samples in samples_
   int num_samples_ = 0;
   int16_t samples_[32];
