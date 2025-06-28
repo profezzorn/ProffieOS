@@ -26,10 +26,16 @@ template<class F, class... B> class Mix {};
 template<class F, class A, class B>
 class Mix<F, A, B> {
 public:
-  void run(BladeBase* blade) {
-    a_.run(blade);
-    b_.run(blade);
-    f_.run(blade);
+  LayerRunResult run(BladeBase* blade) {
+    LayerRunResult a_run_result = RunLayer(&a_, blade);
+    LayerRunResult b_run_result = RunLayer(&b_, blade);
+    FunctionRunResult f_run_result = RunFunction(&f_, blade);
+    switch (f_run_result) {
+      case FunctionRunResult::ZERO_UNTIL_IGNITION: return a_run_result;
+      case FunctionRunResult::ONE_UNTIL_IGNITION: return b_run_result;
+      case FunctionRunResult::UNKNOWN: break;
+    }
+    return LayerRunResult::UNKNOWN;
   }
 private:
   PONUA A a_;
