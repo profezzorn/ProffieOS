@@ -599,7 +599,7 @@ public:
       STDOUT.print("Minimum Volume: ");
     }
   }
-  
+
   // BATTERY LEVEL INDICATOR
   void SpeakBatteryLevel() {
       talkie.SayDigit((int)floorf(battery_monitor.battery()));
