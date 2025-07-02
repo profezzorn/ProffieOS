@@ -21,7 +21,7 @@
 // armor_compromised.wav - for when armor falls to 0
 // boot.wav - Bootup welcome message
 // death.wav - for when health is 0
-// clash**.wav - physical clash sounds
+// clsh**.wav - physical clash sounds
 // health00.wav to health100.wav - for health alert sounds
 // armor00.wav to armor100.wav - for armor readout sounds
 //
@@ -179,14 +179,16 @@ public:
     if (armor_ >= damage) {
       armor_ -= ceilf(damage * 0.80 / 2);
       health_ -= ceilf(damage * 0.20);
-    } else if (armor_ > 0) {
+    }
+    else if (armor_ > 0) {
       int excess_physical = damage - armor_;
       health_ -= excess_physical;
       // Make armor compromised sound play before setting armor to 0
-      SaberBase::DoEffect(EFFECT_USER2, 0.0, 0);
+      SaberBase::DoEffect(EFFECT_USER2, 0.0);
       PVLOG_NORMAL << "Armor Compromised!\n";
       armor_ = 0;
-    } else {
+    }
+    else {
       health_ -= damage;
     }
 
@@ -195,18 +197,18 @@ public:
     if (armor_ < 0) armor_ = 0;
 
     // Damage
-    if (!quiet) SaberBase::DoEffect(EFFECT_STUN, 0.0, damage);
+    if (!quiet) SaberBase::DoEffect(EFFECT_STUN, 0.0);
     
     // Death Sound
     if (health_ == 0) {
-      SaberBase::DoEffect(EFFECT_EMPTY, 0.0, 100);
+      SaberBase::DoEffect(EFFECT_EMPTY, 0.0);
       return;
     }
     
     // Health Alert - only plays when health enters a new multiple of 10
     int new_tens = health_ / 10;
     if (tens != new_tens) {
-      SaberBase::DoEffect(EFFECT_USER1, 0.0, 0);
+      SaberBase::DoEffect(EFFECT_USER1, 0.0);
     }
 
     // Print Damage, Health and Armor
@@ -225,47 +227,23 @@ public:
   // Clashes
   void Clash(bool stab, float strength) override {
     // Don't process clashes if dead or during cooldown.
-    // HEV Suit clash detection uses a fundamentally different approach than PropBase.
-    // The two work together: timer tracks state, timeout defines duration.
-    //
-    //  1. PropBase uses direct timestamp comparison:
-    //     - Stores last_clash_ timestamp and clash_timeout_ value.
-    //     - Compares (millis() - last_clash_ < clash_timeout_) on each check.
-    //     - Simple but limited to basic cooldown functionality.
-    // 
-    //  2. HEV uses object-oriented HEVTimer system:
-    //     - timer_clash_ encapsulates timer state (active flag, start time).
-    //     - clash_timeout_ provides the duration value.
-    //     - Enables more complex patterns like sequences and ready-state checking.
-    // 
-    // This is advantageous because:
-    // - HEV's sophisticated hit categorization needs finer state control.
-    // - Consistent with other HEV timers (health_timer_, armor_timer_, etc.)
-    // - Provides clear separation between "is a timer running?" and "how long should it run?".
-    // - Allows more complex timing patterns needed for authentic HEV behavior.
-    // - Supports future extensions like variable cooldowns based on hit type.
     if (health_ == 0 || (timer_clash_.active_ && !timer_clash_.check())) {
       return;
     }
-    
-    // Forward Clash event. No Stabs!
+
     PropBase::Clash(false, strength);
 
-    // Damage is based on strength, capped at 50
     int damage = std::min((int)(strength * 4), 50);
     float v = (strength - GetCurrentClashThreshold()) / 3;
 
-    // Play Clash sounds based on strength
     SFX_clash.SelectFloat(v);
     SFX_clsh.SelectFloat(v);
     SFX_stab.SelectFloat(v);
 
-    // Play Armor Alarm if Damage is 30 or more
     if (damage >= 30) {
       hybrid_font.PlayPolyphonic(&SFX_armor_alarm);
     }
 
-    // Apply Damage and restart clash timer.
     DoDamage(damage, true);
     timer_clash_.start();
   }
@@ -318,9 +296,9 @@ public:
     if (timer_hazard_delay_.hazard_sequence()) {
       if (armor_ > 0) {
         armor_--;
-        SaberBase::DoEffect(EFFECT_STUN, 0.0, 1);
+        SaberBase::DoEffect(EFFECT_STUN, 0.0);
         if (armor_ == 0) {
-          SaberBase::DoEffect(EFFECT_USER2, 0.0, 0);
+          SaberBase::DoEffect(EFFECT_USER2, 0.0);
           PVLOG_NORMAL << "Armor Compromised!\n";
         }
       } else {
