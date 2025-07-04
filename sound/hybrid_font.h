@@ -23,6 +23,7 @@ public:
     CONFIG_VARIABLE2(ProffieOSSpinDegrees, 360.0f);
 #endif
     CONFIG_VARIABLE2(ProffieOSSmoothSwingHumstart, 0);
+    CONFIG_VARIABLE2(ProffieOSIdleFadeIn, 3.0f);
 
     for (Effect* e = all_effects; e; e = e->next_) {
       char name[32];
@@ -118,6 +119,11 @@ public:
   // Make smoothswings start in sync with hum.
   // Set to 1 to sync, or 0 to resume swings where last pair left off.
   bool ProffieOSSmoothSwingHumstart;
+#ifdef ENABLE_IDLE_SOUND
+  // How many seconds it takes for the idle sound to 
+  // fade in when it first starts playing. It loops at full volume afterwards.
+  float ProffieOSIdleFadeIn;
+#endif
 };
 
 FontConfigFile font_config;
@@ -481,21 +487,9 @@ public:
 
   void SB_Off(OffType off_type, EffectLocation location) override {
     bool most_blades = location.on_blade(0);
-#ifdef ENABLE_IDLE_SOUND
-    if (most_blades) {
-      Effect* idle = AvoidIdleSDAccess() ? nullptr : &SFX_idle;
-      if (SFX_pstoff) {
-        SFX_in.SetFollowing(&SFX_pstoff);
-        SFX_pstoff.SetFollowing(idle);
-      } else {
-        SFX_in.SetFollowing(idle);
-      }
-    } else {
-      SFX_in.SetFollowing(nullptr);
-    }
-#else
+    idling_should_start = AvoidIdleSDAccess() ? false : true;
+
     SFX_in.SetFollowing(most_blades ? &SFX_pstoff : nullptr);
-#endif
     switch (off_type) {
       case OFF_CANCEL_PREON:
         if (state_ == STATE_WAIT_FOR_ON) {
@@ -841,6 +835,7 @@ public:
   }
 
   bool check_postoff_ = false;
+  bool idling_should_start = true;
   void Loop() override {
     if (state_ == STATE_WAIT_FOR_ON) {
       if (!GetWavPlayerPlaying(&SFX_preon)) {
@@ -855,6 +850,32 @@ public:
         check_postoff_ = false;
         SaberBase::DoEffect(EFFECT_POSTOFF, saved_location_);
       }
+    }
+    // Wait for retraction sounds to finish, then play idle.wav
+#ifdef ENABLE_IDLE_SOUND
+    if (idling_should_start) {
+      if (GetWavPlayerPlaying(&SFX_in) ||
+          GetWavPlayerPlaying(&SFX_pstoff) ||
+          GetWavPlayerPlaying(&SFX_boot)) {
+        return;
+      } else {
+        idling_should_start = false;
+        StartIdleSound();
+      }
+    }
+#endif
+  }
+
+  void StartIdleSound() {
+    // if PlayPolyphonic(&SFX_bgnidle) return;
+    PlayCommon(&SFX_idle);
+    RefPtr<BufferedWavPlayer> idlePlayer = GetWavPlayerPlaying(&SFX_idle);
+    if (idlePlayer) {
+      idlePlayer->set_fade_time(font_config.ProffieOSIdleFadeIn);
+      idlePlayer->StartAndFade();
+      PVLOG_NORMAL << "**** Started idle wav\n";
+   } else {
+      STDOUT.println("Out of WAV players!");
     }
   }
 
