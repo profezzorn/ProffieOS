@@ -38,8 +38,8 @@ public:
       // Fill up audio buffers before we lock the SD again
       AudioStreamWork::scheduleFillBuffer();
       if (exists) {
-	Play(full_name);
-	return true;
+        Play(full_name);
+        return true;
       }
     }
     STDOUT << " (not found)\n";
@@ -144,9 +144,9 @@ public:
 
   void dump() {
     STDOUT << " pause=" << pause_.get()
-	   << " buffered=" << buffered()
-	   << " wav.isPlaying()=" << wav.isPlaying()
-	   << "\n";
+           << " buffered=" << buffered()
+           << " wav.isPlaying()=" << wav.isPlaying()
+           << "\n";
     wav.dump();
   }
 private:
