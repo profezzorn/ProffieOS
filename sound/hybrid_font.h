@@ -396,6 +396,7 @@ public:
 
   void SB_Preon(EffectLocation location) {
     saved_location_ = location;
+    StopIdleSound();
     if (SFX_preon) {
       SFX_preon.SetFollowing(getOut());
       // PlayCommon(&SFX_preon);
