@@ -167,7 +167,7 @@ private:
       } else if (rate == AUDIO_RATE * 2) {
         Emit05(v);
       } else {
-	AbortDecodeBytes("Unsupported rate.");
+        AbortDecodeBytes("Unsupported rate.");
       }
     }
   }
@@ -209,24 +209,24 @@ private:
     while (true) {
       while (!run_.get() && !effect_.get()) YIELD();
       if (!run_.get()) {
-	new_file_id_ = old_file_id_.GetFollowing(effect_.get());
+        new_file_id_ = old_file_id_.GetFollowing(effect_.get());
         if (!new_file_id_) goto fail;
         new_file_id_.GetName(filename_);
         run_.set(true);
-	effect_.set(effect_.get()->GetFollowing());
+        effect_.set(effect_.get()->GetFollowing());
       }
       if (new_file_id_ && new_file_id_ == old_file_id_) {
         // Minor optimization: If we're reading the same file
         // as before, then seek to 0 instead of open/close file.
         file_.Rewind();
       } else {
-	if (!file_.OpenFast(filename_)) {
-	  default_output->print("File ");
-	  default_output->print(filename_);
-	  default_output->println(" not found.");
-	  goto fail;
-	}
-	YIELD();
+        if (!file_.OpenFast(filename_)) {
+          default_output->print("File ");
+          default_output->print(filename_);
+          default_output->println(" not found.");
+          goto fail;
+        }
+        YIELD();
         old_file_id_ = new_file_id_;
       }
       wav_ = endswith(".wav", filename_);
@@ -394,10 +394,10 @@ public:
 
   void dump() {
     STDOUT << " run=" << run_.get()
-	   << " filename=" << filename()
-	   << " pos=" << pos()
-	   << " len=" << length()
-	   << "\n";
+           << " filename=" << filename()
+           << " pos=" << pos()
+           << " len=" << length()
+           << "\n";
   }
 
 private:
