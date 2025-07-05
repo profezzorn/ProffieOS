@@ -23,8 +23,9 @@ public:
     CONFIG_VARIABLE2(ProffieOSSpinDegrees, 360.0f);
 #endif
     CONFIG_VARIABLE2(ProffieOSSmoothSwingHumstart, 0);
+#ifdef ENABLE_IDLE_SOUND
     CONFIG_VARIABLE2(ProffieOSIdleFadeIn, 3.0f);
-
+#endif
     for (Effect* e = all_effects; e; e = e->next_) {
       char name[32];
       strcpy(name, "ProffieOS.");
