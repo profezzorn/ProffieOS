@@ -868,6 +868,7 @@ public:
   }
 
   void StartIdleSound() {
+#ifdef ENABLE_IDLE_SOUND
     // if PlayPolyphonic(&SFX_bgnidle) return;
     PlayCommon(&SFX_idle);
     RefPtr<BufferedWavPlayer> idlePlayer = GetWavPlayerPlaying(&SFX_idle);
@@ -878,6 +879,7 @@ public:
    } else {
       STDOUT.println("Out of WAV players!");
     }
+#endif
   }
 
   void StopIdleSound() {
