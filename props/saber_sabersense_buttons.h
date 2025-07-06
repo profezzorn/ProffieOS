@@ -1,4 +1,4 @@
-/* V7/8-261.
+/* V7/8-262.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -238,6 +238,22 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
       { 3, ... }
       etc.
 
+#define SABERSENSE_DEFAULT_BLADE_ARRAY 3
+  This feature is really intended for busy installers
+  and sets the default blade array in multi-array systems.
+  Using this feature, you can have a blade array with all
+  the common blade lengths included, and then select which
+  length to default to on first boot (i.e. until a save
+  file is written).
+  The alternative is to simply re-order the blade array
+  manually, but then you have to re-order the array1.wav,
+  array2.wav etc. files on the SD card to match, which
+  is a hassle.
+  Note that the define uses zero-based numbering, the
+  same as the blade array itself, so you must use the
+  number as it is shown in the blade array - i.e. number 3
+  for the fourth array down the full list.
+
 #define SABERSENSE_DISABLE_SAVE_ARRAY
   By default, SABERSENSE_ARRAY_SELECTOR saves the current
   array so that the saber will always boot into the last
@@ -323,10 +339,22 @@ GESTURE CONTROLS
 #ifdef SABERSENSE_ARRAY_SELECTOR
 
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
+
+#ifdef BLADE_DETECT_PIN
+#ifndef SABERSENSE_DEFAULT_BLADE_ARRAY
+#define SABERSENSE_DEFAULT_BLADE_ARRAY 1
+#endif
+#else
+#ifndef SABERSENSE_DEFAULT_BLADE_ARRAY
+#define SABERSENSE_DEFAULT_BLADE_ARRAY 0
+#endif
+#endif
+
 class SaveArrayStateFile : public ConfigFile {
 public:
   void iterateVariables(VariableOP *op) override {
-    CONFIG_VARIABLE2(sabersense_array_index, 0);  // Default array if no save file.
+    // Default array if no save file present...
+    CONFIG_VARIABLE2(sabersense_array_index, SABERSENSE_DEFAULT_BLADE_ARRAY);
   }
     int sabersense_array_index;  // Stores current array index.
   };
@@ -335,6 +363,14 @@ public:
     struct SabersenseArraySelector {
       static int return_value;  // Tracks current array index.
       float id() {
+#ifdef BLADE_DETECT_PIN
+        if (return_value == 0) {
+          return_value = 1;  // Guards against invalid NO_BLADE default.
+        }
+#endif
+        if (return_value >= NELEM(blades)) {
+          return_value = NELEM(blades) - 1;
+        }
         return return_value;
       }
       static void cycle() {
@@ -599,7 +635,7 @@ public:
       STDOUT.print("Minimum Volume: ");
     }
   }
-
+  
   // BATTERY LEVEL INDICATOR
   void SpeakBatteryLevel() {
       talkie.SayDigit((int)floorf(battery_monitor.battery()));
