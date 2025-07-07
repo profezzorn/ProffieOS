@@ -32,7 +32,7 @@ enum BUTTON : uint32_t {
   BUTTON_TRIGGER_SIX = 32,
   BUTTON_TRIGGER_SEVEN = 64,
   BUTTON_TRIGGER_EIGHT = 128,
-    
+
   MODE_ON = 1024,
   MODE_OFF = 0,
 };
@@ -63,7 +63,7 @@ enum EVENT : uint32_t {
   EVENT_FIRST_CLICK_SHORT,
   EVENT_FIRST_SAVED_CLICK_SHORT,
   EVENT_FIRST_CLICK_LONG,
-    
+
   EVENT_SECOND_PRESSED,
   EVENT_SECOND_RELEASED,
   EVENT_SECOND_HELD,
@@ -103,7 +103,7 @@ enum EVENT : uint32_t {
   EVENT_THRUST,
   EVENT_PUSH,
 
-    // For backwards compatibilty.
+  // For backwards compatibilty.
   EVENT_DOUBLE_CLICK = EVENT_SECOND_PRESSED,
 };
 

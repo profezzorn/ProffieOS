@@ -1,4 +1,4 @@
-/* V7/8-201.
+/* V7/8-261.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -33,8 +33,7 @@ controls between one-button and two-button operation without
 compromising the greater usability of two-button systems.
 
 Where practicable, the same controls apply to both one-button
-and two-button systems, with two-button operation benefitting
-from some extra features.
+and two-button systems.
 
 Where possible without causing conflicts, some one-button
 controls also appear in two-button mode, despite two-button
@@ -95,9 +94,13 @@ FUNCTIONS WITH BLADE OFF
   Skip to first preset      Press and hold until it switches, hilt pointing upwards.
   Skip to middle preset     Press and hold until it switches, hilt horizontal.
   Skip to last preset       Press and hold until it switches, hilt pointing downwards.
+  Skip forward 5 presets    Fast double-click-and-hold, hilt pointing upwards.
+  Skip back 5 presets       Fast double-click-and-hold, hilt pointing downwards.
+  Skip forward 10 presets   Fast triple-click-and-hold, hilt pointing upwards.
+  Skip back 10 presets      Fast triple-click-and-hold, hilt pointing downwards.
   Play Character Quote      Fast double-click, hilt pointing up, plays sequentially. **
   Play Music Track          Fast double-click, hilt pointing down. **
-  Speak battery voltage     Fast double-click-and-hold while OFF.
+  Speak battery voltage     Fast double-click-and-hold, hilt horizontal.
   Run BladeID/Array Select  Fast triple-click while OFF. (Applicable installs only).
   Restore Factory Defaults  Fast four-clicks while OFF, hold on last click.
                               Release once announcement starts.
@@ -190,7 +193,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 
   *   = Gesture ignitions also available via defines.
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
-  
+
 ===========================================================
 =================== SABERSENSE DEFINES ====================
 
@@ -212,7 +215,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   of actual BladeID status. Plays array-specific
   arrayX.wav files when switching.
   Requires arrays to be numbered consecutively,
-  starting at zero, in the field that would otherwise 
+  starting at zero, in the field that would otherwise
   contain BladeID values. Like this:
       { 0, ... }
       { 1, ... }
@@ -225,7 +228,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   BLADE_DETECT_PIN, you must use this define in order to
   prevent a compile error.
   Note that you can have any number of Blade-In arrays
-  in your config, but only one NO_BLADE array is permitted.
+  in your config, but only one NO_BLADE array is supported.
   Note also that NO_BLADE replaces the zero array,
   meaning that Blade-In array numbering must be consecutive
   starting at 1. Like this:
@@ -234,7 +237,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
       { 2, ... }
       { 3, ... }
       etc.
-  
+
 #define SABERSENSE_DISABLE_SAVE_ARRAY
   By default, SABERSENSE_ARRAY_SELECTOR saves the current
   array so that the saber will always boot into the last
@@ -244,7 +247,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Plays font ident after array ident when switching arrays.
   Can be used with SABERSENSE_BLADE_ID and
   SABERSENSE_ARRAY_SELECTOR to tell user which font they
-  have landed on on multiple-array systems in which each 
+  have landed on on multiple-array systems in which each
   array has its own save files.
 
 #define SABERSENSE_FLIP_AUDIO_PLAYERS
@@ -259,6 +262,30 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   in 2-button mode. Improves 1 and 2-button harmonization,
   but makes accidental blasts more likely when double-
   clicking POWER for Quotes or Force Effect.
+
+#define SABERSENSE_FONT_SKIP_A 5
+#define SABERSENSE_FONT_SKIP_B 10
+  As standard, presets can be skipped in batches to aid
+  font navigation. Two skip levels are provided, A and B,
+  which default to 5 and 10 fonts respectively. These
+  defines allow the user to override the default
+  values if required.
+
+#define SABERSENSE_HOT_SKIP_DOWN 27
+#define SABERSENSE_HOT_SKIP_LEVEL 14
+  Hot Skipping is distinct from Font Skipping in that
+  it skips directly to a given preset, rather than
+  skipping forwards or backwards x number of presets.
+  These defines override the Skip-to-Last/Middle
+  Preset features, so that the system skips to a
+  user-defined preset. Note that Skip-to-First
+  preset is fixed and is not user-definable.
+
+#define SABERSENSE_DISABLE_FONT_SKIPPING
+  Completely disables all preset skipping, meaning
+  presets may only be cycled through one at a time.
+  Suitable for installs with small numbers of fonts
+  and presets.
 
 #define SABERSENSE_BUTTON_CLICKER
   Button Clicker to play press/release wav files when
@@ -294,6 +321,7 @@ GESTURE CONTROLS
 #define PROPS_SABER_SABERSENSE_BUTTONS_H
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
+
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
 class SaveArrayStateFile : public ConfigFile {
 public:
@@ -310,11 +338,20 @@ public:
         return return_value;
       }
       static void cycle() {
+#ifndef BLADE_DETECT_PIN
         return_value = (return_value + 1) % NELEM(blades);
+#else   // Improved logic fixes early Array1 repetition when using Blade Detect.
+        return_value = 1 + return_value % (NELEM(blades) - 1);
+#endif
       }
     };
-    int SabersenseArraySelector::return_value;
-    
+
+#ifndef BLADE_DETECT_PIN
+    int SabersenseArraySelector::return_value = 0;
+#else
+    int SabersenseArraySelector::return_value = 1;
+#endif
+
 #undef BLADE_ID_CLASS_INTERNAL
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
@@ -358,8 +395,21 @@ public:
 #define BUTTON_HELD_MEDIUM_TIMEOUT 1000
 #endif
 
-#ifndef BUTTON_HELD_LONG_TIMEOUT
-#define BUTTON_HELD_LONG_TIMEOUT 2000
+#ifndef SABERSENSE_FONT_SKIP_A
+#define SABERSENSE_FONT_SKIP_A 5
+#endif
+
+#ifndef SABERSENSE_FONT_SKIP_B
+#define SABERSENSE_FONT_SKIP_B 10
+#endif
+
+// Hot Skip values are placeholders only.
+#ifndef SABERSENSE_HOT_SKIP_DOWN
+#define SABERSENSE_HOT_SKIP_DOWN 0
+#endif
+
+#ifndef SABERSENSE_HOT_SKIP_LEVEL
+#define SABERSENSE_HOT_SKIP_LEVEL 0
 #endif
 
 EFFECT(dim);      // for EFFECT_POWERSAVE
@@ -466,6 +516,45 @@ public:
 #endif
   }
 
+  // PRESET SKIPPING
+  // Skip Value definable.
+  int GetNumberOfPresets() {
+    CurrentPreset tmp;
+    tmp.SetPreset(-1);
+    return tmp.preset_num + 1;
+  }
+
+  // Two Button system: Up/Down only - loose angle settings for ease of use.
+  bool MultiFontSkip(int skip_value) {
+      float angle = fusor.angle1();
+      int delta = 0;
+
+#if NUM_BUTTONS == 2
+      delta = (angle < -M_PI / 4) ? -skip_value : skip_value;
+#elif NUM_BUTTONS == 1
+      if (angle < -M_PI / 6) {  // Pointing down
+        delta = -skip_value;
+      } else if (angle > M_PI / 6) {  // Pointing up
+        delta = skip_value;
+      } else {
+        SpeakBatteryLevel();
+        return true;
+      }
+#endif
+      int count = GetNumberOfPresets();
+      int new_index = current_preset_.preset_num + delta;
+      // Capping/Clamping, not wrapping - less disorienting for user.
+      if (new_index < 0) new_index = 0;
+      if (new_index >= count) new_index = count - 1;
+
+#ifdef SAVE_PRESET
+      SaveState(new_index);
+#endif
+
+      SetPreset(new_index, true);
+      return true;
+}
+
   // VOLUME MENU
   void VolumeUp() {
     STDOUT.println("Volume up");
@@ -511,6 +600,16 @@ public:
     }
   }
 
+  // BATTERY LEVEL INDICATOR
+  void SpeakBatteryLevel() {
+      talkie.SayDigit((int)floorf(battery_monitor.battery()));
+      talkie.Say(spPOINT);
+      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
+      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
+      talkie.Say(spVOLTS);
+      SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+  }
+
   // BLADE ID OPTIONS AND ARRAY MANAGEMENT
   // True BladeID, runs scan on-demand with unique 'bladeid' ident sound.
 #ifdef SABERSENSE_BLADE_ID
@@ -549,7 +648,7 @@ public:
 #error "SABERSENSE_ARRAY_SELECTOR and SABERSENSE_BLADE_ID cannot be defined at the same time."
 #endif
 
-#ifdef BLADE_DETECT_PIN  
+#ifdef BLADE_DETECT_PIN
 #ifndef SABERSENSE_NO_BLADE  // Means of informing users they can only use one NO_BLADE array.
 #error "BLADE_DETECT_PIN requires SABERSENSE_NO_BLADE to be defined and is limited to one NO_BLADE array."
 #error "SABERSENSE_NO_BLADE allows only one NO_BLADE array but any number of Blade-In arrays."
@@ -571,7 +670,7 @@ public:
     // Restore saved array index.
     SabersenseArraySelector::return_value = saved_state.sabersense_array_index;
   }
-  
+
   void Setup() {
     RestoreArrayState();  // Load saved array on boot.
   }
@@ -624,7 +723,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ANY_BUTTON | MODE_OFF):
       SaberBase::RequestMotion();
 #ifdef SABERSENSE_BUTTON_CLICKER
-      // Intended to play click sound on button presses, primarily for Scavenger 
+      // Intended to play click sound on button presses, primarily for Scavenger
       // hilt where wheel makes tactile switch feel difficult.
       PlaySound("press.wav");  // Requires press.wav file to work.
 #endif
@@ -726,20 +825,20 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_POWER, EVENT_FIRST_CLICK_LONG, MODE_OFF):
       IgnoreClash(100);  // Hopefully prevents false clashes due to 'clicky' button.
                          // Low threshold so as not to conflict with 1-button volume menu access.
-#define DEGREES_TO_RADIANS (M_PI / 180)
-      if (fusor.angle1() > 45 * DEGREES_TO_RADIANS) {
-        // If pointing up
+      if (fusor.angle1() > M_PI / 6) {
+        // Pointing up
         next_preset();
-      } else if (fusor.angle1() < -45 * DEGREES_TO_RADIANS) {
-        // If pointing down
+      } else if (fusor.angle1() < -M_PI / 6) {
+        // Pointing down
         previous_preset();
       } else {
-        // If horizontal
+        // Horizontal
         if (SetMute(true)) {
           unmute_on_deactivation_ = true;
           On();
         }
       }
+
 #ifdef SAVE_PRESET
       SaveState(current_preset_.preset_num);
 #endif
@@ -798,50 +897,69 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 #endif
 
-    // Multiple preset skips - 2 button sabers only.
-#if NUM_BUTTONS == 2
-    // Skips forward five presets pointing up, back five pointing down.
-    case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF):
-      // Backwards if pointing down
-      SetPreset(current_preset_.preset_num + (fusor.angle1() < -M_PI / 4 ? -5 : 5), true);
-#ifdef SAVE_PRESET
-      SaveState(current_preset_.preset_num);
+    // PRESET SKIPPING
+    // Skips forward when pointing up, backward when pointing down.
+    // Uses SABERSENSE_FONT_SKIP_A/B for skip values.
+#ifndef SABERSENSE_DISABLE_FONT_SKIPPING
+#if NUM_BUTTONS == 1
+    // First skip value (define A - default 5)
+    case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF): {
+      return MultiFontSkip(SABERSENSE_FONT_SKIP_A);
+    }
+    // Second skip value (define B - default 10)
+    case EVENTID(BUTTON_POWER, EVENT_THIRD_HELD_MEDIUM, MODE_OFF): {
+      return MultiFontSkip(SABERSENSE_FONT_SKIP_B);
+    }
+#else
+    // First skip value (define A - default 5)
+    case EVENTID(BUTTON_AUX, EVENT_SECOND_SAVED_CLICK_SHORT, MODE_OFF): {
+      return MultiFontSkip(SABERSENSE_FONT_SKIP_A);
+    }
+    // Second skip value (define B - default 10)
+    case EVENTID(BUTTON_AUX, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF): {
+      return MultiFontSkip(SABERSENSE_FONT_SKIP_B);
+    }
 #endif
-      return true;
 
-    // Skips forward ten presets pointing up, back ten pointing down.
-    case EVENTID(BUTTON_AUX, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
-      // Backwards if pointing down
-      SetPreset(current_preset_.preset_num + (fusor.angle1() < -M_PI / 4 ? -10 : 10), true);
-#ifdef SAVE_PRESET
-      SaveState(current_preset_.preset_num);
-#endif
-      return true;
-#endif
-
-    // Skips to first preset (up) or last preset (down)
-    // or middle preset if horizontal:
+    // Skips to first preset (up), last or user-defined preset (down),
+    // or middle or user-defined preset (horizontal [level]):
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_LONG, MODE_OFF):
 #endif
-    case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF):
-#define DEGREES_TO_RADIANS (M_PI / 180)
-      if (fusor.angle1() > 45 * DEGREES_TO_RADIANS) {
-        // If pointing up
-        SetPreset(0, true);
-      } else if (fusor.angle1() < -45 * DEGREES_TO_RADIANS) {
-        // If pointing down
-        SetPreset(-1, true);
+    case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_LONG, MODE_OFF): {
+      CurrentPreset tmp;
+      tmp.SetPreset(-1);
+      int num_presets = tmp.preset_num + 1;
+
+      int target_preset;
+      float angle = fusor.angle1();
+
+      if (angle > M_PI / 6) {
+        target_preset = 0;
+      } else if (angle < -M_PI / 6) {
+        // Get and check user values. Clamp to last preset if invalid.
+        int hot_skip_down = (SABERSENSE_HOT_SKIP_DOWN > 0) ? (SABERSENSE_HOT_SKIP_DOWN - 1) : -1;
+        if (hot_skip_down >= num_presets || hot_skip_down < 0) {
+          hot_skip_down = num_presets - 1;
+        }
+
+        target_preset = hot_skip_down;
       } else {
-        // If horizontal
-        CurrentPreset tmp;
-        tmp.SetPreset(-1);
-        SetPreset(tmp.preset_num / 2, true);
+        int hot_skip_level = (SABERSENSE_HOT_SKIP_LEVEL > 0) ? (SABERSENSE_HOT_SKIP_LEVEL - 1) : -1;
+        if (hot_skip_level >= num_presets || hot_skip_level < 0) {
+          hot_skip_level = num_presets / 2;
+        }
+
+        target_preset = hot_skip_level;
       }
+
 #ifdef SAVE_PRESET
-      SaveState(current_preset_.preset_num);
+      SaveState(target_preset);
 #endif
-      return true;
+      SetPreset(target_preset, true);
+      break;
+    }
+#endif
 
     // BLADE ID OPTIONS AND ARRAY NAVIGATION
     // Blade ID on-demand scanning with BladeID audio idents.
@@ -854,6 +972,10 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // Manual blade array selector.
 #ifdef SABERSENSE_ARRAY_SELECTOR
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
+      // Check for blade present if using Blade Detect.
+#ifdef BLADE_DETECT_PIN
+        if (!blade_detected_) return true; // Do nothing if no blade detected.
+#endif
       // Cycles through blade arrays regardless of BladeID status.
       SabersenseArraySelector::cycle();
       FindBladeAgain();
@@ -932,28 +1054,27 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #endif
 
     // BLASTER DEFLECTION
-    // 1 Button
-    // or 2 button with extra define.
-#if NUM_BUTTONS == 1 || defined(SABERSENSE_BLAST_MAIN_AND_AUX)
+    // 1 Button (and 2 button with extra define).
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-      // For harmonized 'Exit Colour Menu' control in OS-7.x. Ignored in OS-8.
       if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
-        ToggleColorChangeMode();
-      } else {
-        // Fires blast in all OSs.
-        swing_blast_ = false;
-        SaberBase::DoBlast();
-      }
+      // For harmonized 'Exit Colour Menu' control in OS-7.x. Ignored in OS-8 due to Modes.
+      ToggleColorChangeMode();
       return true;
-#endif
+    }
 
-    // 2 Button
+#if NUM_BUTTONS == 1 || defined(SABERSENSE_BLAST_MAIN_AND_AUX)
+      // If NOT in color change mode and 1 button system (or 2 button with define) do blast.
+      swing_blast_ = false;
+      SaberBase::DoBlast();
+#endif
+      return true;
+
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON):
       swing_blast_ = false;
       SaberBase::DoBlast();
       return true;
-#endif  
+#endif
 
     // Multi-Blaster Deflection mode
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
@@ -1107,15 +1228,12 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     break;
 #endif
 
-    // BATTERY LEVEL
+    // 1 Button feature handled in Preset Skipping unless skipping disabled.
+#if (NUM_BUTTONS == 2) || (NUM_BUTTONS == 1 && defined(SABERSENSE_DISABLE_FONT_SKIPPING))
     case EVENTID(BUTTON_POWER, EVENT_SECOND_HELD_MEDIUM, MODE_OFF):
-      talkie.SayDigit((int)floorf(battery_monitor.battery()));
-      talkie.Say(spPOINT);
-      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 10)) % 10);
-      talkie.SayDigit(((int)floorf(battery_monitor.battery() * 100)) % 10);
-      talkie.Say(spVOLTS);
-      SaberBase::DoEffect(EFFECT_BATTERY_LEVEL, 0);
+      SpeakBatteryLevel();
       return true;
+#endif
 
 #ifdef BLADE_DETECT_PIN
     case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
@@ -1150,11 +1268,11 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
   void SB_Effect(EffectType effect, float location) override  //  Required for ProffieOS 7.x.
 #else
   void SB_Effect(EffectType effect, EffectLocation location) override  //  For ProffieOS 8.x.
-#endif  
+#endif
   {
   switch (effect) {
 #ifndef MODES_MODE_H
-    case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return; 
+    case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
 #endif
       case EFFECT_POWERSAVE:
         if (SFX_dim) {

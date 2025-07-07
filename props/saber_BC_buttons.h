@@ -60,22 +60,12 @@ Optional Blade style elements:
 On-Demand battery level - A layer built into the blade styles that reacts
                           as the battery gets weaker, changing blade color
                           from Green to Red, and the blade length shortens.
-User Effects:
+User Effects: 
+These equate to Fett263 "Special Abilities" 1-8.
 - Can be built into blade style code to trigger anything that takes an EFFECT_XXXXX argument.
-- If using styles from the Fett263 Style Library, these equate to "Special Abilities 1-8".
-EFFECT_USER1
-EFFECT_USER2
-- 1 and 2 use POW button, and work when blade is ON.
-EFFECT_USER3
-EFFECT_USER4
-- 3 and 4 use AUX button, and work when blade is ON.
-EFFECT_USER5
-EFFECT_USER6
-- 5 and 6 use POW button, and work when blade is OFF.
-EFFECT_USER7
-EFFECT_USER8
-- 7 and 8 use AUX button, and work when blade is OFF.
-So if using a 1 button saber, USER effects 1,2,5,6 are available.
+EFFECT_USER1 through 4 work when blade is ON.
+EFFECT_USER5 through 8 work when blade is OFF.
+USER 3, 4, 7, 8 are done "while pointing up" on 1 button setups, or the AUX button for 2 button sabers.
 
 EFFECT_POWERSAVE        - PowerSave Dim Blade. Blade style should use a Mix or an AlphaL that applies
                           a transparent amount of Black to the base blade color.
@@ -1220,12 +1210,18 @@ struct BCVolumeMode : public SPEC::SteppedMode {
   int percentage_ = 0;
 
   void mode_activate(bool onreturn) override {
-    PVLOG_NORMAL << "** Enter Volume Menu\n";
     initial_volume_ = dynamic_mixer.get_volume();
     initial_percentage_ = round((initial_volume_ / max_volume_) * 10) * 10;
+    percentage_ = initial_percentage_;
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
     mode::getSL<SPEC>()->SayEditVolume();
     announce_volume();
+
+    PVLOG_NORMAL << "** Enter Volume Menu\n";
+    if (percentage_ <= 10) PVLOG_NORMAL << "** Minimum Volume\n";
+    else if (percentage_ >= 100) PVLOG_NORMAL << "** Maximum Volume\n";
+    else PVLOG_NORMAL << "** Volume " << percentage_ << "%\n";
+
     SPEC::SteppedMode::mode_activate(onreturn);
   }
 
@@ -1244,6 +1240,11 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     announce_volume();
     mode::getSL<SPEC>()->SayVolumeMenuEnd();
     SPEC::SteppedMode::mode_deactivate();
+
+    // "Exit Volume Menu" printout already handled in select() / exit()
+    if (percentage_ <= 10) PVLOG_NORMAL << "** Minimum Volume\n";
+    else if (percentage_ >= 100) PVLOG_NORMAL << "** Maximum Volume\n";
+    else PVLOG_NORMAL << "** Final Volume " << percentage_ << "%\n";
   }
 
   void next() override {
@@ -1254,6 +1255,7 @@ struct BCVolumeMode : public SPEC::SteppedMode {
         current_volume_ = max_volume_;
         QuickMaxVolume();
       } else {
+        sound_library_.fadeout(0.2);
         mode::getSL<SPEC>()->SayVolumeUp();
       }
       dynamic_mixer.set_volume(current_volume_);
@@ -1268,6 +1270,7 @@ struct BCVolumeMode : public SPEC::SteppedMode {
         current_volume_ = min_volume_;
         QuickMinVolume();
       } else {
+        sound_library_.fadeout(0.2);
         mode::getSL<SPEC>()->SayVolumeDown();
       }
       dynamic_mixer.set_volume(current_volume_);
@@ -1286,9 +1289,10 @@ struct BCVolumeMode : public SPEC::SteppedMode {
     mode::getSL<SPEC>()->SayMinimumVolume();
   }
 
-  void update() override {  // Overridden to substitute the tick sound
+  void update() override {
     float volume = dynamic_mixer.get_volume();
     percentage_ = round((volume / max_volume_) * 10) * 10;
+    PVLOG_NORMAL << "** Volume " << percentage_ << "%\n";
     SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
   }
 
@@ -2714,45 +2718,90 @@ any # of buttons
         return true;
 
 // User Effects a.k.a. "Special Abilities" ©Fett263
+#if NUM_BUTTONS == 1
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
+        if (isPointingUp()) {
+          PVLOG_DEBUG << "**** EFFECT_USER3 **\n";
+          SaberBase::DoEffect(EFFECT_USER3, 0);
+        } else {
+          PVLOG_DEBUG << "**** EFFECT_USER1 **\n";
+          SaberBase::DoEffect(EFFECT_USER1, 0);
+        }
+        return true;
+
       case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
+        if (isPointingUp()) {
+          PVLOG_DEBUG << "**** EFFECT_USER4 **\n";
+          SaberBase::DoEffect(EFFECT_USER4, 0);
+        } else {
+          PVLOG_DEBUG << "**** EFFECT_USER2 **\n";
+          SaberBase::DoEffect(EFFECT_USER2, 0);
+        }
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
+        if (isPointingUp()) {
+          PVLOG_DEBUG << "**** EFFECT_USER7 **\n";
+          SaberBase::DoEffect(EFFECT_USER7, 0);
+        } else {
+          PVLOG_DEBUG << "**** EFFECT_USER5 **\n";
+          SaberBase::DoEffect(EFFECT_USER5, 0);
+        }
+        return true;
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
+        if (isPointingUp()) {
+          PVLOG_DEBUG << "**** EFFECT_USER8 **\n";
+          SaberBase::DoEffect(EFFECT_USER8, 0);
+        } else {
+          PVLOG_DEBUG << "**** EFFECT_USER6 **\n";
+          SaberBase::DoEffect(EFFECT_USER6, 0);
+        }
+        return true;
+
+# else  // more than 1-button
+
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
         PVLOG_DEBUG << "**** EFFECT_USER1 **\n";
         SaberBase::DoEffect(EFFECT_USER1, 0);
         return true;
 
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
         PVLOG_DEBUG << "**** EFFECT_USER2 **\n";
         SaberBase::DoEffect(EFFECT_USER2, 0);
         return true;
 
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
         PVLOG_DEBUG << "**** EFFECT_USER3 **\n";
         SaberBase::DoEffect(EFFECT_USER3, 0);
         return true;
 
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
         PVLOG_DEBUG << "**** EFFECT_USER4 **\n";
         SaberBase::DoEffect(EFFECT_USER4, 0);
         return true;
 
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
         PVLOG_DEBUG << "**** EFFECT_USER5 **\n";
         SaberBase::DoEffect(EFFECT_USER5, 0);
         return true;
 
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_POWER):
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_POWER):
         PVLOG_DEBUG << "**** EFFECT_USER6 **\n";
         SaberBase::DoEffect(EFFECT_USER6, 0);
         return true;
 
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_AUX):
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_AUX):
         PVLOG_DEBUG << "**** EFFECT_USER7 **\n";
         SaberBase::DoEffect(EFFECT_USER7, 0);
         return true;
 
-      case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_OFF | BUTTON_AUX):
+      case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_OFF | BUTTON_AUX):
         PVLOG_DEBUG << "**** EFFECT_USER8 **\n";
         SaberBase::DoEffect(EFFECT_USER8, 0);
         return true;
+#endif  // NUM_BUTTONS == 1
 
 // Blade Detect
 #ifdef BLADE_DETECT_PIN
