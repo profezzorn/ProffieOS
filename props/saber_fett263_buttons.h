@@ -736,7 +736,7 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   Spoken Battery Level in volts and percent (point down for volts, parallel or up for percent)
 
 == SaberSense Variation ==
-  FETT263_SS_BUTTON_CLICKER
+  
   Button Clicker to play press/release wav files* when buttons are pressed.
   *Requires press.wav and release.wav files to work.
 
@@ -755,7 +755,7 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
   Quotes - quote01.wav
   Transition Sound - tr.wav
   Transition Sound Loop trloop.wav
-  Button Sounds (requires FETT263_SS_BUTTON_CLICKER define)
+  Button Sounds (requires  define)
     Button Press - press.wav
     Button Release - release.wav
 */
@@ -1418,7 +1418,7 @@ EFFECT(medit); // Edit Mode
 #ifdef FETT263_MANUAL_BLADE_ARRAY
 EFFECT(array);      // for Manual Blade Array switching
 #endif
-#ifdef FETT263_SS_BUTTON_CLICKER
+#ifdef 
 EFFECT(press); // for button press sound
 EFFECT(release); // for button release sound
 #endif
@@ -5508,7 +5508,7 @@ SaberFett263Buttons() : PropBase() {}
         // Intended to play click sound on button presses
         hybrid_font.PlayCommon(&SFX_press);  // Requires press.wav file to work.
 #endif
-        return true;
+        return false;
 
 #if NUM_BUTTONS == 1
 // 1 Button Specific (based on SA22C's prop)
@@ -5907,7 +5907,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         // Intended to play click sound on button presses
         hybrid_font.PlayCommon(&SFX_press);  // Requires press.wav file to work.
 #endif
-        return true;
+        return false;
 
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
@@ -7026,11 +7026,11 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         }
 #ifdef FETT263_SS_BUTTON_CLICKER
         hybrid_font.PlayCommon(&SFX_release);  // Requires release.wav file to work.
-        return true;
+        return false;
 
       case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
         hybrid_font.PlayCommon(&SFX_release);  // Requires release.wav file to work.
-        return true;
+        return false;
 #endif
     }
     return false;
