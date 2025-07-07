@@ -49,6 +49,8 @@
 #ifndef PROPS_HEV_H
 #define PROPS_HEV_H
 #define PROP_TYPE Hev
+#define LOCKUP_HEALING SaberBase::LOCKUP_NORMAL
+#define LOCKUP_FILL_ARMOR SaberBase::LOCKUP_LIGHTNING_BLOCK
 
 #include "prop_base.h"
 #include <cmath>
@@ -66,7 +68,6 @@ EFFECT(morphine);
 struct HEVTimerBase {
   uint32_t start_ = 0;
 
-  // Time between applying damage. HEV_HAZARD_DECREASE_MS
   uint32_t interval_ = 0;
 
   bool active_ = false;
@@ -84,9 +85,12 @@ struct HEVTimerBase {
     return !active_ || (millis() - start_ > interval_);
   }
 
-  // Returns true if timer is active and interval has elapsed.
   bool ready() {
     return active_ && ((millis() - start_) >= interval_);
+  }
+
+  bool running() const {
+    return active_ && (millis() - start_) <= interval_;
   }
 };
 
@@ -100,12 +104,12 @@ struct HEVTimerHazard : public HEVTimerBase {
 
   void reset() {
     HEVTimerBase::reset();
-    next_tick_ = 0; 
+    next_tick_ = 0;
   }
 
   void start() {
     HEVTimerBase::start();
-    next_tick_ = start_; 
+    next_tick_ = start_;
   }
 
   void configure(uint32_t interval, uint32_t delay_time = 0) {
@@ -316,15 +320,15 @@ public:
 
   // Increase health (Hold AUX).
   void IncreaseHealth() {
+    if (SaberBase::Lockup() != LOCKUP_HEALING) return;
+
     if (health_ >= 100) {
       SaberBase::DoEndLockup();
       SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
       return;
     }
 
-    if (!SaberBase::Lockup() || !timer_health_increase_.ready()) {
-      return;
-    }
+    if (timer_health_increase_.running()) return;
 
     if (health_ == 0) {
       timer_post_death_cooldown_.start();
@@ -337,15 +341,15 @@ public:
 
   // Increase armor (Hold POWER).
   void IncreaseArmor() {
+    if (SaberBase::Lockup() != LOCKUP_FILL_ARMOR) return;
+
     if (armor_ >= 100) {
       SaberBase::DoEndLockup();
       SaberBase::SetLockup(SaberBase::LOCKUP_NONE);
       return;
     }
 
-    if (!SaberBase::Lockup() || !timer_armor_increase_.ready()) {
-      return;
-    }
+    if (timer_armor_increase_.running()) return;
 
     armor_++;
     timer_armor_increase_.start();
@@ -356,11 +360,8 @@ public:
   void Loop() override {
     CheckRandomEvent();
     HazardDecrease();
-    if (SaberBase::Lockup() == SaberBase::LOCKUP_NORMAL) {
-      IncreaseHealth();
-    } else if (SaberBase::Lockup() == SaberBase::LOCKUP_LIGHTNING_BLOCK) {
-      IncreaseArmor();
-    }
+    IncreaseHealth();
+    IncreaseArmor();
     PropBase::Loop();
   }
 
