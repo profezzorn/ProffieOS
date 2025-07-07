@@ -386,8 +386,8 @@ public:
 #else   // Improved logic fixes early Array1 repetition when using Blade Detect.
         return_value = 1 + return_value % (NELEM(blades) - 1);
 #endif
-        }
-      };
+      }
+    };
 
 #ifndef BLADE_DETECT_PIN
     int SabersenseArraySelector::return_value = 0;
