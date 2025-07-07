@@ -1,4 +1,4 @@
-/* V7/8-262.
+/* V7/8-263.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -340,11 +340,11 @@ GESTURE CONTROLS
 
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
 
-#ifndef SABERBSENSE_DEFAULT_BLADE_ARRAY
+#ifndef SABERSENSE_DEFAULT_BLADE_ARRAY
 #ifdef BLADE_DETECT_PIN
-#define SABERBSENSE_DEFAULT_BLADE_ARRAY 1
+#define SABERSENSE_DEFAULT_BLADE_ARRAY 1
 #else
-#define SABERBSENSE_DEFAULT_BLADE_ARRAY 0
+#define SABERSENSE_DEFAULT_BLADE_ARRAY 0
 #endif
 #endif
 
@@ -358,14 +358,23 @@ public:
   };
 #endif
 
+  // Check user-defined array is valid at compile time.
+  static_assert(
+    SABERSENSE_DEFAULT_BLADE_ARRAY < NELEM(blades),
+    "[Sabersense] ERROR: "
+    "SABERSENSE_DEFAULT_BLADE_ARRAY must be less than the number of blade arrays present."
+  );
+#ifdef BLADE_DETECT_PIN
+  static_assert(
+    SABERSENSE_DEFAULT_BLADE_ARRAY != 0,
+    "[Sabersense] ERROR: "
+    "SABERSENSE_DEFAULT_BLADE_ARRAY must be 1 or higher when using Blade Detect."
+  );
+#endif
+
     struct SabersenseArraySelector {
       static int return_value;  // Tracks current array index.
       float id() {
-#ifdef BLADE_DETECT_PIN
-        if (return_value == 0) {
-          return_value = 1;  // Guards against invalid NO_BLADE default.
-        }
-#endif
         if (return_value >= NELEM(blades)) {
           return_value = NELEM(blades) - 1;
         }
@@ -377,8 +386,8 @@ public:
 #else   // Improved logic fixes early Array1 repetition when using Blade Detect.
         return_value = 1 + return_value % (NELEM(blades) - 1);
 #endif
-      }
-    };
+        }
+      };
 
 #ifndef BLADE_DETECT_PIN
     int SabersenseArraySelector::return_value = 0;
