@@ -736,7 +736,7 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
   Spoken Battery Level in volts and percent (point down for volts, parallel or up for percent)
 
 == SaberSense Variation ==
-  
+  FETT263_SS_BUTTON_CLICKER
   Button Clicker to play press/release wav files* when buttons are pressed.
   *Requires press.wav and release.wav files to work.
 
