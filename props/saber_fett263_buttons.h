@@ -755,7 +755,7 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
   Quotes - quote01.wav
   Transition Sound - tr.wav
   Transition Sound Loop trloop.wav
-  Button Sounds (requires  define)
+  Button Sounds (requires FETT263_SS_BUTTON_CLICKER define)
     Button Press - press.wav
     Button Release - release.wav
 */
