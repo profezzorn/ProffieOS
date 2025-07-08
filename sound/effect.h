@@ -714,6 +714,7 @@ EFFECT(pstoff);
 // Monophonic fonts
 #ifdef ENABLE_IDLE_SOUND
 EFFECT2(idle, idle);
+EFFECT2(bgnidle, idle);
 EFFECT2(boot, idle);
 EFFECT2(font, idle);
 #else
