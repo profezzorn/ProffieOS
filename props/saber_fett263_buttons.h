@@ -5909,6 +5909,13 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 #endif
         return false;
 
+      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
+#ifdef FETT263_SS_BUTTON_CLICKER
+        // Intended to play click sound on button presses
+        hybrid_font.PlayCommon(&SFX_press);  // Requires press.wav file to work.
+#endif
+        return false;
+
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_LATCH_ON, MODE_OFF):
