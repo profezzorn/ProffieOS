@@ -489,7 +489,7 @@ public:
         SFX_in.SetFollowing(&SFX_pstoff);
         SFX_pstoff.SetFollowing(bgnidle);
       } else {
-        SFX_pstoff.SetFollowing(bgnidle);
+        SFX_in.SetFollowing(bgnidle);
       }
     } else {
       SFX_in.SetFollowing(nullptr);
@@ -606,16 +606,8 @@ public:
       case EFFECT_FORCE: PlayCommon(&SFX_force); return;
       case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); return;
       case EFFECT_QUOTE: PlayCommon(&SFX_quote); return;
-      case EFFECT_BOOT:
-        if (SFX_boot) {
-#ifdef ENABLE_IDLE_SOUND
-          SFX_boot.SetFollowing(&SFX_bgnidle);
-#endif
-          PlayCommon(&SFX_boot);
-          return;
-        }
+      case EFFECT_BOOT: PlayPolyphonic(&SFX_boot); return;
       case EFFECT_NEWFONT: SB_NewFont(); return;
-      case EFFECT_FAST_ON: faston_active = true; return;
       case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;
       case EFFECT_LOCKUP_END: SB_EndLockup(); return;
       case EFFECT_LOW_BATTERY: SB_LowBatt(); return;
@@ -670,15 +662,9 @@ public:
   }
 
   void SB_NewFont() {
-#ifdef ENABLE_IDLE_SOUND
-    if (!faston_active) {
-      SFX_font.SetFollowing(&SFX_bgnidle);
-    }
-#endif
     if (!PlayPolyphonic(&SFX_font)) {
       beeper.Beep(0.05, 1046.5);
     }
-    faston_active = false;
   }
 
   void SB_Change(SaberBase::ChangeType change) override {
@@ -879,19 +865,14 @@ public:
 
   void StopIdleSound() {
 #ifdef ENABLE_IDLE_SOUND
-    RefPtr<BufferedWavPlayer> idlePlayer = GetWavPlayerPlaying(&SFX_idle);
-    RefPtr<BufferedWavPlayer> bgnIdlePlayer = GetWavPlayerPlaying(&SFX_bgnidle);
+    RefPtr<BufferedWavPlayer> idlePlayer = GetWavPlayerPlaying(&SFX_bgnidle);
+    if (!idlePlayer) idlePlayer = GetWavPlayerPlaying(&SFX_idle);
     if (idlePlayer) {
       idlePlayer->set_fade_time(0.5);
       idlePlayer->FadeAndStop();
       idlePlayer.Free();
-      }
-    if (bgnIdlePlayer) {
-      bgnIdlePlayer->set_fade_time(0.5);
-      bgnIdlePlayer->FadeAndStop();
-      bgnIdlePlayer.Free();
+      PVLOG_DEBUG << "**** Stopped idle or bgnidle wav\n";
     }
-      PVLOG_NORMAL << "**** Stopped idle wav\n";
 #endif
   }
 
@@ -927,7 +908,6 @@ public:
   float volume_;
   float current_effect_length_ = 0.0;
   EffectLocation saved_location_;
-  bool faston_active = false;
 };
 
 #endif
