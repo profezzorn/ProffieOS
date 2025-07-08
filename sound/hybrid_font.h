@@ -487,9 +487,9 @@ public:
       Effect* bgnidle = AvoidIdleSDAccess() ? nullptr : &SFX_bgnidle;
       if (SFX_pstoff) {
         SFX_in.SetFollowing(&SFX_pstoff);
-        SFX_pstoff.SetFollowing(SFX_bgnidle ? bgnidle : &SFX_idle);
+        SFX_pstoff.SetFollowing(bgnidle);
       } else {
-        SFX_in.SetFollowing(SFX_bgnidle ? bgnidle : &SFX_idle);
+        SFX_pstoff.SetFollowing(bgnidle);
       }
     } else {
       SFX_in.SetFollowing(nullptr);
@@ -508,7 +508,7 @@ public:
         break;
       case OFF_FAST:
 #ifdef ENABLE_IDLE_SOUND
-        SFX_in.SetFollowing(SFX_bgnidle ? &SFX_bgnidle : &SFX_idle);
+        SFX_in.SetFollowing(&SFX_bgnidle);
 #else
         SFX_in.SetFollowing(nullptr);
 #endif
@@ -606,7 +606,14 @@ public:
       case EFFECT_FORCE: PlayCommon(&SFX_force); return;
       case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); return;
       case EFFECT_QUOTE: PlayCommon(&SFX_quote); return;
-      case EFFECT_BOOT: PlayPolyphonic(&SFX_boot); return;
+      case EFFECT_BOOT:
+        if (SFX_boot) {
+#ifdef ENABLE_IDLE_SOUND
+          SFX_boot.SetFollowing(&SFX_bgnidle);
+#endif
+          PlayCommon(&SFX_boot);
+          return;
+        }
       case EFFECT_NEWFONT: SB_NewFont(); return;
       case EFFECT_FAST_ON: faston_active = true; return;
       case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;
@@ -665,7 +672,7 @@ public:
   void SB_NewFont() {
 #ifdef ENABLE_IDLE_SOUND
     if (!faston_active) {
-      SFX_font.SetFollowing(SFX_bgnidle ? &SFX_bgnidle : &SFX_idle);
+      SFX_font.SetFollowing(&SFX_bgnidle);
     }
 #endif
     if (!PlayPolyphonic(&SFX_font)) {
@@ -873,12 +880,18 @@ public:
   void StopIdleSound() {
 #ifdef ENABLE_IDLE_SOUND
     RefPtr<BufferedWavPlayer> idlePlayer = GetWavPlayerPlaying(&SFX_idle);
+    RefPtr<BufferedWavPlayer> bgnIdlePlayer = GetWavPlayerPlaying(&SFX_bgnidle);
     if (idlePlayer) {
       idlePlayer->set_fade_time(0.5);
       idlePlayer->FadeAndStop();
       idlePlayer.Free();
-      PVLOG_NORMAL << "**** Stopped idle wav\n";
       }
+    if (bgnIdlePlayer) {
+      bgnIdlePlayer->set_fade_time(0.5);
+      bgnIdlePlayer->FadeAndStop();
+      bgnIdlePlayer.Free();
+    }
+      PVLOG_NORMAL << "**** Stopped idle wav\n";
 #endif
   }
 
