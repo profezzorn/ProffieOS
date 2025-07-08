@@ -662,6 +662,9 @@ public:
   }
 
   void SB_NewFont() {
+#ifdef ENABLE_IDLE_SOUND
+    SFX_font.SetFollowing(SFX_bgnidle ? &SFX_bgnidle : &SFX_idle);
+#endif
     if (!PlayPolyphonic(&SFX_font)) {
       beeper.Beep(0.05, 1046.5);
     }
