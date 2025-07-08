@@ -608,6 +608,7 @@ public:
       case EFFECT_QUOTE: PlayCommon(&SFX_quote); return;
       case EFFECT_BOOT: PlayPolyphonic(&SFX_boot); return;
       case EFFECT_NEWFONT: SB_NewFont(); return;
+      case EFFECT_FAST_ON: faston_active = true; return;
       case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;
       case EFFECT_LOCKUP_END: SB_EndLockup(); return;
       case EFFECT_LOW_BATTERY: SB_LowBatt(); return;
@@ -663,11 +664,14 @@ public:
 
   void SB_NewFont() {
 #ifdef ENABLE_IDLE_SOUND
-    SFX_font.SetFollowing(SFX_bgnidle ? &SFX_bgnidle : &SFX_idle);
+    if (!faston_active) {
+      SFX_font.SetFollowing(SFX_bgnidle ? &SFX_bgnidle : &SFX_idle);
+    }
 #endif
     if (!PlayPolyphonic(&SFX_font)) {
       beeper.Beep(0.05, 1046.5);
     }
+    faston_active = false;
   }
 
   void SB_Change(SaberBase::ChangeType change) override {
@@ -910,6 +914,7 @@ public:
   float volume_;
   float current_effect_length_ = 0.0;
   EffectLocation saved_location_;
+  bool faston_active = false;
 };
 
 #endif
