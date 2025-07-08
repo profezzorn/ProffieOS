@@ -484,12 +484,12 @@ public:
     bool most_blades = location.on_blade(0);
 #ifdef ENABLE_IDLE_SOUND
     if (most_blades) {
-      Effect* idle = AvoidIdleSDAccess() ? nullptr : &SFX_idle;
+      Effect* bgnidle = AvoidIdleSDAccess() ? nullptr : &SFX_bgnidle;
       if (SFX_pstoff) {
         SFX_in.SetFollowing(&SFX_pstoff);
-        SFX_pstoff.SetFollowing(idle);
+        SFX_pstoff.SetFollowing(SFX_bgnidle ? bgnidle : &SFX_idle);
       } else {
-        SFX_in.SetFollowing(idle);
+        SFX_in.SetFollowing(SFX_bgnidle ? bgnidle : &SFX_idle);
       }
     } else {
       SFX_in.SetFollowing(nullptr);
@@ -507,7 +507,11 @@ public:
         StopIdleSound();
         break;
       case OFF_FAST:
+#ifdef ENABLE_IDLE_SOUND
+        SFX_in.SetFollowing(SFX_bgnidle ? &SFX_bgnidle : &SFX_idle);
+#else
         SFX_in.SetFollowing(nullptr);
+#endif
         [[gnu::fallthrough]];
       case OFF_NORMAL:
         if (!SFX_in) {
