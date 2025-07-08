@@ -1418,7 +1418,7 @@ EFFECT(medit); // Edit Mode
 #ifdef FETT263_MANUAL_BLADE_ARRAY
 EFFECT(array);      // for Manual Blade Array switching
 #endif
-#ifdef 
+#ifdef FETT263_SS_BUTTON_CLICKER
 EFFECT(press); // for button press sound
 EFFECT(release); // for button release sound
 #endif
