@@ -717,9 +717,12 @@ EFFECT(pstoff);
 #ifdef ENABLE_IDLE_SOUND
 EFFECT2(idle, idle);
 EFFECT2(bgnidle, idle);
-#endif
+EFFECT2(boot, bgnidle);
+EFFECT2(font, bgnidle);
+#else
 EFFECT(boot);
-EFFECT(font);
+EFFECT(font);      // also polyphonic
+#endif
 EFFECT(bladein);   // also polyphonic
 EFFECT(bladeout);  // also polyphonic
 EFFECT2(hum, hum);
