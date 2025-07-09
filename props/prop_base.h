@@ -1571,11 +1571,15 @@ public:
       return true;
     }
     if (!strcmp(cmd, "n") || (!strcmp(cmd, "next") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
-      next_preset();
+      SaberBase::IsOn() ? next_preset_fast() : next_preset();
       return true;
     }
     if (!strcmp(cmd, "p") || (!strcmp(cmd, "prev") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
-      previous_preset();
+      SaberBase::IsOn() ? previous_preset_fast() : previous_preset();
+      return true;
+    }
+    if (!strcmp(cmd, "f") || (!strcmp(cmd, "first") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
+      SaberBase::IsOn() ? first_preset_fast() : first_preset();
       return true;
     }
     if (!strcmp(cmd, "rotate")) {
