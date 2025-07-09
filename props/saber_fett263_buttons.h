@@ -1418,6 +1418,10 @@ EFFECT(medit); // Edit Mode
 #ifdef FETT263_MANUAL_BLADE_ARRAY
 EFFECT(array);      // for Manual Blade Array switching
 #endif
+#ifdef FETT263_SS_BUTTON_CLICKER
+EFFECT(press); // for button press sound
+EFFECT(release); // for button release sound
+#endif
 
 #ifdef FETT263_SAVE_CHOREOGRAPHY
 // Rehearsal / Choreography
@@ -5491,7 +5495,7 @@ SaberFett263Buttons() : PropBase() {}
           return true;
         }
 #ifdef FETT263_SS_BUTTON_CLICKER
-        PlaySound("release.wav");  // Requires release.wav file to work.
+        hybrid_font.PlayCommon(&SFX_release);  // Requires release.wav file to work.
 #endif
         return false;
 
@@ -5502,9 +5506,9 @@ SaberFett263Buttons() : PropBase() {}
 #endif
 #ifdef FETT263_SS_BUTTON_CLICKER
         // Intended to play click sound on button presses
-        PlaySound("press.wav");  // Requires press.wav file to work.
+        hybrid_font.PlayCommon(&SFX_press);  // Requires press.wav file to work.
 #endif
-        return true;
+        return false;
 
 #if NUM_BUTTONS == 1
 // 1 Button Specific (based on SA22C's prop)
@@ -5901,9 +5905,16 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         saber_off_time_millis_ = millis();
 #ifdef FETT263_SS_BUTTON_CLICKER
         // Intended to play click sound on button presses
-        PlaySound("press.wav");  // Requires press.wav file to work.
+        hybrid_font.PlayCommon(&SFX_press);  // Requires press.wav file to work.
 #endif
-        return true;
+        return false;
+
+      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_ON):
+#ifdef FETT263_SS_BUTTON_CLICKER
+        // Intended to play click sound on button presses
+        hybrid_font.PlayCommon(&SFX_press);  // Requires press.wav file to work.
+#endif
+        return false;
 
       case EVENTID(BUTTON_POWER, EVENT_LATCH_ON, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_LATCH_ON, MODE_OFF):
@@ -6040,7 +6051,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
 #endif
 #ifdef FETT263_SS_BUTTON_CLICKER
         // Intended to play click sound on button presses
-        PlaySound("press.wav");  // Requires press.wav file to work.
+        hybrid_font.PlayCommon(&SFX_press);  // Requires press.wav file to work.
 #endif
         return false;
 
@@ -6060,7 +6071,7 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
         }
 #endif
 #ifdef FETT263_SS_BUTTON_CLICKER
-        PlaySound("release.wav");  // Requires release.wav file to work.
+        hybrid_font.PlayCommon(&SFX_release);  // Requires release.wav file to work.
 #endif
         return false;
 
@@ -7021,12 +7032,12 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
           return true;
         }
 #ifdef FETT263_SS_BUTTON_CLICKER
-        PlaySound("release.wav");  // Requires release.wav file to work.
-        return true;
+        hybrid_font.PlayCommon(&SFX_release);  // Requires release.wav file to work.
+        return false;
 
       case EVENTID(BUTTON_AUX, EVENT_RELEASED, MODE_ANY_BUTTON | MODE_OFF):
-        PlaySound("release.wav");  // Requires release.wav file to work.
-        return true;
+        hybrid_font.PlayCommon(&SFX_release);  // Requires release.wav file to work.
+        return false;
 #endif
     }
     return false;
