@@ -1,4 +1,4 @@
-/* V7/8-263.
+/* V7/8-264.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -338,8 +338,6 @@ GESTURE CONTROLS
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
 
-#ifndef SABERSENSE_DISABLE_SAVE_ARRAY
-
 #ifndef SABERSENSE_DEFAULT_BLADE_ARRAY
 #ifdef BLADE_DETECT_PIN
 #define SABERSENSE_DEFAULT_BLADE_ARRAY 1
@@ -347,6 +345,8 @@ GESTURE CONTROLS
 #define SABERSENSE_DEFAULT_BLADE_ARRAY 0
 #endif
 #endif
+
+#ifndef SABERSENSE_DISABLE_SAVE_ARRAY
 
 class SaveArrayStateFile : public ConfigFile {
 public:
