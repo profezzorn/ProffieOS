@@ -1578,10 +1578,7 @@ public:
       SaberBase::IsOn() ? previous_preset_fast() : previous_preset();
       return true;
     }
-    if (!strcmp(cmd, "f") || (!strcmp(cmd, "first") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
-      SaberBase::IsOn() ? first_preset_fast() : first_preset();
-      return true;
-    }
+
     if (!strcmp(cmd, "rotate")) {
       rotate_presets();
       return true;
