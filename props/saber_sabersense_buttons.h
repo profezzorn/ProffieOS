@@ -1,4 +1,4 @@
-/* V7/8-264.
+/* V7/8-265.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -346,37 +346,38 @@ GESTURE CONTROLS
 #endif
 #endif
 
-#ifndef SABERSENSE_DISABLE_SAVE_ARRAY
+  // Check user-defined array is valid at compile time.
+  static_assert(
+    SABERSENSE_DEFAULT_BLADE_ARRAY < NELEM(blades),
+    "[Sabersense] ERROR: "
+    "#define SABERSENSE_DEFAULT_BLADE_ARRAY must be less than the number of blade arrays present."
+  );
+#ifdef BLADE_DETECT_PIN
+  static_assert(
+    SABERSENSE_DEFAULT_BLADE_ARRAY != 0,
+    "[Sabersense] ERROR: "
+    "#define SABERSENSE_DEFAULT_BLADE_ARRAY must be 1 or higher when using Blade Detect."
+  );
+#endif
 
+#ifndef SABERSENSE_DISABLE_SAVE_ARRAY
 class SaveArrayStateFile : public ConfigFile {
 public:
   void iterateVariables(VariableOP *op) override {
     // Default array if no save file present...
     CONFIG_VARIABLE2(sabersense_array_index, SABERSENSE_DEFAULT_BLADE_ARRAY);
   }
-    int sabersense_array_index;  // Stores current array index.
-  };
-#endif
-
-  // Check user-defined array is valid at compile time.
-  static_assert(
-    SABERSENSE_DEFAULT_BLADE_ARRAY < NELEM(blades),
-    "[Sabersense] ERROR: "
-    "SABERSENSE_DEFAULT_BLADE_ARRAY must be less than the number of blade arrays present."
-  );
-#ifdef BLADE_DETECT_PIN
-  static_assert(
-    SABERSENSE_DEFAULT_BLADE_ARRAY != 0,
-    "[Sabersense] ERROR: "
-    "SABERSENSE_DEFAULT_BLADE_ARRAY must be 1 or higher when using Blade Detect."
-  );
+  int sabersense_array_index;  // Stores current array index.
+};
 #endif
 
     struct SabersenseArraySelector {
       static int return_value;  // Tracks current array index.
       float id() {
-        if (return_value >= NELEM(blades)) {
-          return_value = NELEM(blades) - 1;
+        if (return_value < 0 || return_value >= NELEM(blades)) {
+          Serial.println("[Sabersense] ALERT: User or externally-specified array index invalid. "
+                         "Resetting to default.");
+          return_value = SABERSENSE_DEFAULT_BLADE_ARRAY;
         }
         return return_value;
       }
