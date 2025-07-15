@@ -57,6 +57,7 @@
 
 EFFECT(health);
 EFFECT(armor);
+EFFECT(hazard);
 EFFECT(stun);
 EFFECT(death);
 EFFECT(armor_alarm);
@@ -76,65 +77,19 @@ struct HEVTimerBase {
   
   void start() { active_ = true; start_ = millis(); }
 
-  void configure(uint32_t interval) {
-    interval_ = interval;
-  }
+  void configure(uint32_t interval) { interval_ = interval; }
 
   // Returns true if timer is inactive or timeout exceeded.
   bool check() {
     return !active_ || (millis() - start_ > interval_);
   }
 
-  bool ready() {
-    return active_ && ((millis() - start_) >= interval_);
-  }
-
   bool running() const {
     return active_ && (millis() - start_) <= interval_;
   }
-};
 
-struct HEVTimerHazard : public HEVTimerBase {
-  // next_tick_ ensures precise timing for damage events by storing the exact
-  // timestamp when the next damage should occur, preventing timing drift.
-  // Mainly used for hazard damage, controlled by HEV_HAZARD_DECREASE_MS.
-  uint32_t next_tick_ = 0;
-  // Delay before applying damage. HEV_HAZARD_DELAY_MS
-  uint32_t delay_ = 0;
-
-  void reset() {
-    HEVTimerBase::reset();
-    next_tick_ = 0;
-  }
-
-  void start() {
-    HEVTimerBase::start();
-    next_tick_ = start_;
-  }
-
-  void configure(uint32_t interval, uint32_t delay_time = 0) {
-    HEVTimerBase::configure(interval);
-    delay_ = delay_time;
-  }
-
-  // delay_ is a grace period. It's argument is HEV_HAZARD_DELAY_MS.
-  // interval_ uses HEV_HAZARD_DECREASE_MS as an argument. Currently 1000ms.
-  //
-  // The hazard sequence method returns true when:
-  // - The timer is active (active_ is true)
-  // - The grace period has elapsed (now - start_ >= delay_)
-  // - It's time for the next damage tick (now >= next_tick_)
-  //
-  // It returns false when:
-  // - The timer is not active (active_ is false)
-  // - The warning period hasn't elapsed yet
-  // - It's not time for the next damage tick
-  bool hazard_sequence() {
-    if (!active_) return false;
-    uint32_t now = millis();
-    
-    return (now - start_ >= delay_) &&
-           ((now >= next_tick_) ? (next_tick_ = now + interval_, true) : false);
+  bool done() {
+    return active_ && (millis() - start_) >= interval_;
   }
 };
 
@@ -144,10 +99,10 @@ public:
   HEVTimerBase timer_clash_;
   HEVTimerBase timer_post_death_cooldown_;
   HEVTimerBase timer_random_event_;
+  HEVTimerBase timer_hazard_delay_;
   HEVTimerBase timer_hazard_damage_;
   HEVTimerBase timer_health_increase_;
   HEVTimerBase timer_armor_increase_;
-  HEVTimerHazard timer_hazard_delay_;
 
   Hev() : PropBase() {
     // Configure all timers with their respective timings from hev_config.h
@@ -155,7 +110,7 @@ public:
     timer_clash_.configure(this->clash_timeout_);
     timer_post_death_cooldown_.configure(HEV_POST_DEATH_COOLDOWN_MS);
     timer_random_event_.configure(HEV_RANDOM_EVENT_INTERVAL_MS);
-    timer_hazard_delay_.configure(HEV_HAZARD_DECREASE_MS, HEV_HAZARD_DELAY_MS);
+    timer_hazard_delay_.configure(HEV_HAZARD_DELAY_MS);
     timer_health_increase_.configure(HEV_HEALTH_INCREASE_MS);
     timer_armor_increase_.configure(HEV_ARMOR_INCREASE_MS);
   }
@@ -292,12 +247,14 @@ public:
 
     // Start sequence if not running
     if (!timer_hazard_delay_.active_) {
+      timer_hazard_delay_.configure(HEV_HAZARD_DELAY_MS);
+      timer_hazard_delay_.configure(HEV_HAZARD_DECREASE_MS);
       timer_hazard_delay_.start();
       return;
     }
 
     // Check sequence and apply damage
-    if (timer_hazard_delay_.hazard_sequence()) {
+    if (timer_hazard_delay_.done()) {
       if (armor_ > 0) {
         armor_--;
         SaberBase::DoEffect(EFFECT_STUN, 0.0);
@@ -318,6 +275,13 @@ public:
     }
   }
 
+  // Reset random event timer after revive.
+  void Revive() {
+    if (health_ == 0) {
+      timer_random_event_.reset();
+    }
+  }
+
   // Increase health (Hold AUX).
   void IncreaseHealth() {
     if (SaberBase::Lockup() != LOCKUP_HEALING) return;
@@ -330,9 +294,7 @@ public:
 
     if (timer_health_increase_.running()) return;
 
-    if (health_ == 0) {
-      timer_post_death_cooldown_.start();
-    }
+    Revive();
 
     health_++;
     timer_health_increase_.start();
@@ -414,7 +376,7 @@ public:
       // Hold AUX to start healing
       case EVENTID(BUTTON_AUX, EVENT_HELD_MEDIUM, MODE_ON):
         if (!SaberBase::Lockup()) {
-          SaberBase::SetLockup(SaberBase::LOCKUP_NORMAL);
+          SaberBase::SetLockup(SaberBase::LOCKUP_HEALING);
           SaberBase::DoBeginLockup();
           timer_health_increase_.start();
           return true;
@@ -435,7 +397,7 @@ public:
       // Hold POWER to start recharging armor
       case EVENTID(BUTTON_POWER, EVENT_HELD_MEDIUM, MODE_ON):
         if (!SaberBase::Lockup()) {
-          SaberBase::SetLockup(SaberBase::LOCKUP_LIGHTNING_BLOCK);
+          SaberBase::SetLockup(SaberBase::LOCKUP_FILL_ARMOR);
           SaberBase::DoBeginLockup();
           timer_armor_increase_.start();
           return true;
@@ -481,7 +443,10 @@ public:
     // alongside death sound. However all pending sounds should be cleared.
     switch (effect) {
       default: return;
-  
+      case EFFECT_ALT_SOUND:
+        SOUNDQ->Play(SoundToPlay(&SFX_hazard));
+        return;
+
     // Random Hazard Sounds
       case EFFECT_STUN:
         hybrid_font.PlayCommon(&SFX_stun);
