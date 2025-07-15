@@ -248,7 +248,6 @@ public:
     // Start sequence if not running
     if (!timer_hazard_delay_.active_) {
       timer_hazard_delay_.configure(HEV_HAZARD_DELAY_MS);
-      timer_hazard_delay_.configure(HEV_HAZARD_DECREASE_MS);
       timer_hazard_delay_.start();
       return;
     }
@@ -271,7 +270,11 @@ public:
         current_hazard_ = HAZARD_NONE;
         timer_hazard_delay_.reset();
         SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
+        return;
       }
+
+      timer_hazard_delay_.configure(HEV_HAZARD_DECREASE_MS);
+      timer_hazard_delay_.start();
     }
   }
 
