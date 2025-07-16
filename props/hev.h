@@ -1,50 +1,236 @@
-// HALF-LIFE - Hazardous Environment Suit Prop
-//
-// How to use:
-// POWER button:
-//   Long-click: ON/OFF
-//   hold button to recharge armor
-//   double-click: toggle track
-//   triple-click: next preset
-// AUX button:
-//   hold button to heal.
-//   single click: deactivate hazard
-//   double-click: armor readout
-//   triple-click: previous preset
-//
-// Sound files needed:
-// in.wav, out.wav - for power on/off. Use flashlight sound
-// bgnlb.wav, lb.wav, endlb.wave - recharge armor sound sequence
-// bgnlock.wav, lock.wav, endlock.wav - heal sound sequence
-// font.wav - next/previous preset
-// armor_alarm.wav - for when Clash damage is greater than or equal to 30
-// armor_compromised.wav - for when armor falls to 0
-// boot.wav - Bootup welcome message
-// death.wav - for when health is 0
-// clsh**.wav - physical clash sounds
-// health00.wav to health100.wav - for health alert sounds
-// armor00.wav to armor100.wav - for armor readout sounds
-//
-// Random Hazard sounds:
-// These are played using the altchng method. So create 7 directories:
-// alt00, alt01, alt02, alt03, alt04, alt05, alt06.
-// Each directory should contain two folders, altchng and stun.
-// In alt01 to alt06, place the hazard detection voice lines in the altchng dir
-// (bio, blood toxins, chemical, radiation, shock, fire).
-// In alt01 to alt06, place appropriate sound effects in the stun dir
-// (spark, burn, geiger counter).
-// In each stun folder, use the same amount of files as the other stun folders.
-// So if you use 4 stun sounds, use 4 in all of them.
-// In each altchng folder, use the same amount of files as the other altchng folders.
-// I use 2 in all of them.
-// One for the main voice line, the other is the same,
-// but with a follow up health notification for variety.
-// For alt00, have the same amount of files as the other alt** folders
-// but leave the files blank.
-//
-// Notes:
-// Clash will cause varying damage based on strength
-// Damage and Hazards are only active when prop is ON.
+//=====================================================================//
+//                        H A L F - L I F E                            //
+//                      ─────────────────────                          //
+//              Hazardous Environment Suit Diagnostics                 //
+//                H.E.V. Mk V - Configuration Protocol                 //
+//---------------------------------------------------------------------//
+//                      PROPERTY OF BLACK MESA                         //
+//=====================================================================//
+
+//=====================================================================//
+//                                                                     //
+//                    H.E.V. SUIT - USAGE GUIDE                        //
+//                    ─────────────────────────                        //
+//                                                                     //
+// - POWER Button:                                                     //
+//     - Long-click           - ON/OFF                                 //
+//     - Hold                 - Recharge Armor                         //
+//     - Double-click         - Toggle track                           //
+//     - Triple-click         - Next preset                            //
+// - AUX Button:                                                       //
+//     - Hold                 - Recharge Health                        //
+//     - Single-click         - Deactivate Hazard                      //
+//     - Double-click         - Armor Readout                          //
+//     - Triple-click         - Previous preset                        //
+//                                                                     //
+//---------------------------------------------------------------------//
+//              PHYSICAL DAMAGE & HAZARD DAMAGE LOGIC                  //
+//---------------------------------------------------------------------//
+//                                                                     //
+// - The HEV suit has two main resources: Health and Armor.            //
+//     - Both active only while the suit is ON.                        //
+//     - Both have a maximum value of 100.                             //
+// - Random Hazards:                                                   //
+//     - Active only while the suit is ON.                             //
+//     - Triggered at intervals with a chance-based system.            //
+//     - Always damages Armor first, then Health.                      //
+// - When Armor is depleted:                                           //
+//     - Hazards begins directly damaging Health.                      //
+//     - Clashes deal full damage to Health.                           //
+// - When Armor is active:                                             //
+//     - Clashes (physical impacts) are negated:                       //
+//         ▪ 80% of the impact is absorbed by Armor.                   //
+//         ▪ 20% is applied to Health.                                 //
+// - Clash damage is based on force of impact:                         //
+//     - Cannot exceed 50 total damage.                                //
+//                                                                     //
+//=====================================================================//
+
+//=====================================================================//
+//                                                                     //
+//                     AUDIO SYSTEM CATEGORIES                         //
+//                    ─────────────────────────                        //
+//                                                                     //
+//----------------------  HEV VOICE LINES -----------------------------//
+//                                                                     //
+// - armor**.wav             - Armor Readouts                          //
+// - health**.wav            - Health Alerts                           //
+// - armor_compromised.wav   - Plays when armor drops to 0             //
+// - boot.wav                - HEV welcome message (shortened)         //
+// - boot_long.wav           - HEV welcome message (original)          //
+// - hazard**.wav            - Hazard Alerts                           //
+// - morphine.wav            - Plays after a Major Clash               //
+//                                                                     //
+//-------------------- HEV UI SYSTEM SOUNDS ---------------------------//
+//                                                                     //
+// - armor_alarm.wav         - Short alert // plays when damage ≥ 30   //
+// - battery.wav             - Battery SFX // armor pickup             //
+// - bgnlb.wav               - Start armor charge                      //
+// - bgnlock.wav             - Start health charge                     //
+// - death.wav               - Heart monitor flatline // health = 0    //
+// - endlb.wav               - End armor charge                        //
+// - endlock.wav             - End health charge                       //
+// - font.wav                - Weapon select SFX (placeholder)         //
+// - fuzz**.wav              - Subtle alert // precedes armor**.wav    //
+// - in.wav                  - Torch ON                                //
+// - lb.wav                  - Looping armor charge                    //
+// - lock.wav                - Looping health charge                   //
+// - medkit.wav              - Medkit SFX // health pickup             //
+// - out.wav                 - Torch OFF                               //
+// - warning.wav             - No Armor SFX // Armor = 0               //
+//                                                                     //
+//-------------------- ENVIRONMENTAL EFFECTS --------------------------//
+//                                                                     //
+// - stun**.wav              - Hazard SFX // alt001–alt006 = hazards   //
+// - clsh**.wav              - Physical impacts, slashes, collisions   //
+//                                                                     //
+//----------------------------- MISC ----------------------------------//
+//                                                                     //
+// - blank.wav               - Placeholder inside altchng/ folder      //
+//                                                                     //
+//------------------ Random Hazard Sounds Setup -----------------------//
+//                                                                     //
+// ▪ Create 7 directories: alt00 through alt06                         //
+// ▪ Each alt**/ folder must contain:                                  //
+//    ├── hazard00.wav                                                 //
+//    └── hazard01.wav                                                 //
+//      → These are the Hazard Alert (HEV VOICE LINES) for that folder.//
+//                                                                     //
+// ▪ Inside each alt**/ folder, create an altchng/ folder:             //
+// ▪ Inside each altchng/ folder:                                      //
+//    - Include one file: blank.wav                                    //
+//      → A silent placeholder used to satisfy the folder structure.   //
+// ▪ Inside each alt**/ folder, create a stun/ folder:                 //
+// ▪ Inside each stun/ folder:                                         //
+//    - Include the ENVIRONMENTAL EFFECTS that match                   //
+//      the Hazard type (e.g., spark, burn, Geiger counter)            //
+//                                                                     //
+// ▪ All alt**/ folders (alt00–alt06) must have the **same number** of //
+//    WAVs inside including **all** sub folders.                       //
+//                                                                     //
+//=====================================================================//
+
+//=====================================================================//
+//                       TIMER CONFIGURATION                           //
+//                    ─────────────────────────                        //
+//                                                                     //
+// - timer_clash_               - Debounce timer for physical Clashes. //
+//                                Prevents false Clashes.              //
+// - timer_post_death_cooldown_ - Cooldown after user revives.         //
+//                                Blocks Hazards until timer is done.  //
+// - timer_random_event_        - Interval timer for Random Hazards.   //
+//                                Controls how often Hazards can occur.//
+// - timer_hazard_delay_        - Delay between Hazard damage ticks.   //
+//                                Manages Hazard damage over time.     //
+// - timer_health_increase_     - Interval for Health recharge.        //
+//                                Controls healing rate.               //
+// - timer_armor_increase_      - Interval for Armor recharge.         //
+//                                Controls Armor recharge rate.        //
+//=====================================================================//
+
+//=====================================================================//
+//                                                                     //
+//                        BEHAVIOR BREAKDOWN                           //
+//                    ─────────────────────────                        //
+//                                                                     //
+//------------------------- Health Alerts -----------------------------//
+//                                                                     //
+// ▪ When Health reaches the below thresholds, the suit will           //
+//   randomly say different (HEV VOICE LINES):                         //
+//     - ≤= 50: "Seek Medical Attention"        (50% chance)           //
+//     - ≤= 30: "Vital Signs Critical"          (60% chance)           //
+//     - ≤= 6:  "User Death Imminent"           (100% chance)          //
+//                                                                     //
+// ▪ The chances have been configured directly in the sound files,     //
+//   with some wavs as blanks to ensure.                               //
+// ▪ When Health drops to a lower 10th decimal (e.g., from 43 → 36),   //
+//   a Health Alert (health**.wav) will play.                          //
+// ▪ There are no Health Alerts when Health is above 50.               //
+// ▪ When Health is 0, death.wav will trigger.                         //
+//                                                                     //
+//------------------------- Armor Alerts ------------------------------//
+//                                                                     //
+// ▪ When Clash damage ≥ 30:                                           //
+//     - armor_alarm.wav will play. (HEV UI SOUND)                     //
+// ▪ If Armor reaches 0:                                               //
+//     - 50% chance to play armor_compromised.wav. (HEV VOICE LINE)    //
+//                                                                     //
+//-------------------- Physical Clash System --------------------------//
+//                                                                     //
+// ▪ Each Clash deals between 1–50 damage based on impact strength.    //
+// ▪ Currently 8 (ENVIRONMENTAL) Clash sounds available (clsh**.wav):  //
+//     → Divided by Clash Impact and Injury type.                      //
+// ▪ Impact categorised by damage value:                               //
+//     - < 25: Minor Clash sounds                                      //
+//     - ≥ 25: Major Clash sounds                                      //
+// ▪ Injury subcategories for both Impact types:                       //
+//     - Lacerations                                                   //
+//     - Fractures                                                     //
+//                                                                     //
+//-------------------- Clash Sound Index Table ------------------------//
+//                                                                     //
+// ▪ Minor Clash sounds:                                               //
+//     - clsh00.wav  → Laceration (Low)                                //
+//     - clsh01.wav  → Laceration (Med)                                //
+//     - clsh02.wav  → Laceration (High)                               //
+//     - clsh03.wav  → Fracture (Minor)                                //
+// ▪ Major Clash sounds:                                               //
+//     - clsh04.wav  → Laceration (Low)                                //
+//     - clsh05.wav  → Laceration (Med)                                //
+//     - clsh06.wav  → Laceration (High)                               //
+//     - clsh07.wav  → Fracture (Major)                                //
+//                                                                     //
+// ▪ 44% chance to trigger a (HEV VOICE LINE):                         //
+//     - e.g. ”Major Fracture Detected!"                               //
+//                                                                     //
+//-------------------- Morphine Auto-Injection ------------------------//
+//                                                                     //
+// ▪ Only if Major Clash (HEV VOICE LINE) plays:                       //
+//     → 40% chance to follow-up with another (HEV VOICE LINE):        //
+//       - morphine.wav                                                //
+//       - This line will be on a cooldown, so as not to be spammed.   //
+//                                                                     //
+//------------------------ Hazard System ------------------------------//
+//                                                                     //
+// ▪ When triggered, randomly selects one of 6 Hazards:                //
+//     → Heat, Shock, Bio, Blood Toxins, Chemical, Radiation.          //
+// ▪ If Bio, Blood Toxins, Chem, or Radiation triggered,               //
+//   their damage lingers over time.                                   //
+//     - These 4 Hazards have a 50% chance to let the user know        //
+//       that damage is lingering via a (HEV VOICE LINE).              //
+//     - This has been configured directly in the sound font files.    //
+// ▪ Heat and Shock do not have lingering damage and should be         //
+//   cleared immediately by the user by clicking AUX.                  //
+//                                                                     //
+//----------------- Quick Healing & Recharging ------------------------//
+//                                                                     //
+// ▪ Two recovery options are available, which replicate the small     //
+//   health and armor pickups in-game, the Medkits and Batteries.      //
+//     - Medkit  → Immediately recovers 15 Health.                     //
+//     - Battery → Immediately recovers 15 Armor.                      //
+// ▪ Both have their own distinct (HEV UI SOUND):                      //
+//     - Medkit → medkit.wav                                           //
+//     - Battery → battery.wav                                         //
+// ▪ Medkit sound feedback:                                            //
+//     - Plays medkit.wav on trigger.                                  //
+//     - endlock.wav plays if already at max Health.                   //
+// ▪ Battery sound feedback:                                           //
+//     - Plays battery.wav on trigger.                                 //
+//     - endlb.wav plays if already at max Armor.                      //
+//     - Plays Armor Readout function, and rounds the value to         //
+//       the nearest multiple of 5.                                    //
+//                                                                     //
+//----------------------- Armor Readout -------------------------------//
+//                                                                     //
+// ▪ Armor Readout is used to hear the current Armor value.            //
+// ▪ Triggered by double-clicking AUX.                                 //
+// ▪ Activates a sequence of (HEV UI SOUND) then (HEV VOICE LINE):     //
+//   → Subtle alert fuzz**.wav → Armor Readout armor**.wav.            //
+// ▪ If Armor = 0:                                                     //
+//     - Plays warning.wav (HEV UI SOUND)                              //
+//     - No (HEV VOICE LINE)                                           //
+//                                                                     //
+//=====================================================================//
 
 #ifndef PROPS_HEV_H
 #define PROPS_HEV_H
