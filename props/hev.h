@@ -5,12 +5,15 @@
 //                H.E.V. Mk V - Configuration Protocol                 //
 //---------------------------------------------------------------------//
 //                      PROPERTY OF BLACK MESA                         //
+//---------------------------------------------------------------------//
+//               Created by James Nash with fundamental                //
+//          support and contributions of Fredrik Hubinette             //
 //=====================================================================//
 
 //=====================================================================//
-//                                                                     //
 //                    H.E.V. SUIT - USAGE GUIDE                        //
 //                    ─────────────────────────                        //
+// --2 BUTTON SETUP--                                                  //
 //                                                                     //
 // - POWER Button:                                                     //
 //     - Long-click           - ON/OFF                                 //
@@ -28,14 +31,14 @@
 //---------------------------------------------------------------------//
 //                                                                     //
 // - The HEV suit has two main resources: Health and Armor.            //
-//     - Both active only while the suit is ON.                        //
 //     - Both have a maximum value of 100.                             //
+//     - Both active only while the suit is ON.                        //
 // - Random Hazards:                                                   //
 //     - Active only while the suit is ON.                             //
-//     - Triggered at intervals with a chance-based system.            //
 //     - Always damages Armor first, then Health.                      //
+//     - Triggered at intervals with a chance-based system.            //
 // - When Armor is depleted:                                           //
-//     - Hazards begins directly damaging Health.                      //
+//     - Hazards begin directly damaging Health.                       //
 //     - Clashes deal full damage to Health.                           //
 // - When Armor is active:                                             //
 //     - Clashes (physical impacts) are negated:                       //
@@ -47,7 +50,6 @@
 //=====================================================================//
 
 //=====================================================================//
-//                                                                     //
 //                     AUDIO SYSTEM CATEGORIES                         //
 //                    ─────────────────────────                        //
 //                                                                     //
@@ -90,7 +92,7 @@
 //                                                                     //
 //------------------ Random Hazard Sounds Setup -----------------------//
 //                                                                     //
-// ▪ Create 7 directories: alt00 through alt06                         //
+// ▪ Create 7 directories in root of sound font: alt00 through alt06   //
 // ▪ Each alt**/ folder must contain:                                  //
 //    ├── hazard00.wav                                                 //
 //    └── hazard01.wav                                                 //
@@ -111,42 +113,58 @@
 //=====================================================================//
 
 //=====================================================================//
-//                       TIMER CONFIGURATION                           //
-//                    ─────────────────────────                        //
-//                                                                     //
-// - timer_clash_               - Debounce timer for physical Clashes. //
-//                                Prevents false Clashes.              //
-// - timer_post_death_cooldown_ - Cooldown after user revives.         //
-//                                Blocks Hazards until timer is done.  //
-// - timer_random_event_        - Interval timer for Random Hazards.   //
-//                                Controls how often Hazards can occur.//
-// - timer_hazard_delay_        - Delay between Hazard damage ticks.   //
-//                                Manages Hazard damage over time.     //
-// - timer_health_increase_     - Interval for Health recharge.        //
-//                                Controls healing rate.               //
-// - timer_armor_increase_      - Interval for Armor recharge.         //
-//                                Controls Armor recharge rate.        //
-//=====================================================================//
-
-//=====================================================================//
-//                                                                     //
 //                        BEHAVIOR BREAKDOWN                           //
 //                    ─────────────────────────                        //
 //                                                                     //
 //------------------------- Health Alerts -----------------------------//
 //                                                                     //
-// ▪ When Health reaches the below thresholds, the suit will           //
-//   randomly say different (HEV VOICE LINES):                         //
-//     - ≤= 50: "Seek Medical Attention"        (50% chance)           //
-//     - ≤= 30: "Vital Signs Critical"          (60% chance)           //
-//     - ≤= 6:  "User Death Imminent"           (100% chance)          //
-//                                                                     //
-// ▪ The chances have been configured directly in the sound files,     //
-//   with some wavs as blanks to ensure.                               //
 // ▪ When Health drops to a lower 10th decimal (e.g., from 43 → 36),   //
-//   a Health Alert (health**.wav) will play.                          //
-// ▪ There are no Health Alerts when Health is above 50.               //
-// ▪ When Health is 0, death.wav will trigger.                         //
+//   a Health Alert (health**.wav) will play, (HEV VOICE LINE).        //
+//                                                                     //
+// ▪ The suit will say state different Health Alerts, depending on     //
+//   what health dropped down to. Below are the health thresholds:     //
+//                                                                     //
+//   - ≤ 10: "User Death Imminent"    - Range: health01 - health10     //
+//   - ≤ 30: "Vital Signs Critical"   - Range: health11 - health30     //
+//   - ≤ 50: "Seek Medical Attention" - Range: health31 - health50     //
+//                                                                     //
+// ▪ Not all wavs have audio, therefore some wavs are blank, which     //
+//   creates an **element of chance** for Health Alerts to play.       //
+//   This has been configured directly in the health folder in the     //
+//   sound font.                                                       //
+//                                                                     //
+// ▪ The following table shows which health** files in the font        //
+//   have actual voice lines (✓ = has audio, blank = no audio).       //
+//
+//   1–10: "User Death Imminent"
+//   health01  ✓    health06  ✓
+//   health02  ✓    health07
+//   health03  ✓    health08  ✓
+//   health04  ✓    health09  ✓
+//   health05  ✓    health10
+//
+//   11–30: "Vital Signs Critical"
+//   health11  ✓    health18  ✓    health25
+//   health12  ✓    health19       health26  ✓
+//   health13       health20  ✓    health27  ✓
+//   health14  ✓    health21  ✓    health28
+//   health15  ✓    health22       health29  ✓
+//   health16       health23  ✓    health30  ✓
+//   health17  ✓    health24
+//
+//   31–50: "Seek Medical Attention"
+//   health31       health38  ✓    health45
+//   health32  ✓    health39       health46  ✓
+//   health33       health40  ✓    health47
+//   health34  ✓    health41       health48  ✓
+//   health35       health42  ✓    health49
+//   health36  ✓    health43       health50  ✓
+//   health37       health44  ✓
+//
+// ▪ There are no Health Alerts when Health is above 50. So,           //
+//   health51 - health100 are blank.                                   //
+//                                                                     //
+// ▪ health00 is blank. When Health is 0, death.wav will play.         //
 //                                                                     //
 //------------------------- Armor Alerts ------------------------------//
 //                                                                     //
@@ -217,7 +235,7 @@
 // ▪ Battery sound feedback:                                           //
 //     - Plays battery.wav on trigger.                                 //
 //     - endlb.wav plays if already at max Armor.                      //
-//     - Plays Armor Readout function, and rounds the value to         //
+//     - Plays Armor Readout function, but rounds the value to         //
 //       the nearest multiple of 5.                                    //
 //                                                                     //
 //----------------------- Armor Readout -------------------------------//
@@ -237,6 +255,53 @@
 #define PROP_TYPE Hev
 #define LOCKUP_HEALING SaberBase::LOCKUP_NORMAL
 #define LOCKUP_FILL_ARMOR SaberBase::LOCKUP_LIGHTNING_BLOCK
+
+//=====================================================================//
+//                     HEV SUIT TIMING DEFINES                         //
+//                    ─────────────────────────                        //
+//                                                                     //
+//  Below are the HEV_ #defines which control the timings of how       //
+//  often Hazards, Healing and Armor recharge work in the HEV suit.    //
+//  All times are in (ms). Below values are the default.               //
+//  To fine-tune the behaviour, adjust the values in hev_config.h      //
+//                                                                     //
+//  HEV_RANDOM_EVENT_INTERVAL_MS                                       //
+//      - How often (ms) to check for a Random Hazard.                 //
+//        Higher = less frequent checks.                               //
+//                                                                     //
+//  HEV_RANDOM_HAZARD_CHANCE                                           //
+//      - Chance (0–100) for a Random Hazard to occur each check.      //
+//        Higher = more frequent Hazards.                              //
+//                                                                     //
+//  HEV_HAZARD_DELAY_MS                                                //
+//      - Delay (ms) before Hazard damage starts after checking and    //
+//        triggering Hazard. Allows time for HEV Voice Line to finish. //
+//                                                                     //
+//  HEV_HAZARD_DECREASE_MS                                             //
+//      - Time (ms) between each tick of Hazard damage.                //
+//        Lower = faster damage-over-time.                             //
+//                                                                     //
+//  HEV_HAZARD_AFTER_REVIVE_MS                                         //
+//      - Time (ms) after reviving before Hazards can happen again.    //
+//                                                                     //
+//  HEV_HEALTH_INCREASE_MS                                             //
+//      - Time (ms) between each Health recharge tick (hold AUX).      //
+//        Default from 0 - 100 Health is 10 seconds.                   //
+//        Lower = faster healing.                                      //
+//                                                                     //
+//  HEV_ARMOR_INCREASE_MS                                              //
+//      - Time (ms) between each armor recharge tick (hold POWER).     //
+//        Default from 0 - 100 Armor is 10 seconds.                    //
+//        Lower = faster recharge.                                     //
+//=====================================================================//
+
+#define HEV_RANDOM_EVENT_INTERVAL_MS 60000
+#define HEV_RANDOM_HAZARD_CHANCE 15
+#define HEV_HAZARD_DELAY_MS 6000
+#define HEV_HAZARD_DECREASE_MS 1000
+#define HEV_HAZARD_AFTER_REVIVE_MS 60000
+#define HEV_HEALTH_INCREASE_MS 100
+#define HEV_ARMOR_INCREASE_MS 100
 
 #include "prop_base.h"
 #include <cmath>
@@ -282,21 +347,36 @@ struct HEVTimerBase {
 class Hev : public PROP_INHERIT_PREFIX PropBase {
 public:
 
+  //=====================================================================//
+  //                       TIMER CONFIGURATION                           //
+  //                    ─────────────────────────                        //
+  //                                                                     //
+  // - timer_clash_               - Uses clash_timeout from PropBase.    //
+  //                                Debounce to prevent false Clashes.   //
+  // - timer_random_event_        - Interval timer for Random Hazards.   //
+  //                                Controls how often Hazards can occur.//
+  // - timer_hazard_delay_        - Delay inbetween event trigger and    //
+  //                                Hazard dps. Gap for voice to finish. //
+  // - timer_hazard_after_revive_ - Cooldown after user revives.         //
+  //                                Blocks Hazards until timer is done.  //
+  // - timer_health_increase_     - Interval for Health recharge.        //
+  //                                Controls healing rate.               //
+  // - timer_armor_increase_      - Interval for Armor recharge.         //
+  //                                Controls Armor recharge rate.        //
+  //=====================================================================//
+
   HEVTimerBase timer_clash_;
-  HEVTimerBase timer_post_death_cooldown_;
   HEVTimerBase timer_random_event_;
   HEVTimerBase timer_hazard_delay_;
-  HEVTimerBase timer_hazard_damage_;
+  HEVTimerBase timer_hazard_after_revive_;
   HEVTimerBase timer_health_increase_;
   HEVTimerBase timer_armor_increase_;
 
   Hev() : PropBase() {
-    // Configure all timers with their respective timings from hev_config.h
-    // Clash timer uses clash_timeout_ from PropBase for debounce
     timer_clash_.configure(this->clash_timeout_);
-    timer_post_death_cooldown_.configure(HEV_POST_DEATH_COOLDOWN_MS);
     timer_random_event_.configure(HEV_RANDOM_EVENT_INTERVAL_MS);
     timer_hazard_delay_.configure(HEV_HAZARD_DELAY_MS);
+    timer_hazard_after_revive_.configure(HEV_HAZARD_AFTER_REVIVE_MS);
     timer_health_increase_.configure(HEV_HEALTH_INCREASE_MS);
     timer_armor_increase_.configure(HEV_ARMOR_INCREASE_MS);
   }
@@ -400,8 +480,8 @@ public:
 
   // Random Hazards
   void CheckRandomEvent() {
-    // Skip Hazard check if dead or during post-death cooldown
-    if (health_ == 0 || !timer_post_death_cooldown_.check()) {
+    // Skip Hazard check if dead or during revive cooldown
+    if (health_ == 0 || !timer_hazard_after_revive_.check()) {
       return;
     }
 
@@ -636,24 +716,24 @@ public:
         SOUNDQ->Play(SoundToPlay(&SFX_hazard));
         return;
 
-    // Random Hazard Sounds
+    // (ENVIRONMENTAL) Hazard SFX
       case EFFECT_STUN:
         hybrid_font.PlayCommon(&SFX_stun);
         return;
 
-    // Armor Compromised Sound
+    // (HEV VOICE LINE) Armor Compromised
       case EFFECT_USER2:
         SOUNDQ->Play(&SFX_armor_compromised);
         return;
     
-    // Health Alert
+    // (HEV VOICE LINE) Health Alert
       case EFFECT_USER1:
         if (health_ == 0) return; // Don't queue health sounds if dead
         SFX_health.SelectFloat(health_ / 100.0);
         SOUNDQ->Play(&SFX_health);
         return;
     
-    // Death Sound
+    // (HEV UI SOUND) Death Sound
       case EFFECT_EMPTY:
         if (health_ == 0) {
           SOUNDQ->clear_pending();
