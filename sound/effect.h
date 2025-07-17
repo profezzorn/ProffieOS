@@ -712,10 +712,13 @@ EFFECT(preon);
 EFFECT(pstoff);
 
 // Monophonic fonts
+
+// Idle effect, plays when blade is off.
 #ifdef ENABLE_IDLE_SOUND
 EFFECT2(idle, idle);
-EFFECT2(boot, idle);
-EFFECT2(font, idle);
+EFFECT2(bgnidle, idle);
+EFFECT2(boot, bgnidle);
+EFFECT2(font, bgnidle);
 #else
 EFFECT(boot);
 EFFECT(font);      // also polyphonic
