@@ -62,8 +62,12 @@
 // - boot_long.wav           - HEV welcome message (original)          //
 // - hazard**.wav            - Hazard Alerts                           //
 // - morphine.wav            - Plays after a Major Clash               //
+// - minor_laceration.wav    - Plays minor lacerations detected quote  //
+// - minor_fracture.wav      - Plays minor fractures detected quote    //
+// - major_laceration.wav    - Plays major lacerations detected quote  //
+// - major_fracture.wav      - Plays major fractures detected quote    //
 //                                                                     //
-//-------------------- HEV UI SYSTEM SOUNDS ---------------------------//
+//------------------------ HEV UI SOUNDS ------------------------------//
 //                                                                     //
 // - armor_alarm.wav         - Short alert // plays when damage ≥ 30   //
 // - battery.wav             - Battery SFX // armor pickup             //
@@ -104,7 +108,7 @@
 //      → A silent placeholder used to satisfy the folder structure.   //
 // ▪ Inside each alt**/ folder, create a stun/ folder:                 //
 // ▪ Inside each stun/ folder:                                         //
-//    - Include the ENVIRONMENTAL EFFECTS that match                   //
+//    - Include the (ENVIRONMENTAL FX) that match                      //
 //      the Hazard type (e.g., spark, burn, Geiger counter)            //
 //                                                                     //
 // ▪ All alt**/ folders (alt00–alt06) must have the **same number** of //
@@ -166,17 +170,17 @@
 //                                                                     //
 // ▪ health00 is blank. When Health is 0, death.wav will play.         //
 //                                                                     //
-//------------------------- Armor Alerts ------------------------------//
+//-------------------------- Armor Alerts -----------------------------//
 //                                                                     //
 // ▪ When Clash damage ≥ 30:                                           //
-//     - armor_alarm.wav will play. (HEV UI SOUND)                     //
+//     - armor_alarm.wav will play. (HEV UI SOUNDS)                    //
 // ▪ If Armor reaches 0:                                               //
 //     - 50% chance to play armor_compromised.wav. (HEV VOICE LINE)    //
 //                                                                     //
-//-------------------- Physical Clash System --------------------------//
+//--------------------- Physical Clash System -------------------------//
 //                                                                     //
 // ▪ Each Clash deals between 1–50 damage based on impact strength.    //
-// ▪ Currently 8 (ENVIRONMENTAL) Clash sounds available (clsh**.wav):  //
+// ▪ 8 (ENVIRONMENTAL FX) Clash sounds available (clsh**.wav):         //
 //     → Divided by Clash Impact and Injury type.                      //
 // ▪ Impact categorised by damage value:                               //
 //     - < 25: Minor Clash sounds                                      //
@@ -198,15 +202,21 @@
 //     - clsh06.wav  → Laceration (High)                               //
 //     - clsh07.wav  → Fracture (Major)                                //
 //                                                                     //
-// ▪ 44% chance to trigger a (HEV VOICE LINE):                         //
-//     - e.g. ”Major Fracture Detected!"                               //
+//------------------- Clash Detected Voice Line -----------------------//
+//                                                                     //
+// ▪ 44% chance to trigger Clash Detected wav (HEV VOICE LINE):        //
+//     → minor_laceration.wav (Minor Laceration)                       //
+//     → minor_fracture.wav (Minor Fracture)                           //
+//     → major_laceration.wav (Major Laceration)                       //
+//     → major_fracture.wav (Major Fracture)                           //
+//       - e.g. ”Major Fracture Detected!"                             //
 //                                                                     //
 //-------------------- Morphine Auto-Injection ------------------------//
 //                                                                     //
-// ▪ Only if Major Clash (HEV VOICE LINE) plays:                       //
+// ▪ Only if major_laceration or major_fracture (HEV VOICE LINE) plays://
 //     → 40% chance to follow-up with another (HEV VOICE LINE):        //
-//       - morphine.wav                                                //
-//       - This line will be on a cooldown, so as not to be spammed.   //
+//       → morphine.wav                                                //
+//         - This line will be on a cooldown, so as not to be spammed. //
 //                                                                     //
 //------------------------ Hazard System ------------------------------//
 //                                                                     //
@@ -226,7 +236,7 @@
 //   health and armor pickups in-game, the Medkits and Batteries.      //
 //     - Medkit  → Immediately recovers 15 Health.                     //
 //     - Battery → Immediately recovers 15 Armor.                      //
-// ▪ Both have their own distinct (HEV UI SOUND):                      //
+// ▪ Both have their own distinct (HEV UI SOUNDS):                     //
 //     - Medkit → medkit.wav                                           //
 //     - Battery → battery.wav                                         //
 // ▪ Medkit sound feedback:                                            //
@@ -242,10 +252,10 @@
 //                                                                     //
 // ▪ Armor Readout is used to hear the current Armor value.            //
 // ▪ Triggered by double-clicking AUX.                                 //
-// ▪ Activates a sequence of (HEV UI SOUND) then (HEV VOICE LINE):     //
+// ▪ Activates a sequence of (HEV UI SOUNDS) then (HEV VOICE LINE):    //
 //   → Subtle alert fuzz**.wav → Armor Readout armor**.wav.            //
 // ▪ If Armor = 0:                                                     //
-//     - Plays warning.wav (HEV UI SOUND)                              //
+//     - Plays warning.wav (HEV UI SOUNDS)                             //
 //     - No (HEV VOICE LINE)                                           //
 //                                                                     //
 //=====================================================================//
@@ -306,16 +316,27 @@
 #include "prop_base.h"
 #include <cmath>
 
-EFFECT(health);
+// HEV VOICE LINES
 EFFECT(armor);
-EFFECT(hazard);
-EFFECT(stun);
-EFFECT(death);
-EFFECT(armor_alarm);
+EFFECT(health);
 EFFECT(armor_compromised);
-EFFECT(major);
-EFFECT(minor);
+EFFECT(hazard);
+EFFECT(minor_laceration);
+EFFECT(minor_fracture);
+EFFECT(major_laceration);
+EFFECT(major_fracture);
 EFFECT(morphine);
+
+// HEV UI SOUNDS
+EFFECT(armor_alarm);
+EFFECT(battery);
+EFFECT(death);
+EFFECT(fuzz);
+EFFECT(medkit);
+EFFECT(warning);
+
+// ENVIRONMENTAL EFFECTS
+EFFECT(stun);
 
 struct HEVTimerBase {
   uint32_t start_ = 0;
@@ -716,7 +737,7 @@ public:
         SOUNDQ->Play(SoundToPlay(&SFX_hazard));
         return;
 
-    // (ENVIRONMENTAL) Hazard SFX
+    // (ENVIRONMENTAL FX) Hazard SFX
       case EFFECT_STUN:
         hybrid_font.PlayCommon(&SFX_stun);
         return;
@@ -733,7 +754,7 @@ public:
         SOUNDQ->Play(&SFX_health);
         return;
     
-    // (HEV UI SOUND) Death Sound
+    // (HEV UI SOUNDS) Death Sound
       case EFFECT_EMPTY:
         if (health_ == 0) {
           SOUNDQ->clear_pending();
