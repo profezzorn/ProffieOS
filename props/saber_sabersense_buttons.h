@@ -1,4 +1,4 @@
-/* V7/8-265.
+/* V7/8-270.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -238,6 +238,12 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
       { 3, ... }
       etc.
 
+#define SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR 6
+  Allows two-way array selection, i.e. pointing up moves
+  to next array, pointing down moves to previous array.
+  Number denotes the total number of arrays present
+  in the config.
+  
 #define SABERSENSE_DEFAULT_BLADE_ARRAY 3
   This feature is really intended for busy installers
   and sets the default blade array in multi-array systems.
@@ -346,7 +352,7 @@ GESTURE CONTROLS
 #endif
 #endif
 
-  // Check user-defined array is valid at compile time.
+  // Check user-defined Default Array is valid at compile time.
   static_assert(
     SABERSENSE_DEFAULT_BLADE_ARRAY < NELEM(blades),
     "[Sabersense] ERROR: "
@@ -357,6 +363,18 @@ GESTURE CONTROLS
     SABERSENSE_DEFAULT_BLADE_ARRAY != 0,
     "[Sabersense] ERROR: "
     "#define SABERSENSE_DEFAULT_BLADE_ARRAY must be 1 or higher when using Blade Detect."
+  );
+#endif
+
+  // Check user-defined Two-Way Selector value is valid at compile time.
+#ifdef SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR
+  static_assert(
+    SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR >= 3,
+    "[Sabersense] ERROR: Two-way selector requires 3 or more valid arrays."
+  );
+  static_assert(
+    SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR <= NELEM(blades),
+    "[Sabersense] ERROR: Two-way selector value exceeds number of blade arrays present."
   );
 #endif
 
@@ -381,6 +399,25 @@ public:
         }
         return return_value;
       }
+
+#ifdef SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR
+      static void cycle_directional(bool forward) {
+#ifndef BLADE_DETECT_PIN
+        // Directional cycling with wrap-around.
+        const int step = forward ? 1 : (SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR - 1);
+        return_value = (return_value + step) % SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR;
+#else
+        // Blade Detect mode skips index 0
+        if (forward) {
+          return_value++;
+          if (return_value >= SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR) return_value = 1;
+        } else {
+          return_value--;
+          if (return_value < 1) return_value = SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR - 1;
+        }
+#endif
+      }
+#else
       static void cycle() {
 #ifndef BLADE_DETECT_PIN
         return_value = (return_value + 1) % NELEM(blades);
@@ -388,6 +425,7 @@ public:
         return_value = 1 + return_value % (NELEM(blades) - 1);
 #endif
       }
+#endif
     };
 
 #ifndef BLADE_DETECT_PIN
@@ -720,7 +758,7 @@ public:
   }
 #endif
 
-  void NextBladeArray() {
+  void IdentBladeArray() {
 #ifdef SABERSENSE_ENABLE_ARRAY_FONT_IDENT  // Plays 'array' sound AND 'font' sound.
     SFX_array.Select(current_config - blades);
     hybrid_font.PlayCommon(&SFX_array);
@@ -920,9 +958,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // Next/previous preset and volume down. Next preset (UP), previous preset (DOWN).
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-      // backwards if pointing down
+      // backwards if pointing down (anything ≤ 0 is down)
       if (!mode_volume_) {
-        SetPreset(current_preset_.preset_num + (fusor.angle1() < -M_PI / 4 ? -1 : 1), true);
+        SetPreset(current_preset_.preset_num + (fusor.angle1() > 0 ? 1 : -1), true);
       } else {
         VolumeDown();
       }
@@ -1018,16 +1056,23 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       // Check for blade present if using Blade Detect.
 #ifdef BLADE_DETECT_PIN
-        if (!blade_detected_) return true; // Do nothing if no blade detected.
+      if (!blade_detected_) return true; // Do nothing if no blade detected.
 #endif
       // Cycles through blade arrays regardless of BladeID status.
+#ifdef SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR
+      {
+        bool forward = fusor.angle1() > 0 ? true : false;
+        SabersenseArraySelector::cycle_directional(forward);
+      }
+#else
       SabersenseArraySelector::cycle();
+#endif
       FindBladeAgain();
-      NextBladeArray();
+      IdentBladeArray();
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
       SaveArrayState();
 #endif
-      return true;
+  return true;
 #endif
 
     // SOUND EFFECT PLAYERS.
