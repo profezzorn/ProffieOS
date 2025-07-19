@@ -1,4 +1,4 @@
-/* V7/8-261.
+/* V7/8-265.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -238,6 +238,22 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
       { 3, ... }
       etc.
 
+#define SABERSENSE_DEFAULT_BLADE_ARRAY 3
+  This feature is really intended for busy installers
+  and sets the default blade array in multi-array systems.
+  Using this feature, you can have a blade array with all
+  the common blade lengths included, and then select which
+  length to default to on first boot (i.e. until a save
+  file is written).
+  The alternative is to simply re-order the blade array
+  manually, but then you have to re-order the array1.wav,
+  array2.wav etc. files on the SD card to match, which
+  is a hassle.
+  Note that the define uses zero-based numbering, the
+  same as the blade array itself, so you must use the
+  number as it is shown in the blade array - i.e. number 3
+  for the fourth array down the full list.
+
 #define SABERSENSE_DISABLE_SAVE_ARRAY
   By default, SABERSENSE_ARRAY_SELECTOR saves the current
   array so that the saber will always boot into the last
@@ -322,19 +338,47 @@ GESTURE CONTROLS
 
 #ifdef SABERSENSE_ARRAY_SELECTOR
 
+#ifndef SABERSENSE_DEFAULT_BLADE_ARRAY
+#ifdef BLADE_DETECT_PIN
+#define SABERSENSE_DEFAULT_BLADE_ARRAY 1
+#else
+#define SABERSENSE_DEFAULT_BLADE_ARRAY 0
+#endif
+#endif
+
+  // Check user-defined array is valid at compile time.
+  static_assert(
+    SABERSENSE_DEFAULT_BLADE_ARRAY < NELEM(blades),
+    "[Sabersense] ERROR: "
+    "#define SABERSENSE_DEFAULT_BLADE_ARRAY must be less than the number of blade arrays present."
+  );
+#ifdef BLADE_DETECT_PIN
+  static_assert(
+    SABERSENSE_DEFAULT_BLADE_ARRAY != 0,
+    "[Sabersense] ERROR: "
+    "#define SABERSENSE_DEFAULT_BLADE_ARRAY must be 1 or higher when using Blade Detect."
+  );
+#endif
+
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
 class SaveArrayStateFile : public ConfigFile {
 public:
   void iterateVariables(VariableOP *op) override {
-    CONFIG_VARIABLE2(sabersense_array_index, 0);  // Default array if no save file.
+    // Default array if no save file present...
+    CONFIG_VARIABLE2(sabersense_array_index, SABERSENSE_DEFAULT_BLADE_ARRAY);
   }
-    int sabersense_array_index;  // Stores current array index.
-  };
+  int sabersense_array_index;  // Stores current array index.
+};
 #endif
 
     struct SabersenseArraySelector {
       static int return_value;  // Tracks current array index.
       float id() {
+        if (return_value < 0 || return_value >= NELEM(blades)) {
+          Serial.println("[Sabersense] ALERT: User or externally-specified array index invalid. "
+                         "Resetting to default.");
+          return_value = SABERSENSE_DEFAULT_BLADE_ARRAY;
+        }
         return return_value;
       }
       static void cycle() {
