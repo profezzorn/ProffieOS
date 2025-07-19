@@ -1072,7 +1072,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
       SaveArrayState();
 #endif
-  return true;
+      return true;
 #endif
 
     // SOUND EFFECT PLAYERS.
