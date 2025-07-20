@@ -1,4 +1,4 @@
-/* V7/8-270.
+/* V7/8-271.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -373,8 +373,8 @@ GESTURE CONTROLS
     "[Sabersense] ERROR: Two-way selector requires 3 or more valid arrays."
   );
   static_assert(
-    SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR <= NELEM(blades),
-    "[Sabersense] ERROR: Two-way selector value exceeds number of blade arrays present."
+    SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR == NELEM(blades),
+    "[Sabersense] ERROR: Two-way selector value must match total number of blade arrays present."
   );
 #endif
 
