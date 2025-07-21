@@ -83,7 +83,7 @@
 // - lock.wav                - Looping health charge                   //
 // - medkit.wav              - Medkit SFX // health pickup             //
 // - out.wav                 - Torch OFF                               //
-// - warning.wav             - No Armor SFX // Armor = 0               //
+// - armor00.wav             - No Armor SFX // Armor = 0               //
 //                                                                     //
 //-------------------- ENVIRONMENTAL EFFECTS --------------------------//
 //                                                                     //
@@ -255,7 +255,7 @@
 // ▪ Activates a sequence of (HEV UI SOUNDS) then (HEV VOICE LINE):    //
 //   → Subtle alert fuzz**.wav → Armor Readout armor**.wav.            //
 // ▪ If Armor = 0:                                                     //
-//     - Plays warning.wav (HEV UI SOUNDS)                             //
+//     - Plays armor00.wav (HEV UI SOUNDS)                             //
 //     - No (HEV VOICE LINE)                                           //
 //                                                                     //
 //=====================================================================//
@@ -333,7 +333,6 @@ EFFECT(battery);
 EFFECT(death);
 EFFECT(fuzz);
 EFFECT(medkit);
-EFFECT(warning);
 
 // ENVIRONMENTAL EFFECTS
 EFFECT(stun);
@@ -465,9 +464,22 @@ public:
 
   // Armor Readout
   void armor_readout() {
-    PVLOG_NORMAL << "Current Armor: " << armor_ << "\n"; // Debug logging
-    SFX_armor.SelectFloat(armor_ / 100.0);
-    hybrid_font.PlayCommon(&SFX_armor);
+    PVLOG_NORMAL << "Current Armor: " << armor_ << "\n";
+
+    // Play random "fuzz" sound only if armor is above 0.
+    if (armor_ > 0) {
+      SOUNDQ->Play(&SFX_fuzz);
+
+      // Play Armor Readout
+      SFX_armor.SelectFloat(armor_ / 100.0);
+      SOUNDQ->Play(&SFX_armor);
+    }
+
+    // If Armor is 0, immediately plays a warning sound.
+    else {
+      SFX_armor.SelectFloat(armor_ / 0.0);
+      hybrid_font.PlayCommon(&SFX_armor);
+    }
   }
 
   // Clashes
@@ -733,33 +745,41 @@ public:
     // alongside death sound. However all pending sounds should be cleared.
     switch (effect) {
       default: return;
-      case EFFECT_ALT_SOUND:
-        SOUNDQ->Play(SoundToPlay(&SFX_hazard));
-        return;
 
-    // (ENVIRONMENTAL FX) Hazard SFX
+      // (ENVIRONMENTAL FX) Hazard SFX
       case EFFECT_STUN:
         hybrid_font.PlayCommon(&SFX_stun);
         return;
 
-    // (HEV VOICE LINE) Armor Compromised
+      // (HEV VOICE LINE) Armor Compromised
       case EFFECT_USER2:
         SOUNDQ->Play(&SFX_armor_compromised);
         return;
     
-    // (HEV VOICE LINE) Health Alert
+      // (HEV VOICE LINE) Health Alert
       case EFFECT_USER1:
         if (health_ == 0) return; // Don't queue health sounds if dead
         SFX_health.SelectFloat(health_ / 100.0);
         SOUNDQ->Play(&SFX_health);
         return;
     
-    // (HEV UI SOUNDS) Death Sound
+      // (HEV UI SOUNDS) Death Sound
       case EFFECT_EMPTY:
         if (health_ == 0) {
           SOUNDQ->clear_pending();
         }
         hybrid_font.PlayCommon(&SFX_death);
+        return;
+    }
+  }
+
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      default: return;
+
+      // (HEV VOICE LINE ) Hazard Alert
+      case EFFECT_ALT_SOUND:
+        SOUNDQ->Play(SoundToPlay(&SFX_hazard));
         return;
     }
   }
