@@ -1,4 +1,4 @@
-/* V7/8-275.
+/* V7/8-276.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -346,7 +346,7 @@ GESTURE CONTROLS
 #endif
 #endif
 
-  // Check that Default Array is valid at compile time.
+  //  Check user-defined array is valid at compile time.
   static_assert(
     SABERSENSE_DEFAULT_BLADE_ARRAY < NELEM(blades),
     "SABERSENSE_DEFAULT_BLADE_ARRAY must reference a valid array (note zero-based counting)."
