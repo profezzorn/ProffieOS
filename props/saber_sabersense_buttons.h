@@ -1,4 +1,4 @@
-/* V7/8-271.
+/* V7/8-275.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -238,12 +238,6 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
       { 3, ... }
       etc.
 
-#define SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR 6
-  Allows two-way array selection, i.e. pointing up moves
-  to next array, pointing down moves to previous array.
-  Number denotes the total number of arrays present
-  in the config.
-  
 #define SABERSENSE_DEFAULT_BLADE_ARRAY 3
   This feature is really intended for busy installers
   and sets the default blade array in multi-array systems.
@@ -352,92 +346,81 @@ GESTURE CONTROLS
 #endif
 #endif
 
-  // Check user-defined Default Array is valid at compile time.
+  // Check that Default Array is valid.
   static_assert(
     SABERSENSE_DEFAULT_BLADE_ARRAY < NELEM(blades),
-    "[Sabersense] ERROR: "
-    "#define SABERSENSE_DEFAULT_BLADE_ARRAY must be less than the number of blade arrays present."
+    "SABERSENSE_DEFAULT_BLADE_ARRAY must reference a valid array (note zero-based counting)."
   );
+
 #ifdef BLADE_DETECT_PIN
   static_assert(
     SABERSENSE_DEFAULT_BLADE_ARRAY != 0,
-    "[Sabersense] ERROR: "
-    "#define SABERSENSE_DEFAULT_BLADE_ARRAY must be 1 or higher when using Blade Detect."
+    "[Sabersense] ERROR: Default array index must be 1 or higher when using Blade Detect."
   );
+  
+  constexpr int min_blades_required = 3;
+#else
+  constexpr int min_blades_required = 2;
 #endif
 
-  // Check user-defined Two-Way Selector value is valid at compile time.
-#ifdef SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR
+  // Check that Array Selector is needed (prevents unexpected behaviour).
   static_assert(
-    SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR >= 3,
-    "[Sabersense] ERROR: Two-way selector requires 3 or more valid arrays."
+    NELEM(blades) >= min_blades_required,
+    "[Sabersense] ERROR: Array Selector is not required with only one selectable blade array. "
+    "Please undefine SABERSENSE_ARRAY_SELECTOR."
   );
-  static_assert(
-    SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR == NELEM(blades),
-    "[Sabersense] ERROR: Two-way selector value must match total number of blade arrays present."
-  );
-#endif
 
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
 class SaveArrayStateFile : public ConfigFile {
 public:
   void iterateVariables(VariableOP *op) override {
-    // Default array if no save file present...
     CONFIG_VARIABLE2(sabersense_array_index, SABERSENSE_DEFAULT_BLADE_ARRAY);
   }
-  int sabersense_array_index;  // Stores current array index.
+  int sabersense_array_index;
 };
 #endif
 
-    struct SabersenseArraySelector {
-      static int return_value;  // Tracks current array index.
-      float id() {
-        if (return_value < 0 || return_value >= NELEM(blades)) {
-          Serial.println("[Sabersense] ALERT: User or externally-specified array index invalid. "
-                         "Resetting to default.");
-          return_value = SABERSENSE_DEFAULT_BLADE_ARRAY;
-        }
-        return return_value;
-      }
+  struct SabersenseArraySelector {
+    static int return_value;
 
-#ifdef SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR
-      static void cycle_directional(bool forward) {
-#ifndef BLADE_DETECT_PIN
-        // Directional cycling with wrap-around.
-        const int step = forward ? 1 : (SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR - 1);
-        return_value = (return_value + step) % SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR;
-#else
-        // Blade Detect mode skips index 0
-        if (forward) {
-          return_value++;
-          if (return_value >= SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR) return_value = 1;
-        } else {
-          return_value--;
-          if (return_value < 1) return_value = SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR - 1;
-        }
-#endif
+    float id() {
+      if (return_value < 0 || return_value >= NELEM(blades)) {
+        Serial.println("[Sabersense] ALERT: Invalid array index. Resetting to default.");
+        return_value = SABERSENSE_DEFAULT_BLADE_ARRAY;
       }
-#else
-      static void cycle() {
-#ifndef BLADE_DETECT_PIN
-        return_value = (return_value + 1) % NELEM(blades);
-#else   // Improved logic fixes early Array1 repetition when using Blade Detect.
-        return_value = 1 + return_value % (NELEM(blades) - 1);
-#endif
-      }
-#endif
-    };
+      return return_value;
+    }
 
+    static void cycle_directional(bool forward) {
 #ifndef BLADE_DETECT_PIN
-    int SabersenseArraySelector::return_value = 0;
+      const int size = NELEM(blades);
+      return_value = (return_value + (forward ? 1 : size - 1)) % size;
 #else
-    int SabersenseArraySelector::return_value = 1;
+      const int min_index = 1;
+      const int max_index = NELEM(blades) - 1;
+      if (forward) {
+        return_value++;
+        if (return_value > max_index) return_value = min_index;
+      } else {
+        return_value--;
+        if (return_value < min_index) return_value = max_index;
+      }
+#endif
+    }
+  };
+
+// Set initial index based on Blade Detect mode
+#ifndef BLADE_DETECT_PIN
+int SabersenseArraySelector::return_value = 0;
+#else
+int SabersenseArraySelector::return_value = 1;
 #endif
 
 #undef BLADE_ID_CLASS_INTERNAL
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
 #define BLADE_ID_CLASS SabersenseArraySelector
+
 #endif
 
 #include "prop_base.h"
@@ -1051,28 +1034,24 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 #endif
 
-    // Manual blade array selector.
+// Manual blade array selector.
 #ifdef SABERSENSE_ARRAY_SELECTOR
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       // Check for blade present if using Blade Detect.
 #ifdef BLADE_DETECT_PIN
       if (!blade_detected_) return true; // Do nothing if no blade detected.
 #endif
-      // Cycles through blade arrays regardless of BladeID status.
-#ifdef SABERSENSE_NUM_ARRAYS_TWO_WAY_SELECTOR
       {
-        bool forward = fusor.angle1() > 0 ? true : false;
+        // Cycles through blade arrays regardless of BladeID status.
+        bool forward = fusor.angle1() > 0;
         SabersenseArraySelector::cycle_directional(forward);
       }
-#else
-      SabersenseArraySelector::cycle();
-#endif
       FindBladeAgain();
       IdentBladeArray();
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
       SaveArrayState();
 #endif
-      return true;
+    return true;
 #endif
 
     // SOUND EFFECT PLAYERS.
