@@ -305,13 +305,27 @@
 //        Lower = faster recharge.                                     //
 //=====================================================================//
 
+#ifndef HEV_RANDOM_EVENT_INTERVAL_MS
 #define HEV_RANDOM_EVENT_INTERVAL_MS 60000
+#endif
+#ifndef HEV_RANDOM_HAZARD_CHANCE
 #define HEV_RANDOM_HAZARD_CHANCE 15
+#endif
+#ifndef HEV_HAZARD_DELAY_MS
 #define HEV_HAZARD_DELAY_MS 6000
+#endif
+#ifndef HEV_HAZARD_DECREASE_MS
 #define HEV_HAZARD_DECREASE_MS 1000
+#endif
+#ifndef HEV_HAZARD_AFTER_REVIVE_MS
 #define HEV_HAZARD_AFTER_REVIVE_MS 60000
+#endif
+#ifndef HEV_HEALTH_INCREASE_MS
 #define HEV_HEALTH_INCREASE_MS 100
+#endif
+#ifndef HEV_ARMOR_INCREASE_MS
 #define HEV_ARMOR_INCREASE_MS 100
+#endif
 
 #include "prop_base.h"
 #include <cmath>
@@ -357,10 +371,6 @@ struct HEVTimerBase {
 
   bool running() const {
     return active_ && (millis() - start_) <= interval_;
-  }
-
-  bool done() {
-    return active_ && (millis() - start_) >= interval_;
   }
 };
 
@@ -424,18 +434,16 @@ public:
     if (armor_ >= damage) {
       armor_ -= ceilf(damage * 0.80 / 2);
       health_ -= ceilf(damage * 0.20);
-    }
-    else if (armor_ > 0) {
+
+    } else if (armor_ > 0) {
       int excess_physical = damage - armor_;
       health_ -= excess_physical;
       // Make armor compromised sound play before setting armor to 0
       SaberBase::DoEffect(EFFECT_USER2, 0.0);
       PVLOG_NORMAL << "Armor Compromised!\n";
       armor_ = 0;
-    }
-    else {
-      health_ -= damage;
-    }
+
+    } else { health_ -= damage; }
 
     // Enforce minimum values
     if (health_ < 0) health_ = 0;
@@ -473,10 +481,9 @@ public:
       // Play Armor Readout
       SFX_armor.SelectFloat(armor_ / 100.0);
       SOUNDQ->Play(&SFX_armor);
-    }
 
-    // If Armor is 0, immediately plays a warning sound.
-    else {
+    } else {
+      // If Armor is 0, immediately plays a warning sound.
       SFX_armor.SelectFloat(armor_ / 0.0);
       hybrid_font.PlayCommon(&SFX_armor);
     }
@@ -552,17 +559,17 @@ public:
     }
 
     // Check sequence and apply damage
-    if (timer_hazard_delay_.done()) {
+    if (!timer_hazard_delay_.running()) {
       if (armor_ > 0) {
         armor_--;
         SaberBase::DoEffect(EFFECT_STUN, 0.0);
+
         if (armor_ == 0) {
           SaberBase::DoEffect(EFFECT_USER2, 0.0);
           PVLOG_NORMAL << "Armor Compromised!\n";
         }
-      } else {
-        DoDamage(1);
-      }
+
+      } else { DoDamage(1); }
 
       // Clear hazard on death
       if (health_ == 0) {
@@ -777,7 +784,7 @@ public:
     switch (effect) {
       default: return;
 
-      // (HEV VOICE LINE ) Hazard Alert
+      // (HEV VOICE LINE) Hazard Alert
       case EFFECT_ALT_SOUND:
         SOUNDQ->Play(SoundToPlay(&SFX_hazard));
         return;
