@@ -321,6 +321,11 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Applicable to two-button mode only, reverts to lockup
   being triggered by clash while holding aux.
 
+#define SABERSENSE_F263_CUSTOM_USER_EFFECT
+  Based of Fett263 'Special Abilities', this define
+  enables interaction with EFFECT_USER1 etc. in blade
+  styles for things like swing colour changing.
+
 GESTURE CONTROLS
   There are four gesture types: Twist, Stab, Swing and Thrust.
   Gesture controls bypass all preon effects.
@@ -841,6 +846,41 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         FastOn();
       }
       return true;
+#endif
+
+    // Based on Fett263 'Special Abilities'.
+#ifdef SABERSENSE_F263_CUSTOM_USER_EFFECT
+#if NUM_BUTTONS >= 1
+    case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
+      SaberBase::DoEffect(EFFECT_USER5, 0);
+      return true;
+
+    case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
+      SaberBase::DoEffect(EFFECT_USER6, 0);
+      return true;      
+
+    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
+      SaberBase::DoEffect(EFFECT_USER7, 0);
+      return true;  
+#endif
+
+#if NUM_BUTTONS == 2
+    case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
+      SaberBase::DoEffect(EFFECT_USER3, 0);
+      return true;
+
+    case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
+      SaberBase::DoEffect(EFFECT_USER4, 0);
+      return true;
+
+    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
+      SaberBase::DoEffect(EFFECT_USER1, 0);
+      return true;
+
+    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_AUX):
+      SaberBase::DoEffect(EFFECT_USER2, 0);
+      return true;
+#endif
 #endif
 
     // MAIN ACTIVATION
