@@ -1,4 +1,4 @@
-/* V7/8-276.
+/* V7/8-277.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -346,7 +346,7 @@ GESTURE CONTROLS
 #endif
 #endif
 
-  //  Check user-defined array is valid at compile time.
+  // Check user-defined array is valid at compile time.
   static_assert(
     SABERSENSE_DEFAULT_BLADE_ARRAY < NELEM(blades),
     "SABERSENSE_DEFAULT_BLADE_ARRAY must reference a valid array (note zero-based counting)."
@@ -357,13 +357,12 @@ GESTURE CONTROLS
     SABERSENSE_DEFAULT_BLADE_ARRAY != 0,
     "[Sabersense] ERROR: Default array index must be 1 or higher when using Blade Detect."
   );
-  
   constexpr int min_blades_required = 3;
 #else
   constexpr int min_blades_required = 2;
 #endif
 
-  // Check that Array Selector is needed (prevents unexpected behaviour).
+  // Check that Array Selector is actually needed (prevents possible unexpected behaviour).
   static_assert(
     NELEM(blades) >= min_blades_required,
     "[Sabersense] ERROR: Array Selector is not required with only one selectable blade array. "
@@ -382,10 +381,10 @@ public:
 
   struct SabersenseArraySelector {
     static int return_value;
-
     float id() {
       if (return_value < 0 || return_value >= NELEM(blades)) {
-        Serial.println("[Sabersense] ALERT: Invalid array index. Resetting to default.");
+        Serial.println("[Sabersense] ALERT: User or externally-specified array index invalid. "
+                       "Resetting to default.");
         return_value = SABERSENSE_DEFAULT_BLADE_ARRAY;
       }
       return return_value;
@@ -409,18 +408,17 @@ public:
     }
   };
 
-// Set initial index based on Blade Detect mode
+    // Set initial index based on Blade Detect mode.
 #ifndef BLADE_DETECT_PIN
-int SabersenseArraySelector::return_value = 0;
+    int SabersenseArraySelector::return_value = 0;
 #else
-int SabersenseArraySelector::return_value = 1;
+    int SabersenseArraySelector::return_value = 1;
 #endif
 
 #undef BLADE_ID_CLASS_INTERNAL
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
 #define BLADE_ID_CLASS SabersenseArraySelector
-
 #endif
 
 #include "prop_base.h"
@@ -1034,7 +1032,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 #endif
 
-// Manual blade array selector.
+    // Manual blade array selector.
 #ifdef SABERSENSE_ARRAY_SELECTOR
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       // Check for blade present if using Blade Detect.
