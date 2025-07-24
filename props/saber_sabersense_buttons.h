@@ -322,7 +322,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   being triggered by clash while holding aux.
 
 #define SABERSENSE_F263_CUSTOM_USER_EFFECT
-  Based of Fett263 'Special Abilities', this define
+  Based on Fett263 'Special Abilities', this define
   enables interaction with EFFECT_USER1 etc. in blade
   styles for things like swing colour changing.
 
