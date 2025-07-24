@@ -323,8 +323,9 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 
 #define SABERSENSE_F263_CUSTOM_USER_EFFECT
   Based on Fett263 'Special Abilities', this define
-  enables interaction with EFFECT_USER1 etc. in blade
-  styles for things like swing colour changing.
+  enables interaction with EFFECT_USERx in standard
+  (non-Fett) blade styles for custom effects like
+  swing colour changing.
 
 GESTURE CONTROLS
   There are four gesture types: Twist, Stab, Swing and Thrust.
