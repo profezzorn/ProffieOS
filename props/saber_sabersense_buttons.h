@@ -1,4 +1,4 @@
-/* V7/8-277.
+/* V7/8-278.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -101,7 +101,8 @@ FUNCTIONS WITH BLADE OFF
   Play Character Quote      Fast double-click, hilt pointing up, plays sequentially. **
   Play Music Track          Fast double-click, hilt pointing down. **
   Speak battery voltage     Fast double-click-and-hold, hilt horizontal.
-  Run BladeID/Array Select  Fast triple-click while OFF. (Applicable installs only).
+  Run BladeID/Array Select  Fast triple-click while OFF. (Configurable, applicable installs only).
+                              Array Selector is point up for forwards, down for backwards.
   Restore Factory Defaults  Fast four-clicks while OFF, hold on last click.
                               Release once announcement starts.
   Enter/Exit VOLUME MENU    Hold and clash while OFF.
@@ -157,7 +158,8 @@ FUNCTIONS WITH BLADE OFF
   Play Character Quote      Fast double-click POWER, hilt pointing up, plays sequentially. **
   Play Music Track          Fast double-click POWER, pointing down. **
   Speak battery voltage     Fast double-click-and-hold POWER.
-  Run BladeID/Array Select  Fast triple-click. (Applicable installs only).
+  Run BladeID/Array Select  Fast triple-click POWER. (Configurable, applicable installs only).
+                              Array Selector is point up for forwards, down for backwards.
   Restore Factory Defaults  Fast four-clicks POWER, hold on last click.
                               Release once announcement starts.
   Enter/Exit VOLUME MENU    Hold POWER then quickly click AUX and release both simultaneously.
@@ -210,13 +212,13 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Plays array-specific bladeidX.wav files when switching.
 
 #define SABERSENSE_ARRAY_SELECTOR
-  Replaces regular BladeID and allows cycling between
-  different blade/preset arrays manually, regardless
-  of actual BladeID status. Plays array-specific
-  arrayX.wav files when switching.
+  Replaces regular BladeID and allows forwards or
+  backwards cycling between different blade/preset
+  arrays manually, regardless of actual BladeID status.
+  Plays array-specific arrayX.wav files when switching.
   Requires arrays to be numbered consecutively,
-  starting at zero, in the field that would otherwise
-  contain BladeID values. Like this:
+  starting at zero, in the field that would
+  otherwise contain BladeID values. Like this:
       { 0, ... }
       { 1, ... }
       { 2, ... }
@@ -230,8 +232,8 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Note that you can have any number of Blade-In arrays
   in your config, but only one NO_BLADE array is supported.
   Note also that NO_BLADE replaces the zero array,
-  meaning that Blade-In array numbering must be consecutive
-  starting at 1. Like this:
+  meaning that Blade-In array numbering must be
+  consecutive starting at 1. Like this:
       { NO_BLADE, ... }
       { 1, ... }
       { 2, ... }
