@@ -6110,7 +6110,11 @@ case EVENTID(BUTTON_POWER, EVENT_FOURTH_HELD_LONG, MODE_OFF):
             sound_library_.SayExit();
             menu_ = false;
           } else {
+#ifdef FETT263_EDIT_SETTINGS_MENU
+            menu_type_ = MENU_SETTING_SUB;
+#else
             menu_type_ = MENU_TOP;
+#endif
             MenuCancel();
           }
           return true;
