@@ -1041,7 +1041,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         SabersenseArraySelector::cycle_array(forward);
       }
       FindBladeAgain();
-      PlayArraySound();  // Plays associated arrayx.wav to ident array landed on.
+      PlayArraySound();
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
       SaveArrayState();
 #endif
