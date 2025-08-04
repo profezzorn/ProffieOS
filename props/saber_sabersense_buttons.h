@@ -882,7 +882,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       SaberBase::DoEffect(EFFECT_USER2, 0);
       return true;
 #endif
-#endif
+#endif  // SABERSENSE_F263_CUSTOM_USER_EFFECT
 
     // MAIN ACTIVATION
     // Saber ON AND Volume Adjust, 1 and 2 Button.
