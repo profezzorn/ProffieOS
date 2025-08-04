@@ -1,4 +1,4 @@
-/* V7/8-283.
+/* V7/8-284.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -735,7 +735,7 @@ public:
   }
 #endif
 
-  void IdentBladeArray() {  // Plays associated arrayx.wav to ident array landed on.
+  void PlayArraySound() {
 #ifdef SABERSENSE_ENABLE_ARRAY_FONT_IDENT  // Plays 'array' sound AND 'font' sound.
     SFX_array.Select(current_config - blades);
     hybrid_font.PlayCommon(&SFX_array);
@@ -1041,7 +1041,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         SabersenseArraySelector::cycle_array(forward);
       }
       FindBladeAgain();
-      IdentBladeArray();  // Plays associated arrayx.wav to ident array landed on.
+      PlayArraySound();  // Plays associated arrayx.wav to ident array landed on.
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
       SaveArrayState();
 #endif
