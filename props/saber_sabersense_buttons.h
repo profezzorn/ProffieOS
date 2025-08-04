@@ -1,4 +1,4 @@
-/* V7/8-278.
+/* V7/8-283.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -392,21 +392,15 @@ public:
       return return_value;
     }
 
-    static void cycle_directional(bool forward) {
-#ifndef BLADE_DETECT_PIN
-      const int size = NELEM(blades);
-      return_value = (return_value + (forward ? 1 : size - 1)) % size;
-#else
-      const int min_index = 1;
-      const int max_index = NELEM(blades) - 1;
-      if (forward) {
-        return_value++;
-        if (return_value > max_index) return_value = min_index;
-      } else {
-        return_value--;
-        if (return_value < min_index) return_value = max_index;
-      }
+    static void cycle_array(bool forward) {
+      int size = NELEM(blades);
+      int offset = 0;
+#ifdef BLADE_DETECT_PIN
+      offset = 1;
+      size--;
 #endif
+      return_value += forward ? 1 : (size - 1);
+      return_value = (return_value + size - offset) % size + offset;
     }
   };
 
@@ -421,7 +415,7 @@ public:
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
 #define BLADE_ID_CLASS SabersenseArraySelector
-#endif
+#endif  // SABERSENSE_ARRAY_SELECTOR
 
 #include "prop_base.h"
 
@@ -1044,7 +1038,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       {
         // Cycles through blade arrays regardless of BladeID status.
         bool forward = fusor.angle1() > 0;
-        SabersenseArraySelector::cycle_directional(forward);
+        SabersenseArraySelector::cycle_array(forward);
       }
       FindBladeAgain();
       IdentBladeArray();
