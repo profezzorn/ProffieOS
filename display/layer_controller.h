@@ -336,6 +336,7 @@ public:
       }
       if (!strcmp(key, "layer")) {
 	may_need_restart_ = false;
+	layer_time_ = 0;
 	layer_ = screen_->getLayer(++layer_number_);
 	if (!layer_) {
 	  STDERR << "Too many layers.\n";
@@ -356,6 +357,7 @@ public:
 	  }
 	} else {
 	  layer_->LC_play(path);
+	  layer_->LC_set_time(layer_time_);
 	}
       } else if (!strcmp(key, "restart")) {
 	if (may_need_restart_) {
@@ -366,10 +368,12 @@ public:
 	}
       } else if (!strcmp(key, "time")) {
 	if (!strcmp(value, "from_sound")) {
-	  layer_->LC_set_time(sound_time_ms_);
+	  layer_time_ = sound_time_ms_;
 	} else {
-	  layer_->LC_set_time(atoi(value));
+	  layer_time_ = atoi(value);
+	  layer_->LC_set_time(layer_time_);
 	}
+	layer_->LC_set_time(layer_time_);
       } else if (!strcmp(key, "A") ||
 		 !strcmp(key, "B") ||
 		 !strcmp(key, "C") ||
@@ -431,6 +435,7 @@ protected:
   bool delayed_open_ = false;
   char line[128+32+5];
   bool may_need_restart_;
+  uint32_t layer_time_ = 0;
   LayeredScreenControl* screen_;
   int layer_number_;
   LayerControl* layer_ = nullptr;
