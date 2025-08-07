@@ -1,4 +1,4 @@
-/* V7/8-284.
+/* V7/8-285.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -591,34 +591,34 @@ public:
 
   // Two Button system: Up/Down only - loose angle settings for ease of use.
   bool MultiFontSkip(int skip_value) {
-      float angle = fusor.angle1();
-      int delta = 0;
+    float angle = fusor.angle1();
+    int delta = 0;
 
 #if NUM_BUTTONS == 2
-      delta = (angle < -M_PI / 4) ? -skip_value : skip_value;
+    delta = (angle < -M_PI / 4) ? -skip_value : skip_value;
 #elif NUM_BUTTONS == 1
-      if (angle < -M_PI / 6) {  // Pointing down
-        delta = -skip_value;
-      } else if (angle > M_PI / 6) {  // Pointing up
-        delta = skip_value;
-      } else {
-        SpeakBatteryLevel();
-        return true;
-      }
+    if (angle < -M_PI / 6) {  // Pointing down
+      delta = -skip_value;
+    } else if (angle > M_PI / 6) {  // Pointing up
+      delta = skip_value;
+    } else {
+      SpeakBatteryLevel();
+      return true;
+    }
 #endif
-      int count = GetNumberOfPresets();
-      int new_index = current_preset_.preset_num + delta;
-      // Capping/Clamping, not wrapping - less disorienting for user.
-      if (new_index < 0) new_index = 0;
-      if (new_index >= count) new_index = count - 1;
+    int count = GetNumberOfPresets();
+    int new_index = current_preset_.preset_num + delta;
+    // Capping/Clamping, not wrapping - less disorientating for user.
+    if (new_index < 0) new_index = 0;
+    if (new_index >= count) new_index = count - 1;
 
 #ifdef SAVE_PRESET
-      SaveState(new_index);
+    SaveState(new_index);
 #endif
 
-      SetPreset(new_index, true);
-      return true;
-}
+    SetPreset(new_index, true);
+    return true;
+  }
 
   // VOLUME MENU
   void VolumeUp() {
@@ -767,17 +767,17 @@ public:
 // RESET FACTORY DEFAULTS (Delete Save Files).
 // Script to determine if sound effects have finished.
 #ifndef SABERSENSE_DISABLE_RESET
-bool IsSoundPlaying(const Effect* sound) {
-  return !!GetWavPlayerPlaying(sound);
-}
+  bool IsSoundPlaying(const Effect* sound) {
+    return !!GetWavPlayerPlaying(sound);
+  }
 #endif
 
-void PlaySound(const char* sound) {
-  RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
-  if (player) {
-    if (!player->PlayInCurrentDir(sound)) player->Play(sound);
+  void PlaySound(const char* sound) {
+    RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
+    if (player) {
+      if (!player->PlayInCurrentDir(sound)) player->Play(sound);
+    }
   }
-}
 
 bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
   if (GetWavPlayerPlaying(&SFX_boot)) return false;
@@ -1086,7 +1086,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
       SaveArrayState();
 #endif
-    return true;
+      return true;
 #endif
 
     // SOUND EFFECT PLAYERS.
@@ -1373,9 +1373,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
   void SB_Effect(EffectType effect, EffectLocation location) override  //  For ProffieOS 8.x.
 #endif
   {
-  switch (effect) {
+    switch (effect) {
 #ifndef MODES_MODE_H
-    case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
+      case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
 #endif
       case EFFECT_POWERSAVE:
         if (SFX_dim) {
