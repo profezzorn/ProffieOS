@@ -416,6 +416,11 @@ public:
   int health_ = 100;
   int armor_ = 100;
 
+  enum DamageType {
+    DAMAGE_PHYSICAL,
+    DAMAGE_HAZARD,
+  };
+
   enum Hazard {
     HAZARD_NONE = 0,
     HAZARD_BIO = 1,
@@ -429,36 +434,52 @@ public:
   Hazard current_hazard_ = HAZARD_NONE;
 
   // Calculate Physical Damage
-  void DoDamage(int damage, bool quiet = false) {
+  void DoDamage(int damage, bool quiet = false, DamageType type = DAMAGE_PHYSICAL) {
+    int previous_health = health_;
+    int previous_armor = armor_;
     int tens = health_ / 10;
-    if (armor_ >= damage) {
-      armor_ -= ceilf(damage * 0.80 / 2);
-      health_ -= ceilf(damage * 0.20);
 
-    } else if (armor_ > 0) {
-      int excess_physical = damage - armor_;
-      health_ -= excess_physical;
-      // Make armor compromised sound play before setting armor to 0
-      SaberBase::DoEffect(EFFECT_USER2, 0.0);
-      PVLOG_NORMAL << "Armor Compromised!\n";
-      armor_ = 0;
+    // Damage type and calculation
+    switch (type) {
+      case DAMAGE_PHYSICAL:
+        if (armor_ >= damage) {
+          armor_ -= ceilf(damage * 0.80 / 2);
+          health_ -= ceilf(damage * 0.20);
+        } else if (armor_ > 0) {
+          int excess_physical = damage - armor_;
+          health_ -= excess_physical;
+          armor_ = 0;
+        } else { health_ -= damage; }
+        break;
 
-    } else { health_ -= damage; }
+      case DAMAGE_HAZARD:
+        if (armor_ > 0) {
+          armor_ -= damage;
+        } else { health_ -= damage; }
+        break;
+    }
 
     // Enforce minimum values
     if (health_ < 0) health_ = 0;
     if (armor_ < 0) armor_ = 0;
 
-    // Damage
+    // (HEV VOICE LINE) Logic for Armor Compromised
+    if (previous_armor > 0 && armor_ == 0) {
+      SaberBase::DoEffect(EFFECT_USER2, 0.0);
+      PVLOG_NORMAL << "Armor Compromised!\n";
+    }
+
+    // (ENVIRONMENTAL FX) Damage Sounds
     if (!quiet) SaberBase::DoEffect(EFFECT_STUN, 0.0);
     
-    // Death Sound
-    if (health_ == 0) {
+    // (HEV UI SOUNDS) Logic for Death Sound
+    if (health_ == 0 && previous_health > 0) {
       SaberBase::DoEffect(EFFECT_EMPTY, 0.0);
       return;
     }
     
-    // Health Alert - only plays when health enters a new multiple of 10
+    // (HEV VOICE LINE) Logic for Health Alert
+    // Only plays when Health enters a new multiple of 10
     int new_tens = health_ / 10;
     if (tens != new_tens) {
       SaberBase::DoEffect(EFFECT_USER1, 0.0);
@@ -536,9 +557,13 @@ public:
             
       // Roll for Random Hazard
       if (random(100) < HEV_RANDOM_HAZARD_CHANCE) {
-        PVLOG_NORMAL << "Activating hazard.\n";
+        PVLOG_NORMAL << "Activating Hazard.\n";
         current_hazard_ = (Hazard)(1 + random(6));
         SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
+
+      } else {
+        PVLOG_NORMAL << "Skipping Hazard.\n";
+        timer_random_event_.start();
       }
     }
   }
@@ -560,16 +585,7 @@ public:
 
     // Check sequence and apply damage
     if (!timer_hazard_delay_.running()) {
-      if (armor_ > 0) {
-        armor_--;
-        SaberBase::DoEffect(EFFECT_STUN, 0.0);
-
-        if (armor_ == 0) {
-          SaberBase::DoEffect(EFFECT_USER2, 0.0);
-          PVLOG_NORMAL << "Armor Compromised!\n";
-        }
-
-      } else { DoDamage(1); }
+      DoDamage(1, false, DAMAGE_HAZARD);
 
       // Clear hazard on death
       if (health_ == 0) {
