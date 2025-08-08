@@ -307,6 +307,10 @@ public:
 	while (input_buffer_.empty()) {
 	  TRACE2(RGB565, "empty", i);
 	  if (ATEOF()) {
+	    if (i) {
+	      line[i] = 0;
+	      break;
+	    }
 	    TRACE2(RGB565, "EOF", TELL());
 	    goto done;
 	  }
@@ -316,11 +320,12 @@ public:
 	c = getc();
 	if (c == '\r' || c == '\n') {
 	  line[i] = 0;
-	  PVLOG_VERBOSE << "PARSING SCR LINE '" << line << "'\n";
 	  break;
 	}
 	line[i] = c;
       }
+
+      PVLOG_VERBOSE << "PARSING SCR LINE '" << line << "'\n";
 
       char* tmp = strchr(line, '#');
       if (tmp) {
@@ -522,6 +527,7 @@ public:
   };
 
   void Stop() {
+    scr_.Play("");
     for (int i = 0;; i++) {
       LayerControl *layer = scr_.screen()->getLayer(i);
       if (!layer) break;
