@@ -299,6 +299,7 @@ public:
     STATE_MACHINE_BEGIN();
     layer_number_ = 0;
     may_need_restart_ = false;
+    layer_time_ = 0;
     layer_ = screen_->getLayer(layer_number_);
     
     while (true) {

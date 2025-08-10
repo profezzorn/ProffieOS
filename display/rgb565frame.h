@@ -409,6 +409,7 @@ public:
   void LC_play(const char* filename) override {
     TRACE(RGB565, "LC_play");
     delayed_open_ = true;
+    time_ = 0;
     file_.PlayInternal(filename);
   }
 
