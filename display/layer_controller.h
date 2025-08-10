@@ -310,7 +310,7 @@ public:
 	  if (ATEOF()) {
 	    if (i) {
 	      line[i] = 0;
-	      break;
+	      goto have_line;
 	    }
 	    TRACE2(RGB565, "EOF", TELL());
 	    goto done;
@@ -326,6 +326,7 @@ public:
 	line[i] = c;
       }
 
+    have_line:
       PVLOG_VERBOSE << "PARSING SCR LINE '" << line << "'\n";
 
       char* tmp = strchr(line, '#');
@@ -502,6 +503,7 @@ public:
   }
 
   void LC_onStop() override {
+    PVLOG_VERBOSE << "LC_onStop()\n";
     ShowDefault();
   }
 
@@ -528,6 +530,7 @@ public:
   };
 
   void Stop() {
+    PVLOG_VERBOSE << "LC Stop()\n";
     scr_.Play("");
     for (int i = 0;; i++) {
       LayerControl *layer = scr_.screen()->getLayer(i);
@@ -537,6 +540,7 @@ public:
   }
 
   void ShowDefault(bool ignore_lockup = false) {
+    PVLOG_VERBOSE << "LC ShowDefault()\n";
     if (SaberBase::IsOn()) {
       if (SaberBase::Lockup() && SCR_lock && !ignore_lockup) {
         scr_.Play(&SCR_lock);
