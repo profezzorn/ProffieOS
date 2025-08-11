@@ -310,7 +310,7 @@ public:
 	  if (ATEOF()) {
 	    if (i) {
 	      line[i] = 0;
-	      break;
+	      goto have_line;
 	    }
 	    TRACE2(RGB565, "EOF", TELL());
 	    goto done;
@@ -326,6 +326,7 @@ public:
 	line[i] = c;
       }
 
+    have_line:
       PVLOG_VERBOSE << "PARSING SCR LINE '" << line << "'\n";
 
       char* tmp = strchr(line, '#');
@@ -401,6 +402,7 @@ public:
   bool Play(Effect* f) {
     if (!*f) return false; // no files, do nothing
     PVLOG_VERBOSE << "SCR Playing " << f->GetName() << "\n";
+    wait_for_previous_open_to_complete();
     sound_time_ms_ = SaberBase::sound_length * 1000;
     file_.PlayInternal(f);
     delayed_open_ = true;
@@ -409,6 +411,7 @@ public:
   }
 
   void Play(const char* filename) {
+    wait_for_previous_open_to_complete();
     sound_time_ms_ = SaberBase::sound_length * 1000;
     file_.PlayInternal(filename);
     delayed_open_ = true;
@@ -423,6 +426,12 @@ public:
 
   bool IsActive() override { return active_ || delayed_open_; }
 protected:
+  void wait_for_previous_open_to_complete() {
+    while (delayed_open_ && !state_machine_.done()) {
+      loop();
+      check_open();
+    }
+  }
   void check_open() {
     if (delayed_open_ && state_machine_.done()) {
       active_ = true;
@@ -502,6 +511,7 @@ public:
   }
 
   void LC_onStop() override {
+    PVLOG_VERBOSE << "LC_onStop()\n";
     ShowDefault();
   }
 
@@ -528,6 +538,7 @@ public:
   };
 
   void Stop() {
+    PVLOG_VERBOSE << "LC Stop()\n";
     scr_.Play("");
     for (int i = 0;; i++) {
       LayerControl *layer = scr_.screen()->getLayer(i);
@@ -537,6 +548,7 @@ public:
   }
 
   void ShowDefault(bool ignore_lockup = false) {
+    PVLOG_VERBOSE << "LC ShowDefault()\n";
     if (SaberBase::IsOn()) {
       if (SaberBase::Lockup() && SCR_lock && !ignore_lockup) {
         scr_.Play(&SCR_lock);

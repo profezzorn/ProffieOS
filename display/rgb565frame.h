@@ -649,7 +649,8 @@ public:
 	    SLEEP_MICROS(next_frame_time_ - frame_end);
 	  }
 	}
-	lc_->LC_onStop();
+	while (!lc_->LC_done()) YIELD();
+	if (!layers[0].is_playing()) lc_->LC_onStop();
 	while (!lc_->LC_done()) YIELD();
       }
 
