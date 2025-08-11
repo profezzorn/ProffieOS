@@ -402,6 +402,7 @@ public:
   bool Play(Effect* f) {
     if (!*f) return false; // no files, do nothing
     PVLOG_VERBOSE << "SCR Playing " << f->GetName() << "\n";
+    wait_for_previous_open_to_complete();
     sound_time_ms_ = SaberBase::sound_length * 1000;
     file_.PlayInternal(f);
     delayed_open_ = true;
@@ -410,6 +411,7 @@ public:
   }
 
   void Play(const char* filename) {
+    wait_for_previous_open_to_complete();
     sound_time_ms_ = SaberBase::sound_length * 1000;
     file_.PlayInternal(filename);
     delayed_open_ = true;
@@ -424,6 +426,12 @@ public:
 
   bool IsActive() override { return active_ || delayed_open_; }
 protected:
+  void wait_for_previous_open_to_complete() {
+    while (delayed_open_ && !state_machine_.done()) {
+      loop();
+      check_open();
+    }
+  }
   void check_open() {
     if (delayed_open_ && state_machine_.done()) {
       active_ = true;
