@@ -42,7 +42,7 @@
 //     - Clashes deal full damage to Health.                           //
 // - When Armor is active:                                             //
 //     - Clashes (physical impacts) are negated:                       //
-//         ▪ 80% of the impact is absorbed by Armor.                   //
+//         ▪ 80% is divided in half, then applied to Armor.            //
 //         ▪ 20% is applied to Health.                                 //
 // - Clash damage is based on force of impact:                         //
 //     - Cannot exceed 50 total damage.                                //
@@ -449,13 +449,17 @@ public:
           int excess_physical = damage - armor_;
           health_ -= excess_physical;
           armor_ = 0;
-        } else { health_ -= damage; }
+        } else {
+          health_ -= damage;
+        }
         break;
 
       case DAMAGE_HAZARD:
         if (armor_ > 0) {
           armor_ -= damage;
-        } else { health_ -= damage; }
+        } else {
+          health_ -= damage;
+        }
         break;
     }
 
@@ -464,7 +468,7 @@ public:
     if (armor_ < 0) armor_ = 0;
 
     // (HEV VOICE LINE) Logic for Armor Compromised
-    if (previous_armor > 0 && armor_ == 0) {
+    if (previous_armor > 0 && armor_ == 0 && health_ > 0) {
       SaberBase::DoEffect(EFFECT_USER2, 0.0);
       PVLOG_NORMAL << "Armor Compromised!\n";
     }
