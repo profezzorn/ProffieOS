@@ -468,7 +468,7 @@ public:
     if (armor_ < 0) armor_ = 0;
 
     // (HEV VOICE LINE) Logic for Armor Compromised
-    if (previous_armor > 0 && armor_ == 0 && health_ > 0) {
+    if (previous_armor > 0 && armor_ == 0 && health_ == 0) {
       SaberBase::DoEffect(EFFECT_USER2, 0.0);
       PVLOG_NORMAL << "Armor Compromised!\n";
     }
