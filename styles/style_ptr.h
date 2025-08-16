@@ -144,14 +144,8 @@ StyleAllocator StylePtr() {
   using _TopBaseCol = decltype(std::declval<_TopBaseT&>().getColor(0));
   static_assert(color_details::IsOpaqueColor<_TopBaseCol>::value,
                 "\n\n"
-                "           --------------------------------------------------------------------------\n"
-                "           |              (This is the error you are looking for)                   |\n"
-                "           |                                                                        |\n"
-                "           |  StylePtr<> error: BASE LAYER MUST BE A SOLID COLOR, NOT TRANSPARENT   |\n"
-                "           |              (No \"L\" layers allowed as base layer!)                    |\n"
-                "           |                                                                        |\n"
-                "           --------------------------------------------------------------------------\n"
-                "\n\n");
+                "*** StylePtr<> error: BASE LAYER MUST BE A SOLID COLOR, NOT TRANSPARENT.\n"
+                "*** (No \"L\" layers allowed as base layer!)\n");
   static StyleFactoryImpl<Style<STYLE> > factory;
   return &factory;
 };
@@ -187,14 +181,8 @@ StyleAllocator ChargingStylePtr() {
   using _TopBaseCol = decltype(std::declval<_TopBaseT&>().getColor(0));
   static_assert(color_details::IsOpaqueColor<_TopBaseCol>::value,
                 "\n\n"
-                "           --------------------------------------------------------------------------\n"
-                "           |              (This is the error you are looking for)                   |\n"
-                "           |                                                                        |\n"
-                "           |  StylePtr<> error: BASE LAYER MUST BE A SOLID COLOR, NOT TRANSPARENT   |\n"
-                "           |              (No \"L\" layers allowed as base layer!)                    |\n"
-                "           |                                                                        |\n"
-                "           --------------------------------------------------------------------------\n"
-                "\n\n");
+                "*** StylePtr<> error: BASE LAYER MUST BE A SOLID COLOR, NOT TRANSPARENT.\n"
+                "*** (No \"L\" layers allowed as base layer!)\n");
   static StyleFactoryImpl<ChargingStyle<STYLE> > factory;
   return &factory;
 }
