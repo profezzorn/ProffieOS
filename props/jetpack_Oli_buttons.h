@@ -21,149 +21,149 @@ https://www.dropbox.com/scl/fi/jcu9pzaaeqo745y48bi4g/jetpack_Oli_buttons_testfon
 
 Worth mentioning:
 =================
-    Unlike a saber, this jetpack doesn't have any "movement effects". The only one I could foresee being useful
-    is clash ("tap or smash" your backpack/jetpack prop - but it is not in use for now). You do not want
-    to have to do front/back/side flips at your next cosplay to activate something! Or just imagine,
-    for an instant, someone trying to replicate a stab, aka running face-first into the nearest wall with
-    their backpack/jetpack prop. Call me evil if you want, but this makes me laugh every time I picture it.
+  Unlike a saber, this jetpack doesn't have any "movement effects". The only one I could foresee being useful
+  is clash ("tap or smash" your backpack/jetpack prop - but it is not in use for now). You do not want
+  to have to do front/back/side flips at your next cosplay to activate something! Or just imagine,
+  for an instant, someone trying to replicate a stab, aka running face-first into the nearest wall with
+  their backpack/jetpack prop. Call me evil if you want, but this makes me laugh every time I picture it.
 
 Disclaimer:
 ===========
-    The explanations below are not fully 100 percent accurate, I just want to give you, the reader, an idea
-    of what it's like. If you want to learn to fly, please go to flight school. I am not a flight instructor!
+  The explanations below are not fully 100 percent accurate, I just want to give you, the reader, an idea
+  of what it's like. If you want to learn to fly, please go to flight school. I am not a flight instructor!
 
-    Please do not use this as your first flying lesson! And if you do, you will probably crash and most
-    likely die! Don't say: "I didn't warn you!"
+  Please do not use this as your first flying lesson! And if you do, you will probably crash and most
+  likely die! Don't say: "I didn't warn you!"
 
-    This jetpack prop is for fun "pretend-flying" only. Thank you.
+  This jetpack prop is for fun "pretend-flying" only. Thank you.
 
 Explanations:
 =============
 
-    Let me start with a bit of:
-    "How does a jet engine work?": (This section will give you an insight into why this jetpack was designed as it is.)
-    ============================== (Feel free to skip to "How does this jetpack prop work" if you are not interested!)
+  Let me start with a bit of:
+  "How does a jet engine work?": (This section will give you an insight into why this jetpack was designed as it is.)
+  ============================== (Feel free to skip to "How does this jetpack prop work" if you are not interested!)
 
-    On the Boeing 747 (Yes, I am a captain on the B-747), a minimum of five minutes is necessary between the last
-    engine being started and takeoff power being applied. This allows for thermal stabilization in the
-    engines, avoids premature and very costly wear and tear and reduces the chances of one of them going
-    "boom" down the line.
+  On the Boeing 747 (Yes, I am a captain on the B-747), a minimum of five minutes is necessary between the last
+  engine being started and takeoff power being applied. This allows for thermal stabilization in the
+  engines, avoids premature and very costly wear and tear and reduces the chances of one of them going
+  "boom" down the line.
 
-    Additionally, between landing power and after the engine thrust reversers have been returned to their stowed
-    position and the engines have stabilized back to their idle power, another three minutes must pass before it is
-    safe and allowed to shut them down. Just in case you have ever wondered, "We have arrived, why has(have) the
-    pilot(s) not shut down the engines already?" after a short taxi, that is why!
+  Additionally, between landing power and after the engine thrust reversers have been returned to their stowed
+  position and the engines have stabilized back to their idle power, another three minutes must pass before it is
+  safe and allowed to shut them down. Just in case you have ever wondered, "We have arrived, why has(have) the
+  pilot(s) not shut down the engines already?" after a short taxi, that is why!
 
-    I tried to somewhat mimic the functioning of the jetpack prop based on our real-world jetliner jet engines.
-    However, I have only included three modes of operation:
-    - Off (yes, off is a mode)
-    - Idle/low power
-    - Flight/high/full power
+  I tried to somewhat mimic the functioning of the jetpack prop based on our real-world jetliner jet engines.
+  However, I have only included three modes of operation:
+  - Off (yes, off is a mode)
+  - Idle/low power
+  - Flight/high/full power
 
-    Instead of the seven-ish needed (listed in order of operation):
-    - Idle (20 to 25%) - between "after engine(s) has(have) been started" and takeoff (it is called ground idle).
-    - Takeoff (100%) - can only be applied for five to ten minutes.
-    - Climb/cruise (80 to 90%)
-    - Descent (+/-40%) - it is called flight idle.
-    - Landing (+/-60%)
-    - Idle reverse - optional and not needed on a jetpack, but most passenger jetliners use this.
-    - Full reverse - also optional and definitely not needed on a jetpack, but big and heavy jets need to use this.
-    - Plus everything in between 80 and 40% - for different rates of descent.
-    - Plus everything in between 60 and 90% - for different rates of climb or maintaining different speeds at
-      or below cruise altitude.
+  Instead of the seven-ish needed (listed in order of operation):
+  - Idle (20 to 25%) - between "after engine(s) has(have) been started" and takeoff (it is called ground idle).
+  - Takeoff (100%) - can only be applied for five to ten minutes.
+  - Climb/cruise (80 to 90%)
+  - Descent (+/-40%) - it is called flight idle.
+  - Landing (+/-60%)
+  - Idle reverse - optional and not needed on a jetpack, but most passenger jetliners use this.
+  - Full reverse - also optional and definitely not needed on a jetpack, but big and heavy jets need to use this.
+  - Plus everything in between 80 and 40% - for different rates of descent.
+  - Plus everything in between 60 and 90% - for different rates of climb or maintaining different speeds at
+    or below cruise altitude.
 
-    "Why did I choose 'only' 3 modes?"
-    ==================================
-    Because I wanted to have at least 2 "power" levels, and in Star Wars, jetpacks seem to only have off or full power.
-    One exception to that: in one episode of The Mandalorian season 3 when Mando uses his jetpack to gently descends
-    with a "slow-ish burn" - I don't want to add spoilers and I don't know of any other example. If you've seen the
-    episode, you know what I am talking about!
-    And by having 3 modes of operation, I could introduce more "fun" (if you are "pretend flying only") failures for
-    each phases of "flight/non flight".
+  "Why did I choose 'only' 3 modes?"
+  ==================================
+  Because I wanted to have at least 2 "power" levels, and in Star Wars, jetpacks seem to only have off or full power.
+  One exception to that: in one episode of The Mandalorian season 3 when Mando uses his jetpack to gently descends
+  with a "slow-ish burn" - I don't want to add spoilers and I don't know of any other example. If you've seen the
+  episode, you know what I am talking about!
+  And by having 3 modes of operation, I could introduce more "fun" (if you are "pretend flying only") failures for
+  each phases of "flight/non flight".
 
-    The ultimate goal would be to code for a rotary encoder (I suppose this could work like a thrust lever?) or a
-    touch-button that could modulate "power" (aka sound) like a thrust lever modulates fuel flow. I don't even know if
-    ProffieBoard/ProffieOS can modulate sounds like a thrust lever modulates power on a jet engine? And besides,
-    I don't know (yet) how to code for that!
-    Experimentation on Alt-sounds by Bryan Connor aka NoSloppy can be found here:
-    https://crucible.hubbe.net/t/jetpack-prop-update-and-questions/6648/29
+  The ultimate goal would be to code for a rotary encoder (I suppose this could work like a thrust lever?) or a
+  touch-button that could modulate "power" (aka sound) like a thrust lever modulates fuel flow. I don't even know if
+  ProffieBoard/ProffieOS can modulate sounds like a thrust lever modulates power on a jet engine? And besides,
+  I don't know (yet) how to code for that!
+  Experimentation on Alt-sounds by Bryan Connor aka NoSloppy can be found here:
+  https://crucible.hubbe.net/t/jetpack-prop-update-and-questions/6648/29
 
-    But for now my only Proffie prop has a two buttons setup and I can't see any sensible way to have more than 3 modes.
-    I have considered "Alt mode" for more modes but I do not believe that Alt mode is the tool for this job.
-    There would be too many button combinations to attempt to go from one "random" mode to another (that is not next up
-    or next down). Going from off to flight mode would need 6 (or more!) clicks and I doubt it would make for an enjoyable
-    user experience to constantly having to count and keep track of your clicks. It would be barely achievable on a two
-    buttons setup (POW for up and AUX for down) but forget the "fun" malfunctions or a one button prop.
+  But for now my only Proffie prop has a two buttons setup and I can't see any sensible way to have more than 3 modes.
+  I have considered "Alt mode" for more modes but I do not believe that Alt mode is the tool for this job.
+  There would be too many button combinations to attempt to go from one "random" mode to another (that is not next up
+  or next down). Going from off to flight mode would need 6 (or more!) clicks and I doubt it would make for an enjoyable
+  user experience to constantly having to count and keep track of your clicks. It would be barely achievable on a two
+  buttons setup (POW for up and AUX for down) but forget the "fun" malfunctions or a one button prop.
 
-    "How does this jetpack prop work?"
-    ==================================
+  "How does this jetpack prop work?"
+  ==================================
 
-    First Power Short Click Button Press:
-        Plays the jetpack idle starting sound. (low volume & low light intensity on the blade(s),
-        like a jet engine initial start)
-        Loops the idle sound until 1 minute passes, the jetpack is started, or
-        the aux button is pressed (plays a false start sound and restarts the 1-minute idle loop).
-        If no "Second Power Button Press" within 1 minute, the jetpack will switch off automatically.
+  First Power Short Click Button Press:
+    Plays the jetpack idle starting sound. (low volume & low light intensity on the blade(s),
+    like a jet engine initial start)
+    Loops the idle sound until 1 minute passes, the jetpack is started, or
+    the aux button is pressed (plays a false start sound and restarts the 1-minute idle loop).
+    If no "Second Power Button Press" within 1 minute, the jetpack will switch off automatically.
 
-    Second Power Short Click Button Press:
-        Plays the jetpack "going to in flight" starting sound. (high volume & high light intensity on the blade(s),
-        like a jet engine applying take-off power)
-        Loops the jetpack flying sound until the power button is pressed again.
-        To do (if there is a demand): add a limit to this. You can't fly for ever without "refueling"!
+  Second Power Short Click Button Press:
+    Plays the jetpack "going to in flight" starting sound. (high volume & high light intensity on the blade(s),
+    like a jet engine applying take-off power)
+    Loops the jetpack flying sound until the power button is pressed again.
+    To do (if there is a demand): add a limit to this. You can't fly for ever without "refueling"!
 
-    Third Power Short Click Button Press:
-        Plays the jetpack slowing down to idle sound. (low volume & low light intensity on the blade(s) again)
-        Loops the idle sound until 1 minute passes, the jetpack is restarted, or the Aux button is pressed
-        (restarts the 1-minute idle loop).
+  Third Power Short Click Button Press:
+    Plays the jetpack slowing down to idle sound. (low volume & low light intensity on the blade(s) again)
+    Loops the idle sound until 1 minute passes, the jetpack is restarted, or the Aux button is pressed
+    (restarts the 1-minute idle loop).
 
-    Medium Power Button Press:
-        When flying: Plays a stuttering sound.
-        When idle: Plays a false start sound and restarts the 1-minute idle loop.
-        When off: Plays a self-destruct, melt-down or dud sound randomly! (surprise!) The idea behind those 3
-            effects: you might want to use the jetpack as a detonator and rig it to explode but it may or
-            may not go as planned (it might explode, melt or it's a dud)!
+  Medium Power Button Press:
+    When flying: Plays a stuttering sound.
+    When idle: Plays a false start sound and restarts the 1-minute idle loop.
+    When off: Plays a self-destruct, melt-down or dud sound randomly! (surprise!) The idea behind those 3
+      effects: you might want to use the jetpack as a detonator and rig it to explode but it may or
+      may not go as planned (it might explode, melt or it's a dud)!
 
-    Double Click Power Button Press:
-        Will do the "jetpack missile launch sequence".
-        While OFF or in IDLEMODE, if present, mandotalk.wav will play.
-        While in FLIGHTMODE, mandotalk.wav will not play.
+  Double Click Power Button Press:
+    Will do the "jetpack missile launch sequence".
+    While OFF or in IDLEMODE, if present, mandotalk.wav will play.
+    While in FLIGHTMODE, mandotalk.wav will not play.
 
-    The jetpack will turn off automatically if in "idle mode" for more than 1 minute. This can be changed with
-    "#define JETPACK_IDLE_TIME 1000 * 60 * 1" (millisec * sec * minutes) in your config.
-    You can change the time to what you want, but don't make it less than your startidlemode.wav + a few seconds,
-    or you will not be able to make the jetpack go into "flight mode". I have it by default set to 1 min
-    for testing/debugging purposes.
-    I guess a good number, once I know everything is working as it should be, would be around 30 to
-    35 seconds. Enough for various sound effects to complete (if your "engine start sound is short enough),
-    enough to give you time to restart (when coming from "flight mode") or enough to "play" with "false start" function.
+  The jetpack will turn off automatically if in "idle mode" for more than 1 minute. This can be changed with
+  "#define JETPACK_IDLE_TIME 1000 * 60 * 1" (millisec * sec * minutes) in your config.
+  You can change the time to what you want, but don't make it less than your startidlemode.wav + a few seconds,
+  or you will not be able to make the jetpack go into "flight mode". I have it by default set to 1 min
+  for testing/debugging purposes.
+  I guess a good number, once I know everything is working as it should be, would be around 30 to
+  35 seconds. Enough for various sound effects to complete (if your "engine start sound is short enough),
+  enough to give you time to restart (when coming from "flight mode") or enough to "play" with "false start" function.
 
-    Loop Function:
-        Monitors the 1-minute timer (or user defined) during idle mode to turn off the jetpack
-        completely if the time expires.
+  Loop Function:
+    Monitors the 1-minute timer (or user defined) during idle mode to turn off the jetpack
+    completely if the time expires.
 
 ============= LIST OF BUTTON & MOTION COMMANDS: =================================================================================
 1 Button:
 
 POWER Button:
   - Short click (while OFF or ON):
-      - If jetpack is OFF → Start jetpack to IDLE mode (rev up)
-      - If in IDLE mode   → Engage FLIGHT mode   (rev up again)
-      - If in FLIGHT mode → Return to IDLE mode      (rev down)
-      - If in Volume Menu → Adjust Volume:
-          - Pointing UP   → Volume Up
-          - Pointing DOWN → Volume Down
+    - If jetpack is OFF → Start jetpack to IDLE mode (rev up)
+    - If in IDLE mode   → Engage FLIGHT mode   (rev up again)
+    - If in FLIGHT mode → Return to IDLE mode      (rev down)
+    - If in Volume Menu → Adjust Volume:
+      - Pointing UP   → Volume Up
+      - Pointing DOWN → Volume Down
   - Double click (while ON or OFF): Launch missile
   - Triple click (while ON): Turn OFF jetpack (stops idle/flight, not missile)
   - Hold medium (while ON or OFF): Trigger Jetpack Mishaps
   - Quadruple click (while OFF): Announce Battery Level
   - Double click & Hold Medium (while ON or OFF): Enter/Exit Volume Menu
   - Double click (while OFF), pointing:
-      - UP   → Next Preset
-      - DOWN → Previous Preset
+    - UP   → Next Preset
+    - DOWN → Previous Preset
   - Triple click & Hold Medium (while ON or OFF): Start/Stop Track
   - Triple click (while ON or OFF), pointing:
-      - UP   → Next Track
-      - DOWN → Previous Track
+    - UP   → Next Track
+    - DOWN → Previous Track
 
                Activate: EVENT_FIRST_SAVED_CLICK_SHORT Short-click while OFF, in idlemode or flightmode. | tested (works)
         Jetpack Mishaps: EVENT_FIRST_HELD_MEDIUM Hold medium click while ON or OFF.                      | tested (works)
@@ -185,9 +185,9 @@ Missile Launch Sequence: EVENT_SECOND_SAVED_CLICK_SHORT Double-click while ON or
 
 POWER Button:
   - Short click (while OFF or ON):
-      - If jetpack is OFF → Start jetpack to IDLE mode (rev up)
-      - If in IDLE mode   → Engage FLIGHT mode (rev up again)
-      - If in FLIGHT mode → Return to IDLE mode (rev down)
+    - If jetpack is OFF → Start jetpack to IDLE mode (rev up)
+    - If in IDLE mode   → Engage FLIGHT mode (rev up again)
+    - If in FLIGHT mode → Return to IDLE mode (rev down)
   - Double click (ON or OFF): Launch missile (sets missilelaunch_ = true)
   - Triple click (ON): Turn OFF jetpack (stops idle/flight, not missile)
   - Hold medium (ON or OFF): Trigger Jetpack Mishaps (custom function)
@@ -202,19 +202,19 @@ Missile Launch Sequence: EVENT_SECOND_SAVED_CLICK_SHORT Double-click while ON or
 
 AUX Button:
   - Short click (OFF):
-      - Not in Volume Menu →
-          - Pointing UP   → Next Preset
-          - Pointing DOWN → Previous Preset
+    - Not in Volume Menu →
+      - Pointing UP   → Next Preset
+      - Pointing DOWN → Previous Preset
   - Short click (ON or OFF):
-      - In Volume Menu →
-          - Pointing UP   → Volume Up
-          - Pointing DOWN → Volume Down
-          - Level         → No action
+    - In Volume Menu →
+      - Pointing UP   → Volume Up
+      - Pointing DOWN → Volume Down
+      - Level         → No action
   - Double click (ON or OFF): Enter/Exit Volume Menu
   - Triple click (ON or OFF): Start/Stop Track
   - Medium Hold (ON or OFF):
-      - Pointing UP   → Next Track
-      - Pointing DOWN → Previous Track
+    - Pointing UP   → Next Track
+    - Pointing DOWN → Previous Track
 
             Next Preset: EVENT_FIRST_SAVED_CLICK_SHORT while OFF.                                        | tested (works)
         Previous Preset: EVENT_FIRST_SAVED_CLICK_SHORT while OFF.                                        | tested (works)
@@ -266,9 +266,9 @@ whistlingbirds.wav
 mandosrifle.wav
 
 ============= TO DO: ============================================================================================================
-    Create animations for OLED for Missile Launch (based on Mando S02E06 - if you know, you know!)
-    & make a fun jetpack sound font.
-    Create DIM "mode" for "blades/presets" in idle mode.
+  Create animations for OLED for Missile Launch (based on Mando S02E06 - if you know, you know!)
+  & make a fun jetpack sound font.
+  Create DIM "mode" for "blades/presets" in idle mode.
 
 ============= List of optional jetpack defines that you can add to your config. =================================================
 #define JETPACK_IDLE_TIME 1000 * 60 * 1 // Jetpack max idle mode time in millisec (default 1 min) before auto-shutdown.
@@ -407,7 +407,7 @@ public:
       case 0:  SaberBase::DoEffect(EFFECT_SELFDESTRUCT,0); break;
       case 1:  SaberBase::DoEffect(EFFECT_MELTDOWN,0);     break;
       case 2:  SaberBase::DoEffect(EFFECT_DUD,0);          break;
-      default: SaberBase::DoEffect(EFFECT_DUD,0); break; // <-- Is a "default" even needed ???
+      //default: SaberBase::DoEffect(EFFECT_DUD,0); break; // <-- Is a "default" even needed ???
     }
   }
 
@@ -472,6 +472,10 @@ public:
     }
   }
 
+  void Setup() {
+   sound_library_v2.init();
+  }
+
   void FusorWeapons() {
     if (!idle_ && !flight_) { // Jetpack is OFF
       if (fusor.angle1() > M_PI / 9) {
@@ -489,6 +493,13 @@ public:
     } else {
       missilelaunch_ = true;
     }
+  }
+
+  void SetIdleOrFlight() {
+    if (idle_) StartFlightMode();    // Transition from idle to flight  (rev more up)
+    else
+      if (flight_) StopFlightMode(); // Transition from flight to idle     (rev down)
+      else StartIdleMode();          // Jetpack initial start from 0 to idle (rev up)
   }
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
@@ -518,10 +529,7 @@ public:
       //             - if in flight, it revs down to idle.
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-        if (idle_) StartFlightMode();    // Transition from idle to flight  (rev more up)
-        else
-          if (flight_) StopFlightMode(); // Transition from flight to idle     (rev down)
-          else StartIdleMode();          // Jetpack initial start from 0 to idle (rev up)
+        SetIdleOrFlight();
         return true;
 
       // Volume Up/Down (ON or OFF) & Next/Previous Preset (OFF):
@@ -560,12 +568,8 @@ public:
       // Volume Up/Down (ON or OFF)
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
       case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_ON):
-        if (!mode_volume_) {
-          if (idle_) StartFlightMode();    // Transition from idle to flight  (rev more up)
-          else
-            if (flight_) StopFlightMode(); // Transition from flight to idle     (rev down)
-            else StartIdleMode();          // Jetpack initial start from 0 to idle (rev up)
-        } else FusorVolume();
+        if (!mode_volume_) SetIdleOrFlight();
+        else FusorVolume();
         return true;
 
       // Next/Previous Preset (OFF):
@@ -599,24 +603,78 @@ public:
         FusorBatteryLevel();
         return true;
 
+/* For multiple blade detect part 3A/5
+(Need to add part 1/5 to events.h 2/5 to config, part 3A/5 & 3B/5 to props,
+ part 4/5 to to ProffieOS.ino,part 5A/5 & 5B/5 to prop_base.h) */
+#ifndef PROPS_MULTI_PROP_H
 #ifdef BLADE_DETECT_PIN
       case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
-        blade_detected_ = true;
-        FindBladeAgain();
-        SaberBase::DoBladeDetect(true);
+        UpdateBladeInserted (1, true);
         return true;
 
       case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
       case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
-        blade_detected_ = false;
-        FindBladeAgain();
-        SaberBase::DoBladeDetect(false);
+        UpdateBladeInserted (1, false);
         return true;
 #endif // BLADE_DETECT_PIN
+
+#ifdef BLADE_DETECT_PIN2
+      case EVENTID(BUTTON_BLADE_DETECT2, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT2, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
+        UpdateBladeInserted (2, true);
+        return true;
+
+      case EVENTID(BUTTON_BLADE_DETECT2, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT2, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
+        UpdateBladeInserted (2, false);
+        return true;
+#endif // BLADE_DETECT_PIN2
+
+#ifdef BLADE_DETECT_PIN3
+      case EVENTID(BUTTON_BLADE_DETECT3, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT3, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
+        UpdateBladeInserted (3, true);
+        return true;
+
+      case EVENTID(BUTTON_BLADE_DETECT3, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT3, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
+        UpdateBladeInserted (3, false);
+        return true;
+#endif // BLADE_DETECT_PIN3
+#endif // PROPS_MULTI_PROP_H
+
     }  // switch (EVENTID)
     return false;
   }  // Event2
+
+/* For multiple blade detect part 3B/5
+(Need to add part 1/5 to events.h 2/5 to config, part 3A/5 & 3B/5 to props,
+ part 4/5 to to ProffieOS.ino,part 5A/5 & 5B/5 to prop_base.h) */
+#ifndef PROPS_MULTI_PROP_H
+  void UpdateBladeInserted (int blade_detect_index, bool blade_inserted) {
+    switch (blade_detect_index) { // blade_detect_index = 1, 2 or 3
+#ifdef BLADE_DETECT_PIN
+      case 1:
+        blade_detected_ = blade_inserted;
+        break;
+#endif
+#ifdef BLADE_DETECT_PIN2
+      case 2:
+        blade2_detected_ = blade_inserted;
+        break;
+#endif
+#ifdef BLADE_DETECT_PIN3
+      case 3:
+        blade3_detected_ = blade_inserted;
+        break;
+#endif
+    }
+    FindBladeAgain();
+    SaberBase::DoBladeDetect(blade_inserted);
+    PVLOG_DEBUG << "****** Blade detect/undetect done from jetpack_Oli_buttons.\n";
+  }
+#endif // PROPS_MULTI_PROP_H
 
   // Helper (to avoid repetition)
   void EffectHelper (Effect* effect1,const char* msg1) {
@@ -660,7 +718,7 @@ public:
       case EFFECT_VOLUME_LEVEL:    PVLOG_DEBUG << "*** Blade Effect Volume Level\n";           return;
         // Typically used to apply a dimming effect on blade to conserve battery.
         // Here it will be used for idle mode.
-      case EFFECT_POWERSAVE:       sound_library_.SayDim();
+      case EFFECT_POWERSAVE:       sound_library_v2.SayDim();
                                    PVLOG_DEBUG << "*** Effect Powersave/Dim\n";                return;
         // On-Demand Battery Level. Shows battery level visually on blade.
       case EFFECT_BATTERY_LEVEL:   sound_library_.SayBatteryLevel();
@@ -734,20 +792,20 @@ public:
 #ifdef VOLUME_MENU_CYCLE
       if (!max_vol_reached_) {
         sound_library_.SayMaximumVolume();
-        PVLOG_DEBUG << "* Maximum Volume: \n";
+        PVLOG_DEBUG << "* Maximum Volume\n";
         SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
         max_vol_reached_ = true;
       } else {
         dynamic_mixer.set_volume(std::max<int>(VOLUME * 0.1,
         dynamic_mixer.get_volume() - VOLUME * 0.9));
         sound_library_.SayMinimumVolume();
-        PVLOG_DEBUG << "* Minimum Volume: \n";
+        PVLOG_DEBUG << "* Minimum Volume\n";
         SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
         max_vol_reached_ = false;
       }
 #else
       sound_library_.SayMaximumVolume();
-      PVLOG_DEBUG << "* Maximum Volume: \n";
+      PVLOG_DEBUG << "* Maximum Volume\n";
       SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
 #endif
     }
@@ -766,19 +824,19 @@ public:
 #ifdef VOLUME_MENU_CYCLE
       if (!min_vol_reached_) {
         sound_library_.SayMinimumVolume();
-        PVLOG_DEBUG << "* Minimum Volume: \n";
+        PVLOG_DEBUG << "* Minimum Volume\n";
         SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
         min_vol_reached_ = true;
       } else {
         dynamic_mixer.set_volume(VOLUME);
         sound_library_.SayMaximumVolume();
-        PVLOG_DEBUG << "* Maximum Volume: \n";
+        PVLOG_DEBUG << "* Maximum Volume\n";
         SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
         min_vol_reached_ = false;
       }
 #else
       sound_library_.SayMinimumVolume();
-      PVLOG_DEBUG << "* Minimum Volume: \n";
+      PVLOG_DEBUG << "* Minimum Volume\n";
       SaberBase::DoEffect(EFFECT_VOLUME_LEVEL, 0);
 #endif
     }
@@ -1389,3 +1447,4 @@ protected:
 #undef ONCE_PER_JETPACK_EFFECT
 
 #endif  // PROP_BOTTOM
+
