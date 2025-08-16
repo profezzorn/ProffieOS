@@ -21,7 +21,11 @@ Start Soundtrack -        Long-click the POW button while blade is off.
 Blaster block -           Short-click AUX button.
 Enter/Exit Color Change - 1 button saber = Hold button and Twist.
                           2 button saber = Hold Aux and click POW while on.
-** Note Color Change only works with ProffieOS 3.x and above)
+** Note Color Change only works with ProffieOS 3.x and above
+Enter Menu -              Double-click AUX button while blade is off.
+  Use POW to select
+  Use AUX to cancel/exit
+** Note Menu only works with ProffieOS 8.x and above and requires a voicepack V2 in your common folder
 */
 
 #ifndef PROPS_SABER_H
@@ -84,11 +88,11 @@ public:
         return true;
 #endif
 
-#ifdef MENU_SPEC_TEMPLATE	
+#ifdef MENU_SPEC_TEMPLATE
       case EVENTID(BUTTON_AUX, EVENT_SAVED_CLICK_SHORT, MODE_OFF):
-#else	
+#else
       case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF):
-#endif	
+#endif
 #ifdef DUAL_POWER_BUTTONS
         aux_on_ = true;
         On();
@@ -107,12 +111,12 @@ public:
         }
         return false;
 
-#ifdef MENU_SPEC_TEMPLATE	
+#ifdef MENU_SPEC_TEMPLATE
       case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_OFF):
 	EnterMenu();
 	return true;
 #endif
-	
+
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_ON):
         if (millis() - activated_ < 500) {
           if (SetMute(true)) {
