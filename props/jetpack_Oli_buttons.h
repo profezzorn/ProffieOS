@@ -142,7 +142,7 @@ Explanations:
     completely if the time expires.
 
 ============= LIST OF BUTTON & MOTION COMMANDS: =================================================================================
-1 Button:
+1 Button: !!! NEEDS RE-TESTING !!!
 
 POWER Button:
   - Short click (while OFF or ON):
@@ -1447,4 +1447,5 @@ protected:
 #undef ONCE_PER_JETPACK_EFFECT
 
 #endif  // PROP_BOTTOM
+
 
