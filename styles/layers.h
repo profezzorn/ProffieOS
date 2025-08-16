@@ -7,13 +7,6 @@
 #include <type_traits>
 #include <utility>
 
-// Identify “solid” colors by the return type of getColor()
-namespace layers_detail {
-  template<typename T> struct IsOpaqueColor : std::false_type {};
-  template<> struct IsOpaqueColor<SimpleColor> : std::true_type {};
-  template<> struct IsOpaqueColor<OverDriveColor> : std::true_type {};
-}
-
 // Usage: Layers<BASE, LAYER1, LAYER2, ...>
 // BASE: COLOR or LAYER
 // LAYER1, LAYER2: LAYER
@@ -82,24 +75,22 @@ public:
   }
 };
 
-template<class BASE, class ... LAYERS> struct LayerSelector {};
-template<class BASE> struct LayerSelector<BASE> { typedef BASE type; };
-template<class BASE, class L1> struct LayerSelector<AlphaL<BASE, Int<0>>, L1> { typedef L1 type; };
 
-// If base is exactly AlphaL<*, Int<0>> and there are 3+ args, drop it early
-template<class BASE, class L1, class L2, class... REST>
-struct LayerSelector<AlphaL<BASE, Int<0>>, L1, L2, REST...> {
-  typedef typename LayerSelector<L1, L2, REST...>::type type;
-};
-
-// Solid+solid check
+// Reject solid layers after the first
 template<class BASE, class L1>
 struct LayerSelector<BASE, L1> {
   using BaseColorT  = decltype(std::declval<BASE&>().getColor(0));
   using LayerColorT = decltype(std::declval<L1&>().getColor(0));
-  static_assert(!(layers_detail::IsOpaqueColor<BaseColorT>::value &&
-                  layers_detail::IsOpaqueColor<LayerColorT>::value),
-                "Layers<> error: *** CANNOT STACK TWO SOLID COLORS. ***");
+  static_assert(!(color_details::IsOpaqueColor<BaseColorT>::value &&
+                  color_details::IsOpaqueColor<LayerColorT>::value),
+                "\n\n"
+                "           --------------------------------------------------------------------------\n"
+                "           |              (This is the error you are looking for)                   |\n"
+                "           |                                                                        |\n"
+                "           |            Layers<> ERROR: CANNOT STACK TWO SOLID COLORS.              |\n"
+                "           |                                                                        |\n"
+                "           --------------------------------------------------------------------------\n"
+                "\n\n");
   typedef Compose<BASE, L1> type;
 };
 
@@ -108,9 +99,16 @@ template<class BASE, class L1, class ... REST>
 struct LayerSelector<BASE, L1, REST...> {
   using BaseColorT  = decltype(std::declval<BASE&>().getColor(0));
   using LayerColorT = decltype(std::declval<L1&>().getColor(0));
-  static_assert(!(layers_detail::IsOpaqueColor<BaseColorT>::value &&
-                  layers_detail::IsOpaqueColor<LayerColorT>::value),
-                "Layers<> error: *** CANNOT STACK TWO SOLID COLORS. ***");
+  static_assert(!(color_details::IsOpaqueColor<BaseColorT>::value &&
+                  color_details::IsOpaqueColor<LayerColorT>::value),
+                "\n\n"
+                "           --------------------------------------------------------------------------\n"
+                "           |              (This is the error you are looking for)                   |\n"
+                "           |                                                                        |\n"
+                "           |            Layers<> ERROR: CANNOT STACK TWO SOLID COLORS.              |\n"
+                "           |                                                                        |\n"
+                "           --------------------------------------------------------------------------\n"
+                "\n\n");
   typedef typename LayerSelector<Compose<BASE, L1>, REST...>::type type;
 };
 
