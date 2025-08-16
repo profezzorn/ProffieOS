@@ -95,15 +95,6 @@ struct LayerSelector<AlphaL<BASE, Int<0>>, L1, L2, REST...> {
   typedef typename LayerSelector<L1, L2, REST...>::type type;
 };
 
-// Drop BLACK as first item when there are exactly 2 args.
-template<class L1> struct LayerSelector<BLACK, L1> { typedef L1 type; };
-
-// Drop BLACK as first item when there are 3+ args.
-template<class L1, class L2, class... REST>
-struct LayerSelector<BLACK, L1, L2, REST...> {
-  typedef typename LayerSelector<L1, L2, REST...>::type type;
-};
-
 template<class BASE, class L1> struct LayerSelector<BASE, L1> { typedef Compose<BASE, L1> type; };
 template<class BASE, class L1, class ... REST>
 struct LayerSelector<BASE, L1, REST...> {
