@@ -8,10 +8,6 @@ template<class BASE, class L1> class Compose;  // forward-declare Layers node
 namespace style_base_check_detail {
   template<class T> struct TopBase { using type = T; };
   template<class B, class L> struct TopBase<Compose<B,L>> : TopBase<B> {};
-
-  template<typename T> struct IsOpaqueColor : std::false_type {};
-  template<> struct IsOpaqueColor<SimpleColor> : std::true_type {};
-  template<> struct IsOpaqueColor<OverDriveColor> : std::true_type {};
 }
 
 // Usage: StylePtr<BLADE>
@@ -146,8 +142,16 @@ template<class STYLE>
 StyleAllocator StylePtr() {
   using _TopBaseT  = typename style_base_check_detail::TopBase<STYLE>::type;
   using _TopBaseCol = decltype(std::declval<_TopBaseT&>().getColor(0));
-  static_assert(style_base_check_detail::IsOpaqueColor<_TopBaseCol>::value,
-                "StylePtr<> error: *** BASE LAYER MUST BE A SOLID COLOR, NOT TRANSPARENT (No \"L\" layers). ***");
+  static_assert(color_details::IsOpaqueColor<_TopBaseCol>::value,
+                "\n\n"
+                "           --------------------------------------------------------------------------\n"
+                "           |              (This is the error you are looking for)                   |\n"
+                "           |                                                                        |\n"
+                "           |  StylePtr<> error: BASE LAYER MUST BE A SOLID COLOR, NOT TRANSPARENT   |\n"
+                "           |              (No \"L\" layers allowed as base layer!)                    |\n"
+                "           |                                                                        |\n"
+                "           --------------------------------------------------------------------------\n"
+                "\n\n");
   static StyleFactoryImpl<Style<STYLE> > factory;
   return &factory;
 };
@@ -181,8 +185,16 @@ template<class STYLE>
 StyleAllocator ChargingStylePtr() {
   using _TopBaseT  = typename style_base_check_detail::TopBase<STYLE>::type;
   using _TopBaseCol = decltype(std::declval<_TopBaseT&>().getColor(0));
-  static_assert(style_base_check_detail::IsOpaqueColor<_TopBaseCol>::value,
-                "StylePtr<> error: *** BASE LAYER MUST BE A SOLID COLOR, NOT TRANSPARENT (No \"L\" layers). ***");
+  static_assert(color_details::IsOpaqueColor<_TopBaseCol>::value,
+                "\n\n"
+                "           --------------------------------------------------------------------------\n"
+                "           |              (This is the error you are looking for)                   |\n"
+                "           |                                                                        |\n"
+                "           |  StylePtr<> error: BASE LAYER MUST BE A SOLID COLOR, NOT TRANSPARENT   |\n"
+                "           |              (No \"L\" layers allowed as base layer!)                    |\n"
+                "           |                                                                        |\n"
+                "           --------------------------------------------------------------------------\n"
+                "\n\n");
   static StyleFactoryImpl<ChargingStyle<STYLE> > factory;
   return &factory;
 }
