@@ -23,10 +23,7 @@
 template<class BASE, class L1>
 class Compose {
 public:
-  using _BaseColorT  = decltype(std::declval<BASE&>().getColor(0));
-  using _LayerColorT = decltype(std::declval<L1&>().getColor(0));
-  static_assert(!(color_details::IsOpaqueColor<_BaseColorT>::value &&
-                  color_details::IsOpaqueColor<_LayerColorT>::value),
+static_assert(!color_details::IsOpaqueColor<decltype(std::declval<L1&>().getColor(0))>::value,
                 "\n\n"
                 "*** Layers<> ERROR: CANNOT STACK TWO SOLID COLORS.\n\n");
   LayerRunResult run(BladeBase* blade) {
