@@ -4,23 +4,31 @@
 #include "alpha.h"
 #include "../functions/int.h"
 #include "colors.h"
-#include <type_traits>
+#include "../common/color.h"
 #include <utility>
 
 // Usage: Layers<BASE, LAYER1, LAYER2, ...>
 // BASE: COLOR or LAYER
 // LAYER1, LAYER2: LAYER
 // return value: COLOR or LAYER (same as BASE)
-// This style works like layers in gimp or photoshop.
-// In most cases, the layers are expected to be normally transparent effects
-// that turn opaque when then want to paint an effect over the base color.
-// If the base color is opqaque, the final result of this style will also be
-// opaque. If the base color is transparent, the final result may also be transparent,
-// depending on what the layers paint on top of the base color.
+// This style works like layers in Photoshop: each layer is painted over the one beneath it.
+// When a Layers<> is used as the first template argument to StylePtr<>, its BASE color (the first layer)
+// must be a solid (opaque) color, not transparent. No additional solid colors may be stacked on top
+// of that solid base.
+// Additional layers stacked on top of a solid base color are transparent,
+// so the base color shows through until an effect wants to paint over it (e.g., a clash).
+// Layers<> can be nested inside other Layers<> and can be used anywhere a STYLE or COLOR is expected.
+
 
 template<class BASE, class L1>
 class Compose {
 public:
+  using _BaseColorT  = decltype(std::declval<BASE&>().getColor(0));
+  using _LayerColorT = decltype(std::declval<L1&>().getColor(0));
+  static_assert(!(color_details::IsOpaqueColor<_BaseColorT>::value &&
+                  color_details::IsOpaqueColor<_LayerColorT>::value),
+                "\n\n"
+                "*** Layers<> ERROR: CANNOT STACK TWO SOLID COLORS.\n\n");
   LayerRunResult run(BladeBase* blade) {
     LayerRunResult base_run_result = RunLayer(&base_, blade);
     LayerRunResult layer_run_result = RunLayer(&layer_, blade);
@@ -75,40 +83,30 @@ public:
   }
 };
 
+template<class BASE, class ... LAYERS> struct LayerSelector {};
+template<class BASE> struct LayerSelector<BASE> { typedef BASE type; };
 
-// Reject solid layers after the first
-template<class BASE, class L1>
-struct LayerSelector<BASE, L1> {
-  using BaseColorT  = decltype(std::declval<BASE&>().getColor(0));
-  using LayerColorT = decltype(std::declval<L1&>().getColor(0));
-  static_assert(!(color_details::IsOpaqueColor<BaseColorT>::value &&
-                  color_details::IsOpaqueColor<LayerColorT>::value),
-                "\n\n"
-                "           --------------------------------------------------------------------------\n"
-                "           |              (This is the error you are looking for)                   |\n"
-                "           |                                                                        |\n"
-                "           |            Layers<> ERROR: CANNOT STACK TWO SOLID COLORS.              |\n"
-                "           |                                                                        |\n"
-                "           --------------------------------------------------------------------------\n"
-                "\n\n");
-  typedef Compose<BASE, L1> type;
+// Drop fully transparent first item (Alpha 0) when there are exactly 2 args.
+template<class BASE, class L1> struct LayerSelector<AlphaL<BASE, Int<0>>, L1> { typedef L1 type; };
+
+// Drop fully transparent first item (Alpha 0) when there are 3+ args.
+template<class BASE, class L1, class L2, class... REST>
+struct LayerSelector<AlphaL<BASE, Int<0>>, L1, L2, REST...> {
+  typedef typename LayerSelector<L1, L2, REST...>::type type;
 };
 
-// Recursive
+// Drop BLACK as first item when there are exactly 2 args.
+template<class L1> struct LayerSelector<BLACK, L1> { typedef L1 type; };
+
+// Drop BLACK as first item when there are 3+ args.
+template<class L1, class L2, class... REST>
+struct LayerSelector<BLACK, L1, L2, REST...> {
+  typedef typename LayerSelector<L1, L2, REST...>::type type;
+};
+
+template<class BASE, class L1> struct LayerSelector<BASE, L1> { typedef Compose<BASE, L1> type; };
 template<class BASE, class L1, class ... REST>
 struct LayerSelector<BASE, L1, REST...> {
-  using BaseColorT  = decltype(std::declval<BASE&>().getColor(0));
-  using LayerColorT = decltype(std::declval<L1&>().getColor(0));
-  static_assert(!(color_details::IsOpaqueColor<BaseColorT>::value &&
-                  color_details::IsOpaqueColor<LayerColorT>::value),
-                "\n\n"
-                "           --------------------------------------------------------------------------\n"
-                "           |              (This is the error you are looking for)                   |\n"
-                "           |                                                                        |\n"
-                "           |            Layers<> ERROR: CANNOT STACK TWO SOLID COLORS.              |\n"
-                "           |                                                                        |\n"
-                "           --------------------------------------------------------------------------\n"
-                "\n\n");
   typedef typename LayerSelector<Compose<BASE, L1>, REST...>::type type;
 };
 
