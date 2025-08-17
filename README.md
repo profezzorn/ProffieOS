@@ -1,4 +1,4 @@
-# This is my personal version of ProffieOS, based on POS 8.3x from Github Master (June 2025)
+# This is my personal version of ProffieOS, based on POS 8.4x from Github Master (August 2025)
 Changes includes, but not limited to:
 - muliple blade detect code added in: part 1/4 to events.h 2/4 to config, part 3/4 to props, part 4/4 to ProffieOS.ino
 - config/olicomplex1.6.03.5_BT_re-organized.h added (my config - as a multi_prop config example)
@@ -10,7 +10,7 @@ Changes includes, but not limited to:
   - buttons/button_base.h        (for multi_prop compatibility)
   - common/events.h              (for multiple blade detect & multi_prop compatibility)
   - common/saber_base.h          (for multi_prop, detonator_Oli_buttons & jetpack_Oli_buttons compatibility)
-  - common/serial.h              (because I like it better this way)
+  - common/serial.h              (because I like the customized welcome info when I open serial monitor in Arduino)
   - props/blaster_BC_buttons.h   (for multi_prop compatibility)
   - props/detonator.h            (for multi_prop compatibility)
   - props/dual_prop.h            (based on potential issues I identified with multi_prop)
