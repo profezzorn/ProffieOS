@@ -25,7 +25,7 @@ class Compose {
 public:
   static_assert(!color_details::IsOpaqueColor<decltype(std::declval<L1&>().getColor(0))>::value,
                 "\n\n"
-                "*** Layers<> ERROR: CANNOT STACK TWO SOLID COLORS.\n\n");
+                "*** Layers<> error: Only the base color may be solid.\n\n");
   LayerRunResult run(BladeBase* blade) {
     LayerRunResult base_run_result = RunLayer(&base_, blade);
     LayerRunResult layer_run_result = RunLayer(&layer_, blade);
