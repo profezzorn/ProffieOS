@@ -23,7 +23,7 @@
 template<class BASE, class L1>
 class Compose {
 public:
-static_assert(!color_details::IsOpaqueColor<decltype(std::declval<L1&>().getColor(0))>::value,
+  static_assert(!color_details::IsOpaqueColor<decltype(std::declval<L1&>().getColor(0))>::value,
                 "\n\n"
                 "*** Layers<> ERROR: CANNOT STACK TWO SOLID COLORS.\n\n");
   LayerRunResult run(BladeBase* blade) {
@@ -95,7 +95,7 @@ struct LayerSelector<AlphaL<BASE, Int<0>>, L1, L2, REST...> {
 template<class BASE, class L1> struct LayerSelector<BASE, L1> { typedef Compose<BASE, L1> type; };
 template<class BASE, class L1, class ... REST>
 struct LayerSelector<BASE, L1, REST...> {
-  typedef typename LayerSelector<Compose<BASE, L1>, REST...>::type type;
+  typedef typename LayerSelector<typename LayerSelector<BASE, L1>::type, REST...>::type type;
 };
 
 template<class BASE, class... LAYERS> using Layers = typename LayerSelector<BASE, LAYERS...>::type;
