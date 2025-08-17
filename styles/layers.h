@@ -86,12 +86,6 @@ template<class BASE> struct LayerSelector<BASE> { typedef BASE type; };
 // Drop fully transparent first item (Alpha 0) when there are exactly 2 args.
 template<class BASE, class L1> struct LayerSelector<AlphaL<BASE, Int<0>>, L1> { typedef L1 type; };
 
-// Drop fully transparent first item (Alpha 0) when there are 3+ args.
-template<class BASE, class L1, class L2, class... REST>
-struct LayerSelector<AlphaL<BASE, Int<0>>, L1, L2, REST...> {
-  typedef typename LayerSelector<L1, L2, REST...>::type type;
-};
-
 template<class BASE, class L1> struct LayerSelector<BASE, L1> { typedef Compose<BASE, L1> type; };
 template<class BASE, class L1, class ... REST>
 struct LayerSelector<BASE, L1, REST...> {
@@ -99,5 +93,6 @@ struct LayerSelector<BASE, L1, REST...> {
 };
 
 template<class BASE, class... LAYERS> using Layers = typename LayerSelector<BASE, LAYERS...>::type;
+
 
 #endif
