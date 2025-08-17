@@ -25,7 +25,7 @@ Enter/Exit Color Change - 1 button saber = Hold button and Twist.
 Enter Menu -              Double-click AUX button while blade is off.
   Use POW to select
   Use AUX to cancel/exit
-** Note Menu only works with ProffieOS 8.x and above and requires a voicepack V2 in your common folder
+** Note Menu requires a voicepack V2 in your common folder to work
 */
 
 #ifndef PROPS_SABER_H
