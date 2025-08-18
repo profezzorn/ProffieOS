@@ -11,7 +11,9 @@
 // BASE: COLOR or LAYER
 // LAYER1, LAYER2: LAYER
 // return value: COLOR or LAYER (same as BASE)
-// This style works like layers in Photoshop: each layer is painted over the one beneath it.
+// This style works like layers in Photoshop: each layer adds to the stack covering the base. 
+// The written order of layers in the blade style code puts the base first, with any following layers visually covering it.
+//
 // When a Layers<> is used as the first template argument to StylePtr<>, its BASE color (the first layer)
 // must be a solid (opaque) color, not transparent. No additional solid colors may be stacked on top
 // of that solid base.
@@ -19,11 +21,13 @@
 // so the base color shows through until an effect wants to paint over it (e.g., a clash).
 // Layers<> can be nested inside other Layers<> and can be used anywhere a STYLE or COLOR is expected.
 
-
 template<class BASE, class L1>
 class Compose {
 public:
-  static_assert(!color_details::IsOpaqueColor<decltype(std::declval<L1&>().getColor(0))>::value,
+  using _BaseColorT  = decltype(std::declval<BASE&>().getColor(0));
+  using _LayerColorT = decltype(std::declval<L1&>().getColor(0));
+  static_assert(!(color_details::IsOpaqueColor<_BaseColorT>::value &&
+                  color_details::IsOpaqueColor<_LayerColorT>::value),
                 "\n\n"
                 "*** Layers<> error: Only the base color may be solid.\n\n");
   LayerRunResult run(BladeBase* blade) {
@@ -86,6 +90,19 @@ template<class BASE> struct LayerSelector<BASE> { typedef BASE type; };
 // Drop fully transparent first item (Alpha 0) when there are exactly 2 args.
 template<class BASE, class L1> struct LayerSelector<AlphaL<BASE, Int<0>>, L1> { typedef L1 type; };
 
+// Drop fully transparent when it’s the second (right) item in a pair.
+template<class BASE, class ABASE>
+struct LayerSelector<BASE, AlphaL<ABASE, Int<0>>> { typedef BASE type; };
+
+// Drop BLACK when it’s first (two-arg case).
+template<class L1>
+struct LayerSelector<BLACK, L1> { typedef L1 type; };
+
+// Drop BLACK when it’s first (recursive case).
+template<class L1, class... REST>
+struct LayerSelector<BLACK, L1, REST...> {
+  typedef typename LayerSelector<L1, REST...>::type type;
+};
 template<class BASE, class L1> struct LayerSelector<BASE, L1> { typedef Compose<BASE, L1> type; };
 template<class BASE, class L1, class ... REST>
 struct LayerSelector<BASE, L1, REST...> {
@@ -93,6 +110,5 @@ struct LayerSelector<BASE, L1, REST...> {
 };
 
 template<class BASE, class... LAYERS> using Layers = typename LayerSelector<BASE, LAYERS...>::type;
-
 
 #endif
