@@ -24,7 +24,7 @@
 template<class BASE, class L1>
 class Compose {
 public:
-static_assert(!color_details::IsOpaqueColor<decltype(std::declval<L1&>().getColor(0))>::value,
+  static_assert(!color_details::IsOpaqueColor<decltype(std::declval<L1&>().getColor(0))>::value,
                 "\n\n"
                 "*** Layers<> error: Only the base color may be solid.\n\n");
   LayerRunResult run(BladeBase* blade) {
