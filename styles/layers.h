@@ -91,15 +91,6 @@ template<class BASE, class L1> struct LayerSelector<AlphaL<BASE, Int<0>>, L1> { 
 template<class BASE, class ABASE>
 struct LayerSelector<BASE, AlphaL<ABASE, Int<0>>> { typedef BASE type; };
 
-// Drop BLACK when it’s first (two-arg case).
-template<class L1>
-struct LayerSelector<BLACK, L1> { typedef L1 type; };
-
-// Drop BLACK when it’s first (recursive case).
-template<class L1, class... REST>
-struct LayerSelector<BLACK, L1, REST...> {
-  typedef typename LayerSelector<L1, REST...>::type type;
-};
 template<class BASE, class L1> struct LayerSelector<BASE, L1> { typedef Compose<BASE, L1> type; };
 template<class BASE, class L1, class ... REST>
 struct LayerSelector<BASE, L1, REST...> {
