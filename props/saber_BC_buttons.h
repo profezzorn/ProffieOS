@@ -1154,6 +1154,9 @@ EFFECT(push);       // for Force Push gesture
 EFFECT(tr);         // for EFFECT_TRANSITION_SOUND, use with User Effects.
 EFFECT(mute);       // Notification before muted ignition to avoid confusion.
 EFFECT(array);      // for Manual Blade Array switching
+#ifdef BC_BUTTON_CLICKER
+EFFECT(press);      // for button press clicks when OFF only.
+#endif
 
 template<class SPEC>
 struct BCScrollPresetsMode : public SPEC::SteppedMode {
@@ -1196,6 +1199,13 @@ struct BCScrollPresetsMode : public SPEC::SteppedMode {
       case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, 0):
         exit();
         return true;
+#ifdef BC_BUTTON_CLICKER
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
+      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_OFF):
+      case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_OFF):
+        hybrid_font.PlayPolyphonic(&SFX_press);
+        return true;
+#endif
     }
     return false;
   }
@@ -1321,6 +1331,14 @@ struct BCVolumeMode : public SPEC::SteppedMode {
       case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD_MEDIUM, 0):
         QuickMinVolume();
         return true;
+
+#ifdef BC_BUTTON_CLICKER
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
+      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_OFF):
+      case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_OFF):
+        hybrid_font.PlayPolyphonic(&SFX_press);
+        return true;
+#endif
     }
     // Use the select and exit controls from SelectCancelMode
     return SPEC::SelectCancelMode::mode_Event2(button, event, modifiers);
@@ -1374,6 +1392,20 @@ struct BCSelectBladeMode : public SPEC::MenuBase {
     popMode();
     pushMode<typename SPEC::ChangeBladeLengthMode>();
   }
+
+#ifdef BC_BUTTON_CLICKER
+  bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+    switch (EVENTID(button, event, 0)) {
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
+      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_OFF):
+      case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_OFF):
+        hybrid_font.PlayPolyphonic(&SFX_press);
+        return true;
+    }
+    // Use the select and exit controls from SelectCancelMode
+    return SPEC::SelectCancelMode::mode_Event2(button, event, modifiers);
+  }
+#endif
 };
 
 template<class SPEC>
@@ -1397,6 +1429,20 @@ struct BCChangeBladeLengthBlade1 : public mode::ChangeBladeLengthBlade1<SPEC> {
     if (!this->say_time_) this->say_time_ += 1;
     this->fadeout(SaberBase::sound_length);
   }
+
+#ifdef BC_BUTTON_CLICKER
+  bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
+    switch (EVENTID(button, event, 0)) {
+      case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
+      case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_OFF):
+      case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_OFF):
+        hybrid_font.PlayPolyphonic(&SFX_press);
+        return true;
+    }
+    // Use the select and exit controls from SelectCancelMode
+    return SPEC::SelectCancelMode::mode_Event2(button, event, modifiers);
+  }
+#endif
 };
 #endif  // DYNAMIC_BLADE_LENGTH
 
@@ -2824,6 +2870,9 @@ any # of buttons
       case EVENTID(BUTTON_POWER, EVENT_PRESSED, MODE_OFF):
       case EVENTID(BUTTON_AUX, EVENT_PRESSED, MODE_OFF):
       case EVENTID(BUTTON_AUX2, EVENT_PRESSED, MODE_OFF):
+#ifdef BC_BUTTON_CLICKER
+        hybrid_font.PlayPolyphonic(&SFX_press);
+#endif
         saber_off_time_ = millis();
         SaberBase::RequestMotion();
         return true;
