@@ -11,7 +11,7 @@
 // BASE: COLOR or LAYER
 // LAYER1, LAYER2: LAYER
 // return value: COLOR or LAYER (same as BASE)
-// This style works like layers in Photoshop: each layer adds to the stack covering the base. 
+// This style works like layers in Gimp or Photoshop: each layer adds to the stack covering the base.
 // The written order of layers in the blade style code puts the base first, with any following layers visually covering it.
 //
 // When a Layers<> is used as the first template argument to StylePtr<>, its BASE color (the first layer)
