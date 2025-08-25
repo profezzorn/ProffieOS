@@ -1154,6 +1154,9 @@ EFFECT(push);       // for Force Push gesture
 EFFECT(tr);         // for EFFECT_TRANSITION_SOUND, use with User Effects.
 EFFECT(mute);       // Notification before muted ignition to avoid confusion.
 EFFECT(array);      // for Manual Blade Array switching
+#ifdef BC_BUTTON_CLICKER
+EFFECT(press);      // for button press clicks when OFF only.
+#endif
 
 template<class SPEC>
 struct BCScrollPresetsMode : public SPEC::SteppedMode {
@@ -2116,6 +2119,17 @@ void DoSavedTwist() {
   }
 
   RefPtr<BufferedWavPlayer> wav_player;
+
+  bool Event(enum BUTTON button, EVENT event) override {
+#ifdef BC_BUTTON_CLICKER
+    // Play clicker only when saber is OFF and a button is PRESSED
+    if (!IsOn() && event == EVENT_PRESSED &&
+        (button == BUTTON_POWER || button == BUTTON_AUX || button == BUTTON_AUX2)) {
+      hybrid_font.PlayPolyphonic(&SFX_press);
+    }
+#endif
+    return PropBase::Event(button, event);
+  }
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
