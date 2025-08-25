@@ -11,15 +11,19 @@
 // BASE: COLOR or LAYER
 // LAYER1, LAYER2: LAYER
 // return value: COLOR or LAYER (same as BASE)
-// This style works like layers in Gimp or Photoshop: each layer adds to the stack covering the base.
-// The written order of layers in the blade style code puts the base first, with any following layers visually covering it.
+// This style works like layers in Gimp or Photoshop: each layer adds to the stack covering the BASE.
+// The written order of layers in the blade style code puts the BASE first,
+// with any following layers visually covering it. (later layers draw over earlier ones)
+// The rule for opacity is as follows:
+//   The output of Layers<> is opaque if the BASE of that Layers<> is opaque.
+//   If BASE is transparent: the overall result is transparent.
+//   No additional solid opaque colors may be stacked on top of an opaque BASE.
 //
-// When a Layers<> is used as the first template argument to StylePtr<>, its BASE color (the first layer)
-// must be a solid (opaque) color, not transparent. No additional solid colors may be stacked on top
-// of that solid base.
-// Additional layers stacked on top of a solid base color are transparent,
-// so the base color shows through until an effect wants to paint over it (e.g., a clash).
-// Layers<> can be nested inside other Layers<> and can be used anywhere a STYLE or COLOR is expected.
+// StylePtr<> expects its argument to be opaque.
+// Therefore, when using StylePtr<Layers<BASE, ... >>(), BASE MUST be an opaque color.
+//
+// Layers<> itself can still be nested anywhere a STYLE/COLOR is allowed; only the top-level StylePtr<...>()
+// requirement forces the requirement of the BASE to be opaque in that specific position.
 
 template<class BASE, class L1>
 class Compose {
