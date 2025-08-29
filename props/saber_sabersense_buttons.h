@@ -1,4 +1,4 @@
-/* V7/8-265.
+/* V7/8-285.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -101,7 +101,8 @@ FUNCTIONS WITH BLADE OFF
   Play Character Quote      Fast double-click, hilt pointing up, plays sequentially. **
   Play Music Track          Fast double-click, hilt pointing down. **
   Speak battery voltage     Fast double-click-and-hold, hilt horizontal.
-  Run BladeID/Array Select  Fast triple-click while OFF. (Applicable installs only).
+  Run BladeID/Array Select  Fast triple-click while OFF. (Configurable, applicable installs only).
+                              Array Selector is point up for forwards, down for backwards.
   Restore Factory Defaults  Fast four-clicks while OFF, hold on last click.
                               Release once announcement starts.
   Enter/Exit VOLUME MENU    Hold and clash while OFF.
@@ -157,7 +158,8 @@ FUNCTIONS WITH BLADE OFF
   Play Character Quote      Fast double-click POWER, hilt pointing up, plays sequentially. **
   Play Music Track          Fast double-click POWER, pointing down. **
   Speak battery voltage     Fast double-click-and-hold POWER.
-  Run BladeID/Array Select  Fast triple-click. (Applicable installs only).
+  Run BladeID/Array Select  Fast triple-click POWER. (Configurable, applicable installs only).
+                              Array Selector is point up for forwards, down for backwards.
   Restore Factory Defaults  Fast four-clicks POWER, hold on last click.
                               Release once announcement starts.
   Enter/Exit VOLUME MENU    Hold POWER then quickly click AUX and release both simultaneously.
@@ -210,13 +212,13 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Plays array-specific bladeidX.wav files when switching.
 
 #define SABERSENSE_ARRAY_SELECTOR
-  Replaces regular BladeID and allows cycling between
-  different blade/preset arrays manually, regardless
-  of actual BladeID status. Plays array-specific
-  arrayX.wav files when switching.
+  Replaces regular BladeID and allows forwards or
+  backwards cycling between different blade/preset
+  arrays manually, regardless of actual BladeID status.
+  Plays array-specific arrayX.wav files when switching.
   Requires arrays to be numbered consecutively,
-  starting at zero, in the field that would otherwise
-  contain BladeID values. Like this:
+  starting at zero, in the field that would
+  otherwise contain BladeID values. Like this:
       { 0, ... }
       { 1, ... }
       { 2, ... }
@@ -230,8 +232,8 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Note that you can have any number of Blade-In arrays
   in your config, but only one NO_BLADE array is supported.
   Note also that NO_BLADE replaces the zero array,
-  meaning that Blade-In array numbering must be consecutive
-  starting at 1. Like this:
+  meaning that Blade-In array numbering must be
+  consecutive starting at 1. Like this:
       { NO_BLADE, ... }
       { 1, ... }
       { 2, ... }
@@ -321,6 +323,12 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Applicable to two-button mode only, reverts to lockup
   being triggered by clash while holding aux.
 
+#define SABERSENSE_F263_CUSTOM_USER_EFFECT
+  Based on Fett263 'Special Abilities', this define
+  enables interaction with EFFECT_USERx in standard
+  (non-Fett) blade styles for custom effects like
+  swing colour changing.
+
 GESTURE CONTROLS
   There are four gesture types: Twist, Stab, Swing and Thrust.
   Gesture controls bypass all preon effects.
@@ -349,47 +357,60 @@ GESTURE CONTROLS
   // Check user-defined array is valid at compile time.
   static_assert(
     SABERSENSE_DEFAULT_BLADE_ARRAY < NELEM(blades),
-    "[Sabersense] ERROR: "
-    "#define SABERSENSE_DEFAULT_BLADE_ARRAY must be less than the number of blade arrays present."
+    "SABERSENSE_DEFAULT_BLADE_ARRAY must reference a valid array (note zero-based counting)."
   );
+
 #ifdef BLADE_DETECT_PIN
   static_assert(
     SABERSENSE_DEFAULT_BLADE_ARRAY != 0,
-    "[Sabersense] ERROR: "
-    "#define SABERSENSE_DEFAULT_BLADE_ARRAY must be 1 or higher when using Blade Detect."
+    "[Sabersense] ERROR: Default array index must be 1 or higher when using Blade Detect."
   );
+  constexpr int min_blades_required = 3;
+#else
+  constexpr int min_blades_required = 2;
 #endif
+
+  // Check that Array Selector is actually needed (prevents possible unexpected behaviour).
+  static_assert(
+    NELEM(blades) >= min_blades_required,
+    "[Sabersense] ERROR: Array Selector is not required with only one selectable blade array. "
+    "Please undefine SABERSENSE_ARRAY_SELECTOR."
+  );
 
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
 class SaveArrayStateFile : public ConfigFile {
 public:
   void iterateVariables(VariableOP *op) override {
-    // Default array if no save file present...
     CONFIG_VARIABLE2(sabersense_array_index, SABERSENSE_DEFAULT_BLADE_ARRAY);
   }
-  int sabersense_array_index;  // Stores current array index.
+  int sabersense_array_index;
 };
 #endif
 
-    struct SabersenseArraySelector {
-      static int return_value;  // Tracks current array index.
-      float id() {
-        if (return_value < 0 || return_value >= NELEM(blades)) {
-          Serial.println("[Sabersense] ALERT: User or externally-specified array index invalid. "
-                         "Resetting to default.");
-          return_value = SABERSENSE_DEFAULT_BLADE_ARRAY;
-        }
-        return return_value;
+  struct SabersenseArraySelector {
+    static int return_value;
+    float id() {
+      if (return_value < 0 || return_value >= NELEM(blades)) {
+        Serial.println("[Sabersense] ALERT: User or externally-specified array index invalid. "
+                       "Resetting to default.");
+        return_value = SABERSENSE_DEFAULT_BLADE_ARRAY;
       }
-      static void cycle() {
-#ifndef BLADE_DETECT_PIN
-        return_value = (return_value + 1) % NELEM(blades);
-#else   // Improved logic fixes early Array1 repetition when using Blade Detect.
-        return_value = 1 + return_value % (NELEM(blades) - 1);
-#endif
-      }
-    };
+      return return_value;
+    }
 
+    static void cycle_array(bool forward) {
+      int size = NELEM(blades);
+      int offset = 0;
+#ifdef BLADE_DETECT_PIN
+      offset = 1;
+      size--;
+#endif
+      return_value += forward ? 1 : (size - 1);
+      return_value = (return_value + size - offset) % size + offset;
+    }
+  };
+
+    // Set initial index based on Blade Detect mode.
 #ifndef BLADE_DETECT_PIN
     int SabersenseArraySelector::return_value = 0;
 #else
@@ -400,7 +421,7 @@ public:
 #define BLADE_ID_CLASS_INTERNAL SabersenseArraySelector
 #undef BLADE_ID_CLASS
 #define BLADE_ID_CLASS SabersenseArraySelector
-#endif
+#endif  // SABERSENSE_ARRAY_SELECTOR
 
 #include "prop_base.h"
 
@@ -570,34 +591,34 @@ public:
 
   // Two Button system: Up/Down only - loose angle settings for ease of use.
   bool MultiFontSkip(int skip_value) {
-      float angle = fusor.angle1();
-      int delta = 0;
+    float angle = fusor.angle1();
+    int delta = 0;
 
 #if NUM_BUTTONS == 2
-      delta = (angle < -M_PI / 4) ? -skip_value : skip_value;
+    delta = (angle < -M_PI / 4) ? -skip_value : skip_value;
 #elif NUM_BUTTONS == 1
-      if (angle < -M_PI / 6) {  // Pointing down
-        delta = -skip_value;
-      } else if (angle > M_PI / 6) {  // Pointing up
-        delta = skip_value;
-      } else {
-        SpeakBatteryLevel();
-        return true;
-      }
+    if (angle < -M_PI / 6) {  // Pointing down
+      delta = -skip_value;
+    } else if (angle > M_PI / 6) {  // Pointing up
+      delta = skip_value;
+    } else {
+      SpeakBatteryLevel();
+      return true;
+    }
 #endif
-      int count = GetNumberOfPresets();
-      int new_index = current_preset_.preset_num + delta;
-      // Capping/Clamping, not wrapping - less disorienting for user.
-      if (new_index < 0) new_index = 0;
-      if (new_index >= count) new_index = count - 1;
+    int count = GetNumberOfPresets();
+    int new_index = current_preset_.preset_num + delta;
+    // Capping/Clamping, not wrapping - less disorientating for user.
+    if (new_index < 0) new_index = 0;
+    if (new_index >= count) new_index = count - 1;
 
 #ifdef SAVE_PRESET
-      SaveState(new_index);
+    SaveState(new_index);
 #endif
 
-      SetPreset(new_index, true);
-      return true;
-}
+    SetPreset(new_index, true);
+    return true;
+  }
 
   // VOLUME MENU
   void VolumeUp() {
@@ -720,7 +741,7 @@ public:
   }
 #endif
 
-  void NextBladeArray() {
+  void PlayArraySound() {
 #ifdef SABERSENSE_ENABLE_ARRAY_FONT_IDENT  // Plays 'array' sound AND 'font' sound.
     SFX_array.Select(current_config - blades);
     hybrid_font.PlayCommon(&SFX_array);
@@ -746,17 +767,17 @@ public:
 // RESET FACTORY DEFAULTS (Delete Save Files).
 // Script to determine if sound effects have finished.
 #ifndef SABERSENSE_DISABLE_RESET
-bool IsSoundPlaying(const Effect* sound) {
-  return !!GetWavPlayerPlaying(sound);
-}
+  bool IsSoundPlaying(const Effect* sound) {
+    return !!GetWavPlayerPlaying(sound);
+  }
 #endif
 
-void PlaySound(const char* sound) {
-  RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
-  if (player) {
-    if (!player->PlayInCurrentDir(sound)) player->Play(sound);
+  void PlaySound(const char* sound) {
+    RefPtr<BufferedWavPlayer> player = GetFreeWavPlayer();
+    if (player) {
+      if (!player->PlayInCurrentDir(sound)) player->Play(sound);
+    }
   }
-}
 
 bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
   if (GetWavPlayerPlaying(&SFX_boot)) return false;
@@ -843,6 +864,41 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 #endif
 
+    // Based on Fett263 'Special Abilities'.
+#ifdef SABERSENSE_F263_CUSTOM_USER_EFFECT
+#if NUM_BUTTONS >= 1
+    case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
+      SaberBase::DoEffect(EFFECT_USER5, 0);
+      return true;
+
+    case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
+      SaberBase::DoEffect(EFFECT_USER6, 0);
+      return true;      
+
+    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
+      SaberBase::DoEffect(EFFECT_USER7, 0);
+      return true;  
+#endif
+
+#if NUM_BUTTONS == 2
+    case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
+      SaberBase::DoEffect(EFFECT_USER3, 0);
+      return true;
+
+    case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
+      SaberBase::DoEffect(EFFECT_USER4, 0);
+      return true;
+
+    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
+      SaberBase::DoEffect(EFFECT_USER1, 0);
+      return true;
+
+    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_AUX):
+      SaberBase::DoEffect(EFFECT_USER2, 0);
+      return true;
+#endif
+#endif  // SABERSENSE_F263_CUSTOM_USER_EFFECT
+
     // MAIN ACTIVATION
     // Saber ON AND Volume Adjust, 1 and 2 Button.
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
@@ -920,9 +976,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // Next/previous preset and volume down. Next preset (UP), previous preset (DOWN).
 #if NUM_BUTTONS == 2
     case EVENTID(BUTTON_AUX, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
-      // backwards if pointing down
+      // backwards if pointing down (anything ≤ 0 is down)
       if (!mode_volume_) {
-        SetPreset(current_preset_.preset_num + (fusor.angle1() < -M_PI / 4 ? -1 : 1), true);
+        SetPreset(current_preset_.preset_num + (fusor.angle1() > 0 ? 1 : -1), true);
       } else {
         VolumeDown();
       }
@@ -1018,12 +1074,15 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_POWER, EVENT_THIRD_SAVED_CLICK_SHORT, MODE_OFF):
       // Check for blade present if using Blade Detect.
 #ifdef BLADE_DETECT_PIN
-        if (!blade_detected_) return true; // Do nothing if no blade detected.
+      if (!blade_detected_) return true; // Do nothing if no blade detected.
 #endif
-      // Cycles through blade arrays regardless of BladeID status.
-      SabersenseArraySelector::cycle();
+      {
+        // Cycles through blade arrays regardless of BladeID status.
+        bool forward = fusor.angle1() > 0;
+        SabersenseArraySelector::cycle_array(forward);
+      }
       FindBladeAgain();
-      NextBladeArray();
+      PlayArraySound();
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
       SaveArrayState();
 #endif
@@ -1314,9 +1373,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
   void SB_Effect(EffectType effect, EffectLocation location) override  //  For ProffieOS 8.x.
 #endif
   {
-  switch (effect) {
+    switch (effect) {
 #ifndef MODES_MODE_H
-    case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
+      case EFFECT_QUOTE: hybrid_font.PlayCommon(&SFX_quote); return;
 #endif
       case EFFECT_POWERSAVE:
         if (SFX_dim) {
