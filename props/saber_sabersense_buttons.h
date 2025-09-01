@@ -1,4 +1,4 @@
-/* V7/8-285.
+/* V7/8-286.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -958,7 +958,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     // Turn Blade OFF
     case EVENTID(BUTTON_POWER, EVENT_FIRST_HELD_MEDIUM, MODE_ON):
       if (!SaberBase::Lockup()) {
-#ifndef DISABLE_COLOR_CHANGE
+#ifndef SABERSENSE_NO_COLOR_CHANGE
         if (SaberBase::GetColorChangeMode() != SaberBase::COLOR_CHANGE_MODE_NONE) {
           // Just exit color change mode.
           // Don't turn saber off.
@@ -1165,7 +1165,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
     }
 
-#if NUM_BUTTONS == 1 || defined(SABERSENSE_BLAST_MAIN_AND_AUX)
+#if NUM_BUTTONS == 1 || defined(SABERSENSE_BLAST_PWR_AND_AUX)
       // If NOT in color change mode and 1 button system (or 2 button with define) do blast.
       swing_blast_ = false;
       SaberBase::DoBlast();
