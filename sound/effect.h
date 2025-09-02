@@ -879,4 +879,4 @@ protected:
   char filename_[128];
 };
 
-#endif
+#endif // SOUND_EFFECT_H
