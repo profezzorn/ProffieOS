@@ -644,7 +644,7 @@ public:
       energy = (A.energy * a + B.energy * b) >> 14;
       period = (A.period * a + B.period * b) >> 14;
       for (int i = 0; i < 10; i++) {
-	k[i] = (A.k[i] * a + B.k[i] * b) >> 14;
+        k[i] = (A.k[i] * a + B.k[i] * b) >> 14;
       }
     }
   }
@@ -675,8 +675,8 @@ public:
   bool Empty() { return num_words == 0; }
 
   void Say(const uint8_t* addr, uint32_t rate = 25,
-	   const tms5100_coeffs* coeffs = &tms5220_coeff
-//	   const tms5100_coeffs* coeffs = &tms5110a_coeff
+       const tms5100_coeffs* coeffs = &tms5220_coeff
+//     const tms5100_coeffs* coeffs = &tms5110a_coeff
     ) {
     rate *= 7;
     EnableAmplifier();
@@ -698,6 +698,7 @@ public:
     interrupts();
   }
 
+#ifndef KEEP_MINIMUM_TALKIE_ONLY
   void SayDigit(int digit) {
     switch (digit) {
       case 0: Say(spZERO); break;
@@ -743,17 +744,17 @@ public:
       case 3: Say(spTHIRTY); break;
       case 2: Say(spTWENTY); break;
       case 1:
-	switch (n) {
-	  case 19: Say(spNINETEEN); return;
-	  case 18: Say(spEIGHTEEN); return;
-	  case 17: Say(spSEVENTEEN); return;
-	  case 16: Say(spSIXTEEN); return;
-	  case 15: Say(spFIFTEEN); return;
-	  case 14: Say(spFOURTEEN); return;
-	  case 13: Say(spTHIRTEEN); return;
-	  case 12: Say(spTWELVE); return;
-	  case 11: Say(spELEVEN); return;
-	  case 10: Say(spTEN); return;
+    switch (n) {
+      case 19: Say(spNINETEEN); return;
+      case 18: Say(spEIGHTEEN); return;
+      case 17: Say(spSEVENTEEN); return;
+      case 16: Say(spSIXTEEN); return;
+      case 15: Say(spFIFTEEN); return;
+      case 14: Say(spFOURTEEN); return;
+      case 13: Say(spTHIRTEEN); return;
+      case 12: Say(spTWELVE); return;
+      case 11: Say(spELEVEN); return;
+      case 10: Say(spTEN); return;
 	}
     }
     n %= 10;
@@ -767,6 +768,7 @@ public:
     if (x > 1) number -= number % x;
     SayNumber(number);
   }
+#endif // KEEP_MINIMUM_TALKIE_ONLY
 
   // The ROMs used with the TI speech were serial, not byte wide.
   // Here's a handy routine to flip ROM data which is usually reversed.
@@ -817,7 +819,7 @@ public:
       if (num_words) {
         ptrAddr = words[0].ptr;
         rate_ = words[0].rate;
-	coeffs_ = words[0].coeffs;
+        coeffs_ = words[0].coeffs;
         num_words--;
         for (size_t i = 0; i < num_words; i++) words[i] = words[i + 1];
         ptrBit = 0;
@@ -830,19 +832,19 @@ public:
       new_frame.period = coeffs_->pitchtable[getBits(coeffs_->pitch_bits)];
       // A repeat frame uses the last coefficients
       if (!repeat) {
-	for (int i = 0; i < 4; i++)
-	  new_frame.k[i] = coeffs_->ktable[i][getBits(coeffs_->kbits[i])];
-	if (new_frame.period) {
-	  for (int i = 4; i < 10; i++)
-	    new_frame.k[i] = coeffs_->ktable[i][getBits(coeffs_->kbits[i])];
-	} else {
-	  for (int i = 4; i < 10; i++)
-	    new_frame.k[i] = 0;
-	}
+        for (int i = 0; i < 4; i++)
+          new_frame.k[i] = coeffs_->ktable[i][getBits(coeffs_->kbits[i])];
+        if (new_frame.period) {
+          for (int i = 4; i < 10; i++)
+            new_frame.k[i] = coeffs_->ktable[i][getBits(coeffs_->kbits[i])];
+        } else {
+          for (int i = 4; i < 10; i++)
+            new_frame.k[i] = 0;
+        }
       }
     }
   }
-  
+
   int16_t Get8kHz() {
     if (count_++ >= rate_) {
       ReadFrame();
@@ -852,7 +854,6 @@ public:
     Frame f;
     f.lerp(old_frame, new_frame, count_, rate_);
 
-    
     int32_t u[11];
 
     if (f.period) {
@@ -944,7 +945,7 @@ public:
     return ptrAddr == NULL && tmp == 0;
   }
 #endif
-  
+
   int read(int16_t* data, int elements) override {
     if (eof()) return 0;
     for (int i = 0; i < elements; i++) {
@@ -960,40 +961,58 @@ public:
   bool Parse(const char *cmd, const char* arg) override {
     uint32_t rate = 0;
     if (!strcmp(cmd, "say") && arg) {
+#ifdef KEEP_MINIMUM_TALKIE_ONLY
+      if (!strcmp(arg, "nos")) {
+        Say(talkie_no_15, 15);
+        Say(talkie_sd_15, 15);
+        return true;
+      }
+      if (!strcmp(arg, "nof")) {
+        Say(talkie_no_15, 15);
+        Say(talkie_font_15, 15);
+        return true;
+      }
+      if (!strcmp(arg, "fer")) {
+        Say(talkie_font_15, 15);
+        Say(talkie_error_15, 15);
+        return true;
+      }
+#else // KEEP_MINIMUM_TALKIE_ONLY
       if (!strcmp(arg, "bfd")) {
-  	Say(talkie_error_in_15, 15);
-  	Say(talkie_font_directory_15, 15);
-  	return true;
+        Say(talkie_error_in_15, 15);
+        Say(talkie_font_directory_15, 15);
+        return true;
       }
       if (!strcmp(arg, "bof")) {
-	Say(talkie_font_directory_15, 15);
-	Say(talkie_not_found_15, 15);
-	return true;
+        Say(talkie_font_directory_15, 15);
+        Say(talkie_not_found_15, 15);
+        return true;
       }
       if (!strcmp(arg, "ftl")) {
-	Say(talkie_font_directory_15, 15);
-	Say(talkie_too_long_15, 15);
-	return true;
+        Say(talkie_font_directory_15, 15);
+        Say(talkie_too_long_15, 15);
+        return true;
       }
       if (!strcmp(arg, "sd")) {
-	Say(talkie_sd_card_15, 15);
-	Say(talkie_not_found_15, 15);
-	return true;
+        Say(talkie_sd_card_15, 15);
+        Say(talkie_not_found_15, 15);
+        return true;
       }
       if (!strcmp(arg, "bb")) {
-	Say(talkie_error_in_15, 15);
-	Say(talkie_blade_array_15, 15);
-	return true;
+        Say(talkie_error_in_15, 15);
+        Say(talkie_blade_array_15, 15);
+        return true;
       }
       if (!strcmp(arg, "bp")) {
-	Say(talkie_error_in_15, 15);
-	Say(talkie_preset_array_15, 15);
-	return true;
+        Say(talkie_error_in_15, 15);
+        Say(talkie_preset_array_15, 15);
+        return true;
       }
       if (!strcmp(arg, "lb")) {
-	Say(talkie_low_battery_15, 15);
-	return true;
+        Say(talkie_low_battery_15, 15);
+        return true;
       }
+#endif // KEEP_MINIMUM_TALKIE_ONLY
     }
     if (!strcmp(cmd, "talkie")) rate = 25;
     if (!strcmp(cmd, "talkie_slow")) rate = 25;
@@ -1032,7 +1051,7 @@ public:
 
     return false;
   }
-#endif
+#endif // ENABLE_DEVELOPER_COMMANDS
 
 private:
   const uint8_t * ptrAddr = NULL;
@@ -1054,7 +1073,7 @@ private:
 class Talkie {
 public:
   template <typename...> struct always_false { static constexpr bool value = false; };
-  
+
   template<typename... Ts>
   void Say(Ts&&...) {
     static_assert(always_false<Ts...>::value,
@@ -1076,4 +1095,4 @@ public:
 
 #endif  // DISABLE_TALKIE
 
-#endif
+#endif // SOUND_TALKIE_H
