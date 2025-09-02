@@ -15,29 +15,45 @@ public:
 
 #ifdef PROFFIEOS_DEFINE_FUNCTION_STAGE
 
+#if defined(DISABLE_TALKIE) && defined(KEEP_MINIMUM_TALKIE_ONLY)
+#warning Your config file has DISABLE_TALKIE & KEEP_MINIMUM_TALKIE_ONLY in it. DISABLE_TALKIE has priority and no talkies will be included!
+#endif
+
+#if !defined(DISABLE_TALKIE) && !defined(KEEP_MINIMUM_TALKIE_ONLY)
+#define KEEP_REGULAR_TALKIE
+#endif
+
 void ProffieOSErrors::sd_card_not_found() {
   SaberBase::DoEffect(EFFECT_SD_CARD_NOT_FOUND, 0);
 #ifdef ENABLE_AUDIO
-#ifndef DISABLE_TALKIE
+#ifdef KEEP_MINIMUM_TALKIE_ONLY
+  talkie.Say(talkie_no_15, 15);
+  talkie.Say(talkie_sd_15, 15);
+#else // KEEP_MINIMUM_TALKIE_ONLY
   talkie.Say(talkie_sd_card_15, 15);
   talkie.Say(talkie_not_found_15, 15);
-#else
+#endif // KEEP_MINIMUM_TALKIE_ONLY
+#else // DISABLE_TALKIE
   beeper.Beep(0.5, 261.63 * 2); // C4
   beeper.Beep(0.5, 293.66 * 2); // D4
   beeper.Beep(0.5, 261.63 * 2); // C4
   beeper.Beep(0.5, 196.00 * 2); // G3
   beeper.Beep(1.0, 130.81 * 2); // C3
-#endif
+#endif // DISABLE_TALKIE
 #endif
 }
 
 void ProffieOSErrors::font_directory_not_found() {
   SaberBase::DoEffect(EFFECT_FONT_DIRECTORY_NOT_FOUND, 0);
 #ifdef ENABLE_AUDIO
-#ifndef DISABLE_TALKIE
+#ifdef KEEP_MINIMUM_TALKIE_ONLY
+  talkie.Say(talkie_no_15, 15);
+  talkie.Say(talkie_font_15, 15);
+#else // KEEP_MINIMUM_TALKIE_ONLY
   talkie.Say(talkie_font_directory_15, 15);
   talkie.Say(talkie_not_found_15, 15);
-#else
+#endif // KEEP_MINIMUM_TALKIE_ONLY
+#else // DISABLE_TALKIE
   beeper.Beep(0.5, 261.63 * 2); // C4
   beeper.Beep(0.5/3, 246.94 * 2); // B3
   beeper.Beep(0.5/3, 220.00 * 2); // A3
@@ -45,7 +61,7 @@ void ProffieOSErrors::font_directory_not_found() {
   beeper.Beep(0.5, 174.61 * 2); // F3
   beeper.Beep(0.5, 146.83 * 2); // D3
   beeper.Beep(0.5, 130.81 * 2); // C3
-#endif
+#endif // DISABLE_TALKIE
 #endif
 }
 
@@ -53,10 +69,15 @@ void ProffieOSErrors::error_in_blade_array() {
   SaberBase::DoEffect(EFFECT_ERROR_IN_BLADE_ARRAY, 0);
   STDOUT.println("BAD BLADE");
 #ifdef ENABLE_AUDIO
-#ifndef DISABLE_TALKIE
+  // play the fonts error in blade array sound if it exists
+  if (SFX_erbladar) {
+    hybrid_font.PlayCommon(&SFX_erbladar);
+    return;
+  }
+#ifdef KEEP_REGULAR_TALKIE
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_blade_array_15, 15);
-#else
+#else // KEEP_REGULAR_TALKIE
   beeper.Beep(0.25, 174.61 * 2); // F3 - Er
   beeper.Beep(0.25, 196.00 * 2); // G3 - ror
   beeper.Beep(0.25, 174.61 * 2); // F3 - in
@@ -65,17 +86,22 @@ void ProffieOSErrors::error_in_blade_array() {
   beeper.Beep(0.2, 0);
   beeper.Beep(0.5, 146.83 * 2); // D3 - ar
   beeper.Beep(1.0, 130.81 * 2); // C3 - ray
-#endif
+#endif // KEEP_REGULAR_TALKIE
+
 #endif
 }
 
 void ProffieOSErrors::error_in_font_directory() {
   SaberBase::DoEffect(EFFECT_ERROR_IN_FONT_DIRECTORY, 0);
 #ifdef ENABLE_AUDIO
-#ifndef DISABLE_TALKIE
+#ifdef KEEP_MINIMUM_TALKIE_ONLY
+  talkie.Say(talkie_font_15, 15);
+  talkie.Say(talkie_error_15, 15);
+#else // KEEP_MINIMUM_TALKIE_ONLY
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_font_directory_15, 15);
-#else
+#endif // KEEP_MINIMUM_TALKIE_ONLY
+#else // DISABLE_TALKIE
   beeper.Beep(0.25, 174.61 * 2); // F3
   beeper.Beep(0.25, 196.0 * 2); // G3
   beeper.Beep(0.25, 174.61 * 2); // F3
@@ -85,7 +111,7 @@ void ProffieOSErrors::error_in_font_directory() {
   beeper.Beep(0.5, 196.0 * 2); // G3
   beeper.Beep(0.5, 246.94 * 2); // B3
   beeper.Beep(0.5, 261.63 * 2); // C4
-#endif
+#endif // DISABLE_TALKIE
 #endif
 }
 
@@ -96,15 +122,13 @@ void ProffieOSErrors::low_battery() {
     hybrid_font.PlayCommon(&SFX_lowbatt);
     return;
   }
-
-#ifndef DISABLE_TALKIE
+#ifdef KEEP_REGULAR_TALKIE
   talkie.Say(talkie_low_battery_15, 15);
-#else
+#else // KEEP_REGULAR_TALKIE
   beeper.Beep(1.0, 261.63 * 2); // C4
   beeper.Beep(1.0, 130.81 * 2); // C3
-#endif
+#endif // KEEP_REGULAR_TALKIE
 #endif
 }
-
 
 #endif // PROFFIEOS_DEFINE_FUNCTION_STAGE
