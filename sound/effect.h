@@ -805,8 +805,11 @@ EFFECT(blast); // Not to be confused with "blst" and "blaster" as blocking sound
 // battery low
 EFFECT(lowbatt);	// battery low
 
+// error in blade array
+EFFECT(erbladar);
+
 // TODO: Optimize this and make it possible
-// have the WAV reader use this.
+// to have the WAV reader use this.
 class EffectFileReader : public FileReader {
 public:
   EffectFileReader() : FileReader(), do_open_(0) {}
