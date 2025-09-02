@@ -26,6 +26,7 @@ public:
 void ProffieOSErrors::sd_card_not_found() {
   SaberBase::DoEffect(EFFECT_SD_CARD_NOT_FOUND, 0);
 #ifdef ENABLE_AUDIO
+#ifndef DISABLE_TALKIE
 #ifdef KEEP_MINIMUM_TALKIE_ONLY
   talkie.Say(talkie_no_15, 15);
   talkie.Say(talkie_sd_15, 15);
@@ -46,6 +47,7 @@ void ProffieOSErrors::sd_card_not_found() {
 void ProffieOSErrors::font_directory_not_found() {
   SaberBase::DoEffect(EFFECT_FONT_DIRECTORY_NOT_FOUND, 0);
 #ifdef ENABLE_AUDIO
+#ifndef DISABLE_TALKIE
 #ifdef KEEP_MINIMUM_TALKIE_ONLY
   talkie.Say(talkie_no_15, 15);
   talkie.Say(talkie_font_15, 15);
@@ -87,13 +89,13 @@ void ProffieOSErrors::error_in_blade_array() {
   beeper.Beep(0.5, 146.83 * 2); // D3 - ar
   beeper.Beep(1.0, 130.81 * 2); // C3 - ray
 #endif // KEEP_REGULAR_TALKIE
-
 #endif
 }
 
 void ProffieOSErrors::error_in_font_directory() {
   SaberBase::DoEffect(EFFECT_ERROR_IN_FONT_DIRECTORY, 0);
 #ifdef ENABLE_AUDIO
+#ifndef DISABLE_TALKIE
 #ifdef KEEP_MINIMUM_TALKIE_ONLY
   talkie.Say(talkie_font_15, 15);
   talkie.Say(talkie_error_15, 15);
