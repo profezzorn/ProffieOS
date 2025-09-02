@@ -675,8 +675,8 @@ public:
   bool Empty() { return num_words == 0; }
 
   void Say(const uint8_t* addr, uint32_t rate = 25,
-       const tms5100_coeffs* coeffs = &tms5220_coeff
-//     const tms5100_coeffs* coeffs = &tms5110a_coeff
+      const tms5100_coeffs* coeffs = &tms5220_coeff
+//    const tms5100_coeffs* coeffs = &tms5110a_coeff
     ) {
     rate *= 7;
     EnableAmplifier();
@@ -744,18 +744,18 @@ public:
       case 3: Say(spTHIRTY); break;
       case 2: Say(spTWENTY); break;
       case 1:
-    switch (n) {
-      case 19: Say(spNINETEEN); return;
-      case 18: Say(spEIGHTEEN); return;
-      case 17: Say(spSEVENTEEN); return;
-      case 16: Say(spSIXTEEN); return;
-      case 15: Say(spFIFTEEN); return;
-      case 14: Say(spFOURTEEN); return;
-      case 13: Say(spTHIRTEEN); return;
-      case 12: Say(spTWELVE); return;
-      case 11: Say(spELEVEN); return;
-      case 10: Say(spTEN); return;
-	}
+        switch (n) {
+          case 19: Say(spNINETEEN); return;
+          case 18: Say(spEIGHTEEN); return;
+          case 17: Say(spSEVENTEEN); return;
+          case 16: Say(spSIXTEEN); return;
+          case 15: Say(spFIFTEEN); return;
+          case 14: Say(spFOURTEEN); return;
+          case 13: Say(spTHIRTEEN); return;
+          case 12: Say(spTWELVE); return;
+          case 11: Say(spELEVEN); return;
+          case 10: Say(spTEN); return;
+        }
     }
     n %= 10;
     if (n) SayDigit(n);
@@ -1077,19 +1077,19 @@ public:
   template<typename... Ts>
   void Say(Ts&&...) {
     static_assert(always_false<Ts...>::value,
-		  "DISABLE_TALKIE is defined, cannot call talkie.Say(...)");
+        "DISABLE_TALKIE is defined, cannot call talkie.Say(...)");
   }
 
   template<typename... Ts>
   void SayNumber(Ts&&...) {
     static_assert(always_false<Ts...>::value,
-		  "DISABLE_TALKIE is defined, cannot call talkie.SayNumber(...)");
+        "DISABLE_TALKIE is defined, cannot call talkie.SayNumber(...)");
   }
 
   template<typename... Ts>
   void SayDigit(Ts&&...) {
     static_assert(always_false<Ts...>::value,
-		  "DISABLE_TALKIE is defined, cannot call talkie.SayDigit(...)");
+        "DISABLE_TALKIE is defined, cannot call talkie.SayDigit(...)");
   }
 };
 
