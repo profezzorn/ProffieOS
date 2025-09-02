@@ -83,7 +83,7 @@ protected:
 #endif
     // Battery isn't low if it's not connected at all.
     if (battery() < 0.5) return false;
-    
+
     return battery() < (loaded_ ? 2.6 : 3.0);
   }
 
@@ -96,7 +96,7 @@ protected:
       STDOUT.print("Battery voltage: ");
       float v = battery();
       STDOUT.println(v);
-#if defined(ENABLE_AUDIO) && !defined(DISABLE_TALKIE)
+#if defined(ENABLE_AUDIO) && !defined(DISABLE_TALKIE) && !defined(KEEP_MINIMUM_TALKIE_ONLY)
       talkie.SayDigit((int)floorf(v));
       talkie.Say(spPOINT);
       talkie.SayDigit(((int)floorf(v * 10)) % 10);
