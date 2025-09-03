@@ -2120,16 +2120,15 @@ void DoSavedTwist() {
 
   RefPtr<BufferedWavPlayer> wav_player;
 
-  bool Event(enum BUTTON button, EVENT event) override {
 #ifdef BC_BUTTON_CLICKER
+  bool Event(enum BUTTON button, EVENT event) override {
     // Play clicker only when saber is OFF and a button is PRESSED
-    if (!IsOn() && event == EVENT_PRESSED &&
-        (button == BUTTON_POWER || button == BUTTON_AUX || button == BUTTON_AUX2)) {
+    if (!IsOn() && event == EVENT_PRESSED) {
       hybrid_font.PlayPolyphonic(&SFX_press);
     }
-#endif
     return PropBase::Event(button, event);
   }
+#endif
 
   bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     switch (EVENTID(button, event, modifiers)) {
