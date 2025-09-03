@@ -96,7 +96,7 @@ protected:
       STDOUT.print("Battery voltage: ");
       float v = battery();
       STDOUT.println(v);
-#if defined(ENABLE_AUDIO) && !defined(DISABLE_TALKIE) && !defined(KEEP_MINIMUM_TALKIE_ONLY)
+#if defined(ENABLE_AUDIO) && !defined(DISABLE_TALKIE) && !defined(KEEP_MINIMUM_TALKIE_ONLY) && !defined(KEEP_MINIMUM_TALKIE_ONLY)
       talkie.SayDigit((int)floorf(v));
       talkie.Say(spPOINT);
       talkie.SayDigit(((int)floorf(v * 10)) % 10);
@@ -159,4 +159,4 @@ public:
 
 BatteryMonitor battery_monitor;
 
-#endif
+#endif // COMMON_BATTERY_MONITOR_H
