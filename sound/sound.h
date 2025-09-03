@@ -115,7 +115,7 @@ void SetupStandardAudioLow() {
     wav_players[i].reset_volume();
   }
   dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
-#ifndef DISABLE_TALKIE  
+#ifndef DISABLE_TALKIE
   dynamic_mixer.streams_[NELEM(wav_players)+1] = &talkie;
 #endif
 }
@@ -128,19 +128,23 @@ void SetupStandardAudio() {
 
 void SaySDInitError(int error) {
 #ifndef DISABLE_TALKIE
+#ifndef KEEP_MINIMUM_TALKIE_ONLY
   talkie.Say(spS);
   talkie.Say(spD);
   talkie.Say(spSTART);
   talkie.SayNumber(error);
-#endif  
+#endif // KEEP_MINIMUM_TALKIE_ONLY
+#endif
 }
 
 void SaySDCheckError(int error) {
 #ifndef DISABLE_TALKIE
+#ifndef KEEP_MINIMUM_TALKIE_ONLY
   talkie.Say(spS);
   talkie.Say(spD);
   talkie.Say(spCHECK);
   talkie.SayNumber(error);
+#endif // KEEP_MINIMUM_TALKIE_ONLY
 #endif
 }
 
