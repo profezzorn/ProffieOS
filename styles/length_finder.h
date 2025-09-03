@@ -34,7 +34,8 @@ public:
     if (say_it_ && millis() - last_speak_ > 3000) {
       last_speak_ = millis();
       say_it_ = false;
-#ifdef ENABLE_AUDIO
+#if defined(ENABLE_AUDIO) && !defined(KEEP_MINIMUM_TALKIE_ONLY)
+    // feels like a "&& !defined(DISABLE_TALKIE)" should have been here already?
       talkie.SayNumber(led_ + 1);
 #endif
       STDOUT << "LEN=" << (led_ + 1) << "\n";
@@ -53,4 +54,4 @@ private:
   LIGHTUP lightup_;
 };
 
-#endif
+#endif // STYLES_LENGTH_FINDER_H
