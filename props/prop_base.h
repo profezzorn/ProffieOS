@@ -387,10 +387,10 @@ public:
 #else
 #define WRAP_BLADE_SHORTERNER(N)
 #endif
-#define SET_BLADE_STYLE(N) do {                                         \
+#define SET_BLADE_STYLE(N) do {                                           \
       BladeStyle* tmp = style_parser.Parse(current_preset_.GetStyle(N));  \
-    WRAP_BLADE_SHORTERNER(N)                                            \
-    current_config->blade##N->SetStyle(tmp);                            \
+    WRAP_BLADE_SHORTERNER(N)                                              \
+    current_config->blade##N->SetStyle(tmp);                              \
   } while (0);
 
     ONCEPERBLADE(SET_BLADE_STYLE)
@@ -434,7 +434,7 @@ public:
     TRACE(PROP, "end");
   }
 
-    // Set/Update Font & Style, skips Preon effect using FastOn (for use in Edit Mode and "fast" preset changes)
+  // Set/Update Font & Style, skips Preon effect using FastOn (for use in Edit Mode and "fast" preset changes)
   void SetPresetFast(int preset_num) {
     PVLOG_DEBUG << "SetPresetFast(" << preset_num << ")\n";
     SetPreset(preset_num, false);
@@ -527,9 +527,9 @@ public:
   }
 
   virtual void SpeakBladeID(float id) {
-#ifdef DISABLE_TALKIE
+#if defined(DISABLE_TALKIE) || defined(KEEP_MINIMUM_TALKIE_ONLY)
 #ifdef SPEAK_BLADE_ID
-#error You cannot define both DISABLE_TALKIE and SPEAK_BLADE_ID
+#error You cannot define both DISABLE_TALKIE (or KEEP_MINIMUM_TALKIE_ONLY) and SPEAK_BLADE_ID
 #endif
 #else
     talkie.Say(spI);
