@@ -810,9 +810,6 @@ EFFECT(erinftdr); // for "error in font directory"
 EFFECT(ervpntfd); // for "voice pack not found"
 EFFECT(erinvpvr); // for "error in voicepack version"
 
-// error in blade array
-EFFECT(erbladar);
-
 // TODO: Optimize this and make it possible
 // to have the WAV reader use this.
 class EffectFileReader : public FileReader {
