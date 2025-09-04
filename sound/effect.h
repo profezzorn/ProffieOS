@@ -802,8 +802,13 @@ EFFECT(endauto); // Doesn't exist in fonts, but I expect there may be use for au
 
 EFFECT(blast); // Not to be confused with "blst" and "blaster" as blocking sounds in sabers
 
-// battery low
-EFFECT(lowbatt);	// battery low
+// OS errors:
+EFFECT(lowbatt);  // for "battery low"
+EFFECT(erbladar); // for "error in blade array"
+EFFECT(erfntdnf); // for "font directory not found"
+EFFECT(erinftdr); // for "error in font directory"
+EFFECT(ervpntfd); // for "voice pack not found"
+EFFECT(erinvpvr); // for "error in voicepack version"
 
 // error in blade array
 EFFECT(erbladar);
