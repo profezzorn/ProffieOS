@@ -977,7 +977,7 @@ public:
         //Say(talkie_font_15, 15);  // this "talkie_font_15" is garbage (place holder only)
         return true;
       }
-      if (!strcmp(arg, "olifer")) {
+      if (!strcmp(arg, "fer")) {
         //Say(talkie_font_15, 15);  // this "talkie_font_15" is garbage (place holder only)
         Say(spF);
         Say(spO);
