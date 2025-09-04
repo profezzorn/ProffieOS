@@ -963,21 +963,35 @@ public:
     if (!strcmp(cmd, "say") && arg) {
 #ifdef KEEP_MINIMUM_TALKIE_ONLY
       if (!strcmp(arg, "nos")) {
-        Say(talkie_no_15, 15);
-        Say(talkie_sd_15, 15);
+        Say(spNO);
+        Say(spS);
+        Say(spD);
         return true;
       }
       if (!strcmp(arg, "nof")) {
-        Say(talkie_no_15, 15);
-        Say(talkie_font_15, 15);
+        Say(spNO);
+        Say(spF);
+        Say(spO);
+        Say(spN);
+        Say(spT);
+        //Say(talkie_font_15, 15);  // this "talkie_font_15" is garbage (place holder only)
         return true;
       }
-      if (!strcmp(arg, "fer")) {
-        Say(talkie_font_15, 15);
-        Say(talkie_error_15, 15);
+      if (!strcmp(arg, "olifer")) {
+        //Say(talkie_font_15, 15);  // this "talkie_font_15" is garbage (place holder only)
+        Say(spF);
+        Say(spO);
+        Say(spN);
+        Say(spT);
+        Say(spERROR);
         return true;
       }
 #else // KEEP_MINIMUM_TALKIE_ONLY
+      if (!strcmp(arg, "vpv")) {
+        Say(talkie_voice_pack_15, 15);  // place holder only
+        Say(talkie_version_15, 15);     // place holder only
+        return true;
+      }
       if (!strcmp(arg, "bfd")) {
         Say(talkie_error_in_15, 15);
         Say(talkie_font_directory_15, 15);
