@@ -808,7 +808,7 @@ EFFECT(erbladar); // for "error in blade array"
 EFFECT(erfntdnf); // for "font directory not found"
 EFFECT(erinftdr); // for "error in font directory"
 EFFECT(ervpntfd); // for "voice pack not found"
-EFFECT(erinvpvr); // for "error in voicepack version"
+EFFECT(erinvpvr); // for "error in voice pack version"
 
 // TODO: Optimize this and make it possible
 // to have the WAV reader use this.
