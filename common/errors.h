@@ -26,6 +26,7 @@ public:
 #error Your config file has KEEP_REGULAR_TALKIE defined. Please delete it from your config! For internal use only!
 #else
 #define KEEP_REGULAR_TALKIE
+#endif // KEEP_REGULAR_TALKIE
 #endif
 
 void ProffieOSErrors::sd_card_not_found() {
