@@ -72,11 +72,11 @@ private:
       VoicePackVersionFile f;
       f.ReadInCurrentDir("voicepack.ini");
       found_version = f.voice_pack_version;
-      PVLOG_STATUS << "Sound library version " << found_version << " found.\n";
+      PVLOG_STATUS << "Voicepack version " << found_version << " found.\n";
     }
     if (found_version < required_version_) {
-      PVLOG_ERROR << "ERROR - Sound library version " << required_version_ << " required.\n";
-      ProffieOSErrors::error_in_font_directory(); // Make new error for voice pack?
+      PVLOG_ERROR << "** ERROR - A version " << required_version_ << " voice pack is required to use selected prop file.\n";
+      ProffieOSErrors::error_in_voice_pack_version();
     }
   }
 
