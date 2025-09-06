@@ -1463,7 +1463,11 @@ public:
       ProffieOSErrors::font_directory_not_found();
       return true;
     }
-    if (!strcmp(cmd, "error_in_blade_array")) {
+    if (!strcmp(cmd, "voice_pack_not_found")) {
+      ProffieOSErrors::voice_pack_not_found();
+      return true;
+    }
+	if (!strcmp(cmd, "error_in_blade_array")) {
       ProffieOSErrors::error_in_blade_array();
       return true;
     }
