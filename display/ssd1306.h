@@ -571,14 +571,17 @@ public:
      case EFFECT_SD_CARD_NOT_FOUND:
        SetErrorMessage("sd card\nnot found");
        break;
-     case EFFECT_ERROR_IN_FONT_DIRECTORY:
-       SetErrorMessage("err font\ndirectory");
+     case EFFECT_FONT_DIRECTORY_NOT_FOUND:
+       SetErrorMessage("font dir\nnot found");
+       break;
+     case EFFECT_VOICE_PACK_NOT_FOUND:
+       SetErrorMessage("voice pack\nnot found");
        break;
      case EFFECT_ERROR_IN_BLADE_ARRAY:
        SetErrorMessage("err blade\narray");
        break;
-     case EFFECT_FONT_DIRECTORY_NOT_FOUND:
-       SetErrorMessage("font dir\nnot found");
+     case EFFECT_ERROR_IN_FONT_DIRECTORY:
+       SetErrorMessage("err font\ndirectory");
        break;
      case EFFECT_ERROR_IN_VOICE_PACK_VERSION:
        SetErrorMessage("err voice\npack ver");
