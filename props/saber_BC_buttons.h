@@ -1453,11 +1453,13 @@ public:
   SaberBCButtons() : PropBase() {}
   const char* name() override { return "SaberBCButtons"; }
 
-#ifndef MENU_SPEC_TEMPLATE
   void Setup() override{
+#ifndef MENU_SPEC_TEMPLATE
     MKSPEC<BCMenuSpec>::SoundLibrary::init();
-  }
+#else
+    SoundLibrary::init();
 #endif
+  }
 
 #if defined(DYNAMIC_BLADE_LENGTH) && !defined(MENU_SPEC_TEMPLATE)
   void EnterBladeLengthMode() {
