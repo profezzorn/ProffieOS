@@ -974,11 +974,9 @@ public:
         Say(spO);
         Say(spN);
         Say(spT);
-        //Say(talkie_font_15, 15);  // this "talkie_font_15" is garbage (place holder only)
         return true;
       }
       if (!strcmp(arg, "fer")) {
-        //Say(talkie_font_15, 15);  // this "talkie_font_15" is garbage (place holder only)
         Say(spF);
         Say(spO);
         Say(spN);
@@ -987,11 +985,53 @@ public:
         return true;
       }
 #else // KEEP_MINIMUM_TALKIE_ONLY
-      if (!strcmp(arg, "vpv")) {
-        Say(talkie_voice_pack_15, 15);  // place holder only
-        Say(talkie_version_15, 15);     // place holder only
+      if (!strcmp(arg, "vpnf")) {
+        Say(talkie_voice_pack_15, 25);
+        Say(talkie_not_found_15, 15);
+      return true;
+      }
+      if (!strcmp(arg, "eivp")) {
+        Say(talkie_error_in_15, 15);
+        Say(talkie_voice_pack_15, 15);
+        Say(talkie_version_15, 15);
+      return true;
+      }
+#ifdef OLD_PROFFIE_TALKIE
+      if (!strcmp(arg, "bfd")) {
+        Say(spERRORIN);
+        Say(spFONTDIRECTORY);
         return true;
       }
+      if (!strcmp(arg, "bof")) {
+        Say(spFONTDIRECTORY);
+        Say(spNOTFOUND);
+        return true;
+      }
+      if (!strcmp(arg, "ftl")) {
+        Say(spFONTDIRECTORY);
+        Say(spTOOLONG);
+        return true;
+      }
+      if (!strcmp(arg, "sd")) {
+        Say(spSDCARD);
+        Say(spNOTFOUND);
+        return true;
+      }
+      if (!strcmp(arg, "bb")) {
+        Say(spERRORIN);
+        Say(spBLADEARRAY);
+        return true;
+      }
+      if (!strcmp(arg, "bp")) {
+        Say(spERRORIN);
+        Say(spPRESETARRAY);
+        return true;
+      }
+      if (!strcmp(arg, "lb")) {
+        Say(spLOWBATTERY);
+        return true;
+      }
+#else // OLD_PROFFIE_TALKIE
       if (!strcmp(arg, "bfd")) {
         Say(talkie_error_in_15, 15);
         Say(talkie_font_directory_15, 15);
@@ -1026,6 +1066,7 @@ public:
         Say(talkie_low_battery_15, 15);
         return true;
       }
+#endif // OLD_PROFFIE_TALKIE
 #endif // KEEP_MINIMUM_TALKIE_ONLY
     }
     if (!strcmp(cmd, "talkie")) rate = 25;
