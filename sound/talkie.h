@@ -994,7 +994,12 @@ public:
         Say(talkie_low_battery_15, 15);
       return true;
       }
-      if (!strcmp(arg, "bvp")) {
+      if (!strcmp(arg, "vp")) {
+        Say(talkie_voice_pack_15, 25);
+        Say(talkie_not_found_15, 15);
+      return true;
+      }
+	  if (!strcmp(arg, "bvp")) {
         Say(talkie_error_in_15, 15);
         Say(talkie_voice_pack_15, 15);
         Say(talkie_version_15, 15);
