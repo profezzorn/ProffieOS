@@ -6,6 +6,7 @@ class ProffieOSErrors {
 public:
   static void sd_card_not_found();
   static void font_directory_not_found();
+  static void voice_pack_not_found();
   static void error_in_blade_array();
   static void error_in_font_directory();
   static void error_in_voice_pack_version();
@@ -46,6 +47,21 @@ void ProffieOSErrors::font_directory_not_found() {
   beeper.Beep(0.5, 174.61 * 2); // F3
   beeper.Beep(0.5, 146.83 * 2); // D3
   beeper.Beep(0.5, 130.81 * 2); // C3
+#endif
+#endif
+}
+
+void ProffieOSErrors::voice_pack_not_found() {
+  SaberBase::DoEffect(EFFECT_VOICE_PACK_NOT_FOUND, 0);
+#ifdef ENABLE_AUDIO
+#ifndef DISABLE_TALKIE
+  talkie.Say(talkie_voice_pack_15, 25);
+  talkie.Say(talkie_not_found_15, 15);
+#else
+  beeper.Beep(1.0, 220.00 * 2); // A4 - Voice
+  beeper.Beep(0.5, 130.81 * 2); // C4 - pack
+  beeper.Beep(0.5, 146.83 * 2); // D4 - not
+  beeper.Beep(1.0, 130.81 * 2); // C4 - found
 #endif
 #endif
 }
