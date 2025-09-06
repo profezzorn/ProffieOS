@@ -39,8 +39,13 @@ void ProffieOSErrors::sd_card_not_found() {
   talkie.Say(spS);
   talkie.Say(spD);
 #else // KEEP_MINIMUM_TALKIE_ONLY
+#ifdef OLD_PROFFIE_TALKIE
+  talkie.Say(spSDCARD);
+  talkie.Say(spNOTFOUND);
+#else // OLD_PROFFIE_TALKIE
   talkie.Say(talkie_sd_card_15, 15);
   talkie.Say(talkie_not_found_15, 15);
+#endif // OLD_PROFFIE_TALKIE
 #endif // KEEP_MINIMUM_TALKIE_ONLY
 #else // DISABLE_TALKIE
   beeper.Beep(0.5, 261.63 * 2); // C4 - S
@@ -67,17 +72,21 @@ void ProffieOSErrors::font_directory_not_found() {
   talkie.Say(spO);
   talkie.Say(spN);
   talkie.Say(spT);
-  //talkie.Say(talkie_font_15, 15); // this one is garbage (place holder)
 #else // KEEP_MINIMUM_TALKIE_ONLY
+#ifdef OLD_PROFFIE_TALKIE
+  talkie.Say(spFONTDIRECTORY);
+  talkie.Say(spNOTFOUND);
+#else // OLD_PROFFIE_TALKIE
   talkie.Say(talkie_font_directory_15, 15);
   talkie.Say(talkie_not_found_15, 15);
+#endif // OLD_PROFFIE_TALKIE
 #endif // KEEP_MINIMUM_TALKIE_ONLY
 #else // DISABLE_TALKIE
-  beeper.Beep(0.5, 261.63 * 2);   // C4 -
-  beeper.Beep(0.5/3, 246.94 * 2); // B3 -
-  beeper.Beep(0.5/3, 220.00 * 2); // A3 -
-  beeper.Beep(0.5/3, 196.00 * 2); // G3 -
-  beeper.Beep(0.5, 174.61 * 2);   // F3 -
+  beeper.Beep(0.5, 261.63 * 2);   // C4 - Font
+  beeper.Beep(0.5/3, 246.94 * 2); // B3 - di
+  beeper.Beep(0.5/3, 220.00 * 2); // A3 - rec
+  beeper.Beep(0.5/3, 196.00 * 2); // G3 - to
+  beeper.Beep(0.5, 174.61 * 2);   // F3 - ry
   beeper.Beep(0.5, 146.83 * 2);   // D3 - not
   beeper.Beep(0.5, 130.81 * 2);   // C3 - found
 #endif // DISABLE_TALKIE
@@ -94,8 +103,13 @@ void ProffieOSErrors::error_in_blade_array() {
     return;
   }
 #ifdef KEEP_REGULAR_TALKIE
+#ifdef OLD_PROFFIE_TALKIE
+  talkie.Say(spERRORIN);
+  talkie.Say(spBLADEARRAY);
+#else // OLD_PROFFIE_TALKIE
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_blade_array_15, 15);
+#endif // OLD_PROFFIE_TALKIE
 #else // KEEP_REGULAR_TALKIE
   beeper.Beep(0.25, 174.61 * 2); // F3 - Er
   beeper.Beep(0.25, 196.00 * 2); // G3 - ror
@@ -123,22 +137,26 @@ void ProffieOSErrors::error_in_font_directory() {
   talkie.Say(spO);
   talkie.Say(spN);
   talkie.Say(spT);
-  //talkie.Say(talkie_font_15, 15); // this one is garbage (place holder)
   talkie.Say(spERROR);
 #else // KEEP_MINIMUM_TALKIE_ONLY
+#ifdef OLD_PROFFIE_TALKIE
+  talkie.Say(spERRORIN);
+  talkie.Say(spFONTDIRECTORY);
+#else // OLD_PROFFIE_TALKIE
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_font_directory_15, 15);
+#endif // OLD_PROFFIE_TALKIE
 #endif // KEEP_MINIMUM_TALKIE_ONLY
 #else // DISABLE_TALKIE
   beeper.Beep(0.25, 174.61 * 2); // F3 - Er
   beeper.Beep(0.25, 196.00 * 2); // G3 - ror
   beeper.Beep(0.25, 174.61 * 2); // F3 - in
-  beeper.Beep(0.25, 164.81 * 2); // E3 -
-  beeper.Beep(0.5, 146.83 * 2);  // D3 - 
-  beeper.Beep(0.5, 164.81 * 2);  // E3 -
-  beeper.Beep(0.5, 196.00 * 2);  // G3 -
-  beeper.Beep(0.5, 246.94 * 2);  // B3 -
-  beeper.Beep(0.5, 261.63 * 2);  // C4 -
+  beeper.Beep(0.25, 164.81 * 2); // E3 - font
+  beeper.Beep(0.5, 146.83 * 2);  // D3 - di
+  beeper.Beep(0.5, 164.81 * 2);  // E3 - rec
+  beeper.Beep(0.5, 196.00 * 2);  // G3 - to
+  beeper.Beep(0.5, 246.94 * 2);  // B3 - r
+  beeper.Beep(0.5, 261.63 * 2);  // C4 - y
 #endif // DISABLE_TALKIE
 #endif
 }
@@ -151,7 +169,11 @@ void ProffieOSErrors::low_battery() {
     return;
   }
 #ifdef KEEP_REGULAR_TALKIE
+#ifdef OLD_PROFFIE_TALKIE
+  talkie.Say(spLOWBATTERY);
+#else // OLD_PROFFIE_TALKIE
   talkie.Say(talkie_low_battery_15, 15);
+#endif // OLD_PROFFIE_TALKIE
 #else // KEEP_REGULAR_TALKIE
   beeper.Beep(1.0, 261.63 * 2); // C4
   beeper.Beep(1.0, 130.81 * 2); // C3
@@ -169,7 +191,11 @@ void ProffieOSErrors::voice_pack_not_found() {
   }
 #ifdef KEEP_REGULAR_TALKIE
   talkie.Say(talkie_voice_pack_15, 15);
+#ifdef OLD_PROFFIE_TALKIE
+  talkie.Say(spNOTFOUND);
+#else // OLD_PROFFIE_TALKIE
   talkie.Say(talkie_not_found_15, 15);
+#endif // OLD_PROFFIE_TALKIE
 #else // KEEP_REGULAR_TALKIE
   // insert appropriate beeper.Beep codes here // ?? - voi
   // insert appropriate beeper.Beep codes here // ?? - ce
@@ -189,7 +215,11 @@ void ProffieOSErrors::error_in_voice_pack_version() {
     return;
   }
 #ifdef KEEP_REGULAR_TALKIE
+#ifdef OLD_PROFFIE_TALKIE
+  talkie.Say(spERRORIN);
+#else // OLD_PROFFIE_TALKIE
   talkie.Say(talkie_error_in_15, 15);
+#endif // OLD_PROFFIE_TALKIE
   talkie.Say(talkie_voice_pack_15, 15);
   talkie.Say(talkie_version_15 ,15);
 #else // KEEP_REGULAR_TALKIE
