@@ -580,6 +580,9 @@ public:
      case EFFECT_FONT_DIRECTORY_NOT_FOUND:
        SetErrorMessage("font dir\nnot found");
        break;
+     case EFFECT_ERROR_IN_VOICE_PACK_VERSION:
+       SetErrorMessage("err voice\npack ver");
+       break;
      case EFFECT_LOW_BATTERY:
        // Maybe we should make this blink or something?
        if (img_.IMG_lowbatt) {
