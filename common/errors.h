@@ -8,6 +8,7 @@ public:
   static void font_directory_not_found();
   static void error_in_blade_array();
   static void error_in_font_directory();
+  static void error_in_voice_pack_version();
   static void low_battery();
 };
 
@@ -85,6 +86,26 @@ void ProffieOSErrors::error_in_font_directory() {
   beeper.Beep(0.5, 196.0 * 2); // G3
   beeper.Beep(0.5, 246.94 * 2); // B3
   beeper.Beep(0.5, 261.63 * 2); // C4
+#endif
+#endif
+}
+
+void ProffieOSErrors::error_in_voice_pack_version() {
+  SaberBase::DoEffect(EFFECT_ERROR_IN_VOICE_PACK_VERSION, 0);
+#ifdef ENABLE_AUDIO
+#ifndef DISABLE_TALKIE
+  talkie.Say(talkie_error_in_15, 15);
+  talkie.Say(talkie_voice_pack_15, 15);
+  talkie.Say(talkie_version_15, 15);
+#else
+  beeper.Beep(0.25, 174.61 * 2); // F4 - Err
+  beeper.Beep(0.25, 196.00 * 2); // G4 - or
+  beeper.Beep(0.25, 174.61 * 2); // F4 - in
+  beeper.Beep(0.25, 164.81 * 2); // E4 - the
+  beeper.Beep(0.5,  220.00 * 2); // A4 - voice
+  beeper.Beep(0.5,  146.83 * 2); // D4 - pack
+  beeper.Beep(1.0,  196.00 * 2); // G4 - ver
+  beeper.Beep(0.5,  130.81 * 2); // C4 - sion
 #endif
 #endif
 }
