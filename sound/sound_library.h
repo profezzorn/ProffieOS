@@ -72,7 +72,7 @@ private:
       VoicePackVersionFile f;
       f.ReadInCurrentDir("voicepack.ini");
       found_version = f.voice_pack_version;
-      PVLOG_STATUS << "Voicepack version " << found_version << " found.\n";
+      PVLOG_STATUS << "Voice pack version " << found_version << " found.\n";
     }
     if (found_version < required_version_) {
       PVLOG_ERROR << "** ERROR - A version " << required_version_ << " voice pack is required to use selected prop file.\n";
