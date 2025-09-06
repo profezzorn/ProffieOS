@@ -1471,7 +1471,11 @@ public:
       ProffieOSErrors::error_in_font_directory();
       return true;
     }
-    if (!strcmp(cmd, "low_battery")) {
+    if (!strcmp(cmd, "error_in_voice_pack_version")) {
+      ProffieOSErrors::error_in_voice_pack_version();
+      return true;
+    }
+	if (!strcmp(cmd, "low_battery")) {
       SaberBase::DoLowBatt();
       return true;
     }
