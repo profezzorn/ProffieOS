@@ -1,6 +1,7 @@
 #ifndef SOUND_HYBRID_FONT_H
 #define SOUND_HYBRID_FONT_H
 #include "../common/fuse.h"
+#include "../common/newfont_wait.h"
 
 class FontConfigFile : public ConfigFile {
 public:
@@ -607,7 +608,13 @@ public:
       case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); return;
       case EFFECT_QUOTE: PlayCommon(&SFX_quote); return;
       case EFFECT_BOOT: PlayPolyphonic(&SFX_boot); return;
-      case EFFECT_NEWFONT: SB_NewFont(); return;
+      case EFFECT_NEWFONT:
+        if (NewFontWaitActive()) {
+          pending_newfont_ = true;
+          return;
+        }
+        SB_NewFont();
+        return;
       case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;
       case EFFECT_LOCKUP_END: SB_EndLockup(); return;
       case EFFECT_LOW_BATTERY: SB_LowBatt(); return;
@@ -861,6 +868,11 @@ public:
         SaberBase::DoEffect(EFFECT_POSTOFF, saved_location_);
       }
     }
+    // Delay NEWFONT for error talkie/beeps to finish..
+    if (pending_newfont_ && !NewFontWaitActive()) {
+      pending_newfont_ = false;
+      SB_NewFont();
+    }
   }
 
   void StopIdleSound() {
@@ -908,6 +920,7 @@ public:
   float volume_;
   float current_effect_length_ = 0.0;
   EffectLocation saved_location_;
+  bool pending_newfont_ = false;
 };
 
 #endif
