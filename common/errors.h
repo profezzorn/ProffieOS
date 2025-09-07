@@ -19,6 +19,7 @@ public:
 
 void ProffieOSErrors::sd_card_not_found() {
   SaberBase::DoEffect(EFFECT_SD_CARD_NOT_FOUND, 0);
+  PVLOG_ERROR << "** ERROR - SD card not found.\n";
 #ifdef ENABLE_AUDIO
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_sd_card_15, 15);
@@ -30,12 +31,12 @@ void ProffieOSErrors::sd_card_not_found() {
   beeper.Beep(0.5, 196.00 * 2); // G3
   beeper.Beep(1.0, 130.81 * 2); // C3
 #endif
-  PVLOG_ERROR << "** ERROR - SD card not found.\n";
 #endif
 }
 
 void ProffieOSErrors::font_directory_not_found() {
   SaberBase::DoEffect(EFFECT_FONT_DIRECTORY_NOT_FOUND, 0);
+  PVLOG_ERROR << "** ERROR - Font directory not found.\n";
 #ifdef ENABLE_AUDIO
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_font_directory_15, 15);
@@ -51,12 +52,12 @@ void ProffieOSErrors::font_directory_not_found() {
   beeper.Beep(0.5, 130.81 * 2); // C3
   delay(2530);
 #endif
-  PVLOG_ERROR << "** ERROR - Font directory not found.\n";
 #endif
 }
 
 void ProffieOSErrors::voice_pack_not_found() {
   SaberBase::DoEffect(EFFECT_VOICE_PACK_NOT_FOUND, 0);
+  PVLOG_ERROR << "** ERROR - Voice pack not found.\n";
 #ifdef ENABLE_AUDIO
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_voice_pack_15, 25);
@@ -69,13 +70,13 @@ void ProffieOSErrors::voice_pack_not_found() {
   beeper.Beep(1.0, 130.81 * 2); // C4 - found
   delay(3000);
 #endif
-  PVLOG_ERROR << "** ERROR - Voice pack not found.\n";
 #endif
 }
 
 void ProffieOSErrors::error_in_blade_array() {
   SaberBase::DoEffect(EFFECT_ERROR_IN_BLADE_ARRAY, 0);
   STDOUT.println("BAD BLADE");
+  PVLOG_ERROR << "** ERROR - Error in blade array.\n";
 #ifdef ENABLE_AUDIO
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_error_in_15, 15);
@@ -92,12 +93,12 @@ void ProffieOSErrors::error_in_blade_array() {
   beeper.Beep(1.0, 130.81 * 2); // C3 - ray
   delay(3000);
 #endif
-  PVLOG_ERROR << "** ERROR - Error in blade array.\n";
 #endif
 }
 
 void ProffieOSErrors::error_in_font_directory() {
   SaberBase::DoEffect(EFFECT_ERROR_IN_FONT_DIRECTORY, 0);
+  PVLOG_ERROR << "** ERROR - Error in font directory.\n";
 #ifdef ENABLE_AUDIO
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_error_in_15, 15);
@@ -115,12 +116,12 @@ void ProffieOSErrors::error_in_font_directory() {
   beeper.Beep(0.5, 261.63 * 2); // C4
   delay(3500);
 #endif
-  PVLOG_ERROR << "** ERROR - Error in font directory.\n";
 #endif
 }
 
 void ProffieOSErrors::error_in_voice_pack_version() {
   SaberBase::DoEffect(EFFECT_ERROR_IN_VOICE_PACK_VERSION, 0);
+  PVLOG_ERROR << "** ERROR - Error in voice pack version.\n";
 #ifdef ENABLE_AUDIO
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_error_in_15, 15);
@@ -138,7 +139,6 @@ void ProffieOSErrors::error_in_voice_pack_version() {
   beeper.Beep(0.5,  130.81 * 2); // C4 - sion
   delay(3500);
 #endif
-  PVLOG_ERROR << "** ERROR - Error in voice pack version.\n";
 #endif
 }
 
