@@ -76,7 +76,7 @@ private:
     }
     if (found_version < required_version_) {
       if (SFX_mnum) {
-        PVLOG_ERROR << "** A version " << required_version_ << " voice pack is required to use selected prop file.\n";
+        PVLOG_ERROR << "** A version " << required_version_ << " voice pack is required to use the selected prop file.\n";
         ProffieOSErrors::error_in_voice_pack_version();
       } else {
         PVLOG_ERROR << "** A voice pack is required to use selected prop file.\n";
