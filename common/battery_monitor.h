@@ -69,9 +69,9 @@ protected:
       last_voltage_read_time_ = now;
       last_voltage_ = last_voltage_ * mul + v * (1 - mul);
       if (IsLow()) {
-	low_count_++;
+        low_count_++;
       } else {
-	low_count_ = 0;
+        low_count_ = 0;
       }
     }
     STATE_MACHINE_END();
@@ -83,7 +83,7 @@ protected:
 #endif
     // Battery isn't low if it's not connected at all.
     if (battery() < 0.5) return false;
-    
+
     return battery() < (loaded_ ? 2.6 : 3.0);
   }
 
@@ -159,4 +159,4 @@ public:
 
 BatteryMonitor battery_monitor;
 
-#endif
+#endif // COMMON_BATTERY_MONITOR_H
