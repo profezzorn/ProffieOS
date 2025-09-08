@@ -53,4 +53,4 @@ private:
   LIGHTUP lightup_;
 };
 
-#endif
+#endif // STYLES_LENGTH_FINDER_H
