@@ -1,7 +1,7 @@
 #ifndef SOUND_HYBRID_FONT_H
 #define SOUND_HYBRID_FONT_H
 #include "../common/fuse.h"
-#include "../common/newfont_wait.h"
+#include "../common/delay_timer.h"
 
 class FontConfigFile : public ConfigFile {
 public:
@@ -607,12 +607,12 @@ public:
       case EFFECT_FORCE: PlayCommon(&SFX_force); return;
       case EFFECT_BLAST: Play(&SFX_blaster, &SFX_blst); return;
       case EFFECT_QUOTE: PlayCommon(&SFX_quote); return;
-      case EFFECT_BOOT: PlayPolyphonic(&SFX_boot); return;
+      case EFFECT_BOOT:
+        if (DelayTimerActive()) pending_boot_ = true; return;
+        PlayPolyphonic(&SFX_boot);
+        return;
       case EFFECT_NEWFONT:
-        if (NewFontWaitActive()) {
-          pending_newfont_ = true;
-          return;
-        }
+        if (DelayTimerActive()) pending_newfont_ = true; return;
         SB_NewFont();
         return;
       case EFFECT_LOCKUP_BEGIN: SB_BeginLockup(); return;
@@ -868,8 +868,13 @@ public:
         SaberBase::DoEffect(EFFECT_POSTOFF, saved_location_);
       }
     }
-    // Delay NEWFONT for error talkie/beeps to finish..
-    if (pending_newfont_ && !NewFontWaitActive()) {
+    // Delay boot.wav for error talkie/beeps to finish.
+    if (pending_boot_ && !DelayTimerActive()) {
+      pending_boot_ = false;
+      if (PlayPolyphonic(&SFX_boot)) return;
+    }
+    // Delay font.wav for error talkie/beeps to finish.
+    if (pending_newfont_ && !DelayTimerActive()) {
       pending_newfont_ = false;
       SB_NewFont();
     }
@@ -920,6 +925,7 @@ public:
   float volume_;
   float current_effect_length_ = 0.0;
   EffectLocation saved_location_;
+  bool pending_boot_ = false;
   bool pending_newfont_ = false;
 };
 
