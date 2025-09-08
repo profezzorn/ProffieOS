@@ -72,15 +72,16 @@ private:
       VoicePackVersionFile f;
       f.ReadInCurrentDir("voicepack.ini");
       found_version = f.voice_pack_version;
-      PVLOG_STATUS << "Voicepack version " << found_version << " found.\n";
+      PVLOG_STATUS << "Voice pack version " << found_version << " found.\n";
     }
     if (found_version < required_version_) {
       if (SFX_mnum) {
-        PVLOG_ERROR << "** ERROR - A version " << required_version_ << " voice pack is required to use selected prop file.\n";
+        PVLOG_ERROR << "** A version " << required_version_ << " voice pack is required to use selected prop file.\n";
         ProffieOSErrors::error_in_voice_pack_version();
       } else {
-        PVLOG_ERROR << "** ERROR - A voice pack is required to use selected prop file.\n";
-        ProffieOSErrors::voice_pack_not_found();
+        PVLOG_ERROR << "** A voice pack is required to use selected prop file.\n";
+        PVLOG_ERROR << "** Add sounds to SD card and append 'common' to preset's font search path.\n";
+       ProffieOSErrors::voice_pack_not_found();
       }
     }
   }
