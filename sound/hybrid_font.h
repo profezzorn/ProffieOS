@@ -642,6 +642,15 @@ public:
           PlayPolyphonic(getNext(lock_player_, &SFX_boom));
         }
         break;
+      case EFFECT_FONT_DIRECTORY_NOT_FOUND:
+	PlayErrorMessage("e_fnt_nf.wav");
+	break;
+      case EFFECT_ERROR_IN_FONT_DIRECTORY:
+	PlayErrorMessage("e_in_fnt.wav");
+	break;
+      case EFFECT_ERROR_IN_BLADE_ARRAY:
+	PlayErrorMessage("e_blade.wav");
+	break;
     }
   }
 
