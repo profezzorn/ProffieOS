@@ -100,6 +100,52 @@ RefPtr<BufferedWavPlayer> RequireFreeWavPlayer()  {
   }
 }
 
+// Helper class for dodging.
+class UnaDodger : public Looper {
+public:
+  UnaDodger() : Looper(NOLINK) {}
+  const char* name() override { return "undodge"; }
+  void start(int ms) {
+    if (millis_ == 0) Link();
+    millis_ = ms;
+    start_time_ = millis();
+    for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+      wav_players[unit].set_dodge(true);
+    }
+  }
+  void Loop() override {
+    if (millis() - start_time_ <= millis_) return;
+    start_time_ = 0;
+    millis_ = 0;
+    Unlink();
+    for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+      wav_players[unit].set_dodge(false);
+    }
+  }
+private:
+  uint32_t millis_ = 0;
+  uint32_t start_time_ = 0;
+};
+
+void DodgeSound(uint32_t millis) {
+  static UnaDodger undodge;
+  undodge.start(millis);
+}
+
+bool PlayErrorMessage(const char* filename) {
+  RefPtr<BufferedWavPlayer> ret = GetFreeWavPlayer();
+  if (!ret) return false;
+  if (!ret->PlayInCurrentDir(filename) &&
+      !ret->PlayInDir("errors", filename)) {
+    return false;
+  }
+
+  DodgeSound(ret->length() * 1000.0);
+  ret->set_dodge(false);
+  ret->UpdateSaberBaseSoundInfo();
+  return true;
+}
+
 size_t WhatUnit(class BufferedWavPlayer* player) {
   if (!player) return -1;
   return player - wav_players;
