@@ -39,8 +39,8 @@ void ProffieOSErrors::sd_card_not_found() {
 
 void ProffieOSErrors::font_directory_not_found() {
   SaberBase::DoEffect(EFFECT_FONT_DIRECTORY_NOT_FOUND, 0);
-  if (SaberBase::sound_length > 0) return;
 #ifdef ENABLE_AUDIO
+  if (SaberBase::sound_length > 0) return;
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_font_directory_15, 15);
   talkie.Say(talkie_not_found_15, 15);
@@ -60,9 +60,9 @@ void ProffieOSErrors::font_directory_not_found() {
 
 void ProffieOSErrors::error_in_blade_array() {
   SaberBase::DoEffect(EFFECT_ERROR_IN_BLADE_ARRAY, 0);
-  if (SaberBase::sound_length > 0) return;
   STDOUT.println("BAD BLADE");
 #ifdef ENABLE_AUDIO
+  if (SaberBase::sound_length > 0) return;
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_blade_array_15, 15);
@@ -83,8 +83,8 @@ void ProffieOSErrors::error_in_blade_array() {
 
 void ProffieOSErrors::error_in_font_directory() {
   SaberBase::DoEffect(EFFECT_ERROR_IN_FONT_DIRECTORY, 0);
-  if (SaberBase::sound_length > 0) return;
 #ifdef ENABLE_AUDIO
+  if (SaberBase::sound_length > 0) return;
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_error_in_15, 15);
   talkie.Say(talkie_font_directory_15, 15);
