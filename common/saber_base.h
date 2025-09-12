@@ -109,9 +109,11 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(USER8)                        \
     /* ERRORS */                                \
     DEFINE_EFFECT(SD_CARD_NOT_FOUND)            \
-    DEFINE_EFFECT(ERROR_IN_FONT_DIRECTORY)      \
-    DEFINE_EFFECT(ERROR_IN_BLADE_ARRAY)         \
     DEFINE_EFFECT(FONT_DIRECTORY_NOT_FOUND)     \
+    DEFINE_EFFECT(VOICE_PACK_NOT_FOUND)         \
+    DEFINE_EFFECT(ERROR_IN_BLADE_ARRAY)         \
+    DEFINE_EFFECT(ERROR_IN_FONT_DIRECTORY)      \
+    DEFINE_EFFECT(ERROR_IN_VOICE_PACK_VERSION)  \
     /* menu effects, triggered when you go from one menu entry to the next/previous */                             \
     DEFINE_EFFECT(MENU_CHANGE)                  \
 

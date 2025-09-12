@@ -1463,7 +1463,11 @@ public:
       ProffieOSErrors::font_directory_not_found();
       return true;
     }
-    if (!strcmp(cmd, "error_in_blade_array")) {
+    if (!strcmp(cmd, "voice_pack_not_found")) {
+      ProffieOSErrors::voice_pack_not_found();
+      return true;
+    }
+	if (!strcmp(cmd, "error_in_blade_array")) {
       ProffieOSErrors::error_in_blade_array();
       return true;
     }
@@ -1471,7 +1475,11 @@ public:
       ProffieOSErrors::error_in_font_directory();
       return true;
     }
-    if (!strcmp(cmd, "low_battery")) {
+    if (!strcmp(cmd, "error_in_voice_pack_version")) {
+      ProffieOSErrors::error_in_voice_pack_version();
+      return true;
+    }
+	if (!strcmp(cmd, "low_battery")) {
       SaberBase::DoLowBatt();
       return true;
     }

@@ -961,38 +961,49 @@ public:
     uint32_t rate = 0;
     if (!strcmp(cmd, "say") && arg) {
       if (!strcmp(arg, "bfd")) {
-  	Say(talkie_error_in_15, 15);
-  	Say(talkie_font_directory_15, 15);
-  	return true;
+        Say(talkie_error_in_15, 15);
+        Say(talkie_font_directory_15, 15);
+        return true;
       }
       if (!strcmp(arg, "bof")) {
-	Say(talkie_font_directory_15, 15);
-	Say(talkie_not_found_15, 15);
-	return true;
+        Say(talkie_font_directory_15, 15);
+        Say(talkie_not_found_15, 15);
+      	return true;
       }
       if (!strcmp(arg, "ftl")) {
-	Say(talkie_font_directory_15, 15);
-	Say(talkie_too_long_15, 15);
-	return true;
+        Say(talkie_font_directory_15, 15);
+        Say(talkie_too_long_15, 15);
+      	return true;
       }
       if (!strcmp(arg, "sd")) {
-	Say(talkie_sd_card_15, 15);
-	Say(talkie_not_found_15, 15);
-	return true;
+        Say(talkie_sd_card_15, 15);
+        Say(talkie_not_found_15, 15);
+      	return true;
       }
       if (!strcmp(arg, "bb")) {
-	Say(talkie_error_in_15, 15);
-	Say(talkie_blade_array_15, 15);
-	return true;
+        Say(talkie_error_in_15, 15);
+        Say(talkie_blade_array_15, 15);
+      	return true;
       }
       if (!strcmp(arg, "bp")) {
-	Say(talkie_error_in_15, 15);
-	Say(talkie_preset_array_15, 15);
-	return true;
+        Say(talkie_error_in_15, 15);
+        Say(talkie_preset_array_15, 15);
+      	return true;
       }
       if (!strcmp(arg, "lb")) {
-	Say(talkie_low_battery_15, 15);
-	return true;
+        Say(talkie_low_battery_15, 15);
+      	return true;
+      }
+      if (!strcmp(arg, "vp")) {
+        Say(talkie_voice_pack_15, 25);
+        Say(talkie_not_found_15, 15);
+      	return true;
+      }
+	  if (!strcmp(arg, "bvp")) {
+        Say(talkie_error_in_15, 15);
+        Say(talkie_voice_pack_15, 15);
+        Say(talkie_version_15, 15);
+      	return true;
       }
     }
     if (!strcmp(cmd, "talkie")) rate = 25;
