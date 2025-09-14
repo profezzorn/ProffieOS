@@ -25,8 +25,8 @@ public:
 
 void ProffieOSErrors::sd_card_not_found() {
   SaberBase::DoEffect(EFFECT_SD_CARD_NOT_FOUND, 0);
-  PVLOG_ERROR << "** ERROR - SD card not found.\n
-                  ** See https://pod.hubbe.net/troubleshooting/what-is-it-saying.html#sd-card-not-found\n";
+  PVLOG_ERROR << "** ERROR - SD card not found.\n"
+                 "** See https://pod.hubbe.net/troubleshooting/what-is-it-saying.html#sd-card-not-found\n";
 #ifdef ENABLE_AUDIO
 #ifndef DISABLE_TALKIE
   talkie.Say(talkie_sd_card_15, 15);
@@ -43,8 +43,8 @@ void ProffieOSErrors::sd_card_not_found() {
 
 void ProffieOSErrors::font_directory_not_found() {
   SaberBase::DoEffect(EFFECT_FONT_DIRECTORY_NOT_FOUND, 0);
-  PVLOG_ERROR << "** ERROR - Font directory not found.\n
-                  ** See https://pod.hubbe.net/troubleshooting/what-is-it-saying.html#font-directory-not-found\n";
+  PVLOG_ERROR << "** ERROR - Font directory not found.\n"
+                 "** See https://pod.hubbe.net/troubleshooting/what-is-it-saying.html#font-directory-not-found\n";
 #ifdef ENABLE_AUDIO
   if (SaberBase::sound_length > 0) return;
 #ifndef DISABLE_TALKIE
@@ -66,8 +66,8 @@ void ProffieOSErrors::font_directory_not_found() {
 
 void ProffieOSErrors::voice_pack_not_found() {
   SaberBase::DoEffect(EFFECT_VOICE_PACK_NOT_FOUND, 0);
-  PVLOG_ERROR << "** ERROR - Voice pack not found.\n
-                  ** See https://pod.hubbe.net/troubleshooting/what-is-it-saying.html#voice-pack-not-found\n";
+  PVLOG_ERROR << "** ERROR - Voice pack not found.\n"
+                 "** See https://pod.hubbe.net/troubleshooting/what-is-it-saying.html#voice-pack-not-found\n";
 #ifdef ENABLE_AUDIO
   if (SaberBase::sound_length > 0) return;
 #ifndef DISABLE_TALKIE
@@ -86,8 +86,8 @@ void ProffieOSErrors::voice_pack_not_found() {
 
 void ProffieOSErrors::error_in_blade_array() {
   SaberBase::DoEffect(EFFECT_ERROR_IN_BLADE_ARRAY, 0);
-  PVLOG_ERROR << "** ERROR - Error in blade array\n
-                  ** See https://pod.hubbe.net/troubleshooting/what-is-it-saying.html#error-in-blade-array\n";
+  PVLOG_ERROR << "** ERROR - Error in blade array\n"
+                 "** See https://pod.hubbe.net/troubleshooting/what-is-it-saying.html#error-in-blade-array\n";
 #ifdef ENABLE_AUDIO
   if (SaberBase::sound_length > 0) return;
 #ifndef DISABLE_TALKIE
@@ -110,8 +110,8 @@ void ProffieOSErrors::error_in_blade_array() {
 
 void ProffieOSErrors::error_in_font_directory() {
   SaberBase::DoEffect(EFFECT_ERROR_IN_FONT_DIRECTORY, 0);
-  PVLOG_ERROR << "** ERROR - Error in font directory.\n
-                  ** See https://pod.hubbe.net/troubleshooting/what-is-it-saying.html#error-in-font-directory\n";
+  PVLOG_ERROR << "** ERROR - Error in font directory.\n"
+                 "** See https://pod.hubbe.net/troubleshooting/what-is-it-saying.html#error-in-font-directory\n";
 #ifdef ENABLE_AUDIO
   if (SaberBase::sound_length > 0) return;
 #ifndef DISABLE_TALKIE
@@ -135,8 +135,8 @@ void ProffieOSErrors::error_in_font_directory() {
 
 void ProffieOSErrors::error_in_voice_pack_version() {
   SaberBase::DoEffect(EFFECT_ERROR_IN_VOICE_PACK_VERSION, 0);
-  PVLOG_ERROR << "** ERROR - Error in voice pack version.\n
-                  ** See https://pod.hubbe.net/troubleshooting/what-is-it-saying.html#error-in-voice-pack-version\n";
+  PVLOG_ERROR << "** ERROR - Error in voice pack version.\n"
+                 "** See https://pod.hubbe.net/troubleshooting/what-is-it-saying.html#error-in-voice-pack-version\n";
 #ifdef ENABLE_AUDIO
   if (SaberBase::sound_length > 0) return;
 #ifndef DISABLE_TALKIE
