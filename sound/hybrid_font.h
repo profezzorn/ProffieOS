@@ -643,14 +643,20 @@ public:
         }
         break;
       case EFFECT_FONT_DIRECTORY_NOT_FOUND:
-	PlayErrorMessage("e_fnt_nf.wav");
-	break;
-      case EFFECT_ERROR_IN_FONT_DIRECTORY:
-	PlayErrorMessage("e_in_fnt.wav");
-	break;
+        PlayErrorMessage("e_fnt_nf.wav");
+        break;
+      case EFFECT_VOICE_PACK_NOT_FOUND:
+        PlayErrorMessage("e_vp_nf.wav");
+        break;
       case EFFECT_ERROR_IN_BLADE_ARRAY:
-	PlayErrorMessage("e_blade.wav");
-	break;
+        PlayErrorMessage("e_blade.wav");
+        break;
+      case EFFECT_ERROR_IN_FONT_DIRECTORY:
+        PlayErrorMessage("e_in_fnt.wav");
+        break;
+      case EFFECT_ERROR_IN_VOICE_PACK_VERSION:
+        PlayErrorMessage("e_vp_ver.wav");
+        break;
     }
   }
 
