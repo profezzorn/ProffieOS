@@ -159,4 +159,4 @@ public:
 
 BatteryMonitor battery_monitor;
 
-#endif // COMMON_BATTERY_MONITOR_H
+#endif  // COMMON_BATTERY_MONITOR_H
