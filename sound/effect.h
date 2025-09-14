@@ -610,12 +610,12 @@ class Effect {
 #endif
 
 #ifdef ENABLE_SD
+    if (!LSFS::Begin()) ProffieOSErrors::sd_card_not_found();
     if (LSFS::Exists(dir)) {
       Scanner scanner;
       scanner.Scan(dir);
       STDOUT.println(" done");
     } else {
-      STDOUT.println(" NOT FOUND!");
       if (strlen(dir)) ProffieOSErrors::font_directory_not_found();
     }
 #endif   // ENABLE_SD
