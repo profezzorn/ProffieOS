@@ -27,238 +27,238 @@ struct tms5100_coeffs
 
 /* common, shared coefficients */
 /* energy */
-#define TI_0280_PATENT_ENERGY \
-    /* E  */\
+#define TI_0280_PATENT_ENERGY          \
+    /* E  */                           \
     {   0,  0,  1,  1,  2,  3,  5,  7, \
       10, 15, 21, 30, 43, 61, 86, 0 },
 
-#define TI_028X_LATER_ENERGY \
-    /* E  */\
+#define TI_028X_LATER_ENERGY           \
+    /* E  */                           \
     {   0,  1,  2,  3,  4,  6,  8, 11, \
       16, 23, 33, 47, 63, 85,114, 0 },
 
 /* pitch */
-#define TI_0280_2801_PATENT_PITCH \
-  /* P  */\
+#define TI_0280_2801_PATENT_PITCH            \
+  /* P  */                                   \
   {  0,   41,  43,  45,  47,  49,  51,  53,  \
-    55,  58,  60,  63,  66,  70,  73,  76,  \
+    55,  58,  60,  63,  66,  70,  73,  76,   \
     79,  83,  87,  90,  94,  99,  103, 107,  \
     112, 118, 123, 129, 134, 140, 147, 153 },
 
-#define TI_2802_PITCH \
-  /* P */\
+#define TI_2802_PITCH                        \
+  /* P */                                    \
   {   0,  16,  18,  19,  21,  24,  26,  28,  \
-    31,  35,  37,  42,  44,  47,  50,  53,  \
-    56,  59,  63,  67,  71,  75,  79,  84,  \
+    31,  35,  37,  42,  44,  47,  50,  53,   \
+    56,  59,  63,  67,  71,  75,  79,  84,   \
     89,  94, 100, 106, 112, 126, 141, 150},
 
-#define TI_5110_PITCH \
-  /* P */\
+#define TI_5110_PITCH                        \
+  /* P */                                    \
   {   0,  15,  16,  17,  19,  21,  22,  25,  \
-    26,  29,  32,  36,  40,  42,  46,  50,  \
-    55,  60,  64,  68,  72,  76,  80,  84,  \
+    26,  29,  32,  36,  40,  42,  46,  50,   \
+    55,  60,  64,  68,  72,  76,  80,  84,   \
     86,  93, 101, 110, 120, 132, 144, 159},
 
-#define TI_2501E_PITCH \
-  /* P */\
+#define TI_2501E_PITCH                       \
+  /* P */                                    \
   {   0,  14,  15,  16,  17,  18,  19,  20,  \
-    21,  22,  23,  24,  25,  26,  27,  28,  \
-    29,  30,  31,  32,  34,  36,  38,  40,  \
-    41,  43,  45,  48,  49,  51,  54,  55,  \
-    57,  60,  62,  64,  68,  72,  74,  76,  \
-    81,  85,  87,  90,  96,  99, 103, 107, \
-    112, 117, 122, 127, 133, 139, 145, 151, \
+    21,  22,  23,  24,  25,  26,  27,  28,   \
+    29,  30,  31,  32,  34,  36,  38,  40,   \
+    41,  43,  45,  48,  49,  51,  54,  55,   \
+    57,  60,  62,  64,  68,  72,  74,  76,   \
+    81,  85,  87,  90,  96,  99, 103, 107,   \
+    112, 117, 122, 127, 133, 139, 145, 151,  \
     157, 164, 171, 178, 186, 194, 202, 211},
 
-#define TI_5220_PITCH \
-  /* P */\
+#define TI_5220_PITCH                        \
+  /* P */                                    \
   {   0,  15,  16,  17,  18,  19,  20,  21,  \
-    22,  23,  24,  25,  26,  27,  28,  29,  \
-    30,  31,  32,  33,  34,  35,  36,  37,  \
-    38,  39,  40,  41,  42,  44,  46,  48,  \
-    50,  52,  53,  56,  58,  60,  62,  65,  \
-    68,  70,  72,  76,  78,  80,  84,  86,  \
-    91,  94,  98, 101, 105, 109, 114, 118, \
+    22,  23,  24,  25,  26,  27,  28,  29,   \
+    30,  31,  32,  33,  34,  35,  36,  37,   \
+    38,  39,  40,  41,  42,  44,  46,  48,   \
+    50,  52,  53,  56,  58,  60,  62,  65,   \
+    68,  70,  72,  76,  78,  80,  84,  86,   \
+    91,  94,  98, 101, 105, 109, 114, 118,   \
     122, 127, 132, 137, 142, 148, 153, 159},
 
 /* LPC */
-#define TI_0280_PATENT_LPC \
-    /* K1  */\
-    { -501, -497, -493, -488, -480, -471, -460, -446,\
-      -427, -405, -378, -344, -305, -259, -206, -148,\
-      -86,  -21,   45,  110,  171,  227,  277,  320,\
-      357,  388,  413,  434,  451,  464,  474,  498 },\
-    /* K2  */\
-    { -349, -328, -305, -280, -252, -223, -192, -158,\
-      -124,  -88,  -51,  -14,  23,    60,   97,  133,\
-      167,  199,  230,  259,  286,  310,  333,  354,\
-      372,  389,  404,  417,  429,  439,  449,  506 },\
-    /* K3  */\
-    { -397, -365, -327, -282, -229, -170, -104, -36,\
-      35,  104,  169,  228,  281,  326,  364, 396 },\
-    /* K4  */\
-    { -369, -334, -293, -245, -191, -131, -67,  -1,\
-      64,  128,  188,  243,  291,  332, 367, 397 },\
-    /* K5  */\
-    { -319, -286, -250, -211, -168, -122, -74, -25,\
-      24,   73,  121,  167,  210,  249, 285, 318 },\
-    /* K6  */\
-    { -290, -252, -209, -163, -114,  -62,  -9,  44,\
-      97,  147,  194,  238,  278,  313, 344, 371 },\
-    /* K7  */\
-    { -291, -256, -216, -174, -128, -80, -31,  19,\
-      69,  117,  163,  206,  246, 283, 316, 345 },\
-    /* K8  */\
-    { -218, -133,  -38,  59,  152,  235, 305, 361 },\
-    /* K9  */\
-    { -226, -157,  -82,  -3,   76,  151, 220, 280 },\
-    /* K10 */\
+#define TI_0280_PATENT_LPC                             \
+    /* K1  */                                          \
+    { -501, -497, -493, -488, -480, -471, -460, -446,  \
+      -427, -405, -378, -344, -305, -259, -206, -148,  \
+      -86,  -21,   45,  110,  171,  227,  277,  320,   \
+      357,  388,  413,  434,  451,  464,  474,  498 }, \
+    /* K2  */                                          \
+    { -349, -328, -305, -280, -252, -223, -192, -158,  \
+      -124,  -88,  -51,  -14,  23,    60,   97,  133,  \
+      167,  199,  230,  259,  286,  310,  333,  354,   \
+      372,  389,  404,  417,  429,  439,  449,  506 }, \
+    /* K3  */                                          \
+    { -397, -365, -327, -282, -229, -170, -104, -36,   \
+      35,  104,  169,  228,  281,  326,  364, 396 },   \
+    /* K4  */                                          \
+    { -369, -334, -293, -245, -191, -131, -67,  -1,    \
+      64,  128,  188,  243,  291,  332, 367, 397 },    \
+    /* K5  */                                          \
+    { -319, -286, -250, -211, -168, -122, -74, -25,    \
+      24,   73,  121,  167,  210,  249, 285, 318 },    \
+    /* K6  */                                          \
+    { -290, -252, -209, -163, -114,  -62,  -9,  44,    \
+      97,  147,  194,  238,  278,  313, 344, 371 },    \
+    /* K7  */                                          \
+    { -291, -256, -216, -174, -128, -80, -31,  19,     \
+      69,  117,  163,  206,  246, 283, 316, 345 },     \
+    /* K8  */                                          \
+    { -218, -133,  -38,  59,  152,  235, 305, 361 },   \
+    /* K9  */                                          \
+    { -226, -157,  -82,  -3,   76,  151, 220, 280 },   \
+    /* K10 */                                          \
     { -179, -122,  -61,    1,   62,  123, 179, 231 },
 
-#define TI_2801_2501E_LPC \
-    /* K1  */\
-    { -501, -498, -495, -490, -485, -478, -469, -459,\
-      -446, -431, -412, -389, -362, -331, -295, -253,\
-      -207, -156, -102,  -45,   13,   70,  126,  179,\
-      228,  272,  311,  345,  374,  399,  420,  437 },\
-    /* K2  */\
-    { -376, -357, -335, -312, -286, -258, -227, -195,\
-      -161, -124,  -87,  -49,  -10,   29,   68,  106,\
-      143,  178,  212,  243,  272,  299,  324,  346,\
-      366,  384,  400,  414,  427,  438,  448,  506 },\
-    /* K3  */\
-    { -407, -381, -349, -311, -268, -218, -162, -102,\
-      -39,   25,   89,  149,  206,  257,  302,  341 },\
-    /* K4  */\
-    { -290, -252, -209, -163, -114,  -62,   -9,   44,\
-      97,  147,  194,  238,  278,  313,  344,  371 },\
-    /* K5  */\
-    { -318, -283, -245, -202, -156, -107,  -56,   -3,\
-      49,  101,  150,  196,  239,  278,  313,  344 },\
-    /* K6  */\
-    { -193, -152, -109,  -65,  -20,   26,   71,  115,\
-      158,  198,  235,  270,  301,  330,  355,  377 },\
-    /* K7  */\
-    { -254, -218, -180, -140,  -97,  -53,   -8,   36,\
-      81,  124,  165,  204,  240,  274,  304,  332 },\
-    /* K8  */\
+#define TI_2801_2501E_LPC                              \
+    /* K1  */                                          \
+    { -501, -498, -495, -490, -485, -478, -469, -459,  \
+      -446, -431, -412, -389, -362, -331, -295, -253,  \
+      -207, -156, -102,  -45,   13,   70,  126,  179,  \
+      228,  272,  311,  345,  374,  399,  420,  437 }, \
+    /* K2  */                                          \
+    { -376, -357, -335, -312, -286, -258, -227, -195,  \
+      -161, -124,  -87,  -49,  -10,   29,   68,  106,  \
+      143,  178,  212,  243,  272,  299,  324,  346,   \
+      366,  384,  400,  414,  427,  438,  448,  506 }, \
+    /* K3  */                                          \
+    { -407, -381, -349, -311, -268, -218, -162, -102,  \
+      -39,   25,   89,  149,  206,  257,  302,  341 }, \
+    /* K4  */                                          \
+    { -290, -252, -209, -163, -114,  -62,   -9,   44,  \
+      97,  147,  194,  238,  278,  313,  344,  371 },  \
+    /* K5  */                                          \
+    { -318, -283, -245, -202, -156, -107,  -56,   -3,  \
+      49,  101,  150,  196,  239,  278,  313,  344 },  \
+    /* K6  */                                          \
+    { -193, -152, -109,  -65,  -20,   26,   71,  115,  \
+      158,  198,  235,  270,  301,  330,  355,  377 }, \
+    /* K7  */                                          \
+    { -254, -218, -180, -140,  -97,  -53,   -8,   36,  \
+      81,  124,  165,  204,  240,  274,  304,  332 },  \
+    /* K8  */                                          \
     { -205, -112,  -10,   92,  187,  269,  336,  387 },\
-    /* K9  */\
+    /* K9  */                                          \
     { -249, -183, -110,  -32,   48,  126,  198,  261 }, /* on patents 4,403,965 and 4,946,391 the 4th entry is 0x3ED (-19) which is a typo of the correct value of 0x3E0 (-32)*/\
-    /* K10 */\
+    /* K10 */                                          \
     { -190, -133,  -73,  -10,   53,  115,  173,  227 },
 
 // below is the same as 2801/2501E above EXCEPT for K4 which is completely different.
-#define TI_2802_LPC \
-    /* K1 */\
-    { -501, -498, -495, -490, -485, -478, -469, -459,\
-      -446, -431, -412, -389, -362, -331, -295, -253,\
-      -207, -156, -102,  -45,   13,   70,  126,  179,\
-      228,  272,  311,  345,  374,  399,  420,  437},\
-    /* K2 */\
-    { -376, -357, -335, -312, -286, -258, -227, -195,\
-      -161, -124,  -87,  -49,  -10,   29,   68,  106,\
-      143,  178,  212,  243,  272,  299,  324,  346,\
-      366,  384,  400,  414,  427,  438,  448,  506},\
-    /* K3 */\
-    { -407, -381, -349, -311, -268, -218, -162, -102,\
-      -39,   25,   89,  149,  206,  257,  302,  341},\
-    /* K4 */\
-    { -289, -248, -202, -152,  -98,  -43,   14,   71,\
-      125,  177,  225,  269,  307,  341,  371,  506},\
-    /* K5 */\
-    { -318, -283, -245, -202, -156, -107,  -56,   -3,\
-      49,  101,  150,  196,  239,  278,  313,  344},\
-    /* K6 */\
-    { -193, -152, -109,  -65,  -20,   26,   71,  115,\
-      158,  198,  235,  270,  301,  330,  355,  377},\
-    /* K7 */\
-    { -254, -218, -180, -140,  -97,  -53,   -8,   36,\
-      81,  124,  165,  204,  240,  274,  304,  332},\
-    /* K8 */\
-    { -205, -112,  -10,   92,  187,  269,  336,  387},\
-    /* K9 */\
-    { -249, -183, -110,  -32,   48,  126,  198,  261},\
-    /* K10 */\
+#define TI_2802_LPC                                    \
+    /* K1 */                                           \
+    { -501, -498, -495, -490, -485, -478, -469, -459,  \
+      -446, -431, -412, -389, -362, -331, -295, -253,  \
+      -207, -156, -102,  -45,   13,   70,  126,  179,  \
+      228,  272,  311,  345,  374,  399,  420,  437},  \
+    /* K2 */                                           \
+    { -376, -357, -335, -312, -286, -258, -227, -195,  \
+      -161, -124,  -87,  -49,  -10,   29,   68,  106,  \
+      143,  178,  212,  243,  272,  299,  324,  346,   \
+      366,  384,  400,  414,  427,  438,  448,  506},  \
+    /* K3 */                                           \
+    { -407, -381, -349, -311, -268, -218, -162, -102,  \
+      -39,   25,   89,  149,  206,  257,  302,  341},  \
+    /* K4 */                                           \
+    { -289, -248, -202, -152,  -98,  -43,   14,   71,  \
+      125,  177,  225,  269,  307,  341,  371,  506},  \
+    /* K5 */                                           \
+    { -318, -283, -245, -202, -156, -107,  -56,   -3,  \
+      49,  101,  150,  196,  239,  278,  313,  344},   \
+    /* K6 */                                           \
+    { -193, -152, -109,  -65,  -20,   26,   71,  115,  \
+      158,  198,  235,  270,  301,  330,  355,  377},  \
+    /* K7 */                                           \
+    { -254, -218, -180, -140,  -97,  -53,   -8,   36,  \
+      81,  124,  165,  204,  240,  274,  304,  332},   \
+    /* K8 */                                           \
+    { -205, -112,  -10,   92,  187,  269,  336,  387}, \
+    /* K9 */                                           \
+    { -249, -183, -110,  -32,   48,  126,  198,  261}, \
+    /* K10 */                                          \
     { -190, -133,  -73,  -10,   53,  115,  173,  227},
 
-#define TI_5110_5220_LPC \
-    /* K1  */\
-    { -501, -498, -497, -495, -493, -491, -488, -482,\
-      -478, -474, -469, -464, -459, -452, -445, -437,\
-      -412, -380, -339, -288, -227, -158,  -81,   -1,\
-      80,  157,  226,  287,  337,  379,  411,  436 },\
-    /* K2  */\
-    { -328, -303, -274, -244, -211, -175, -138,  -99,\
-      -59,  -18,   24,   64,  105,  143,  180,  215,\
-      248,  278,  306,  331,  354,  374,  392,  408,\
-      422,  435,  445,  455,  463,  470,  476,  506 },\
-    /* K3  */\
-    { -441, -387, -333, -279, -225, -171, -117,  -63,\
-      -9,   45,   98,  152,  206,  260,  314,  368  },\
-    /* K4  */\
-    { -328, -273, -217, -161, -106,  -50,    5,   61,\
-      116,  172,  228,  283,  339,  394,  450,  506  },\
-    /* K5  */\
-    { -328, -282, -235, -189, -142,  -96,  -50,   -3,\
-      43,   90,  136,  182,  229,  275,  322,  368  },\
-    /* K6  */\
-    { -256, -212, -168, -123,  -79,  -35,   10,   54,\
-      98,  143,  187,  232,  276,  320,  365,  409  },\
-    /* K7  */\
-    { -308, -260, -212, -164, -117,  -69,  -21,   27,\
-      75,  122,  170,  218,  266,  314,  361,  409  },\
-    /* K8  */\
+#define TI_5110_5220_LPC                                \
+    /* K1  */                                           \
+    { -501, -498, -497, -495, -493, -491, -488, -482,   \
+      -478, -474, -469, -464, -459, -452, -445, -437,   \
+      -412, -380, -339, -288, -227, -158,  -81,   -1,   \
+      80,  157,  226,  287,  337,  379,  411,  436 },   \
+    /* K2  */                                           \
+    { -328, -303, -274, -244, -211, -175, -138,  -99,   \
+      -59,  -18,   24,   64,  105,  143,  180,  215,    \
+      248,  278,  306,  331,  354,  374,  392,  408,    \
+      422,  435,  445,  455,  463,  470,  476,  506 },  \
+    /* K3  */                                           \
+    { -441, -387, -333, -279, -225, -171, -117,  -63,   \
+      -9,   45,   98,  152,  206,  260,  314,  368  },  \
+    /* K4  */                                           \
+    { -328, -273, -217, -161, -106,  -50,    5,   61,   \
+      116,  172,  228,  283,  339,  394,  450,  506  }, \
+    /* K5  */                                           \
+    { -328, -282, -235, -189, -142,  -96,  -50,   -3,   \
+      43,   90,  136,  182,  229,  275,  322,  368  },  \
+    /* K6  */                                           \
+    { -256, -212, -168, -123,  -79,  -35,   10,   54,   \
+      98,  143,  187,  232,  276,  320,  365,  409  },  \
+    /* K7  */                                           \
+    { -308, -260, -212, -164, -117,  -69,  -21,   27,   \
+      75,  122,  170,  218,  266,  314,  361,  409  },  \
+    /* K8  */                                           \
     { -256, -161,  -66,   29,  124,  219,  314,  409  },\
-    /* K9  */\
+    /* K9  */                                           \
     { -256, -176,  -96,  -15,   65,  146,  226,  307  },\
-    /* K10 */\
+    /* K10 */                                           \
     { -205, -132,  -59,   14,   87,  160,  234,  307  },
 
 /* chirp */
-#define TI_0280_PATENT_CHIRP \
-  /* Chirp table */\
-  {   0x00, 0x2a, 0xd4, 0x32, 0xb2, 0x12, 0x25, 0x14,\
-    0x02, 0xe1, 0xc5, 0x02, 0x5f, 0x5a, 0x05, 0x0f,\
-    0x26, 0xfc, 0xa5, 0xa5, 0xd6, 0xdd, 0xdc, 0xfc,\
-    0x25, 0x2b, 0x22, 0x21, 0x0f, 0xff, 0xf8, 0xee,\
-    0xed, 0xef, 0xf7, 0xf6, 0xfa, 0x00, 0x03, 0x02,\
-    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
+#define TI_0280_PATENT_CHIRP                            \
+  /* Chirp table */                                     \
+  {   0x00, 0x2a, 0xd4, 0x32, 0xb2, 0x12, 0x25, 0x14,   \
+    0x02, 0xe1, 0xc5, 0x02, 0x5f, 0x5a, 0x05, 0x0f,     \
+    0x26, 0xfc, 0xa5, 0xa5, 0xd6, 0xdd, 0xdc, 0xfc,     \
+    0x25, 0x2b, 0x22, 0x21, 0x0f, 0xff, 0xf8, 0xee,     \
+    0xed, 0xef, 0xf7, 0xf6, 0xfa, 0x00, 0x03, 0x02,     \
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,     \
     0x00, 0x00, 0x00, 0x00 },
 
 // almost, but not exactly the same as the patent chirp above (25 bits differ)
-#define TI_2801_CHIRP \
-  /* Chirp table */\
-  {   0x00, 0x2b, 0xd4, 0x33, 0xb3, 0x12, 0x25, 0x14,\
-    0x02, 0xe2, 0xc6, 0x03, 0x60, 0x5b, 0x05, 0x0f,\
-    0x26, 0xfc, 0xa6, 0xa5, 0xd6, 0xdd, 0xdd, 0xfd,\
-    0x25, 0x2b, 0x23, 0x22, 0x0f, 0xff, 0xf8, 0xef,\
-    0xed, 0xef, 0xf7, 0xf7, 0xfa, 0x01, 0x04, 0x03,\
-    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
+#define TI_2801_CHIRP                                   \
+  /* Chirp table */                                     \
+  {   0x00, 0x2b, 0xd4, 0x33, 0xb3, 0x12, 0x25, 0x14,   \
+    0x02, 0xe2, 0xc6, 0x03, 0x60, 0x5b, 0x05, 0x0f,     \
+    0x26, 0xfc, 0xa6, 0xa5, 0xd6, 0xdd, 0xdd, 0xfd,     \
+    0x25, 0x2b, 0x23, 0x22, 0x0f, 0xff, 0xf8, 0xef,     \
+    0xed, 0xef, 0xf7, 0xf7, 0xfa, 0x01, 0x04, 0x03,     \
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,     \
     0x00, 0x00, 0x00, 0x00 },
 
-#define TI_2802_CHIRP \
-  /* Chirp table */\
-  {   0x00, 0xa5, 0xbd, 0xee, 0x34, 0x73, 0x7e, 0x3d,\
-    0xe8, 0xea, 0x34, 0x24, 0xd1, 0x01, 0x13, 0xc3,\
-    0x0c, 0xd2, 0xe7, 0xdd, 0xd9, 0x00, 0x00, 0x00,\
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
+#define TI_2802_CHIRP                                   \
+  /* Chirp table */                                     \
+  {   0x00, 0xa5, 0xbd, 0xee, 0x34, 0x73, 0x7e, 0x3d,   \
+    0xe8, 0xea, 0x34, 0x24, 0xd1, 0x01, 0x13, 0xc3,     \
+    0x0c, 0xd2, 0xe7, 0xdd, 0xd9, 0x00, 0x00, 0x00,     \
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,     \
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,     \
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,     \
     0x00, 0x00, 0x00, 0x00 },
 
-#define TI_LATER_CHIRP \
-  /* Chirp table */\
-  {   0x00, 0x03, 0x0f, 0x28, 0x4c, 0x6c, 0x71, 0x50,\
-    0x25, 0x26, 0x4c, 0x44, 0x1a, 0x32, 0x3b, 0x13,\
-    0x37, 0x1a, 0x25, 0x1f, 0x1d, 0x00, 0x00, 0x00,\
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
+#define TI_LATER_CHIRP                                  \
+  /* Chirp table */                                     \
+  {   0x00, 0x03, 0x0f, 0x28, 0x4c, 0x6c, 0x71, 0x50,   \
+    0x25, 0x26, 0x4c, 0x44, 0x1a, 0x32, 0x3b, 0x13,     \
+    0x37, 0x1a, 0x25, 0x1f, 0x1d, 0x00, 0x00, 0x00,     \
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,     \
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,     \
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,     \
     0x00, 0x00, 0x00, 0x00 },
 
 /* Interpolation Table */
-#define TI_INTERP \
+#define TI_INTERP                       \
   /* interpolation shift coefficients */\
   { 0, 3, 3, 3, 2, 2, 1, 1 }
 
@@ -612,7 +612,6 @@ static const struct tms5100_coeffs vlm5030_coeff =
     0,  0,  0,  0 },
 };
 
-
 const int32_t lanc2_11[] = {
   -36, -152, -349, -609, -901, -1173, -1366, -1409, -1233, -777,
   0,
@@ -644,7 +643,7 @@ public:
       energy = (A.energy * a + B.energy * b) >> 14;
       period = (A.period * a + B.period * b) >> 14;
       for (int i = 0; i < 10; i++) {
-	k[i] = (A.k[i] * a + B.k[i] * b) >> 14;
+        k[i] = (A.k[i] * a + B.k[i] * b) >> 14;
       }
     }
   }
@@ -675,8 +674,8 @@ public:
   bool Empty() { return num_words == 0; }
 
   void Say(const uint8_t* addr, uint32_t rate = 25,
-	   const tms5100_coeffs* coeffs = &tms5220_coeff
-//	   const tms5100_coeffs* coeffs = &tms5110a_coeff
+           const tms5100_coeffs* coeffs = &tms5220_coeff
+//         const tms5100_coeffs* coeffs = &tms5110a_coeff
     ) {
     rate *= 7;
     EnableAmplifier();
@@ -700,16 +699,16 @@ public:
 
   void SayDigit(int digit) {
     switch (digit) {
-      case 0: Say(spZERO); break;
-      case 1: Say(spONE); break;
-      case 2: Say(spTWO); break;
+      case 0: Say(spZERO);  break;
+      case 1: Say(spONE);   break;
+      case 2: Say(spTWO);   break;
       case 3: Say(spTHREE); break;
-      case 4: Say(spFOUR); break;
-      case 5: Say(spFIVE); break;
-      case 6: Say(spSIX); break;
+      case 4: Say(spFOUR);  break;
+      case 5: Say(spFIVE);  break;
+      case 6: Say(spSIX);   break;
       case 7: Say(spSEVEN); break;
       case 8: Say(spEIGHT); break;
-      case 9: Say(spNINE); break;
+      case 9: Say(spNINE);  break;
     }
   }
 
@@ -734,27 +733,27 @@ public:
       n %= 100;
     }
     switch (n / 10) {
-      case 9: Say(spNINETY); break;
-      case 8: Say(spEIGHTY); break;
+      case 9: Say(spNINETY);  break;
+      case 8: Say(spEIGHTY);  break;
       case 7: Say(spSEVENTY); break;
-      case 6: Say(spSIXTY); break;
-      case 5: Say(spFIFTY); break;
-      case 4: Say(spFORTY); break;
-      case 3: Say(spTHIRTY); break;
-      case 2: Say(spTWENTY); break;
+      case 6: Say(spSIXTY);   break;
+      case 5: Say(spFIFTY);   break;
+      case 4: Say(spFORTY);   break;
+      case 3: Say(spTHIRTY);  break;
+      case 2: Say(spTWENTY);  break;
       case 1:
-	switch (n) {
-	  case 19: Say(spNINETEEN); return;
-	  case 18: Say(spEIGHTEEN); return;
-	  case 17: Say(spSEVENTEEN); return;
-	  case 16: Say(spSIXTEEN); return;
-	  case 15: Say(spFIFTEEN); return;
-	  case 14: Say(spFOURTEEN); return;
-	  case 13: Say(spTHIRTEEN); return;
-	  case 12: Say(spTWELVE); return;
-	  case 11: Say(spELEVEN); return;
-	  case 10: Say(spTEN); return;
-	}
+        switch (n) {
+          case 19: Say(spNINETEEN); return;
+          case 18: Say(spEIGHTEEN); return;
+          case 17: Say(spSEVENTEEN); return;
+          case 16: Say(spSIXTEEN); return;
+          case 15: Say(spFIFTEEN); return;
+          case 14: Say(spFOURTEEN); return;
+          case 13: Say(spTHIRTEEN); return;
+          case 12: Say(spTWELVE); return;
+          case 11: Say(spELEVEN); return;
+          case 10: Say(spTEN); return;
+        }
     }
     n %= 10;
     if (n) SayDigit(n);
@@ -817,7 +816,7 @@ public:
       if (num_words) {
         ptrAddr = words[0].ptr;
         rate_ = words[0].rate;
-	coeffs_ = words[0].coeffs;
+        coeffs_ = words[0].coeffs;
         num_words--;
         for (size_t i = 0; i < num_words; i++) words[i] = words[i + 1];
         ptrBit = 0;
@@ -830,19 +829,19 @@ public:
       new_frame.period = coeffs_->pitchtable[getBits(coeffs_->pitch_bits)];
       // A repeat frame uses the last coefficients
       if (!repeat) {
-	for (int i = 0; i < 4; i++)
-	  new_frame.k[i] = coeffs_->ktable[i][getBits(coeffs_->kbits[i])];
-	if (new_frame.period) {
-	  for (int i = 4; i < 10; i++)
-	    new_frame.k[i] = coeffs_->ktable[i][getBits(coeffs_->kbits[i])];
-	} else {
-	  for (int i = 4; i < 10; i++)
-	    new_frame.k[i] = 0;
-	}
+        for (int i = 0; i < 4; i++)
+          new_frame.k[i] = coeffs_->ktable[i][getBits(coeffs_->kbits[i])];
+        if (new_frame.period) {
+          for (int i = 4; i < 10; i++)
+        new_frame.k[i] = coeffs_->ktable[i][getBits(coeffs_->kbits[i])];
+        } else {
+          for (int i = 4; i < 10; i++)
+            new_frame.k[i] = 0;
+        }
       }
     }
   }
-  
+
   int16_t Get8kHz() {
     if (count_++ >= rate_) {
       ReadFrame();
@@ -851,7 +850,6 @@ public:
 
     Frame f;
     f.lerp(old_frame, new_frame, count_, rate_);
-
     
     int32_t u[11];
 
@@ -876,15 +874,15 @@ public:
 
 #define matrix_multiply(X, Y) (((X)*(Y)) >> 9)
     u[9] = u[10] - matrix_multiply(f.k[9], x[9]);
-    u[8] = u[9] - matrix_multiply(f.k[8], x[8]);
-    u[7] = u[8] - matrix_multiply(f.k[7], x[7]);
-    u[6] = u[7] - matrix_multiply(f.k[6], x[6]);
-    u[5] = u[6] - matrix_multiply(f.k[5], x[5]);
-    u[4] = u[5] - matrix_multiply(f.k[4], x[4]);
-    u[3] = u[4] - matrix_multiply(f.k[3], x[3]);
-    u[2] = u[3] - matrix_multiply(f.k[2], x[2]);
-    u[1] = u[2] - matrix_multiply(f.k[1], x[1]);
-    u[0] = u[1] - matrix_multiply(f.k[0], x[0]);
+    u[8] = u[9]  - matrix_multiply(f.k[8], x[8]);
+    u[7] = u[8]  - matrix_multiply(f.k[7], x[7]);
+    u[6] = u[7]  - matrix_multiply(f.k[6], x[6]);
+    u[5] = u[6]  - matrix_multiply(f.k[5], x[5]);
+    u[4] = u[5]  - matrix_multiply(f.k[4], x[4]);
+    u[3] = u[4]  - matrix_multiply(f.k[3], x[3]);
+    u[2] = u[3]  - matrix_multiply(f.k[2], x[2]);
+    u[1] = u[2]  - matrix_multiply(f.k[1], x[1]);
+    u[0] = u[1]  - matrix_multiply(f.k[0], x[0]);
 
     // Output clamp
     if (u[0] > 511) u[0] = 511;
@@ -944,7 +942,7 @@ public:
     return ptrAddr == NULL && tmp == 0;
   }
 #endif
-  
+
   int read(int16_t* data, int elements) override {
     if (eof()) return 0;
     for (int i = 0; i < elements; i++) {
@@ -968,42 +966,42 @@ public:
       if (!strcmp(arg, "bof")) {
         Say(talkie_font_directory_15, 15);
         Say(talkie_not_found_15, 15);
-      	return true;
+        return true;
       }
       if (!strcmp(arg, "ftl")) {
         Say(talkie_font_directory_15, 15);
         Say(talkie_too_long_15, 15);
-      	return true;
+        return true;
       }
       if (!strcmp(arg, "sd")) {
         Say(talkie_sd_card_15, 15);
         Say(talkie_not_found_15, 15);
-      	return true;
+        return true;
       }
       if (!strcmp(arg, "bb")) {
         Say(talkie_error_in_15, 15);
         Say(talkie_blade_array_15, 15);
-      	return true;
+        return true;
       }
       if (!strcmp(arg, "bp")) {
         Say(talkie_error_in_15, 15);
         Say(talkie_preset_array_15, 15);
-      	return true;
+        return true;
       }
       if (!strcmp(arg, "lb")) {
         Say(talkie_low_battery_15, 15);
-      	return true;
+        return true;
       }
       if (!strcmp(arg, "vp")) {
         Say(talkie_voice_pack_15, 25);
         Say(talkie_not_found_15, 15);
-      	return true;
+        return true;
       }
-	  if (!strcmp(arg, "bvp")) {
+      if (!strcmp(arg, "bvp")) {
         Say(talkie_error_in_15, 15);
         Say(talkie_voice_pack_15, 15);
         Say(talkie_version_15, 15);
-      	return true;
+        return true;
       }
     }
     if (!strcmp(cmd, "talkie")) rate = 25;
@@ -1043,7 +1041,7 @@ public:
 
     return false;
   }
-#endif
+#endif  // ENABLE_DEVELOPER_COMMANDS
 
 private:
   const uint8_t * ptrAddr = NULL;
@@ -1065,26 +1063,26 @@ private:
 class Talkie {
 public:
   template <typename...> struct always_false { static constexpr bool value = false; };
-  
+
   template<typename... Ts>
   void Say(Ts&&...) {
     static_assert(always_false<Ts...>::value,
-		  "DISABLE_TALKIE is defined, cannot call talkie.Say(...)");
+        "DISABLE_TALKIE is defined, cannot call talkie.Say(...)");
   }
 
   template<typename... Ts>
   void SayNumber(Ts&&...) {
     static_assert(always_false<Ts...>::value,
-		  "DISABLE_TALKIE is defined, cannot call talkie.SayNumber(...)");
+        "DISABLE_TALKIE is defined, cannot call talkie.SayNumber(...)");
   }
 
   template<typename... Ts>
   void SayDigit(Ts&&...) {
     static_assert(always_false<Ts...>::value,
-		  "DISABLE_TALKIE is defined, cannot call talkie.SayDigit(...)");
+        "DISABLE_TALKIE is defined, cannot call talkie.SayDigit(...)");
   }
 };
 
 #endif  // DISABLE_TALKIE
 
-#endif
+#endif  // SOUND_TALKIE_H
