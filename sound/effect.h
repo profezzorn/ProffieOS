@@ -615,7 +615,6 @@ class Effect {
       scanner.Scan(dir);
       STDOUT.println(" done");
     } else {
-      STDOUT.println(" NOT FOUND!");
       if (strlen(dir)) ProffieOSErrors::font_directory_not_found();
     }
 #endif   // ENABLE_SD
