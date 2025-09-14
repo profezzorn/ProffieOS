@@ -743,16 +743,16 @@ public:
       case 2: Say(spTWENTY);  break;
       case 1:
         switch (n) {
-          case 19: Say(spNINETEEN); return;
-          case 18: Say(spEIGHTEEN); return;
+          case 19: Say(spNINETEEN);  return;
+          case 18: Say(spEIGHTEEN);  return;
           case 17: Say(spSEVENTEEN); return;
-          case 16: Say(spSIXTEEN); return;
-          case 15: Say(spFIFTEEN); return;
-          case 14: Say(spFOURTEEN); return;
-          case 13: Say(spTHIRTEEN); return;
-          case 12: Say(spTWELVE); return;
-          case 11: Say(spELEVEN); return;
-          case 10: Say(spTEN); return;
+          case 16: Say(spSIXTEEN);   return;
+          case 15: Say(spFIFTEEN);   return;
+          case 14: Say(spFOURTEEN);  return;
+          case 13: Say(spTHIRTEEN);  return;
+          case 12: Say(spTWELVE);    return;
+          case 11: Say(spELEVEN);    return;
+          case 10: Say(spTEN);       return;
         }
     }
     n %= 10;
@@ -833,7 +833,7 @@ public:
           new_frame.k[i] = coeffs_->ktable[i][getBits(coeffs_->kbits[i])];
         if (new_frame.period) {
           for (int i = 4; i < 10; i++)
-        new_frame.k[i] = coeffs_->ktable[i][getBits(coeffs_->kbits[i])];
+            new_frame.k[i] = coeffs_->ktable[i][getBits(coeffs_->kbits[i])];
         } else {
           for (int i = 4; i < 10; i++)
             new_frame.k[i] = 0;
@@ -850,7 +850,7 @@ public:
 
     Frame f;
     f.lerp(old_frame, new_frame, count_, rate_);
-    
+
     int32_t u[11];
 
     if (f.period) {
