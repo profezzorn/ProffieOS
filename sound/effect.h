@@ -802,10 +802,10 @@ EFFECT(endauto); // Doesn't exist in fonts, but I expect there may be use for au
 EFFECT(blast); // Not to be confused with "blst" and "blaster" as blocking sounds in sabers
 
 // battery low
-EFFECT(lowbatt);	// battery low
+EFFECT(lowbatt);    // battery low
 
 // TODO: Optimize this and make it possible
-// have the WAV reader use this.
+// to have the WAV reader use this.
 class EffectFileReader : public FileReader {
 public:
   EffectFileReader() : FileReader(), do_open_(0) {}

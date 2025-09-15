@@ -52,13 +52,13 @@ void ProffieOSErrors::font_directory_not_found() {
   talkie.Say(talkie_not_found_15, 15);
   DodgeSound(2000);
 #else
-  beeper.Beep(0.5, 261.63 * 2);   // C5 - Font
+  beeper.Beep(0.5,   261.63 * 2); // C5 - Font
   beeper.Beep(0.5/3, 246.94 * 2); // B4 - di
   beeper.Beep(0.5/3, 220.00 * 2); // A4 - rec
   beeper.Beep(0.5/3, 196.00 * 2); // G4 - tor
-  beeper.Beep(0.5, 174.61 * 2);   // F4 - y
-  beeper.Beep(0.5, 146.83 * 2);   // D4 - not
-  beeper.Beep(0.5, 130.81 * 2);   // C4 - found
+  beeper.Beep(0.5,   174.61 * 2); // F4 - y
+  beeper.Beep(0.5,   146.83 * 2); // D4 - not
+  beeper.Beep(0.5,   130.81 * 2); // C4 - found
   DodgeSound(2530);
 #endif
 #endif
@@ -99,10 +99,10 @@ void ProffieOSErrors::error_in_blade_array() {
   beeper.Beep(0.25, 196.00 * 2); // G4 - or
   beeper.Beep(0.25, 174.61 * 2); // F4 - in
   beeper.Beep(0.25, 164.81 * 2); // E4 - the
-  beeper.Beep(0.3, 146.83 * 2);  // D4 - blade
-  beeper.Beep(0.2, 0);           // Silence
-  beeper.Beep(0.5, 146.83 * 2);  // D4 - ar
-  beeper.Beep(1.0, 130.81 * 2);  // C4 - ray
+  beeper.Beep(0.3,  146.83 * 2); // D4 - blade
+  beeper.Beep(0.2,  0);          // Silence
+  beeper.Beep(0.5,  146.83 * 2); // D4 - ar
+  beeper.Beep(1.0,  130.81 * 2); // C4 - ray
   DodgeSound(3000);
 #endif
 #endif

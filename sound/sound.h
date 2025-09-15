@@ -42,7 +42,7 @@ RefPtr<BufferedWavPlayer> GetFreeWavPlayer()  {
 RefPtr<BufferedWavPlayer> GetWavPlayerPlaying(const Effect* effect) {
   for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
     if (wav_players[unit].isPlaying() &&
-	wav_players[unit].current_file_id().GetEffect() == effect) {
+        wav_players[unit].current_file_id().GetEffect() == effect) {
       return RefPtr<BufferedWavPlayer>(wav_players + unit);
     }
   }
@@ -62,13 +62,13 @@ RefPtr<BufferedWavPlayer> GetOrFreeWavPlayer(Effect* e)  {
   float best_remaining = 1000.0;
   for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
     if (wav_players[unit].isPlaying() &&
-	wav_players[unit].refs() == 0 &&
-	wav_players[unit].current_file_id().GetEffect() &&
-	wav_players[unit].current_file_id().GetEffect()->GetKillable()) {
+        wav_players[unit].refs() == 0 &&
+        wav_players[unit].current_file_id().GetEffect() &&
+        wav_players[unit].current_file_id().GetEffect()->GetKillable()) {
       float remaining = wav_players[unit].length() - wav_players[unit].pos();
       if (remaining < best_remaining) {
-	best_remaining = remaining;
-	p = wav_players + unit;
+        best_remaining = remaining;
+        p = wav_players + unit;
       }
     }
   }
@@ -161,7 +161,7 @@ void SetupStandardAudioLow() {
     wav_players[i].reset_volume();
   }
   dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
-#ifndef DISABLE_TALKIE  
+#ifndef DISABLE_TALKIE
   dynamic_mixer.streams_[NELEM(wav_players)+1] = &talkie;
 #endif
 }
@@ -178,7 +178,7 @@ void SaySDInitError(int error) {
   talkie.Say(spD);
   talkie.Say(spSTART);
   talkie.SayNumber(error);
-#endif  
+#endif
 }
 
 void SaySDCheckError(int error) {
