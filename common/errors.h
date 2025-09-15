@@ -162,7 +162,7 @@ void ProffieOSErrors::low_battery() {
 #ifdef ENABLE_AUDIO
   // play the fonts low battery sound if it exists
   if (SFX_lowbatt) {
-    hybrid_font.PlayCommon(&SFX_lowbatt);   // <-- should this be moved to hybrid_font.h, like the other "errors.wav" ?
+    hybrid_font.PlayCommon(&SFX_lowbatt);
     return;
   }
 
