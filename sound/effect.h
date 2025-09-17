@@ -5,6 +5,14 @@
 #include "../common/atomic.h"
 #include "../common/file_reader.h"
 
+#ifndef NO_REPEAT_RANDOM_BUFFER_SIZE_BITS
+#define NO_REPEAT_RANDOM_BUFFER_SIZE_BITS 24
+#endif
+
+#if NO_REPEAT_RANDOM_BUFFER_SIZE_BITS > 256
+#define NO_REPEAT_RANDOM_BUFFER_SIZE_BITS 256
+#endif
+
 class Effect;
 Effect* all_effects = NULL;
 
@@ -175,6 +183,11 @@ class Effect {
     paired_ = false;
 #ifdef KILL_OLD_PLAYERS
     killable_ = false;
+#endif
+#ifdef NO_REPEAT_RANDOM
+    for (size_t i = 0; i < NO_REPEAT_RANDOM_BUFFER_SIZE_BITS; ++i) available_[i] = available_mark_;
+    last_ = -1;
+    last_subid_ = -1;
 #endif
   }
   static int altnum(const char* s) {
@@ -379,6 +392,10 @@ class Effect {
   }
 
 #ifdef NO_REPEAT_RANDOM
+  // Storage for random sampling without replacement.
+  bool available_[NO_REPEAT_RANDOM_BUFFER_SIZE_BITS];
+  bool available_mark_ = false;
+
   int16_t last_ = -1;
   int16_t last_subid_ = -1;
 
@@ -406,6 +423,32 @@ class Effect {
 
   int random_subid(int filenum) {
     if (!sub_files_) return 0;
+#ifdef NO_REPEAT_RANDOM
+    size_t total_files = files_found() * sub_files_;
+    if (total_files > 2 && total_files <= NO_REPEAT_RANDOM_BUFFER_SIZE_BITS) {
+      const uint8_t start = filenum * files_found();
+      const uint8_t end = start + sub_files_ - 1;
+      
+      uint8_t n = 0;
+      for (uint8_t i = start; i <= end; ++i) n += available_[i] == available_mark_ && (last_ != filenum || last_subid_ != i % sub_files_);
+      if (!n) {
+        for (uint8_t i = start; i <= end; ++i) available_[i] = available_mark_;
+        n = sub_files_;
+      }
+
+      uint8_t nth_ret = RANDOMIZE(n, -1);
+      for (uint8_t i = start; i <= end; ++i) {
+        if (available_[i] != available_mark_ || (last_ == filenum && last_subid_ == i % sub_files_)) continue;
+        if (!nth_ret) {
+          available_[i] = !available_mark_;
+          last_ = i / sub_files_;
+          last_subid_ = i % sub_files_;
+          return last_subid_;
+        }
+        nth_ret--;
+      }
+    }
+#endif
     int ret = RANDOMIZE(sub_files_, last_ == filenum ? last_subid_ : -1);
 #ifdef NO_REPEAT_RANDOM
     last_subid_ = ret;
@@ -430,6 +473,35 @@ class Effect {
 	       (file_type_ == FileType::SOUND || paired_)) {
       n = std::min<int>(SaberBase::sound_number, num_files - 1);
     } else {
+#ifdef NO_REPEAT_RANDOM
+      size_t total_files = files_found() * number_of_subfiles();
+      if (total_files > 2 && total_files <= NO_REPEAT_RANDOM_BUFFER_SIZE_BITS) {
+        uint8_t n = 0;
+        for (uint8_t i = 0; i < total_files; ++i) {
+          const int16_t file = sub_files_ ? i / sub_files_ : i;
+          const int16_t subfile = sub_files_ ? i % sub_files_ : 0;
+          n += available_[i] == available_mark_ && (last_ != file || (sub_files_ && last_subid_ != subfile));
+        }
+        if (!n) {
+          available_mark_ = !available_mark_;
+          n = total_files;
+        }
+
+        uint8_t nth_ret = RANDOMIZE(n, -1);
+        for (uint8_t i = 0; i < total_files; ++i) {
+          const int16_t file = sub_files_ ? i / sub_files_ : i;
+          const int16_t subfile = sub_files_ ? i % sub_files_ : 0;
+          if (available_[i] != available_mark_ || (last_ == file && (!sub_files_ || last_subid_ == subfile))) continue;
+          if (!nth_ret) {
+            available_[i] = !available_mark_;
+            last_ = file;
+            if (sub_files_) last_subid_ = subfile;
+            return FileID(this, last_, sub_files_ ? last_subid_ : 0);
+          }
+          nth_ret--;
+        }
+      }
+#endif
       n = RANDOMIZE(num_files, last_);
     }
     int subid = random_subid(n);
