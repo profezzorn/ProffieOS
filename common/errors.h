@@ -2,6 +2,9 @@
 #ifndef COMMON_ERROR_H_DECLARED
 #define COMMON_ERROR_H_DECLARED
 
+extern bool font_dir_missing_;
+extern bool error_in_font_dir_;
+
 #ifdef ENABLE_AUDIO
 void DodgeSound(uint32_t millis);
 #else
@@ -22,6 +25,8 @@ public:
 #endif // COMMON_ERROR_H_DECLARED
 
 #ifdef PROFFIEOS_DEFINE_FUNCTION_STAGE
+bool font_dir_missing_ = false;
+bool error_in_font_dir_ = false;
 
 void ProffieOSErrors::sd_card_not_found() {
   SaberBase::DoEffect(EFFECT_SD_CARD_NOT_FOUND, 0);
