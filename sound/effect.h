@@ -615,7 +615,7 @@ class Effect {
       scanner.Scan(dir);
       STDOUT.println(" done");
     } else {
-      if (strlen(dir)) ProffieOSErrors::font_directory_not_found();
+      if (strlen(dir)) font_dir_missing_ = true;
     }
 #endif   // ENABLE_SD
   }
@@ -637,7 +637,7 @@ class Effect {
         if (!warned) {
           warned = true;
           PVLOG_ERROR <<"\nWARNING: A font seems to be missing some files!!\n";
-          ProffieOSErrors::error_in_font_directory();
+          error_in_font_dir_ = true;
         }
         e->Show();
       }
