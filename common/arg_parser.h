@@ -141,10 +141,23 @@ public:
       bits_[i] = 0;
     }
   }
+  void fill(size_t bit = SIZE) {
+    for (size_t i = 0; i < NELEM(bits_); i++) {
+      bits_[i] = ~uint32_t(0);
+      if (i == (bit >> 5) && !!(bit & 31)) bits_[i] >>= 32 - (bit & 31);
+    }
+  }
   size_t popcount() const {
     size_t ret = 0;
     for (size_t i = 0; i < NELEM(bits_); i++) {
       ret += __builtin_popcount(bits_[i]);
+    }
+    return ret;
+  }
+  size_t popcount_subset(size_t first, size_t last) const {
+    size_t ret = 0;
+    for (size_t i = first; i <= last; i++) {
+      ret += get(i);
     }
     return ret;
   }
@@ -168,6 +181,16 @@ public:
 	if (bit-- <= 0) {
 	  return i;
 	}
+      }
+    }
+    return 0;
+  }
+  size_t nth_subset(int bit, size_t first, size_t last) const {
+    for (size_t i = first; i <= last; i++) {
+      if (get(i)) {
+        if (bit-- <= 0) {
+          return i;
+        }
       }
     }
     return 0;
