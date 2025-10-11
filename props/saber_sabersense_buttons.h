@@ -1,4 +1,4 @@
-/* V7/8-286.
+/* V7/8-288.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -331,12 +331,15 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 
 GESTURE CONTROLS
   There are four gesture types: Twist, Stab, Swing and Thrust.
-  Gesture controls bypass all preon effects.
   #define SABERSENSE_TWIST_ON
   #define SABERSENSE_TWIST_OFF
   #define SABERSENSE_STAB_ON
   #define SABERSENSE_SWING_ON
   #define SABERSENSE_THRUST_ON
+
+#define SABERSENSE_GESTURE_PREON
+  As standard, gesture controls bypass all preon effects
+  unless this define is added which reinstates them.
 
 ============================================================
 ============================================================
@@ -822,7 +825,11 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF):
       // Motion chip startup on boot can create false ignition, so delay SwingOn at boot for 3000ms
       if (millis() > 3000) {
+#ifdef SABERSENSE_GESTURE_PREON
+        On();
+#else
         FastOn();
+#endif    
       }
       return true;
 #endif
@@ -831,7 +838,11 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_NONE, EVENT_TWIST, MODE_OFF):
       // Delay twist events to prevent false trigger from over twisting
       if (millis() - last_twist_ > 2000 && millis() - saber_off_time_ > 1000) {
+#ifdef SABERSENSE_GESTURE_PREON
+        On();
+#else
         FastOn();
+#endif  
         last_twist_ = millis();
       }
       return true;
@@ -851,7 +862,11 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #ifdef SABERSENSE_STAB_ON
     case EVENTID(BUTTON_NONE, EVENT_STAB, MODE_OFF):
       if (millis() - saber_off_time_ > 1000) {
+#ifdef SABERSENSE_GESTURE_PREON
+        On();
+#else
         FastOn();
+#endif  
       }
       return true;
 #endif
@@ -859,7 +874,11 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #ifdef SABERSENSE_THRUST_ON
     case EVENTID(BUTTON_NONE, EVENT_THRUST, MODE_OFF):
       if (millis() - saber_off_time_ > 1000) {
+#ifdef SABERSENSE_GESTURE_PREON
+        On();
+#else
         FastOn();
+#endif  
       }
       return true;
 #endif
