@@ -441,10 +441,8 @@ class Effect {
         
         uint8_t n = available_.popcount_subset(first, last);
         if (!n) {
-          for (size_t bit = first; bit <= last; ++bit) {
-            available_.set(bit);
-          }
-          n = available_.popcount_subset(first, last);
+          available_.set_subset(first, last);
+          n = sub_files_;
         }
         if (n == sub_files_ && filenum == last_ && last_subid_ >= 0) n--;
 
@@ -490,8 +488,8 @@ class Effect {
       if (total_files > 2 && total_files <= SAMPLE_WITHOUT_REPLACEMENT_BUFFER_SIZE_BITS) {
         uint8_t n = available_.popcount();
         if (!n) {
-          available_.fill(total_files);
-          n = available_.popcount();
+          available_ = BitSet<SAMPLE_WITHOUT_REPLACEMENT_BUFFER_SIZE_BITS>::fill(total_files);
+          n = total_files;
         }
         if (n == total_files && (last_ >= 0 || last_subid_ >= 0)) n--;
 

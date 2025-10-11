@@ -135,17 +135,22 @@ public:
   bool operator[](size_t bit) const { return !!(bits_[bit >> 5] & (1UL << (bit & 31))); }
   bool get(size_t bit) const { return !!(bits_[bit >> 5] & (1UL << (bit & 31))); }
   void set(size_t bit) { bits_[bit >> 5] |= (1UL << (bit & 31)); }
+  void set_subset(size_t first, size_t last) { *this |= ~(BitSet<SIZE>::fill() << last + 1) & (BitSet<SIZE>::fill() << first); }
   void clear(size_t bit) { bits_[bit >> 5] &=~ (1UL << (bit & 31)); }
+  void clear_subset(size_t first, size_t last) { *this &= (BitSet<SIZE>::fill() << last + 1) | ~(BitSet<SIZE>::fill() << first); }
   void clear() {
     for (size_t i = 0; i < NELEM(bits_); i++) {
       bits_[i] = 0;
     }
   }
-  void fill(size_t bit = SIZE) {
-    for (size_t i = 0; i < NELEM(bits_); i++) {
-      bits_[i] = ~uint32_t(0);
-      if (i == (bit >> 5) && !!(bit & 31)) bits_[i] >>= 32 - (bit & 31);
+  // Create a BitSet with a given number of initially set bits
+  static BitSet<SIZE> fill(size_t n = SIZE) {
+    BitSet<SIZE> ret;
+    for (size_t i = 0; i <= n >> 5; i++) {
+      ret.bits_[i] = ~uint32_t(0);
     }
+    if (!!(n & 31)) ret.bits_[n >> 5] >>= 32 - (n & 31);
+    return ret;
   }
   size_t popcount() const {
     size_t ret = 0;
@@ -155,11 +160,8 @@ public:
     return ret;
   }
   size_t popcount_subset(size_t first, size_t last) const {
-    size_t ret = 0;
-    for (size_t i = first; i <= last; i++) {
-      ret += get(i);
-    }
-    return ret;
+    BitSet<SIZE> subset = ~(BitSet<SIZE>::fill() << last + 1) & (BitSet<SIZE>::fill() << first);
+    return (subset & *this).popcount();
   }
   size_t next(size_t bit) const {
     for (size_t i = 1; i <= SIZE; i++) {
@@ -204,6 +206,61 @@ public:
 	clear(i);
       }
     }
+  }
+  BitSet<SIZE> operator>>(int bits) const {
+    BitSet<SIZE> ret = *this;
+    ret >>= bits;
+    return ret;
+  }
+  void operator<<=(int bits) {
+    if (!bits) return;
+    for (int i = SIZE - 1; i >= 0; i--) {
+      if (i - bits >= 0 && get(i - bits)) {
+	set(i);
+      } else {
+	clear(i);
+      }
+    }
+  }
+  BitSet<SIZE> operator<<(int bits) const {
+    BitSet<SIZE> ret = *this;
+    ret <<= bits;
+    return ret;
+  }
+  BitSet<SIZE> operator~() const {
+    BitSet<SIZE> ret = *this;
+    for (size_t i = 0; i < NELEM(bits_); i++) {
+      ret.bits_[i] = ~ret.bits_[i];
+    }
+    if (!!(SIZE & 31)) ret.bits_[SIZE >> 5] &= ~uint32_t(0) >> 32 - (SIZE & 31);
+    return ret;
+  }
+  void operator&=(const BitSet<SIZE>& other) {
+    for (size_t i = 0; i < NELEM(bits_); i++) {
+      bits_[i] &= other.bits_[i];
+    } 
+  }
+  BitSet<SIZE> operator&(const BitSet<SIZE>& other) const {
+    BitSet<SIZE> ret = *this;
+    ret &= other;
+    return ret;
+  }
+  void operator|=(const BitSet<SIZE>& other) {
+    for (size_t i = 0; i < NELEM(bits_); i++) {
+      bits_[i] |= other.bits_[i];
+    } 
+  }
+  BitSet<SIZE> operator|(const BitSet<SIZE>& other) const {
+    BitSet<SIZE> ret = *this;
+    ret |= other;
+    return ret;
+  }
+  void print() const {
+    STDOUT << "BitSet<" << SIZE << ">: "; 
+    for (size_t i = 0; i < SIZE; ++i) {
+      STDOUT << get(SIZE - 1 - i);
+    }
+    STDOUT << "\n";
   }
   
 private:
