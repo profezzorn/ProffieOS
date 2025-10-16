@@ -152,6 +152,16 @@ public:
     if (!!(n & 31)) ret.bits_[n >> 5] >>= 32 - (n & 31);
     return ret;
   }
+  uint32_t get_word(int word) const {
+    if (word < 0 || word >= (int)NELEM(bits_)) return 0;
+    return bits_[word];
+  }
+  uint32_t get32(int pos) const {
+    uint64_t tmp = get_word(1 + (pos >> 5));
+    tmp <<= 32;
+    tmp |= get_word(pos >> 5); 
+    return tmp >> (pos & 31); 
+  }
   size_t popcount() const {
     size_t ret = 0;
     for (size_t i = 0; i < NELEM(bits_); i++) {
@@ -199,32 +209,20 @@ public:
   }
   void operator>>=(int bits) {
     if (!bits) return;
-    for (int i = 0; i < (int)SIZE; i++) {
-      if (i + bits < (int)SIZE && get(i + bits)) {
-	set(i);
-      } else {
-	clear(i);
-      }
-    }
+    for (int i = 0; i < SIZE; i++) bits_[i] = get32(i * 32 + bits);
   }
   BitSet<SIZE> operator>>(int bits) const {
-    BitSet<SIZE> ret = *this;
-    ret >>= bits;
+    BitSet<SIZE> ret;
+    for (size_t i = 0; i < NELEM(bits_); i++) ret.bits_[i] = get32(i * 32 + bits);
     return ret;
   }
   void operator<<=(int bits) {
     if (!bits) return;
-    for (int i = SIZE - 1; i >= 0; i--) {
-      if (i - bits >= 0 && get(i - bits)) {
-	set(i);
-      } else {
-	clear(i);
-      }
-    }
+    for (size_t i = NELEM(bits_) - 1; i >= 0; i--) bits_[i] = get32(i * 32 - bits);
   }
   BitSet<SIZE> operator<<(int bits) const {
-    BitSet<SIZE> ret = *this;
-    ret <<= bits;
+    BitSet<SIZE> ret;
+    for (size_t i = NELEM(bits_) - 1; i >= 0; i--) ret.bits_[i] = get32(i * 32 - bits);
     return ret;
   }
   BitSet<SIZE> operator~() const {
