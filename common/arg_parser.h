@@ -209,7 +209,7 @@ public:
   }
   void operator>>=(int bits) {
     if (!bits) return;
-    for (int i = 0; i < SIZE; i++) bits_[i] = get32(i * 32 + bits);
+    for (size_t i = 0; i < NELEM(bits_); i++) bits_[i] = get32(i * 32 + bits);
   }
   BitSet<SIZE> operator>>(int bits) const {
     BitSet<SIZE> ret;
