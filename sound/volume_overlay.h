@@ -88,6 +88,10 @@ public:
     stop_when_zero_.set(false);
   }
 
+  void set_dodge(bool dodge) {
+    volume_.set_dodge(dodge);
+  }
+
 private:
   ClickAvoiderLin volume_;
   POAtomic<bool> stop_when_zero_;
