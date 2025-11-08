@@ -782,14 +782,13 @@ public:
       case EFFECT_USER1:
         if (health_ == 0) return; // Don't queue health sounds if dead
         SFX_health.SelectFloat(health_ / 100.0);
-        // SOUNDQ->Play(&SFX_health);
-        // Queue sound with STEP2 effect which triggers when sound actually plays, enabling WavLen use.
+        // Queue sound with STEP2 effect which triggers when sound actually plays.
         PVLOG_DEBUG << "******** Queueing health sound with STEP2 trigger\n";
         SOUNDQ->Play(SoundToPlay(&SFX_health, EFFECT_USER1_STEP2));
         return;
 
       case EFFECT_USER1_STEP2: {
-        // Re-fetch the sound length when the effect actually triggers
+        // Get the sound length when the effect actually triggers for WavLen use.
         RefPtr<BufferedWavPlayer> tmp = GetWavPlayerPlaying(&SFX_health);
         if (tmp) {
           SaberBase::sound_length = tmp->length();
@@ -800,7 +799,6 @@ public:
 
       // (HEV VOICE LINE) Armor Compromised
       case EFFECT_USER2:
-        // SOUNDQ->Play(&SFX_armor_compromised);
         PVLOG_DEBUG << "******** Queueing SFX_armor_compromised sound with STEP2 trigger\n";
         SOUNDQ->Play(SoundToPlay(&SFX_armor_compromised, EFFECT_USER2_STEP2));
         return;
