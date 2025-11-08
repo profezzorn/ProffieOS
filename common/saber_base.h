@@ -106,6 +106,15 @@ extern SaberBase* saberbases;
     DEFINE_EFFECT(USER6)                        \
     DEFINE_EFFECT(USER7)                        \
     DEFINE_EFFECT(USER8)                        \
+    /* user step 2 effects - allows WavLen with SOUNDQ */                                                          \
+    DEFINE_EFFECT(USER1_STEP2)                  \
+    DEFINE_EFFECT(USER2_STEP2)                  \
+    DEFINE_EFFECT(USER3_STEP2)                  \
+    DEFINE_EFFECT(USER4_STEP2)                  \
+    DEFINE_EFFECT(USER5_STEP2)                  \
+    DEFINE_EFFECT(USER6_STEP2)                  \
+    DEFINE_EFFECT(USER7_STEP2)                  \
+    DEFINE_EFFECT(USER8_STEP2)                  \
     /* ERRORS */                                \
     DEFINE_EFFECT(SD_CARD_NOT_FOUND)            \
     DEFINE_EFFECT(FONT_DIRECTORY_NOT_FOUND)     \
