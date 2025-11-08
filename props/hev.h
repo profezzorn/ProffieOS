@@ -772,9 +772,6 @@ public:
     // alongside death sound. However all pending sounds should be cleared.
     switch (effect) {
       default: return;
-      case EFFECT_BOOT:
-        hybrid_font.PlayCommon(&SFX_boot);
-        return;
 
       // (ENVIRONMENTAL FX) Hazard SFX
       case EFFECT_STUN:
