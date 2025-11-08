@@ -218,19 +218,11 @@ public:
   }
   void operator<<=(int bits) {
     if (!bits) return;
-    const size_t n = NELEM(bits_);
-    for (size_t i = 0; i < n; i++) {
-      const size_t curr = n - 1 - i;
-      bits_[curr] = get32(curr * 32 - bits);
-    }
+    for (int i = NELEM(bits_) - 1; i >= 0; i--) bits_[i] = get32(i * 32 - bits);
   }
   BitSet<SIZE> operator<<(int bits) const {
     BitSet<SIZE> ret;
-    const size_t n = NELEM(bits_);
-    for (size_t i = 0; i < n; i++) {
-      const size_t curr = n - 1 - i;
-      ret.bits_[curr] = get32(curr * 32 - bits);
-    }
+    for (int i = NELEM(bits_) - 1; i >= 0; i--) ret.bits_[i] = get32(i * 32 - bits);
     return ret;
   }
   BitSet<SIZE> operator~() const {
