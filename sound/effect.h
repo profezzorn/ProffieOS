@@ -436,8 +436,8 @@ class Effect {
 #ifdef RANDOM_SAMPLE_WITHOUT_REPLACEMENT
       const size_t total_files = files_found() * number_of_subfiles();
       if (total_files > 2 && total_files <= SAMPLE_WITHOUT_REPLACEMENT_BUFFER_SIZE_BITS) {
-        const size_t first = filenum * files_found();
-        const size_t last = first + sub_files_ - 1;
+        const size_t first = filenum * sub_files_;
+        const size_t last = first + files_found();
         
         uint8_t n = available_.popcount_subset(first, last);
         if (!n) {
