@@ -146,10 +146,10 @@ public:
   // Create a BitSet with a given number of initially set bits
   static BitSet<SIZE> fill(size_t n = SIZE) {
     BitSet<SIZE> ret;
-    for (size_t i = 0; i < NELEM(ret.bits_); i++) {
+    for (size_t i = 0; i <= (n - 1) >> 5; i++) {
       ret.bits_[i] = ~uint32_t(0);
     }
-    if (!!(n & 31)) ret.bits_[n >> 5] >>= 32 - (n & 31);
+    if (!!(n & 31)) ret.bits_[(n - 1) >> 5] >>= 32 - (n & 31);
     return ret;
   }
   uint32_t get_word(int word) const {
