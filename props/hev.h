@@ -308,10 +308,10 @@
 //=====================================================================//
 
 #ifndef HEV_RANDOM_EVENT_INTERVAL_MS
-#define HEV_RANDOM_EVENT_INTERVAL_MS 10000
+#define HEV_RANDOM_EVENT_INTERVAL_MS 60000
 #endif
 #ifndef HEV_RANDOM_HAZARD_CHANCE
-#define HEV_RANDOM_HAZARD_CHANCE 100
+#define HEV_RANDOM_HAZARD_CHANCE 15
 #endif
 #ifndef HEV_HAZARD_DELAY_MS
 #define HEV_HAZARD_DELAY_MS 6000
