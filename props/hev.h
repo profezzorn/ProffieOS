@@ -308,10 +308,10 @@
 //=====================================================================//
 
 #ifndef HEV_RANDOM_EVENT_INTERVAL_MS
-#define HEV_RANDOM_EVENT_INTERVAL_MS 60000
+#define HEV_RANDOM_EVENT_INTERVAL_MS 10000
 #endif
 #ifndef HEV_RANDOM_HAZARD_CHANCE
-#define HEV_RANDOM_HAZARD_CHANCE 15
+#define HEV_RANDOM_HAZARD_CHANCE 100
 #endif
 #ifndef HEV_HAZARD_DELAY_MS
 #define HEV_HAZARD_DELAY_MS 6000
@@ -441,6 +441,7 @@ public:
     int previous_health = health_;
     int previous_armor = armor_;
     int tens = health_ / 10;
+    int log_hazard_damage = 0;
 
     // Damage type and calculation
     switch (type) {
@@ -458,11 +459,24 @@ public:
         break;
 
       case DAMAGE_HAZARD:
-        if (armor_ > 0) {
-          armor_ -= damage;
-        } else {
-          health_ -= damage;
+        int hazard_damage = damage;
+        if (damage == 0) {
+          switch (current_hazard_) {
+            case HAZARD_BIO: hazard_damage = 2; break;
+            case HAZARD_RAD: hazard_damage = 3; break;
+            case HAZARD_BLO: hazard_damage = 2; break;
+            case HAZARD_CHE: hazard_damage = 2; break;
+            case HAZARD_HEA: hazard_damage = 4; break;
+            case HAZARD_SHO: hazard_damage = 5; break;
+            default: hazard_damage = 1; break;
+          }
         }
+        if (armor_ > 0) {
+          armor_ -= hazard_damage;
+        } else {
+          health_ -= hazard_damage;
+        }
+        log_hazard_damage = hazard_damage;
         break;
     }
 
@@ -493,7 +507,8 @@ public:
     }
 
     // Print Damage, Health and Armor
-    PVLOG_NORMAL << "DAMAGE: -" << damage << "\n";
+    PVLOG_NORMAL << "DAMAGE: -" << damage << " / ";
+    PVLOG_NORMAL << "HAZARD DAMAGE: -" << log_hazard_damage << "\n";
     PVLOG_NORMAL << "HEALTH: " << health_ << " / ";
     PVLOG_NORMAL << "ARMOR: " << armor_ << "\n";
   }
@@ -590,9 +605,9 @@ public:
       return;
     }
 
-    // Check sequence and apply damage
+    // Check sequence and apply hazard_damage from DoDamage
     if (!timer_hazard_delay_.running()) {
-      DoDamage(1, false, DAMAGE_HAZARD);
+      DoDamage(0, false, DAMAGE_HAZARD);
 
       // Clear hazard on death
       if (health_ == 0) {
