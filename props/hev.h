@@ -227,8 +227,8 @@
 //     - These 4 Hazards have a 50% chance to let the user know        //
 //       that damage is lingering via a (HEV VOICE LINE).              //
 //     - This has been configured directly in the sound font files.    //
-// ▪ Heat and Shock do not have lingering damage and should be         //
-//   cleared immediately by the user by clicking AUX.                  //
+// ▪ Heat/Shock do not have indefinite lingering damage as they will   //
+//   clear themselves after a short time.                              //
 //                                                                     //
 //----------------- Quick Healing & Recharging ------------------------//
 //                                                                     //
@@ -293,6 +293,12 @@
 //  HEV_HAZARD_DECREASE_MAX_MS                                         //
 //      - Maximum time (ms) between each tick of Hazard damage.        //
 //                                                                     //
+//  HEV_HAZARD_SURGE_MIN_MS                                            //
+//      - Minimum time (ms) for a quick surge of Hazard damage.       //
+//                                                                     //
+//  HEV_HAZARD_SURGE_MAX_MS                                            //
+//      - Maximum time (ms) for a quick surge of Hazard damage.       //
+//                                                                     //
 //  HEV_HAZARD_AFTER_REVIVE_MS                                         //
 //      - Time (ms) after reviving before Hazards can happen again.    //
 //                                                                     //
@@ -321,6 +327,12 @@
 #endif
 #ifndef HEV_HAZARD_DECREASE_MAX_MS
 #define HEV_HAZARD_DECREASE_MAX_MS 4000
+#endif
+#ifndef HEV_HAZARD_SURGE_MIN_MS
+#define HEV_HAZARD_SURGE_MIN_MS 8000
+#endif
+#ifndef HEV_HAZARD_SURGE_MAX_MS
+#define HEV_HAZARD_SURGE_MAX_MS 15000
 #endif
 #ifndef HEV_HAZARD_AFTER_REVIVE_MS
 #define HEV_HAZARD_AFTER_REVIVE_MS 60000
@@ -396,6 +408,8 @@ public:
   //                                Controls healing rate.               //
   // - timer_armor_increase_      - Interval for Armor recharge.         //
   //                                Controls Armor recharge rate.        //
+  // - timer_hazard_surge_        - Duration timer for a quick surge of  //
+  //                                hazardous damage (Heat/Shock).       //
   //=====================================================================//
 
   HEVTimerBase timer_clash_;
@@ -404,6 +418,7 @@ public:
   HEVTimerBase timer_hazard_after_revive_;
   HEVTimerBase timer_health_increase_;
   HEVTimerBase timer_armor_increase_;
+  HEVTimerBase timer_hazard_surge_;
 
   Hev() : PropBase() {
     timer_clash_.configure(this->clash_timeout_);
@@ -412,6 +427,7 @@ public:
     timer_hazard_after_revive_.configure(HEV_HAZARD_AFTER_REVIVE_MS);
     timer_health_increase_.configure(HEV_HEALTH_INCREASE_MS);
     timer_armor_increase_.configure(HEV_ARMOR_INCREASE_MS);
+    timer_hazard_surge_.configure(0);
   }
 
   const char* name() override { return "Hev"; }
@@ -582,7 +598,6 @@ public:
         PVLOG_NORMAL << "Activating Hazard.\n";
         current_hazard_ = (Hazard)(1 + random(6));
         SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
-
       } else {
         PVLOG_NORMAL << "Skipping Hazard.\n";
         timer_random_event_.start();
@@ -595,6 +610,7 @@ public:
     // Reset timer when hazard is cleared
     if (current_hazard_ == HAZARD_NONE) {
       timer_hazard_delay_.reset();
+      timer_hazard_surge_.reset();
       return;
     }
 
@@ -605,14 +621,34 @@ public:
       return;
     }
 
-    // Check sequence and apply hazard_damage from DoDamage
+    // Check sequence then start surge timer or apply hazard damage
     if (!timer_hazard_delay_.running()) {
+      // For Heat/Shock: start surge timer if not already started
+      if ((current_hazard_ == HAZARD_HEA || current_hazard_ == HAZARD_SHO)) {
+        if (!timer_hazard_surge_.active_) {
+          timer_hazard_surge_.configure_random(
+            HEV_HAZARD_SURGE_MIN_MS,
+            HEV_HAZARD_SURGE_MAX_MS
+          );
+          timer_hazard_surge_.start();
+        } else if (timer_hazard_surge_.check()) {
+          PVLOG_NORMAL << "Heat/Shock Hazard expired.\n";
+          current_hazard_ = HAZARD_NONE;
+          timer_hazard_delay_.reset();
+          timer_hazard_surge_.reset();
+          SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
+          timer_random_event_.start();
+          return;
+        }
+      }
+      // Apply hazard damage
       DoDamage(0, false, DAMAGE_HAZARD);
 
       // Clear hazard on death
       if (health_ == 0) {
         current_hazard_ = HAZARD_NONE;
         timer_hazard_delay_.reset();
+        timer_hazard_surge_.reset();
         SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
         return;
       }
@@ -630,6 +666,7 @@ public:
   void Revive() {
     if (health_ == 0) {
       timer_random_event_.reset();
+      timer_hazard_surge_.reset();
     }
   }
 
@@ -697,6 +734,7 @@ public:
           SaberBase::DoEffect(EFFECT_ALT_SOUND, 0.0, current_hazard_);
           timer_random_event_.reset();
           timer_random_event_.start();
+          timer_hazard_delay_.reset();
           return true;
         }
         // Play a no-hazard sound ?
