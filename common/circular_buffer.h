@@ -25,6 +25,13 @@ public:
 
   void push() { first_ += 1; }
   void push(size_t elements) { first_ += elements; }
+  void unpush(size_t elements) { first_ -= elements; }
+
+  void push_back(T  value) {
+    *space() = value;
+    push();
+  }
+
   T pop() {
     T ret = current();
     last_ += 1;
@@ -34,6 +41,10 @@ public:
 
   void clear() { first_ = 0; last_=0; }
   size_t pos() { return last_.get(); }
+
+  T& operator[](size_t n) {
+    return data_[(last_.get() + n) % SIZE];
+  }
 
 private:
   T data_[SIZE];

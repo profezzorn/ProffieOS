@@ -166,10 +166,23 @@ public:
     SayPercent();
   }
 
+#ifdef SEARCH_FOR_SOUND_LIBRARY_FILES
+
+// Search font path for sound.
 #define ADD_SL_SOUND(NAME, BASE)                                        \
   void Say##NAME() { SOUNDQ->Play(BASE ".wav"); }                       \
   /* t for "trampoline" */                                              \
   struct t##NAME { static void say() { SOUNDQ->Play(BASE ".wav"); } }
+
+#else
+
+// Use mnum as template where to find sounds.
+#define ADD_SL_SOUND(NAME, BASE)                                        \
+  void Say##NAME() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE ".wav", &SFX_mnum)); } \
+  /* t for "trampoline" */                                              \
+  struct t##NAME { static void say() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE ".wav", &SFX_mnum)); } }
+
+#endif
 
   ADD_SL_SOUND(Red, "clrlst/clrlst01");
   ADD_SL_SOUND(OrangeRed, "clrlst/clrlst02");

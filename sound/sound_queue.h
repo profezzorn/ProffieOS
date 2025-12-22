@@ -1,12 +1,174 @@
 #ifndef SOUND_SOUND_QUEUE_H
 #define SOUND_SOUND_QUEUE_H
 
+class SoundToPlayBase {
+public:
+  virtual bool Play(BufferedWavPlayer* player) = 0;
+  virtual ~SoundToPlayBase() {}
+};
+
+class SoundToPlayInSameDirAs : public SoundToPlayBase {
+public:
+  SoundToPlayInSameDirAs(const char* filename, Effect* e) : filename_(filename), effect_(e) {}
+  bool Play(BufferedWavPlayer* player) override {
+    player->PlayInSameDirAs(filename_, effect_);
+    return true;
+  }
+
+private:
+  const char* filename_;
+  Effect* effect_;
+};
+
+class SoundToPlayInCurrentDir : public SoundToPlayBase {
+public:
+  SoundToPlayInCurrentDir(const char* filename) : filename_(filename) {}
+  bool Play(BufferedWavPlayer* player) override {
+    return player->PlayInCurrentDir(filename_);
+  }
+
+private:
+  const char* filename_;
+};
+
+class SoundToPlayFileID : public SoundToPlayBase {
+public:
+  SoundToPlayFileID(Effect::FileID id) : file_id_(id) {}
+  bool Play(BufferedWavPlayer* player) override {
+    player->PlayOnce(file_id_);
+    return true;
+  }
+
+private:
+  Effect::FileID file_id_;
+};
+
+class SoundToPlayColor : public SoundToPlayBase {
+public:
+  SoundToPlayColor(unsigned char r,
+		   unsigned char g,
+		   unsigned char b) : r_(r), g_(g), b_(b) {
+  }
+  bool Play(BufferedWavPlayer* player) override {
+    // color
+    char filename[32];
+    strcpy(filename, "colors/");
+    char* tmp = filename + strlen(filename);
+    *(tmp++) = "0123456789abcdef"[r_ >> 4];
+    *(tmp++) = "0123456789abcdef"[r_ & 15];
+    *(tmp++) = "0123456789abcdef"[g_ >> 4];
+    *(tmp++) = "0123456789abcdef"[g_ & 15];
+    *(tmp++) = "0123456789abcdef"[b_ >> 4];
+    *(tmp++) = "0123456789abcdef"[b_ & 15];
+    strcpy(tmp, ".wav");
+    return player->PlayInCurrentDir(filename);
+  }
+  unsigned char r_, g_, b_;
+};
+
+// Fixed-size deque of objects with shared base class.
+// Similar to deque<shared_ptr<BASE>>, size is fixed and
+// all memory allocations are done from internal memory.
+// push_back/emplace_back will fail and return false/nullptr
+// if insufficient space is available.
+template<class BASE, size_t N = 8, size_t SIZE = N * 12>
+class VirtVec {
+public:
+  size_t size() const { return elements_.size(); }
+  BASE* operator[](size_t n) { return elements_[n]; }
+  BASE* first() { return elements_[0]; }
+
+  template<class T, class... Args>
+  T* emplace_back(Args&&... args) {
+    char* ptr = allocate(sizeof(T), alignof(T));
+    if (ptr == nullptr) return nullptr;
+    return new(ptr) T(args...);
+  }
+
+  template<class T> bool push_back(T value) {
+    char* ptr = allocate(sizeof(T), alignof(T));
+    if (ptr == nullptr) return false;
+    return new(ptr) T(value);
+  }
+
+  // Stack
+  void pop_back() {
+    if (elements_.empty()) return;
+    int n = elements_.size() -1;
+    (*this)[n]->~BASE();
+    buffer_.unpush(element_size(n));
+    elements_.unpush(-1);
+  }
+
+  // Queue
+  void pop_front() {
+    if (elements_.empty()) return;
+    (*this)[0]->~BASE();
+    buffer_.pop(element_size(0));
+    elements_.pop();
+  }
+
+  void clear() {
+    while (size()) pop_front();
+  }
+
+private:
+  // May return a larger number, but not smaller.
+  size_t element_size(size_t n) {
+    char *a = reinterpret_cast<char *>(elements_[n]);
+    char *b;
+    if (n == size() - 1) {
+      // Last element
+      b = buffer_.space();
+    } else {
+      b = reinterpret_cast<char *>(elements_[n + 1]);
+    }
+    if (b < a) {
+      b = buffer_.data() + buffer_.continuous_data();
+    }
+    return b - a;
+  }
+
+  char* allocate(size_t size, size_t alignment) {
+    if (elements_.space_available() == 0) return nullptr;
+    while (true) {
+      if (buffer_.space_available() < size) return nullptr;
+      if (((size_t)buffer_.space()) % alignment) {
+	// Fix alignment
+	size_t misalignment = alignment - ((size_t)buffer_.space()) % alignment;
+	if (buffer_.space_available() < misalignment) return nullptr;
+	buffer_.push(misalignment);
+	continue; // retry
+      }
+      if (buffer_.continuous_space() < size) {
+	// Not enough space at end of buffer,
+	// jump back to beginning of buffer.
+	// (If there is enough space there.)
+	if (buffer_.space_available() - buffer_.continuous_space() < size) return nullptr;
+	buffer_.push(buffer_.continuous_space());
+	continue; // retry
+      }
+      break;
+    }
+    char* ret = buffer_.space();
+    buffer_.push(size);
+    elements_.push_back(reinterpret_cast<BASE*>(ret));
+  }
+
+  // Pointers to each of the elements in the VirtVec
+  CircularBuffer<BASE*, N> elements_;
+
+  // Memory for storing the elements.
+  CircularBuffer<char, SIZE> buffer_;
+};
+
 struct SoundToPlay {
   const char* filename_;
   Effect::FileID file_id_;
 
   SoundToPlay() :filename_(nullptr), file_id_(nullptr, 0xffff, 0, 0)  {}
   explicit SoundToPlay(const char* file) : filename_(file) {  }
+  explicit SoundToPlay(const char* file, Effect* effect) : filename_(file), file_id_(effect, 0,0,0) {  }
   SoundToPlay(Effect* effect) : filename_(nullptr), file_id_(effect->RandomFile()) {}
   SoundToPlay(Effect* effect, int selection) : filename_(nullptr), file_id_((effect->Select(selection),effect->RandomFile())) {}
   SoundToPlay(uint8_t R, uint8_t G, uint8_t B) :filename_(nullptr), file_id_(nullptr, R, G, B) {}
@@ -40,16 +202,23 @@ struct SoundToPlay {
 template<int QueueLength>
 class SoundQueue {
 public:
+  template<class T>
+  bool Play(T p) { queue_.push_back(p); }
+
+  // For backwards compatibility only.
   bool Play(SoundToPlay p) {
-    if (sounds_ < QueueLength) {
-      queue_[sounds_++] = p;
-      return true;
+    if (p.filename_) {
+      return Play(SoundToPlayInCurrentDir(p.filename_));
     }
-    return false;
+    if (p.file_id_) {
+      return Play(SoundToPlayFileID(p.file_id_));
+    }
+    return Play(SoundToPlayColor(p.file_id_.GetFileNum(),
+				 p.file_id_.GetSubId(),
+				 p.file_id_.GetAlt()));
   }
-  bool Play(const char* p) {
-    return Play(SoundToPlay(p));
-  }
+
+  bool Play(const char* p) { return Play(SoundToPlayInCurrentDir(p)); }
 
   // Called from Loop()
   void PollSoundQueue(RefPtr<BufferedWavPlayer>& player) {
@@ -59,22 +228,21 @@ public:
       if (busy_) {
         // We really should add the time since the fadeout was scheduled here.
         // However, if polling is frequent, it would be a fraction of a milli
-        // which basically dones't matter.
+        // which basically doesn't matter.
         player->set_fade_time(fadeout_len_);
         player->FadeAndStop();
       }
     }
     if (!busy_) {
-      if (sounds_) {
+      if (queue_.size()) {
         busy_ = true;
         if (!player) {
           player = GetFreeWavPlayer();
           if (!player) return;
         }
         player->set_volume_now(1.0f);
-        queue_[0].Play(player.get());
-        sounds_--;
-        for (int i = 0; i < sounds_; i++) queue_[i] = queue_[i+1];
+        queue_[0]->Play(player.get());
+	queue_.pop_front();
       } else {
         if (player) player.Free();
       }
@@ -82,19 +250,18 @@ public:
   }
   bool busy() const { return busy_; }
   void fadeout(float len) {
-    sounds_ = 0;
+    queue_.clear();
     fadeout_ = true;
     fadeout_len_ = len;
   }
   void clear_pending() {
-    sounds_ = 0;
+    queue_.clear();
   }
 private:
-  int sounds_;
   bool busy_ = false;
   bool fadeout_;
   bool fadeout_len_;
-  SoundToPlay queue_[QueueLength];
+  VirtVec<SoundToPlayBase, QueueLength, QueueLength * 12> queue_;
 };
 
 #endif // SOUND_SOUND_QUEUE_H
