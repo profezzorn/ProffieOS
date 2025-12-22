@@ -159,6 +159,18 @@ class Effect {
     reset();
   }
 
+  void CopyDirectoryFrom(Effect* effect) {
+    min_file_ = 0;
+    max_file_ = 0;
+    unnumbered_file_found_ = true;
+    found_in_alt_dir_ = effect->found_in_alt_dir_;
+    file_pattern_ = effect->file_pattern_;
+    ext_ = Extension::WAV;
+    num_files_ = 1;
+    directory_ = effect->directory_;
+    volume_ = effect->volume_;
+  }
+
   void reset() {
     min_file_ = 127;
     max_file_ = -1;
