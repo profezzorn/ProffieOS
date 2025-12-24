@@ -51,6 +51,14 @@ public:
     return false;
   }
 
+  void PlayInSameDirAs(const char* name, Effect* effect) {
+    Effect tmp(name);
+    tmp.CopyDirectoryFrom(effect);
+    char full_name[128];
+    tmp.RandomFile().GetName(full_name);
+    Play(full_name);
+  }
+
   void UpdateSaberBaseSoundInfo() {
     SaberBase::sound_length = length();
     SaberBase::sound_number = current_file_id().GetFileNum();

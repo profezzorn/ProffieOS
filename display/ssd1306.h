@@ -1028,7 +1028,7 @@ public:
   // TODO: Don't update the display when we don't need to
   // and return false here so that we can go into lower power modes.
   void SB_IsOn(bool* on) override {
-    *on = on_;
+    if (on_) *on = true;
   }
 
   void Loop() override {
