@@ -568,7 +568,7 @@ struct BlasterDisplayEffects  {
 template<int Width, class col_t, typename PREFIX = ByteArray<>>
 class BlasterDisplayController : public StandardDisplayController<Width, col_t, PREFIX> {
 public:
-  BlasterDisplayEffects<PREFIX> img_;
+  BlasterDisplayEffects<PREFIX> &img_;
   BlasterDisplayConfigFile &blaster_font_config;
   BlasterDisplayController() :
     img_(*getPtr<BlasterDisplayEffects<PREFIX>>()),
