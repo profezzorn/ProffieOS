@@ -519,7 +519,7 @@ public:
 #ifdef PROP_BOTTOM
 
 #define ONCE_PER_BLASTER_EFFECT(X)    \
-  X(stun)                            \
+  X(stun)                             \
   X(blast)                            \
   X(reload)                           \
   X(empty)                            \
@@ -543,7 +543,7 @@ struct BlasterDisplayConfigFile : public ConfigFile {
     CONFIG_VARIABLE2(ProffieOSDestructImageDuration, 10000.0f);
   }
 
-  // for OLED displays, the time a stun.bmp    will play
+  // for OLED displays, the time a stun.bmp     will play
   float ProffieOSStunImageDuration;
   // for OLED displays, the time a blast.bmp    will play
   float ProffieOSFireImageDuration;
@@ -582,7 +582,7 @@ public:
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
       case EFFECT_STUN:
-        this->ShowFileWithSoundLength(&img_.IMG_stun,   blaster_font_config.ProffieOSStunImageDuration);
+        this->ShowFileWithSoundLength(&img_.IMG_stun,    blaster_font_config.ProffieOSStunImageDuration);
         break;
       case EFFECT_FIRE:
         this->ShowFileWithSoundLength(&img_.IMG_blast,   blaster_font_config.ProffieOSFireImageDuration);
