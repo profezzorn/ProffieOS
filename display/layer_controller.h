@@ -547,7 +547,7 @@ public:
     }
   }
 
-  void ShowDefault(bool ignore_lockup = false) {
+  virtual void ShowDefault(bool ignore_lockup = false) {
     PVLOG_VERBOSE << "LC ShowDefault()\n";
     if (SaberBase::IsOn()) {
       if (SaberBase::Lockup() && SCR_lock && !ignore_lockup) {
