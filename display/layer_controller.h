@@ -484,13 +484,13 @@ private:
 #define DEF_SCR(X, ARGS...) Effect SCR_##X;
 
 template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>, typename NumberToByteArray<H>::type>>
-class StandarColorDisplayController : public SaberBase, public Looper, public CommandParser, public LayerControllerInterface {
+class StandardColorDisplayController : public SaberBase, public Looper, public CommandParser, public LayerControllerInterface {
 public:
 //  typedef SizedLayeredScreenControl<W, H> SLSC;
-//  explicit StandarColorDisplayController(SLSC* screen) : scr_(screen) ONCE_PER_EFFECT(INIT_SCR) {}
+//  explicit StandardColorDisplayController(SLSC* screen) : scr_(screen) ONCE_PER_EFFECT(INIT_SCR) {}
 
   template<int w, int h>
-  explicit StandarColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : scr_(screen) ONCE_PER_EFFECT(INIT_SCR) {
+  explicit StandardColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : scr_(screen) ONCE_PER_EFFECT(INIT_SCR) {
     static_assert(w == W, "Width is not matching.");
     static_assert(h == H, "Height is not matching.");
     screen->LSC_SetController(this);
