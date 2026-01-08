@@ -438,7 +438,7 @@ public:
         FindBladeAgain();
         SaberBase::DoBladeDetect(false);
         return true;
- #endif
+#endif
     }
     return false;
   }
@@ -519,6 +519,7 @@ public:
 #ifdef PROP_BOTTOM
 
 #define ONCE_PER_BLASTER_EFFECT(X)    \
+  X(auto)                             \
   X(stun)                             \
   X(blast)                            \
   X(reload)                           \
@@ -533,7 +534,7 @@ public:
 struct BlasterDisplayConfigFile : public ConfigFile {
   BlasterDisplayConfigFile() { link(&font_config); }
   void iterateVariables(VariableOP *op) override {
-	CONFIG_VARIABLE2(ProffieOSStunImageDuration,     1000.0f);
+    CONFIG_VARIABLE2(ProffieOSStunImageDuration,     1000.0f);
     CONFIG_VARIABLE2(ProffieOSFireImageDuration,     1000.0f);
     CONFIG_VARIABLE2(ProffieOSReloadImageDuration,   1000.0f);
     CONFIG_VARIABLE2(ProffieOSEmptyImageDuration,    1000.0f);
@@ -561,7 +562,6 @@ struct BlasterDisplayConfigFile : public ConfigFile {
   float ProffieOSDestructImageDuration;
 };
 
-
 template<typename PREFIX = ByteArray<>>
 struct BlasterDisplayEffects  {
   BlasterDisplayEffects() : dummy_(0) ONCE_PER_BLASTER_EFFECT(INIT_IMG) {}
@@ -577,6 +577,17 @@ public:
   BlasterDisplayController() :
     img_(*getPtr<BlasterDisplayEffects<PREFIX>>()),
     blaster_font_config(*getPtr<BlasterDisplayConfigFile>()) {
+  }
+
+  void ShowDefault(bool ignore_lockup = false) override {
+    if (SaberBase::IsOn() &&
+        SaberBase::Lockup() == SaberBase::LOCKUP_AUTOFIRE &&
+        img_.IMG_auto &&
+        !ignore_lockup) {
+      this->SetFile(&img_.IMG_auto, 3600000.0);
+     return;
+    }
+    StandardDisplayController<Width, col_t, PREFIX>::ShowDefault(ignore_lockup);
   }
 
   void SB_Effect2(EffectType effect, EffectLocation location) override {
@@ -624,9 +635,21 @@ public:
   template<int w, int h>
   explicit BlasterColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_BLASTER_EFFECT(INIT_SCR) {
   }
+
+  void ShowDefault(bool ignore_lockup = false) override {
+    if (SaberBase::IsOn() &&
+        SaberBase::Lockup() == SaberBase::LOCKUP_AUTOFIRE &&
+        SCR_auto &&
+        !ignore_lockup) {
+      this->scr_.Play(&SCR_auto);
+      return;
+    }
+    StandarColorDisplayController<W, H, PREFIX>::ShowDefault(ignore_lockup);
+  }
+
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
-	  case EFFECT_STUN:     this->scr_.Play(&SCR_stun);    break;
+      case EFFECT_STUN:     this->scr_.Play(&SCR_stun);    break;
       case EFFECT_FIRE:     this->scr_.Play(&SCR_blast);   break;
       case EFFECT_RELOAD:   this->scr_.Play(&SCR_reload);  break;
       case EFFECT_EMPTY:    this->scr_.Play(&SCR_empty);   break;
