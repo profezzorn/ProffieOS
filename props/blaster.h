@@ -630,10 +630,10 @@ public:
 #endif  // INCLUDE_SSD1306
 
 template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>, typename NumberToByteArray<H>::type>>
-class BlasterColorDisplayController : public StandarColorDisplayController<W, H, PREFIX> {
+class BlasterColorDisplayController : public StandardColorDisplayController<W, H, PREFIX> {
 public:
   template<int w, int h>
-  explicit BlasterColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_BLASTER_EFFECT(INIT_SCR) {
+  explicit BlasterColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : StandardColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_BLASTER_EFFECT(INIT_SCR) {
   }
 
   void ShowDefault(bool ignore_lockup = false) override {
@@ -644,7 +644,7 @@ public:
       this->scr_.Play(&SCR_auto);
       return;
     }
-    StandarColorDisplayController<W, H, PREFIX>::ShowDefault(ignore_lockup);
+    StandardColorDisplayController<W, H, PREFIX>::ShowDefault(ignore_lockup);
   }
 
   void SB_Effect2(EffectType effect, EffectLocation location) override {
@@ -657,7 +657,7 @@ public:
       case EFFECT_CLIP_IN:  this->scr_.Play(&SCR_clipin);  break;
       case EFFECT_CLIP_OUT: this->scr_.Play(&SCR_clipout); break;
       default:
-        StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
+        StandardColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
     }
   }
 
