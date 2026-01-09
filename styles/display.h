@@ -98,7 +98,6 @@ private:
   FB fb_[NBUF];
 };
 
-
 // TODO: Move to common/malloc_helper.h
 
 #define NAME_INSTANCE(I, T)						\
