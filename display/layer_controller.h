@@ -65,8 +65,6 @@ if it is looped.
 
 */
 
-
-
 #include "../common/bytearray.h"
 
 struct VariableSource {
@@ -279,7 +277,6 @@ protected:
   POLYHOLE;
 };
 
-
 class SCRReader : public BufferedFileReader {
 public:
   explicit SCRReader(LayeredScreenControl* screen) : screen_(screen) {
@@ -460,7 +457,6 @@ private:
   StateMachineState state_machine_;
 };
 
-
 #define ONCE_PER_EFFECT(X) \
   X(boot)                  \
   X(font)                  \
@@ -478,7 +474,6 @@ private:
   X(pli)                   \
   X(idle)                  \
   X(lowbatt)
-
 
 #define INIT_SCR(X, ARGS...) ,SCR_##X(ConcatByteArrays<PREFIX, ByteArray<'/'>, STRTYPE(#X)>::str, nullptr, Effect::FileType::SCREEN)
 #define DEF_SCR(X, ARGS...) Effect SCR_##X;
@@ -658,7 +653,6 @@ public:
 #endif
     return false;
   }
-
 
 protected:
   SCRReader scr_;
