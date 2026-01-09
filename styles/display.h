@@ -60,13 +60,16 @@ public:
   const char* name() override { return "InMemoryDisplay"; }
   InMemoryDisplay() : Looper(HFLINK) {
   }
+
   void initDisplay() override {
     for (int i = 0; i < NBUF; i++) fb_[i].clear();
     target_buffer_ = FrameRef(fb_);
   }
+
   void enableDisplay() override {}
   void disableDisplay() override {}
   void enableBacklight() override {}
+
   void startTransfer() override {
     while (SUPER::output_buffers_.size() && SUPER::output_buffers_.data()->done.get()) {
       uint16_t *data = SUPER::output_buffers_.data()->chunk.begin();
@@ -75,6 +78,7 @@ public:
       SUPER::output_buffers_.pop(1);
     }
   }
+
   void fixByteOrder() override {}
 
   void swapBuffers() override {
@@ -86,6 +90,7 @@ public:
   FrameRef StartFrame() {
     return active_buffer_;
   }
+
 private:
   int next_buffer() {
     for (size_t b = 0; b < NBUF; b++) if (fb_[b].refs == 0) return b;
@@ -100,8 +105,8 @@ private:
 
 // TODO: Move to common/malloc_helper.h
 
-#define NAME_INSTANCE(I, T)						\
-struct T;								\
+#define NAME_INSTANCE(I, T)          \
+struct T;                            \
 auto getInstance(T*) -> decltype(& I) { return & I; }
 
 template<class I, bool ZZ=true, int rot=0>
@@ -115,10 +120,12 @@ typedef typename std::remove_reference<decltype( *getInstance((I*)0) )>::type Di
   void run(BladeBase* blade) {
     frame_ = getInstance((I*)0)->StartFrame();
   }
+
   SimpleColor getColor(int x, int y) {
     if (x > (int)W || y > (int)H || !frame_) return Color16(0,0,0);
     return frame_->getColor(x, y);
   }
+
   SimpleColor getColor(int led) {
     int x = led % W;
     int y = led / W;
@@ -127,6 +134,7 @@ typedef typename std::remove_reference<decltype( *getInstance((I*)0) )>::type Di
     if (rot & 2) y = H - y;
     return (rot & 4) ? getColor(y, x) : getColor(x, y);
   }
+
 private:
   FrameRef frame_;
 };
