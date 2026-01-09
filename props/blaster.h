@@ -585,7 +585,7 @@ public:
         img_.IMG_auto &&
         !ignore_lockup) {
       this->SetFile(&img_.IMG_auto, 3600000.0);
-     return;
+      return;
     }
     StandardDisplayController<Width, col_t, PREFIX>::ShowDefault(ignore_lockup);
   }
