@@ -85,7 +85,7 @@ public:
     active_buffer_ = target_buffer_;
     target_buffer_ = FrameRef(fb_ + next_buffer());
   }
-  
+
   void Loop() override { SUPER::frame_loop(); }
   FrameRef StartFrame() {
     return active_buffer_;
