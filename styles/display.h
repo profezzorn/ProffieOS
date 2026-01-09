@@ -17,7 +17,7 @@
 //
 //     StandardColorDisplayController<8, 8> my_small_display_controller(&my_small_display);
 //
-// Now we need give this display a name we can use in a style:
+// Now we need to give this display a name we can use in a style:
 //
 //     NAME_INSTANCE(my_small_display, MYDISPLAY);
 //
