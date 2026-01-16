@@ -159,6 +159,18 @@ class Effect {
     reset();
   }
 
+  void CopyDirectoryFrom(Effect* effect) {
+    min_file_ = 0;
+    max_file_ = 0;
+    unnumbered_file_found_ = true;
+    found_in_alt_dir_ = effect->found_in_alt_dir_;
+    file_pattern_ = effect->file_pattern_;
+    ext_ = Extension::WAV;
+    num_files_ = 1;
+    directory_ = effect->directory_;
+    volume_ = effect->volume_;
+  }
+
   void reset() {
     min_file_ = 127;
     max_file_ = -1;
@@ -615,7 +627,6 @@ class Effect {
       scanner.Scan(dir);
       STDOUT.println(" done");
     } else {
-      STDOUT.println(" NOT FOUND!");
       if (strlen(dir)) ProffieOSErrors::font_directory_not_found();
     }
 #endif   // ENABLE_SD
@@ -712,10 +723,13 @@ EFFECT(preon);
 EFFECT(pstoff);
 
 // Monophonic fonts
+
+// Idle effect, plays when blade is off.
 #ifdef ENABLE_IDLE_SOUND
 EFFECT2(idle, idle);
-EFFECT2(boot, idle);
-EFFECT2(font, idle);
+EFFECT2(bgnidle, idle);
+EFFECT2(boot, bgnidle);
+EFFECT2(font, bgnidle);
 #else
 EFFECT(boot);
 EFFECT(font);      // also polyphonic
@@ -800,10 +814,10 @@ EFFECT(endauto); // Doesn't exist in fonts, but I expect there may be use for au
 EFFECT(blast); // Not to be confused with "blst" and "blaster" as blocking sounds in sabers
 
 // battery low
-EFFECT(lowbatt);	// battery low
+EFFECT(lowbatt);    // battery low
 
 // TODO: Optimize this and make it possible
-// have the WAV reader use this.
+// to have the WAV reader use this.
 class EffectFileReader : public FileReader {
 public:
   EffectFileReader() : FileReader(), do_open_(0) {}

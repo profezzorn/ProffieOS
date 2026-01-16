@@ -28,22 +28,35 @@ public:
     pause_.set(false);
   }
 
+  bool PlayInDir(const char* dir, const char* name) {
+    PathHelper full_name(dir, name);
+    LOCK_SD(true);
+    bool exists = LSFS::Exists(full_name);
+    LOCK_SD(false);
+    // Fill up audio buffers before we lock the SD again
+    AudioStreamWork::scheduleFillBuffer();
+    if (exists) {
+      Play(full_name);
+      return true;
+    }
+    return false;
+  }
+
   bool PlayInCurrentDir(const char* name) {
     STDOUT << "Playing " << name << ", ";
     for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
-      PathHelper full_name(dir, name);
-      LOCK_SD(true);
-      bool exists = LSFS::Exists(full_name);
-      LOCK_SD(false);
-      // Fill up audio buffers before we lock the SD again
-      AudioStreamWork::scheduleFillBuffer();
-      if (exists) {
-        Play(full_name);
-        return true;
-      }
+      if (PlayInDir(dir, name)) return true;
     }
     STDOUT << " (not found)\n";
     return false;
+  }
+
+  void PlayInSameDirAs(const char* name, Effect* effect) {
+    Effect tmp(name);
+    tmp.CopyDirectoryFrom(effect);
+    char full_name[128];
+    tmp.RandomFile().GetName(full_name);
+    Play(full_name);
   }
 
   void UpdateSaberBaseSoundInfo() {

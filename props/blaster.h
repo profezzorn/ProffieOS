@@ -422,23 +422,23 @@ public:
         Off();
         return true;
 
-  #ifdef BLADE_DETECT_PIN
-    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
-    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
-      // Might need to do something cleaner, but let's try this for now.
-      blade_detected_ = true;
-      FindBladeAgain();
-      SaberBase::DoBladeDetect(true);
-      return true;
+#ifdef BLADE_DETECT_PIN
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_ON, MODE_ANY_BUTTON | MODE_OFF):
+        // Might need to do something cleaner, but let's try this for now.
+        blade_detected_ = true;
+        FindBladeAgain();
+        SaberBase::DoBladeDetect(true);
+        return true;
 
-    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
-    case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
-      // Might need to do something cleaner, but let's try this for now.
-      blade_detected_ = false;
-      FindBladeAgain();
-      SaberBase::DoBladeDetect(false);
-      return true;
-  #endif
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_ON):
+      case EVENTID(BUTTON_BLADE_DETECT, EVENT_LATCH_OFF, MODE_ANY_BUTTON | MODE_OFF):
+        // Might need to do something cleaner, but let's try this for now.
+        blade_detected_ = false;
+        FindBladeAgain();
+        SaberBase::DoBladeDetect(false);
+        return true;
+ #endif
     }
     return false;
   }
@@ -519,6 +519,7 @@ public:
 #ifdef PROP_BOTTOM
 
 #define ONCE_PER_BLASTER_EFFECT(X)    \
+  X(stun)                             \
   X(blast)                            \
   X(reload)                           \
   X(empty)                            \
@@ -532,6 +533,7 @@ public:
 struct BlasterDisplayConfigFile : public ConfigFile {
   BlasterDisplayConfigFile() { link(&font_config); }
   void iterateVariables(VariableOP *op) override {
+	CONFIG_VARIABLE2(ProffieOSStunImageDuration,     1000.0f);
     CONFIG_VARIABLE2(ProffieOSFireImageDuration,     1000.0f);
     CONFIG_VARIABLE2(ProffieOSReloadImageDuration,   1000.0f);
     CONFIG_VARIABLE2(ProffieOSEmptyImageDuration,    1000.0f);
@@ -541,6 +543,8 @@ struct BlasterDisplayConfigFile : public ConfigFile {
     CONFIG_VARIABLE2(ProffieOSDestructImageDuration, 10000.0f);
   }
 
+  // for OLED displays, the time a stun.bmp     will play
+  float ProffieOSStunImageDuration;
   // for OLED displays, the time a blast.bmp    will play
   float ProffieOSFireImageDuration;
   // for OLED displays, the time a reload.bmp   will play
@@ -568,7 +572,7 @@ struct BlasterDisplayEffects  {
 template<int Width, class col_t, typename PREFIX = ByteArray<>>
 class BlasterDisplayController : public StandardDisplayController<Width, col_t, PREFIX> {
 public:
-  BlasterDisplayEffects<PREFIX> img_;
+  BlasterDisplayEffects<PREFIX> &img_;
   BlasterDisplayConfigFile &blaster_font_config;
   BlasterDisplayController() :
     img_(*getPtr<BlasterDisplayEffects<PREFIX>>()),
@@ -577,6 +581,9 @@ public:
 
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
+      case EFFECT_STUN:
+        this->ShowFileWithSoundLength(&img_.IMG_stun,    blaster_font_config.ProffieOSStunImageDuration);
+        break;
       case EFFECT_FIRE:
         this->ShowFileWithSoundLength(&img_.IMG_blast,   blaster_font_config.ProffieOSFireImageDuration);
         break;
@@ -619,6 +626,7 @@ public:
   }
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
+	  case EFFECT_STUN:     this->scr_.Play(&SCR_stun);    break;
       case EFFECT_FIRE:     this->scr_.Play(&SCR_blast);   break;
       case EFFECT_RELOAD:   this->scr_.Play(&SCR_reload);  break;
       case EFFECT_EMPTY:    this->scr_.Play(&SCR_empty);   break;

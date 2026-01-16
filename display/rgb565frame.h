@@ -409,6 +409,7 @@ public:
   void LC_play(const char* filename) override {
     TRACE(RGB565, "LC_play");
     delayed_open_ = true;
+    time_ = 0;
     file_.PlayInternal(filename);
   }
 
@@ -648,7 +649,8 @@ public:
 	    SLEEP_MICROS(next_frame_time_ - frame_end);
 	  }
 	}
-	lc_->LC_onStop();
+	while (!lc_->LC_done()) YIELD();
+	if (!layers[0].is_playing()) lc_->LC_onStop();
 	while (!lc_->LC_done()) YIELD();
       }
 

@@ -72,11 +72,14 @@ private:
       VoicePackVersionFile f;
       f.ReadInCurrentDir("voicepack.ini");
       found_version = f.voice_pack_version;
-      PVLOG_STATUS << "Sound library version " << found_version << " found.\n";
+      PVLOG_STATUS << "Voice pack version " << found_version << " found.\n";
     }
     if (found_version < required_version_) {
-      PVLOG_ERROR << "ERROR - Sound library version " << required_version_ << " required.\n";
-      ProffieOSErrors::error_in_font_directory(); // Make new error for voice pack?
+      if (SFX_mnum) {
+        ProffieOSErrors::error_in_voice_pack_version();
+      } else {
+       ProffieOSErrors::voice_pack_not_found();
+      }
     }
   }
 
@@ -163,10 +166,23 @@ public:
     SayPercent();
   }
 
+#ifdef SEARCH_FOR_SOUND_LIBRARY_FILES
+
+// Search font path for sound.
 #define ADD_SL_SOUND(NAME, BASE)                                        \
   void Say##NAME() { SOUNDQ->Play(BASE ".wav"); }                       \
   /* t for "trampoline" */                                              \
   struct t##NAME { static void say() { SOUNDQ->Play(BASE ".wav"); } }
+
+#else
+
+// Use mnum as template where to find sounds.
+#define ADD_SL_SOUND(NAME, BASE)                                        \
+  void Say##NAME() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE ".wav", &SFX_mnum)); } \
+  /* t for "trampoline" */                                              \
+  struct t##NAME { static void say() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE ".wav", &SFX_mnum)); } }
+
+#endif
 
   ADD_SL_SOUND(Red, "clrlst/clrlst01");
   ADD_SL_SOUND(OrangeRed, "clrlst/clrlst02");

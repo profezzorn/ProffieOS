@@ -143,7 +143,7 @@ protected:
 
   uint32_t TELL() {
     uint32_t ret = seek_pos_ + input_buffer_.pos();
-//    TRACE2(RGB565, "TELL", ret);
+    // TRACE2(RGB565, "TELL", ret);
     return ret;
   }
 
@@ -179,21 +179,21 @@ protected:
       input_buffer_.clear();
       seek_pos_ = 0;
       if (!file_.IsOpen()) {
-	file_size_ = 0;
-	TRACE(RGB565, "FillBuffer::EOF");
+        file_size_ = 0;
+        TRACE(RGB565, "FillBuffer::EOF");
         return false;
       }
       file_size_ = file_.FileSize();
-//      TRACE(RGB565, "FillBuffer5");
+      // TRACE(RGB565, "FillBuffer5");
       return true;  // return to ProcessAudioStream which will return here when no audiostreams are in need of data.
     }
-//    TRACE(RGB565, "FillBuffer5.5");
+    // TRACE(RGB565, "FillBuffer5.5");
     if (BUFATEOF()) return false;
     if (do_seek_) {
       TRACE2(RGB565, "FillBuffer, seek to ", seek_pos_);
       file_.Seek(seek_pos_);
       do_seek_ = false;
-//      TRACE(RGB565, "FillBuffer6");
+      // TRACE(RGB565, "FillBuffer6");
       return true;
     }
     uint32_t toread = input_buffer_.continuous_space();
@@ -211,12 +211,12 @@ protected:
       bps_bytes_ += bytes_read;
       bps_millis_ += m;
       if (bps_millis_ > 5000) {
-	bps_millis_ /= 2;
-	bps_bytes_ /= 2;
+        bps_millis_ /= 2;
+        bps_bytes_ /= 2;
       }
     }
     bps_last_millis_ = now;
-    
+
     input_buffer_.push(bytes_read);
     TRACE2(RGB565_DATA, "FillBuffer, bufsize=", input_buffer_.size());
     return true;
@@ -227,7 +227,7 @@ protected:
     return bps_bytes_ / (float)bps_millis_;
   }
 
-  
+
   void CloseFiles() override {
     TRACE(RGB565, "CloseFiles");
     file_.Close();
@@ -240,7 +240,7 @@ protected:
       TRACE2(RGB565_DATA, "space_available ib=", input_buffer_.space_available());
       return 0;
     }
-//    if (!input_buffer_.space_available()) return 0;
+    // if (!input_buffer_.space_available()) return 0;
     if (stream_locked_.get()) {
       TRACE2(RGB565_DATA, "space_available locked=", stream_locked_.get());
       return 0;
@@ -250,13 +250,13 @@ protected:
     // TRACE2(RGB565_DATA, "file_size_=", file_size_);
     // TRACE2(RGB565_DATA, "TELL()=", TELL());
     // TRACE2(RGB565_DATA, "ib.size=", input_buffer_.size());
-    
+
     if (BUFATEOF()) {
       TRACE2(RGB565_DATA, " BUFATEOF=", BUFATEOF());
       return 0;
     }
     // TRACE(RGB565_DATA, " return 1");
-    
+
     // Always low priority
     return 1;
   }
@@ -266,7 +266,7 @@ protected:
   uint32_t bps_bytes_ = 0;
   uint32_t bps_millis_ = 0;
   uint32_t bps_last_millis_ = 0;
-  
+
   POLYHOLE;
   POAtomic<bool> stream_locked_;
   volatile uint32_t file_size_ = 0xFFFFFFFFU;
@@ -299,83 +299,94 @@ public:
     STATE_MACHINE_BEGIN();
     layer_number_ = 0;
     may_need_restart_ = false;
+    layer_time_ = 0;
     layer_ = screen_->getLayer(layer_number_);
-    
+
     while (true) {
       for (i = 0; i < sizeof(line); i++) {
-	TRACE2(RGB565, "line", i);
-	while (input_buffer_.empty()) {
-	  TRACE2(RGB565, "empty", i);
-	  if (ATEOF()) {
-	    TRACE2(RGB565, "EOF", TELL());
-	    goto done;
-	  }
-	  scheduleFillBuffer();
-	  YIELD();
-	}
-	c = getc();
-	if (c == '\r' || c == '\n') {
-	  line[i] = 0;
-	  PVLOG_VERBOSE << "PARSING SCR LINE '" << line << "'\n";
-	  break;
-	}
-	line[i] = c;
+        TRACE2(RGB565, "line", i);
+        while (input_buffer_.empty()) {
+          TRACE2(RGB565, "empty", i);
+          if (ATEOF()) {
+            if (i) {
+              line[i] = 0;
+              goto have_line;
+            }
+            TRACE2(RGB565, "EOF", TELL());
+            goto done;
+          }
+          scheduleFillBuffer();
+          YIELD();
+        }
+        c = getc();
+        if (c == '\r' || c == '\n') {
+          line[i] = 0;
+          break;
+        }
+        line[i] = c;
       }
+
+    have_line:
+      PVLOG_VERBOSE << "PARSING SCR LINE '" << line << "'\n";
 
       char* tmp = strchr(line, '#');
       if (tmp) {
-	*tmp = 0;
-	while (tmp > line && isspace(tmp[-1])) { *--tmp = 0; }
+        *tmp = 0;
+        while (tmp > line && isspace(tmp[-1])) { *--tmp = 0; }
       }
       char* eq = strchr(line, '=');
       char* key = line;
       char* value = 0;
       if (eq) {
-	*eq = 0;
-	value = eq + 1;
+        *eq = 0;
+        value = eq + 1;
       }
       if (!strcmp(key, "layer")) {
-	may_need_restart_ = false;
-	layer_ = screen_->getLayer(++layer_number_);
-	if (!layer_) {
-	  STDERR << "Too many layers.\n";
-	  break;
-	}
+        may_need_restart_ = false;
+        layer_time_ = 0;
+        layer_ = screen_->getLayer(++layer_number_);
+        if (!layer_) {
+          STDERR << "Too many layers.\n";
+          break;
+        }
       } else if (!strcmp(key, "file")) {
-	// Filename is relative to the SCR file.
-	PathHelper path(file_.GetFilename());
-	path.Dirname();
-	path.Append(value);
-	  
-	if (!strcmp(layer_->LC_get_filename(), path)) {
-	  // Same file.
-	  if (do_restart_) {
-	    layer_->LC_restart();
-	  } else {
-	    may_need_restart_ = true;
-	  }
-	} else {
-	  layer_->LC_play(path);
-	}
+        // Filename is relative to the SCR file.
+        PathHelper path(file_.GetFilename());
+        path.Dirname();
+        path.Append(value);
+
+        if (!strcmp(layer_->LC_get_filename(), path)) {
+          // Same file.
+          if (do_restart_) {
+            layer_->LC_restart();
+          } else {
+            may_need_restart_ = true;
+          }
+        } else {
+          layer_->LC_play(path);
+          layer_->LC_set_time(layer_time_);
+        }
       } else if (!strcmp(key, "restart")) {
-	if (may_need_restart_) {
-	  layer_->LC_restart();
-	  may_need_restart_ = false;
-	} else {
-	  do_restart_ = true;
-	}
+        if (may_need_restart_) {
+          layer_->LC_restart();
+          may_need_restart_ = false;
+        } else {
+          do_restart_ = true;
+        }
       } else if (!strcmp(key, "time")) {
-	if (!strcmp(value, "from_sound")) {
-	  layer_->LC_set_time(sound_time_ms_);
-	} else {
-	  layer_->LC_set_time(atoi(value));
-	}
+        if (!strcmp(value, "from_sound")) {
+          layer_time_ = sound_time_ms_;
+        } else {
+          layer_time_ = atoi(value);
+          layer_->LC_set_time(layer_time_);
+        }
+        layer_->LC_set_time(layer_time_);
       } else if (!strcmp(key, "A") ||
-		 !strcmp(key, "B") ||
-		 !strcmp(key, "C") ||
-		 !strcmp(key, "D") ||
-		 !strcmp(key, "E")) {
-	layer_->LC_setVariable(key[0] - 'A', parse_variable_source(value));
+                 !strcmp(key, "B") ||
+                 !strcmp(key, "C") ||
+                 !strcmp(key, "D") ||
+                 !strcmp(key, "E")) {
+        layer_->LC_setVariable(key[0] - 'A', parse_variable_source(value));
       }
     }
   done:
@@ -386,11 +397,12 @@ public:
   }
 #else
   void loop() {}
-#endif  
+#endif
 
   bool Play(Effect* f) {
     if (!*f) return false; // no files, do nothing
     PVLOG_VERBOSE << "SCR Playing " << f->GetName() << "\n";
+    wait_for_previous_open_to_complete();
     sound_time_ms_ = SaberBase::sound_length * 1000;
     file_.PlayInternal(f);
     delayed_open_ = true;
@@ -399,6 +411,7 @@ public:
   }
 
   void Play(const char* filename) {
+    wait_for_previous_open_to_complete();
     sound_time_ms_ = SaberBase::sound_length * 1000;
     file_.PlayInternal(filename);
     delayed_open_ = true;
@@ -413,6 +426,12 @@ public:
 
   bool IsActive() override { return active_ || delayed_open_; }
 protected:
+  void wait_for_previous_open_to_complete() {
+    while (delayed_open_ && !state_machine_.done()) {
+      loop();
+      check_open();
+    }
+  }
   void check_open() {
     if (delayed_open_ && state_machine_.done()) {
       active_ = true;
@@ -431,6 +450,7 @@ protected:
   bool delayed_open_ = false;
   char line[128+32+5];
   bool may_need_restart_;
+  uint32_t layer_time_ = 0;
   LayeredScreenControl* screen_;
   int layer_number_;
   LayerControl* layer_ = nullptr;
@@ -441,22 +461,22 @@ private:
 };
 
 
-#define ONCE_PER_EFFECT(X)			\
-  X(boot)					\
-  X(font)					\
-  X(bladein)					\
-  X(bladeout)					\
-  X(blst)					\
-  X(clsh)					\
-  X(force)					\
-  X(preon)					\
-  X(out)					\
-  X(in)						\
-  X(pstoff)					\
-  X(on)						\
-  X(lock)					\
-  X(pli)					\
-  X(idle)					\
+#define ONCE_PER_EFFECT(X) \
+  X(boot)                  \
+  X(font)                  \
+  X(bladein)               \
+  X(bladeout)              \
+  X(blst)                  \
+  X(clsh)                  \
+  X(force)                 \
+  X(preon)                 \
+  X(out)                   \
+  X(in)                    \
+  X(pstoff)                \
+  X(on)                    \
+  X(lock)                  \
+  X(pli)                   \
+  X(idle)                  \
   X(lowbatt)
 
 
@@ -475,7 +495,7 @@ public:
     static_assert(h == H, "Height is not matching.");
     screen->LSC_SetController(this);
   }
-  
+
   void SB_On2(EffectLocation location) override {
     if (!scr_.Play(&SCR_out)) {
       ShowDefault();
@@ -491,6 +511,7 @@ public:
   }
 
   void LC_onStop() override {
+    PVLOG_VERBOSE << "LC_onStop()\n";
     ShowDefault();
   }
 
@@ -500,7 +521,7 @@ public:
 
   const char* name() override { return "ColorDisplayController"; }
 
-#if 0    
+#if 0
   void usb_connected() override {
     if (EscapeIdleIfNeeded() && current_effect_ == &SCR_idle) {
       // We are idle-looping, and usb is connected. Time to stop.
@@ -508,7 +529,7 @@ public:
       SetScreenNow(SCREEN_MESSAGE);
     }
   }
-#endif    
+#endif
 
   enum class Tristate : uint8_t {
     Unknown,
@@ -517,6 +538,8 @@ public:
   };
 
   void Stop() {
+    PVLOG_VERBOSE << "LC Stop()\n";
+    scr_.Play("");
     for (int i = 0;; i++) {
       LayerControl *layer = scr_.screen()->getLayer(i);
       if (!layer) break;
@@ -524,7 +547,8 @@ public:
     }
   }
 
-  void ShowDefault(bool ignore_lockup = false) {
+  virtual void ShowDefault(bool ignore_lockup = false) {
+    PVLOG_VERBOSE << "LC ShowDefault()\n";
     if (SaberBase::IsOn()) {
       if (SaberBase::Lockup() && SCR_lock && !ignore_lockup) {
         scr_.Play(&SCR_lock);
@@ -534,7 +558,7 @@ public:
     } else {
       // Off
       if (!AvoidIdleSDAccess()) {
-	scr_.Play(&SCR_idle);
+        scr_.Play(&SCR_idle);
       }
     }
   }
@@ -546,55 +570,55 @@ public:
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
       case EFFECT_CHDIR:
-	looped_on_ = Tristate::Unknown;
-	Stop();
-	break;
-	
+        looped_on_ = Tristate::Unknown;
+        Stop();
+        break;
+
       case EFFECT_BLADEIN:
-	if (scr_.Play(&SCR_bladeout)) break;
-	if (scr_.Play(&SCR_font)) break;
-	ShowDefault();
-	break;
+        if (scr_.Play(&SCR_bladeout)) break;
+        if (scr_.Play(&SCR_font)) break;
+        ShowDefault();
+        break;
       case EFFECT_BLADEOUT:
-	if (scr_.Play(&SCR_bladein)) break;
-	/* fall through */
+        if (scr_.Play(&SCR_bladein)) break;
+        /* fall through */
       case EFFECT_NEWFONT:
-	if (scr_.Play(&SCR_font)) break;
-	ShowDefault();
-	break;
+        if (scr_.Play(&SCR_font)) break;
+        ShowDefault();
+        break;
       case EFFECT_LOCKUP_BEGIN:
-	ShowDefault();
-	break;
+        ShowDefault();
+        break;
       case EFFECT_LOCKUP_END:
-	ShowDefault(true);
-	break;
+        ShowDefault(true);
+        break;
       case EFFECT_BATTERY_LEVEL:
-	// Show On-Demand battery meter
-	scr_.Play(&SCR_pli);
-	break;
+        // Show On-Demand battery meter
+        scr_.Play(&SCR_pli);
+        break;
       case EFFECT_LOW_BATTERY:
-	scr_.Play(&SCR_lowbatt);
-	break;
+        scr_.Play(&SCR_lowbatt);
+        break;
       case EFFECT_BOOT:
-	if (!scr_.Play(&SCR_boot)) {
-	  ShowDefault();
-	}
-	break;
+        if (!scr_.Play(&SCR_boot)) {
+          ShowDefault();
+        }
+        break;
       case EFFECT_BLAST:
-	scr_.Play(&SCR_blst);
-	break;
+        scr_.Play(&SCR_blst);
+        break;
       case EFFECT_CLASH:
-	scr_.Play(&SCR_clsh);
-	break;
+        scr_.Play(&SCR_clsh);
+        break;
       case EFFECT_FORCE:
-	scr_.Play(&SCR_force);
-	break;
+        scr_.Play(&SCR_force);
+        break;
       case EFFECT_PREON:
-	scr_.Play(&SCR_preon);
-	break;
+        scr_.Play(&SCR_preon);
+        break;
       case EFFECT_POSTOFF:
-	scr_.Play(&SCR_pstoff);
-	break;
+        scr_.Play(&SCR_pstoff);
+        break;
       default: break;
     }
   }
@@ -620,9 +644,9 @@ public:
     if (iscmd("show", &layer, cmd) && arg) {
       PVLOG_STATUS << "Showing " << arg << "\n";
       if (endswith(".scr", arg)) {
-	scr_.Play(arg);
+        scr_.Play(arg);
       } else {
-	layer->LC_play(arg);
+        layer->LC_play(arg);
       }
       return true;
     }
@@ -634,14 +658,14 @@ public:
 #endif
     return false;
   }
-  
+
 
 protected:
   SCRReader scr_;
   ONCE_PER_EFFECT(DEF_SCR)
 
   // TODO: There is currently no easy way to know if a PQF files is looped...
-  
+
   // True if IMG_on is looped.
   volatile Tristate looped_on_ = Tristate::Unknown;
 };
@@ -650,5 +674,5 @@ protected:
 //#undef INIT_SCR
 //#undef DEF_SCR
 
-#endif
-  
+#endif // DISPLAY_LAYER_CONTROLLER_H
+

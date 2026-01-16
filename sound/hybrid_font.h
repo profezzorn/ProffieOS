@@ -484,12 +484,12 @@ public:
     bool most_blades = location.on_blade(0);
 #ifdef ENABLE_IDLE_SOUND
     if (most_blades) {
-      Effect* idle = AvoidIdleSDAccess() ? nullptr : &SFX_idle;
+      Effect* bgnidle = AvoidIdleSDAccess() ? nullptr : &SFX_bgnidle;
       if (SFX_pstoff) {
         SFX_in.SetFollowing(&SFX_pstoff);
-        SFX_pstoff.SetFollowing(idle);
+        SFX_pstoff.SetFollowing(bgnidle);
       } else {
-        SFX_in.SetFollowing(idle);
+        SFX_in.SetFollowing(bgnidle);
       }
     } else {
       SFX_in.SetFollowing(nullptr);
@@ -507,7 +507,11 @@ public:
         StopIdleSound();
         break;
       case OFF_FAST:
+#ifdef ENABLE_IDLE_SOUND
+        SFX_in.SetFollowing(&SFX_bgnidle);
+#else
         SFX_in.SetFollowing(nullptr);
+#endif
         [[gnu::fallthrough]];
       case OFF_NORMAL:
         if (!SFX_in) {
@@ -637,6 +641,21 @@ public:
           state_ = STATE_HUM_FADE_OUT;
           PlayPolyphonic(getNext(lock_player_, &SFX_boom));
         }
+        break;
+      case EFFECT_FONT_DIRECTORY_NOT_FOUND:
+        PlayErrorMessage("e_fnt_nf.wav");
+        break;
+      case EFFECT_VOICE_PACK_NOT_FOUND:
+        PlayErrorMessage("e_vp_nf.wav");
+        break;
+      case EFFECT_ERROR_IN_BLADE_ARRAY:
+        PlayErrorMessage("e_blade.wav");
+        break;
+      case EFFECT_ERROR_IN_FONT_DIRECTORY:
+        PlayErrorMessage("e_in_fnt.wav");
+        break;
+      case EFFECT_ERROR_IN_VOICE_PACK_VERSION:
+        PlayErrorMessage("e_vp_ver.wav");
         break;
     }
   }
@@ -861,13 +880,14 @@ public:
 
   void StopIdleSound() {
 #ifdef ENABLE_IDLE_SOUND
-    RefPtr<BufferedWavPlayer> idlePlayer = GetWavPlayerPlaying(&SFX_idle);
+    RefPtr<BufferedWavPlayer> idlePlayer = GetWavPlayerPlaying(&SFX_bgnidle);
+    if (!idlePlayer) idlePlayer = GetWavPlayerPlaying(&SFX_idle);
     if (idlePlayer) {
       idlePlayer->set_fade_time(0.5);
       idlePlayer->FadeAndStop();
       idlePlayer.Free();
-      PVLOG_NORMAL << "**** Stopped idle wav\n";
-      }
+      PVLOG_DEBUG << "**** Stopped idle or bgnidle wav\n";
+    }
 #endif
   }
 

@@ -387,10 +387,10 @@ public:
 #else
 #define WRAP_BLADE_SHORTERNER(N)
 #endif
-#define SET_BLADE_STYLE(N) do {                                         \
+#define SET_BLADE_STYLE(N) do {                                           \
       BladeStyle* tmp = style_parser.Parse(current_preset_.GetStyle(N));  \
-    WRAP_BLADE_SHORTERNER(N)                                            \
-    current_config->blade##N->SetStyle(tmp);                            \
+    WRAP_BLADE_SHORTERNER(N)                                              \
+    current_config->blade##N->SetStyle(tmp);                              \
   } while (0);
 
     ONCEPERBLADE(SET_BLADE_STYLE)
@@ -434,7 +434,7 @@ public:
     TRACE(PROP, "end");
   }
 
-    // Set/Update Font & Style, skips Preon effect using FastOn (for use in Edit Mode and "fast" preset changes)
+  // Set/Update Font & Style, skips Preon effect using FastOn (for use in Edit Mode and "fast" preset changes)
   void SetPresetFast(int preset_num) {
     PVLOG_DEBUG << "SetPresetFast(" << preset_num << ")\n";
     SetPreset(preset_num, false);
@@ -1463,12 +1463,20 @@ public:
       ProffieOSErrors::font_directory_not_found();
       return true;
     }
+    if (!strcmp(cmd, "voice_pack_not_found")) {
+      ProffieOSErrors::voice_pack_not_found();
+      return true;
+    }
     if (!strcmp(cmd, "error_in_blade_array")) {
       ProffieOSErrors::error_in_blade_array();
       return true;
     }
     if (!strcmp(cmd, "error_in_font_directory")) {
       ProffieOSErrors::error_in_font_directory();
+      return true;
+    }
+    if (!strcmp(cmd, "error_in_voice_pack_version")) {
+      ProffieOSErrors::error_in_voice_pack_version();
       return true;
     }
     if (!strcmp(cmd, "low_battery")) {

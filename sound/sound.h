@@ -42,7 +42,7 @@ RefPtr<BufferedWavPlayer> GetFreeWavPlayer()  {
 RefPtr<BufferedWavPlayer> GetWavPlayerPlaying(const Effect* effect) {
   for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
     if (wav_players[unit].isPlaying() &&
-	wav_players[unit].current_file_id().GetEffect() == effect) {
+        wav_players[unit].current_file_id().GetEffect() == effect) {
       return RefPtr<BufferedWavPlayer>(wav_players + unit);
     }
   }
@@ -62,13 +62,13 @@ RefPtr<BufferedWavPlayer> GetOrFreeWavPlayer(Effect* e)  {
   float best_remaining = 1000.0;
   for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
     if (wav_players[unit].isPlaying() &&
-	wav_players[unit].refs() == 0 &&
-	wav_players[unit].current_file_id().GetEffect() &&
-	wav_players[unit].current_file_id().GetEffect()->GetKillable()) {
+        wav_players[unit].refs() == 0 &&
+        wav_players[unit].current_file_id().GetEffect() &&
+        wav_players[unit].current_file_id().GetEffect()->GetKillable()) {
       float remaining = wav_players[unit].length() - wav_players[unit].pos();
       if (remaining < best_remaining) {
-	best_remaining = remaining;
-	p = wav_players + unit;
+        best_remaining = remaining;
+        p = wav_players + unit;
       }
     }
   }
@@ -100,6 +100,52 @@ RefPtr<BufferedWavPlayer> RequireFreeWavPlayer()  {
   }
 }
 
+// Helper class for dodging.
+class UnaDodger : public Looper {
+public:
+  UnaDodger() : Looper(NOLINK) {}
+  const char* name() override { return "undodge"; }
+  void start(int ms) {
+    if (millis_ == 0) Link();
+    millis_ = ms;
+    start_time_ = millis();
+    for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+      wav_players[unit].set_dodge(true);
+    }
+  }
+  void Loop() override {
+    if (millis() - start_time_ <= millis_) return;
+    start_time_ = 0;
+    millis_ = 0;
+    Unlink();
+    for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
+      wav_players[unit].set_dodge(false);
+    }
+  }
+private:
+  uint32_t millis_ = 0;
+  uint32_t start_time_ = 0;
+};
+
+void DodgeSound(uint32_t millis) {
+  static UnaDodger undodge;
+  undodge.start(millis);
+}
+
+bool PlayErrorMessage(const char* filename) {
+  RefPtr<BufferedWavPlayer> ret = GetFreeWavPlayer();
+  if (!ret) return false;
+  if (!ret->PlayInCurrentDir(filename) &&
+      !ret->PlayInDir("errors", filename)) {
+    return false;
+  }
+
+  DodgeSound(ret->length() * 1000.0);
+  ret->set_dodge(false);
+  ret->UpdateSaberBaseSoundInfo();
+  return true;
+}
+
 size_t WhatUnit(class BufferedWavPlayer* player) {
   if (!player) return -1;
   return player - wav_players;
@@ -115,7 +161,7 @@ void SetupStandardAudioLow() {
     wav_players[i].reset_volume();
   }
   dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
-#ifndef DISABLE_TALKIE  
+#ifndef DISABLE_TALKIE
   dynamic_mixer.streams_[NELEM(wav_players)+1] = &talkie;
 #endif
 }
@@ -132,7 +178,7 @@ void SaySDInitError(int error) {
   talkie.Say(spD);
   talkie.Say(spSTART);
   talkie.SayNumber(error);
-#endif  
+#endif
 }
 
 void SaySDCheckError(int error) {

@@ -355,7 +355,7 @@ public:
     return last_delay_ = FillFrameBuffer2(advance);
   }
 
-  void ShowDefault(bool ignore_lockup = false) {
+  virtual void ShowDefault(bool ignore_lockup = false) {
     screen_ = SCREEN_PLI;
     t_ = 0;
     if (SaberBase::IsOn()) {
@@ -571,14 +571,20 @@ public:
      case EFFECT_SD_CARD_NOT_FOUND:
        SetErrorMessage("sd card\nnot found");
        break;
-     case EFFECT_ERROR_IN_FONT_DIRECTORY:
-       SetErrorMessage("err font\ndirectory");
+     case EFFECT_FONT_DIRECTORY_NOT_FOUND:
+       SetErrorMessage("font dir\nnot found");
+       break;
+     case EFFECT_VOICE_PACK_NOT_FOUND:
+       SetErrorMessage("voice pack\nnot found");
        break;
      case EFFECT_ERROR_IN_BLADE_ARRAY:
        SetErrorMessage("err blade\narray");
        break;
-     case EFFECT_FONT_DIRECTORY_NOT_FOUND:
-       SetErrorMessage("font dir\nnot found");
+     case EFFECT_ERROR_IN_FONT_DIRECTORY:
+       SetErrorMessage("err font\ndirectory");
+       break;
+     case EFFECT_ERROR_IN_VOICE_PACK_VERSION:
+       SetErrorMessage("err voice\npack ver");
        break;
      case EFFECT_LOW_BATTERY:
        // Maybe we should make this blink or something?
@@ -1022,7 +1028,7 @@ public:
   // TODO: Don't update the display when we don't need to
   // and return false here so that we can go into lower power modes.
   void SB_IsOn(bool* on) override {
-    *on = on_;
+    if (on_) *on = true;
   }
 
   void Loop() override {
