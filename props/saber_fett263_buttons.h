@@ -382,6 +382,7 @@ Standard Controls While Blade is ON
         *if COLOR_CHANGE_DIRECT is defined then each click will change color instead of turn
       Otherwise ColorWheel is used per style set up.
     Click PWR to save
+	Long Click PWR to revert
     NEW! Color Zoom* = Double Click and Hold PWR, Release to Save
       *For Color List or ColorWheel you can Hold PWR down to zoom in color for easier selection
        Release PWR to save
