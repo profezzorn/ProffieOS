@@ -699,7 +699,6 @@ public:
     eof_ = false;
   }
 
-
   // AudioStreamWork implementation
   size_t space_available() override {
     if (lock_fb_) return 0;
