@@ -203,7 +203,6 @@ struct ClearScreenOp {
   };
 };
 
-
 // Op wrapper, skips the op if the base is not an image.
 template<template<int, class> class T>
 struct IfImageOp {
@@ -214,7 +213,6 @@ struct IfImageOp {
     }
   };
 };
-
 
 // Clear a rectangle.
 template<int x1, int x2, int y1, int y2> struct ClearRectangleOp {
@@ -244,8 +242,6 @@ template<int x, int y, int digits> struct WriteBulletCountOp {
 };
 
 #endif
-
-
 
 #if 0
 class DisplayHelper {
@@ -923,7 +919,6 @@ private:
   volatile Effect* current_effect_;
 };
 
-
 template<template<int, class, class> class T, typename PREFIX = ByteArray<>>
 struct BaseLayerOp {
   template<int Width, class col_t> struct Controller : public T<Width, col_t, PREFIX> {};
@@ -1076,7 +1071,6 @@ public:
       Send(SEGREMAP | 0x1);            // 0xa0 | 1
       Send(COMSCANDEC);
 #endif
-
 
       Send(SETCOMPINS);                // 0xDA
       if (HEIGHT == 64 || WIDTH==64) {
