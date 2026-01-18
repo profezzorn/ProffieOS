@@ -622,7 +622,6 @@ public:
     }
   }
 
-
   bool iscmd(const char* command, LayerControl **layer, const char* cmd) {
     int layer_number = 0;
     size_t l = sizeof(PREFIX::str);
