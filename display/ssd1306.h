@@ -10,17 +10,17 @@
 struct DisplayConfigFile : public ConfigFile {
   DisplayConfigFile() { link(&font_config); }
   void iterateVariables(VariableOP *op) override {
-    CONFIG_VARIABLE2(ProffieOSAnimationFrameRate, 0.0f);
-    CONFIG_VARIABLE2(ProffieOSTextMessageDuration, -1.0f);
-    CONFIG_VARIABLE2(ProffieOSBootImageDuration, -1.0f);
-    CONFIG_VARIABLE2(ProffieOSFontImageDuration, 3000.0f);
-    CONFIG_VARIABLE2(ProffieOSBlastImageDuration, 1000.0f);
-    CONFIG_VARIABLE2(ProffieOSClashImageDuration, 500.0f);
-    CONFIG_VARIABLE2(ProffieOSForceImageDuration, 2000.0f);
-    CONFIG_VARIABLE2(ProffieOSOutImageDuration, 2000.0f);
-    CONFIG_VARIABLE2(ProffieOSInImageDuration, 2000.0f);
+    CONFIG_VARIABLE2(ProffieOSAnimationFrameRate,     0.0f);
+    CONFIG_VARIABLE2(ProffieOSTextMessageDuration,   -1.0f);
+    CONFIG_VARIABLE2(ProffieOSBootImageDuration,     -1.0f);
+    CONFIG_VARIABLE2(ProffieOSFontImageDuration,   3000.0f);
+    CONFIG_VARIABLE2(ProffieOSBlastImageDuration,  1000.0f);
+    CONFIG_VARIABLE2(ProffieOSClashImageDuration,   500.0f);
+    CONFIG_VARIABLE2(ProffieOSForceImageDuration,  2000.0f);
+    CONFIG_VARIABLE2(ProffieOSOutImageDuration,    2000.0f);
+    CONFIG_VARIABLE2(ProffieOSInImageDuration,     2000.0f);
     CONFIG_VARIABLE2(ProffieOSPstoffImageDuration, 2000.0f);
-    CONFIG_VARIABLE2(ProffieOSOnImageDuration, 5000.0f);
+    CONFIG_VARIABLE2(ProffieOSOnImageDuration,     5000.0f);
   }
 
   // For OLED displays, this specifies the frame rate of animations.
@@ -29,21 +29,21 @@ struct DisplayConfigFile : public ConfigFile {
   float ProffieOSTextMessageDuration;
   // for OLED displays, the time a static BMP or loop will play when saber is off
   float ProffieOSFontImageDuration;
-  // for OLED displays, the time an on.bmp will play
+  // for OLED displays, the time an on.bmp    will play
   float ProffieOSOnImageDuration;
-  // for OLED displays, the time a blst.bmp will play
+  // for OLED displays, the time a blst.bmp   will play
   float ProffieOSBlastImageDuration;
-  // for OLED displays, the time a clsh.bmp will play
+  // for OLED displays, the time a clsh.bmp   will play
   float ProffieOSClashImageDuration;
-  // for OLED displays, the time a force.bmp will play
+  // for OLED displays, the time a force.bmp  will play
   float ProffieOSForceImageDuration;
-  // for OLED displays, the time a out.bmp will play
+  // for OLED displays, the time a out.bmp    will play
   float ProffieOSOutImageDuration;
-  // for OLED displays, the time a in.bmp will play
+  // for OLED displays, the time a in.bmp     will play
   float ProffieOSInImageDuration;
   // for OLED displays, the time a pstoff.bmp will play
   float ProffieOSPstoffImageDuration;
-  // for OLED displays, the time a boot.bmp will play
+  // for OLED displays, the time a boot.bmp   will play
   float ProffieOSBootImageDuration;
 };
 
@@ -79,7 +79,7 @@ enum Screen {
   SCREEN_STARTUP,
   SCREEN_MESSAGE,
   SCREEN_ERROR_MESSAGE,
-  SCREEN_PLI,
+  SCREEN_PLI,    // Power Level Indicator
   SCREEN_IMAGE,  // also for animations
   SCREEN_OFF,
   SCREEN_DEFAULT
@@ -203,7 +203,6 @@ struct ClearScreenOp {
   };
 };
 
-
 // Op wrapper, skips the op if the base is not an image.
 template<template<int, class> class T>
 struct IfImageOp {
@@ -214,7 +213,6 @@ struct IfImageOp {
     }
   };
 };
-
 
 // Clear a rectangle.
 template<int x1, int x2, int y1, int y2> struct ClearRectangleOp {
@@ -244,8 +242,6 @@ template<int x, int y, int digits> struct WriteBulletCountOp {
 };
 
 #endif
-
-
 
 #if 0
 class DisplayHelper {
@@ -287,8 +283,7 @@ public:
 
   StandardDisplayController() :
     img_(*getPtr<DisplayEffects<PREFIX>>()),
-    font_config(*getPtr<DisplayConfigFile>()) {
-  }
+    font_config(*getPtr<DisplayConfigFile>()) {}
 
   enum ScreenLayout {
     LAYOUT_NATIVE,
@@ -527,101 +522,100 @@ public:
     ShowFile(e, round(duration));
   }
 
- void SB_Effect2(EffectType effect, EffectLocation location) override {
-   switch (effect) {
-     case EFFECT_CHDIR:
-       looped_on_ = Tristate::Unknown;
-       looped_idle_ = Tristate::Unknown;
-       break;
-       
-     case EFFECT_BLADEOUT:
-       if (img_.IMG_bladeout) {
-         ShowFileWithSoundLength(&img_.IMG_bladeout, font_config.ProffieOSFontImageDuration);
-         break;
-       }
-       goto show_font;
-     case EFFECT_BLADEIN:
-       if (img_.IMG_bladein) {
-         ShowFileWithSoundLength(&img_.IMG_bladein, font_config.ProffieOSFontImageDuration);
-         break;
-       }
-     case EFFECT_NEWFONT:
-     show_font:
-       if (img_.IMG_font) {
-         ShowFileWithSoundLength(&img_.IMG_font, font_config.ProffieOSFontImageDuration);
-         break;
-       }
-       if (prop.current_preset_name()) {
-         SetMessage(prop.current_preset_name());
-         SetScreenNow(SCREEN_MESSAGE);
-       } else if (img_.IMG_idle) {
-         ShowFile(&img_.IMG_idle, 3600000.0);
-       }
-       break;
-     case EFFECT_LOCKUP_BEGIN:
-       ShowDefault();
-       break;
-     case EFFECT_LOCKUP_END:
-       ShowDefault(true);
-       break;
-     case EFFECT_BATTERY_LEVEL:
-       // Show On-Demand battery meter
-       SetScreenNow(SCREEN_PLI);
-       break;
-     case EFFECT_SD_CARD_NOT_FOUND:
-       SetErrorMessage("sd card\nnot found");
-       break;
-     case EFFECT_FONT_DIRECTORY_NOT_FOUND:
-       SetErrorMessage("font dir\nnot found");
-       break;
-     case EFFECT_VOICE_PACK_NOT_FOUND:
-       SetErrorMessage("voice pack\nnot found");
-       break;
-     case EFFECT_ERROR_IN_BLADE_ARRAY:
-       SetErrorMessage("err blade\narray");
-       break;
-     case EFFECT_ERROR_IN_FONT_DIRECTORY:
-       SetErrorMessage("err font\ndirectory");
-       break;
-     case EFFECT_ERROR_IN_VOICE_PACK_VERSION:
-       SetErrorMessage("err voice\npack ver");
-       break;
-     case EFFECT_LOW_BATTERY:
-       // Maybe we should make this blink or something?
-       if (img_.IMG_lowbatt) {
-         ShowFile(&img_.IMG_lowbatt, 5000);
-       } else {
-         SetErrorMessage("low\nbattery");
-       }
-       break;
-     case EFFECT_BOOT:
-       if (img_.IMG_boot) {
-         ShowFileWithSoundLength(&img_.IMG_boot,
-                                 font_config.ProffieOSBootImageDuration != -1.0 ?
-                                 font_config.ProffieOSBootImageDuration :
-                                 font_config.ProffieOSFontImageDuration);
-       } else {
-         SetScreenNow(SCREEN_STARTUP);
-       }
-       break;
-     case EFFECT_BLAST:
-       ShowFileWithSoundLength(&img_.IMG_blst, font_config.ProffieOSBlastImageDuration);
-       break;
-     case EFFECT_CLASH:
-       ShowFileWithSoundLength(&img_.IMG_clsh, font_config.ProffieOSClashImageDuration);
-       break;
-     case EFFECT_FORCE:
-       ShowFileWithSoundLength(&img_.IMG_force, font_config.ProffieOSForceImageDuration);
-       break;
-     case EFFECT_PREON:
-       ShowFile(&img_.IMG_preon, round(SaberBase::sound_length * 1000));
-       break;
-     case EFFECT_POSTOFF:
-       ShowFileWithSoundLength(&img_.IMG_pstoff, font_config.ProffieOSPstoffImageDuration);
-       break;
-     default: break;
-   }
- }
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      case EFFECT_CHDIR:
+        looped_on_ = Tristate::Unknown;
+        looped_idle_ = Tristate::Unknown;
+        break;
+      case EFFECT_BLADEOUT:
+        if (img_.IMG_bladeout) {
+          ShowFileWithSoundLength(&img_.IMG_bladeout, font_config.ProffieOSFontImageDuration);
+          break;
+        }
+        goto show_font;
+      case EFFECT_BLADEIN:
+        if (img_.IMG_bladein) {
+          ShowFileWithSoundLength(&img_.IMG_bladein, font_config.ProffieOSFontImageDuration);
+          break;
+        }
+      case EFFECT_NEWFONT:
+      show_font:
+        if (img_.IMG_font) {
+          ShowFileWithSoundLength(&img_.IMG_font, font_config.ProffieOSFontImageDuration);
+          break;
+        }
+        if (prop.current_preset_name()) {
+          SetMessage(prop.current_preset_name());
+          SetScreenNow(SCREEN_MESSAGE);
+        } else if (img_.IMG_idle) {
+          ShowFile(&img_.IMG_idle, 3600000.0);
+        }
+        break;
+      case EFFECT_LOCKUP_BEGIN:
+        ShowDefault();
+        break;
+      case EFFECT_LOCKUP_END:
+        ShowDefault(true);
+        break;
+      case EFFECT_BATTERY_LEVEL:
+        // Show On-Demand battery meter
+        SetScreenNow(SCREEN_PLI);
+        break;
+      case EFFECT_SD_CARD_NOT_FOUND:
+        SetErrorMessage("sd card\nnot found");
+        break;
+      case EFFECT_FONT_DIRECTORY_NOT_FOUND:
+        SetErrorMessage("font dir\nnot found");
+        break;
+      case EFFECT_VOICE_PACK_NOT_FOUND:
+        SetErrorMessage("voice pack\nnot found");
+        break;
+      case EFFECT_ERROR_IN_BLADE_ARRAY:
+        SetErrorMessage("err blade\narray");
+        break;
+      case EFFECT_ERROR_IN_FONT_DIRECTORY:
+        SetErrorMessage("err font\ndirectory");
+        break;
+      case EFFECT_ERROR_IN_VOICE_PACK_VERSION:
+        SetErrorMessage("err voice\npack ver");
+        break;
+      case EFFECT_LOW_BATTERY:
+        // Maybe we should make this blink or something?
+        if (img_.IMG_lowbatt) {
+          ShowFile(&img_.IMG_lowbatt, 5000);
+        } else {
+          SetErrorMessage("low\nbattery");
+        }
+        break;
+      case EFFECT_BOOT:
+        if (img_.IMG_boot) {
+          ShowFileWithSoundLength(&img_.IMG_boot,
+                                  font_config.ProffieOSBootImageDuration != -1.0 ?
+                                  font_config.ProffieOSBootImageDuration :
+                                  font_config.ProffieOSFontImageDuration);
+        } else {
+          SetScreenNow(SCREEN_STARTUP);
+        }
+        break;
+      case EFFECT_BLAST:
+        ShowFileWithSoundLength(&img_.IMG_blst, font_config.ProffieOSBlastImageDuration);
+        break;
+      case EFFECT_CLASH:
+        ShowFileWithSoundLength(&img_.IMG_clsh, font_config.ProffieOSClashImageDuration);
+        break;
+      case EFFECT_FORCE:
+        ShowFileWithSoundLength(&img_.IMG_force, font_config.ProffieOSForceImageDuration);
+        break;
+      case EFFECT_PREON:
+        ShowFile(&img_.IMG_preon, round(SaberBase::sound_length * 1000));
+        break;
+      case EFFECT_POSTOFF:
+        ShowFileWithSoundLength(&img_.IMG_pstoff, font_config.ProffieOSPstoffImageDuration);
+        break;
+      default: break;
+    }
+  }
 
   // If called from SB_Effect2, you must call SetScreenNow after.
   void SetMessage(const char* text) {
@@ -704,7 +698,6 @@ public:
     SetScreenNow(SCREEN_IMAGE);
     eof_ = false;
   }
-
 
   // AudioStreamWork implementation
   size_t space_available() override {
@@ -925,7 +918,6 @@ private:
   volatile Effect* current_effect_;
 };
 
-
 template<template<int, class, class> class T, typename PREFIX = ByteArray<>>
 struct BaseLayerOp {
   template<int Width, class col_t> struct Controller : public T<Width, col_t, PREFIX> {};
@@ -938,51 +930,51 @@ public:
   const char* name() override { return "SSD1306"; }
 
   enum Commands {
-    SETCONTRAST = 0x81,
+    SETCONTRAST         = 0x81,
     DISPLAYALLON_RESUME = 0xA4,
-    DISPLAYALLON = 0xA5,
-    NORMALDISPLAY = 0xA6,
-    INVERTDISPLAY = 0xA7,
-    DISPLAYOFF = 0xAE,
-    DISPLAYON = 0xAF,
+    DISPLAYALLON        = 0xA5,
+    NORMALDISPLAY       = 0xA6,
+    INVERTDISPLAY       = 0xA7,
+    DISPLAYOFF          = 0xAE,
+    DISPLAYON           = 0xAF,
 
-    SETDISPLAYOFFSET = 0xD3,
-    SETCOMPINS = 0xDA,
+    SETDISPLAYOFFSET    = 0xD3,
+    SETCOMPINS          = 0xDA,
 
-    SETVCOMDETECT = 0xDB,
+    SETVCOMDETECT       = 0xDB,
 
-    SETDISPLAYCLOCKDIV = 0xD5,
-    SETPRECHARGE = 0xD9,
+    SETDISPLAYCLOCKDIV  = 0xD5,
+    SETPRECHARGE        = 0xD9,
 
-    SETMULTIPLEX = 0xA8,
+    SETMULTIPLEX        = 0xA8,
 
-    SETLOWCOLUMN = 0x00,
-    SETHIGHCOLUMN = 0x10,
+    SETLOWCOLUMN        = 0x00,
+    SETHIGHCOLUMN       = 0x10,
 
-    SETSTARTLINE = 0x40,
+    SETSTARTLINE        = 0x40,
 
-    MEMORYMODE = 0x20,
-    COLUMNADDR = 0x21,
-    PAGEADDR   = 0x22,
+    MEMORYMODE          = 0x20,
+    COLUMNADDR          = 0x21,
+    PAGEADDR            = 0x22,
 
-    COMSCANINC = 0xC0,
-    COMSCANDEC = 0xC8,
+    COMSCANINC          = 0xC0,
+    COMSCANDEC          = 0xC8,
 
-    SEGREMAP = 0xA0,
+    SEGREMAP            = 0xA0,
 
-    CHARGEPUMP = 0x8D,
+    CHARGEPUMP          = 0x8D,
 
-    EXTERNALVCC = 0x1,
-    SWITCHCAPVCC = 0x2,
+    EXTERNALVCC         = 0x1,
+    SWITCHCAPVCC        = 0x2,
 
     // Scrolling commands
-    ACTIVATE_SCROLL = 0x2F,
-    DEACTIVATE_SCROLL = 0x2E,
-    SET_VERTICAL_SCROLL_AREA = 0xA3,
-    RIGHT_HORIZONTAL_SCROLL = 0x26,
-    LEFT_HORIZONTAL_SCROLL = 0x27,
+    ACTIVATE_SCROLL                      = 0x2F,
+    DEACTIVATE_SCROLL                    = 0x2E,
+    SET_VERTICAL_SCROLL_AREA             = 0xA3,
+    RIGHT_HORIZONTAL_SCROLL              = 0x26,
+    LEFT_HORIZONTAL_SCROLL               = 0x27,
     VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL = 0x29,
-    VERTICAL_AND_LEFT_HORIZONTAL_SCROLL = 0x2A,
+    VERTICAL_AND_LEFT_HORIZONTAL_SCROLL  = 0x2A,
   };
 
   void SetController(DisplayControllerBase<WIDTH, col_t>* controller) {
@@ -1042,62 +1034,61 @@ public:
       while (!I2CLock()) YIELD();
 
       // Init sequence
-      Send(DISPLAYOFF);                    // 0xAE
-      Send(SETDISPLAYCLOCKDIV);            // 0xD5
-      Send(0x80);                          // the suggested ratio 0x80
+      Send(DISPLAYOFF);                // 0xAE
+      Send(SETDISPLAYCLOCKDIV);        // 0xD5
+      Send(0x80);                      // the suggested ratio 0x80
 
-      Send(SETMULTIPLEX);                  // 0xA8
+      Send(SETMULTIPLEX);              // 0xA8
       Send(HEIGHT - 1);
 
-      Send(SETDISPLAYOFFSET);              // 0xD3
-      Send(0x0);                                   // no offset
+      Send(SETDISPLAYOFFSET);          // 0xD3
+      Send(0x0);                       // no offset
 
-      Send(SETSTARTLINE | 0x0);            // 0x40 line #0
+      Send(SETSTARTLINE | 0x0);        // 0x40 line #0
 
-      Send(CHARGEPUMP);                    // 0x8D
+      Send(CHARGEPUMP);                // 0x8D
       Send(0x14);
 
-      Send(MEMORYMODE);                    // 0x20
-      Send(0x01);                          // vertical address mode
+      Send(MEMORYMODE);                // 0x20
+      Send(0x01);                      // vertical address mode
 
 #if defined (OLED_FLIP_180)
 #if defined (OLED_MIRRORED)
       // Flip 180 and mirrored OLED operation
-      Send(SEGREMAP | 0x1);        // 0xa0 | 1
+      Send(SEGREMAP | 0x1);            // 0xa0 | 1
 #else
       // Flip 180
-      Send(SEGREMAP);        // 0xa0 | 1
+      Send(SEGREMAP);                  // 0xa0 | 1
 #endif
       Send(COMSCANINC);
 #elif defined (OLED_MIRRORED)
       // mirrored OLED operation
-      Send(SEGREMAP);        // 0xa0 | 1
+      Send(SEGREMAP);                  // 0xa0 | 1
       Send(COMSCANDEC);
 #else
       // normal OLED operation
-      Send(SEGREMAP | 0x1);        // 0xa0 | 1
+      Send(SEGREMAP | 0x1);            // 0xa0 | 1
       Send(COMSCANDEC);
 #endif
 
-
-      Send(SETCOMPINS);                    // 0xDA
+      Send(SETCOMPINS);                // 0xDA
       if (HEIGHT == 64 || WIDTH==64) {
         Send(0x12);
       } else {
         Send(0x02);  // may need to be 0x12 for some displays
       }
-      Send(SETCONTRAST);                   // 0x81
+      Send(SETCONTRAST);               // 0x81
       Send(0x8F);
-      Send(SETPRECHARGE);                  // 0xd9
+      Send(SETPRECHARGE);              // 0xd9
       Send(0xF1);
-      Send(SETVCOMDETECT);                 // 0xDB
+      Send(SETVCOMDETECT);             // 0xDB
       Send(0x40);
-      Send(DISPLAYALLON_RESUME);           // 0xA4
-      Send(NORMALDISPLAY);                 // 0xA6
+      Send(DISPLAYALLON_RESUME);       // 0xA4
+      Send(NORMALDISPLAY);             // 0xA6
 
       Send(DEACTIVATE_SCROLL);
 
-      Send(DISPLAYON);                     //--turn on oled panel
+      Send(DISPLAYON);                 //--turn on oled panel
 
       I2CUnlock();
 
@@ -1162,7 +1153,7 @@ public:
 
       // Time to shut down... for now.
       while (!I2CLock()) YIELD();
-      Send(DISPLAYOFF);                    // 0xAE
+      Send(DISPLAYOFF);                // 0xAE
       I2CUnlock();
 
       power_.Power(false);
@@ -1239,4 +1230,4 @@ constexpr uint8_t SSD1306Template<WIDTH, col_t, POWER_PIN>::transactions[];
 
 using SSD1306 = SSD1306Template<128, uint32_t>;
 
-#endif
+#endif // DISPLAY_SSD1306_H
