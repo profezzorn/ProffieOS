@@ -177,9 +177,9 @@ public:
 #else
 
 // Use mnum as template where to find sounds.
-#define ADD_SL_SOUND(NAME, BASE)                                        \
+#define ADD_SL_SOUND(NAME, BASE)                                                     \
   void Say##NAME() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE ".wav", &SFX_mnum)); } \
-  /* t for "trampoline" */                                              \
+  /* t for "trampoline" */                                                           \
   struct t##NAME { static void say() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE ".wav", &SFX_mnum)); } }
 
 #endif
@@ -365,33 +365,33 @@ public:
 
   void SayColor(ColorNumber n) {
     switch (n) {
-    case COLOR_RED:          SayRed();          break;
-    case COLOR_ORANGERED:    SayOrangeRed();    break;
-    case COLOR_DARKORANGE:   SayDarkOrange();   break;
-    case COLOR_ORANGE:       SayOrange();       break;
-    case COLOR_GOLD:         SayGold();         break;
-    case COLOR_YELLOW:       SayYellow();       break;
-    case COLOR_GREENYELLOW:  SayGreenYellow();  break;
-    case COLOR_GREEN:        SayGreen();        break;
-    case COLOR_AQUAMARINE:   SayAquaMarine();   break;
-    case COLOR_CYAN:         SayCyan();         break;
-    case COLOR_DEEPSKYBLUE:  SayDeepSkyBlue();  break;
-    case COLOR_DODGERBLUE:   SayDodgerBlue();   break;
-    case COLOR_BLUE:         SayBlue();         break;
-    case COLOR_ICEBLUE:      SayIceBlue();      break;
-    case COLOR_INDIGO:       SayIndigo();       break;
-    case COLOR_PURPLE:       SayPurple();       break;
-    case COLOR_DEEPPURPLE:   SayDeepPurple();   break;
-    case COLOR_MAGENTA:      SayMagenta();      break;
-    case COLOR_DEEPPINK:     SayDeepPink();     break;
-    case COLOR_SILVER:       SaySilver();       break;
-    case COLOR_GLACIER:      SayGlacier();      break;
-    case COLOR_ICEWHITE:     SayIceWhite();     break;
-    case COLOR_LIGHTCYAN:    SayLightCyan();    break;
-    case COLOR_MOCCASIN:     SayMoccasin();     break;
-    case COLOR_LEMONCHIFFON: SayLemonChiffon(); break;
-    case COLOR_NAVAJOWHITE:  SayNavajoWhite();  break;
-    case COLOR_WHITE:        SayWhite();        break;
+      case COLOR_RED:          SayRed();          break;
+      case COLOR_ORANGERED:    SayOrangeRed();    break;
+      case COLOR_DARKORANGE:   SayDarkOrange();   break;
+      case COLOR_ORANGE:       SayOrange();       break;
+      case COLOR_GOLD:         SayGold();         break;
+      case COLOR_YELLOW:       SayYellow();       break;
+      case COLOR_GREENYELLOW:  SayGreenYellow();  break;
+      case COLOR_GREEN:        SayGreen();        break;
+      case COLOR_AQUAMARINE:   SayAquaMarine();   break;
+      case COLOR_CYAN:         SayCyan();         break;
+      case COLOR_DEEPSKYBLUE:  SayDeepSkyBlue();  break;
+      case COLOR_DODGERBLUE:   SayDodgerBlue();   break;
+      case COLOR_BLUE:         SayBlue();         break;
+      case COLOR_ICEBLUE:      SayIceBlue();      break;
+      case COLOR_INDIGO:       SayIndigo();       break;
+      case COLOR_PURPLE:       SayPurple();       break;
+      case COLOR_DEEPPURPLE:   SayDeepPurple();   break;
+      case COLOR_MAGENTA:      SayMagenta();      break;
+      case COLOR_DEEPPINK:     SayDeepPink();     break;
+      case COLOR_SILVER:       SaySilver();       break;
+      case COLOR_GLACIER:      SayGlacier();      break;
+      case COLOR_ICEWHITE:     SayIceWhite();     break;
+      case COLOR_LIGHTCYAN:    SayLightCyan();    break;
+      case COLOR_MOCCASIN:     SayMoccasin();     break;
+      case COLOR_LEMONCHIFFON: SayLemonChiffon(); break;
+      case COLOR_NAVAJOWHITE:  SayNavajoWhite();  break;
+      case COLOR_WHITE:        SayWhite();        break;
     }
   }
 
@@ -426,7 +426,7 @@ public:
       case IGNITION_COLOR_ARG:       //  7
         SayIgnitionColor();
         break;
-      case IGNITION_POWER_UP_ARG:    // 8
+      case IGNITION_POWER_UP_ARG:    //  8
         SayPowerUpOptions();
         break;
       case BLAST_COLOR_ARG:          //  9
@@ -580,7 +580,7 @@ public:
   ADD_SL_SOUND(ListEndBuzz,                         "mbuzz");
   ADD_SL_SOUND(CantDeleteLastPreset,                "mcantdlp");
   ADD_SL_SOUND(ThisStyleHasNoSettings,              "mstnoset");
-  ADD_SL_SOUND(EditSettingsV2,                      "mseting2");    // NO pause!
+  ADD_SL_SOUND(EditSettingsV2,                      "mseting2"); // NO pause!
 };
 
 // Please don't forget to call sound_library_->init();
@@ -589,4 +589,4 @@ public:
 // Please don't forget to call sound_library_v2->init();
 #define sound_library_v2 (*getPtr<SoundLibraryV2>())
 
-#endif
+#endif  // SOUND_SOUND_LIBRARY_H
