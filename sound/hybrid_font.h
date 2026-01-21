@@ -166,10 +166,21 @@ public:
 
     STDOUT.println(" font.");
     SaberBase::Link(this);
+
+    if (font_dir_missing_) {
+      font_dir_missing_ = false;
+      ProffieOSErrors::font_directory_not_found();
+    }
+    if (error_in_font_dir_) {
+      error_in_font_dir_ = false;
+      ProffieOSErrors::error_in_font_directory();
+    }
+
     Looper::Link();
     SetHumVolume(1.0);
     state_ = STATE_OFF;
   }
+
 
   enum State {
     STATE_OFF,
