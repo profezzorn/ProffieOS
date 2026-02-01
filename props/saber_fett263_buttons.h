@@ -2983,8 +2983,7 @@ SaberFett263Buttons() : PropBase() {}
     if (font_num_ <= 0) font_num_ = num_fonts;
     char font[128];
     RunCommandAndGetSingleLine("list_fonts", nullptr, font_num_, font, sizeof(font));
-    strcat(font, ";common");
-    current_preset_.font = mkstr(font);
+    current_preset_.font = format_pattern(FONT_PATTERN, font);
     current_preset_.Save();
     SetPresetFast(current_preset_.preset_num);
     hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
