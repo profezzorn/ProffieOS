@@ -103,4 +103,4 @@ typedef Rgb<0, 13, 255>    RareBlue;
 typedef Rgb<13, 0, 255>    OverdueBlue;
 typedef Rgb<55, 0, 255>    ViolentViolet;
 
-#endif
+#endif  // STYLES_COLORS_H
