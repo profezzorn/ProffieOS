@@ -143,4 +143,4 @@ private:
   BladeEffect* effects_;
 };
 
-#endif
+#endif  // FUNCTIONS_BLAST_H
