@@ -382,6 +382,7 @@ Standard Controls While Blade is ON
         *if COLOR_CHANGE_DIRECT is defined then each click will change color instead of turn
       Otherwise ColorWheel is used per style set up.
     Click PWR to save
+	Long Click PWR to revert
     NEW! Color Zoom* = Double Click and Hold PWR, Release to Save
       *For Color List or ColorWheel you can Hold PWR down to zoom in color for easier selection
        Release PWR to save
@@ -2982,8 +2983,7 @@ SaberFett263Buttons() : PropBase() {}
     if (font_num_ <= 0) font_num_ = num_fonts;
     char font[128];
     RunCommandAndGetSingleLine("list_fonts", nullptr, font_num_, font, sizeof(font));
-    strcat(font, ";common");
-    current_preset_.font = mkstr(font);
+    current_preset_.font = format_pattern(FONT_PATTERN, font);
     current_preset_.Save();
     SetPresetFast(current_preset_.preset_num);
     hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
