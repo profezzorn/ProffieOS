@@ -143,4 +143,4 @@ inline FunctionRunResult RunFunction(T* style, BladeBase* blade) {
   return RunFunctionHelper<T, decltype(style->run(blade))>::run(style, blade);
 };
 
-#endif
+#endif  // STYLES_BLADE_STYLE_H
