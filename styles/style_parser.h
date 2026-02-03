@@ -138,7 +138,7 @@ public:
     return style->style_allocator->make();
   }
 
-  // Returns true if the listed style refereces the specified argument.
+  // Returns true if the listed style references the specified argument.
   bool UsesArgument(const char* str, int argument) {
     NamedStyle* style = FindStyle(str);
     if (!style) return false;

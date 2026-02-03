@@ -7,8 +7,8 @@
 // BLADE: COLOR
 // return value: suitable for preset array
 // Most blade styls are created by taking a blade style template and wrapping it
-// this class, which implements the BladeStyle interface. We do this so that the
-// getColor calls will be inlined in this loop for speed.
+// in this class, which implements the BladeStyle interface. We do this so that
+// the getColor calls will be inlined in this loop for speed.
 
 struct HandledTypeResetter {
   HandledTypeResetter() { BladeBase::ResetHandledTypes(); }
@@ -167,4 +167,4 @@ StyleAllocator ChargingStylePtr() {
   static StyleFactoryImpl<ChargingStyle<STYLE> > factory;
   return &factory;
 }
-#endif
+#endif  // STYLES_STYLE_PTR_H

@@ -65,14 +65,14 @@ private:
   BladeEffect* effects_;
 };
 
-
 // Usage: BlastFadeoutF<FADEOUT_MS, EFFECT>
 // FADEOUT_MS: a number (defaults to 250)
 // EFFECT: a BladeEffectType (defaults to EFFECT_BLAST)
 // return value: FUNCTION
-// NOrmally returns 0, but returns up to 32768 when the
+// Normally returns 0, but returns up to 32768 when the
 // selected effect occurs. Then if fades back to zero over
 // FADEOUT_MS milliseconds.
+
 template<int FADEOUT_MS = 250, BladeEffectType EFFECT = EFFECT_BLAST>
 class BlastFadeoutF {
 public:
@@ -109,6 +109,7 @@ private:
 // return value: FUNCTION
 // Original blast function. Normally returns zero, but
 // returns up to 32768 when the selected effect occurs.
+
 template<BladeEffectType EFFECT=EFFECT_BLAST>
 class OriginalBlastF {
 public:
@@ -143,4 +144,4 @@ private:
   BladeEffect* effects_;
 };
 
-#endif
+#endif  // FUNCTIONS_BLAST_H
