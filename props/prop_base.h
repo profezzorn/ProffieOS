@@ -380,9 +380,9 @@ public:
   void AllocateBladeStyles() {
 #ifdef DYNAMIC_BLADE_LENGTH
     savestate_.ReadINIFromSaveDir("curstate");
-#define WRAP_BLADE_SHORTERNER(N) \
+#define WRAP_BLADE_SHORTERNER(N)                                                                              \
     if (savestate_.blade##N##len != -1 && savestate_.blade##N##len != current_config->blade##N->num_leds()) { \
-      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);   \
+      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);                                         \
     }
 #else
 #define WRAP_BLADE_SHORTERNER(N)
@@ -519,6 +519,18 @@ public:
   bool blade_detected_ = false;
 #endif
 
+/* For multiple blade detect part 5A/5                                                            // added by Oli
+(Need to add part 1/5 to events.h 2/5 to config, part 3A/5 & 3B/5 to props,                       // added by Oli
+ part 4/5 to to ProffieOS.ino,part 5A/5 & 5B/5 to prop_base.h) */                                 // added by Oli
+                                                                                                  // added by Oli
+#ifdef BLADE_DETECT_PIN2                                                                          // added by Oli
+  bool blade2_detected_ = false;                                                                  // added by Oli
+#endif                                                                                            // added by Oli
+                                                                                                  // added by Oli
+#ifdef BLADE_DETECT_PIN3                                                                          // added by Oli
+  bool blade3_detected_ = false;                                                                  // added by Oli
+#endif                                                                                            // added by Oli
+
   // Use this helper function, not the bool above.
   // This function changes when we're properly initialized
   // the blade, the bool is an internal to blade detect.
@@ -552,12 +564,35 @@ public:
 #endif // SPEAK_BLADE_ID
     }
 #ifdef BLADE_DETECT_PIN
+    PVLOG_STATUS << "***** Primary Main Blade #1 ";                                               // added by Oli
     if (!blade_detected_) {
-      PVLOG_STATUS << "NO ";
+      PVLOG_STATUS << "NOT ";      // was PVLOG_STATUS << "NO "                                   // changed by Oli
       ret += NO_BLADE;
     }
-    PVLOG_STATUS << "Blade Detected\n";
+    PVLOG_STATUS << "Detected\n";  // was PVLOG_STATUS << "Blade Detected\n";                     // changed by Oli
 #endif
+
+/* For multiple blade detect part 5B/5                                                            // added by Oli
+(Need to add part 1/5 to events.h 2/5 to config, part 3A/5 & 3B/5 to props,                       // added by Oli
+ part 4/5 to to ProffieOS.ino,part 5A/5 & 5B/5 to prop_base.h) */                                 // added by Oli
+                                                                                                  // added by Oli
+#ifdef BLADE_DETECT_PIN2                                                                          // added by Oli
+    PVLOG_STATUS << "***** Secondary Main Blade #2 ";                                             // added by Oli
+    if (!blade2_detected_) {                                                                      // added by Oli
+      PVLOG_STATUS << "NOT ";                                                                     // added by Oli
+    //ret += NO_BLADE; // Commented out, because I don't want to add another NO_BLADE again!      // added by Oli
+    }                                                                                             // added by Oli
+    PVLOG_STATUS << "Detected\n";                                                                 // added by Oli
+#endif                                                                                            // added by Oli
+                                                                                                  // added by Oli
+#ifdef BLADE_DETECT_PIN3                                                                          // added by Oli
+    PVLOG_STATUS << "***** Cross-Guard Blade #3 ";                                                // added by Oli
+    if (!blade3_detected_) {                                                                      // added by Oli
+      PVLOG_STATUS << "NOT ";                                                                     // added by Oli
+    //ret += NO_BLADE; // Commented out, because I don't want to add another NO_BLADE again!      // added by Oli
+    }                                                                                             // added by Oli
+    PVLOG_STATUS << "Detected\n";                                                                 // added by Oli
+#endif                                                                                            // added by Oli
       return ret;
   }
 
@@ -1123,7 +1158,6 @@ public:
     last_motion_call_millis_ = millis();
     SaberBase::DoAccel(fusor.accel(), clear);
     SaberBase::DoMotion(fusor.gyro(), clear);
-
     if (monitor.ShouldPrint(Monitoring::MonitorClash)) {
       STDOUT << "ACCEL: " << fusor.accel() << "\n";
     }
@@ -1132,7 +1166,6 @@ public:
   volatile bool clash_pending1_ = false;
   volatile bool pending_clash_is_stab1_ = false;
   volatile float pending_clash_strength1_ = 0.0;
-
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
 
@@ -1230,14 +1263,16 @@ public:
     if (b & BUTTON_LEFT)          STDOUT.print("Left");
     if (b & BUTTON_RIGHT)         STDOUT.print("Right");
     if (b & BUTTON_SELECT)        STDOUT.print("Select");
-    if (b & BUTTON_BLADE_DETECT)  STDOUT.print("BladeDetect");
+    if (b & BUTTON_BLADE_DETECT)  STDOUT.print("BladeDetect1");          // changed by Oli
+    if (b & BUTTON_BLADE_DETECT2) STDOUT.print("BladeDetect2");          // added by Oli
+    if (b & BUTTON_BLADE_DETECT3) STDOUT.print("BladeDetect3");          // added by Oli
     if (b & MODE_ON)              STDOUT.print("On");
-/* do not add, those buttons have the same values as some other buttons.                                    // added by Oli
-    if (b & BUTTON_RELOAD)        STDOUT.print("Reload");                                                   // added by Oli
-    if (b & BUTTON_FIRE)          STDOUT.print("Fire");                                                     // added by Oli
-    if (b & BUTTON_MODE_SELECT)   STDOUT.print("ModeSelect");                                               // added by Oli
-    if (b & BUTTON_CLIP_DETECT)   STDOUT.print("ClipDetect");                                               // added by Oli
-*/                                                                                                          // added by Oli
+/* do not add, those buttons have the same values as some other buttons. // added by Oli
+    if (b & BUTTON_RELOAD)        STDOUT.print("Reload");                // added by Oli
+    if (b & BUTTON_FIRE)          STDOUT.print("Fire");                  // added by Oli
+    if (b & BUTTON_MODE_SELECT)   STDOUT.print("ModeSelect");            // added by Oli
+    if (b & BUTTON_CLIP_DETECT)   STDOUT.print("ClipDetect");            // added by Oli
+*/                                                                       // added by Oli
   }
 
   void PrintEvent(uint32_t e) {
@@ -1254,7 +1289,7 @@ public:
       case EVENT_HELD:              STDOUT.print("Held");             break;
       case EVENT_HELD_MEDIUM:       STDOUT.print("HeldMedium");       break;
       case EVENT_HELD_LONG:         STDOUT.print("HeldLong");         break;
-      case MULTI_PROP_EVENT_HELD_XTRA_LONG: STDOUT.print("HeldXtraLong"); break;                            // added by Oli
+      case MULTI_PROP_EVENT_HELD_XTRA_LONG: STDOUT.print("HeldXtraLong"); break; // added by Oli
       case EVENT_CLICK_SHORT:       STDOUT.print("Shortclick");       break;
       case EVENT_CLICK_LONG:        STDOUT.print("Longclick");        break;
       case EVENT_SAVED_CLICK_SHORT: STDOUT.print("SavedShortclick");  break;
