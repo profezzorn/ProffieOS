@@ -1,3 +1,5 @@
+// This version of saber_caiwyn_buttons.h, has been modified by me (Oli) to be compatible with multi_prop.h & dual_prop.h
+
 // Caiwyn's Lightsaber Controls
 // This config is designed to provide fast, low-latency response to button
 // presses for the most basic functions (blaster blocks, lockups, and clashes)
@@ -171,7 +173,7 @@ public:
 #endif
 
 // The Saber class implements the basic states and actions for the saber.
-class CaiwynButtons : public PropBase {
+class CaiwynButtons : public PROP_INHERIT_PREFIX PropBase {                       // Changed by Oli
 public:
   CaiwynButtons() : PropBase() {}
   const char* name() override { return "CaiwynButtons"; }

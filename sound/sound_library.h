@@ -75,6 +75,7 @@ private:
       PVLOG_STATUS << "Voice pack version " << found_version << " found.\n";
     }
     if (found_version < required_version_) {
+      //PVLOG_ERROR << "ERROR - Sound library version " << required_version_ << " required.\n";
       if (SFX_mnum) {
         ProffieOSErrors::error_in_voice_pack_version();
       } else {
@@ -107,6 +108,12 @@ public:
       Say0();
       return;
     }
+    int millions = number / 1000000;                                // added by Oli
+    if (millions) {                                                 // added by Oli
+      SayWhole(millions);                                           // added by Oli
+      Say1000000();                                                 // added by Oli
+      number %= 1000000;                                            // added by Oli
+    }                                                               // added by Oli
     int thousands = number / 1000;
     if (thousands) {
       SayWhole(thousands);
@@ -165,6 +172,14 @@ public:
     SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);
     SayPercent();
   }
+
+  void SayBatteryPercentVolts() {                                           // added by oli
+    SayTheBatteryLevelIs();                                                 // added by oli
+    SayNumber(battery_monitor.battery_percent(), SAY_WHOLE);                // added by oli
+    SayPercent();                                                           // added by oli
+    SayNumber(battery_monitor.battery(), SAY_DECIMAL);                      // added by oli
+    SayVolts();                                                             // added by oli
+  }                                                                         // added by oli
 
 #ifdef SEARCH_FOR_SOUND_LIBRARY_FILES
 
@@ -242,6 +257,8 @@ public:
   ADD_SL_SOUND(90,    "ninety");
   ADD_SL_SOUND(100,   "hundred");
   ADD_SL_SOUND(1000,  "thousand");
+  // million for "NO_BLADE" from blade ID
+  ADD_SL_SOUND(1000000, "million");                                 // added by oli
 
   ADD_SL_SOUND(Point, "mpoint");
 
@@ -555,7 +572,7 @@ public:
   ADD_SL_SOUND(Preset,                              "mpset");
   ADD_SL_SOUND(EditPresets,                         "medpsets");
 
-//  ADD_SL_SOUND(EditStyleOptions,                    "mestyopt");
+  ADD_SL_SOUND(EditStyleOptions,                    "mestyopt");               // uncommented by Oli
 
   ADD_SL_SOUND(InsertSelectedPreset,                "minpset");
   ADD_SL_SOUND(MoveSelectedPreset,                  "mmpset");
@@ -581,6 +598,18 @@ public:
   ADD_SL_SOUND(CantDeleteLastPreset,                "mcantdlp");
   ADD_SL_SOUND(ThisStyleHasNoSettings,              "mstnoset");
   ADD_SL_SOUND(EditSettingsV2,                      "mseting2"); // NO pause!
+
+  // added by Oli:
+  // million for "NO_BLADE" from blade ID add in number list & code also added
+  // V3 suggested addition:
+  ADD_SL_SOUND(BeginBattleMode,                     "bmbegin");                // added by oli
+  ADD_SL_SOUND(BeginMultiBlast,                     "blstbgn");                // added by oli
+  ADD_SL_SOUND(Dim,                                 "dim");                    // Added by Oli
+  ADD_SL_SOUND(EndBattleMode,                       "bmend");                  // Added by Oli
+  ADD_SL_SOUND(EndMultiBlast,                       "blstend");                // Added by Oli
+  ADD_SL_SOUND(Mute,                                "mute");                   // Added by Oli
+  ADD_SL_SOUND(Press,                               "press");                  // Added by Oli
+  ADD_SL_SOUND(Release,                             "release");                // Added by Oli
 };
 
 // Please don't forget to call sound_library_->init();

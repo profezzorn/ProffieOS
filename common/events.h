@@ -22,6 +22,10 @@ enum BUTTON : uint32_t {
   BUTTON_RANGE = 128,
 
   BUTTON_BLADE_DETECT = 256,
+// For multiple blade detect part 1/4                                                             // added by Oli
+// (Need to add part 1/4 to events.h 2/4 to config, part 3/4 to props, part 4/4 to ProffieOS.ino) // added by Oli
+  BUTTON_BLADE_DETECT2 = 2048,                                                                    // added by Oli
+  BUTTON_BLADE_DETECT3 = 4096,                                                                    // added by Oli
   MODE_ANY_BUTTON = 512,
 
   BUTTON_TRIGGER_ONE = 1,
@@ -105,6 +109,11 @@ enum EVENT : uint32_t {
 
   // For backwards compatibilty.
   EVENT_DOUBLE_CLICK = EVENT_SECOND_PRESSED,
+
+  // added by Oli
+  // Reseved for multi_prop or any other prop that would be used to
+  // switch between multiple props with an extra-long button push.
+  MULTI_PROP_EVENT_HELD_XTRA_LONG,
 };
 
 #define NO_BLADE 1000000000 /* 1 billion */

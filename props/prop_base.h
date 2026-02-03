@@ -1232,6 +1232,12 @@ public:
     if (b & BUTTON_SELECT)        STDOUT.print("Select");
     if (b & BUTTON_BLADE_DETECT)  STDOUT.print("BladeDetect");
     if (b & MODE_ON)              STDOUT.print("On");
+/* do not add, those buttons have the same values as some other buttons.                                    // added by Oli
+    if (b & BUTTON_RELOAD)        STDOUT.print("Reload");                                                   // added by Oli
+    if (b & BUTTON_FIRE)          STDOUT.print("Fire");                                                     // added by Oli
+    if (b & BUTTON_MODE_SELECT)   STDOUT.print("ModeSelect");                                               // added by Oli
+    if (b & BUTTON_CLIP_DETECT)   STDOUT.print("ClipDetect");                                               // added by Oli
+*/                                                                                                          // added by Oli
   }
 
   void PrintEvent(uint32_t e) {
@@ -1248,6 +1254,7 @@ public:
       case EVENT_HELD:              STDOUT.print("Held");             break;
       case EVENT_HELD_MEDIUM:       STDOUT.print("HeldMedium");       break;
       case EVENT_HELD_LONG:         STDOUT.print("HeldLong");         break;
+      case MULTI_PROP_EVENT_HELD_XTRA_LONG: STDOUT.print("HeldXtraLong"); break;                            // added by Oli
       case EVENT_CLICK_SHORT:       STDOUT.print("Shortclick");       break;
       case EVENT_CLICK_LONG:        STDOUT.print("Longclick");        break;
       case EVENT_SAVED_CLICK_SHORT: STDOUT.print("SavedShortclick");  break;

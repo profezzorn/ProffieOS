@@ -1,3 +1,4 @@
+// This version of blaster_BC_buttons.h, has been modified by me (Oli) to be compatible with multi_prop.h
 /*
 blaster_BC_buttons.h prop file.
   http://fredrik.hubbe.net/lightsaber/proffieos.html
@@ -176,7 +177,9 @@ Additionally:
 // Additional effects for BC buttons prop.
 EFFECT(destruct);
 #ifndef PROPS_DUAL_PROP_H
+#ifndef PROPS_MULTI_PROP_H                             // added by Oli
 EFFECT(battery);    // for EFFECT_BATTERY_LEVEL
+#endif                                                 // added by Oli
 #endif
 
 template<class SPEC>
@@ -738,6 +741,5 @@ private:
   RefPtr<BufferedWavPlayer> auto_player_;
   RefPtr<BufferedWavPlayer> wav_player;
 };
-
 
 #endif  // PROPS_BLASTER_BC_H

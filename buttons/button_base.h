@@ -31,6 +31,10 @@
 #define BUTTON_LONG_CLICK_TIMEOUT 2500
 #endif
 
+#ifndef BUTTON_HELD_XTRA_LONG_TIMEOUT                                             // added by Oli (does nothing at the moment)
+#define BUTTON_HELD_XTRA_LONG_TIMEOUT 4000                                        // added by Oli
+#endif                                                                            // added by Oli
+
 // Simple button handler. Keeps track of clicks and lengths of pushes.
 class ButtonBase : public Looper,
                    public CommandParser,
@@ -95,7 +99,13 @@ protected:
               while (DebouncedRead() && (current_modifiers & button_)) {
                 if (millis() - push_millis_ > BUTTON_HELD_LONG_TIMEOUT) {
                   Send(EVENT_HELD_LONG);
-                  while (DebouncedRead() && (current_modifiers & button_)) YIELD();
+                  //while (DebouncedRead() && (current_modifiers & button_)) {          // added by Oli
+                    //if (millis() - push_millis_ > BUTTON_HELD_XTRA_LONG_TIMEOUT) {    // added by Oli
+                      //Send(MULTI_PROP_EVENT_HELD_XTRA_LONG);                          // added by Oli
+                      while (DebouncedRead() && (current_modifiers & button_)) YIELD();
+                    //}                                                                 // added by Oli
+                    //YIELD();                                                          // added by Oli
+                  //}                                                                   // added by Oli
                 }
                 YIELD();
               }
@@ -145,14 +155,15 @@ protected:
           return ret;
         }
         switch (arg[0]) {
-        case 'p': e = EVENT_PRESSED;           break;
-        case 'r': e = EVENT_RELEASED;          break;
-        case 'h': e = EVENT_HELD;              break;
-        case 'm': e = EVENT_HELD_MEDIUM;       break;
-        case 'l': e = EVENT_HELD_LONG;         break;
-        case 'S': e = EVENT_CLICK_SHORT;       break;
-        case 's': e = EVENT_SAVED_CLICK_SHORT; break;
-        case 'L': e = EVENT_CLICK_LONG;        break;
+        case 'p': e = EVENT_PRESSED;                   break;
+        case 'r': e = EVENT_RELEASED;                  break;
+        case 'h': e = EVENT_HELD;                      break;
+        case 'm': e = EVENT_HELD_MEDIUM;               break;
+        case 'l': e = EVENT_HELD_LONG;                 break;
+        case 'S': e = EVENT_CLICK_SHORT;               break;
+        case 's': e = EVENT_SAVED_CLICK_SHORT;         break;
+        case 'L': e = EVENT_CLICK_LONG;                break;
+        case 'X': e = MULTI_PROP_EVENT_HELD_XTRA_LONG; break;                    // added by Oli
         }
         if (strlen(arg) > 1) {
           cnt = atoi(arg + 1);
