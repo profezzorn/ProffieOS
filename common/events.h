@@ -22,8 +22,9 @@ enum BUTTON : uint32_t {
   BUTTON_RANGE = 128,
 
   BUTTON_BLADE_DETECT = 256,
-// For multiple blade detect part 1/4                                                             // added by Oli
-// (Need to add part 1/4 to events.h 2/4 to config, part 3/4 to props, part 4/4 to ProffieOS.ino) // added by Oli
+/* For multiple blade detect part 1/5                                                             // added by Oli
+(Need to add part 1/5 to events.h 2/5 to config, part 3A/5 & 3B/5 to props,                       // added by Oli
+ part 4/5 to to ProffieOS.ino,part 5A/5 & 5B/5 to prop_base.h) */                                 // added by Oli
   BUTTON_BLADE_DETECT2 = 2048,                                                                    // added by Oli
   BUTTON_BLADE_DETECT3 = 4096,                                                                    // added by Oli
   MODE_ANY_BUTTON = 512,
