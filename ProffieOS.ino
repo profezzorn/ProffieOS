@@ -802,23 +802,23 @@ LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN>>
 USE_PIN_OUTPUT(BLADE_DETECT_PIN, PO_SubSystems::PO_BLADE_DETECT);
 #endif
 
-/* For multiple blade detect part 4/5                                                                // added by Oli
-(Need to add part 1/5 to events.h 2/5 to config, part 3/5 to props, part 4/5 to to ProffieOS.ino,    // added by Oli
-part 5A/5 & 5B/5 to prop_base.h */                                                                   // added by Oli
-                                                                                                     // added by Oli
-#ifdef BLADE_DETECT_PIN2                                                                             // added by Oli
-LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN2>>                                        // added by Oli
-  BladeDetect2(BUTTON_BLADE_DETECT2, BLADE_DETECT_PIN2, "blade_detect2");                            // added by Oli
-                                                                                                     // added by Oli
-USE_PIN_OUTPUT(BLADE_DETECT_PIN2, PO_SubSystems::PO_BLADE_DETECT);                                   // added by Oli
-#endif                                                                                               // added by Oli
-                                                                                                     // added by Oli
-#ifdef BLADE_DETECT_PIN3                                                                             // added by Oli
-LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN3>>                                        // added by Oli
-  BladeDetect3(BUTTON_BLADE_DETECT3, BLADE_DETECT_PIN3, "blade_detect3");                            // added by Oli
-                                                                                                     // added by Oli
-USE_PIN_OUTPUT(BLADE_DETECT_PIN3, PO_SubSystems::PO_BLADE_DETECT);                                   // added by Oli
-#endif                                                                                               // added by Oli
+/* For multiple blade detect part 4/5                                         // added by Oli
+(Need to add part 1/5 to events.h 2/5 to config, part 3A/5 & 3B/5 to props,   // added by Oli
+ part 4/5 to to ProffieOS.ino,part 5A/5, 5B/5 & 5C/5 to prop_base.h) */       // added by Oli
+                                                                              // added by Oli
+#ifdef BLADE_DETECT_PIN2                                                      // added by Oli
+LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN2>>                 // added by Oli
+  BladeDetect2(BUTTON_BLADE_DETECT2, BLADE_DETECT_PIN2, "blade_detect2");     // added by Oli
+                                                                              // added by Oli
+USE_PIN_OUTPUT(BLADE_DETECT_PIN2, PO_SubSystems::PO_BLADE_DETECT);            // added by Oli
+#endif                                                                        // added by Oli
+                                                                              // added by Oli
+#ifdef BLADE_DETECT_PIN3                                                      // added by Oli
+LatchingButtonTemplate<FloatingButtonBase<BLADE_DETECT_PIN3>>                 // added by Oli
+  BladeDetect3(BUTTON_BLADE_DETECT3, BLADE_DETECT_PIN3, "blade_detect3");     // added by Oli
+                                                                              // added by Oli
+USE_PIN_OUTPUT(BLADE_DETECT_PIN3, PO_SubSystems::PO_BLADE_DETECT);            // added by Oli
+#endif                                                                        // added by Oli
 
 #include "common/sd_test.h"
 
