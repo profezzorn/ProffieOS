@@ -1687,7 +1687,7 @@ void setup() {
   } else {
     STDOUT.println("Sdcard found..");
   }
-#endif
+#endif  // ENABLE_SD
 
   Looper::DoSetup();
   PVLOG_DEBUG << "***************** Booting up! *******************\n";
