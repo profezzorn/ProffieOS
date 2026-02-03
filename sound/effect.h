@@ -799,8 +799,15 @@ EFFECT(ccbegin);
 EFFECT(ccend);
 EFFECT(ccchange);
 
+// Alt sounds                                              // added by oli
 EFFECT(altchng);
 EFFECT(chhum);
+EFFECT(tr);                                                // added by oli
+EFFECT2(trloop, trloop);                                   // added by oli
+
+EFFECT(push);                                              // added by oli
+EFFECT(faston);                                            // added by oli
+EFFECT(array);                                             // added by oli
 
 // menu sounds
 EFFECT(mclick);
@@ -814,7 +821,7 @@ EFFECT(endauto); // Doesn't exist in fonts, but I expect there may be use for au
 EFFECT(blast); // Not to be confused with "blst" and "blaster" as blocking sounds in sabers
 
 // battery low
-EFFECT(lowbatt);    // battery low
+EFFECT(lowbatt);  // for "battery low"
 
 // TODO: Optimize this and make it possible
 // to have the WAV reader use this.
@@ -887,4 +894,4 @@ protected:
   char filename_[128];
 };
 
-#endif
+#endif  // SOUND_EFFECT_H
