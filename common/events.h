@@ -3,43 +3,43 @@
 
 // Max 17!
 enum BUTTON : uint32_t {
-  BUTTON_NONE = 0,   // used for gestures and the like
-  BUTTON_POWER = 1,
-  BUTTON_AUX = 2,
-  BUTTON_AUX2 = 4,
-  BUTTON_UP = 8,
-  BUTTON_DOWN = 16,
-  BUTTON_LEFT = 32,
-  BUTTON_RIGHT = 64,
-  BUTTON_SELECT = 128,
+  BUTTON_NONE =            0,   // used for gestures and the like
+  BUTTON_POWER =           1,
+  BUTTON_AUX =             2,
+  BUTTON_AUX2 =            4,
+  BUTTON_UP =              8,
+  BUTTON_DOWN =           16,
+  BUTTON_LEFT =           32,
+  BUTTON_RIGHT =          64,
+  BUTTON_SELECT =        128,
 
   // D-pad and FIRE//MODE_SELECT/CLIP_DETECT/RELOAD and RANGE have the same numbers,
   // so you can't have a D-pad in a blaster.
-  BUTTON_FIRE = 8,
-  BUTTON_MODE_SELECT = 16,
-  BUTTON_CLIP_DETECT = 32,
-  BUTTON_RELOAD = 64,
-  BUTTON_RANGE = 128,
+  BUTTON_FIRE =            8,
+  BUTTON_MODE_SELECT =    16,
+  BUTTON_CLIP_DETECT =    32,
+  BUTTON_RELOAD =         64,
+  BUTTON_RANGE =         128,
 
-  BUTTON_BLADE_DETECT = 256,
+  BUTTON_BLADE_DETECT =  256,
 /* For multiple blade detect part 1/5                                        // added by Oli
 (Need to add part 1/5 to events.h 2/5 to config, part 3A/5 & 3B/5 to props,  // added by Oli
  part 4/5 to to ProffieOS.ino,part 5A/5 & 5B/5 to prop_base.h) */            // added by Oli
   BUTTON_BLADE_DETECT2 = 2048,                                               // added by Oli
   BUTTON_BLADE_DETECT3 = 4096,                                               // added by Oli
-  MODE_ANY_BUTTON = 512,
+  MODE_ANY_BUTTON =        12,
 
-  BUTTON_TRIGGER_ONE = 1,
-  BUTTON_TRIGGER_TWO = 2,
-  BUTTON_TRIGGER_THREE = 4,
-  BUTTON_TRIGGER_FOUR = 8,
-  BUTTON_TRIGGER_FIVE = 16,
-  BUTTON_TRIGGER_SIX = 32,
-  BUTTON_TRIGGER_SEVEN = 64,
-  BUTTON_TRIGGER_EIGHT = 128,
+  BUTTON_TRIGGER_ONE =      1,
+  BUTTON_TRIGGER_TWO =      2,
+  BUTTON_TRIGGER_THREE =    4,
+  BUTTON_TRIGGER_FOUR =     8,
+  BUTTON_TRIGGER_FIVE =    16,
+  BUTTON_TRIGGER_SIX =     32,
+  BUTTON_TRIGGER_SEVEN =   64,
+  BUTTON_TRIGGER_EIGHT =  128,
 
-  MODE_ON = 1024,
-  MODE_OFF = 0,
+  MODE_ON =              1024,
+  MODE_OFF =                0,
 };
 
 // Returns value in range 0-31
