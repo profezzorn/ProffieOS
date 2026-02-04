@@ -105,6 +105,7 @@ class UnaDodger : public Looper {
 public:
   UnaDodger() : Looper(NOLINK) {}
   const char* name() override { return "undodge"; }
+
   void start(int ms) {
     if (millis_ == 0) Link();
     millis_ = ms;
@@ -113,6 +114,7 @@ public:
       wav_players[unit].set_dodge(true);
     }
   }
+
   void Loop() override {
     if (millis() - start_time_ <= millis_) return;
     start_time_ = 0;
@@ -122,6 +124,7 @@ public:
       wav_players[unit].set_dodge(false);
     }
   }
+
 private:
   uint32_t millis_ = 0;
   uint32_t start_time_ = 0;
@@ -162,7 +165,9 @@ void SetupStandardAudioLow() {
   }
   dynamic_mixer.streams_[NELEM(wav_players)] = &beeper;
 #ifndef DISABLE_TALKIE
+#ifndef KEEP_MINIMUM_TALKIE_ONLY                                     // added by Oli
   dynamic_mixer.streams_[NELEM(wav_players)+1] = &talkie;
+#endif  // KEEP_MINIMUM_TALKIE_ONLY                                  // added by Oli
 #endif
 }
 
@@ -174,19 +179,23 @@ void SetupStandardAudio() {
 
 void SaySDInitError(int error) {
 #ifndef DISABLE_TALKIE
+#ifndef KEEP_MINIMUM_TALKIE_ONLY                                     // added by Oli
   talkie.Say(spS);
   talkie.Say(spD);
   talkie.Say(spSTART);
   talkie.SayNumber(error);
+#endif  // KEEP_MINIMUM_TALKIE_ONLY                                  // added by Oli
 #endif
 }
 
 void SaySDCheckError(int error) {
 #ifndef DISABLE_TALKIE
+#ifndef KEEP_MINIMUM_TALKIE_ONLY                                     // added by Oli
   talkie.Say(spS);
   talkie.Say(spD);
   talkie.Say(spCHECK);
   talkie.SayNumber(error);
+#endif  // KEEP_MINIMUM_TALKIE_ONLY                                  // added by Oli
 #endif
 }
 
