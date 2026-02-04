@@ -13,13 +13,17 @@ BatteryMonitor() : reader_(batteryLevelPin, INPUT
 #endif
    ) {}
   const char* name() override { return "BatteryMonitor"; }
+
   float battery() const {
     return last_voltage_;
   }
+
   void SetLoad(bool on) {
     loaded_ = on;
   }
+
   bool low() const { return low_count_ > 1000; }
+
   float battery_percent() {
     // Energy is roughly proportional to voltage squared.
     float v = battery();
@@ -28,6 +32,7 @@ BatteryMonitor() : reader_(batteryLevelPin, INPUT
     return 100.0 * clamp((v * v - min_v * min_v) / (max_v * max_v - min_v * min_v), 0, 1);
 //    return 100.0 * (v - min_v) / (max_v - min_v);
   }
+
   void SetPinHigh(bool go_high) {
     if (go_high) {
       pinMode(batteryLevelPin, OUTPUT);
@@ -42,11 +47,13 @@ BatteryMonitor() : reader_(batteryLevelPin, INPUT
       last_voltage_read_time_ = micros();
     }
   }
+
 protected:
   void Setup() override {
     last_voltage_ = battery_now();
     SetPinHigh(false);
   }
+
   void Loop() override {
     if (monitor.ShouldPrint(Monitoring::MonitorBattery) ||
         millis() - last_print_millis_ > 60000) {               // changed by Oli (was 20000)
@@ -96,6 +103,7 @@ protected:
       float v = battery();
       STDOUT.println(v);
 #if defined(ENABLE_AUDIO) && !defined(DISABLE_TALKIE) && !defined(KEEP_MINIMUM_TALKIE_ONLY) // && !defined(KEEP_MINIMUM_TALKIE_ONLY) added by Oli
+    // maybe we could use "sound_library_.Say...;" instead of "talkie.Say...;" ? // added by Oli
       talkie.SayDigit((int)floorf(v));
       talkie.Say(spPOINT);
       talkie.SayDigit(((int)floorf(v * 10)) % 10);
@@ -117,6 +125,7 @@ protected:
 #endif
     return false;
   }
+
 private:
   float battery_now() {
     // This is the volts on the battery monitor pin.
