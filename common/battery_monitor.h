@@ -7,8 +7,7 @@
 
 class BatteryMonitor : Looper, CommandParser, StateMachine {
 public:
-BatteryMonitor() : reader_(batteryLevelPin,
-			     INPUT
+BatteryMonitor() : reader_(batteryLevelPin, INPUT
 #if VERSION_MAJOR == 5 || VERSION_MAJOR == 6
                              , 10e-6
 #endif
@@ -50,7 +49,7 @@ protected:
   }
   void Loop() override {
     if (monitor.ShouldPrint(Monitoring::MonitorBattery) ||
-        millis() - last_print_millis_ > 20000) {
+        millis() - last_print_millis_ > 60000) {               // changed by Oli (was 20000)
       STDOUT.print("Battery voltage: ");
       STDOUT.println(battery());
       last_print_millis_ = millis();
@@ -96,7 +95,7 @@ protected:
       STDOUT.print("Battery voltage: ");
       float v = battery();
       STDOUT.println(v);
-#if defined(ENABLE_AUDIO) && !defined(DISABLE_TALKIE)
+#if defined(ENABLE_AUDIO) && !defined(DISABLE_TALKIE) && !defined(KEEP_MINIMUM_TALKIE_ONLY) // && !defined(KEEP_MINIMUM_TALKIE_ONLY) added by Oli
       talkie.SayDigit((int)floorf(v));
       talkie.Say(spPOINT);
       talkie.SayDigit(((int)floorf(v * 10)) % 10);
