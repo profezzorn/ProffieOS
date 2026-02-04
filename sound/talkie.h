@@ -697,6 +697,7 @@ public:
     interrupts();
   }
 
+#ifndef KEEP_MINIMUM_TALKIE_ONLY                                   // added by Oli
   void SayDigit(int digit) {
     switch (digit) {
       case 0: Say(spZERO);  break;
@@ -766,6 +767,7 @@ public:
     if (x > 1) number -= number % x;
     SayNumber(number);
   }
+#endif  // KEEP_MINIMUM_TALKIE_ONLY                                  // added by Oli
 
   // The ROMs used with the TI speech were serial, not byte wide.
   // Here's a handy routine to flip ROM data which is usually reversed.
@@ -958,6 +960,68 @@ public:
   bool Parse(const char *cmd, const char* arg) override {
     uint32_t rate = 0;
     if (!strcmp(cmd, "say") && arg) {
+#ifdef KEEP_MINIMUM_TALKIE_ONLY                                      // added by Oli
+      if (!strcmp(arg, "nos")) {                                     // added by Oli
+        Say(spNO);                                                   // added by Oli
+        Say(spS);                                                    // added by Oli
+        Say(spD);                                                    // added by Oli
+        return true;                                                 // added by Oli
+      }                                                              // added by Oli
+      if (!strcmp(arg, "nof")) {                                     // added by Oli
+        Say(spNO);                                                   // added by Oli
+        Say(spF);                                                    // added by Oli
+        Say(spO);                                                    // added by Oli
+        Say(spN);                                                    // added by Oli
+        Say(spT);                                                    // added by Oli
+        return true;                                                 // added by Oli
+      }                                                              // added by Oli
+      if (!strcmp(arg, "fer")) {                                     // added by Oli
+        Say(spF);                                                    // added by Oli
+        Say(spO);                                                    // added by Oli
+        Say(spN);                                                    // added by Oli
+        Say(spT);                                                    // added by Oli
+        Say(spERROR);                                                // added by Oli
+        return true;                                                 // added by Oli
+      }                                                              // added by Oli
+#else  // KEEP_MINIMUM_TALKIE_ONLY                                   // added by Oli
+#ifdef OLD_PROFFIE_TALKIE  // (Military format)                      // added by Oli
+      //These take slightly less memory than the modern ones         // added by Oli
+      if (!strcmp(arg, "bfd")) {                                     // added by Oli
+        Say(spERRORIN);                                              // added by Oli
+        Say(spFONTDIRECTORY);                                        // added by Oli
+        return true;                                                 // added by Oli
+      }                                                              // added by Oli
+      if (!strcmp(arg, "bof")) {                                     // added by Oli
+        Say(spFONTDIRECTORY);                                        // added by Oli
+        Say(spNOTFOUND);                                             // added by Oli
+        return true;                                                 // added by Oli
+      }                                                              // added by Oli
+      if (!strcmp(arg, "ftl")) {                                     // added by Oli
+        Say(spFONTDIRECTORY);                                        // added by Oli
+        Say(spTOOLONG);                                              // added by Oli
+        return true;                                                 // added by Oli
+      }                                                              // added by Oli
+      if (!strcmp(arg, "sd")) {                                      // added by Oli
+        Say(spSDCARD);                                               // added by Oli
+        Say(spNOTFOUND);                                             // added by Oli
+        return true;                                                 // added by Oli
+      }                                                              // added by Oli
+      if (!strcmp(arg, "bb")) {                                      // added by Oli
+        Say(spERRORIN);                                              // added by Oli
+        Say(spBLADEARRAY);                                           // added by Oli
+        return true;                                                 // added by Oli
+      }                                                              // added by Oli
+      if (!strcmp(arg, "bp")) {                                      // added by Oli
+        Say(spERRORIN);                                              // added by Oli
+        Say(spPRESETARRAY);                                          // added by Oli
+        return true;                                                 // added by Oli
+      }                                                              // added by Oli
+      if (!strcmp(arg, "lb")) {                                      // added by Oli
+        Say(spLOWBATTERY);                                           // added by Oli
+        return true;                                                 // added by Oli
+      }                                                              // added by Oli
+#else  // OLD_PROFFIE_TALKIE  // (Modern format)                     // added by Oli
+      // These take slightly more memory but sound the same (as bad) // added by Oli
       if (!strcmp(arg, "bfd")) {
         Say(talkie_error_in_15, 15);
         Say(talkie_font_directory_15, 15);
@@ -992,6 +1056,7 @@ public:
         Say(talkie_low_battery_15, 15);
         return true;
       }
+#endif  // OLD_PROFFIE_TALKIE                                        // added by Oli
       if (!strcmp(arg, "vp")) {
         Say(talkie_voice_pack_15, 25);
         Say(talkie_not_found_15, 15);
@@ -1003,6 +1068,7 @@ public:
         Say(talkie_version_15, 15);
         return true;
       }
+#endif  // KEEP_MINIMUM_TALKIE_ONLY                                  // added by Oli
     }
     if (!strcmp(cmd, "talkie")) rate = 25;
     if (!strcmp(cmd, "talkie_slow")) rate = 25;
