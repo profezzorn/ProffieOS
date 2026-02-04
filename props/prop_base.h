@@ -1229,7 +1229,7 @@ public:
     if (b & BUTTON_LEFT) STDOUT.print("Left");
     if (b & BUTTON_RIGHT) STDOUT.print("Right");
     if (b & BUTTON_SELECT) STDOUT.print("Select");
-    if (b & BUTTON_BLADE_DETECT)  STDOUT.print("BladeDetect");
+    if (b & BUTTON_BLADE_DETECT) STDOUT.print("BladeDetect");
     if (b & MODE_ON) STDOUT.print("On");
   }
 
