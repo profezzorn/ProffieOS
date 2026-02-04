@@ -1,6 +1,8 @@
 #ifndef SOUND_SOUND_LIBRARY_H
 #define SOUND_SOUND_LIBRARY_H
 
+#ifdef ENABLE_AUDIO
+
 #include "sound_queue.h"
 
 // Sound library
@@ -589,4 +591,5 @@ public:
 // Please don't forget to call sound_library_v2->init();
 #define sound_library_v2 (*getPtr<SoundLibraryV2>())
 
+#endif  // ENABLE_AUDIO
 #endif
