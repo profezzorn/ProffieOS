@@ -1,6 +1,8 @@
 #ifndef DISPLAY_LAYER_CONTROLLER_H
 #define DISPLAY_LAYER_CONTROLLER_H
 
+#include "../sound/audio_stream_work.h"
+
 /*
 
 Layer Controller: Tells displays what to do.
@@ -79,13 +81,25 @@ struct BatteryVariableSource : public VariableSource {
 BatteryVariableSource battery_variable_source;
 
 struct SoundLevelVariableSource : public VariableSource {
-  int percent() override { return clampi32(sqrtf(dynamic_mixer.audio_volume()) / 1638, 0, 100); };
+  int percent() override {
+#ifdef ENABLE_AUDIO
+    return clampi32(sqrtf(dynamic_mixer.audio_volume()) / 1638, 0, 100);
+#else
+    return 0;
+#endif
+  }
 };
 
 SoundLevelVariableSource sound_level_variable_source;
 
 struct VolumeVariableSource : public VariableSource {
-  int percent() override { return clampi32(dynamic_mixer.get_volume() * 100 / VOLUME, 0, 100); };
+  int percent() override {
+#ifdef ENABLE_AUDIO
+    return clampi32(dynamic_mixer.get_volume() * 100 / VOLUME, 0, 100);
+#else
+    return 0;
+#endif
+  }
 };
 
 VolumeVariableSource volume_variable_source;
@@ -227,7 +241,7 @@ protected:
     return bps_bytes_ / (float)bps_millis_;
   }
 
-  
+
   void CloseFiles() override {
     TRACE(RGB565, "CloseFiles");
     file_.Close();
@@ -250,13 +264,13 @@ protected:
     // TRACE2(RGB565_DATA, "file_size_=", file_size_);
     // TRACE2(RGB565_DATA, "TELL()=", TELL());
     // TRACE2(RGB565_DATA, "ib.size=", input_buffer_.size());
-    
+
     if (BUFATEOF()) {
       TRACE2(RGB565_DATA, " BUFATEOF=", BUFATEOF());
       return 0;
     }
     // TRACE(RGB565_DATA, " return 1");
-    
+
     // Always low priority
     return 1;
   }
@@ -266,7 +280,7 @@ protected:
   uint32_t bps_bytes_ = 0;
   uint32_t bps_millis_ = 0;
   uint32_t bps_last_millis_ = 0;
-  
+
   POLYHOLE;
   POAtomic<bool> stream_locked_;
   volatile uint32_t file_size_ = 0xFFFFFFFFU;
