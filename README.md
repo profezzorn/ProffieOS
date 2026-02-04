@@ -2,6 +2,8 @@
 Changes includes, but not limited to:
 - muliple blade detect code added in: part 1/5 to events.h 2/5 to config, part 3/5 to props,
   part 4/5 to ProffieOS.ino & part 5A/5, 5B/5 & 5C/5 to prop_base.h
+- keep minimum talkie only: "no sd", "no font" & "font error" instead of "sd card not found",
+  "font directory not found" & "error in font directory" the rest is either absent or replaced.
 - config/olicomplex1.6.03.5_BT_re-organized.h added (my config - as a multi_prop config example)
 - prop/detonator_Oli_buttons.h                added
 - prop/jetpack_Oli_buttons.h                  added
