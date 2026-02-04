@@ -438,7 +438,7 @@ public:
         FindBladeAgain();
         SaberBase::DoBladeDetect(false);
         return true;
- #endif
+#endif
     }
     return false;
   }
@@ -519,6 +519,8 @@ public:
 #ifdef PROP_BOTTOM
 
 #define ONCE_PER_BLASTER_EFFECT(X)    \
+  X(auto)                             \
+  X(stun)                             \
   X(blast)                            \
   X(reload)                           \
   X(empty)                            \
@@ -532,6 +534,7 @@ public:
 struct BlasterDisplayConfigFile : public ConfigFile {
   BlasterDisplayConfigFile() { link(&font_config); }
   void iterateVariables(VariableOP *op) override {
+    CONFIG_VARIABLE2(ProffieOSStunImageDuration,     1000.0f);
     CONFIG_VARIABLE2(ProffieOSFireImageDuration,     1000.0f);
     CONFIG_VARIABLE2(ProffieOSReloadImageDuration,   1000.0f);
     CONFIG_VARIABLE2(ProffieOSEmptyImageDuration,    1000.0f);
@@ -541,6 +544,8 @@ struct BlasterDisplayConfigFile : public ConfigFile {
     CONFIG_VARIABLE2(ProffieOSDestructImageDuration, 10000.0f);
   }
 
+  // for OLED displays, the time a stun.bmp     will play
+  float ProffieOSStunImageDuration;
   // for OLED displays, the time a blast.bmp    will play
   float ProffieOSFireImageDuration;
   // for OLED displays, the time a reload.bmp   will play
@@ -557,7 +562,6 @@ struct BlasterDisplayConfigFile : public ConfigFile {
   float ProffieOSDestructImageDuration;
 };
 
-
 template<typename PREFIX = ByteArray<>>
 struct BlasterDisplayEffects  {
   BlasterDisplayEffects() : dummy_(0) ONCE_PER_BLASTER_EFFECT(INIT_IMG) {}
@@ -568,15 +572,29 @@ struct BlasterDisplayEffects  {
 template<int Width, class col_t, typename PREFIX = ByteArray<>>
 class BlasterDisplayController : public StandardDisplayController<Width, col_t, PREFIX> {
 public:
-  BlasterDisplayEffects<PREFIX> img_;
+  BlasterDisplayEffects<PREFIX> &img_;
   BlasterDisplayConfigFile &blaster_font_config;
   BlasterDisplayController() :
     img_(*getPtr<BlasterDisplayEffects<PREFIX>>()),
     blaster_font_config(*getPtr<BlasterDisplayConfigFile>()) {
   }
 
+  void ShowDefault(bool ignore_lockup = false) override {
+    if (SaberBase::IsOn() &&
+        SaberBase::Lockup() == SaberBase::LOCKUP_AUTOFIRE &&
+        img_.IMG_auto &&
+        !ignore_lockup) {
+      this->SetFile(&img_.IMG_auto, 3600000.0);
+      return;
+    }
+    StandardDisplayController<Width, col_t, PREFIX>::ShowDefault(ignore_lockup);
+  }
+
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
+      case EFFECT_STUN:
+        this->ShowFileWithSoundLength(&img_.IMG_stun,    blaster_font_config.ProffieOSStunImageDuration);
+        break;
       case EFFECT_FIRE:
         this->ShowFileWithSoundLength(&img_.IMG_blast,   blaster_font_config.ProffieOSFireImageDuration);
         break;
@@ -612,13 +630,26 @@ public:
 #endif  // INCLUDE_SSD1306
 
 template<int W, int H, typename PREFIX = ConcatByteArrays<typename NumberToByteArray<W>::type, ByteArray<'x'>, typename NumberToByteArray<H>::type>>
-class BlasterColorDisplayController : public StandarColorDisplayController<W, H, PREFIX> {
+class BlasterColorDisplayController : public StandardColorDisplayController<W, H, PREFIX> {
 public:
   template<int w, int h>
-  explicit BlasterColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : StandarColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_BLASTER_EFFECT(INIT_SCR) {
+  explicit BlasterColorDisplayController(SizedLayeredScreenControl<w, h>* screen) : StandardColorDisplayController<W, H, PREFIX>(screen) ONCE_PER_BLASTER_EFFECT(INIT_SCR) {
   }
+
+  void ShowDefault(bool ignore_lockup = false) override {
+    if (SaberBase::IsOn() &&
+        SaberBase::Lockup() == SaberBase::LOCKUP_AUTOFIRE &&
+        SCR_auto &&
+        !ignore_lockup) {
+      this->scr_.Play(&SCR_auto);
+      return;
+    }
+    StandardColorDisplayController<W, H, PREFIX>::ShowDefault(ignore_lockup);
+  }
+
   void SB_Effect2(EffectType effect, EffectLocation location) override {
     switch (effect) {
+      case EFFECT_STUN:     this->scr_.Play(&SCR_stun);    break;
       case EFFECT_FIRE:     this->scr_.Play(&SCR_blast);   break;
       case EFFECT_RELOAD:   this->scr_.Play(&SCR_reload);  break;
       case EFFECT_EMPTY:    this->scr_.Play(&SCR_empty);   break;
@@ -626,7 +657,7 @@ public:
       case EFFECT_CLIP_IN:  this->scr_.Play(&SCR_clipin);  break;
       case EFFECT_CLIP_OUT: this->scr_.Play(&SCR_clipout); break;
       default:
-        StandarColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
+        StandardColorDisplayController<W, H, PREFIX>::SB_Effect2(effect, location);
     }
   }
 

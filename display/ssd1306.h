@@ -355,7 +355,7 @@ public:
     return last_delay_ = FillFrameBuffer2(advance);
   }
 
-  void ShowDefault(bool ignore_lockup = false) {
+  virtual void ShowDefault(bool ignore_lockup = false) {
     screen_ = SCREEN_PLI;
     t_ = 0;
     if (SaberBase::IsOn()) {
