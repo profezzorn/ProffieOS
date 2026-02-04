@@ -1230,4 +1230,4 @@ constexpr uint8_t SSD1306Template<WIDTH, col_t, POWER_PIN>::transactions[];
 
 using SSD1306 = SSD1306Template<128, uint32_t>;
 
-#endif // DISPLAY_SSD1306_H
+#endif  // DISPLAY_SSD1306_H
