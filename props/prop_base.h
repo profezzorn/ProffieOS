@@ -295,13 +295,13 @@ public:
       if (SFX_lswing) {
         smooth_swing_cfx_config.ReadInCurrentDir("font_config.txt");
         // map CFX values to Proffie (sourced from font_config.txt in font folder)
-        smooth_swing_config.SwingSensitivity          = smooth_swing_cfx_config.smooth_sens;
-        smooth_swing_config.MaximumHumDucking         = smooth_swing_cfx_config.smooth_dampen;
-        smooth_swing_config.SwingSharpness            = smooth_swing_cfx_config.smooth_sharp;
-        smooth_swing_config.SwingStrengthThreshold    = smooth_swing_cfx_config.smooth_gate;
-        smooth_swing_config.Transition1Degrees        = smooth_swing_cfx_config.smooth_width1;
-        smooth_swing_config.Transition2Degrees        = smooth_swing_cfx_config.smooth_width2;
-        smooth_swing_config.MaxSwingVolume            = smooth_swing_cfx_config.smooth_gain * 3 / 100;
+        smooth_swing_config.SwingSensitivity = smooth_swing_cfx_config.smooth_sens;
+        smooth_swing_config.MaximumHumDucking = smooth_swing_cfx_config.smooth_dampen;
+        smooth_swing_config.SwingSharpness = smooth_swing_cfx_config.smooth_sharp;
+        smooth_swing_config.SwingStrengthThreshold = smooth_swing_cfx_config.smooth_gate;
+        smooth_swing_config.Transition1Degrees = smooth_swing_cfx_config.smooth_width1;
+        smooth_swing_config.Transition2Degrees = smooth_swing_cfx_config.smooth_width2;
+        smooth_swing_config.MaxSwingVolume = smooth_swing_cfx_config.smooth_gain * 3 / 100;
         smooth_swing_config.AccentSwingSpeedThreshold = smooth_swing_cfx_config.hswing;
         smooth_swing_config.Version = 2;
       } else if (!SFX_swingl) {
@@ -650,7 +650,7 @@ public:
     PVLOG_STATUS << "blade = " << best_config << "\n";
     current_config = blades + best_config;
 
-#define ACTIVATE(N) do {     \
+#define ACTIVATE(N) do {                            \
     if (!current_config->blade##N) goto bad_blade;  \
     current_config->blade##N->Activate(N);          \
   } while(0);
@@ -1221,16 +1221,16 @@ public:
 #endif  // DISABLE_COLOR_CHANGE
 
   virtual void PrintButton(uint32_t b) {
-    if (b & BUTTON_POWER)         STDOUT.print("Power");
-    if (b & BUTTON_AUX)           STDOUT.print("Aux");
-    if (b & BUTTON_AUX2)          STDOUT.print("Aux2");
-    if (b & BUTTON_UP)            STDOUT.print("Up");
-    if (b & BUTTON_DOWN)          STDOUT.print("Down");
-    if (b & BUTTON_LEFT)          STDOUT.print("Left");
-    if (b & BUTTON_RIGHT)         STDOUT.print("Right");
-    if (b & BUTTON_SELECT)        STDOUT.print("Select");
+    if (b & BUTTON_POWER) STDOUT.print("Power");
+    if (b & BUTTON_AUX) STDOUT.print("Aux");
+    if (b & BUTTON_AUX2) STDOUT.print("Aux2");
+    if (b & BUTTON_UP) STDOUT.print("Up");
+    if (b & BUTTON_DOWN) STDOUT.print("Down");
+    if (b & BUTTON_LEFT) STDOUT.print("Left");
+    if (b & BUTTON_RIGHT) STDOUT.print("Right");
+    if (b & BUTTON_SELECT) STDOUT.print("Select");
     if (b & BUTTON_BLADE_DETECT)  STDOUT.print("BladeDetect");
-    if (b & MODE_ON)              STDOUT.print("On");
+    if (b & MODE_ON) STDOUT.print("On");
   }
 
   void PrintEvent(uint32_t e) {
@@ -1561,7 +1561,7 @@ public:
     }
 #endif
 
-#endif // enable sound
+#endif // ENABLE_AUDIO
     if (!strcmp(cmd, "cd")) {
       chdir(arg);
       SaberBase::DoNewFont();
@@ -1591,7 +1591,6 @@ public:
       rotate_presets();
       return true;
     }
-
     if (!strcmp(cmd, "list_presets")) {
       CurrentPreset tmp;
       for (int i = 0; ; i++) {
@@ -1601,19 +1600,16 @@ public:
       }
       return true;
     }
-
     if (!strcmp(cmd, "set_font") && arg) {
       current_preset_.font = mkstr(arg);
       current_preset_.Save();
       return true;
     }
-
     if (!strcmp(cmd, "set_track") && arg) {
       current_preset_.track = mkstr(arg);
       current_preset_.Save();
       return true;
     }
-
     if (!strcmp(cmd, "set_name") && arg) {
       current_preset_.name = mkstr(arg);
       current_preset_.Save();
@@ -1632,19 +1628,16 @@ public:
       current_preset_.SaveAt(pos);
       return true;
     }
-
     if (!strcmp(cmd, "duplicate_preset") && arg) {
       int32_t pos = strtol(arg, NULL, 0);
       current_preset_.preset_num = -1;
       current_preset_.SaveAt(pos);
       return true;
     }
-
     if (!strcmp(cmd, "delete_preset")) {
       current_preset_.SaveAt(-1);
       return true;
     }
-
     if (!strcmp(cmd, "show_current_preset")) {
       current_preset_.Print();
       return true;
@@ -1747,14 +1740,12 @@ public:
       if (!SetMute(true)) SetMute(false);
       return true;
     }
-
     if (!strcmp(cmd, "set_preset") && arg) {
       int preset = strtol(arg, NULL, 0);
       SaveState(preset);
       SetPreset(preset, true);
       return true;
     }
-
     if (!strcmp(cmd, "change_preset") && arg) {
       int preset = strtol(arg, NULL, 0);
       if (preset != current_preset_.preset_num) {
@@ -1794,7 +1785,6 @@ public:
       LOCK_SD(false);
       return true;
     }
-
     if (!strcmp(cmd, "list_fonts")) {
       LOCK_SD(true);
       for (LSFS::Iterator iter("/"); iter; ++iter) {
@@ -1838,7 +1828,6 @@ public:
       default:
         break;
     }
-
     if (current_mode->mode_Event2(button, event, current_modifiers | (IsOn() ? MODE_ON : MODE_OFF))) {
       current_modifiers = 0;
       return true;
