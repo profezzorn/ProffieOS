@@ -984,8 +984,8 @@ public:
         return true;                                                 // added by Oli
       }                                                              // added by Oli
 #else  // KEEP_MINIMUM_TALKIE_ONLY                                   // added by Oli
-#ifdef OLD_PROFFIE_TALKIE  // (Military voice)                       // added by Oli
-      //These take slightly less memory and are easier to understand // added by Oli
+#ifdef OLD_PROFFIE_TALKIE  // (Military format)                      // added by Oli
+      //These take slightly less memory than the modern ones         // added by Oli
       if (!strcmp(arg, "bfd")) {                                     // added by Oli
         Say(spERRORIN);                                              // added by Oli
         Say(spFONTDIRECTORY);                                        // added by Oli
@@ -1020,8 +1020,8 @@ public:
         Say(spLOWBATTERY);                                           // added by Oli
         return true;                                                 // added by Oli
       }                                                              // added by Oli
-#else  // OLD_PROFFIE_TALKIE  // (Modern voice)                      // added by Oli
-      //These take slightly more memory and are harder to understand // added by Oli
+#else  // OLD_PROFFIE_TALKIE  // (Modern format)                     // added by Oli
+      // These take slightly more memory but sound the same (as bad) // added by Oli
       if (!strcmp(arg, "bfd")) {
         Say(talkie_error_in_15, 15);
         Say(talkie_font_directory_15, 15);
