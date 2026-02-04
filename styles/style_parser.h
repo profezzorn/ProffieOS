@@ -17,17 +17,17 @@ public:
   BladeStyle* make() override {
 #if NUM_BLADES == 0
     return nullptr;
-#else    
+#else
     // Technically we should call run on these.
     IntArg<1, 0> preset_arg;
     IntArg<2, 1> style_arg;
     int preset = preset_arg.getInteger(0);
     int style = style_arg.getInteger(0);
-    
+
     StyleAllocator allocator = nullptr;
     if (preset < 0 || preset >= (int)(current_config->num_presets))
       return nullptr;
-    
+
     Preset* p = current_config->presets + preset;
 #define GET_PRESET_STYLE(N) if (style == N) allocator = p->style_allocator##N;
     ONCEPERBLADE(GET_PRESET_STYLE);
@@ -36,7 +36,7 @@ public:
     // ArgParser ap(SkipWord(CurrentArgParser->GetArg(2, "", "")));
     // CurrentArgParser = &ap;
     return allocator->make();
-#endif    
+#endif
   }
 };
 
@@ -126,7 +126,6 @@ public:
 	return named_styles + i;
       }
     }
-
     return nullptr;
   }
 
@@ -138,7 +137,7 @@ public:
     return style->style_allocator->make();
   }
 
-  // Returns true if the listed style refereces the specified argument.
+  // Returns true if the listed style references the specified argument.
   bool UsesArgument(const char* str, int argument) {
     NamedStyle* style = FindStyle(str);
     if (!style) return false;
@@ -433,7 +432,7 @@ public:
     if (strlen(ret) != len) {
       STDOUT << "FATAL ERROR IN COPYARGUMENTS: len = " << len << " strlen = " << strlen(ret) << "\n";
     }
-#endif    
+#endif
     return LSPtr<char>(ret);
   }
 
@@ -470,7 +469,7 @@ public:
     if (strlen(ret) != len) {
       STDOUT << "FATAL ERROR IN COPYCOLORARGUMENTS: len = " << len << " strlen = " << strlen(ret) << "\n";
     }
-#endif    
+#endif
     return LSPtr<char>(ret);
   }
 
