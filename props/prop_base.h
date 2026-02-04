@@ -295,13 +295,13 @@ public:
       if (SFX_lswing) {
         smooth_swing_cfx_config.ReadInCurrentDir("font_config.txt");
         // map CFX values to Proffie (sourced from font_config.txt in font folder)
-        smooth_swing_config.SwingSensitivity = smooth_swing_cfx_config.smooth_sens;
-        smooth_swing_config.MaximumHumDucking = smooth_swing_cfx_config.smooth_dampen;
-        smooth_swing_config.SwingSharpness = smooth_swing_cfx_config.smooth_sharp;
-        smooth_swing_config.SwingStrengthThreshold = smooth_swing_cfx_config.smooth_gate;
-        smooth_swing_config.Transition1Degrees = smooth_swing_cfx_config.smooth_width1;
-        smooth_swing_config.Transition2Degrees = smooth_swing_cfx_config.smooth_width2;
-        smooth_swing_config.MaxSwingVolume = smooth_swing_cfx_config.smooth_gain * 3 / 100;
+        smooth_swing_config.SwingSensitivity          = smooth_swing_cfx_config.smooth_sens;
+        smooth_swing_config.MaximumHumDucking         = smooth_swing_cfx_config.smooth_dampen;
+        smooth_swing_config.SwingSharpness            = smooth_swing_cfx_config.smooth_sharp;
+        smooth_swing_config.SwingStrengthThreshold    = smooth_swing_cfx_config.smooth_gate;
+        smooth_swing_config.Transition1Degrees        = smooth_swing_cfx_config.smooth_width1;
+        smooth_swing_config.Transition2Degrees        = smooth_swing_cfx_config.smooth_width2;
+        smooth_swing_config.MaxSwingVolume            = smooth_swing_cfx_config.smooth_gain * 3 / 100;
         smooth_swing_config.AccentSwingSpeedThreshold = smooth_swing_cfx_config.hswing;
         smooth_swing_config.Version = 2;
       } else if (!SFX_swingl) {
@@ -865,6 +865,7 @@ public:
     SHAKE_FWD,
     SHAKE_REW
   };
+
   struct Stroke {
     StrokeType type;
     uint32_t start_millis;
@@ -1112,8 +1113,8 @@ public:
     }
   }
 
-
   uint32_t last_motion_call_millis_;
+
   void CallMotion() {
     if (millis() == last_motion_call_millis_) return;
     if (!fusor.ready()) return;
@@ -1126,6 +1127,7 @@ public:
       STDOUT << "ACCEL: " << fusor.accel() << "\n";
     }
   }
+
   volatile bool clash_pending1_ = false;
   volatile bool pending_clash_is_stab1_ = false;
   volatile float pending_clash_strength1_ = 0.0;
@@ -1180,7 +1182,6 @@ public:
 
   virtual void mode_activate(bool onreturn) {}
 
-
 #ifdef IDLE_OFF_TIME
   uint32_t last_on_time_;
 #endif
@@ -1220,16 +1221,16 @@ public:
 #endif  // DISABLE_COLOR_CHANGE
 
   virtual void PrintButton(uint32_t b) {
-    if (b & BUTTON_POWER) STDOUT.print("Power");
-    if (b & BUTTON_AUX) STDOUT.print("Aux");
-    if (b & BUTTON_AUX2) STDOUT.print("Aux2");
-    if (b & BUTTON_UP) STDOUT.print("Up");
-    if (b & BUTTON_DOWN) STDOUT.print("Down");
-    if (b & BUTTON_LEFT) STDOUT.print("Left");
-    if (b & BUTTON_RIGHT) STDOUT.print("Right");
-    if (b & BUTTON_SELECT) STDOUT.print("Select");
-    if (b & BUTTON_BLADE_DETECT) STDOUT.print("BladeDetect");
-    if (b & MODE_ON) STDOUT.print("On");
+    if (b & BUTTON_POWER)         STDOUT.print("Power");
+    if (b & BUTTON_AUX)           STDOUT.print("Aux");
+    if (b & BUTTON_AUX2)          STDOUT.print("Aux2");
+    if (b & BUTTON_UP)            STDOUT.print("Up");
+    if (b & BUTTON_DOWN)          STDOUT.print("Down");
+    if (b & BUTTON_LEFT)          STDOUT.print("Left");
+    if (b & BUTTON_RIGHT)         STDOUT.print("Right");
+    if (b & BUTTON_SELECT)        STDOUT.print("Select");
+    if (b & BUTTON_BLADE_DETECT)  STDOUT.print("BladeDetect");
+    if (b & MODE_ON)              STDOUT.print("On");
   }
 
   void PrintEvent(uint32_t e) {
@@ -1240,27 +1241,27 @@ public:
       e -= (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED) * cnt;
     }
     switch (e) {
-      case EVENT_NONE: STDOUT.print("None"); break;
-      case EVENT_PRESSED: STDOUT.print("Pressed"); break;
-      case EVENT_RELEASED: STDOUT.print("Released"); break;
-      case EVENT_HELD: STDOUT.print("Held"); break;
-      case EVENT_HELD_MEDIUM: STDOUT.print("HeldMedium"); break;
-      case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
-      case EVENT_CLICK_SHORT: STDOUT.print("Shortclick"); break;
-      case EVENT_CLICK_LONG: STDOUT.print("Longclick"); break;
-      case EVENT_SAVED_CLICK_SHORT: STDOUT.print("SavedShortclick"); break;
-      case EVENT_LATCH_ON: STDOUT.print("On"); break;
-      case EVENT_LATCH_OFF: STDOUT.print("Off"); break;
-      case EVENT_STAB: STDOUT.print("Stab"); break;
-      case EVENT_SWING: STDOUT.print("Swing"); break;
-      case EVENT_SHAKE: STDOUT.print("Shake"); break;
-      case EVENT_TWIST: STDOUT.print("Twist"); break;
-      case EVENT_TWIST_LEFT: STDOUT.print("TwistLeft"); break;
-      case EVENT_TWIST_RIGHT: STDOUT.print("TwistRight"); break;
-      case EVENT_CLASH: STDOUT.print("Clash"); break;
-      case EVENT_THRUST: STDOUT.print("Thrust"); break;
-      case EVENT_PUSH: STDOUT.print("Push"); break;
-      default: STDOUT.print("?"); STDOUT.print(e); break;
+      case EVENT_NONE:              STDOUT.print("None");             break;
+      case EVENT_PRESSED:           STDOUT.print("Pressed");          break;
+      case EVENT_RELEASED:          STDOUT.print("Released");         break;
+      case EVENT_HELD:              STDOUT.print("Held");             break;
+      case EVENT_HELD_MEDIUM:       STDOUT.print("HeldMedium");       break;
+      case EVENT_HELD_LONG:         STDOUT.print("HeldLong");         break;
+      case EVENT_CLICK_SHORT:       STDOUT.print("Shortclick");       break;
+      case EVENT_CLICK_LONG:        STDOUT.print("Longclick");        break;
+      case EVENT_SAVED_CLICK_SHORT: STDOUT.print("SavedShortclick");  break;
+      case EVENT_LATCH_ON:          STDOUT.print("On");               break;
+      case EVENT_LATCH_OFF:         STDOUT.print("Off");              break;
+      case EVENT_STAB:              STDOUT.print("Stab");             break;
+      case EVENT_SWING:             STDOUT.print("Swing");            break;
+      case EVENT_SHAKE:             STDOUT.print("Shake");            break;
+      case EVENT_TWIST:             STDOUT.print("Twist");            break;
+      case EVENT_TWIST_LEFT:        STDOUT.print("TwistLeft");        break;
+      case EVENT_TWIST_RIGHT:       STDOUT.print("TwistRight");       break;
+      case EVENT_CLASH:             STDOUT.print("Clash");            break;
+      case EVENT_THRUST:            STDOUT.print("Thrust");           break;
+      case EVENT_PUSH:              STDOUT.print("Push");             break;
+      default: STDOUT.print("?");   STDOUT.print(e);                  break;
     }
     if (cnt) {
       STDOUT.print('#');
@@ -1853,11 +1854,13 @@ public:
   virtual bool mode_Event2(enum BUTTON button, EVENT event, uint32_t modifiers) {
     return Event2(button, event, modifiers);
   }
+
   virtual bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) = 0;
 
   const char* GetStyle(int blade) {
     return current_preset_.GetStyle(blade);
   }
+
   void SetStyle(int blade, LSPtr<char> style) {
     current_preset_.SetStyle(blade, std::move(style));
     current_preset_.Save();
@@ -1869,6 +1872,7 @@ public:
     // Reload preset to make the change take effect.
     SetPreset(current_preset_.preset_num, false);
   }
+
   void SetTrack(const char* font) {
     current_preset_.track = mkstr(font);
     current_preset_.Save();
@@ -1877,6 +1881,7 @@ public:
   const char* GetFont() {
     return current_preset_.font.get();
   }
+
   const char* GetTrack() {
     return current_preset_.track.get();
   }
@@ -1884,6 +1889,7 @@ public:
   int GetPresetPosition() {
     return current_preset_.preset_num;
   }
+
   void MovePreset(int position) {
     current_preset_.SaveAt(position);
   }
@@ -1914,4 +1920,4 @@ protected:
   LoopCounter accel_loop_counter_;
 };
 
-#endif
+#endif  // PROPS_PROP_BASE_H
