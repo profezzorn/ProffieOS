@@ -2,7 +2,7 @@
 #define SOUND_AUDIO_STREAM_WORK_H
 
 #include "../common/atomic.h"
-
+#include "../common/circular_buffer.h"
 
 // AudioStreamWork is a linked list of classes that would like to
 // do some work in a software-triggered interrupt. This is used to

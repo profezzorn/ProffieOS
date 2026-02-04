@@ -46,7 +46,7 @@ struct SubMenuAllBladeEntry : public MenuEntry {
   }
 };
 
-// Blades listed in 'BLADEARRAY'  
+// Blades listed in 'BLADEARRAY'
 template<class SPEC, class SUBMENU, class SOUND, class BLADEARRAY>
 struct SubMenuBladeEntry : public MenuEntry {
   static const int size = sizeof(BLADEARRAY::data);
@@ -62,6 +62,7 @@ struct SubMenuBladeEntry : public MenuEntry {
   }
 };
 
+#ifdef ENABLE_AUDIO
 // CMD and arg are expected to be ByteArray.
 template<class CMD, class ARG, class SOUND>
 struct CommandMenuEntry : public MenuEntry {
@@ -71,7 +72,7 @@ struct CommandMenuEntry : public MenuEntry {
     CommandParser::DoParse(CMD::str, ARG::str);
   }
 };
-
+#endif
 
 template<class SOUND>
 struct PopMenuEntry : public MenuEntry {

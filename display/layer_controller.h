@@ -1,6 +1,8 @@
 #ifndef DISPLAY_LAYER_CONTROLLER_H
 #define DISPLAY_LAYER_CONTROLLER_H
 
+#include "../sound/audio_stream_work.h"
+
 /*
 
 Layer Controller: Tells displays what to do.
@@ -77,13 +79,25 @@ struct BatteryVariableSource : public VariableSource {
 BatteryVariableSource battery_variable_source;
 
 struct SoundLevelVariableSource : public VariableSource {
-  int percent() override { return clampi32(sqrtf(dynamic_mixer.audio_volume()) / 1638, 0, 100); };
+  int percent() override {
+#ifdef ENABLE_AUDIO
+    return clampi32(sqrtf(dynamic_mixer.audio_volume()) / 1638, 0, 100);
+#else
+    return 0;
+#endif
+  }
 };
 
 SoundLevelVariableSource sound_level_variable_source;
 
 struct VolumeVariableSource : public VariableSource {
-  int percent() override { return clampi32(dynamic_mixer.get_volume() * 100 / VOLUME, 0, 100); };
+  int percent() override {
+#ifdef ENABLE_AUDIO
+    return clampi32(dynamic_mixer.get_volume() * 100 / VOLUME, 0, 100);
+#else
+    return 0;
+#endif
+  }
 };
 
 VolumeVariableSource volume_variable_source;
