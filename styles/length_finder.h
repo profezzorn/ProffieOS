@@ -11,6 +11,7 @@
 // Use this when you don't know how many LEDs are in your blade.
 // Set the blade length to 144, enter color change mode and
 // change it until no LED turns on, go back one and there you go!
+
 template<class BASE = BLACK, class LIGHTUP = WHITE>
 class LengthFinder {
 public:
@@ -18,6 +19,7 @@ public:
     BladeBase::HandleFeature(HANDLED_FEATURE_CHANGE);
     BladeBase::HandleFeature(HANDLED_FEATURE_CHANGE_TICKED);
   }
+
   void run(BladeBase* blade) {
     base_.run(blade);
     lightup_.run(blade);
@@ -34,7 +36,9 @@ public:
     if (say_it_ && millis() - last_speak_ > 3000) {
       last_speak_ = millis();
       say_it_ = false;
-#ifdef ENABLE_AUDIO
+#if defined(ENABLE_AUDIO) && !defined(KEEP_MINIMUM_TALKIE_ONLY)      // changed by Oli (was #ifdef ENABLE_AUDIO)
+    // feels like a "&& !defined(DISABLE_TALKIE)" should have been here already?
+    // maybe we could use "sound_library_.SayNumber(led_ + 1);" ?    // added by Oli
       talkie.SayNumber(led_ + 1);
 #endif
       STDOUT << "LEN=" << (led_ + 1) << "\n";
@@ -45,6 +49,7 @@ public:
     if (led == led_) return lightup_.getColor(led);
     return base_.getColor(led);
   }
+
 private:
   bool say_it_ = true;
   int led_= -1;
@@ -53,4 +58,4 @@ private:
   LIGHTUP lightup_;
 };
 
-#endif // STYLES_LENGTH_FINDER_H
+#endif  // STYLES_LENGTH_FINDER_H
