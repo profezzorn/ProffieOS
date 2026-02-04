@@ -6,7 +6,7 @@ class BladeBase;
 // Base class for blade styles.
 // Blade styles are responsible for the colors and patterns
 // of the colors of the blade. Each time run() is called, the
-// BladeStyle shouldl call blade->set() to update the color
+// BladeStyle should call blade->set() to update the color
 // of all the LEDs in the blade.
 class BladeStyle {
 public:
@@ -23,7 +23,7 @@ public:
   virtual void run(BladeBase* blade) = 0;
 
   // If this returns true, this blade style has no on/off states, so
-  // we disabllow the saber from turning on. Mostly used for charging
+  // we disable the saber from turning on. Mostly used for charging
   // styles.
   virtual bool NoOnOff() { return false; }
 
@@ -143,4 +143,4 @@ inline FunctionRunResult RunFunction(T* style, BladeBase* blade) {
   return RunFunctionHelper<T, decltype(style->run(blade))>::run(style, blade);
 };
 
-#endif
+#endif  // STYLES_BLADE_STYLE_H
