@@ -1,6 +1,8 @@
 #ifndef SOUND_SOUND_QUEUE_H
 #define SOUND_SOUND_QUEUE_H
 
+#ifdef ENABLE_AUDIO
+
 class SoundToPlayBase {
 public:
   virtual bool Play(BufferedWavPlayer* player) = 0;
@@ -263,5 +265,7 @@ private:
   bool fadeout_len_;
   VirtVec<SoundToPlayBase, QueueLength, QueueLength * 12> queue_;
 };
+
+#endif // ENABLE_AUDIO
 
 #endif // SOUND_SOUND_QUEUE_H
