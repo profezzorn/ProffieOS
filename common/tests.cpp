@@ -854,7 +854,40 @@ void test_command_line_capture() {
     
 };
 
+#include "range.h"
+
+void test_range_stripe_intersect(Range range, Range stripe, uint32_t mod) {
+  // fprintf(stderr, " test %u - %u   %u - %u MOD %u\n", range.start, range.end, stripe.start, stripe.end, mod);
+  uint32_t ret = range.intersect_with_stripes(stripe, mod);
+  uint32_t truth = 0;
+  while (stripe.start >= mod) {
+    stripe.start -= mod;
+    stripe.end -= mod;
+  }
+  for (uint32_t i = range.start; i < range.end; i++) {
+    uint32_t j = i % mod;
+    if ((j >= stripe.start && j < stripe.end) || (stripe.end > mod && j < stripe.end % mod))
+	truth++;
+  }
+  CHECK_EQ(truth, ret);
+}
+
+void test_range_stripe_intersect() {
+  for (uint32_t mod = 2; mod < 5; mod++) {
+    for (uint32_t s = 0; s < 10; s++) {
+      for (uint32_t w = 0; w < mod; w++) {
+	for (uint32_t b = 0; b < 10; b++) {
+	  for (uint32_t e = 0; e < 10; e++) {
+	    test_range_stripe_intersect(Range(b, b+e), Range(s, s+w), mod);
+	  }
+	}
+      }
+    }
+  }
+}
+
 int main() {
+  test_range_stripe_intersect();
   test_command_line_capture();
   test_patterns();
   test_effect_location();
