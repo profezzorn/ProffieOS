@@ -380,9 +380,9 @@ public:
   void AllocateBladeStyles() {
 #ifdef DYNAMIC_BLADE_LENGTH
     savestate_.ReadINIFromSaveDir("curstate");
-#define WRAP_BLADE_SHORTERNER(N) \
+#define WRAP_BLADE_SHORTERNER(N)                                                                              \
     if (savestate_.blade##N##len != -1 && savestate_.blade##N##len != current_config->blade##N->num_leds()) { \
-      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);   \
+      tmp = new BladeShortenerWrapper(savestate_.blade##N##len, tmp);                                         \
     }
 #else
 #define WRAP_BLADE_SHORTERNER(N)
@@ -1037,6 +1037,7 @@ public:
   }
 
   bool swinging_ = false;
+
   // The prop should call this from Loop() if it wants to detect swings as an event.
   void DetectSwing() {
     if (!swinging_ && fusor.swing_speed() > 250) {
@@ -1105,7 +1106,7 @@ public:
       if (current_style() && !current_style()->Charging()) {
         LowBatteryOff();
         if (millis() - last_beep_ > 15000) {  // (was 5000)
-	  STDOUT << "Low battery: " << battery_monitor.battery() << " volts\n";
+          STDOUT << "Low battery: " << battery_monitor.battery() << " volts\n";
           SaberBase::DoLowBatt();
           last_beep_ = millis();
         }
@@ -1122,7 +1123,6 @@ public:
     last_motion_call_millis_ = millis();
     SaberBase::DoAccel(fusor.accel(), clear);
     SaberBase::DoMotion(fusor.gyro(), clear);
-
     if (monitor.ShouldPrint(Monitoring::MonitorClash)) {
       STDOUT << "ACCEL: " << fusor.accel() << "\n";
     }
@@ -1131,7 +1131,6 @@ public:
   volatile bool clash_pending1_ = false;
   volatile bool pending_clash_is_stab1_ = false;
   volatile float pending_clash_strength1_ = 0.0;
-
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
 
@@ -1241,27 +1240,27 @@ public:
       e -= (EVENT_SECOND_PRESSED - EVENT_FIRST_PRESSED) * cnt;
     }
     switch (e) {
-      case EVENT_NONE:              STDOUT.print("None");             break;
-      case EVENT_PRESSED:           STDOUT.print("Pressed");          break;
-      case EVENT_RELEASED:          STDOUT.print("Released");         break;
-      case EVENT_HELD:              STDOUT.print("Held");             break;
-      case EVENT_HELD_MEDIUM:       STDOUT.print("HeldMedium");       break;
-      case EVENT_HELD_LONG:         STDOUT.print("HeldLong");         break;
-      case EVENT_CLICK_SHORT:       STDOUT.print("Shortclick");       break;
-      case EVENT_CLICK_LONG:        STDOUT.print("Longclick");        break;
-      case EVENT_SAVED_CLICK_SHORT: STDOUT.print("SavedShortclick");  break;
-      case EVENT_LATCH_ON:          STDOUT.print("On");               break;
-      case EVENT_LATCH_OFF:         STDOUT.print("Off");              break;
-      case EVENT_STAB:              STDOUT.print("Stab");             break;
-      case EVENT_SWING:             STDOUT.print("Swing");            break;
-      case EVENT_SHAKE:             STDOUT.print("Shake");            break;
-      case EVENT_TWIST:             STDOUT.print("Twist");            break;
-      case EVENT_TWIST_LEFT:        STDOUT.print("TwistLeft");        break;
-      case EVENT_TWIST_RIGHT:       STDOUT.print("TwistRight");       break;
-      case EVENT_CLASH:             STDOUT.print("Clash");            break;
-      case EVENT_THRUST:            STDOUT.print("Thrust");           break;
-      case EVENT_PUSH:              STDOUT.print("Push");             break;
-      default: STDOUT.print("?");   STDOUT.print(e);                  break;
+      case EVENT_NONE: STDOUT.print("None"); break;
+      case EVENT_PRESSED: STDOUT.print("Pressed"); break;
+      case EVENT_RELEASED: STDOUT.print("Released"); break;
+      case EVENT_HELD: STDOUT.print("Held"); break;
+      case EVENT_HELD_MEDIUM: STDOUT.print("HeldMedium"); break;
+      case EVENT_HELD_LONG: STDOUT.print("HeldLong"); break;
+      case EVENT_CLICK_SHORT: STDOUT.print("Shortclick"); break;
+      case EVENT_CLICK_LONG: STDOUT.print("Longclick"); break;
+      case EVENT_SAVED_CLICK_SHORT: STDOUT.print("SavedShortclick"); break;
+      case EVENT_LATCH_ON: STDOUT.print("On"); break;
+      case EVENT_LATCH_OFF: STDOUT.print("Off"); break;
+      case EVENT_STAB: STDOUT.print("Stab"); break;
+      case EVENT_SWING: STDOUT.print("Swing"); break;
+      case EVENT_SHAKE: STDOUT.print("Shake"); break;
+      case EVENT_TWIST: STDOUT.print("Twist"); break;
+      case EVENT_TWIST_LEFT: STDOUT.print("TwistLeft"); break;
+      case EVENT_TWIST_RIGHT: STDOUT.print("TwistRight"); break;
+      case EVENT_CLASH: STDOUT.print("Clash"); break;
+      case EVENT_THRUST: STDOUT.print("Thrust"); break;
+      case EVENT_PUSH: STDOUT.print("Push"); break;
+      default: STDOUT.print("?"); STDOUT.print(e); break;
     }
     if (cnt) {
       STDOUT.print('#');
@@ -1749,7 +1748,7 @@ public:
     if (!strcmp(cmd, "change_preset") && arg) {
       int preset = strtol(arg, NULL, 0);
       if (preset != current_preset_.preset_num) {
-	SaveState(preset);
+        SaveState(preset);
         SetPreset(preset, true);
       }
       return true;
