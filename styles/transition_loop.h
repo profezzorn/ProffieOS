@@ -21,13 +21,13 @@ public:
   }
 private:
   TRANSITION transition_;
-public:  
+public:
   auto getColor(int led) -> decltype(transition_.getColor(RGBA_um_nod::Transparent(),
-							  RGBA_um_nod::Transparent(),
-							  led)) {
+                                                          RGBA_um_nod::Transparent(),
+                                                          led)) {
     return transition_.getColor(RGBA_um_nod::Transparent(),
-				RGBA_um_nod::Transparent(),
-				led);
+                                RGBA_um_nod::Transparent(),
+                                led);
   }
 };
 
@@ -72,7 +72,7 @@ public:
       run_ = false;
     }
   }
-  
+
 private:
   bool run_ = false;
   bool end_ = false;
@@ -87,11 +87,11 @@ auto getColor(int led) -> decltype(
     decltype(MixColors(end_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led),
         loop_tr_.getColor(loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led), RGBA_um_nod::Transparent(), led), 1, 1)) ret = RGBA_um_nod::Transparent();
     if (run_) {
-      ret = loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led); 
+      ret = loop_tr_.getColor(RGBA_um_nod::Transparent(), RGBA_um_nod::Transparent(), led);
       if (end_) ret = end_tr_.getColor(ret, RGBA_um_nod::Transparent(), led);
     }
     return ret;
   }
 };
 
-#endif
+#endif  // STYLES_TRANSITION_LOOP_H
