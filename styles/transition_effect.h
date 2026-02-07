@@ -33,17 +33,17 @@ public:
     }
     return LayerRunResult::UNKNOWN;
   }
-  
+
 private:
   bool run_ = false;
   TRANSITION transition_;
   OneshotEffectDetector<EFFECT> effect_;
 public:
   auto getColor(int led) -> decltype(transition_.getColor(RGBA_um_nod::Transparent(),
-							  RGBA_um_nod::Transparent(), 1)) {
+                                                          RGBA_um_nod::Transparent(), 1)) {
     if (run_) {
       return transition_.getColor(RGBA_um_nod::Transparent(),
-				  RGBA_um_nod::Transparent(), led);
+                                  RGBA_um_nod::Transparent(), led);
     } else {
       return RGBA_um_nod::Transparent();
     }
@@ -63,27 +63,27 @@ public:
     for (size_t i = 0; i < N; i++) {
       // TODO: Detect oldest rather than newest.
       if (effect_.DetectScoped(blade)) {
-	transitions_[pos_].begin();
-	run_[pos_] = true;
-	effects_[pos_] = *last_detected_blade_effect;
-	pos_++;
-	if (pos_ >= N) pos_ = 0;
+        transitions_[pos_].begin();
+        run_[pos_] = true;
+        effects_[pos_] = *last_detected_blade_effect;
+        pos_++;
+        if (pos_ >= N) pos_ = 0;
       }
     }
     running_ = false;
     for (size_t i = 0; i < N; i++) {
       if (run_[i]) {
-	last_detected_blade_effect = effects_ + i;
-	transitions_[i].run(blade);
-	if (transitions_[i].done()) {
-	  run_[i] = false;
-	} else {
-	  running_ = true;
-	}
+        last_detected_blade_effect = effects_ + i;
+        transitions_[i].run(blade);
+        if (transitions_[i].done()) {
+          run_[i] = false;
+        } else {
+          running_ = true;
+        }
       }
     }
   }
-  
+
 private:
   uint8_t pos_ = 0;
   bool running_ = false;
@@ -96,11 +96,11 @@ public:
     decltype(getColor(0)) ret(RGBA_um_nod::Transparent());
     if (running_) {
       for (int i = N - 1; i >= 0; i--) {
-	size_t x = (i + pos_) % N;
-	if (run_[x]) {
-	  ret = ret << transitions_[x].getColor(RGBA_um_nod::Transparent(),
-						RGBA_um_nod::Transparent(), led);
-	}
+        size_t x = (i + pos_) % N;
+        if (run_[x]) {
+          ret = ret << transitions_[x].getColor(RGBA_um_nod::Transparent(),
+                                                RGBA_um_nod::Transparent(), led);
+        }
       }
     }
     return ret;
@@ -110,5 +110,4 @@ public:
 template<class T, class EFFECT_COLOR, class TRANSITION1, class TRANSITION2, BladeEffectType EFFECT, int N = 3>
   using MultiTransitionEffect = Layers<T, MultiTransitionEffectL<TrConcat<TRANSITION1, EFFECT_COLOR, TRANSITION2>, EFFECT, N>>;
 
-
-#endif
+#endif  // STYLES_TRANSITION_EFFECT_H
