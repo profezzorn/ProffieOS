@@ -143,6 +143,7 @@ protected:
     input_buffer_.clear();
     stream_locked_.set(false);
   }
+
   void SEEK(uint32_t pos) {
     TRACE2(RGB565, "SEEK", pos);
     if (pos > TELL() && pos - TELL() < input_buffer_.size()) {
@@ -436,6 +437,7 @@ public:
   }
 
   bool IsActive() override { return active_ || delayed_open_; }
+
 protected:
   void wait_for_previous_open_to_complete() {
     while (delayed_open_ && !state_machine_.done()) {
@@ -443,6 +445,7 @@ protected:
       check_open();
     }
   }
+
   void check_open() {
     if (delayed_open_ && state_machine_.done()) {
       active_ = true;
@@ -467,6 +470,7 @@ protected:
   LayerControl* layer_ = nullptr;
   int sound_time_ms_;
   bool active_ = false;
+
 private:
   StateMachineState state_machine_;
 };
@@ -510,7 +514,9 @@ public:
       ShowDefault();
     }
   }
+
   void SB_Top(uint64_t total_cycles) override { scr_.screen()->LSC_Top(); }
+
   void SB_Off2(OffType offtype, EffectLocation location) override {
     if (offtype == OFF_IDLE) {
       Stop();
@@ -571,6 +577,7 @@ public:
       }
     }
   }
+
   void Loop() override {
     scr_.loop();
     // Need to call ShowDefault when the previous effect is over.
@@ -582,7 +589,6 @@ public:
         looped_on_ = Tristate::Unknown;
         Stop();
         break;
-
       case EFFECT_BLADEIN:
         if (scr_.Play(&SCR_bladeout)) break;
         if (scr_.Play(&SCR_font)) break;
@@ -631,6 +637,7 @@ public:
       default: break;
     }
   }
+
   bool iscmd(const char* command, LayerControl **layer, const char* cmd) {
     int layer_number = 0;
     size_t l = sizeof(PREFIX::str);
@@ -647,6 +654,7 @@ public:
     *layer = scr_.screen()->getLayer(layer_number);
     return strcmp(command, cmd) == 0;
   }
+
   bool Parse(const char* cmd, const char* arg) override {
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
     LayerControl* layer = nullptr;
@@ -663,7 +671,6 @@ public:
       scr_.dumpstate();
       return true;
     }
-
 #endif
     return false;
   }
@@ -682,5 +689,5 @@ protected:
 //#undef INIT_SCR
 //#undef DEF_SCR
 
-#endif // DISPLAY_LAYER_CONTROLLER_H
+#endif  // DISPLAY_LAYER_CONTROLLER_H
 

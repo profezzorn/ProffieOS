@@ -203,7 +203,6 @@ struct ClearScreenOp {
   };
 };
 
-
 // Op wrapper, skips the op if the base is not an image.
 template<template<int, class> class T>
 struct IfImageOp {
@@ -214,7 +213,6 @@ struct IfImageOp {
     }
   };
 };
-
 
 // Clear a rectangle.
 template<int x1, int x2, int y1, int y2> struct ClearRectangleOp {
@@ -244,8 +242,6 @@ template<int x, int y, int digits> struct WriteBulletCountOp {
 };
 
 #endif
-
-
 
 #if 0
 class DisplayHelper {
@@ -287,8 +283,7 @@ public:
 
   StandardDisplayController() :
     img_(*getPtr<DisplayEffects<PREFIX>>()),
-    font_config(*getPtr<DisplayConfigFile>()) {
-  }
+    font_config(*getPtr<DisplayConfigFile>()) {}
 
   enum ScreenLayout {
     LAYOUT_NATIVE,
@@ -527,101 +522,100 @@ public:
     ShowFile(e, round(duration));
   }
 
- void SB_Effect2(EffectType effect, EffectLocation location) override {
-   switch (effect) {
-     case EFFECT_CHDIR:
-       looped_on_ = Tristate::Unknown;
-       looped_idle_ = Tristate::Unknown;
-       break;
-       
-     case EFFECT_BLADEOUT:
-       if (img_.IMG_bladeout) {
-         ShowFileWithSoundLength(&img_.IMG_bladeout, font_config.ProffieOSFontImageDuration);
-         break;
-       }
-       goto show_font;
-     case EFFECT_BLADEIN:
-       if (img_.IMG_bladein) {
-         ShowFileWithSoundLength(&img_.IMG_bladein, font_config.ProffieOSFontImageDuration);
-         break;
-       }
-     case EFFECT_NEWFONT:
-     show_font:
-       if (img_.IMG_font) {
-         ShowFileWithSoundLength(&img_.IMG_font, font_config.ProffieOSFontImageDuration);
-         break;
-       }
-       if (prop.current_preset_name()) {
-         SetMessage(prop.current_preset_name());
-         SetScreenNow(SCREEN_MESSAGE);
-       } else if (img_.IMG_idle) {
-         ShowFile(&img_.IMG_idle, 3600000.0);
-       }
-       break;
-     case EFFECT_LOCKUP_BEGIN:
-       ShowDefault();
-       break;
-     case EFFECT_LOCKUP_END:
-       ShowDefault(true);
-       break;
-     case EFFECT_BATTERY_LEVEL:
-       // Show On-Demand battery meter
-       SetScreenNow(SCREEN_PLI);
-       break;
-     case EFFECT_SD_CARD_NOT_FOUND:
-       SetErrorMessage("sd card\nnot found");
-       break;
-     case EFFECT_FONT_DIRECTORY_NOT_FOUND:
-       SetErrorMessage("font dir\nnot found");
-       break;
-     case EFFECT_VOICE_PACK_NOT_FOUND:
-       SetErrorMessage("voice pack\nnot found");
-       break;
-     case EFFECT_ERROR_IN_BLADE_ARRAY:
-       SetErrorMessage("err blade\narray");
-       break;
-     case EFFECT_ERROR_IN_FONT_DIRECTORY:
-       SetErrorMessage("err font\ndirectory");
-       break;
-     case EFFECT_ERROR_IN_VOICE_PACK_VERSION:
-       SetErrorMessage("err voice\npack ver");
-       break;
-     case EFFECT_LOW_BATTERY:
-       // Maybe we should make this blink or something?
-       if (img_.IMG_lowbatt) {
-         ShowFile(&img_.IMG_lowbatt, 5000);
-       } else {
-         SetErrorMessage("low\nbattery");
-       }
-       break;
-     case EFFECT_BOOT:
-       if (img_.IMG_boot) {
-         ShowFileWithSoundLength(&img_.IMG_boot,
-                                 font_config.ProffieOSBootImageDuration != -1.0 ?
-                                 font_config.ProffieOSBootImageDuration :
-                                 font_config.ProffieOSFontImageDuration);
-       } else {
-         SetScreenNow(SCREEN_STARTUP);
-       }
-       break;
-     case EFFECT_BLAST:
-       ShowFileWithSoundLength(&img_.IMG_blst, font_config.ProffieOSBlastImageDuration);
-       break;
-     case EFFECT_CLASH:
-       ShowFileWithSoundLength(&img_.IMG_clsh, font_config.ProffieOSClashImageDuration);
-       break;
-     case EFFECT_FORCE:
-       ShowFileWithSoundLength(&img_.IMG_force, font_config.ProffieOSForceImageDuration);
-       break;
-     case EFFECT_PREON:
-       ShowFile(&img_.IMG_preon, round(SaberBase::sound_length * 1000));
-       break;
-     case EFFECT_POSTOFF:
-       ShowFileWithSoundLength(&img_.IMG_pstoff, font_config.ProffieOSPstoffImageDuration);
-       break;
-     default: break;
-   }
- }
+  void SB_Effect2(EffectType effect, EffectLocation location) override {
+    switch (effect) {
+      case EFFECT_CHDIR:
+        looped_on_ = Tristate::Unknown;
+        looped_idle_ = Tristate::Unknown;
+        break;
+      case EFFECT_BLADEOUT:
+        if (img_.IMG_bladeout) {
+          ShowFileWithSoundLength(&img_.IMG_bladeout, font_config.ProffieOSFontImageDuration);
+          break;
+        }
+        goto show_font;
+      case EFFECT_BLADEIN:
+        if (img_.IMG_bladein) {
+          ShowFileWithSoundLength(&img_.IMG_bladein, font_config.ProffieOSFontImageDuration);
+          break;
+        }
+      case EFFECT_NEWFONT:
+      show_font:
+        if (img_.IMG_font) {
+          ShowFileWithSoundLength(&img_.IMG_font, font_config.ProffieOSFontImageDuration);
+          break;
+        }
+        if (prop.current_preset_name()) {
+          SetMessage(prop.current_preset_name());
+          SetScreenNow(SCREEN_MESSAGE);
+        } else if (img_.IMG_idle) {
+          ShowFile(&img_.IMG_idle, 3600000.0);
+        }
+        break;
+      case EFFECT_LOCKUP_BEGIN:
+        ShowDefault();
+        break;
+      case EFFECT_LOCKUP_END:
+        ShowDefault(true);
+        break;
+      case EFFECT_BATTERY_LEVEL:
+        // Show On-Demand battery meter
+        SetScreenNow(SCREEN_PLI);
+        break;
+      case EFFECT_SD_CARD_NOT_FOUND:
+        SetErrorMessage("sd card\nnot found");
+        break;
+      case EFFECT_FONT_DIRECTORY_NOT_FOUND:
+        SetErrorMessage("font dir\nnot found");
+        break;
+      case EFFECT_VOICE_PACK_NOT_FOUND:
+        SetErrorMessage("voice pack\nnot found");
+        break;
+      case EFFECT_ERROR_IN_BLADE_ARRAY:
+        SetErrorMessage("err blade\narray");
+        break;
+      case EFFECT_ERROR_IN_FONT_DIRECTORY:
+        SetErrorMessage("err font\ndirectory");
+        break;
+      case EFFECT_ERROR_IN_VOICE_PACK_VERSION:
+        SetErrorMessage("err voice\npack ver");
+        break;
+      case EFFECT_LOW_BATTERY:
+        // Maybe we should make this blink or something?
+        if (img_.IMG_lowbatt) {
+          ShowFile(&img_.IMG_lowbatt, 5000);
+        } else {
+          SetErrorMessage("low\nbattery");
+        }
+        break;
+      case EFFECT_BOOT:
+        if (img_.IMG_boot) {
+          ShowFileWithSoundLength(&img_.IMG_boot,
+                                  font_config.ProffieOSBootImageDuration != -1.0 ?
+                                  font_config.ProffieOSBootImageDuration :
+                                  font_config.ProffieOSFontImageDuration);
+        } else {
+          SetScreenNow(SCREEN_STARTUP);
+        }
+        break;
+      case EFFECT_BLAST:
+        ShowFileWithSoundLength(&img_.IMG_blst, font_config.ProffieOSBlastImageDuration);
+        break;
+      case EFFECT_CLASH:
+        ShowFileWithSoundLength(&img_.IMG_clsh, font_config.ProffieOSClashImageDuration);
+        break;
+      case EFFECT_FORCE:
+        ShowFileWithSoundLength(&img_.IMG_force, font_config.ProffieOSForceImageDuration);
+        break;
+      case EFFECT_PREON:
+        ShowFile(&img_.IMG_preon, round(SaberBase::sound_length * 1000));
+        break;
+      case EFFECT_POSTOFF:
+        ShowFileWithSoundLength(&img_.IMG_pstoff, font_config.ProffieOSPstoffImageDuration);
+        break;
+      default: break;
+    }
+  }
 
   // If called from SB_Effect2, you must call SetScreenNow after.
   void SetMessage(const char* text) {
@@ -704,7 +698,6 @@ public:
     SetScreenNow(SCREEN_IMAGE);
     eof_ = false;
   }
-
 
   // AudioStreamWork implementation
   size_t space_available() override {
@@ -925,7 +918,6 @@ private:
   volatile Effect* current_effect_;
 };
 
-
 template<template<int, class, class> class T, typename PREFIX = ByteArray<>>
 struct BaseLayerOp {
   template<int Width, class col_t> struct Controller : public T<Width, col_t, PREFIX> {};
@@ -1079,7 +1071,6 @@ public:
       Send(COMSCANDEC);
 #endif
 
-
       Send(SETCOMPINS);                    // 0xDA
       if (HEIGHT == 64 || WIDTH==64) {
         Send(0x12);
@@ -1184,6 +1175,7 @@ public:
     0,  // Page start address (0 = reset)
     sizeof(col_t) - 1
   };
+
   void RunLocked() override {
     size_t size;
     if (i < 0) {
@@ -1208,6 +1200,7 @@ public:
     I2CUnlock();
     return;
   }
+
   static void DataSent(void *x, unsigned long event) { ((SSD1306Template*)x)->DataSent(); }
   void DataSent() {
     stm32l4_i2c_notify(Wire._i2c, nullptr, 0, 0);
@@ -1239,4 +1232,4 @@ constexpr uint8_t SSD1306Template<WIDTH, col_t, POWER_PIN>::transactions[];
 
 using SSD1306 = SSD1306Template<128, uint32_t>;
 
-#endif
+#endif  // DISPLAY_SSD1306_H
