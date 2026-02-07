@@ -123,7 +123,7 @@ public:
     if (!name) return nullptr;
     for (size_t i = 0; i < NELEM(named_styles); i++) {
       if (FirstWord(name, named_styles[i].name)) {
-	return named_styles + i;
+        return named_styles + i;
       }
     }
     return nullptr;
@@ -148,6 +148,7 @@ public:
     delete style->style_allocator->make();
     return ap.next();
   }
+
   bool GetBuiltinPos(const char* str, int* preset, int* blade) {
     *preset = -1;
     *blade = -1;
@@ -157,6 +158,7 @@ public:
     *blade = strtol(ap.GetArg(2, "", ""), nullptr, 10);
     return *preset >= 0 && *blade >= 1;
   }
+
   // Returns the maximum argument used.
   int MaxUsedArgument(const char* str) {
     NamedStyle* style = FindStyle(str);
@@ -271,14 +273,14 @@ public:
     for (int i = 0; i < output_args; i++) {
       if (i) strcat(tmp++, " ");
       if (i == argument) {
-	strcat(tmp, new_value);
-	tmp += strlen(tmp);
+        strcat(tmp, new_value);
+        tmp += strlen(tmp);
       } else {
-	if (!GetArgument(str, i, tmp)) {
-	  strcat(tmp, "~");
-	}
-//	fprintf(stderr, "OUTPUT: %s\n", tmp);
-	tmp += strlen(tmp);
+        if (!GetArgument(str, i, tmp)) {
+          strcat(tmp, "~");
+        }
+//      fprintf(stderr, "OUTPUT: %s\n", tmp);
+        tmp += strlen(tmp);
       }
     }
     *tmp = 0;
@@ -329,19 +331,22 @@ public:
       parts[0]= StyleIdentifierLength(str);
       const char* tmp = str + parts[0];
       for (int i = 0; i < n; i++) {
-	tmp = SkipWord(tmp);
+        tmp = SkipWord(tmp);
       }
       parts[1] = tmp - str;
       parts[2] = strlen(str);
     }
+
     int partlen(int part) {
       if (part == 0) return parts[0];
       return parts[part] - parts[part - 1];
     }
+
     const char* partptr(int part) {
       if (part == 0) return str;
       return str + parts[part - 1];
     }
+
     void AppendPart(int part, char** to) {
       int l = partlen(part);
       memcpy(*to, partptr(part), l);
@@ -372,16 +377,20 @@ public:
     ArgumentIterator(const char* str_) : start(str_) {
       end = str_ + StyleIdentifierLength(str_);
     }
+
     void next() {
       start = end;
       end = SkipWord(end);
     }
+
     operator bool() const { return end > start; }
     bool contains(char c) { return StringPiece(start, end).contains(c); }
+
     int len() const {
       if (end == start) return 2;
       return end - start;
     }
+
     void append(char** to) const {
       int l = len();
       memcpy(*to, end == start ? " ~" : start, l);
@@ -394,7 +403,7 @@ public:
     if (arg == 0) return true;
     for (size_t x = 0; x < arguments_to_keep_len; x++)
       if (arguments_to_keep[x] == arg)
-	return true;
+        return true;
     return false;
   }
 
@@ -407,11 +416,11 @@ public:
       ArgumentIterator FROM(from);
       ArgumentIterator TO(to);
       for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
-	if (keep(arg, arguments_to_keep, arguments_to_keep_len)) {
-	  len += TO.len();
-	} else {
-	  len += FROM.len();
-	}
+        if (keep(arg, arguments_to_keep, arguments_to_keep_len)) {
+          len += TO.len();
+        } else {
+          len += FROM.len();
+        }
       }
     }
     char* ret = (char*) malloc(len + 1);
@@ -420,11 +429,11 @@ public:
       ArgumentIterator FROM(from);
       ArgumentIterator TO(to);
       for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
-	if (keep(arg, arguments_to_keep, arguments_to_keep_len)) {
-	  TO.append(&tmp);
-	} else {
-	  FROM.append(&tmp);
-	}
+        if (keep(arg, arguments_to_keep, arguments_to_keep_len)) {
+          TO.append(&tmp);
+        } else {
+          FROM.append(&tmp);
+        }
       }
     }
     // STDOUT << "CopyArguments(from=" << from << " to=" << to << ") = " << ret << "\n";
@@ -444,11 +453,11 @@ public:
       ArgumentIterator FROM(from);
       ArgumentIterator TO(to);
       for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
-	if (FROM.contains(',') || TO.contains(',')) {
-	  len += FROM.len();
-	} else {
-	  len += TO.len();
-	}
+        if (FROM.contains(',') || TO.contains(',')) {
+          len += FROM.len();
+        } else {
+          len += TO.len();
+        }
       }
     }
     char* ret = (char*) malloc(len + 1);
@@ -457,11 +466,11 @@ public:
       ArgumentIterator FROM(from);
       ArgumentIterator TO(to);
       for (int arg = 0; FROM || TO; arg++, FROM.next(), TO.next()) {
-	if (FROM.contains(',') || TO.contains(',')) {
-	  FROM.append(&tmp);
-	} else {
-	  TO.append(&tmp);
-	}
+        if (FROM.contains(',') || TO.contains(',')) {
+          FROM.append(&tmp);
+        } else {
+          TO.append(&tmp);
+        }
       }
     }
     // STDOUT << "CopyArguments(from=" << from << " to=" << to << ") = " << ret << "\n";
@@ -478,25 +487,25 @@ public:
       // Just print one per line.
       // Skip the last one (builtin)
       for (size_t i = 0; i < NELEM(named_styles) - 1; i++) {
-	STDOUT.println(named_styles[i].name);
+        STDOUT.println(named_styles[i].name);
       }
       for (size_t i = 0; i < current_config->num_presets; i++) {
-	for (size_t j = 1; j <= NUM_BLADES; j++) {
-	  STDOUT << "builtin " << i << " " << j << "\n";
-	}
+        for (size_t j = 1; j <= NUM_BLADES; j++) {
+          STDOUT << "builtin " << i << " " << j << "\n";
+        }
       }
       return true;
     }
 
     if (!strcmp("describe_named_style", cmd)) {
       if (NamedStyle* style = FindStyle(arg)) {
-	STDOUT.println(style->description);
-	ArgParserPrinter arg_parser_printer(SkipWord(arg));
-	CurrentArgParser = &arg_parser_printer;
-	do {
-	  BladeStyle* tmp = style->style_allocator->make();
-	  delete tmp;
-	} while (arg_parser_printer.next());
+        STDOUT.println(style->description);
+        ArgParserPrinter arg_parser_printer(SkipWord(arg));
+        CurrentArgParser = &arg_parser_printer;
+        do {
+          BladeStyle* tmp = style->style_allocator->make();
+          delete tmp;
+        } while (arg_parser_printer.next());
       }
       return true;
     }
