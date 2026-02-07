@@ -1131,6 +1131,7 @@ public:
   volatile bool clash_pending1_ = false;
   volatile bool pending_clash_is_stab1_ = false;
   volatile float pending_clash_strength1_ = 0.0;
+
   uint32_t last_beep_;
   float current_tick_angle_ = 0.0;
 
@@ -1307,6 +1308,7 @@ public:
       PRINT_CHECK_BLADE=false;
       return true;
     }
+
     if (!strcmp(cmd, "on2")) {
       PRINT_CHECK_BLADE=true;
       if (SaberBase::BladeIsOn(1)) {
@@ -1318,6 +1320,7 @@ public:
       PRINT_CHECK_BLADE=false;
       return true;
     }
+
     if (!strcmp(cmd, "off2")) {
       PRINT_CHECK_BLADE=true;
       if (SaberBase::BladeIsOn(1)) {
@@ -1330,6 +1333,7 @@ public:
       PRINT_CHECK_BLADE=false;
       return true;
     }
+
     if (!strcmp(cmd, "off1")) {
       PRINT_CHECK_BLADE=true;
       if (SaberBase::BladeIsOn(2)) {
@@ -1344,36 +1348,44 @@ public:
       return true;
     }
 #endif // ENABLE_DEVELOPER_COMMANDS
+
     if (!strcmp(cmd, "off")) {
       Off();
       return true;
     }
+
     if (!strcmp(cmd, "get_on")) {
       STDOUT.println(IsOn());
       return true;
     }
+
     if (!strcmp(cmd, "clash")) {
       Clash2(false, 10.0);
       return true;
     }
+
     if (!strcmp(cmd, "stab")) {
       Clash2(true, 10.0);
       return true;
     }
+
     if (!strcmp(cmd, "force")) {
       SaberBase::DoForce();
       return true;
     }
+
     if (!strcmp(cmd, "blast")) {
       // Avoid the base and the very tip.
       // TODO: Make blast only appear on one blade!
       SaberBase::DoBlast();
       return true;
     }
+
     if (!strcmp(cmd, "quote")) {
       SaberBase::DoEffect(EFFECT_QUOTE, 0);
       return true;
     }
+
     if (!strcmp(cmd, "lock") || !strcmp(cmd, "lockup")) {
       STDOUT.print("Lockup ");
       if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
@@ -1387,6 +1399,7 @@ public:
       }
       return true;
     }
+
     if (!strcmp(cmd, "drag")) {
       STDOUT.print("Drag ");
       if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
@@ -1400,6 +1413,7 @@ public:
       }
       return true;
     }
+
     if (!strcmp(cmd, "lblock") || !strcmp(cmd, "lb")) {
       STDOUT.print("lblock ");
       if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
@@ -1413,6 +1427,7 @@ public:
       }
       return true;
     }
+
     if (!strcmp(cmd, "melt")) {
       STDOUT.print("melt ");
       if (SaberBase::Lockup() == SaberBase::LOCKUP_NONE) {
@@ -1426,15 +1441,18 @@ public:
       }
       return true;
     }
+
     if (!strcmp(cmd, "swing")) {
       SaberBase::DoEffect(EFFECT_ACCENT_SWING, 0);
       Event(BUTTON_NONE, EVENT_SWING);
       return true;
     }
+
     if (!strcmp(cmd, "slash")) {
       SaberBase::DoEffect(EFFECT_ACCENT_SLASH, 0);
       return true;
     }
+
 #ifdef ENABLE_SPINS
     if (!strcmp(cmd, "spin")) {
       SaberBase::DoEffect(EFFECT_SPIN, 0);
@@ -1454,36 +1472,44 @@ public:
       return true;
     }
 #endif
+
 #ifdef ENABLE_DEVELOPER_COMMANDS
     if (!strcmp(cmd, "sd_card_not_found")) {
       ProffieOSErrors::sd_card_not_found();
       return true;
     }
+
     if (!strcmp(cmd, "font_directory_not_found")) {
       ProffieOSErrors::font_directory_not_found();
       return true;
     }
+
     if (!strcmp(cmd, "voice_pack_not_found")) {
       ProffieOSErrors::voice_pack_not_found();
       return true;
     }
+
     if (!strcmp(cmd, "error_in_blade_array")) {
       ProffieOSErrors::error_in_blade_array();
       return true;
     }
+
     if (!strcmp(cmd, "error_in_font_directory")) {
       ProffieOSErrors::error_in_font_directory();
       return true;
     }
+
     if (!strcmp(cmd, "error_in_voice_pack_version")) {
       ProffieOSErrors::error_in_voice_pack_version();
       return true;
     }
+
     if (!strcmp(cmd, "low_battery")) {
       SaberBase::DoLowBatt();
       return true;
     }
 #endif
+
     if (!strcmp(cmd, "play")) {
       if (!arg) {
         StartOrStopTrack();
@@ -1502,6 +1528,7 @@ public:
       }
       return true;
     }
+
     if (!strcmp(cmd, "play_track")) {
       if (!arg) {
         StartOrStopTrack();
@@ -1524,6 +1551,7 @@ public:
       }
       return true;
     }
+
     if (!strcmp(cmd, "stop_track")) {
       if (track_player_) {
         track_player_->Stop();
@@ -1531,12 +1559,14 @@ public:
       }
       return true;
     }
+
     if (!strcmp(cmd, "get_track")) {
       if (track_player_) {
         STDOUT.println(track_player_->Filename());
       }
       return true;
     }
+
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "volumes")) {
       for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
@@ -1548,6 +1578,7 @@ public:
       return true;
     }
 #endif
+
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
     if (!strcmp(cmd, "buffered")) {
       for (size_t unit = 0; unit < NELEM(wav_players); unit++) {
@@ -1561,35 +1592,42 @@ public:
 #endif
 
 #endif // ENABLE_AUDIO
+
     if (!strcmp(cmd, "cd")) {
       chdir(arg);
       SaberBase::DoNewFont();
       return true;
     }
+
 #if 0
     if (!strcmp(cmd, "mkdir")) {
       SD.mkdir(arg);
       return true;
     }
 #endif
+
     if (!strcmp(cmd, "pwd")) {
       for (const char* dir = current_directory; dir; dir = next_current_directory(dir)) {
         STDOUT.println(dir);
       }
       return true;
     }
+
     if (!strcmp(cmd, "n") || (!strcmp(cmd, "next") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
       next_preset();
       return true;
     }
+
     if (!strcmp(cmd, "p") || (!strcmp(cmd, "prev") && arg && (!strcmp(arg, "preset") || !strcmp(arg, "pre")))) {
       previous_preset();
       return true;
     }
+
     if (!strcmp(cmd, "rotate")) {
       rotate_presets();
       return true;
     }
+
     if (!strcmp(cmd, "list_presets")) {
       CurrentPreset tmp;
       for (int i = 0; ; i++) {
@@ -1599,16 +1637,19 @@ public:
       }
       return true;
     }
+
     if (!strcmp(cmd, "set_font") && arg) {
       current_preset_.font = mkstr(arg);
       current_preset_.Save();
       return true;
     }
+
     if (!strcmp(cmd, "set_track") && arg) {
       current_preset_.track = mkstr(arg);
       current_preset_.Save();
       return true;
     }
+
     if (!strcmp(cmd, "set_name") && arg) {
       current_preset_.name = mkstr(arg);
       current_preset_.Save();
@@ -1621,26 +1662,32 @@ public:
       current_preset_.Save();                           \
       return true;                                      \
     }
+
     ONCEPERBLADE(SET_STYLE_CMD)
+
     if (!strcmp(cmd, "move_preset") && arg) {
       int32_t pos = strtol(arg, NULL, 0);
       current_preset_.SaveAt(pos);
       return true;
     }
+
     if (!strcmp(cmd, "duplicate_preset") && arg) {
       int32_t pos = strtol(arg, NULL, 0);
       current_preset_.preset_num = -1;
       current_preset_.SaveAt(pos);
       return true;
     }
+
     if (!strcmp(cmd, "delete_preset")) {
       current_preset_.SaveAt(-1);
       return true;
     }
+
     if (!strcmp(cmd, "show_current_preset")) {
       current_preset_.Print();
       return true;
     }
+
 #ifdef MOUNT_SD_SETTING
     if (!strcmp(cmd, "sd")) {
       if (arg) {
@@ -1670,10 +1717,12 @@ public:
       STDOUT.println(GetMaxBladeLength(atoi(arg)));
       return true;
     }
+
     if (!strcmp(cmd, "get_blade_length") && arg) {
       STDOUT.println(GetBladeLength(atoi(arg)));
       return true;
     }
+
     if (!strcmp(cmd, "set_blade_length") && arg) {
       SetBladeLength(atoi(arg), atoi(SkipWord(arg)));
       SaveState(current_preset_.preset_num);
@@ -1688,6 +1737,7 @@ public:
       STDOUT.println(SaberBase::GetCurrentDimming());
       return true;
     }
+
     if (!strcmp(cmd, "set_blade_dimming") && arg) {
       SaberBase::SetDimming(atoi(arg));
       return true;
@@ -1699,6 +1749,7 @@ public:
       STDOUT.println(GetCurrentClashThreshold());
       return true;
     }
+
     if (!strcmp(cmd, "set_clash_threshold") && arg) {
       SetClashThreshold(parsefloat(arg));
       return true;
@@ -1709,6 +1760,7 @@ public:
       STDOUT.println(current_preset_.preset_num);
       return true;
     }
+
     if (!strcmp(cmd, "get_volume")) {
 #ifdef ENABLE_AUDIO
       STDOUT.println(dynamic_mixer.get_volume());
@@ -1717,6 +1769,7 @@ public:
 #endif
       return true;
     }
+
     if (!strcmp(cmd, "set_volume") && arg) {
 #ifdef ENABLE_AUDIO
       int32_t volume = strtol(arg, NULL, 0);
@@ -1727,24 +1780,29 @@ public:
 #endif
       return true;
     }
+
     if (!strcmp(cmd, "mute")) {
       SetMute(true);
       return true;
     }
+
     if (!strcmp(cmd, "unmute")) {
       SetMute(false);
       return true;
     }
+
     if (!strcmp(cmd, "toggle_mute")) {
       if (!SetMute(true)) SetMute(false);
       return true;
     }
+
     if (!strcmp(cmd, "set_preset") && arg) {
       int preset = strtol(arg, NULL, 0);
       SaveState(preset);
       SetPreset(preset, true);
       return true;
     }
+
     if (!strcmp(cmd, "change_preset") && arg) {
       int preset = strtol(arg, NULL, 0);
       if (preset != current_preset_.preset_num) {
@@ -1760,10 +1818,12 @@ public:
       SaberBase::SetVariation(variation);
       return true;
     }
+
     if (!strcmp(cmd, "get_variation")) {
       STDOUT.println(SaberBase::GetCurrentVariation());
       return true;
     }
+
     if (!strcmp(cmd, "ccmode")) {
       ToggleColorChangeMode();
       return true;
@@ -1784,6 +1844,7 @@ public:
       LOCK_SD(false);
       return true;
     }
+
     if (!strcmp(cmd, "list_fonts")) {
       LOCK_SD(true);
       for (LSFS::Iterator iter("/"); iter; ++iter) {
@@ -1827,6 +1888,7 @@ public:
       default:
         break;
     }
+
     if (current_mode->mode_Event2(button, event, current_modifiers | (IsOn() ? MODE_ON : MODE_OFF))) {
       current_modifiers = 0;
       return true;
