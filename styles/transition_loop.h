@@ -63,11 +63,11 @@ public:
       loop_tr_.run(blade);
       if (loop_tr_.done()) loop_tr_.begin();
       if (end_) {
-	end_tr_.run(blade);
-	if (end_tr_.done()) {
-	  end_ = false;
-	  run_ = false;
-	}
+        end_tr_.run(blade);
+        if (end_tr_.done()) {
+          end_ = false;
+          run_ = false;
+        }
       }
     }
   }
