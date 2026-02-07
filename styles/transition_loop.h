@@ -50,26 +50,25 @@ class TransitionLoopWhileL {
 public:
   void run(BladeBase* blade) {
     condition_.run(blade);
-    bool cond = condition_.calculate(blade);
-    if (!run_ || loop_tr_.done()) {
-       if (cond) {
-          run_ = true;
-          loop_tr_.begin();
-       }
+    bool cond = condition_.calculate(blade) > 0;
+    if (!run_ && cond) {
+      run_ = true;
+      loop_tr_.begin();
     }
-    if (run_) {
-       if (!end_ && !cond) {
-         end_ = true;
-         end_tr_.begin();
-       }
+    if (run_ && !cond && !end_) {
+      end_ = true;
+      end_tr_.begin();
     }
     if (run_) {
       loop_tr_.run(blade);
-      if (end_) end_tr_.run(blade);
-    }
-    if (end_ && end_tr_.done()) {
-      end_ = false;
-      run_ = false;
+      if (loop_tr_.done()) loop_tr_.begin();
+      if (end_) {
+	end_tr_.run(blade);
+	if (end_tr_.done()) {
+	  end_ = false;
+	  run_ = false;
+	}
+      }
     }
   }
   
