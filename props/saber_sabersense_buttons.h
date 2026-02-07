@@ -1,14 +1,27 @@
-/* V7/8-288.
+/* V7/8-290.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
 =================       CHRIS CARTER       =================
 ============================================================
 
-Built on Matthew McGeary's SA22C button prop file for one
-and two button replica lightsabers. Modified by Chris
-Carter with substantial support and contributions from
-Fredrik Hubinette and Brian Conner.
+http://fredrik.hubbe.net/lightsaber/proffieos.html
+Copyright (c) 2016-2019 Fredrik Hubinette
+
+Sabersense(TM) Prop File for ProffieOS.
+https://www.sabersense.co.uk
+
+Prop file Copyright (c) 2024-2026 Chris Carter (Sabersense)
+Built on Matthew McGeary's SA22C button prop file for
+one and two button replica lightsabers.
+Modified by Chris Carter with substantial support and
+contributions from Fredrik Hubinette and Brian Conner.
+
+Distributed under the terms of the
+GNU General Public License v3.
+
+============================================================
+======================= INTRODUCTION =======================
 
 This prop file has been optimized for, and is included
 with, ProffieOS 8.x or later, but is also fully
@@ -17,9 +30,13 @@ backwards compatible with ProffieOS 7.x.
 This prop file references certain custom sound files
 to aid in saber function navigation. These sound files
 are optional and are available as a free download from
-the Sabersense website. (Link below).
-
+the Sabersense website:
 https://sabersense.square.site/downloads
+
+A video explaining the design principles and providing
+button control user guides is available on the
+Sabersense Youtube Channel:
+https://www.youtube.com/watch?v=kqK0EJ9dMZs
 
 ============================================================
 ========= BUTTON SYSTEM PRINCIPLES AND LOGIC NOTES =========
