@@ -28,8 +28,19 @@ private:
 template<class SPEC>
 class SelectArgTime : public SPEC::SmoothMode {
 public:
-  int get() override { return GetIntArg(menu_current_blade, menu_current_arg); }
-  float t(int x) { return powf(x / 32768.0f, 2.0) * 30.0; }
+  float t(int x) { return powf(x / 32767.0f, 2.0) * 30.0; }
+  int v(float seconds) {
+    if (seconds > 30.0) seconds = 30.0;
+    if (seconds < 0.0) seconds = 0.0;
+    return powf(seconds / 30.0f, 1.0/2.0) * 32767.0;
+  }
+
+  int get() override {
+    int millis = GetIntArg(menu_current_blade, menu_current_arg);
+    value_ = v(millis / 1000.0f);
+    return value_;
+  }
+
   void set(int x) {
     value_ = x;
     if (!getSL<SPEC>()->busy()) {
@@ -39,9 +50,14 @@ public:
   }
 
   void select() override {
-    SPEC::SmoothMode::select();
+    getSL<SPEC>()->SaySelect();
     SetIntArg(menu_current_blade, menu_current_arg, (int)(t(value_) * 1000));
-    popMode();
+    SPEC::SmoothMode::select();
+  }
+
+  void exit() override {
+    getSL<SPEC>()->SayCancel();
+    SPEC::SmoothMode::exit();
   }
 
 private:  
