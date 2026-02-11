@@ -102,6 +102,7 @@ char* itoa( int value, char *string, int radix )
 // This really ought to be a typedef, but it causes problems I don't understand.
 #define StyleAllocator class StyleFactory*
 
+#include "../common/linked_list.h"
 #include "../common/linked_ptr.h"
 #include "../common/strfun.h"
 #include "../common/lsfs.h"
