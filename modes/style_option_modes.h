@@ -10,15 +10,20 @@ public:
   void set(int x) {
     value_ = x;
     if (!getSL<SPEC>()->busy()) {
-      getSL<SPEC>()->SayWhole(x * 100 / 32768);
+      getSL<SPEC>()->SayWhole(x * 100 / 32768); // decimals?
       getSL<SPEC>()->SayPercent();
     }
   }
 
   void select() override {
-    SPEC::SmoothMode::select();
+    getSL<SPEC>()->SaySelect();
     SetIntArg(menu_current_blade, menu_current_arg, value_);
-    popMode();
+    SPEC::SmoothMode::select();
+  }
+
+  void exit() override {
+    getSL<SPEC>()->SayCancel();
+    SPEC::SmoothMode::exit();
   }
 
 private:  
@@ -74,6 +79,7 @@ public:
       if (max < 0) max = 32768;
       max_ = max;
       this->pos_ = GetIntArg(menu_current_blade, menu_current_arg);
+      PVLOG_DEBUG << "Current value = " << this->pos_  << "\n";
       // TODO: What if pos_ > max_ ?
     }
   }
@@ -132,12 +138,13 @@ public:
       pushMode<typename SPEC::SelectArgColor>();
     } else {
       int max_arg = GetMaxStyleArg();
-      if (max_arg == 32768 || max_arg == 32767) {
-	pushMode<typename SPEC::SelectArgSmooth>();
-      } else if (max_arg <= 0 && isTimeArg(menu_current_arg)) {
+      PVLOG_DEBUG << " MAX = " << max_arg << "\n";
+      if (max_arg > 0 && max_arg <= 1000) {
+	pushMode<typename SPEC::SelectArgNumber>();
+      } else if (isTimeArg(menu_current_arg)) {
 	pushMode<typename SPEC::SelectArgTime>();
       } else {
-	pushMode<typename SPEC::SelectArgNumber>();
+	pushMode<typename SPEC::SelectArgSmooth>();
       }
     }
   }
