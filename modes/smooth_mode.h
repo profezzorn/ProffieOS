@@ -83,9 +83,9 @@ struct SmoothMode : public SmoothBase<SPEC> {
     SmoothBase<SPEC>::mode_activate(onreturn);
     this->angle_ = Angle::fromFixedWithMargin(this->get(), margin_fraction());
   }
-  void mode_Loop() override {  float last_angle_;
+  void mode_Loop() override {
     switch (this->angle_.increment_with_guardrails(
-	      this->delta_.get() / this->revolutions())) {
+        this->delta_.get() / this->revolutions())) {
       case -1: min_bump(); break;
       case  1: max_bump(); break;
     }
