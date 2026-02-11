@@ -179,10 +179,10 @@ public:
 #else
 
 // Use mnum as template where to find sounds.
-#define ADD_SL_SOUND(NAME, BASE)                                        \
-  void Say##NAME() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE ".wav", &SFX_mnum)); } \
-  /* t for "trampoline" */                                              \
-  struct t##NAME { static void say() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE ".wav", &SFX_mnum)); } }
+#define ADD_SL_SOUND(NAME, BASE)                                              \
+  void Say##NAME() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE, &SFX_mnum)); } \
+  /* t for "trampoline" */                                                    \
+  struct t##NAME { static void say() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE, &SFX_mnum)); } }
 
 #endif
 
