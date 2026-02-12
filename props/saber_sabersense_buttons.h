@@ -1,4 +1,4 @@
-/* V7/8-293.
+/* V7/8-294.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -1147,7 +1147,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
           SFX_quote.SelectNext();
           SaberBase::DoEffect(EFFECT_QUOTE, 0);
 #else
-          SaberBase::DoEffect(EFFECT_QUOTE, -1);
+          SaberBase::DoEffect(EFFECT_QUOTE, -1);  // Repetition and '-1' required for OS-7.
 #endif
         } else {
           SaberBase::DoForce();  // Force effect for hilt pointed DOWN.
@@ -1173,7 +1173,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
           SFX_quote.SelectNext();
           SaberBase::DoEffect(EFFECT_QUOTE, 0);
 #else
-          SaberBase::DoEffect(EFFECT_QUOTE, -1);
+          SaberBase::DoEffect(EFFECT_QUOTE, -1);  // Repetition and '-1' required for OS-7.
 #endif
         } else {
           StartOrStopTrack();  // Play track for hilt pointed DOWN.
