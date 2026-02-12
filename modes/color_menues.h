@@ -12,6 +12,16 @@ namespace mode {
 template<class SPEC>
 class FileColorMenu : public SPEC::MenuBase {
 public:
+
+  Color8 getColor(FileReader& f, int N) {
+    Color8 ret;
+    f.Seek(this->pos_ * mult_);
+    ret.r = f.ReadHex2();
+    ret.g = f.ReadHex2();
+    ret.b = f.ReadHex2();
+    return ret;
+  }
+
   void init() {
     size_ = 0;
     dir_ = nullptr;
@@ -28,8 +38,36 @@ public:
 	if (f.Read() <= 13) mult_++;
 	size_ = f.FileSize() / mult_;
       }
+#if 0
+      // This makes it go to the closest color, which might be nice,
+      // or it might be super annoying...
+      
+      int best_match = 0;
+      int best_diff = 0x7ffffff;
+      Color16 best_color;
+      for (int n = 0; n < size_; n++) {
+	Color16 tmp = getColor(f, n);
+	int diff =
+	  std::abs<int>(tmp.r - saved_.r) +
+	  std::abs<int>(tmp.g - saved_.g) +
+	  std::abs<int>(tmp.b - saved_.b);
+	if (diff < best_diff) {
+	  best_diff = diff;
+	  best_match = n;
+	  best_color = tmp;
+	}
+      }
+      this->pos_ = best_match;
+
       f.Close();
       LOCK_SD(false);
+      ShowColorStyle::SetColor(best_color);
+#else
+      f.Close();
+      LOCK_SD(false);
+      ShowColorStyle::SetColor(get());
+#endif      
+
       PVLOG_STATUS << " DIR = " << dir_ << " size = " <<  size_  << " \n";
       if (dir_) break;
     }
@@ -42,10 +80,7 @@ public:
       AudioStreamWork::scheduleFillBuffer();
       LOCK_SD(true);
       if (f.Open(full_name)) {
-	f.Seek(this->pos_ * mult_);
-	ret.r = f.ReadHex2();
-	ret.g = f.ReadHex2();
-	ret.b = f.ReadHex2();
+	ret = getColor(f, this->pos_);
       }
       f.Close();
       LOCK_SD(false);
@@ -66,7 +101,6 @@ public:
 
   void exit() override {
     ShowColorStyle::SetColor(saved_);
-    getSL<SPEC>()->SayCancel();
     SPEC::MenuBase::exit();
   }
   
@@ -287,6 +321,11 @@ struct ColorSelectMode : public ColorSelectList<SPEC, ColorSelectMode<SPEC>> {
   void mode_activate(bool onreturn) override {
     if (!onreturn) {
       load();
+      PVLOG_DEBUG << "**Color override start: "
+		  << " r = " << ShowColorStyle::getColor().r
+		  << " g = " << ShowColorStyle::getColor().g
+		  << " b = " << ShowColorStyle::getColor().b
+		  << "\n";
       show_color_all_.Start();
     }
     ColorSelectList<SPEC, ColorSelectMode<SPEC>>::mode_activate(onreturn);
@@ -294,6 +333,7 @@ struct ColorSelectMode : public ColorSelectList<SPEC, ColorSelectMode<SPEC>> {
 
   void mode_deactivate() override {
     show_color_all_.Stop();
+    PVLOG_DEBUG << "**Color override stop\n";
     ColorSelectList<SPEC, ColorSelectMode<SPEC>>::mode_deactivate();
   }
 
