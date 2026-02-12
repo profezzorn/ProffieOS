@@ -81,7 +81,6 @@ typedef Rgb<255, 0, 19> HaltRed;
 typedef Rgb<255, 24, 0> MoltenCore;
 typedef Rgb<255, 33, 0> SafetyOrange;
 typedef Rgb<255, 55, 0> OrangeJuice;
-typedef Rgb<255, 97, 0> Orange;
 typedef Rgb<255, 115, 0> ImperialYellow;
 typedef Rgb<255, 176, 0> SchoolBus;
 typedef Rgb<255, 186, 0> SuperSaiyan;
