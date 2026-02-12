@@ -124,6 +124,8 @@ WS2811_Blade(WS2811PIN* pin,
     STDOUT.print(pin_->num_leds());
     STDOUT.println(" leds.");
     run_ = true;
+    power_off_requested_ = false;
+    poweroff_delay_start_ = 0;
     CommandParser::Link();
     Looper::Link();
     AbstractBlade::Activate(blade_number);
@@ -159,6 +161,8 @@ WS2811_Blade(WS2811PIN* pin,
     TRACE(BLADE, "SetStyle");
     AbstractBlade::SetStyle(style);
     run_ = true;
+    power_off_requested_ = false;
+    poweroff_delay_start_ = 0;
   }
   BladeStyle* UnSetStyle() override {
     TRACE(BLADE, "UnSetStyle");
