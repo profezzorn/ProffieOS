@@ -166,6 +166,8 @@ Monitoring monitor;
 #include "../functions/ramp.h"
 #include "rotate_color.h"
 #include "random_blink.h"
+#include "../functions/effect_increment.h"
+#include "../transitions/extend.h"
 
 Color16 TestRgbArgColors[256];
 
@@ -929,6 +931,8 @@ void test_smoothstep() {
 #include "test_types.h"
 #include "get_arg_max.h"
 
+float SaberBase::clash_strength_ = 0.0;
+
 void test_get_max_arg() {
 
   CHECK_NEAR((GetArgMax<TrSelect<IntArg<77, 0>, TrInstant, TrInstant, TrInstant>, 77>::value), 3, 0);
@@ -938,6 +942,14 @@ void test_get_max_arg() {
   CHECK_NEAR((GetArgMax<LARGE_TYPE_WITH_OPTIONS, IGNITION_OPTION_ARG>::value), 5, 0);
   CHECK_NEAR((GetArgMax<LARGE_TYPE_WITH_OPTIONS, RETRACTION_OPTION_ARG>::value), 3, 0);
   CHECK_NEAR((GetArgMax<LARGE_TYPE_WITH_OPTIONS, PREON_OPTION_ARG>::value), 5, 0);
+
+  CHECK_NEAR((GetArgMax<LARGE_TYPE_WITH_OPTIONS2, STYLE_OPTION_ARG>::value), 2, 0);
+
+  ArgParser ap("foobar");
+  CurrentArgParser = &ap;
+  BladeStyle* style = StylePtr<LARGE_TYPE_WITH_OPTIONS2>()->make();
+  CHECK_NEAR(style->get_max_arg(STYLE_OPTION_ARG), 2, 0);
+  delete style;
 }
 
 int main() {
