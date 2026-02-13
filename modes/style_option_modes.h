@@ -181,10 +181,10 @@ struct ApplyColorsFromSelectedStyleEntry : public  MenuEntry {
       return;
     }
     CurrentPreset preset;
-    preset.Load(menu_selected_preset);
+    preset.SetPreset(menu_selected_preset);
     const char* FROM = preset.GetStyle(menu_selected_blade);
-    const char* TO = GetStyle(menu_selected_blade);
-    SetStyle(menu_selected_blade, style_parser.CopyColorArguments(FROM, TO));
+    const char* TO = GetStyle(menu_current_blade);
+    SetStyle(menu_current_blade, style_parser.CopyColorArguments(FROM, TO));
     getSL<SPEC>()->SaySelect();
   }
 };
@@ -196,9 +196,9 @@ struct ApplyColorsToAllBladesEntry : public MenuEntry {
   }
   void select(int entry) {
     getSL<SPEC>()->SaySelect();
-    const char* FROM = GetStyle(menu_selected_blade);
+    const char* FROM = GetStyle(menu_current_blade);
     for (int b = 1; b <= NUM_BLADES; b++) {
-      if (b == menu_selected_blade) continue;
+      if (b == menu_current_blade) continue;
       SetStyle(b, style_parser.CopyColorArguments(FROM, GetStyle(b)));
     }
   }
@@ -215,10 +215,10 @@ struct ApplyStyleArumentsFromSelectedStyleEntry : public  MenuEntry {
       return;
     }
     CurrentPreset preset;
-    preset.Load(menu_selected_preset);
+    preset.SetPreset(menu_selected_preset);
     const char* FROM = preset.GetStyle(menu_selected_blade);
-    const char* TO = GetStyle(menu_selected_blade);
-    SetStyle(menu_selected_blade, style_parser.CopyArguments(FROM, TO));
+    const char* TO = GetStyle(menu_current_blade);
+    SetStyle(menu_current_blade, style_parser.CopyArguments(FROM, TO));
     getSL<SPEC>()->SaySelect();
   }
 };
@@ -234,10 +234,8 @@ struct ResetColorsEntry : public MenuEntry {
       getSL<SPEC>()->SayNoStyleSelected();
       return;
     }
-    CurrentPreset preset;
-    preset.Load(menu_selected_preset);
-    const char* TO = GetStyle(menu_selected_blade);
-    SetStyle(menu_selected_blade, style_parser.CopyColorArguments("builtin 0 0", TO));
+    const char* TO = GetStyle(menu_current_blade);
+    SetStyle(menu_current_blade, style_parser.CopyColorArguments("builtin 0 0", TO));
     getSL<SPEC>()->SaySelect();
   }
 };
@@ -248,10 +246,8 @@ struct ResetStyleArgumentsEntry : public MenuEntry {
     getSL<SPEC>()->SayResetStyleSettings();
   }
   void select(int entry) {
-    CurrentPreset preset;
-    preset.Load(menu_selected_preset);
-    const char* TO = GetStyle(menu_selected_blade);
-    SetStyle(menu_selected_blade, style_parser.CopyArguments("builtin 0 0", TO));
+    const char* TO = GetStyle(menu_current_blade);
+    SetStyle(menu_current_blade, style_parser.CopyArguments("builtin 0 0", TO));
     getSL<SPEC>()->SaySelect();
   }
 };
@@ -280,7 +276,7 @@ struct SelectStyleMenu : public SPEC::MenuBase {
 
   void select() override {
     LSPtr<char> builtin(CurrentPreset::mk_builtin_str(preset(), blade()));
-    SetStyle(menu_selected_blade, style_parser.CopyArguments(builtin.get(), GetStyle(menu_selected_blade)));
+    SetStyle(menu_current_blade, style_parser.CopyArguments(builtin.get(), GetStyle(menu_current_blade)));
     SPEC::MenuBase::select();
   }
 };
