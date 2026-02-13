@@ -1,4 +1,4 @@
-/* V7/8-294.
+/* V7/8-295.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -291,7 +291,7 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   sequential QUOTE with blade ON and OFF, and DOWN for random
   FORCE effect (ON) and music TRACK (OFF). Define acts on
   both ON and OFF states for consistency.
-  
+
 #define SABERSENSE_RANDOM_QUOTE
   Makes the playing of quote.wav files random
   instead of sequential.
@@ -727,8 +727,8 @@ public:
       SaberBase::DoNewFont();  // Play font ident if 'bladeid' sound file missing.
     }
   }
-#endif
-#endif
+#endif // SABERSENSE_ENABLE_ARRAY_FONT_IDENT
+#endif // SABERSENSE_BLADE_ID
 
   // Manual Array Selector, switches on-demand to next array, plays 'array' ident sound.
 #ifdef SABERSENSE_ARRAY_SELECTOR
@@ -785,8 +785,8 @@ public:
       SaberBase::DoNewFont();  // Play font ident if 'array' sound file missing.
     }
   }
-#endif
-#endif
+#endif // SABERSENSE_ENABLE_ARRAY_FONT_IDENT
+#endif // SABERSENSE_ARRAY_SELECTOR
 
 // RESET FACTORY DEFAULTS (Delete Save Files).
 // Script to determine if sound effects have finished.
@@ -850,7 +850,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         On();
 #else
         FastOn();
-#endif    
+#endif
       }
       return true;
 #endif
@@ -863,7 +863,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         On();
 #else
         FastOn();
-#endif  
+#endif
         last_twist_ = millis();
       }
       return true;
@@ -887,7 +887,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         On();
 #else
         FastOn();
-#endif  
+#endif
       }
       return true;
 #endif
@@ -899,7 +899,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         On();
 #else
         FastOn();
-#endif  
+#endif
       }
       return true;
 #endif
@@ -913,11 +913,11 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 
     case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
       SaberBase::DoEffect(EFFECT_USER6, 0);
-      return true;      
+      return true;
 
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
       SaberBase::DoEffect(EFFECT_USER7, 0);
-      return true;  
+      return true;
 #endif
 
 #if NUM_BUTTONS == 2
@@ -1099,7 +1099,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       SetPreset(target_preset, true);
       break;
     }
-#endif
+#endif // !SABERSENSE_DISABLE_FONT_SKIPPING
 
     // BLADE ID OPTIONS AND ARRAY NAVIGATION
     // Blade ID on-demand scanning with BladeID audio idents.
@@ -1115,7 +1115,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       // Check for blade present if using Blade Detect.
 #ifdef BLADE_DETECT_PIN
       if (!blade_detected_) return true; // Do nothing if no blade detected.
-#endif
+#endif // BLADE_DETECT_PIN
       {
         // Cycles through blade arrays regardless of BladeID status.
         bool forward = fusor.angle1() > 0;
@@ -1125,9 +1125,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       PlayArraySound();
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
       SaveArrayState();
-#endif
+#endif // !SABERSENSE_DISABLE_SAVE_ARRAY
       return true;
-#endif
+#endif // SABERSENSE_ARRAY_SELECTOR
 
     // SOUND EFFECT PLAYERS.
     // With Blade ON - UP for Character Quote, plays sequentially.
@@ -1141,14 +1141,14 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #else
       // Quote player points downwards.
         if (fusor.angle1() < 0)
-#endif
+#endif // SABERSENSE_FLIP_AUDIO_PLAYERS
         {
 #ifndef SABERSENSE_RANDOM_QUOTE
           SFX_quote.SelectNext();
           SaberBase::DoEffect(EFFECT_QUOTE, 0);
 #else
           SaberBase::DoEffect(EFFECT_QUOTE, -1);  // Repetition and '-1' required for OS-7.
-#endif
+#endif // SABERSENSE_RANDOM_QUOTE
         } else {
           SaberBase::DoForce();  // Force effect for hilt pointed DOWN.
         }
@@ -1164,17 +1164,18 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #ifndef SABERSENSE_FLIP_AUDIO_PLAYERS
       // Define reverses UP/DOWN options for all QUOTE/FORCE/TRACK audio players.
       //  Quote player points upwards.
-        if (fusor.angle1() > 0) {
+        if (fusor.angle1() > 0)
 #else
       // Quote player points downwards.
-        if (fusor.angle1() < 0) {
-#endif
+        if (fusor.angle1() < 0)
+#endif // SABERSENSE_FLIP_AUDIO_PLAYERS
+        {
 #ifndef SABERSENSE_RANDOM_QUOTE
           SFX_quote.SelectNext();
           SaberBase::DoEffect(EFFECT_QUOTE, 0);
 #else
           SaberBase::DoEffect(EFFECT_QUOTE, -1);  // Repetition and '-1' required for OS-7.
-#endif
+#endif // SABERSENSE_RANDOM_QUOTE
         } else {
           StartOrStopTrack();  // Play track for hilt pointed DOWN.
         }
@@ -1201,8 +1202,8 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
       ToggleColorChangeMode();
       return true;
-#endif
-#endif
+#endif // NUM_BUTTONS == 2
+#endif // !SABERSENSE_NO_COLOR_CHANGE
 
     // BLASTER DEFLECTION
     // 1 Button (and 2 button with extra define).
@@ -1260,7 +1261,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
 #else
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD, MODE_ON):
-#endif
+#endif // NUM_BUTTONS
 
       if (accel_.x < -0.15) {
         SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);
