@@ -1,4 +1,4 @@
-/* V7/8-290.
+/* V7/8-294.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -291,6 +291,10 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   sequential QUOTE with blade ON and OFF, and DOWN for random
   FORCE effect (ON) and music TRACK (OFF). Define acts on
   both ON and OFF states for consistency.
+  
+#define SABERSENSE_RANDOM_QUOTE
+  Makes the playing of quote.wav files random
+  instead of sequential.
 
 #define SABERSENSE_BLAST_PWR_AND_AUX
   Adds blaster block button to POWER button as well as AUX
@@ -1139,8 +1143,12 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         if (fusor.angle1() < 0)
 #endif
         {
+#ifndef SABERSENSE_RANDOM_QUOTE
           SFX_quote.SelectNext();
           SaberBase::DoEffect(EFFECT_QUOTE, 0);
+#else
+          SaberBase::DoEffect(EFFECT_QUOTE, -1);  // Repetition and '-1' required for OS-7.
+#endif
         } else {
           SaberBase::DoForce();  // Force effect for hilt pointed DOWN.
         }
@@ -1161,8 +1169,12 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       // Quote player points downwards.
         if (fusor.angle1() < 0) {
 #endif
+#ifndef SABERSENSE_RANDOM_QUOTE
           SFX_quote.SelectNext();
           SaberBase::DoEffect(EFFECT_QUOTE, 0);
+#else
+          SaberBase::DoEffect(EFFECT_QUOTE, -1);  // Repetition and '-1' required for OS-7.
+#endif
         } else {
           StartOrStopTrack();  // Play track for hilt pointed DOWN.
         }
