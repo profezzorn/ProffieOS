@@ -590,12 +590,12 @@ public:
         Stop();
         break;
       case EFFECT_BLADEIN:
-        if (scr_.Play(&SCR_bladeout)) break;
+        if (scr_.Play(&SCR_bladein)) break;
         if (scr_.Play(&SCR_font)) break;
         ShowDefault();
         break;
       case EFFECT_BLADEOUT:
-        if (scr_.Play(&SCR_bladein)) break;
+        if (scr_.Play(&SCR_bladeout)) break;
         /* fall through */
       case EFFECT_NEWFONT:
         if (scr_.Play(&SCR_font)) break;
