@@ -25,6 +25,7 @@ Print* stdout_output = &standard_print;
 ConsoleHelper STDOUT;
 Monitoring monitor;
 
+#define STRIFY(X) std::string((char *)&(X), sizeof(X))
 
 int32_t clampi32(int32_t x, int32_t a, int32_t b) {
   if (x < a) return a;
@@ -43,7 +44,7 @@ std::string mkchunk(std::string chnk,
 		    std::string data) {
   std::string ret = chnk;
   uint32_t tmp = data.size();
-  ret += STRINGIFY(tmp);
+  ret += STRIFY(tmp);
   ret += data;
   return ret;
 }
@@ -92,7 +93,7 @@ int main(int argc, char** argv) {
     talkie.Say(data.data(), rate);
     while (talkie.isPlaying()) {
       int16_t ret = talkie.Get44kHz();
-      samples += STRINGIFY(ret);
+      samples += STRIFY(ret);
     }
   }
   
@@ -108,7 +109,7 @@ int main(int argc, char** argv) {
   Fmt fmt;
   std::string wav = mkchunk("RIFF",
 			    "WAVE" +
-			    mkchunk("fmt ", STRINGIFY(fmt)) +
+			    mkchunk("fmt ", STRIFY(fmt)) +
 			    mkchunk("data", samples));
   fwrite(wav.c_str(), 1, wav.size(), stdout);
 }
