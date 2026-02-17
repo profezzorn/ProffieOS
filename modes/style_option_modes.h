@@ -257,26 +257,31 @@ struct SelectStyleMenu : public SPEC::MenuBase {
   uint16_t size() override {
     return NUM_BLADES * current_config->num_presets;
   }
-  int blade() { return this->pos_ / NUM_BLADES; }
-  int preset() { return this->pos_ % NUM_BLADES; }
+  int preset() { return this->pos_ / NUM_BLADES; }
+  int blade() { return this->pos_ % NUM_BLADES; }
   void mode_activate(bool onreturn) override {
+    int preset = -1;
+    int blade = -1;
+    style_parser.GetBuiltinPos(GetStyle(menu_current_blade), &preset, &blade);
+    this->pos_ = preset * NUM_BLADES + (blade - 1);
+    PVLOG_DEBUG
+      << " PRESET = " << preset
+      << " BLADE = " << blade
+      << " POS = " << this->pos_
+      << "\n";
     SPEC::MenuBase::mode_activate(onreturn);
-    int preset;
-    int style;
-    style_parser.GetBuiltinPos(GetStyle(menu_current_blade), &preset, &style);
-    this->pos_ = preset * NUM_BLADES + style;
   }
   
   void say() override {
-    getSL<SPEC>()->SayBlade();
-    getSL<SPEC>()->SayWhole(blade());
     getSL<SPEC>()->SayPreset();
-    getSL<SPEC>()->SayWhole(preset());
+    getSL<SPEC>()->SayWhole(preset() + 1);
+    getSL<SPEC>()->SayBlade();
+    getSL<SPEC>()->SayWhole(blade() + 1);
   }
 
   void select() override {
-    LSPtr<char> builtin(CurrentPreset::mk_builtin_str(preset(), blade()));
-    SetStyle(menu_current_blade, style_parser.CopyArguments(builtin.get(), GetStyle(menu_current_blade)));
+    LSPtr<char> builtin(CurrentPreset::mk_builtin_str(preset(), blade() + 1));
+    SetStyle(menu_current_blade, style_parser.CopyArguments(GetStyle(menu_current_blade), builtin.get()));
     SPEC::MenuBase::select();
   }
 };
