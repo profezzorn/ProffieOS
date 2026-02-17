@@ -1,4 +1,4 @@
-/* V7/8-295.
+/* V7/8-300.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -136,7 +136,7 @@ FUNCTIONS WITH BLADE ON
   Lightning block           Double click and hold while ON.
   Melt                      Hold and push blade tip against wall (stab). Rotate for heat colours.
   Blaster blocks            Short click/double click/triple click while ON.
-  Enter multi-blast mode    Hold while swinging for one second and release.
+  Enter multi-blast mode    Hold while swinging for one second and release. ***
                               To trigger blaster block, swing saber while in multi-blast mode.
                               To exit, hold while swinging for one second and release.
 
@@ -151,6 +151,8 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 
   *   = Gesture ignitions also available via defines.
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
+  *** = Can be used for Kestis style Colour Change feature via define. In which case Multi-blast
+        is accessed by four clicks of POWER with blade on.
 
 ============================================================
 ===================== 2 BUTTON CONTROLS ====================
@@ -194,7 +196,7 @@ FUNCTIONS WITH BLADE ON
   Lightning block           Double-click POWER and hold.
   Melt                      Hold POWER and stab blade tip against wall. Rotate for heat colours.
   Blaster blocks            Short click AUX. (Add Short click POWER using define).
-  Enter multi-blast mode    Hold POWER while swinging for one second and release.
+  Enter multi-blast mode    Hold POWER while swinging for one second and release. ***
                               Saber will play two quick blasts confirming mode.
                               Swing blade to trigger blaster block.
                               To exit multi-blast mode, fast single click AUX.
@@ -212,6 +214,8 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 
   *   = Gesture ignitions also available via defines.
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
+  *** = Can be used for Kestis style Colour Change feature via define. In which case Multi-blast
+        is accessed by four clicks of POWER with blade on.
 
 ===========================================================
 =================== SABERSENSE DEFINES ====================
@@ -344,12 +348,18 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Applicable to two-button mode only, reverts to lockup
   being triggered by clash while holding aux.
 
-#define SABERSENSE_F263_CUSTOM_USER_EFFECT
-  Based on Fett263 'Special Abilities', this define
-  enables interaction with EFFECT_USERx in standard
-  (non-Fett) blade styles for custom effects like
-  swing colour changing.
-
+#define SABERSENSE_EFFECT_USER1_ALT_FONT
+  This define utilises ProffieOS's EFFECT_USER1
+  feature in blade styles to allow effects like
+  the swing colour change seen in the Cal Kestis
+  Fallen Order video game.
+  It also allows the Alt Font feature to change
+  certain sounds when combined with a suitable
+  blade style and font folder layout.
+  Further details and specific blade styles can
+  be found on the Sabersense website here:
+  https://sabersense.square.site/downloads
+  
 GESTURE CONTROLS
   There are four gesture types: Twist, Stab, Swing and Thrust.
   #define SABERSENSE_TWIST_ON
@@ -904,41 +914,6 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 #endif
 
-    // Based on Fett263 'Special Abilities'.
-#ifdef SABERSENSE_F263_CUSTOM_USER_EFFECT
-#if NUM_BUTTONS >= 1
-    case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
-      SaberBase::DoEffect(EFFECT_USER5, 0);
-      return true;
-
-    case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
-      SaberBase::DoEffect(EFFECT_USER6, 0);
-      return true;
-
-    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
-      SaberBase::DoEffect(EFFECT_USER7, 0);
-      return true;
-#endif
-
-#if NUM_BUTTONS == 2
-    case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
-      SaberBase::DoEffect(EFFECT_USER3, 0);
-      return true;
-
-    case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
-      SaberBase::DoEffect(EFFECT_USER4, 0);
-      return true;
-
-    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
-      SaberBase::DoEffect(EFFECT_USER1, 0);
-      return true;
-
-    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_AUX):
-      SaberBase::DoEffect(EFFECT_USER2, 0);
-      return true;
-#endif
-#endif  // SABERSENSE_F263_CUSTOM_USER_EFFECT
-
     // MAIN ACTIVATION
     // Saber ON AND Volume Adjust, 1 and 2 Button.
     case EVENTID(BUTTON_POWER, EVENT_FIRST_SAVED_CLICK_SHORT, MODE_OFF):
@@ -1229,7 +1204,11 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #endif
 
     // Multi-Blaster Deflection mode
+#ifdef SABERSENSE_EFFECT_USER1_ALT_FONT
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_ON):
+#else
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
+#endif
       swing_blast_ = !swing_blast_;
       if (swing_blast_) {
         if (SFX_blstbgn) {
@@ -1251,6 +1230,12 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         SaberBase::DoBlast();
       }
       return true;
+
+#ifdef SABERSENSE_EFFECT_USER1_ALT_FONT
+    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
+      SaberBase::DoEffect(EFFECT_USER1, 0);
+      return true;  
+#endif
 
     // LOCKUP
 #if NUM_BUTTONS == 1
