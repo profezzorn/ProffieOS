@@ -338,7 +338,7 @@ Standard Controls While Blade is OFF
     *if using FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
     Point down for volts, parallel or up for percent
   NEW! Manual Blade ID* = Triple Click + Long Click PWR
-    *requires FETT263_MANUAL_BLADE_ID and BLADE_ID_SCAN_MILLIS defines
+    *requires FETT263_MANUAL_BLADE_ID
     *replaces Change Font control
   NEW! Change Font*
     Next Font = Triple Click + Long Click PWR (parallel or up)
@@ -557,7 +557,7 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
 
   FETT263_MANUAL_BLADE_ID
   Enables Manual Blade ID Scan via button control (see here: https://pod.hubbe.net/howto/blade-id.html)
-  *requires BLADE_ID_SCAN_MILLIS define, replaces "Change Font" control
+  *replaces "Change Font" control
 
   FETT263_MANUAL_BLADE_ARRAY
   Enables Manual Blade Array switching via button control (you need more than one Blade Array)
@@ -1416,8 +1416,8 @@ EFFECT2(trloop, trloop);
 #ifdef FETT263_USE_SETTINGS_MENU
 EFFECT(medit); // Edit Mode
 #endif
-#ifdef FETT263_MANUAL_BLADE_ARRAY
-EFFECT(array);      // for Manual Blade Array switching
+#if defined(FETT263_MANUAL_BLADE_ARRAY) || defined(FETT263_MANUAL_BLADE_ID)
+EFFECT(array);      // for Manual Blade Array or Manual Blade ID switching
 #endif
 #ifdef FETT263_SS_BUTTON_CLICKER
 EFFECT(press); // for button press sound
@@ -2291,6 +2291,7 @@ SaberFett263Buttons() : PropBase() {}
     FindBladeAgain();
     PlayArraySound();
   }
+
 #ifdef FETT263_MANUAL_BLADE_ARRAY
   void NextBladeArray() {
     if (!use_fake_id_) best_config_before_faking_ = current_config - blades;
@@ -2301,6 +2302,7 @@ SaberFett263Buttons() : PropBase() {}
     FindBladeAgain();
     PlayArraySound();
   }
+#endif
 
   void PlayArraySound() {
     if (SFX_array) {
@@ -2310,7 +2312,6 @@ SaberFett263Buttons() : PropBase() {}
       hybrid_font.PlayCommon(&SFX_font);
     }
   }
-#endif
 #endif
 
   void DoInteractivePreon() {
