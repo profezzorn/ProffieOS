@@ -159,12 +159,20 @@ class Effect {
     reset();
   }
 
+  Effect(const char* name, NoLink _,
+	 FileType file_type = FileType::SOUND) : name_(name) {
+    following_ = nullptr;
+    next_ = nullptr;
+    file_type_ = file_type;
+    reset();
+  }
+
   void CopyDirectoryFrom(Effect* effect) {
-    min_file_ = 0;
-    max_file_ = 0;
+    min_file_ = 127;
+    max_file_ = -1;
     unnumbered_file_found_ = true;
     found_in_alt_dir_ = effect->found_in_alt_dir_;
-    file_pattern_ = effect->file_pattern_;
+    file_pattern_ = FilePattern::FLAT;
     ext_ = Extension::WAV;
     num_files_ = 1;
     directory_ = effect->directory_;

@@ -2,7 +2,7 @@
 #define SOUND_AUDIO_STREAM_WORK_H
 
 #include "../common/atomic.h"
-
+#include "../common/circular_buffer.h"
 
 // AudioStreamWork is a linked list of classes that would like to
 // do some work in a software-triggered interrupt. This is used to
@@ -71,15 +71,15 @@ public:
 
   static void LockSD(bool locked) {
 //    scheduleFillBuffer();
-    sd_locked.set(locked);
+    sd_locked += locked ? 1 : -1;
     if (locked) MountSDCard();
   }
 
   static void LockSD_nomount(bool locked) {
-    sd_locked.set(locked);
+    sd_locked += locked ? 1 : -1;
   }
   
-  static bool sd_is_locked() { return sd_locked.get(); }
+  static bool sd_is_locked() { return sd_locked.get() > 0; }
 
   static void CloseAllOpenFiles() {
     for (AudioStreamWork *d = data_streams; d; d=d->next_)
@@ -136,12 +136,12 @@ private:
     fill_buffers_pending_.set(false);
   }
 
-  static POAtomic<bool> sd_locked;
+  static POAtomic<uint32_t> sd_locked;
   static POAtomic<bool> fill_buffers_pending_;
   AudioStreamWork* next_;
 };
 
-POAtomic<bool> AudioStreamWork::sd_locked (false);
+POAtomic<uint32_t> AudioStreamWork::sd_locked (false);
 POAtomic<bool> AudioStreamWork::fill_buffers_pending_(false);
 #define LOCK_SD(X) AudioStreamWork::LockSD(X)
 

@@ -108,6 +108,11 @@ struct GetArgMax<IntSelect<IntArg<ARG, DEFAULT_VALUE>, REST...>, ARG> {
   static const int value = sizeof...(REST);
 };
 
+template<int ARG, int DEFAULT_VALUE>
+struct GetArgMax<IntArg<ARG, DEFAULT_VALUE>, ARG> {
+  static const int value = DEFAULT_VALUE <= 1000 ? ARG_MAX_UNKNOWN : 32768;
+};
+
 template<int ARG, class T>
 struct GetArgMaxTL<ARG, TypeList<T>> {
   static const int value = GetArgMax<T, ARG>::value;

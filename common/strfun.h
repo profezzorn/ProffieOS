@@ -124,7 +124,7 @@ bool Sscanf(const char* str, const char* pattern, const char** arg) {
 }
 
 
-const char* format_pattern(const StringPiece pattern, const StringPiece value) {
+char* format_pattern(const StringPiece pattern, const StringPiece value) {
   size_t stars = 0;
   for (size_t i = 0; i < pattern.len; i++) if (pattern[i] == '*') stars++;
   size_t len = pattern.len + stars * (value.len - 1) + 1;

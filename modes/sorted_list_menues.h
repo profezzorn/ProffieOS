@@ -43,7 +43,9 @@ public:
     SPEC::SelectFromListModeBase::mode_activate(onreturn);
   }
   void say() override {
-    chdir(this->get());
+    char* path = format_pattern(FONT_PATTERN, this->get());
+    chdir(path);
+    free(path);
     hybrid_font.SB_Effect(EFFECT_NEWFONT, 0);
   }
   void exit() override {

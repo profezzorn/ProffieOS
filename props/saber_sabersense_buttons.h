@@ -1,14 +1,27 @@
-/* V7/8-288.
+/* V7/8-300.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
 =================       CHRIS CARTER       =================
 ============================================================
 
-Built on Matthew McGeary's SA22C button prop file for one
-and two button replica lightsabers. Modified by Chris
-Carter with substantial support and contributions from
-Fredrik Hubinette and Brian Conner.
+http://fredrik.hubbe.net/lightsaber/proffieos.html
+Copyright (c) 2016-2019 Fredrik Hubinette
+
+Sabersense(TM) Prop File for ProffieOS.
+https://www.sabersense.co.uk
+
+Prop file Copyright (c) 2024-2026 Chris Carter (Sabersense)
+Built on Matthew McGeary's SA22C button prop file for
+one and two button replica lightsabers.
+Modified by Chris Carter with substantial support and
+contributions from Fredrik Hubinette and Brian Conner.
+
+Distributed under the terms of the
+GNU General Public License v3.
+
+============================================================
+======================= INTRODUCTION =======================
 
 This prop file has been optimized for, and is included
 with, ProffieOS 8.x or later, but is also fully
@@ -17,9 +30,13 @@ backwards compatible with ProffieOS 7.x.
 This prop file references certain custom sound files
 to aid in saber function navigation. These sound files
 are optional and are available as a free download from
-the Sabersense website. (Link below).
-
+the Sabersense website:
 https://sabersense.square.site/downloads
+
+A video explaining the design principles and providing
+button control user guides is available on the
+Sabersense Youtube Channel:
+https://www.youtube.com/watch?v=kqK0EJ9dMZs
 
 ============================================================
 ========= BUTTON SYSTEM PRINCIPLES AND LOGIC NOTES =========
@@ -119,7 +136,7 @@ FUNCTIONS WITH BLADE ON
   Lightning block           Double click and hold while ON.
   Melt                      Hold and push blade tip against wall (stab). Rotate for heat colours.
   Blaster blocks            Short click/double click/triple click while ON.
-  Enter multi-blast mode    Hold while swinging for one second and release.
+  Enter multi-blast mode    Hold while swinging for one second and release. ***
                               To trigger blaster block, swing saber while in multi-blast mode.
                               To exit, hold while swinging for one second and release.
 
@@ -134,6 +151,8 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 
   *   = Gesture ignitions also available via defines.
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
+  *** = Can be used for Kestis style Colour Change feature via define. In which case Multi-blast
+        is accessed by four clicks of POWER with blade on.
 
 ============================================================
 ===================== 2 BUTTON CONTROLS ====================
@@ -177,7 +196,7 @@ FUNCTIONS WITH BLADE ON
   Lightning block           Double-click POWER and hold.
   Melt                      Hold POWER and stab blade tip against wall. Rotate for heat colours.
   Blaster blocks            Short click AUX. (Add Short click POWER using define).
-  Enter multi-blast mode    Hold POWER while swinging for one second and release.
+  Enter multi-blast mode    Hold POWER while swinging for one second and release. ***
                               Saber will play two quick blasts confirming mode.
                               Swing blade to trigger blaster block.
                               To exit multi-blast mode, fast single click AUX.
@@ -195,6 +214,8 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
 
   *   = Gesture ignitions also available via defines.
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
+  *** = Can be used for Kestis style Colour Change feature via define. In which case Multi-blast
+        is accessed by four clicks of POWER with blade on.
 
 ===========================================================
 =================== SABERSENSE DEFINES ====================
@@ -275,6 +296,10 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   FORCE effect (ON) and music TRACK (OFF). Define acts on
   both ON and OFF states for consistency.
 
+#define SABERSENSE_RANDOM_QUOTE
+  Makes the playing of quote.wav files random
+  instead of sequential.
+
 #define SABERSENSE_BLAST_PWR_AND_AUX
   Adds blaster block button to POWER button as well as AUX
   in 2-button mode. Improves 1 and 2-button harmonization,
@@ -323,12 +348,18 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   Applicable to two-button mode only, reverts to lockup
   being triggered by clash while holding aux.
 
-#define SABERSENSE_F263_CUSTOM_USER_EFFECT
-  Based on Fett263 'Special Abilities', this define
-  enables interaction with EFFECT_USERx in standard
-  (non-Fett) blade styles for custom effects like
-  swing colour changing.
-
+#define SABERSENSE_EFFECT_USER1_ALT_FONT
+  This define utilises ProffieOS's EFFECT_USER1
+  feature in blade styles to allow effects like
+  the swing colour change seen in the Cal Kestis
+  Fallen Order video game.
+  It also allows the Alt Font feature to change
+  certain sounds when combined with a suitable
+  blade style and font folder layout.
+  Further details and specific blade styles can
+  be found on the Sabersense website here:
+  https://sabersense.square.site/downloads
+  
 GESTURE CONTROLS
   There are four gesture types: Twist, Stab, Swing and Thrust.
   #define SABERSENSE_TWIST_ON
@@ -706,8 +737,8 @@ public:
       SaberBase::DoNewFont();  // Play font ident if 'bladeid' sound file missing.
     }
   }
-#endif
-#endif
+#endif // SABERSENSE_ENABLE_ARRAY_FONT_IDENT
+#endif // SABERSENSE_BLADE_ID
 
   // Manual Array Selector, switches on-demand to next array, plays 'array' ident sound.
 #ifdef SABERSENSE_ARRAY_SELECTOR
@@ -764,8 +795,8 @@ public:
       SaberBase::DoNewFont();  // Play font ident if 'array' sound file missing.
     }
   }
-#endif
-#endif
+#endif // SABERSENSE_ENABLE_ARRAY_FONT_IDENT
+#endif // SABERSENSE_ARRAY_SELECTOR
 
 // RESET FACTORY DEFAULTS (Delete Save Files).
 // Script to determine if sound effects have finished.
@@ -829,7 +860,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         On();
 #else
         FastOn();
-#endif    
+#endif
       }
       return true;
 #endif
@@ -842,7 +873,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         On();
 #else
         FastOn();
-#endif  
+#endif
         last_twist_ = millis();
       }
       return true;
@@ -866,7 +897,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         On();
 #else
         FastOn();
-#endif  
+#endif
       }
       return true;
 #endif
@@ -878,45 +909,10 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
         On();
 #else
         FastOn();
-#endif  
+#endif
       }
       return true;
 #endif
-
-    // Based on Fett263 'Special Abilities'.
-#ifdef SABERSENSE_F263_CUSTOM_USER_EFFECT
-#if NUM_BUTTONS >= 1
-    case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_POWER):
-      SaberBase::DoEffect(EFFECT_USER5, 0);
-      return true;
-
-    case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_POWER):
-      SaberBase::DoEffect(EFFECT_USER6, 0);
-      return true;      
-
-    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_POWER):
-      SaberBase::DoEffect(EFFECT_USER7, 0);
-      return true;  
-#endif
-
-#if NUM_BUTTONS == 2
-    case EVENTID(BUTTON_NONE, EVENT_TWIST_RIGHT, MODE_ON | BUTTON_AUX):
-      SaberBase::DoEffect(EFFECT_USER3, 0);
-      return true;
-
-    case EVENTID(BUTTON_NONE, EVENT_TWIST_LEFT, MODE_ON | BUTTON_AUX):
-      SaberBase::DoEffect(EFFECT_USER4, 0);
-      return true;
-
-    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_AUX):
-      SaberBase::DoEffect(EFFECT_USER1, 0);
-      return true;
-
-    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_OFF | BUTTON_AUX):
-      SaberBase::DoEffect(EFFECT_USER2, 0);
-      return true;
-#endif
-#endif  // SABERSENSE_F263_CUSTOM_USER_EFFECT
 
     // MAIN ACTIVATION
     // Saber ON AND Volume Adjust, 1 and 2 Button.
@@ -1078,7 +1074,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       SetPreset(target_preset, true);
       break;
     }
-#endif
+#endif // !SABERSENSE_DISABLE_FONT_SKIPPING
 
     // BLADE ID OPTIONS AND ARRAY NAVIGATION
     // Blade ID on-demand scanning with BladeID audio idents.
@@ -1094,7 +1090,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       // Check for blade present if using Blade Detect.
 #ifdef BLADE_DETECT_PIN
       if (!blade_detected_) return true; // Do nothing if no blade detected.
-#endif
+#endif // BLADE_DETECT_PIN
       {
         // Cycles through blade arrays regardless of BladeID status.
         bool forward = fusor.angle1() > 0;
@@ -1104,9 +1100,9 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       PlayArraySound();
 #ifndef SABERSENSE_DISABLE_SAVE_ARRAY
       SaveArrayState();
-#endif
+#endif // !SABERSENSE_DISABLE_SAVE_ARRAY
       return true;
-#endif
+#endif // SABERSENSE_ARRAY_SELECTOR
 
     // SOUND EFFECT PLAYERS.
     // With Blade ON - UP for Character Quote, plays sequentially.
@@ -1120,10 +1116,14 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #else
       // Quote player points downwards.
         if (fusor.angle1() < 0)
-#endif
+#endif // SABERSENSE_FLIP_AUDIO_PLAYERS
         {
+#ifndef SABERSENSE_RANDOM_QUOTE
           SFX_quote.SelectNext();
           SaberBase::DoEffect(EFFECT_QUOTE, 0);
+#else
+          SaberBase::DoEffect(EFFECT_QUOTE, -1);  // Repetition and '-1' required for OS-7.
+#endif // SABERSENSE_RANDOM_QUOTE
         } else {
           SaberBase::DoForce();  // Force effect for hilt pointed DOWN.
         }
@@ -1139,13 +1139,18 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #ifndef SABERSENSE_FLIP_AUDIO_PLAYERS
       // Define reverses UP/DOWN options for all QUOTE/FORCE/TRACK audio players.
       //  Quote player points upwards.
-        if (fusor.angle1() > 0) {
+        if (fusor.angle1() > 0)
 #else
       // Quote player points downwards.
-        if (fusor.angle1() < 0) {
-#endif
+        if (fusor.angle1() < 0)
+#endif // SABERSENSE_FLIP_AUDIO_PLAYERS
+        {
+#ifndef SABERSENSE_RANDOM_QUOTE
           SFX_quote.SelectNext();
           SaberBase::DoEffect(EFFECT_QUOTE, 0);
+#else
+          SaberBase::DoEffect(EFFECT_QUOTE, -1);  // Repetition and '-1' required for OS-7.
+#endif // SABERSENSE_RANDOM_QUOTE
         } else {
           StartOrStopTrack();  // Play track for hilt pointed DOWN.
         }
@@ -1172,8 +1177,8 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_ON | BUTTON_POWER):
       ToggleColorChangeMode();
       return true;
-#endif
-#endif
+#endif // NUM_BUTTONS == 2
+#endif // !SABERSENSE_NO_COLOR_CHANGE
 
     // BLASTER DEFLECTION
     // 1 Button (and 2 button with extra define).
@@ -1199,7 +1204,11 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
 #endif
 
     // Multi-Blaster Deflection mode
+#ifdef SABERSENSE_EFFECT_USER1_ALT_FONT
+    case EVENTID(BUTTON_POWER, EVENT_FOURTH_SAVED_CLICK_SHORT, MODE_ON):
+#else
     case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
+#endif
       swing_blast_ = !swing_blast_;
       if (swing_blast_) {
         if (SFX_blstbgn) {
@@ -1222,6 +1231,12 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       }
       return true;
 
+#ifdef SABERSENSE_EFFECT_USER1_ALT_FONT
+    case EVENTID(BUTTON_NONE, EVENT_SWING, MODE_ON | BUTTON_POWER):
+      SaberBase::DoEffect(EFFECT_USER1, 0);
+      return true;  
+#endif
+
     // LOCKUP
 #if NUM_BUTTONS == 1
     // 1 button lockup
@@ -1231,7 +1246,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_ON | BUTTON_AUX):
 #else
     case EVENTID(BUTTON_AUX, EVENT_FIRST_HELD, MODE_ON):
-#endif
+#endif // NUM_BUTTONS
 
       if (accel_.x < -0.15) {
         SaberBase::SetLockup(SaberBase::LOCKUP_DRAG);

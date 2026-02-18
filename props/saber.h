@@ -101,7 +101,7 @@ public:
 #endif
         return true;
 
-        // Handle double-click with preon
+      // Handle double-click with preon
       case EVENTID(BUTTON_POWER, EVENT_DOUBLE_CLICK, MODE_OFF):
         if (on_pending_) {
           if (SetMute(true)) {
@@ -112,6 +112,8 @@ public:
         return false;
 
 #ifdef MENU_SPEC_TEMPLATE
+      // Serial monitor command: aux p2
+      // Navigate with [l]eft [r]ight, [sel]ect and [can]cel.
       case EVENTID(BUTTON_AUX, EVENT_DOUBLE_CLICK, MODE_OFF):
 	EnterMenu();
 	return true;

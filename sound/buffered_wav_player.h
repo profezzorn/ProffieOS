@@ -52,7 +52,7 @@ public:
   }
 
   void PlayInSameDirAs(const char* name, Effect* effect) {
-    Effect tmp(name);
+    Effect tmp(name, NOLINK);
     tmp.CopyDirectoryFrom(effect);
     char full_name[128];
     tmp.RandomFile().GetName(full_name);

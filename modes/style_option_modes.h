@@ -10,15 +10,20 @@ public:
   void set(int x) {
     value_ = x;
     if (!getSL<SPEC>()->busy()) {
-      getSL<SPEC>()->SayWhole(x * 100 / 32768);
+      getSL<SPEC>()->SayWhole(x * 100 / 32768); // decimals?
       getSL<SPEC>()->SayPercent();
     }
   }
 
   void select() override {
-    SPEC::SmoothMode::select();
+    getSL<SPEC>()->SaySelect();
     SetIntArg(menu_current_blade, menu_current_arg, value_);
-    popMode();
+    SPEC::SmoothMode::select();
+  }
+
+  void exit() override {
+    getSL<SPEC>()->SayCancel();
+    SPEC::SmoothMode::exit();
   }
 
 private:  
@@ -28,8 +33,19 @@ private:
 template<class SPEC>
 class SelectArgTime : public SPEC::SmoothMode {
 public:
-  int get() override { return GetIntArg(menu_current_blade, menu_current_arg); }
-  float t(int x) { return powf(x / 32768.0f, 2.0) * 30.0; }
+  float t(int x) { return powf(x / 32767.0f, 2.0) * 30.0; }
+  int v(float seconds) {
+    if (seconds > 30.0) seconds = 30.0;
+    if (seconds < 0.0) seconds = 0.0;
+    return powf(seconds / 30.0f, 1.0/2.0) * 32767.0;
+  }
+
+  int get() override {
+    int millis = GetIntArg(menu_current_blade, menu_current_arg);
+    value_ = v(millis / 1000.0f);
+    return value_;
+  }
+
   void set(int x) {
     value_ = x;
     if (!getSL<SPEC>()->busy()) {
@@ -39,9 +55,14 @@ public:
   }
 
   void select() override {
-    SPEC::SmoothMode::select();
+    getSL<SPEC>()->SaySelect();
     SetIntArg(menu_current_blade, menu_current_arg, (int)(t(value_) * 1000));
-    popMode();
+    SPEC::SmoothMode::select();
+  }
+
+  void exit() override {
+    getSL<SPEC>()->SayCancel();
+    SPEC::SmoothMode::exit();
   }
 
 private:  
@@ -58,6 +79,7 @@ public:
       if (max < 0) max = 32768;
       max_ = max;
       this->pos_ = GetIntArg(menu_current_blade, menu_current_arg);
+      PVLOG_DEBUG << "Current value = " << this->pos_  << "\n";
       // TODO: What if pos_ > max_ ?
     }
   }
@@ -116,12 +138,13 @@ public:
       pushMode<typename SPEC::SelectArgColor>();
     } else {
       int max_arg = GetMaxStyleArg();
-      if (max_arg == 32768 || max_arg == 32767) {
-	pushMode<typename SPEC::SelectArgSmooth>();
-      } else if (max_arg <= 0 && isTimeArg(menu_current_arg)) {
+      PVLOG_DEBUG << " MAX = " << max_arg << "\n";
+      if (max_arg > 0 && max_arg <= 1000) {
+	pushMode<typename SPEC::SelectArgNumber>();
+      } else if (isTimeArg(menu_current_arg)) {
 	pushMode<typename SPEC::SelectArgTime>();
       } else {
-	pushMode<typename SPEC::SelectArgNumber>();
+	pushMode<typename SPEC::SelectArgSmooth>();
       }
     }
   }
@@ -158,10 +181,10 @@ struct ApplyColorsFromSelectedStyleEntry : public  MenuEntry {
       return;
     }
     CurrentPreset preset;
-    preset.Load(menu_selected_preset);
+    preset.SetPreset(menu_selected_preset);
     const char* FROM = preset.GetStyle(menu_selected_blade);
-    const char* TO = GetStyle(menu_selected_blade);
-    SetStyle(menu_selected_blade, style_parser.CopyColorArguments(FROM, TO));
+    const char* TO = GetStyle(menu_current_blade);
+    SetStyle(menu_current_blade, style_parser.CopyColorArguments(FROM, TO));
     getSL<SPEC>()->SaySelect();
   }
 };
@@ -173,9 +196,9 @@ struct ApplyColorsToAllBladesEntry : public MenuEntry {
   }
   void select(int entry) {
     getSL<SPEC>()->SaySelect();
-    const char* FROM = GetStyle(menu_selected_blade);
+    const char* FROM = GetStyle(menu_current_blade);
     for (int b = 1; b <= NUM_BLADES; b++) {
-      if (b == menu_selected_blade) continue;
+      if (b == menu_current_blade) continue;
       SetStyle(b, style_parser.CopyColorArguments(FROM, GetStyle(b)));
     }
   }
@@ -192,10 +215,10 @@ struct ApplyStyleArumentsFromSelectedStyleEntry : public  MenuEntry {
       return;
     }
     CurrentPreset preset;
-    preset.Load(menu_selected_preset);
+    preset.SetPreset(menu_selected_preset);
     const char* FROM = preset.GetStyle(menu_selected_blade);
-    const char* TO = GetStyle(menu_selected_blade);
-    SetStyle(menu_selected_blade, style_parser.CopyArguments(FROM, TO));
+    const char* TO = GetStyle(menu_current_blade);
+    SetStyle(menu_current_blade, style_parser.CopyArguments(FROM, TO));
     getSL<SPEC>()->SaySelect();
   }
 };
@@ -211,10 +234,8 @@ struct ResetColorsEntry : public MenuEntry {
       getSL<SPEC>()->SayNoStyleSelected();
       return;
     }
-    CurrentPreset preset;
-    preset.Load(menu_selected_preset);
-    const char* TO = GetStyle(menu_selected_blade);
-    SetStyle(menu_selected_blade, style_parser.CopyColorArguments("builtin 0 0", TO));
+    const char* TO = GetStyle(menu_current_blade);
+    SetStyle(menu_current_blade, style_parser.CopyColorArguments("builtin 0 0", TO));
     getSL<SPEC>()->SaySelect();
   }
 };
@@ -225,10 +246,8 @@ struct ResetStyleArgumentsEntry : public MenuEntry {
     getSL<SPEC>()->SayResetStyleSettings();
   }
   void select(int entry) {
-    CurrentPreset preset;
-    preset.Load(menu_selected_preset);
-    const char* TO = GetStyle(menu_selected_blade);
-    SetStyle(menu_selected_blade, style_parser.CopyArguments("builtin 0 0", TO));
+    const char* TO = GetStyle(menu_current_blade);
+    SetStyle(menu_current_blade, style_parser.CopyArguments("builtin 0 0", TO));
     getSL<SPEC>()->SaySelect();
   }
 };
@@ -238,26 +257,31 @@ struct SelectStyleMenu : public SPEC::MenuBase {
   uint16_t size() override {
     return NUM_BLADES * current_config->num_presets;
   }
-  int blade() { return this->pos_ / NUM_BLADES; }
-  int preset() { return this->pos_ % NUM_BLADES; }
+  int preset() { return this->pos_ / NUM_BLADES; }
+  int blade() { return this->pos_ % NUM_BLADES; }
   void mode_activate(bool onreturn) override {
+    int preset = -1;
+    int blade = -1;
+    style_parser.GetBuiltinPos(GetStyle(menu_current_blade), &preset, &blade);
+    this->pos_ = preset * NUM_BLADES + (blade - 1);
+    PVLOG_DEBUG
+      << " PRESET = " << preset
+      << " BLADE = " << blade
+      << " POS = " << this->pos_
+      << "\n";
     SPEC::MenuBase::mode_activate(onreturn);
-    int preset;
-    int style;
-    style_parser.GetBuiltinPos(GetStyle(menu_current_blade), &preset, &style);
-    this->pos_ = preset * NUM_BLADES + style;
   }
   
   void say() override {
-    getSL<SPEC>()->SayBlade();
-    getSL<SPEC>()->SayWhole(blade());
     getSL<SPEC>()->SayPreset();
-    getSL<SPEC>()->SayWhole(preset());
+    getSL<SPEC>()->SayWhole(preset() + 1);
+    getSL<SPEC>()->SayBlade();
+    getSL<SPEC>()->SayWhole(blade() + 1);
   }
 
   void select() override {
-    LSPtr<char> builtin(CurrentPreset::mk_builtin_str(preset(), blade()));
-    SetStyle(menu_selected_blade, style_parser.CopyArguments(builtin.get(), GetStyle(menu_selected_blade)));
+    LSPtr<char> builtin(CurrentPreset::mk_builtin_str(preset(), blade() + 1));
+    SetStyle(menu_current_blade, style_parser.CopyArguments(GetStyle(menu_current_blade), builtin.get()));
     SPEC::MenuBase::select();
   }
 };

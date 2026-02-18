@@ -134,8 +134,17 @@ class HybridFont : public SaberBase, public Looper {
 public:
   const char* name() override { return "Hybrid Font"; }
   HybridFont() : SaberBase(NOLINK), Looper(NOLINK) { }
-  void Activate() {
+  void Activate1() {
     SetupStandardAudio();
+    guess_monophonic_ = false;
+    monophonic_hum_ = false;
+    state_ = STATE_OFF;
+    SaberBase::Link(this);
+  }
+
+  // Do font scan between Activate1 and Activate2
+  
+  void Activate2() {
     font_config.ReadInCurrentDir("config.ini");
     STDOUT.print("Activating ");
     // TODO: Find more reliable way to figure out if it's a monophonic or polyphonic font!!!!
@@ -144,7 +153,6 @@ public:
     } else {
       monophonic_hum_ = SFX_poweron || SFX_poweroff || SFX_pwroff || SFX_blast;
     }
-    guess_monophonic_ = false;
     if (monophonic_hum_) {
       if (SFX_clash || SFX_blaster || SFX_swing) {
         if (SFX_humm) {
@@ -165,10 +173,8 @@ public:
     }
 
     STDOUT.println(" font.");
-    SaberBase::Link(this);
     Looper::Link();
     SetHumVolume(1.0);
-    state_ = STATE_OFF;
   }
 
   enum State {

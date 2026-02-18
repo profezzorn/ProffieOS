@@ -1,6 +1,8 @@
 #ifndef SOUND_SOUND_LIBRARY_H
 #define SOUND_SOUND_LIBRARY_H
 
+#ifdef ENABLE_AUDIO
+
 #include "sound_queue.h"
 
 // Sound library
@@ -177,10 +179,10 @@ public:
 #else
 
 // Use mnum as template where to find sounds.
-#define ADD_SL_SOUND(NAME, BASE)                                        \
-  void Say##NAME() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE ".wav", &SFX_mnum)); } \
-  /* t for "trampoline" */                                              \
-  struct t##NAME { static void say() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE ".wav", &SFX_mnum)); } }
+#define ADD_SL_SOUND(NAME, BASE)                                              \
+  void Say##NAME() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE, &SFX_mnum)); } \
+  /* t for "trampoline" */                                                    \
+  struct t##NAME { static void say() { SOUNDQ->Play(SoundToPlayInSameDirAs(BASE, &SFX_mnum)); } }
 
 #endif
 
@@ -589,4 +591,5 @@ public:
 // Please don't forget to call sound_library_v2->init();
 #define sound_library_v2 (*getPtr<SoundLibraryV2>())
 
+#endif  // ENABLE_AUDIO
 #endif

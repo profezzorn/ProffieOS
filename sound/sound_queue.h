@@ -1,6 +1,8 @@
 #ifndef SOUND_SOUND_QUEUE_H
 #define SOUND_SOUND_QUEUE_H
 
+#ifdef ENABLE_AUDIO
+
 class SoundToPlayBase {
 public:
   virtual bool Play(BufferedWavPlayer* player) = 0;
@@ -80,15 +82,20 @@ public:
 
   template<class T, class... Args>
   T* emplace_back(Args&&... args) {
+    if (elements_.space_available() == 0) return nullptr;
     char* ptr = allocate(sizeof(T), alignof(T));
     if (ptr == nullptr) return nullptr;
-    return new(ptr) T(args...);
+    T* ret = new(ptr) T(args...);
+    elements_.push_back(ret);
+    return ret;
   }
 
   template<class T> bool push_back(T value) {
+    if (elements_.space_available() == 0) return false;
     char* ptr = allocate(sizeof(T), alignof(T));
     if (ptr == nullptr) return false;
-    return new(ptr) T(value);
+    elements_.push_back(new(ptr) T(value));
+    return true;
   }
 
   // Stack
@@ -123,14 +130,11 @@ private:
     } else {
       b = reinterpret_cast<char *>(elements_[n + 1]);
     }
-    if (b < a) {
-      b = buffer_.data() + buffer_.continuous_data();
-    }
+    if (b < a) b += SIZE;
     return b - a;
   }
 
   char* allocate(size_t size, size_t alignment) {
-    if (elements_.space_available() == 0) return nullptr;
     while (true) {
       if (buffer_.space_available() < size) return nullptr;
       if (((size_t)buffer_.space()) % alignment) {
@@ -152,7 +156,7 @@ private:
     }
     char* ret = buffer_.space();
     buffer_.push(size);
-    elements_.push_back(reinterpret_cast<BASE*>(ret));
+    return ret;
   }
 
   // Pointers to each of the elements in the VirtVec
@@ -203,7 +207,7 @@ template<int QueueLength>
 class SoundQueue {
 public:
   template<class T>
-  bool Play(T p) { queue_.push_back(p); }
+  bool Play(T p) { return queue_.push_back(p); }
 
   // For backwards compatibility only.
   bool Play(SoundToPlay p) {
@@ -261,7 +265,9 @@ private:
   bool busy_ = false;
   bool fadeout_;
   bool fadeout_len_;
-  VirtVec<SoundToPlayBase, QueueLength, QueueLength * 12> queue_;
+  VirtVec<SoundToPlayBase, QueueLength, QueueLength * 8> queue_;
 };
+
+#endif // ENABLE_AUDIO
 
 #endif // SOUND_SOUND_QUEUE_H

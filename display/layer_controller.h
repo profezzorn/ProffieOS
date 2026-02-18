@@ -1,6 +1,8 @@
 #ifndef DISPLAY_LAYER_CONTROLLER_H
 #define DISPLAY_LAYER_CONTROLLER_H
 
+#include "../sound/audio_stream_work.h"
+
 /*
 
 Layer Controller: Tells displays what to do.
@@ -77,13 +79,25 @@ struct BatteryVariableSource : public VariableSource {
 BatteryVariableSource battery_variable_source;
 
 struct SoundLevelVariableSource : public VariableSource {
-  int percent() override { return clampi32(sqrtf(dynamic_mixer.audio_volume()) / 1638, 0, 100); };
+  int percent() override {
+#ifdef ENABLE_AUDIO
+    return clampi32(sqrtf(dynamic_mixer.audio_volume()) / 1638, 0, 100);
+#else
+    return 0;
+#endif
+  }
 };
 
 SoundLevelVariableSource sound_level_variable_source;
 
 struct VolumeVariableSource : public VariableSource {
-  int percent() override { return clampi32(dynamic_mixer.get_volume() * 100 / VOLUME, 0, 100); };
+  int percent() override {
+#ifdef ENABLE_AUDIO
+    return clampi32(dynamic_mixer.get_volume() * 100 / VOLUME, 0, 100);
+#else
+    return 0;
+#endif
+  }
 };
 
 VolumeVariableSource volume_variable_source;
@@ -129,6 +143,7 @@ protected:
     input_buffer_.clear();
     stream_locked_.set(false);
   }
+
   void SEEK(uint32_t pos) {
     TRACE2(RGB565, "SEEK", pos);
     if (pos > TELL() && pos - TELL() < input_buffer_.size()) {
@@ -422,6 +437,7 @@ public:
   }
 
   bool IsActive() override { return active_ || delayed_open_; }
+
 protected:
   void wait_for_previous_open_to_complete() {
     while (delayed_open_ && !state_machine_.done()) {
@@ -429,6 +445,7 @@ protected:
       check_open();
     }
   }
+
   void check_open() {
     if (delayed_open_ && state_machine_.done()) {
       active_ = true;
@@ -453,6 +470,7 @@ protected:
   LayerControl* layer_ = nullptr;
   int sound_time_ms_;
   bool active_ = false;
+
 private:
   StateMachineState state_machine_;
 };
@@ -496,7 +514,9 @@ public:
       ShowDefault();
     }
   }
+
   void SB_Top(uint64_t total_cycles) override { scr_.screen()->LSC_Top(); }
+
   void SB_Off2(OffType offtype, EffectLocation location) override {
     if (offtype == OFF_IDLE) {
       Stop();
@@ -557,6 +577,7 @@ public:
       }
     }
   }
+
   void Loop() override {
     scr_.loop();
     // Need to call ShowDefault when the previous effect is over.
@@ -568,14 +589,13 @@ public:
         looped_on_ = Tristate::Unknown;
         Stop();
         break;
-
       case EFFECT_BLADEIN:
-        if (scr_.Play(&SCR_bladeout)) break;
+        if (scr_.Play(&SCR_bladein)) break;
         if (scr_.Play(&SCR_font)) break;
         ShowDefault();
         break;
       case EFFECT_BLADEOUT:
-        if (scr_.Play(&SCR_bladein)) break;
+        if (scr_.Play(&SCR_bladeout)) break;
         /* fall through */
       case EFFECT_NEWFONT:
         if (scr_.Play(&SCR_font)) break;
@@ -617,6 +637,7 @@ public:
       default: break;
     }
   }
+
   bool iscmd(const char* command, LayerControl **layer, const char* cmd) {
     int layer_number = 0;
     size_t l = sizeof(PREFIX::str);
@@ -633,6 +654,7 @@ public:
     *layer = scr_.screen()->getLayer(layer_number);
     return strcmp(command, cmd) == 0;
   }
+
   bool Parse(const char* cmd, const char* arg) override {
 #ifndef DISABLE_DIAGNOSTIC_COMMANDS
     LayerControl* layer = nullptr;
@@ -649,7 +671,6 @@ public:
       scr_.dumpstate();
       return true;
     }
-
 #endif
     return false;
   }
@@ -668,5 +689,5 @@ protected:
 //#undef INIT_SCR
 //#undef DEF_SCR
 
-#endif // DISPLAY_LAYER_CONTROLLER_H
+#endif  // DISPLAY_LAYER_CONTROLLER_H
 

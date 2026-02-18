@@ -216,7 +216,7 @@ protected:
 template<int bufsize>
 class LineTagger : public CommandOutputCaptureHelper<bufsize> {
 public:
-  LineTagger(const StringPiece& tag) : tag_(tag), line_(0) {}
+  LineTagger(const StringPiece& tag) : line_(0), tag_(tag) {}
   void GotLine(const Line<bufsize>& l) override {
     *(this->saved_output_) << ++line_ << "," << strlen(l.line) << "," << tag_ << "|" << l.line << "\n";
   }
