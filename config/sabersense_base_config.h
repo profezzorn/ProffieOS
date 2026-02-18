@@ -23,15 +23,15 @@ GNU General Public License v3.
 
 TUTORIALS
   Section 1  -  How to Use this Config            Line  37
-  Section 3  -  One Button User Controls          Line  81
-  Section 4  -  Two Button User Controls          Line 140
-  Section 5  -  Defines Descriptions              Line 202
+  Section 2  -  One Button User Controls          Line  81
+  Section 3  -  Two Button User Controls          Line 140
+  Section 4  -  Defines Descriptions              Line 202
 
 THE CODE
-  Section 6  -  THE MAIN CONFIG                   Line 359
-  Section 7  -  Config Top                        Line 677
-  Section 8  -  Blade Style Elements              Line 798
-  Section 9  -  The Blade Styles                  Line 831
+  Section 5  -  THE MAIN CONFIG                   Line 359
+  Section 6  -  Config Top                        Line 677
+  Section 7  -  Blade Style Elements              Line 798
+  Section 8  -  The Blade Styles                  Line 831
 
 ==========================================================
 ================= HOW TO USE THIS CONFIG =================
