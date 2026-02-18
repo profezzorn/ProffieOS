@@ -850,6 +850,10 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 #error MENU_SPEC_TEMPLATE cannot be combined with FETT263_EDIT_SETTINGS_MENU
 #endif
 
+#if defined(FETT263_MANUAL_BLADE_ID) && !defined(BLADE_ID_SCAN_MILLIS)
+#error BLADE_ID_SCAN_MILLIS must be defined to use FETT263_MANUAL_BLADE_ID
+#endif
+
 #if defined(FETT263_REPLACE_CC_COLOR_LIST) && defined(FETT263_SAY_COLOR_LIST_CC)
 #error FETT263_SAY_COLOR_LIST_CC does not work with FETT263_REPLACE_CC_COLOR_LIST
 #endif
@@ -1416,8 +1420,8 @@ EFFECT2(trloop, trloop);
 #ifdef FETT263_USE_SETTINGS_MENU
 EFFECT(medit); // Edit Mode
 #endif
-#ifdef FETT263_MANUAL_BLADE_ARRAY
-EFFECT(array);      // for Manual Blade Array switching
+#if defined(FETT263_MANUAL_BLADE_ARRAY) || defined(FETT263_MANUAL_BLADE_ID)
+EFFECT(array);      // for Manual Blade Array or Manual Blade ID switching
 #endif
 #ifdef FETT263_SS_BUTTON_CLICKER
 EFFECT(press); // for button press sound
@@ -2291,6 +2295,7 @@ SaberFett263Buttons() : PropBase() {}
     FindBladeAgain();
     PlayArraySound();
   }
+
 #ifdef FETT263_MANUAL_BLADE_ARRAY
   void NextBladeArray() {
     if (!use_fake_id_) best_config_before_faking_ = current_config - blades;
@@ -2301,6 +2306,7 @@ SaberFett263Buttons() : PropBase() {}
     FindBladeAgain();
     PlayArraySound();
   }
+#endif
 
   void PlayArraySound() {
     if (SFX_array) {
@@ -2310,7 +2316,6 @@ SaberFett263Buttons() : PropBase() {}
       hybrid_font.PlayCommon(&SFX_font);
     }
   }
-#endif
 #endif
 
   void DoInteractivePreon() {
