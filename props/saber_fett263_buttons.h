@@ -338,7 +338,7 @@ Standard Controls While Blade is OFF
     *if using FETT263_BC_SAY_BATTERY_VOLTS_PERCENT
     Point down for volts, parallel or up for percent
   NEW! Manual Blade ID* = Triple Click + Long Click PWR
-    *requires FETT263_MANUAL_BLADE_ID and BLADE_ID_SCAN_MILLIS defines
+    *requires FETT263_MANUAL_BLADE_ID
     *replaces Change Font control
   NEW! Change Font*
     Next Font = Triple Click + Long Click PWR (parallel or up)
@@ -557,7 +557,7 @@ OPTIONAL DEFINES (added to CONFIG_TOP in config.h file)
 
   FETT263_MANUAL_BLADE_ID
   Enables Manual Blade ID Scan via button control (see here: https://pod.hubbe.net/howto/blade-id.html)
-  *requires BLADE_ID_SCAN_MILLIS define, replaces "Change Font" control
+  *replaces "Change Font" control
 
   FETT263_MANUAL_BLADE_ARRAY
   Enables Manual Blade Array switching via button control (you need more than one Blade Array)
@@ -848,10 +848,6 @@ CUSTOM SOUNDS SUPPORTED (add to font to enable):
 
 #if defined(MENU_SPEC_TEMPLATE) && defined(FETT263_EDIT_SETTINGS_MENU)
 #error MENU_SPEC_TEMPLATE cannot be combined with FETT263_EDIT_SETTINGS_MENU
-#endif
-
-#if defined(FETT263_MANUAL_BLADE_ID) && !defined(BLADE_ID_SCAN_MILLIS)
-#error BLADE_ID_SCAN_MILLIS must be defined to use FETT263_MANUAL_BLADE_ID
 #endif
 
 #if defined(FETT263_REPLACE_CC_COLOR_LIST) && defined(FETT263_SAY_COLOR_LIST_CC)
