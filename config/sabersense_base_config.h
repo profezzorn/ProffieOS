@@ -57,7 +57,6 @@ like this:
    { "MyFont;Menus", "tracks/MyMusicTrack.wav",
 //  Main Blade:
 StylePtr<StandardFlicker>("~ ~ 6"),
-
 //  Crystal Chamber:
 StylePtr<Crystal>("~ ~ 6"),
 "myfont"},
@@ -352,7 +351,6 @@ GESTURE CONTROLS
 #define SABERSENSE_GESTURE_PREON
   As standard, gesture controls bypass all preon effects
   unless this define is added which reinstates them.
-
 */
 //  *************************************************************************
 //  *************************************************************************
@@ -361,7 +359,6 @@ GESTURE CONTROLS
 //  *************************************************************************
 
 #ifdef CONFIG_STYLES
-
 //  FULL LENGTH CLASH AND LOCKUP WITH STANDARD MAIN BLADE FLICKER.
 using StandardFlicker = Layers<
   Layers<
@@ -670,7 +667,6 @@ using Crystal = Layers<
     TransitionEffectL<TrConcat<TrWipe<1000>,AlphaL<Mix<BatteryLevel,Red,Green>,
       SmoothStep<BatteryLevel,Int<-10>>>,TrDelay<2000>,AlphaL<Mix<BatteryLevel,Red,Green>,
       SmoothStep<BatteryLevel,Int<-10>>>,TrWipeIn<1000>>,EFFECT_BATTERY_LEVEL>>;
-
 #endif
 
 //  ===========================================================
@@ -721,7 +717,6 @@ const unsigned int maxLedsPerStrip = 144;
 
 //  #define SHARED_POWER_PINS
 
-
 //  ARRAY SELECT AND BLADE ID
 //  See Technical Note 1 above when using BLADE_ID or ARRAY_SELECTOR.
 //  #define SABERSENSE_BLADE_ID   // Plays Array ident sound with BladeID detection.
@@ -735,15 +730,12 @@ const unsigned int maxLedsPerStrip = 144;
 //  #define SABERSENSE_ENABLE_ARRAY_FONT_IDENT   //  Plays font ident after array ident.
                                                  //  Works with SABERSENSE BLADE_ID & ARRAY_SELECTOR.
                                                  //  used for systems that have different fonts on different arrays.
-
 //  BLADE DETECT
 //  #define BLADE_DETECT_PIN aux2Pin  //  Wire to Button 3.
 //  #define SABERSENSE_NO_BLADE  //  Required to make Blade Detect work with Array Selector.
 
-
 //  REQUIRED FOR BLUETOOTH MODULE.
 //  #define ENABLE_SERIAL
-
 
 //  REQUIRED FOR OLED MODULE
 //  #define ENABLE_SSD1306
@@ -754,11 +746,9 @@ const unsigned int maxLedsPerStrip = 144;
 //  For OLED function, add 'oled' to each preset file list and ensure
 //  oled folder is on top level of SD card.
 
-
 //  MEMORY SAVING OPTIONS
 //  #define DISABLE_BASIC_PARSER_STYLES   // Disables default named styles found in Proffie Workbench.
 //  #define DISABLE_DIAGNOSTIC_COMMANDS   // Disables diagnostic commands in Serial Monitor.
-
 
 //  CUSTOM SABERSENSE BUTTON CONTROLS
 //  Gesture controls bypass Preon effects unless SABERSENSE_GESTURE_PREON define is added.
@@ -788,11 +778,9 @@ const unsigned int maxLedsPerStrip = 144;
 //  #define SABERSENSE_EFFECT_USER1_ALT_FONT //  For custom blade effects with EFFECT_USER1 in the style.
 #endif
 
-
 #ifdef CONFIG_PROP
 #include "../props/saber_sabersense_buttons.h"
 #endif
-
 /*
 ============================================================
 =================== BLADE STYLE ELEMENTS ===================
@@ -946,9 +934,8 @@ BladeConfig blades[] = {
     CONFIGARRAY(presets) },
 };
 #endif
-
 //  *************************************************************************
-
+//  *************************************************************************
 #ifdef CONFIG_BUTTONS
 //  Button shorts to GND:
 Button PowerButton(BUTTON_POWER, powerButtonPin, "pow");
