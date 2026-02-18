@@ -284,37 +284,38 @@ public:
     *(b++) = 0;
     *(b++) = 0;
 
-    Effect::ScanCurrentDirectory();
     ResetCurrentAlternative();
 #ifdef ENABLE_AUDIO
-    SaberBase* font = NULL;
-    hybrid_font.Activate();
-    font = &hybrid_font;
-    if (font) {
-      smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
-      if (SFX_lswing) {
-        smooth_swing_cfx_config.ReadInCurrentDir("font_config.txt");
-        // map CFX values to Proffie (sourced from font_config.txt in font folder)
-        smooth_swing_config.SwingSensitivity = smooth_swing_cfx_config.smooth_sens;
-        smooth_swing_config.MaximumHumDucking = smooth_swing_cfx_config.smooth_dampen;
-        smooth_swing_config.SwingSharpness = smooth_swing_cfx_config.smooth_sharp;
-        smooth_swing_config.SwingStrengthThreshold = smooth_swing_cfx_config.smooth_gate;
-        smooth_swing_config.Transition1Degrees = smooth_swing_cfx_config.smooth_width1;
-        smooth_swing_config.Transition2Degrees = smooth_swing_cfx_config.smooth_width2;
-        smooth_swing_config.MaxSwingVolume = smooth_swing_cfx_config.smooth_gain * 3 / 100;
-        smooth_swing_config.AccentSwingSpeedThreshold = smooth_swing_cfx_config.hswing;
-        smooth_swing_config.Version = 2;
-      } else if (!SFX_swingl) {
-        smooth_swing_config.Version = 0;
-      }
-      switch (smooth_swing_config.Version) {
-        case 1:
-          looped_swing_wrapper.Activate(font);
-          break;
-        case 2:
-          smooth_swing_v2.Activate(font);
-          break;
-      }
+    hybrid_font.Activate1();
+#endif
+
+    Effect::ScanCurrentDirectory();
+#ifdef ENABLE_AUDIO
+    hybrid_font.Activate2();
+
+    smooth_swing_config.ReadInCurrentDir("smoothsw.ini");
+    if (SFX_lswing) {
+      smooth_swing_cfx_config.ReadInCurrentDir("font_config.txt");
+      // map CFX values to Proffie (sourced from font_config.txt in font folder)
+      smooth_swing_config.SwingSensitivity = smooth_swing_cfx_config.smooth_sens;
+      smooth_swing_config.MaximumHumDucking = smooth_swing_cfx_config.smooth_dampen;
+      smooth_swing_config.SwingSharpness = smooth_swing_cfx_config.smooth_sharp;
+      smooth_swing_config.SwingStrengthThreshold = smooth_swing_cfx_config.smooth_gate;
+      smooth_swing_config.Transition1Degrees = smooth_swing_cfx_config.smooth_width1;
+      smooth_swing_config.Transition2Degrees = smooth_swing_cfx_config.smooth_width2;
+      smooth_swing_config.MaxSwingVolume = smooth_swing_cfx_config.smooth_gain * 3 / 100;
+      smooth_swing_config.AccentSwingSpeedThreshold = smooth_swing_cfx_config.hswing;
+      smooth_swing_config.Version = 2;
+    } else if (!SFX_swingl) {
+      smooth_swing_config.Version = 0;
+    }
+    switch (smooth_swing_config.Version) {
+      case 1:
+	looped_swing_wrapper.Activate(&hybrid_font);
+	break;
+      case 2:
+	smooth_swing_v2.Activate(&hybrid_font);
+	break;
     }
 //    EnableBooster();
 #endif
