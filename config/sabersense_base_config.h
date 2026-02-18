@@ -23,15 +23,15 @@ GNU General Public License v3.
 
 TUTORIALS
   Section 1  -  How to Use this Config            Line  37
-  Section 2  -  One Button User Controls          Line  81
-  Section 3  -  Two Button User Controls          Line 140
-  Section 4  -  Defines Descriptions              Line 202
+  Section 2  -  One Button User Controls          Line  80
+  Section 3  -  Two Button User Controls          Line 139
+  Section 4  -  Defines Descriptions              Line 201
 
 THE CODE
-  Section 5  -  THE MAIN CONFIG                   Line 359
-  Section 6  -  Config Top                        Line 677
-  Section 7  -  Blade Style Elements              Line 798
-  Section 8  -  The Blade Styles                  Line 831
+  Section 5  -  THE MAIN CONFIG                   Line 357
+  Section 6  -  Config Top                        Line 673
+  Section 7  -  Blade Style Elements              Line 786
+  Section 8  -  The Blade Styles                  Line 819
 
 ==========================================================
 ================= HOW TO USE THIS CONFIG =================
@@ -62,10 +62,10 @@ StylePtr<Crystal>("~ ~ 6"),
 "myfont"},
 
 <StandardFlicker> refers to the pre-built style used.
-The full range of available styles can be seen on line 803.
+The full range of available styles can be seen on line 791.
 
 The number in the brackets at the end sets the default colour
-based on the table shown on line 813. So in the above
+based on the table shown on line 801. So in the above
 example, the default colour is set to red. Note that the user can
 change blade colours themselves just using the buttons after
 the saber has been programmed.
