@@ -67,6 +67,19 @@ public:
   void SB_Effect(EffectType effect, EffectLocation location) override {
     if (effect == EFFECT_CHDIR) CheckVersion();
   }
+
+
+  // Legacy call for prop compatibility.
+  void Poll(RefPtr<BufferedWavPlayer>& player) {
+    static bool unlinked = false;
+    if (!unlinked) {
+      unlinked = true;
+      Looper::Unlink();
+      wav_player_.Free();
+    }
+    PollSoundQueue(player);
+  }
+
 private:
   void CheckVersion() {
     int found_version = 0;
@@ -98,7 +111,7 @@ public:
   static bool Play(SoundToPlay p) { return SOUNDQ->Play(p); }
   static void fadeout(float len) { return SOUNDQ->fadeout(len); }
   static bool busy() { return SOUNDQ->busy(); }
-  static void Poll(RefPtr<BufferedWavPlayer>& player) {}
+  static void Poll(RefPtr<BufferedWavPlayer>& player) { SOUNDQ->Poll(player); }
 
   static void init() {
     SOUNDQ->require_version(SoundLibraryVersion);
