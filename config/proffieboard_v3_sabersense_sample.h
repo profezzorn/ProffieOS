@@ -22,16 +22,17 @@ GNU General Public License v3.
 ========================== INDEX =========================
 
 TUTORIALS
-  Section 1  -  How to Use this Config            Line  37
-  Section 2  -  One Button User Controls          Line  80
-  Section 3  -  Two Button User Controls          Line 139
-  Section 4  -  Defines Descriptions              Line 201
+  Section 1  -  How to Use this Config            Line  38
+  Section 2  -  One Button User Controls          Line  83
+  Section 3  -  Two Button User Controls          Line 143
+  Section 4  -  Advanced Technical Notes          Line 205
+  Section 5  -  Defines Descriptions              Line 252
 
 THE CODE
-  Section 5  -  THE MAIN CONFIG                   Line 360
-  Section 6  -  Config Top                        Line 676
-  Section 7  -  Blade Style Elements              Line 789
-  Section 8  -  The Blade Styles                  Line 822
+  Section 6  -  THE MAIN CONFIG                   Line 411
+  Section 7  -  Config Top                        Line 727
+  Section 8  -  Blade Style Elements              Line 840
+  Section 9  -  The Blade Styles                  Line 873
 
 ==========================================================
 ================= HOW TO USE THIS CONFIG =================
@@ -40,6 +41,9 @@ This file is intended to provide a base config to set all
 necessary defines for your system and then to facilitate
 the simple building of blade presets for your chosen
 sound fonts.
+
+The only parts that are intended to be edited are the
+CONFIG_TOP section and the Blade Styles section.
 
 Before each define in the CONFIG_TOP section, you will notice
 two slashes, like this:
@@ -62,10 +66,10 @@ StylePtr<Crystal>("~ ~ 6"),
 "myfont"},
 
 <StandardFlicker> refers to the pre-built style used.
-The full range of available styles can be seen on line 791.
+The full range of available styles can be seen on line 845.
 
 The number in the brackets at the end sets the default colour
-based on the table shown on line 801. So in the above
+based on the table shown on line 855. So in the above
 example, the default colour is set to red. Note that the user can
 change blade colours themselves just using the buttons after
 the saber has been programmed.
@@ -196,6 +200,53 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   **  = Audio player orientations can be reversed using SABERSENSE_FLIP_AUDIO_PLAYERS define.
   *** = Can be used for Kestis style Colour Change feature via define. In which case
         Multi-blast is accessed by four clicks of POWER with blade on.
+        
+============================================================
+================= ADVANCED TECHNICAL NOTES =================
+
+1) SAVE FILES
+For proper function when using BLADE_ID or ARRAY_SELECTOR with SAVE_STATE, allocate 
+individual save folders per blade array. This will save separate settings per array.
+If you want common saved settings, you must use BLADE_DETECT or ARRAY_SELECTOR without the
+save folders but with the same number of presets per array. (Single preset arrays such as 
+charging mode are still permitted).
+
+2) CLASH CONTROLS
+//  To revert to older 0 to 4 scale, insert the relevant defines below.
+//  #define AUDIO_CLASH_SUPPRESSION_LEVEL 10	// Disable if using next three defines
+//  #define PROFFIEOS_DONT_USE_GYRO_FOR_CLASH	// Experimental define reverts to OS 5.x clash algorithm
+                                                // Fixes false clashes from buttons or motors close to board.
+//  #define PROFFIEOS_MOTION_FREQUENCY 800		// Experimental define reverts to OS 5.x clash algorithm
+//  #define PROFFIEOS_ACCELEROMETER_RANGE 4		// Experimental define reverts to OS 5.x clash algorithm
+												// Can be set to 2, 4, 8 or 16.
+For more details on false clash prevention and adjustments, visit:
+https://crucible.hubbe.net/t/false-clashes-with-os7-7-still/3988/22
+
+If button clicking is causing false clashes due to close proximity
+of switch to the Proffieboard, visit:
+https://crucible.hubbe.net/t/false-clash-and-thrust-when-clicking-power-button/4136/13
+
+For a detailed description of how clashes are detected and triggered, 
+and how the above settings actually work, visit:
+https://crucible.hubbe.net/t/clash-settings-and-questions/4651/2
+
+For more information on various historic clash settings, visit:
+https://pod.hubbe.net/explainers/history-of-clash.html
+
+3) BLADE DETECT
+When using BLADE_DETECT with SABERSENSE_ARRAY_SELECTOR, the NO_BLADE array will be
+skipped by Array Selector and only be accessed by the Blade Detect process.
+
+4)
+Further information on Proffieboards v2.2 and v3.9 can be found here:
+
+Proffieboard v2:
+https://drive.google.com/file/d/1vn9vRk-CNZSUHL4xm_hHwS6UgkfKXdO2/view?fbclid
+IwY2xjawHI869leHRuA2FlbQIxMQABHTTieWfK0DRZZ1FWWvfSYSSwpfd1cDj4UKqH39EPE7Sd_
+DQGtQX430zP3Q_aem_1U2VWjNEYfR981X2fEG-hA
+
+Proffieboard v3:
+https://fredrik.hubbe.net/lightsaber/v6/
 
 ===========================================================
 ================== DEFINES DESCRIPTIONS ===================
