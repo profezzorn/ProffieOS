@@ -1,4 +1,4 @@
-/* For Sabersense Prop File v7/8-300 onwards.
+/* For Sabersense Prop File v7/8-301 onwards.
 ============================================================
 ==============   SABERSENSE BASE CONFIG FILE   =============
 =================            by            =================
@@ -28,10 +28,10 @@ TUTORIALS
   Section 4  -  Defines Descriptions              Line 201
 
 THE CODE
-  Section 5  -  THE MAIN CONFIG                   Line 357
-  Section 6  -  Config Top                        Line 673
-  Section 7  -  Blade Style Elements              Line 786
-  Section 8  -  The Blade Styles                  Line 819
+  Section 5  -  THE MAIN CONFIG                   Line 360
+  Section 6  -  Config Top                        Line 676
+  Section 7  -  Blade Style Elements              Line 789
+  Section 8  -  The Blade Styles                  Line 822
 
 ==========================================================
 ================= HOW TO USE THIS CONFIG =================
@@ -211,6 +211,9 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   spurious ID readings switching blade when you don't want
   it to, especially if using SnapshotID.
   Plays array-specific bladeidX.wav files when switching.
+  Note that this feature requires the following system define
+  to also be active to enable the scans to work correctly:
+  #define ENABLE_POWER_FOR_ID PowerPINS<bladePowerPin2, bladePowerPin3>
 
 #define SABERSENSE_ARRAY_SELECTOR
   Replaces regular BladeID and allows cycling between
