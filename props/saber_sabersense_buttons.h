@@ -1,4 +1,4 @@
-/* V7/8-300.
+/* V7/8-301.
 ============================================================
 =================   SABERSENSE PROP FILE   =================
 =================            by            =================
@@ -231,6 +231,9 @@ COLOUR CHANGE FUNCTIONS WITH BLADE ON
   spurious ID readings switching blade when you don't want
   it to, especially if using SnapshotID.
   Plays array-specific bladeidX.wav files when switching.
+  Note that this feature requires the following system define
+  to also be active to enable the scans to work correctly:
+  #define ENABLE_POWER_FOR_ID PowerPINS<bladePowerPin2, bladePowerPin3>
 
 #define SABERSENSE_ARRAY_SELECTOR
   Replaces regular BladeID and allows forwards or
