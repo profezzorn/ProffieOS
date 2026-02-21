@@ -940,6 +940,14 @@ public:
     }
 
 #ifdef ENABLE_DEVELOPER_COMMANDS
+    if (!strcmp(cmd, "barrel_roll") || !strcmp(cmd, "br")) {
+      int direction = 1;
+      if (e) direction = -1;
+      fusor.do_a_barrel_roll(direction);
+      STDOUT << "Rolling..\n";
+      return true;
+    }
+
     if (!strcmp(cmd, "readalot")) {
       uint8_t tmp[10];
       LOCK_SD(true);

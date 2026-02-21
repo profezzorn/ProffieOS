@@ -194,6 +194,19 @@ public:
     // so we would need to use MTZ() on mss_.
     CHECK_NAN(down_.x);
 
+#ifdef ENABLE_DEVELOPER_COMMANDS
+    Vec3 angle(0.0, 0.0, 0.0);
+    if (barrel_roll_direction_) {
+      // Rotation takes exactly one second.
+      float fraction = (millis() - barrel_roll_start_) / 1000.0;
+      if (fraction > 1.0) {
+	barrel_roll_direction_ = 0;
+      } else {
+	down_ = down_.RotateX(M_PI * 2 * fraction * barrel_roll_direction_);
+      }
+    }
+#endif
+
     if (monitor.ShouldPrint(Monitoring::MonitorFusion)) {
       STDOUT << "Acl" << accel_ << "(" << accel_.len() << ")"
              << " Gyro" << gyro_
@@ -315,7 +328,7 @@ public:
 
   // Meters per second per second
   float gyro_clash_value() {
-#if 0    
+#if 0
     static uint32_t last_printout=0;
     if (millis() - last_printout > 1000) {
       last_printout = millis();
@@ -323,13 +336,13 @@ public:
 	     << " XTRAPOLATOR: "<< gyro_extrapolator_.get(micros())
 	     << "\n";
     }
-#endif    
+#endif
     // degrees per microsecond
     float v = (gyro_clash_filter_.get() - gyro_extrapolator_.get(micros())).len();
     // Translate into meters per second per second, assuming blade is one meter.
     return v / 9.81;
   }
-  
+
 #ifdef FUSE_SPEED
   Vec3 speed() { return speed_; }  // m/s
 #endif
@@ -365,6 +378,13 @@ public:
 
   bool ready() { return micros() - last_micros_ < 50000; }
 
+#ifdef ENABLE_DEVELOPER_COMMANDS
+  void do_a_barrel_roll(int direction) {
+    barrel_roll_direction_ = direction;
+    barrel_roll_start_ = millis();
+  }
+#endif
+
 private:
   uint32_t last_clear_ = 0;
   static const int filter_hz = 80;
@@ -385,6 +405,10 @@ private:
   float swing_speed_;
   float angle1_;
   float angle2_;
+#ifdef ENABLE_DEVELOPER_COMMANDS
+  uint32_t barrel_roll_start_;
+  int8_t barrel_roll_direction_;
+#endif
 };
 
 Fusor fusor;
