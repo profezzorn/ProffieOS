@@ -5,6 +5,18 @@
 #include "../common/atomic.h"
 #include "../common/file_reader.h"
 
+#ifdef RANDOM_SAMPLE_WITHOUT_REPLACEMENT
+#include "../common/arg_parser.h"
+
+#ifndef SAMPLE_WITHOUT_REPLACEMENT_BUFFER_SIZE_BITS
+#define SAMPLE_WITHOUT_REPLACEMENT_BUFFER_SIZE_BITS 32
+#endif
+
+#if SAMPLE_WITHOUT_REPLACEMENT_BUFFER_SIZE_BITS > 256
+#define SAMPLE_WITHOUT_REPLACEMENT_BUFFER_SIZE_BITS 256
+#endif
+#endif
+
 class Effect;
 Effect* all_effects = NULL;
 
@@ -195,6 +207,13 @@ class Effect {
     paired_ = false;
 #ifdef KILL_OLD_PLAYERS
     killable_ = false;
+#endif
+#ifdef NO_REPEAT_RANDOM
+#ifdef RANDOM_SAMPLE_WITHOUT_REPLACEMENT
+    available_.clear();
+#endif
+    last_ = -1;
+    last_subid_ = -1;
 #endif
   }
   static int altnum(const char* s) {
@@ -399,6 +418,13 @@ class Effect {
   }
 
 #ifdef NO_REPEAT_RANDOM
+
+#ifdef RANDOM_SAMPLE_WITHOUT_REPLACEMENT
+  // Storage for random sampling without replacement.
+  // Each bit tracks a specific File. `1` marks as available to select.
+  BitSet<SAMPLE_WITHOUT_REPLACEMENT_BUFFER_SIZE_BITS> available_;
+#endif
+
   int16_t last_ = -1;
   int16_t last_subid_ = -1;
 
@@ -426,6 +452,32 @@ class Effect {
 
   int random_subid(int filenum) {
     if (!sub_files_) return 0;
+#ifdef NO_REPEAT_RANDOM
+#ifdef RANDOM_SAMPLE_WITHOUT_REPLACEMENT
+      const size_t total_files = files_found() * number_of_subfiles();
+      if (total_files > 2 && total_files <= SAMPLE_WITHOUT_REPLACEMENT_BUFFER_SIZE_BITS) {
+        const size_t first = filenum * sub_files_;
+        const size_t last = first + files_found();
+        
+        uint8_t n = available_.popcount_subset(first, last);
+        if (!n) {
+          available_.set_subset(first, last);
+          n = sub_files_;
+        }
+        if (n == sub_files_ && filenum == last_ && last_subid_ >= 0) n--;
+
+        size_t ret = available_.nth_subset(RANDOMIZE(n, -1), first, last);
+        if (ret == last_ * sub_files_ + last_subid_) {
+          ret = available_.popcount_subset(ret, last) > 1 ? available_.next(ret) : available_.prev(ret);
+        }
+        
+        available_.clear(ret);
+        last_ = ret / sub_files_;
+        last_subid_ = ret % sub_files_;
+        return last_subid_;
+      }
+#endif
+#endif
     int ret = RANDOMIZE(sub_files_, last_ == filenum ? last_subid_ : -1);
 #ifdef NO_REPEAT_RANDOM
     last_subid_ = ret;
@@ -450,6 +502,28 @@ class Effect {
 	       (file_type_ == FileType::SOUND || paired_)) {
       n = std::min<int>(SaberBase::sound_number, num_files - 1);
     } else {
+#ifdef NO_REPEAT_RANDOM
+#ifdef RANDOM_SAMPLE_WITHOUT_REPLACEMENT
+      const size_t total_files = files_found() * number_of_subfiles();
+      if (total_files > 2 && total_files <= SAMPLE_WITHOUT_REPLACEMENT_BUFFER_SIZE_BITS) {
+        uint8_t n = available_.popcount();
+        if (!n) {
+          available_ = BitSet<SAMPLE_WITHOUT_REPLACEMENT_BUFFER_SIZE_BITS>::fill(total_files);
+          n = total_files;
+        }
+        if (n == total_files && (last_ >= 0 || last_subid_ >= 0)) n--;
+
+        size_t ret = available_.nth(RANDOMIZE(n, -1));
+        const int16_t last = sub_files_ ? last_ * sub_files_ + last_subid_ : last_;
+        if (ret == last) ret = available_.next(ret);
+        
+        available_.clear(ret);
+        last_ = sub_files_ ? ret / sub_files_ : ret;
+        if (sub_files_) last_subid_ = ret % sub_files_;
+        return FileID(this, last_, sub_files_ ? last_subid_ : 0);
+      }
+#endif
+#endif
       n = RANDOMIZE(num_files, last_);
     }
     int subid = random_subid(n);
