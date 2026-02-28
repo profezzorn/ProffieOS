@@ -287,9 +287,11 @@
 //      - Delay (ms) before Hazard damage starts after checking and    //
 //        triggering Hazard. Allows time for HEV Voice Line to finish. //
 //                                                                     //
-//  HEV_HAZARD_DECREASE_MS                                             //
-//      - Time (ms) between each tick of Hazard damage.                //
-//        Lower = faster damage-over-time.                             //
+//  HEV_HAZARD_DECREASE_MIN_MS                                         //
+//      - Minimum time (ms) between each tick of Hazard damage.        //
+//                                                                     //
+//  HEV_HAZARD_DECREASE_MAX_MS                                         //
+//      - Maximum time (ms) between each tick of Hazard damage.        //
 //                                                                     //
 //  HEV_HAZARD_AFTER_REVIVE_MS                                         //
 //      - Time (ms) after reviving before Hazards can happen again.    //
@@ -314,8 +316,11 @@
 #ifndef HEV_HAZARD_DELAY_MS
 #define HEV_HAZARD_DELAY_MS 6000
 #endif
-#ifndef HEV_HAZARD_DECREASE_MS
-#define HEV_HAZARD_DECREASE_MS 1000
+#ifndef HEV_HAZARD_DECREASE_MIN_MS
+#define HEV_HAZARD_DECREASE_MIN_MS 1000
+#endif
+#ifndef HEV_HAZARD_DECREASE_MAX_MS
+#define HEV_HAZARD_DECREASE_MAX_MS 4000
 #endif
 #ifndef HEV_HAZARD_AFTER_REVIVE_MS
 #define HEV_HAZARD_AFTER_REVIVE_MS 60000
@@ -353,22 +358,19 @@ EFFECT(stun);
 
 struct HEVTimerBase {
   uint32_t start_ = 0;
-
   uint32_t interval_ = 0;
-
   bool active_ = false;
 
   void reset() { active_ = false; }
-  
   void start() { active_ = true; start_ = millis(); }
-
   void configure(uint32_t interval) { interval_ = interval; }
+  void configure_random(uint32_t min_ms, uint32_t max_ms) {
+    interval_ = min_ms + random(max_ms - min_ms + 1);
+  }
 
-  // Returns true if timer is inactive or timeout exceeded.
   bool check() {
     return !active_ || (millis() - start_ > interval_);
   }
-
   bool running() const {
     return active_ && (millis() - start_) <= interval_;
   }
@@ -385,8 +387,9 @@ public:
   //                                Debounce to prevent false Clashes.   //
   // - timer_random_event_        - Interval timer for Random Hazards.   //
   //                                Controls how often Hazards can occur.//
-  // - timer_hazard_delay_        - Delay inbetween event trigger and    //
-  //                                Hazard dps. Gap for voice to finish. //
+  // - timer_hazard_delay_        - Delay between event trigger and      //
+  //                                Hazard DPS. Also used as a gap for   //
+  //                                voice to end before stun sfx start.  //
   // - timer_hazard_after_revive_ - Cooldown after user revives.         //
   //                                Blocks Hazards until timer is done.  //
   // - timer_health_increase_     - Interval for Health recharge.        //
@@ -433,7 +436,7 @@ public:
 
   Hazard current_hazard_ = HAZARD_NONE;
 
-  // Calculate Physical Damage
+  // Calculate Physical and Hazard Damage
   void DoDamage(int damage, bool quiet = false, DamageType type = DAMAGE_PHYSICAL) {
     int previous_health = health_;
     int previous_armor = armor_;
@@ -468,7 +471,7 @@ public:
     if (armor_ < 0) armor_ = 0;
 
     // (HEV VOICE LINE) Logic for Armor Compromised
-    if (previous_armor > 0 && armor_ == 0 && health_ == 0) {
+    if (previous_armor > 0 && armor_ == 0) {
       SaberBase::DoEffect(EFFECT_USER2, 0.0);
       PVLOG_NORMAL << "Armor Compromised!\n";
     }
@@ -599,7 +602,11 @@ public:
         return;
       }
 
-      timer_hazard_delay_.configure(HEV_HAZARD_DECREASE_MS);
+      // Interval for continuous damage is randomized between min and max
+      timer_hazard_delay_.configure_random(
+        HEV_HAZARD_DECREASE_MIN_MS,
+        HEV_HAZARD_DECREASE_MAX_MS
+      );
       timer_hazard_delay_.start();
     }
   }
