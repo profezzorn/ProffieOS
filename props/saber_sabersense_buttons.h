@@ -1280,7 +1280,7 @@ bool Event2(enum BUTTON button, EVENT event, uint32_t modifiers) override {
       return true;
 
     // ENTER VOLUME MENU
-    // 1 button or 2 button on hilts where both buttons cannot be pressed simultaneously.
+    // 1 button hilts, or 2 button hilts where both buttons cannot be pressed simultaneously.
     case EVENTID(BUTTON_NONE, EVENT_CLASH, MODE_OFF | BUTTON_POWER):
     // 2 button.
     case EVENTID(BUTTON_AUX, EVENT_CLICK_SHORT, MODE_OFF | BUTTON_POWER):
