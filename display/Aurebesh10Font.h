@@ -5,12 +5,12 @@
 const uint8_t Aurebesh10pt7bChar0[] = {   // 0x20 ' '
   0b0UL,
 };
-const uint16_t Aurebesh10pt7bChar1[] = {   // 0x21 '!'
+const uint16_t Aurebesh10pt7bChar1[] = {   // 0x21 '!' edited
   0b111001110000UL,
   0b011100111000UL,
   0b001110011100UL,
   0b000111001110UL,
-  0b000011100111UL
+  0b000011100111UL,
 };
 const uint8_t Aurebesh10pt7bChar2[] = {   // 0x22 '"'
   0b1111111UL,
@@ -54,7 +54,7 @@ const uint16_t Aurebesh10pt7bChar4[] = {   // 0x24 '$'
   0b00000000111100UL,
   0b00000000001100UL,
 };
-const uint16_t Aurebesh10pt7bChar5[] = {   // 0x25 '%'
+const uint16_t Aurebesh10pt7bChar5[] = {   // 0x25 '%' edited
   0b00000011111100UL,
   0b00000111111110UL,
   0b00001110000111UL,
@@ -70,7 +70,7 @@ const uint16_t Aurebesh10pt7bChar5[] = {   // 0x25 '%'
   0b11001100110000UL,
   0b11100001110000UL,
   0b01111111100000UL,
-  0b00111111000000UL
+  0b00111111000000UL,
 };
 const uint16_t Aurebesh10pt7bChar6[] = {   // 0x26 '&'
   0b00000000000011UL,
@@ -108,16 +108,16 @@ const uint16_t Aurebesh10pt7bChar9[] = {   // 0x29 ')'
   0b11111111111111UL,
   0b11111111111111UL,
 };
-const uint8_t Aurebesh10pt7bChar10[] = {   // 0x2A '*'
+const uint8_t Aurebesh10pt7bChar10[] = {   // 0x2A '*' edited
   0b1001001UL,
   0b0101010UL,
   0b0011100UL,
   0b1111111UL,
   0b0011100UL,
   0b0101010UL,
-  0b1001001UL
+  0b1001001UL,
 };
-const uint16_t Aurebesh10pt7bChar11[] = {   // 0x2B '+'
+const uint16_t Aurebesh10pt7bChar11[] = {   // 0x2B '+' edited
   0b0000110000UL,
   0b0000110000UL,
   0b0000110000UL,
@@ -127,7 +127,7 @@ const uint16_t Aurebesh10pt7bChar11[] = {   // 0x2B '+'
   0b0000110000UL,
   0b0000110000UL,
   0b0000110000UL,
-  0b0000110000UL
+  0b0000110000UL,
 };
 const uint8_t Aurebesh10pt7bChar12[] = {   // 0x2C ','
   0b111111UL,
@@ -160,7 +160,7 @@ const uint16_t Aurebesh10pt7bChar15[] = {   // 0x2F '/'
   0b00000011111111UL,
   0b00000000111111UL,
 };
-const uint16_t Aurebesh10pt7bChar16[] = {   // 0x30 '0'
+const uint16_t Aurebesh10pt7bChar16[] = {   // 0x30 '0' edited
   0b00111111111100UL,
   0b01111111111110UL,
   0b11100000000111UL,
@@ -175,7 +175,7 @@ const uint16_t Aurebesh10pt7bChar16[] = {   // 0x30 '0'
   0b11000000000011UL,
   0b11100000000111UL,
   0b01111111111110UL,
-  0b00111111111100UL
+  0b00111111111100UL,
 };
 const uint16_t Aurebesh10pt7bChar17[] = {   // 0x31 '1'
   0b11000000000011UL,
@@ -289,7 +289,7 @@ const uint16_t Aurebesh10pt7bChar23[] = {   // 0x37 '7'
   0b11111111111111UL,
   0b11111111111111UL,
 };
-const uint16_t Aurebesh10pt7bChar24[] = {   // 0x38 '8'
+const uint16_t Aurebesh10pt7bChar24[] = {   // 0x38 '8' edited
   0b00111100111100UL,
   0b01111111111110UL,
   0b11100111100111UL,
@@ -304,7 +304,7 @@ const uint16_t Aurebesh10pt7bChar24[] = {   // 0x38 '8'
   0b11000011000011UL,
   0b11100111100111UL,
   0b01111111111110UL,
-  0b00111100111100UL
+  0b00111100111100UL,
 };
 const uint16_t Aurebesh10pt7bChar25[] = {   // 0x39 '9'
   0b11000011111100UL,
@@ -416,7 +416,7 @@ const uint16_t Aurebesh10pt7bChar33[] = {   // 0x41 'A'
   0b11111100111111UL,
   0b11111100111111UL,
 };
-const uint16_t Aurebesh10pt7bChar34[] = {   // 0x42 'B'
+const uint16_t Aurebesh10pt7bChar34[] = {   // 0x42 'B' edited
   0b00010000001000UL,
   0b00110000001100UL,
   0b01110000001110UL,
@@ -433,7 +433,7 @@ const uint16_t Aurebesh10pt7bChar34[] = {   // 0x42 'B'
   0b11100011000111UL,
   0b01110000001110UL,
   0b00110000001100UL,
-  0b00010000001000UL
+  0b00010000001000UL,
 };
 const uint16_t Aurebesh10pt7bChar35[] = {   // 0x43 'C'
   0b11111111100000UL,
@@ -700,7 +700,7 @@ const uint16_t Aurebesh10pt7bChar50[] = {   // 0x52 'R'
   0b00000000000011UL,
   0b00000000000011UL,
 };
-const uint16_t Aurebesh10pt7bChar51[] = {   // 0x53 'S'
+const uint16_t Aurebesh10pt7bChar51[] = {   // 0x53 'S' edited
   0b11111111111111UL,
   0b11111111111111UL,
   0b11100000000000UL,
@@ -716,9 +716,9 @@ const uint16_t Aurebesh10pt7bChar51[] = {   // 0x53 'S'
   0b00011000001110UL,
   0b00011000000111UL,
   0b00001100000011UL,
-  0b00001100000000UL
+  0b00001100000000UL,
 };
-const uint16_t Aurebesh10pt7bChar52[] = {   // 0x54 'T'
+const uint16_t Aurebesh10pt7bChar52[] = {   // 0x54 'T' edited
   0b00000010000000UL,
   0b00000110000000UL,
   0b00001110000000UL,
@@ -734,7 +734,7 @@ const uint16_t Aurebesh10pt7bChar52[] = {   // 0x54 'T'
   0b00011100000000UL,
   0b00001110000000UL,
   0b00000110000000UL,
-  0b00000010000000UL
+  0b00000010000000UL,
 };
 const uint16_t Aurebesh10pt7bChar53[] = {   // 0x55 'U'
   0b01111111111111UL,
@@ -754,7 +754,7 @@ const uint16_t Aurebesh10pt7bChar53[] = {   // 0x55 'U'
   0b01111111111111UL,
   0b01111111111111UL,
 };
-const uint16_t Aurebesh10pt7bChar54[] = {   // 0x56 'V'
+const uint16_t Aurebesh10pt7bChar54[] = {   // 0x56 'V' edited
   0b00000000000001UL,
   0b00000000000011UL,
   0b00000000000111UL,
@@ -770,7 +770,7 @@ const uint16_t Aurebesh10pt7bChar54[] = {   // 0x56 'V'
   0b00000000001110UL,
   0b00000000000111UL,
   0b00000000000011UL,
-  0b00000000000001UL
+  0b00000000000001UL,
 };
 const uint16_t Aurebesh10pt7bChar55[] = {   // 0x57 'W'
   0b00111111111100UL,
@@ -911,7 +911,7 @@ const uint16_t Aurebesh10pt7bChar65[] = {   // 0x61 'a'
   0b11000000000011UL,
   0b10000000000001UL,
 };
-const uint16_t Aurebesh10pt7bChar66[] = {   // 0x62 'b'
+const uint16_t Aurebesh10pt7bChar66[] = {   // 0x62 'b' edited
   0b00010000001000UL,
   0b00110000001100UL,
   0b01110000001110UL,
@@ -928,7 +928,7 @@ const uint16_t Aurebesh10pt7bChar66[] = {   // 0x62 'b'
   0b11100011000111UL,
   0b01110000001110UL,
   0b00110000001100UL,
-  0b00010000001000UL
+  0b00010000001000UL,
 };
 const uint16_t Aurebesh10pt7bChar67[] = {   // 0x63 'c'
   0b00000111111111UL,
@@ -1195,7 +1195,7 @@ const uint16_t Aurebesh10pt7bChar82[] = {   // 0x72 'r'
   0b00000000001111UL,
   0b00000000000011UL,
 };
-const uint16_t Aurebesh10pt7bChar83[] = {   // 0x73 's'
+const uint16_t Aurebesh10pt7bChar83[] = {   // 0x73 's' edited
   0b00001100000000UL,
   0b00001100000011UL,
   0b00011000000111UL,
@@ -1211,9 +1211,9 @@ const uint16_t Aurebesh10pt7bChar83[] = {   // 0x73 's'
   0b01110000000000UL,
   0b11100000000000UL,
   0b11111111111111UL,
-  0b11111111111111UL
+  0b11111111111111UL,
 };
-const uint16_t Aurebesh10pt7bChar84[] = {   // 0x74 't'
+const uint16_t Aurebesh10pt7bChar84[] = {   // 0x74 't' edited
   0b00000010000000UL,
   0b00000110000000UL,
   0b00001110000000UL,
@@ -1229,7 +1229,7 @@ const uint16_t Aurebesh10pt7bChar84[] = {   // 0x74 't'
   0b00011100000000UL,
   0b00001110000000UL,
   0b00000110000000UL,
-  0b00000010000000UL
+  0b00000010000000UL,
 };
 const uint16_t Aurebesh10pt7bChar85[] = {   // 0x75 'u'
   0b01111111111111UL,
@@ -1249,7 +1249,7 @@ const uint16_t Aurebesh10pt7bChar85[] = {   // 0x75 'u'
   0b01111111111111UL,
   0b01111111111111UL,
 };
-const uint16_t Aurebesh10pt7bChar86[] = {   // 0x76 'v'
+const uint16_t Aurebesh10pt7bChar86[] = {   // 0x76 'v' edited
   0b00000000000001UL,
   0b00000000000011UL,
   0b00000000000111UL,
@@ -1265,7 +1265,7 @@ const uint16_t Aurebesh10pt7bChar86[] = {   // 0x76 'v'
   0b00000000001110UL,
   0b00000000000111UL,
   0b00000000000011UL,
-  0b00000000000001UL
+  0b00000000000001UL,
 };
 const uint16_t Aurebesh10pt7bChar87[] = {   // 0x77 'w'
   0b00111111111100UL,
@@ -1342,7 +1342,7 @@ const uint16_t Aurebesh10pt7bChar90[] = {   // 0x7A 'z'
   0b11111111111111UL,
   0b11111111111111UL,
 };
-const uint16_t Aurebesh10pt7bChar91[] = {   // 0x7B '{'
+const uint16_t Aurebesh10pt7bChar91[] = {   // 0x7B '{' edited
   0b00000111110000UL,
   0b00011110001100UL,
   0b00111100000010UL,
@@ -1357,7 +1357,7 @@ const uint16_t Aurebesh10pt7bChar91[] = {   // 0x7B '{'
   0b01111000000000UL,
   0b00111100000010UL,
   0b00011110001100UL,
-  0b00000111110000UL
+  0b00000111110000UL,
 };
 const uint16_t Aurebesh10pt7bChar92[] = {   // 0x7C '|'
   0b11111111111111UL,
@@ -1376,7 +1376,7 @@ const uint16_t Aurebesh10pt7bChar92[] = {   // 0x7C '|'
   0b10000000000001UL,
   0b01111111111110UL,
 };
-const uint16_t Aurebesh10pt7bChar93[] = {   // 0x7D '}'
+const uint16_t Aurebesh10pt7bChar93[] = {   // 0x7D '}' edited
   0b00001111110000UL,
   0b00111000011100UL,
   0b01111111111110UL,
@@ -1391,7 +1391,7 @@ const uint16_t Aurebesh10pt7bChar93[] = {   // 0x7D '}'
   0b01010111110110UL,
   0b01111111111110UL,
   0b00111000011100UL,
-  0b00001111110000UL
+  0b00001111110000UL,
 };
 const uint16_t Aurebesh10pt7bChar94[] = {   // 0x7E '~'
   0b11111111111111UL,
